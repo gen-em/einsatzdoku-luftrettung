@@ -71,6 +71,25 @@ Der Hinweis in `starten` nennt jetzt jede vorhandene `.SET`-Datei, statt eine
 nach dem Gerätenamen zu raten — sie hieß nur deshalb meist so, weil der
 Prüfstand seine Kompilate nach dem Gerät benennt.
 
+### Werkzeug — `git status` taugt nicht als Beleg für `uhr-bilder`
+
+Beim Gegenprüfen der S3-Änderung an den Vektorvorlagen meldete Git nach einem
+Lauf von `tools/uhr-bilder/erzeugen.sh` **17 geänderte PNG**. Kein einziger
+Bildpunkt war anders: Das Werkzeug schreibt in jede Datei einen `tIME`-Block
+mit der aktuellen Uhrzeit. Gemessen mit `compare -metric AE` gegen
+`git show HEAD:<pfad>` — 17-mal 0. Der Hinweis steht jetzt in der `LIESMICH.md`
+des Werkzeugs, samt dem Weg, wie man es richtig prüft.
+
+### Werkzeug — Und die Anleitung war nicht auffindbar
+
+`CLAUDE.md` Abschnitt 6 sagte „Es gibt keine automatisierten Tests. Geprüft
+wird durch Lesen und im Browser." — und erwähnte den Uhr-Prüfstand mit keinem
+Wort. Wer nur die Arbeitsanweisung liest, schließt daraus, am Uhr-Code sei
+nichts prüfbar; der Weg über `docs/Technik.md` §5.2b muss erst gefunden werden.
+Das war die eigentliche Lücke: Die Anleitung war vollständig, aber nicht
+auffindbar. Abschnitt 6 nennt den Prüfstand jetzt, samt dem Hinweis, dass die
+Adresse erfragt werden muss.
+
 ## [Web 12.4.2] — 2026-09-02
 
 **Das Bodenlogo war nie so klein, wie es aussah — es war gepolstert.** Elftes

@@ -28,6 +28,13 @@ reproduziert die vier, die es vor diesem Werkzeug schon gab, bitgleich
 (`compare -metric AE` liefert 0). Das ist der Beleg, dass es das richtige ist
 und nicht bloß ein ähnliches.
 
+**`git status` ist dafür kein Maßstab.** Ein Lauf schreibt in jedes PNG einen
+`tIME`-Block mit der aktuellen Uhrzeit; danach meldet Git alle Dateien als
+geändert, obwohl kein Bildpunkt anders ist. Wer wissen will, ob sich etwas
+getan hat, vergleicht mit `compare -metric AE` gegen `git show HEAD:<pfad>` —
+am 02.09.2026 waren so alle 17 Dateien pixelgleich, und die 17 Einträge in
+`git status` waren ausschließlich Zeitstempel.
+
 Eine Ausnahme: Die beiden **Launcher-Symbole** (40 und 70 px) stammten aus der
 Zeit vor der Vektorumstellung und waren aus einem 40-px-Bitmap hochskaliert.
 Sie kommen jetzt aus derselben Vorlage wie alles andere — der einzige
