@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 22 (02.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 23 (02.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -129,8 +129,8 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 
 | Schritt | Kennung | Inhalt | Voraussetzung | Konzept | Modell | Status |
 |---|---|---|---|---|---|---|
-| 1 | **S4 — Merge** | Fehlerbehebung abschließen, Backlog-Nummern nachziehen, `main` holen, Merge = Deploy, `update.php` | — | liegt vor | Opus | **in Arbeit** — Zweig fertig (Web 12.8.0, Android 0.7.7), `main` geholt und Konflikte gelöst; **wartet auf die Freigabe zum Push**, `update.php` steht danach aus |
-| 2 | **S6 — Gerätekennung und Schlüsselfrist** | Serverseite von R42, Behebung R44 | Schritt 1 | keins; R42 und R44 sind die Spezifikation | Opus | **gebaut** — Web 12.9.2 auf dem Zweig, Modelltabelle gefüllt; wartet nur noch auf die Abnahme |
+| 1 | **S4 — Merge** | Fehlerbehebung abschließen, Backlog-Nummern nachziehen, `main` holen, Merge = Deploy, `update.php` | — | liegt vor | Opus | **gemergt** (Web 12.8.0, Android 0.7.7 auf `main`); `update.php` für `2026_09_02_schnitte` vom Auftraggeber zu bestätigen; Prüfliste S4 (1, 2, 3, 5) offen |
+| 2 | **S6 — Gerätekennung und Schlüsselfrist** | Serverseite von R42, Behebung R44 | Schritt 1 | keins; R42 und R44 sind die Spezifikation | Opus | **gemergt und ausgeliefert** (Web 12.9.0 bis 12.9.2 auf `main`); `update.php` für `2026_09_02_geraetekennung` und `…_geraetemodell_breiter` zu bestätigen; Abnahme nach Abschnitt 6 offen |
 | 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | offen |
 | 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | `docs/konzepte/Umstellung-Backup.md` | Opus | offen |
 | 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | offen |
@@ -818,3 +818,4 @@ Abschnitt 6.
 | **20** | **02.09.2026** | **Marken- und Schutzrechtszeichen aus den Modellnamen** (Web 12.9.2): 171 der 173 Namen trugen ® oder ™, 194 Vorkommen. Sie gehören nicht uns, sie stören die Zählung (ein Wechsel ® → ™ ergäbe zwei Geräte) und sie kosten Platz. Entfernt wird im Erzeuger, nicht in der erzeugten Datei; `í`, `ē` und der Halbgeviertstrich bleiben — sie sind Bestandteil der Namen. Gegengeprüft: weiterhin 325 Teilenummern auf 173 verschiedene Namen, 0 Zusammenfälle, 0 doppelte Leerzeichen. Keine Migration. |
 | **21** | **02.09.2026** | **Drei Punkte aufgenommen** (Backlog 81–83): App-Symbol in der Benachrichtigung zu groß und angeschnitten (am Gerät gemeldet, aus dem Quellstand nicht nachvollziehbar — die Kachel wurde nachgerechnet, sie stimmt), fehlende Warnung vor dem Akkuverbrauch der Daueraufzeichnung (der vorhandene Akku-Dialog sagt das Gegenteil), und die **Haltbarkeit der Gerätestatistik** als Diskussionspunkt für Schritt 10 — gemessen: 82 von 82 Einsätzen ohne Geräteverweis, weil `ON DELETE SET NULL` gilt und `device_id` nicht in der Sicherung steht. 81 und 82 in den S4-Rest, 83 vor den Neuaufsetzen-Beschluss (R60). |
 | **22** | **02.09.2026** | **Android-Rückmeldungen und Gerätestatistik entschieden:** feste Server-Adresse und Name der Android-App (R63); Nr. 83 als R64 entschieden — Momentaufnahme am Einsatz, eigene `origin`-Werte, Umsetzung im S4-Rest zusammen mit Nr. 63; Backlog 84–88 angelegt (feste Adresse, App-Name, Statusleiste, Web-App-Erhebung vor v1.0, NutzerInnen-Kachel); Schritt 6 und Schritt 10 ergänzt; Änderungsverlauf wieder aufsteigend |
+| **23** | **02.09.2026** | **Statuszeilen 1 und 2 auf den Stand von `main`:** S4-Merge und S6 sind gemergt (Web 12.9.2, Android 0.7.7); beide Migrationen warten auf `update.php`. Als Nächstes laufen Schritt 3 (S5-Konzept, Fable) und Schritt 4 (S7, Opus) parallel |
