@@ -38,7 +38,7 @@ angelegt, bevor die Entdopplung oben auf `main` lag, und nummeriert sie beim
 Zusammenführen auf 63 bis 67 um: Sperrvermerke des Schnitts in der
 Konto-Sicherung, Bedienhöhe der Android-App, Fassungshinweise im
 Android-Baulauf, Garmin-Uhrcode in der Wortliste, `csrf_check()` ohne
-API-Zweig. Die Punkte 68 bis 72 sind mit Fassung 16 angelegt und stehen
+API-Zweig. Die Punkte 68 bis 79 sind mit Fassung 16 angelegt und stehen
 unten; die Zuordnung aller offenen Punkte zu Paketen führt
 `docs/Rahmenplan.md`, Abschnitt 5.
 
@@ -748,6 +748,88 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     immer noch abweicht, die Rechnung gegen die Projektion nachmessen.
     Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
     Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
+
+73. **Die Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
+    (Rahmenplan Fassung 16).* Auf `admin_users.php` stehen die Filter „Alle,
+    Admins, Sicherung überfällig, Nie gesichert, Ohne Gerät" rechts neben
+    dem Suchfeld; bei üblicher Schreibtischbreite fällt „Ohne Gerät" allein
+    in eine zweite Zeile. **Zu tun:** Anordnung im S8-Konzept festlegen —
+    Suchfeld über den Filtern, oder Filter in einer Zeile mit Umbruchregel —
+    und am Baustein umsetzen, nicht an der Seite; `tools/screenshots/` in
+    allen acht Breiten. Zuordnung: S8.
+
+74. **Bedienhöhe am Schreibtisch: müssen es 44 px sein?**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* `CLAUDE.md` 5 und
+    `Design.md` verlangen eine Höhe für Bedienelemente, mobil wie am
+    Schreibtisch. Am Schreibtisch wirken die Knöpfe hoch. **Zu klären im
+    S8-Konzept:** eine zweite Stufe für Zeigergeräte (etwa 36 px, nur über
+    `pointer:fine`) mit Begründung, Kontrastprüfung und Nachtrag in
+    `Design.md` — oder es bleibt bei einer Höhe. Berührt die Messung
+    „Knöpfe ≠ 44 px" in `tools/screenshots/`, die dann zwei Sollwerte
+    kennen muss. Zuordnung: S8 (Entscheidung).
+
+75. **Die Unterpunkte des Admin-Menüs sind fett und nicht einklappbar.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* S3 (Block F) hatte den
+    Fettdruck der Seitenleiste auf den ausgewählten Punkt begrenzt; in der
+    Administration (`ui_leiste_einstellungen()`, `.leiste-liste`) erscheinen
+    die Unterpunkte weiter fett, und die Überschriften der Gruppen heben
+    sich nicht ab. **Zu tun:** nachsehen, ob der Admin-Teil von S3
+    ausgenommen blieb oder eine eigene Regel trägt; Fettdruck nur für den
+    aktiven Punkt; Gruppen ein- und ausklappbar, Zustand je Sitzung merken.
+    Gehört zur Menüstruktur, die S8 ohnehin neu ordnet. Zuordnung: S8.
+
+76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
+    hat.**
+    *Aufgenommen 02.09.2026 als Frage des Auftraggebers (Rahmenplan Fassung
+    16).* `demo_reset_wenn_faellig()` in `demo_lib.php` setzt zeitgesteuert
+    zurück — 30 Minuten relativ zur letzten Aktivität, angestoßen von der
+    nächsten Anfrage —, ohne zu prüfen, ob eine Besucherin etwas verändert
+    hat; `demo_zuruecksetzen()` spielt die Fixture neu ein. **Die Frage:**
+    Ist das ein Aufwand, den es sich zu vermeiden lohnt, oder kann es
+    durchlaufen? **Zu tun:** zuerst messen — Laufzeit und Last eines Resets
+    auf der Produktivinstallation (P-12 hat die Laufzeit einmal geprüft,
+    die Zahl ist nicht festgehalten) —, dann entscheiden: durchlaufen
+    lassen, oder eine Änderungsmarke (Zähler im Schreibweg des Demo-Kontos,
+    Reset nur bei gesetzter Marke). Zuordnung: Backlog-Runde (Messung), die
+    Entscheidung danach.
+
+77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* Die Seite trägt heute
+    die Migrationsliste, den Job-Einstieg mit Cron-Zeile und Token-Adresse,
+    die Speichergrenze der Sicherungen und weitere Betriebsangaben auf einer
+    Fläche. **Zu tun:** Schnitt im S8-Konzept (etwa Serverbetrieb und Jobs,
+    Sicherung, Migrationen), dabei entscheiden, ob die Migrationsliste
+    sichtbar bleiben muss — das hängt am Update-Weg ab v1.0 (R60). Handbuch
+    und Technik ziehen nach, die alte Adresse bleibt als Weiterleitung, bis
+    P6 neu aufsetzt. Zuordnung: S8.
+
+78. **Der Wertekasten zeigt Cron-Adresse und Token in der Schriftgröße des
+    Kopplungscodes.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
+    (Rahmenplan Fassung 16).* `.codeblock-wert` (`style.css`) setzt
+    `--groesse-5`, 600 und gesperrt — gedacht für sechs Zeichen
+    Kopplungscode, benutzt aber auch für die Cron-Zeile und die Token-Adresse
+    auf der Wartungsseite, den Setz-Link auf der Kontoseite und die
+    Serverschlüssel-Zeile der Sicherungsziele. Lange Werte brechen in dieser
+    Größe über mehrere Zeilen und wirken unpassend. **Zu tun:** eine zweite
+    Stufe des Bausteins für lange Werte (`--schrift-fest` in `--groesse-2`
+    oder `-3`, ohne Sperrung), Herkunft in `Design.md` nachtragen; der
+    Kopplungscode behält die große Stufe. Darf als Kleinstkorrektur vorab in
+    der Backlog-Runde laufen. Zuordnung: S8.
+
+79. **Sicherungsoptionen: Begriffe und Optionen sind gewachsen wie
+    Wildwuchs.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* P3 hat Sicherungen je
+    Konto und Sicherungsregeln auf die Kontoseite gelegt, S2 hat
+    Speichergrenze, Warnschwellen, Aufbewahrung, Sicherungsziele, Zeitplan
+    und Komplettsicherung dazugebaut, S7 stellt den Begriff um. Was wo
+    einstellbar ist und wie es heißt, ist nicht mehr aus einem Guss.
+    **Zu tun:** Bestandsaufnahme aller Sicherungsoptionen mit Fundort,
+    Begriff und Zielgruppe; dann eine Ordnung (je Konto gegen je
+    Installation, NutzerIn gegen Admin gegen Betreiberin) und ein
+    Begriffssatz; Handbuch 6 und `Backup-Format.md` nachziehen. Zuordnung:
+    S8, als Kern der Sichtung.
 
 ---
 

@@ -39,7 +39,8 @@ Demo-Konto als einzige benannte E2E-Ausnahme (R25).
 
 **Nicht Ziel:** iOS und watchOS (R46) · Store-Verteilung der Clients vor
 v1.0 (Betriebsübergang, R41) · ein Migrationspfad für Bestandsinstallationen
-(R11: v1.0 liest die 7.x-Sicherung, mehr nicht).
+(R11: v1.0 liest die 7.x-Sicherung genau einmal, mehr nicht) ·
+Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 
 ## 2. Regeln der Zusammenarbeit
 
@@ -110,10 +111,11 @@ v1.0 (Betriebsübergang, R41) · ein Migrationspfad für Bestandsinstallationen
 | 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | `docs/Umstellung-Backup.md` | Opus | offen |
 | 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | offen |
 | 6 | **S4 — Rest** | Kopplungsmodul, QR, Gerätetest, Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | offen |
-| 7 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
-| 8 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb | Schritte 2 und 5; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
-| 9 | **Planung v1.0** | Konzeptgespräch vor dem Schnitt: Umfang des Code-Reviews, Aufteilung in mehrere Repositorien, Auslieferungskette; Ergebnis ist das P6-Konzept (R59) | Schritt 8 | entsteht hier | Fable (R14) | offen |
-| 10 | **P6 — v1.0-Schnitt** | Review, Umbenennung, Doku, Neuaufsetzen, Repositorien | Schritt 9 | aus Schritt 9 | Fable (R17), sonst Opus | offen |
+| 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Sicherungsoptionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61) | Schritte 4 und 6 | neu, mit Mockups | Fable (Konzept) | offen |
+| 8 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
+| 9 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb | Schritte 2, 5 und 7; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
+| 10 | **Planung v1.0** | Konzeptgespräch vor dem Schnitt: Umfang des Code-Reviews, Aufteilung in mehrere Repositorien, Auslieferungskette, Update-Weg (R59, R60); Ergebnis ist das P6-Konzept | Schritt 9 | entsteht hier | Fable (R14) | offen |
+| 11 | **P6 — v1.0-Schnitt** | Review, Umbenennung, Doku, Neuaufsetzen, Repositorien | Schritt 10 | aus Schritt 10 | Fable (R17), sonst Opus | offen |
 | — | Betriebsübergang | Öffnung in Wellen, Stores | nach v1.0 | — | — | — |
 
 Reihenfolge und Begründung: S4 zuerst, weil der Zweig fertig gebaut ist
@@ -123,7 +125,9 @@ geschrieben wird. S7 in das Fenster, in dem das S5-Konzept entsteht (dort
 entsteht kein Code). Der S4-Rest nach S5, weil sein Kopplungsmodul nach
 dem alten Modell gebaut ist und das neue Protokoll braucht. P5 nach S5,
 weil die App den Dienstbetrieb nicht braucht, ihre öffentliche Verteilung
-schon (R37.10, R19).
+schon (R37.10, R19). S8 vor P5, weil P5 in genau diesen Seiten weitere
+Optionen anlegt und die Ordnung vorher stehen soll — dasselbe Argument, mit
+dem S3 vor P5 lag.
 
 ### Schritt 1 — S4 Merge
 
@@ -220,7 +224,41 @@ Prüfliste 4 und 6 des Prüfdokuments S4 (Telefon, Kreisläufe R24 auf
 geschnittenen und importierten Einsätzen), Messstand für das Schneiden.
 **Wear-OS-Uhr:** Gerätetest, sobald eine vorliegt; blockiert nichts.
 
-### Schritt 7 — Backlog-Runde
+### Schritt 7 — S8 Einstellungen, Administration und Wartung
+
+**Ziel:** Die Einstellungs-, Verwaltungs- und Wartungsseiten werden einmal
+**ergebnisoffen** gesichtet und neu geordnet, bevor P5 dort weitere
+Optionen anlegt (R61, Beschluss vom 02.09.2026). **Anlass, aus den
+Rückmeldungen vom 02.09.2026:** Begriffe und Optionen der Sicherung sind
+über P3 und S2 gewachsen und wirken wie Wildwuchs (Kontoseite,
+Sicherungsseite, Sicherungsziele, Komplettsicherung, Wartungsseite); die
+Wartungsseite `update.php` trägt Migrationsliste, Job-Einstieg mit Cron
+und Token, Speichergrenze und mehr auf einer Seite; die Filterknöpfe der
+NutzerInnen-Liste brechen in zwei Zeilen; die Unterpunkte des Admin-Menüs
+sind fett und nicht einklappbar; die Bedienhöhe 44 px wirkt am
+Schreibtisch hoch; der Wertekasten zeigt Cron-Adresse und Token in der
+Schriftgröße des Kopplungscodes. **Inhalt** (Konzept nach K1, Sichtung mit
+Fable nach R14, Mockup und Freigabe je neuer Darstellung nach `CLAUDE.md`
+5): (1) Bestandsaufnahme jeder Einstellung und jeder Verwaltungshandlung
+mit Fundort, Begriff und Zielgruppe (NutzerIn, Admin, Betreiberin) · (2)
+Neuordnung: welche Seite trägt was, Menüstruktur der Einstellungen und
+der Administration, Aufteilung der Wartungsseite (etwa Serverbetrieb und
+Jobs, Sicherung, Migrationen), Ort der Migrationsliste · (3) die
+Sicherungsoptionen vereinheitlicht (Begriffe nach S7; Aufbewahrung,
+Speichergrenze, Ziele, Zeitplan, je Konto gegen je Installation) · (4) die
+Einzelpunkte 73, 74, 75, 77, 78, 79 · (5) eine Vorgabe für P5, wo
+Support-Adresse, Rechtstexte, Betriebsart der Registrierung und die
+S2-Optionen liegen (R31, R32, R37). **Entscheidung im Konzept:** die
+Bedienhöhe am Schreibtisch (Nr. 74) — eine Änderung an `CLAUDE.md` 5 und
+`Design.md` nur mit Begründung und Kontrastprüfung. **Abnahme:** Bilderlauf
+in acht Breiten, Vollständigkeit, Wortliste, Stilvergleich mit
+Soll-Ist-Liste, Bedienprüfung jeder umgezogenen Funktion; Handbuch
+nachgezogen, verschobene und entfernte Funktionen ausgetragen. **Nicht
+Umfang:** neue Verwaltungsfunktionen und Rollen (P5, R38). **Lage:** nach
+S4-Rest und S7, weil alle drei `einstellungen.php` und die Admin-Seiten
+anfassen.
+
+### Schritt 8 — Backlog-Runde
 
 **Ziel:** Die Einzelpunkte aus Abschnitt 5, die keiner Phase bedürfen.
 **Regeln:** je Punkt ein Commit, Buchführung nach `CLAUDE.md` 2, kein
@@ -228,10 +266,10 @@ Konzept nach K1; ein Punkt, der eine neue Darstellung braucht, bekommt
 vorher ein Mockup und eine Freigabe (`CLAUDE.md` 5). Läuft jederzeit ab
 Schritt 1 parallel, auf eigenem Zweig; die Dateiregel aus Abschnitt 4 gilt.
 
-### Schritt 8 — P5 Dienstbetrieb
+### Schritt 9 — P5 Dienstbetrieb
 
-**Ziel:** Die Anwendung trägt eine größere Nutzerbasis sicher. **Inhalt
-nach R9, R10, R31, R33, R36 bis R41:** Registrierung mit drei Betriebsarten
+**Ziel:** Die Anwendung trägt eine größere Nutzerbasis sicher. Baut auf
+der Ordnung aus S8 auf. **Inhalt nach R9, R10, R31, R33, R36 bis R41:** Registrierung mit drei Betriebsarten
 und Sicherheitspaket · Konto-Lebenszyklus (Bibliothek, Kontostatus bis in
 `ingest.php`, Double-Opt-In, Selbstlöschung mit Karenz, E-Mail-Wechsel,
 Einwilligungen mit Fassungskennung, Mail-Warteschlange, Geräteschlüssel
@@ -248,24 +286,31 @@ Hosting-Entscheidung (R36), Staging-Ziel; mit P5-Beginn endet der
 Autodeploy auf Produktiv. **Backlog:** 8, 17, 37, 48, 49, 54, 67. **Demo-
 Konto** in jeder Betriebsart mitdenken (R25).
 
-### Schritt 9 — Planung v1.0
+### Schritt 10 — Planung v1.0
 
 **Ziel:** Bevor etwas als v1.0 veröffentlicht wird, noch einmal planen
 statt schneiden (R59, Beschluss vom 02.09.2026). Ein Konzeptgespräch mit
-drei Gegenständen: **Code-Review** — Umfang, Reihenfolge und Form des
+vier Gegenständen: **Code-Review** — Umfang, Reihenfolge und Form des
 Bug- und Sicherheitsreviews nach R17, was davon vor und was nach dem
 Neuaufsetzen läuft, wie Funde entschieden werden · **Aufteilung in mehrere
 Repositorien** — ob Web/Server, Garmin-Uhr, Android und Werkzeuge getrennt
 oder gemeinsam weiterleben, was das für Vertrag, Versionszählung,
 Auslieferung und die Übernahme des Backlogs (dauerhafte Nummern) heißt ·
 **Auslieferungskette** nach R40 (Staging, Release-Tag, CI-Prüftor,
-Rollback). Dazu die Doku-Anforderungen nach R16, wenn das Gespräch dazu
+Rollback) · **Update-Weg der Installation ab v1.0** (R60): Prüft die
+Installation selbst gegen das Repositorium und meldet eine neue Fassung?
+Spielt sie das Update selbst ein, oder bleibt es beim Hochladen per FTP?
+Muss die Migrationsliste auf der Wartungsseite sichtbar bleiben? Fest
+steht: ab v1.0 **keine Rückwärtskompatibilität**, auch nicht bei Updates;
+v1.0 beginnt mit dem Neuaufsetzen (R40), und eine ältere Sicherung wird
+genau **einmal** über ein dafür gebautes Formular eingespielt, das danach
+entfällt. Dazu die Doku-Anforderungen nach R16, wenn das Gespräch dazu
 noch aussteht. **Ergebnis:** das P6-Konzept nach K1 mit Paketschnitt und
 Abnahmekriterien; bis dahin beginnt kein P6-Paket. **Modell:** Fable (R14).
 
-### Schritt 10 — P6 v1.0-Schnitt
+### Schritt 11 — P6 v1.0-Schnitt
 
-**Ziel:** Neuer Name, neue Repositorien nach dem Schnitt aus Schritt 9,
+**Ziel:** Neuer Name, neue Repositorien nach dem Schnitt aus Schritt 10,
 Version 1.0. **Inhalt:**
 Eingangsschritt **Bug- und Sicherheitsreview mit Fable (R17)** —
 einschließlich Verschlüsselungsverfahren, Containerfassung 4, SPUR1,
@@ -308,6 +353,7 @@ und die Backlog-Nummern verlangen die Gegenproben aus Abschnitt 2.2.
 | Konzeptarbeit P5 (Hosting, Gespräche) zu allem | S5-Umsetzung zu S6 und S7 (`pair.php`, `devices`, `einstellungen.php`, Vertrag, Wartungsjob) |
 | Wear-OS-Gerätetest zu allem | S4-Rest zu S5 (Kopplungsmodul braucht 1a) |
 | — | Backlog 21 (43 Restfunde quer durch `server/`) zu jedem laufenden `server/`-Paket |
+| — | S8 zu S4-Rest und S7 (`einstellungen.php`, `admin_*.php`, `update.php`, Handbuch) — S8 erst nach beiden |
 
 **Merge-Reihenfolge auf `main`:** ein Push je Paket nach Freigabe (K7);
 nach jeder Migration `update.php`.
@@ -315,7 +361,7 @@ nach jeder Migration `update.php`.
 ## 5. Zuordnung der offenen Backlog-Punkte
 
 Jeder offene Punkt steht genau einmal. Nummern 63–67 sind für den
-S4-Zweig reserviert (dort heute 59–63); 68–72 sind mit dieser Fassung
+S4-Zweig reserviert (dort heute 59–63); 68–79 sind mit dieser Fassung
 angelegt.
 
 | Nr. | Punkt (kurz) | gehört zu | Bemerkung |
@@ -358,6 +404,13 @@ angelegt.
 | 70 | „Auf der Karte setzen" für Standorte | Backlog-Runde | P3-Zulieferung, jetzt nummeriert |
 | 71 | Regionen mit Unteradmins | nach v1.0 | verworfen, festgehalten (R39) |
 | 72 | Richtungspfeile auf der Spur zeigen teils falsch | Backlog-Runde | neu; wahrscheinlich `transform` auf einem Inline-`<span>` (`geo.js`, `.geo-pfeil`), Sichtprüfung Pflicht |
+| 73 | Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen | S8 | am Baustein, nicht an der Seite |
+| 74 | Bedienhöhe 44 px am Schreibtisch: nötig oder schmaler? | S8 | Entscheidung im S8-Konzept; berührt `CLAUDE.md` 5, `Design.md`, `tools/screenshots/` |
+| 75 | Unterpunkte des Admin-Menüs fett und nicht einklappbar | S8 | mit der Menüstruktur |
+| 76 | Demo-Reset läuft alle 30 Minuten, auch ohne Änderung | Backlog-Runde | erst messen (Laufzeit, Last), dann entscheiden |
+| 77 | Wartungsseite `update.php` in Unterseiten aufteilen | S8 | Schnitt im Konzept; Ort der Migrationsliste hängt an R60 |
+| 78 | Wertekasten zeigt Cron-Adresse und Token in Kopplungscode-Größe | S8 | `.codeblock-wert` nutzt `--groesse-5`; zweite Stufe für lange Werte; darf vorab in der Backlog-Runde laufen |
+| 79 | Sicherungsoptionen: Begriffe und Optionen gewachsen wie Wildwuchs | S8 | Bestandsaufnahme über Kontoseite, Sicherungsseite, Ziele, Komplettsicherung, Wartung |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -380,12 +433,13 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | DNS-Eintrag und TLS für `nadoku.gen-em.org` | Schritt 5 | vor dem Uhr-Build |
 | Freigabe des S5-Konzepts | Schritt 3 | — |
 | Drei Fragen aus `Konzept-V1-Ortsdaten.md` (Schutzbedarf der Spur; Passwortwechsel bei nicht synchronisierten Uhr-Daten; Stichtag oder rückwirkend) | Nr. 43, P6 | vor dem R17-Review |
-| Hosting-Entscheidung (Cron/SSH, DB-Kontingent, `max_user_connections`, DDoS-Schutz, Verschlüsselung at rest) | P5-Konzept | vor Schritt 8 |
-| Staging-Installation samt FTP-Zugang | P5-Beginn | vor Schritt 8 |
+| Freigabe des S8-Konzepts und seiner Mockups; darin die Entscheidung zur Bedienhöhe am Schreibtisch (Nr. 74) | Schritt 7 | — |
+| Hosting-Entscheidung (Cron/SSH, DB-Kontingent, `max_user_connections`, DDoS-Schutz, Verschlüsselung at rest) | P5-Konzept | vor Schritt 9 |
+| Staging-Installation samt FTP-Zugang | P5-Beginn | vor Schritt 9 |
 | SPF/DKIM/DMARC der Versanddomain, Bounce-Postfach | P5 | vor der P5-Abnahme |
 | Nutzungsbedingungen, AVV, Datenschutzerklärung des Dienstes, ggf. mit rechtlicher Prüfung | Öffnung (R41) | vor der ersten Welle |
-| Planungsgespräch v1.0: Code-Review-Umfang, Aufteilung in Repositorien, Auslieferungskette (R59) | Schritt 9 | nach P5, vor jedem P6-Paket |
-| Anforderungsgespräch Doku-Neufassung | P6 | vor dem P6-Konzept, kann Teil von Schritt 9 sein |
+| Planungsgespräch v1.0: Code-Review-Umfang, Aufteilung in Repositorien, Auslieferungskette, Update-Weg (R59, R60) | Schritt 10 | nach P5, vor jedem P6-Paket |
+| Anforderungsgespräch Doku-Neufassung | P6 | vor dem P6-Konzept, kann Teil von Schritt 10 sein |
 | Wellenplan der Öffnung | Betriebsübergang | vor der Öffnung |
 | Freigabe je Konzept und je F-Entscheidung | alle | laufend |
 
@@ -408,7 +462,7 @@ werden nie neu vergeben.
 | R8 | Gründerfarben präsenter | erledigt in P3 (`Design.md`) |
 | R9 | Registrierung in drei Betriebsarten plus Sicherheitspaket | gilt, P5 (konkretisiert in R37) |
 | R10 | Rollen- und Sichtbarkeitsmodell, auch was der Admin nicht kann | gilt, P5 (R38) |
-| R11 | Kein Migrationspfad; v1.0 liest die 7.x-edbak; Referenzdatei liegt | gilt; Abnahme in P6 |
+| R11 | Kein Migrationspfad; v1.0 liest die 7.x-edbak; Referenzdatei liegt | gilt; Abnahme in P6; seit R60 als einmaliges Einspielen über ein Wegwerf-Formular |
 | R12 | Weitere Clients: Basisfähigkeit, Vertragsreview in P6 | gilt; Payloads und Texte erledigt; 1a kommt aus S5 |
 | R13 | Versionshistorische Kommentare am v1.0-Schnitt ersetzen | gilt, P6 (Liste Konzept P2, 10.3) |
 | R14 | Konzepte mit Fable, mechanische Pflege ohne | gilt |
@@ -456,7 +510,9 @@ werden nie neu vergeben.
 | R56 | S7: Verb „sichern", Symbolname und `admin_sicherungen.php` bleiben | gilt (F16) |
 | R57 | Überlappende aktive Diensttage: Hinweis im Browser (F-S4-D, Weg c) | gilt, S4-Rest |
 | R58 | Android-Bedienhöhe 48 dp in beiden Modulen; `CLAUDE.md` 5 ergänzen | gilt, S4-Merge |
-| R59 | Vor v1.0 ein Planungsgespräch: Umfang des Code-Reviews, Aufteilung in mehrere Repositorien, Auslieferungskette; Ergebnis ist das P6-Konzept | gilt, Schritt 9 |
+| R59 | Vor v1.0 ein Planungsgespräch: Umfang des Code-Reviews, Aufteilung in mehrere Repositorien, Auslieferungskette; Ergebnis ist das P6-Konzept | gilt, Schritt 10 |
+| R60 | Ab v1.0 keine Rückwärtskompatibilität, auch bei Updates; v1.0 beginnt mit dem Neuaufsetzen; eine ältere Sicherung wird einmal über ein Wegwerf-Formular eingespielt, danach nie wieder. Der Update-Weg der Installation (Selbstprüfung gegen das Repositorium, Benachrichtigung, Einspielen selbst oder per FTP, Sichtbarkeit der Migrationsliste) wird in der Planung v1.0 entschieden | gilt, Schritt 10 |
+| R61 | Zwischenpaket S8 „Einstellungen, Administration und Wartung": ergebnisoffene Sichtung und Neuordnung vor P5, mit Konzept und Mockups; die Sicherungsoptionen, die Menüstruktur und die Aufteilung der Wartungsseite gehören hinein | gilt, Schritt 7 |
 
 ## 8. Erledigt — Kurzübersicht
 
@@ -602,4 +658,4 @@ Abschnitt 6.
 | 13 | 01.09.2026 | S5 eingefügt (R49) |
 | 14 | 01.09.2026 | R50 Backup-Begriff; zwei Berichtigungen zu Merge-Aussagen |
 | 15 | 02.09.2026 | S2 als ausgeliefert; Backlog 46–49 entdoppelt (→ 59–62); zweite Rückmeldungsrunde; R50 fällig |
-| **16** | **02.09.2026** | **Neustrukturierung:** Archiv abgetrennt (R51), Fahrplan nach Ausführungsreihenfolge, S6 und S7 benannt (R52), P4 aufgelöst (R53), Kurzregister (R54), Prüflisten bereinigt (R55), R56–R58 entschieden, Planungsgespräch vor v1.0 als Schritt 9 (R59); Statusfehler berichtigt (Kleinstpaket nicht begonnen, S3 ausgeliefert, S4 auf dem Zweig gebaut); Backlog 68–72 angelegt, 63–67 für S4 reserviert |
+| **16** | **02.09.2026** | **Neustrukturierung:** Archiv abgetrennt (R51), Fahrplan nach Ausführungsreihenfolge, S6 und S7 benannt (R52), P4 aufgelöst (R53), Kurzregister (R54), Prüflisten bereinigt (R55), R56–R58 entschieden, Planungsgespräch vor v1.0 als Schritt 10 (R59), Update-Weg und Ende der Rückwärtskompatibilität ab v1.0 (R60), Zwischenpaket S8 Einstellungen, Administration und Wartung als Schritt 7 (R61); Statusfehler berichtigt (Kleinstpaket nicht begonnen, S3 ausgeliefert, S4 auf dem Zweig gebaut); Backlog 68–79 angelegt, 63–67 für S4 reserviert |
