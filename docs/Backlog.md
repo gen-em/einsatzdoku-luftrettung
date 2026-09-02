@@ -640,28 +640,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     von Fehlern statt eines Falls.
 
 
-59. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
-    *Bis zum 02.09.2026 trug dieser Punkt die Nummer 46. Sie war durch die
-    Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
-    umnummeriert wurde die jüngere der beiden Reihen.*
-    entgegen.** Die Uhr sendet ihn seit 1.9.0 (JSON-Vertrag 1a), der Server
-    verwirft ihn derzeit stillschweigend. Zu tun: Spalten an `devices`
-    (Teilenummer, Art, Displaymaße, Firmware, CIQ-Fassung, App-Fassung),
-    Auflösung der Teilenummer auf Modell und Geräteart über die
-    Connect-IQ-Gerätedateien (325 Teilenummern → 173 Modelle; die Zuordnung
-    lässt sich mit `tools/uhr-pruefstand/geraeteklassen.py` aus denselben
-    Dateien ziehen), und eine Auswertung in der Weboberfläche.
-    Dazu gehört die zweite Hälfte der Frage: **Uhr, Handy oder Sonstiges.**
-    Die Uhr meldet immer `"uhr"` — Handy und Rechner erscheinen nur über die
-    Web-Zugriffe, also über den User-Agent der Browsersitzung. Beides muss in
-    derselben Statistik zusammenlaufen, sonst zählt man zwei Dinge und nennt
-    sie eins.
-    **Vor der Umsetzung zu klären:** Ein Gerätemodell ist ein schwaches
-    Merkmal, in einer kleinen Gruppe aber möglicherweise identifizierend. Die
-    Datenschutzerklärung muss die Erhebung benennen, bevor sie ausgewertet
-    wird — bei einer Anwendung, deren Versprechen die Ende-zu-Ende-
-    Verschlüsselung ist, gehört das nicht als Nebenprodukt eingeführt.
-
 62. **Logodateien tragen teilweise wieder die alten Farbwerte.**
     *Bis zum 02.09.2026 trug dieser Punkt die Nummer 49. Sie war durch die
     Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
@@ -932,10 +910,68 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ---
 
+80. **Auswertung der Gerätestatistik — und die zweite Hälfte der Frage.**
+    *Angelegt 02.09.2026 als Rest von Nr. 59 (erledigt mit Web 12.9.0). Die
+    Speicherung steht; ausgewertet ist nichts.*
+    Zu tun: eine **Geräteverteilung** je Art und je Modell im
+    Betriebslage-Dashboard (R38, P5), gezählt über echte Geräte — ohne das
+    virtuelle Gerät `manual-%`, ohne das Demo-Konto.
+    Dazu gehört die zweite Hälfte der Frage: **Uhr, Handy oder Sonstiges.**
+    Die gekoppelten Geräte melden sich seit Web 12.9.0 selbst; **Rechner**
+    erscheinen dagegen nur über die Web-Zugriffe, also über den User-Agent der
+    Browsersitzung. Beides muss in derselben Statistik zusammenlaufen, sonst
+    zählt man zwei Dinge und nennt sie eins. (Seit S4 gibt es eine
+    Handy-**App**, die koppelt — die zählt über `geraet_art = 'handy'` mit und
+    ist nicht dasselbe wie ein Handy-Browser.)
+    **Vor der Umsetzung zu klären, und zwar zwingend:** Ein Gerätemodell ist
+    ein schwaches Merkmal, in einer kleinen Gruppe aber möglicherweise
+    identifizierend. Die **Datenschutzerklärung muss die Erhebung benennen,
+    bevor sie ausgewertet wird** — bei einer Anwendung, deren Versprechen die
+    Ende-zu-Ende-Verschlüsselung ist, gehört das nicht als Nebenprodukt
+    eingeführt. Der Text entsteht nach Rahmenplan Schritt 10 aus einer
+    Bestandsaufnahme des gesamten Projekts, vor v1.0.
+    **Eine Lücke, die die Zählung kennen muss:** Eine Wear-OS-Uhr **koppelt
+    nicht** — sie hat weder Serveradresse noch Schlüssel (E-S4-11), das Handy
+    koppelt für sie. Eine solche Installation erscheint in der Statistik
+    ausschließlich als `handy`; die Uhr dahinter wird nie gezählt. Das ist
+    keine Datenlücke, sondern die Bauform — wer die Zahlen liest, muss es
+    wissen.
+    **Nicht mehr zu tun:** Die Spalten sind da, die Teilenummer wird
+    aufgelöst, und die Geräteliste zeigt Art und Modell (Nr. 59).
+    **Die Modelltabelle steht** (Web 12.9.1): 325 Teilenummern auf 173
+    Modelle, davon 28 keine Uhren. Eine Zählung nach `geraet_art` trägt damit
+    — aber nur für Geräte, die **nach** dem Füllen gekoppelt haben. Ältere
+    Zeilen tragen die ungeprüfte Selbstauskunft; vor der ersten Auswertung
+    deshalb `php tools/geraetemodelle/nachaufloesen.php` fahren.
+
+---
+
 ## Erledigt
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+59. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
+    entgegen.**
+    *Bis zum 02.09.2026 trug dieser Punkt die Nummer 46. Sie war durch die
+    Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
+    umnummeriert wurde die jüngere der beiden Reihen. Erledigt am 02.09.2026
+    mit Web 12.9.0 (S6, R42).*
+    Die Uhr sendet den Block seit 1.9.0, die Handy-App seit 0.2.0
+    (JSON-Vertrag 1a); der Server hat ihn stillschweigend verworfen. Jetzt
+    landet er in drei Spalten an `devices` — `geraet_art`, `geraet_modell` und
+    `geraet_teil` —, die Teilenummer wird über `server/geraetemodelle.php`
+    aufgelöst, und beide Gerätelisten zeigen Art und Modell.
+    **Zwei Abweichungen von dem, was hier stand, beide bewusst:**
+    Erstens **keine Displaymaße, keine Firmware, keine Plattform- und
+    App-Fassung.** Sie kommen an und werden verworfen: R36 lässt die
+    Gerätekennung als die eine benannte Ausnahme zu, und die Ausnahme ist die
+    Frage „welches Gerät", nicht „in welchem Zustand".
+    Zweitens **drei Spalten statt zwei** (R42 nennt Art und Modell): Die
+    Rohangabe steht daneben, weil die Modelltabelle nur kennen kann, was es
+    beim Erzeugen schon gab — ohne sie fiele ein künftiges Gerät dauerhaft
+    und unwiederbringlich auf „unbekannt".
+    **Der Rest — Auswertung und die User-Agent-Hälfte — steht als Nr. 80.**
 
 64. **Die Bedienhöhe steht auf 44 px, Android verlangt 48 dp.**
     *Aufgenommen 02.09.2026 als B-S4-02 (S4/D1); erledigt am selben Tag mit

@@ -44,6 +44,14 @@ CREATE TABLE devices (
   active       TINYINT(1) NOT NULL DEFAULT 1,        -- deaktiviert = Upload gesperrt, Daten bleiben
   last_seen    TIMESTAMP NULL,
   created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  -- Was fuer ein Geraet hat sich hier gekoppelt (R42). Alle drei sind NULL-bar
+  -- und bleiben es: Ein von Hand angelegtes Geraet meldet nichts ueber sich,
+  -- eine aeltere Uhr-Fassung ebenfalls nicht -- und eine Kopplung darf an
+  -- einer Statistikangabe NIE scheitern (JSON-Vertrag 1a).
+  geraet_art    VARCHAR(16) NULL,                    -- 'uhr' | 'handy' | 'sonstiges'; NULL = unbekannt
+  geraet_modell VARCHAR(191) NULL,                   -- aufgeloest; Sammelnamen werden lang,
+                                                     -- der laengste hat 156 Zeichen
+  geraet_teil   VARCHAR(64) NULL,                    -- Rohangabe des Geraets, siehe update.php
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -658,4 +666,8 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- backup_targets steht oben schon im Schema (Web 12.1.0).
   ('2026_09_01_sicherungsziele', 'skipped'),
   -- track_cuts steht oben schon im Schema (Web 12.5.0).
-  ('2026_09_02_schnitte', 'skipped');
+  ('2026_09_02_schnitte', 'skipped'),
+  -- Die drei Geraetespalten stehen oben schon an devices (Web 12.9.0),
+  -- geraet_modell gleich in der breiten Fassung (Web 12.9.1).
+  ('2026_09_02_geraetekennung', 'skipped'),
+  ('2026_09_02_geraetemodell_breiter', 'skipped');

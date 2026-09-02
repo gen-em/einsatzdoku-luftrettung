@@ -1,6 +1,7 @@
-# JSON-Vertrag Uhr → Server
+# JSON-Vertrag Gerät → Server
 
-**Version:** 1.3 — Dienstkennung `day_ref`, neutrale Phasenbeschriftungen
+**Version:** 1.4 — Kopplungsblock `geraet` in zwei Formen (Uhr und Handy, 1a),
+Kennungspräfixe der Android-Apps (8)
 **Endpunkt:** `POST https://<host>/ingest.php`
 **Content-Type:** `application/json`
 
@@ -10,7 +11,8 @@
 > die Abweichung ist ein Fehler in der Umsetzung, nicht im Vertrag.
 
 > **Geltungsbereich:** Dieses Dokument beschreibt ausschließlich den Vertrag
-> zwischen Uhr und Server (`ingest.php`). Die JSON-Endpunkte, die die
+> zwischen einem aufzeichnenden Gerät und dem Server (`ingest.php`, `pair.php`)
+> — die Garmin-Uhr, seit S4 auch die Android-Handy-App. Die JSON-Endpunkte, die die
 > Weboberfläche im Browser benutzt (`server/api/*.php`, darunter
 > `import_commit.php`), gehören nicht dazu und sind in `Technik.md`,
 > Abschnitt 4 beschrieben.
@@ -39,6 +41,7 @@ schon durchsetzt und welche noch nicht.
 | Rückfallebene über `(Konto, day)` (2.1) | durchgesetzt, **dauerhaft** |
 | Antwortfeld `dropped_points` (5) | durchgesetzt seit Web 10.2.0 |
 | Antwortfeld `cut_points` (5) | durchgesetzt seit Web 12.5.0 |
+| Block `geraet` wird gespeichert (1a) | durchgesetzt seit Web 12.9.0; davor stillschweigend verworfen |
 | 413 „Uhr halbiert die Chunk-Größe und wiederholt" (5) | **beschrieben, nicht umgesetzt** — `Uploader.mc` setzt bei jedem Fehlercode nur `lastError`, und `UPLOAD_CHUNK_POINTS` ist eine Konstante. Gefunden in S2/AP3; die Anwendung lehnt heute keine Chunk-Größe ab, die die Uhr sendet, deshalb tritt der Fall nicht auf |
 
 Bis auf eine Zeile lauten alle „durchgesetzt" — die Tabelle beschreibt damit
@@ -84,32 +87,108 @@ auskommt: Sie erzeugt die Zugangsdaten ja erst. Gesendet wird per POST:
 ```
 
 `code` ist Pflicht; **`geraet` ist es nicht.** Ein Server, der den Block nicht
-kennt, ignoriert ihn, und eine Uhr, die ein Feld nicht liefern kann, sendet
+kennt, ignoriert ihn, und ein Gerät, das ein Feld nicht liefern kann, sendet
 dort `null` — eine Kopplung darf an einer Statistikangabe nie scheitern.
+**Dieser Server speichert den Block seit Web 12.9.0**; davor hat er ihn
+stillschweigend verworfen.
 
-| Feld | Bedeutung |
+### 1a.1 Zwei Formen — Uhr und Handy
+
+Der Block kommt in zwei Zuschnitten, weil die Geräte Verschiedenes über sich
+wissen. Die **Garmin-Uhr kennt ihren Modellnamen nicht** und sendet ihre
+Teilenummer; das **Handy kennt ihn** und sendet Hersteller und Modell
+(E-S4-28, seit Android 0.2.0).
+
+| Feld | Uhr | Handy |
+|---|---|---|
+| `art` | `"uhr"`, fest | `"handy"`, fest |
+| `teil` | Teilenummer aus `System.getDeviceSettings().partNumber` — der eigentliche Schlüssel | `null` — ein Handy hat keine |
+| `hersteller` | — | `Build.MANUFACTURER` |
+| `modell` | — | `Build.MODEL` |
+| `br`, `ho` | Displaybreite und -höhe in Pixeln | dito |
+| `touch` | Touchscreen vorhanden | immer `true` |
+| `fw` | Firmware-Stand des Geräts | Android-Fassung (`Build.VERSION.RELEASE`) |
+| `ciq` | Fassung der Uhr-Plattform, `major.minor.patch` | **entfällt** |
+| `sdk` | — | API-Stufe (`Build.VERSION.SDK_INT`) |
+| `app` | `Const.APP_VERSION` der Uhr-App | Fassung der Handy-App |
+
+Das Handy sendet die Handy-Form über **denselben Endpunkt** wie die Uhr; es
+gibt keinen zweiten Kopplungsweg.
+
+**`ciq` wird beim Handy weggelassen und nicht auf `null` gesetzt.** Ein Feld,
+das es für diese Geräteart gar nicht gibt, ist etwas anderes als eines, das
+das Gerät nicht beantworten kann. Der Vertrag stellt beides frei.
+
+```json
+{
+  "code": "AB3K7Q",
+  "geraet": {
+    "art":        "handy",
+    "teil":       null,
+    "hersteller": "Google",
+    "modell":     "Pixel 8",
+    "br":         1080,
+    "ho":         2400,
+    "touch":      true,
+    "fw":         "14",
+    "sdk":        34,
+    "app":        "0.7.7"
+  }
+}
+```
+
+### 1a.2 Was der Server davon speichert
+
+**Drei Spalten an `devices`, nicht zehn** (Web 12.9.0, R42):
+
+| Spalte | Inhalt |
 |---|---|
-| `art` | `"uhr"`, fest. Die Uhr-App läuft nur auf der Uhr; Handy und Rechner erscheinen über die Web-Zugriffe, nicht hier. |
-| `teil` | Teilenummer aus `System.getDeviceSettings().partNumber`. Der eigentliche Schlüssel. |
-| `br`, `ho` | Displaybreite und -höhe in Pixeln |
-| `touch` | Touchscreen vorhanden |
-| `fw` | Firmware-Stand des Geräts |
-| `ciq` | Fassung der Uhr-Plattform, `major.minor.patch` |
-| `app` | `Const.APP_VERSION` der Uhr-App |
+| `geraet_art` | `uhr`, `handy` oder `sonstiges`; alles andere wird zu `NULL` |
+| `geraet_modell` | aufgelöster Klarname (`Venu 3S`, `Google Pixel 8`) |
+| `geraet_teil` | die **Rohangabe** des Geräts, unverändert |
+
+**Displaymaße, Firmware, `ciq`/`sdk` und `app` werden nicht gespeichert**,
+obwohl beide Clients sie senden. Der Grund steht in R36: Erhoben wird eine
+**einmalige Geräteeigenschaft** — „welches Gerät", nicht „in welchem
+Zustand". Die Felder bleiben trotzdem im Vertrag: Ein anderer Server darf sie
+auswerten, und ein Client, der sie schon sendet, soll sie nicht wieder
+ausbauen müssen.
+
+**Die Rohangabe steht neben dem Modell und nicht statt seiner.** Der
+Modellname entsteht aus einer erzeugten Tabelle (`server/geraetemodelle.php`,
+siehe unten), und die kennt nur, was es beim Erzeugen schon gab. Ohne die
+Rohangabe fiele ein künftiges Gerät dauerhaft und unwiederbringlich auf
+„unbekannt"; mit ihr lässt sich jede Zeile später erneut auflösen.
+
+**Fehlt der Block oder ist er unbrauchbar, bleiben alle drei Spalten leer.**
+„Unbekannt" ist eine Sache der Anzeige, nicht der Spalte — vier Wege legen ein
+Gerät an, und nur die Kopplung weiß etwas über es.
+
+**Was ankommt, wird zugeschnitten und nicht geglaubt.** Der Block ist eine
+Selbstauskunft eines Geräts, das sich erst vorstellt: Längen werden auf die
+Spaltenbreite gekürzt, Steuerzeichen zu Leerzeichen, eine Geräteart außerhalb
+der drei erlaubten Werte zu `NULL`. Ein Block, der gar keiner ist — eine
+Zeichenkette, eine Zahl, `true` —, ergibt drei leere Werte und **keinen
+Fehler**.
 
 **Warum die Teilenummer und nicht der Modellname.** Die Uhr kennt ihren
 Modellnamen nicht — `DeviceSettings` führt ihn nicht. Die Teilenummer ist
 dagegen eindeutig und lässt sich gegen die Gerätedateien der Uhr-Plattform
-auflösen:
-325 Teilenummern führen auf 173 Modelle, samt Geräteart. Diese Zuordnung
-gehört auf den Server; eine Uhr mit 128 kB ist der falsche Ort für eine
-Modelltabelle.
+auflösen: 325 Teilenummern führen auf 173 Modelle, samt Geräteart. Diese
+Zuordnung gehört auf den Server; eine Uhr mit 128 kB ist der falsche Ort für
+eine Modelltabelle. Sie liegt in `server/geraetemodelle.php` und ist
+**erzeugt** (`tools/geraetemodelle/`).
 
-**Was bewusst fehlt: `uniqueIdentifier`.** Das ist eine dauerhafte,
-geräteweite Kennung. Für eine Stückzahl-Statistik wird sie nicht gebraucht,
-und in einer kleinen Gruppe wäre sie ein Personenbezug mehr, als die Frage
-rechtfertigt. Die Zuordnung leistet die `device_id`, die der Server bei der
-Kopplung ohnehin vergibt.
+**Bei der Geräteart schlägt die Tabelle die Selbstauskunft.** Die Uhr-App
+sendet `art` fest als `"uhr"`, weil eine Connect-IQ-App nur auf Garmin-Geräten
+läuft — Uhr und Radcomputer kann sie nicht unterscheiden. Die Gerätedateien
+können es. Kennt die Tabelle die Teilenummer, gilt ihre Einstufung.
+
+**Was bewusst fehlt: `uniqueIdentifier`** (Uhr) und `ANDROID_ID`, IMEI,
+Seriennummer (Handy). Das sind dauerhafte, geräteweite Kennungen. Für eine
+Stückzahl-Statistik werden sie nicht gebraucht, und in einer kleinen Gruppe
+wären sie ein Personenbezug mehr, als die Frage rechtfertigt. Die Zuordnung
+leistet die `device_id`, die der Server bei der Kopplung ohnehin vergibt.
 
 ## 1b. Trennen (`pair.php`) — seit Uhr 1.11.0 / Web 9.15.0
 
@@ -454,12 +533,25 @@ deshalb gehört sie in den Vertrag und nicht nur in den Code.
 
 | Präfix | Erzeuger | Bedeutung |
 |---|---|---|
-| `m-` | Uhr-App | Einsatz |
-| `r-` | Uhr-App | Ruhe-Segment |
-| `d-` | Uhr-App | **Dienst** (`day_ref`, Abschnitt 2.1) |
+| `m-` | Garmin-Uhr-App | Einsatz |
+| `r-` | Garmin-Uhr-App | Ruhe-Segment |
+| `d-` | Garmin-Uhr-App | **Dienst** (`day_ref`, Abschnitt 2.1) |
+| `am-` | Android-Handy-App | Einsatz |
+| `ar-` | Android-Handy-App | Ruhe-Segment |
+| `ad-` | Android-Handy-App | **Dienst** |
+| `wm-` | Wear-OS-App | Einsatz, an der Uhr begonnen — gesendet hat ihn das Handy |
 | `man-` | Weboberfläche, Einsatzformular | von Hand angelegt |
 | `imp-` | Import | aus einer Datei übernommen |
 | `bak-` | Wiedereinspielen | aus einer Sicherung, ohne eigene Kennung |
+
+**Die vier Android-Präfixe stehen seit Fassung 1.4 hier** (nachgetragen mit
+S6, weil sie an R42 hingen). Sie sind der Grund, warum die Präfixe überhaupt
+im Vertrag stehen und nicht nur im Code: Zwei Clients derselben Person
+schreiben in dasselbe Konto, und ohne getrennte Präfixe kollidierten ihre
+Zähler. **`wm-` ist dabei kein eigener Client am Server** — die Wear-OS-App
+hat weder Serveradresse noch Schlüssel (E-S4-11); sie schickt ihre Ereignisse
+an das Handy, und das Handy sendet. Das Präfix sagt, *wo* der Einsatz begonnen
+wurde, nicht *wer* ihn hochgeladen hat.
 
 **Das Verhalten, das daran hängt:** Beim endgültigen Löschen wird die Kennung
 auf eine Sperrliste gesetzt, damit eine Uhr mit gepufferten Daten den Datensatz

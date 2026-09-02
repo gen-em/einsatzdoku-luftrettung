@@ -1729,7 +1729,6 @@ $MIGRATIONS = [
             "ALTER TABLE rest_segments ADD COLUMN letzter_punkt_am DATETIME NULL AFTER final",
         ],
     ],
-    // Naechste Migration hier anhaengen.
     [
         'id'    => '2026_09_01_sicherungsziele',
         'web'   => '12.1',
@@ -1867,6 +1866,119 @@ $MIGRATIONS = [
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
         ],
     ],
+    [
+        'id'    => '2026_09_02_geraetekennung',
+        'web'   => '12.9',
+        'label' => 'Gerätekennung: drei Spalten an devices (Art, Modell, Rohangabe) — S6/R42',
+        'skip'  => function (PDO $pdo): bool {
+            return _hat_spalte($pdo, 'devices', 'geraet_art');
+        },
+        'sql'   => [
+            /* WAS FUER EIN GERAET HAT SICH HIER GEKOPPELT (R42, Backlog Nr. 59).
+             *
+             * Bis hierher wusste der Server nur, DASS ein Geraet gekoppelt ist.
+             * Fuer die Frage "welche Geraete sollen wir kuenftig unterstuetzen"
+             * gibt es keine brauchbare aeussere Quelle: Garmin veroeffentlicht
+             * keine modellgenauen Zahlen, und der Connect-IQ-Store schluesselt
+             * Installationen nicht nach Geraet auf. Wer es wissen will, muss
+             * selbst zaehlen. Die Uhr sendet die Angabe seit 1.9.0, die
+             * Handy-App seit 0.2.0 — `pair.php` hat sie bis Web 12.9.0
+             * stillschweigend verworfen.
+             *
+             * ALLE DREI SIND NULL-BAR, UND ZWAR DAUERHAFT. Vier Wege legen ein
+             * Geraet an, und nur einer von ihnen weiss etwas ueber das Geraet:
+             * die Kopplung. Das manuelle Anlegen (einstellungen.php,
+             * admin_user.php), das virtuelle Geraet "manual-<konto>"
+             * (einsatz_form.php, api/import_commit.php) und das Einspielen des
+             * Demo-Bestands (demo_lib.php) haben nichts zu melden. Ein
+             * NOT NULL DEFAULT 'unbekannt' haette daraus eine Aussage gemacht,
+             * wo keine ist. "Unbekannt" ist eine Sache der ANZEIGE, nicht der
+             * Spalte.
+             *
+             * BESTANDSGERAETE BLEIBEN LEER, ohne Nachfuellung. Die Angabe
+             * entsteht ausschliesslich beim Koppeln; eine bereits gekoppelte
+             * Uhr wird nicht rueckwirkend gefragt, und es gaebe auch niemanden,
+             * den man fragen koennte. Wer die Zahlen vollstaendig will, koppelt
+             * neu — das ist der Preis dafuer, dass die Erhebung erst jetzt
+             * kommt, und er ist in R42 benannt.
+             *
+             * WARUM DREI SPALTEN UND NICHT ZWEI. R42 nennt zwei (Art, Modell).
+             * Die dritte haelt die ROHANGABE des Geraets — bei der Garmin-Uhr
+             * die Teilenummer ("006-B4261-00"), beim Handy Hersteller und
+             * Modell, wie das Geraet sie meldet. Der Grund ist die Aufloesung:
+             * `geraet_modell` entsteht aus einer Tabelle
+             * (geraetemodelle.php), und die kann nur kennen, was es beim
+             * Erzeugen schon gab. Eine Uhr, die naechstes Jahr erscheint,
+             * faellt sonst dauerhaft auf "unbekannt" — und zwar ohne dass sich
+             * das je nachholen liesse, weil die Teilenummer dann nirgends mehr
+             * steht. Mit der Rohangabe laesst sich jede Zeile spaeter erneut
+             * aufloesen. Sie ist ausserdem die einzige Spalte, die eine
+             * BEHAUPTUNG DES GERAETS unveraendert festhaelt; `geraet_modell`
+             * ist bereits eine Auslegung des Servers.
+             *
+             * KEINE WEITEREN FELDER. Backlog Nr. 59 nennt daneben Displaymasse,
+             * Firmware, Plattform- und App-Fassung. Die stehen hier bewusst
+             * NICHT: R36 sagt "es wird nichts Neues erfasst", mit der
+             * Gerätekennung als der einen benannten Ausnahme — und die Ausnahme
+             * ist die Frage "welches Geraet", nicht "in welchem Zustand". Die
+             * Displaygroesse beantwortet keine Frage, die jemand gestellt hat.
+             *
+             * VARCHAR(16) UND KEIN ENUM fuer die Art: Ein ENUM braucht fuer
+             * jede neue Geraeteart eine Migration. Die drei erlaubten Werte
+             * stehen in pair.php (GERAET_ARTEN) und werden dort geprueft; was
+             * nicht darin steht, wird zu NULL und nicht etwa gespeichert. */
+            "ALTER TABLE devices ADD COLUMN geraet_art    VARCHAR(16) NULL AFTER created_at",
+            "ALTER TABLE devices ADD COLUMN geraet_modell VARCHAR(64) NULL AFTER geraet_art",
+            "ALTER TABLE devices ADD COLUMN geraet_teil   VARCHAR(64) NULL AFTER geraet_modell",
+        ],
+    ],
+    [
+        'id'    => '2026_09_02_geraetemodell_breiter',
+        'web'   => '12.9.1',
+        'label' => 'Gerätekennung: geraet_modell auf 191 Zeichen — Sammelnamen (S6)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->prepare("SELECT character_maximum_length
+                                FROM information_schema.columns
+                                WHERE table_schema = DATABASE()
+                                  AND table_name = 'devices'
+                                  AND column_name = 'geraet_modell'");
+            $q->execute();
+            $breite = $q->fetchColumn();
+            return $breite !== false && (int)$breite >= 191;
+        },
+        'sql'   => [
+            /* DIE 64 WAR GERATEN, UND ZWAR VON MIR.
+             *
+             * Als die Spalte entstand, lagen die Geraetedateien nicht vor; 64
+             * Zeichen schienen reichlich fuer einen Modellnamen. Sie sind es
+             * nicht. Die Dateien fuehren je Teilenummer die HARDWARE, und
+             * Garmin verkauft dieselbe Hardware unter mehreren Namen — der
+             * laengste Eintrag im Bestand hat 153 Zeichen ("fēnix 6X Pro /
+             * 6X Sapphire / … / quatix 6X Dual Power"). 5 der 173 Modelle
+             * liegen ueber 64, 15 der 325 Teilenummern sind betroffen.
+             *
+             * WARUM EINE ZWEITE MIGRATION UND NICHT DIE ERSTE GEAENDERT. Die
+             * erste ist gepusht; eine Installation, die sie schon gefahren
+             * hat, saehe eine Aenderung an ihrem Rumpf nie — `update.php`
+             * fuehrt jede Kennung genau einmal aus. Der Rumpf einer
+             * abgeschickten Migration ist damit so gut wie unveraenderlich,
+             * und die einzige verlaessliche Richtung ist eine neue.
+             *
+             * DER VOLLE NAME WIRD GESPEICHERT, gekuerzt wird erst fuer die
+             * Anzeige (geraet_modell_kurz()). Die spaetere Zaehlung (P5) soll
+             * Hardwaregruppen zaehlen, und genau die bezeichnet der Sammelname;
+             * ein beim Schreiben gekuerzter Name waere eine Auslegung, die sich
+             * nicht mehr zurueckdrehen liesse.
+             *
+             * 191 UND NICHT 255: Die Zahl ist die alte Obergrenze fuer einen
+             * utf8mb4-Index (767 Byte / 4). Ein Index liegt hier nicht drauf —
+             * aber wenn die Auswertung in P5 einen braucht, soll die Spalte ihn
+             * tragen koennen, ohne dass jemand sie dafuer erneut anfassen muss.
+             */
+            "ALTER TABLE devices MODIFY geraet_modell VARCHAR(191) NULL",
+        ],
+    ],
+    // Naechste Migration hier anhaengen.
 ];
 
 /* ---- Zweistufiger Ablauf ---------------------------------------------------

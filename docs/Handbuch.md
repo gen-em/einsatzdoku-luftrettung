@@ -1427,6 +1427,22 @@ ohne Aktivität. Deshalb kommt es im Alltag regelmäßig vor, dass du angemeldet
 bist, die geschützten Angaben aber gesperrt sind — typischerweise, wenn du einen
 Link in einem **neuen Tab** öffnest oder den **Browser neu gestartet** hast.
 
+> **Ein Tab, ein Schlüssel — das ist gewollt.** Der Schlüssel wandert
+> ausdrücklich nicht zwischen Tabs. Wer die Anwendung in einem zweiten Tab
+> öffnet, bekommt dort den Entsperrdialog, obwohl er angemeldet ist. Das ist
+> kein Fehler, sondern der Preis dafür, dass der Schlüssel nur dort liegt, wo
+> gearbeitet wird.
+
+**Beide Fristen zählen seit Web 12.9.0 gleich.** Vorher lief die Frist des
+Schlüssels ab dem **Entsperren**, die der Anmeldung dagegen ab der **letzten
+Bedienung**. Gemerkt hast du davon nichts — der Schlüssel wurde im Hintergrund
+stillschweigend neu erzeugt, ohne Nachfrage. Trotzdem gehört es geradegerückt:
+Solange du arbeitest, bleibt beides gültig; lässt du die Anwendung eine halbe
+Stunde liegen, wirst du abgemeldet und meldest dich neu an.
+
+Der Entsperrdialog erscheint dadurch **nicht seltener** — er hängt nicht an
+dieser Frist, sondern an den drei oben genannten Fällen.
+
 In diesem Fall erscheint ein Fenster **„Geschützte Angaben entsperren“**, das
 nach deinem Kontopasswort fragt. Nach der Eingabe sind Einsatznummer, Name,
 Geburtsdatum, Alter, Diagnose und Einsatzort sofort wieder sichtbar — ohne die
@@ -2244,7 +2260,8 @@ Bedarf löschen.
 
 ## 10. Geräte
 
-Unter **Einstellungen → „Geräte"** verwaltet jede/r die eigenen Uhren:
+Unter **Einstellungen → „Geräte"** verwaltet jede/r die eigenen Geräte — die
+Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
 **„Gerät anlegen"** erzeugt Geräte-ID und API-Schlüssel — der Schlüssel wird
 **nur einmal** angezeigt, also sofort notieren bzw. eintragen. **Deaktivieren**
 sperrt den Upload sofort (z. B. bei Verlust); alle bereits hochgeladenen Daten
@@ -2264,6 +2281,28 @@ im Geräte-Reiter ein Hinweis auf alles, was in den letzten sieben Tagen dazukam
 **Kommt dir ein Gerät unbekannt vor, lösche es.** Ab diesem Moment kann es
 nichts mehr hochladen. Bereits hochgeladene Daten bleiben erhalten, damit du
 sie in Ruhe ansehen kannst.
+
+**In der Liste steht, was für ein Gerät es ist** *(seit Web 12.9.0)*: erst die
+Art — **Uhr** oder **Handy** —, dann das Modell, dann Zustand und letzter
+Kontakt; bei einem Handy also etwa „Handy · Google Pixel 8". Wer mehrere Geräte
+gekoppelt hat, unterscheidet sie sonst nur an einer selbst vergebenen
+Bezeichnung — und die fehlt beim frisch gekoppelten Gerät gerade.
+
+Drei Dinge dazu, damit die Anzeige nicht mehr verspricht, als sie hält:
+
+- **Die Angabe stammt vom Gerät selbst.** Sie ist eine Herkunftsauskunft, keine
+  geprüfte Wahrheit — der Server glaubt, was ihm gesagt wird, und schneidet es
+  nur zu.
+- **Sie entsteht nur beim Koppeln.** Bei einem Gerät, das vorher gekoppelt
+  wurde oder das du von Hand angelegt hast, steht „Gerät unbekannt". Das lässt
+  sich nicht nachtragen; es hilft nur, das Gerät neu zu koppeln.
+- **Steht statt eines Modellnamens eine Nummer** („Uhr · 006-B4261-00"), ist
+  das Gerät neuer als die Modelltabelle des Servers. Es funktioniert
+  vollständig; nur der Klarname fehlt, und er lässt sich später nachtragen.
+
+Ausgewertet wird davon vorerst nichts — die Angabe wird gespeichert, damit
+später überhaupt zählbar ist, welche Geräte im Einsatz sind. Bevor eine
+Auswertung entsteht, wird sie in der Datenschutzerklärung benannt.
 
 ### 10.1 Die Android-App herunterladen
 
@@ -2300,7 +2339,7 @@ Darunter:
 | Karte | Was dort steht |
 |---|---|
 | **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. |
-| **Geräte** | Die gekoppelten Uhren mit Kennung, Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
+| **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Sicherungen** | Die Sicherungen **dieses** Kontos mit Zeitpunkt, Umfang, Größe und Zustand; dazu „Jetzt sichern" und „Für Zielkonto freigeben". |
 | **Abonnement** | Reservierter Platz. Tarif, Laufzeit und Rechnungen kommen mit den Abomodellen. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
@@ -2642,7 +2681,8 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
    mehr genutztes Gerät löschen.
 4. **Auf der Uhr: Sync-Seite → Gerät koppeln → Code eintippen** und bestätigen
    — die Uhr meldet „Gekoppelt" mit einem Haken und ist einsatzbereit. Das Gerät
-   erscheint im Web in der Geräteliste, und du bekommst eine E-Mail darüber.
+   erscheint im Web in der Geräteliste — mit Art und Modell, die es beim
+   Koppeln selbst gemeldet hat —, und du bekommst eine E-Mail darüber.
    *Bei Garmin: die Sync-Seite und der Tastenweg zum Koppeln stehen in den
    Abschnitten 2.0 und 2.2 — je Uhr verschieden.*
 5. **Alternative ohne Code:** Gerät manuell anlegen und Geräte-ID sowie

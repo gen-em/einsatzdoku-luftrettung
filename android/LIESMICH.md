@@ -90,6 +90,18 @@ Regel wohnt — `ServeradresseTest`.
 *App → `pair.php` → `devices`-Zeile*. Wie ein Kopplungscode im Browser
 entsteht, ist nicht Gegenstand dieses Falls, sondern seine Vorbedingung.
 
+**Seit Web 12.9.0 trägt diese `devices`-Zeile drei Spalten mehr** —
+`geraet_art`, `geraet_modell`, `geraet_teil` (R42). Der Rundlauf ist damit der
+einzige automatisierte Nachweis, dass die **Handy-Form** des Blocks
+(`Geraeteangabe`, E-S4-28) beim Server wirklich so ankommt, wie der Vertrag es
+sagt: Nach dem Koppeln steht dort `handy` / `Google Pixel 8` / `Google Pixel 8`
+statt dreimal `NULL`. Läuft die lokale Installation auf einem älteren Stand,
+bleiben die Spalten leer — das ist kein Fehlschlag der App. Auf Serverseite
+prüft `php tools/geraeteprobe/probe.php` dasselbe Auslesen ohne Datenbank.
+
+**Die Fassung der Apps steigt dafür nicht.** S6 ändert keine Zeile unter
+`android/`; die drei Zählungen (Web, Uhr, Android) bleiben getrennt.
+
 Die Fälle **räumen hinter sich auf**: Was sie koppeln, trennen sie wieder.
 Das ist Voraussetzung und nicht Ordnungsliebe — `MAX_GERAETE` ist 5, und JUnit
 sichert keine Reihenfolge zu. Beim ersten Lauf füllte der Grenzfall das Konto,

@@ -639,7 +639,13 @@ function geraete_grenze_erreicht(PDO $pdo, int $userId): bool {
  */
 function geraete_neu(PDO $pdo, int $userId): array {
     $seit = geraete_hinweis_stand($pdo, $userId);
-    $st = $pdo->prepare('SELECT device_id, label, created_at FROM devices
+    /* Art, Modell und Rohangabe seit Web 12.9.0 mit (S6/R42): Der Hinweis
+     * stellt die Frage „war ich das?", und „Uhr · Venu 3S" beantwortet sie
+     * besser als „Uhr". Die Angabe kostet nichts — die Zeile wird ohnehin
+     * gelesen. */
+    $st = $pdo->prepare('SELECT device_id, label, created_at,
+                                geraet_art, geraet_modell, geraet_teil
+                         FROM devices
                          WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . '
                            AND created_at > DATE_SUB(NOW(), INTERVAL ? DAY)
                            AND (? IS NULL OR created_at > ?)

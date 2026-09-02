@@ -19,11 +19,19 @@ grundlegend anders, und der Abschnitt beginnt damit.
 
 ## 1. Überblick
 
-| Gerät | Auflösung | Tasten | Touch | CIQ | Launcher-Icon | Stand |
-|---|---|---|---|---|---|---|
-| Fenix 6 Pro (`fenix6pro`) | 260 × 260 | 5 | nein | 3.4.5 | 40 × 40 | 03.08.2026 |
-| Forerunner 945 (`fr945`) | 240 × 240 | 5 | nein | 3.3.1 | 40 × 40 | 03.08.2026 |
-| Venu 3s (`venu3s`) | 390 × 390 | 3 (2 nutzbar) | ja | 5.2.0 | 70 × 70 | 03.08.2026 |
+| Gerät | Teilenummer | Auflösung | Tasten | Touch | CIQ | Launcher-Icon | Stand |
+|---|---|---|---|---|---|---|---|
+| Fenix 6 Pro (`fenix6pro`) | `006-B3290-00` | 260 × 260 | 5 | nein | 3.4.5 | 40 × 40 | 03.08.2026 |
+| Forerunner 945 (`fr945`) | `006-B3113-00` | 240 × 240 | 5 | nein | 3.3.1 | 40 × 40 | 03.08.2026 |
+| Venu 3s (`venu3s`) | `006-B4261-00` | 390 × 390 | 3 (2 nutzbar) | ja | 5.2.0 | 70 × 70 | 03.08.2026 |
+
+**Die Teilenummer steht seit S6 in dieser Tabelle**, weil sie außerhalb der
+Uhr gebraucht wird: Die Uhr kennt ihren Modellnamen nicht und sendet beim
+Koppeln stattdessen diese Nummer (`docs/JSON-Vertrag.md`, Abschnitt 1a). Der
+Server löst sie über `server/geraetemodelle.php` auf. Diese drei Nummern sind
+damit prüfbare Eingangswerte — und die einzigen, die im Repositorium belegt
+sind; die vollständige Zuordnung entsteht aus den Gerätedateien
+(`tools/geraetemodelle/`).
 
 Die Icon-Größen stammen aus den Compiler-Warnungen: Für `fr945` und
 `fenix6pro` erschien keine, für `venu3s` die Meldung, dass 40 × 40 nicht zur
@@ -128,6 +136,11 @@ Bewusst hingenommen.
 4. Größe des Launcher-Icons aus der Compiler-Warnung übernehmen und ein
    passendes Icon unter `watch/resources-<gerät>/drawables/` ablegen.
 5. Erst danach das Gerät in `watch/manifest.xml` aufnehmen.
+6. **Prüfen, dass die Teilenummer aufgelöst wird**: Steht sie in
+   `server/geraetemodelle.php`? Wenn nicht, `tools/geraetemodelle/erzeugen.py`
+   mit aktuellen Gerätedateien neu laufen lassen. Sonst koppelt das Gerät
+   zwar, erscheint in der Geräteliste aber dauerhaft als Nummer statt als
+   Name — und das fällt niemandem auf, weil nichts fehlschlägt.
 
 Drei Punkte sind vor der Aufnahme zwingend zu klären, weil sie über die
 Bedienbarkeit entscheiden:

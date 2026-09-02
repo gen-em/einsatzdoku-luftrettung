@@ -1,0 +1,166 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fristprobe — misst der Inhaltsschlüssel dieselbe Frist wie die Sitzung? (R44)</title>
+<h1>Fristprobe</h1>
+<pre id="ausgabe">läuft …</pre>
+<script>
+'use strict';
+
+/* DAS DOPPEL STEHT VOR keyguard.js, UND ZWAR ZWINGEND.
+ *
+ * `crypto.js` legt `EdCrypto` als `const` auf oberster Ebene an. Ein `const`
+ * ist KEINE Eigenschaft von `window`; eine spätere Zuweisung an
+ * `window.EdCrypto` überschreibt ihn deshalb nicht — der Bezeichner in
+ * `keyguard.js` löst weiter auf den echten auf. Der erste Anlauf dieser Probe
+ * ist genau daran gescheitert („Kein Schlüssel bei Minute 0"), weil das echte
+ * `getContentKey()` ohne WebCrypto-Hülle null lieferte.
+ *
+ * Also: `crypto.js` gar nicht erst laden und das Doppel selbst als `var`
+ * anlegen, bevor `keyguard.js` kommt. Gegenstand dieser Probe ist die FRIST,
+ * nicht die Kryptografie.
+ */
+var entpackt = 0;
+const CK = 'cc'.repeat(32);
+
+var EdCrypto = {
+  async wrapFingerprint(w) { return 'fp-' + w; },
+  async getContentKey(w) {
+    const dk = sessionStorage.getItem('edk');
+    if (!dk || !w) { return null; }      // wie crypto.js: ohne edk kein Schlüssel
+    entpackt++;
+    sessionStorage.setItem('pck', CK);
+    return CK;
+  },
+  clearSession() {
+    ['edk', 'pck', 'edkvor', 'edk_neu'].forEach(k => sessionStorage.removeItem(k));
+  },
+};
+</script>
+<script src="/server/assets/keyguard.js"></script>
+<script>
+'use strict';
+
+/* WAS HIER GEMESSEN WIRD (R44).
+ *
+ * Die Sitzung führt eine INAKTIVITÄTSFRIST: `auth_guard.php` schreibt
+ * `last_seen` bei jeder Anfrage. Der Inhaltsschlüssel führte bis Web 12.9.0
+ * eine ABSOLUTE Frist: `keyguard.js` setzte seinen Zeitstempel nur beim
+ * Entpacken und ließ ihn beim Treffer im Zwischenspeicher unberührt.
+ *
+ * Die Folge ist NICHT der Entsperrdialog — das war der Irrtum im R44-Eintrag,
+ * berichtigt im Rahmenplan-Archiv am 01.09.2026: `verwerfeInhalt()` lässt den
+ * Datenschlüssel `edk` liegen, und `EdCrypto.getContentKey()` entpackt eine
+ * Zeile später ohne Passwort neu. Die Folge ist ein STILLES NEU-ENTPACKEN,
+ * alle 30 Minuten, egal wie durchgehend gearbeitet wird.
+ *
+ * Genau das zählt diese Probe: Wie oft muss der Schlüssel über eine Schicht
+ * neu entpackt werden, obwohl ununterbrochen gearbeitet wird? Die Zahl ist der
+ * Unterschied, den die im Rahmenplan vorgeschriebene Abnahme NICHT zeigt —
+ * sie ist vor und nach der Änderung grün.
+ *
+ * DIE UHR WIRD VORGESTELLT, NICHT GEWARTET. Eine echte Schicht dauert acht
+ * Stunden; die Probe ersetzt `Date.now()` durch einen Zähler und rückt ihn in
+ * Schritten vor. Gemessen wird dadurch dieselbe Logik, nur schneller.
+ */
+
+const SCHICHT_MIN   = 480;   // acht Stunden Dienst
+const BEDIENUNG_MIN = 5;     // alle fünf Minuten eine Seite aufrufen
+const FRIST_MIN     = 30;    // MAX_ALTER_MS in keyguard.js
+
+const HUELLE = 'huelle-eins';
+
+/* Die Zeit gehört ab hier der Probe. `keyguard.js` ruft `Date.now()` erst zur
+ * Laufzeit, deshalb genügt es, sie nach dem Laden zu ersetzen. */
+let jetzt = 1_750_000_000_000;
+const echteJetzt = Date.now;
+Date.now = () => jetzt;
+
+/* Der Keyguard in der Fassung VOR der Änderung: contentKey() gibt den Treffer
+ * zurück, ohne den Zeitstempel anzufassen. Wortgleich aus keyguard.js
+ * übernommen, bis auf die eine fehlende Zeile — der Unterschied, um den es
+ * geht. */
+const AltGuard = (() => {
+  const S_BIND = 'pckb', S_TIME = 'pckt';
+  const MAX_ALTER_MS = FRIST_MIN * 60 * 1000;
+  function ablegen(b) {
+    sessionStorage.setItem(S_BIND, b || '');
+    sessionStorage.setItem(S_TIME, String(Date.now()));
+  }
+  function verwerfeInhalt() {
+    sessionStorage.removeItem('pck');
+    sessionStorage.removeItem(S_BIND);
+    sessionStorage.removeItem(S_TIME);
+  }
+  function frisch() {
+    const t = parseInt(sessionStorage.getItem(S_TIME) || '0', 10);
+    return t > 0 && (Date.now() - t) < MAX_ALTER_MS;
+  }
+  async function contentKey(wrap) {
+    if (!wrap) { return null; }
+    const erwartet = await EdCrypto.wrapFingerprint(wrap);
+    const vorhanden = sessionStorage.getItem('pck');
+    if (vorhanden) {
+      const gebunden = sessionStorage.getItem(S_BIND);
+      if (gebunden === erwartet && frisch()) { return vorhanden; }
+      verwerfeInhalt();
+    }
+    const ck = await EdCrypto.getContentKey(wrap);
+    if (ck) { ablegen(erwartet); }
+    return ck;
+  }
+  return { contentKey };
+})();
+
+/**
+ * Eine Schicht durchspielen: alle BEDIENUNG_MIN Minuten eine Seite aufrufen.
+ * Gezählt wird, wie oft der Schlüssel dabei neu entpackt werden musste.
+ */
+async function schicht(guard) {
+  sessionStorage.clear();
+  sessionStorage.setItem('edk', 'aa'.repeat(32));
+  entpackt = 0;
+  jetzt = 1_750_000_000_000;
+
+  const stempel = [];
+  for (let m = 0; m <= SCHICHT_MIN; m += BEDIENUNG_MIN) {
+    const ck = await guard.contentKey(HUELLE);
+    if (ck !== CK) { return { fehler: `Kein Schlüssel bei Minute ${m}` }; }
+    stempel.push(parseInt(sessionStorage.getItem('pckt') || '0', 10));
+    jetzt += BEDIENUNG_MIN * 60 * 1000;
+  }
+  /* GEZAEHLT WIRD DAS ENTPACKEN, nicht das Alter des Zeitstempels. Das Alter
+   * am Ende der Schicht ist in BEIDEN Fassungen 0 — die alte hat ihn beim
+   * letzten Ablauf gerade erst neu gesetzt. Es wäre eine Zahl, die gleich
+   * aussieht und Verschiedenes bedeutet, und die stand hier zuerst. */
+  return { aufrufe: stempel.length, entpackt };
+}
+
+/** Und der Fall, für den die Frist da ist: Leerlauf über die Frist hinaus. */
+async function leerlauf(guard) {
+  sessionStorage.clear();
+  sessionStorage.setItem('edk', 'aa'.repeat(32));
+  entpackt = 0;
+  jetzt = 1_750_000_000_000;
+  await guard.contentKey(HUELLE);          // einmal entpacken
+  const nachErstem = entpackt;
+  jetzt += (FRIST_MIN + 1) * 60 * 1000;    // nichts tun, über die Frist hinaus
+  await guard.contentKey(HUELLE);
+  return { neuEntpackt: entpackt - nachErstem };
+}
+
+(async () => {
+  const e = {
+    alt:  await schicht(AltGuard),
+    neu:  await schicht(EdKeyGuard),
+    altLeerlauf: await leerlauf(AltGuard),
+    neuLeerlauf: await leerlauf(EdKeyGuard),
+    schichtMin: SCHICHT_MIN,
+    bedienungMin: BEDIENUNG_MIN,
+    fristMin: FRIST_MIN,
+  };
+  Date.now = echteJetzt;
+  window.__ergebnis = e;
+  window.__fertig = true;
+  document.getElementById('ausgabe').textContent = JSON.stringify(e, null, 2);
+})();
+</script>

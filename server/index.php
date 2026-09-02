@@ -56,9 +56,20 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
         <p>
           <?= count($neueGeraete) === 1 ? 'Ein neues Gerät wurde' : count($neueGeraete) . ' neue Geräte wurden' ?>
           mit deinem Konto verbunden:
+          <?php /* Seit Web 12.9.0 steht die Geraeteart dabei (S6/R42): Der
+                   Hinweis stellt die Frage „war ich das?", und „Uhr · Venu 3S"
+                   beantwortet sie besser als die frei waehlbare Bezeichnung
+                   allein — die lautet bei einer frischen Kopplung schlicht
+                   „Uhr" oder „Handy". Meldet das Geraet nichts ueber sich,
+                   bleibt es beim Namen; „Gerät unbekannt" waere hier eine
+                   Beunruhigung ohne Inhalt. */ ?>
           <?php $teile = [];
                 foreach ($neueGeraete as $g) {
-                    $teile[] = ($g['label'] ?? $g['device_id'])
+                    $name = (string)($g['label'] ?? '') !== ''
+                          ? (string)$g['label'] : (string)$g['device_id'];
+                    $was  = ($g['geraet_modell'] ?? $g['geraet_teil']) ?? null;
+                    $teile[] = $name
+                             . ($was !== null ? ' · ' . $was : '')
                              . ' (' . fmt_local($g['created_at'], 'd.m.Y H:i') . ')';
                 }
                 echo e(implode(', ', $teile)); ?>.

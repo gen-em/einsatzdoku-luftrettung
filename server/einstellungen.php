@@ -10,6 +10,7 @@ require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), 
  * darf nicht an einem zufaelligen Umweg haengen. */
 require_once __DIR__ . '/trash_lib.php';
 require_once __DIR__ . '/apk_lib.php';    // APK-Karte des Geraete-Reiters (S4/A1)
+require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste (S6)
 
 /* OHNE `t` DIE ÜBERSICHT (E-P3-11, P3/O2).
  *
@@ -714,6 +715,7 @@ if ($tab === 'geraete') {
      * Vergleich gegen eine in PHP gebildete Grenze haette stillschweigend
      * angenommen, dass beide dieselbe Zeitzone benutzen. */
     $st = db()->prepare('SELECT id, device_id, label, active, last_seen, created_at,
+                                geraet_art, geraet_modell, geraet_teil,
                                 (created_at > DATE_SUB(NOW(), INTERVAL ? DAY)) AS ist_neu
                          FROM devices
                          WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at');
@@ -2918,8 +2920,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
 
   <?php else: ?>
     <?php ui_titelzeile(['titel' => 'Geräte']); ?>
-    <p class="seiten-erklaerung">Jedes Gerät (Uhr) bekommt eigene Zugangsdaten
-       für den Upload. Deaktivieren sperrt den Schlüssel — hochgeladene Daten
+    <p class="seiten-erklaerung">Jedes Gerät — Uhr oder Handy — bekommt eigene
+       Zugangsdaten für den Upload. Deaktivieren sperrt den Schlüssel — hochgeladene Daten
        bleiben. Je Konto sind <?= MAX_GERAETE ?> Geräte möglich, belegt sind
        <?= count($devices) ?>; deaktivierte zählen mit, erst Löschen gibt einen
        Platz frei.</p>
@@ -2934,10 +2936,14 @@ ui_seite_start(['titel' => 'Einstellungen']);
           . 'danach kann es nichts mehr hochladen.', null, 'warn', '      '); ?>
     <?php endif; ?>
 
-    <?php ui_karte_start(['titel' => 'Uhr koppeln', 'id' => 'koppeln']); ?>
-      <p class="feld-hinweis">Erzeuge einen Code und gib ihn auf der Uhr ein:
-         <strong>Sync-Seite → Gerät koppeln → Code eintippen</strong>. Die Uhr
-         holt sich ihre Zugangsdaten dann selbst — kein Abtippen langer
+    <?php /* „Gerät koppeln", nicht „Uhr koppeln" (S6): Seit S4 koppelt die
+             Handy-App ueber denselben Weg und denselben Code — und die Liste
+             darunter sagt seit Web 12.9.0 „Handy". Eine Ueberschrift, die
+             „Uhr" sagt, widerspricht der Zeile, die sie ankuendigt. */ ?>
+    <?php ui_karte_start(['titel' => 'Gerät koppeln', 'id' => 'koppeln']); ?>
+      <p class="feld-hinweis">Erzeuge einen Code und gib ihn auf dem Gerät ein:
+         <strong>Sync-Seite → Gerät koppeln → Code eintippen</strong>. Das Gerät
+         holt sich seine Zugangsdaten dann selbst — kein Abtippen langer
          Schlüssel. Der Code ist <?= PAIR_TTL_MIN ?> Minuten gültig und genau
          einmal verwendbar; ein neuer macht einen vorher erzeugten ungültig.</p>
       <?php /* Der Tastenweg steht als Zusatz mit genannter Plattform: Er gilt
@@ -2977,7 +2983,14 @@ ui_seite_start(['titel' => 'Einstellungen']);
       <?php foreach ($devices as $d):
             $did = (int)$d['id'];
             $aktiv = (int)$d['active'] === 1;
-            $klein = ($aktiv ? 'aktiv' : 'deaktiviert')
+            /* WAS FUER EIN GERAET DAS IST, steht vorn (S6/R42): Wer drei
+               Geraete gekoppelt hat, unterscheidet sie sonst nur an einer
+               selbst vergebenen Bezeichnung — und die fehlt beim frisch
+               gekoppelten Geraet gerade. Vorhandener Baustein, keine neue
+               Darstellung: dieselbe Kleinzeile, die schon Zustand und letzten
+               Kontakt traegt. */
+            $klein = geraet_bezeichnung($d['geraet_art'], $d['geraet_modell'], $d['geraet_teil'])
+                   . ' · ' . ($aktiv ? 'aktiv' : 'deaktiviert')
                    . ' · zuletzt gesehen: '
                    . ($d['last_seen'] ? fmt_local($d['last_seen'], 'd.m.Y H:i') : 'nie');
             ?>
@@ -2998,7 +3011,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
             'plaketten' => ((int)$d['ist_neu']
                 ? ui_plakette('neu seit ' . fmt_local($d['created_at'], 'd.m.Y'), ['ton' => 'orange'])
                 : '')
-                . ui_plakette((string)$d['device_id'], ['ton' => 'neutral']),
+                /* GEKUERZT (S6): Die volle 36-Zeichen-Kennung hat keine
+                   Umbruchstelle und drueckte den Text daneben auf ein Wort je
+                   Zeile zusammen — bei jedem frisch gekoppelten Geraet, dessen
+                   Bezeichnung kurz ist. Begruendung und Form stehen an einer
+                   Stelle: geraet_kennung_kurz(). */
+                . ui_plakette(geraet_kennung_kurz((string)$d['device_id']), ['ton' => 'neutral']),
             'aktionen' => ui_zeilenaktionen([
                 'titel' => (string)($d['label'] ?? $d['device_id']),
                 'eintraege' => [
@@ -3018,7 +3036,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
         <h3 class="listen-form-titel"><?= $editDev ? 'Bezeichnung ändern' : 'Gerät von Hand anlegen' ?></h3>
         <?php if (!$editDev): ?>
           <p class="feld-hinweis">Die Alternative zum Koppeln: Geräte-ID und
-             Schlüssel werden angezeigt und in der Uhr-App eingetragen.</p>
+             Schlüssel werden angezeigt und in der App des Geräts eingetragen.</p>
         <?php endif; ?>
         <form method="post" action="einstellungen.php?t=geraete">
           <?= csrf_field() ?>
@@ -3085,7 +3103,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
 
     <?php if ($newKey): ?>
       <?php ui_karte_start(['titel' => 'Zugangsdaten des neuen Geräts']); ?>
-        <p class="feld-hinweis">Beide Werte in den Einstellungen der Uhr-App
+        <p class="feld-hinweis">Beide Werte in den Einstellungen der App
            eintragen; als Server genügt die Domain.</p>
         <p class="feld-klein">Bei Garmin stehen diese Einstellungen in Garmin Connect.</p>
         <div class="codeblock">

@@ -90,6 +90,309 @@ Das war die eigentliche Lücke: Die Anleitung war vollständig, aber nicht
 auffindbar. Abschnitt 6 nennt den Prüfstand jetzt, samt dem Hinweis, dass die
 Adresse erfragt werden muss.
 
+## [Web 12.9.2] — 2026-09-02
+
+**Die Marken- und Schutzrechtszeichen sind aus den Modellnamen heraus.** Aus
+`Forerunner® 945` wird `Forerunner 945`, aus `Venu® 3S` wird `Venu 3S`. 171 der
+173 Namen waren betroffen, 194 Vorkommen insgesamt (163 × `®`, 31 × `™`). Keine
+Migration.
+
+### Web — Warum sie herausfliegen
+
+**Sie gehören nicht uns.** In unserer eigenen Oberfläche gelesen, sieht ein `®`
+wie eine Aussage über unsere Marke aus. Der Produktname ist eine Sachangabe —
+das Zeichen ist eine Rechtsbehauptung, und die trifft an dieser Stelle niemand.
+
+**Sie stören die Zählung.** Schriebe Garmin morgen „Venu™ 3S" statt „Venu® 3S",
+zählte die Statistik in P5 zwei Geräte. Ein Name ohne Zeichen ist stabiler
+gegen genau diese Art von Änderung.
+
+**Sie kosten Platz**, und der ist bei einem Sammelnamen knapp: Der längste
+Eintrag trägt drei davon und schrumpft von 156 auf 153 Zeichen.
+
+### Web — Entfernt wird im Erzeuger, nicht in der Datei
+
+`server/geraetemodelle.php` ist erzeugt; eine Änderung von Hand wirft der
+nächste Lauf weg. Die Regel steht deshalb in `tools/geraetemodelle/erzeugen.py`
+und gilt für `® ™ © ℗ ℠`.
+
+**`í`, `ē` und der Halbgeviertstrich bleiben.** Sie sind Bestandteil der Namen
+(„fēnix", „Descent", „tactix 7 – AMOLED Edition") und keine Zeichen **über**
+den Namen. Der Unterschied ist der ganze Punkt: Entfernt wird, was eine
+Behauptung über den Namen ist, nicht, was der Name ist.
+
+**Der Leerraum wird danach geglättet**, und das ist keine Kosmetik: Steht das
+Zeichen am Wortende („Edge® 1030"), bliebe sonst ein doppeltes Leerzeichen
+stehen — und zwei Namen, die sich nur darin unterscheiden, wären in der
+Zählung zwei Geräte.
+
+### Gegengeprüft
+
+**325 Teilenummern auf weiterhin 173 verschiedene Namen** — das Entfernen hat
+keine zwei Modelle zusammenfallen lassen. 0 verbliebene Marken-/
+Schutzrechtszeichen, 0 doppelte Leerzeichen. Die Spaltenbreite von 191 bleibt
+richtig: fünf Namen liegen weiterhin über 64 Zeichen.
+
+## [Web 12.9.1] — 2026-09-02
+
+**Die Modelltabelle ist gefüllt — und die echten Daten haben eine Annahme
+widerlegt.** Nachtrag zu 12.9.0; die Zuarbeit aus Rahmenplan Abschnitt 6 ist
+damit erledigt. **Mit Migration** (`2026_09_02_geraetemodell_breiter`).
+
+### Web — 325 Teilenummern auf 173 Modelle
+
+Genau die Zahl, die der JSON-Vertrag seit der Uhr-Seite nennt — sie stammte aus
+derselben Quelle und ist damit unabhängig bestätigt. Erzeugt aus den
+Gerätedateien der Uhr-Plattform (`tools/geraetemodelle/erzeugen.py`); die
+Adresse ihrer Bereitstellung steht weiterhin **nicht** im Repositorium.
+
+Die drei im Repositorium belegten Teilenummern lösen richtig auf:
+`006-B3113-00` → Forerunner® 945, `006-B3290-00` → fēnix® 6 Pro (Sammelname),
+`006-B4261-00` → Venu® 3S.
+
+**28 der 173 Modelle sind keine Uhren** — 20 Edge, 8 Outdoor-Handgeräte. Genau
+dafür schlägt die Tabelle die Selbstauskunft: Eine Connect-IQ-App sendet `art`
+fest als `"uhr"`, weil sie Uhr und Radcomputer nicht unterscheiden kann. Am
+laufenden Server nachgemessen: Ein Gerät, das sich mit der Teilenummer eines
+Edge 1000 als „uhr" koppelt, steht danach als `sonstiges` in der Spalte und
+heißt „Gerät", nicht „Uhr".
+
+### Web — Die Spalte war zu schmal, und zwar geraten
+
+`geraet_modell` stand auf `VARCHAR(64)`. Diese Zahl entstand, als die
+Gerätedateien noch nicht vorlagen, und sie ist falsch: Die Dateien führen je
+Teilenummer die **Hardware**, und Garmin verkauft dieselbe Hardware unter
+mehreren Namen. Der längste Eintrag hat **156 Zeichen** („fēnix® 6X Pro / 6X
+Sapphire / 6X Pro Solar / tactix® Delta Sapphire / … / quatix® 6X Dual
+Power"). Fünf der 173 Modelle liegen über 64, 15 der 325 Teilenummern sind
+betroffen.
+
+Die Spalte geht auf **191**. Gespeichert wird der **volle** Name — die spätere
+Zählung (P5) soll Hardwaregruppen zählen, und genau die bezeichnet der
+Sammelname; ein beim Schreiben gekürzter Name wäre eine Auslegung, die sich
+nicht mehr zurückdrehen ließe. Gekürzt wird erst für die **Anzeige**, auf das
+erste Glied: „Uhr · fēnix® 6X Pro …". Das Auslassungszeichen sagt, dass mehr
+dahintersteht.
+
+**Eine zweite Migration und nicht die erste geändert.** Die erste ist gepusht,
+und `update.php` führt jede Kennung genau einmal aus — eine Installation, die
+sie schon gefahren hätte, sähe eine Änderung an ihrem Rumpf nie. Der Rumpf
+einer abgeschickten Migration ist damit so gut wie unveränderlich, und die
+einzige verlässliche Richtung ist eine neue. Nachgemessen: gegen eine
+Datenbank, die die erste Migration bereits trug, greift die zweite und der
+zweite Aufruf ist folgenlos (40 = 40).
+
+### Werkzeug — Die Wortliste braucht jetzt eine Ausnahme, und zwar dateiweit
+
+Vorhergesagt in `tools/geraetemodelle/LIESMICH.md`, eingetreten wie
+beschrieben: Die gefüllte Tabelle liegt unter `server/*.php` und fällt damit in
+Bereich (a); ihre Werte sind Zeichenketten und keine Kommentare. **89 Treffer**
+— „Forerunner", „Venu", „Edge". Die Ausnahme steht auf der **Datei** und nicht
+auf einzelnen Zeilen: Der Bestand wechselt mit jedem Lauf des Erzeugers, ein
+Muster auf einzelne Namen wäre danach entweder unvollständig oder ungenutzt,
+und beides ist ein Fehlschlag.
+
+**Die 89 sind kleiner als der Bestand**, und das ist keine Beruhigung: Garmin
+schreibt „fēnix" mit Makron, das Sperrmuster lautet `\bfenix` und trifft diese
+Zeilen nicht. Wer die Zahl liest, weiß das besser — sie steht so auch in der
+Begründung der Ausnahme.
+
+## [Web 12.9.0] — 2026-09-02
+
+**Der Server nimmt endlich an, was die Geräte über sich sagen — und der
+Entsperrdialog erscheint nicht mehr mitten in der Arbeit.** Das Zwischenpaket
+S6: Serverseite von R42, Behebung von R44. **Mit Migration**
+(`2026_09_02_geraetekennung`) — nach dem Deploy muss eine Administratorin
+`update.php` aufrufen.
+
+### Web — Was für ein Gerät hat sich da gekoppelt (R42)
+
+Die Uhr schickt beim Koppeln seit **1.9.0** einen Block über sich selbst, die
+Handy-App seit **0.2.0**. `pair.php` hat ihn bis hierher stillschweigend
+verworfen — er lief ein Jahr lang ins Leere, und jede Kopplung in dieser Zeit
+ist für die Statistik verloren. Das war so vorgesehen (R42 nennt es), macht es
+aber nicht besser.
+
+Er landet jetzt in drei Spalten an `devices`: **Art** (`uhr`, `handy`,
+`sonstiges`), **Modell** und die **Rohangabe** des Geräts. Beide Geräteklassen
+fallen auf dieselben drei Spalten, obwohl sie Verschiedenes senden: Die
+Garmin-Uhr **kennt ihren Modellnamen nicht** — `DeviceSettings` führt ihn nicht
+— und schickt ihre Teilenummer (`006-B4261-00`); das Handy kennt ihn und
+schickt Hersteller und Modell (E-S4-28).
+
+**Warum drei Spalten und nicht zwei.** R42 nennt zwei. Die dritte hält die
+Rohangabe daneben, und das ist keine Bequemlichkeit: Der Modellname entsteht
+aus einer erzeugten Tabelle, und die kann nur kennen, was es beim Erzeugen
+schon gab. Eine Uhr, die nächstes Jahr erscheint, fiele sonst dauerhaft auf
+„unbekannt" — und zwar unwiederbringlich, weil die Teilenummer dann nirgends
+mehr stünde. Mit der Rohangabe lässt sich jede Zeile später erneut auflösen.
+Sie ist außerdem die einzige Spalte, die die **Behauptung des Geräts**
+unverändert festhält; das Modell ist bereits eine Auslegung des Servers.
+
+**Die Auflösung liegt auf dem Server, nicht auf der Uhr** — eine Modelltabelle
+auf einem Gerät mit 128 kB wäre der falsche Platz. Sie steht in
+`server/geraetemodelle.php` und ist **erzeugt** (`tools/geraetemodelle/`, aus
+den Gerätedateien der Uhr-Plattform). Wer sie von Hand ergänzt, ergänzt sie an
+der falschen Stelle.
+
+**Sie war bei diesem Stand noch leer** — die Gerätedateien lagen nicht vor.
+Gefüllt ist sie seit Web 12.9.1 (eigener Eintrag oben); die Adresse ihrer
+Bereitstellung steht weiterhin bewusst nicht im Repositorium.
+
+**Und deshalb gibt es `nachaufloesen.php`.** `pair.php` löst die Teilenummer im
+Moment der Kopplung auf, und nur dann — eine Zeile, die damals auf eine leere
+Tabelle traf, bliebe sonst für immer, wie sie war. Genau das hätte die
+Begründung für die dritte Spalte zur leeren Zusage gemacht. Das Skript geht die
+Zeilen mit Rohangabe durch und trägt nach, was die Tabelle inzwischen kennt;
+zeigen ist die Vorgabe, `--schreiben` trägt ein. **Es geht dabei um mehr als
+den Namen:** Solange die Tabelle eine Teilenummer nicht kennt, steht in
+`geraet_art` die ungeprüfte Selbstauskunft, und die Garmin-App sendet dort fest
+`"uhr"` — ein Radcomputer wäre bis zum Nachauflösen falsch gezählt, und das ist
+ein falscher Wert und nicht nur ein fehlender. Grenze: Das Skript braucht
+Shell-Zugriff; ohne ihn holen die Geräte ihre Angabe bei der nächsten Kopplung
+nach.
+
+**Die Tabelle schlägt die Selbstauskunft — bei der Art.** Die Uhr-App sendet
+`art` fest als `"uhr"`, weil eine Connect-IQ-App nur auf Garmin-Geräten läuft;
+Uhr und Radcomputer kann sie nicht unterscheiden. Die Gerätedateien können es.
+Ein Edge, der sich „uhr" nennt, hätte die Statistik sonst still verfälscht.
+
+**Alle drei Spalten dürfen leer sein, und das bleibt so.** Vier Wege legen ein
+Gerät an, und nur einer weiß etwas über es: die Kopplung. Manuelles Anlegen,
+das virtuelle Gerät „Manuelle Einträge" und der Demo-Bestand haben nichts zu
+melden. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht,
+wo keine ist — „unbekannt" ist eine Sache der **Anzeige**, nicht der Spalte.
+Bestandsgeräte bleiben leer; die Angabe entsteht ausschließlich beim Koppeln,
+und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt.
+
+**Was bewusst nicht erhoben wird.** `uniqueIdentifier` (Uhr) und `ANDROID_ID`,
+IMEI, Seriennummer (Handy) senden die Clients gar nicht erst. Und obwohl beide
+Displaymaße, Firmware und Plattformfassung mitschicken, werden sie **nicht
+gespeichert**: R36 lässt die Gerätekennung als die eine benannte Ausnahme zu —
+„welches Gerät", nicht „in welchem Zustand". Backlog Nr. 59 hatte die weiteren
+Felder vorgeschlagen; sie fallen damit weg.
+
+**Eine Kopplung scheitert nie an einer Statistikangabe** (JSON-Vertrag 1a). Was
+ankommt, wird zugeschnitten statt geglaubt: Längen auf die Spaltenbreite
+(mit `mb_substr`, damit ein Umlaut an der Schnittkante die Spalte nicht
+unlesbar macht), Steuerzeichen zu Leerzeichen, eine erfundene Geräteart zu
+`NULL` statt in die Spalte. Ein Block, der gar keiner ist — eine Zeichenkette,
+eine Zahl, `true` —, ergibt drei leere Werte und keinen Fehler.
+
+### Web — Art und Modell in beiden Gerätelisten
+
+Auf dem Geräte-Reiter (Einstellungen) und im Adminbereich, in der Kleinzeile,
+die schon Zustand und letzten Kontakt trägt: „Uhr · Venu 3S · aktiv · zuletzt
+gesehen: 02.09.2026 14:33". **Kein neuer Baustein** — dieselbe Zeile, ein Feld
+mehr darin.
+
+Ist das Modell nicht auflösbar, steht dort die **Rohangabe**: „Uhr ·
+006-B4261-00". Das ist eine magere Auskunft, aber es ist eine — und sie sagt
+zugleich, dass hier etwas gekoppelt hat, das die Modelltabelle noch nicht
+kennt. „Modell unbekannt" hätte das verschwiegen.
+
+### Web — Die Gerätekennung machte die Zeile daneben unlesbar
+
+Im Bilderlauf zu diesem Paket gefunden, und zwar **auch am Stand davor**: Die
+öffentliche Gerätekennung steht als Plakette in der Zeile, ist seit Web 4.5.1
+36 Zeichen lang und hat keine Umbruchstelle. Sie setzte damit eine
+Mindestbreite durch, die dem Text daneben nichts übrig ließ — bei einem kurz
+benannten Gerät („Uhr", „Handy" — genau die Vorgabe nach dem Koppeln) fiel die
+Kleinzeile auf **ein Wort je Zeile** zusammen, und bei 360 px lief die Seite um
+1 px über.
+
+Sie wird jetzt gekürzt: acht Zeichen, Auslassung, die letzten zwei. Der
+Adminbereich macht das seit Web 9.7.2 so (Mockup 40); die Rechnung stand dort
+im Seitenquelltext und steht jetzt an **einer** Stelle, damit beide Listen
+dieselbe Kennung zeigen. Acht Zeichen sind 32 Bit — genug, um zwei Geräte
+auseinanderzuhalten und eine Zeile in einer Rückfrage zu benennen; die letzten
+beiden stehen dabei, damit ein Vergleich mit der Kopplungs-E-Mail an beiden
+Enden anfassen kann.
+
+**Die längere Kleinzeile hat es nur sichtbar gemacht, verursacht hat sie es
+nicht.** Nachgemessen mit `tools/screenshots/` gegen den Stand vor der
+Änderung: dieselben acht Breiten, derselbe Überlauf.
+
+### Web — Ein frisch gekoppeltes Handy hieß „Uhr"
+
+Ein Fehler aus S4, hier mitgenommen: Der Name eines neu gekoppelten Geräts
+stand fest auf `'Uhr'`. Das war richtig, solange nur Garmin-Uhren koppeln
+konnten — seit der Handy-App stand in der Geräteliste „Uhr", bis jemand es
+umbenannte. Die Vorgabe folgt jetzt der gemeldeten Art („Uhr", „Handy",
+„Gerät"). Wo keine Art gemeldet wird, bleibt es bei „Uhr": Ein Gerät ohne
+Block ist eine Uhr-Fassung vor 1.9.0, und etwas anderes konnte damals nicht
+koppeln.
+
+### Web — Dieselbe Zahl war nicht dieselbe Frist (R44)
+
+Zwei Fristen standen auf 30 Minuten, und der Kommentar in `keyguard.js` sagte
+ausdrücklich, sie sollten gleich sein. Sie waren es nie — sie maßen
+**Verschiedenes**:
+
+- `auth_guard.php` schreibt `$_SESSION['last_seen']` bei **jeder** Anfrage.
+  Das ist eine **Inaktivitätsfrist**: Sie erneuert sich mit jedem Klick.
+- `keyguard.js` setzte seinen Zeitstempel nur beim **Entpacken**. Der Treffer
+  im Zwischenspeicher gab den Schlüssel zurück, ohne ihn anzufassen. Das war
+  eine **absolute Frist ab dem Entsperren**.
+
+`contentKey()` erneuert den Zeitstempel jetzt bei jedem Treffer.
+
+**Und jetzt der unangenehme Teil: Der R44-Eintrag hat die Folge falsch
+beschrieben, und dieser Changelog-Eintrag hätte es fast wiederholt.** R44 sagt,
+der Entsperrdialog erscheine deshalb mitten in der Arbeit. Das trifft nicht zu
+— berichtigt im Rahmenplan-Archiv am 01.09.2026, hier am Code nachgelesen:
+`verwerfeInhalt()` räumt `pck`, `pckb` und `pckt`, lässt den **Datenschlüssel
+`edk` aber bewusst liegen**, und `EdCrypto.getContentKey()` entpackt den
+Inhaltsschlüssel eine Zeile weiter unten **ohne Passwort** daraus neu. Der
+Fristablauf kostete ein **stilles Neu-Entpacken**, keinen Dialog.
+
+**Was er kostete, ist trotzdem zählbar** — und zwar mit dem neuen Prüfmittel
+`tools/fristprobe/`: Acht Stunden Dienst, alle fünf Minuten eine Seite
+aufgerufen, 97 Aufrufe ohne eine einzige Pause. **Vorher 17 Neu-Entpackungen,
+nachher 1.** Die Gegenprobe im selben Lauf zeigt, dass die Frist weiterhin
+greift: Leerlauf über 30 Minuten hinaus kostet in beiden Fassungen ein
+Entpacken.
+
+**Die Angleichung ist damit Aufräumen und kein Heilmittel.** Sie bleibt
+richtig — zwei Uhren, die dieselbe Zahl tragen und Verschiedenes messen, sind
+eine Falle für den nächsten, der sich auf den Kommentar verlässt — aber sie
+verspricht nichts, was sie nicht hält. Die Gegenrichtung (die Sitzung ebenfalls
+absolut befristen) hieße, aktive NutzerInnen mitten in der Arbeit abzumelden.
+
+**Der Dialog kommt woanders her, und das steht jetzt im Handbuch:**
+`sessionStorage` gilt je **Tab**. Wer die Anwendung in einem zweiten Tab
+öffnet, hat dort keinen Datenschlüssel und bekommt den Dialog, obwohl die
+Sitzung läuft. Dasselbe nach einem Browser-Neustart und nach einem
+Passwort-Reset ohne Wiederherstellungsschlüssel. Das ist so gewollt — der
+Schlüssel soll nicht über Tabs wandern — und war bislang nirgends erklärt,
+sodass es wie ein Fehler aussah.
+
+**Die in R44 vorgeschriebene Abnahme belegt das nicht.** „Eine Sitzung über 30
+Minuten mit Bedienung bringt keinen Dialog" ist vor und nach der Änderung
+grün. Deshalb die Fristprobe: Ein Prüfmittel, das in beiden Zuständen dasselbe
+sagt, misst nicht die Änderung.
+
+### Werkzeug — Zwei neue Prüfmittel
+
+`tools/geraeteprobe/` hält das Auslesen des Blocks gegen das, was wirklich
+ankommt: beide Geräteformen, die Abwehr von Unsinn, die Beschriftungen der
+Geräteliste, die gekürzte Kennung. **39 Erwartungen, 0 Abweichungen.** Ohne
+Datenbank, ohne Webserver, ohne Gerät — und mit einer eigenen kleinen
+Modelltabelle, damit sie nicht davon abhängt, welche Geräte gerade ausgeliefert
+sind.
+
+`tools/fristprobe/` belegt R44 mit der Zahl, die die vorgeschriebene Abnahme
+nicht liefern kann. Sie stellt die Uhr vor, statt zu warten, und spielt acht
+Stunden Dienst durch: **97 Aufrufe, vorher 17 Neu-Entpackungen, nachher 1** —
+bei gleichbleibender Gegenprobe, dass die Frist weiterhin greift. Die Fassung
+von vorher steht wortgleich in der Probe, bis auf die eine fehlende Zeile.
+
+`tools/geraetemodelle/` erzeugt die Modelltabelle und löst mit
+`nachaufloesen.php` bestehende Zeilen nachträglich auf. Es braucht die
+Gerätedateien der Uhr-Plattform; die liefert nur der SDK-Manager aus, und die
+Adresse der Bereitstellung steht bewusst nicht im Repositorium (dieselbe
+Begründung wie beim Uhr-Prüfstand).
+
 ## [Web 12.8.0] — 2026-09-02
 
 **Die Android-App wird über die Anwendung selbst verteilt.** Halbes viertes

@@ -2019,5 +2019,71 @@ declare(strict_types=1);
  * (E-S4-15) und der Nachtrag im JSON-Vertrag. Beides haengt an S5 und R42,
  * die noch nicht durch sind.
  *
+ * 12.9.0 NIMMT AN, WAS DIE GERAETE SEIT EINEM JAHR SENDEN (S6, R42 und R44).
+ * Die Uhr schickt beim Koppeln seit 1.9.0 einen Block ueber sich selbst, die
+ * Handy-App seit 0.2.0 — `pair.php` hat ihn stillschweigend verworfen. Jetzt
+ * landet er in drei Spalten an `devices` (Art, Modell, Rohangabe), und die
+ * Geraeteliste sagt, was da eigentlich gekoppelt ist. MIT MIGRATION
+ * (2026_09_02_geraetekennung).
+ *
+ * DIE UHR SENDET IHRE TEILENUMMER, NICHT IHREN MODELLNAMEN — den kennt sie
+ * nicht. Aufgeloest wird sie auf dem Server (`geraetemodelle.php`, erzeugt
+ * aus den Geraetedateien der Uhr-Plattform). Die dritte Spalte haelt die
+ * Rohangabe daneben: Eine Uhr, die es beim Erzeugen der Tabelle noch nicht
+ * gab, fiele sonst dauerhaft auf "unbekannt" — und zwar unwiederbringlich.
+ * Mit der Rohangabe loest `tools/geraetemodelle/nachaufloesen.php` jede Zeile
+ * spaeter erneut auf. Das Werkzeug gehoert zur Sache und nicht zum Komfort:
+ * Bis dahin steht in `geraet_art` die ungepruefte Selbstauskunft, und die
+ * Garmin-App sendet dort fest "uhr" — ein Radcomputer waere falsch gezaehlt.
+ *
+ * 12.9.1 FUELLT DIE MODELLTABELLE — 325 Teilenummern auf 173 Modelle, genau
+ * die Zahl, die der JSON-Vertrag seit der Uhr-Seite nennt. Die Zuarbeit aus
+ * Rahmenplan Abschnitt 6 ist damit erledigt; erzeugt wurde die Datei aus den
+ * Geraetedateien der Uhr-Plattform, die Adresse ihrer Bereitstellung steht
+ * weiterhin nicht im Repositorium.
+ *
+ * UND DIE ECHTEN DATEN HABEN EINE ANNAHME WIDERLEGT. `geraet_modell` stand auf
+ * VARCHAR(64) — geraten, als die Dateien noch nicht vorlagen. Die Dateien
+ * fuehren je Teilenummer die HARDWARE, und Garmin verkauft dieselbe Hardware
+ * unter mehreren Namen: "fēnix 6X Pro / 6X Sapphire / … / quatix 6X Dual
+ * Power" sind 153 Zeichen. Fuenf der 173 Modelle liegen ueber 64. Die Spalte
+ * geht deshalb auf 191 (zweite Migration, 2026_09_02_geraetemodell_breiter);
+ * gespeichert wird der volle Name, gekuerzt wird erst fuer die Anzeige
+ * ("Uhr · fēnix 6X Pro …"). Die spaetere Zaehlung soll Hardwaregruppen
+ * zaehlen, und genau die bezeichnet der Sammelname.
+ *
+ * DIE ZWEITE MIGRATION IST KEIN VERSEHEN, SONDERN DIE EINZIGE VERLAESSLICHE
+ * RICHTUNG: Die erste ist gepusht, und `update.php` fuehrt jede Kennung genau
+ * einmal aus — eine Installation, die sie schon gefahren haette, saehe eine
+ * Aenderung an ihrem Rumpf nie.
+ *
+ * 12.9.2 NIMMT DIE MARKENZEICHEN AUS DEN MODELLNAMEN. Aus "Forerunner® 945"
+ * wird "Forerunner 945"; 171 der 173 Namen waren betroffen. Drei Gruende, und
+ * der erste wiegt am schwersten: Ein ® in UNSERER Oberflaeche sieht aus wie
+ * eine Aussage ueber unsere Marke. Dazu: Ein Wechsel von ® auf ™ bei Garmin
+ * ergaebe in der Zaehlung zwei Geraete, und ein Sammelname traegt bis zu drei
+ * davon. Entfernt wird im ERZEUGER, nicht in der erzeugten Datei. `í`, `ē` und
+ * der Halbgeviertstrich bleiben — sie sind Bestandteil der Namen und keine
+ * Zeichen ueber ihnen. Keine Migration.
+ *
+ * NEBENBEI EIN FEHLER AUS S4: Beim Koppeln stand der Name eines Geraets fest
+ * auf "Uhr". Seit es die Handy-App gibt, hiess ein frisch gekoppeltes Handy
+ * in der Geraeteliste "Uhr". Die Vorgabe folgt jetzt der gemeldeten Art.
+ *
+ * UND DIE ZWEITE UHR GEHT JETZT RICHTIG (R44). Sitzung und Inhaltsschluessel
+ * standen beide auf 30 Minuten und massen trotzdem Verschiedenes: die Sitzung
+ * Inaktivitaet (erneuert bei jeder Anfrage), der Schluessel die Zeit seit dem
+ * Entsperren (nie erneuert). `keyguard.js` erneuert den Zeitstempel jetzt bei
+ * jedem Treffer.
+ *
+ * WAS DAS NICHT IST: das Ende des Entsperrdialogs. Der R44-Eintrag schrieb
+ * dem Fristablauf den Dialog zu; das ist im Rahmenplan-Archiv am 01.09.2026
+ * berichtigt worden und stimmt nicht. `verwerfeInhalt()` laesst den
+ * Datenschluessel liegen, und der Inhaltsschluessel wird eine Zeile spaeter
+ * OHNE Passwort neu entpackt — der Ablauf kostete ein stilles Neu-Entpacken,
+ * gemessen 17 statt 1 ueber acht Stunden Dienst (`tools/fristprobe/`). Der
+ * Dialog kommt vom tabweisen sessionStorage und bleibt; er steht jetzt als
+ * gewollte Eigenschaft im Handbuch statt als unerklaerter Fehler.
+ *
  */
-const WEB_VERSION = '12.8.0';
+const WEB_VERSION = '12.9.2';
