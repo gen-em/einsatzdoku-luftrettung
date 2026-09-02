@@ -2,13 +2,13 @@
  * ===========================================================================
  *
  * WOFUER. Manche Handlungen brauchen mehr als eine Rückfrage: Das Einspielen
- * einer Sicherung will ein Zielkonto und eine abgetippte Adresse (E-P3-41).
+ * eines Backups will ein Zielkonto und eine abgetippte Adresse (E-P3-41).
  * confirm.js kann das nicht — es baut seinen Dialog selbst und kennt nur Text
  * und zwei Knöpfe. Hier steht das Gegenstück: Der Dialog steht als <dialog
  * class="dialog"> IM MARKUP, mit Formular und allem, was er braucht; dieses
  * Skript öffnet und schliesst ihn nur.
  *
- * EIN DIALOG FUER VIELE ZEILEN. Drei Sicherungen bekommen nicht drei
+ * EIN DIALOG FUER VIELE ZEILEN. Drei Backups bekommen nicht drei
  * Dialoge — sonst stünde dasselbe Formular dreimal in der Seite und die
  * Kennungen müssten durchnummeriert werden. Stattdessen trägt der Öffner die
  * Werte, die den Fall ausmachen:

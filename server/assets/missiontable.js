@@ -38,8 +38,8 @@ const EdMissionTable = (() => {
    * Einsatz hat keine Angaben, oder er hat welche, die sich nicht
    * entschluesseln lassen. Der zweite Fall ist ein Alarmzeichen und sah aus
    * wie der erste. Wer den Unterschied nicht sieht, merkt nicht, dass sein
-   * Inhaltsschluessel nicht mehr passt — und erstellt als Naechstes eine
-   * Sicherung.
+   * Inhaltsschluessel nicht mehr passt — und erstellt als Naechstes ein
+   * Backup.
    *
    * Jetzt:  –  keine Angaben      ⚠  vorhanden, aber nicht lesbar
    *
@@ -59,7 +59,7 @@ const EdMissionTable = (() => {
    * PARSERS.ganzzahl verlangt /^-?\d+$/. `47<img …>` wird verworfen, nicht
    * übernommen. api/backup_restore.php dagegen übernimmt den inneren
    * Chiffretext unverändert, wie es sein muss — und im Adminbereich
-   * schreibt „Einspielen" eine FREMDE Sicherung in ein Konto.
+   * schreibt „Einspielen" ein FREMDES Backup in ein Konto.
    *
    * Die Entscheidung, eine Angabe zu maskieren, darf deshalb nicht an der
    * Aufrufstelle liegen: Sie war an zwei von sechs Stellen falsch getroffen,

@@ -44,7 +44,7 @@
 
     var DIALOG_KEIN_BACKUP =
         'Dies ist kein Backup. Ein Export ist zum Weiterverarbeiten in anderen ' +
-        'Programmen gedacht. Für eine vollständige Sicherung inklusive ' +
+        'Programmen gedacht. Für ein vollständiges Backup inklusive ' +
         'Verschlüsselung nutze Einstellungen → Backup.';
 
     /* ---------------------------------------------------------- Helfer --- */
@@ -1275,7 +1275,7 @@
      *  4.7.0 gilt überall dieselbe Regel aus EdPwQuality (M2-03, D4).
      *
      *  KEIN Angebot, das Kontopasswort zu verwenden — anders als bei der
-     *  Sicherung. Eine Exportdatei ist zum Weitergeben gedacht; wer sie mit
+     *  Backup. Eine Exportdatei ist zum Weitergeben gedacht; wer sie mit
      *  seinem Kontopasswort verschlüsselt, gibt es dem Empfänger mit. */
     function syncPasswordGate() {
         var on = $('exp_pw').checked;
@@ -1431,7 +1431,7 @@
                 }
             }
             /* DASS DIE DATEI DA IST, MUSS DASTEHEN — dieselbe Lücke wie auf der
-             * Sicherungsseite und aus demselben Grund: Der Download läuft ohne
+             * Backup-Seite und aus demselben Grund: Der Download läuft ohne
              * Dialog durch, und die Namen sind hier lang und einander ähnlich
              * (Profil, Personenbezug und Verschlüsselung stecken darin). Wer
              * zweimal hintereinander exportiert, braucht den vollen Namen, um zu

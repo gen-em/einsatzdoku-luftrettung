@@ -1,25 +1,117 @@
 # Umstellung „Sicherung" → „Backup"
 
-**Stand:** 01.09.2026 · **Zustand:** vorbereitet, nicht umgesetzt ·
-**Umsetzung:** **nach S3**, in einem Zug
+**Stand:** 02.09.2026 · **Zustand:** in Umsetzung (Schritt 4 des Rahmenplans,
+S7) · **Umsetzung:** in einem Zug, Zweig `claude/new-session-30byn3`
 
-> **Nachtrag 01.09.2026 (Rahmenplan Fassung 13).** Der erste Entwurf sagte
-> „nach S2". Das ist zu früh, und der Grund steht im Rahmenplan selbst: Die
-> Reihenfolge lautet inzwischen **S2 → S5 → S3 → S4**, und die
-> Parallelisierungs-Übersicht (Fassung 10, Abschnitt 5) führt S3 ausdrücklich
-> als **nicht parallel zu S2** — wegen `einstellungen.php`, „auf beiden Seiten".
-> S3 (R43) baut die Seite um, S5 (R49) davor den Geräteabschnitt. Wer die Texte
-> vor S3 umstellt, lässt sie von S3 gleich wieder umschreiben.
->
-> Dazu zwei Zahlen, die sich seither geändert haben: Der ausgelieferte Stand
-> ist **Web 9.15.0** (nicht 9.14.1), und S2 steht auf seinem Zweig bei
-> **Web 11.0.0**, Arbeitspaket AP5. Die Konfliktspalte unten ist auf diesen
-> Stand nachgemessen — sie ist gewachsen.
+## Statusblock
 
-Dieses Dokument ist die Vorlage für eine Umstellung, die **noch nicht
-stattgefunden hat**. Es sammelt den Befund, die Grenzen und die Arbeitsliste,
-damit die Umstellung später an einem Stück laufen kann statt in Etappen, die
-sich widersprechen.
+| Arbeitspaket | Inhalt | Zustand |
+|---|---|---|
+| AP0 | Neuzählung gegen Web 12.9.2, Entscheidungen E-S7-1 bis E-S7-4 | **erledigt** |
+| AP1 | Backup-Seite der NutzerIn (`einstellungen.php`, `assets/*.js`, `style.css`) | **erledigt** |
+| AP2 | Adminbereich Konten (`admin_user.php`, `admin_users.php`, `admin_sicherungen.php`, `adminbackup_lib.php`, `backup_lib.php`, `api/`) | offen |
+| AP3 | Komplett-Backup und Wiederanlauf (`komplett_lib.php`, `admin_komplettsicherung.php`, `wiederherstellen.php`) | offen |
+| AP4 | Backup-Ziele, Jobs, Rahmen (`admin_sicherungsziele.php`, `sicherungsziel_lib.php`, `jobs_lib.php`, `ui.php`, `update.php`, `install.php`, Rest) | offen |
+| AP5 | Dokumentation (Handbuch, Technik, Backup-Format, Export-Format, Design, Lizenzen, README, Backlog) | offen |
+| AP6 | `tools/` | offen |
+| AP7 | Buchführung (Version, Changelog), Prüfmittel, Prüfdokument | offen |
+| AP8 | Rahmenplan, Löschung dieses Dokuments — **erst nach Freigabe** | offen |
+
+**Wo es hakt:** nichts. **Nicht prüfbar in dieser Umgebung:** nichts —
+entgegen der Erwartung steht eine vollständige lokale Installation
+(MariaDB nachinstalliert, Referenzdatensatz über die regulären Wege
+eingespielt: 526 Ingest-Anfragen, 16 Diensttage, 87 Einsätze, 0 Fehler).
+Bilderlauf und Browserprüfung laufen damit wirklich.
+
+---
+
+## 0. Die Neuzählung (AP0, 02.09.2026)
+
+Die Zahlen der Vorlage stammten von Web 9.14.1/9.15.0. `main` steht auf
+**Web 12.9.2** und hat S2, S4 und S6 aufgenommen. Neu gezählt
+(`grep -o "Sicherung\|sicherung\|SICHERUNG"`, Vorkommen, nicht Zeilen):
+
+| Bereich | jetzt | Vorlage |
+|---|---|---|
+| `server/` ohne `vendor/` | **643** | 272 |
+| — davon in Kommentaren | 374 | — |
+| — davon in Code und sichtbarem Text | 269 | — |
+| `docs/Handbuch.md` | 78 | 48 |
+| `docs/Technik.md` | 123 | 34 |
+| `docs/Backup-Format.md` | 56 | 20 |
+| `docs/Backlog.md` | 51 | 11 |
+| übrige normative Doku | 15 | — |
+| `tools/` | 188 | nicht erfasst |
+| **Historie** (Changelog 236, Rahmenplan 47, Archiv 107, `konzepte/erledigt/` 344) | 734 | bleibt |
+
+**Die Verdopplung hat einen Namen: S2.** `komplett_lib.php` (40),
+`admin_komplettsicherung.php` (27), `wiederherstellen.php` (18),
+`admin_sicherungsziele.php` (17), `sicherungsziel_lib.php` (15) und
+`jobs_lib.php` (22) standen auf keiner Zeile der Arbeitsliste in Abschnitt 5 —
+es gab sie zum Zeitpunkt der Vorlage noch nicht. Sie gehören nach deren
+eigener Regel dazu; die Prüfmittel-Liste des Auftrags nennt zwei davon
+ohnehin. Damit bestätigt sich, was Abschnitt 2 vorhergesagt hat: **Eine
+Konfliktmessung gegen einen laufenden Zweig hat ein Verfallsdatum.**
+
+## 0a. Entscheidungen dieser Umsetzung
+
+Getroffen am 02.09.2026, vor der ersten Änderung. Sie ergänzen R56 (Verb
+„sichern", Symbolname und `admin_sicherungen.php` bleiben).
+
+- **E-S7-1 — Komposita mit Bindestrich.** „Komplett-Backup", „Backup-Ziel(e)",
+  „Backup-Datei", „Backup-Regeln", „Backup-Stand", „Backup-Lauf",
+  „Backup-Paket", „Backup-Kennung", „Backup-Job", „Backup-Bereich",
+  „Backup-Container", „Backup-Vorgang", „Backup-Seite", „Konto-Backup",
+  „Admin-Backup", „Sammel-Backup". Grund: Deutsche Typografie setzt bei
+  Anglizismus-Komposita den Bindestrich, und die Menüpunkte bleiben kurz —
+  „Backup-Ziele" ist zwei Zeichen kürzer als „Sicherungsziele".
+  **Das Genus zieht nur mit, wo der Kopf „Sicherung" war:** „Komplett-Backup"
+  ist sächlich, „Backup-Datei" bleibt weiblich, „Backup-Lauf" männlich,
+  „Backup-Ziel" sächlich wie zuvor.
+- **E-S7-2 — Kommentare gehen mit.** Damit gilt Abschnitt 5.1 dieser Vorlage
+  und **nicht** der Prompt-Satz „Kommentare bleiben (R13)": R13 sagt nur
+  versionshistorischen Kommentaren zu, und ein Kommentar, der „Sicherung"
+  erklärt, während der Code daneben „Backup" sagt, ist genau die Drift, die
+  diese Umstellung beseitigen soll. **Ausgenommen bleibt die Versionsgeschichte
+  in `server/version.php`** (45 Treffer) — dieselbe Begründung wie beim
+  Changelog in Abschnitt 3.2: sie ist Beleg, nicht Oberfläche.
+- **E-S7-3 — `docs/Backlog.md`: offene Punkte ja, erledigte nein.** Wie in
+  Abschnitt 5.2 vorgesehen. Erledigte Punkte sind Protokoll.
+- **E-S7-4 — `tools/` zieht mit**, mit zwei Ausnahmen, die kein Begriff sind,
+  sondern eine Messgrundlage: `tools/referenzdatensatz/quelldaten/` (drei
+  Fundstellen in Freitextfeldern der Diensttage D12, D15, D16) und die
+  eingecheckten Referenz-Exporte unter `tools/referenzdatensatz/referenz/`
+  bleiben **unangetastet**. Eine Änderung dort verändert die erzeugten
+  Nutzlasten, und der Kreislaufvergleich meldete danach Abweichungen, die
+  keine sind. Ebenfalls unangetastet bleibt
+  `.github/workflows/deploy.yml`: Der Kommentar dort erklärt die
+  Ausnahmeliste, und an dieser Datei wird in diesem Paket nichts angefasst
+  (`CLAUDE.md` 3).
+
+## 0b. Funde während der Umsetzung
+
+- **F-S7-01 (AP1) — „Sicherung" stand zweimal für *Absicherung*, nicht für
+  ein Backup.** `assets/crypto.js` („Das ist die wichtigste Sicherung dieses
+  Umbaus" — gemeint ist die Absicherung gegen einen stillen Vorgabewert) und
+  `einsatz_loeschen.php` („so greift die Sicherung auch, wenn Dialoge
+  blockiert sind"). Eine mechanische Ersetzung hätte beide zu Unsinn gemacht.
+  Behoben, indem dort **„Absicherung"** steht — das trennt die beiden
+  Bedeutungen dauerhaft. Repo-weit gegengesucht (`Sicherung gegen`,
+  `als Sicherung`, `Sicherung, dass`, `wichtigste Sicherung`, …): keine
+  weiteren Fälle.
+- **F-S7-02 (AP1) — Der Platzhalter der Zusatzdaten hieß an zwei Stellen
+  verschieden.** `crypto.js` schrieb `EDBAK4|<sicherungskennung>|…`,
+  `docs/Backup-Format.md` `EDBAK4|<kennung>|…`; der Code selbst liest
+  `manifest['kennung']`. Auf die normative Fassung angeglichen.
+
+---
+
+Dieses Dokument war die Vorlage für eine Umstellung, die noch nicht
+stattgefunden hatte; seit dem 02.09.2026 ist es zugleich das **Konzept der
+laufenden Umsetzung**. Es sammelt den Befund, die Grenzen und die
+Arbeitsliste, damit die Umstellung an einem Stück läuft statt in Etappen, die
+sich widersprechen. Abschnitte 1 bis 6 stehen unverändert als Befund; was die
+Umsetzung daran berichtigt hat, steht oben in Abschnitt 0.
 
 ---
 
