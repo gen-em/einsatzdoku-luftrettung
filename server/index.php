@@ -271,6 +271,29 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
     </section>
     </div><?php /* .tag-raster */ ?>
 
+    <?php /* ---- Ruhesegmente (S4/A2b, E-S4-17) ---------------------------
+             Bis Web 12.5.0 lagen die Segmente nur als graue Linie auf der
+             Karte und waren nicht anfassbar. Sie sind aber der Ort, an dem
+             die Spur eines vergessenen Einsatzes liegt — wer waehrend des
+             Einsatzes keinen Knopf gedrueckt hat, findet sie hier und
+             nirgends sonst.
+             Die Zeilen baut `renderRuheliste()`; die Karte bleibt leer, wenn
+             der Tag keine Segmente hat (kein Leerzustand mit eigener
+             Gestaltung — die Karte verschwindet dann ganz). */ ?>
+    <section class="karte" id="ruheliste" hidden>
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Ruhesegmente</h2>
+        <span class="karte-zahl" id="rzahl"></span>
+      </div>
+      <div class="karte-inhalt">
+        <p class="feld-hinweis">Aufzeichnung zwischen den Einsätzen. Wurde
+           während eines Einsatzes kein Knopf gedrückt, schneide ihn hier aus
+           dem Segment heraus — der übrige Zeitraum bleibt als Ruhesegment
+           stehen.</p>
+        <div id="ruhezeilen"></div>
+      </div>
+    </section>
+
     <?php /* Das Sortierblatt (E-P3-32): dieselben Spalten wie der
              Tabellenkopf, mobil als Blatt von unten. Die Eintraege baut
              renderMissionTable() aus den Koepfen — eine zweite Spaltenliste
@@ -297,6 +320,13 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/luftlinie.js') ?>"></script>
+<?php /* Der Schnitt (S4/A2b). Muss NACH html.js stehen (er liest EdHtml) und
+         VOR dem Block unten, der `EdSchnitt.starten()` ruft. `zeitfeld.js`
+         ruestet die Felder des Schneide-Bereichs nach — es beobachtet das
+         Dokument und erfasst auch spaeter erzeugte Felder, die erzeugende
+         Stelle muss davon nichts wissen. */ ?>
+<script src="<?= asset('assets/schneiden.js') ?>"></script>
+<script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
 const SEL_DAY_ID = <?= json_encode($selDay) ?>;
 const DEF_VEHICLE = <?= (int)($SD_DEFAULTS['vehicle_id'] ?? 0) ?>;
@@ -340,6 +370,7 @@ map.on('zoomend', () => {
 
 function fmtDay(iso){ const [y,m,d]=iso.split('-'); return `${d}.${m}.${y}`; }
 let dayMissions = [];
+let dayRest = [];
 let sortKey = 'start', sortDir = 1;
 
 function sortVal(m, key){
@@ -595,16 +626,22 @@ async function loadDay(dayId){
   trackLines.length = 0;
   const bounds = [];
 
-  // Ruhe-Track: schwarz, dezent
-  d.rest_segments.forEach(seg => {
-    if (seg.length > 1) {
-      const rl = L.polyline(seg, { color: EdGeo.ruheFarbe(),
+  /* Ruhe-Track: schwarz, dezent.
+     Seit Web 12.6.0 liefert die API je Segment ein OBJEKT (Kennung, Zeiten,
+     Punktzahl, Schnitte) statt der blossen Punktliste — die Karte
+     „Ruhesegmente" braucht mehr als Linien. Fuer die Karte selbst aendert
+     das nur `seg` zu `seg.track`. */
+  dayRest = d.rest_segments;
+  dayRest.forEach(seg => {
+    if (seg.track.length > 1) {
+      const rl = L.polyline(seg.track, { color: EdGeo.ruheFarbe(),
         weight: Math.max(3, trackWeight() - 1), opacity:0.9, smoothFactor:0 });
       layerGroup.addLayer(rl);
       trackLines.push(rl);
-      seg.forEach(p => bounds.push(p));
+      seg.track.forEach(p => bounds.push(p));
     }
   });
+  EdSchnitt.setzen(dayRest);
 
   // Einsaetze: je eigene Farbe
   // Einsaetze: Nummer + Farbe stabil nach Alarmierungszeit vergeben
@@ -870,6 +907,11 @@ function tagdatenBearbeiten(auf){
 }
 
 async function init(){
+  /* Der Schnitt bekommt den Weg zum Neuladen — nicht umgekehrt. Nach einem
+     Schnitt aendern sich Einsatztabelle, Karte, Segmentliste und
+     Diensttag-Zeitraum; vier Stellen von Hand fortzuschreiben waeren vier
+     Gelegenheiten, an denen die Anzeige von der Datenbank abweicht. */
+  EdSchnitt.starten(() => loadDay(currentDayId));
   document.getElementById('vehsel').addEventListener('change', vehicleBaseSync);
   document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());
   document.getElementById('tagdatenknopf').addEventListener('click', ev => {

@@ -1412,17 +1412,24 @@ function schnitt_vermerken(PDO $pdo, int $userId, string $quelleTyp, int $quelle
  * die lineare Suche in `schnitt_gesperrt()` ist dann billiger als jeder
  * Index.
  *
- * @return list<array{von_ts:int,bis_ts:int}> aufsteigend nach von_ts
+ * `mission_id` KOMMT MIT, obwohl `ingest.php` es nicht braucht. Die
+ * Tagesansicht braucht es: Sie zeigt an einem Segment, was daraus
+ * geschnitten wurde, und der Weg zurueck fuehrt ueber den Einsatz. Eine
+ * zweite Funktion fuer dieselbe Zeile mit einer Spalte mehr waere die
+ * teurere Loesung — eine Spalte kostet an dieser Stelle nichts.
+ *
+ * @return list<array{mission_id:int,von_ts:int,bis_ts:int}> aufsteigend nach von_ts
  */
 function schnitte_lesen(PDO $pdo, string $ownerType, int $ownerId): array
 {
-    $q = $pdo->prepare('SELECT von_ts, bis_ts FROM track_cuts
+    $q = $pdo->prepare('SELECT mission_id, von_ts, bis_ts FROM track_cuts
                          WHERE owner_type = ? AND owner_id = ?
                          ORDER BY von_ts');
     $q->execute([$ownerType, $ownerId]);
     $aus = [];
     foreach ($q->fetchAll() as $r) {
-        $aus[] = ['von_ts' => (int)$r['von_ts'], 'bis_ts' => (int)$r['bis_ts']];
+        $aus[] = ['mission_id' => (int)$r['mission_id'],
+                  'von_ts' => (int)$r['von_ts'], 'bis_ts' => (int)$r['bis_ts']];
     }
     return $aus;
 }

@@ -2346,6 +2346,175 @@ Kommandozeilen-Notausgang) hat die vier offenen Migrationen nachgeholt.
 
 ---
 
+### A2b — Schneiden: Endpunkt und Bedienung · Web 12.6.0 · erledigt
+
+**Was gebaut ist:**
+
+- `server/api/schneiden.php` — zwei Aktionen (`schneiden`, `rueckgaengig`),
+  beide über `validate_lib.php`, beide in einer Transaktion.
+- Die Karte **„Ruhesegmente"** in `index.php` und der aufklappbare
+  Schneide-Bereich, gebaut in `server/assets/schneiden.js`.
+- `api/day.php` liefert je Segment Kennung, Zeiten, Punktzahl und die
+  Sperrvermerke (bis dahin nur eine nackte Punktliste für die Karte).
+- Die Gestaltung in `style.css`, nachgetragen in `docs/Design.md` 9.17.
+
+#### Prüfstand A2b
+
+**Zuerst, was nicht geprüft ist:**
+
+- **Kein Gerät hat nach einem Schnitt nachgeliefert.** Der Fall ist zweimal
+  belegt (Spurprobe Teil 6 und die Endpunktprobe), aber beide bauen die
+  Punktschleife aus `ingest.php` nach, statt den Endpunkt aufzurufen. Ein
+  echter Upload gegen `ingest.php` mit gültigem Gerätetoken steht aus.
+- **Die Kreisläufe R24** (`tools/wiederherstellungs-probe/`,
+  `papierkorb_misch.mjs`) sind nicht gefahren. Ein Befund steht fest:
+  **B-S4-10**, die Konto-Sicherung trägt `track_cuts` nicht mit
+  (Backlog Nr. 59).
+- **Messstand R35** (Antwortzeit auf dem 5 000-Einsätze-Konto): nicht
+  gemessen. Der Endpunkt liest genau eine Spur; die Zahl wäre trotzdem eine.
+- **Kein Test über Mitternacht mit echten Daten.** Der Tagesversatz ist
+  gebaut und im Code begründet (`tagFuer()` probiert beide Kalendertage und
+  nimmt den, der ins Segment fällt), aber der Prüfbestand hat keinen Dienst
+  über Mitternacht mit Ruhesegment.
+- **Nur Chromium.** Andere Browser sind nicht gefahren.
+
+**Browser (Chromium, lokale Installation, 1280 px und 390 px): 28 Erwartungen,
+alle erfüllt.**
+
+| Prüfung | Ist | Soll |
+|---|---|---|
+| Karte „Ruhesegmente" steht in der Tagesansicht | vorhanden und sichtbar | E-S4-17 |
+| Alle Segmente als Zeile | **4 von 4** | vollständig |
+| Knopf nur, wo Punkte sind | **3 von 4** (Nr. 125 hat 0 Punkte) | kein leeres Versprechen |
+| Die Karte zeichnet die Spuren weiter | **6 Linien** | keine Regression |
+| Bereich klappt auf und meldet es | `aria-expanded="true"` | bedienbar |
+| Vorbelegung | **07:00 / 07:05** = das ganze Segment | A0 |
+| Zeitfelder | **5**, alle `.zeitfeld` als Textfeld | E1 |
+| `<input type="time">` | **0** | E1 |
+| Erklärtext nennt Auswahl UND Rest | „07:01 – 07:03 · 2 min … (07:00 – 07:01 und 07:03 – 07:05)" | A0 |
+| Unsinn im Feld | Knopf gesperrt, Grund genannt | robust |
+| Zeit außerhalb des Segments | abgewiesen, Grenzen genannt | robust |
+| Ende vor Beginn | abgewiesen | robust |
+| **Der Schnitt** | Meldung „13 Punkte … 48 bleiben" | beide Zahlen |
+| Segment danach | **61 → 48** | Punkte wandern |
+| Einsatzliste danach | **3 → 4** | Einsatz entsteht |
+| Sperrvermerk | steht, **07:01–07:03**, als Plakette sichtbar | E-S4-53 |
+| Optionale Phase | **1 Phase** am Einsatz | A0 |
+| **Zweiter Schnitt über denselben Bereich** | abgelehnt (409), Begründung genannt | kein leerer Einsatz |
+| … und kein zweiter Einsatz | Einsatzliste bleibt **4** | belegt |
+| **Rückgängig** | „13 Punkte liegen wieder im Ruhesegment" | E-S4-17 |
+| Segment danach | **48 → 61** | vollständig |
+| Sperrvermerk danach | **0** | das Loch bleibt füllbar |
+| Einsatzliste danach | **4 → 3** | Einsatz weg |
+| Konsolenfehler | **0** unerwartete (dazu 1× die erwartete 409) | sauber |
+| 390 px: waagerechter Überlauf | **0 px** | E-P3 |
+| 390 px: Bedienhöhen | **44 / 44 / 44 / 44 / 44 px** | CLAUDE.md 5 |
+
+**Endpunktlogik ohne HTTP (dieselben Funktionen, dieselbe Reihenfolge, in
+einer zurückgerollten Transaktion): 17 Erwartungen, alle erfüllt.** Darunter:
+Der Schnitt nimmt **1801 von 3600** Punkten (09:10:00–09:40:00 inklusive
+beider Ränder), eine Phase **außerhalb** des Schnitts wird abgelehnt, der
+Einsatz trägt `origin=manual`/`manual=1`/`client_ref=cut-…`, der Diensttag
+umschließt ihn, eine Nachlieferung **nach** dem Schnitt kommt zu **1800 von
+1800** an, und das Rückgängig gibt 1801 zurück, ohne die 1800 anzutasten
+(3599 → 5400).
+
+**Prüfmittel:** Wortliste **0/0/0**. Vollständigkeit **266 gegen 260** vor
+A2b — und die sechs sind benannt, nicht weggesehen:
+
+Die Prüfung hat beim ersten Lauf **19** mehr gemeldet, und drei Viertel davon
+waren echte Befunde gegen diesen Code:
+
+| gemeldet | war | behoben durch |
+|---|---|---|
+| 8 × Pixelmaß außerhalb der Token | `top:3px`, `border-radius:8px`, `flex:1 1 180px` | Die Leiste **ist** jetzt der Balken; die Beschriftungen hängen mit `bottom:100%` daran, statt gerechnet versetzt zu werden. Rundung aus `--radius-rund`, Feldreihe als Grid mit der bestehenden 720-px-Schwelle wie `.listen-form-felder` |
+| 1 × Klasse ohne Regel (`meldung-`) | `'meldung-' + ton` — ein zusammengesetzter Klassenname, den kein Prüfmittel lesen kann | ausgeschrieben |
+| 1 × Unicode-Zeichen (`…`) in einem Kommentar | ein **veralteter** Kommentar, der noch das SVG beschrieb | ersetzt |
+| 3 × `…` in `api/schneiden.php` | Prosa in Kommentaren | durch Punkte ersetzt |
+
+**Übrig bleiben 6 `style="…"`-Attribute in `schneiden.js`** — die
+Prozentwerte der Zeitleiste, zur Laufzeit gerechnet. Die kann kein Stylesheet
+vorhalten; es ist dieselbe Klasse wie das schon vorhandene
+`index.php: background:${m._col}` (die Einsatzfarbe). Sie über
+`element.style.setProperty()` zu setzen wäre derselbe Effekt und **würde nur
+das Prüfmittel umgehen** — deshalb stehen sie da und werden gezählt.
+
+Der Stilvergleich ist **nicht** gefahren und war auch nicht fällig: Die
+Änderung an `style.css` fügt einen Block neu hinzu und verschiebt, führt
+zusammen oder entfernt nichts (CLAUDE.md 6).
+
+#### Probleme und wie sie gelöst wurden
+
+**Der Schnitt griff zwei Stunden daneben und meldete Erfolg.** Der erste
+Browserlauf schnitt 05:01–05:03 aus einem Segment, das die Oberfläche als
+05:00–05:05 zeigte — und nahm **null Punkte** mit. Die Ursache: `api/day.php`
+lieferte `started_at` roh als UTC, und `schneiden.js` rechnete mit
+`new Date(…)` in die Zone des **Browsers** um. Im Container ist die UTC, die
+Anwendung rechnet in `Europe/Berlin` — zwei Stunden Versatz.
+
+Das ist kein Zufallsfehler, sondern eine verlassene Linie: Die Anwendung
+rechnet Zeiten **immer** auf dem Server (`fmt_local()`), und die
+Einsatztabelle bekommt seit jeher `start_hhmm`. Diese eine Datei tat es
+anders. Jetzt liefert die API `start_hhmm`/`end_hhmm` fertig formatiert,
+`von_ts`/`bis_ts` als Epochensekunden (reine Balkengeometrie, zonenfrei) und
+`start_tag`/`end_tag` für Dienste über Mitternacht; der Browser rechnet nur
+noch in Minuten.
+
+**Die Zeitleiste war auf dem Telefon unlesbar.** Sie war ein
+`<svg viewBox="0 0 640 120">` mit `width:100%`, wie im Mockup. Ein `viewBox`
+skaliert aber seine Beschriftung mit: auf 1280 px richtig, auf 390 px **sechs
+Pixel** hoch. Dieselbe Zahl in zwei Größen, je nach Fenster — und die
+Schriftskala aus `Design.md` 5 galt für sie nicht mehr. Jetzt HTML mit
+Prozentbreiten: Der Text bleibt Text, nur der Balken skaliert. In
+`Design.md` 9.17 als Fund festgehalten.
+
+**Ein Schnitt ohne Punkte legte einen Einsatz an, den niemand mehr loswurde.**
+Beim zweiten Schnitt über denselben Bereich wanderten 0 Punkte. Der Endpunkt
+legte trotzdem den Einsatz an, schrieb aber — richtigerweise — keinen
+Sperrvermerk; und ohne Vermerk findet das Rückgängig den Weg zurück nicht. Die
+Bedienerin bliebe mit einem leeren Einsatz sitzen, den nur der Papierkorb noch
+loswird, ohne dass ihr jemand gesagt hat, warum. Jetzt wird der Fall
+**abgelehnt** (409) mit dem Hinweis auf „Nachtragen".
+
+**`spur_teilen()` hätte beim Rückgängig 500 Punkte auf 50 zusammengestrichen** —
+gefunden und behoben schon in A2a, hier zum ersten Mal *am laufenden Weg*
+belegt: Das Segment war nach dem Schnitt weitergelaufen, und der Prüffall
+zählt nach dem Rückgängig 550 statt 50.
+
+**PDO kennt keine verschachtelten Transaktionen** (A2a) — hier zeigte sich,
+wofür der Schalter da war: Der Endpunkt öffnet die Transaktion, legt den
+Einsatz an, ruft `spur_teilen()` und vermerkt. Mit einer eigenen Transaktion
+in `spur_teilen()` hätte das geworfen.
+
+#### Entscheidungen, die in A2b gefallen sind
+
+- **E-S4-58 — Rückgängig steht am Segment, nicht am Einsatz.** *Abweichung
+  vom freigegebenen Mockup* (Vorschlag 3: „Zeilenaktion am geschnittenen
+  Einsatz"). Die Einsatzliste ist eine sortierbare Tabelle mit Spaltenkatalog
+  (`mission_fields.php`) und hat **keine** Zeilenaktionen; eine Aktionsspalte
+  träfe alle drei Einsatztabellen (Tagesansicht, Suche, Zeitraum) und wäre
+  eine neue Darstellung — freigabepflichtig nach CLAUDE.md 5. Am Segment ist
+  die Handlung außerdem vollständig: Dort steht, was fehlt, dorthin kommen die
+  Punkte zurück, und dort steht schon die Plakette mit dem Zeitraum.
+  **Steht zur Entscheidung** — sie ist in einer halben Stunde umgestellt, wenn
+  die Aktionsspalte gewünscht ist.
+- **E-S4-59 — Ein Schnitt ohne Punkte wird abgelehnt.** Begründung oben. Wer
+  einen Einsatz ohne Spur will, trägt ihn nach; das Formular tut genau
+  dasselbe.
+- **E-S4-60 — Der Endpunkt füllt keine Einsatzfelder.** Einsatzort, Alter und
+  Diagnose sind Ende-zu-Ende-verschlüsselt und entstehen im Browser. Der
+  geschnittene Einsatz ist ein Einsatz mit Zeiten, Phasen und Spur; den Rest
+  trägt die Bedienerin im Formular nach, das dafür da ist.
+- **E-S4-61 — Die Zeitleiste ist HTML, kein SVG.** Begründung oben und in
+  `Design.md` 9.17. Sie bleibt außerdem eine **Anzeige**: kein Ziehen an den
+  Griffen, weil das eine zweite Eingabe für dieselbe Zahl wäre.
+- **E-S4-62 — Der Schneide-Bereich benutzt Zeitfelder nach E1**
+  (`<input type="text" class="zeitfeld">`), nicht `type="time"` wie der
+  Mockup. Das ist die zweite bewusste Abweichung; die Begründung ist die
+  bestehende Regel und steht im Kopf von `assets/zeitfeld.js`.
+
+---
+
 ## 13. Abgleich mit Rahmenplan Fassung 13 (R49) — 01.09.2026
 
 Der Rahmenplan wurde nach der Beauftragung von Block B und C fortgeschrieben.

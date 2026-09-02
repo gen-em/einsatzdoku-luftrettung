@@ -1316,6 +1316,61 @@ ein echter Fund, kein erfundenes Beispiel:
 
 ---
 
+### 9.17 Schneide-Bereich und Zeitleiste
+
+*Neu mit Web 12.6.0 (S4/A2b). Mockup `docs/mockups/S4-schneiden.html`,
+freigegeben am 31.08.2026.* Gebaut wird er in `assets/schneiden.js`, nicht in
+`ui.php`: Die Segmentliste entsteht im Browser aus `api/day.php`, es gibt
+keine PHP-Seite, die ihn ausgeben könnte. In der erzeugten Bausteintabelle
+(Kapitel 9, Anfang) steht er deshalb nicht — sie liest `ui.php`.
+
+```
+.schnitt-bereich      der aufklappbare Block unter einer Segmentzeile
+  .schnitt-vorschau   der Kasten um die Zeitleiste
+    .schnitt-leiste   die Leiste selbst (position:relative)
+      .schnitt-bahn   die volle Dauer des Segments      — --sand
+      .schnitt-weg    ein früher schon geschnittener Teil — --gedaempft, .35
+      .schnitt-wahl   der gewählte Bereich               — --orange
+      .schnitt-griff  die beiden Kanten                  — --dunkelblau
+      .schnitt-marke  Uhrzeit am Griff
+    .schnitt-raender  Anfang und Ende des Segments unter der Leiste
+  .schnitt-felder     eine Reihe Zeitfelder (flex, 1 1 180px je Feld)
+```
+
+**Der orange Randstrich ist nicht neu.** `.schnitt-bereich` benutzt dieselbe
+Form wie `.rea-ereignisse`: `border-left: var(--strich-stark) solid
+var(--orange)` plus Innenabstand. Sie sagt „das hier gehört zur Zeile
+darüber" (E-P3-28), und dafür gibt es keinen zweiten Weg.
+
+**Kein neuer Farbwert und keine neue Größe.** Alles hier kommt aus den Token
+in `:root`. Der Balken ist `--sand`, das Gewählte `--orange` — dieselbe
+Aussage wie überall sonst („dieser Teil ist gemeint").
+
+> **Die Zeitleiste ist HTML, kein SVG — und das ist ein Fund.** Die erste
+> Fassung war ein `<svg viewBox="0 0 640 120">` mit `width:100%`, wie im
+> Mockup. Ein `viewBox` skaliert aber **seine Beschriftung mit**: Auf 1280 px
+> stand die Uhrzeit richtig, auf 390 px war sie sechs Pixel hoch. Dieselbe
+> Zahl in zwei Größen, je nach Fenster — und die Schriftskala aus Kapitel 5
+> gilt dann für sie nicht mehr.
+>
+> Mit Prozentbreiten auf gewöhnlichen Elementen bleibt der Text Text und nur
+> der Balken skaliert. **Gemessen:** 390 px, Beschriftung 13 px, waagerechter
+> Überlauf 0.
+
+> **Sie ist eine Anzeige, keine Bedienung.** Geführt wird über die Zeitfelder;
+> die Leiste zeigt das Ergebnis. Ein Ziehen an den Griffen wäre eine zweite
+> Eingabe für dieselbe Zahl — die eine auf die Minute genau, die andere auf
+> das Pixel —, und die beiden liefen auseinander. Der Mockup hält es ebenso
+> („führend sind die Felder").
+
+**Zeitfelder sind Textfelder mit `.zeitfeld`**, nie `<input type="time">`
+(E1). Der Mockup zeigt fünfmal `type="time"`; das ist die eine Stelle, an der
+die Umsetzung ihm bewusst nicht folgt — die Begründung steht im Kopf von
+`assets/zeitfeld.js`: Ein `type="time"` zeigt sein Format nach der
+Regionseinstellung des Betriebssystems und wird bei einer 12-Stunden-Region
+zu „01:30 PM", auch auf deutscher Oberfläche. In einer Notfalldokumentation
+ist das eine Fehlerquelle.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Fünf Typen

@@ -2269,6 +2269,89 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   border-left:var(--strich-stark) solid var(--orange)}
 .zeile-weg{color:var(--rot)}
 
+/* ---- Schneide-Bereich (S4/A2b, E-S4-17) -----------------------------------
+ *
+ * Der aufklappbare Bereich unter einer Ruhesegment-Zeile: Aus dem Segment
+ * wird ein Einsatz herausgeschnitten. Er GEHÖRT ZUR ZEILE DARÜBER, und das
+ * sagt der orange Randstrich — dieselbe Form wie `.rea-ereignisse`, kein
+ * neuer Gedanke (E-P3-28).
+ *
+ * Kein eigener Farbwert und keine eigene Größe: Alles hier kommt aus den
+ * vorhandenen Token. Die Zeitleiste benutzt `--sand` für die volle Dauer und
+ * `--orange` für das Gewählte — dieselbe Aussage wie überall sonst („dieser
+ * Teil ist gemeint"). */
+.schnitt-bereich{
+  margin:var(--abstand-2) 0 var(--abstand-4) var(--abstand-2);
+  padding:var(--abstand-3) 0 var(--abstand-3) var(--abstand-3);
+  border-left:var(--strich-stark) solid var(--orange);
+}
+/* Untereinander, ab 720 px nebeneinander und gleich breit — dieselbe Form und
+ * dieselbe Schwelle wie `.listen-form-felder`. `grid-auto-flow:column` statt
+ * einer festen Spaltenzahl, weil die Reihe mal zwei und mal drei Felder trägt;
+ * eine feste Grundbreite in Pixeln bräuchte eine Zahl, die in keinem Token
+ * steht. */
+.schnitt-felder{display:grid;gap:var(--abstand-3)}
+.schnitt-felder .feld{min-width:0}
+@media (min-width:720px){
+  .schnitt-felder{grid-auto-flow:column;grid-auto-columns:1fr}
+}
+
+/* Die Zeitleiste. Sie ist eine ANZEIGE und keine Bedienung: Geführt wird über
+ * die Zeitfelder, die Leiste zeigt das Ergebnis. Deshalb kein Ziehen an den
+ * Griffen — es gäbe eine zweite Eingabe für dieselbe Zahl, und die beiden
+ * liefen auseinander (Mockup A0, Vorschlag 2).
+ *
+ * SIE IST HTML UND KEIN SVG, und das war eine Korrektur: Ein SVG mit
+ * `viewBox` skaliert seine Beschriftung mit der Breite. Auf 1280 px stand sie
+ * richtig, auf 390 px war sie sechs Pixel hoch und unlesbar — dieselbe Zahl
+ * in zwei Größen, je nach Fenster. Mit Prozentbreiten auf gewöhnlichen
+ * Elementen bleibt der Text der Text und nur der Balken skaliert. */
+.schnitt-vorschau{
+  background:var(--rauch);
+  border-radius:var(--radius);
+  padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);
+  margin-bottom:var(--abstand-3);
+}
+/* Die Leiste IST der Balken — die Beschriftungen hängen mit `bottom:100%`
+ * darüber und mit `top:100%` darunter. Das erspart gerechnete Versätze, und
+ * damit die einzigen Zahlen, für die es hier kein Token gäbe. Der obere
+ * Abstand hält den Platz für die Griffbeschriftung frei. */
+.schnitt-leiste{position:relative;height:var(--abstand-4);margin-top:var(--abstand-5)}
+.schnitt-bahn{
+  position:absolute;inset:0;
+  background:var(--sand);border-radius:var(--radius-rund);
+}
+.schnitt-wahl{
+  position:absolute;top:0;bottom:0;
+  background:var(--orange);border-radius:var(--radius-rund);
+}
+/* Schon einmal Geschnittenes: dieselbe Fläche, aber blasser — es ist kein
+ * zweiter gewählter Bereich, sondern einer, der nicht mehr da ist. Ein
+ * zweiter Vollton hieße „auch das ist gemeint". */
+.schnitt-weg{
+  position:absolute;top:0;bottom:0;
+  background:var(--gedaempft);opacity:.35;
+}
+/* Der Griff ragt oben und unten über den Balken hinaus, damit die Kante auch
+ * dort sichtbar ist, wo Balken und Auswahl dieselbe Höhe haben. */
+.schnitt-griff{
+  position:absolute;top:calc(-1 * var(--abstand-1));
+  bottom:calc(-1 * var(--abstand-1));
+  width:var(--strich-stark);background:var(--dunkelblau);
+}
+/* Die Beschriftung am Griff: mittig darüber, und `translateX(-50%)` statt
+ * einer gerechneten Verschiebung — die Textbreite kennt nur der Browser. */
+.schnitt-marke{
+  position:absolute;bottom:calc(100% + var(--abstand-1));
+  transform:translateX(-50%);
+  white-space:nowrap;font-size:var(--groesse-2);color:var(--dunkelblau);
+}
+.schnitt-raender{
+  display:flex;justify-content:space-between;
+  font-size:var(--groesse-2);color:var(--gedaempft);
+  margin-top:var(--abstand-2);
+}
+
 /* Orange Anlegen-Wege in Kartenfüßen („+ Phase hinzufügen"). */
 .anlegen-link{
   display:inline-flex;align-items:center;gap:var(--abstand-2);

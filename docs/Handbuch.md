@@ -545,6 +545,65 @@ der Karte.
 > so zu behandeln wie die geschützten Angaben selbst, obwohl sie ohne
 > Schlüssel lesbar ist. Der Hinweis steht auf der Seite über der Liste.
 
+### 4.1b Einen vergessenen Einsatz aus der Ruhezeit schneiden
+
+*Seit Web 12.6.0.*
+
+**Das Problem, für das es gebaut ist:** Der Einsatz war da, nur hat niemand
+auf der Uhr einen Knopf gedrückt. Er fehlt also in der Liste — aber der
+**Weg** ist aufgezeichnet: Das Gerät hat durchgezeichnet und alles als
+Ruhezeit gebucht. Wer den Einsatz einfach nachträgt, bekommt einen Einsatz
+ohne Spur, und die Fahrt bleibt als Ruhezeit stehen.
+
+Unter der Einsatzliste steht deshalb die Karte **„Ruhesegmente"**: jede
+Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
+
+**So geht es:**
+
+1. **„Schneiden"** an der Zeile des Segments, in dem der Einsatz steckt. Der
+   Bereich klappt darunter auf.
+2. **Beginn und Ende** eintragen. Vorbelegt ist das ganze Segment — das ist
+   Absicht: Ein geratener Ausschnitt wäre eine Behauptung über etwas, das nur
+   du weißt. Die **Zeitleiste** darüber zeigt orange, was du gewählt hast.
+3. **Phasenzeiten** sind optional — Ausrücken, Ankunft Einsatzort, Ankunft
+   Klinik. Alles Weitere trägst du danach im Einsatz nach; zum Schneiden
+   genügen Beginn und Ende.
+4. **„Einsatz erzeugen"**. Unter den Feldern steht vorher in Worten, was
+   passiert: welchen Zeitraum der Einsatz bekommt und welche Reste als
+   Ruhesegment stehen bleiben.
+
+**Die Punkte wandern, sie werden nicht kopiert.** Nach dem Schnitt liegt die
+Fahrt beim Einsatz und **nicht mehr** im Ruhesegment. Das ist gewollt: Sonst
+zeigte die Ruhezeit später eine Fahrt über 40 km.
+
+**Was danach noch fehlt:** Einsatzort, Alter und Diagnose. Die sind
+verschlüsselt und können nur im Browser entstehen — der geschnittene Einsatz
+ist zunächst ein Einsatz mit Zeiten, Phasen und Spur. Öffne ihn und trag den
+Rest wie gewohnt nach (Abschnitt 4.3).
+
+**Rückgängig** steht an derselben Segmentzeile, neben einer Plakette mit dem
+geschnittenen Zeitraum. Es holt die Punkte zurück und löscht den Einsatz.
+
+> **Es geht nur, solange am Einsatz nichts hängt.** Hast du inzwischen
+> Einsatzort, Diagnose, eine abweichende Besatzung oder eine Reanimation
+> eingetragen, sagt die Anwendung das und tut nichts — Rückgängig würde das
+> mitlöschen. Soll der Einsatz dann trotzdem weg, lösch ihn über den
+> Papierkorb (Abschnitt 8); dort läuft die Frist von 30 Tagen.
+
+> **Ein Zeitraum, in dem kein Punkt liegt, lässt sich nicht schneiden.** Die
+> Anwendung sagt es und legt nichts an. Das passiert, wenn du denselben
+> Bereich ein zweites Mal schneidest oder wenn das Gerät dort nicht
+> aufgezeichnet hat. Für einen Einsatz ohne Spur ist **„Nachtragen"** der
+> richtige Weg.
+
+**Und wenn das Gerät den Zeitraum später noch nachliefert?** Es kommt nicht
+mehr an. Der Schnitt merkt sich den Zeitraum, und was daraus nachkommt, wird
+verworfen — sonst läge die Fahrt hinterher zweimal da. Alles **außerhalb** des
+geschnittenen Zeitraums kommt normal an; die Aufzeichnung läuft über den
+Schnitt hinweg weiter, und ein Dienst, der um 09:30 geschnitten wurde, zeichnet
+um 09:31 weiter auf. Nimmst du den Schnitt zurück, ist auch die Sperre wieder
+weg.
+
 ### 4.2 Einsatzansicht
 
 Über dem Titel steht der **Rückweg** „‹ Sonntag, 27.12.2026" zurück zur

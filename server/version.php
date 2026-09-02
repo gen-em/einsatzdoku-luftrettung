@@ -1934,5 +1934,39 @@ declare(strict_types=1);
  * Die Bedienung folgt in einem eigenen Paket; hier stehen Bibliothek, Schema,
  * die Pruefung in ingest.php und die Loeschwege.
  *
+ * 12.6.0 MACHT DAS SCHNEIDEN BEDIENBAR (S4/A2b). Die Tagesansicht bekommt die
+ * Karte „Ruhesegmente" -- bis hierher lagen die Segmente nur als graue Linie
+ * auf der Karte und waren nicht anfassbar, obwohl genau dort die Spur eines
+ * vergessenen Einsatzes liegt. An einer Segmentzeile klappt der
+ * Schneide-Bereich auf: Zeitleiste, Beginn und Ende (Pflicht), drei
+ * Phasenzeiten (optional). `api/schneiden.php` legt den Einsatz auf dem
+ * BESTANDSWEG an (virtuelles Geraet `manual-<userId>`, `origin = 'manual'`,
+ * `manual = 1`) und verschiebt die Punkte in EINER Transaktion. Rueckgaengig
+ * ist derselbe Aufruf mit vertauschten Enden.
+ *
+ * OHNE MIGRATION -- die Tabelle steht seit 12.5.0.
+ *
+ * ZWEI FUNDE AUS DER BROWSERPRUEFUNG, beide behoben und beide von derselben
+ * Art: etwas, das auf EINEM Rechner richtig aussieht.
+ *
+ * (1) DIE ZEITEN GINGEN ROH HINAUS. `api/day.php` lieferte `started_at` als
+ *     UTC-Zeichenkette, und der Browser rechnete mit `new Date(...)` in SEINE
+ *     Zone um. Auf einem Rechner in der Zone der Anwendung faellt das nie
+ *     auf; im Container ist sie UTC, und der Schnitt griff zwei Stunden
+ *     daneben und nahm NULL Punkte mit -- mit Erfolgsmeldung. Jetzt geht
+ *     `start_hhmm` hinaus, fertig formatiert, wie es die Einsatztabelle seit
+ *     jeher bekommt. Der Browser rechnet nur noch in Minuten.
+ *
+ * (2) DIE ZEITLEISTE WAR EIN SVG mit `viewBox` und skalierte ihre
+ *     Beschriftung mit der Breite: auf 1280 px richtig, auf 390 px sechs
+ *     Pixel hoch. Jetzt HTML mit Prozentbreiten -- der Text bleibt Text, nur
+ *     der Balken skaliert.
+ *
+ * Dazu: Ein Schnitt, in dessen Zeitraum kein Punkt liegt, wird ABGELEHNT
+ * statt einen leeren Einsatz anzulegen. Ohne gewanderte Punkte gaebe es
+ * keinen Sperrvermerk, und ohne Vermerk faende das Rueckgaengig den Weg
+ * zurueck nicht -- die Bedienerin bliebe mit einem Einsatz sitzen, den nur
+ * der Papierkorb noch loswird.
+ *
  */
-const WEB_VERSION = '12.5.0';
+const WEB_VERSION = '12.6.0';

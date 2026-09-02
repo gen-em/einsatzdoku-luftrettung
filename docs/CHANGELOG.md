@@ -11,6 +11,124 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.6.0] — 2026-09-02
+
+**Der vergessene Einsatz lässt sich jetzt aus dem Ruhesegment
+herausschneiden.** Zweites Paket von S4 Block A: die Bedienung. Keine
+Migration — die Tabelle steht seit Web 12.5.0.
+
+### Web — Die Karte „Ruhesegmente"
+
+Bis hierher lagen die Ruhesegmente **nur als graue Linie auf der Karte** und
+waren nicht anfassbar. Dabei ist genau dort die Spur eines Einsatzes, bei dem
+niemand einen Knopf gedrückt hat: Das Gerät hat durchgezeichnet, nur eben als
+Ruhezeit.
+
+Die Tagesansicht führt sie deshalb jetzt als eigene Karte, mit Zeitraum,
+Dauer und Punktzahl. Wo Punkte da sind, steht **„Schneiden"** — wo keine
+sind, nicht: Ein Segment ohne Spur hat nichts, was wandern könnte, und der
+Knopf wäre ein Versprechen, das der Endpunkt nicht halten kann.
+
+### Web — Der Schneide-Bereich
+
+An der Zeile klappt er auf: **Zeitleiste**, Beginn und Ende (Pflicht), drei
+Phasenzeiten (optional — Ausrücken, Ankunft Einsatzort, Ankunft Klinik). Die
+vollständige Phasenliste hat ihr Zuhause im Einsatzformular; hier stehen die
+drei, die man beim Schneiden ohnehin weiß.
+
+**Vorbelegt ist das ganze Segment**, nicht ein geratener Ausschnitt. „Die
+mittlere Stunde" wäre eine Behauptung über etwas, das nur die Bedienerin
+weiß; das ganze Segment ist die ehrliche Vorbelegung — sichtbar falsch und in
+zwei Feldern berichtigt.
+
+**Die Zeitleiste ist eine Anzeige, keine Bedienung.** Kein Ziehen an den
+Griffen: Das wäre eine zweite Eingabe für dieselbe Zahl — die eine auf die
+Minute genau, die andere auf das Pixel —, und die beiden liefen auseinander.
+Sie zeigt außerdem, was **früher schon** herausgeschnitten wurde; ohne diese
+Fläche sähe man eine Lücke ohne Erklärung und schnitte ein zweites Mal an
+derselben Stelle.
+
+Unter den Feldern steht in Worten, was geschieht: welchen Zeitraum der
+Einsatz bekommt, welche Reste als Ruhesegment stehen bleiben, und dass sich
+der Schnitt rückgängig machen lässt.
+
+### Web — Was der Endpunkt tut
+
+`api/schneiden.php` legt den Einsatz auf dem **Bestandsweg** an: virtuelles
+Gerät `manual-<userId>`, `origin = 'manual'`, `manual = 1`, `client_ref` mit
+Präfix — wörtlich wie `einsatz_form.php`. Daran hängt, ob der Einsatz durch
+Sicherung, Export und Papierkorb kommt.
+
+Alles in **einer** Transaktion: Einsatz anlegen, Phasen schreiben, Punkte
+verschieben, Sperrvermerk setzen, Diensttag-Zeitraum fortschreiben. Bricht
+etwas ab, steht nichts davon.
+
+**Einsatzort, Alter und Diagnose füllt er nicht.** Die sind
+Ende-zu-Ende-verschlüsselt und entstehen im Browser; ein Endpunkt, der sie
+annähme, bräuchte Klartext. Der geschnittene Einsatz ist ein leerer Einsatz
+mit Zeiten, Phasen und Spur — den Rest trägt man im Formular nach.
+
+**Ein Schnitt ohne Punkte wird abgelehnt.** Er entstünde beim zweiten Schnitt
+über denselben Bereich oder über eine Aufzeichnungslücke. Herauskäme ein
+leerer Einsatz — und einer, den das Rückgängig nicht anfassen kann: Ohne
+gewanderte Punkte gibt es keinen Sperrvermerk, und ohne Vermerk findet es den
+Weg zurück nicht. Also nichts anlegen und sagen, warum.
+
+### Web — Rückgängig
+
+Am Segment, mit der Plakette, die den Schnitt nennt. Es ist derselbe Aufruf
+mit vertauschten Enden: Die Punkte wandern zurück, der Sperrvermerk fällt,
+der Einsatz wird gelöscht.
+
+**Was am Einsatz hängt, hält es auf.** Wer inzwischen Einsatzort, Diagnose
+oder eine Reanimation eingetragen hat, verlöre das — auf einen Knopf, der
+„rückgängig" heißt und nach der harmlosesten Handlung der Seite klingt. Ein
+Einsatz mit Inhalt geht stattdessen über den Papierkorb, wo die Frist von
+30 Tagen läuft.
+
+*Abweichung vom freigegebenen Mockup, benannt:* Der Vorschlag sah das
+Rückgängig als Zeilenaktion am **Einsatz** vor. Die Einsatzliste ist aber
+eine sortierbare Tabelle mit Spaltenkatalog und hat keine Zeilenaktionen;
+eine Aktionsspalte träfe alle drei Einsatztabellen und wäre eine neue
+Darstellung. Am Segment ist die Handlung außerdem vollständig — dort steht,
+was fehlt, und dorthin kommen die Punkte zurück.
+
+### Web — Zwei Funde aus der Browserprüfung
+
+Beide von derselben Art: **etwas, das auf einem Rechner richtig aussieht.**
+
+**Die Zeiten gingen roh hinaus.** `api/day.php` lieferte `started_at` als
+UTC-Zeichenkette, und der Browser rechnete mit `new Date(…)` in *seine* Zone
+um. Auf einem Rechner in der Zone der Anwendung fällt das nie auf; im
+Prüfcontainer ist sie UTC, und der Schnitt griff zwei Stunden daneben und
+nahm **null Punkte** mit — mit Erfolgsmeldung. Jetzt geht `start_hhmm` fertig
+formatiert hinaus, wie es die Einsatztabelle seit jeher bekommt; der Browser
+rechnet nur noch in Minuten. Das ist die Linie der ganzen Anwendung, und
+diese Datei war die eine Stelle, die sie verlassen hatte.
+
+**Die Zeitleiste war ein SVG.** Ein `viewBox` skaliert seine Beschriftung mit
+der Breite: auf 1280 px stand die Uhrzeit richtig, auf 390 px war sie **sechs
+Pixel** hoch — dieselbe Zahl in zwei Größen, je nach Fenster, und die
+Schriftskala galt für sie nicht mehr. Jetzt HTML mit Prozentbreiten: Der Text
+bleibt Text, nur der Balken skaliert.
+
+### Web — Nachweis
+
+**Im Browser (Chromium, lokale Installation): 28 Erwartungen, alle erfüllt.**
+Geschnitten, zurückgenommen, Grenzfälle durchgespielt — Unsinn im Feld,
+Zeiten außerhalb des Segments, Ende vor Beginn, zweiter Schnitt über
+denselben Bereich. **Keine unerwarteten Konsolenfehler** (die eine 409 ist
+die Ablehnung des Leerschnitts, die der Browser protokolliert).
+
+Die Kernzahlen des Rundlaufs: Segment 61 → 48 Punkte, Einsatzliste 3 → 4,
+Sperrvermerk 07:01–07:03 sichtbar; nach dem Rückgängig 48 → 61, Einsatzliste
+wieder 3, Vermerk weg. **390 px: waagerechter Überlauf 0, alle Bedienelemente
+44 px.**
+
+Die Logik des Endpunkts zusätzlich ohne HTTP: 17 Erwartungen, alle erfüllt —
+darunter, dass eine Phase außerhalb des Schnitts abgelehnt wird und der
+Diensttag den Einsatz umschließt.
+
 ## [Web 12.5.0] — 2026-09-02
 
 **Ein Schnitt, der sich nicht von selbst wieder auflöst.** Erstes Paket von

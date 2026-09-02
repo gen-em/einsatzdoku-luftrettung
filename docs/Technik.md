@@ -167,6 +167,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      backup_spuren.php und backup_spuren_restore.php
 │   │                      (die Spurteile der Fassung 4, S2/AP5) ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
+│   │                      schneiden.php (Einsatz aus einem Ruhesegment schneiden
+│   │                      und zurücknehmen, S4/A2b — siehe 4.97e) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
 │   │                      adminbackup_freigabe.php (freigegebene Sicherung für die NutzerIn)
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
@@ -182,6 +184,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      ortsfeld.js (Ortsfeld-Komponente: Bezeichnung + optionale
 │   │                       Koordinaten, sechs Verwendungen, s. u.),
 │   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.),
+│   │                      schneiden.js (Karte „Ruhesegmente" und Schneide-Bereich
+│   │                       der Tagesansicht, S4/A2b — siehe 4.97e),
 │   │                      geo.js (EdGeo: Marker-Satz und Spurfarben der Karten, s. u.),
 │   │                      ortswahl.js (Geolocation + Kartendialog am Ortsfeld, s. u.),
 │   │                      blatt.js (Aktions- und Sortierblätter) + schublade.js (mobile Leiste),
@@ -2465,8 +2469,10 @@ Kopfzeilen-Einschleusung.
 #### Die Spurenseite des Diensttages
 
 **Ruhesegmente hatten in der Oberfläche keine Identität.** In der Tagesansicht
-sind sie eine schwarze Linie, ohne Zeile, ohne Popup; `api/day.php` liefert
-nicht einmal ihre Kennung. Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
+waren sie eine schwarze Linie, ohne Zeile, ohne Popup; `api/day.php` lieferte
+nicht einmal ihre Kennung. *(Seit Web 12.6.0 gilt das nur noch für die Karte
+selbst: Die Tagesansicht führt sie als eigene Karte „Ruhesegmente" — dort wird
+geschnitten, siehe 4.97e.)* Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
 — die Abnahme verlangt den Abruf aber „je Einsatz **und** je Ruhesegment".
 
 `tag_spuren.php` gibt beiden dieselbe Identität: die Karte des Tages, darunter
@@ -3055,6 +3061,55 @@ unsichtbar — die Oberfläche zeigt ihn nicht.
 `spur_loeschen()` für die Quelle, und das darf die Vermerke nicht anfassen —
 sonst löschte der zweite Schnitt an einem Segment die Sperre des ersten.
 
+#### Die Bedienung (ab Web 12.6.0)
+
+Die Tagesansicht führt die Ruhesegmente als eigene Karte — Zeitraum, Dauer,
+Punktzahl, und wo Punkte da sind, **„Schneiden"**. An der Zeile klappt der
+Schneide-Bereich auf: Zeitleiste, Beginn und Ende (Pflicht), drei Phasenzeiten
+(optional). Gebaut wird er in `assets/schneiden.js`, gestaltet nach
+`docs/Design.md` 9.17.
+
+**`api/schneiden.php` kennt zwei Aktionen**, beide POST mit `X-CSRF`:
+
+| Aktion | Nutzlast | tut |
+|---|---|---|
+| `schneiden` | `rest_id`, `beginn`, `ende` (`hh:mm`), `beginn_tag`/`ende_tag`, `phasen` | legt den Einsatz an, verschiebt die Punkte, vermerkt den Schnitt |
+| `rueckgaengig` | `mission_id` | gibt die Punkte zurück, löscht Vermerk und Einsatz |
+
+Der Einsatz entsteht auf dem **Bestandsweg** — virtuelles Gerät
+`manual-<userId>`, `origin = 'manual'`, `manual = 1`, `client_ref` mit Präfix
+`cut-`, wörtlich wie in `einsatz_form.php`. Daran hängt, ob er durch
+Sicherung, Export und Papierkorb kommt (R24), und ob `ingest.php` seine Phasen
+später noch anfasst. Alles läuft in **einer** Transaktion; `spur_teilen()`
+schließt sich ihr an, statt eine eigene mitzubringen.
+
+**Was der Endpunkt nicht tut:** Einsatzfelder füllen. Einsatzort, Alter und
+Diagnose sind Ende-zu-Ende-verschlüsselt und entstehen im Browser; ein
+Endpunkt, der sie annähme, bräuchte Klartext.
+
+**Ein Schnitt ohne Punkte wird abgelehnt** (409). Er entstünde beim zweiten
+Schnitt über denselben Bereich oder über eine Aufzeichnungslücke, und heraus
+käme ein leerer Einsatz, den das Rückgängig nicht anfassen kann: Ohne
+gewanderte Punkte gibt es keinen Vermerk, und ohne Vermerk keinen Weg zurück.
+
+**Das Rückgängig hält an, was am Einsatz hängt** — abweichende Besatzung,
+Rettungsmittel, Reanimation, `edited`, `pat_blob`. Der Grund ist nicht
+Vorsicht, sondern Arithmetik: Es *löscht* den Einsatz. Ein Einsatz mit Inhalt
+geht über den Papierkorb, wo die Frist läuft.
+
+> **Zeiten gehen fertig formatiert hinaus.** `api/day.php` liefert je Segment
+> `start_hhmm`/`end_hhmm` (App-Zeitzone), `von_ts`/`bis_ts` (Epochensekunden
+> für die Balkengeometrie) und `start_tag`/`end_tag` (Kalendertage hinter dem
+> Diensttag, für Dienste über Mitternacht). Der Browser rechnet nur in
+> Minuten.
+>
+> Das ist die Linie der ganzen Anwendung, und diese Stelle hatte sie einmal
+> verlassen: Die erste Fassung schickte `started_at` roh als UTC, und der
+> Browser rechnete mit `new Date(…)` in *seine* Zone. Auf einem Rechner in der
+> Zone der Anwendung fällt das nie auf; im Prüfcontainer ist sie UTC, und der
+> Schnitt griff zwei Stunden daneben und nahm **null Punkte** mit — mit
+> Erfolgsmeldung.
+
 #### Nachweis
 
 `tools/spurprobe/probe.php`, **Teil 6** — auf einer eigens angelegten Kulisse
@@ -3064,6 +3119,13 @@ ist. **20 Erwartungen, alle erfüllt.** Die Kernzahlen: 350 Punkte geliefert,
 50 geschnitten; von 250 nachgelieferten Punkten **50 gesperrt, 200
 angenommen**; Segment danach 500 Punkte, Einsatz 50. Nach dem Rückgängig 550
 und 0, ohne einen zeitlichen Rücksprung in der vereinigten Spur.
+
+Die Bedienung ist im Browser abgenommen (Chromium, lokale Installation):
+**28 Erwartungen, alle erfüllt** — Schneiden, Rückgängig und die Grenzfälle
+(Unsinn im Feld, Zeit außerhalb des Segments, Ende vor Beginn, zweiter Schnitt
+über denselben Bereich). Segment 61 → 48 Punkte, Einsatzliste 3 → 4, nach dem
+Rückgängig wieder 61 und 3. Bei 390 px: waagerechter Überlauf 0, alle
+Bedienelemente 44 px.
 
 ### 4.98 Was im verschlüsselten Block liegt — und was nicht
 
