@@ -1848,3 +1848,107 @@ Nachziehen aufgefallen und mitkorrigiert, samt Rahmenmaßen.
 - **Backlog Nr. 49 (Logofarben)** ist wie beschlossen **nicht** angefasst
   (E-S3-05). Der Generatorlauf rastert also mit den heutigen — teils
   abweichenden — Farbwerten. Das ist bekannt und bleibt so bis S4/B1.
+
+---
+
+### AP12 — Abschluss
+
+**Stand:** erledigt. Keine Versionserhöhung — AP12 ändert nur `docs/`
+(dieselbe Begründung wie bei AP1).
+
+#### Was erledigt ist
+
+- **Backlog:** Nr. 56 nach *Erledigt* verschoben (Konzeptteil mit AP1
+  erfüllt); **Nr. 57** (zwei Aufbauten derselben Einsatztabelle, aus F-S3-A)
+  und **Nr. 58** (kein Prüfmittel fragt, ob eine Seite ihr Gerüst hat, aus
+  F-S3-C) neu angehängt. Nummern 4, 6, 7 bleiben frei.
+- **Rahmenplan:** Statuszeile S3 gesetzt.
+- **Prüfdokument:** `docs/Pruefdokument-S3-Oberflaechen-Nacharbeit.md` —
+  eigene Datei neben dem Konzept, mit dem, **was nicht geprüft werden
+  konnte**, an erster Stelle.
+- **Dokumentation gegengelesen** (Abschnitt 7 des Konzepts): `Design.md`
+  (Kapitel 2.3, 5, 6, 9.5–9.9, 9.13, 9.16, 12), `Handbuch.md` (vier
+  Stellen), `Lizenzen.md` 6.2, `CHANGELOG.md`, `Rahmenplan.md`.
+
+#### Prüfmittel-Endlauf, in der Reihenfolge aus CLAUDE.md 6
+
+Erst Code, dann Dokumentation, **dann** die Prüfmittel — und jede Zahl mit
+dem, was sie gemessen hat:
+
+| Mittel | Was es gemessen hat | Ergebnis |
+|---|---|---|
+| `tools/wortliste/wortliste.py` | alle sichtbaren Texte unter `server/` und die normative Dokumentation | **0** Treffer außerhalb der Ausnahmen, **0** ungenutzte Ausnahmen, **0** durchgerutschte Fallen — bei 66 statt 67 Regeln |
+| `tools/vollstaendigkeit/pruefen.py` | 220 Klassen der Sollmenge, 328 Klassen im Markup, Symbolverweise, Knopfhöhen | **260** Befunde — Zeile für Zeile gleich dem Stand vor S3 |
+| `tools/screenshots/kontrast.py` | 21 Farbpaare aus `:root` gegen ihre tatsächliche Fläche | **0** verfehlt |
+| `tools/screenshots/aufnehmen.mjs` | **38 Seiten** in acht Breiten, angemeldet als Demo- und als Admin-Konto | **304 Bilder**: 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
+| Gegenprobe dazu (LIESMICH, F-P3-AQ) | `md5sum` über alle 304 Bilder | **302 verschieden**; die zwei Dubletten sind erklärt: `10-tagesuebersicht` und `11-tagesuebersicht-schublade` bei 1280 und 1440 px — oberhalb der Schwelle steht die Leiste fest, es gibt dort keine Schublade. Ein früherer Lauf hatte drei, weil auch 1024 px zusammenfiel: dieselbe Ursache. Kein Fall der Art „176-mal die Anmeldeseite“ |
+| `tools/stilvergleich/kaskade.py` | Endstand gegen den Stand vor S3 | siehe Soll-Ist-Bilanz unten |
+
+#### Soll-Ist-Bilanz des Stilvergleichs über die ganze Phase
+
+Je Paket gegen den jeweiligen Vorstand gerechnet, hier zusammengezogen:
+
+| Paket | entfallen | neu | anderer Wert | Reihenfolgetausch |
+|---|--:|--:|--:|--:|
+| AP2 | 0 | 0 | 14 | **0** |
+| AP3 | 0 | 2 | 1 | **0** |
+| AP4 | 4 | 1 | 3 | **0** |
+| AP5 | 0 | 8 | 0 | **0** |
+| AP6 | 0 | 0 | 1 | **0** |
+| AP7 | 8 | 1 | 3 | **0** |
+| AP8 | 4 | 0 | 1 | **0** |
+| AP10 | 0 | 5 | 0 | **0** |
+| **Summe** | **16** | **17** | **23** | **0** |
+
+**Gegengerechnet in einem Zug**, Endstand gegen den Stand vor AP1:
+`entfallen 16 · neu 17 · anderer Endwert 23 · Reihenfolgetausch 0` — die
+Summe der Pakete deckt sich mit der Gesamtrechnung. (Die fünf neuen
+Eigenschaften von AP10 sind die vier Rücknahmen der `fieldset`-Vorgaben plus
+die Deckkraft; im Paketstand oben standen sie als „2", weil dort gegen den
+Stand vor AP8 gerechnet war und zwei davon dieselbe Regel betreffen. Die
+Gesamtrechnung ist die maßgebliche.)
+
+Jede dieser 56 Abweichungen stand vor ihrem Paket als Soll fest und ist im
+jeweiligen Prüfstand benannt. **Keine darüber hinaus** — und in keinem Paket
+hat sich die Reihenfolge zweier gleich starker Regeln gedreht.
+
+#### Was S3 über die Liste hinaus gefunden hat
+
+Die Rückmeldungsliste hatte 19 Punkte. Zwei davon waren bereits erledigt und
+sind nachgemessen worden, statt sie erneut zu „beheben" (Zeilentrenner,
+weiches Trennzeichen). Dafür sind **fünf Funde** dazugekommen, von denen
+keiner auf der Liste stand:
+
+| | Fund | wie gefunden |
+|---|---|---|
+| F-S3-A | Die Tagesübersicht baut ihre Einsatztabelle ein zweites Mal | beim Suchen der Ursache für den Dauer-Umbruch |
+| F-S3-B | Ein unbekannter Meldungston ergab einen ungestalteten Kasten | Rückmeldung 01.09.2026, dann im Code nachgesehen |
+| F-S3-C | `tag_spuren.php` lief ohne Seitengerüst | **von einem Menschen auf einem Telefon** |
+| F-S3-D | XML verbietet `--` im Kommentar — und das Favicon-Werkzeug schrieb trotzdem eine Datei | eigener Fehler, beim Bildvergleich aufgefallen |
+| F-S3-E | Die Logotabelle in `Design.md` 2.3 war veraltet | beim Nachziehen |
+
+**Drei davon konnte kein Prüfmittel finden**, und das ist der eigentliche
+Ertrag: F-S3-C nicht, weil der Bilderlauf Überlauf misst und nicht
+Randlosigkeit; F-S3-B nicht, weil die Vollständigkeitsprüfung Klassen als
+Literale sucht und diese zur Laufzeit entsteht; F-S3-D nicht, weil das
+Werkzeug bei einem Fehlschlag klaglos eine Datei schrieb. Zwei sind als
+Backlog Nr. 57 und 58 vermerkt, der dritte ist im Werkzeug behoben.
+
+#### Versionen der Phase
+
+| Version | Paket | Sache |
+|---|---|---|
+| 12.2.2 | AP1 + AP2 | vertikaler Rhythmus, Formularfuß an zwölf Knöpfen |
+| 12.2.3 | AP3 | Sammelleiste in Kartenform |
+| 12.2.4 | AP4 | Navigation, Leistenüberschrift |
+| 12.3.0 | AP5 | Spaltenausrichtung, Kacheln, fünfter Meldungston, Gerüst der Spurenseite |
+| 12.3.1 | AP6 | Einsatzansicht |
+| 12.3.2 | AP7 | Markerversatz |
+| 12.3.3 | AP8 | Autosuche, Platzhalter, Wahlliste |
+| 12.4.0 | AP9 | Filterausblendung aus dem Feldkatalog |
+| 12.4.1 | AP10 | Demo-Konto gesperrt |
+| 12.4.2 | AP11 | Logos, Favicons, Uhr-Kacheln |
+
+**Keine Migration.** `update.php` ist nach dem Deploy nicht nötig.
+**Die Uhr-Version steigt nicht** — die neu gerasterten Kacheln reisen mit der
+S5-Auslieferung (E-S3-04).
