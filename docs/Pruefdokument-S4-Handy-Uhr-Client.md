@@ -105,13 +105,29 @@ lohnt, ist eine echte Frage:** Es belegt den Data Layer zwischen zwei
 Emulatoren — der Gerätetest auf dem S24 und einer echten Uhr belegt ihn
 ohnehin, und zwar besser.
 
-### 1.2 Der Signaturschlüssel ist nicht erzeugt
+### 1.2 Der Signaturschlüssel ist erzeugt — und lag vier Tage nur im Ablagefach
 
-Er entsteht außerhalb des Repositoriums und wird dir zur Verwahrung übergeben
-(E-R45-6, E-S4-16). Ohne ihn gibt es kein signiertes APK — und **jede spätere
-Fassung muss mit demselben Schlüssel signiert sein**, sonst verlangt Android
-eine Neuinstallation. Die Download-Seite ist geprüft, aber gegen eine
-**Attrappe aus 7 MB Füllbytes**.
+**Diese Überschrift hieß bis zum 02.09.2026 „ist nicht erzeugt", und das war
+falsch.** Erzeugt wurde er am 31.08.2026 in B1 (E-S4-27): RSA 4096, PKCS#12,
+Alias `nadoku`, gültig bis 23.08.2056, Zertifikat SHA-256 `078c…ad64` —
+derselbe Fingerabdruck, mit dem beide Module probeweise signiert wurden.
+
+**Nicht übergeben war er.** Die Datei lag im Ablagefach der Arbeitssitzung,
+und das wird mit dem Container eingezogen. Zwei Dokumente sagten „nicht
+erzeugt", eines sagte „erzeugt und übergeben"; keines sagte, wo er liegt. Wäre
+der Widerspruch nicht aufgefallen, wäre der Schlüssel verlorengegangen — und
+mit ihm die Möglichkeit, je eine zweite Fassung derselben App auszuliefern.
+
+**Übergeben am 02.09.2026**, mit Übergabevermerk und Passwort. **Sichere ihn
+an einem Ort, der ein Notebook überlebt:** Android erkennt eine App an
+Paketname *und* Signatur. Eine spätere Fassung mit einem anderen Schlüssel ist
+für jedes Gerät eine **andere App** — Installation schlägt fehl, und der
+einzige Weg wäre Deinstallation samt Kopplung, Geräteschlüssel und
+ungesendetem Puffer. Solange noch nichts ausgeliefert ist, kostet ein Tausch
+nichts; danach nie mehr.
+
+Ungeprüft bleibt trotzdem: Die Download-Seite ist gegen eine **Attrappe aus
+7 MB Füllbytes** gelaufen, nicht gegen ein echtes signiertes APK.
 
 ### 1.3 Die Deploy-Ausnahme für `server/apk/` ist abgeleitet, nicht gefahren
 

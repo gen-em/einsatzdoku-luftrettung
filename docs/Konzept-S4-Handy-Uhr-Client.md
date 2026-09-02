@@ -1349,6 +1349,17 @@ Sie füllen die vorhandenen E-Einträge aus und ersetzen keinen davon.
   `apksigner verify` bestätigt dasselbe Zertifikat für Handy und Uhr, was die
   Bedingung des Data Layer (gleiches Paket, gleiche Signatur) belegt.
 
+  **Nachtrag 02.09.2026 — „übergeben" stimmte nicht, und das ist der
+  gefährlichste Satz dieses Konzepts gewesen.** Der Schlüssel lag im
+  Ablagefach der Arbeitssitzung, nicht beim Auftraggeber; ein Ablagefach wird
+  mit dem Container eingezogen. Aufgefallen ist es nur, weil zwei andere
+  Stellen (Prüfstand A1a, Prüfdokument 1.2) „ist nicht erzeugt" behaupteten
+  und der Widerspruch nachgeprüft wurde. **Tatsächlich übergeben am
+  02.09.2026.** Die Lehre gehört hierher und nicht in eine Fußnote: Eine
+  Zusage der Form „wurde übergeben" ist erst wahr, wenn die Übergabe
+  stattgefunden hat — und ein Prüfstand, der zwei einander widersprechende
+  Sätze über dieselbe Sache trägt, hat beide nicht geprüft.
+
 #### Neue Fehlerfunde (K4, gesammelt in Abschnitt 10)
 
 `B-S4-02` und `B-S4-03` — Beschreibung dort.
@@ -2750,9 +2761,13 @@ braucht keinen Eintrag.
 - **Es gab kein echtes APK.** Geprüft wurde gegen eine Attrappe aus 7 MB
   Füllbytes. Ob ein signiertes APK ausgeliefert und von Android angenommen
   wird, ist Gerätetest.
-- **Der Signaturschlüssel (B1) ist nicht erzeugt.** Er entsteht außerhalb des
-  Repositoriums und wird dem Auftraggeber übergeben (E-R45-6); ohne ihn gibt
-  es keine signierte Datei zum Hochladen.
+- **Der Signaturschlüssel (B1) war erzeugt, aber nicht übergeben** — und
+  dieser Satz stand hier bis zum 02.09.2026 falsch als „ist nicht erzeugt".
+  Erzeugt ist er seit B1 (E-S4-27, Zertifikat `078c…ad64`); er lag jedoch
+  allein im Ablagefach der Arbeitssitzung und wäre mit dem Container
+  verloren gewesen. **Übergeben am 02.09.2026** samt Übergabevermerk. Bis
+  dahin gab es keine signierte Datei zum Hochladen, und der Widerspruch
+  zwischen E-S4-27 und dieser Stelle stand vier Tage unbemerkt im Dokument.
 
 **Im Browser (Chromium): 10 Erwartungen, alle erfüllt.**
 
