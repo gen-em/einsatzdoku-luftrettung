@@ -34,7 +34,9 @@ Daten erst nach Server-Bestätigung.
 │                          Backup-Format, Export-Format,
 │                          Geraete-Eingabe (gemessenes Eingabeverhalten je Uhr),
 │                          Uhr-Layout (Layoutregeln der Uhr-Oberflächen),
-│                          Pruefung-Sofortpaket-22 (Prüfdokument zu Nr. 22)
+│                          Rahmenplan (Steuerung) und Rahmenplan-Archiv (Werdegang),
+│                          konzepte/ (laufende Konzepte und Prüfdokumente; darin
+│                          erledigt/ mit dem Bestand bis S3 samt P3-Mockups)
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc),

@@ -32,6 +32,16 @@ Backlog-Punkte vergibt, prüft vor dem Zusammenführen die Nummernvergabe —
 
 muss leer bleiben.
 
+**Zu den Nummern 63 bis 67 (Rahmenplan Fassung 16, 02.09.2026).** Sie sind
+für den S4-Zweig reserviert. Er hat seine fünf Punkte als 59 bis 63
+angelegt, bevor die Entdopplung oben auf `main` lag, und nummeriert sie beim
+Zusammenführen auf 63 bis 67 um: Sperrvermerke des Schnitts in der
+Konto-Sicherung, Bedienhöhe der Android-App, Fassungshinweise im
+Android-Baulauf, Garmin-Uhrcode in der Wortliste, `csrf_check()` ohne
+API-Zweig. Die Punkte 68 bis 79 sind mit Fassung 16 angelegt und stehen
+unten; die Zuordnung aller offenen Punkte zu Paketen führt
+`docs/Rahmenplan.md`, Abschnitt 5.
+
 **Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
 rekonstruierbar: Code und Changelog verweisen an neun Stellen namentlich auf
 sie („Backlog Nr. 10"), und aus diesen Fundstellen geht eindeutig hervor,
@@ -360,7 +370,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dorthin führt, und die Koordinate jeder Phase liegen im Klartext. Der Ort
     ist damit nominell geschützt und faktisch rekonstruierbar.
 
-    Die Bestandsaufnahme steht in `docs/Konzept-V1-Ortsdaten.md`: was liegt wo,
+    Die Bestandsaufnahme steht in `docs/konzepte/Konzept-V1-Ortsdaten.md`: was liegt wo,
     was verrät was, was kosten die drei Wege. Kurzfassung — der Server rechnet
     mit den Koordinaten **nicht** (Strecke und Höhenmeter kommen von der Uhr,
     die Phasenzuordnung über Zeitstempel), aber die **Uhr hat keinen
@@ -670,6 +680,157 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
     Ableitungen nachmessen.
 
+68. **Vorschlagsfelder über `<datalist>` zeigen auf dem Handy nichts an.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers
+    (Rahmenplan Fassung 16).* Die Besatzungsfelder des Diensttags
+    (`index.php`, `renderCrewFields()`) bieten die hinterlegten
+    Crewmitglieder über ein `<datalist>` an, und dasselbe Muster tragen
+    weitere Felder — beobachtet ist der Ausfall an den Crew-Feldern **und**
+    an der Zielklinik. Mobile Browser zeigen `<datalist>`-Vorschläge nicht
+    oder nur nach Tippen und ohne brauchbare Filterung; die Suche in den
+    Stammdaten fällt dort stillschweigend aus, ohne Fehler und ohne Hinweis.
+    **Zu tun:** zuerst **alle** Vorschlagsfelder erheben (`grep -l datalist
+    server/` nennt `index.php`, `einsatz_form.php`, `mission_fields.php`,
+    `ui.php`, `assets/ortsfeld.js`), jedes einzeln am Handy prüfen (Chromium
+    mobil und WebKit), dann auf einen Baustein umstellen, der mobil trägt.
+    Das Ortsfeld sucht seit S3 beim Tippen mit eigener Trefferliste und ist
+    das Muster; ob es selbst noch ein `<datalist>` benutzt, ist Teil der
+    Erhebung. Ein neuer Baustein braucht Mockup und Freigabe (`Design.md` 1).
+    Zuordnung: Backlog-Runde.
+
+69. **Kurzname je Rettungsmittel als Stammdatenfeld.**
+    *Zulieferung aus P3; bis Fassung 16 ohne Nummer im Rahmenplan-Abschnitt
+    P4 geführt.* Leiste, Kacheln und Plaketten zeigen den vollen Namen des
+    Rettungsmittels; auf schmalen Breiten bricht er um oder wird
+    abgeschnitten. Ein Kurzname (etwa „RTH 1", „NEF 2") als eigenes
+    Stammdatenfeld würde an diesen drei Stellen verwendet, der volle Name
+    bleibt in Formularen und Exporten. Schemaänderung, Feldkatalog, Export,
+    Import und Sicherung ziehen nach — deshalb ein eigener Punkt und kein
+    Nebenklapp. Zuordnung: Backlog-Runde.
+
+70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
+    *Zulieferung aus P3; bis Fassung 16 ohne Nummer.* Die Position eines
+    Standorts wird über die Ortssuche oder von Hand als Koordinate erfasst;
+    das Ortsfeld der Einsätze kann seit P3 die Position auch auf der Karte
+    wählen. Dieselbe Kartenwahl fehlt in den Stammdaten der Standorte.
+    **Zu tun:** den vorhandenen Baustein des Ortsfelds dort einbinden, kein
+    neuer Baustein. Zuordnung: Backlog-Runde.
+
+71. **Regionen mit Unteradmins — verworfen, festgehalten.**
+    *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
+    mit Rahmenplan Fassung 16, wie R39 es vorsah.* Das Alternativmodell zu
+    den zentralen Stammdaten: Regionen hängen am zentralen Standort und
+    vererben auf alle Untertypen; `user_regions` n:m, weil NotärztInnen in
+    mehreren Bereichen arbeiten; Unteradmin als Zusatzbefugnis in eigener
+    Tabelle, ausdrücklich ohne Kontoeinblick; null Regionen bedeutet das
+    heutige Verhalten. **Verworfen**, weil im Dienstbetrieb jede NutzerIn
+    ihre Stammdaten selbst pflegt und die zentralen Stammdaten in P5
+    entfallen (R39). Wieder aufzunehmen, falls Wachen oder Verbände als
+    organisierte Träger auftreten. Zuordnung: nach v1.0.
+
+72. **Die Richtungspfeile auf der Spur zeigen teilweise in die falsche
+    Richtung.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers mit
+    Bildschirmfoto (Rahmenplan Fassung 16).* Auf einer Spur, die von Nordwest
+    nach Südost läuft, zeigt der Pfeil senkrecht nach oben. **Wahrscheinliche
+    Ursache, am Code gelesen und nicht im Browser nachgestellt:**
+    `pfeilIcon()` in `assets/geo.js` dreht den Pfeil mit
+    `style="transform:rotate(…deg)"` auf einem `<span class="geo-pfeil">`;
+    die Regel `.geo-pfeil` in `style.css` setzt nur die Farbe, keine
+    Anzeigeart, und die SVG darin ist ebenfalls inline. `transform` wirkt
+    nach CSS-Regel **nicht** auf nicht ersetzte Inline-Elemente — die
+    Drehung wird verworfen, jeder Pfeil steht ungedreht und zeigt nach
+    Norden. „Teilweise falsch" passt dazu: Auf Abschnitten Richtung Norden
+    stimmt der Pfeil zufällig. Die Winkelrechnung selbst
+    (`atan2` plus 90 Grad) ist richtig. **Zu tun:** `.geo-pfeil` auf
+    `display:inline-block` (oder `block`) setzen, dann im Browser über
+    mehrere Zoomstufen und Laufrichtungen prüfen; falls der Pfeil danach
+    immer noch abweicht, die Rechnung gegen die Projektion nachmessen.
+    Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
+    Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
+
+73. **Die Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
+    (Rahmenplan Fassung 16).* Auf `admin_users.php` stehen die Filter „Alle,
+    Admins, Sicherung überfällig, Nie gesichert, Ohne Gerät" rechts neben
+    dem Suchfeld; bei üblicher Schreibtischbreite fällt „Ohne Gerät" allein
+    in eine zweite Zeile. **Zu tun:** Anordnung im S8-Konzept festlegen —
+    Suchfeld über den Filtern, oder Filter in einer Zeile mit Umbruchregel —
+    und am Baustein umsetzen, nicht an der Seite; `tools/screenshots/` in
+    allen acht Breiten. Zuordnung: S8.
+
+74. **Bedienhöhe am Schreibtisch: müssen es 44 px sein?**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* `CLAUDE.md` 5 und
+    `Design.md` verlangen eine Höhe für Bedienelemente, mobil wie am
+    Schreibtisch. Am Schreibtisch wirken die Knöpfe hoch. **Zu klären im
+    S8-Konzept:** eine zweite Stufe für Zeigergeräte (etwa 36 px, nur über
+    `pointer:fine`) mit Begründung, Kontrastprüfung und Nachtrag in
+    `Design.md` — oder es bleibt bei einer Höhe. Berührt die Messung
+    „Knöpfe ≠ 44 px" in `tools/screenshots/`, die dann zwei Sollwerte
+    kennen muss. Zuordnung: S8 (Entscheidung).
+
+75. **Die Unterpunkte des Admin-Menüs sind fett und nicht einklappbar.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* S3 (Block F) hatte den
+    Fettdruck der Seitenleiste auf den ausgewählten Punkt begrenzt; in der
+    Administration (`ui_leiste_einstellungen()`, `.leiste-liste`) erscheinen
+    die Unterpunkte weiter fett, und die Überschriften der Gruppen heben
+    sich nicht ab. **Zu tun:** nachsehen, ob der Admin-Teil von S3
+    ausgenommen blieb oder eine eigene Regel trägt; Fettdruck nur für den
+    aktiven Punkt; Gruppen ein- und ausklappbar, Zustand je Sitzung merken.
+    Gehört zur Menüstruktur, die S8 ohnehin neu ordnet. Zuordnung: S8.
+
+76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
+    hat.**
+    *Aufgenommen 02.09.2026 als Frage des Auftraggebers (Rahmenplan Fassung
+    16).* `demo_reset_wenn_faellig()` in `demo_lib.php` setzt zeitgesteuert
+    zurück — 30 Minuten relativ zur letzten Aktivität, angestoßen von der
+    nächsten Anfrage —, ohne zu prüfen, ob eine Besucherin etwas verändert
+    hat; `demo_zuruecksetzen()` spielt die Fixture neu ein. **Die Frage:**
+    Ist das ein Aufwand, den es sich zu vermeiden lohnt, oder kann es
+    durchlaufen? **Zu tun:** zuerst messen — Laufzeit und Last eines Resets
+    auf der Produktivinstallation (P-12 hat die Laufzeit einmal geprüft,
+    die Zahl ist nicht festgehalten) —, dann entscheiden: durchlaufen
+    lassen, oder eine Änderungsmarke (Zähler im Schreibweg des Demo-Kontos,
+    Reset nur bei gesetzter Marke). Zuordnung: Backlog-Runde (Messung), die
+    Entscheidung danach.
+
+77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* Die Seite trägt heute
+    die Migrationsliste, den Job-Einstieg mit Cron-Zeile und Token-Adresse,
+    die Speichergrenze der Sicherungen und weitere Betriebsangaben auf einer
+    Fläche. **Zu tun:** Schnitt im S8-Konzept (etwa Serverbetrieb und Jobs,
+    Sicherung, Migrationen), dabei entscheiden, ob die Migrationsliste
+    sichtbar bleiben muss — das hängt am Update-Weg ab v1.0 (R60). Handbuch
+    und Technik ziehen nach, die alte Adresse bleibt als Weiterleitung, bis
+    P6 neu aufsetzt. Zuordnung: S8.
+
+78. **Der Wertekasten zeigt Cron-Adresse und Token in der Schriftgröße des
+    Kopplungscodes.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
+    (Rahmenplan Fassung 16).* `.codeblock-wert` (`style.css`) setzt
+    `--groesse-5`, 600 und gesperrt — gedacht für sechs Zeichen
+    Kopplungscode, benutzt aber auch für die Cron-Zeile und die Token-Adresse
+    auf der Wartungsseite, den Setz-Link auf der Kontoseite und die
+    Serverschlüssel-Zeile der Sicherungsziele. Lange Werte brechen in dieser
+    Größe über mehrere Zeilen und wirken unpassend. **Zu tun:** eine zweite
+    Stufe des Bausteins für lange Werte (`--schrift-fest` in `--groesse-2`
+    oder `-3`, ohne Sperrung), Herkunft in `Design.md` nachtragen; der
+    Kopplungscode behält die große Stufe. Darf als Kleinstkorrektur vorab in
+    der Backlog-Runde laufen. Zuordnung: S8.
+
+79. **Sicherungsoptionen: Begriffe und Optionen sind gewachsen wie
+    Wildwuchs.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* P3 hat Sicherungen je
+    Konto und Sicherungsregeln auf die Kontoseite gelegt, S2 hat
+    Speichergrenze, Warnschwellen, Aufbewahrung, Sicherungsziele, Zeitplan
+    und Komplettsicherung dazugebaut, S7 stellt den Begriff um. Was wo
+    einstellbar ist und wie es heißt, ist nicht mehr aus einem Guss.
+    **Zu tun:** Bestandsaufnahme aller Sicherungsoptionen mit Fundort,
+    Begriff und Zielgruppe; dann eine Ordnung (je Konto gegen je
+    Installation, NutzerIn gegen Admin gegen Betreiberin) und ein
+    Begriffssatz; Handbuch 6 und `Backup-Format.md` nachziehen. Zuordnung:
+    S8, als Kern der Sichtung.
+
 ---
 
 ## Erledigt
@@ -697,7 +858,7 @@ zutreffen.
     Installation in einem Aufruf auf. Wer eine Prüfung für unmöglich hält,
     sehe zuerst in `tools/` nach.
     **Erledigt mit S3:** Beide Punkte stehen als Abschnitt 1.13 im
-    Konzept `docs/Konzept-S3-Oberflaechen-Nacharbeit.md` — die Umsetzung hat
+    Konzept `docs/konzepte/erledigt/Konzept-S3-Oberflaechen-Nacharbeit.md` — die Umsetzung hat
     sie damit als erledigt vorgefunden und nicht ein zweites Mal
     beschlossen.
 
@@ -947,7 +1108,7 @@ zutreffen.
     Die Durchsicht des gesamten Importpfads (32 Ausgabestellen mit
     `innerHTML` o. ä. in 23 eigenen Skriptdateien und allen Seiten unter
     `server/`) ergab **keinen weiteren Fund**; die Liste steht in
-    `docs/Pruefung-Sofortpaket-22.md`. Dabei fiel allerdings `edk_neu` auf —
+    `docs/konzepte/erledigt/Pruefung-Sofortpaket-22.md`. Dabei fiel allerdings `edk_neu` auf —
     das Vormerkfach des Passwortwechsels trug den neuen Datenschlüssel über
     das Abmelden hinaus, was Punkt V-10 des Prüfdokuments P0 verbietet. Auch
     das ist mit dieser Version behoben (eine Zeile in

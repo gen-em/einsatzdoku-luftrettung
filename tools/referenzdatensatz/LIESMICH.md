@@ -29,7 +29,7 @@ einer Zahl benennt.
 | `referenz/` | die eingecheckten Referenz-Exporte (CSV-Archiv und `.edbak`) | — |
 | `vergleich/` | Vergleichswerkzeug und Kreislauftests | `vergleich/LIESMICH.md` |
 | `fixture/` | erzeugt `server/demo/fixture.json.gz` für die Demo-Funktion | — |
-| `Konzept-P1.md` | Konzept, Entscheidungen, Abdeckungsmatrix, Prüfprotokoll, Fehlerfunde | — |
+| `docs/konzepte/erledigt/Konzept-P1.md` (seit Rahmenplan Fassung 16 dort, nicht mehr in diesem Ordner) | Konzept, Entscheidungen, Abdeckungsmatrix, Prüfprotokoll, Fehlerfunde | — |
 
 **Nichts davon wird ausgeliefert.** `tools/` ist vom Deploy ausgenommen; nur
 `server/demo/fixture.json.gz` geht mit, und die entsteht hier.
@@ -163,7 +163,7 @@ zurück.
 ## Was dieser Datensatz absichtlich enthält
 
 Er soll nicht schön sein, sondern **vollständig**. Die Abdeckungsmatrix in
-`Konzept-P1.md` Abschnitt 5 führt 78 Zeilen; jede ist mindestens einem Einsatz
+`docs/konzepte/erledigt/Konzept-P1.md` Abschnitt 5 führt 78 Zeilen; jede ist mindestens einem Einsatz
 zugewiesen. Darunter:
 
 - drei Herkünfte (Uhr, Formular, Import)
