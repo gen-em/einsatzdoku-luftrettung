@@ -2760,6 +2760,73 @@ unverändert.
 
 ---
 
+### D1 — Doku, Lizenzen, Wortliste, Prüfdokument · erledigt
+
+**Kein Versionsbump.** Dieses Paket fasst `docs/`, `CLAUDE.md`, `tools/` und
+`.github/` an — nichts, was ausgeliefert wird. Präzedenz: `b8b3910`
+(S3/AP1) und `92c1617` (S3/AP12).
+
+**Was nachgezogen ist:**
+
+| Dokument | was |
+|---|---|
+| `CLAUDE.md` | Einstiegsabsatz nennt `android/` · drei Zählungen statt zwei (Abschnitt 2) · zwei neue feste Zusagen (Abschnitt 4): die Uhr kennt keine Zugangsdaten, der Data Layer steckt hinter einer Schnittstelle · Abschnitt 6: die Wortlisten-Regel als Zitat, dazu wie die Android-Apps sich selbst prüfen · Abschnitt 9: `android/` in den Pflegepflichten |
+| `docs/Technik.md` | `android/` im Verzeichnisbaum · **Abschnitt 5a** — zwei Module, ein Quelltext, der Weg zwischen Uhr und Handy, die zwei Böden gegen die Doppelzustellung, Prüfen ohne Gerät und was das *nicht* ersetzt |
+| `docs/Lizenzen.md` | **Abschnitt 6a** — vier Fremdbestandteile, drei Apache-2.0; die vierte (`play-services-wearable`) ist proprietär und bekommt eine eigene Begründung |
+| `docs/Geraete-Eingabe.md` | **Abschnitt 7** — Wear OS, ausdrücklich als „blind gebaut, am Gerät nachzumessen" gekennzeichnet, mit Prüftabelle |
+| `docs/Backlog.md` | Nr. **60** (44 dp gegen 48 dp), **61** (14 Fassungshinweise = eine Entscheidung), **62** (Garmin-Uhrcode in der Wortliste) |
+| `tools/wortliste/` | Bereich **d**, Art `xml`, zwei Ausnahmen, LIESMICH — eigenes Paket, siehe unten |
+| `docs/Pruefdokument-S4-Handy-Uhr-Client.md` | neu, nach K9 |
+
+#### Die AGPL-Frage, ausgeschrieben
+
+`play-services-wearable` ist **nicht** quelloffen — eine Aussage, die in einer
+AGPL-Anwendung nicht nebenbei stehen darf. `docs/Lizenzen.md` 6a beantwortet
+sie in vier Punkten: Sie steckt **nicht im APK** (Google-Play-Dienste sind
+eine Systemkomponente des Geräts; die Ausnahme für „System Libraries" in
+GPL-3 §1, auf die die AGPL sich stützt, greift). Sie ist auf **eine Datei**
+eingegrenzt, und die Grenze ist nachprüfbar — deshalb laufen die Prüffälle
+ohne Play-Dienste. Sie **überträgt nichts nach außen**. Und der Preis steht
+dabei: Eine Wear-OS-Uhr ohne Play-Dienste kann sich nicht mit dem Handy
+verbinden; die Handy-App bleibt unberührt.
+
+#### Zwei Funde beim Nachziehen
+
+**Die Wortliste hat meine eigene neue Doku beanstandet** — zwei „Garmin-Uhr"
+in `Technik.md` 5a. Das ist kein Ausnahmefall: Die Datei sagt an derselben
+Stelle „Uhr-App (Monkey C)", und die Bestandsausnahme `technik-uhrkapitel`
+gilt Abschnitt 5, nicht 5a. Umformuliert zu „die Uhr-App aus Abschnitt 5" —
+Regel 2 der Ausnahmen: *Vermeidbares ist keine Ausnahme.*
+
+**Die `zeile`-Bedingung einer Ausnahme prüft die ZERLEGTE Zeile.** Bei XML ist
+das der Text ohne Tags — eine Regel, die an einen Schlüsselnamen bindet,
+greift also nie. Sie bindet stattdessen an den vollständigen sichtbaren Text,
+was ohnehin enger ist. Steht in `tools/wortliste/LIESMICH.md`.
+
+#### Prüfmittel nach D1
+
+| Mittel | Zahl |
+|---|---|
+| Wortliste, alle Bereiche | **0 / 0 / 0** über **4 Bereiche, 123 Dateien** (vorher 3 Bereiche, 101 Dateien) |
+| Selbstprobe des Zerlegers | **19/19** (vorher 16/16) |
+| Vollständigkeit | **266**, unverändert |
+
+#### Was aus Block D offen bleibt
+
+- **Der Rahmenplan.** Seine Statuszeile führt S4 als „offen"
+  (`docs/Rahmenplan.md`, Abschnitt 6). Sie ist **nicht** angefasst worden:
+  Das Dokument wird außerhalb dieser Sitzung fortgeschrieben und lag zuletzt
+  als Fassung 14 vor. Die Zeile gehört in die nächste Fassung.
+- **Der CHANGELOG-Präfix `Android`** ist nicht vergeben worden. Die
+  Android-Fassungen 0.1.0 bis 0.7.5 stehen vollständig in
+  `android/LIESMICH.md` und in Abschnitt 12 dieses Konzepts, aber nicht in
+  `docs/CHANGELOG.md`. Grund: Es ist **nichts ausgeliefert** — es gibt kein
+  signiertes APK, und ein Changelog-Eintrag für eine Fassung, die niemand
+  bekommen kann, wäre eine Ankündigung, keine Historie. Der Eintrag gehört
+  in das Paket, das die erste Fassung tatsächlich verteilt.
+
+---
+
 ## 13. Abgleich mit Rahmenplan Fassung 13 (R49) — 01.09.2026
 
 Der Rahmenplan wurde nach der Beauftragung von Block B und C fortgeschrieben.

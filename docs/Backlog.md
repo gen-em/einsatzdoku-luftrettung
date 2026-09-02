@@ -664,6 +664,50 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kennungen. Dazu `docs/Backup-Format.md`, die Kreislaufproben und ein
     Prüffall.
 
+60. **Die Bedienhöhe steht auf 44 px, Android verlangt 48 dp.**
+    *Aufgenommen 02.09.2026 als B-S4-02 (S4/D1).*
+    `CLAUDE.md` 5 sagt: „Eine Höhe für Bedienelemente: **44 px**, mobil wie am
+    Schreibtisch." Androids eigene Vorgabe für Berührziele ist **48 dp**. Die
+    vier Pixel klingen nach nichts und sind es nicht: Diese App wird **mit
+    Handschuhen im Einsatz** bedient, und das ist genau der Fall, für den die
+    48 dp gedacht sind.
+    **Umgesetzt sind 44 dp** — weil `CLAUDE.md` eindeutig ist und eine Zahl
+    nicht nebenbei geändert wird. Die Wear-OS-App hält dagegen 48 dp
+    (gemessen), weil sie die Wear-Bausteine benutzt; die beiden Module sind
+    an dieser Stelle also **uneins**, und das ist der eigentliche Befund.
+    **Zu entscheiden vor dem Gerätetest**, weil der S24-Dienst genau das
+    prüfen kann, was strittig ist. Die Konstante steht an einer Stelle
+    (`BEDIENHOEHE` in `handy/…/Bausteine.kt`); die Änderung ist eine Zeile.
+
+61. **Vierzehn Fassungshinweise im Android-Baulauf hängen an einer
+    Entscheidung.**
+    *Aufgenommen 02.09.2026 als Rest aus B-S4-04 (S4/D1).*
+    `lintDebug` meldet für `android/handy/` 14 Warnungen, und sie sind nicht
+    vierzehn Entscheidungen, sondern **eine**: `androidx.wear.compose` 1.6.2
+    und die Compose-BOM 2026.08.00 verlangen einen neueren Compose-Compiler;
+    der hängt an Kotlin, Kotlin 2.4 an AGP 9. Dieselbe Kette ziehen
+    `core-ktx`, `lifecycle`, `activity-compose` und die vier
+    `camera`-Bausteine.
+    **AGP 9 ist ein Umbau der Bau-Sprache** und gehört in eine eigene,
+    absichtliche Runde — nicht in eine Korrekturfassung. Stummgeschaltet wird
+    nichts (CLAUDE.md 6): Die 14 stehen und werden gezählt; sie sind das
+    Preisschild an einer aufgeschobenen Entscheidung, und genau das sollen sie
+    sein.
+
+62. **Der Garmin-Uhrcode läuft nicht durch die Wortliste.**
+    *Aufgenommen 02.09.2026 als Bereich `e` aus B-S4-06 (S4/D1).*
+    Seit D1 prüft `tools/wortliste/` vier Bereiche, darunter die
+    Android-Apps. **`watch/` fehlt weiterhin.** Die bisherige Begründung —
+    `watch/` „beschreibe die Garmin-Uhr als Gegenstand" — trifft auf
+    `docs/Uhr-Layout_Regeln.md` zu, **nicht** auf die sichtbaren Texte der App
+    selbst (`watch/resources/**/*.xml`): Die liest dieselbe Person, die auch
+    die Weboberfläche liest. Sie sind die **ältesten Texte des Projekts** und
+    damit die wahrscheinlichste Fundstelle.
+    **Auf Ansage einer anderen Instanz zugewiesen** (01.09.2026); sie braucht
+    Kenntnis der Monkey-C-Ressourcen und der historischen Begriffe. Der
+    Bereich heißt dort `e`; die Mechanik ist da (eine Art `xml` im Zerleger,
+    die Tags mit wegräumt), einzutragen ist die Bereichszeile.
+
 ## Erledigt
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter

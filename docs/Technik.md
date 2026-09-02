@@ -231,6 +231,19 @@ Daten erst nach Server-Bestätigung.
 │   ├── resources/         Vorgabe für alle Geräte
 │   ├── resources-<gerät>/ geräteabhängige Überschreibungen (Launcher-Icon)
 │   └── source/            s. Abschnitt 5
+├── android/               Handy- und Wear-OS-App (Kotlin, Compose) — S4
+│   ├── handy/             das Telefon: Kopplung, Aufzeichnung, Dienstklammer,
+│   │                      Phasen und Einsätze, Senden an ingest.php
+│   ├── uhr/               Wear OS: dasselbe Bedienbild am Handgelenk, aber
+│   │                      OHNE Zugangsdaten — sie spricht nur mit dem Handy
+│   ├── gemeinsam/         Quelltext, den beide Module einbinden (E-S4-24):
+│   │                      Nachrichtenformat, Data-Layer-Weg, Kennungen,
+│   │                      Modus, Phasen, Farben, Bildmarke
+│   ├── gradle/            libs.versions.toml — die vollständige Liste der
+│   │                      Fremdbestandteile, eine Nummer je Bestandteil
+│   ├── werkzeuge/         Farb-, Kontrast-, Bildmarken- und Stromprüfung
+│   ├── mockups/           Vorher/Nachher-Bilder aus dem Prüfstand
+│   └── LIESMICH.md        Bauanleitung, Entscheidungen, Prüfstand
 ├── tools/                 Werkzeuge, werden nicht ausgeliefert
 │   ├── abmelde-probe/     zeigt, was der Abmeldeweg im sessionStorage
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
@@ -4061,6 +4074,85 @@ Die Grenzen bleiben die des Simulators, unverändert: keine echte Hardware,
 keine Systemgesten, kein Server. Ein Lauf zeigt, dass es startet und wie es
 aussieht — nicht, dass es richtig ist. Anleitung:
 `tools/uhr-pruefstand/LIESMICH.md`.
+
+## 5a. Android-Apps (Kotlin/Compose) — Handy und Wear OS
+
+*Seit S4, Blöcke B und C. Die App zählt eigene Fassungen
+(`android/version.properties`), unabhängig von `WEB_VERSION` und von der
+Uhr-App aus Abschnitt 5.* Bauanleitung, Entscheidungen und der vollständige Prüfstand
+stehen in `android/LIESMICH.md`; hier steht, wie es zusammenhängt.
+
+### Zwei Module, ein Quelltext
+
+| Modul | läuft auf | hat |
+|---|---|---|
+| `android/handy/` | Telefon | Kopplung, Aufzeichnung, Dienstklammer, Phasen und Einsätze, Senden an `ingest.php` — **und die Zugangsdaten** |
+| `android/uhr/` | Wear OS | dasselbe Bedienbild am Handgelenk, **ohne** Zugangsdaten |
+| `android/gemeinsam/` | beide | Nachrichtenformat, Data-Layer-Weg, Kennungen, Modus, Phasen, Farben, Bildmarke (E-S4-24) |
+
+**Die Uhr kennt weder Serveradresse noch API-Schlüssel** (E-S4-11). Sie
+schickt ihre Ereignisse an das Handy, und das Handy sendet. Das ist keine
+Bequemlichkeit, sondern die Sicherheitsaussage der Bauform: Eine verlorene
+Uhr gibt keinen Zugang preis. Der Prüfstand zählt die Schlüssel des
+Nachrichtenformats nach — genau `uhr, nr, art, zeit, phase, einsatz_ref`,
+kein `api_key`, keine `device_id`, keine Adresse.
+
+Beide Module tragen dieselbe `applicationId` (`org.genem.nadoku`) und
+**müssen mit demselben Schlüssel signiert sein** — der Wear Data Layer
+stellt sonst nicht zu (E-S4-01). Der Signaturschlüssel entsteht außerhalb des
+Repositoriums und wird verwahrt (E-R45-6); jede spätere Fassung braucht
+denselben, sonst verlangt Android eine Neuinstallation.
+
+### Der Weg zwischen Uhr und Handy
+
+`MessageClient` des Wear Data Layer, drei Pfade: `/nadoku/ereignis`
+(Uhr → Handy), `/nadoku/quittung` und `/nadoku/stand` (Handy → Uhr). Die
+Umsetzung steckt in **einer** Datei (`WearNachrichtenweg.kt`) hinter der
+Schnittstelle `Nachrichtenweg`; alles darüber kennt nur die Schnittstelle.
+Deshalb laufen die Prüffälle beider Module ohne Play-Dienste — sie benutzen
+eine Attrappe. Zur Lizenzlage der proprietären Bibliothek:
+`docs/Lizenzen.md` 6a.
+
+**Zwei Böden gegen die Doppelzustellung** (E-S4-10, E-S4-09):
+
+1. Eine **Ereignisnummer je Uhr**, fortlaufend. Das Handy quittiert bis zur
+   höchsten **lückenlosen** Nummer — eine Lücke hält die Quittung an, statt
+   über sie hinwegzuspringen.
+2. Die **`wm-`-Kennung** des Einsatzes als zweiter Boden. Sie greift auch,
+   wenn die Buchführung verlorengegangen ist (zurückgesetzte Uhr, neue
+   Nummernreihe): Ein Ereignis mit bekannter Kennung landet im vorhandenen
+   Einsatz, statt einen zweiten anzulegen.
+
+Ohne Quittung wird dieselbe Nachricht **mit derselben Nummer** erneut
+gesendet. Der Puffer der Uhr überlebt ihren Neustart.
+
+### Was die App an den Server schickt
+
+Nichts Neues: denselben JSON-Vertrag wie die Uhr-App aus Abschnitt 5. Der Server ist
+geräteneutral und bleibt es — er sieht ein Gerät mit Kennung und
+API-Schlüssel und weiß nicht, ob dahinter Monkey C oder Kotlin steckt. Die
+Kennungspräfixe unterscheiden die Quellen (`am-`/`ar-`/`ad-` für das Handy,
+`wm-` für die Uhr); der Vertragsnachtrag dazu steht noch aus (A1, hängt an
+R42).
+
+### Prüfen ohne Gerät
+
+Es gibt keine Uhr und kein Telefon. Was trotzdem geht, steht in
+`android/LIESMICH.md`; die Kurzform:
+
+- **Prüffälle** über JUnit und Robolectric — auch gegen ein *echtes* SQLite
+  und, wo eine lokale Installation läuft, gegen `ingest.php` selbst.
+- **Bilder** über Robolectric im NATIVE-Grafikmodus. `captureToImage()` ist
+  unter Robolectric strukturell unbrauchbar (Deadlock in
+  `WindowCapture.forceRedraw`); der Weg darüber ist der einzige, der ohne
+  Emulator Pixel liefert — und er kostet **null** neue Abhängigkeiten.
+- **Ein Emulator läuft**, entgegen E-R45-8, aber ohne KVM (QEMU/TCG) und nur
+  mit `-no-window`. `sys.boot_completed=1` lügt dabei; die Begründung, warum
+  er trotzdem nicht der Hauptweg ist, steht in der `LIESMICH.md`.
+
+**Was keiner dieser Wege ersetzt:** den echten Data Layer. Ob zugestellt
+wird, ob die beiden `WearableListenerService` gerufen werden, ob Paket- und
+Signaturgleichheit im Feld greift — das ist Gerätetest und steht aus.
 
 ## 6. Deployment
 
