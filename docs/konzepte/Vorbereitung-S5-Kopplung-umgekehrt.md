@@ -26,14 +26,15 @@ Was hier steht, ist Befund und Prüfstand.
 ## 1. Wie geprüft wurde
 
 Gelesen wurde jede im Konzept genannte Fundstelle im Repositorium, nicht
-stichprobenweise: **38 Verweise** auf Zeilen in `server/`, `watch/`, `docs/`
-und `tools/`. Dazu drei Zählungen (Migrationsregister, Backlog-Nummern,
-Fundstellen der abzulösenden Begriffe) und ein Lauf sämtlicher Prüfmittel,
-die ohne Gerätedateien laufen.
+stichprobenweise: **77 Verweise** mit Datei und Zeile (bzw. Abschnitt) auf
+`server/`, `watch/`, `docs/` und `tools/`. Dazu drei Zählungen
+(Migrationsregister, Backlog-Nummern, Fundstellen der abzulösenden Begriffe)
+und ein Lauf sämtlicher Prüfmittel, die ohne Gerätedateien laufen.
 
-**Ergebnis der Fundstellenprüfung: die Zahlen des Konzepts stimmen.** Von 38
-Verweisen trafen 37 auf die Zeile oder den Block, den sie benennen. Der eine
-Fehlgriff steht als V-S5-07 unten und ist folgenlos.
+**Ergebnis der Fundstellenprüfung: die Zahlen des Konzepts stimmen.** Von 77
+Verweisen trafen 75 auf die Zeile oder den Block, den sie benennen. Die zwei
+Fehlgriffe stehen als V-S5-07 (folgenlos) und **V-S5-12** (ein
+Sachfehler in B-S5-01) unten.
 
 Namentlich nachgelesen und bestätigt: `pair.php` 56–64/68–74/104–162/171/
 175–198/206–227/229–249/269–274/319–359 · `db.php` 448–462/476–483/570–580 ·
@@ -43,8 +44,9 @@ Namentlich nachgelesen und bestätigt: `pair.php` 56–64/68–74/104–162/171/
 `jobs.php` 95–128 · `style.css` 2783–2795 · `Pair.mc` 3–4/32–41/45–70/64/
 93–108/176–179/237–264/240/289–336/317–323/330–333 · `SyncView.mc`
 23–36/90–99/225–234 · `Ui.mc` 120–135 · `ClockView.mc` 115/125/216 ·
-`Uploader.mc` 180–192/216 · `properties.xml` · `settings.xml` ·
-`Technik.md` 1754–1763/1935–1947/2290–2298 · `JSON-Vertrag.md` 42–50/203–212 ·
+`Uploader.mc` 180–192/216 · `Input.mc` 16/18–22 · `properties.xml` ·
+`settings.xml` · `admin_users.php` 169 · `Technik.md`
+1754–1763/1935–1947/2290–2298 · `JSON-Vertrag.md` 42–50/203–212 ·
 `Backlog.md` 66/84 · `Uhr-Layout_Regeln.md` 3.1/4.2/5.1/7 · `Design.md`
 2.2/9.0–9.11.
 
@@ -62,7 +64,7 @@ Nachgezählt:
 ## 2. Befunde am Konzept (V-S5)
 
 Nummeriert wie die Fehlerfunde des Konzepts, aber mit eigenem Präfix, damit
-beide Listen nebeneinander bestehen können. **Vier davon ändern die
+beide Listen nebeneinander bestehen können. Zwölf Befunde; **vier davon ändern die
 Dateilisten der Pakete** (V-S5-01 bis V-S5-04).
 
 ### V-S5-01 — `demo_lib.php` löscht aus `pair_codes`; Paket A nennt die Datei nicht
@@ -247,6 +249,23 @@ keiner Stelle „Sicherung". Zu erwarten ist reine Zeilendrift. Deshalb liegt
 neben dieser Datei ein Werkzeug, das die Anker des Konzepts **nach Inhalt**
 statt nach Zeilennummer wiederfindet: `tools/s5-anker/anker.py`
 (Abschnitt 5).
+
+### V-S5-12 — B-S5-01: `admin_users.php` 169 legt kein Gerät an
+
+B-S5-01 sagt: „Auch `admin_users.php` 169 zieht 8 Bytes **für ein Gerät**."
+Zeile 169 zieht acht Bytes für den **`account_key` eines Kontos**
+(`INSERT INTO users (email, name, role, account_key)`) — mit Gerätekennungen
+hat sie nichts zu tun.
+
+Nachgezählt: `'dev-'` entsteht im ganzen `server/` an **genau zwei** Stellen —
+`einstellungen.php` 261 (4 Zufallsbytes) und `pair.php` 249 (16, seit M4-08).
+Alle übrigen `INSERT INTO devices` legen das virtuelle Gerät „Manuelle
+Einträge" mit dem Präfix `manual-` an.
+
+**Die erste Hälfte von B-S5-01 stimmt damit weiterhin** und ist der
+eigentliche Fund: Zwei Wege zur selben Spalte, mit 32 und 128 Bit. Die
+zweite Hälfte gehört gestrichen — sonst sucht die Umsetzung eine dritte
+Stelle, die es nicht gibt.
 
 ---
 
@@ -446,4 +465,4 @@ Konzepten — Historie, bleibt.
 
 | Fassung | Datum | Inhalt |
 |---|---|---|
-| 1 | 02.09.2026 | Erstfassung: Prüfung des Konzepts (38 Fundstellen), 11 Befunde V-S5-01 bis V-S5-11, Prüfstand aufgebaut und mit Ausgangszahlen belegt, Fundstellen-Inventar, offene Zuarbeiten |
+| 1 | 02.09.2026 | Erstfassung: Prüfung des Konzepts (77 Fundstellen), 12 Befunde V-S5-01 bis V-S5-12, Prüfstand aufgebaut und mit Ausgangszahlen belegt, Fundstellen-Inventar, offene Zuarbeiten |
