@@ -406,8 +406,30 @@ try {
      * eingehenden Punkten geschieht. */
     $stand = spur_stand($pdo, $ownerType, $ownerId);
 
+    /* DIE SPERRVERMERKE, EBENFALLS EINMAL — vor der Schleife (S4/A2, E-S4-53).
+     *
+     * Wurde aus dieser Spur ein Einsatz geschnitten, sind die Punkte des
+     * geschnittenen Zeitraums dorthin gewandert. Das Geraet weiss davon
+     * nichts: Es hatte sie moeglicherweise noch im Puffer und liefert sie
+     * jetzt nach. Ohne diese Pruefung faenden sie in die Quelle zurueck, und
+     * der Schnitt loeste sich still wieder auf.
+     *
+     * `n_original` FAENGT DAS NICHT AB, auch wenn es auf den ersten Blick so
+     * aussieht. Die Nummern vergibt die Schleife unten aus `seq_from` — der
+     * Marke, die das Geraet zuletzt bekommen hat. Gepufferte Punkte kommen
+     * deshalb OBERHALB der Sperrgrenze an und laufen glatt daran vorbei;
+     * `n_original` faengt nur die Wiederholung schon gelieferter Punkte ab.
+     * Was sie kenntlich macht, ist ihre `ts`.
+     *
+     * EINE ABFRAGE JE UPLOAD, nicht eine je Punkt. Das ist der heisseste
+     * Schreibweg der Anwendung; eine Spur hat ueblicherweise null Vermerke,
+     * und dann kostet die Pruefung in der Schleife einen Test gegen ein
+     * leeres Feld. */
+    $schnitte = schnitte_lesen($pdo, $ownerType, $ownerId);
+
     $stored = 0;
     $verworfen = 0;
+    $gesperrt = 0;
     if ($points) {
         $ins = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
                               VALUES (?,?,?,?,?,?,?)');
@@ -435,6 +457,30 @@ try {
              * die der naechste Verdichtungslauf einarbeiten soll — und
              * quittiert sie, so dass die Uhr sie loescht. Unwiederbringlich. */
             if ($seq < $stand['n_original']) { continue; }
+
+            /* GESCHNITTEN HEISST WEG (E-S4-53). Der Punkt gehoert in den
+             * Einsatz, der aus dieser Spur herausgeschnitten wurde; dort
+             * steht er bereits, denn der Schnitt hat ihn mitgenommen. Kaeme
+             * er hier noch einmal an, laege er zweimal.
+             *
+             * `ts` LIEGT IN $pt[3] UND IST HIER NOCH UNGEPRUEFT. Das ist in
+             * Ordnung: Ein Wert, der keine Zahl ist, wird zu 0 und faellt
+             * damit aus jedem Sperrbereich heraus — er laeuft weiter in die
+             * Wertepruefung unten und wird dort behandelt wie bisher. Die
+             * Sperre entscheidet also nie ueber einen Punkt, den sie nicht
+             * versteht.
+             *
+             * QUITTIERT WIRD TROTZDEM. Der Punkt zaehlt nicht als
+             * gespeichert, aber die Fortsetzungsmarke wandert ueber ihn
+             * hinweg (sie ist mindestens `seq_from` + Punktzahl). Sonst
+             * liefert das Geraet endlos nach — dieselbe Regel wie bei der
+             * Sperrliste `deleted_refs`. */
+            if ($schnitte && is_array($pt) && count($pt) >= 4
+                && schnitt_gesperrt($schnitte, (int)$pt[3])) {
+                $gesperrt++;
+                continue;
+            }
+
             if (spur_ist_ausgeduennt($stand)) {
                 /* Die Wertepruefung laeuft hier BEWUSST NICHT. Sonst landeten
                  * planmaessig verworfene Punkte mit krummen Koordinaten in
@@ -557,6 +603,20 @@ try {
      * wie die anderen nur, wenn es etwas zu berichten gibt. */
     if ($verworfen > 0) {
         $antwort['dropped_points'] = $verworfen;
+    }
+    /* Punkte in einem geschnittenen Bereich NENNEN (S4/A2, Konzept 14,
+     * offener Punkt 3).
+     *
+     * EIGENES FELD UND NICHT `dropped_points`: Dort steht die Ausduennung —
+     * „diese Spur ist fertig verdichtet". Hier steht etwas anderes: „diesen
+     * Zeitraum hat jemand herausgeschnitten". Beides in einen Zaehler zu
+     * legen hiesse, in der Fehlersuche nicht mehr unterscheiden zu koennen,
+     * ob eine Spur verdichtet oder beschnitten wurde.
+     *
+     * KEINE VERTRAGSAENDERUNG: Der Client muss damit nichts tun. Das Feld
+     * erscheint wie die anderen nur, wenn es etwas zu berichten gibt. */
+    if ($gesperrt > 0) {
+        $antwort['cut_points'] = $gesperrt;
     }
     if (!$pruef->sauber()) {
         $antwort['rejected'] = $pruef->nachUrsache();

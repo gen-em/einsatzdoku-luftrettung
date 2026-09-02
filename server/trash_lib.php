@@ -228,6 +228,14 @@ function trash_purge_mission(int $userId, int $id): void {
         // was hier nicht ausdruecklich geloescht wird, bleibt als Waise
         // liegen — Positionsdaten ohne Eigentuemer (F-S2-B).
         spur_loeschen($pdo, 'mission', [$id]);
+        /* Sperrvermerke MIT (S4/A2). Zwei Richtungen, und beide muessen weg:
+         * War dieser Einsatz aus einem Segment geschnitten, gehoert der
+         * Vermerk am Segment jetzt zu einem Einsatz, den es nicht mehr gibt;
+         * war er selbst Quelle eines Schnitts, gilt sein Zeitraum niemandem
+         * mehr. Bleiben sie stehen, sperren sie einen Zeitraum fuer immer —
+         * und zwar unsichtbar, denn die Oberflaeche zeigt sie nicht. */
+        schnitte_loeschen($pdo, 'ziel', [$id]);
+        schnitte_loeschen_quelle($pdo, 'mission', [$id]);
         $pdo->prepare('DELETE FROM missions WHERE id = ?')->execute([$id]);  // Rest kaskadiert
         $pdo->commit();
     } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
@@ -314,6 +322,8 @@ function trash_purge_day(int $userId, int $dayId): void {
         // Spuren gebuendelt, Zeilen UND Blob (E-S2-18) — statt je Einsatz
         // einer eigenen DELETE-Anweisung.
         spur_loeschen($pdo, 'mission', $mLoeschen);
+        schnitte_loeschen($pdo, 'ziel', $mLoeschen);
+        schnitte_loeschen_quelle($pdo, 'mission', $mLoeschen);
         $ss = $pdo->prepare('SELECT id, device_id, client_ref FROM rest_segments
                              WHERE user_id = ? AND day_id = ?');
         $ss->execute([$userId, $dayId]);
@@ -326,6 +336,7 @@ function trash_purge_day(int $userId, int $dayId): void {
             $pdo->prepare('DELETE FROM rest_segments WHERE id = ?')->execute([(int)$seg['id']]);
         }
         spur_loeschen($pdo, 'rest', $rLoeschen);
+        schnitte_loeschen_quelle($pdo, 'rest', $rLoeschen);
         $pdo->prepare('DELETE FROM days WHERE user_id = ? AND id = ? AND deleted_at IS NOT NULL')
             ->execute([$userId, $dayId]);
         $pdo->commit();

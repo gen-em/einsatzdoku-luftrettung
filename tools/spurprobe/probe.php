@@ -440,5 +440,177 @@ if ($eineSpur !== null) {
            . "n={$kopf['n']}, stufe={$kopf['stufe']}");
 }
 
+/* ---- Teil 6 — Schnitt und Nachlieferung (S4/A2, E-S4-53) ------------------
+ *
+ * DER PRUEFFALL, DEN DAS KONZEPT VERLANGT (Abschnitt 14, offener Punkt 4):
+ * Schnitt, dann Nachlieferung — die geschnittenen Punkte kommen nicht wieder,
+ * die spaeteren schon.
+ *
+ * ER LAEUFT AUF EINER EIGENS ANGELEGTEN KULISSE und nicht auf dem Bestand.
+ * Der Grund ist der Fall selbst: Er braucht ein Ruhesegment mit bekannter
+ * Zeitachse, einen Einsatz als Ziel und einen Punktvorrat, der beim Schnitt
+ * absichtlich nur zur HAELFTE geliefert ist — die andere Haelfte liegt im
+ * Puffer des Geraets, und genau um sie geht es. So etwas liefert kein
+ * gewachsener Bestand. Alles laeuft in einer Transaktion, die am Ende
+ * zurueckgerollt wird.
+ */
+echo "\n  Teil 6 — Schnitt und Nachlieferung (E-S4-53)\n";
+
+$hatSchnitte = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                                  WHERE table_schema = DATABASE()
+                                    AND table_name = 'track_cuts'")->fetchColumn() > 0;
+pruefe($hatSchnitte, 'Tabelle track_cuts vorhanden',
+       $hatSchnitte ? '' : 'update.php ausfuehren (Migration 2026_09_02_schnitte)');
+
+if ($hatSchnitte) {
+    $pdo->beginTransaction();
+    try {
+        $t0 = 1756700000;          // fest, damit die Zahlen reproduzierbar sind
+        $pdo->prepare('INSERT INTO days (user_id, day) VALUES (?, ?)')
+            ->execute([$uid, '2026-09-02']);
+        $dayId = (int)$pdo->lastInsertId();
+        $pdo->prepare('INSERT INTO rest_segments (user_id, client_ref, day_id, started_at)
+                       VALUES (?, ?, ?, FROM_UNIXTIME(?))')
+            ->execute([$uid, 'probe-rest', $dayId, $t0]);
+        $segId = (int)$pdo->lastInsertId();
+        $pdo->prepare('INSERT INTO missions (user_id, client_ref, day_id, started_at, origin, manual)
+                       VALUES (?, ?, ?, FROM_UNIXTIME(?), ?, 1)')
+            ->execute([$uid, 'probe-mission', $dayId, $t0 + 300, 'manual']);
+        $misId = (int)$pdo->lastInsertId();
+
+        /* 600 Punkte im Sekundentakt waeren der volle Dienst; beim Schnitt
+         * sind erst 350 geliefert (seq 0..349). Geschnitten wird
+         * [t0+300, t0+399] — davon liegen 50 Punkte da (seq 300..349) und 50
+         * noch im Geraet. */
+        $ins = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
+                              VALUES (?,?,?,?,?,?,?)');
+        for ($i = 0; $i < 350; $i++) {
+            $ins->execute(['rest', $segId, $i, 48.0 + $i * 0.0001, 11.0 + $i * 0.0001,
+                           500.0, $t0 + $i]);
+        }
+        pruefe(count(spur_lesen($pdo, 'rest', $segId)) === 350,
+               'Kulisse steht: Ruhesegment mit gelieferten Punkten', '350 Punkte, seq 0..349');
+
+        $markeVorher = spur_naechste_seq($pdo, 'rest', $segId);
+
+        /* ---- Der Schnitt ------------------------------------------------- */
+        $erg = spur_teilen($pdo, 'rest', $segId, 'mission', $misId, $t0 + 300, $t0 + 399);
+        schnitt_vermerken($pdo, $uid, 'rest', $segId, $misId, $t0 + 300, $t0 + 399,
+                          $erg['genommen']);
+
+        pruefe($erg['genommen'] === 50 && $erg['geblieben'] === 300,
+               'Der Schnitt nimmt genau den Zeitbereich',
+               "genommen {$erg['genommen']}, geblieben {$erg['geblieben']} (erwartet 50/300)");
+        pruefe(count(spur_lesen($pdo, 'mission', $misId)) === 50,
+               'Die Punkte stehen danach im Einsatz', '50 Punkte');
+        pruefe(count(spur_lesen($pdo, 'rest', $segId)) === 300,
+               'und nicht mehr im Segment — sie wandern, sie werden nicht kopiert',
+               '300 Punkte');
+
+        $markeNachher = spur_naechste_seq($pdo, 'rest', $segId);
+        pruefe($markeNachher >= $markeVorher,
+               'Die Fortsetzungsmarke faellt durch den Schnitt nicht zurueck',
+               "vorher $markeVorher, nachher $markeNachher");
+
+        $schnitte = schnitte_lesen($pdo, 'rest', $segId);
+        pruefe(count($schnitte) === 1
+               && $schnitte[0]['von_ts'] === $t0 + 300
+               && $schnitte[0]['bis_ts'] === $t0 + 399,
+               'Der Sperrvermerk steht und nennt den Zeitraum',
+               count($schnitte) . ' Vermerk(e), '
+               . ($schnitte ? ($schnitte[0]['bis_ts'] - $schnitte[0]['von_ts'] + 1) . ' s' : '—'));
+
+        /* ---- Die Nachlieferung ------------------------------------------- *
+         *
+         * Das Geraet setzt bei seiner Marke fort und sendet die restlichen
+         * 250 Punkte (ts t0+350 .. t0+599). 50 davon liegen im geschnittenen
+         * Bereich, 200 dahinter. Nachgebaut ist der Weg aus ingest.php:
+         * Sequenz aus `seq_from`, dann `n_original`, dann die Sperrpruefung. */
+        $stand    = spur_stand($pdo, 'rest', $segId);
+        $seqFrom  = $markeNachher;
+        $genommen = 0; $gesperrt = 0; $wiederholt = 0;
+        for ($i = 350; $i < 600; $i++) {
+            $seq = $seqFrom + ($i - 350);
+            $ts  = $t0 + $i;
+            if ($seq < $stand['n_original']) { $wiederholt++; continue; }
+            if (schnitt_gesperrt($schnitte, $ts)) { $gesperrt++; continue; }
+            $ins->execute(['rest', $segId, $seq, 48.0 + $i * 0.0001, 11.0 + $i * 0.0001,
+                           500.0, $ts]);
+            $genommen++;
+        }
+        pruefe($gesperrt === 50,
+               'Nachgelieferte Punkte des geschnittenen Bereichs werden verworfen',
+               "$gesperrt von 250 gesperrt (erwartet 50)");
+        pruefe($genommen === 200,
+               'Alles ausserhalb des Bereichs kommt normal an',
+               "$genommen von 250 angenommen (erwartet 200)");
+        pruefe(count(spur_lesen($pdo, 'rest', $segId)) === 500,
+               'Das Segment traegt danach Ruhe vor UND nach dem Einsatz',
+               '500 Punkte (300 vorher + 200 nachher)');
+        pruefe(count(spur_lesen($pdo, 'mission', $misId)) === 50,
+               'Der Einsatz hat dabei keinen Punkt dazubekommen', '50 Punkte');
+
+        /* Und der zweite Boden getrennt nachgewiesen: Eine Uhr, die ihre
+         * Marke verloren hat, sendet ab 0 neu. Diese Punkte faengt
+         * `n_original` ab — nicht der Vermerk. */
+        $nOrig = (int)spur_stand($pdo, 'rest', $segId)['n_original'];
+        $abgefangen = 0;
+        for ($i = 0; $i < 350; $i++) { if ($i < $nOrig) { $abgefangen++; } }
+        pruefe($abgefangen === 350,
+               'Eine Uhr, die ab 0 neu sendet, laeuft vollstaendig in n_original',
+               "$abgefangen von 350 abgefangen (n_original = $nOrig)");
+
+        /* ---- Rueckgaengig (E-S4-17) --------------------------------------- *
+         *
+         * Die Punkte gehen zurueck, der Vermerk faellt. Das ist die Stelle,
+         * an der sich zeigt, ob `spur_teilen()` das Ziel ERGAENZT: Das
+         * Segment traegt inzwischen 500 Punkte, und ein Blob-Schreiben, das
+         * ersetzt statt zu mischen, liesse davon 50 uebrig. */
+        $vorherSeg = count(spur_lesen($pdo, 'rest', $segId));
+        $zur = spur_teilen($pdo, 'mission', $misId, 'rest', $segId, $t0, $t0 + 599);
+        schnitte_loeschen($pdo, 'ziel', [$misId]);
+
+        pruefe($zur['genommen'] === 50,
+               'Rueckgaengig holt genau die geschnittenen Punkte zurueck',
+               "{$zur['genommen']} Punkte (erwartet 50)");
+        pruefe(count(spur_lesen($pdo, 'rest', $segId)) === 550,
+               'Das Segment ist wieder vollstaendig — die 500 bleiben stehen',
+               'vorher ' . $vorherSeg . ', nachher '
+               . count(spur_lesen($pdo, 'rest', $segId)) . ' (erwartet 550)');
+        pruefe(count(spur_lesen($pdo, 'mission', $misId)) === 0,
+               'Der Einsatz traegt danach keine Punkte mehr', '0 Punkte');
+        pruefe(schnitte_lesen($pdo, 'rest', $segId) === [],
+               'Der Sperrvermerk ist mit aufgehoben — das Loch bleibt fuellbar',
+               '0 Vermerke');
+
+        /* Die Zeitfolge muss dabei aufsteigend geblieben sein: Die
+         * zurueckgegebenen Punkte liegen ZWISCHEN den vorhandenen, nicht
+         * hinten dran. Ein Blob mit ungeordneten Zeiten faellt sonst erst in
+         * der Karte auf. */
+        $zurueck = spur_lesen($pdo, 'rest', $segId);
+        $unsortiert = 0;
+        for ($i = 1; $i < count($zurueck); $i++) {
+            if ((int)$zurueck[$i][4] < (int)$zurueck[$i - 1][4]) { $unsortiert++; }
+        }
+        pruefe($unsortiert === 0,
+               'Die vereinigte Spur ist zeitlich aufsteigend',
+               "$unsortiert Rueckspruenge in " . count($zurueck) . " Punkten");
+
+        /* ---- Der Randfall: alles wandert ---------------------------------- */
+        $erg2 = spur_teilen($pdo, 'rest', $segId, 'mission', $misId, $t0, $t0 + 599);
+        pruefe($erg2['geblieben'] === 0 && count(spur_lesen($pdo, 'rest', $segId)) === 0,
+               'Ein Schnitt darf die ganze Spur nehmen', '0 Punkte im Segment');
+        pruefe(spur_naechste_seq($pdo, 'rest', $segId) >= $markeNachher,
+               'und die Fortsetzungsmarke bleibt trotzdem stehen (leerer Blob)',
+               'naechste_seq = ' . spur_naechste_seq($pdo, 'rest', $segId));
+
+        $pdo->rollBack();
+        pruefe(!$pdo->inTransaction(), 'Der Prueffall ist rueckstandslos zurueckgerollt', '');
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        throw $e;
+    }
+}
+
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $erwartungen, $offen);
 exit($offen === 0 ? 0 : 1);

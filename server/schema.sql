@@ -521,6 +521,39 @@ CREATE TABLE track_blobs (
   KEY stufe_alter (stufe, geaendert_am)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Sperrvermerke des Schneidewerkzeugs (S4/A2, E-S4-53). Eine Zeile je Schnitt.
+--
+-- Wer einen vergessenen Einsatz nachtraegt, schneidet ihn aus dem Ruhesegment
+-- heraus; die Punkte WANDERN dabei (spur_teilen()), sie werden nicht kopiert.
+-- Das Geraet weiss davon nichts und liefert den geschnittenen Zeitraum
+-- moeglicherweise noch nach (Funkloch). Diese Zeile sagt `ingest.php`, welchen
+-- Zeitraum es an diesem Eigentuemer nicht mehr annehmen darf — sonst faenden
+-- die Punkte in das Segment zurueck und der Schnitt loeste sich still wieder
+-- auf.
+--
+-- ZEITRAUM, NICHT SEQUENZBEREICH: Die Sequenznummern der noch nicht
+-- gelieferten Punkte gibt es beim Schnitt nicht; sie vergibt `ingest.php` erst
+-- bei der Ankunft. Der Zeitraum steht dagegen fest, und jeder Punkt bringt
+-- seine `ts` mit.
+--
+-- WIE `track_points` OHNE FREMDSCHLUESSEL (polymorph). `mission_id` ist das
+-- Ziel und traegt das Rueckgaengig (E-S4-17): Es holt die Punkte zurueck und
+-- loescht die Zeile, sonst bliebe ein Loch, das niemand mehr fuellen kann.
+CREATE TABLE track_cuts (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id      INT UNSIGNED NOT NULL,
+  owner_type   ENUM('mission','rest') NOT NULL,   -- Quelle des Schnitts
+  owner_id     INT UNSIGNED NOT NULL,
+  mission_id   INT UNSIGNED NOT NULL,             -- Ziel: der geschnittene Einsatz
+  von_ts       BIGINT NOT NULL,
+  bis_ts       BIGINT NOT NULL,
+  n_punkte     INT UNSIGNED NOT NULL,             -- gewanderte Punkte, fuer die Rueckmeldung
+  erstellt_am  DATETIME NOT NULL,
+  KEY quelle (owner_type, owner_id),
+  KEY ziel (mission_id),
+  KEY konto (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Zustand der Hintergrundjobs (S2, jobs.php). Eine Zeile je Job.
 --
 -- Mehr als ein Zeitstempel: Sobald Arbeit in HAEPPCHEN anfaellt, braucht
@@ -623,4 +656,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- letzter_punkt_am steht oben schon an beiden Tabellen (Web 10.2.0).
   ('2026_09_01_letzter_punkt_am', 'skipped'),
   -- backup_targets steht oben schon im Schema (Web 12.1.0).
-  ('2026_09_01_sicherungsziele', 'skipped');
+  ('2026_09_01_sicherungsziele', 'skipped'),
+  -- track_cuts steht oben schon im Schema (Web 12.5.0).
+  ('2026_09_02_schnitte', 'skipped');

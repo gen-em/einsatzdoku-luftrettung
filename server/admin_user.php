@@ -373,6 +373,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $ids->execute([$uid]);
                     spur_loeschen($pdoDel, $typ, $ids->fetchAll(PDO::FETCH_COLUMN));
                 }
+                /* Und die Sperrvermerke des Kontos (S4/A2). Sie haengen an
+                 * keinem Fremdschluessel — wie die Spuren, aus demselben
+                 * Grund und mit demselben Preis. Ein Vermerk nennt einen
+                 * Zeitraum, in dem sich jemand aufgehalten hat; das ist ein
+                 * Ortsdatum und faellt unter genau die Handlung, die hier
+                 * gerade vollzogen wird. */
+                schnitte_loeschen($pdoDel, 'konto', [$uid]);
                 // Der Rest kaskadiert wie bisher.
                 $pdoDel->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
                 header('Location: admin_users.php');

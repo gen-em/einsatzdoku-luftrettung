@@ -643,6 +643,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     kleines Prüfmittel dafür wäre ein Nachmittag und fände die ganze Klasse
     von Fehlern statt eines Falls.
 
+59. **Sperrvermerke des Schnitts überstehen die Konto-Sicherung nicht.**
+    *Aufgenommen 02.09.2026 als B-S4-10 (S4/A2).*
+    `track_cuts` (Web 12.5.0) hält den Zeitraum, den `ingest.php` an einer
+    geschnittenen Spur nicht mehr annimmt. Die **Komplettsicherung** trägt die
+    Tabelle mit — sie findet ihre Tabellen über `SHOW FULL TABLES`. Die
+    **Konto-Sicherung** (`edbak_build()`, Nutzlast 8) hat dagegen einen
+    aufgezählten Aufbau und kennt sie nicht.
+    **Die Folge nach einem Wiedereinspielen:** Ein Gerät, das Punkte des
+    geschnittenen Zeitraums noch im Puffer hat, liefert sie nach, und sie
+    landen wieder im Ruhesegment — die Fahrt läge dann in Einsatz *und*
+    Segment, also genau der Zustand, den E-S4-53 mit dem Verschieben statt
+    Kopieren vermeiden wollte. Der Einsatz selbst kommt vollständig durch;
+    beschädigt wird nichts, es fällt nur eine Sperre weg.
+    **Das Fenster ist schmal** (Wiedereinspielen ist selten, ein Gerätepuffer
+    umfasst Stunden), der Fehler aber echt. Nicht nebenbei behoben, weil die
+    Behebung den Nutzlastaufbau **und** beide Rückwege berührt: Der Vermerk
+    verweist auf zwei Kennungen (Quelle und Ziel), die das Einspielen erst neu
+    vergibt — er muss also wie die Spuren über Verweise laufen, nicht über
+    Kennungen. Dazu `docs/Backup-Format.md`, die Kreislaufproben und ein
+    Prüffall.
+
 ## Erledigt
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter

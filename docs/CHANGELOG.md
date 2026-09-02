@@ -11,6 +11,101 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.5.0] — 2026-09-02
+
+**Ein Schnitt, der sich nicht von selbst wieder auflöst.** Erstes Paket von
+S4 Block A: das Fundament des Schneidewerkzeugs.
+**Migration erforderlich** (`2026_09_02_schnitte`) — nach dem Deploy muss
+eine Administratorin `update.php` aufrufen.
+
+### Web — Was das Schneiden ist und warum es einen zweiten Boden braucht
+
+Wer einen vergessenen Einsatz nachträgt, hat sein Problem nicht mit dem
+Formular gelöst: Die Spur des Einsatzes liegt im **Ruhesegment**, in dem
+das Gerät zu der Zeit aufgezeichnet hat. `spur_teilen()` schneidet sie dort
+heraus — der gewählte Zeitbereich wandert samt Punkten zum Einsatz.
+
+**Die Punkte wandern, sie werden nicht kopiert** (E-S4-53). Kopieren wäre
+einfacher gewesen und ist verworfen: Die Punkte lägen doppelt (bei rund
+9 500 behaltenen Punkten je Zwölf-Stunden-Dienst spürbar), und das
+Ruhesegment behielte die Einsatzfahrt in sich. Wer es später ansieht, sähe
+eine Ruhezeit, in der jemand 40 km gefahren ist. Der Schnitt soll trennen.
+
+**Damit fehlt aber etwas, das nachkommen kann.** Das Gerät weiß vom Schnitt
+nichts. Hatte es die Punkte des geschnittenen Zeitraums noch im Puffer —
+ein Funkloch reicht —, liefert es sie nach, und sie fänden in das Segment
+zurück, aus dem sie eben genommen wurden. Der Schnitt löste sich still
+wieder auf.
+
+### Web — Warum `n_original` das nicht auffängt
+
+Das war die erste Annahme dieses Pakets, und sie war falsch. Sie klingt
+plausibel: `spur_lesen_viele()` übergeht seit Web 10.0.0 jede Zeile mit
+`seq < n_original`, und der Schnitt könnte diese Grenze einfach hochsetzen.
+
+`ingest.php` vergibt die Sequenznummern aber aus `seq_from` — der Marke,
+die das Gerät zuletzt zurückbekommen hat. **Gepufferte Punkte kommen
+deshalb oberhalb jeder Sperrgrenze an** und laufen glatt daran vorbei;
+`n_original` fängt nur die *Wiederholung* schon gelieferter Punkte ab. Was
+die Nachzügler kenntlich macht, ist ihre `ts` — und die bringen sie selbst
+mit.
+
+Deshalb hält der neue Sperrvermerk in `track_cuts` einen **Zeitraum** und
+nicht, wie das Konzept es in Abschnitt 14 vorsah, einen Sequenzbereich: Den
+gibt es beim Schnitt noch gar nicht, weil es die betreffenden Punkte noch
+nicht gibt. Der Zeitraum steht dagegen fest, sobald die Bedienerin ihn
+gewählt hat.
+
+**Beide Böden bleiben nötig, und sie tun Verschiedenes:**
+
+| | fängt ab | wäre sonst die Folge |
+|---|---|---|
+| `n_original` (Blob) | Wiederholung bereits gelieferter Punkte; hält die Fortsetzungsmarke | Das Gerät sendet den ganzen Dienst noch einmal — der Schnitt löscht Zeilen, und die Marke fiele mit ihnen zurück |
+| `track_cuts` (Zeitraum) | Nachlieferung aus dem Puffer | Die geschnittenen Punkte kehren ins Segment zurück |
+
+`ingest.php` liest die Vermerke **einmal je Upload**, nicht einmal je Punkt
+— es ist der heißeste Schreibweg der Anwendung. Verworfene Punkte werden
+genannt (`cut_points` in der Antwort), aber **quittiert**: Sonst liefert das
+Gerät endlos nach, dieselbe Regel wie bei der Sperrliste `deleted_refs`.
+Eine Vertragsänderung ist das nicht — der Client muss damit nichts tun.
+
+### Web — Was beim Bauen auffiel
+
+**Ein Schnitt darf die ganze Spur nehmen.** Bleibt dabei kein Punkt übrig,
+schreibt `spur_teilen()` trotzdem einen Blob zurück — einen leeren, 21 Byte.
+Ohne ihn fände `spur_naechste_seq()` weder Zeile noch Blob und antwortete 0.
+Der Fall ist nicht selten: Wer einen Einsatz aus einem kurzen Segment
+schneidet, nimmt häufig alles.
+
+**Das Ziel wird ergänzt, nicht überschrieben.** Beim Schneiden selbst ist es
+ein frisch angelegter Einsatz und leer; beim **Rückgängig** (E-S4-17) ist es
+das Ruhesegment, das seit dem Schnitt weitergelaufen ist. Ein Blob-Schreiben,
+das ersetzt statt zu mischen, hätte dessen neue Punkte gelöscht — ohne
+Fehlermeldung. Das Rückgängig hebt den Sperrvermerk mit auf, sonst bliebe
+ein Loch, das niemand mehr füllen kann.
+
+**Die Löschwege räumen die Vermerke mit ab.** Sie hängen an keinem
+Fremdschlüssel — wie `track_points` und `track_blobs`, aus demselben Grund
+(polymorph) und mit demselben Preis. Papierkorb, Kontolöschung und der
+Waisenjob tun es jetzt ausdrücklich; ein Vermerk nennt einen Zeitraum, in
+dem sich jemand aufgehalten hat, und das ist ein Ortsdatum.
+
+### Web — Nachweis
+
+`tools/spurprobe/probe.php` hat einen **Teil 6** bekommen: Schnitt, dann
+Nachlieferung, dann Rückgängig, auf einer eigens angelegten Kulisse in einer
+zurückgerollten Transaktion. Der Bestand liefert diesen Fall nicht — er
+braucht eine Spur, die beim Schnitt absichtlich nur zur Hälfte geliefert ist.
+
+**20 Erwartungen, alle erfüllt.** Die Kernzahlen: von 250 nachgelieferten
+Punkten werden **50 gesperrt und 200 angenommen**; das Segment trägt danach
+500 Punkte (Ruhe vor *und* nach dem Einsatz), der Einsatz unverändert 50.
+Nach dem Rückgängig sind es 550 im Segment und 0 im Einsatz, ohne einen
+einzigen zeitlichen Rücksprung in der vereinigten Spur.
+
+Die Bedienung — Schneide-Bereich in der Tagesansicht, `api/`-Endpunkt,
+Rückgängig-Aktion — folgt in einem eigenen Paket.
+
 ## [Web 12.4.2] — 2026-09-02
 
 **Das Bodenlogo war nie so klein, wie es aussah — es war gepolstert.** Elftes

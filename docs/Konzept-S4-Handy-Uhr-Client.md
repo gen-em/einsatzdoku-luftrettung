@@ -1091,6 +1091,66 @@ Behauptung über etwas, das die Uhr nicht wissen kann.
 Prüffälle halten es fest: der Anfangszustand behauptet nichts, und der erste
 Sendeversuch macht daraus eine Beobachtung — in beide Richtungen.
 
+### B-S4-10 — Sperrvermerke überstehen die Konto-Sicherung nicht
+
+**Gefunden in A2 am 02.09.2026**, beim Nachziehen der Doku zur neuen Tabelle.
+
+`track_cuts` hält den Zeitraum, den `ingest.php` an einer geschnittenen Spur
+nicht mehr annimmt. Zwei Sicherungswege, zwei Ergebnisse:
+
+| Weg | trägt `track_cuts` | warum |
+|---|---|---|
+| Komplettsicherung (4.97d) | **ja** | `komp_tabellen()` findet ihre Tabellen über `SHOW FULL TABLES` — eine neue Tabelle reist von selbst mit |
+| Konto-Sicherung (`edbak_build()`, Nutzlast 8) | **nein** | Der Aufbau ist aufgezählt: `stammdaten`, `days`, `missions`, `rest_segments`. Was nicht dasteht, kommt nicht mit |
+
+**Die Folge nach einem Wiedereinspielen:** Ein Gerät, das Punkte des
+geschnittenen Zeitraums noch im Puffer hat, liefert sie nach, und sie landen
+wieder im Ruhesegment. Die Einsatzfahrt läge dann in Einsatz *und* Segment —
+genau der Zustand, den E-S4-53 mit dem Verschieben statt Kopieren vermeiden
+wollte. Der Einsatz selbst kommt vollständig durch; beschädigt wird nichts,
+es fällt eine Sperre weg.
+
+**Nicht nebenbei behoben** (K4), und diesmal nicht nur wegen der Regel: Ein
+Vermerk verweist auf **zwei** Kennungen — die Quelle (Segment oder Einsatz)
+und das Ziel (Einsatz) —, und beide vergibt das Einspielen erst neu. Er muss
+deshalb denselben Weg über **Verweise** nehmen wie die Spuren seit Nutzlast 8,
+nicht über Kennungen. Dazu kommen `docs/Backup-Format.md`, beide
+Kreislaufproben und ein Prüffall. Das ist ein Paket, kein Nachklapp.
+
+**Aufgenommen als Backlog Nr. 59.**
+
+### B-S4-11 — Die Spurprobe misst die Ausdünnung an synthetischen Daten
+
+**Gefunden in A2 am 02.09.2026**, beim ersten Lauf gegen die frisch
+migrierte Container-Installation. **Kein Fehler des Schnitts** — der Befund
+steht auf `main` genauso, nachgewiesen durch einen Lauf gegen den gestashten
+Stand.
+
+`tools/spurprobe/probe.php`, Teil 4 erwartet, dass die Ausdünnung „rund 37 %"
+der Punkte behält (E-S2-05). Gemessen wurden **0,45 % (423 von 94 922
+Punkten)** — die eine Erwartung, die dieser Bestand nicht erfüllt.
+
+Die Ursache liegt in den Daten, nicht in der Ausdünnung: Der Testbestand
+besteht aus **einer** Spur, 77-fach dupliziert (77 Spuren, alle mit
+9 505 Punkten und identischer Ausdehnung von 2,195258° × 3,264970°). Sie ist
+erzeugt, nicht geflogen, und läuft in geraden Etappen. Douglas-Peucker
+verwirft auf einer Geraden **jeden** Zwischenpunkt, unabhängig von der
+Toleranz — 0,45 % ist für diese Daten das richtige Ergebnis.
+
+**Der Befund gegen den Prüfstand, nicht gegen den Code:** Die Erwartung ist
+gegen echte Flugspuren geeicht und misst auf synthetischen Daten etwas
+anderes, als sie behauptet — genau der Fehler, den CLAUDE.md 6 unter „Eine
+grüne Zahl ist erst dann ein Beleg, wenn sie das Gemessene benennt" führt,
+nur in die andere Richtung: eine **rote** Zahl, die nichts über den Code sagt.
+Eine rote Zahl, die in jedem Lauf rot ist, wird außerdem übersehen, wenn
+einmal eine echte danebensteht.
+
+**Vorschlag** (nicht umgesetzt, gehört zu S2 und nicht zu S4): Die Erwartung
+prüft zusätzlich, ob der Bestand überhaupt Krümmung hat — etwa den Anteil der
+Punkte, die mehr als die Toleranz von der Verbindungslinie ihrer Nachbarn
+abweichen. Ist er nahe null, ist die Spur synthetisch, und die Erwartung
+meldet das statt eines Fehlschlags.
+
 ## 11. Statuspflege
 
 Nach jedem Paket: dieses Konzept fortschreiben (erledigt, Probleme,
@@ -2149,6 +2209,143 @@ Entscheidung, und genau das sollen sie sein.
 
 ---
 
+### A2a — Schneiden: Bibliothek, Schema und Sperre · Web 12.5.0 · erledigt
+
+**Warum A2 geteilt ist.** Das Paket trägt zwei Dinge, die nichts miteinander
+zu tun haben: den Weg durch die Daten (Punkte verschieben, Nachlieferung
+abwehren) und die Bedienung (Schneide-Bereich, Endpunkt, Rückgängig-Aktion).
+Der erste ist gebaut und mit Zahlen belegt; der zweite baut darauf auf. Sie in
+einem Commit zu vermengen hieße, den Nachweis des einen im Rauschen des
+anderen zu verlieren.
+
+**Was gebaut ist:**
+
+- `spur_teilen()` in `server/spur_lib.php` — verschiebt einen Zeitbereich von
+  einer Spur zur anderen. Schließt sich einer laufenden Transaktion an.
+- Die Sperrvermerke, ebenfalls dort: `schnitt_vermerken()`,
+  `schnitte_lesen()`, `schnitt_gesperrt()`, `schnitte_zum_einsatz()`,
+  `schnitte_loeschen()`, `schnitte_loeschen_quelle()`. Hinter dieselbe Datei
+  wie die Punkte, aus demselben Grund (CLAUDE.md 4).
+- Tabelle `track_cuts`, Migration `2026_09_02_schnitte`, dazu `schema.sql`.
+- Die Prüfung in `server/ingest.php` samt Antwortfeld `cut_points`.
+- Die Löschwege: `trash_lib.php` (drei Stellen, beide Richtungen),
+  `admin_user.php` (Kontolöschung), `jobs_lib.php` (Waisenjob als Netz).
+- `tools/spurprobe/probe.php`, Teil 6 — der Prüffall aus Abschnitt 14.
+
+#### Prüfstand A2a
+
+Gefahren gegen die Container-Installation (MariaDB, Konto
+`philipp@chadid.net`, 77 Spuren / 94 930 Punkte), nach `php update.php`.
+
+| Prüfung | Mittel | Ist | Soll |
+|---|---|---|---|
+| PHP-Syntax | `php -l`, 7 geänderte Dateien | **0 Fehler** | 0 |
+| Migration | `php server/update.php` | `2026_09_02_schnitte` **erfolgreich angewendet**; die vier vorher offenen (S2/S3) liefen dabei mit | Tabelle steht |
+| Spurprobe gesamt | `php tools/spurprobe/probe.php` | **45 Erwartungen, 1 nicht erfüllt** (vorher 25/1) | die 20 neuen grün |
+| … die eine rote | Teil 4, Ausdünnungsband | **0,45 % statt „rund 37 %"** — steht auf `main` genauso (Gegenlauf gegen den gestashten Stand), Ursache in den Daten: **Fund B-S4-11** | nicht dieses Paket |
+| **Der Schnitt nimmt den Zeitbereich** | Teil 6 | **50 genommen, 300 geblieben** von 350 gelieferten | 50/300 |
+| … die Punkte wandern | Teil 6 | Einsatz **50**, Segment **300** — Summe 350, kein Punkt doppelt | E-S4-53 |
+| … die Fortsetzungsmarke hält | `spur_naechste_seq()` vor/nach | **350 → 350** | kein Rückfall |
+| **Nachlieferung: der gesperrte Teil** | 250 nachgelieferte Punkte | **50 gesperrt** | genau die 50 im Bereich |
+| **Nachlieferung: der Rest** | dieselben 250 | **200 angenommen** | alles außerhalb kommt an |
+| … Segment danach | `spur_lesen()` | **500 Punkte** (300 vor dem Einsatz + 200 danach) | Ruhe vor *und* nach |
+| … Einsatz danach | `spur_lesen()` | **50 Punkte, unverändert** | nichts dazubekommen |
+| **Der zweite Boden getrennt** | Uhr sendet ab `seq` 0 neu | **350 von 350** laufen in `n_original` (= 350) | Wiederholung greift |
+| **Rückgängig** | `spur_teilen()` zurück | **50 Punkte zurück**; Segment **500 → 550**, Einsatz **0** | die 500 bleiben stehen |
+| … der Vermerk fällt mit | `schnitte_lesen()` | **0 Vermerke** | das Loch bleibt füllbar |
+| … die Zeitfolge bleibt | 550 Punkte durchgezählt | **0 Rücksprünge** | aufsteigend |
+| **Randfall: alles wandert** | Schnitt über die ganze Spur | Segment **0 Punkte**, `naechste_seq` **600** | leerer Blob hält die Marke |
+| Rückstandsfreiheit | Rollback am Ende von Teil 6 | Transaktion beendet, Bestand unverändert | ändert nichts |
+
+**Was nicht geprüft ist — und das steht hier, nicht in einer Fußnote:**
+
+- **Nichts davon im Browser.** Es gibt noch keine Bedienung; das Paket ist
+  Bibliothek, Schema und ein Endpunkt-Vorbau. Der Browsergang gehört zu A2b.
+- **`ingest.php` ist nicht gegen einen echten Upload gelaufen.** Teil 6 baut
+  den Weg der Punktschleife nach (`seq` aus `seq_from`, dann `n_original`,
+  dann `schnitt_gesperrt()`), aber er ruft den Endpunkt nicht auf. Die
+  Anmeldung an der lokalen Installation steht noch aus (das Sitzungs-Cookie
+  ist `secure`, und das Formular-Token wird im Browser aus dem Passwort
+  abgeleitet — mit `curl` nicht nachbaubar). Ein Rundlauf gegen `ingest.php`
+  gehört zu A2b, wo ohnehin ein Endpunkt dazukommt.
+- **Die Antwortzeit auf dem 5 000-Einsätze-Konto** (Messstand R35, von der
+  Abnahme verlangt) ist nicht gemessen — dafür braucht es den Endpunkt.
+- **Die Kreisläufe R24** (`tools/wiederherstellungs-probe/`,
+  `papierkorb_misch.mjs`) sind nicht gefahren. Sie gehören ans Ende von A2,
+  wenn geschnittene Einsätze tatsächlich entstehen können. **Ein Befund steht
+  aber schon fest:** Die Konto-Sicherung trägt `track_cuts` nicht mit — Fund
+  **B-S4-10**, Backlog Nr. 59.
+
+#### Probleme und wie sie gelöst wurden
+
+**`n_original` reicht nicht — und die erste Fassung nahm an, es reiche.** Der
+Kopfkommentar von `spur_teilen()` behauptete das sogar ausdrücklich („Das ist
+die eine Stelle, an der E-S4-53 hängt"), und das Konzept sagte in Abschnitt 14
+„Sequenzbereich". Aufgefallen ist es beim Nachlesen von `ingest.php`: Dort
+steht `$seq = $seqFrom + $i`. Die Nummern entstehen bei der **Ankunft**, aus
+der Marke des Geräts — gepufferte Punkte kommen also *oberhalb* jeder
+Sperrgrenze an. Was sie kenntlich macht, ist ihre `ts`. Berichtigt sind
+Kommentar, Konzept (Abschnitt 14) und die Bauform (`track_cuts` hält einen
+Zeitraum).
+
+**Ein Schnitt, der alles nimmt, hätte die Fortsetzungsmarke gelöscht.** Blieb
+kein Punkt übrig, schrieb die erste Fassung gar keinen Blob zurück;
+`spur_naechste_seq()` fände dann weder Zeile noch Blob und antwortete 0. Das
+Gerät begänne den Dienst von vorn. Ein leerer Blob kostet **21 Byte**
+(gemessen) und hält die Marke.
+
+**`spur_teilen()` hätte beim Rückgängig die halbe Spur gelöscht.** Es schrieb
+den Zielblob mit `spur_blob_schreiben()`, und das ersetzt (`ON DUPLICATE KEY
+UPDATE`) statt zu ergänzen. Beim Schnitt fällt das nicht auf — das Ziel ist
+ein frischer, leerer Einsatz. Beim Rückgängig ist das Ziel das Ruhesegment mit
+inzwischen 500 Punkten; von denen wären 50 übriggeblieben, **ohne
+Fehlermeldung**. Die Funktion mischt jetzt und sortiert nach `ts`; der
+Prüffall zählt die 550 nach und prüft die Zeitfolge auf Rücksprünge.
+
+**`spur_loeschen()` darf die Vermerke nicht mitnehmen.** Naheliegend wäre, das
+Aufräumen dort hineinzulegen — aber `spur_teilen()` ruft es selbst, für die
+Quelle. Der zweite Schnitt an einem Segment löschte damit die Sperre des
+ersten. Die Vermerke räumen deshalb die Löschwege der **Eigentümer** ab
+(Papierkorb, Kontolöschung, Waisenjob), nicht der Spur.
+
+**PDO kennt keine verschachtelten Transaktionen.** `spur_teilen()` brachte
+eine eigene mit; im Endpunkt (Einsatz anlegen, schneiden, vermerken — das gilt
+zusammen oder gar nicht) und in der Probe (alles in einem Rollback) hätte das
+geworfen. Jetzt: eigene Transaktion nur, wenn keine läuft.
+
+**Die lokale Datenbank stand auf dem Vor-S2-Schema.** `track_blobs` gab es
+nicht, die Spurprobe lief ins Leere. `php server/update.php` (der
+Kommandozeilen-Notausgang) hat die vier offenen Migrationen nachgeholt.
+
+#### Entscheidungen, die in A2a gefallen sind
+
+- **E-S4-54 — Der Sperrvermerk hält einen Zeitraum, keinen Sequenzbereich.**
+  Begründung oben und in Abschnitt 14. Folge: `track_cuts` ist polymorph über
+  `owner_type`/`owner_id` und heißt nicht `rest_segment_schnitte` — aus einem
+  **Einsatz** wird ebenso geschnitten (das Rückgängig ist derselbe Vorgang
+  rückwärts).
+- **E-S4-55 — `spur_teilen()` ergänzt das Ziel und ersetzt es nie.** Das
+  Rückgängig ist damit kein eigener Weg, sondern derselbe Aufruf mit
+  vertauschten Enden. Preis: Die Funktion liest das Ziel mit, auch wenn es
+  (beim Schnitt) leer ist — eine Abfrage, die sich gegen einen stillen
+  Datenverlust rechnet.
+- **E-S4-56 — Verworfene Punkte werden quittiert und gezählt, nicht
+  abgelehnt.** `cut_points` in der Antwort, eigenes Feld neben
+  `dropped_points`. Ohne Quittung liefert das Gerät endlos nach — dieselbe
+  Regel wie bei `deleted_refs`.
+- **E-S4-57 — A2 wird geteilt.** A2a: Bibliothek, Schema, Sperre, Nachweis.
+  A2b: Endpunkt, Bedienung in der Tagesansicht, Rückgängig-Aktion,
+  Kreisläufe, Messstand R35.
+
+#### Neue Fehlerfunde (K4, gesammelt in Abschnitt 10)
+
+- **B-S4-10** — Sperrvermerke überstehen die Konto-Sicherung nicht
+  (Backlog Nr. 59).
+- **B-S4-11** — Die Spurprobe misst die Ausdünnung an synthetischen Daten
+  (Befund gegen den Prüfstand, nicht gegen den Code; steht auf `main` genauso).
+
+---
+
 ## 13. Abgleich mit Rahmenplan Fassung 13 (R49) — 01.09.2026
 
 Der Rahmenplan wurde nach der Beauftragung von Block B und C fortgeschrieben.
@@ -2268,30 +2465,74 @@ trennen, nicht verdoppeln.
 | Regel | Folge |
 |---|---|
 | Punkte **wandern**, sie werden nicht kopiert | kein doppelter Speicher, das Segment zeigt danach die Ruhezeit |
-| Der geschnittene **Sequenzbereich** wird am Quellsegment vermerkt | `ingest.php` muss ihn lesen |
+| Der geschnittene **Zeitraum** wird am Quellsegment vermerkt | `ingest.php` muss ihn lesen — *in A2 berichtigt: Zeitraum statt Sequenzbereich, siehe unten* |
 | Punkte in einem gesperrten Bereich werden **verworfen** | … |
 | … aber der Upload wird **quittiert** | sonst liefert das Gerät endlos nach — dieselbe Regel wie bei der Sperrliste (`deleted_refs`, `ingest.php`) |
 | Alles außerhalb des Bereichs kommt **normal an** | die Aufzeichnung läuft über den Schnitt hinweg weiter |
 | Rückgängig hebt die Sperre **mit** auf | sonst bliebe ein Loch, das niemand mehr füllen kann |
 
+### Berichtigung aus der Umsetzung: Zeitraum statt Sequenzbereich
+
+**Nachgetragen am 02.09.2026 (A2).** Die Tabelle oben sagte
+„Sequenzbereich", und die vier offenen Punkte darunter gingen davon aus. Das
+trägt nicht, und der Grund steht in `ingest.php`:
+
+```php
+$seq = $seqFrom + $i;
+```
+
+**Die Sequenznummer entsteht erst bei der Ankunft**, aus `seq_from` — der
+Marke, die das Gerät zuletzt zurückbekommen hat. Die Punkte, um die es beim
+Sperrvermerk überhaupt geht, sind beim Schnitt noch **nicht geliefert**; ihre
+Nummern gibt es also noch gar nicht, und sie werden **oberhalb** jeder
+Sperrgrenze liegen, die man beim Schnitt setzen könnte. Ein Sequenzbereich
+fängt genau den Fall nicht ab, für den er gedacht war.
+
+Was sie kenntlich macht, ist ihre `ts` — die tragen sie selbst bei sich, und
+sie steht in der Punktschleife schon in `$pt[3]`. `track_cuts` hält deshalb
+`von_ts`/`bis_ts`.
+
+**Die zweite Hälfte der ursprünglichen Annahme bleibt richtig, aber für einen
+anderen Zweck.** `n_original` wird beim Schnitt trotzdem hochgesetzt — nicht
+gegen die Nachlieferung, sondern gegen den Rückfall der **Fortsetzungsmarke**:
+Der Schnitt löscht Zeilen, und `spur_naechste_seq()` fiele mit ihnen zurück;
+das Gerät sendete den ganzen Dienst noch einmal. Es sind zwei Böden für zwei
+verschiedene Fälle, und beide werden gebraucht:
+
+| | fängt ab |
+|---|---|
+| `n_original` im Blob | Wiederholung schon gelieferter Punkte; hält die Fortsetzungsmarke |
+| `track_cuts` (Zeitraum) | Nachlieferung aus dem Gerätepuffer |
+
 ### Was die Umsetzung noch klären muss
 
-Diese Punkte sind **nicht** entschieden und gehören in A2:
+Diese Punkte waren beim Beschluss **nicht** entschieden; die Antworten aus A2
+stehen dahinter:
 
-1. **Wo der Bereich steht.** Eine eigene Tabelle (`rest_segment_schnitte`
-   mit `seq_von`, `seq_bis`, `mission_id`) oder eine Spalte am Segment.
-   Die Tabelle ist wahrscheinlich richtig — ein Segment kann mehrfach
-   geschnitten werden, und Rückgängig braucht die Zuordnung zum Einsatz.
-2. **Wie `ingest.php` prüft, ohne teurer zu werden.** Der Endpunkt ist der
-   heißeste Schreibweg der Anwendung. Die Prüfung darf keine zweite Abfrage
-   je Punkt sein.
-3. **Was die Antwort meldet.** Der Vertrag kennt `rejected` und `kept_*`;
-   verworfene Punkte in einem geschnittenen Bereich sind weder das eine noch
-   das andere. Wahrscheinlich ein neues Feld, wahrscheinlich ohne
-   Vertragsänderung (der Client muss nichts damit tun).
-4. **Der Prüffall**, den das Konzept verlangt: Schnitt, dann Nachlieferung
-   derselben Sequenzen aus dem Referenzdatensatz — die geschnittenen kommen
-   nicht wieder, die späteren schon. Mit Zahl.
+1. **Wo der Bereich steht.** → Eine eigene Tabelle, wie vermutet, aber
+   **polymorph** und mit Zeitgrenzen: `track_cuts` mit `owner_type`/`owner_id`
+   (Quelle), `mission_id` (Ziel), `von_ts`/`bis_ts`. Nicht
+   `rest_segment_schnitte`: Geschnitten wird auch aus einem **Einsatz**
+   heraus, und das Rückgängig ist derselbe Vorgang in die andere Richtung.
+   Migration `2026_09_02_schnitte`, Web 12.5.0.
+2. **Wie `ingest.php` prüft, ohne teurer zu werden.** → `schnitte_lesen()`
+   **einmal je Upload**, vor der Punktschleife; in der Schleife entscheidet
+   `schnitt_gesperrt()` gegen ein Feld im Arbeitsspeicher. Eine Spur hat
+   üblicherweise null Vermerke — dann kostet die Prüfung einen Test gegen ein
+   leeres Feld. Keine zusätzliche Abfrage je Punkt.
+3. **Was die Antwort meldet.** → `cut_points`, ein eigenes Feld neben
+   `dropped_points`. Getrennt, weil es etwas anderes sagt: `dropped_points`
+   heißt „diese Spur ist fertig verdichtet", `cut_points` „diesen Zeitraum hat
+   jemand herausgeschnitten"; in der Fehlersuche will man das unterscheiden.
+   Wie vermutet **ohne Vertragsänderung** — der Client muss nichts damit tun.
+   In `docs/JSON-Vertrag.md` Abschnitt 5 nachgetragen.
+4. **Der Prüffall.** → `tools/spurprobe/probe.php`, Teil 6. **Nicht aus dem
+   Referenzbestand**, und das ist der Punkt: Der Fall braucht eine Spur, die
+   beim Schnitt absichtlich nur zur **Hälfte** geliefert ist — die andere
+   Hälfte liegt im Gerätepuffer, und genau um sie geht es. So etwas liefert
+   kein gewachsener Bestand. Die Probe legt die Kulisse deshalb selbst an, in
+   einer Transaktion, die am Ende zurückgerollt wird.
+   **20 Erwartungen, alle erfüllt** (Zahlen im Prüfstand A2a unten).
 
 ### Nachtrag zur Lage: Block A wartet auf S3
 

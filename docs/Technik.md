@@ -383,6 +383,7 @@ Daten erst nach Server-Bestätigung.
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
 | `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Sicherungsziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
+| `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
 | `backup_targets` | Sicherungsziele (seit Web 12.1.0, S2/AP7): FTP-, FTPS- oder SFTP-Gegenstelle je Zeile. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
@@ -1859,7 +1860,8 @@ sechs sind umgestellt:
 
 Dazu die Schreib- und Löschseite: `spur_naechste_seq()` liefert die
 Fortsetzungsmarke der Uhr (`ingest.php`), `spur_loeschen()` entfernt **Zeilen
-und Blob** und wird von jedem Löschweg gerufen.
+und Blob** und wird von jedem Löschweg gerufen. Seit Web 12.5.0 kommt
+`spur_teilen()` dazu — der Schnitt, siehe Abschnitt 4.97e.
 
 **`spur_lesen_viele()` setzt beide Stufen zusammen.** Zwischen Verdichtung und
 Ausdünnung darf die Uhr Punkte nachreichen; sie landen als Zeilen *hinter* dem
@@ -2952,6 +2954,116 @@ Platte, ein echter Absturz mitten in der Anfrage, der Migrationslauf — steht
 an erster Stelle ihrer `LIESMICH.md`.
 
 ---
+
+### 4.97e Schneiden: ein Zeitbereich wandert (ab Web 12.5.0, S4/A2, E-S4-53)
+
+Wer einen vergessenen Einsatz nachträgt, hat sein Problem mit dem Formular
+nicht gelöst: Die **Spur** des Einsatzes liegt im Ruhesegment, in dem das
+Gerät zu der Zeit aufgezeichnet hat. Das Schneidewerkzeug holt sie dort
+heraus.
+
+#### Die Punkte wandern
+
+`spur_teilen($pdo, $quelleTyp, $quelleId, $zielTyp, $zielId, $vonTs, $bisTs)`
+verschiebt alle Punkte mit `von_ts ≤ ts ≤ bis_ts` von der Quelle zum Ziel.
+Beide Spuren stehen danach als Blob da.
+
+**Kopieren wurde verworfen** (E-S4-53). Die Punkte lägen doppelt — bei rund
+9 500 behaltenen Punkten je Zwölf-Stunden-Dienst spürbar —, und das
+Ruhesegment behielte die Einsatzfahrt in sich: Wer es später ansieht, sähe
+eine Ruhezeit, in der jemand 40 km gefahren ist.
+
+Zwei Eigenschaften der Funktion sind nicht offensichtlich und beide nötig:
+
+- **Sie ergänzt das Ziel, sie ersetzt es nicht.** Beim Schneiden ist das Ziel
+  ein frisch angelegter Einsatz und leer; beim **Rückgängig** ist es das
+  Ruhesegment, das seit dem Schnitt weitergelaufen ist. `spur_blob_schreiben()`
+  ersetzt einen Blob vollständig — dessen neue Punkte wären ohne Mischen weg,
+  ohne Fehlermeldung.
+- **Sie schreibt auch dann einen Blob, wenn nichts übrigbleibt** — einen
+  leeren, 21 Byte. Ohne ihn fände `spur_naechste_seq()` weder Zeile noch Blob
+  und antwortete 0; das Gerät begänne den Dienst von vorn. Wer aus einem
+  kurzen Segment schneidet, nimmt häufig alles.
+
+Läuft bereits eine Transaktion, schließt sich `spur_teilen()` ihr an. Das ist
+der Regelfall: Einsatz anlegen, schneiden, vermerken — das gilt zusammen oder
+gar nicht.
+
+#### Der Sperrvermerk, und warum `n_original` ihn nicht ersetzt
+
+Das Gerät weiß vom Schnitt nichts. Hatte es die Punkte des geschnittenen
+Zeitraums noch im Puffer — ein Funkloch reicht —, liefert es sie nach.
+
+Die naheliegende Abwehr ist `n_original`: `spur_lesen_viele()` übergeht jede
+Zeile mit `seq < n_original` (Abschnitt 4.97), der Schnitt müsste die Grenze
+also nur hochsetzen. **Das trägt nicht.** `ingest.php` vergibt die
+Sequenznummern aus `seq_from` — der Marke, die das Gerät zuletzt bekommen
+hat. Gepufferte Punkte kommen deshalb **oberhalb** der Grenze an und laufen
+glatt daran vorbei; `n_original` fängt nur die *Wiederholung* schon
+gelieferter Punkte ab.
+
+Was die Nachzügler kenntlich macht, ist ihre `ts`. Deshalb hält `track_cuts`
+einen **Zeitraum** und keinen Sequenzbereich: Den gibt es beim Schnitt noch
+nicht, weil es die betreffenden Punkte noch nicht gibt.
+
+| | fängt ab | wäre sonst die Folge |
+|---|---|---|
+| `n_original` im Blob | Wiederholung bereits gelieferter Punkte; hält die Fortsetzungsmarke | Das Gerät sendet den ganzen Dienst noch einmal — der Schnitt löscht Zeilen, und die Marke fiele mit ihnen zurück |
+| `track_cuts` (Zeitraum) | Nachlieferung aus dem Gerätepuffer | Die geschnittenen Punkte kehren in die Quelle zurück, der Schnitt löst sich still wieder auf |
+
+Beide Böden bleiben also, und sie tun Verschiedenes.
+
+#### Der Weg durch `ingest.php`
+
+`schnitte_lesen()` holt die Vermerke **einmal je Upload**, vor der
+Punktschleife — es ist der heißeste Schreibweg der Anwendung, eine Abfrage je
+Punkt wäre der falsche Preis. In der Schleife entscheidet
+`schnitt_gesperrt($schnitte, $ts)`; eine Spur hat üblicherweise null Vermerke,
+und dann kostet das einen Test gegen ein leeres Feld.
+
+Die Prüfung liegt **hinter** der `n_original`-Prüfung und **vor** der
+Wertprüfung. Ein `ts`, das keine Zahl ist, wird zu 0 und fällt aus jedem
+Sperrbereich heraus — die Sperre entscheidet nie über einen Punkt, den sie
+nicht versteht.
+
+Verworfene Punkte werden **genannt** (`cut_points` in der Antwort) und
+trotzdem **quittiert**: Die Fortsetzungsmarke wandert über sie hinweg, sonst
+liefert das Gerät endlos nach — dieselbe Regel wie bei der Sperrliste
+`deleted_refs`. `cut_points` steht bewusst neben und nicht in
+`dropped_points`: Dort steht die Ausdünnung („diese Spur ist fertig
+verdichtet"), hier etwas anderes („diesen Zeitraum hat jemand
+herausgeschnitten"). Eine Vertragsänderung ist das nicht, der Client muss
+damit nichts tun.
+
+#### Die Vermerke gehören ebenfalls hinter `spur_lib.php`
+
+`schnitt_vermerken()`, `schnitte_lesen()`, `schnitt_gesperrt()`,
+`schnitte_zum_einsatz()`, `schnitte_loeschen()`, `schnitte_loeschen_quelle()`
+— aus demselben Grund wie bei den Punkten (CLAUDE.md 4): Wer die Tabelle
+unmittelbar liest, bekommt früher oder später eine halbe Auskunft, etwa indem
+er den Vermerk zum Ziel löscht und den zur Quelle stehenlässt.
+
+`track_cuts` hängt an keinem Fremdschlüssel — polymorph wie `track_points` und
+`track_blobs`, aus demselben Grund und mit demselben Preis. Die Löschwege
+räumen ausdrücklich mit: Papierkorb (`trash_lib.php`, beide Richtungen —
+Vermerk *zum* Einsatz und Vermerk *am* Einsatz), Kontolöschung
+(`admin_user.php`) und der Waisenjob als Sicherheitsnetz (`jobs_lib.php`).
+Bleibt ein Vermerk stehen, sperrt er einen Zeitraum für immer, und zwar
+unsichtbar — die Oberfläche zeigt ihn nicht.
+
+**Nicht mit abgeräumt wird beim Schnitt selbst:** `spur_teilen()` ruft intern
+`spur_loeschen()` für die Quelle, und das darf die Vermerke nicht anfassen —
+sonst löschte der zweite Schnitt an einem Segment die Sperre des ersten.
+
+#### Nachweis
+
+`tools/spurprobe/probe.php`, **Teil 6** — auf einer eigens angelegten Kulisse
+in einer zurückgerollten Transaktion. Der Bestand liefert diesen Fall nicht:
+Er braucht eine Spur, die beim Schnitt absichtlich nur zur Hälfte geliefert
+ist. **20 Erwartungen, alle erfüllt.** Die Kernzahlen: 350 Punkte geliefert,
+50 geschnitten; von 250 nachgelieferten Punkten **50 gesperrt, 200
+angenommen**; Segment danach 500 Punkte, Einsatz 50. Nach dem Rückgängig 550
+und 0, ohne einen zeitlichen Rücksprung in der vereinigten Spur.
 
 ### 4.98 Was im verschlüsselten Block liegt — und was nicht
 

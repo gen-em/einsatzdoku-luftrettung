@@ -1188,6 +1188,331 @@ function spur_zeit_verschieben(PDO $pdo, string $ownerType, array $ids, int $del
 }
 
 /* ---------------------------------------------------------------------------
+ * SCHNEIDEN (S4/A2, E-S4-17 und E-S4-53)
+ *
+ * Aus einem Ruhesegment wird ein Einsatz geschnitten: Der Zeitbereich wandert
+ * vom Segment zum Einsatz. Die Punkte werden VERSCHOBEN, nicht kopiert
+ * (E-S4-53) — sonst laege die Einsatzfahrt hinterher in beiden Spuren, und
+ * wer das Ruhesegment ansieht, saehe eine Ruhezeit ueber 40 km.
+ *
+ * WARUM DAS HIERHIN GEHOERT UND NICHT IN DEN ENDPUNKT: CLAUDE.md 4 laesst
+ * genau einen Weg zu den Spurtabellen zu. Ein Schneidewerkzeug, das selbst
+ * SQL gegen `track_points` und `track_blobs` schreibt, haette dieselbe halbe
+ * Spur zur Folge wie jeder andere Umweg — nur faellt sie hier spaeter auf,
+ * weil ein Schnitt selten ist.
+ *
+ * ZWEI DINGE MUESSEN DABEI HALTEN, UND SIE BRAUCHEN ZWEI MITTEL. Das war
+ * beim ersten Anlauf nicht klar und ist der eigentliche Ertrag dieses Pakets:
+ *
+ * (1) DIE FORTSETZUNGSMARKE DARF NICHT ZURUECKFALLEN. `spur_naechste_seq()`
+ *     nimmt das Groessere aus `n_original` des Blobs und der hoechsten
+ *     Zeilennummer. Der Schnitt loescht Zeilen — ohne Gegenmassnahme faellt
+ *     die Marke unter das, was das Geraet schon gesendet hat, und das Geraet
+ *     schickt den ganzen Dienst noch einmal. Dagegen hilft `n_original`, und
+ *     zwar auf `max(n_original, naechste_seq)` gesetzt: Es ist dieselbe
+ *     Ueberlegung wie bei der Ausduennung (E-S2-08), nur ausgeloest von einem
+ *     anderen Vorgang. Deshalb schreibt der Schnitt die Quelle als Blob
+ *     zurueck, auch wenn kein Punkt uebrigbleibt.
+ *
+ * (2) DER GESCHNITTENE ZEITRAUM DARF NICHT ZURUECKKOMMEN (E-S4-53). Dafuer
+ *     reicht `n_original` NICHT, und die Annahme, es reiche, war falsch.
+ *     `ingest.php` vergibt die Sequenznummern aus `seq_from` — der Marke, die
+ *     das Geraet zuletzt zurueckbekommen hat. Punkte, die beim Schnitt noch im
+ *     Puffer des Geraets liegen (Funkloch), kommen deshalb mit Nummern
+ *     OBERHALB der Sperrgrenze an und laufen glatt daran vorbei. Die Grenze
+ *     faengt nur die Wiederholung bereits gelieferter Punkte ab.
+ *
+ *     Was diese Punkte kenntlich macht, ist ihre `ts` — die tragen sie selbst
+ *     bei sich. Der Schnitt vermerkt deshalb den ZEITRAUM in `track_cuts`
+ *     (`schnitt_vermerken()`), und `ingest.php` fragt ihn einmal je Upload ab
+ *     (`schnitte_lesen()`). Das Konzept spricht in Abschnitt 14 von einem
+ *     Sequenzbereich; der laesst sich beim Schnitt nicht ausfuellen, weil es
+ *     die Sequenzen der noch nicht gelieferten Punkte noch nicht gibt.
+ *
+ * WAS NICHT GESPERRT WIRD: alles ausserhalb des Zeitraums. Ein Dienst laeuft
+ * zwoelf Stunden; wer um 09:30 schneidet, ist um 09:31 wieder im Dienst, und
+ * das Handy liefert weiter. Die Aufzeichnung laeuft ueber den Schnitt hinweg.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Einen Zeitbereich aus einer Spur herausschneiden und einer anderen geben.
+ *
+ * Beide Spuren werden anschliessend als Blob geschrieben — die Quelle mit
+ * einem `n_original`, das die Fortsetzungsmarke haelt (siehe Kopfkommentar),
+ * das Ziel mit seiner eigenen Punktzahl, weil es die Punkte nie von einem
+ * Geraet bekommen hat.
+ *
+ * SIE VERMERKT DEN SCHNITT NICHT SELBST. Der Sperrvermerk in `track_cuts`
+ * gehoert dem Aufrufer (`schnitt_vermerken()`), weil er das Ziel und das Konto
+ * kennt und weil das Rueckgaengig beides in EINER Transaktion braucht.
+ *
+ * @param int $vonTs  erster Zeitpunkt, der wandert (Epochensekunden, inklusiv)
+ * @param int $bisTs  letzter Zeitpunkt, der wandert (inklusiv)
+ * @return array{genommen:int,geblieben:int,ziel_gesamt?:int,n_original:int,von_ts:?int,bis_ts:?int}
+ *         `genommen` = gewanderte Punkte, `geblieben` = Punkte in der Quelle,
+ *         `ziel_gesamt` = Punkte im Ziel danach (nur wenn etwas wanderte),
+ *         `n_original` = die neue Sperrgrenze der Quelle (die Fortsetzungsmarke),
+ *         `von_ts`/`bis_ts` = der tatsaechlich getroffene Bereich oder null
+ * @throws InvalidArgumentException wenn der Bereich verkehrt herum liegt
+ */
+function spur_teilen(PDO $pdo, string $quelleTyp, int $quelleId,
+                     string $zielTyp, int $zielId, int $vonTs, int $bisTs): array
+{
+    if ($bisTs < $vonTs) {
+        throw new InvalidArgumentException('spur_teilen: bis_ts liegt vor von_ts');
+    }
+
+    if ($quelleTyp === $zielTyp && $quelleId === $zielId) {
+        throw new InvalidArgumentException('spur_teilen: Quelle und Ziel sind dieselbe Spur');
+    }
+
+    $stand  = spur_stand($pdo, $quelleTyp, $quelleId);
+    $punkte = spur_lesen($pdo, $quelleTyp, $quelleId);
+
+    $bleiben = [];
+    $wandern = [];
+    foreach ($punkte as $p) {
+        $ts = (int)$p[4];
+        if ($ts >= $vonTs && $ts <= $bisTs) { $wandern[] = $p; } else { $bleiben[] = $p; }
+    }
+
+    if (!$wandern) {
+        return ['genommen' => 0, 'geblieben' => count($bleiben),
+                'n_original' => (int)$stand['n_original'],
+                'von_ts' => null, 'bis_ts' => null];
+    }
+
+    /* DIE MARKE IST DAS HOECHSTE VON BEIDEM. `n_original` sagt, bis wohin der
+     * Blob reicht; `naechste_seq` beruecksichtigt Zeilen, die noch nicht
+     * verdichtet sind — und die sind hier der Regelfall, denn geschnitten
+     * wird meist am selben Tag. Naehme man nur `n_original` (bei einer
+     * frischen Spur: 0), fiele die Fortsetzungsmarke mit dem Schnitt auf null
+     * und das Geraet saendte den ganzen Dienst noch einmal. */
+    $sperrgrenze = max((int)$stand['n_original'], (int)$stand['naechste_seq']);
+
+    /* Die Zeitfolge muss aufsteigend sein — `spur_kodieren` packt Differenzen,
+     * und der Leseweg verlaesst sich darauf. `spur_lesen_viele()` liefert
+     * Blob-Punkte in Blobreihenfolge und Zeilen danach nach `seq`; beides ist
+     * normalerweise schon zeitlich sortiert, aber eine Nachlieferung aus einem
+     * Funkloch muss es nicht sein. */
+    usort($bleiben, static fn($a, $b) => $a[4] <=> $b[4]);
+    usort($wandern, static fn($a, $b) => $a[4] <=> $b[4]);
+
+    /* DAS ZIEL WIRD ERGAENZT, NICHT UEBERSCHRIEBEN.
+     *
+     * Beim Schnitt selbst ist das Ziel ein frisch angelegter Einsatz und
+     * leer; da macht es keinen Unterschied. Beim RUECKGAENGIG (E-S4-17) macht
+     * es den ganzen: Dort ist das Ziel das Ruhesegment, das seit dem Schnitt
+     * weiterlaeuft und 200 neue Punkte hat. Ein `spur_blob_schreiben()` auf
+     * den Zielschluessel ersetzt den Blob vollstaendig (ON DUPLICATE KEY
+     * UPDATE) — die 200 waeren weg, ohne Fehlermeldung.
+     *
+     * DIE MARKE DES ZIELS BLEIBT DABEI, wo sie ist: `n_original` wird das
+     * Groesste aus seinem bisherigen Wert, seiner Fortsetzungsmarke und der
+     * neuen Punktzahl. Sonst faellt sie beim Rueckgaengig genauso zurueck wie
+     * beim Schnitt ohne Blob.
+     *
+     * DIE STUFE IST DIE HOEHERE VON BEIDEN. Ausduennen laesst sich nicht
+     * rueckgaengig machen: Waren die Punkte einer der beiden Seiten schon
+     * verduennt, ist die vereinigte Spur verduennt. Die niedrigere zu nehmen
+     * hiesse, `ingest.php` wieder Punkte annehmen zu lassen, die der naechste
+     * Verdichtungslauf sofort wieder wegwirft. */
+    $zielStand  = spur_stand($pdo, $zielTyp, $zielId);
+    $zielPunkte = spur_lesen($pdo, $zielTyp, $zielId);
+    $zielPunkte = array_merge($zielPunkte, $wandern);
+    usort($zielPunkte, static fn($a, $b) => $a[4] <=> $b[4]);
+    $zielStufe    = max((int)$stand['stufe'], (int)$zielStand['stufe'], SPUR_STUFE_ROH);
+    $zielOriginal = max((int)$zielStand['n_original'],
+                        (int)$zielStand['naechste_seq'],
+                        count($zielPunkte));
+
+    /* NUR EINE EIGENE TRANSAKTION, WENN KEINE LAEUFT.
+     *
+     * Der Regelfall ist die fremde: Der Endpunkt legt den Einsatz an,
+     * schneidet und vermerkt den Schnitt — das muss zusammen gelten oder gar
+     * nicht. PDO kennt keine verschachtelten Transaktionen; ein blindes
+     * `beginTransaction()` wuerfe hier. Allein aufgerufen (Probe, Konsole)
+     * soll die Funktion aber trotzdem in sich abgesichert sein, deshalb der
+     * Schalter statt „Transaktion ist Sache des Aufrufers". */
+    $eigene = !$pdo->inTransaction();
+    if ($eigene) { $pdo->beginTransaction(); }
+    try {
+        /* ERST DAS ZIEL, DANN DIE QUELLE. Bricht es dazwischen ab, steht der
+         * Einsatz mit seiner Spur da und das Segment traegt sie noch —
+         * doppelt, aber vollstaendig. Umgekehrt waeren die Punkte weg. */
+        spur_loeschen($pdo, $zielTyp, [$zielId]);
+        spur_blob_schreiben($pdo, $zielTyp, $zielId,
+            spur_kodieren($zielPunkte, $zielStufe, $zielOriginal),
+            $zielStufe, $zielOriginal, count($zielPunkte));
+
+        spur_loeschen($pdo, $quelleTyp, [$quelleId]);
+
+        /* AUCH WENN NICHTS BLEIBT, WIRD GESCHRIEBEN — ein Blob mit null
+         * Punkten. Er kostet 21 Byte (gemessen) und traegt die
+         * Fortsetzungsmarke: Ohne ihn faende `spur_naechste_seq()` weder
+         * Zeile noch Blob und antwortete 0, und das Geraet begaenne den Dienst
+         * von vorn. Der Fall ist nicht selten — wer einen Einsatz aus einem
+         * kurzen Segment schneidet, nimmt haeufig alles. */
+        spur_blob_schreiben($pdo, $quelleTyp, $quelleId,
+            spur_kodieren($bleiben, (int)$stand['stufe'], $sperrgrenze),
+            (int)$stand['stufe'], $sperrgrenze, count($bleiben));
+        if ($eigene) { $pdo->commit(); }
+    } catch (Throwable $e) {
+        if ($eigene) { $pdo->rollBack(); }
+        throw $e;
+    }
+
+    return ['genommen' => count($wandern), 'geblieben' => count($bleiben),
+            'ziel_gesamt' => count($zielPunkte),
+            'n_original' => $sperrgrenze,
+            'von_ts' => (int)$wandern[0][4],
+            'bis_ts' => (int)$wandern[count($wandern) - 1][4]];
+}
+
+/* ---------------------------------------------------------------------------
+ * DIE SPERRVERMERKE (S4/A2, E-S4-53)
+ *
+ * Der zweite Boden des Schnitts. Warum er noetig ist und warum `n_original`
+ * ihn nicht ersetzt, steht im Kopfkommentar von `spur_teilen()`.
+ *
+ * WIE track_points UND track_blobs GEHOERT AUCH track_cuts HINTER DIESE
+ * DATEI. Es ist derselbe Grund wie bei den anderen beiden (CLAUDE.md 4): Wer
+ * die Tabelle unmittelbar liest, bekommt frueher oder spaeter eine halbe
+ * Auskunft — hier zum Beispiel, indem er den Vermerk zum Ziel loescht, aber
+ * nicht den zur Quelle.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Einen Schnitt vermerken. Gibt die Nummer des Vermerks zurueck.
+ *
+ * OHNE EIGENE TRANSAKTION, mit Absicht: Der Aufrufer schneidet, legt den
+ * Einsatz an und vermerkt — das gehoert in EINE Transaktion, und die kann nur
+ * er aufmachen. `spur_teilen()` bringt eine eigene mit, weil es auch allein
+ * aufgerufen werden kann; hier waere sie verschachtelt und PDO kennt das nicht.
+ */
+function schnitt_vermerken(PDO $pdo, int $userId, string $quelleTyp, int $quelleId,
+                           int $missionId, int $vonTs, int $bisTs, int $nPunkte): int
+{
+    $pdo->prepare('INSERT INTO track_cuts
+                     (user_id, owner_type, owner_id, mission_id,
+                      von_ts, bis_ts, n_punkte, erstellt_am)
+                   VALUES (?,?,?,?,?,?,?,UTC_TIMESTAMP())')
+        ->execute([$userId, $quelleTyp, $quelleId, $missionId,
+                   $vonTs, $bisTs, $nPunkte]);
+    return (int)$pdo->lastInsertId();
+}
+
+/**
+ * Die gesperrten Zeitraeume einer Spur — EINE Abfrage, nicht eine je Punkt.
+ *
+ * Genau darum geht es an der einzigen heissen Stelle, an der sie gebraucht
+ * werden (`ingest.php`, Konzept 14, offener Punkt 2): Der Aufrufer holt die
+ * Liste einmal vor der Punktschleife und prueft darin. Eine Spur hat
+ * ueblicherweise null Vermerke, oft einen, selten mehr als eine Handvoll —
+ * die lineare Suche in `schnitt_gesperrt()` ist dann billiger als jeder
+ * Index.
+ *
+ * @return list<array{von_ts:int,bis_ts:int}> aufsteigend nach von_ts
+ */
+function schnitte_lesen(PDO $pdo, string $ownerType, int $ownerId): array
+{
+    $q = $pdo->prepare('SELECT von_ts, bis_ts FROM track_cuts
+                         WHERE owner_type = ? AND owner_id = ?
+                         ORDER BY von_ts');
+    $q->execute([$ownerType, $ownerId]);
+    $aus = [];
+    foreach ($q->fetchAll() as $r) {
+        $aus[] = ['von_ts' => (int)$r['von_ts'], 'bis_ts' => (int)$r['bis_ts']];
+    }
+    return $aus;
+}
+
+/**
+ * Liegt dieser Zeitpunkt in einem gesperrten Bereich?
+ *
+ * BEIDE GRENZEN GEHOEREN DAZU. `spur_teilen()` nimmt den Bereich ebenso
+ * (`ts >= von && ts <= bis`); staende es hier anders, faende der Randpunkt
+ * einer Sekunde zurueck, den der Schnitt gerade weggenommen hat.
+ *
+ * @param list<array{von_ts:int,bis_ts:int}> $schnitte aus schnitte_lesen()
+ */
+function schnitt_gesperrt(array $schnitte, int $ts): bool
+{
+    foreach ($schnitte as $s) {
+        if ($ts >= $s['von_ts'] && $ts <= $s['bis_ts']) { return true; }
+    }
+    return false;
+}
+
+/**
+ * Die Vermerke zu einem geschnittenen Einsatz — fuer das Rueckgaengig.
+ *
+ * @return list<array{id:int,owner_type:string,owner_id:int,von_ts:int,bis_ts:int,n_punkte:int}>
+ */
+function schnitte_zum_einsatz(PDO $pdo, int $missionId): array
+{
+    $q = $pdo->prepare('SELECT id, owner_type, owner_id, von_ts, bis_ts, n_punkte
+                          FROM track_cuts WHERE mission_id = ? ORDER BY id');
+    $q->execute([$missionId]);
+    $aus = [];
+    foreach ($q->fetchAll() as $r) {
+        $aus[] = ['id' => (int)$r['id'], 'owner_type' => (string)$r['owner_type'],
+                  'owner_id' => (int)$r['owner_id'], 'von_ts' => (int)$r['von_ts'],
+                  'bis_ts' => (int)$r['bis_ts'], 'n_punkte' => (int)$r['n_punkte']];
+    }
+    return $aus;
+}
+
+/**
+ * Vermerke loeschen — nach Nummer, nach Ziel oder nach Konto.
+ *
+ * DREI WEGE, WEIL ES DREI ANLAESSE GIBT und keiner davon die anderen kennt:
+ * das Rueckgaengig (nach Ziel), die Loeschung eines Einsatzes oder Segments
+ * (nach Quelle) und die Kontoloeschung (nach Konto). Ohne den letzten bliebe
+ * hier liegen, was bei `track_points` jahrelang liegengeblieben ist (F-S2-B) —
+ * und ein Zeitraum, in dem sich jemand aufgehalten hat, ist ein Ortsdatum.
+ *
+ * @return int Zahl der geloeschten Vermerke
+ */
+function schnitte_loeschen(PDO $pdo, string $wonach, array $werte): int
+{
+    if (!$werte) { return 0; }
+    switch ($wonach) {
+        case 'id':      $wo = 'id IN (%s)';         break;
+        case 'ziel':    $wo = 'mission_id IN (%s)'; break;
+        case 'konto':   $wo = 'user_id IN (%s)';    break;
+        default:
+            throw new InvalidArgumentException("schnitte_loeschen: unbekannt '$wonach'");
+    }
+    $werte = array_values(array_map('intval', $werte));
+    $platz = implode(',', array_fill(0, count($werte), '?'));
+    $q = $pdo->prepare('DELETE FROM track_cuts WHERE ' . sprintf($wo, $platz));
+    $q->execute($werte);
+    return $q->rowCount();
+}
+
+/**
+ * Vermerke einer Quelle loeschen (Einsatz oder Ruhesegment faellt weg).
+ *
+ * EIGENE FUNKTION UND KEIN VIERTER FALL OBEN, weil hier zwei Werte
+ * zusammengehoeren: `owner_type` UND `owner_id`. In die IN-Liste passt das
+ * nicht, ohne dass man Typen mischt — und ein Vermerk, der zum Ruhesegment 7
+ * gehoert, darf nicht mit dem Einsatz 7 verschwinden.
+ *
+ * @param list<int> $ids
+ */
+function schnitte_loeschen_quelle(PDO $pdo, string $ownerType, array $ids): int
+{
+    if (!$ids) { return 0; }
+    $ids   = array_values(array_unique(array_map('intval', $ids)));
+    $platz = implode(',', array_fill(0, count($ids), '?'));
+    $q = $pdo->prepare("DELETE FROM track_cuts
+                         WHERE owner_type = ? AND owner_id IN ($platz)");
+    $q->execute(array_merge([$ownerType], $ids));
+    return $q->rowCount();
+}
+
+/* ---------------------------------------------------------------------------
  * ROHER ZUGRIFF FUER DIE SICHERUNG (S2/AP5)
  *
  * Die Sicherung Fassung 4 legt Spuren als SPUR1-Blob in die Datei, statt sie

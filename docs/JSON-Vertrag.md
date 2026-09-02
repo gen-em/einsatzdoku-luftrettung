@@ -38,6 +38,7 @@ schon durchsetzt und welche noch nicht.
 | Dienstkennung `day_ref` (2.1) | durchgesetzt seit Web 6.0.0, gesendet ab Uhr 1.8.0 |
 | Rückfallebene über `(Konto, day)` (2.1) | durchgesetzt, **dauerhaft** |
 | Antwortfeld `dropped_points` (5) | durchgesetzt seit Web 10.2.0 |
+| Antwortfeld `cut_points` (5) | durchgesetzt seit Web 12.5.0 |
 | 413 „Uhr halbiert die Chunk-Größe und wiederholt" (5) | **beschrieben, nicht umgesetzt** — `Uploader.mc` setzt bei jedem Fehlercode nur `lastError`, und `UPLOAD_CHUNK_POINTS` ist eine Konstante. Gefunden in S2/AP3; die Anwendung lehnt heute keine Chunk-Größe ab, die die Uhr sendet, deshalb tritt der Fall nicht auf |
 
 Bis auf eine Zeile lauten alle „durchgesetzt" — die Tabelle beschreibt damit
@@ -394,6 +395,7 @@ Zusätzlich können auftreten:
 | `kept_phases` | die gesendete Phasenliste wurde übergangen (leer oder kürzer als der vorhandene Stand); der Wert nennt die **Anzahl der behaltenen** Einträge |
 | `kept_resus` | dasselbe für die Reanimationssitzungen |
 | `dropped_points` | Punkte, die der Server nach der **Ausdünnung** der Spur nicht mehr annimmt (S2, E-S2-08). Sie sind quittiert; die Uhr darf sie löschen. Erscheint nur, wenn tatsächlich verworfen wurde, und ist **kein** Datenfehler — deshalb steht es nicht in `rejected` |
+| `cut_points` | Punkte, die in einen **herausgeschnittenen** Zeitraum fallen (S4, E-S4-53). Aus dieser Spur ist ein Einsatz geschnitten worden; die Punkte stehen dort bereits. Sie sind quittiert, die Uhr darf sie löschen. Wie `dropped_points` kein Datenfehler — und bewusst ein eigenes Feld: Ausdünnung und Schnitt sind verschiedene Vorgänge, und in der Fehlersuche will man sie unterscheiden |
 
 Ein `ok: true` mit gefülltem `rejected` oder einem `kept_*` bedeutet: Der
 Upload ist angekommen, aber **nicht vollständig übernommen**. Die Uhr sollte

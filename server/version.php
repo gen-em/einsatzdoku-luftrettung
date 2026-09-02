@@ -1902,5 +1902,37 @@ declare(strict_types=1);
  * reisen mit der S5-Auslieferung (E-S3-04); die Uhr-Version steigt hier
  * NICHT.
  *
+ * 12.5.0 LEGT DAS FUNDAMENT DES SCHNEIDEWERKZEUGS (S4/A2). Wer einen
+ * vergessenen Einsatz nachtraegt, soll ihn aus dem Ruhesegment
+ * HERAUSSCHNEIDEN koennen: Der gewaehlte Zeitbereich wandert samt Punkten vom
+ * Segment zum Einsatz. `spur_teilen()` in spur_lib.php tut das -- und zwar
+ * VERSCHIEBEND, nicht kopierend (E-S4-53), sonst laege die Einsatzfahrt
+ * hinterher in beiden Spuren und das Ruhesegment zeigte eine Ruhezeit ueber
+ * 40 km.
+ *
+ * MIGRATION ERFORDERLICH (2026_09_02_schnitte): die Tabelle `track_cuts`.
+ * Sie ist der Sperrvermerk, ohne den sich der Schnitt still wieder aufloest.
+ * Das Geraet weiss von ihm nichts; hat es die Punkte des geschnittenen
+ * Zeitraums noch im Puffer (Funkloch), liefert es sie nach, und sie faenden
+ * in das Segment zurueck, aus dem sie eben genommen wurden.
+ *
+ * DASS DAFUER `n_original` NICHT REICHT, ist der Ertrag dieses Pakets und war
+ * zuerst falsch angenommen. `ingest.php` vergibt die Sequenznummern aus
+ * `seq_from` -- der Marke, die das Geraet zuletzt bekam. Gepufferte Punkte
+ * kommen deshalb OBERHALB jeder Sperrgrenze an und laufen glatt daran vorbei;
+ * `n_original` faengt nur die Wiederholung schon gelieferter Punkte ab. Was
+ * die Nachzuegler kenntlich macht, ist ihre `ts`. Der Vermerk haelt deshalb
+ * einen ZEITRAUM und nicht, wie das Konzept es vorsah, einen Sequenzbereich
+ * -- den gibt es beim Schnitt noch gar nicht.
+ *
+ * Beide Boeden bleiben also noetig, und sie tun Verschiedenes: `n_original`
+ * haelt die Fortsetzungsmarke (sonst faellt sie mit den geloeschten Zeilen
+ * zurueck und das Geraet sendet den ganzen Dienst noch einmal), der Vermerk
+ * haelt den Zeitraum. Nachgewiesen mit 20 Erwartungen in
+ * `tools/spurprobe/probe.php`, Teil 6.
+ *
+ * Die Bedienung folgt in einem eigenen Paket; hier stehen Bibliothek, Schema,
+ * die Pruefung in ingest.php und die Loeschwege.
+ *
  */
-const WEB_VERSION = '12.4.2';
+const WEB_VERSION = '12.5.0';
