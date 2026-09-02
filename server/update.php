@@ -1953,8 +1953,8 @@ $MIGRATIONS = [
              * Zeichen schienen reichlich fuer einen Modellnamen. Sie sind es
              * nicht. Die Dateien fuehren je Teilenummer die HARDWARE, und
              * Garmin verkauft dieselbe Hardware unter mehreren Namen — der
-             * laengste Eintrag im Bestand hat 156 Zeichen ("fēnix® 6X Pro /
-             * 6X Sapphire / … / quatix® 6X Dual Power"). 5 der 173 Modelle
+             * laengste Eintrag im Bestand hat 153 Zeichen ("fēnix 6X Pro /
+             * 6X Sapphire / … / quatix 6X Dual Power"). 5 der 173 Modelle
              * liegen ueber 64, 15 der 325 Teilenummern sind betroffen.
              *
              * WARUM EINE ZWEITE MIGRATION UND NICHT DIE ERSTE GEAENDERT. Die

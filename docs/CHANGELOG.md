@@ -90,6 +90,49 @@ Das war die eigentliche Lücke: Die Anleitung war vollständig, aber nicht
 auffindbar. Abschnitt 6 nennt den Prüfstand jetzt, samt dem Hinweis, dass die
 Adresse erfragt werden muss.
 
+## [Web 12.9.2] — 2026-09-02
+
+**Die Marken- und Schutzrechtszeichen sind aus den Modellnamen heraus.** Aus
+`Forerunner® 945` wird `Forerunner 945`, aus `Venu® 3S` wird `Venu 3S`. 171 der
+173 Namen waren betroffen, 194 Vorkommen insgesamt (163 × `®`, 31 × `™`). Keine
+Migration.
+
+### Web — Warum sie herausfliegen
+
+**Sie gehören nicht uns.** In unserer eigenen Oberfläche gelesen, sieht ein `®`
+wie eine Aussage über unsere Marke aus. Der Produktname ist eine Sachangabe —
+das Zeichen ist eine Rechtsbehauptung, und die trifft an dieser Stelle niemand.
+
+**Sie stören die Zählung.** Schriebe Garmin morgen „Venu™ 3S" statt „Venu® 3S",
+zählte die Statistik in P5 zwei Geräte. Ein Name ohne Zeichen ist stabiler
+gegen genau diese Art von Änderung.
+
+**Sie kosten Platz**, und der ist bei einem Sammelnamen knapp: Der längste
+Eintrag trägt drei davon und schrumpft von 156 auf 153 Zeichen.
+
+### Web — Entfernt wird im Erzeuger, nicht in der Datei
+
+`server/geraetemodelle.php` ist erzeugt; eine Änderung von Hand wirft der
+nächste Lauf weg. Die Regel steht deshalb in `tools/geraetemodelle/erzeugen.py`
+und gilt für `® ™ © ℗ ℠`.
+
+**`í`, `ē` und der Halbgeviertstrich bleiben.** Sie sind Bestandteil der Namen
+(„fēnix", „Descent", „tactix 7 – AMOLED Edition") und keine Zeichen **über**
+den Namen. Der Unterschied ist der ganze Punkt: Entfernt wird, was eine
+Behauptung über den Namen ist, nicht, was der Name ist.
+
+**Der Leerraum wird danach geglättet**, und das ist keine Kosmetik: Steht das
+Zeichen am Wortende („Edge® 1030"), bliebe sonst ein doppeltes Leerzeichen
+stehen — und zwei Namen, die sich nur darin unterscheiden, wären in der
+Zählung zwei Geräte.
+
+### Gegengeprüft
+
+**325 Teilenummern auf weiterhin 173 verschiedene Namen** — das Entfernen hat
+keine zwei Modelle zusammenfallen lassen. 0 verbliebene Marken-/
+Schutzrechtszeichen, 0 doppelte Leerzeichen. Die Spaltenbreite von 191 bleibt
+richtig: fünf Namen liegen weiterhin über 64 Zeichen.
+
 ## [Web 12.9.1] — 2026-09-02
 
 **Die Modelltabelle ist gefüllt — und die echten Daten haben eine Annahme

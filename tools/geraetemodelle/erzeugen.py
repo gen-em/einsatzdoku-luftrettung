@@ -61,10 +61,41 @@ import textwrap
 # Tabelle vorbei.
 UHR_GRUPPE = "Watches/Wearables"
 
+# --- Marken- und Schutzrechtszeichen ----------------------------------------
+#
+# Garmins `displayName` trägt sie: 171 der 173 Namen enthalten ® oder ™, 194
+# Vorkommen insgesamt. Sie fliegen hier heraus, und zwar aus drei Gründen:
+#
+#   Sie gehören nicht uns.   In UNSERER Oberfläche gelesen, sieht ein ® wie
+#                            eine Aussage über unsere eigene Marke aus. Der
+#                            Produktname ist eine Sachangabe; das Zeichen ist
+#                            eine Rechtsbehauptung, und die trifft hier
+#                            niemand.
+#   Sie stören die Zählung.  Schriebe Garmin morgen „Venu™ 3S" statt
+#                            „Venu® 3S", zählte die Statistik zwei Geräte.
+#   Sie kosten Platz.        Ein Sammelname trägt bis zu drei davon.
+#
+# `í`, `ē` und der Halbgeviertstrich bleiben — sie sind Bestandteil der Namen
+# („fēnix", „Descent", „tactix 7 – AMOLED Edition") und keine Zeichen ÜBER den
+# Namen.
+MARKENZEICHEN = "®™©℗℠"
+
 # Ein Muster, das eine Teilenummer sein könnte. Zweck ist nicht die Abwehr --
 # die Dateien sind vertrauenswürdig --, sondern der Befund: Weicht eine Zeile
 # ab, soll das auffallen und nicht still in der Tabelle landen.
 TEIL_MUSTER = re.compile(r"^[0-9A-Za-z][0-9A-Za-z.\-]{3,31}$")
+
+
+def ohne_markenzeichen(name):
+    """Marken- und Schutzrechtszeichen entfernen, Leerraum wieder glätten.
+
+    Das Glätten ist nicht Kosmetik: Steht das Zeichen am Wortende („Edge® 1030"),
+    bleibt nach dem Entfernen ein doppeltes Leerzeichen stehen -- und zwei Namen,
+    die sich nur darin unterscheiden, wären in der späteren Zählung zwei Geräte.
+    """
+    for z in MARKENZEICHEN:
+        name = name.replace(z, "")
+    return re.sub(r"\s+", " ", name).strip()
 
 
 def lies_geraete(wurzel):
@@ -82,7 +113,7 @@ def lies_geraete(wurzel):
             continue
         geraete.append({
             "id": d.name,
-            "name": (c.get("displayName") or "").strip(),
+            "name": ohne_markenzeichen(c.get("displayName") or ""),
             "gruppe": (c.get("webDocDeviceGroup") or "").strip(),
             "teile": [str(p.get("number") or "").strip()
                       for p in (c.get("partNumbers") or [])

@@ -22,9 +22,18 @@ Angaben, die hier gebraucht werden:
 
 | Feld | Beispiel | wird zu |
 |---|---|---|
-| `displayName` | `Venu 3S` | Modellname |
+| `displayName` | `Venu® 3S` | Modellname, **ohne Marken-/Schutzrechtszeichen**: `Venu 3S` |
 | `webDocDeviceGroup` | `Watches/Wearables` | Geräteart `uhr`, sonst `sonstiges` |
 | `partNumbers[].number` | `006-B4261-00` | Schlüssel (mehrere je Gerät möglich) |
+
+**`® ™ © ℗ ℠` fliegen heraus** (seit Web 12.9.2). Drei Gründe: Sie gehören
+nicht uns — in unserer Oberfläche gelesen sieht ein `®` wie eine Aussage über
+unsere Marke aus; sie stören die Zählung (ein Wechsel von `®` auf `™` bei
+Garmin ergäbe zwei Geräte); und sie kosten Platz, wo er knapp ist. **`í`, `ē`
+und der Halbgeviertstrich bleiben** — sie sind Bestandteil der Namen („fēnix",
+„Descent", „tactix 7 – AMOLED Edition") und keine Zeichen **über** ihnen.
+Danach wird der Leerraum geglättet, damit „Edge® 1030" nicht als „Edge  1030"
+mit zwei Leerzeichen endet.
 
 **„Handy" kann hier nie herauskommen.** Eine Connect-IQ-App läuft nicht auf
 einem Handy; die Handy-Angabe kommt aus der Android-App und geht an dieser

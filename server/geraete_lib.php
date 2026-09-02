@@ -68,8 +68,8 @@ const GERAET_MAX_ART    = 16;
 /* 191 UND NICHT 64. Die 64 stand hier zuerst und war geraten — die
  * Gerätedateien waren noch nicht da. Sie liefern SAMMELNAMEN: Eine Teilenummer
  * bezeichnet die Hardware, und Garmin verkauft dieselbe Hardware unter
- * mehreren Namen ("fēnix® 6X Pro / 6X Sapphire / … / quatix® 6X Dual Power",
- * 156 Zeichen). 5 der 173 Modelle sind länger als 64. Der volle Name wird
+ * mehreren Namen ("fēnix 6X Pro / 6X Sapphire / … / quatix 6X Dual Power",
+ * 153 Zeichen). 5 der 173 Modelle sind länger als 64. Der volle Name wird
  * gespeichert, weil er die Auskunft der Gerätedateien IST und die spätere
  * Zählung (P5) genau diese Hardwaregruppen zählen soll; gekürzt wird für die
  * ANZEIGE, siehe geraet_bezeichnung(). */
@@ -281,15 +281,15 @@ function geraet_kennung_kurz(string $kennung): string
  *
  * WAS EIN SAMMELNAME IST. Die Gerätedateien fuehren je Teilenummer die
  * HARDWARE, und Garmin verkauft dieselbe Hardware unter mehreren Namen. Aus
- * einer Kopplung kommt deshalb "fēnix® 6X Pro / 6X Sapphire / 6X Pro Solar /
- * tactix® Delta Sapphire / … / quatix® 6X Dual Power" — 156 Zeichen fuer EIN
+ * einer Kopplung kommt deshalb "fēnix 6X Pro / 6X Sapphire / 6X Pro Solar /
+ * tactix Delta Sapphire / … / quatix 6X Dual Power" — 153 Zeichen fuer EIN
  * Geraet. In einer Listenzeile ist das unbrauchbar; in der Spalte ist es
  * richtig, weil die spaetere Zaehlung Hardwaregruppen zaehlen soll und nicht
  * Verkaufsnamen.
  *
  * DAS ERSTE GLIED UND NICHT DAS KUERZESTE: Die Datei nennt die Namen in
  * Garmins Reihenfolge, und die beginnt mit dem gelaeufigsten. Das Auslassungs-
- * zeichen sagt, dass mehr dahintersteht — ohne es lese sich "fēnix® 6X Pro"
+ * zeichen sagt, dass mehr dahintersteht — ohne es lese sich "fēnix 6X Pro"
  * wie eine genaue Angabe, und das waere sie nicht.
  */
 function geraet_modell_kurz(string $modell): string
