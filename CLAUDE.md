@@ -132,6 +132,11 @@ Bausteine; eine Änderung an `.btn-plain` trifft ein Dutzend Stellen).
 Wenn eine Änderung nicht im Browser überprüft werden konnte, das **sagen**,
 statt sie als erledigt zu melden.
 
+**Uhr-Code** wird mit `tools/uhr-pruefstand/` geprüft: übersetzen für alle
+Zielgeräte (Stufe I) und im Simulator starten (Stufe II). Der Aufbau braucht
+eine Adresse in `CIQ_GERAETE_URL`, die nicht im Repositorium steht —
+erfragen. Anleitung in der dortigen `LIESMICH.md`.
+
 **Während P3 (Oberflächen-Redesign) treten zwei Werkzeuge an die Stelle des
 Stilvergleichs**, weil er dort die falsche Frage stellt (Begründung in
 `tools/stilvergleich/LIESMICH.md`):
