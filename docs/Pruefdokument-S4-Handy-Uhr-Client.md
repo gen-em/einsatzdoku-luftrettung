@@ -22,6 +22,14 @@ beantwortet *„was muss ich noch tun?"*.
 
 Das steht an erster Stelle und nicht in einer Fußnote.
 
+> **Nachtrag vom 02.09.2026 (Android 0.7.6):** Ein Emulatorlauf hat drei
+> Punkte dieser Liste bewegt. **Geschlossen** ist der `AndroidKeyStore`
+> (Punkt 4 der alten Prüfliste, jetzt sechs grüne instrumentierte Fälle).
+> **Bestätigt** ist die Behebung des runden Beschnitts auf echter Maske.
+> **Verschoben** ist die Grenze zum Data Layer: Sie liegt nicht bei den
+> Play-Diensten, sondern bei der Companion-App auf der Telefonseite. Die
+> Einzelheiten stehen in 1.1a. Alles Übrige gilt unverändert.
+
 ### 1.1 Es gab kein Telefon und keine Uhr
 
 Das ist die größte Lücke der ganzen Phase, und sie betrifft **die Hälfte des
@@ -50,6 +58,52 @@ zwei gepufferte Ereignisse, nach Rückkehr beide zugestellt in der Reihenfolge
 unverändert da**, nächste Nummer **3** und nicht 1) und ein Rundlauf gegen
 `ingest.php` gegen eine echte lokale Installation (**3 Phasenzeilen**,
 `verworfen={}`). Das ist die Mechanik. Es ist nicht das Gerät.
+
+### 1.1a Was ein Emulatorlauf davon abgedeckt hat (02.09.2026)
+
+Ein Emulator ist **kein** Gerät. Er hat keine echte Funkstrecke, keinen
+Akku, kein GPS und keinen Hardware-Sicherheitsanker. Was er hat, ist ein
+echtes Android und ein echtes rundes Glas — und damit ließ sich Folgendes
+belegen:
+
+| | Ergebnis |
+|---|---|
+| **Der `AndroidKeyStore`** | **geschlossen.** `GeraetTresorTest`, **6 Fälle, alle grün, 13,7 s**: Der Schlüssel entsteht unter seinem Namen im Keystore, `getEncoded()` ist **null**, der Rundlauf trägt, der Schlüssel überlebt einen neuen Griff, jeder Schreibvorgang bekommt einen frischen Zufallswert, ein verfälschtes Paket wird abgelehnt |
+| **Der runde Beschnitt (B-S4-08b)** | **bestätigt.** Auf echter Maske: Knopfhöhe **35,5 → 48,0 dp**, Luft zum Glasrand **0,4 → 14,7 dp**. Dazu „Handy nicht erreichbar" statt des früheren falschen „Handy verbunden" (B-S4-09) |
+| **Die Wearable-API** | **erreichbar.** Play-Dienste 22.48.14 vorhanden, `NodeClient.localNode` liefert einen Knoten mit Kennung, `connectedNodes` = 0 (richtig ohne Telefon), `HandyHorcher` löst für alle drei Pfade auf |
+| **Die Zustellung über den Data Layer** | **weiter offen** — siehe unten |
+
+**Der `AndroidKeyStore` bleibt trotzdem halb offen**, und das gehört gesagt:
+Ein Emulator bildet ihn in Software nach. `getEncoded() == null` gilt; die
+Aussage „auch mit Root-Rechten nicht auslesbar" hängt am Trusted Execution
+Environment eines echten Geräts.
+
+**Die Grenze zum Data Layer liegt woanders, als dieses Dokument annahm.**
+Nicht bei den Play-Diensten — die sind da. Sondern bei der
+**Wear-OS-Companion-App auf dem Telefon**: Zwei Emulatoren zu koppeln
+verlangt sie, sie kommt aus dem Play Store, und der verlangt eine Anmeldung
+mit einem Google-Konto. Ein Seitenladen aus einer APK-Sammelseite scheidet
+aus (CLAUDE.md 4).
+
+**In meiner Umgebung ist das ein Nein, kein „noch nicht"** — nachgemessen und
+nicht vermutet: Keine der 16 APKs im Android-SDK ist die Companion-App;
+`android.clients.google.com` (Play-Bezug) antwortet mit **403**
+(`x-deny-reason: host_not_allowed`), `dl.google.com` daneben mit **302** — die
+Sperre ist also gezielt und nicht „kein Netz"; und Googles eigener Notausgang
+`cmd package query-receivers -a com.google.android.gms.wearable.EMULATOR`
+meldet **`No receivers found`**. Eine Verwechslung, die naheliegt: `pm path
+com.google.android.wearable.app` *antwortet* auf der Uhr — aber mit
+`ClockworkWcs.apk`, der Uhrseite unter demselben Paketnamen, nicht der
+Telefon-App.
+
+*Auf deinem Rechner ist der Weg dagegen offen, wenn du ihn gehen willst:* ein
+Google-Konto (ein Wegwerfkonto genügt) auf einem
+`google_apis_playstore`-Telefonabbild, dort die Wear-OS-App installieren, dann
+`adb -s <uhr> forward tcp:5601 tcp:5601` und in der App „Mit Emulator
+koppeln". Rechne mit einer Stunde, das meiste davon Bootzeit. **Ob sich das
+lohnt, ist eine echte Frage:** Es belegt den Data Layer zwischen zwei
+Emulatoren — der Gerätetest auf dem S24 und einer echten Uhr belegt ihn
+ohnehin, und zwar besser.
 
 ### 1.2 Der Signaturschlüssel ist nicht erzeugt
 
@@ -112,6 +166,8 @@ weiterhin nur als Text.
 | Prüffälle `uhr` | `testDebugUnitTest` | **47**, 0 Fehlschläge, 0 übersprungen |
 | Prüffälle `handy` | `testDebugUnitTest` mit lokaler Installation | **167**, 0 Fehlschläge, 0 übersprungen |
 | Prüffälle gesamt | beide Module | **214** |
+| **Instrumentiert** (auf dem Emulator, seit 0.7.6) | `am instrument` | `GeraetTresorTest` **6/6**, `DataLayerErreichbarTest` **3/3** |
+| Runder Beschnitt auf echter Maske | Emulatorabzug, ausgemessen | Knopf **48,0 dp**, Luft zum Glasrand **14,7 dp** (vorher 35,5 dp / 0,4 dp) |
 | Lint `uhr` | `lintDebug` | **0 Fehler, 0 Warnungen** |
 | Lint `handy` | `lintDebug` | **0 Fehler, 14 Warnungen** — alle Fassungshinweise, alle an *einer* Entscheidung (Backlog Nr. 61) |
 | APK-Größe | `assembleRelease`, unsigniert | Handy **9 598 911 B**, Uhr **19 491 794 B** |
@@ -207,6 +263,10 @@ und die beiden Dateien vergleichen. Erwartet: dieselben Punkte.
 
 ### 4. Die Android-App auf einem echten Telefon  *(braucht den Signaturschlüssel)*
 
+*Der Punkt „AndroidKeyStore" ist hier gestrichen — er ist seit 0.7.6 auf dem
+Emulator belegt (1.1a). Was am Gerät bleibt, ist die Härte des Ankers: dass
+der Schlüssel auch mit Root-Rechten nicht auszulesen ist.*
+
 Erst nach 1.2 möglich. Der vollständige Ablauf steht in
 `docs/Geraete-Eingabe.md`, Abschnitt 7.3 — dort mit Erwartung und
 Scheiterns-Merkmal je Punkt. Die Reihenfolge, die ich empfehle:
@@ -269,6 +329,25 @@ nur sichtbar.
   Paket zweimal *falsch* gemeldet — einmal, weil es das versteckte Radio des
   `.wahlliste`-Bausteins anklicken wollte, einmal, weil es den letzten
   Listeneintrag für den neuen hielt. Beide Male lag der Fehler im Prüfmittel.
+- **Ein Emulator misst den runden Beschnitt NICHT so, wie man denkt.** Er hat
+  bereits beschnitten: Was außerhalb des Glases lag, steht im Abzug gar nicht,
+  und „Anteil außerhalb des Kreises" ist dort **immer 0 %**. Der erste
+  Messversuch am 02.09.2026 lieferte deshalb für die *fehlerhafte* Fassung
+  0.7.0 dieselben 0,00 % wie für die behobene — er hätte den Fehler als
+  behoben ausgewiesen. Messbar ist auf einem Emulatorabzug nur, ob der Knopf
+  den Glasrand **berührt**. Der Prüfstand rechnet dagegen gegen den
+  einbeschriebenen Kreis und sieht den Beschnitt; die beiden Mittel messen
+  Verschiedenes und sind nicht austauschbar.
+- **Der erste Lauf eines GMS-Prüffalls sagt wenig.** `NodeClient.localNode`
+  lief nach dem Boot in eine 30-Sekunden-Zeitgrenze; GMS meldete dabei einen
+  **60 Sekunden** blockierten Verbindungspool auf seiner `phenotype.db`.
+  Beim zweiten Lauf, mit warmem GMS: **10 Sekunden für drei Fälle**. Wer aus
+  dem ersten Lauf „die API antwortet nicht" schließt, schließt falsch.
+- **`connectedAndroidTest` trägt auf einem Emulator ohne KVM nicht.** Gradle
+  meldet „Skipping device: Unknown API Level", weil ddmlib beim Lesen von
+  `ro.build.version.sdk` nach 5 s aufgibt — das Gerät antwortet in 4,3 s und
+  liegt damit auf der Kippe. Der Weg über `adb shell am instrument` hat keine
+  solche Grenze.
 - **Eine abgelehnte Anfrage ist ein Konsolenfehler.** Jeder Browser
   protokolliert eine 404 oder 409, auch die beabsichtigte. Die Zahlen oben
   nennen deshalb „unerwartete" Fehler und sagen dazu, wie viele erwartete

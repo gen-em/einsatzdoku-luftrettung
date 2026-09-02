@@ -204,4 +204,18 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
+
+    /* INSTRUMENTIERT, also auf einem Android-System und nicht in der JVM
+     * (S4/D2). Daran haengt, was Robolectric nicht erreicht: der echte
+     * `AndroidKeyStore` (`KeyStoreException: AndroidKeyStore not found`) und
+     * die Erreichbarkeit der Wearable-API.
+     *
+     * NICHTS DAVON LIEGT IM APK der Anwendung: Der Laeufer wird in ein
+     * eigenes Test-APK gepackt. Aufgerufen wird es hier NICHT ueber
+     * `connectedAndroidTest` -- das scheitert auf einem softwareemulierten
+     * Geraet an einer ddmlib-Zeitgrenze --, sondern ueber
+     * `adb shell am instrument`; die Befehlsfolge steht in
+     * `android/LIESMICH.md`. */
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
 }

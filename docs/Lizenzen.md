@@ -254,8 +254,11 @@ Abhängigkeit des Projekts.
 | **ZXing** (`core`) | 3.5.4 | Apache-2.0 | QR-Erkennung *aus* diesem Kamerabild |
 | **play-services-wearable** | 20.0.1 | **proprietär** (Google APIs ToS) | **Ausschließlich** der Wear Data Layer — der Weg zwischen Uhr und Handy |
 
-Nur zum Prüfen, nichts davon liegt im APK: JUnit 4.13.2 (EPL-1.0),
-Robolectric 4.16.1 (Apache-2.0), `androidx.test` 1.7.0 / 1.3.0 (Apache-2.0).
+Nur zum Prüfen, nichts davon liegt im APK der Anwendung: JUnit 4.13.2
+(EPL-1.0), Robolectric 4.16.1 (Apache-2.0), `androidx.test` 1.7.0 / 1.3.0
+(Apache-2.0) und seit Android 0.7.6 `androidx.test:runner` 1.7.0
+(Apache-2.0) — der Läufer für die **instrumentierten** Fälle. Er wird in ein
+eigenes Test-APK gepackt, das nur `am instrument` installiert.
 
 Die vollständige, maschinenlesbare Liste steht in
 `android/gradle/libs.versions.toml` — **eine** Datei, ein Eintrag je
@@ -370,6 +373,7 @@ Abschnitt 2 bleibt unberührt.
 
 | Fassung | Was |
 |---|---|
+| S4/D2 | `androidx.test:runner` 1.7.0 in Abschnitt 6a — der Läufer für die instrumentierten Prüffälle (Keystore, Wearable-Erreichbarkeit). Test-only, Apache-2.0, nicht im App-APK. |
 | S4/D1 | Abschnitt 6a: die Android-Apps. Vier Fremdbestandteile, drei davon Apache-2.0; die vierte (`play-services-wearable`) ist proprietär und bekommt eine eigene Begründung — sie steckt nicht im APK, ist auf **eine** Datei eingegrenzt, überträgt nichts nach außen, und der Preis (keine Uhr ohne Play-Dienste) steht dabei. |
 | Web 10.3.0 (S2/AP4) | Abschnitt 7.1: das vendorierte GPX-1.1-Schema von TopoGrafix, mit Herkunft und SHA-256. Es liegt unter `tools/` und wird zur Laufzeit nie geladen. |
 | Web 9.13.0 (P3/O12) | Erstfassung. Zusammengetragen aus den Dateiköpfen unter `server/assets/vendor/`, dem Stylesheet-Kommentar zu den Schriften, `LICENSE-tabler-icons.txt` und den Adressen in `map_layers.js`, `ortsfeld.js` und `ortswahl.js`. |

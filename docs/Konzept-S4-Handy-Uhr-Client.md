@@ -2827,6 +2827,139 @@ was ohnehin enger ist. Steht in `tools/wortliste/LIESMICH.md`.
 
 ---
 
+### D2 — Der Emulator holt drei Punkte von der Prüfliste · Android 0.7.6 · erledigt
+
+**Anlass:** die Rückfrage „Hast du mit der App im Emulator alles
+durchsimulieren können?" (02.09.2026). Die ehrliche Antwort war **nein** — und
+beim Nachsehen fiel auf, dass mehr möglich ist, als die `LIESMICH` behauptet.
+
+**Was gebaut ist:** ein zweiter Quellsatz `android/handy/src/androidTest/`
+mit zwei instrumentierten Prüffällen, dazu `androidx.test:runner` im Katalog.
+**An der App selbst ist keine Zeile geändert** — nichts davon liegt im APK.
+
+#### Prüfstand D2
+
+Emulator `wear30` (Wear OS 3, `wearos_small_round`, 384 × 384,
+`hw.lcd.circular = true`), rein softwareemuliert
+(`-accel off -gpu swiftshader_indirect -no-window`).
+
+| Prüfung | Mittel | Ist |
+|---|---|---|
+| Boot | Emulatorlog | **366 s** (Gradle lief parallel auf denselben vier Kernen) |
+| Installation Uhr-APK (26 MB) | `adb install` | **165 s** |
+| Installation Handy-APK (13,5 MB) | `adb install` | **466 s** |
+| **`AndroidKeyStore`** | `GeraetTresorTest`, `am instrument` | **6 Fälle, alle grün, 13,7 s** |
+| **Wearable-API erreichbar** | `DataLayerErreichbarTest` | **3 Fälle, alle grün, 10,0 s** |
+| Play-Dienste im Wear-Abbild | `dumpsys package` | **`com.google.android.gms` 22.48.14** |
+| Empfangsdienst registriert | `cmd package query-services` | `HandyHorcher`, `wear:`, `PREFIX /nadoku` — **alle drei Pfade lösen auf** |
+| **Runder Beschnitt, Knopfhöhe** | Abzug ausgemessen | 0.7.0 **35,5 dp** → 0.7.5 **48,0 dp** |
+| **Runder Beschnitt, Luft zum Glasrand** | dasselbe | 0.7.0 **0,4 dp** → 0.7.5 **14,7 dp** |
+
+#### Was sich an der Sachlage geändert hat
+
+**Der `AndroidKeyStore` ist geschlossen.** Er stand seit B2 als „genau eine
+überschriebene Methode ungeprüft" auf der Prüfliste. Jetzt belegt: Der
+Schlüssel entsteht unter seinem Namen im Keystore, `getEncoded()` ist `null`,
+der Rundlauf trägt, der Schlüssel überlebt einen neuen Griff, jeder
+Schreibvorgang bekommt einen frischen Zufallswert, ein verfälschtes Paket
+wird abgelehnt. **Halb offen bleibt er trotzdem:** Ein Emulator bildet den
+Keystore in Software nach; „auch mit Root nicht auslesbar" hängt am
+Sicherheitsanker eines echten Geräts.
+
+**Die 0.7.3-Behebung ist auf echter runder Maske bestätigt.** Sie war bis
+dahin nur über den Prüfstand belegt, und der zeichnet ein Quadrat und rechnet
+den Kreis dazu — `mockups/S4-uhr-startseite.png` sagt das selbst. Jetzt liegt
+der Abzug vor.
+
+**Die Grenze zum Data Layer lag woanders, als sie dokumentiert war.** Die
+`LIESMICH` begründete sie mit „braucht zwei gekoppelte Geräte **und** die
+Play-Dienste; im Container gibt es beides nicht". Beide Hälften sind
+widerlegt: Die Play-Dienste liegen im Wear-Abbild, und die Wearable-API
+antwortet — der lokale Knoten hat eine Kennung, die Liste der verbundenen
+Knoten ist leer, was ohne Telefon die richtige Antwort ist. **Was fehlt, ist
+allein die Telefonseite** — und die ist in diesem Container nicht zu
+beschaffen. Den Knoten erzeugt nicht GMS, sondern die
+Wear-OS-Companion-App auf dem Telefon; ohne sie bleibt `connectedNodes` leer
+und `sendMessage` endet in `TARGET_NODE_NOT_CONNECTED`, gleichgültig wie die
+Portweiterleitungen stehen. Drei Messungen schließen die Kette: Von 16 APKs
+unter `/opt/android-sdk` trägt **keine** `wear`, `clockwork` oder
+`companion` im Namen — die App steckt in keinem Systemabbild. Ihr einziger
+Bezugsweg, der Play Store, verlangt `android.clients.google.com`, und das
+Egress-Gitter antwortet dort mit **403** und `x-deny-reason:
+host_not_allowed`; `dl.google.com` antwortet daneben mit **302**, die Sperre
+ist also gezielt nach Hostname und nicht „kein Netz". Googles eigener
+Notausgang an der Companion vorbei ist in diesem Abbild nicht registriert:
+`cmd package query-receivers -a com.google.android.gms.wearable.EMULATOR`
+meldet **`No receivers found`**.
+
+**Zwei bequeme Begründungen tragen ausdrücklich nicht**, und sie stehen
+deshalb nirgends: nicht die fehlende Hardwarebeschleunigung (zwei Emulatoren
+sind mindestens einmal gleichzeitig gebootet worden) und nicht „die Uhr hat
+kein Netz" (widersprüchlich gemessen, ungeklärt). Wer sich darauf beruft, ist
+widerlegt, sobald es jemand ausprobiert. Und eine Verwechslung, die
+naheliegt: `pm path com.google.android.wearable.app` *antwortet* auf der Uhr,
+aber mit `/system/priv-app/ClockworkWcs/ClockworkWcs.apk` — der **Uhrseite**
+von WCS unter demselben Paketnamen, nicht der Telefon-App.
+
+#### Probleme und wie sie gelöst wurden
+
+**Die erste Messung hätte den behobenen Fehler als behoben und den
+unbehobenen ebenfalls als behoben ausgewiesen.** „Anteil der Knopffläche
+außerhalb des Kreises" ergab für 0.7.0 **und** 0.7.5 exakt 0,00 % — weil der
+Emulator bereits beschnitten hat: Was außerhalb des Glases lag, steht im
+Abzug gar nicht. Auf einem Emulatorabzug ist nur messbar, ob der Knopf den
+Rand **berührt**. Dazu musste außerdem die orange Bildmarke aus der Messung
+heraus, über zusammenhängende Flächen — die größte ist der Knopf. Erst dann
+kamen 35,5 dp gegen 48,0 dp heraus, also genau die Zahlen des Prüfstands.
+
+**Der erste Data-Layer-Lauf lief in eine Zeitgrenze und hätte zur falschen
+Schlussfolgerung geführt.** `NodeClient.localNode` überschritt 30 s; das
+Protokoll zeigte GMS mit einem **60 Sekunden** blockierten Verbindungspool auf
+seiner `phenotype.db`, während es über Conscrypt nach Hause telefonierte. Mit
+120 s Frist und warmem GMS: **drei Fälle in 10 Sekunden**. Aus dem ersten Lauf
+„die API antwortet nicht" zu schließen, wäre falsch gewesen.
+
+**D8 lehnt Backtick-Prüffallnamen mit Leerzeichen ab.** „Space characters in
+SimpleName are not allowed prior to DEX version 040" — DEX 040 gibt es ab
+API 30, dieses Modul steht auf `minSdk = 26`. Der Fehler fällt erst beim
+Dexen des Test-APK auf, nicht beim Übersetzen. Die Begründung steht jetzt im
+Kopf der Prüffallklasse, damit die nächste Fassung nicht zurückfällt.
+
+**`./gradlew connectedAndroidTest` trägt auf diesem Emulator nicht.** Gradle
+meldet „Skipping device 'wear30(AVD)': Unknown API Level" — ddmlib gibt beim
+Lesen von `ro.build.version.sdk` nach 5 s auf, das Gerät antwortet in 4,3 s.
+Der Weg über `adb shell am instrument` hat diese Grenze nicht und steht in
+der `LIESMICH`.
+
+**Ein fremder Emulator lief mit.** Während des Laufs tauchte ein zweites AVD
+(`wear30b`) auf, das ich nicht gestartet hatte — vermutlich ein
+Recherche-Subagent, der den Auftrag „sieh dir das Abbild an" weiter ausgelegt
+hat als gemeint. Es war `offline` und teilte sich die vier Kerne; beendet.
+Festgehalten, weil es die Bootzeit von 366 s gegen die früher gemessenen
+197–345 s miterklärt.
+
+#### Entscheidungen, die in D2 gefallen sind
+
+- **E-S4-73 — Instrumentierte Prüffälle gehen an Gradle vorbei.** Nicht
+  `connectedAndroidTest`, sondern `adb shell am instrument`. Grund oben; die
+  Befehlsfolge steht in `android/LIESMICH.md`.
+- **E-S4-74 — `DataLayerErreichbarTest` bleibt im Baum**, obwohl er die
+  Zustellung nicht prüfen kann. Er schreibt die **Grenze** fest: Fällt er
+  durch, liegt es an den Play-Diensten; läuft er durch und die Zustellung
+  klemmt, liegt es an der Kopplung. Ein Prüffall, der eine Grenze markiert,
+  ist mehr wert als eine Behauptung im Fließtext — das hat dieses Paket
+  gerade vorgeführt.
+- **E-S4-75 — Kein Seitenladen der Companion-App.** Der Gedanke lag nahe,
+  eine APK-Sammelseite zu benutzen; das verstößt gegen CLAUDE.md 4 („keine
+  fremde Quelle") und brächte ein unsigniertes Google-Binärpaket in eine
+  Prüfumgebung. Der Data Layer bleibt lieber ungeprüft als so geprüft. Die
+  Entscheidung steht auf dem Grundsatz und **nicht** auf der Lage — sie wäre
+  dieselbe, wenn der Weg offen wäre. Er ist es ohnehin nicht:
+  `www.apkmirror.com` antwortet hier mit **403**. Das ist eine Beruhigung,
+  kein Argument.
+
+---
+
 ## 13. Abgleich mit Rahmenplan Fassung 13 (R49) — 01.09.2026
 
 Der Rahmenplan wurde nach der Beauftragung von Block B und C fortgeschrieben.

@@ -4149,10 +4149,33 @@ Es gibt keine Uhr und kein Telefon. Was trotzdem geht, steht in
 - **Ein Emulator läuft**, entgegen E-R45-8, aber ohne KVM (QEMU/TCG) und nur
   mit `-no-window`. `sys.boot_completed=1` lügt dabei; die Begründung, warum
   er trotzdem nicht der Hauptweg ist, steht in der `LIESMICH.md`.
+- **Instrumentierte Prüffälle** (seit Android 0.7.6) laufen auf dem Emulator
+  und schließen zwei Lücken, die die JVM nicht erreicht: den echten
+  `AndroidKeyStore` und die Erreichbarkeit der Wearable-API. Sie gehen
+  **an Gradle vorbei** (`adb shell am instrument`) — `connectedAndroidTest`
+  scheitert auf einem softwareemulierten Gerät an einer ddmlib-Zeitgrenze.
 
-**Was keiner dieser Wege ersetzt:** den echten Data Layer. Ob zugestellt
-wird, ob die beiden `WearableListenerService` gerufen werden, ob Paket- und
-Signaturgleichheit im Feld greift — das ist Gerätetest und steht aus.
+#### Wo die Grenze zum Data Layer wirklich liegt
+
+Sie lag nicht dort, wo sie dokumentiert war. Gemessen am 02.09.2026:
+
+| bisher angenommen | gemessen |
+|---|---|
+| keine Play-Dienste im Container | `com.google.android.gms` **22.48.14** liegt im Wear-Abbild, `isGooglePlayServicesAvailable` = `SUCCESS` |
+| Wearable-API nicht erreichbar | `NodeClient.localNode` liefert einen **lokalen Knoten mit Kennung** |
+| Empfangsdienst ungeprüft | `HandyHorcher` ist registriert (`wear:`, `PREFIX /nadoku`) und löst für alle drei Pfade auf |
+
+**Was tatsächlich fehlt, ist die Telefonseite.** Zwei Emulatoren zu koppeln
+verlangt die Wear-OS-Companion-App auf dem Telefon; die kommt aus dem Play
+Store und damit über eine Anmeldung mit einem Google-Konto. `adb forward
+tcp:5601 tcp:5601` steht bereit, `com.google.android.wearable.app` liegt auf
+der Uhr — es hakt an genau einem Schritt, und der ist jetzt benannt statt
+vermutet.
+
+**Was keiner dieser Wege ersetzt:** die **Zustellung** über den Data Layer.
+Ob eine Nachricht ankommt, ob die beiden `WearableListenerService` mit einer
+echten Nachricht das Richtige tun, ob Paket- und Signaturgleichheit im Feld
+greift — das ist Gerätetest und steht aus.
 
 ## 6. Deployment
 

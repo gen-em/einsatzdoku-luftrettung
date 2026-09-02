@@ -194,10 +194,18 @@ Ausblenden.
 > anderen Instanz zugewiesen.
 
 **Die Android-Apps prüfen sich selbst — `./gradlew build` im Ordner
-`android/`.** Anders als Web und Garmin-Uhr haben sie automatisierte
-Prüffälle (JUnit/Robolectric), und die laufen ohne Gerät: gegen ein echtes
-SQLite, gegen eine Attrappe des Data Layer und, wo eine lokale Installation
-steht, gegen `ingest.php` selbst. Bilder entstehen über Robolectric im
+`android/`** (mit `ANDROID_HOME=/opt/android-sdk`). Anders als Web und
+Garmin-Uhr haben sie automatisierte Prüffälle (JUnit/Robolectric), und die
+laufen ohne Gerät: gegen ein echtes SQLite, gegen eine Attrappe des Data
+Layer und, wo eine lokale Installation steht, gegen `ingest.php` selbst.
+
+**Was nur auf einem Android-System geht, steht in `src/androidTest/`** — der
+echte `AndroidKeyStore` und die Erreichbarkeit der Wearable-API. Diese Fälle
+gehen **an Gradle vorbei** (`adb shell am instrument`, Befehlsfolge in
+`android/LIESMICH.md`): `connectedAndroidTest` scheitert auf einem
+softwareemulierten Gerät an einer ddmlib-Zeitgrenze. Und **Backtick-Namen mit
+Leerzeichen** sind dort verboten — D8 lehnt sie unterhalb von DEX 040 ab, das
+Modul steht auf `minSdk = 26`. Bilder entstehen über Robolectric im
 NATIVE-Modus, nicht über `captureToImage()` (das hängt sich auf) und nicht
 über einen Emulator. Erwartet werden **0 Lint-Fehler** und **0 Fehlschläge**;
 Warnungen werden gezählt und nicht stummgeschaltet. Was das alles NICHT

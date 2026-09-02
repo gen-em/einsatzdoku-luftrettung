@@ -171,6 +171,27 @@ Die runde Maske wird dabei **gerechnet, nicht gemalt**: Der Direktweg zeichnet
 ein Quadrat, aber wo das Glas liegt, ist bekannt. Was außerhalb Farbe trägt,
 sieht auf der Uhr niemand.
 
+> **Am 02.09.2026 auf dem Emulator gegengeprüft** — die Rechnung stimmt.
+> Der Abzug der Startseite auf echter runder Maske (`wear30`, Wear OS 3,
+> 384 × 384, `hw.lcd.circular = true`), gegen den Abzug von 0.7.0 gehalten:
+>
+> | | Knopfhöhe | Luft zum Glasrand |
+> |---|---|---|
+> | 0.7.0 vorher | **35,5 dp** | **0,4 dp** — der Knopf klebt am Rand |
+> | 0.7.5 nachher | **48,0 dp** | **14,7 dp** |
+>
+> Dazu bestätigt: „Handy nicht erreichbar" statt des früheren, falschen
+> „Handy verbunden" (B-S4-09).
+>
+> **Eine Falle dabei, die man kennen muss:** Auf einem Emulator-Abzug lässt
+> sich „Anteil außerhalb des Kreises" **nicht** messen — der Emulator hat
+> bereits beschnitten, die Pixel außerhalb sind gar nicht da, und die Zahl
+> ist immer 0 %. Der erste Messversuch lieferte deshalb für beide Fassungen
+> 0,00 % und hätte den Fehler von 0.7.0 als behoben ausgewiesen. Messbar ist
+> auf dem Abzug nur, ob der Knopf den Glasrand **berührt** — dafür der größte
+> Abstand seiner Pixel zur Mitte gegen den Radius. Und die orange Bildmarke
+> muss vorher weg: über zusammenhängende Flächen, die größte ist der Knopf.
+
 Ein Mockup mit Vorher/Nachher-Bildern liegt unter `mockups/`.
 
 **Was diese Bilder nicht zeigen:** Robolectrics Schriften statt der von Wear OS, keine
@@ -344,16 +365,76 @@ Das steht vorn und nicht in einer Fußnote (E-R45-7, E-R45-8):
   Prüflauf ohne ihn (siehe 2.2). Was er kostet: Boot 197–345 s, Installation
   eines 26-MB-APK 207 s. `-no-window` ist **Pflicht** — die GUI-Binärdatei
   scheitert an fehlendem `libpulse.so.0`.
+
+  *Zweiter Lauf am 02.09.2026 (0.7.6), Zahlen bei geteilten Kernen:* Boot
+  **366 s** (Gradle lief parallel), Uhr-APK **165 s**, Handy-APK **466 s**.
+  Und: `./gradlew connectedAndroidTest` **scheitert** auf diesem Emulator mit
+  „Skipping device 'wear30(AVD)': Unknown API Level" — ddmlib gibt beim Lesen
+  von `ro.build.version.sdk` nach 5 s auf, das Gerät braucht 4,3 s und liegt
+  damit auf der Kippe. Der Weg, der trägt, geht an Gradle vorbei:
+
+  ```bash
+  adb install -r -t handy/build/outputs/apk/debug/handy-debug.apk
+  adb install -r -t handy/build/outputs/apk/androidTest/debug/handy-debug-androidTest.apk
+  adb shell am instrument -w -e class <Klasse> \
+    org.genem.nadoku.pruef.test/androidx.test.runner.AndroidJUnitRunner
+  ```
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf
   Hardware.
-- **Der Wear Data Layer.** Er braucht zwei gekoppelte Geräte und die
-  Play-Dienste; im Container gibt es beides nicht. Ungeprüft sind damit genau
-  drei Klassen: `WearNachrichtenweg` (rund fünfzig Zeilen, keine Entscheidung)
-  und die beiden `WearableListenerService`. **Geprüft ist alles darüber** —
-  Puffer, Nummernvergabe, Quittung, Nachlieferung, Doppelzustellung, die
-  Buchführung am Handy: gegen eine Transport-Attrappe, in 26 Fällen. Genau
-  dafür ist die Naht dort, wo sie ist.
+- **Der Wear Data Layer — die Grenze liegt woanders, als hier stand.**
+  Der Satz lautete: „Er braucht zwei gekoppelte Geräte **und** die
+  Play-Dienste; im Container gibt es beides nicht." **Beide Hälften sind
+  widerlegt** (gemessen am 02.09.2026 auf dem `wear30`-Emulator):
+
+  | behauptet | gemessen |
+  |---|---|
+  | keine Play-Dienste | `com.google.android.gms` **22.48.14** liegt im Abbild; `isGooglePlayServicesAvailable` meldet `SUCCESS` |
+  | Wearable-API nicht erreichbar | `NodeClient.localNode` liefert einen **lokalen Knoten mit Kennung**; `connectedNodes` liefert **0** — ohne Telefon die richtige Antwort |
+  | Empfangsdienst ungeprüft | `HandyHorcher` ist beim System registriert (`wear:`, `PREFIX /nadoku`) und löst für **alle drei** Pfade auf |
+
+  Was tatsächlich fehlt, ist **nur die Telefonseite** — und sie ist in diesem
+  Container nicht zu beschaffen. Der Knoten entsteht nicht durch die
+  Play-Dienste, sondern durch die **Wear-OS-Companion-App auf dem Telefon**;
+  ohne Knoten liefert `connectedNodes` eine leere Liste und `sendMessage`
+  scheitert mit `TARGET_NODE_NOT_CONNECTED`, gleichgültig wie die
+  Portweiterleitungen stehen. Drei Messungen schließen die Kette
+  (02.09.2026, jede einzeln nachgefahren):
+
+  | Weg | gemessen |
+  |---|---|
+  | Companion-APK liegt in einem Systemabbild | **0** von 16 APKs unter `/opt/android-sdk` tragen `wear`, `clockwork` oder `companion` im Namen |
+  | Bezug über den Play Store | `android.clients.google.com` antwortet **403**, `x-deny-reason: host_not_allowed` (ebenso `play.google.com`); `dl.google.com` dagegen **302** — die Sperre ist gezielt nach Hostname, nicht „kein Netz" |
+  | Googles eigener Notausgang an der Companion vorbei | `cmd package query-receivers -a com.google.android.gms.wearable.EMULATOR` → **`No receivers found`** |
+
+  Ein Seitenladen aus einer APK-Sammelseite scheidet ohnehin aus
+  (CLAUDE.md 4) — und `www.apkmirror.com` antwortet hier ebenfalls mit 403.
+  **Damit ist das kein „noch nicht", sondern ein Nein**, und wer es doch
+  versucht, zahlt eine Viertelstunde Bootzeit für eine Sperre, die ein
+  `curl` in zwölf Sekunden zeigt.
+
+  **Zwei Begründungen, die NICHT tragen** und deshalb hier nicht stehen: Es
+  liegt *nicht* an der fehlenden Hardwarebeschleunigung — zwei Emulatoren sind
+  mindestens einmal gleichzeitig gebootet worden. Und es liegt *nicht* daran,
+  dass die Uhr kein Netz hätte — das ist widersprüchlich gemessen und
+  ungeklärt. Wer sich auf eine der beiden beruft, ist widerlegt, sobald es
+  jemand ausprobiert.
+
+  Zur Vorsicht gegen eine naheliegende Verwechslung: `pm path
+  com.google.android.wearable.app` *antwortet* auf der Uhr — aber mit
+  `/system/priv-app/ClockworkWcs/ClockworkWcs.apk`, also der **Uhrseite** von
+  WCS unter demselben Paketnamen. Das ist nicht die Telefon-App.
+
+  Ungeprüft bleibt damit **die Zustellung selbst**: `WearNachrichtenweg`
+  (rund fünfzig Zeilen, keine Entscheidung) und was die beiden
+  `WearableListenerService` *mit* einer echten Nachricht tun. **Geprüft ist
+  alles darüber** — Puffer, Nummernvergabe, Quittung, Nachlieferung,
+  Doppelzustellung, die Buchführung am Handy: gegen eine Transport-Attrappe,
+  in 26 Fällen. Genau dafür ist die Naht dort, wo sie ist.
+
+  *Prüffall dazu:* `DataLayerErreichbarTest` (instrumentiert). Er schreibt die
+  Grenze fest: Fällt er durch, liegt es an den Play-Diensten; läuft er durch
+  und die Zustellung klemmt, liegt es an der Kopplung.
 - **Die Uhr-App ist blind gebaut.** Rundung, Schriftgrößen, Berührziele,
   Haltedauer und Sperrfrist sind gewählt und am Gerät nachzumessen; sie
   gehören danach in den Wear-Teil von `docs/Geraete-Eingabe.md`. Geprüft ist
@@ -362,16 +443,27 @@ Das steht vorn und nicht in einer Fußnote (E-R45-7, E-R45-8):
   Bedienbild fest, bevor es jemand gesehen hat. Ungeprüft bleibt alles
   Sichtbare — und die freie Taste: `WearableButtons` meldet im Container
   keine, der Weg über `onKeyDown` ist ungeprüft.
-- **Der `AndroidKeyStore`.** Robolectric bringt ihn nicht mit
-  (`KeyStoreException: AndroidKeyStore not found`). Geprüft ist deshalb der
-  ganze Umschlag — AES-256-GCM, frischer Zufallswert je Schreibvorgang, der
-  Rundlauf, die Abwesenheit von Klartext im Speicherabbild. **Ungeprüft ist
-  genau eine überschriebene Methode:** dass der Schlüssel im Keystore entsteht
-  und ihn nicht verlässt (`KeystoreTresorschluessel.schluessel()`). Das gehört
-  auf die Prüfliste des Gerätetests.
-- **Die Kamera.** `QrKamera` ist eine Hülle um CameraX; ohne Emulator gibt es
-  keine. Geprüft ist, was dahinterliegt: die Erkennung (`QrLeser`) und die
-  Auswertung des Inhalts (`QrInhalt`).
+- ~~**Der `AndroidKeyStore`.**~~ **Seit 0.7.6 geprüft** — auf dem Emulator,
+  nicht mehr nur zugesagt. Robolectric bringt ihn nach wie vor nicht mit
+  (`KeyStoreException: AndroidKeyStore not found`); der instrumentierte
+  `GeraetTresorTest` läuft dafür auf einem echten Android-System und belegt in
+  **sechs Fällen** (13,7 s): Der Schlüssel entsteht unter seinem Namen im
+  Keystore, `getEncoded()` ist **null** (also nicht exportierbar), der
+  Rundlauf trägt, der Schlüssel überlebt einen neuen Griff, jeder
+  Schreibvorgang bekommt einen frischen Zufallswert, und ein verfälschtes
+  Paket wird abgelehnt.
+
+  **Was auch das nicht belegt:** Ein Emulator hat keinen
+  Hardware-Sicherheitsanker. `getEncoded() == null` gilt, aber „auch mit
+  Root-Rechten nicht auslesbar" hängt am Trusted Execution Environment eines
+  echten Geräts. Das bleibt auf der Prüfliste des Gerätetests.
+- **Die Kamera.** `QrKamera` ist eine Hülle um CameraX. Die frühere
+  Begründung — „ohne Emulator gibt es keine" — ist **überholt**: Den Emulator
+  gibt es, und sein AVD führt `hw.camera.back = emulated`. Ungeprüft ist die
+  Hülle trotzdem, nur aus einem anderen Grund: Die emulierte Kamera zeigt eine
+  Kunstszene, und ob ein QR-Code darin erkennbar bei ZXing ankommt, ist eine
+  eigene Frage. Geprüft ist, was dahinterliegt: die Erkennung (`QrLeser`) und
+  die Auswertung des Inhalts (`QrInhalt`).
 - **Der Vordergrunddienst.** `AufzeichnungsDienst` bekommt im Container weder
   GPS noch einen `LocationManager`. Geprüft ist die Logik dahinter —
   `Ausduenner` gegen fünf synthetische Ströme, `Dienstklammer` gegen echtes
