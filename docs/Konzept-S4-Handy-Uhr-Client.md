@@ -704,7 +704,7 @@ als eigener, offener Abschnitt geführt — nicht als erledigt erzählt.
 - Mengenbremse für `ingest.php` — P5 (R19); S4 hält sich mit E-S4-07 an
   das vermessene Sendeverhalten, damit die spätere Bremse beide Clients
   gleich behandeln kann.
-- Serverseite der Gerätestatistik (Backlog Nr. 46) — eigenes Kleinstpaket
+- Serverseite der Gerätestatistik (Backlog Nr. 59) — eigenes Kleinstpaket
   nach R42, weil es eine Schemaänderung mitbringt.
 - Verwaltung in der App (Einsätze ansehen, bearbeiten, Patientenfelder) —
   die Verwaltung bleibt im Browser (R45).
@@ -753,7 +753,7 @@ Werte; das gehört vor B1 entschieden. Bei der Behebung `Design.md` 2.5
 mitziehen.
 **Entschieden am 31.08.2026: bewusst liegen lassen.** Keine Behebung
 vorab; B1 übernimmt den dann aktuellen Stand der Dateien. Damit der Fund
-nicht verschwindet, ist er als **Backlog Nr. 49** eingetragen.
+nicht verschwindet, ist er als **Backlog Nr. 62** eingetragen.
 
 ## 11. Statuspflege
 

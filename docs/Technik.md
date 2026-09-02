@@ -1699,7 +1699,7 @@ Displaymaßen, Touch, Firmware, Plattform- und App-Fassung; die Art steht fest
 auf `"uhr"`. Feldliste und Begründungen: `docs/JSON-Vertrag.md`, Abschnitt 1a.
 
 **Der Server verwirft den Block derzeit stillschweigend** — die Auswertung ist
-Backlog Nr. 46. Bis dahin sammelt niemand etwas; die Uhr sendet nur.
+Backlog Nr. 59. Bis dahin sammelt niemand etwas; die Uhr sendet nur.
 
 Zwei Entscheidungen dahinter. Gesendet wird die **Teilenummer**, nicht der
 Modellname: Den kennt die Uhr nicht, `DeviceSettings` führt ihn nicht. Die
