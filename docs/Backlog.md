@@ -708,6 +708,33 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bereich heißt dort `e`; die Mechanik ist da (eine Art `xml` im Zerleger,
     die Tags mit wegräumt), einzutragen ist die Bereichszeile.
 
+63. **`csrf_check()` hat keinen API-Zweig.**
+    *Aufgenommen aus einer Gegenprüfung vom 23.08.2026; die Zahlen sind am
+    02.09.2026 nachgezählt (S4/D2).*
+    `require_admin()` verzweigt daneben nach `ist_api_aufruf()` und antwortet
+    einem Endpunkt mit JSON; `csrf_check()` rendert unbedingt eine HTML-Seite.
+    Ein Endpunkt, der sie aufriefe, schickte einer `fetch()`-Anfrage also eine
+    Fehlerseite statt eines Fehlerobjekts — die Oberfläche zeigte „unerwartete
+    Antwort" statt „Sitzung abgelaufen".
+    **Bisher folgenlos, weil es diesen Aufrufer nicht gibt.** Von den 15
+    Dateien unter `server/api/` ruft **keine** `csrf_check()` auf. Die **elf**,
+    die POST annehmen, prüfen jede selbst gegen `HTTP_X_CSRF` — neun davon
+    ändern Zustand (acht schreiben in die Datenbank,
+    `adminbackup_freigabe.php` in eine Begleitdatei), die beiden anderen
+    (`backup_spuren.php`, `export_data.php`) lesen nur und benutzen POST für
+    die Nutzlast. Die übrigen **vier** (`backup_data.php`, `mission.php`,
+    `range.php`, `suchindex.php`) sind streng GET-only, weisen alles andere
+    mit 405 ab und haben kein Schreib-SQL; ihnen fehlt die Prüfung also nicht.
+    Es ist damit eine **unausgesprochene Invariante**, keine Störung — und die
+    Nachzählung hat keinen ungeschützten schreibenden Endpunkt gefunden.
+    **Zu tun:** entweder denselben `ist_api_aufruf()`-Zweig in `csrf_check()`
+    ergänzen, oder die Invariante im Kopf der Funktion festhalten, damit der
+    nächste Endpunkt sie nicht versehentlich bricht. Die ursprüngliche Fassung
+    dieses Punktes nannte „alle sechs schreibenden Endpunkte" — die Zahl
+    stammte von Web 7.2.0 und war schon beim Nachtragen falsch; seither sind
+    unter anderem `api/gpx_import.php` und `api/schneiden.php` dazugekommen.
+    Wer diesen Punkt anfasst, zählt vorher wieder nach.
+
 ## Erledigt
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter

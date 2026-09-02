@@ -771,7 +771,7 @@ Aus Rahmenplan Abschnitt 7, hier mit Verortung im Paketplan:
 
 | Was | Wofür | Wann |
 |---|---|---|
-| Netzfreigaben `dl.google.com`, `maven.google.com`, `repo1.maven.org`, `plugins.gradle.org`, `services.gradle.org` | B1-Probebau (und jeden weiteren Baulauf) | **vor B1** |
+| Netzfreigaben `dl.google.com`, `maven.google.com`, `repo1.maven.org`, `plugins.gradle.org`, `services.gradle.org` | B1-Probebau (und jeden weiteren Baulauf) | **erledigt** — 31.08.2026 aus dem Container geprüft: alle fünf antworten (200), einschließlich der Weiterleitungen (maven.google.com → dl.google.com; Gradle-ZIP über GitHub-Release-Assets); JDK 21 und Gradle liegen im Container vor. Der volle Baulauf bleibt der B1-Probebau |
 | Entscheidung F-S4-A (Mindest-Android-Stand) | B1 | vor B1 |
 | Mockup-Freigabe (A0) | A2/A3-Beginn | vor A2 |
 | Verwahrung des Signaturschlüssels | jede spätere Auslieferung | mit dem ersten Build (B1) |
