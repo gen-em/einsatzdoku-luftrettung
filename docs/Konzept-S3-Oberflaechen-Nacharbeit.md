@@ -1,5 +1,30 @@
 # Konzept S3 — Oberflächen-Nacharbeit und vertikaler Rhythmus
 
+> ## Stand: umgesetzt (02.09.2026)
+>
+> **Alle zwölf Arbeitspakete sind gebaut**, Web **12.2.2 bis 12.4.2**, ein
+> Commit je Paket. **Keine Migration** — `update.php` ist nach dem Deploy
+> nicht nötig. **Die Uhr-Version steigt nicht**; die neu gerasterten Kacheln
+> reisen mit S5 (E-S3-04). **Die Deploy-Freigabe steht aus** — ein Push auf
+> `main` deployt sofort.
+>
+> Der Umsetzungsstand je Paket steht in **Abschnitt 10**, die Fehlerfunde in
+> **Abschnitt 8** (F-S3-A bis F-S3-E), die während der Umsetzung
+> entschiedenen Fragen in **Abschnitt 4** (F-S3-01 bis F-S3-03). Was noch
+> **von Hand** zu prüfen ist, steht nicht hier, sondern in
+> `docs/Pruefdokument-S3-Oberflaechen-Nacharbeit.md`.
+>
+> **Drei Zahlen, die die Phase zusammenfassen:** Von 269
+> Abstandsdeklarationen trug **keine** einen Rohwert — es fehlte nicht die
+> Skala, sondern die Regel. Der Markerversatz ist von **51,7 px auf 0,0 px**
+> gemessen. Und **fünf Funde** kamen dazu, die auf keiner Liste standen;
+> **drei davon konnte kein Prüfmittel finden**.
+>
+> Der Text unterhalb dieses Kastens ist die **Übergabefassung vom
+> 01.09.2026** und bleibt, wie sie war — sie sagt, was geplant war. Wo die
+> Umsetzung etwas anders vorgefunden hat, sagt das der jeweilige Abschnitt
+> in Kapitel 10, nicht eine stille Berichtigung oben.
+
 Zwischenpaket nach R43, **nach S2, vor S5** (Rahmenplan Fassung 15).
 Konzeptstand: 01.09.2026, Übergabefassung an die Umsetzung. Format nach K1;
 keine Versionsnummern (K3). **Kein Fable-Schritt** (K2/K8): Die
@@ -1933,6 +1958,21 @@ Randlosigkeit; F-S3-B nicht, weil die Vollständigkeitsprüfung Klassen als
 Literale sucht und diese zur Laufzeit entsteht; F-S3-D nicht, weil das
 Werkzeug bei einem Fehlschlag klaglos eine Datei schrieb. Zwei sind als
 Backlog Nr. 57 und 58 vermerkt, der dritte ist im Werkzeug behoben.
+
+#### Der Rahmenplan ist an zwei Stellen fortgeschrieben
+
+- **Abschnitt 6, Statuszeile S3** — Ergebnis, Zahlen, Funde.
+- **Abschnitt 5, der S3-Block selbst** — ein Umsetzungsblock am Ende, der
+  benennt, was sich **anders dargestellt hat als geplant**: Der
+  Zeilentrenner reichte bereits über die volle Breite, „Sekundärtransport"
+  trug schon das weiche Trennzeichen, die Höhenbedingung stand schon im
+  Code, und die Favicons trugen den leeren Rand nicht. Dazu die drei
+  gefallenen Bildentscheide und das, was offen bleibt.
+- Dabei **eine überholte Angabe berichtigt**: Der Block K nannte für die
+  Uhr-Auslieferung noch „P6 (R29)". Das ist seit R48 nicht mehr richtig —
+  P6 trägt keine Uhr-Auslieferung mehr, die nächste ist die von S5
+  (E-S3-04). Der Satz stand so auch im Konzept (1.14) und war dort bereits
+  als überholt gekennzeichnet; im Rahmenplan nicht.
 
 #### Versionen der Phase
 

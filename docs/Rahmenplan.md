@@ -734,9 +734,12 @@ in die Kachel —, nach dem Beschnitt gar nicht mehr. Das Ergebnis ist also
 `tools/uhr-bilder/erzeugen.sh` neu laufen lassen** — sonst passen die
 eingecheckten Kacheln nicht mehr zu ihrer Quelle, und das fällt niemandem
 auf. Die geänderten Kacheln brauchen einen Uhr-Build; sie reisen deshalb mit
-der **P6-Uhr-Auslieferung** (R29) mit, nicht mit S3. In S3 wird der Beschnitt
+der nächsten Uhr-Auslieferung mit, nicht mit S3. In S3 wird der Beschnitt
 gemacht und der Generator gefahren; der Web-Teil wirkt sofort, die Uhr-Dateien
-liegen bis P6 im Repositorium und werden dort ausgeliefert.
+liegen bis dahin im Repositorium.
+> **Berichtigt:** Hier stand „P6-Uhr-Auslieferung (R29)". Das ist seit R48
+> (Fassung 12) überholt — **P6 trägt keine Uhr-Auslieferung mehr**; die
+> nächste ist die von **S5** (E-S3-04).
 
 **Nebenbefund — entschieden, kein Arbeitspunkt (E-R43-3):** Die Kacheln der
 Zeitraumübersicht tragen „Flugkilometer gesamt" und „Ø Winden-Cycles /
@@ -745,6 +748,69 @@ Luftrettungsansicht, und dort ist Flugsprache ausdrücklich zulässig
 (E-P2-04). Meldet die Wortliste den Fall, bekommt er dort eine **Ausnahme
 mit dieser Begründung** — keine Umformulierung (R28: ein Luftbegriff, der
 bleiben soll, braucht einen Eintrag, kein Ausblenden).
+
+**Umsetzung (01.–02.09.2026): abgeschlossen.** Web 12.2.2 bis 12.4.2, zwölf
+Pakete AP1–AP12, keine Migration. Konzept und Prüfstände:
+`docs/Konzept-S3-Oberflaechen-Nacharbeit.md`; Prüfliste:
+`docs/Pruefdokument-S3-Oberflaechen-Nacharbeit.md`. Statuszeile in Abschnitt 6.
+
+**Der Kern hat sich bestätigt, und schärfer als hier formuliert.** Der Text
+oben nimmt an, ein Teil der Liste sei die Folge einer fehlenden Regel.
+Nachgemessen: Von **269** Abstandsdeklarationen trägt **keine** einen
+Rohwert — die Skala wurde nicht „überwiegend", sondern **ausnahmslos**
+eingehalten. Von 74 Zwischenraum-Deklarationen waren **61 schon richtig**;
+13 Regeln waren einzustellen. Der Befund in einer Zeile: `.karte` und
+`.feld` trugen beide 16 px, Trennung war also genauso groß wie Bindung.
+
+**Vier Punkte dieses Abschnitts trafen so nicht zu.** Sie sind nachgemessen
+worden, statt sie erneut zu „beheben":
+
+- **B, Zeilentrenner:** Er reicht **doch** über die volle Tabellenbreite —
+  gemessen bei 1440 px von x = 0 bis 2227 von 2228 Bildpunkten. Der Punkt
+  hat sich zwischen Web 9.14.1 und 12.2.4 von selbst erledigt. Die
+  **Zentrierung** der fünf Spalten war der reale Teil und ist gemacht.
+- **I, „Sekundär Transport":** Trägt seit F-N1-G das **weiche Trennzeichen**
+  (`&shy;`), der Browser setzt den Bindestrich selbst. Nichts zu tun. Der
+  **Dauer-Umbruch** dagegen war echt — und die Ursache eine andere als
+  vermutet: `missiontable.js` setzt `zeit-spalte` längst, aber die
+  Tagesübersicht baut ihre Zeilen in einem **zweiten, älteren Aufbau**
+  zusammen, und dort fehlte die Klasse (Backlog Nr. 57).
+- **G, Höhenanzeige:** Die Bedingung `kind === 'air'` stand bereits im Code;
+  gefehlt hat nur das **Wort** vor der Zahl.
+- **K, Favicons:** Sie tragen den leeren Rand **nicht** — beide sind korrekt
+  auf ihre quadratische Fläche gesetzt. Neu abgeleitet wurden sie trotzdem.
+
+**Die drei offenen Bildentscheide sind gefallen.** Versalien und Sperrung
+der Leistenüberschrift **entfallen** (bei 15 px liest sich der gesperrte
+Versalsatz als Etikett und konkurriert mit dem Eintrag darunter; bei 13 px
+trug die Sperrung noch — sie war der Ersatz für die Größe, die jetzt da
+ist). Eine **Feinkorrektur der Logogrößen ist nicht nötig**: 54,5 × 34 gegen
+42,6 × 34 px, Flächenverhältnis von 2,01 auf **1,28**; die Höhen sind gleich,
+und das ist es, was das Auge in einer Zeile vergleicht.
+
+**Der Markerversatz ist gemessen behoben:** **51,7 px** vorher, **0,0 px**
+nachher, über sechs Zoomstufen — mit Nachstellung des alten Zustands als
+Gegenprobe.
+
+**Fünf Funde über die Liste hinaus** (F-S3-A bis F-S3-E). Zwei davon kamen
+aus der zweiten Rückmeldungsrunde am 01.09.2026, beide auf
+`tag_spuren.php`: Die Seite lief **ohne Seitengerüst** — als einzige
+angemeldete Seite ohne Leiste und ohne Innenabstand, linke Kante bei 0 statt
+12 px —, und `ui_meldung_markup()` ergab bei einem Ton, den es nicht gibt,
+einen **ungestalteten Kasten**. **Drei der fünf konnte kein Prüfmittel
+finden**, und das ist der eigentliche Ertrag dieser Phase: Der Bilderlauf
+misst *Überlauf*, und eine randlose Seite läuft nicht über; die
+Vollständigkeitsprüfung sucht Klassen als *Literale*, und `'meldung-' . $ton`
+entsteht zur Laufzeit; der Favicon-Generator schrieb bei einem Fehlschlag
+klaglos eine Datei. Backlog **Nr. 57 und 58** halten die beiden fest, die
+über S3 hinausreichen.
+
+**Was offen bleibt** (Einzelheiten im Prüfdokument, Kapitel 1): Der
+Bilderlauf ist nur für **eine** Logo-Wahl gefahren; die neu gerasterten
+Uhr-Kacheln sind **nie übersetzt** worden (kein Garmin-SDK — gehört in die
+S5-Auslieferung, E-S3-04); die Autosuche ist gegen einen **abgefangenen**
+Photon geprüft; Bedienzustände fehlen durchgehend. Die Deploy-Freigabe steht
+aus — ein Push auf `main` deployt sofort.
 
 ### S4 — Handy- und Uhr-Client (Android/Wear OS), Schneidewerkzeug und GPX-Import (Zwischenpaket, nach S3)
 **Ziel:** NotärztInnen ohne Garmin-Uhr zeichnen ihre Spur mit dem Handy auf
