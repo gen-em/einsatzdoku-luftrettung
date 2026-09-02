@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 20 (02.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 21 (02.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -326,8 +326,10 @@ Server-Adresse) · Hinweis in der Tagesansicht bei zeitlich überlappenden
 aktiven Diensttagen samt Handbuchabsatz (R57) · Backlog 63 (Sperrvermerke
 des Schnitts in die Konto-Sicherung) · Signaturschlüssel erzeugen und
 übergeben, erstes signiertes APK · Gerätetest auf dem S24 (zwei bis drei
-Runden) · Changelog-Präfix `Android` mit der ersten verteilten Fassung ·
-Prüfdokument S4 fortschreiben, Erledigt-Zeile in Abschnitt 8. **Abnahme:**
+Runden) · **Backlog 81** (App-Symbol in der Benachrichtigung) und **82**
+(Warnung vor dem Akkuverbrauch der Daueraufzeichnung), beide am 02.09.2026 vom
+Auftraggeber gemeldet · Changelog-Präfix `Android` mit der ersten verteilten
+Fassung · Prüfdokument S4 fortschreiben, Erledigt-Zeile in Abschnitt 8. **Abnahme:**
 Prüfliste 4 und 6 des Prüfdokuments S4 (Telefon, Kreisläufe R24 auf
 geschnittenen und importierten Einsätzen), Messstand für das Schneiden.
 **Wear-OS-Uhr:** Gerätetest, sobald eine vorliegt; blockiert nichts.
@@ -413,7 +415,19 @@ steht: ab v1.0 **keine Rückwärtskompatibilität**, auch nicht bei Updates;
 v1.0 beginnt mit dem Neuaufsetzen (R40), und eine ältere Sicherung wird
 genau **einmal** über ein dafür gebautes Formular eingespielt, das danach
 entfällt. Dazu die Doku-Anforderungen nach R16, wenn das Gespräch dazu
-noch aussteht. **Ergebnis:** das P6-Konzept nach K1 mit Paketschnitt und
+noch aussteht.
+
+**Dazu ein Punkt, der genau hierhin gehört und nirgendwo sonst: die
+Haltbarkeit der Gerätestatistik (Backlog Nr. 83).** Seit Web 12.9.0 hängen Art
+und Modell an `devices`; der Verweis vom Einsatz dorthin überlebt aber weder
+das Löschen eines Geräts noch eine Wiederherstellung — gemessen am Demo-Konto
+**82 von 82 Einsätzen ohne Verweis**. Und genau hier wird beschlossen, dass
+v1.0 mit einem Neuaufsetzen und **einer einmaligen** Wiederherstellung beginnt
+(R60). Was bis dahin nicht haltbar gemacht ist, ist für den Altbestand danach
+nicht mehr herstellbar. Der Punkt nennt drei Wege und ihre Kosten; er ist vor
+dem Schnitt zu entscheiden, nicht danach.
+
+**Ergebnis:** das P6-Konzept nach K1 mit Paketschnitt und
 Abnahmekriterien; bis dahin beginnt kein P6-Paket. **Modell:** Fable (R14).
 
 ### Schritt 11 — P6 v1.0-Schnitt
@@ -500,7 +514,10 @@ angelegt.
 | 55 | Komplettsicherung ohne scharfen Schnappschuss | nach v1.0 | — |
 | 57 | Tagesübersicht baut ihre Tabelle zweimal | Backlog-Runde | Vereinheitlichung |
 | 58 | Prüfmittel: Seite ohne Gerüst | Backlog-Runde | Prüfmittel, ein Nachmittag |
-| 80 | Auswertung der Gerätestatistik (Rest von 59) | **P5** | Speicherung erledigt mit Web 12.9.0; die Datenschutzerklärung ist Vorbedingung der Auswertung (Schritt 10) |
+| 80 | Auswertung der Gerätestatistik (Rest von 59) | **P5** | Speicherung erledigt mit Web 12.9.0; Datenschutzerklärung und Nr. 83 sind Vorbedingungen (Schritt 10) |
+| 81 | App-Symbol in der Benachrichtigung zu groß und angeschnitten | **S4-Rest** | am Gerät gemeldet; aus dem heutigen Quellstand nicht nachvollziehbar — zuerst die installierte App-Fassung klären |
+| 82 | Warnung fehlt, dass die Daueraufzeichnung den Akku leert | **S4-Rest** | der vorhandene Akku-Dialog (E-S4-05) sagt das Gegenteil: warum die App Strom ziehen darf |
+| 83 | Haltbarkeit der Gerätestatistik: welche Daten wie gespeichert werden | **Schritt 10**, Umsetzung danach | Vorbedingung für 80; muss vor dem Neuaufsetzen (R60) entschieden sein |
 | 62 | Logodateien mit alten Farbwerten | Backlog-Runde | `Design.md` 2.5 mitziehen |
 | 63 | Sperrvermerke des Schnitts in der Konto-Sicherung | S4-Rest | `Backup-Format.md`, Kreisläufe |
 | 64 | Bedienhöhe Android | **erledigt** (S4-Merge, Android 0.7.7) | 48 dp in beiden Modulen, `CLAUDE.md` 5 unterscheidet Web und Android (R58, E-S4-77) |
@@ -779,6 +796,7 @@ Abschnitt 6.
 | 15 | 02.09.2026 | S2 als ausgeliefert; Backlog 46–49 entdoppelt (→ 59–62); zweite Rückmeldungsrunde; R50 fällig |
 | **16** | **02.09.2026** | **Neustrukturierung:** Archiv abgetrennt (R51), Fahrplan nach Ausführungsreihenfolge, S6 und S7 benannt (R52), P4 aufgelöst (R53), Kurzregister (R54), Prüflisten bereinigt (R55), R56–R58 entschieden, Planungsgespräch vor v1.0 als Schritt 10 (R59), Update-Weg und Ende der Rückwärtskompatibilität ab v1.0 (R60), Zwischenpaket S8 Einstellungen, Administration und Wartung als Schritt 7 (R61), Konzeptablage `docs/konzepte/` mit Lebenszyklus und Push je Arbeitspaket (R62, K7 geändert), Bestand nach `docs/konzepte/erledigt/` verschoben; Statusfehler berichtigt (Kleinstpaket nicht begonnen, S3 ausgeliefert, S4 auf dem Zweig gebaut); Backlog 68–79 angelegt, 63–67 für S4 reserviert |
 | **17** | **02.09.2026** | **S4-Merge vorbereitet** (Schritt 1): Backlog des S4-Zweigs auf 63–67 umnummeriert und beide Reihen konfliktfrei zusammengeführt (44 offene Nummern, 0 doppelt); R58 umgesetzt (48 dp, Backlog 64 erledigt), R57 als E-S4-76 eingetragen; Konzept und Prüfdokument nach `docs/konzepte/` verschoben (R62) mit Statusblock; Migrationsregister gegengezählt (38 = 38); Signaturschlüssel des APK an den Auftraggeber übergeben — er war seit B1 erzeugt, aber nie ausgehändigt. Der Push auf `main` steht aus. |
+| **21** | **02.09.2026** | **Drei Punkte aufgenommen** (Backlog 81–83): App-Symbol in der Benachrichtigung zu groß und angeschnitten (am Gerät gemeldet, aus dem Quellstand nicht nachvollziehbar — die Kachel wurde nachgerechnet, sie stimmt), fehlende Warnung vor dem Akkuverbrauch der Daueraufzeichnung (der vorhandene Akku-Dialog sagt das Gegenteil), und die **Haltbarkeit der Gerätestatistik** als Diskussionspunkt für Schritt 10 — gemessen: 82 von 82 Einsätzen ohne Geräteverweis, weil `ON DELETE SET NULL` gilt und `device_id` nicht in der Sicherung steht. 81 und 82 in den S4-Rest, 83 vor den Neuaufsetzen-Beschluss (R60). |
 | **20** | **02.09.2026** | **Marken- und Schutzrechtszeichen aus den Modellnamen** (Web 12.9.2): 171 der 173 Namen trugen ® oder ™, 194 Vorkommen. Sie gehören nicht uns, sie stören die Zählung (ein Wechsel ® → ™ ergäbe zwei Geräte) und sie kosten Platz. Entfernt wird im Erzeuger, nicht in der erzeugten Datei; `í`, `ē` und der Halbgeviertstrich bleiben — sie sind Bestandteil der Namen. Gegengeprüft: weiterhin 325 Teilenummern auf 173 verschiedene Namen, 0 Zusammenfälle, 0 doppelte Leerzeichen. Keine Migration. |
 | **19** | **02.09.2026** | **Modelltabelle gefüllt** (Web 12.9.1): 325 Teilenummern auf 173 Modelle aus den gelieferten Gerätedateien — die Zuarbeit aus Abschnitt 6 ist erledigt. Die echten Daten haben eine geratene Annahme widerlegt: `geraet_modell` geht von 64 auf 191 Zeichen (E-S6-7, zweite Migration `2026_09_02_geraetemodell_breiter`), weil die Dateien Sammelnamen bis 156 Zeichen führen; gekürzt wird erst für die Anzeige. Dateiweite Wortlisten-Ausnahme für die erzeugte Tabelle (89 Treffer, wie in ihrer LIESMICH vorhergesagt). Register 40 = 40. **Vollständigkeit 266 → 272** — die sechs liegen sämtlich in „Unicode-Zeichen als Symbol im Markup": vier sind Auslassungszeichen in Kommentaren (dieselbe Verwendung wie an drei älteren Stellen in `version.php` und `update.php`), zwei die Kürzungsmarke im Code, die `admin_user.php` schon vor S6 benutzte. Kein neuer Befundtyp; die Kategorie ist Bestand aus P3. |
 | **18** | **02.09.2026** | **S6 gebaut** (Schritt 2, Web 12.9.0): drei Spalten an `devices` statt der in R42 genannten zwei (E-S6-1), `pair.php` liest beide Kopplungsformen über die neue `geraete_lib.php`, Modelltabelle als erzeugte Datei mit eigenem Werkzeug samt Nachauflösen (E-S6-6), Art und Modell in beiden Gerätelisten, R44 angeglichen (gleitende Schlüsselfrist) und dabei die Wirkungsaussage des R44-Eintrags berichtigt (E-S6-4, neues Prüfmittel `tools/fristprobe/`: 17 gegen 1 Neu-Entpackung je Schicht); Gerätekennung in beiden Listen gekürzt (E-S6-5, behebt einen Überlauf, den es schon vorher gab); JSON-Vertrag auf Fassung 1.4 (beide Formen, Speicherung, Android-Präfixe — der Nachtrag hing an R42), `Lizenzen.md` 7a für die erzeugte Tabelle; Backlog 59 erledigt, Rest als 80 angelegt; drei Zuarbeiten in Abschnitt 6 (Gerätedateien, S6-Abnahme, Datenschutzerklärung). Migrationsregister gegengezählt (39 = 39). |
