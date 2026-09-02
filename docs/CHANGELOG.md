@@ -90,6 +90,70 @@ Das war die eigentliche Lücke: Die Anleitung war vollständig, aber nicht
 auffindbar. Abschnitt 6 nennt den Prüfstand jetzt, samt dem Hinweis, dass die
 Adresse erfragt werden muss.
 
+## [Web 12.9.1] — 2026-09-02
+
+**Die Modelltabelle ist gefüllt — und die echten Daten haben eine Annahme
+widerlegt.** Nachtrag zu 12.9.0; die Zuarbeit aus Rahmenplan Abschnitt 6 ist
+damit erledigt. **Mit Migration** (`2026_09_02_geraetemodell_breiter`).
+
+### Web — 325 Teilenummern auf 173 Modelle
+
+Genau die Zahl, die der JSON-Vertrag seit der Uhr-Seite nennt — sie stammte aus
+derselben Quelle und ist damit unabhängig bestätigt. Erzeugt aus den
+Gerätedateien der Uhr-Plattform (`tools/geraetemodelle/erzeugen.py`); die
+Adresse ihrer Bereitstellung steht weiterhin **nicht** im Repositorium.
+
+Die drei im Repositorium belegten Teilenummern lösen richtig auf:
+`006-B3113-00` → Forerunner® 945, `006-B3290-00` → fēnix® 6 Pro (Sammelname),
+`006-B4261-00` → Venu® 3S.
+
+**28 der 173 Modelle sind keine Uhren** — 20 Edge, 8 Outdoor-Handgeräte. Genau
+dafür schlägt die Tabelle die Selbstauskunft: Eine Connect-IQ-App sendet `art`
+fest als `"uhr"`, weil sie Uhr und Radcomputer nicht unterscheiden kann. Am
+laufenden Server nachgemessen: Ein Gerät, das sich mit der Teilenummer eines
+Edge 1000 als „uhr" koppelt, steht danach als `sonstiges` in der Spalte und
+heißt „Gerät", nicht „Uhr".
+
+### Web — Die Spalte war zu schmal, und zwar geraten
+
+`geraet_modell` stand auf `VARCHAR(64)`. Diese Zahl entstand, als die
+Gerätedateien noch nicht vorlagen, und sie ist falsch: Die Dateien führen je
+Teilenummer die **Hardware**, und Garmin verkauft dieselbe Hardware unter
+mehreren Namen. Der längste Eintrag hat **156 Zeichen** („fēnix® 6X Pro / 6X
+Sapphire / 6X Pro Solar / tactix® Delta Sapphire / … / quatix® 6X Dual
+Power"). Fünf der 173 Modelle liegen über 64, 15 der 325 Teilenummern sind
+betroffen.
+
+Die Spalte geht auf **191**. Gespeichert wird der **volle** Name — die spätere
+Zählung (P5) soll Hardwaregruppen zählen, und genau die bezeichnet der
+Sammelname; ein beim Schreiben gekürzter Name wäre eine Auslegung, die sich
+nicht mehr zurückdrehen ließe. Gekürzt wird erst für die **Anzeige**, auf das
+erste Glied: „Uhr · fēnix® 6X Pro …". Das Auslassungszeichen sagt, dass mehr
+dahintersteht.
+
+**Eine zweite Migration und nicht die erste geändert.** Die erste ist gepusht,
+und `update.php` führt jede Kennung genau einmal aus — eine Installation, die
+sie schon gefahren hätte, sähe eine Änderung an ihrem Rumpf nie. Der Rumpf
+einer abgeschickten Migration ist damit so gut wie unveränderlich, und die
+einzige verlässliche Richtung ist eine neue. Nachgemessen: gegen eine
+Datenbank, die die erste Migration bereits trug, greift die zweite und der
+zweite Aufruf ist folgenlos (40 = 40).
+
+### Werkzeug — Die Wortliste braucht jetzt eine Ausnahme, und zwar dateiweit
+
+Vorhergesagt in `tools/geraetemodelle/LIESMICH.md`, eingetreten wie
+beschrieben: Die gefüllte Tabelle liegt unter `server/*.php` und fällt damit in
+Bereich (a); ihre Werte sind Zeichenketten und keine Kommentare. **89 Treffer**
+— „Forerunner", „Venu", „Edge". Die Ausnahme steht auf der **Datei** und nicht
+auf einzelnen Zeilen: Der Bestand wechselt mit jedem Lauf des Erzeugers, ein
+Muster auf einzelne Namen wäre danach entweder unvollständig oder ungenutzt,
+und beides ist ein Fehlschlag.
+
+**Die 89 sind kleiner als der Bestand**, und das ist keine Beruhigung: Garmin
+schreibt „fēnix" mit Makron, das Sperrmuster lautet `\bfenix` und trifft diese
+Zeilen nicht. Wer die Zahl liest, weiß das besser — sie steht so auch in der
+Begründung der Ausnahme.
+
 ## [Web 12.9.0] — 2026-09-02
 
 **Der Server nimmt endlich an, was die Geräte über sich sagen — und der
@@ -128,10 +192,9 @@ auf einem Gerät mit 128 kB wäre der falsche Platz. Sie steht in
 den Gerätedateien der Uhr-Plattform). Wer sie von Hand ergänzt, ergänzt sie an
 der falschen Stelle.
 
-**Sie wird vorerst leer ausgeliefert.** Die Gerätedateien liefert nur der
-SDK-Manager aus; die Adresse ihrer Bereitstellung steht bewusst nicht im
-Repositorium und muss erfragt werden (Rahmenplan, Abschnitt 6). Bis dahin zeigt
-jede Garmin-Kopplung die Teilenummer statt des Modellnamens.
+**Sie war bei diesem Stand noch leer** — die Gerätedateien lagen nicht vor.
+Gefüllt ist sie seit Web 12.9.1 (eigener Eintrag oben); die Adresse ihrer
+Bereitstellung steht weiterhin bewusst nicht im Repositorium.
 
 **Und deshalb gibt es `nachaufloesen.php`.** `pair.php` löst die Teilenummer im
 Moment der Kopplung auf, und nur dann — eine Zeile, die damals auf eine leere

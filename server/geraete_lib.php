@@ -65,7 +65,15 @@ const GERAET_ARTEN = ['uhr', 'handy', 'sonstiges'];
 
 /** Laengengrenzen der drei Spalten (schema.sql). */
 const GERAET_MAX_ART    = 16;
-const GERAET_MAX_MODELL = 64;
+/* 191 UND NICHT 64. Die 64 stand hier zuerst und war geraten — die
+ * Gerätedateien waren noch nicht da. Sie liefern SAMMELNAMEN: Eine Teilenummer
+ * bezeichnet die Hardware, und Garmin verkauft dieselbe Hardware unter
+ * mehreren Namen ("fēnix® 6X Pro / 6X Sapphire / … / quatix® 6X Dual Power",
+ * 156 Zeichen). 5 der 173 Modelle sind länger als 64. Der volle Name wird
+ * gespeichert, weil er die Auskunft der Gerätedateien IST und die spätere
+ * Zählung (P5) genau diese Hardwaregruppen zählen soll; gekürzt wird für die
+ * ANZEIGE, siehe geraet_bezeichnung(). */
+const GERAET_MAX_MODELL = 191;
 const GERAET_MAX_TEIL   = 64;
 
 /**
@@ -230,7 +238,7 @@ function geraet_vorgabename(?string $art): string
 function geraet_bezeichnung(?string $art, ?string $modell, ?string $teil): string
 {
     $artText = geraet_art_text($art);
-    $name    = ($modell !== null && $modell !== '') ? $modell
+    $name    = ($modell !== null && $modell !== '') ? geraet_modell_kurz($modell)
              : (($teil !== null && $teil !== '') ? $teil : null);
 
     if ($artText !== null && $name !== null) { return $artText . ' · ' . $name; }
@@ -266,6 +274,28 @@ function geraet_kennung_kurz(string $kennung): string
 {
     if (mb_strlen($kennung) <= 12) { return $kennung; }
     return mb_substr($kennung, 0, 8) . '…' . mb_substr($kennung, -2);
+}
+
+/**
+ * Ein Sammelname, gekuerzt auf sein erstes Glied.
+ *
+ * WAS EIN SAMMELNAME IST. Die Gerätedateien fuehren je Teilenummer die
+ * HARDWARE, und Garmin verkauft dieselbe Hardware unter mehreren Namen. Aus
+ * einer Kopplung kommt deshalb "fēnix® 6X Pro / 6X Sapphire / 6X Pro Solar /
+ * tactix® Delta Sapphire / … / quatix® 6X Dual Power" — 156 Zeichen fuer EIN
+ * Geraet. In einer Listenzeile ist das unbrauchbar; in der Spalte ist es
+ * richtig, weil die spaetere Zaehlung Hardwaregruppen zaehlen soll und nicht
+ * Verkaufsnamen.
+ *
+ * DAS ERSTE GLIED UND NICHT DAS KUERZESTE: Die Datei nennt die Namen in
+ * Garmins Reihenfolge, und die beginnt mit dem gelaeufigsten. Das Auslassungs-
+ * zeichen sagt, dass mehr dahintersteht — ohne es lese sich "fēnix® 6X Pro"
+ * wie eine genaue Angabe, und das waere sie nicht.
+ */
+function geraet_modell_kurz(string $modell): string
+{
+    $erstes = explode(' / ', $modell, 2);
+    return count($erstes) === 2 ? rtrim($erstes[0]) . ' …' : $modell;
 }
 
 /**

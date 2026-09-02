@@ -1932,6 +1932,52 @@ $MIGRATIONS = [
             "ALTER TABLE devices ADD COLUMN geraet_teil   VARCHAR(64) NULL AFTER geraet_modell",
         ],
     ],
+    [
+        'id'    => '2026_09_02_geraetemodell_breiter',
+        'web'   => '12.9.1',
+        'label' => 'Gerätekennung: geraet_modell auf 191 Zeichen — Sammelnamen (S6)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->prepare("SELECT character_maximum_length
+                                FROM information_schema.columns
+                                WHERE table_schema = DATABASE()
+                                  AND table_name = 'devices'
+                                  AND column_name = 'geraet_modell'");
+            $q->execute();
+            $breite = $q->fetchColumn();
+            return $breite !== false && (int)$breite >= 191;
+        },
+        'sql'   => [
+            /* DIE 64 WAR GERATEN, UND ZWAR VON MIR.
+             *
+             * Als die Spalte entstand, lagen die Geraetedateien nicht vor; 64
+             * Zeichen schienen reichlich fuer einen Modellnamen. Sie sind es
+             * nicht. Die Dateien fuehren je Teilenummer die HARDWARE, und
+             * Garmin verkauft dieselbe Hardware unter mehreren Namen — der
+             * laengste Eintrag im Bestand hat 156 Zeichen ("fēnix® 6X Pro /
+             * 6X Sapphire / … / quatix® 6X Dual Power"). 5 der 173 Modelle
+             * liegen ueber 64, 15 der 325 Teilenummern sind betroffen.
+             *
+             * WARUM EINE ZWEITE MIGRATION UND NICHT DIE ERSTE GEAENDERT. Die
+             * erste ist gepusht; eine Installation, die sie schon gefahren
+             * hat, saehe eine Aenderung an ihrem Rumpf nie — `update.php`
+             * fuehrt jede Kennung genau einmal aus. Der Rumpf einer
+             * abgeschickten Migration ist damit so gut wie unveraenderlich,
+             * und die einzige verlaessliche Richtung ist eine neue.
+             *
+             * DER VOLLE NAME WIRD GESPEICHERT, gekuerzt wird erst fuer die
+             * Anzeige (geraet_modell_kurz()). Die spaetere Zaehlung (P5) soll
+             * Hardwaregruppen zaehlen, und genau die bezeichnet der Sammelname;
+             * ein beim Schreiben gekuerzter Name waere eine Auslegung, die sich
+             * nicht mehr zurueckdrehen liesse.
+             *
+             * 191 UND NICHT 255: Die Zahl ist die alte Obergrenze fuer einen
+             * utf8mb4-Index (767 Byte / 4). Ein Index liegt hier nicht drauf —
+             * aber wenn die Auswertung in P5 einen braucht, soll die Spalte ihn
+             * tragen koennen, ohne dass jemand sie dafuer erneut anfassen muss.
+             */
+            "ALTER TABLE devices MODIFY geraet_modell VARCHAR(191) NULL",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

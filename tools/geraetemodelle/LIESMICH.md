@@ -57,8 +57,8 @@ vollständig — sie löst nur nichts auf: Jede Teilenummer landet unverändert 
 Geräteliste zeigt statt „Uhr · Venu 3S" eben „Uhr · 006-B4261-00".
 
 **Nichts geht dabei verloren.** Genau dafür steht die Rohangabe in einer
-eigenen Spalte: Ein späterer Lauf des Erzeugers kann jede Zeile nachträglich
-auflösen. Ohne sie fiele jedes Gerät, das die Tabelle nicht kennt, dauerhaft
+eigenen Spalte: Ein späterer Lauf des Erzeugers und `nachaufloesen.php`
+tragen jede Zeile nachträglich nach. Ohne sie fiele jedes Gerät, das die Tabelle nicht kennt, dauerhaft
 und unwiederbringlich auf „unbekannt".
 
 ## Nach dem Lauf: die Bestandszeilen nachziehen
@@ -86,11 +86,17 @@ nicht; dort holen die Geräte ihre Angabe bei der nächsten Kopplung nach.
 
 ## Eine Falle: die Wortliste
 
-**Solange die Tabelle leer ist, darf keine Ausnahme dafür eingetragen
-werden** — `tools/wortliste/` wertet eine ungenutzte Ausnahme als Fehlschlag,
-genau wie einen unerklärten Treffer.
+**Eingetreten am 02.09.2026, genau wie unten beschrieben — die Ausnahme steht
+jetzt** (`geraetemodelle-erzeugt`, dateiweit, Klasse G). Der erste echte Lauf
+brachte **89 Treffer** in Bereich (a). Was hier steht, gilt weiter für den
+umgekehrten Fall: Wer die Tabelle wieder mit `--leer` erzeugt, macht die
+Ausnahme zur **ungenutzten** — und die ist ebenso ein Fehlschlag.
 
-**Nach dem ersten echten Lauf ist eine nötig, und zwar dateiweit.** Die
+**Solange die Tabelle leer ist, darf keine Ausnahme dafür stehen** —
+`tools/wortliste/` wertet eine ungenutzte Ausnahme als Fehlschlag, genau wie
+einen unerklärten Treffer.
+
+**Bei gefüllter Tabelle ist eine nötig, und zwar dateiweit.** Die
 erzeugte Datei liegt unter `server/*.php` und fällt damit in Bereich (a) der
 Wortliste; ihre Werte sind Zeichenketten und keine Kommentare, der Zerleger
 räumt sie nicht weg. Darin stehen dann `Venu`, `Forerunner`, `fēnix` — allesamt
@@ -100,9 +106,10 @@ nächsten Lauf mit anderem Gerätebestand entweder unvollständig oder ungenutzt
 und beides ist rot. Begründung der Klasse G: öffentliche Produktnamen sind hier
 die Sache selbst und nicht eine Formulierung, die sich ersetzen ließe.
 
-**Und die gemeldete Zahl wird kleiner sein, als sie sollte:** Garmin schreibt
+**Und die gemeldete Zahl ist kleiner, als sie sein sollte:** Garmin schreibt
 „fēnix" mit Makron, das Sperrmuster lautet `\bfenix`. Ein Teil der Namen bleibt
-dadurch unauffällig. Wer die Zahl liest, weiß das besser.
+dadurch unauffällig — 89 Treffer bei 325 Einträgen. Wer die Zahl liest, weiß
+das besser.
 
 ## Was der Lauf meldet
 

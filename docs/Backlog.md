@@ -938,14 +938,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wissen.
     **Nicht mehr zu tun:** Die Spalten sind da, die Teilenummer wird
     aufgelöst, und die Geräteliste zeigt Art und Modell (Nr. 59).
-    **Was noch fehlt, ist nicht Code, sondern eine Zuarbeit:**
-    `server/geraetemodelle.php` wird derzeit leer ausgeliefert — die
-    Gerätedateien lagen bei der Umsetzung nicht vor (Rahmenplan Abschnitt 6).
-    Solange das so ist, steht in `geraet_art` die ungeprüfte Selbstauskunft
-    (die Garmin-App sendet fest „uhr"), und die Zählung nach Art wäre
-    entsprechend falsch. Nachzuholen mit
-    `php tools/geraetemodelle/nachaufloesen.php`, **vor** der ersten
-    Auswertung.
+    **Die Modelltabelle steht** (Web 12.9.1): 325 Teilenummern auf 173
+    Modelle, davon 28 keine Uhren. Eine Zählung nach `geraet_art` trägt damit
+    — aber nur für Geräte, die **nach** dem Füllen gekoppelt haben. Ältere
+    Zeilen tragen die ungeprüfte Selbstauskunft; vor der ersten Auswertung
+    deshalb `php tools/geraetemodelle/nachaufloesen.php` fahren.
 
 ---
 

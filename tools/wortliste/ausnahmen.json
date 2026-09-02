@@ -518,6 +518,12 @@
       "zeile": "Garmin-App sendet dort fest",
       "klasse": "G",
       "begruendung": "Runbook-Eintrag zur unaufgeloesten Teilenummer. Der Satz sagt, dass GENAU DIESE App `art` fest auf \"uhr\" setzt und die Angabe deshalb ungeprueft ist — die Aussage haengt an der Plattform und liesse sich nicht plattformneutral treffen."
+    },
+    {
+      "id": "geraetemodelle-erzeugt",
+      "datei": "server/geraetemodelle.php",
+      "klasse": "G",
+      "begruendung": "Die erzeugte Modelltabelle (tools/geraetemodelle/). Sie enthaelt oeffentliche Produktnamen von Garmin — „Forerunner\", „Venu\", „fēnix\", „Edge\" —, und die sind hier die Sache selbst und keine Formulierung, die sich ersetzen liesse: Der Server loest damit die Teilenummer auf, die eine Uhr beim Koppeln sendet (JSON-Vertrag 1a, R42). DATEIWEIT und nicht je Zeile: Der Bestand wechselt mit jedem Lauf des Erzeugers; ein Muster auf einzelne Namen waere danach entweder unvollstaendig oder ungenutzt, und beides ist ein Fehlschlag. Zur gemeldeten Zahl: Sie ist KLEINER als der Bestand — Garmin schreibt „fēnix\" mit Makron, das Sperrmuster lautet \\bfenix und trifft diese Zeilen nicht. Wer die Zahl liest, weiss das besser."
     }
   ]
 }

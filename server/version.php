@@ -2036,10 +2036,26 @@ declare(strict_types=1);
  * Bis dahin steht in `geraet_art` die ungepruefte Selbstauskunft, und die
  * Garmin-App sendet dort fest "uhr" — ein Radcomputer waere falsch gezaehlt.
  *
- * DIE TABELLE WIRD VORERST LEER AUSGELIEFERT. Die Geraetedateien liefert nur
- * der SDK-Manager aus; die Adresse ihrer Bereitstellung steht nicht im
- * Repositorium (Rahmenplan, Abschnitt 6). Bis dahin zeigt jede
- * Garmin-Kopplung die Teilenummer statt des Modellnamens.
+ * 12.9.1 FUELLT DIE MODELLTABELLE — 325 Teilenummern auf 173 Modelle, genau
+ * die Zahl, die der JSON-Vertrag seit der Uhr-Seite nennt. Die Zuarbeit aus
+ * Rahmenplan Abschnitt 6 ist damit erledigt; erzeugt wurde die Datei aus den
+ * Geraetedateien der Uhr-Plattform, die Adresse ihrer Bereitstellung steht
+ * weiterhin nicht im Repositorium.
+ *
+ * UND DIE ECHTEN DATEN HABEN EINE ANNAHME WIDERLEGT. `geraet_modell` stand auf
+ * VARCHAR(64) — geraten, als die Dateien noch nicht vorlagen. Die Dateien
+ * fuehren je Teilenummer die HARDWARE, und Garmin verkauft dieselbe Hardware
+ * unter mehreren Namen: "fēnix® 6X Pro / 6X Sapphire / … / quatix® 6X Dual
+ * Power" sind 156 Zeichen. Fuenf der 173 Modelle liegen ueber 64. Die Spalte
+ * geht deshalb auf 191 (zweite Migration, 2026_09_02_geraetemodell_breiter);
+ * gespeichert wird der volle Name, gekuerzt wird erst fuer die Anzeige
+ * ("Uhr · fēnix® 6X Pro …"). Die spaetere Zaehlung soll Hardwaregruppen
+ * zaehlen, und genau die bezeichnet der Sammelname.
+ *
+ * DIE ZWEITE MIGRATION IST KEIN VERSEHEN, SONDERN DIE EINZIGE VERLAESSLICHE
+ * RICHTUNG: Die erste ist gepusht, und `update.php` fuehrt jede Kennung genau
+ * einmal aus — eine Installation, die sie schon gefahren haette, saehe eine
+ * Aenderung an ihrem Rumpf nie.
  *
  * NEBENBEI EIN FEHLER AUS S4: Beim Koppeln stand der Name eines Geraets fest
  * auf "Uhr". Seit es die Handy-App gibt, hiess ein frisch gekoppeltes Handy
@@ -2061,4 +2077,4 @@ declare(strict_types=1);
  * gewollte Eigenschaft im Handbuch statt als unerklaerter Fehler.
  *
  */
-const WEB_VERSION = '12.9.0';
+const WEB_VERSION = '12.9.1';
