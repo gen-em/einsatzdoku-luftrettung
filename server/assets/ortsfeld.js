@@ -24,15 +24,16 @@
  *                           seit Web 3.x.
  *
  *   getrennteSuche: true    Textfeld = NAME (Zielklinik, Standort). „Standort
- *                           Kempten" ist keine Adresse; wuerde die Suche das
+ *                           Talwang" ist keine Adresse; wuerde die Suche das
  *                           Textfeld ueberschreiben, waere der Name weg. Ein
  *                           Treffer setzt deshalb nur die Koordinaten — und
  *                           faellt nur dann in das Namensfeld, wenn es leer
  *                           ist. SEIT O5 (E-P3-34) sucht hier kein zweites
- *                           Feld mehr, sondern der Lupen-Knopf mit dem, was
- *                           im Namensfeld steht — die Suche laeuft also nur
- *                           auf ausdruecklichen Anstoss, nie beim Tippen des
- *                           Namens.
+ *                           Feld mehr, sondern das Namensfeld selbst.
+ *                           SEIT S3/AP8 (E-S3-06) auch BEIM TIPPEN, nicht
+ *                           mehr nur auf Klick — entprellt, ab drei Zeichen,
+ *                           mit hoechstens einer offenen Anfrage. Die Lupe
+ *                           bleibt als ausdruecklicher Ausloeser.
  *
  * WAS IN BEIDEN FORMEN GLEICH BLEIBT und der eigentliche Grund fuer die
  * Zusammenfassung ist:
@@ -54,6 +55,27 @@
  */
 (function (global) {
     'use strict';
+
+    /* ENTPRELLUNG UND EINE OFFENE ANFRAGE (E-S3-06).
+     *
+     * Photon ist ein frei betriebener Gemeinschaftsdienst. Eine Anfrage je
+     * Tastendruck waere Missbrauch seiner Gutmuetigkeit — und jede Anfrage
+     * traegt die eingetippten Buchstaben zu einem Dritten. Deshalb drei
+     * Grenzen, und alle drei stehen hier und nicht verstreut:
+     *
+     *   ENTPRELL_MS      Ruhe nach dem letzten Tastendruck, bevor gesucht
+     *                    wird. E-S3-06 gibt 400 ms vor und erlaubt 300–600;
+     *                    400 ist geblieben — bei fluessigem Tippen eines
+     *                    Ortsnamens entsteht damit genau EINE Anfrage.
+     *   MINDESTZEICHEN   Unter drei Zeichen sucht niemand ernsthaft.
+     *   AbortController  Eine laufende Anfrage wird abgebrochen, bevor die
+     *                    naechste startet. Ohne das ueberholen sich zwei
+     *                    Antworten, und die Liste zeigt die zum vorletzten
+     *                    Stand — der Fehler faellt nur im langsamen Netz auf.
+     *
+     * Die Lupe umgeht die Entprellung (sofort), nicht die Mindestlaenge. */
+    var ENTPRELL_MS = 400;
+    var MINDESTZEICHEN = 3;
 
     /* Photon (OSM-Daten, kostenlos, kein Schluessel). Dieselbe Adresse wie
      * bisher im Einsatzformular. */
@@ -132,6 +154,7 @@
         var platzhalterBez = opt.bezeichnungPlatzhalter || platzhalterFrei;
 
         var timer = null;
+        var laufend = null;          // AbortController der offenen Anfrage
         var erkennung = { typ: null };
         /* Zuletzt aus der Vorschlagsliste uebernommener Name. Er verhindert,
          * dass eine VON HAND gesetzte Koordinate beim erneuten Tippen desselben
@@ -265,9 +288,14 @@
         }
 
         /* ---- Eingabe im Bezeichnungsfeld ---------------------------------- */
+        /* AUCH BEI GETRENNTER SUCHE (S3/AP8, E-S3-06). Bis Web 12.3.2 stand
+         * hier `if (nurKoordinaten) { zustand(); }` — bei Standort und
+         * Zielklinik lief die Suche also nur auf Klick. Jetzt sucht das Feld
+         * in beiden Bedienformen beim Tippen; was ein Treffer uebernimmt,
+         * bleibt unterschieden (bei getrennter Suche nur die Koordinaten). */
         feld.addEventListener('input', function () {
             pruefeVorschlag();
-            if (nurKoordinaten) { zustand(); } else { sucheTippen(); }
+            sucheTippen();
         });
 
         /* ---- Suche (beim Tippen bzw. per Lupe) ---------------------------- */
@@ -319,11 +347,22 @@
             if (!adresssuche) { versteckeListe(); return; }
 
             var q = suchF.value.trim();
-            if (q.length < 3) { versteckeListe(); return; }
+            if (q.length < MINDESTZEICHEN) { versteckeListe(); return; }
             timer = setTimeout(function () {
-                fetch(PHOTON + encodeURIComponent(q)).then(function (r) {
+                /* HOECHSTENS EINE OFFENE ANFRAGE. Eine noch laufende wird
+                 * abgebrochen, bevor die naechste startet — sonst ueberholen
+                 * sich zwei Antworten und die Liste zeigt die zum vorletzten
+                 * Stand. */
+                if (laufend) { laufend.abort(); }
+                laufend = (typeof AbortController === 'function')
+                    ? new AbortController() : null;
+                var dieser = laufend;
+                fetch(PHOTON + encodeURIComponent(q),
+                      laufend ? { signal: laufend.signal } : undefined).then(function (r) {
                     return r.json();
                 }).then(function (d) {
+                    if (dieser !== laufend) { return; }   // ueberholt
+                    laufend = null;
                     if (!liste) { return; }
                     liste.innerHTML = '';
                     (d.features || []).forEach(function (ft) {
@@ -344,8 +383,14 @@
                         });
                     });
                     liste.hidden = liste.children.length === 0;
-                }).catch(function () { versteckeListe(); });
-            }, sofort ? 0 : 300);   // Lupe: sofort, Tippen: entprellt
+                }).catch(function (e) {
+                    /* Ein ABBRUCH ist kein Fehlschlag: Er heisst, dass gerade
+                     * eine neuere Anfrage laeuft. Die Liste zu leeren liesse
+                     * sie beim fluessigen Tippen flackern. */
+                    if (e && e.name === 'AbortError') { return; }
+                    versteckeListe();
+                });
+            }, sofort ? 0 : ENTPRELL_MS);   // Lupe: sofort, Tippen: entprellt
         }
 
         /* Der Lupen-Knopf (ui_ortsfeld) stoesst die Suche ausdruecklich an —

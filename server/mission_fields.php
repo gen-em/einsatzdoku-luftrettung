@@ -361,7 +361,7 @@ return [
              * umbenennt (A13p). */
             'transport_dest' => [
                 'label' => 'Transportziel', 'type' => 'loc', 'max' => 190,
-                'placeholder' => 'z. B. Klinikum Kempten',
+                'placeholder' => 'z. B. Klinikum Westried',
                 'suggest_src' => 'transport_dests',
                 'lat_col' => 'dest_lat', 'lon_col' => 'dest_lon',
                 /* Beschriftung des Suchfeldes daneben. Es hiess „Koordinaten

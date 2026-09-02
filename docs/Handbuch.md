@@ -398,6 +398,16 @@ nicht ändern, und „Passwort vergessen" führt für diese Adresse zu nichts.
 Beides ist Absicht — die Zugangsdaten sind öffentlich und müssen es bleiben,
 damit die nächste Person hereinkommt. Alles andere ist offen.
 
+**Und in der Administration** (seit Web 12.4.1): Auf der Kontoseite des
+Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
+**gesperrt**, die Karte „Sicherungen" fehlt dort ganz, und der Anzeigename
+lautet **„Demo NutzerIn"**. Verwaltet wird das Konto ausschließlich über den
+Reiter **Demo-Konto**: anlegen, zurücksetzen, entfernen. Der Grund ist der
+Reset — was auf der Kontoseite eingetragen würde, wäre spätestens nach dreißig
+Minuten wieder weg, und zwar ohne Hinweis. **Die Geräte bleiben offen:** Eine
+Uhr zu koppeln ist gerade der Sinn dieses Kontos, und der Reset räumt das
+selbst wieder ab.
+
 > **Niemals echte Patienten- oder Einsatzdaten in diesem Konto erfassen.**
 > Es ist die einzige Stelle der Anwendung, an der die Verschlüsselung bewusst
 > ausgesetzt ist: Das Schlüsselmaterial liegt dort auf dem Server, damit die
@@ -451,9 +461,13 @@ Pro Tag:
 - **Karte** mit allen Einsätzen des Tages (jeder in eigener Farbe, beginnend
   mit Orange/Blau/Rot) und dem Ruhe-Track in gedämpftem Graublau. Kleine
   **Richtungspfeile** auf den Spuren zeigen die Bewegungsrichtung.
-  Der **Standort** steht als Haus-Schild auf der Karte, das
-  **Transportziel** jedes Einsatzes als Klinik-Schild, der **Einsatzort**
+  Der **Standort** steht als Haus-Schild auf der Karte, der **Einsatzort**
   als oranger Kreis; Dienstbeginn und -ende tragen Ringe am Standort-Schild.
+  **Transportziele zeigt diese Karte nicht** (seit Web 12.3.2): Sie
+  beantwortet, wo das Rettungsmittel an diesem Tag unterwegs war, und acht
+  Klinik-Schilder zwischen acht Spuren beantworten eine andere Frage. Das
+  Transportziel steht in der Einsatzansicht, wo es zu **einem** Einsatz
+  gehört.
   Einsätze ohne aufgezeichneten Track verbindet eine **gestrichelte
   Luftlinie** in der Farbe des Einsatzes — gestrichelt heißt immer: gerade
   Verbindung, kein aufgezeichneter Weg. Die Karte zoomt automatisch so, dass
@@ -563,12 +577,23 @@ der Uhr aufgezeichneter, später bearbeiteter Einsatz zeigt also „Uhr" **und**
 „editiert", nicht „manuell": „manuell" beschreibt ausschließlich, **wie** ein
 Einsatz entstanden ist, „editiert" ob er danach verändert wurde.
 
-Der Zustand der geschützten Angaben steht als **eine Meldung** über den
-Karten (seit Web 9.3.0): blau „Geschützte Angaben sind entsperrt" nach der
-Anmeldung, mit **Entsperren**-Knopf, solange die Verschlüsselung gesperrt
-ist, und als deutliche Fehlermeldung, falls gespeicherte Angaben mit dem
-aktuellen Schlüssel nicht lesbar sind. Schloss-Symbole an den einzelnen
-Zeilen gibt es nicht mehr — die Meldung sagt es einmal für alle.
+**Solange die Verschlüsselung gesperrt ist**, steht über den Karten eine
+blaue Meldung mit dem **Entsperren**-Knopf. Sind gespeicherte Angaben mit dem
+aktuellen Schlüssel nicht lesbar, steht dort stattdessen eine deutliche
+Fehlermeldung.
+
+**Nach dem Entsperren verschwindet die Meldung** (seit Web 12.3.1). Eine
+Bestätigung, die von da an auf jedem Einsatz steht, sagt beim zwanzigsten
+Mal nichts mehr; sichtbar ist der Zustand ohnehin daran, dass die geschützten
+Angaben dastehen. **Entsperrt bleibt es bis zur Abmeldung** — das Passwort
+ist danach nicht noch einmal nötig.
+
+**Welche Angaben geschützt sind, sagen die Karten selbst:** Die Blöcke
+**Einsatz** und **PatientIn** tragen im Kopf die blaue Plakette
+**„verschlüsselt"**, und die einzelnen geschützten Zeilen — Einsatzort,
+Beschreibung, Diagnose, Name, Geburtsdatum — tragen daneben ein kleines
+**Schloss**. Die Plakette sagt „hier stehen verschlüsselte Angaben", das
+Schloss sagt „diese hier".
 
 Die Angaben selbst stehen in **vier Karten**:
 
@@ -590,7 +615,9 @@ Leere Felder werden nicht angezeigt; eine Karte ganz ohne Inhalt erscheint
 nicht. Die **Karte** (auf dem Handy kompakt zwischen den Angaben und den
 Phasen, ab 1200 px rechts oben und beim Rollen klebend) zeigt den Track mit
 **Richtungspfeilen**, den Standort als Haus-Schild, das Transportziel als
-Klinik-Schild und den Einsatzort als orangen Kreis; **Start und Ende der
+Klinik-Schild und den Einsatzort als orangen Kreis. **Die Schilder tragen
+keinen Namen** (seit Web 12.3.2) — nur das Symbol; der Name erscheint als
+Kurzinfo, wenn der Mauszeiger darauf steht. **Start und Ende der
 Aufzeichnung** tragen einen blauen bzw. roten Ring — am Schild des Ortes,
 an dem die Spur beginnt oder endet, sonst als eigener Ringpunkt; beides am
 selben Ort ergibt einen Doppelring. Einsätze ohne Track zeigt die
@@ -1161,18 +1188,23 @@ auf, in denen etwas gesetzt ist. Alle gesetzten Filter gelten gleichzeitig
 Rettungsmittel, Besatzung, Bergwacht-Bereitschaft, weitere Rettungsmittel und Zielklinik
 enthalten nur, was in deinem Bestand tatsächlich vorkommt.
 
-**Bergrettung nur, wenn es sie gibt.** Der Block erscheint nur dann, wenn
-wenigstens ein Einsatz deines Bestandes eine Winden- oder eine
-Bergwacht-Angabe trägt. Wer nie windet und nie mit der Bergwacht arbeitet, hat
-diese acht Felder also gar nicht erst in der Leiste stehen — sie könnten dort
-nur Filter setzen, die garantiert null Treffer ergeben. Dasselbe gilt seit
-Web 7.0.0 für das einzelne Feld **Fehleinsatz**: Es steht in einem Block, der
-bleiben muss, und erscheint deshalb feldweise nur, wenn im Bestand einer
-dokumentiert ist. Maßgeblich ist der
-**gesamte** Bestand, nicht die aktuelle Trefferliste: Die Leiste verändert sich
-also nicht, während du filterst. Öffnest du einen geteilten Link, der einen
-dieser Filter setzt, bleibt der Block sichtbar — sonst wäre ein Filter gesetzt,
-den du nicht finden und nicht zurücknehmen könntest.
+**Ein Filter erscheint nur, wenn im Bestand etwas dahintersteht** (seit
+Web 12.4.0 für alle Filter, vorher nur für den Block Bergrettung und das Feld
+Fehleinsatz). Wer nie windet, hat die Windenfelder gar nicht erst in der
+Leiste; wer keinen Transport dokumentiert, keine Transportfelder. Sie könnten
+dort nur Filter setzen, die garantiert null Treffer ergeben. **Ein Block
+verschwindet**, sobald alle seine Felder verschwunden sind.
+
+**Immer da bleibt, was immer sinnvoll ist:** Zeitraum, Uhrzeit, Wochentag,
+Strecke, Dauer, Alter, Standort, Rettungsmittel, Art, Besatzung und weitere
+Rettungsmittel. Auf einem frisch angelegten Konto stehen genau diese in der
+Leiste.
+
+Maßgeblich ist der **gesamte** Bestand, nicht die aktuelle Trefferliste: Die
+Leiste verändert sich also nicht, während du filterst. Öffnest du einen
+geteilten Link, der einen ausgeblendeten Filter setzt, erscheint **er** —
+sonst wäre ein Filter gesetzt, den du nicht finden und nicht zurücknehmen
+könntest.
 
 Eine Besonderheit:
 

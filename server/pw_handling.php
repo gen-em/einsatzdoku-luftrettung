@@ -313,8 +313,10 @@ ui_seite_start([
       <?php ui_feld(['id' => 'pw2', 'label' => 'Wiederholen', 'art' => 'password',
                      'pflicht' => true,
                      'attr' => ' minlength="10" autocomplete="new-password"']); ?>
-      <?= ui_knopf(['text' => 'Passwort festlegen', 'art' => 'primaer',
-                    'breit' => true, 'attr' => ' id="gobtn"']) ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Passwort festlegen', 'art' => 'primaer',
+                      'breit' => true, 'attr' => ' id="gobtn"']) ?>
+      </div>
       <p class="zustandszeile" id="state"></p>
     </form>
 
@@ -347,7 +349,9 @@ ui_seite_start([
       <?php ui_feld(['id' => 'pw2', 'label' => 'Wiederholen', 'art' => 'password',
                      'pflicht' => true,
                      'attr' => ' minlength="10" autocomplete="new-password"']); ?>
-      <?= ui_knopf(['text' => 'Passwort speichern', 'art' => 'primaer', 'breit' => true]) ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Passwort speichern', 'art' => 'primaer', 'breit' => true]) ?>
+      </div>
       <p class="zustandszeile" id="state"></p>
     </form>
   <?php endif; ?>

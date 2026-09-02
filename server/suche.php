@@ -158,7 +158,8 @@ ui_seite_start(['titel' => 'Suche']);
           </div>
           <?php /* Der Fehleinsatz ist selten. Er erscheint nur, wenn im Bestand
                    überhaupt einer dokumentiert ist — sonst ergäbe „ja" dauerhaft
-                   null Treffer und „nein" den ganzen Bestand (FELD_NUR_WENN). */
+                   null Treffer und „nein" den ganzen Bestand — die Sichtbarkeit
+                   entsteht seit S3/AP9 aus dem Feldkatalog. */
                 $dreiwert('f-fe', 'Fehleinsatz'); ?>
       <?php $gruppe_zu(); ?>
 
@@ -389,8 +390,25 @@ const ART_OPTIONEN = <?php
     }
     echo json_encode($artOpt, JSON_UNESCAPED_UNICODE);
 ?>;
-const TRANSPORT_OPTIONEN = <?php
+/* WELCHE FELDER DER KATALOG KENNT UND WELCHER ART SIE SIND (S3/AP9,
+   E-S3-08). Erzeugt aus mission_fields.php, samt Unterfeldern — keine
+   zweite Liste, die man beim naechsten Feld nachzupflegen vergisst. Der
+   Browser braucht die ART, weil „gefuellt" je nach Art etwas anderes heisst:
+   Bei einem Haken zaehlt nur `wahr`, bei einer Auswahl zaehlt auch die
+   Null („0 Cycles" ist eine Angabe). */
+const KATALOG_ART = <?php
     $FELDER = require __DIR__ . '/mission_fields.php';
+    $arten = [];
+    $sammle = function (array $felder) use (&$sammle, &$arten): void {
+        foreach ($felder as $col => $f) {
+            if (mf_ist_spalte($f)) { $arten[$col] = (string)($f['type'] ?? 'text'); }
+            if (!empty($f['children'])) { $sammle($f['children']); }
+        }
+    };
+    $sammle($FELDER);
+    echo json_encode($arten, JSON_UNESCAPED_UNICODE);
+?>;
+const TRANSPORT_OPTIONEN = <?php
     $taOpt = [];
     foreach (mf_optionen($FELDER['transport_mode']['options']) as $wert => $text) {
         $taOpt[] = ['wert' => (string)$wert, 'text' => (string)$text];
@@ -450,20 +468,20 @@ const FILTER = [
   { kurz: 'wd', el: 'f-wd', art: 'haken', gruppe: 'einsatz', titel: 'Wochentage' },
   /* Winde und Bergwacht liegen seit Web 7.0.0 in EINEM Block „Bergrettung".
      Die Kurznamen bleiben unveraendert — sie stehen in verschickten Links. */
-  { kurz: 'wi', el: 'f-wi', art: 'segment', gruppe: 'bergrettung', titel: 'Windeneinsatz' },
-  { kurz: 'cv', el: 'f-cv', art: 'text', gruppe: 'bergrettung', titel: 'Cycles ab' },
-  { kurz: 'cb', el: 'f-cb', art: 'text', gruppe: 'bergrettung', titel: 'Cycles bis' },
-  { kurz: 'pv', el: 'f-pv', art: 'text', gruppe: 'bergrettung', titel: 'Cycles m. Pat. ab' },
-  { kurz: 'pb', el: 'f-pb', art: 'text', gruppe: 'bergrettung', titel: 'Cycles m. Pat. bis' },
-  { kurz: 'lv', el: 'f-lv', art: 'segment', gruppe: 'bergrettung', titel: 'Luftverladung' },
-  { kurz: 'bw', el: 'f-bw', art: 'segment', gruppe: 'bergrettung', titel: 'Bergwacht' },
-  { kurz: 'bu', el: 'f-bu', art: 'text', gruppe: 'bergrettung' },
-  { kurz: 'ta', el: 'f-ta', art: 'text', gruppe: 'transport', titel: 'Transportart' },
-  { kurz: 'nb', el: 'f-nb', art: 'segment', gruppe: 'transport', titel: 'NA-Begleitung' },
-  { kurz: 'tz', el: 'f-tz', art: 'text', gruppe: 'transport', titel: 'Ziel' },
-  { kurz: 'se', el: 'f-se', art: 'segment', gruppe: 'transport', titel: 'Sekundärtransport' },
-  { kurz: 'sr', el: 'f-sr', art: 'segment', gruppe: 'transport', titel: 'Schockraum' },
-  { kurz: 'fe', el: 'f-fe', art: 'segment', gruppe: 'einsatz', titel: 'Fehleinsatz' },
+  { kurz: 'wi', el: 'f-wi', art: 'segment', gruppe: 'bergrettung', spalte: 'winch', titel: 'Windeneinsatz' },
+  { kurz: 'cv', el: 'f-cv', art: 'text', gruppe: 'bergrettung', spalte: 'winch_cycles', titel: 'Cycles ab' },
+  { kurz: 'cb', el: 'f-cb', art: 'text', gruppe: 'bergrettung', spalte: 'winch_cycles', titel: 'Cycles bis' },
+  { kurz: 'pv', el: 'f-pv', art: 'text', gruppe: 'bergrettung', spalte: 'winch_cycles_pat', titel: 'Cycles m. Pat. ab' },
+  { kurz: 'pb', el: 'f-pb', art: 'text', gruppe: 'bergrettung', spalte: 'winch_cycles_pat', titel: 'Cycles m. Pat. bis' },
+  { kurz: 'lv', el: 'f-lv', art: 'segment', gruppe: 'bergrettung', spalte: 'winch_airload', titel: 'Luftverladung' },
+  { kurz: 'bw', el: 'f-bw', art: 'segment', gruppe: 'bergrettung', spalte: 'bergwacht', titel: 'Bergwacht' },
+  { kurz: 'bu', el: 'f-bu', art: 'text', gruppe: 'bergrettung', spalte: 'bw_unit' },
+  { kurz: 'ta', el: 'f-ta', art: 'text', gruppe: 'transport', spalte: 'transport_mode', titel: 'Transportart' },
+  { kurz: 'nb', el: 'f-nb', art: 'segment', gruppe: 'transport', spalte: 'na_escort', titel: 'NA-Begleitung' },
+  { kurz: 'tz', el: 'f-tz', art: 'text', gruppe: 'transport', spalte: 'transport_dest', titel: 'Ziel' },
+  { kurz: 'se', el: 'f-se', art: 'segment', gruppe: 'transport', spalte: 'secondary', titel: 'Sekundärtransport' },
+  { kurz: 'sr', el: 'f-sr', art: 'segment', gruppe: 'transport', spalte: 'schockraum', titel: 'Schockraum' },
+  { kurz: 'fe', el: 'f-fe', art: 'segment', gruppe: 'einsatz', spalte: 'false_alarm', titel: 'Fehleinsatz' },
   { kurz: 'st', el: 'f-st', art: 'text', gruppe: 'wer', titel: 'Standort' },
   /* 'ac' hiess bis Web 5.10.0 „Maschine" und filterte nach aircraft. Der
      Parametername BLEIBT, obwohl das Feld jetzt Rettungsmittel heisst: Die
@@ -770,65 +788,96 @@ function gruppenOeffnen() {
 }
 
 /* ====================================================================
- * Blöcke, die es nur bei passendem Bestand gibt (Web 5.10.0).
+ * FILTER, DIE ES NUR BEI PASSENDEM BESTAND GIBT (Web 5.10.0, neu gefasst
+ * in S3/AP9 nach E-S3-08).
  *
- * Winde und Bergwacht sind Sache eines Teils der Standorte. Wer nie windet,
- * hatte trotzdem sechs Winden-Felder in der Spalte stehen — Filter, die
- * garantiert null Treffer ergeben, und zwar dauerhaft. Sie kosteten Platz und
- * Aufmerksamkeit und legten nahe, hier sei etwas einzustellen.
+ * Wer nie windet, hatte sechs Winden-Felder in der Spalte stehen — Filter,
+ * die garantiert null Treffer ergeben, und zwar dauerhaft. Sie kosteten
+ * Platz und Aufmerksamkeit und legten nahe, hier sei etwas einzustellen.
  *
- * Ein Eintrag je Block: die Bedingung, unter der er gebraucht wird. Geprüft
- * wird der GESAMTE Bestand, nicht die aktuelle Trefferliste — sonst
- * verschwände der Block, sobald ein anderer Filter die Winden-Einsätze gerade
+ * BIS S3 STANDEN HIER ZWEI HANDGEPFLEGTE LISTEN: `GRUPPE_NUR_WENN` mit
+ * einer Bedingung je Block und `FELD_NUR_WENN` mit einer je Einzelfeld.
+ * Genau der Einzelfall-Wildwuchs, den der Feldkatalog abschaffen sollte —
+ * jedes neue Feld hätte einen dritten Eintrag gebraucht, und wer ihn
+ * vergisst, merkt es nie: Ein dauerhaft leerer Filter sieht aus wie ein
+ * Filter.
+ *
+ * JETZT ENTSTEHT DIE REGEL AUS DEM KATALOG. Jeder Filter, der zu einer
+ * Katalogspalte gehört, trägt sie als `spalte`; `KATALOG_ART` sagt, welcher
+ * Art sie ist. Sichtbar ist ein Filter, wenn der Bestand zu seiner Spalte
+ * etwas führt. Ein Filter OHNE Spalte — Zeitraum, Uhrzeit, Wochentag,
+ * Strecke, Dauer, Alter, Standort, Rettungsmittel, Besatzung — ist immer
+ * sinnvoll und steht immer da. Ein BLOCK verschwindet, wenn alle seine
+ * Filter verschwunden sind; er braucht keine eigene Bedingung mehr.
+ *
+ * EINE ABFRAGE, KEIN FELD-FUER-FELD-SCAN: Der ganze Bestand liegt seit
+ * Web 5.10.0 ohnehin im Browser (api/suchindex.php, einmal je Seitenaufruf,
+ * fünf SQL-Abfragen unabhängig von der Zahl der Einsätze). Die Sichtbarkeit
+ * entsteht in EINEM Durchgang über dieses Feld — nicht in einem je Filter.
+ * Eine zusätzliche Serverabfrage, wie E-S3-08 sie beschreibt, wäre dieselbe
+ * Auskunft ein zweites Mal geholt.
+ *
+ * Geprüft wird der GESAMTE Bestand, nicht die aktuelle Trefferliste — sonst
+ * verschwände ein Filter, sobald ein anderer die passenden Einsätze gerade
  * ausschliesst, und die Spalte hüpfte beim Tippen.
  *
- * Ausnahme, die bleiben muss: Ein geteilter Link kann einen Filter aus einem
- * dieser Blöcke setzen. Dann wird der Block gezeigt, auch wenn der eigene
- * Bestand nichts dazu hat — ein gesetzter, aber unsichtbarer Filter, der die
- * Liste leer hält und sich nicht finden lässt, wäre das schlechtere Ergebnis.
+ * Ausnahme, die bleiben muss: Ein geteilter Link kann einen Filter setzen,
+ * zu dem der eigene Bestand nichts hat. Dann wird er gezeigt — ein
+ * gesetzter, aber unsichtbarer Filter, der die Liste leer hält und sich
+ * nicht finden lässt, wäre das schlechtere Ergebnis.
  * ================================================================== */
-const GRUPPE_NUR_WENN = {
-  /* Ein Block statt zweier (Web 7.0.0): Winde und Bergwacht sind zusammen die
-     Bergrettung, und wer keines von beidem dokumentiert, braucht keines von
-     beiden Feldern. Die Bedingung ist die ODER-Verknüpfung der beiden
-     bisherigen — der Block erscheint also auch dort, wo nur eines vorkommt. */
-  bergrettung: m => m.winch || m.winch_airload
-                    || m.winch_cycles != null || m.winch_cycles_pat != null
-                    || m.bergwacht
-                    || (m.bw_unit != null && m.bw_unit !== '')
-                    || (m.bw_info != null && m.bw_info !== '')
-};
 
-/* ---- EINZELNE FELDER, die es nur bei passendem Bestand gibt --------------
- *
- * Dasselbe Prinzip eine Ebene tiefer. Nötig geworden, weil der Fehleinsatz
- * jetzt in einem Block steht, der bleiben muss: „Einsatz" trägt auch Datum,
- * Uhrzeit, Strecke und Dauer. Der Haken selbst ist aber unverändert selten —
- * wer keinen dokumentiert hat, hat an ihm nichts zu wählen („ja" ergäbe
- * dauerhaft null Treffer, „nein" den ganzen Bestand).
- *
- * `el` ist die Kennung des LABELS, nicht des Feldes: Versteckt gehört die
- * Beschriftung mit, sonst bliebe ein Wort ohne Bedienelement stehen. */
-const FELD_NUR_WENN = {
-  fe: { el: 'lab-fe', wenn: m => m.false_alarm }
-};
+/** Trägt dieser Wert eine Angabe? Die Art entscheidet, was „leer" heisst. */
+function wertGefuellt(v, art) {
+  if (v === null || v === undefined || v === '') { return false; }
+  /* Ein Haken zählt nur gesetzt: `false` und `0` sind bei ihm dasselbe wie
+     „nicht erfasst". Bei jeder anderen Art ist die Null eine Angabe —
+     „0 Cycles" heisst, dass jemand hingesehen hat. */
+  if (art === 'checkbox') { return v !== 0 && v !== false && v !== '0'; }
+  return true;
+}
+
+/** Spalten, zu denen der Bestand etwas führt — EIN Durchgang über alles. */
+function spaltenMitBestand() {
+  const raus = new Set();
+  const spalten = [...new Set(FILTER.filter(f => f.spalte).map(f => f.spalte))];
+  for (const m of missions) {
+    for (const c of spalten) {
+      if (!raus.has(c) && wertGefuellt(m[c], KATALOG_ART[c])) { raus.add(c); }
+    }
+    if (raus.size === spalten.length) { break; }   // mehr gibt es nicht zu finden
+  }
+  return raus;
+}
+
+/** Der Kasten, in dem ein Filter samt Beschriftung steht. */
+function filterKasten(f) {
+  const el = $(f.el);
+  if (!el) { return null; }
+  /* `.feldblock` zuerst: Ein Zahlenpaar („Cycles von/bis") steht darin als
+     zwei Filter, und versteckt gehört das Paar samt Überschrift. Erst wenn
+     es keinen gibt, ist das umschliessende <label> der Kasten — sonst
+     verschwände bei „von" nur das Wort „von". */
+  return el.closest('.feldblock') || el.closest('label') || null;
+}
 
 function gruppenSichtbarkeit() {
-  Object.keys(GRUPPE_NUR_WENN).forEach(name => {
-    const block = document.querySelector(`.filtergruppe[data-gruppe="${name}"]`);
-    if (!block) { return; }
-    const gesetzt   = FILTER.some(f => f.gruppe === name && wertLesen(f) !== '');
-    const vorhanden = missions.some(GRUPPE_NUR_WENN[name]);
-    block.hidden = !vorhanden && !gesetzt;
+  const bestand = spaltenMitBestand();
+  const sichtbar = {};        // Gruppe -> hat mindestens einen sichtbaren Filter
+
+  FILTER.forEach(f => {
+    if (!f.gruppe) { return; }                 // das Freitextfeld
+    const zeigen = !f.spalte
+                || bestand.has(f.spalte)
+                || wertLesen(f) !== '';
+    if (zeigen) { sichtbar[f.gruppe] = true; }
+    if (!f.spalte) { return; }                 // immer da, nichts zu schalten
+    const kasten = filterKasten(f);
+    if (kasten) { kasten.hidden = !zeigen; }
   });
-  Object.keys(FELD_NUR_WENN).forEach(kurz => {
-    const regel = FELD_NUR_WENN[kurz];
-    const lab = $(regel.el);
-    if (!lab) { return; }
-    // Ausnahme wie bei den Blöcken: Ein Filter aus einem geteilten Link bleibt
-    // sichtbar, auch wenn der eigene Bestand nichts dazu hat.
-    const gesetzt = FILTER.some(f => f.kurz === kurz && wertLesen(f) !== '');
-    lab.hidden = !missions.some(regel.wenn) && !gesetzt;
+
+  document.querySelectorAll('.filtergruppe').forEach(block => {
+    block.hidden = !sichtbar[block.dataset.gruppe];
   });
 }
 

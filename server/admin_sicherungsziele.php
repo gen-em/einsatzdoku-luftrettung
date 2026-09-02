@@ -242,8 +242,10 @@ ui_seite_start(['titel' => 'Sicherungsziele']);
          ein Passwort im Klartext zu speichern kommt nicht in Frage.</p>
       <form method="post">
         <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_anlegen">
-        <?= ui_knopf(['text' => 'Serverschlüssel erzeugen und eintragen',
-                      'symbol' => 'schloss', 'art' => 'primaer']) ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Serverschlüssel erzeugen und eintragen',
+                        'symbol' => 'schloss', 'art' => 'primaer']) ?>
+        </div>
       </form>
       <p class="feld-hinweis">Klappt das nicht (weil <code>config.php</code> nicht
          beschreibbar ist), diese Zeile von Hand einfügen, gleich hinter
@@ -271,7 +273,9 @@ ui_seite_start(['titel' => 'Sicherungsziele']);
                            'klein' => 'Der Wartungsjob schiebt neue Pakete auf die '
                                     . 'aktiven Ziele. Es wird nur ergänzt — auf dem '
                                     . 'Ziel wird nie etwas gelöscht.']); ?>
-        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+        </div>
       </form>
       <?php
       ui_zeile(['text' => 'Aktive Ziele',

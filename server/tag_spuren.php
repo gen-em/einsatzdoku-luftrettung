@@ -115,6 +115,20 @@ $mitSpur = array_values(array_filter($spuren, fn($s) => $s['n'] > 0));
 $auswahlAn = count($mitSpur) >= 2;
 
 ui_seite_start(['titel' => 'Spuren des Diensttages', 'karte' => true]);
+/* DAS GERUEST HAT HIER GEFEHLT (Rueckmeldung vom 01.09.2026). Diese Seite
+ * rief `ui_seite_start()` und schrieb ihren Inhalt danach unmittelbar in den
+ * <body> — ohne `ui_geruest_start()`. Damit fehlte ihr nicht nur die
+ * Diensttag-Leiste, sondern auch `.rahmen`/`.inhalt` und deren seitlicher
+ * Innenabstand: Titel, Karte und Kartenbaustein sassen am blanken
+ * Fensterrand (gemessen auf 412 px: linke Kante 0 statt 12). Auffaellig war
+ * es MOBIL, wo 12 px den Unterschied zwischen „Rand" und „kein Rand"
+ * ausmachen; am Schreibtisch fiel die fehlende Leiste als Gestaltungswille
+ * durch.
+ *
+ * Der Bilderlauf hat es nicht gefunden, und das ist kein Versagen: Er misst
+ * waagerechten UEBERLAUF (scrollWidth > innerWidth), und eine Seite ohne
+ * Innenabstand laeuft nicht ueber — sie ist nur randlos. */
+ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]);
 ?>
 
   <div class="titelzeile">
@@ -134,7 +148,7 @@ ui_seite_start(['titel' => 'Spuren des Diensttages', 'karte' => true]);
   </div>
 
   <?php if (!$spuren): ?>
-    <?= ui_meldung_markup('hinweis', 'An diesem Diensttag hängt weder ein '
+    <?= ui_meldung_markup('info', 'An diesem Diensttag hängt weder ein '
         . 'Einsatz noch ein Ruhesegment.') ?>
   <?php else: ?>
 
@@ -147,7 +161,7 @@ ui_seite_start(['titel' => 'Spuren des Diensttages', 'karte' => true]);
              aus genau diesem Grund an die personenbezogenen Angaben
              (`api/export_data.php`). Hier gibt es keine anonyme Fassung, also
              gehoert der Satz an die Stelle, an der jemand herunterlaedt. */ ?>
-    <?= ui_meldung_markup('hinweis', 'Eine Spur zeigt den gefahrenen oder '
+    <?= ui_meldung_markup('schutz', 'Eine Spur zeigt den gefahrenen oder '
         . 'geflogenen Weg mit Zeitstempeln — bei einem Einsatz also auch den '
         . 'Einsatzort, bei einer Ruhezeit den Aufenthalt der Besatzung '
         . 'zwischen den Einsätzen. Die Dateien sind damit so zu behandeln wie '
@@ -235,6 +249,10 @@ ui_seite_start(['titel' => 'Spuren des Diensttages', 'karte' => true]);
   <?php endif; ?>
   <?php endif; ?>
 
+<?php /* Das Geruest schliesst VOR den Skriptbloecken: Sie gehoeren nicht in
+         <main>. Dieselbe Reihenfolge wie in index.php. */ ?>
+<?php ui_geruest_ende(); ?>
+
 <?php if ($spuren): ?>
 <link rel="stylesheet" href="<?= asset('assets/vendor/leaflet/leaflet.css') ?>">
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
@@ -242,8 +260,9 @@ ui_seite_start(['titel' => 'Spuren des Diensttages', 'karte' => true]);
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <?php /* `geo.js` baut Kartenmarkierungen aus `edSymbol()` und braucht deshalb
          `symbol.js` VOR sich — sonst wirft es beim Laden „edSymbol is not
-         defined". Dieselbe Reihenfolge wie in index.php und einsatz.php. */ ?>
-<script src="<?= asset('assets/symbol.js') ?>"></script>
+         defined". `ui_geruest_ende()` laedt symbol.js seit S3 ohnehin und
+         steht weiter oben; die eigene Zeile hier waere ein zweiter Abruf
+         derselben Datei. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script>
 const SPUREN = <?= json_encode($spuren, JSON_UNESCAPED_UNICODE) ?>;

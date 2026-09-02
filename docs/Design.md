@@ -117,13 +117,38 @@ Wiederherstellungsschlüssel, Geräte-ID).
 Es gibt **zwei** Bildmarken, und welche erscheint, ist einstellbar
 (E-P3-19/20):
 
-| Datei | Fassung |
-|---|---|
-| `server/assets/images/gen-em_logo_helicopter.svg` | Hubschrauber, farbig — heller Grund |
-| `server/assets/images/gen-em_logo_helicopter_weiss.svg` | Hubschrauber, weiß — Kopfleiste |
-| `server/assets/images/gen-em_logo_fahrzeug.svg` | Fahrzeug (NEF), farbig |
-| `server/assets/images/gen-em_logo_fahrzeug_weiss.svg` | Fahrzeug (NEF), weiß |
-| `server/assets/images/favicon.png`, `favicon-fahrzeug.png` | Browser-Symbol je Wahl |
+| Datei | Fassung | Rahmen |
+|---|---|---|
+| `server/assets/images/gen-em_logo_helicopter.svg` | Hubschrauber, farbig — heller Grund | 400,16 × 249,81 |
+| `server/assets/images/gen-em_logo_helicopter_weiss.svg` | Hubschrauber, weiß — Kopfleiste | 400,16 × 249,81 |
+| `server/assets/images/gen-em_logo_nef.svg` | Fahrzeug (NEF), farbig | 420 × 335 |
+| `server/assets/images/gen-em_logo_nef_weiss.svg` | Fahrzeug (NEF), weiß | 420 × 335 |
+| `server/assets/images/favicon_helicopter.png`, `favicon_nef.png` | Browser-Symbol je Wahl, 64 × 64 | — |
+
+**Der Rahmen ist deckungsgleich mit der Zeichnung**, und das ist eine Zusage
+(seit Web 12.4.2). Das NEF-Logo war bis dahin auf ein Quadrat gepolstert
+(`viewBox="0 0 420 420"`, die Zeichnung 420 × 335 ab y = 42,5): oben und
+unten je ein Zehntel leer. Skaliert wird aber über die **Höhe** — ein
+Zehntel dieser Höhe war damit Luft, und das Bodenlogo erschien neben dem
+Luftlogo schmaler **und** niedriger zugleich. Gemessen bei 34 px Höhe:
+1 853 gegen 921 px² sichtbare Fläche, also das Doppelte.
+
+Nach dem Beschnitt: **54,5 × 34 px gegen 42,6 × 34 px**, Flächenverhältnis
+**1,28**. Die verbleibende Differenz ist der ehrliche Unterschied zweier
+Motive — das eine liegt quer, das andere weniger — und **keine
+Feinkorrektur wert** (E-S3-12 b, am Bild entschieden). Die Höhen sind gleich,
+und das ist es, was das Auge in einer Zeile vergleicht.
+
+> **Wer eine dieser SVG anfasst, prüft danach den Rahmen mit `getBBox()`.**
+> Beim Luftlogo läuft ein blauer Streifen rund 156 Einheiten über den Rahmen
+> hinaus; sichtbar ist er nicht — ein Clip schneidet ihn weg —, aber er wird
+> es, sobald jemand den Rahmen weitet. Seit Web 12.4.2 hält ein zusätzlicher
+> Rahmen-Clip ihn unabhängig davon drinnen.
+>
+> **Und XML verbietet `--` im Kommentar.** Eine SVG mit einem doppelten
+> Bindestrich im Kommentar ist ungültig; der Browser zeigt sein
+> Platzhalterbild, und `tools/logos/erzeugen.mjs` fotografierte es früher
+> klaglos als Favicon. Das Werkzeug bricht heute ab (S3/AP11).
 
 **Drei Ebenen der Wahl**, und sie greifen in dieser Reihenfolge:
 
@@ -290,7 +315,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-88 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+89 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
@@ -404,7 +429,8 @@ auseinanderlaufen kann.
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
 | `--schalter-punkt` | `20px` | 4 | 44-px-Zeile passt und greifbar bleibt |
-| `--geo-kreis` | `36px` | 2 | Einsatzort-Kreis auf der Karte |
+| `--geo-kreis` | `32px` | 2 | Einsatzort-Kreis auf der Karte |
+| `--geo-schild` | `36px` | 2 | Kästchen für Standort und Zielklinik |
 | `--geo-ring` | `3px` | 10 | Ringstärke Start/Ende am Schild |
 | `--anmeldekarte` | `400px` | 1 | Karte der Anmeldung (E-P3-38) |
 | `--zeile-frei` | `1.4em` | 1 | Mindesthöhe der Zustandszeile |
@@ -465,9 +491,9 @@ Vollständigkeitsprüfung meldet jede.
 
 | Token | Wert | wofür |
 |---|---|---|
-| `--groesse-1` | 12 px | Plakette, Kleinstzeile, Leistenüberschrift |
+| `--groesse-1` | 12 px | Plakette, Kleinstzeile, Zähler |
 | `--groesse-2` | 13 px | Kleinzeile, Hinweis, Tabelleninhalt |
-| `--groesse-3` | 15 px | Fließtext der Oberfläche |
+| `--groesse-3` | 15 px | Fließtext der Oberfläche, Leistenüberschrift |
 | `--groesse-4` | 16 px | Kartentitel, Knopf |
 | `--groesse-5` | 19 px | Abschnittsüberschrift |
 | `--groesse-6` | 24 px | Seitentitel |
@@ -533,6 +559,71 @@ Redesign zurückzunehmen.
 > bloße Klasse**. Wer ein solches Kästchen über eine Klasse ausblenden will,
 > braucht `input[type=checkbox].meine-klasse` — `.meine-klasse` allein
 > verliert, und das Kästchen bleibt 20 × 20 px groß und fängt Klicks ab.
+
+### Der vertikale Rhythmus
+
+**Die Skala allein genügt nicht.** `--abstand-1` bis `--abstand-5` stehen
+seit P3 und werden eingehalten — nachgemessen in S3/AP1: 269
+Abstandsdeklarationen, davon **null** mit einem Rohwert. Trotzdem passten
+die Abstände sichtbar nicht zusammen, und der Grund ist nicht die Skala,
+sondern die fehlende Stufe darüber: eine Regel, die sagt, **welche Stufe
+wo** gilt. Ohne sie wird die Wahl an jeder Stelle einzeln getroffen — und
+fällt vierundsiebzigmal auf fünf verschiedene Werte, ohne dass ein Muster
+dahintersteht (S3, Rückmeldungsliste vom 31.08.2026, Block A).
+
+**Der Leitgedanke ist einer: Bindung ist kleiner als Trennung.** Was
+zusammengehört, steht enger als das, was sich voneinander absetzt. Wo der
+Abstand zwischen zwei Karten derselbe ist wie der zwischen zwei Feldern
+*innerhalb* einer Karte, sagt die Fläche nichts mehr darüber, was wozu
+gehört — genau das war der Befund.
+
+| Beziehung | Stufe | Begründung |
+|---|---|---|
+| Beschriftung → ihr Feld | `--abstand-1` (4 px) | klebt am Feld; alles Größere ließe die Beschriftung zwischen zwei Feldern schweben |
+| Überschrift → ihr Inhalt | `--abstand-2` (8 px) | bindet; die Überschrift gehört zum Inhalt darunter, nicht in die Mitte zwischen zwei Blöcke |
+| Element → Element derselben Gruppe (Feld → Feld, Zeile → Zeile) | `--abstand-3` (12 px) | der Arbeitsabstand; zugleich die häufigste Wahl im Bestand |
+| Gruppe → nächste Gruppe innerhalb einer Karte; Formular → Formularfuß | `--abstand-4` (16 px) | setzt ab, ohne zu trennen; deckungsgleich mit dem bestehenden `.listen-form-fuss` |
+| Karte → Karte; Inhalt → nächste Abschnittsüberschrift | `--abstand-5` (24 px) | trennt; der Wechsel zwischen Sinneinheiten muss größer sein als jeder Abstand innerhalb |
+
+**Zwei Präzisierungen, beide aus echten Fällen** (S3/AP1, F-S3-02 und
+F-S3-03):
+
+- **Zeile 3 gilt für Bausteine, nicht für Zeilen in einem Textblock.** Ein
+  `<li>` im Fließtext ist eine Zeile, kein Element: Es gehört zum selben
+  zusammenhängenden Text wie die Zeile darüber. Aufzählungen stehen deshalb
+  enger (`--abstand-1`) — bekämen sie den Arbeitsabstand, stünden ihre
+  Punkte so weit auseinander wie zwei Absätze, und genau die Bindung, die
+  eine Liste zur Liste macht, wäre weg.
+- **Trägt eine Überschrift Bedienelemente, gilt Zeile 4 statt Zeile 2.** Die
+  Titelzeile (9.8) ist der Fall: Neben dem Titel stehen dort Knöpfe von
+  44 px Höhe. Acht Pixel darunter stünde ein Knopf fast auf der ersten
+  Karte — die Beziehung ist dann nicht „Überschrift → ihr Inhalt", sondern
+  „Gruppe → nächste Gruppe" (`--abstand-4`). Das ist keine sechste Stufe,
+  sondern dieselbe Zeile 4 auf einen Fall angewandt, den die Tabelle nicht
+  benannt hatte.
+
+**Woran erkenne ich die Beziehung?** Die Frage ist immer dieselbe: *Was ist
+das Nächste, das folgt — gehört es noch zu mir, oder ist es das Nächste?*
+Gehört es noch dazu, steht es enger; ist es das Nächste, steht es weiter.
+Zwei Zeilen weiter unten dieselbe Frage erneut zu stellen, kostet nichts und
+ist der ganze Trick.
+
+**Wofür die Regel gilt und wofür nicht.** Sie regelt den **Zwischenraum**:
+senkrechte `margin` und das `row-gap` einer Spalte oder eines Rasters. Sie
+regelt **nicht die Polsterung** (`padding`) — die gehört zur Form des
+Bausteins, nicht zum Verhältnis zweier Dinge zueinander. Wer `padding` nach
+dieser Tabelle wählt, beantwortet die falsche Frage.
+
+**Keine neuen Token.** Die fünf Stufen decken die fünf Beziehungen. Findet
+sich eine Beziehung, die in keiner Zeile aufgeht, ist das eine Frage an das
+laufende Konzept — keine stille sechste Stufe (E-S3-02).
+
+**Das Anti-Muster dazu**: ein Abstand, der an der **Seite** hängt statt am
+Baustein. Er wirkt einmal richtig und ist beim nächsten Baustein wieder weg;
+die Stelle, an der die Rückmeldungsliste ihn fand, war „Profil speichern" in
+`einstellungen.php` — ein nackter Knopf zwischen `ui_karte_ende()` und
+`</form>`, obwohl es mit `.listen-form-fuss` längst einen Formularfuß gibt
+(9.16).
 
 ---
 
@@ -881,7 +972,7 @@ zehn Stellen zurückgenommen.
 
 ### 9.5 Meldung
 
-**Vier Töne**, je mit Symbol und Rolle:
+**Fünf Töne**, je mit Symbol und Rolle — und die Liste ist **geschlossen**:
 
 | Ton | Fläche | Symbol | `role` | wofür |
 |---|---|---|---|---|
@@ -889,6 +980,25 @@ zehn Stellen zurückgenommen.
 | `ok` | Blau hell | Haken | `status` | Vollzug |
 | `warn` | Orange hell | Warnung | `status` | Vorsicht |
 | `fehler` | Rosa | Warnung | `alert` | etwas ist schiefgegangen |
+| `schutz` | Rosa | Schloss | `status` | schutzbedürftige Daten, dauerhaft |
+
+**`schutz` ist rot und trotzdem kein Fehler** (S3, Rückmeldung vom
+01.09.2026). Er ist für den einen Fall da, in dem eine Meldung **dauerhaft**
+steht und trotzdem die Farbe des Ernstfalls braucht: ein Datenschutzhinweis
+an der Stelle, an der jemand gleich Daten herunterlädt. Er benutzt Fläche und
+Schrift von `fehler` — **kein neuer Farbwert** —, aber `role="status"` statt
+`alert`: Was bei jedem Aufruf der Seite dasteht, darf einen Vorleser nicht
+jedes Mal unterbrechen. Das Symbol ist das **Schloss**, nicht die Warnung: Es
+geht um Schutzbedürftigkeit, nicht um einen Fehlgriff.
+
+> **Ein Ton, den es nicht gibt, ergab bis S3 einen ungestalteten Kasten.**
+> `ui_meldung_markup()` setzte die Klasse aus dem übergebenen Wort zusammen;
+> ein Tippfehler oder ein erfundener Ton führte zu `meldung-<wort>` ohne
+> Regel im Stylesheet — weiß, ohne Fläche, ohne Fehlermeldung. Die
+> Spurenseite trug so zwei Meldungen mit dem Ton „hinweis", den es nie gab.
+> Die Vollständigkeitsprüfung sieht solche Klassen nicht, weil sie
+> **zusammengesetzt** werden. Die Funktion prüft den Ton jetzt selbst und
+> wirft bei einem unbekannten.
 
 ```html
 <div class="meldung meldung-warn" role="status">
@@ -922,6 +1032,14 @@ sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 > Literal nirgends auftaucht; `tools/vollstaendigkeit/` kann ihn deshalb nicht
 > finden. Behoben mit Web 10.3.0, vermerkt in Backlog Nr. 36.
 
+> **Plakette und Schloss schließen einander nicht mehr aus** (S3/AP6,
+> E-S3-16). F-N1-B hatte in P3 entschieden: entweder die Plakette
+> „verschlüsselt" am Kopf der Karte **oder** das Schloss an der einzelnen
+> Zeile. Seit der Rückmeldung vom 31.08.2026 gilt beides nebeneinander, weil
+> es zwei verschiedene Auskünfte sind: **Die Plakette sagt „hier stehen
+> verschlüsselte Angaben", das Schloss sagt „diese hier."** Bei einer
+> Schutzauskunft ist Redundanz kein Lärm.
+
 ### 9.7 Feld, Schalter, Segment, Wahlliste
 
 Vier Eingabebausteine, und die Wahl zwischen ihnen ist keine Geschmacksfrage:
@@ -931,7 +1049,7 @@ Vier Eingabebausteine, und die Wahl zwischen ihnen ist keine Geschmacksfrage:
 | **`.feld`** | Beschriftung plus Eingabe. Die Beschriftung steht in **Normalschrift** — im Bestand waren Feldnamen gesperrte Versalien, das prägende Stilmittel und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21). |
 | **`.schalter`** | **eines** an oder aus. 44-px-Zeile, Beschriftung links, an in Orange. Abhängige Felder klappen darunter auf, eingerückt mit orangem Randstrich (E-P3-28). |
 | **`.segment`** | **eine aus wenigen** kurzen Möglichkeiten nebeneinander („Gemischt / Luft / Boden"). |
-| **`.wahlliste`** | **eine aus mehreren** mit Erklärung daneben. 44-px-Zeilen untereinander, die gewählte hell orange (E-P3-20). |
+| **`.wahlliste`** | **eine aus mehreren** mit Erklärung daneben. 44-px-Zeilen untereinander, die gewählte hell orange (E-P3-20). **Schlichte Liste, keine umrandeten Einzelzeilen** (seit Web 12.3.3): Vier Zeilen mit eigenem Rahmen auf eigener Fläche sahen aus wie vier Karten und sind eine Wahl. Erkennbar ist die Auswahl am gezeichneten Punkt und an der Fläche der gewählten Zeile — dafür braucht keine Zeile eine Umrandung. |
 
 Alle vier sind aus **echten** `<input>` gebaut: Tastaturbedienung,
 Vorlesezustand und Absenden kommen damit vom Browser und nicht aus einem
@@ -944,6 +1062,15 @@ Skript.
   <p class="feld-klein">Hinweis unter dem Feld.</p>
 </div>
 ```
+
+**Platzhalter tragen ausschließlich Phantasienamen** (E-S3-13). Ein
+Platzhalter ist ein Beispiel, kein Vorschlag: Steht dort „z. B. Standort
+Kempten", liest ein Teil der NutzerInnen das als die erwartete Antwort und
+ein anderer als Aussage darüber, wer diese Anwendung betreibt. Beides ist
+falsch. Orte, Personen, Kliniken und Rettungsmittel in Platzhaltern sind
+deshalb **erfunden** — erkennbar erfunden, nicht bloß ein anderer echter
+Ort. Die Regel gilt für jedes Formular der Anwendung, auch für den
+Einrichter, und sie gilt ab S3 für jede neue Stelle.
 
 **Das Dateifeld ist der eine Sonderfall.** `input[type=file]` stellt seinen
 nativen Knopf auf die Textzeile, und die steht in einem 44 px hohen Feld ohne
@@ -976,6 +1103,11 @@ Die Unterzeile steht **nach** der Hauptzeile, nicht im Flex-Block: Sonst
 bestimmt ihre Breite die des Titelblocks, und die Aktionen brechen unter einen
 kurzen Titel („Einsatz 1"), obwohl neben ihm Platz ist (Fund aus O4).
 
+**Der Abstand darunter ist `--abstand-4`, nicht `--abstand-2`** — die
+begründete Ausnahme des vertikalen Rhythmus (Kapitel 6): Die Titelzeile ist
+eine Überschrift, die Bedienelemente trägt, und der Abstand darunter muss
+den 44-px-Knopf freistellen.
+
 ### 9.9 Speichern-Leiste
 
 **Zweck:** Erscheint mit der ersten Änderung eines Formulars und klebt unten.
@@ -983,6 +1115,19 @@ Hängt an `data-dirty-track` (`assets/forms.js`).
 
 **Kein „Verwerfen".** Der Rückweg oben genügt, und ein Verwerfen-Knopf neben
 einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29).
+
+**Sie hat die Form der Karte** (E-R43-1, seit Web 12.2.3): derselbe Radius,
+dieselbe Breite. Bis dahin brach sie mit einem negativen Rand seitlich aus dem
+Inhalt aus und lief ohne Radius von Rand zu Rand — sie wirkte dadurch eckig
+und breiter als die Karte darüber, obwohl sie zu ihr gehört. **Was bleibt, ist
+alles, was die Funktion trägt:** der klebende Sitz, die Trennlinie nach oben
+und der Schatten. Die Leiste soll auffallen, weil sie folgt, nicht weil sie
+anders geschnitten ist.
+
+**Der Knopf steht rechts, die Zählung links daneben.** Im Markup steht der
+Hinweis zuerst — das ist zugleich die Vorlesereihenfolge („12 ausgewählt",
+dann „Auswahl sichern"). Ausgerichtet wird über `justify-content:flex-end`,
+**nicht über `order`**: Sonst liefen Seh- und Vorlesereihenfolge auseinander.
 
 > **Nicht jedes Formular bekommt eine.** Sie gehört zu Formularen, die man
 > *bearbeitet* und deren Stand man verlieren kann. Wo der Knopf das **Ziel des
@@ -1089,6 +1234,23 @@ für den Fall, dass das Bezeichnungsfeld schon existiert und die Kennung
 > nicht irgendeinem Namensfeld daneben. Steht sie zweimal im Markup, findet
 > `getElementById` das erste, und das zweite ist Zierde (F-P3-AI).
 
+**Der Hinweistext ist kein Platzhalter.** „Adresse, Koordinaten oder Plus
+Code" nennt das Format, nicht ein Beispiel. Wo das Ortsfeld doch einen
+Platzhalter bekommt, gilt die Regel aus 9.7: erfundener Ort, kein echter
+(E-S3-13).
+
+**Es sucht beim Tippen** (seit Web 12.3.3, E-S3-06) — in **beiden**
+Bedienformen, also auch bei Standort und Zielklinik, wo bis dahin nur die
+Lupe suchte. Drei Grenzen fassen das ein und stehen als Konstanten oben in
+`assets/ortsfeld.js`: **400 ms** Ruhe nach dem letzten Tastendruck, **ab drei
+Zeichen**, **höchstens eine offene Anfrage** (eine laufende wird abgebrochen).
+Die Lupe umgeht die Entprellung, nicht die Mindestlänge.
+
+> **Das ist eine Auskunft an Dritte, und sie steht in `docs/Lizenzen.md` 6.2.**
+> Die Adresssuche geht an Photon; jede Anfrage trägt die eingetippten
+> Buchstaben dorthin. Stehen bereits Koordinaten, ruht die Suche ganz — die
+> Formaterkennung läuft lokal und hat Vorrang.
+
 ### 9.14 Abbruchseite
 
 **Zweck:** Der aufgerufene Datensatz existiert nicht, gehört einem anderen
@@ -1149,6 +1311,8 @@ ein echter Fund, kein erfundenes Beispiel:
 | ein Token in `:root`, das niemand benutzt | Sieht aus wie eine Zusage und ist keine. Die Filterleiste war zwei Pakete lang zu schmal. | erzeugte Tokentabelle lesen (F-P3-BC) |
 | eine Aufstellung in einem Rückfragedialog | Ein Dialog mit halbem Bildschirm Text ist keiner mehr. | eine eigene Seite |
 | zwei primäre Knöpfe auf einer Seite | Keiner ist mehr die Haupthandlung. | einer `primaer`, der Rest `neutral` |
+| ein Absendeknopf, der nackt im `<form>` steht | Er bekommt den Abstand, den zufällig das Element davor mitbringt — mal 12, mal 16, mal keinen. „Profil speichern" stand so zwischen `ui_karte_ende()` und `</form>`; die Durchsicht fand zwölf solche Stellen (S3/AP2). | ein `<div class="listen-form-fuss">` darum |
+| ein Abstand, der an der Seite hängt statt am Baustein | Er wirkt an dieser einen Stelle und ist beim nächsten Baustein wieder weg. | die Stufe am Baustein setzen, nach der Rhythmustabelle (Kapitel 6) |
 
 ---
 
@@ -1265,5 +1429,13 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 12.4.2 (S3/AP11)** | Kapitel 2.3: Logotabelle auf die tatsächlichen Dateinamen gebracht (sie führte noch die Namen von vor dem NEF-Platzhalter-Ersatz) und um die Rahmenmaße ergänzt. Neue Zusage: **Rahmen = Zeichnung** — das Bodenlogo war auf ein Quadrat gepolstert, ein Zehntel seiner Höhe war leer. Dazu zwei Warnungen für den nächsten, der eine SVG anfasst (`getBBox()` prüfen; XML verbietet `--` im Kommentar). |
+| **Web 12.4.1 (S3/AP10)** | Kapitel 9.7: neue Regel `.feldsatz-gesperrt` — ein `<fieldset>`, das nur gruppiert, für das `disabled`-Attribut. Die Elementregeln für `fieldset` sind mit O11 gefallen; ohne diese Rücknahme bringt der Browser Rahmen und Polsterung mit. |
+| **Web 12.3.3 (S3/AP8)** | Kapitel 9.7: Die Wahlliste ist eine **schlichte Liste** — vier Zeilen mit eigenem Rahmen auf eigener Fläche sahen aus wie vier Karten und sind eine Wahl. Kapitel 9.13: Das Ortsfeld sucht **beim Tippen**, mit drei Grenzen (400 ms, drei Zeichen, eine offene Anfrage) und dem Verweis auf `Lizenzen.md` 6.2. |
+| **Web 12.3.1 (S3/AP6)** | Kapitel 9.6: Plakette und Schloss schließen einander **nicht mehr aus** — Ablösung von F-N1-B. Die Plakette sagt „hier stehen verschlüsselte Angaben“, das Schloss sagt „diese hier“. |
+| **Web 12.3.0 (S3/AP5)** | Kapitel 9.5: **fünfter Meldungston `schutz`** — rot wie `fehler`, aber `role="status"` und mit dem Schloss statt der Warnung, für einen Datenschutzhinweis, der dauerhaft steht. Dazu die Warnung, dass ein Ton, den es nicht gibt, bis dahin einen ungestalteten Kasten ergab. |
+| **Web 12.2.4 (S3/AP4)** | Kapitel 5: Die Schriftskala führte die Leistenüberschrift noch bei 12 px, während das Stylesheet seit P3 13 px setzt — berichtigt und auf `--groesse-3` (15 px) nachgezogen. |
+| **Web 12.2.3 (S3/AP3)** | Kapitel 9.9: Die Sammelleiste hat die **Form der Karte** (E-R43-1); Knopf rechts, Zählung links daneben, ausgerichtet über `justify-content` und ausdrücklich nicht über `order`. |
+| **Web 12.2.2 (S3/AP1–AP2)** | Neuer Abschnitt „Der vertikale Rhythmus" in Kapitel 6: eine Stufe je Beziehung, mit dem Leitgedanken „Bindung ist kleiner als Trennung", der Abgrenzung Zwischenraum gegen Polsterung und zwei Präzisierungen aus echten Fällen (Überschrift mit Bedienelementen; Zeilen in einem Textblock). Platzhalter-Pflegeregel in 9.7, Querverweis in 9.13. Die Titelzeile (9.8) trägt den Abstand darunter jetzt als begründete Ausnahme. Zwei neue Anti-Muster in 9.16. |
 | **Web 9.14.0** | Erste Rückmeldungsrunde nach P3. Neues Token `--symbol-klein` (16 px). Fünf neue Anti-Muster in 9.16, alle aus echten Funden dieser Runde. Kopfleiste: Wortzeichen „Gen-EM Einsatzdoku", Logo 34 px. Segmenttasten ohne geerbten Rand. Neue Regeln: `.symbol-schutz`, `.tagfeld-breit`, `.vehkind`, `.sd-liste`, `.loc-widget`. |
 | **Web 9.13.0 (P3/O12)** | Erstfassung. Ersetzt `docs/Branding.md`. Farben, Schriften und Logo-Regeln von dort übernommen; die Abbildung auf CSS-Variablen (dort Abschnitt 1.3, mit `--ink`, `--navy`, `--accent`, `--muted`) ist entfallen — diese Token gibt es seit Web 9.0.0 nicht mehr. Die offenen Punkte B1 (Logo trägt nicht die Markenwerte), B2 (keine geschlossene Größenskala) und B3 (78 Hexwerte) sind **erledigt** und in 2.5, 5 und 6 als solche vermerkt. |

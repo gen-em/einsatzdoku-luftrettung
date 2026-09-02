@@ -1688,5 +1688,219 @@ declare(strict_types=1);
  * ui_meldung_markup(), das die vollstaendige Tabelle fuehrt. Betroffen waren
  * gerade die Meldungen, die auffallen sollen.
  *
+ * 12.2.2 SCHREIBT DEN VERTIKALEN RHYTHMUS FEST (S3/AP1 und AP2). Die
+ * Abstandsskala --abstand-1 bis -5 steht seit P3 und wird eingehalten:
+ * gemessen 269 Abstandsdeklarationen, davon KEINE mit einem Rohwert. Was
+ * fehlte, war die Stufe darueber -- eine Regel, WELCHE Stufe WO gilt. Sie
+ * steht jetzt in docs/Design.md, Kapitel 6.
+ *
+ * Der Befund dahinter in einem Satz: .karte und .feld trugen beide 16 px.
+ * Zwei Karten standen genauso weit auseinander wie zwei Felder INNERHALB
+ * einer Karte, und die Flaeche sagte damit nichts mehr darueber, was wozu
+ * gehoert. Jetzt trennen Karten mit 24 px und Felder binden mit 12 px.
+ * Dreizehn Regeln des Stylesheets sind darauf eingestellt, dazu zwoelf
+ * freistehende Absendeknoepfe, die jetzt im Formularfuss-Baustein stehen.
+ *
+ * KORREKTURSTUFE, obwohl es auf jeder Seite zu sehen ist: Es gibt keine neue
+ * Funktion und kein neues Feld, und kein Weg durch die Anwendung hat sich
+ * geaendert. Was sich aendert, ist die Groesse von Zwischenraeumen.
+ *
+ * 12.2.3 GIBT DER SAMMELLEISTE DIE KARTENFORM (S3/AP3, E-R43-1). Sie brach
+ * mit `margin: <oben> calc(var(--abstand-3) * -1) <unten>` seitlich aus dem Inhalt aus und
+ * lief ohne Radius von Rand zu Rand -- daher der Eindruck „eckig und
+ * breiter". Jetzt Radius und Breite wie die Karte darueber; klebender Sitz,
+ * Trennlinie und Schatten bleiben, denn sie tragen die Funktion. Dazu die
+ * Reihenfolge im Markup umgedreht: Hinweis zuerst, Knopf danach -- der Knopf
+ * steht damit rechts, und die Vorlesereihenfolge stimmt ohne `order`.
+ *
+ * 12.2.4 NIMMT DIE AUSZEICHNUNG AUS DER NAVIGATION ZURUECK (S3/AP4,
+ * E-R43-2). Alle Menuepunkte standen fett; in einer Liste, in der jede Zeile
+ * fett ist, hebt das nichts hervor. Jetzt normal, und nur der AKTIVE Punkt
+ * fett -- die Auszeichnung wandert von „alle" zu „einer".
+ *
+ * Die Leistenueberschrift („Diensttage", „Einstellungen", „Administration",
+ * „Filter") wirkte verloren. Das war ein Problem von Groesse und Kontrast,
+ * nicht von Ausrichtung: eine Stufe hoeher (15 statt 13 px) und --asphalt
+ * statt --gedaempft, linksbuendig wie bisher. Versalien und Sperrung sind
+ * dabei entfallen -- am Bild entschieden, denn bei 15 px liest sich der
+ * gesperrte Versalsatz als Etikett und konkurriert mit dem Eintrag darunter.
+ *
+ * 12.3.0 BRINGT DEN FUENFTEN MELDUNGSTON und raeumt zwei Tabellen auf
+ * (S3/AP5 und die Rueckmeldung vom 01.09.2026).
+ *
+ * NEUE NEBENNUMMER wegen `schutz`: ein Meldungston in der Flaeche von
+ * `fehler`, aber mit role="status" und dem Schloss statt der Warnung. Er ist
+ * fuer eine Meldung da, die DAUERHAFT steht und trotzdem die Farbe des
+ * Ernstfalls braucht -- der Datenschutzhinweis der Spurenseite, dort wo
+ * jemand gleich GPX herunterlaedt. Kein neuer Farbwert.
+ *
+ * DAHINTER STECKT EIN FEHLER, DER LANGE UNSICHTBAR WAR: ui_meldung_markup()
+ * setzte die Klasse aus dem uebergebenen Wort zusammen. Ein Ton, den es nicht
+ * gibt, ergab `meldung-<wort>` ohne Regel im Stylesheet -- einen weissen
+ * Kasten ohne Flaeche und ohne Fehlermeldung. Die Spurenseite trug zwei
+ * Meldungen mit dem Ton „hinweis", den diese Funktion nie gekannt hat. Die
+ * Vollstaendigkeitspruefung kann das nicht finden, weil die Klasse
+ * zusammengesetzt wird; die Funktion prueft den Ton jetzt selbst.
+ *
+ * UND DER SPURENSEITE FEHLTE DAS GERUEST. Sie rief ui_seite_start() und
+ * schrieb ihren Inhalt danach unmittelbar in den <body> -- ohne
+ * ui_geruest_start(). Damit fehlten ihr die Diensttag-Leiste UND der
+ * seitliche Innenabstand: Titel, Karte und Kartenbaustein sassen am blanken
+ * Fensterrand (gemessen auf 412 px: linke Kante 0 statt 12). Der Bilderlauf
+ * hat es nicht gefunden, weil er waagerechten UEBERLAUF misst -- eine Seite
+ * ohne Innenabstand laeuft nicht ueber, sie ist nur randlos.
+ *
+ * DAZU AP5: Fuenf Spalten der NutzerInnen-Liste stehen mittig statt links --
+ * ihre Titel waren seit P3 zentriert und standen ueber nichts. Nr., Beginn
+ * und Alter der Tagesuebersicht ebenso. Die Dauer traegt dort endlich
+ * `zeit-spalte` und bricht nicht mehr nach der Stunde um. Kennzahl-Kacheln
+ * zentrieren ihren Inhalt senkrecht, sobald eine Nachbarkachel hoeher ist.
+ *
+ * 12.3.1 RAEUMT DIE EINSATZANSICHT (S3/AP6). Die Hoehe des Einsatzortes stand
+ * als nacktes „706 m" in einer Zeile mit „Strecke 40,9 km" -- der Nachbarwert
+ * trug sein Wort, dieser nicht. Jetzt „Hoehe 706 m". Angezeigt wird sie
+ * weiterhin nur luftgebunden; bodengebunden ist es die Hoehe der Strasse und
+ * die Zeile entfaellt ersatzlos.
+ *
+ * SCHUTZ WIRD REDUNDANT ANGEZEIGT, und das ist die Umkehr von F-N1-B. Dort
+ * galt: entweder die Plakette an der Karte ODER das Schloss an der Zeile,
+ * nie beides. Die Rueckmeldung vom 31.08.2026 will beides, und die
+ * Begruendung traegt: Die Plakette sagt „hier stehen verschluesselte
+ * Angaben", das Schloss sagt „diese hier". Bei einer Schutzauskunft ist
+ * Redundanz kein Laerm. Neu sind die Plakette am Block „Einsatz" und die
+ * Schloesser an Name und Geburtsdatum.
+ *
+ * DER BLAUE BALKEN „Geschuetzte Angaben sind entsperrt, bis du dich
+ * abmeldest" ENTFAELLT. Er stand nach dem Entsperren auf JEDEM Einsatz und
+ * sagte beim zwanzigsten Mal nichts mehr; sichtbar ist der Zustand ohnehin
+ * daran, dass die geschuetzten Angaben dastehen. Der GESPERRT-Balken mit dem
+ * Entsperren-Knopf bleibt, ebenso die Fehlermeldung fuer unlesbare Angaben.
+ * Die Aussage „entsperrt bis zur Abmeldung" steht jetzt im Handbuch.
+ *
+ * Dazu das Schloss senkrecht mittig zum Wort daneben: `vertical-align`
+ * -0.1em statt `baseline`, nachgemessen an einer echten Zeile.
+ *
+ * 12.3.2 BEHEBT DEN MARKERVERSATZ (S3/AP7) -- den einen echten Fehler der
+ * Rueckmeldungsliste.
+ *
+ * DER FEHLER: Standort- und Klinik-Schilder sassen umso weiter oestlich, je
+ * weiter herausgezoomt wurde. Drei Glieder, jedes fuer sich richtig:
+ * `.geo-schild` ist eine Flex-SPALTE (wird so breit wie ihr breitestes
+ * Kind), das breiteste Kind war das NAMENSSCHILD (nowrap, bei „Klinikum
+ * Immenstadt" rund 150 px statt 44), und `iconSize: null` liess Leaflet die
+ * Groesse aus dem Markup nehmen -- `iconAnchor: [22, 22]` verankerte damit
+ * rund 50 px links der Kastenmitte. Ein KONSTANTER Pixelversatz:
+ * herausgezoomt sind dieselben 50 px Kilometer, hereingezoomt Meter.
+ *
+ * Nachgemessen im Browser: 51,7 px vorher, 0,0 px nachher, ueber sechs
+ * Zoomstufen unveraendert.
+ *
+ * Die Namensschilder entfallen ohnehin (sie machten die Karte voll und
+ * standen bei mehreren Markern uebereinander); der Name steht jetzt im
+ * title-Attribut. `iconSize` wird TROTZDEM ausdruecklich gesetzt, an ALLEN
+ * fuenf Markerarten -- wer dem Marker kuenftig etwas danebenstellt, traegt
+ * den Fehler sonst wieder ein, und zwar wieder ohne Fehlermeldung.
+ *
+ * Dazu: Das Schildkaestchen wird enger (36 statt 44 px -- es ist eine
+ * Zeichnung und kein Bedienelement, die 44-px-Regel gilt fuer das, was man
+ * drueckt), der Einsatzort-Kreis verliert seine weisse Umrandung und wird
+ * 32 statt 36 px, und die Tagesuebersicht zeigt keine Zielkliniken mehr.
+ *
+ * 12.3.3 LAESST DAS ORTSFELD BEIM TIPPEN SUCHEN (S3/AP8, E-S3-06) --
+ * FUNKTIONSAENDERUNG. Bei Standort und Zielklinik suchte bis hierher nur die
+ * Lupe; O5 hatte das ausdruecklich so entschieden. Fuer einen Weg, den man
+ * zwanzigmal am Tag geht, ist ein Klick eine Handlung zu viel. Drei Grenzen
+ * fassen es ein: 400 ms Entprellung, ab drei Zeichen, hoechstens EINE offene
+ * Anfrage (eine laufende wird abgebrochen). Nachgemessen mit abgefangenen
+ * Anfragen: fluessiges Tippen eines Ortsnamens ergibt genau eine.
+ *
+ * DAS AENDERT EINE ZUSAGE, UND DIE STEHT IN docs/Lizenzen.md 6.2. Dort hiess
+ * es, die Suche laufe nicht bei jedem Tastendruck UND nur auf ausdrueckliches
+ * Ausloesen. Der erste Teil stimmt weiter, der zweite nicht mehr. Der
+ * Abschnitt ist neu geschrieben und nennt die drei Grenzen. Die
+ * E2E-Zusage ist unberuehrt: Gesucht wird, BEVOR aus der Eingabe ein
+ * gespeicherter -- und damit verschluesselter -- Wert wird.
+ *
+ * PLATZHALTER TRAGEN JETZT PHANTASIENAMEN (E-S3-13). „z. B. Standort
+ * Kempten" bevorzugte einen realen Ort und las sich fuer manche als die
+ * erwartete Antwort, fuer andere als Auskunft darueber, wer diese Anwendung
+ * betreibt. Elf Stellen getauscht, mit Namen aus der Welt des
+ * Referenzdatensatzes (Talwang, Westried, Sonnenau, Alpenfalke).
+ *
+ * Dazu die Wahlliste als schlichte Liste statt vier umrandeter Einzelzeilen:
+ * 248 auf 224 px bei gleicher Zeilenhoehe.
+ *
+ * 12.4.0 BLENDET FILTER OHNE BESTAND AUS (S3/AP9, E-S3-08) --
+ * FUNKTIONSAENDERUNG, deshalb die Nebennummer.
+ *
+ * Bis hierher galt die Regel fuer den Block „Bergrettung" und das Einzelfeld
+ * „Fehleinsatz", und sie stand als ZWEI HANDGEPFLEGTE LISTEN im Code
+ * (GRUPPE_NUR_WENN, FELD_NUR_WENN) -- genau der Einzelfall-Wildwuchs, den der
+ * Feldkatalog abschaffen sollte. Jedes neue Feld haette einen dritten Eintrag
+ * gebraucht, und wer ihn vergisst, merkt es nie: Ein dauerhaft leerer Filter
+ * sieht aus wie ein Filter.
+ *
+ * JETZT ENTSTEHT DIE REGEL AUS DEM KATALOG. Jeder Filter, der zu einer
+ * Katalogspalte gehoert, traegt sie; KATALOG_ART sagt (aus
+ * mission_fields.php erzeugt), welcher Art sie ist -- denn „gefuellt" heisst
+ * je nach Art etwas anderes: Bei einem Haken zaehlt nur wahr, bei einer
+ * Auswahl ist auch die Null eine Angabe. Ein Filter OHNE Spalte -- Zeitraum,
+ * Uhrzeit, Wochentag, Strecke, Dauer, Alter, Standort, Rettungsmittel,
+ * Besatzung -- ist immer sinnvoll und bleibt. Ein Block verschwindet, wenn
+ * alle seine Filter verschwunden sind; eine eigene Bedingung braucht er nicht
+ * mehr.
+ *
+ * KEINE ZUSAETZLICHE SERVERABFRAGE. Der ganze Bestand liegt seit Web 5.10.0
+ * ohnehin im Browser (api/suchindex.php, einmal je Seitenaufruf, fuenf
+ * SQL-Abfragen unabhaengig von der Zahl der Einsaetze). Die Sichtbarkeit
+ * entsteht in EINEM Durchgang darueber, gemessen 0,06 ms bei 82 Einsaetzen.
+ *
+ * 12.4.1 SPERRT DAS DEMO-KONTO AUF DER KONTOSEITE (S3/AP10, E-S3-07) --
+ * FUNKTIONSAENDERUNG.
+ *
+ * Es wird zentral verwaltet: angelegt, zurueckgesetzt und entfernt ueber den
+ * Reiter „Demo-Konto“. Was auf der Kontoseite haengenbliebe, waere
+ * spaetestens nach dreissig Minuten weg -- der Reset ueberschreibt Konto- und
+ * Schluesselmaterial und loescht den ganzen Bestand. Eine Aenderung, die
+ * lautlos verfaellt, ist schlimmer als eine, die gar nicht erst geht.
+ * Gesichert wird das Konto ebenfalls nicht: Sein Bestand ist erfunden und
+ * liegt als Fixture im Repositorium.
+ *
+ * DIE SPERRE SITZT IM SCHREIBWEG, nicht im Markup. Ein `disabled` allein ist
+ * Kulisse -- ein direkt abgesetzter POST geht daran vorbei. Sieben Aktionen
+ * werden serverseitig abgewiesen (konto, sichern, einspielen, freigeben,
+ * widerrufen, paket_loeschen, user_delete); die Anzeige graut zusaetzlich
+ * aus, damit man es sieht, bevor man es versucht. NICHT gesperrt sind die
+ * Geraete-Aktionen: Das Demo-Konto laedt ausdruecklich zum Koppeln einer Uhr
+ * ein, und was dabei entsteht, raeumt der Reset selbst ab.
+ *
+ * Dazu der Anzeigename „Demo NutzerIn“ statt des Namens aus der Fixture --
+ * gesetzt beim Anlegen UND beim Zuruecksetzen, sonst holte der naechste Reset
+ * den alten zurueck.
+ *
+ * 12.4.2 BESCHNEIDET DAS BODENLOGO (S3/AP11). Es wirkte neben dem Luftlogo
+ * kleiner, und das lag nicht an einer Regel: Seine viewBox war 420 x 420, die
+ * Zeichnung darin aber 420 x 335 ab y=42,5 -- oben und unten je ein Zehntel
+ * leer, ein Artefakt des Exports. Skaliert wird ueber die HOEHE, also war ein
+ * Zehntel dieser Hoehe Luft. Gemessen bei 34 px: sichtbare Flaeche 1 853
+ * gegen 921 px², das Doppelte.
+ *
+ * Jetzt ist der Rahmen deckungsgleich mit der Zeichnung: 54,5 x 34 gegen
+ * 42,6 x 34 px, Flaechenverhaeltnis 1,28. Eine Feinkorrektur braucht es
+ * nicht -- die Hoehen sind gleich, und die Restdifferenz ist der ehrliche
+ * Unterschied zweier Motive (E-S3-12 b, am Bild entschieden). AN DER
+ * ZEICHNUNG IST NICHTS GEAENDERT, nur am Rahmen.
+ *
+ * DIE KOPFLEISTE GIBT DIE BILDMASSE JETZT JE LOGO AUS. `width="54"
+ * height="34"` galt fuer beide; 54:34 ist das Verhaeltnis des Luftlogos, das
+ * Bodenlogo ist 43 px breit. Der Browser reservierte damit einen Kasten, in
+ * den das Bild nicht passt, und rueckte beim Laden nach.
+ *
+ * Dazu: ein Rahmen-Clip am Luftlogo (ein blauer Streifen laeuft 156 Einheiten
+ * ueber den Rahmen hinaus -- unsichtbar, bis jemand den Rahmen weitet), neu
+ * abgeleitete Favicons und vier neu gerasterte Uhr-Kacheln. Die Uhr-Kacheln
+ * reisen mit der S5-Auslieferung (E-S3-04); die Uhr-Version steigt hier
+ * NICHT.
+ *
  */
-const WEB_VERSION = '12.2.1';
+const WEB_VERSION = '12.4.2';
