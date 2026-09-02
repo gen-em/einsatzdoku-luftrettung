@@ -52,7 +52,7 @@ const EdMissionTable = (() => {
    * Zelle wird per innerHTML gesetzt; Markup darin lief in dem Fenster los,
    * in dem der Inhaltsschlüssel liegt.
    *
-   * DER WEG HINEIN IST DIE WIEDERHERSTELLUNG EINER SICHERUNG, nicht der
+   * DER WEG HINEIN IST DIE WIEDERHERSTELLUNG EINER BACKUP, nicht der
    * Import. Bis Web 7.3.1 stand hier das Gegenteil („import.js übernimmt
    * pat.age als rohen Zellenwert"); das ist nachgemessen falsch —
    * import_profiles.js bildet `pat_alter` mit parse:['alterJahre'] ab, und

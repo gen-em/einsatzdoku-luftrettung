@@ -6,7 +6,7 @@ require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/smtp.php';        // smtp_eingerichtet() (E-S2-15)
 
 /**
- * SICHERUNGEN — die REGELN, und sonst nichts mehr (E-P3-41, P3/O9c).
+ * BACKUPS — die REGELN, und sonst nichts mehr (E-P3-41, P3/O9c).
  *
  * WAS SICH GEAENDERT HAT. Bis Web 9.9.0 stand hier alles: eine Tabelle mit
  * jedem Konto und seinen Paketen, eine zweite mit jedem einzelnen Backup
@@ -259,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* ---- Löschen (A8.8) -------------------------------------------------
      *
      * Ein Backup OHNE KONTO ist immer das letzte seiner Art: Es gibt kein
-     * Konto mehr, das sie neu erzeugen könnte. Deshalb ist die Bestätigung
+     * Konto mehr, das es neu erzeugen könnte. Deshalb ist die Bestätigung
      * hier immer die harte — die abgetippte Adresse aus der Begleitdatei.
      * Ist die Begleitdatei unlesbar, gibt es keine Adresse zum Abtippen; an
      * ihre Stelle tritt eine ausdrückliche Bestätigung (Kriterium 64).

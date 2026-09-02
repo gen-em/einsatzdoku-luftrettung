@@ -139,7 +139,7 @@ function trash_delete_day(int $userId, int $dayId): void {
  * Einspielen ausdruecklich ablehnt: in der Suche und auf der Einsatzseite
  * sichtbar, in Tagesuebersicht, Zeitraum, Export, Nachbearbeitung und
  * Papierkorb nicht; das Formular bricht ohne Diensttag ab. Was der Rueckweg
- * einer Sicherung nicht anlegen darf, darf die Oberflaeche erst recht nicht
+ * eines Backups nicht anlegen darf, darf die Oberflaeche erst recht nicht
  * auf Knopfdruck herstellen.
  *
  * DEN TAG STILL MITZURUECKHOLEN waere die falsche Grosszuegigkeit: Ein Klick
@@ -278,7 +278,7 @@ function trash_aktiv_am_tag(int $userId, int $dayId): array {
  * `missions.day_id` traegt ON DELETE SET NULL. Danach stand er ohne Tag in der
  * Datenbank: in der Suche und auf der Einsatzseite sichtbar, in
  * Tagesuebersicht, Zeitraum, Export und Nachbearbeitung nicht, im Formular
- * nicht mehr zu oeffnen — und in der Sicherung zwar enthalten, beim
+ * nicht mehr zu oeffnen — und im Backup zwar enthalten, beim
  * Einspielen aber uebersprungen, weil ihm der Diensttag fehlt. Ein Datensatz
  * also, der gerettet aussah und beim naechsten Umlauf still verschwand.
  *

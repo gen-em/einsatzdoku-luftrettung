@@ -97,7 +97,7 @@ const KOMP_BAU_PRAEFIX = '.bau-';
 /**
  * Wie viele Staende aufbewahrt werden (Vorgabe).
  *
- * DIESELBE ZWEI WIE BEI DEN KONTOSICHERUNGEN (E-S2-14) und aus demselben
+ * DIESELBE ZWEI WIE BEI DEN KONTO-BACKUPS (E-S2-14) und aus demselben
  * Grund: Zwei Staende erlauben den Griff auf den vorletzten, wenn der letzte
  * beim Erzeugen etwas abbekommen hat. Drei erlauben das auch — und kosten ein
  * weiteres Mal die volle Datenbank auf einem Webspace, dessen Platz die
@@ -275,7 +275,7 @@ const KOMP_ZAHL = ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint
  * SIE WERDEN GEFRAGT UND NICHT AUFGEZAEHLT. Eine fest verdrahtete Liste waere
  * genau einmal richtig — naemlich bis zur naechsten Migration, die eine
  * Tabelle hinzufuegt. Ein Komplett-Backup, das eine Tabelle auslaesst, ist
- * schlimmer als keine: Sie sieht vollstaendig aus.
+ * schlimmer als keines: Es sieht vollstaendig aus.
  *
  * @return array<string,array> je Tabelle:
  *   spalten  [name => ['binaer' => bool, 'zahl' => bool]]
@@ -1087,7 +1087,7 @@ function komp_oeffnen(string $pfad, string $schluessel, callable $hinaus): int
  *
  * SIE IST SO GROSS, DASS DER HUCKEPACK-WEG GAR NICHT ERST ANFAENGT
  * (`JOB_BUDGET_ANFRAGE` = 3 s). Ein Komplett-Backup ist die schwerste
- * Arbeit dieser Anwendung; sie an der Anfrage einer NutzerIn mitlaufen zu
+ * Arbeit dieser Anwendung; es an der Anfrage einer NutzerIn mitlaufen zu
  * lassen hiesse, eine Seite auf zehn Sekunden zu bringen, damit im
  * Hintergrund die Datenbank abgeschrieben wird.
  */
@@ -1199,13 +1199,13 @@ function komp_auftrag_starten(): array
     if (!serverschluessel_da()) {
         return ['ok' => false, 'meldung' => 'Es gibt noch keinen Serverschlüssel. '
             . 'Ohne ihn kann das Komplett-Backup nicht versiegelt werden, und '
-            . 'unversiegelt wird sie nicht abgelegt. Der Schlüssel wird auf der '
+            . 'unversiegelt wird es nicht abgelegt. Der Schlüssel wird auf der '
             . 'Seite „Backup-Ziele" eingetragen.'];
     }
     [$bOk, $bMeldung] = komp_bereit();
     if (!$bOk) { return ['ok' => false, 'meldung' => (string)$bMeldung]; }
     /* DIE SPEICHERGRENZE GILT AUCH HIER (E-S2-15). Ein Komplett-Backup ist
-     * die groesste einzelne Datei der Ablage; sie an der Grenze vorbei
+     * die groesste einzelne Datei der Ablage; es an der Grenze vorbei
      * anzulegen hiesse, den Webspace mit genau dem vollzuschreiben, was ihn
      * retten soll. */
     [$gOk, $gMeldung] = edbak_grenze_pruefen(true);
@@ -1231,7 +1231,7 @@ function komp_auftrag_starten(): array
         return ['ok' => false, 'meldung' => 'Der Auftrag liess sich nicht vormerken.'];
     }
     return ['ok' => true, 'meldung' => 'Das Komplett-Backup ist vorgemerkt. '
-        . 'Sie läuft mit dem nächsten Wartungslauf in Häppchen an.'];
+        . 'Es läuft mit dem nächsten Wartungslauf in Häppchen an.'];
 }
 
 /** Einen laufenden Auftrag abbrechen und den Bauordner raeumen. */
@@ -1422,7 +1422,7 @@ function komp_ausgeben_klar(string $datei, callable $hinaus): int
 /**
  * Ein abgelegtes Backup unter einer PASSPHRASE ausgeben (E-S2-21).
  *
- * Sie wird dabei nicht doppelt verschlüsselt, sondern UMGESIEGELT: mit dem
+ * Es wird dabei nicht doppelt verschlüsselt, sondern UMGESIEGELT: mit dem
  * Serverschlüssel geoeffnet, mit dem abgeleiteten Schluessel wieder
  * verschlossen. Der Zweck ist die Weitergabe — eine Datei, die auch dann noch
  * verschlossen ist, wenn sie auf einem USB-Stick liegt oder in einem

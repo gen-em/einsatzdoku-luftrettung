@@ -6,10 +6,10 @@ require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/jobs_lib.php';
 
 /**
- * KOMPLETTSICHERUNG — die ganze Installation als versiegelter SQL-Dump
+ * KOMPLETT-BACKUP — die ganze Installation als versiegelter SQL-Dump
  * (E-S2-19 bis E-S2-21, S2/AP8).
  *
- * WARUM EINE EIGENE SEITE UND KEINE KARTE AUF „SICHERUNGEN". Dieselbe
+ * WARUM EINE EIGENE SEITE UND KEINE KARTE AUF „BACKUPS". Dieselbe
  * Begründung wie bei den Backup-Zielen: „Backups" ist seit P3/O9c die
  * Seite der REGELN — Aufbewahrung, Grenze, Schwellen. Hier steht eine Liste
  * von Ständen mit Handgriffen daran, dazu ein Lauf, der Minuten dauert und

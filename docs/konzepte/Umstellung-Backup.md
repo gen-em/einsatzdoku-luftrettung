@@ -11,13 +11,15 @@ S7) · **Umsetzung:** in einem Zug, Zweig `claude/new-session-30byn3`
 | AP1 | Backup-Seite der NutzerIn (`einstellungen.php`, `assets/*.js`, `style.css`) | **erledigt** |
 | AP2 | Adminbereich Konten (`admin_user.php`, `admin_users.php`, `admin_sicherungen.php`, `adminbackup_lib.php`, `backup_lib.php`, `api/`) | **erledigt** |
 | AP3 | Komplett-Backup und Wiederanlauf (`komplett_lib.php`, `admin_komplettsicherung.php`, `wiederherstellen.php`) | **erledigt** |
-| AP4 | Backup-Ziele, Jobs, Rahmen (`admin_sicherungsziele.php`, `sicherungsziel_lib.php`, `jobs_lib.php`, `ui.php`, `update.php`, `install.php`, Rest) | offen |
+| AP4 | Backup-Ziele, Jobs, Rahmen (`admin_sicherungsziele.php`, `sicherungsziel_lib.php`, `jobs_lib.php`, `ui.php`, `update.php`, `install.php`, Rest) | **erledigt** — `server/` ist durch |
 | AP5 | Dokumentation (Handbuch, Technik, Backup-Format, Export-Format, Design, Lizenzen, README, Backlog) | offen |
 | AP6 | `tools/` | offen |
 | AP7 | Buchführung (Version, Changelog), Prüfmittel, Prüfdokument | offen |
 | AP8 | Rahmenplan, Löschung dieses Dokuments — **erst nach Freigabe** | offen |
 
-**Wo es hakt:** nichts. **Nicht prüfbar in dieser Umgebung:** nichts —
+**Wo es hakt:** nichts an der Umstellung. Ein **vorbestehender** Fehler
+ist beim Prüfen aufgefallen und als Backlog Nr. 89 aufgenommen (F-S7-06):
+Der Job „Komplett-Backup der Installation" läuft seit Web 12.2.0 nie. **Nicht prüfbar in dieser Umgebung:** nichts —
 entgegen der Erwartung steht eine vollständige lokale Installation
 (MariaDB nachinstalliert, Referenzdatensatz über die regulären Wege
 eingespielt: 526 Ingest-Anfragen, 16 Diensttage, 87 Einsätze, 0 Fehler).
@@ -133,8 +135,31 @@ Getroffen am 02.09.2026, vor der ersten Änderung. Sie ergänzen R56 (Verb
   `wiederherstellen.php`: „Eine Seite ohne Anmeldung, die sie nebenbei
   mitlaufen liesse, nähme genau diese Sicherung heraus" — gemeint ist der
   Knopf zwischen Anzeigen und Ausführen, kein Backup. Ebenfalls zu
-  „Absicherung". Der vierte und letzte Fall (`einsatz_loeschen.php`) wartet
-  auf AP4; danach ist der Bestand durchgesehen.
+  „Absicherung". Der vierte und letzte Fall (`einsatz_loeschen.php`, „so
+  greift die Sicherung auch, wenn Dialoge blockiert sind") ist in AP4
+  erledigt; damit ist der Bestand durchgesehen.
+- **F-S7-06 (AP4) — ein vorbestehender Fehler, gefunden beim Prüfen:
+  Der Job „Komplett-Backup der Installation" läuft seit Web 12.2.0 nie.**
+  `job_komplett()` nimmt `float $reserve = KOMP_RESERVE_S` als
+  Parameter-Vorgabewert; die Konstante steht in `komplett_lib.php`, das
+  erst **im Rumpf** geladen wird. PHP wertet Vorgabewerte beim Aufruf aus —
+  also vorher. Der Aufruf aus `jobs.php` endet damit immer in
+  `Error: Undefined constant "KOMP_RESERVE_S"`, und die Wartungsseite zeigt
+  den Job als „Fehler". **Von S7 unberührt** (auf `main` identisch), deshalb
+  nach K4 gesammelt statt behoben: **Backlog Nr. 89**.
+- **F-S7-07 (AP4) — Versalien-Überschriften zogen zunächst nicht mit.**
+  Das Projekt setzt Abschnittsüberschriften in Kommentaren in Großbuchstaben
+  („SICHERUNGSZIELE — wohin die Sicherungen geschoben werden"). Alle Regeln
+  waren auf gemischte Schreibung gebaut; 30 Stellen in `server/` wären
+  stehen geblieben, und keine Prüfung hätte sie gemeldet, weil die
+  Nachprüfung dieselbe Annahme teilte. Eigene Versalien-Liste ergänzt.
+- **F-S7-08 (AP4) — Pronomen und Possessive ziehen nicht von selbst mit.**
+  „Das Komplett-Backup ist vorgemerkt. **Sie** läuft mit dem nächsten
+  Wartungslauf an." Eine Prüfung über Satzgrenzen hinweg (Nomen, dann
+  `sie`/`ihr` innerhalb von 160 Zeichen ohne Satzende dazwischen) legte
+  50 Stellen vor; 11 davon waren echte Fehlbezüge, 39 gingen auf ein
+  anderes Wort. Alle 11 behoben. Ohne diese Prüfung wären sie in
+  Meldungen stehen geblieben, die eine NutzerIn liest.
 
 ---
 

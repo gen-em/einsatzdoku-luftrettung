@@ -298,7 +298,7 @@ unset($k);
  * den Filterplaketten dagegen beziehen sich auf die laufende Suche: Sie
  * beantworten „was bringt mir dieser Filter jetzt?".
  *
- * SIE TRETEN AN DIE STELLE DER SICHERUNGSERINNERUNG (A8.4). Bis Web 9.8.0
+ * SIE TRETEN AN DIE STELLE DER BACKUP-ERINNERUNG (A8.4). Bis Web 9.8.0
  * stand oben auf dieser Seite eine Warnung aus edbak_erinnerung() — mit der
  * ausdruecklichen Begruendung, sie stehe HIER und nicht nur auf der
  * Backup-Seite, weil ein Hinweis auf einer Seite, die man erst oeffnet,

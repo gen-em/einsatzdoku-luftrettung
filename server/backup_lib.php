@@ -47,7 +47,7 @@ const EDBAK_FENSTER = 500;
 /**
  * Inneres Backup-JSON aufbauen.
  *
- * DER PAPIERKORB IST TEIL JEDER SICHERUNG (E-S1-01). Bis Web 7.3.1 filterten
+ * DER PAPIERKORB IST TEIL JEDES BACKUPS (E-S1-01). Bis Web 7.3.1 filterten
  * drei Abfragen hier auf `deleted_at IS NULL`, und ein Parameter
  * `$mitPapierkorb` schaltete den Filter fuer die Demo-Fixture ab. Beides ist
  * entfallen.
@@ -62,7 +62,7 @@ const EDBAK_FENSTER = 500;
  * ist ein ABBILD; ein Abbild, das einen Teil des Bestands weglaesst, ist
  * keines.
  *
- * KEINE WAHLMOEGLICHKEIT AUF DER SICHERUNGSSEITE (E-S1-02). Ein Haken
+ * KEINE WAHLMOEGLICHKEIT AUF DER BACKUP-SEITE (E-S1-02). Ein Haken
  * „Papierkorb mitsichern" verschoebe die Entscheidung auf den Zeitpunkt, an
  * dem am wenigsten ueberlegt wird. Stattdessen nennen die Umfangsangaben
  * (Admin-Tabelle, Freigabe-Hinweis, `umfang.papierkorb` des Admin-Backups),
@@ -134,7 +134,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      *
      * Hier stand eine Funktion, die JE EINSATZ und JE RUHESEGMENT eine eigene
      * Abfrage absetzte — zusammen mit Phasen, Rettungsmitteln und Reanimation
-     * waren das bei 1600 Einsaetzen ueber 6000 Abfragen fuer EINE Backup.
+     * waren das bei 1600 Einsaetzen ueber 6000 Abfragen fuer EIN Backup.
      * Eine Obergrenze gab es nicht: Die Zahl waechst mit dem Bestand, und das
      * Backup ist genau die Handlung, die jemand ausfuehrt, wenn er ohnehin
      * schon beunruhigt ist.

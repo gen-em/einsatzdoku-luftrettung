@@ -708,8 +708,8 @@ function ui_leiste_einstellungen(string $aktiv): void
          * sich nur im Reiter unterschieden. Der Reiter gehoert in die Seite
          * (Segmentwahl in der Titelzeile), nicht in die Leiste. */
         'admin_stammdaten'  => ['admin_stammdaten.php',  'Stammdaten systemweit', 'datenbank'],
-        'admin_sicherungen' => ['admin_sicherungen.php', 'Sicherungen',           'sicherung'],
-        /* SICHERUNGSZIELE STEHEN DIREKT UNTER SICHERUNGEN (S2/AP7). Sie sind
+        'admin_sicherungen' => ['admin_sicherungen.php', 'Backups',           'sicherung'],
+        /* BACKUP-ZIELE STEHEN DIREKT UNTER BACKUPS (S2/AP7). Sie sind
          * die Fortsetzung derselben Sache: erst die Regeln, dann wohin.
          * Das Symbol ist `tausch` — dasselbe wie bei Import/Export, und aus
          * demselben Grund: Es geht in beiden Faellen um Dateien, die das Haus
@@ -718,19 +718,19 @@ function ui_leiste_einstellungen(string $aktiv): void
          *
          * NICHT „Transportziele" — so heissen unter Stammdaten die
          * Zielkliniken (F-S2-G). */
-        'admin_sicherungsziele' => ['admin_sicherungsziele.php', 'Sicherungsziele', 'tausch'],
-        /* KOMPLETTSICHERUNG DIREKT DAHINTER (S2/AP8). Die drei gehoeren
+        'admin_sicherungsziele' => ['admin_sicherungsziele.php', 'Backup-Ziele', 'tausch'],
+        /* KOMPLETT-BACKUP DIREKT DAHINTER (S2/AP8). Die drei gehoeren
          * zusammen und stehen in der Reihenfolge, in der man sie braucht:
-         * erst die Regeln fuer die Kontosicherungen, dann wohin sie gehen,
-         * dann die Sicherung der ganzen Installation.
+         * erst die Regeln fuer die Konto-Backups, dann wohin sie gehen,
+         * dann das Backup der ganzen Installation.
          *
          * Das Symbol ist `datenbank` — dasselbe wie bei „Stammdaten
          * systemweit", und aus dem naheliegenden Grund: Hier wird die
          * Datenbank als solche gesichert. Ein NEUES Symbol braeuchte Freigabe
          * mit Mockup (docs/Design.md, Kapitel 9); der Vorrat reicht. */
         'admin_komplettsicherung' => ['admin_komplettsicherung.php',
-                                      'Komplettsicherung', 'datenbank'],
-        /* Zwischen Sicherungen und Demo-Konto — so steht es in Mockup 35. */
+                                      'Komplett-Backup', 'datenbank'],
+        /* Zwischen Backups und Demo-Konto — so steht es in Mockup 35. */
         'admin_rechtstexte' => ['admin_rechtstexte.php', 'Rechtstexte',           'rechtstexte'],
         'admin_demo'        => ['admin_demo.php',        'Demo-Konto',            'kolben'],
         'wartung'           => ['update.php',            'Wartung',               'werkzeug'],
@@ -790,9 +790,9 @@ function ui_einstellungen_uebersicht(): void
         $bloecke[] = ['Administration', [
             ['admin_users.php',      'NutzerInnen',           'gruppe'],
             ['admin_stammdaten.php', 'Stammdaten systemweit', 'datenbank'],
-            ['admin_sicherungen.php','Sicherungen',           'sicherung'],
-            ['admin_sicherungsziele.php', 'Sicherungsziele',   'tausch'],
-            ['admin_komplettsicherung.php', 'Komplettsicherung', 'datenbank'],
+            ['admin_sicherungen.php','Backups',           'sicherung'],
+            ['admin_sicherungsziele.php', 'Backup-Ziele',   'tausch'],
+            ['admin_komplettsicherung.php', 'Komplett-Backup', 'datenbank'],
             ['admin_rechtstexte.php','Rechtstexte',           'rechtstexte'],
             ['admin_demo.php',       'Demo-Konto',            'kolben'],
             ['update.php',           'Wartung',               'werkzeug'],
@@ -929,7 +929,7 @@ function ui_demo_hinweis(): void
  *
  *   fehler   rosa/rot   Dreieck    „Nicht gespeichert."
  *   info     hellblau   Kreis-i    Erklärung, Zustand
- *   ok       hellblau   Haken      Vollzug: „Sicherung erstellt."
+ *   ok       hellblau   Haken      Vollzug: „Backup erstellt."
  *   warn     hellorange Dreieck    Warnung, die kein Fehler ist
  *
  * GRÜN IST FORT. Die Vollzugsmeldung war grün — eine Farbe, die es in der
@@ -1114,7 +1114,7 @@ function ui_karte_start(array $o = []): void
         if (isset($o['zahl'])) {
             echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";
         }
-        /* Eine Plakette neben Titel und Zahl (O9, Mockup 40: „Sicherungen 3
+        /* Eine Plakette neben Titel und Zahl (O9, Mockup 40: „Backups 3
          * [überfällig · 23 Tage]"). Sie sagt den ZUSTAND des Karteninhalts —
          * und gehört deshalb dorthin, wo man den Titel liest, nicht in die
          * erste Zeile darunter. Fertiges Markup aus ui_plakette(). */
@@ -1654,7 +1654,7 @@ function ui_speichern_leiste(array $o = []): void
 function ui_kennzahl(array $o): string
 {
     /* TON UND VERWEIS (O9b, Mockup 41). Eine Statuskachel sagt nicht nur eine
-     * Zahl, sondern auch, ob sie in Ordnung ist („27 Sicherung überfällig" in
+     * Zahl, sondern auch, ob sie in Ordnung ist („27 Backup überfällig" in
      * Orange, „9 nie gesichert" in Rot) — und sie ist ein WEG: Ein Klick
      * öffnet die Liste, auf die sie sich bezieht. Ein <a> statt eines <div>,
      * weil ein Klickziel, das kein Link ist, weder Tastatur noch Kontextmenü
@@ -1898,7 +1898,7 @@ function ui_ortsfeld(array $o): void
  *     wrap     false -> KEIN PAT_WRAP. Genau ein Aufrufer: einsatz.php, das
  *              die Huelle aus der API-Antwort bezieht (m.pat_wrap).
  *     keycheck true  -> zusaetzlich PAT_KEY_CHECK (Herkunftsabgleich beim
- *              Einspielen einer Sicherung)
+ *              Einspielen eines Backups)
  *     csrf     true  -> zusaetzlich CSRF
  *     einzug   Einrueckung der ausgegebenen Zeilen
  */

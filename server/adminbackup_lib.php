@@ -138,7 +138,7 @@ function edbak_wurzel(): string
  */
 function edbak_ablage_bereit(): array
 {
-    /* OHNE ext/zip GIBT ES KEINE SICHERUNG (S2/AP6).
+    /* OHNE ext/zip GIBT ES KEINE BACKUP (S2/AP6).
      *
      * Seit dem Umbau auf das mehrteilige Rohpaket ist ein Adminpaket ein ZIP.
      * Fehlt die Erweiterung, soll das HIER auffallen — an der Stelle, die
@@ -674,7 +674,7 @@ function edbak_sicherung_erzeugen(int $userId): array
     if (!edbak_begleit_schreiben($kennung, $begleit)) {
         /* KEIN STILLES WEITERGEHEN (S2/AP6). Der Rueckgabewert wurde hier
          * verworfen. Das Backup liegt dann zwar, aber das Verzeichnis
-         * kennt sie nicht — und `edbak_pakete()` faellt fuer sie auf den
+         * kennt es nicht — und `edbak_pakete()` faellt fuer es auf den
          * Zeitstempel im Namen zurueck, ohne Umfang. Das ist kein
          * Datenverlust, aber eine Auskunft, die fehlt. */
         return [true, 'Das Backup liegt, aber das Verzeichnis des Kontos '
@@ -1608,12 +1608,12 @@ function edbak_ablage_zahlen(bool $frisch = false): array
             }
         }
     }
-    /* DIE KOMPLETTSICHERUNGEN BEKOMMEN EINE EIGENE ZAHL (S2/AP8).
+    /* DIE KOMPLETT-BACKUPS BEKOMMEN EINE EIGENE ZAHL (S2/AP8).
      *
      * Gewogen waren sie schon vorher — `$wiegen` geht ueber den ganzen Baum.
      * Sie landeten damit aber unter `sonstige_bytes`, und das ist die Zahl,
      * die auf der Speicherseite „auffaelliger Rest" heisst. Ein
-     * Komplett-Backup ist mit Abstand die groesste Datei der Ablage; sie als
+     * Komplett-Backup ist mit Abstand die groesste Datei der Ablage; es als
      * Rest auszuweisen hiesse, die Speicherseite zur Meldung eines Fehlers zu
      * bringen, den es nicht gibt — und beim naechsten Mal glaubt ihr niemand
      * mehr. */
@@ -2223,7 +2223,7 @@ function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?
  * Seiten geleert: von der Schaltflaeche, solange die Anfrage Zeit hat, und
  * vom Wartungsjob, in Schueben.
  *
- * KEINE AUTOMATISCHEN SICHERUNGEN. Der Job arbeitet nur, wenn ein Auftrag
+ * KEINE AUTOMATISCHEN BACKUPS. Der Job arbeitet nur, wenn ein Auftrag
  * vorliegt — E-S2-19 hat naechtliche Konto-Backups ausdruecklich
  * abgelehnt. Ohne Auftrag kostet er eine Abfrage.
  */

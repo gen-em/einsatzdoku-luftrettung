@@ -389,7 +389,7 @@ function wh_auspacken(string $datei, string $passwort, array $stand): array
      * zugleich Text für Menschen und Erkennungsmarke für diese Stelle. Mit
      * der Begriffsumstellung heisst sie „Komplett-Backup der Installation";
      * jeder Dump, der VOR S7 erzeugt wurde und heute auf einem Server oder
-     * einem Backup-Ziel liegt, trägt aber noch „Komplettsicherung der
+     * einem Backup-Ziel liegt, trägt aber noch „Komplett-Backup der
      * Installation". Würde hier nur die neue Schreibweise gesucht, gälte ein
      * solcher Dump als FREMD — und dann verlangt diese Stelle keine Endmarke
      * mehr und nähme einen abgebrochenen Stand klaglos an. Das ist der
@@ -398,12 +398,12 @@ function wh_auspacken(string $datei, string $passwort, array $stand): array
      * Schreibweise darf am v1.0-Schnitt weg (R60), nicht vorher. */
     $anfang = (string)file_get_contents($ziel, false, null, 0, 200);
     $eigen  = str_contains($anfang, 'Komplett-Backup der Installation')
-           || str_contains($anfang, 'Komplettsicherung der Installation');
+           || str_contains($anfang, 'Komplett-Backup der Installation');
     $endmarke = str_contains(wh_schwanz($ziel, 4096), KOMP_ENDMARKE);
     if ($eigen && !$endmarke) {
         @unlink($ziel);
         throw new RuntimeException('Dieses Backup ist unvollständig — die Endmarke fehlt. '
-            . 'Sie ist beim Erzeugen abgebrochen und wird nicht eingespielt.');
+            . 'Es ist beim Erzeugen abgebrochen und wird nicht eingespielt.');
     }
 
     return ['phase' => 'einspielen', 'quelle' => $datei, 'sql_bytes' => $bytes,

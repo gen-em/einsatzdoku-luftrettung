@@ -90,7 +90,7 @@ const JOB_SPERRE_VERFALL_S = 3600;
  *
  * DER RAHMEN HAT BIS WEB 12.0.0 NUR DIE ZEIT GEMESSEN. Das reichte, solange
  * jeder Job in Bloecken ueber Zeilen lief — dort waechst der Speicher mit der
- * Blockgroesse und nicht mit dem Bestand. Der Sicherungsjob ist anders: Ein
+ * Blockgroesse und nicht mit dem Bestand. Der Backup-Job ist anders: Ein
  * einzelnes Konto kostet beim 5000er-Bestand 24 MB, und das ist die Groesse,
  * an der es klemmt, nicht die Sekunde.
  *
@@ -115,8 +115,8 @@ const JOB_TOKEN_SCHLUESSEL = 'jobs_token';
  *
  * WOFUER (S2/AP3). Seit die Jobs Zeilen LOESCHEN und Blobs ERSETZEN, aendern
  * sie waehrend ihres Laufs den Bestand — und das trifft jede Messung, die
- * gerade nebenher laeuft. Aufgefallen ist es am Kreislauf: Er spielt eine
- * Sicherung in ein frisches Konto und exportiert sie sofort wieder. Die
+ * gerade nebenher laeuft. Aufgefallen ist es am Kreislauf: Er spielt ein
+ * Backup in ein frisches Konto und exportiert es sofort wieder. Die
  * wiederhergestellten Einsaetze sind alt; der Verdichtungsjob haelt sie fuer
  * reif, verdichtet sie, und der Ausduennungsjob duennt aus, was aelter als
  * sechs Monate ist. Der Vergleich misst dann nicht mehr „kommt zurueck, was
@@ -133,7 +133,7 @@ const JOB_TOKEN_SCHLUESSEL = 'jobs_token';
  * Wartungsseite zeigt sie an, damit eine vergessene Pause nicht aussieht wie
  * ein arbeitender Job.
  *
- * Im Betrieb ist sie ebenfalls nuetzlich: Wer eine grosse Sicherung
+ * Im Betrieb ist sie ebenfalls nuetzlich: Wer ein grosses Backup
  * einspielt, will die Jobs so lange still haben.
  */
 const JOB_PAUSE_SCHLUESSEL = 'jobs_pause_bis';
@@ -223,14 +223,14 @@ function jobs_katalog(): array
             'rueckstand'   => 'job_ausduennen_rueckstand',
             'lauf'         => 'job_ausduennen',
         ],
-        /* DER SICHERUNGSJOB STEHT VOR `waisen` UND NACH DER SPURARBEIT.
+        /* DER BACKUP-JOB STEHT VOR `waisen` UND NACH DER SPURARBEIT.
          *
          * Er arbeitet nur, wenn ein Auftrag vorliegt („Alle sichern"); ohne
          * Auftrag kostet er eine Abfrage. Er darf deshalb weit vorn stehen,
          * ohne den anderen Jobs im Regelfall Budget wegzunehmen — und wenn er
          * etwas zu tun hat, ist es das, worauf jemand gerade wartet. */
         'adminbackup' => [
-            'titel'        => 'Sicherungen aller Konten',
+            'titel'        => 'Backups aller Konten',
             'beschreibung' => 'Den Auftrag „Alle sichern" in Schüben abarbeiten '
                             . '— je Konto ein Paket, mit Wiederaufnahme',
             'taeglich'     => false,
@@ -244,30 +244,30 @@ function jobs_katalog(): array
          *
          * Ohne aktives Ziel kostet er eine Abfrage und ist fertig. */
         'versand' => [
-            'titel'        => 'Sicherungen versenden',
-            'beschreibung' => 'Neue Pakete auf die aktiven Sicherungsziele '
+            'titel'        => 'Backups versenden',
+            'beschreibung' => 'Neue Pakete auf die aktiven Backup-Ziele '
                             . 'schieben — nur was dort fehlt, und nichts wird '
                             . 'dort gelöscht',
             'taeglich'     => false,
             'rueckstand'   => 'job_versand_rueckstand',
             'lauf'         => 'job_versand',
         ],
-        /* DIE KOMPLETTSICHERUNG STEHT NACH DEM VERSAND, nicht davor — und das
+        /* DIE KOMPLETT-BACKUP STEHT NACH DEM VERSAND, nicht davor — und das
          * kostet bewusst einen Lauf.
          *
          * Davor waere sie am rechten Platz: Was hier entsteht, ginge im selben
          * Lauf hinaus. Nur ist sie die schwerste Arbeit dieser Anwendung, und
          * jeder Job hinter ihr bekaeme nur noch, was sie uebrig laesst. Ein
          * Versand, der wochenlang nicht drankommt, weil vor ihm eine
-         * Datenbank abgeschrieben wird, waere der teurere Fehler: Die
-         * Sicherung laege dann zwar da, aber nur hier.
+         * Datenbank abgeschrieben wird, waere der teurere Fehler: Das
+         * Backup laege dann zwar da, aber nur hier.
          *
          * Der Preis ist, dass ein frischer Stand erst im NAECHSTEN Lauf
          * hinausgeht — bei taeglichem Cron also am Tag darauf. Zusaetzlich
          * begrenzt sich der Job auf KOMP_LAUF_MAX_S, damit auch `waisen`
          * hinter ihm noch zum Zug kommt. */
         'komplett' => [
-            'titel'        => 'Komplettsicherung der Installation',
+            'titel'        => 'Komplett-Backup der Installation',
             'beschreibung' => 'Die ganze Datenbank als versiegelter SQL-Dump '
                             . '— tabellenweise in Häppchen, mit Wiederaufnahme',
             'taeglich'     => false,
@@ -789,7 +789,7 @@ function job_verdichtung(PDO $pdo, array $zustand, callable $zeitLinks): array
                 }
 
                 // 4. Zu gross: ablehnen, nicht verdichten. Eine solche Spur ist
-                //    aus einer Sicherung nicht wiederherstellbar (F-S2-02); sie
+                //    aus einem Backup nicht wiederherstellbar (F-S2-02); sie
                 //    zu verdichten hiesse, Zeilen unwiderruflich gegen einen
                 //    Blob zu tauschen, den der Rueckweg ablehnt.
                 if ($u['gesamt'] > LIMIT_TRACKPUNKTE_SPUR) {
@@ -915,7 +915,7 @@ function job_verdichtung_rueckstand(PDO $pdo, array $z): ?int
  * DER EINSTIEG GEHT UEBER DEN PRIMAERSCHLUESSEL von `track_blobs`, nicht ueber
  * den Index `stufe_alter (stufe, geaendert_am)`. Der traegt das Aenderungsdatum
  * des BLOBS, nicht das Einsatzende, und ist als Naeherung in beide Richtungen
- * falsch: Das Einspielen einer Sicherung schreibt einen frischen
+ * falsch: Das Einspielen eines Backups schreibt einen frischen
  * `geaendert_am` auf zwei Jahre alte Punkte, und `spur_zeit_verschieben()`
  * schreibt ihn bei jeder Umdatierung eines Diensttags neu.
  *
@@ -988,7 +988,7 @@ function job_ausduennen(PDO $pdo, array $zustand, callable $zeitLinks): array
                  * verlustfreien Blob zusammenfuehrt. Duennte man jetzt aus,
                  * nummerierte der Blob 0..n_gespeichert-1 und die Nachzuegler
                  * begaennen bei n_original — eine Nummernluecke, die der
-                 * Rueckweg der Sicherung nicht vertraegt. */
+                 * Rueckweg des Backups nicht vertraegt. */
                 if (isset($mitZeilen[$id])) {
                     if (count($sammeln['nachzuegler']) < JOB_LISTE_MAX) { $sammeln['nachzuegler'][] = "$typ:$id"; }
                     $offen++; continue;
@@ -1080,20 +1080,20 @@ function job_ausduennen_rueckstand(PDO $pdo, array $z): ?int
     return isset($z['offen']) ? (int)$z['offen'] : null;
 }
 
-/* ---- Job: Sicherungen aller Konten (S2/AP6, E-S2-14) --------------------
+/* ---- Job: Backups aller Konten (S2/AP6, E-S2-14) --------------------
  *
  * ER ARBEITET NUR AUF AUFTRAG. „Alle sichern" legt eine Warteschlange an
  * (`edbak_auftrag_starten()`); dieser Job leert sie in Schueben. Ohne Auftrag
  * kostet er eine Abfrage und meldet „fertig".
  *
- * WARUM NICHT AUTOMATISCH. E-S2-19 hat naechtliche Sicherungen je Konto
+ * WARUM NICHT AUTOMATISCH. E-S2-19 hat naechtliche Backups je Konto
  * ausdruecklich abgelehnt (Beschluss 29.08.2026). Der Job ist das Fuhrwerk
  * fuer die Schaltflaeche, kein Zeitplan.
  *
  * DIE RESERVE IST GROSS, und das ist Absicht: Ein Konto mit 5000 Einsaetzen
  * kostet gemessen 14,13 s. Am Huckepack-Weg (JOB_BUDGET_ANFRAGE = 3 s) fängt
  * dieser Job deshalb gar nicht erst an — eine Anfrage einer NutzerIn soll
- * keine fremde Sicherung mittragen.
+ * kein fremdes Backup mittragen.
  */
 const JOB_ADMINBACKUP_RESERVE_S = 15.0;
 
@@ -1113,7 +1113,7 @@ function job_adminbackup_rueckstand(PDO $pdo, array $zustand): ?int
 }
 
 
-/* ---- Versand auf die Sicherungsziele (S2/AP7, E-S2-22) ------------------- */
+/* ---- Versand auf die Backup-Ziele (S2/AP7, E-S2-22) ------------------- */
 
 /**
  * Neue Pakete auf die aktiven Ziele schieben.
@@ -1154,10 +1154,10 @@ function job_versand_rueckstand(PDO $pdo, array $zustand): ?int
 }
 
 
-/* ---- Komplettsicherung der Installation (S2/AP8, E-S2-19 bis E-S2-21) ----- */
+/* ---- Komplett-Backup der Installation (S2/AP8, E-S2-19 bis E-S2-21) ----- */
 
 /**
- * Wie viel Zeit ein Lauf hoechstens fuer die Komplettsicherung verwendet.
+ * Wie viel Zeit ein Lauf hoechstens fuer das Komplett-Backup verwendet.
  *
  * OHNE DIESE SCHRANKE FRAESSE SIE DEN GANZEN CLI-LAUF (300 s). Sie arbeitet,
  * solange sie Zeit hat, und Zeit hat sie auf dem Cron-Weg reichlich — hinter

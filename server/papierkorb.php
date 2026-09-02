@@ -36,7 +36,7 @@ if ($isPost && $action === 'restore_mission' && $id > 0) {
     /* NICHT MEHR BEDINGUNGSLOS (Backlog Nr. 33). Liegt der Diensttag selbst im
      * Papierkorb, lehnt trash_restore_mission() ab — sonst entstuende ein
      * aktiver Einsatz an einem geloeschten Tag, also genau der halb sichtbare
-     * Zustand, den das Einspielen einer Sicherung seit E-S1-19 verweigert.
+     * Zustand, den das Einspielen eines Backups seit E-S1-19 verweigert.
      * Die Meldung geht ueber die Sitzung, weil danach umgeleitet wird. */
     $ergebnis = trash_restore_mission($userId, $id);
     if ($ergebnis === 'tag_im_papierkorb') {

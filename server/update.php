@@ -951,24 +951,24 @@ $MIGRATIONS = [
     [
         'id'    => '2026_08_16_kontokennung',
         'web'   => '5.9.0',
-        'label' => 'Kontokennung für die Admin-Sicherungen (users.account_key)',
+        'label' => 'Kontokennung für die Admin-Backups (users.account_key)',
         /* WARUM EINE EIGENE KENNUNG UND NICHT users.id ODER DIE ADRESSE (E17)
          *
-         * Die Kennung ist der Ordnername der Admin-Sicherung. Sie muss
+         * Die Kennung ist der Ordnername des Admin-Backups. Sie muss
          * unveraenderlich sein und darf NIE ein zweites Mal vergeben werden.
          *
          * Die E-Mail-Adresse scheidet aus: Sie aendert sich (der Ordner
          * muesste mitwandern, ein Fehlschlag bliebe unbemerkt), sie ist eine
          * personenbezogene Angabe im Klartext auf dem Dateisystem, sie bringt
          * Zeichen- und Gross-/Kleinschreibungsprobleme mit — und bei Loeschung
-         * plus Neuanlage derselben Adresse traefen Sicherungen mit
+         * plus Neuanlage derselben Adresse traefen Backups mit
          * VERSCHIEDENEN Inhaltsschluesseln in einem Ordner aufeinander.
          *
          * users.id scheidet aus, weil der AUTO_INCREMENT-Zaehler in MariaDB
          * und aelteren MySQL-Fassungen nach einem Serverneustart auf den
          * hoechsten vorhandenen Wert zurueckfallen kann. Ein neu angelegtes
          * Konto koennte dann den Ordner eines geloeschten erben — und dessen
-         * Sicherungen unter seinem Namen fuehren.
+         * Backups unter seinem Namen fuehren.
          *
          * Zwei Zugaben der Zufallskennung: Sie ist nicht erratbar und damit
          * selbst die zweite Schranke, falls die .htaccess einmal nicht greift;
@@ -1732,14 +1732,14 @@ $MIGRATIONS = [
     [
         'id'    => '2026_09_01_sicherungsziele',
         'web'   => '12.1',
-        'label' => 'Sicherungsziele: Tabelle backup_targets für FTP, FTPS und SFTP (S2/AP7)',
+        'label' => 'Backup-Ziele: Tabelle backup_targets für FTP, FTPS und SFTP (S2/AP7)',
         'skip'  => function (PDO $pdo): bool {
             $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
                               WHERE table_schema = DATABASE() AND table_name = 'backup_targets'");
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* WOHIN DIE SICHERUNGEN GESCHOBEN WERDEN (E-S2-22).
+            /* WOHIN DIE BACKUPS GESCHOBEN WERDEN (E-S2-22).
              *
              * DER NAME IST NICHT `transport_dests`, UND ZWAR MIT ABSICHT. Die
              * Tabelle `transport_dests` gibt es seit Web 4 — sie haelt die
@@ -1747,8 +1747,8 @@ $MIGRATIONS = [
              * Konzept nennt das hier ebenfalls „Transportziel"; im Adminbereich
              * staenden damit zwei verschiedene Dinge unter demselben Wort, und
              * zwar zwei Klicks voneinander entfernt (Stammdaten gegen
-             * Sicherungen). Deshalb heisst es hier SICHERUNGSZIEL. Der
-             * Unterschied ist in docs/Konzept-S2 unter F-S2-G festgehalten.
+             * Backups). Deshalb heisst es hier BACKUP-ZIEL. Der
+             * Unterschied ist in docs/konzepte/erledigt/Konzept-S2 unter F-S2-G festgehalten.
              *
              * DIE GEHEIMNISSE STEHEN VERSIEGELT DRIN, NIE IM KLARTEXT.
              * `geheim` und `schluessel` tragen `edsk1:`-Chiffren aus
@@ -1988,7 +1988,7 @@ $MIGRATIONS = [
  * des Browsers ihr folgte, hatte die Migrationen laufen lassen — darunter
  * solche, die Spalten LOESCHEN. Eine unwiderrufliche Handlung auf einen GET
  * hin ist immer falsch; hier war sie es besonders, weil die Seite kein
- * Formular-Token brauchte und der Rat, vorher eine Sicherung zu erstellen,
+ * Formular-Token brauchte und der Rat, vorher ein Backup zu erstellen,
  * erst DANACH zu lesen war.
  *
  * Jetzt gilt:
@@ -2128,7 +2128,7 @@ function inhalt_zaehlen(PDO $pdo, array $spalten): array
         /* Tabellen- und Spaltenname stehen fest im Code dieser Datei und
          * kommen von nirgendwo sonst her; sie lassen sich in einer
          * vorbereiteten Anweisung nicht als Parameter uebergeben. Die
-         * Ruecksicherung ist die Abfrage oben: Was nicht in
+         * Rueckspielen ist die Abfrage oben: Was nicht in
          * information_schema steht, kommt hier nicht an. */
         $c = $pdo->query("SELECT COUNT(*) FROM `$tabelle`
                           WHERE `$spalte` IS NOT NULL AND `$spalte` <> ''")->fetchColumn();
@@ -2563,7 +2563,7 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
                             . 'nachgeliefert hat.'],
             'zu_gross'    => ['Zu viele Punkte',
                               'Über 50 000 Punkte je Spur. Eine solche Spur ist aus '
-                            . 'einer Sicherung nicht wiederherstellbar; sie bleibt '
+                            . 'einem Backup nicht wiederherstellbar; sie bleibt '
                             . 'deshalb als Zeilen stehen.'],
             'stufe3'      => ['Punkte auf einer ausgedünnten Spur',
                               'Erwartet werden hier null. Steht eine Zahl da, nimmt '
@@ -2673,7 +2673,7 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
    * trash_purge_day() nimmt jetzt alles mit. Was VORHER entstanden ist,
    * liegt aber noch da, und sichtbar ist es fast nirgends: in der Suche und
    * auf der Einsatzseite ja — in Tagesübersicht, Zeitraum, Export und
-   * Nachbearbeitung nicht, und in einer Sicherung ist es zwar enthalten,
+   * Nachbearbeitung nicht, und in einem Backup ist es zwar enthalten,
    * kommt beim Einspielen aber nicht zurück.
    */
   $waisen = $pdo->query(
@@ -2693,7 +2693,7 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
           . 'keinen Diensttag. Sie stammen aus einem Stand vor Web 8.0.0 (siehe '
           . 'Changelog, Backlog Nr. 33). Sie sind in der Suche zu finden, fehlen '
           . 'aber in Tagesübersicht, Zeitraum, Export und Nachbearbeitung — und '
-          . 'eine Sicherung führt sie zwar mit, spielt sie aber nicht zurück.') ?>
+          . 'ein Backup führt sie zwar mit, spielt sie aber nicht zurück.') ?>
       <p class="feld-hinweis"><strong>Zu tun:</strong> Jeden Einsatz öffnen und über
          <strong>Verschieben</strong> an einen Diensttag hängen (oder löschen,
          wenn er nicht gebraucht wird). Diese Seite ändert von sich aus nichts —
@@ -2739,9 +2739,9 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
         <?= ui_meldung_markup('warn', $offen . ' Eintrag/Einträge stehen aus. '
             . 'Unten steht, was passieren würde.', 'Es wurde noch nichts geändert.') ?>
         <?= ui_meldung_markup('warn', 'Migrationen können Spalten und Daten '
-            . 'unwiderruflich entfernen. Die Sicherung dauert eine Minute — eine '
-            . 'verlorene Spalte dagegen ist verloren.', 'Vorher eine Sicherung erstellen.',
-            ui_knopf(['text' => 'Zur Sicherung', 'art' => 'neutral', 'symbol' => 'sicherung',
+            . 'unwiderruflich entfernen. Das Backup dauert eine Minute — eine '
+            . 'verlorene Spalte dagegen ist verloren.', 'Vorher ein Backup erstellen.',
+            ui_knopf(['text' => 'Zum Backup', 'art' => 'neutral', 'symbol' => 'sicherung',
                       'href' => 'einstellungen.php?t=backup'])) ?>
       <?php endif; ?>
       <?php if ($blockiert > 0): ?>

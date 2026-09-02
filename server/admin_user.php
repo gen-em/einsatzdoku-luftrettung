@@ -17,7 +17,7 @@ require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste
  *
  * WAS SICH GEAENDERT HAT. Bis Web 9.7.2 war diese Seite eine Reihe von
  * Einzelformularen (Rolle, E-Mail, Name — jedes mit eigenem Speichern) und
- * einer Geraetetabelle; die SICHERUNGEN eines Kontos standen woanders, auf
+ * einer Geraetetabelle; die BACKUPS eines Kontos standen woanders, auf
  * admin_sicherungen.php, in einer Tabelle ueber alle Konten. Wer zu einem
  * Konto etwas tun wollte, brauchte zwei Seiten und musste auf der zweiten
  * seine Zeile suchen.
@@ -314,7 +314,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!edbak_bestaetigung_passt($eingabe, (string)$u['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht überein — nichts wurde gelöscht.';
         } else {
-            /* ÜBER DIE SICHERUNGEN WIRD AUSDRÜCKLICH ENTSCHIEDEN (E25).
+            /* ÜBER DIE BACKUPS WIRD AUSDRÜCKLICH ENTSCHIEDEN (E25).
              *
              * Bis Web 5.8.0 sagte der Warntext unbedingt zu, dass nach der
              * Löschung nichts mehr lesbar ist. Sobald Admin-Backups
