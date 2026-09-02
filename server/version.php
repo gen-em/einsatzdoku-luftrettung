@@ -2085,5 +2085,41 @@ declare(strict_types=1);
  * Dialog kommt vom tabweisen sessionStorage und bleibt; er steht jetzt als
  * gewollte Eigenschaft im Handbuch statt als unerklaerter Fehler.
  *
+ *
+ * 12.9.3 STELLT DEN BEGRIFF UM: „Sicherung" heisst ueberall „Backup" (R50,
+ * Schritt 4 des Rahmenplans, S7). Anlass war eine Rueckmeldung zur Seite
+ * selbst — die Karte hiess „Backup erstellen", der Knopf darin „Sicherung
+ * erstellen": dieselbe Handlung, zwei Woerter, ein Bildschirm. Es ist eine
+ * KORREKTURSTUFE, kein Nebenschritt: Es kommt keine Funktion und kein Feld
+ * hinzu, nur Text.
+ *
+ * DAS GENUS ZIEHT MIT. „Die Sicherung" ist weiblich, „das Backup"
+ * saechlich — Artikel, Possessiv, Adjektivendung, Relativpronomen und die
+ * Pronomen im Folgesatz aendern sich mit. Komposita bekommen den
+ * Bindestrich: Komplett-Backup, Backup-Ziel, Backup-Datei, Backup-Lauf.
+ * Wo der Kopf des Kompositums nicht „Sicherung" war, bleibt das Genus, wie
+ * es ist: „die Backup-Datei", „der Backup-Lauf".
+ *
+ * WAS BEWUSST STEHEN BLEIBT: der Ablagepfad `sicherungen/` (er steht in der
+ * Ausnahmeliste des Deploys, ein umbenanntes Verzeichnis waere beim
+ * naechsten Aufspielen weg), saemtliche Bezeichner, Dateinamen und
+ * Formatkennungen (R5, R56), der Symbolname `sicherung`, das Verb „sichern"
+ * in den Knoepfen (R56), die Versionsgeschichte in dieser Datei und der
+ * Changelog — beide sind Beleg, nicht Oberflaeche.
+ *
+ * UND EIN FALLSTRICK, DEN DIE UMSTELLUNG FAST GESTELLT HAETTE: Die Kopfzeile
+ * des Komplett-Backup-Dumps ist zugleich Text und Erkennungsmarke.
+ * `wiederherstellen.php` prueft an ihr, ob ein Dump aus dieser Anwendung
+ * stammt, und verlangt nur dann die Endmarke. Haette sie nur die neue
+ * Schreibweise gesucht, gaelte jeder aeltere Dump als fremd — und ein
+ * abgebrochener Stand waere klaglos eingespielt worden. Der Leser kennt
+ * deshalb beide Schreibweisen; die alte darf am v1.0-Schnitt weg (R60).
+ *
+ * 12.9.4 BEHEBT EINEN FEHLER, DER SEIT 12.2.0 UNBEMERKT LAG und beim
+ * Pruefen von S7 auffiel (Backlog Nr. 89): Der Job „Komplett-Backup der
+ * Installation" lief nie. `job_komplett()` trug eine Konstante als
+ * Parameter-Vorgabewert, die erst im Rumpf geladen wird — PHP wertet
+ * Vorgabewerte beim Aufruf aus. Das geplante Komplett-Backup war damit
+ * seit S2/AP8 ohne Wirkung.
  */
-const WEB_VERSION = '12.9.2';
+const WEB_VERSION = '12.9.4';
