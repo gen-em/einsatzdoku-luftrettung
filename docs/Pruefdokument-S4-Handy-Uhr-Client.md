@@ -47,7 +47,7 @@ Gebauten**. Kein einziger Teil der Android-Apps ist je auf Hardware gelaufen.
   Sekunden sind gewählt, nicht gemessen.
 - **Die Aufzeichnung über zwölf Stunden.** Ob das System die App beendet, ob
   der Akku hält, ob die Spur durchläuft.
-- **Ob 44 dp mit Handschuhen treffbar sind** (siehe Backlog Nr. 60).
+- **Ob 44 dp mit Handschuhen treffbar sind** (siehe Backlog Nr. 64).
 - **Always-on-Display**, Systemgesten, Tastensperre.
 
 **Was stattdessen belegt ist:** 214 Prüffälle über beide Module, 0
@@ -135,7 +135,7 @@ geschnittene und importierte Einsätze **nicht** gelaufen. Beide tragen
 `origin` = `manual` bzw. `import`, `manual = 1` und eine `cut-`/`imp-`-Kennung
 — dieselben drei Merkmale wie ein CSV-importierter Einsatz, der die Kreisläufe
 besteht. **Ein Befund steht aber schon fest:** Die Konto-Sicherung trägt
-`track_cuts` **nicht** mit (Fund B-S4-10, Backlog Nr. 59).
+`track_cuts` **nicht** mit (Fund B-S4-10, Backlog Nr. 63).
 
 ### 1.6 Kein Messstand R35, kein Dienst über Mitternacht mit echten Daten
 
@@ -169,7 +169,7 @@ weiterhin nur als Text.
 | **Instrumentiert** (auf dem Emulator, seit 0.7.6) | `am instrument` | `GeraetTresorTest` **6/6**, `DataLayerErreichbarTest` **3/3** |
 | Runder Beschnitt auf echter Maske | Emulatorabzug, ausgemessen | Knopf **48,0 dp**, Luft zum Glasrand **14,7 dp** (vorher 35,5 dp / 0,4 dp) |
 | Lint `uhr` | `lintDebug` | **0 Fehler, 0 Warnungen** |
-| Lint `handy` | `lintDebug` | **0 Fehler, 14 Warnungen** — alle Fassungshinweise, alle an *einer* Entscheidung (Backlog Nr. 61) |
+| Lint `handy` | `lintDebug` | **0 Fehler, 14 Warnungen** — alle Fassungshinweise, alle an *einer* Entscheidung (Backlog Nr. 65) |
 | APK-Größe | `assembleRelease`, unsigniert | Handy **9 598 911 B**, Uhr **19 491 794 B** |
 | Spuren: Rundlauf, Verdichtung, Ausdünnung, **Schnitt** | `php tools/spurprobe/probe.php` | **45 Erwartungen, 1 nicht erfüllt** — die eine steht auf `main` genauso (Fund B-S4-11) |
 | … davon Teil 6 (Schnitt und Nachlieferung) | dasselbe | **20 Erwartungen, alle erfüllt** |
@@ -301,7 +301,7 @@ Konto-Sicherung erstellen, in ein leeres Konto einspielen und vergleichen.
 **Erwartet:** Beide Einsätze kommen vollständig durch, mit ihrer Spur.
 
 **Bekannt und erwartet:** Der **Sperrvermerk** kommt *nicht* mit (Backlog
-Nr. 59). Das ist kein neuer Fund, sondern der bereits notierte — er wird hier
+Nr. 63). Das ist kein neuer Fund, sondern der bereits notierte — er wird hier
 nur sichtbar.
 
 ---
@@ -323,7 +323,7 @@ nur sichtbar.
   dieser Art findet sie nicht.
 - **Die Wortliste liest Text, nicht Bedeutung.** Sie zählt Begriffe; ob ein
   Satz die Sache trifft, entscheidet sie nicht. Und sie erreicht `watch/`
-  weiterhin nicht (Backlog Nr. 62).
+  weiterhin nicht (Backlog Nr. 66).
 - **Playwright klickt, es bedient nicht.** Ein Skript trifft ein Element mit
   dem Selektor; ob ein Mensch es findet, sagt das nicht. Es hat in diesem
   Paket zweimal *falsch* gemeldet — einmal, weil es das versteckte Radio des

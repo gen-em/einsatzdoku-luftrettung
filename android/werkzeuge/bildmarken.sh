@@ -29,7 +29,7 @@
 #
 # ACHTUNG, offener Fund B-S4-01: Die SVG tragen teilweise noch die ALTEN
 # Farbwerte (#587abc, #e3322b, #f7941d, Korpus #1d0e0a). Am 31.08.2026 wurde
-# entschieden, das bewusst liegen zu lassen (Backlog Nr. 49); die App erbt den
+# entschieden, das bewusst liegen zu lassen (Backlog Nr. 62); die App erbt den
 # jeweils aktuellen Stand der Dateien. Wer die Vorlagen berichtigt, laesst
 # dieses Skript danach laufen -- sonst zeigt die App weiter die alten Werte.
 #

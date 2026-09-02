@@ -45,8 +45,9 @@ import org.genem.nadoku.gemeinsam.Farbe
  * Das ist kein Widerspruch zu `CLAUDE.md` 5, sondern dessen Zweck: Die 44 px
  * sind eine Untergrenze für Maus und Finger am Schreibtisch. Hier trifft ein
  * Finger im Einsatz ein rundes Display, oft mit Handschuh — Androids eigene
- * Empfehlung von 48 dp ist die kleinere Zumutung. (Am Handy bleibt es bei 44;
- * der Unterschied ist als Fund B-S4-02 vermerkt und dort zu entscheiden.)
+ * Empfehlung von 48 dp ist die kleinere Zumutung. **Seit R58 (02.09.2026)
+ * gilt das für beide Module:** Das Handy führt dieselben 48 dp, die Web-Zahl
+ * gilt für den Browser. Fund B-S4-02 ist damit entschieden, nicht mehr offen.
  */
 val UHR_BEDIENHOEHE: Dp = 48.dp
 

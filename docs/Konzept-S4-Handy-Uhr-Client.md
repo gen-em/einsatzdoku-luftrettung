@@ -528,6 +528,12 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
   (b) verhindert nur die absichtliche Doppelkopplung. Eine Umsetzung fiele
   in Block A oder später — **in B/C ist nichts davon enthalten.**
 
+  **Entschieden am 02.09.2026 als R57: Variante (c).** Ein Hinweis in der
+  Tagesansicht, wenn zwei aktive Diensttage desselben Kontos sich zeitlich
+  überlappen, dazu ein Absatz im Handbuch. Die Frage ist damit **geschlossen**;
+  die Umsetzung gehört in **Schritt 6 („S4 Rest")** und wird hier nicht
+  gebaut. Einzelheiten als **E-S4-76**.
+
 
 ## 5. Arbeitspakete
 
@@ -758,7 +764,7 @@ als eigener, offener Abschnitt geführt — nicht als erledigt erzählt.
 - Mengenbremse für `ingest.php` — P5 (R19); S4 hält sich mit E-S4-07 an
   das vermessene Sendeverhalten, damit die spätere Bremse beide Clients
   gleich behandeln kann.
-- Serverseite der Gerätestatistik (Backlog Nr. 46) — eigenes Kleinstpaket
+- Serverseite der Gerätestatistik (Backlog Nr. 59) — eigenes Kleinstpaket
   nach R42, weil es eine Schemaänderung mitbringt.
 - Verwaltung in der App (Einsätze ansehen, bearbeiten, Patientenfelder) —
   die Verwaltung bleibt im Browser (R45).
@@ -807,7 +813,7 @@ Werte; das gehört vor B1 entschieden. Bei der Behebung `Design.md` 2.5
 mitziehen.
 **Entschieden am 31.08.2026: bewusst liegen lassen.** Keine Behebung
 vorab; B1 übernimmt den dann aktuellen Stand der Dateien. Damit der Fund
-nicht verschwindet, ist er als **Backlog Nr. 49** eingetragen.
+nicht verschwindet, ist er als **Backlog Nr. 62** eingetragen.
 
 ### B-S4-02 — Bedienhöhe: 44 px der Weboberfläche gegen 48 dp der Android-Vorgabe
 
@@ -826,8 +832,13 @@ Zurückhaltung" — die 44 sind eine Web-Zahl, keine Markenzahl.
 **Stand B1: 44 dp umgesetzt**, weil `CLAUDE.md` eindeutig ist und eine Zahl
 nicht nebenbei geändert wird. Die Konstante steht an **einer** Stelle
 (`BEDIENHOEHE` in `handy/src/main/java/.../Bausteine.kt`); eine Änderung ist
-eine Zeile. **Zu entscheiden vor dem Gerätetest**, weil der S24-Dienst genau
-das prüfen kann, was hier strittig ist.
+eine Zeile.
+
+**Entschieden am 02.09.2026 als R58 — 48 dp, in beiden Modulen** (E-S4-77).
+Die Web-Zahl gilt für den Browser, die Android-Module folgen ihrer Plattform;
+`CLAUDE.md` 5 sagt das jetzt selbst. Der Fund ist damit **geschlossen**,
+Backlog Nr. 64 erledigt. Der Gerätetest misst die Trefferfläche weiterhin —
+aber er entscheidet sie nicht mehr.
 
 ### B-S4-03 — Das APK der Uhr ist 18 MB groß (Ursache in 0.7.3 berichtigt)
 
@@ -1139,7 +1150,7 @@ deshalb denselben Weg über **Verweise** nehmen wie die Spuren seit Nutzlast 8,
 nicht über Kennungen. Dazu kommen `docs/Backup-Format.md`, beide
 Kreislaufproben und ein Prüffall. Das ist ein Paket, kein Nachklapp.
 
-**Aufgenommen als Backlog Nr. 59.**
+**Aufgenommen als Backlog Nr. 63.**
 
 ### B-S4-11 — Die Spurprobe misst die Ausdünnung an synthetischen Daten
 
@@ -2127,6 +2138,37 @@ Browser mit einer Vorschau; das ist die Stelle, an der ein Mensch entscheidet.
 Ein stiller Automatismus wäre hier das Gegenteil von Dokumentation. Zu tun
 bleibt ein Satz im Handbuch (Block D).
 
+**E-S4-77 — Die Bedienhöhe der Android-Module ist 48 dp (R58).**
+Entscheidung des Auftraggebers vom 02.09.2026 zu Fund **B-S4-02**. Die 44 px
+aus `CLAUDE.md` 5 gelten für die **Weboberfläche**; die Android-Module folgen
+der Plattformvorgabe. Umgesetzt an einer Stelle — `BEDIENHOEHE` in
+`handy/…/Bausteine.kt` steht auf `48.dp`, `UHR_BEDIENHOEHE` stand schon dort.
+
+**Der Befund war nie die Zahl, sondern die Uneinigkeit:** Dasselbe Programm
+führte an derselben Stelle zwei Maße, weil die Uhr die Wear-Bausteine benutzt
+und das Handy die Web-Zahl übernommen hatte. Ausschlaggebend für 48 ist der
+Einsatzfall — diese App wird mit Handschuhen bedient, und genau dafür ist die
+Android-Zahl gemacht. `CLAUDE.md` 5 sagt die Unterscheidung jetzt selbst, damit
+sie nicht als Widerspruch gelesen wird. Backlog **Nr. 64** ist damit erledigt.
+
+**E-S4-76 — F-S4-D bekommt einen Hinweis, keine Automatik (R57).**
+Entscheidung des Auftraggebers vom 02.09.2026, aus den drei Kandidaten der
+offenen Frage: **Variante (c)** — ein Hinweis in der Tagesansicht, wenn zwei
+aktive Diensttage desselben Kontos sich zeitlich überlappen, dazu ein Absatz
+im Handbuch.
+
+Das ergänzt E-S4-50, es widerruft es nicht: Die zwei Diensttage **bleiben**
+stehen, weil sie zwei vollständige Aufzeichnungen sind und ein stiller
+Automatismus raten müsste. Der Hinweis macht die Doppelung nur **sichtbar**,
+statt darauf zu warten, dass jemand sie in der Jahresstatistik bemerkt. Und
+er trifft den Fall, um den es eigentlich geht: die vergessene Garmin im
+Spind — den sieht eine Warnung beim Koppeln (Kandidat b) gerade nicht, weil
+dort niemand koppelt.
+
+**Gebaut wird das hier nicht.** Es gehört in **Schritt 6 („S4 Rest")** des
+Fahrplans, zusammen mit Kopplungsmodul, Adress-QR und Gerätetest. Hier steht
+es, damit die Entscheidung nicht zwischen zwei Sitzungen verlorengeht.
+
 **E-S4-51 — Auf dem runden Glas entscheidet die Geometrie über die
 Reihenfolge, nicht die Wichtigkeit.** Der Kreis ist in der Mitte am
 breitesten. Bedienelemente gehören dorthin, Statusanzeigen darum herum — sie
@@ -2296,7 +2338,7 @@ Gefahren gegen die Container-Installation (MariaDB, Konto
   `papierkorb_misch.mjs`) sind nicht gefahren. Sie gehören ans Ende von A2,
   wenn geschnittene Einsätze tatsächlich entstehen können. **Ein Befund steht
   aber schon fest:** Die Konto-Sicherung trägt `track_cuts` nicht mit — Fund
-  **B-S4-10**, Backlog Nr. 59.
+  **B-S4-10**, Backlog Nr. 63.
 
 #### Probleme und wie sie gelöst wurden
 
@@ -2362,7 +2404,7 @@ Kommandozeilen-Notausgang) hat die vier offenen Migrationen nachgeholt.
 #### Neue Fehlerfunde (K4, gesammelt in Abschnitt 10)
 
 - **B-S4-10** — Sperrvermerke überstehen die Konto-Sicherung nicht
-  (Backlog Nr. 59).
+  (Backlog Nr. 63).
 - **B-S4-11** — Die Spurprobe misst die Ausdünnung an synthetischen Daten
   (Befund gegen den Prüfstand, nicht gegen den Code; steht auf `main` genauso).
 
@@ -2391,7 +2433,7 @@ Kommandozeilen-Notausgang) hat die vier offenen Migrationen nachgeholt.
 - **Die Kreisläufe R24** (`tools/wiederherstellungs-probe/`,
   `papierkorb_misch.mjs`) sind nicht gefahren. Ein Befund steht fest:
   **B-S4-10**, die Konto-Sicherung trägt `track_cuts` nicht mit
-  (Backlog Nr. 59).
+  (Backlog Nr. 63).
 - **Messstand R35** (Antwortzeit auf dem 5 000-Einsätze-Konto): nicht
   gemessen. Der Endpunkt liest genau eine Spur; die Zahl wäre trotzdem eine.
 - **Kein Test über Mitternacht mit echten Daten.** Der Tagesversatz ist
@@ -3152,8 +3194,10 @@ stehen dahinter:
 
 **Ebenfalls am 01.09.2026 entschieden:** S3 wird vorgezogen und beginnt als
 Nächstes. Block A folgt danach, wie der Rahmenplan es ohnehin vorsieht
-(`docs/Rahmenplan.md:1047` — „Nicht parallel: … S4 Block A zu S2 **und
-S3**").
+(`docs/Rahmenplan-Archiv.md`, Abschnitt 5 alt, Absatz „Parallel führbar" —
+„Nicht parallel: … S4 Block A zu S2 **und S3**"). Der Zeilenverweis auf
+`docs/Rahmenplan.md` galt bis Fassung 15; seit der Neustrukturierung liegt
+die Stelle im Archiv.
 
 Das ist die teurere, aber richtige Reihenfolge. S3 fasst `index.php`,
 `einstellungen.php`, `ui.php`, `style.css` und `geo.js` an — genau die

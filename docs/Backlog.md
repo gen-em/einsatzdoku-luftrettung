@@ -643,7 +643,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     kleines Prüfmittel dafür wäre ein Nachmittag und fände die ganze Klasse
     von Fehlern statt eines Falls.
 
-59. **Sperrvermerke des Schnitts überstehen die Konto-Sicherung nicht.**
+63. **Sperrvermerke des Schnitts überstehen die Konto-Sicherung nicht.**
     *Aufgenommen 02.09.2026 als B-S4-10 (S4/A2).*
     `track_cuts` (Web 12.5.0) hält den Zeitraum, den `ingest.php` an einer
     geschnittenen Spur nicht mehr annimmt. Die **Komplettsicherung** trägt die
@@ -664,22 +664,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kennungen. Dazu `docs/Backup-Format.md`, die Kreislaufproben und ein
     Prüffall.
 
-60. **Die Bedienhöhe steht auf 44 px, Android verlangt 48 dp.**
-    *Aufgenommen 02.09.2026 als B-S4-02 (S4/D1).*
-    `CLAUDE.md` 5 sagt: „Eine Höhe für Bedienelemente: **44 px**, mobil wie am
-    Schreibtisch." Androids eigene Vorgabe für Berührziele ist **48 dp**. Die
-    vier Pixel klingen nach nichts und sind es nicht: Diese App wird **mit
-    Handschuhen im Einsatz** bedient, und das ist genau der Fall, für den die
-    48 dp gedacht sind.
-    **Umgesetzt sind 44 dp** — weil `CLAUDE.md` eindeutig ist und eine Zahl
-    nicht nebenbei geändert wird. Die Wear-OS-App hält dagegen 48 dp
-    (gemessen), weil sie die Wear-Bausteine benutzt; die beiden Module sind
-    an dieser Stelle also **uneins**, und das ist der eigentliche Befund.
-    **Zu entscheiden vor dem Gerätetest**, weil der S24-Dienst genau das
-    prüfen kann, was strittig ist. Die Konstante steht an einer Stelle
-    (`BEDIENHOEHE` in `handy/…/Bausteine.kt`); die Änderung ist eine Zeile.
-
-61. **Vierzehn Fassungshinweise im Android-Baulauf hängen an einer
+65. **Vierzehn Fassungshinweise im Android-Baulauf hängen an einer
     Entscheidung.**
     *Aufgenommen 02.09.2026 als Rest aus B-S4-04 (S4/D1).*
     `lintDebug` meldet für `android/handy/` 14 Warnungen, und sie sind nicht
@@ -694,7 +679,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Preisschild an einer aufgeschobenen Entscheidung, und genau das sollen sie
     sein.
 
-62. **Der Garmin-Uhrcode läuft nicht durch die Wortliste.**
+66. **Der Garmin-Uhrcode läuft nicht durch die Wortliste.**
     *Aufgenommen 02.09.2026 als Bereich `e` aus B-S4-06 (S4/D1).*
     Seit D1 prüft `tools/wortliste/` vier Bereiche, darunter die
     Android-Apps. **`watch/` fehlt weiterhin.** Die bisherige Begründung —
@@ -708,7 +693,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bereich heißt dort `e`; die Mechanik ist da (eine Art `xml` im Zerleger,
     die Tags mit wegräumt), einzutragen ist die Bereichszeile.
 
-63. **`csrf_check()` hat keinen API-Zweig.**
+67. **`csrf_check()` hat keinen API-Zweig.**
     *Aufgenommen aus einer Gegenprüfung vom 23.08.2026; die Zahlen sind am
     02.09.2026 nachgezählt (S4/D2).*
     `require_admin()` verzweigt daneben nach `ist_api_aufruf()` und antwortet
@@ -761,6 +746,24 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+64. **Die Bedienhöhe steht auf 44 px, Android verlangt 48 dp.**
+    *Aufgenommen 02.09.2026 als B-S4-02 (S4/D1); erledigt am selben Tag mit
+    der Entscheidung R58.*
+    `CLAUDE.md` 5 sagte: „Eine Höhe für Bedienelemente: **44 px**, mobil wie
+    am Schreibtisch." Androids eigene Vorgabe für Berührziele ist **48 dp**.
+    Die vier Pixel klingen nach nichts und sind es nicht: Diese App wird **mit
+    Handschuhen im Einsatz** bedient, und das ist genau der Fall, für den die
+    48 dp gedacht sind. Der eigentliche Befund war nicht die Zahl, sondern die
+    **Uneinigkeit**: Die Wear-OS-App hielt längst 48 dp, weil sie die
+    Wear-Bausteine benutzt — dasselbe Programm führte an derselben Stelle zwei
+    Maße.
+    **Entschieden als R58** (02.09.2026): Die 44 px gelten für die
+    Weboberfläche, die Android-Module folgen ihrer Plattform. Umgesetzt ist es
+    an einer Stelle — `BEDIENHOEHE` in `handy/…/Bausteine.kt` steht auf
+    `48.dp`; `UHR_BEDIENHOEHE` stand schon dort. `CLAUDE.md` 5 sagt die
+    Unterscheidung jetzt selbst, damit die nächste Instanz nicht dieselbe
+    Frage noch einmal aufwirft.
 
 56. **Die zweite Rückmeldungsrunde steht in keinem Konzept.**
     *Aufgenommen 01.09.2026 mit Web 12.2.1; der Prüfteil ist am selben Tag

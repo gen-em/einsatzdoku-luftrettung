@@ -42,14 +42,18 @@ import org.genem.nadoku.gemeinsam.Motiv
  * die sich um zwei Pixel unterscheiden -- genau der Zustand, aus dem das
  * Stylesheet der Weboberflaeche in P3 herausgeholt wurde.
  *
- * MASSE. Die Bedienhoehe ist 44 dp (CLAUDE.md 5: "Eine Höhe für
- * Bedienelemente: 44 px, mobil wie am Schreibtisch"). Android empfiehlt fuer
- * Beruehrziele 48 dp; der Unterschied ist als Fund B-S4-02 im Konzept
- * vermerkt und nicht hier nebenbei entschieden.
+ * MASSE. Die Bedienhoehe ist 48 dp -- die Plattformvorgabe von Android fuer
+ * Beruehrziele, NICHT die 44 px der Weboberflaeche. Der Unterschied stand als
+ * Fund B-S4-02 im Konzept und ist am 02.09.2026 als R58 entschieden worden:
+ * Die Web-Zahl gilt fuer den Browser, die Android-Module folgen ihrer
+ * Plattform. Ausschlaggebend war der Einsatzfall -- diese App wird MIT
+ * HANDSCHUHEN bedient, und genau dafuer sind die 48 dp gedacht. Die Uhr hielt
+ * sie ohnehin schon (UHR_BEDIENHOEHE), die beiden Module waren an dieser
+ * Stelle also uneins; jetzt nicht mehr.
  */
 
 /** Hoehe jedes Bedienelements. Eine Zahl, keine Kompaktvariante. */
-val BEDIENHOEHE: Dp = 44.dp
+val BEDIENHOEHE: Dp = 48.dp
 
 /** Abstaende -- die Fuenferstufung des Web (`--abstand-1` bis `--abstand-5`). */
 object Abstand {

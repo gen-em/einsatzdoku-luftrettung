@@ -129,7 +129,10 @@ Oberflächenänderung anfängt, liest zuerst dort. Kurz:
   nachgetragen. Die Skala ist geschlossen.
 - Kontrast gegen die tatsächliche Fläche prüfen (Schnee/Rauch, nicht Weiß),
   Zielwert AA. `python3 tools/screenshots/kontrast.py` rechnet ihn nach.
-- Eine Höhe für Bedienelemente: **44 px**, mobil wie am Schreibtisch.
+- Eine Höhe für Bedienelemente: **44 px**, mobil wie am Schreibtisch —
+  das gilt für die **Weboberfläche**. Die Android-Apps folgen der
+  Plattformvorgabe von **48 dp** (R58, 02.09.2026): Sie werden mit
+  Handschuhen bedient, und dafür ist die Android-Zahl gemacht.
 - Spaltenbreiten in Tabellen nie über `:nth-child` — sie zählen Spalten ab und
   rutschen beim Streichen einer Spalte still auf die falsche. Klassen benutzen.
 - Die Tabellen in `Design.md` (Token, Schwellen, Symbole, Bausteine) sind
