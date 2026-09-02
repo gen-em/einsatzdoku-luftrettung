@@ -67,9 +67,9 @@ Die Umstellung liegt fast vollständig in Dateien, die der S2-Zweig
 | `server/einstellungen.php` | 34 | **hält** (AP5) |
 | `server/assets/crypto.js` | 12 | **hält** |
 | `server/ui.php` | 7 | **hält** |
-| `docs/Konzept-P3-Oberflaeche.md` | 68 | frei |
+| `docs/konzepte/erledigt/Konzept-P3-Oberflaeche.md` | 68 | frei |
 | `server/adminbackup_lib.php` | 42 | frei |
-| `docs/Konzept-S1-Sicherung-Import.md` | 37 | frei |
+| `docs/konzepte/erledigt/Konzept-S1-Sicherung-Import.md` | 37 | frei |
 | `server/admin_sicherungen.php` | 31 | frei |
 | `server/admin_users.php` | 18 | frei |
 

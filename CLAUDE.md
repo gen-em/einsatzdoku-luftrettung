@@ -188,14 +188,28 @@ Bilderlauf steht sie in seiner `LIESMICH.md`.
 ## 7. Konzept und Umsetzung
 
 Konzeptarbeit findet in einer getrennten Sitzung statt und mündet in ein
-Konzeptdokument. Innerhalb von Claude Code gilt:
+Konzeptdokument. **Ablage: `docs/konzepte/`** — das Konzept, das Prüfdokument
+daneben, Mockups in einem Unterordner. Der abgeschlossene Bestand bis S3 liegt
+in `docs/konzepte/erledigt/` und wird nicht mehr fortgeschrieben (Rahmenplan
+R62). Innerhalb von Claude Code gilt:
 
 - Die Aufgabe ist in Arbeitspakete gegliedert; **eines nach dem anderen**.
 - Nach jedem Arbeitspaket: Konzeptdokument fortschreiben — was ist erledigt,
   welche Probleme sind aufgetreten, wie wurden sie gelöst, welche Entscheidungen
   sind dabei gefallen. Dazu ein Prüfstand: was wurde geprüft und wie, was steht
-  noch aus und auf welchem Weg.
+  noch aus und auf welchem Weg. **Ein Statusblock am Kopf des Konzepts** sagt,
+  welches Paket in Arbeit ist, welche erledigt sind und wo es hakt; danach
+  wird der Arbeitszweig **gepusht**, damit andere Instanzen den Stand sehen
+  (Abschnitt 8).
 - Erst dann zum nächsten Paket.
+- **Nach der Freigabe des Abschlusses:** Erledigt-Zeile in
+  `docs/Rahmenplan.md` Abschnitt 8 (Versionen, Datum, wesentliche Änderungen,
+  Prüfzahlen, letzter Commit des Konzepts), Reste nach Abschnitt 6, Backlog
+  nach Abschnitt 5, eine Zeile nach Abschnitt 10 — und **das Konzept wird
+  gelöscht**; die Git-Historie behält es. Das **Prüfdokument bleibt, bis
+  seine Prüfliste abgehakt ist**, und wird dann ebenso gelöscht. Wer ein
+  Konzept löscht, ohne die Erledigt-Zeile zu schreiben, hat die Phase nicht
+  abgeschlossen.
 - **Am Ende der Phase ein Prüfdokument** — eine eigene Datei neben dem
   Konzept, nicht ein Abschnitt darin. Das Prüfprotokoll im Konzept beantwortet
   „ist es belegt?“; das Prüfdokument beantwortet „was muss **ich** noch tun?“.
@@ -218,10 +232,12 @@ umgestellt oder anders entschieden ist.
 
 Ein Commit je abgeschlossenem Arbeitspaket, deutsche Nachricht. Die Historie
 nennt bislang nur die Version (`web v7.0.2`); besser ist Version **und** ein
-Satz zur Sache. **Gepusht wird einmal, am Ende der Phase** — und weil ein
-Push auf `main` sofort deployt (Abschnitt 3), erst nach ausdrücklicher
-Bestätigung. Nicht committen: `config.php`, Build-Ausgaben der Uhr
-(`watch/bin/`, `*.prg`), Sicherungen.
+Satz zur Sache. **Der Arbeitszweig wird nach jedem Arbeitspaket gepusht**
+(Rahmenplan K7, R62) — das deployt nichts, solange es nicht `main` ist, und
+andere Instanzen sehen Stand und laufendes Paket. **Auf `main` kommt eine
+Phase einmal, am Ende, nach ausdrücklicher Bestätigung** — ein Push dorthin
+deployt sofort (Abschnitt 3). Nicht committen: `config.php`, Build-Ausgaben
+der Uhr (`watch/bin/`, `*.prg`), Sicherungen.
 
 ## 9. Pflegepflichten
 
@@ -236,8 +252,10 @@ nicht später, nicht „in P6":
   Darstellung entsteht nur nach ausdrücklicher Freigabe mit Mockup; bis
   dahin werden vorhandene Bausteine verwendet.
 - **Sicherung und Import** (`backup_*`, `adminbackup_*`, `import*`,
-  Formate): `docs/Konzept-S1-Sicherung-Import.md` (Fortschreibung),
-  `docs/Backup-Format.md`, `docs/Technik.md`.
+  Formate): `docs/Backup-Format.md`, `docs/Technik.md`; der Werdegang liegt
+  in `docs/konzepte/erledigt/Konzept-S1-Sicherung-Import.md` und
+  `…/Konzept-S2-Mengen-Spuren-Sicherung.md` (Protokoll, nicht mehr
+  fortgeschrieben).
 - **Begriffe und Texte:** `tools/wortliste/` laufen lassen; Handbuch an
   der betroffenen Stelle nachziehen.
 - **Fremdbestandteile** (Bibliotheken, Schriften, Symbole, Dienste):

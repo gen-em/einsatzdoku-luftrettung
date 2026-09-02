@@ -370,7 +370,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dorthin führt, und die Koordinate jeder Phase liegen im Klartext. Der Ort
     ist damit nominell geschützt und faktisch rekonstruierbar.
 
-    Die Bestandsaufnahme steht in `docs/Konzept-V1-Ortsdaten.md`: was liegt wo,
+    Die Bestandsaufnahme steht in `docs/konzepte/Konzept-V1-Ortsdaten.md`: was liegt wo,
     was verrät was, was kosten die drei Wege. Kurzfassung — der Server rechnet
     mit den Koordinaten **nicht** (Strecke und Höhenmeter kommen von der Uhr,
     die Phasenzuordnung über Zeitstempel), aber die **Uhr hat keinen
@@ -858,7 +858,7 @@ zutreffen.
     Installation in einem Aufruf auf. Wer eine Prüfung für unmöglich hält,
     sehe zuerst in `tools/` nach.
     **Erledigt mit S3:** Beide Punkte stehen als Abschnitt 1.13 im
-    Konzept `docs/Konzept-S3-Oberflaechen-Nacharbeit.md` — die Umsetzung hat
+    Konzept `docs/konzepte/erledigt/Konzept-S3-Oberflaechen-Nacharbeit.md` — die Umsetzung hat
     sie damit als erledigt vorgefunden und nicht ein zweites Mal
     beschlossen.
 
@@ -1108,7 +1108,7 @@ zutreffen.
     Die Durchsicht des gesamten Importpfads (32 Ausgabestellen mit
     `innerHTML` o. ä. in 23 eigenen Skriptdateien und allen Seiten unter
     `server/`) ergab **keinen weiteren Fund**; die Liste steht in
-    `docs/Pruefung-Sofortpaket-22.md`. Dabei fiel allerdings `edk_neu` auf —
+    `docs/konzepte/erledigt/Pruefung-Sofortpaket-22.md`. Dabei fiel allerdings `edk_neu` auf —
     das Vormerkfach des Passwortwechsels trug den neuen Datenschlüssel über
     das Abmelden hinaus, was Punkt V-10 des Prüfdokuments P0 verbietet. Auch
     das ist mit dieser Version behoben (eine Zeile in

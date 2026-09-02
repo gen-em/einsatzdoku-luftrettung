@@ -49,6 +49,11 @@ noch gilt, steht im neuen Rahmenplan an folgender Stelle:
 - Die **P0-Bedienprüfung** (V-8/V-9) und die **P2-Prüfliste** bis auf
   Punkt 4.1 gelten seit Fassung 16 als durch P3, S2 und S3 überholt
   (R55). Die Statuszeilen unten führen sie noch als offen.
+- Die **abgeschlossenen Konzepte und Prüfdokumente** (P1, Sofortpaket 22,
+  S1, P2, P3 samt Mockups, S2, S3) liegen seit Fassung 16 unter
+  `docs/konzepte/erledigt/` (R62); die Pfade unten (`docs/Konzept-…`,
+  `tools/referenzdatensatz/Konzept-P1.md`) sind die alten. Laufende
+  Konzepte liegen in `docs/konzepte/`.
 
 ## Kurzübersicht der erledigten Phasen
 

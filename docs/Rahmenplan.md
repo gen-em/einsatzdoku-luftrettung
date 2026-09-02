@@ -49,7 +49,8 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 - **K1** Je Phase ein Konzeptdokument im bewährten Format: Befund,
   Entscheidungen (E-Nummern), offene Fragen (F-Nummern), Arbeitspakete mit
   Abnahmekriterien, Prüfprotokoll, gesammelte Fehlerfunde. Es ist die
-  Übergabeeinheit an die umsetzende Instanz.
+  Übergabeeinheit an die umsetzende Instanz. **Ablage: `docs/konzepte/`**,
+  Mockups in einem Unterordner daneben; Lebenszyklus in 2.2 (R62).
 - **K2** Konzepte nennen keine Modellempfehlung je Arbeitspaket.
   **Standardmodell der Umsetzung ist Opus.** Schritte, die Fable erfordern,
   sind im Konzept ausdrücklich als Fable-Schritt markiert.
@@ -59,18 +60,23 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 - **K5** Jede Phase endet mit lauffähigem Stand, fortgeschriebenem
   Konzept, fortgeschriebenem Prüfprotokoll und dem Statuseintrag in
   diesem Dokument (Abschnitt 3 während der Arbeit, Abschnitt 8 danach).
+  **Nach jedem Arbeitspaket** sagt ein Statusblock am Kopf des Konzepts,
+  welches Paket in Arbeit ist, welche erledigt sind und wo es hakt (R62).
 - **K6** F-Fragen werden vor Umsetzungsbeginn des betroffenen Pakets
   entschieden und als E-Eintrag ins Konzept überführt.
-- **K7** Je Arbeitspaket ein Commit (deutsche Nachricht); **gepusht wird
-  einmal am Ende der Phase**, nach ausdrücklicher Bestätigung — ein Push
-  auf `main` deployt sofort auf den Produktivserver.
+- **K7** Je Arbeitspaket ein Commit (deutsche Nachricht), **und der
+  Arbeitszweig wird nach jedem Arbeitspaket gepusht**, damit andere
+  Instanzen Stand und laufendes Paket sehen — das deployt nichts, solange
+  es nicht `main` ist. **Auf `main` kommt eine Phase einmal, am Ende, nach
+  ausdrücklicher Bestätigung**; dieser Push deployt sofort auf den
+  Produktivserver.
 - **K8** Nur vor einem **Fable-Schritt** pausiert die umsetzende Instanz
   und weist darauf hin; alles Übrige läuft ohne Modellnachfrage mit Opus.
 - **K9** Jede Phase liefert ein **Prüfdokument**, getrennt vom Konzept:
   Kurzfassung, maschinelle Prüfungen mit Zahlen, das Nicht-Prüfbare an
   erster Stelle, und eine abhakbare Prüfliste, in der jeder Punkt
   Bedienweg, erwartetes Ergebnis und die Bedeutung eines Fehlschlags nennt
-  (Muster: `docs/Pruefdokument-S3-Oberflaechen-Nacharbeit.md`).
+  (Muster: `docs/konzepte/erledigt/Pruefdokument-S3-Oberflaechen-Nacharbeit.md`).
 
 ### 2.2 Dauerpflichten, die aus Entscheidungen erwachsen sind
 
@@ -100,6 +106,20 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
   Anlagen still; der Schaden trifft erst die nächste Neuinstallation).
 - **Pflegepflichten** je Änderung nach `CLAUDE.md` 2 und 9 (Version,
   Changelog, Doku, Backlog, Design, Lizenzen).
+- **Lebenszyklus eines Konzepts (R62).** Es entsteht in `docs/konzepte/`
+  (Prüfdokument daneben, Mockups in einem Unterordner). Während der
+  Umsetzung wird es nach **jedem Arbeitspaket** fortgeschrieben — Statusblock
+  am Kopf mit laufendem Paket, erledigten Paketen und Stand — und der Zweig
+  gepusht (K7). Nach der **Freigabe des Abschlusses** trägt die umsetzende
+  Instanz die Erledigt-Zeile in Abschnitt 8 ein (Versionen, Datum,
+  wesentliche Änderungen, Prüfzahlen, **letzter Commit des Konzepts**), die
+  Reste nach Abschnitt 6, den Backlog nach Abschnitt 5, eine Zeile nach
+  Abschnitt 10 — und **löscht das Konzept**. Die Git-Historie behält es; die
+  Erledigt-Zeile nennt den Commit, unter dem es zuletzt lag. Das
+  **Prüfdokument bleibt, bis seine Prüfliste abgehakt ist**, und wird dann
+  ebenso gelöscht; offene Reste wandern vorher nach Abschnitt 6. Der
+  Bestand bis S3 liegt als Protokoll in `docs/konzepte/erledigt/` und wird
+  nicht mehr fortgeschrieben.
 
 ## 3. Fahrplan — die nächsten Schritte
 
@@ -108,7 +128,7 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 1 | **S4 — Merge** | Fehlerbehebung abschließen, Backlog-Nummern nachziehen, `main` holen, Merge = Deploy, `update.php` | — | liegt vor | Opus | **in Arbeit** |
 | 2 | **S6 — Gerätekennung und Schlüsselfrist** | Serverseite von R42, Behebung R44 | Schritt 1 | keins; R42 und R44 sind die Spezifikation | Opus | offen |
 | 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | offen |
-| 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | `docs/Umstellung-Backup.md` | Opus | offen |
+| 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | `docs/konzepte/Umstellung-Backup.md` | Opus | offen |
 | 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | offen |
 | 6 | **S4 — Rest** | Kopplungsmodul, QR, Gerätetest, Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | offen |
 | 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Sicherungsoptionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61) | Schritte 4 und 6 | neu, mit Mockups | Fable (Konzept) | offen |
@@ -136,7 +156,8 @@ Backlogs zu brechen. **Inhalt:** letzte Fehlerbehebung · Backlog-Nummern
 des Zweigs von 59–63 auf **63–67** und die alten Verweise 46/49 auf 59/62
 · `main` in den Zweig holen, `docs/Backlog.md` mit beiden Reihen lösen,
 Migrationsregister gegenzählen · R58 (48 dp, eine Zeile) · Merge, Deploy,
-danach **`update.php`** (Migration `2026_09_02_schnitte`). **Was der
+danach **`update.php`** (Migration `2026_09_02_schnitte`) · Konzept und
+Prüfdokument S4 beim Merge nach `docs/konzepte/` verschieben (R62). **Was der
 Zweig bereits enthält:** Schneidewerkzeug (Web 12.5.0/12.6.0), GPX-Import
 (12.7.0), APK-Weg und Downloadseite (12.8.0), Handy-App und Wear-OS-App
 (Android 0.1.0–0.7.6: Kopplung nach altem Modell, Aufzeichnung, Senden,
@@ -182,7 +203,7 @@ Konzepts:** Freigabe durch den Auftraggeber. In die S5-Abnahme geht
 ### Schritt 4 — S7 Backup-Begriff
 
 **Ziel:** „Sicherung" wird überall zu „Backup", in einem Zug (R50).
-**Spezifikation:** `docs/Umstellung-Backup.md` (Befund, Grenzen,
+**Spezifikation:** `docs/konzepte/Umstellung-Backup.md` (Befund, Grenzen,
 Arbeitsliste, Prüfwege). **Entschieden (R56):** Verb „sichern" bleibt in
 den Knöpfen, Symbolname `sicherung` bleibt, `admin_sicherungen.php` wird
 nicht umbenannt. **Grenzen:** `server/sicherungen/` bleibt (Deploy-
@@ -377,7 +398,7 @@ angelegt.
 | 40 | 55 Altklassen der Streichliste austragen | Backlog-Runde | vor dem nächsten CSS-Umbau |
 | 41 | Sechs Klassen ohne Regel | Backlog-Runde | Gestaltungsentscheidung mit Mockup |
 | 42 | Drei Unicode-Symbole im Markup | Backlog-Runde | Gestaltungsentscheidung |
-| 43 | GPS-Spur und Phasenkoordinaten im Klartext | P6 (Weg B) und Backlog-Runde (Weg C) | Vorstudie `docs/Konzept-V1-Ortsdaten.md`: Weg C (Zusage in `CLAUDE.md` 4, Technik und Datenschutztext ehrlich eingrenzen) jetzt; Weg B (Schlüssel auf das Gerät) entscheidet der R17-Review; drei Fragen an den Auftraggeber in Abschnitt 6 |
+| 43 | GPS-Spur und Phasenkoordinaten im Klartext | P6 (Weg B) und Backlog-Runde (Weg C) | Vorstudie `docs/konzepte/Konzept-V1-Ortsdaten.md`: Weg C (Zusage in `CLAUDE.md` 4, Technik und Datenschutztext ehrlich eingrenzen) jetzt; Weg B (Schlüssel auf das Gerät) entscheidet der R17-Review; drei Fragen an den Auftraggeber in Abschnitt 6 |
 | 44 | Sprungliste bei vielen Rettungsmitteln | Backlog-Runde | Mockup `docs/mockups/N1-sprungliste.html` liegt, Freigabe fehlt |
 | 45 | Dritte Kartengröße | nach v1.0 | ohne Mockup, ohne Bedarf |
 | 46 | Altformat der Sicherung abschaffen | P6 | Stichtag NaDoku 1.0 |
@@ -513,6 +534,7 @@ werden nie neu vergeben.
 | R59 | Vor v1.0 ein Planungsgespräch: Umfang des Code-Reviews, Aufteilung in mehrere Repositorien, Auslieferungskette; Ergebnis ist das P6-Konzept | gilt, Schritt 10 |
 | R60 | Ab v1.0 keine Rückwärtskompatibilität, auch bei Updates; v1.0 beginnt mit dem Neuaufsetzen; eine ältere Sicherung wird einmal über ein Wegwerf-Formular eingespielt, danach nie wieder. Der Update-Weg der Installation (Selbstprüfung gegen das Repositorium, Benachrichtigung, Einspielen selbst oder per FTP, Sichtbarkeit der Migrationsliste) wird in der Planung v1.0 entschieden | gilt, Schritt 10 |
 | R61 | Zwischenpaket S8 „Einstellungen, Administration und Wartung": ergebnisoffene Sichtung und Neuordnung vor P5, mit Konzept und Mockups; die Sicherungsoptionen, die Menüstruktur und die Aufteilung der Wartungsseite gehören hinein | gilt, Schritt 7 |
+| R62 | Konzeptablage `docs/konzepte/` mit Lebenszyklus: Statusblock und Push nach jedem Arbeitspaket, damit andere Instanzen den Stand sehen; nach Freigabe des Abschlusses Erledigt-Zeile hier und Löschung des Konzepts; Prüfdokument bleibt bis zur abgehakten Prüfliste; Bestand bis S3 in `docs/konzepte/erledigt/` | gilt (F16), Regel in 2.2 |
 
 ## 8. Erledigt — Kurzübersicht
 
@@ -529,13 +551,14 @@ Erscheinungsbilds) · kein Ordnerumbau (E-A6-12). *Reste:* 43 Restfunde als
 Nr. 21.
 
 ### Sofortpaket Nr. 22 · Web 7.2.1 · 23.08.2026 (R20)
-`docs/Pruefung-Sofortpaket-22.md`. Altersfeld in den Einsatztabellen
+`docs/konzepte/erledigt/Pruefung-Sofortpaket-22.md`. Altersfeld in den Einsatztabellen
 maskiert (Skriptausführung über den Import war möglich) · Importpfad
 durchgesehen · Keyguard-Einträge geklärt · Dauer-Regressionsfall mit
 Angriffswert im Referenzdatensatz.
 
 ### P1 — Referenzdatensatz und Demo-Konto · Web 7.2.2 bis 7.3.1 · 23.08.2026
-`tools/referenzdatensatz/Konzept-P1.md`, `…/Pruefdokument-P1.md`.
+`docs/konzepte/erledigt/Konzept-P1.md`, `…/Pruefdokument-P1.md`; Werkzeuge
+und Quelldaten unter `tools/referenzdatensatz/`.
 Generierter Datensatz mit **16 Diensttagen und 87 Einsätzen** aus
 JSON-Quelldaten, eingespielt über die regulären Wege (526 Ingest-Anfragen)
 · **Demo-Konto** mit Anlegen, Zurücksetzen, 30-Minuten-Reset und
@@ -545,7 +568,7 @@ Uhr-Sendeverhaltens für R19 · drei Anwendungsfehler behoben (CSV-Rückimport
 verlor sechs Felder; Einsätze nach Mitternacht 24 h zu früh).
 
 ### S1 — Sicherung und Import · Web 8.0.0 · 24.08.2026 (R23)
-`docs/Konzept-S1-Sicherung-Import.md`, `docs/Pruefdokument-S1-…md`.
+`docs/konzepte/erledigt/Konzept-S1-Sicherung-Import.md`, `…/Pruefdokument-S1-…md`.
 **Papierkorb in NutzerInnen- und Admin-Sicherung** (Nutzlast 7, kommt als
 Papierkorb mit frischer Frist zurück) · CSV-Kreislauf auf **0**: mehrzeilige
 Notizen und `final`/`ende` überleben den Rückimport · `created_at` wird
@@ -555,7 +578,7 @@ aktiver Einsatz an gelöschtem Diensttag ausgeschlossen · **Prüfmittel
 Backlog 24, 25, 27–35 erledigt.
 
 ### P2 — Terminologie · Web 8.0.1 · 24.08.2026
-`docs/Konzept-P2-Terminologie.md`, `docs/Pruefdokument-P2-…md`. Wortlaut
+`docs/konzepte/erledigt/Konzept-P2-Terminologie.md`, `…/Pruefdokument-P2-…md`. Wortlaut
 Land/Luft neutral in Oberfläche und Dokumentation (sieben Stellen in der
 Oberfläche, deutlich mehr in README, Handbuch und Formatbeschreibungen,
 darunter Sachfehler) · Kopplungstexte gerätefrei, Garmin-Tastenweg als
@@ -564,8 +587,8 @@ nachher · Nacharbeit mit vier Funden (R30). *Rest:* Punkt 4.1 der Prüfliste
 (Kopplung mit Uhr) → S5.
 
 ### P3 — Oberflächen-Redesign · Web 9.0.0 bis 9.13.0, Rückmeldungsrunde 9.14.0 · 26.–30.08.2026
-`docs/Konzept-P3-Oberflaeche.md`, `docs/Pruefdokument-P3-…md`, Mockups in
-`docs/konzept-p3/`. Mobil-first-Oberfläche mit Gestaltungsrichtlinie
+`docs/konzepte/erledigt/Konzept-P3-Oberflaeche.md`, `…/Pruefdokument-P3-…md`,
+Mockups in `…/konzept-p3/`. Mobil-first-Oberfläche mit Gestaltungsrichtlinie
 **`docs/Design.md`** (Token, Skalen, Bausteine; ersetzt `Branding.md`) ·
 Symbole aus Tabler Icons, vendoriert · **Fußzeile auf jeder Seite, Impressum
 und Datenschutz als editierbare Seiten** (R32) · **Logo-Wahl je Profil**
@@ -592,7 +615,7 @@ echte Anwendungs-ID** (2.0.0) · **Prüfmittel `tools/uhr-pruefstand/`**
 repariert.
 
 ### S2 — Mengen, Spurspeicherung und Sicherung · Web 10.0.0 bis 12.2.0 · 31.08.–01.09.2026 (R34)
-`docs/Konzept-S2-Mengen-Spuren-Sicherung.md`, `docs/Pruefdokument-S2-…md`.
+`docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md`, `…/Pruefdokument-S2-…md`.
 **Messstand `tools/messstand/`** mit 5 000-Einsätze-Konto (R35) ·
 **Spurpunkte als Blob SPUR1** statt Zeilen (62,4 → 3,58 Byte je Punkt),
 Verdichtung nach 14 Tagen, Ausdünnung nach sechs Monaten; **alle Zugriffe
@@ -615,7 +638,7 @@ Abschlussmeldungen von Sicherung und Export · Warnzeichen für den Ton
 Prüfung für unmöglich hält, sehe zuerst in `tools/` nach).
 
 ### S3 — Oberflächen-Nacharbeit und vertikaler Rhythmus · Web 12.2.2 bis 12.4.2 · 01.–02.09.2026 (R43)
-`docs/Konzept-S3-Oberflaechen-Nacharbeit.md`, `docs/Pruefdokument-S3-…md`.
+`docs/konzepte/erledigt/Konzept-S3-Oberflaechen-Nacharbeit.md`, `…/Pruefdokument-S3-…md`.
 **Anwendungsregel für Abstände** in `Design.md` 6, an Bausteinen umgesetzt
 (13 Regeln eingestellt) · Sammelleiste in Kartenform, Knopf rechts ·
 Leistenüberschrift größer und kräftiger · Menü fett nur für den aktiven
@@ -643,6 +666,11 @@ Abschnitt 6.
   Konzept; er wird angehängt, nie verändert.
 - Backlog-Nummern, Kennungen und R-Nummern bleiben, wie sie sind; neue
   Kennungen für Pakete vergibt nur eine Fassung dieses Dokuments.
+- **Konzepte** kommen und gehen nach 2.2 (R62): Sie liegen in
+  `docs/konzepte/`, werden je Arbeitspaket fortgeschrieben und gepusht, und
+  nach Freigabe durch die umsetzende Instanz hier eingetragen und gelöscht.
+  Wer ein Konzept löscht, ohne die Erledigt-Zeile mit Commit zu schreiben,
+  hat die Phase nicht abgeschlossen.
 
 ## 10. Änderungsverlauf
 
@@ -658,4 +686,4 @@ Abschnitt 6.
 | 13 | 01.09.2026 | S5 eingefügt (R49) |
 | 14 | 01.09.2026 | R50 Backup-Begriff; zwei Berichtigungen zu Merge-Aussagen |
 | 15 | 02.09.2026 | S2 als ausgeliefert; Backlog 46–49 entdoppelt (→ 59–62); zweite Rückmeldungsrunde; R50 fällig |
-| **16** | **02.09.2026** | **Neustrukturierung:** Archiv abgetrennt (R51), Fahrplan nach Ausführungsreihenfolge, S6 und S7 benannt (R52), P4 aufgelöst (R53), Kurzregister (R54), Prüflisten bereinigt (R55), R56–R58 entschieden, Planungsgespräch vor v1.0 als Schritt 10 (R59), Update-Weg und Ende der Rückwärtskompatibilität ab v1.0 (R60), Zwischenpaket S8 Einstellungen, Administration und Wartung als Schritt 7 (R61); Statusfehler berichtigt (Kleinstpaket nicht begonnen, S3 ausgeliefert, S4 auf dem Zweig gebaut); Backlog 68–79 angelegt, 63–67 für S4 reserviert |
+| **16** | **02.09.2026** | **Neustrukturierung:** Archiv abgetrennt (R51), Fahrplan nach Ausführungsreihenfolge, S6 und S7 benannt (R52), P4 aufgelöst (R53), Kurzregister (R54), Prüflisten bereinigt (R55), R56–R58 entschieden, Planungsgespräch vor v1.0 als Schritt 10 (R59), Update-Weg und Ende der Rückwärtskompatibilität ab v1.0 (R60), Zwischenpaket S8 Einstellungen, Administration und Wartung als Schritt 7 (R61), Konzeptablage `docs/konzepte/` mit Lebenszyklus und Push je Arbeitspaket (R62, K7 geändert), Bestand nach `docs/konzepte/erledigt/` verschoben; Statusfehler berichtigt (Kleinstpaket nicht begonnen, S3 ausgeliefert, S4 auf dem Zweig gebaut); Backlog 68–79 angelegt, 63–67 für S4 reserviert |
