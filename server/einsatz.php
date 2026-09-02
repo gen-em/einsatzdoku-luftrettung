@@ -130,10 +130,6 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
                     'typ' => 'button', 'attr' => ' id="unlockbtn"']) ?>
     </div>
   </div>
-  <div class="meldung meldung-info" id="freibanner" role="status" hidden>
-    <?= ui_symbol('schloss-offen', 'symbol-gross') ?>
-    <p>Geschützte Angaben sind entsperrt, bis du dich abmeldest.</p>
-  </div>
   <div class="meldung meldung-fehler" id="patfehlerbanner" role="alert" hidden>
     <?= ui_symbol('warnung', 'symbol-gross') ?>
     <p>Für diesen Einsatz sind geschützte Angaben gespeichert, sie lassen sich
@@ -151,8 +147,21 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
            linke — Mockup 20. Leere Felder werden nicht gerendert, leere
            Karten bleiben versteckt. */ ?>
   <div class="einsatz-raster">
+    <?php /* PLAKETTE AUCH HIER (S3/AP6, E-S3-16). F-N1-B hatte sie bewusst
+             nur an der PatientIn-Karte: Dort ist ALLES verschluesselt, hier
+             stehen drei geschuetzte Felder zwischen Klartextfeldern und
+             tragen ihr Schloss einzeln. Die Rueckmeldung vom 31.08.2026
+             verlangt sie trotzdem — und die Begruendung traegt: Wer wissen
+             will, ob auf einer Seite geschuetzte Daten stehen, soll das an
+             der Karte sehen und nicht Zeile fuer Zeile suchen muessen. Die
+             Plakette sagt „hier stehen verschluesselte Angaben", die
+             Schloesser sagen „diese hier". Beides zusammen ist redundant,
+             und bei einer Schutzauskunft ist Redundanz kein Fehler. */ ?>
     <section class="karte karte-block-einsatz" hidden>
-      <div class="karte-kopf"><h2 class="karte-titel">Einsatz</h2></div>
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Einsatz</h2>
+        <?= ui_plakette('verschlüsselt', ['ton' => 'blau']) ?>
+      </div>
       <div class="karte-inhalt">
         <div class="tag-lese" id="liste-einsatz"></div>
         <div class="zeile-plaketten" id="plaketten" hidden></div>
@@ -799,15 +808,20 @@ async function zeigePat(m, bounds){
     document.getElementById('patfehlerbanner').hidden = false;
     return;
   }
-  document.getElementById('freibanner').hidden = false;
 
   const o = r.daten || {};
   if (o.mission_no != null && String(o.mission_no) !== '') {
     zeile('patientin', RANG.mission_no, 'Einsatznummer', esc(String(o.mission_no)));
   }
+  /* SCHLOSS AUCH IN DER PATIENTIN-KARTE (S3/AP6, E-S3-16). F-N1-B hielt es
+     hier fuer Laerm, weil die Karte ihre Plakette traegt. Die Rueckmeldung
+     vom 31.08.2026 sieht es andersherum: Name und Geburtsdatum sind die
+     beiden Angaben, bei denen jemand ausdruecklich wissen will, dass sie den
+     Server nie im Klartext erreichen — und eine Plakette ueber der Karte
+     beantwortet das nicht fuer die einzelne Zeile. */
   const pname = EdPat.name(o);
   if (pname !== '') {
-    zeile('patientin', RANG.pat_name, 'Name', esc(pname));
+    zeile('patientin', RANG.pat_name, dtGeschuetzt('Name'), esc(pname));
   }
   /* GEBURTSDATUM UND ALTER IN EINER ZEILE (Web 7.0.0): Das Alter FOLGT aus
      dem Geburtsdatum, es ist keine zweite Angabe. Die Einheit wechselt mit
@@ -817,11 +831,11 @@ async function zeigePat(m, bounds){
      geschaetzte Wert. */
   const alterTxt = EdPat.alterText(o, m.mission_day);
   if (o.dob != null) {
-    zeile('patientin', RANG.pat_dob, 'Geboren',
+    zeile('patientin', RANG.pat_dob, dtGeschuetzt('Geboren'),
       esc(EdPat.datumDe(o.dob))
       + (alterTxt ? `<span class="lese-klein">${esc(alterTxt)}</span>` : ''));
   } else if (alterTxt) {
-    zeile('patientin', RANG.pat_dob, 'Alter', esc(alterTxt));
+    zeile('patientin', RANG.pat_dob, dtGeschuetzt('Alter'), esc(alterTxt));
   }
   /* EINSATZORT MIT KLEINZEILE (Mockup 19): Hoehe, Luftlinie und Strecke sind
      Eigenschaften DIESES Ortes bzw. des Weges dorthin und stehen klein unter
@@ -830,7 +844,10 @@ async function zeigePat(m, bounds){
   if (o.loc && o.loc.addr) {
     if (hoeheZeigen) { zeileEntferne('hoehe'); }
     const klein = [];
-    if (hoeheZeigen) { klein.push(`${hoeheWert} m`); }
+    /* BESCHRIFTET (S3/AP6, E-S3-09). „1917 m" allein steht in einer Zeile
+       mit „Strecke 12,4 km" und sagt nicht, WAS 1917 Meter sind — der
+       Nachbarwert traegt sein Wort, dieser nicht. */
+    if (hoeheZeigen) { klein.push(`Höhe ${hoeheWert} m`); }
     if (m.distance_m != null) { klein.push('Strecke ' + fmtKm(m.distance_m)); }
     zeile('einsatz', RANG.pat_loc, dtGeschuetzt('Einsatzort'),
       esc(o.loc.addr)

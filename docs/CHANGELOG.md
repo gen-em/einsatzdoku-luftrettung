@@ -11,6 +11,620 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.4.2] — 2026-09-02
+
+**Das Bodenlogo war nie so klein, wie es aussah — es war gepolstert.** Elftes
+Arbeitspaket von S3. Keine Migration.
+
+### Web — Ein Zehntel der Höhe war leer
+
+Das NEF-Logo wirkte neben dem Hubschrauber deutlich kleiner. Die Ursache
+steckte in der Datei: `viewBox="0 0 420 420"`, die **Zeichnung darin aber
+420 × 335 ab y = 42,5** — oben und unten je ein Zehntel leer, ein Artefakt
+des Exports und keine Gestaltungsentscheidung.
+
+Skaliert wird über die **Höhe** (`height: 34px; width: auto`). Ein Zehntel
+dieser Höhe war damit Luft, und das Bild erschien **schmaler und niedriger
+zugleich**:
+
+| bei 34 px Höhe | vorher | nachher |
+|---|---|---|
+| Luftlogo | 54,5 × 34 px · 1 853 px² | 54,5 × 34 px · 1 853 px² |
+| Bodenlogo | 34 × 27,1 px · **921 px²** | **42,6 × 34 px · 1 449 px²** |
+| Flächenverhältnis | **2,01** | **1,28** |
+
+**Eine Feinkorrektur braucht es danach nicht** (E-S3-12 b, am Bild
+entschieden): Die Höhen sind gleich, und das ist es, was das Auge in einer
+Zeile vergleicht. Die verbleibende Breitendifferenz ist der ehrliche
+Unterschied zweier Motive — das eine liegt quer, das andere weniger. **An der Zeichnung ist nichts geändert, nur am Rahmen.**
+
+### Web — Die Kopfleiste reservierte für beide Logos denselben Kasten
+
+`width="54" height="34"` stand fest im Markup. 54 : 34 ist das Verhältnis des
+**Luftlogos**; das Bodenlogo ist bei 34 px Höhe **43 px** breit. Der Browser
+reservierte also einen Kasten, in den das Bild nicht passt, und rückte beim
+Laden nach — ein Layoutsprung, den man nur sieht, wenn man darauf wartet. Die
+Maße kommen jetzt aus `ui_logo_masse()`, je nach gewähltem Logo.
+
+### Web — Eine Falle am Luftlogo, entschärft
+
+Ein blauer Streifen der Zeichnung läuft bis x = 556,7 und damit rund **156
+Einheiten über den Rahmen** (400,16) hinaus. Sichtbar war er nie — ein Clip
+im Inneren schneidet ihn weg. Sichtbar **würde** er, sobald jemand den Rahmen
+weitet, und daran denkt beim Weiten niemand. Ein zusätzlicher Rahmen-Clip
+hält ihn jetzt unabhängig davon drinnen; am Bild ändert sich nichts, geprüft
+durch Vergleich der abgeleiteten Favicons: **bitgleich**.
+
+### Web — Favicons und Uhr-Kacheln neu abgeleitet
+
+Beide Favicons sind neu erzeugt. Der **Inhalt** des Luftlogo-Favicons ist aus
+alter und neuer SVG **identisch**; das Bodenlogo-Favicon ändert sich um 593
+Bildpunkte — der Beschnitt. Dass beide Dateien trotzdem neue Bytes haben,
+liegt am neueren Chromium, mit dem sie gerastert wurden.
+
+Von den **17** Uhr-Bildern ändern sich genau die **vier `logo_boden.png`**;
+die dreizehn aus dem Luftlogo abgeleiteten sind **bildgleich** und bleiben
+unangetastet (ihre Bytes unterschieden sich nur im Zeitstempel-Block des
+PNG). Der 78-%-Faktor für das NEF bleibt richtig — er war schon vorher das
+Verhältnis der beiden Seitenverhältnisse, und daran ändert der Beschnitt
+nichts. **Ausgeliefert werden die Kacheln mit der nächsten Uhr-Fassung
+(S5, E-S3-04); die Uhr-Version steigt hier nicht.**
+
+### Web — Ein Werkzeug, das bei einem Fehlschlag eine Datei schrieb
+
+Beim ersten Anlauf enthielt ein neuer XML-Kommentar in den SVG einen
+doppelten Bindestrich — **XML verbietet das**. Die Dateien waren damit
+ungültig, der Browser zeigte sein Platzhalterbild („kaputtes Bild"), und
+`tools/logos/erzeugen.mjs` fotografierte es, schrieb es als Favicon und
+meldete zufrieden „64 × 64, 865 Bytes". Das Werkzeug sieht jetzt nach, ob das
+Bild überhaupt geladen hat, und **bricht ab, ohne etwas zu schreiben**.
+
+## [Web 12.4.1] — 2026-09-02
+
+**Das Demo-Konto lässt sich auf der Kontoseite nicht mehr ändern.** Zehntes
+Arbeitspaket von S3. **Funktionsänderung.** Keine Migration.
+
+### Web — Änderungen am Demo-Konto verfielen lautlos
+
+Das Demo-Konto wird zentral verwaltet: angelegt, zurückgesetzt und entfernt
+über den Reiter **Demo-Konto**. Auf seiner Kontoseite standen trotzdem alle
+Formulare der übrigen Konten — Name, Rolle, E-Mail, Sichern, Einspielen,
+Freigeben, Löschen. Was man dort eintrug, war **spätestens nach dreißig
+Minuten wieder weg**: Der Reset überschreibt Konto- und Schlüsselmaterial und
+löscht den ganzen Bestand. Eine Änderung, die lautlos verfällt, ist schlimmer
+als eine, die gar nicht erst geht.
+
+**Gesichert wird das Konto ebenfalls nicht.** Sein Bestand ist erfunden, liegt
+als Fixture im Repositorium und wird alle dreißig Minuten daraus neu
+hergestellt — eine Sicherung davon wäre die Kopie einer Datei, die ohnehin im
+Git liegt. Die Karte „Sicherungen" entfällt für dieses Konto.
+
+### Web — Die Sperre sitzt im Schreibweg, nicht im Markup
+
+Ein `disabled` am Formular ist **Kulisse**: Ein direkt abgesetzter POST geht
+daran vorbei. Sieben Aktionen werden deshalb **serverseitig** abgewiesen —
+`konto`, `sichern`, `einspielen`, `freigeben`, `widerrufen`,
+`paket_loeschen`, `user_delete` — mit einer Meldung, die sagt, wo es
+stattdessen geht. Die Anzeige graut zusätzlich aus, damit man es sieht, bevor
+man es versucht.
+
+Geprüft mit **direkten POSTs** an der Sitzung vorbei: alle drei getesteten
+Aktionen abgewiesen, der Name des Demo-Kontos danach unverändert. Die
+Gegenprobe an einem normalen Konto ging durch.
+
+**Nicht gesperrt sind die Geräte-Aktionen.** Das Demo-Konto lädt ausdrücklich
+zum Koppeln einer Uhr ein („Ausprobieren ist erwünscht"), und was dabei
+entsteht, räumt der Reset selbst wieder ab.
+
+### Web — „Demo NutzerIn"
+
+Der Anzeigename kam aus der Fixture und war der Name des Referenzkontos, aus
+dem sie erzeugt wurde; in der NutzerInnen-Liste las sich das wie ein
+gewöhnliches Konto. Er heißt jetzt **„Demo NutzerIn"** — gesetzt beim Anlegen
+**und** beim Zurücksetzen, sonst holte der nächste Reset den alten zurück.
+
+## [Web 12.4.0] — 2026-09-01
+
+**Filter erscheinen nur, wenn im Bestand etwas dahintersteht.** Neuntes
+Arbeitspaket von S3. **Funktionsänderung.** Keine Migration, keine
+Schnittstellenänderung.
+
+### Web — Bisher galt die Regel für zwei Fälle, und sie stand zweimal im Code
+
+Seit Web 5.10.0 verschwand der Block **Bergrettung**, wenn niemand windet;
+seit Web 7.0.0 auch das Einzelfeld **Fehleinsatz**. Beides stand als
+handgepflegte Liste im Code — `GRUPPE_NUR_WENN` mit einer Bedingung je Block,
+`FELD_NUR_WENN` mit einer je Feld.
+
+Das ist genau der Einzelfall-Wildwuchs, den der Feldkatalog abschaffen sollte:
+Jedes neue Feld hätte einen dritten Eintrag gebraucht, **und wer ihn vergisst,
+merkt es nie** — ein dauerhaft leerer Filter sieht aus wie ein Filter.
+
+### Web — Jetzt entsteht die Regel aus dem Katalog
+
+Jeder Filter, der zu einer Spalte des Feldkatalogs gehört, trägt sie in seiner
+Definition; `KATALOG_ART` — **aus `mission_fields.php` erzeugt**, samt
+Unterfeldern — sagt, welcher Art sie ist. Die Art entscheidet, was „leer"
+heißt: Bei einem **Haken** zählt nur `wahr`, bei einer **Auswahl** ist auch
+die Null eine Angabe („0 Cycles" heißt, dass jemand hingesehen hat).
+
+**Ein Filter ohne Spalte bleibt immer stehen** — Zeitraum, Uhrzeit, Wochentag,
+Strecke, Dauer, Alter, Standort, Rettungsmittel, Art, Besatzung, weitere
+Rettungsmittel. Auf einem frisch angelegten Konto stehen genau diese elf in
+der Leiste, und die Blöcke **Transport** und **Bergrettung** fehlen ganz: Ein
+Block verschwindet, wenn alle seine Filter verschwunden sind, und braucht
+dafür keine eigene Bedingung mehr. `GRUPPE_NUR_WENN` und `FELD_NUR_WENN` sind
+ersatzlos entfallen.
+
+**Gemessen an zwei echten Konten:**
+
+| | Blöcke | ausgeblendete Filter |
+|---|---|---|
+| Konto mit vollem Bestand | alle fünf sichtbar | **0** |
+| frisches Konto ohne Einsatz | Transport und Bergrettung fehlen | **12** |
+| frisches Konto, geteilter Link `#wi=j` | Bergrettung kommt zurück | **11** — genau der gesetzte Filter erscheint |
+
+**Die Gegenprobe in die andere Richtung**, über die Oberfläche gefahren: Auf
+dem leeren Konto einen Diensttag und einen Einsatz **mit Fehleinsatz**
+angelegt — danach steht **genau** der Filter „Fehleinsatz" da, und alle
+übrigen bleiben ausgeblendet.
+
+### Web — Ohne zusätzliche Serverabfrage
+
+Der gesamte Bestand liegt seit Web 5.10.0 ohnehin im Browser
+(`api/suchindex.php`, **einmal** je Seitenaufruf, fünf SQL-Abfragen
+unabhängig von der Zahl der Einsätze). Die Sichtbarkeit entsteht daraus in
+**einem** Durchgang — nicht in einem je Filter. Gemessen **0,06 ms** bei 82
+Einsätzen; der Aufwand wächst linear mit dem Bestand.
+
+## [Web 12.3.3] — 2026-09-01
+
+**Formularbausteine und Ortssuche.** Achtes Arbeitspaket von S3. Eine
+**Funktionsänderung** (Autosuche im Ortsfeld) mit einer Folge, die benannt
+gehört. Keine Migration.
+
+### Web — Das Ortsfeld sucht beim Tippen
+
+Bei **Standort** und **Zielklinik** suchte bis hierher nur die Lupe; O5 hatte
+das ausdrücklich so entschieden, weil in diesen Feldern ein **Name** steht und
+keine Adresse. Für einen Weg, den man zwanzigmal am Tag geht, ist ein Klick
+eine Handlung zu viel. Beide Felder suchen jetzt beim Tippen — **die Lupe
+bleibt** als ausdrücklicher Auslöser, und was ein Treffer übernimmt, bleibt
+unterschieden (bei Standort und Zielklinik nur die Koordinaten, nie der Name).
+
+Drei Grenzen fassen das ein, und sie stehen als benannte Konstanten oben in
+`assets/ortsfeld.js` statt verstreut im Code:
+
+| Grenze | Wert | wozu |
+|---|---|---|
+| Entprellung | **400 ms** | beim flüssigen Tippen entsteht **eine** Anfrage, nicht eine je Buchstabe |
+| Mindestlänge | **3 Zeichen** | unter drei Zeichen sucht niemand ernsthaft |
+| offene Anfragen | **höchstens eine** | eine laufende wird abgebrochen; sonst überholen sich zwei Antworten und die Liste zeigt den vorletzten Stand |
+
+Nachgemessen mit abgefangenen Anfragen an allen drei Ortsfeldern (Standort,
+Zielklinik, Einsatzort): flüssiges Tippen von „Talwang" (sieben Zeichen à
+80 ms) ergibt **eine** Anfrage, zwei Zeichen ergeben **keine**, und die Lupe
+löst nach **unter 50 ms** aus.
+
+### Web — Und das ändert eine Zusage in `docs/Lizenzen.md`
+
+Dort stand, die Adresssuche laufe „nicht bei jedem Tastendruck" **und nur auf
+ausdrückliches Auslösen". Der erste Teil stimmt weiter, der zweite nicht mehr.
+Der Abschnitt 6.2 ist deshalb neu geschrieben: Er sagt jetzt, dass das Tippen
+in einem Ortsfeld Suchanfragen an Photon auslöst, nennt die drei Grenzen und
+sagt, warum es sie gibt — Photon ist ein frei betriebener
+Gemeinschaftsdienst, und jede Anfrage trägt die eingetippten Buchstaben zu
+einem Dritten.
+
+**Die Ende-zu-Ende-Verschlüsselung ist davon nicht berührt.** Gesucht wird,
+bevor aus der Eingabe ein gespeicherter — und damit verschlüsselter — Wert
+wird; das war beim Klick auf die Lupe so und ist es beim Tippen. Wer
+Koordinaten von Hand einträgt, einen Plus Code einfügt oder den Ort auf der
+Karte wählt, löst **keine** Anfrage aus.
+
+### Web — Platzhalter tragen jetzt Phantasienamen
+
+„z. B. Standort Kempten" bevorzugte einen realen Ort. Ein Platzhalter ist ein
+**Beispiel**, kein Vorschlag: Ein Teil der NutzerInnen liest ihn als die
+erwartete Antwort, ein anderer als Aussage darüber, wer diese Anwendung
+betreibt. Beides ist falsch.
+
+**Elf Stellen getauscht**, mit Namen aus der Welt des Referenzdatensatzes —
+Talwang, Westried, Sonnenau, Alpenfalke:
+
+| vorher | jetzt |
+|---|---|
+| z. B. Standort Kempten | z. B. Standort Talwang |
+| z. B. Christoph 17 oder NEF Kempten 1 | z. B. Alpenfalke 1 oder NEF Talwang 76/1 |
+| z. B. Klinikum Kempten | z. B. Klinikum Westried |
+| z. B. RTW Kempten | z. B. RTW Talwang 76/85 |
+| z. B. Bereitschaft Oberstdorf | z. B. Bergwacht Sonnenau |
+
+Die Regel steht als Pflegeregel in `docs/Design.md` 9.7 und gilt ab jetzt für
+jede neue Stelle. **Ein Nebeneffekt:** Die Wortliste brauchte für den
+Rettungsmittel-Platzhalter eine Ausnahme, weil „Christoph 17" ein
+Luftbegriff ist. Mit „Alpenfalke 1 oder NEF Talwang 76/1" ist der Platzhalter
+von sich aus neutral — die Ausnahme ist ersatzlos entfallen (66 statt 67
+Regeln).
+
+### Web — Die Wahlliste ist eine Liste, keine Kartensammlung
+
+Jede Zeile trug einen eigenen Rahmen auf eigener Fläche und stand mit 8 px
+Abstand zur nächsten: vier Kästchen untereinander, die aussahen wie vier
+Karten und eine Wahl sind. Rahmen, Fläche und Zwischenraum entfallen; die
+Auswahl zeigt sich weiterhin am gezeichneten Punkt und an der hell orangen
+Fläche der gewählten Zeile. Die Zeilenhöhe bleibt bei 44 px.
+
+Gemessen an der Logo-Wahl: **248 → 224 px** bei unveränderter Zeilenhöhe. Die
+Änderung sitzt am Baustein und trifft damit auch die beiden Wahllisten des
+Diensttag-Zusammenführens.
+
+## [Web 12.3.2] — 2026-09-01
+
+**Der Markerversatz — der eine echte Fehler der Rückmeldungsliste.** Siebtes
+Arbeitspaket von S3. Keine Migration, keine Schnittstellenänderung.
+
+### Web — Warum die Marker beim Herauszoomen nach Osten wanderten
+
+Die Schilder von Standort und Zielklinik saßen umso weiter östlich, je weiter
+herausgezoomt wurde. Die Ursache ist eine **Kette aus drei Gliedern, von
+denen jedes für sich richtig aussah**:
+
+1. `.geo-schild` ist eine Flex-**Spalte** mit `align-items: center`. Ihr
+   Wurzelelement wird damit so breit wie ihr **breitestes** Kind.
+2. Das breiteste Kind war das **Namensschild** (`white-space: nowrap`) —
+   nicht der 44-px-Kasten. Bei „Klinikum Immenstadt" rund 150 px.
+3. `iconSize: null` lässt Leaflet die Größe aus dem Markup nehmen, und
+   `iconAnchor: [22, 22]` verankerte damit 22 px vom linken Rand **des
+   Wurzelelements** — also rund 50 px links der Kastenmitte.
+
+Das ergibt einen **konstanten Pixelversatz**, und genau das machte ihn so
+schwer zu fassen: Herausgezoomt sind dieselben 50 px Kilometer,
+hereingezoomt Meter. Er wuchs mit der Länge des Namens.
+
+**Nachgemessen, nicht angesehen** — Abstand zwischen dem Ankerpunkt der
+Koordinate und der Mitte des gezeichneten Kastens, über sechs Zoomstufen:
+
+| | vorher | nachher |
+|---|---|---|
+| Versatz waagerecht | **51,7 px** | **0,0 px** |
+| Versatz senkrecht | −4,0 px | **0,0 px** |
+| über sechs Zoomstufen | unverändert | unverändert |
+
+### Web — `iconSize` steht jetzt überall ausdrücklich
+
+Mit dem Wegfall der Namensschilder wäre der Versatz von selbst verschwunden.
+**Die Behebung setzt `iconSize` trotzdem** — an allen fünf Markerarten
+(Schild, Einsatzort, Ring, Punkt, Richtungspfeil). Wer dem Marker künftig
+etwas danebenstellt, eine Plakette oder eine Zahl, trüge den Fehler sonst
+wieder ein, und zwar wieder ohne Fehlermeldung.
+
+Die Maße stehen dafür an zwei Stellen — als Zahl in `geo.js` (Leaflet braucht
+sie so) und als Token im Stylesheet. Ein Kommentar an beiden sagt, dass sie
+zusammengehören.
+
+### Web — Die Schilder tragen keinen Namen mehr
+
+Auf einer Karte mit mehreren Markern standen die Namensschilder übereinander
+und verdeckten die Spuren. Das Schild ist jetzt nur noch das Symbol; der Name
+steht im `title` und erscheint als Kurzinfo. Das Kästchen wird dabei enger —
+**36 statt 44 px**, bei gleich großem Symbol: Was verschwindet, ist Weißraum
+zwischen Symbol und Rand (12 px ringsum vorher, 8 px jetzt). Die 44 kamen von
+`--knopf`, und der Kasten ist kein Bedienelement, sondern eine Zeichnung.
+
+### Web — Kein Zielklinik-Schild mehr auf der Tagesübersicht
+
+Die Karte der Tagesübersicht zeigt den ganzen Tag. Bei acht Einsätzen standen
+dort acht Klinik-Schilder zwischen acht Spuren — und die Frage, die diese
+Karte beantwortet, ist „wo war das Rettungsmittel unterwegs", nicht „welche
+Kliniken gibt es". Das Transportziel steht weiterhin in der **Einsatzansicht**,
+wo es zu einem Einsatz gehört. Am Bestand ändert sich nichts.
+
+### Web — Der Einsatzort-Kreis verliert die weiße Umrandung
+
+Sie war ein Rest aus der Zeit vor dem Schatten und sollte den Kreis von der
+Karte abheben; das tut der Schatten. Der Rand machte den Kreis zusätzlich um
+4 px breiter, als er aussah. Jetzt **32 statt 36 px**, ohne Rand.
+
+## [Web 12.3.1] — 2026-09-01
+
+**Die Einsatzansicht.** Sechstes Arbeitspaket von S3. Eine
+Funktionsänderung (Höhenanzeige), sonst Anzeige. Keine Migration.
+
+### Web — „706 m" sagte nicht, was 706 Meter sind
+
+Unter dem Einsatzort steht eine Kleinzeile mit Höhe und Strecke. Die Strecke
+trug ihr Wort („Strecke 40,9 km"), die Höhe nicht — dort stand nur „706 m",
+direkt daneben. Jetzt **„Höhe 706 m"**.
+
+**Angezeigt wird sie weiterhin nur bei luftgebundenen Diensttagen**
+(`kind = 'air'`). Bodengebunden ist es die Höhe der Straße, und die ist keine
+Auskunft; die Zeile entfällt dort **ersatzlos** — eine leere beschriftete
+Zeile wäre derselbe Fehler in neu. Gespeichert und exportiert wird die Höhe
+unverändert in beiden Fällen; bedingt ist nur die Anzeige.
+
+### Web — Schutz wird jetzt zweimal angezeigt, und das ist Absicht
+
+P3 hatte sich entschieden (F-N1-B): **entweder** die Plakette „verschlüsselt"
+am Kopf der Karte **oder** das Schloss an der einzelnen Zeile, nie beides.
+Die Karte „PatientIn" bekam die Plakette, weil dort alles verschlüsselt ist;
+die drei geschützten Felder der Karte „Einsatz" bekamen Schlösser, weil sie
+zwischen Klartextfeldern stehen.
+
+Die Rückmeldung vom 31.08.2026 dreht das um, und die Begründung trägt: **Die
+Plakette sagt „hier stehen verschlüsselte Angaben", das Schloss sagt „diese
+hier."** Das sind zwei verschiedene Auskünfte, und bei einer Schutzauskunft
+ist Redundanz kein Lärm. Neu sind deshalb:
+
+- die blaue Plakette **„verschlüsselt"** auch am Block **Einsatz**,
+- das Schloss an **Name** und **Geburtsdatum** in der Karte PatientIn.
+
+### Web — Der blaue Balken nach dem Entsperren entfällt
+
+„Geschützte Angaben sind entsperrt, bis du dich abmeldest" stand nach dem
+Entsperren auf **jedem** Einsatz, den man danach öffnete. Eine Bestätigung,
+die von da an immer dasteht, sagt beim zwanzigsten Mal nichts mehr — und
+sichtbar ist der Zustand ohnehin daran, dass die geschützten Angaben
+dastehen.
+
+**Was bleibt:** der Balken für den **gesperrten** Zustand samt
+Entsperren-Knopf und die Fehlermeldung für Angaben, die sich mit dem
+aktuellen Schlüssel nicht lesen lassen. Beide sagen etwas, das man nicht
+sieht. Die Aussage „entsperrt bis zur Abmeldung" ist ins **Handbuch**
+gewandert und dort ausgetragen worden, wo sie die alte Meldung beschrieb.
+
+### Web — Das Schloss saß nicht auf der Höhe des Wortes
+
+`.symbol-schutz` stand auf `vertical-align: baseline` — der Kasten des
+16-px-Symbols auf der Schriftlinie des 15-px-Wortes, und damit sichtbar zu
+hoch. Nachgemessen an einer echten Zeile, Symbolmitte gegen die Mitte des
+Zeilenkastens: `baseline` **−2,0 px**, `middle` (wie auch `text-bottom` und
+`sub`) **+2,0 px**, `-0.1em` **−0,5 px**. Es steht jetzt auf `-0.1em` — die
+Angabe hängt an der Schriftgröße der Zeile und stimmt damit auch dort, wo das
+Schloss in einer anderen Größe steht.
+
+## [Web 12.3.0] — 2026-09-01
+
+**Ein fünfter Meldungston, zwei aufgeräumte Tabellen und ein Gerüst, das
+gefehlt hat.** Fünftes Arbeitspaket von S3, dazu zwei Funde aus der
+Rückmeldung vom 01.09.2026. Keine Migration, keine Schnittstellenänderung.
+
+### Web — Ein Ton, den es nicht gab, ergab einen weißen Kasten
+
+`ui_meldung_markup()` baute die Klasse aus dem übergebenen Wort zusammen:
+`'meldung-' . $ton`. Ein Ton, den es nicht gibt, führte damit zu einer Klasse
+**ohne Regel im Stylesheet** — ein Kasten ohne Fläche, ohne Farbe, ohne
+Fehlermeldung. Die Spurenseite des Diensttages trug so **zwei** Meldungen mit
+dem Ton `hinweis`, den diese Funktion nie gekannt hat.
+
+Die Vollständigkeitsprüfung kann das nicht finden: Sie sucht Klassen als
+**Literale** im Quelltext, und diese hier entsteht erst zur Laufzeit. Prüfen
+kann es nur die Funktion selbst — sie tut es jetzt und wirft bei einem
+unbekannten Ton.
+
+### Web — `schutz`: rot, und trotzdem kein Fehler
+
+Der Hinweis auf der Spurenseite sagt, dass eine GPX-Datei den Weg bis zum
+Einsatzort trägt und deshalb so zu behandeln ist wie die geschützten Angaben
+selbst. Das ist eine **kritische Datenschutzinformation** an genau der Stelle,
+an der jemand gleich herunterlädt — sie gehört in die Farbe des Ernstfalls.
+
+`fehler` wäre falsch gewesen: Die Meldung steht **dauerhaft**, und
+`role="alert"` ließe jeden Vorleser bei jedem Seitenaufruf unterbrechen. Der
+neue Ton `schutz` benutzt deshalb Fläche und Schrift von `fehler` — **kein
+neuer Farbwert** —, aber `role="status"`, und als Symbol das **Schloss** statt
+der Warnung: Es geht um Schutzbedürftigkeit, nicht um einen Fehlgriff.
+
+### Web — Der Spurenseite fehlte das Seitengerüst
+
+Sie rief `ui_seite_start()` und schrieb ihren Inhalt danach unmittelbar in den
+`<body>` — ohne `ui_geruest_start()`. Als einzige angemeldete Seite der
+Anwendung hatte sie damit **keine Diensttag-Leiste und keinen
+Inhaltsrahmen**: Titel, Karte und Kartenbaustein saßen am blanken Fensterrand.
+Gemessen bei 412 px: linke Kante **0 px statt 12**.
+
+Aufgefallen ist es mobil, wo diese 12 px der Unterschied zwischen „Rand" und
+„kein Rand" sind; am Schreibtisch ging die fehlende Leiste als
+Gestaltungswille durch. **Der Bilderlauf hat es nicht gefunden, und das ist
+kein Versagen des Werkzeugs:** Es misst waagerechten Überlauf
+(`scrollWidth > innerWidth`), und eine Seite ohne Innenabstand läuft nicht
+über — sie ist nur randlos.
+
+### Web — Spaltentitel standen über nichts
+
+In der NutzerInnen-Liste sind die Spaltentitel seit P3 zentriert (F-N1-G),
+die Inhalte von **Rolle, Seit, Zuletzt angemeldet, Geräte** und **Sicherung**
+standen aber links oder rechts. Ein Titel mittig über einer linksbündigen
+Spalte steht über nichts. Alle fünf stehen jetzt mittig — keiner dieser Werte
+ist Fließtext oder eine Größe, die man an einer Kante vergleicht. **Konto
+bleibt linksbündig:** Name und Adresse werden gelesen, nicht verglichen.
+
+Dasselbe in der Tagesübersicht für **Nr., Beginn und Alter**. Gemacht ist es
+über eine Klasse `mitte-spalte`, **nie über `:nth-child`** — die Tabelle der
+Tagesübersicht bekommt ihre hinteren Spalten aus dem Feldkatalog, und eine
+Zählung rutschte still auf die falsche Spalte.
+
+### Web — Die Dauer brach nach der Stunde um
+
+„1h 06min" passte nicht in die schmale Spalte und stand auf zwei Zeilen — was
+sich wie zwei Angaben liest. `missiontable.js` setzt dagegen seit F-N1-G die
+Klasse `zeit-spalte` (`white-space: nowrap`). **Die Tagesübersicht baut ihre
+Zeilen aber selbst**, mit einem zweiten, älteren Aufbau derselben Tabelle —
+und dort fehlte die Klasse. Sie steht jetzt da. Dass es zwei Aufbauten für
+dieselbe Tabelle gibt, ist der eigentliche Fund und liegt als F-S3-A im
+Konzept.
+
+### Web — Kennzahl-Kacheln stehen senkrecht mittig
+
+Die Kacheln der Zeitraumübersicht stehen in einem Raster und werden alle so
+hoch wie die höchste — und die ist höher, sobald **eine** Beschriftung
+umbricht („Längste Flugstrecke · 14.08."). Der Inhalt der übrigen klebte dann
+oben. Gemessen in der schmalen Monatsansicht bei 360 px: Kacheln von 77 und
+97 px Höhe nebeneinander, die niedrigeren vorher **13 px oben / 33 px unten**,
+jetzt **23/23**.
+
+## [Web 12.2.4] — 2026-09-01
+
+**Navigation und Leistenüberschrift.** Viertes Arbeitspaket von S3. Keine
+Migration, keine Schnittstellenänderung.
+
+### Web — Wenn jede Zeile fett ist, hebt sich keine hervor
+
+Die Menüpunkte der Seitenleiste standen durchgehend auf Schriftschnitt 600 —
+Diensttage wie Einstellungen. Der aktive Punkt musste seine Erkennbarkeit
+allein aus Fläche und orangem Randstrich holen, und der ganze Block wirkte
+schwer. Jetzt steht der Grundschnitt auf 400 und **nur der ausgewählte Punkt
+auf 600**: Die Auszeichnung wandert von „alle" zu „einer".
+
+Dieselbe Überlegung hat P3 schon einmal für die Zeilen des Aktionsblattes
+angestellt (F-N1-F). Die Leiste war damals übersehen worden.
+
+Eine Regel ist dabei entfallen: `.eintrag-leise` setzte `font-weight: 400`,
+solange die Grundform 600 war. Jetzt wäre es eine Dublette — und eine
+Dublette ist nie harmlos, sobald sich die Grundform ändert.
+
+### Web — „Diensttage" wirkte verloren, und es lag nicht an der Ausrichtung
+
+Die Rückmeldung lautete, die Überschrift stehe verloren links oben. Sie bleibt
+**linksbündig** — sie wird größer und dunkler: eine Stufe höher in der
+geschlossenen Skala (15 statt 13 px) und `--asphalt` statt `--gedaempft`.
+Gemessen 19,29:1 gegen die tatsächliche Fläche der Leiste, weit über AA.
+
+**Versalien und Sperrung sind dabei entfallen — entschieden am Bild.** Bei
+13 px trug die Sperrung, weil die Größe allein nicht reichte; sie war der
+Ersatz für die Größe, die jetzt da ist. Bei 15 px in Bricolage 600 liest sich
+„DIENSTTAGE" gesperrt als **Etikett** und steht dem Jahreseintrag „2026"
+darunter an Lautstärke kaum nach — zwei Überschriften statt einer Ordnung.
+Gemischt gesetzt bleibt es eine Überschrift: präsent, aber ersichtlich eine
+Ebene über dem, was sie ordnet.
+
+Der Baustein trägt **vier** Zeilen: Diensttage, Einstellungen, Administration
+und „Filter" in der Suche. Alle vier ziehen mit — das ist beabsichtigt und
+war der Grund, es am Baustein zu machen und nicht an der Diensttag-Leiste.
+
+## [Web 12.2.3] — 2026-09-01
+
+**Die Sammelleiste bekommt die Form der Karte.** Drittes Arbeitspaket von S3.
+Keine Migration, keine Schnittstellenänderung.
+
+### Web — Warum die Leiste „eckig und breiter" wirkte
+
+Sie war es. `.speichern` trug `margin: … calc(var(--abstand-3) * -1)` und
+brach damit seitlich aus dem Inhalt aus; einen Radius hatte sie nicht. Neben
+einer Karte mit 12 px Radius stand also ein Kasten, der breiter war und
+scharfe Ecken hatte — und der trotzdem zu dieser Karte gehört.
+
+Jetzt hat sie **denselben Radius und dieselbe Breite**. Gemessen in acht
+Breiten: linke Kante und Breite der Leiste decken sich mit dem Inhalt auf den
+Pixel genau. **Was bleibt, ist alles, was die Funktion trägt** — der klebende
+Sitz am unteren Rand, die Trennlinie nach oben, der Schatten. Die Leiste soll
+auffallen, weil sie folgt, nicht weil sie anders geschnitten ist.
+
+### Web — Der Knopf steht jetzt rechts
+
+Im Markup stand er vorn und damit links, die Zählung („12 ausgewählt") rechts
+davon — umgekehrt zu allem anderen in dieser Oberfläche, wo die Haupthandlung
+rechts sitzt. Der Hinweis steht jetzt zuerst, der Knopf danach.
+
+Die Ausrichtung läuft über `justify-content:flex-end` und **nicht über
+`order`**: Ein `order` hätte die Seh- von der Vorlesereihenfolge getrennt.
+Wer die Leiste vorgelesen bekommt, hört jetzt erst „12 ausgewählt" und dann
+„Auswahl sichern" — die Zahl, bevor die Handlung kommt, auf die sie sich
+bezieht.
+
+**Der Baustein hat zwei Verwendungen, beide sind geprüft:** die Speichern-Leiste
+eines schmutzigen Formulars (Einsatzformular, Rechtstexte) und die Sammelleiste
+einer Auswahl (NutzerInnen-Liste, Spurenseite des Diensttages).
+
+## [Web 12.2.2] — 2026-09-01
+
+**Der vertikale Rhythmus bekommt eine Regel.** Erste zwei Arbeitspakete von
+S3 (Oberflächen-Nacharbeit). Keine Migration, keine Schnittstellenänderung,
+keine neue Funktion — was sich ändert, ist die Größe von Zwischenräumen, und
+zwar auf jeder Seite.
+
+### Web — Warum die Abstände nicht passten, und es lag an keiner Zahl
+
+Die Rückmeldungsliste vom 31.08.2026 fragte: „Warum passen die Abstände
+häufiger nicht? Gibt es dafür keine Definition?" Die Vermutung dahinter —
+irgendwo stünden krumme Werte — ist **nachgemessen falsch**: Von **269**
+Abstandsdeklarationen im Stylesheet zieht **jede einzelne** ihren Wert aus
+`--abstand-1` bis `--abstand-5`; Rohwerte gibt es **null**.
+
+Was fehlte, ist die Stufe darüber: eine Regel, die sagt, **welche** Stufe
+**wo** gilt. Ohne sie wird die Wahl an jeder Stelle einzeln getroffen, und
+das Ergebnis ist genau das, was die Liste bemängelt — Abstände, die alle aus
+derselben Skala kommen und trotzdem nichts miteinander zu tun haben.
+
+Die Regel steht jetzt in `docs/Design.md`, Kapitel 6, mit einer Zeile je
+Beziehung und dem Leitgedanken **Bindung ist kleiner als Trennung**: Was
+zusammengehört, steht enger als das, was sich voneinander absetzt.
+
+### Web — Der Befund in einer Zeile: Karte und Feld standen gleich weit
+
+`.karte` und `.feld` trugen beide `--abstand-4` (16 px). Der Abstand zwischen
+zwei **Karten** war damit genauso groß wie der zwischen zwei **Feldern
+innerhalb** einer Karte — die Fläche sagte nichts mehr darüber, was wozu
+gehört. Das ist die Antwort auf die Frage der Liste, und sie ist genauer als
+„die Abstände passen nicht": Sie passten zueinander, aber sie unterschieden
+nichts.
+
+**Die Anwendung widersprach sich dabei selbst.** Die Grundform `label` trägt
+für dieselbe Beziehung — Feld → nächstes Feld — schon seit P3 12 px. Ein
+Formular aus `<label>`-Grundformen stand also enger als eines aus
+`.feld`-Bausteinen, und beide sahen aus wie ein Formular.
+
+| Beziehung | vorher | nachher |
+|---|---|---|
+| Karte → Karte (`.karte`, `.meldung`, `.geo`, `.demo-hinweis`) | 16 px | **24 px** |
+| Feld → Feld (`.feld`) | 16 px | **12 px** |
+| Überschrift → ihr Inhalt (`.text h1`/`h2`, `.blatt-titel`, `.listen-form-titel`, `.vorschau > h4`) | 12–16 px | **8 px** |
+| Kästchenreihe, Suchzeile, Phasenzeile | 4–8 px | **12 px** |
+
+Insgesamt 13 Regeln. Von 74 Zwischenraum-Deklarationen waren **61 schon
+richtig** — die Skala stand, sie wurde nur nicht durchgehalten.
+
+### Web — Zwei Ausnahmen, beide begründet und beide in der Regel vermerkt
+
+**Die Titelzeile bleibt bei 16 px.** Sie ist keine bloße Überschrift: Neben
+dem Titel stehen Aktionsknöpfe von 44 px Höhe. Acht Pixel darunter stünde ein
+Knopf fast auf der ersten Karte. Wo eine Überschrift Bedienelemente trägt,
+ist die Beziehung nicht „Überschrift → Inhalt", sondern „Gruppe → nächste
+Gruppe".
+
+**Aufzählungen im Fließtext bleiben eng** (4 px). Ein `<li>` im Fließtext ist
+eine **Zeile**, kein Element: Bekäme es den Arbeitsabstand, stünden die
+Punkte einer Liste so weit auseinander wie zwei Absätze — und genau die
+Bindung, die eine Liste zur Liste macht, wäre weg. Betrifft Handbuch,
+Impressum, Datenschutz und die Suchsyntax-Hilfe.
+
+Keine der beiden Ausnahmen ist eine sechste Stufe: Beide ordnen einen Fall
+einer **vorhandenen** Zeile der Tabelle zu.
+
+### Web — Zwölf Absendeknöpfe standen ohne Fuß im Formular
+
+Der Fall, an dem die Liste es festmachte: „Profil speichern" in den
+Einstellungen war ein nackter `ui_knopf()` zwischen `ui_karte_ende()` und
+`</form>`. Der Abstand fehlte nicht, weil eine Zahl falsch war, sondern weil
+an dieser Stelle **kein Baustein benutzt wurde** — obwohl es mit
+`.listen-form-fuss` seit P3 einen Formularfuß gibt, den dreißig andere
+Stellen benutzen.
+
+Die Durchsicht aller Formularseiten fand **zwölf** solche Stellen und keine
+weitere: Profil, Passwort ändern, Einrichter, Sicherungsregeln, Serverschlüssel,
+Versand, Konto speichern, Konto löschen, Anmelden, Link anfordern und zweimal
+Passwort setzen. Alle zwölf haben jetzt denselben Fuß. **Der Geräteabschnitt
+der Einstellungen ist ausgenommen** — S5 ersetzt ihn vollständig, und die
+Bausteinänderung wirkt dort von selbst, sobald S5 mit den Bausteinen baut.
+
+### Web — Eine doppelte Regel weniger
+
+`.feld-label` stand zweimal im Stylesheet, einmal im Formular- und einmal im
+Suchabschnitt, mit demselben Abstand. Die zweite setzte nichts, was die erste
+nicht schon gesetzt hätte — aber eine Änderung am Abstand wäre an einer der
+beiden Stellen hängengeblieben. Sie ist entfallen; an ihrer Stelle steht der
+Hinweis, warum es sie gab.
+
 ## [Web 12.2.1] — 2026-09-01
 
 **Drei kleine Dinge, die täglich auffallen.** Zweite Rückmeldungsrunde nach

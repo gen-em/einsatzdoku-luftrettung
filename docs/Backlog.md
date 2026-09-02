@@ -612,9 +612,45 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Ableitungen nachmessen.
 
 
+57. **Die Tagesübersicht baut ihre Einsatztabelle ein zweites Mal.**
+    *Aufgenommen 02.09.2026 als F-S3-A (S3/AP5).*
+    `assets/missiontable.js` führt die Spaltendefinitionen der drei
+    Einsatztabellen an **einer** Stelle; `index.php` baut seine Zeilen daneben
+    noch einmal selbst zusammen (`tr.innerHTML = …`). Die beiden sind
+    auseinandergelaufen: Die Dauerspalte trug in `missiontable.js` seit
+    F-N1-G die Klasse `zeit-spalte`, in `index.php` nicht — deshalb brach
+    „1h 06min" dort um. **Die Folge ist behoben** (die Klasse steht jetzt in
+    beiden), **die Ursache nicht**: Solange es zwei Aufbauten gibt, kommt die
+    nächste Änderung wieder nur an einem an, und es fällt wieder erst
+    jemandem im Browser auf.
+    Nicht in S3 gemacht, weil die Vereinheitlichung Sortierung, Sortierblatt
+    und die Kachelform berührt — das ist ein eigenes Paket, kein Nachklapp.
+
+58. **Kein Prüfmittel fragt, ob eine Seite ihr Gerüst hat.**
+    *Aufgenommen 02.09.2026 als Lehre aus F-S3-C (S3/AP5).*
+    `tag_spuren.php` lief zwei Jahre ohne `ui_geruest_start()`: keine
+    Diensttag-Leiste, kein `.rahmen`/`.inhalt` und damit kein seitlicher
+    Innenabstand — auf 412 px saß die linke Kante bei 0 statt 12 px.
+    **Gefunden hat es ein Mensch auf einem Telefon.**
+    Kein Werkzeug konnte es finden, und das ist kein Zufall: Der Bilderlauf
+    misst waagerechten Überlauf (`scrollWidth > innerWidth`), und eine Seite
+    ohne Innenabstand läuft nicht über — sie ist nur randlos. Die
+    Vollständigkeitsprüfung fragt nach Klassen ohne Regel, nicht nach Seiten
+    ohne Gerüst. Der Stilvergleich misst Markup-Proben.
+    **Die Frage ist am Quelltext zu beantworten:** Jede Seite, die
+    `require_admin()` oder `auth_guard.php` einbindet und eigenes Markup
+    ausgibt, muss `ui_geruest_start()` und `ui_geruest_ende()` aufrufen. Ein
+    kleines Prüfmittel dafür wäre ein Nachmittag und fände die ganze Klasse
+    von Fehlern statt eines Falls.
+
+## Erledigt
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
+
 56. **Die zweite Rückmeldungsrunde steht in keinem Konzept.**
     *Aufgenommen 01.09.2026 mit Web 12.2.1; der Prüfteil ist am selben Tag
-    erledigt worden, der Konzeptteil ist offen.*
+    erledigt worden, der Konzeptteil mit S3/AP1 (02.09.2026).*
     Beide Oberflächenpunkte (Dateifeld mittig, Dateiname in den
     Abschlussmeldungen) stehen nicht in `ToDo_Layout.pdf` — die Liste hat 19
     Punkte am Stand Web 9.14.1, diese sind neuer. Sie gehören ins S3-Konzept
@@ -631,12 +667,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     und `tools/referenzdatensatz/einspielen/lokal_starten.sh` setzt die
     Installation in einem Aufruf auf. Wer eine Prüfung für unmöglich hält,
     sehe zuerst in `tools/` nach.
+    **Erledigt mit S3:** Beide Punkte stehen als Abschnitt 1.13 im
+    Konzept `docs/Konzept-S3-Oberflaechen-Nacharbeit.md` — die Umsetzung hat
+    sie damit als erledigt vorgefunden und nicht ein zweites Mal
+    beschlossen.
 
-
-## Erledigt
-
-Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
-zutreffen.
 
 2. **Serverseitige Track-Vereinfachung (Douglas-Peucker) für die
    Web-Darstellung.**

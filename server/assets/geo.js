@@ -41,33 +41,70 @@
 
   /* ---- Schilder (Standort, Zielklinik) --------------------------------- */
 
-  /* Der Anker liegt in der MITTE DES KASTENS, nicht am unteren Ende des
-   * Namensschilds: Das Schild zeigt auf den Ort, der Text haengt darunter.
-   * ring: '' | 'start' | 'ende' | 'beide' — Ringe der Spur (E-P3-33). */
-  function schild(symbol, name, ring) {
+  /* ---- Der Markerversatz, und warum er entstand (S3/AP7) ---------------
+   *
+   * Bis Web 12.3.1 sassen Standort und Zielklinik umso weiter oestlich, je
+   * weiter herausgezoomt wurde. Die Ursache ist eine Kette aus drei Gliedern,
+   * von denen jedes fuer sich richtig aussah:
+   *
+   *  1  `.geo-schild` ist eine Flex-SPALTE mit `align-items:center`. Das
+   *     Wurzelelement wird damit so breit wie sein BREITESTES Kind.
+   *  2  Das breiteste Kind war das Namensschild (`white-space:nowrap`),
+   *     nicht der Kasten. Bei „Klinikum Immenstadt" rund 150 px statt 44.
+   *  3  `iconSize: null` laesst Leaflet die Groesse aus dem Markup nehmen,
+   *     und `iconAnchor: [22, 22]` verankerte auf 22 px vom linken Rand DES
+   *     WURZELELEMENTS — also rund 50 px links der Kastenmitte.
+   *
+   * Das ergibt einen KONSTANTEN Pixelversatz: herausgezoomt sind dieselben
+   * 50 px Kilometer, hereingezoomt Meter. Er waechst mit der Laenge des
+   * Namens — was den Fehler so lange harmlos aussehen liess.
+   *
+   * Mit der Streichung des Namensschilds verschwaende er von selbst. Die
+   * Behebung setzt `iconSize` TROTZDEM ausdruecklich: Wer dem Marker
+   * kuenftig etwas danebenstellt — eine Plakette, eine Zahl —, traegt den
+   * Fehler sonst wieder ein, und zwar wieder ohne Fehlermeldung.
+   *
+   * ring: '' | 'start' | 'ende' | 'beide' — Ringe der Spur (E-P3-33). Sie
+   * liegen als box-shadow AUSSERHALB des Kastens und aendern seine Groesse
+   * nicht; der Anker bleibt richtig. */
+  var SCHILD_PX = 36;
+
+  function schild(symbol, ring) {
     var k = 'geo-schild' + (ring ? ' geo-ring-' + ring : '');
     var html = '<span class="' + k + '">'
              + '<span class="geo-schild-kasten">' + edSymbol(symbol) + '</span>'
-             + (name ? '<span class="geo-schild-text">' + esc(name) + '</span>' : '')
              + '</span>';
     return L.divIcon({ className: '', html: html,
-      iconSize: null, iconAnchor: [22, 22] });
+      iconSize: [SCHILD_PX, SCHILD_PX],
+      iconAnchor: [SCHILD_PX / 2, SCHILD_PX / 2] });
   }
 
+  /* Der zweite Parameter ist der NAME und bleibt in der Aufrufliste, obwohl
+   * das Schild ihn seit S3/AP7 nicht mehr zeigt: Die drei Kartenseiten geben
+   * ihn weiter, und er landet im Popup, das ihre Aufrufer selbst binden.
+   * Ihn hier zu streichen hiesse, drei Aufrufstellen anzufassen, ohne dass
+   * sich etwas aendert. */
   function markerStandort(latlng, name, ring) {
-    return L.marker(latlng, { icon: schild('haus', name, ring || ''),
-      keyboard: false, zIndexOffset: 500 });
+    return L.marker(latlng, { icon: schild('haus', ring || ''),
+      title: name || '', keyboard: false, zIndexOffset: 500 });
   }
   function markerZiel(latlng, name, ring) {
-    return L.marker(latlng, { icon: schild('klinik', name, ring || ''),
-      keyboard: false, zIndexOffset: 500 });
+    return L.marker(latlng, { icon: schild('klinik', ring || ''),
+      title: name || '', keyboard: false, zIndexOffset: 500 });
   }
 
-  /* ---- Einsatzort: oranger Kreis mit Pin -------------------------------- */
+  /* ---- Einsatzort: oranger Kreis mit Pin --------------------------------
+   *
+   * DIE MASSE STEHEN HIER UND IM STYLESHEET, und das ist bewusst: Leaflet
+   * braucht sie als Zahl, das Stylesheet als Token. Wer eines aendert,
+   * aendert beides — sonst wandert der Anker. Token: --geo-kreis,
+   * --geo-schild. */
+  var KREIS_PX = 32;
+
   function markerEinsatzort(latlng, titel) {
     var icon = L.divIcon({ className: '',
       html: '<span class="geo-kreis">' + edSymbol('einsatzort') + '</span>',
-      iconSize: null, iconAnchor: [18, 18] });
+      iconSize: [KREIS_PX, KREIS_PX], iconAnchor: [KREIS_PX / 2, KREIS_PX / 2] });
     var m = L.marker(latlng, { icon: icon, keyboard: false, zIndexOffset: 400 });
     if (titel) { m.bindPopup(titel); }
     return m;
@@ -79,7 +116,7 @@
   function markerRing(latlng, art, titel) {
     var icon = L.divIcon({ className: '',
       html: '<span class="geo-ringpunkt geo-ringpunkt-' + art + '"></span>',
-      iconSize: null, iconAnchor: [8, 8] });
+      iconSize: [16, 16], iconAnchor: [8, 8] });
     var m = L.marker(latlng, { icon: icon, keyboard: false, zIndexOffset: 350 });
     if (titel) { m.bindPopup(titel); }
     return m;
@@ -89,7 +126,7 @@
   function markerPunkt(latlng, farbe, titel) {
     var icon = L.divIcon({ className: '',
       html: '<span class="geo-punkt" style="background:' + esc(farbe) + '"></span>',
-      iconSize: null, iconAnchor: [6, 6] });
+      iconSize: [12, 12], iconAnchor: [6, 6] });
     var m = L.marker(latlng, { icon: icon, keyboard: false });
     if (titel) { m.bindPopup(titel); }
     return m;
@@ -111,7 +148,7 @@
     return L.divIcon({ className: '',
       html: '<span class="geo-pfeil" style="transform:rotate(' + Math.round(winkelGrad) + 'deg)">'
           + edSymbol('pfeil-hoch') + '</span>',
-      iconSize: null, iconAnchor: [10, 10] });
+      iconSize: [20, 20], iconAnchor: [10, 10] });
   }
 
   function pfeile(map, gruppe, latlngs) {

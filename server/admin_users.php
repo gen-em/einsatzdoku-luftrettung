@@ -584,11 +584,18 @@ ui_seite_start(['titel' => 'NutzerInnen']);
               <span class="konto-name"><?= e((string)($k['name'] ?: '—')) ?></span>
               <span class="konto-mail"><?= e((string)$k['email']) ?></span>
             </td>
-            <td><?= $k['role'] === 'admin' ? 'Admin' : 'NutzerIn' ?></td>
-            <td><?= e($k['created_at'] ? fmt_local($k['created_at'], 'd.m.Y') : '—') ?></td>
-            <td><?= e($k['last_login'] ? fmt_local($k['last_login'], 'd.m.Y') : '—') ?></td>
-            <td class="zahl-spalte"><?= (int)$k['geraete'] ?></td>
-            <td><?= ui_plakette($standText, ['ton' => $standTon]) ?></td>
+            <?php /* FUENF SPALTEN MITTIG (S3/AP5, Block B). Rolle, Seit,
+                     Zuletzt angemeldet, Geraete und Sicherung standen links,
+                     ihre Titel aber mittig (F-N1-G) — die Ueberschrift stand
+                     ueber nichts. Keiner dieser Werte ist Flietext oder eine
+                     Groesse zum Vergleichen; mittig stehen sie unter ihrem
+                     Titel. KONTO bleibt linksbuendig: Name und Adresse sind
+                     Text und werden gelesen, nicht verglichen. */ ?>
+            <td class="mitte-spalte"><?= $k['role'] === 'admin' ? 'Admin' : 'NutzerIn' ?></td>
+            <td class="mitte-spalte"><?= e($k['created_at'] ? fmt_local($k['created_at'], 'd.m.Y') : '—') ?></td>
+            <td class="mitte-spalte"><?= e($k['last_login'] ? fmt_local($k['last_login'], 'd.m.Y') : '—') ?></td>
+            <td class="mitte-spalte"><?= (int)$k['geraete'] ?></td>
+            <td class="mitte-spalte"><?= ui_plakette($standText, ['ton' => $standTon]) ?></td>
             <td class="oeffnen-spalte"><a class="oeffnen" href="<?= e($ziel) ?>"><?=
               ui_symbol('winkel', 'symbol-rechts') ?><span>Öffnen</span></a></td>
           </tr>

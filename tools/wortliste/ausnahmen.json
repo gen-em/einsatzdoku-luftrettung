@@ -148,12 +148,6 @@
       "begruendung": "Der Besatzungswechsel im laufenden Dienst wird mit beiden Beispielen genannt (E-P2-14). „Pilotenwechsel\" allein setzte voraus, dass das Rettungsmittel ein Hubschrauber ist; hier steht der Fahrerwechsel daneben."
     },
     {
-      "id": "beispiel-rettungsmittelname",
-      "zeile": "Christoph 17 oder NEF Kempten 1",
-      "klasse": "F",
-      "begruendung": "Der Platzhalter des Rettungsmittelnamens nennt beide Arten nebeneinander (E-P2-14) — auf der NutzerInnen- wie auf der Administrationsseite derselbe Wortlaut. Vorher zeigte jede Seite nur eine Art, und zwar eine andere."
-    },
-    {
       "id": "fahrzeugtypen",
       "zeile": "RTH, NEF, NAW|RTW, NEF, RTH|RTH, NEF oder",
       "klasse": "F",

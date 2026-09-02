@@ -204,10 +204,33 @@ OpenStreetMap unter **ODbL**. Angesprochen von `server/assets/ortsfeld.js`
 Adresse).
 
 **Was dabei übertragen wird:** die eingetippten Buchstaben bzw. die gewählten
-Koordinaten. Das ist der Grund, warum die Suche **nicht bei jedem Tastendruck**
-läuft und warum das Feld ausdrücklich freiwillig ist: Wer keine Adresse sucht,
-löst keine Anfrage aus. Der Einsatzort selbst wird verschlüsselt gespeichert;
-gesucht wird, bevor daraus ein gespeicherter Wert wird.
+Koordinaten.
+
+**Das Tippen in einem Ortsfeld löst Suchanfragen aus** (seit Web 12.3.3).
+Vorher stand hier, die Suche laufe nur auf ausdrückliches Auslösen; für die
+Felder Standort und Zielklinik stimmt das nicht mehr. Sie suchen jetzt beim
+Tippen, weil ein Klick auf die Lupe für einen Weg, den man zwanzigmal am Tag
+geht, eine Handlung zu viel ist. Drei Grenzen fassen das ein
+(`server/assets/ortsfeld.js`):
+
+| Grenze | Wert | wozu |
+|---|---|---|
+| Entprellung | **400 ms** Ruhe nach dem letzten Tastendruck | beim flüssigen Tippen eines Ortsnamens entsteht **eine** Anfrage, nicht eine je Buchstabe |
+| Mindestlänge | **3 Zeichen** | unter drei Zeichen sucht niemand ernsthaft |
+| offene Anfragen | **höchstens eine** | eine laufende wird abgebrochen, bevor die nächste startet |
+
+Photon ist ein **frei betriebener Gemeinschaftsdienst**. Eine Anfrage je
+Tastendruck wäre Missbrauch seiner Gutmütigkeit — und jede Anfrage trägt die
+eingetippten Buchstaben zu einem Dritten.
+
+**Freiwillig bleibt das Feld:** Wer eine Koordinate von Hand einträgt, einen
+Plus Code einfügt oder den Ort auf der Karte wählt, löst **keine** Anfrage
+aus; die Formaterkennung läuft lokal und hat Vorrang. Stehen bereits
+Koordinaten, ruht die Adresssuche ganz.
+
+**Die Ende-zu-Ende-Verschlüsselung ist davon nicht berührt.** Gesucht wird,
+**bevor** aus der Eingabe ein gespeicherter — und damit verschlüsselter —
+Wert wird. Das war beim Klick auf die Lupe so und ist es beim Tippen.
 
 ---
 

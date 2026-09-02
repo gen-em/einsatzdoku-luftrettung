@@ -136,7 +136,9 @@ ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'anmeldung-body
     <form method="post">
       <?php ui_feld(['name' => 'email', 'label' => 'E-Mail', 'art' => 'email',
                      'pflicht' => true, 'attr' => ' autofocus']); ?>
-      <?= ui_knopf(['text' => 'Link anfordern', 'art' => 'primaer', 'breit' => true]) ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Link anfordern', 'art' => 'primaer', 'breit' => true]) ?>
+      </div>
     </form>
     <p class="anmeldung-neben"><a href="login.php">Zurück zur Anmeldung</a></p>
   <?php endif; ?>

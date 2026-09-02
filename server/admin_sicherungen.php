@@ -443,7 +443,9 @@ ui_seite_start(['titel' => 'Sicherungen']);
                            'an' => edbak_admin_mail_an(),
                            'klein' => 'Liste der überfälligen Konten, höchstens einmal '
                                     . 'je Woche und nur, wenn es etwas zu melden gibt.']); ?>
-        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+        </div>
       </form>
       <?php /* Der frühere Absatz sagte „Es gibt keinen Zeitplan. Auf diesem
                Webspace läuft kein Cron" — das stimmt seit dem Job-Einstieg

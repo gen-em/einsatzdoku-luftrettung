@@ -208,7 +208,9 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
     <label>Passwort
       <input type="password" name="password" required autocomplete="current-password">
     </label>
-    <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
+    <div class="listen-form-fuss">
+      <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
+    </div>
   </form>
   <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a></p>
   <?php /* Zustandszeile der Anmeldung (Schluesselableitung laeuft …).

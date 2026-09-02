@@ -313,7 +313,8 @@
   --schalter-breit:46px;               /* der Schalter aus E-P3-28 … */
   --schalter-hoch:26px;                /* … 26 hoch, damit er in eine */
   --schalter-punkt:20px;               /* 44-px-Zeile passt und greifbar bleibt */
-  --geo-kreis:36px;                    /* Einsatzort-Kreis auf der Karte */
+  --geo-kreis:32px;                    /* Einsatzort-Kreis auf der Karte */
+  --geo-schild:36px;                   /* Kästchen für Standort und Zielklinik */
   --geo-ring:3px;                      /* Ringstärke Start/Ende am Schild */
   --anmeldekarte:400px;                /* Karte der Anmeldung (E-P3-38) */
   --zeile-frei:1.4em;                  /* Mindesthöhe der Zustandszeile */
@@ -538,10 +539,24 @@ img,svg,video{max-width:100%;height:auto}
  * Zeichen der Zusatz. Kleiner als ein gewöhnliches Symbol und in der Farbe
  * der Beschriftung — es soll gefunden werden, wenn man danach sucht, und
  * nicht auffallen, wenn man es nicht tut. */
+/* SENKRECHT MITTIG ZUM TEXT (S3/AP6) — und der Wert ist gemessen, nicht
+ * geraten. Das Schloss ist mit 16 px hoeher als die Versalhoehe des
+ * 15-px-Wortes daneben; `baseline` stellt seinen Kasten auf die Schriftlinie
+ * und schiebt es damit nach oben, `middle` (und ebenso `text-bottom` und
+ * `sub`) um denselben Betrag nach unten. Nachgemessen an einer echten Zeile
+ * der Einsatzansicht, Symbolmitte gegen die Mitte des Zeilenkastens:
+ *
+ *   baseline  -2,0 px      middle  +2,0 px
+ *   -0.1em    -0,5 px      -0.15em +0,3 px      -0.2em  +1,0 px
+ *
+ * -0.1em trifft beide Bezugsgroessen auf einen halben Punkt genau (gegen die
+ * Versalmitte +0,5 px) und ist damit die Wahl. Die Angabe haengt an der
+ * Schriftgroesse der Zeile, nicht an einer festen Pixelzahl — sie stimmt
+ * damit auch dort, wo das Schloss in einer anderen Groesse steht. */
 .symbol-schutz{
   width:var(--symbol-klein);height:var(--symbol-klein);
   margin-left:var(--abstand-1);
-  vertical-align:baseline;
+  vertical-align:-0.1em;
 }
 
 /* ---- Nur für Screenreader ------------------------------------------------
@@ -694,13 +709,24 @@ img,svg,video{max-width:100%;height:auto}
 /* EINE STUFE GRÖSSER (F-N1-K). Mit 12 px war die Überschrift der Leiste das
  * kleinste Element darin — kleiner als die Gruppen, die sie überschreibt, und
  * kleiner als jede Beschriftung darunter. Eine Überschrift, die von allem
- * überragt wird, das sie ordnet, ordnet nichts. 13 px, weiterhin
- * versalgesetzt und gesperrt: Sie soll den Bereich benennen, nicht mit den
- * Gruppentiteln konkurrieren. */
+ * überragt wird, das sie ordnet, ordnet nichts.
+ *
+ * SEIT S3/AP4 (E-R43-2) EINE STUFE HOEHER: 15 px statt 13, --asphalt statt
+ * --gedaempft. Die Rueckmeldung „wirkt verloren" war ein Problem von Groesse
+ * und Kontrast, nicht von Ausrichtung — linksbuendig bleibt sie.
+ *
+ * VERSALIEN UND SPERRUNG SIND DABEI ENTFALLEN, und das ist am Bild
+ * entschieden (E-S3-12 a): Bei 15 px in Bricolage 600 liest sich
+ * „DIENSTTAGE" gesperrt als ETIKETT und steht dem Jahreseintrag „2026"
+ * darunter an Lautstaerke kaum nach — zwei Ueberschriften statt einer
+ * Ordnung. Gemischt gesetzt bleibt es eine Ueberschrift: praesent, aber
+ * ersichtlich eine Ebene ueber dem, was es ordnet. Bei 13 px trug die
+ * Sperrung noch, weil die Groesse allein nicht reichte; sie war der Ersatz
+ * fuer die Groesse, die jetzt da ist. */
 .leiste-kopfzeile{
-  font-family:var(--schrift-kopf);font-size:var(--groesse-2);
-  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--gedaempft);
+  font-family:var(--schrift-kopf);font-size:var(--groesse-3);
+  font-weight:600;
+  color:var(--asphalt);
   padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);
 }
 .leiste-leer{color:var(--gedaempft);padding:0 var(--abstand-3)}
@@ -813,10 +839,16 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * aus „27.12.2026" ein „27.12.20…" — abgeschnitten wurde also die Auskunft,
  * die den Eintrag überhaupt identifiziert. Der Name absorbiert die Restbreite
  * (E-P3-09: Ellipse am NAMEN, voller Name im Tooltip). */
+/* NORMAL, NICHT FETT (S3/AP4). Alle Eintraege standen auf 600. In einer
+ * Liste, in der JEDE Zeile fett ist, hebt das nichts hervor -- es macht nur
+ * den Block schwer, und der aktive Punkt muss seine Erkennbarkeit allein aus
+ * Flaeche und Randstrich holen. Die Auszeichnung wandert von „alle" zu
+ * „einer": Grundschnitt 400, der aktive Punkt 600. Dieselbe Ueberlegung wie
+ * bei den Blattzeilen (F-N1-F). */
 .eintrag-text{
   flex:1 0 auto;min-width:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:400;
 }
 /* Lange Rettungsmittelnamen werden abgeschnitten („NEF Neubran…"); der volle
  * Name steht im Tooltip und im Seitentitel. Unter 1200 px entfällt der Name
@@ -827,7 +859,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .eintrag.aktiv{background:var(--orange-hell);border-left-color:var(--orange)}
-.eintrag.aktiv .eintrag-text{color:var(--dunkelblau)}
+.eintrag.aktiv .eintrag-text{color:var(--dunkelblau);font-weight:600}
 
 /* Der Fuß der Leiste: „Zuordnung offen" (rosa mit rotem Zähler, nur solange
  * etwas offen ist), „Diensttag anlegen" (orange), Papierkorb (gedämpft). */
@@ -836,8 +868,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .eintrag-offen .eintrag-text{color:var(--rot-tief)}
 .eintrag-anlegen .symbol,
 .eintrag-anlegen .eintrag-text{color:var(--orange-tief)}
+/* `font-weight:400` stand hier, solange die Grundform 600 war; seit S3/AP4
+ * ist 400 die Grundform und die Angabe waere eine Dublette (9.16). */
 .eintrag-leise .symbol,
-.eintrag-leise .eintrag-text{color:var(--gedaempft);font-weight:400}
+.eintrag-leise .eintrag-text{color:var(--gedaempft)}
 .zaehler{
   flex:0 0 auto;
   min-width:var(--abstand-5);height:var(--abstand-5);padding:0 var(--abstand-1);
@@ -859,7 +893,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   background:var(--schnee);
   border:var(--strich) solid var(--linie);
   border-radius:var(--radius-gross);
-  margin-bottom:var(--abstand-4);
+  margin-bottom:var(--abstand-5);
 }
 /* flex-wrap: Wird die Zeile zu eng (Titel + Zahl + Sortieren + Nachtragen bei
  * 360 px), bricht die Kopfaktion in eine zweite Zeile um. Ohne wrap schrumpft
@@ -1036,7 +1070,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);
   padding:var(--abstand-3) var(--abstand-4);
   border-radius:var(--radius);
-  margin-bottom:var(--abstand-4);
+  margin-bottom:var(--abstand-5);
 }
 /* Der Text braucht eine Mindestbreite, unter der die Aktion in die naechste
  * Zeile umbricht — sonst quetscht ein breiter Knopf den Text auf ein Wort je
@@ -1050,6 +1084,17 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .meldung-info .symbol{color:var(--blau-tief)}
 .meldung-ok{background:var(--blau-hell);color:var(--blau-tief)}
 .meldung-ok .symbol{color:var(--blau-tief)}
+/* SCHUTZ — rot, aber kein Fehler (S3, Rueckmeldung vom 01.09.2026). Fuer den
+ * einen Fall, in dem eine Meldung dauerhaft steht und trotzdem die Farbe des
+ * Ernstfalls braucht: ein Datenschutzhinweis an der Stelle, an der jemand
+ * gleich Daten herunterlaedt. Er benutzt die Flaeche und die Schrift von
+ * `fehler` — kein neuer Farbwert —, aber `role="status"` statt `alert`: Was
+ * bei JEDEM Aufruf der Seite dasteht, darf einen Vorleser nicht jedes Mal
+ * unterbrechen. Das Symbol ist das Schloss, nicht die Warnung: Es geht um
+ * Schutzbeduerftigkeit, nicht um einen Fehlgriff. */
+.meldung-schutz{background:var(--rosa);color:var(--rot-tief)}
+.meldung-schutz .symbol{color:var(--rot)}
+.meldung-schutz strong{color:var(--rot-tief)}
 .meldung-warn{background:var(--orange-hell);color:var(--asphalt)}
 .meldung-warn .symbol{color:var(--orange-tief)}
 .meldung-warn strong{color:var(--orange-tief)}
@@ -1079,7 +1124,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 }
 .blatt-titel{
   font-size:var(--groesse-5);text-align:center;
-  margin-bottom:var(--abstand-3);
+  margin-bottom:var(--abstand-2);
 }
 .blatt-liste{display:flex;flex-direction:column}
 /* NORMAL STATT FETT (F-N1-F). Die Einträge standen auf 600 — dasselbe
@@ -1121,7 +1166,16 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
  * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
  */
-.feld{margin-bottom:var(--abstand-4)}
+/* EIN <fieldset>, DAS NUR GRUPPIERT (S3/AP10). Gebraucht fuer das
+ * `disabled`-Attribut: Es sperrt ein ganzes Formular in einem Zug, statt an
+ * jedem Feld ein Attribut zu setzen. Die Elementregeln fuer fieldset sind mit
+ * O11 gefallen — ohne diese Ruecknahme brachte der Browser seinen eigenen
+ * Rahmen und seine eigene Polsterung mit. `min-width:0` gehoert dazu: Ein
+ * fieldset hat eine eingebaute Mindestbreite nach seinem Inhalt und sprengt
+ * damit sonst jedes schmale Raster. */
+.feldsatz-gesperrt{border:0;padding:0;margin:0;min-width:0}
+.feldsatz-gesperrt[disabled]{opacity:.55}
+.feld{margin-bottom:var(--abstand-3)}
 .feld-label{display:block;font-weight:600;margin-bottom:var(--abstand-1)}
 .feld-pflicht{color:var(--rot-tief)}
 .feld-eingabe{
@@ -1250,14 +1304,28 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29). */
 .speichern{
   position:sticky;bottom:0;z-index:30;
-  margin:var(--abstand-4) calc(var(--abstand-3) * -1) 0;
+  /* KARTENFORM (E-R43-1). Bis Web 12.2.2 brach die Leiste mit
+   * `margin: … calc(var(--abstand-3) * -1)` seitlich aus dem Inhalt aus und
+   * lief ohne Radius von Rand zu Rand — sie wirkte dadurch „eckig und
+   * breiter" als die Karte darüber, obwohl sie zu ihr gehört. Jetzt Radius
+   * und Breite wie die Karte; der Ausbruch ist ersatzlos entfallen.
+   *
+   * WAS BLEIBT, ist alles, was die FUNKTION traegt: der klebende Sitz, die
+   * Trennlinie nach oben und der Schatten. Die Leiste soll auffallen, weil
+   * sie folgt — nicht, weil sie anders geschnitten ist. */
+  margin:var(--abstand-4) 0 0;
   padding:var(--abstand-3);
   background:var(--schnee);
   border-top:var(--strich) solid var(--linie);
+  border-radius:var(--radius-gross);
   box-shadow:var(--schatten);
 }
+/* KNOPF RECHTS, ZAEHLUNG LINKS DANEBEN. Im Markup steht der Hinweis zuerst
+ * (ui_speichern_leiste), damit die Vorlesereihenfolge stimmt: erst „12
+ * ausgewaehlt", dann „Auswahl sichern". flex-end schiebt das Paar an den
+ * rechten Rand — die Haupthandlung sitzt dort, wo die Hand sie sucht. */
 .speichern-innen{
-  display:flex;align-items:center;gap:var(--abstand-3);
+  display:flex;align-items:center;justify-content:flex-end;gap:var(--abstand-3);
   max-width:var(--rahmen);margin:0 auto;
 }
 .speichern-hinweis{display:none;color:var(--gedaempft);font-size:var(--groesse-2)}
@@ -1274,8 +1342,15 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   grid-template-columns:repeat(2,minmax(0,1fr));
   margin-bottom:var(--abstand-4);
 }
+/* SENKRECHT MITTIG (S3/AP5). Die Kacheln stehen in einem Raster und werden
+ * alle so hoch wie die hoechste — und die ist hoeher, sobald EINE
+ * Beschriftung umbricht („Laengste Flugstrecke · 14.08."). Der Inhalt der
+ * uebrigen klebte dann oben, und eine Reihe gleich hoher Kacheln zeigte
+ * Werte auf verschiedenen Hoehen. `justify-content:center` verteilt die
+ * Restluft nach oben und unten; die Kachel selbst bleibt, wie sie war. */
 .kennzahl{
   position:relative;
+  display:flex;flex-direction:column;justify-content:center;
   padding:var(--abstand-3);
   background:var(--schnee);
   border:var(--strich) solid var(--linie);
@@ -1308,8 +1383,8 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * Datenschutz (E-P3-12, E-P3-38).
  */
 .text{max-width:var(--lesespalte)}
-.text h1{margin-bottom:var(--abstand-4)}
-.text h2{font-size:var(--groesse-5);margin:var(--abstand-5) 0 var(--abstand-3)}
+.text h1{margin-bottom:var(--abstand-2)}
+.text h2{font-size:var(--groesse-5);margin:var(--abstand-5) 0 var(--abstand-2)}
 .text h3{font-size:var(--groesse-4);margin:var(--abstand-4) 0 var(--abstand-2)}
 .text p{font-size:var(--groesse-4);line-height:var(--zeile-lesen);margin-bottom:var(--abstand-3)}
 .text ul,.text ol{margin:0 0 var(--abstand-3) var(--abstand-5);list-style:disc}
@@ -1351,7 +1426,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .demo-hinweis{
   display:flex;align-items:center;gap:var(--abstand-3);
   padding:var(--abstand-3) var(--abstand-4);
-  margin-bottom:var(--abstand-4);
+  margin-bottom:var(--abstand-5);
   background:var(--orange-hell);
   border-radius:var(--radius);
   font-size:var(--groesse-2);
@@ -1435,7 +1510,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   border-radius:var(--radius);
   overflow:hidden;
   background:var(--rauch);
-  margin-bottom:var(--abstand-4);
+  margin-bottom:var(--abstand-5);
   /* EIGENER STAPELKONTEXT. Leaflet vergibt intern z-index bis 1000 — seine
    * Bedienelemente zeichneten über Schublade (60) und Schleier (50), der
    * Kartenpin stand mitten im Menü (Fable-Kontrolle, F-P3-Y). position und
@@ -1518,7 +1593,7 @@ label > textarea{display:block;width:100%;margin-top:var(--abstand-1)}
 label:has(> input[type=checkbox]),
 label:has(> input[type=radio]){
   display:flex;align-items:center;gap:var(--abstand-2);
-  min-height:var(--knopf);margin-bottom:var(--abstand-1);
+  min-height:var(--knopf);margin-bottom:var(--abstand-3);
 }
 summary{cursor:pointer}
 code,kbd,pre{font-family:var(--schrift-fest);font-size:var(--groesse-2)}
@@ -1763,6 +1838,14 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .tabelle td.haken-spalte{text-align:center}
 /* Eine Dauer wie „1h 06min" ist EINE Angabe und wird nicht getrennt. */
 .tabelle td.zeit-spalte{white-space:nowrap}
+/* MITTIG — die dritte Zellenausrichtung neben links (Text) und rechts (Zahl).
+ * Sie ist fuer Spalten da, deren Inhalt WEDER Flietext noch eine Groesse zum
+ * Vergleichen ist: eine Rolle, ein Datum, eine Plakette, eine laufende
+ * Nummer. Solche Werte fluchten nicht sinnvoll an einer Kante, und der
+ * zentrierte Spaltentitel (F-N1-G) stand ueber ihnen im Leeren.
+ * ALS KLASSE, nicht als :nth-child — Spalten der Kontentabelle erscheinen
+ * datengetrieben, und eine Zaehlung rutschte still auf die falsche. */
+.tabelle td.mitte-spalte{text-align:center}
 
 /* Sortieren-Link im Kartenkopf — nur dort, wo es keine Spaltenköpfe gibt. */
 .karte-sortieren{
@@ -1838,10 +1921,19 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  * Ort als Doppelring. Richtungspfeile erscheinen erst ab einer Zoomstufe,
  * bei der sie nicht gedrängt stehen.
  */
+/* KEIN NAMENSSCHILD MEHR (S3/AP7). Die Spalte traegt seit S3 genau ein Kind;
+ * `gap` und `flex-direction` bleiben trotzdem stehen, weil die Ringklassen
+ * darauf aufsetzen und ein Marker mit zwei Kindern jederzeit wiederkommen
+ * kann — dann aber mit ausdruecklichem `iconSize` (siehe geo.js). */
 .geo-schild{display:flex;flex-direction:column;align-items:center;gap:var(--abstand-1)}
+/* ENGER (S3/AP7): 36 statt 44 px. Die 44 kamen von `--knopf` — der Kasten
+ * ist aber kein Bedienelement, sondern eine Zeichnung, und die 44-px-Regel
+ * gilt fuer das, was man DRUECKT. Das Symbol darin bleibt bei 20 px; was
+ * verschwindet, ist Weissraum zwischen Symbol und Rand (12 px ringsum
+ * vorher, 8 px jetzt). */
 .geo-schild-kasten{
   display:flex;align-items:center;justify-content:center;
-  width:var(--knopf);height:var(--knopf);
+  width:var(--geo-schild);height:var(--geo-schild);
   background:var(--schnee);color:var(--dunkelblau);
   border:var(--strich-stark) solid var(--dunkelblau);
   border-radius:var(--radius);
@@ -1863,19 +1955,14 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
              0 0 0 calc(var(--geo-ring) * 3) var(--schnee),
              0 0 0 calc(var(--geo-ring) * 4) var(--rot);
 }
-.geo-schild-text{
-  background:var(--schnee);color:var(--asphalt);
-  font:600 var(--groesse-2)/1.3 var(--schrift-text);
-  padding:var(--abstand-1) var(--abstand-2);
-  border-radius:var(--radius-klein);
-  box-shadow:var(--schatten);
-  white-space:nowrap;
-}
+/* OHNE WEISSE UMRANDUNG UND ETWAS KLEINER (S3/AP7). Der weisse Rand war ein
+ * Rest aus der Zeit vor dem Schatten: Er sollte den Kreis von der Karte
+ * abheben. Das tut der Schatten, und der Rand machte den Kreis zusaetzlich
+ * um 4 px breiter, als er aussah. 32 statt 36 px. */
 .geo-kreis{
   display:flex;align-items:center;justify-content:center;
   width:var(--geo-kreis);height:var(--geo-kreis);
   background:var(--orange);color:var(--dunkelblau);
-  border:var(--strich-stark) solid var(--schnee);
   border-radius:var(--radius-rund);
   box-shadow:var(--schatten);
 }
@@ -2168,7 +2255,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   display:grid;
   grid-template-columns:minmax(0,1fr) calc(var(--knopf) * 2) var(--knopf);
   gap:var(--abstand-2);align-items:center;
-  margin-bottom:var(--abstand-2);
+  margin-bottom:var(--abstand-3);
 }
 .phasen-eingabe .zeitfeld{text-align:center;width:auto}
 .phasen-eingabe label{margin:0}
@@ -2248,9 +2335,12 @@ button.blatt-zeile{
 .filterfelder .fld-reihe label{display:flex;flex-direction:column;justify-content:flex-end}
 
 /* Beschriftung über einer Gruppe von Bedienelementen (Segmentwahl), dort wo
- * ein <label> nicht taugt: Es kann nur EIN Element beschriften. */
+ * ein <label> nicht taugt: Es kann nur EIN Element beschriften. Die
+ * Beschriftung selbst ist `.feld-label` aus Abschnitt 11 — hier stand sie
+ * bis S3/AP2 ein zweites Mal, mit demselben Wert und ohne font-weight, und
+ * setzte damit nichts, was die erste Regel nicht schon gesetzt hätte. Eine
+ * Änderung am Abstand wäre an einer der beiden Stellen hängengeblieben. */
 .feldblock{margin-bottom:var(--abstand-3)}
-.feld-label{display:block;margin-bottom:var(--abstand-1)}
 
 /* Segmentwahl in der Filterspalte: leiser als die Segmentwahl im Inhalt —
  * hell orange mit orangem Rahmen statt voller Fläche (Mockup 27/28). Bis zu
@@ -2273,7 +2363,7 @@ button.blatt-zeile{
 .filterfuss{display:flex;flex-direction:column;gap:var(--abstand-2)}
 
 /* ---- Suchzeile: Feld und Filterknopf (Mockup 27) ------------------------- */
-.suchzeile{display:flex;gap:var(--abstand-2);align-items:stretch;margin-bottom:var(--abstand-2)}
+.suchzeile{display:flex;gap:var(--abstand-2);align-items:stretch;margin-bottom:var(--abstand-3)}
 .suchfeld{position:relative;flex:1 1 auto;display:flex;align-items:center}
 .suchfeld input{
   width:100%;min-height:var(--suchfeld);
@@ -2422,16 +2512,21 @@ tr.hl-extrem td{background:var(--orange-hell)}
 /* WAHLLISTE (.wahlliste) — eine aus vieren, untereinander, 44 px hoch.
  * Freigegeben mit Mockup 13. Die Radios selbst sind unsichtbar; die Zeile
  * ist das Bedienelement, und der Punkt links wird gezeichnet — so lässt er
- * sich färben und auf Größe bringen, was ein Systemradio nicht zulässt. */
-.wahlliste{display:flex;flex-direction:column;gap:var(--abstand-2)}
+ * sich färben und auf Größe bringen, was ein Systemradio nicht zulässt.
+ *
+ * SCHLICHTE LISTE STATT UMRANDETER EINZELZEILEN (S3/AP8). Jede Zeile trug
+ * einen eigenen Rahmen auf eigener Fläche und stand mit 8 px Abstand zur
+ * nächsten — vier Kästchen untereinander, die aussahen wie vier Karten und
+ * nur eine Wahl sind. Die Auswahl braucht diese Umrandung nicht: Sie zeigt
+ * sich am Punkt links und, bei der gewählten Zeile, an der Fläche.
+ * Was bleibt, sind die 44 px Zeilenhöhe und der gezeichnete Punkt. */
+.wahlliste{display:flex;flex-direction:column}
 input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
 .wahl-zeile{
   display:flex;align-items:center;gap:var(--abstand-3);
   min-height:var(--knopf);
   padding:var(--abstand-2) var(--abstand-3);
-  border:var(--strich) solid var(--linie);
-  border-radius:var(--radius);
-  background:var(--schnee);
+  border-radius:var(--radius-klein);
   cursor:pointer;
 }
 .wahl-zeile:hover{background:var(--rauch)}
@@ -2446,7 +2541,7 @@ input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-heig
 
 /* Gewählt: hell orange mit orangem Rahmen und gefülltem Punkt — dieselbe
  * Sprache wie die aktive Kennzahl-Kachel und der aktive Leisteneintrag. */
-.wahl-box:checked + .wahl-zeile{background:var(--orange-hell);border-color:var(--orange)}
+.wahl-box:checked + .wahl-zeile{background:var(--orange-hell)}
 .wahl-box:checked + .wahl-zeile .wahl-punkt{
   border-color:var(--orange);
   box-shadow:inset 0 0 0 var(--strich-stark) var(--schnee);
@@ -2525,7 +2620,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 .listen-form-titel{
   font-family:var(--schrift-kopf);font-weight:600;
   font-size:var(--groesse-3);color:var(--dunkelblau);
-  margin:0 0 var(--abstand-3);
+  margin:0 0 var(--abstand-2);
 }
 .listen-form-felder{display:grid;gap:var(--abstand-3)}
 .listen-form-fuss{display:flex;flex-wrap:wrap;gap:var(--abstand-2);margin-top:var(--abstand-4)}
@@ -2816,7 +2911,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   padding:var(--abstand-4);
   margin-top:var(--abstand-3);
 }
-.vorschau > h4{margin-bottom:var(--abstand-3)}
+.vorschau > h4{margin-bottom:var(--abstand-2)}
 /* Der Fließtext darin ist `.text` — aber ohne dessen Lesebreite: Der Kasten
  * IST schon schmal, und eine zweite Begrenzung darin ließe ihn links kleben. */
 .vorschau .text{max-width:none}

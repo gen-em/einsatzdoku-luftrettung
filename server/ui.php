@@ -270,6 +270,30 @@ function ui_logo(bool $weiss = false): string
 
 
 /**
+ * Bildmasse des gewaehlten Logos bei gegebener Hoehe: ['breite' => …, 'hoehe' => …].
+ *
+ * WARUM DIE BREITE NICHT FEST STEHEN DARF (S3/AP11). Bis Web 12.4.1 stand in
+ * der Kopfleiste `width="54" height="34"` — fuer BEIDE Logos. 54:34 ist das
+ * Verhaeltnis des Luftlogos; das Bodenlogo ist 420:335 und damit nur 42,6 px
+ * breit. Der Browser reservierte also einen Kasten, in den das Bild nicht
+ * passt, und rueckte beim Laden nach: ein Layoutsprung, den man nur sieht,
+ * wenn man darauf wartet.
+ *
+ * Die Verhaeltnisse stehen HIER als Zahlen und nicht im Stylesheet: Sie sind
+ * eine Eigenschaft der DATEI, nicht der Gestaltung, und `width`/`height` am
+ * Bild-Tag sind das einzige, was der Browser VOR dem Laden kennt.
+ */
+function ui_logo_masse(int $hoehe): array
+{
+    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
+    /* Rahmen der SVG, nach dem Beschnitt in S3/AP11 deckungsgleich mit der
+     * Zeichnung: Luft 400,16 x 249,81 · Boden 420 x 335. */
+    $verhaeltnis = str_contains($stamm, 'nef') ? 420 / 335 : 400.16 / 249.81;
+    return ['breite' => (int)round($hoehe * $verhaeltnis), 'hoehe' => $hoehe];
+}
+
+
+/**
  * Artzeichen eines Diensttags — Symbol mit Textalternative.
  *
  * Die EINE Stelle, an der aus `days.kind` ein sichtbares Zeichen wird. Bis
@@ -330,7 +354,9 @@ function ui_kopf(array $o = []): void
     <?php endif; ?>
 
     <a class="kopf-marke" href="index.php">
-      <img src="<?= ui_e(ui_logo(true)) ?>" alt="" width="54" height="34">
+      <?php $lm = ui_logo_masse(34); ?>
+      <img src="<?= ui_e(ui_logo(true)) ?>" alt=""
+           width="<?= $lm['breite'] ?>" height="<?= $lm['hoehe'] ?>">
       <span class="kopf-name">Gen-EM Einsatzdoku</span>
       <?php if ($menue): ?><span class="kopf-nutzer"><?= ui_e(ui_user_label()) ?></span><?php endif; ?>
     </a>
@@ -943,9 +969,21 @@ function ui_meldung(?string $hinweis, ?string $fehler = null,
 function ui_meldung_markup(string $ton, string $text, string $auftakt = '',
                            string $knopf = ''): string
 {
+    /* FUENF TOENE, UND DIE LISTE IST GESCHLOSSEN (Design.md 9.5). Ein Ton,
+     * den es nicht gibt, ergab bis S3 eine Klasse ohne Regel im Stylesheet —
+     * also einen ungestalteten Kasten, und zwar ohne jede Fehlermeldung. Die
+     * Spurenseite trug so zwei Jahre lang zwei weisse Meldungen mit dem Ton
+     * „hinweis", den diese Funktion nie gekannt hat. Weil die Klasse hier
+     * ZUSAMMENGESETZT wird, sieht die Vollstaendigkeitspruefung sie nicht;
+     * das kann nur diese Stelle selbst pruefen. */
     $symbole = ['fehler' => 'warnung', 'warn' => 'warnung',
-                'ok' => 'haken', 'info' => 'hinweis'];
-    $sym = $symbole[$ton] ?? 'hinweis';
+                'ok' => 'haken', 'info' => 'hinweis', 'schutz' => 'schloss'];
+    if (!isset($symbole[$ton])) {
+        throw new InvalidArgumentException(
+            'Unbekannter Meldungston „' . $ton . '". Erlaubt: '
+            . implode(', ', array_keys($symbole)) . '.');
+    }
+    $sym = $symbole[$ton];
     $m = '<div class="meldung meldung-' . ui_e($ton) . '" role="' . ($ton === 'fehler' ? 'alert' : 'status') . '">';
     $m .= ui_symbol($sym, 'symbol-gross');
     $m .= '<p>';
@@ -1570,7 +1608,18 @@ function ui_speichern_leiste(array $o = []): void
     $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
     ?>
 <div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
+  <?php /* HINWEIS ZUERST, KNOPF DANACH (E-R43-1). Bis Web 12.2.2 stand der
+           Knopf im Markup vorn und damit links, die Zaehlung rechts davon —
+           umgekehrt zu allem anderen in dieser Oberflaeche, wo die
+           Haupthandlung rechts sitzt. Die Reihenfolge im Markup ist zugleich
+           die Vorlesereihenfolge: erst „12 ausgewaehlt", dann „Auswahl
+           sichern". Ausgerichtet wird ueber `justify-content:flex-end` an
+           `.speichern-innen`, nicht ueber `order` — sonst liefen Seh- und
+           Vorlesereihenfolge auseinander. */ ?>
   <div class="speichern-innen">
+    <p class="speichern-hinweis<?= !empty($o['zahl']) ? ' speichern-zahl' : '' ?>"
+       <?= !empty($o['zahl']) ? 'id="' . ui_e((string)$o['zahl']) . '"' : '' ?>><?= ui_e((string)($o['hinweis']
+        ?? 'Es gibt ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
     <?= ui_knopf([
         'text' => (string)($o['text'] ?? 'Speichern'),
         'art' => 'primaer', 'symbol' => (string)($o['symbol'] ?? 'haken'),
@@ -1584,9 +1633,6 @@ function ui_speichern_leiste(array $o = []): void
         'attr' => (string)($o['attr'] ?? '')
                 . (!empty($o['form']) ? ' form="' . ui_e((string)$o['form']) . '"' : ''),
     ]) ?>
-    <p class="speichern-hinweis<?= !empty($o['zahl']) ? ' speichern-zahl' : '' ?>"
-       <?= !empty($o['zahl']) ? 'id="' . ui_e((string)$o['zahl']) . '"' : '' ?>><?= ui_e((string)($o['hinweis']
-        ?? 'Es gibt ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
   </div>
 </div>
 <?php }
@@ -1762,7 +1808,7 @@ function ui_ortsfeld(array $o): void
     <?php else: ?>
       <?php /* NUR-LAGE-FASSUNG (feld = false): ein Suchfeld ohne Namensfeld.
                Die Verwaltungslisten führen den Namen in einem EIGENEN Feld
-               („Standort Kempten"); hier wird nur die Lage gesucht, und ein
+               („Standort Talwang"); hier wird nur die Lage gesucht, und ein
                Treffer setzt ausschließlich die Koordinaten (ortsfeld.js,
                `getrennteSuche`).
 
