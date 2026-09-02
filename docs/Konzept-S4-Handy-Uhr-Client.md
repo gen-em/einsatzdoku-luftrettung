@@ -914,7 +914,7 @@ derselben Transaktion zurück, in der sie die Phase einfügt. Belegt durch
 (hatArbeit vorher **false**, nachher **true**) und im Rundlauf gegen
 `ingest.php` durch drei Phaseneinträge auf dem Server.
 
-### B-S4-06 — Die Wortliste erreicht `android/` nicht
+### B-S4-06 — Die Wortliste erreicht `android/` nicht (Bereich d behoben in D1)
 
 `tools/wortliste/` prüft drei Bereiche: `server/*.php`, `server/assets/*.js`
 und die normative Dokumentation — zusammen **101 Dateien**. Die sichtbaren
@@ -969,6 +969,28 @@ Projekts und damit die wahrscheinlichste Fundstelle.
 Daraus folgt für die Bereichsliste: **d** (Android, Handy und Uhr) und **e**
 (Garmin) sind keine Erweiterung, sondern das Nachholen einer Pflicht, die mit
 `android/` in B1 entstand und mit `watch/` schon vorher bestand.
+
+**Erledigt am 02.09.2026 (D1), soweit es diese Instanz betrifft.** Bereich
+**d** steht in `tools/wortliste/wortliste.py`, dazu eine Art `xml` im
+Zerleger, die nicht nur Kommentare, sondern auch die **Tags** wegräumt —
+sichtbarer Text steht *zwischen* ihnen, und ein Schlüsselname wie
+`dienst_beginnen` ist ein Bezeichner, den niemand liest. Drei neue Fälle in
+der Selbstprobe (**19/19**), darunter ein maskiertes `&lt;` im Text und eine
+kaputte Datei, die durchlaufen und nicht werfen muss.
+
+**Der erste Lauf fand genau die drei Treffer, die C2 von Hand gezählt hatte** —
+zweimal „Bildmarke Rettungshubschrauber", einmal „RTH". Beide haben jetzt eine
+Ausnahme mit Begründung (`android-bildmarke-alt`, `android-logowahl`), keine
+Ausblendung. Danach: **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte
+Ausnahmen, 0 durchgerutschte Fallen** über alle vier Bereiche, **123 Dateien**
+statt 101.
+
+*Eine Kleinigkeit, die beim Schreiben der Ausnahmen auffiel und
+dokumentiert gehört:* Die `zeile`-Bedingung einer Regel wird gegen die
+**zerlegte** Zeile geprüft, nicht gegen die rohe. Bei XML ist das der Text
+ohne Tags — eine Regel, die an den Schlüsselnamen bindet, greift also nie.
+Sie bindet stattdessen an den vollständigen sichtbaren Text, was ohnehin
+enger ist. Steht in `tools/wortliste/LIESMICH.md`.
 
 **Arbeitsteilung (auf Ansage):** Bereich **d** trägt Block D nach — dort wird
 ohnehin am Server- und Werkzeugcode gearbeitet. Bereich **e**, die **Prüfung

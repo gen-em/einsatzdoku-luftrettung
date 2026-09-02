@@ -45,10 +45,33 @@ WURZEL = HIER.parent.parent
 sys.path.insert(0, str(HIER))
 import zerlegen                                    # noqa: E402
 
-# Die drei Bereiche aus dem Konzept P2, Abschnitt 5.1 (Klassen A und B).
+# Die Bereiche aus dem Konzept P2, Abschnitt 5.1 (Klassen A und B), seit
+# S4/D1 um die Android-Apps erweitert.
+#
+# DIE REGEL DAHINTER (S4, B-S4-06, auf Ansage vom 01.09.2026):
+#
+#   Jeder sichtbare Text der Anwendung laeuft durch die Wortliste — gleich,
+#   in welchem Client er steht. Ein Bereich fehlt nicht, weil ein Verzeichnis
+#   jung ist; er fehlt, weil ihn niemand eingetragen hat. Wer einen Client
+#   hinzufuegt, traegt seine Textdateien im selben Paket ein, in dem der
+#   Client entsteht. Ein Lauf, der einen Client uebergeht, meldet keine Null —
+#   er meldet gar nichts.
+#
+# Genau das war passiert: Die Android-Apps entstanden in S4/B1, und der Lauf
+# nach C2 meldete 0 Treffer, ohne eine einzige Zeile der App angesehen zu
+# haben. Der Fall, vor dem CLAUDE.md 6 warnt — eine gruene Zahl, die etwas
+# anderes gemessen hat.
+#
 # Was hier NICHT steht, ist Absicht: CHANGELOG.md (Historie), die Konzept-
 # und Pruefdokumente, Geraete-Eingabe.md und Uhr-Layout_Regeln.md
-# (plattformspezifisch, Klasse G), Backlog.md, watch/ und tools/ (Klasse H).
+# (plattformspezifisch, Klasse G), Backlog.md und tools/ (Klasse H).
+#
+# `watch/` FEHLT WEITERHIN, und das ist eine Arbeitsteilung, kein Versehen:
+# Die sichtbaren Texte der Garmin-App (`watch/resources/**/*.xml`) sind die
+# aeltesten des Projekts und damit die wahrscheinlichste Fundstelle. Ihre
+# Pruefung geht an eine andere Instanz (Ansage 01.09.2026); sie braucht
+# Kenntnis der Monkey-C-Ressourcen und der historischen Begriffe. Der Bereich
+# heisst dort `e` und gehoert in dieselbe Liste, sobald er kommt.
 BEREICHE: dict[str, dict] = {
     "a": {
         "titel": "server/*.php, server/api/*.php (sichtbare Texte, ohne Kommentare)",
@@ -64,6 +87,15 @@ BEREICHE: dict[str, dict] = {
         "titel": "server/assets/*.js ohne vendor/ (Zeichenketten, ohne Kommentare)",
         "art": "js",
         "glob": ["server/assets/*.js"],
+    },
+    "d": {
+        "titel": "android/*/src/main/res/values/strings.xml (Handy und Uhr)",
+        "art": "xml",
+        # `values/` OHNE Sprachkennung: Das ist die deutsche Fassung, und eine
+        # andere gibt es nicht (die Apps sind einsprachig wie die
+        # Weboberflaeche). Kaeme eine hinzu, gehoerte sie mit in dieses
+        # Muster — `values-*/strings.xml` waere dann die Erweiterung.
+        "glob": ["android/*/src/main/res/values/strings.xml"],
     },
     "c": {
         "titel": "normative Dokumentation",
