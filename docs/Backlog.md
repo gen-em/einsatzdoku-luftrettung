@@ -727,6 +727,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mit 405 ab und haben kein Schreib-SQL; ihnen fehlt die Prüfung also nicht.
     Es ist damit eine **unausgesprochene Invariante**, keine Störung — und die
     Nachzählung hat keinen ungeschützten schreibenden Endpunkt gefunden.
+    **Zwei Einschränkungen an diesen Sätzen**, aus einer Gegenprüfung vom
+    02.09.2026, damit die nächste Zählung nicht darauf hereinfällt:
+    `kdf_upgrade.php` prüft erst in Zeile 67 — Zeile 66 steigt für das
+    Demo-Konto vorher mit `json_out(['ok' => true, …])` aus. Heute folgenlos,
+    weil hinter dem Ausstieg nichts steht; kippt aber, sobald dort mehr steht
+    als ein `json_out()`. Die beiden Zeilen gehören getauscht. Und „kein
+    Schreib-SQL" gilt für die vier **Dateien**, nicht für die vier
+    **Endpunkte**: `auth_guard.php` ruft bei *jeder* Anfrage — GET
+    eingeschlossen — `run_cleanup_if_due()` und beim Demo-Konto
+    `demo_reset_wenn_faellig()`, und `jobs_lauf()` schreibt dabei
+    (`INSERT IGNORE INTO jobs`, `UPDATE jobs`). Ein GET auf
+    `api/suchindex.php` kann also die tägliche Wartung auslösen. Das ist
+    gewollte Huckepack-Bauweise und harmlos, weil ein Angreifer nichts
+    gewinnt, was der nächste Seitenaufruf ohnehin auslöst — aber schreibfrei
+    ist der Endpunkt nicht.
     **Zu tun:** entweder denselben `ist_api_aufruf()`-Zweig in `csrf_check()`
     ergänzen, oder die Invariante im Kopf der Funktion festhalten, damit der
     nächste Endpunkt sie nicht versehentlich bricht.
