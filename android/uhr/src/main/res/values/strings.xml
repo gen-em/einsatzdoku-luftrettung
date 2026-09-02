@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Sichtbare Texte der Uhr-App. Gerätefrei wie am Handy (E-S4-19).
+
+    KURZ, UND ZWAR AUS EINEM GRUND. Ein rundes Display schneidet an beiden
+    Seiten ab; was nicht hineinpasst, faellt weg, ohne dass es jemand merkt.
+    Dieselbe Erfahrung steht in Pair.mc der Garmin-Uhr (ZEILE_MAX = 26
+    Zeichen). Wo eine lange und eine kurze Fassung noetig ist, stehen beide
+    hier — nicht eine, die im Code gekuerzt wird.
+-->
+<resources>
+    <string name="app_name">NAdoku</string>
+    <string name="marke_luft_beschreibung">Bildmarke Rettungshubschrauber</string>
+    <string name="marke_boden_beschreibung">Bildmarke Notarzteinsatzfahrzeug</string>
+
+    <string name="fassung">Fassung %1$s</string>
+
+    <!-- ==== Bedienbild (E-S4-21) ======================================== -->
+    <string name="handy_verbunden">Handy verbunden</string>
+    <!--
+        Der dritte Fall: Es ist noch nichts hinausgegangen. Weder "verbunden"
+        (eine Behauptung) noch "nicht erreichbar" (eine Warnung ohne Anlass) —
+        sondern schlicht, was zutrifft.
+    -->
+    <string name="handy_unbekannt">noch nichts gesendet</string>
+    <string name="handy_nicht_erreichbar">Handy nicht erreichbar</string>
+    <!--
+        Der schwebende Dienststart (E-S4-10). Er sagt beides in einer Zeile:
+        dass die Uhr gemeldet hat, und dass noch NICHTS aufgezeichnet wird.
+        Nur das Erste zu sagen waere die gefaehrlichere Haelfte.
+    -->
+    <string name="dienst_schwebt">wartet aufs Handy · keine Aufzeichnung</string>
+    <plurals name="gepuffert">
+        <item quantity="one">%1$d gepuffert</item>
+        <item quantity="other">%1$d gepuffert</item>
+    </plurals>
+    <string name="dienst_beginnen">Dienst beginnen</string>
+    <string name="dienst_beenden">Dienst beenden</string>
+    <string name="phase_knopf">%1$d · %2$s</string>
+    <string name="phase_seit">Phase %1$d · %2$s</string>
+    <string name="halten_phasenliste">halten: Phasenliste</string>
+    <string name="einsatz_abschliessen">Einsatz abschließen</string>
+    <string name="einsatz_abschliessen_frage">Einsatz\nabschließen?</string>
+    <string name="dienst_beenden_frage">Dienst\nbeenden?</string>
+    <string name="abschliessen">Abschließen</string>
+    <string name="beenden">Beenden</string>
+    <string name="zurueck">Zurück</string>
+    <string name="gesperrt">zum Entsperren halten</string>
+    <string name="gesperrt_beschreibung">Gesperrt</string>
+    <string name="keine_zeit">–</string>
+    <string name="nur_aufzeichnen">Nur aufzeichnen</string>
+</resources>

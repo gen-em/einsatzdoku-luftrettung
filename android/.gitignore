@@ -1,0 +1,37 @@
+# ---------------------------------------------------------------------------
+# Was hier NICHT hineingehoert
+#
+# Der Signaturschluessel (E-S4-16). Er wird einmal erzeugt, ausserhalb des
+# Repositoriums verwahrt und niemals eingecheckt: Jede spaetere Fassung der App
+# muss mit DEMSELBEN Schluessel signiert sein, sonst verlangt Android eine
+# Neuinstallation und die App verliert dabei ihre Daten. Ein Schluessel im
+# Repositorium waere zugleich der Schluessel fuer jeden, der das Repositorium
+# lesen kann -- und damit kein Schluessel mehr.
+#
+# Dasselbe Muster wie server/config.php: in .gitignore UND in der
+# Ausnahmeliste des Deploys.
+# ---------------------------------------------------------------------------
+*.jks
+*.keystore
+signatur.properties
+
+# Ausgaben des Baulaufs. Vollstaendig aus den Quellen ableitbar; ein APK ist
+# ausserdem gross und aendert sich bei jedem Lauf.
+build/
+.gradle/
+*.apk
+*.aab
+
+# Zwischenspeicher des Kotlin-Uebersetzers (seit Kotlin 2.x). Er entsteht
+# neben build/ und wurde bisher nicht erfasst -- aufgefallen, als ein Baulauf
+# ihn im Arbeitsbaum stehen liess.
+.kotlin/
+
+# Verweis auf das Android-SDK DIESER Maschine. Auf einer anderen ist der Pfad
+# falsch -- der Bauweg liest deshalb ANDROID_HOME (siehe LIESMICH.md).
+local.properties
+
+# Werkzeuge des Arbeitsplatzes
+.idea/
+*.iml
+captures/

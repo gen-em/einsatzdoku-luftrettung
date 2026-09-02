@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 16 (02.09.2026)** — Neustrukturierung. Dieses Dokument steuert
+**Fassung 17 (02.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -11,7 +11,9 @@ das Archiv; sein Kopf sagt, welcher alte Abschnitt wo weiterlebt.
 
 **Stand am 02.09.2026:** `main` trägt **Web 12.4.2** und **Uhr 2.0.0**
 (ausgeliefert; ein Push auf `main` deployt). Der S4-Zweig trägt
-**Web 12.8.0** und **Android 0.7.6**, noch nicht zusammengeführt.
+**Web 12.8.0** und **Android 0.7.7**; `main` ist in ihn geholt und die
+Konflikte sind gelöst — der Push auf `main` **wartet auf die Freigabe**, und
+danach ist `update.php` fällig.
 
 **So wird gelesen:** Abschnitt 3 sagt, was als Nächstes dran ist und in
 welcher Reihenfolge. Abschnitt 5 sagt, wohin jeder offene Backlog-Punkt
@@ -125,7 +127,7 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 
 | Schritt | Kennung | Inhalt | Voraussetzung | Konzept | Modell | Status |
 |---|---|---|---|---|---|---|
-| 1 | **S4 — Merge** | Fehlerbehebung abschließen, Backlog-Nummern nachziehen, `main` holen, Merge = Deploy, `update.php` | — | liegt vor | Opus | **in Arbeit** |
+| 1 | **S4 — Merge** | Fehlerbehebung abschließen, Backlog-Nummern nachziehen, `main` holen, Merge = Deploy, `update.php` | — | liegt vor | Opus | **in Arbeit** — Zweig fertig (Web 12.8.0, Android 0.7.7), `main` geholt und Konflikte gelöst; **wartet auf die Freigabe zum Push**, `update.php` steht danach aus |
 | 2 | **S6 — Gerätekennung und Schlüsselfrist** | Serverseite von R42, Behebung R44 | Schritt 1 | keins; R42 und R44 sind die Spezifikation | Opus | offen |
 | 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | offen |
 | 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | `docs/konzepte/Umstellung-Backup.md` | Opus | offen |
@@ -160,9 +162,16 @@ danach **`update.php`** (Migration `2026_09_02_schnitte`) · Konzept und
 Prüfdokument S4 beim Merge nach `docs/konzepte/` verschieben (R62). **Was der
 Zweig bereits enthält:** Schneidewerkzeug (Web 12.5.0/12.6.0), GPX-Import
 (12.7.0), APK-Weg und Downloadseite (12.8.0), Handy-App und Wear-OS-App
-(Android 0.1.0–0.7.6: Kopplung nach altem Modell, Aufzeichnung, Senden,
-Phasen, Uhr-Bedienbild, Nachrichtenweg mit Quittung, Emulator-Prüfung),
-Doku und Lizenzen. **Abnahme:** Prüfdokument S4, Prüflisten 1 bis 3 und 5
+(Android 0.1.0–0.7.7: Kopplung nach altem Modell, Aufzeichnung, Senden,
+Phasen, Uhr-Bedienbild, Nachrichtenweg mit Quittung, Emulator-Prüfung,
+Bedienhöhe 48 dp nach R58), Doku und Lizenzen. **Am 02.09.2026 dazu
+gekommen:** Backlog-Umnummerierung auf 63–67 mit neun nachgezogenen
+Verweisen, R57 als E-S4-76 und R58 als E-S4-77 im Konzept, Konzept und
+Prüfdokument nach `docs/konzepte/` verschoben (R62) samt Statusblock am
+Kopf, `main` geholt und drei Konflikte gelöst (Backlog, Changelog, Konzept),
+Migrationsregister gegengezählt (38 = 38). **Und ein Fund, der nicht warten
+konnte:** Der Signaturschlüssel war seit B1 erzeugt, aber nie übergeben — er
+lag allein im Ablagefach der Arbeitssitzung; übergeben am 02.09.2026. **Abnahme:** Prüfdokument S4, Prüflisten 1 bis 3 und 5
 (Schneiden am echten Diensttag, Sperrvermerk, fremde GPX, APK-Ablage nach
 dem Deploy). **Was in Schritt 6 wartet:** Kopplungsmodul, Adress-QR,
 Signaturschlüssel, Gerätetest, Backlog 63.
@@ -416,7 +425,7 @@ angelegt.
 | 59 | Serverseite der Gerätestatistik | **S6** | Auswertung in P5 (R38) |
 | 62 | Logodateien mit alten Farbwerten | Backlog-Runde | `Design.md` 2.5 mitziehen |
 | 63 | Sperrvermerke des Schnitts in der Konto-Sicherung | S4-Rest | `Backup-Format.md`, Kreisläufe |
-| 64 | Bedienhöhe Android | S4-Merge | entschieden: 48 dp (R58) |
+| 64 | Bedienhöhe Android | **erledigt** (S4-Merge, Android 0.7.7) | 48 dp in beiden Modulen, `CLAUDE.md` 5 unterscheidet Web und Android (R58, E-S4-77) |
 | 65 | 14 Fassungshinweise, AGP 9 | Backlog-Runde | eigene Runde nach dem S4-Rest, nur `android/` |
 | 66 | `watch/` läuft nicht durch die Wortliste | S5 | mit der Uhr-Auslieferung |
 | 67 | `csrf_check()` ohne API-Zweig | P5 | CSRF-Umfeld (R21) |
@@ -448,7 +457,8 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | Bestätigung, dass SMTP auf Produktiv eingerichtet ist | S2 Warnmails | — |
 | Bilderlauf für die zweite Logo-Wahl; Autosuche gegen den echten Photon; Bedienzustände | S3-Reste | gelegentlich |
 | Prüfliste S4 (1, 2, 3, 5) am echten Diensttag | Schritt 1 | nach dem Merge |
-| Signaturschlüssel des APK verwahren (wird von der Umsetzung erzeugt) | Schritt 6 | mit dem ersten signierten Build |
+| **Signaturschlüssel des APK verwahren** — erzeugt am 31.08.2026 (RSA 4096, Zertifikat `078c…ad64`, gültig bis 2056), am 02.09.2026 an den Auftraggeber übergeben; er lag bis dahin nur im Ablagefach der Arbeitssitzung | Schritt 6 und jede spätere Auslieferung | **sofort** — ohne genau diesen Schlüssel ist jede spätere Fassung für Android eine andere App |
+| Data Layer Uhr↔Handy auf **echter Hardware** — zwischen zwei Emulatoren nachweislich nicht prüfbar (die Wear-OS-Companion-App des Telefons ist im Baucontainer nicht zu beschaffen) | Schritt 6 | mit der Wear-OS-Uhr |
 | Dienst-Test mit der Handy-App auf dem S24 (zwei bis drei Runden) | Schritt 6 | nach dem ersten APK |
 | Wear-OS-Uhr für den Gerätetest | Schritt 6 | wenn vorhanden; blockiert nichts |
 | DNS-Eintrag und TLS für `nadoku.gen-em.org` | Schritt 5 | vor dem Uhr-Build |
@@ -687,3 +697,4 @@ Abschnitt 6.
 | 14 | 01.09.2026 | R50 Backup-Begriff; zwei Berichtigungen zu Merge-Aussagen |
 | 15 | 02.09.2026 | S2 als ausgeliefert; Backlog 46–49 entdoppelt (→ 59–62); zweite Rückmeldungsrunde; R50 fällig |
 | **16** | **02.09.2026** | **Neustrukturierung:** Archiv abgetrennt (R51), Fahrplan nach Ausführungsreihenfolge, S6 und S7 benannt (R52), P4 aufgelöst (R53), Kurzregister (R54), Prüflisten bereinigt (R55), R56–R58 entschieden, Planungsgespräch vor v1.0 als Schritt 10 (R59), Update-Weg und Ende der Rückwärtskompatibilität ab v1.0 (R60), Zwischenpaket S8 Einstellungen, Administration und Wartung als Schritt 7 (R61), Konzeptablage `docs/konzepte/` mit Lebenszyklus und Push je Arbeitspaket (R62, K7 geändert), Bestand nach `docs/konzepte/erledigt/` verschoben; Statusfehler berichtigt (Kleinstpaket nicht begonnen, S3 ausgeliefert, S4 auf dem Zweig gebaut); Backlog 68–79 angelegt, 63–67 für S4 reserviert |
+| **17** | **02.09.2026** | **S4-Merge vorbereitet** (Schritt 1): Backlog des S4-Zweigs auf 63–67 umnummeriert und beide Reihen konfliktfrei zusammengeführt (44 offene Nummern, 0 doppelt); R58 umgesetzt (48 dp, Backlog 64 erledigt), R57 als E-S4-76 eingetragen; Konzept und Prüfdokument nach `docs/konzepte/` verschoben (R62) mit Statusblock; Migrationsregister gegengezählt (38 = 38); Signaturschlüssel des APK an den Auftraggeber übergeben — er war seit B1 erzeugt, aber nie ausgehändigt. Der Push auf `main` steht aus. |

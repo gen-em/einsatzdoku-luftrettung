@@ -38,6 +38,12 @@ jobs:
           # Die .htaccess im Ordner legt adminbackup_lib.php beim ersten
           # Schreiben selbst an — sie darf hier nicht mit hochgeladen werden,
           # sonst käme sie nie im ausgenommenen Ordner an.
+          # EBENSO apk/ seit S4/A1 (E-S4-16): Die APK-Dateien der Android-Apps
+          # liegen nur auf dem Server, der Betreiber lädt sie per FTPS dorthin.
+          # Ohne diesen Eintrag löscht der nächste Deploy sie — er
+          # synchronisiert server/ und entfernt, was hier nicht ausgenommen
+          # ist. Auch hier zweimal, weil die Aktion Datei- und
+          # Verzeichnismuster getrennt prüft.
           exclude: |
             **/.git*
             **/.git*/**
@@ -46,3 +52,5 @@ jobs:
             install.lock
             sicherungen/**
             sicherungen/
+            apk/**
+            apk/

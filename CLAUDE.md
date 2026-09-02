@@ -1,8 +1,9 @@
 # Arbeitsanweisung für Claude Code
 
 Dieses Repositorium ist die **Einsatzdokumentation Notarzt**: eine
-Garmin-Uhr-App (Monkey C) erfasst Dienste, GPS und Reanimations-Ereignisse, eine
-PHP/MySQL-Weboberfläche zeigt und bearbeitet sie. Patientendaten sind
+Garmin-Uhr-App (Monkey C) und seit S4 eine Android-App mit Wear-OS-Gegenstück
+(Kotlin/Compose, `android/`) erfassen Dienste, GPS und Reanimations-Ereignisse,
+eine PHP/MySQL-Weboberfläche zeigt und bearbeitet sie. Patientendaten sind
 Ende-zu-Ende-verschlüsselt.
 
 Einstieg in die Sache selbst: `README.md`, dann `docs/Technik.md` (Architektur,
@@ -35,7 +36,10 @@ Diese vier Punkte sind kein Nachklapp, sondern Teil der Änderung:
    spürbar veränderte Wege durch die Anwendung), Neben = neue Funktionen und
    Felder, Korrektur = Fehlerbehebung und Feinschliff. Der Kopfkommentar der
    Datei erklärt zu jeder Hauptnummer, wofür sie steht — diese Erzählung
-   fortschreiben. Die Uhr-App zählt getrennt in `watch/source/Const.mc`.
+   fortschreiben. Die Garmin-Uhr zählt getrennt in `watch/source/Const.mc`,
+   die Android-Apps in `android/version.properties`. **Drei Zählungen, drei
+   Auslieferungen** — eine Änderung, die nur `tools/` oder `docs/` anfasst,
+   stuft keine davon hoch.
 2. **`docs/CHANGELOG.md` ergänzen.** Format nach *Keep a Changelog*, Präfix
    `Web` oder `Uhr`. Der bestehende Ton ist erklärende Prosa mit **Begründung**,
    nicht eine Liste von Stichpunkten: Was war das Problem, warum diese Lösung,
@@ -89,6 +93,17 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   `mission_fields.php` beschrieben; Formular, Speichern, API und Anzeige ziehen
   von selbst nach. Ein neues Feld, das an fünf Stellen von Hand eingebaut wird,
   ist ein Fehler. Vorgehen: `docs/Technik.md`, Abschnitt 7 (Runbook).
+- **Die Uhr kennt keine Zugangsdaten.** Die Wear-OS-App (`android/uhr/`) hat
+  weder Serveradresse noch API-Schlüssel; sie schickt ihre Ereignisse an das
+  Handy, und das Handy sendet (E-S4-11). Eine verlorene Uhr gibt keinen Zugang
+  preis. Wer das aufweicht — und sei es „nur zum Prüfen" —, nimmt der Bauform
+  ihre Sicherheitsaussage. Der Prüfstand zählt die Schlüssel des
+  Nachrichtenformats nach.
+- **Der Data Layer steckt hinter einer Schnittstelle.** `Nachrichtenweg`, eine
+  Umsetzung (`WearNachrichtenweg.kt`). Alles darüber kennt nur die
+  Schnittstelle — deshalb laufen die Prüffälle ohne Play-Dienste, und deshalb
+  ist die eine proprietäre Bibliothek des Projekts auf eine Datei begrenzt
+  (`docs/Lizenzen.md` 6a). Ein Aufruf am Weg vorbei ist ein Fehler.
 - **Spuren nur über `spur_lib.php`.** Seit Web 10.0.0 liegen GPS-Punkte je
   nach Alter als Zeilen in `track_points` **oder** als Blob in `track_blobs`
   (Format SPUR1) — und während einer Nachlieferung als beides. Wer eine der
@@ -116,7 +131,10 @@ Oberflächenänderung anfängt, liest zuerst dort. Kurz:
   nachgetragen. Die Skala ist geschlossen.
 - Kontrast gegen die tatsächliche Fläche prüfen (Schnee/Rauch, nicht Weiß),
   Zielwert AA. `python3 tools/screenshots/kontrast.py` rechnet ihn nach.
-- Eine Höhe für Bedienelemente: **44 px**, mobil wie am Schreibtisch.
+- Eine Höhe für Bedienelemente: **44 px**, mobil wie am Schreibtisch —
+  das gilt für die **Weboberfläche**. Die Android-Apps folgen der
+  Plattformvorgabe von **48 dp** (R58, 02.09.2026): Sie werden mit
+  Handschuhen bedient, und dafür ist die Android-Zahl gemacht.
 - Spaltenbreiten in Tabellen nie über `:nth-child` — sie zählen Spalten ab und
   rutschen beim Streichen einer Spalte still auf die falsche. Klassen benutzen.
 - Die Tabellen in `Design.md` (Token, Schwellen, Symbole, Bausteine) sind
@@ -166,12 +184,43 @@ Der Stilvergleich ersetzt die Browserprüfung nicht: Er misst statisches
 Markup, keine Bedienzustände.
 
 **Wortliste bei jeder Textänderung.** Für jede Änderung an einem sichtbaren
-Text der Weboberfläche oder an der normativen Dokumentation wird
-`tools/wortliste/` gefahren (Anleitung in der dortigen `LIESMICH.md`): Es
-zählt nach, ob Land und Luft neutral benannt sind. Erwartet werden null
-Treffer außerhalb der Ausnahmeliste und null ungenutzte Ausnahmen; ein
-Luftbegriff, der bleiben soll, braucht einen Eintrag mit Begründung — kein
+Text — der Weboberfläche, **der Android-Apps** oder der normativen
+Dokumentation — wird `tools/wortliste/` gefahren (Anleitung in der dortigen
+`LIESMICH.md`): Es zählt nach, ob Land und Luft neutral benannt sind. Erwartet
+werden null Treffer außerhalb der Ausnahmeliste und null ungenutzte Ausnahmen;
+ein Luftbegriff, der bleiben soll, braucht einen Eintrag mit Begründung — kein
 Ausblenden.
+
+> **Jeder sichtbare Text der Anwendung läuft durch die Wortliste — gleich, in
+> welchem Client er steht.** Ein Bereich fehlt nicht, weil ein Verzeichnis
+> jung ist; er fehlt, weil ihn niemand eingetragen hat. Wer einen Client
+> hinzufügt, trägt seine Textdateien im selben Paket ein, in dem der Client
+> entsteht. **Ein Lauf, der einen Client übergeht, meldet keine Null — er
+> meldet gar nichts.**
+>
+> Aufgestellt in S4 (B-S4-06), nachdem der Lauf nach dem letzten Android-Paket
+> 0 Treffer meldete, ohne eine Zeile der App angesehen zu haben. Bereich `d`
+> (Android) steht seither in der Liste; `watch/` fehlt noch und ist einer
+> anderen Instanz zugewiesen.
+
+**Die Android-Apps prüfen sich selbst — `./gradlew build` im Ordner
+`android/`** (mit `ANDROID_HOME=/opt/android-sdk`). Anders als Web und
+Garmin-Uhr haben sie automatisierte Prüffälle (JUnit/Robolectric), und die
+laufen ohne Gerät: gegen ein echtes SQLite, gegen eine Attrappe des Data
+Layer und, wo eine lokale Installation steht, gegen `ingest.php` selbst.
+
+**Was nur auf einem Android-System geht, steht in `src/androidTest/`** — der
+echte `AndroidKeyStore` und die Erreichbarkeit der Wearable-API. Diese Fälle
+gehen **an Gradle vorbei** (`adb shell am instrument`, Befehlsfolge in
+`android/LIESMICH.md`): `connectedAndroidTest` scheitert auf einem
+softwareemulierten Gerät an einer ddmlib-Zeitgrenze. Und **Backtick-Namen mit
+Leerzeichen** sind dort verboten — D8 lehnt sie unterhalb von DEX 040 ab, das
+Modul steht auf `minSdk = 26`. Bilder entstehen über Robolectric im
+NATIVE-Modus, nicht über `captureToImage()` (das hängt sich auf) und nicht
+über einen Emulator. Erwartet werden **0 Lint-Fehler** und **0 Fehlschläge**;
+Warnungen werden gezählt und nicht stummgeschaltet. Was das alles NICHT
+ersetzt, steht in `android/LIESMICH.md` und beginnt mit dem echten Data
+Layer.
 
 **Die Prüfmittel laufen zuletzt, nicht zwischendurch.** Erst der Code, dann
 die Dokumentation, **dann** Wortliste, Vollständigkeit, Kontraste und
@@ -260,6 +309,10 @@ nicht später, nicht „in P6":
   der betroffenen Stelle nachziehen.
 - **Fremdbestandteile** (Bibliotheken, Schriften, Symbole, Dienste):
   `docs/Lizenzen.md`.
+- **Android-App** (`android/`): `android/LIESMICH.md` (Bauanleitung,
+  Entscheidungen, Prüfstand), `docs/Technik.md` 5a (wie es zusammenhängt),
+  `docs/Lizenzen.md` 6a (Fremdbestandteile — die Liste selbst steht in
+  `android/gradle/libs.versions.toml`), `docs/Geraete-Eingabe.md` (Wear-Teil).
 - **Prüfmittel:** nach jedem Paket `tools/vollstaendigkeit/`,
   `tools/screenshots/` (berührte Seiten) und `tools/wortliste/`; der
   Stilvergleich wacht ab P4 wieder.

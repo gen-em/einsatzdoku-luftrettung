@@ -1800,6 +1800,73 @@ $MIGRATIONS = [
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
         ],
     ],
+    [
+        'id'    => '2026_09_02_schnitte',
+        'web'   => '12.5',
+        'label' => 'Schneidewerkzeug: Tabelle track_cuts für den Sperrvermerk (S4/A2)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'track_cuts'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* EINE ZEILE JE SCHNITT — der Sperrvermerk aus E-S4-53.
+             *
+             * WAS DER SCHNITT IST: Wer einen vergessenen Einsatz nachtraegt,
+             * schneidet ihn aus dem Ruhesegment heraus. Die Punkte WANDERN
+             * dabei (spur_teilen()), sie werden nicht kopiert. Danach fehlen
+             * sie dem Segment — und genau das ist beabsichtigt.
+             *
+             * WOFUER DIESE TABELLE DA IST: Das Geraet weiss von alldem
+             * nichts. Es hat die Punkte des geschnittenen Zeitraums
+             * moeglicherweise noch im Puffer (Funkloch) und liefert sie
+             * nach. Ohne Vermerk faenden sie in das Segment zurueck, aus dem
+             * sie eben genommen wurden, und der Schnitt loeste sich still
+             * wieder auf. Der Vermerk sagt `ingest.php`, welchen Zeitraum es
+             * an diesem Eigentuemer nicht mehr annehmen darf.
+             *
+             * ZEITRAUM UND NICHT SEQUENZBEREICH — Abweichung vom Konzept,
+             * begruendet: Abschnitt 14 des Konzepts nennt `seq_von`/`seq_bis`.
+             * Das laesst sich beim Schnitt nicht ausfuellen. Die Punkte, um
+             * die es geht, sind noch NICHT geliefert; ihre Sequenznummern
+             * vergibt `ingest.php` erst bei der Ankunft aus `seq_from`. Was
+             * beim Schnitt bekannt ist, sind die Sequenzen der Punkte, die
+             * schon dastehen — und die faengt `n_original` ohnehin ab. Der
+             * Zeitraum dagegen steht fest, sobald die Bedienerin ihn gewaehlt
+             * hat, und jeder eingehende Punkt traegt seine `ts` bei sich. Die
+             * Pruefung kostet damit keine zweite Abfrage je Punkt (Konzept
+             * 14, offener Punkt 2), sondern eine Abfrage je Upload.
+             *
+             * POLYMORPH WIE track_points UND track_blobs, aus demselben
+             * Grund und mit demselben Preis: kein Fremdschluessel, also
+             * raeumen die Loeschwege ausdruecklich mit (spur_loeschen() und
+             * die Kontoloeschung).
+             *
+             * `mission_id` ist das Ziel — der Einsatz, in den geschnitten
+             * wurde. Rueckgaengig (E-S4-17) braucht die Zuordnung: Es holt
+             * die Punkte zurueck UND loescht diese Zeile, sonst bliebe ein
+             * Loch, das niemand mehr fuellen kann.
+             *
+             * `user_id` steht dabei, obwohl es aus dem Eigentuemer
+             * herleitbar waere: Die Kontoloeschung und der Wartungsjob
+             * sollen nicht ueber zwei Tabellen springen muessen, um zu
+             * wissen, wem eine Zeile gehoert. */
+            "CREATE TABLE track_cuts (
+               id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               user_id      INT UNSIGNED NOT NULL,
+               owner_type   ENUM('mission','rest') NOT NULL,  -- Quelle des Schnitts
+               owner_id     INT UNSIGNED NOT NULL,
+               mission_id   INT UNSIGNED NOT NULL,            -- Ziel: der geschnittene Einsatz
+               von_ts       BIGINT NOT NULL,
+               bis_ts       BIGINT NOT NULL,
+               n_punkte     INT UNSIGNED NOT NULL,            -- gewanderte Punkte, fuer die Rueckmeldung
+               erstellt_am  DATETIME NOT NULL,
+               KEY quelle (owner_type, owner_id),
+               KEY ziel (mission_id),
+               KEY konto (user_id)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        ],
+    ],
 ];
 
 /* ---- Zweistufiger Ablauf ---------------------------------------------------

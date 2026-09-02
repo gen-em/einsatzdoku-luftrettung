@@ -1902,5 +1902,122 @@ declare(strict_types=1);
  * reisen mit der S5-Auslieferung (E-S3-04); die Uhr-Version steigt hier
  * NICHT.
  *
+ * 12.5.0 LEGT DAS FUNDAMENT DES SCHNEIDEWERKZEUGS (S4/A2). Wer einen
+ * vergessenen Einsatz nachtraegt, soll ihn aus dem Ruhesegment
+ * HERAUSSCHNEIDEN koennen: Der gewaehlte Zeitbereich wandert samt Punkten vom
+ * Segment zum Einsatz. `spur_teilen()` in spur_lib.php tut das -- und zwar
+ * VERSCHIEBEND, nicht kopierend (E-S4-53), sonst laege die Einsatzfahrt
+ * hinterher in beiden Spuren und das Ruhesegment zeigte eine Ruhezeit ueber
+ * 40 km.
+ *
+ * MIGRATION ERFORDERLICH (2026_09_02_schnitte): die Tabelle `track_cuts`.
+ * Sie ist der Sperrvermerk, ohne den sich der Schnitt still wieder aufloest.
+ * Das Geraet weiss von ihm nichts; hat es die Punkte des geschnittenen
+ * Zeitraums noch im Puffer (Funkloch), liefert es sie nach, und sie faenden
+ * in das Segment zurueck, aus dem sie eben genommen wurden.
+ *
+ * DASS DAFUER `n_original` NICHT REICHT, ist der Ertrag dieses Pakets und war
+ * zuerst falsch angenommen. `ingest.php` vergibt die Sequenznummern aus
+ * `seq_from` -- der Marke, die das Geraet zuletzt bekam. Gepufferte Punkte
+ * kommen deshalb OBERHALB jeder Sperrgrenze an und laufen glatt daran vorbei;
+ * `n_original` faengt nur die Wiederholung schon gelieferter Punkte ab. Was
+ * die Nachzuegler kenntlich macht, ist ihre `ts`. Der Vermerk haelt deshalb
+ * einen ZEITRAUM und nicht, wie das Konzept es vorsah, einen Sequenzbereich
+ * -- den gibt es beim Schnitt noch gar nicht.
+ *
+ * Beide Boeden bleiben also noetig, und sie tun Verschiedenes: `n_original`
+ * haelt die Fortsetzungsmarke (sonst faellt sie mit den geloeschten Zeilen
+ * zurueck und das Geraet sendet den ganzen Dienst noch einmal), der Vermerk
+ * haelt den Zeitraum. Nachgewiesen mit 20 Erwartungen in
+ * `tools/spurprobe/probe.php`, Teil 6.
+ *
+ * Die Bedienung folgt in einem eigenen Paket; hier stehen Bibliothek, Schema,
+ * die Pruefung in ingest.php und die Loeschwege.
+ *
+ * 12.6.0 MACHT DAS SCHNEIDEN BEDIENBAR (S4/A2b). Die Tagesansicht bekommt die
+ * Karte „Ruhesegmente" -- bis hierher lagen die Segmente nur als graue Linie
+ * auf der Karte und waren nicht anfassbar, obwohl genau dort die Spur eines
+ * vergessenen Einsatzes liegt. An einer Segmentzeile klappt der
+ * Schneide-Bereich auf: Zeitleiste, Beginn und Ende (Pflicht), drei
+ * Phasenzeiten (optional). `api/schneiden.php` legt den Einsatz auf dem
+ * BESTANDSWEG an (virtuelles Geraet `manual-<userId>`, `origin = 'manual'`,
+ * `manual = 1`) und verschiebt die Punkte in EINER Transaktion. Rueckgaengig
+ * ist derselbe Aufruf mit vertauschten Enden.
+ *
+ * OHNE MIGRATION -- die Tabelle steht seit 12.5.0.
+ *
+ * ZWEI FUNDE AUS DER BROWSERPRUEFUNG, beide behoben und beide von derselben
+ * Art: etwas, das auf EINEM Rechner richtig aussieht.
+ *
+ * (1) DIE ZEITEN GINGEN ROH HINAUS. `api/day.php` lieferte `started_at` als
+ *     UTC-Zeichenkette, und der Browser rechnete mit `new Date(...)` in SEINE
+ *     Zone um. Auf einem Rechner in der Zone der Anwendung faellt das nie
+ *     auf; im Container ist sie UTC, und der Schnitt griff zwei Stunden
+ *     daneben und nahm NULL Punkte mit -- mit Erfolgsmeldung. Jetzt geht
+ *     `start_hhmm` hinaus, fertig formatiert, wie es die Einsatztabelle seit
+ *     jeher bekommt. Der Browser rechnet nur noch in Minuten.
+ *
+ * (2) DIE ZEITLEISTE WAR EIN SVG mit `viewBox` und skalierte ihre
+ *     Beschriftung mit der Breite: auf 1280 px richtig, auf 390 px sechs
+ *     Pixel hoch. Jetzt HTML mit Prozentbreiten -- der Text bleibt Text, nur
+ *     der Balken skaliert.
+ *
+ * Dazu: Ein Schnitt, in dessen Zeitraum kein Punkt liegt, wird ABGELEHNT
+ * statt einen leeren Einsatz anzulegen. Ohne gewanderte Punkte gaebe es
+ * keinen Sperrvermerk, und ohne Vermerk faende das Rueckgaengig den Weg
+ * zurueck nicht -- die Bedienerin bliebe mit einem Einsatz sitzen, den nur
+ * der Papierkorb noch loswird.
+ *
+ * 12.7.0 LIEST GPX (S4/A3, E-S4-18) — das Gegenstueck zum Abruf aus S2/AP4.
+ * Eine Spur, die auf einem anderen Geraet entstanden ist, kommt damit herein:
+ * ueber „···" -> „GPX importieren" in der Tagesansicht, als Dialog. Zwei
+ * Ziele, und die Wahl ist keine Kosmetik (E-R45-4): Ein RUHESEGMENT ist die
+ * Aufzeichnung eines ganzen Dienstes, aus der man die Einsaetze danach
+ * herausschneidet (der Regelfall); ein EINSATZ ist eine Datei, die genau
+ * einer ist. Keine Migration.
+ *
+ * `time` IST PFLICHT, und eine Datei ohne Zeitstempel wird mit dieser
+ * Begruendung abgelehnt statt still angenommen: Ohne Zeit gibt es keine
+ * Punktreihenfolge, kein Schneiden und keine Phasenzeiten.
+ *
+ * DER LESER STEHT IN `gpx_lib.php`, neben dem Schreiber. GPX hat damit genau
+ * eine Stelle in dieser Anwendung, die es kennt — ein Leser, der woanders
+ * wohnt, laeuft frueher oder spaeter mit anderen Annahmen als der Schreiber,
+ * und das faellt erst auf, wenn eine Datei hinaus, aber nicht wieder hinein
+ * kommt.
+ *
+ * DIE FALLE, IN DIE DAS PAKET GETRETEN IST: Nach `children($ns)` schaltet
+ * SimpleXML die Namensraum-Umgebung eines Knotens um — AUCH fuer Attribute.
+ * `$pt['lat']` sucht danach ein `lat` IM GPX-Namensraum, und ein
+ * unpraefigiertes Attribut liegt in KEINEM. Das Ergebnis war ein leerer
+ * String, kein Fehler: Jeder Punkt fiel durch die Koordinatenpruefung, und
+ * die Meldung lautete „enthält keinen einzigen Trackpunkt" — bei 61
+ * vorhandenen. Jetzt ueber `attributes()`.
+ *
+ * 12.8.0 VERTEILT DIE ANDROID-APP (S4/A1 zur Haelfte, E-S4-16). Der
+ * Geraete-Reiter bekommt die Karte „NAdoku fuer Android": Sie zeigt, was in
+ * `server/apk/` LIEGT — Name, Groesse, Fassung, Datum und den gerechneten
+ * SHA-256. Von Hand gepflegt wird nichts; eine Versionsangabe, die jemand
+ * eintippt, stimmt am Tag des Eintippens und danach nie wieder. Liegt keine
+ * Datei, erscheint die Karte gar nicht.
+ *
+ * DIE DATEI IST WEDER IM REPOSITORIUM NOCH IM DEPLOY. `server/apk/` steht in
+ * `.gitignore` UND in der Ausnahmeliste des Deploys — dasselbe Muster wie
+ * `config.php` und `sicherungen/`, und beides ist noetig: Ohne den zweiten
+ * Eintrag loeschte der naechste Push die Dateien, denn die Action
+ * synchronisiert `server/` und entfernt, was nicht ausgenommen ist.
+ * Hochgeladen wird per FTPS durch die Betreiberin.
+ *
+ * DER NAME WIRD NICHT GEPRUEFT, SONDERN GESUCHT: `apk.php` liest den Ordner
+ * und waehlt daraus aus. Ein Pfad, den der Aufrufer zusammensetzt, kommt
+ * damit nie an `fopen()` — auch keiner mit `..`, keiner mit Nullbyte und
+ * keiner mit einem Zeilenumbruch fuer die Content-Disposition-Kopfzeile. Der
+ * Unterschied zu „gefaehrliche Zeichen entfernen" ist, dass hier nichts
+ * vergessen werden kann.
+ *
+ * WAS AN A1 NOCH FEHLT und hier NICHT dabei ist: der QR-Kopplungscode
+ * (E-S4-15) und der Nachtrag im JSON-Vertrag. Beides haengt an S5 und R42,
+ * die noch nicht durch sind.
+ *
  */
-const WEB_VERSION = '12.4.2';
+const WEB_VERSION = '12.8.0';

@@ -234,6 +234,77 @@ Wert wird. Das war beim Klick auf die Lupe so und ist es beim Tippen.
 
 ---
 
+## 6a. Die Android-Apps (seit S4)
+
+Handy- und Wear-OS-App liegen unter `android/` und werden **nicht über den
+Deploy verteilt**, sondern als APK auf den Server gelegt (`server/apk/`,
+Technik 4.97g). Ihre Fremdbestandteile sind deshalb eine eigene Aufstellung —
+sie laufen auf dem Telefon, nicht auf dem Server und nicht im Browser.
+
+**So wenige wie möglich, und das ist gemessen.** HTTP läuft über
+`HttpURLConnection`, JSON über `org.json`, der Puffer über
+`SQLiteOpenHelper` — alles drei **Bordmittel von Android**. Sie stehen
+deshalb nicht in dieser Tabelle: Was mit dem Betriebssystem kommt, ist keine
+Abhängigkeit des Projekts.
+
+| Bestandteil | Version | Lizenz | wofür |
+|---|---|---|---|
+| **AndroidX / Jetpack Compose** (`core-ktx`, `lifecycle`, `activity-compose`, Compose-BOM, `wear.compose`, `wear-input`) | BOM 2025.06.01, Wear-Compose 1.4.1 | Apache-2.0 | Die gesamte Oberfläche beider Module |
+| **CameraX** (`camera-core`, `camera2`, `lifecycle`, `view`) | 1.4.2 | Apache-2.0 | Das Kamerabild für das Scannen des Kopplungscodes |
+| **ZXing** (`core`) | 3.5.4 | Apache-2.0 | QR-Erkennung *aus* diesem Kamerabild |
+| **play-services-wearable** | 20.0.1 | **proprietär** (Google APIs ToS) | **Ausschließlich** der Wear Data Layer — der Weg zwischen Uhr und Handy |
+
+Nur zum Prüfen, nichts davon liegt im APK der Anwendung: JUnit 4.13.2
+(EPL-1.0), Robolectric 4.16.1 (Apache-2.0), `androidx.test` 1.7.0 / 1.3.0
+(Apache-2.0) und seit Android 0.7.6 `androidx.test:runner` 1.7.0
+(Apache-2.0) — der Läufer für die **instrumentierten** Fälle. Er wird in ein
+eigenes Test-APK gepackt, das nur `am instrument` installiert.
+
+Die vollständige, maschinenlesbare Liste steht in
+`android/gradle/libs.versions.toml` — **eine** Datei, ein Eintrag je
+Bestandteil. Wer eine Fassung hochzieht, zieht sie dort hoch und trägt sie
+hier nach.
+
+**Alle werden nur zur Bauzeit bezogen.** Die App lädt zur Laufzeit nichts
+nach — der Grundsatz aus Abschnitt 2 gilt für sie unverändert. Sie spricht
+mit genau einem Server: dem, den die BedienerIn bei der Kopplung eingetragen
+hat.
+
+### Die proprietäre unter ihnen — und warum sie verträglich ist
+
+`play-services-wearable` ist **nicht** quelloffen. Das ist eine Aussage, die
+in einer AGPL-Anwendung nicht nebenbei stehen darf, deshalb ausführlich:
+
+**Sie steckt nicht im APK.** Google-Play-Dienste sind eine *Systemkomponente*
+des Geräts. Was die App mitliefert, ist eine dünne Client-Schicht, die auf
+den auf dem Gerät vorhandenen Dienst zugreift — dieselbe Lage wie bei jeder
+anderen Android-Systemschnittstelle. Die AGPL verlangt die Quellen des
+Werks; ein Systemdienst des Betriebssystems gehört nicht dazu (die
+Ausnahme für „System Libraries" in GPL-3 §1, auf die die AGPL sich stützt).
+
+**Sie ist eingegrenzt und die Grenze ist nachprüfbar.** Sie wird an genau
+einer Stelle benutzt: `android/gemeinsam/quelle/…/WearNachrichtenweg.kt`, der
+Umsetzung der Schnittstelle `Nachrichtenweg`. Alles darüber — Puffer,
+Quittung, Nummernvergabe, Bedienbild — kennt nur diese Schnittstelle. Wer
+den Data Layer ersetzen will (Bluetooth unmittelbar, ein anderer Hersteller),
+schreibt eine zweite Umsetzung und rührt nichts anderes an. Genau diese
+Trennung ist der Grund, warum die Prüffälle beider Module ohne Play-Dienste
+laufen: Sie benutzen eine Attrappe derselben Schnittstelle.
+
+**Sie überträgt nichts nach außen.** Der Data Layer verbindet Uhr und Handy
+desselben Menschen. Einsatzdaten gehen von dort zum eingetragenen Server und
+sonst nirgendwohin; die Uhr-App kennt weder Serveradresse noch Zugangsdaten
+(E-S4-11).
+
+**Der Preis, offen gesagt:** Eine Wear-OS-Uhr ohne Google-Play-Dienste — ein
+degoogeltes System, eine Uhr in China — kann die Verbindung zum Handy nicht
+herstellen. Die Handy-App bleibt davon unberührt und ist vollständig
+benutzbar; die Uhr ist eine Bequemlichkeit, kein Erfordernis. Eine
+freie Alternative zum Data Layer gibt es nicht: Er *ist* die Schnittstelle,
+über die Wear OS Uhr und Telefon koppelt.
+
+---
+
 ## 7. Werkzeuge — nicht ausgeliefert
 
 Alles unter `tools/` ist Prüf- und Erzeugungswerkzeug und **wird nicht auf den
@@ -244,6 +315,12 @@ nicht in dieser Aufstellung.
 
 Für die Uhr-App gilt dasselbe in die andere Richtung: `watch/` ist Monkey C
 und benutzt ausschließlich das Connect-IQ-SDK von Garmin.
+
+Auch `android/werkzeuge/` gehört hierher: Farb-, Kontrast-, Bildmarken- und
+Stromprüfung der Android-Module sind Prüfmittel und liegen in keinem APK.
+Die Bauwerkzeuge (Gradle, das Android-Gradle-Plugin, der Kotlin-Compiler)
+sind Entwicklungsumgebung wie Playwright und Pillow — die Fassungen stehen in
+`android/gradle/libs.versions.toml`.
 
 ### 7.1 Das GPX-1.1-Schema (seit Web 10.3.0)
 
@@ -296,5 +373,7 @@ Abschnitt 2 bleibt unberührt.
 
 | Fassung | Was |
 |---|---|
+| S4/D2 | `androidx.test:runner` 1.7.0 in Abschnitt 6a — der Läufer für die instrumentierten Prüffälle (Keystore, Wearable-Erreichbarkeit). Test-only, Apache-2.0, nicht im App-APK. |
+| S4/D1 | Abschnitt 6a: die Android-Apps. Vier Fremdbestandteile, drei davon Apache-2.0; die vierte (`play-services-wearable`) ist proprietär und bekommt eine eigene Begründung — sie steckt nicht im APK, ist auf **eine** Datei eingegrenzt, überträgt nichts nach außen, und der Preis (keine Uhr ohne Play-Dienste) steht dabei. |
 | Web 10.3.0 (S2/AP4) | Abschnitt 7.1: das vendorierte GPX-1.1-Schema von TopoGrafix, mit Herkunft und SHA-256. Es liegt unter `tools/` und wird zur Laufzeit nie geladen. |
 | Web 9.13.0 (P3/O12) | Erstfassung. Zusammengetragen aus den Dateiköpfen unter `server/assets/vendor/`, dem Stylesheet-Kommentar zu den Schriften, `LICENSE-tabler-icons.txt` und den Adressen in `map_layers.js`, `ortsfeld.js` und `ortswahl.js`. |

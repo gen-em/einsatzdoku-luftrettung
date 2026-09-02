@@ -631,7 +631,13 @@ function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
 
             if ($waisen) {
                 $weg = spur_loeschen($pdo, $typ, $waisen);
-                $erledigt += $weg['zeilen'] + $weg['blobs'];
+                /* Sperrvermerke derselben Waisen mit (S4/A2). Sie haengen an
+                 * keinem Fremdschluessel, genau wie Zeilen und Blob, und das
+                 * Netz waere ohne sie loechrig: Ein Vermerk zu einem Segment,
+                 * das es nicht mehr gibt, sperrt einen Zeitraum, den niemand
+                 * mehr einsieht. */
+                $erledigt += $weg['zeilen'] + $weg['blobs']
+                           + schnitte_loeschen_quelle($pdo, $typ, $waisen);
             }
             $marke = (int)end($ids);
             $zustand[$typ] = $marke;

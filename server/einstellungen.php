@@ -9,6 +9,7 @@ require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), 
  * ueber demo_lib.php ohnehin mit — aber eine Frist, die auf der Seite steht,
  * darf nicht an einem zufaelligen Umweg haengen. */
 require_once __DIR__ . '/trash_lib.php';
+require_once __DIR__ . '/apk_lib.php';    // APK-Karte des Geraete-Reiters (S4/A1)
 
 /* OHNE `t` DIE ÜBERSICHT (E-P3-11, P3/O2).
  *
@@ -3042,6 +3043,45 @@ ui_seite_start(['titel' => 'Einstellungen']);
         </form>
       </div>
     <?php ui_karte_ende(); ?>
+
+    <?php /* ---- NAdoku für Android (S4/A1, E-S4-16) ---------------------
+             Die App wird hier verteilt und nicht über einen App-Store. Die
+             Karte zeigt, was auf dem Server LIEGT — Name, Größe, Datum und
+             der gerechnete SHA-256; von Hand gepflegt wird nichts. Liegt
+             nichts, erscheint die Karte gar nicht: Ein Leerzustand „noch
+             keine App" wäre auf jeder Installation zu sehen, die keine
+             Android-App verteilt, und sagte dort etwas Falsches.
+
+             DER DOWNLOAD IST EINE NEUTRALE HANDLUNG, kein Primärknopf
+             (Mockup A0, freigegeben): Die eine Haupthandlung dieses Reiters
+             bleibt „Kopplungscode erzeugen". */ ?>
+    <?php $apks = apk_liste(); if ($apks): ?>
+      <?php ui_karte_start(['titel' => 'NAdoku für Android']); ?>
+        <p class="feld-hinweis">Die Handy-App zeichnet die Spur des Dienstes
+           auf und dokumentiert die Einsatzphasen — am Handy oder an einer
+           verbundenen Wear-OS-Uhr. Sie wird hier verteilt, nicht über einen
+           App-Store.</p>
+        <?php foreach ($apks as $apk): ?>
+          <?php ui_zeile([
+              'text'  => $apk['datei'],
+              'klein' => apk_groesse($apk['groesse'])
+                       . ($apk['version'] !== null ? ' · Fassung ' . $apk['version'] : '')
+                       . ' · Stand ' . fmt_local(gmdate('Y-m-d H:i:s', $apk['stand']), 'd.m.Y'),
+              'aktionen' => '<div class="zeile-knoepfe">'
+                  . '<a class="knopf knopf-neutral" href="apk.php?d='
+                  . e(rawurlencode($apk['datei'])) . '"><span>Herunterladen</span></a>'
+                  . '</div>',
+          ]); ?>
+          <p class="feld-klein">SHA-256:
+             <code><?= e(apk_sha_lesbar($apk['sha256'])) ?></code> — wer der
+             Seite nicht traut, rechnet die Prüfsumme der heruntergeladenen
+             Datei nach.</p>
+        <?php endforeach; ?>
+        <p class="feld-klein">Beim ersten Öffnen fragt Android nach, ob
+           Installationen aus dieser Quelle erlaubt sind — das ist bei einer
+           Verteilung ohne App-Store der vorgesehene Weg.</p>
+      <?php ui_karte_ende(); ?>
+    <?php endif; ?>
 
     <?php if ($newKey): ?>
       <?php ui_karte_start(['titel' => 'Zugangsdaten des neuen Geräts']); ?>

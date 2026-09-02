@@ -321,15 +321,91 @@ try {
         $missions[] = $zeile;
     }
 
-    $st = db()->prepare('SELECT id FROM rest_segments WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL ORDER BY started_at');
+    /* DIE RUHESEGMENTE TRAGEN SEIT WEB 12.6.0 MEHR ALS IHRE PUNKTE (S4/A2b).
+     *
+     * Bis hierher lieferte `rest_segments` nur die Linien fuer die Karte —
+     * eine Liste von Listen, ohne Kennung, ohne Zeiten. Fuer eine Karte
+     * reicht das; fuer die Karte „Ruhesegmente", an der geschnitten wird,
+     * nicht: Sie braucht die Kennung (wohin der Schnitt geht), die Zeiten
+     * (was zur Auswahl steht) und die Punktzahl (ob ueberhaupt etwas da ist).
+     *
+     * `track` BLEIBT AN SEINEM PLATZ IM OBJEKT, damit die Karte sich nicht
+     * aendern muss — sie liest jetzt `.track` statt des Eintrags selbst. Der
+     * Umbau ist klein und steht in `index.php` an einer Stelle. */
+    $st = db()->prepare('SELECT id, started_at, ended_at, device_id, final
+                           FROM rest_segments
+                          WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
+                          ORDER BY started_at');
     $st->execute([$userId, $dayId]);
     $restZeilen = $st->fetchAll();
-    $spurRuhe = $spurLaden('rest',
-        array_map(static fn($r) => (int)$r['id'], $restZeilen));
+    $restIds  = array_map(static fn($r) => (int)$r['id'], $restZeilen);
+    $spurRuhe = $spurLaden('rest', $restIds);
+
+    /* DIE GESPERRTEN BEREICHE JE SEGMENT (E-S4-53), damit die Bedienung
+     * anzeigen kann, was schon herausgeschnitten ist. Ohne diese Angabe
+     * saehe die Zeitleiste eine Luecke, fuer die es keine Erklaerung gibt —
+     * und jemand schnitte ein zweites Mal an derselben Stelle. */
+    $schnitteNach = [];
+    foreach ($restIds as $rid) {
+        $sn = schnitte_lesen(db(), 'rest', $rid);
+        if ($sn) { $schnitteNach[$rid] = $sn; }
+    }
+
+    /* ZEITEN GEHEN FERTIG FORMATIERT HINAUS, nicht als UTC-Zeichenkette.
+     *
+     * Das ist die Linie der ganzen Anwendung: Der Server rechnet in die
+     * App-Zeitzone (`fmt_local()`), der Browser zeigt nur an. Die
+     * Einsatztabelle bekommt seit jeher `start_hhmm`; hier stand zuerst die
+     * rohe UTC-Zeichenkette, und der Browser rechnete mit `new Date(...)` in
+     * SEINE Zone um. Das geht auf jedem Rechner gut, dessen Zone zufaellig
+     * die der Anwendung ist — im Container ist sie UTC, und der Schnitt griff
+     * zwei Stunden daneben und nahm null Punkte mit.
+     *
+     * `von_ts`/`bis_ts` kommen als Epochensekunden dazu. Die braucht die
+     * Zeitleiste, um Laengen auszurechnen; sie ist reine Geometrie und
+     * kennt keine Zone.
+     *
+     * `start_tag`/`end_tag` sagen, wie viele Kalendertage hinter dem
+     * Diensttag der jeweilige Zeitpunkt liegt. Ein Dienst laeuft ueber
+     * Mitternacht, und `hh:mm` allein ist dann zweideutig. */
+    $tagIso  = (string)$tag['day'];
+    $versatz = static function (?string $utc) use ($tagIso): int {
+        if ($utc === null || $utc === '') { return 0; }
+        /* BEIDE DATEN ALS UTC-MITTERNACHT, dann die Differenz in Tagen. Ueber
+         * DateTime::diff()->days ginge es auch, aber ohne Vorzeichen — und ein
+         * Zeitpunkt VOR dem Diensttag ist moeglich (ein Segment, das der
+         * Umdatierung entgangen ist). */
+        $a = new DateTimeImmutable(fmt_local($utc, 'Y-m-d'), new DateTimeZone('UTC'));
+        $b = new DateTimeImmutable($tagIso, new DateTimeZone('UTC'));
+        return (int)round(($a->getTimestamp() - $b->getTimestamp()) / 86400);
+    };
+
     $rest = [];
     foreach ($restZeilen as $r) {
-        $track = $spurRuhe[(int)$r['id']] ?? [];
-        if ($track) $rest[] = $track;
+        $rid   = (int)$r['id'];
+        $track = $spurRuhe[$rid] ?? [];
+        $ende  = $r['ended_at'] !== null ? (string)$r['ended_at'] : null;
+        $sn    = [];
+        foreach ($schnitteNach[$rid] ?? [] as $c) {
+            $sn[] = $c + [
+                'von_hhmm' => fmt_local(gmdate('Y-m-d H:i:s', $c['von_ts'])),
+                'bis_hhmm' => fmt_local(gmdate('Y-m-d H:i:s', $c['bis_ts'])),
+            ];
+        }
+        $rest[] = [
+            'id'         => $rid,
+            'start_hhmm' => fmt_local((string)$r['started_at']),
+            'end_hhmm'   => $ende !== null ? fmt_local($ende) : null,
+            'start_tag'  => $versatz((string)$r['started_at']),
+            'end_tag'    => $ende !== null ? $versatz($ende) : null,
+            'von_ts'     => (int)strtotime((string)$r['started_at'] . ' UTC'),
+            'bis_ts'     => $ende !== null ? (int)strtotime($ende . ' UTC') : null,
+            'final'      => (int)$r['final'] === 1,
+            'device'     => $r['device_id'] !== null ? (int)$r['device_id'] : null,
+            'n'          => count($track),
+            'track'      => $track,
+            'schnitte'   => $sn,
+        ];
     }
 
     $antwort = ['day_id' => $dayId, 'day' => (string)$tag['day'], 'meta' => $meta,

@@ -1,0 +1,14 @@
+# Der Wrapper-Starter fuer Windows ist eine BATCH-DATEI. Die Wurzel-Regel
+# `* text=auto eol=lf` schreibt ihm LF-Zeilenenden -- und cmd.exe stolpert
+# darueber (Sprungmarken und `goto` verhalten sich dann unzuverlaessig). Diese
+# eine Datei behaelt deshalb CRLF.
+*.bat text eol=crlf
+
+# Binaerdateien nie umschreiben. `text=auto` erkennt sie zwar von selbst; die
+# Zeilen hier sagen es ausdruecklich, damit ein PNG oder die Wrapper-JAR nicht
+# von einer kuenftigen Regel erwischt wird.
+*.jar binary
+*.png binary
+*.jks binary
+*.keystore binary
+*.apk binary

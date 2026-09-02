@@ -11,6 +11,10 @@ wird, steht in Abschnitt 5.
 Zur **Darstellung** auf den Geräten — Schriften, runde Displays, Aufbau der
 Oberflächen — siehe `Uhr-Layout.md`.
 
+Die Abschnitte 1 bis 6 gelten der **Garmin-Uhr** (Connect IQ, Monkey C).
+Abschnitt 7 kam mit S4 dazu und gilt der **Wear-OS-App** — dort ist die Lage
+grundlegend anders, und der Abschnitt beginnt damit.
+
 ---
 
 ## 1. Überblick
@@ -138,3 +142,71 @@ Bedienbarkeit entscheiden:
 Der Simulator bildet Verhalten des Betriebssystems außerhalb der App nicht
 zuverlässig ab — Steuerungsmenüs, Tastensperren, Displaydimmung. Diese Punkte
 sind mit ⚠️ gekennzeichnet und brauchen eine Gegenprobe auf echter Hardware.
+
+---
+
+## 7. Wear OS — `android/uhr/` (seit S4)
+
+> **⚠️ Dieser Abschnitt ist blind gebaut und am Gerät nachzumessen.**
+> Es lag keine Wear-OS-Uhr vor. Was hier steht, stammt aus der
+> Android-Dokumentation, aus den Maßen der Compose-for-Wear-Bausteine und aus
+> gerenderten Bildern (Robolectric, NATIVE-Grafikmodus) — **nicht** aus einer
+> Messung an Hardware. Die Abschnitte 2 bis 4 sind gemessen; dieser ist es
+> nicht, und der Unterschied gehört an den Anfang und nicht in eine Fußnote.
+
+### 7.1 Warum hier keine Tastentabelle steht
+
+Die Garmin-Abschnitte messen, **welche Taste welches Ereignis auslöst** und ob
+`KeyPressed`/`KeyReleased` durchkommen. Bei Wear OS stellt sich diese Frage
+nicht in derselben Form:
+
+- **Es gibt keine feste Tastenzahl.** Wear-OS-Uhren haben eine, zwei oder drei
+  physische Tasten; ihre Belegung liegt beim System, nicht bei der App. Eine
+  App, die auf „Taste 2" baut, ist auf der Hälfte der Geräte unbedienbar.
+- **Die Bedienung ist Touch.** Das ist die Vorgabe der Plattform, nicht eine
+  Entscheidung dieses Projekts. Die App bedient sich mit Tippen und
+  senkrechtem Rollen; sie fängt **keine** Systemgesten ab.
+- **Zurückwischen gehört dem System.** Ein Wisch von links ist „zurück" und
+  wird nicht abgefangen.
+
+Was stattdessen zu messen ist, steht deshalb in 7.3.
+
+### 7.2 Was aus dem Bild bekannt ist
+
+Gerendert wurde in den Größen, die Wear OS führt — **192 dp** (kleine runde
+Uhr) und **227 dp** (große). Die Zahlen aus dem Prüfstand C1/C2:
+
+| Eigenschaft | Wert | Herkunft |
+|---|---|---|
+| Höhe der Bedienknöpfe | **48 dp** | gemessen im gerenderten Bild (Android-Vorgabe; das Web hält 44 px, siehe Fund B-S4-02) |
+| Anteil der Knopfflächen außerhalb des runden Glases | **0 %** | gemessen, beide Größen |
+| Inhalt der laufenden Ansicht | **221 dp auf 192 dp** | gemessen — sie ist **rollbar**, und das ist der Grund |
+
+**Die Zusicherung gilt den Knopfflächen, nicht dem ganzen Inhalt.** Eine
+frühere Fassung dieser Zeile behauptete „0 % außerhalb" für die ganze Ansicht;
+gemessen sind es 221 dp Inhalt auf 192 dp Glas. Der Inhalt rollt, die Knöpfe
+liegen vollständig im Glas — das ist die Aussage, die trägt.
+
+### 7.3 Was am Gerät nachzumessen ist
+
+Je Punkt: was zu tun ist, was erwartet wird, und **woran ein Scheitern zu
+erkennen ist**.
+
+| Prüfen | Erwartet | Scheitern erkennbar an |
+|---|---|---|
+| **Zustellung überhaupt** — Dienst auf der Uhr beginnen, Handy in Reichweite | Das Handy zeigt den Dienst binnen Sekunden | Die Uhr bleibt bei „wartet aufs Handy · keine Aufzeichnung"; der Zähler „gepuffert" steigt |
+| **Paket- und Signaturgleichheit** (E-S4-01) — beide Module aus demselben Baulauf installieren | wie oben | Zustellung schlägt dauerhaft fehl, auch bei nebeneinander liegenden Geräten. **Der wahrscheinlichste Fehler überhaupt**: unterschiedliche Signaturen |
+| **Funkloch** — Handy ausschalten, drei Ereignisse auslösen, Handy einschalten | alle drei kommen an, in der Reihenfolge 1, 2, 3 | eines fehlt (Puffer verloren) oder eines liegt doppelt (Quittung greift nicht) |
+| **Wie lange `Tasks.await` hängt** bei abgeschalteter Uhr | die Bedienung friert nicht ein | Die Uhr reagiert nach dem Auslösen mehrere Sekunden nicht |
+| **Uhr-Neustart mit gefülltem Puffer** | Nach dem Neustart sind die Nachrichten noch da, die nächste Nummer ist **nicht** 1 | Das Handy legt einen zweiten Dienst an |
+| **Rollen** in der laufenden Ansicht | Der Abschlussknopf ist erreichbar | Er liegt unter dem Rand und lässt sich nicht erreichen |
+| **Knopfhöhe am Handgelenk** | 48 dp sind mit Handschuh treffbar | Fehlgriffe; dann ist 48 dp die falsche Zahl für dieses Gerät |
+| **Always-on-Display** | Die Ansicht überlebt den Wechsel in den Ambient-Modus | Die App startet neu oder verliert den Dienst |
+| **Dauerlauf** — zwölf Stunden Dienst | Der Akku hält, der Dienst läuft durch | Das System beendet die App; der Dienst bricht ohne Meldung ab |
+
+### 7.4 Ein Gerät ergänzen
+
+Anders als bei Garmin gibt es **keine Geräteliste zu pflegen**: Wear OS
+liefert Größe und Form zur Laufzeit, und die App rechnet damit. Zu ergänzen
+ist hier nur, was eine Messung ergeben hat, die von 7.2 abweicht — und das
+ist dann ein Fund, kein Eintrag.

@@ -108,6 +108,16 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
              * dieselbe Freigabe wie ein neuer Baustein. */
             ['text' => 'Spuren als GPX', 'symbol' => 'karte',
              'href' => 'tag_spuren.php?d=' . (int)$selDay, 'attr' => 'id="dayspurenlink"'],
+            /* GPX HEREIN (S4/A3, E-S4-18). Es steht neben „Spuren als GPX" —
+             * hinaus und herein sind dieselbe Sache in zwei Richtungen, und
+             * wer den einen Weg sucht, sucht dort auch den anderen. Kein
+             * Verweis, sondern ein Knopf: Der Import ist ein Dialog auf
+             * dieser Seite (zwei Angaben, eine Handlung, Design.md 9.11) und
+             * kein Seitenwechsel. Symbol `karte` wie beim Abruf; fuer
+             * „hochladen" gibt es keines im Vorrat, und ein neues Zeichen
+             * braucht dieselbe Freigabe wie ein neuer Baustein. */
+            ['text' => 'GPX importieren', 'symbol' => 'karte',
+             'href' => '#', 'attr' => 'id="daygpximport"'],
             ['text' => 'Tag löschen', 'symbol' => 'korb', 'gefahr' => true,
              'href' => 'diensttag_loeschen.php?d=' . (int)$selDay, 'attr' => 'id="daydellink"'],
           ]]) ?>
@@ -271,10 +281,78 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
     </section>
     </div><?php /* .tag-raster */ ?>
 
+    <?php /* ---- Ruhesegmente (S4/A2b, E-S4-17) ---------------------------
+             Bis Web 12.5.0 lagen die Segmente nur als graue Linie auf der
+             Karte und waren nicht anfassbar. Sie sind aber der Ort, an dem
+             die Spur eines vergessenen Einsatzes liegt — wer waehrend des
+             Einsatzes keinen Knopf gedrueckt hat, findet sie hier und
+             nirgends sonst.
+             Die Zeilen baut `renderRuheliste()`; die Karte bleibt leer, wenn
+             der Tag keine Segmente hat (kein Leerzustand mit eigener
+             Gestaltung — die Karte verschwindet dann ganz). */ ?>
+    <section class="karte" id="ruheliste" hidden>
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Ruhesegmente</h2>
+        <span class="karte-zahl" id="rzahl"></span>
+      </div>
+      <div class="karte-inhalt">
+        <p class="feld-hinweis">Aufzeichnung zwischen den Einsätzen. Wurde
+           während eines Einsatzes kein Knopf gedrückt, schneide ihn hier aus
+           dem Segment heraus — der übrige Zeitraum bleibt als Ruhesegment
+           stehen.</p>
+        <div id="ruhezeilen"></div>
+      </div>
+    </section>
+
     <?php /* Das Sortierblatt (E-P3-32): dieselben Spalten wie der
              Tabellenkopf, mobil als Blatt von unten. Die Eintraege baut
              renderMissionTable() aus den Koepfen — eine zweite Spaltenliste
              gaebe es sonst hier. */ ?>
+    <?php /* ---- GPX-Import (S4/A3) ---------------------------------------
+             Ein Dialog und keine Seite: zwei Angaben (Datei, Ziel), eine
+             Handlung — die Aufstellungs-Regel aus Design.md 9.11 greift
+             nicht. Nach dem Import steht man wieder in der Tagesansicht, wo
+             das neue Segment bzw. der Einsatz an seiner Stelle liegt. */ ?>
+    <dialog class="dialog" id="gpxdialog" aria-labelledby="gpx-titel">
+      <div class="dialog-kopf"><h2 id="gpx-titel">GPX importieren</h2></div>
+      <div class="dialog-inhalt">
+        <p id="gpx-tagsatz"></p>
+        <div class="feld">
+          <label class="feld-label" for="gpx-datei">GPX-Datei</label>
+          <input class="feld-eingabe" type="file" id="gpx-datei" accept=".gpx,application/gpx+xml">
+          <p class="feld-klein">GPX mit Zeitstempeln je Punkt. Eine Datei ohne
+             Zeiten wird abgelehnt — ohne sie gibt es keine Reihenfolge und
+             kein Schneiden.</p>
+        </div>
+        <div class="feld">
+          <span class="feld-label">Übernehmen als</span>
+          <div class="wahlliste" role="radiogroup" aria-label="Übernehmen als">
+            <input type="radio" class="wahl-box" id="gpx-ruhe" name="gpx-ziel" value="ruhe" checked>
+            <label class="wahl-zeile" for="gpx-ruhe">
+              <span class="wahl-punkt" aria-hidden="true"></span>
+              <span class="wahl-text">Ruhesegment</span>
+              <span class="wahl-zusatz">die ganze Aufzeichnung; Einsätze danach herausschneiden</span>
+            </label>
+            <input type="radio" class="wahl-box" id="gpx-einsatz" name="gpx-ziel" value="einsatz">
+            <label class="wahl-zeile" for="gpx-einsatz">
+              <span class="wahl-punkt" aria-hidden="true"></span>
+              <span class="wahl-text">Einsatz</span>
+              <span class="wahl-zusatz">die Datei ist genau ein Einsatz; Phasenzeiten danach im Einsatz</span>
+            </label>
+          </div>
+        </div>
+        <div class="meldung meldung-fehler" id="gpx-fehler" role="alert" hidden>
+          <?= ui_symbol('warnung', 'symbol-gross') ?><p></p>
+        </div>
+      </div>
+      <div class="dialog-fuss">
+        <button class="knopf knopf-leise" type="button" id="gpx-abbrechen">
+          <span>Abbrechen</span></button>
+        <button class="knopf knopf-primaer" type="button" id="gpx-los" disabled>
+          <span>Importieren</span></button>
+      </div>
+    </dialog>
+
     <div class="blatt" id="sortblatt" hidden>
       <div class="blatt-griff" aria-hidden="true"></div>
       <h2 class="blatt-titel">Sortieren</h2>
@@ -297,6 +375,13 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/luftlinie.js') ?>"></script>
+<?php /* Der Schnitt (S4/A2b). Muss NACH html.js stehen (er liest EdHtml) und
+         VOR dem Block unten, der `EdSchnitt.starten()` ruft. `zeitfeld.js`
+         ruestet die Felder des Schneide-Bereichs nach — es beobachtet das
+         Dokument und erfasst auch spaeter erzeugte Felder, die erzeugende
+         Stelle muss davon nichts wissen. */ ?>
+<script src="<?= asset('assets/schneiden.js') ?>"></script>
+<script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
 const SEL_DAY_ID = <?= json_encode($selDay) ?>;
 const DEF_VEHICLE = <?= (int)($SD_DEFAULTS['vehicle_id'] ?? 0) ?>;
@@ -340,6 +425,7 @@ map.on('zoomend', () => {
 
 function fmtDay(iso){ const [y,m,d]=iso.split('-'); return `${d}.${m}.${y}`; }
 let dayMissions = [];
+let dayRest = [];
 let sortKey = 'start', sortDir = 1;
 
 function sortVal(m, key){
@@ -595,16 +681,22 @@ async function loadDay(dayId){
   trackLines.length = 0;
   const bounds = [];
 
-  // Ruhe-Track: schwarz, dezent
-  d.rest_segments.forEach(seg => {
-    if (seg.length > 1) {
-      const rl = L.polyline(seg, { color: EdGeo.ruheFarbe(),
+  /* Ruhe-Track: schwarz, dezent.
+     Seit Web 12.6.0 liefert die API je Segment ein OBJEKT (Kennung, Zeiten,
+     Punktzahl, Schnitte) statt der blossen Punktliste — die Karte
+     „Ruhesegmente" braucht mehr als Linien. Fuer die Karte selbst aendert
+     das nur `seg` zu `seg.track`. */
+  dayRest = d.rest_segments;
+  dayRest.forEach(seg => {
+    if (seg.track.length > 1) {
+      const rl = L.polyline(seg.track, { color: EdGeo.ruheFarbe(),
         weight: Math.max(3, trackWeight() - 1), opacity:0.9, smoothFactor:0 });
       layerGroup.addLayer(rl);
       trackLines.push(rl);
-      seg.forEach(p => bounds.push(p));
+      seg.track.forEach(p => bounds.push(p));
     }
   });
+  EdSchnitt.setzen(dayRest);
 
   // Einsaetze: je eigene Farbe
   // Einsaetze: Nummer + Farbe stabil nach Alarmierungszeit vergeben
@@ -870,6 +962,11 @@ function tagdatenBearbeiten(auf){
 }
 
 async function init(){
+  /* Der Schnitt bekommt den Weg zum Neuladen — nicht umgekehrt. Nach einem
+     Schnitt aendern sich Einsatztabelle, Karte, Segmentliste und
+     Diensttag-Zeitraum; vier Stellen von Hand fortzuschreiben waeren vier
+     Gelegenheiten, an denen die Anzeige von der Datenbank abweicht. */
+  EdSchnitt.starten(() => loadDay(currentDayId));
   document.getElementById('vehsel').addEventListener('change', vehicleBaseSync);
   document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());
   document.getElementById('tagdatenknopf').addEventListener('click', ev => {
@@ -878,6 +975,18 @@ async function init(){
   });
   /* Derselbe Weg aus dem Aktionsmenue: Blatt schliessen, Formular oeffnen,
      zur Karte rollen. */
+  /* Der GPX-Import: Blatt schliessen, Dialog auf. Der Diensttag steht erst
+     nach `loadDay()` fest — deshalb wird er beim Klick gelesen und nicht
+     beim Verdrahten. */
+  document.getElementById('daygpximport')?.addEventListener('click', ev => {
+    ev.preventDefault();
+    if (window.edBlatt) { edBlatt.zu(); }
+    if (!currentDayId) { return; }
+    /* Das DATUM und nicht der Titel: Der trägt den Wochentag zweimal (lang
+       und kurz, eine der beiden Fassungen ist per CSS ausgeblendet), und
+       `textContent` sieht beide — „DonnerstagDo, 16.07.2026". */
+    EdSchnitt.gpxStarten(currentDayId, fmtDay(currentDay));
+  });
   document.querySelector('#dayblatt [data-tagdaten-bearbeiten]')
     ?.addEventListener('click', ev => {
       ev.preventDefault();

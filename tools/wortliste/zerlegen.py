@@ -32,7 +32,7 @@ nicht kann"):
   Kommentar ist, bleibt stehen. Ein Treffer zu viel kostet eine Ausnahme,
   ein Treffer zu wenig kostet die Aussage.
 
-`--probe` faehrt die Selbstprobe (siehe unten): sechzehn Faelle mit
+`--probe` faehrt die Selbstprobe (siehe unten): neunzehn Faelle mit
 Sollergebnis, darunter die Fallen, an denen der Einzeiler scheitert.
 """
 from __future__ import annotations
@@ -288,8 +288,42 @@ def php_bereiche(text: str) -> list[tuple[int, int]]:
     return bereiche + _html_bereiche(text, inseln)
 
 
+def xml_bereiche(text: str) -> list[tuple[int, int]]:
+    """Alles, was in einer XML-Datei KEIN sichtbarer Text ist.
+
+    Das ist mehr als die Kommentare: Auch die Tags selbst gehoeren dazu.
+    In einer Android-`strings.xml` steht der sichtbare Text ZWISCHEN den
+    Tags; `<string name="dienst_beginnen">` ist ein Bezeichner, den niemand
+    liest. Bliebe er stehen, meldete die Wortliste jeden Schluesselnamen als
+    Treffer — und eine Liste, die zu neun Zehnteln aus Falschmeldungen
+    besteht, liest bald niemand mehr.
+
+    BEWUSST OHNE XML-PARSER. Gebraucht wird eine Abbildung, die die
+    ZEILENNUMMERN erhaelt (die Ausgabe nennt Datei und Zeile) und die auch
+    eine kaputte Datei uebersteht. Ein Parser gaebe einen Baum und keine
+    Positionen, und bei einem Syntaxfehler gar nichts.
+    """
+    bereiche: list[tuple[int, int]] = []
+    i, n = 0, len(text)
+    while i < n:
+        if text.startswith("<!--", i):
+            j = text.find("-->", i + 4)
+            j = n if j < 0 else j + 3
+            bereiche.append((i, j))
+            i = j
+            continue
+        if text[i] == "<":
+            j = text.find(">", i + 1)
+            j = n if j < 0 else j + 1
+            bereiche.append((i, j))
+            i = j
+            continue
+        i += 1
+    return bereiche
+
+
 def ohne_kommentare(text: str, art: str) -> str:
-    """Kommentare durch Leerzeichen ersetzen. `art` ist php, js, css oder md."""
+    """Kommentare durch Leerzeichen ersetzen. `art` ist php, js, css, xml oder md."""
     if art == "md":
         return text
     if art == "php":
@@ -298,6 +332,8 @@ def ohne_kommentare(text: str, art: str) -> str:
         bereiche = js_bereiche(text)
     elif art == "css":
         bereiche = css_bereiche(text)
+    elif art == "xml":
+        bereiche = xml_bereiche(text)
     else:
         raise ValueError(f"Unbekannte Art: {art}")
     zeichen = list(text)
@@ -338,6 +374,20 @@ PROBEN: list[tuple[str, str, list[str], list[str]]] = [
     # JS-Kommentar stehen.
     ("php", "<script>\nvar id = <?= json_encode($x) ?>;\n/* Flugtag */\n"
             "var n = 'Pilot';\n</script>\n", ["Pilot"], ["Flugtag"]),
+    # XML (Android-`strings.xml`, S4/D1). Hier ist MEHR wegzuraeumen als der
+    # Kommentar: Der Schluesselname im Tag ist ein Bezeichner, den niemand
+    # liest — bliebe er stehen, meldete die Wortliste jeden davon als Treffer.
+    ("xml", '<resources>\n  <!-- Flugtag -->\n'
+            '  <string name="flugtag_titel">Hubschrauber</string>\n</resources>\n',
+     ["Hubschrauber"], ["Flugtag", "flugtag_titel"]),
+    # Ein `<` im TEXT (als &lt; maskiert, wie XML es verlangt) darf keinen
+    # Tag eroeffnen und den Rest der Datei verschlucken.
+    ("xml", '<string name="a">Weniger &lt; als Pilot</string>\n', ["Pilot"], []),
+    # Eine kaputte Datei — ein Tag ohne schliessende Klammer. Sie muss
+    # durchlaufen und darf nicht werfen: Ein Pruefmittel, das an einer
+    # fehlerhaften Datei abbricht, prueft die uebrigen nicht mehr.
+    ("xml", '<string name="a">Pilot</string>\n<string name="b"\n',
+     ["Pilot"], []),
 ]
 
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Symbol der dauerhaften Benachrichtigung.
+
+    Android zeichnet ein Meldungssymbol in der Statusleiste AUSSCHLIESSLICH
+    einfarbig: Es nimmt nur den Alphakanal und färbt ihn selbst. Die Bildmarke
+    taugt dafür nicht — sie lebt von drei Farben und würde zu einem
+    unkenntlichen Klecks. Genommen wird deshalb ein Aufnahmepunkt: ein voller
+    Kreis, das Zeichen für „läuft", und derselbe rote Punkt, den die App auf
+    jedem laufenden Bildschirm trägt (E-S4-22a). Die Farbe kommt vom System.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,5 A7,7 0 1,0 12,19 A7,7 0 1,0 12,5 Z" />
+</vector>

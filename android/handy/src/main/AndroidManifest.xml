@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    NAdoku Handy.
+
+    ALLOWBACKUP IST AUS (E-S4-13). Mit `true` wandern die App-Daten — und
+    damit die verschluesselte Ablage von `device_id` und `api_key` — in die
+    Geraetesicherung und von dort auf ein anderes Geraet. Der Schluessel, mit
+    dem sie verschluesselt sind, liegt im Android Keystore und ist nicht
+    exportierbar; die Kopie waere also unbrauchbar. Aber sie waere vorhanden,
+    und ein Geheimnis, das an einer Stelle mehr liegt als noetig, ist ein
+    Geheimnis weniger. Die Kopplung ist ohnehin in einer Minute neu gemacht.
+
+    Die Berechtigungen wachsen mit den Arbeitspaketen: Ortung und
+    Vordergrunddienst kommen mit B3, die Kamera fuer den QR-Scan mit B2. Hier
+    steht bewusst nur, was der Stand B1 wirklich braucht — eine Berechtigung
+    auf Vorrat waere eine Frage an die NutzerIn, die die App noch nicht
+    beantworten kann.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!--
+        Die Kamera dient AUSSCHLIESSLICH dem Kopplungs-QR (E-S4-15), und die
+        Freigabe wird erst in dem Augenblick erfragt, in dem jemand "QR-Code
+        scannen" antippt — nicht beim Erststart. Wer sie ablehnt, tippt den
+        Code von Hand ein; die App bleibt vollstaendig benutzbar.
+
+        `required="false"`: Ein Geraet ohne Kamera kann NAdoku trotzdem
+        benutzen. Mit `true` verschwaende die App im Store fuer solche Geraete
+        — und das waere fuer einen Kameraschwenk, der eine Abkuerzung ist, die
+        falsche Aussage.
+    -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
+    <!--
+        Ortung und Vordergrunddienst (E-S4-05).
+
+        ACCESS_FINE_LOCATION, nicht COARSE: Die Ausdünnung entscheidet auf
+        15 Metern; eine grobe Ortung liegt um Größenordnungen daneben und
+        erzeugte eine Spur, die keine ist.
+
+        ACCESS_BACKGROUND_LOCATION steht hier BEWUSST NICHT. Ein
+        Vordergrunddienst vom Typ `location`, der bei laufender
+        Aufzeichnung sichtbar in der Leiste steht, braucht sie nicht — und
+        sie ist die Freigabe, für die Android einen eigenen Bildschirm mit
+        einer Warnung zeigt. Was die App nicht braucht, fragt sie nicht.
+
+        FOREGROUND_SERVICE_LOCATION ist ab Android 14 Pflicht; ohne sie
+        wirft startForeground eine SecurityException.
+
+        POST_NOTIFICATIONS ab Android 13: Die dauerhafte Meldung ist die
+        einzige Auskunft, dass aufgezeichnet wird, solange die App zu ist.
+        Wird sie abgelehnt, läuft der Dienst trotzdem — Android zeigt für
+        einen Vordergrunddienst ohnehin einen Hinweis.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!--
+        COARSE steht neben FINE, und das ist Pflicht, keine Höflichkeit: Seit
+        Android 12 zeigt der Freigabedialog zwei Möglichkeiten — „genau" und
+        „ungefähr" —, und ohne die zweite Erklärung lehnt das System die
+        Anfrage ab. Aufgezeichnet wird trotzdem nur mit der genauen: Eine
+        ungefähre Ortung liegt um Größenordnungen neben den 15 m, auf denen
+        die Ausdünnung entscheidet. Die App sagt in dem Fall, dass die Spur
+        so nichts taugt, statt eine unbrauchbare aufzuzeichnen.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--
+        REQUEST_IGNORE_BATTERY_OPTIMIZATIONS STEHT HIER BEWUSST NICHT MEHR
+        (Fund B-S4-04, entschieden mit E-S4-52).
+
+        Sie erlaubt den gezielten Dialog "NAdoku von der Optimierung
+        ausnehmen?" — und verstoesst gegen die Inhaltsrichtlinie des Play
+        Store, die dafuer nur wenige benannte Faelle zulaesst (Wecker, VoIP,
+        Geraetesuche). Eine Einsatzdokumentation steht nicht darauf, obwohl
+        genau sie die Freistellung braucht.
+
+        Die App fuehrt stattdessen zur allgemeinen Liste
+        (ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS). Die verlangt KEINE
+        Berechtigung, ist richtlinienkonform und kostet einen Schritt mehr:
+        Die NutzerIn sucht NAdoku selbst heraus. Der Erklaertext in der App
+        sagt genau, wonach.
+
+        Das LESEN des Zustands (PowerManager.isIgnoringBatteryOptimizations)
+        braucht ebenfalls keine Berechtigung — die App kann also weiterhin
+        anzeigen, ob die Freistellung steht.
+    -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
+    <application
+        android:name=".handy.NAdokuApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/datensicherung"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/symbol"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/symbol"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.NAdoku">
+
+        <activity
+            android:name=".handy.HauptActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.NAdoku">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Der Vordergrunddienst der Aufzeichnung.
+
+            `stopWithTask="false"`: Wer die App aus der Übersicht wischt,
+            beendet den DIENST nicht. Genau darum geht es — die Aufzeichnung
+            läuft über zwölf Stunden weiter, während das Handy in der Tasche
+            liegt. Beendet wird sie über „Dienst beenden", nicht durch eine
+            Handbewegung, die man auch versehentlich macht.
+        -->
+        <service
+            android:name=".handy.aufzeichnung.AufzeichnungsDienst"
+            android:exported="false"
+            android:foregroundServiceType="location"
+            android:stopWithTask="false" />
+
+        <!--
+            Der Empfang der Uhr-Ereignisse (C2, E-S4-10).
+
+            `exported="true"` ist Pflicht und keine Oeffnung: Der Data Layer
+            der Play-Dienste stellt die Nachricht zu, also muss ein fremder
+            Prozess den Dienst starten duerfen. Wer zustellen darf, ist damit
+            nicht beliebig — der Data Layer liefert NUR zwischen Apps mit
+            gleichem Paketnamen UND gleicher Signatur (E-S4-01). Der
+            `pathPrefix` grenzt zusaetzlich ein: Nachrichten ausserhalb von
+            /nadoku erreichen den Dienst gar nicht erst.
+        -->
+        <service
+            android:name=".handy.uhr.HandyHorcher"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/nadoku" />
+            </intent-filter>
+        </service>
+
+    </application>
+
+</manifest>

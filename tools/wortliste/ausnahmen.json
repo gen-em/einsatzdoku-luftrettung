@@ -448,6 +448,20 @@
       "zeile": "Connect-IQ-SDK von Garmin",
       "klasse": "E",
       "begruendung": "Garmin ist der Hersteller des SDK, mit dem die Uhr-App gebaut wird — eine Lizenzangabe nennt den Rechteinhaber beim Namen. Das ist keine Aussage ueber die Einsatzart."
+    },
+    {
+      "id": "android-bildmarke-alt",
+      "datei": "android/*/src/main/res/values/strings.xml",
+      "zeile": "^\\s*Bildmarke Rettungshubschrauber\\s*$",
+      "klasse": "Homonym",
+      "begruendung": "Der Alternativtext der Luft-Bildmarke in beiden Android-Modulen. Er beschreibt ein BILD, das einen Hubschrauber zeigt, nicht die Einsatzart — dieselbe Lage und dieselbe Begründung wie design-bildmarke und symbolname-hubschrauber. Eine Bildbeschreibung zu neutralisieren, während das Bild einen Hubschrauber zeigt, wäre eine falsche Beschriftung — und sie wird vorgelesen, also gerade dort gehört, wo niemand das Bild sieht. Der Ausdruck ist an den vollständigen Text gebunden und nicht an das Wort: Ein bloßes „Hubschrauber“ deckte jede weitere Stelle mit ab, auch eine, die die Einsatzart meint. (Gegen den TEXT und nicht gegen den Schlüsselnamen, weil die Wortliste eine XML-Datei ohne ihre Tags sieht — sichtbarer Text ist genau das, was zwischen ihnen steht.)"
+    },
+    {
+      "id": "android-logowahl",
+      "datei": "android/*/src/main/res/values/strings.xml",
+      "zeile": "^\\s*RTH\\s*$",
+      "klasse": "Homonym",
+      "begruendung": "Die Beschriftung der Logo-Wahl in der App: „RTH“, mit „NEF“ als Gegenstück in derselben Datei. Sie benennt, WELCHES BILD gewählt ist; beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Lage wie logowahl-option in server/einstellungen.php, nur in der App. Der Ausdruck verlangt, dass die ganze Zeile aus „RTH“ besteht — ein RTH in einem Satz wäre etwas anderes und bliebe ein Treffer."
     }
   ]
 }

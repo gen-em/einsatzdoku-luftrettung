@@ -90,6 +90,405 @@ Das war die eigentliche Lücke: Die Anleitung war vollständig, aber nicht
 auffindbar. Abschnitt 6 nennt den Prüfstand jetzt, samt dem Hinweis, dass die
 Adresse erfragt werden muss.
 
+## [Web 12.8.0] — 2026-09-02
+
+**Die Android-App wird über die Anwendung selbst verteilt.** Halbes viertes
+Paket von S4 Block A — der QR-Kopplungscode aus derselben Karte fehlt noch,
+er hängt an S5 und R42. Keine Migration.
+
+### Web — Die Karte „NAdoku für Android"
+
+Auf dem Geräte-Reiter, unter der Geräteliste. Sie zeigt, was in
+`server/apk/` **liegt**: Dateiname, Größe, Fassung (aus dem Dateinamen),
+Datum und den vom Server gerechneten **SHA-256** in Vierergruppen — 64 Zeichen
+am Stück sind nicht vergleichbar, wer nachrechnet verliert beim dritten
+Blockwechsel die Stelle.
+
+**Von Hand gepflegt wird nichts.** Eine Versionsangabe, die jemand eintippt,
+stimmt am Tag des Eintippens und danach nie wieder. Die Prüfsumme wird bei
+jedem Aufruf neu gerechnet (bei 7 MB wenige Millisekunden) — ein
+zwischengespeicherter Wert wäre genau die Zahl, die nach einem Austausch der
+Datei noch die alte nennt, und bei einer Prüfsumme ist das schlimmer als
+keine.
+
+**Liegt nichts, erscheint die Karte gar nicht.** Ein Leerzustand „noch keine
+App" wäre auf jeder Installation zu sehen, die keine Android-App verteilt,
+und sagte dort etwas Falsches.
+
+Der Download ist eine **neutrale** Handlung, kein Primärknopf: Die eine
+Haupthandlung des Reiters bleibt „Kopplungscode erzeugen".
+
+### Web — Weder im Repositorium noch im Deploy
+
+`server/apk/` steht in `.gitignore` **und** in der Ausnahmeliste des Deploys.
+Beides ist nötig, und der zweite Eintrag ist der, den man vergisst: Die
+Deploy-Action synchronisiert `server/` und **entfernt, was nicht ausgenommen
+ist** — der nächste Push löschte die Dateien. Dasselbe Muster wie
+`config.php` und `sicherungen/`, inklusive der doppelten Schreibweise
+(`apk/**` und `apk/`), weil die Action Datei- und Verzeichnismuster getrennt
+prüft.
+
+Ein signiertes APK ist ein Erzeugnis, kein Quelltext; eingecheckt wäre es bei
+jeder Fassung ein zweistelliges MB im Verlauf. Hochgeladen wird per FTPS
+durch die Betreiberin.
+
+### Web — Der Name wird nicht geprüft, sondern gesucht
+
+`apk.php` liest den Ordner und wählt aus dem Gelesenen aus. Ein Pfad, den der
+Aufrufer zusammensetzt, kommt damit **nie** an `fopen()` — auch keiner mit
+`..`, keiner mit einem Nullbyte und keiner mit einem Zeilenumbruch für die
+`Content-Disposition`-Kopfzeile. Der Unterschied zu „gefährliche Zeichen
+entfernen" ist, dass hier nichts vergessen werden kann.
+
+Der Abruf liegt **neben** den Seiten und nicht unter `api/`, aus demselben
+Grund wie `gpx.php`: `ist_api_aufruf()` entscheidet am Pfad, und ein
+`<a href>`, den jemand anklickt, bekäme dort nach einer Mittagspause
+`{"error":"session_ende"}` im Browserfenster statt der Anmeldeseite.
+
+### Web — Nachweis
+
+**Im Browser: 10 Erwartungen, alle erfüllt** (gegen eine 7-MB-Attrappe).
+Karte vorhanden, Datei mit **7,0 MB · Fassung 1.0.0 · Stand** genannt,
+Prüfsumme in **16 Vierergruppen**, Download neutral (`knopf-neutral`), Datei
+kommt in **7 340 032 Byte** an, `?d=../config.php` läuft ins Leere, eine
+unbekannte Datei bekommt eine Seite statt eines leeren 404. Keine
+unerwarteten Konsolenfehler.
+
+`git check-ignore` bestätigt die `.gitignore`-Wirkung
+(`.gitignore:28:server/apk/`).
+
+**Nicht geprüft:** Die Deploy-Ausnahme ist am Workflow-Text abgeleitet, nicht
+durchgespielt — ein Trockenlauf bräuchte FTP-Zugangsdaten. Das Muster ist
+zeichengenau das von `sicherungen/`, das im Betrieb steht. Und es gab kein
+echtes APK: geprüft wurde gegen eine Attrappe aus 7 MB Füllbytes.
+
+## [Web 12.7.0] — 2026-09-02
+
+**GPX kommt jetzt auch herein.** Drittes Paket von S4 Block A. Keine
+Migration.
+
+### Web — Das Gegenstück zum Abruf
+
+Seit Web 10.3.0 gehen Spuren als GPX hinaus (S2/AP4). Der Weg zurück fehlte:
+Eine Aufzeichnung, die auf einem anderen Gerät entstanden ist — ein
+Wanderuhr-Track, ein Export aus einer Leitstellensoftware, die eigene
+Sicherung —, kam nicht in die Anwendung.
+
+Über **„···" → „GPX importieren"** in der Tagesansicht, als Dialog: Datei
+wählen, Ziel wählen, fertig. Der Eintrag steht **neben** „Spuren als GPX" —
+hinaus und herein sind dieselbe Sache in zwei Richtungen, und wer den einen
+Weg sucht, sucht dort auch den anderen.
+
+**Zwei Ziele, und die Wahl ist keine Kosmetik** (E-R45-4):
+
+| Ziel | wofür |
+|---|---|
+| **Ruhesegment** | Die Datei ist die Aufzeichnung eines ganzen Dienstes. Die Einsätze schneidet man danach heraus (Web 12.6.0). Der Regelfall. |
+| **Einsatz** | Die Datei *ist* genau ein Einsatz. Die Phasenzeiten trägt man danach im Formular nach. |
+
+### Web — `time` ist Pflicht, und die Ablehnung ist der Punkt
+
+Eine GPX-Datei ohne Zeitstempel wird **abgelehnt**, nicht still angenommen.
+Ohne `<time>` gibt es keine Punktreihenfolge, kein Schneiden und keine
+Phasenzeiten — eine Spur, an der die halbe Anwendung nicht arbeiten kann.
+
+Die Meldung nennt den Grund und die Zahl: *„Kein einziger der 2 Punkte hat
+einen Zeitstempel. Ohne `<time>` gibt es keine Reihenfolge, kein Schneiden
+und keine Phasenzeiten — die Datei wird deshalb nicht angenommen."* Eine
+Meldung wie „Import fehlgeschlagen" ließe jemanden dreimal dieselbe Datei
+wählen, ohne je zu erfahren, woran es liegt.
+
+Ebenso begründet abgelehnt: kaputtes XML (mit der Fehlerstelle des Parsers),
+ein falsches Wurzelelement, eine Datei ohne Trackpunkte (Wegpunkte und Routen
+liest dieser Import nicht), mehr als 50 000 Punkte (die Meldung nennt die
+Grenze *und* rechnet sie in Stunden um) und mehr als 12 MB.
+
+**Und eine Dokumenttyp-Deklaration.** Eine GPX-Datei braucht keinen
+`<!DOCTYPE>`; wer einen mitschickt, bekommt eine Absage statt einer Auslegung.
+Das ist die Abwehr gegen XXE, und sie steht **vor** dem Parser:
+`libxml_disable_entity_loader()` gibt es seit PHP 8 nicht mehr, externe
+Entitäten lädt libxml seither von sich aus nicht — aber *interne* expandiert
+es weiterhin, und daraus baut man eine Entitätenbombe ohne eine einzige
+externe Referenz.
+
+### Web — Toleranz, wo sie richtig ist
+
+Angenommen wird auch **GPX 1.0** und eine Datei **ohne Namensraum**: Die
+Elemente, um die es geht (`trk`, `trkseg`, `trkpt`, `ele`, `time`), heißen in
+beiden Fassungen gleich und bedeuten dasselbe. Auf 1.1 zu bestehen hieße,
+Dateien abzulehnen, die inhaltlich in Ordnung sind.
+
+Mehrere `<trkseg>` oder `<trk>` werden zu **einer** Spur zusammengeführt und
+**nach Zeit sortiert** — die Dateireihenfolge muss nicht die zeitliche sein.
+Einzelne unbrauchbare Punkte (Koordinate außerhalb, Zeit unlesbar) fallen
+heraus, ohne die Datei zu verwerfen; ihre Zahl steht in der Rückmeldung.
+
+### Web — Der Leser wohnt beim Schreiber
+
+`gpx_lesen()` steht in `gpx_lib.php`, direkt unter `gpx_bauen()`. GPX hat
+damit **genau eine Stelle** in dieser Anwendung, die es kennt. Ein Leser, der
+woanders wohnt, läuft früher oder später mit anderen Annahmen als der
+Schreiber — und das fällt erst auf, wenn eine Datei durch den einen Weg
+hinaus und den anderen nicht wieder hinein kommt.
+
+**Gelesen wird auf dem Server, nicht im Browser** — anders als beim
+CSV-Import. Der Unterschied ist der Inhalt: Beim CSV stehen Patientendaten in
+der Datei, die der Server nie sehen darf, also *muss* der Browser lesen. Eine
+GPX-Datei enthält nichts Verschlüsseltes. Und die Ablehnungsregeln sind
+verbindlich; eine verbindliche Regel im Browser ist keine.
+
+Die Datei kommt als Zeichenkette im JSON-Körper, nicht als Dateiupload.
+Diese Anwendung hat nirgends ein `$_FILES`; ein erster Upload-Weg brächte
+`upload_max_filesize`, `post_max_size`, temporäre Verzeichnisse und deren
+Rechte mit — vier Stellschrauben auf geteiltem Hosting für einen Vorgang, den
+eine Zeichenkette genauso trägt.
+
+### Web — Der Fund: ein leerer String statt eines Fehlers
+
+Nach `children($ns)` schaltet SimpleXML die Namensraum-Umgebung eines Knotens
+um — **auch für Attribute**. `$pt['lat']` sucht danach ein `lat` *im
+GPX-Namensraum*, und ein unpräfigiertes Attribut liegt in **keinem**
+(XML-Namens-Spezifikation 6.2).
+
+Das Ergebnis war kein Fehler, sondern ein leerer String: Die Datei wurde
+gelesen, jeder Punkt fiel durch die Koordinatenprüfung, und die Meldung
+lautete *„enthält keinen einzigen Trackpunkt"* — bei 61 vorhandenen. Genau
+die Art Fehler, die eine Prüfung braucht, um aufzufallen. Behoben über
+`attributes()`; im Code steht die Begründung, damit die nächste Fassung nicht
+zurückfällt.
+
+### Web — Nachweis
+
+**Der Leser: 17 Erwartungen, alle erfüllt.** Darunter der Rundlauf über den
+Schreiber (61 Punkte hinaus, 61 zurück, **0 Abweichungen**), sieben
+Ablehnungsfälle mit Prüfung der Meldung, GPX 1.0 und Namensraum-freie
+Dateien, zeitliche Sortierung über zwei Segmente hinweg. **9 000 Punkte
+(24-h-Dienst in 10-s-Auflösung, 0,78 MB) in 0,13 s.**
+
+**Im Browser: 17 Erwartungen, alle erfüllt.** Import als Ruhesegment (6 → 7
+Segmente, 54 Punkte) und als Einsatz (4 → 5 Einsätze), beide Ablehnungsfälle
+mit sichtbarer Begründung im Dialog, keine unerwarteten Konsolenfehler.
+
+**Der Rundlauf, den die Abnahme verlangt: 12 Erwartungen, alle erfüllt.**
+Importierte Spur → GPX-Abruf → erneut gelesen: **54 Punkte, 0 Abweichungen**
+gegen die Quelldatei, für Segment *und* Einsatz. Beide liegen als
+verlustfreier Blob mit `n_original = 54`; der Einsatz trägt
+`origin = import`, `manual = 1` und die `imp-`-Kennung, und der Diensttag
+umschließt die Spur.
+
+## [Web 12.6.0] — 2026-09-02
+
+**Der vergessene Einsatz lässt sich jetzt aus dem Ruhesegment
+herausschneiden.** Zweites Paket von S4 Block A: die Bedienung. Keine
+Migration — die Tabelle steht seit Web 12.5.0.
+
+### Web — Die Karte „Ruhesegmente"
+
+Bis hierher lagen die Ruhesegmente **nur als graue Linie auf der Karte** und
+waren nicht anfassbar. Dabei ist genau dort die Spur eines Einsatzes, bei dem
+niemand einen Knopf gedrückt hat: Das Gerät hat durchgezeichnet, nur eben als
+Ruhezeit.
+
+Die Tagesansicht führt sie deshalb jetzt als eigene Karte, mit Zeitraum,
+Dauer und Punktzahl. Wo Punkte da sind, steht **„Schneiden"** — wo keine
+sind, nicht: Ein Segment ohne Spur hat nichts, was wandern könnte, und der
+Knopf wäre ein Versprechen, das der Endpunkt nicht halten kann.
+
+### Web — Der Schneide-Bereich
+
+An der Zeile klappt er auf: **Zeitleiste**, Beginn und Ende (Pflicht), drei
+Phasenzeiten (optional — Ausrücken, Ankunft Einsatzort, Ankunft Klinik). Die
+vollständige Phasenliste hat ihr Zuhause im Einsatzformular; hier stehen die
+drei, die man beim Schneiden ohnehin weiß.
+
+**Vorbelegt ist das ganze Segment**, nicht ein geratener Ausschnitt. „Die
+mittlere Stunde" wäre eine Behauptung über etwas, das nur die Bedienerin
+weiß; das ganze Segment ist die ehrliche Vorbelegung — sichtbar falsch und in
+zwei Feldern berichtigt.
+
+**Die Zeitleiste ist eine Anzeige, keine Bedienung.** Kein Ziehen an den
+Griffen: Das wäre eine zweite Eingabe für dieselbe Zahl — die eine auf die
+Minute genau, die andere auf das Pixel —, und die beiden liefen auseinander.
+Sie zeigt außerdem, was **früher schon** herausgeschnitten wurde; ohne diese
+Fläche sähe man eine Lücke ohne Erklärung und schnitte ein zweites Mal an
+derselben Stelle.
+
+Unter den Feldern steht in Worten, was geschieht: welchen Zeitraum der
+Einsatz bekommt, welche Reste als Ruhesegment stehen bleiben, und dass sich
+der Schnitt rückgängig machen lässt.
+
+### Web — Was der Endpunkt tut
+
+`api/schneiden.php` legt den Einsatz auf dem **Bestandsweg** an: virtuelles
+Gerät `manual-<userId>`, `origin = 'manual'`, `manual = 1`, `client_ref` mit
+Präfix — wörtlich wie `einsatz_form.php`. Daran hängt, ob der Einsatz durch
+Sicherung, Export und Papierkorb kommt.
+
+Alles in **einer** Transaktion: Einsatz anlegen, Phasen schreiben, Punkte
+verschieben, Sperrvermerk setzen, Diensttag-Zeitraum fortschreiben. Bricht
+etwas ab, steht nichts davon.
+
+**Einsatzort, Alter und Diagnose füllt er nicht.** Die sind
+Ende-zu-Ende-verschlüsselt und entstehen im Browser; ein Endpunkt, der sie
+annähme, bräuchte Klartext. Der geschnittene Einsatz ist ein leerer Einsatz
+mit Zeiten, Phasen und Spur — den Rest trägt man im Formular nach.
+
+**Ein Schnitt ohne Punkte wird abgelehnt.** Er entstünde beim zweiten Schnitt
+über denselben Bereich oder über eine Aufzeichnungslücke. Herauskäme ein
+leerer Einsatz — und einer, den das Rückgängig nicht anfassen kann: Ohne
+gewanderte Punkte gibt es keinen Sperrvermerk, und ohne Vermerk findet es den
+Weg zurück nicht. Also nichts anlegen und sagen, warum.
+
+### Web — Rückgängig
+
+Am Segment, mit der Plakette, die den Schnitt nennt. Es ist derselbe Aufruf
+mit vertauschten Enden: Die Punkte wandern zurück, der Sperrvermerk fällt,
+der Einsatz wird gelöscht.
+
+**Was am Einsatz hängt, hält es auf.** Wer inzwischen Einsatzort, Diagnose
+oder eine Reanimation eingetragen hat, verlöre das — auf einen Knopf, der
+„rückgängig" heißt und nach der harmlosesten Handlung der Seite klingt. Ein
+Einsatz mit Inhalt geht stattdessen über den Papierkorb, wo die Frist von
+30 Tagen läuft.
+
+*Abweichung vom freigegebenen Mockup, benannt:* Der Vorschlag sah das
+Rückgängig als Zeilenaktion am **Einsatz** vor. Die Einsatzliste ist aber
+eine sortierbare Tabelle mit Spaltenkatalog und hat keine Zeilenaktionen;
+eine Aktionsspalte träfe alle drei Einsatztabellen und wäre eine neue
+Darstellung. Am Segment ist die Handlung außerdem vollständig — dort steht,
+was fehlt, und dorthin kommen die Punkte zurück.
+
+### Web — Zwei Funde aus der Browserprüfung
+
+Beide von derselben Art: **etwas, das auf einem Rechner richtig aussieht.**
+
+**Die Zeiten gingen roh hinaus.** `api/day.php` lieferte `started_at` als
+UTC-Zeichenkette, und der Browser rechnete mit `new Date(…)` in *seine* Zone
+um. Auf einem Rechner in der Zone der Anwendung fällt das nie auf; im
+Prüfcontainer ist sie UTC, und der Schnitt griff zwei Stunden daneben und
+nahm **null Punkte** mit — mit Erfolgsmeldung. Jetzt geht `start_hhmm` fertig
+formatiert hinaus, wie es die Einsatztabelle seit jeher bekommt; der Browser
+rechnet nur noch in Minuten. Das ist die Linie der ganzen Anwendung, und
+diese Datei war die eine Stelle, die sie verlassen hatte.
+
+**Die Zeitleiste war ein SVG.** Ein `viewBox` skaliert seine Beschriftung mit
+der Breite: auf 1280 px stand die Uhrzeit richtig, auf 390 px war sie **sechs
+Pixel** hoch — dieselbe Zahl in zwei Größen, je nach Fenster, und die
+Schriftskala galt für sie nicht mehr. Jetzt HTML mit Prozentbreiten: Der Text
+bleibt Text, nur der Balken skaliert.
+
+### Web — Nachweis
+
+**Im Browser (Chromium, lokale Installation): 28 Erwartungen, alle erfüllt.**
+Geschnitten, zurückgenommen, Grenzfälle durchgespielt — Unsinn im Feld,
+Zeiten außerhalb des Segments, Ende vor Beginn, zweiter Schnitt über
+denselben Bereich. **Keine unerwarteten Konsolenfehler** (die eine 409 ist
+die Ablehnung des Leerschnitts, die der Browser protokolliert).
+
+Die Kernzahlen des Rundlaufs: Segment 61 → 48 Punkte, Einsatzliste 3 → 4,
+Sperrvermerk 07:01–07:03 sichtbar; nach dem Rückgängig 48 → 61, Einsatzliste
+wieder 3, Vermerk weg. **390 px: waagerechter Überlauf 0, alle Bedienelemente
+44 px.**
+
+Die Logik des Endpunkts zusätzlich ohne HTTP: 17 Erwartungen, alle erfüllt —
+darunter, dass eine Phase außerhalb des Schnitts abgelehnt wird und der
+Diensttag den Einsatz umschließt.
+
+## [Web 12.5.0] — 2026-09-02
+
+**Ein Schnitt, der sich nicht von selbst wieder auflöst.** Erstes Paket von
+S4 Block A: das Fundament des Schneidewerkzeugs.
+**Migration erforderlich** (`2026_09_02_schnitte`) — nach dem Deploy muss
+eine Administratorin `update.php` aufrufen.
+
+### Web — Was das Schneiden ist und warum es einen zweiten Boden braucht
+
+Wer einen vergessenen Einsatz nachträgt, hat sein Problem nicht mit dem
+Formular gelöst: Die Spur des Einsatzes liegt im **Ruhesegment**, in dem
+das Gerät zu der Zeit aufgezeichnet hat. `spur_teilen()` schneidet sie dort
+heraus — der gewählte Zeitbereich wandert samt Punkten zum Einsatz.
+
+**Die Punkte wandern, sie werden nicht kopiert** (E-S4-53). Kopieren wäre
+einfacher gewesen und ist verworfen: Die Punkte lägen doppelt (bei rund
+9 500 behaltenen Punkten je Zwölf-Stunden-Dienst spürbar), und das
+Ruhesegment behielte die Einsatzfahrt in sich. Wer es später ansieht, sähe
+eine Ruhezeit, in der jemand 40 km gefahren ist. Der Schnitt soll trennen.
+
+**Damit fehlt aber etwas, das nachkommen kann.** Das Gerät weiß vom Schnitt
+nichts. Hatte es die Punkte des geschnittenen Zeitraums noch im Puffer —
+ein Funkloch reicht —, liefert es sie nach, und sie fänden in das Segment
+zurück, aus dem sie eben genommen wurden. Der Schnitt löste sich still
+wieder auf.
+
+### Web — Warum `n_original` das nicht auffängt
+
+Das war die erste Annahme dieses Pakets, und sie war falsch. Sie klingt
+plausibel: `spur_lesen_viele()` übergeht seit Web 10.0.0 jede Zeile mit
+`seq < n_original`, und der Schnitt könnte diese Grenze einfach hochsetzen.
+
+`ingest.php` vergibt die Sequenznummern aber aus `seq_from` — der Marke,
+die das Gerät zuletzt zurückbekommen hat. **Gepufferte Punkte kommen
+deshalb oberhalb jeder Sperrgrenze an** und laufen glatt daran vorbei;
+`n_original` fängt nur die *Wiederholung* schon gelieferter Punkte ab. Was
+die Nachzügler kenntlich macht, ist ihre `ts` — und die bringen sie selbst
+mit.
+
+Deshalb hält der neue Sperrvermerk in `track_cuts` einen **Zeitraum** und
+nicht, wie das Konzept es in Abschnitt 14 vorsah, einen Sequenzbereich: Den
+gibt es beim Schnitt noch gar nicht, weil es die betreffenden Punkte noch
+nicht gibt. Der Zeitraum steht dagegen fest, sobald die Bedienerin ihn
+gewählt hat.
+
+**Beide Böden bleiben nötig, und sie tun Verschiedenes:**
+
+| | fängt ab | wäre sonst die Folge |
+|---|---|---|
+| `n_original` (Blob) | Wiederholung bereits gelieferter Punkte; hält die Fortsetzungsmarke | Das Gerät sendet den ganzen Dienst noch einmal — der Schnitt löscht Zeilen, und die Marke fiele mit ihnen zurück |
+| `track_cuts` (Zeitraum) | Nachlieferung aus dem Puffer | Die geschnittenen Punkte kehren ins Segment zurück |
+
+`ingest.php` liest die Vermerke **einmal je Upload**, nicht einmal je Punkt
+— es ist der heißeste Schreibweg der Anwendung. Verworfene Punkte werden
+genannt (`cut_points` in der Antwort), aber **quittiert**: Sonst liefert das
+Gerät endlos nach, dieselbe Regel wie bei der Sperrliste `deleted_refs`.
+Eine Vertragsänderung ist das nicht — der Client muss damit nichts tun.
+
+### Web — Was beim Bauen auffiel
+
+**Ein Schnitt darf die ganze Spur nehmen.** Bleibt dabei kein Punkt übrig,
+schreibt `spur_teilen()` trotzdem einen Blob zurück — einen leeren, 21 Byte.
+Ohne ihn fände `spur_naechste_seq()` weder Zeile noch Blob und antwortete 0.
+Der Fall ist nicht selten: Wer einen Einsatz aus einem kurzen Segment
+schneidet, nimmt häufig alles.
+
+**Das Ziel wird ergänzt, nicht überschrieben.** Beim Schneiden selbst ist es
+ein frisch angelegter Einsatz und leer; beim **Rückgängig** (E-S4-17) ist es
+das Ruhesegment, das seit dem Schnitt weitergelaufen ist. Ein Blob-Schreiben,
+das ersetzt statt zu mischen, hätte dessen neue Punkte gelöscht — ohne
+Fehlermeldung. Das Rückgängig hebt den Sperrvermerk mit auf, sonst bliebe
+ein Loch, das niemand mehr füllen kann.
+
+**Die Löschwege räumen die Vermerke mit ab.** Sie hängen an keinem
+Fremdschlüssel — wie `track_points` und `track_blobs`, aus demselben Grund
+(polymorph) und mit demselben Preis. Papierkorb, Kontolöschung und der
+Waisenjob tun es jetzt ausdrücklich; ein Vermerk nennt einen Zeitraum, in
+dem sich jemand aufgehalten hat, und das ist ein Ortsdatum.
+
+### Web — Nachweis
+
+`tools/spurprobe/probe.php` hat einen **Teil 6** bekommen: Schnitt, dann
+Nachlieferung, dann Rückgängig, auf einer eigens angelegten Kulisse in einer
+zurückgerollten Transaktion. Der Bestand liefert diesen Fall nicht — er
+braucht eine Spur, die beim Schnitt absichtlich nur zur Hälfte geliefert ist.
+
+**20 Erwartungen, alle erfüllt.** Die Kernzahlen: von 250 nachgelieferten
+Punkten werden **50 gesperrt und 200 angenommen**; das Segment trägt danach
+500 Punkte (Ruhe vor *und* nach dem Einsatz), der Einsatz unverändert 50.
+Nach dem Rückgängig sind es 550 im Segment und 0 im Einsatz, ohne einen
+einzigen zeitlichen Rücksprung in der vereinigten Spur.
+
+Die Bedienung — Schneide-Bereich in der Tagesansicht, `api/`-Endpunkt,
+Rückgängig-Aktion — folgt in einem eigenen Paket.
+
 ## [Web 12.4.2] — 2026-09-02
 
 **Das Bodenlogo war nie so klein, wie es aussah — es war gepolstert.** Elftes

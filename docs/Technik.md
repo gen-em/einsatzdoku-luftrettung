@@ -159,6 +159,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      Markdown-Renderer rt_html() — die EINZIGE Stelle des
 │   │                      Projekts, an der aus einer Eingabe HTML wird
 │   ├── admin_rechtstexte.php  Editor dazu (Administration)
+│   ├── apk_lib.php        Was in server/apk/ liegt — Name, Größe, Fassung,
+│   │                       Datum, SHA-256 (S4/A1, siehe 4.97g)
+│   │                       · apk.php liefert die Datei aus
+│   │                       · apk/ die Dateien selbst (entstehen nur auf dem
+│   │                         Server, im Deploy ausgenommen)
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
 │   ├── api/               day.php · mission.php · range.php · suchindex.php ·
@@ -169,6 +174,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      backup_spuren.php und backup_spuren_restore.php
 │   │                      (die Spurteile der Fassung 4, S2/AP5) ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
+│   │                      schneiden.php (Einsatz aus einem Ruhesegment schneiden
+│   │                      und zurücknehmen, S4/A2b — siehe 4.97e) ·
+│   │                      gpx_import.php (GPX herein, S4/A3 — siehe 4.97f) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
 │   │                      adminbackup_freigabe.php (freigegebene Sicherung für die NutzerIn)
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
@@ -184,6 +192,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      ortsfeld.js (Ortsfeld-Komponente: Bezeichnung + optionale
 │   │                       Koordinaten, sechs Verwendungen, s. u.),
 │   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.),
+│   │                      schneiden.js (Karte „Ruhesegmente" und Schneide-Bereich
+│   │                       der Tagesansicht, S4/A2b — siehe 4.97e),
 │   │                      geo.js (EdGeo: Marker-Satz und Spurfarben der Karten, s. u.),
 │   │                      ortswahl.js (Geolocation + Kartendialog am Ortsfeld, s. u.),
 │   │                      blatt.js (Aktions- und Sortierblätter) + schublade.js (mobile Leiste),
@@ -223,6 +233,19 @@ Daten erst nach Server-Bestätigung.
 │   ├── resources/         Vorgabe für alle Geräte
 │   ├── resources-<gerät>/ geräteabhängige Überschreibungen (Launcher-Icon)
 │   └── source/            s. Abschnitt 5
+├── android/               Handy- und Wear-OS-App (Kotlin, Compose) — S4
+│   ├── handy/             das Telefon: Kopplung, Aufzeichnung, Dienstklammer,
+│   │                      Phasen und Einsätze, Senden an ingest.php
+│   ├── uhr/               Wear OS: dasselbe Bedienbild am Handgelenk, aber
+│   │                      OHNE Zugangsdaten — sie spricht nur mit dem Handy
+│   ├── gemeinsam/         Quelltext, den beide Module einbinden (E-S4-24):
+│   │                      Nachrichtenformat, Data-Layer-Weg, Kennungen,
+│   │                      Modus, Phasen, Farben, Bildmarke
+│   ├── gradle/            libs.versions.toml — die vollständige Liste der
+│   │                      Fremdbestandteile, eine Nummer je Bestandteil
+│   ├── werkzeuge/         Farb-, Kontrast-, Bildmarken- und Stromprüfung
+│   ├── mockups/           Vorher/Nachher-Bilder aus dem Prüfstand
+│   └── LIESMICH.md        Bauanleitung, Entscheidungen, Prüfstand
 ├── tools/                 Werkzeuge, werden nicht ausgeliefert
 │   ├── abmelde-probe/     zeigt, was der Abmeldeweg im sessionStorage
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
@@ -385,6 +408,7 @@ Daten erst nach Server-Bestätigung.
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
 | `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Sicherungsziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
+| `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
 | `backup_targets` | Sicherungsziele (seit Web 12.1.0, S2/AP7): FTP-, FTPS- oder SFTP-Gegenstelle je Zeile. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
@@ -1861,7 +1885,8 @@ sechs sind umgestellt:
 
 Dazu die Schreib- und Löschseite: `spur_naechste_seq()` liefert die
 Fortsetzungsmarke der Uhr (`ingest.php`), `spur_loeschen()` entfernt **Zeilen
-und Blob** und wird von jedem Löschweg gerufen.
+und Blob** und wird von jedem Löschweg gerufen. Seit Web 12.5.0 kommt
+`spur_teilen()` dazu — der Schnitt, siehe Abschnitt 4.97e.
 
 **`spur_lesen_viele()` setzt beide Stufen zusammen.** Zwischen Verdichtung und
 Ausdünnung darf die Uhr Punkte nachreichen; sie landen als Zeilen *hinter* dem
@@ -2465,8 +2490,10 @@ Kopfzeilen-Einschleusung.
 #### Die Spurenseite des Diensttages
 
 **Ruhesegmente hatten in der Oberfläche keine Identität.** In der Tagesansicht
-sind sie eine schwarze Linie, ohne Zeile, ohne Popup; `api/day.php` liefert
-nicht einmal ihre Kennung. Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
+waren sie eine schwarze Linie, ohne Zeile, ohne Popup; `api/day.php` lieferte
+nicht einmal ihre Kennung. *(Seit Web 12.6.0 gilt das nur noch für die Karte
+selbst: Die Tagesansicht führt sie als eigene Karte „Ruhesegmente" — dort wird
+geschnitten, siehe 4.97e.)* Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
 — die Abnahme verlangt den Abruf aber „je Einsatz **und** je Ruhesegment".
 
 `tag_spuren.php` gibt beiden dieselbe Identität: die Karte des Tages, darunter
@@ -2954,6 +2981,344 @@ Platte, ein echter Absturz mitten in der Anfrage, der Migrationslauf — steht
 an erster Stelle ihrer `LIESMICH.md`.
 
 ---
+
+### 4.97e Schneiden: ein Zeitbereich wandert (ab Web 12.5.0, S4/A2, E-S4-53)
+
+Wer einen vergessenen Einsatz nachträgt, hat sein Problem mit dem Formular
+nicht gelöst: Die **Spur** des Einsatzes liegt im Ruhesegment, in dem das
+Gerät zu der Zeit aufgezeichnet hat. Das Schneidewerkzeug holt sie dort
+heraus.
+
+#### Die Punkte wandern
+
+`spur_teilen($pdo, $quelleTyp, $quelleId, $zielTyp, $zielId, $vonTs, $bisTs)`
+verschiebt alle Punkte mit `von_ts ≤ ts ≤ bis_ts` von der Quelle zum Ziel.
+Beide Spuren stehen danach als Blob da.
+
+**Kopieren wurde verworfen** (E-S4-53). Die Punkte lägen doppelt — bei rund
+9 500 behaltenen Punkten je Zwölf-Stunden-Dienst spürbar —, und das
+Ruhesegment behielte die Einsatzfahrt in sich: Wer es später ansieht, sähe
+eine Ruhezeit, in der jemand 40 km gefahren ist.
+
+Zwei Eigenschaften der Funktion sind nicht offensichtlich und beide nötig:
+
+- **Sie ergänzt das Ziel, sie ersetzt es nicht.** Beim Schneiden ist das Ziel
+  ein frisch angelegter Einsatz und leer; beim **Rückgängig** ist es das
+  Ruhesegment, das seit dem Schnitt weitergelaufen ist. `spur_blob_schreiben()`
+  ersetzt einen Blob vollständig — dessen neue Punkte wären ohne Mischen weg,
+  ohne Fehlermeldung.
+- **Sie schreibt auch dann einen Blob, wenn nichts übrigbleibt** — einen
+  leeren, 21 Byte. Ohne ihn fände `spur_naechste_seq()` weder Zeile noch Blob
+  und antwortete 0; das Gerät begänne den Dienst von vorn. Wer aus einem
+  kurzen Segment schneidet, nimmt häufig alles.
+
+Läuft bereits eine Transaktion, schließt sich `spur_teilen()` ihr an. Das ist
+der Regelfall: Einsatz anlegen, schneiden, vermerken — das gilt zusammen oder
+gar nicht.
+
+#### Der Sperrvermerk, und warum `n_original` ihn nicht ersetzt
+
+Das Gerät weiß vom Schnitt nichts. Hatte es die Punkte des geschnittenen
+Zeitraums noch im Puffer — ein Funkloch reicht —, liefert es sie nach.
+
+Die naheliegende Abwehr ist `n_original`: `spur_lesen_viele()` übergeht jede
+Zeile mit `seq < n_original` (Abschnitt 4.97), der Schnitt müsste die Grenze
+also nur hochsetzen. **Das trägt nicht.** `ingest.php` vergibt die
+Sequenznummern aus `seq_from` — der Marke, die das Gerät zuletzt bekommen
+hat. Gepufferte Punkte kommen deshalb **oberhalb** der Grenze an und laufen
+glatt daran vorbei; `n_original` fängt nur die *Wiederholung* schon
+gelieferter Punkte ab.
+
+Was die Nachzügler kenntlich macht, ist ihre `ts`. Deshalb hält `track_cuts`
+einen **Zeitraum** und keinen Sequenzbereich: Den gibt es beim Schnitt noch
+nicht, weil es die betreffenden Punkte noch nicht gibt.
+
+| | fängt ab | wäre sonst die Folge |
+|---|---|---|
+| `n_original` im Blob | Wiederholung bereits gelieferter Punkte; hält die Fortsetzungsmarke | Das Gerät sendet den ganzen Dienst noch einmal — der Schnitt löscht Zeilen, und die Marke fiele mit ihnen zurück |
+| `track_cuts` (Zeitraum) | Nachlieferung aus dem Gerätepuffer | Die geschnittenen Punkte kehren in die Quelle zurück, der Schnitt löst sich still wieder auf |
+
+Beide Böden bleiben also, und sie tun Verschiedenes.
+
+#### Der Weg durch `ingest.php`
+
+`schnitte_lesen()` holt die Vermerke **einmal je Upload**, vor der
+Punktschleife — es ist der heißeste Schreibweg der Anwendung, eine Abfrage je
+Punkt wäre der falsche Preis. In der Schleife entscheidet
+`schnitt_gesperrt($schnitte, $ts)`; eine Spur hat üblicherweise null Vermerke,
+und dann kostet das einen Test gegen ein leeres Feld.
+
+Die Prüfung liegt **hinter** der `n_original`-Prüfung und **vor** der
+Wertprüfung. Ein `ts`, das keine Zahl ist, wird zu 0 und fällt aus jedem
+Sperrbereich heraus — die Sperre entscheidet nie über einen Punkt, den sie
+nicht versteht.
+
+Verworfene Punkte werden **genannt** (`cut_points` in der Antwort) und
+trotzdem **quittiert**: Die Fortsetzungsmarke wandert über sie hinweg, sonst
+liefert das Gerät endlos nach — dieselbe Regel wie bei der Sperrliste
+`deleted_refs`. `cut_points` steht bewusst neben und nicht in
+`dropped_points`: Dort steht die Ausdünnung („diese Spur ist fertig
+verdichtet"), hier etwas anderes („diesen Zeitraum hat jemand
+herausgeschnitten"). Eine Vertragsänderung ist das nicht, der Client muss
+damit nichts tun.
+
+#### Die Vermerke gehören ebenfalls hinter `spur_lib.php`
+
+`schnitt_vermerken()`, `schnitte_lesen()`, `schnitt_gesperrt()`,
+`schnitte_zum_einsatz()`, `schnitte_loeschen()`, `schnitte_loeschen_quelle()`
+— aus demselben Grund wie bei den Punkten (CLAUDE.md 4): Wer die Tabelle
+unmittelbar liest, bekommt früher oder später eine halbe Auskunft, etwa indem
+er den Vermerk zum Ziel löscht und den zur Quelle stehenlässt.
+
+`track_cuts` hängt an keinem Fremdschlüssel — polymorph wie `track_points` und
+`track_blobs`, aus demselben Grund und mit demselben Preis. Die Löschwege
+räumen ausdrücklich mit: Papierkorb (`trash_lib.php`, beide Richtungen —
+Vermerk *zum* Einsatz und Vermerk *am* Einsatz), Kontolöschung
+(`admin_user.php`) und der Waisenjob als Sicherheitsnetz (`jobs_lib.php`).
+Bleibt ein Vermerk stehen, sperrt er einen Zeitraum für immer, und zwar
+unsichtbar — die Oberfläche zeigt ihn nicht.
+
+**Nicht mit abgeräumt wird beim Schnitt selbst:** `spur_teilen()` ruft intern
+`spur_loeschen()` für die Quelle, und das darf die Vermerke nicht anfassen —
+sonst löschte der zweite Schnitt an einem Segment die Sperre des ersten.
+
+#### Die Bedienung (ab Web 12.6.0)
+
+Die Tagesansicht führt die Ruhesegmente als eigene Karte — Zeitraum, Dauer,
+Punktzahl, und wo Punkte da sind, **„Schneiden"**. An der Zeile klappt der
+Schneide-Bereich auf: Zeitleiste, Beginn und Ende (Pflicht), drei Phasenzeiten
+(optional). Gebaut wird er in `assets/schneiden.js`, gestaltet nach
+`docs/Design.md` 9.17.
+
+**`api/schneiden.php` kennt zwei Aktionen**, beide POST mit `X-CSRF`:
+
+| Aktion | Nutzlast | tut |
+|---|---|---|
+| `schneiden` | `rest_id`, `beginn`, `ende` (`hh:mm`), `beginn_tag`/`ende_tag`, `phasen` | legt den Einsatz an, verschiebt die Punkte, vermerkt den Schnitt |
+| `rueckgaengig` | `mission_id` | gibt die Punkte zurück, löscht Vermerk und Einsatz |
+
+Der Einsatz entsteht auf dem **Bestandsweg** — virtuelles Gerät
+`manual-<userId>`, `origin = 'manual'`, `manual = 1`, `client_ref` mit Präfix
+`cut-`, wörtlich wie in `einsatz_form.php`. Daran hängt, ob er durch
+Sicherung, Export und Papierkorb kommt (R24), und ob `ingest.php` seine Phasen
+später noch anfasst. Alles läuft in **einer** Transaktion; `spur_teilen()`
+schließt sich ihr an, statt eine eigene mitzubringen.
+
+**Was der Endpunkt nicht tut:** Einsatzfelder füllen. Einsatzort, Alter und
+Diagnose sind Ende-zu-Ende-verschlüsselt und entstehen im Browser; ein
+Endpunkt, der sie annähme, bräuchte Klartext.
+
+**Ein Schnitt ohne Punkte wird abgelehnt** (409). Er entstünde beim zweiten
+Schnitt über denselben Bereich oder über eine Aufzeichnungslücke, und heraus
+käme ein leerer Einsatz, den das Rückgängig nicht anfassen kann: Ohne
+gewanderte Punkte gibt es keinen Vermerk, und ohne Vermerk keinen Weg zurück.
+
+**Das Rückgängig hält an, was am Einsatz hängt** — abweichende Besatzung,
+Rettungsmittel, Reanimation, `edited`, `pat_blob`. Der Grund ist nicht
+Vorsicht, sondern Arithmetik: Es *löscht* den Einsatz. Ein Einsatz mit Inhalt
+geht über den Papierkorb, wo die Frist läuft.
+
+> **Zeiten gehen fertig formatiert hinaus.** `api/day.php` liefert je Segment
+> `start_hhmm`/`end_hhmm` (App-Zeitzone), `von_ts`/`bis_ts` (Epochensekunden
+> für die Balkengeometrie) und `start_tag`/`end_tag` (Kalendertage hinter dem
+> Diensttag, für Dienste über Mitternacht). Der Browser rechnet nur in
+> Minuten.
+>
+> Das ist die Linie der ganzen Anwendung, und diese Stelle hatte sie einmal
+> verlassen: Die erste Fassung schickte `started_at` roh als UTC, und der
+> Browser rechnete mit `new Date(…)` in *seine* Zone. Auf einem Rechner in der
+> Zone der Anwendung fällt das nie auf; im Prüfcontainer ist sie UTC, und der
+> Schnitt griff zwei Stunden daneben und nahm **null Punkte** mit — mit
+> Erfolgsmeldung.
+
+#### Nachweis
+
+`tools/spurprobe/probe.php`, **Teil 6** — auf einer eigens angelegten Kulisse
+in einer zurückgerollten Transaktion. Der Bestand liefert diesen Fall nicht:
+Er braucht eine Spur, die beim Schnitt absichtlich nur zur Hälfte geliefert
+ist. **20 Erwartungen, alle erfüllt.** Die Kernzahlen: 350 Punkte geliefert,
+50 geschnitten; von 250 nachgelieferten Punkten **50 gesperrt, 200
+angenommen**; Segment danach 500 Punkte, Einsatz 50. Nach dem Rückgängig 550
+und 0, ohne einen zeitlichen Rücksprung in der vereinigten Spur.
+
+Die Bedienung ist im Browser abgenommen (Chromium, lokale Installation):
+**28 Erwartungen, alle erfüllt** — Schneiden, Rückgängig und die Grenzfälle
+(Unsinn im Feld, Zeit außerhalb des Segments, Ende vor Beginn, zweiter Schnitt
+über denselben Bereich). Segment 61 → 48 Punkte, Einsatzliste 3 → 4, nach dem
+Rückgängig wieder 61 und 3. Bei 390 px: waagerechter Überlauf 0, alle
+Bedienelemente 44 px.
+
+### 4.97f GPX herein: der Weg zurück (ab Web 12.7.0, S4/A3, E-S4-18)
+
+Das Gegenstück zum Abruf (4.97b). Eine Aufzeichnung, die auf einem anderen
+Gerät entstanden ist, kommt damit in die Anwendung: über **„···" → „GPX
+importieren"** in der Tagesansicht, als Dialog (`Design.md` 9.11).
+
+#### Zwei Ziele
+
+| Ziel | wird | wofür |
+|---|---|---|
+| `ruhe` | ein **Ruhesegment** | Die Datei ist die Aufzeichnung eines ganzen Dienstes; die Einsätze schneidet man danach heraus (4.97e). Der Regelfall. |
+| `einsatz` | ein **Einsatz** | Die Datei *ist* genau ein Einsatz; die Phasenzeiten trägt man danach im Formular nach. |
+
+Beide entstehen auf dem Bestandsweg: virtuelles Gerät `manual-<userId>`,
+`client_ref` mit Präfix **`imp-`** wie beim CSV-Import (daran hängt die
+Sperrliste `deleted_refs`), beim Einsatz zusätzlich `origin = 'import'` und
+`manual = 1`. Die Spur wird **gleich als Blob** abgelegt (Stufe 2,
+`n_original` = volle Punktzahl): Eine importierte Spur ist fertig — es kommt
+nichts mehr nach, denn ihr „Gerät" ist eine Datei.
+
+#### Der Leser wohnt beim Schreiber
+
+`gpx_lesen()` steht in `gpx_lib.php`, direkt unter `gpx_bauen()`. GPX hat
+damit genau **eine** Stelle in dieser Anwendung, die es kennt. Ein Leser, der
+woanders wohnt, läuft früher oder später mit anderen Annahmen als der
+Schreiber — und das fällt erst auf, wenn eine Datei durch den einen Weg
+hinaus und den anderen nicht wieder hinein kommt.
+
+**Gelesen wird auf dem Server**, anders als beim CSV-Import. Der Unterschied
+ist der Inhalt: Beim CSV stehen Patientendaten in der Datei, die der Server
+nie sehen darf, also *muss* der Browser lesen. Eine GPX-Datei enthält nichts
+Verschlüsseltes. Und die Ablehnungsregeln sind verbindlich; eine verbindliche
+Regel im Browser ist keine.
+
+Die Datei kommt als Zeichenkette im JSON-Körper, **nicht als Dateiupload**.
+Diese Anwendung hat nirgends ein `$_FILES`; ein erster Upload-Weg brächte
+`upload_max_filesize`, `post_max_size`, temporäre Verzeichnisse und deren
+Rechte mit — vier Stellschrauben auf geteiltem Hosting für einen Vorgang, den
+eine Zeichenkette genauso trägt. Der Browser liest mit `FileReader`.
+
+#### Was abgelehnt wird — und warum jede Ablehnung einen Satz mitbringt
+
+| Fall | Antwort |
+|---|---|
+| kein gültiges XML | 422, mit der Fehlerstelle des Parsers |
+| Wurzelelement ≠ `<gpx>` | 422, mit dem tatsächlichen Namen |
+| **`<!DOCTYPE>` vorhanden** | 422 — siehe unten |
+| kein Punkt hat `<time>` | 422, mit der Punktzahl und der Begründung |
+| kein `<trkpt>` | 422 („Wegpunkte und Routen liest dieser Import nicht") |
+| > `LIMIT_TRACKPUNKTE_SPUR` (50 000) | 422, mit Grenze **und** Umrechnung in Stunden |
+| > `GPX_DATEI_MAX` (12 MB) | 422, mit Größe und Grenze |
+
+`gpx_lesen()` wirft mit einem Satz, der einer BedienerIn etwas sagt, und der
+Endpunkt reicht ihn unverändert durch. Das ist Absicht: „Import
+fehlgeschlagen" ließe jemanden dreimal dieselbe Datei wählen, ohne je zu
+erfahren, dass ihr die Zeitstempel fehlen.
+
+> **Kein DOCTYPE — die XXE-Abwehr steht vor dem Parser, nicht darin.**
+> `libxml_disable_entity_loader()` gibt es seit PHP 8 nicht mehr, externe
+> Entitäten lädt libxml seither von sich aus nicht — aber **interne**
+> expandiert es weiterhin, und daraus baut man eine Entitätenbombe ohne eine
+> einzige externe Referenz. Eine GPX-Datei braucht keinen DOCTYPE; wer einen
+> mitschickt, bekommt eine Absage statt einer Auslegung. Dazu `LIBXML_NONET`:
+> kein Netzzugriff, unter keinen Umständen (CLAUDE.md 4 gilt auch für einen
+> Parser).
+
+#### Toleranz, wo sie richtig ist
+
+Angenommen werden **GPX 1.0** und Dateien **ohne Namensraum**: Die Elemente,
+um die es geht, heißen in beiden Fassungen gleich und bedeuten dasselbe. Auf
+1.1 zu bestehen hieße, Dateien abzulehnen, die inhaltlich in Ordnung sind.
+
+Mehrere `<trkseg>` oder `<trk>` werden zu **einer** Spur zusammengeführt und
+**nach Zeit sortiert**, die Sequenz danach neu vergeben — der Blob speichert
+Differenzen und verlässt sich auf eine aufsteigende Zeitfolge (4.97), und die
+Dateireihenfolge muss nicht die zeitliche sein.
+
+Einzelne unbrauchbare Punkte fallen heraus, ohne die Datei zu verwerfen; ihre
+Zahl steht in der Antwort (`ohne_zeit`, `verworfen`) und in der Rückmeldung an
+die BedienerIn. Die Koordinaten gehen dabei durch `pruef_breite()` /
+`pruef_laenge()` — eine eigene Bereichsprüfung hier wäre eine zweite Wahrheit
+darüber, was ein gültiger Breitengrad ist (CLAUDE.md 4).
+
+> **Attribute über `attributes()`, nie über `$el['lat']`** — eine Falle, in
+> die dieses Paket getreten ist. Nach `children($ns)` schaltet SimpleXML die
+> Namensraum-Umgebung eines Knotens um, **auch für Attribute**. `$pt['lat']`
+> sucht danach ein `lat` im GPX-Namensraum, und ein unpräfigiertes Attribut
+> liegt in **keinem** (XML-Namens-Spezifikation 6.2). Das Ergebnis war kein
+> Fehler, sondern ein leerer String: Jeder Punkt fiel durch die
+> Koordinatenprüfung, und die Meldung lautete „enthält keinen einzigen
+> Trackpunkt" — bei 61 vorhandenen.
+
+#### Nachweis
+
+**Der Leser: 17 Erwartungen, alle erfüllt** — Rundlauf über den Schreiber
+(61 Punkte hinaus, 61 zurück, 0 Abweichungen), sieben Ablehnungsfälle mit
+Prüfung der Meldung, GPX 1.0, Namensraum-freie Dateien, zeitliche Sortierung
+über zwei Segmente. **9 000 Punkte (0,78 MB) in 0,13 s.**
+
+**Im Browser: 17 Erwartungen, alle erfüllt** — Import als Ruhesegment (6 → 7,
+54 Punkte) und als Einsatz (4 → 5), beide Ablehnungsfälle mit sichtbarer
+Begründung, keine unerwarteten Konsolenfehler.
+
+**Der Rundlauf der Abnahme: 12 Erwartungen, alle erfüllt** — importierte Spur
+→ GPX-Abruf → erneut gelesen: 54 Punkte, **0 Abweichungen** gegen die
+Quelldatei, für Segment *und* Einsatz.
+
+### 4.97g Die Android-App verteilen (ab Web 12.8.0, S4/A1, E-S4-16)
+
+Die App wird über die Anwendung selbst verteilt, nicht über einen App-Store.
+Die Karte **„NAdoku für Android"** auf dem Geräte-Reiter zeigt, was in
+`server/apk/` **liegt** — Name, Größe, Fassung (aus dem Dateinamen), Datum
+und den gerechneten SHA-256.
+
+**Von Hand gepflegt wird nichts.** Eine Versionsangabe, die jemand eintippt,
+stimmt am Tag des Eintippens und danach nie wieder. Die Prüfsumme entsteht bei
+jedem Aufruf neu (bei 7 MB wenige Millisekunden); ein zwischengespeicherter
+Wert wäre genau die Zahl, die nach einem Austausch der Datei noch die alte
+nennt.
+
+Die Fassung kommt aus dem **Dateinamen** (`nadoku-1.0.0.apk`), nicht aus dem
+APK. Sie dort zu lesen hieße, ein ZIP zu öffnen und das Android-Binär-XML des
+Manifests zu entschlüsseln — dafür gäbe es keine Bibliothek im Haus, und eine
+neue Abhängigkeit für eine Anzeige wäre der falsche Preis (CLAUDE.md 4).
+Trägt der Name keine, steht keine da.
+
+#### Zwei Ausnahmelisten, und beide sind nötig
+
+| Ort | Eintrag | ohne ihn |
+|---|---|---|
+| `.gitignore` | `server/apk/` | Ein signiertes APK läge im Verlauf — ein Erzeugnis, kein Quelltext, bei jeder Fassung ein zweistelliges MB |
+| `.github/workflows/deploy.yml` | `apk/**` und `apk/` | **Der nächste Push löschte die Dateien.** Die Action synchronisiert `server/` und entfernt, was nicht ausgenommen ist |
+
+Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
+`sicherungen/`, inklusive der doppelten Schreibweise: Die Action prüft
+Datei- und Verzeichnismuster getrennt.
+
+Hochgeladen wird per FTPS durch die Betreiberin.
+
+#### Der Name wird nicht geprüft, sondern gesucht
+
+`apk.php` liest den Ordner (`apk_liste()`) und wählt aus dem **Gelesenen**
+aus. Ein Pfad, den der Aufrufer zusammensetzt, kommt damit nie an `fopen()` —
+auch keiner mit `..`, keiner mit einem Nullbyte und keiner mit einem
+Zeilenumbruch für die `Content-Disposition`-Kopfzeile. Der Unterschied zu
+„gefährliche Zeichen entfernen" ist, dass hier nichts vergessen werden kann.
+
+`apk_liste()` nimmt nur `[A-Za-z0-9._-]+\.apk` an. Ein Verzeichnis, in das
+jemand per FTP schreibt, ist kein vertrauenswürdiger Eingang; was nicht auf
+das Muster passt, wird still übergangen (eine `.DS_Store` dort ist keine
+Fehlermeldung wert).
+
+Der Abruf liegt **neben** den Seiten und nicht unter `api/`, aus demselben
+Grund wie `gpx.php` (4.97b): `ist_api_aufruf()` entscheidet am Pfad, und ein
+`<a href>` bekäme dort nach einer Mittagspause `{"error":"session_ende"}` im
+Browserfenster statt der Anmeldeseite. Nur angemeldet, GET, ohne CSRF (M3-11).
+`Cache-Control: private, max-age=86400` und nicht `no-store`: Ein APK ist
+unveränderlich, sobald es liegt — es trägt seine Fassung im Namen, und ein
+Austausch bekommt einen neuen.
+
+#### Nachweis
+
+**Im Browser: 10 Erwartungen, alle erfüllt** (gegen eine 7-MB-Attrappe) —
+Karte vorhanden, „7,0 MB · Fassung 1.0.0 · Stand …", Prüfsumme in 16
+Vierergruppen, Download neutral, Datei kommt in 7 340 032 Byte an,
+`?d=../config.php` läuft ins Leere, unbekannte Datei bekommt eine Seite statt
+eines leeren 404.
+
+**Nicht geprüft:** Die Deploy-Ausnahme ist am Workflow-Text abgeleitet, nicht
+durchgespielt — ein Trockenlauf bräuchte FTP-Zugangsdaten. Und es gab kein
+echtes APK.
 
 ### 4.98 Was im verschlüsselten Block liegt — und was nicht
 
@@ -3724,6 +4089,108 @@ Die Grenzen bleiben die des Simulators, unverändert: keine echte Hardware,
 keine Systemgesten, kein Server. Ein Lauf zeigt, dass es startet und wie es
 aussieht — nicht, dass es richtig ist. Anleitung:
 `tools/uhr-pruefstand/LIESMICH.md`.
+
+## 5a. Android-Apps (Kotlin/Compose) — Handy und Wear OS
+
+*Seit S4, Blöcke B und C. Die App zählt eigene Fassungen
+(`android/version.properties`), unabhängig von `WEB_VERSION` und von der
+Uhr-App aus Abschnitt 5.* Bauanleitung, Entscheidungen und der vollständige Prüfstand
+stehen in `android/LIESMICH.md`; hier steht, wie es zusammenhängt.
+
+### Zwei Module, ein Quelltext
+
+| Modul | läuft auf | hat |
+|---|---|---|
+| `android/handy/` | Telefon | Kopplung, Aufzeichnung, Dienstklammer, Phasen und Einsätze, Senden an `ingest.php` — **und die Zugangsdaten** |
+| `android/uhr/` | Wear OS | dasselbe Bedienbild am Handgelenk, **ohne** Zugangsdaten |
+| `android/gemeinsam/` | beide | Nachrichtenformat, Data-Layer-Weg, Kennungen, Modus, Phasen, Farben, Bildmarke (E-S4-24) |
+
+**Die Uhr kennt weder Serveradresse noch API-Schlüssel** (E-S4-11). Sie
+schickt ihre Ereignisse an das Handy, und das Handy sendet. Das ist keine
+Bequemlichkeit, sondern die Sicherheitsaussage der Bauform: Eine verlorene
+Uhr gibt keinen Zugang preis. Der Prüfstand zählt die Schlüssel des
+Nachrichtenformats nach — genau `uhr, nr, art, zeit, phase, einsatz_ref`,
+kein `api_key`, keine `device_id`, keine Adresse.
+
+Beide Module tragen dieselbe `applicationId` (`org.genem.nadoku`) und
+**müssen mit demselben Schlüssel signiert sein** — der Wear Data Layer
+stellt sonst nicht zu (E-S4-01). Der Signaturschlüssel entsteht außerhalb des
+Repositoriums und wird verwahrt (E-R45-6); jede spätere Fassung braucht
+denselben, sonst verlangt Android eine Neuinstallation.
+
+### Der Weg zwischen Uhr und Handy
+
+`MessageClient` des Wear Data Layer, drei Pfade: `/nadoku/ereignis`
+(Uhr → Handy), `/nadoku/quittung` und `/nadoku/stand` (Handy → Uhr). Die
+Umsetzung steckt in **einer** Datei (`WearNachrichtenweg.kt`) hinter der
+Schnittstelle `Nachrichtenweg`; alles darüber kennt nur die Schnittstelle.
+Deshalb laufen die Prüffälle beider Module ohne Play-Dienste — sie benutzen
+eine Attrappe. Zur Lizenzlage der proprietären Bibliothek:
+`docs/Lizenzen.md` 6a.
+
+**Zwei Böden gegen die Doppelzustellung** (E-S4-10, E-S4-09):
+
+1. Eine **Ereignisnummer je Uhr**, fortlaufend. Das Handy quittiert bis zur
+   höchsten **lückenlosen** Nummer — eine Lücke hält die Quittung an, statt
+   über sie hinwegzuspringen.
+2. Die **`wm-`-Kennung** des Einsatzes als zweiter Boden. Sie greift auch,
+   wenn die Buchführung verlorengegangen ist (zurückgesetzte Uhr, neue
+   Nummernreihe): Ein Ereignis mit bekannter Kennung landet im vorhandenen
+   Einsatz, statt einen zweiten anzulegen.
+
+Ohne Quittung wird dieselbe Nachricht **mit derselben Nummer** erneut
+gesendet. Der Puffer der Uhr überlebt ihren Neustart.
+
+### Was die App an den Server schickt
+
+Nichts Neues: denselben JSON-Vertrag wie die Uhr-App aus Abschnitt 5. Der Server ist
+geräteneutral und bleibt es — er sieht ein Gerät mit Kennung und
+API-Schlüssel und weiß nicht, ob dahinter Monkey C oder Kotlin steckt. Die
+Kennungspräfixe unterscheiden die Quellen (`am-`/`ar-`/`ad-` für das Handy,
+`wm-` für die Uhr); der Vertragsnachtrag dazu steht noch aus (A1, hängt an
+R42).
+
+### Prüfen ohne Gerät
+
+Es gibt keine Uhr und kein Telefon. Was trotzdem geht, steht in
+`android/LIESMICH.md`; die Kurzform:
+
+- **Prüffälle** über JUnit und Robolectric — auch gegen ein *echtes* SQLite
+  und, wo eine lokale Installation läuft, gegen `ingest.php` selbst.
+- **Bilder** über Robolectric im NATIVE-Grafikmodus. `captureToImage()` ist
+  unter Robolectric strukturell unbrauchbar (Deadlock in
+  `WindowCapture.forceRedraw`); der Weg darüber ist der einzige, der ohne
+  Emulator Pixel liefert — und er kostet **null** neue Abhängigkeiten.
+- **Ein Emulator läuft**, entgegen E-R45-8, aber ohne KVM (QEMU/TCG) und nur
+  mit `-no-window`. `sys.boot_completed=1` lügt dabei; die Begründung, warum
+  er trotzdem nicht der Hauptweg ist, steht in der `LIESMICH.md`.
+- **Instrumentierte Prüffälle** (seit Android 0.7.6) laufen auf dem Emulator
+  und schließen zwei Lücken, die die JVM nicht erreicht: den echten
+  `AndroidKeyStore` und die Erreichbarkeit der Wearable-API. Sie gehen
+  **an Gradle vorbei** (`adb shell am instrument`) — `connectedAndroidTest`
+  scheitert auf einem softwareemulierten Gerät an einer ddmlib-Zeitgrenze.
+
+#### Wo die Grenze zum Data Layer wirklich liegt
+
+Sie lag nicht dort, wo sie dokumentiert war. Gemessen am 02.09.2026:
+
+| bisher angenommen | gemessen |
+|---|---|
+| keine Play-Dienste im Container | `com.google.android.gms` **22.48.14** liegt im Wear-Abbild, `isGooglePlayServicesAvailable` = `SUCCESS` |
+| Wearable-API nicht erreichbar | `NodeClient.localNode` liefert einen **lokalen Knoten mit Kennung** |
+| Empfangsdienst ungeprüft | `HandyHorcher` ist registriert (`wear:`, `PREFIX /nadoku`) und löst für alle drei Pfade auf |
+
+**Was tatsächlich fehlt, ist die Telefonseite.** Zwei Emulatoren zu koppeln
+verlangt die Wear-OS-Companion-App auf dem Telefon; die kommt aus dem Play
+Store und damit über eine Anmeldung mit einem Google-Konto. `adb forward
+tcp:5601 tcp:5601` steht bereit, `com.google.android.wearable.app` liegt auf
+der Uhr — es hakt an genau einem Schritt, und der ist jetzt benannt statt
+vermutet.
+
+**Was keiner dieser Wege ersetzt:** die **Zustellung** über den Data Layer.
+Ob eine Nachricht ankommt, ob die beiden `WearableListenerService` mit einer
+echten Nachricht das Richtige tun, ob Paket- und Signaturgleichheit im Feld
+greift — das ist Gerätetest und steht aus.
 
 ## 6. Deployment
 

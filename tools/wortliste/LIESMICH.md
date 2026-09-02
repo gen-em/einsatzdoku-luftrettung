@@ -15,6 +15,7 @@ sondern als Liste mit Begründungen.
 ```
 python3 wortliste.py                 # alle Bereiche
 python3 wortliste.py --bereich a     # nur die PHP-Dateien des Servers
+python3 wortliste.py --bereich d     # nur die Android-Apps
 python3 wortliste.py --alle          # auch die erklärten Treffer zeigen
 python3 wortliste.py --probe         # Selbstprobe des Zerlegers
 python3 wortliste.py --bericht /tmp/wortliste.txt
@@ -63,12 +64,51 @@ echt waren es zwei.
 | **a** | `server/*.php`, `server/api/*.php` — ohne Kommentare |
 | **b** | `server/assets/*.js` ohne `vendor/` — ohne Kommentare |
 | **c** | `README.md`, `docs/Handbuch.md`, `docs/Export-Format.md`, `docs/Technik.md`, `docs/Backup-Format.md`, `docs/JSON-Vertrag.md`, `docs/Design.md`, `docs/Lizenzen.md` |
+| **d** | `android/*/src/main/res/values/strings.xml` — die sichtbaren Texte der Handy- und der Wear-OS-App (seit S4/D1) |
+
+### Die Regel dahinter
+
+> **Jeder sichtbare Text der Anwendung läuft durch die Wortliste — gleich, in
+> welchem Client er steht.** Ein Bereich fehlt nicht, weil ein Verzeichnis
+> jung ist; er fehlt, weil ihn niemand eingetragen hat. Wer einen Client
+> hinzufügt, trägt seine Textdateien im selben Paket ein, in dem der Client
+> entsteht. **Ein Lauf, der einen Client übergeht, meldet keine Null — er
+> meldet gar nichts.**
+
+*Aufgestellt auf Ansage am 01.09.2026 (S4, Fund B-S4-06).* Der Anlass: Die
+Android-Apps entstanden in S4/B1, und der Lauf nach dem letzten Paket meldete
+**0 Treffer, ohne eine einzige Zeile der App angesehen zu haben** — genau der
+Fall, vor dem `CLAUDE.md` 6 warnt („eine grüne Zahl ist erst dann ein Beleg,
+wenn sie das Gemessene benennt").
+
+Bereich **d** ist deshalb keine Erweiterung, sondern das Nachholen einer
+Pflicht, die mit `android/` entstand. Er fand beim ersten Lauf **3 Treffer**
+— alle drei Homonyme derselben Klasse, für die die Weboberfläche an
+denselben Stellen bereits Ausnahmen führt (`android-bildmarke-alt`,
+`android-logowahl`).
+
+**Bei XML wird mehr weggeräumt als der Kommentar.** Sichtbarer Text steht
+*zwischen* den Tags; `<string name="dienst_beginnen">` ist ein Bezeichner,
+den niemand liest. Bliebe er stehen, meldete das Werkzeug jeden
+Schlüsselnamen — und eine Liste, die zu neun Zehnteln aus Falschmeldungen
+besteht, liest bald niemand mehr. Eine Ausnahmeregel für Bereich d bindet
+ihre `zeile` deshalb an den **Text**, nicht an den Schlüsselnamen.
 
 **Nicht geprüft**, und jedes mit Grund: `docs/CHANGELOG.md` (Historie — dort
 stehen die alten Begriffe zu Recht), die Konzept- und Prüfdokumente,
 `docs/Geraete-Eingabe.md` und `docs/Uhr-Layout_Regeln.md` (beschreiben die
-Garmin-Uhr als Gegenstand), `docs/Backlog.md`, `watch/` und `tools/` selbst.
+Garmin-Uhr als Gegenstand), `docs/Backlog.md` und `tools/` selbst.
 Die Zuordnung folgt den Fundort-Klassen im Konzept P2, Abschnitt 5.1.
+
+> **`watch/` fehlt noch, und das ist Arbeitsteilung, kein Versehen.** Die
+> sichtbaren Texte der Garmin-App (`watch/resources/**/*.xml`) sind die
+> ältesten des Projekts und damit die wahrscheinlichste Fundstelle. Die
+> bisherige Begründung — `watch/` „beschreibe die Garmin-Uhr als Gegenstand"
+> — trifft auf `docs/Uhr-Layout_Regeln.md` zu, **nicht** auf die Texte der App
+> selbst: Die liest dieselbe Person, die auch die Weboberfläche liest.
+> Ihre Prüfung geht an eine andere Instanz (Ansage 01.09.2026); sie braucht
+> Kenntnis der Monkey-C-Ressourcen und der historischen Begriffe. Der Bereich
+> heißt dort **e** und gehört in dieselbe Liste, sobald er kommt.
 
 ## Wie eine Ausnahme begründet wird
 

@@ -680,6 +680,105 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
     Ableitungen nachmessen.
 
+63. **Sperrvermerke des Schnitts überstehen die Konto-Sicherung nicht.**
+    *Aufgenommen 02.09.2026 als B-S4-10 (S4/A2).*
+    `track_cuts` (Web 12.5.0) hält den Zeitraum, den `ingest.php` an einer
+    geschnittenen Spur nicht mehr annimmt. Die **Komplettsicherung** trägt die
+    Tabelle mit — sie findet ihre Tabellen über `SHOW FULL TABLES`. Die
+    **Konto-Sicherung** (`edbak_build()`, Nutzlast 8) hat dagegen einen
+    aufgezählten Aufbau und kennt sie nicht.
+    **Die Folge nach einem Wiedereinspielen:** Ein Gerät, das Punkte des
+    geschnittenen Zeitraums noch im Puffer hat, liefert sie nach, und sie
+    landen wieder im Ruhesegment — die Fahrt läge dann in Einsatz *und*
+    Segment, also genau der Zustand, den E-S4-53 mit dem Verschieben statt
+    Kopieren vermeiden wollte. Der Einsatz selbst kommt vollständig durch;
+    beschädigt wird nichts, es fällt nur eine Sperre weg.
+    **Das Fenster ist schmal** (Wiedereinspielen ist selten, ein Gerätepuffer
+    umfasst Stunden), der Fehler aber echt. Nicht nebenbei behoben, weil die
+    Behebung den Nutzlastaufbau **und** beide Rückwege berührt: Der Vermerk
+    verweist auf zwei Kennungen (Quelle und Ziel), die das Einspielen erst neu
+    vergibt — er muss also wie die Spuren über Verweise laufen, nicht über
+    Kennungen. Dazu `docs/Backup-Format.md`, die Kreislaufproben und ein
+    Prüffall.
+
+65. **Vierzehn Fassungshinweise im Android-Baulauf hängen an einer
+    Entscheidung.**
+    *Aufgenommen 02.09.2026 als Rest aus B-S4-04 (S4/D1).*
+    `lintDebug` meldet für `android/handy/` 14 Warnungen, und sie sind nicht
+    vierzehn Entscheidungen, sondern **eine**: `androidx.wear.compose` 1.6.2
+    und die Compose-BOM 2026.08.00 verlangen einen neueren Compose-Compiler;
+    der hängt an Kotlin, Kotlin 2.4 an AGP 9. Dieselbe Kette ziehen
+    `core-ktx`, `lifecycle`, `activity-compose` und die vier
+    `camera`-Bausteine.
+    **AGP 9 ist ein Umbau der Bau-Sprache** und gehört in eine eigene,
+    absichtliche Runde — nicht in eine Korrekturfassung. Stummgeschaltet wird
+    nichts (CLAUDE.md 6): Die 14 stehen und werden gezählt; sie sind das
+    Preisschild an einer aufgeschobenen Entscheidung, und genau das sollen sie
+    sein.
+
+66. **Der Garmin-Uhrcode läuft nicht durch die Wortliste.**
+    *Aufgenommen 02.09.2026 als Bereich `e` aus B-S4-06 (S4/D1).*
+    Seit D1 prüft `tools/wortliste/` vier Bereiche, darunter die
+    Android-Apps. **`watch/` fehlt weiterhin.** Die bisherige Begründung —
+    `watch/` „beschreibe die Garmin-Uhr als Gegenstand" — trifft auf
+    `docs/Uhr-Layout_Regeln.md` zu, **nicht** auf die sichtbaren Texte der App
+    selbst (`watch/resources/**/*.xml`): Die liest dieselbe Person, die auch
+    die Weboberfläche liest. Sie sind die **ältesten Texte des Projekts** und
+    damit die wahrscheinlichste Fundstelle.
+    **Auf Ansage einer anderen Instanz zugewiesen** (01.09.2026); sie braucht
+    Kenntnis der Monkey-C-Ressourcen und der historischen Begriffe. Der
+    Bereich heißt dort `e`; die Mechanik ist da (eine Art `xml` im Zerleger,
+    die Tags mit wegräumt), einzutragen ist die Bereichszeile.
+
+67. **`csrf_check()` hat keinen API-Zweig.**
+    *Aufgenommen aus einer Gegenprüfung vom 23.08.2026; die Zahlen sind am
+    02.09.2026 nachgezählt (S4/D2).*
+    `require_admin()` verzweigt daneben nach `ist_api_aufruf()` und antwortet
+    einem Endpunkt mit JSON; `csrf_check()` rendert unbedingt eine HTML-Seite.
+    Ein Endpunkt, der sie aufriefe, schickte einer `fetch()`-Anfrage also eine
+    Fehlerseite statt eines Fehlerobjekts — die Oberfläche zeigte „unerwartete
+    Antwort" statt „Sitzung abgelaufen".
+    **Bisher folgenlos, weil es diesen Aufrufer nicht gibt.** Von den 15
+    Dateien unter `server/api/` ruft **keine** `csrf_check()` auf. Die **elf**,
+    die POST annehmen, prüfen jede selbst gegen `HTTP_X_CSRF` — neun davon
+    ändern Zustand (acht schreiben in die Datenbank,
+    `adminbackup_freigabe.php` in eine Begleitdatei), die beiden anderen
+    (`backup_spuren.php`, `export_data.php`) lesen nur und benutzen POST für
+    die Nutzlast. Die übrigen **vier** (`backup_data.php`, `mission.php`,
+    `range.php`, `suchindex.php`) sind streng GET-only, weisen alles andere
+    mit 405 ab und haben kein Schreib-SQL; ihnen fehlt die Prüfung also nicht.
+    Es ist damit eine **unausgesprochene Invariante**, keine Störung — und die
+    Nachzählung hat keinen ungeschützten schreibenden Endpunkt gefunden.
+    **Zwei Einschränkungen an diesen Sätzen**, aus einer Gegenprüfung vom
+    02.09.2026, damit die nächste Zählung nicht darauf hereinfällt:
+    `kdf_upgrade.php` prüft erst in Zeile 67 — Zeile 66 steigt für das
+    Demo-Konto vorher mit `json_out(['ok' => true, …])` aus. Heute folgenlos,
+    weil hinter dem Ausstieg nichts steht; kippt aber, sobald dort mehr steht
+    als ein `json_out()`. Die beiden Zeilen gehören getauscht. Und „kein
+    Schreib-SQL" gilt für die vier **Dateien**, nicht für die vier
+    **Endpunkte**: `auth_guard.php` ruft bei *jeder* Anfrage — GET
+    eingeschlossen — `run_cleanup_if_due()` und beim Demo-Konto
+    `demo_reset_wenn_faellig()`, und `jobs_lauf()` schreibt dabei
+    (`INSERT IGNORE INTO jobs`, `UPDATE jobs`). Ein GET auf
+    `api/suchindex.php` kann also die tägliche Wartung auslösen. Das ist
+    gewollte Huckepack-Bauweise und harmlos, weil ein Angreifer nichts
+    gewinnt, was der nächste Seitenaufruf ohnehin auslöst — aber schreibfrei
+    ist der Endpunkt nicht.
+    **Zu tun:** entweder denselben `ist_api_aufruf()`-Zweig in `csrf_check()`
+    ergänzen, oder die Invariante im Kopf der Funktion festhalten, damit der
+    nächste Endpunkt sie nicht versehentlich bricht.
+    **Und eine Lehre über die Sache hinaus.** Die ursprüngliche Fassung dieses
+    Punktes nannte „alle sechs schreibenden Endpunkte". Am 23.08.2026 war das
+    **richtig**: Damals lagen zehn Dateien unter `server/api/`, und genau sechs
+    prüften gegen `HTTP_X_CSRF` (`adminbackup_freigabe`, `backup_restore`,
+    `day`, `export_data`, `import_commit`, `kdf_upgrade`). In den zehn Tagen
+    bis zum Eintragen sind fünf dazugekommen — `backup_eintraege_restore`,
+    `backup_spuren`, `backup_spuren_restore`, `gpx_import`, `schneiden` —, und
+    alle fünf prüfen ebenfalls. Aus sechs wurden elf. **Eine Zahl in einem
+    Backlog-Punkt altert also, während der Punkt liegt**, und sie altert
+    lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
+    vorher wieder nach — die Zählung von heute ist morgen genauso alt.
+
 68. **Vorschlagsfelder über `<datalist>` zeigen auf dem Handy nichts an.**
     *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers
     (Rahmenplan Fassung 16).* Die Besatzungsfelder des Diensttags
@@ -837,6 +936,24 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+64. **Die Bedienhöhe steht auf 44 px, Android verlangt 48 dp.**
+    *Aufgenommen 02.09.2026 als B-S4-02 (S4/D1); erledigt am selben Tag mit
+    der Entscheidung R58.*
+    `CLAUDE.md` 5 sagte: „Eine Höhe für Bedienelemente: **44 px**, mobil wie
+    am Schreibtisch." Androids eigene Vorgabe für Berührziele ist **48 dp**.
+    Die vier Pixel klingen nach nichts und sind es nicht: Diese App wird **mit
+    Handschuhen im Einsatz** bedient, und das ist genau der Fall, für den die
+    48 dp gedacht sind. Der eigentliche Befund war nicht die Zahl, sondern die
+    **Uneinigkeit**: Die Wear-OS-App hielt längst 48 dp, weil sie die
+    Wear-Bausteine benutzt — dasselbe Programm führte an derselben Stelle zwei
+    Maße.
+    **Entschieden als R58** (02.09.2026): Die 44 px gelten für die
+    Weboberfläche, die Android-Module folgen ihrer Plattform. Umgesetzt ist es
+    an einer Stelle — `BEDIENHOEHE` in `handy/…/Bausteine.kt` steht auf
+    `48.dp`; `UHR_BEDIENHOEHE` stand schon dort. `CLAUDE.md` 5 sagt die
+    Unterscheidung jetzt selbst, damit die nächste Instanz nicht dieselbe
+    Frage noch einmal aufwirft.
 
 56. **Die zweite Rückmeldungsrunde steht in keinem Konzept.**
     *Aufgenommen 01.09.2026 mit Web 12.2.1; der Prüfteil ist am selben Tag

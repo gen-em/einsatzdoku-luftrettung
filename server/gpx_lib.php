@@ -38,6 +38,9 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/spur_lib.php';
+/* Der Leser (S4/A3) prueft Koordinaten ueber die gemeinsame Pruefschicht.
+ * Der Schreiber braucht sie nicht — er gibt aus, was schon geprueft war. */
+require_once __DIR__ . '/validate_lib.php';
 
 /** Formatfassung, die wir schreiben. */
 const GPX_FASSUNG = '1.1';
@@ -284,4 +287,174 @@ function gpx_dateiname_tag(string $datum, int $anzahl, array $stufen): string
     $name = sprintf('diensttag_%s_%d-spuren_%s.gpx',
                     $datum !== '' ? $datum : 'ohne-datum', $anzahl, $marke);
     return preg_replace('/[^A-Za-z0-9._-]/', '', $name) ?? 'spuren.gpx';
+}
+
+/* ---------------------------------------------------------------------------
+ * LESEN (S4/A3, E-S4-18)
+ *
+ * Das Gegenstueck zum Abruf. Es steht in DERSELBEN Datei, und das ist der
+ * Punkt: GPX 1.1 hat damit genau eine Stelle in dieser Anwendung, die es
+ * kennt. Ein Leser, der woanders wohnt, laeuft frueher oder spaeter mit
+ * anderen Annahmen als der Schreiber — und das faellt erst auf, wenn eine
+ * Datei durch den einen Weg hinaus und den anderen nicht wieder hinein kommt.
+ * ------------------------------------------------------------------------ */
+
+/** Groesste Datei, die angenommen wird. */
+const GPX_DATEI_MAX = 12 * 1024 * 1024;
+
+/**
+ * Ein GPX-Dokument in Punkte.
+ *
+ * @return array{punkte:list<array{0:int,1:float,2:float,3:?float,4:int}>,
+ *               name:?string,segmente:int,ohne_zeit:int,verworfen:int}
+ *         Punkte in der Form von `spur_lib.php`: [seq, lat, lon, ele, ts].
+ * @throws InvalidArgumentException mit einem Satz, der einer BedienerIn etwas
+ *         sagt — er geht unveraendert in die Meldung.
+ */
+function gpx_lesen(string $xml, ?Pruefliste $pruef = null): array
+{
+    if (strlen($xml) > GPX_DATEI_MAX) {
+        throw new InvalidArgumentException(sprintf(
+            'Die Datei ist %.1f MB gross; angenommen werden %d MB.',
+            strlen($xml) / 1048576, intdiv(GPX_DATEI_MAX, 1048576)));
+    }
+    if (trim($xml) === '') {
+        throw new InvalidArgumentException('Die Datei ist leer.');
+    }
+
+    /* KEINE DOKUMENTTYP-DEKLARATION. Das ist die Abwehr gegen XXE, und sie
+     * steht VOR dem Parser, nicht darin: `libxml_disable_entity_loader()`
+     * gibt es seit PHP 8 nicht mehr, externe Entitaeten laedt libxml seither
+     * von sich aus nicht — aber INTERNE Entitaeten expandiert es weiterhin,
+     * und daraus baut man eine Milliarde-Lacher-Bombe ohne eine einzige
+     * externe Referenz. Eine GPX-Datei braucht keinen DOCTYPE; wer einen
+     * mitschickt, bekommt eine Absage statt einer Auslegung. */
+    if (preg_match('/<!DOCTYPE/i', $xml)) {
+        throw new InvalidArgumentException(
+            'Die Datei enthält eine Dokumenttyp-Deklaration. GPX braucht keine, '
+            . 'und angenommen wird sie deshalb nicht.');
+    }
+
+    $vorher = libxml_use_internal_errors(true);
+    libxml_clear_errors();
+    /* LIBXML_NONET: kein Netzzugriff, unter keinen Umstaenden (CLAUDE.md 4,
+     * „keine fremde Quelle zur Laufzeit" — das gilt auch fuer einen Parser). */
+    $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NONET);
+    $fehler = libxml_get_errors();
+    libxml_clear_errors();
+    libxml_use_internal_errors($vorher);
+
+    if ($doc === false) {
+        $erste = $fehler ? trim((string)$fehler[0]->message) : 'unbekannter Fehler';
+        throw new InvalidArgumentException(
+            'Die Datei ist kein gültiges XML (' . $erste . ').');
+    }
+    if (strtolower($doc->getName()) !== 'gpx') {
+        throw new InvalidArgumentException(
+            'Das ist keine GPX-Datei — das Wurzelelement heißt <'
+            . $doc->getName() . '> statt <gpx>.');
+    }
+
+    /* DER NAMENSRAUM WIRD GENOMMEN, WIE ER KOMMT.
+     *
+     * GPX 1.1 steht unter topografix.com/GPX/1/1, GPX 1.0 unter .../1/0, und
+     * manche Werkzeuge schreiben gar keinen. Auf 1.1 zu bestehen hiesse,
+     * Dateien abzulehnen, die inhaltlich in Ordnung sind — und die Elemente,
+     * um die es hier geht (`trk`, `trkseg`, `trkpt`, `ele`, `time`), heissen
+     * in beiden Fassungen gleich und bedeuten dasselbe. Angenommen wird
+     * deshalb der Namensraum des Dokuments selbst. */
+    $ns = $doc->getDocNamespaces();
+    $haupt = $ns[''] ?? ($ns['gpx'] ?? '');
+    $kinder = static function (SimpleXMLElement $el, string $name) use ($haupt) {
+        return $haupt !== '' ? $el->children($haupt)->{$name} : $el->{$name};
+    };
+    /* ATTRIBUTE UEBER `attributes()`, NICHT UEBER `$el['lat']` — und das ist
+     * kein Geschmack, sondern eine Falle, in die dieses Paket getreten ist.
+     *
+     * Nach `children($ns)` schaltet SimpleXML die Namensraum-Umgebung des
+     * Knotens um, und zwar AUCH fuer Attribute. `$pt['lat']` sucht danach ein
+     * `lat` IM GPX-Namensraum — ein unpraefigiertes Attribut liegt aber in
+     * KEINEM Namensraum (XML-Namens-Spezifikation, Abschnitt 6.2). Das
+     * Ergebnis ist ein leerer String, kein Fehler: Die Datei wurde gelesen,
+     * jeder Punkt fiel durch die Koordinatenpruefung, und die Meldung lautete
+     * „enthält keinen einzigen Trackpunkt" — bei 61 vorhandenen. */
+    $attr = static function (SimpleXMLElement $el, string $name): string {
+        return (string)($el->attributes()->{$name} ?? '');
+    };
+
+    $punkte    = [];
+    $segmente  = 0;
+    $ohneZeit  = 0;
+    $verworfen = 0;
+    $name      = null;
+
+    $meta = $kinder($doc, 'metadata');
+    if ($meta && (string)$kinder($meta[0], 'name') !== '') {
+        $name = (string)$kinder($meta[0], 'name');
+    }
+
+    foreach ($kinder($doc, 'trk') as $trk) {
+        if ($name === null && (string)$kinder($trk, 'name') !== '') {
+            $name = (string)$kinder($trk, 'name');
+        }
+        foreach ($kinder($trk, 'trkseg') as $seg) {
+            $segmente++;
+            foreach ($kinder($seg, 'trkpt') as $pt) {
+                /* DIE WERTE GEHEN DURCH DIE GEMEINSAME PRUEFSCHICHT
+                 * (CLAUDE.md 4). Eine eigene Bereichspruefung hier waere eine
+                 * zweite Wahrheit darueber, was ein gueltiger Breitengrad
+                 * ist — und die eine, die irgendwann nicht mehr zur anderen
+                 * passt. */
+                $la = pruef_breite($attr($pt, 'lat'), 'gpx.lat', $pruef);
+                $lo = pruef_laenge($attr($pt, 'lon'), 'gpx.lon', $pruef);
+                if ($la === null || $lo === null) { $verworfen++; continue; }
+
+                /* `time` IST PFLICHT (E-S4-18), und die Ablehnung ist der
+                 * ganze Zweck der Zaehlung: Ohne Zeitstempel gibt es keine
+                 * Punktreihenfolge, kein Schneiden und keine Phasenzeiten.
+                 * Eine Datei ohne Zeiten still anzunehmen hiesse, eine Spur
+                 * anzulegen, an der die halbe Anwendung nicht arbeiten kann. */
+                $zeit = trim((string)$kinder($pt, 'time'));
+                if ($zeit === '') { $ohneZeit++; continue; }
+                $ts = strtotime($zeit);
+                if ($ts === false) { $ohneZeit++; continue; }
+
+                $ele = trim((string)$kinder($pt, 'ele'));
+                $punkte[] = [count($punkte), $la, $lo,
+                             $ele === '' ? null : (float)$ele, (int)$ts];
+            }
+        }
+    }
+
+    if (!$punkte && $ohneZeit > 0) {
+        throw new InvalidArgumentException(sprintf(
+            'Kein einziger der %d Punkte hat einen Zeitstempel. Ohne <time> gibt '
+            . 'es keine Reihenfolge, kein Schneiden und keine Phasenzeiten — die '
+            . 'Datei wird deshalb nicht angenommen.', $ohneZeit));
+    }
+    if (!$punkte) {
+        throw new InvalidArgumentException(
+            'Die Datei enthält keinen einzigen Trackpunkt (<trkpt> in '
+            . '<trk><trkseg>). Wegpunkte und Routen liest dieser Import nicht.');
+    }
+    if (count($punkte) > LIMIT_TRACKPUNKTE_SPUR) {
+        throw new InvalidArgumentException(sprintf(
+            'Die Datei hat %d Punkte; angenommen werden bis zu %d. Das sind '
+            . '%.1f Stunden bei einem Punkt je Sekunde.',
+            count($punkte), LIMIT_TRACKPUNKTE_SPUR,
+            LIMIT_TRACKPUNKTE_SPUR / 3600));
+    }
+
+    /* NACH ZEIT SORTIEREN UND DIE SEQUENZ NEU VERGEBEN.
+     *
+     * Der Blob speichert Differenzen und verlaesst sich auf eine aufsteigende
+     * Zeitfolge (`spur_kodieren()`); die Position IST die Sequenznummer. Eine
+     * Datei mit mehreren `<trkseg>` oder mehreren `<trk>` liefert die
+     * Abschnitte aber in Dateireihenfolge, und die muss nicht zeitlich sein —
+     * etwa wenn jemand zwei Aufzeichnungen in eine Datei geschoben hat. */
+    usort($punkte, static fn($a, $b) => $a[4] <=> $b[4]);
+    foreach ($punkte as $i => $_) { $punkte[$i][0] = $i; }
+
+    return ['punkte' => $punkte, 'name' => $name, 'segmente' => $segmente,
+            'ohne_zeit' => $ohneZeit, 'verworfen' => $verworfen];
 }
