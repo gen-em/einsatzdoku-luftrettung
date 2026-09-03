@@ -14,6 +14,54 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.8.1] — 2026-09-03
+
+### Android — Ein Bilderlauf für beide Module, und was er im ersten Lauf fand
+
+Für die Uhr gab es seit C1 einen Bilderlauf, für das Handy nicht.
+Oberflächenänderungen am Telefon waren damit **gelesen und nicht gesehen** —
+in E1 sind zwei neue Bildschirmzustände entstanden, und es gab keinen Weg, sie
+anzusehen. `HandyBildTest` schließt das: 16 Bildschirme in drei Breiten (360,
+411, 600 dp), gezeichnet auf den sichtbaren Bereich eines 800-dp-Telefons.
+Beide Läufe brauchen weiterhin **null neue Abhängigkeiten** und weder Emulator
+noch Gerät.
+
+**Beide Läufe vergleichen jetzt die Prüfsummen ihrer Bilder.** Das ist die
+Lehre aus F-P3-AQ: Der Bilderlauf des Web meldete einmal „248 Bilder, 0
+Überlauf", und 176 davon zeigten dieselbe Anmeldeseite. Eine Zahl über Bilder,
+von denen zwei Drittel dasselbe zeigen, ist keine Prüfung, sondern eine
+Beruhigung.
+
+**Es hat sich sofort gerechnet.** Die zwei neuen Uhr-Bilder für „keine Ortung"
+und „GPS sucht" kamen byteweise **gleich** heraus. Der Grund: Auf der
+192-dp-Uhr ist die laufende Ansicht mit Phasenknöpfen 221 dp hoch, und die
+unterste Zeile liegt unter dem Rand. Betroffen war damit nicht nur die neue
+Warnung, sondern auch die **bestehende** „wartet aufs Handy · keine
+Aufzeichnung" — ausgerechnet die Aussage, für die diese Zeile überhaupt gebaut
+wurde, fiel auf der engsten Uhr aus, seit es sie gibt. Beide stehen jetzt in
+der Zustandszeile **oben** und verdrängen dort Phase und Uhrzeit, statt eine
+Reihe hinzuzufügen: Die Ansicht wächst nicht, der früher gemessene
+Glasüberlauf kehrt also nicht zurück. Dass „Phase 3 seit 09:12" währenddessen
+nicht dasteht, ist die richtige Reihenfolge — „es entsteht gerade keine Spur"
+wiegt schwerer, und die Phasenliste ist einen Druck entfernt.
+
+Ein zweiter Fund bleibt **bewusst stehen**: Bei laufendem Einsatz mit
+Phasenknöpfen sind vom Knopf „Dienst beenden" auf 800 dp Bildschirmhöhe nur
+29 dp sichtbar, in allen drei geprüften Breiten. Der Bildschirm rollt, es geht
+nichts verloren — aber mit Handschuhen ist Schieben ein Bedienschritt mehr,
+und es trifft die Handlung, die unter Zeitdruck gesucht wird. Die laufende
+Ansicht zu kürzen ist eine Gestaltungsänderung und braucht eine Entscheidung;
+bis dahin benennt der Bilderlauf sie bei jedem Lauf.
+
+**Eine Messung ist dabei ersatzlos gestrichen worden**, und das ist kein
+Verlust: Die erste Fassung meldete „waagerechten Überlauf" wie der Web-Lauf.
+Die Zahl konnte nichts messen — jeder Bildschirm der App ruft `fillMaxSize()`,
+also gewinnt die Einschränkung immer, und ein zu breites Kind wird von Compose
+beschnitten statt gemeldet. „Verlangte Breite = Gerätebreite" stand in jeder
+der 48 Zeilen, gleich was darin stand. An ihre Stelle sind zwei Messungen
+getreten, die die **Folge** fassen, wo sie jemanden trifft: Knopffarbe an der
+Bildkante, und Knöpfe unter der Faltkante.
+
 ## [Android 0.8.0] — 2026-09-03
 
 ### Android — Die App sagt jetzt, ob sie wirklich aufzeichnet

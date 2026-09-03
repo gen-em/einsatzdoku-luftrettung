@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import org.genem.nadoku.gemeinsam.LogoWahl
+import org.genem.nadoku.gemeinsam.Ortungscode
 import org.genem.nadoku.gemeinsam.Phasen
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,6 +19,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import java.security.MessageDigest
 
 private const val UhrBausteine_SOLL_DP = 48.0
 
@@ -54,6 +56,16 @@ private val KNOPFFARBEN = setOf(0xFFFF8F1F.toInt(), 0xFFD63338.toInt())
 @Config(qualifiers = "w192dp-h192dp-round-xhdpi")
 class UhrBildTest {
 
+    /**
+     * Die Pruefsummen aller gezeichneten Bilder — Grundlage von [alleBilderSindVerschieden].
+     *
+     * Sie ist `companion`, weil JUnit je Prueffall ein neues Exemplar der
+     * Klasse baut. Ein Feld am Exemplar saehe nach jedem Fall wieder leer aus.
+     */
+    private companion object {
+        val pruefsummen = linkedMapOf<String, String>()
+    }
+
     private fun male(name: String, kante: Int, inhalt: @Composable () -> Unit): Double {
         val steuerung = Robolectric.buildActivity(ComponentActivity::class.java).setup()
         val activity = steuerung.get()
@@ -75,6 +87,9 @@ class UhrBildTest {
         ordner.mkdirs()
         val ziel = File(ordner, "$name.png")
         ziel.outputStream().use { bild.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        pruefsummen[name] = MessageDigest.getInstance("SHA-256")
+            .digest(ziel.readBytes())
+            .joinToString("") { "%02x".format(it) }
 
         /* GEGENPROBE IM FALL SELBST. Ein einfarbiges Rechteck wäre ein
          * gescheiterter Versuch, kein Bild. Gezählt wird, wie viele Punkte
@@ -217,6 +232,37 @@ class UhrBildTest {
         pruefeBedienhoehe("192 dp, laufend", dp)
     }
 
+    /**
+     * **Die Uhr sagt, wenn das Handy nichts aufzeichnet** (E-S5Z-15).
+     *
+     * Der Fall, für den F-S5Z-01 mit (c) entschieden wurde: Ein Dienst, der
+     * an der Uhr begonnen wurde, während der Standort des Handys aus ist. Die
+     * Uhr zeigt „keine Ortung · keine Aufzeichnung" — sonst stünde dort
+     * „Dienst läuft" über einer Spur, die gar nicht entsteht.
+     */
+    @Test fun laufendOhneOrtung() {
+        val z = Uhrzustand(
+            dienstLaeuft = true, ansicht = Ansicht.LAUFEND,
+            ortung = Ortungscode.STANDORT_AUS,
+        )
+        val dp = male("uhr-laufend-keine-ortung-192dp", 384) {
+            UhrOberflaeche(logoWahl = LogoWahl.BODEN, anfang = z)
+        }
+        pruefeBedienhoehe("192 dp, ohne Ortung", dp)
+    }
+
+    /** Die leisere Stufe: Der Empfänger fängt sich noch ein. */
+    @Test fun laufendGpsSucht() {
+        val z = Uhrzustand(
+            dienstLaeuft = true, ansicht = Ansicht.LAUFEND,
+            ortung = Ortungscode.SUCHT,
+        )
+        val dp = male("uhr-laufend-gps-sucht-192dp", 384) {
+            UhrOberflaeche(logoWahl = LogoWahl.BODEN, anfang = z)
+        }
+        pruefeBedienhoehe("192 dp, GPS sucht", dp)
+    }
+
     /** Galaxy Watch, 227 dp Rundbild — dieselbe Ansicht, andere Kante. */
     @Test fun groessereUhr() {
         RuntimeEnvironment.setQualifiers("w227dp-h227dp-round-xhdpi")
@@ -233,6 +279,40 @@ class UhrBildTest {
      * Bild ist der Beleg, die Zahl ist die Prüfung. Toleranz 1 dp für die
      * Rasterung auf ganze Bildpunkte.
      */
+    /**
+     * **Keine zwei Bilder sind gleich** (F-P3-AQ).
+     *
+     * Der Bilderlauf des Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176
+     * davon zeigten die Anmeldeseite. Hier ist derselbe Fehler schon einmal
+     * von Hand gefunden worden: `sperreAn = false` malte byteweise dasselbe
+     * wie die Bodenmarke und wurde gestrichen. Diese Zeile sorgt dafür, dass
+     * es beim nächsten Mal auffällt, statt gelesen werden zu müssen.
+     *
+     * Der Fall läuft **zuletzt**: Er braucht die Bilder der anderen. JUnit
+     * ordnet Prüffälle nach einem festen Hash, nicht nach Quelltext — deshalb
+     * malt er selbst, statt sich auf eine Reihenfolge zu verlassen.
+     */
+    @Test fun alleBilderSindVerschieden() {
+        bodenmarke()
+        luftmarke()
+        laufendeAnsichtMitLangemText()
+        laufendOhneOrtung()
+        laufendGpsSucht()
+        groessereUhr()
+
+        val doppelt = pruefsummen.entries
+            .groupBy { it.value }
+            .filter { it.value.size > 1 }
+        check(doppelt.isEmpty()) {
+            "Gleiche Bilder unter verschiedenem Namen (F-P3-AQ): " +
+                doppelt.values.joinToString(" · ") { g -> g.joinToString(" = ") { it.key } }
+        }
+        println(
+            "BILDERLAUF UHR — ${pruefsummen.size} Bilder, alle paarweise verschieden: " +
+                pruefsummen.keys.joinToString(", ")
+        )
+    }
+
     private fun pruefeBedienhoehe(uhr: String, gemessen: Double) {
         check(gemessen >= UhrBausteine_SOLL_DP - 1.0) {
             "Bedienhöhe auf $uhr: %.1f dp statt %.0f dp (E-S4-41). Die Spalte staucht den Knopf."

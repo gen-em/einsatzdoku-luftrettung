@@ -371,14 +371,47 @@ private fun GesperrteAnsicht(z: Uhrzustand, logoWahl: LogoWahl) {
 @Composable
 private fun Zustandszeile(z: Uhrzustand) {
     Box(contentAlignment = Alignment.Center) {
-        Text(
-            text = if (z.einsatzLaeuft) {
-                stringResource(R.string.phase_seit, z.laufendePhase, z.laufendeSeit.orEmpty())
-            } else {
-                stringResource(R.string.dienst_beginnen)
-            },
-            color = Farbe.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
-        )
+        /* WAS NICHT AUFGEZEICHNET WIRD, STEHT HIER OBEN — und nicht unten in
+         * der Verbindungszeile, wo es hingehörte (E-S4-51: Statusanzeigen an
+         * den Rand).
+         *
+         * DER GRUND IST GEMESSEN, nicht überlegt (B-S5Z-17). Auf der 192-dp-Uhr
+         * ist die laufende Ansicht mit Phasenknöpfen 221 dp hoch — die letzte
+         * Zeile liegt unter dem Rand und ist ohne Bildlauf **nicht da**.
+         * `UhrBildTest` hat es nachgewiesen: Drei Bilder mit drei
+         * verschiedenen Ortungszuständen waren byteweise gleich, weil keines
+         * die Zeile zeigte. Eine Warnung, die genau auf der engsten Uhr
+         * ausfällt, ist keine.
+         *
+         * DIE REIHE WÄCHST DABEI NICHT. Es ist dieselbe eine Zeile; sie sagt
+         * nur etwas Anderes, solange es etwas Wichtigeres zu sagen gibt. Der
+         * Preis ist, dass Phase und Zeit währenddessen nicht dastehen — und
+         * das ist die richtige Reihenfolge: „Es entsteht gerade keine Spur"
+         * schlägt „Phase 3 seit 09:12", und die Phasenliste ist einen Druck
+         * entfernt. */
+        val warnung = when {
+            z.dienstSchwebt -> stringResource(R.string.dienst_schwebt)
+            z.ortung in Ortungscode.OHNE_AUFZEICHNUNG -> stringResource(R.string.ortung_keine)
+            else -> null
+        }
+        when {
+            warnung != null -> Text(
+                text = warnung,
+                color = Farbe.rosa, fontSize = 13.sp, textAlign = TextAlign.Center,
+            )
+            z.ortung == Ortungscode.SUCHT -> Text(
+                text = stringResource(R.string.ortung_sucht),
+                color = Farbe.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
+            )
+            else -> Text(
+                text = if (z.einsatzLaeuft) {
+                    stringResource(R.string.phase_seit, z.laufendePhase, z.laufendeSeit.orEmpty())
+                } else {
+                    stringResource(R.string.dienst_beginnen)
+                },
+                color = Farbe.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -402,43 +435,11 @@ private fun Zustandszeile(z: Uhrzustand) {
  */
 @Composable
 private fun Verbindungszeile(z: Uhrzustand) {
-    if (z.dienstSchwebt) {
-        Text(
-            text = stringResource(R.string.dienst_schwebt),
-            color = Farbe.rosa, fontSize = 12.sp, textAlign = TextAlign.Center,
-        )
-        return
-    }
-    /* DIE ORTUNG DES HANDYS HAT VORFAHRT VOR DEM FUNKSTAND (E-S5Z-15).
-     *
-     * Beide sagen dasselbe Wesentliche — „gerade entsteht keine Spur" —, aber
-     * die fehlende Ortung ist der Fall, den nur diese Zeile verraten kann: Der
-     * Funk steht, das Handy hat quittiert, der Dienst läuft, und aufgezeichnet
-     * wird trotzdem nichts. Ohne sie stünde hier „verbunden", und das wäre
-     * wahr und irreführend zugleich.
-     *
-     * EIN WORTLAUT FÜR VIER URSACHEN: Die Uhr kann keine davon beheben. Das
-     * tut das Handy, und das vibriert (E-S5Z-04).
-     *
-     * SIE STEHT HIER UNTEN UND NICHT ÜBER DEN KNÖPFEN (E-S5Z-25, E-S4-51):
-     * Bedienelemente in die Mitte, wo der Kreis breit ist, Statusanzeigen an
-     * den Rand. Der Entwurf sah sie vor den Knöpfen vor; dort schob schon die
-     * Verbindungszeile beide Knöpfe so weit nach unten, dass 1,66 % des
-     * Inhalts aus dem Glas liefen — gemessen, nicht vermutet. */
-    if (z.ortung in Ortungscode.OHNE_AUFZEICHNUNG) {
-        Text(
-            text = stringResource(R.string.ortung_keine),
-            color = Farbe.rosa, fontSize = 12.sp, textAlign = TextAlign.Center,
-        )
-        return
-    }
-    if (z.ortung == Ortungscode.SUCHT) {
-        Text(
-            text = stringResource(R.string.ortung_sucht),
-            color = Farbe.sand, fontSize = 12.sp, textAlign = TextAlign.Center,
-        )
-        return
-    }
+    /* „Wartet aufs Handy" und „keine Ortung" standen einmal HIER. Sie sind
+     * mit E1 in die Zustandszeile oben gewandert, weil diese Reihe auf der
+     * 192-dp-Uhr im Phasenmodus unter dem Rand liegt (B-S5Z-17, dort die
+     * Messung). Was bleibt, ist der Funkstand: Er ist eine Auskunft, keine
+     * Warnung, und darf unter den Rand rutschen. */
     Text(
         text = when {
             /* NOCH NICHTS VERSUCHT ist ein eigener Fall und nicht „verbunden".

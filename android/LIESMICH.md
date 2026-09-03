@@ -113,19 +113,20 @@ Die APK liegen danach unter
 
 ### Was der Baulauf heute meldet
 
-Stand E1 (Android 0.8.0), `./gradlew build` im Container, 03.09.2026:
+Stand E1 (Android 0.8.1), `./gradlew build` im Container, 03.09.2026:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **14** | **0** |
-| Prüffälle | **195**, davon 12 übersprungen | **61**, davon 0 übersprungen |
+| Prüffälle | **196**, davon 12 übersprungen | **64**, davon 0 übersprungen |
 | APK (unsigniert, Release) | **9 637 735 B** | **19 574 450 B** |
 
-Zusammen **256 Prüffälle** — 36 mehr als der Stand davor (0.7.7: 167 / 53 =
+Zusammen **260 Prüffälle** — 40 mehr als der Stand davor (0.7.7: 167 / 53 =
 220). Sie verteilen sich auf `OrtungswaechterTest` (21),
 `OrtungszuhoererTest` (2), `AusduennerTest` (+5 für `brauchbar()`),
-`NachrichtenformatTest` (+5) und `UhrsteuerungTest` (+3). Dass es so viele
+`NachrichtenformatTest` (+5), `UhrsteuerungTest` (+3), `HandyBildTest` (1 Fall
+für 48 Bilder) und `UhrBildTest` (+3 Fälle, 4 → 6 Bilder). Dass es so viele
 sind, ist kein Übereifer: Paket E ist zu einem großen Teil gerätegebunden,
 und diese Fälle sind das Einzige, was im Container überhaupt läuft
 (Abschnitt 7).
@@ -168,21 +169,51 @@ Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.
 
 Die **12 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 195 von 195 (siehe unten). *(Hier stand „11" — die Zahl
-war seit 0.7.0 nicht nachgezogen worden; gezählt sind es zwölf.)* Die 61 Fälle der Uhr laufen
+Installation sind es 196 von 196 (siehe unten). *(Hier stand „11" — die Zahl
+war seit 0.7.0 nicht nachgezogen worden; gezählt sind es zwölf.)* Die 64 Fälle der Uhr laufen
 immer — sie brauchen weder Server noch Gerät, weil geprüft wird, was die
 Bedienung *entscheidet* und was der Funk *zusichert*, nicht was die Uhr
 *zeichnet* (E-S4-40).
 
 ### 2.2 Bilder der Oberfläche, ohne Emulator und ohne Gerät
 
-`UhrBildTest` (Modul `uhr`) baut die Ansicht in einer Robolectric-Activity
-auf, misst und zeichnet sie selbst auf eine Bitmap und legt PNG unter
-`uhr/build/bilder/` ab:
+**Zwei Bilderläufe, einer je Modul.** Beide bauen die Ansicht in einer
+Robolectric-Activity auf, messen und zeichnen sie selbst auf eine Bitmap und
+legen PNG unter `<modul>/build/bilder/` ab:
 
 ```bash
-./gradlew :uhr:testDebugUnitTest --tests '*UhrBildTest*'
+./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  6 Bilder
+./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 48 Bilder
 ```
+
+| | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
+|---|---|---|
+| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | 48 — 16 Bildschirme × 3 Breiten (360, 411, 600 dp) |
+| Bedienhöhe | 48 dp je Bild | 48 dp an 45 von 48 (drei liegen unter der Faltkante) |
+| Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**, und was unter der **Faltkante** liegt |
+| Unterscheidbarkeit | alle 6 paarweise verschieden | alle 48 paarweise verschieden, **und je Breite** |
+
+**Warum die letzte Zeile die wichtigste ist (F-P3-AQ).** Der Bilderlauf des
+Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die
+Anmeldeseite. Beide Läufe vergleichen deshalb die SHA-256 aller erzeugten PNG
+und bestehen darauf, dass keine zweimal vorkommt. Das hat sich sofort
+ausgezahlt: Die zwei neuen Uhr-Bilder für „keine Ortung" und „GPS sucht"
+kamen **byteweise gleich** heraus, weil die Zeile auf der 192-dp-Uhr im
+Phasenmodus unter dem Rand lag und in keinem der beiden zu sehen war
+(B-S5Z-17). Ohne den Vergleich wären zwei Dateien entstanden, die nichts
+belegen.
+
+**Was `HandyBildTest` ausdrücklich NICHT misst:** waagerechten Überlauf im
+Sinn des Web-Laufs. Die erste Fassung meldete ihn, und die Zahl war wertlos —
+jeder Bildschirm der App ruft `fillMaxSize()`, also gewinnt die Einschränkung
+immer, und ein zu breites Kind wird von Compose **beschnitten statt
+gemeldet**. „Verlangte Breite = Gerätebreite" stand in jeder der 48 Zeilen,
+gleich was darin stand. An ihre Stelle sind die zwei Messungen getreten, die
+die **Folge** des Beschnitts dort fassen, wo sie jemanden trifft: Knopffarbe
+an der Bildkante, und Knöpfe unter der Faltkante.
+
+**Was beide nicht können:** Bedienzustände. Kein Tippen, kein Bildlauf, keine
+Tastatur, keine Schriftrasterung eines echten Geräts, keine Systemleisten.
 
 **Null neue Abhängigkeiten** (E-S4-49): `ComposeView` steckt in
 `androidx.compose.ui`, das die App ohnehin einbindet. Der naheliegende Weg

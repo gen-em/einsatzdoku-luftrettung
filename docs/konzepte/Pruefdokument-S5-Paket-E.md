@@ -14,7 +14,7 @@ geschrieben, nicht für die Instanz am Code.
 
 | | |
 |---|---|
-| Stand | 03.09.2026 — **E1 fertig** (Android 0.8.0), E2 und E3 offen |
+| Stand | 03.09.2026 — **E1 fertig** (Android 0.8.1, mit Bilderlauf), E2 und E3 offen |
 | Zweig | `claude/s5-paket-e-android` |
 | Erhoben an | Zweigstand von `main` 696449d (Web 12.9.4, Android 0.7.7, Uhr 2.0.0) |
 
@@ -54,38 +54,53 @@ das jetzt so.
 | Die **drei Meldungs-IDs** nebeneinander | `dumpsys notification` fällt aus | E1-10 |
 | Ob der **Data Layer** die Standmeldung wirklich zustellt | keine Wear-OS-Uhr, keine Telefonseite (`android/LIESMICH.md` 7) | E1-11 |
 
-### 1.3 Die Diagnose 1.3 des Konzepts ist **nicht gefahren**
+### 1.3 Die Diagnose des Vorfalls — zur Hälfte beantwortet
 
-Sie braucht das S24 und den Produktivserver. **Sie liegt beim Auftraggeber**,
-und sie gehört **vor E2** — nicht, weil E2 sonst nicht gebaut werden könnte
-(E2 behebt alle drei Ketten unabhängig davon), sondern weil sie entscheidet,
-welche der drei als **belegter** Fehler in dieses Dokument kommt.
+**Beantwortet am 03.09.2026 vom Auftraggeber:**
 
-Die vier Schritte, kurz:
+| Frage | Antwort | Folge |
+|---|---|---|
+| Am Handy oder an der Uhr beendet? | **am Handy** | **H1 (Kette B3) ist ausgeschlossen** — die Uhr war es nicht |
+| Fehlermeldung? | **keine** | passt auf jede der übrigen Ketten; 0.7.7 hat keinen Weg, eine zu zeigen |
+| „Alles gesendet" oder „Rückstand N Pakete"? | **kein Rückstand** | passt auf **H3** (Kette B5): 400-Antwort, Paket als `fehlerhaft` markiert und aus Warteschlange **und** Anzeige genommen |
 
-1. App öffnen: steht unter „Gekoppelt" **„Alles gesendet"** oder **„Rückstand
-   N Pakete"**? Rückstand > 0 → H2.
-2. `adb logcat -s NAdoku`: Zeilen „Sendelauf: … Pakete fertig" nach dem
-   Beenden? Keine → der Lauf ist nicht gelaufen.
-3. Auf dem Server:
-   `SELECT client_ref, started_at, ended_at, final FROM rest_segments WHERE user_id = ? ORDER BY id DESC LIMIT 5;`
-   — `final = 0` bestätigt die fehlende Übertragung; ein `ar-`-Präfix sagt,
-   dass es das Handy war.
-4. Wurde der Dienst **am Handy oder an der Uhr** beendet, und wie lange danach
-   wurde ins Web gesehen?
+**Damit ist B-S5Z-06 der belegte Fehler**, nicht mehr nur ein Nebenfund: Die
+App sagt „Alles gesendet", während beim Server ein Segment offen bleibt. Für
+E2 heißt das, dass **E-S5Z-12** — die Zeile „N Pakete vom Server abgewiesen" —
+nicht Beigabe ist, sondern die Abnahme.
+
+**Der Vorbehalt gehört dazu und wird nicht weggelassen:** Der Blick in die App
+erfolgte *später*, nicht im Augenblick des Beendens. Ein Rückstand, den ein
+späterer Dienst inzwischen weggeräumt hat, sähe heute genauso aus — das wäre
+H2 mit später Nachlieferung. Unterschieden wird das an **einer** Stelle:
+
+> **Offen, und nur am Server zu beantworten:** Ist das Segment von damals
+> **heute noch** offen (`final = 0`, `ended_at IS NULL`)? Dann war es H3.
+> Ist es inzwischen geschlossen, war es H2.
+>
+> ```sql
+> SELECT client_ref, started_at, ended_at, final FROM rest_segments
+>  WHERE user_id = ? ORDER BY id DESC LIMIT 5;
+> ```
+>
+> Ebenfalls offen: `adb logcat -s NAdoku` auf Zeilen „Sendelauf: … fertig"
+> nach dem Zeitpunkt des Beendens. **Beides blockiert E2 nicht** — E2 behebt
+> H2 und H3 gleichermaßen.
 
 ---
 
 ## 2. Was maschinell geprüft wurde — mit Mittel **und** Zahl
 
-Alles am Stand von E1 (Android 0.8.0), **nach** der letzten Änderung gefahren,
+Alles am Stand von E1 (Android 0.8.1), **nach** der letzten Änderung gefahren,
 nicht zwischendurch.
 
-| Prüfmittel | Was es gemessen hat | Vorher (0.7.7) | Nachher (0.8.0) |
+| Prüfmittel | Was es gemessen hat | Vorher (0.7.7) | Nachher (0.8.1) |
 |---|---|---|---|
 | `./gradlew build` | Übersetzen beider Module, Lint, alle Prüffälle in beiden Varianten | 0 Fehler, **14** Warnungen | 0 Fehler, **14** Warnungen |
-| Prüffälle `handy` | JUnit/Robolectric, je Variante | **167** (12 übersprungen) | **195** (12 übersprungen) |
-| Prüffälle `uhr` | dieselbe | **53** (0) | **61** (0) |
+| Prüffälle `handy` | JUnit/Robolectric, je Variante | **167** (12 übersprungen) | **196** (12 übersprungen) |
+| Prüffälle `uhr` | dieselbe | **53** (0) | **64** (0) |
+| `HandyBildTest` | 16 Bildschirme × 3 Breiten, gezeichnet und vermessen | — *(gab es nicht)* | **48 Bilder**, alle paarweise verschieden |
+| `UhrBildTest` | Uhr-Ansichten, gezeichnet und vermessen | 4 Bilder | **6 Bilder**, alle paarweise verschieden |
 | Fehlschläge | beide Module, beide Varianten | 0 | **0** |
 | `werkzeuge/kontraste.py` | Farbpaare gegen WCAG-Zielwert, aus `farben.xml` gerechnet | 16 Paare, 0 darunter | **24 Paare, 0 darunter** |
 | `werkzeuge/farbabgleich.py` | App-Token gegen Web-Token | 0 Abweichungen, 0 eigene Werte | **0 / 0** |
@@ -96,7 +111,7 @@ nicht zwischendurch.
 **Was diese Zahlen *nicht* messen** — die Regel aus `CLAUDE.md` 6, dass eine
 grüne Zahl erst dann ein Beleg ist, wenn sie das Gemessene benennt:
 
-- Die **256 Prüffälle** prüfen die *Entscheidungen*: die Zustandsmaschine mit
+- Die **260 Prüffälle** prüfen die *Entscheidungen*: die Zustandsmaschine mit
   eingespeister Zeit, die Genauigkeitsschwelle, den Rundlauf des
   Nachrichtenformats. Sie prüfen **nicht**, dass ein Rückruf des Systems
   eintrifft, dass ein Handy vibriert oder dass ein Text auf einem Bildschirm
@@ -108,23 +123,45 @@ grüne Zahl erst dann ein Beleg ist, wenn sie das Gemessene benennt:
 - Die **Wortliste** las 2 Dateien: `handy/…/strings.xml` und
   `uhr/…/strings.xml`. Sie hat die Kotlin-Quellen **nicht** angesehen; ein
   Text, der dort fest verdrahtet stünde, fiele nicht auf.
-- Der **`SendeRundlaufTest` ist übersprungen** (12 von 195). Er ist die
+- Der **`SendeRundlaufTest` ist übersprungen** (12 von 196). Er ist die
   Abnahme von **E2**, nicht von E1; ohne laufende Installation überspringt er
   sich selbst.
 
 ---
 
-## 3. Was im Browser bzw. am Bild geprüft wurde
+## 3. Was am Bild geprüft wurde
 
-**Nichts.** Paket E berührt `server/` nicht — es gibt keine Webseite dazu. Die
-Oberfläche der App ist über Compose-Vorschauen beschrieben (`VorschauRuhend`,
-**`VorschauStandortAus`** *(neu)*, `VorschauLaufendNurAufzeichnen`,
-**`VorschauLaufendOhneSignal`** *(neu)*), aber **nicht gerendert**: Der
-Bilderlauf über Robolectric besteht bisher nur für das Uhr-Modul
-(`UhrBildTest`); ein Gegenstück für das Handy gibt es nicht.
+Im **Browser** nichts — Paket E berührt `server/` nicht, es gibt keine
+Webseite dazu.
 
-**Das ist eine Lücke und wird als solche gemeldet**, nicht als erledigt. Die
-zwei neuen Vorschauen sind gelesen, nicht gesehen.
+**Am Bild seit 0.8.1 alles, was die App zeigt.** Die Lücke aus der ersten
+Fassung dieses Dokuments („für das Handy gibt es keinen Bilderlauf") ist
+geschlossen:
+
+| Lauf | Bilder | Was gemessen wird | Ergebnis |
+|---|---|---|---|
+| `HandyBildTest` | **48** (16 Bildschirme × 360/411/600 dp) | Bedienhöhe, Knopf an der Bildkante, Knopf unter der Faltkante, Unterscheidbarkeit | 48 dp an 45 von 48; 0 an der Kante; **3 unter der Faltkante**; alle 48 verschieden |
+| `UhrBildTest` | **6** | Bedienhöhe, Anteil außerhalb des runden Glases, Unterscheidbarkeit | 48 dp je Bild; **0 %** Knopffläche außerhalb; alle 6 verschieden |
+
+Die 16 Bildschirme decken beide Sperren vor dem Dienst, **alle sechs**
+Ortungszustände im Dienst, beide Betriebsarten, Kopplung und Einstellungen.
+Die PNG liegen unter `handy/build/bilder/` und `uhr/build/bilder/`.
+
+**Zwei Funde beim ersten Lauf** — beide standen vorher in keiner Zahl:
+
+1. **B-S5Z-17 (behoben):** Auf der 192-dp-Uhr lag die unterste Zeile im
+   Phasenmodus unter dem Rand. Betroffen war neben der neuen Ortungswarnung
+   die **bestehende** „wartet aufs Handy · keine Aufzeichnung". Beide stehen
+   jetzt oben in der Zustandszeile.
+2. **B-S5Z-16 (offen, bewusst):** Bei laufendem Einsatz mit Phasenknöpfen sind
+   vom Knopf „Dienst beenden" auf 800 dp nur **29 dp** sichtbar. Der
+   Bildschirm rollt; eine Kürzung wäre eine Gestaltungsänderung und braucht
+   eine Entscheidung.
+
+**Was der Bilderlauf nicht sieht:** Bedienzustände. Kein Tippen, kein
+Bildlauf, keine Tastatur, keine Schriftrasterung eines echten Geräts, keine
+Systemleisten. Und ausdrücklich **keinen waagerechten Überlauf** im Sinn des
+Web-Laufs — die Begründung steht in `android/LIESMICH.md` 2.2.
 
 ---
 
@@ -150,6 +187,8 @@ GPS: Tiefgarage oder Handy in eine Metallbox.
 | **E1-11** | *(nur mit Wear-OS-Uhr)* E1-4 mit Blick auf die Uhr | unten in Rosa „keine Ortung · keine Aufzeichnung", binnen Sekunden; nach E1-5 verschwindet sie | Uhr bleibt stumm → die Standmeldung kommt nicht an. **Ohne Uhr ist dieser Punkt nicht prüfbar und bleibt offen** |
 | **E1-12** | *(nur mit einem Android-8/9/10-Gerät)* E1-4 dort | wie E1-4, **kein Absturz** | `AbstractMethodError` im Logcat — das belegte B-S5Z-01 rückwirkend für 0.7.7. **Ohne solches Gerät bleibt der Befund abgeleitet** |
 | **E1-13** | Dienst an der **Uhr** beginnen, während der Standort des Handys aus ist | Der Dienst **beginnt** (er wird nicht abgelehnt), das Handy vibriert sofort, die Uhr zeigt „keine Ortung · keine Aufzeichnung" | Die Uhr zeigt „Dienst läuft" ohne Hinweis, oder das Handy schweigt |
+| **E1-15** | Laufenden Einsatz mit Phasenknöpfen am S24 ansehen (B-S5Z-16) | „Dienst beenden" ist ohne Schieben sichtbar — **oder eben nicht**; dann notieren, wie weit gescrollt werden muss | Der Knopf ist erst nach Schieben da. Der Bilderlauf sagt: 29 von 48 dp sichtbar auf 800 dp. **Am Gerät gegenprüfen** — das S24 ist höher als 800 dp |
+| **E1-16** | *(mit Wear-OS-Uhr)* Laufenden Dienst mit Phasenknöpfen ansehen, während das Handy nichts aufzeichnet | „keine Ortung · keine Aufzeichnung" steht **oben** in der Zustandszeile, dort wo sonst Phase und Zeit stehen | Die Zeile fehlt — dann greift B-S5Z-17 noch, oder die Standmeldung kommt nicht an |
 | **E1-14** | Zwölfstundendienst mit E1 | Wächter und Sendetakt laufen durch; **Akkuverbrauch notieren** (Backlog 82) | Dienst abgeräumt („Apps im Tiefschlaf") |
 
 ### Was die Punkte messen sollen, das noch keine Zahl hat
@@ -173,7 +212,8 @@ Sie stehen und fallen mit E1-3, E1-6 und E1-7:
 | JUnit/Robolectric | den echten `LocationManager`, den echten `NotificationManager`, den echten Data Layer. Robolectric stellt sie nach; die Nachstellung ist nicht die Sache |
 | `kontraste.py` | ob die Farbe im Code an dieser Stelle steht. **Feste Paarliste** — was nicht eingetragen ist, wird nicht gemessen und meldet folglich auch nichts (Backlog 92) |
 | `wortliste.py` Bereich d | alles außerhalb der beiden `strings.xml` |
-| Compose-Vorschauen | alles. Sie sind Quelltext, kein Bild — für das Handy gibt es keinen Bilderlauf |
+| Compose-Vorschauen | alles. Sie sind Quelltext, kein Bild — der Beleg kommt aus dem Bilderlauf |
+| `HandyBildTest` / `UhrBildTest` | Bedienzustände. Und **keinen waagerechten Überlauf**: `fillMaxSize()` lässt die Einschränkung immer gewinnen, ein zu breites Kind wird beschnitten statt gemeldet |
 | Lint | Laufzeitverhalten. Es hat `postDelayed` mit Token als `NewApi` gefunden — das war Glück in dem Sinn, dass der Fehler auf einem Android-9-Gerät sonst erst zur Laufzeit aufgefallen wäre |
 
 ---
@@ -181,9 +221,8 @@ Sie stehen und fallen mit E1-3, E1-6 und E1-7:
 ## 6. Offene Punkte, die aus E1 mitgehen
 
 1. **Die Diagnose 1.3** (Abschnitt 1.3 hier) — vor E2, beim Auftraggeber.
-2. **Ein Bilderlauf für das Handy-Modul.** Es gibt einen für die Uhr; das
-   Gegenstück fehlt. Solange es fehlt, sind Oberflächenänderungen der
-   Handy-App gelesen und nicht gesehen. *Kein Backlog-Punkt daraus gemacht —
-   erst fragen, ob er gewollt ist.*
+2. ~~Ein Bilderlauf für das Handy-Modul.~~ **Erledigt mit 0.8.1** —
+   `HandyBildTest`, 48 Bilder. Offen bleibt daraus **B-S5Z-16**: der
+   „Dienst beenden"-Knopf unter der Faltkante bei laufendem Einsatz.
 3. **E1-11 und E1-12** brauchen Geräte, die es hier nicht gibt (Wear-OS-Uhr;
    Android 8–10).
