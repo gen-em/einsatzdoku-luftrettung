@@ -175,6 +175,45 @@ class AusduennerTest {
         assertEquals(70.0, a.anstiegM, 0.001)
     }
 
+    // ---- brauchbar(): dieselbe Schwelle fuer Aufzeichnung und Anzeige ----
+    //
+    // Sie steht seit E1 als eigene Funktion da, weil der Ortungswaechter sie
+    // ebenfalls braucht (E-S5Z-02). Diese Faelle belegen die GRENZE selbst --
+    // 100 m ist die Zahl im Code, und ein "> " statt "≥" verschoebe sie um
+    // einen Meter, ohne dass ein Stromfall das merkte.
+
+    @Test fun neunundneunzigMeterSindNochBrauchbar() {
+        assertTrue(Ausduenner.brauchbar(punktMit(99f)))
+    }
+
+    @Test fun genauHundertMeterSindNochBrauchbar() {
+        assertTrue(Ausduenner.brauchbar(punktMit(100f)))
+    }
+
+    @Test fun einhunderteinsIstNichtMehrBrauchbar() {
+        assertFalse(Ausduenner.brauchbar(punktMit(101f)))
+    }
+
+    /** Kein Wert ist kein Grund zum Wegwerfen -- das waere stiller Verlust. */
+    @Test fun ohneAngabeGiltDerFundAlsBrauchbar() {
+        assertTrue(Ausduenner.brauchbar(punktMit(null)))
+    }
+
+    /** Und `nimm()` benutzt genau diese Regel, statt eine zweite zu fuehren. */
+    @Test fun nimmUndBrauchbarSindSichEinig() {
+        for (g in listOf(null, 0f, 8f, 99f, 100f, 101f, 500f)) {
+            val punkt = punktMit(g)
+            assertEquals(
+                "Streuung $g",
+                Ausduenner.brauchbar(punkt),
+                Ausduenner().nimm(punkt),
+            )
+        }
+    }
+
+    private fun punktMit(genauigkeitM: Float?) =
+        Rohpunkt(47.7261, 10.3186, 712.0, 1000, genauigkeitM = genauigkeitM)
+
     @Test fun haversineStimmtMitDerReferenzUeberein() {
         // 1 Grad Breite am Äquator: rund 111,19 km (2 pi R / 360).
         assertEquals(111_194.9, Ausduenner.abstandM(0.0, 0.0, 1.0, 0.0), 1.0)

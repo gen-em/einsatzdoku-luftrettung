@@ -202,16 +202,44 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
-Stand C2 (Android 0.7.0), `./gradlew build` im Container:
+Stand E3 (Android 0.10.1), `./gradlew build` im Container, 03.09.2026:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **14** | **0** |
-| Prüffälle | **167**, davon 12 übersprungen | **53**, davon 0 übersprungen |
-| APK (unsigniert, Release) | **9 598 911 B** | **19 491 794 B** |
+| Prüffälle | **224**, davon 12 übersprungen | **71**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **9 657 735 B** | **19 574 446 B** |
 
-Zusammen **220 Prüffälle**. Dass die Uhr-APK doppelt so groß ist wie die
+Zusammen **295 Prüffälle** — 75 mehr als der Stand davor (0.7.7: 167 / 53 =
+220). Woher sie kommen:
+
+| Paket | Prüffälle |
+|---|---|
+| E1 | `OrtungswaechterTest` 24, `OrtungszuhoererTest` 2, `AusduennerTest` +5 (`brauchbar()`), `NachrichtenformatTest` +5, `UhrsteuerungTest` +3 |
+| Bilderlauf | `HandyBildTest` 1 Fall für **63 Bilder**, `UhrBildTest` +3 Fälle (4 → 6 Bilder) |
+| E2 | `NachsendenTest` 9, `DienstfolgeTest` 6, `AbgewieseneTest` 5, `SendetaktTest` +5 |
+| E3 | `OrtungsanzeigeTest` 7 (die drei davon in `OrtungswaechterTest` sind oben schon gezählt) |
+
+Dass es so viele sind, ist kein Übereifer: Paket E ist zu einem großen Teil
+gerätegebunden, und diese Fälle sind das Einzige, was im Container überhaupt
+läuft (Abschnitt 7).
+
+**Mit laufender Installation sind es 224 von 224, 0 übersprungen** — dann
+laufen auch die drei Rundlaufklassen. `SendeRundlaufTest` ist die Abnahme von
+E2: Er belegt am echten `ingest.php`, dass ein Dienstende beim Server ankommt
+(`rest_segments.final = 1` mit `ended_at`, `days.ended_at` gesetzt).
+
+**Die Warnungszahl blieb bei 14, und einmal war sie 15.** Der neue Text
+„· GPS ok" ergab `Typos: "ok" is usually capitalized as "OK"`. Stummgeschaltet
+wurde nichts — der Wortlaut heißt jetzt „· GPS empfängt", und das ist die
+bessere Aussage: Er nennt das Gemessene (es kommen brauchbare Funde) statt
+eine Güte zu behaupten, die die App gar nicht abstuft. Ebenso gefunden und
+behoben: `postDelayed(r, token, ms)` gibt es erst ab **API 28**, `minSdk` ist
+26 — vier Lint-Fehler `NewApi`. Der Weg, der ab API 1 trägt, ist
+`postAtTime(r, token, uptimeMillis() + ms)`.
+
+Die APKs sind gegenüber 0.7.7 um 58 824 B (Handy) und 82 652 B (Uhr) gewachsen. Dass die Uhr-APK doppelt so groß ist wie die
 Handy-APK, ist kein Fehler: Compose für Wear OS bringt seine eigene
 Bausteinsammlung mit, und beide Module übersetzen `gemeinsam/` mit. Der Fund
 **B-S4-03** im Konzept hält fest, dass das für eine Uhr viel ist und worauf
@@ -239,21 +267,61 @@ mehr, dafür verträgt sie sich mit der Inhaltsrichtlinie des Play Store.
 Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.
 
-Die **11 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 167 von 167 (siehe unten). Die 53 Fälle der Uhr laufen
+Die **12 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
+Installation sind es 224 von 224 (siehe unten). *(Hier stand „11" — die Zahl
+war seit 0.7.0 nicht nachgezogen worden; gezählt sind es zwölf.)* Die 71 Fälle der Uhr laufen
 immer — sie brauchen weder Server noch Gerät, weil geprüft wird, was die
 Bedienung *entscheidet* und was der Funk *zusichert*, nicht was die Uhr
 *zeichnet* (E-S4-40).
 
 ### 2.2 Bilder der Oberfläche, ohne Emulator und ohne Gerät
 
-`UhrBildTest` (Modul `uhr`) baut die Ansicht in einer Robolectric-Activity
-auf, misst und zeichnet sie selbst auf eine Bitmap und legt PNG unter
-`uhr/build/bilder/` ab:
+**Zwei Bilderläufe, einer je Modul.** Beide bauen die Ansicht in einer
+Robolectric-Activity auf, messen und zeichnen sie selbst auf eine Bitmap und
+legen PNG unter `<modul>/build/bilder/` ab:
 
 ```bash
-./gradlew :uhr:testDebugUnitTest --tests '*UhrBildTest*'
+./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  6 Bilder
+./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 66 Bilder
 ```
+
+| | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
+|---|---|---|
+| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | **66** — 22 Bildschirme × 3 Breiten (360, 411, 600 dp) |
+| Bedienhöhe | 48 dp je Bild | 48 dp an **66 von 66** |
+| Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**; dazu der **ganze** Inhalt gegen den sichtbaren Bereich |
+| Unterscheidbarkeit | alle 6 paarweise verschieden | alle 66 paarweise verschieden, **und je Breite** |
+
+**Warum die letzte Zeile die wichtigste ist (F-P3-AQ).** Der Bilderlauf des
+Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die
+Anmeldeseite. Beide Läufe vergleichen deshalb die SHA-256 aller erzeugten PNG
+und bestehen darauf, dass keine zweimal vorkommt. Das hat sich sofort
+ausgezahlt: Die zwei neuen Uhr-Bilder für „keine Ortung" und „GPS sucht"
+kamen **byteweise gleich** heraus, weil die Zeile auf der 192-dp-Uhr im
+Phasenmodus unter dem Rand lag und in keinem der beiden zu sehen war
+(B-S5Z-17). Ohne den Vergleich wären zwei Dateien entstanden, die nichts
+belegen.
+
+**Zwei Funde im Prüfmittel selbst, beide behoben.** Die erste Fassung
+maß den waagerechten Überlauf (siehe unten) — eine Zahl, die nichts messen
+konnte. Die zweite fand Knöpfe, die von der Faltkante **angeschnitten**
+werden, aber keinen, der **vollständig** darunter liegt: Sie meldete „kein
+Knopf unter der Faltkante", während einer 80 dp tiefer lag (B-S5Z-18). Der
+Lauf misst deshalb **zweimal** — einmal auf der Gerätehöhe für das Bild,
+einmal ohne Faltkante für die Zählung — und nennt in der Ausgabe „N von M
+Knöpfen, Inhalt X dp".
+
+**Was `HandyBildTest` ausdrücklich NICHT misst:** waagerechten Überlauf im
+Sinn des Web-Laufs. Die erste Fassung meldete ihn, und die Zahl war wertlos —
+jeder Bildschirm der App ruft `fillMaxSize()`, also gewinnt die Einschränkung
+immer, und ein zu breites Kind wird von Compose **beschnitten statt
+gemeldet**. „Verlangte Breite = Gerätebreite" stand in jeder Zeile,
+gleich was darin stand. An ihre Stelle sind die zwei Messungen getreten, die
+die **Folge** des Beschnitts dort fassen, wo sie jemanden trifft: Knopffarbe
+an der Bildkante, und Knöpfe unter der Faltkante.
+
+**Was beide nicht können:** Bedienzustände. Kein Tippen, kein Bildlauf, keine
+Tastatur, keine Schriftrasterung eines echten Geräts, keine Systemleisten.
 
 **Null neue Abhängigkeiten** (E-S4-49): `ComposeView` steckt in
 `androidx.compose.ui`, das die App ohnehin einbindet. Der naheliegende Weg
@@ -460,7 +528,87 @@ XML-Ressource führt statt in einem Stylesheet.
 
 Das steht vorn und nicht in einer Fußnote (E-R45-7, E-R45-8):
 
-- ~~**Kein Emulator.**~~ **Das stimmte nicht** und ist seit 0.7.2 berichtigt.
+### Was Paket E1 dazugelegt hat (Android 0.8.0)
+
+Der Ortungswächter ist **fast vollständig gerätegebunden**. Was in diesem
+Container läuft, ist seine Regel — die Zustandsmaschine mit eingespeister
+Zeit; was sie auslöst und was daraus folgt, läuft nicht:
+
+| Nicht prüfbar | Warum | Wo es geprüft wird |
+|---|---|---|
+| **Vibration** der Warnung | Kein Gerät, kein Emulator (siehe unten) | Gerätetest, einmal auch mit „Nicht stören" — die Einstellung kann sie unterdrücken, und das bleibt so |
+| **Die Fristen** 120 s (Erstfix) und 60 s (Signalverlust) | Kein GPS. Beide Zahlen sind **hergeleitet, nicht gemessen** | Gerätetest: Kaltstart im Freien mitstoppen, Handy drei Minuten in die Tiefgarage |
+| **Ob `onProviderDisabled` ankommt** | Der Standort lässt sich hier nicht abschalten, weil es nichts gibt, an dem er anginge | Gerätetest: Schnelleinstellung im laufenden Dienst |
+| **Der `AbstractMethodError` auf Android 8–10** | Kein solches Gerät. Der Befund ist aus der Plattform-Schnittstelle **abgeleitet** | Gerätetest, falls ein Gerät greifbar ist. Ersatzweise der Reflexionsfall — er belegt die Bauform, nicht ihre Wirkung |
+| **Die drei Meldungs-IDs nebeneinander** | `adb shell dumpsys notification` braucht ein Gerät | Gerätetest, mit dem Auge |
+| **Job-Zeiten unter Doze** und Samsungs Akkusteuerung | dasselbe | Gerätetest |
+
+Und was **E2** dazugelegt hat:
+
+| Nicht prüfbar | Warum | Wo es geprüft wird |
+|---|---|---|
+| **Wann der Nachsende-Job wirklich anläuft** | `JobScheduler` unter Doze verhält sich auf einem Gerät anders als in der JVM; `adb shell cmd jobscheduler run -f` bräuchte einen Emulator, und den gibt es hier nicht | Gerätetest: Flugmodus an, Dienst beenden, Flugmodus aus, Zeit messen |
+| **Ob er einen Neustart übersteht** | `setPersisted` wird vom System über den Neustart getragen; nachstellen lässt sich das nur mit einem Neustart | Gerätetest, ausdrücklich **ohne** die App zu öffnen |
+| **Ob ein Dienstende von der Uhr ankommt** | keine Wear-OS-Uhr, keine Telefonseite des Data Layer | Gerätetest mit Uhr |
+| **Ob die aktive Standmeldung** (E3) auf Hardware ankommt | dasselbe — der Data Layer braucht eine Telefonseite | Gerätetest mit Uhr (E3-1) |
+| **Ob der Sendelauf beim Wegwischen der App abbricht** | Prozessverwaltung des Herstellers | Gerätetest: beenden, sofort wegwischen, Web ansehen |
+
+Was **stattdessen** belegt ist: `SendeRundlaufTest` fährt den ganzen Weg gegen
+ein echtes `ingest.php` und prüft am Server nach, dass Segment und Diensttag
+geschlossen sind. Er sagt nichts über Zeitpunkte und nichts über
+Prozesstode — aber alles über die Nachricht selbst.
+
+### Der Emulator — er läuft, und er ist ab 03.09.2026 Pflicht
+
+**Die Regel zuerst** (CLAUDE.md 6, angewiesen am 03.09.2026): Bei jeder
+Änderung an einem der beiden Android-Module läuft der Emulator mit, Aussehen
+**und** Funktion werden darin geprüft, und beides wird mit Bildern belegt —
+so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
+`android/werkzeuge/emulator.sh`.
+
+- ~~**Kein Emulator.**~~ ~~**Nachtrag 03.09.2026: In diesem Container läuft
+  keiner — das x86_64-Abbild braucht KVM.**~~ **Auch das war falsch, und zwar
+  am selben Tag berichtigt.**
+
+  **Was stimmt:** KVM fehlt wirklich. `/dev/kvm` ist nicht da, `/proc/cpuinfo`
+  nennt weder `vmx` noch `svm`, und `emulator -accel-check` antwortet
+  „KVM requires a CPU that supports vmx or svm" — die CPU ist selbst
+  virtualisiert, Verschachtelung ist nicht freigegeben.
+
+  **Was nicht stimmt:** dass daraus „kein Emulator" folgt. Mit **`-accel off`**
+  übersetzt QEMU die x86_64-Befehle selbst (TCG) und braucht die
+  Verschachtelung nicht. Der Fehlschluss war, „startet nicht ohne Weiteres"
+  für „geht nicht" zu nehmen und deshalb gar nicht erst bis zum Startversuch
+  zu gehen. Er kostete Paket E die ganze Stufe II.
+
+  **Zwei Stolpersteine davor**, beide am 03.09.2026 gemessen:
+
+  | Stolperstein | Was zu tun ist |
+  |---|---|
+  | `emulator -version` scheitert an `libpulse.so.0` | `apt-get install -y libpulse0`. Die QEMU-Binärdatei bindet sie hart — auch mit `-no-audio`, auch mit `-no-window`. |
+  | `-accel auto` (die Vorgabe) bricht ab | `-accel off` setzen. Dazu `-gpu swiftshader_indirect`, denn die Grafik rechnet ebenfalls die CPU. |
+
+  | Abbild | Ergebnis |
+  |---|---|
+  | **x86_64** (`system-images;android-34;google_apis;x86_64`) | **läuft** mit `-accel off`. |
+  | **arm64** | `FATAL | Avd's CPU Architecture 'arm64' is not supported by the QEMU2 emulator on x86_64 host.` (Emulator 37.1.11) — der heutige Emulator übersetzt keine fremde Architektur mehr. *Übernommen aus der S5-Vorbereitung 8.3, dort gemessen.* |
+
+  **Was er kostet, und warum er trotzdem ans Ende gehört.** TCG rechnet
+  **einkernig**: Der QEMU-Prozess steht bei rund 100 % *eines* Kerns, `-cores 4`
+  ändert daran nichts. Boot und Aufspielen liegen darum in Minuten. Wer den
+  Emulator nach jeder Datei anwirft, verbraucht die Zeit, die die Änderung
+  selbst gebraucht hätte — er läuft **am Ende eines Arbeitspakets**, mit
+  Wortliste, Kontrasten und Bilderlauf.
+
+  Was das nicht ändert: **Der Bilderlauf bleibt** (Abschnitt 2.2, Robolectric
+  im NATIVE-Modus). Er und der Emulator messen Verschiedenes — der eine das
+  gerechnete Bild, deterministisch und in Sekunden, der andere das gelaufene
+  mit Systemleisten, echter Schriftrasterung, rundem Glas und Bedienzuständen.
+  Keiner ersetzt den anderen. Die instrumentierten Prüffälle aus 0.7.6 bleiben
+  ebenfalls, was sie sind — sie brauchen nur ein Android-System, gleich
+  welches.
+
+  Was der Lauf von 0.7.2 kostete, zur Erinnerung:
   Der Emulator läuft ohne KVM in reiner Software-Emulation; beide Module
   wurden darin gebootet, bedient und abgezogen. Bilder entstehen im
   Prüflauf ohne ihn (siehe 2.2). Was er kostet: Boot 197–345 s, Installation

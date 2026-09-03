@@ -8,10 +8,10 @@ Auftrag des Auftraggebers vom 02.09.2026 nach der Geräteprüfung · Ablage
 >
 > | | |
 > |---|---|
-> | Stand | 02.09.2026 — **Zusatz vollständig, Freigabe ausstehend** |
-> | Paket in Arbeit | keines; E1 beginnt nach Freigabe und nach der Diagnose aus 1.3 |
-> | Erledigt | — |
-> | Wo es hakt | 6 offene Fragen F-S5Z-01 bis F-S5Z-06 (Abschnitt 3), alle mit Empfehlung; nach K6 vor dem betroffenen Paket zu entscheiden |
+> | Stand | 03.09.2026 — **alle drei Teilpakete umgesetzt** auf Zweig `claude/s5-paket-e-android`; Freigabe des Abschlusses ausstehend |
+> | Paket in Arbeit | **keines** — E1, E2 und E3 sind fertig. Offen ist der **Gerätetest** (Prüfdokument, Listen E1-1 bis E1-16 und E2-1 bis E2-11) |
+> | Erledigt | Freigabe und alle sechs Fragen (E-S5Z-15 bis -21); Prüfstand aufgebaut, Ausgangszahlen gemessen; **E1 (Android 0.8.0)**; **Bilderlauf beider Module (0.8.1)**; **E2 (Android 0.9.0)**; **E3 (Android 0.10.0)** |
+> | Wo es hakt | Nichts Blockierendes. Die Diagnose 1.3 ist **beantwortet** (Abschnitt 8): belegt ist H2. Was bleibt: kein Emulator im Container, also ist Paket E gerätegebundener als Abschnitt 9.3 annimmt. Ursprünglich stand hier: Die Diagnose kann die Umsetzung nicht fahren — sie braucht das S24 und den Produktivserver. Sie liegt beim Auftraggeber und ist Voraussetzung für den *Beleg* in E2, nicht für den *Bau* (E2 behebt alle drei Ketten unabhängig davon). Dazu: kein Emulator im Container (Vorbereitung 8.3), also ist Paket E gerätegebundener als Abschnitt 9.3 annimmt |
 > | Fable-Schritt | **keiner** |
 > | Erhoben an | `main`, Commit `c2ac707` (02.09.2026): Android 0.7.7, Web 12.9.2 |
 > | Erhoben aus | dem Repositorium und der Beobachtung des Auftraggebers am Gerät (02.09.2026: Diensttage in der App beendet, im Web noch als laufend gezeigt). Kein Telefon, keine Uhr, kein Server in der Konzeptsitzung — was sich so nicht ermitteln ließ, steht in Abschnitt 10 |
@@ -214,13 +214,45 @@ E-S4-08). Für beide Ketten gibt es dort ein Vorbild:
 | **E-S5Z-12** | **Die Ansicht zeigt den Sendezustand vollständig** (5.5): „Alles gesendet" / „Rückstand N Pakete" (bestehend), neu „N Pakete vom Server abgewiesen" (Rot, aus `fehlerhaft = 1`; B-S5Z-06) und ein Knopf **„Jetzt senden"** (`KnopfNeutral`, nur bei Rückstand > 0 und nicht während ein Lauf läuft) mit einer Ergebniszeile aus dem letzten Lauf. Alles mit vorhandenen Bausteinen (`Zustandszeile`, `KnopfNeutral`); kein neuer Baustein, kein Mockup nötig | B-S5Z-06; `CLAUDE.md` 5 |
 | **E-S5Z-13** | **Uhr-Spiegel als optionales Paket E3.** Die Standmeldung Handy → Uhr bekommt ein Feld `ortung` (Kurzcode der sechs Stufen); die Uhr zeigt in der laufenden Ansicht in Rot „keine Ortung" (`STANDORT_AUS`, `KEIN_SIGNAL`, `UNGENAU`, `FREIGABE_FEHLT`), in Sand „GPS sucht" (`SUCHT`), nichts bei `OK` und nichts, wenn das Feld fehlt (alte Handy-Fassung). Das Handy schickt die Standmeldung zusätzlich bei jedem Ortungswechsel, nicht nur als Antwort auf ein Ereignis. Begründung wie E-S4-10: Eine Uhr, die „Dienst läuft" zeigt, während nichts aufgezeichnet wird, verschweigt genau die Lücke, die hinterher niemand erklären kann. **Kein Zugangsdatum** reist mit (CLAUDE.md 4); der Weg bleibt `Nachrichtenweg`. Details in 6 | Auftraggeber 02.09.2026 (Ja, optional) |
 | **E-S5Z-14** | **Reihenfolge und Einordnung:** E1 → E2 → E3. E läuft parallel zu A–D (nur `android/` und Doku; Rahmenplan 4 „ein Paket, das nur `android/` anfasst, kann immer laufen") und wird **vor dem S4-Rest** gemergt (gemeinsame Dateien). Eine Android-Fassung je Paket (Nebennummer: neue Funktion; die Nummer vergibt die Umsetzung, K3). Backlog 82 (Akku-Warnung) bleibt beim S4-Rest, aber sein Kandidat (c) nennt den Text „… · GPS an", den E1 ersetzt — der S4-Rest baut auf der neuen Zeile auf (B-S5Z-10) | Rahmenplan 3 und 4 |
+| **E-S5Z-15** | **F-S5Z-01 ist mit (c) beantwortet** (Auftraggeber, 03.09.2026): Ein Dienststart von der Uhr bei ausgeschaltetem Standort wird **durchgelassen**; das Handy warnt sofort (Warnung ID 3, Vibration, rote Zustandszeile) **und** schickt der Uhr den Ortungszustand in der Standmeldung, mit der es das Ereignis ohnehin quittiert. Damit ist die Warnung nicht nur in der Hosentasche. Gegenargument, das dabei bewusst in Kauf genommen wird: Es entsteht ein Dienst, der nachweislich nichts aufzeichnet — die Klammer bleibt offen, Phasen werden dokumentiert, Koordinaten sind `null` (Vertrag 3 lässt das zu). Ein abgelehnter Start vom Handgelenk wäre der schlechtere Fall: Die Person steht mit Handschuhen am Fahrzeug, hat gedrückt, und nichts erklärt ihr, warum nichts läuft | Auftraggeber 03.09.2026 |
+| **E-S5Z-16** | **Der Paketschnitt ändert sich, weil E-S5Z-15 es verlangt.** Für die Quittung mit Ortungszustand braucht es das Feld `ortung` in der `Standmeldung`, seine Füllung in `Uhrannahme.stand()` und die Anzeige auf der Uhr — genau den Dateisatz, den Abschnitt 8 dem optionalen Paket E3 zuwies. Er wandert nach **E1**. E3 behält, was übrig bleibt: den **aktiven** Spiegel, also die Standmeldung bei **jedem** Wächterwechsel statt nur als Antwort auf ein Ereignis. E3 ist damit klein und nicht mehr „optional bei Zeitnot" — es ist der Unterschied zwischen „die Uhr erfährt es beim nächsten Knopfdruck" und „die Uhr erfährt es sofort". **Folge für Abschnitt 6 und für die Prüffallzahlen:** Die sechs E3-Fälle verteilen sich mit; gezählt wird am Ende die Summe, nicht die Aufteilung | Folge aus E-S5Z-15 |
+| **E-S5Z-17** | **F-S5Z-02 bestätigt:** Z-S5Z-01 = 120 s (Erstfix), Z-S5Z-02 = 60 s (Signalverlust). Beide sind hergeleitete Vorschläge, keine Messungen — die Ist-Zeiten liefert der Gerätetest (9.2 Punkte 3 und 6) und gehört ins Prüfdokument | Auftraggeber 03.09.2026 |
+| **E-S5Z-18** | **F-S5Z-03 bestätigt:** Erinnerung alle Z-S5Z-04 = 600 s, solange ein Warnzustand anhält — nicht nur beim Übergang. Das Handy steckt in der Tasche; eine einzige Vibration in einer Anfahrt ist überhörbar | Auftraggeber 03.09.2026 |
+| **E-S5Z-19** | **F-S5Z-04 bestätigt:** `RECEIVE_BOOT_COMPLETED` wird deklariert, damit der Nachsende-Job `setPersisted(true)` einen Neustart übersteht. Normale Berechtigung ohne Dialog, im Manifest mit Begründung kommentiert wie die übrigen | Auftraggeber 03.09.2026 |
+| **E-S5Z-20** | **F-S5Z-05 bestätigt:** Changelog-Präfix `Android` ab sofort, ein Eintrag je E-Paket, erklärende Prosa mit Begründung. Die erste verteilte Fassung ist faktisch da — der Auftraggeber betreibt ein APK auf dem S24 und prüft damit | Auftraggeber 03.09.2026 |
+| **E-S5Z-21** | **F-S5Z-06 ist gegenstandslos.** Der Wortlaut „Aufzeichnung läuft" steht in der App (`strings.xml` 103/112/113) **und** das Web zeigt für ein Ruhesegment ohne `final` „· läuft noch" (`schneiden.js` 346, Vorbereitung 8.1 Fassung 5). Beide Oberflächen entstehen aus demselben Zustand — ein Segment, dessen Abschluss den Server nie erreicht hat — und beide führen auf **H1, Kette B3**. Die Rückfrage „App oder Web?" entfällt; die Diagnose 1.3 am Gerät bleibt zu fahren, weil sie entscheidet, was das Prüfdokument als **belegten** Fehler führt | Vorbereitung 8.1 |
+| **E-S5Z-22** | **`UNGENAU` wird rot, nicht orange** — und das ist eine berichtigte Zusage, keine Geschmacksfrage. Abschnitt 4.3 sah Orange vor; nachgerechnet nach WCAG trägt **kein** vorhandenes Orange Text auf Schnee: `marke_orange` (#FF8F1F) kommt auf **2,23 : 1**, `marke_orange_tief` (#C25A00) auf **4,32 : 1** — beide unter AA (4,5). Damit wäre das E1-Abnahmekriterium „`kontraste.py`: 0 Paare unter Zielwert" mit orangem Text unerreichbar gewesen (B6.1 der Gegenlesung). Gewählt ist `marke_rot_tief` (**7,58 : 1**) wie bei `KEIN_SIGNAL`: Alle vier Zustände, in denen nichts aufgezeichnet wird, sind rot und unterscheiden sich am **Wortlaut**. Der Verlust der farblichen Abstufung „warnt" gegen „fehlt ganz" ist in Kauf genommen — aufgezeichnet wird in beiden Fällen nichts, und das ist die Aussage, auf die es ankommt. Kein neues Token, keine Mockup-Freigabe nötig | Auftraggeber 03.09.2026; B6.1 |
+| **E-S5Z-23** | **Der Wächter bekommt ein eigenes Handler-Token** (B1.1 der Gegenlesung, am Code bestätigt). `taktStarten()` begann mit `taktgeber.removeCallbacksAndMessages(null)` — **ohne Token, also die ganze Warteschlange des einzigen Handlers**; `onStartCommand` ruft es bei jedem Start, und `HandyHorcher` startet den Dienst bei **jeder** Uhrnachricht. Ein 10-s-Wächter „am vorhandenen Handler" wäre dort still gestorben. Beide Takte laufen deshalb mit eigenem Token (`postDelayed(r, TOKEN, ms)` / `removeCallbacksAndMessages(TOKEN)`) | B1.1; `AufzeichnungsDienst.kt` 63, 113–121 |
+| **E-S5Z-24** | **Die Standmeldung an die Uhr geht nie vom Hauptfaden** (B4.6). `WearNachrichtenweg.sende()` blockiert bis 5 s je `Tasks.await`, und ihr eigener Klassenkommentar sagt, sie gehöre nicht auf den Hauptthread. Der Wächtertakt läuft auf dem Main-Looper — die Meldung wird deshalb auf dem Sendeausführer eingereiht (E-S5Z-11, kommt mit E2; bis dahin auf einem eigenen Faden wie der Sendelauf heute) | B4.6; `WearNachrichtenweg.kt` 25–27, 41–50 |
+| **E-S5Z-25** | ~~**Der Uhr-Spiegel steht am Rand, nicht über den Knöpfen** (B4.3).~~ **Aufgehoben durch E-S5Z-28** — die Messung hat B4.3 hier widerlegt. Der Gedanke war richtig (E-S4-51: Statusanzeigen an den Rand) und die Folge falsch: Auf der 192-dp-Uhr liegt der Rand im Phasenmodus **unter der Faltkante**, und die Warnung erschien dort nie. Begründung und Messung in E-S5Z-28 | B4.3, widerlegt durch `UhrBildTest` |
+| **E-S5Z-26** | **Beim Nachsenden wird die Reihenfolge gesichert** (B5.3). `ingest.php` schrieb beim Upsert `ended_at = VALUES(ended_at)` **bedingungslos**, `final` dagegen mit `GREATEST` — ein nicht-finales Paket, das **nach** dem finalen ankam, setzte `ended_at` auf NULL zurück, während `final = 1` stehen blieb. **Nachtrag 03.09.2026:** S5 Paket A hat den Fund nachgestellt statt geglaubt und dabei festgestellt, dass er **breiter** ist als gemeldet — es traf auch `distance_m` und `ascent_m`, also einen abgeschlossenen Einsatz ohne Ende, ohne Strecke und ohne Anstieg, quittiert mit „ok". Behoben mit `COALESCE(VALUES(x), x)` an allen vier Stellen und mit **Web 13.0.1 gepusht**; die Ingestprobe prüft es seither als Teil 7 (30 Erwartungen statt 24, 0 nicht erfüllt). Der serverseitige Backlog-Kandidat ist damit **erledigt, bevor er eine Nummer bekam**. **Für Paket E ändert das nichts an der Zusage:** Der Nachsende-Job schickt je Paket in Anlagereihenfolge und nie ein älteres nach einem finalen. Der Server verzeiht die falsche Reihenfolge jetzt — sie herzustellen bleibt Aufgabe des Absenders, denn eine zweite Wahrheit über die Reihenfolge wäre genau die Art doppelter Boden, die der Vertrag ohnehin führt (Idempotenz über `client_ref`), und keine Entschuldigung dafür, sie wegzulassen | B5.3; S5 Paket A, Web 13.0.1 |
+| **E-S5Z-27** | **Der Wortlaut bei `OK` heisst „· GPS empfängt", nicht „· GPS ok".** Abschnitt 4.3 sah „ok" vor; Lint meldet dazu `Typos: "ok" is usually capitalized as "OK"` und die Warnungszahl stieg von 14 auf 15. Stummschalten verbietet `CLAUDE.md` 6, und „OK" mitten im Satz ist ein Schreien. „Empfängt" ist ohnehin die bessere Aussage: Es nennt das **Gemessene** — es kommen brauchbare Funde —, statt eine Güte zu behaupten, die diese App gar nicht abstuft. Die Garmin-Uhr hat drei Stufen („gut / ausreichend / zu schwach"), die App hat eine; „gut" zu schreiben hiesse, eine Abstufung zu versprechen, die es nicht gibt | Lint `Typos`; `SyncView.mc` 56–72 |
+| **E-S5Z-28** | **Die Warnung „keine Aufzeichnung" steht auf der Uhr in der Zustandszeile oben**, nicht in der Verbindungszeile unten — und sie **verdrängt** dort Phase und Zeit, statt eine Reihe hinzuzufügen. Gemessen mit `UhrBildTest` (B-S5Z-17): Auf der 192-dp-Uhr ist die laufende Ansicht mit Phasenknöpfen 221 dp hoch; die letzte Reihe liegt unter dem Rand. Drei Bilder mit drei verschiedenen Ortungszuständen kamen **byteweise gleich** heraus, weil keines die Zeile zeigte. Eine Warnung, die genau auf der engsten Uhr ausfällt, ist keine. **Die Reihe wächst dabei nicht** — es ist dieselbe eine Zeile, sie sagt nur etwas Anderes, solange es etwas Wichtigeres zu sagen gibt; der Glasüberlauf aus B-S4-08b kehrt also nicht zurück. Der Preis ist, dass „Phase 3 seit 09:12" währenddessen nicht dasteht, und das ist die richtige Reihenfolge: „Es entsteht gerade keine Spur" schlägt die Phasenzeit, und die Phasenliste ist einen Druck entfernt. **Dieselbe Verlegung gilt für die bestehende Zeile `dienst_schwebt`** — sie stand in derselben Reihe und war auf der kleinen Uhr ebenso unsichtbar | `UhrBildTest`; B-S5Z-17 |
+| **E-S5Z-29** | **Der Sendehinweis (ID 2) ist wegwischbar und still.** Das Konzept sagte es (5.1), die Begründung fehlte: Es gibt an dieser Meldung **nichts zu tun** — der Job arbeitet von selbst. Eine Vibration wäre eine Aufforderung ohne Handlung, und `setOngoing` machte sie zu genau der Meldung, die B-S5Z-03 beklagt: eine andauernde ohne Dienst dahinter. Wer sie wegwischt, hat sie zur Kenntnis genommen; der Job läuft unberührt weiter. **Ausnahme, die dazugehört:** Bei 401 bleibt sie ebenso wegwischbar, obwohl dort etwas zu tun ist — die Anweisung steht auch in der Ansicht (E-S5Z-12), und eine unwegwischbare Meldung, die man nur durch Neukoppeln loswird, wäre eine Geiselnahme | 5.1; B-S5Z-03 |
+| **E-S5Z-30** | **Die Standmeldung an die Uhr geht über einen eigenen Ausführer, nicht über den Sendeausführer** — das berichtigt E-S5Z-24. Der Gedanke dort war richtig (nicht vom Hauptfaden, weil `WearNachrichtenweg.sende()` je `Tasks.await` bis zu 5 s blockiert, B4.6); die Folgerung war es nicht. Beide Warteschlangen haben **verschiedene Fristen**: Ein Upload eines Zwölfstundendienstes braucht zwanzig Anfragen und kann eine Minute dauern — läge die Uhrnachricht dahinter, käme die Warnung „keine Ortung" eine Minute zu spät ans Handgelenk, und ihre Rechtzeitigkeit ist der einzige Grund, warum es E3 gibt. Umgekehrt darf eine Uhr im Funkloch keinen Diensttag aufhalten. **Was E-S5Z-11 zusichert, bleibt unberührt:** Dort geht es um zwei Läufe auf demselben **Puffer**; eine Uhrnachricht liest den Stand und schreibt nichts | B4.6; E-S5Z-11 |
+| **E-S5Z-31** | **Gemeldet wird bei einem Wechsel der ANZEIGE, nicht des Zustands.** Das Handy führt sechs Stufen, die Uhr zeigt drei Dinge (`KEINE_ORTUNG`, `SUCHEN`, `STILL`). Für sie sehen `STANDORT_AUS` und `KEIN_SIGNAL` gleich aus; eine Nachricht dazwischen änderte am Handgelenk nichts und kostete doch bis zu 5 s Wartezeit und einen Funkaufwacher. **Die Zusammenfassung steht einmal** (`Ortungscode.anzeige()` in `gemeinsam/`) und wird von beiden Seiten benutzt — von der Uhr zum Zeichnen, vom Handy zum Entscheiden. Zwei Kopien liefen auseinander, und dann meldete das Handy Wechsel, die nichts ändern, oder — schlimmer — einen nicht, den die Uhr angezeigt hätte. Ein Prüffall hält beide Enden aneinander: Die Stufen, bei denen das Handy warnt, sind genau die, bei denen die Uhr rot wird | E3 |
+| **E-S5Z-32** | **Eine verlorene Standmeldung wird nicht nachgeliefert.** Anders als ein Ereignis der Uhr — das gepuffert wird, bis das Handy quittiert (E-S4-10) — ist der Stand ein **Augenblickswert**. Der nächste Wechsel trägt den dann gültigen, und der ist mehr wert als der alte. Eine Warteschlange dafür wäre eine zweite Buchführung für Daten, die beim Ankommen schon veraltet sein können | E3 |
+| **E-S5Z-33** | **Die Phasenliste zeigt gesetzte und nächste Phase, nicht alle acht** (Auftraggeber, 03.09.2026, zu B-S5Z-16). Der Rest liegt hinter `KnopfNeutral` „Alle Phasen zeigen“. **Grundlage war eine Messung, keine Ansicht:** Acht Reihen zu 48 dp sind 412 dp von 1015; „Einsatz abschließen“ lag dadurch bei 771–819 dp auf einem 800-dp-Telefon. Nach der Kürzung endet er bei 515 dp (Einsatzbeginn), 693 dp (drei gesetzt) und 759 dp (alle acht) — in **jeder** Phase des Einsatzes über der Faltkante. **Der Preis ist benannt und bezahlt:** E-S4-21c hatte die Liste als „Übersicht und Direktwahl in einem“ gebaut; die Direktwahl einer beliebigen Phase rückt einen Druck weiter weg. Ein Knopf hinter einem Knopf ist billiger als ein Knopf unter dem Rand. **Die gesetzten Phasen bleiben immer sichtbar** — sie sind die Dokumentation, und ein erneutes Tippen ist die Korrektur (E-R45-12). **Nicht gelöst:** Bei acht gesetzten Phasen liegt „Dienst beenden“ weiter unter dem Rand (879 dp) | Auftraggeber 03.09.2026; B-S5Z-16 |
 
 ---
 
 ## 3. Offene Fragen (F-S5Z) — mit Empfehlung
 
-Nach K6 vor Beginn des betroffenen Pakets zu entscheiden und dann als
-E-S5Z-15 ff. einzutragen.
+**Alle sechs sind am 03.09.2026 entschieden** und stehen als E-S5Z-15 bis
+E-S5Z-21 in Abschnitt 2. Die Tabelle bleibt stehen, weil sie die Empfehlung
+und das Gegenargument festhält, gegen die entschieden wurde — die Entscheidung
+selbst steht oben, nicht hier.
+
+| Nr. | Entschieden | Als |
+|---|---|---|
+| F-S5Z-01 | **(c)** durchlassen, warnen **und** der Uhr quittieren | E-S5Z-15 |
+| F-S5Z-02 | Fristen 120 s / 60 s bestätigt | E-S5Z-17 |
+| F-S5Z-03 | Erinnerung alle 10 Minuten | E-S5Z-18 |
+| F-S5Z-04 | `RECEIVE_BOOT_COMPLETED` ja | E-S5Z-19 |
+| F-S5Z-05 | Changelog-Präfix `Android` ab sofort | E-S5Z-20 |
+| F-S5Z-06 | gegenstandslos — der Wortlaut steht in **beiden** Oberflächen | E-S5Z-21 |
+
+Die ursprüngliche Vorlage:
 
 | Nr. | Frage | Empfehlung | Paket |
 |---|---|---|---|
@@ -519,10 +551,94 @@ Prüfmittel **zuletzt** (`CLAUDE.md` 6). Vor E2 die Diagnose aus 1.3.
 
 | Paket | Stand | Probleme / Lösungen | Entscheidungen |
 |---|---|---|---|
-| Diagnose 1.3 | offen | — | — |
-| E1 | offen | — | — |
-| E2 | offen | — | — |
-| E3 | offen | — | — |
+| Vorlauf | **erledigt** 03.09.2026 | Zwei Werkzeuge, die der Prüfstand braucht (`tools/containeraufbau/`, `…/lokal_einrichten.sh`), liegen nicht auf `main`, sondern nur auf dem S7-Zweig — ohne sie gibt es kein Android-SDK und damit keine Zahl. **Gelöst:** von dort geholt und benutzt, aber **nicht** auf diesen Zweig committet; sie gehören dem S7-Stand und kollidierten sonst beim Merge. Ausgangszahlen gemessen und mit Vorbereitung 8.2 verglichen: **alle acht decken sich** | E-S5Z-15 bis -26 eingetragen |
+| Diagnose 1.3 | **beantwortet** 03.09.2026 | Vom Auftraggeber: **am Handy beendet**, keine Fehlermeldung, **kein Rückstand** angezeigt — damit ist **H1 (Uhr) ausgeschlossen**. Die App-Beobachtung sah nach H3 aus; der Blick auf den Server hat das **widerlegt**: Das Segment vom 02.09. ist heute **nicht mehr offen**, wurde also später nachgeliefert. **Belegt ist H2 (Kette B1/B2)** — der Abschluss-Upload kam im Augenblick des Beendens nicht durch und wurde nie wiederholt, bis der nächste Dienst lief. Die App-Antwort „Alles gesendet" war eine Beobachtung von *später*; wer nur sie gefragt hätte, wäre bei H3 gelandet | **Die Abnahme von E2 sind 5.1 Punkt 1 und 2** — Vordergrunddienst halten, Nachsende-Job planen. E-S5Z-12 (400-Pakete sichtbar) bleibt richtig, ist aber Vorsorge und nicht der belegte Fehler |
+| E1 | **erledigt** 03.09.2026, Android **0.8.0**, Bilderlauf **0.8.1** | sechs Fundstellen, alle unten | E-S5Z-22 (rot statt orange), E-S5Z-23 (Handler-Token), E-S5Z-27 (Wortlaut „GPS empfängt") |
+| E2 | **erledigt** 03.09.2026, Android **0.9.0** | siehe unten | E-S5Z-29 |
+| E3 | **erledigt** 03.09.2026, Android **0.10.0** | Der Sendeausführer aus E-S5Z-24 war die falsche Warteschlange — siehe E-S5Z-30 | E-S5Z-30, E-S5Z-31 |
+
+#### Was in E1 entstanden ist
+
+| Datei | Was |
+|---|---|
+| `aufzeichnung/Ortungswaechter.kt` *(neu)* | Die Zustandsmaschine (6 Stufen, 3 Warnbefehle) plus `Ortungslage` — ohne Android-Bezug, Zeit eingespeist |
+| `aufzeichnung/Ortungszuhoerer.kt` *(neu)* | Der `LocationListener` als ausgeschriebene Klasse mit allen vier Methoden (B-S5Z-01) |
+| `aufzeichnung/AufzeichnungsDienst.kt` | Wächter, Wächtertakt, zweiter Meldungskanal, Warnung (ID 3), Dauermeldung nach Zustand, `isProviderEnabled` beim Start, getrennte Handler-Token |
+| `aufzeichnung/Ausduenner.kt` | `brauchbar()` herausgezogen — **eine** Schwelle für Aufzeichnung und Anzeige |
+| `NAdokuApp.kt` | `ortung: Ortungslage?`, `@Volatile` |
+| `HauptActivity.kt`, `DienstAnsicht.kt` | Sperre vor dem Dienst, Block „Standort ausgeschaltet", Zustandszeile in drei Farbstufen, zwei neue Vorschauen |
+| `gemeinsam/Uhrnachricht.kt` | `Standmeldung.ortung` und `object Ortungscode` (E-S5Z-15) |
+| `uhr/…` (4 Dateien) | Zustand, Übernahme, Zeile am unteren Rand, Texte |
+| `werkzeuge/kontraste.py` | **8 neue Paare** — 16 → 24 |
+
+**Prüffälle: 220 → 260** (+40), dazu **54 Bilder** (48 Handy, 6 Uhr). `OrtungswaechterTest` 21, `OrtungszuhoererTest`
+2, `AusduennerTest` +5, `NachrichtenformatTest` +5, `UhrsteuerungTest` +3.
+
+#### Probleme in E1 und wie sie gelöst wurden
+
+| Was | Wie es auffiel | Lösung |
+|---|---|---|
+| **`postDelayed(r, token, ms)` gibt es erst ab API 28**, `minSdk` ist 26 | Vier Lint-Fehler `NewApi` im Baulauf — nicht beim Übersetzen, das ging durch | `postAtTime(r, token, uptimeMillis() + ms)`, ab API 1 vorhanden, in einer Hilfsfunktion `spaeter()` gekapselt |
+| **Der Wortlaut „· GPS ok" ergab eine 15. Lint-Warnung** (`Typos`, „ok" → „OK") | Warnungszahl wich von 14 ab | Nicht stummgeschaltet, sondern umformuliert: **„· GPS empfängt"** (E-S5Z-27). Das ist auch die bessere Aussage — es nennt das Gemessene statt eine Güte zu behaupten, die die App nicht abstuft |
+| **Die Trailing-Lambda-Falle:** `Uhrannahme(puffer, klammer) { Modus.X }` band nach dem neuen vierten Parameter an `ortung` statt an `modus` | Zwei Übersetzungsfehler in Prüffällen | Beide Aufrufstellen auf benannte Argumente umgestellt. Der Fehler wäre ohne Typprüfung still gewesen — beide Parameter sind Funktionen |
+| **`marke_rot` als Schrift auf Asphalt trägt 4,12 : 1** und damit unter AA — es trifft die **bestehende** Uhr-Zeile „wartet aufs Handy" | Beim Nachrechnen aller Token für E-S5Z-22 | `marke_rosa` (15,94 : 1), der helle Vertreter derselben Familie. Als **Fläche** mit weisser Schrift trägt dasselbe Rot 4,78 : 1 und bleibt richtig. Neuer Fund **B-S5Z-15** |
+
+#### Was in E2 entstanden ist
+
+| Datei | Was |
+|---|---|
+| `uhr/Dienstfolge.kt` *(neu)* | Die reine Entscheidung STARTEN / BEENDEN / NICHTS (E-S5Z-08) |
+| `senden/Nachsenden.kt` *(neu)* | Planung **und** die reine Entscheidung `planen()`; Job-ID, Backoff |
+| `senden/NachsendeDienst.kt` *(neu)* | `JobService` — dünne Hülle um einen Lauf auf dem Sendeausführer |
+| `senden/Sendehinweis.kt` *(neu)* | Die Meldung ID 2 nach dem Dienstende, still und wegwischbar |
+| `aufzeichnung/AufzeichnungsDienst.kt` | Dienstende hält den Dienst (5.1), Netzrückruf, Laufmarke `steht`, kein Nachposten der Dauermeldung |
+| `NAdokuApp.kt` | Sendeausführer, `letzterSendebericht`, `sendelaufLaeuft`, Planung in `onCreate` |
+| `senden/Sendetakt.kt` | Mindestabstand für `WIEDERVERBINDUNG` (60 s) |
+| `puffer/Puffer.kt` | `abgewiesen()` |
+| `uhr/HandyHorcher.kt` | benutzt `Dienstfolge`, fängt `IllegalStateException` beim Start |
+| `HauptActivity.kt`, `DienstAnsicht.kt` | 5.5: abgewiesene Pakete, „Jetzt senden", Ergebniszeile; `Sendeausgang`/`Sendeergebnis` |
+| `AndroidManifest.xml` | `RECEIVE_BOOT_COMPLETED`, `NachsendeDienst` mit `BIND_JOB_SERVICE` |
+
+**Prüffälle: 260 → 285** (+25): `NachsendenTest` 9, `DienstfolgeTest` 6,
+`AbgewieseneTest` 5, `SendetaktTest` +5. Bilder 54 → 69 (fünf neue
+Sendezustände × 3 Breiten).
+
+**Die Abnahme ist gefahren:** `SendeRundlaufTest` gegen eine echte
+Installation — **221 von 221, 0 übersprungen, 0 Fehlschläge**; am Server
+`rest_segments.final = 1` mit `ended_at` und `days.ended_at` gesetzt.
+
+#### Probleme in E2 und wie sie gelöst wurden
+
+| Was | Wie es auffiel | Lösung |
+|---|---|---|
+| **`--` in einem XML-Kommentar** bricht den Manifest-Zusammenbau | `ManifestMerger2$MergeFailureException` — und die Meldung nennt die Zeile **nicht** | Gedankenstrich durch Komma ersetzt. Zum zweiten Mal in diesem Paket (E1 hatte es in `strings.xml`); der Fehler ist so leicht zu machen wie schwer zu lesen |
+| **Der Bestand des Rundlaufs sah nach Datenverlust aus** — `track_points` fiel von 55 861 auf 30 610 | beim Nachzählen vor/nach dem Lauf | Kein Verlust: Ich hatte **eine der zwei Ablagen** gezählt. Mit `track_blobs` sind es 70 300 (+14 439). Genau der Fehler, vor dem `CLAUDE.md` 4 zu `spur_lib.php` warnt — und ich bin per SQL hineingelaufen |
+| **Der bestehende `SendetaktTest` zählte `WIEDERVERBINDUNG` zu den sofortigen Auslösern** | Prüffall wurde rot | Er ist berichtigt und um fünf Fälle erweitert. Die Regel hat sich nicht gelockert: Dieser eine Auslöser kommt nicht von einem Menschen |
+
+#### Was in E3 entstanden ist
+
+| Datei | Was |
+|---|---|
+| `gemeinsam/Uhrnachricht.kt` | `Ortungscode.Anzeige` und `anzeige()` — sechs Stufen auf drei Anzeigen, **eine** Regel für beide Seiten |
+| `NAdokuApp.kt` | `uhrausfuehrer` — ein **zweiter** Faden neben dem Sendeausführer (E-S5Z-30) |
+| `aufzeichnung/AufzeichnungsDienst.kt` | `uhrSpiegeln()`: Standmeldung bei jedem Wechsel der **Anzeige** |
+| `uhr/UhrActivity.kt` | benutzt `anzeige()` statt zweier eigener Vergleiche |
+| Prüffälle | `OrtungsanzeigeTest` (7), `OrtungswaechterTest` +3 (die Brücke zwischen Handy und Uhr) |
+
+**Prüffälle: 285 → 295** (+10).
+
+#### Probleme in E3 und wie sie gelöst wurden
+
+| Was | Wie es auffiel | Lösung |
+|---|---|---|
+| **E-S5Z-24 wies die Uhrnachricht dem Sendeausführer zu** | beim Schreiben: Ein Upload dauert bis zu einer Minute, und die Warnung an die Uhr läge dahinter | Eigener Ausführer (E-S5Z-30). Die Zusicherung von E-S5Z-11 gilt dem **Puffer**, und den fasst eine Uhrnachricht nur lesend an |
+| **Eine Meldung je Zustandswechsel wäre zu viel** | Für die Uhr sehen vier der sechs Stufen gleich aus | Verglichen wird die **Anzeige**, nicht der Zustand (E-S5Z-31). Der Wechsel `STANDORT_AUS` → `KEIN_SIGNAL` löst damit keinen Funkaufwacher mehr aus |
+
+#### Was E1 bewusst stehen lässt
+
+Der Sendelauf beim Dienstende lief weiter auf einem eigenen Faden, während
+der Dienst schon stoppte (B-S5Z-03, Kette B1). **Mit E2 erledigt** — der
+Umbau gehörte als Ganzes dorthin.
 
 ---
 
@@ -612,6 +728,12 @@ Meldungs-IDs.
 | **B-S5Z-10** | Backlog 82, Kandidat (c), nennt den Text „Aufzeichnung läuft seit … · GPS an" — E1 ersetzt ihn; der S4-Rest muss die neue Zeile kennen | `docs/Backlog.md` 979–998 | Vermerk beim Merge von E (eine Zeile im Backlog-Punkt) |
 | **B-S5Z-11** | Sendeläufe können überlappen: Oberfläche (Phase, Abschluss) und Dienst (Takt, Dienstende) starten je einen eigenen Faden auf demselben Puffer; `Sender.chunkPunkte` ist ungeschützt. Harmlos nur dank Idempotenz des Servers | `AufzeichnungsDienst.kt` 131; `HauptActivity.kt` 341–343; `Sender.kt` 74–76 | E2 (E-S5Z-11) |
 | **B-S5Z-12** | `TAKT_MS = 1000` wird als `minTimeMs` an `requestLocationUpdates` gegeben — das ist ein **Mindest**abstand, kein Takt. Der Kommentar („1-s-Abtastung wie die Uhr") ist deshalb halb richtig: Mehr als 1 Hz kommt nie, weniger jederzeit. Für den Wächter ist das der Grund, mit Fristen statt mit Zählungen zu arbeiten | `AufzeichnungsDienst.kt` 167–173, 265–266 | Kommentar in E1 berichtigen; kein Verhaltensfehler |
+| **B-S5Z-13** | **Der orange Punkt der Zeile „Rückstand N Pakete" ist zu blass.** `marke_orange` (#FF8F1F) auf `marke_schnee` (#FFFCFA) erreicht **2,23 : 1**; für ein grafisches Objekt verlangt WCAG 1.4.11 **3,0**. Der Fehler stand nie in einer Zahl, weil `werkzeuge/kontraste.py` eine **feste Paarliste** führt und dieses Paar nicht enthält (B6.2 der Gegenlesung). Gefunden beim Nachrechnen aller Token gegen Schnee für E-S5Z-22 | `DienstAnsicht.kt` 132; `werkzeuge/kontraste.py` | E1 setzt den Punkt auf `marke_orange_tief` (4,32 : 1) und trägt das Paar in `kontraste.py` ein |
+| **B-S5Z-14** | **Ein von der Uhr geführter Dienst sendet bis zum Dienstende gar nicht.** `taktStarten()` postet den 15-Minuten-Takt bei **jedem** `onStartCommand` neu, und `HandyHorcher` ruft `AufzeichnungsDienst.starten()` bei **jeder** Uhrnachricht — kommen Ereignisse dichter als 15 Minuten, läuft der Takt nie ab. Nebenbefund aus B1.1; er trifft die Aussage von Kette B Punkt 3 („gesendet wird beim nächsten 15-Minuten-Takt"), die dann **nicht** zutrifft | `AufzeichnungsDienst.kt` 83, 113–121; `HandyHorcher.kt` 41 | E1 (zusammen mit E-S5Z-23): Der Takt wird nur gestartet, wenn er nicht schon läuft |
+| **B-S5Z-15** | **`marke_rot` als Schrift auf `marke_asphalt` trägt 4,12 : 1** und bleibt damit unter AA (4,5). Betroffen ist die bestehende Uhr-Zeile „wartet aufs Handy · keine Aufzeichnung" (`dienst_schwebt`), seit C1. Als **Fläche** mit weisser Schrift trägt dasselbe Rot 4,78 : 1 und ist richtig — der Unterschied stand nie in einer Zahl, weil das Paar in `kontraste.py` fehlte (dieselbe Lücke wie B-S5Z-13). Gefunden beim Nachrechnen aller Token gegen Asphalt | `UhrActivity.kt` 394–401; `werkzeuge/kontraste.py` | E1: `marke_rosa` (15,94 : 1) für beide Warnzeilen der Uhr; beide Paare in der Liste |
+| **B-S5Z-16** | **Bei laufendem Einsatz lag „Einsatz abschließen“ auf der Faltkante.** Gemessen: Die laufende Ansicht war **1015 dp** hoch; auf 800 dp sichtbarem Bereich endete „Einsatz abschließen“ bei 819 dp (halb weg) und „Dienst beenden“ bei 939 dp (ganz weg). Den Ausschlag gab die Phasenliste — acht Reihen zu 48 dp sind rund 412 dp. Gefunden vom neuen `HandyBildTest` beim ersten ehrlichen Lauf | `DienstAnsicht.kt`, `Phasenteil.kt` | **Behoben** mit 0.10.1 (E-S5Z-33): Die Liste zeigt gesetzte und nächste Phase. „Einsatz abschließen“ endet jetzt bei 515 dp (Einsatzbeginn) bis 759 dp (alle acht gesetzt). **Rest, bewusst:** Bei acht gesetzten Phasen liegt „Dienst beenden“ weiter darunter (879 dp) — ein Schichtende mitten im Einsatz ist der seltene Fall |
+| **B-S5Z-17** | **Auf der 192-dp-Uhr erscheint die unterste Zeile im Phasenmodus nie.** Die laufende Ansicht ist dort 221 dp hoch (im Fall selbst seit C1 vermerkt), die Verbindungszeile liegt darunter. Betroffen war damit **auch die bestehende Warnung `dienst_schwebt`** („wartet aufs Handy · keine Aufzeichnung") — die Aussage, für die E-S4-10 an der Oberfläche überhaupt gebaut wurde, fiel auf der engsten Uhr aus. Nachgewiesen, nicht vermutet: Drei Bilder mit drei verschiedenen Ortungszuständen waren byteweise gleich | `UhrActivity.kt` (Verbindungszeile) | E1 (E-S5Z-28): beide Aussagen wandern in die Zustandszeile oben |
+| **B-S5Z-18** | **Der Bilderlauf fand nur *angeschnittene* Knöpfe.** `unterDerFaltkante` prüfte, ob das unterste Knopfband die letzte Bildzeile berührt — ein Knopf, der **vollständig** unter dem Rand liegt, war damit unsichtbar. Nach der Kürzung der Phasenliste meldete der Lauf „Kein Knopf liegt unter der Faltkante“, während „Dienst beenden“ 80 dp darunter lag. Genau die grüne Zahl, die nichts misst (`CLAUDE.md` 6) — und diesmal im eigenen Prüfmittel | `HandyBildTest.kt` | **Behoben** mit 0.10.1: Der Lauf misst zusätzlich den **ganzen** Inhalt (zweite Messung ohne Faltkante) und zählt Knöpfe gesamt gegen Knöpfe im sichtbaren Bereich. Die Ausgabe nennt jetzt „1 von 2 Knöpfen, Inhalt 955 dp“ statt zu schweigen |
 
 ---
 

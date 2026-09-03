@@ -219,12 +219,44 @@ gehen **an Gradle vorbei** (`adb shell am instrument`, Befehlsfolge in
 `android/LIESMICH.md`): `connectedAndroidTest` scheitert auf einem
 softwareemulierten Gerät an einer ddmlib-Zeitgrenze. Und **Backtick-Namen mit
 Leerzeichen** sind dort verboten — D8 lehnt sie unterhalb von DEX 040 ab, das
-Modul steht auf `minSdk = 26`. Bilder entstehen über Robolectric im
-NATIVE-Modus, nicht über `captureToImage()` (das hängt sich auf) und nicht
-über einen Emulator. Erwartet werden **0 Lint-Fehler** und **0 Fehlschläge**;
-Warnungen werden gezählt und nicht stummgeschaltet. Was das alles NICHT
-ersetzt, steht in `android/LIESMICH.md` und beginnt mit dem echten Data
-Layer.
+Modul steht auf `minSdk = 26`. Die Bilder des Prüflaufs entstehen über
+Robolectric im NATIVE-Modus, nicht über `captureToImage()` (das hängt sich
+auf) — sie zeigen das **gerechnete** Bild und sind damit etwas anderes als
+die Abzüge vom Emulator (nächster Absatz). Erwartet werden **0 Lint-Fehler**
+und **0 Fehlschläge**; Warnungen werden gezählt und nicht stummgeschaltet.
+Was das alles NICHT ersetzt, steht in `android/LIESMICH.md` und beginnt mit
+dem echten Data Layer.
+
+**Der Emulator läuft mit — wie der Simulator bei der Garmin-Uhr.**
+Angewiesen am 03.09.2026. Die Uhr hat seit jeher zwei Stufen: übersetzen
+(Stufe I) und im Simulator starten (Stufe II). Für Android galt bislang nur
+Stufe I. Das ändert sich: Bei **jeder** Änderung an einem der beiden
+Android-Module wird der Emulator gestartet, die Änderung darin **angesehen
+und bedient**, und beides mit **Bildern belegt**. Werkzeug:
+`android/werkzeuge/emulator.sh` (`aufbauen`, `start`, `legen`, `bild`, `aus`),
+Anleitung und Zahlen in `android/LIESMICH.md`.
+
+Drei Sätze, damit die Regel nicht ins Leere greift:
+
+- **Der Bilderlauf ersetzt ihn nicht, und er ersetzt den Bilderlauf nicht.**
+  Robolectric zeichnet das gerechnete Bild: deterministisch, Dutzende Abzüge
+  in Sekunden, aber ohne laufendes Programm. Der Emulator zeigt das
+  gelaufene: Systemleisten, echte Schriftrasterung, rundes Glas,
+  Bedienzustände, und was nach einem Druck auf einen Knopf passiert. Was der
+  eine sieht, sieht der andere nicht — deshalb laufen beide.
+- **Pflicht ist der Versuch, nicht der Erfolg.** Der Emulator ist eine
+  Eigenschaft des Wegwerf-Containers. Läuft er nicht, ist das ein **Befund
+  mit Zahl** — welches Abbild, welche Fassung, welche Meldung —, kein
+  stillschweigend übersprungener Punkt; er gehört dann im Prüfdokument an den
+  Anfang, unter „was nicht geprüft werden konnte und warum". Und **bevor**
+  man ihn abschreibt, wird `-accel off` versucht: Am 03.09.2026 stand in
+  `android/LIESMICH.md`, das x86_64-Abbild brauche KVM — es braucht es nicht,
+  ohne KVM übersetzt QEMU selbst. Der Satz verwechselte „startet nicht ohne
+  Weiteres" mit „geht nicht" und kostete ein ganzes Paket ohne Stufe II.
+- **Er läuft am Ende des Arbeitspakets**, mit den übrigen Prüfmitteln. Ohne
+  KVM rechnet **ein** Kern; Boot und Aufspielen liegen in Minuten, nicht
+  Sekunden. Wer ihn nach jeder Datei anwirft, verbraucht die Zeit, die die
+  Änderung selbst gebraucht hätte.
 
 **Die Prüfmittel laufen zuletzt, nicht zwischendurch.** Erst der Code, dann
 die Dokumentation, **dann** Wortliste, Vollständigkeit, Kontraste und

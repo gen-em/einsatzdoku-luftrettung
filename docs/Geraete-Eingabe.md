@@ -223,6 +223,9 @@ erkennen ist**.
 | **Knopfhöhe am Handgelenk** | 48 dp sind mit Handschuh treffbar | Fehlgriffe; dann ist 48 dp die falsche Zahl für dieses Gerät |
 | **Always-on-Display** | Die Ansicht überlebt den Wechsel in den Ambient-Modus | Die App startet neu oder verliert den Dienst |
 | **Dauerlauf** — zwölf Stunden Dienst | Der Akku hält, der Dienst läuft durch | Das System beendet die App; der Dienst bricht ohne Meldung ab |
+| **Ortungszustand am Handgelenk** (seit Android 0.10.0) — im laufenden Dienst den Standort des Handys ausschalten und die Uhr **nicht anfassen** | Binnen Sekunden steht **oben in der Zustandszeile** „keine Ortung · keine Aufzeichnung" in Rosa, ohne dass jemand einen Knopf drückt; nach dem Wiedereinschalten „GPS sucht" und dann wieder Phase und Zeit | Die Uhr ändert sich erst, wenn man einen Knopf drückt → die aktive Standmeldung kommt nicht an. Die Uhr ändert sich gar nicht → das Feld `ortung` fehlt, oder die Zeile liegt wieder unter dem Rand (B-S5Z-17) |
+| **Kein Funkfeuer bei jedem Wechsel** — im Dienst zwischen „Standort aus" und „kein Signal" wechseln lassen (Standort aus, dann in die Tiefgarage) | Die Uhr zeigt durchgehend dasselbe, und im `logcat` steht **kein** zweiter „Ortungsstand an die Uhr" | Eine Meldung je Zustandswechsel statt je Anzeigewechsel — das kostet Akku für nichts |
+| **Dienststart bei ausgeschaltetem Standort** — an der Uhr beginnen, während der Standort des Handys aus ist | Der Dienst beginnt trotzdem (er wird nicht abgelehnt), das Handy vibriert, und die Uhr zeigt sofort „keine Ortung · keine Aufzeichnung" | Die Uhr zeigt „Dienst läuft" ohne Hinweis — dann verschweigt sie genau die Lücke, die hinterher niemand erklären kann |
 
 ### 7.4 Ein Gerät ergänzen
 

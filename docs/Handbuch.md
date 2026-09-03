@@ -2352,6 +2352,101 @@ erlaubt sind — das ist bei einer Verteilung ohne Store der vorgesehene Weg.
 Steht die Karte nicht da, liegt auf dieser Installation keine App-Datei. Frag
 die Administration.
 
+### 10.2 Was die App über die Aufzeichnung sagt
+
+*Seit Android 0.8.0.*
+
+Im Dienst steht neben dem roten Aufnahmepunkt eine Zeile, und sie sagt
+**nicht immer dasselbe**:
+
+| Zeile | Bedeutung |
+|---|---|
+| „Aufzeichnung läuft seit 07:02 · GPS empfängt" | Es kommen brauchbare Positionen. Nur hier entsteht eine Spur. |
+| „Dienst läuft seit 07:02 · GPS sucht …" | Der Empfänger fängt sich noch ein. Nach einem Kaltstart im Freien dauert das eine halbe bis eine Minute. |
+| „Dienst läuft seit 07:02 · kein GPS-Signal seit 3 min · keine Aufzeichnung" | Es kommt nichts an — Tiefgarage, Metallkoffer, Handy tief in der Tasche. |
+| „Dienst läuft seit 07:02 · GPS zu ungenau · keine Aufzeichnung" | Es kommen Positionen, aber mit über 100 m Streuung. Das ist kein GPS mehr, sondern aus Funkzelle oder WLAN geschätzt. |
+| „Dienst läuft seit 07:02 · Standort aus · keine Aufzeichnung" | Der Standort des Telefons ist ausgeschaltet. |
+| „Dienst läuft seit 07:02 · Ortung nicht freigegeben · keine Aufzeichnung" | Die App darf nicht orten. |
+
+**„Aufzeichnung läuft" steht nur in der ersten Zeile.** In allen anderen heißt
+es „Dienst läuft", weil das wahr ist und das andere nicht — der Dienst läuft,
+die Zeiten und Phasen werden dokumentiert, aber es entsteht keine Spur. Der
+rote Punkt bleibt trotzdem stehen: Er zeigt den Dienst, nicht das Signal.
+
+**Das Telefon vibriert, wenn nichts aufgezeichnet wird**, und wiederholt es
+alle zehn Minuten, solange es so bleibt — ohne Ton. Die Meldung steht in der
+Benachrichtigungsleiste und sagt, was hilft; bei ausgeschaltetem Standort
+führt ein Tippen darauf direkt in die Einstellung. Sobald wieder aufgezeichnet
+wird, verschwindet sie von selbst.
+
+> **Wenn nichts vibriert:** „Nicht stören" kann die Vibration unterdrücken.
+> Die Meldung in der Leiste und die rote Zeile in der App bleiben davon
+> unberührt. Die Einstellung dazu steht unter *Einstellungen → Apps → NAdoku
+> → Benachrichtigungen → Warnungen*.
+
+**Ein Dienst beginnt nicht bei ausgeschaltetem Standort.** Statt „Dienst
+beginnen" steht dann ein Hinweis mit dem Knopf **„Standort einschalten"**; er
+führt in die Systemeinstellung. Nach der Rückkehr verschwindet der Hinweis von
+selbst, und der Knopf ist wieder da. Dasselbe gilt, wenn die Ortungsfreigabe
+fehlt.
+
+An der **Wear-OS-Uhr** ist das anders: Dort wird ein Dienst auch bei
+ausgeschaltetem Standort begonnen — am Handgelenk kann die App niemanden
+fragen, und ein wortloses „geht nicht" hülfe nicht weiter. Stattdessen
+vibriert das Telefon, und die Uhr zeigt „keine Ortung · keine Aufzeichnung".
+
+### 10.3 Die Phasenliste im Einsatz
+
+*Seit Android 0.10.1.*
+
+Während eines Einsatzes zeigt die Liste unter dem großen Knopf **die bereits
+gesetzten Phasen und die nächste** — nicht alle acht. Ein Tippen auf eine
+gesetzte Phase setzt sie erneut; das ist die Korrektur, und beide Zeiten
+bleiben stehen.
+
+Wer eine Phase überspringen oder eine weiter hinten direkt setzen will, tippt
+**„Alle Phasen zeigen"**. Danach steht die vollständige Liste da, bis der
+Einsatz abgeschlossen ist.
+
+> **Warum nicht immer alle acht:** Mit voller Liste rutschte „Einsatz
+> abschließen" auf vielen Telefonen unter den unteren Bildrand und war nur
+> nach dem Schieben erreichbar — mit Handschuhen ein Griff zu viel an der
+> Stelle, an der es schnell gehen soll.
+
+### 10.4 Was beim Dienstende geschieht
+
+*Seit Android 0.9.0.*
+
+Nach „Dienst beenden" steht in der Benachrichtigungsleiste kurz **„Dienst
+beendet · sende …"**. Solange sie da ist, arbeitet die App noch — sie darf in
+dieser Zeit weggelegt, aber nicht abgewürgt werden. Danach gibt es drei
+Möglichkeiten:
+
+| Was zu sehen ist | Was es heißt |
+|---|---|
+| **keine Meldung mehr** | Alles ist beim Server angekommen. Nichts zu tun. |
+| „Dienst beendet · 2 Pakete warten auf Netz" | Es fehlte Netz. Die App holt es nach, sobald wieder eines da ist — auch wenn das Telefon zwischendurch neu startet. Die Meldung verschwindet dann von selbst. |
+| „Dienst beendet · Schlüssel abgewiesen – Gerät neu koppeln" | Der Server hat das Gerät nicht mehr akzeptiert. **Hier hilft Warten nicht:** Das Gerät muss in den Einstellungen neu gekoppelt werden. |
+
+Die mittlere Meldung lässt sich wegwischen — der Nachsendevorgang läuft davon
+unberührt weiter.
+
+> **Nach einem Neustart des Telefons** wartet die Nachlieferung, bis das Gerät
+> das erste Mal **entsperrt** wurde. Das ist Absicht: Vorher kommt die App an
+> ihre eigenen Zugangsdaten nicht heran.
+
+**Auf der Startseite steht, was noch aussteht:**
+
+| Zeile | Bedeutung |
+|---|---|
+| „Alles gesendet" | Der Server hat alles. |
+| „Rückstand 2 Pakete" | Zwei abgeschlossene Pakete sind noch nicht bestätigt. Darunter steht der Knopf **„Jetzt senden"**, falls es schneller gehen soll. |
+| „1 Paket vom Server abgewiesen" *(rot)* | Der Server hat den Inhalt abgelehnt. **Das geht nicht von selbst weg** und wird auch nicht wiederholt — bitte melden; die Daten liegen weiter auf dem Telefon. |
+
+Nach jedem Sendeversuch steht darunter kurz das Ergebnis: „Gesendet · 12:41",
+„Keine Verbindung · wird nachgeholt" oder „Schlüssel abgewiesen · Gerät neu
+koppeln".
+
 ---
 
 ## 11. Administration (nur Admin)

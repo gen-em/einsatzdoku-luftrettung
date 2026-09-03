@@ -23,6 +23,35 @@ import org.genem.nadoku.gemeinsam.Farbe
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.gemeinsam.Motiv
 import org.genem.nadoku.gemeinsam.Modus
+import org.genem.nadoku.handy.aufzeichnung.Ortungsstand
+
+/**
+ * Wie der letzte Sendelauf ausgegangen ist (E-S5Z-12).
+ *
+ * Die Ansicht bekommt das **fertig entschieden** und nicht als
+ * `Sendebericht`: Sie soll anzeigen, nicht auswerten. Sonst stünde die Regel,
+ * was „Keine Verbindung" heißt, in einer Compose-Funktion und wäre dort
+ * weder prüfbar noch wiederfindbar.
+ */
+enum class Sendeausgang {
+    /** Alles durch. */
+    GESENDET,
+
+    /** Kein Netz oder 5xx — der Nachsende-Job holt es nach. */
+    KEIN_NETZ,
+
+    /** 401. Wiederholen hilft nicht; es hilft eine neue Kopplung. */
+    SCHLUESSEL_ABGEWIESEN,
+
+    /** 400. Der Server hat den Inhalt abgelehnt — er wird nicht wiederholt. */
+    PAKET_ABGEWIESEN,
+}
+
+/**
+ * @param hhmm wann der Lauf war
+ * @param anzahl nur bei [Sendeausgang.PAKET_ABGEWIESEN]: wie viele
+ */
+data class Sendeergebnis(val ausgang: Sendeausgang, val hhmm: String, val anzahl: Int = 0)
 
 /** Was die Dienstansicht anzeigen soll — alles, was sie braucht, in einem Stück. */
 data class Dienststand(
@@ -32,6 +61,24 @@ data class Dienststand(
     val punkte: Long,
     val streckeKm: String,
     val ortungFreigegeben: Boolean,
+    /**
+     * Ist der GPS-Anbieter eingeschaltet? Vor dem Dienst entscheidet er
+     * zusammen mit [ortungFreigegeben] darüber, ob überhaupt begonnen werden
+     * kann (E-S5Z-03).
+     */
+    val standortAn: Boolean = true,
+    /**
+     * Der Ortungszustand des **laufenden** Dienstes; `null`, solange keiner
+     * läuft oder der Wächter noch nichts gemessen hat (E-S5Z-01).
+     */
+    val ortung: Ortungsstand? = null,
+    /**
+     * Wie lange [ortung] schon gilt, in vollen Minuten — für „seit 3 min".
+     *
+     * Die Ansicht rechnet das nicht selbst aus: Sie bekäme dafür eine
+     * monotone Uhr in die Hand, und eine Vorschau hätte keine.
+     */
+    val ortungSeitMin: Int = 0,
     val einsatzLaeuft: Boolean = false,
     val laufendePhase: Int = org.genem.nadoku.gemeinsam.Phasen.FREI,
     val phaseSeit: String? = null,
@@ -58,10 +105,15 @@ fun DienstAnsicht(
     serverBasis: String?,
     logoWahl: LogoWahl,
     rueckstand: Int,
+    abgewiesen: Int = 0,
+    sendeergebnis: Sendeergebnis? = null,
+    sendelaufLaeuft: Boolean = false,
+    aufJetztSenden: () -> Unit = {},
     aufModus: (Modus) -> Unit,
     aufBeginnen: () -> Unit,
     aufBeenden: () -> Unit,
     aufOrtungFreigeben: () -> Unit,
+    aufStandortEinschalten: () -> Unit,
     aufEinstellungen: () -> Unit,
     aufPhase: (Int) -> Unit = {},
     aufEinsatzAbschluss: () -> Unit = {},
@@ -76,8 +128,19 @@ fun DienstAnsicht(
             verticalArrangement = Arrangement.spacedBy(Abstand.drei),
         ) {
             Karte {
-                Zustandsblock(stand, serverBasis, rueckstand)
+                Zustandsblock(
+                    stand, serverBasis, rueckstand, abgewiesen,
+                    sendeergebnis, sendelaufLaeuft, aufJetztSenden,
+                )
 
+                /* ZWEI SPERREN, IN DIESER REIHENFOLGE (E-S5Z-03). Erst die
+                 * Freigabe, dann der Standort: Ohne Freigabe nützt der
+                 * eingeschaltete Standort nichts, und zwei Meldungsblöcke
+                 * übereinander wären eine Zumutung mit Handschuhen.
+                 *
+                 * Solange einer der beiden steht, gibt es KEINEN Knopf
+                 * „Dienst beginnen" — ein Dienst, der nichts aufzeichnet,
+                 * ist kein Dienst, sondern eine Lücke mit Uhrzeit. */
                 if (!stand.ortungFreigegeben) {
                     Meldungsblock(
                         titel = stringResource(R.string.ortung_fehlt),
@@ -85,6 +148,15 @@ fun DienstAnsicht(
                         warnend = true,
                     )
                     KnopfPrimaer(stringResource(R.string.ortung_freigeben)) { aufOrtungFreigeben() }
+                } else if (!stand.standortAn) {
+                    Meldungsblock(
+                        titel = stringResource(R.string.standort_aus),
+                        hinweis = stringResource(R.string.standort_aus_hinweis),
+                        warnend = true,
+                    )
+                    KnopfPrimaer(stringResource(R.string.standort_einschalten)) {
+                        aufStandortEinschalten()
+                    }
                 }
 
                 if (stand.laeuft) {
@@ -100,20 +172,27 @@ fun DienstAnsicht(
 }
 
 @Composable
-private fun Zustandsblock(stand: Dienststand, serverBasis: String?, rueckstand: Int) {
+private fun Zustandsblock(
+    stand: Dienststand,
+    serverBasis: String?,
+    rueckstand: Int,
+    abgewiesen: Int,
+    sendeergebnis: Sendeergebnis?,
+    sendelaufLaeuft: Boolean,
+    aufJetztSenden: () -> Unit,
+) {
     if (stand.laeuft) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Abstand.zwei),
         ) {
+            /* DER AUFNAHMEPUNKT BLEIBT IN JEDEM ZUSTAND (E-S4-22a): Er
+             * zeigt den DIENST, nicht das Signal. Die Zeile daneben sagt,
+             * was der Punkt nicht sagen kann. */
             Aufnahmepunkt()
             Text(
-                text = stringResource(
-                    if (stand.ortungFreigegeben) R.string.dienst_laeuft_seit
-                    else R.string.dienst_laeuft_seit_ohne_gps,
-                    stand.begonnenHhmm.orEmpty(),
-                ),
-                color = Farbe.asphalt, fontSize = 13.sp,
+                text = ortungstext(stand),
+                color = ortungsfarbe(stand.ortung), fontSize = 13.sp,
             )
         }
     }
@@ -130,9 +209,70 @@ private fun Zustandsblock(stand: Dienststand, serverBasis: String?, rueckstand: 
         } else {
             stringResource(R.string.sync_vollstaendig)
         },
-        punktfarbe = if (rueckstand > 0) Farbe.orange else Farbe.blau,
+        /* `orangeTief` UND NICHT `orange` (B-S5Z-13). Der Punkt ist ein
+         * grafisches Objekt und braucht nach WCAG 1.4.11 3,0 : 1 gegen die
+         * Fläche. `marke_orange` auf `marke_schnee` erreicht 2,23 : 1 —
+         * gefunden erst beim Nachrechnen ALLER Token für E-S5Z-22, weil
+         * `werkzeuge/kontraste.py` eine feste Paarliste führt und dieses
+         * Paar nicht enthielt. `marke_orange_tief` erreicht 4,32 : 1; das
+         * Paar steht jetzt in der Liste. */
+        punktfarbe = if (rueckstand > 0) Farbe.orangeTief else Farbe.blau,
         schriftfarbe = Farbe.gedaempft,
     )
+
+    /* WAS DER SERVER ABGEWIESEN HAT, STAND BIS 0.8.1 NIRGENDS (B-S5Z-06).
+     *
+     * Ein Paket mit 400 wird als `fehlerhaft` gemerkt und nicht wiederholt —
+     * das ist richtig (Vertrag 5). Es fiel damit aber auch aus dem Rückstand
+     * und aus der Anzeige: Die App sagte „Alles gesendet", während beim
+     * Server ein Segment offen blieb. Rot, weil hier tatsächlich etwas
+     * verloren ist und niemand es von selbst merkt. */
+    if (abgewiesen > 0) {
+        Zustandszeile(
+            text = androidx.compose.ui.res.pluralStringResource(
+                R.plurals.sync_abgewiesen, abgewiesen, abgewiesen,
+            ),
+            punktfarbe = Farbe.rot, schriftfarbe = Farbe.rotTief,
+        )
+    }
+
+    /* Die Ergebniszeile lebt nur, solange die Ansicht offen ist — sie steht
+     * in `NAdokuApp` und nicht im Puffer. Nach einem Neustart der App gibt es
+     * sie nicht mehr, und das ist richtig: Sie ist die Quittung auf eine
+     * Handlung, kein Zustand. */
+    val ergebnis = sendeergebnis
+    if (sendelaufLaeuft) {
+        Text(
+            text = stringResource(R.string.sync_sendet),
+            color = Farbe.gedaempft, fontSize = 13.sp,
+        )
+    } else if (ergebnis != null) {
+        Text(
+            text = when (ergebnis.ausgang) {
+                Sendeausgang.GESENDET ->
+                    stringResource(R.string.sync_ergebnis_gesendet, ergebnis.hhmm)
+                Sendeausgang.KEIN_NETZ -> stringResource(R.string.sync_ergebnis_kein_netz)
+                Sendeausgang.SCHLUESSEL_ABGEWIESEN ->
+                    stringResource(R.string.sync_ergebnis_schluessel)
+                Sendeausgang.PAKET_ABGEWIESEN ->
+                    androidx.compose.ui.res.pluralStringResource(
+                        R.plurals.sync_ergebnis_abgewiesen, ergebnis.anzahl, ergebnis.anzahl,
+                    )
+            },
+            color = when (ergebnis.ausgang) {
+                Sendeausgang.GESENDET -> Farbe.gedaempft
+                else -> Farbe.rotTief
+            },
+            fontSize = 13.sp,
+        )
+    }
+
+    /* „JETZT SENDEN" NUR, WENN ES ETWAS ZU SENDEN GIBT und gerade kein Lauf
+     * unterwegs ist. Ein Knopf, der nichts tut, ist schlimmer als keiner: Wer
+     * ihn drückt und nichts geschieht, hält die App für kaputt. */
+    if (rueckstand > 0 && !sendelaufLaeuft) {
+        KnopfNeutral(stringResource(R.string.sync_jetzt_senden)) { aufJetztSenden() }
+    }
 }
 
 @Composable
@@ -166,7 +306,13 @@ private fun androidx.compose.foundation.layout.ColumnScope.RuhenderDienst(
     ) { links ->
         aufModus(if (links) Modus.MIT_PHASENKNOEPFEN else Modus.NUR_AUFZEICHNEN)
     }
-    KnopfPrimaer(stringResource(R.string.dienst_beginnen)) { aufBeginnen() }
+    /* KEIN „Dienst beginnen", solange eine der beiden Sperren steht
+     * (E-S5Z-03). Der Knopf verschwindet, statt beim Druck abzulehnen: Eine
+     * Ablehnung müsste erklärt werden, und über dem Knopf steht die
+     * Erklärung schon. */
+    if (stand.ortungFreigegeben && stand.standortAn) {
+        KnopfPrimaer(stringResource(R.string.dienst_beginnen)) { aufBeginnen() }
+    }
 }
 
 @Composable
@@ -227,20 +373,89 @@ private fun androidx.compose.foundation.layout.ColumnScope.LaufenderDienst(
     KnopfBeenden(stringResource(R.string.dienst_beenden)) { aufBeenden() }
 }
 
+/**
+ * Der Wortlaut zum Ortungszustand (4.3).
+ *
+ * `null` faellt mit [Ortungsstand.SUCHT] zusammen, und das ist richtig:
+ * Beides heisst, dass die App es noch nicht weiss. Sie darf dann nicht
+ * „GPS ok" sagen — das war der Fehler von 0.7.7 (B-S5Z-07).
+ */
+@Composable
+private fun ortungstext(stand: Dienststand): String {
+    val seit = stand.begonnenHhmm.orEmpty()
+    return when (stand.ortung) {
+        Ortungsstand.OK -> stringResource(R.string.dienst_laeuft_ok, seit)
+        Ortungsstand.KEIN_SIGNAL ->
+            stringResource(R.string.dienst_laeuft_kein_signal, seit, stand.ortungSeitMin)
+        Ortungsstand.UNGENAU -> stringResource(R.string.dienst_laeuft_ungenau, seit)
+        Ortungsstand.STANDORT_AUS -> stringResource(R.string.dienst_laeuft_standort_aus, seit)
+        Ortungsstand.FREIGABE_FEHLT ->
+            stringResource(R.string.dienst_laeuft_freigabe_fehlt, seit)
+        Ortungsstand.SUCHT, null -> stringResource(R.string.dienst_laeuft_sucht, seit)
+    }
+}
+
+/**
+ * Die Farbe dazu — **drei Stufen, nicht sechs** (E-S5Z-22).
+ *
+ * Alle vier Zustaende, in denen nichts aufgezeichnet wird, sind rot und
+ * unterscheiden sich am Wortlaut. Das Konzept sah fuer `UNGENAU` Orange vor;
+ * nachgerechnet traegt kein vorhandenes Orange Text auf Schnee
+ * (`marke_orange` 2,23 : 1, `marke_orange_tief` 4,32 : 1 — beide unter AA).
+ * `rotTief` erreicht 7,58 : 1. Die farbliche Abstufung „warnt" gegen „fehlt
+ * ganz" geht dabei verloren; aufgezeichnet wird in beiden Faellen nichts, und
+ * das ist die Aussage, auf die es ankommt.
+ */
+@Composable
+private fun ortungsfarbe(stand: Ortungsstand?) = when (stand) {
+    Ortungsstand.OK -> Farbe.asphalt
+    Ortungsstand.SUCHT, null -> Farbe.gedaempft
+    else -> Farbe.rotTief
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun VorschauRuhend() = DienstAnsicht(
     stand = Dienststand(false, null, Modus.MIT_PHASENKNOEPFEN, 0, "0,0", true),
     serverBasis = "https://einsatz.beispieldomain.de/", logoWahl = LogoWahl.LUFT,
     rueckstand = 0, aufModus = {}, aufBeginnen = {}, aufBeenden = {},
-    aufOrtungFreigeben = {}, aufEinstellungen = {},
+    aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
+)
+
+/** Die Sperre vor dem Dienst: Standort aus, kein Knopf „Dienst beginnen". */
+@Preview(showBackground = true)
+@Composable
+private fun VorschauStandortAus() = DienstAnsicht(
+    stand = Dienststand(
+        false, null, Modus.MIT_PHASENKNOEPFEN, 0, "0,0",
+        ortungFreigegeben = true, standortAn = false,
+    ),
+    serverBasis = "https://einsatz.beispieldomain.de/", logoWahl = LogoWahl.LUFT,
+    rueckstand = 0, aufModus = {}, aufBeginnen = {}, aufBeenden = {},
+    aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
 )
 
 @Preview(showBackground = true)
 @Composable
 private fun VorschauLaufendNurAufzeichnen() = DienstAnsicht(
-    stand = Dienststand(true, "07:02", Modus.NUR_AUFZEICHNEN, 1483, "126,4", true),
+    stand = Dienststand(
+        true, "07:02", Modus.NUR_AUFZEICHNEN, 1483, "126,4",
+        ortungFreigegeben = true, ortung = Ortungsstand.OK,
+    ),
     serverBasis = "https://einsatz.beispieldomain.de/", logoWahl = LogoWahl.BODEN,
     rueckstand = 2, aufModus = {}, aufBeginnen = {}, aufBeenden = {},
-    aufOrtungFreigeben = {}, aufEinstellungen = {},
+    aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
+)
+
+/** Der Fall, den 0.7.7 verschwieg: Dienst läuft, aufgezeichnet wird nichts. */
+@Preview(showBackground = true)
+@Composable
+private fun VorschauLaufendOhneSignal() = DienstAnsicht(
+    stand = Dienststand(
+        true, "07:02", Modus.NUR_AUFZEICHNEN, 1483, "126,4",
+        ortungFreigegeben = true, ortung = Ortungsstand.KEIN_SIGNAL, ortungSeitMin = 3,
+    ),
+    serverBasis = "https://einsatz.beispieldomain.de/", logoWahl = LogoWahl.BODEN,
+    rueckstand = 0, aufModus = {}, aufBeginnen = {}, aufBeenden = {},
+    aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
 )

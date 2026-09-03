@@ -38,6 +38,7 @@ import org.genem.nadoku.BuildConfig
 import org.genem.nadoku.R
 import org.genem.nadoku.gemeinsam.Bildmarke
 import org.genem.nadoku.gemeinsam.Farbe
+import org.genem.nadoku.gemeinsam.Ortungscode
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.gemeinsam.Motiv
@@ -370,19 +371,62 @@ private fun GesperrteAnsicht(z: Uhrzustand, logoWahl: LogoWahl) {
 @Composable
 private fun Zustandszeile(z: Uhrzustand) {
     Box(contentAlignment = Alignment.Center) {
-        Text(
-            text = if (z.einsatzLaeuft) {
-                stringResource(R.string.phase_seit, z.laufendePhase, z.laufendeSeit.orEmpty())
-            } else {
-                stringResource(R.string.dienst_beginnen)
-            },
-            color = Farbe.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
-        )
+        /* WAS NICHT AUFGEZEICHNET WIRD, STEHT HIER OBEN — und nicht unten in
+         * der Verbindungszeile, wo es hingehörte (E-S4-51: Statusanzeigen an
+         * den Rand).
+         *
+         * DER GRUND IST GEMESSEN, nicht überlegt (B-S5Z-17). Auf der 192-dp-Uhr
+         * ist die laufende Ansicht mit Phasenknöpfen 221 dp hoch — die letzte
+         * Zeile liegt unter dem Rand und ist ohne Bildlauf **nicht da**.
+         * `UhrBildTest` hat es nachgewiesen: Drei Bilder mit drei
+         * verschiedenen Ortungszuständen waren byteweise gleich, weil keines
+         * die Zeile zeigte. Eine Warnung, die genau auf der engsten Uhr
+         * ausfällt, ist keine.
+         *
+         * DIE REIHE WÄCHST DABEI NICHT. Es ist dieselbe eine Zeile; sie sagt
+         * nur etwas Anderes, solange es etwas Wichtigeres zu sagen gibt. Der
+         * Preis ist, dass Phase und Zeit währenddessen nicht dastehen — und
+         * das ist die richtige Reihenfolge: „Es entsteht gerade keine Spur"
+         * schlägt „Phase 3 seit 09:12", und die Phasenliste ist einen Druck
+         * entfernt. */
+        val anzeige = Ortungscode.anzeige(z.ortung)
+        val warnung = when {
+            z.dienstSchwebt -> stringResource(R.string.dienst_schwebt)
+            anzeige == Ortungscode.Anzeige.KEINE_ORTUNG -> stringResource(R.string.ortung_keine)
+            else -> null
+        }
+        when {
+            warnung != null -> Text(
+                text = warnung,
+                color = Farbe.rosa, fontSize = 13.sp, textAlign = TextAlign.Center,
+            )
+            anzeige == Ortungscode.Anzeige.SUCHEN -> Text(
+                text = stringResource(R.string.ortung_sucht),
+                color = Farbe.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
+            )
+            else -> Text(
+                text = if (z.einsatzLaeuft) {
+                    stringResource(R.string.phase_seit, z.laufendePhase, z.laufendeSeit.orEmpty())
+                } else {
+                    stringResource(R.string.dienst_beginnen)
+                },
+                color = Farbe.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
 /**
  * Was der Funk gerade tut — und **was er noch nicht getan hat**.
+ *
+ * ROSA UND NICHT ROT, und das ist eine Berichtigung (B-S5Z-15). `marke_rot`
+ * als **Schrift** auf `marke_asphalt` erreicht 4,12 : 1 und bleibt damit unter
+ * AA; als Fläche mit weisser Schrift (die beendenden Knöpfe) trägt dasselbe
+ * Rot 4,78 : 1 und ist richtig. `marke_rosa` ist der helle Vertreter
+ * derselben Familie und erreicht 15,94 : 1. Der Fehler stand seit C1 da und
+ * fiel nicht auf, weil `werkzeuge/kontraste.py` eine feste Paarliste führt
+ * und dieses Paar nicht enthielt — dieselbe Lücke wie bei B-S5Z-13. Beide
+ * Paare stehen jetzt darin.
  *
  * DIE SCHWEBENDE ZEILE IST DER KERN VON E-S4-10 an der Oberfläche: Ein an der
  * Uhr ausgelöster Dienststart wirkt erst mit der Zustellung; vorher läuft am
@@ -392,13 +436,11 @@ private fun Zustandszeile(z: Uhrzustand) {
  */
 @Composable
 private fun Verbindungszeile(z: Uhrzustand) {
-    if (z.dienstSchwebt) {
-        Text(
-            text = stringResource(R.string.dienst_schwebt),
-            color = Farbe.rot, fontSize = 12.sp, textAlign = TextAlign.Center,
-        )
-        return
-    }
+    /* „Wartet aufs Handy" und „keine Ortung" standen einmal HIER. Sie sind
+     * mit E1 in die Zustandszeile oben gewandert, weil diese Reihe auf der
+     * 192-dp-Uhr im Phasenmodus unter dem Rand liegt (B-S5Z-17, dort die
+     * Messung). Was bleibt, ist der Funkstand: Er ist eine Auskunft, keine
+     * Warnung, und darf unter den Rand rutschen. */
     Text(
         text = when {
             /* NOCH NICHTS VERSUCHT ist ein eigener Fall und nicht „verbunden".

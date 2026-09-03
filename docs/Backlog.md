@@ -42,6 +42,11 @@ API-Zweig. Die Punkte 68 bis 79 sind mit Fassung 16 angelegt, 80 bis 83 mit
 Fassung 21, 84 bis 88 mit Fassung 22; alle stehen unten; die Zuordnung aller offenen Punkte zu Paketen führt
 `docs/Rahmenplan.md`, Abschnitt 5.
 
+**Zu den Nummern 98 bis 113 (Rahmenplan Fassung 26, 03.09.2026).** 98–100
+kommen aus der vorgezogenen Planung v1.0 (R65–R67), 101–113 sind die
+Problemsammlung für Schritt 8 (S9, R73); ihre Kennungen PS-1 bis PS-10 stehen
+in `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
+
 **Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
 rekonstruierbar: Code und Changelog verweisen an neun Stellen namentlich auf
 sie („Backlog Nr. 10"), und aus diesen Fundstellen geht eindeutig hervor,
@@ -1229,6 +1234,180 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Bewusst so gelassen:** Drei davon sind Komfortwege, der vierte ist der
     Kopplungstakt, der sich nach drei Fehlern selbst beendet — und während
     einer Wartung koppelt ohnehin niemand.
+
+98. **Versionscode-Versatz für das Uhr-Modul.**
+    *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R65).*
+    `version.properties` rechnet für Handy- und Uhr-Modul denselben
+    Versionscode (`Haupt·10000 + Neben·100 + Korrektur`, E-S4-02). Die Play
+    Console verlangt unter einem Paketnamen je APK einen eindeutigen Code —
+    ohne Versatz ist kein Wear-OS-Release möglich. Das Uhr-Modul bekommt einen
+    Versatz (Schema in der Umsetzung: etwa `+ 1 000 000` oder eine führende
+    Formfaktor-Ziffer); Versionsname und Zählung bleiben eins. Preis: ein
+    einmaliger Sprung, Neuinstallation auf der vorhandenen Uhr. Rahmenplan
+    Schritt 6 (S4-Rest).
+
+99. **Fassungsprüfung auf Klick.**
+    *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R66, Option A2).*
+    Ein Knopf „Auf neue Fassung prüfen" auf der Wartungsseite, der einmalig
+    die GitHub-Releases-Schnittstelle fragt — kein Hintergrundlauf, kein
+    Banner. Nur, wenn Selbsthoster es verlangen; die eigene Installation
+    braucht es nicht, weil Betreiberin und Entwicklung dieselben sind.
+    **Nach v1.0.**
+
+100. **Play-API-Upload aus der Auslieferungskette.**
+    *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R67).*
+    Upload-Schlüssel als GitHub-Secret plus Dienstkonto der Play-API; jeder
+    grüne Tag landet von selbst auf dem internen Test-Track, die
+    Produktionsfreigabe bleibt ein Klick in der Play Console. Vertretbar,
+    weil nach Play App Signing der Upload-Schlüssel der zurücksetzbare ist;
+    E-S4-16 dann um den Unterschied App-Signaturschlüssel / Upload-Schlüssel
+    ergänzen. **Nach v1.0**, wenn die Releases häufiger werden.
+
+101. **Adresssuche im Kartendialog.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-1), Rahmenplan
+    Schritt 8 (S9), R73.*
+    Im aufploppenden Kartendialog (Transportziel, Einsatzort usw.) kann kein
+    Ort per Adresse gesucht werden. Soll: Adress- und Ortssuche im Dialog;
+    ein Klick auf einen Treffer **setzt den Pin**, die Übernahme bleibt ein
+    eigener, bestätigender Schritt (F1). Zuerst zu prüfen: die
+    Geocoding-Quelle — dieselbe wie die heutigen Adressvorschläge oder keine
+    (`CLAUDE.md` 4, Datenschutz). Vorbereitung
+    `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
+
+102. **Weitere Rettungsmittel: die Auswahl wird nicht übernommen.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-2), Schritt 8 (S9).*
+    Die Suche im hinterlegten Stand liefert Treffer; ein Klick schließt den
+    Dialog, das Rettungsmittel wird aber nicht in den Einsatz übernommen.
+    Bug, nur Desktop/Web (F2).
+
+103. **Kompaktere Buttons Einsatzort, Standort, Zielklinik.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-3), Schritt 8 (S9).*
+    Die drei Buttons sollen kleiner werden; Prüfidee: die farbige Umrandung
+    der Icons von Standort und Zielklinik als Anzeige Einsatzbeginn/-ende
+    nutzen und die separate Anzeige sparen — ob das gestalterisch trägt, ist
+    offen; Icon-Größe separat justierbar. Liefergegenstand sind Mockups
+    mehrerer Optionen **im S9-Konzept** (Fable-Schritt, F8). Hängt an der
+    Bedienhöhe am Schreibtisch (Nr. 74, S8). Offen: F3–F6 (Rahmenplan
+    Abschnitt 6).
+
+104. **Windenkacheln fehlen bei Nullwert.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-4), Schritt 8 (S9).*
+    In Monats- und Jahresansicht fehlen die Windenkacheln, wenn im Zeitraum
+    keine Windeneinsätze geflogen wurden. Soll: Sobald ein Hubschrauber mit
+    Winde als Einsatzmittel ausgewählt war, erscheinen die Kacheln — auch
+    mit „0" (F7).
+
+105. **Hubschrauber-Icon in der linken Leiste.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-5), Schritt 8 (S9).*
+    Das Icon neben den Tagesdaten überzeugt nicht; Varianten entstehen im
+    S9-Konzept (Fable-Schritt, F8), nicht vorab.
+
+106. **Klinik- und Adressvorschläge überlagern sich.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-6), Schritt 8 (S9).*
+    Beide Vorschlagsarten in **einer** Liste: Kliniken oben, visuell
+    abgesetzt, darunter die Adressen. Klinikvorschläge nur im
+    Zielklinik-Kontext (F9), höchstens zwei (F10).
+
+107. **Zielklinik per Koordinaten und Karte.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-7), Schritt 8 (S9).*
+    An beiden Stellen (Vorbelegung bei den Rettungsmitteln,
+    Einsatzbearbeitung) zusätzlich Koordinateneingabe und Auswahl über den
+    standardisierten Kartendialog (Nr. 101). Koordinaten einheitlich wie in
+    den übrigen Feldern (F11); so gewählte Zielkliniken sind Ad-hoc-Einträge
+    je Einsatz, kein Stammdateneintrag (F12). Migration; Vertrag prüfen.
+
+108. **Schloss-Icon und Legende für verschlüsselte Felder.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.1), Schritt 8
+    (S9).*
+    Es ist nicht ersichtlich, welche Felder verschlüsselt gespeichert werden.
+    Soll: Schloss-Icon am Feld plus Legende (F13). Getrennt von Nr. 109.
+
+109. **Notizfeld verschlüsseln, Suche bleibt.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.2), Schritt 8
+    (S9).*
+    Das Notizfeld soll verschlüsselt werden und **durchsuchbar bleiben**, wie
+    in allen anderen Feldern (F14/F18); Filtern ist nicht nötig. **Offener
+    Zielkonflikt, im S9-Konzept als Erstes zu prüfen:** Werden die übrigen
+    durchsuchbaren Felder im Klartext gehalten und serverseitig durchsucht,
+    ist beides nicht ohne Kompromiss zu haben — dann Optionen mit Vor- und
+    Nachteilen, bevor entschieden wird. Betrifft Datenmodell und
+    Verschlüsselung (Migration); die Antwort geht in das Bedrohungsmodell
+    des R17-Reviews ein (Nr. 43, R69). Fable-Schritt.
+
+110. **Kachel „Spur" heißt „GPS-Daten".**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-9), Schritt 8 (S9).*
+    Die Kachel neben „editiert" zeigt z. B. „Spur · 852 Punkte"; „Spur" ist
+    schwer verständlich. Soll: „GPS-Daten", die Punktzahl entfällt (F15);
+    Wortliste nachziehen.
+
+111. **Neue Rettungsmittel-Arten.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.1), Schritt 8
+    (S9).*
+    Bergwachtnotarzt, Veranstaltungsnotarzt, Sonstiges — mit eigenem Icon,
+    ohne Rollen-Vorlagen, ein Standort kann eingegeben werden (F16).
+    Migration.
+
+112. **Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.2), Schritt 8
+    (S9).*
+    Ein Rettungsmittel kann in der Tageszuordnung manuell definiert werden;
+    es gilt nur für den Tag, die dauerhafte Aufnahme in den Stamm bleibt
+    manuell über die Einstellungen (F17). Bedingung: Suche und Filter müssen
+    für solche Einträge greifen.
+
+113. **Rollen unmittelbar nach der Auswahl bearbeitbar.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.3), Schritt 8
+    (S9).*
+    Heute muss erst gespeichert und erneut „bearbeiten" geklickt werden,
+    bevor Rollen editierbar sind. Soll: sofort bearbeitbar; sind Rollen für
+    das Rettungsmittel vordefiniert, werden sie nach der Auswahl automatisch
+    nachgeladen. Für manuell definierte Rettungsmittel (Nr. 112) und Arten
+    ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
+
+114. **Abgewiesene Pakete sichtbar machen und ausräumen.**
+    *Aufgenommen 03.09.2026 aus S5 Paket E (B-S5Z-06).* Antwortet der Server
+    auf ein Paket mit **400**, wird es im Puffer als `fehlerhaft = 1` markiert
+    und damit aus der Warteschlange **und** aus der Anzeige genommen: Die App
+    sagt „Alles gesendet", während beim Server ein Segment offen bleibt. Paket
+    E2 macht die Zahl sichtbar („N Pakete vom Server abgewiesen"); was fehlt,
+    ist ein **Weg damit umzugehen** — ansehen, was drinsteht, ausleiten oder
+    verwerfen. Ohne ihn bleibt die Zahl für immer stehen und wird zur
+    Tapete. **Zu entscheiden:** ob Ausleiten (als Datei, zum Nachreichen von
+    Hand) oder nur Verwerfen mit Rückfrage; Ersteres braucht ein Format,
+    Letzteres ist Datenverlust auf Knopfdruck. Zuordnung: Backlog-Runde, nach
+    S5.
+
+115. **Die Rundlaufprüffälle räumen ihren hochgeladenen Bestand nicht ab.**
+    *Aufgenommen 03.09.2026 aus S5 (Vorbereitung 8.2).* `android/LIESMICH.md`
+    verspricht: „Die Fälle räumen hinter sich auf: Was sie koppeln, trennen
+    sie wieder." Das stimmt für die **Geräte** und nicht für die **Daten**:
+    Nach einem Lauf standen 9 Diensttage, 5 Einsätze und 14 439 Spurpunkte
+    zusätzlich im Admin-Konto, und jeder weitere Lauf legt dasselbe noch
+    einmal dazu. Das ist kein Fehler der Prüffälle — der Sinn des Rundlaufs
+    ist gerade, dass die Daten wirklich ankommen —, aber es heißt: Wer die
+    Installation als Ausgangsstand braucht, muss sie neu einrichten, und wer
+    Zahlen misst, muss sie vor **und** nach dem Lauf notieren. Die
+    `day`-Kennungen sind den Fällen bekannt; ein Abräumen am Ende wäre
+    machbar. Zuordnung: Backlog-Runde.
+
+116. **Das Kontrastwerkzeug misst nur, was in seiner Paarliste steht.**
+    *Aufgenommen 03.09.2026 aus S5 Paket E1 (B-S5Z-13, B-S5Z-15, B6.2).*
+    `android/werkzeuge/kontraste.py` führt eine **feste Liste** von
+    Farbpaaren. Ein Paar, das dort nicht eingetragen ist, wird nicht gemessen
+    — und meldet folglich auch keinen Fehler. Genau so standen zwei Paare
+    jahrelang unter dem Zielwert, ohne dass ein grüner Lauf je etwas anderes
+    sagte: der orange Punkt der Zeile „Rückstand N Pakete" (2,23 : 1 gegen
+    3,0) und die rote Zeile „wartet aufs Handy" auf der Uhr (4,12 : 1 gegen
+    4,5). Beide sind mit E1 behoben und beide Paare eingetragen; die **Lücke
+    im Werkzeug** bleibt. **Zu entscheiden:** ob das Werkzeug die Paare aus
+    dem Quelltext **ableiten** kann (jedes `color = Farbe.x` innerhalb eines
+    Bausteins mit bekanntem Grund) oder ob eine Vollständigkeitsprüfung
+    genügt, die meldet, welche Token-Kombinationen im Code vorkommen und in
+    der Liste fehlen. Das Zweite ist deutlich billiger und fängt denselben
+    Fehler. Dieselbe Frage stellt sich für
+    `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
+
+---
 
 ## Erledigt
 

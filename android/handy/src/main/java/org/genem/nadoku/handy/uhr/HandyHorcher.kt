@@ -1,5 +1,6 @@
 package org.genem.nadoku.handy.uhr
 
+import android.util.Log
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import org.genem.nadoku.gemeinsam.Nachrichtenformat
@@ -31,13 +32,47 @@ class HandyHorcher : WearableListenerService() {
         val meldung = Nachrichtenformat.liesMeldung(ereignis.data) ?: return
 
         val app = NAdokuApp.von(this)
-        val annahme = Uhrannahme(app.puffer, app.klammer) { app.einstellungen.letzterModus }
+        val annahme = Uhrannahme(
+            app.puffer,
+            app.klammer,
+            modus = { app.einstellungen.letzterModus },
+            ortung = { app.ortung?.stand?.code },
+        )
+
+        /* VOR dem Wirken gelesen — danach ist es zu spät (E-S5Z-08). */
+        val liefVorher = app.klammer.laeuft()
         val quittung = annahme.uebernimm(meldung)
+        val laeuftNachher = app.klammer.laeuft()
 
         val weg = WearNachrichtenweg(this)
         weg.sende(Nachrichtenformat.PFAD_QUITTUNG, Nachrichtenformat.schreibe(quittung))
         weg.sende(Nachrichtenformat.PFAD_STAND, Nachrichtenformat.schreibe(annahme.stand()))
 
-        if (app.klammer.laeuft()) AufzeichnungsDienst.starten(this)
+        /* WAS MIT DEM VORDERGRUNDDIENST GESCHIEHT, entscheidet eine reine
+         * Funktion (E-S5Z-08). Hier stand bis 0.8.1 nur `starten` — ein
+         * Dienstende von der Uhr beendete ihn nie: Ortung lief weiter, kein
+         * DIENSTENDE-Lauf, und das Web sah den Dienst bis zum nächsten Takt
+         * als laufend (B-S5Z-04).
+         *
+         * Der `try` um `starten()` ist kein Beiwerk: Ab Android 12 ist
+         * `startForegroundService` aus dem Hintergrund beschränkt, und ob
+         * der Weg über einen `WearableListenerService` unter eine Ausnahme
+         * fällt, ist nicht belegt (B-S5Z-08, B4.2). Fliegt sie, ist die
+         * Aufzeichnung nicht gestartet — aber die Quittung ist raus und die
+         * App lebt. Der Absturz wäre das schlechtere Ergebnis. */
+        when (Dienstfolge.aus(liefVorher, laeuftNachher, AufzeichnungsDienst.steht)) {
+            Dienstfolge.STARTEN -> try {
+                AufzeichnungsDienst.starten(this)
+            } catch (e: IllegalStateException) {
+                Log.w(MARKE, "Vordergrunddienst nicht startbar (Hintergrund): ${e.message}")
+            }
+
+            Dienstfolge.BEENDEN -> AufzeichnungsDienst.beenden(this)
+            Dienstfolge.NICHTS -> Unit
+        }
+    }
+
+    private companion object {
+        const val MARKE = "NAdoku"
     }
 }

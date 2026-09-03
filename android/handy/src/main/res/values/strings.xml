@@ -100,17 +100,29 @@
     <!-- ==== Dienst und Aufzeichnung (E-S4-05, E-S4-20) ================== -->
     <string name="dienst_kanal">Aufzeichnung</string>
     <string name="dienst_kanal_zweck">Zeigt an, dass die Spur des laufenden Dienstes aufgezeichnet wird.</string>
-    <string name="dienst_meldung_laeuft">Aufzeichnung läuft seit %1$s</string>
     <string name="dienst_meldung_ohne">Kein Dienst</string>
+    <string name="dienst_meldung_beendet_sendet">Dienst beendet · sende …</string>
+
+    <!-- Der Ortungszustand in Worten (E-S5Z-01, Wortlaute 4.3 des Zusatzes).
+         EIN Satz Texte fuer Dauermeldung UND Zustandszeile: Zwei Wortlaute
+         fuer denselben Zustand laufen frueher oder spaeter auseinander.
+         "Aufzeichnung laeuft" steht nur bei OK; in allen anderen Zustaenden
+         "Dienst laeuft", weil das wahr ist und das andere nicht. Ersetzt
+         dienst_meldung_laeuft, dienst_laeuft_seit und
+         dienst_laeuft_seit_ohne_gps aus 0.7.7 (B-S5Z-07). -->
+    <string name="dienst_laeuft_ok">Aufzeichnung läuft seit %1$s · GPS empfängt</string>
+    <string name="dienst_laeuft_sucht">Dienst läuft seit %1$s · GPS sucht …</string>
+    <string name="dienst_laeuft_kein_signal">Dienst läuft seit %1$s · kein GPS-Signal seit %2$d min · keine Aufzeichnung</string>
+    <string name="dienst_laeuft_ungenau">Dienst läuft seit %1$s · GPS zu ungenau · keine Aufzeichnung</string>
+    <string name="dienst_laeuft_standort_aus">Dienst läuft seit %1$s · Standort aus · keine Aufzeichnung</string>
+    <string name="dienst_laeuft_freigabe_fehlt">Dienst läuft seit %1$s · Ortung nicht freigegeben · keine Aufzeichnung</string>
 
     <string name="dienst_keiner">Kein Dienst</string>
     <string name="dienst_beginnen">Dienst beginnen</string>
     <string name="dienst_beenden">Dienst beenden</string>
     <string name="dienst_beenden_frage">Dienst beenden?</string>
-    <string name="dienst_beenden_text">Die Aufzeichnung hört auf, und alles Offene wird abgeschlossen und gesendet.</string>
+    <string name="dienst_beenden_text">Die Aufzeichnung hört auf. Alles Offene wird abgeschlossen und gesendet — ohne Netz, sobald es wieder da ist.</string>
     <string name="dienst_beenden_ja">Beenden</string>
-    <string name="dienst_laeuft_seit">Aufzeichnung läuft seit %1$s · GPS an</string>
-    <string name="dienst_laeuft_seit_ohne_gps">Aufzeichnung läuft seit %1$s · GPS fehlt</string>
     <plurals name="dienst_punkte">
         <item quantity="one">%1$d Punkt · %2$s km</item>
         <item quantity="other">%1$d Punkte · %2$s km</item>
@@ -126,6 +138,51 @@
     <string name="ortung_fehlt">Ortung nicht freigegeben</string>
     <string name="ortung_fehlt_hinweis">Ohne Ortungsfreigabe zeichnet die App keine Spur auf. Tippe hier, um sie zu erteilen.</string>
     <string name="ortung_freigeben">Ortung freigeben</string>
+
+    <!-- Ohne eingeschalteten Standort beginnt kein Dienst (E-S5Z-03). Muster
+         wie oben: erst was los ist, dann was hilft. -->
+    <string name="standort_aus">Standort ausgeschaltet</string>
+    <string name="standort_aus_hinweis">Ohne eingeschalteten Standort beginnt kein Dienst. Tippe hier, um ihn einzuschalten.</string>
+    <string name="standort_einschalten">Standort einschalten</string>
+
+    <!-- Die Warnung (ID 3, eigener Kanal, Vibration ohne Ton; E-S5Z-04).
+         Ein Titel fuer alle vier Ursachen: Was zaehlt, ist "es wird nichts
+         aufgezeichnet"; die Ursache steht im Text, samt dem, was hilft. -->
+    <string name="warnung_kanal">Warnungen</string>
+    <string name="warnung_kanal_zweck">Meldet mit Vibration, wenn während eines Dienstes nichts aufgezeichnet wird.</string>
+    <string name="warnung_titel">Keine Aufzeichnung</string>
+    <string name="warnung_standort_aus">Der Standort ist ausgeschaltet. Einschalten, sonst bleibt die Spur dieses Dienstes leer.</string>
+    <string name="warnung_kein_signal">Seit %1$d min kommt kein GPS-Signal. Handy aus der Tasche oder ans Fenster.</string>
+    <string name="warnung_ungenau">Das GPS-Signal ist zu ungenau (über 100 m). Handy aus der Tasche oder ans Fenster.</string>
+    <string name="warnung_freigabe_fehlt">Die Ortungsfreigabe fehlt. In der App erteilen.</string>
+
+    <!-- Hinweis nach dem Dienstende (ID 2, stiller Kanal, wegwischbar;
+         E-S5Z-07). Er sagt, dass etwas aussteht, und verschwindet, sobald der
+         Nachsende-Job es erledigt hat. Kein Ton, keine Vibration: Es gibt
+         nichts zu tun. -->
+    <plurals name="hinweis_warten">
+        <item quantity="one">Dienst beendet · %1$d Paket wartet auf Netz</item>
+        <item quantity="other">Dienst beendet · %1$d Pakete warten auf Netz</item>
+    </plurals>
+    <string name="hinweis_schluessel_abgewiesen">Dienst beendet · Schlüssel abgewiesen – Gerät neu koppeln</string>
+
+    <!-- Was die Ansicht ueber das Senden sagt (E-S5Z-12). "Abgewiesen" ist
+         der Fall, den die App bis 0.8.1 verschwieg: Ein Paket mit 400 fiel
+         aus Warteschlange UND Anzeige, und es stand "Alles gesendet", waehrend
+         beim Server ein Segment offen blieb (B-S5Z-06). -->
+    <plurals name="sync_abgewiesen">
+        <item quantity="one">%1$d Paket vom Server abgewiesen</item>
+        <item quantity="other">%1$d Pakete vom Server abgewiesen</item>
+    </plurals>
+    <string name="sync_jetzt_senden">Jetzt senden</string>
+    <string name="sync_sendet">Sendet …</string>
+    <string name="sync_ergebnis_gesendet">Gesendet · %1$s</string>
+    <string name="sync_ergebnis_kein_netz">Keine Verbindung · wird nachgeholt</string>
+    <string name="sync_ergebnis_schluessel">Schlüssel abgewiesen · Gerät neu koppeln</string>
+    <plurals name="sync_ergebnis_abgewiesen">
+        <item quantity="one">Server hat %1$d Paket abgewiesen</item>
+        <item quantity="other">Server hat %1$d Pakete abgewiesen</item>
+    </plurals>
     <string name="akku_titel">Von der Akkuoptimierung ausnehmen</string>
     <!--
         Der Text nennt jetzt den WEG, weil die App nicht mehr direkt fragen
@@ -159,5 +216,10 @@
     <string name="einsatz_abschliessen_text">Danach wird der Einsatz mit Endzeit gesendet. Ein neues Ruhesegment beginnt.</string>
     <string name="einsatz_abschliessen_ja">Abschließen</string>
     <string name="phasenliste">Phasen</string>
+    <!-- Die Liste zeigt gesetzte und naechste Phase; der Rest liegt einen
+         Druck entfernt (B-S5Z-16). Acht Reihen zu 48 dp schoben "Einsatz
+         abschliessen" unter die Faltkante. -->
+    <string name="phasen_alle_zeigen">Alle Phasen zeigen</string>
+    <string name="phasen_weniger_zeigen">Weniger zeigen</string>
     <string name="trennen_erst_dienst_beenden">Erst den Dienst beenden. Ein Trennen mitten in der Aufzeichnung risse den laufenden Dienst von seinem Konto ab.</string>
 </resources>

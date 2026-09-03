@@ -30,6 +30,13 @@
         Nur das Erste zu sagen waere die gefaehrlichere Haelfte.
     -->
     <string name="dienst_schwebt">wartet aufs Handy · keine Aufzeichnung</string>
+
+    <!-- Was das Handy ueber seine Ortung meldet (E-S5Z-15). EIN Wortlaut fuer
+         vier Ursachen: Die Uhr kann keine davon beheben, das tut das Handy.
+         Was sie beitragen kann, ist die Nachricht ans Handgelenk, dass gerade
+         keine Spur entsteht. -->
+    <string name="ortung_keine">keine Ortung · keine Aufzeichnung</string>
+    <string name="ortung_sucht">GPS sucht</string>
     <plurals name="gepuffert">
         <item quantity="one">%1$d gepuffert</item>
         <item quantity="other">%1$d gepuffert</item>

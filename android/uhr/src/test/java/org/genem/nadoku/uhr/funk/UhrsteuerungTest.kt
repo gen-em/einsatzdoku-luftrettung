@@ -4,6 +4,7 @@ import org.genem.nadoku.gemeinsam.Ereignisart
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.gemeinsam.Nachrichtenformat
 import org.genem.nadoku.gemeinsam.Phasen
+import org.genem.nadoku.gemeinsam.Ortungscode
 import org.genem.nadoku.gemeinsam.Phasenmarke
 import org.genem.nadoku.gemeinsam.Quittung
 import org.genem.nadoku.gemeinsam.Standmeldung
@@ -210,6 +211,43 @@ class UhrsteuerungTest {
         assertEquals(4, z.laufendePhase)
         assertEquals(2, z.phasen.size)
         assertEquals("Und die Ansicht folgt", Ansicht.LAUFEND, z.ansicht)
+    }
+
+    // ---- Der Ortungszustand des Handys (E-S5Z-15) --------------------------
+
+    @Test fun derOrtungszustandWirdUebernommen() {
+        steuerung.standEingegangen(
+            stand(dienstLaeuft = true).copy(ortung = Ortungscode.STANDORT_AUS)
+        )
+        assertEquals(Ortungscode.STANDORT_AUS, steuerung.zustand.ortung)
+    }
+
+    /**
+     * **`null` bleibt `null`.** Eine Handy-Fassung vor E1 schickt das Feld
+     * nicht mit; die Uhr darf daraus nicht "alles gut" machen — sie zeigt
+     * dann nichts an, und das ist die einzige zutreffende Auskunft (B-S4-09).
+     */
+    @Test fun ohneAngabeBleibtDerOrtungszustandUnbekannt() {
+        steuerung.standEingegangen(stand(dienstLaeuft = true))
+        assertNull(steuerung.zustand.ortung)
+    }
+
+    /**
+     * Der Zustand ueberlebt das Bedienen: Wer waehrend eines Signalverlusts
+     * eine Phase setzt, sieht die Warnung danach noch. Sie verschwindet erst,
+     * wenn das Handy etwas anderes meldet.
+     */
+    @Test fun derOrtungszustandBleibtBeimBedienenErhalten() {
+        steuerung.standEingegangen(
+            stand(dienstLaeuft = true).copy(ortung = Ortungscode.KEIN_SIGNAL)
+        )
+        steuerung.ereignis(Uhrereignis.GrosserKnopf(tipp()))
+        assertEquals(Ortungscode.KEIN_SIGNAL, steuerung.zustand.ortung)
+
+        steuerung.standEingegangen(
+            stand(dienstLaeuft = true).copy(ortung = Ortungscode.OK)
+        )
+        assertEquals(Ortungscode.OK, steuerung.zustand.ortung)
     }
 
     /** Der Modus kommt vom Handy — ohne Phasenknöpfe gibt es keine (E-S4-20). */

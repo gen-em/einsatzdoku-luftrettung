@@ -4430,7 +4430,12 @@ schickt ihre Ereignisse an das Handy, und das Handy sendet. Das ist keine
 Bequemlichkeit, sondern die Sicherheitsaussage der Bauform: Eine verlorene
 Uhr gibt keinen Zugang preis. Der Prüfstand zählt die Schlüssel des
 Nachrichtenformats nach — genau `uhr, nr, art, zeit, phase, einsatz_ref`,
-kein `api_key`, keine `device_id`, keine Adresse.
+kein `api_key`, keine `device_id`, keine Adresse. Diese Menge ist die
+**Uhrmeldung**, also die Richtung Uhr → Handy; dort steht die
+Sicherheitsaussage, und sie ist seit S4 unverändert. Die Standmeldung in der
+Gegenrichtung wuchs mit Android 0.8.0 um einen Schlüssel (`ortung`, ein
+Kurzcode des Ortungszustands) — auch er trägt kein Zugangsdatum, und ein
+eigener Prüffall zählt beide Mengen getrennt nach.
 
 Beide Module tragen dieselbe `applicationId` (`org.genem.nadoku`) und
 **müssen mit demselben Schlüssel signiert sein** — der Wear Data Layer
@@ -4442,6 +4447,9 @@ denselben, sonst verlangt Android eine Neuinstallation.
 
 `MessageClient` des Wear Data Layer, drei Pfade: `/nadoku/ereignis`
 (Uhr → Handy), `/nadoku/quittung` und `/nadoku/stand` (Handy → Uhr). Die
+Standmeldung trägt seit Android 0.8.0 auch den Ortungszustand des Handys;
+fehlt das Feld — eine ältere Handy-Fassung —, zeigt die Uhr dazu nichts an,
+statt etwas zu behaupten. Die
 Umsetzung steckt in **einer** Datei (`WearNachrichtenweg.kt`) hinter der
 Schnittstelle `Nachrichtenweg`; alles darüber kennt nur die Schnittstelle.
 Deshalb laufen die Prüffälle beider Module ohne Play-Dienste — sie benutzen
@@ -4460,6 +4468,180 @@ eine Attrappe. Zur Lizenzlage der proprietären Bibliothek:
 
 Ohne Quittung wird dieselbe Nachricht **mit derselben Nummer** erneut
 gesendet. Der Puffer der Uhr überlebt ihren Neustart.
+
+### Ortungswächter und Nachsenden
+
+*Seit Android 0.8.0 (S5, Paket E).*
+
+**Der Vordergrunddienst misst, ob wirklich aufgezeichnet wird.** Bis 0.7.7
+leitete die App ihre Aussage aus der **Freigabe** ab: erteilt → „Aufzeichnung
+läuft · GPS an". Ob der Standort eingeschaltet ist, ob Positionen hereinkommen
+und ob sie brauchbar sind, hat sie nie geprüft — drei Lagen, in denen im
+Puffer nichts landet, sahen aus wie die vierte, in der es funktioniert.
+
+Der `Ortungswaechter` ist eine **reine Zustandsmaschine ohne Android-Bezug**
+(`handy/…/aufzeichnung/Ortungswaechter.kt`): Er bekommt Ereignisse und die
+Zeit übergeben und liefert einen von sechs Zuständen plus die Entscheidung,
+ob zu warnen ist. Deshalb ist er auf der JVM prüfbar — wie `Sendetakt` und
+`Uhrbedienung`, und aus demselben Grund: Was auf einem Gerät nicht
+nachstellbar ist, muss wenigstens in seiner Regel belegbar sein.
+
+| Zustand | Bedingung | Es wird aufgezeichnet? |
+|---|---|---|
+| `FREIGABE_FEHLT` | `ACCESS_FINE_LOCATION` nicht erteilt | nein |
+| `STANDORT_AUS` | GPS-Anbieter aus | nein |
+| `SUCHT` | Anbieter an, noch kein Fund, Erstfix-Frist läuft (120 s) | noch nicht |
+| `KEIN_SIGNAL` | kein Fund seit 120 s (nach Start) bzw. 60 s (nach einem Fund) | nein |
+| `UNGENAU` | Funde kommen, aber seit 60 s keiner unter 100 m Streuung | nein |
+| `OK` | brauchbarer Fund innerhalb der letzten 60 s | **ja** |
+
+Drei Festlegungen dahinter, jede mit einem Grund:
+
+- **Der GPS-Anbieter entscheidet, nicht `isLocationEnabled()`.** Im Modus
+  „Stromsparen" ist der Standort an und GPS aus — aufgezeichnet wird nur mit
+  GPS.
+- **„Brauchbar" ist dieselbe Schwelle, nach der aufgezeichnet wird.**
+  `Ausduenner.brauchbar()` ist öffentlich, damit Anzeige und Puffer nicht
+  zwei Regeln führen. Die Garmin-Uhr hält es genauso (`SyncView.mc` gegen
+  `Track.mc`): Eine Anzeige mit anderer Schwelle wäre irreführend.
+- **Gemessen wird mit `SystemClock.elapsedRealtime()`**, nicht mit der
+  Wanduhr und nicht mit der GPS-Zeit. Beide können springen; eine Frist, die
+  einen Sprung mitmacht, meldet eine Lücke, die es nicht gab, oder
+  verschweigt eine, die es gab.
+
+**Was der Zustand steuert:** die Zustandszeile der Dienstansicht (drei
+Farbstufen — Asphalt bei `OK`, gedämpft bei `SUCHT`, `rotTief` bei den vier
+übrigen), den Text der Dauermeldung (derselbe Wortlaut — zwei Wortlaute für
+denselben Zustand laufen auseinander), eine **Warnung auf eigenem Kanal**
+(ID 3, `warnungen`, Vibration ohne Ton, Erinnerung alle 10 min) und den
+Kurzcode in der Standmeldung an die Uhr.
+
+**Ein zweiter Benachrichtigungskanal, weil Android die Einstellungen eines
+Kanals nach dem Anlegen der Nutzerin überlässt.** Der Kanal „Aufzeichnung"
+ist bewusst `LOW` und stumm; eine Warnung, die spürbar sein muss, kann nicht
+an einer Einstellung hängen, die für die Dauermeldung gemacht wurde.
+
+**Ein Dienst beginnt nicht mehr bei ausgeschaltetem Standort** (am Handy).
+Erst die Freigabe, dann der Standort — solange einer der beiden Blöcke steht,
+gibt es keinen Knopf „Dienst beginnen". Ein von der **Uhr** ausgelöster Start
+wird dagegen durchgelassen: Dort kann niemand gefragt werden, und ein stilles
+„nein" am Handgelenk erklärt nichts. Das Handy warnt stattdessen sofort und
+schickt den Zustand mit der Quittung zurück; die Uhr zeigt „keine Ortung ·
+keine Aufzeichnung" in der Zeile am unteren Rand — dort, wo auch
+`dienst_schwebt` steht, und aus demselben Grund (Bedienelemente in die Mitte,
+Statusanzeigen an den Rand).
+
+**Der Ortungszustand liegt im Arbeitsspeicher** (`NAdokuApp.ortung`), nicht im
+Puffer: Er ist ein Augenblickswert und überlebt einen Neustart bewusst nicht.
+Eine wiederhergestellte Aussage über den GPS-Empfang von vorhin wäre
+schlimmer als keine — sie sähe aus wie eine Messung. `null` heißt „es läuft
+kein Dienst"; vor dem Dienst leitet die Oberfläche selbst ab, was sie für die
+beiden Sperren braucht.
+
+**Zwei Takte an einem Handler, mit getrennten Token.** Der Sendetakt (15 min)
+und der Wächtertakt (10 s) laufen am selben `Handler`;
+`removeCallbacksAndMessages(null)` hätte die ganze Warteschlange gelöscht und
+den Wächter beim ersten Uhrereignis still umgebracht. Der Sendetakt wird
+außerdem nur noch gestartet, wenn er nicht schon läuft — sonst schob jede
+Uhrnachricht seine Frist vor sich her, und ein von der Uhr geführter Dienst
+sendete bis zum Dienstende gar nicht.
+
+### Dienstende und Nachsenden
+
+*Seit Android 0.9.0 (S5, Paket E2).*
+
+**Das Dienstende hält den Vordergrunddienst, bis der Sendelauf zurück ist.**
+Bis 0.8.1 stand dort: Faden starten, `stopForeground`, `stopSelf` — ohne
+dazwischen zu warten. Der Lauf lief danach in einem Prozess **ohne**
+Vordergrunddienst weiter, und den räumt Android bei Bedarf ab. Kam er wegen
+fehlenden Netzes nicht durch, endete er mit `spaeterErneut`, und ein Später
+gab es nicht: Ausserhalb eines Dienstes existierte kein Zeitgeber. Das ist der
+belegte Fehler des Vorfalls vom 02.09.2026.
+
+Der Ablauf jetzt:
+
+| Schritt | |
+|---|---|
+| 1 | `klammer.beenden()` schliesst Einsatz, Segment und Dienst im Puffer |
+| 2 | Ortung ab, Wächter ab, Netzrückruf ab, Warnung (ID 3) weg |
+| 3 | Dauermeldung „Dienst beendet · sende …" — **der Dienst steht noch** |
+| 4 | DIENSTENDE-Lauf auf dem Sendeausführer |
+| 5 | Rückstand 0 → keine Meldung bleibt. Rückstand > 0 → Nachsende-Job + stiller Hinweis (ID 2). 401 → Hinweis „Gerät neu koppeln", **kein** Job |
+| 6 | `stopForeground`, `stopSelf` |
+
+**Der Nachsende-Job** (`NachsendeDienst`, `JobScheduler`, feste Job-ID) ist
+ein Bordmittel — `WorkManager` wäre eine Abhängigkeit und setzt intern auf
+denselben Planer. Bedingung `NETWORK_TYPE_ANY`, `setPersisted(true)` (dafür
+`RECEIVE_BOOT_COMPLETED`), Backoff exponentiell ab 30 s. **Wann geplant wird,
+steht in einer reinen Funktion** `Nachsenden.planen(bericht, rueckstand,
+dienstLaeuft)` und nirgends sonst:
+
+- nach einem Lauf: nur bei `spaeterErneut`, Rückstand > 0, kein 401, kein
+  laufender Dienst;
+- beim App-Start (`bericht = null`): jeder Rückstand genügt — der Prozess kann
+  gestorben sein, bevor der Job geplant wurde.
+
+Er läuft erst nach dem **ersten Entsperren**: Die Zugangsdaten liegen in der
+anmeldungsgeschützten Speicherung. Kein `directBootAware`.
+
+**Ein Dienstende von der Uhr beendet den Vordergrunddienst.** `HandyHorcher`
+liest `klammer.laeuft()` **vor** und nach `uebernimm()` und fragt
+`Dienstfolge.aus(liefVorher, laeuftNachher, dienstSteht)`. Die dritte Zahl ist
+die Vorsicht: Ohne stehenden Dienst wird nichts angefasst — ein Stopp-Befehl
+an einen Dienst, den es nicht gibt, startet ihn erst, und `startService` aus
+dem Hintergrund wirft ab Android 8.
+
+**Wiederverbindung.** Der Vordergrunddienst meldet
+`registerDefaultNetworkCallback` an; `onAvailable` löst einen Lauf aus,
+höchstens einmal je 60 s. Die Bremse liegt in `Sendetakt` und nicht im
+Rückruf — dort ist sie prüfbar. Damit ist der Auslöser `WIEDERVERBINDUNG` aus
+E-S4-07 gebaut und `ACCESS_NETWORK_STATE` hat seinen Nutzer.
+
+**Ein Sendeausführer, nie zwei Läufe zugleich.** `NAdokuApp` hält einen
+`newSingleThreadExecutor`; Dienst (Takt, Dienstende, Wiederverbindung),
+Oberfläche (Phase, Abschluss, „Jetzt senden") und Nachsende-Job reichen ihre
+Läufe dort ein. Vorher startete jeder Anlass einen eigenen `Thread`, und die
+Zusicherung „die Läufe überlappen nicht" galt nur für den Takt. **Nebenwirkung,
+die zählt:** Damit ist auch die Reihenfolge beim Nachsenden gesichert — ein
+älteres, nicht-finales Paket kann nicht mehr nach einem finalen ankommen.
+
+**Was die Ansicht zeigt** (`abgewiesen()` im Puffer): „Alles gesendet" /
+„Rückstand N Pakete" / **„N Pakete vom Server abgewiesen"** in Rot, dazu ein
+Knopf „Jetzt senden" bei Rückstand und eine Ergebniszeile aus dem letzten
+Lauf. Die 400-Zeile schliesst die Lücke, durch die ein Paket bisher aus
+Warteschlange **und** Anzeige fiel.
+
+### Der Uhr-Spiegel
+
+*Seit Android 0.10.0 (S5, Paket E3).*
+
+Der Vordergrunddienst schickt den Ortungszustand bei **jedem Wechsel** ans
+Handgelenk — nicht mehr nur als Antwort auf ein Ereignis der Uhr. Wer keinen
+Knopf drückte, sah bis dahin „Dienst läuft", während nichts aufgezeichnet
+wurde.
+
+**Sechs Stufen, drei Anzeigen.** `Ortungscode.anzeige()` fasst zusammen:
+`KEINE_ORTUNG` (die vier Stufen ohne Aufzeichnung), `SUCHEN`, `STILL` (nur
+`OK` — und ein fehlendes Feld, also eine ältere Handy-Fassung). Die Regel
+liegt in `gemeinsam/` und wird von **beiden** Seiten benutzt: von der Uhr zum
+Zeichnen, vom Handy zum Entscheiden, ob überhaupt gesendet wird. Zwei Kopien
+liefen auseinander, und dann meldete das Handy Wechsel, die nichts ändern —
+oder einen nicht, den die Uhr angezeigt hätte. Ein Prüffall hält beide Enden
+aneinander: Die Stufen, bei denen das Handy warnt, sind genau die, bei denen
+die Uhr rot wird.
+
+**Zwei Ausführer, und der Unterschied ist begründet.** `NAdokuApp` hält den
+Sendeausführer (Server) **und** einen eigenen für die Uhr. Beide
+Warteschlangen haben verschiedene Fristen: Ein Upload kann eine Minute
+dauern, eine Uhrnachricht bis zu fünf Sekunden je Schritt blockieren. Lägen
+sie hintereinander, käme die Warnung zu spät ans Handgelenk oder ein Funkloch
+hielte einen Diensttag auf. Was E-S5Z-11 zusichert — nie zwei Läufe auf
+demselben Puffer — bleibt unberührt: Eine Uhrnachricht liest und schreibt
+nicht.
+
+**Eine verlorene Standmeldung wird nicht nachgeliefert.** Anders als ein
+Ereignis der Uhr (gepuffert bis zur Quittung) ist der Stand ein
+Augenblickswert; der nächste Wechsel trägt den dann gültigen.
 
 ### Was die App an den Server schickt
 

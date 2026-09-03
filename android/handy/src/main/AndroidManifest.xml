@@ -72,6 +72,27 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!--
+        RECEIVE_BOOT_COMPLETED fuer den PERSISTIERTEN Nachsende-Job
+        (E-S5Z-09/-19). Sie ist eine normale Berechtigung: kein Dialog, keine
+        Frage an die NutzerIn.
+
+        WOZU SIE DA IST und wozu nicht: Die App startet bei einem Neustart
+        NICHTS von selbst und horcht auf keinen Boot-Rundruf. Was sie braucht,
+        ist `JobInfo.setPersisted(true)`, und das VERLANGT diese
+        Berechtigung, weil ein Job, der einen Neustart ueberdauert, danach
+        wieder eingeplant werden muss.
+
+        Ohne sie verloere ein Neustart nach einem Dienst ohne Netz die
+        Nachlieferung, bis jemand die App oeffnet. Genau das war der belegte
+        Fehler dieses Pakets (Diagnose 1.3, H2).
+
+        Der Job laeuft erst nach dem ERSTEN ENTSPERREN: Die Zugangsdaten
+        liegen in der anmeldungsgeschuetzten Speicherung. Das ist richtig so
+        und wird nicht umgangen (kein `directBootAware`).
+    -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!--
         REQUEST_IGNORE_BATTERY_OPTIMIZATIONS STEHT HIER BEWUSST NICHT MEHR
         (Fund B-S4-04, entschieden mit E-S4-52).
 
@@ -129,6 +150,22 @@
             android:exported="false"
             android:foregroundServiceType="location"
             android:stopWithTask="false" />
+
+        <!--
+            Der Nachsende-Job (E-S5Z-09).
+
+            `permission="BIND_JOB_SERVICE"` ist PFLICHT und keine Vorsicht:
+            Ohne sie lehnt der Job-Planer den Dienst beim Einplanen ab
+            (`IllegalArgumentException`), und zwar erst zur Laufzeit. Sie sagt,
+            dass NUR das System diesen Dienst binden darf.
+
+            `exported="false"`: Niemand sonst hat hier etwas zu suchen. Der
+            Planer bindet Systemdienste unabhaengig davon.
+        -->
+        <service
+            android:name=".handy.senden.NachsendeDienst"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <!--
             Der Empfang der Uhr-Ereignisse (C2, E-S4-10).

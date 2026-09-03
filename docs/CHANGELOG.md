@@ -2,15 +2,360 @@
 
 Format nach [Keep a Changelog](https://keepachangelog.com/de/).
 
-**Weboberfläche** und **Uhr-App** werden getrennt gezählt, weil sie unabhängig
-voneinander ausgeliefert werden: `server/version.php` bzw.
-`watch/source/Const.mc`. Die Web-Version steht in der Fußzeile jeder Seite. Bis
+**Weboberfläche**, **Uhr-App** (Garmin) und **Android-App** werden getrennt
+gezählt, weil sie unabhängig voneinander ausgeliefert werden:
+`server/version.php`, `watch/source/Const.mc` bzw. `android/version.properties`.
+Das Präfix `Android` kommt mit Paket E hinzu (F-S5Z-05): Der Rahmenplan sah es
+„mit der ersten verteilten Fassung" vor, und die ist faktisch da — ein APK
+läuft auf dem Prüfgerät. Die Web-Version steht in der Fußzeile jeder Seite. Bis
 Web 5.3.0 hing sie zusätzlich an allen Stylesheet- und Skript-Adressen; seit
 Web 5.4.0 steht dort der Zeitstempel der jeweiligen Datei, damit nach einem
 Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.10.1] — 2026-09-03
+
+### Android — „Einsatz abschließen" ist wieder ohne Schieben erreichbar
+
+Der neue Bilderlauf hat es gefunden, und gelesen hätte es niemand: Bei
+laufendem Einsatz war die Dienstansicht **1015 dp** hoch. Auf einem
+800-dp-Telefon lag „Einsatz abschließen" damit bei 771–819 dp — zur Hälfte
+unter dem Rand, und „Dienst beenden" bei 891–939 dp ganz darunter. Der
+Bildschirm rollt, es ging also nichts verloren; aber mit Handschuhen ist
+Schieben ein Bedienschritt mehr, und es traf ausgerechnet die Handlung, die
+den Einsatz beendet.
+
+Den Ausschlag gab die Phasenliste: acht Reihen zu 48 dp sind rund **412 dp**
+und damit der größte Block der Ansicht. Sie zeigt jetzt nur noch die
+**gesetzten** Phasen und die **nächste**; alles andere liegt hinter „Alle
+Phasen zeigen". Die gesetzten bleiben stehen, weil sie die Dokumentation sind
+und weil ein erneutes Tippen die Korrektur ist. Gemessen an drei Punkten eines
+Einsatzes:
+
+| Stand | Inhalt | „Einsatz abschließen" endet bei |
+|---|---|---|
+| Einsatz beginnt | 711 dp *(vorher 1015)* | **515 dp** *(vorher 819)* |
+| Mitte, drei Phasen gesetzt | 889 dp | **693 dp** |
+| Ende, alle acht gesetzt | 955 dp | **759 dp** |
+
+**Was das kostet, und es ist kein kleiner Preis:** Die Direktwahl einer
+beliebigen Phase rückt einen Druck weiter weg. Die Liste war ausdrücklich als
+„Übersicht und Direktwahl in einem" gebaut. Ein Knopf hinter einem Knopf ist
+trotzdem billiger als ein Knopf unter dem Rand.
+
+**Was bewusst stehen bleibt:** Sind alle acht Phasen gesetzt, liegt „Dienst
+beenden" weiterhin unter dem Rand (bei 879 dp). Ein Schichtende mitten in
+einem Einsatz ist der seltene Fall — und wer ihn braucht, findet den Knopf
+eine Wischbewegung tiefer.
+
+**Das Prüfmittel selbst war dabei zu schwach und ist mitkorrigiert.** Es
+suchte Knöpfe, die von der Faltkante **angeschnitten** werden. Einer, der
+vollständig darunter liegt, war für es unsichtbar — es meldete „kein Knopf
+unter der Faltkante", während einer 80 dp darunter lag. Genau die grüne Zahl,
+die nichts misst. Der Lauf misst jetzt zusätzlich den **ganzen** Inhalt und
+zählt, wie viele Knöpfe davon im sichtbaren Bereich liegen: „1 von 2 Knöpfen,
+Inhalt 955 dp" steht seither in der Ausgabe, statt Schweigen.
+
+## [Android 0.10.0] — 2026-09-03
+
+### Android — Die Uhr erfährt es, ohne zu fragen
+
+Seit 0.8.0 trägt die Standmeldung ans Handgelenk den Ortungszustand des
+Telefons. Sie ging bisher aber nur **als Antwort** hinaus: Wer einen Knopf an
+der Uhr drückte, bekam den Stand mitgeliefert. Wer keinen drückte — und das
+ist der Normalfall auf einer Anfahrt —, sah weiter „Dienst läuft", während das
+Telefon längst nichts mehr aufzeichnete. Genau die Lücke, gegen die die
+schwebende Zeile „wartet aufs Handy" seit C2 gebaut ist, nur eine Ebene
+später.
+
+Der Vordergrunddienst schickt den Stand jetzt bei **jedem Wechsel**. Auf der
+Uhr steht dann binnen Sekunden „keine Ortung · keine Aufzeichnung", ohne dass
+jemand etwas anfassen muss.
+
+**Gemeldet wird bei einem Wechsel der *Anzeige*, nicht des Zustands.** Das
+Telefon unterscheidet sechs Stufen, die Uhr zeigt drei Dinge: rot „keine
+Ortung", sandfarben „GPS sucht", oder nichts. Für sie sehen „Standort aus" und
+„kein Signal" gleich aus — eine Nachricht dazwischen änderte am Handgelenk
+nichts und kostete doch bis zu fünf Sekunden Wartezeit und einen
+Funkaufwacher. Die Zusammenfassung von sechs auf drei steht **einmal** im
+gemeinsamen Quelltext und wird von beiden Seiten benutzt: von der Uhr, um zu
+zeichnen, und vom Telefon, um zu entscheiden, ob es überhaupt sendet. Zwei
+Kopien derselben Regel würden auseinanderlaufen, und dann meldete das Telefon
+Wechsel, die nichts ändern — oder, schlimmer, einen nicht, den die Uhr
+angezeigt hätte.
+
+**Auf einem zweiten Faden, nicht auf dem des Sendens.** Das Konzept sah vor,
+die Nachricht beim Sendeausführer einzureihen. Der Gedanke war richtig — sie
+darf nicht auf den Hauptfaden, weil der Weg zur Uhr je Schritt bis zu fünf
+Sekunden blockiert — die Folgerung nicht: Ein Upload eines
+Zwölfstundendienstes braucht zwanzig Anfragen und kann eine Minute dauern.
+Läge die Uhrnachricht dahinter, käme die Warnung eine Minute zu spät ans
+Handgelenk — und ihre Rechtzeitigkeit ist der einzige Grund, warum es sie
+gibt. Umgekehrt darf eine Uhr im Funkloch keinen Diensttag aufhalten. Die
+Zusicherung „nie zwei Läufe auf demselben Puffer" bleibt davon unberührt: Eine
+Uhrnachricht liest den Stand und schreibt nichts.
+
+**Eine verlorene Standmeldung wird nicht nachgeliefert**, und das ist Absicht.
+Anders als ein Ereignis der Uhr — das gepuffert wird, bis das Telefon
+quittiert — ist der Stand ein Augenblickswert. Der nächste Wechsel trägt den
+dann gültigen, und der ist mehr wert als der alte.
+
+Ein neuer Prüffall hält Telefon und Uhr aneinander: Die vier Stufen, bei denen
+das Telefon vibriert, sind genau die vier, bei denen die Uhr rot wird. Das
+sind zwei Listen an zwei Orten; wer eine siebte Stufe einführt, wird von
+dieser Zeile daran erinnert, beide zu pflegen.
+
+**Nicht geprüft werden konnte,** ob die Meldung auf echter Hardware ankommt —
+dafür braucht es eine Wear-OS-Uhr und die Telefonseite des Data Layer, und
+beides gibt es hier nicht. Geprüft ist alles darüber: das Format, die
+Übernahme, die Anzeige und die Entscheidung, wann gesendet wird.
+
+## [Android 0.9.0] — 2026-09-03
+
+### Android — Was gesendet werden soll, wird gesendet
+
+Der Auftraggeber beendete am 02.09.2026 einen Dienst am Handy. Die App zeigte
+keinen Fehler und keinen Rückstand; im Web stand der Diensttag trotzdem ohne
+Ende da. Der Blick in die Datenbank hat es aufgeklärt: Das Segment ist heute
+geschlossen, wurde also **später** nachgeliefert — von irgendeinem folgenden
+Dienst. Der Abschluss-Upload selbst war im Augenblick des Beendens nicht
+durchgekommen, und **es gab keinen zweiten Versuch**.
+
+Der Grund stand in drei Zeilen, in dieser Reihenfolge: Sendefaden starten,
+`stopForeground`, `stopSelf` — ohne dazwischen zu warten. Der Lauf lief danach
+in einem Prozess **ohne Vordergrunddienst** weiter, und den darf Android
+jederzeit abräumen; wer die App direkt nach „Beenden" wegwischte, verlor ihn
+sicher. Kam er wegen fehlenden Netzes nicht durch, endete er mit
+„später erneut" — und es gab kein Später: Außerhalb eines laufenden Dienstes
+existierte kein Zeitgeber, der noch einmal angeklopft hätte. Erst der nächste
+Dienst sendete wieder, sein erster Takt eine Viertelstunde nach dem Start.
+
+**Der Dienst bleibt jetzt im Vordergrund, bis der Lauf zurück ist.** Die
+Dauermeldung sagt in dieser Zeit „Dienst beendet · sende …". Was danach
+geschieht, hängt am Ergebnis: Ist alles durch, verschwindet jede Meldung. Ist
+etwas liegen geblieben, wird ein **Nachsende-Job** eingeplant und ein stiller,
+wegwischbarer Hinweis gestellt — „Dienst beendet · 2 Pakete warten auf Netz".
+Der Job läuft, sobald Netz da ist, überdauert einen Neustart des Telefons und
+löscht den Hinweis, wenn er fertig ist. Er benutzt den `JobScheduler` und
+damit ein Bordmittel: `WorkManager` wäre eine neue Abhängigkeit gewesen und
+setzt intern ohnehin auf denselben Planer.
+
+**Bei einem abgewiesenen Schlüssel (401) wird ausdrücklich *kein* Job
+geplant.** Wiederholen hilft dort nicht; es hilft nur eine neue Kopplung, und
+die kann nur ein Mensch. Ein Job, der es trotzdem alle dreißig Sekunden
+versucht, verbrennt Akku für ein sicheres Nein. Der Hinweis sagt stattdessen,
+was zu tun ist.
+
+**Ein Dienstende von der Uhr beendet den Vordergrunddienst jetzt auch.**
+Bisher stand im Empfänger genau eine Bedingung — starten, wenn ein Dienst
+läuft. Beendet hat er ihn nie: Die Ortung lief weiter, der Akku leerte sich,
+und gesendet wurde erst beim nächsten Takt. Die Entscheidung liegt jetzt in
+einer reinen Funktion mit vier Zeilen, und eine davon ist die Vorsicht, ohne
+die es abstürzt: Ohne laufenden Vordergrunddienst wird nichts angefasst — ein
+Stopp-Befehl an einen Dienst, den es nicht gibt, startet ihn erst, und aus dem
+Hintergrund wirft das ab Android 8 eine Ausnahme.
+
+**Das Netz meldet sich jetzt selbst.** Kommt es während eines Dienstes zurück,
+wird sofort gesendet statt bis zum nächsten Takt zu warten — höchstens aber
+einmal je Minute: Ein flatterndes Mobilfunknetz meldet die Wiederverbindung im
+Sekundentakt, und jeder Lauf kostet mindestens eine Anfrage mit
+bcrypt-Prüfung am Server. Damit ist ein Auslöser gebaut, der seit S4
+deklariert und nie benutzt war — und die Berechtigung `ACCESS_NETWORK_STATE`,
+die ebenso lange unbenutzt im Manifest stand, hat ihren Nutzer.
+
+**Alle Sendeläufe laufen jetzt auf einem einzigen Faden.** Bisher startete
+jeder Anlass seinen eigenen: Takt und Dienstende aus dem Vordergrunddienst,
+Phasenwechsel und Einsatzabschluss aus der Oberfläche. Der Kommentar dazu
+sagte, die Läufe überlappten nicht — und meinte damit nur den Takt. Zwei Läufe
+auf demselben Puffer waren möglich und nur deshalb harmlos, weil der Server
+jede Nachricht mehrfach verträgt. Mit dem Nachsende-Job wäre ein dritter Weg
+dazugekommen; die Zusicherung wird deshalb jetzt gemacht statt kommentiert.
+Nebenbei erledigt das die Reihenfolge beim Nachsenden: Ein älteres Paket kann
+nicht mehr nach einem abschließenden ankommen.
+
+**Und die Anzeige verschweigt nichts mehr.** Antwortet der Server auf ein
+Paket mit 400, wird es nicht wiederholt — richtig so, es ist inhaltlich
+kaputt. Es fiel damit aber auch aus dem Rückstand **und** aus der Anzeige: Die
+App sagte „Alles gesendet", während beim Server ein Segment offen blieb. Jetzt
+steht dort in Rot „1 Paket vom Server abgewiesen". Dazu ein Knopf **„Jetzt
+senden"**, wenn etwas aussteht, und eine Ergebniszeile nach jedem Lauf
+(„Gesendet · 12:41" / „Keine Verbindung · wird nachgeholt" / „Schlüssel
+abgewiesen · Gerät neu koppeln"). Ein **Weg**, ein abgewiesenes Paket
+loszuwerden, ist bewusst nicht dabei — ansehen, ausleiten oder verwerfen
+braucht eine Entscheidung darüber, was mit den Daten geschieht (Backlog 114).
+
+Die Rückfrage vor dem Dienstende sagt jetzt die Wahrheit: „Alles Offene wird
+abgeschlossen und gesendet — **ohne Netz, sobald es wieder da ist**." Vorher
+versprach sie das Senden ohne jede Einschränkung.
+
+**Was bewusst stehen bleibt:** Der Job läuft erst nach dem ersten Entsperren
+des Telefons. Die Zugangsdaten liegen in der anmeldungsgeschützten
+Speicherung, und der Planer startet Jobs für Apps ohne
+Direct-Boot-Kennzeichnung erst danach. Das ist richtig so und wird nicht
+umgangen.
+
+**Nicht geprüft werden konnte,** wie schnell der Job unter Doze und Samsungs
+Akkusteuerung tatsächlich anläuft, ob der Hinweis nach einem Neustart des
+Telefons wirklich wiederkommt, und ob ein Dienstende von der Uhr auf echter
+Hardware ankommt — alles drei braucht ein Gerät. Belegt ist der Weg dorthin:
+Der Rundlauf gegen eine echte Installation von `ingest.php` schließt Segment
+und Diensttag (`final = 1`, `ended_at` gesetzt), 221 von 221 Prüffällen, keiner
+übersprungen.
+
+## [Android 0.8.1] — 2026-09-03
+
+### Android — Ein Bilderlauf für beide Module, und was er im ersten Lauf fand
+
+Für die Uhr gab es seit C1 einen Bilderlauf, für das Handy nicht.
+Oberflächenänderungen am Telefon waren damit **gelesen und nicht gesehen** —
+in E1 sind zwei neue Bildschirmzustände entstanden, und es gab keinen Weg, sie
+anzusehen. `HandyBildTest` schließt das: 16 Bildschirme in drei Breiten (360,
+411, 600 dp), gezeichnet auf den sichtbaren Bereich eines 800-dp-Telefons.
+Beide Läufe brauchen weiterhin **null neue Abhängigkeiten** und weder Emulator
+noch Gerät.
+
+**Beide Läufe vergleichen jetzt die Prüfsummen ihrer Bilder.** Das ist die
+Lehre aus F-P3-AQ: Der Bilderlauf des Web meldete einmal „248 Bilder, 0
+Überlauf", und 176 davon zeigten dieselbe Anmeldeseite. Eine Zahl über Bilder,
+von denen zwei Drittel dasselbe zeigen, ist keine Prüfung, sondern eine
+Beruhigung.
+
+**Es hat sich sofort gerechnet.** Die zwei neuen Uhr-Bilder für „keine Ortung"
+und „GPS sucht" kamen byteweise **gleich** heraus. Der Grund: Auf der
+192-dp-Uhr ist die laufende Ansicht mit Phasenknöpfen 221 dp hoch, und die
+unterste Zeile liegt unter dem Rand. Betroffen war damit nicht nur die neue
+Warnung, sondern auch die **bestehende** „wartet aufs Handy · keine
+Aufzeichnung" — ausgerechnet die Aussage, für die diese Zeile überhaupt gebaut
+wurde, fiel auf der engsten Uhr aus, seit es sie gibt. Beide stehen jetzt in
+der Zustandszeile **oben** und verdrängen dort Phase und Uhrzeit, statt eine
+Reihe hinzuzufügen: Die Ansicht wächst nicht, der früher gemessene
+Glasüberlauf kehrt also nicht zurück. Dass „Phase 3 seit 09:12" währenddessen
+nicht dasteht, ist die richtige Reihenfolge — „es entsteht gerade keine Spur"
+wiegt schwerer, und die Phasenliste ist einen Druck entfernt.
+
+Ein zweiter Fund bleibt **bewusst stehen**: Bei laufendem Einsatz mit
+Phasenknöpfen sind vom Knopf „Dienst beenden" auf 800 dp Bildschirmhöhe nur
+29 dp sichtbar, in allen drei geprüften Breiten. Der Bildschirm rollt, es geht
+nichts verloren — aber mit Handschuhen ist Schieben ein Bedienschritt mehr,
+und es trifft die Handlung, die unter Zeitdruck gesucht wird. Die laufende
+Ansicht zu kürzen ist eine Gestaltungsänderung und braucht eine Entscheidung;
+bis dahin benennt der Bilderlauf sie bei jedem Lauf.
+
+**Eine Messung ist dabei ersatzlos gestrichen worden**, und das ist kein
+Verlust: Die erste Fassung meldete „waagerechten Überlauf" wie der Web-Lauf.
+Die Zahl konnte nichts messen — jeder Bildschirm der App ruft `fillMaxSize()`,
+also gewinnt die Einschränkung immer, und ein zu breites Kind wird von Compose
+beschnitten statt gemeldet. „Verlangte Breite = Gerätebreite" stand in jeder
+der 48 Zeilen, gleich was darin stand. An ihre Stelle sind zwei Messungen
+getreten, die die **Folge** fassen, wo sie jemanden trifft: Knopffarbe an der
+Bildkante, und Knöpfe unter der Faltkante.
+
+## [Android 0.8.0] — 2026-09-03
+
+### Android — Die App sagt jetzt, ob sie wirklich aufzeichnet
+
+Bis 0.7.7 stand in der Dienstansicht „Aufzeichnung läuft seit 07:02 · GPS an",
+sobald die **Ortungsfreigabe** erteilt war. Ob der Standort eingeschaltet ist,
+ob überhaupt eine Position hereinkommt und ob sie brauchbar ist, hat die App
+nie geprüft. Vier verschiedene Lagen sahen deshalb gleich aus, und in dreien
+davon landete im Puffer nichts: Standort aus, kein Empfang, Signal zu ungenau.
+Der rote Aufnahmepunkt leuchtete, die Dauermeldung sagte „Aufzeichnung läuft",
+und am Abend fehlte eine Spur, die niemand mehr erklären konnte. Das ist genau
+die Art Aussage, gegen die dieses Projekt an anderer Stelle ausdrücklich
+gebaut ist — eine Behauptung über etwas, das die App nicht geprüft hat.
+
+Neu misst ein **Ortungswächter** im Vordergrunddienst, was tatsächlich
+ankommt, und unterscheidet sechs Zustände: Freigabe fehlt, Standort aus, sucht,
+kein Signal, zu ungenau, empfängt. „Aufzeichnung läuft" steht nur noch beim letzten;
+in allen anderen heißt es „Dienst läuft" und dahinter, was fehlt — weil das
+wahr ist und das andere nicht. Die Dauermeldung trägt denselben Wortlaut, denn
+sie ist die einzige Auskunft, solange die App nicht offen steht.
+
+**Brauchbar heißt dabei: die Ausdünnung würde den Fund annehmen.** Der Wächter
+zählt nicht Sensorereignisse, sondern das, was in den Puffer geht — dieselbe
+100-Meter-Schwelle, nach der auch aufgezeichnet wird. Eine Anzeige mit einer
+anderen Schwelle als die Aufzeichnung wäre irreführend; die Garmin-Uhr hält es
+seit jeher genauso.
+
+**Gewarnt wird sichtbar und spürbar, nicht hörbar.** Ein zweiter
+Benachrichtigungskanal „Warnungen" vibriert und schweigt — der Kanal
+„Aufzeichnung" bleibt still und niederrangig, und weil Android die
+Einstellungen eines Kanals nach dem Anlegen der Nutzerin überlässt, kann eine
+spürbare Warnung nicht auf demselben liegen. Die Warnung kommt beim Übergang
+in einen Fehlzustand, beim Wechsel zwischen zweien und danach alle zehn
+Minuten, solange er anhält: Das Handy steckt in der Tasche, und eine einzige
+Vibration in einer Anfahrt ist überhörbar. Sie verschwindet von selbst, sobald
+wieder aufgezeichnet wird. Antippen führt bei ausgeschaltetem Standort direkt
+in die Systemeinstellung. **Bewusst nicht behoben:** „Nicht stören" kann die
+Vibration unterdrücken — das ist die Entscheidung der Nutzerin und bleibt es;
+die sichtbare Meldung und die rote Zeile bleiben davon unberührt.
+
+**Ein Dienst beginnt nicht mehr bei ausgeschaltetem Standort.** Statt des
+Knopfes „Dienst beginnen" steht dann ein Block „Standort ausgeschaltet" mit dem
+Weg dorthin. Der Knopf verschwindet, statt beim Druck abzulehnen: Eine
+Ablehnung müsste erklärt werden, und über dem Knopf steht die Erklärung schon.
+Nach der Rückkehr aus den Einstellungen verschwindet der Block von selbst.
+
+**Die Uhr erfährt es mit der Quittung.** Ein Dienststart lässt sich am
+Handgelenk auslösen, und dort kann niemand gefragt werden — der Dienst wird
+deshalb durchgelassen und nicht abgelehnt: Wer mit Handschuhen am Fahrzeug
+steht und gedrückt hat, ist mit einem stillen „nein" schlechter bedient als mit
+einer Warnung. Damit die Warnung nicht nur in der Hosentasche vibriert, trägt
+die Standmeldung ans Handgelenk jetzt einen Kurzcode des Ortungszustands, und
+die Uhr zeigt „keine Ortung · keine Aufzeichnung". Ein Wortlaut für vier
+Ursachen, weil die Uhr keine davon beheben kann — das tut das Handy. Fehlt das
+Feld (ältere Handy-Fassung), zeigt die Uhr nichts an, statt etwas zu behaupten.
+
+Vier Fehler am Bestand sind dabei aufgefallen und mitbehoben:
+
+Der Zuhörer der Ortung war ein **SAM-Lambda** und setzte damit genau eine der
+vier Methoden von `LocationListener` um. Auf Android 8 bis 10 — und das ist die
+untere Grenze dieser App — sind alle vier abstrakt; hätte das System dort
+`onProviderDisabled` gerufen, wäre der Vordergrunddienst mit einem
+`AbstractMethodError` gestorben, und zwar genau in dem Augenblick, in dem
+jemand den Standort ausschaltet. Der Zuhörer ist jetzt eine ausgeschriebene
+Klasse, und ein Prüffall zählt per Reflexion nach, dass alle vier Methoden dort
+stehen. Abgeleitet aus der Plattform-Schnittstelle, nicht beobachtet: Ein
+solches Gerät stand nicht zur Verfügung.
+
+Der Sendetakt wurde bei **jedem** Start des Dienstes neu aufgesetzt, und die
+Zeile, die ihn zurücksetzte, löschte dabei die ganze Warteschlange ihres
+Handlers. Beides zusammen heißt: Ein Dienst, der von der Uhr geführt wird, hat
+bei Ereignissen dichter als fünfzehn Minuten **gar nicht** gesendet — jede
+Uhrnachricht startet den Dienst erneut und schob den Takt vor sich her. Beide
+Takte laufen jetzt mit eigenem Token, und der Sendetakt wird nur gestartet,
+wenn er nicht schon läuft.
+
+Zwei Farben trugen zu wenig Kontrast, und beide sind erst beim Nachrechnen
+**aller** Token aufgefallen: Der orange Punkt der Zeile „Rückstand N Pakete"
+kam auf 2,23 : 1 gegen die Karte, gefordert sind 3,0 für ein grafisches
+Objekt; die rote Zeile „wartet aufs Handy" auf der Uhr kam auf 4,12 : 1,
+gefordert sind 4,5 für Schrift. Beide standen jahrelang da, weil das
+Kontrastwerkzeug eine **feste Paarliste** führt und diese zwei Paare nicht
+enthielt — ein Paar, das nicht eingetragen ist, wird nicht gemessen und meldet
+folglich auch keinen Fehler. Sie tragen jetzt das tiefe Orange (4,32 : 1) und
+Rosa (15,94 : 1), und acht Paare sind neu in der Liste. Aus demselben Grund ist
+der Zustand „zu ungenau" **rot** geworden und nicht orange, wie das Konzept es
+vorsah: Kein Orange der Palette trägt Text auf der hellen Karte. Alle vier
+Zustände ohne Aufzeichnung sind damit rot und unterscheiden sich am Wortlaut —
+die farbliche Abstufung „warnt" gegen „fehlt ganz" geht dabei verloren, und das
+ist in Kauf genommen, weil in beiden Fällen nichts aufgezeichnet wird.
+
+**Was bewusst stehen bleibt:** Das Dienstende sendet weiterhin auf einem
+eigenen Faden, während der Dienst schon stoppt — die Lücke, durch die ein
+Abschluss verlorengeht, wenn die App direkt danach weggewischt wird. Sie wird
+als Ganzes im nächsten Paket geschlossen (Vordergrunddienst halten,
+Nachsende-Job, Hinweismeldung); halb behoben wäre sie schwerer zu prüfen als
+gar nicht.
+
+**Nicht geprüft werden konnte** alles, was ein Gerät braucht: Vibration, die
+tatsächlichen Fristen für Erstfix und Signalverlust, das Verhalten beim
+Abschalten des Standorts und der Absturz auf Android 8 bis 10. In diesem
+Container gibt es keinen Emulator — das arm64-Abbild übersetzt der heutige
+QEMU2 nicht, das x86_64-Abbild braucht KVM, und `/dev/kvm` fehlt. Geprüft ist
+die Regel dahinter, mit eingespeister Zeit: 36 neue Prüffälle, jede Frist auf
+beiden Seiten ihrer Grenze.
 ## [Uhr 3.0.0] — 2026-09-03
 
 ### Uhr — Die Kopplung läuft andersherum: die Uhr zeigt den Code (S5, Paket C)

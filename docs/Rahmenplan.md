@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 25 (03.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 26 (03.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -26,6 +26,13 @@ E1 bis E3 fertig. Es berührt nur `android/` und Doku und hängt an keinem
 der übrigen Pakete; es geht **vor dem S4-Rest** auf `main` (beide fassen
 `HauptActivity.kt`, `strings.xml` und das Manifest an).
 
+**Die Planung v1.0 (Schritt 11) ist vorgezogen und entschieden** — R65 bis
+R73, Konzept `docs/konzepte/Konzept-Planung-v1.0.md`; der v1.0-Schnitt ist
+in drei Phasen geteilt (P6, P7, P8, R71), die Problemsammlung vom
+03.09.2026 ist Schritt 8 (S9, R73). Was daraus sofort am Auftraggeber
+liegt, steht in Abschnitt 6 — zuvorderst die **D-U-N-S-Nummer** für das
+Play-Console-Organisationskonto (R65).
+
 > **Berichtigt mit Fassung 24.** Diese Zeile nannte bis zuletzt
 > „Web 12.4.2" und den S4-Zweig als noch offen. Fassung 23 hatte die
 > Statuszeilen in Abschnitt 3 auf den Stand von `main` gezogen, den Kopf
@@ -45,8 +52,8 @@ sagt, was schon gebaut ist und was es gebracht hat. Die Kennungen (P5, S6,
 Die bestehende Einsatzdokumentation wird von einem Luftrettungs-Werkzeug
 mit bodengebundener Erweiterung zu **Gen-EM NAdoku v1.0**: ein
 Notarzt-Dokumentationswerkzeug für Land und Luft gleichrangig, mit neuem
-Namen, neuer Oberfläche, Mehrbenutzerfähigkeit und frischen
-Repositorien (ob eines oder mehrere, entscheidet die Planung vor v1.0, R59). Betrieben wird es als **offener Dienst mit
+Namen, neuer Oberfläche, Mehrbenutzerfähigkeit und einem frischen
+Repositorium `gen-em/nadoku` (R68). Betrieben wird es als **offener Dienst mit
 Selbstregistrierung** bis 1 000 Konten (R36), mit einem zweiten Client
 neben der Garmin-Uhr: Android-Handy und Wear-OS-Uhr (R45).
 
@@ -56,8 +63,9 @@ zur Laufzeit · **keine Telemetrie** — Betriebszahlen nur aus vorhandenen
 Spalten, einzige Ausnahme die Gerätekennung beim Koppeln (R36, R42) · das
 Demo-Konto als einzige benannte E2E-Ausnahme (R25).
 
-**Nicht Ziel:** iOS und watchOS (R46) · Store-Verteilung der Clients vor
-v1.0 (Betriebsübergang, R41) · ein Migrationspfad für Bestandsinstallationen
+**Nicht Ziel:** iOS und watchOS (R46) · **Produktionsfreigabe** der Clients
+in den Stores vor v1.0 (Betriebsübergang, R41, R65 — der interne
+Play-Test-Track ab Schritt 6 ist Ziel, nicht Nicht-Ziel) · ein Migrationspfad für Bestandsinstallationen
 (R11: v1.0 liest die 7.x-Sicherung genau einmal, mehr nicht) ·
 Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 
@@ -113,7 +121,7 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 - **Modell (R14):** Konzepte mit Fable, hohe Denktiefe; mechanische Pflege
   ohne. Umsetzung nach K2/K8.
 - **Deploy (R40):** bis einschließlich S4 Autodeploy auf Produktiv; **mit
-  P5-Beginn** deployt `main` nur noch auf Staging; am P6-Schnitt einmaliges
+  P5-Beginn** deployt `main` nur noch auf Staging; am P8-Schnitt einmaliges
   Neuaufsetzen mit Datenübernahme per edbak (R11).
 - **Backlog-Nummern sind dauerhaft.** Vor jedem Merge, der Backlog-Punkte
   mitbringt: `grep -oE '^[0-9]+\.' docs/Backlog.md | tr -d '.' | sort -n |
@@ -149,13 +157,16 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | erledigt 03.09.2026 — Freigabe mit E-S5-32 bis -47 |
 | 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | gelöscht nach R62 | Opus | **erledigt, Web 12.9.3/12.9.4** (Abschnitt 8); PR gegen `main` offen — der Merge deployt; Prüfliste S7 offen |
 | 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | **in Arbeit** — Paket A (Server, Web 13.0.0) erledigt 03.09.2026 auf `claude/s7-umsetzung-vorbereiten-s8kax0`; C und E in eigenen Instanzen |
-| 6 | **S4 — Rest** | Kopplungsmodul, feste Server-Adresse, App-Name, Insets, Herkunft je Einsatz (R64), Gerätetest, Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | offen |
+| 6 | **S4 — Rest** | Kopplungsmodul, feste Server-Adresse, App-Name, Insets, Herkunft je Einsatz (R64), Gerätetest, **Play Console nach R65** (interner Test-Track für Handy und Uhr, Versionscode-Versatz, Signaturweg), Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | offen |
 | 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Backup-Optionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61) | Schritte 4 und 6 | neu, mit Mockups | Fable (Konzept) | offen |
-| 8 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
-| 9 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb | Schritte 2, 5 und 7; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
-| 10 | **Planung v1.0** | Konzeptgespräch vor dem Schnitt: Umfang des Code-Reviews, Aufteilung in mehrere Repositorien, Auslieferungskette, Update-Weg (R59, R60); Ergebnis ist das P6-Konzept | Schritt 9 | entsteht hier | Fable (R14) | offen |
-| 11 | **P6 — v1.0-Schnitt** | Review, Umbenennung, Doku, Neuaufsetzen, Repositorien | Schritt 10 | aus Schritt 10 | Fable (R17), sonst Opus | offen |
-| — | Betriebsübergang | Öffnung in Wellen, Stores | nach v1.0 | — | — | — |
+| 8 | **S9 — Einsatzbearbeitung und Rettungsmittel** | Problemsammlung vom 03.09.2026 (Nr. 101–113): Adresssuche und gemeinsamer Kartendialog, Rettungsmittel-Übernahme, kompaktere Buttons, Windenkacheln, Hubschrauber-Icon, Vorschlagsliste, Zielklinik ad hoc, Schloss-Kennzeichnung, Notizfeld, Kachel „GPS-Daten", neue Rettungsmittel-Arten, Tageszuordnung, Rollen | Schritt 7 (S8-Konzept, Nr. 74); F3–F6 beantwortet | neu; Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md` | Fable (Konzept; Mockups PS-3/PS-5, Zielkonflikt PS-8.2), Umsetzung Opus | offen |
+| 9 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
+| 10 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb | Schritte 2, 5 und 7; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
+| 11 | **Planung v1.0** | Festlegungen vor dem Schnitt: Store-Verteilung (R65), Update-Weg (R66), Auslieferungskette (R67), Repositorium (R68), Code-Review (R69), Web-App auf Android (R70), Phasenschnitt (R71), Doku-Anforderungen (R72), Problemsammlung (R73); Ergebnis sind die Konzepte der Phasen P6–P8 mit je eigenem Paketschnitt | Festlegungen: keine (vorgezogen); Paketschnitte: die jeweilige Vorphase, P6 nach der Freigaberunde des Reviews | `docs/konzepte/Konzept-Planung-v1.0.md` | Fable (R14) | **Festlegungen entschieden** 03.09.2026 (R65–R73); offen nur die Paketschnitte je Phasenkonzept |
+| 12 | **P6 — Review und Bereinigung** | Bedrohungsmodell; Bug- und Sicherheitsreview in zwölf Stücken (R17, R69); Freigaberunde; Sofortpaket; Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); Weg B (Nr. 43); R5-Ausnahmeliste | Schritte 8 und 10; Nr. 43-Fragen beantwortet | `docs/konzepte/Review-R17.md`, Paketschnitt nach der Freigaberunde | Fable (Review, Kryptographie), sonst Opus | offen |
+| 13 | **P7 — Gesicht v1.0** | Umbenennung überall, neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung (R16, R72); Web-App-Manifest (Nr. 87, R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung abschaffen (Nr. 46); Kommentarregel `CLAUDE.md` (R69) | Schritt 12 | eigenes Konzept nach K1 | Opus | offen |
+| 14 | **P8 — Schnitt** | Neuaufsetzen (R40 (3)); Migrationsregister neu (R66); Repo-Umzug und Inventur (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Erklärung v1.0 | Schritt 13 | eigenes Konzept nach K1 | Opus | offen |
+| — | Betriebsübergang | Öffnung in Wellen; Produktionsfreigabe in den Stores (R65) | nach v1.0 | — | — | — |
 
 Reihenfolge und Begründung: S4 zuerst, weil der Zweig fertig gebaut ist
 und `schema.sql`/`update.php` hält, die S6 anfassen muss. S6 vor S5, weil
@@ -354,10 +365,25 @@ des Schnitts in die Konto-Sicherung) · Signaturschlüssel erzeugen und
 Runden) · **Backlog 81** (App-Symbol in der Benachrichtigung) und **82**
 (Warnung vor dem Akkuverbrauch der Daueraufzeichnung), beide am 02.09.2026 vom
 Auftraggeber gemeldet · Changelog-Präfix `Android` mit der ersten verteilten
-Fassung · Prüfdokument S4 fortschreiben, Erledigt-Zeile in Abschnitt 8. **Abnahme:**
+Fassung · Prüfdokument S4 fortschreiben, Erledigt-Zeile in Abschnitt 8 ·
+**Play Console nach R65:** Organisationskonto der Gen-EM GbR ist
+eingerichtet (Zuarbeit, Abschnitt 6) · Versionscode-Versatz für das
+Uhr-Modul (Backlog 98; E-S4-02 bleibt eine Zählung) · vorhandener
+Signaturschlüssel als App-Signaturschlüssel bei Play App Signing,
+Upload-Schlüssel erzeugt und übergeben · Deklarationen, soweit der interne
+Track sie verlangt (Vordergrunddienst/Standort mit Demo-Video,
+Datensicherheitsformular) · **erstes Release auf dem internen Test-Track**
+für Handy und Uhr, Testerliste = der bekannte Kreis · `android/LIESMICH.md`
+und Handbuch 10.1 nachgezogen — **die Karte „NAdoku für Android" bleibt als
+Rückfall bis zur Produktionsfreigabe** (R65), Handbuch 10.1 nennt den Track
+als Regelweg. **Abnahme:**
 Prüfliste 4 und 6 des Prüfdokuments S4 (Telefon, Kreisläufe R24 auf
-geschnittenen und importierten Einsätzen), Messstand für das Schneiden.
-**Wear-OS-Uhr:** Gerätetest, sobald eine vorliegt; blockiert nichts.
+geschnittenen und importierten Einsätzen), Messstand für das Schneiden;
+dazu Installation von Handy- und Uhr-App aus dem internen Track auf dem
+S24 und einer Wear-OS-Uhr, Update von der Seitenladungs-Fassung auf die
+Track-Fassung **ohne Neuinstallation** (gleiche Signatur).
+**Wear-OS-Uhr:** Gerätetest, sobald eine vorliegt; für die
+Wear-OS-Prüfrunde des Tracks gebraucht.
 
 ### Schritt 7 — S8 Einstellungen, Administration und Wartung
 
@@ -393,7 +419,32 @@ Umfang:** neue Verwaltungsfunktionen und Rollen (P5, R38). **Lage:** nach
 S4-Rest und S7, weil alle drei `einstellungen.php` und die Admin-Seiten
 anfassen.
 
-### Schritt 8 — Backlog-Runde
+### Schritt 8 — S9 Einsatzbearbeitung und Rettungsmittel
+
+**Ziel:** Die Problemsammlung vom 03.09.2026 wird in einem Zug analysiert,
+konzipiert und umgesetzt — dreizehn Punkte (Nr. 101–113) zur
+Einsatzbearbeitung, zur Ortsauswahl und zu den Rettungsmitteln; die
+Sammlung mit ihren neunzehn Entscheidungen liegt in
+`docs/konzepte/Vorbereitung-S9-Problemsammlung.md`. **Inhalt** (Konzept
+nach K1 mit Fable, R14): (1) **zuerst der Zielkonflikt** PS-8.2 — Notizfeld
+verschlüsselt und trotzdem durchsuchbar wie die übrigen Felder; Optionen
+mit Preis, bevor entschieden wird; die Antwort geht in das
+Bedrohungsmodell des Reviews ein (Nr. 43, R69) · (2) der **gemeinsame
+Kartendialog** mit Adresssuche als eine Komponente (PS-1, Voraussetzung für
+PS-7); erste Prüffrage die Geocoding-Quelle — dieselbe wie die heutigen
+Adressvorschläge oder keine (`CLAUDE.md` 4) · (3) die Bugs PS-2, PS-4,
+PS-6, PS-10.3 · (4) die Erweiterungen PS-7 und PS-10 mit ihren Migrationen
+und der Prüfung des Vertrags (R12) · (5) die Gestaltung PS-3, PS-5, PS-8.1,
+PS-9 — **Mockups zu PS-3 und PS-5 sind Fable-Schritte** (K2), Freigabe je
+Darstellung (`CLAUDE.md` 5); PS-3 setzt die Entscheidung zu Nr. 74 aus dem
+S8-Konzept voraus. **Reihenfolge:** Konzept nach dem S8-Konzept; Umsetzung
+parallel zur S8-Umsetzung zulässig, wenn beide Konzepte ihre Berührungen
+benennen (Stylesheet, Stammdaten- und Einstellungsseiten). P5 setzt S9
+nicht voraus, **P6 schon**. **Abnahme:** Bilderlauf in acht Breiten,
+Kreisläufe csv und edbak (Datenmodell), Wortliste, Bedienprüfung je Punkt
+auf dem Auftraggeber-Client, Handbuch nachgezogen, Register gegengezählt.
+
+### Schritt 9 — Backlog-Runde
 
 **Ziel:** Die Einzelpunkte aus Abschnitt 5, die keiner Phase bedürfen.
 **Regeln:** je Punkt ein Commit, Buchführung nach `CLAUDE.md` 2, kein
@@ -401,7 +452,7 @@ Konzept nach K1; ein Punkt, der eine neue Darstellung braucht, bekommt
 vorher ein Mockup und eine Freigabe (`CLAUDE.md` 5). Läuft jederzeit ab
 Schritt 1 parallel, auf eigenem Zweig; die Dateiregel aus Abschnitt 4 gilt.
 
-### Schritt 9 — P5 Dienstbetrieb
+### Schritt 10 — P5 Dienstbetrieb
 
 **Ziel:** Die Anwendung trägt eine größere Nutzerbasis sicher. Baut auf
 der Ordnung aus S8 auf. **Inhalt nach R9, R10, R31, R33, R36 bis R41:** Registrierung mit drei Betriebsarten
@@ -416,75 +467,116 @@ Betriebslage-Dashboard im festen Minimalumfang samt Geräteverteilung (R42)
 Admin-Optionen für Support-Adresse (R31), Rechtstexte (R32) und die
 S2-Sicherungseinstellungen · Mengenbremse `ingest.php` (R19,
 Grundsatzfrage zuerst) · CSP mit HSTS, `frame-ancestors`, `nosniff` (Nr. 8)
-· Wartungsmodus-Torwächter für ausstehende Migrationen (R40.4). **Davor:**
+· Torwächter für ausstehende Migrationen (R40.4) — er setzt den
+**Wartungsmodus aus Paket W** (`server/wartung.lock`, Web 13.2.0)
+automatisch, zwei Auslöser, ein Mechanismus. **Davor:**
 Hosting-Entscheidung (R36), Staging-Ziel; mit P5-Beginn endet der
-Autodeploy auf Produktiv. **Backlog:** 8, 17, 37, 48, 49, 54, 67. **Demo-
+Autodeploy auf Produktiv — **Aufbau der Auslieferungskette nach R67**:
+Staging automatisch, Prüftor Stufen 1 und 2, Umgebung „produktion" mit
+Freigabe- und Backup-Tor. **Backlog:** 8, 17, 37, 48, 49, 54, 67. **Demo-
 Konto** in jeder Betriebsart mitdenken (R25).
 
-### Schritt 10 — Planung v1.0
+### Schritt 11 — Planung v1.0 · **Festlegungen entschieden 03.09.2026**
 
 **Ziel:** Bevor etwas als v1.0 veröffentlicht wird, noch einmal planen
-statt schneiden (R59, Beschluss vom 02.09.2026). Ein Konzeptgespräch mit
-fünf Gegenständen: **Code-Review** — Umfang, Reihenfolge und Form des
-Bug- und Sicherheitsreviews nach R17, was davon vor und was nach dem
-Neuaufsetzen läuft, wie Funde entschieden werden · **Aufteilung in mehrere
-Repositorien** — ob Web/Server, Garmin-Uhr, Android und Werkzeuge getrennt
-oder gemeinsam weiterleben, was das für Vertrag, Versionszählung,
-Auslieferung und die Übernahme des Backlogs (dauerhafte Nummern) heißt ·
-**Auslieferungskette** nach R40 (Staging, Release-Tag, CI-Prüftor,
-Rollback) · **Update-Weg der Installation ab v1.0** (R60): Prüft die
-Installation selbst gegen das Repositorium und meldet eine neue Fassung?
-Spielt sie das Update selbst ein, oder bleibt es beim Hochladen per FTP?
-Muss die Migrationsliste auf der Wartungsseite sichtbar bleiben? Fest
-steht: ab v1.0 **keine Rückwärtskompatibilität**, auch nicht bei Updates;
-v1.0 beginnt mit dem Neuaufsetzen (R40), und eine ältere Sicherung wird
-genau **einmal** über ein dafür gebautes Formular eingespielt, das danach
-entfällt · **Web-App auf Android** (Nr. 87): Ergebnis der Erhebung, ob und
-mit welchem Umfang die Weboberfläche vor v1.0 aus dem Browser heraus
-installierbar wird (Manifest, Symbole, Service Worker ja oder nein). Dazu die Doku-Anforderungen nach R16, wenn das Gespräch dazu
-noch aussteht.
+statt schneiden (R59, Beschluss vom 02.09.2026). Der Schritt wurde am
+03.09.2026 **vorgezogen** und in `docs/konzepte/Konzept-Planung-v1.0.md`
+Punkt für Punkt entschieden: **Store-Verteilung** — R65 (E-PV-1) ·
+**Update-Weg der Installation ab v1.0** (R60) — entschieden als **R66**
+(E-PV-2): keine Selbstprüfung, kein Selbst-Update, Produktion nur auf
+Handauslösung, nur ausstehende Migrationen sichtbar; fest steht weiterhin:
+ab v1.0 **keine Rückwärtskompatibilität**, auch nicht bei Updates, v1.0
+beginnt mit dem Neuaufsetzen (R40), eine ältere Sicherung wird genau
+**einmal** über ein Wegwerf-Formular eingespielt · **Auslieferungskette**
+nach R40 — **R67** (E-PV-3) · **Aufteilung in Repositorien** — **R68**
+(E-PV-4): eines, frisch, öffentlich, `gen-em/nadoku` · **Code-Review**
+(R17) — **R69** (E-PV-5): alles, in Stücken, Eingang von P6, zwei Wege für
+Funde · **Web-App auf Android** (Nr. 87) — **R70** (E-PV-6): Manifest
+allein, in P7 · **Phasenschnitt** — **R71** (E-PV-7): P6, P7, P8 · die
+**Doku-Anforderungen** nach R16 — **R72** (E-PV-8) · die
+**Problemsammlung** als Schritt 8 — **R73** (E-PV-9).
 
-**Dazu ein Punkt, der genau hierhin gehört und nirgendwo sonst: die
-Haltbarkeit der Gerätestatistik (Backlog Nr. 83).** Seit Web 12.9.0 hängen Art
-und Modell an `devices`; der Verweis vom Einsatz dorthin überlebt aber weder
-das Löschen eines Geräts noch eine Wiederherstellung — gemessen am Demo-Konto
-**82 von 82 Einsätzen ohne Verweis**. Und genau hier wird beschlossen, dass
-v1.0 mit einem Neuaufsetzen und **einer einmaligen** Wiederherstellung beginnt
-(R60). Was bis dahin nicht haltbar gemacht ist, ist für den Altbestand danach
-nicht mehr herstellbar. Der Punkt nennt drei Wege und ihre Kosten; er ist vor
-dem Schnitt zu entscheiden, nicht danach.
+Die Haltbarkeit der Gerätestatistik (Nr. 83), mit Fassung 21 hierher
+gelegt, ist mit Fassung 22 als **R64** entschieden (Momentaufnahme am
+Einsatz, Umsetzung im S4-Rest) und steht hier nicht mehr an.
 
-**Ergebnis:** das P6-Konzept nach K1 mit Paketschnitt und
-Abnahmekriterien; bis dahin beginnt kein P6-Paket. **Modell:** Fable (R14).
+**Ergebnis:** je Phase ein Konzept nach K1 mit Paketschnitt und
+Abnahmekriterien (P6 nach der Freigaberunde des Reviews, R69); bis dahin
+beginnt kein Paket der Phase. **Modell:** Fable (R14).
 
-### Schritt 11 — P6 v1.0-Schnitt
+### Schritt 12 — P6 Review und Bereinigung
 
-**Ziel:** Neuer Name, neue Repositorien nach dem Schnitt aus Schritt 10,
-Version 1.0. **Inhalt:**
-Eingangsschritt **Bug- und Sicherheitsreview mit Fable (R17)** —
+**Ziel:** sauberer Code, Verhalten unverändert außer bei Funden.
+**Inhalt:** Eingangsschritt **Bug- und Sicherheitsreview mit Fable (R17,
+Umfang und Form nach R69)** — alles, in zwölf Stücken; Stück 1 ist das
+**Bedrohungsmodell** als eigener Abschnitt; gesucht werden Bugs,
+Sicherheitslücken, ungebrauchter Code, Karteileichen und Probleme,
 einschließlich Verschlüsselungsverfahren, Containerfassung 4, SPUR1,
-Komplettbackup und Serverschlüssel, Demo-Konstruktion, Schlüsselablage auf
-dem Handy, S5-Kopplungsweg, Umgang mit Dumps und Klartext-Koordinaten (R41,
-Nr. 43) · Umbenennung überall (Web und Handbuch heißen noch „Einsatzdoku",
-die Uhr seit 2.0.0 „NAdoku"), Namensdurchgang nach R31, neues Demo-Passwort
-mit dem Produktnamen in der Schwachwortliste (R25) · Kommentare
-normalisieren (R13, Liste in Konzept P2 10.3) · R5-Ausnahmeliste
-beschließen (zugeliefert: leer) · Vertragsreview und Festschreibung als v1
-(R12; Nr. 23) · Doku-Neufassung mit Screenshots und klickbaren Kapiteln
-(R16; Anforderungsgespräch vorher) · Changelog neu ab v1.0 (R15) · Backlog
-mit dauerhaften Nummern übernehmen · Altformat der Sicherung abschaffen
-(Nr. 46) · **Neuaufsetzen** (R40): frische Installation, Übernahme des
-Bestandskontos per edbak, Demo-Konto nach Runbook, Probe des
-Komplettbackup-Zyklus auf Produktiv; Release-getriggerte Auslieferung mit
-CI-Prüftor (R24/R28/R35) und Rollback-Weg · Rechts- und Betreiberunterlagen
-zur Öffnung (R41). **Abnahme nach R11:** die frische Installation liest die
-Referenz-edbak aus `tools/referenzdatensatz/referenz/`.
+Komplettbackup und Serverschlüssel, Demo-Konstruktion (R25), Schlüsselablage
+auf dem Handy, S5-Kopplungsweg und Adress-QR, Umgang mit Dumps und
+Klartext-Koordinaten (R41, Nr. 43 — **Weg B entscheidet der Review**),
+Signaturschlüssel bei Google (R65), Geheimnisse der Kette (R67), die
+Antwort auf den Notizfeld-Zielkonflikt aus S9 (Nr. 109) ·
+**Kommentardurchgang:** keine Verweise auf Beschlüsse, Backlog-Nummern,
+Fassungen oder Konzepte mehr im Code — Kommentare normalisieren (R13) und
+Namensdurchgang (R31) gehen darin auf · **Freigaberunde:** der
+Auftraggeber entscheidet je Fund; danach der **Paketschnitt** ·
+**Sofortpaket** für Kritisches vor allem anderen · **Pflicht- und
+Aufräumpakete** (je Codebasis gebündelt) für alles andere — v1.0 wird nicht
+erklärt, solange ein Fund offen ist · R5-Ausnahmeliste beschließen
+(zugeliefert: leer). **Voraussetzung:** die drei Fragen aus
+`Konzept-V1-Ortsdaten.md` beantwortet; P5 und S9 gemergt. **Abnahme:**
+Review-Dokument vollständig (zwölf Stücke, jeder Fund entschieden),
+Sofort- und Pflichtpakete abgenommen, Prüfmittel unverändert grün,
+Wortliste 0/0/0.
+
+### Schritt 13 — P7 Gesicht v1.0
+
+**Ziel:** v1.0 sieht aus wie v1.0. **Inhalt:** Umbenennung überall (Web und
+Handbuch heißen noch „Einsatzdoku", die Uhr seit 2.0.0 „NAdoku"), neues
+Demo-Passwort mit dem Produktnamen in der Schwachwortliste (R25) ·
+Vertragsreview und Festschreibung als v1 (R12; Nr. 23) · **Doku-Neufassung
+nach R72** (Handbuch, Betreiberhandbuch, Installation und Selbsthosting,
+Technik; Screenshots erzeugt, Sprungmarken; das Handbuch als statisches
+HTML in der Kette nach `server/hilfe/` gerendert und mit dem Release
+ausgeliefert, Link „Hilfe" in Fußzeile und Anmeldeseite) ·
+**Web-App-Manifest** (Nr. 87, R70: Manifest allein, „NAdoku Web", Symbole
+für Web-App und Handy-App aus dem Entwurf) · Changelog neu ab v1.0 (R15) ·
+Backlog mit dauerhaften Nummern übernehmen · Altformat der Sicherung
+abschaffen (Nr. 46) · Kommentarregel in `CLAUDE.md` („Grund ja, Nummer
+nein", R69). **Konzept** nach K1, Paketschnitt dort. **Abnahme:** kein
+„Einsatzdoku" mehr außer im Archiv und Changelog; Vertrag v1
+festgeschrieben; Handbuch-Screenshots aus dem Bilderlauf; Manifest am S24
+(Chrome, Samsung Internet, Firefox) und am iPhone nachgewiesen; Wortliste
+0/0/0.
+
+### Schritt 14 — P8 Schnitt
+
+**Ziel:** die frische Installation, das frische Repositorium, Version 1.0.
+**Inhalt:** **Neuaufsetzen** (R40 (3)): frische Installation, Übernahme des
+Bestandskontos per edbak über das Wegwerf-Formular (R60), Demo-Konto nach
+Runbook, Probe des Komplettbackup-Zyklus und des Rollbacks auf Produktiv
+(R67) · **Migrationsregister beginnt neu** — die bis dahin gelaufenen
+Migrationen gehen in die Grundfassung von `schema.sql` (R66) ·
+**Repo-Umzug und Inventur** (R68): Durchsicht von `tools/`, `docs/`,
+`.github/`, `CLAUDE.md` — was in den ersten Commit von `gen-em/nadoku`
+kommt, mit Begründung je Weglassung; Umgebungen und Zweigschutz;
+Altrepositorium archivieren mit Verweis · **Auslieferungskette nach R67 im
+neuen Repositorium** (R40 (4)) · Rechts- und Betreiberunterlagen zur
+Öffnung (R41; MDR-Abgrenzung bereits vor Welle 1, R65) · **Abnahme nach
+R11:** die frische Installation liest die Referenz-edbak aus
+`tools/referenzdatensatz/referenz/` · Erklärung v1.0: Tags `web-v1.0.0`,
+`uhr-v…`, `android-v1.0.0`; danach der Betriebsübergang, Welle 1 (R65).
 
 ### Betriebsübergang (nach v1.0, keine Phase)
 
-Öffnung in Wellen über die Betriebsarten (R41) · Verteilung der Clients
-über Connect-IQ-Store und Play Store (setzt Mengenbremse und Mengengrenze
-aus P5 voraus, E-R45-6) · halbjährliche Probe-Wiederherstellung.
+Öffnung in Wellen über die Betriebsarten (R41) · **Produktionsfreigabe im
+Play Store mit Welle 1** (R65; setzt Mengenbremse und Mengengrenze aus P5,
+die MDR-Abgrenzung und die Rechtsunterlagen nach R41 voraus — der interne
+Test-Track läuft seit Schritt 6) · **mit Welle 1 entfällt die
+Seitenladung**: Karte „NAdoku für Android", `apk.php`, Handbuch 10.1 und die
+Deploy-Ausnahme `apk/` (R65) · Verteilung der Garmin-Uhr über den
+Connect-IQ-Store (R41) · halbjährliche Probe-Wiederherstellung.
 
 ## 4. Parallelität und Sperren
 
@@ -503,6 +595,7 @@ und die Backlog-Nummern verlangen die Gegenproben aus Abschnitt 2.2.
 | Wear-OS-Gerätetest zu allem | S4-Rest zu **Paket E** (`HauptActivity.kt`, `strings.xml`, Manifest) — E geht zuerst. Die alte Sperre „S4-Rest zu S5“ ist erfüllt: Vertragsabschnitt 1a steht |
 | — | Backlog 21 (43 Restfunde quer durch `server/`) zu jedem laufenden `server/`-Paket |
 | — | S8 zu S4-Rest und S7 (`einstellungen.php`, `admin_*.php`, `update.php`, Handbuch) — S8 erst nach beiden |
+| S9-Umsetzung zur S8-Umsetzung (verschiedene Seiten), wenn beide Konzepte ihre Berührungen benennen (R73) | S8 und S9: Stylesheet, Stammdaten- und Einstellungsseiten — wer zuerst mergt, der andere zieht nach (K7); S9-Konzept erst nach dem S8-Konzept (Nr. 74) |
 
 **Merge-Reihenfolge auf `main`:** ein Push je Paket nach Freigabe (K7);
 nach jeder Migration `update.php`.
@@ -512,7 +605,15 @@ nach jeder Migration `update.php`.
 Jeder offene Punkt steht genau einmal. Nummern 63–67 sind für den
 S4-Zweig reserviert (dort heute 59–63); 68–79 sind mit Fassung 16, 80–83 mit
 Fassung 21 und 84–88 mit Fassung 22 angelegt; **89–92 kamen aus S7 und S5/C,
-93–97 mit Fassung 25 aus S5** (Pakete A, W und der Vorbereitung).
+93–97 mit Fassung 25 aus S5** (Pakete A, W und der Vorbereitung); **98–113
+mit Fassung 26** (98–100 aus der Planung v1.0, 101–113 die Problemsammlung
+für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt).
+
+> Die drei aus Paket E standen dort zunächst als 90–92 und mussten beim
+> Zusammenführen mit Fassung 26 weichen: 89–92 waren schon an S7 und S5/C
+> vergeben. Wer auf einem Zweig eine Nummer vergibt, ohne den Stand des
+> Rahmenplans zu kennen, vergibt sie zweimal — die Nummer steht hier, nicht
+> im Zweig.
 
 | Nr. | Punkt (kurz) | gehört zu | Bemerkung |
 |---|---|---|---|
@@ -520,17 +621,17 @@ Fassung 21 und 84–88 mit Fassung 22 angelegt; **89–92 kamen aus S7 und S5/C,
 | 17 | Mengenbremse `ingest.php` | P5 | Grundsatzfrage zuerst (R19); Messung liegt |
 | 19 | `$title` in `einsatz_loeschen.php` ungenutzt | Backlog-Runde | zusammen mit 21 |
 | 21 | 43 A4-Restfunde sichten (mit 18) | Backlog-Runde | Felder mit Vertrags- oder Uhrberührung nur nach Vertragsabgleich (R21) |
-| 23 | Vertrag nennt Reanimationsart `beginn`, die keiner annimmt | P6 | mit dem Vertragsreview (R12) |
+| 23 | Vertrag nennt Reanimationsart `beginn`, die keiner annimmt | P7 | mit dem Vertragsreview (R12, R71) |
 | 36 | Prüfmittel: Klassennamen, die nur JavaScript sucht | Backlog-Runde | Prüfmittel |
 | 37 | Konto, das über Jahre wächst | P5 | S2 hat die Mengen beantwortet; Rest sind Speichergrenzen je Konto (R37.10) |
 | 38 | `nb_offen_gesamt()` zählt über Zeilen | Backlog-Runde | kleine Optimierung |
 | 40 | 55 Altklassen der Streichliste austragen | Backlog-Runde | vor dem nächsten CSS-Umbau |
 | 41 | Sechs Klassen ohne Regel | Backlog-Runde | Gestaltungsentscheidung mit Mockup |
 | 42 | Drei Unicode-Symbole im Markup | Backlog-Runde | Gestaltungsentscheidung |
-| 43 | GPS-Spur und Phasenkoordinaten im Klartext | P6 (Weg B) und Backlog-Runde (Weg C) | Vorstudie `docs/konzepte/Konzept-V1-Ortsdaten.md`: Weg C (Zusage in `CLAUDE.md` 4, Technik und Datenschutztext ehrlich eingrenzen) jetzt; Weg B (Schlüssel auf das Gerät) entscheidet der R17-Review; drei Fragen an den Auftraggeber in Abschnitt 6 |
+| 43 | GPS-Spur und Phasenkoordinaten im Klartext | P6 (Weg B) und Backlog-Runde (Weg C) | Vorstudie `docs/konzepte/Konzept-V1-Ortsdaten.md`: Weg C (Zusage in `CLAUDE.md` 4, Technik und Datenschutztext ehrlich eingrenzen) jetzt; Weg B (Schlüssel auf das Gerät) entscheidet der R17-Review (R69, Stück 2; eigene R-Nummer nach der Freigaberunde); drei Fragen an den Auftraggeber in Abschnitt 6 — spätestens mit dem Abschluss von P5; die Frage hängt mit dem Notizfeld aus S9 zusammen (Nr. 109) |
 | 44 | Sprungliste bei vielen Rettungsmitteln | Backlog-Runde | Mockup `docs/mockups/N1-sprungliste.html` liegt, Freigabe fehlt |
 | 45 | Dritte Kartengröße | nach v1.0 | ohne Mockup, ohne Bedarf |
-| 46 | Altformat der Sicherung abschaffen | P6 | Stichtag NaDoku 1.0 |
+| 46 | Altformat der Sicherung abschaffen | P7 | Stichtag NaDoku 1.0 (R71) |
 | 47 | Natives `confirm()` fernhalten | Backlog-Runde | Prüfmittel |
 | 48 | Aufbewahrung je Konto | P5 | Admin-Optionen |
 | 49 | Aufbewahrung auf dem Sicherungsziel | P5 | Admin-Optionen, Entscheidung |
@@ -549,7 +650,7 @@ Fassung 21 und 84–88 mit Fassung 22 angelegt; **89–92 kamen aus S7 und S5/C,
 | 84 | Android-App kennt nur `nadoku.gen-em.org` | S4-Rest | R63; Adressfeld und Adress-QR entfallen; mit dem Kopplungsmodul |
 | 85 | Handy-App heißt „Gen-EM NAdoku", Uhr bleibt „NAdoku" | S4-Rest | R63; eine Zeichenkette plus Sichtprüfung |
 | 86 | Statusleiste überlappt die Handy-App | S4-Rest | wahrscheinlich fehlende Fenster-Insets bei `targetSdk 36`; am Gerät prüfen |
-| 87 | Weboberfläche als installierbare Web-App auf Android | Backlog-Runde (Erhebung), Entscheidung in Schritt 10 | heute kein Manifest, kein Service Worker; vor v1.0 klären |
+| 87 | Weboberfläche als installierbare Web-App auf Android | P7 (R70) | Manifest allein, kein Service Worker; Name „NAdoku Web", eigenes Symbol; Erhebung erledigt (R70) |
 | 88 | Kachel „Einsätze je Gerät" in der Zeitraumübersicht der NutzerIn | Backlog-Runde, nach S4-Rest | neue Darstellung: Mockup und Freigabe (R64) |
 | 62 | Logodateien mit alten Farbwerten | Backlog-Runde | `Design.md` 2.5 mitziehen |
 | 63 | Sperrvermerke des Schnitts in der Konto-Sicherung | S4-Rest | `Backup-Format.md`, Kreisläufe |
@@ -565,7 +666,7 @@ Fassung 21 und 84–88 mit Fassung 22 angelegt; **89–92 kamen aus S7 und S5/C,
 | 74 | Bedienhöhe 44 px am Schreibtisch: nötig oder schmaler? | S8 | Entscheidung im S8-Konzept; berührt `CLAUDE.md` 5, `Design.md`, `tools/screenshots/` |
 | 75 | Unterpunkte des Admin-Menüs fett und nicht einklappbar | S8 | mit der Menüstruktur |
 | 76 | Demo-Reset läuft alle 30 Minuten, auch ohne Änderung | Backlog-Runde | erst messen (Laufzeit, Last), dann entscheiden |
-| 77 | Wartungsseite `update.php` in Unterseiten aufteilen | S8 | Schnitt im Konzept; Ort der Migrationsliste hängt an R60 |
+| 77 | Wartungsseite `update.php` in Unterseiten aufteilen | S8 | Schnitt im Konzept; **Unterseite „Migrationen" zeigt nur Ausstehende mit „Ausstehende ausführen", der Torwächter liest dasselbe Register (R66)**; ausgeführte Kennungen bis P5 eingeklappt, danach im Audit-Protokoll; der Wartungsmodus-Schalter (Paket W) zieht auf die Unterseite „Serverbetrieb" |
 | 78 | Wertekasten zeigt Cron-Adresse und Token in Kopplungscode-Größe | S8 | `.codeblock-wert` nutzt `--groesse-5`; zweite Stufe für lange Werte; darf vorab in der Backlog-Runde laufen |
 | 79 | Backup-Optionen: Begriffe und Optionen gewachsen wie Wildwuchs | S8 | Bestandsaufnahme über Kontoseite, Sicherungsseite, Ziele, Komplettsicherung, Wartung |
 | 93 | `AUTH_VERGLEICHSWERT` trägt Kostenfaktor 10, PHP 8.4 legt 12 an | Backlog-Runde | aus S5/A (V-S5-13); 57 gegen 228 ms, heute von der Mindestdauer 0,35 s verdeckt |
@@ -573,6 +674,22 @@ Fassung 21 und 84–88 mit Fassung 22 angelegt; **89–92 kamen aus S7 und S5/C,
 | 95 | Die Android-Rundlauffälle lassen Daten im Admin-Konto zurück | Schritt 6 | 9 Diensttage, 5 Einsätze, 14 439 Punkte; Aufräumen im `@After` oder eigenes Prüfkonto |
 | 96 | Eigene Wartungsmeldung auf Uhr und Handy, `Retry-After` auswerten | nach v1.0 | aus S5/W (E-S5W-08); heute behandeln die Clients das 503 als gewöhnliches 5xx, und das genügt |
 | 97 | Browser-Skripte zeigen den Wartungstext uneinheitlich | Backlog-Runde | aus S5/W (E-S5W-10); `export.js`, `import_ui.js` und `schneiden.js` zeigen ihn, `kopplung.js`, `unlock.js`, `ortsfeld.js` und `ortswahl.js` nicht |
+| 98 | Versionscode-Versatz für das Uhr-Modul | S4-Rest | R65; Play verlangt je APK einen eindeutigen Code, E-S4-02 rechnet für beide Module denselben; eine Zählung bleibt |
+| 99 | Fassungsprüfung auf Klick der Administratorin (GitHub-Releases) | nach v1.0 | R66, Option A2; nur wenn Selbsthoster es verlangen; kein Hintergrundlauf |
+| 100 | Play-API-Upload aus der Auslieferungskette | nach v1.0 | R67; Upload-Schlüssel als GitHub-Secret plus Dienstkonto, wenn die Releases häufiger werden; E-S4-16 dann ergänzen |
+| 101 | Adresssuche im Kartendialog (PS-1) | S9 | Treffer setzt den Pin, Übernahme bleibt eigener Schritt (F1); Geocoding-Quelle erste Prüffrage (R73) |
+| 102 | Weitere Rettungsmittel: Auswahl wird nicht übernommen (PS-2) | S9 | Bug, nur Desktop/Web (F2) |
+| 103 | Kompaktere Buttons Einsatzort/Standort/Zielklinik (PS-3) | S9 | Mockups im Konzept (Fable); hängt an Nr. 74; F3–F6 offen (Abschnitt 6) |
+| 104 | Windenkacheln fehlen bei Nullwert (PS-4) | S9 | maßgeblich ist die Auswahl als Einsatzmittel (F7) |
+| 105 | Hubschrauber-Icon in der linken Leiste (PS-5) | S9 | Varianten im Konzept (Fable, F8) |
+| 106 | Klinik- und Adressvorschläge in einer Liste (PS-6) | S9 | Kliniken nur im Zielklinik-Kontext, höchstens zwei (F9, F10) |
+| 107 | Zielklinik per Koordinaten und Karte, ad hoc (PS-7) | S9 | wie übrige Felder (F11), kein Stammdateneintrag (F12); Migration |
+| 108 | Schloss-Icon und Legende für verschlüsselte Felder (PS-8.1) | S9 | F13 |
+| 109 | Notizfeld verschlüsseln, Suche bleibt (PS-8.2) | S9 | **Zielkonflikt zuerst** (F14/F18); Fable; Bedrohungsmodell, Nr. 43 |
+| 110 | Kachel „Spur" → „GPS-Daten" ohne Punktzahl (PS-9) | S9 | F15; Wortliste |
+| 111 | Neue Rettungsmittel-Arten mit eigenem Icon, ohne Rollen-Vorlagen (PS-10.1) | S9 | F16; Migration |
+| 112 | Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung (PS-10.2) | S9 | gilt nur für den Tag (F17); Suche und Filter müssen greifen |
+| 113 | Rollen unmittelbar nach Auswahl bearbeitbar, Vorlagen nachladen (PS-10.3) | S9 | entfällt für Arten ohne Vorlagen (F19) |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -585,8 +702,8 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | **Prüfliste S5 (12 Punkte)**, darunter: die Bestandsuhr **einmal neu koppeln** (E-S5-42, vorher den Sync leerlaufen lassen), beide Kopplungsmails im Postfach sichten, Antwortgleichheit auf Produktiv nachmessen, die Geräteseite **ohne JavaScript**, drei Punkte nur am Gerät (Verbindungsabriss, Tastensperre, Oberfläche auf zwei Geräteklassen), **ein Update mit Wartungsmodus** und **eine Kopplung mit dem Handbuch in der Hand** (P2-Punkt 4.1) | S5-Abnahme | nach `update.php` |
 | **Freigabe des S5-Abschlusses** — danach löscht R62 die beiden Konzepte (`Konzept-S5-Kopplung-umgekehrt.md`, `…-Zusatz-Wartungsmodus.md`); das Prüfdokument bleibt bis zur abgehakten Prüfliste | Schritt 5 | — |
 | **Merge von Paket E** (Android-Ortung und Dienstende, Android 0.10.1) — muss **vor** den S4-Rest, beide fassen `HauptActivity.kt`, `strings.xml` und das Manifest an | Schritt 5 / Schritt 6 | vor Schritt 6 |
-| Neues NEF-Logo und -Favicon | P3, Logo-Wahl (Platzhalter liegt) | vor P6 |
-| Impressums- und Datenschutztext der Installation über den Editor eintragen | P3 (R32) | vor P6; Datenschutztext dann mit der Grenze der E2E (Nr. 43, Weg C) |
+| Neues NEF-Logo und -Favicon | P3, Logo-Wahl (Platzhalter liegt) | vor P7 (R71) |
+| Impressums- und Datenschutztext der Installation über den Editor eintragen | P3 (R32) | vor P7; für das Datensicherheitsformular der Play Console schon vor dem ersten Track-Release (R65); Datenschutztext dann mit der Grenze der E2E (Nr. 43, Weg C) |
 | Sichtprüfung in WebKit und Firefox (Symbole am Dateiverweis) | P3-Abnahme | gelegentlich |
 | Prüfliste S2 (12 Punkte), darunter **die Probe-Wiederherstellung der ganzen Installation** auf einem Wegwerf-Webspace | S2-Abnahme, danach halbjährlich | wichtigster offener Punkt; blockiert nichts |
 | Zugangsdaten je eines echten FTP-, FTPS- und SFTP-Ziels; ein Klick auf „Verbindung prüfen" | S2 Sicherungsziele | — |
@@ -595,21 +712,34 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | Prüfliste S4 (1, 2, 3, 5) am echten Diensttag | Schritt 1 | nach dem Merge |
 | ~~**Adresse der Connect-IQ-Gerätedateien (`CIQ_GERAETE_URL`)**~~ — **geliefert am 02.09.2026.** `server/geraetemodelle.php` trägt jetzt 325 Teilenummern auf 173 Modelle (Web 12.9.1/12.9.2). Die Adresse selbst steht weiterhin **nicht** im Repositorium — sie liegt seit dem 03.09.2026 in den **Umgebungsvariablen der Arbeitsumgebung**, nicht in einer Datei. Jede neue Sitzung findet sie dort von selbst; eine laufende erbt sie nicht nach, weil Umgebungsvariablen beim Start des Containers hereinkommen | Schritt 2 (S6) | **erledigt** |
 | **Abnahme S6:** je eine Kopplung mit Garmin-Uhr und Handy-App (zeigt die Liste Art und Modell?), dazu eine Sitzung über 30 Minuten mit Bedienung (kein Dialog) und ein Leerlauf darüber (Abmeldung) | Schritt 2 (S6) | nach dem Deploy, zusammen mit `update.php` |
-| **Datenschutzerklärung um die Gerätekennung ergänzen** — seit Web 12.9.0 wird beim Koppeln Art und Modell erhoben; Backlog Nr. 80 macht die Nennung zur Vorbedingung der Auswertung. Der Text entsteht nach R60 aus einer Bestandsaufnahme des gesamten Projekts | Schritt 10, vor v1.0 | vor jeder Auswertung (P5) |
-| **Signaturschlüssel des APK verwahren** — erzeugt am 31.08.2026 (RSA 4096, Zertifikat `078c…ad64`, gültig bis 2056), am 02.09.2026 an den Auftraggeber übergeben; er lag bis dahin nur im Ablagefach der Arbeitssitzung | Schritt 6 und jede spätere Auslieferung | **sofort** — ohne genau diesen Schlüssel ist jede spätere Fassung für Android eine andere App |
+| **Datenschutzerklärung um die Gerätekennung ergänzen** — seit Web 12.9.0 wird beim Koppeln Art und Modell erhoben; Backlog Nr. 80 macht die Nennung zur Vorbedingung der Auswertung. Der Text entsteht nach R60 aus einer Bestandsaufnahme des gesamten Projekts | Schritt 11, vor v1.0 | vor jeder Auswertung (P5) |
+| **Signaturschlüssel des APK verwahren** — erzeugt am 31.08.2026 (RSA 4096, Zertifikat `078c…ad64`, gültig bis 2056), am 02.09.2026 an den Auftraggeber übergeben; er lag bis dahin nur im Ablagefach der Arbeitssitzung; **wird nach R65 als App-Signaturschlüssel bei Play App Signing hochgeladen** — dazu kommt ein Upload-Schlüssel, gleich verwahrt | Schritt 6 und jede spätere Auslieferung | **sofort** — ohne genau diesen Schlüssel ist jede spätere Fassung für Android eine andere App |
 | Data Layer Uhr↔Handy auf **echter Hardware** — zwischen zwei Emulatoren nachweislich nicht prüfbar (die Wear-OS-Companion-App des Telefons ist im Baucontainer nicht zu beschaffen) | Schritt 6 | mit der Wear-OS-Uhr |
 | Dienst-Test mit der Handy-App auf dem S24 (zwei bis drei Runden) | Schritt 6 | nach dem ersten APK |
-| Wear-OS-Uhr für den Gerätetest | Schritt 6 | wenn vorhanden; blockiert nichts |
+| Wear-OS-Uhr für den Gerätetest — jetzt auch für die Wear-OS-Prüfrunde und den Installationstest aus dem Track (R65) | Schritt 6 | vor dem ersten Uhr-Release |
 | **DNS-Eintrag und TLS für `nadoku.gen-em.org`** — die Uhr trägt die Adresse seit Uhr 3.0.0 als **Vorgabewert** (E-R49-8). Ohne DNS und Zertifikat läuft jede frisch aufgesetzte Uhr ins Leere, und zwar ohne dass sie sagen kann, warum | Schritt 5 | **fällig — die Uhr ist ausgeliefert** |
 | ~~Freigabe des S5-Konzepts~~ | Schritt 3 | **erledigt 03.09.2026** — Umsetzung ist gebaut und gemergt |
-| Drei Fragen aus `Konzept-V1-Ortsdaten.md` (Schutzbedarf der Spur; Passwortwechsel bei nicht synchronisierten Uhr-Daten; Stichtag oder rückwirkend) | Nr. 43, P6 | vor dem R17-Review |
+| Drei Fragen aus `Konzept-V1-Ortsdaten.md` (Schutzbedarf der Spur; Passwortwechsel bei nicht synchronisierten Uhr-Daten; Stichtag oder rückwirkend) | Nr. 43, P6 | vor dem R17-Review — spätestens mit dem Abschluss von P5 (R69) |
 | Freigabe des S8-Konzepts und seiner Mockups; darin die Entscheidung zur Bedienhöhe am Schreibtisch (Nr. 74) | Schritt 7 | — |
-| Hosting-Entscheidung (Cron/SSH, DB-Kontingent, `max_user_connections`, DDoS-Schutz, Verschlüsselung at rest) | P5-Konzept | vor Schritt 9 |
-| Staging-Installation samt FTP-Zugang | P5-Beginn | vor Schritt 9 |
+| Hosting-Entscheidung (Cron/SSH, DB-Kontingent, `max_user_connections`, DDoS-Schutz, Verschlüsselung at rest) | P5-Konzept | vor Schritt 10 |
+| Staging-Installation samt FTP-Zugang; **samt Demo-Konto, Referenzdatensatz und Messstand-Konto — Staging ist die Prüfumgebung (R67)** | P5-Beginn | vor Schritt 10 |
+| GitHub-Umgebung „produktion" mit Pflichtfreigabe (Betreiberin) und den FTPS-Zugangsdaten der Produktion als Umgebungsgeheimnisse; GitHub-App auf dem Handy mit Push-Nachrichten; prüfen, ob `CIQ_GERAETE_URL` als CI-Secret taugt (Stufe 1) | R67, Freigabe-Tor | mit dem Aufbau der Kette in P5 |
 | SPF/DKIM/DMARC der Versanddomain, Bounce-Postfach | P5 | vor der P5-Abnahme |
 | Nutzungsbedingungen, AVV, Datenschutzerklärung des Dienstes, ggf. mit rechtlicher Prüfung | Öffnung (R41) | vor der ersten Welle |
-| Planungsgespräch v1.0: Code-Review-Umfang, Aufteilung in Repositorien, Auslieferungskette, Update-Weg (R59, R60) | Schritt 10 | nach P5, vor jedem P6-Paket |
-| Anforderungsgespräch Doku-Neufassung | P6 | vor dem P6-Konzept, kann Teil von Schritt 10 sein |
+| ~~Planungsgespräch v1.0~~ — Festlegungen entschieden als R65–R73 (`docs/konzepte/Konzept-Planung-v1.0.md`); Paketschnitte je Phase (R71) | Schritt 11 | **erledigt 03.09.2026** |
+| ~~Anforderungsgespräch Doku-Neufassung~~ | P7 | **erledigt 03.09.2026 (R72)** |
+| **D-U-N-S-Nummer für die Gen-EM GbR** bei Dun & Bradstreet beantragen (kostenlos, bis zu vier Wochen); dabei klären, ob die GbR als eGbR im Gesellschaftsregister steht — sonst Gesellschaftsvertrag oder Gewerbeanmeldung bereithalten | R65, Play-Console-Organisationskonto | **sofort** — längster Vorlauf im Programm |
+| Google-Konto der GbR als Kontoinhaber (keine private Adresse), Play-Console-Organisationskonto anlegen (25 USD), Identitätsprüfung; Entwicklername und öffentliche Kontaktadresse festlegen | R65 | nach D-U-N-S, vor Schritt 6 |
+| Vorhandenen Signaturschlüssel bei Play App Signing hochladen, Upload-Schlüssel erzeugen und außerhalb des Repositoriums verwahren | R65, Schritt 6 | mit dem ersten Track-Release |
+| Demo-Video des Vordergrunddienstes (Dauer-GPS) **auf echtem Gerät** für die Standort-Deklaration; wer es dreht, ist zu klären | R65, Schritt 6 | vor dem ersten Track-Release, falls der interne Track die Deklaration verlangt (beim Einrichten prüfen) |
+| Datensicherheitsformular der Play Console — setzt die Datenschutzerklärung voraus | R65 | vor dem ersten Release, das es verlangt |
+| **MDR-Abgrenzung nach R41 vorziehen:** vor der Produktionsfreigabe (Welle 1), nicht erst in P8; für den internen Track nach heutiger Einschätzung nicht nötig — beim Einrichten prüfen | R41, R65 | vor Welle 1 |
+| GitHub: `gen-em/nadoku` anlegen (öffentlich, AGPL-3.0), Umgebungen `staging` und `produktion` mit Pflichtfreigabe, Zweigschutz für `main`; nach dem Umzug `gen-em/einsatzdoku-luftrettung` archivieren | R68, P8 | mit dem Umzug in P8 |
+| Fable-Instanz mit Repositoriumszugriff (Claude Code) für den Review in zwölf Sitzungen; `docs/konzepte/Review-R17.md` als Sammelstelle | R17, R69 | Eingang von P6 |
+| Wahl der Symbole für Handy-App und Web-App (gleicher Hubschrauber, zwei Hintergrundfarben, GPS-Nadel / Browser-Marke) aus dem Entwurf im P7-Konzept; iPhone für den Safari-Nachweis | R70, P7 | mit dem P7-Konzept |
+| Drei repräsentative Uhr-Darstellungen benennen (welche Bildschirme) und Handy-Screenshots aus dem Gerätetest mit dem Demo-Konto | R72, P7 | mit dem P7-Konzept |
+| Betriebsakte der eigenen Installation ausfüllen (Hoster, Domain, Mail, Aufsichtsbehörde, zweiter Admin, Ablageort des Wiederanlaufpakets, Play Console) — außerhalb des Repositoriums | R41, R72 | vor der Öffnung |
+| F3–F6 zu PS-3: Screenshot des Ist-Zustands in realer Nutzungsbreite; Client und Zielbreite (Desktop / Tablet quer / hoch); ob die Beginn/Ende-Anzeige Uhrzeiten zeigt; Zusatzmerkmal neben der Farbe (Sonnenlicht, Farbfehlsichtigkeit) | S9, Nr. 103 | vor dem S9-Konzept |
 | Wellenplan der Öffnung | Betriebsübergang | vor der Öffnung |
 | **Prüfliste S7** (`docs/konzepte/Pruefdokument-S7-Backup-Begriff.md`), sechs offene Punkte. Der wichtigste ist **Nummer 4: ein Komplett-Backup aus der Zeit VOR diesem Deploy einspielen** — die Kopfzeile des Dumps ist zugleich Erkennungsmarke, und ob die Vorsorge am echten Bestand trägt, lässt sich nur dort sehen. Dazu die beiden Warnmails (SMTP), die Bedienzustände der Dialoge, der Wiederanlaufweg in einer leeren Datenbank und ein Backup-Umlauf in dasselbe Konto | Schritt 4 (S7) | nach dem Deploy |
 | **Das geplante Komplett-Backup einmal im Betrieb sehen** — Plan auf „täglich", einen Tag warten, danach steht auf der Wartungsseite ein Zeitpunkt und keine Fehlerzeile. Erster Betriebsnachweis für Backlog Nr. 89: Dieser Job lief von Web 12.2.0 bis 12.9.2 nie | Schritt 4 (S7) | nach dem Deploy |
@@ -628,19 +758,19 @@ werden nie neu vergeben.
 | R2 | Phasenfolge P0 → … → P6 mit Zwischenpaketen | überholt durch Abschnitt 3 |
 | R3 | Luftbegriffe nur ersetzen, wo sie Allgemeines meinen; Luftfahrt-Fachfelder bleiben | gilt; Wortliste in Konzept P2, 5; Prüfmittel R28 |
 | R4 | Referenzdatensatz wird generiert, über reguläre Wege eingespielt | erledigt (P1: 16 Diensttage, 87 Einsätze) |
-| R5 | Gespeicherte Namen bleiben; Ausnahmeliste in P6 beschließen | gilt; Liste zugeliefert und leer |
+| R5 | Gespeicherte Namen bleiben; Ausnahmeliste in P7 beschließen (R71) | gilt; Liste zugeliefert und leer |
 | R6 | Backlog-Zuordnung (alt) | überholt durch Abschnitt 5 |
 | R7 | Ordnerumbau vor P3 | gegenstandslos (E-A6-12) |
 | R8 | Gründerfarben präsenter | erledigt in P3 (`Design.md`) |
 | R9 | Registrierung in drei Betriebsarten plus Sicherheitspaket | gilt, P5 (konkretisiert in R37) |
 | R10 | Rollen- und Sichtbarkeitsmodell, auch was der Admin nicht kann | gilt, P5 (R38) |
-| R11 | Kein Migrationspfad; v1.0 liest die 7.x-edbak; Referenzdatei liegt | gilt; Abnahme in P6; seit R60 als einmaliges Einspielen über ein Wegwerf-Formular |
-| R12 | Weitere Clients: Basisfähigkeit, Vertragsreview in P6 | gilt; Payloads und Texte erledigt. **Abschnitt 1a in zwei Stufen:** S6 hat ihn auf den heutigen Stand gebracht (Fassung 1.4 — beide Kopplungsformen, was der Server davon speichert, Präfixe der Android-Apps); **S5 schreibt ihn nach E-R49-7 neu**, weil sich der Kopplungsweg selbst umkehrt. Wer 1a liest, liest bis dahin die S6-Fassung |
-| R13 | Versionshistorische Kommentare am v1.0-Schnitt ersetzen | gilt, P6 (Liste Konzept P2, 10.3) |
+| R11 | Kein Migrationspfad; v1.0 liest die 7.x-edbak; Referenzdatei liegt | gilt; Abnahme in P8 (R71); seit R60 als einmaliges Einspielen über ein Wegwerf-Formular |
+| R12 | Weitere Clients: Basisfähigkeit, Vertragsreview in P7 (R71) | gilt; Payloads und Texte erledigt. **Abschnitt 1a in zwei Stufen:** S6 hat ihn auf den heutigen Stand gebracht (Fassung 1.4 — beide Kopplungsformen, was der Server davon speichert, Präfixe der Android-Apps); **S5 schreibt ihn nach E-R49-7 neu**, weil sich der Kopplungsweg selbst umkehrt. Wer 1a liest, liest bis dahin die S6-Fassung |
+| R13 | Versionshistorische Kommentare am v1.0-Schnitt ersetzen | gilt, P6 — im Kommentardurchgang des R17-Reviews (R69) |
 | R14 | Konzepte mit Fable, mechanische Pflege ohne | gilt |
-| R15 | Changelog ab v1.0 als Stichpunkte | gilt, P6 |
-| R16 | Doku-Neufassung zu v1.0 mit Screenshots; Anforderungsgespräch vorher | gilt, P6 |
-| R17 | Bug- und Sicherheitsreview mit Fable vor v1.0 | gilt, Eingang von P6 |
+| R15 | Changelog ab v1.0 als Stichpunkte | gilt, P7 (R71) |
+| R16 | Doku-Neufassung zu v1.0 mit Screenshots; Anforderungsgespräch vorher | gilt; Anforderungen R72, Umsetzung P7 |
+| R17 | Bug- und Sicherheitsreview mit Fable vor v1.0 | gilt, Eingang von P6; Umfang und Form nach **R69** |
 | R18 | Konzept im Projektraum, Umsetzung in Claude Code | gilt |
 | R19 | Mengenbremse `ingest.php`: Grundsatzfrage und vier Randbedingungen; Messung liegt | gilt, P5 |
 | R20 | Sofortpaket Nr. 22 (Altersfeld maskieren) | erledigt (Web 7.2.1) |
@@ -648,13 +778,13 @@ werden nie neu vergeben.
 | R22 | Papierkorb in beiden Sicherungen | erledigt (S1, Web 8.0.0) |
 | R23 | Zwischenpaket S1 | erledigt |
 | R24 | Regressionspflicht: beide Kreisläufe je Phase, 0 unerklärt | gilt, dauerhaft |
-| R25 | Demo-Konto dauerhaft, einzige E2E-Ausnahme; auf der Kontoseite gesperrt | gilt; P5 und P6 führen es mit |
+| R25 | Demo-Konto dauerhaft, einzige E2E-Ausnahme; auf der Kontoseite gesperrt | gilt; P5, P6 (Review prüft die Konstruktion) und P7 (neues Demo-Passwort mit der Umbenennung) führen es mit |
 | R26 | Backlog-Zuordnung nach P1 | überholt durch Abschnitt 5 |
 | R27 | Prüfmittel Wiederherstellungsprobe und Papierkorb-Mischfall | gilt, dauerhaft |
 | R28 | Prüfmittel Wortliste | gilt, dauerhaft |
 | R29 | Uhr-Umbenennung in P6 | erledigt vorzeitig (R48, Uhr 2.0.0) |
 | R30 | Nacharbeit zu P2 statt Backlog | erledigt |
-| R31 | Support-Adresse konfigurierbar (P5), Namensbeispiele raus (P6), Farbnamen bleiben | gilt |
+| R31 | Support-Adresse konfigurierbar (P5), Namensbeispiele raus (P6, im Review R69), Farbnamen bleiben | gilt |
 | R32 | Impressum und Datenschutz als editierbare Seiten | erledigt in P3; Felder in die Admin-Optionen (P5) |
 | R33 | Servicemodell mit Abonnements | gilt, P5 |
 | R34 | Zwischenpaket S2 | erledigt |
@@ -663,12 +793,12 @@ werden nie neu vergeben.
 | R37 | Konto-Lebenszyklus und Registrierungs-Sicherheitspaket (elf Punkte) | gilt, P5 |
 | R38 | Support-Rolle, Admin-TOTP, Audit, Dashboard im Minimalumfang | gilt, P5 |
 | R39 | Zentrale Stammdaten entfallen; Regionen-Modell verworfen | gilt, P5; Regionen als Nr. 71 festgehalten |
-| R40 | Deploy-Umbau: Staging ab P5, Neuaufsetzen am P6-Schnitt, CI-Prüftor, Torwächter | gilt |
-| R41 | Recht und Betreiberorganisation vor der Öffnung; Öffnung in Wellen | gilt |
+| R40 | Deploy-Umbau: Staging ab P5, Neuaufsetzen am P8-Schnitt, CI-Prüftor, Torwächter | gilt; (1) läuft, (2) ab P5-Beginn, (3) und (4) in P8 — (4) präzisiert durch R67 |
+| R41 | Recht und Betreiberorganisation vor der Öffnung; Öffnung in Wellen | gilt; Prüfung in P8 (R71); MDR-Abgrenzung vor Welle 1 (R65); Betreiberhandbuch generisch mit Notfall-FAQ, Zugänge in der Betriebsakte außerhalb des Repositoriums (R72) |
 | R42 | Gerätekennung beim Koppeln | Uhr-Seite erledigt (1.9.0); **Speicherung erledigt (Web 12.9.0, S6)** — drei Spalten statt zwei, begründet im Changelog; Auswertung P5 (Backlog 80) |
 | R43 | Zwischenpaket S3 | erledigt |
 | R44 | Inhaltsschlüssel führt eine Inaktivitätsfrist wie die Sitzung | **erledigt (Web 12.9.0, S6)** — als Aufräumen, nicht als Behebung des Dialogs (E-S6-4): Der Fristablauf kostete ein stilles Neu-Entpacken, keinen Dialog. Der Dialog kommt vom tabweisen `sessionStorage`, bleibt und steht jetzt im Handbuch |
-| R45 | Zwischenpaket S4 mit E-R45-1 bis E-R45-13 | in Arbeit (Schritte 1 und 6) |
+| R45 | Zwischenpaket S4 mit E-R45-1 bis E-R45-13 | in Arbeit (Schritte 1 und 6); **E-R45-6 ersetzt durch R65** |
 | R46 | Keine Apple Watch; P7 entfällt | gilt |
 | R47 | Garmin-Uhr-Auslieferung vorgezogen | erledigt (Uhr 1.10.1 bis 1.11.1, Web 9.15.0) |
 | R48 | Uhr heißt NAdoku, echte Anwendungs-ID | erledigt (Uhr 2.0.0) |
@@ -682,12 +812,21 @@ werden nie neu vergeben.
 | R56 | S7: Verb „sichern", Symbolname und `admin_sicherungen.php` bleiben | gilt (F16) |
 | R57 | Überlappende aktive Diensttage: Hinweis im Browser (F-S4-D, Weg c) | gilt, S4-Rest |
 | R58 | Android-Bedienhöhe 48 dp in beiden Modulen; `CLAUDE.md` 5 ergänzen | gilt, S4-Merge |
-| R59 | Vor v1.0 ein Planungsgespräch: Umfang des Code-Reviews, Aufteilung in mehrere Repositorien, Auslieferungskette; Ergebnis ist das P6-Konzept | gilt, Schritt 10 |
-| R60 | Ab v1.0 keine Rückwärtskompatibilität, auch bei Updates; v1.0 beginnt mit dem Neuaufsetzen; eine ältere Sicherung wird einmal über ein Wegwerf-Formular eingespielt, danach nie wieder. Der Update-Weg der Installation (Selbstprüfung gegen das Repositorium, Benachrichtigung, Einspielen selbst oder per FTP, Sichtbarkeit der Migrationsliste) wird in der Planung v1.0 entschieden | gilt, Schritt 10 |
+| R59 | Vor v1.0 ein Planungsgespräch: Umfang des Code-Reviews, Aufteilung in mehrere Repositorien, Auslieferungskette; Ergebnis sind die Konzepte P6–P8 (R71) | vorgezogen und entschieden: R65–R73 (Fassung 26); Schritt 11 |
+| R60 | Ab v1.0 keine Rückwärtskompatibilität, auch bei Updates; v1.0 beginnt mit dem Neuaufsetzen; eine ältere Sicherung wird einmal über ein Wegwerf-Formular eingespielt, danach nie wieder. Der Update-Weg der Installation (Selbstprüfung gegen das Repositorium, Benachrichtigung, Einspielen selbst oder per FTP, Sichtbarkeit der Migrationsliste) ist mit **R66** entschieden | gilt; Update-Weg entschieden (R66) |
 | R61 | Zwischenpaket S8 „Einstellungen, Administration und Wartung": ergebnisoffene Sichtung und Neuordnung vor P5, mit Konzept und Mockups; die Sicherungsoptionen, die Menüstruktur und die Aufteilung der Wartungsseite gehören hinein | gilt, Schritt 7 |
 | R62 | Konzeptablage `docs/konzepte/` mit Lebenszyklus: Statusblock und Push nach jedem Arbeitspaket, damit andere Instanzen den Stand sehen; nach Freigabe des Abschlusses Erledigt-Zeile hier und Löschung des Konzepts; Prüfdokument bleibt bis zur abgehakten Prüfliste; Bestand bis S3 in `docs/konzepte/erledigt/` | gilt (F16), Regel in 2.2 |
 | R63 | Die Android-App kennt nur `nadoku.gen-em.org`, fest und nicht änderbar: Adressfeld, Adress-QR (E-S4-15) und Adresswahl entfallen, Selbsthoster bauen ein eigenes APK. E-R45-2 und E-R49-8 gelten für Android insoweit nicht mehr; die Garmin-Uhr behält Vorgabewert und Einstellung. Dazu: Handy-App heißt „Gen-EM NAdoku", Wear-OS-Uhr bleibt „NAdoku" | gilt, S4-Rest (Nr. 84–86) |
 | R64 | **Herkunft und Gerät je Einsatz** (Beschluss 02.09.2026 zu Nr. 83, Weg b): **(1)** Geräteart und Modell werden beim Anlegen als Momentaufnahme an `missions` und `rest_segments` kopiert, in die Sicherung aufgenommen, der Bestand per Migration aus `devices` nachgefüllt; Trennen bleibt Löschen (R47). **(2)** `origin` bekommt eigene Werte: `watch` bleibt für die Garmin-Uhr, neu `android`, `wear` und `schnitt` neben `manual` und `import`, gesetzt beim Anlegen aus Geräteart und `client_ref`-Präfix; Feldkatalog, Export- und Backup-Format, Kreisläufe (R24) und Referenz ziehen nach. **(3)** Sichtbar im Betriebslage-Dashboard je Installation (Nr. 80, P5) **und** je NutzerIn als Kachel der Zeitraumübersicht (Nr. 88). Keine neue Erhebung über R42 hinaus — dieselben Werte, festgehalten; die Datenschutzerklärung nennt es (R41, Abschnitt 6) | gilt; Speicherung S4-Rest, Dashboard P5, Kachel Nr. 88 |
+| R65 | **Store-Verteilung in zwei Stufen** (Beschluss 03.09.2026, E-PV-1; ersetzt E-R45-6): Play-Console-Organisationskonto der Gen-EM GbR (D-U-N-S); **interner Test-Track ab Schritt 6** als Regelweg für den bekannten Kreis, Handy und Uhr unter einem Eintrag; **Produktionsfreigabe erst als Welle 1** des Betriebsübergangs (R41), nach P5 und MDR-Abgrenzung; Versionscode je Modul mit Versatz (E-S4-02 bleibt eine Zählung, Nr. 98); vorhandener Signaturschlüssel wird App-Signaturschlüssel bei Play App Signing, getrennter Upload-Schlüssel — der Schlüssel liegt danach auch bei Google (R17); Seitenladung bleibt bis zur Produktionsfreigabe und entfällt mit Welle 1; Connect IQ unverändert. Begründung in `docs/konzepte/Konzept-Planung-v1.0.md`, E-PV-1 | gilt; Konto sofort, Track in Schritt 6, Produktion Betriebsübergang |
+| R66 | **Update-Weg ab v1.0** (Beschluss 03.09.2026, E-PV-2; beantwortet R60): keine Selbstprüfung auf neue Fassungen, kein Selbst-Update — die Installation ändert ihren Code nie selbst, neuer Code kommt nur über die Auslieferungskette (R40, R67); **Produktion nur auf ausdrückliche Auslösung der Betreiberin, nie automatisch**, damit vorher Backups geprüft werden können; Wartungsseite zeigt nur ausstehende Migrationen mit „Ausstehende ausführen", der Torwächter liest dasselbe Register, ausgeführte Kennungen ab P5 im Audit-Protokoll; Migrationsregister beginnt bei v1.0 neu. Selbsthoster: Release-Archiv, FTP, Migrationen von Hand (Betreiberhandbuch). Fassungsprüfung auf Klick als Nr. 99 nach v1.0. Begründung E-PV-2 | gilt; Unterseite in S8 (Nr. 77), Audit in P5, Neubeginn des Registers in P8 |
+| R67 | **Auslieferungskette** (Beschluss 03.09.2026, E-PV-3; präzisiert R40 (4)): `main` deployt automatisch auf Staging, das zugleich Prüfumgebung ist (Demo-Konto, Referenzdatensatz, Messstand-Konto); ein Release-Tag startet den Produktiv-Lauf, der in der GitHub-Umgebung „produktion" auf die **Freigabe der Betreiberin** wartet — die Produktiv-Zugangsdaten liegen nur dort; der freigegebene Lauf **stößt zuerst das Komplett-Backup an und bricht ohne Erfolg ab**, dann Deploy, Migrationen von Hand (R66); mit dem Wartungsmodus aus Paket W: Wartung an → Backup → Deploy → Migrationen → Wartung aus; **Rollback** = voriger Tag plus Wiederherstellung; **Prüftor in drei Stufen** (je Push statisch und Android-Build, rot = kein Merge; nach Staging-Deploy Kreisläufe, Bilderlauf, Messstand bei Tags, rot = nicht freigabefähig; Produktion nach Freigabe); Android in der CI unsigniert, Signatur und Play-Upload auf dem Rechner der Betreiberin (E-S4-16 bleibt), Play-API-Upload nach v1.0 (Nr. 100). Pflichtfreigaben setzen ein **öffentliches** Repositorium voraus (R68). Begründung E-PV-3 | gilt; gebaut in P5 (R40 (2)), vollständig ab dem neuen Repositorium (R40 (4)) |
+| R68 | **Ein Repositorium, frisch, öffentlich** (Beschluss 03.09.2026, E-PV-4; beantwortet den Repositorien-Teil von R59): v1.0 lebt in **`gen-em/nadoku`** (öffentlich, AGPL-3.0) ohne Git-Historie; `gen-em/einsatzdoku-luftrettung` wird archiviert und verweist weiter. Drei Zählungen bleiben, Tags mit Präfix je Zählung, Pfadfilter in der Kette (R67). `main` nur über Pull-Request mit grüner Stufe 1. Der Umzug ist das letzte P8-Paket **„Repo-Umzug und Inventur"**: Durchsicht von `tools/`, `docs/`, `.github/`, `CLAUDE.md` — was wandert, mit Begründung je Weglassung; `docs/konzepte/erledigt/` bleibt im Archiv. Begründung E-PV-4 | gilt; Umzug in P8, zusammen mit dem Neuaufsetzen |
+| R69 | **Umfang und Form des R17-Reviews** (Beschluss 03.09.2026, E-PV-5): der Review liest **alles** — `server/`, `watch/`, `android/`, `tools/`, `.github/`, Doku — **in zwölf Stücken** mit Fable, als Eingang von P6; Stück 1 ist ein **Bedrohungsmodell** als eigener Abschnitt; gesucht werden Bugs, Sicherheitslücken, ungebrauchter Code, Karteileichen, Probleme; dazu der **Kommentardurchgang** — keine Verweise auf Beschlüsse, Backlog-Nummern, Fassungen oder Konzepte mehr im Code (R13 und R31 gehen darin auf). Funde in `docs/konzepte/Review-R17.md`, zwei Wege: **kritisch → Sofortpaket, alles andere → Pflichtpaket in P6**; der Auftraggeber entscheidet je Fund in einer Freigaberunde; der P6-Paketschnitt folgt ihr. Vorbedingungen: Nr. 43-Fragen beantwortet, P5 und S9 gemergt. Begründung E-PV-5 | gilt; Eingang von P6 |
+| R70 | **Web-App-Manifest** (Beschluss 03.09.2026, E-PV-6; erledigt die Erhebung zu Nr. 87): die Weboberfläche wird als installierbare Web-App ausgeliefert — **Manifest allein, kein Service Worker** (Chrome auf Android verlangt seit Version 108 keinen; kein Cache, keine alten Dateien), **in P7 mit der Umbenennung**, Name „NAdoku Web", eigenes Symbol (gleicher Hubschrauber wie die Handy-App, andere Hintergrundfarbe, Browser-Marke; der Tracker bekommt eine GPS-Nadel); Entwurf im P7-Konzept. Nachweis am S24 mit Chrome, Samsung Internet und Firefox sowie auf einem iPhone (Safari) — für iPhone-NutzerInnen die einzige App-Form. R44 gilt unverändert. Begründung E-PV-6 | gilt; P7 |
+| R71 | **Drei Phasen vor v1.0** (Beschluss 03.09.2026, E-PV-7): **P6 Review und Bereinigung** (Fable-Eingang; Sofort-, Pflicht- und Aufräumpakete, Kommentardurchgang, Weg B) · **P7 Gesicht v1.0** (Umbenennung, Vertrag v1, Doku-Neufassung, Manifest, Changelog, Backlog, Altformat, Kommentarregel) · **P8 Schnitt** (Neuaufsetzen, Register neu, Repo-Umzug mit Inventur, Kette im neuen Repositorium, Rechtsunterlagen, Abnahme R11, Erklärung v1.0). Je Phase ein Konzept nach K1 mit eigenem Paketschnitt; P6 → P7 → P8, nichts parallel. Frühere „P6"-Nennungen sind nach `docs/konzepte/Konzept-Planung-v1.0.md` 6.2.8.5 zugeordnet | gilt; Schritte 12–14 |
+| R72 | **Anforderungen an die Doku-Neufassung** (Beschluss 03.09.2026, E-PV-8; beantwortet das Anforderungsgespräch aus R16): vier Dokumente nach Zielgruppe — Handbuch (NutzerIn), Betreiberhandbuch mit Notfall-FAQ und Betriebsakte-Vorlage (generisch, ohne Zugänge), Installation und Selbsthosting, Technik mit Bedrohungsmodell — dazu der Vertrag; Markdown mit Sprungmarken; **das Handbuch reist als statisches HTML mit jedem Release** in die Installation (Link „Hilfe"), nicht von GitHub zur Laufzeit; Screenshots erzeugt (1920×1080, 414×896), Uhr drei Simulatorbilder, Handy aus dem Gerätetest; kurz und prägnant — je Aufgabe ein Bild, Referenz im Anhang, keine Fassungsgeschichte; Abnahmemaß höchstens ein Drittel des heutigen Umfangs. Begründung E-PV-8 | gilt; Umsetzung P7 |
+| R73 | **Problemsammlung als S9** (Beschluss 03.09.2026, E-PV-9): Schritt 8 „S9 — Einsatzbearbeitung und Rettungsmittel", Konzept nach K1 mit Fable (Mockups PS-3/PS-5, Zielkonflikt PS-8.2 als Fable-Schritte), Backlog 101–113, Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`; Konzept nach dem S8-Konzept (Nr. 74), Umsetzung parallel zulässig; P5 setzt S9 nicht voraus, P6 schon; Zielkonflikt PS-8.2 geht in das Bedrohungsmodell ein (Nr. 43, R69); erste Prüffrage Geocoding-Quelle (PS-1). Schritte 8–13 → 9–14 | gilt; Konzept nach Go des Auftraggebers |
 
 ## 8. Erledigt — Kurzübersicht
 
@@ -988,3 +1127,4 @@ beide sind die dokumentierten Grenzen. *Reste:* Prüfliste in Abschnitt 6.
 | **23** | **02.09.2026** | **Statuszeilen 1 und 2 auf den Stand von `main`:** S4-Merge und S6 sind gemergt (Web 12.9.2, Android 0.7.7); beide Migrationen warten auf `update.php`. Als Nächstes laufen Schritt 3 (S5-Konzept, Fable) und Schritt 4 (S7, Opus) parallel |
 | **24** | **03.09.2026** | **S7 erledigt** (Schritt 4, Web 12.9.3/12.9.4): „Sicherung“ heißt überall „Backup“ — 642 → 167 Fundstellen in `server/`, Handbuch 78 → 0, Historie unberührt; Entscheidungen E-S7-1 bis E-S7-4 (Bindestrich-Komposita, Kommentare gehen mit, offene Backlog-Punkte ja, `tools/` mit zwei Messgrundlagen als Ausnahme). Fünf Funde, die eine mechanische Ersetzung zerstört hätte, darunter die Kopfzeile des Komplett-Backup-Dumps, die zugleich Erkennungsmarke ist. Dazu **Backlog Nr. 89**: Das geplante Komplett-Backup lief von Web 12.2.0 bis 12.9.2 nie — eigene Korrekturstufe. Konzept nach R62 gelöscht, Prüfdokument bleibt. Zwei Zuarbeiten in Abschnitt 6. **Berichtigt:** die Standzeile im Kopf, die seit Fassung 23 „Web 12.4.2“ nannte, während Abschnitt 3 schon 12.9.2 sagte |
 | **25** | **03.09.2026** | **S5 gebaut und gemergt** (Schritt 5, Web 13.0.0–13.2.0, Uhr 3.0.0; PR #28 und #29): Die Kopplung läuft umgekehrt — das Gerät zeigt den Code, das Web nimmt ihn entgegen, das Gerät bestätigt. Dazu ein Verfahrenswechsel, der nicht im Plan stand (Geräteschlüssel bcrypt → SHA-256, E-S5-42, die Bestandsuhr koppelt einmal neu), der **Wartungsmodus** als Zusatzpaket W (Web 13.2.0, 503 statt 500 während eines Updates) und ein stiller Datenverlust im Upload, der älter ist als S5 (Web 13.0.1). Backlog 66 erledigt (`watch/` läuft durch die Wortliste), 89–92 aus S7 und S5/C, **93–97 neu**. **Vier Migrationen warten auf `update.php`** — die aus S5 ist die dringende, ohne sie endet jede Kopplung in einem 500. **Paket E** (Android 0.10.1) ist gebaut, aber nicht gemergt; es geht vor den S4-Rest. Die Freigabe des Abschlusses und damit die Löschung der Konzepte nach R62 steht aus. |
+| **26** | **03.09.2026** | **Schritt 11 (Planung v1.0) vorgezogen und entschieden** (Konzept `docs/konzepte/Konzept-Planung-v1.0.md`): **R65** Store-Verteilung in zwei Stufen — interner Play-Test-Track ab Schritt 6, Produktion mit Welle 1; Organisationskonto der Gen-EM GbR, Versionscode-Versatz (Nr. 98), Signaturschlüssel zu Play App Signing, Seitenladung bis zur Produktionsfreigabe; sieben Zuarbeiten, D-U-N-S sofort; E-R45-6 ersetzt; Abschnitt 1 und Betriebsübergang angepasst · **R66** Update-Weg: keine Selbstprüfung, kein Selbst-Update, Produktion nur auf Handauslösung, nur ausstehende Migrationen sichtbar (Nr. 77 damit für S8 beantwortet), Register beginnt bei v1.0 neu (Nr. 99) · **R67** Auslieferungskette: Staging automatisch und Prüfumgebung, Freigabe- und Backup-Tor, Rollback, Prüftor in drei Stufen, Android-Signatur außerhalb der CI (Nr. 100) · **R68** Repositorium: eines, frisch, öffentlich, `gen-em/nadoku`; P8-Paket „Repo-Umzug und Inventur" · **R69** Review-Umfang: alles in zwölf Stücken, Bedrohungsmodell zuerst, Kommentardurchgang ohne Beschluss- und Fassungsverweise, zwei Wege für Funde (Sofortpaket / Pflichtpaket P6), Paketschnitt nach der Freigaberunde; R13 und R31 gehen darin auf · **R70** Web-App-Manifest: Manifest allein, in P7, „NAdoku Web" mit eigenem Symbol; Nr. 87 als Erhebung erledigt · **R71** Phasenschnitt: P6 Review und Bereinigung, P7 Gesicht v1.0, P8 Schnitt — Schritt 11 (alt) in drei Schritte geteilt, alle P6-Nennungen zugeordnet · **R72** Doku-Anforderungen: vier Dokumente nach Zielgruppe, Handbuch reist mit dem Release als HTML, erzeugte Screenshots, kurz und prägnant; Betreiberhandbuch generisch mit Notfall-FAQ und Betriebsakte · **R73** Problemsammlung vom 03.09.2026 als **Schritt 8 „S9 — Einsatzbearbeitung und Rettungsmittel"** (Nr. 101–113, Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`, Konzept mit Fable nach dem S8-Konzept); **Schrittnummern 8–11 → 9–12, dazu die neuen Schritte 13 und 14**. Torwächter in P5 hängt am Wartungsmodus aus Paket W. **Berichtigt:** der Absatz zu Nr. 83 im Planungsschritt nannte den Punkt als offen, obwohl Fassung 22 ihn als R64 entschieden hatte. Abschnitte 1, 2, 3, 4, 5, 6, 7 entsprechend; Backlog 98–113 angelegt. |
