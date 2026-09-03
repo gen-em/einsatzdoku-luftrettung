@@ -14,7 +14,7 @@ geschrieben, nicht für die Instanz am Code.
 
 | | |
 |---|---|
-| Stand | 03.09.2026 — **E1 fertig** (Android 0.8.1, mit Bilderlauf), E2 und E3 offen |
+| Stand | 03.09.2026 — **E1 und E2 fertig** (Android 0.9.0), E3 offen |
 | Zweig | `claude/s5-paket-e-android` |
 | Erhoben an | Zweigstand von `main` 696449d (Web 12.9.4, Android 0.7.7, Uhr 2.0.0) |
 
@@ -53,8 +53,12 @@ das jetzt so.
 | Der **`AbstractMethodError`** auf Android 8–10 | kein solches Gerät; der Befund ist aus der Plattform-Schnittstelle **abgeleitet**, nicht beobachtet | E1-12 |
 | Die **drei Meldungs-IDs** nebeneinander | `dumpsys notification` fällt aus | E1-10 |
 | Ob der **Data Layer** die Standmeldung wirklich zustellt | keine Wear-OS-Uhr, keine Telefonseite (`android/LIESMICH.md` 7) | E1-11 |
+| **Wann der Nachsende-Job anläuft** (Doze, Samsungs Akkusteuerung) | `cmd jobscheduler run -f` bräuchte einen Emulator | E2-2, E2-3 |
+| Ob der Job einen **Neustart** übersteht | nachstellen geht nur mit einem Neustart | E2-4 |
+| Ob ein **Dienstende von der Uhr** ankommt | keine Uhr | E2-6 |
+| Ob der Sendelauf beim **Wegwischen** der App abbricht | Prozessverwaltung des Herstellers | E2-1 |
 
-### 1.3 Die Diagnose des Vorfalls — zur Hälfte beantwortet
+### 1.3 Die Diagnose des Vorfalls — beantwortet, und anders als vermutet
 
 **Beantwortet am 03.09.2026 vom Auftraggeber:**
 
@@ -62,44 +66,59 @@ das jetzt so.
 |---|---|---|
 | Am Handy oder an der Uhr beendet? | **am Handy** | **H1 (Kette B3) ist ausgeschlossen** — die Uhr war es nicht |
 | Fehlermeldung? | **keine** | passt auf jede der übrigen Ketten; 0.7.7 hat keinen Weg, eine zu zeigen |
-| „Alles gesendet" oder „Rückstand N Pakete"? | **kein Rückstand** | passt auf **H3** (Kette B5): 400-Antwort, Paket als `fehlerhaft` markiert und aus Warteschlange **und** Anzeige genommen |
+| „Alles gesendet" oder „Rückstand N Pakete"? | **kein Rückstand** | sah zunächst nach **H3** aus — der Blick auf den Server hat das widerlegt, siehe Nachtrag |
 
-**Damit ist B-S5Z-06 der belegte Fehler**, nicht mehr nur ein Nebenfund: Die
-App sagt „Alles gesendet", während beim Server ein Segment offen bleibt. Für
-E2 heißt das, dass **E-S5Z-12** — die Zeile „N Pakete vom Server abgewiesen" —
-nicht Beigabe ist, sondern die Abnahme.
+**Nachtrag 03.09.2026 — der Server hat entschieden, und er widerspricht der
+ersten Lesart.** Abgefragt wurden alle Ruhesegmente ohne `final`:
 
-**Der Vorbehalt gehört dazu und wird nicht weggelassen:** Der Blick in die App
-erfolgte *später*, nicht im Augenblick des Beendens. Ein Rückstand, den ein
-späterer Dienst inzwischen weggeräumt hat, sähe heute genauso aus — das wäre
-H2 mit später Nachlieferung. Unterschieden wird das an **einer** Stelle:
+```sql
+SELECT u.email, s.client_ref, s.started_at, s.ended_at, s.final
+  FROM rest_segments s JOIN users u ON u.id = s.user_id
+ WHERE s.final = 0 AND s.deleted_at IS NULL
+ ORDER BY s.id DESC LIMIT 20;
+```
 
-> **Offen, und nur am Server zu beantworten:** Ist das Segment von damals
-> **heute noch** offen (`final = 0`, `ended_at IS NULL`)? Dann war es H3.
-> Ist es inzwischen geschlossen, war es H2.
->
-> ```sql
-> SELECT client_ref, started_at, ended_at, final FROM rest_segments
->  WHERE user_id = ? ORDER BY id DESC LIMIT 5;
-> ```
->
-> Ebenfalls offen: `adb logcat -s NAdoku` auf Zeilen „Sendelauf: … fertig"
-> nach dem Zeitpunkt des Beendens. **Beides blockiert E2 nicht** — E2 behebt
-> H2 und H3 gleichermaßen.
+**Das Segment vom 02.09. steht nicht darin.** Es ist also inzwischen
+geschlossen — ein späterer Dienst hat es nachgeliefert. Damit ist **H3
+ausgeschlossen** und **H2 (Kette B1/B2) der belegte Fehler**: Der
+Abschluss-Upload kam im Augenblick des Beendens nicht durch (kein Netz, oder
+der Prozess starb mit der weggewischten App), und es gab **keinen zweiten
+Versuch** — bis der nächste Dienst lief.
+
+Der Vorbehalt aus der ersten Fassung dieses Abschnitts hat also gegriffen:
+„Alles gesendet" in der App war eine Beobachtung von **später**, nach der
+Nachlieferung, und nicht von damals. Wer nur die App gefragt hätte, wäre bei
+H3 gelandet.
+
+**Was das für E2 heißt:** Die Abnahme sind die Punkte 1 und 2 des Ablaufs 5.1
+— den Vordergrunddienst halten, bis der Lauf zurück ist, und einen
+Nachsende-Job planen, wenn etwas liegen bleibt. `E-S5Z-12` (die Zeile
+„N Pakete vom Server abgewiesen") bleibt richtig und wird gebaut, ist aber
+**nicht** der belegte Fehler, sondern Vorsorge gegen den Fall, der hier
+nicht eingetreten ist.
+
+**Nebenbefund aus derselben Abfrage, nicht Paket E:** Zwei Konten
+(`philipp@gen-em.org` und `philipp@chadid.net`) tragen je ein offenes Segment
+mit **derselben** `client_ref` `r-1785863592` und demselben `started_at`
+(04.08.2026 17:13:12). Die Eindeutigkeit im Schema ist
+`UNIQUE (device_id, client_ref)`, nicht `(user_id, client_ref)` — zwei Geräte
+dürfen dieselbe Kennung tragen. Ob das hier ein doppelt gekoppeltes Gerät ist
+oder zwei Installationen mit gleicher Zufallszahl, ist von außen nicht zu
+sagen. **Gemeldet, nicht bewertet** — es gehört zu `server/`, nicht zu Paket E.
 
 ---
 
 ## 2. Was maschinell geprüft wurde — mit Mittel **und** Zahl
 
-Alles am Stand von E1 (Android 0.8.1), **nach** der letzten Änderung gefahren,
+Alles am Stand von E2 (Android 0.9.0), **nach** der letzten Änderung gefahren,
 nicht zwischendurch.
 
-| Prüfmittel | Was es gemessen hat | Vorher (0.7.7) | Nachher (0.8.1) |
+| Prüfmittel | Was es gemessen hat | Vorher (0.7.7) | Nachher (0.9.0) |
 |---|---|---|---|
 | `./gradlew build` | Übersetzen beider Module, Lint, alle Prüffälle in beiden Varianten | 0 Fehler, **14** Warnungen | 0 Fehler, **14** Warnungen |
-| Prüffälle `handy` | JUnit/Robolectric, je Variante | **167** (12 übersprungen) | **196** (12 übersprungen) |
+| Prüffälle `handy` | JUnit/Robolectric, je Variante | **167** (12 übersprungen) | **221** (12 übersprungen) |
 | Prüffälle `uhr` | dieselbe | **53** (0) | **64** (0) |
-| `HandyBildTest` | 16 Bildschirme × 3 Breiten, gezeichnet und vermessen | — *(gab es nicht)* | **48 Bilder**, alle paarweise verschieden |
+| `HandyBildTest` | 21 Bildschirme × 3 Breiten, gezeichnet und vermessen | — *(gab es nicht)* | **63 Bilder**, alle paarweise verschieden |
 | `UhrBildTest` | Uhr-Ansichten, gezeichnet und vermessen | 4 Bilder | **6 Bilder**, alle paarweise verschieden |
 | Fehlschläge | beide Module, beide Varianten | 0 | **0** |
 | `werkzeuge/kontraste.py` | Farbpaare gegen WCAG-Zielwert, aus `farben.xml` gerechnet | 16 Paare, 0 darunter | **24 Paare, 0 darunter** |
@@ -107,11 +126,49 @@ nicht zwischendurch.
 | `werkzeuge/stroeme.py` | Ausdünnung gegen die Referenzregel, 5 Ströme | 0 Abweichungen | **0** |
 | `werkzeuge/bildmarken.sh pruefen` | 4 Bildmarken gegen ihre Quelle | 0 Abweichungen | **0** |
 | `tools/wortliste/` Bereich d | sichtbare Texte **beider** Module, 2 Dateien | 3 Treffer, 0 außerhalb | **3 Treffer, 0 außerhalb** |
+| **`SendeRundlaufTest`** gegen echtes `ingest.php` | ob ein Dienstende beim Server **ankommt** | — | **221 von 221, 0 übersprungen**; am Server `rest_segments.final = 1` mit `ended_at`, `days.ended_at` gesetzt |
+
+### Der Rundlauf im Einzelnen — die Abnahme von E2
+
+```bash
+sh tools/referenzdatensatz/einspielen/lokal_einrichten.sh   # WURZEL setzen, s. u.
+mariadb nadoku -e "DELETE FROM pair_codes; INSERT INTO pair_codes …"
+cd android && ANDROID_HOME=/opt/android-sdk ./gradlew :handy:testDebugUnitTest \
+  --rerun-tasks -Pnadoku.rundlauf=http://127.0.0.1:8080/
+```
+
+**Was er hinterlässt** — vor und nach dem Lauf gezählt, weil ein zweiter Lauf
+sonst den Bestand des ersten misst (Backlog 91):
+
+| Konto 1 (admin) | vor dem Lauf | nach dem Lauf |
+|---|---|---|
+| Diensttage | 0 | **9** |
+| Einsätze | 0 | **5** |
+| Ruhesegmente | 0 | **14** |
+| Spurpunkte | 55 861 | **70 300** (+14 439) |
+
+> **Die letzte Zeile ist eine Warnung an die nächste Person.** Zuerst hatte
+> ich `SELECT COUNT(*) FROM track_points` gezählt und 55 861 → **30 610**
+> bekommen — was nach Datenverlust aussah. Es war keiner: Seit Web 10.0.0
+> liegen ältere Punkte als Blob in `track_blobs`, und die Summe über **beide**
+> Ablagen stimmt. Genau davor warnt `CLAUDE.md` 4 zu `spur_lib.php` („Wer eine
+> der beiden Tabellen unmittelbar per SQL liest, zeigt früher oder später eine
+> halbe Spur"), und ich bin trotzdem hineingelaufen. Wer den Bestand zählt,
+> zählt `track_points` **plus** `SUM(n_original)` aus `track_blobs`.
+
+**Zwei Stolperstellen beim Aufbau**, beide nicht in der Anleitung:
+
+1. `lokal_einrichten.sh` leitet `WURZEL` aus dem eigenen Pfad ab. Wer das
+   Skript woanders hinkopiert (etwa aus einem anderen Zweig), muss
+   `WURZEL=<Repo>` mitgeben — sonst startet es einen PHP-Server auf ein
+   Verzeichnis, das es nicht gibt, und bricht wortlos ab.
+2. Der PHP-Server läuft im Hintergrund der Shell. Endet sie, ist er weg;
+   `setsid` hilft.
 
 **Was diese Zahlen *nicht* messen** — die Regel aus `CLAUDE.md` 6, dass eine
 grüne Zahl erst dann ein Beleg ist, wenn sie das Gemessene benennt:
 
-- Die **260 Prüffälle** prüfen die *Entscheidungen*: die Zustandsmaschine mit
+- Die **285 Prüffälle** prüfen die *Entscheidungen*: die Zustandsmaschine mit
   eingespeister Zeit, die Genauigkeitsschwelle, den Rundlauf des
   Nachrichtenformats. Sie prüfen **nicht**, dass ein Rückruf des Systems
   eintrifft, dass ein Handy vibriert oder dass ein Text auf einem Bildschirm
@@ -123,9 +180,9 @@ grüne Zahl erst dann ein Beleg ist, wenn sie das Gemessene benennt:
 - Die **Wortliste** las 2 Dateien: `handy/…/strings.xml` und
   `uhr/…/strings.xml`. Sie hat die Kotlin-Quellen **nicht** angesehen; ein
   Text, der dort fest verdrahtet stünde, fiele nicht auf.
-- Der **`SendeRundlaufTest` ist übersprungen** (12 von 196). Er ist die
-  Abnahme von **E2**, nicht von E1; ohne laufende Installation überspringt er
-  sich selbst.
+- Der **`SendeRundlaufTest` ist im normalen Lauf übersprungen** (12 von 221).
+  **Mit laufender Installation ist er gefahren** — siehe die eigene Zeile
+  unten; er ist die Abnahme von E2.
 
 ---
 
@@ -191,6 +248,25 @@ GPS: Tiefgarage oder Handy in eine Metallbox.
 | **E1-16** | *(mit Wear-OS-Uhr)* Laufenden Dienst mit Phasenknöpfen ansehen, während das Handy nichts aufzeichnet | „keine Ortung · keine Aufzeichnung" steht **oben** in der Zustandszeile, dort wo sonst Phase und Zeit stehen | Die Zeile fehlt — dann greift B-S5Z-17 noch, oder die Standmeldung kommt nicht an |
 | **E1-14** | Zwölfstundendienst mit E1 | Wächter und Sendetakt laufen durch; **Akkuverbrauch notieren** (Backlog 82) | Dienst abgeräumt („Apps im Tiefschlaf") |
 
+## 4a. Prüfliste E2 — Dienstende und Nachsenden
+
+Dies ist die Liste zum **belegten** Fehler. E2-1 und E2-2 sind die beiden
+Punkte, die den Vorfall vom 02.09.2026 abdecken.
+
+| Nr. | Bedienweg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **E2-1** | Dienst beenden **mit Netz**, die App sofort aus der Übersicht wischen | Dauermeldung „Dienst beendet · sende …" für Sekunden, dann **keine** Meldung mehr. App öffnen: „Alles gesendet". **Web: Diensttag mit Dienstende, letztes Segment mit Endzeit** | Im Web steht „–offen" oder der Diensttag hat kein Ende. Oder: eine Meldung „Kein Dienst" bleibt hängen (das wäre B-S5Z-03) |
+| **E2-2** | **Flugmodus an**, Dienst beenden, Flugmodus 5 min später aus, App **nicht** öffnen | Hinweis „Dienst beendet · N Pakete warten auf Netz"; nach dem Flugmodus verschwindet er binnen weniger Minuten von selbst; `logcat` zeigt „Nachsende-Job läuft an" und „fertig". Web zeigt das Ende | Der Hinweis bleibt über 15 min bei Netz stehen → der Job läuft nicht. **Dann Akkueinstellung prüfen** und die Zeit notieren |
+| **E2-3** | Wie E2-2, aber die Zeit bis zum Anlaufen **messen** | eine Zahl | keine — dieser Punkt hat kein Soll. Er liefert die Zahl, die bisher fehlt: wie lange der Job unter Doze braucht |
+| **E2-4** | Wie E2-2, aber das Handy **im Flugmodus neu starten**, entsperren, dann Flugmodus aus | wie E2-2 | nichts gesendet → der persistierte Job fehlt. **Achtung:** Ohne Entsperren läuft er absichtlich nicht — das ist kein Fehler |
+| **E2-5** | Wie E2-2, dann App öffnen und **„Jetzt senden"** antippen | Ergebniszeile „Gesendet · HH:MM", danach „Alles gesendet"; der Knopf verschwindet | „Keine Verbindung" trotz Netz; oder der Knopf bleibt stehen |
+| **E2-6** | *(mit Wear-OS-Uhr)* Dienst am Handy beginnen, **an der Uhr beenden**, Handy in der Tasche | Dauermeldung verschwindet binnen Sekunden, das GPS-Symbol der Statusleiste erlischt, Web zeigt das Ende binnen einer Minute | Meldung und GPS-Symbol bleiben (das wäre B-S5Z-04); oder das Ende kommt erst nach 15 min |
+| **E2-7** | Im Dienst **Flugmodus 20 min** an, dann aus | binnen 60 s ein Sendelauf im `logcat` („Sendelauf (WIEDERVERBINDUNG)"), nicht erst beim Takt | Lauf erst nach bis zu 15 min → der Netzrückruf greift nicht |
+| **E2-8** | Netz mehrfach kurz hintereinander an- und ausschalten | **höchstens ein** Lauf je Minute im `logcat` | ein Lauf je Umschaltung → die Bremse greift nicht |
+| **E2-9** | Während einer Warnung des Wächters den Dienst beenden | Die Warnung (ID 3) verschwindet sofort; nur der Hinweis (ID 2) kann bleiben | Die Warnung vibriert nach dem Dienstende weiter |
+| **E2-10** | Zweimal schnell auf „Beenden" tippen | Es geschieht einmal etwas | zwei Sendeläufe im `logcat`, oder die App hängt |
+| **E2-11** | Nach einem Dienst mit abgewiesenem Paket in die App sehen | rote Zeile „1 Paket vom Server abgewiesen" | „Alles gesendet" bei offenem Segment im Web — das wäre B-S5Z-06 unverändert. *(Ein 400 lässt sich nicht bestellen; dieser Punkt fällt an, wenn er anfällt)* |
+
 ### Was die Punkte messen sollen, das noch keine Zahl hat
 
 Drei Zahlen dieses Pakets sind **Vorschläge mit Herleitung**, keine Messungen.
@@ -201,6 +277,7 @@ Sie stehen und fallen mit E1-3, E1-6 und E1-7:
 | Z-S5Z-01 Erstfix | 120 s | E1-3 — Zeit bis zum ersten brauchbaren Fund |
 | Z-S5Z-02 Signalverlust | 60 s | E1-6 — Zeit, nach der die Warnung kam, gegen das Gefühl „jetzt fehlt zu viel" |
 | Z-S5Z-07 Streuung | 100 m | E1-14 — wie oft sie über einen ganzen Dienst greift (steht bisher „blind gewählt" im Code) |
+| Z-S5Z-06 Backoff | 30 s | E2-3 — wie lange der Job unter Doze **tatsächlich** braucht |
 
 ---
 

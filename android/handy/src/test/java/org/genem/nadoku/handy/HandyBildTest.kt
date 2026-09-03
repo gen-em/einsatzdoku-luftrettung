@@ -131,6 +131,9 @@ class HandyBildTest {
         ortungSeitMin: Int = 0,
         modus: Modus = Modus.MIT_PHASENKNOEPFEN,
         rueckstand: Int = 0,
+        abgewiesen: Int = 0,
+        sendeergebnis: Sendeergebnis? = null,
+        sendelaufLaeuft: Boolean = false,
         einsatzLaeuft: Boolean = false,
         laufendePhase: Int = Phasen.FREI,
     ): @Composable () -> Unit = {
@@ -153,6 +156,10 @@ class HandyBildTest {
             serverBasis = "https://einsatz.beispieldomain.de/",
             logoWahl = LogoWahl.LUFT,
             rueckstand = rueckstand,
+            abgewiesen = abgewiesen,
+            sendeergebnis = sendeergebnis,
+            sendelaufLaeuft = sendelaufLaeuft,
+            aufJetztSenden = {},
             aufModus = {}, aufBeginnen = {}, aufBeenden = {},
             aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
         )
@@ -192,6 +199,21 @@ class HandyBildTest {
         ),
         "laufend-nur-aufzeichnen" to dienst(
             laeuft = true, ortung = Ortungsstand.OK, modus = Modus.NUR_AUFZEICHNEN,
+        ),
+
+        // -- Was das Senden anzeigt (E2, E-S5Z-12) --
+        "sende-abgewiesen" to dienst(abgewiesen = 1),
+        "sende-laeuft" to dienst(rueckstand = 2, sendelaufLaeuft = true),
+        "sende-kein-netz" to dienst(
+            rueckstand = 2,
+            sendeergebnis = Sendeergebnis(Sendeausgang.KEIN_NETZ, "12:41"),
+        ),
+        "sende-schluessel-weg" to dienst(
+            rueckstand = 2,
+            sendeergebnis = Sendeergebnis(Sendeausgang.SCHLUESSEL_ABGEWIESEN, "12:41"),
+        ),
+        "sende-gesendet" to dienst(
+            sendeergebnis = Sendeergebnis(Sendeausgang.GESENDET, "12:41"),
         ),
 
         // -- Nebenbildschirme --

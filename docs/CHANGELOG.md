@@ -14,6 +14,98 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.9.0] — 2026-09-03
+
+### Android — Was gesendet werden soll, wird gesendet
+
+Der Auftraggeber beendete am 02.09.2026 einen Dienst am Handy. Die App zeigte
+keinen Fehler und keinen Rückstand; im Web stand der Diensttag trotzdem ohne
+Ende da. Der Blick in die Datenbank hat es aufgeklärt: Das Segment ist heute
+geschlossen, wurde also **später** nachgeliefert — von irgendeinem folgenden
+Dienst. Der Abschluss-Upload selbst war im Augenblick des Beendens nicht
+durchgekommen, und **es gab keinen zweiten Versuch**.
+
+Der Grund stand in drei Zeilen, in dieser Reihenfolge: Sendefaden starten,
+`stopForeground`, `stopSelf` — ohne dazwischen zu warten. Der Lauf lief danach
+in einem Prozess **ohne Vordergrunddienst** weiter, und den darf Android
+jederzeit abräumen; wer die App direkt nach „Beenden" wegwischte, verlor ihn
+sicher. Kam er wegen fehlenden Netzes nicht durch, endete er mit
+„später erneut" — und es gab kein Später: Außerhalb eines laufenden Dienstes
+existierte kein Zeitgeber, der noch einmal angeklopft hätte. Erst der nächste
+Dienst sendete wieder, sein erster Takt eine Viertelstunde nach dem Start.
+
+**Der Dienst bleibt jetzt im Vordergrund, bis der Lauf zurück ist.** Die
+Dauermeldung sagt in dieser Zeit „Dienst beendet · sende …". Was danach
+geschieht, hängt am Ergebnis: Ist alles durch, verschwindet jede Meldung. Ist
+etwas liegen geblieben, wird ein **Nachsende-Job** eingeplant und ein stiller,
+wegwischbarer Hinweis gestellt — „Dienst beendet · 2 Pakete warten auf Netz".
+Der Job läuft, sobald Netz da ist, überdauert einen Neustart des Telefons und
+löscht den Hinweis, wenn er fertig ist. Er benutzt den `JobScheduler` und
+damit ein Bordmittel: `WorkManager` wäre eine neue Abhängigkeit gewesen und
+setzt intern ohnehin auf denselben Planer.
+
+**Bei einem abgewiesenen Schlüssel (401) wird ausdrücklich *kein* Job
+geplant.** Wiederholen hilft dort nicht; es hilft nur eine neue Kopplung, und
+die kann nur ein Mensch. Ein Job, der es trotzdem alle dreißig Sekunden
+versucht, verbrennt Akku für ein sicheres Nein. Der Hinweis sagt stattdessen,
+was zu tun ist.
+
+**Ein Dienstende von der Uhr beendet den Vordergrunddienst jetzt auch.**
+Bisher stand im Empfänger genau eine Bedingung — starten, wenn ein Dienst
+läuft. Beendet hat er ihn nie: Die Ortung lief weiter, der Akku leerte sich,
+und gesendet wurde erst beim nächsten Takt. Die Entscheidung liegt jetzt in
+einer reinen Funktion mit vier Zeilen, und eine davon ist die Vorsicht, ohne
+die es abstürzt: Ohne laufenden Vordergrunddienst wird nichts angefasst — ein
+Stopp-Befehl an einen Dienst, den es nicht gibt, startet ihn erst, und aus dem
+Hintergrund wirft das ab Android 8 eine Ausnahme.
+
+**Das Netz meldet sich jetzt selbst.** Kommt es während eines Dienstes zurück,
+wird sofort gesendet statt bis zum nächsten Takt zu warten — höchstens aber
+einmal je Minute: Ein flatterndes Mobilfunknetz meldet die Wiederverbindung im
+Sekundentakt, und jeder Lauf kostet mindestens eine Anfrage mit
+bcrypt-Prüfung am Server. Damit ist ein Auslöser gebaut, der seit S4
+deklariert und nie benutzt war — und die Berechtigung `ACCESS_NETWORK_STATE`,
+die ebenso lange unbenutzt im Manifest stand, hat ihren Nutzer.
+
+**Alle Sendeläufe laufen jetzt auf einem einzigen Faden.** Bisher startete
+jeder Anlass seinen eigenen: Takt und Dienstende aus dem Vordergrunddienst,
+Phasenwechsel und Einsatzabschluss aus der Oberfläche. Der Kommentar dazu
+sagte, die Läufe überlappten nicht — und meinte damit nur den Takt. Zwei Läufe
+auf demselben Puffer waren möglich und nur deshalb harmlos, weil der Server
+jede Nachricht mehrfach verträgt. Mit dem Nachsende-Job wäre ein dritter Weg
+dazugekommen; die Zusicherung wird deshalb jetzt gemacht statt kommentiert.
+Nebenbei erledigt das die Reihenfolge beim Nachsenden: Ein älteres Paket kann
+nicht mehr nach einem abschließenden ankommen.
+
+**Und die Anzeige verschweigt nichts mehr.** Antwortet der Server auf ein
+Paket mit 400, wird es nicht wiederholt — richtig so, es ist inhaltlich
+kaputt. Es fiel damit aber auch aus dem Rückstand **und** aus der Anzeige: Die
+App sagte „Alles gesendet", während beim Server ein Segment offen blieb. Jetzt
+steht dort in Rot „1 Paket vom Server abgewiesen". Dazu ein Knopf **„Jetzt
+senden"**, wenn etwas aussteht, und eine Ergebniszeile nach jedem Lauf
+(„Gesendet · 12:41" / „Keine Verbindung · wird nachgeholt" / „Schlüssel
+abgewiesen · Gerät neu koppeln"). Ein **Weg**, ein abgewiesenes Paket
+loszuwerden, ist bewusst nicht dabei — ansehen, ausleiten oder verwerfen
+braucht eine Entscheidung darüber, was mit den Daten geschieht (Backlog 90).
+
+Die Rückfrage vor dem Dienstende sagt jetzt die Wahrheit: „Alles Offene wird
+abgeschlossen und gesendet — **ohne Netz, sobald es wieder da ist**." Vorher
+versprach sie das Senden ohne jede Einschränkung.
+
+**Was bewusst stehen bleibt:** Der Job läuft erst nach dem ersten Entsperren
+des Telefons. Die Zugangsdaten liegen in der anmeldungsgeschützten
+Speicherung, und der Planer startet Jobs für Apps ohne
+Direct-Boot-Kennzeichnung erst danach. Das ist richtig so und wird nicht
+umgangen.
+
+**Nicht geprüft werden konnte,** wie schnell der Job unter Doze und Samsungs
+Akkusteuerung tatsächlich anläuft, ob der Hinweis nach einem Neustart des
+Telefons wirklich wiederkommt, und ob ein Dienstende von der Uhr auf echter
+Hardware ankommt — alles drei braucht ein Gerät. Belegt ist der Weg dorthin:
+Der Rundlauf gegen eine echte Installation von `ingest.php` schließt Segment
+und Diensttag (`final = 1`, `ended_at` gesetzt), 221 von 221 Prüffällen, keiner
+übersprungen.
+
 ## [Android 0.8.1] — 2026-09-03
 
 ### Android — Ein Bilderlauf für beide Module, und was er im ersten Lauf fand

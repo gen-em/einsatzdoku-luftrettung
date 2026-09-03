@@ -4332,8 +4332,70 @@ außerdem nur noch gestartet, wenn er nicht schon läuft — sonst schob jede
 Uhrnachricht seine Frist vor sich her, und ein von der Uhr geführter Dienst
 sendete bis zum Dienstende gar nicht.
 
-**Nachsenden nach dem Dienstende** kommt mit Paket E2 und ist hier noch nicht
-beschrieben.
+### Dienstende und Nachsenden
+
+*Seit Android 0.9.0 (S5, Paket E2).*
+
+**Das Dienstende hält den Vordergrunddienst, bis der Sendelauf zurück ist.**
+Bis 0.8.1 stand dort: Faden starten, `stopForeground`, `stopSelf` — ohne
+dazwischen zu warten. Der Lauf lief danach in einem Prozess **ohne**
+Vordergrunddienst weiter, und den räumt Android bei Bedarf ab. Kam er wegen
+fehlenden Netzes nicht durch, endete er mit `spaeterErneut`, und ein Später
+gab es nicht: Ausserhalb eines Dienstes existierte kein Zeitgeber. Das ist der
+belegte Fehler des Vorfalls vom 02.09.2026.
+
+Der Ablauf jetzt:
+
+| Schritt | |
+|---|---|
+| 1 | `klammer.beenden()` schliesst Einsatz, Segment und Dienst im Puffer |
+| 2 | Ortung ab, Wächter ab, Netzrückruf ab, Warnung (ID 3) weg |
+| 3 | Dauermeldung „Dienst beendet · sende …" — **der Dienst steht noch** |
+| 4 | DIENSTENDE-Lauf auf dem Sendeausführer |
+| 5 | Rückstand 0 → keine Meldung bleibt. Rückstand > 0 → Nachsende-Job + stiller Hinweis (ID 2). 401 → Hinweis „Gerät neu koppeln", **kein** Job |
+| 6 | `stopForeground`, `stopSelf` |
+
+**Der Nachsende-Job** (`NachsendeDienst`, `JobScheduler`, feste Job-ID) ist
+ein Bordmittel — `WorkManager` wäre eine Abhängigkeit und setzt intern auf
+denselben Planer. Bedingung `NETWORK_TYPE_ANY`, `setPersisted(true)` (dafür
+`RECEIVE_BOOT_COMPLETED`), Backoff exponentiell ab 30 s. **Wann geplant wird,
+steht in einer reinen Funktion** `Nachsenden.planen(bericht, rueckstand,
+dienstLaeuft)` und nirgends sonst:
+
+- nach einem Lauf: nur bei `spaeterErneut`, Rückstand > 0, kein 401, kein
+  laufender Dienst;
+- beim App-Start (`bericht = null`): jeder Rückstand genügt — der Prozess kann
+  gestorben sein, bevor der Job geplant wurde.
+
+Er läuft erst nach dem **ersten Entsperren**: Die Zugangsdaten liegen in der
+anmeldungsgeschützten Speicherung. Kein `directBootAware`.
+
+**Ein Dienstende von der Uhr beendet den Vordergrunddienst.** `HandyHorcher`
+liest `klammer.laeuft()` **vor** und nach `uebernimm()` und fragt
+`Dienstfolge.aus(liefVorher, laeuftNachher, dienstSteht)`. Die dritte Zahl ist
+die Vorsicht: Ohne stehenden Dienst wird nichts angefasst — ein Stopp-Befehl
+an einen Dienst, den es nicht gibt, startet ihn erst, und `startService` aus
+dem Hintergrund wirft ab Android 8.
+
+**Wiederverbindung.** Der Vordergrunddienst meldet
+`registerDefaultNetworkCallback` an; `onAvailable` löst einen Lauf aus,
+höchstens einmal je 60 s. Die Bremse liegt in `Sendetakt` und nicht im
+Rückruf — dort ist sie prüfbar. Damit ist der Auslöser `WIEDERVERBINDUNG` aus
+E-S4-07 gebaut und `ACCESS_NETWORK_STATE` hat seinen Nutzer.
+
+**Ein Sendeausführer, nie zwei Läufe zugleich.** `NAdokuApp` hält einen
+`newSingleThreadExecutor`; Dienst (Takt, Dienstende, Wiederverbindung),
+Oberfläche (Phase, Abschluss, „Jetzt senden") und Nachsende-Job reichen ihre
+Läufe dort ein. Vorher startete jeder Anlass einen eigenen `Thread`, und die
+Zusicherung „die Läufe überlappen nicht" galt nur für den Takt. **Nebenwirkung,
+die zählt:** Damit ist auch die Reihenfolge beim Nachsenden gesichert — ein
+älteres, nicht-finales Paket kann nicht mehr nach einem finalen ankommen.
+
+**Was die Ansicht zeigt** (`abgewiesen()` im Puffer): „Alles gesendet" /
+„Rückstand N Pakete" / **„N Pakete vom Server abgewiesen"** in Rot, dazu ein
+Knopf „Jetzt senden" bei Rückstand und eine Ergebniszeile aus dem letzten
+Lauf. Die 400-Zeile schliesst die Lücke, durch die ein Paket bisher aus
+Warteschlange **und** Anzeige fiel.
 
 ### Was die App an den Server schickt
 

@@ -2359,8 +2359,41 @@ fehlt.
 An der **Wear-OS-Uhr** ist das anders: Dort wird ein Dienst auch bei
 ausgeschaltetem Standort begonnen — am Handgelenk kann die App niemanden
 fragen, und ein wortloses „geht nicht" hülfe nicht weiter. Stattdessen
-vibriert das Telefon, und die Uhr zeigt unten „keine Ortung · keine
-Aufzeichnung".
+vibriert das Telefon, und die Uhr zeigt „keine Ortung · keine Aufzeichnung".
+
+### 10.3 Was beim Dienstende geschieht
+
+*Seit Android 0.9.0.*
+
+Nach „Dienst beenden" steht in der Benachrichtigungsleiste kurz **„Dienst
+beendet · sende …"**. Solange sie da ist, arbeitet die App noch — sie darf in
+dieser Zeit weggelegt, aber nicht abgewürgt werden. Danach gibt es drei
+Möglichkeiten:
+
+| Was zu sehen ist | Was es heißt |
+|---|---|
+| **keine Meldung mehr** | Alles ist beim Server angekommen. Nichts zu tun. |
+| „Dienst beendet · 2 Pakete warten auf Netz" | Es fehlte Netz. Die App holt es nach, sobald wieder eines da ist — auch wenn das Telefon zwischendurch neu startet. Die Meldung verschwindet dann von selbst. |
+| „Dienst beendet · Schlüssel abgewiesen – Gerät neu koppeln" | Der Server hat das Gerät nicht mehr akzeptiert. **Hier hilft Warten nicht:** Das Gerät muss in den Einstellungen neu gekoppelt werden. |
+
+Die mittlere Meldung lässt sich wegwischen — der Nachsendevorgang läuft davon
+unberührt weiter.
+
+> **Nach einem Neustart des Telefons** wartet die Nachlieferung, bis das Gerät
+> das erste Mal **entsperrt** wurde. Das ist Absicht: Vorher kommt die App an
+> ihre eigenen Zugangsdaten nicht heran.
+
+**Auf der Startseite steht, was noch aussteht:**
+
+| Zeile | Bedeutung |
+|---|---|
+| „Alles gesendet" | Der Server hat alles. |
+| „Rückstand 2 Pakete" | Zwei abgeschlossene Pakete sind noch nicht bestätigt. Darunter steht der Knopf **„Jetzt senden"**, falls es schneller gehen soll. |
+| „1 Paket vom Server abgewiesen" *(rot)* | Der Server hat den Inhalt abgelehnt. **Das geht nicht von selbst weg** und wird auch nicht wiederholt — bitte melden; die Daten liegen weiter auf dem Telefon. |
+
+Nach jedem Sendeversuch steht darunter kurz das Ergebnis: „Gesendet · 12:41",
+„Keine Verbindung · wird nachgeholt" oder „Schlüssel abgewiesen · Gerät neu
+koppeln".
 
 ---
 

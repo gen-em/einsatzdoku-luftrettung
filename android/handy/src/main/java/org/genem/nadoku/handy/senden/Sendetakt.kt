@@ -27,7 +27,10 @@ import java.time.Instant
  * DIESE KLASSE HÄLT KEINE UHR UND KEINEN FADEN. Sie beantwortet eine Frage,
  * und deshalb ist sie ohne Zeitverzug prüfbar.
  */
-class Sendetakt(private val abstand: Duration = Duration.ofSeconds(ABSTAND_S)) {
+class Sendetakt(
+    private val abstand: Duration = Duration.ofSeconds(ABSTAND_S),
+    private val wiederverbindungsAbstand: Duration = Duration.ofSeconds(WIEDERVERBINDUNG_ABSTAND_S),
+) {
 
     /** Was den Sendelauf ausgelöst hat. */
     enum class Ausloeser {
@@ -40,7 +43,13 @@ class Sendetakt(private val abstand: Duration = Duration.ofSeconds(ABSTAND_S)) {
         /** Der Dienst wurde beendet. */
         DIENSTENDE,
 
-        /** Das Netz ist wieder da. */
+        /**
+         * Das Netz ist wieder da (E-S5Z-10).
+         *
+         * War bis 0.8.1 deklariert und **nie benutzt** (B-S5Z-05) — ebenso
+         * wie die Berechtigung `ACCESS_NETWORK_STATE` im Manifest. E-S4-07
+         * sah den Auslöser vor; gebaut wurde er nicht.
+         */
         WIEDERVERBINDUNG,
 
         /** Der Takt läuft ab — der einzige Auslöser, der wartet. */
@@ -51,8 +60,23 @@ class Sendetakt(private val abstand: Duration = Duration.ofSeconds(ABSTAND_S)) {
      * @param letzterVersuch wann zuletzt gesendet wurde; `null` = noch nie
      */
     fun faellig(ausloeser: Ausloeser, jetzt: Instant, letzterVersuch: Instant?): Boolean {
-        /* JEDES EREIGNIS SENDET SOFORT. Es sind genau die Augenblicke, in
-         * denen etwas Abgeschlossenes entstanden ist — darauf zu warten,
+        /* DIE WIEDERVERBINDUNG IST EIN EREIGNIS MIT BREMSE (E-S5Z-10).
+         *
+         * Sie kommt nicht von einem Menschen, sondern vom
+         * `ConnectivityManager` — und ein flatterndes Mobilfunknetz meldet
+         * `onAvailable` im Sekundentakt. Jeder Lauf kostet mindestens eine
+         * Anfrage mit bcrypt-Prüfung am Server; ohne Mindestabstand wäre der
+         * Auslöser eine Last, kein Dienst.
+         *
+         * DIE REGEL STEHT HIER UND NICHT IM RÜCKRUF, weil sie hier prüfbar
+         * ist: Diese Klasse hält keine Uhr und keinen Faden. */
+        if (ausloeser == Ausloeser.WIEDERVERBINDUNG) {
+            if (letzterVersuch == null) return true
+            return Duration.between(letzterVersuch, jetzt) >= wiederverbindungsAbstand
+        }
+
+        /* JEDES ANDERE EREIGNIS SENDET SOFORT. Es sind genau die Augenblicke,
+         * in denen etwas Abgeschlossenes entstanden ist — darauf zu warten,
          * bis der Takt abläuft, hieße, es fünfzehn Minuten lang nur auf dem
          * Handy liegen zu haben. */
         if (ausloeser != Ausloeser.TAKT) return true
@@ -63,5 +87,14 @@ class Sendetakt(private val abstand: Duration = Duration.ofSeconds(ABSTAND_S)) {
     companion object {
         /** 15 Minuten — dicht am gemessenen Median der R19-Messung (1 020 s). */
         const val ABSTAND_S = 900L
+
+        /**
+         * Z-S5Z-05: Mindestabstand zweier Läufe aus **Wiederverbindung**.
+         *
+         * Eine Minute. Kürzer, und ein Funkloch am Straßenrand erzeugte einen
+         * Lauf je Laternenmast; länger, und die Wiederverbindung verlöre
+         * ihren Zweck — sie soll das Netz nutzen, solange es da ist.
+         */
+        const val WIEDERVERBINDUNG_ABSTAND_S = 60L
     }
 }

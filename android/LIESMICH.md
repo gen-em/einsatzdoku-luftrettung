@@ -113,20 +113,27 @@ Die APK liegen danach unter
 
 ### Was der Baulauf heute meldet
 
-Stand E1 (Android 0.8.1), `./gradlew build` im Container, 03.09.2026:
+Stand E2 (Android 0.9.0), `./gradlew build` im Container, 03.09.2026:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **14** | **0** |
-| Prüffälle | **196**, davon 12 übersprungen | **64**, davon 0 übersprungen |
-| APK (unsigniert, Release) | **9 637 735 B** | **19 574 450 B** |
+| Prüffälle | **221**, davon 12 übersprungen | **64**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **9 657 735 B** | **19 574 450 B** |
 
-Zusammen **260 Prüffälle** — 40 mehr als der Stand davor (0.7.7: 167 / 53 =
+Zusammen **285 Prüffälle** — 65 mehr als der Stand davor (0.7.7: 167 / 53 =
 220). Sie verteilen sich auf `OrtungswaechterTest` (21),
 `OrtungszuhoererTest` (2), `AusduennerTest` (+5 für `brauchbar()`),
 `NachrichtenformatTest` (+5), `UhrsteuerungTest` (+3), `HandyBildTest` (1 Fall
-für 48 Bilder) und `UhrBildTest` (+3 Fälle, 4 → 6 Bilder). Dass es so viele
+für 63 Bilder), `UhrBildTest` (+3 Fälle, 4 → 6 Bilder) sowie aus E2
+`NachsendenTest` (9), `DienstfolgeTest` (6), `AbgewieseneTest` (5) und
+`SendetaktTest` (+5).
+
+**Mit laufender Installation sind es 221 von 221, 0 übersprungen** — dann
+laufen auch die drei Rundlaufklassen. `SendeRundlaufTest` ist die Abnahme von
+E2: Er belegt am echten `ingest.php`, dass ein Dienstende beim Server ankommt
+(`rest_segments.final = 1`, `ended_at` gesetzt, `days.ended_at` gesetzt). Dass es so viele
 sind, ist kein Übereifer: Paket E ist zu einem großen Teil gerätegebunden,
 und diese Fälle sind das Einzige, was im Container überhaupt läuft
 (Abschnitt 7).
@@ -140,7 +147,7 @@ behoben: `postDelayed(r, token, ms)` gibt es erst ab **API 28**, `minSdk` ist
 26 — vier Lint-Fehler `NewApi`. Der Weg, der ab API 1 trägt, ist
 `postAtTime(r, token, uptimeMillis() + ms)`.
 
-Die APKs sind um 38 824 B (Handy) und 82 656 B (Uhr) gewachsen. Dass die Uhr-APK doppelt so groß ist wie die
+Die APKs sind gegenüber 0.7.7 um 58 824 B (Handy) und 82 656 B (Uhr) gewachsen. Dass die Uhr-APK doppelt so groß ist wie die
 Handy-APK, ist kein Fehler: Compose für Wear OS bringt seine eigene
 Bausteinsammlung mit, und beide Module übersetzen `gemeinsam/` mit. Der Fund
 **B-S4-03** im Konzept hält fest, dass das für eine Uhr viel ist und worauf
@@ -183,15 +190,15 @@ legen PNG unter `<modul>/build/bilder/` ab:
 
 ```bash
 ./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  6 Bilder
-./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 48 Bilder
+./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 63 Bilder
 ```
 
 | | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
 |---|---|---|
-| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | 48 — 16 Bildschirme × 3 Breiten (360, 411, 600 dp) |
-| Bedienhöhe | 48 dp je Bild | 48 dp an 45 von 48 (drei liegen unter der Faltkante) |
+| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | 63 — 21 Bildschirme × 3 Breiten (360, 411, 600 dp) |
+| Bedienhöhe | 48 dp je Bild | 48 dp an 60 von 63 (drei liegen unter der Faltkante) |
 | Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**, und was unter der **Faltkante** liegt |
-| Unterscheidbarkeit | alle 6 paarweise verschieden | alle 48 paarweise verschieden, **und je Breite** |
+| Unterscheidbarkeit | alle 6 paarweise verschieden | alle 63 paarweise verschieden, **und je Breite** |
 
 **Warum die letzte Zeile die wichtigste ist (F-P3-AQ).** Der Bilderlauf des
 Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die
@@ -207,7 +214,7 @@ belegen.
 Sinn des Web-Laufs. Die erste Fassung meldete ihn, und die Zahl war wertlos —
 jeder Bildschirm der App ruft `fillMaxSize()`, also gewinnt die Einschränkung
 immer, und ein zu breites Kind wird von Compose **beschnitten statt
-gemeldet**. „Verlangte Breite = Gerätebreite" stand in jeder der 48 Zeilen,
+gemeldet**. „Verlangte Breite = Gerätebreite" stand in jeder Zeile,
 gleich was darin stand. An ihre Stelle sind die zwei Messungen getreten, die
 die **Folge** des Beschnitts dort fassen, wo sie jemanden trifft: Knopffarbe
 an der Bildkante, und Knöpfe unter der Faltkante.
@@ -433,7 +440,21 @@ Zeit; was sie auslöst und was daraus folgt, läuft nicht:
 | **Ob `onProviderDisabled` ankommt** | Der Standort lässt sich hier nicht abschalten, weil es nichts gibt, an dem er anginge | Gerätetest: Schnelleinstellung im laufenden Dienst |
 | **Der `AbstractMethodError` auf Android 8–10** | Kein solches Gerät. Der Befund ist aus der Plattform-Schnittstelle **abgeleitet** | Gerätetest, falls ein Gerät greifbar ist. Ersatzweise der Reflexionsfall — er belegt die Bauform, nicht ihre Wirkung |
 | **Die drei Meldungs-IDs nebeneinander** | `adb shell dumpsys notification` braucht ein Gerät | Gerätetest, mit dem Auge |
-| **Job-Zeiten unter Doze** und Samsungs Akkusteuerung | dasselbe | Gerätetest (gehört zu E2) |
+| **Job-Zeiten unter Doze** und Samsungs Akkusteuerung | dasselbe | Gerätetest |
+
+Und was **E2** dazugelegt hat:
+
+| Nicht prüfbar | Warum | Wo es geprüft wird |
+|---|---|---|
+| **Wann der Nachsende-Job wirklich anläuft** | `JobScheduler` unter Doze verhält sich auf einem Gerät anders als in der JVM; `adb shell cmd jobscheduler run -f` bräuchte einen Emulator, und den gibt es hier nicht | Gerätetest: Flugmodus an, Dienst beenden, Flugmodus aus, Zeit messen |
+| **Ob er einen Neustart übersteht** | `setPersisted` wird vom System über den Neustart getragen; nachstellen lässt sich das nur mit einem Neustart | Gerätetest, ausdrücklich **ohne** die App zu öffnen |
+| **Ob ein Dienstende von der Uhr ankommt** | keine Wear-OS-Uhr, keine Telefonseite des Data Layer | Gerätetest mit Uhr |
+| **Ob der Sendelauf beim Wegwischen der App abbricht** | Prozessverwaltung des Herstellers | Gerätetest: beenden, sofort wegwischen, Web ansehen |
+
+Was **stattdessen** belegt ist: `SendeRundlaufTest` fährt den ganzen Weg gegen
+ein echtes `ingest.php` und prüft am Server nach, dass Segment und Diensttag
+geschlossen sind. Er sagt nichts über Zeitpunkte und nichts über
+Prozesstode — aber alles über die Nachricht selbst.
 
 ### Der Emulator — die Berichtigung von 0.7.2 gilt hier nicht mehr
 

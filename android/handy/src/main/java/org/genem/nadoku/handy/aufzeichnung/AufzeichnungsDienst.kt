@@ -11,6 +11,8 @@ import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.location.Location
 import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -24,6 +26,9 @@ import androidx.lifecycle.LifecycleService
 import org.genem.nadoku.R
 import org.genem.nadoku.handy.HauptActivity
 import org.genem.nadoku.handy.NAdokuApp
+import org.genem.nadoku.handy.senden.Nachsenden
+import org.genem.nadoku.handy.senden.Sendebericht
+import org.genem.nadoku.handy.senden.Sendehinweis
 import org.genem.nadoku.handy.senden.Sendetakt
 import java.time.Instant
 
@@ -89,6 +94,33 @@ class AufzeichnungsDienst : LifecycleService() {
     private var letzterMeldungstext: String? = null
 
     /**
+     * Läuft das Dienstende gerade? (E-S5Z-07)
+     *
+     * Ab hier wird die Dauermeldung **nicht mehr** vom Wächter oder von einem
+     * Punkt überschrieben: Sie sagt „Dienst beendet · sende …", bis der Lauf
+     * zurück ist. Und danach wird sie gar nicht mehr gestellt — genau das war
+     * B-S5Z-03, eine „andauernde" Meldung „Kein Dienst" ohne Dienst dahinter.
+     */
+    private var beendetGerade = false
+
+    /**
+     * Der Rückruf des Netzes (E-S5Z-10, B-S5Z-05).
+     *
+     * `onAvailable` kommt auf einem eigenen Faden des Systems; der Sprung auf
+     * den Hauptfaden ist deshalb kein Stil, sondern nötig — [sendeWenn] fasst
+     * [letzterVersuch] an.
+     */
+    private val netzRueckruf = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(netz: Network) {
+            taktgeber.post { sendeWenn(Sendetakt.Ausloeser.WIEDERVERBINDUNG) }
+        }
+        /* `onLost` bleibt leer: Der nächste Lauf stellt von selbst fest, dass
+         * nichts geht, und meldet `spaeterErneut`. Etwas zu tun, wenn das
+         * Netz WEG ist, hiesse, ohne Netz zu handeln. */
+    }
+    private var netzAngemeldet = false
+
+    /**
      * Ausgeschrieben statt als Lambda, und das ist kein Stil (E-S5Z-05,
      * B-S5Z-01): Auf API 26–29 hat `LocationListener` vier abstrakte
      * Methoden. Begründung in [Ortungszuhoerer].
@@ -102,7 +134,9 @@ class AufzeichnungsDienst : LifecycleService() {
     override fun onCreate() {
         super.onCreate()
         app = NAdokuApp.von(this)
+        steht = true
         kanalAnlegen()
+        netzRueckrufAnmelden()
     }
 
     /**
@@ -140,10 +174,34 @@ class AufzeichnungsDienst : LifecycleService() {
     }
 
     override fun onDestroy() {
+        steht = false
         ortung?.removeUpdates(zuhoerer)
         taktgeber.removeCallbacksAndMessages(null)
+        netzRueckrufAbmelden()
         waechterAbraeumen()
         super.onDestroy()
+    }
+
+    private fun netzRueckrufAnmelden() {
+        if (netzAngemeldet) return
+        try {
+            (getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager)
+                .registerDefaultNetworkCallback(netzRueckruf)
+            netzAngemeldet = true
+        } catch (e: SecurityException) {
+            Log.w(MARKE, "Netzrückruf nicht anmeldbar: ${e.message}")
+        }
+    }
+
+    private fun netzRueckrufAbmelden() {
+        if (!netzAngemeldet) return
+        netzAngemeldet = false
+        try {
+            (getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager)
+                .unregisterNetworkCallback(netzRueckruf)
+        } catch (e: IllegalArgumentException) {
+            // War nicht angemeldet — dann ist nichts zu tun.
+        }
     }
 
     // ---- Senden ------------------------------------------------------------
@@ -189,26 +247,36 @@ class AufzeichnungsDienst : LifecycleService() {
         taktgeber.postAtTime(was, token, SystemClock.uptimeMillis() + inMs)
     }
 
+    /**
+     * Einen Sendelauf anstoßen, wenn der Auslöser fällig ist.
+     *
+     * ÜBER DEN SENDEAUSFÜHRER (E-S5Z-11) und nicht mehr über einen eigenen
+     * `Thread` je Anlass. Der alte Kommentar sagte, die Läufe überlappten
+     * nicht — er galt nur für den Takt; Oberfläche und Dienst starteten
+     * längst nebeneinander (B-S5Z-11).
+     *
+     * UND OHNE NACHPOSTEN DER DAUERMELDUNG. Hier stand
+     * `taktgeber.post { meldungAuffrischen() }`, und das lief auch dann noch,
+     * wenn der Dienst inzwischen gestoppt war: eine „andauernde" Meldung
+     * „Kein Dienst" ohne Dienst dahinter, die niemand wegbekam (B-S5Z-03).
+     * Der Text der Meldung folgt ohnehin dem Wächter — er hat sich durch
+     * einen Sendelauf nie geändert.
+     */
     private fun sendeWenn(ausloeser: Sendetakt.Ausloeser) {
         val jetzt = Instant.now()
         if (!takt.faellig(ausloeser, jetzt, letzterVersuch)) return
         letzterVersuch = jetzt
-        /* Netz gehört nicht auf den Anzeigefaden. Ein eigener Faden je
-         * Sendelauf ist hier richtig: Die Läufe überlappen nicht (der nächste
-         * kommt frühestens in 15 Minuten), und ein Fadenvorrat für einen Lauf
-         * je Viertelstunde wäre Aufwand ohne Gegenwert. */
-        Thread {
-            val bericht = app.sender.sendeAlles()
-            if (bericht.anfragen > 0) {
-                Log.i(
-                    MARKE,
-                    "Sendelauf: ${bericht.anfragen} Anfragen, " +
-                        "${bericht.gesendetePunkte} Punkte, " +
-                        "${bericht.fertigePakete} Pakete fertig, sauber=${bericht.sauber}",
-                )
-            }
-            taktgeber.post { meldungAuffrischen() }
-        }.start()
+        app.sendelauf { bericht -> protokolliere(ausloeser, bericht) }
+    }
+
+    private fun protokolliere(ausloeser: Sendetakt.Ausloeser, bericht: Sendebericht) {
+        if (bericht.anfragen == 0) return
+        Log.i(
+            MARKE,
+            "Sendelauf ($ausloeser): ${bericht.anfragen} Anfragen, " +
+                "${bericht.gesendetePunkte} Punkte, " +
+                "${bericht.fertigePakete} Pakete fertig, sauber=${bericht.sauber}",
+        )
     }
 
     private fun starteImVordergrund() {
@@ -381,22 +449,92 @@ class AufzeichnungsDienst : LifecycleService() {
     private fun minutenSeit(seitMs: Long): Int =
         ((jetztMs() - seitMs) / 60_000L).toInt().coerceAtLeast(1)
 
+    /**
+     * **Das Dienstende hält den Vordergrunddienst, bis der Lauf zurück ist**
+     * (E-S5Z-07, Ablauf 5.1).
+     *
+     * DAS IST DER BELEGTE FEHLER DIESES PAKETS. Bis 0.8.1 stand hier:
+     * Sendefaden starten, `stopForeground`, `stopSelf` — in dieser
+     * Reihenfolge, ohne dazwischen zu warten. Der Lauf lief dann in einem
+     * Prozess **ohne Vordergrunddienst** weiter, und den darf Android
+     * jederzeit abräumen; Samsung tut es besonders gern. Wer die App direkt
+     * nach „Beenden" wegwischte, verlor den Abschluss-Upload — und weil es
+     * keinen zweiten Versuch gab, blieb der Diensttag im Web ohne Ende
+     * stehen, bis der nächste Dienst lief. Die Diagnose des Vorfalls vom
+     * 02.09.2026 hat genau diesen Weg bestätigt (H2, Kette B1/B2).
+     *
+     * Die Zeitlimits des Netzwegs begrenzen die Wartezeit (15 s Verbindung,
+     * 30 s Lesen je Anfrage, `Netzweg.kt`); ein Dienstende braucht rund
+     * zwanzig Anfragen, und im schlechten Fall bricht es früh mit
+     * `spaeterErneut` ab. Ein Typwechsel des Dienstes auf `dataSync` für
+     * diese Sekunden wäre eine weitere Berechtigung für nichts.
+     */
     private fun beenden() {
+        if (beendetGerade) return          // Doppeltes „Beenden" ist ein Klick zu viel, kein Zustand.
+        beendetGerade = true
+
         ortung?.removeUpdates(zuhoerer)
         /* Der Wächter geht als Erstes: Ohne ihn kann keine Warnung mehr
          * hereinkommen, während der Dienst schon abgebaut wird. */
         waechterAbraeumen()
-        taktgeber.removeCallbacksAndMessages(null)
+        taktgeber.removeCallbacksAndMessages(TOKEN_TAKT)
         taktLaeuft = false
+        netzRueckrufAbmelden()
+
+        // Die Meldung sagt jetzt, was geschieht — der Dienst steht noch.
+        meldungStellen(getString(R.string.dienst_meldung_beendet_sendet))
+
         // Dienstende ist ein Auslöser (E-S4-07): Was jetzt noch liegt, soll
         // nicht bis zum nächsten Dienst warten.
-        sendeWenn(Sendetakt.Ausloeser.DIENSTENDE)
-        /* BEKANNTE LÜCKE, DIE E2 SCHLIESST (B-S5Z-03, Kette B1): Der
-         * Sendelauf oben läuft auf einem eigenen Faden weiter, während hier
-         * schon gestoppt wird — und postet danach die Dauermeldung neu, als
-         * gewöhnliche „andauernde" Meldung ohne Dienst dahinter. E1 lässt das
-         * bewusst stehen, statt es halb zu beheben: Der Umbau gehört als
-         * Ganzes zu E2 (Vordergrunddienst halten, Nachsende-Job, Hinweis). */
+        letzterVersuch = Instant.now()
+        app.sendelauf { bericht ->
+            protokolliere(Sendetakt.Ausloeser.DIENSTENDE, bericht)
+            taktgeber.post { nachDemDienstende(bericht) }
+        }
+    }
+
+    /**
+     * Was nach dem Abschluss-Lauf übrig bleibt — auf dem Hauptfaden.
+     *
+     * Drei Ausgänge, und jeder sagt der NutzerIn etwas anderes:
+     *
+     * | Ausgang | Was bleibt |
+     * |---|---|
+     * | alles gesendet | **keine** Meldung. Es gibt nichts zu tun. |
+     * | Rückstand, kein Netz | Nachsende-Job **und** ein stiller Hinweis |
+     * | 401 | Hinweis „Gerät neu koppeln" — **kein** Job |
+     *
+     * Der 401-Fall bekommt bewusst keinen Job: Wiederholen hilft nicht, es
+     * hilft nur eine neue Kopplung, und die kann nur ein Mensch. Ein Job, der
+     * es trotzdem alle 30 Sekunden versucht, verbrennt Akku für ein sicheres
+     * Nein.
+     */
+    private fun nachDemDienstende(bericht: Sendebericht) {
+        val rest = app.puffer.rueckstand()
+        when {
+            bericht.pausiert ->
+                Sendehinweis.stellen(this, getString(R.string.hinweis_schluessel_abgewiesen))
+
+            Nachsenden.planen(bericht, rest, dienstLaeuft = false) -> {
+                Nachsenden.einplanen(this)
+                Sendehinweis.stellen(
+                    this,
+                    resources.getQuantityString(R.plurals.hinweis_warten, rest, rest),
+                )
+            }
+
+            /* Rückstand ohne `spaeterErneut`: Der Lauf hat getan, was ging,
+             * und etwas ist trotzdem liegen geblieben — abgewiesene Pakete
+             * etwa. Ein Job hülfe nicht; die Ansicht zeigt es (E-S5Z-12). */
+            rest > 0 -> Sendehinweis.stellen(
+                this,
+                resources.getQuantityString(R.plurals.hinweis_warten, rest, rest),
+            )
+
+            else -> Sendehinweis.loeschen(this)
+        }
+
+        Log.i(MARKE, "Dienstende abgeschlossen: Rückstand $rest, pausiert=${bericht.pausiert}")
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -473,7 +611,7 @@ class AufzeichnungsDienst : LifecycleService() {
         }
     }
 
-    private fun meldung(): Notification {
+    private fun meldung(text: String = meldungstext()): Notification {
         val oeffnen = PendingIntent.getActivity(
             this, 0,
             Intent(this, HauptActivity::class.java)
@@ -484,7 +622,7 @@ class AufzeichnungsDienst : LifecycleService() {
         return NotificationCompat.Builder(this, KANAL)
             .setSmallIcon(R.drawable.symbol_meldung)
             .setContentTitle(getString(R.string.app_name))
-            .setContentText(meldungstext())
+            .setContentText(text)
             .setContentIntent(oeffnen)
             .setOngoing(true)
             .setSilent(true)
@@ -502,11 +640,18 @@ class AufzeichnungsDienst : LifecycleService() {
      * aussähe.
      */
     private fun meldungAuffrischen() {
-        val text = meldungstext()
+        /* AB DEM DIENSTENDE NICHT MEHR (B-S5Z-03). Ab hier steht „Dienst
+         * beendet · sende …" und soll stehen bleiben, bis der Dienst geht;
+         * danach darf gar nichts mehr gestellt werden. */
+        if (beendetGerade) return
+        meldungStellen(meldungstext())
+    }
+
+    private fun meldungStellen(text: String) {
         if (text == letzterMeldungstext) return
         letzterMeldungstext = text
         (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
-            .notify(MELDUNG_ID, meldung())
+            .notify(MELDUNG_ID, meldung(text))
     }
 
     // ---- Warnung (ID 3, Kanal „Warnungen") ---------------------------------
@@ -598,6 +743,22 @@ class AufzeichnungsDienst : LifecycleService() {
          */
         private val TOKEN_TAKT = Any()
         private val TOKEN_WAECHTER = Any()
+
+        /**
+         * **Läuft der Vordergrunddienst gerade?** (E-S5Z-08)
+         *
+         * Die Marke wird gebraucht, bevor irgendjemand `startService()` oder
+         * `stopService()` ruft: Aus dem Hintergrund — und `HandyHorcher` ist
+         * Hintergrund — wirft `startService` ab Android 8
+         * `IllegalStateException`, und ein Stopp-Befehl an einen Dienst, den
+         * es nicht gibt, **startet ihn erst**, um ihn dann zu beenden.
+         *
+         * `@Volatile`, weil sie im Dienst (Hauptfaden) gesetzt und im
+         * `HandyHorcher` (Dienstfaden des Data Layer) gelesen wird.
+         */
+        @Volatile
+        var steht: Boolean = false
+            private set
 
         fun starten(kontext: Context) {
             ContextCompat.startForegroundService(

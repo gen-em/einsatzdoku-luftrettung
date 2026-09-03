@@ -194,6 +194,9 @@ private fun GekoppelteOberflaeche(
     }
 
     val rueckstand = remember(takt) { app.puffer.rueckstand() }
+    val abgewiesen = remember(takt) { app.puffer.abgewiesen() }
+    val sendelaeuft = remember(takt) { app.sendelaufLaeuft }
+    val sendeergebnis = remember(takt) { sendeergebnis(app.letzterSendebericht) }
 
     val stand = remember(takt, modus, ortungFrei) {
         val laufend = app.klammer.laufenderDienst()
@@ -315,6 +318,13 @@ private fun GekoppelteOberflaeche(
             serverBasis = serverBasis,
             logoWahl = logoWahl,
             rueckstand = rueckstand,
+            abgewiesen = abgewiesen,
+            sendeergebnis = sendeergebnis,
+            sendelaufLaeuft = sendelaeuft,
+            aufJetztSenden = {
+                sendeImHintergrund(app)
+                takt++
+            },
             aufModus = { gewaehlt ->
                 modus = gewaehlt
                 app.einstellungen.letzterModus = gewaehlt
@@ -355,7 +365,32 @@ private fun GekoppelteOberflaeche(
  * Gewartet wird nicht: Ein Bedienschritt darf nicht am Netz hängen.
  */
 private fun sendeImHintergrund(app: NAdokuApp) {
-    Thread { app.sender.sendeAlles() }.start()
+    /* ÜBER DEN SENDEAUSFÜHRER und nicht mehr über einen eigenen `Thread`
+     * (E-S5Z-11): Ein Phasenwechsel während eines laufenden Takt-Laufs
+     * erzeugte sonst zwei Läufe auf demselben Puffer (B-S5Z-11). */
+    app.sendelauf()
+}
+
+/**
+ * Den Bericht des letzten Laufs in das übersetzen, was die Ansicht zeigt
+ * (E-S5Z-12).
+ *
+ * DIE REGEL STEHT HIER UND NICHT IN DER ANSICHT: Eine Compose-Funktion, die
+ * entscheidet, was „Keine Verbindung" heißt, ist weder prüfbar noch
+ * wiederfindbar. Die Reihenfolge ist die der Dringlichkeit — ein abgewiesener
+ * Schlüssel wiegt schwerer als ein abgewiesenes Paket, und beides schwerer
+ * als ein fehlendes Netz, das sich von selbst erledigt.
+ */
+private fun sendeergebnis(lauf: Sendelauf?): Sendeergebnis? {
+    val l = lauf ?: return null
+    val hhmm = Zeit.hhmm(l.am)
+    return when {
+        l.bericht.pausiert -> Sendeergebnis(Sendeausgang.SCHLUESSEL_ABGEWIESEN, hhmm)
+        l.bericht.fehlerhaft > 0 ->
+            Sendeergebnis(Sendeausgang.PAKET_ABGEWIESEN, hhmm, l.bericht.fehlerhaft)
+        l.bericht.spaeterErneut -> Sendeergebnis(Sendeausgang.KEIN_NETZ, hhmm)
+        else -> Sendeergebnis(Sendeausgang.GESENDET, hhmm)
+    }
 }
 
 /**

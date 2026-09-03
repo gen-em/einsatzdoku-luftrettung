@@ -513,6 +513,22 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             null,
         ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
 
+    /**
+     * Pakete, die der Server mit **400** abgewiesen hat (B-S5Z-06).
+     *
+     * WARUM SIE EINE EIGENE ZAHL BRAUCHEN. `alsFehlerhaftMerken` nimmt ein
+     * Paket aus der Warteschlange **und** aus [rueckstand] — beides zu Recht:
+     * Es wird nicht wiederholt (Vertrag 5), und ein Rückstand, der sich nie
+     * abbaut, wäre eine Anzeige ohne Aussage. Die Folge war aber, dass es
+     * **nirgends** mehr auftauchte: Die App sagte „Alles gesendet", während
+     * beim Server ein Segment offen blieb. E-S4-36 hatte die Anzeige dem
+     * Paket D1 zugewiesen; dort ist sie nicht entstanden.
+     */
+    fun abgewiesen(): Int =
+        readableDatabase.rawQuery(
+            "SELECT COUNT(*) FROM paket WHERE fehlerhaft = 1", null,
+        ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+
     /** Hat dieses Paket noch etwas zu senden? */
     fun hatArbeit(p: Paketzeile): Boolean =
         !p.metadatenBestaetigt || p.bestaetigtSeq < punktzahl(p.id)

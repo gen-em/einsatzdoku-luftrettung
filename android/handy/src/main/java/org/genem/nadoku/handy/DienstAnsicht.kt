@@ -25,6 +25,34 @@ import org.genem.nadoku.gemeinsam.Motiv
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.aufzeichnung.Ortungsstand
 
+/**
+ * Wie der letzte Sendelauf ausgegangen ist (E-S5Z-12).
+ *
+ * Die Ansicht bekommt das **fertig entschieden** und nicht als
+ * `Sendebericht`: Sie soll anzeigen, nicht auswerten. Sonst stünde die Regel,
+ * was „Keine Verbindung" heißt, in einer Compose-Funktion und wäre dort
+ * weder prüfbar noch wiederfindbar.
+ */
+enum class Sendeausgang {
+    /** Alles durch. */
+    GESENDET,
+
+    /** Kein Netz oder 5xx — der Nachsende-Job holt es nach. */
+    KEIN_NETZ,
+
+    /** 401. Wiederholen hilft nicht; es hilft eine neue Kopplung. */
+    SCHLUESSEL_ABGEWIESEN,
+
+    /** 400. Der Server hat den Inhalt abgelehnt — er wird nicht wiederholt. */
+    PAKET_ABGEWIESEN,
+}
+
+/**
+ * @param hhmm wann der Lauf war
+ * @param anzahl nur bei [Sendeausgang.PAKET_ABGEWIESEN]: wie viele
+ */
+data class Sendeergebnis(val ausgang: Sendeausgang, val hhmm: String, val anzahl: Int = 0)
+
 /** Was die Dienstansicht anzeigen soll — alles, was sie braucht, in einem Stück. */
 data class Dienststand(
     val laeuft: Boolean,
@@ -77,6 +105,10 @@ fun DienstAnsicht(
     serverBasis: String?,
     logoWahl: LogoWahl,
     rueckstand: Int,
+    abgewiesen: Int = 0,
+    sendeergebnis: Sendeergebnis? = null,
+    sendelaufLaeuft: Boolean = false,
+    aufJetztSenden: () -> Unit = {},
     aufModus: (Modus) -> Unit,
     aufBeginnen: () -> Unit,
     aufBeenden: () -> Unit,
@@ -96,7 +128,10 @@ fun DienstAnsicht(
             verticalArrangement = Arrangement.spacedBy(Abstand.drei),
         ) {
             Karte {
-                Zustandsblock(stand, serverBasis, rueckstand)
+                Zustandsblock(
+                    stand, serverBasis, rueckstand, abgewiesen,
+                    sendeergebnis, sendelaufLaeuft, aufJetztSenden,
+                )
 
                 /* ZWEI SPERREN, IN DIESER REIHENFOLGE (E-S5Z-03). Erst die
                  * Freigabe, dann der Standort: Ohne Freigabe nützt der
@@ -137,7 +172,15 @@ fun DienstAnsicht(
 }
 
 @Composable
-private fun Zustandsblock(stand: Dienststand, serverBasis: String?, rueckstand: Int) {
+private fun Zustandsblock(
+    stand: Dienststand,
+    serverBasis: String?,
+    rueckstand: Int,
+    abgewiesen: Int,
+    sendeergebnis: Sendeergebnis?,
+    sendelaufLaeuft: Boolean,
+    aufJetztSenden: () -> Unit,
+) {
     if (stand.laeuft) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -176,6 +219,60 @@ private fun Zustandsblock(stand: Dienststand, serverBasis: String?, rueckstand: 
         punktfarbe = if (rueckstand > 0) Farbe.orangeTief else Farbe.blau,
         schriftfarbe = Farbe.gedaempft,
     )
+
+    /* WAS DER SERVER ABGEWIESEN HAT, STAND BIS 0.8.1 NIRGENDS (B-S5Z-06).
+     *
+     * Ein Paket mit 400 wird als `fehlerhaft` gemerkt und nicht wiederholt —
+     * das ist richtig (Vertrag 5). Es fiel damit aber auch aus dem Rückstand
+     * und aus der Anzeige: Die App sagte „Alles gesendet", während beim
+     * Server ein Segment offen blieb. Rot, weil hier tatsächlich etwas
+     * verloren ist und niemand es von selbst merkt. */
+    if (abgewiesen > 0) {
+        Zustandszeile(
+            text = androidx.compose.ui.res.pluralStringResource(
+                R.plurals.sync_abgewiesen, abgewiesen, abgewiesen,
+            ),
+            punktfarbe = Farbe.rot, schriftfarbe = Farbe.rotTief,
+        )
+    }
+
+    /* Die Ergebniszeile lebt nur, solange die Ansicht offen ist — sie steht
+     * in `NAdokuApp` und nicht im Puffer. Nach einem Neustart der App gibt es
+     * sie nicht mehr, und das ist richtig: Sie ist die Quittung auf eine
+     * Handlung, kein Zustand. */
+    val ergebnis = sendeergebnis
+    if (sendelaufLaeuft) {
+        Text(
+            text = stringResource(R.string.sync_sendet),
+            color = Farbe.gedaempft, fontSize = 13.sp,
+        )
+    } else if (ergebnis != null) {
+        Text(
+            text = when (ergebnis.ausgang) {
+                Sendeausgang.GESENDET ->
+                    stringResource(R.string.sync_ergebnis_gesendet, ergebnis.hhmm)
+                Sendeausgang.KEIN_NETZ -> stringResource(R.string.sync_ergebnis_kein_netz)
+                Sendeausgang.SCHLUESSEL_ABGEWIESEN ->
+                    stringResource(R.string.sync_ergebnis_schluessel)
+                Sendeausgang.PAKET_ABGEWIESEN ->
+                    androidx.compose.ui.res.pluralStringResource(
+                        R.plurals.sync_ergebnis_abgewiesen, ergebnis.anzahl, ergebnis.anzahl,
+                    )
+            },
+            color = when (ergebnis.ausgang) {
+                Sendeausgang.GESENDET -> Farbe.gedaempft
+                else -> Farbe.rotTief
+            },
+            fontSize = 13.sp,
+        )
+    }
+
+    /* „JETZT SENDEN" NUR, WENN ES ETWAS ZU SENDEN GIBT und gerade kein Lauf
+     * unterwegs ist. Ein Knopf, der nichts tut, ist schlimmer als keiner: Wer
+     * ihn drückt und nichts geschieht, hält die App für kaputt. */
+    if (rueckstand > 0 && !sendelaufLaeuft) {
+        KnopfNeutral(stringResource(R.string.sync_jetzt_senden)) { aufJetztSenden() }
+    }
 }
 
 @Composable

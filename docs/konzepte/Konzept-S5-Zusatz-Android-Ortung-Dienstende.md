@@ -9,9 +9,9 @@ Auftrag des Auftraggebers vom 02.09.2026 nach der Geräteprüfung · Ablage
 > | | |
 > |---|---|
 > | Stand | 03.09.2026 — **freigegeben, Umsetzung läuft** auf Zweig `claude/s5-paket-e-android` |
-> | Paket in Arbeit | **E2** (Dienstende und Nachsenden) |
-> | Erledigt | Freigabe und alle sechs Fragen (E-S5Z-15 bis -21); Prüfstand aufgebaut, Ausgangszahlen gemessen; **E1 (Android 0.8.0)**; **Bilderlauf beider Module (0.8.1)** |
-> | Wo es hakt | **Die Diagnose 1.3 ist zur Hälfte beantwortet** (siehe Abschnitt 8) — H1 ist ausgeschlossen, H3 ist die wahrscheinlichste. Was fehlt, ist ein Blick auf den Server: Ist das Segment heute noch offen? Ursprünglich stand hier: Die Diagnose kann die Umsetzung nicht fahren — sie braucht das S24 und den Produktivserver. Sie liegt beim Auftraggeber und ist Voraussetzung für den *Beleg* in E2, nicht für den *Bau* (E2 behebt alle drei Ketten unabhängig davon). Dazu: kein Emulator im Container (Vorbereitung 8.3), also ist Paket E gerätegebundener als Abschnitt 9.3 annimmt |
+> | Paket in Arbeit | **E3** (aktiver Uhr-Spiegel) |
+> | Erledigt | Freigabe und alle sechs Fragen (E-S5Z-15 bis -21); Prüfstand aufgebaut, Ausgangszahlen gemessen; **E1 (Android 0.8.0)**; **Bilderlauf beider Module (0.8.1)**; **E2 (Android 0.9.0)** |
+> | Wo es hakt | Nichts Blockierendes. Die Diagnose 1.3 ist **beantwortet** (Abschnitt 8): belegt ist H2. Was bleibt: kein Emulator im Container, also ist Paket E gerätegebundener als Abschnitt 9.3 annimmt. Ursprünglich stand hier: Die Diagnose kann die Umsetzung nicht fahren — sie braucht das S24 und den Produktivserver. Sie liegt beim Auftraggeber und ist Voraussetzung für den *Beleg* in E2, nicht für den *Bau* (E2 behebt alle drei Ketten unabhängig davon). Dazu: kein Emulator im Container (Vorbereitung 8.3), also ist Paket E gerätegebundener als Abschnitt 9.3 annimmt |
 > | Fable-Schritt | **keiner** |
 > | Erhoben an | `main`, Commit `c2ac707` (02.09.2026): Android 0.7.7, Web 12.9.2 |
 > | Erhoben aus | dem Repositorium und der Beobachtung des Auftraggebers am Gerät (02.09.2026: Diensttage in der App beendet, im Web noch als laufend gezeigt). Kein Telefon, keine Uhr, kein Server in der Konzeptsitzung — was sich so nicht ermitteln ließ, steht in Abschnitt 10 |
@@ -228,6 +228,7 @@ E-S4-08). Für beide Ketten gibt es dort ein Vorbild:
 | **E-S5Z-26** | **Beim Nachsenden wird die Reihenfolge gesichert** (B5.3). `ingest.php` schrieb beim Upsert `ended_at = VALUES(ended_at)` **bedingungslos**, `final` dagegen mit `GREATEST` — ein nicht-finales Paket, das **nach** dem finalen ankam, setzte `ended_at` auf NULL zurück, während `final = 1` stehen blieb. **Nachtrag 03.09.2026:** S5 Paket A hat den Fund nachgestellt statt geglaubt und dabei festgestellt, dass er **breiter** ist als gemeldet — es traf auch `distance_m` und `ascent_m`, also einen abgeschlossenen Einsatz ohne Ende, ohne Strecke und ohne Anstieg, quittiert mit „ok". Behoben mit `COALESCE(VALUES(x), x)` an allen vier Stellen und mit **Web 13.0.1 gepusht**; die Ingestprobe prüft es seither als Teil 7 (30 Erwartungen statt 24, 0 nicht erfüllt). Der serverseitige Backlog-Kandidat ist damit **erledigt, bevor er eine Nummer bekam**. **Für Paket E ändert das nichts an der Zusage:** Der Nachsende-Job schickt je Paket in Anlagereihenfolge und nie ein älteres nach einem finalen. Der Server verzeiht die falsche Reihenfolge jetzt — sie herzustellen bleibt Aufgabe des Absenders, denn eine zweite Wahrheit über die Reihenfolge wäre genau die Art doppelter Boden, die der Vertrag ohnehin führt (Idempotenz über `client_ref`), und keine Entschuldigung dafür, sie wegzulassen | B5.3; S5 Paket A, Web 13.0.1 |
 | **E-S5Z-27** | **Der Wortlaut bei `OK` heisst „· GPS empfängt", nicht „· GPS ok".** Abschnitt 4.3 sah „ok" vor; Lint meldet dazu `Typos: "ok" is usually capitalized as "OK"` und die Warnungszahl stieg von 14 auf 15. Stummschalten verbietet `CLAUDE.md` 6, und „OK" mitten im Satz ist ein Schreien. „Empfängt" ist ohnehin die bessere Aussage: Es nennt das **Gemessene** — es kommen brauchbare Funde —, statt eine Güte zu behaupten, die diese App gar nicht abstuft. Die Garmin-Uhr hat drei Stufen („gut / ausreichend / zu schwach"), die App hat eine; „gut" zu schreiben hiesse, eine Abstufung zu versprechen, die es nicht gibt | Lint `Typos`; `SyncView.mc` 56–72 |
 | **E-S5Z-28** | **Die Warnung „keine Aufzeichnung" steht auf der Uhr in der Zustandszeile oben**, nicht in der Verbindungszeile unten — und sie **verdrängt** dort Phase und Zeit, statt eine Reihe hinzuzufügen. Gemessen mit `UhrBildTest` (B-S5Z-17): Auf der 192-dp-Uhr ist die laufende Ansicht mit Phasenknöpfen 221 dp hoch; die letzte Reihe liegt unter dem Rand. Drei Bilder mit drei verschiedenen Ortungszuständen kamen **byteweise gleich** heraus, weil keines die Zeile zeigte. Eine Warnung, die genau auf der engsten Uhr ausfällt, ist keine. **Die Reihe wächst dabei nicht** — es ist dieselbe eine Zeile, sie sagt nur etwas Anderes, solange es etwas Wichtigeres zu sagen gibt; der Glasüberlauf aus B-S4-08b kehrt also nicht zurück. Der Preis ist, dass „Phase 3 seit 09:12" währenddessen nicht dasteht, und das ist die richtige Reihenfolge: „Es entsteht gerade keine Spur" schlägt die Phasenzeit, und die Phasenliste ist einen Druck entfernt. **Dieselbe Verlegung gilt für die bestehende Zeile `dienst_schwebt`** — sie stand in derselben Reihe und war auf der kleinen Uhr ebenso unsichtbar | `UhrBildTest`; B-S5Z-17 |
+| **E-S5Z-29** | **Der Sendehinweis (ID 2) ist wegwischbar und still.** Das Konzept sagte es (5.1), die Begründung fehlte: Es gibt an dieser Meldung **nichts zu tun** — der Job arbeitet von selbst. Eine Vibration wäre eine Aufforderung ohne Handlung, und `setOngoing` machte sie zu genau der Meldung, die B-S5Z-03 beklagt: eine andauernde ohne Dienst dahinter. Wer sie wegwischt, hat sie zur Kenntnis genommen; der Job läuft unberührt weiter. **Ausnahme, die dazugehört:** Bei 401 bleibt sie ebenso wegwischbar, obwohl dort etwas zu tun ist — die Anweisung steht auch in der Ansicht (E-S5Z-12), und eine unwegwischbare Meldung, die man nur durch Neukoppeln loswird, wäre eine Geiselnahme | 5.1; B-S5Z-03 |
 
 ---
 
@@ -547,9 +548,9 @@ Prüfmittel **zuletzt** (`CLAUDE.md` 6). Vor E2 die Diagnose aus 1.3.
 | Paket | Stand | Probleme / Lösungen | Entscheidungen |
 |---|---|---|---|
 | Vorlauf | **erledigt** 03.09.2026 | Zwei Werkzeuge, die der Prüfstand braucht (`tools/containeraufbau/`, `…/lokal_einrichten.sh`), liegen nicht auf `main`, sondern nur auf dem S7-Zweig — ohne sie gibt es kein Android-SDK und damit keine Zahl. **Gelöst:** von dort geholt und benutzt, aber **nicht** auf diesen Zweig committet; sie gehören dem S7-Stand und kollidierten sonst beim Merge. Ausgangszahlen gemessen und mit Vorbereitung 8.2 verglichen: **alle acht decken sich** | E-S5Z-15 bis -26 eingetragen |
-| Diagnose 1.3 | **teilweise beantwortet** 03.09.2026 durch den Auftraggeber | Zwei von vier Schritten: **beendet am Handy** (nicht an der Uhr) und **keine Fehlermeldung**; die App zeigte **keinen Rückstand**, also „Alles gesendet". Damit ist **H1 (Kette B3) ausgeschlossen** — die Uhr war es nicht. Übrig bleiben H2 und H3, und die Beobachtung „Alles gesendet bei offenem Segment" **passt auf H3** (Kette B5): Der Server antwortete mit 400, die App markierte das Paket `fehlerhaft = 1` und nahm es aus Warteschlange **und** Anzeige (B-S5Z-06). **Vorbehalt, der dazugehört:** Der Blick in die App erfolgte *später*, nicht im Augenblick des Beendens — ein Rückstand, den ein späterer Dienst inzwischen weggeräumt hat, sähe heute genauso aus. Unterschieden wird das nur am Server: Ist das Segment **heute noch** offen, war es H3; ist es geschlossen, war es H2 mit später Nachlieferung. Schritte 2 und 3 der Diagnose (Logcat, SQL) stehen weiter offen | Der belegte Fehler ist **B-S5Z-06** (400-Pakete sind unsichtbar) — nicht mehr nur ein Nebenfund. E2 zeigt sie (E-S5Z-12); das ist damit **die** Abnahme von E2, nicht eine Beigabe |
+| Diagnose 1.3 | **beantwortet** 03.09.2026 | Vom Auftraggeber: **am Handy beendet**, keine Fehlermeldung, **kein Rückstand** angezeigt — damit ist **H1 (Uhr) ausgeschlossen**. Die App-Beobachtung sah nach H3 aus; der Blick auf den Server hat das **widerlegt**: Das Segment vom 02.09. ist heute **nicht mehr offen**, wurde also später nachgeliefert. **Belegt ist H2 (Kette B1/B2)** — der Abschluss-Upload kam im Augenblick des Beendens nicht durch und wurde nie wiederholt, bis der nächste Dienst lief. Die App-Antwort „Alles gesendet" war eine Beobachtung von *später*; wer nur sie gefragt hätte, wäre bei H3 gelandet | **Die Abnahme von E2 sind 5.1 Punkt 1 und 2** — Vordergrunddienst halten, Nachsende-Job planen. E-S5Z-12 (400-Pakete sichtbar) bleibt richtig, ist aber Vorsorge und nicht der belegte Fehler |
 | E1 | **erledigt** 03.09.2026, Android **0.8.0**, Bilderlauf **0.8.1** | sechs Fundstellen, alle unten | E-S5Z-22 (rot statt orange), E-S5Z-23 (Handler-Token), E-S5Z-27 (Wortlaut „GPS empfängt") |
-| E2 | offen | — | — |
+| E2 | **erledigt** 03.09.2026, Android **0.9.0** | siehe unten | E-S5Z-29 |
 | E3 | offen | — | — |
 
 #### Was in E1 entstanden ist
@@ -578,12 +579,43 @@ Prüfmittel **zuletzt** (`CLAUDE.md` 6). Vor E2 die Diagnose aus 1.3.
 | **Die Trailing-Lambda-Falle:** `Uhrannahme(puffer, klammer) { Modus.X }` band nach dem neuen vierten Parameter an `ortung` statt an `modus` | Zwei Übersetzungsfehler in Prüffällen | Beide Aufrufstellen auf benannte Argumente umgestellt. Der Fehler wäre ohne Typprüfung still gewesen — beide Parameter sind Funktionen |
 | **`marke_rot` als Schrift auf Asphalt trägt 4,12 : 1** und damit unter AA — es trifft die **bestehende** Uhr-Zeile „wartet aufs Handy" | Beim Nachrechnen aller Token für E-S5Z-22 | `marke_rosa` (15,94 : 1), der helle Vertreter derselben Familie. Als **Fläche** mit weisser Schrift trägt dasselbe Rot 4,78 : 1 und bleibt richtig. Neuer Fund **B-S5Z-15** |
 
+#### Was in E2 entstanden ist
+
+| Datei | Was |
+|---|---|
+| `uhr/Dienstfolge.kt` *(neu)* | Die reine Entscheidung STARTEN / BEENDEN / NICHTS (E-S5Z-08) |
+| `senden/Nachsenden.kt` *(neu)* | Planung **und** die reine Entscheidung `planen()`; Job-ID, Backoff |
+| `senden/NachsendeDienst.kt` *(neu)* | `JobService` — dünne Hülle um einen Lauf auf dem Sendeausführer |
+| `senden/Sendehinweis.kt` *(neu)* | Die Meldung ID 2 nach dem Dienstende, still und wegwischbar |
+| `aufzeichnung/AufzeichnungsDienst.kt` | Dienstende hält den Dienst (5.1), Netzrückruf, Laufmarke `steht`, kein Nachposten der Dauermeldung |
+| `NAdokuApp.kt` | Sendeausführer, `letzterSendebericht`, `sendelaufLaeuft`, Planung in `onCreate` |
+| `senden/Sendetakt.kt` | Mindestabstand für `WIEDERVERBINDUNG` (60 s) |
+| `puffer/Puffer.kt` | `abgewiesen()` |
+| `uhr/HandyHorcher.kt` | benutzt `Dienstfolge`, fängt `IllegalStateException` beim Start |
+| `HauptActivity.kt`, `DienstAnsicht.kt` | 5.5: abgewiesene Pakete, „Jetzt senden", Ergebniszeile; `Sendeausgang`/`Sendeergebnis` |
+| `AndroidManifest.xml` | `RECEIVE_BOOT_COMPLETED`, `NachsendeDienst` mit `BIND_JOB_SERVICE` |
+
+**Prüffälle: 260 → 285** (+25): `NachsendenTest` 9, `DienstfolgeTest` 6,
+`AbgewieseneTest` 5, `SendetaktTest` +5. Bilder 54 → 69 (fünf neue
+Sendezustände × 3 Breiten).
+
+**Die Abnahme ist gefahren:** `SendeRundlaufTest` gegen eine echte
+Installation — **221 von 221, 0 übersprungen, 0 Fehlschläge**; am Server
+`rest_segments.final = 1` mit `ended_at` und `days.ended_at` gesetzt.
+
+#### Probleme in E2 und wie sie gelöst wurden
+
+| Was | Wie es auffiel | Lösung |
+|---|---|---|
+| **`--` in einem XML-Kommentar** bricht den Manifest-Zusammenbau | `ManifestMerger2$MergeFailureException` — und die Meldung nennt die Zeile **nicht** | Gedankenstrich durch Komma ersetzt. Zum zweiten Mal in diesem Paket (E1 hatte es in `strings.xml`); der Fehler ist so leicht zu machen wie schwer zu lesen |
+| **Der Bestand des Rundlaufs sah nach Datenverlust aus** — `track_points` fiel von 55 861 auf 30 610 | beim Nachzählen vor/nach dem Lauf | Kein Verlust: Ich hatte **eine der zwei Ablagen** gezählt. Mit `track_blobs` sind es 70 300 (+14 439). Genau der Fehler, vor dem `CLAUDE.md` 4 zu `spur_lib.php` warnt — und ich bin per SQL hineingelaufen |
+| **Der bestehende `SendetaktTest` zählte `WIEDERVERBINDUNG` zu den sofortigen Auslösern** | Prüffall wurde rot | Er ist berichtigt und um fünf Fälle erweitert. Die Regel hat sich nicht gelockert: Dieser eine Auslöser kommt nicht von einem Menschen |
+
 #### Was E1 bewusst stehen lässt
 
-Der Sendelauf beim Dienstende läuft weiter auf einem eigenen Faden, während
-der Dienst schon stoppt (B-S5Z-03, Kette B1). Halb behoben wäre er schwerer zu
-prüfen als gar nicht; der Umbau gehört als Ganzes zu E2 und ist im Code an
-der Stelle vermerkt.
+Der Sendelauf beim Dienstende lief weiter auf einem eigenen Faden, während
+der Dienst schon stoppte (B-S5Z-03, Kette B1). **Mit E2 erledigt** — der
+Umbau gehörte als Ganzes dorthin.
 
 ---
 

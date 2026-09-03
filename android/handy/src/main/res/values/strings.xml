@@ -101,6 +101,7 @@
     <string name="dienst_kanal">Aufzeichnung</string>
     <string name="dienst_kanal_zweck">Zeigt an, dass die Spur des laufenden Dienstes aufgezeichnet wird.</string>
     <string name="dienst_meldung_ohne">Kein Dienst</string>
+    <string name="dienst_meldung_beendet_sendet">Dienst beendet · sende …</string>
 
     <!-- Der Ortungszustand in Worten (E-S5Z-01, Wortlaute 4.3 des Zusatzes).
          EIN Satz Texte fuer Dauermeldung UND Zustandszeile: Zwei Wortlaute
@@ -120,7 +121,7 @@
     <string name="dienst_beginnen">Dienst beginnen</string>
     <string name="dienst_beenden">Dienst beenden</string>
     <string name="dienst_beenden_frage">Dienst beenden?</string>
-    <string name="dienst_beenden_text">Die Aufzeichnung hört auf, und alles Offene wird abgeschlossen und gesendet.</string>
+    <string name="dienst_beenden_text">Die Aufzeichnung hört auf. Alles Offene wird abgeschlossen und gesendet — ohne Netz, sobald es wieder da ist.</string>
     <string name="dienst_beenden_ja">Beenden</string>
     <plurals name="dienst_punkte">
         <item quantity="one">%1$d Punkt · %2$s km</item>
@@ -154,6 +155,34 @@
     <string name="warnung_kein_signal">Seit %1$d min kommt kein GPS-Signal. Handy aus der Tasche oder ans Fenster.</string>
     <string name="warnung_ungenau">Das GPS-Signal ist zu ungenau (über 100 m). Handy aus der Tasche oder ans Fenster.</string>
     <string name="warnung_freigabe_fehlt">Die Ortungsfreigabe fehlt. In der App erteilen.</string>
+
+    <!-- Hinweis nach dem Dienstende (ID 2, stiller Kanal, wegwischbar;
+         E-S5Z-07). Er sagt, dass etwas aussteht, und verschwindet, sobald der
+         Nachsende-Job es erledigt hat. Kein Ton, keine Vibration: Es gibt
+         nichts zu tun. -->
+    <plurals name="hinweis_warten">
+        <item quantity="one">Dienst beendet · %1$d Paket wartet auf Netz</item>
+        <item quantity="other">Dienst beendet · %1$d Pakete warten auf Netz</item>
+    </plurals>
+    <string name="hinweis_schluessel_abgewiesen">Dienst beendet · Schlüssel abgewiesen – Gerät neu koppeln</string>
+
+    <!-- Was die Ansicht ueber das Senden sagt (E-S5Z-12). "Abgewiesen" ist
+         der Fall, den die App bis 0.8.1 verschwieg: Ein Paket mit 400 fiel
+         aus Warteschlange UND Anzeige, und es stand "Alles gesendet", waehrend
+         beim Server ein Segment offen blieb (B-S5Z-06). -->
+    <plurals name="sync_abgewiesen">
+        <item quantity="one">%1$d Paket vom Server abgewiesen</item>
+        <item quantity="other">%1$d Pakete vom Server abgewiesen</item>
+    </plurals>
+    <string name="sync_jetzt_senden">Jetzt senden</string>
+    <string name="sync_sendet">Sendet …</string>
+    <string name="sync_ergebnis_gesendet">Gesendet · %1$s</string>
+    <string name="sync_ergebnis_kein_netz">Keine Verbindung · wird nachgeholt</string>
+    <string name="sync_ergebnis_schluessel">Schlüssel abgewiesen · Gerät neu koppeln</string>
+    <plurals name="sync_ergebnis_abgewiesen">
+        <item quantity="one">Server hat %1$d Paket abgewiesen</item>
+        <item quantity="other">Server hat %1$d Pakete abgewiesen</item>
+    </plurals>
     <string name="akku_titel">Von der Akkuoptimierung ausnehmen</string>
     <!--
         Der Text nennt jetzt den WEG, weil die App nicht mehr direkt fragen
