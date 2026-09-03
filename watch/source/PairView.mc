@@ -105,8 +105,9 @@ class PairView extends WatchUi.View {
         }
         var rest = Pair.restSekunden();
         if (rest > 60) {
-            // Aufgerundet: Bei 540 s steht "noch 9 min", bei 541 "noch 10 min".
-            // Abrunden hiesse, in der letzten Minute "noch 0 min" zu zeigen.
+            // Aufgerundet: Bei 540 s steht "9 min gültig", bei 541
+            // "10 min gültig". Abrunden hiesse, in der letzten Minute
+            // "0 min gültig" zu zeigen.
             lines.add([((rest + 59) / 60).toString() + " min gültig",
                        Graphics.COLOR_LT_GRAY]);
         } else {
