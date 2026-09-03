@@ -3987,7 +3987,8 @@ und genau dann wäre er nötig.
 | `StartView.mc` | Startbildschirm „Dienst beginnen"; Hinweise zu Server-Adresse und Kopplung |
 | `ClockView/SpeedView/StatsView/SyncView/CprView.mc` | Oberflächen + Delegates; erben von `ActionDelegate` und beschreiben nur noch die Aktionen |
 | `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete), App-Version, Kopplung per START-Halten |
-| `Pair.mc` | Kopplungscode-Eingabe → tauscht Code gegen Geräte-Zugang (`Storage 'cred'`) |
+| `Pair.mc` | Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher** |
+| `PairView.mc` | Die Kopplungsansicht: zeigt den Code groß, dazu Restzeit und Verbindungshinweis; BACK bricht ab. Eigene Ansicht, weil der Code Buchstaben trägt (keine Ziffernschrift), eine Restzeit läuft und BACK hier anders wirkt als auf der Sync-Seite |
 | `Const.mc` / `Util.mc` | `APP_VERSION`, Labels, Tuning-Werte; ISO-UTC, lokale Anzeige, Vibration |
 
 Rückruf-Muster: `method()` existiert nur auf Objekten → kleine Träger-Klassen
@@ -3997,7 +3998,7 @@ Rückruf-Muster: `method()` existiert nur auf Objekten → kleine Träger-Klasse
 > zuverlässig und wurde gelöscht. Eine künftige Kartenansicht wird neu
 > aufgebaut; die alte Fassung liegt in der Git-Historie.
 
-> **Vor jeder Änderung an einer Oberfläche:** `Uhr-Layout.md` lesen. Dort
+> **Vor jeder Änderung an einer Oberfläche:** `Uhr-Layout_Regeln.md` lesen. Dort
 > stehen die Regeln zu Schriften, runden Displays und vertikalen Blöcken —
 > jede davon, weil sie einmal verletzt wurde und der Fehler erst im Simulator
 > aufgefallen ist.
@@ -4182,14 +4183,19 @@ Ergebnisse gehören nach `Geraete-Eingabe.md`.
 Entwickler-Schlüssel via „Generate a Developer Key". Ziele `fenix6pro`, `fr945`
 und `venu3s` (s. Abschnitt 5.1 und `Geraete-Eingabe.md`),
 Debug-Build; Sideload: `.prg` nach `GARMIN/Apps/`. Server-Adresse, Geräte-ID und
-API-Schlüssel sind **App-Einstellungen ohne Vorgabewert** (Garmin Connect); die
-Zugangsdaten füllt die **Kopplung per Code** (Web: Einstellungen → Geräte; Uhr:
-Sync-Seite → START halten). Connect IQ bewahrt diese Einstellungen an der
-App-Kennung auf — sie überstehen jedes Neukompilieren, gehen aber bei einem
-Wechsel der Kennung verloren. `Const.APP_VERSION` bei Releases mitziehen
-(Anzeige Sync-Seite). Die **App-Kennung im `manifest.xml` ist noch ein
-Platzhalter** — für eine Store-Veröffentlichung muss eine eindeutige erzeugt
-werden.
+API-Schlüssel sind **App-Einstellungen** (Garmin Connect). Seit Uhr 3.0.0 hat
+die **Server-Adresse einen Vorgabewert** — `nadoku.gen-em.org`, die öffentliche
+Installation (E-R49-8); Selbsthoster tragen dort ihre eigene Domain ein. Geräte-ID
+und API-Schlüssel bleiben leer und sind der **Alt-Weg** für die Handanlage; im
+Regelfall füllt sie die **Kopplung** (Uhr: Sync-Seite → START halten; das Gerät
+zeigt einen Code, den ein Mensch im Web unter Einstellungen → Geräte einträgt).
+Connect IQ bewahrt diese Einstellungen an der App-Kennung auf — sie überstehen
+jedes Neukompilieren, gehen aber bei einem Wechsel der Kennung verloren; der
+Simulator behält sie sogar über ein neues Kompilat hinweg (`pruefstand.sh
+einstellungen-leeren`). `Const.APP_VERSION` bei Releases mitziehen (Anzeige
+Sync-Seite). Die **App-Kennung im `manifest.xml`** ist seit Uhr 2.0.0 keine
+Platzhalterzahl mehr, sondern die endgültige — sie wird nicht wieder gewechselt,
+weil ein Wechsel für die Uhr eine andere App bedeutet und die Kopplung mitnimmt.
 
 **Dienstende (Uhr):** „Einsatztag beenden" schließt Rea und Dienst, setzt den
 Arbeitszustand zurück (Zähler, Phase, Tag) und beendet die App per

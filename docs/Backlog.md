@@ -1127,6 +1127,54 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ---
 
+90. **Der Simulator kann keinen Verbindungsabriss herstellen.**
+    *Aufgenommen 03.09.2026 aus S5 Paket C.*
+    Der Rundlauf der Uhr-Kopplung sollte sechs Fälle belegen; der sechste —
+    „Telefon aus der Reichweite" — ist im Simulator **nicht** herstellbar. Wird
+    der Server getötet, sieht die App **HTTP 404**, keinen negativen Code
+    (dieselbe Eigenschaft, die `tools/netzprobe/` für den CA-Fehler gemessen
+    hat: eine fehlgeschlagene TLS-Verbindung erscheint als 404). Der Zweig
+    „`Keine Verbindung (n)`, Code bleibt stehen, Abfrage läuft weiter"
+    (E-S5-25) bleibt damit ungeprüft, und er ist kein Randfall — er ist der
+    häufigste Fehler im Betrieb.
+    **Woran es hängt:** `makeWebRequest` liefert negative Codes nur bei
+    Bluetooth-Fehlern, und der Simulator hat kein Bluetooth. Der einzige
+    gemessene Weg zu einem negativen Code ist blankes `http://` (−1001,
+    `SECURE_CONNECTION_REQUIRED`) — aber der trifft schon `start` und kommt
+    nie bis zur Kopplungsansicht.
+    **Mögliche Wege:** ein Proxy vor dem Simulator, der die Verbindung
+    mittendrin abbricht, und die Frage, was `makeWebRequest` daraus macht;
+    oder eine Prüf-Einstellung in der App, die einen negativen Code
+    einspeist (dann aber als Fremdkörper im ausgelieferten Code).
+
+91. **Die Auswahl in `WatchUi.Confirmation` ist im Bildabzug nicht zu sehen.**
+    *Aufgenommen 03.09.2026 aus S5 Paket C.*
+    Beim Rundlauf musste „Nein" auf der Rückfrage ausgelöst werden. Welche der
+    beiden Schaltflächen gerade gewählt ist, zeigt der Bildabzug **nicht** —
+    `Cancel` und `Confirm` stehen ohne erkennbare Hervorhebung nebeneinander,
+    und `Up`/`Down` änderten daran nichts Sichtbares. Gemessen: Ein `Return`
+    ohne weitere Taste **bestätigt** (die Vorauswahl steht also auf
+    `Confirm`), und BACK räumt den Dialog weg, **ohne** `onResponse` zu rufen.
+    **Folge für die Prüfmittel:** Ein Rundlauf, der eine Ablehnung im Dialog
+    belegen will, kann sie nicht am Bild ablesen — er muss sie an der Wirkung
+    messen (Datenbank: kein Gerät, keine Sitzung). Das ist gemacht, aber es
+    gehört aufgeschrieben, damit die nächste Instanz nicht wieder eine halbe
+    Stunde an der Tastensteuerung sucht.
+
+92. **`pruefstand.sh bildreihe` fotografiert nur den Startbildschirm.**
+    *Aufgenommen 03.09.2026 aus S5 Paket C.*
+    Für Stufe II verlangt die Abnahme „je Vertreter ein Bild der `PairView`".
+    `bildreihe` lädt die App, wartet und fotografiert — es gibt keinen Weg,
+    eine Tastenfolge mitzugeben. Paket C hat sich dafür eine eigene Schleife
+    gebaut (zweimal `Down`, weil der erste Druck nach dem Laden regelmäßig
+    verlorengeht, dann `keydown Return` / `sleep` / `keyup` für den Langdruck;
+    `pruefstand.sh halten` kann nur Maus, nicht Taste — und die
+    Drei-Tasten-Geräte brauchen stattdessen Wischen, gelesen aus
+    `monkey.jungle`).
+    **Vorschlag:** `bildreihe <liste> <ziel> [tastenfolge]`, wobei die
+    Tastenfolge eine Zeichenkette wie `Down,Down,hold:Return,wait:8` ist. Dann
+    braucht die nächste Ansicht keine eigene Schleife.
+
 ## Erledigt
 
 

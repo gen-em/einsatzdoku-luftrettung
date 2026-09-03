@@ -11,6 +11,118 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 3.0.0] — 2026-09-03
+
+### Uhr — Kopplung umgekehrt: die Uhr zeigt den Code (S5, Paket C)
+
+**Die Uhr tippt keinen Code mehr ein, sie zeigt einen.** Bis 2.0.0 erzeugte das
+Web den Kopplungscode, und die Trägerin tippte ihn auf dem Uhrendisplay ein —
+sechs Zeichen über einen `TextPicker`, die einzige Texteingabe der ganzen App
+und der unangenehmste Weg darin. Das setzte außerdem voraus, dass sie vorher am
+Rechner war. Jetzt holt sich die Uhr mit `start` eine Kopplungssitzung, zeigt
+den Code groß an, fragt alle fünf Sekunden nach, ob ihn jemand im Web
+eingetragen hat — und fragt dann **zurück**: „Mit ph\*\*\*@… koppeln?" Erst
+dieses Ja legt das Gerät an.
+
+**Zwei Tore statt eines** (E-R49-5). Die Bestätigungsseite im Web fängt das
+fremde Gerät im eigenen Konto ab; die Rückfrage auf der Uhr fängt das eigene
+Gerät im fremden Konto ab. Wer eines von beiden wegnimmt, lässt eine der beiden
+Richtungen offen.
+
+**Der Code weist nichts aus.** Er ist für den Menschen, der ihn abliest; wer ihn
+über die Schulter sieht, kann an der Uhr nichts auslösen. Was die Uhr ausweist,
+sind Kennung und Schlüssel aus `start` — und die sind bis zum Ja **schwebend**:
+Der Server kennt sie, `ingest.php` weist sie mit `401` ab, weil es das Gerät
+noch nicht gibt. Auf der Uhr liegen sie bis dahin **nur im Arbeitsspeicher**
+(E-S5-22); erst `200 {"ok":true}` schreibt `Storage "cred"`. Wer die App vorher
+verlässt, hat keine halbe Kopplung auf dem Gerät — die Sitzung verfällt
+serverseitig nach zehn Minuten. Das Kontolabel wird **nie** gespeichert.
+
+**Der Preis, und er ist diesmal doppelt.** Erstens koppelt **keine ältere
+Uhr-Fassung mehr**: Der alte Weg setzte einen im Web erzeugten Code voraus, und
+den gibt es nicht mehr (E-R49-7). Eine Uhr 2.0.0 am neuen Server bekommt
+`400 {"error":"aktion","meldung":"Uhr-App aktualisieren"}` und zeigt genau
+diesen Satz an — der einzige Kanal, auf dem sie erfährt, was zu tun ist.
+Zweitens muss die **eine Bestandsuhr neu gekoppelt** werden, und das ist neu
+gegenüber der ersten Planung: Ihr Schlüssel liegt als bcrypt-Hash, der Server
+vergleicht seit Web 13.0.0 gegen SHA-256 (E-S5-42). Vorher den Sync vollständig
+laufen lassen — sonst gehen gepufferte Ereignisse mit dem Trennen verloren.
+Bestehende Kopplungen sind davon **nur** deshalb betroffen; am Drahtvertrag von
+`ingest.php` ändert sich nichts.
+
+**Neu: `PairView.mc`.** Eine eigene Ansicht, kein vierter Zustand des
+Mittelblocks der Sync-Seite (E-S5-24) — aus drei Gründen, von denen jeder
+reicht: Der Code muss groß stehen und trägt Buchstaben, also scheidet eine
+Ziffernschrift aus (`Uhr-Layout_Regeln` 3.1: sie kennt keine Buchstaben und
+zeichnet leere Kästchen); die Seite hat eine Restzeit, die weiterläuft; und
+BACK bedeutet dort etwas anderes als auf der Sync-Seite. Der Code steht in zwei
+Dreiergruppen („CBF E4W"), weil sechs gleichförmige Zeichen abzulesen und
+fehlerfrei einzutippen die eigentliche Arbeit dieses Bildschirms ist.
+
+**Der Vorgabewert `serverUrl`** ist jetzt `nadoku.gen-em.org` (E-R49-8). Bis
+2.0.0 stand dort nichts, mit der Begründung „jede Installation hat ihren eigenen
+Server". Das stimmte, als es nur Selbsthoster gab; seit es eine öffentliche
+Installation gibt, kostete es jede Trägerin einen Weg durch die
+Garmin-Connect-Einstellungen, bevor sie überhaupt koppeln konnte. Selbsthoster
+tragen dort weiter ihre eigene Domain ein. `deviceId`/`apiKey` bleiben als
+Alt-Weg für die Handanlage.
+
+**Kein Pfeil auf der Uhr, und zwar gemessen.** Das Konzept sah
+„Einstellungen → Geräte" vor und führte als offenen Punkt, ob die
+Geräteschriften „→" überhaupt tragen. Nachgesehen (fenix6pro, SDK 9.2.0, mit
+dem Pfeil übersetzt und fotografiert): Das Zeichen erscheint als
+**Platzhalter-Raute** — derselbe Fall wie bei den Ziffernschriften, nur mit
+einer Textschrift, und ebenso ohne Warnung und ohne Fehler. Auf der Uhr steht
+deshalb „Einstellungen, Geräte"; Web und Handbuch behalten den Pfeil, weil
+deren Schrift ihn trägt. Dass beide auseinanderlaufen, ist kein Versehen — die
+Uhr kann es nicht anders.
+
+### Uhr — Behoben: die Tastensperre wurde nur in einer Reihenfolge erkannt
+
+Am Gerät gemeldet. Wer die Tastensperre der Uhr mit **UP zuerst** und START
+dazu auslöste — die übliche Handhaltung —, bekam das Schnellmenü, während die
+Uhr sperrte.
+
+Die Erkennung war da, aber einseitig: `ActionDelegate` merkte sich nur Tasten,
+die die jeweilige Seite selbst verfolgt (START immer, UP/DOWN allein auf der
+Reanimationsseite). Ein UP-Druck auf der Uhr-, Tempo-, Statistik- oder
+Sync-Seite hinterließ deshalb **keine Spur**; der folgende START-Druck sah ein
+leeres Feld und hielt sich für einen gewöhnlichen Langdruck. Dokumentiert war
+die Sperre entsprechend einseitig — „START + beliebige Taste", „während des
+langen START-Drucks".
+
+Jetzt merkt `onKeyPressed` **jede** gedrückte Taste, auch die, die es dem
+System überlässt. Kommt danach START, während eine andere Taste unten ist, gilt
+das als Sperre: kein Halte-Timer, und beim Loslassen auch kein kurzer Druck.
+Bleibt das Loslassen aus, weil die Uhr es während der Sperre nicht mehr
+zustellt, heilt es sich beim nächsten Druck derselben Taste — der Preis ist
+höchstens **ein** verschluckter Langdruck.
+
+**Nicht belegt, und das gehört dazu:** Der Simulator bildet Tastensperren nicht
+ab (`docs/Geraete-Eingabe.md` 6). Belegt ist, dass es übersetzt und die übrige
+Bedienung unverändert läuft; ob der Fehlgriff verschwindet, zeigt allein das
+Gerät. Seit 3.0.0 wäre er übrigens teurer als vorher: Auf der Sync-Seite löst
+derselbe Fehlgriff jetzt eine Kopplungssitzung aus.
+
+### Uhr — Behoben: die GPS-Zeile lief auf der Venu 3s über den Rand
+
+Sie war die **einzige** Zeile der Sync-Seite ohne `Ui.fitFont`
+(`Uhr-Layout_Regeln` 4.2), und bis 2.0.0 fiel das nicht auf: Der untere Block
+trug im Regelfall nur die Versionszeile, der Mittelblock saß tief genug, und
+„GPS aus (kein Dienst)" passte.
+
+Mit 3.0.0 trägt der untere Block auf einem **gewöhnlichen** Weg drei Zeilen —
+Meldung, Weg heraus, Version, etwa nach einem Abbruch der Kopplung. `untenY`
+rückt damit nach oben, der zentrierte Mittelblock rückt mit, und die Zeile
+landet dort, wo der Kreis zuläuft. Auf der Venu 3s trifft es am ehesten, weil
+`Ui.fontHint()` dort ab 320 px die größere Schrift liefert.
+
+Am Simulator fotografiert, gleicher Ausschnitt und gleiche Vergrößerung:
+vorher **„PS aus (kein Diens"** — beide Enden fort, ohne Warnung —, nachher
+**„GPS aus (kein Dienst)"**. Auf dem Ausgangsstand desselben Geräts stand die
+Zeile vollständig da; es ist also keine Altlast, sondern die Folge der
+zusätzlichen Zeile.
+
 ## [Web 13.1.1] — 2026-09-03
 
 ### Web — Behoben: ein gelungenes Trennen leerte einen Topf, der ihm nicht gehört
