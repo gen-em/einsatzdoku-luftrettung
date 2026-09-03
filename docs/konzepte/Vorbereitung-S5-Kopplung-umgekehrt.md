@@ -518,21 +518,27 @@ dem Repositorium beantworten:
 | App, Dauermeldung | `strings.xml:103` `dienst_meldung_laeuft` | **„Aufzeichnung läuft seit %1$s"** |
 | App, Zustandszeile | `strings.xml:112` `dienst_laeuft_seit` | **„Aufzeichnung läuft seit %1$s · GPS an"** |
 | App, Zustandszeile ohne Freigabe | `strings.xml:113` `dienst_laeuft_seit_ohne_gps` | „Aufzeichnung läuft seit %1$s · GPS fehlt" |
-| Web | — | **kein solcher Wortlaut** |
+| Web, Seite „Spuren schneiden“, Karte „Ruhesegmente“ | `assets/schneiden.js:346` | **„… · läuft noch“** bei `final = 0` — **berichtigt 03.09.2026, Fassung 5** (siehe unten) |
 
-Gegengeprüft: `git grep -i` über `server/` nach „laufend", „läuft",
-„Aufzeichnung" findet **keine** Stelle, an der die Weboberfläche behauptete,
-eine Aufzeichnung laufe. Was das Web bei fehlendem Abschluss zeigt, ist
-genau das, was der Zusatz beschreibt: `–offen` auf der Spurenseite
-(`tag_spuren.php:183`) und ein `days.ended_at`, das NULL bleibt.
+**Berichtigung (Fassung 5, aus der Gegenlesung B5.1):** Die erste Fassung
+dieser Tabelle sagte „Web: kein solcher Wortlaut“, gestützt auf ein
+`git grep` über `server/`, das die Skripte unter `server/assets/` **nicht**
+erfasst hatte. Die Seite „Spuren schneiden“ eines Diensttags zeigt jedes
+Ruhesegment ohne `final` mit dem Zusatz „· läuft noch“ (`schneiden.js`
+343–347) — und genau diese Seite ist „im Diensttag selbst“, wie der
+Auftraggeber es beschrieb. Die Rückfrage unten entfällt damit: Ob er die
+App-Zeile oder die Web-Karte sah, beide entstehen aus demselben Zustand —
+ein Segment, dessen Abschluss den Server nie erreicht hat. Was das Web sonst
+bei fehlendem Abschluss zeigt, bleibt richtig beschrieben: `–offen` auf der
+Spurenseite (`tag_spuren.php:183`) und ein `days.ended_at`, das NULL bleibt.
 
 **Damit stützt der Befund H1 (Kette B3):** Der Dienst wurde an der Uhr
 beendet, der Vordergrunddienst lief weiter, und die App sagte weiter
 „Aufzeichnung läuft seit …". Die Diagnose am Gerät (1.3) bleibt trotzdem zu
 fahren — sie entscheidet, was das Prüfdokument als **belegten** Fehler führt.
-Eine Rückfrage bleibt: Der Auftraggeber sagte „im Diensttag selbst" — das
-klingt nach der Weboberfläche. Zu klären, ob er die App-Ansicht oder eine
-Webseite meinte; nur die App kennt den Wortlaut.
+Die Rückfrage „App oder Web?“ aus der ersten Fassung ist mit der
+Berichtigung oben gegenstandslos: Beide Oberflächen zeigen den Zustand, und
+beide führen auf H1.
 
 Nebenbei eine Genauigkeit zum Befund 1.1 des Zusatzes: Es gibt **zwei**
 Zustandszeilen, nicht eine — `dienst_laeuft_seit` und
@@ -607,6 +613,35 @@ unwichtiger — sie sind das Einzige, was im Container überhaupt läuft.
 
 ---
 
+### 8.4 Maschinelle Gegenlesung des Zusatzes — was davon trägt
+
+Neben der Prüfung von Hand lief am 03.09.2026 eine Gegenlesung des Zusatzes
+in sechs Dimensionen mit anschließender adversarialer Verifikation je Befund
+(26 Agenten). **Sie wurde nicht zu Ende geführt:** 35 Befunde (107
+Fundstellen, 95 zutreffend), davon nur **9 gegengeprüft**, **1 in der Sache
+bestätigt**, 8 verworfen — durchweg, weil das Konzept die Stelle bereits als
+B-S5Z-01/-02/-03/-07/-11 mit Entscheidung führt; **25 Befunde blieben
+ungeprüft**. Die Rohfassung (32 KB) liegt nicht im Repositorium; was hier
+steht, ist **von Hand am Code nachgelesen** (HEAD `d342951`), nicht
+übernommen. Für Paket E gilt: Die bestätigten Punkte gehören in die
+Umsetzung, die plausiblen sind **vor** dem betroffenen Teilpaket zu prüfen.
+
+| Nr. | Befund | Am Code nachgelesen (03.09.2026) | Folge für Paket E |
+|---|---|---|---|
+| **B1.1** (bestätigt, hoch) | `taktStarten()` beginnt mit `taktgeber.removeCallbacksAndMessages(null)` — ohne Token, also die **ganze** Warteschlange des einzigen Handlers; `onStartCommand` ruft es bei **jedem** Start, und `HandyHorcher.kt:41` startet den Dienst bei jeder Uhrnachricht, solange die Klammer läuft | stimmt: `AufzeichnungsDienst.kt` 63, 83, 113–121; `HandyHorcher.kt` 41 | Ein 10-s-Wächter „am vorhandenen Handler“ (E-S5Z-06) stirbt still beim ersten Uhrereignis, wenn er vor `taktStarten()` gepostet wird — oder der 15-Minuten-Takt wird bei jedem Uhrereignis zurückgesetzt. **E-S5Z-06 braucht einen Satz:** eigenes Token (`postDelayed(r, TOKEN, ms)` / `removeCallbacksAndMessages(TOKEN)`) oder eigener Handler. Nebenbefund: Ein rein von der Uhr geführter Dienst mit Ereignissen dichter als 15 Minuten sendet bis zum Dienstende **gar nicht** — Kette B Punkt 3 des Zusatzes („beim nächsten Takt“) trifft dann nicht zu |
+| **B5.1** (nachgelesen, hoch) | Das Web zeigt „· läuft noch“ für Ruhesegmente ohne `final` | stimmt: `schneiden.js` 346 — **8.1 ist berichtigt** | Die Diagnose H1 bleibt; die Rückfrage „App oder Web“ entfällt |
+| **B5.3** (nachgelesen, mittel) | `ingest.php` schreibt beim Upsert `ended_at = VALUES(ended_at)` **bedingungslos**, `final` dagegen mit `GREATEST` | stimmt: `ingest.php` 365–369 (`rest_segments`; für `missions` dasselbe Muster weiter oben) | Ein nicht-finales Paket, das **nach** dem finalen ankommt, setzt `ended_at` auf NULL zurück, während `final = 1` stehen bleibt. **E2 muss die Reihenfolge beim Nachsenden sichern** (kein älteres Paket nach einem finalen); serverseitig ein Backlog-Kandidat: `ended_at = COALESCE(VALUES(ended_at), ended_at)` |
+| **B6.1** (nachgerechnet, hoch) | `marke_orange` (#FF8F1F) auf `marke_schnee` (#FFFCFA) | **2,23 : 1**, nachgerechnet nach WCAG — unter AA (4,5) und unter AA-groß (3) | Das E1-Abnahmekriterium „`kontraste.py`: 0 Paare unter Zielwert“ ist mit orangem **Text** auf Schnee nicht erreichbar; Orange taugt für Fläche oder Symbol mit dunklem Text, nicht für Schrift (dazu B6.2: `kontraste.py` führt eine feste Paarliste — neue Paare müssen dort **eingetragen** werden, sonst misst das Werkzeug sie nicht) |
+| **B4.6** (nachgelesen, hoch) | `WearNachrichtenweg.sende()` blockiert bis 5 s je `Tasks.await`; der Klassenkommentar sagt „SIE BLOCKIERT … gehört nicht auf den Hauptthread“ | stimmt: `WearNachrichtenweg.kt` 25–27, 41–50, 75 | Eine Standmeldung an die Uhr bei jedem Wächterwechsel darf **nicht** vom Main-Looper-Handler des Dienstes gesendet werden — wie heute der Sendelauf auf einen eigenen Faden (`AufzeichnungsDienst.kt` 131–142) |
+| **B4.3** (nachgelesen, hoch) | Die Vorbild-Zeile `dienst_schwebt` steht in `UhrActivity.kt` **zuletzt** (Kommentar E-S4-51: „Bedienelemente in die Mitte, Statusanzeigen an den Rand“), nicht vor den Knöpfen | stimmt: `UhrActivity.kt` 297–302; `GesperrteAnsicht` (353–368) zeigt die Zeile gar nicht (B4.4) | Die Platzierung des Uhr-Spiegels (E3, Abschnitt 6 des Zusatzes) folgt E-S4-51: Zeile an den Rand, sonst wiederholt sich der in C1 gemessene Glasüberlauf |
+| **B4.2** (plausibel, ungeprüft) | `AufzeichnungsDienst.starten()` ruft `ContextCompat.startForegroundService` ohne `try`; aus `HandyHorcher` (Hintergrund) ist das ab Android 12 beschränkt (`ForegroundServiceStartNotAllowedException`) | Code stimmt (`AufzeichnungsDienst.kt` 268–272); ob die Ausnahme greift, hängt von den Ausnahmeregeln der Plattform ab und ist ohne Gerät nicht zu messen | E-S5Z-08 sichert nur den BEENDEN-Weg; der STARTEN-Weg bekommt dieselbe Absicherung — Gerätetest im Prüfdokument |
+| **B2.2** (ungeprüft, hoch) | Die Dauermeldung sagt „Aufzeichnung läuft seit …“ auch ohne Ortungsfreigabe | `AufzeichnungsDienst.kt` 231–240, `strings.xml` 103 | Deckt sich mit E1 (die Meldung folgt dem Wächterzustand); kein neuer Punkt, nur die Bestätigung, dass E1 die Dauermeldung **mit** umstellen muss |
+
+Die übrigen 27 Befunde sind Feinheiten (Zeilen, Bezeichner, Kommentare)
+oder durch B-S5Z-Einträge des Zusatzes abgedeckt; sie sind nicht verloren
+(die Rohfassung liegt in der Sitzung, aus der diese Datei stammt), aber ohne
+Gegenprobe nicht belegt und deshalb hier nicht aufgeführt.
+
 ## 8a. Paket C — der Uhr-Prüfstand steht, und F-S5-11 ist beantwortet
 
 Die Adresse der Gerätedateien liegt seit dem 03.09.2026 in den
@@ -675,3 +710,4 @@ Beide hätten die Uhr-Instanz in ihrer ersten halben Stunde getroffen.
 | 2 | 03.09.2026 | Abschnitt 8: das Zusatzkonzept (Paket E) geprüft — 32 neue Anker, Antwort auf F-S5Z-06, Ausgangszahlen der Android-Prüfmittel, Rundlauf 167/167 belegt, Emulator als unmöglich gemessen |
 | 3 | 03.09.2026 | Abschnitt 8a: Uhr-Prüfstand vollständig (173 Gerätedateien, 1332 Schriften), Stufe I 99/0/0/0 als Ausgangsstand, **F-S5-11 beantwortet** (nur TLS mit bekannter CA), zwei Fehler im Prüfstand behoben; S7-Merge ohne Wirkung auf S5 |
 | 4 | 03.09.2026 | V-S5-13 (bcrypt-Kosten gemessen: 228 ms je Prüfung, Drift zu `AUTH_VERGLEICHSWERT`); Statusblock: Entscheidungen des Auftraggebers eingetragen, Paket A begonnen |
+| 5 | 03.09.2026 | Abschnitt 8.4: maschinelle Gegenlesung des Zusatzes ausgewertet (35 Befunde, 9 gegengeprüft, 1 bestätigt; sieben am Code nachgelesen), **8.1 berichtigt** — das Web sagt „· läuft noch“ (`schneiden.js` 346) |
