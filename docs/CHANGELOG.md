@@ -143,6 +143,75 @@ einzeln nachgezählt und zugeordnet. Normative Dokumentation **272 → 48**
 (Handbuch 78 → 0). Offene Backlog-Punkte **45 → 7**, erledigte unberührt.
 `tools/` **188 → 40**. Historie (Changelog, Rahmenplan, Archiv,
 abgeschlossene Konzepte) **734 → 734**, wie vorgesehen.
+## [Werkzeug: Uhr-Prüfstand am lokalen Server] — 2026-09-03
+
+**Der Simulator kommt an einen Server auf `127.0.0.1` heran — aber nur über
+TLS mit einer CA, die er kennt.** Keine der drei Auslieferungen ist geändert,
+deshalb wieder keine Versionsnummer.
+
+Anlass war F-S5-11 aus dem S5-Konzept: „Erlaubt `makeWebRequest` im Simulator
+`http://127.0.0.1:8080`, oder verlangt er TLS?" Das Konzept sah zwei mögliche
+Antworten vor und für den Fall, dass beide Nein lauten, einen Rückfall auf
+eine Attrappe. Gemessen sind es drei, und die dritte trägt.
+
+### Werkzeug — `tools/netzprobe/`, eine Anfrage als Antwort
+
+Eine Connect-IQ-Probe mit eigener Anwendungs-ID, hervorgegangen aus
+`tools/eingabe-probe/`. Sie stellt **eine** Anfrage an `pair.php` und zeigt
+den Rücklaufcode. Der Beleg steht aber nicht auf dem Display, sondern im
+Zugriffsprotokoll des Servers — und erst beides zusammen unterscheidet die
+Fälle. `pair.php` als Ziel ist Absicht: Es lehnt `GET` mit 405 ab, und eine
+405 in der Konsole kann nur aus dem Endpunkt selbst kommen.
+
+Gemessen am 03.09.2026, SDK 9.2.0, fenix6pro:
+
+| Weg | Was die App sieht | Was beim Server ankommt |
+|---|---|---|
+| `http://127.0.0.1:8080` | **−1001** `SECURE_CONNECTION_REQUIRED` | **die Anfrage** |
+| `https://…`, selbstsigniert | 404 | nichts (`tlsv1 alert unknown ca`) |
+| `https://…`, CA im Systemspeicher | **405 von `pair.php`** | die Anfrage |
+
+**Die erste Zeile ist die, die man kennen muss.** Über blankes HTTP lässt der
+Simulator die Anfrage hinaus — der Server sieht sie und **führt sie aus** —,
+gibt der App die Antwort aber nicht. Wer nur auf den Rücklaufcode sieht, hält
+den Weg für tot und übersieht, dass die Gegenseite schon gehandelt hat. Bei
+einem `POST` auf einen schreibenden Endpunkt ist das kein Schönheitsfehler.
+
+### Werkzeug — `lokal_starten.sh` unterschreibt jetzt mit einer eigenen CA
+
+Das Zertifikat war selbstsigniert, und für `curl -k` war das genug. Der
+Simulator prüft und nimmt keinen unbekannten Aussteller. Das Skript legt
+deshalb eine eigene CA an, unterschreibt damit das Serverzertifikat
+(`subjectAltName=IP:127.0.0.1`) und legt die CA nach
+`/usr/local/share/ca-certificates/`. Für alle bisherigen Nutzer ändert sich
+nichts; `curl` **ohne** `-k` liefert jetzt zusätzlich 200 statt eines
+Zertifikatsfehlers. Die CA entsteht auf der Maschine und verlässt sie nicht.
+
+### Werkzeug — zwei Fehler in `pruefstand.sh bauen`, beide beim Benutzen gefunden
+
+**Die dokumentierte Aufrufform war kaputt.** `bauen fenix6pro -l 3` — so steht
+es in der LIESMICH — übergab `-l` als **Jungle-Pfad**; `monkeyc` brach mit
+„Missing argument for option: f" ab und druckte seine Hilfe. Der Aufruf mit
+eigenem Jungle funktionierte, der dokumentierte nicht, und ausgerechnet `-l 3`
+ist die strenge Typprüfung, die jede Abnahme verlangt. Ein zweites Argument,
+das mit `-` beginnt, ist jetzt ein Schalter und kein Pfad.
+
+**Und `bauen` setzte `java.awt.headless` nicht.** `reihe` tut es seit
+Langem, mit ausführlicher Begründung: `monkeyc` skaliert das Launcher-Symbol
+über `java.awt.BufferedImage` und braucht dafür eine Grafikumgebung; fehlt
+sie, endet der Lauf in einem `AWTError` **ohne** ERROR-Zeile. `umgebung()`
+leert `JAVA_TOOL_OPTIONS` sogar ausdrücklich. `fenix6pro` und `fr945` bauten
+durch — ihr Symbol passt exakt —, `venu3s` mit der Eingabe-Probe nicht, und
+der Ausfall sah nach einem Geräteproblem aus.
+
+### Werkzeug — 99 und 173 waren dasselbe Wort für zwei Zahlen
+
+Die LIESMICH sagte „99 Geräte mit `compiler.json`". Es sind **173**; die 99
+sind die Auswahl, die `geraeteklassen.py` daraus für Stufe I zieht (davon 20
+Vertreter für Stufe II). Wer den Bestand gegen die alte Zahl prüfte, hielt
+einen vollständigen Abzug für unvollständig. Stufe I auf dem heutigen Stand:
+**99 übersetzt, 0 fehlgeschlagen, 0 Warnungen, 0 Fehler.**
+
 ## [Werkzeug: Containeraufbau und S5-Anker] — 2026-09-02
 
 **Der Prüfstand ließ sich nicht in einem Zug aufbauen, und niemand hatte es

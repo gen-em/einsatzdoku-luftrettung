@@ -1,15 +1,15 @@
 # Vorbereitung der S5-Umsetzung — Prüfung des Konzepts und Prüfstand
 
 **Rahmenplan Schritt 5 · Zweig `claude/s7-umsetzung-vorbereiten-s8kax0` ·
-Stand 02.09.2026, erhoben an `main`, Commit `c2ac707` (Web 12.9.2, Uhr 2.0.0,
-Android 0.7.7).**
+Stand 03.09.2026, erhoben an `main`, Commit `696449d` (Web 12.9.4, Uhr 2.0.0,
+Android 0.7.7 — S7 gemergt).**
 
 > | | |
 > |---|---|
-> | Zweck | Das Konzept `Konzept-S5-Kopplung-umgekehrt.md` gegen den Code prüfen und alles aufbauen, was die Umsetzung an Prüfmitteln braucht — **bevor** sie beginnt |
-> | Gebaut | Datenbank, lokale Installation mit Demo-Bestand, Android-SDK und Baulauf, Connect-IQ-SDK und Simulator-Bibliotheken |
-> | Fehlt | **`CIQ_GERAETE_URL`** — ohne sie keine Gerätedateien und keine Schriften, also kein Übersetzen und kein Simulator (Abschnitt 4) |
-> | Beginnt | nach dem Merge von **S7** auf `main` (Rahmenplan 4: S5-Umsetzung ist zu S7 gesperrt) |
+> | Zweck | Beide S5-Konzepte gegen den Code prüfen und alles aufbauen, was die Umsetzung an Prüfmitteln braucht — **bevor** sie beginnt |
+> | Gebaut | Datenbank und Installation mit Demo-Bestand · Android-SDK, Baulauf und Rundlauf · **Uhr-Prüfstand vollständig** (SDK, 173 Gerätedateien, 1332 Schriften, Simulator) |
+> | Fehlt | nichts am Prüfstand. Offen sind Entscheidungen: **F-S5-01 bis -12** (Pakete A–D) und **F-S5Z-01 bis -05** (Paket E) |
+> | S7 | gemergt, **ohne Wirkung auf S5** — `pair.php`, `ratelimit_lib.php`, `schema.sql`, `geraete_lib.php`, `watch/` und `android/` byteweise unverändert; alle 115 Anker gefunden (Abschnitt 8a) |
 > | Diese Datei | wird mit dem Abschluss von Paket A in das Prüfdokument nach K9 überführt und dann gelöscht |
 
 ---
@@ -583,9 +583,70 @@ unwichtiger — sie sind das Einzige, was im Container überhaupt läuft.
 
 ---
 
+## 8a. Paket C — der Uhr-Prüfstand steht, und F-S5-11 ist beantwortet
+
+Die Adresse der Gerätedateien liegt seit dem 03.09.2026 in den
+Umgebungsvariablen; damit ließ sich der Prüfstand hier vollständig aufbauen.
+
+| | |
+|---|---|
+| SDK | Connect IQ 9.2.0 |
+| Gerätedateien | **173 mit `compiler.json`** (343 MB) |
+| Schriften | **1332 Dateien** (1,2 GB) |
+| Simulatorbibliotheken | 0 fehlend |
+| `geraeteklassen.py` | **99** Geräte für Stufe I, **20** Vertreter für Stufe II |
+| **Stufe I auf dem heutigen Stand** | **99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei, 0 Warnungen, 0 Fehler** |
+
+Die **20 Vertreter** beantworten den offenen Punkt aus Abschnitt 11 des
+Konzepts („Wie viele Bilder `bildreihe` liefert"). Und die **99** sind
+geklärt: Sie sind nicht die Zahl der Gerätedateien — das sind 173 —, sondern
+die Auswahl, die `geraeteklassen.py` daraus zieht. `tools/uhr-pruefstand/LIESMICH.md`
+hatte beides verwechselt und ist berichtigt.
+
+### F-S5-11 — die Antwort hat drei Zeilen, nicht zwei
+
+Das Konzept fragt, ob der Simulator `makeWebRequest` gegen
+`http://127.0.0.1:8080` zulässt, und sagt „erst messen". Gemessen mit
+`tools/netzprobe/` (neu), SDK 9.2.0, fenix6pro:
+
+| Weg | Was die App sieht | Was beim Server ankommt |
+|---|---|---|
+| `http://127.0.0.1:8080` | **−1001** `SECURE_CONNECTION_REQUIRED` | **die Anfrage** — `[405]: GET /pair.php` im Zugriffsprotokoll |
+| `https://…`, **selbstsigniert** (der bisherige Weg von `lokal_starten.sh`) | 404 | nichts — `tlsv1 alert unknown ca` |
+| `https://…`, Zertifikat aus **eigener CA im Systemspeicher** | **405 von `pair.php`** | die Anfrage |
+
+**Beide vom Konzept erwogenen Wege sind zu**, der dritte trägt. Damit ist der
+Simulator-Rundlauf für Paket C möglich — die 18 Mitschnitte (6 Fälle × 3
+Geräte) brauchen keinen Ersatz durch eine Attrappe.
+
+Die erste Zeile ist die, die man kennen muss: Über blankes HTTP geht die
+Anfrage **hinaus und wird ausgeführt**, nur die Antwort erreicht die App
+nicht. Wer beim Aufsetzen des Rundlaufs nur auf den Rücklaufcode sieht, hält
+den Weg für tot und übersieht, dass die Gegenseite bereits gehandelt hat — bei
+einem `POST` auf `pair.php` wäre das eine angelegte Sitzung, von der die Uhr
+nichts weiß.
+
+`lokal_starten.sh` erzeugt deshalb jetzt eine eigene CA, unterschreibt damit
+das Serverzertifikat (`subjectAltName=IP:127.0.0.1`) und legt die CA nach
+`/usr/local/share/ca-certificates/`. Für alles andere ändert sich nichts —
+die Skripte prüfen weiter mit `-k`, und `curl` **ohne** `-k` liefert jetzt
+zusätzlich 200 statt eines Zertifikatsfehlers.
+
+### Zwei Fehler im Prüfstand, beide beim Benutzen gefunden
+
+| | Fund | Behandlung |
+|---|---|---|
+| **P-06** | `pruefstand.sh bauen fenix6pro -l 3` — die in der LIESMICH dokumentierte Form — übergab `-l` als **Jungle-Pfad**. `monkeyc` brach mit „Missing argument for option: f" ab und druckte seine Hilfe. Ausgerechnet `-l 3` ist der Schalter, den die Abnahme von Paket C verlangt | behoben: ein zweites Argument, das mit `-` beginnt, ist ein Schalter und kein Pfad |
+| **P-07** | `bauen` setzte `java.awt.headless` nicht — `reihe` tut es, und `umgebung()` leert `JAVA_TOOL_OPTIONS` sogar ausdrücklich. Geräte, deren Launcher-Symbol skaliert werden muss, brachen in einem `AWTError` ab, **ohne** ERROR-Zeile. `fenix6pro` und `fr945` bauten durch, `venu3s` mit der Eingabe-Probe nicht — der Ausfall sah nach einem Geräteproblem aus | behoben, mit Verweis auf die Begründung, die in `reihe` schon stand |
+
+Beide hätten die Uhr-Instanz in ihrer ersten halben Stunde getroffen.
+
+---
+
 ## 9. Änderungsverlauf dieser Datei
 
 | Fassung | Datum | Inhalt |
 |---|---|---|
 | 1 | 02.09.2026 | Erstfassung: Prüfung des Konzepts (77 Fundstellen), 12 Befunde V-S5-01 bis V-S5-12, Prüfstand aufgebaut und mit Ausgangszahlen belegt, Fundstellen-Inventar, offene Zuarbeiten |
 | 2 | 03.09.2026 | Abschnitt 8: das Zusatzkonzept (Paket E) geprüft — 32 neue Anker, Antwort auf F-S5Z-06, Ausgangszahlen der Android-Prüfmittel, Rundlauf 167/167 belegt, Emulator als unmöglich gemessen |
+| 3 | 03.09.2026 | Abschnitt 8a: Uhr-Prüfstand vollständig (173 Gerätedateien, 1332 Schriften), Stufe I 99/0/0/0 als Ausgangsstand, **F-S5-11 beantwortet** (nur TLS mit bekannter CA), zwei Fehler im Prüfstand behoben; S7-Merge ohne Wirkung auf S5 |

@@ -324,6 +324,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      (s. LIESMICH.md)
 │   ├── logos/             erzeugt die Favicons AUS den Logodateien, damit beide
 │   │                      nicht auseinanderlaufen (s. LIESMICH.md)
+│   ├── netzprobe/         eine Connect-IQ-Probe mit EINER Anfrage: Kommt der
+│   │                      Simulator an einen Server auf 127.0.0.1 heran?
+│   │                      Beantwortet in fuenf Minuten, was sonst ein halber
+│   │                      Umbau voraussetzt — und trennt „kommt nicht raus"
+│   │                      von „kommt raus, Antwort wird verworfen"
+│   │                      (s. LIESMICH.md)
 │   ├── pruefkonten/       legt einen Bestand von 300+ Konten mit gemischten
 │   │                      Backup-Staenden an (fester Zufallsstartwert) —
 │   │                      fuer Seitenwechsel, Filter und Sammelauswahl der

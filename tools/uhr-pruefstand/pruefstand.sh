@@ -173,12 +173,38 @@ umgebung() {
     export JAVA_TOOL_OPTIONS=""      # sonst verrauscht der Proxy-Hinweis jede Ausgabe
 }
 
+# DER JUNGLE IST OPTIONAL, DIE SCHALTER SIND ES AUCH — und beides an
+# derselben Stelle. Bis zum 03.09.2026 nahm diese Funktion das zweite Argument
+# unbesehen als Jungle-Pfad. Der in der LIESMICH dokumentierte Aufruf
+#
+#     pruefstand.sh bauen fenix6pro -l 3
+#
+# uebergab damit "-l" als Jungle und "3" als Schalter; monkeyc brach ab mit
+# "Missing argument for option: f" und druckte seine Hilfe. Der Aufruf mit
+# eigenem Jungle (tools/eingabe-probe) funktionierte, der dokumentierte nicht —
+# und die strenge Typpruefung ist gerade der Schalter, den die Abnahme
+# verlangt. Ein zweites Argument, das mit "-" beginnt, ist deshalb ein
+# Schalter und kein Pfad.
 bauen() {
-    local geraet="${1:?Geraet fehlt}" jungle="${2:-$WURZEL/watch/monkey.jungle}"
+    local geraet="${1:?Geraet fehlt}"; shift
+    local jungle="$WURZEL/watch/monkey.jungle"
+    case "${1:-}" in
+        -*|"") ;;                       # Schalter oder nichts: Vorgabe behalten
+        *) jungle="$1"; shift ;;
+    esac
     umgebung; mkdir -p "$AUSGABE"
+    # DIESELBE GRAFIKFALLE WIE IN `reihe` (Begruendung dort): monkeyc skaliert
+    # das Launcher-Icon ueber java.awt.BufferedImage und braucht dafuer eine
+    # Grafikumgebung. Ohne sie endet der Lauf in einem AWTError statt in einer
+    # ERROR-Zeile. `reihe` setzt headless, `bauen` tat es bis zum 03.09.2026
+    # nicht — und `umgebung` leert JAVA_TOOL_OPTIONS sogar ausdruecklich.
+    # Aufgefallen an `bauen venu3s tools/eingabe-probe/monkey.jungle`; Geraete,
+    # deren Icon exakt passt (fenix6pro, fr945), bauen ohne die Zeile durch,
+    # und deshalb sah der Ausfall nach einem Geraeteproblem aus.
+    export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
     melde "Uebersetzen fuer $geraet"
     monkeyc -f "$jungle" -d "$geraet" -o "$AUSGABE/$geraet.prg" \
-            -y "$SCHLUESSEL" "${@:3}"
+            -y "$SCHLUESSEL" "$@"
     printf 'Kompilat: %s\n' "$AUSGABE/$geraet.prg"
 }
 
