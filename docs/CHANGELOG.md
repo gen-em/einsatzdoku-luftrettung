@@ -2,14 +2,123 @@
 
 Format nach [Keep a Changelog](https://keepachangelog.com/de/).
 
-**Weboberfläche** und **Uhr-App** werden getrennt gezählt, weil sie unabhängig
-voneinander ausgeliefert werden: `server/version.php` bzw.
-`watch/source/Const.mc`. Die Web-Version steht in der Fußzeile jeder Seite. Bis
+**Weboberfläche**, **Uhr-App** (Garmin) und **Android-App** werden getrennt
+gezählt, weil sie unabhängig voneinander ausgeliefert werden:
+`server/version.php`, `watch/source/Const.mc` bzw. `android/version.properties`.
+Das Präfix `Android` kommt mit Paket E hinzu (F-S5Z-05): Der Rahmenplan sah es
+„mit der ersten verteilten Fassung" vor, und die ist faktisch da — ein APK
+läuft auf dem Prüfgerät. Die Web-Version steht in der Fußzeile jeder Seite. Bis
 Web 5.3.0 hing sie zusätzlich an allen Stylesheet- und Skript-Adressen; seit
 Web 5.4.0 steht dort der Zeitstempel der jeweiligen Datei, damit nach einem
 Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
+
+## [Android 0.8.0] — 2026-09-03
+
+### Android — Die App sagt jetzt, ob sie wirklich aufzeichnet
+
+Bis 0.7.7 stand in der Dienstansicht „Aufzeichnung läuft seit 07:02 · GPS an",
+sobald die **Ortungsfreigabe** erteilt war. Ob der Standort eingeschaltet ist,
+ob überhaupt eine Position hereinkommt und ob sie brauchbar ist, hat die App
+nie geprüft. Vier verschiedene Lagen sahen deshalb gleich aus, und in dreien
+davon landete im Puffer nichts: Standort aus, kein Empfang, Signal zu ungenau.
+Der rote Aufnahmepunkt leuchtete, die Dauermeldung sagte „Aufzeichnung läuft",
+und am Abend fehlte eine Spur, die niemand mehr erklären konnte. Das ist genau
+die Art Aussage, gegen die dieses Projekt an anderer Stelle ausdrücklich
+gebaut ist — eine Behauptung über etwas, das die App nicht geprüft hat.
+
+Neu misst ein **Ortungswächter** im Vordergrunddienst, was tatsächlich
+ankommt, und unterscheidet sechs Zustände: Freigabe fehlt, Standort aus, sucht,
+kein Signal, zu ungenau, empfängt. „Aufzeichnung läuft" steht nur noch beim letzten;
+in allen anderen heißt es „Dienst läuft" und dahinter, was fehlt — weil das
+wahr ist und das andere nicht. Die Dauermeldung trägt denselben Wortlaut, denn
+sie ist die einzige Auskunft, solange die App nicht offen steht.
+
+**Brauchbar heißt dabei: die Ausdünnung würde den Fund annehmen.** Der Wächter
+zählt nicht Sensorereignisse, sondern das, was in den Puffer geht — dieselbe
+100-Meter-Schwelle, nach der auch aufgezeichnet wird. Eine Anzeige mit einer
+anderen Schwelle als die Aufzeichnung wäre irreführend; die Garmin-Uhr hält es
+seit jeher genauso.
+
+**Gewarnt wird sichtbar und spürbar, nicht hörbar.** Ein zweiter
+Benachrichtigungskanal „Warnungen" vibriert und schweigt — der Kanal
+„Aufzeichnung" bleibt still und niederrangig, und weil Android die
+Einstellungen eines Kanals nach dem Anlegen der Nutzerin überlässt, kann eine
+spürbare Warnung nicht auf demselben liegen. Die Warnung kommt beim Übergang
+in einen Fehlzustand, beim Wechsel zwischen zweien und danach alle zehn
+Minuten, solange er anhält: Das Handy steckt in der Tasche, und eine einzige
+Vibration in einer Anfahrt ist überhörbar. Sie verschwindet von selbst, sobald
+wieder aufgezeichnet wird. Antippen führt bei ausgeschaltetem Standort direkt
+in die Systemeinstellung. **Bewusst nicht behoben:** „Nicht stören" kann die
+Vibration unterdrücken — das ist die Entscheidung der Nutzerin und bleibt es;
+die sichtbare Meldung und die rote Zeile bleiben davon unberührt.
+
+**Ein Dienst beginnt nicht mehr bei ausgeschaltetem Standort.** Statt des
+Knopfes „Dienst beginnen" steht dann ein Block „Standort ausgeschaltet" mit dem
+Weg dorthin. Der Knopf verschwindet, statt beim Druck abzulehnen: Eine
+Ablehnung müsste erklärt werden, und über dem Knopf steht die Erklärung schon.
+Nach der Rückkehr aus den Einstellungen verschwindet der Block von selbst.
+
+**Die Uhr erfährt es mit der Quittung.** Ein Dienststart lässt sich am
+Handgelenk auslösen, und dort kann niemand gefragt werden — der Dienst wird
+deshalb durchgelassen und nicht abgelehnt: Wer mit Handschuhen am Fahrzeug
+steht und gedrückt hat, ist mit einem stillen „nein" schlechter bedient als mit
+einer Warnung. Damit die Warnung nicht nur in der Hosentasche vibriert, trägt
+die Standmeldung ans Handgelenk jetzt einen Kurzcode des Ortungszustands, und
+die Uhr zeigt „keine Ortung · keine Aufzeichnung". Ein Wortlaut für vier
+Ursachen, weil die Uhr keine davon beheben kann — das tut das Handy. Fehlt das
+Feld (ältere Handy-Fassung), zeigt die Uhr nichts an, statt etwas zu behaupten.
+
+Vier Fehler am Bestand sind dabei aufgefallen und mitbehoben:
+
+Der Zuhörer der Ortung war ein **SAM-Lambda** und setzte damit genau eine der
+vier Methoden von `LocationListener` um. Auf Android 8 bis 10 — und das ist die
+untere Grenze dieser App — sind alle vier abstrakt; hätte das System dort
+`onProviderDisabled` gerufen, wäre der Vordergrunddienst mit einem
+`AbstractMethodError` gestorben, und zwar genau in dem Augenblick, in dem
+jemand den Standort ausschaltet. Der Zuhörer ist jetzt eine ausgeschriebene
+Klasse, und ein Prüffall zählt per Reflexion nach, dass alle vier Methoden dort
+stehen. Abgeleitet aus der Plattform-Schnittstelle, nicht beobachtet: Ein
+solches Gerät stand nicht zur Verfügung.
+
+Der Sendetakt wurde bei **jedem** Start des Dienstes neu aufgesetzt, und die
+Zeile, die ihn zurücksetzte, löschte dabei die ganze Warteschlange ihres
+Handlers. Beides zusammen heißt: Ein Dienst, der von der Uhr geführt wird, hat
+bei Ereignissen dichter als fünfzehn Minuten **gar nicht** gesendet — jede
+Uhrnachricht startet den Dienst erneut und schob den Takt vor sich her. Beide
+Takte laufen jetzt mit eigenem Token, und der Sendetakt wird nur gestartet,
+wenn er nicht schon läuft.
+
+Zwei Farben trugen zu wenig Kontrast, und beide sind erst beim Nachrechnen
+**aller** Token aufgefallen: Der orange Punkt der Zeile „Rückstand N Pakete"
+kam auf 2,23 : 1 gegen die Karte, gefordert sind 3,0 für ein grafisches
+Objekt; die rote Zeile „wartet aufs Handy" auf der Uhr kam auf 4,12 : 1,
+gefordert sind 4,5 für Schrift. Beide standen jahrelang da, weil das
+Kontrastwerkzeug eine **feste Paarliste** führt und diese zwei Paare nicht
+enthielt — ein Paar, das nicht eingetragen ist, wird nicht gemessen und meldet
+folglich auch keinen Fehler. Sie tragen jetzt das tiefe Orange (4,32 : 1) und
+Rosa (15,94 : 1), und acht Paare sind neu in der Liste. Aus demselben Grund ist
+der Zustand „zu ungenau" **rot** geworden und nicht orange, wie das Konzept es
+vorsah: Kein Orange der Palette trägt Text auf der hellen Karte. Alle vier
+Zustände ohne Aufzeichnung sind damit rot und unterscheiden sich am Wortlaut —
+die farbliche Abstufung „warnt" gegen „fehlt ganz" geht dabei verloren, und das
+ist in Kauf genommen, weil in beiden Fällen nichts aufgezeichnet wird.
+
+**Was bewusst stehen bleibt:** Das Dienstende sendet weiterhin auf einem
+eigenen Faden, während der Dienst schon stoppt — die Lücke, durch die ein
+Abschluss verlorengeht, wenn die App direkt danach weggewischt wird. Sie wird
+als Ganzes im nächsten Paket geschlossen (Vordergrunddienst halten,
+Nachsende-Job, Hinweismeldung); halb behoben wäre sie schwerer zu prüfen als
+gar nicht.
+
+**Nicht geprüft werden konnte** alles, was ein Gerät braucht: Vibration, die
+tatsächlichen Fristen für Erstfix und Signalverlust, das Verhalten beim
+Abschalten des Standorts und der Absturz auf Android 8 bis 10. In diesem
+Container gibt es keinen Emulator — das arm64-Abbild übersetzt der heutige
+QEMU2 nicht, das x86_64-Abbild braucht KVM, und `/dev/kvm` fehlt. Geprüft ist
+die Regel dahinter, mit eingespeister Zeit: 36 neue Prüffälle, jede Frist auf
+beiden Seiten ihrer Grenze.
 
 ## [Web 12.9.4] — 2026-09-02
 

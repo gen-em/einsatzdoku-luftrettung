@@ -61,7 +61,7 @@ class UhrannahmeTest {
             ausduenner = Ausduenner(),
             jetzt = { uhrzeit },
         )
-        annahme = Uhrannahme(puffer, klammer) { Modus.MIT_PHASENKNOEPFEN }
+        annahme = Uhrannahme(puffer, klammer, modus = { Modus.MIT_PHASENKNOEPFEN })
     }
 
     @After fun abbauen() {

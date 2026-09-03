@@ -39,6 +39,17 @@ data class Uhrzustand(
     val phasen: List<Phasenmarke> = emptyList(),
     val ansicht: Ansicht = Ansicht.START,
 
+    /**
+     * Wie es um die Ortung des Handys steht — ein
+     * [org.genem.nadoku.gemeinsam.Ortungscode], oder `null` (E-S5Z-15).
+     *
+     * **`null` heisst „das Handy sagt nichts dazu"** und nicht „alles gut" —
+     * derselbe dritte Zustand wie bei [handyErreichbar] und aus demselben
+     * Grund (B-S4-09). Eine ältere Handy-Fassung schickt das Feld nicht mit;
+     * die Uhr zeigt dann nichts an, statt etwas zu behaupten.
+     */
+    val ortung: String? = null,
+
     /** Die Anzeige ist gesperrt (E-S4-21d). */
     val gesperrt: Boolean = false,
 

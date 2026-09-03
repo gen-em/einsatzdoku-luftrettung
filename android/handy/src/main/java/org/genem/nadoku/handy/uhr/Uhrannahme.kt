@@ -43,6 +43,14 @@ class Uhrannahme(
     private val klammer: Dienstklammer,
     /** Der Modus für einen an der Uhr ausgelösten Dienst (E-S4-20). */
     private val modus: () -> Modus = { Modus.MIT_PHASENKNOEPFEN },
+    /**
+     * Der Ortungszustand als Kurzcode, oder `null` (E-S5Z-15).
+     *
+     * Als Funktion und nicht als Wert: Zwischen dem Bau dieser Annahme und
+     * der Antwort liegt das Wirken des Ereignisses — ein Dienststart kann den
+     * Zustand in genau dieser Spanne ändern.
+     */
+    private val ortung: () -> String? = { null },
 ) {
 
     /**
@@ -101,6 +109,12 @@ class Uhrannahme(
             laufendePhase = phasen.lastOrNull()?.nummer ?: Phasen.FREI,
             laufendeSeit = phasen.lastOrNull()?.at?.let { Zeit.hhmm(Instant.parse(it)) },
             phasen = phasen.map { Phasenmarke(it.nummer, Zeit.hhmm(Instant.parse(it.at))) },
+            /* DIE ANTWORT AUF EIN UHR-EREIGNIS TRÄGT DEN ORTUNGSZUSTAND MIT
+             * (E-S5Z-15). Damit erfährt die Uhr von einem Dienststart bei
+             * ausgeschaltetem Standort im selben Augenblick, in dem sie die
+             * Quittung bekommt — ohne dass jemand das Handy aus der Tasche
+             * holen muss. */
+            ortung = ortung(),
         )
     }
 }

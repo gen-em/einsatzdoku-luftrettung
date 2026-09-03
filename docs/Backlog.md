@@ -994,6 +994,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Nicht als Dauerwarnung.** Ein Hinweis, den man bei jedem Dienstbeginn
     wegklickt, wird nicht gelesen — dieselbe Überlegung wie beim Hinweis auf
     neue Geräte (M4-10), der bestätigbar ist.
+    **Nachtrag 03.09.2026 (S5, Paket E1, B-S5Z-10):** Kandidat (c) nennt den
+    Text „Aufzeichnung läuft seit %1$s · GPS an". **Den gibt es nicht mehr.**
+    Android 0.8.0 hat ihn durch sechs Texte ersetzt, einen je Ortungszustand
+    (`dienst_laeuft_ok`, `…_sucht`, `…_kein_signal`, `…_ungenau`,
+    `…_standort_aus`, `…_freigabe_fehlt`); dieselben Texte tragen auch die
+    Dauermeldung. Wer (c) baut, hängt den Akkuhinweis also an **eine** dieser
+    Zeilen — vermutlich `dienst_laeuft_ok`, die einzige, in der wirklich
+    aufgezeichnet und damit Strom gezogen wird. Zu bedenken: Die Zeile ist
+    schon jetzt lang, und bei `KEIN_SIGNAL` trägt sie zusätzlich eine
+    Minutenzahl. Kandidat (a) und (b) sind davon unberührt.
     Zuordnung: **S4-Rest** (Schritt 6). Textänderung heißt `tools/wortliste/`
     fahren, Bereich (d).
 
@@ -1138,6 +1148,49 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Mockup und Freigabe nach `Design.md` 1 vor der Umsetzung; Baustein
     `ui_kennzahl` aus P3 als Ausgangspunkt. Braucht die Spalten aus R64
     (Nr. 83, S4-Rest). Zuordnung: Backlog-Runde, nach dem S4-Rest.
+
+90. **Abgewiesene Pakete sichtbar machen und ausräumen.**
+    *Aufgenommen 03.09.2026 aus S5 Paket E (B-S5Z-06).* Antwortet der Server
+    auf ein Paket mit **400**, wird es im Puffer als `fehlerhaft = 1` markiert
+    und damit aus der Warteschlange **und** aus der Anzeige genommen: Die App
+    sagt „Alles gesendet", während beim Server ein Segment offen bleibt. Paket
+    E2 macht die Zahl sichtbar („N Pakete vom Server abgewiesen"); was fehlt,
+    ist ein **Weg damit umzugehen** — ansehen, was drinsteht, ausleiten oder
+    verwerfen. Ohne ihn bleibt die Zahl für immer stehen und wird zur
+    Tapete. **Zu entscheiden:** ob Ausleiten (als Datei, zum Nachreichen von
+    Hand) oder nur Verwerfen mit Rückfrage; Ersteres braucht ein Format,
+    Letzteres ist Datenverlust auf Knopfdruck. Zuordnung: Backlog-Runde, nach
+    S5.
+
+91. **Die Rundlaufprüffälle räumen ihren hochgeladenen Bestand nicht ab.**
+    *Aufgenommen 03.09.2026 aus S5 (Vorbereitung 8.2).* `android/LIESMICH.md`
+    verspricht: „Die Fälle räumen hinter sich auf: Was sie koppeln, trennen
+    sie wieder." Das stimmt für die **Geräte** und nicht für die **Daten**:
+    Nach einem Lauf standen 9 Diensttage, 5 Einsätze und 14 439 Spurpunkte
+    zusätzlich im Admin-Konto, und jeder weitere Lauf legt dasselbe noch
+    einmal dazu. Das ist kein Fehler der Prüffälle — der Sinn des Rundlaufs
+    ist gerade, dass die Daten wirklich ankommen —, aber es heißt: Wer die
+    Installation als Ausgangsstand braucht, muss sie neu einrichten, und wer
+    Zahlen misst, muss sie vor **und** nach dem Lauf notieren. Die
+    `day`-Kennungen sind den Fällen bekannt; ein Abräumen am Ende wäre
+    machbar. Zuordnung: Backlog-Runde.
+
+92. **Das Kontrastwerkzeug misst nur, was in seiner Paarliste steht.**
+    *Aufgenommen 03.09.2026 aus S5 Paket E1 (B-S5Z-13, B-S5Z-15, B6.2).*
+    `android/werkzeuge/kontraste.py` führt eine **feste Liste** von
+    Farbpaaren. Ein Paar, das dort nicht eingetragen ist, wird nicht gemessen
+    — und meldet folglich auch keinen Fehler. Genau so standen zwei Paare
+    jahrelang unter dem Zielwert, ohne dass ein grüner Lauf je etwas anderes
+    sagte: der orange Punkt der Zeile „Rückstand N Pakete" (2,23 : 1 gegen
+    3,0) und die rote Zeile „wartet aufs Handy" auf der Uhr (4,12 : 1 gegen
+    4,5). Beide sind mit E1 behoben und beide Paare eingetragen; die **Lücke
+    im Werkzeug** bleibt. **Zu entscheiden:** ob das Werkzeug die Paare aus
+    dem Quelltext **ableiten** kann (jedes `color = Farbe.x` innerhalb eines
+    Bausteins mit bekanntem Grund) oder ob eine Vollständigkeitsprüfung
+    genügt, die meldet, welche Token-Kombinationen im Code vorkommen und in
+    der Liste fehlen. Das Zweite ist deutlich billiger und fängt denselben
+    Fehler. Dieselbe Frage stellt sich für
+    `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
 
 ---
 

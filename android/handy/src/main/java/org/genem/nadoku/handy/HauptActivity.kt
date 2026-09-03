@@ -4,7 +4,9 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
+import android.os.SystemClock
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
@@ -37,6 +39,7 @@ import org.genem.nadoku.R
 import org.genem.nadoku.gemeinsam.Farbe
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.handy.aufzeichnung.AufzeichnungsDienst
+import org.genem.nadoku.handy.aufzeichnung.Ortungsstand
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.dienst.Zeit
 import org.genem.nadoku.handy.kopplung.Geraeteangabe
@@ -194,6 +197,13 @@ private fun GekoppelteOberflaeche(
 
     val stand = remember(takt, modus, ortungFrei) {
         val laufend = app.klammer.laufenderDienst()
+        /* WER DEN ORTUNGSZUSTAND KENNT, HÄNGT DAVON AB, OB EIN DIENST LÄUFT
+         * (E-S5Z-01). Läuft einer, ist der Vordergrunddienst die eine Quelle
+         * — er misst, die Ansicht liest. Läuft keiner, gibt es nichts zu
+         * lesen; dann leitet die Ansicht selbst ab, was sie für die beiden
+         * Sperren braucht. Der Sekundentakt oben holt es von selbst nach,
+         * sobald jemand aus den Systemeinstellungen zurückkommt. */
+        val lage = app.ortung
         val offenesPaket = laufend?.let {
             app.puffer.offenesPaket(org.genem.nadoku.handy.puffer.Paketzeile.ART_EINSATZ)
                 ?: app.puffer.offenesPaket(org.genem.nadoku.handy.puffer.Paketzeile.ART_RUHESEGMENT)
@@ -207,6 +217,11 @@ private fun GekoppelteOberflaeche(
             punkte = offenesPaket?.let { app.puffer.punktzahl(it.id) } ?: 0L,
             streckeKm = "%.1f".format(app.klammer.streckeM() / 1000.0),
             ortungFreigegeben = ortungFrei,
+            standortAn = standortAn(kontext),
+            ortung = lage?.stand,
+            ortungSeitMin = lage
+                ?.let { ((SystemClock.elapsedRealtime() - it.seitMs) / 60_000L).toInt() }
+                ?.coerceAtLeast(1) ?: 0,
             einsatzLaeuft = einsatz != null,
             laufendePhase = app.klammer.laufendePhase(),
             phaseSeit = phasen.lastOrNull()?.let { Zeit.hhmm(Instant.parse(it.at)) },
@@ -319,6 +334,7 @@ private fun GekoppelteOberflaeche(
             },
             aufBeenden = { beendenFrageOffen = true },
             aufOrtungFreigeben = { freigabeFrage.launch(noetigeFreigaben()) },
+            aufStandortEinschalten = { standortEinstellungOeffnen(kontext) },
             aufEinstellungen = { ansicht = Ansicht.Einstellungen },
             aufPhase = { nummer ->
                 app.klammer.phaseSetzen(nummer)
@@ -376,6 +392,50 @@ private fun noetigeFreigaben(): Array<String> =
  * keine App erreicht. Die App fragt deshalb **einmal**, merkt sich das und
  * drängt nicht wieder.
  */
+/**
+ * Ist der **GPS-Anbieter** eingeschaltet? (E-S5Z-03)
+ *
+ * ABSICHTLICH DER ANBIETER und nicht `isLocationEnabled()`: Im Modus
+ * „Stromsparen" ist der Standort an und GPS aus — aufgezeichnet wird aber nur
+ * mit GPS. Ein Dienst, der unter dieser Auskunft begänne, zeichnete nichts
+ * auf und sagte es nicht.
+ *
+ * Das Lesen braucht keine Berechtigung; die Freigabe wird getrennt geprüft.
+ */
+private fun standortAn(kontext: Context): Boolean = try {
+    (kontext.getSystemService(Context.LOCATION_SERVICE) as LocationManager)
+        .isProviderEnabled(LocationManager.GPS_PROVIDER)
+} catch (e: SecurityException) {
+    false
+} catch (e: IllegalArgumentException) {
+    // Kein GPS-Anbieter auf diesem Gerät — dann gibt es nichts einzuschalten.
+    false
+}
+
+/**
+ * Die Systemeinstellung für den Standort öffnen (E-S5Z-03).
+ *
+ * Die App kann den Standort nicht selbst einschalten, und das ist richtig so:
+ * Es ist eine Systemeinstellung mit Wirkung auf jede App des Geräts. Sie
+ * führt deshalb dorthin und liest nach der Rückkehr im Sekundentakt neu — der
+ * Meldungsblock verschwindet von selbst.
+ */
+private fun standortEinstellungOeffnen(kontext: Context) {
+    try {
+        kontext.startActivity(
+            Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    } catch (e: android.content.ActivityNotFoundException) {
+        /* Diese Seite gibt es auf jedem Android; fehlt sie doch, bleibt die
+         * allgemeine Einstellungsliste. Ohne diesen Fang stürzte die App an
+         * einer Stelle ab, an der sie gerade erklärt, was zu tun ist. */
+        kontext.startActivity(
+            Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+}
+
 private fun akkuEinstellungOeffnen(kontext: Context) {
     /* EIN EINZIGER WEG, KEIN RÜCKFALL. Die allgemeine Liste gibt es auf jedem
      * Android ab 6.0; der Rückfall, den die frühere Fassung für fehlende

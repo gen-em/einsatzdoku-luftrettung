@@ -113,16 +113,33 @@ Die APK liegen danach unter
 
 ### Was der Baulauf heute meldet
 
-Stand C2 (Android 0.7.0), `./gradlew build` im Container:
+Stand E1 (Android 0.8.0), `./gradlew build` im Container, 03.09.2026:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **14** | **0** |
-| Prüffälle | **167**, davon 12 übersprungen | **53**, davon 0 übersprungen |
-| APK (unsigniert, Release) | **9 598 911 B** | **19 491 794 B** |
+| Prüffälle | **195**, davon 12 übersprungen | **61**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **9 637 735 B** | **19 574 450 B** |
 
-Zusammen **220 Prüffälle**. Dass die Uhr-APK doppelt so groß ist wie die
+Zusammen **256 Prüffälle** — 36 mehr als der Stand davor (0.7.7: 167 / 53 =
+220). Sie verteilen sich auf `OrtungswaechterTest` (21),
+`OrtungszuhoererTest` (2), `AusduennerTest` (+5 für `brauchbar()`),
+`NachrichtenformatTest` (+5) und `UhrsteuerungTest` (+3). Dass es so viele
+sind, ist kein Übereifer: Paket E ist zu einem großen Teil gerätegebunden,
+und diese Fälle sind das Einzige, was im Container überhaupt läuft
+(Abschnitt 7).
+
+**Die Warnungszahl blieb bei 14, und einmal war sie 15.** Der neue Text
+„· GPS ok" ergab `Typos: "ok" is usually capitalized as "OK"`. Stummgeschaltet
+wurde nichts — der Wortlaut heißt jetzt „· GPS empfängt", und das ist die
+bessere Aussage: Er nennt das Gemessene (es kommen brauchbare Funde) statt
+eine Güte zu behaupten, die die App gar nicht abstuft. Ebenso gefunden und
+behoben: `postDelayed(r, token, ms)` gibt es erst ab **API 28**, `minSdk` ist
+26 — vier Lint-Fehler `NewApi`. Der Weg, der ab API 1 trägt, ist
+`postAtTime(r, token, uptimeMillis() + ms)`.
+
+Die APKs sind um 38 824 B (Handy) und 82 656 B (Uhr) gewachsen. Dass die Uhr-APK doppelt so groß ist wie die
 Handy-APK, ist kein Fehler: Compose für Wear OS bringt seine eigene
 Bausteinsammlung mit, und beide Module übersetzen `gemeinsam/` mit. Der Fund
 **B-S4-03** im Konzept hält fest, dass das für eine Uhr viel ist und worauf
@@ -150,8 +167,9 @@ mehr, dafür verträgt sie sich mit der Inhaltsrichtlinie des Play Store.
 Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.
 
-Die **11 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 167 von 167 (siehe unten). Die 53 Fälle der Uhr laufen
+Die **12 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
+Installation sind es 195 von 195 (siehe unten). *(Hier stand „11" — die Zahl
+war seit 0.7.0 nicht nachgezogen worden; gezählt sind es zwölf.)* Die 61 Fälle der Uhr laufen
 immer — sie brauchen weder Server noch Gerät, weil geprüft wird, was die
 Bedienung *entscheidet* und was der Funk *zusichert*, nicht was die Uhr
 *zeichnet* (E-S4-40).
@@ -371,7 +389,49 @@ XML-Ressource führt statt in einem Stylesheet.
 
 Das steht vorn und nicht in einer Fußnote (E-R45-7, E-R45-8):
 
+### Was Paket E1 dazugelegt hat (Android 0.8.0)
+
+Der Ortungswächter ist **fast vollständig gerätegebunden**. Was in diesem
+Container läuft, ist seine Regel — die Zustandsmaschine mit eingespeister
+Zeit; was sie auslöst und was daraus folgt, läuft nicht:
+
+| Nicht prüfbar | Warum | Wo es geprüft wird |
+|---|---|---|
+| **Vibration** der Warnung | Kein Gerät, kein Emulator (siehe unten) | Gerätetest, einmal auch mit „Nicht stören" — die Einstellung kann sie unterdrücken, und das bleibt so |
+| **Die Fristen** 120 s (Erstfix) und 60 s (Signalverlust) | Kein GPS. Beide Zahlen sind **hergeleitet, nicht gemessen** | Gerätetest: Kaltstart im Freien mitstoppen, Handy drei Minuten in die Tiefgarage |
+| **Ob `onProviderDisabled` ankommt** | Der Standort lässt sich hier nicht abschalten, weil es nichts gibt, an dem er anginge | Gerätetest: Schnelleinstellung im laufenden Dienst |
+| **Der `AbstractMethodError` auf Android 8–10** | Kein solches Gerät. Der Befund ist aus der Plattform-Schnittstelle **abgeleitet** | Gerätetest, falls ein Gerät greifbar ist. Ersatzweise der Reflexionsfall — er belegt die Bauform, nicht ihre Wirkung |
+| **Die drei Meldungs-IDs nebeneinander** | `adb shell dumpsys notification` braucht ein Gerät | Gerätetest, mit dem Auge |
+| **Job-Zeiten unter Doze** und Samsungs Akkusteuerung | dasselbe | Gerätetest (gehört zu E2) |
+
+### Der Emulator — die Berichtigung von 0.7.2 gilt hier nicht mehr
+
 - ~~**Kein Emulator.**~~ **Das stimmte nicht** und ist seit 0.7.2 berichtigt.
+
+  **Nachtrag 03.09.2026, und er dreht es zurück:** In dem Container, in dem
+  Paket E entstand, läuft **kein** Emulator. Beide Wege sind gemessen:
+
+  | Weg | Ergebnis |
+  |---|---|
+  | **x86_64-Abbild** | braucht KVM. `/dev/kvm` fehlt, und `/proc/cpuinfo` nennt weder `vmx` noch `svm` — die CPU ist selbst virtualisiert, Verschachtelung ist nicht freigegeben. *In diesem Container nachgemessen.* |
+  | **arm64-Abbild** | `FATAL | Avd's CPU Architecture 'arm64' is not supported by the QEMU2 emulator on x86_64 host.` (Emulator 37.1.11) — der heutige Emulator übersetzt keine fremde Architektur mehr. *Übernommen aus der S5-Vorbereitung 8.3, dort gemessen.* |
+
+  **Beide Sätze stimmen, und der Unterschied ist der Container**, nicht die
+  App: Der Lauf von 0.7.2 fand einen älteren Emulator und ein Abbild vor, die
+  reine Software-Emulation noch zuließen. Wer sich auf den Emulator verlässt,
+  verlässt sich also auf eine Eigenschaft der Wegwerf-Umgebung — sie kann beim
+  nächsten Mal fehlen. **Deshalb ist er nicht der Hauptweg und darf es nicht
+  werden.** Vor dem Gebrauch nachsehen, ob er da ist; die vier Griffe, die
+  Konzept S5-Zusatz 9.3 für ihn vorsah (`adb emu geo fix`, Standort abschalten,
+  `cmd jobscheduler run -f`, `dumpsys notification`), fielen für Paket E
+  vollständig aus.
+
+  Was das nicht ändert: **Bilder entstehen ohnehin ohne Emulator**
+  (Abschnitt 2.2, Robolectric im NATIVE-Modus), und die instrumentierten
+  Prüffälle aus 0.7.6 bleiben, was sie sind — sie brauchen nur ein
+  Android-System, gleich welches.
+
+  Was der Lauf von 0.7.2 kostete, zur Erinnerung:
   Der Emulator läuft ohne KVM in reiner Software-Emulation; beide Module
   wurden darin gebootet, bedient und abgezogen. Bilder entstehen im
   Prüflauf ohne ihn (siehe 2.2). Was er kostet: Boot 197–345 s, Installation

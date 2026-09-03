@@ -34,6 +34,29 @@ PAARE = [
     ("Hinweiskasten: Schrift",       "marke_asphalt",    "marke_blau_hell",  4.5),
     ("Auswahl aktiv: Schrift",       "marke_blau_tief",  "marke_blau_hell",  4.5),
     ("Kopfleiste: Schrift",          "marke_auf_dunkel", "marke_dunkelblau", 4.5),
+    # -- Zustandszeile der Ortung (E1, E-S5Z-22) --
+    #
+    # DIE DREI STUFEN, DIE DIE ZEILE KENNT. Sie stehen hier, WEIL dieses
+    # Werkzeug eine feste Paarliste fuehrt: Ein Paar, das nicht eingetragen
+    # ist, wird nicht gemessen -- und meldet folglich auch keinen Fehler
+    # (B6.2). Genau so blieb `marke_orange` als Punkt jahrelang unbemerkt
+    # unter dem Zielwert (B-S5Z-13, unten).
+    #
+    # Das Konzept sah fuer UNGENAU Orange als SCHRIFT vor. Nachgerechnet:
+    # marke_orange 2,23:1, marke_orange_tief 4,32:1 -- beide unter AA. Rot
+    # traegt hier, und alle vier Zustaende ohne Aufzeichnung sind deshalb rot
+    # (E-S5Z-22); sie unterscheiden sich am Wortlaut.
+    ("Ortung ok: Schrift",           "marke_asphalt",    "marke_schnee",     4.5),
+    ("Ortung sucht: Schrift",        "marke_gedaempft",  "marke_schnee",     4.5),
+    ("Ortung fehlt: Schrift",        "marke_rot_tief",   "marke_schnee",     4.5),
+    # -- Uhr: derselbe Zustand am Handgelenk (E-S5Z-15) --
+    ("Uhr: keine Ortung",            "marke_rosa",       "marke_asphalt",    4.5),
+    # B-S5Z-15: Dieselbe Zeile in ihrer aelteren Fassung. `marke_rot` als
+    # SCHRIFT auf Asphalt traegt 4,12:1 -- unter AA. Als FLAECHE mit weisser
+    # Schrift traegt dasselbe Rot 4,78:1 und ist richtig; der Unterschied
+    # stand nie in einer Zahl, weil das Paar hier fehlte.
+    ("Uhr: Dienst schwebt",          "marke_rosa",       "marke_asphalt",    4.5),
+    ("Uhr: GPS sucht",               "marke_sand",       "marke_asphalt",    4.5),
     # -- Uhr, Asphalt als Grund --
     ("Uhr: Hauptschrift",            "marke_auf_dunkel", "marke_asphalt",    4.5),
     ("Uhr: Nebenschrift",            "marke_sand",       "marke_asphalt",    4.5),
@@ -43,6 +66,12 @@ PAARE = [
     ("Uhr: Abschluss-Rueckfrage",    "marke_auf_dunkel", "marke_rot",        4.5),
     # -- grafische Objekte (1.4.11): 3:1 --
     ("Aufnahmepunkt auf Karte",      "marke_rot",        "marke_schnee",     3.0),
+    # B-S5Z-13: Der Punkt der Zeile "Rueckstand N Pakete" trug bis E1
+    # `marke_orange` -- 2,23:1 gegen Schnee und damit unter den 3,0, die
+    # WCAG 1.4.11 fuer ein grafisches Objekt verlangt. Er trug sie deshalb so
+    # lange, weil dieses Paar in dieser Liste fehlte.
+    ("Rueckstandspunkt auf Karte",   "marke_orange_tief", "marke_schnee",    3.0),
+    ("Warnpunkt auf Karte",          "marke_rot",        "marke_schnee",     3.0),
     ("Aufnahmepunkt auf Uhr",        "marke_rot",        "marke_asphalt",    3.0),
     ("Zustandspunkt blau auf Uhr",   "marke_blau",       "marke_asphalt",    3.0),
 ]

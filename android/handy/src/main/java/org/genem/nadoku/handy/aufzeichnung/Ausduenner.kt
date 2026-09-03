@@ -63,18 +63,9 @@ class Ausduenner {
      *   den Puffer.
      */
     fun nimm(punkt: Rohpunkt): Boolean {
-        /* ERST DIE GENAUIGKEIT. Die Uhr verwirft alles unterhalb von
-         * `QUALITY_POOR`; auf Android gibt es keine Stufen, sondern einen
-         * geschätzten Fehler in Metern. 100 m ist bewusst großzügig gewählt:
-         * Bei dieser Streuung ist der Fund kein GPS-Fund mehr, sondern aus
-         * Funkzelle oder WLAN abgeleitet, und er läge weit jenseits der 15 m,
-         * um die es bei der Ausdünnung geht. Ein strengerer Wert würfe im
-         * Wald oder in der Klinikeinfahrt echte Punkte weg.
-         *
-         * DIE ZAHL IST BLIND GEWÄHLT und gehört auf die Prüfliste des
-         * Gerätetests: Nur ein Dienst auf dem S24 zeigt, wie oft sie greift. */
-        val g = punkt.genauigkeitM
-        if (g != null && g > HOECHSTE_STREUUNG_M) return false
+        // ERST DIE GENAUIGKEIT -- die Regel steht in `brauchbar()`, weil der
+        // Ortungswächter dieselbe braucht (E-S5Z-02).
+        if (!brauchbar(punkt)) return false
 
         val vorher = letzte
         if (vorher == null) {
@@ -124,6 +115,39 @@ class Ausduenner {
     }
 
     companion object {
+        /**
+         * Ist der Fund brauchbar — verwirft die Ausdünnung ihn **nicht wegen
+         * Streuung**? (E-S5Z-02)
+         *
+         * WARUM DIESE ZEILE ÖFFENTLICH IST UND NICHT MITTEN IN [nimm] STEHT.
+         * Der [Ortungswaechter] muss dieselbe Frage beantworten: Er zeigt an,
+         * ob **brauchbare** Funde kommen, nicht ob irgendein Sensor läuft.
+         * Zwei Umsetzungen derselben Schwelle liefen früher oder später
+         * auseinander, und dann behauptete die Anzeige etwas anderes, als der
+         * Puffer täte. Die Garmin-Uhr macht es genauso: `SyncView.mc` zeigt
+         * die Güte mit **derselben** Schwelle an, ab der `Track.mc`
+         * speichert — „sonst wäre die Anzeige irreführend".
+         *
+         * Die Uhr verwirft alles unterhalb von `QUALITY_POOR`; auf Android
+         * gibt es keine Stufen, sondern einen geschätzten Fehler in Metern.
+         * 100 m ist bewusst großzügig gewählt: Bei dieser Streuung ist der
+         * Fund kein GPS-Fund mehr, sondern aus Funkzelle oder WLAN
+         * abgeleitet, und er läge weit jenseits der 15 m, um die es bei der
+         * Ausdünnung geht. Ein strengerer Wert würfe im Wald oder in der
+         * Klinikeinfahrt echte Punkte weg.
+         *
+         * EINE UNBEKANNTE GENAUIGKEIT GILT ALS BRAUCHBAR. Ein Gerät, das
+         * keinen Fehler mitliefert, ist kein Grund, seine Funde wegzuwerfen —
+         * das wäre der stillste denkbare Datenverlust.
+         *
+         * DIE ZAHL IST BLIND GEWÄHLT und gehört auf die Prüfliste des
+         * Gerätetests: Nur ein Dienst auf dem S24 zeigt, wie oft sie greift.
+         */
+        fun brauchbar(punkt: Rohpunkt): Boolean {
+            val g = punkt.genauigkeitM
+            return g == null || g <= HOECHSTE_STREUUNG_M
+        }
+
         /** `Const.THIN_MIN_DIST_M` der Uhr. */
         const val MINDESTSTRECKE_M = 15.0
 

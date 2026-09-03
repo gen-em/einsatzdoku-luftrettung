@@ -2318,6 +2318,50 @@ erlaubt sind — das ist bei einer Verteilung ohne Store der vorgesehene Weg.
 Steht die Karte nicht da, liegt auf dieser Installation keine App-Datei. Frag
 die Administration.
 
+### 10.2 Was die App über die Aufzeichnung sagt
+
+*Seit Android 0.8.0.*
+
+Im Dienst steht neben dem roten Aufnahmepunkt eine Zeile, und sie sagt
+**nicht immer dasselbe**:
+
+| Zeile | Bedeutung |
+|---|---|
+| „Aufzeichnung läuft seit 07:02 · GPS empfängt" | Es kommen brauchbare Positionen. Nur hier entsteht eine Spur. |
+| „Dienst läuft seit 07:02 · GPS sucht …" | Der Empfänger fängt sich noch ein. Nach einem Kaltstart im Freien dauert das eine halbe bis eine Minute. |
+| „Dienst läuft seit 07:02 · kein GPS-Signal seit 3 min · keine Aufzeichnung" | Es kommt nichts an — Tiefgarage, Metallkoffer, Handy tief in der Tasche. |
+| „Dienst läuft seit 07:02 · GPS zu ungenau · keine Aufzeichnung" | Es kommen Positionen, aber mit über 100 m Streuung. Das ist kein GPS mehr, sondern aus Funkzelle oder WLAN geschätzt. |
+| „Dienst läuft seit 07:02 · Standort aus · keine Aufzeichnung" | Der Standort des Telefons ist ausgeschaltet. |
+| „Dienst läuft seit 07:02 · Ortung nicht freigegeben · keine Aufzeichnung" | Die App darf nicht orten. |
+
+**„Aufzeichnung läuft" steht nur in der ersten Zeile.** In allen anderen heißt
+es „Dienst läuft", weil das wahr ist und das andere nicht — der Dienst läuft,
+die Zeiten und Phasen werden dokumentiert, aber es entsteht keine Spur. Der
+rote Punkt bleibt trotzdem stehen: Er zeigt den Dienst, nicht das Signal.
+
+**Das Telefon vibriert, wenn nichts aufgezeichnet wird**, und wiederholt es
+alle zehn Minuten, solange es so bleibt — ohne Ton. Die Meldung steht in der
+Benachrichtigungsleiste und sagt, was hilft; bei ausgeschaltetem Standort
+führt ein Tippen darauf direkt in die Einstellung. Sobald wieder aufgezeichnet
+wird, verschwindet sie von selbst.
+
+> **Wenn nichts vibriert:** „Nicht stören" kann die Vibration unterdrücken.
+> Die Meldung in der Leiste und die rote Zeile in der App bleiben davon
+> unberührt. Die Einstellung dazu steht unter *Einstellungen → Apps → NAdoku
+> → Benachrichtigungen → Warnungen*.
+
+**Ein Dienst beginnt nicht bei ausgeschaltetem Standort.** Statt „Dienst
+beginnen" steht dann ein Hinweis mit dem Knopf **„Standort einschalten"**; er
+führt in die Systemeinstellung. Nach der Rückkehr verschwindet der Hinweis von
+selbst, und der Knopf ist wieder da. Dasselbe gilt, wenn die Ortungsfreigabe
+fehlt.
+
+An der **Wear-OS-Uhr** ist das anders: Dort wird ein Dienst auch bei
+ausgeschaltetem Standort begonnen — am Handgelenk kann die App niemanden
+fragen, und ein wortloses „geht nicht" hülfe nicht weiter. Stattdessen
+vibriert das Telefon, und die Uhr zeigt unten „keine Ortung · keine
+Aufzeichnung".
+
 ---
 
 ## 11. Administration (nur Admin)

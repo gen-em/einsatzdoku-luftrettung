@@ -216,6 +216,8 @@ erkennen ist**.
 | **Knopfhöhe am Handgelenk** | 48 dp sind mit Handschuh treffbar | Fehlgriffe; dann ist 48 dp die falsche Zahl für dieses Gerät |
 | **Always-on-Display** | Die Ansicht überlebt den Wechsel in den Ambient-Modus | Die App startet neu oder verliert den Dienst |
 | **Dauerlauf** — zwölf Stunden Dienst | Der Akku hält, der Dienst läuft durch | Das System beendet die App; der Dienst bricht ohne Meldung ab |
+| **Ortungszustand am Handgelenk** (seit Android 0.8.0) — im laufenden Dienst den Standort des Handys ausschalten | Binnen Sekunden steht in der Zeile am unteren Rand „keine Ortung · keine Aufzeichnung" in Rosa; nach dem Wiedereinschalten „GPS sucht" und dann nichts mehr | Die Uhr zeigt weiter den Funkstand („verbunden"), obwohl das Handy nichts aufzeichnet — dann kommt die Standmeldung nicht an, oder das Feld `ortung` fehlt darin |
+| **Dienststart bei ausgeschaltetem Standort** — an der Uhr beginnen, während der Standort des Handys aus ist | Der Dienst beginnt trotzdem (er wird nicht abgelehnt), das Handy vibriert, und die Uhr zeigt sofort „keine Ortung · keine Aufzeichnung" | Die Uhr zeigt „Dienst läuft" ohne Hinweis — dann verschweigt sie genau die Lücke, die hinterher niemand erklären kann |
 
 ### 7.4 Ein Gerät ergänzen
 

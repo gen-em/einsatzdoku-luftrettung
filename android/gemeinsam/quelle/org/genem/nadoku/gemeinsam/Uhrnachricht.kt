@@ -83,6 +83,11 @@ object Nachrichtenformat {
         put("einsatz", s.einsatzLaeuft)
         put("phase", s.laufendePhase)
         if (s.laufendeSeit != null) put("seit", s.laufendeSeit)
+        /* NUR WENN ES ETWAS ZU SAGEN GIBT (E-S5Z-15). Ein fehlender Schlüssel
+         * heisst „diese Handy-Fassung kennt den Ortungszustand nicht" — und
+         * eine Uhr, die dann nichts anzeigt, sagt genau das Richtige. Ein
+         * leerer Wert wäre eine Aussage, ein fehlender ist keine. */
+        if (s.ortung != null) put("ortung", s.ortung)
         put(
             "phasen",
             JSONArray().apply {
@@ -100,6 +105,7 @@ object Nachrichtenformat {
             einsatzLaeuft = o.getBoolean("einsatz"),
             laufendePhase = o.optInt("phase", Phasen.FREI),
             laufendeSeit = if (o.has("seit")) o.getString("seit") else null,
+            ortung = if (o.has("ortung")) o.getString("ortung") else null,
             phasen = buildList {
                 for (i in 0 until liste.length()) {
                     val p = liste.getJSONArray(i)
@@ -178,7 +184,54 @@ data class Standmeldung(
     val laufendePhase: Int,
     val laufendeSeit: String?,
     val phasen: List<Phasenmarke>,
+    /**
+     * Wie es um die Ortung steht — einer der [Ortungscode]; `null`, wenn das
+     * Handy es nicht mitteilt (E-S5Z-15).
+     *
+     * WARUM DIE UHR DAS ERFÄHRT. Sie kann einen Dienst beginnen, während der
+     * Standort des Handys aus ist — fragen kann sie niemanden, das Handy
+     * liegt in der Tasche. Der Dienst wird trotzdem durchgelassen (F-S5Z-01
+     * (c)), aber eine Uhr, die dann „Dienst läuft" zeigt, verschweigt genau
+     * die Lücke, die hinterher niemand erklären kann. Dieselbe Begründung wie
+     * bei `dienst_schwebt` (E-S4-10).
+     *
+     * ES REIST KEIN ZUGANGSDATUM MIT (E-S4-11): ein Kurzcode, sonst nichts.
+     * Die Schlüsselmenge der **Uhrmeldung** — der Richtung, in der die
+     * Sicherheitsaussage steht — bleibt davon unberührt.
+     */
+    val ortung: String? = null,
 )
+
+/**
+ * Die Kurzcodes des Ortungszustands im Nachrichtenformat (E-S5Z-15).
+ *
+ * WARUM SIE IN `gemeinsam/` STEHEN und nicht auf jeder Seite als Zeichenkette:
+ * Zwei Programme, die dieselben sechs Wörter unabhängig voneinander tippen,
+ * tippen früher oder später eines verschieden — und der Data Layer meldet
+ * keine unverstandene Nachricht, er stellt sie zu und niemand tut etwas
+ * damit. Es ist derselbe Grund, aus dem dieses ganze Format hier liegt.
+ *
+ * Sie sind kurz, weil jede Nachricht über Funk geht; sie sind Zeichenketten
+ * und keine Zahlen, weil eine Zahl in einem Protokollauszug nichts sagt.
+ */
+object Ortungscode {
+    const val FREIGABE_FEHLT = "frei_fehlt"
+    const val STANDORT_AUS = "aus"
+    const val SUCHT = "sucht"
+    const val KEIN_SIGNAL = "kein"
+    const val UNGENAU = "ungenau"
+    const val OK = "ok"
+
+    /**
+     * Die Codes, bei denen **nichts aufgezeichnet wird** — die Uhr zeigt für
+     * alle vier denselben Satz.
+     *
+     * Ein Wortlaut für vier Ursachen, weil die Uhr keine davon beheben kann:
+     * Das tut das Handy, und das vibriert. Was die Uhr beitragen kann, ist
+     * die Nachricht „gerade entsteht keine Spur" ans Handgelenk.
+     */
+    val OHNE_AUFZEICHNUNG = setOf(FREIGABE_FEHLT, STANDORT_AUS, KEIN_SIGNAL, UNGENAU)
+}
 
 /**
  * Der Weg, auf dem eine Nachricht geht — **die Naht zur Hardware**.

@@ -38,6 +38,7 @@ import org.genem.nadoku.BuildConfig
 import org.genem.nadoku.R
 import org.genem.nadoku.gemeinsam.Bildmarke
 import org.genem.nadoku.gemeinsam.Farbe
+import org.genem.nadoku.gemeinsam.Ortungscode
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.gemeinsam.Motiv
@@ -384,6 +385,15 @@ private fun Zustandszeile(z: Uhrzustand) {
 /**
  * Was der Funk gerade tut — und **was er noch nicht getan hat**.
  *
+ * ROSA UND NICHT ROT, und das ist eine Berichtigung (B-S5Z-15). `marke_rot`
+ * als **Schrift** auf `marke_asphalt` erreicht 4,12 : 1 und bleibt damit unter
+ * AA; als Fläche mit weisser Schrift (die beendenden Knöpfe) trägt dasselbe
+ * Rot 4,78 : 1 und ist richtig. `marke_rosa` ist der helle Vertreter
+ * derselben Familie und erreicht 15,94 : 1. Der Fehler stand seit C1 da und
+ * fiel nicht auf, weil `werkzeuge/kontraste.py` eine feste Paarliste führt
+ * und dieses Paar nicht enthielt — dieselbe Lücke wie bei B-S5Z-13. Beide
+ * Paare stehen jetzt darin.
+ *
  * DIE SCHWEBENDE ZEILE IST DER KERN VON E-S4-10 an der Oberfläche: Ein an der
  * Uhr ausgelöster Dienststart wirkt erst mit der Zustellung; vorher läuft am
  * Handy kein GPS. Eine Uhr, die in diesem Augenblick nur „Dienst läuft"
@@ -395,7 +405,37 @@ private fun Verbindungszeile(z: Uhrzustand) {
     if (z.dienstSchwebt) {
         Text(
             text = stringResource(R.string.dienst_schwebt),
-            color = Farbe.rot, fontSize = 12.sp, textAlign = TextAlign.Center,
+            color = Farbe.rosa, fontSize = 12.sp, textAlign = TextAlign.Center,
+        )
+        return
+    }
+    /* DIE ORTUNG DES HANDYS HAT VORFAHRT VOR DEM FUNKSTAND (E-S5Z-15).
+     *
+     * Beide sagen dasselbe Wesentliche — „gerade entsteht keine Spur" —, aber
+     * die fehlende Ortung ist der Fall, den nur diese Zeile verraten kann: Der
+     * Funk steht, das Handy hat quittiert, der Dienst läuft, und aufgezeichnet
+     * wird trotzdem nichts. Ohne sie stünde hier „verbunden", und das wäre
+     * wahr und irreführend zugleich.
+     *
+     * EIN WORTLAUT FÜR VIER URSACHEN: Die Uhr kann keine davon beheben. Das
+     * tut das Handy, und das vibriert (E-S5Z-04).
+     *
+     * SIE STEHT HIER UNTEN UND NICHT ÜBER DEN KNÖPFEN (E-S5Z-25, E-S4-51):
+     * Bedienelemente in die Mitte, wo der Kreis breit ist, Statusanzeigen an
+     * den Rand. Der Entwurf sah sie vor den Knöpfen vor; dort schob schon die
+     * Verbindungszeile beide Knöpfe so weit nach unten, dass 1,66 % des
+     * Inhalts aus dem Glas liefen — gemessen, nicht vermutet. */
+    if (z.ortung in Ortungscode.OHNE_AUFZEICHNUNG) {
+        Text(
+            text = stringResource(R.string.ortung_keine),
+            color = Farbe.rosa, fontSize = 12.sp, textAlign = TextAlign.Center,
+        )
+        return
+    }
+    if (z.ortung == Ortungscode.SUCHT) {
+        Text(
+            text = stringResource(R.string.ortung_sucht),
+            color = Farbe.sand, fontSize = 12.sp, textAlign = TextAlign.Center,
         )
         return
     }

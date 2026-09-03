@@ -31,7 +31,12 @@ class HandyHorcher : WearableListenerService() {
         val meldung = Nachrichtenformat.liesMeldung(ereignis.data) ?: return
 
         val app = NAdokuApp.von(this)
-        val annahme = Uhrannahme(app.puffer, app.klammer) { app.einstellungen.letzterModus }
+        val annahme = Uhrannahme(
+            app.puffer,
+            app.klammer,
+            modus = { app.einstellungen.letzterModus },
+            ortung = { app.ortung?.stand?.code },
+        )
         val quittung = annahme.uebernimm(meldung)
 
         val weg = WearNachrichtenweg(this)
