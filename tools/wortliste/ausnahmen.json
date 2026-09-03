@@ -534,6 +534,13 @@
       "datei": "server/geraetemodelle.php",
       "klasse": "G",
       "begruendung": "Die erzeugte Modelltabelle (tools/geraetemodelle/). Sie enthaelt oeffentliche Produktnamen von Garmin — „Forerunner\", „Venu\", „fēnix\", „Edge\" —, und die sind hier die Sache selbst und keine Formulierung, die sich ersetzen liesse: Der Server loest damit die Teilenummer auf, die eine Uhr beim Koppeln sendet (JSON-Vertrag 1a, R42). DATEIWEIT und nicht je Zeile: Der Bestand wechselt mit jedem Lauf des Erzeugers; ein Muster auf einzelne Namen waere danach entweder unvollstaendig oder ungenutzt, und beides ist ein Fehlschlag. Zur gemeldeten Zahl: Sie ist KLEINER als der Bestand — Garmin schreibt „fēnix\" mit Makron, das Sperrmuster lautet \\bfenix und trifft diese Zeilen nicht. Wer die Zahl liest, weiss das besser."
+    },
+    {
+      "id": "technik-abgrenzung-beide-uhren",
+      "datei": "docs/Technik.md",
+      "zeile": "Die Garmin-Uhr hält es genauso",
+      "klasse": "G",
+      "begruendung": "Steht im Android-Kapitel (5a), nicht im Uhr-Kapitel, und dort ist der Markenname die Unterscheidung: Das Kapitel spricht ueber die Wear-OS-Uhr, der Satz vergleicht mit der Connect-IQ-Uhr (SyncView.mc gegen Track.mc). 'Uhr-App' waere hier zweideutig, und zwar genau an der Stelle, an der es auf den Unterschied ankommt. Aufgenommen 03.09.2026 mit S5 Paket E."
     }
   ]
 }
