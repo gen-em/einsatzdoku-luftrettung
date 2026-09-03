@@ -249,7 +249,17 @@ anzeige_starten() {
 
 simulator_starten() {
     umgebung; anzeige_starten
-    pgrep -f "$SDK_DIR/bin/simulator" >/dev/null && { melde "Simulator laeuft bereits"; return; }
+    # DAS MUSTER MUSS DER KOMMANDOZEILE ENTSPRECHEN, NICHT DEM PFAD.
+    # Gestartet wird unten mit `cd "$SDK_DIR/bin" && ./simulator` — in der
+    # Prozessliste steht deshalb "./simulator", niemals der volle Pfad. Die
+    # Abfrage mit `pgrep -f "$SDK_DIR/bin/simulator"` traf also NIE, und jeder
+    # Aufruf startete einen WEITEREN Simulator. Zwei davon auf derselben
+    # Anzeige schiessen einander ab: Der Bildabzug bleibt schwarz oder zeigt
+    # das Fenster des anderen, ohne dass irgendwo ein Fehler steht.
+    # Gemessen am 03.09.2026 waehrend der Bildstrecke von Paket C — die ersten
+    # zehn Abzuege waren deshalb leer. `pgrep -x` prueft den Prozessnamen und
+    # ist gegen den Aufrufpfad unempfindlich.
+    pgrep -x simulator >/dev/null && { melde "Simulator laeuft bereits"; return; }
     melde "Simulator starten"
     (cd "$SDK_DIR/bin" && setsid nohup ./simulator >"$BASIS/simulator.log" 2>&1 </dev/null &)
     sleep 18
@@ -455,7 +465,11 @@ speicher_leeren() {
 }
 
 beenden() {
-    pkill -f "$SDK_DIR/bin/simulator" 2>/dev/null || true
+    # Dasselbe Muster wie in simulator_starten, und derselbe Grund: In der
+    # Prozessliste steht "./simulator". `beenden` meldete deshalb Vollzug und
+    # liess den Simulator laufen — der naechste Lauf uebernahm ihn samt
+    # geladener App und altem Zustand.
+    pkill -x simulator 2>/dev/null || true
     pkill -f "Xvfb $ANZEIGE" 2>/dev/null || true
     melde "Simulator und Anzeige beendet"
 }

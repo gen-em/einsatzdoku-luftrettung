@@ -73,12 +73,24 @@ class PairView extends WatchUi.View {
          * Die unterste Zeile sitzt zwischen 84 und 91,5 % der Displayhoehe, und
          * dort traegt die Kreissehne nur noch 128 px (Fenix 6 Pro), 118 (FR945)
          * bzw. 193 (Venu 3s) — gemessen aus den Geraetedateien, nicht
-         * geschaetzt. Die Restzeit passt dort mit 71/64/146 px sicher hinein
-         * und ist in ihrer Laenge bekannt; der Verbindungshinweis ist es nicht
+         * geschaetzt. Die Restzeit ist der einzige Text dort, dessen Laenge
+         * bekannt ist; der Verbindungshinweis ist es nicht
          * und lief in derselben Zeile um 48 bis 111 px ueber den Rand — ohne
          * Warnung, denn Ui.fitFont hat unter 320 px Displayhoehe gar keine
          * kleinere Schrift mehr zur Wahl (fontHint liefert dort selbst schon
          * FONT_XTINY). Uhr-Layout_Regeln 4.3 nennt genau diesen Fall.
+         *
+         * DIE RESTZEIT SELBST IST AUF DER VENU 3S KNAPP. Mit dem Wortlaut
+         * "noch 10 min gültig" (Ansage vom 03.09.2026) misst sie dort 194 px
+         * gegen 193 px Sehne — ein Pixel ueber der eigenen Sicherheitslinie,
+         * nachdem fitFont bereits auf FONT_XTINY zurueckgefallen ist.
+         * Gezeichnet wird sie trotzdem vollstaendig, weil chordW zusaetzlich
+         * Ui.s(dc,16) = 24 px Rand abzieht; am Bild nachgesehen. Auf der Fenix
+         * (120/128) und der FR945 (111/118) bleiben 8 bzw. 7 px Reserve. Wer
+         * den Wortlaut verlaengert — oder wer dem Server ein groesseres
+         * `frist_s` erlaubt, "noch 100 min gültig" —, verliert auch dort den
+         * Rand. Die frueher hier genannten 71/64/146 px galten dem
+         * EINSTELLIGEN Fall ohne "gültig"; sie sind berichtigt.
          *
          * Eine Zeile hoeher traegt die Sehne 173/163/271 px — dort passt der
          * Hinweis. Das ist auch der Grund, warum die Sync-Seite an derselben
@@ -97,14 +109,14 @@ class PairView extends WatchUi.View {
         if (rest > 60) {
             // Aufgerundet: Bei 540 s steht "noch 9 min", bei 541 "noch 10 min".
             // Abrunden hiesse, in der letzten Minute "noch 0 min" zu zeigen.
-            lines.add(["noch " + ((rest + 59) / 60).toString() + " min",
+            lines.add(["noch " + ((rest + 59) / 60).toString() + " min gültig",
                        Graphics.COLOR_LT_GRAY]);
         } else {
             // Unter einer Minute auf Sekunden umschalten und in Orange: Die
             // Restzeit ist ab hier eine Kennzahl, auf die es ankommt
             // (Uhr-Layout_Regeln 7). Rot waere falsch — noch ist nichts
             // schiefgegangen.
-            lines.add(["noch " + rest.toString() + " s", Ui.ORANGE]);
+            lines.add(["noch " + rest.toString() + " s gültig", Ui.ORANGE]);
         }
 
         var untenY = h - Ui.s(dc, 22) - lines.size() * hKlein;
@@ -122,7 +134,7 @@ class PairView extends WatchUi.View {
         var y = (zone - blockH) / 2;
         if (y < Ui.s(dc, 20)) { y = Ui.s(dc, 20); }
 
-        var tOben = "Code für das Web";
+        var tOben = "Kopplungscode";
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, y,
             Ui.fitFont(dc, tOben, y, hKlein, [fKlein, Graphics.FONT_XTINY]),
