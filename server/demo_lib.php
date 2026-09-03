@@ -278,7 +278,7 @@ function demo_anlegen(): array
  * Demo-Konto auf den Ausgangsstand bringen.
  *
  * Loescht ALLES, was am Konto haengt — auch, was Besucher angelegt haben:
- * Geraete, Kopplungscodes, Papierkorb, Sperrlisteneintraege. Und spielt
+ * Geraete, Kopplungssitzungen, Papierkorb, Sperrlisteneintraege. Und spielt
  * anschliessend die Fixture erneut ein, EINSCHLIESSLICH Konto- und
  * Schluesselmaterial.
  *
@@ -384,7 +384,7 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
                    JOIN devices d ON d.id = dr.device_id
                    WHERE d.user_id = ?')->execute([$id]);
 
-    foreach (['missions', 'rest_segments', 'days', 'devices', 'pair_codes',
+    foreach (['missions', 'rest_segments', 'days', 'devices', 'pair_sessions',
               'password_resets', 'crew_presets', 'bw_units', 'resources',
               'transport_dests', 'vehicles', 'user_bases', 'user_defaults',
               'bases'] as $t) {

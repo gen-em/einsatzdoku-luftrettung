@@ -380,7 +380,7 @@ der Quelle.
 Repositorium ist öffentlich, und eine Bereitstellung für den eigenen Gebrauch
 ist etwas anderes als eine Veröffentlichung — dieselbe Überlegung wie beim
 Uhr-Prüfstand (`tools/uhr-pruefstand/LIESMICH.md`). Ihre Bereitstellungsadresse
-(`CIQ_GERAETE_URL`) steht bewusst nicht hier und muss erfragt werden.
+(`CIQ_GERAETE_URL`) steht bewusst nicht hier. Sie liegt seit dem 03.09.2026 in den **Umgebungsvariablen der Arbeitsumgebung** und ist in einer eingerichteten Umgebung bereits gesetzt; erfragt werden muss sie nur, wenn `$CIQ_GERAETE_URL` leer ist.
 
 **Das Erzeugungswerkzeug fällt unter Abschnitt 7** und wird nicht
 ausgeliefert. Die erzeugte Datei ist reines PHP ohne Abhängigkeit; zur

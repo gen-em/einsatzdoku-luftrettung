@@ -115,7 +115,24 @@ Laufzeit aus dem Bestand aufgelöst — Kennungen gehören zu **einer**
 Installation und dürfen nicht in einer eingecheckten Datei stehen.
 
 `karte: true` wartet zusätzlich auf Leaflet. `vorher` führt Bedienschritte
-vor der Aufnahme aus (bisher: `schublade`).
+vor der Aufnahme aus. Bekannt sind drei:
+
+| Schritt | Was er tut |
+|---|---|
+| `schublade` | öffnet das Menü (nur unter 1024 px sichtbar — sonst geschieht nichts) |
+| `kopplung-rueckfrage` | holt sich über `pair.php` eine **echte** Kopplungssitzung, tippt den Code ins Feld und klickt „Weiter" — Zustand 2 der Karte „Gerät koppeln" |
+| `kopplung-warten` | dasselbe, dann noch „Mit meinem Konto verbinden" — Zustand 3, die Karte wartet auf das Gerät |
+
+Die beiden Kopplungsschritte sind **das Gerät**, nicht eine Attrappe davon:
+Sie sprechen mit `pair.php`, wie eine Uhr es täte. Der Code wird je Schritt
+**einmal** geholt und über alle acht Breiten wiederverwendet — der
+Ratenschutz-Topf `pair_start` lässt zwanzig Aufrufe je zehn Minuten und Adresse
+zu, ein Lauf mit einer Sitzung je Breite bräuchte sechzehn davon. Wer im selben
+Zeitfenster `tools/kopplungsprobe/rundlauf.mjs` fährt, kann den Topf trotzdem
+füllen; dann meldet der Schritt es ausdrücklich, statt ein Bild des falschen
+Zustands aufzunehmen. Zurück bleibt eine Sitzung, die nach zehn Minuten
+verfällt — eine Gerätezeile entsteht nie, denn das Gerät sagt in diesem Lauf
+kein Ja.
 
 ## Drei Fallen, die hier schon zugeschnappt sind
 

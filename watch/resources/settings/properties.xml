@@ -1,9 +1,15 @@
 <properties>
-    <!-- Adresse der EIGENEN Installation. Die Domain genuegt
-         (z. B. "nadoku.beispieldomain.de") — Schema und /ingest.php ergaenzt die
-         App selbst. Vollstaendige URLs bleiben ebenfalls gueltig.
-         Bewusst ohne Vorgabewert: Jede Installation hat ihren eigenen Server. -->
-    <property id="serverUrl" type="string"></property>
+    <!-- Adresse der Installation. Die Domain genuegt — Schema und
+         /ingest.php ergaenzt die App selbst; vollstaendige URLs bleiben
+         ebenfalls gueltig.
+         VORGABE IST DIE OEFFENTLICHE INSTALLATION (R36, E-R49-8). Bis 2.0.0
+         stand hier nichts, mit der Begruendung "jede Installation hat ihren
+         eigenen Server". Das stimmte, als es nur Selbsthoster gab; seit es
+         eine oeffentliche Installation gibt, kostete es jede Trägerin einen
+         Weg durch die Garmin-Connect-Einstellungen, bevor sie ueberhaupt
+         koppeln konnte. Selbsthoster tragen hier ihre eigene Domain ein —
+         das Feld bleibt ueberschreibbar. -->
+    <property id="serverUrl" type="string">nadoku.gen-em.org</property>
     <!-- Werden beim Koppeln automatisch gefuellt — normalerweise nichts eintragen. -->
     <property id="deviceId"  type="string"></property>
     <property id="apiKey"    type="string"></property>

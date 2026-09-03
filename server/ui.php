@@ -913,7 +913,7 @@ function ui_demo_hinweis(): void
   <?= ui_symbol('kolben', 'symbol-gross') ?>
   <p><strong>Demo-Konto.</strong> Alle Daten hier sind <strong>frei
   erfunden</strong>. Ausprobieren ist ausdrücklich erwünscht — ändern,
-  anlegen, löschen, Uhr koppeln. Der Bestand wird
+  anlegen, löschen, Gerät koppeln. Der Bestand wird
   <strong>alle 30&nbsp;Minuten</strong> auf den Ausgangsstand
   zurückgesetzt<?= $rest > 0 ? ', das nächste Mal in etwa '
       . (int)ceil($rest / 60) . '&nbsp;Minuten' : '' ?>.

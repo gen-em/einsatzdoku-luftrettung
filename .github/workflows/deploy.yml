@@ -38,6 +38,13 @@ jobs:
           # Die .htaccess im Ordner legt adminbackup_lib.php beim ersten
           # Schreiben selbst an — sie darf hier nicht mit hochgeladen werden,
           # sonst käme sie nie im ausgenommenen Ordner an.
+          # SEIT S5/W (E-S5W-02) auch wartung.lock: der Schalter des
+          # Wartungsmodus. Er entsteht auf dem Server, wenn jemand die
+          # Installation fuer ein Update schliesst -- und der Deploy ist
+          # genau das, was waehrenddessen laeuft. Ohne diesen Eintrag
+          # loeschte der Push die Datei und oeffnete die Installation mitten
+          # im Umbau. Einmal genuegt: wartung.lock ist eine Datei, kein
+          # Verzeichnis.
           # EBENSO apk/ seit S4/A1 (E-S4-16): Die APK-Dateien der Android-Apps
           # liegen nur auf dem Server, der Betreiber lädt sie per FTPS dorthin.
           # Ohne diesen Eintrag löscht der nächste Deploy sie — er
@@ -50,6 +57,7 @@ jobs:
             **/node_modules/**
             config.php
             install.lock
+            wartung.lock
             sicherungen/**
             sicherungen/
             apk/**

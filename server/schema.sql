@@ -39,7 +39,9 @@ CREATE TABLE devices (
   id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id      INT UNSIGNED NOT NULL,
   device_id    VARCHAR(64) NOT NULL UNIQUE,          -- oeffentlich, Header X-Device-Id
-  api_key_hash VARCHAR(255) NOT NULL,                -- password_hash des Geraeteschluessels
+  api_key_hash VARCHAR(255) NOT NULL,                -- SHA-256 (hex) des Geraeteschluessels; bis Web 12.9.4
+                                                     -- bcrypt (E-S5-42) -- die Breite bleibt, ein Wechsel des
+                                                     -- Verfahrens soll keine Migration kosten
   label        VARCHAR(64) NULL,
   active       TINYINT(1) NOT NULL DEFAULT 1,        -- deaktiviert = Upload gesperrt, Daten bleiben
   last_seen    TIMESTAMP NULL,
@@ -411,19 +413,38 @@ CREATE TABLE rest_segments (
   FOREIGN KEY (day_id)    REFERENCES days(id)    ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Kopplungscodes, mit denen sich eine Uhr selbst Zugangsdaten holt (pair.php)
--- — ohne Abtippen langer Schluessel. Laenge, Alphabet und Gueltigkeit stehen in
--- db.php (PAIR_LEN, PAIR_CHARS, PAIR_TTL_MIN), damit sie nicht an drei Stellen
--- auseinanderlaufen. Die Einmaligkeit ist DURCHGESETZT: pair.php entwertet den
--- Code, bevor es ihn als gueltig annimmt (used_at wechselt genau einmal von
--- NULL auf einen Wert), nicht nur zugesichert.
-CREATE TABLE pair_codes (
-  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,
-  code VARCHAR(8) NOT NULL UNIQUE,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  used_at TIMESTAMP NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+-- Kopplungssitzungen (Web 13.0.0, S5 / R49): Das GERAET holt sich mit `start`
+-- eine Sitzung und zeigt den Code; ein Mensch gibt ihn im Web in sein Konto
+-- ein (user_id wird gesetzt: "beansprucht"); das Geraet bestaetigt mit Ja, und
+-- erst dann entsteht die devices-Zeile. Bis dahin sind Kennung und Schluessel
+-- SCHWEBEND -- ingest.php kennt sie nicht (E-R49-2). Bis Web 12.9.4 lief es
+-- andersherum (Tabelle pair_codes: Code im Web erzeugt, an der Uhr getippt).
+--
+-- Laenge, Alphabet und Frist stehen in db.php (PAIR_LEN, PAIR_CHARS,
+-- PAIR_TTL_MIN). EINE Frist ab erstellt_am fuer alles (E-S5-12). Die Datenbank
+-- ist der Schiedsrichter (E-S5-13): Beanspruchen ist ein UPDATE mit
+-- `user_id IS NULL` in der Bedingung und gilt nur bei rowCount() = 1; zwei
+-- Browser mit demselben Code -- genau einer gewinnt.
+--
+-- KEINE ENDZUSTAENDE (E-S5-11): Bestaetigt oder verworfen wird GELOESCHT;
+-- verfallen bleibt liegen, bis der Job `aufraeumen` es entsorgt, und zaehlt
+-- nirgends mehr (die Obergrenze PAIR_SITZUNGEN_MAX zaehlt nur unverfallene
+-- Zeilen). Keine IP, kein Label, kein "beansprucht_am" -- die Spalte waere
+-- geschrieben und nie gelesen worden (E-S5-44). Der Schluessel liegt als
+-- SHA-256 (E-S5-41): 24 Zufallsbytes brauchen kein bcrypt.
+CREATE TABLE pair_sessions (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  code          VARCHAR(8) NOT NULL UNIQUE,          -- Anzeigecode, nur fuer den Menschen
+  device_id     VARCHAR(64) NOT NULL UNIQUE,         -- kuenftige Geraetekennung (X-Device-Id)
+  api_key_hash  VARCHAR(255) NOT NULL,               -- SHA-256 des kuenftigen Geraeteschluessels
+  geraet_art    VARCHAR(16) NULL,                    -- wie devices (R42), bei `start` gelesen
+  geraet_modell VARCHAR(191) NULL,
+  geraet_teil   VARCHAR(64) NULL,
+  user_id       INT UNSIGNED NULL,                   -- NULL = offen; gesetzt = beansprucht
+  erstellt_am   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX (erstellt_am),
+  INDEX (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Sperrliste geloeschter Einsaetze: verhindert, dass eine Uhr mit noch
@@ -670,4 +691,7 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- Die drei Geraetespalten stehen oben schon an devices (Web 12.9.0),
   -- geraet_modell gleich in der breiten Fassung (Web 12.9.1).
   ('2026_09_02_geraetekennung', 'skipped'),
-  ('2026_09_02_geraetemodell_breiter', 'skipped');
+  ('2026_09_02_geraetemodell_breiter', 'skipped'),
+  -- pair_sessions steht oben schon im Schema, pair_codes gibt es nicht mehr
+  -- (Web 13.0.0, S5).
+  ('2026_09_03_kopplungssitzungen', 'skipped');

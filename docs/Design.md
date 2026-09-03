@@ -112,6 +112,16 @@ Drei Familien-Token: `--schrift-kopf` (Bricolage), `--schrift-text`
 Schreibmaschinenschrift die Aussage *ist*: Kopplungscode,
 Wiederherstellungsschlüssel, Geräte-ID).
 
+Das gilt seit Web 13.1.0 **in beide Richtungen**: Der Kopplungscode wird nicht
+mehr angezeigt, sondern abgetippt — das Gerät zeigt ihn, ein Mensch überträgt
+ihn ins Web. Er steht deshalb nicht mehr in einem `.codeblock`, sondern in
+einem Eingabefeld mit der Klasse `.feld-fest` (`style.css`, sie setzt allein
+`--schrift-fest` auf `.feld-eingabe`). Die Begründung bleibt dieselbe und wiegt
+im Feld eher schwerer: Wer sechs Zeichen von einem Uhrendisplay abliest und
+tippt, muss jedes einzeln sehen — der Codeblock selbst bleibt für die übrigen
+sechs Verwendungen (Wiederherstellungsschlüssel, Geräte-ID, API-Schlüssel,
+Cron-Zeile, Serverschlüssel, Setz-Link).
+
 ### 2.3 Logo und Logo-Wahl
 
 Es gibt **zwei** Bildmarken, und welche erscheint, ist einstellbar
@@ -1391,6 +1401,21 @@ daneben; der Unterschied ist ausschließlich CSS.
 Versionsnummer und den Verweisen auf Impressum und Datenschutz. Die einzige
 Ausnahme ist der Einrichter: Er läuft, bevor es eine Datenbank gibt, und die
 beiden Rechtstextseiten brauchen eine.
+
+> **Die Wartungsseite ist der Sonderfall, der die Regel bestätigt** (Web
+> 13.2.0, S5 Paket W). Sie benutzt die **Lesespalte** — `.rahmen
+> rahmen-lesespalte`, `.inhalt`, `.text`, `.meldung meldung-warn` —, aber
+> **nicht `ui.php`**: Dessen Hülle zieht über `ui_favicon()` und
+> `logo_stamm()` die Datenbank herein, und die ist im Wartungsfall genau
+> das, was gerade umgebaut wird. Sie steht deshalb als eigenes Markup in
+> `server/wartung_lib.php`.
+>
+> Zwei Folgen, die man kennen muss: **Sie hat keine Fußzeile** (die braucht
+> `WEB_VERSION` und die Rechtstextseiten, und beide Verweise gingen ins 503),
+> und **ihr Logo wird gewürfelt** statt aus `logo_stamm()` geholt — eine
+> Installation mit eigenem Logo sieht während der Wartung eines der beiden
+> Standardlogos. Kein neuer Baustein, keine neue Regel im Stylesheet; wer
+> sie ändert, ändert die vorhandenen mit.
 
 ### 10.2 Rezept: eine neue Inhaltsseite
 

@@ -9,7 +9,14 @@ Die Werte stammen nicht aus Datenblättern, sondern aus Messungen mit
 wird, steht in Abschnitt 5.
 
 Zur **Darstellung** auf den Geräten — Schriften, runde Displays, Aufbau der
-Oberflächen — siehe `Uhr-Layout.md`.
+Oberflächen — siehe `Uhr-Layout_Regeln.md`.
+
+**Die Kopplung bringt seit Uhr 3.0.0 keinen neuen Tastenweg mit.** Sie beginnt
+wie bisher mit dem langen Auswahl-Druck auf der Sync-Seite (`SELECT_LONG`,
+Abschnitt 1) und braucht in der neuen Kopplungsansicht nur noch `BACK` zum
+Abbrechen — beides steht in der Tabelle. Was **entfallen** ist, ist der
+`WatchUi.TextPicker`: die einzige Texteingabe der App und der einzige Weg, der
+auf der Venu 3s eine Bildschirmtastatur brauchte.
 
 Die Abschnitte 1 bis 6 gelten der **Garmin-Uhr** (Connect IQ, Monkey C).
 Abschnitt 7 kam mit S4 dazu und gilt der **Wear-OS-App** — dort ist die Lage

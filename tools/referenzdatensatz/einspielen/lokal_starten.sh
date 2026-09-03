@@ -46,17 +46,44 @@ curl -s --noproxy '*' -o /dev/null -w "PHP-Server: HTTP %{http_code}\n" "http://
 # leitet zur Anmeldung um. Der eingebaute PHP-Server kann kein TLS; socat
 # terminiert es davor.
 #
-# Das Zertifikat ist selbstsigniert und gilt nur fuer diese Maschine. Die
-# Skripte pruefen es deshalb nicht -- das ist fuer 127.0.0.1 vertretbar und
-# steht ausdruecklich so im LIESMICH.
+# DAS ZERTIFIKAT IST NICHT MEHR SELBSTSIGNIERT, sondern von einer eigenen,
+# hier erzeugten CA unterschrieben, und die CA liegt im Systemspeicher.
+#
+# WARUM DER UMWEG. Fuer curl war selbstsigniert genug (die Skripte pruefen mit
+# -k nicht nach). Der Connect-IQ-SIMULATOR prueft sehr wohl, und er nimmt
+# keinen unbekannten Aussteller: Der Handschlag endet in
+# "tlsv1 alert unknown ca", und beim Uhr-Rundlauf kommt nichts an. Ueber
+# blankes HTTP geht es auch nicht -- da laesst der Simulator die Anfrage zwar
+# hinaus (der Server sieht sie), gibt der App die Antwort aber nicht: sie
+# bekommt -1001 SECURE_CONNECTION_REQUIRED. Gemessen am 03.09.2026 mit
+# tools/netzprobe/ (F-S5-11); mit CA im Systemspeicher kam 405 von pair.php
+# durch, also die echte Antwort.
+#
+# Fuer alles andere aendert sich nichts: curl -k gilt weiter, und ein
+# CA-signiertes Zertifikat ist fuer 127.0.0.1 nicht unsicherer als ein
+# selbstsigniertes -- die CA entsteht auf dieser Maschine und verlaesst sie
+# nicht.
 if ! curl -sk --noproxy '*' -o /dev/null "https://127.0.0.1:$TLS_PORT/login.php"; then
   mkdir -p "$TLS_DIR"
   if [ ! -f "$TLS_DIR/beides.pem" ]; then
-    echo "Selbstsigniertes Zertifikat erzeugen ..."
-    openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
-      -keyout "$TLS_DIR/key.pem" -out "$TLS_DIR/cert.pem" \
-      -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" 2>/dev/null
+    echo "Eigene CA und Serverzertifikat erzeugen ..."
+    openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+      -keyout "$TLS_DIR/ca.key" -out "$TLS_DIR/ca.crt" \
+      -subj "/CN=NAdoku Pruefstand CA" \
+      -addext "basicConstraints=critical,CA:TRUE" 2>/dev/null
+    openssl req -newkey rsa:2048 -nodes -keyout "$TLS_DIR/key.pem" \
+      -out "$TLS_DIR/srv.csr" -subj "/CN=127.0.0.1" 2>/dev/null
+    printf 'subjectAltName=IP:127.0.0.1,DNS:localhost\nextendedKeyUsage=serverAuth\n' \
+      > "$TLS_DIR/ext.cnf"
+    openssl x509 -req -in "$TLS_DIR/srv.csr" -CA "$TLS_DIR/ca.crt" \
+      -CAkey "$TLS_DIR/ca.key" -CAcreateserial -days 3650 \
+      -extfile "$TLS_DIR/ext.cnf" -out "$TLS_DIR/cert.pem" 2>/dev/null
     cat "$TLS_DIR/cert.pem" "$TLS_DIR/key.pem" > "$TLS_DIR/beides.pem"
+    # Die CA in den Systemspeicher -- daran prueft der Simulator.
+    if [ -d /usr/local/share/ca-certificates ]; then
+      cp "$TLS_DIR/ca.crt" /usr/local/share/ca-certificates/nadoku-pruefstand.crt
+      update-ca-certificates >/dev/null 2>&1 || true
+    fi
   fi
   echo "TLS-Terminierung starten ..."
   socat "OPENSSL-LISTEN:$TLS_PORT,cert=$TLS_DIR/beides.pem,verify=0,reuseaddr,fork" \

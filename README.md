@@ -58,9 +58,11 @@ liegt auf dem Server, damit die Rücksetzung funktioniert. Näheres im Handbuch
 **Uhr (Garmin, Connect IQ):** `watch/` mit VS Code + Monkey-C-Erweiterung +
 Connect-IQ-SDK bauen (Ziele `fenix6pro`, `fr945`, `venu3s`; vorher die
 Server-Domain in `properties.xml` eintragen), `.prg` per USB nach
-`GARMIN/Apps/`, dann **per Code koppeln**: Web → Einstellungen → Geräte →
-Code erzeugen; auf der Uhr: Sync-Seite → Gerät koppeln → Code eintippen
-(Details: Handbuch, Abschnitte 10 und 12; Tastenwege je Uhr in 2.0).
+`GARMIN/Apps/`, dann **koppeln**: Auf der Uhr Sync-Seite → Gerät koppeln —
+sie zeigt einen Code aus sechs Zeichen. Den im Web unter Einstellungen →
+Geräte eingeben; die Uhr fragt danach noch einmal nach, und erst das Ja dort
+schließt die Kopplung ab (seit Web 13.0.0 ist der Weg umgedreht; Details:
+Handbuch, Abschnitte 10 und 12; Tastenwege je Uhr in 2.0).
 
 **Deployment:** Push auf `main` deployt `server/` automatisch per FTPS
 (GitHub Actions). Nach DB-Änderungen als Admin `update.php` aufrufen.

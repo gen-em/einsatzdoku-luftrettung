@@ -11,6 +11,8 @@ require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), 
 require_once __DIR__ . '/trash_lib.php';
 require_once __DIR__ . '/apk_lib.php';    // APK-Karte des Geraete-Reiters (S4/A1)
 require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste (S6)
+require_once __DIR__ . '/kopplung_lib.php';  // Kopplungssitzungen: Code suchen, beanspruchen (S5)
+require_once __DIR__ . '/ratelimit_lib.php'; // Topf `pair_code` an der Code-Eingabe (S5, E-S5-16)
 
 /* OHNE `t` DIE ÜBERSICHT (E-P3-11, P3/O2).
  *
@@ -37,7 +39,27 @@ if ($tab === 'stammdaten') { $tab = 'standorte'; }
 if (!in_array($tab, ['profil', 'geraete', 'standorte', 'rettungsmittel', 'backup'], true)) {
     $tab = 'profil';
 }
-$notice = null; $error = null; $pwGewechselt = false; $newKey = null; $pairCode = null;
+$notice = null; $error = null; $pwGewechselt = false; $newKey = null;
+
+/* DER TON DER HINWEISZEILE (S5 Paket B). Bis hierher war er fest 'info'. Die
+ * abgeschlossene Kopplung ist aber ein Vollzug und kein Hinweis — sie bekommt
+ * 'ok' mit dem Haken. Vorgabe bleibt 'info', jede vorhandene Meldung sieht aus
+ * wie bisher. */
+$noticeTon = 'info';
+
+/* ---- Die beiden Zustaende der Karte „Gerät koppeln" (S5, E-S5-01) ---------
+ *
+ * $koppelSitzung  Zustand 2: Der eingegebene Code passt zu einer offenen
+ *                 Sitzung. Die Karte zeigt Art, Modell und Kennung und fragt
+ *                 nach — beansprucht ist noch nichts.
+ * $koppelWarten   Zustand 3: Die Sitzung gehoert jetzt diesem Konto, das
+ *                 Geraet ist am Zug. Die Karte wartet und laedt nach
+ *                 (E-S5-53). Der Zustand haengt an $_SESSION['pair_warten']
+ *                 und ueberlebt damit ein Neuladen, ohne im Adressfeld zu
+ *                 stehen.
+ *
+ * Beide null: die Karte zeigt ihren Regelfall, das Eingabefeld. */
+$koppelSitzung = null; $koppelWarten = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -258,10 +280,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    . 'genügt nicht, die Zugangsdaten bleiben dabei bestehen.';
         } else {
             $label = trim($_POST['label'] ?? '');
-            $devId = 'dev-' . bin2hex(random_bytes(4));
+            /* SECHZEHN ZUFALLSBYTES WIE BEI DER KOPPLUNG (B-S5-01, S5 Paket B).
+             *
+             * Hier standen vier. Zwei Wege fuehrten damit zu derselben Spalte,
+             * der eine mit 32, der andere mit 128 Bit — und der schwaechere war
+             * ausgerechnet der, den niemand pruefte: Bei der Kopplung faengt
+             * der eindeutige Schluessel eine Dublette ab und die Uhr versucht
+             * es erneut; hier bekaeme die NutzerIn einen Datenbankfehler. Die
+             * Begruendung fuer 16 steht in pair.php (M4-08, Geburtstags-
+             * problem). Bestandsgeraete behalten ihre kurze Kennung — die
+             * Spalte ist VARCHAR(64), es ist keine Migration noetig, und
+             * geraet_kennung_kurz() kommt mit beiden Laengen zurecht. */
+            $devId = 'dev-' . bin2hex(random_bytes(16));
             $key   = bin2hex(random_bytes(24));
             db()->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label) VALUES (?,?,?,?)')
-                ->execute([$userId, $devId, password_hash($key, PASSWORD_DEFAULT), $label ?: null]);
+                ->execute([$userId, $devId, geraet_schluessel_hash($key), $label ?: null]);
             $newKey = ['device_id' => $devId, 'api_key' => $key];
             $notice = 'Gerät angelegt. Schlüssel unten JETZT notieren — er wird nur einmal angezeigt.';
         }
@@ -271,57 +304,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
         $notice = 'Status geändert.';
     }
-    if ($action === 'pair_code' && geraete_grenze_erreicht(db(), $userId)) {
-        // Schon hier abfangen statt erst beim Einloesen: Der Code waere sonst
-        // verbraucht, ohne dass ein Geraet entstanden ist (pair.php entwertet
-        // vor der Pruefung, und das ist dort richtig so).
-        $error = 'Es sind bereits ' . MAX_GERAETE . ' Geräte mit diesem Konto verbunden. '
-               . 'Bitte zuerst ein nicht mehr genutztes Gerät löschen — dann lässt sich '
-               . 'wieder ein Kopplungscode erzeugen.';
-    } elseif ($action === 'pair_code') {
-        // Hoechstens EIN offener Code je Konto: Ein neuer entwertet den alten.
-        // Sonst haetten mehrere gleichzeitig gueltige Codes den Raum, den ein
-        // Angreifer treffen kann, mit jedem Klick vergroessert — und liegen
-        // gebliebene Codes aus abgebrochenen Kopplungsversuchen waeren bis zum
-        // Ablauf weiter einloesbar.
-        db()->prepare('UPDATE pair_codes SET used_at = NOW()
-                       WHERE user_id = ? AND used_at IS NULL')
-            ->execute([$userId]);
+    /* ---- Kopplung: den Code vom Gerät entgegennehmen (S5, E-S5-01) -------
+     *
+     * DER ABLAUF HAT SICH UMGEDREHT. Bis Web 12.9.4 erzeugte diese Seite einen
+     * Code, und die Uhr tippte ihn. Jetzt zeigt das GERAET den Code, ein Mensch
+     * tippt ihn hier, und das Geraet hat das letzte Wort: Es sieht die
+     * maskierte Adresse des Kontos und sagt Ja oder Nein.
+     *
+     * ZWEI SCHRITTE, ZWEI AKTIONEN, und das ist kein Umweg, sondern das erste
+     * der beiden Tore aus E-S5-05: `koppeln_pruefen` SUCHT die Sitzung und
+     * zeigt, was da koppeln will (Art, Modell, Kennung); `koppeln_bestaetigen`
+     * BINDET sie ans Konto. Wer nur den Code hat, hat damit noch nichts
+     * ausgeloest — er sieht ein Geraet und kann abbrechen. Das zweite Tor steht
+     * am Geraet.
+     *
+     * WAS ZAEHLT UND WAS NICHT (E-S5-17). Gezaehlt wird im Topf `pair_code`,
+     * je Konto UND je Adresse:
+     *   - Code passt nicht zum Muster  -> zaehlt NICHT. Die Datenbank wurde
+     *     nicht gefragt; es ist nichts zu erraten, nur ein Vertipper.
+     *   - Code nicht gefunden          -> zaehlt. Das ist der Rateversuch.
+     *   - Sitzung dazwischen weg       -> zaehlt. Von aussen nicht von einem
+     *     Rateversuch zu unterscheiden, und selten genug.
+     *
+     * GELEERT WIRD DER TOPF ERST BEIM BEANSPRUCHEN, nicht schon beim Finden —
+     * und das weicht bewusst vom Wortlaut in Z-08 ab (E-S5-54). Ein Treffer im
+     * Suchschritt verbraucht die Sitzung naemlich nicht: Wer sich ueber
+     * `pair.php?aktion=start` selbst eine Sitzung holt, kennt einen gueltigen
+     * Code, den er beliebig oft eingeben kann — und haette damit alle zehn
+     * Versuche zurueckgesetzt, so oft er will. Das Beanspruchen dagegen
+     * verbraucht die Sitzung; jedes Zuruecksetzen kostet dann ein neues
+     * `start`, und das begrenzt der Topf `pair_start`.
+     */
+    if ($action === 'koppeln_pruefen' || $action === 'koppeln_bestaetigen') {
+        /* Das Merkmal ist die KONTOKENNUNG, nicht die E-Mail-Adresse: Sie ist
+         * ebenso eindeutig und legt keine Adresse in einer Tabelle ab, die zum
+         * Zaehlen da ist. rate_merkmale() haengt die IP-Adresse selbst an. */
+        $koppelKonto = (string)$userId;
 
-        // Laenge, Alphabet und Gueltigkeit stehen in db.php — dieselbe Quelle,
-        // aus der auch pair.php sein Pruefmuster bildet.
-        for ($try = 0; $try < 5; $try++) {
-            $code = '';
-            for ($i = 0; $i < PAIR_LEN; $i++) {
-                $code .= PAIR_CHARS[random_int(0, strlen(PAIR_CHARS) - 1)];
-            }
-            try {
-                db()->prepare('INSERT INTO pair_codes (user_id, code) VALUES (?,?)')
-                    ->execute([$userId, $code]);
-                $pairCode = $code;
-                break;
-            } catch (PDOException $ex) {
-                /* NUR die Kollision rechtfertigt einen neuen Versuch (M4-09).
-                 *
-                 * Vorher galt jeder Datenbankfehler als Kollision. Fehlte die
-                 * Tabelle oder war die Verbindung weg, versuchte es die Schleife
-                 * fuenfmal mit fuenf frischen Zufallscodes und meldete danach
-                 * "Bitte erneut versuchen." — eine Aufforderung, die nie zum
-                 * Ziel fuehren konnte, weil die Ursache eine ganz andere war.
-                 *
-                 * Ein Zusammentreffen zweier Codes ist ohnehin so selten, dass
-                 * die fuenf Versuche eher Formsache sind. Ein echter Fehler
-                 * dagegen soll durchschlagen. */
-                if (!ist_dublettenfehler($ex)) { throw $ex; }
+        if (geraete_grenze_erreicht(db(), $userId)) {
+            // Schon hier abfangen: Die Sitzung waere sonst beansprucht, und
+            // das Geraet liefe beim Ja in ein 409 (pair.php prueft erneut).
+            $error = 'Es sind bereits ' . MAX_GERAETE . ' Geräte mit diesem Konto verbunden. '
+                   . 'Bitte zuerst ein nicht mehr genutztes Gerät löschen — dann lässt sich '
+                   . 'wieder ein Gerät koppeln.';
+        } elseif (!rate_erlaubt('pair_code', $koppelKonto)) {
+            $bis = rate_gesperrt_bis('pair_code', $koppelKonto);
+            $error = 'Zu viele falsche Codes.'
+                   . ($bis !== null
+                      ? ' Bis ' . fmt_local($bis, 'H:i') . ' Uhr nimmt der Server keine Eingabe von dir an.'
+                      : ' Bitte später erneut versuchen.');
+        } else {
+            $koppelCode = pair_code_normalisieren((string)($_POST['code'] ?? ''));
+            if (!preg_match(PAIR_RE, $koppelCode)) {
+                $error = 'Ein Code hat ' . PAIR_LEN . ' Zeichen; 0, O, 1 und I kommen darin '
+                       . 'nicht vor. Bitte vergleiche mit der Anzeige auf dem Gerät.';
+            } else {
+                $sitzung = pair_sitzung_nach_code(db(), $koppelCode);
+                if ($sitzung === null) {
+                    rate_misserfolg('pair_code', $koppelKonto);
+                    $error = 'Diesen Code kennt der Server nicht — er ist falsch, abgelaufen '
+                           . 'oder schon verwendet. Auf dem Gerät einen neuen Code holen: '
+                           . 'Sync-Seite → Gerät koppeln.';
+                } elseif ($action === 'koppeln_pruefen') {
+                    $koppelSitzung = $sitzung;
+                } elseif (!pair_sitzung_beanspruchen(db(), $koppelCode, $userId)) {
+                    /* Zwischen Suchen und Beanspruchen ist die Sitzung weg —
+                     * abgelaufen, am Gerät verworfen oder von einem zweiten
+                     * Browserfenster genommen. Die Datenbank hat entschieden
+                     * (E-S5-13), und dieselbe Meldung wie oben genuegt: Der
+                     * Unterschied ginge nur einen Angreifer etwas an. */
+                    rate_misserfolg('pair_code', $koppelKonto);
+                    $error = 'Diesen Code kennt der Server nicht — er ist falsch, abgelaufen '
+                           . 'oder schon verwendet. Auf dem Gerät einen neuen Code holen: '
+                           . 'Sync-Seite → Gerät koppeln.';
+                } else {
+                    /* ---- UMLEITUNG STATT DIREKTER ANZEIGE (E-S5-53) --------
+                     *
+                     * Der Wartezustand ist der einzige auf dieser Seite, der
+                     * MINUTEN dauert und sich von selbst aendert: Das Geraet
+                     * sagt Ja, und die Seite soll es merken. Ein Neuladen — vom
+                     * Skript oder von Hand — darf deshalb nicht die Rueckfrage
+                     * „Formular erneut senden?" ausloesen und schon gar nicht
+                     * ein zweites Mal beanspruchen. Nach dem POST also eine
+                     * Umleitung, und der Zustand liegt in der Sitzung, nicht im
+                     * Adressfeld: Die Gerätekennung ist kein Geheimnis, aber
+                     * sie hat auch nichts im Verlauf des Browsers zu suchen. */
+                    rate_erfolg('pair_code', $koppelKonto);
+                    $_SESSION['pair_warten'] = (string)$sitzung['device_id'];
+                    $_SESSION['flash_notice'] = 'Der Code ist deinem Konto zugeordnet. '
+                                              . 'Bestätige jetzt am Gerät mit Ja.';
+                    header('Location: einstellungen.php?t=geraete#koppeln');
+                    exit;
+                }
             }
         }
-        if ($pairCode === null) {
-            // Fuenf Kollisionen hintereinander sind bei 32^6 Moeglichkeiten
-            // praktisch ausgeschlossen — dann liegt ein anderer Fehler vor,
-            // und die NutzerIn soll ihn sehen statt vor einer leeren Kachel
-            // zu stehen.
-            $error = 'Es konnte kein Kopplungscode erzeugt werden. Bitte erneut versuchen.';
-        }
+    }
+    if ($action === 'koppeln_abbrechen') {
+        /* Der Rueckweg aus dem Wartezustand. Ohne ihn saehe eine Person, die
+         * es sich anders ueberlegt, bis zum Ablauf der Frist eine Karte, die
+         * auf ein Geraet wartet, das nie kommt — und die Sitzung bliebe
+         * beansprucht. */
+        $kw = (string)($_SESSION['pair_warten'] ?? '');
+        if ($kw !== '') { pair_sitzung_verwerfen(db(), $kw, $userId); }
+        unset($_SESSION['pair_warten']);
+        $_SESSION['flash_notice'] = 'Die Kopplung ist abgebrochen. Wenn du das Gerät doch '
+                                  . 'verbinden willst, hol dir dort einen neuen Code.';
+        header('Location: einstellungen.php?t=geraete#koppeln');
+        exit;
     }
     if ($action === 'rename') {
         $lbl = mb_substr(trim($_POST['label'] ?? ''), 0, 120);
@@ -703,6 +792,40 @@ if (!empty($_SESSION['flash_error'])) {
     unset($_SESSION['flash_error']);
 }
 
+/* ---- Wartet dieses Konto gerade auf ein Gerät? (S5, E-S5-53) --------------
+ *
+ * Der Zustand steht in der Sitzung und wird bei JEDEM Aufruf des Geräte-
+ * Reiters gegen die Wirklichkeit gehalten — er ist eine Erinnerung, keine
+ * Wahrheit. Drei Ausgaenge:
+ *
+ *   Sitzung da und unverfallen  -> Zustand 3, die Karte wartet und laedt nach.
+ *   Sitzung weg, Geraet da      -> das Geraet hat Ja gesagt. Vollzugsmeldung,
+ *                                  Erinnerung loeschen.
+ *   Sitzung weg, kein Geraet    -> Nein am Geraet oder Frist abgelaufen.
+ *                                  Erinnerung STILL loeschen: Wer Tage spaeter
+ *                                  auf die Seite kommt, soll nicht an einen
+ *                                  abgebrochenen Versuch erinnert werden. Wer
+ *                                  gerade zusieht, hat es vom Skript erfahren.
+ *
+ * Die Kontokennung steht in beiden Abfragen mit in der Bedingung: Eine
+ * Erinnerung aus einer fremden Sitzung — moeglich nach einem Kontowechsel im
+ * selben Browser — zeigt damit nichts an. */
+if ($tab === 'geraete' && !empty($_SESSION['pair_warten'])) {
+    $kw = (string)$_SESSION['pair_warten'];
+    $sitzung = pair_sitzung_nach_kennung(db(), $kw);
+    if ($sitzung !== null && (int)($sitzung['user_id'] ?? 0) === $userId
+        && (int)$sitzung['rest_s'] > 0) {
+        $koppelWarten = $sitzung;
+    } else {
+        unset($_SESSION['pair_warten']);
+        if ($sitzung === null && pair_geraet_da(db(), $kw, $userId)) {
+            $notice = 'Das Gerät ist jetzt mit deinem Konto verbunden — du findest es '
+                    . 'unten in der Liste. Eine E-Mail dazu ist unterwegs.';
+            $noticeTon = 'ok';
+        }
+    }
+}
+
 /* Die Rollenbeschriftungen kommen aus CREW_ROLES (db.php, E4). Bis Web 5.10.0
  * stand hier eine zweite Liste mit fuenf Flugrollen; sie waere mit dem Katalog
  * auseinandergelaufen, sobald eine Rolle dazukommt. */
@@ -730,7 +853,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => $tab]); ?>
-  <?php ui_meldung($notice, $error, 'info', '  '); ?>
+  <?php ui_meldung($notice, $error, $noticeTon, '  '); ?>
 
   <?php if ($tab === 'profil'): ?>
     <?php
@@ -2936,45 +3059,135 @@ ui_seite_start(['titel' => 'Einstellungen']);
           . 'danach kann es nichts mehr hochladen.', null, 'warn', '      '); ?>
     <?php endif; ?>
 
-    <?php /* „Gerät koppeln", nicht „Uhr koppeln" (S6): Seit S4 koppelt die
-             Handy-App ueber denselben Weg und denselben Code — und die Liste
-             darunter sagt seit Web 12.9.0 „Handy". Eine Ueberschrift, die
-             „Uhr" sagt, widerspricht der Zeile, die sie ankuendigt. */ ?>
-    <?php ui_karte_start(['titel' => 'Gerät koppeln', 'id' => 'koppeln']); ?>
-      <p class="feld-hinweis">Erzeuge einen Code und gib ihn auf dem Gerät ein:
-         <strong>Sync-Seite → Gerät koppeln → Code eintippen</strong>. Das Gerät
-         holt sich seine Zugangsdaten dann selbst — kein Abtippen langer
-         Schlüssel. Der Code ist <?= PAIR_TTL_MIN ?> Minuten gültig und genau
-         einmal verwendbar; ein neuer macht einen vorher erzeugten ungültig.</p>
-      <?php /* Der Tastenweg steht als Zusatz mit genannter Plattform: Er gilt
-               nur für Fenix und Forerunner. Auf der Venu 3s gibt es weder START
-               noch DOWN — der frühere Satz war für sie schon falsch, als sie
-               dazukam. Die Tabelle je Uhr steht im Handbuch, Abschnitt 2.0. */ ?>
-      <p class="feld-klein">Auf Garmin-Uhren: die Sync-Seite erreichst du vom
-         Startbildschirm mit DOWN, das Koppeln startet mit gedrückt gehaltener
-         START-Taste. Die Tastenwege der einzelnen Uhren stehen im Handbuch,
-         Abschnitt 2.0.</p>
-      <?php if ($pairCode): ?>
-        <?php /* Der Code GROSS und für sich (E-P3-35): Er wird von einem
-                 Bildschirm auf eine Uhr abgetippt, und zwar unter Zeitdruck. */ ?>
-        <div class="codeblock">
-          <p class="codeblock-titel">Kopplungscode</p>
-          <p class="codeblock-wert"><?= e($pairCode) ?></p>
-          <p class="feld-klein">Gültig bis
-             <?= e(fmt_local(gmdate('Y-m-d H:i:s', time() + PAIR_TTL_MIN * 60), 'H:i')) ?> Uhr.
-             Das Gerät erscheint nach der Kopplung unten in der Liste.</p>
-        </div>
-      <?php endif; ?>
-      <?php /* Der Knopf steht im `.listen-form-fuss` wie jeder andere Knopf am
-               Ende eines Formulars (Design.md 9.0). Vorher stand er blank im
-               <form> und klebte am Absatz darüber (F-N1-O). */ ?>
-      <form method="post" action="einstellungen.php?t=geraete">
-        <?= csrf_field() ?><input type="hidden" name="action" value="pair_code">
-        <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => 'Kopplungscode erzeugen', 'art' => 'primaer']) ?>
-        </div>
-      </form>
-    <?php ui_karte_ende(); ?>
+    <?php /* ---- Die Karte „Gerät koppeln" in drei Zuständen (S5, E-S5-26) ----
+             „Gerät koppeln", nicht „Uhr koppeln" (S6): Seit S4 koppelt die
+             Handy-App über denselben Weg — und die Liste darunter sagt seit
+             Web 12.9.0 „Handy". Eine Überschrift, die „Uhr" sagt,
+             widerspricht der Zeile, die sie ankündigt.
+
+             DREI ZUSTÄNDE, EINE KARTE, KEIN NEUER BAUSTEIN: erst die Eingabe,
+             dann die Rückfrage, dann das Warten. Alles aus dem Vorrat
+             (Design.md 9): die Karte
+             selbst, `ui_feld`, `ui_zeile`, `ui_meldung_markup` und Knöpfe im
+             `.listen-form-fuss`. Eine eigene Darstellung bräuchte Freigabe
+             mit Mockup (Design.md 1.2) — sie ist nicht nötig. */ ?>
+    <?php if ($koppelWarten !== null): ?>
+      <?php /* ---- Zustand 3: beansprucht, das Gerät ist am Zug -------------
+               Diese Karte wartet, und sie wartet SICHTBAR: Sie sagt, worauf,
+               auf welches Gerät und wie lange noch. Das Nachladen besorgt
+               `assets/kopplung.js` (E-S5-53); ohne JavaScript bleibt der Weg
+               vollständig — dann steht hier dieselbe Auskunft, und die Person
+               lädt die Seite selbst neu, sobald sie am Gerät bestätigt hat. */ ?>
+      <?php $kwRest = (int)$koppelWarten['rest_s']; ?>
+      <?php ui_karte_start(['titel' => 'Am Gerät bestätigen', 'id' => 'koppeln']); ?>
+        <?php ui_zeile([
+            'text'  => geraet_bezeichnung($koppelWarten['geraet_art'],
+                                          $koppelWarten['geraet_modell'],
+                                          $koppelWarten['geraet_teil']),
+            'klein' => 'Kennung ' . geraet_kennung_kurz((string)$koppelWarten['device_id'])]); ?>
+        <p class="feld-hinweis">Das Gerät fragt jetzt, ob es sich mit deinem Konto
+           verbinden soll — <strong>bestätige dort mit Ja</strong>. Es zeigt dabei
+           deine E-Mail-Adresse, teilweise verdeckt. Danach erscheint es unten in
+           der Liste.</p>
+        <p class="feld-klein" id="kopplung-warten"
+           data-rest="<?= $kwRest ?>"
+           data-quelle="api/kopplung_stand.php"
+           data-ziel="einstellungen.php?t=geraete">Noch
+           <span id="kopplung-restzeit"><?= e(pair_restzeit_text($kwRest)) ?></span>
+           gültig. Sagst du am Gerät Nein oder läuft die Zeit ab, geschieht
+           nichts — dann holst du dir dort einen neuen Code.</p>
+        <form method="post" action="einstellungen.php?t=geraete">
+          <?= csrf_field() ?><input type="hidden" name="action" value="koppeln_abbrechen">
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise']) ?>
+          </div>
+        </form>
+      <?php ui_karte_ende(); ?>
+      <script src="<?= asset('assets/kopplung.js') ?>" defer></script>
+
+    <?php elseif ($koppelSitzung !== null): ?>
+      <?php /* ---- Zustand 2: das erste der beiden Tore (E-S5-05a) ----------
+               Hier steht, WAS koppeln will — Art, Modell, gekürzte Kennung,
+               Restzeit. Das ist der ganze Zweck dieses Zwischenschritts: Wer
+               einen fremden Code eingetippt bekommt („gib mal AB3 K7Q ein"),
+               sieht spätestens jetzt ein Gerät, das nicht seines ist. */ ?>
+      <?php $ksRest = (int)$koppelSitzung['rest_s']; ?>
+      <?php ui_karte_start(['titel' => 'Dieses Gerät koppeln?', 'id' => 'koppeln']); ?>
+        <?php ui_zeile([
+            'text'  => geraet_bezeichnung($koppelSitzung['geraet_art'],
+                                          $koppelSitzung['geraet_modell'],
+                                          $koppelSitzung['geraet_teil']),
+            'klein' => 'Code ' . pair_code_anzeigen((string)$koppelSitzung['code'])
+                     . ' · gültig bis '
+                     . fmt_local(gmdate('Y-m-d H:i:s', time() + $ksRest), 'H:i') . ' Uhr'
+                     . ' · Kennung ' . geraet_kennung_kurz((string)$koppelSitzung['device_id'])]); ?>
+        <p class="feld-hinweis">Wenn das dein Gerät ist und der Code stimmt, verbinde
+           es. Das Gerät fragt dich danach noch einmal — erst dein Ja dort schließt
+           die Kopplung ab. Kommt dir das Gerät unbekannt vor: abbrechen. Dann
+           geschieht nichts.</p>
+        <?php if ($koppelSitzung['geraet_art'] === null && $koppelSitzung['geraet_teil'] === null): ?>
+          <?php /* Ohne Selbstauskunft steht hier „Gerät unbekannt" — und dann
+                   trägt die Rückfrage nichts mehr, woran sich ein fremdes
+                   Gerät erkennen ließe. Das gehört gesagt, nicht verschwiegen. */ ?>
+          <?= ui_meldung_markup('warn', 'Das Gerät hat keine Angaben über sich gemacht. '
+              . 'Das ist bei älteren Uhr-Apps so; sei sicher, dass es deines ist.') ?>
+        <?php endif; ?>
+        <form method="post" action="einstellungen.php?t=geraete">
+          <?= csrf_field() ?><input type="hidden" name="action" value="koppeln_bestaetigen">
+          <input type="hidden" name="code" value="<?= e((string)$koppelSitzung['code']) ?>">
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Mit meinem Konto verbinden', 'art' => 'primaer']) ?>
+            <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
+                          'href' => 'einstellungen.php?t=geraete#koppeln']) ?>
+          </div>
+        </form>
+      <?php ui_karte_ende(); ?>
+
+    <?php else: ?>
+      <?php ui_karte_start(['titel' => 'Gerät koppeln', 'id' => 'koppeln']); ?>
+        <?php if (geraete_grenze_erreicht(db(), $userId)): ?>
+          <?php /* Kein Feld, wo die Eingabe ohnehin abgewiesen würde: Erst ein
+                   Platz, dann ein Code. Denselben Wortlaut nennt der
+                   Fehlerzweig der Aktion. */ ?>
+          <p class="feld-hinweis">Es sind bereits <?= MAX_GERAETE ?> Geräte mit diesem
+             Konto verbunden. Bitte zuerst ein nicht mehr genutztes Gerät löschen —
+             dann lässt sich wieder ein Gerät koppeln.</p>
+        <?php else: ?>
+          <p class="feld-hinweis">Starte die Kopplung auf dem Gerät:
+             <strong>Sync-Seite → Gerät koppeln</strong>. Das Gerät zeigt einen Code
+             aus <?= PAIR_LEN ?> Zeichen. Gib ihn hier ein; danach fragt das Gerät, ob
+             es sich mit deinem Konto verbinden soll — bestätige dort mit Ja. Der Code
+             ist <?= PAIR_TTL_MIN ?> Minuten gültig.</p>
+          <?php /* Der Tastenweg steht als Zusatz mit genannter Plattform: Er gilt
+                   nur für Fenix und Forerunner. Auf der Venu 3s gibt es weder START
+                   noch DOWN — der frühere Satz war für sie schon falsch, als sie
+                   dazukam. Die Tabelle je Uhr steht im Handbuch, Abschnitt 2.0. */ ?>
+          <p class="feld-klein">Auf Garmin-Uhren: die Sync-Seite erreichst du vom
+             Startbildschirm mit DOWN, das Koppeln startet mit gedrückt gehaltener
+             START-Taste. Die Tastenwege der einzelnen Uhren stehen im Handbuch,
+             Abschnitt 2.0.</p>
+          <form method="post" action="einstellungen.php?t=geraete">
+            <?= csrf_field() ?><input type="hidden" name="action" value="koppeln_pruefen">
+            <?php /* `feld-fest` setzt die Schreibmaschinenschrift (Design.md 2.2):
+                     Der Code wird abgelesen und abgetippt, und in Festbreite steht
+                     jedes Zeichen für sich. Die Eingabe nimmt ihn mit und ohne
+                     Leerzeichen und in jeder Schreibung — pair_code_normalisieren()
+                     räumt das auf, bevor gesucht wird; deshalb maxlength 8 und nicht
+                     6. Der Platzhalter ist ein Phantasiecode (E-S3-13). */ ?>
+            <?php ui_feld([
+                'name'        => 'code',
+                'label'       => 'Code vom Gerät',
+                'klasse'      => 'feld-fest',
+                'platzhalter' => 'AB3 K7Q',
+                'attr'        => ' maxlength="8" autocomplete="off" '
+                               . 'autocapitalize="characters" spellcheck="false"']); ?>
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Weiter', 'art' => 'primaer']) ?>
+            </div>
+          </form>
+        <?php endif; ?>
+      <?php ui_karte_ende(); ?>
+    <?php endif; ?>
 
     <?php ui_karte_start(['titel' => 'Geräte', 'zahl' => count($devices), 'id' => 'geraeteliste']); ?>
       <?php if (!$devices): ?>
@@ -3051,8 +3264,18 @@ ui_seite_start(['titel' => 'Einstellungen']);
                            'attr' => ' maxlength="120"']); ?>
           </div>
           <div class="listen-form-fuss">
+            <?php /* NEUTRAL, NICHT PRIMÄR (B-S5-09, S5 Paket B).
+                     Hier standen zwei primäre Knöpfe auf einer Seite — dieser
+                     und der der Kopplungskarte darüber. Design.md 9.16 nennt
+                     genau das als Anti-Muster („Keiner ist mehr die
+                     Haupthandlung"), und 9.0 verlangt „die EINE Haupthandlung".
+                     Welche das auf diesem Reiter ist, sagt die Anwendung selbst
+                     an zwei Stellen: Der Text nebenan nennt die Handanlage „die
+                     Alternative zum Koppeln", und E-R49-7 führt sie als
+                     Rückfall. Der Fund ist älter als S5 — er fällt hier auf,
+                     weil die Karte darüber neu gebaut wurde. */ ?>
             <?= ui_knopf(['text' => $editDev ? 'Bezeichnung speichern' : 'Gerät anlegen',
-                          'art' => 'primaer']) ?>
+                          'art' => 'neutral']) ?>
             <?php if ($editDev): ?>
               <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
                             'href' => 'einstellungen.php?t=geraete']) ?>
@@ -3072,7 +3295,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
 
              DER DOWNLOAD IST EINE NEUTRALE HANDLUNG, kein Primärknopf
              (Mockup A0, freigegeben): Die eine Haupthandlung dieses Reiters
-             bleibt „Kopplungscode erzeugen". */ ?>
+             bleibt „Weiter" am Feld „Code vom Gerät" (S5, B-S5-07). */ ?>
     <?php $apks = apk_liste(); if ($apks): ?>
       <?php ui_karte_start(['titel' => 'NAdoku für Android']); ?>
         <p class="feld-hinweis">Die Handy-App zeichnet die Spur des Dienstes

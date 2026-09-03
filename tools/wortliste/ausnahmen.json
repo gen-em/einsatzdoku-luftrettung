@@ -108,6 +108,16 @@
       "begruendung": "Kapitel 5 samt Build-Absaetzen beschreibt das Connect-IQ-Projekt, seine Tastenprofile und die Bauziele `fenix6pro`, `fr945`, `venu3s`. Plattformspezifisch, also bleibt Garmin (E-P2-15)."
     },
     {
+      "id": "uhr-tastennamen",
+      "bereich": "e",
+      "datei": "watch/source-tasten5/DeviceProfile.mc",
+      "muster": [
+        "taste-start"
+      ],
+      "klasse": "G",
+      "begruendung": "DeviceProfile.mc IST der plattformspezifische Teil der Uhr-App: Die Datei haelt je Tastenprofil die Beschriftungen, die auf dem Gehaeuse stehen — „START“ auf Fenix und Forerunner, „Action“ auf der Venu 3s (source-tasten3, deshalb dort kein Treffer). Genau diese Trennung sieht E-P2-02 vor: geraetefreier Ablauf, Garmin-Weg als benannter Zusatz. Die Oberflaechen setzen den Namen ueber Input.lSelectHold() ein und kennen ihn nicht selbst; wer ihn hier ersetzte, schriebe eine Bedienanweisung auf ein echtes Geraet, die dort nicht ausfuehrbar waere. Nur `taste-start` — DOWN und BACK stehen in dieser Datei nicht, und eine Regel auf Vorrat greift nicht und faellt als ungenutzt auf."
+    },
+    {
       "id": "connect-iq-projekt",
       "zeile": "Connect-IQ-Projekt|Connect-IQ-Probe",
       "klasse": "G",

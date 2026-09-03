@@ -43,9 +43,22 @@ tools/uhr-pruefstand/pruefstand.sh aufbau
 **Die Adresse steht bewusst nicht in diesem Repositorium.** Es ist öffentlich,
 die Dateien gehören Garmin, und eine Bereitstellung für den eigenen Gebrauch
 ist etwas anderes als eine Veröffentlichung. Aus demselben Grund werden die
-Dateien nicht eingecheckt. **Wer hier neu anfängt, hat die Adresse also nicht
-und kann sie sich auch nicht herleiten — sie muss erfragt werden.** Ohne sie
-bricht `aufbau` mit einem Hinweis ab, statt stillschweigend halb zu laufen.
+Dateien nicht eingecheckt.
+
+**Wo sie stattdessen liegt: in den Umgebungsvariablen der Arbeitsumgebung**
+(seit 03.09.2026; Rahmenplan Abschnitt 6). In einer eingerichteten Umgebung
+ist `CIQ_GERAETE_URL` damit schon gesetzt, und der `export` oben entfällt.
+Prüfen, ohne die Adresse ins Protokoll zu schreiben:
+
+```bash
+[ -n "$CIQ_GERAETE_URL" ] && echo "gesetzt (${#CIQ_GERAETE_URL} Zeichen)" || echo "NICHT gesetzt"
+```
+
+Ist sie leer, gibt es zwei Gründe, und beide sind harmlos: Die Umgebung wurde
+nach dem Start dieses Containers geändert — Umgebungsvariablen kommen beim
+**Start** herein, eine laufende Sitzung erbt sie nicht nach —, oder es ist eine
+fremde Umgebung. Dann erfragen. Ohne die Adresse bricht `aufbau` mit einem
+Hinweis ab, statt stillschweigend halb zu laufen.
 
 Zwei Anforderungen an die Bereitstellung, beide nicht offensichtlich:
 
@@ -56,11 +69,35 @@ Zwei Anforderungen an die Bereitstellung, beide nicht offensichtlich:
 - **`Devices/` und `Fonts/` liegen direkt unter der Adresse**, nicht tiefer.
 
 Die Adresse darf einen Pfad haben (`…/ciq`) oder in der Serverwurzel liegen;
-das Skript rechnet `--cut-dirs` aus der Adresse aus. Bis zum 02.09.2026 stand
+das Skript rechnet `--cut-dirs` aus der Adresse aus. **Ein Schrägstrich am
+Ende ist erlaubt** — er wird abgeschnitten, bevor die Adresse zusammengesetzt
+wird; sonst entstünde `https://host//Devices/`, und das leere Segment zählte
+für `wget` als Verzeichnisebene. Bis zum 02.09.2026 stand
 dort fest die 1, und damit landete alles unter einer Adresse **mit** Pfad als
 `Devices/Devices/<gerät>/` — der Baum eine Ebene zu tief, `monkeyc` findet kein
 Gerät, und das dokumentierte Beispiel oben war genau dieser Fall. Nachgemessen
 gegen einen örtlichen Testserver mit beiden Adressformen.
+
+**Am 03.09.2026 stand dasselbe Bild noch einmal da, mit anderer Ursache:** ein
+Schrägstrich am Ende der Adresse. `pfadtiefe()` misst die Adresse, nicht das
+Ergebnis der Zusammensetzung — und sah das leere Segment deshalb nicht.
+Herausgekommen ist ein **halb richtiger Baum**: 173 Geräte unter
+`Devices/Devices/`, 732 MB Schriften unter `Fonts/Fonts/`, daneben je ein
+korrekt abgelegter Teil (welche Datei wohin fällt, hängt davon ab, ob `wget`
+sie über die Startadresse oder über einen Verweis aus der
+Verzeichnisauflistung erreicht).
+
+Das ist die gefährliche Form. `pruefen` sucht nur nach den **drei
+Zielgeräten** — und die lagen oben, als Symlinks in den tiefen Baum. Der
+Bestand meldete also Vollzug, während `reihe` für die anderen 170
+„Gerätedatei fehlt" gesagt hätte: eine grüne Zahl über etwas, das sie nicht
+gemessen hat (`CLAUDE.md` 6). Seither wird die Adresse an der Quelle
+normalisiert, nicht in der Rechnung.
+
+**Vorsicht beim Aufräumen von Hand:** Jene Symlinks überleben ein `cp -rn` des
+tiefen Baums nach oben — der Name ist belegt, das echte Verzeichnis wird
+übersprungen, und nach dem `rm -rf` des tiefen Baums zeigen sie ins Leere. Die
+drei Zielgeräte sind dann fort, und `ls` sieht trotzdem vollständig aus.
 
 ### Wieviele Gerätedateien
 
@@ -73,9 +110,15 @@ und Starten und spart Zeit. Für **Stufe I** (unten) und für
 CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau
 ```
 
-Zum Stand vom 02.09.2026 sind das 99 Geräte mit `compiler.json`. Die Schriften
-(rund 1,2 GB) kommen in beiden Fällen vollständig — welche Datei zu welchem
-Gerät gehört, steht nur im Geräteabbild.
+Zum Stand vom 03.09.2026 sind das **173 Geräte mit `compiler.json`**. Die
+Schriften (rund 1,2 GB) kommen in beiden Fällen vollständig — welche Datei zu
+welchem Gerät gehört, steht nur im Geräteabbild.
+
+**Die 99 weiter unten sind etwas anderes** und wurden hier bis zum 03.09.2026
+verwechselt: Sie sind nicht die Zahl der Gerätedateien, sondern die **Auswahl**,
+die `geraeteklassen.py` daraus zieht (`--alle-liste`) — 99 von 173 für Stufe I,
+davon 20 Vertreter für Stufe II. Wer den Bestand gegen die alte Zahl prüft,
+hält einen vollständigen Abzug für unvollständig.
 
 ## Bedienung
 
@@ -108,7 +151,7 @@ Hebel: **Übersetzen ist billig, Simulieren ist teuer.**
 | | Aufwand je Gerät | Läuft über | Fängt |
 |---|---|---|---|
 | **Stufe I** `reihe` | ~3 s | **alle** Zielgeräte | fehlende API-Funktionen, fehlende Ressourcen, Speicherbedarf |
-| **Stufe II** `bildreihe` | ~50 s | nur **Vertreter** je Klasse | Layout, Bedienhinweise, Abstürze beim Zeichnen |
+| **Stufe II** `bildreihe` | ~50 s | nur **Vertreter** je Klasse (20, Stand 03.09.2026) | Layout, Bedienhinweise, Abstürze beim Zeichnen |
 
 ```bash
 python3 geraeteklassen.py ~/.Garmin/ConnectIQ/Devices \
@@ -142,6 +185,27 @@ stillschweigend. Für ein Touch-Gerät mit zwei nutzbaren Tasten übersetzt das
 sauber und ist auf dem Gerät **unbedienbar** — genau der Fall, den
 `docs/Geraete-Eingabe.md` für die Venu 3s beschreibt. Die Eingabe-Zuordnung
 bleibt Handarbeit je Klasse, mit `tools/eingabe-probe`.
+
+## Rundlauf gegen einen lokalen Server — nur über TLS mit bekannter CA
+
+Gemessen am 03.09.2026 mit `tools/netzprobe/` (SDK 9.2.0, fenix6pro):
+
+| Weg | Was die App sieht | Was beim Server ankommt |
+|---|---|---|
+| `http://127.0.0.1:8080` | **−1001** `SECURE_CONNECTION_REQUIRED` | **die Anfrage** — der Server führt sie aus |
+| `https://…`, selbstsigniert | 404 | nichts (`tlsv1 alert unknown ca`) |
+| `https://…`, CA im Systemspeicher | **405 von `pair.php`** | die Anfrage |
+
+Die erste Zeile ist die Falle: Über blankes HTTP geht die Anfrage **hinaus**
+und wird ausgeführt, nur die Antwort erreicht die App nicht. Wer bloß auf den
+Rücklaufcode sieht, hält den Weg für tot — bei einem schreibenden Endpunkt
+ist das kein Schönheitsfehler.
+
+`tools/referenzdatensatz/einspielen/lokal_starten.sh` legt deshalb seit dem
+03.09.2026 eine eigene CA an, unterschreibt damit das Serverzertifikat
+(`subjectAltName=IP:127.0.0.1`) und legt die CA nach
+`/usr/local/share/ca-certificates/`. Danach trägt der Rundlauf. Wer ihn
+anders aufsetzt, braucht dasselbe.
 
 ## Der Simulator merkt sich zwei Dinge
 

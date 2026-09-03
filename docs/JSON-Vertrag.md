@@ -1,7 +1,13 @@
 # JSON-Vertrag Gerät → Server
 
-**Version:** 1.4 — Kopplungsblock `geraet` in zwei Formen (Uhr und Handy, 1a),
-Kennungspräfixe der Android-Apps (8)
+**Version:** 2.1 — die Kopplung ist umgekehrt (1a): Das **Gerät** zeigt den
+Code, das Web nimmt ihn entgegen, das Gerät bestätigt das Konto. `pair.php`
+kennt vier Anliegen statt zwei. Die Hauptnummer stieg auf 2.0, weil kein
+Client der Fassung 1.x sich mehr koppeln kann — bestehende Kopplungen und
+alles ab Abschnitt 2 sind unberührt. **2.1** trägt den Wartungsmodus nach
+(Abschnitt 5): ein 503 mit `{"error":"maintenance"}`, das jeder Endpunkt
+schicken kann. Nebennummer, weil es für die Clients keine neue Regel ist —
+sie behandeln es als 5xx, wie bisher.
 **Endpunkt:** `POST https://<host>/ingest.php`
 **Content-Type:** `application/json`
 
@@ -42,6 +48,8 @@ schon durchsetzt und welche noch nicht.
 | Antwortfeld `dropped_points` (5) | durchgesetzt seit Web 10.2.0 |
 | Antwortfeld `cut_points` (5) | durchgesetzt seit Web 12.5.0 |
 | Block `geraet` wird gespeichert (1a) | durchgesetzt seit Web 12.9.0; davor stillschweigend verworfen |
+| Kopplung in drei Anliegen (1a) | durchgesetzt seit Web 13.0.0 — der alte Weg (Code aus dem Web, Uhr tippt ihn ein) ist ersatzlos entfallen |
+| 503 `{"error":"maintenance"}` während der Wartung (5) | durchgesetzt seit Web 13.2.0. **Für die Clients keine neue Regel** — es ist ein 5xx und wird als solches behandelt; der Zusatz `Retry-After` ist ein Hinweis, kein Auftrag |
 | 413 „Uhr halbiert die Chunk-Größe und wiederholt" (5) | **beschrieben, nicht umgesetzt** — `Uploader.mc` setzt bei jedem Fehlercode nur `lastError`, und `UPLOAD_CHUNK_POINTS` ist eine Konstante. Gefunden in S2/AP3; die Anwendung lehnt heute keine Chunk-Größe ab, die die Uhr sendet, deshalb tritt der Fall nicht auf |
 
 Bis auf eine Zeile lauten alle „durchgesetzt" — die Tabelle beschreibt damit
@@ -62,37 +70,217 @@ Eine Ausnahme steht ausdrücklich darin: Die **Präfixe** der Client-Kennung
 
 Antwort bei ungültigem Schlüssel: `401 {"error":"auth"}`.
 
-## 1a. Kopplung (`pair.php`) — seit Uhr 1.9.0
+## 1a. Kopplung (`pair.php`) — seit Uhr ‹Fassung› / Web 13.0.0
 
-`pair.php` kennt **zwei** Anliegen: koppeln (dieser Abschnitt) und trennen
-(Abschnitt 1b).
+`pair.php` kennt **vier** Anliegen: `start`, `status` und `bestaetigen`
+(dieser Abschnitt) und `trennen` (Abschnitt 1b). Alle vier gehen per `POST`
+an denselben Endpunkt, mit `Content-Type: application/json` und einem
+Pflichtfeld `aktion` im Rumpf. Eine andere HTTP-Methode bekommt
+`405 {"error":"method"}`, und zwar bevor der Server den Rumpf überhaupt
+liest.
 
-Die Kopplung ist der einzige Weg, der **ohne** die Header aus Abschnitt 1
-auskommt: Sie erzeugt die Zugangsdaten ja erst. Gesendet wird per POST:
+Ein Rumpf **ohne** `aktion` oder mit einer unbekannten Aktion bekommt
+`400 {"error":"aktion","meldung":"Uhr-App aktualisieren"}`. Die Meldung ist
+für Clients der alten Fassung gedacht, die den Kopplungscode noch **senden**
+statt ihn zu **zeigen** — sie ist der einzige Kanal, auf dem eine solche Uhr
+erfährt, was zu tun ist (1a.6).
+
+**Das Gerät zeigt einen Code, das Web nimmt ihn entgegen, das Gerät bestätigt
+das Konto.** Der Ablauf hat drei Schritte, und jeder ist ein Anliegen:
+
+1. **`start`** — das Gerät bittet um eine Kopplungssitzung. Ohne Kopfzeilen:
+   Es hat noch keine. Der Server antwortet mit einem **Anzeigecode** für den
+   Menschen und mit den **Zugangsdaten**, die das Gerät ab jetzt trägt, aber
+   erst nach Schritt 3 benutzen darf.
+2. **`status`** — das Gerät fragt nach, ob jemand den Code in sein Konto
+   eingegeben hat. Mit den Kopfzeilen aus Abschnitt 1, den Zugangsdaten aus
+   Schritt 1.
+3. **`bestaetigen`** — das Gerät sagt Ja oder Nein zu dem Konto, das der
+   Server in Schritt 2 genannt hat. Mit Kopfzeilen. Nach Ja gibt es das
+   Gerät; nach Nein gibt es die Sitzung nicht mehr.
+
+**Bis Web 12.9.4 lief das andersherum:** Das Web erzeugte den Code, und die
+Uhr tippte ihn am Handgelenk ein. Der Grund für die Umkehr ist nicht die
+Bequemlichkeit, sondern das zweite Tor. Vorher entschied allein, wer den Code
+kannte; jetzt gibt es zwei Prüfungen an zwei Geräten: Ein **fremdes Gerät im
+eigenen Konto** scheitert an der Bestätigungsseite im Web, die Art und Modell
+zeigt; das **eigene Gerät im fremden Konto** scheitert am Ja auf dem Gerät,
+weil dort die maskierte Adresse des fremden Kontos steht und auffällt.
+
+Der Code ist **nur für den Menschen**. Er weist das Gerät nirgends aus; wer
+ihn abliest, kann am Gerät nichts auslösen. Was das Gerät ausweist, sind
+Kennung und Schlüssel aus Schritt 1 — und die sind bis Schritt 3
+**schwebend**: Der Server kennt sie, aber `ingest.php` weist sie mit `401`
+ab, weil es das Gerät noch nicht gibt. Ein Gerät, das nie bestätigt, hat
+damit einen Schlüssel, der zu nichts passt und nach zehn Minuten von selbst
+wertlos wird.
+
+**Zwei Bremsen, ein Fehlerschlüssel.** `start` wird je Absenderadresse
+gezählt; `status`, `bestaetigen` und `trennen` zählen ihre Fehlversuche in
+einem zweiten, davon unabhängigen Topf. Beide antworten
+`429 {"error":"zu_viele_versuche"}`. Ein Client kann und muss sie nicht
+auseinanderhalten: In beiden Fällen ist die Antwort dieselbe — später noch
+einmal.
+
+### 1a.1 `start` — Sitzung anlegen
+
+Ohne Kopfzeilen. Kopfzeilen, die trotzdem mitkommen, liest der Server an
+dieser Stelle nicht.
 
 ```json
-{
-  "code": "AB3K7Q",
-  "geraet": {
-    "art":   "uhr",
-    "teil":  "006-B4261-00",
-    "br":    390,
-    "ho":    390,
-    "touch": true,
-    "fw":    1140,
-    "ciq":   "5.2.0",
-    "app":   "1.9.0"
-  }
-}
+{ "aktion": "start",
+  "geraet": { "art": "uhr", "teil": "006-B4261-00", "br": 390, "ho": 390,
+              "touch": true, "fw": 1140, "ciq": "5.2.0", "app": "2.1.0" } }
 ```
 
-`code` ist Pflicht; **`geraet` ist es nicht.** Ein Server, der den Block nicht
-kennt, ignoriert ihn, und ein Gerät, das ein Feld nicht liefern kann, sendet
-dort `null` — eine Kopplung darf an einer Statistikangabe nie scheitern.
-**Dieser Server speichert den Block seit Web 12.9.0**; davor hat er ihn
-stillschweigend verworfen.
+`geraet` ist **freiwillig** und kommt in zwei Formen (1a.4). Eine Kopplung
+scheitert nie an einer Statistikangabe — aber Art und Modell sind das, was
+die Kontoinhaberin auf der Bestätigungsseite **sieht**; ein Gerät, das nichts
+über sich sagt, erscheint dort als „Gerät unbekannt".
 
-### 1a.1 Zwei Formen — Uhr und Handy
+Antwort `200`:
+
+```json
+{ "code": "AB3K7Q",
+  "device_id": "dev-3f9a…",
+  "api_key": "8c1e…",
+  "frist_s": 600 }
+```
+
+| Feld | Bedeutung |
+|---|---|
+| `code` | sechs Zeichen aus dem Alphabet `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` (ohne 0/O und 1/I — sie sind auf einem Uhrendisplay nicht zu unterscheiden). **Ohne Trennzeichen.** Das Gerät zeigt ihn in zwei Dreiergruppen („AB3 K7Q"); das Web nimmt ihn mit und ohne Leerzeichen, mit und ohne Bindestrich, in jeder Schreibung |
+| `device_id` | die künftige Gerätekennung, `dev-` + 32 Hexzeichen (16 Zufallsbytes) |
+| `api_key` | der Geräteschlüssel im Klartext, 48 Hexzeichen (24 Bytes). **Er wird genau einmal übertragen — hier.** Der Server speichert nur seinen Hash, und kein Protokoll sieht den Klartext |
+| `frist_s` | die **volle** Gültigkeitsdauer der Sitzung in Sekunden (600) — nicht eine Restzeit |
+
+**Die Frist läuft ab dem Anlegen der Sitzung**, nicht ab dem Empfang dieser
+Antwort; die Laufzeit der Antwort geht dem Gerät verloren. Für die Anzeige
+genügt `frist_s`; verlässlich ist `rest_s` aus `status` (1a.2), das der
+Server aus derselben Uhr rechnet wie die Fristprüfung. Nach Ablauf sind Code
+**und** Zugangsdaten wertlos, und das Gerät beginnt von vorn.
+
+**`start` ist nicht idempotent.** Jeder Aufruf legt eine neue Sitzung mit
+neuen Zugangsdaten an und zählt gegen die Adressgrenze. Ein bereits
+gekoppeltes Gerät verliert dadurch nichts — seine `devices`-Zeile bleibt
+stehen —, aber es hält dann zwei Schlüssel, von denen einer schwebt.
+
+Fehler:
+
+| Code | Rumpf | Bedeutung / Verhalten des Geräts |
+|---|---|---|
+| 429 | `{"error":"zu_viele_versuche","meldung":"…"}` | zu viele Sitzungen von dieser Adresse — später noch einmal |
+| 429 | `{"error":"zu_viele_sitzungen","meldung":"…"}` | der Server hält gerade so viele offene Sitzungen, wie er höchstens hält — später noch einmal; der Zustand dauert Minuten, nicht Stunden |
+| 405 | `{"error":"method"}` | falsche HTTP-Methode |
+| 500 | `{"error":"server"}` | die Sitzung ließ sich nicht anlegen. Nichts ist entstanden; das Gerät darf wiederholen |
+
+**Das Feld `meldung` ist ein Satz für den Menschen, kein Vertragsgegenstand.**
+Es steht in einigen Fehlerantworten, sein Wortlaut kann sich ändern, und ein
+Client entscheidet am Feld `error`, nicht an ihm. Sinnvoll ist es dort, wo
+ein Gerät den Fall selbst nicht benennen kann — dann zeigt es die
+Servermeldung als zweite Zeile.
+
+### 1a.2 `status` — nachfragen
+
+Mit den Kopfzeilen `X-Device-Id` und `X-Api-Key` aus Schritt 1:
+
+```json
+{ "aktion": "status" }
+```
+
+Antwort `200`, drei Zustände:
+
+| Rumpf | Bedeutung |
+|---|---|
+| `{"zustand":"offen","rest_s":540}` | noch hat niemand den Code eingegeben; `rest_s` ist die Restgültigkeit in Sekunden |
+| `{"zustand":"beansprucht","konto":"ph***@gen-em.org","rest_s":300}` | ein Konto hat den Code eingegeben. `konto` ist die **maskierte E-Mail-Adresse** dieses Kontos: die ersten zwei Zeichen des lokalen Teils, `***`, die volle Domain, alles klein geschrieben. Sie ist nur für den Dialog auf dem Gerät bestimmt und wird dort **nicht gespeichert** |
+| `{"zustand":"gekoppelt"}` | zu diesen Kopfzeilen gibt es bereits ein Gerät — **ohne** `rest_s`, denn eine Sitzung gibt es nicht mehr. Das ist der Fall, wenn die Antwort auf `bestaetigen ja` verlorenging: Das Gerät darf die Zugangsdaten als gültig speichern |
+
+**Warum die Adresse maskiert ist und die Domain trotzdem voll.** Der Zweck
+des Feldes ist, dass die Trägerin ihr eigenes Konto **erkennt** — an einer
+fremden Domain fällt das falsche Konto auf, und genau darauf beruht das
+zweite Tor. Die volle Adresse dagegen gehört nicht auf ein Uhrendisplay, das
+jeder ablesen kann, der danebensteht. Ein Client zeigt das Feld an und
+zerlegt es nicht: Es ist eine Zeichenkette für Menschen, kein Adressformat.
+
+Das Gerät fragt **höchstens alle fünf Sekunden** und nie, bevor die vorige
+Antwort da ist. Ein Verbindungsfehler ist kein Grund aufzuhören — die Sitzung
+lebt auf dem Server weiter, bis die Frist abläuft.
+
+Fehler:
+
+| Code | Rumpf | Bedeutung / Verhalten des Geräts |
+|---|---|---|
+| 401 | `{"error":"auth"}` | Kennung unbekannt **oder** Schlüssel falsch. Für das Gerät dasselbe wie 410: von vorn beginnen |
+| 410 | `{"error":"abgelaufen"}` | die Sitzung ist verfallen. Code und Zugangsdaten wegwerfen, von vorn beginnen |
+| 429 | `{"error":"zu_viele_versuche","meldung":"…"}` | Ratenschutz — gilt für alle vier Anliegen |
+
+**`401` unterscheidet mit Absicht nicht, woran es lag.** Unbekannte Kennung,
+falscher Sitzungsschlüssel, falscher Geräteschlüssel — der Rumpf ist in allen
+Fällen byteweise derselbe, und die Antwort dauert in allen Fällen gleich
+lang. Sonst beantwortete der Endpunkt einem Fremden die Frage, welche
+Gerätekennungen es gibt; die Kennung ist die Hälfte dessen, was ein Upload
+braucht.
+
+**Eine verworfene Sitzung ergibt `401`, nicht `410`.** Wer Nein sagt oder im
+Web abbricht, löscht die Zeile — danach ist die Kennung unbekannt wie jede
+andere. Für das Gerät läuft beides auf dasselbe hinaus; wer den Endpunkt
+nachbaut, muss den Unterschied kennen.
+
+### 1a.3 `bestaetigen` — Ja oder Nein
+
+Mit Kopfzeilen. `antwort` ist Pflicht und lautet `ja` oder `nein`:
+
+```json
+{ "aktion": "bestaetigen", "antwort": "ja" }
+```
+
+| Antwort | Bedeutung |
+|---|---|
+| `200 {"ok":true}` (nach `ja`) | **Das Gerät existiert jetzt** und ist aktiv; die Sitzung ist beendet. Das Gerät speichert Kennung und Schlüssel dauerhaft. Die Kontoinhaberin bekommt eine E-Mail — dieselbe wie bisher beim Koppeln. Eine Wiederholung derselben Anfrage antwortet ebenfalls `200`: Das Gerät gibt es schon |
+| `200 {"ok":true}` (nach `nein`) | die Sitzung samt Zugangsdaten ist gelöscht. `nein` ist in **jedem** Zustand erlaubt, auch `offen` und auch nach Fristablauf — so bricht ein Gerät ab, das zurück auf seine Sync-Seite geht |
+| `400 {"error":"payload"}` | `antwort` fehlt oder lautet etwas anderes als `ja` oder `nein`. Zählt **nicht** im Ratenschutz: Hier rät niemand, hier ist ein Client falsch gebaut |
+| `401 {"error":"auth"}` | Kennung unbekannt oder Schlüssel falsch — wie in 1a.2 |
+| `409 {"error":"nicht_beansprucht"}` | `ja`, aber noch hat kein Konto den Code eingegeben. **Die Sitzung bleibt bestehen**; ein Gerät, das sich an dieses Dokument hält, sendet `ja` nur nach `beansprucht` |
+| `409 {"error":"device_limit","meldung":"…"}` | das Konto hat bereits so viele Geräte, wie es haben darf (zwischen der Eingabe im Web und dem Ja kann eines von Hand dazugekommen sein). **Die Sitzung ist gelöscht**; erst ein Gerät im Web löschen, dann von vorn |
+| `410 {"error":"abgelaufen"}` | Frist vorbei, und die Antwort war `ja`. Von vorn |
+| `429 {"error":"zu_viele_versuche","meldung":"…"}` | Ratenschutz |
+| `500 {"error":"server"}` | das Anlegen scheiterte. Die Sitzung besteht weiter; das Gerät darf wiederholen |
+
+**`410` und `409` kommen ohne Verzögerung und zählen nicht.** Sie setzen die
+richtige Kennung **und** den richtigen Schlüssel voraus und sagen einem
+Fremden deshalb nichts — der Code war richtig, hier ist niemand am Raten.
+`401` dagegen zählt und wird künstlich verzögert.
+
+**Was der Server nach `ja` in einem Zug tut:** die `devices`-Zeile anlegen —
+mit Konto, Kennung, Schlüssel-Hash, einem Vorgabenamen nach der gemeldeten
+Art und den drei Werten aus dem `geraet`-Block von Schritt 1 (1a.5) — und die
+Sitzung löschen, beides in **einer** Transaktion. Scheitert das Anlegen,
+bleibt die Sitzung bestehen und das Gerät bekommt `500 {"error":"server"}`;
+es darf wiederholen. Ein zweites Ja zu derselben Sitzung wartet auf die erste
+Transaktion, findet die Sitzung dann nicht mehr und bekommt `200` aus dem
+Gerätezweig — die Kopplung hängt damit an keinem einzelnen Funkpaket.
+
+**Zwei Fälle, die kein regelkonformer Client sendet, die aber eine Antwort
+brauchen:**
+
+**`nein` an einem bereits gekoppelten Gerät** ist ein Nichtstun:
+`200 {"ok":true}`, und das Gerät bleibt. Der Fall entsteht, wenn das Ja das
+Gerät angelegt hat, die Antwort verlorenging und jemand statt zu wiederholen
+abbricht. Ein Nein, das ein fertiges Gerät löschte, wäre ein Trennen ohne
+Trennen-Benachrichtigung: Das Konto verlöre ein Gerät, ohne davon zu
+erfahren, und die Kopplungsmail von eben stünde falsch im Postfach. Bleibt
+das Gerät stehen, ist der schlimmste Fall ein überflüssiger Eintrag — er ist
+gemeldet, er trägt sieben Tage den Hinweis „neu", und ein Klick im Web
+entfernt ihn.
+
+**`trennen` mit schwebenden Zugangsdaten** wirkt wie `nein`: Die Sitzung wird
+gelöscht, die Antwort ist `200 {"ok":true}`. Es gibt kein Gerät, das sich
+trennen ließe, und die Sitzung braucht danach niemand mehr. Die Alternative —
+ein Fehler — hinterließe eine Sitzung, die bis zum Fristende Platz belegt,
+und zwar für einen Aufruf, der genau das Richtige wollte.
+
+### 1a.4 Zwei Formen des Blocks `geraet` — Uhr und Handy
 
 Der Block kommt in zwei Zuschnitten, weil die Geräte Verschiedenes über sich
 wissen. Die **Garmin-Uhr kennt ihren Modellnamen nicht** und sendet ihre
@@ -137,7 +325,7 @@ das Gerät nicht beantworten kann. Der Vertrag stellt beides frei.
 }
 ```
 
-### 1a.2 Was der Server davon speichert
+### 1a.5 Was der Server davon speichert
 
 **Drei Spalten an `devices`, nicht zehn** (Web 12.9.0, R42):
 
@@ -163,6 +351,14 @@ Rohangabe fiele ein künftiges Gerät dauerhaft und unwiederbringlich auf
 **Fehlt der Block oder ist er unbrauchbar, bleiben alle drei Spalten leer.**
 „Unbekannt" ist eine Sache der Anzeige, nicht der Spalte — vier Wege legen ein
 Gerät an, und nur die Kopplung weiß etwas über es.
+
+**Gelesen wird bei `start`, gespeichert bei `bestaetigen`.** Die drei Werte
+entstehen, sobald das Gerät um eine Sitzung bittet, und liegen bis zum Ja in
+der Sitzung — die Kontoinhaberin soll auf der Bestätigungsseite ja sehen,
+**was** da koppeln will. Erst das Ja überträgt sie unverändert in die
+`devices`-Zeile. Dieselben drei Spalten führt deshalb auch `pair_sessions`.
+Ein späteres Nachauflösen des Modellnamens trifft nur `devices`; Sitzungen
+leben zehn Minuten, und in zehn Minuten ändert sich keine Modelltabelle.
 
 **Was ankommt, wird zugeschnitten und nicht geglaubt.** Der Block ist eine
 Selbstauskunft eines Geräts, das sich erst vorstellt: Längen werden auf die
@@ -190,6 +386,23 @@ Stückzahl-Statistik werden sie nicht gebraucht, und in einer kleinen Gruppe
 wären sie ein Personenbezug mehr, als die Frage rechtfertigt. Die Zuordnung
 leistet die `device_id`, die der Server bei der Kopplung ohnehin vergibt.
 
+### 1a.6 Was ein Client der alten Fassung sieht
+
+Ein Gerät, das `{"code":"…"}` ohne `aktion` sendet, bekommt `400` mit
+`error: aktion` und `meldung: "Uhr-App aktualisieren"`. Es gibt **keine**
+Übergangszeit, in der beide Wege gehen: Der alte Weg setzte einen im Web
+erzeugten Code voraus, und den gibt es nicht mehr. Eine Übergangszeit hätte
+zwei Kopplungswege nebeneinander gebraucht, jeden mit eigener Bremse, für
+einen Bestand von einer Uhr.
+
+Der einzige Fall, in dem eine alte Uhr diese Meldung **nicht** sieht: Ist die
+Absenderadresse gerade wegen zu vieler Fehlversuche gesperrt, antwortet der
+Server `429`, bevor er die Aktion überhaupt ansieht.
+
+**Bestehende Kopplungen sind von alldem nicht berührt** — `ingest.php` und
+Abschnitt 1 ändern sich nicht. Was eine alte Uhr verliert, ist die
+Möglichkeit, sich **neu** zu koppeln.
+
 ## 1b. Trennen (`pair.php`) — seit Uhr 1.11.0 / Web 9.15.0
 
 Die Uhr gibt ihre Kopplung zurück. POST an **denselben** Endpunkt, diesmal
@@ -203,7 +416,11 @@ Die Uhr gibt ihre Kopplung zurück. POST an **denselben** Endpunkt, diesmal
 |---|---|
 | `200 {"ok":true}` | Das Gerät ist gelöscht |
 | `401 {"error":"auth"}` | Kennung oder Schlüssel falsch — wie in Abschnitt 1 |
-| `429 {"error":"zu_viele_versuche"}` | Ratenschutz, gilt für beide Anliegen von `pair.php` |
+| `429 {"error":"zu_viele_versuche","meldung":"…"}` | Ratenschutz, gilt für **alle vier** Anliegen von `pair.php` (1a) |
+
+**Ein `trennen` mit noch schwebenden Zugangsdaten** — aus einer Kopplung, die
+das Ja noch nicht hinter sich hat — löscht die Sitzung und antwortet ebenfalls
+`200 {"ok":true}`. Die Begründung steht in 1a.3.
 
 **Wozu.** Der Fall ist die geteilt genutzte Uhr. Bis Uhr 1.10.3 gab es für den
 Wechsel der Person nur „neuen Code eintippen"; gelang das nicht, dokumentierte
@@ -231,7 +448,7 @@ sie an das neue. Die Uhr verweigert das Trennen deshalb, solange
 ## 2. Grundprinzipien
 
 - **Zeitstempel:** ISO 8601 in UTC mit `Z`-Suffix, Sekundenauflösung (`2026-07-16T08:31:05Z`). Track-Punkte nutzen kompakte Unix-Epochen (Sekunden, UTC).
-- **Idempotenz:** Jeder Einsatz und jedes Ruhe-Segment trägt eine von der Uhr erzeugte `client_ref` (eindeutig pro Gerät). Wiederholtes Senden derselben Daten ist unschädlich.
+- **Idempotenz:** Jeder Einsatz und jedes Ruhe-Segment trägt eine von der Uhr erzeugte `client_ref` (eindeutig pro Gerät). Wiederholtes Senden derselben Daten ist unschädlich — **auch in der falschen Reihenfolge** (seit Web 13.0.1): Ein Feld, das ein Paket nicht trägt (`ended_at`, `distance_m` und `ascent_m` sind `null`, solange der Einsatz läuft), löscht auf dem Server nichts. Ein Wert überschreibt, ein `null` lässt stehen. Eine Berichtigung bleibt damit möglich; ein einmal gesetztes Ende verschwindet nicht mehr, so wenig wie `final` zurückgeht.
 - **Inkrementeller Track:** Track-Punkte werden mit fortlaufender Sequenznummer gesendet. Die Uhr sendet ab `seq_from`; der Server ignoriert bereits bekannte Sequenzen und antwortet mit `next_seq`, ab dem die Uhr weitersenden soll. Nach bestätigtem Empfang darf die Uhr ihren lokalen Puffer bis `next_seq` leeren.
 - **Diensttag:** Feld `day` = Datum des Dienstbeginns (Format `YYYY-MM-DD`); die Uhr bestimmt es einmal bei „Einsatztag starten" und verwendet es für alle Uploads dieses Dienstes. Seit Vertrag 1.3 ist es **nicht mehr der Zuordnungsschlüssel**, sondern nur noch Sortier- und Anzeigedatum — die Zuordnung leistet `day_ref` (Abschnitt 2.1).
 - **Nachzügler:** Bei fehlender Verbindung puffert die Uhr und sendet später identisch nach — keine Sonderfelder nötig.
@@ -492,6 +709,22 @@ Fehler:
 | 405 | `{"error":"method"}` | Falsche HTTP-Methode |
 | 413 | `{"error":"too_large"}` | Chunk zu groß — Uhr halbiert die Chunk-Größe und wiederholt |
 | 5xx | — | Später unverändert erneut versuchen (Backoff) |
+| 503 | `{"error":"maintenance","meldung":"…"}` | **Wartungsmodus** — ein Sonderfall von 5xx, **kein neues Verhalten**: Der Server wird gerade aktualisiert und schließt sich für die Dauer. Behandlung genau wie 5xx, also Backoff und unverändert erneut. Die Antwort trägt zusätzlich `Retry-After` in Sekunden (heute 300) als Hinweis für Browser und Werkzeuge; **die Geräte müssen ihn nicht auswerten** und tun es heute nicht |
+
+**Warum das eigens dasteht, obwohl sich nichts ändert.** Der Wartungsmodus
+(Web 13.2.0) ist die einzige Lage, in der der Server ein 5xx **absichtlich**
+und **für längere Zeit** schickt. Wer einen neuen Client schreibt, soll
+wissen, dass diese Antwort erwartbar ist und keinen Fehlerzustand am Gerät
+bedeutet: Der Puffer bleibt, nichts wird markiert, nichts wird bestätigt.
+Genau das prüft das S4-Prüfprotokoll für die Android-App bereits nach
+(„5xx / 503 → später erneut, nichts markiert, nichts bestätigt").
+
+Alle Endpunkte antworten so — `ingest.php`, `pair.php` mit allen vier
+Anliegen, und die Skript-Endpunkte unter `/api/`. Ausgenommen sind die
+Skripte, die die Wartung selbst braucht (`update.php`,
+`wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`,
+`install.php`); sie antworten wie sonst. Einzelheiten und Betriebsablauf:
+`docs/Technik.md`, Abschnitte 4.99c und 7.
 
 ## 6. Chunk-Größen
 

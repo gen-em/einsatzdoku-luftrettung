@@ -236,8 +236,9 @@
                  Roboto,'Helvetica Neue',Arial,sans-serif;
   --schrift-text:'Open Sans',system-ui,'Segoe UI',Roboto,
                  'Helvetica Neue',Arial,sans-serif;
-  /* Schreibmaschinenschrift nur, wo sie die Aussage IST: Kopplungscode,
-   * Wiederherstellungsschlüssel, Rechtstext-Editor. */
+  /* Schreibmaschinenschrift nur, wo sie die Aussage IST: Kopplungscode
+   * (seit Web 13.1.0 im Eingabefeld, .feld-fest — er wird abgetippt, nicht
+   * angezeigt), Wiederherstellungsschlüssel, Rechtstext-Editor. */
   --schrift-fest:ui-monospace,'SF Mono','Cascadia Mono','JetBrains Mono',
                  Consolas,monospace;
 
@@ -2780,9 +2781,15 @@ h1 + .seiten-erklaerung{margin-top:0}
 /* Der Klammerzusatz an einer Feldbeschriftung („(optional)"). */
 .feld-klein-inline{font-weight:400;color:var(--gedaempft);font-size:var(--groesse-2)}
 
-/* CODEBLOCK — Kopplungscode, Geräte-ID, API-Schlüssel. Werte, die von einem
- * Bildschirm auf eine Uhr abgetippt werden, und zwar unter Zeitdruck:
- * groß, in Festbreite, mit Abstand zwischen den Zeichen. */
+/* CODEBLOCK — Geräte-ID, API-Schlüssel, Wiederherstellungsschlüssel,
+ * Cron-Zeile, Serverschlüssel. Werte, die von einem Bildschirm abgeschrieben
+ * oder herauskopiert werden, oft unter Zeitdruck: groß, in Festbreite, mit
+ * Abstand zwischen den Zeichen.
+ *
+ * DER KOPPLUNGSCODE STEHT SEIT WEB 13.1.0 NICHT MEHR HIER. Er wandert seit S5
+ * in die andere Richtung — das Gerät zeigt ihn, ein Mensch tippt ihn im Web
+ * ein —, und dafür ist ein Eingabefeld zuständig (.feld-fest). Der Baustein
+ * bleibt: sechs andere Stellen benutzen ihn. */
 .codeblock{
   background:var(--rauch);
   border:var(--strich) solid var(--linie);

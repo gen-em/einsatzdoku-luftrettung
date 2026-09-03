@@ -1,0 +1,267 @@
+#!/usr/bin/env python3
+"""Anker der S5-Fundstellen — findet sie am INHALT, nicht an der Zeilennummer.
+
+WOZU. Die beiden S5-Konzepte (`Konzept-S5-Kopplung-umgekehrt.md`, Pakete A-D,
+und `Konzept-S5-Zusatz-Android-Ortung-Dienstende.md`, Paket E) nennen zu
+jeder Aussage eine Fundstelle mit Zeilennummer. Diese Nummern sind am
+02.09.2026 an `main` (c2ac707) erhoben und stimmten alle. Sie halten aber nur
+bis zum naechsten Paket, das dieselben Dateien anfasst — S7 ersetzt
+"Sicherung" durch "Backup" und beruehrt dabei `einstellungen.php` (46
+Treffer), `jobs_lib.php` (22), `update.php` (16), `Handbuch.md` (71) und
+`Technik.md` (114). Danach zeigt jede Zeilennummer des Konzepts auf etwas
+anderes. Fuer Paket E (nur `android/`) tut das nicht S7, sondern der S4-Rest —
+er fasst `HauptActivity.kt`, `strings.xml` und das Manifest an; E-S5Z-14 laesst
+E deshalb davor mergen.
+
+Ein Konzept deswegen umzuschreiben waere die falsche Antwort: Die Nummern
+sind Beleg, kein Wegweiser. Dieses Werkzeug sucht statt ihrer den TEXT und
+sagt, wo er heute steht.
+
+DREI ANTWORTEN, und die dritte ist die wichtige:
+
+  gefunden, eine Stelle    Zeile hat sich vielleicht verschoben — kein Problem
+  gefunden, mehrere        das Muster taugt nicht mehr (oder es gibt die
+                           Stelle jetzt zweimal) — nachsehen
+  NICHT gefunden           jemand hat die Stelle umgeschrieben oder entfernt.
+                           Dann ist der Konzeptabsatz dazu neu zu lesen.
+
+Aufruf:
+    python3 tools/s5-anker/anker.py            # alle Anker
+    python3 tools/s5-anker/anker.py --knapp    # nur Abweichungen
+    python3 tools/s5-anker/anker.py --paket C  # nur die eines Pakets (C, D, E)
+
+Rueckgabewert 0 = jeder Anker genau einmal gefunden, 1 = mindestens einer
+fehlt oder ist mehrdeutig.
+"""
+from __future__ import annotations
+
+import argparse
+import pathlib
+import re
+import sys
+
+WURZEL = pathlib.Path(__file__).resolve().parents[2]
+
+# DIE ANKER DER PAKETE A UND B SIND FORT (03.09.2026), und das ist ihr
+# planmaessiges Ende: Sie waren dazu da, die Fundstellen des Konzepts nach der
+# Zeilendrift von S7 wiederzufinden — bis die Stelle umgeschrieben ist. Web
+# 13.0.0 und 13.1.0 haben genau das getan; von den 40 Ankern zeigten danach 15
+# ins Leere, weil es die Zeile nicht mehr gibt. Ein Werkzeug, das dauerhaft
+# Fehlendes meldet, wird nicht gelesen. Was sie fanden, steht in der
+# Git-Historie (Commit dieses Standes) — hier bleiben C, D und E, die noch
+# gebraucht werden.
+#
+# (Paket, Kennung, Datei, Sollzeile am 02.09.2026, Muster [, erwartete Trefferzahl])
+#
+# Das Muster ist ein regulaerer Ausdruck auf EINER Zeile. Gewaehlt ist
+# jeweils der kuerzeste Text, der die Stelle eindeutig macht und der eine
+# Umbenennung "Sicherung" -> "Backup" ueberlebt.
+#
+# Die Trefferzahl ist 1, wo nichts anderes dasteht. Sie ausdruecklich auf 2
+# zu setzen ist keine Nachsicht, sondern eine Aussage: An dieser Stelle steht
+# derselbe Text zweimal, und das ist so gewollt. Wird daraus eine 1 oder eine
+# 3, meldet das Werkzeug es.
+ANKER: list[tuple] = [
+    # ---- Paket A: Server ---------------------------------------------------
+
+    # ---- Paket B: Web ------------------------------------------------------
+
+    # ---- Paket C: Uhr ------------------------------------------------------
+    ("C", "pair.mc.trennen-dlg",  "watch/source/Pair.mc",  35,
+     r"^class TrennenDelegate"),
+    ("C", "pair.mc.zeile-max",    "watch/source/Pair.mc",  64,
+     r"^\s*const ZEILE_MAX"),
+    ("C", "pair.mc.start",        "watch/source/Pair.mc",  93,
+     r"^\s*function start\(\) as Void"),
+    ("C", "pair.mc.trennen",      "watch/source/Pair.mc", 113,
+     r"^\s*function trennen\(\) as Void"),
+    ("C", "pair.mc.geraeteinfo",  "watch/source/Pair.mc", 217,
+     r"^\s*function _geraeteInfo"),
+    ("C", "pair.mc.verbindung",   "watch/source/Pair.mc", 317,
+     r"\} else if \(code < 0\) \{"),
+    ("C", "sync.timer",           "watch/source/SyncView.mc",  25,
+     r"_timer\.start\(method\(:refresh\), 2000, true\)"),
+    ("C", "sync.einrichtung",     "watch/source/SyncView.mc",  96,
+     r'"Erst Server-Adresse setzen"'),
+    ("C", "sync.koppeln-hinweis", "watch/source/SyncView.mc",  98,
+     r'lSelectHold\(\) \+ ": Ger.t koppeln"'),
+    ("C", "sync.selectlong",      "watch/source/SyncView.mc", 231,
+     r"^\s*function actSelectLong"),
+    ("C", "ui.fitfont",           "watch/source/Ui.mc", 125,
+     r"^\s*function fitFont"),
+    ("C", "ui.fonthint",          "watch/source/Ui.mc", 140,
+     r"^\s*function fontHint"),
+    # Derselbe Dialogtext steht zweimal in der Datei (216 und 245) — der
+    # Endlauf und der Abbruch fragen wortgleich. Deshalb anzahl=2.
+    ("C", "clock.confirm-lang",   "watch/source/ClockView.mc", 216,
+     r"Sync unvollst.ndig", 2),
+    ("C", "uploader.credentials", "watch/source/Uploader.mc", 180,
+     r"^\s*function credentials"),
+    ("C", "props.serverurl",      "watch/resources/settings/properties.xml", 6,
+     r'property id="serverUrl"'),
+    ("C", "wortliste.bereiche",   "tools/wortliste/wortliste.py", 75,
+     r"^BEREICHE"),
+
+    # ---- Paket D: Doku -----------------------------------------------------
+    #
+    # NEUN ANKER SIND MIT D HAELFTE 1 (Web 13.1.2) AUSGETRAGEN, weil ihre
+    # Stellen umgeschrieben sind und der Anker ab jetzt nur noch Laerm waere:
+    #   vertrag.durchsetzung · vertrag.1b-429 · technik.datenmodell ·
+    #   technik.mail-frist · technik.antwortgleich · technik.jobs-topf ·
+    #   technik.zeitrechnung · backup.pair-codes · android.rundlauf-sql
+    # Zwei davon meldete das Werkzeug beim letzten Lauf als NICHT GEFUNDEN
+    # (vertrag.1b-429, backup.pair-codes) — genau die Auskunft, fuer die es
+    # gebaut ist. Was stehen bleibt, gehoert D HAELFTE 2 (Handbuch, Rahmenplan)
+    # oder anderen Instanzen (Backlog und CLAUDE.md der Uhr, uhrbilder zu C).
+    ("D", "backlog.66",            "docs/Backlog.md", 697,
+     r"^66\. \*\*Der Garmin-Uhrcode"),
+    ("D", "backlog.84",            "docs/Backlog.md", 1067,
+     r"^84\. \*\*Die Android-App kennt nur"),
+    ("D", "rahmenplan.sperren",    "docs/Rahmenplan.md", 486,
+     r"S5-Umsetzung zu S6 und S7"),
+    ("D", "uhrbilder.bitgleich",   "tools/uhr-bilder/erzeugen.sh", 13,
+     r"sie BITGLEICH \(geprueft"),
+    # ---- Paket E: Android-Ortung und Dienstende (Zusatzkonzept) ------------
+    #
+    # Kennungen mit "e." — sie gehoeren zum Zusatz
+    # (Konzept-S5-Zusatz-Android-Ortung-Dienstende.md) und nicht zu A-D.
+    # Paket E beruehrt nur android/ und Doku; S7 verschiebt hier nichts.
+    # Der S4-REST dagegen fasst HauptActivity.kt, strings.xml und das Manifest
+    # an (E-S5Z-14: E wird davor gemergt) — nach diesem Merge laeuft das
+    # Werkzeug wieder.
+    ("E", "e.dienst.zuhoerer",     "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 65,
+     r"val zuhoerer = LocationListener"),
+    ("E", "e.dienst.taktgeber",    "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 63,
+     r"val taktgeber = Handler"),
+    ("E", "e.dienst.sendewenn",    "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 123,
+     r"private fun sendeWenn"),
+    ("E", "e.dienst.nachposten",   "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 141,
+     r"taktgeber\.post \{ meldungAuffrischen\(\) \}"),
+    ("E", "e.dienst.ortung",       "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 154,
+     r"private fun ortungAnfordern"),
+    ("E", "e.dienst.versprechen",  "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 159,
+     r"Benachrichtigung sagt dann, dass die"),
+    ("E", "e.dienst.updates",      "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 171,
+     r"m\.requestLocationUpdates\("),
+    ("E", "e.dienst.aufnehmen",    "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 181,
+     r"private fun aufnehmen\(ort: Location\)"),
+    ("E", "e.dienst.beenden",      "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 194,
+     r"private fun beenden\(\)"),
+    ("E", "e.dienst.kanal",        "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 207,
+     r"private fun kanalAnlegen"),
+    ("E", "e.dienst.meldung",      "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 222,
+     r"private fun meldung\("),
+    ("E", "e.dienst.meldung-id",   "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 262,
+     r"MELDUNG_ID = 1"),
+    # TAKT_MS steht zweimal: Definition (266) und Uebergabe an
+    # requestLocationUpdates (172) — genau der Punkt von B-S5Z-12.
+    ("E", "e.dienst.takt-ms",      "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 172,
+     r"TAKT_MS", 2),
+    ("E", "e.ausduenner.pruefung", "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/Ausduenner.kt", 77,
+     r"g > HOECHSTE_STREUUNG_M"),
+    ("E", "e.ausduenner.abstand",  "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/Ausduenner.kt", 131,
+     r"HOECHSTABSTAND_S = 10L"),
+    ("E", "e.ausduenner.streuung", "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/Ausduenner.kt", 137,
+     r"HOECHSTE_STREUUNG_M = 100f"),
+    ("E", "e.takt.wiederverbind",  "android/handy/src/main/java/org/genem/nadoku/handy/senden/Sendetakt.kt", 44,
+     r"WIEDERVERBINDUNG,"),
+    ("E", "e.takt.faellig",        "android/handy/src/main/java/org/genem/nadoku/handy/senden/Sendetakt.kt", 53,
+     r"fun faellig\("),
+    ("E", "e.takt.abstand",        "android/handy/src/main/java/org/genem/nadoku/handy/senden/Sendetakt.kt", 65,
+     r"ABSTAND_S = 900L"),
+    ("E", "e.horcher.nicht-belegt", "android/handy/src/main/java/org/genem/nadoku/handy/uhr/HandyHorcher.kt", 25,
+     r"\*\*Nicht belegt\*\*"),
+    ("E", "e.horcher.startet",     "android/handy/src/main/java/org/genem/nadoku/handy/uhr/HandyHorcher.kt", 41,
+     r"if \(app\.klammer\.laeuft\(\)\) AufzeichnungsDienst\.starten"),
+    ("E", "e.format.pfad-stand",   "android/gemeinsam/quelle/org/genem/nadoku/gemeinsam/Uhrnachricht.kt", 35,
+     r"const val PFAD_STAND"),
+    ("E", "e.format.schreibe",     "android/gemeinsam/quelle/org/genem/nadoku/gemeinsam/Uhrnachricht.kt", 80,
+     r"fun schreibe\(s: Standmeldung\)"),
+    # Das Vorbild fuer ein OPTIONALES Feld (E3 braucht genau dieses Muster).
+    ("E", "e.format.optional",     "android/gemeinsam/quelle/org/genem/nadoku/gemeinsam/Uhrnachricht.kt", 85,
+     r"if \(s\.laufendeSeit != null\) put"),
+    ("E", "e.format.lies-stand",   "android/gemeinsam/quelle/org/genem/nadoku/gemeinsam/Uhrnachricht.kt", 94,
+     r"fun liesStand\("),
+    ("E", "e.format.standmeldung", "android/gemeinsam/quelle/org/genem/nadoku/gemeinsam/Uhrnachricht.kt", 174,
+     r"^data class Standmeldung"),
+    ("E", "e.uhr.zustand",         "android/uhr/src/main/java/org/genem/nadoku/uhr/Uhrzustand.kt", 33,
+     r"^data class Uhrzustand"),
+    # Die beiden Texte, die der Auftraggeber am 02.09.2026 gesehen haben duerfte
+    # (F-S5Z-06): Der Wortlaut steht in der APP, nicht im Web.
+    ("E", "e.text.meldung-laeuft", "android/handy/src/main/res/values/strings.xml", 103,
+     r'name="dienst_meldung_laeuft"'),
+    ("E", "e.text.zustandszeile",  "android/handy/src/main/res/values/strings.xml", 112,
+     r'name="dienst_laeuft_seit"'),
+    ("E", "e.text.ohne-gps",       "android/handy/src/main/res/values/strings.xml", 113,
+     r'name="dienst_laeuft_seit_ohne_gps"'),
+    ("E", "e.text.beenden",        "android/handy/src/main/res/values/strings.xml", 110,
+     r'name="dienst_beenden_text"'),
+    ("E", "e.web.offen",           "server/tag_spuren.php", 183,
+     r"'–offen'"),
+]
+
+
+def suche(datei: pathlib.Path, muster: str) -> list[int]:
+    if not datei.is_file():
+        return []
+    r = re.compile(muster)
+    return [nr for nr, z in enumerate(datei.read_text(encoding="utf-8",
+                                                      errors="replace").splitlines(), 1)
+            if r.search(z)]
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="Anker der S5-Fundstellen nachziehen")
+    p.add_argument("--knapp", action="store_true",
+                   help="nur Anker mit Abweichung oder Fehlschlag")
+    p.add_argument("--paket", action="append", choices=list("ABCDE"),
+                   help="nur die Anker dieses Pakets (mehrfach moeglich)")
+    a = p.parse_args()
+
+    anker = [x for x in ANKER if not a.paket or x[0] in a.paket]
+    fehlend = mehrdeutig = verschoben = 0
+
+    print(f"S5-Anker gegen {WURZEL}")
+    print(f"  {len(anker)} Anker, Sollzeilen erhoben am 02.09.2026 (main c2ac707)\n")
+    print(f"  {'P':1} {'Kennung':24} {'Datei':40} {'Soll':>5} {'Ist':>5}  Befund")
+    print("  " + "-" * 96)
+
+    for eintrag in anker:
+        paket, kennung, rel, soll, muster = eintrag[:5]
+        erwartet = eintrag[5] if len(eintrag) > 5 else 1
+        treffer = suche(WURZEL / rel, muster)
+        if not treffer:
+            befund, ist = "NICHT GEFUNDEN — Stelle neu lesen", "—"
+            fehlend += 1
+        elif len(treffer) != erwartet:
+            befund = (f"MEHRDEUTIG ({len(treffer)}× statt {erwartet}: "
+                      f"{', '.join(map(str, treffer[:5]))})")
+            ist = str(treffer[0])
+            mehrdeutig += 1
+        else:
+            ist = str(treffer[0])
+            zusatz = f" ({erwartet}×)" if erwartet > 1 else ""
+            if soll == 0:
+                befund = "ohne Sollzeile" + zusatz
+            elif treffer[0] == soll:
+                befund = "unveraendert" + zusatz
+            else:
+                befund = f"verschoben um {treffer[0] - soll:+d}"
+                verschoben += 1
+        if a.knapp and befund.startswith(("unveraendert", "ohne Sollzeile")):
+            continue
+        print(f"  {paket} {kennung:24} {rel:40} {soll or '—':>5} {ist:>5}  {befund}")
+
+    print()
+    print(f"  nicht gefunden: {fehlend} · mehrdeutig: {mehrdeutig} · "
+          f"verschoben: {verschoben} · unveraendert: "
+          f"{len(anker) - fehlend - mehrdeutig - verschoben}")
+    if fehlend or mehrdeutig:
+        print("\n  Ein fehlender Anker ist eine Auskunft, keine Panne: Die Stelle ist")
+        print("  umgeschrieben worden. Den zugehoerigen Konzeptabsatz neu lesen.")
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

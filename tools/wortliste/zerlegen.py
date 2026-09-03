@@ -323,12 +323,26 @@ def xml_bereiche(text: str) -> list[tuple[int, int]]:
 
 
 def ohne_kommentare(text: str, art: str) -> str:
-    """Kommentare durch Leerzeichen ersetzen. `art` ist php, js, css, xml oder md."""
+    """Kommentare durch Leerzeichen ersetzen.
+
+    `art` ist php, js, monkeyc, css, xml oder md.
+    """
     if art == "md":
         return text
     if art == "php":
         bereiche = php_bereiche(text)
-    elif art == "js":
+    elif art in ("js", "monkeyc"):
+        # MONKEY C KOMMENTIERT WIE JAVASCRIPT — `//` bis Zeilenende, `/* */`
+        # ueber Zeilen. Deshalb derselbe Zerleger und keine zweite Heuristik.
+        #
+        # Was der JS-Teil zusaetzlich kann, schadet hier nicht: Er
+        # unterscheidet regulaeren Ausdruck und Division am zuletzt gesehenen
+        # bedeutungstragenden Zeichen. Monkey C kennt keine Regex-Literale,
+        # und bei einem Schraegstrich nach Bezeichner, Zahl oder schliessender
+        # Klammer — die einzigen Stellen, an denen dort einer steht —
+        # entscheidet die Heuristik auf Division. Die Selbstprobe faehrt zwei
+        # Monkey-C-Faelle mit, damit das eine gepruefte Aussage bleibt und
+        # keine Annahme.
         bereiche = js_bereiche(text)
     elif art == "css":
         bereiche = css_bereiche(text)
@@ -383,6 +397,15 @@ PROBEN: list[tuple[str, str, list[str], list[str]]] = [
     # Ein `<` im TEXT (als &lt; maskiert, wie XML es verlangt) darf keinen
     # Tag eroeffnen und den Rest der Datei verschlucken.
     ("xml", '<string name="a">Weniger &lt; als Pilot</string>\n', ["Pilot"], []),
+
+    # Monkey C — dieselben Kommentarformen wie JavaScript, aber eine Division,
+    # die nach einer schliessenden Klammer steht (der haeufigste Fall in den
+    # Uhr-Oberflaechen: `(rest + 59) / 60`). Waere sie als Beginn eines
+    # regulaeren Ausdrucks gelesen worden, verschwaende der Rest der Zeile.
+    ("monkeyc", "// Hubschrauber\nvar y = (a + 59) / 60; var t = \"Pilot\";\n",
+     ["Pilot"], ["Hubschrauber"]),
+    ("monkeyc", "/* Flugtag */ dc.drawText(cx, y, f, \"Rettungswache\", 1);\n",
+     ["Rettungswache"], ["Flugtag"]),
     # Eine kaputte Datei — ein Tag ohne schliessende Klammer. Sie muss
     # durchlaufen und darf nicht werfen: Ein Pruefmittel, das an einer
     # fehlerhaften Datei abbricht, prueft die uebrigen nicht mehr.

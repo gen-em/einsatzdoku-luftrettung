@@ -141,6 +141,21 @@ bedeutet, dass die Uhr gerade keine Punkte speichert. Außerhalb eines Dienstes
 steht dort „GPS aus". Unten die App-Version, bei Problemen der Fehlergrund;
 mit **START gedrückt halten** startest du hier die Geräte-Kopplung.
 
+**Koppeln — die Uhr zeigt einen Code.** Seit Uhr 3.0.0 läuft das andersherum
+als früher: Du tippst nichts mehr auf der Uhr ein. Sie holt sich beim Server
+eine Kopplungssitzung und zeigt **sechs Zeichen** groß an, darunter
+„Einstellungen, Geräte" und die Restzeit. Diesen Code gibst du **im Web** ein
+(Einstellungen → Geräte). Danach fragt die Uhr zurück — „Mit ph\*\*\*@… koppeln?"
+—, und erst dein **Ja auf der Uhr** schließt die Kopplung ab. So kann weder ein
+fremdes Gerät in dein Konto noch dein Gerät in ein fremdes.
+
+**Zurück** bricht ab. Nach **zehn Minuten** verfällt der Code; dann holst du mit
+demselben Tastenweg einen neuen — die Uhr sagt es dir („Code abgelaufen / START
+halten: neuer Code"). Ist eine Kopplung schon da, fragt die Uhr vorher, ob sie
+sie trennen soll, und besteht darauf, dass vorher alles gesendet ist: Offene
+Pakete gehören dem bisherigen Konto. Der ganze Weg von der leeren Uhr an steht
+in Abschnitt 12.
+
 **Reanimation:** siehe 2.3.
 
 ### 2.3 Reanimationsmodus
@@ -2262,8 +2277,26 @@ Bedarf löschen.
 
 Unter **Einstellungen → „Geräte"** verwaltet jede/r die eigenen Geräte — die
 Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
-**„Gerät anlegen"** erzeugt Geräte-ID und API-Schlüssel — der Schlüssel wird
-**nur einmal** angezeigt, also sofort notieren bzw. eintragen. **Deaktivieren**
+
+**Die Karte „Gerät koppeln" steht oben und hat drei Zustände** *(seit Web
+13.1.0)*. Sie führt den Weg, den Abschnitt 12 von der Uhr aus beschreibt:
+
+1. **Ein Feld „Code vom Gerät".** Du startest die Kopplung **am Gerät**; es
+   zeigt sechs Zeichen, die du hier eintippst. Groß- und Kleinschreibung und
+   ein Leerzeichen in der Mitte sind egal.
+2. **Eine Rückfrage.** Sie zeigt, **welches Gerät** sich meldet: die Art
+   („Uhr" oder „Handy") und das Modell, das es selbst gemeldet hat, dazu den
+   Code in zwei Dreiergruppen und die gekürzte Gerätekennung. Erst **„Verbinden"** ordnet die Sitzung deinem
+   Konto zu; daneben steht leise **„Abbrechen"**.
+3. **Ein Wartezustand.** Jetzt ist das Gerät am Zug: Es fragt zurück, ob es zu
+   deinem Konto gehören soll, und **erst dieses Ja legt es an**. Die Seite
+   lädt von selbst nach, sobald es soweit ist — du musst nichts neu laden.
+   Bis dahin läuft die Restzeit mit, und du kannst den Vorgang hier abbrechen.
+
+**„Gerät anlegen"** ist die Alternative dazu und erzeugt Geräte-ID und
+API-Schlüssel von Hand — der Schlüssel wird **nur einmal** angezeigt, also
+sofort notieren bzw. eintragen. Man braucht sie, wenn ein Gerät nicht koppeln
+kann. **Deaktivieren**
 sperrt den Upload sofort (z. B. bei Verlust); alle bereits hochgeladenen Daten
 bleiben erhalten, und **Aktivieren** schaltet dasselbe Gerät wieder frei.
 
@@ -2271,7 +2304,8 @@ bleiben erhalten, und **Aktivieren** schaltet dasselbe Gerät wieder frei.
 3 von 5"). Deaktivierte Geräte zählen mit — ihre Zugangsdaten bestehen weiter
 und lassen sich mit einem Klick wieder freischalten. Erst **Löschen** gibt
 einen Platz frei. Ist die Grenze erreicht, lässt sich weder ein Gerät anlegen
-noch ein Kopplungscode erzeugen; die Meldung sagt, was zu tun ist.
+noch ein Code entgegennehmen; die Karte sagt es dann statt des Feldes, und das
+Gerät selbst meldet „Zu viele Geräte / Erst eines im Web löschen".
 
 **Du wirst benachrichtigt, wenn ein Gerät hinzukommt.** Nach jeder erfolgreichen
 Kopplung geht eine E-Mail an deine Adresse — mit Gerätekennung, Zeitpunkt und
@@ -2487,7 +2521,59 @@ geht, sagt der Hoster. Die Adresse enthält ein **Geheimnis** — sie gehört ni
 in eine Mail und nicht in ein Ticket. „Neues Token erzeugen" macht die alte
 Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
-Unter **„Wartung"** stehen mehrere Auskünfte in eigenen Karten: das Logo der
+#### Der Wartungsmodus
+
+Ganz oben unter **„Wartung"** steht die Karte **„Serverbetrieb"** mit einem
+Schalter. Er schließt die Installation vorübergehend für alle außer der
+Verwaltung.
+
+**Wofür.** Während eines Updates werden die Dateien auf dem Server nach und
+nach ersetzt, und danach muss noch die Datenbank angepasst werden. Wer in
+dieses Fenster gerät, sieht eine Fehlerseite — und eine Uhr, die genau dann
+sendet, bekommt einen Fehler, mit dem sie nichts anfangen kann. Mit dem
+Wartungsmodus bekommen alle stattdessen eine **Wartungsseite**, und die Geräte
+bekommen eine Antwort, die sie kennen: *später noch einmal*. **Sie behalten
+ihre Daten und liefern von selbst nach, sobald du wieder ausschaltest.** Es
+geht nichts verloren.
+
+**So läuft ein Update mit Wartungsmodus:**
+
+1. Auf der Wartungsseite zuerst das **Komplett-Backup** prüfen — steht ein
+   frisches, und ist das Ziel erreichbar? Sonst „Jetzt sichern".
+2. **„Wartungsmodus einschalten"** klicken.
+3. Das Update einspielen lassen (das macht die Entwicklung).
+4. Die Seite **„Wartung"** neu laden und die anstehenden Migrationen
+   ausführen.
+5. In einem zweiten Reiter die Startseite aufrufen. **Es muss die
+   Wartungsseite kommen** — kommt die normale Seite, ist der Wartungsmodus
+   nicht an.
+6. **„Wartungsmodus ausschalten"** klicken. Startseite erneut aufrufen: Sie
+   antwortet, und unten in der Fußzeile steht die neue Fassung.
+7. Uhr und Handy melden sich beim nächsten Mal von selbst. Nichts zu tun.
+
+**Was währenddessen weiter geht.** Diese Seite, die Anmeldung, das Abmelden
+und der Abruf der Hintergrundjobs. Das ist Absicht: Das Komplett-Backup läuft
+am besten **während** der Wartung, weil dann niemand sonst schreibt.
+
+**Wer sich anmeldet, aber nicht verwaltet**, wird gleich wieder abgemeldet und
+sieht die Wartungsseite. Auch das ist Absicht — während umgebaut wird, soll
+niemand mitten in einer Eingabe stehen.
+
+> **Der Wartungsmodus schaltet sich nicht von selbst ab.** Es gibt keine
+> Zeitsteuerung. Solange er steht, siehst du auf dieser Seite und auf der
+> Anmeldeseite oben einen **orangen Balken** mit Zeitpunkt und Konto — das
+> sind die beiden einzigen Seiten, auf denen er überhaupt zu sehen ist. Alle
+> anderen zeigen die Wartungsseite, und die sagt nicht, seit wann.
+
+**Wenn du dich selbst aussperrst.** Es gibt zwei Wege zurück: die Anmeldeseite
+funktioniert weiter (melde dich mit einem Admin-Konto an, dann bist du wieder
+auf der Wartungsseite), und wer Zugang zum Webspace hat, löscht die Datei
+`wartung.lock` neben den übrigen Serverdateien. Mehr als diese Datei ist der
+Schalter nicht.
+
+
+Unter **„Wartung"** stehen mehrere Auskünfte in eigenen Karten: zuoberst der
+**Serverbetrieb** (der Wartungsmodus, gleich unten), dann das Logo der
 Installation, die Umgebung (Mailversand), die Hintergrundjobs samt ihren Auslösern, Einsätze
 ohne Diensttag und zuunterst das **Datenbank-Update**. Das bloße Öffnen der Seite
 ändert nichts — sie zeigt erst an, was anstünde, und wartet auf eine
@@ -2661,61 +2747,87 @@ und setzt danach das Häkchen an genau dieser einen Zeile.
 Die Schritte gelten für jede Uhr. Wo die Plattform eigene Wege hat, steht der
 Zusatz kursiv darunter — bei Garmin die folgenden.
 
+> **Seit Uhr 3.0.0 läuft das Koppeln andersherum.** Früher erzeugte das Web
+> einen Code und du hast ihn auf der Uhr eingetippt. Jetzt **zeigt die Uhr**
+> den Code, du gibst ihn **im Web** ein, und die Uhr fragt zum Schluss zurück,
+> ob sie zu diesem Konto gehören soll. Auf der Uhr wird nichts mehr getippt.
+
 1. **App auf die Uhr laden** (siehe `Technik.md`).
    *Bei Garmin: aus dem Connect-IQ-Projekt gebaut und per USB übertragen;
    Abschnitt 5 der Technik-Doku.*
-2. **Server-Adresse in den Einstellungen der Uhr-App eintragen** — die Domain
-   genügt (z. B. `nadoku.beispieldomain.de`).
+2. **Server-Adresse prüfen.** Seit Uhr 3.0.0 steht dort ein Vorgabewert —
+   `nadoku.gen-em.org`, die öffentliche Installation. Wer eine eigene betreibt,
+   trägt die eigene Domain ein; sonst ist hier nichts zu tun.
    **Die Uhr-App heißt „NAdoku"** — der künftige Name, seit Uhr 2.0.0. Die
    Weboberfläche und dieses Handbuch tragen noch „Einsatzdoku" und ziehen mit
    dem v1.0-Schnitt nach; wer die App in der Liste sucht, sucht also nach
    **NAdoku**.
    *Bei Garmin: in Garmin Connect unter den App-Einstellungen.*
-3. **Im Web einen Kopplungscode erzeugen:** **Einstellungen → „Geräte" →
-   „Kopplungscode erzeugen"** — der **6-Zeichen-Code ist 10 Minuten gültig und
-   genau einmal verwendbar**.
-   Ein neu erzeugter Code macht einen vorher erzeugten ungültig, und es gibt
-   je Konto immer höchstens einen offenen Code. Wird der Code zu oft falsch
-   eingegeben, weist der Server weitere Versuche vorübergehend ab. Sind bereits
-   fünf Geräte verbunden, lässt sich kein Code mehr erzeugen — erst ein nicht
-   mehr genutztes Gerät löschen.
-4. **Auf der Uhr: Sync-Seite → Gerät koppeln → Code eintippen** und bestätigen
-   — die Uhr meldet „Gekoppelt" mit einem Haken und ist einsatzbereit. Das Gerät
-   erscheint im Web in der Geräteliste — mit Art und Modell, die es beim
-   Koppeln selbst gemeldet hat —, und du bekommst eine E-Mail darüber.
-   *Bei Garmin: die Sync-Seite und der Tastenweg zum Koppeln stehen in den
-   Abschnitten 2.0 und 2.2 — je Uhr verschieden.*
-5. **Alternative ohne Code:** Gerät manuell anlegen und Geräte-ID sowie
-   API-Schlüssel in die Einstellungen der Uhr-App eintragen (nur nötig, wenn
-   die Kopplung nicht möglich ist).
+3. **Auf der Uhr die Kopplung starten:** Sync-Seite, Auswahltaste **gedrückt
+   halten**. Die Uhr sagt kurz „Hole Code…" und zeigt dann den **Code für das
+   Web** — sechs Zeichen, groß, darunter „Einstellungen, Geräte" und die
+   Restzeit („noch 9 min", in der letzten Minute orange auf Sekunden).
+   *Bei Garmin heißt die Taste je nach Uhr anders — die Uhr schreibt sie selbst
+   in ihre Hinweiszeile; die Tabelle je Modell steht in Abschnitt 2.0.*
+4. **Den Code im Web eingeben:** **Einstellungen → „Geräte"**, Feld
+   **„Code vom Gerät"**. Groß- und Kleinschreibung und ein Leerzeichen in der
+   Mitte sind egal — die Seite räumt das auf. Sie zeigt dir dann, **welches
+   Gerät** sich meldet — Art und Modell, so wie das Gerät es selbst gemeldet
+   hat — und fragt, ob es zu deinem Konto soll.
+5. **Zurück an der Uhr: bestätigen.** Sie fragt **„Mit ph\*\*\*@… koppeln?"** —
+   mit deiner E-Mail-Adresse, gekürzt. **Ja** schließt die Kopplung ab (kurz
+   „Kopple…", dann **„Gekoppelt"**), **Nein** bricht ab („Nicht gekoppelt").
+   Erst dieses Ja legt das Gerät an: Wer nur den Code abliest, kommt nirgendwo
+   hinein.
+6. Danach erscheint das Gerät **im Web in der Geräteliste** — mit Art und
+   Modell, die es beim Koppeln selbst gemeldet hat —, und du bekommst eine
+   E-Mail darüber. Die Geräteseite lädt von selbst nach; du musst nichts neu
+   laden.
+7. **Alternative ohne Kopplung:** Gerät im Web von Hand anlegen und Geräte-ID
+   sowie API-Schlüssel in die Einstellungen der Uhr-App eintragen (nur nötig,
+   wenn die Kopplung nicht möglich ist).
    *Bei Garmin: ebenfalls in Garmin Connect.*
 
-**Wenn die Kopplung nicht klappt**, sagt die Uhr seit Version 1.7.0, woran es
-liegt und was hilft — in zwei kurzen Zeilen:
+**Der Code gilt zehn Minuten** und gehört genau einem Gerät. **Zurück** bricht
+jederzeit ab. Läuft die Zeit ab, sagt die Uhr **„Code abgelaufen"** und
+darunter, mit welcher Taste es einen neuen gibt.
+
+**Warum drei Schritte und nicht einer.** Zwischen dem Code und dem fertigen
+Gerät liegen **zwei Tore**: Die Web-Seite sieht, **wer eingibt**, und die Uhr
+sieht, **wessen Konto** es wäre. Keines allein trägt. Wer dir den Code
+abschwatzt, hat nichts — er kann an deiner Uhr nichts auslösen. Und wer dich
+dazu bringt, einen **fremden** Code einzugeben, koppelt sein Gerät nicht an
+dein Konto: Das Ja fehlt ihm.
+
+**Wenn es nicht klappt**, sagt die Uhr in zwei kurzen Zeilen, woran es liegt
+und was hilft:
 
 | Meldung auf der Uhr | Was zu tun ist |
 |---|---|
-| „Zu viele Geräte" | Im Web ein nicht mehr genutztes Gerät löschen, dann neuen Code erzeugen. |
-| „Zu viele Versuche" | Kurz warten. Weiteres Eintippen verlängert die Sperre nur. |
-| „Code ungültig/abgelaufen" | Im Web einen neuen Code erzeugen — er gilt 10 Minuten und nur einmal. |
-| „Keine Verbindung" | Telefon in Reichweite? Bluetooth an? Der Code ist noch gültig. |
-
-Vorher stand dort in all diesen Fällen nur „Kopplung fehlgeschlagen" mit einer
-Zahl.
+| „Code abgelaufen" / „‹Taste› halten: neuer Code" | Zehn Minuten sind um, oder du hast im Web abgebrochen. Neuen Code holen — die Uhr nennt die Taste selbst. |
+| „Zu viele Geräte" / „Erst eines im Web löschen" | Fünf Geräte sind das Höchste je Konto. Im Web ein nicht mehr genutztes **löschen** (Deaktivieren gibt den Platz nicht frei). |
+| „Zu viele Versuche" / „Später noch einmal" | Der Ratenschutz hat zugemacht. Kurz warten; weitere Versuche verlängern die Sperre nur. |
+| „Server ausgelastet" / „Später noch einmal" | Gerade sind zu viele Kopplungen offen. Kurz warten, dann von vorn. |
+| „Keine Verbindung (n)" **unter** dem Code | Telefon in Reichweite? Bluetooth an? **Der Code bleibt gültig** — die Zeile ersetzt ihn nicht, und wer das Telefon zurückbringt, macht dort weiter. |
+| „Server antwortet nicht" unter dem Code | Wie oben, aber die Verbindung steht und der Server schweigt. Der Code bleibt ebenfalls gültig. |
+| „Gerät unbekannt" | Die Uhr trägt Zugangsdaten, die der Server nicht kennt — meist, weil das Gerät im Web gelöscht wurde. Einfach neu koppeln. |
+| „Uhr-App aktualisieren" | Die Uhr spricht den alten Weg (bis Uhr 2.0.0) und der Server den neuen. Die App auf 3.0.0 bringen. |
+| „Kopplung fehlgeschlagen (n)" | Alles Übrige, mit dem Zahlencode und — wenn der Server einen schickt — seinem Hinweis. Der Zahlencode gehört in die Fehlermeldung an die Betreuung. |
 
 ### 12.1 Eine Uhr an eine andere Person übergeben
 
-Seit Uhr 1.11.0 trennt sich die Uhr **zuerst ausdrücklich**, bevor sie neu
-koppelt. Der Weg dorthin ist derselbe wie beim ersten Mal (Sync-Seite → Gerät
-koppeln; der Tastenweg je Uhr steht in Abschnitt 2.2), aber er beginnt jetzt
-mit einer Rückfrage:
+Die Uhr trennt sich **zuerst ausdrücklich**, bevor sie neu koppelt. Der Weg
+dorthin ist derselbe wie beim ersten Mal (Sync-Seite, Auswahltaste halten),
+aber er beginnt mit einer Rückfrage:
 
 1. **„Kopplung trennen und neu koppeln?"** — Nein lässt alles, wie es ist.
-2. Bei Ja meldet die Uhr **„Getrennt"** und öffnet die Code-Eingabe. Das Gerät
-   verschwindet aus der Geräteliste im Web und gibt seinen Platz frei; die
-   bisherige Kontoinhaberin bekommt eine E-Mail darüber. **Bereits
-   hochgeladene Einsätze bleiben vollständig erhalten.**
-3. Danach wie oben: im Web einen Code erzeugen und eintippen.
+2. Bei Ja meldet die Uhr kurz **„Trenne…"** und holt danach **von selbst einen
+   neuen Code**. Das Gerät verschwindet aus der Geräteliste im Web und gibt
+   seinen Platz frei; die bisherige Kontoinhaberin bekommt eine E-Mail darüber.
+   **Bereits hochgeladene Einsätze bleiben vollständig erhalten.**
+3. Danach wie oben: den Code im Web eingeben und an der Uhr mit Ja bestätigen —
+   diesmal mit der Adresse der **neuen** Person in der Rückfrage. Genau dort
+   fällt auf, wenn jemand den Code des falschen Kontos eingetippt hat.
 
 Zwei Dinge, die dabei bewusst so sind:
 
@@ -2724,13 +2836,14 @@ die Uhr **„Erst N Pakete senden / Sonst ans neue Konto"** und trennt nicht.
 Die Pakete gehören der bisherigen Person; nach einer Neukopplung landeten sie
 im neuen Konto. Erst senden — die Sync-Seite zeigt den Rückstand.
 
-**Ohne Verbindung trennt die Uhr trotzdem**, sagt es aber:
-**„Nur auf der Uhr getrennt / Gerät im Web löschen"**. Sonst bliebe eine Uhr
-ohne Telefon in Reichweite dauerhaft an ein Konto gebunden, das sie nicht mehr
-benutzen soll. Der Eintrag im Web ist dann noch da und mit einem Klick zu
-entfernen.
+**Ohne Verbindung trennt die Uhr trotzdem** und merkt sich, dass der Server es
+nicht mitbekommen hat: Unter dem **„Gekoppelt"** der nächsten Kopplung steht
+dann **„Altes Gerät im Web löschen"**. Sonst bliebe eine Uhr ohne Telefon in
+Reichweite dauerhaft an ein Konto gebunden, das sie nicht mehr benutzen soll —
+und der alte Eintrag belegte weiter einen der fünf Plätze. Er ist im Web mit
+einem Klick zu entfernen.
 
-**Warum das nötig war:** Bis dahin führte der Weg direkt in die Code-Eingabe.
-Schlug das Koppeln fehl, blieben die alten Zugangsdaten stehen und die Uhr
-dokumentierte stillschweigend weiter auf das vorherige Konto — niemand sah es
-ihr an.
+**Warum das nötig war:** Bis Uhr 1.11.0 führte der Weg direkt in die
+Code-Eingabe. Schlug das Koppeln fehl, blieben die alten Zugangsdaten stehen
+und die Uhr dokumentierte stillschweigend weiter auf das vorherige Konto —
+niemand sah es ihr an.

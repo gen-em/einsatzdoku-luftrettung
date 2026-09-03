@@ -136,9 +136,9 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 |---|---|---|---|---|---|---|
 | 1 | **S4 — Merge** | Fehlerbehebung abschließen, Backlog-Nummern nachziehen, `main` holen, Merge = Deploy, `update.php` | — | liegt vor | Opus | **gemergt** (Web 12.8.0, Android 0.7.7 auf `main`); `update.php` für `2026_09_02_schnitte` vom Auftraggeber zu bestätigen; Prüfliste S4 (1, 2, 3, 5) offen |
 | 2 | **S6 — Gerätekennung und Schlüsselfrist** | Serverseite von R42, Behebung R44 | Schritt 1 | keins; R42 und R44 sind die Spezifikation | Opus | **gemergt und ausgeliefert** (Web 12.9.0 bis 12.9.2 auf `main`); `update.php` für `2026_09_02_geraetekennung` und `…_geraetemodell_breiter` zu bestätigen; Abnahme nach Abschnitt 6 offen |
-| 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | offen |
+| 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | erledigt 03.09.2026 — Freigabe mit E-S5-32 bis -47 |
 | 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | gelöscht nach R62 | Opus | **erledigt, Web 12.9.3/12.9.4** (Abschnitt 8); PR gegen `main` offen — der Merge deployt; Prüfliste S7 offen |
-| 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | offen |
+| 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | **in Arbeit** — Paket A (Server, Web 13.0.0) erledigt 03.09.2026 auf `claude/s7-umsetzung-vorbereiten-s8kax0`; C und E in eigenen Instanzen |
 | 6 | **S4 — Rest** | Kopplungsmodul, feste Server-Adresse, App-Name, Insets, Herkunft je Einsatz (R64), Gerätetest, Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | offen |
 | 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Backup-Optionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61) | Schritte 4 und 6 | neu, mit Mockups | Fable (Konzept) | offen |
 | 8 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
@@ -283,8 +283,10 @@ Die acht Beschlüsse E-R49-1 bis E-R49-8 sind gefallen; offen sind Zahlen
 des Ratenschutzes und der Sitzungsobergrenze, Abfragetakt der Uhr, Wortlaute
 der Uhr-Anzeigen und der Geräteseite, Paketschnitt mit Abnahmekriterien,
 Vertragsabschnitt 1a im Wortlaut (1b „trennen" bleibt). **Vier Blöcke:**
-Server (Sitzungstabelle statt `pair_codes`, drei Anliegen `start`/`status`/
-`bestaetigen`, Ratenschutz je Konto und IP, Aufräumen über den Job-Einstieg)
+Server (Sitzungstabelle statt `pair_codes`, vier Anliegen `start`/`status`/
+`bestaetigen`/`trennen` — das vierte übernommen und auf schwebende
+Zugangsdaten erweitert, Ratenschutz je Konto und IP, Aufräumen über den
+Job-Einstieg)
 · Web (Feld „Code vom Gerät", Bestätigungsseite mit Art und Modell,
 „Kopplungscode erzeugen" entfällt, manuelle Anlage bleibt) · Uhr
 (Code-Anzeige, Rückbestätigung mit maskierter E-Mail, Vorgabeadresse
@@ -566,7 +568,7 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | Bestätigung, dass SMTP auf Produktiv eingerichtet ist | S2 Warnmails | — |
 | Bilderlauf für die zweite Logo-Wahl; Autosuche gegen den echten Photon; Bedienzustände | S3-Reste | gelegentlich |
 | Prüfliste S4 (1, 2, 3, 5) am echten Diensttag | Schritt 1 | nach dem Merge |
-| ~~**Adresse der Connect-IQ-Gerätedateien (`CIQ_GERAETE_URL`)**~~ — **geliefert am 02.09.2026.** `server/geraetemodelle.php` trägt jetzt 325 Teilenummern auf 173 Modelle (Web 12.9.1/12.9.2). Die Adresse selbst steht weiterhin **nicht** im Repositorium — sie gehört in die Umgebungsvariablen der Arbeitsumgebung, nicht in eine Datei | Schritt 2 (S6) | **erledigt** |
+| ~~**Adresse der Connect-IQ-Gerätedateien (`CIQ_GERAETE_URL`)**~~ — **geliefert am 02.09.2026.** `server/geraetemodelle.php` trägt jetzt 325 Teilenummern auf 173 Modelle (Web 12.9.1/12.9.2). Die Adresse selbst steht weiterhin **nicht** im Repositorium — sie liegt seit dem 03.09.2026 in den **Umgebungsvariablen der Arbeitsumgebung**, nicht in einer Datei. Jede neue Sitzung findet sie dort von selbst; eine laufende erbt sie nicht nach, weil Umgebungsvariablen beim Start des Containers hereinkommen | Schritt 2 (S6) | **erledigt** |
 | **Abnahme S6:** je eine Kopplung mit Garmin-Uhr und Handy-App (zeigt die Liste Art und Modell?), dazu eine Sitzung über 30 Minuten mit Bedienung (kein Dialog) und ein Leerlauf darüber (Abmeldung) | Schritt 2 (S6) | nach dem Deploy, zusammen mit `update.php` |
 | **Datenschutzerklärung um die Gerätekennung ergänzen** — seit Web 12.9.0 wird beim Koppeln Art und Modell erhoben; Backlog Nr. 80 macht die Nennung zur Vorbedingung der Auswertung. Der Text entsteht nach R60 aus einer Bestandsaufnahme des gesamten Projekts | Schritt 10, vor v1.0 | vor jeder Auswertung (P5) |
 | **Signaturschlüssel des APK verwahren** — erzeugt am 31.08.2026 (RSA 4096, Zertifikat `078c…ad64`, gültig bis 2056), am 02.09.2026 an den Auftraggeber übergeben; er lag bis dahin nur im Ablagefach der Arbeitssitzung | Schritt 6 und jede spätere Auslieferung | **sofort** — ohne genau diesen Schlüssel ist jede spätere Fassung für Android eine andere App |

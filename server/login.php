@@ -85,7 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Der Browser sendet nie das Passwort, sondern das daraus
         // abgeleitete Token (siehe assets/crypto.js).
-        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter, logo_wahl
+        /* `role` seit S5 Paket W: Im Wartungsmodus entscheidet die Rolle,
+         * ob die Anmeldung Bestand hat (E-S5W-09). Sie wandert NICHT in die
+         * Sitzung — das war M1-05, und daran aendert sich nichts; sie wird
+         * hier einmal gelesen und danach vergessen. auth_guard.php liest sie
+         * weiterhin bei jeder Anfrage neu. */
+        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter, logo_wahl, role
                              FROM users WHERE email = ?');
         $st->execute([$email]);
         $u = $st->fetch();
@@ -137,6 +142,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($ok) {
+            /* ---- Zaehler leeren, BEVOR ueber den Zugang entschieden wird ----
+             *
+             * Beide Aufrufe standen bisher weiter unten. Sie stehen jetzt hier
+             * oben, weil der Wartungsmodus gleich darunter abbrechen kann und
+             * das Passwort trotzdem RICHTIG war: Wer waehrend einer Wartung
+             * dreimal richtig tippt, darf sich danach nicht ausgesperrt finden
+             * (E-S5W-09 b). Der Demo-Zaehler bleibt unten — er zaehlt die
+             * NUTZUNG des Demo-Kontos, und wer sofort wieder abgemeldet wird,
+             * hat es nicht benutzt. */
+            rate_erfolg('login', $email);
+            // Auch den Zaehler des Salz-Endpunkts leeren — jede Anmeldung
+            // verbraucht dort einen Versuch, und wer sich erfolgreich
+            // anmeldet, soll sich nicht selbst aussperren.
+            rate_erfolg('salt', $email);
+
+            /* ---- WARTUNGSMODUS: nur die Verwaltung kommt hinein (E-S5W-09) --
+             *
+             * Die Entscheidung des Auftraggebers vom 03.09.2026, abweichend
+             * von der Empfehlung des Konzepts: Ein Nicht-Admin-Konto bekommt
+             * KEINE Sitzung, die die Wartung ueberdauert. Damit liegt waehrend
+             * des Umbaus kein entsperrter Inhaltsschluessel herum, und keine
+             * Anmeldung schreibt in `users` (`last_login`, gleich darunter),
+             * waehrend `update.php` das Schema aendert.
+             *
+             * DIE STELLE IST WICHTIG. Der Zweig haengt am ERFOLG des
+             * Passwortvergleichs, nicht am Vergleich selbst — die
+             * Antwortgleichheit des Fehlerzweigs (rate_gleiche_dauer, ganz
+             * unten) bleibt unberuehrt, und ein Angreifer erfaehrt hier
+             * nichts, was er nicht schon wuesste: Er hat das Passwort.
+             *
+             * UND ES IST NICHT DAS ANMELDEFORMULAR, das danach erscheint.
+             * Wer hier landete und wieder die Maske saehe, laese das als
+             * „Passwort falsch" und tippte weiter — bis der Ratenschutz
+             * zuschlaegt. Es ist die Wartungsseite, und die sagt, was los
+             * ist. */
+            if (wartung_aktiv() && (string)($u['role'] ?? 'user') !== 'admin') {
+                session_verwerfen();
+                wartung_antwort_seite();
+            }
+
             session_regenerate_id(true);
             $_SESSION['user_id'] = (int)$u['id'];
             /* Stand des Sitzungszaehlers mitfuehren (M1-09). Jede Anfrage
@@ -168,15 +213,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (Throwable) {
                 // Spalte fehlt (Migration steht aus) — ohne Folgen.
             }
-            rate_erfolg('login', $email);
-            // Auch den Zaehler des Salz-Endpunkts leeren — jede Anmeldung
-            // verbraucht dort einen Versuch, und wer sich erfolgreich
-            // anmeldet, soll sich nicht selbst aussperren.
-            rate_erfolg('salt', $email);
-            /* Die Demo-Bremse zaehlt GELUNGENE Anmeldungen — deshalb hier,
-             * zwischen den beiden rate_erfolg()-Aufrufen, die Zaehler leeren.
-             * Kein Widerspruch: Jene betreffen den Fehlversuchsschutz des
-             * Kontos, dieser die Nutzungsmenge des Demo-Kontos. */
+            /* Die Demo-Bremse zaehlt GELUNGENE Anmeldungen. Kein Widerspruch
+             * zu den beiden rate_erfolg()-Aufrufen oben: Jene betreffen den
+             * Fehlversuchsschutz des Kontos, dieser die Nutzungsmenge des
+             * Demo-Kontos. */
             if ($istDemoAdresse) { rate_demo_zaehlen(); }
             header('Location: index.php'); exit;
         }
@@ -193,6 +233,12 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
   <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
   <h1 class="anmeldung-titel">Einsatzdoku</h1>
   <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
+  <?php /* Der Wartungsbalken (S5 Paket W, Konzept 4.5). Er steht UEBER der
+           Meldung und nicht darunter: Wer hier ankommt, waehrend die Wartung
+           laeuft, soll wissen, warum die Anwendung sonst nicht antwortet,
+           BEVOR er sein Passwort eintippt. Anmelden kann er sich trotzdem —
+           was danach geschieht, entscheidet die Rolle (E-S5W-09). */ ?>
+  <?= wartung_balken() ?>
   <?php /* Beide schliessen einander aus: Steht ein Fehler an, tritt der
            Hinweis zurueck. Die Reihenfolge in ui_meldung() ist deshalb
            ohne Wirkung. */ ?>

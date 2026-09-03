@@ -11,6 +11,845 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 3.0.0] — 2026-09-03
+
+### Uhr — Die Kopplung läuft andersherum: die Uhr zeigt den Code (S5, Paket C)
+
+**Bis 2.0.0 erzeugte das Web einen Code und die Trägerin tippte ihn auf der
+Uhr ein.** Das setzte voraus, dass sie vorher am Rechner war, und die
+Texteingabe über `WatchUi.TextPicker` war der unangenehmste Weg der ganzen
+App — sechs gleichförmige Zeichen auf einem Uhrendisplay, auf der Venu 3s über
+eine Bildschirmtastatur. Jetzt zeigt die Uhr, und das Web nimmt entgegen
+(E-R49-1).
+
+Der Weg hat drei Schritte, und jeder ist ein Anliegen an `pair.php`:
+`start` holt eine Kopplungssitzung samt Anzeigecode und schwebenden
+Zugangsdaten, `status` fragt im Takt nach, ob ein Konto den Code eingetragen
+hat, `bestaetigen` gibt die Antwort der Trägerin. **Erst ihr Ja legt das Gerät
+an.**
+
+**Der Preis, und er ist nicht klein.** Nach dem Umstieg koppelt **keine
+ältere Uhr-Fassung mehr** — der alte Weg brauchte einen im Web erzeugten Code,
+und den gibt es nicht mehr (E-R49-7). Eine Uhr 2.0.0 am neuen Server bekommt
+`400 {"error":"aktion","meldung":"Uhr-App aktualisieren"}` und zeigt die
+Servermeldung als zweite Zeile; das ist der einzige Kanal, auf dem sie
+erfährt, was zu tun ist. **Und die eine Bestandsuhr muss einmal neu koppeln**,
+weil Web 13.0.0 den Geräteschlüssel als SHA-256 statt bcrypt vergleicht
+(E-S5-42) — vorher den Sync vollständig laufen lassen, sonst gehen gepufferte
+Ereignisse mit dem Trennen verloren.
+
+**Warum die Hauptnummer.** Es ist ein spürbar anderer Weg durch die Anwendung
+*und* ein Bruch der Anschlussfähigkeit. Bestehende Kopplungen bleiben davon
+unberührt: `ingest.php` und Vertragsabschnitt 1 ändern sich nicht.
+
+### Uhr — Die neue Kopplungsansicht, und warum sie eine eigene ist
+
+`PairView.mc` zeigt den Code groß in zwei Dreiergruppen („CBF E4W"), darüber
+„Code für das Web", darunter den Zielort im Web und die Restzeit. Ein vierter
+Zustand des Mittelblocks der Sync-Seite hätte nicht getragen (E-S5-24): Der
+Code muss groß stehen und **trägt Buchstaben** — eine Ziffernschrift scheidet
+damit aus (`Uhr-Layout_Regeln` 3.1), es bleibt `fitFont` über die
+Textschriften; die Seite hat eine Restzeit, die weiterläuft; und BACK bedeutet
+hier etwas anderes als dort, nämlich Abbrechen statt Blättern.
+
+**Der Pfeil ist gemessen und gestrichen.** Das Konzept zeichnete
+„Einstellungen → Geräte" und ließ offen, ob „→" in den Geräteschriften steht.
+Mit dem Pfeil übersetzt und im Simulator fotografiert (fenix6pro, SDK 9.2.0):
+Er erscheint als **Platzhalter-Raute**, ohne Warnung und ohne Fehler — der
+Fall aus `Uhr-Layout_Regeln` 3.1, nur mit einer Text- statt einer
+Ziffernschrift. Auf der Uhr steht deshalb „Einstellungen, Geräte"; Web und
+Handbuch behalten den Pfeil, weil deren Schrift ihn trägt.
+
+**Der Verbindungshinweis steht über der Restzeit, nicht darunter.** Die
+unterste Zeile sitzt zwischen 84 und 91,5 % der Displayhöhe, und dort trägt
+die Kreissehne nur 128 px (Fenix 6 Pro), 118 (FR945) bzw. 193 (Venu 3s) —
+gerechnet aus den Schriftmetriken der Gerätedateien. „Telefon in Reichweite?
+(−104)" lief dort um 48 bis 111 px über den Rand, und `fitFont` konnte nicht
+retten: Unter 320 px Displayhöhe liefert `fontHint` selbst schon `FONT_XTINY`,
+es gibt keine kleinere Stufe. Jetzt steht in der engsten Zeile der einzige
+Text, dessen Länge bekannt ist (die Restzeit, 71/64/146 px), und der Hinweis
+eine Zeile höher, wo 173/163/271 px zur Verfügung stehen. Er heißt dort
+„Keine Verbindung (n)" statt „Telefon in Reichweite? (n)", weil auch der
+obere Platz für den langen Wortlaut nicht reicht.
+
+### Uhr — Was die Zugangsdaten bis zum Ja nicht tun: gespeichert werden
+
+**Code, Gerätekennung, Schlüssel und Kontolabel liegen bis zum Ja
+ausschließlich im Arbeitsspeicher** (E-S5-22). Erst `200 {"ok":true}` auf
+`bestaetigen ja` schreibt `Storage "cred"`. Wer die App vorher verlässt, hat
+keine halbe Kopplung auf der Uhr; die Sitzung verfällt serverseitig nach zehn
+Minuten. Die maskierte E-Mail steht nur im Dialog und wird nie gespeichert.
+
+Damit war dies die **erste Stelle des Projekts, an der zwei Web-Anfragen
+gleichzeitig offen sein können**: `bestaetigen nein` wird bewusst nicht
+abgewartet (E-S5-23), und daneben läuft schon der nächste `start`. `Uploader`
+serialisiert strikt über `_busy`, die Abfrage über `_pending` — für diese
+beiden gab es keine Buchführung. Kommen sie vertauscht zurück (Connect IQ
+sagt darüber nichts zu), schriebe ein `200 {"ok":true}` auf das **alte Nein**
+die Zugangsdaten der **neuen** Sitzung in den Speicher: Die Uhr hielte sich
+für gekoppelt, jeder Upload endete in 401, und ein Rückstand verhinderte sogar
+das Neukoppeln — eine Sackgasse. Deshalb trägt jetzt **jeder Rückruf mit,
+worauf er antwortet**: `start` eine Laufnummer, `status` und `bestaetigen` die
+Gerätekennung der Sitzung, `bestaetigen` zusätzlich das Ja oder Nein (der
+Server antwortet auf beides `200 {"ok":true}`).
+
+### Uhr — Fehlerzweige, die eine lebende Sitzung nicht wegwerfen
+
+Ein `429 zu_viele_versuche` steht in `pair.php` **vor** der Aktionsprüfung und
+trifft jedes Anliegen; ein `500` nach `bestaetigen ja` bedeutet, dass der
+Server zurückgerollt hat und die Sitzung ausdrücklich **stehen lässt**
+(Vertrag 1a.3: „es darf wiederholen"). Beide als „Code abgelaufen" zu melden
+hätte eine gültige Sitzung weggeworfen und die Trägerin ohne Not von vorn
+geschickt — die Meldung hätte eine Ursache benannt, die nicht vorlag, und
+einen Weg, der nicht hinausführt. Jetzt bleibt der Code in beiden Fällen
+stehen, die Abfrage läuft weiter, und „Code abgelaufen" sagt nur noch, wer
+410 oder 401 bekommt. Alles Übrige nennt seine Zahl und die Servermeldung.
+
+**Die Frist wird jetzt auch ohne Server erreicht.** Ein Verbindungsfehler
+beendet die Sitzung nicht (E-S5-25) — aber „bis zur Frist" heißt eben auch:
+an der Frist ist Schluss. Vorher hätte die Ansicht bei „noch 0 s" gestanden
+und auf ein 410 gewartet, das bei fortgebliebenem Telefon nie kommt.
+
+### Uhr — BACK auf einer Bestätigung ruft `onResponse` nicht auf
+
+**Gemessen am Simulator, im Code nicht zu sehen.** Der Vertrag von
+`ConfirmationDelegate` legt es nicht fest; ein Druck auf BACK bei stehender
+`WatchUi.Confirmation` räumt den Dialog weg, und mehr geschieht nicht.
+
+Für die Kopplung war das folgenschwer: Beim Öffnen der Rückfrage schaltet die
+Abfrage ab, damit eine eintreffende Antwort keinen Platz hat, an dem sie etwas
+ändern dürfte. Ohne Antwort vom Dialog wurde sie **nie wieder eingeschaltet** —
+kein `status` mehr, keine Rückfrage mehr, nur ein Code, der still ablief, und
+die Fristprüfung stand hinter derselben Sperre. Erholbar allein über BACK, und
+ohne jeden Hinweis darauf.
+
+`PairView.onShow()` meldet jetzt die Rückkehr. Die Lage ist eindeutig zu
+erkennen: Ansicht wieder oben, Sitzung vorhanden, Abfrage steht still, kein Ja
+unterwegs — beim **ersten** Erscheinen der Ansicht läuft die Abfrage bereits.
+Behandelt wird sie wie ein Nein: Wer die Frage wegdrückt, hat nicht Ja gesagt,
+und die Sitzung zurückzugeben ist ehrlicher, als sie bis zur Frist offen zu
+lassen.
+
+### Uhr — Die Ansicht drängt sich nicht mehr über eine fremde Seite
+
+Zwischen dem langen Druck und dem Erscheinen der Kopplungsansicht liegt eine
+volle Funkrunde. Wer in dieser Zeit weiterblättert oder mit BACK herausgeht,
+bekam die Ansicht über eine Seite geschoben, die sie nicht aufgerufen hat — im
+schlimmsten Fall über den Rea-Countdown, wo die Ereignistasten tot wären, BACK
+etwas anderes bedeutet und die Uhr bei 0:00 unter einem fremden Bildschirm
+vibriert. Die Sync-Seite meldet jetzt, ob sie sichtbar ist; ist sie es nicht,
+wird die Sitzung zurückgegeben statt angezeigt. Derselbe Musterfehler steckte
+schon in 2.0.0 (`onTrennen` → `openInput()`), dort aber im Sonderfall.
+
+Dazu eine Sperre gegen einen **zweiten** `start`: Ein weiterer langer Druck
+während „Hole Code…" trug eine zweite Sitzung ein und schob eine zweite
+Ansicht — von denen eine unschließbar stehen blieb, weil die Buchführung nur
+einen Zustand kennt. Auf der Venu liegt der lange Druck absichtlich auf zwei
+Tasten, der zweite Druck ist dort einen Fehlgriff entfernt.
+
+### Uhr — Die Server-Adresse hat einen Vorgabewert
+
+`serverUrl` steht auf **`nadoku.gen-em.org`**, der öffentlichen Installation
+(E-R49-8, R63). Bis 2.0.0 stand dort nichts, mit der Begründung „jede
+Installation hat ihren eigenen Server" — das stimmte, als es nur Selbsthoster
+gab. Seit es eine öffentliche Installation gibt, kostete es jede Trägerin
+einen Weg durch die Garmin-Connect-Einstellungen, bevor sie überhaupt koppeln
+konnte. Selbsthoster tragen dort weiter ihre eigene Domain ein; das Feld
+bleibt überschreibbar, und `deviceId`/`apiKey` bleiben als Alt-Weg für die
+Handanlage. Belegt am Simulator: Die Sync-Seite sagt frisch installiert
+„Nicht eingerichtet / START halten: Gerät koppeln" statt „Erst Server-Adresse
+setzen".
+
+Ebendort ausgetragen: `nadoku.beispieldomain.de` in `properties.xml`,
+`settings.xml` und `Uploader.mc`. Und „Erst Server-**Domain** setzen" heißt
+jetzt „Erst Server-**Adresse** setzen" — zwei Namen für eine Einstellung
+konnten sogar gleichzeitig auf dem Bildschirm stehen; die Sync-Seite
+unterdrückt die Doppelung nun ohnehin.
+
+### Uhr — Behoben: Die Tastensperre öffnete das Schnellmenü
+
+**Am Gerät gemeldet, im Simulator nicht nachstellbar** (`Geraete-Eingabe.md` 6:
+Tastensperren bildet er nicht ab).
+
+`Input.mc` erkannte die Tastensperre nur in **einer** Reihenfolge. Es merkte
+sich allein die Tasten, die es selbst verfolgt — START immer, UP/DOWN nur auf
+der Reanimationsseite. Wer UP **zuerst** drückte und START dazu, die übliche
+Handhaltung, hinterließ keine Spur: START sah ein leeres Feld, hielt sich für
+einen gewöhnlichen Langdruck und öffnete das Schnellmenü, während die Uhr
+sperrte. Auf der Sync-Seite wäre es seit 3.0.0 eine angefangene Kopplung.
+
+`onKeyPressed` merkt jetzt **jede** gedrückte Taste, auch die, die es dem
+System überlässt. Bleibt das Loslassen aus, weil die Uhr es während der Sperre
+nicht mehr zustellt, heilt es sich beim nächsten Druck derselben Taste; der
+Preis ist höchstens ein verschluckter Langdruck — deutlich weniger als ein
+Schnellmenü, das sich beim Sperren öffnet. Die Dokumentation sagte dieselbe
+Einseitigkeit („während des langen START-Drucks zusätzlich eine andere Taste")
+und ist nachgezogen.
+
+### Uhr — Behoben: die GPS-Zeile lief auf der Venu 3s über den Rand
+
+Sie war die **einzige** Zeile der Sync-Seite ohne `Ui.fitFont`
+(`Uhr-Layout_Regeln` 4.2), und bis 2.0.0 fiel das nicht auf: Der untere Block
+trug im Regelfall nur die Versionszeile, der Mittelblock saß tief genug, und
+„GPS aus (kein Dienst)" passte.
+
+Mit 3.0.0 trägt der untere Block auf einem **gewöhnlichen** Weg drei Zeilen —
+Meldung, Weg heraus, Version, etwa nach einem Abbruch der Kopplung. `untenY`
+rückt damit nach oben, der zentrierte Mittelblock rückt mit, und die Zeile
+landet dort, wo der Kreis zuläuft. Auf der Venu 3s trifft es am ehesten, weil
+`Ui.fontHint()` dort ab 320 px die größere Schrift liefert.
+
+Am Simulator fotografiert, gleicher Ausschnitt und gleiche Vergrößerung:
+vorher **„PS aus (kein Diens"** — beide Enden fort, ohne Warnung —, nachher
+**„GPS aus (kein Dienst)"**. Auf dem Ausgangsstand desselben Geräts stand die
+Zeile vollständig da; es ist also keine Altlast, sondern die Folge der
+zusätzlichen Zeile.
+
+## [Web 13.2.0] — 2026-09-03
+
+### Web — Der Wartungsmodus: 503 statt 500, während umgebaut wird (S5, Paket W)
+
+Ein Update läuft heute so: Push auf `main`, FTPS lädt `server/` hoch, danach
+ruft eine Administratorin `update.php` und lässt die Migration laufen.
+**Zwischen der ersten und der letzten hochgeladenen Datei stehen alte und neue
+nebeneinander**, und zwischen dem Hochladen und der Migration erwartet neuer
+Code Tabellen, die es noch nicht gibt. Wer in dieses Fenster gerät, bekommt
+**500**.
+
+Für einen Menschen ist das ärgerlich. Für eine Uhr ist es etwas anderes: Der
+JSON-Vertrag sagt zu **5xx** „später unverändert erneut versuchen", und genau
+das tun Uhr und Handy — sie puffern und liefern nach. Ein 500 aus einer halb
+umgebauten Datenbank ist aber nicht dasselbe wie ein angekündigtes 503, und
+die Grenze zwischen beiden war bisher der Zufall.
+
+**Jetzt gibt es einen Schalter.** Auf der Wartungsseite, Karte
+„Serverbetrieb", nur für die Verwaltung. Steht er, bekommt **jede** Anfrage
+außer den Ausnahmen ein **503** mit `Retry-After: 300` — Seiten eine schlichte
+Wartungsseite, Geräte und Browser-Skripte
+`{"error":"maintenance","meldung":"…"}`. **Kein Client wurde dafür geändert:**
+Das Verhalten steht seit S4 im Vertrag und ist im S4-Prüfprotokoll gemessen
+(„5xx / 503 → später erneut, nichts markiert, nichts bestätigt").
+
+**Der Zustand ist eine Datei, keine Zeile in der Datenbank.**
+`server/wartung.lock`, JSON mit `seit` und `von`. Das ist die eine
+Entscheidung, an der alles hängt: Der Wartungsmodus wird gerade dann
+gebraucht, wenn die Datenbank umgebaut wird oder eine Migration auf halber
+Strecke gescheitert ist. Ein Schalter, der die Datenbank fragt, ob er schalten
+darf, ist im entscheidenden Moment stumm. Die Datei steht deshalb in
+`.gitignore` **und** in der Ausnahmeliste des Deploys — ohne den zweiten
+Eintrag löschte der nächste Push sie mitten im Update, für das sie da ist.
+Dasselbe Muster wie `config.php`, `install.lock`, `sicherungen/` und `apk/`.
+
+**Das Tor sitzt in `db.php`, nicht in `auth_guard.php`.** Durch `auth_guard`
+laufen nur die Seiten. `ingest.php` und `pair.php` laden `db.php` direkt — und
+das sind die beiden, auf die es ankommt, weil sie die Daten der Uhr bringen.
+Ein Tor, das sie nicht sieht, sperrt die Menschen aus und lässt die Geräte in
+die Baustelle laufen. Die Zeile steht hinter `json_out()` und **vor** jeder
+Datenbankverbindung; `db()` verbindet erst beim ersten Aufruf, also ist bis
+dahin nichts geschehen. Kostet im Normalfall einen `file_exists()`.
+
+**Sechs Skripte bleiben offen** (E-S5W-04), verglichen am Dateinamen und nicht
+am Pfad — `login.php` lädt `db.php` als Allererstes, ein Pfadmuster wäre zu
+spät: `update.php` und `wiederherstellen.php` (die Arbeit selbst und der
+Rückweg), `jobs.php` mit Token (**das Komplett-Backup läuft während der
+Wartung — genau dann ist es konsistent**), `login.php`, `logout.php`,
+`install.php`. Alles unter `assets/` läuft ohnehin nicht durch PHP, und die
+Kommandozeile ist nie getort.
+
+**Die Datei ist der Schalter, nicht ihr Inhalt.** Liegt sie da, ist aber
+unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
+dann „seit unbekannt". Andersherum wäre es falsch — ein Tippfehler im Inhalt
+darf keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
+
+**Eine Entscheidung gegen unsere Empfehlung** (E-S5W-09, Auftraggeber): Wer
+sich während der Wartung anmeldet und **nicht** verwaltet, wird sofort wieder
+abgemeldet und sieht die Wartungsseite. Wir hatten vorgeschlagen, die Sitzung
+stehen zu lassen; der Auftraggeber wollte es umgekehrt, und das ist das
+strengere Verhalten: Während des Umbaus liegt keine Sitzung mit entsperrtem
+Inhaltsschlüssel herum, und keine Anmeldung schreibt `last_login`, während
+`update.php` das Schema ändert. **Drei Dinge hängen daran und sind einzeln
+gemessen:** Der Passwortvergleich ist unverändert (der Zweig hängt am Erfolg,
+nicht am Vergleich — die Antwortgleichheit bleibt), die Ratenschutz-Zähler
+werden **trotzdem** geleert (das Passwort war richtig; wer während einer
+Wartung dreimal richtig tippt, darf sich danach nicht ausgesperrt finden), und
+was danach erscheint, ist die **Wartungsseite** und nicht das Anmeldeformular
+— das läse sich wie „Passwort falsch", und die Person tippte weiter, bis der
+Ratenschutz zuschlägt.
+
+**Kein automatisches Ausschalten**, keine Zeitsteuerung (E-S5W-05). Ein
+stehengebliebener Wartungsmodus kann nur auf zwei Seiten auffallen —
+`update.php` und `login.php` —, und auf beiden steht dann oben ein oranger
+Balken mit Zeitpunkt und Konto. Alles andere antwortet mit 503, und ein 503
+sagt nicht, dass es seit drei Tagen kommt.
+
+**Zwei Kleinigkeiten am Rand.** Die Wartungsseite kann `logo_stamm()` nicht
+rufen (Datenbank) und **würfelt** deshalb zwischen den beiden Standardlogos,
+wie es die Einstellung „wechselnd" ohnehin tut — eine Installation mit eigenem
+Logo sieht während der Wartung eines der beiden Standardlogos. Und eine
+Meldung auf der Wartungsseite stand in Ersatzschreibung („Das Token liess sich
+nicht erzeugen"), obwohl sie ein Mensch liest; sie hat jetzt Umlaute wie ihre
+Nachbarinnen.
+
+**Nachweis:** Wartungsprobe **40 Erwartungen, 0 nicht erfüllt** — beide
+Richtungen (was gesperrt wird, was offen bleibt), einschließlich „`ingest.php`
+mit **gültigem** Geräteschlüssel → 503 und **keine** Zeile in `missions`",
+„kein `Set-Cookie` auf dem 503" und „das 503 kommt schneller als die Antwort
+ohne Wartung" (0,3 ms statt 1,4 ms — das Tor greift vor Datenbank und
+Ratenschutz) · Bilderlauf der Wartungsseite und der Wartungsseite **mit**
+Balken: **16 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** ·
+Kopplungsprobe **76 / 76**, Ingestprobe **30 / 30** und der Browser-Rundlauf
+**25 / 25** unverändert (der Rundlauf meldet sich an — `login.php` ist
+angefasst) · Wortliste über alle vier Bereiche, **129 Dateien**,
+**0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen** ·
+Vollständigkeit **278** unverändert: Die Wartungsseite benutzt nur vorhandene
+Klassen · S5-Anker **0 nicht gefunden** · `php -l` über alle geänderten
+Dateien **0 Fehler**.
+
+**Nicht geprüft:** ob der FTPS-Deploy die `wartung.lock` wirklich stehen
+lässt. Die Ausnahme in `.github/workflows/deploy.yml` ist eine **Zusage** —
+bewiesen wird sie beim ersten Deploy im Wartungsmodus, und der ist der Merge
+dieser Phase selbst. Steht im Prüfdokument S5.
+
+## [Web 13.1.2] — 2026-09-03
+
+### Web — Die Dokumentation beschreibt den neuen Weg (S5, Paket D — erste Hälfte)
+
+Pakete A und B haben die Richtung der Kopplung umgedreht; die Dokumentation
+beschrieb weiter die alte. Das ist kein Schönheitsfehler: Wer nach dem Knopf
+„Kopplungscode erzeugen" sucht, findet ihn seit Web 13.0.0 nicht mehr — und
+zwei der Texte, die ihn nennen, standen nicht in einer Datei, sondern **auf
+dem Bildschirm**.
+
+**Die Trennen-Mail schickte den Empfänger auf einen Knopf, den es nicht mehr
+gibt.** Sie geht raus, wenn ein Gerät sich vom Konto löst, und erklärte den
+Rückweg mit „Einstellungen → Geräte → Kopplungscode erzeugen". Jetzt erklärt
+sie den heutigen: die Kopplung **am Gerät** starten und den Code, den es
+zeigt, im Web eingeben. Die Mail ist der einzige Kanal, auf dem jemand von
+einer Trennung erfährt, die er nicht selbst ausgelöst hat — eine falsche
+Wegbeschreibung darin ist teurer als anderswo.
+
+**Der Demo-Hinweis sagte „Uhr koppeln".** Seit Web 12.9.0 koppeln auch
+Handys; die Zeile stand noch auf der Uhr allein. Jetzt „Gerät koppeln", wie
+überall sonst.
+
+**Dazu Kommentare, die eine falsche Begründung trugen.** Der auffälligste:
+Die Obergrenze `MAX_GERAETE` in `db.php` berief sich darauf, dass „wer einen
+Kopplungscode abfängt, sich ein Gerät anlegt". Das trägt seit E-S5-03 nicht
+mehr — der Code des neuen Verfahrens weist nichts aus, wer ihn abliest, kann
+am Gerät nichts auslösen. **Die Grenze bleibt richtig, ihre Begründung war es
+nicht;** der Weg hinein ist heute die Überredung („Lies mir mal den Code
+vor"), und dagegen wirkt sie genauso. Ebenso: `reset_request.php` verwies auf
+„dasselbe Muster wie bei den Kopplungscodes" — ein Muster, das es dort nicht
+mehr gibt, weil eine Kopplungssitzung einem **Gerät** gehört und nicht einem
+Konto. Und der `.codeblock` im Stylesheet nannte den Kopplungscode als seinen
+ersten Zweck; der wandert seit S5 in ein Eingabefeld. Der Baustein bleibt,
+sechs andere Stellen benutzen ihn.
+
+**Neu in `docs/Technik.md`: ein Bedrohungsmodell der Kopplung (4.99b).** Zwölf
+Angriffe, jeder mit dem, was ihn aufhält, und — wo es einen gibt — dem
+Restrisiko. Der Grund, es aufzuschreiben: Bei S5 ist mehrfach die Frage
+gefallen, ob ein abgelesener Code reicht, um in ein fremdes Konto zu
+schreiben. Die Antwort ist nein, aber sie steckte in vier Dateien verteilt.
+Dazu ein Runbook-Eintrag **„Die Kopplung klappt nicht"** mit acht Schritten
+vom Ratenschutz bis zur Sitzungstabelle — die Fehlerbilder des neuen Wegs
+sehen anders aus als die des alten, und die häufigsten sind stumm.
+
+**`android/LIESMICH.md` sagt jetzt, was der Server-Rundlauf heute braucht.**
+Die Anleitung legte Kopplungscodes per SQL in `pair_codes` an — eine Tabelle,
+die es seit Web 13.0.0 nicht mehr gibt. Bis der Prüfling den neuen Weg
+spricht, brauchen alle drei Rundlaufklassen einen Server **vor** S5, und zwar
+Quelltext **und** Datenbank; die Anleitung enthält dafür ein
+`git worktree`-Rezept und beschreibt daneben, wie ein Prüfling heute an eine
+Kopplung kommt.
+
+**Was bewusst noch nicht dabei ist:** `docs/Handbuch.md`,
+`docs/Geraete-Eingabe.md` und die Uhr-Abschnitte der Technik. Sie beschreiben,
+was ein Mensch **an der Uhr** sieht, und die Uhr-Anzeigen entstehen in Paket C.
+Eine Bedienanleitung für einen Bildschirm, den es noch nicht gibt, wäre wieder
+das, was hier gerade behoben wird.
+
+**Nachweis:** Wortliste über **alle vier Bereiche, 128 Dateien** — 0 Treffer
+außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen (77 / 77), 0 durchgerutschte
+Fallen; der eine Treffer, den sie fand, war neu geschriebener Text dieses
+Pakets („drei Stationen") und ist ersetzt · Vollständigkeit **278 Befunde**,
+einer mehr als nach Paket B: der Pfeil in „Sync-Seite → Gerät koppeln" der
+neuen Trennen-Mail (`pair.php` 449) — gegen `dcaede6` per `git worktree`
+gemessen, Prüfung 1, 2 und 4 Zeile für Zeile unverändert · Kopplungsprobe
+**76 / 76** · Ingestprobe **30 / 30** · Browser-Rundlauf **25 / 25, 0
+Konsolenfehler**, das Nachladen griff 3,1 s nach dem Ja · S5-Anker **0 nicht
+gefunden, 0 mehrdeutig** (neun erledigte D-Anker ausgetragen, 83 → 66) ·
+`php -l` über die fünf geänderten PHP-Dateien **0 Fehler**.
+
+**Nicht geprüft:** die Trennen-Mail im echten Postausgang — die
+Prüfinstallation hat keinen Mailserver; geprüft ist ihr Wortlaut im Quelltext
+und der Versandweg (Kopplungsprobe Fall 26). Ebenso ungefahren: das
+`git worktree`-Rezept in `android/LIESMICH.md` — dafür bräuchte es einen
+zweiten Server und ein zweites Schema neben der laufenden Installation.
+
+### Web — Nachtrag: das Handbuch beschreibt den neuen Weg (S5, Paket D — zweite Hälfte)
+
+**Ohne eigene Fassung.** Was hier geändert wird, ist ausschließlich
+Dokumentation — `server/version.php` bleibt auf 13.1.2, und die Zählung der
+Uhr ist die von Paket C. Der Eintrag steht trotzdem hier, weil er das Paket
+abschließt, dessen erste Hälfte darüber steht.
+
+**Die zweite Hälfte wartete auf Paket C** (E-S5-58): `docs/Handbuch.md` 12 und
+12.1 nennen Wortlaute, die die Uhr anzeigt — und die legte Paket C erst fest.
+Jetzt stehen sie: „Code für das Web", „Einstellungen, Geräte", „noch 9 min",
+„Mit ph\*\*\*@… koppeln?", „Gekoppelt", und die neun Fehlerpaare aus `Pair.mc`.
+Alle sind aus dem Quelltext abgeschrieben, nicht aus dem Konzept — im Konzept
+standen Entwürfe, gebaut wurde teils anders.
+
+**Der Abschnitt sagt jetzt auch, warum es drei Schritte sind** und nicht einer:
+Zwischen Code und fertigem Gerät liegen zwei Tore — die Web-Seite sieht, *wer
+eingibt*, die Uhr sieht, *wessen Konto* es wäre. Wer den Code abschwatzt, hat
+nichts; wer jemanden dazu bringt, einen fremden Code einzugeben, bekommt das Ja
+nicht. Das stand bisher nur in `Technik.md` 4.99b, also da, wo es niemand
+sucht, der gerade eine Uhr in der Hand hat.
+
+**Dazu ein Fund, der nicht auf dem Zettel stand:** Abschnitt 10 („Geräte")
+beschrieb die Geräteseite noch so, wie sie **vor Paket B** aussah — nur
+„Gerät anlegen", kein Wort über das Feld „Code vom Gerät" und die drei
+Zustände der Karte. Paket B hatte die Seite gebaut und den Changelog
+geschrieben, aber das Handbuch nicht angefasst; D Hälfte 1 hatte den Abschnitt
+nicht auf der Liste, weil er in der Konsistenzlesung nur mit **einer** Zeile
+auffiel („noch ein Kopplungscode erzeugen"). Die eine Zeile war die Spitze:
+Der ganze Abschnitt war überholt. Er ist neu geschrieben — die drei Zustände,
+und „Gerät anlegen" ausdrücklich als **Alternative**, nicht als Hauptweg.
+
+**Nachweis:** Die beiden Zahlen aus der Konsistenzlesung stehen jetzt auf null.
+**K3** (Handlungsanweisungen „Code erzeugen"/„Code eintippen" außerhalb von
+Changelog, Archiv und erledigten Konzepten): **7 → 0**; die eine verbleibende
+Fundstelle (Handbuch 2153) ist die Adresseingabe „Plus Code eintippen" und war
+nie gemeint. **K4** (`beispieldomain` in `watch/` und Handbuch): **4 → 0** —
+drei Zeilen hat Paket C geschlossen, die vierte (Handbuch 2683) diese.
+Wortliste über **fünf Bereiche, 164 Dateien**, 0 Treffer außerhalb der
+Ausnahmen (78 / 78 gegriffen, 0 ungenutzt) — sie fand dabei **zwei** Treffer in
+neu geschriebenem Text dieses Pakets: „Uhr · Venu 3S" als Beispiel für Art und
+Modell, zweimal. Ein Gerätename gehört nach E-P2-02 in den ausdrücklichen
+Garmin-Zusatz, nicht in den geräteneutralen Ablauf; das Beispiel ist ersetzt
+durch das, was die Seite wirklich zeigt („die Art und das Modell, das das Gerät
+selbst gemeldet hat") — das ist ohnehin die bessere Auskunft, weil ein Leser
+mit einer anderen Uhr sich am fremden Modellnamen nur stößt.
+
+**Die S5-Anker sind abgeräumt.** Nach dem Merge von Paket C meldeten sie
+**13 `NICHT GEFUNDEN` und einen mehrdeutigen** — zehn davon in `watch/`, wo C
+`Pair.mc` neu geschrieben hat, dazu die beiden Handbuch-Anker dieses Pakets und
+`claude.watch-fehlt`. Das ist keine Panne, sondern genau die Auskunft, für die
+das Werkzeug gebaut wurde: Die Stelle ist umgeschrieben. Alle vierzehn sind
+ausgetragen (83 → 52), und der Lauf steht wieder auf **0 nicht gefunden, 0
+mehrdeutig**. Vollständigkeit **278** unverändert, `php -l` **0 Fehler**.
+
+
+## [Web 13.1.1] — 2026-09-03
+
+### Web — Behoben: ein gelungenes Trennen leerte einen Topf, der ihm nicht gehört
+
+Gefunden bei der Vorarbeit zu Paket D, beim Nachzählen der Verbraucher des
+Ratenschutz-Topfes `pair`. Der Fehlerfund B-S5-04 nannte zwei — `pair.php` und
+das Token von `jobs.php`. **Es sind drei:** `server/gpx.php` zählt darin
+ebenfalls, an sieben Stellen (73, 131, 141, 165, 177, 206, 262, 280), und
+schützt damit die Freigabelinks der Spuren.
+
+`pair.php` rief nach einem gelungenen `trennen` `rate_erfolg('pair')` — und
+leerte damit den Zähler dieser Adresse **für alle drei**. Wer Freigabelinks
+durchprobiert, brauchte also nur ein eigenes Gerät zu trennen, um sich zehn
+frische Versuche zu holen; neu koppeln kostet einen Handgriff, und das beliebig
+oft. Eine Bremse, die sich vom Gebremsten zurücksetzen lässt, ist keine.
+
+Der Aufruf ist ersatzlos entfallen. Der Gedanke dahinter war der der
+Anmeldung — wer es richtig macht, soll nicht an einem früheren Vertippen
+hängenbleiben —, aber an diesem Endpunkt gibt es seit Web 13.0.0 nichts mehr zu
+vertippen: Den Code tippt ein Mensch im Web (Topf `pair_code`, mit eigenem
+`rate_erfolg`), und was hier ankommt, sind Kopfzeilen einer Maschine. Ein
+Gerät, das seinen Schlüssel zehnmal falsch schickt, ist kaputt oder fremd;
+beidem hilft kein Nachlass.
+
+**Der Preis, bewusst gezahlt:** Ein Gerät mit veralteten Zugangsdaten sperrt
+seine Adresse nach zehn Versuchen für zehn Minuten aus, und das gilt dann auch
+für den GPX-Abruf. Genau dafür ist der Topf da.
+
+### Web — Behoben: vier Meldungen an das Gerät trugen keine Umlaute
+
+`pair.php` schickt zu jedem Fehler ein Feld `meldung`, und die Uhr zeigt es an
+(`watch/source/Pair.mc` 331–332). Vier dieser Texte standen in
+Ersatzschreibung — „Bitte spaeter erneut", „Es sind bereits 5 Geraete … Erst
+eines loeschen" —, während die gleichwertige Meldung in `auth_salt.php` und
+sämtliche Mails derselben Datei Umlaute tragen. Es war keine Konvention,
+sondern eine Ungleichheit: Die **Kommentare** dieses Projekts sind in
+Ersatzschreibung, die **sichtbaren Texte** nicht. Eine davon ist mit Web 13.0.0
+neu dazugekommen („Der Server ist gerade ausgelastet").
+
+**Nachweis:** Kopplungsprobe **76 Erwartungen, 0 nicht erfüllt** (neu: ein
+gelungenes `trennen` lässt den Topf stehen — vorher vier Einträge, nachher
+vier).
+
+## [Web 13.1.0] — 2026-09-03
+
+### Web — Die Geräteseite nimmt den Code entgegen (S5, Paket B)
+
+Paket A hat den Server umgedreht; hier kommt die Seite dazu, an der ein Mensch
+den Code eingibt. Die Karte „Gerät koppeln" hat jetzt **drei Zustände** statt
+eines Knopfes, alle aus dem vorhandenen Vorrat gebaut (`Design.md` 9) — keine
+neue Klasse, keine neue Darstellung, kein Mockup nötig:
+
+**Eingabe.** Ein Feld „Code vom Gerät" in Festbreitenschrift (`.feld-fest`),
+darunter „Weiter". Der Code darf so eingetippt werden, wie das Gerät ihn
+zeigt — mit Leerzeichen, in jeder Schreibung, auch mit Bindestrich;
+`pair_code_normalisieren()` räumt das auf, bevor gesucht wird. Steht das Konto
+am Gerätelimit, erscheint gar kein Feld, sondern der Grund.
+
+**Rückfrage.** Passt der Code, zeigt die Karte, **was** da koppeln will: Art,
+Modell, den Code in zwei Dreiergruppen, die gekürzte Kennung und die Restzeit.
+Das ist das erste der beiden Tore aus E-S5-05 und der ganze Zweck des
+Zwischenschritts — wer einen fremden Code eingetippt bekommt („gib mal AB3 K7Q
+ein"), sieht spätestens hier ein Gerät, das nicht seines ist. Hat das Gerät
+nichts über sich gesagt, steht das als Warnung dabei, statt verschwiegen zu
+werden. Daneben: „Abbrechen", und dann geschieht nichts.
+
+**Warten.** Nach „Mit meinem Konto verbinden" gehört die Sitzung dem Konto, und
+das Gerät ist am Zug. Die Karte wartet sichtbar — mit dem Gerät, um das es
+geht, und der Restzeit — **und sie lädt von selbst nach, sobald am Gerät Ja
+gesagt wurde** (E-S5-53, Entscheidung des Auftraggebers gegen die
+Konzeptempfehlung E-S5-27). Das ist die einzige Stelle des ganzen Ablaufs, an
+der die Person nichts tun kann und trotzdem nicht weiß, ob es geklappt hat: Sie
+schaut auf die Uhr, drückt dort Ja, schaut zurück — und sah bis hierher einen
+Bildschirm mit dem alten Stand und der Aufforderung, selbst neu zu laden.
+
+### Web — Wie das Nachladen gebaut ist, und was es nicht darf
+
+Sechs Bedingungen, damit aus der Bequemlichkeit kein zweites Problem wird:
+
+1. **Ein Endpunkt, der genau eine Frage beantwortet** (`api/kopplung_stand.php`)
+   und **keine Eingabe nimmt**: Welche Sitzung gemeint ist, steht in der
+   PHP-Sitzung des Browsers, nicht in einem Parameter, den jemand mit einer
+   fremden Gerätekennung füllen könnte. Die Kontokennung steht in jeder
+   Bedingung mit.
+2. **Die Abfrage endet von selbst** — bei Erfolg, bei Ablehnung am Gerät, mit
+   dem Ende der Frist und nach drei Fehlversuchen in Folge. Länger als die zehn
+   Minuten, die eine Sitzung lebt, läuft sie nie.
+3. **Sie ruht im Hintergrund-Reiter** und holt beim Zurückkommen sofort nach.
+4. **Ohne JavaScript bleibt der Weg vollständig.** Die Karte sagt auch dann,
+   was am Gerät zu tun ist; das Skript nimmt nur den Handgriff ab.
+5. **Kein `reload()`.** Die wartende Karte steht im Regelfall auf einer Seite,
+   die aus einer Umleitung kam — dort wäre Neuladen harmlos. Sie steht aber
+   **auch** auf der Antwort eines POST, wenn jemand währenddessen ein anderes
+   Gerät umbenennt oder löscht; ein `reload()` hätte dann „Formular erneut
+   senden?" gefragt und im schlimmsten Fall das Löschen wiederholt.
+6. **Und das Ziel trägt kein Fragment** — nachgemessen: Eine Navigation, die
+   nur das Fragment ändert (`#koppeln` → `#geraeteliste`), ist keine; der
+   Browser scrollt und fragt den Server nicht. Die Karte hätte weiter auf ein
+   Gerät gewartet, das längst in der Liste stand. Das war der eine echte Fehler
+   dieses Pakets, und der Browserrundlauf hat ihn gefunden.
+
+Dazu die Umleitung nach dem Beanspruchen: Der Wartezustand ist der einzige auf
+dieser Seite, der Minuten dauert und sich von selbst ändert. Er darf beim
+Neuladen weder eine Rückfrage auslösen noch ein zweites Mal beanspruchen —
+also POST, dann `Location`, und der Zustand liegt in der Sitzung, nicht im
+Adressfeld: Die Gerätekennung ist kein Geheimnis, hat aber nichts im Verlauf
+des Browsers zu suchen.
+
+### Web — Ratenschutz: der Topf wird erst beim Beanspruchen geleert
+
+Der Topf `pair_code` zählt Fehlgriffe je Konto **und** je Adresse. Was **nicht**
+zählt, ist ein Code, der schon am Muster scheitert — die Datenbank wurde nicht
+gefragt, es ist nichts zu erraten, nur ein Vertipper (E-S5-17).
+
+Geleert wird der Topf **erst beim Beanspruchen**, nicht schon beim Finden — und
+das weicht bewusst vom Wortlaut in Z-08 ab (E-S5-54). Ein Treffer im Suchschritt
+verbraucht die Sitzung nämlich nicht: Wer sich über `pair.php` mit
+`aktion=start` selbst eine Sitzung holt, kennt einen gültigen Code, den er
+beliebig oft eingeben kann — und hätte damit alle zehn Versuche
+zurückgesetzt, so oft er will. Das Beanspruchen dagegen verbraucht die Sitzung;
+jedes Zurücksetzen kostet dann ein neues `start`, und das begrenzt der Topf
+`pair_start` auf zwanzig je zehn Minuten.
+
+### Web — Zwei Funde am Bestand, beide älter als S5
+
+**Die Handanlage vergab Gerätekennungen aus vier Zufallsbytes** (B-S5-01),
+während die Kopplung seit M4-08 sechzehn nimmt. Zwei Wege zu derselben Spalte,
+32 gegen 128 Bit — und der schwächere war ausgerechnet der, den niemand prüfte:
+Bei der Kopplung fängt der eindeutige Schlüssel eine Dublette ab und das Gerät
+versucht es erneut; hier bekäme die Nutzerin einen Datenbankfehler.
+Bestandsgeräte behalten ihre kurze Kennung — die Spalte ist `VARCHAR(64)`,
+`geraet_kennung_kurz()` kommt mit beiden Längen zurecht, keine Migration.
+
+**Der Reiter trug zwei primäre Knöpfe** (B-S5-09): den der Kopplungskarte und
+„Gerät anlegen". `Design.md` 9.16 nennt genau das als Anti-Muster — „Keiner ist
+mehr die Haupthandlung" —, und welche es hier ist, sagt die Anwendung selbst an
+zwei Stellen: Der Text neben der Handanlage nennt sie „die Alternative zum
+Koppeln", und E-R49-7 führt sie als Rückfall. Sie ist jetzt neutral.
+
+Dazu ein sichtbarer Text, den Paket A falsch hat werden lassen:
+`admin_demo.php` sagte der Administratorin, das Zurücksetzen des Demo-Kontos
+lösche „Kopplungscodes" — es sind seit 13.0.0 offene Kopplungssitzungen.
+
+### Werkzeuge — der Bilderlauf kann jetzt Zustände, die einen POST brauchen
+
+`tools/screenshots/` kannte genau einen Bedienschritt (`schublade`) und konnte
+deshalb von den drei Zuständen der Karte nur den ersten fotografieren. Zwei
+neue Schritte (`kopplung-rueckfrage`, `kopplung-warten`) holen sich über
+`pair.php` eine echte Kopplungssitzung — die Probe ist das Gerät, es gibt keine
+Attrappe — und klicken sich durch. Der Code wird je Schritt **einmal** geholt
+und über alle acht Breiten wiederverwendet: Der Topf `pair_start` lässt zwanzig
+Aufrufe je zehn Minuten zu, und ein Lauf mit einer Sitzung je Breite bräuchte
+sechzehn. Zurück bleibt eine Sitzung, die nach zehn Minuten verfällt, und keine
+Gerätezeile — das Gerät sagt in diesem Lauf nie Ja.
+
+Neu daneben: **`tools/kopplungsprobe/rundlauf.mjs`** — der ganze Weg im
+Browser, vom Anmelden bis zum abgemeldeten Prüfgerät, mit der Probe als Gerät
+auf der anderen Seite. Er ist der einzige automatisierte Beleg dafür, dass das
+Nachladen wirklich greift.
+
+**Nachweis:** Rundlauf **25 Erwartungen, 0 nicht erfüllt, 0 Konsolenfehler**
+(das Nachladen griff 3,2 s nach dem Ja) · Bilderlauf über die drei Zustände
+**24 Bilder in acht Breiten, 0 Überlauf, 0 Konsolenfehler, alle Knöpfe 44 px**,
+Gegenprobe 27 Dateien / 27 verschiedene Prüfsummen · Kopplungsprobe unverändert
+**75/75** · Ingestprobe **30/30** · Wortliste a–d **0/0/0**, 77 Ausnahmen alle
+gegriffen · Vollständigkeit **277 statt 272** — die fünf Zeichen sind benannt:
+drei in den Kommentaren der beiden neuen Dateien, zwei Pfeile mehr in
+sichtbarem Text, weil der Weg „Sync-Seite → Gerät koppeln" jetzt an drei
+Stellen steht statt an einer. Prüfung 1 (Klassen), 2 (Werte) und 4 (Knopfhöhe)
+sind Zeile für Zeile unverändert.
+
+## [Web 13.0.1] — 2026-09-03
+
+### Web — Behoben: ein später eintreffendes Paket löschte Ende, Strecke und Anstieg
+
+Gefunden bei der Gegenlesung des S5-Zusatzes (Befund B5.3), nachgestellt gegen
+eine laufende Installation, behoben in einem eigenen Schritt — der Fehler ist
+älter als S5 und soll getrennt nachvollziehbar bleiben.
+
+Der Upsert in `ingest.php` schrieb `ended_at`, `distance_m` und `ascent_m`
+bedingungslos aus dem eintreffenden Paket (`ended_at = VALUES(ended_at)`),
+während `final` seit jeher mit `GREATEST(final, VALUES(final))` geschützt war.
+**Genau diese drei Spalten trägt ein nicht-finales Paket aber nicht:** Solange
+ein Einsatz läuft, kennt die Uhr weder Ende noch Strecke noch Anstieg und
+sendet `null`.
+
+Kam ein solches Paket **nach** dem finalen an, setzte der Upsert alle drei auf
+NULL zurück — und `final` blieb wegen `GREATEST` auf 1. Übrig blieb ein
+abgeschlossener Einsatz ohne Ende, ohne Strecke, ohne Anstieg. Kein Fehler,
+keine Meldung, die Antwort lautete „ok". Am Ruhe-Segment zeigte sich derselbe
+Fehler als Widerspruch auf der Spurenseite eines Diensttags: „12:00 – offen
+Uhr" **ohne** den Zusatz „· läuft noch", weil die Zeile ihr Ende aus
+`ended_at` und den Zusatz aus `final` bezieht (`assets/schneiden.js` 341–346).
+
+**Dass das vorkommt, ist kein Gedankenspiel.** Jede Wiederholung eines
+früheren Teilstücks ist so ein Paket — die Ingestprobe schickt genau das seit
+S2 („Wiederholung unterhalb `n_original`", Teil 3) und hat nur nie
+hingesehen. Mit dem Nachsende-Speicher der Handy-App (S5-Zusatz, Paket E2)
+wird die Reihenfolge vollends unzuverlässig: Was beim Funkabriss
+liegenblieb, geht hinterher heraus, und zwar nach dem, was inzwischen
+gesendet wurde.
+
+Behoben mit `COALESCE(VALUES(x), x)` an allen vier Stellen (drei an
+`missions`, eine an `rest_segments`): Ein Wert überschreibt, ein NULL lässt
+stehen. **Eine Berichtigung bleibt möglich** — sendet die Uhr ein anderes
+Ende, gilt es; nur das Vergessen ist weg. Der umgekehrte Fall, ein Ende soll
+wieder verschwinden, ist keiner: `final` geht aus demselben Grund nie zurück.
+
+**Keine Migration.** Was einmal gelöscht wurde, lässt sich nicht
+zurückholen — der Wert stand nur im Paket, das ihn überschrieben hat. Auf der
+Betreiberinstallation ist kein Fall bekannt; wer einen Einsatz mit `final = 1`
+und leerem Ende findet, trägt das Ende von Hand nach.
+
+**Nachweis:** `tools/ingestprobe/` **Teil 7** (neu): nach dem finalen Paket
+stehen alle drei Werte, ein späteres nicht-finales Paket lässt sie stehen,
+`final` bleibt 1 — und die Gegenprobe, dass eine Berichtigung mit anderen
+Werten weiterhin durchgeht. Damit **30 Erwartungen, 0 nicht erfüllt** (vorher
+24). `tools/kopplungsprobe/` unverändert **75 / 75**.
+## [Werkzeug: Ein Schrägstrich zu viel in der Geräteadresse] — 2026-09-03
+
+**Der Prüfstand legte den halben Gerätebaum eine Ebene zu tief ab und meldete
+trotzdem Vollzug.** Keine der drei Auslieferungen ist geändert, deshalb keine
+Versionsnummer.
+
+### Werkzeug — die Adresse wird normalisiert, nicht nachgerechnet
+
+`geraetedateien()` setzt die Quelle als `"$GERAETE_URL/Devices/"` zusammen.
+Endet `CIQ_GERAETE_URL` selbst auf einem Schrägstrich, steht dort
+`https://host//Devices/` — und das leere Segment zählt für `wget` als
+Verzeichnisebene. `pfadtiefe()` sieht es nicht: Es misst die Adresse, nicht das
+Ergebnis der Zusammensetzung. `--cut-dirs` war damit um eins zu klein.
+
+Herausgekommen ist ein **halb richtiger Baum**: 173 Geräte unter
+`Devices/Devices/`, 732 MB Schriften unter `Fonts/Fonts/`, daneben je ein
+korrekt abgelegter Teil — je nachdem, ob `wget` eine Datei über die
+Startadresse oder über einen Verweis aus der Verzeichnisauflistung erreicht.
+
+**Warum das schlimmer ist als ein ganz falscher Baum:** `pruefen` sucht nach
+den drei Zielgeräten, und die lagen oben — als Symlinks in den tiefen Baum. Der
+Bestand meldete „vorhanden", `reihe` hätte für die anderen 170 „Gerätedatei
+fehlt" gesagt. Eine grüne Zahl über etwas, das sie nicht gemessen hat
+(`CLAUDE.md` 6).
+
+Behoben an der Quelle: Der Schrägstrich fällt weg, bevor die Adresse benutzt
+wird. Am 02.09.2026 stand dasselbe Bild schon einmal da, mit anderer Ursache
+(eine fest verdrahtete `1`) — deshalb jetzt die Normalisierung und nicht die
+dritte Fassung derselben Rechnung.
+
+Dazu ein Warnhinweis in der `LIESMICH`: Jene Symlinks überleben ein `cp -rn`
+des tiefen Baums nach oben — der Name ist belegt, das echte Verzeichnis wird
+übersprungen, und nach dem Abräumen zeigen sie ins Leere. Genau so sind beim
+Aufräumen von Hand die drei Zielgeräte verschwunden, während `ls` weiter
+vollständig aussah.
+
+**Bestand danach:** SDK 9.2.0, **173 Gerätedateien** mit `compiler.json`,
+**1332 Schriften**, 0 fehlende Simulatorbibliotheken; `geraeteklassen.py`
+liefert **99** Geräte für Stufe I und **20** Vertreter für Stufe II.
+
+## [Werkzeug: Wortliste sieht die Uhr an] — 2026-09-03
+
+**Der letzte Client, der nie durch die Wortliste lief, läuft jetzt durch sie**
+— `watch/` als Bereich `e` (Backlog 66, S5 Paket C). Keine der drei
+Auslieferungen ist geändert, deshalb keine Versionsnummer.
+
+### Werkzeug — Bereich `e`: Ressourcen **und** Monkey C
+
+Backlog 66 nannte `watch/resources/**/*.xml`. Das wären vier Zeichenketten
+gewesen: der App-Name und die drei Namen der Bildmarken-Wahl. Die sichtbaren
+Texte der Uhr stehen aber als Literale im Quelltext — „Nicht eingerichtet",
+„Zu viele Geräte", „Sync vollständig". Ein Bereich, der die XML ansieht und
+die `.mc` übergeht, hätte wieder eine Null gemeldet über etwas, das er nicht
+gelesen hat: genau der Befund B-S4-06, dem die Regel in `CLAUDE.md` 6
+überhaupt erst zu verdanken ist. Bereich `e` umfasst deshalb beides
+(E-S5-61).
+
+Dafür zwei Erweiterungen am Werkzeug, beide klein und beide nötig:
+
+- **Eine Art `monkeyc` im Zerleger.** Monkey C kommentiert wie JavaScript
+  (`//`, `/* */`), also derselbe Weg — aber unter eigenem Namen, damit in der
+  Bereichsdefinition steht, was tatsächlich gelesen wird. Dass die
+  JS-Heuristik reguläre Ausdrücke von der Division unterscheidet, schadet
+  nicht: Monkey C kennt keine Regex-Literale. Zwei zusätzliche Probefälle
+  halten das fest, darunter die Division nach schließender Klammer
+  (`(rest + 59) / 60`) — in den Uhr-Oberflächen der häufigste Fall. Die
+  Selbstprobe steht damit bei **21 Fällen**.
+- **Ein Bereich darf zwei Arten haben.** `"art": {".xml": "xml", ".mc":
+  "monkeyc"}`. Die Alternative wären zwei Bereiche gewesen — und damit zwei
+  Zahlen für eine Frage, die niemand addiert. Eine Endung ohne Zuordnung
+  bricht den Lauf ab; sie darf nicht still übergangen werden, sonst entsteht
+  die Lücke wieder, die dieser Bereich schließt.
+
+`resources*` statt `resources`, weil die vorgerasterten Bildmarken und
+Launcher-Symbole in Geschwisterordnern liegen, die `monkey.jungle` je Gerät
+zuweist. Sie tragen heute keinen sichtbaren Text — aber ein Ordner, den
+niemand ansieht, ist genau die Lücke von eben. `watch/manifest.xml` bleibt
+draußen: Der App-Name steht dort als Verweis, der Text in `strings.xml`.
+
+### Werkzeug — was der erste Lauf fand: zweimal einen Gehäuseaufdruck
+
+**34 Dateien, 2 Treffer**, beide dieselbe Sache: `L_SELECT = "START"` und
+`L_SELECT_HOLD = "START halten"` in `watch/source-tasten5/DeviceProfile.mc`.
+Das Muster `taste-start` sucht `START` in Großbuchstaben, weil „Start" und
+„starten" gewöhnliche Wörter sind — hier trifft es den Aufdruck auf dem
+Gehäuse von Fenix und Forerunner. Die Venu 3s heißt an derselben Stelle
+„Action" und trifft deshalb nicht.
+
+Das ist keine Nachlässigkeit, sondern die Bauform: `DeviceProfile.mc` **ist**
+der plattformspezifische Teil, und die Oberflächen setzen den Namen über
+`Input.lSelectHold()` ein, ohne ihn selbst zu kennen. Genau diese Trennung —
+gerätefreier Ablauf, Garmin-Weg als benannter Zusatz — sieht E-P2-02 vor. Wer
+das Wort hier ersetzte, schriebe eine Bedienanweisung, die auf einem echten
+Gerät nicht ausführbar ist. Also eine Ausnahme, Klasse G
+(`uhr-tastennamen`), beschränkt auf diese eine Datei und dieses eine Muster.
+
+Danach **0 / 0 / 0** in allen fünf Bereichen: 87 · 29 · 8 · 2 · 34 Dateien
+zum Zeitpunkt dieses Eintrags, 78 Ausnahmeregeln, alle 78 gegriffen, 0
+durchgerutschte Teilstring-Fallen. (Mit Web 13.1.x und Uhr 3.0.0 sind es
+88 · 30 · 8 · 2 · 35 — die Bereiche wachsen mit dem Code.)
+
+## [Web 13.0.0] — 2026-09-03
+
+### Web — Kopplung umgekehrt: das Gerät zeigt den Code (S5, Paket A — Server)
+
+Bis 12.9.4 erzeugte das Web den Kopplungscode, und die Uhr tippte ihn — sechs
+Zeichen über einen Textpicker am Handgelenk, mit Rückfragen, Tippfehlern und
+einer Uhr-Fassung je Änderung am Codeformat. Rahmenplan R49 dreht den Ablauf
+um: **Das Gerät holt sich mit `start` eine Kopplungssitzung und zeigt den
+Code, ein Mensch gibt ihn im Web in sein Konto ein, und das Gerät bestätigt
+mit Ja.** Dieses Paket baut die Serverseite; die Geräteseite im Web (Paket B)
+und die Uhr (Paket C) folgen auf demselben Zweig, und das Ganze kommt einmal
+auf `main` — **bis dahin läuft der Knopf „Kopplungscode erzeugen“ ins Leere**,
+weil die Tabelle dahinter nicht mehr existiert. Dieser Zweig geht nicht vor
+Paket B auf `main`.
+
+`pair.php` kennt vier Anliegen mit Pflichtfeld `aktion`: `start`, `status`,
+`bestaetigen` und das unveränderte `trennen`. Die Zugangsdaten entstehen bei
+`start` und sind bis zum Ja **schwebend** — sie liegen in der neuen Tabelle
+`pair_sessions`, nicht in `devices`, und `ingest.php` weist sie ab. Der Code
+ist nur für den Menschen: Er weist nichts aus; wer ihn abliest, kann am Gerät
+nichts auslösen. Das letzte Wort hat das Gerät, das die maskierte Adresse des
+Kontos sieht (`ph***@gen-em.org`) — die falsche Adresse fällt auf. Zwei
+Angriffsflächen, zwei Tore: Ein fremdes Gerät im eigenen Konto scheitert an
+der Bestätigungsseite (sie zeigt Art und Modell), das eigene Gerät im fremden
+Konto am Ja auf dem Gerät. Eine alte Uhr, die noch `{"code": …}` sendet,
+bekommt `400` mit der Meldung „Uhr-App aktualisieren“ — der einzige Kanal, auf
+dem sie erfährt, was zu tun ist.
+
+**Ratenschutz gedreht.** Drei Töpfe statt einem: `pair_start` zählt jede
+Sitzungsanfrage je Adresse (20 je zehn Minuten — ein Kurs mit zwölf Uhren
+hinter einer Adresse passt hinein), `pair_code` die Fehlgriffe bei der Eingabe
+im Web je Konto **und** Adresse, `pair` bleibt für 401 an den ausgewiesenen
+Anliegen und für das Token von `jobs.php`. Dazu eine Obergrenze von 1000
+unverfallenen Sitzungen, **per SQL gezählt, nicht per Zeile** — der
+Aufräumjob läuft täglich, die Frist ist zehn Minuten, und eine Zeilenzählung
+ließe sich an einem Tag mit toten Sitzungen füllen. Was zählt und was nicht,
+ist festgelegt: 401 zählt, ein Rumpf ohne Aktion nicht (das ist eine alte Uhr,
+kein Raten), 410 und 409 nicht (der Code war richtig). Und ein gelungenes
+`status` leert den Zähler **nicht** — sonst setzte ein Angreifer mit einer
+eigenen Sitzung alle fünf Sekunden den Adresszähler zurück, während er daneben
+fremde Kennungen durchprobiert.
+
+**Eine Migration ist zwingend** (`2026_09_03_kopplungssitzungen`): Sie legt
+`pair_sessions` an und **löscht `pair_codes`**. Die Codes darin sind zehn
+Minuten gültige Zufallswerte, nichts davon ist von Hand eingegeben, und kein
+Gerät löst sie mehr ein — deshalb ohne Inhaltsprüfung, nach dem Muster der
+Phase-10-Migration. Nach dem Deploy `update.php` aufrufen.
+
+### Web — Geräteschlüssel als SHA-256 statt bcrypt — deshalb die Hauptnummer
+
+Der Geräteschlüssel sind 24 Zufallsbytes. bcrypt bremst das Raten eines
+*schwachen* Geheimnisses; bei 192 Bit Zufall bremst es nur den Server:
+228 ms je Upload (PHP 8.4 legt Kostenfaktor 12 an, gemessen), und beim
+Abfragetakt der neuen Kopplung wären es 27 s Rechenzeit je Sitzung gewesen.
+Seit dieser Fassung liegen Geräte- **und** Sitzungsschlüssel als SHA-256
+(`geraet_schluessel_hash()`, `db.php`), verglichen in konstanter Zeit; das
+Anmeldetoken bleibt bcrypt, denn es ist gestrecktes Passwort. Die Regel, nach
+der das Projekt seine Verfahren wählt, steht in `db.php` bei
+`GERAET_VERGLEICHSWERT`: aus einem Passwort abgeleitet → bcrypt; Zufall ab
+128 Bit → SHA-256; muss der Server es zurücklesen → AES-GCM mit dem
+Serverschlüssel. HMAC mit dem Serverschlüssel wurde erwogen und verworfen —
+kein Zugewinn gegen den Datenbankdieb, aber eine Abhängigkeit von `config.php`
+an einem Weg, der sie nicht braucht.
+
+**Der Preis, bewusst gezahlt (E-S5-42):** Ein Gerät, das vor dieser Fassung
+gekoppelt wurde, trägt einen bcrypt-Hash, der nie mehr passt — es wird nach
+dem Deploy mit `401` abgewiesen und **koppelt einmal neu**, nachdem sein Sync
+vollständig ist. Einen Umhash-Pfad gibt es absichtlich nicht: Ab 1.0 gibt es
+genau eine, frisch installierte Installation (R60), und Code für einen
+Bestand, den es nicht geben soll, wäre die Flickschusterei, die 1.0 vermeiden
+will. Der Drahtvertrag von `ingest.php` ist byteweise unverändert; die
+Android-Prüffälle merken nichts. Die Demo-Geräte der Fixture behalten ihre
+bcrypt-Zeichenketten und passen damit nie — für Geräte, deren Klartextschlüssel
+niemand hat, der richtige Zustand.
+
+**Was bewusst stehen bleibt:** `AUTH_VERGLEICHSWERT` für die Anmeldung, mit
+Kostenfaktor 10 gegen die 12 der gespeicherten Hashes — verdeckt heute nur von
+der Mindestdauer 0,35 s (V-S5-13, Backlog-Kandidat). Die Beschreibung des
+Kopplungswegs im JSON-Vertrag (1a), im Handbuch (12) und in der Technik-Doku
+zieht Paket D nach; hier ist nur berichtigt, was dieses Paket falsch gemacht
+hätte (Datenmodell, Jobkatalog, Antwortzeit- und Sicherheitstabelle).
+
+**Nachweis:** `tools/kopplungsprobe/` (neu): **75 Erwartungen** über echtes
+HTTP, 0 nicht erfüllt — Zustände, Frist, Gerätelimit, Antwortgleichheit
+(beide 401-Zweige 0,351 s, Rümpfe byteweise gleich), drei Töpfe, Obergrenze
+mit 1000 Zeilen, Dublettenschleife, Aufräumjob, Kaskade. `tools/ingestprobe/`
+**24/24** mit dem neuen Hash, `tools/geraeteprobe/` **39/39**. Die Migration
+auf einer Installation mit `pair_codes` gefahren (41 Kennungen im Register,
+`pair_codes` weg) und auf einer frischen Installation als übersprungen verbucht.
+
 ## [Web 12.9.4] — 2026-09-02
 
 ### Web — Behoben: Das geplante Komplett-Backup lief nie
@@ -143,6 +982,159 @@ einzeln nachgezählt und zugeordnet. Normative Dokumentation **272 → 48**
 (Handbuch 78 → 0). Offene Backlog-Punkte **45 → 7**, erledigte unberührt.
 `tools/` **188 → 40**. Historie (Changelog, Rahmenplan, Archiv,
 abgeschlossene Konzepte) **734 → 734**, wie vorgesehen.
+## [Werkzeug: Uhr-Prüfstand am lokalen Server] — 2026-09-03
+
+**Der Simulator kommt an einen Server auf `127.0.0.1` heran — aber nur über
+TLS mit einer CA, die er kennt.** Keine der drei Auslieferungen ist geändert,
+deshalb wieder keine Versionsnummer.
+
+Anlass war F-S5-11 aus dem S5-Konzept: „Erlaubt `makeWebRequest` im Simulator
+`http://127.0.0.1:8080`, oder verlangt er TLS?" Das Konzept sah zwei mögliche
+Antworten vor und für den Fall, dass beide Nein lauten, einen Rückfall auf
+eine Attrappe. Gemessen sind es drei, und die dritte trägt.
+
+### Werkzeug — `tools/netzprobe/`, eine Anfrage als Antwort
+
+Eine Connect-IQ-Probe mit eigener Anwendungs-ID, hervorgegangen aus
+`tools/eingabe-probe/`. Sie stellt **eine** Anfrage an `pair.php` und zeigt
+den Rücklaufcode. Der Beleg steht aber nicht auf dem Display, sondern im
+Zugriffsprotokoll des Servers — und erst beides zusammen unterscheidet die
+Fälle. `pair.php` als Ziel ist Absicht: Es lehnt `GET` mit 405 ab, und eine
+405 in der Konsole kann nur aus dem Endpunkt selbst kommen.
+
+Gemessen am 03.09.2026, SDK 9.2.0, fenix6pro:
+
+| Weg | Was die App sieht | Was beim Server ankommt |
+|---|---|---|
+| `http://127.0.0.1:8080` | **−1001** `SECURE_CONNECTION_REQUIRED` | **die Anfrage** |
+| `https://…`, selbstsigniert | 404 | nichts (`tlsv1 alert unknown ca`) |
+| `https://…`, CA im Systemspeicher | **405 von `pair.php`** | die Anfrage |
+
+**Die erste Zeile ist die, die man kennen muss.** Über blankes HTTP lässt der
+Simulator die Anfrage hinaus — der Server sieht sie und **führt sie aus** —,
+gibt der App die Antwort aber nicht. Wer nur auf den Rücklaufcode sieht, hält
+den Weg für tot und übersieht, dass die Gegenseite schon gehandelt hat. Bei
+einem `POST` auf einen schreibenden Endpunkt ist das kein Schönheitsfehler.
+
+### Werkzeug — `lokal_starten.sh` unterschreibt jetzt mit einer eigenen CA
+
+Das Zertifikat war selbstsigniert, und für `curl -k` war das genug. Der
+Simulator prüft und nimmt keinen unbekannten Aussteller. Das Skript legt
+deshalb eine eigene CA an, unterschreibt damit das Serverzertifikat
+(`subjectAltName=IP:127.0.0.1`) und legt die CA nach
+`/usr/local/share/ca-certificates/`. Für alle bisherigen Nutzer ändert sich
+nichts; `curl` **ohne** `-k` liefert jetzt zusätzlich 200 statt eines
+Zertifikatsfehlers. Die CA entsteht auf der Maschine und verlässt sie nicht.
+
+### Werkzeug — zwei Fehler in `pruefstand.sh bauen`, beide beim Benutzen gefunden
+
+**Die dokumentierte Aufrufform war kaputt.** `bauen fenix6pro -l 3` — so steht
+es in der LIESMICH — übergab `-l` als **Jungle-Pfad**; `monkeyc` brach mit
+„Missing argument for option: f" ab und druckte seine Hilfe. Der Aufruf mit
+eigenem Jungle funktionierte, der dokumentierte nicht, und ausgerechnet `-l 3`
+ist die strenge Typprüfung, die jede Abnahme verlangt. Ein zweites Argument,
+das mit `-` beginnt, ist jetzt ein Schalter und kein Pfad.
+
+**Und `bauen` setzte `java.awt.headless` nicht.** `reihe` tut es seit
+Langem, mit ausführlicher Begründung: `monkeyc` skaliert das Launcher-Symbol
+über `java.awt.BufferedImage` und braucht dafür eine Grafikumgebung; fehlt
+sie, endet der Lauf in einem `AWTError` **ohne** ERROR-Zeile. `umgebung()`
+leert `JAVA_TOOL_OPTIONS` sogar ausdrücklich. `fenix6pro` und `fr945` bauten
+durch — ihr Symbol passt exakt —, `venu3s` mit der Eingabe-Probe nicht, und
+der Ausfall sah nach einem Geräteproblem aus.
+
+### Werkzeug — 99 und 173 waren dasselbe Wort für zwei Zahlen
+
+Die LIESMICH sagte „99 Geräte mit `compiler.json`". Es sind **173**; die 99
+sind die Auswahl, die `geraeteklassen.py` daraus für Stufe I zieht (davon 20
+Vertreter für Stufe II). Wer den Bestand gegen die alte Zahl prüfte, hielt
+einen vollständigen Abzug für unvollständig. Stufe I auf dem heutigen Stand:
+**99 übersetzt, 0 fehlgeschlagen, 0 Warnungen, 0 Fehler.**
+
+## [Werkzeug: Containeraufbau und S5-Anker] — 2026-09-02
+
+**Der Prüfstand ließ sich nicht in einem Zug aufbauen, und niemand hatte es
+je aufgeschrieben.** Weder die Weboberfläche noch die Uhr-App noch die
+Android-Apps sind geändert, deshalb trägt dieser Eintrag keine
+Versionsnummer — wie schon die Einträge vom 30.08. und 02.09.2026.
+
+Anlass war die Vorbereitung der S5-Umsetzung: Bevor der erste Handgriff am
+Code geschieht, sollte belegt sein, dass jedes Prüfmittel des Repositoriums
+in dieser Umgebung tatsächlich läuft. Das war es nicht, und die Gründe waren
+nirgends festgehalten.
+
+### Werkzeug — `tools/containeraufbau/`, weil das Abbild drei Dinge nicht mitbringt
+
+`CLAUDE.md` 6 verlangt `./gradlew build` mit `ANDROID_HOME=/opt/android-sdk`;
+dieses Verzeichnis existierte nicht. Ohne Datenbankserver läuft keine der
+sechs Proben, die eine Installation brauchen. Und `python3-cryptography` lag
+zwar im Abbild, aber ohne `_cffi_backend` — der Import endet dann nicht mit
+einer Fehlermeldung, sondern mit einer Rust-Panik
+(`pyo3_runtime.PanicException`), und wer die liest, sucht den Fehler im
+eigenen Skript statt im Paket. Betroffen waren `kreislauf.py` und
+`einspielen.py`, also ausgerechnet die Regressionspflicht R24.
+
+Das Skript zieht nach, was fehlt, und **nur** das: MariaDB, Android-SDK 36,
+`librsvg2-bin`, `imagemagick`, `socat`, `cffi`. Den Uhr-Prüfstand baut es
+ausdrücklich nicht — der holt sein SDK selbst und braucht dafür eine Adresse,
+die nicht im Repositorium steht.
+
+### Werkzeug — `lokal_einrichten.sh`, weil „im Browser" hier nicht geht
+
+`tools/referenzdatensatz/einspielen/LIESMICH.md` sagte: „Eingerichtet wird
+**einmal** über `install.php` im Browser; das macht dieses Skript nicht." In
+einer Wegwerf-Umgebung ist der Browserweg genau der, den man nicht gehen kann
+— und dann steht man vor einer leeren Datenbank und rät, welche Felder das
+Formular wollte.
+
+Das neue Skript geht **denselben** Weg über HTTP: dieselbe Seite, dasselbe
+Formular, dieselben Prüfungen einschließlich der Nachweisdatei aus M1-11. Was
+es nicht nachbaut, ist der Browserschritt — Passwort, Salz, Inhaltsschlüssel
+und beide Hüllen entstehen weiter ausschließlich mit der WebCrypto des
+Browsers (E-P1-10); dafür ruft es `passwort_setzen.mjs`. Das Demo-Konto
+entsteht über `demo_anlegen()`, dieselbe Funktion, die der Knopf im
+Adminbereich ruft. Kein zweiter Weg, den niemand pflegt.
+
+Die Vorgabewerte sind nicht frei gewählt, sondern die, die `kreislauf.py` und
+`aufnehmen.mjs` ohne Schalter erwarten. Damit läuft nach einem Aufruf jedes
+Werkzeug ohne Zusatzangabe.
+
+### Werkzeug — Wo `CIQ_GERAETE_URL` wohnt, stand nirgends
+
+Vier Dokumente sagten „muss erfragt werden" — `CLAUDE.md` 6,
+`docs/Lizenzen.md`, `docs/Technik.md` und beide LIESMICH der betroffenen
+Werkzeuge. Der Rahmenplan sagte daneben schon das Richtige („sie gehört in die
+Umgebungsvariablen der Arbeitsumgebung"), aber an einer durchgestrichenen,
+erledigten Zeile, die niemand mehr liest. Wer neu anfing, fragte deshalb nach
+einer Adresse, die längst hinterlegt war.
+
+Seit dem 03.09.2026 liegt sie in den Umgebungsvariablen. Die fünf Stellen
+sagen das jetzt, samt der Probe, die sie nicht ins Protokoll schreibt
+(`[ -n "$CIQ_GERAETE_URL" ]` und die Zeichenzahl statt des Werts) und samt
+dem Grund, aus dem sie trotzdem einmal leer sein kann: Umgebungsvariablen
+kommen beim **Start** eines Containers herein — eine Sitzung, die vor der
+Änderung begann, erbt sie nicht nach. Genau dieser Fall ist hier eingetreten
+und hat eine Viertelstunde gekostet.
+
+**Die Adresse selbst steht weiterhin nirgends im Repositorium**; gegengeprüft
+mit `git grep` über den ganzen Baum.
+
+### Werkzeug — `tools/s5-anker/`, weil Zeilennummern Belege sind und keine Wegweiser
+
+Das S5-Konzept belegt jede Aussage mit einer Fundstelle samt Zeilennummer.
+Diese Nummern stimmen — nachgelesen wurden alle 38 —, aber sie halten nur bis
+zum nächsten Paket, das dieselben Dateien anfasst. S7 ersetzt „Sicherung"
+durch „Backup" und berührt dabei `einstellungen.php` (46 Treffer),
+`jobs_lib.php` (22), `update.php` (16), `Handbuch.md` (71) und `Technik.md`
+(114).
+
+Das Konzept deswegen umzuschreiben wäre die falsche Antwort. Stattdessen
+83 Muster, die dieselben Stellen am **Text** finden, mit ihrer Sollzeile
+daneben. Der Lauf sagt dann, was gewandert ist (belanglos) und was
+**verschwunden** ist — und Letzteres ist die eigentliche Auskunft: Dort hat
+ein anderes Paket eine Annahme des Konzepts weggeräumt, und der zugehörige
+Absatz ist neu zu lesen, bevor jemand danach baut. Das Verzeichnis wird mit
+dem Abschluss von S5 gelöscht, wie das Konzept selbst (R62).
 
 ## [Werkzeug: Uhr-Prüfstand] — 2026-09-02
 

@@ -292,8 +292,8 @@ ui_seite_start(['titel' => 'Demo-Konto']);
       <ul>
         <li>Diensttage, Einsätze, Ruhesegmente, Spuren, Stammdaten — vollständig
             ersetzt.</li>
-        <li>Geräte, Kopplungscodes, Papierkorb und Sperrliste — auch das, was
-            Besucher angelegt haben.</li>
+        <li>Geräte, offene Kopplungssitzungen, Papierkorb und Sperrliste — auch
+            das, was Besucher angelegt haben.</li>
         <li>Konto- und Schlüsselmaterial: E-Mail, Passwort, Salz und beide
             Schlüsselhüllen werden aus der Fixture überschrieben. Selbst eine
             unerwartet gelungene Änderung der Konto-Identität bliebe damit

@@ -53,25 +53,32 @@ if (strlen($raw) > $CFG['app']['max_body_bytes']) json_out(['error' => 'too_larg
 /* --- Geraet authentifizieren -------------------------------------------------
  *
  * ANTWORTZEIT (M4-07): Bei unbekannter Gerätekennung kam die Abweisung frueher
- * sofort, bei bekannter lief erst eine bcrypt-Pruefung. Der Unterschied ist
- * ohne jede Zugangsdaten messbar und beantwortet die Frage, welche
- * Geraetekennungen es gibt — und die Kennung ist die Haelfte dessen, was ein
- * Upload braucht. Deshalb laeuft auch der unbekannte Zweig gegen einen festen
- * Vergleichswert (AUTH_VERGLEICHSWERT, db.php).
+ * sofort, bei bekannter lief erst eine Pruefung des Schluessels. Der
+ * Unterschied ist ohne jede Zugangsdaten messbar und beantwortet die Frage,
+ * welche Geraetekennungen es gibt — und die Kennung ist die Haelfte dessen,
+ * was ein Upload braucht. Deshalb laeuft auch der unbekannte Zweig gegen einen
+ * festen Vergleichswert.
+ *
+ * SEIT WEB 13.0.0 IST DER SCHLUESSEL SHA-256, NICHT BCRYPT (S5, E-S5-42;
+ * die Verfahrenswahl steht in db.php bei GERAET_VERGLEICHSWERT). Der
+ * Schluessel sind 24 Zufallsbytes — bcrypt bremste hier nichts als den Server,
+ * 228 ms je Upload. Der Blindvergleich bleibt trotzdem: Beide Zweige gehen
+ * dieselben Schritte, und hash_equals() vergleicht in konstanter Zeit. Ein
+ * bcrypt-Hash aus der Zeit davor passt nie mehr; das Geraet koppelt neu.
  *
  * Die Abfolge bleibt sonst unveraendert: Der Fehlerschluessel 'auth' deckt
  * beide Faelle ab und sagt nicht, welcher es war.
  */
-$deviceId = $_SERVER['HTTP_X_DEVICE_ID'] ?? '';
-$apiKey   = $_SERVER['HTTP_X_API_KEY']   ?? '';
+$deviceId = (string)($_SERVER['HTTP_X_DEVICE_ID'] ?? '');
+$apiKey   = (string)($_SERVER['HTTP_X_API_KEY']   ?? '');
 $st = db()->prepare('SELECT id, user_id, api_key_hash, active FROM devices WHERE device_id = ?');
 $st->execute([$deviceId]);
 $dev = $st->fetch();
 if (!$dev) {
-    password_verify($apiKey, AUTH_VERGLEICHSWERT);
+    geraet_schluessel_gueltig($apiKey, GERAET_VERGLEICHSWERT);
     json_out(['error' => 'auth'], 401);
 }
-if (!password_verify($apiKey, $dev['api_key_hash'])) json_out(['error' => 'auth'], 401);
+if (!geraet_schluessel_gueltig($apiKey, (string)$dev['api_key_hash'])) json_out(['error' => 'auth'], 401);
 if (!(int)$dev['active']) json_out(['error' => 'device_disabled'], 403);
 
 /* Demo-Konto: faelliger Reset VOR der Verarbeitung (E-P1-18).
@@ -237,12 +244,45 @@ try {
             $ownerId = (int)$existing['id'];
             $ownerType = 'mission';
         } else {
-        // Upsert des Einsatzes (idempotent ueber device_id+client_ref)
+        /* Upsert des Einsatzes (idempotent ueber device_id+client_ref)
+         *
+         * ---- COALESCE UND NICHT VALUES: EIN SPAETES PAKET DARF NICHTS
+         *      LOESCHEN (Web 13.0.1) ------------------------------------------
+         *
+         * Bis 13.0.0 stand hier `ended_at = VALUES(ended_at)` und dasselbe fuer
+         * distance_m und ascent_m — waehrend `final` schon immer mit GREATEST
+         * geschuetzt war. Die drei Spalten sind aber genau die, die ein
+         * NICHT-finales Paket gar nicht traegt: Solange der Einsatz laeuft,
+         * kennt die Uhr weder Ende noch Strecke noch Anstieg und sendet null.
+         *
+         * Kommt so ein Paket NACH dem finalen an, setzte der Upsert alle drei
+         * auf NULL zurueck — und `final` blieb wegen GREATEST auf 1. Uebrig
+         * blieb ein abgeschlossener Einsatz ohne Ende, ohne Strecke, ohne
+         * Anstieg. Kein Fehler, keine Meldung, die Antwort lautete "ok".
+         *
+         * DASS DAS VORKOMMT, IST KEIN GEDANKENSPIEL: Jede Wiederholung eines
+         * frueheren Teilstuecks ist so ein Paket. Die Ingestprobe schickt
+         * genau das seit S2 (Teil 3, "Wiederholung unterhalb n_original") —
+         * sie hat nur nie hingesehen. Mit dem Nachsende-Speicher der
+         * Handy-App (S5-Zusatz, E2) wird die Reihenfolge vollends
+         * unzuverlaessig: Was beim Funkabriss liegenblieb, geht hinterher
+         * heraus, und zwar nach dem, was inzwischen gesendet wurde.
+         *
+         * COALESCE(VALUES(x), x) heisst: Ein Wert ueberschreibt, ein NULL
+         * laesst stehen. Eine Berichtigung bleibt damit moeglich (die Uhr
+         * sendet ein anderes Ende, und das gilt), nur das Vergessen ist weg.
+         * Der umgekehrte Fall — ein Ende soll wieder verschwinden — ist keiner:
+         * `final` geht aus demselben Grund nie zurueck.
+         *
+         * Gefunden bei der Gegenlesung des S5-Zusatzes (B5.3), nachgestellt
+         * gegen eine laufende Installation, seither Teil 7 der Ingestprobe. */
         $pdo->prepare('INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at, distance_m, ascent_m, final)
                        VALUES (?,?,?,?,?,?,?,?,?)
                        ON DUPLICATE KEY UPDATE
-                         ended_at = VALUES(ended_at), distance_m = VALUES(distance_m),
-                         ascent_m = VALUES(ascent_m), final = GREATEST(final, VALUES(final)),
+                         ended_at   = COALESCE(VALUES(ended_at),   ended_at),
+                         distance_m = COALESCE(VALUES(distance_m), distance_m),
+                         ascent_m   = COALESCE(VALUES(ascent_m),   ascent_m),
+                         final = GREATEST(final, VALUES(final)),
                          id = LAST_INSERT_ID(id)')
             ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt,
                        $distanceM, $ascentM, $final]);
@@ -362,10 +402,22 @@ try {
         }
         }   // Ende: nicht-manueller Einsatz
     } else { // rest_segment
+        /* COALESCE wie beim Einsatz oben (Web 13.0.1): Ein spaeter
+         * eintreffendes nicht-finales Paket traegt kein Ende und darf keines
+         * loeschen.
+         *
+         * WIE ES SICH ZEIGTE: Die Spurenseite eines Diensttags setzt die Zeile
+         * eines Ruhe-Segments aus zwei unabhaengigen Angaben zusammen —
+         * "12:00 – 13:00 Uhr" aus `ended_at`, und den Zusatz "· laeuft noch"
+         * aus `final` (assets/schneiden.js 341-346). Nach dem Fehler standen
+         * beide im Widerspruch: "12:00 – offen Uhr" OHNE "laeuft noch" — ein
+         * Segment, das der Server fuer abgeschlossen haelt und dem trotzdem das
+         * Ende fehlt. Wer die Seite las, sah einen Widerspruch ohne Ursache. */
         $pdo->prepare('INSERT INTO rest_segments (user_id, device_id, client_ref, day_id, started_at, ended_at, final)
                        VALUES (?,?,?,?,?,?,?)
                        ON DUPLICATE KEY UPDATE
-                         ended_at = VALUES(ended_at), final = GREATEST(final, VALUES(final)),
+                         ended_at = COALESCE(VALUES(ended_at), ended_at),
+                         final = GREATEST(final, VALUES(final)),
                          id = LAST_INSERT_ID(id)')
             ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt, $final]);
         $ownerId = (int)$pdo->lastInsertId();
