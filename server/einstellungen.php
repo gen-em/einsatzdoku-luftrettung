@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Der umgepackte Inhaltsschlüssel gehört nicht zu diesem Konto — '
                    . 'das Passwort wurde NICHT geändert. Bitte die Seite neu laden '
                    . 'und erneut versuchen. Sollte das wiederholt auftreten, bitte '
-                   . 'nichts weiter unternehmen, bevor eine Sicherung erstellt ist.';
+                   . 'nichts weiter unternehmen, bevor ein Backup erstellt ist.';
         } else {
             // Passwort und Huelle gemeinsam — sonst entstuende ein Konto, das
             // sich zwar anmelden laesst, dessen Angaben aber unlesbar waeren.
@@ -1640,12 +1640,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
     <?php ui_titelzeile(['titel' => 'Backup']); ?>
     <?php /* DREI ZEILEN (E-P3-35). Was in der Datei steht und warum das
              Passwort zählt, gehört an die Handlung — es steht in der Karte
-             „Sicherung erstellen", direkt über der Passwortwahl. */ ?>
+             „Backup erstellen", direkt über der Passwortwahl. */ ?>
     <p class="seiten-erklaerung">Sichert <strong>alle</strong> deine Daten in eine
        einzelne Datei (<code>.edbak</code>), verschlüsselt mit einem Passwort
        deiner Wahl. Ver- und Entschlüsselung passieren vollständig in deinem
-       Browser — der Server sieht die Inhalte nie. Dadurch lässt sich eine
-       Sicherung auch in ein anderes Konto einspielen.</p>
+       Browser — der Server sieht die Inhalte nie. Dadurch lässt sich ein
+       Backup auch in ein anderes Konto einspielen.</p>
 
     <div id="lockwarn" hidden>
       <?php ui_meldung(
@@ -1673,7 +1673,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
          schwächer geschützt, und es ist ein Passwort weniger zu verwahren.
          <strong>Nicht</strong> geeignet, wenn die Datei an jemand anderen gehen soll.</p>
 
-      <?php ui_feld(['label' => 'Passwort für die Sicherung', 'id' => 'bpw1',
+      <?php ui_feld(['label' => 'Passwort für das Backup', 'id' => 'bpw1',
                      'art' => 'password', 'klasse' => 'bpw1-feld',
                      'klein' => 'Mindestens 10 Zeichen.',
                      'attr' => ' minlength="10" autocomplete="new-password"']); ?>
@@ -1683,22 +1683,22 @@ ui_seite_start(['titel' => 'Einstellungen']);
                        'art' => 'password', 'attr' => ' autocomplete="new-password"']); ?>
       </div>
       <div class="listen-form-fuss">
-        <?= ui_knopf(['text' => 'Sicherung erstellen', 'art' => 'primaer',
+        <?= ui_knopf(['text' => 'Backup erstellen', 'art' => 'primaer',
                       'typ' => 'button', 'attr' => ' id="expbtn"']) ?>
       </div>
       <div id="expstate" class="zustandszeile"></div>
     <?php ui_karte_ende(); ?>
 
     <?php ui_karte_start(['titel' => 'Backup einspielen']); ?>
-      <p class="feld-hinweis">Spielt eine Sicherung in <strong>dieses</strong> Konto
+      <p class="feld-hinweis">Spielt ein Backup in <strong>dieses</strong> Konto
          zurück. Vorhandene Einsätze, Tage und Stammdaten bleiben unangetastet —
          das Einspielen ergänzt nur Fehlendes und ist gefahrlos wiederholbar.</p>
       <?php ui_feld(['label' => 'Datei (.edbak)', 'id' => 'bfile', 'name' => 'bfile',
                      'art' => 'file', 'pflicht' => true, 'attr' => ' accept=".edbak"']); ?>
-      <?php ui_feld(['label' => 'Passwort der Sicherung', 'id' => 'ipw',
+      <?php ui_feld(['label' => 'Passwort des Backups', 'id' => 'ipw',
                      'art' => 'password', 'attr' => ' autocomplete="off"']); ?>
       <div class="listen-form-fuss">
-        <?= ui_knopf(['text' => 'Sicherung einspielen', 'art' => 'primaer',
+        <?= ui_knopf(['text' => 'Backup einspielen', 'art' => 'primaer',
                       'typ' => 'button', 'attr' => ' id="impbtn"']) ?>
       </div>
       <?php /* Herkunft der geöffneten Datei (M5-13). Steht ÜBER der
@@ -1708,19 +1708,19 @@ ui_seite_start(['titel' => 'Einstellungen']);
       <div id="impstate" class="zustandszeile"></div>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Von der Administration freigegebene Sicherung (A8.6) -------
+    <?php /* ---- Von der Administration freigegebenes Backup (A8.6) -------
              Erscheint NUR, wenn tatsächlich eine Freigabe vorliegt. Ein
              dauerhaft sichtbarer, meist leerer Block wäre eine Frage, die man
              sich bei jedem Besuch neu stellt.
 
              Der Fall dahinter: Das Konto wurde gelöscht und neu aufgesetzt.
-             Die geschützten Angaben der alten Sicherung hängen am ALTEN
+             Die geschützten Angaben des alten Backups hängen am ALTEN
              Inhaltsschlüssel; nur der Wiederherstellungsschlüssel öffnet ihn,
              und der liegt ausschliesslich hier. Deshalb kann die Administration
              ein solches Paket nicht einspielen — sie gibt es frei, und das
              Umschlüsseln passiert in diesem Browser. */ ?>
     <div id="freigabebox" hidden>
-      <?php ui_karte_start(['titel' => 'Für dich freigegebene Sicherung']); ?>
+      <?php ui_karte_start(['titel' => 'Für dich freigegebenes Backup']); ?>
         <p class="feld-hinweis" id="freigabeinfo"></p>
         <?php /* DIE HÜLLE TRÄGT DIE KENNUNG, NICHT DAS FELD (F-S2-F).
                  `freigabeLaden()` blendet die Frage nach dem
@@ -1739,12 +1739,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
                        'platzhalter' => 'XXXX-XXXX-XXXX-XXXX',
                        'klein' => 'Der Schlüssel, der bei der Ersteinrichtung einmalig '
                                 . 'angezeigt wurde — nicht das Kontopasswort. Ohne ihn lassen '
-                                . 'sich die geschützten Angaben dieser Sicherung von niemandem '
+                                . 'sich die geschützten Angaben dieses Backups von niemandem '
                                 . 'mehr öffnen.',
                        'attr' => ' autocomplete="off"']); ?>
         </div>
         <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => 'Sicherung einspielen', 'art' => 'primaer',
+          <?= ui_knopf(['text' => 'Backup einspielen', 'art' => 'primaer',
                         'typ' => 'button', 'attr' => ' id="freigabebtn"']) ?>
         </div>
         <div id="freigabestate" class="zustandszeile"></div>
@@ -1759,14 +1759,14 @@ ui_seite_start(['titel' => 'Einstellungen']);
     <?php ui_krypto_bootstrap(['keycheck' => true, 'csrf' => true,
                                'guete' => true, 'einzug' => '    ']); ?>
     <?php /* patient.js liefert die gemeinsame Entschluesselungsschleife
-             (Baustein B8), die der Sicherungslauf seit Web 4.6.0 benutzt. */ ?>
+             (Baustein B8), die der Backup-Lauf seit Web 4.6.0 benutzt. */ ?>
     <?php /* html.js liefert EdHtml.escape() — melde() setzt fremden Text in
              eine Meldung, und der muss maskiert sein: In „Import
              fehlgeschlagen: …" steckt eine Fehlermeldung, die aus einer
              fremden Datei stammen kann. */ ?>
     <script src="<?= asset('assets/html.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
-    <?php /* zip.js: Seit Containerfassung 4 (S2/AP5) ist eine Sicherung ein
+    <?php /* zip.js: Seit Containerfassung 4 (S2/AP5) ist ein Backup ein
              ZIP mit versiegelten Teilen — geschrieben beim Sichern, gelesen
              beim Einspielen. Dieselbe vendorierte Bibliothek, die der Export
              und der Import schon benutzen (assets/vendor/zipjs.min.js,
@@ -1778,7 +1778,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
     // Eigenes Konto — nur fuer den Vergleich mit der Herkunft der Datei (M5-13).
     const KONTO_MAIL = <?= json_encode($userEmail) ?>;
     const KONTO_NAME = <?= json_encode($userName) ?>;
-    /* Die Fassung der Anwendung wandert ins Manifest der Sicherung: Wer eine
+    /* Die Fassung der Anwendung wandert ins Manifest des Backups: Wer eine
        Datei in zwei Jahren wiederfindet, soll ihr ansehen, womit sie
        entstanden ist. */
     const WEB_VERSION = <?= json_encode(WEB_VERSION) ?>;
@@ -1794,7 +1794,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
 
     /* ---- Zustandszeilen als Meldungen (E-P3-16) --------------------------
      *
-     * Die Sicherung meldet viel: Fortschritt („Daten werden geladen …"),
+     * Das Backup meldet viel: Fortschritt („Daten werden geladen …"),
      * Fehlschläge („Das ist nicht dein Kontopasswort") und Erfolge („Fertig:
      * 82 Einsätze"). Bis Web 9.7.1 stand alles in derselben grauen Zeile —
      * ein misslungener Export sah aus wie ein Zwischenstand.
@@ -1852,7 +1852,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
      * Hülle öffnen lassen. Passt es nicht, ist es das falsche Passwort.
      *
      * WARUM ES NUR HIER ANGEBOTEN WIRD UND NICHT BEIM EXPORT
-     * Eine Sicherung ist für einen selbst. Eine Exportdatei ist ausdrücklich
+     * Ein Backup ist für einen selbst. Eine Exportdatei ist ausdrücklich
      * zum Weitergeben gedacht — wer sie mit seinem Kontopasswort verschlüsselt,
      * gibt es dem Empfänger mit. */
     const bpw1 = document.getElementById('bpw1');
@@ -1872,7 +1872,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
          .firstChild` traf damit den Zeilenumbruch statt der Beschriftung. */
       document.querySelector('label[for="bpw1"]').textContent = an
         ? 'Kontopasswort'
-        : 'Passwort für die Sicherung';
+        : 'Passwort für das Backup';
       document.querySelector('.bpw1-feld .feld-klein').hidden = an;
       bpwGuete.hidden = an;
       bpw1.value = '';
@@ -1989,7 +1989,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
           /* NACHZÄHLEN, WAS ANGEKOMMEN IST (S2/AP5b).
              Die Schleife rückt um FENSTER weiter, gleichgültig wie viel
              zurückkam. Lieferte ein Fenster weniger — aus welchem Grund auch
-             immer —, fehlten diese Einträge in der Sicherung, und die
+             immer —, fehlten diese Einträge im Backup, und die
              Meldung am Ende lautete trotzdem „Fertig". Der Endpunkt weist
              eine zu große `anzahl` heute mit 400 ab, statt still zu kürzen;
              diese Zeile ist die zweite Schranke, die nicht davon abhängt,
@@ -2212,7 +2212,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
           + (unlesbar
               ? ` ACHTUNG: ${unlesbar} Einsätze ließen sich nicht entschlüsseln. `
                 + 'Ihre Angaben sind verschlüsselt in der Datei enthalten und bleiben '
-                + 'lesbar, wenn die Sicherung in DIESES Konto zurückgespielt wird. '
+                + 'lesbar, wenn das Backup in DIESES Konto zurückgespielt wird. '
                 + 'Bitte klären, warum der Schlüssel nicht passt, bevor weitere '
                 + 'Schritte unternommen werden.'
               : '')
@@ -2236,7 +2236,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
 
     /* ---- Rückmeldung einer Wiederherstellung, an EINER Stelle (E-S1-08) --
      *
-     * Zwei Wege spielen ein — die eigene Datei und die freigegebene Sicherung
+     * Zwei Wege spielen ein — die eigene Datei und das freigegebene Backup
      * der Administration —, und beide melden dasselbe. Bis Web 7.3.1 hatten
      * sie zwei getrennte Textbausteine, und die liefen auseinander: Der zweite
      * fasste alle Überspringgründe zu „bereits vorhanden oder unbrauchbar"
@@ -2250,7 +2250,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
      *  - Was in den PAPIERKORB gegangen ist. Diese Einträge stecken in den
      *    Zahlen oben mit drin; ohne den Satz wären sie unauffindbar — sie
      *    stehen ja gerade nicht in der Tagesliste.
-     *  - Dass die Frist NEU beginnt (E-S1-03). Wer eine alte Sicherung
+     *  - Dass die Frist NEU beginnt (E-S1-03). Wer ein altes Backup
      *    einspielt, würde sonst annehmen, seine Einträge verfielen morgen.
      */
     const GRUND_TEXT = {
@@ -2304,7 +2304,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
     }
 
     // ---- Import: läuft vollständig im Browser ----
-    /* ---- Eine mehrteilige Sicherung öffnen (S2/AP5, Containerfassung 4) --
+    /* ---- Ein mehrteiliges Backup öffnen (S2/AP5, Containerfassung 4) --
      *
      * Reihenfolge, und jeder Schritt hat einen Grund:
      *
@@ -2330,25 +2330,25 @@ ui_seite_start(['titel' => 'Einstellungen']);
 
       if (!nach.has('manifest.edbak')) {
         await leser.close();
-        throw new Error('Diese Datei ist ein Archiv, aber keine Sicherung dieser '
+        throw new Error('Diese Datei ist ein Archiv, aber kein Backup dieser '
           + 'Anwendung: Das Manifest fehlt. Womöglich ist es ein Export (CSV/Excel) '
-          + 'statt einer Sicherung.');
+          + 'statt eines Backups.');
       }
       const mBytes = await holen('manifest.edbak');
       const kopf = EdCrypto.teilKopf(mBytes);
       const vorgang = await EdCrypto.backupSchluessel(pw, kopf.iter, kopf.salt);
       const manifest = await EdCrypto.openTeilJson(vorgang, mBytes,
-        EdCrypto.aadManifest(), 'Das Manifest der Sicherung');
+        EdCrypto.aadManifest(), 'Das Manifest des Backups');
 
       const teile = manifest.teile || [];
       if (!teile.length || teile[0].art !== 'kopf') {
         await leser.close();
-        throw new Error('Das Manifest nennt keinen Kopf — die Sicherung ist unvollständig.');
+        throw new Error('Das Manifest nennt keinen Kopf — das Backup ist unvollständig.');
       }
       const fehlend = teile.filter(t => !nach.has(t.name)).map(t => t.name);
       if (fehlend.length) {
         await leser.close();
-        throw new Error(`Der Sicherung fehlen ${fehlend.length} von ${teile.length} `
+        throw new Error(`Dem Backup fehlen ${fehlend.length} von ${teile.length} `
           + `Teilen: ${fehlend.slice(0, 3).join(', ')}`
           + (fehlend.length > 3 ? ' …' : '')
           + '. Es wurde nichts geändert.');
@@ -2360,12 +2360,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
         /* DIE PRÜFSUMME ZUERST. Sie sagt deutlicher, was los ist, als die
            Zusatzdaten: „dieses Teil ist nicht das, das hier stehen soll"
            gegen „ließ sich nicht öffnen". Beide fangen dieselben Fälle; für
-           wen eine Sicherung nicht aufgeht, ist der Unterschied der zwischen
+           wen ein Backup nicht aufgeht, ist der Unterschied der zwischen
            zehnmal Passwort tippen und die richtige Datei suchen. */
         if (t.sha256 && await EdCrypto.sha256Hex(roh) !== t.sha256) {
           throw new Error(`Das Teil ${t.name} ist nicht das, das laut Manifest hier `
             + 'stehen soll. Es ist verändert, vertauscht oder stammt aus einer '
-            + 'anderen Sicherung. Es wurde nichts geändert.');
+            + 'anderen Backup. Es wurde nichts geändert.');
         }
         return EdCrypto.openTeilJson(vorgang, roh,
           EdCrypto.aadTeil(manifest.kennung, t.name, index + 1, teile.length),
@@ -2392,7 +2392,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
         impState.textContent = 'Datei wird gelesen…';
         const bytes = new Uint8Array(await f.arrayBuffer());
         /* DREI ANTWORTEN STATT EINER (S2/AP5). `isBackupFile()` sagt seit
-           Fassung 4 auch zu einem ZIP ja — die mehrteilige Sicherung IST
+           Fassung 4 auch zu einem ZIP ja — das mehrteilige Backup IST
            eins. Damit ein versehentlich gewaehltes CSV-Archiv trotzdem eine
            brauchbare Auskunft bekommt, entscheidet hier `dateiArt()`:
            'zip' = mehrteilig, 'edbak' = einteilig, 'teil' = ein Stueck
@@ -2403,8 +2403,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
           return;
         }
         if (art === 'teil') {
-          melde(impState, 'Das ist ein einzelnes Teil einer mehrteiligen Sicherung, '
-                        + 'nicht die Sicherung selbst. Bitte die vollständige '
+          melde(impState, 'Das ist ein einzelnes Teil eines mehrteiligen Backups, '
+                        + 'nicht das Backup selbst. Bitte die vollständige '
                         + '.edbak-Datei auswählen.', 'fehler');
           return;
         }
@@ -2416,7 +2416,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
         let data;
         if (art === 'zip') {
           fassung4 = await fassung4Oeffnen(pw, bytes);
-          impState.textContent = `Sicherung vom ${(fassung4.manifest.erzeugt_am || '')
+          impState.textContent = `Backup vom ${(fassung4.manifest.erzeugt_am || '')
             .slice(0, 10)} mit ${fassung4.eintragsteile.length} Eintrags- und `
             + `${fassung4.spurteile.length} Spurteilen — Kopf wird geöffnet…`;
           data = await fassung4.teilOeffnen(0);
@@ -2437,7 +2437,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
               ? ` vom ${wann.toLocaleDateString('de-DE')}, ${wann.toLocaleTimeString('de-DE',
                   { hour: '2-digit', minute: '2-digit' })} Uhr` : '';
             const fremd = data.user.email && data.user.email !== KONTO_MAIL;
-            herkunftEl.textContent = `Sicherung${zeit} aus dem Konto ${wer}.`
+            herkunftEl.textContent = `Backup${zeit} aus dem Konto ${wer}.`
               + (fremd ? ` Das ist NICHT das angemeldete Konto (${KONTO_MAIL}) — die `
                        + 'geschützten Angaben werden dabei für dieses Konto neu '
                        + 'verschlüsselt.' : '');
@@ -2486,8 +2486,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
          *
          * WAS DIESE ZEILEN GEKOSTET HABEN: Bis hierher stand hier nur „aus
          * einem anderen Konto". Das ist bei Fassung 4 der REGELFALL des
-         * Einspielens, und die Rückfrage kam damit bei jeder fremden
-         * Sicherung — auch bei einer, in der jeder Einsatz seine Angaben im
+         * Einspielens, und die Rückfrage kam damit bei jedem fremden
+         * Backup — auch bei einem, in dem jeder Einsatz seine Angaben im
          * Klartext mitbringt. Der Kreislauftest lief 300 Sekunden ins Leere,
          * weil sein Browser die Frage verneinte; ein Mensch hätte eine
          * Warnung vor einem Verlust gelesen, der nicht stattfindet.
@@ -2513,9 +2513,9 @@ ui_seite_start(['titel' => 'Einstellungen']);
              lässt sich im Browser dauerhaft abschalten („keine weiteren
              Dialoge dieser Seite anzeigen") — genau das war der Grund, aus
              dem es confirm.js überhaupt gibt. Diese beiden Stellen im
-             Sicherungsbereich waren die letzten, die daran vorbeigingen. */
+             Backup-Bereich waren die letzten, die daran vorbeigingen. */
           if (!await window.edConfirm(
-              `Einsätze dieser Sicherung können geschützte Angaben enthalten, `
+              `Einsätze dieses Backups können geschützte Angaben enthalten, `
               + `die beim Erstellen nicht entschlüsselt werden konnten. `
               + `${w}${woher} Solche Angaben werden übernommen, sind hier aber `
               + `voraussichtlich NICHT lesbar. Trotzdem fortfahren?`,
@@ -2588,7 +2588,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
          * keinen Datensatz gibt, und eine Spur, die der Server ablehnt.
          * Beides ist kein Abbruch, aber beides gehört in die Rückmeldung:
          * Eine Wiederherstellung, die eine Spur still verliert, ist genau
-         * das, wovor eine Sicherung schützen soll. */
+         * das, wovor ein Backup schützen soll. */
         let spurenGeschrieben = 0, spurenUebersprungen = 0;
         const spurenAbgelehnt = [];
         let ohneZiel = 0;
@@ -2670,7 +2670,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
       }
     });
 
-    /* ---- Freigegebene Sicherung einspielen (A8.6) ----------------------
+    /* ---- Freigegebenes Backup einspielen (A8.6) ----------------------
      *
      * Ablauf, vollständig im Browser:
      *   1. Wiederherstellungsschlüssel -> Schlüssel-Hex (EdCrypto.recoveryKeyHex)
@@ -2698,8 +2698,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
         const woher = d.freigabe.herkunft_email
           ? ` Sie stammt aus dem Konto ${d.freigabe.herkunft_email}.` : '';
         /* „davon im Papierkorb" (E-S1-02). Die drei Zahlen davor zählen den
-           Papierkorb MIT — seit Nutzlast 7 steht er in jeder Sicherung. Fehlt
-           der Block (Sicherung von vor S1), bleibt der Zusatz weg: „nicht
+           Papierkorb MIT — seit Nutzlast 7 steht er in jedem Backup. Fehlt
+           der Block (Backup von vor S1), bleibt der Zusatz weg: „nicht
            erhoben" ist etwas anderes als „nichts drin". */
         const pk = u.papierkorb;
         const pkText = pk
@@ -2709,7 +2709,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
             + `beginnt dabei neu.`
           : '';
         document.getElementById('freigabeinfo').textContent =
-          `Die Administration hat eine Sicherung vom `
+          `Die Administration hat ein Backup vom `
           + `${(d.freigabe.erzeugt || '').replace('T', ' ').replace('Z', ' UTC')} `
           + `für dich freigegeben: ${u.einsaetze || 0} Einsätze, `
           + `${u.diensttage || u.flugtage || 0} Diensttage, ${u.ruhezeiten || 0} Ruhezeiten.`
@@ -2754,7 +2754,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
             return;
           }
           if (!fgPaket.pat_wrap_rc) {
-            fgState.textContent = 'Der Sicherung fehlt die Wiederherstellungs-Hülle — '
+            fgState.textContent = 'Dem Backup fehlt die Wiederherstellungs-Hülle — '
               + 'die geschützten Angaben lassen sich nicht mehr öffnen.';
             return;
           }
@@ -2763,8 +2763,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
           try { altCk = await EdCrypto.decrypt(rcKey, fgPaket.pat_wrap_rc); }
           catch (e) { altCk = null; }
           if (!altCk) {
-            fgState.textContent = 'Der Wiederherstellungsschlüssel passt nicht zu dieser '
-              + 'Sicherung. Es wurde nichts eingespielt.';
+            fgState.textContent = 'Der Wiederherstellungsschlüssel passt nicht zu diesem '
+              + 'Backup. Es wurde nichts eingespielt.';
             return;
           }
           eigenerCk = await ck();

@@ -11,6 +11,139 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.9.4] — 2026-09-02
+
+### Web — Behoben: Das geplante Komplett-Backup lief nie
+
+Gefunden beim Prüfen der Begriffsumstellung, behoben in einem eigenen
+Schritt — er hat mit ihr nichts zu tun und soll getrennt nachvollziehbar
+bleiben (Backlog Nr. 89).
+
+`job_komplett()` in `jobs_lib.php` trug `float $reserve = KOMP_RESERVE_S`
+als **Vorgabewert eines Parameters**. Die Konstante steht in
+`komplett_lib.php`, und diese Datei wird erst **im Rumpf** geladen — so, wie
+`jobs_lib.php` es mit allen schweren Abhängigkeiten hält, damit eine
+gewöhnliche Anfrage sie nicht mitschleppt. PHP wertet Vorgabewerte aber
+**beim Aufruf** aus, also vor der ersten Zeile des Rumpfs. Der Aufruf ohne
+viertes Argument — und genau so ruft `jobs.php` — endete deshalb jedes Mal in
+`Error: Undefined constant "KOMP_RESERVE_S"`.
+
+**Die Folge war still und teuer.** Das Komplett-Backup der Installation lief
+über den Wartungsjob von Web 12.2.0 bis 12.9.2 kein einziges Mal; der Plan
+„täglich", „wöchentlich", „monatlich" auf der Seite war ohne Wirkung. Von
+Hand angestoßen lief der Lauf einwandfrei, weil `komp_schub()` denselben
+Vorgabewert erst nach dem Laden benutzt — deshalb ist es niemandem
+aufgefallen. Die Wartungsseite zeigte den Job als „Fehler"; auch das hat
+niemand gelesen.
+
+Behoben mit `?float $reserve = null` und der Auflösung auf `KOMP_RESERVE_S`
+im Rumpf, nach dem `require_once`. Das erhält die späte Ladung, auf die
+diese Datei gebaut ist, statt sie aufzugeben. Die Fehlerklasse
+— „Vorgabewert aus einer erst im Rumpf geladenen Datei" — ist nachgezählt:
+in `server/` gibt es genau diese eine Stelle.
+
+*Gemessen:* Aufruf ohne viertes Argument vorher `Undefined constant`,
+nachher fehlerfrei; über `php jobs.php` gefahren: `komplett fertig ·
+erledigt 57796`, erzeugte Datei 814 453 Byte; Wartungsseite ohne
+Fehlerzeile.
+
+## [Web 12.9.3] — 2026-09-02
+
+### Web — Geändert: „Sicherung" heißt überall „Backup"
+
+Anlass war eine Rückmeldung zur Seite selbst. Dort standen beide Wörter
+unmittelbar untereinander: Die Karte hieß **„Backup erstellen"**, der Knopf
+darin **„Sicherung erstellen"**. Dieselbe Handlung, zwei Wörter, ein
+Bildschirm. Wer die Anwendung zum ersten Mal sieht, muss raten, ob der
+Unterschied Absicht ist.
+
+**Die Richtung ist die größere, nicht die kleinere** (R50, beschlossen am
+31.08.2026). „Sicherung" war die Hauptsprache, „Backup" die Minderheit — die
+Umstellung dreht das um, weil „Backup" die klarere Beschreibung ist. Und sie
+läuft **in einem Zug**: Eine halb durchgeführte Terminologie-Umstellung ist
+schlechter als gar keine. Vorher weiß man, dass zwei Wörter dasselbe meinen;
+nachher muss man raten.
+
+**Das Genus zieht mit.** „Die Sicherung" ist weiblich, „das Backup"
+sächlich. Artikel, Possessiv, Adjektivendung, Relativpronomen und die
+Pronomen im Folgesatz ändern sich mit — aus „Der Sicherung fehlt der Kopf"
+wird „Dem Backup fehlt der Kopf", aus „eine ältere Sicherung" „ein älteres
+Backup". Komposita bekommen den Bindestrich: **Komplett-Backup**,
+**Backup-Ziel**, **Backup-Datei**, **Backup-Regeln**, **Backup-Lauf**. Wo
+der Kopf des Kompositums nicht „Sicherung" war, bleibt das Genus, wie es
+ist: „die Backup-Datei", „der Backup-Lauf".
+
+**Was bewusst stehen bleibt**, und warum:
+
+- **Das Verb „sichern"** in den Knöpfen — „Jetzt sichern", „Alle sichern",
+  „Auswahl sichern" (R56). Es erzeugt ein Backup, das ist verständlich, und
+  Deutsch hat für „backuppen" kein brauchbares Wort. „Backup erstellen"
+  wäre auf schmalen Knöpfen teurer.
+- **Der Ablagepfad `sicherungen/`.** Er steht in der Ausnahmeliste des
+  Deploys; ein umbenanntes Verzeichnis fiele heraus, und die vorhandenen
+  Backups wären beim nächsten Aufspielen weg.
+- **Bezeichner, Dateinamen und Formatkennungen** (R5, R56):
+  `edbak_sicherung_erzeugen()`, `admin_sicherungen.php`, der Sortierschlüssel
+  `'sicherung'`, die Migrationskennung `2026_09_01_sicherungsziele`, die
+  Formatkennung `einsatzdoku-adminsicherung`, der Symbolname `sicherung`.
+  Gespeicherte Namen bleiben.
+- **Changelog, Rahmenplan, Archiv und die abgeschlossenen Phasendokumente.**
+  Ein Eintrag von Web 4.6.0, der nachträglich „Backup" sagt, behauptet
+  etwas, das damals nicht dastand. Diese Texte sind Beleg, nicht Oberfläche —
+  ebenso die Versionsgeschichte in `version.php` und die **erledigten**
+  Punkte des Backlogs. Die offenen Punkte ziehen mit; sie beschreiben
+  künftige Arbeit.
+- **Die Quelldaten des Referenzdatensatzes** und die eingecheckten
+  Referenz-Exporte. Drei Freitextfelder tragen dort das Wort. Eine Änderung
+  verschöbe die erzeugten Nutzlasten, und der Kreislaufvergleich meldete
+  danach Abweichungen, die keine sind.
+- **Die Seitennamen des Bilderlaufs** (`43-sicherungen` und die zwei
+  Nachbarn). Sie sind Messidentitäten: Dieser Changelog hält unter genau
+  diesen Namen Prüfzahlen fest. Wer sie umbenennt, trennt das Protokoll von
+  dem, was es misst.
+
+**Vier Dinge sind dabei aufgefallen, die eine mechanische Ersetzung
+zerstört hätte** — und die der Grund sind, warum diese Umstellung nicht mit
+`sed` gemacht wurde:
+
+1. **„Sicherung" stand fünfmal für *Absicherung*, nicht für ein Backup.**
+   „Das ist die wichtigste Sicherung dieses Umbaus" (`crypto.js`, gemeint
+   ist die Absicherung gegen einen stillen Vorgabewert), „so greift die
+   Sicherung auch, wenn Dialoge blockiert sind" (`einsatz_loeschen.php`),
+   „nähme genau diese Sicherung heraus" (`wiederherstellen.php` und
+   `Technik.md`), „Zwei Sicherungen, und jede trägt für sich"
+   (`Backup-Format.md`, gemeint sind Manifest-Prüfsumme und Zusatzdaten).
+   Dort steht jetzt **„Absicherung"**; das trennt die beiden Bedeutungen
+   dauerhaft.
+2. **Die Kopfzeile des Komplett-Backup-Dumps ist zugleich Text und
+   Erkennungsmarke.** `wiederherstellen.php` prüft an ihr, ob ein Dump aus
+   dieser Anwendung stammt — und verlangt nur dann die Endmarke, die einen
+   abgebrochenen Lauf verrät; ein fremder `mysqldump` hat keine und wird
+   ohne sie angenommen. Hätte die Umstellung nur die neue Schreibweise
+   gesucht, gälte **jeder vor heute erzeugte Dump als fremd**: Die
+   Vollständigkeitsprüfung wäre für genau die Dateien ausgefallen, die auf
+   den Servern liegen, und ein abgebrochener Stand wäre klaglos eingespielt
+   worden. Ohne Fehlermeldung. Der Leser kennt deshalb **beide**
+   Schreibweisen — ebenso `tools/komplettprobe/`; die alte darf am
+   v1.0-Schnitt weg (R60), nicht vorher.
+3. **Wortgruppen laufen über Zeichenketten-Grenzen.** `… sieht die '` ·
+   Zeilenumbruch · `. 'Sicherung jetzt im eigenen …` — der Artikel steht in
+   der einen Zeichenkette, das Nomen in der nächsten, und keine zeilenweise
+   Regel sieht das. Drei Fälle, gefunden mit einer eigenen Prüfung.
+4. **Überschriften in Versalien** („SICHERUNGSZIELE — wohin die Sicherungen
+   geschoben werden") und **Pronomen im Folgesatz** („Das Komplett-Backup
+   ist vorgemerkt. **Sie** läuft mit dem nächsten Wartungslauf an") ziehen
+   nicht von selbst mit. 30 beziehungsweise 11 Stellen; beide Klassen haben
+   jetzt eine eigene Prüfung.
+
+*Gezählt, vorher → nachher:* `server/` ohne `vendor/` **642 → 167**, davon
+51 in der Versionsgeschichte und 116 Bezeichner, Pfade, Dateinamen,
+Formatkennungen und falsche Freunde (Absicherung, Zusicherung) — jeder
+einzeln nachgezählt und zugeordnet. Normative Dokumentation **272 → 48**
+(Handbuch 78 → 0). Offene Backlog-Punkte **45 → 7**, erledigte unberührt.
+`tools/` **188 → 40**. Historie (Changelog, Rahmenplan, Archiv,
+abgeschlossene Konzepte) **734 → 734**, wie vorgesehen.
+
 ## [Werkzeug: Uhr-Prüfstand] — 2026-09-02
 
 **Die Aufbauanleitung führte an zwei Stellen in die Irre.** Weder die

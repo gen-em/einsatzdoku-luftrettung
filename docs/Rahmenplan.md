@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 23 (02.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 24 (03.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -9,13 +9,18 @@ Umsetzungsblöcken und die 50 Programmentscheidungen im Volltext —, liegt
 älteren Dokumenten auf „Rahmenplan Abschnitt 5" oder „Fassung 13" meinen
 das Archiv; sein Kopf sagt, welcher alte Abschnitt wo weiterlebt.
 
-**Stand am 02.09.2026:** `main` trägt **Web 12.4.2** und **Uhr 2.0.0**
-(ausgeliefert; ein Push auf `main` deployt). Der S4-Zweig trägt
-**Web 12.8.0** und **Android 0.7.7**; `main` ist in ihn geholt und die
-Konflikte sind gelöst — der Push auf `main` **wartet auf die Freigabe**, und
-danach ist `update.php` fällig. Darauf aufbauend liegt der S6-Zweig mit
-**Web 12.9.2** (Schritt 2, gebaut) — er bringt **zwei weitere** Migrationen
-mit; nach dem Deploy ist `update.php` einmal für alle drei fällig.
+**Stand am 03.09.2026:** `main` trägt **Web 12.9.2**, **Android 0.7.7** und
+**Uhr 2.0.0** (ausgeliefert; ein Push auf `main` deployt). Drei Migrationen
+aus S4 und S6 warten auf `update.php` — vom Auftraggeber zu bestätigen. Der
+S7-Zweig trägt **Web 12.9.4** (Schritt 4, gebaut und geprüft) und liegt als
+PR gegen `main`; er bringt **keine** Migration mit, `update.php` ist dafür
+nicht fällig.
+
+> **Berichtigt mit Fassung 24.** Diese Zeile nannte bis zuletzt
+> „Web 12.4.2" und den S4-Zweig als noch offen. Fassung 23 hatte die
+> Statuszeilen in Abschnitt 3 auf den Stand von `main` gezogen, den Kopf
+> aber stehen lassen — zwei Aussagen über denselben Sachverhalt, und die
+> auffälligere war falsch.
 
 **So wird gelesen:** Abschnitt 3 sagt, was als Nächstes dran ist und in
 welcher Reihenfolge. Abschnitt 5 sagt, wohin jeder offene Backlog-Punkt
@@ -132,10 +137,10 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 1 | **S4 — Merge** | Fehlerbehebung abschließen, Backlog-Nummern nachziehen, `main` holen, Merge = Deploy, `update.php` | — | liegt vor | Opus | **gemergt** (Web 12.8.0, Android 0.7.7 auf `main`); `update.php` für `2026_09_02_schnitte` vom Auftraggeber zu bestätigen; Prüfliste S4 (1, 2, 3, 5) offen |
 | 2 | **S6 — Gerätekennung und Schlüsselfrist** | Serverseite von R42, Behebung R44 | Schritt 1 | keins; R42 und R44 sind die Spezifikation | Opus | **gemergt und ausgeliefert** (Web 12.9.0 bis 12.9.2 auf `main`); `update.php` für `2026_09_02_geraetekennung` und `…_geraetemodell_breiter` zu bestätigen; Abnahme nach Abschnitt 6 offen |
 | 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | offen |
-| 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | `docs/konzepte/Umstellung-Backup.md` | Opus | offen |
+| 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | gelöscht nach R62 | Opus | **erledigt, Web 12.9.3/12.9.4** (Abschnitt 8); PR gegen `main` offen — der Merge deployt; Prüfliste S7 offen |
 | 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | offen |
 | 6 | **S4 — Rest** | Kopplungsmodul, feste Server-Adresse, App-Name, Insets, Herkunft je Einsatz (R64), Gerätetest, Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | offen |
-| 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Sicherungsoptionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61) | Schritte 4 und 6 | neu, mit Mockups | Fable (Konzept) | offen |
+| 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Backup-Optionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61) | Schritte 4 und 6 | neu, mit Mockups | Fable (Konzept) | offen |
 | 8 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
 | 9 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb | Schritte 2, 5 und 7; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
 | 10 | **Planung v1.0** | Konzeptgespräch vor dem Schnitt: Umfang des Code-Reviews, Aufteilung in mehrere Repositorien, Auslieferungskette, Update-Weg (R59, R60); Ergebnis ist das P6-Konzept | Schritt 9 | entsteht hier | Fable (R14) | offen |
@@ -289,19 +294,13 @@ Vorgabewert und Einstellung. **Abnahme des
 Konzepts:** Freigabe durch den Auftraggeber. In die S5-Abnahme geht
 **P2-Prüfpunkt 4.1** auf (eine Kopplung mit der Uhr in der Hand, R55).
 
-### Schritt 4 — S7 Backup-Begriff
+### Schritt 4 — S7 Backup-Begriff · **erledigt**
 
-**Ziel:** „Sicherung" wird überall zu „Backup", in einem Zug (R50).
-**Spezifikation:** `docs/konzepte/Umstellung-Backup.md` (Befund, Grenzen,
-Arbeitsliste, Prüfwege). **Entschieden (R56):** Verb „sichern" bleibt in
-den Knöpfen, Symbolname `sicherung` bleibt, `admin_sicherungen.php` wird
-nicht umbenannt. **Grenzen:** `server/sicherungen/` bleibt (Deploy-
-Ausnahme), Changelog und abgeschlossene Konzepte bleiben, dieses Dokument
-und das Archiv bleiben. **Vor Beginn neu zählen** (Stand 02.09.2026: 451
-Treffer in `server/`, 138 sichtbare Fundstellen). **Abnahme:** Gegenprobe
-`grep -rc "Sicherung" server/ docs/`, jede Fundstelle gegen die Grenzenliste;
-Wortliste 0/0/0; Browserprüfung der vier betroffenen Seiten. Kein Konzept,
-kein Prüfdokument.
+Gebaut und geprüft am 02./03.09.2026, Web 12.9.3 und 12.9.4. Was es
+gebracht hat, steht in Abschnitt 8; was noch am Auftraggeber liegt, in
+Abschnitt 6 und im Prüfdokument
+`docs/konzepte/Pruefdokument-S7-Backup-Begriff.md`. Das Konzept ist nach
+R62 gelöscht; die Git-Historie behält es.
 
 ### Schritt 5 — S5 Umsetzung
 
@@ -550,7 +549,7 @@ Fassung 21 und 84–88 mit Fassung 22 angelegt.
 | 76 | Demo-Reset läuft alle 30 Minuten, auch ohne Änderung | Backlog-Runde | erst messen (Laufzeit, Last), dann entscheiden |
 | 77 | Wartungsseite `update.php` in Unterseiten aufteilen | S8 | Schnitt im Konzept; Ort der Migrationsliste hängt an R60 |
 | 78 | Wertekasten zeigt Cron-Adresse und Token in Kopplungscode-Größe | S8 | `.codeblock-wert` nutzt `--groesse-5`; zweite Stufe für lange Werte; darf vorab in der Backlog-Runde laufen |
-| 79 | Sicherungsoptionen: Begriffe und Optionen gewachsen wie Wildwuchs | S8 | Bestandsaufnahme über Kontoseite, Sicherungsseite, Ziele, Komplettsicherung, Wartung |
+| 79 | Backup-Optionen: Begriffe und Optionen gewachsen wie Wildwuchs | S8 | Bestandsaufnahme über Kontoseite, Sicherungsseite, Ziele, Komplettsicherung, Wartung |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -585,6 +584,8 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | Planungsgespräch v1.0: Code-Review-Umfang, Aufteilung in Repositorien, Auslieferungskette, Update-Weg (R59, R60) | Schritt 10 | nach P5, vor jedem P6-Paket |
 | Anforderungsgespräch Doku-Neufassung | P6 | vor dem P6-Konzept, kann Teil von Schritt 10 sein |
 | Wellenplan der Öffnung | Betriebsübergang | vor der Öffnung |
+| **Prüfliste S7** (`docs/konzepte/Pruefdokument-S7-Backup-Begriff.md`), sechs offene Punkte. Der wichtigste ist **Nummer 4: ein Komplett-Backup aus der Zeit VOR diesem Deploy einspielen** — die Kopfzeile des Dumps ist zugleich Erkennungsmarke, und ob die Vorsorge am echten Bestand trägt, lässt sich nur dort sehen. Dazu die beiden Warnmails (SMTP), die Bedienzustände der Dialoge, der Wiederanlaufweg in einer leeren Datenbank und ein Backup-Umlauf in dasselbe Konto | Schritt 4 (S7) | nach dem Deploy |
+| **Das geplante Komplett-Backup einmal im Betrieb sehen** — Plan auf „täglich", einen Tag warten, danach steht auf der Wartungsseite ein Zeitpunkt und keine Fehlerzeile. Erster Betriebsnachweis für Backlog Nr. 89: Dieser Job lief von Web 12.2.0 bis 12.9.2 nie | Schritt 4 (S7) | nach dem Deploy |
 | Freigabe je Konzept und je F-Entscheidung | alle | laufend |
 
 ## 7. Programmentscheidungen — Register
@@ -776,6 +777,62 @@ vom leeren Rand befreit, Uhr-Kacheln neu gerastert · `tag_spuren.php` mit
 Seitengerüst · Backlog 57, 58 neu. *Reste:* Uhr-Kacheln reisen mit S5;
 Abschnitt 6.
 
+### S7 — Backup-Begriff · Web 12.9.3 und 12.9.4 · 02.–03.09.2026 (R50, R56)
+Konzept `docs/konzepte/Umstellung-Backup.md` — nach R62 **gelöscht**;
+zuletzt unter Commit `7057e7b`. Prüfdokument
+`docs/konzepte/Pruefdokument-S7-Backup-Begriff.md` **bleibt**, bis seine
+Prüfliste abgehakt ist.
+
+**„Sicherung" heißt überall „Backup"**, in einem Zug. Anlass war die
+Rückmeldung zur Seite selbst: Die Karte hieß „Backup erstellen", der Knopf
+darin „Sicherung erstellen" · **Das Genus zieht mit** — Artikel, Possessiv,
+Adjektivendung, Relativpronomen und die Pronomen im Folgesatz; Komposita
+mit Bindestrich (E-S7-1): Komplett-Backup, Backup-Ziel, Backup-Datei ·
+**Kommentare gehen mit** (E-S7-2), ausgenommen die Versionsgeschichte in
+`version.php` · **Backlog: offene Punkte ja, erledigte nein** (E-S7-3) ·
+**`tools/` zieht mit** (E-S7-4), ausgenommen die Quelldaten des
+Referenzdatensatzes und die Seitennamen des Bilderlaufs — beides
+Messgrundlagen, keine Begriffe.
+
+**Fünf Funde, die eine mechanische Ersetzung zerstört hätte:** „Sicherung"
+stand **fünfmal für *Absicherung*** · die **Kopfzeile des
+Komplett-Backup-Dumps** ist zugleich Text und Erkennungsmarke — hätte die
+Umstellung nur die neue Schreibweise gesucht, gälte jeder ältere Dump als
+fremd und ein abgebrochener Stand wäre klaglos eingespielt worden; der
+Leser kennt jetzt beide Schreibweisen (bis v1.0, R60) · Wortgruppen laufen
+über **Zeichenketten-Grenzen** · **Versalien-Überschriften** (30) und
+**Pronomen im Folgesatz** (17 echte aus 78 geprüften).
+
+**Und ein Fehler, der seit Web 12.2.0 unbemerkt lag** (Backlog Nr. 89,
+eigene Korrekturstufe 12.9.4): `job_komplett()` trug eine erst im Rumpf
+geladene Konstante als Parameter-Vorgabewert — PHP wertet die beim Aufruf
+aus. **Das geplante Komplett-Backup lief nie**; der Plan
+„täglich/wöchentlich/monatlich" war seit S2/AP8 wirkungslos, und die
+Wartungsseite zeigte den Job als „Fehler". Nachgezählt: In `server/` gibt
+es genau diese eine Stelle.
+
+**Die Vorzählung lag dreimal daneben, jedes Mal zu niedrig** — und das
+gehört ins Protokoll, weil es die Regel belegt, die die Vorlage selbst
+aufgestellt hat: eine Messung gegen einen laufenden Zweig hat ein
+Verfallsdatum. R50 zählte 272 (Web 9.15.0), Fassung 15 zählte 451
+(Web 12.4.2), tatsächlich waren es **642** (Web 12.9.2). Der Zuwachs kam
+aus S2: `komplett_lib.php`, `admin_komplettsicherung.php`,
+`wiederherstellen.php`, `admin_sicherungsziele.php`, `sicherungsziel_lib.php`
+und `jobs_lib.php` standen auf keiner Zeile der Arbeitsliste — es gab sie
+noch nicht.
+
+*Zahlen, vorher → nachher:* `server/` ohne `vendor/` **642 → 167** (51
+Versionsgeschichte, 116 Bezeichner, Pfade, Formatkennungen und falsche
+Freunde — jeder einzeln zugeordnet) · normative Doku **272 → 48**
+(Handbuch **78 → 0**) · offene Backlog-Punkte **45 → 7** · `tools/`
+**188 → 40** · Historie **734 → 734**, 0 gelöschte Zeilen.
+*Prüfzahlen:* Wortliste **0/0/0** (77 Regeln, 77 gegriffen) ·
+Vollständigkeit **272** (unverändert) · Kontraste **21 Paare, 0 verfehlt** ·
+Bilderlauf **304 Bilder**, Überlauf/Konsole/Knopfhöhen **0** · Kreisläufe
+(R24) **252 882** und **8 797** Einzelvergleiche, je **0** unerklärt ·
+Sichtprobe im Browser: 29 Seiten, „Backup" **83×**, „Sicherung" **2×** —
+beide sind die dokumentierten Grenzen. *Reste:* Prüfliste in Abschnitt 6.
+
 ## 9. Pflege dieses Dokuments
 
 - **Status** einer Phase: Abschnitt 3 (Tabelle und Block) während der
@@ -819,3 +876,4 @@ Abschnitt 6.
 | **21** | **02.09.2026** | **Drei Punkte aufgenommen** (Backlog 81–83): App-Symbol in der Benachrichtigung zu groß und angeschnitten (am Gerät gemeldet, aus dem Quellstand nicht nachvollziehbar — die Kachel wurde nachgerechnet, sie stimmt), fehlende Warnung vor dem Akkuverbrauch der Daueraufzeichnung (der vorhandene Akku-Dialog sagt das Gegenteil), und die **Haltbarkeit der Gerätestatistik** als Diskussionspunkt für Schritt 10 — gemessen: 82 von 82 Einsätzen ohne Geräteverweis, weil `ON DELETE SET NULL` gilt und `device_id` nicht in der Sicherung steht. 81 und 82 in den S4-Rest, 83 vor den Neuaufsetzen-Beschluss (R60). |
 | **22** | **02.09.2026** | **Android-Rückmeldungen und Gerätestatistik entschieden:** feste Server-Adresse und Name der Android-App (R63); Nr. 83 als R64 entschieden — Momentaufnahme am Einsatz, eigene `origin`-Werte, Umsetzung im S4-Rest zusammen mit Nr. 63; Backlog 84–88 angelegt (feste Adresse, App-Name, Statusleiste, Web-App-Erhebung vor v1.0, NutzerInnen-Kachel); Schritt 6 und Schritt 10 ergänzt; Änderungsverlauf wieder aufsteigend |
 | **23** | **02.09.2026** | **Statuszeilen 1 und 2 auf den Stand von `main`:** S4-Merge und S6 sind gemergt (Web 12.9.2, Android 0.7.7); beide Migrationen warten auf `update.php`. Als Nächstes laufen Schritt 3 (S5-Konzept, Fable) und Schritt 4 (S7, Opus) parallel |
+| **24** | **03.09.2026** | **S7 erledigt** (Schritt 4, Web 12.9.3/12.9.4): „Sicherung“ heißt überall „Backup“ — 642 → 167 Fundstellen in `server/`, Handbuch 78 → 0, Historie unberührt; Entscheidungen E-S7-1 bis E-S7-4 (Bindestrich-Komposita, Kommentare gehen mit, offene Backlog-Punkte ja, `tools/` mit zwei Messgrundlagen als Ausnahme). Fünf Funde, die eine mechanische Ersetzung zerstört hätte, darunter die Kopfzeile des Komplett-Backup-Dumps, die zugleich Erkennungsmarke ist. Dazu **Backlog Nr. 89**: Das geplante Komplett-Backup lief von Web 12.2.0 bis 12.9.2 nie — eigene Korrekturstufe. Konzept nach R62 gelöscht, Prüfdokument bleibt. Zwei Zuarbeiten in Abschnitt 6. **Berichtigt:** die Standzeile im Kopf, die seit Fassung 23 „Web 12.4.2“ nannte, während Abschnitt 3 schon 12.9.2 sagte |

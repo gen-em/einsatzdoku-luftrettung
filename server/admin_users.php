@@ -18,15 +18,15 @@ require_once __DIR__ . '/adminbackup_lib.php';
  * Seitenwechsel — und eine Sammelleiste, deren Auswahl ueber die Seiten
  * hinweg gilt. Das Anlegen steht als „+ Anlegen" im Kartenkopf und oeffnet
  * einen Dialog; das LOESCHEN eines Kontos steht nur noch auf der Kontoseite,
- * wo die Entscheidung ueber die Sicherungen mit dazugehoert (E25).
+ * wo die Entscheidung ueber die Backups mit dazugehoert (E25).
  *
  * WO DIE ARBEIT LIEGT, UND WARUM SIE DORT VERTRETBAR IST.
  *
- * Der Sicherungsstand eines Kontos steht NICHT in der Datenbank, sondern im
+ * Der Backup-Stand eines Kontos steht NICHT in der Datenbank, sondern im
  * Dateisystem. Drei Fragen der Seite haengen daran: die beiden roten Kacheln,
- * zwei der fuenf Filter und die Spalte „Sicherung". Ihn je Zeile zu holen
+ * zwei der fuenf Filter und die Spalte „Backup". Ihn je Zeile zu holen
  * hiesse bei 300 Konten 300 Verzeichnisdurchlaeufe — genau der Fehler, den
- * die alte Sicherungsseite gemacht hat (F-P3-F).
+ * die alte Backup-Seite gemacht hat (F-P3-F).
  *
  * Stattdessen: EIN Durchlauf der Ablagewurzel (edbak_staende(), je Ordner eine
  * kleine JSON-Datei) und EINE Abfrage ueber die Konten. Gemessen an 304 Konten:
@@ -40,7 +40,7 @@ require_once __DIR__ . '/adminbackup_lib.php';
  * sind in jedem Fall hoechstens fuenfzig Zeilen.
  *
  * Die Grenze davon steht in docs/Backlog.md Nr. 37: Bei einigen tausend
- * Konten kippt das Verhaeltnis, und dann braucht der Sicherungsstand eine
+ * Konten kippt das Verhaeltnis, und dann braucht der Backup-Stand eine
  * Spalte in der Datenbank statt eines Verzeichnisdurchlaufs.
  */
 
@@ -49,7 +49,7 @@ const KONTEN_JE_SEITE = 50;
 /**
  * Zeitbudget einer Sammelaktion in Sekunden.
  *
- * KEINE ZAHL VON KONTEN, SONDERN EINE ZEIT. Eine Sicherung liest den ganzen
+ * KEINE ZAHL VON KONTEN, SONDERN EINE ZEIT. Ein Backup liest den ganzen
  * Bestand eines Kontos und schreibt eine Datei; gemessen an einem Konto mit
  * 82 Einsaetzen sind das 222 ms, an einem leeren 7 ms. Eine feste Obergrenze
  * von n Konten waere deshalb entweder fuer kleine Bestaende unnoetig streng
@@ -60,7 +60,7 @@ const KONTEN_JE_SEITE = 50;
  * Zwanzig Sekunden liegen unter der `max_execution_time`, die geteilter
  * Webspace ueblicherweise setzt (30 bis 60 s). Was in dieser Zeit nicht
  * fertig wird, bleibt AUSGEWAEHLT und wird beim naechsten Klick erledigt —
- * die Seite sagt, wie viele das sind. Jede einzelne Sicherung ist fuer sich
+ * die Seite sagt, wie viele das sind. Jedes einzelne Backup ist fuer sich
  * abgeschlossen; ein Halt zwischen zweien hinterlaesst nichts Halbes.
  */
 const KONTEN_SAMMELBUDGET = 20.0;
@@ -77,7 +77,7 @@ const KONTEN_SAMMELBUDGET = 20.0;
 const KONTEN_FILTER = [
     'alle'        => 'Alle',
     'admins'      => 'Admins',
-    'ueberfaellig'=> 'Sicherung überfällig',
+    'ueberfaellig'=> 'Backup überfällig',
     'nie'         => 'Nie gesichert',
     'ohne-geraet' => 'Ohne Gerät',
 ];
@@ -89,7 +89,7 @@ const KONTEN_SPALTEN = [
     'seit'       => 'Seit',
     'angemeldet' => 'Zuletzt angemeldet',
     'geraete'    => 'Geräte',
-    'sicherung'  => 'Sicherung',
+    'sicherung'  => 'Backup',
 ];
 
 $notice = null; $error = null; $setzLink = null;
@@ -160,8 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->beginTransaction();
                 try {
                     /* Kontokennung bei der Anlage, nicht spaeter (E17).
-                     * Sie ist ab hier unveraenderlich und der Ordnername der
-                     * Admin-Sicherung; ein Konto ohne sie waere ein Konto, das
+                     * Sie ist ab hier unveraenderlich und der Ordnername des
+                     * Admin-Backups; ein Konto ohne sie waere ein Konto, das
                      * sich nicht sichern laesst. */
                     $pdo->prepare('INSERT INTO users (email, name, role, account_key)
                                    VALUES (?, ?, ?, ?)')
@@ -229,9 +229,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $t0 = microtime(true);
             $gut = 0; $schlecht = []; $rest = [];
             foreach ($ids as $n => $id) {
-                /* Vor jeder WEITEREN Sicherung pruefen, nicht nach der
-                 * letzten: So bricht die Reihe zwischen zwei Sicherungen ab
-                 * und nie mitten in einer. Die erste laeuft immer — sonst
+                /* Vor jedem WEITEREN Backup pruefen, nicht nach dem
+                 * letzten: So bricht die Reihe zwischen zwei Backups ab
+                 * und nie mitten in einem. Das erste laeuft immer — sonst
                  * koennte eine Anfrage gar nichts tun und trotzdem melden,
                  * sie sei fertig. */
                 if ($n > 0 && microtime(true) - $t0 > KONTEN_SAMMELBUDGET) {
@@ -241,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 [$ok, $grund, ] = edbak_sicherung_erzeugen($id);
                 if ($ok) { $gut++; } else { $schlecht[] = $grund; }
             }
-            $notice = $gut . ' ' . ($gut === 1 ? 'Sicherung' : 'Sicherungen') . ' erzeugt.';
+            $notice = $gut . ' ' . ($gut === 1 ? 'Backup' : 'Backups') . ' erzeugt.';
             if ($rest) {
                 $notice .= ' ' . count($rest) . ' ' . (count($rest) === 1 ? 'Konto ist' : 'Konten sind')
                          . ' noch ausgewählt — die Zeit für eine Anfrage reicht nicht für alle '
@@ -298,10 +298,10 @@ unset($k);
  * den Filterplaketten dagegen beziehen sich auf die laufende Suche: Sie
  * beantworten „was bringt mir dieser Filter jetzt?".
  *
- * SIE TRETEN AN DIE STELLE DER SICHERUNGSERINNERUNG (A8.4). Bis Web 9.8.0
+ * SIE TRETEN AN DIE STELLE DER BACKUP-ERINNERUNG (A8.4). Bis Web 9.8.0
  * stand oben auf dieser Seite eine Warnung aus edbak_erinnerung() — mit der
  * ausdruecklichen Begruendung, sie stehe HIER und nicht nur auf der
- * Sicherungsseite, weil ein Hinweis auf einer Seite, die man erst oeffnet,
+ * Backup-Seite, weil ein Hinweis auf einer Seite, die man erst oeffnet,
  * wenn man ohnehin sichern will, niemandem etwas meldet. Diese Begruendung
  * gilt weiter; erfuellt wird sie jetzt besser.
  *
@@ -416,7 +416,7 @@ function konten_sortwert(array $k, string $sort): string
          * nicht an den Anfang: Ein leerer Wert ist kein frueher Zeitpunkt. */
         'angemeldet' => (string)($k['last_login'] ?? '9999'),
         'geraete'    => str_pad((string)$k['geraete'], 6, '0', STR_PAD_LEFT),
-        /* Sicherung: die Zahl der Tage seit der letzten. Was nie gesichert
+        /* Backup: die Zahl der Tage seit der letzten. Was nie gesichert
          * wurde oder keine Kennung hat, gilt als unendlich alt — aufsteigend
          * steht das Frischeste oben, absteigend das Dringlichste. */
         /* max(0, …): Ein Paket mit einem Zeitpunkt in der Zukunft ergaebe
@@ -466,7 +466,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
 
   <?php ui_titelzeile(['titel' => 'NutzerInnen']); ?>
   <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite mit allen
-     Verwaltungsaufgaben: Kontodaten, Geräte, Sicherungen, später Abonnement.
+     Verwaltungsaufgaben: Kontodaten, Geräte, Backups, später Abonnement.
      Ein Klick auf eine Zeile öffnet sie.</p>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
@@ -484,7 +484,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
        Jede ist ein Weg in die Liste, die sie meint. Die beiden linken tragen
        keinen Ton — sie sind Bestandszahlen, keine Befunde. */ ?>
   <?php /* NULL IST KEIN BEFUND. Der Ton haengt an der Zahl, nicht an der
-           Kachel: „0 Sicherung überfällig" in Warnorange behauptete ein
+           Kachel: „0 Backup überfällig" in Warnorange behauptete ein
            Problem, wo gerade keines ist — und wer das ein paarmal gesehen
            hat, sieht die Farbe nicht mehr, wenn sie einmal etwas bedeutet.
            Bei 0 ist die Kachel eine gewoehnliche Bestandszahl.
@@ -505,7 +505,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
     <?= ui_kennzahl(['wert' => (string)$gesamt['admins'], 'label' => 'Admins',
                      'href' => konten_weg(['f' => 'admins', 'q' => '', 's' => ''])]) ?>
     <?= ui_kennzahl(['wert' => (string)$gesamt['ueberfaellig'],
-                     'label' => 'Sicherung überfällig',
+                     'label' => 'Backup überfällig',
                      'ton' => $gesamt['ueberfaellig'] > 0 ? 'orange' : '',
                      'href' => konten_weg(['f' => 'ueberfaellig', 'q' => '', 's' => ''])]) ?>
     <?= ui_kennzahl(['wert' => (string)$gesamt['nie'], 'label' => 'nie gesichert',
@@ -585,7 +585,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
               <span class="konto-mail"><?= e((string)$k['email']) ?></span>
             </td>
             <?php /* FUENF SPALTEN MITTIG (S3/AP5, Block B). Rolle, Seit,
-                     Zuletzt angemeldet, Geraete und Sicherung standen links,
+                     Zuletzt angemeldet, Geraete und Backup standen links,
                      ihre Titel aber mittig (F-N1-G) — die Ueberschrift stand
                      ueber nichts. Keiner dieser Werte ist Flietext oder eine
                      Groesse zum Vergleichen; mittig stehen sie unter ihrem

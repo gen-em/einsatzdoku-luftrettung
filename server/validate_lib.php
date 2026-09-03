@@ -11,11 +11,11 @@ require_once __DIR__ . '/db.php';
  *   Formular   einsatz_form.php        eigene Eingabe          Sitzung ja
  *   Uhr        ingest.php              Geraet mit Schluessel   Sitzung nein
  *   Import     api/import_commit.php   Datei ueber den Browser Sitzung ja
- *   Sicherung  backup_lib.php          Datei beliebiger Herkunft
+ *   Backup  backup_lib.php          Datei beliebiger Herkunft
  *
  * Die Pruefungen liefen bisher an vier Stellen mit vier verschiedenen
  * Massstaeben — und zwar UMGEKEHRT zur Vertrauenswuerdigkeit der Quelle: Der
- * Import prueft neun Eigenschaften, das Wiedereinspielen einer Sicherung keine
+ * Import prueft neun Eigenschaften, das Wiedereinspielen eines Backups keine
  * einzige. Diese Datei ist die eine Stelle, auf die alle vier Wege umgestellt
  * werden.
  *
@@ -52,7 +52,7 @@ require_once __DIR__ . '/db.php';
  * KANN ein gueltiger Block nicht sein.
  *
  * Im Umlauf waren bisher drei verschiedene Untergrenzen: 16 (Formular),
- * 20 (Import) und gar keine (Sicherung) — alle drei unterhalb des
+ * 20 (Import) und gar keine (Backup) — alle drei unterhalb des
  * ueberhaupt Moeglichen oder nicht vorhanden.
  */
 const PAT_BLOB_MIN = 40;
@@ -77,7 +77,7 @@ const PAT_BLOB_MAX = 60000;
  * Ein Chiffretext bestand bisher aus Zufallswert und Nutzdaten, ohne jede
  * Angabe darueber, mit welchem Verfahren er entstanden ist. Wird das Verfahren
  * je gewechselt — und irgendwann wird es das —, gibt es kein Merkmal, an dem
- * sich alt von neu unterscheiden liesse. Der Sicherungscontainer macht es seit
+ * sich alt von neu unterscheiden liesse. Der Backup-Container macht es seit
  * jeher richtig vor: Er traegt eine Fassungsnummer im Kopf.
  *
  * Der Doppelpunkt gehoert NICHT zum base64-Zeichenvorrat. Die Kennung ist
@@ -363,7 +363,7 @@ function pruef_utc($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = null): ?s
 /**
  * Zeitstempel in UTC — entweder im Uhr-Format oder in Datenbankschreibweise.
  *
- * Der Uhr-Weg liefert "2026-03-14T09:50:00Z", eine Sicherungsdatei dagegen
+ * Der Uhr-Weg liefert "2026-03-14T09:50:00Z", eine Backup-Datei dagegen
  * "2026-03-14 09:50:00", weil sie die Werte so uebernimmt, wie sie in der
  * Datenbank stehen. Beide meinen dasselbe. Diese Funktion nimmt beides an —
  * damit nicht wieder zwei Massstaebe entstehen, nur weil zwei Formate im

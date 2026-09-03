@@ -542,7 +542,7 @@ deshalb gehört sie in den Vertrag und nicht nur in den Code.
 | `wm-` | Wear-OS-App | Einsatz, an der Uhr begonnen — gesendet hat ihn das Handy |
 | `man-` | Weboberfläche, Einsatzformular | von Hand angelegt |
 | `imp-` | Import | aus einer Datei übernommen |
-| `bak-` | Wiedereinspielen | aus einer Sicherung, ohne eigene Kennung |
+| `bak-` | Wiedereinspielen | aus einem Backup, ohne eigene Kennung |
 
 **Die vier Android-Präfixe stehen seit Fassung 1.4 hier** (nachgetragen mit
 S6, weil sie an R42 hingen). Sie sind der Grund, warum die Präfixe überhaupt

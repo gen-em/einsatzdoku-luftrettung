@@ -286,7 +286,7 @@ try {
          * der einzige Abnehmer, und sie zeigt die Steigung nicht mehr an: Sie
          * ist das Profil der geflogenen Strecke, keine Aussage ueber den
          * Einsatz. Erhalten bleibt sie ueberall sonst — in der Spalte, im
-         * Export (`hoehenmeter_m`), im Import und in der Sicherung. */
+         * Export (`hoehenmeter_m`), im Import und im Backup. */
         'site_ele_m' => $m['site_ele_m'] !== null ? (int)$m['site_ele_m'] : null,
         'origin'     => (string)($m['origin'] ?? 'watch'),
         'edited'     => (int)($m['edited'] ?? 0) === 1,

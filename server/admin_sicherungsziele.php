@@ -6,9 +6,9 @@ require_once __DIR__ . '/sicherungsziel_lib.php';
 require_once __DIR__ . '/adminbackup_lib.php';   // edbak_groesse_text()
 
 /**
- * SICHERUNGSZIELE — wohin die Sicherungen geschoben werden (E-S2-22, S2/AP7).
+ * BACKUP-ZIELE — wohin die Backups geschoben werden (E-S2-22, S2/AP7).
  *
- * WARUM EINE EIGENE SEITE UND KEINE VIERTE KARTE AUF „SICHERUNGEN".
+ * WARUM EINE EIGENE SEITE UND KEINE VIERTE KARTE AUF „BACKUPS".
  * Jene Seite ist seit P3/O9c ausdrücklich „die Regeln, und sonst nichts mehr"
  * — Zahlen und Schalter, keine Liste. Hier steht eine Liste mit einem
  * Formular je Eintrag, dazu ein Handgriff („Verbindung prüfen"), der etwas
@@ -166,7 +166,7 @@ $vorschlag = $schluesselDa ? '' : serverschluessel_neu();
 $aktiveZiele = count(array_filter($ziele, static fn($z) => (int)$z['aktiv'] === 1));
 $autoAn = $tabelleDa && sz_auto_an();
 
-ui_seite_start(['titel' => 'Sicherungsziele']);
+ui_seite_start(['titel' => 'Backup-Ziele']);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
@@ -179,8 +179,8 @@ ui_seite_start(['titel' => 'Sicherungsziele']);
   </form>
 
   <?php ui_titelzeile([
-      'titel' => 'Sicherungsziele',
-      'unter' => 'FTP-, FTPS- und SFTP-Gegenstellen, auf die Sicherungen geschoben '
+      'titel' => 'Backup-Ziele',
+      'unter' => 'FTP-, FTPS- und SFTP-Gegenstellen, auf die Backups geschoben '
                . 'werden. Nicht zu verwechseln mit den Transportzielen unter '
                . '<a href="admin_stammdaten.php">Stammdaten</a> — das sind Zielkliniken.',
       'aktionen' => $schluesselDa && $tabelleDa
@@ -196,8 +196,8 @@ ui_seite_start(['titel' => 'Sicherungsziele']);
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php if (!$tabelleDa): ?>
-    <?= ui_meldung_markup('fehler', 'Die Tabelle für die Sicherungsziele fehlt '
-        . 'noch. Sie entsteht mit der Migration „Sicherungsziele" — bitte '
+    <?= ui_meldung_markup('fehler', 'Die Tabelle für die Backup-Ziele fehlt '
+        . 'noch. Sie entsteht mit der Migration „Backup-Ziele" — bitte '
         . 'einmal die Wartung aufrufen und die Updates anwenden.',
         'Migration steht aus.') ?>
     <p class="feld-hinweis"><a href="update.php">Zur Wartung</a></p>
@@ -268,7 +268,7 @@ ui_seite_start(['titel' => 'Sicherungsziele']);
     <?php ui_karte_start(['titel' => 'Versand']); ?>
       <form method="post">
         <?= csrf_field() ?><input type="hidden" name="action" value="versand_schalter">
-        <?php ui_schalter(['name' => 'versand_auto', 'label' => 'Sicherungen automatisch versenden',
+        <?php ui_schalter(['name' => 'versand_auto', 'label' => 'Backups automatisch versenden',
                            'an' => $autoAn,
                            'klein' => 'Der Wartungsjob schiebt neue Pakete auf die '
                                     . 'aktiven Ziele. Es wird nur ergänzt — auf dem '
@@ -308,8 +308,8 @@ ui_seite_start(['titel' => 'Sicherungsziele']);
     <?php ui_karte_start(['titel' => 'Ziele', 'zahl' => count($ziele)]); ?>
       <?php if (!$ziele): ?>
         <p class="feld-hinweis">Es ist noch kein Ziel eingetragen. Ohne Ziel bleiben
-           die Sicherungen dort, wo sie entstehen — auf demselben Server, dessen
-           Ausfall der Grund für eine Sicherung wäre.</p>
+           die Backups dort, wo sie entstehen — auf demselben Server, dessen
+           Ausfall der Grund für ein Backup wäre.</p>
       <?php endif; ?>
       <?php foreach ($ziele as $z): ?>
         <?php
@@ -418,7 +418,7 @@ ui_seite_start(['titel' => 'Sicherungsziele']);
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'host', 'label' => 'Rechnername', 'pflicht' => true,
                          'wert' => (string)($form['host'] ?? ''),
-                         'platzhalter' => 'sicherung.example.de']); ?>
+                         'platzhalter' => 'backup.example.de']); ?>
           <?php ui_feld(['name' => 'port', 'label' => 'Port', 'art' => 'number',
                          'pflicht' => true, 'attr' => 'min="1" max="65535"',
                          'wert' => (string)($form['port'] ?? SZ_PORTS['sftp']),
@@ -429,7 +429,7 @@ ui_seite_start(['titel' => 'Sicherungsziele']);
                          'wert' => (string)($form['nutzer'] ?? '')]); ?>
           <?php ui_feld(['name' => 'pfad', 'label' => 'Pfad auf dem Ziel',
                          'wert' => (string)($form['pfad'] ?? '/'),
-                         'klein' => 'Der Ordner, in dem die Sicherungen landen. Je Konto '
+                         'klein' => 'Der Ordner, in dem die Backups landen. Je Konto '
                                   . 'entsteht darunter ein Unterordner.']); ?>
         </div>
         <?php ui_feld(['name' => 'geheim', 'label' => 'Passwort', 'art' => 'password',

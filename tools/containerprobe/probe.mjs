@@ -1,7 +1,7 @@
 /* Containerprobe — haelt Fassung 4 gegen drei unabhaengige Umsetzungen.
  * ===========================================================================
  *
- * WOFUER (S2/AP5, E-S2-10). Fassung 4 zerlegt die Sicherung in versiegelte
+ * WOFUER (S2/AP5, E-S2-10). Fassung 4 zerlegt das Backup in versiegelte
  * Teile. Drei Dinge daran koennen schiefgehen, ohne dass es auffaellt:
  *
  *   1. Die Teile gehen wieder auf — aber nur in dem Browser, der sie
@@ -211,7 +211,7 @@ try {
     berichte.richtiger_platz = await scheitert(() => EdCrypto.openTeilJson(
       vorgang, rohe[nameA], EdCrypto.aadTeil(kennung, nameA, nrA, gesamt), 'Ein Spurteil'));
 
-    /* Ein Teil aus einer ZWEITEN Sicherung — dasselbe Passwort, andere
+    /* Ein Teil aus einem ZWEITEN Backup — dasselbe Passwort, andere
        Kennung. Ohne die Bindung ginge es klaglos auf. */
     const vorgang2 = await EdCrypto.backupSchluessel(pw, runden, vorgang.salt);
     const kennung2 = EdCrypto.randomHex(16);
@@ -289,7 +289,7 @@ try {
   pruefe(b.richtiger_platz === null,
          'Gegenprobe: an seinem richtigen Platz geht dasselbe Teil auf',
          'sonst belegte jeder Fehlschlag die Bindung');
-  pruefe(!!b.fremd, 'Ein Teil aus einer FREMDEN Sicherung wird abgewiesen');
+  pruefe(!!b.fremd, 'Ein Teil aus einem FREMDEN Backup wird abgewiesen');
   pruefe(b.fremd_mit_eigener_kennung === null,
          'Gegenprobe: mit seiner eigenen Kennung geht es auf',
          'der Unterschied liegt an der Bindung, nicht am Schluessel');

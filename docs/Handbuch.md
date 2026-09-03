@@ -238,7 +238,7 @@ links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 **Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie listet Profil,
 **Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
 finden darunter einen zweiten Block **Administration** mit NutzerInnen,
-**Stammdaten systemweit**, Sicherungen, **Sicherungsziele**, **Rechtstexte**,
+**Stammdaten systemweit**, Backups, **Backup-Ziele**, **Rechtstexte**,
 Demo-Konto und Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
 fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
 Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
@@ -400,7 +400,7 @@ damit die nächste Person hereinkommt. Alles andere ist offen.
 
 **Und in der Administration** (seit Web 12.4.1): Auf der Kontoseite des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
-**gesperrt**, die Karte „Sicherungen" fehlt dort ganz, und der Anzeigename
+**gesperrt**, die Karte „Backups" fehlt dort ganz, und der Anzeigename
 lautet **„Demo NutzerIn"**. Verwaltet wird das Konto ausschließlich über den
 Reiter **Demo-Konto**: anlegen, zurücksetzen, entfernen. Der Grund ist der
 Reset — was auf der Kontoseite eingetragen würde, wäre spätestens nach dreißig
@@ -609,7 +609,7 @@ weg.
 *Seit Web 12.7.0.*
 
 Eine Aufzeichnung, die woanders entstanden ist — auf einer Wanderuhr, als
-Export aus einer anderen Software, aus einer eigenen Sicherung —, lässt sich
+Export aus einer anderen Software, aus einem eigenen Backup —, lässt sich
 einem Diensttag hinzufügen. Über **„···" → „GPX importieren"**; der Eintrag
 steht direkt neben **„Spuren als GPX"**, denn es ist derselbe Weg in die
 andere Richtung.
@@ -1510,7 +1510,7 @@ Meldung nicht: Das entscheidet die Einstellung deines Browsers — meist der
 Download-Ordner, bei entsprechender Einstellung fragt er nach. Dasselbe gilt
 für den Datenexport unter **Einstellungen → „Export"**.
 
-**Ältere Sicherungen kannst du weiterhin einspielen.** Umgekehrt gilt das
+**Ältere Backups kannst du weiterhin einspielen.** Umgekehrt gilt das
 nicht: Eine Datei aus Web 11.1.0 lässt sich in einer älteren Installation
 nicht öffnen — sie sagt das aber deutlich, statt „Passwort falsch" zu melden.
 Wählst du versehentlich ein *einzelnes Teil* aus (etwa weil du die Datei
@@ -1530,7 +1530,7 @@ einspielen: Beim Import werden die geschützten Angaben automatisch mit dem
 Schlüssel des Zielkontos neu verschlüsselt.
 
 **Eine Rückfrage vor dem Einspielen — aber nur, wenn es etwas zu fragen gibt.**
-Enthält eine Sicherung Einsätze, deren geschützte Angaben schon beim
+Enthält ein Backup Einsätze, deren geschützte Angaben schon beim
 *Erstellen* nicht zu entschlüsseln waren, kommen sie hier ebenfalls unlesbar
 an; davor warnt die Anwendung und fragt nach. Bis Web 11.1.0 kam die Frage
 bei jeder Datei aus einem anderen Konto — also fast immer, und meistens ohne
@@ -1542,22 +1542,22 @@ mehrfaches Einspielen derselben Datei ist gefahrlos. Während Export und Import
 zeigt eine Statuszeile den Fortschritt und am Ende die Zahl der übernommenen
 Einsätze, Ruhesegmente und Diensttage.
 
-**Der Papierkorb ist Teil der Sicherung.** Was du gelöscht hast und was noch in
+**Der Papierkorb ist Teil des Backups.** Was du gelöscht hast und was noch in
 der 90-Tage-Frist liegt, steht in der Datei und kommt beim Einspielen wieder
 **als Papierkorb** zurück — nicht als aktiver Bestand. Es gibt dafür keinen
-Haken zum Abwählen: Eine Sicherung ist ein Abbild, und der Papierkorb ist kein
+Haken zum Abwählen: Ein Backup ist ein Abbild, und der Papierkorb ist kein
 Abfall, sondern ein Zustand, aus dem sich zurückholen lässt. Vorher war das
 anders, und das war der schlechtere Weg: Wer am Tag nach einem versehentlichen
 Löschen sicherte und die Datei später zurückspielte, verlor genau das, was er
 retten wollte.
 
 Eines ändert sich beim Einspielen: **Die 90 Tage beginnen neu.** Übernommen
-wird, *dass* etwas gelöscht war, nicht *wann*. Sonst könnte eine ältere
-Sicherung Einträge mitbringen, deren Frist längst abgelaufen ist — der nächste
+wird, *dass* etwas gelöscht war, nicht *wann*. Sonst könnte ein älteres
+Backup Einträge mitbringen, deren Frist längst abgelaufen ist — der nächste
 Aufräumlauf entfernte sie endgültig, ohne dass du sie je zu sehen bekommen
 hättest.
 
-Wer die Sicherung in eine Installation **vor** dieser Fassung einspielt, sollte
+Wer das Backup in eine Installation **vor** dieser Fassung einspielt, sollte
 wissen: Die nimmt die Datei zwar an, kennt den Papierkorb darin aber nicht und
 legt seine Einträge als aktive Einsätze und Diensttage an. Dort also
 anschließend nachsehen.
@@ -1572,7 +1572,7 @@ selbst; der Server bekommt es nicht zu sehen.
 Nicht geeignet ist das Kontopasswort, wenn die Datei an jemand anderen gehen
 soll — dann bekommt der Empfänger das Anmeldepasswort mit.
 
-**Sicherungsdateien bleiben lesbar, auch nach einem Update.** In der Datei steht
+**Backup-Dateien bleiben lesbar, auch nach einem Update.** In der Datei steht
 seit 5.0.0 vermerkt, mit welchen Einstellungen sie verschlüsselt wurde. Ältere
 Dateien lassen sich unverändert öffnen. Kommt eine Datei aus einer *neueren*
 Fassung des Programms, sagt die Meldung genau das — und nicht „Passwort
@@ -1583,44 +1583,44 @@ Tagesübersicht erscheint nach dem Koppeln einer Uhr ein Hinweis mit Name und
 Zeitpunkt. Mit „Verstanden, das war ich" verschwindet er. Wird danach ein
 weiteres Gerät verbunden, erscheint er erneut.
 
-**Woher die Datei stammt, steht dabei.** Sobald die Sicherung geöffnet ist —
+**Woher die Datei stammt, steht dabei.** Sobald das Backup geöffnet ist —
 also nach Eingabe des Backup-Passworts —, nennt eine Zeile das Konto und den
 Zeitpunkt, zu dem sie erstellt wurde. Stammt sie aus einem anderen Konto als
-dem angemeldeten, steht das ausdrücklich da. Ein Abbruch ist das nicht: Eine
-Sicherung in ein anderes Konto einzuspielen ist vorgesehen. Die Angabe ist
+dem angemeldeten, steht das ausdrücklich da. Ein Abbruch ist das nicht: Ein
+Backup in ein anderes Konto einzuspielen ist vorgesehen. Die Angabe ist
 dafür da, die richtige Datei von einer ähnlich benannten zu unterscheiden.
 
-Öffnet sich eine Sicherung nicht und die Meldung nennt den Browser, liegt es
+Öffnet sich ein Backup nicht und die Meldung nennt den Browser, liegt es
 weder an der Datei noch am Passwort: Sehr alte Browser können gepackte
-Sicherungen nicht entpacken. Ein aktueller Browser öffnet dieselbe Datei ohne
+Backups nicht entpacken. Ein aktueller Browser öffnet dieselbe Datei ohne
 Weiteres. (Bis Web 4.5.1 stand in diesem Fall „Passwort falsch oder Datei
 beschädigt" — was beides nicht stimmte.)
 
 Der Aufbau der Datei ist in `docs/Backup-Format.md` vollständig beschrieben —
 sie lässt sich damit auch ohne dieses Programm entschlüsseln.
 
-### 6.1 Sicherung durch die Administration
+### 6.1 Backup durch die Administration
 
-Seit Web 5.9.0 kann die Administration zusätzlich **Sicherungen aller Konten**
+Seit Web 5.9.0 kann die Administration zusätzlich **Backups aller Konten**
 anlegen. Das ist eine Rückfallebene für den Fall, dass in einem Konto etwas
 schiefgeht — sie ersetzt dein eigenes Backup nicht.
 
-**Die Administration sieht dabei keine Inhalte.** In der Sicherung stecken die
+**Die Administration sieht dabei keine Inhalte.** Im Backup stecken die
 geschützten Angaben genau so verschlüsselt wie in der Datenbank; lesbar werden
 sie erst in einem Browser, der den Schlüssel hat. Die Übersicht in der
 Administration zeigt Zeitpunkt, Anzahl der Einsätze, Diensttage und
 Ruhezeiten, davon die Anzahl im Papierkorb, und die Dateigröße — mehr nicht.
 
-**Wenn dein Konto weiterbesteht**, spielt die Administration eine solche
-Sicherung unmittelbar zurück; du musst nichts tun. Eingespielt wird immer
+**Wenn dein Konto weiterbesteht**, spielt die Administration ein solches
+Backup unmittelbar zurück; du musst nichts tun. Eingespielt wird immer
 **ergänzend**: Was schon da ist, bleibt unverändert.
 
 **Wenn dein Konto neu aufgesetzt wurde**, geht das nicht — und zwar aus einem
-Grund, der sich nicht umgehen lässt: Die geschützten Angaben der alten Sicherung
+Grund, der sich nicht umgehen lässt: Die geschützten Angaben des alten Backups
 hängen am alten Inhaltsschlüssel, und den öffnet allein dein
-**Wiederherstellungsschlüssel**. Die Administration gibt die Sicherung dann für
+**Wiederherstellungsschlüssel**. Die Administration gibt das Backup dann für
 dein Konto frei. Unter **Einstellungen → „Backup"** erscheint danach ein
-Abschnitt *Für dich freigegebene Sicherung*: Dort gibst du deinen
+Abschnitt *Für dich freigegebenes Backup*: Dort gibst du deinen
 Wiederherstellungsschlüssel ein, dein Browser schlüsselt die Angaben auf deinen
 neuen Schlüssel um und spielt sie ein. Solange du eine Freigabe nicht eingelöst
 hast, kann die Administration sie zurücknehmen.
@@ -1634,23 +1634,23 @@ hast, kann die Administration sie zurücknehmen.
 - Die einzige Voraussetzung ist deshalb nichttechnisch: **Verwahre deinen
   Wiederherstellungsschlüssel.** Er wird bei der Ersteinrichtung einmalig
   angezeigt und danach nie wieder (Abschnitt 5).
-- Es wird **nicht automatisch** gesichert. Wann eine Sicherung entsteht,
+- Es wird **nicht automatisch** gesichert. Wann ein Backup entsteht,
   entscheidet die Administration von Hand; es gibt nur eine Erinnerung.
-- Je Konto liegen höchstens **zwei** Sicherungen (die Administration kann die
-  Zahl unter „Sicherungen" ändern; bis Web 11.2.0 waren es drei). Die älteste
+- Je Konto liegen höchstens **zwei** Backups (die Administration kann die
+  Zahl unter „Backups" ändern; bis Web 11.2.0 waren es drei). Das älteste
   wird beim nächsten Sichern verdrängt — nach Alter wird dagegen nie etwas
   entfernt.
 - Wird dein Konto gelöscht, entscheidet die Administration dabei ausdrücklich,
-  ob die Sicherungen mitgehen. Die Vorgabe ist: **mitlöschen**.
-- Die Sicherungen können zusätzlich auf einen **anderen Server** geschoben
+  ob die Backups mitgehen. Die Vorgabe ist: **mitlöschen**.
+- Die Backups können zusätzlich auf einen **anderen Server** geschoben
   werden (Abschnitt 6.2). Ob das eingerichtet ist, weiss die Administration.
 
-### 6.2 Wohin die Sicherungen gehen (nur Administration)
+### 6.2 Wohin die Backups gehen (nur Administration)
 
 Seit Web 12.1.0 kann die Administration unter **Einstellungen →
-Sicherungsziele** eine Gegenstelle eintragen, auf die die Sicherungen
-geschoben werden — per FTP, FTPS oder SFTP. Der Grund ist schlicht: Eine
-Sicherung, die auf demselben Server liegt wie das Gesicherte, hilft nicht,
+Backup-Ziele** eine Gegenstelle eintragen, auf die die Backups
+geschoben werden — per FTP, FTPS oder SFTP. Der Grund ist schlicht: Ein
+Backup, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
 wenn dieser Server ausfällt.
 
 Nicht zu verwechseln mit dem **Transportziel** eines Einsatzes — das ist die
@@ -1672,20 +1672,20 @@ Was dabei zu wissen ist:
   Konto" gilt für die Ablage auf dem eigenen Server; drüben sammelt sich
   alles an, bis dort jemand aufräumt.
 
-Für dein Konto ändert sich dadurch nichts: Der Inhalt der Sicherung bleibt
+Für dein Konto ändert sich dadurch nichts: Der Inhalt des Backups bleibt
 verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort
 nicht zu öffnen.
 
-### 6.3 Die Komplettsicherung (nur Administration)
+### 6.3 Das Komplett-Backup (nur Administration)
 
-Seit Web 12.2.0 gibt es unter **Einstellungen → Komplettsicherung** einen
+Seit Web 12.2.0 gibt es unter **Einstellungen → Komplett-Backup** einen
 zweiten, grösseren Knopf. Der Unterschied zu allem darüber ist der Zweck:
 
-| | Sicherung eines Kontos | Komplettsicherung |
+| | Backup eines Kontos | Komplett-Backup |
 |---|---|---|
 | enthält | die Daten **einer** NutzerIn | **alle** Konten, Stammdaten, Geräte, Spuren — jede Tabelle |
 | hilft gegen | „jemand hat sich vertan" | „der Server ist weg" |
-| wo | Einstellungen → Sicherungen | Einstellungen → Komplettsicherung |
+| wo | Einstellungen → Backups | Einstellungen → Komplett-Backup |
 
 **Was zu tun ist.** Einen Zeitplan setzen (täglich, wöchentlich oder
 monatlich) — mehr braucht es im Regelfall nicht. Der Lauf arbeitet in kleinen
@@ -1694,7 +1694,7 @@ Wer sofort einen Stand will, drückt *Jetzt sichern*.
 
 **Wie viele aufbewahrt werden**, steht daneben; Vorgabe sind zwei. Ältere
 werden nach einem erfolgreichen Lauf gelöscht — hier, nicht auf dem
-Sicherungsziel.
+Backup-Ziel.
 
 **Zwei Wege heraus:**
 
@@ -1705,15 +1705,15 @@ Sicherungsziel.
   oder für einen USB-Stick. **Die Passphrase wird nirgends gespeichert** — wer
   sie verliert, hat die Datei verloren.
 
-Was von selbst auf ein Sicherungsziel geschoben wird, ist immer die
+Was von selbst auf ein Backup-Ziel geschoben wird, ist immer die
 verschlossene Fassung.
 
-**Das Wichtigste steht nicht in der Datei.** Die Komplettsicherung enthält
+**Das Wichtigste steht nicht in der Datei.** Das Komplett-Backup enthält
 absichtlich *nicht* die Datei `config.php` des Servers. In ihr steht der
-Schlüssel, mit dem sich die Sicherung öffnen lässt — beides zusammen
+Schlüssel, mit dem sich das Backup öffnen lässt — beides zusammen
 aufzubewahren wäre, als klebte der Schlüssel am Schloss. Sie gehört an einen
-anderen Ort, zusammen mit dem Zugang zum Sicherungsziel. Diese drei Dinge
-zusammen heissen **Wiederanlaufpaket**, und ohne sie nützt die beste Sicherung
+anderen Ort, zusammen mit dem Zugang zum Backup-Ziel. Diese drei Dinge
+zusammen heissen **Wiederanlaufpaket**, und ohne sie nützt das beste Backup
 nichts.
 
 **Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
@@ -1722,7 +1722,7 @@ und verlangt einen Nachweis, dass man Zugriff auf das Verzeichnis der
 Anwendung hat. Die Schritte stehen im Runbook (`docs/Technik.md`, Abschnitt 7);
 die Seite selbst führt durch sie hindurch.
 
-**Einmal im Halbjahr ausprobieren.** Eine Sicherung, die nie zurückgespielt
+**Einmal im Halbjahr ausprobieren.** Ein Backup, das nie zurückgespielt
 wurde, ist eine Vermutung.
 
 ---
@@ -1806,7 +1806,7 @@ Rückimport der eigenen Exportformate ist da genauer — siehe „Zurücklesen" 
 
 Auf derselben Seite, unterhalb des Importbereichs, steht der **Export**. Er ist
 zum Weiterverarbeiten in anderen Programmen gedacht — **nicht als Backup**. Für
-eine vollständige Sicherung gibt es Abschnitt 6.
+ein vollständiges Backup gibt es Abschnitt 6.
 
 Wie beim Import passiert alles im Browser: Der Server liefert nur Rohdaten, die
 geschützten Angaben werden erst auf deinem Rechner entschlüsselt. Ohne den Haken
@@ -2034,13 +2034,13 @@ vereinen.
 **Ein Diensttag im Papierkorb nimmt keine Änderungen an.** Trägst du Rettungsmittel,
 Standort oder Besatzung für einen gelöschten Tag ein, wird das abgelehnt und du
 bekommst einen Hinweis — die Angaben werden nicht gespeichert. Dasselbe gilt
-für Import und das Einspielen einer Sicherung: Beide überspringen solche Tage
+für Import und das Einspielen eines Backups: Beide überspringen solche Tage
 und sagen es. Der Grund: Das Löschen war eine bewusste Handlung, und sie
 nebenbei rückgängig zu machen wäre eine Überraschung. Stelle den Tag zuerst
 wieder her.
 
 Genau zu lesen ist dabei, **wessen** Papierkorb gemeint ist: Übersprungen wird
-ein Tag, der **hier** im Papierkorb liegt. Was **in der Sicherungsdatei**
+ein Tag, der **hier** im Papierkorb liegt. Was **in der Backup-Datei**
 gelöscht ist, wird nicht übersprungen — es kommt zurück, und zwar wieder als
 Papierkorbeintrag (Abschnitt 6). Die Rückmeldung nach dem Einspielen nennt
 beides getrennt: wie viel in den Papierkorb übernommen wurde und wie viel aus
@@ -2325,7 +2325,7 @@ die Administration.
 Die Administration führt zwei Seiten für Konten: die **Liste** aller
 NutzerInnen (11.2) und je Konto dessen **Kontoseite** (11.1). Angelegt wird in
 der Liste, gelöscht auf der Kontoseite — dort gehört die Entscheidung dazu, was
-mit den Sicherungen geschieht.
+mit den Backups geschieht.
 
 ### 11.1 Die Kontoseite
 
@@ -2340,7 +2340,7 @@ Darunter:
 |---|---|
 | **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
-| **Sicherungen** | Die Sicherungen **dieses** Kontos mit Zeitpunkt, Umfang, Größe und Zustand; dazu „Jetzt sichern" und „Für Zielkonto freigeben". |
+| **Backups** | Die Backups **dieses** Kontos mit Zeitpunkt, Umfang, Größe und Zustand; dazu „Jetzt sichern" und „Für Zielkonto freigeben". |
 | **Abonnement** | Reservierter Platz. Tarif, Laufzeit und Rechnungen kommen mit den Abomodellen. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
 
@@ -2356,39 +2356,39 @@ verschickter Link wird dabei ungültig — es gilt immer nur der zuletzt
 verschickte. Kommt die E-Mail nicht weg, **zeigt die Seite den Link an**; er ist
 eine Stunde gültig und darf nur an die Person selbst weitergegeben werden.
 
-**Die Sicherungen dieses Kontos.** Jede Zeile nennt Zeitpunkt, Umfang (wie viele
+**Die Backups dieses Kontos.** Jede Zeile nennt Zeitpunkt, Umfang (wie viele
 Diensttage, Einsätze und Ruhezeiten, wie viel davon im Papierkorb liegt) und
 Größe, dazu eine Plakette: *lesbar*, *freigegeben* oder *nicht lesbar*. Über der
 Liste steht der Stand des Kontos — *aktuell*, *überfällig · n Tage* oder *nie
 gesichert*.
 
-- **Einspielen** bringt eine Sicherung zurück in **dieses** Konto. Zur
+- **Einspielen** bringt ein Backup zurück in **dieses** Konto. Zur
   Bestätigung ist die E-Mail-Adresse des Kontos abzutippen. Eingespielt wird
   **ergänzend**: Vorhandenes bleibt stehen, es wird nichts überschrieben.
-- **Für Zielkonto freigeben** gibt eine Sicherung an ein **anderes** Konto
-  weiter — der Weg für ein neu aufgesetztes Konto. Die NutzerIn sieht sie
-  danach in ihrem eigenen Backup-Bereich und spielt sie dort mit ihrem
+- **Für Zielkonto freigeben** gibt ein Backup an ein **anderes** Konto
+  weiter — der Weg für ein neu aufgesetztes Konto. Die NutzerIn sieht es
+  danach in ihrem eigenen Backup-Bereich und spielt es dort mit ihrem
   Wiederherstellungsschlüssel ein. Die Administration bekommt zu keinem
   Zeitpunkt Klartext zu sehen.
-- **Löschen** entfernt ein Paket endgültig. Ist es die **letzte** Sicherung des
+- **Löschen** entfernt ein Paket endgültig. Ist es die **letzte** Backup des
   Kontos, ist zusätzlich die E-Mail-Adresse abzutippen.
 
 **Aufbewahrung.** Je Konto bleiben die letzten *n* Pakete stehen (Vorgabe:
-**zwei** seit Web 12.0.0, vorher drei — einstellbar unter „Sicherungen");
+**zwei** seit Web 12.0.0, vorher drei — einstellbar unter „Backups");
 ältere verschwinden beim nächsten Sichern. Zwei bleiben immer: die **jüngste**
-Sicherung und eine, die gerade **freigegeben** ist. Nach **Alter** wird nie
+Backup und eine, die gerade **freigegeben** ist. Nach **Alter** wird nie
 etwas entfernt.
 
 **Konto löschen** entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
 und Geräte endgültig — ohne Papierkorb. Vorher ist zu entscheiden, was mit den
-Sicherungen geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts zurück.
+Backups geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts zurück.
 Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
-„Sicherungen" als Sicherung ohne Konto. Zur Bestätigung ist die E-Mail-Adresse
+„Backups" als Backup ohne Konto. Zur Bestätigung ist die E-Mail-Adresse
 abzutippen.
 
 ### 11.2 Die Liste der NutzerInnen
 
-Oben stehen vier Zahlen: **Konten**, **Admins**, **Sicherung überfällig**,
+Oben stehen vier Zahlen: **Konten**, **Admins**, **Backup überfällig**,
 **nie gesichert**. Sie zählen den ganzen Bestand, und jede ist ein Weg: Ein
 Klick öffnet die Liste, die sie meint.
 
@@ -2396,7 +2396,7 @@ Darunter die Liste selbst.
 
 - **Suchen** nach Name oder E-Mail-Adresse. Gesucht wird über alle Konten, nicht
   nur über die angezeigte Seite.
-- **Filtern** über die Plaketten daneben: Alle, Admins, Sicherung überfällig,
+- **Filtern** über die Plaketten daneben: Alle, Admins, Backup überfällig,
   Nie gesichert, Ohne Gerät. Die Zahl an einer Plakette sagt, was der Filter
   **bei der laufenden Suche** ergäbe — deshalb ändert sie sich, wenn im Suchfeld
   etwas steht, während die Zahlen oben stehen bleiben.
@@ -2406,9 +2406,9 @@ Darunter die Liste selbst.
   sind („Konten 1–50 von 304"), unten rechts die Seitenzahlen.
 - **Ein Klick auf eine Zeile** öffnet die Kontoseite (11.1).
 
-Die Spalte **Sicherung** sagt je Konto eines von fünf Worten: *aktuell*,
+Die Spalte **Backup** sagt je Konto eines von fünf Worten: *aktuell*,
 *überfällig · n Tage*, *nie gesichert*, *ohne Kennung* (ein Konto aus der Zeit
-vor den Admin-Sicherungen — es lässt sich erst sichern, wenn die Wartung
+vor den Admin-Backups — es lässt sich erst sichern, wenn die Wartung
 gelaufen ist) oder *Stand unbekannt* (die Begleitdatei des Kontos ist nicht
 lesbar; die Kontoseite sagt dann, was wirklich da ist).
 
@@ -2424,7 +2424,7 @@ E-Mail-Adresse, Name und Rolle; das Konto entsteht ohne Passwort, und die Person
 bekommt einen Link, mit dem sie es selbst setzt (24 Stunden gültig).
 
 **Löschen** steht nicht in der Liste, sondern auf der Kontoseite (11.1): Dort
-gehört die Entscheidung dazu, was mit den Sicherungen des Kontos geschehen soll.
+gehört die Entscheidung dazu, was mit den Backups des Kontos geschehen soll.
 
 ### 11.3 Anlegen, Rollen und Wartung
 
@@ -2513,14 +2513,14 @@ Hinweis darauf hin (keine Blockade). Seit Web 9.10.0 gilt das auch für
 ein systemweiter Standort, den ein Dutzend Konten bereits selbst angelegt
 hatte, entstand ohne jede Warnung.
 
-Unter **„Sicherungen"** stehen seit Web 9.10.0 nur noch die Dinge, die für
-**alle** Konten gelten. Wer eine bestimmte Sicherung sucht, ist hier falsch:
+Unter **„Backups"** stehen seit Web 9.10.0 nur noch die Dinge, die für
+**alle** Konten gelten. Wer ein bestimmtes Backup sucht, ist hier falsch:
 
 | Was du willst | Wo es steht |
 |---|---|
-| Wie steht es um die Installation? Welche Regeln gelten? | **Sicherungen** |
-| Welche Konten sind überfällig? Mehrere auf einmal sichern | **NutzerInnen** (Kachel „Sicherung überfällig" bzw. „nie gesichert") |
-| Die Sicherungen **eines** Kontos einspielen, freigeben, löschen | Die **Kontoseite** dieses Kontos (11.1) |
+| Wie steht es um die Installation? Welche Regeln gelten? | **Backups** |
+| Welche Konten sind überfällig? Mehrere auf einmal sichern | **NutzerInnen** (Kachel „Backup überfällig" bzw. „nie gesichert") |
+| Die Backups **eines** Kontos einspielen, freigeben, löschen | Die **Kontoseite** dieses Kontos (11.1) |
 
 Oben vier Zahlen: Konten, Pakete samt Größe der Ablage, überfällig, nie
 gesichert. Die letzten beiden sind anklickbar und öffnen die NutzerInnen-Liste
@@ -2532,7 +2532,7 @@ mit genau diesem Filter.
   (Vorgabe 30).
 - **Aufbewahrung je Konto** — wie viele Pakete je Konto liegen bleiben (Vorgabe
   **2** seit Web 12.0.0, vorher 3). Ältere werden beim nächsten Sichern
-  gelöscht; die jüngste und eine freigegebene nie. Bis Web 9.9.0 war das eine
+  gelöscht; das jüngste und ein freigegebenes nie. Bis Web 9.9.0 war das eine
   feste Zahl im Programm.
 
   > **Wer die Zahl nie angefasst hat, verliert beim nächsten Sichern je Konto
@@ -2540,9 +2540,9 @@ mit genau diesem Filter.
   > Die Rückmeldung des Laufs nennt jede verdrängte Datei, und wer drei behalten
   > will, trägt drei ein.
 
-- **Speichergrenze** — wie viel Platz alle Sicherungen zusammen belegen dürfen
+- **Speichergrenze** — wie viel Platz alle Backups zusammen belegen dürfen
   (Vorgabe 2 GB). Ist sie erreicht, wird **nicht mehr gesichert**. Es wird
-  nichts gelöscht und nichts überschrieben — eine Sicherung, die eine andere
+  nichts gelöscht und nichts überschrieben — ein Backup, das eine andere
   wegräumt, um selbst zu passen, wäre das Gegenteil einer Rückfallebene.
 - **Warnschwellen** — Prozentwerte, durch Komma getrennt (Vorgabe 70, 90). Je
   Schwelle kommt **einmal** eine Meldung, nicht bei jedem Lauf. Fällt der
@@ -2552,7 +2552,7 @@ mit genau diesem Filter.
 - **Erinnerung an Admins per E-Mail** — aus Vorsicht standardmäßig **aus**.
 
 **Die Erinnerungsmail** nennt die überfälligen und die nie gesicherten Konten
-mit Adresse und Alter der letzten Sicherung — keine Namen und keine Zahlen aus
+mit Adresse und Alter des letzten Backups — keine Namen und keine Zahlen aus
 den Konten, denn eine Mail liegt unverschlüsselt im Postfach. Sie geht an alle
 Admins mit gesetztem Passwort.
 
@@ -2570,19 +2570,19 @@ weiter, und der Wartungsjob arbeitet den Rest ohnehin in Schüben ab; solange
 ein Auftrag läuft, steht sein Stand oben auf der Seite.
 
 > **Bis Web 11.1.1 gab es keinen Merkzettel.** Die Konten wurden nach dem Alter
-> ihrer letzten Sicherung sortiert, und der zweite Klick sollte deshalb von
+> ihres letzten Backups sortiert, und der zweite Klick sollte deshalb von
 > selbst weitermachen. Das trug nur, solange sich die Konten um mindestens
 > einen ganzen Tag unterschieden — wer heute alle sicherte, hatte danach lauter
 > Nullen, und die letzten Konten kamen unter Umständen nie dran. Jetzt merkt
 > sich der Auftrag, wie weit er ist: **jedes Konto genau einmal**, und ein
 > Abbruch verliert höchstens das laufende.
 
-**Automatisch entsteht keine Sicherung.** Nächtliche Sicherungen je Konto sind
+**Automatisch entsteht kein Backup.** Nächtliche Backups je Konto sind
 bewusst nicht vorgesehen: Sie bräuchten den Inhaltsschlüssel, und den hat der
 Server nicht.
 
 **Ablage** nennt den Pfad, ob er beschreibbar ist, wann zuletzt gesichert wurde
-und wie viele Konten eine Ablage haben. **Sicherungen ohne Konto** steht
+und wie viele Konten eine Ablage haben. **Backups ohne Konto** steht
 zugeklappt darunter: Ordner, zu deren Konto es keine Zeile mehr gibt — der Fall
 „Konto gelöscht und neu aufgesetzt". Sie überleben die Löschung mit Absicht;
 genau dafür sind sie da. An den Rückfragen ändert sich nichts: Vor dem
@@ -2627,7 +2627,7 @@ Getippte. Sie entsteht auf dem Server, mit demselben Renderer wie die
 Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 (siehe Technik-Doku, Betrieb). Die Seite läuft **zweistufig**: Der Aufruf zeigt
 nur an, was anstünde, und ändert nichts; erst der Knopf **„Updates jetzt
-anwenden"** führt sie aus. Vorher eine Sicherung erstellen — Migrationen können
+anwenden"** führt sie aus. Vorher ein Backup erstellen — Migrationen können
 Spalten und die darin enthaltenen Daten unwiderruflich entfernen.
 
 Seit Web 7.0.0 steht der **Zustand zuerst** (Schlüsselableitung, Umgebung,

@@ -13,7 +13,7 @@
  *
  * Gibt den Wiederherstellungsschluessel aus. Er wird gebraucht: Ohne ihn
  * kaeme man nach einem vergessenen Passwort nicht mehr an die Daten, und
- * die Admin-Sicherung fuehrt ihn als `pat_wrap_rc`.
+ * das Admin-Backup fuehrt ihn als `pat_wrap_rc`.
  */
 import { writeFileSync } from 'node:fs';
 

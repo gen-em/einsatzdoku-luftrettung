@@ -6,7 +6,7 @@ require_once __DIR__ . '/trash_lib.php';
 /**
  * Zwischenseite fuer das Loeschen eines Einsatzes: zeigt erst den Umfang,
  * erst der zweite Schritt legt ihn in den Papierkorb. Bewusst serverseitig
- * (kein JavaScript) — so greift die Sicherung auch, wenn Dialoge blockiert
+ * (kein JavaScript) — so greift die Absicherung auch, wenn Dialoge blockiert
  * sind, und der Umfang ist vorher sichtbar.
  *
  * Sie bleibt aus demselben Grund eine Seite wie `diensttag_loeschen.php`: Der

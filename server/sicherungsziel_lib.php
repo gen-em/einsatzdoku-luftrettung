@@ -3,15 +3,15 @@ declare(strict_types=1);
 require_once __DIR__ . '/serverkrypto_lib.php';
 
 /**
- * SICHERUNGSZIELE — wohin die Sicherungen gehen (E-S2-22, S2/AP7).
+ * BACKUP-ZIELE — wohin die Backups gehen (E-S2-22, S2/AP7).
  *
- * WARUM „SICHERUNGSZIEL" UND NICHT „TRANSPORTZIEL". Das Konzept nennt es
+ * WARUM „BACKUP-ZIEL" UND NICHT „TRANSPORTZIEL". Das Konzept nennt es
  * Transportziel. Diesen Namen trägt in dieser Anwendung seit Web 4 aber schon
  * etwas anderes: `transport_dests`, die Zielklinik einer Patientin, gepflegt
  * unter Stammdaten. Zwei Dinge, zwei Klicks voneinander entfernt, unter einem
  * Wort — das wäre kein Detail, sondern die Art Verwechslung, die man in einer
- * Fehlermeldung nicht mehr auflösen kann. Also: Sicherungsziel. Festgehalten
- * in `docs/Konzept-S2-Mengen-Spuren-Sicherung.md` unter F-S2-G.
+ * Fehlermeldung nicht mehr auflösen kann. Also: Backup-Ziel. Festgehalten
+ * in `docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md` unter F-S2-G.
  *
  * DREI PROTOKOLLE, EINE SCHNITTSTELLE
  * `Zielweg` beschreibt, was ein Ziel können muss — verbinden, Ordner anlegen,
@@ -80,7 +80,7 @@ const SZ_PROTOKOLLE = [
 class ZielFehler extends RuntimeException {}
 
 /**
- * Was ein Sicherungsziel können muss.
+ * Was ein Backup-Ziel können muss.
  *
  * Alle Pfade sind RELATIV zum Grundpfad des Ziels. Kein Adapter nimmt einen
  * absoluten Pfad entgegen — sonst wäre der Grundpfad eine Empfehlung und
@@ -658,8 +658,8 @@ function sz_lesen(int $id): ?array
  *
  * WARUM DAS NICHT ÜBER `validate_lib.php` LÄUFT. Die gemeinsame Prüfschicht
  * gilt für EINSATZDATEN — das ist die Zusage aus CLAUDE.md Abschnitt 4, und
- * sie bleibt unangetastet. Ein Sicherungsziel ist keine Einsatzdatei, kommt
- * nicht von der Uhr, nicht aus einer Sicherung und nicht über die API,
+ * sie bleibt unangetastet. Ein Backup-Ziel ist keine Einsatzdatei, kommt
+ * nicht von der Uhr, nicht aus einem Backup und nicht über die API,
  * sondern aus genau einem Adminformular.
  */
 function sz_pruefen_eingabe(array $e): array
@@ -950,7 +950,7 @@ function sz_auto_setzen(bool $an): bool
  * eine Anfrage mehr je Konto und dafür immer richtig: Eine Merkliste in der
  * Datenbank behauptet „schon versandt" auch dann noch, wenn die Datei am Ziel
  * längst gelöscht, das Ziel neu aufgesetzt oder der Pfad geändert wurde. Diese
- * Art Lüge fällt erst auf, wenn man die Sicherung braucht.
+ * Art Lüge fällt erst auf, wenn man das Backup braucht.
  *
  * ES WIRD NUR HINZUGEFÜGT, NIE GELÖSCHT. Die Aufbewahrung („zwei je Konto")
  * gilt für die Ablage auf diesem Server; auf dem Ziel räumt niemand auf. Das
@@ -981,7 +981,7 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
     }
     sort($ordner);
 
-    /* DIE KOMPLETTSICHERUNG GEHT DENSELBEN WEG (S2/AP8, E-S2-21).
+    /* DIE KOMPLETT-BACKUP GEHT DENSELBEN WEG (S2/AP8, E-S2-21).
      *
      * Sie liegt in `sicherungen/komplett/` und nicht in einem Kontoordner —
      * `edbak_kennung_gueltig()` weist den Namen ab, die Schleife oben
@@ -991,8 +991,8 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
      * bleibt.
      *
      * SIE STEHT VORN. Wenn die Zeit eines Schubes nicht fuer alles reicht,
-     * soll das Uebriggebliebene ein Kontopaket sein und nicht die
-     * Komplettsicherung: Aus ihr laesst sich jedes Konto wiederherstellen,
+     * soll das Uebriggebliebene ein Kontopaket sein und nicht das
+     * Komplett-Backup: Aus ihm laesst sich jedes Konto wiederherstellen,
      * umgekehrt nicht. */
     require_once __DIR__ . '/komplett_lib.php';
     if (is_dir(komp_wurzel())) { array_unshift($ordner, KOMP_ORDNER); }
@@ -1087,7 +1087,7 @@ function sz_versand_rueckstand(): ?int
             if ((int)@filemtime($wurzel . '/' . $k . '/' . $d) > $grenze) { $n++; }
         }
     }
-    /* Die Komplettsicherungen zaehlen mit — sie gehen denselben Weg. */
+    /* Die Komplett-Backups zaehlen mit — sie gehen denselben Weg. */
     require_once __DIR__ . '/komplett_lib.php';
     foreach (komp_staende() as $st) {
         if ((int)@filemtime(komp_wurzel() . '/' . $st['datei']) > $grenze) { $n++; }

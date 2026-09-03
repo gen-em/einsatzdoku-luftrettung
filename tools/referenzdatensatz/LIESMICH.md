@@ -116,7 +116,7 @@ dreimal gefahren, zweimal davon ungeplant.
 **Was dabei nicht identisch wiederkommt:** interne Kennungen, `created_at` und
 die **Gerätekennungen** (`dev-…`). Nur die internen Kennungen nimmt die
 Normalisierung weg; `created_at` wird seit Web 8.0.0 verglichen (es kommt beim
-Einspielen wieder zurück), und die Gerätekennungen stehen in der Sicherung
+Einspielen wieder zurück), und die Gerätekennungen stehen im Backup
 unter `days[].refs[].device_id`. Wer den Referenzstand neu aufbaut, erzeugt
 deshalb auch die Referenz-Exporte und die Fixture neu.
 
@@ -139,7 +139,7 @@ Schlüsselmaterial, die **echten** Geräte und den Bestand **mit** Papierkorb
 trägt die Kontonummer im Namen und entsteht im Zielkonto bei Bedarf von
 selbst (seit Web 8.0.1; vorher brach das Anlegen des Demo-Kontos ab, sobald
 eine Installation beide Bestände führte). Das
-Nachlauf-Drehbuch ist mit Web 8.0.0 entfallen — die Sicherung führt gelöschte
+Nachlauf-Drehbuch ist mit Web 8.0.0 entfallen — das Backup führt gelöschte
 Einträge jetzt selbst, und das Einspielen bringt sie als Papierkorb zurück.
 Die Mechanik steht in `docs/Technik.md` 4.99a.
 

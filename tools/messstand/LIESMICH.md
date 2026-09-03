@@ -3,21 +3,21 @@
 Entstanden in S2 (Konzept, E-S2-23; Regressionspflicht R35). Er bleibt
 dauerhaft im Repositorium: Die Zielzahlen aus E-S2-24 werden nicht einmal
 abgenommen und dann vergessen, sondern nach jeder Änderung an Spuren,
-Sicherung oder Suche erneut gemessen.
+Backup oder Suche erneut gemessen.
 
 ## Warum es ihn gibt
 
 S2 verspricht, dass ein Konto mit **5000 Einsätzen** trägt — Suche, Ansichten,
-Sicherung und Wiederherstellung, auf einem fünf Jahre alten Gerät (Z1/Z3). Ein
+Backup und Wiederherstellung, auf einem fünf Jahre alten Gerät (Z1/Z3). Ein
 solches Versprechen lässt sich nicht durch Nachdenken einlösen. Es braucht
 einen Bestand dieser Größe, und den muss jemand **herstellen** können:
 reproduzierbar, ohne Handarbeit, auf jeder Entwicklungsmaschine.
 
-Und es braucht einen **Ausgangswert**. „Die Sicherung ist jetzt schneller" ist
+Und es braucht einen **Ausgangswert**. „Das Backup ist jetzt schneller" ist
 keine Aussage, solange niemand weiß, wie langsam sie vorher war und wo genau
 sie aufgehört hat zu funktionieren. Der Messstand hält den heutigen Stand fest,
 **einschließlich der Stelle, an der er bricht** — das ist die eigentliche
-Auskunft, denn B-S2-03 sagt zwar, dass der Sicherungsweg lange vor 5000
+Auskunft, denn B-S2-03 sagt zwar, dass der Backup-Weg lange vor 5000
 Einsätzen bricht, aber nicht, wo.
 
 **Der Bestand entsteht über die regulären Wege.** Der Vervielfältiger baut
@@ -73,11 +73,11 @@ auseinander:
 
 | Weg | wer geht ihn | gemessen am Messstand |
 |---|---|---|
-| am Stück, **mit** Punktlisten | die Admin-Sicherungen (noch; AP6) | 6,95 s · 94,28 MB · **1077,6 MB** Spitze |
-| Kopf + Fenster zu 250 | die Sicherung der NutzerIn | 1,12 s · größtes Fenster 0,44 MB · **10,0 MB** Spitze |
+| am Stück, **mit** Punktlisten | die Admin-Backups (noch; AP6) | 6,95 s · 94,28 MB · **1077,6 MB** Spitze |
+| Kopf + Fenster zu 250 | das Backup der NutzerIn | 1,12 s · größtes Fenster 0,44 MB · **10,0 MB** Spitze |
 
-Stünde nur die erste Zeile da, läse sich das Protokoll so, als brauche jede
-Sicherung ein Gigabyte. Das stimmt für die Admin-Sicherung und ist dort die
+Stünde nur die erste Zeile da, läse sich das Protokoll so, als brauche jedes
+Backup ein Gigabyte. Das stimmt für das Admin-Backup und ist dort die
 Auskunft — für die Nutzerin stimmt es seit AP5b nicht mehr. **Eine Zahl, die
 nicht dazusagt, welchen Weg sie gemessen hat, ist keine.**
 

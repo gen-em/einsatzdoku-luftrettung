@@ -4,14 +4,14 @@ require_once __DIR__ . '/../auth_guard.php';      // liefert $userId
 require_once __DIR__ . '/../adminbackup_lib.php';
 
 /**
- * Die von der Administration freigegebene Sicherung — für die NutzerIn selbst.
+ * Das von der Administration freigegebene Backup — für die NutzerIn selbst.
  *
  *   GET  api/adminbackup_freigabe.php            -> Paket oder { freigabe: null }
  *   POST api/adminbackup_freigabe.php  { eingeloest: true }
  *
  * WARUM ES DIESEN WEG ÜBERHAUPT GIBT (E5, E20)
  * Wurde ein Konto gelöscht und neu aufgesetzt, trägt es einen NEUEN
- * Inhaltsschlüssel. Die geschützten Angaben der alten Sicherung sind mit dem
+ * Inhaltsschlüssel. Die geschützten Angaben des alten Backups sind mit dem
  * ALTEN verschlüsselt, und der steckt in `pat_wrap_rc` — geöffnet allein vom
  * Wiederherstellungsschlüssel, den ausschliesslich die NutzerIn hat.
  * Administration kann ein solches Paket deshalb nicht einspielen: Es entstünden
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
      * 5000er-Konto waeren das 94 MB gewesen — und auf dem Rueckweg ein POST
      * derselben Groesse gegen ein Limit, das niemand kennt. Der Browser holt
      * Kopf, Eintragsfenster und Spurteile einzeln, genau wie beim Einspielen
-     * einer eigenen Sicherung.
+     * eines eigenen Backups.
      *
      * Der Name wird in `edbak_paket_teil_lesen()` gegen die Teileliste des
      * Manifests geprueft; was dort nicht steht, gibt es hier nicht. */
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         if ($roh === null) {
             json_out(['error' => 'teil',
                       'meldung' => 'Dieser Teil gehört nicht zur freigegebenen '
-                                 . 'Sicherung.'], 404);
+                                 . 'Backup.'], 404);
         }
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store');
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $paket = edbak_paket_kopf_lesen($f['account_key'], $f['datei']);
     if ($paket === null) {
         json_out(['error' => 'unlesbar',
-                  'meldung' => 'Die freigegebene Sicherung lässt sich nicht lesen. '
+                  'meldung' => 'Das freigegebene Backup lässt sich nicht lesen. '
                              . 'Bitte die Administration verständigen.'], 500);
     }
     $fassung = (int)($paket['version'] ?? 1);
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $f = edbak_freigabe_fuer($userId);
     if ($f === null) { json_out(['error' => 'keine_freigabe'], 404); }
-    /* Als eingelöst vermerken, nicht löschen: Die Sicherung selbst bleibt
+    /* Als eingelöst vermerken, nicht löschen: Das Backup selbst bleibt
      * liegen. Sie ist die Rückfallebene, und die verliert ihren Sinn, wenn sie
      * beim ersten Gebrauch verschwindet. Widerrufbar ist ab hier nichts mehr —
      * eingelöst ist eingelöst (Akzeptanzkriterium 53 gilt für die Zeit davor). */

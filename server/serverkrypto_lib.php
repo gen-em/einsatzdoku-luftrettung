@@ -11,7 +11,7 @@ declare(strict_types=1);
  * die der Server ohne jeden Browser lesen können MUSS, weil sie zu einem
  * Zeitpunkt gebraucht werden, an dem niemand angemeldet ist:
  *
- *   1. die Zugangsdaten der Sicherungsziele (Passwort, privater Schlüssel) —
+ *   1. die Zugangsdaten der Backup-Ziele (Passwort, privater Schlüssel) —
  *      der Versandjob läuft nachts über den Job-Einstieg,
  *   2. das Komplettbackup der Installation (AP8), sobald es das Haus verlässt.
  *
@@ -28,7 +28,7 @@ declare(strict_types=1);
  * scheinbar versiegelt.
  *
  * Damit gehört er ins WIEDERANLAUFPAKET — config.php plus Serverschlüssel
- * plus Zugang zum Sicherungsziel, getrennt aufbewahrt. Ohne ihn sind die
+ * plus Zugang zum Backup-Ziel, getrennt aufbewahrt. Ohne ihn sind die
  * Zugangsdaten der Ziele verloren (neu eintragen, mehr nicht) und ein
  * versiegeltes Komplettbackup ist Müll (das ist die schwere Folge). Das
  * Runbook in `docs/Technik.md` sagt es an der Stelle noch einmal.

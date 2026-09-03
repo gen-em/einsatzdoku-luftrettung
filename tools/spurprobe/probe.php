@@ -10,7 +10,7 @@ declare(strict_types=1);
  * sie ueber den GANZEN Referenzbestand, nicht ueber ein Beispiel.
  *
  * Und es beantwortet die zweite Frage von AP1: Liefern die Leser vor und nach
- * der Verdichtung DASSELBE? Tagesansicht, Einsatzansicht, Export und Sicherung
+ * der Verdichtung DASSELBE? Tagesansicht, Einsatzansicht, Export und Backup
  * ziehen ihre Punkte seither ueber `spur_lib.php`; wenn dort etwas anders
  * herauskommt, faellt es hier auf und nicht erst in der Karte.
  *
@@ -202,7 +202,7 @@ try {
            count($unterschiede) . ' Spuren abweichend'
            . ($unterschiede ? ' — erste: ' . $unterschiede[0] : ''));
 
-    /* DIE SICHERUNG IST DIE HAERTESTE PROBE: Sie enthaelt jeden Punkt jeder
+    /* DIE BACKUP IST DIE HAERTESTE PROBE: Sie enthaelt jeden Punkt jeder
      * Spur mit Nummer, Koordinate, Hoehe und Zeit. Sind beide Pakete gleich,
      * hat die Verdichtung an keinem einzigen Wert etwas geaendert. */
     $backupNachher = edbak_build($uid);

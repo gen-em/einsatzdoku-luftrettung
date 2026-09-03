@@ -1,13 +1,13 @@
 # Wiederherstellungsprobe
 
 Vorher/Nachher-Beleg zu **E-S1-04**, **E-S1-19** und **Backlog Nr. 31/33/34/35**
-(Web 8.0.0). Der Papierkorb und der Rückweg einer Sicherung haben Grenzfälle,
+(Web 8.0.0). Der Papierkorb und der Rückweg eines Backups haben Grenzfälle,
 die sich im Browser nur mühsam herstellen lassen und die man dem Ergebnis nicht
 ansieht. Vier Teile.
 
 ## Teil 1 — Papierkorb aus der Datei
 
-Seit Nutzlast 7 trägt die Sicherungsdatei den Papierkorb mit, und
+Seit Nutzlast 7 trägt die Backup-Datei den Papierkorb mit, und
 `edbak_restore()` bringt ihn als Papierkorb zurück. Zwei Angaben dabei sind
 leicht falsch herum gebaut, und beide fallen erst auf, wenn jemand Wochen
 später etwas im Papierkorb sucht und es nicht findet.
@@ -81,7 +81,7 @@ Wiedererkennung nichts mehr findet.
 
 ## Warum eine eigene Probe und nicht der Kreislauf
 
-Der Kreislauf (`tools/referenzdatensatz/`) fährt eine **echte** Sicherung
+Der Kreislauf (`tools/referenzdatensatz/`) fährt eine **echte** Backup
 durch den Browser und vergleicht das Ergebnis. Er belegt damit, dass der
 Papierkorb als Papierkorb zurückkommt — aber der Referenzbestand enthält
 keinen Diensttag, an dem gleichzeitig ein mitgelöschter, ein einzeln

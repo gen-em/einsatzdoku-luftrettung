@@ -563,7 +563,7 @@ function dt_rueckfall(PDO $pdo, int $userId, string $day, ?string $startedAt = n
  * Weder der Nachschlag ueber `day_refs` noch $vorhandenerDayId darf auf einen
  * Tag im Papierkorb fuehren. Sonst legte die naechste Nachlieferung einen
  * AKTIVEN Einsatz an einem GELOESCHTEN Tag an — den halb sichtbaren Zustand,
- * den E-S1-19 beim Einspielen einer Sicherung ablehnt und den die
+ * den E-S1-19 beim Einspielen eines Backups ablehnt und den die
  * Papierkorbseite seit Web 8.0.0 nicht mehr herstellen kann. Die Uhr weiss
  * nichts vom Papierkorb und liefert weiter; ohne diese Bedingung waere sie
  * die letzte offene Tuer.

@@ -89,7 +89,7 @@ Pfaden gehört nicht ins Repositorium.
 
 | Bibliothek | Version | Lizenz | Verzeichnis | wofür |
 |---|---|---|---|---|
-| **phpseclib** | 3.0.57 | MIT | `vendor/phpseclib3/` | Der SFTP-Adapter der Sicherungsziele (S2/AP7) |
+| **phpseclib** | 3.0.57 | MIT | `vendor/phpseclib3/` | Der SFTP-Adapter der Backup-Ziele (S2/AP7) |
 | **constant_time_encoding** | 2.7.0 | MIT | `vendor/ParagonIE/ConstantTime/` | Von phpseclib vorausgesetzt (genau eine Stelle: `Common/Functions/Strings.php`) |
 
 Herkunft, Commit-Kennung und die Anleitung zum Austausch stehen in

@@ -132,8 +132,8 @@ def konto_loeschen(basis: str, admin: tuple[str, str], konto: str,
     # die Funktion merkte es erst an der Gegenprobe unten (F-P3-BB).
     #
     # `sicherungen_mit=1` ist die Vorbelegung der Oberflaeche: Zum Umlaufkonto
-    # gehoerende Admin-Sicherungen gehen mit. Genau das ist hier richtig — ein
-    # Pruefkonto soll keine verwaisten Sicherungen hinterlassen.
+    # gehoerende Admin-Backups gehen mit. Genau das ist hier richtig — ein
+    # Pruefkonto soll keine verwaisten Backups hinterlassen.
     seite = f"admin_user.php?id={kennung}"
     s.csrf_auffrischen(seite)
     s.post(seite, {"csrf": s.csrf, "action": "user_delete",
@@ -165,7 +165,7 @@ def konto_anlegen(basis: str, admin: tuple[str, str], konto: str,
 # ---------------------------------------------------------------- Umlaeufe
 
 def umlauf_edbak(a) -> tuple[str, str]:
-    """Sicherung -> frisches Konto -> Sicherung.
+    """Backup -> frisches Konto -> Backup.
 
     ZWEI LAEUFE, ZWEI REFERENZEN (S2/AP5):
 
@@ -184,7 +184,7 @@ def umlauf_edbak(a) -> tuple[str, str]:
     ordnerRef = (pathlib.Path(a.referenz) / "altformat") if a.art == "edbak-alt" \
                 else pathlib.Path(a.referenz)
     quelle = neueste(str(ordnerRef), "*.edbak")
-    melde(f"[Sicherung] Referenz: {quelle.name}")
+    melde(f"[Backup] Referenz: {quelle.name}")
     ordner = pathlib.Path(a.ausgabe) / a.art
     ordner.mkdir(parents=True, exist_ok=True)
     e = lauf(["node", str(WURZEL / "browser" / "kreislauf_edbak.mjs"),
@@ -267,7 +267,7 @@ def main() -> int:
     # DIE HINTERGRUNDJOBS ANHALTEN (S2/AP3).
     #
     # Seit Web 10.2.0 verdichten und dünnen die Jobs Spuren aus — sie LÖSCHEN
-    # Zeilen und ERSETZEN Blobs. Der Kreislauf spielt eine Sicherung in ein
+    # Zeilen und ERSETZEN Blobs. Der Kreislauf spielt ein Backup in ein
     # frisches Konto und exportiert sie sofort wieder; die wiederhergestellten
     # Einsätze sind alt, der Verdichtungsjob hält sie für reif, und was älter
     # als sechs Monate ist, wird ausgedünnt. Der Vergleich misst dann nicht

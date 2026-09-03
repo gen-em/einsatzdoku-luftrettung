@@ -6,11 +6,11 @@ require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/jobs_lib.php';
 
 /**
- * KOMPLETTSICHERUNG — die ganze Installation als versiegelter SQL-Dump
+ * KOMPLETT-BACKUP — die ganze Installation als versiegelter SQL-Dump
  * (E-S2-19 bis E-S2-21, S2/AP8).
  *
- * WARUM EINE EIGENE SEITE UND KEINE KARTE AUF „SICHERUNGEN". Dieselbe
- * Begründung wie bei den Sicherungszielen: „Sicherungen" ist seit P3/O9c die
+ * WARUM EINE EIGENE SEITE UND KEINE KARTE AUF „BACKUPS". Dieselbe
+ * Begründung wie bei den Backup-Zielen: „Backups" ist seit P3/O9c die
  * Seite der REGELN — Aufbewahrung, Grenze, Schwellen. Hier steht eine Liste
  * von Ständen mit Handgriffen daran, dazu ein Lauf, der Minuten dauert und
  * einen Fortschritt hat. Das ist der Zuschnitt einer Seite.
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
          * ein Webserver wartet. Ein Download rechnet nicht — er schiebt
          * Bytes, und wie lange das dauert, entscheidet die Leitung der
          * Herunterladenden. Ein Abbruch nach 30 s wäre kein Schutz, sondern
-         * eine Sicherung, die sich bei langsamer Verbindung nicht abholen
+         * ein Backup, das sich bei langsamer Verbindung nicht abholen
          * lässt.
          *
          * Der Speicher bleibt trotzdem bei einem halben Megabyte: Es wird
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                                 5.0);
                 komp_zustand_setzen($z);
                 if (($z['stand'] ?? '') === 'fertig') {
-                    $notice = 'Die Komplettsicherung ist fertig: '
+                    $notice = 'Das Komplett-Backup ist fertig: '
                             . number_format((int)$z['zeilen'], 0, ',', '.') . ' Zeilen aus '
                             . (int)$z['tabellen'] . ' Tabellen, '
                             . edbak_groesse_text((int)$z['bytes']) . '.';
@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
     } elseif ($aktion === 'stand_loeschen') {
         $datei = (string)($_POST['datei'] ?? '');
         $notice = komp_loeschen($datei)
-            ? 'Der Stand wurde gelöscht. Was auf einem Sicherungsziel liegt, '
+            ? 'Der Stand wurde gelöscht. Was auf einem Backup-Ziel liegt, '
             . 'bleibt dort — gelöscht wird auf dem Ziel nichts.'
             : null;
         if ($notice === null) { $error = 'Diesen Stand gibt es nicht (mehr).'; }
@@ -153,14 +153,14 @@ $staende      = komp_staende();
 $zahlen       = edbak_ablage_zahlen(true);
 $plan         = komp_plan();
 
-ui_seite_start(['titel' => 'Komplettsicherung']);
+ui_seite_start(['titel' => 'Komplett-Backup']);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
                         'menue' => 'admin_komplettsicherung']); ?>
 
   <form method="post" id="f-sichern" hidden
-        data-confirm="Jetzt eine Komplettsicherung der ganzen Installation erzeugen? Sie umfasst alle Konten, Stammdaten und Spuren; das dauert und belegt Platz. Was in einem Durchgang nicht fertig wird, läuft mit der Wartung weiter."
+        data-confirm="Jetzt ein Komplett-Backup der ganzen Installation erzeugen? Es umfasst alle Konten, Stammdaten und Spuren; das dauert und belegt Platz. Was in einem Durchgang nicht fertig wird, läuft mit der Wartung weiter."
         data-confirm-ok="Sichern" data-confirm-tone="normal">
     <?= csrf_field() ?><input type="hidden" name="action" value="jetzt_sichern">
   </form>
@@ -174,7 +174,7 @@ ui_seite_start(['titel' => 'Komplettsicherung']);
   </form>
 
   <?php ui_titelzeile([
-      'titel' => 'Komplettsicherung',
+      'titel' => 'Komplett-Backup',
       'unter' => 'Die ganze Installation als versiegelter SQL-Dump: alle Konten, '
                . 'Stammdaten, Geräte, Schlüsselhüllen und Spuren. Nicht enthalten '
                . 'ist <code>config.php</code> — sie gehört ins Wiederanlaufpaket.',
@@ -193,15 +193,15 @@ ui_seite_start(['titel' => 'Komplettsicherung']);
 
   <?php if (!$schluesselDa): ?>
     <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt']); ?>
-      <p class="feld-hinweis">Eine Komplettsicherung enthält jede Tabelle dieser
+      <p class="feld-hinweis">Ein Komplett-Backup enthält jede Tabelle dieser
       Datenbank. Sie wird deshalb <strong>immer versiegelt</strong> abgelegt —
       und dafür braucht es den Serverschlüssel aus <code>config.php</code>.
       Ohne ihn wird hier nichts erzeugt; unversiegelt wird eine solche Datei
       nicht abgelegt.</p>
       <p class="feld-hinweis">Der Schlüssel wird auf der Seite
-      <a href="admin_sicherungsziele.php">Sicherungsziele</a> erzeugt und
+      <a href="admin_sicherungsziele.php">Backup-Ziele</a> erzeugt und
       eingetragen. Er gehört danach ins Wiederanlaufpaket: Geht er verloren,
-      lässt sich keine versiegelte Sicherung mehr öffnen.</p>
+      lässt sich kein versiegeltes Backup mehr öffnen.</p>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
@@ -275,7 +275,7 @@ ui_seite_start(['titel' => 'Komplettsicherung']);
                        'art' => 'number', 'attr' => 'min="1" max="20"',
                        'wert' => (string)komp_aufbewahrung(),
                        'klein' => 'Ältere werden nach einem erfolgreichen Lauf gelöscht — '
-                                . 'hier, nicht auf dem Sicherungsziel.']); ?>
+                                . 'hier, nicht auf dem Backup-Ziel.']); ?>
       </div>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
@@ -289,9 +289,9 @@ ui_seite_start(['titel' => 'Komplettsicherung']);
                   ? ui_plakette('keiner', ['ton' => 'orange'])
                   : ui_plakette(edbak_zeitpunkt_text((string)$staende[0]['zeit']),
                                 ['ton' => 'blau'])]);
-    ui_zeile(['text' => 'Belegt von Komplettsicherungen',
+    ui_zeile(['text' => 'Belegt von Komplett-Backups',
               'klein' => 'Zählt auf die Speichergrenze mit — sie steht unter '
-                       . '„Sicherungen".',
+                       . '„Backups".',
               'plaketten' => ui_plakette(edbak_groesse_text((int)$zahlen['komplett_bytes']),
                                          ['ton' => 'neutral'])]);
     ui_zeile(['text' => 'Wartet auf den nächsten Lauf',
@@ -306,7 +306,7 @@ ui_seite_start(['titel' => 'Komplettsicherung']);
 
   <?php ui_karte_start(['titel' => 'Stände', 'zahl' => count($staende)]); ?>
     <?php if ($staende === []): ?>
-      <p class="feld-hinweis">Es liegt noch keine Komplettsicherung vor.</p>
+      <p class="feld-hinweis">Es liegt noch kein Komplett-Backup vor.</p>
     <?php else: ?>
       <?php foreach ($staende as $nr => $s):
           $kopf = komp_kopf_lesen(komp_wurzel() . '/' . $s['datei']);
@@ -319,7 +319,7 @@ ui_seite_start(['titel' => 'Komplettsicherung']);
           <input type="hidden" name="datei" value="<?= ui_e($s['datei']) ?>">
         </form>
         <form method="post" id="f-weg-<?= $id ?>" hidden
-              data-confirm="Diesen Stand endgültig löschen? Was bereits auf einem Sicherungsziel liegt, bleibt dort."
+              data-confirm="Diesen Stand endgültig löschen? Was bereits auf einem Backup-Ziel liegt, bleibt dort."
               data-confirm-ok="Löschen" data-confirm-tone="gefahr">
           <?= csrf_field() ?><input type="hidden" name="action" value="stand_loeschen">
           <input type="hidden" name="datei" value="<?= ui_e($s['datei']) ?>">
@@ -380,14 +380,14 @@ ui_seite_start(['titel' => 'Komplettsicherung']);
     das, was <code>mysql</code> und phpMyAdmin einspielen können. „Versiegelt
     herunterladen" liefert dieselbe Datei unter einer Passphrase; die braucht
     es, wenn die Datei aus dem Haus geht. Was von selbst auf ein
-    <a href="admin_sicherungsziele.php">Sicherungsziel</a> geschoben wird, ist
+    <a href="admin_sicherungsziele.php">Backup-Ziel</a> geschoben wird, ist
     immer die versiegelte Fassung.</p>
 
     <p class="feld-hinweis"><strong>Das Wiederanlaufpaket.</strong> Diese Datei
     allein reicht nicht. Wer nach einem Totalausfall neu aufsetzt, braucht
     <em>drei</em> Dinge, und zwei davon stehen nicht hier drin:
     <code>config.php</code> (Datenbankzugang und <strong>Serverschlüssel</strong>),
-    den Zugang zum Sicherungsziel und diese Datei. Ohne den Serverschlüssel
+    den Zugang zum Backup-Ziel und diese Datei. Ohne den Serverschlüssel
     lässt sich die versiegelte Fassung nicht öffnen — er gehört an einen Ort,
     der den Server überlebt. Das Vorgehen steht im Runbook
     (<code>docs/Technik.md</code>, Abschnitt 7).</p>
@@ -398,7 +398,7 @@ ui_seite_start(['titel' => 'Komplettsicherung']);
     schon dastand. Wer es genauer braucht, lässt nachts sichern.</p>
 
     <p class="feld-hinweis"><strong>Ein Konto einzeln</strong> holt man sich
-    nicht hier, sondern unter <a href="admin_sicherungen.php">Sicherungen</a>.
+    nicht hier, sondern unter <a href="admin_sicherungen.php">Backups</a>.
     Diese Seite ist für den Fall „der Server ist weg", nicht für „jemand hat
     sich vertan".</p>
   <?php ui_karte_ende(true); ?>

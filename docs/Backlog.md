@@ -35,8 +35,8 @@ muss leer bleiben.
 **Zu den Nummern 63 bis 67 (Rahmenplan Fassung 16, 02.09.2026).** Sie sind
 für den S4-Zweig reserviert. Er hat seine fünf Punkte als 59 bis 63
 angelegt, bevor die Entdopplung oben auf `main` lag, und nummeriert sie beim
-Zusammenführen auf 63 bis 67 um: Sperrvermerke des Schnitts in der
-Konto-Sicherung, Bedienhöhe der Android-App, Fassungshinweise im
+Zusammenführen auf 63 bis 67 um: Sperrvermerke des Schnitts in dem
+Konto-Backup, Bedienhöhe der Android-App, Fassungshinweise im
 Android-Baulauf, Garmin-Uhrcode in der Wortliste, `csrf_check()` ohne
 API-Zweig. Die Punkte 68 bis 79 sind mit Fassung 16 angelegt, 80 bis 83 mit
 Fassung 21, 84 bis 88 mit Fassung 22; alle stehen unten; die Zuordnung aller offenen Punkte zu Paketen führt
@@ -83,7 +83,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kandidaten geliefert (Abschnitt 9.3 des P0-Konzepts). Sie sind **nicht**
     freigegeben und **nicht** angefasst: Ein großer Teil berührt
     Antwortverträge (`api/`, Export, Backup), und dort ist „niemand liest es"
-    keine hinreichende Begründung — ein Feld kann für eine ältere Sicherung
+    keine hinreichende Begründung — ein Feld kann für ein älteres Backup
     oder eine künftige Uhr-Fassung gebraucht werden. Eigenes Paket mit eigener
     Freigabe.
 23. **`docs/JSON-Vertrag.md` 3.3 nennt eine Reanimationsart, die kein
@@ -171,7 +171,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       der Server nicht filtern. Die **übrigen** rund dreißig Filter arbeiten
       auf unverschlüsselten Spalten und könnten serverseitig vorschneiden —
       das ist der eigentliche Hebel, und er ist unangetastet.
-    - **Die Sicherung ist zu 93 % Spur.** 31,9 kB je Einsatz mit Spurpunkten,
+    - **Das Backup ist zu 93 % Spur.** 31,9 kB je Einsatz mit Spurpunkten,
       2,2 kB ohne; 3500 Einsätze ergäben rund 109 MB rohes JSON. Die
       `.edbak`-Datei selbst ist gzip-komprimiert und handlich (739 kB für 87
       Einsätze) — beim **Zurückspielen** aber entsiegelt der Browser sie und
@@ -199,11 +199,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     gemessen** und vorerst erledigt (`tools/pruefkonten/`, 300 Konten): Die
     NutzerInnen-Liste kommt mit **einer** Abfrage und **einem**
     Verzeichnisdurchlauf aus (3,3 ms / 3,2 ms bei 304 Konten, 103 ms für den
-    ganzen Aufruf), weil der Sicherungsstand aller Konten aus je einer kleinen
+    ganzen Aufruf), weil der Backup-Stand aller Konten aus je einer kleinen
     `konto.json` kommt statt aus je einem Verzeichnisdurchlauf. Gesucht,
     gefiltert und sortiert wird im Speicher; der Browser bekommt höchstens 50
     Zeilen. **Die Grenze davon:** Bei einigen tausend Konten kippt das
-    Verhältnis, und dann braucht der Sicherungsstand eine Spalte in der
+    Verhältnis, und dann braucht der Backup-Stand eine Spalte in der
     Datenbank statt eines Verzeichnisdurchlaufs. Dabei aufgefallen und behoben:
     `edbak_intervall()` fragte je Zeile die Datenbank — 304 Abfragen und
     27,7 ms für eine Subtraktion.
@@ -231,7 +231,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Diese Frage wird in der Phase S2 beantwortet, und `tools/lastdatensatz/`
     ist darin zu `tools/messstand/` geworden** (S2/AP0). Der Weg ist ein
     anderer als hier beschrieben — nicht neue Dienstdaten erfinden, sondern
-    die Referenzsicherung vervielfältigen und über den **regulären**
+    das Referenz-Backup vervielfältigen und über den **regulären**
     Wiederherstellungsweg einspielen; damit ist der Einspielweg selbst einer
     der Prüflinge. Stand: 5002 Einsätze, 3,2 Mio. Spurpunkte, herstellbar in
     245 s.
@@ -254,7 +254,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Was hier offen bleibt,** bis die Phase durch ist: Zeitraumübersicht und
     Nachbearbeitung bei dieser Menge, `admin_sicherungen.php` (siehe oben),
     und die Frage, ob die Zielzahlen aus E-S2-24 (Suche ≤ 5 s, Tagesansicht
-    ≤ 3 s, Sicherung ≤ 5 min) gehalten werden.
+    ≤ 3 s, Backup ≤ 5 min) gehalten werden.
 
 38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
     *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste
@@ -338,7 +338,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     > mit einer einzigen neuen Zeile auf der Wartungsseite von 167 auf 168
     > gebracht, S2/AP4 mit den Kopfkommentaren dreier neuer Dateien von 168
     > auf 174 (`?art=…&id=…` allein zählt viermal), S2/AP5 mit den
-    > Fortschrittsmeldungen des Sicherungslaufs („Teil 2 von 5 …") auf 189
+    > Fortschrittsmeldungen des Backup-Laufs („Teil 2 von 5 …") auf 189
     > S2/AP5b mit drei Auslassungspunkten in **Kommentaren** auf 192 und
     > S2/AP6 mit den Fortschrittsmeldungen des Freigabewegs auf 195 — jedes
     > Mal gemessen gegen den Stand davor, nicht geschätzt.
@@ -397,7 +397,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     eine mittlere Fassung über die volle Breite des Diensttags, über der
     Liste. Kein Mockup, keine Freigabe — bewusst nicht in dieser Runde.
 
-46. **Das Altformat der Sicherung wird mit NaDoku 1.0 abgeschafft.**
+46. **Das Altformat des Backups wird mit NaDoku 1.0 abgeschafft.**
     *Aufgenommen 31.08.2026 (S2/AP5), Entscheidung desselben Tages.* Seit
     Web 11.0.0 schreibt die Anwendung Containerfassung 4; die einteiligen
     Fassungen 2 und 3 werden nur noch **gelesen**. Das ist der Weg, auf dem
@@ -444,7 +444,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Handbuch sagt das auch zu: „Alle Rückfragen erscheinen als Fenster
     **innerhalb der Seite**."
 
-    Diese Zusage war zwei Jahre lang falsch. Zwei Aufrufe im Sicherungsbereich
+    Diese Zusage war zwei Jahre lang falsch. Zwei Aufrufe im Backup-Bereich
     von `einstellungen.php` benutzten weiter `window.confirm`; aufgefallen ist
     es erst, als der Kreislauftest daran hängenblieb — Playwright weist native
     Dialoge stillschweigend ab, und das Einspielen brach ab, ohne dass jemand
@@ -484,11 +484,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     „Jetzt sichern". `edbak_aufbewahrung()` bekäme dafür einen optionalen
     Parameter; `edbak_verdraengen()` liest ihn.
 
-49. **Aufbewahrung auch auf dem Sicherungsziel.**
+49. **Aufbewahrung auch auf dem Backup-Ziel.**
     Der Versand (Web 12.1.0, S2/AP7) **ergänzt nur**: Auf der Gegenstelle
     löscht diese Anwendung nie, auch nicht im Sinne der Regel „höchstens zwei
     je Konto", die für die Ablage auf dem eigenen Server gilt. Bei zwei
-    Sicherungen je Konto und Monat läuft ein Ziel damit über kurz oder lang
+    Backups je Konto und Monat läuft ein Ziel damit über kurz oder lang
     voll, und niemand merkt es hier.
 
     Das ist zunächst Absicht und keine Lücke: Der Zweck eines auswärtigen Ziels
@@ -512,8 +512,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     Der Ausweg ist **nicht** eine Merkliste in der Datenbank — die behauptet
     „schon versandt" auch dann noch, wenn die Datei am Ziel gelöscht oder das
-    Ziel neu aufgesetzt wurde, und diese Art Lüge fällt erst auf, wenn man die
-    Sicherung braucht (Begründung in Technik 4.97c). Denkbar ist stattdessen,
+    Ziel neu aufgesetzt wurde, und diese Art Lüge fällt erst auf, wenn man das
+    Backup braucht (Begründung in Technik 4.97c). Denkbar ist stattdessen,
     die Liste je Ziel **einmal rekursiv** zu holen, wo das Protokoll es
     hergibt, und nur bei Zweifel nachzufragen. Erst messen, dann bauen.
 
@@ -540,7 +540,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wiegt — die Vermutung „es ist die Krypto" hat sich in AP9 schon einmal
     als falsch erwiesen.
 
-52. **WebDAV als viertes Sicherungsziel.**
+52. **WebDAV als viertes Backup-Ziel.**
     Aus E-S2-22, dort ausdrücklich in den Backlog verwiesen. Die Schnittstelle
     `Zielweg` (`sicherungsziel_lib.php`) ist genau dafür gebaut: verbinden,
     Ordner anlegen, senden, holen, auflisten, löschen — ein vierter Adapter
@@ -554,7 +554,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Festlegung und kein Handgriff.
 
 53. **Konto-Schlüsselpaar für versiegelte Serversicherungen.**
-    Aus E-S2-19. Nächtliche Sicherungen je Konto ohne Browser sind abgelehnt
+    Aus E-S2-19. Nächtliche Backups je Konto ohne Browser sind abgelehnt
     worden, weil der Server den Inhaltsschlüssel nicht hat und ihn nicht
     bekommen soll. Ein **öffentlicher** Schlüssel je Konto würde die Lücke
     schließen: Der Server verschlüsselt damit ohne jedes Geheimnis, öffnen kann
@@ -562,7 +562,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Zu entscheiden:** wo der private Teil lebt (unter dem Inhaltsschlüssel
     verpackt wie `pat_wrap_rc`?), was bei einem Passwortwechsel damit
-    geschieht, und ob eine Sicherung, die niemand außer der NutzerIn öffnen
+    geschieht, und ob ein Backup, das niemand außer der NutzerIn öffnen
     kann, für die Administration überhaupt eine Rückfallebene ist — bei einem
     verlorenen Konto ist sie es nicht. Genau daran ist E-S2-19 einmal
     gescheitert; der Punkt steht hier, damit die Frage nicht verlorengeht,
@@ -574,8 +574,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nicht: Es sagt am Ende, ob der Dump aus einer anderen Fassung stammt, und
     schickt zur Wartung. Der Grund ist gut — `update.php` ist seit M6-01
     zweistufig, weil Migrationen Spalten löschen können, und eine Seite ohne
-    Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Sicherung
-    heraus.
+    Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese
+    Absicherung heraus.
 
     Damit bleibt der Schritt aber **an einem Menschen hängen**, und zwar an
     dem Tag, an dem er am meisten zu tun hat. Wer ihn vergisst, hat eine
@@ -590,7 +590,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ist: die Bestätigung. Die zweite Möglichkeit ist billiger und ändert
     nichts an einer Datei mit 37 Migrationen.
 
-55. **Die Komplettsicherung kennt keinen scharfen Schnappschuss.**
+55. **Das Komplett-Backup kennt keinen scharfen Schnappschuss.**
     Aus S2/AP8. Der Dump entsteht über mehrere Anfragen; ein Lesestand über
     den ganzen Lauf (`--single-transaction`) ginge nur innerhalb EINER
     Verbindung. Eine Zeile, die währenddessen entsteht, kann enthalten sein
@@ -658,12 +658,12 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
     Ableitungen nachmessen.
 
-63. **Sperrvermerke des Schnitts überstehen die Konto-Sicherung nicht.**
+63. **Sperrvermerke des Schnitts überstehen das Konto-Backup nicht.**
     *Aufgenommen 02.09.2026 als B-S4-10 (S4/A2).*
     `track_cuts` (Web 12.5.0) hält den Zeitraum, den `ingest.php` an einer
-    geschnittenen Spur nicht mehr annimmt. Die **Komplettsicherung** trägt die
+    geschnittenen Spur nicht mehr annimmt. Die **Komplett-Backup** trägt die
     Tabelle mit — sie findet ihre Tabellen über `SHOW FULL TABLES`. Die
-    **Konto-Sicherung** (`edbak_build()`, Nutzlast 8) hat dagegen einen
+    **Konto-Backup** (`edbak_build()`, Nutzlast 8) hat dagegen einen
     aufgezählten Aufbau und kennt sie nicht.
     **Die Folge nach einem Wiedereinspielen:** Ein Gerät, das Punkte des
     geschnittenen Zeitraums noch im Puffer hat, liefert sie nach, und sie
@@ -782,7 +782,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     abgeschnitten. Ein Kurzname (etwa „RTH 1", „NEF 2") als eigenes
     Stammdatenfeld würde an diesen drei Stellen verwendet, der volle Name
     bleibt in Formularen und Exporten. Schemaänderung, Feldkatalog, Export,
-    Import und Sicherung ziehen nach — deshalb ein eigener Punkt und kein
+    Import und Backup ziehen nach — deshalb ein eigener Punkt und kein
     Nebenklapp. Zuordnung: Backlog-Runde.
 
 70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
@@ -829,7 +829,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 73. **Die Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen.**
     *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
     (Rahmenplan Fassung 16).* Auf `admin_users.php` stehen die Filter „Alle,
-    Admins, Sicherung überfällig, Nie gesichert, Ohne Gerät" rechts neben
+    Admins, Backup überfällig, Nie gesichert, Ohne Gerät" rechts neben
     dem Suchfeld; bei üblicher Schreibtischbreite fällt „Ohne Gerät" allein
     in eine zweite Zeile. **Zu tun:** Anordnung im S8-Konzept festlegen —
     Suchfeld über den Filtern, oder Filter in einer Zeile mit Umbruchregel —
@@ -874,9 +874,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.**
     *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* Die Seite trägt heute
     die Migrationsliste, den Job-Einstieg mit Cron-Zeile und Token-Adresse,
-    die Speichergrenze der Sicherungen und weitere Betriebsangaben auf einer
+    die Speichergrenze der Backups und weitere Betriebsangaben auf einer
     Fläche. **Zu tun:** Schnitt im S8-Konzept (etwa Serverbetrieb und Jobs,
-    Sicherung, Migrationen), dabei entscheiden, ob die Migrationsliste
+    Backup, Migrationen), dabei entscheiden, ob die Migrationsliste
     sichtbar bleiben muss — das hängt am Update-Weg ab v1.0 (R60). Handbuch
     und Technik ziehen nach, die alte Adresse bleibt als Weiterleitung, bis
     P6 neu aufsetzt. Zuordnung: S8.
@@ -888,21 +888,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `--groesse-5`, 600 und gesperrt — gedacht für sechs Zeichen
     Kopplungscode, benutzt aber auch für die Cron-Zeile und die Token-Adresse
     auf der Wartungsseite, den Setz-Link auf der Kontoseite und die
-    Serverschlüssel-Zeile der Sicherungsziele. Lange Werte brechen in dieser
+    Serverschlüssel-Zeile der Backup-Ziele. Lange Werte brechen in dieser
     Größe über mehrere Zeilen und wirken unpassend. **Zu tun:** eine zweite
     Stufe des Bausteins für lange Werte (`--schrift-fest` in `--groesse-2`
     oder `-3`, ohne Sperrung), Herkunft in `Design.md` nachtragen; der
     Kopplungscode behält die große Stufe. Darf als Kleinstkorrektur vorab in
     der Backlog-Runde laufen. Zuordnung: S8.
 
-79. **Sicherungsoptionen: Begriffe und Optionen sind gewachsen wie
+79. **Backup-Optionen: Begriffe und Optionen sind gewachsen wie
     Wildwuchs.**
-    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* P3 hat Sicherungen je
-    Konto und Sicherungsregeln auf die Kontoseite gelegt, S2 hat
-    Speichergrenze, Warnschwellen, Aufbewahrung, Sicherungsziele, Zeitplan
-    und Komplettsicherung dazugebaut, S7 stellt den Begriff um. Was wo
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* P3 hat Backups je
+    Konto und Backup-Regeln auf die Kontoseite gelegt, S2 hat
+    Speichergrenze, Warnschwellen, Aufbewahrung, Backup-Ziele, Zeitplan
+    und Komplett-Backup dazugebaut, S7 stellt den Begriff um. Was wo
     einstellbar ist und wie es heißt, ist nicht mehr aus einem Guss.
-    **Zu tun:** Bestandsaufnahme aller Sicherungsoptionen mit Fundort,
+    **Zu tun:** Bestandsaufnahme aller Backup-Optionen mit Fundort,
     Begriff und Zielgruppe; dann eine Ordnung (je Konto gegen je
     Installation, NutzerIn gegen Admin gegen Betreiberin) und ein
     Begriffssatz; Handbuch 6 und `Backup-Format.md` nachziehen. Zuordnung:
@@ -1003,8 +1003,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nr. 80 (Auswertung) und muss VOR dieser entschieden sein.*
     Nr. 80 fragt, **wie** ausgewertet wird. Dieser Punkt fragt, **ob die Daten
     dafür überhaupt haltbar sind**. Sie sind es nur zur Hälfte.
-    **Was trägt** — beides steht als Spalte am Einsatz selbst und ist in der
-    Sicherung: `missions.origin` (`watch` / `manual` / `import`, beim Anlegen
+    **Was trägt** — beides steht als Spalte am Einsatz selbst und ist im
+    Backup: `missions.origin` (`watch` / `manual` / `import`, beim Anlegen
     gesetzt, nie geändert) und das **Präfix der `client_ref`** (`m-` Garmin-Uhr,
     `am-`/`ar-`/`ad-` Handy-App, `wm-` Wear, `man-` Formular, `imp-` Import;
     JSON-Vertrag 8, seit Fassung 1.4). Damit ist „wie viele Einsätze mit dem
@@ -1014,13 +1014,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     seit Web 12.9.0 Art und Modell hängen. Er steht auf `ON DELETE SET NULL`,
     und drei Wege löschen ein Gerät — einer davon (`pair.php` trennen) ist der
     **vorgesehene Normalfall** bei einer geteilt genutzten Uhr (Nr. 14).
-    Ausserdem steht `device_id` **nicht in der Sicherung** (bewusst, als
+    Ausserdem steht `device_id` **nicht im Backup** (bewusst, als
     interner Verweis).
     **Gemessen am 02.09.2026** an einem Demo-Konto, das über den regulären
     Einspielweg entsteht: **82 von 82 Einsätzen und 95 von 95 Ruhesegmenten
     ohne Geräteverweis** — obwohl 76 davon `origin = 'watch'` tragen. Zum
     Vergleich: **`day_refs` 16 von 16 mit Verweis**, denn dort steht die
-    *öffentliche* Gerätekennung in der Sicherung und wird beim Einspielen neu
+    *öffentliche* Gerätekennung im Backup und wird beim Einspielen neu
     verknüpft. Das richtige Muster existiert im Projekt also schon, nur an
     einer Stelle.
     **Warum es eilt:** R60 lässt v1.0 mit einem Neuaufsetzen und **einer
@@ -1030,7 +1030,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (a) **`devices` weich löschen** statt hart — Spalte `geloescht_am`,
     Zugangsdaten beim Trennen leeren, Zeile aus Listen und aus `MAX_GERAETE`
     filtern; dazu den Verweis wie bei `day_refs` über die öffentliche Kennung
-    in die Sicherung. Hält ein bereits erlaubtes Datum am Leben und ist damit
+    in das Backup. Hält ein bereits erlaubtes Datum am Leben und ist damit
     R36-konform.
     (b) **Art und Modell auf den Einsatz kopieren** (`missions.geraet_art`).
     Überlebt alles, auch die Wiederherstellung — ist aber eine
@@ -1050,8 +1050,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     danach — jedenfalls vor dem Neuaufsetzen.
     **Entschieden am 02.09.2026 (Rahmenplan R64), früher als hier vorgesehen:**
     **Weg (b)** — `geraet_art` und `geraet_modell` als Momentaufnahme an
-    `missions` und `rest_segments`, beim Anlegen aus `devices` kopiert, in die
-    Sicherung aufgenommen (das Muster von `day_refs`), Bestand per Migration
+    `missions` und `rest_segments`, beim Anlegen aus `devices` kopiert, in das
+    Backup aufgenommen (das Muster von `day_refs`), Bestand per Migration
     nachgefüllt, solange die Geräte noch stehen; Trennen bleibt Löschen. Dazu
     **eigene Herkunftswerte** in `origin`: `watch` bleibt für die Garmin-Uhr,
     neu `android`, `wear` und `schnitt` neben `manual` und `import`, gesetzt
@@ -1146,6 +1146,37 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+89. **Der Job „Komplett-Backup der Installation" brach ab, bevor er
+    anfing — von Web 12.2.0 bis 12.9.2.**
+    *Aufgenommen und erledigt am 02.09.2026 (gefunden in S7 als F-S7-06; der
+    Fehler selbst war von der Begriffsumstellung unberührt).*
+    `job_komplett()` (`jobs_lib.php`) trug `float $reserve = KOMP_RESERVE_S`
+    als **Vorgabewert eines Parameters**. Die Konstante steht in
+    `komplett_lib.php`, und diese Datei wird erst **im Rumpf** geladen — so,
+    wie `jobs_lib.php` es mit allen schweren Abhängigkeiten hält, damit eine
+    gewöhnliche Anfrage sie nicht mitschleppt. PHP wertet Vorgabewerte aber
+    **beim Aufruf** aus, also vor der ersten Zeile des Rumpfs. Der Aufruf
+    ohne viertes Argument — und genau so ruft `jobs.php` — endete deshalb
+    immer in `Error: Undefined constant "KOMP_RESERVE_S"`.
+
+    **Was das gekostet hat:** Das geplante Komplett-Backup lief nie. Der Plan
+    („täglich", „wöchentlich", „monatlich") auf
+    `admin_komplettsicherung.php` war seit S2/AP8 ohne Wirkung. Von Hand
+    angestoßen lief der Lauf, weil `komp_schub()` denselben Vorgabewert erst
+    nach dem Laden benutzt — deshalb ist es niemandem aufgefallen. Die
+    Wartungsseite zeigte den Job als „Fehler"; auch das hat niemand gelesen.
+
+    **Behoben:** Vorgabewert `?float $reserve = null`, Auflösung auf
+    `KOMP_RESERVE_S` im Rumpf **nach** dem `require_once`. Das erhält die
+    Bauweise der Datei (späte Ladung) und beseitigt die Ursache.
+    **Gemessen am 02.09.2026:** vorher Aufruf ohne viertes Argument →
+    `Undefined constant`; nachher → Lauf ohne Fehler. Über `php jobs.php`
+    gefahren: `komplett fertig · erledigt 57796`, erzeugte Datei
+    814 453 Byte, Wartungsseite ohne Fehlerzeile.
+
+    **Die Fehlerklasse ist nachgezählt:** „Vorgabewert aus einer erst im
+    Rumpf geladenen Datei" — in `server/` gibt es genau diese eine Stelle.
 
 59. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
     entgegen.**

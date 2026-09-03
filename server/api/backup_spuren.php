@@ -4,21 +4,21 @@ require_once __DIR__ . '/../auth_guard.php';      // liefert $userId
 require_once __DIR__ . '/../spur_lib.php';
 
 /**
- * POST api/backup_spuren.php — die Spuren einer Sicherung, blockweise.
+ * POST api/backup_spuren.php — die Spuren eines Backups, blockweise.
  *
  * WOFUER (Konzept S2, 3.2.3). Fassung 4 legt Spuren als SPUR1-Blob in die
- * Sicherungsdatei. Der Browser holt sie in Bloecken, versiegelt sie zu
+ * Backup-Datei. Der Browser holt sie in Bloecken, versiegelt sie zu
  * Spurteilen von hoechstens 2 MB und haengt sie ans ZIP — er packt dabei nie
  * einen einzelnen Punkt an.
  *
  * WARUM NICHT ueber `api/export_data.php`. Der liefert Punktlisten und traegt
  * drei Regeln, die HIER falsch waeren:
  *
- *   - Er filtert `deleted_at IS NULL`. Eine Sicherung enthaelt den
+ *   - Er filtert `deleted_at IS NULL`. Ein Backup enthaelt den
  *     Papierkorb (E-S1-01) — wer diesen Filter uebernimmt, verliert genau
- *     das, was jemand mit der Sicherung retten wollte.
+ *     das, was jemand mit dem Backup retten wollte.
  *   - Er verlangt den Haken „personenbezogene Angaben" (A9). Bei einer
- *     Sicherung gibt es die anonyme Fassung nicht; es gaebe keinen Haken zu
+ *     Backup gibt es die anonyme Fassung nicht; es gaebe keinen Haken zu
  *     umgehen.
  *   - Er gibt Punkte aus. Hier soll gerade NICHT ausgepackt werden.
  *
@@ -85,7 +85,7 @@ try {
     /* DATENTRENNUNG (I3, I4) — und OHNE den Papierkorbfilter, mit Absicht:
      * `edbak_build()` nimmt den Papierkorb seit Web 7.3.1 ausdruecklich mit
      * (E-S1-01, Begruendung dort). Eine Spur, deren Einsatz im Papierkorb
-     * liegt, gehoert also in die Sicherung. */
+     * liegt, gehoert also in das Backup. */
     $tabelle = $ownerType === 'mission' ? 'missions' : 'rest_segments';
     $eigene = array_map(static fn($r) => (int)$r['id'], sql_in_bloecken($pdo,
         "SELECT id FROM `$tabelle` WHERE user_id = ? AND id IN ({IDS})",

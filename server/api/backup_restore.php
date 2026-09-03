@@ -31,7 +31,7 @@ if (!is_array($data) || ($data['format'] ?? '') !== 'einsatzdoku-backup') {
 
 /* ÄLTERE NUTZLASTVERSIONEN WERDEN ABGELEHNT (E23, A10).
  *
- * Mit dem Umbau auf Diensttage hat sich der Inhalt einer Sicherung so weit
+ * Mit dem Umbau auf Diensttage hat sich der Inhalt eines Backups so weit
  * geaendert, dass eine Umsetzung raten muesste: Eine Nutzlast der Version 5
  * kennt keine Kennung des Flugtags (der Kalendertag WAR sie), keine Art, keinen
  * Rollensatz, keine Standortzuordnung der Stammdaten und keine Uhr-Kennungen.
@@ -62,7 +62,7 @@ if (!is_array($data) || ($data['format'] ?? '') !== 'einsatzdoku-backup') {
 $nutzlast = isset($data['version']) ? (int)$data['version'] : 0;
 if ($nutzlast < 6) {
     json_out(['error' => 'version_alt',
-              'meldung' => 'Diese Sicherung hat das Format ' . $nutzlast
+              'meldung' => 'Dieses Backup hat das Format ' . $nutzlast
                          . ' und stammt aus einer Fassung vor der Umstellung auf '
                          . 'Diensttage (Web 6.0.0). Sie lässt sich nicht mehr '
                          . 'einspielen: Ihr fehlen Angaben, die sich nicht '
@@ -85,7 +85,7 @@ if ($nutzlast < 6) {
 const NUTZLAST_HOECHSTENS = 8;
 if ($nutzlast > NUTZLAST_HOECHSTENS) {
     json_out(['error' => 'version_neu',
-              'meldung' => 'Diese Sicherung hat das Format ' . $nutzlast
+              'meldung' => 'Dieses Backup hat das Format ' . $nutzlast
                          . ' und stammt aus einer neueren Fassung der Anwendung. '
                          . 'Diese Installation kennt höchstens Format '
                          . NUTZLAST_HOECHSTENS . '. Es wurde nichts geändert — '

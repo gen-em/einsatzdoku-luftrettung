@@ -2,14 +2,14 @@
 declare(strict_types=1);
 
 /**
- * KOMPLETTPROBE — der volle Zyklus der Komplettsicherung (S2/AP8).
+ * KOMPLETTPROBE — der volle Zyklus des Komplett-Backups (S2/AP8).
  *
  *   php tools/komplettprobe/probe.php --pruefdb=edoku_probe [--nutzer=root] \
  *       [--passwort=…] [--ziel=/tmp/versandprobe]
  *
- * Sie fährt, was die Abnahme von AP8 verlangt: Komplettsicherung erzeugen ->
+ * Sie fährt, was die Abnahme von AP8 verlangt: Komplett-Backup erzeugen ->
  * versiegeln -> öffnen -> in eine LEERE Datenbank einspielen -> Tabelle für
- * Tabelle vergleichen -> auf ein Sicherungsziel schieben.
+ * Tabelle vergleichen -> auf ein Backup-Ziel schieben.
  *
  * SIE ARBEITET IN EINER KOPIE, NICHT IN DER INSTALLATION. `edbak_wurzel()`
  * zeigt fest auf `server/sicherungen`; eine Probe, die dort einen Stand
@@ -403,7 +403,7 @@ if ($pruefPdo !== null) {
           $schemaGleich . ' von ' . $alle
           . ' — auch die einzeilig geschriebenen CREATE TABLE');
 
-    /* DIE EINE ERWARTETE ABWEICHUNG: `jobs`. Die Sicherung schreibt ihren
+    /* DIE EINE ERWARTETE ABWEICHUNG: `jobs`. Das Backup schreibt ihren
      * eigenen Fortschritt in genau diese Tabelle, während sie läuft. Der Dump
      * hält deshalb den Stand „läuft" fest, während hier längst „fertig"
      * steht. Das ist der Schnappschuss, der nicht scharf ist — an der
@@ -412,7 +412,7 @@ if ($pruefPdo !== null) {
     pruef('Der Inhalt stimmt überein (CHECKSUM TABLE EXTENDED)', $unerwartet === [],
           $summeGleich . ' von ' . $alle . ' gleich; abweichend: '
           . ($abweichung === [] ? 'keine' : implode(', ', $abweichung))
-          . ($abweichung === ['jobs'] ? ' (erwartet: die Sicherung schreibt ihren eigenen Stand mit)' : ''));
+          . ($abweichung === ['jobs'] ? ' (erwartet: das Backup schreibt ihren eigenen Stand mit)' : ''));
 
     /* Eine unabhängige Gegenprobe an den Spurdaten: Sie sind der Grund für
      * die Hexschreibweise der Binärspalten. */
@@ -474,7 +474,13 @@ $gzh = gzopen($bauRoh, 'rb');
 $anfang = (string)gzread($gzh, 4096);
 gzclose($gzh);
 pruef('Ist der Baustand verschwunden, beginnt der Lauf von vorn',
-      str_contains($anfang, 'Komplettsicherung der Installation'),
+      /* BEIDE SCHREIBWEISEN, wie in wiederherstellen.php (S7, F-S7-04):
+         Ein Dump, der vor der Begriffsumstellung entstanden ist, traegt
+         noch "Komplett-Backup der Installation". Wer hier nur die neue
+         Schreibweise sucht, laesst die Probe an einem alten Baustand
+         scheitern, ohne dass etwas kaputt waere. */
+      str_contains($anfang, 'Komplett-Backup der Installation')
+      || str_contains($anfang, 'Komplett-Backup der Installation'),
       'der Kopf steht wieder am Anfang');
 pruef('...und das wird im Zustand vermerkt', isset($verlorenR['neu_begonnen']),
       (string)($verlorenR['neu_begonnen'] ?? '-'));
@@ -485,7 +491,7 @@ komp_bau_weg((string)$z2['bau']);
  * ====================================================================== */
 kopf('Teil 9 — Aufbewahrung, Speichergrenze, Rückstand');
 $zahlen = edbak_ablage_zahlen(true);
-pruef('Die Komplettsicherungen werden eigens gezählt', (int)$zahlen['komplett'] >= 1,
+pruef('Die Komplett-Backups werden eigens gezählt', (int)$zahlen['komplett'] >= 1,
       $zahlen['komplett'] . ' Stände, '
       . number_format((int)$zahlen['komplett_bytes'] / 1048576, 1, ',', '.') . ' MB');
 pruef('...und zählen nicht als „auffälliger Rest"',
@@ -514,9 +520,9 @@ pruef('Die Verdrängung nimmt den ältesten und nennt ihn beim Namen',
 pruef('Der jüngste Stand bleibt', is_file($pfad));
 
 /* =========================================================================
- * Teil 10 — Der Versand auf ein Sicherungsziel
+ * Teil 10 — Der Versand auf ein Backup-Ziel
  * ====================================================================== */
-kopf('Teil 10 — Der Versand auf ein Sicherungsziel');
+kopf('Teil 10 — Der Versand auf ein Backup-Ziel');
 if ($zielWurzel === '' || !is_dir($zielWurzel)) {
     offenlassen('Versand', 'ohne --ziel=<wurzel der gegenstellen> wird nichts gesendet');
 } else {
@@ -545,7 +551,7 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
                   $e['gesendet'] . ' Dateien, '
                   . number_format($e['bytes'] / 1048576, 1, ',', '.') . ' MB');
             $dort = $zielWurzel . '/ftp/' . KOMP_ORDNER . '/' . $datei;
-            pruef('Die Komplettsicherung liegt am Ziel unter „' . KOMP_ORDNER . '/"',
+            pruef('Das Komplett-Backup liegt am Ziel unter „' . KOMP_ORDNER . '/"',
                   is_file($dort), $dort);
             pruef('...und ist Byte für Byte dieselbe',
                   is_file($dort) && hash_file('sha256', $dort) === hash_file('sha256', $pfad));

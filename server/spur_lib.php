@@ -1520,9 +1520,9 @@ function schnitte_loeschen_quelle(PDO $pdo, string $ownerType, array $ids): int
 }
 
 /* ---------------------------------------------------------------------------
- * ROHER ZUGRIFF FUER DIE SICHERUNG (S2/AP5)
+ * ROHER ZUGRIFF FUER DAS BACKUP (S2/AP5)
  *
- * Die Sicherung Fassung 4 legt Spuren als SPUR1-Blob in die Datei, statt sie
+ * Das Backup Fassung 4 legt Spuren als SPUR1-Blob in die Datei, statt sie
  * zu Punktlisten auszupacken. Sie braucht dafuer den Blob, nicht die Punkte —
  * und bis hierher gab es dafuer KEINEN erlaubten Weg: `spur_lesen_viele()`
  * dekodiert in derselben Schleife, in der es liest.
@@ -1560,10 +1560,10 @@ function spur_blob_lesen_viele(PDO $pdo, string $ownerType, array $ids): array
 }
 
 /**
- * Die Spuren mehrerer Eigentuemer, fertig fuer die Sicherungsdatei.
+ * Die Spuren mehrerer Eigentuemer, fertig fuer die Backup-Datei.
  *
- * DIE FALLUNTERSCHEIDUNG STEHT AN EINER STELLE — hier. Der Endpunkt, die
- * Admin-Sicherung und alles, was spaeter dazukommt, ruft sie; keiner baut sie
+ * DIE FALLUNTERSCHEIDUNG STEHT AN EINER STELLE — hier. Der Endpunkt, das
+ * Admin-Backup und alles, was spaeter dazukommt, ruft sie; keiner baut sie
  * nach. Sie ist naemlich nicht offensichtlich:
  *
  *   Zeilen 0, Blob da        -> Blob durchreichen, so wie er liegt
@@ -1578,14 +1578,14 @@ function spur_blob_lesen_viele(PDO $pdo, string $ownerType, array $ids): array
  *                            die Nachzuegler tragen Originalnummern — die
  *                            Vereinigung ist keine Spur. Erwartungswert 0
  *                            (ingest.php nimmt solche Punkte seit AP3 nicht
- *                            mehr an), aber eine Sicherung ist der falsche
+ *                            mehr an), aber ein Backup ist der falsche
  *                            Ort fuer eine Annahme.
  *   Luecke in den Nummern    `spur_kodieren()` speichert die Nummer nicht, die
  *                            POSITION ist die Nummer. Eine Luecke verschoebe
  *                            still jeden Punkt dahinter.
  *   Ueber LIMIT_TRACKPUNKTE_SPUR
  *                            Der Rueckweg lehnt eine solche Spur ab
- *                            (validate_lib.php). Eine Sicherung, die etwas
+ *                            (validate_lib.php). Ein Backup, das etwas
  *                            enthaelt, das sich nicht einspielen laesst, ist
  *                            eine Falle.
  *
@@ -1700,7 +1700,7 @@ function spur_fuer_sicherung_viele(PDO $pdo, string $ownerType, array $ids,
         $n = count($punkte);
         $blob = spur_kodieren($punkte, SPUR_STUFE_ROH, $n);
 
-        /* RUNDLAUF VOR DEM AUSLIEFERN. Eine Sicherung, die still einen
+        /* RUNDLAUF VOR DEM AUSLIEFERN. Ein Backup, das still einen
          * unbelegten Blob mitnimmt, ist schlimmer als eine, die einen Fehler
          * meldet: Der Fehler faellt beim Sichern auf, der Blob beim
          * Einspielen — und da ist die Quelle vielleicht schon weg. */
@@ -1744,7 +1744,7 @@ function spur_fuer_sicherung_viele(PDO $pdo, string $ownerType, array $ids,
  *
  * WAS SIE NICHT PRUEFT: ob die Spur PLAUSIBEL ist. Ein Weg quer durch Europa
  * in zehn Sekunden ist gueltig; das zu beurteilen ist nicht Sache eines
- * Rueckwegs, und eine Sicherung darf ihren eigenen Bestand mitbringen.
+ * Rueckwegs, und ein Backup darf seinen eigenen Bestand mitbringen.
  *
  * @return string|null null = in Ordnung, sonst der Grund im Klartext
  */

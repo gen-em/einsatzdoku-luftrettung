@@ -15,11 +15,11 @@ Hand über den Einladungsweg.
 
 ## Wozu
 
-Eine Administration darf eine Sicherung mit geschützten Angaben **nicht**
+Eine Administration darf ein Backup mit geschützten Angaben **nicht**
 unmittelbar in ein neu aufgesetztes Konto spielen (E20): Die Angaben sind mit
 einem Inhaltsschlüssel verschlüsselt, den nur der Wiederherstellungsschlüssel
-öffnet — und der liegt ausschliesslich bei der NutzerIn. Sie gibt die
-Sicherung deshalb frei, und das Umschlüsseln geschieht in ihrem Browser.
+öffnet — und der liegt ausschliesslich bei der NutzerIn. Sie gibt das
+Backup deshalb frei, und das Umschlüsseln geschieht in ihrem Browser.
 
 **Dieser Weg war bis Web 12.0.0 nie geprüft, und er hat auch nie
 funktioniert.** Der Kasten, in dem der Schlüssel einzugeben ist, wurde von

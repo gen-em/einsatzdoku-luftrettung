@@ -21,7 +21,7 @@ const EdCrypto = (() => {
    * anderes Token, und der gespeicherte Hash passte nicht mehr. Der Wert
    * kommt jetzt je Konto vom Server (users.kdf_iter).
    *
-   * ITER_ALT ist nur noch fuer EINEN Zweck da: Sicherungsdateien im
+   * ITER_ALT ist nur noch fuer EINEN Zweck da: Backup-Dateien im
    * Containerformat 2 tragen die Rundenzahl nicht im Kopf, dort galt immer
    * dieser Wert. Fuer die Kontoableitung darf er NICHT verwendet werden. */
   const ITER_ALT = 310000;
@@ -51,7 +51,7 @@ const EdCrypto = (() => {
    *
    * DIE RUNDENZAHL IST PFLICHT UND HAT KEINEN VORGABEWERT (M2-01).
    *
-   * Das ist die wichtigste Sicherung dieses Umbaus. Ein Vorgabewert würde
+   * Das ist die wichtigste Absicherung dieses Umbaus. Ein Vorgabewert würde
    * jede vergessene Aufrufstelle stillschweigend mit der alten Zahl rechnen
    * lassen — und weil heute fast alle Konten noch die alte Zahl tragen, fiele
    * das NICHT AUF. Es fiele erst an dem Tag auf, an dem jemand den Zielwert
@@ -163,7 +163,7 @@ const EdCrypto = (() => {
       if (kennung !== CHIFFRE_PRAEFIX) {
         /* Eine Kennung, die diese Fassung nicht kennt. Die Meldung sagt das
          * auch — sonst sucht jemand den Fehler beim Schlüssel und findet ihn
-         * nie. Derselbe Gedanke wie beim Sicherungscontainer. */
+         * nie. Derselbe Gedanke wie beim Backup-Container. */
         throw new Error('Dieser Datensatz wurde mit einer neueren Fassung des '
                       + 'Programms verschlüsselt (' + kennung + '). Bitte die '
                       + 'Anwendung aktualisieren.');
@@ -298,7 +298,7 @@ const EdCrypto = (() => {
    *       Inhaltsschlüssel enthält — danach ist jeder vorhandene Datensatz
    *       unlesbar, und zwar endgültig.
    *   (b) Bindung des zwischengespeicherten Schlüssels (siehe keyguard.js).
-   *   (c) Einspielen einer Sicherung: erkennt, ob ein mitgeführter
+   *   (c) Einspielen eines Backups: erkennt, ob ein mitgeführter
    *       Chiffretext aus demselben Konto stammt.
    *
    * WAS DER SERVER DADURCH LERNT: nichts. Der Inhaltsschlüssel ist 256 Bit
@@ -431,8 +431,8 @@ const EdCrypto = (() => {
    *
    * WARUM DIE RUNDENZAHL IN DEN KOPF MUSSTE (S7)
    * Sie stand nur als Konstante im Code. Wer sie anhebt, macht damit JEDE
-   * bereits erzeugte Sicherungsdatei unlesbar — und zwar ohne Fehlermeldung,
-   * die den Grund nennt: Es sähe aus wie ein falsches Passwort. Sicherungen
+   * bereits erzeugte Backup-Datei unlesbar — und zwar ohne Fehlermeldung,
+   * die den Grund nennt: Es sähe aus wie ein falsches Passwort. Backups
    * werden aber gerade für den Fall aufbewahrt, dass etwas schiefgeht; eine
    * Datei, die genau dann nicht mehr aufgeht, ist keine.
    *
@@ -464,25 +464,25 @@ const EdCrypto = (() => {
     /* Verfuegbarkeit pruefen wie beim Packen (M2-11).
      *
      * gzip() oben fragt seit jeher nach, ob CompressionStream existiert, und
-     * legt die Sicherung sonst ungepackt an. gunzip() fragte nicht — auf
-     * einem Browser ohne DecompressionStream endete das Oeffnen einer
-     * gepackten Sicherung in einem ReferenceError, der weiter oben als
+     * legt das Backup sonst ungepackt an. gunzip() fragte nicht — auf
+     * einem Browser ohne DecompressionStream endete das Oeffnen eines
+     * gepackten Backups in einem ReferenceError, der weiter oben als
      * "Passwort falsch oder Datei beschaedigt" ankam.
      *
      * Das ist die denkbar irrefuehrendste Auskunft: Die Datei ist in Ordnung,
      * das Passwort stimmt, und die betroffene Person tippt es zehnmal neu.
-     * Der Fall trifft ausserdem genau die aelteren Browser, auf denen die
-     * Sicherung urspruenglich ungepackt entstanden waere — beim Wechsel des
+     * Der Fall trifft ausserdem genau die aelteren Browser, auf denen das
+     * Backup urspruenglich ungepackt entstanden waere — beim Wechsel des
      * Geraets ist er also nicht abwegig. */
     if (typeof DecompressionStream === 'undefined') {
-      throw new Error('Dieser Browser kann gepackte Sicherungen nicht öffnen. '
+      throw new Error('Dieser Browser kann gepackte Backups nicht öffnen. '
                     + 'Bitte einen aktuellen Browser verwenden — die Datei ist in Ordnung.');
     }
     const s = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
     return new Uint8Array(await new Response(s).arrayBuffer());
   }
 
-  /** Erzeugt eine Sicherungsdatei in der aktuellen Fassung (3). */
+  /** Erzeugt eine Backup-Datei in der aktuellen Fassung (3). */
   async function sealBackup(password, jsonText, iter) {
     pruefeRunden(iter, 'sealBackup');
     const raw = te.encode(jsonText);
@@ -524,13 +524,13 @@ const EdCrypto = (() => {
        * Kern ohne Spurteile ist unvollstaendig, ein Spurteil ohne Kern sind
        * Zahlen ohne Zuordnung. Die Meldung sagt deshalb, was zu tun ist,
        * statt beim Passwort zu enden. */
-      throw new Error('Das ist ein einzelnes Teil einer mehrteiligen Sicherung, '
-                    + 'nicht die Sicherung selbst. Bitte die vollständige '
+      throw new Error('Das ist ein einzelnes Teil eines mehrteiligen Backups, '
+                    + 'nicht das Backup selbst. Bitte die vollständige '
                     + '.edbak-Datei auswählen — die, die alle Teile enthält.');
     } else {
       // Eine NEUERE Fassung als diese Installation kennt. Die Meldung sagt
       // das auch — sonst sucht jemand den Fehler beim Passwort.
-      throw new Error('Diese Sicherungsdatei stammt aus einer neueren Fassung '
+      throw new Error('Diese Backup-Datei stammt aus einer neueren Fassung '
                     + '(Format ' + version + '). Bitte die Anwendung aktualisieren.');
     }
     const head = bytes.slice(0, kopfLen);
@@ -548,12 +548,12 @@ const EdCrypto = (() => {
 
   /* ---- Containerfassung 4: ein ZIP mit versiegelten Teilen -------------
    *
-   * WOFUER (Konzept S2, E-S2-10). Eine Sicherung mit 5000 Einsaetzen traegt
+   * WOFUER (Konzept S2, E-S2-10). Ein Backup mit 5000 Einsaetzen traegt
    * rund drei Millionen Spurpunkte. Als EINE Zeichenkette ist das ein
    * Browserschritt jenseits jedes Budgets — und der Rueckweg ein POST, den
    * kein Webspace annimmt. Fassung 4 zerlegt die Datei deshalb in Teile:
    *
-   *   manifest.edbak          Teileliste, SHA-256 je Teil, Sicherungskennung
+   *   manifest.edbak          Teileliste, SHA-256 je Teil, Backup-Kennung
    *   kopf.edbak              Stammdaten, Diensttage, Zahl der Eintraege
    *   eintraege/0001.edbak …  je 250 Eintraege OHNE Punktlisten
    *   spuren/0001.edbak …     je Teil eine Liste {spur_ref, blob} (SPUR1)
@@ -576,16 +576,16 @@ const EdCrypto = (() => {
    * 2. DIE ZUSATZDATEN TRAGEN DEN PLATZ DES TEILS.
    *
    *      Manifest   EDBAK4|manifest
-   *      jedes ...  EDBAK4|<sicherungskennung>|<name>|<nr>/<gesamt>
+   *      jedes ...  EDBAK4|<kennung>|<name>|<nr>/<gesamt>
    *
    *    Sie stehen HINTER dem Kopf, nicht an seiner Stelle: AAD = Kopf (13 B)
    *    + diese Zeichenkette. Der Kopf bleibt damit gebunden wie bisher, und
    *    der Platz kommt dazu.
    *
    *    WAS DAS LEISTET: Ein fehlendes, doppeltes, vertauschtes oder aus einer
-   *    ANDEREN Sicherung stammendes Teil faellt beim Entsiegeln auf — nicht
+   *    ANDEREN Backup stammendes Teil faellt beim Entsiegeln auf — nicht
    *    erst beim Datenvergleich, und nicht gar nicht. Ohne diese Bindung
-   *    liesse sich `spuren/0003.edbak` einer fremden Sicherung unterschieben;
+   *    liesse sich `spuren/0003.edbak` einem fremden Backup unterschieben;
    *    sie entsiegelte klaglos (dasselbe Passwort genuegt) und brachte die
    *    Spuren eines fremden Bestands in dieses Konto. Das Muster ist von
    *    Cryptomator und age abgeschaut, wo der Blockindex aus demselben Grund
@@ -602,7 +602,7 @@ const EdCrypto = (() => {
   const AAD_MARKE = 'EDBAK4';
 
   /**
-   * Der Schluessel eines Sicherungsvorgangs — EINMAL ableiten.
+   * Der Schluessel eines Backup-Vorgangs — EINMAL ableiten.
    *
    * Ohne `salt` entsteht ein neues (Sichern), mit `salt` wird das aus dem
    * ersten Teil gelesene benutzt (Einspielen).
@@ -693,7 +693,7 @@ const EdCrypto = (() => {
    *
    * DIE MELDUNG UNTERSCHEIDET DREI FAELLE, und das ist der Punkt der ganzen
    * Uebung: „Passwort falsch" fuer alles waere hier die schlechteste aller
-   * Auskuenfte. Wer eine Sicherung einspielt, hat meist keinen zweiten
+   * Auskuenfte. Wer ein Backup einspielt, hat meist keinen zweiten
    * Versuch — er soll wissen, ob er das Passwort neu tippen oder die Datei
    * suchen muss.
    */
@@ -707,10 +707,10 @@ const EdCrypto = (() => {
           additionalData: aadBytes(head, aadText) },
         vorgang.key, bytes.slice(41)));
     } catch (e) {
-      throw new Error((wasIstDas || 'Ein Teil der Sicherung') + ' ließ sich nicht '
+      throw new Error((wasIstDas || 'Ein Teil des Backups') + ' ließ sich nicht '
         + 'öffnen. Entweder stimmt das Passwort nicht, oder das Teil gehört '
         + 'nicht an diese Stelle — es kann fehlen, vertauscht sein oder aus '
-        + 'einer anderen Sicherung stammen.');
+        + 'einem anderen Backup stammen.');
     }
     return kopf.flag === 1 ? await gunzip(body) : body;
   }

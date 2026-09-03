@@ -18,7 +18,7 @@ require_once __DIR__ . '/../gpx_lib.php';
  *
  * WOFUER. Das Gegenstueck zum GPX-Abruf (S2/AP4). Eine Spur, die auf einem
  * anderen Geraet entstanden ist — ein Wanderuhr-Track, ein Export aus einer
- * Leitstellensoftware, die eigene Sicherung —, kommt damit in die Anwendung.
+ * Leitstellensoftware, das eigene Backup —, kommt damit in die Anwendung.
  *
  * ZWEI ZIELE, UND DIE WAHL IST NICHT KOSMETIK (E-R45-4):
  *

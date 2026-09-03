@@ -103,7 +103,7 @@ const EXPORT_ORIGIN_LABEL = [
 ];
 
 /* Die chunkweise IN(...)-Abfrage stand bis Web 4.5.3 HIER und war die einzige
- * Umsetzung im Projekt. Tagesansicht und Sicherung fragten stattdessen je
+ * Umsetzung im Projekt. Tagesansicht und Backup fragten stattdessen je
  * Datensatz einzeln — den Weg, den dieser Kommentar seit jeher beschreibt,
  * ist ihm niemand gefolgt, weil er nur hier zu finden war. Seit Web 4.6.0
  * steht er als sql_in_bloecken() in db.php und wird von allen drei Stellen

@@ -38,8 +38,8 @@ const EdMissionTable = (() => {
    * Einsatz hat keine Angaben, oder er hat welche, die sich nicht
    * entschluesseln lassen. Der zweite Fall ist ein Alarmzeichen und sah aus
    * wie der erste. Wer den Unterschied nicht sieht, merkt nicht, dass sein
-   * Inhaltsschluessel nicht mehr passt — und erstellt als Naechstes eine
-   * Sicherung.
+   * Inhaltsschluessel nicht mehr passt — und erstellt als Naechstes ein
+   * Backup.
    *
    * Jetzt:  –  keine Angaben      ⚠  vorhanden, aber nicht lesbar
    *
@@ -52,14 +52,14 @@ const EdMissionTable = (() => {
    * Zelle wird per innerHTML gesetzt; Markup darin lief in dem Fenster los,
    * in dem der Inhaltsschlüssel liegt.
    *
-   * DER WEG HINEIN IST DIE WIEDERHERSTELLUNG EINER SICHERUNG, nicht der
+   * DER WEG HINEIN IST DIE WIEDERHERSTELLUNG EINER BACKUP, nicht der
    * Import. Bis Web 7.3.1 stand hier das Gegenteil („import.js übernimmt
    * pat.age als rohen Zellenwert"); das ist nachgemessen falsch —
    * import_profiles.js bildet `pat_alter` mit parse:['alterJahre'] ab, und
    * PARSERS.ganzzahl verlangt /^-?\d+$/. `47<img …>` wird verworfen, nicht
    * übernommen. api/backup_restore.php dagegen übernimmt den inneren
    * Chiffretext unverändert, wie es sein muss — und im Adminbereich
-   * schreibt „Einspielen" eine FREMDE Sicherung in ein Konto.
+   * schreibt „Einspielen" ein FREMDES Backup in ein Konto.
    *
    * Die Entscheidung, eine Angabe zu maskieren, darf deshalb nicht an der
    * Aufrufstelle liegen: Sie war an zwei von sechs Stellen falsch getroffen,
