@@ -11,6 +11,54 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 13.0.1] — 2026-09-03
+
+### Web — Behoben: ein später eintreffendes Paket löschte Ende, Strecke und Anstieg
+
+Gefunden bei der Gegenlesung des S5-Zusatzes (Befund B5.3), nachgestellt gegen
+eine laufende Installation, behoben in einem eigenen Schritt — der Fehler ist
+älter als S5 und soll getrennt nachvollziehbar bleiben.
+
+Der Upsert in `ingest.php` schrieb `ended_at`, `distance_m` und `ascent_m`
+bedingungslos aus dem eintreffenden Paket (`ended_at = VALUES(ended_at)`),
+während `final` seit jeher mit `GREATEST(final, VALUES(final))` geschützt war.
+**Genau diese drei Spalten trägt ein nicht-finales Paket aber nicht:** Solange
+ein Einsatz läuft, kennt die Uhr weder Ende noch Strecke noch Anstieg und
+sendet `null`.
+
+Kam ein solches Paket **nach** dem finalen an, setzte der Upsert alle drei auf
+NULL zurück — und `final` blieb wegen `GREATEST` auf 1. Übrig blieb ein
+abgeschlossener Einsatz ohne Ende, ohne Strecke, ohne Anstieg. Kein Fehler,
+keine Meldung, die Antwort lautete „ok". Am Ruhe-Segment zeigte sich derselbe
+Fehler als Widerspruch auf der Spurenseite eines Diensttags: „12:00 – offen
+Uhr" **ohne** den Zusatz „· läuft noch", weil die Zeile ihr Ende aus
+`ended_at` und den Zusatz aus `final` bezieht (`assets/schneiden.js` 341–346).
+
+**Dass das vorkommt, ist kein Gedankenspiel.** Jede Wiederholung eines
+früheren Teilstücks ist so ein Paket — die Ingestprobe schickt genau das seit
+S2 („Wiederholung unterhalb `n_original`", Teil 3) und hat nur nie
+hingesehen. Mit dem Nachsende-Speicher der Handy-App (S5-Zusatz, Paket E2)
+wird die Reihenfolge vollends unzuverlässig: Was beim Funkabriss
+liegenblieb, geht hinterher heraus, und zwar nach dem, was inzwischen
+gesendet wurde.
+
+Behoben mit `COALESCE(VALUES(x), x)` an allen vier Stellen (drei an
+`missions`, eine an `rest_segments`): Ein Wert überschreibt, ein NULL lässt
+stehen. **Eine Berichtigung bleibt möglich** — sendet die Uhr ein anderes
+Ende, gilt es; nur das Vergessen ist weg. Der umgekehrte Fall, ein Ende soll
+wieder verschwinden, ist keiner: `final` geht aus demselben Grund nie zurück.
+
+**Keine Migration.** Was einmal gelöscht wurde, lässt sich nicht
+zurückholen — der Wert stand nur im Paket, das ihn überschrieben hat. Auf der
+Betreiberinstallation ist kein Fall bekannt; wer einen Einsatz mit `final = 1`
+und leerem Ende findet, trägt das Ende von Hand nach.
+
+**Nachweis:** `tools/ingestprobe/` **Teil 7** (neu): nach dem finalen Paket
+stehen alle drei Werte, ein späteres nicht-finales Paket lässt sie stehen,
+`final` bleibt 1 — und die Gegenprobe, dass eine Berichtigung mit anderen
+Werten weiterhin durchgeht. Damit **30 Erwartungen, 0 nicht erfüllt** (vorher
+24). `tools/kopplungsprobe/` unverändert **75 / 75**.
+
 ## [Web 13.0.0] — 2026-09-03
 
 ### Web — Kopplung umgekehrt: das Gerät zeigt den Code (S5, Paket A — Server)

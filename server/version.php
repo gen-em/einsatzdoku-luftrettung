@@ -2150,5 +2150,19 @@ declare(strict_types=1);
  * bcrypt-Hash, der nie mehr passt, und koppelt einmal neu. Einen Umhash-Pfad
  * gibt es absichtlich nicht — ab 1.0 gibt es genau eine, frisch installierte
  * Installation (R60).
+ *
+ * 13.0.1 BEHEBT EINEN STILLEN DATENVERLUST IM UPLOAD, der aelter ist als S5
+ * und bei der Gegenlesung des S5-Zusatzes auffiel (Befund B5.3). Der Upsert in
+ * `ingest.php` schrieb `ended_at`, `distance_m` und `ascent_m` bedingungslos
+ * aus dem eintreffenden Paket — waehrend `final` seit jeher mit GREATEST
+ * geschuetzt war. Genau diese drei Spalten traegt ein NICHT-finales Paket
+ * aber nicht. Kam eines nach dem finalen an — jede Wiederholung eines
+ * frueheren Teilstuecks ist so eines —, blieb ein abgeschlossener Einsatz
+ * ohne Ende, ohne Strecke und ohne Anstieg zurueck. Die Antwort lautete "ok".
+ * Jetzt steht dort COALESCE: Ein Wert ueberschreibt, ein NULL laesst stehen;
+ * eine Berichtigung bleibt moeglich. Nachgestellt und seither gehalten von
+ * Teil 7 der Ingestprobe. Keine Migration — was einmal geloescht wurde, laesst
+ * sich nicht zurueckholen; auf der Betreiberinstallation ist kein Fall
+ * bekannt.
  */
-const WEB_VERSION = '13.0.0';
+const WEB_VERSION = '13.0.1';

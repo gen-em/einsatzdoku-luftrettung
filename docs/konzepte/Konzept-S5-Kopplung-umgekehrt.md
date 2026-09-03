@@ -849,7 +849,7 @@ lässt.
 | Kandidat | Herkunft | Vorschlag |
 |---|---|---|
 | `AUTH_VERGLEICHSWERT` trägt Kostenfaktor 10, PHP 8.4 legt 12 an — 57 gegen 228 ms, verdeckt nur von der Mindestdauer 0,35 s | V-S5-13, Paket A | Vergleichswert auf den tatsächlichen Kostenfaktor ziehen, sobald keine Installation mehr auf PHP 8.3 läuft; oder `rate_gleiche_dauer()` an `login.php` auf 0,5 s |
-| `ingest.php` schreibt beim Upsert `ended_at = VALUES(ended_at)` bedingungslos, `final` mit `GREATEST` — ein spätes nicht-finales Paket setzt `ended_at` auf NULL zurück | Gegenlesung B5.3 (Vorbereitung 8.4) | `ended_at = COALESCE(VALUES(ended_at), ended_at)`; betrifft auch Paket E2 (Reihenfolge beim Nachsenden) |
+| ~~`ingest.php` schreibt beim Upsert bedingungslos~~ | Gegenlesung B5.3 | **erledigt in Web 13.0.1**, nicht als Backlog-Punkt: nachgestellt (es gingen Ende, Strecke **und** Anstieg verloren, nicht nur das Ende), mit `COALESCE` an vier Stellen behoben, Ingestprobe Teil 7 hält es. Für Paket E2 bleibt die Reihenfolge beim Nachsenden trotzdem die richtige Zusage — der Server verzeiht sie jetzt nur |
 | Kopfkommentar von `tools/uhr-bilder/erzeugen.sh` sagt „bitgleich“, die LIESMICH daneben „pixelgleich“ | V-S5-05 | ein Wort, oder `-define png:exclude-chunk=time` |
 | Die manuelle Geräteanlage vergibt `dev-` + 4 Zufallsbytes, die Kopplung 16 | B-S5-01 (erste Hälfte) | in Paket B mitnehmen, weil `einstellungen.php` dort ohnehin offen ist — Entscheidung der Umsetzung |
 | Die Rundlauffälle der Android-App lassen 9 Diensttage, 5 Einsätze und 14 439 Punkte im Admin-Konto zurück | Vorbereitung 8.2 | Aufräumen im `@After` oder eigenes Prüfkonto |
