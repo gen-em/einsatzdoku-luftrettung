@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Anker der S5-Fundstellen — findet sie am INHALT, nicht an der Zeilennummer.
 
-WOZU. Das Konzept `docs/konzepte/Konzept-S5-Kopplung-umgekehrt.md` nennt zu
+WOZU. Die beiden S5-Konzepte (`Konzept-S5-Kopplung-umgekehrt.md`, Pakete A-D,
+und `Konzept-S5-Zusatz-Android-Ortung-Dienstende.md`, Paket E) nennen zu
 jeder Aussage eine Fundstelle mit Zeilennummer. Diese Nummern sind am
 02.09.2026 an `main` (c2ac707) erhoben und stimmten alle. Sie halten aber nur
 bis zum naechsten Paket, das dieselben Dateien anfasst — S7 ersetzt
 "Sicherung" durch "Backup" und beruehrt dabei `einstellungen.php` (46
 Treffer), `jobs_lib.php` (22), `update.php` (16), `Handbuch.md` (71) und
 `Technik.md` (114). Danach zeigt jede Zeilennummer des Konzepts auf etwas
-anderes.
+anderes. Fuer Paket E (nur `android/`) tut das nicht S7, sondern der S4-Rest —
+er fasst `HauptActivity.kt`, `strings.xml` und das Manifest an; E-S5Z-14 laesst
+E deshalb davor mergen.
 
 Ein Konzept deswegen umzuschreiben waere die falsche Antwort: Die Nummern
 sind Beleg, kein Wegweiser. Dieses Werkzeug sucht statt ihrer den TEXT und
@@ -25,7 +28,7 @@ DREI ANTWORTEN, und die dritte ist die wichtige:
 Aufruf:
     python3 tools/s5-anker/anker.py            # alle Anker
     python3 tools/s5-anker/anker.py --knapp    # nur Abweichungen
-    python3 tools/s5-anker/anker.py --paket A  # nur die eines Pakets
+    python3 tools/s5-anker/anker.py --paket A  # nur die eines Pakets (A-D, E)
 
 Rueckgabewert 0 = jeder Anker genau einmal gefunden, 1 = mindestens einer
 fehlt oder ist mehrdeutig.
@@ -225,6 +228,83 @@ ANKER: list[tuple] = [
      r"INSERT INTO pair_codes"),
     ("D", "uhrbilder.bitgleich",   "tools/uhr-bilder/erzeugen.sh", 13,
      r"sie BITGLEICH \(geprueft"),
+    # ---- Paket E: Android-Ortung und Dienstende (Zusatzkonzept) ------------
+    #
+    # Kennungen mit "e." — sie gehoeren zum Zusatz
+    # (Konzept-S5-Zusatz-Android-Ortung-Dienstende.md) und nicht zu A-D.
+    # Paket E beruehrt nur android/ und Doku; S7 verschiebt hier nichts.
+    # Der S4-REST dagegen fasst HauptActivity.kt, strings.xml und das Manifest
+    # an (E-S5Z-14: E wird davor gemergt) — nach diesem Merge laeuft das
+    # Werkzeug wieder.
+    ("E", "e.dienst.zuhoerer",     "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 65,
+     r"val zuhoerer = LocationListener"),
+    ("E", "e.dienst.taktgeber",    "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 63,
+     r"val taktgeber = Handler"),
+    ("E", "e.dienst.sendewenn",    "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 123,
+     r"private fun sendeWenn"),
+    ("E", "e.dienst.nachposten",   "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 141,
+     r"taktgeber\.post \{ meldungAuffrischen\(\) \}"),
+    ("E", "e.dienst.ortung",       "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 154,
+     r"private fun ortungAnfordern"),
+    ("E", "e.dienst.versprechen",  "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 159,
+     r"Benachrichtigung sagt dann, dass die"),
+    ("E", "e.dienst.updates",      "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 171,
+     r"m\.requestLocationUpdates\("),
+    ("E", "e.dienst.aufnehmen",    "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 181,
+     r"private fun aufnehmen\(ort: Location\)"),
+    ("E", "e.dienst.beenden",      "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 194,
+     r"private fun beenden\(\)"),
+    ("E", "e.dienst.kanal",        "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 207,
+     r"private fun kanalAnlegen"),
+    ("E", "e.dienst.meldung",      "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 222,
+     r"private fun meldung\("),
+    ("E", "e.dienst.meldung-id",   "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 262,
+     r"MELDUNG_ID = 1"),
+    # TAKT_MS steht zweimal: Definition (266) und Uebergabe an
+    # requestLocationUpdates (172) — genau der Punkt von B-S5Z-12.
+    ("E", "e.dienst.takt-ms",      "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/AufzeichnungsDienst.kt", 172,
+     r"TAKT_MS", 2),
+    ("E", "e.ausduenner.pruefung", "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/Ausduenner.kt", 77,
+     r"g > HOECHSTE_STREUUNG_M"),
+    ("E", "e.ausduenner.abstand",  "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/Ausduenner.kt", 131,
+     r"HOECHSTABSTAND_S = 10L"),
+    ("E", "e.ausduenner.streuung", "android/handy/src/main/java/org/genem/nadoku/handy/aufzeichnung/Ausduenner.kt", 137,
+     r"HOECHSTE_STREUUNG_M = 100f"),
+    ("E", "e.takt.wiederverbind",  "android/handy/src/main/java/org/genem/nadoku/handy/senden/Sendetakt.kt", 44,
+     r"WIEDERVERBINDUNG,"),
+    ("E", "e.takt.faellig",        "android/handy/src/main/java/org/genem/nadoku/handy/senden/Sendetakt.kt", 53,
+     r"fun faellig\("),
+    ("E", "e.takt.abstand",        "android/handy/src/main/java/org/genem/nadoku/handy/senden/Sendetakt.kt", 65,
+     r"ABSTAND_S = 900L"),
+    ("E", "e.horcher.nicht-belegt", "android/handy/src/main/java/org/genem/nadoku/handy/uhr/HandyHorcher.kt", 25,
+     r"\*\*Nicht belegt\*\*"),
+    ("E", "e.horcher.startet",     "android/handy/src/main/java/org/genem/nadoku/handy/uhr/HandyHorcher.kt", 41,
+     r"if \(app\.klammer\.laeuft\(\)\) AufzeichnungsDienst\.starten"),
+    ("E", "e.format.pfad-stand",   "android/gemeinsam/quelle/org/genem/nadoku/gemeinsam/Uhrnachricht.kt", 35,
+     r"const val PFAD_STAND"),
+    ("E", "e.format.schreibe",     "android/gemeinsam/quelle/org/genem/nadoku/gemeinsam/Uhrnachricht.kt", 80,
+     r"fun schreibe\(s: Standmeldung\)"),
+    # Das Vorbild fuer ein OPTIONALES Feld (E3 braucht genau dieses Muster).
+    ("E", "e.format.optional",     "android/gemeinsam/quelle/org/genem/nadoku/gemeinsam/Uhrnachricht.kt", 85,
+     r"if \(s\.laufendeSeit != null\) put"),
+    ("E", "e.format.lies-stand",   "android/gemeinsam/quelle/org/genem/nadoku/gemeinsam/Uhrnachricht.kt", 94,
+     r"fun liesStand\("),
+    ("E", "e.format.standmeldung", "android/gemeinsam/quelle/org/genem/nadoku/gemeinsam/Uhrnachricht.kt", 174,
+     r"^data class Standmeldung"),
+    ("E", "e.uhr.zustand",         "android/uhr/src/main/java/org/genem/nadoku/uhr/Uhrzustand.kt", 33,
+     r"^data class Uhrzustand"),
+    # Die beiden Texte, die der Auftraggeber am 02.09.2026 gesehen haben duerfte
+    # (F-S5Z-06): Der Wortlaut steht in der APP, nicht im Web.
+    ("E", "e.text.meldung-laeuft", "android/handy/src/main/res/values/strings.xml", 103,
+     r'name="dienst_meldung_laeuft"'),
+    ("E", "e.text.zustandszeile",  "android/handy/src/main/res/values/strings.xml", 112,
+     r'name="dienst_laeuft_seit"'),
+    ("E", "e.text.ohne-gps",       "android/handy/src/main/res/values/strings.xml", 113,
+     r'name="dienst_laeuft_seit_ohne_gps"'),
+    ("E", "e.text.beenden",        "android/handy/src/main/res/values/strings.xml", 110,
+     r'name="dienst_beenden_text"'),
+    ("E", "e.web.offen",           "server/tag_spuren.php", 183,
+     r"'–offen'"),
 ]
 
 
@@ -241,7 +321,7 @@ def main() -> int:
     p = argparse.ArgumentParser(description="Anker der S5-Fundstellen nachziehen")
     p.add_argument("--knapp", action="store_true",
                    help="nur Anker mit Abweichung oder Fehlschlag")
-    p.add_argument("--paket", action="append", choices=list("ABCD"),
+    p.add_argument("--paket", action="append", choices=list("ABCDE"),
                    help="nur die Anker dieses Pakets (mehrfach moeglich)")
     a = p.parse_args()
 

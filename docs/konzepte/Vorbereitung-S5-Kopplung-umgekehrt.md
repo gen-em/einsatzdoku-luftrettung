@@ -461,8 +461,110 @@ Konzepten — Historie, bleibt.
 
 ---
 
-## 8. Änderungsverlauf dieser Datei
+## 8. Paket E — Zusatzkonzept „Android: Ortung und Dienstende"
+
+Der Zusatz `Konzept-S5-Zusatz-Android-Ortung-Dienstende.md` liegt seit dem
+03.09.2026 daneben und ist auf demselben Weg geprüft: **70 Fundstellen**,
+davon rund 50 in `android/`.
+
+**Die Zahlen des Zusatzes stimmen ebenso.** Stichprobe an den zwölf
+Kernstellen, gemessen statt gelesen — `AufzeichnungsDienst.kt` 63 (Handler),
+65 (Zuhörer als SAM-Lambda), 123/141 (Sendefaden und Nachposten), 154/159/171
+(Ortung anfordern, das nicht eingelöste Versprechen, `requestLocationUpdates`),
+194 (`beenden()`), 207/222/262/266 (Kanal, Meldung, ID, Takt) ·
+`Ausduenner.kt` 77/131/137 · `Sendetakt.kt` 44/53/65 · `HandyHorcher.kt` 25/41 ·
+`Uhrnachricht.kt` 35/80/85/94/174. Alle **32 neuen Anker** stehen im
+Ankerwerkzeug (`--paket E`) und lösen eindeutig auf.
+
+### 8.1 Antwort auf F-S5Z-06 — der Wortlaut steht in der App, nicht im Web
+
+Das ist die Frage, an der die Diagnose aus 1.3 hängt, und sie lässt sich aus
+dem Repositorium beantworten:
+
+| Wo | Zeichenkette | Wortlaut |
+|---|---|---|
+| App, Dauermeldung | `strings.xml:103` `dienst_meldung_laeuft` | **„Aufzeichnung läuft seit %1$s"** |
+| App, Zustandszeile | `strings.xml:112` `dienst_laeuft_seit` | **„Aufzeichnung läuft seit %1$s · GPS an"** |
+| App, Zustandszeile ohne Freigabe | `strings.xml:113` `dienst_laeuft_seit_ohne_gps` | „Aufzeichnung läuft seit %1$s · GPS fehlt" |
+| Web | — | **kein solcher Wortlaut** |
+
+Gegengeprüft: `git grep -i` über `server/` nach „laufend", „läuft",
+„Aufzeichnung" findet **keine** Stelle, an der die Weboberfläche behauptete,
+eine Aufzeichnung laufe. Was das Web bei fehlendem Abschluss zeigt, ist
+genau das, was der Zusatz beschreibt: `–offen` auf der Spurenseite
+(`tag_spuren.php:183`) und ein `days.ended_at`, das NULL bleibt.
+
+**Damit stützt der Befund H1 (Kette B3):** Der Dienst wurde an der Uhr
+beendet, der Vordergrunddienst lief weiter, und die App sagte weiter
+„Aufzeichnung läuft seit …". Die Diagnose am Gerät (1.3) bleibt trotzdem zu
+fahren — sie entscheidet, was das Prüfdokument als **belegten** Fehler führt.
+Eine Rückfrage bleibt: Der Auftraggeber sagte „im Diensttag selbst" — das
+klingt nach der Weboberfläche. Zu klären, ob er die App-Ansicht oder eine
+Webseite meinte; nur die App kennt den Wortlaut.
+
+Nebenbei eine Genauigkeit zum Befund 1.1 des Zusatzes: Es gibt **zwei**
+Zustandszeilen, nicht eine — `dienst_laeuft_seit` und
+`dienst_laeuft_seit_ohne_gps`. Sie schalten an der **Freigabe** um, nicht am
+Ortungszustand; die Aussage des Zusatzes stimmt also, die Zahl der Texte ist
+zwei. E1 ersetzt beide.
+
+### 8.2 Der Prüfstand für Paket E — Ausgangszahlen
+
+Alles gemessen, nicht übernommen:
+
+| Prüfmittel | Ausgangszahl (03.09.2026, `main` c2ac707) |
+|---|---|
+| `./gradlew build` | **BUILD SUCCESSFUL**, **0 Lint-Fehler, 14 Warnungen** |
+| Prüffälle `handy` / `uhr` | **167** (12 übersprungen) / **53** (0) = **220**, **0 Fehlschläge** |
+| **`handy` mit laufender Installation** (`-Pnadoku.rundlauf=http://127.0.0.1:8080/`) | **167 von 167, 0 übersprungen, 0 Fehlschläge** — der Rundlauf gegen das echte `ingest.php` läuft |
+| `werkzeuge/kontraste.py` | **16 Paare, 0 unter dem Zielwert** |
+| `werkzeuge/farbabgleich.py` | **0 Abweichungen, 0 eigene Farbwerte**; 18 Web-Token, 17 App-Token, 1 nicht übernommen (`--spur-8`) |
+| `werkzeuge/stroeme.py` | **5 Ströme, 0 Abweichungen** analytisch gegen Referenzregel |
+| `werkzeuge/bildmarken.sh pruefen` | **0 Abweichungen** (4 Bildmarken) |
+| `tools/wortliste/` Bereich d | **2 Dateien, 3 Treffer, alle durch Ausnahmen erklärt, 0 außerhalb** |
+
+Der Rundlauf ist der wichtigste dieser Punkte: **`SendeRundlaufTest` ist die
+Abnahme von Paket E2** („Segment am Server `final = 1`, `days.ended_at`
+gesetzt"), und dass er hier gegen eine echte Installation grün läuft, ist die
+Voraussetzung dafür. Die Prüffälle räumen hinter sich auf — nach dem Lauf
+stehen wieder nur die zwei Geräte des Demo-Kontos.
+
+### 8.3 Kein Emulator — gemessen, nicht vermutet
+
+Abschnitt 9.3 des Zusatzes zählt auf, was der Emulator kann und die Umsetzung
+nutzen soll: `adb emu geo fix`, das Abschalten des Standorts,
+`adb shell cmd jobscheduler run -f`, `adb shell dumpsys notification`.
+**In diesem Container geht davon nichts.** Beide Wege sind zu, und beide sind
+gemessen:
+
+| Weg | Ergebnis |
+|---|---|
+| **arm64-Abbild** (`system-images;android-34;google_apis;arm64-v8a`, heruntergeladen und AVD angelegt) | `FATAL | Avd's CPU Architecture 'arm64' is not supported by the QEMU2 emulator on x86_64 host.` — der heutige Emulator (37.1.11) übersetzt keine fremde Architektur mehr |
+| **x86_64-Abbild** | braucht KVM. `/dev/kvm` fehlt, und `/proc/cpuinfo` nennt weder `vmx` noch `svm` — die CPU ist selbst virtualisiert (`hypervisor`), Verschachtelung ist nicht freigegeben |
+
+**Folge für das Prüfdokument:** Die vier Emulator-Griffe aus 9.3 gehören an
+den Anfang der Liste „nicht prüfbar" — **zusammen** mit dem, wofür sie als
+Ersatz gedacht waren. Was bleibt, ist der Gerätetest nach 9.2 und die
+JVM-Prüffälle. Das trifft besonders:
+
+- **`STANDORT_AUS` und der Rückruf** (`onProviderDisabled`) — nur am Gerät;
+  der JVM-Prüffall der Zustandsmaschine belegt die *Entscheidung*, nicht das
+  Ankommen des Rückrufs.
+- **Der Nachsende-Job** — `jobscheduler run -f` fällt aus; Punkt 9 und 10 der
+  Prüfliste sind die einzigen Belege.
+- **Die drei Meldungs-IDs** — `dumpsys notification` fällt aus; am Gerät ist
+  es das Auge.
+
+Das ist kein Rückschlag für den Entwurf, sondern eine Größe für die Planung:
+**Paket E ist zu einem größeren Teil gerätegebunden, als der Zusatz annimmt.**
+Die JVM-Prüffälle (E1 ≥ 16, E2 ≥ 13, E3 ≥ 6) werden dadurch wichtiger, nicht
+unwichtiger — sie sind das Einzige, was im Container überhaupt läuft.
+
+---
+
+## 9. Änderungsverlauf dieser Datei
 
 | Fassung | Datum | Inhalt |
 |---|---|---|
 | 1 | 02.09.2026 | Erstfassung: Prüfung des Konzepts (77 Fundstellen), 12 Befunde V-S5-01 bis V-S5-12, Prüfstand aufgebaut und mit Ausgangszahlen belegt, Fundstellen-Inventar, offene Zuarbeiten |
+| 2 | 03.09.2026 | Abschnitt 8: das Zusatzkonzept (Paket E) geprüft — 32 neue Anker, Antwort auf F-S5Z-06, Ausgangszahlen der Android-Prüfmittel, Rundlauf 167/167 belegt, Emulator als unmöglich gemessen |
