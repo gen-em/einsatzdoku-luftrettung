@@ -1135,7 +1135,7 @@ zutreffen.
 
 66. **Der Garmin-Uhrcode lief nicht durch die Wortliste — jetzt schon.**
     *Aufgenommen 02.09.2026 als Bereich `e` aus B-S4-06 (S4/D1); erledigt am
-    03.09.2026 in S5, Paket C (E-S5-40, E-S5-54).*
+    03.09.2026 in S5, Paket C (E-S5-40, E-S5-61).*
     Bis hierher prüfte `tools/wortliste/` vier Bereiche und ließ den ältesten
     Client aus. Die frühere Begründung — `watch/` „beschreibe die Garmin-Uhr
     als Gegenstand" — trifft auf `docs/Uhr-Layout_Regeln.md` zu, **nicht** auf

@@ -71,7 +71,7 @@ import zerlegen                                    # noqa: E402
 # die wahrscheinlichste Fundstelle; bis dahin waren sie als einziger Client
 # ungeprueft.
 #
-# UND ZWAR XML UND MONKEY C (E-S5-54). Backlog 66 nannte nur
+# UND ZWAR XML UND MONKEY C (E-S5-61). Backlog 66 nannte nur
 # `watch/resources/**/*.xml` — das sind vier Zeichenketten (AppName und die
 # drei Namen der Bildmarken-Wahl). Die eigentlichen Texte der App stehen als
 # Literale im Quelltext: "Nicht eingerichtet", "Zu viele Geräte",

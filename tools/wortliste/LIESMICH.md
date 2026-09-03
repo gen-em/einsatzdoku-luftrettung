@@ -109,7 +109,7 @@ Client. Die sichtbaren Texte der Garmin-App sind die **ältesten des Projekts**
 `docs/Uhr-Layout_Regeln.md` zu, **nicht** auf die Texte der App selbst: Die
 liest dieselbe Person, die auch die Weboberfläche liest.
 
-**Er umfasst XML *und* Monkey C** (E-S5-54). Backlog 66 nannte nur
+**Er umfasst XML *und* Monkey C** (E-S5-61). Backlog 66 nannte nur
 `watch/resources/**/*.xml`. Das sind vier Zeichenketten — der App-Name und die
 drei Namen der Bildmarken-Wahl. Die eigentlichen Texte der Uhr stehen als
 Literale im Quelltext: „Nicht eingerichtet", „Zu viele Geräte", „Sync

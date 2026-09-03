@@ -26,7 +26,7 @@ Texte der Uhr stehen aber als Literale im Quelltext — „Nicht eingerichtet",
 die `.mc` übergeht, hätte wieder eine Null gemeldet über etwas, das er nicht
 gelesen hat: genau der Befund B-S4-06, dem die Regel in `CLAUDE.md` 6
 überhaupt erst zu verdanken ist. Bereich `e` umfasst deshalb beides
-(E-S5-54).
+(E-S5-61).
 
 Dafür zwei Erweiterungen am Werkzeug, beide klein und beide nötig:
 
