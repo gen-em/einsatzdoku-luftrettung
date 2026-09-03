@@ -11,6 +11,65 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Wortliste sieht die Uhr an] — 2026-09-03
+
+**Der letzte Client, der nie durch die Wortliste lief, läuft jetzt durch sie**
+— `watch/` als Bereich `e` (Backlog 66, S5 Paket C). Keine der drei
+Auslieferungen ist geändert, deshalb keine Versionsnummer.
+
+### Werkzeug — Bereich `e`: Ressourcen **und** Monkey C
+
+Backlog 66 nannte `watch/resources/**/*.xml`. Das wären vier Zeichenketten
+gewesen: der App-Name und die drei Namen der Bildmarken-Wahl. Die sichtbaren
+Texte der Uhr stehen aber als Literale im Quelltext — „Nicht eingerichtet",
+„Zu viele Geräte", „Sync vollständig". Ein Bereich, der die XML ansieht und
+die `.mc` übergeht, hätte wieder eine Null gemeldet über etwas, das er nicht
+gelesen hat: genau der Befund B-S4-06, dem die Regel in `CLAUDE.md` 6
+überhaupt erst zu verdanken ist. Bereich `e` umfasst deshalb beides
+(E-S5-54).
+
+Dafür zwei Erweiterungen am Werkzeug, beide klein und beide nötig:
+
+- **Eine Art `monkeyc` im Zerleger.** Monkey C kommentiert wie JavaScript
+  (`//`, `/* */`), also derselbe Weg — aber unter eigenem Namen, damit in der
+  Bereichsdefinition steht, was tatsächlich gelesen wird. Dass die
+  JS-Heuristik reguläre Ausdrücke von der Division unterscheidet, schadet
+  nicht: Monkey C kennt keine Regex-Literale. Zwei zusätzliche Probefälle
+  halten das fest, darunter die Division nach schließender Klammer
+  (`(rest + 59) / 60`) — in den Uhr-Oberflächen der häufigste Fall. Die
+  Selbstprobe steht damit bei **21 Fällen**.
+- **Ein Bereich darf zwei Arten haben.** `"art": {".xml": "xml", ".mc":
+  "monkeyc"}`. Die Alternative wären zwei Bereiche gewesen — und damit zwei
+  Zahlen für eine Frage, die niemand addiert. Eine Endung ohne Zuordnung
+  bricht den Lauf ab; sie darf nicht still übergangen werden, sonst entsteht
+  die Lücke wieder, die dieser Bereich schließt.
+
+`resources*` statt `resources`, weil die vorgerasterten Bildmarken und
+Launcher-Symbole in Geschwisterordnern liegen, die `monkey.jungle` je Gerät
+zuweist. Sie tragen heute keinen sichtbaren Text — aber ein Ordner, den
+niemand ansieht, ist genau die Lücke von eben. `watch/manifest.xml` bleibt
+draußen: Der App-Name steht dort als Verweis, der Text in `strings.xml`.
+
+### Werkzeug — was der erste Lauf fand: zweimal einen Gehäuseaufdruck
+
+**34 Dateien, 2 Treffer**, beide dieselbe Sache: `L_SELECT = "START"` und
+`L_SELECT_HOLD = "START halten"` in `watch/source-tasten5/DeviceProfile.mc`.
+Das Muster `taste-start` sucht `START` in Großbuchstaben, weil „Start" und
+„starten" gewöhnliche Wörter sind — hier trifft es den Aufdruck auf dem
+Gehäuse von Fenix und Forerunner. Die Venu 3s heißt an derselben Stelle
+„Action" und trifft deshalb nicht.
+
+Das ist keine Nachlässigkeit, sondern die Bauform: `DeviceProfile.mc` **ist**
+der plattformspezifische Teil, und die Oberflächen setzen den Namen über
+`Input.lSelectHold()` ein, ohne ihn selbst zu kennen. Genau diese Trennung —
+gerätefreier Ablauf, Garmin-Weg als benannter Zusatz — sieht E-P2-02 vor. Wer
+das Wort hier ersetzte, schriebe eine Bedienanweisung, die auf einem echten
+Gerät nicht ausführbar ist. Also eine Ausnahme, Klasse G
+(`uhr-tastennamen`), beschränkt auf diese eine Datei und dieses eine Muster.
+
+Danach **0 / 0 / 0** in allen fünf Bereichen: 87 · 29 · 8 · 2 · 34 Dateien,
+78 Ausnahmeregeln, alle 78 gegriffen, 0 durchgerutschte Teilstring-Fallen.
+
 ## [Web 13.0.0] — 2026-09-03
 
 ### Web — Kopplung umgekehrt: das Gerät zeigt den Code (S5, Paket A — Server)

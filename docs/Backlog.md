@@ -694,20 +694,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Preisschild an einer aufgeschobenen Entscheidung, und genau das sollen sie
     sein.
 
-66. **Der Garmin-Uhrcode läuft nicht durch die Wortliste.**
-    *Aufgenommen 02.09.2026 als Bereich `e` aus B-S4-06 (S4/D1).*
-    Seit D1 prüft `tools/wortliste/` vier Bereiche, darunter die
-    Android-Apps. **`watch/` fehlt weiterhin.** Die bisherige Begründung —
-    `watch/` „beschreibe die Garmin-Uhr als Gegenstand" — trifft auf
-    `docs/Uhr-Layout_Regeln.md` zu, **nicht** auf die sichtbaren Texte der App
-    selbst (`watch/resources/**/*.xml`): Die liest dieselbe Person, die auch
-    die Weboberfläche liest. Sie sind die **ältesten Texte des Projekts** und
-    damit die wahrscheinlichste Fundstelle.
-    **Auf Ansage einer anderen Instanz zugewiesen** (01.09.2026); sie braucht
-    Kenntnis der Monkey-C-Ressourcen und der historischen Begriffe. Der
-    Bereich heißt dort `e`; die Mechanik ist da (eine Art `xml` im Zerleger,
-    die Tags mit wegräumt), einzutragen ist die Bereichszeile.
-
 67. **`csrf_check()` hat keinen API-Zweig.**
     *Aufgenommen aus einer Gegenprüfung vom 23.08.2026; die Zahlen sind am
     02.09.2026 nachgezählt (S4/D2).*
@@ -1146,6 +1132,37 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+66. **Der Garmin-Uhrcode lief nicht durch die Wortliste — jetzt schon.**
+    *Aufgenommen 02.09.2026 als Bereich `e` aus B-S4-06 (S4/D1); erledigt am
+    03.09.2026 in S5, Paket C (E-S5-40, E-S5-54).*
+    Bis hierher prüfte `tools/wortliste/` vier Bereiche und ließ den ältesten
+    Client aus. Die frühere Begründung — `watch/` „beschreibe die Garmin-Uhr
+    als Gegenstand" — trifft auf `docs/Uhr-Layout_Regeln.md` zu, **nicht** auf
+    die sichtbaren Texte der App selbst: Die liest dieselbe Person, die auch
+    die Weboberfläche liest.
+
+    **Weiter gefasst als die Aufnahme.** Backlog 66 nannte
+    `watch/resources/**/*.xml` — das sind vier Zeichenketten (App-Name und die
+    drei Namen der Bildmarken-Wahl). Die eigentlichen Texte der Uhr stehen als
+    Literale im Quelltext. Bereich `e` umfasst deshalb **XML und Monkey C**
+    (`watch/resources*/**/*.xml`, `watch/source*/*.mc`); ein Bereich, der nur
+    die XML angesehen hätte, meldete wieder eine Null über etwas, das er nicht
+    gelesen hat — der Fall B-S4-06 selbst.
+
+    **Was dabei entstand:** eine Art `monkeyc` im Zerleger (derselbe Weg wie
+    JavaScript — gleiche Kommentarformen, keine regulären Ausdrücke), zwei
+    zusätzliche Probefälle dafür, und die Möglichkeit, einem Bereich **zwei
+    Arten** zu geben (`{".xml": "xml", ".mc": "monkeyc"}`); eine Endung ohne
+    Zuordnung bricht den Lauf ab, statt die Datei still zu übergehen.
+
+    **Ergebnis des ersten Laufs:** 34 Dateien, **2 Treffer**, beide dieselbe
+    Sache — `"START"` und `"START halten"` in
+    `watch/source-tasten5/DeviceProfile.mc`. Das ist der Aufdruck auf dem
+    Gehäuse von Fenix und Forerunner; die Venu 3s heißt dort „Action" und
+    trifft nicht. Eine Ausnahme, Klasse G (`uhr-tastennamen`) — genau die
+    Trennung, die E-P2-02 vorsieht. Danach **0 / 0 / 0** in allen fünf
+    Bereichen.
 
 89. **Der Job „Komplett-Backup der Installation" brach ab, bevor er
     anfing — von Web 12.2.0 bis 12.9.2.**

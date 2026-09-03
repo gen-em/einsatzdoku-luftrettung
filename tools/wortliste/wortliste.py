@@ -66,12 +66,18 @@ import zerlegen                                    # noqa: E402
 # und Pruefdokumente, Geraete-Eingabe.md und Uhr-Layout_Regeln.md
 # (plattformspezifisch, Klasse G), Backlog.md und tools/ (Klasse H).
 #
-# `watch/` FEHLT WEITERHIN, und das ist eine Arbeitsteilung, kein Versehen:
-# Die sichtbaren Texte der Garmin-App (`watch/resources/**/*.xml`) sind die
-# aeltesten des Projekts und damit die wahrscheinlichste Fundstelle. Ihre
-# Pruefung geht an eine andere Instanz (Ansage 01.09.2026); sie braucht
-# Kenntnis der Monkey-C-Ressourcen und der historischen Begriffe. Der Bereich
-# heisst dort `e` und gehoert in dieselbe Liste, sobald er kommt.
+# `watch/` IST SEIT S5/C DABEI, als Bereich `e` (Backlog 66, E-S5-40). Die
+# sichtbaren Texte der Garmin-App sind die aeltesten des Projekts und damit
+# die wahrscheinlichste Fundstelle; bis dahin waren sie als einziger Client
+# ungeprueft.
+#
+# UND ZWAR XML UND MONKEY C (E-S5-54). Backlog 66 nannte nur
+# `watch/resources/**/*.xml` — das sind vier Zeichenketten (AppName und die
+# drei Namen der Bildmarken-Wahl). Die eigentlichen Texte der App stehen als
+# Literale im Quelltext: "Nicht eingerichtet", "Zu viele Geräte",
+# "Sync vollständig". Ein Bereich, der die XML ansieht und die `.mc` uebergeht,
+# meldete wieder eine Null ueber etwas, das er nicht gelesen hat — genau der
+# Fall B-S4-06, der die Regel oben ueberhaupt erst noetig gemacht hat.
 BEREICHE: dict[str, dict] = {
     "a": {
         "titel": "server/*.php, server/api/*.php (sichtbare Texte, ohne Kommentare)",
@@ -96,6 +102,24 @@ BEREICHE: dict[str, dict] = {
         # Weboberflaeche). Kaeme eine hinzu, gehoerte sie mit in dieses
         # Muster — `values-*/strings.xml` waere dann die Erweiterung.
         "glob": ["android/*/src/main/res/values/strings.xml"],
+    },
+    "e": {
+        "titel": "watch/ — Ressourcen und Quelltext der Garmin-App",
+        # ZWEI ARTEN IN EINEM BEREICH. Die Ressourcen sind XML, der Quelltext
+        # ist Monkey C; beides beantwortet dieselbe Frage ("steht in einem
+        # sichtbaren Text der Uhr ein Luftbegriff?") und gehoert deshalb unter
+        # eine Zahl. Zwei Bereiche haetten zwei Zahlen ergeben, die niemand
+        # addiert — und die Regel oben verlangt eine Aussage je Client, nicht
+        # je Dateiformat.
+        "art": {".xml": "xml", ".mc": "monkeyc"},
+        # `resources*` statt `resources`: Die vorgerasterten Bildmarken und
+        # Launcher-Symbole liegen in Geschwisterordnern (resources-marke101,
+        # resources-icon54 …), die monkey.jungle je Geraet zuweist. Sie
+        # tragen heute keinen sichtbaren Text — aber ein Ordner, den niemand
+        # ansieht, ist genau die Luecke, die dieser Bereich schliessen soll.
+        # `watch/manifest.xml` bleibt draussen: Der App-Name steht dort als
+        # Verweis (@Strings.AppName), der Text selbst in strings.xml.
+        "glob": ["watch/resources*/**/*.xml", "watch/source*/*.mc"],
     },
     "c": {
         "titel": "normative Dokumentation",
@@ -231,6 +255,24 @@ def passt(regel: dict, bereich: str, rel: str, zeilennr: int,
     return True
 
 
+def _art_fuer(b: dict, pfad: pathlib.Path) -> str:
+    """Welcher Zerleger fuer diese Datei?
+
+    Ein Bereich hat in der Regel genau eine Art. Bereich `e` hat zwei — die
+    Ressourcen der Uhr sind XML, ihr Quelltext ist Monkey C. Dann steht unter
+    `art` eine Zuordnung von Dateiendung auf Art. Eine Endung, die dort fehlt,
+    ist ein Fehler in der Bereichsdefinition und keine stille Ausnahme: Sie
+    faellt hier auf und nicht erst daran, dass eine Datei ungeprueft blieb.
+    """
+    art = b["art"]
+    if isinstance(art, dict):
+        if pfad.suffix not in art:
+            raise SystemExit(
+                f"Bereich ohne Art fuer {pfad.suffix}: {pfad}")
+        return art[pfad.suffix]
+    return art
+
+
 def suche(kennung: str, muster: list[dict], fallen: list[dict],
           regeln: list[dict]) -> dict:
     b = BEREICHE[kennung]
@@ -244,7 +286,7 @@ def suche(kennung: str, muster: list[dict], fallen: list[dict],
     for pfad in dateien:
         rel = str(pfad.relative_to(WURZEL))
         roh = pfad.read_text(encoding="utf-8")
-        text = zerlegen.ohne_kommentare(roh, b["art"])
+        text = zerlegen.ohne_kommentare(roh, _art_fuer(b, pfad))
         zeilen_roh = roh.splitlines()
         zeilen = text.splitlines()
 
