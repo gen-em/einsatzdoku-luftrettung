@@ -171,7 +171,7 @@
    * sichern", „Einspielen" und „Für NutzerIn freigeben". Gebunden wurde nur
    * an <form> und an <a>; die drei Dialoge erschienen also NIE. Dass die
    * Attribute dastanden, sah nach Absicherung aus und war keine — ausgerechnet
-   * vor dem Einspielen einer fremden Sicherung in ein Konto.
+   * vor dem Einspielen eines fremden Backups in ein Konto.
    *
    * WARUM DER KNOPF ERNEUT GEKLICKT WIRD und nicht f.submit() gerufen: Nur der
    * tatsächlich betätigte Absendeknopf schickt sein name/value mit. Die drei

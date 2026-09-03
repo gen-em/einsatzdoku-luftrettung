@@ -1,10 +1,10 @@
-"""Aus einer Referenzsicherung einen Großbestand bauen (E-S2-23, R35).
+"""Aus einem Referenz-Backup einen Großbestand bauen (E-S2-23, R35).
 
 WOFUER. S2 verspricht, dass 5000 Einsätze in einem Konto tragen (Z1). Diese
 Zusage lässt sich nur an 5000 Einsätzen prüfen, und die muss jemand herstellen
 können — reproduzierbar, ohne Handarbeit und ohne an der Prüfschicht vorbei.
 
-DER WEG. Die Referenzsicherung wird geöffnet, ihre Nutzlast **r-mal** mit
+DER WEG. Das Referenz-Backup wird geöffnet, ihre Nutzlast **r-mal** mit
 versetzten Zeiten und eigenen Kennungen vervielfältigt und als Folge
 einteiliger `.edbak`-Dateien wieder versiegelt. Eingespielt werden sie über
 den **regulären** Wiederherstellungsweg im Browser (`einspielen.mjs`) — kein

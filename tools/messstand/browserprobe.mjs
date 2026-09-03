@@ -16,10 +16,10 @@
  * WAS GEMESSEN WIRD, und warum genau das:
  *
  *   Zeit          Suche bis zur ersten Trefferanzeige, Tagesansicht,
- *                 Sicherung erstellen — die drei Wege aus E-S2-24.
+ *                 Backup erstellen — die drei Wege aus E-S2-24.
  *   JSON-Größe    Die größte Zeichenkette, die durch JSON.parse oder
  *                 JSON.stringify läuft. Z3 setzt hier 10 MB. Diese Zahl ist
- *                 der eigentliche Grund, aus dem der heutige Sicherungsweg
+ *                 der eigentliche Grund, aus dem der heutige Backup-Weg
  *                 bricht (B-S2-03) — sie wird deshalb direkt an der Quelle
  *                 abgegriffen und nicht aus der Übertragungsgröße geschätzt.
  *   Halde         JSHeapUsedSize aus dem Protokoll der Entwicklerwerkzeuge,
@@ -286,7 +286,7 @@ messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
   return { trefferzahl: zahl };
 }));
 
-messungen.push(await messen('Sicherung erstellen', async () => {
+messungen.push(await messen('Backup erstellen', async () => {
   await seite.goto(`${basis}/einstellungen.php?t=backup`, { waitUntil: 'domcontentloaded', timeout: 180000 });
   await seite.waitForTimeout(800);
   await seite.fill('#bpw1', bpw);

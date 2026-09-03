@@ -1,10 +1,10 @@
 /* Freigabeprobe — der Weg MIT Wiederherstellungsschlüssel (S2/AP6).
  *
- * DIE FRAGE. Eine Administration darf eine Sicherung mit geschützten Angaben
+ * DIE FRAGE. Eine Administration darf ein Backup mit geschützten Angaben
  * nicht unmittelbar in ein neu aufgesetztes Konto spielen (E20): Die Angaben
  * sind mit einem Inhaltsschlüssel verschlüsselt, den nur der
  * Wiederherstellungsschlüssel öffnet — und der liegt ausschliesslich bei der
- * NutzerIn. Sie gibt die Sicherung deshalb frei, und das Umschlüsseln
+ * NutzerIn. Sie gibt das Backup deshalb frei, und das Umschlüsseln
  * geschieht im Browser der NutzerIn.
  *
  * Dieser Weg war bis Web 12.0.0 NIE geprüft, und er hat auch nie
@@ -87,7 +87,7 @@ try {
 
   /* ---- 2. Quelle herrichten, sichern, freigeben ------------------------ */
   const q = php('quelle', { ...mat, ziel: ZIEL });
-  pruefe(q.fassung === 2, 'Die Sicherung ist ein Fassung-2-Paket',
+  pruefe(q.fassung === 2, 'Das Backup ist ein Fassung-2-Paket',
          `Fassung ${q.fassung}, ${q.eintragsteile} Eintrags-, ${q.spurteile} Spurteile`);
   pruefe(q.geschuetzte === 1, 'Das Manifest zählt den Einsatz mit geschützten Angaben',
          'geschuetzte=' + q.geschuetzte);

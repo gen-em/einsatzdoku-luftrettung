@@ -2804,7 +2804,7 @@ h1 + .seiten-erklaerung{margin-top:0}
   margin:0;
 }
 
-/* ZUSTANDSZEILE — Fortschritt und Ergebnis einer langen Handlung (Sicherung,
+/* ZUSTANDSZEILE — Fortschritt und Ergebnis einer langen Handlung (Backup,
  * Import). Sie hält ihre Höhe frei, damit der Kasten beim Erscheinen der
  * ersten Meldung nicht springt; ein Ergebnis erscheint darin als
  * Meldungs-Baustein, Fortschritt als schlichte Zeile. */
@@ -2820,7 +2820,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 /* ===========================================================================
  * 27  ADMINISTRATION                                        (P3/O9, E-P3-41)
  *
- * Kontoseite, NutzerInnen-Liste, Sicherungsregeln. Fast alles daran sind
+ * Kontoseite, NutzerInnen-Liste, Backup-Regeln. Fast alles daran sind
  * vorhandene Bausteine — Karte, Zeile, Zeilenaktionen, Kennzahl, Dialog.
  * Neu ist nur die GEFAHRENZONE: eine Karte, die von weitem als solche zu
  * erkennen ist.

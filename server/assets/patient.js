@@ -11,7 +11,7 @@
  * inzwischen dazugekommen, ohne dass er nachgezogen wurde. Eine Liste, die
  * nicht stimmt, ist schlechter als keine: Wer sie liest, glaubt zu wissen,
  * welche Seiten eine Aenderung hier trifft. einstellungen.php kam mit Web
- * 4.6.0 dazu — der Sicherungslauf benutzt seither entschluessleListe.)
+ * 4.6.0 dazu — der Backup-Lauf benutzt seither entschluessleListe.)
  */
 (function () {
   'use strict';
@@ -123,7 +123,7 @@
    *
    * Das ist der Anfang einer Kette, an deren Ende Daten verschwinden: Wer den
    * Unterschied nicht sieht, merkt nicht, dass sein Inhaltsschluessel nicht
-   * mehr passt — und erstellt als Naechstes eine Sicherung.
+   * mehr passt — und erstellt als Naechstes ein Backup.
    *
    * Diese Schleife liefert deshalb je Datensatz einen ZUSTAND und zaehlt mit.
    */

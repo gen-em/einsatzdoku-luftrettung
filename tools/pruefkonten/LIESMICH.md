@@ -9,7 +9,7 @@ gebaut wurde:
 
 - Trägt der Seitenwechsel, und rechnet er an den Rändern richtig?
 - Bleibt die Auswahl über Seiten hinweg stehen?
-- Wie lange braucht ein Aufruf, wenn der Sicherungsstand jedes Kontos aus dem
+- Wie lange braucht ein Aufruf, wenn der Backup-Stand jedes Kontos aus dem
   Dateisystem kommt?
 - Sortiert die Namensspalte einen Umlaut an die richtige Stelle?
 
@@ -31,13 +31,13 @@ darin wird als Pfad gelesen).
 
 Konten unterhalb von `@example.invalid` mit dem Präfix `pruefkonto-` — sonst
 nichts. `entfernen` löscht genau diese wieder, samt Geräten (Fremdschlüssel mit
-`ON DELETE CASCADE`) und samt ihrer Sicherungsordner unter
+`ON DELETE CASCADE`) und samt ihrer Backup-Ordner unter
 `server/sicherungen/`.
 
 **Trotzdem: gegen eine Testinstallation fahren, nicht gegen den
 Produktivserver.** Das Werkzeug fragt nicht nach.
 
-## Warum die Sicherungen echte Dateien sind
+## Warum die Backups echte Dateien sind
 
 Der Stand eines Kontos — *aktuell*, *überfällig · n Tage*, *nie gesichert* —
 steht nicht in der Datenbank, sondern in
@@ -52,7 +52,7 @@ Inhalt. Wer Datenmengen prüfen will, ist bei Backlog Nr. 37 richtig.
 ## Reproduzierbar
 
 `mt_srand()` mit festem Startwert: Zweimal `anlegen 300` ergibt zweimal
-denselben Bestand — Rollen, Gerätezahlen, Sicherungsstände und
+denselben Bestand — Rollen, Gerätezahlen, Backup-Stände und
 Anmeldezeitpunkte inbegriffen. Nur so lässt sich eine gemessene Zahl beim
 nächsten Lauf wiederfinden.
 
@@ -61,7 +61,7 @@ Die Mischung bei 300 Konten (gemessen, Stand Web 9.9.0):
 | | |
 |---|---|
 | aktuell gesichert | 180 |
-| Sicherung überfällig | 28 |
+| Backup überfällig | 28 |
 | nie gesichert | 86 |
 | ohne Kontokennung | 6 |
 | Admins | 6 |
@@ -74,7 +74,7 @@ können, ohne sie als „nie gesichert" auszugeben — sie sind ein anderer Befu
 
 ## Grenzen
 
-- Die Konten haben **keine Einsätze und keine Diensttage**. Die Sicherungen
+- Die Konten haben **keine Einsätze und keine Diensttage**. Die Backups
   sind leer. Für Datenmengen ist das der falsche Bestand (Backlog Nr. 37).
 - Kein Konto hat ein Passwort — anmelden lässt sich mit keinem davon.
 - Die Geräte tragen einen Zufallshash als Schlüssel; es gibt keinen Klartext

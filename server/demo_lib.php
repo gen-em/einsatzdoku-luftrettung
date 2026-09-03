@@ -40,7 +40,7 @@ require_once __DIR__ . '/backup_lib.php';
  *
  * WARUM KEIN ZWEITER EINSPIELWEG
  * Der Bestand wird ueber `edbak_restore()` eingespielt — dieselbe Routine wie
- * bei der Wiederherstellung einer Sicherung, mit derselben Pruefung. Ein
+ * bei der Wiederherstellung eines Backups, mit derselben Pruefung. Ein
  * eigener Weg haette eigene Fehler, und ausgerechnet der Weg, der am
  * haeufigsten laeuft, waere der ungeprueftere. Der Chiffretext wandert dabei
  * UNVERAENDERT durch: `edbak_restore()` nimmt `pat_blob` als Spalte entgegen,
@@ -424,7 +424,7 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
          * "Duplicate entry 'manual-2' for key 'device_id'" ab.
          *
          * Verwiesen wird darauf nichts: `day_refs` nennen nur echte Geraete,
-         * und `missions.device_id` steht gar nicht erst in der Sicherung
+         * und `missions.device_id` steht gar nicht erst im Backup
          * (backup_lib.php, "Interne Verweise"). Gezaehlt: 0 Vorkommen von
          * 'manual-' in der Nutzlast der ausgelieferten Fixture. */
         if (geraet_virtuell((string)$g['device_id'])) { continue; }
@@ -447,7 +447,7 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
  * keine verschachtelten kennt — der Reset zerfiel damit in zwei Schritte, von
  * denen der zweite fehlschlagen konnte.
  *
- * Der Grund dafuer war das Sicherungsformat: Es kannte keine geloeschten
+ * Der Grund dafuer war das Backup-Format: Es kannte keine geloeschten
  * Eintraege, und ein Papierkorb-Dauerzustand liess sich nur nachstellen. Seit
  * Nutzlast 7 fuehrt die Datei den Papierkorb, und `edbak_restore()` bringt ihn
  * als Papierkorb zurueck (E-S1-01/03/04). Damit ist das Drehbuch gegenstandslos

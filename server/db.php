@@ -249,7 +249,7 @@ function json_out(array $data, int $code = 200): never {
     header('Content-Type: application/json');
     /* Kein Zwischenspeichern (M3-11).
      *
-     * Bisher setzte GENAU EIN Endpunkt diesen Kopf: die Sicherung. Vier
+     * Bisher setzte GENAU EIN Endpunkt diesen Kopf: das Backup. Vier
      * weitere liefern denselben Chiffretext aus — Tagesdaten, Zeitraum,
      * Suchindex, Einzeleinsatz —, und die durften Zwischenspeicher auf dem
      * Weg befuellen. Das ist kein theoretischer Einwand: An einem
@@ -273,10 +273,10 @@ function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
  * WARUM SIE HIER STEHT
  * Dieselbe Aufgabe — "hole alle Unterzeilen zu diesen n Datensaetzen, aber
  * nicht mit n Abfragen" — faellt an drei Stellen an: Export, Tagesansicht und
- * Sicherung. Der Export hat sie als Erstes geloest und den Weg im Kommentar
+ * Backup. Der Export hat sie als Erstes geloest und den Weg im Kommentar
  * vermerkt; die beiden anderen sind ihm nicht gefolgt und fragten je
  * Datensatz einzeln. Bei 1600 Einsaetzen waren das ueber 6000 Abfragen fuer
- * EINE Sicherung.
+ * EIN Backup.
  *
  * Die Vorlage traegt {IDS} an der Stelle der Platzhalterliste. Bewusst KEINE
  * Formatzeichenkette mit %s: Damit waere jedes weitere Prozentzeichen im

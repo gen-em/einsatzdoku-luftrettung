@@ -4,7 +4,7 @@ require_once __DIR__ . '/../auth_guard.php';      // liefert $userId
 require_once __DIR__ . '/../backup_lib.php';      // edbak_spuren_schreiben()
 
 /**
- * POST api/backup_spuren_restore.php — die Spuren einer Sicherung zurueckspielen.
+ * POST api/backup_spuren_restore.php — die Spuren eines Backups zurueckspielen.
  *
  * WOFUER (Konzept S2, 3.2.4). Der Kern ist eingespielt; der Server hat dabei
  * gesagt, unter welcher Kennung jede `spur_ref` angelegt wurde. Jetzt kommen
@@ -43,7 +43,7 @@ require_once __DIR__ . '/../backup_lib.php';      // edbak_spuren_schreiben()
  * Gefunden hat das der Kreislauf: 79 Einsaetze kamen ohne `site_ele_m`
  * zurueck, obwohl die Quelle sie hatte. Kein Datenverlust — die Angabe ist
  * abgeleitet und liesse sich nachrechnen —, aber ein stiller Unterschied
- * zwischen Sicherung und Wiederherstellung, und genau die sucht ein
+ * zwischen Backup und Wiederherstellung, und genau die sucht ein
  * Kreislauf.
  */
 
@@ -75,7 +75,7 @@ try {
 
     /* DIE ARBEIT STEHT IN backup_lib.php (S2/AP6).
      *
-     * Sie stand bis Web 11.2.0 hier — und die Admin-Sicherung braucht seit
+     * Sie stand bis Web 11.2.0 hier — und das Admin-Backup braucht seit
      * dem Umbau auf das mehrteilige Rohpaket genau dasselbe. Ein zweiter Weg
      * waere ein zweiter Ort, an dem die Eigentumspruefung, die Blobpruefung
      * und das Ueberspringen vorhandener Spuren zu vergessen sind. Dieser

@@ -797,9 +797,9 @@ Wert ist dort eine Aussage.
 - **Der Papierkorb ist in keinem Exportprofil enthalten** — gelöschte
   Einsätze, Ruhesegmente und Diensttage tauchen nirgends auf
   (`api/export_data.php` filtert `deleted_at IS NULL`). Ein Export ist eine
-  Auswertung des aktiven Bestands, keine Sicherung.
+  Auswertung des aktiven Bestands, kein Backup.
 
-  **Die Sicherung (`.edbak`) verhält sich seit Web 8.0.0 anders**: Sie führt
+  **Das Backup (`.edbak`) verhält sich seit Web 8.0.0 anders**: Es führt
   den Papierkorb und spielt ihn als Papierkorb zurück
   (`docs/Backup-Format.md` 2). Wer gelöschte Einträge erhalten will, nimmt
   also das Backup, nicht den Export — und diese Zeile steht hier, damit man

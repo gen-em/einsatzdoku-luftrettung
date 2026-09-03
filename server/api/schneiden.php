@@ -35,7 +35,7 @@ require_once __DIR__ . '/../spur_lib.php';
  * DER EINSATZ ENTSTEHT AUF DEM BESTANDSWEG. Virtuelles Geraet
  * `manual-<userId>`, `origin = 'manual'`, `manual = 1`, `client_ref` mit
  * Praefix — woertlich wie in `einsatz_form.php`. Das ist kein Zierrat: An
- * diesen drei Merkmalen haengt, ob der Einsatz durch Sicherung, Export und
+ * diesen drei Merkmalen haengt, ob der Einsatz durch Backup, Export und
  * Papierkorb kommt (R24), und ob `ingest.php` seine Phasen spaeter noch
  * anfasst.
  *

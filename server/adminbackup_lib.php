@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * Admin-Sicherungen: Ablage im Dateisystem, Übersicht, Rückspielung.
+ * Admin-Backups: Ablage im Dateisystem, Übersicht, Rückspielung.
  *
  * Zweck (Block A8): Administration soll Konten sichern und wiederherstellen
  * können, OHNE Einblick in die Daten zu erhalten. Das Rohpaket entsteht
@@ -11,7 +11,7 @@ declare(strict_types=1);
  * WARUM DAS DATEISYSTEM UND NICHT DIE DATENBANK (E16)
  * Ein Paket liegt bei größeren Beständen im zweistelligen MB-Bereich, und
  * `max_allowed_packet` liegt auf geteiltem Webspace oft unveränderlich bei
- * 16 MB. Der zweite Grund wiegt schwerer: Eine Sicherung, die im selben
+ * 16 MB. Der zweite Grund wiegt schwerer: Ein Backup, das im selben
  * Behälter liegt wie das Gesicherte, ist keine Rückfallebene.
  *
  * ZWEI SCHRANKEN GEGEN DEN ABRUF ÜBER DEN BROWSER
@@ -24,7 +24,7 @@ declare(strict_types=1);
  * ZWINGEND: `sicherungen/` steht in der `exclude`-Liste von
  * `.github/workflows/deploy.yml`. Der FTP-Deploy synchronisiert `server/` und
  * löscht alles, was nicht ausgenommen ist — ohne den Eintrag wäre die erste
- * Auslieferung nach dieser Fassung zugleich die letzte aller Sicherungen.
+ * Auslieferung nach dieser Fassung zugleich das letzte aller Backups.
  *
  * Aufbau der Ablage:
  *
@@ -36,7 +36,7 @@ declare(strict_types=1);
  *
  * Die Begleitdatei hält Anzeigename und E-Mail-Adresse fest, damit die
  * Zuordnung eine Kontolöschung überlebt (A8.2) — genau dafür gibt es den
- * Abschnitt „verwaiste Sicherungen" in der Übersicht.
+ * Abschnitt „verwaiste Backups" in der Übersicht.
  */
 
 require_once __DIR__ . '/backup_lib.php';
@@ -45,7 +45,7 @@ require_once __DIR__ . '/backup_lib.php';
  * Vorbelegung der Aufbewahrung je Konto (E18, seit Web 9.8.0 einstellbar).
  *
  * Bis Web 9.7.2 war die Zahl fest verdrahtet. Sie ist jetzt eine Regel der
- * Installation (`app_state.adminbackup_aufbewahrung`, Seite „Sicherungen").
+ * Installation (`app_state.adminbackup_aufbewahrung`, Seite „Backups").
  *
  * ZWEI STATT DREI (S2/AP6, Entscheidung vom 31.08.2026). Das Konzept nennt
  * seit E-S2-14 die Zwei; Code und drei Dokumente standen auf drei. Der
@@ -85,7 +85,7 @@ const EDBAK_ADMIN_TEIL_PUNKTE = 250000;
 const EDBAK_ADMIN_SPUR_BLOCK = 25;
 
 /**
- * Präfix des Bauordners, in dem die Teile einer Sicherung entstehen (S2/AP6).
+ * Präfix des Bauordners, in dem die Teile eines Backups entstehen (S2/AP6).
  *
  * Er ist ERKENNBAR, und das ist der Punkt: Bricht ein Lauf mitten im Bau ab,
  * bleibt ein solcher Ordner liegen. Vorher war das eine `.tmp`-Datei, die
@@ -138,7 +138,7 @@ function edbak_wurzel(): string
  */
 function edbak_ablage_bereit(): array
 {
-    /* OHNE ext/zip GIBT ES KEINE SICHERUNG (S2/AP6).
+    /* OHNE ext/zip GIBT ES KEINE BACKUP (S2/AP6).
      *
      * Seit dem Umbau auf das mehrteilige Rohpaket ist ein Adminpaket ein ZIP.
      * Fehlt die Erweiterung, soll das HIER auffallen — an der Stelle, die
@@ -147,18 +147,18 @@ function edbak_ablage_bereit(): array
      * demselben Paket schon vor der Einrichtung. */
     if (!class_exists('ZipArchive')) {
         return [false, 'Der PHP-Erweiterung „zip" fehlt (ext/zip, Klasse '
-                     . 'ZipArchive). Sicherungen sind ZIP-Dateien; ohne sie '
+                     . 'ZipArchive). Backups sind ZIP-Dateien; ohne sie '
                      . 'lässt sich keine erzeugen. Bitte beim Hoster '
                      . 'freischalten lassen.'];
     }
     $wurzel = edbak_wurzel();
     if (!is_dir($wurzel) && !@mkdir($wurzel, 0770, true) && !is_dir($wurzel)) {
-        return [false, 'Das Verzeichnis für Sicherungen lässt sich nicht anlegen ('
+        return [false, 'Das Verzeichnis für Backups lässt sich nicht anlegen ('
                      . $wurzel . '). Bitte Schreibrechte prüfen.'];
     }
     $ht = $wurzel . '/.htaccess';
     if (!is_file($ht)) {
-        $inhalt = "# Sicherungen sind NIE über den Browser abrufbar.\n"
+        $inhalt = "# Backups sind NIE über den Browser abrufbar.\n"
                 . "# Zweite Schranke ist der Ordnername: Er ist die zufällige\n"
                 . "# Kontokennung und nicht zu erraten (E17).\n"
                 . "Require all denied\n"
@@ -172,7 +172,7 @@ function edbak_ablage_bereit(): array
         }
     }
     if (!is_writable($wurzel)) {
-        return [false, 'Das Verzeichnis für Sicherungen ist nicht beschreibbar ('
+        return [false, 'Das Verzeichnis für Backups ist nicht beschreibbar ('
                      . $wurzel . ').'];
     }
     return [true, null];
@@ -300,7 +300,7 @@ function edbak_begleit_schreiben(string $kennung, array $daten): bool
  * Pakete eines Ordners, neueste zuerst.
  *
  * Grundlage ist das VERZEICHNIS, nicht die Begleitdatei: Eine Begleitdatei,
- * die eine Datei nennt, die es nicht mehr gibt, darf keine Sicherung
+ * die eine Datei nennt, die es nicht mehr gibt, darf kein Backup
  * vortäuschen — und umgekehrt darf eine vorhandene Datei nicht deshalb
  * unsichtbar bleiben, weil sie im Verzeichnis fehlt.
  */
@@ -341,7 +341,7 @@ function edbak_zeit_aus_name(string $name): ?string
 }
 
 /**
- * Sicherung erzeugen.
+ * Backup erzeugen.
  *
  * Zusätzlich zum Ergebnis von edbak_build() werden `pat_wrap_rc` und
  * `pat_key_check` mitgesichert (E5). Ohne die Hülle liesse sich das Paket
@@ -397,8 +397,8 @@ function edbak_sicherung_erzeugen(int $userId): array
      * Schreiben ein drittes Mal als Zeichenkette. Gemessen am 5000er-Konto:
      * 19,81 s, 94,28 MB Paket, **1077,6 MB** Spitze — und mit
      * `memory_limit=64M` (Z3) brach der Lauf in `spur_lib.php` ab. Auf genau
-     * der Sorte Webspace, für die diese Anwendung gebaut ist, war die
-     * Admin-Sicherung eines großen Kontos schlicht unmöglich.
+     * der Sorte Webspace, für die diese Anwendung gebaut ist, war das
+     * Admin-Backup eines großen Kontos schlicht unmöglich.
      *
      * Jetzt derselbe Weg wie beim Nutzerformat seit Web 11.1.0: Kopf,
      * Eintragsfenster, Spurteile — nur unversiegelt, denn ein Adminpaket
@@ -452,12 +452,12 @@ function edbak_sicherung_erzeugen(int $userId): array
     };
 
     if (!$teilSchreiben('kopf.json', $kopfJson)) {
-        return $abbruch('Der Kopf der Sicherung liess sich nicht schreiben.');
+        return $abbruch('Der Kopf des Backups liess sich nicht schreiben.');
     }
     unset($kopfJson);
 
-    /* 'papierkorb' als Unterblock (E-S1-02). Seit Nutzlast 7 enthaelt jede
-     * Sicherung den Papierkorb; die Zahl daneben ist die einzige Stelle, an
+    /* 'papierkorb' als Unterblock (E-S1-02). Seit Nutzlast 7 enthaelt jedes
+     * Backup den Papierkorb; die Zahl daneben ist die einzige Stelle, an
      * der das SICHTBAR wird, ohne die Datei zu oeffnen. */
     $imPapierkorb = static function (array $zeilen): int {
         $n = 0;
@@ -495,12 +495,12 @@ function edbak_sicherung_erzeugen(int $userId): array
         unset($roh);
         if (!is_array($f) || !isset($f['missions'], $f['rest_segments'])
             || !is_array($f['missions']) || !is_array($f['rest_segments'])) {
-            return $abbruch('Ein Eintragsfenster der Sicherung ist unvollständig.');
+            return $abbruch('Ein Eintragsfenster des Backups ist unvollständig.');
         }
         /* NACHZAEHLEN, WAS ANGEKOMMEN IST — dieselbe Schranke wie im Browser
          * (S2/AP5b). Die Schleife rueckt um das Fenster weiter, gleichgueltig
-         * wie viel zurueckkam; ein zu kurzes Fenster liesse Eintraege aus der
-         * Sicherung fallen, und die Meldung lautete trotzdem „fertig". */
+         * wie viel zurueckkam; ein zu kurzes Fenster liesse Eintraege aus dem
+         * Backup fallen, und die Meldung lautete trotzdem „fertig". */
         $bekommen = count($f['missions']) + count($f['rest_segments']);
         $soll = min(EDBAK_ADMIN_FENSTER, $gesamtEintraege - $ab);
         if ($bekommen !== $soll) {
@@ -617,7 +617,7 @@ function edbak_sicherung_erzeugen(int $userId): array
     $tmp  = $ordner . '/' . $name . '.tmp';
     $zip  = new ZipArchive();
     if ($zip->open($tmp, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-        return $abbruch('Die Sicherungsdatei lässt sich nicht anlegen.');
+        return $abbruch('Die Backup-Datei lässt sich nicht anlegen.');
     }
     foreach ($teile as $t) {
         /* GEPACKT, anders als beim Nutzerformat: Dort sind die Teile bereits
@@ -627,12 +627,12 @@ function edbak_sicherung_erzeugen(int $userId): array
         if (!$zip->addFile($t['datei'], $t['name'])) {
             @$zip->close();
             @unlink($tmp);
-            return $abbruch('Ein Teil liess sich nicht in die Sicherung legen.');
+            return $abbruch('Ein Teil liess sich nicht in das Backup legen.');
         }
     }
     if (!$zip->close()) {
         @unlink($tmp);
-        return $abbruch('Die Sicherung liess sich nicht abschliessen.');
+        return $abbruch('Das Backup liess sich nicht abschliessen.');
     }
     edbak_ordner_leeren($bau);
     @rmdir($bau);
@@ -640,7 +640,7 @@ function edbak_sicherung_erzeugen(int $userId): array
     if (!@rename($tmp, $ordner . '/' . $name)) {
         @unlink($tmp);
         if ($ordnerNeu) { @rmdir($ordner); }
-        return [false, 'Die Sicherung liess sich nicht ablegen.', null];
+        return [false, 'Das Backup liess sich nicht ablegen.', null];
     }
 
     /* ---- ERST GEGENLESEN, DANN AUFRAEUMEN (S2/AP6) ---------------------
@@ -657,7 +657,7 @@ function edbak_sicherung_erzeugen(int $userId): array
      * einen Fehler, ohne den Bestand angetastet zu haben. */
     $gegenprobe = edbak_paket_kopf_lesen($kennung, $name);
     if ($gegenprobe === null || ($gegenprobe['version'] ?? 0) !== 2) {
-        return [false, 'Die Sicherung wurde geschrieben, liess sich danach aber '
+        return [false, 'Das Backup wurde geschrieben, liess sich danach aber '
                      . 'nicht lesen. Der bisherige Bestand ist unangetastet '
                      . 'geblieben; die fragliche Datei heisst ' . $name . '.', null];
     }
@@ -673,11 +673,11 @@ function edbak_sicherung_erzeugen(int $userId): array
     ];
     if (!edbak_begleit_schreiben($kennung, $begleit)) {
         /* KEIN STILLES WEITERGEHEN (S2/AP6). Der Rueckgabewert wurde hier
-         * verworfen. Die Sicherung liegt dann zwar, aber das Verzeichnis
-         * kennt sie nicht — und `edbak_pakete()` faellt fuer sie auf den
+         * verworfen. Das Backup liegt dann zwar, aber das Verzeichnis
+         * kennt es nicht — und `edbak_pakete()` faellt fuer es auf den
          * Zeitstempel im Namen zurueck, ohne Umfang. Das ist kein
          * Datenverlust, aber eine Auskunft, die fehlt. */
-        return [true, 'Die Sicherung liegt, aber das Verzeichnis des Kontos '
+        return [true, 'Das Backup liegt, aber das Verzeichnis des Kontos '
                     . 'liess sich nicht schreiben. Umfang und Zeitpunkt fehlen '
                     . 'deshalb in der Liste.',
                 ['datei' => $name, 'umfang' => $umfang, 'verdraengt' => [],
@@ -695,12 +695,12 @@ function edbak_sicherung_erzeugen(int $userId): array
 }
 
 /**
- * Älteste Sicherungen entfernen, bis höchstens n übrig sind (E18).
+ * Älteste Backups entfernen, bis höchstens n übrig sind (E18).
  *
  * KEINE ALTERSGRENZE. Bei rein manueller Auslösung würde eine Altersgrenze
- * genau die letzte vorhandene Sicherung entfernen, wenn lange keine neue
- * erzeugt wurde — also in der Lage, in der man sie braucht. Die Anzahlgrenze
- * greift nur, wenn tatsächlich eine neuere existiert.
+ * genau das letzte vorhandene Backup entfernen, wenn lange kein neues
+ * erzeugt wurde — also in der Lage, in der man es braucht. Die Anzahlgrenze
+ * greift nur, wenn tatsächlich ein neueres existiert.
  *
  * Das ist die zugesagte Verdrängung und KEINE Löschhandlung im Sinne von
  * A8.8: Sie braucht deshalb keine Bestätigung (Akzeptanzkriterium 60).
@@ -710,7 +710,7 @@ function edbak_sicherung_erzeugen(int $userId): array
  * hätte sonst zwei Zusagen gebrochen:
  *
  *   das JÜNGSTE Paket, weil `array_slice` bei n = 0 den ganzen Bestand
- *   entfernen würde — eine Sicherung, die beim Sichern alles wegräumt, ist
+ *   entfernen würde — ein Backup, das beim Sichern alles wegräumt, ist
  *   das Gegenteil der Funktion;
  *
  *   ein FREIGEGEBENES Paket, weil die NutzerIn es im eigenen Backup-Bereich
@@ -821,8 +821,8 @@ function edbak_ordner_leeren(string $pfad): bool
  *
  * SIE WERDEN NICHT NACH ALTER GEFILTERT, sondern nach Zugehörigkeit: Was hier
  * entfernt wird, trägt das Präfix bzw. die Endung, die nur diese Bibliothek
- * vergibt. Ein paralleler Lauf im selben Konto ist ausgeschlossen — die
- * Sicherung eines Kontos läuft in einer Anfrage, und der Joblauf sperrt.
+ * vergibt. Ein paralleler Lauf im selben Konto ist ausgeschlossen — das
+ * Backup eines Kontos läuft in einer Anfrage, und der Joblauf sperrt.
  */
 function edbak_baureste_aufraeumen(string $kennung): int
 {
@@ -984,7 +984,7 @@ function edbak_weg(array $paket, array $ziel): array
  * Übersicht: bestehende Konten und verwaiste Ordner (E19).
  *
  * Die Liste der Ordner entsteht aus dem VERZEICHNIS, nicht aus der Datenbank.
- * Eine Liste allein aus `users` würde genau die Sicherungen verschweigen, um
+ * Eine Liste allein aus `users` würde genau die Backups verschweigen, um
  * derentwillen die Funktion gebaut wird: Das neu aufgesetzte Konto trägt eine
  * neue Kennung, zum alten Ordner existiert keine Datenbankzeile mehr.
  */
@@ -1040,7 +1040,7 @@ function edbak_uebersicht(): array
     return ['konten' => $mitKonto, 'verwaist' => $verwaist];
 }
 
-/** Freigabe setzen (A8.6): die Sicherung wird für ein Zielkonto sichtbar. */
+/** Freigabe setzen (A8.6): das Backup wird für ein Zielkonto sichtbar. */
 function edbak_freigeben(string $kennung, string $datei, int $zielUserId): bool
 {
     if (!edbak_paketname_gueltig($datei)) { return false; }
@@ -1063,10 +1063,10 @@ function edbak_freigabe_widerrufen(string $kennung): bool
 }
 
 /**
- * Die für ein Konto freigegebene Sicherung — oder null.
+ * Das für ein Konto freigegebene Backup — oder null.
  *
  * Durchsucht alle Ordner, nicht nur den eigenen: Der Anwendungsfall ist gerade
- * der, dass die Sicherung in einem FREMDEN (verwaisten) Ordner liegt, weil das
+ * der, dass das Backup in einem FREMDEN (verwaisten) Ordner liegt, weil das
  * Konto neu aufgesetzt wurde.
  */
 function edbak_freigabe_fuer(int $userId): ?array
@@ -1097,7 +1097,7 @@ function edbak_freigabe_eingeloest(string $kennung): void
     }
 }
 
-/** Eine einzelne Sicherung löschen (A8.8). Wirkt sofort und endgültig (E23). */
+/** Ein einzelnes Backup löschen (A8.8). Wirkt sofort und endgültig (E23). */
 function edbak_paket_loeschen(string $kennung, string $datei): bool
 {
     if (!edbak_kennung_gueltig($kennung) || !edbak_paketname_gueltig($datei)) { return false; }
@@ -1138,7 +1138,7 @@ function edbak_ordner_loeschen(string $kennung): bool
     return @rmdir($ordner);
 }
 
-/** Alle Sicherungen eines Kontos entfernen (E25, Kontolöschung). */
+/** Alle Backups eines Kontos entfernen (E25, Kontolöschung). */
 function edbak_konto_ordner_loeschen(?string $kennung): bool
 {
     return edbak_kennung_gueltig($kennung) ? edbak_ordner_loeschen((string)$kennung) : true;
@@ -1146,7 +1146,7 @@ function edbak_konto_ordner_loeschen(?string $kennung): bool
 
 /* ---- Erinnerung (A8.4) ---------------------------------------------------
  *
- * Intervall und Zeitpunkt der letzten Sicherung passen in die vorhandene
+ * Intervall und Zeitpunkt des letzten Backups passen in die vorhandene
  * Tabelle app_state; dafür braucht es keine neue Struktur. Die Anzeige folgt
  * dem Muster der Wartungswarnung in update.php: erst sagen, was ist, dann was
  * daraus folgt.
@@ -1157,7 +1157,7 @@ function edbak_konto_ordner_loeschen(?string $kennung): bool
  * Wert gleich mit in den Zwischenspeicher.
  *
  * DER GRUND IST GEMESSEN. Die NutzerInnen-Liste wertet je Zeile einen
- * Sicherungsstand und braucht dafür das Erinnerungsintervall. Ohne
+ * Backup-Stand und braucht dafür das Erinnerungsintervall. Ohne
  * Zwischenspeicher waren das bei 304 Konten 304 Abfragen und 27,7 ms für eine
  * Rechnung, die aus einer Subtraktion besteht.
  *
@@ -1189,7 +1189,7 @@ function edbak_marke_lesen(string $k): ?string
  * Eine Marke schreiben. Liefert, OB es geklappt hat (S2/AP6).
  *
  * VORHER WAR DER RUECKGABETYP `void` UND DER `catch` LEER. Der Gedanke war
- * richtig: Eine nicht schreibbare Marke darf die Sicherung selbst nicht
+ * richtig: Eine nicht schreibbare Marke darf das Backup selbst nicht
  * scheitern lassen. Nur hat der Block danach jeden Fehler geschluckt — auch
  * den, bei dem ein Wert schlicht nicht in die Spalte passt.
  *
@@ -1221,7 +1221,7 @@ function edbak_marke_setzen(string $k, string $v): bool
         $c[$k] = $v;
         return true;
     } catch (Throwable $ex) {
-        /* Still gegenueber der Anfrage — die Sicherung selbst soll daran nicht
+        /* Still gegenueber der Anfrage — das Backup selbst soll daran nicht
          * scheitern —, aber nachlesbar. */
         error_log('adminbackup: Marke "' . $k . '" liess sich nicht schreiben: '
                 . $ex->getMessage());
@@ -1260,9 +1260,9 @@ function edbak_admin_mail_an(): bool
  * zeigt genau ein Konto, und bei mehreren hundert Konten wäre die Übersicht
  * dafür ein Verzeichnisdurchlauf über den ganzen Bestand.
  *
- * Zurück kommt, was die Karte „Sicherungen" braucht: die Pakete, die
+ * Zurück kommt, was die Karte „Backups" braucht: die Pakete, die
  * Freigabe, und der Stand als eines von fünf Worten. „nie" ist dabei nicht
- * „überfällig": Ein Konto ohne jede Sicherung ist ein anderer Befund als
+ * „überfällig": Ein Konto ohne jedes Backup ist ein anderer Befund als
  * eines, dessen letzte zu alt ist — die Liste zählt beide getrennt.
  */
 function edbak_konto_stand(array $konto): array
@@ -1406,7 +1406,7 @@ function edbak_stand_aus_karte(?string $kennung, array $karte, ?int $intervall =
          * lesbar verzeichnet; was genau, sagt die Kontoseite. Ist der Ordner
          * dagegen LEER, ist „nie gesichert" die richtige und dieselbe Antwort
          * wie dort (ein leerer Ordner bleibt etwa nach einem abgebrochenen
-         * Sicherungslauf zurück). */
+         * Backup-Lauf zurück). */
         return !empty($e['leer'])
             ? ['stand' => 'nie', 'letzte' => null, 'tage' => null]
             : ['stand' => 'unbekannt', 'letzte' => null, 'tage' => null];
@@ -1416,14 +1416,14 @@ function edbak_stand_aus_karte(?string $kennung, array $karte, ?int $intervall =
 
 /* ---- Zwei Zeilen für die Anzeige (O9) ------------------------------------
  *
- * Beide standen bis Web 9.7.2 in admin_sicherungen.php. Seit die Sicherungen
+ * Beide standen bis Web 9.7.2 in admin_sicherungen.php. Seit die Backups
  * eines Kontos auf dessen Kontoseite liegen (E-P3-41), brauchen sie zwei
  * Seiten — und eine Formatierung, die an zwei Stellen doppelt steht, läuft
  * auseinander.
  */
 
 /**
- * Umfang einer Sicherung als eine Zeile — nur Zahlen, nie Inhalte (A8.7).
+ * Umfang eines Backups als eine Zeile — nur Zahlen, nie Inhalte (A8.7).
  *
  * REIHENFOLGE UND TRENNER FOLGEN MOCKUP 40 („41 Diensttage · 138 Einsätze ·
  * 2,1 MB"): Diensttage zuerst, Mittelpunkt statt Komma. Ruhezeiten und
@@ -1441,7 +1441,7 @@ function edbak_umfang_text(array $p): string
         $teile[] = (int)($z['einsaetze'] ?? 0) . ' Einsätze';
         $teile[] = (int)($z['ruhezeiten'] ?? 0) . ' Ruhezeiten';
         /* „davon im Papierkorb" (E-S1-02). Seit Nutzlast 7 steht der
-         * Papierkorb in jeder Sicherung und zaehlt in den drei Zahlen oben
+         * Papierkorb in jedem Backup und zaehlt in den drei Zahlen oben
          * MIT. Ohne diesen Zusatz waere aus „87 Einsätze" nicht zu erkennen,
          * dass fünf davon geloescht sind.
          *
@@ -1454,7 +1454,7 @@ function edbak_umfang_text(array $p): string
          * Aufteilung stand im Weg. Bewusste Kürzung, keine Auslassung —
          * das Paket selbst führt die Zahlen weiter je Art.
          *
-         * Fehlt der Block (Sicherungen vor S1), wird NICHTS angezeigt statt
+         * Fehlt der Block (Backups vor S1), wird NICHTS angezeigt statt
          * einer Null: Eine Null behauptete „nichts im Papierkorb", richtig ist
          * „nicht erhoben". */
         $pk = $z['papierkorb'] ?? null;
@@ -1608,12 +1608,12 @@ function edbak_ablage_zahlen(bool $frisch = false): array
             }
         }
     }
-    /* DIE KOMPLETTSICHERUNGEN BEKOMMEN EINE EIGENE ZAHL (S2/AP8).
+    /* DIE KOMPLETT-BACKUPS BEKOMMEN EINE EIGENE ZAHL (S2/AP8).
      *
      * Gewogen waren sie schon vorher — `$wiegen` geht ueber den ganzen Baum.
      * Sie landeten damit aber unter `sonstige_bytes`, und das ist die Zahl,
-     * die auf der Speicherseite „auffaelliger Rest" heisst. Eine
-     * Komplettsicherung ist mit Abstand die groesste Datei der Ablage; sie als
+     * die auf der Speicherseite „auffaelliger Rest" heisst. Ein
+     * Komplett-Backup ist mit Abstand die groesste Datei der Ablage; es als
      * Rest auszuweisen hiesse, die Speicherseite zur Meldung eines Fehlers zu
      * bringen, den es nicht gibt — und beim naechsten Mal glaubt ihr niemand
      * mehr. */
@@ -1690,10 +1690,10 @@ function edbak_grenze_pruefen(bool $frisch = false): array
 {
     $st = edbak_speicherstand($frisch);
     if (!$st['voll']) { return [true, null]; }
-    return [false, 'Die Speichergrenze für Sicherungen ist erreicht ('
+    return [false, 'Die Speichergrenze für Backups ist erreicht ('
                  . edbak_groesse_text($st['bytes']) . ' von '
                  . edbak_groesse_text($st['grenze']) . '). Es wurde NICHTS '
-                 . 'gelöscht und nichts überschrieben. Bitte alte Sicherungen '
+                 . 'gelöscht und nichts überschrieben. Bitte alte Backups '
                  . 'entfernen, die Aufbewahrung senken oder die Grenze erhöhen.'];
 }
 
@@ -1751,16 +1751,16 @@ function edbak_schwellen_melden(): array
         if (is_string($m) && $m !== '') { $ziele[] = $m; }
     }
     foreach ($offen as $s) {
-        $text = "Die Ablage der Sicherungen hat " . $s . " % ihrer Grenze erreicht.\n\n"
+        $text = "Die Ablage der Backups hat " . $s . " % ihrer Grenze erreicht.\n\n"
               . "Belegt:  " . edbak_groesse_text($st['bytes']) . "\n"
               . "Grenze:  " . edbak_groesse_text($st['grenze']) . "\n"
               . "Pakete:  " . $st['pakete'] . " in " . $st['ordner'] . " Konten\n\n"
               . "Ist die Grenze erreicht, wird nicht mehr gesichert — es wird "
-              . "nichts still verdraengt. Bitte alte Sicherungen entfernen, die "
+              . "nichts still verdraengt. Bitte alte Backups entfernen, die "
               . "Aufbewahrung senken oder die Grenze erhoehen.\n";
         $ok = false;
         foreach ($ziele as $m) {
-            if (smtp_send($m, 'Sicherungen: ' . $s . ' % der Speichergrenze erreicht', $text)) {
+            if (smtp_send($m, 'Backups: ' . $s . ' % der Speichergrenze erreicht', $text)) {
                 $ok = true;
             }
         }
@@ -1825,16 +1825,16 @@ function edbak_faellige_konten(): array
     return $liste;
 }
 
-/* ---- Sicherungen ohne Konto (O9c) -----------------------------------------
+/* ---- Backups ohne Konto (O9c) -----------------------------------------
  *
  * Ordner, zu deren Kennung es keine Zeile in `users` (mehr) gibt — der Fall
  * „Konto geloescht und neu aufgesetzt" (A8.2). Sie sind der Grund, aus dem die
  * Uebersicht ueberhaupt aus dem VERZEICHNIS entsteht und nicht aus der
- * Datenbank: Eine Liste aus `users` verschwiege genau die Sicherungen, um
+ * Datenbank: Eine Liste aus `users` verschwiege genau die Backups, um
  * derentwillen es sie gibt.
  *
  * Das ist die schmale Fassung von edbak_uebersicht(): NUR die verwaisten
- * Ordner. Die Konten selbst brauchen hier nichts mehr — ihre Sicherungen
+ * Ordner. Die Konten selbst brauchen hier nichts mehr — ihre Backups
  * stehen seit Web 9.8.0 auf der Kontoseite.
  */
 function edbak_verwaiste(): array
@@ -1921,7 +1921,7 @@ function edbak_erinnerung_planen(): int
         require_once __DIR__ . '/smtp.php';
         foreach ($admins as $a) {
             @smtp_send((string)$a['email'],
-                'Sicherungen fällig — Gen-EM Einsatzdokumentation Notarzt', $text);
+                'Backups fällig — Gen-EM Einsatzdokumentation Notarzt', $text);
         }
     });
     return count($faellig);
@@ -1930,8 +1930,8 @@ function edbak_erinnerung_planen(): int
 /**
  * Der Text der Erinnerungsmail.
  *
- * KEINE NAMEN, KEINE ZAHLEN AUS DEN KONTEN — nur Adressen und das Alter der
- * letzten Sicherung. Eine Mail liegt unverschlüsselt im Postfach; was darin
+ * KEINE NAMEN, KEINE ZAHLEN AUS DEN KONTEN — nur Adressen und das Alter des
+ * letzten Backups. Eine Mail liegt unverschlüsselt im Postfach; was darin
  * steht, steht damit auch auf jedem Mailserver dazwischen. Die Adresse muss
  * hinein, sonst weiss niemand, welches Konto gemeint ist; alles Weitere steht
  * in der Anwendung.
@@ -1947,21 +1947,21 @@ function edbak_erinnerung_text(array $faellig): string
     $zeilen = [];
     foreach ($nie as $k) { $zeilen[] = '  ' . $k['email'] . ' — nie gesichert'; }
     foreach ($alt as $k) {
-        $zeilen[] = '  ' . $k['email'] . ' — letzte Sicherung vor ' . (int)$k['tage'] . ' Tagen';
+        $zeilen[] = '  ' . $k['email'] . ' — letztes Backup vor ' . (int)$k['tage'] . ' Tagen';
     }
     $basis = (string)($CFG['app']['base_url'] ?? '');
 
     return "Hallo,\n\n"
          . "in der Gen-EM Einsatzdokumentation Notarzt sind " . count($faellig)
-         . " Konten ohne aktuelle Sicherung:\n\n"
+         . " Konten ohne aktuelles Backup:\n\n"
          . implode("\n", $zeilen) . "\n\n"
-         . "Als überfällig gilt ein Konto, dessen letzte Sicherung älter ist als "
+         . "Als überfällig gilt ein Konto, dessen letztes Backup älter ist als "
          . edbak_intervall() . " Tage.\n\n"
          . "Sichern lässt sich jedes Konto auf seiner Kontoseite, mehrere auf einmal\n"
          . "über die Auswahl in der NutzerInnen-Liste:\n\n"
          . ($basis !== '' ? $basis . "/admin_users.php?f=nie\n" . $basis . "/admin_users.php?f=ueberfaellig\n\n" : '')
          . "Diese Erinnerung kommt höchstens einmal je Woche und nur, wenn es etwas zu\n"
-         . "melden gibt. Abschalten lässt sie sich unter Einstellungen → Sicherungen.\n\n"
+         . "melden gibt. Abschalten lässt sie sich unter Einstellungen → Backups.\n\n"
          . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
          . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n";
 }
@@ -2006,7 +2006,7 @@ function edbak_erinnerung(): array
  * WOFUER. Fassung 2 liegt mehrteilig vor; sie am Stueck zu lesen und
  * `edbak_restore()` in einem Zug zu uebergeben waere genau die Spitze, die
  * der Umbau auf der Schreibseite beseitigt hat — nur eben beim Lesen. Diese
- * Funktion geht denselben Weg wie der Browser bei einer Nutzersicherung:
+ * Funktion geht denselben Weg wie der Browser bei einem Nutzer-Backup:
  * Kopf, Eintragsfenster, Spurteile.
  *
  * WARUM DAS NICHT „nur" eine Bequemlichkeit ist. Ein Fassung-2-Kern durch
@@ -2027,17 +2027,17 @@ function edbak_erinnerung(): array
 function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId): array
 {
     if (!edbak_kennung_gueltig($kennung) || edbak_paket_fassung($datei) !== 2) {
-        return [false, 'Das ist kein mehrteiliges Sicherungspaket.', null];
+        return [false, 'Das ist kein mehrteiliges Backup-Paket.', null];
     }
     if (!class_exists('ZipArchive')) {
         return [false, 'Der PHP-Erweiterung „zip" fehlt (ext/zip).', null];
     }
     $pfad = edbak_ordner($kennung) . '/' . $datei;
-    if (!is_file($pfad)) { return [false, 'Die Sicherung ist nicht auffindbar.', null]; }
+    if (!is_file($pfad)) { return [false, 'Das Backup ist nicht auffindbar.', null]; }
 
     $zip = new ZipArchive();
     if ($zip->open($pfad) !== true) {
-        return [false, 'Die Sicherung liess sich nicht öffnen.', null];
+        return [false, 'Das Backup liess sich nicht öffnen.', null];
     }
     $lies = static function (string $name) use ($zip): ?array {
         $roh = $zip->getFromName($name);
@@ -2049,7 +2049,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     $manifest = $lies('manifest.json');
     if ($manifest === null || ($manifest['format'] ?? '') !== 'einsatzdoku-adminsicherung') {
         $zip->close();
-        return [false, 'Der Sicherung fehlt ein lesbares Manifest.', null];
+        return [false, 'Dem Backup fehlt ein lesbares Manifest.', null];
     }
     /* VOLLSTAENDIGKEIT VOR DEM ERSTEN SCHREIBEN. Ein fehlendes Teil soll
      * auffallen, solange das Zielkonto noch unberuehrt ist — nicht auf halber
@@ -2060,7 +2060,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     }
     if ($fehlend) {
         $zip->close();
-        return [false, 'Der Sicherung fehlen ' . count($fehlend) . ' von '
+        return [false, 'Dem Backup fehlen ' . count($fehlend) . ' von '
                      . count((array)$manifest['teile']) . ' Teilen ('
                      . implode(', ', array_slice($fehlend, 0, 3))
                      . (count($fehlend) > 3 ? ' …' : '')
@@ -2070,7 +2070,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     $kopf = $lies('kopf.json');
     if ($kopf === null) {
         $zip->close();
-        return [false, 'Der Sicherung fehlt der Kopf.', null];
+        return [false, 'Dem Backup fehlt der Kopf.', null];
     }
 
     $summe = [];
@@ -2168,7 +2168,7 @@ function edbak_paket_zurueckspielen(string $kennung, string $datei, int $zielUse
         return edbak_paket_einspielen($kennung, $datei, $zielUserId);
     }
     $paket = edbak_paket_lesen($kennung, $datei);
-    if ($paket === null) { return [false, 'Die Sicherung liess sich nicht lesen.', null]; }
+    if ($paket === null) { return [false, 'Das Backup liess sich nicht lesen.', null]; }
     return [true, null, edbak_restore($zielUserId, $paket['daten'] ?? [])];
 }
 
@@ -2206,7 +2206,7 @@ function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?
  * WARUM EINE WARTESCHLANGE UND KEINE HEURISTIK.
  *
  * Bis Web 12.0.0 gab es keinen Merkzettel: „Alle sichern" sortierte die
- * Konten nach dem Alter ihrer letzten Sicherung, arbeitete ab, bis die Zeit
+ * Konten nach dem Alter ihres letzten Backups, arbeitete ab, bis die Zeit
  * knapp wurde, und verliess sich darauf, dass ein zweiter Klick dort
  * weitermacht, wo der erste aufgehoert hat — wer eben gesichert wurde, steht
  * ja hinten.
@@ -2223,8 +2223,8 @@ function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?
  * Seiten geleert: von der Schaltflaeche, solange die Anfrage Zeit hat, und
  * vom Wartungsjob, in Schueben.
  *
- * KEINE AUTOMATISCHEN SICHERUNGEN. Der Job arbeitet nur, wenn ein Auftrag
- * vorliegt — E-S2-19 hat naechtliche Konto-Sicherungen ausdruecklich
+ * KEINE AUTOMATISCHEN BACKUPS. Der Job arbeitet nur, wenn ein Auftrag
+ * vorliegt — E-S2-19 hat naechtliche Konto-Backups ausdruecklich
  * abgelehnt. Ohne Auftrag kostet er eine Abfrage.
  */
 
@@ -2242,7 +2242,7 @@ const EDBAK_AUFTRAG_SCHLUESSEL = 'adminbackup_auftrag';
  * Ein Zeiger passt immer: Gearbeitet wird in der Reihenfolge der Kennung
  * (`users.id`), und die Marke merkt sich, wie weit es ist.
  *
- * WAS DAMIT WEGFAELLT: „aelteste Sicherung zuerst". Das war ohnehin nie eine
+ * WAS DAMIT WEGFAELLT: „aeltestes Backup zuerst". Das war ohnehin nie eine
  * Reihenfolge, sondern ein Ersatz dafuer — gerechnet wurde in TAGEN, und bei
  * Gleichstand war sie beliebig. Was der Auftrag zusagt, ist etwas anderes und
  * Belastbareres: JEDES Konto genau einmal, und ein Abbruch verliert

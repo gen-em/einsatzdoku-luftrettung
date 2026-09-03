@@ -71,7 +71,7 @@ Daten erst nach Server-Bestätigung.
 │   │                       gefiltert und seitenweise (50 je Seite), mit
 │   │                       Statuskacheln und Sammelleiste
 │   │                       Die Kontoseite ist seit Web 9.8.0 die Drehscheibe
-│   │                       eines Kontos: Kontodaten, Geräte, Sicherungen
+│   │                       eines Kontos: Kontodaten, Geräte, Backups
 │   │                       dieses Kontos, Abonnement (Platz für R33), Löschung
 │   ├── admin_stammdaten.php  Systemweite Stammdaten aller sechs Typen
 │   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`;
@@ -111,25 +111,25 @@ Daten erst nach Server-Bestätigung.
 │   │                       Sperre)
 │   ├── backup_lib.php     Backup-Serialisierung (Kern mit oder ohne Spuren)
 │   │                       · trash_lib.php Papierkorb-Logik
-│   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage (ZIP, Fassung 2),
+│   ├── adminbackup_lib.php  Admin-Backups: Ablage (ZIP, Fassung 2),
 │   │                       Übersicht, Freigabe, Speichergrenze, Auftrag (A8, S2/AP6)
 │   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
-│   │                       Regeln, Ablage und Sicherungen ohne Konto;
+│   │                       Regeln, Ablage und Backups ohne Konto;
 │   │                       die Konten stehen in admin_users.php, die
 │   │                       Pakete eines Kontos auf dessen Kontoseite
 │   │                       · sicherungen/ die Ablage selbst
 │   │                       (entsteht nur auf dem Server, im Deploy ausgenommen)
-│   │                       · sicherungen/komplett/ die Komplettsicherungen
+│   │                       · sicherungen/komplett/ die Komplett-Backups
 │   │                       · sicherungen/eingang/ was wiederhergestellt
 │   │                         werden soll — von Hand dorthin gelegt
-│   ├── sicherungsziel_lib.php  Sicherungsziele (S2/AP7): Schnittstelle
+│   ├── sicherungsziel_lib.php  Backup-Ziele (S2/AP7): Schnittstelle
 │   │                       `Zielweg` und drei Adapter — FTP und FTPS über
 │   │                       ext/ftp, SFTP über phpseclib; dazu Pflege in der
 │   │                       Tabelle backup_targets, „Verbindung prüfen" und
 │   │                       der Versandschub
 │   ├── admin_sicherungsziele.php  Adminseite dazu: Ziele anlegen und prüfen,
 │   │                       Serverschlüssel nachtragen, Versand ein/aus
-│   ├── komplett_lib.php   Komplettsicherung der Installation (S2/AP8):
+│   ├── komplett_lib.php   Komplett-Backup der Installation (S2/AP8):
 │   │                       eigener SQL-Dump in Häppchen (ein Statement je
 │   │                       Zeile, INSERT-Stapel bis 1 MB, einspielbare
 │   │                       Reihenfolge), gzip, Siegel EDKOMP1; dazu Ablage,
@@ -183,7 +183,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      und zurücknehmen, S4/A2b — siehe 4.97e) ·
 │   │                      gpx_import.php (GPX herein, S4/A3 — siehe 4.97f) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
-│   │                      adminbackup_freigabe.php (freigegebene Sicherung für die NutzerIn)
+│   │                      adminbackup_freigabe.php (freigegebenes Backup für die NutzerIn)
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
 │   │                      crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
@@ -293,7 +293,7 @@ Daten erst nach Server-Bestätigung.
 │   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
 │   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
 │   ├── messstand/         stellt ein Konto mit 5000 Einsätzen her — aus der
-│   │                      Referenzsicherung vervielfältigt und über den
+│   │                      Referenz-Backup vervielfältigt und über den
 │   │                      REGULÄREN Wiederherstellungsweg eingespielt — und
 │   │                      misst daran die Zielzahlen von S2: Suche,
 │   │                      Tagesansicht, Sichern, Speicherspitzen,
@@ -325,7 +325,7 @@ Daten erst nach Server-Bestätigung.
 │   ├── logos/             erzeugt die Favicons AUS den Logodateien, damit beide
 │   │                      nicht auseinanderlaufen (s. LIESMICH.md)
 │   ├── pruefkonten/       legt einen Bestand von 300+ Konten mit gemischten
-│   │                      Sicherungsstaenden an (fester Zufallsstartwert) —
+│   │                      Backup-Staenden an (fester Zufallsstartwert) —
 │   │                      fuer Seitenwechsel, Filter und Sammelauswahl der
 │   │                      NutzerInnen-Liste (P-P3-16)
 │   ├── rechtstexte/       Angriffsprobe fuer den Markdown-Renderer der
@@ -358,13 +358,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      plus berechnete Stile im Browser, 13 Breiten.
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
-│   ├── komplettprobe/     fährt den ganzen Zyklus der Komplettsicherung
+│   ├── komplettprobe/     fährt den ganzen Zyklus des Komplett-Backups
 │   │                      (S2/AP8): erzeugen in Häppchen, versiegeln, öffnen,
 │   │                      in eine LEERE Datenbank einspielen und Tabelle für
-│   │                      Tabelle vergleichen, aufs Sicherungsziel schieben.
+│   │                      Tabelle vergleichen, aufs Backup-Ziel schieben.
 │   │                      76 Erwartungen. Arbeitet in einer Kopie unter /tmp,
 │   │                      liest aber aus der ECHTEN Datenbank
-│   ├── versandprobe/      prüft die drei Sicherungsziel-Adapter (S2/AP7)
+│   ├── versandprobe/      prüft die drei Backup-Ziel-Adapter (S2/AP7)
 │   │                      gegen ECHTE Server auf 127.0.0.1: Rundlauf je
 │   │                      Protokoll, Fingerabdruck als Riegel, Fehlerfälle,
 │   │                      Versiegelung der Zugangsdaten. 115 Erwartungen.
@@ -413,7 +413,7 @@ Daten erst nach Server-Bestätigung.
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“ |
-| Sicherung | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist in der Sicherung, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
+| Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Siehe Abschnitt 5 |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
@@ -438,11 +438,11 @@ Daten erst nach Server-Bestätigung.
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Sicherungsziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
-| `backup_targets` | Sicherungsziele (seit Web 12.1.0, S2/AP7): FTP-, FTPS- oder SFTP-Gegenstelle je Zeile. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
+| `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTP-, FTPS- oder SFTP-Gegenstelle je Zeile. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
@@ -771,7 +771,7 @@ sie durch Klartext, holt die Spuren blockweise als SPUR1-Blobs
 mit versiegelten Teilen (**Containerfassung 4**, seit Web 11.1.0):
 `manifest.edbak`, `kopf.edbak`, `eintraege/NNNN.edbak`, `spuren/NNNN.edbak`.
 Jedes Teil ist ein AES-GCM-Container; die Zusatzdaten binden
-Sicherungskennung, Teilname und Nummer, und abgeleitet wird **einmal je
+Backup-Kennung, Teilname und Nummer, und abgeleitet wird **einmal je
 Vorgang**.
 
 **Warum 250 Einträge je Fenster:** Der Rückweg schickt genau diese Fenster als
@@ -1508,8 +1508,8 @@ den Standard, und genau das soll die Anmeldeseite zeigen.
 
 **Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Diensttage tragen
 `deleted_at`; alle Lesepfade (Übersicht, Tages-/Einsatz-/Zeitraum-API,
-Tagesliste, **Export**) filtern darauf. **Die Sicherung nicht mehr** — seit Web
-8.0.0 führt sie den Papierkorb und spielt ihn als Papierkorb zurück
+Tagesliste, **Export**) filtern darauf. **Das Backup nicht mehr** — seit Web
+8.0.0 führt es den Papierkorb und spielt ihn als Papierkorb zurück
 (`docs/Backup-Format.md` 2 und 3). `trash_lib.php` bündelt Umfangsermittlung,
 weiches Löschen, Wiederherstellen und endgültiges Entfernen; der Job
 `aufraeumen` (`jobs_lib.php`) räumt nach `TRASH_DAYS` (**90**) endgültig ab. Beim Löschen eines
@@ -1527,7 +1527,7 @@ bliebe er ohne `day_id` zurück. Vier Stellen halten das:
 Uhr einen **neuen** Tag auslöst (die Dienstkennung in `day_refs` wird auf ihn
 umgebogen); `trash_purge_day()` nimmt **alles** am Tag mit statt nur das
 Gelöschte, und die Rückfrage nennt das Aktive vorher einzeln
-(`trash_aktiv_am_tag()`); und beim Einspielen einer Sicherung gilt E-S1-19.
+(`trash_aktiv_am_tag()`); und beim Einspielen eines Backups gilt E-S1-19.
 Altbestand meldet `update.php` unter „Einsätze ohne Diensttag" — als Bericht,
 nicht als Migration. `ingest.php` quittiert Uploads für
 Einträge im Papierkorb, verwirft sie aber; erst das endgültige Löschen schreibt
@@ -1891,7 +1891,7 @@ Server etwas über den Schlüssel lernt — er vergleicht zwei Hashwerte, und de
 Schlüssel ist 256 Bit Zufall.
 
 Sie wird geprüft beim Passwortwechsel, beim Zurücksetzen über den
-Wiederherstellungsschlüssel und beim Einspielen einer Sicherung; gesetzt wird
+Wiederherstellungsschlüssel und beim Einspielen eines Backups; gesetzt wird
 sie bei der Ersteinrichtung und bei jedem Setzen des Passworts. **`NULL` ist ein
 gültiger Zustand** (Konten vor Web 4.0.0): Der Server kann sie nicht
 nachträglich berechnen, also werden solche Konten angenommen und bekommen sie
@@ -1998,8 +1998,8 @@ sechs sind umgestellt:
 | Tagesansicht (`api/day.php`) | `spur_lesen_viele()` | `[lat, lon]` |
 | Einsatzansicht (`api/mission.php`) | `spur_lesen()` | `[lat, lon]` + `ts` für `track_idx` |
 | Export (`api/export_data.php`) | `spur_lesen_viele()`, `spur_zahlen()` | `[lat, lon, ele, ts]` |
-| Sicherung, Nutzlast ≤ 7 (`backup_lib.php`) | `spur_lesen_viele()` | `[seq, lat, lon, ele, ts]` |
-| Sicherung, Fassung 4 (`api/backup_spuren.php`) | `spur_fuer_sicherung_viele()` | SPUR1-Blob, roh |
+| Backup, Nutzlast ≤ 7 (`backup_lib.php`) | `spur_lesen_viele()` | `[seq, lat, lon, ele, ts]` |
+| Backup, Fassung 4 (`api/backup_spuren.php`) | `spur_fuer_sicherung_viele()` | SPUR1-Blob, roh |
 | Rückweg der Fassung 4 (`api/backup_spuren_restore.php`) | `spur_blob_pruefen()`, `spur_blob_schreiben()` | — |
 | Einsatzort-Höhe (`site_elevation_lib.php`) | `spur_lesen()` | ein Punkt |
 | Umdatierung (`tageszuordnung_lib.php`) | `spur_min_ts()`, `spur_zeit_verschieben()` | — |
@@ -2392,7 +2392,7 @@ umgekehrt wäre ein Abbruch Datenverlust.
 **Die Ausdünnung geht über den Primärschlüssel von `track_blobs`**, nicht über
 den Index `stufe_alter (stufe, geaendert_am)`. Der trägt das Änderungsdatum des
 *Blobs*, nicht das Einsatzende, und ist als Näherung in beide Richtungen
-falsch: Das Einspielen einer Sicherung schreibt einen frischen `geaendert_am`
+falsch: Das Einspielen eines Backups schreibt einen frischen `geaendert_am`
 auf zwei Jahre alte Punkte, und `spur_zeit_verschieben()` schreibt ihn bei
 jeder Umdatierung neu. Bezugsgröße ist `COALESCE(ended_at, started_at)` —
 `started_at` ist in beiden Tabellen `NOT NULL`, und bei sechs Monaten Frist ist
@@ -2403,7 +2403,7 @@ Richtung).
 sie gehört der Verdichtung, die Blob und Nachzügler zu einem neuen
 verlustfreien Blob zusammenführt. Sonst nummerierte der Blob 0 … n_gespeichert−1
 und die Nachzügler begännen bei `n_original` — eine Nummernlücke, die der
-Rückweg der Sicherung nicht verträgt.
+Rückweg des Backups nicht verträgt.
 
 **Verkettet wird nicht.** Konzept 3.1.4 sah vor, dass die Ausdünnung im selben
 Häppchen hinterherläuft, wenn die Frist schon abgelaufen ist. Dagegen sprach:
@@ -2425,15 +2425,15 @@ jemand vergisst. Die Wartungsseite zeigt sie als eigene Plakette an, damit eine
 laufende Pause nicht wie ein arbeitender Job aussieht.
 
 **Warum es sie gibt.** Seit die Jobs Zeilen löschen und Blobs ersetzen, ändern
-sie den Bestand, während eine Messung darüber läuft. Der Kreislauf spielt eine
-Sicherung in ein frisches Konto und exportiert sie sofort wieder; die
+sie den Bestand, während eine Messung darüber läuft. Der Kreislauf spielt ein
+Backup in ein frisches Konto und exportiert es sofort wieder; die
 wiederhergestellten Einsätze sind alt, der Verdichtungsjob hält sie für reif,
 und was älter als sechs Monate ist, wird ausgedünnt. Der Vergleich misst dann
 nicht mehr „kommt zurück, was hineinging", sondern „hat der Job dazwischen
 zugeschlagen". Beim ersten Lauf nach AP3 ging es gut, aber nur **zufällig** —
 nachgemessen verdichtete ein Lauf ohne Pause 125 Spuren des Umlaufkontos.
 
-Im Betrieb ist sie ebenfalls nützlich: Wer eine große Sicherung einspielt, will
+Im Betrieb ist sie ebenfalls nützlich: Wer ein großes Backup einspielt, will
 die Jobs so lange still haben.
 
 #### Die Waisensuche läuft bereichsweise (E-S2-18)
@@ -2691,16 +2691,16 @@ das Skript.
 
 ---
 
-### 4.97c Sicherungsziele: die Sicherung verlässt das Haus (ab Web 12.1.0, S2/AP7, E-S2-22)
+### 4.97c Backup-Ziele: das Backup verlässt das Haus (ab Web 12.1.0, S2/AP7, E-S2-22)
 
-Bis Web 12.0.0 entstanden die Admin-Sicherungen unter `server/sicherungen/`
+Bis Web 12.0.0 entstanden die Admin-Backups unter `server/sicherungen/`
 und blieben dort. Das ist die Rückfallebene für einen gelöschten Einsatz —
-aber nicht für den Fall, für den man Sicherungen macht: dass dieser Server weg
+aber nicht für den Fall, für den man Backups macht: dass dieser Server weg
 ist. Ab Web 12.1.0 gehen sie auf eine **Gegenstelle**.
 
 #### Der Name
 
-**Sicherungsziel**, nicht Transportziel. `transport_dests` gibt es seit Web 4;
+**Backup-Ziel**, nicht Transportziel. `transport_dests` gibt es seit Web 4;
 das sind die Zielkliniken einer Patientin, gepflegt unter Stammdaten. Zwei
 Dinge unter einem Wort, zwei Klicks voneinander entfernt — das lässt sich in
 einer Fehlermeldung nicht mehr auflösen (Konzept-S2, F-S2-G).
@@ -2774,7 +2774,7 @@ die schlechteste Antwort, denn der Versand liefe dann in ein „Zugang
 verweigert", und niemand käme auf die Ursache.
 
 Neue Installationen bekommen den Schlüssel vom Installer. Bestehende tragen
-ihn auf der Seite „Sicherungsziele" nach — ein Knopf, wenn `config.php`
+ihn auf der Seite „Backup-Ziele" nach — ein Knopf, wenn `config.php`
 beschreibbar ist, sonst eine Zeile von Hand. Der Knopf **ergänzt und ersetzt
 nie** (ein Überschreiben machte jedes versiegelte Feld unlesbar), schreibt in
 eine Nebendatei mit Endung `.php` — eine `config.php.tmp` läge im
@@ -2795,7 +2795,7 @@ jemand geklickt, und das ist die Zustimmung.
 Grösse** — und nicht in einer Merkliste geführt. Eine Merkliste behauptet
 „schon versandt" auch dann noch, wenn die Datei am Ziel gelöscht, das Ziel neu
 aufgesetzt oder der Pfad geändert wurde; diese Art Lüge fällt erst auf, wenn
-man die Sicherung braucht. Die Grösse gehört dazu, weil eine abgebrochene
+man das Backup braucht. Die Grösse gehört dazu, weil eine abgebrochene
 Übertragung sonst mit richtigem Namen und falscher Länge für immer als
 erledigt gälte.
 
@@ -2847,7 +2847,7 @@ FTPS 1,85 s, SFTP 0,68 s für dieselben 64 Pakete, 64 von 64 byteweise gleich.
 **Der Grundpfad bedeutet je Protokoll etwas anderes.** vsftpd sperrt den
 Nutzer in sein Heimverzeichnis — dort ist `/` die Wurzel. OpenSSH tut das
 nicht — dort ist `/` die Wurzel des Dateisystems. Ein Ziel mit „Pfad = /" legt
-seine Sicherungen bei SFTP also dorthin, wohin der Nutzer im Dateisystem
+seine Backups bei SFTP also dorthin, wohin der Nutzer im Dateisystem
 zeigt, und nicht in ein Heimverzeichnis.
 
 Was sie nicht prüfen kann — ein echtes Ziel im Internet —, steht an erster
@@ -2855,9 +2855,9 @@ Stelle ihrer `LIESMICH.md`.
 
 ---
 
-### 4.97d Komplettsicherung der Installation (ab Web 12.2.0, S2/AP8, E-S2-19 bis E-S2-21)
+### 4.97d Komplett-Backup der Installation (ab Web 12.2.0, S2/AP8, E-S2-19 bis E-S2-21)
 
-Die Adminsicherung (Abschnitt „Admin-Sicherungen") sichert ein **Konto**.
+Das Admin-Backup (Abschnitt „Admin-Backups") sichert ein **Konto**.
 Diese hier sichert die **Installation**: alle Konten, Stammdaten, Geräte,
 Schlüsselhüllen, `app_state`, den Migrationsstand — jede Tabelle, die in
 dieser Datenbank steht. Der Fall, gegen den sie hilft, ist nicht „jemand hat
@@ -2953,7 +2953,7 @@ Zusatzdaten je Block: `edkomp1|<SHA-256 von Magie+Kopfzeile>|<Index>|<0|1>`.
 Beides ist nötig. **Ohne Zähler** liessen sich zwei Blöcke vertauschen, und
 die Prüfsumme jedes einzelnen bliebe richtig. **Ohne die Endemarkierung**
 liesse sich die Datei hinten abschneiden, und was übrig bleibt, wäre eine
-gültige, kürzere Sicherung. Der **Dateikopf** hängt über seinen SHA-256 an
+gültige, kürzere Backup. Der **Dateikopf** hängt über seinen SHA-256 an
 jedem Block: Wer ihn ändert — etwa den Vermerk „mit Passphrase" —, macht damit
 jeden Block unlesbar.
 
@@ -2972,13 +2972,13 @@ steht im Kopf; raten muss das niemand.
   Sie wird nicht doppelt verschlüsselt, sondern Block für Block *umgesiegelt*;
   der Speicherbedarf bleibt bei einem halben Megabyte, gleich wie gross die
   Datei ist. **Eine PBKDF2 je Vorgang** (Z3), nicht eine je Block.
-- Was **von selbst** hinausgeht — der Versand aufs Sicherungsziel (4.97c) —
+- Was **von selbst** hinausgeht — der Versand aufs Backup-Ziel (4.97c) —
   ist immer die versiegelte Fassung.
 
 Der Download ist die eine begründete Ausnahme vom Z3-Budget „Serveranfrage
 ≤ 30 s": Das Budget gilt der *Arbeit*, ein Download rechnet nicht, sondern
-schiebt Bytes. Ein Abbruch nach 30 s wäre kein Schutz, sondern eine Sicherung,
-die sich bei langsamer Leitung nicht abholen lässt.
+schiebt Bytes. Ein Abbruch nach 30 s wäre kein Schutz, sondern ein Backup,
+das sich bei langsamer Leitung nicht abholen lässt.
 
 **Ohne Serverschlüssel wird gar nicht erst gesichert.** Eine unversiegelte
 Abschrift jeder Tabelle in `sicherungen/` liegen zu lassen unterliefe die
@@ -3005,14 +3005,14 @@ deshalb über ihre Werteliste durchlaufen — das betrifft `track_points` und
 #### Der Schnappschuss ist nicht scharf
 
 `mysqldump --single-transaction` hält einen Lesestand über den ganzen Lauf.
-Das geht nur **innerhalb einer Verbindung**, und diese Sicherung läuft über
+Das geht nur **innerhalb einer Verbindung**, und dieses Backup läuft über
 viele Anfragen. Eine Zeile, die währenddessen entsteht, kann enthalten sein
 oder nicht. Was **nicht** passieren kann, ist eine übersprungene Altzeile: Der
 Cursor läuft über den Primärschlüssel und nicht über `LIMIT/OFFSET`, ein
 gelöschter Vorgänger verschiebt ihn also nicht.
 
 Sichtbar wird das an genau einer Stelle: Die Tabelle `jobs` weicht nach einer
-Rückspielung ab, weil die Sicherung ihren eigenen Fortschritt dort
+Rückspielung ab, weil das Backup seinen eigenen Fortschritt dort
 mitschreibt. Das ist die harmloseste mögliche Stelle — und zugleich eine, die
 Folgen hat, siehe gleich.
 
@@ -3025,8 +3025,8 @@ Der Fortsetzungszustand steht in `jobs.zustand` und wird vom Job-Rahmen erst
    mittendrin abgebrochen; seine Zeilen stehen schon da, der Zustand zeigt
    davor. Der nächste Lauf schneidet auf die gemerkte Länge zurück. Ohne das
    käme das zweite `DROP TABLE` derselben Tabelle in die Datei und würde beim
-   Einspielen wegwerfen, was das erste Häppchen eingefügt hat — eine
-   Sicherung, die vollständig aussieht und es nicht ist.
+   Einspielen wegwerfen, was das erste Häppchen eingefügt hat — ein
+   Backup, das vollständig aussieht und es nicht ist.
 2. **Die Baudatei ist KÜRZER** (oder weg). Dann wird von vorn begonnen. Der
    Fall tritt regelmässig nach einer Wiederherstellung auf: Die eingespielte
    Datenbank trägt den Stand „Dump läuft" samt einem Bauordner, den es auf dem
@@ -3075,7 +3075,7 @@ ist eine neue Anfrage mit einer neuen. In der Datei stehen sie trotzdem — für
 
 **Migrationen laufen dort nicht mit.** `update.php` ist seit M6-01
 zweistufig, weil Migrationen Spalten löschen können. Eine Seite ohne
-Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Sicherung
+Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Absicherung
 heraus. Die Seite vergleicht stattdessen die Web-Fassung des Dumps mit der
 laufenden und schickt zur Wartung.
 
@@ -3221,7 +3221,7 @@ Schneide-Bereich auf: Zeitleiste, Beginn und Ende (Pflicht), drei Phasenzeiten
 Der Einsatz entsteht auf dem **Bestandsweg** — virtuelles Gerät
 `manual-<userId>`, `origin = 'manual'`, `manual = 1`, `client_ref` mit Präfix
 `cut-`, wörtlich wie in `einsatz_form.php`. Daran hängt, ob er durch
-Sicherung, Export und Papierkorb kommt (R24), und ob `ingest.php` seine Phasen
+Backup, Export und Papierkorb kommt (R24), und ob `ingest.php` seine Phasen
 später noch anfasst. Alles läuft in **einer** Transaktion; `spur_teilen()`
 schließt sich ihr an, statt eine eigene mitzubringen.
 
@@ -3655,10 +3655,10 @@ Die Anwendung hat vier unabhängige Schreibwege in dieselben Tabellen. Die
 Prüftiefe verlief historisch **umgekehrt zur Vertrauenswürdigkeit der Quelle**:
 
 Der Zustand vor Web 4.2.0 — die Reihenfolge nach Sorgfalt lautete Import →
-Formular → Uhr → Sicherung, die nach Vertrauenswürdigkeit der Quelle genau
+Formular → Uhr → Backup, das nach Vertrauenswürdigkeit der Quelle genau
 umgekehrt:
 
-| Prüfung | Formular | Import | Uhr | Sicherung |
+| Prüfung | Formular | Import | Uhr | Backup |
 |---|---|---|---|---|
 | Datumsformat | Muster | Muster | Muster | nein |
 | Kalendertag existiert | nein | nein | nein | nein |
@@ -3719,9 +3719,9 @@ Die Bausteine im Einzelnen:
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
-| Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Sicherungslauf) und schreibt je Einsatz `_pat` und `_patState`. |
+| Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |
 | Migrationsschutz | `update.php` (`inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert). Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
-| Blockabfrage | `db.php` (`sql_in_bloecken()`) | Eine Abfrage je Tabelle statt einer je Datensatz, in Blöcken zu 1000 IDs. Benutzt von Export, Tagesansicht und Sicherung. Die Vorlage trägt `{IDS}` und ist **keine** Formatzeichenkette — ein Prozentzeichen im SQL bleibt ein Prozentzeichen. |
+| Blockabfrage | `db.php` (`sql_in_bloecken()`) | Eine Abfrage je Tabelle statt einer je Datensatz, in Blöcken zu 1000 IDs. Benutzt von Export, Tagesansicht und Backup. Die Vorlage trägt `{IDS}` und ist **keine** Formatzeichenkette — ein Prozentzeichen im SQL bleibt ein Prozentzeichen. |
 | Formatkennung des Chiffretexts | `assets/crypto.js` (`CHIFFRE_PRAEFIX`), `validate_lib.php` (`PAT_BLOB_RE`, `WRAP_RE`) | `edk1:` vor jedem Chiffretext. Schreiben immer, Lesen großzügig (keine Kennung = erste Fassung), unbekannte Kennung wird als solche gemeldet. Betrifft `pat_blob` **und** beide Schlüsselhüllen — sie kommen aus derselben Funktion. |
 | Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Wartungsseite meldet diesen Zustand unter „Schlüsselableitung". |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
@@ -3800,16 +3800,16 @@ nicht bloß zugesichert:
 bleibt tolerant, eine Fixture der Version 1 lässt sich also weiterhin
 einspielen — ihr `nachlauf`-Block wird schlicht nicht mehr gelesen.
 
-**Warum sie nicht aus einer `.edbak` kommen kann.** Die Sicherungsdatei trägt
+**Warum sie nicht aus einer `.edbak` kommen kann.** Die Backup-Datei trägt
 die geschützten Angaben im **Klartext** — der Browser entschlüsselt vor dem
-Versiegeln, damit sich eine Sicherung in jedes Konto einspielen lässt. Für die
+Versiegeln, damit sich ein Backup in jedes Konto einspielen lässt. Für die
 Fixture wäre das genau falsch: Sie soll den Chiffretext unverändert mitführen
 und daneben das Schlüsselmaterial, mit dem er lesbar ist. Erst dadurch kann
 der Server das Konto **ohne jede Entschlüsselung** zurücksetzen — und erst
 dadurch ist der Reset schnell genug, um bei jeder Anfrage zu laufen.
 
-Die Quelle ist deshalb `edbak_build()`: dieselbe Funktion, die auch die
-Sicherung aufbaut, aber serverseitig — dort steht `pat_blob` noch als
+Die Quelle ist deshalb `edbak_build()`: dieselbe Funktion, die auch das
+Backup aufbaut, aber serverseitig — dort steht `pat_blob` noch als
 Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
 Der Erzeuger bricht ab, wenn er Klartext findet.
 
@@ -3820,7 +3820,7 @@ JSON-Zahlen. Gepackt sind es rund 745 KB, und die Datei geht bei jedem Deploy
 #### Kein zweiter Einspielweg
 
 Der Bestand wird über `edbak_restore()` eingespielt — dieselbe Routine wie bei
-der Wiederherstellung einer Sicherung, mit derselben Prüfung. Ein eigener Weg
+der Wiederherstellung eines Backups, mit derselben Prüfung. Ein eigener Weg
 hätte eigene Fehler, und ausgerechnet der Weg, der am häufigsten läuft, wäre
 der ungeprüftere.
 
@@ -3833,7 +3833,7 @@ Eine Erweiterung war dafür nötig, in `backup_lib.php`:
   hinterlassen — und der Reset läuft unbeaufsichtigt.
 
 Eine zweite gab es bis Web 7.3.1: `edbak_build($userId, $mitPapierkorb)`. Sie
-ist entfallen, weil der Papierkorb seit Web 8.0.0 ohnehin in jeder Sicherung
+ist entfallen, weil der Papierkorb seit Web 8.0.0 ohnehin in jedem Backup
 steht (`docs/Backup-Format.md` 2).
 
 #### Der Papierkorb-Nachlauf ist entfallen (Web 8.0.0)
@@ -3845,7 +3845,7 @@ Löschwege wieder in den Papierkorb. Es musste **nach** dem Commit laufen, weil
 `trash_delete_*()` je eine eigene Transaktion öffnen — der Reset zerfiel damit
 in zwei Schritte, von denen der zweite fehlschlagen konnte.
 
-**Warum es weg ist.** Seit Nutzlast 7 führt die Sicherung den Papierkorb, und
+**Warum es weg ist.** Seit Nutzlast 7 führt das Backup den Papierkorb, und
 `edbak_restore()` bringt ihn als Papierkorb zurück. Der Reset ist wieder
 **ein** Vorgang in **einer** Transaktion; die Zahlen für den Bericht kommen aus
 `stats.papierkorb` der Einspielroutine. Die 90-Tage-Frist stempelt jeder Reset
@@ -4353,7 +4353,7 @@ sieht vollständig aus und ist es nicht.
 
 **Ein Konto mit 5000 Einsätzen herstellen (Mengenprüfung, S2/R35):**
 `cd tools/messstand && python3 messen.py --frisch`. Der Lauf legt das Konto
-`messstand@gen-em.org` an, vervielfältigt die Referenzsicherung zu einer Folge
+`messstand@gen-em.org` an, vervielfältigt das Referenz-Backup zu einer Folge
 `.edbak`-Dateien und spielt sie über den **regulären** Wiederherstellungsweg im
 Browser ein — kein SQL. Dauer je nach Rechner rund zehn Minuten; danach misst
 er Suche, Tagesansicht, Sichern (Browser, CPU-Drossel 6×) sowie Tabellengrößen
@@ -4384,7 +4384,7 @@ und Adresse fertig zum Kopieren:
 „Hintergrundjobs" → Zeile **„Spuren verdichten"**. Darunter steht, was
 liegenbleibt und warum, mit Kennung: *Lücke in der Nummernfolge* (eine Uhr hat
 ein Teilstück nie nachgeliefert — die Spur bleibt als Zeilen stehen, das ist
-richtig so), *Zu viele Punkte* (über 50 000; aus einer Sicherung nicht
+richtig so), *Zu viele Punkte* (über 50 000; aus einem Backup nicht
 wiederherstellbar), *Punkte auf einer ausgedünnten Spur* (Erwartungswert **0** —
 steht dort eine Zahl, nimmt `ingest.php` an, was es verwerfen sollte),
 *Prüfung nicht bestanden* (es wurde nichts gelöscht und nichts ersetzt).
@@ -4396,8 +4396,8 @@ im Papierkorb liegt.
 **Die Jobs vorübergehend anhalten** (vor einer großen Wiederherstellung, vor
 einer Messung): `php jobs.php --pause 1800`, aufheben mit `--pause 0`. Die
 Pause gilt für alle drei Auslöser, läuft nach höchstens zwei Stunden von selbst
-ab, und die Wartungsseite zeigt sie an. **Sie ist kein Ersatz für eine
-Sicherung:** Was der Ausdünnungsjob einmal ersetzt hat, ist weg.
+ab, und die Wartungsseite zeigt sie an. **Sie ist kein Ersatz für ein
+Backup:** Was der Ausdünnungsjob einmal ersetzt hat, ist weg.
 
 **Nach dem Ausrollen von Web 10.2.0 auf einen gewachsenen Bestand:** Der erste
 Verdichtungslauf trägt den ganzen Altbestand ab. Gemessen an 3,3 Mio. Punkten:
@@ -4477,13 +4477,13 @@ und `SELECT` zogen von selbst nach. Spaltenbreiten nach Position
 und rutschen beim Streichen einer Spalte still auf die falsche.
 
 **Backup (seit Web 12.2.0 aus der Anwendung heraus):** Adminbereich →
-**Komplettsicherung** → *Jetzt sichern*, oder einen Zeitplan setzen
+**Komplett-Backup** → *Jetzt sichern*, oder einen Zeitplan setzen
 (täglich/wöchentlich/monatlich). Der Lauf schreibt jede Tabelle als
 versiegelten SQL-Dump nach `server/sicherungen/komplett/`; der Versand aufs
-Sicherungsziel nimmt ihn wie jedes andere Paket mit. Ein Hoster-Backup oder
+Backup-Ziel nimmt ihn wie jedes andere Paket mit. Ein Hoster-Backup oder
 ein `mysqldump` von aussen bleibt daneben zulässig und ist nicht überflüssig
 — es läuft auf einem anderen Weg und fällt deshalb nicht mit demselben Fehler
-aus. `config.php` ist in **keiner** dieser Sicherungen enthalten; sie gehört
+aus. `config.php` ist in **keinem** dieser Backups enthalten; sie gehört
 ins Wiederanlaufpaket (gleich darunter). Mechanik: Abschnitt 4.97d.
 
 Die Uhr sendet nach einer Wiederherstellung fehlende jüngste Daten idempotent
@@ -4496,18 +4496,18 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
 2. **Anwendungsdateien hochladen** (der Deploy tut das, oder von Hand).
 3. **`config.php` aus dem Wiederanlaufpaket** daneben legen. Datenbankzugang
    darin auf die neue Datenbank anpassen, den **`server_key` unverändert
-   lassen** — er ist es, der die Sicherung öffnet.
-4. **Die Sicherungsdatei** nach `server/sicherungen/eingang/` legen — per
-   FTP, SFTP oder Dateimanager des Hosters. Vom Sicherungsziel holt man sie
+   lassen** — er ist es, der das Backup öffnet.
+4. **Die Backup-Datei** nach `server/sicherungen/eingang/` legen — per
+   FTP, SFTP oder Dateimanager des Hosters. Vom Backup-Ziel holt man sie
    sich dorthin. Erkannt werden `.edk` (versiegelt), `.sql.gz` und `.sql`.
 5. **`wiederherstellen.php` aufrufen.** Die Seite nennt eine Nachweisdatei im
    Anwendungsverzeichnis; deren Kennung eintragen, *Auspacken und prüfen*,
    dann *Einspielen* — so oft, bis 100 % erreicht sind. Jeder Durchgang macht
    dort weiter, wo der vorige aufhörte.
-6. **Anmelden** — mit dem Administrationskonto aus der Sicherung; die
+6. **Anmelden** — mit dem Administrationskonto aus dem Backup; die
    Passwörter sind dieselben wie vorher.
 7. **Wartung (`update.php`) aufrufen** und den Migrationslauf ausführen.
-   Nicht optional, wenn die Sicherung aus einer älteren Fassung stammt — die
+   Nicht optional, wenn das Backup aus einer älteren Fassung stammt — die
    Seite sagt es dann auch. Der Lauf passiert dort und nicht in Schritt 5,
    weil Migrationen Spalten löschen können und dazwischen eine angemeldete
    Person und ein Knopf gehören (M6-01).
@@ -4521,9 +4521,9 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
 |---|---|---|
 | „Diese Installation ist noch nicht eingerichtet" | keine `config.php` | Schritt 3 nachholen |
 | „Die Datenbank antwortet nicht" | Zugangsdaten in `config.php` passen nicht, oder die Datenbank existiert nicht | Schritt 1 und 3 prüfen |
-| „Diese Installation ist in Betrieb" | in der Datenbank stehen schon Konten | Datenbank leeren (bewusste Handlung beim Hoster) oder einzelne Konten über *Sicherungen* zurückholen |
+| „Diese Installation ist in Betrieb" | in der Datenbank stehen schon Konten | Datenbank leeren (bewusste Handlung beim Hoster) oder einzelne Konten über *Backups* zurückholen |
 | „falscher Schlüssel, falsche Passphrase — oder der Dateikopf ist verändert" | der `server_key` in `config.php` ist nicht der, mit dem versiegelt wurde | den richtigen aus dem Wiederanlaufpaket eintragen |
-| „Diese Sicherung ist unvollständig — die Endmarke fehlt" | der Lauf ist beim Erzeugen abgebrochen | einen älteren Stand nehmen |
+| „Dieses Backup ist unvollständig — die Endmarke fehlt" | der Lauf ist beim Erzeugen abgebrochen | einen älteren Stand nehmen |
 | „gescheitert an Anweisung *n*" | halb eingespielt; es wurde **nichts** zurückgenommen | Datenbank leeren und von vorn |
 
 **Das Wiederanlaufpaket (seit Web 12.1.0, E-S2-21).** Getrennt von der
@@ -4532,32 +4532,32 @@ Anwendung aufbewahren — auf einem anderen Rechner, nicht im selben Backup:
 1. **`server/config.php`.** Sie steht in `.gitignore` **und** in der
    Ausnahmeliste des Deploys; es gibt sie also nur auf dem Server.
 2. **Der Serverschlüssel** darin (`'server_key' => '…'`, 64 Hexzeichen).
-   Er versiegelt die Zugangsdaten der Sicherungsziele und — ab AP8 — das
+   Er versiegelt die Zugangsdaten der Backup-Ziele und — ab AP8 — das
    Komplettbackup. **Ohne ihn** sind die Zugangsdaten der Ziele neu
    einzutragen (verschmerzbar) und ein versiegeltes Komplettbackup **nicht
    mehr zu öffnen** (nicht verschmerzbar).
-3. **Der Zugang zum Sicherungsziel** — Rechnername, Nutzer, Passwort bzw.
+3. **Der Zugang zum Backup-Ziel** — Rechnername, Nutzer, Passwort bzw.
    privater Schlüssel. Er steht in der Datenbank, aber versiegelt; wer nur
-   den Dump hat und den Serverschlüssel nicht, kommt an die Sicherungen
+   den Dump hat und den Serverschlüssel nicht, kommt an die Backups
    dort nicht heran. Das ist der Sinn der Sache und zugleich der Grund,
    ihn zusätzlich von Hand zu notieren.
 
 **Probe-Wiederherstellung** ist ein Prüfpunkt und keine Formalie: einmal je
-Halbjahr ein Paket vom Ziel holen und in ein Wegwerfkonto einspielen. Eine
-Sicherung, die nie zurückgespielt wurde, ist eine Vermutung.
+Halbjahr ein Paket vom Ziel holen und in ein Wegwerfkonto einspielen. Ein
+Backup, das nie zurückgespielt wurde, ist eine Vermutung.
 
 **Serverschlüssel nachtragen (bestehende Installation):** Adminbereich →
-**Sicherungsziele**. Ist `config.php` beschreibbar, genügt der Knopf; sonst
+**Backup-Ziele**. Ist `config.php` beschreibbar, genügt der Knopf; sonst
 zeigt die Seite die fertige Zeile zum Einfügen — **genau eine** eintragen, bei
 jedem Neuladen steht dort eine andere. Danach die Zeile ins Wiederanlaufpaket.
 
-**Sicherungsziel einrichten:** Adminbereich → **Sicherungsziele** → *Ziel
+**Backup-Ziel einrichten:** Adminbereich → **Backup-Ziele** → *Ziel
 anlegen*. **SFTP wählen, wenn das Ziel es anbietet** — es ist das einzige der
 drei Protokolle, das den Server am Hostschlüssel wiedererkennt. Danach
 **Verbindung prüfen**: Der Lauf schreibt eine Probedatei, liest sie zurück,
 vergleicht sie und löscht sie wieder; er beantwortet damit auch die Frage nach
 den Schreibrechten. Beim ersten Mal wird der Hostschlüssel übernommen.
-Zuletzt den Schalter *Sicherungen automatisch versenden* setzen — **wie oft**
+Zuletzt den Schalter *Backups automatisch versenden* setzen — **wie oft**
 das geschieht, entscheidet der eingerichtete Job-Auslöser (Abschnitt 4.97a).
 
 **„Der Server meldet sich mit einem ANDEREN Hostschlüssel":** Erst klären, ob
@@ -4621,7 +4621,7 @@ immer ISO), und ein selbstgebauter Kalender wäre mobil schlechter zu bedienen.
 
 Die Prüfschicht liegt weiterhin auf dem Server: `local_to_utc()` in `db.php`
 prüft Muster **und** Wertebereich. `zeitfeld.js` ist Bequemlichkeit im
-Browser, keine Sicherung. Betroffen sind die Phasenzeiten im Einsatzformular
+Browser, kein Backup. Betroffen sind die Phasenzeiten im Einsatzformular
 (`ph_time[]`, dynamisch erzeugt) und die beiden Alarmzeit-Filter der Suche;
 letztere sind reine Clientfilter und erreichen den Server nie.
 
@@ -4676,7 +4676,7 @@ sie durchnummeriert; Verweise aus Code und Dokumentation nennen die Nummer
 
 ---
 
-## Admin-Sicherungen (A8, seit Web 5.9.0)
+## Admin-Backups (A8, seit Web 5.9.0)
 
 **Zweck.** Administration soll Konten sichern und wiederherstellen können, ohne
 Einblick in die Daten zu bekommen. Der Serverteil war im Kern vorhanden:
@@ -4689,7 +4689,7 @@ Chiffretext, `edbak_restore()` übernimmt ihn unverändert.
 (`app_state.adminbackup_aufbewahrung`, `edbak_aufbewahrung()`, **Vorgabe 2
 seit Web 12.0.0**, vorher 3). Nicht in der Datenbank: Ein Paket liegt bei
 größeren Beständen im zweistelligen MB-Bereich, `max_allowed_packet` liegt auf
-geteiltem Webspace oft unveränderlich bei 16 MB — und eine Sicherung im selben
+geteiltem Webspace oft unveränderlich bei 16 MB — und ein Backup im selben
 Behälter wie das Gesicherte ist keine Rückfallebene.
 
 **Zwei Schranken gegen den Abruf über den Browser**, dasselbe Muster wie bei der
@@ -4699,7 +4699,7 @@ nachlegt, und der nicht erratbare Ordnername.
 
 **Ein Paket ist seit Web 12.0.0 ein ZIP** (Aufbau: `docs/Backup-Format.md` 5).
 Gebaut, gelesen und eingespielt wird in Fenstern zu 250 Einträgen — dieselbe
-Zahl wie bei der Nutzersicherung, hier aber aus einem anderen Grund: Über die
+Zahl wie bei dem Nutzer-Backup, hier aber aus einem anderen Grund: Über die
 Leitung geht nichts, es zählt allein der Speicher. **Gemessen** am
 5000er-Bestand: 1077,6 MB → **24,0 MB von 64**, Datei 94,28 → 11,42 MB, Dauer
 19,81 → 14,13 s. Mit `memory_limit=64M` (Z3) brach der Lauf vorher ab.
@@ -4773,8 +4773,8 @@ Rückspielpfad wäre eine zweite Stelle, an der dieselben Fehler zu machen sind.
 
 `edbak_verdraengen()` läuft nach **jedem** Sichern eines Kontos und entfernt,
 was über der Aufbewahrung liegt. Keine Altersgrenze: Bei rein manueller
-Auslösung würde sie genau die letzte vorhandene Sicherung entfernen, wenn lange
-keine neue erzeugt wurde — also in der Lage, in der man sie braucht.
+Auslösung würde sie genau das letzte vorhandene Backup entfernen, wenn lange
+kein neues erzeugt wurde — also in der Lage, in der man es braucht.
 
 **Zwei Pakete sind ausgenommen**, seit die Zahl einstellbar ist:
 
@@ -4797,15 +4797,15 @@ Merkzettel steht in `app_state.adminbackup_auftrag` und ist **ein Zeiger,
 keine Liste** — `app_state.v` ist `varchar(190)`, eine Liste von Kennungen
 passt dort nicht hinein (Aufbau: `docs/Backup-Format.md` 5c).
 
-Der Job arbeitet **nur auf Auftrag**; nächtliche Sicherungen je Konto sind
+Der Job arbeitet **nur auf Auftrag**; nächtliche Backups je Konto sind
 ausdrücklich abgelehnt (E-S2-19). Seine Reserve ist mit 15 s so groß, dass er
 am Huckepack-Weg (`JOB_BUDGET_ANFRAGE` = 3 s) gar nicht erst anfängt — eine
-Anfrage einer NutzerIn soll keine fremde Sicherung mittragen.
+Anfrage einer NutzerIn soll kein fremdes Backup mittragen.
 
 **Der Job-Rahmen misst seit Web 12.0.0 auch den Speicher**
 (`jobs_speicher_knapp()`, `JOB_SPEICHER_DECKEL_MB` = 48 von 64). Bis dahin
 zählte nur die Zeit; das reichte, solange jeder Job in Blöcken über Zeilen
-lief. Der Sicherungsjob ist anders: Ein einzelnes Konto kostet beim
+lief. Der Backup-Job ist anders: Ein einzelnes Konto kostet beim
 5000er-Bestand 24 MB, und das ist die Größe, an der es klemmt.
 
 Die zweite Ausnahme folgt derselben Regel wie
@@ -4816,7 +4816,7 @@ vorhandene Datei löscht: Eine Freigabe und die Datei dazu gehören zusammen.
 
 `admin_users.php` zeigt vier Statuskacheln, eine Suche, fünf Filter, sechs
 sortierbare Spalten und **50 Konten je Seite**. Zwei Kacheln, zwei Filter und
-eine Spalte hängen am **Sicherungsstand**, und der steht im Dateisystem.
+eine Spalte hängen am **Backup-Stand**, und der steht im Dateisystem.
 
 Deshalb genau zwei Zugriffe je Seitenaufruf, beide unabhängig von der Zahl der
 Konten je Zeile:
@@ -4836,7 +4836,7 @@ kennen kein SQL. Eine halbe Filterung in SQL und eine halbe in PHP wären zwei
 Wege für dieselbe Frage — und der zweite hätte die falschen Zahlen. Der Browser
 bekommt in jedem Fall höchstens 50 Zeilen. Die Grenze davon steht in
 `docs/Backlog.md` Nr. 37: Bei einigen tausend Konten braucht der
-Sicherungsstand eine Spalte in der Datenbank.
+Backup-Stand eine Spalte in der Datenbank.
 
 **Die Kacheln zählen den ganzen Bestand, die Filterzahlen die laufende Suche.**
 Absicht: Die Kacheln sagen, wie es um die Installation steht; die Zahl an einer
@@ -4871,17 +4871,17 @@ Konten 304 Abfragen und 27,7 ms.
 ### Die Kontoseite (E-P3-41, seit Web 9.8.0)
 
 Alles zu **einem** Konto liegt auf `admin_user.php?id=…`: Kontodaten (ein
-Formular, ein Speichern), Geräte, die Sicherungen **dieses** Kontos, ein
+Formular, ein Speichern), Geräte, die Backups **dieses** Kontos, ein
 reservierter Platz für das Abonnement (R33) und die Löschung als
 Gefahrenzone. `admin_sicherungen.php` behält die Regeln — und seit Web 9.10.0
-nur noch sie (Abschnitt „Sicherungen: was auf welcher Seite steht").
+nur noch sie (Abschnitt „Backups: was auf welcher Seite steht").
 
 Der Grund ist nicht nur Bedienung, sondern Menge: `edbak_uebersicht()` liest
 für **jedes** Konto ein Verzeichnis und eine Begleitdatei, um eine Zeile zu
 zeigen — Arbeit, die mit der Zahl der Konten wächst, obwohl man immer nur ein
 Konto ansieht. `edbak_konto_stand($userzeile)` liest genau einen Ordner und
 liefert `stand` (`aktuell` · `ueberfaellig` · `nie` · `ohne_kennung`), die
-Pakete, die Freigabe und das Alter der jüngsten Sicherung.
+Pakete, die Freigabe und das Alter des jüngsten Backups.
 
 Der Zeitpunkt kommt dabei aus dem jüngsten **vorhandenen** Paket, nicht aus
 `konto.json`: Wird eine Datei von Hand aus dem Ordner entfernt, bliebe die
@@ -4901,9 +4901,9 @@ weiterhin **serverseitig** — die abgetippte Adresse muss stimmen; ein
 Browser-Dialog ließe sich umgehen.
 
 Das Einspielen zielt auf **dieses** Konto. Ein Auswahlfeld mit allen Konten
-stünde für einen Fall, den es auf dieser Seite nicht gibt: Wer eine Sicherung
-in ein fremdes Konto bringen will, gibt sie frei; ein Paket ohne Konto findet
-man unter „Sicherungen ohne Konto".
+stünde für einen Fall, den es auf dieser Seite nicht gibt: Wer ein Backup
+in ein fremdes Konto bringen will, gibt es frei; ein Paket ohne Konto findet
+man unter „Backups ohne Konto".
 
 **Grenze, die im Handbuch steht und hier wiederholt gehört:** Ohne
 Wiederherstellungsschlüssel ist ein neu aufgesetztes Konto nicht
@@ -4919,10 +4919,10 @@ Die Aufteilung über die drei Seiten:
 |---|---|
 | Wie steht es um die Installation? Welche Regeln gelten? | `admin_sicherungen.php` |
 | Welche Konten sind überfällig? Mehrere auf einmal sichern | `admin_users.php` (Filter `?f=ueberfaellig` / `?f=nie`) |
-| Die Sicherungen **eines** Kontos: einspielen, freigeben, löschen | `admin_user.php?id=…` |
+| Die Backups **eines** Kontos: einspielen, freigeben, löschen | `admin_user.php?id=…` |
 
 Vier Kacheln (`edbak_stand_zaehlen()`, `edbak_ablage_zahlen()`), die Karten
-**Regeln**, **Ablage** und — zugeklappt — **Sicherungen ohne Konto**
+**Regeln**, **Ablage** und — zugeklappt — **Backups ohne Konto**
 (`edbak_verwaiste()`).
 
 **Warum die Ablagezahlen hier Verzeichnisse lesen dürfen und in der Liste
@@ -4932,7 +4932,7 @@ geöffnet; die Liste dagegen ist der Weg zu einem Konto und wird ständig
 aufgerufen.
 
 **„Alle sichern" hat ein Zeitbudget** (`SICHERN_BUDGET = 20.0` Sekunden), keine
-Stückzahl. Die fälligen Konten werden nach Alter der letzten Sicherung
+Stückzahl. Die fälligen Konten werden nach Alter des letzten Backups
 sortiert, das älteste zuerst. Wer nicht mehr hineinpasst, ist beim nächsten
 Klick der älteste — die Reihenfolge sorgt selbst dafür, dass wiederholtes
 Klicken konvergiert. Gemessen: 222 ms je Konto mit 82 Einsätzen, 7 ms für ein
@@ -4959,7 +4959,7 @@ ausgefallene — die nächste kommt in sieben Tagen.
 Älteste). Keine Namen, keine Zahlen aus den Konten — eine Mail liegt
 unverschlüsselt im Postfach und auf jedem Server dazwischen.
 
-Abschalten: Einstellungen → Sicherungen → „Erinnerung an Admins per E-Mail".
+Abschalten: Einstellungen → Backups → „Erinnerung an Admins per E-Mail".
 Beim Einschalten wird `adminbackup_mail_last` geleert, damit die erste
 Erinnerung nicht im Rhythmus einer abgeschalteten Zeit hängt.
 

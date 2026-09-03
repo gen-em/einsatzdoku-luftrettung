@@ -59,7 +59,7 @@ Einspielwegs: Er schickt die ganze Datei als **einen** POST.
 | Startseite, 500 Tagesverweise | 1,36 s | — | ✓ |
 | Tagesansicht bis zur gezeichneten Spur | ~~**4,81 s**~~ **1,17 s** | ≤ 3 s (E-S2-24) | ~~62 % darüber~~ **✓** (Berichtigung S2/AP9) |
 | Suche bis zur ersten Trefferanzeige | ~~**4,53 s**~~ **3,81 s** | ≤ 5 s (E-S2-24) | ~~✓ ohne Reserve~~ **✓** (Berichtigung S2/AP9) |
-| Sicherung erstellen | **109,8 s** | ≤ 5 min (E-S2-24) | ✓ |
+| Backup erstellen | **109,8 s** | ≤ 5 min (E-S2-24) | ✓ |
 
 Und die Gerätebudgets nach Z3, gemessen beim Sichern:
 
@@ -68,7 +68,7 @@ Und die Gerätebudgets nach Z3, gemessen beim Sichern:
 | größte JSON-Zeichenkette | **138,25 MB** | ≤ 10 MB | **13,8×** darüber |
 | Haldenspitze | **508 MB** | ≤ 100 MB | **5,1×** darüber |
 | PBKDF2-Ableitungen je Vorgang | **1** | 1 | ✓ |
-| Sicherungsdatei | **40,5 MB** | ≤ 25 MB (E-S2-24) | **1,6×** darüber |
+| Backup-Datei | **40,5 MB** | ≤ 25 MB (E-S2-24) | **1,6×** darüber |
 
 Konsolenfehler: **0**.
 
@@ -88,13 +88,13 @@ Konsolenfehler: **0**.
 > | Startseite, 500 Tagesverweise | 1,36 s | 1,39 s | — |
 > | **Tagesansicht bis zur gezeichneten Spur** | **4,81 s** | **1,17 s** | ≤ 3 s — **gehalten**, nicht 62 % darüber |
 > | Suche bis zur ersten Trefferanzeige | 4,53 s | **3,81 s** | ≤ 5 s |
-> | Sicherung erstellen | 109,8 s | **42,21 s** | ≤ 5 min |
+> | Backup erstellen | 109,8 s | **42,21 s** | ≤ 5 min |
 > 
 > **Die Tagesansicht war nie über dem Ziel.** Der Befund „62 % darüber"
 > löst sich vollständig auf — er war der Timeout. Die Suche liegt mit Reserve
 > unter ihrem Ziel statt „ohne Reserve" darauf.
 >
-> Ein Teil der Verbesserung bei der Sicherung geht auf AP5b und AP6 zurück und
+> Ein Teil der Verbesserung beim Backup geht auf AP5b und AP6 zurück und
 > nicht auf den Messfehler; bei Tagesansicht und Suche ist es der Timeout.
 >
 > **Zweitens: Es werden sehr wohl alle 5 002 entschlüsselt.** Gezählt:
@@ -185,10 +185,10 @@ nicht sicherer als das, was es prüft.
 | größte JSON-Zeichenkette | 138,25 MB | 10 MB | **14** |
 | Haldenspitze Browser | 508 MB | 100 MB | **5** |
 | Spuren je 1000 Einsätze | 38,07 MB | 3 MB | **13** |
-| Sicherungsdatei | 40,5 MB | 25 MB | **1,6** |
+| Backup-Datei | 40,5 MB | 25 MB | **1,6** |
 | Tagesansicht | ~~4,81 s~~ **1,17 s** | 3 s | ~~1,6~~ **✓** |
 | Suche | ~~4,53 s~~ **3,81 s** | 5 s | ✓ |
-| Sicherung erstellen | 109,8 s | 300 s | ✓ |
+| Backup erstellen | 109,8 s | 300 s | ✓ |
 | Wiederherstellung | 245 s | 900 s | ✓ (ohne Drossel) |
 
 Die vier großen Faktoren hängen alle an derselben Sache: **die Spurpunkte

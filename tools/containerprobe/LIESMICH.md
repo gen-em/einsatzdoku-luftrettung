@@ -9,11 +9,11 @@ Rückgabewert `0` = alle Erwartungen erfüllt, `1` = mindestens eine nicht.
 
 ## Wozu
 
-Fassung 4 zerlegt die Sicherung in versiegelte Teile (`docs/Backup-Format.md`,
+Fassung 4 zerlegt das Backup in versiegelte Teile (`docs/Backup-Format.md`,
 Konzept S2 3.2). Drei Dinge daran gehen schief, ohne dass es auffällt:
 
 1. **Die Teile gehen nur dort wieder auf, wo sie geschrieben wurden.** Ein
-   Werkzeug zum Handöffnen gibt es dann nicht mehr — und eine Sicherung, die
+   Werkzeug zum Handöffnen gibt es dann nicht mehr — und ein Backup, das
    nur die eine Anwendung lesen kann, ist genau in dem Fall wertlos, für den
    man sie aufbewahrt.
 2. **Die Spur kommt verändert zurück.** Ein SPUR1-Blob ist Binärinhalt; eine
@@ -46,17 +46,17 @@ prüfte sie ihren eigenen Nachbau.
 | Teil | Frage |
 |---|---|
 | 1 | Versiegeln und Öffnen im Browser: eine PBKDF2 je Vorgang, Fassung 4 im Teilkopf, Base64 für 2 MB, Formaterkennung, ZIP ohne Kompression |
-| 1 | **Die Bindung:** vertauscht · falsche Nummer · fremde Sicherung · verfälschtes Byte · falsches Passwort — jeder Fall muss auffallen, und die Meldung darf nicht nur „Passwort falsch" sagen |
+| 1 | **Die Bindung:** vertauscht · falsche Nummer · fremdes Backup · verfälschtes Byte · falsches Passwort — jeder Fall muss auffallen, und die Meldung darf nicht nur „Passwort falsch" sagen |
 | 2 | Dieselbe Datei in Python: Rundlauf, Prüfsummen, Punkt für Punkt gegen das, was PHP kodiert hat |
 | 2 | **Die Schadensfälle am Archiv:** fehlendes Teil · vertauschte Teile · fremdes Teil · verfälschtes Teil · überzählige Datei · kein Manifest |
 
-## Zwei Sicherungen, und jede trägt für sich
+## Zwei Backups, und jede trägt für sich
 
 Ein verändertes Teil fällt zweimal auf, und das ist Absicht:
 
 - an der **SHA-256** aus dem Manifest — sie schlägt zuerst zu und sagt, *welches*
   Teil nicht stimmt;
-- an den **Zusatzdaten** (AAD) der Verschlüsselung — sie binden Sicherungs­kennung,
+- an den **Zusatzdaten** (AAD) der Verschlüsselung — sie binden Backup-Kennung,
   Teilname und Nummer.
 
 Die Probe zeigt beide **einzeln**: Für die AAD zieht sie das Manifest passend

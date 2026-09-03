@@ -128,7 +128,7 @@ $waisen = zahl($pdo, "SELECT COUNT(*) FROM track_points tp
 $aus["wartung_vollscan"] = ["waisen" => $waisen,
                             "dauer_s" => round(microtime(true) - $t0, 3)];
 
-/* Der Sicherungsbau (B-S2-03) — Laufzeit und Speicherspitze.
+/* Der Backup-Bau (B-S2-03) — Laufzeit und Speicherspitze.
  * Das ist die Stelle, von der das Konzept sagt, dass sie memory_limit
  * sprengt. Hier steht die Zahl. */
 require_once $wurzel . "/backup_lib.php";
@@ -153,8 +153,8 @@ $aus["edbak_build"] = [
  * (S2/AP5b): Kopf und Eintragsfenster einzeln.
  *
  * WARUM BEIDE ZAHLEN. Die obige misst den Weg mit Punktlisten am Stueck —
- * den gehen nur noch die Admin-Sicherungen (AP6), und dort ist die Spitze
- * die Auskunft. Wer nur sie liest, haelt die Sicherung fuer einen
+ * den gehen nur noch die Admin-Backups (AP6), und dort ist die Spitze
+ * die Auskunft. Wer nur sie liest, haelt das Backup fuer einen
  * Gigabyten-Vorgang; das ist sie fuer die Nutzerin seit AP5b nicht mehr.
  * Eine Zahl, die nicht dazusagt, WELCHEN Weg sie gemessen hat, ist keine.
  *
@@ -221,7 +221,7 @@ echo json_encode($aus, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), "\n";
 
 
 def php_fenster_messen(konto: str, fenster: int = 250) -> dict:
-    """Der Sicherungsbau so, wie die Anwendung ihn seit Web 11.1.0 geht.
+    """Der Backup-Bau so, wie die Anwendung ihn seit Web 11.1.0 geht.
 
     EIGENER PROZESS, und das ist der Punkt. `memory_get_peak_usage()` kennt
     nur EIN Maximum je Prozess; nach dem Bau am Stueck stuende dort schon ueber
@@ -340,22 +340,22 @@ def main() -> int:
                   f"(Zielwert E-S2-24 nach Ausdünnung: ≤ 3 MB)")
         print(f"Datenbank gesamt (alle Konten): {gesamt:.1f} MB")
     b = werte["edbak_build"]
-    print(f"edbak_build() am Stück, MIT Punktlisten (Admin-Sicherung, AP6): "
+    print(f"edbak_build() am Stück, MIT Punktlisten (Admin-Backup, AP6): "
           f"{b['dauer_s']} s, Paket {b['paket_mb']} MB, "
           f"Speicherspitze {b['spitze_mb']} MB (Z3-Grenze: 64 MB)"
           + (f" — FEHLER {b['fehler']}" if b["fehler"] else ""))
 
     # DER WEG, DEN DIE ANWENDUNG SEIT WEB 11.1.0 GEHT — eigener Prozess mit
     # memory_limit=64M, s. php_fenster_messen(). Ohne diese Zeile las sich das
-    # Protokoll so, als brauche jede Sicherung ein Gigabyte; das gilt nur noch
-    # fuer die Admin-Sicherung.
+    # Protokoll so, als brauche jedes Backup ein Gigabyte; das gilt nur noch
+    # fuer das Admin-Backup.
     f = php_fenster_messen(a.konto)
     werte["edbak_fenster"] = f
     if f.get("fehler"):
         print(f"edbak_build() in Fenstern: ABGEBROCHEN bei memory_limit=64M "
               f"— {f['fehler']}")
     else:
-        print(f"edbak_build() in Fenstern zu {f['fenster']} (Sicherung der "
+        print(f"edbak_build() in Fenstern zu {f['fenster']} (Backup der "
               f"NutzerIn, Web 11.1.0): {f['dauer_s']} s, "
               f"{f['eintraege_gesamt']} Einträge in {f['teile']} Fenstern, "
               f"Kopf {f['kopf_mb']} MB, größtes Fenster {f['groesstes_mb']} MB, "

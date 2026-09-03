@@ -31,8 +31,8 @@ verschwindet, faellt beim Vergleich nicht auf; eine Marke, die an der falschen
 Stelle steht, schon.
 
 WAS NICHT NORMALISIERT WIRD: Chiffretext. Er kommt hier gar nicht vor — das
-CSV-Archiv traegt Klartext, und das innere JSON der Sicherung ebenfalls
-(Backup-Format.md 2). Nur wo eine Sicherung einen Einsatz NICHT lesen konnte,
+CSV-Archiv traegt Klartext, und das innere JSON des Backups ebenfalls
+(Backup-Format.md 2). Nur wo ein Backup einen Einsatz NICHT lesen konnte,
 fuehrt sie `pat_blob` unveraendert mit; dieser Fall wird eigens gemeldet,
 statt ihn stillschweigend zu vergleichen (der IV ist zufaellig, ein Vergleich
 verglich also nichts).

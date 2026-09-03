@@ -45,7 +45,7 @@
       "id": "flugtage-altfeld",
       "zeile": "\\['flugtage'\\]|\\.flugtage\\b",
       "klasse": "D",
-      "begruendung": "`flugtage` als Feldname in Sicherungen und Umfangsangaben aelterer Fassungen. Der Code liest ihn als Zweitnamen (`diensttage ?? flugtage`), damit alte Dateien lesbar bleiben."
+      "begruendung": "`flugtage` als Feldname in Backups und Umfangsangaben aelterer Fassungen. Der Code liest ihn als Zweitnamen (`diensttage ?? flugtage`), damit alte Dateien lesbar bleiben."
     },
     {
       "id": "besatzung-kurznamen",
@@ -58,7 +58,7 @@
       "id": "rollencode-hems",
       "zeile": "(['\"`])hems\\1|crew_hems|dayCrew\\.hems|hems\\s+TINYINT|p2, hems",
       "klasse": "D",
-      "begruendung": "Rollencode `hems`, Spalte `crew_hems`/`tag_crew_hems`, Schluessel in CSV, Excel und Sicherung, sowie die Aufzaehlung des Katalogs („p1, p2, hems, fr …\") in der Format-Doku. Gespeicherte und vertragliche Namen bleiben (R5, E-P2-11); ein Umbenennen machte jede vorhandene Datei unlesbar. Die Aufzaehlung kam mit der Nacharbeit dazu (F-P2-J): Vorher stand dort `tc`, ein Code, den es nie gegeben hat — das Muster fand ihn nicht, weil er kein Luftwort ist."
+      "begruendung": "Rollencode `hems`, Spalte `crew_hems`/`tag_crew_hems`, Schluessel in CSV, Excel und Backup, sowie die Aufzaehlung des Katalogs („p1, p2, hems, fr …\") in der Format-Doku. Gespeicherte und vertragliche Namen bleiben (R5, E-P2-11); ein Umbenennen machte jede vorhandene Datei unlesbar. Die Aufzaehlung kam mit der Nacharbeit dazu (F-P2-J): Vorher stand dort `tc`, ein Code, den es nie gegeben hat — das Muster fand ihn nicht, weil er kein Luftwort ist."
     },
     {
       "id": "rollenbeschriftung-vorgabe",
@@ -222,7 +222,7 @@
       "datei": "docs/Backup-Format.md",
       "zeile": "Version 6 \\(seit Web 6\\.0\\.0\\)",
       "klasse": "C",
-      "begruendung": "Die Versionsgeschichte des Sicherungsformats: „Version 6 war der Umbau auf Diensttage: Der Flugtag ist …\". Historische Erklaerung, kein heutiger Wortlaut."
+      "begruendung": "Die Versionsgeschichte des Backup-Formats: „Version 6 war der Umbau auf Diensttage: Der Flugtag ist …\". Historische Erklaerung, kein heutiger Wortlaut."
     },
     {
       "id": "rollenbeschriftung-hems-tc",
@@ -234,7 +234,7 @@
       "id": "historische-nennung",
       "zeile": "bis (Web|Uhr|Vertrag|Version)\\b|hieß\\b|hiess\\b",
       "klasse": "C",
-      "begruendung": "Historische Nennung mit Versionsangabe (E-P2-10). Der alte Begriff steht nur in einem Satz, der ausdruecklich sagt, dass er alt ist — solche Saetze erklaeren alte Exporte und Sicherungen und bleiben. Das Muster fragt nach „bis Web …\" und „hiess\", NICHT nach „seit Web\": „seit\" beschreibt meist den heutigen Zustand und wuerde Zeilen freigeben, die gar nichts Historisches sagen — so waere „Eine Flugspur endet am Einsatzort (seit Web 5.8.0, A9)\" durchgerutscht. Die zwei Stellen, deren Versionsangabe wirklich in der Zeile davor steht, haben eigene Regeln."
+      "begruendung": "Historische Nennung mit Versionsangabe (E-P2-10). Der alte Begriff steht nur in einem Satz, der ausdruecklich sagt, dass er alt ist — solche Saetze erklaeren alte Exporte und Backups und bleiben. Das Muster fragt nach „bis Web …\" und „hiess\", NICHT nach „seit Web\": „seit\" beschreibt meist den heutigen Zustand und wuerde Zeilen freigeben, die gar nichts Historisches sagen — so waere „Eine Flugspur endet am Einsatzort (seit Web 5.8.0, A9)\" durchgerutscht. Die zwei Stellen, deren Versionsangabe wirklich in der Zeile davor steht, haben eigene Regeln."
     },
     {
       "id": "basis-als-bezeichner",
@@ -265,7 +265,7 @@
       "datei": "docs/Backup-Format.md",
       "zeile": "Christoph 17",
       "klasse": "D",
-      "begruendung": "Beispielwerte im JSON-Schema der Sicherung. Das Feld `kind` daneben zeigt beide Arten (`air|ground`); der Name ist Fuellwert, nicht Aussage. D5 erwartet in dieser Datei ausdruecklich keine Aenderung."
+      "begruendung": "Beispielwerte im JSON-Schema des Backups. Das Feld `kind` daneben zeigt beide Arten (`air|ground`); der Name ist Fuellwert, nicht Aussage. D5 erwartet in dieser Datei ausdruecklich keine Aenderung."
     },
     {
       "id": "vertrag-payload-limit",

@@ -11,7 +11,7 @@ ist ein Referenzzustand und ein Werkzeug, das jede Abweichung davon benennt.
 
 | Datei | Aufgabe |
 |---|---|
-| `lesen.py` | CSV-Archiv (`.zip`) und Sicherung (`.edbak`) einlesen |
+| `lesen.py` | CSV-Archiv (`.zip`) und Backup (`.edbak`) einlesen |
 | `normalisieren.py` | flüchtige Anteile durch Marken ersetzen |
 | `vergleichen.py` | Feld für Feld vergleichen, Bericht schreiben |
 | `kreislauf.py` | den ganzen Umlauf fahren: Konto → Einspielen → Export → Vergleich |
@@ -19,8 +19,8 @@ ist ein Referenzzustand und ein Werkzeug, das jede Abweichung davon benennt.
 
 ## Was verglichen wird — und was nicht
 
-**Verglichen wird Klartext.** Das CSV-Archiv trägt ihn ohnehin; bei der
-Sicherung liegt das innere JSON im Klartext vor, weil der Browser vor dem
+**Verglichen wird Klartext.** Das CSV-Archiv trägt ihn ohnehin; beim
+Backup liegt das innere JSON im Klartext vor, weil der Browser vor dem
 Versiegeln entschlüsselt (`docs/Backup-Format.md` 2). Chiffretext wird nie
 verglichen — sein IV ist zufällig, ein Vergleich verglich also den Zufall.
 
@@ -47,7 +47,7 @@ und genau die soll ein Umlauf ja belegen.
   nicht der Zeitpunkt. `deleted_with_day` wird gar nicht angefasst.
 
 **Verglichen wird über einen natürlichen Schlüssel**, nicht über die
-Zeilennummer: In der Sicherung über `client_ref`, im CSV über Diensttag und
+Zeilennummer: Im Backup über `client_ref`, im CSV über Diensttag und
 Beginn. Sonst verschöbe eine einzige fehlende Zeile alles dahinter, und der
 Bericht meldete hundert Abweichungen, wo eine ist.
 
@@ -95,7 +95,7 @@ zusätzliche Zeile, geänderter Trackpunkt, geänderte Feldbeschreibung,
 geänderter Zeitraum) und vier Gegenproben, die genau das ändern, was die
 Normalisierung wegnehmen soll.
 
-**Sicherung: zwölf Proben.** Seit Web 8.0.0 kommen zwei Paare dazu, die die
+**Backup: zwölf Proben.** Seit Web 8.0.0 kommen zwei Paare dazu, die die
 neuen Regeln oben absichern:
 
 | Probe | erwartet | prüft |
@@ -142,7 +142,7 @@ Minuten für den Bestand, dazu je Export einige Minuten für die GPX-Dateien.
 **Was dabei NICHT identisch wiederkommt**, weil es beim Anlegen entsteht:
 interne Kennungen, `created_at` und die **Gerätekennungen** (`dev-…`). Die
 internen Kennungen nimmt die Normalisierung weg; die Gerätekennungen stehen in
-der Sicherung unter `days[].refs[].device_id` und weichen deshalb ab. Ein
+dem Backup unter `days[].refs[].device_id` und weichen deshalb ab. Ein
 Vergleich zweier Referenzstände über einen Wiederaufbau hinweg zeigt sie als
 Abweichung — richtig so: Es ist ein anderes Gerät.
 
@@ -172,7 +172,7 @@ einziger Spurpunkt ist darunter**; genau das soll der Lauf belegen.
 
 > **Er fällt mit NaDoku 1.0 weg**, zusammen mit dem Altformat (Backlog
 > Nr. 46). Bis dahin gehört er in jeden Regressionsdurchgang: Solange die
-> Anwendung verspricht, alte Sicherungen zu lesen, muss das jemand nachmessen.
+> Anwendung verspricht, alte Backups zu lesen, muss das jemand nachmessen.
 
 ### Die Läufe warten auf die Meldung, nicht auf einen Wortlaut
 

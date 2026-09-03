@@ -9,7 +9,7 @@ ist die wiederholbare Fassung, die Klickstrecke die prüfbare.
 | `csv_import.mjs` | CSV-Import der vier nachträglich erfassten Einsätze (Aufbau) |
 | `angriffswerte.mjs` | P-07 — die Angriffswerte stehen inert in allen Einsatztabellen |
 | `referenz_export.mjs` | zieht die eingecheckten Referenzdateien aus dem Referenzkonto |
-| `kreislauf_edbak.mjs` | Umlauf der Sicherung: einspielen, erneut sichern (von `kreislauf.py` gerufen) |
+| `kreislauf_edbak.mjs` | Umlauf des Backups: einspielen, erneut sichern (von `kreislauf.py` gerufen) |
 | `kreislauf_csv.mjs` | dasselbe für den CSV-Weg |
 | `papierkorb_misch.mjs` | E-S1-04 und Backlog Nr. 33: ein Diensttag mit **einzeln** und **mit dem Tag** gelöschten Einsätzen übersteht den Umlauf, die Papierkorbseite zeigt den Unterschied, und das Zurückholen wird abgelehnt, solange der Diensttag selbst im Papierkorb liegt |
 | `demo_pruefen.mjs` | Abnahme der Demo-Funktion (E-P1-08) — **verändert das Konto, gegen das es läuft** |

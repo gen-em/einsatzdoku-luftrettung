@@ -47,7 +47,7 @@ if ($schritt === 'quelle') {
     ]);
 
     [$ok, $grund, $info] = edbak_sicherung_erzeugen($uid);
-    if (!$ok) { fwrite(STDERR, "Sicherung: $grund\n"); exit(2); }
+    if (!$ok) { fwrite(STDERR, "Backup: $grund\n"); exit(2); }
 
     $zielId = (int)$pdo->query('SELECT id FROM users WHERE email = '
         . $pdo->quote((string)$daten['ziel']))->fetchColumn();

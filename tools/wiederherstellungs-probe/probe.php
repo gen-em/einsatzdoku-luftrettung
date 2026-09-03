@@ -4,11 +4,11 @@ declare(strict_types=1);
 /**
  * Wiederherstellungsprobe — Beleg zu E-S1-04, E-S1-19 und Backlog Nr. 31/33/34/35.
  *
- * WOFUER. Der Papierkorb und der Rueckweg einer Sicherung haben Grenzfaelle,
+ * WOFUER. Der Papierkorb und der Rueckweg eines Backups haben Grenzfaelle,
  * die sich im Browser nur muehsam herstellen lassen und die man dem Ergebnis
  * nicht ansieht. Vier Teile:
  *
- *   TEIL 1 — PAPIERKORB. Seit Nutzlast 7 traegt die Sicherungsdatei den
+ *   TEIL 1 — PAPIERKORB. Seit Nutzlast 7 traegt die Backup-Datei den
  *   Papierkorb mit (E-S1-01), und der Rueckweg muss zwei Regeln einhalten:
  *
  *     E-S1-04  `deleted_with_day` ist eine UND-Verknuepfung: der Wert aus der
@@ -601,7 +601,7 @@ $sag('Endpunkt und Browser nennen dieselbe Hoechstzahl je Anfrage',
 /* DASSELBE FUER DIE EINTRAGSFENSTER (S2/AP5b). Der Browser holt den Kern in
  * Fenstern zu FENSTER Eintraegen; `api/backup_data.php` nimmt hoechstens
  * BACKUP_EINTRAEGE_MAX je Anfrage. Waere FENSTER groesser, antwortete der
- * Endpunkt mit 400 und die Sicherung braeche ab — laut, aber erst im Betrieb
+ * Endpunkt mit 400 und das Backup braeche ab — laut, aber erst im Betrieb
  * und ausgerechnet beim grossen Bestand, fuer den die Fenster da sind. */
 $abruf = file_get_contents(dirname(__DIR__, 2) . '/server/api/backup_data.php');
 preg_match('/BACKUP_EINTRAEGE_MAX\s*=\s*(\d+)/', $abruf, $mA);
@@ -675,7 +675,7 @@ $weg($uid8);
 /* ==========================================================================
  * Teil 8 — Das Adminpaket der Fassung 2: Rundlauf (S2/AP6)
  *
- * WOFUER. Die Admin-Sicherung ist seit Web 11.2.0 ein mehrteiliges ZIP und
+ * WOFUER. Das Admin-Backup ist seit Web 11.2.0 ein mehrteiliges ZIP und
  * wird in Fenstern gebaut. Zwei Dinge muessen dabei stimmen, und beide gehen
  * STILL schief, wenn sie es nicht tun:
  *
@@ -723,7 +723,7 @@ edbak_restore($quelle, [
 ]);
 
 [$ok6, $grund6, $info6] = edbak_sicherung_erzeugen($quelle);
-$sag('Die Sicherung entsteht', $ok6 === true, $ok6 ? (string)$info6['datei'] : (string)$grund6);
+$sag('Das Backup entsteht', $ok6 === true, $ok6 ? (string)$info6['datei'] : (string)$grund6);
 $datei6 = $ok6 ? (string)$info6['datei'] : '';
 $sag('Sie ist ein ZIP (Fassung 2 am Namen erkennbar)',
      $datei6 !== '' && edbak_paket_fassung($datei6) === 2, $datei6 ?: '—');
@@ -908,7 +908,7 @@ $weg($q9);
  * DREI ZUSAGEN:
  *
  *   Jedes Konto genau einmal. Die frühere Fassung hatte keinen Merkzettel,
- *   sondern sortierte nach dem Alter der letzten Sicherung — gerechnet in
+ *   sondern sortierte nach dem Alter des letzten Backups — gerechnet in
  *   TAGEN. Wer heute alle Konten sichert, hat danach lauter Nullen; bei
  *   Gleichstand ist die Reihenfolge beliebig, und die letzten Konten kommen
  *   nie dran.

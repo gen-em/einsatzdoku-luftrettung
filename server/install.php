@@ -215,15 +215,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* DIE ERWEITERUNGEN, OHNE DIE ES SPAETER KLEMMT (S2/AP6).
      *
      * Bis Web 12.0.0 hat der Installer gar keine Erweiterung geprueft. Das
-     * ging gut, solange alles Benoetigte im PHP-Kern steckt — seit die
-     * Admin-Sicherung ein ZIP ist, gilt das nicht mehr. Ohne `ext/zip` faellt
-     * es sonst erst beim ersten Sicherungslauf auf, und dann als „liess sich
+     * ging gut, solange alles Benoetigte im PHP-Kern steckt — seit das
+     * Admin-Backup ein ZIP ist, gilt das nicht mehr. Ohne `ext/zip` faellt
+     * es sonst erst beim ersten Backup-Lauf auf, und dann als „liess sich
      * nicht schreiben" auf einer Installation, die laengst in Betrieb ist.
      *
      * Hier steht die Pruefung deshalb VOR der Einrichtung. Sie ist nicht
      * vollstaendig — sie nennt, was diese Anwendung nachweislich braucht und
      * was ein Hoster tatsaechlich abschalten kann. */
-    foreach (['zip' => 'Sicherungen sind ZIP-Dateien (ext/zip, Klasse ZipArchive)',
+    foreach (['zip' => 'Backups sind ZIP-Dateien (ext/zip, Klasse ZipArchive)',
               'zlib' => 'Spuren werden komprimiert gespeichert (ext/zlib)',
               'openssl' => 'Zufall und Pruefsummen (ext/openssl)',
               'mbstring' => 'Texte in UTF-8 (ext/mbstring)'] as $erw => $wofuer) {
@@ -288,10 +288,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // config.php schreiben + Sperre setzen
     if (!$errors) {
         /* DER SERVERSCHLUESSEL ENTSTEHT HIER UND NIRGENDWO SONST (E-S2-21,
-         * S2/AP7). Er versiegelt die Zugangsdaten der Sicherungsziele und —
+         * S2/AP7). Er versiegelt die Zugangsdaten der Backup-Ziele und —
          * ab AP8 — das Komplettbackup. Eine neue Installation bekommt ihn
          * mit, ohne dass jemand daran denken muss; bestehende Installationen
-         * tragen ihn ueber die Seite „Sicherungsziele" nach.
+         * tragen ihn ueber die Seite „Backup-Ziele" nach.
          *
          * ER GEHOERT INS WIEDERANLAUFPAKET. Steht in docs/Technik.md,
          * Abschnitt 7, und im Kopf dieser config.php gleich mit — denn wer
@@ -308,7 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
         $php = "<?php\n// Automatisch erzeugt vom Installer am " . date('c') . "\n"
              . "// Diese Datei enthält Zugangsdaten — niemals ins Git-Repo committen!\n"
-             . "// server_key versiegelt die Zugangsdaten der Sicherungsziele und das\n"
+             . "// server_key versiegelt die Zugangsdaten der Backup-Ziele und das\n"
              . "// Komplettbackup. Geht er verloren, sind versiegelte Komplettbackups\n"
              . "// nicht mehr zu öffnen. Er gehört zusammen mit dieser Datei ins\n"
              . "// getrennt aufbewahrte Wiederanlaufpaket (docs/Technik.md, Runbook).\n"

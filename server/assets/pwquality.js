@@ -28,7 +28,7 @@
 const EdPwQuality = (() => {
 
   /** Mindestlänge — für das Kontopasswort UND das Passwort einer
-   *  Sicherungsdatei. Beide Stellen schützen dieselben Angaben; zwei
+   *  Backup-Datei. Beide Stellen schützen dieselben Angaben; zwei
    *  verschiedene Mindestlängen (10 und 8) waren nur historisch begründet. */
   const MIN_LAENGE = 10;
 
@@ -66,7 +66,7 @@ const EdPwQuality = (() => {
        "nadoku" in der Liste laesst es sich nicht mehr setzen (pw_handling)
        und nicht mehr als Backup- oder Exportpasswort verwenden
        (einstellungen.php, import.php pruefen `guete.erlaubt`) — gemessen: der
-       Kreislauftest scheiterte daran, weil die erneute Sicherung gar nicht
+       Kreislauftest scheiterte daran, weil das erneute Backup gar nicht
        erst erzeugt wurde. Das Passwort steht im README, im Handbuch 3.2 und
        in saemtlichen Pruefmitteln. Wenn der Produktname kommt (P6), gehoert
        "nadoku" hierher — zusammen mit einem neuen Demo-Passwort.

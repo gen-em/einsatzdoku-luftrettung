@@ -8,15 +8,15 @@ declare(strict_types=1);
  * Testbestand von 300 Konten" (E-P3-41, Abnahme O9). Ein Referenzdatensatz mit
  * vier Konten beantwortet die Fragen nicht, um derentwillen die Liste gebaut
  * wurde: Trägt der Seitenwechsel? Bleibt die Auswahl über Seiten hinweg? Wie
- * lange braucht ein Aufruf, wenn der Sicherungsstand aus dem Dateisystem kommt?
+ * lange braucht ein Aufruf, wenn der Backup-Stand aus dem Dateisystem kommt?
  *
  * WAS SIE ANFASST. Konten unterhalb von `@example.invalid` mit dem Präfix
  * `pruefkonto-` — sonst nichts. `entfernen` löscht genau diese wieder, samt
  * Geräten (Fremdschlüssel mit ON DELETE CASCADE) und samt ihrer
- * Sicherungsordner. Trotzdem gilt: gegen eine Testinstallation fahren, nicht
+ * Backup-Ordner. Trotzdem gilt: gegen eine Testinstallation fahren, nicht
  * gegen den Produktivserver.
  *
- * WARUM DIE SICHERUNGEN ECHTE DATEIEN SIND. Der Stand eines Kontos („aktuell",
+ * WARUM DIE BACKUPS ECHTE DATEIEN SIND. Der Stand eines Kontos („aktuell",
  * „überfällig · n Tage", „nie gesichert") kommt nicht aus der Datenbank,
  * sondern aus `server/sicherungen/<kennung>/konto.json`. Ein Testbestand, der
  * nur Datenbankzeilen anlegt, würde die Liste also mit lauter „nie gesichert"
@@ -25,7 +25,7 @@ declare(strict_types=1);
  * die ZAHL der Ordner, nicht um ihren Inhalt.
  *
  * REPRODUZIERBAR. `mt_srand()` mit festem Startwert: Zweimal `anlegen 300`
- * ergibt zweimal denselben Bestand — Rollen, Gerätezahlen, Sicherungsstände
+ * ergibt zweimal denselben Bestand — Rollen, Gerätezahlen, Backup-Stände
  * und Anmeldezeitpunkte inbegriffen. Nur so lässt sich eine gemessene Zahl
  * beim nächsten Lauf wiederfinden.
  *
@@ -136,7 +136,7 @@ if ($befehl === 'anlegen') {
      * in der Datenbank stehen. Bricht ein Lauf mitten drin ab — Strg-C, ein
      * Fatal, ein Duplikat in devices.device_id —, rollte eine umspannende
      * Transaktion die Zeilen zurueck und liesse die bereits geschriebenen
-     * Ordner stehen: verwaiste Sicherungen, die `entfernen` ueber die
+     * Ordner stehen: verwaiste Backups, die `entfernen` ueber die
      * Kontenliste nie wiederfaende. Ein Konto je Transaktion laesst im
      * schlimmsten Fall EIN halbes Konto zurueck, und `entfernen` raeumt
      * zusaetzlich nach der Begleitdatei auf (siehe unten). */
@@ -175,7 +175,7 @@ if ($befehl === 'anlegen') {
 
         if ($kennung === null) { $pdo->commit(); continue; }
 
-        /* Sicherungsstand: rund 60 % aktuell, 10 % ueberfaellig, 30 % nie.
+        /* Backup-Stand: rund 60 % aktuell, 10 % ueberfaellig, 30 % nie.
          * „nie" bekommt gar keinen Ordner — genau wie in der Anwendung. */
         $wurf = mt_rand(1, 100);
         if ($wurf > 70) { $zahl['nie']++; $pdo->commit(); continue; }
@@ -240,7 +240,7 @@ if ($befehl === 'entfernen') {
             $weg($kennung); $verwaist++;
         }
     }
-    printf("%d Prüfkonten entfernt, %d Sicherungsordner gelöscht%s.\n",
+    printf("%d Prüfkonten entfernt, %d Backup-Ordner gelöscht%s.\n",
         $entfernt, $ordner,
         $verwaist ? sprintf(' (davon %d verwaiste)', $verwaist) : '');
     exit(0);

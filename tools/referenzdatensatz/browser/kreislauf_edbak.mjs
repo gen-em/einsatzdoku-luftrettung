@@ -1,4 +1,4 @@
-/* Kreislauftest der Sicherung (Arbeitspaket B5, P-09).
+/* Kreislauftest des Backups (Arbeitspaket B5, P-09).
  *
  * DIE FRAGE. Kommt derselbe Bestand nach einem vollstaendigen Umlauf
  * unveraendert wieder heraus?
@@ -13,7 +13,7 @@
  *
  * Das Konto entsteht ueber den REGULAEREN Einladungsweg; das Passwort wird im
  * Browser gesetzt, weil dort auch das Schluesselmaterial entsteht. Die
- * geschuetzten Angaben der Sicherung liegen im inneren JSON im Klartext und
+ * geschuetzten Angaben des Backups liegen im inneren JSON im Klartext und
  * werden beim Einspielen mit dem Inhaltsschluessel DIESES Kontos neu
  * verschluesselt — der Chiffretext ist danach ein anderer, der Klartext
  * derselbe. Genau deshalb vergleicht das Werkzeug Klartext.
@@ -96,7 +96,7 @@ async function rueckfragen(hoechstens = 4) {
    nachgebaut: Ein zweiter Weg zum Anlegen eines Kontos waere ein zweiter
    Weg, den niemand pflegt. */
 
-// ---- 3. Sicherung in das frische Konto einspielen ------------------------
+// ---- 3. Backup in das frische Konto einspielen ------------------------
 pruefe(await anmelden(konto, kontoPw), `Anmeldung als ${konto} gescheitert`);
 schritt(`Als ${konto} anmelden`);
 
@@ -133,7 +133,7 @@ try {
 const impZustand = (await seite.locator('#impstate').textContent().catch(() => '') || '').trim();
 const impTon = (await impMeldung.first().getAttribute('class').catch(() => '') || '');
 const herkunft = (await seite.locator('#impherkunft').textContent().catch(() => '') || '').trim();
-schritt(`Sicherung eingespielt — ${impZustand}`);
+schritt(`Backup eingespielt — ${impZustand}`);
 if (herkunft) { console.log(`     Herkunft: ${herkunft}`); }
 /* Nur `meldung-ok` ist ein bestandenes Einspielen. `meldung-warn` deckt
    zweierlei ab, das beides kein Erfolg ist: den Abbruch vor dem ersten
