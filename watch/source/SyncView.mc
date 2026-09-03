@@ -179,8 +179,28 @@ class SyncView extends WatchUi.View {
         var y = (zone - blockH) / 2;
         if (y < Ui.s(dc, 20)) { y = Ui.s(dc, 20); }
 
+        /* AUCH DIESE ZEILE DURCH fitFont (Uhr-Layout_Regeln 4.2). Sie war die
+         * einzige der Seite ohne, und bis Uhr 2.0.0 fiel das nicht auf: Der
+         * untere Block trug im Regelfall nur die Versionszeile, der
+         * Mittelblock sass tief genug, und "GPS aus (kein Dienst)" passte.
+         *
+         * Mit 3.0.0 traegt der untere Block auf einem GEWOEHNLICHEN Weg drei
+         * Zeilen — Meldung, Weg heraus, Version (etwa nach einem Abbruch der
+         * Kopplung). untenY rueckt damit nach oben, der zentrierte
+         * Mittelblock rueckt mit, und die GPS-Zeile landet dort, wo der Kreis
+         * zulaeuft. Am 03.09.2026 auf der Venu 3s fotografiert: Sie las
+         * "PS aus (kein Diens" — beide Enden fort, ohne Warnung und ohne
+         * Fehler. Auf dem Ausgangsstand desselben Geraets stand sie
+         * vollstaendig da; es ist also keine Altlast, sondern die Folge der
+         * zusaetzlichen Zeile.
+         *
+         * fontHint liefert auf der Venu die GROESSERE Schrift (ab 320 px), die
+         * Zeile ist dort also breiter als auf den kleinen Geraeten — deshalb
+         * trifft es ausgerechnet das groesste Display. */
         dc.setColor(gpsCol, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y, fKlein, gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, y,
+            Ui.fitFont(dc, gpsTxt, y, hKlein, [fKlein, Graphics.FONT_XTINY]),
+            gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
         y += hKlein + gGps;
 
         if (einrichten) {

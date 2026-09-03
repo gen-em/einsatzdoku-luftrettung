@@ -38,6 +38,7 @@ using Toybox.Communications;
 using Toybox.Application.Storage;
 using Toybox.Application.Properties;
 using Toybox.System;
+using Toybox.Timer;
 
 // Rueckruf-Traeger (method() existiert nur auf Objekten).
 //
@@ -86,6 +87,13 @@ class PairJaCb {
     function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
         Pair.onBestaetigt(_fuer, _ja, code, data);
     }
+}
+
+/* Traeger fuer den verzoegerten Ausgang. Warum es ihn braucht, steht bei
+ * Pair.dialogWeggeklickt(). */
+class PairSpaeterCb {
+    function initialize() { }
+    function fire() as Void { Pair.spaeterAblehnen(); }
 }
 
 class UnpairCb {
@@ -212,6 +220,8 @@ module Pair {
     var _viewOffen as Lang.Boolean = false;
 
     var _ucb as UnpairCb or Null = null;
+    var _spaeterT as Timer.Timer or Null = null;
+    var _spaeterCb as PairSpaeterCb or Null = null;
 
     /* Meldet die Sync-Seite beim Erscheinen und Verschwinden (B8).
      * Dass onHide auch feuert, wenn die Kopplungsansicht selbst darueber
@@ -796,7 +806,35 @@ module Pair {
      * gesagt, und `nein` ist in jedem Zustand erlaubt. Die Sitzung
      * zurueckzugeben ist ehrlicher, als sie bis zur Frist offen zu lassen. */
     function dialogWeggeklickt() as Void {
-        if (_dev != null && !_abfragen && !jaLaeuft) { ablehnen("Nicht gekoppelt"); }
+        if (_dev == null || _abfragen || jaLaeuft) { return; }
+        /* NICHT SOFORT ABLEHNEN. Dieser Aufruf steht in PairView.onShow — die
+         * Ansicht wird gerade sichtbar, und ein popView aus diesem Aufruf
+         * heraus greift NICHT ZUVERLAESSIG.
+         *
+         * GEMESSEN AM 03.09.2026, und zwar geraeteabhaengig: Auf der fenix6pro
+         * verschwand die Ansicht wie gewollt, auf der fr945 blieb sie mit dem
+         * Code stehen — gleicher Quelltext, gleiches SDK. Genau davor warnt der
+         * letzte Punkt der Abgabeliste in Uhr-Layout_Regeln: auf ALLEN DREI
+         * Geraeten ansehen.
+         *
+         * Das Projekt hat fuer diese Klasse Fehler schon eine Loesung: Der
+         * Dienstende-Weg schiebt den Ansichtswechsel um 100 ms hinaus (Modul
+         * EndDay), weil die sich schliessende Bestaetigung ihn sonst wieder
+         * mitnimmt. Hier dasselbe Muster und keine zweite Erfindung. */
+        var cb = _spaeterCb;
+        if (cb == null) { cb = new PairSpaeterCb(); _spaeterCb = cb; }
+        var tm = _spaeterT;
+        if (tm == null) { tm = new Timer.Timer(); _spaeterT = tm; }
+        tm.start(cb.method(:fire), 100, false);
+    }
+
+    function spaeterAblehnen() as Void {
+        var tm = _spaeterT;
+        if (tm != null) { tm.stop(); }
+        // Zwischenzeitlich kann sich die Lage geaendert haben (eine Antwort
+        // ist eingetroffen, die Sitzung ist beendet) — dann nichts tun.
+        if (_dev == null || _abfragen || jaLaeuft) { return; }
+        ablehnen("Nicht gekoppelt");
     }
 
     /* BACK in der Kopplungsansicht (E-S5-23). */
