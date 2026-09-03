@@ -33,6 +33,11 @@ class PairView extends WatchUi.View {
      * (Const.PAIR_TAKT_MS, E-S5-25). Der Zeitgeber weiss davon nichts: Er
      * klopft nur an. */
     function onShow() as Void {
+        /* Diese Ansicht wird auch wieder sichtbar, wenn die Rueckfrage
+         * darueber verschwindet. Kam sie ohne Antwort weg (BACK), ist das hier
+         * die einzige Stelle, an der die App davon erfaehrt — Begruendung in
+         * Pair.dialogWeggeklickt(). */
+        Pair.dialogWeggeklickt();
         if (_timer == null) { _timer = new Timer.Timer(); }
         _timer.start(method(:tick), 2000, true);
     }

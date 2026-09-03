@@ -515,12 +515,9 @@ module Pair {
      * wenn die Verbindung langsam ist), und der Takt muss verstrichen sein
      * (sonst waeren es 300 Anfragen je Sitzung statt 120). */
     function abfrageAnstossen() as Void {
-        if (!_abfragen || _pending) { return; }
         var dev = _dev;
         var key = _key;
         if (dev == null || key == null) { return; }
-        var base = Uploader.serverBase();
-        if (base.length() == 0) { return; }
 
         /* Die Frist laeuft AUCH OHNE SERVER ab. Ein Verbindungsfehler beendet
          * die Sitzung nicht (E-S5-25) — aber "bis zur Frist" heisst eben auch:
@@ -532,6 +529,10 @@ module Pair {
                             Input.lSelectHold() + ": neuer Code", :error);
             return;
         }
+
+        if (!_abfragen || _pending) { return; }
+        var base = Uploader.serverBase();
+        if (base.length() == 0) { return; }
 
         var jetzt = System.getTimer();
         /* getTimer() zaehlt Millisekunden seit dem Einschalten und laeuft
@@ -771,6 +772,31 @@ module Pair {
 
         // 410 abgelaufen, 409 nicht_beansprucht, 401 und alles Uebrige.
         _sitzungBeenden("Code abgelaufen", Input.lSelectHold() + ": neuer Code", :error);
+    }
+
+    /* DER BESTAETIGUNGSDIALOG IST OHNE ANTWORT VERSCHWUNDEN.
+     *
+     * GEMESSEN AM 03.09.2026 (Simulator, SDK 9.2.0, fenix6pro): Ein Druck auf
+     * BACK bei stehender WatchUi.Confirmation ruft onResponse NICHT auf — der
+     * Dialog wird weggeraeumt, und mehr geschieht nicht. Der Vertrag von
+     * ConfirmationDelegate legt das nicht fest; das Verhalten musste gemessen
+     * werden, und im Code war es nicht zu sehen.
+     *
+     * Ohne diesen Weg blieb die Kopplungsansicht danach TOT stehen: `_abfragen`
+     * war beim Oeffnen des Dialogs abgeschaltet worden und wurde nie wieder
+     * eingeschaltet — kein `status` mehr, keine Rueckfrage mehr, nur ein Code,
+     * der still ablief. Erholbar nur ueber BACK, und ohne jeden Hinweis darauf.
+     *
+     * Die Lage ist eindeutig zu erkennen: Die Ansicht ist wieder oben, es gibt
+     * eine Sitzung, die Abfrage steht still, und es ist kein Ja unterwegs. Das
+     * kann nur der weggeklickte Dialog sein — beim ERSTEN Erscheinen der
+     * Ansicht laeuft die Abfrage bereits.
+     *
+     * Behandelt wird er wie ein Nein: Wer die Frage wegdrueckt, hat nicht Ja
+     * gesagt, und `nein` ist in jedem Zustand erlaubt. Die Sitzung
+     * zurueckzugeben ist ehrlicher, als sie bis zur Frist offen zu lassen. */
+    function dialogWeggeklickt() as Void {
+        if (_dev != null && !_abfragen && !jaLaeuft) { ablehnen("Nicht gekoppelt"); }
     }
 
     /* BACK in der Kopplungsansicht (E-S5-23). */
