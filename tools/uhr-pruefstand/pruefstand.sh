@@ -12,6 +12,25 @@ set -euo pipefail
 
 SDK_VERSION="${CIQ_SDK_VERSION:-9.2.0}"
 GERAETE_URL="${CIQ_GERAETE_URL:-}"      # Quelle fuer Devices/ und Fonts/
+# SCHRAEGSTRICH AM ENDE WEG — sonst entsteht ein leeres Pfadsegment.
+#
+# Die Adresse wird unten als "$GERAETE_URL/Devices/" zusammengesetzt. Endet sie
+# selbst auf einem Schraegstrich, steht dort "https://host//Devices/", und das
+# leere Segment zaehlt fuer wget als Verzeichnisebene. pfadtiefe() sieht es
+# nicht (es misst die Adresse, nicht das Ergebnis der Zusammensetzung), also
+# ist --cut-dirs um eins zu klein: Der Baum landet teils als
+# Devices/Devices/<geraet>/ und teils richtig — je nachdem, ob wget eine Datei
+# ueber die Startadresse oder ueber einen Verweis aus der Verzeichnisauflistung
+# erreicht. Der halb richtige Baum ist die unangenehme Form: `pruefen` findet
+# die drei Zielgeraete und meldet Vollzug, waehrend `reihe` fuer die anderen
+# 170 "Geraetedatei fehlt" sagt.
+#
+# Gemessen am 03.09.2026: 173 Geraete unter Devices/Devices, 732 MB Schriften
+# unter Fonts/Fonts, daneben je ein korrekt abgelegter Teil. Am 02.09. war
+# dasselbe Bild schon einmal da, mit anderer Ursache (fest verdrahtete 1) —
+# deshalb steht die Normalisierung jetzt hier, an der Quelle, und nicht in der
+# Rechnung.
+while [ "${GERAETE_URL%/}" != "$GERAETE_URL" ]; do GERAETE_URL="${GERAETE_URL%/}"; done
 BASIS="${CIQ_BASIS:-$HOME/.ciq-pruefstand}"
 GARMIN_HOME="$HOME/.Garmin/ConnectIQ"
 ZIEL_GERAETE="${CIQ_ZIELE:-fenix6pro fr945 venu3s}"

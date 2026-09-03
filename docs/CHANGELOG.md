@@ -11,6 +11,46 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Ein Schrägstrich zu viel in der Geräteadresse] — 2026-09-03
+
+**Der Prüfstand legte den halben Gerätebaum eine Ebene zu tief ab und meldete
+trotzdem Vollzug.** Keine der drei Auslieferungen ist geändert, deshalb keine
+Versionsnummer.
+
+### Werkzeug — die Adresse wird normalisiert, nicht nachgerechnet
+
+`geraetedateien()` setzt die Quelle als `"$GERAETE_URL/Devices/"` zusammen.
+Endet `CIQ_GERAETE_URL` selbst auf einem Schrägstrich, steht dort
+`https://host//Devices/` — und das leere Segment zählt für `wget` als
+Verzeichnisebene. `pfadtiefe()` sieht es nicht: Es misst die Adresse, nicht das
+Ergebnis der Zusammensetzung. `--cut-dirs` war damit um eins zu klein.
+
+Herausgekommen ist ein **halb richtiger Baum**: 173 Geräte unter
+`Devices/Devices/`, 732 MB Schriften unter `Fonts/Fonts/`, daneben je ein
+korrekt abgelegter Teil — je nachdem, ob `wget` eine Datei über die
+Startadresse oder über einen Verweis aus der Verzeichnisauflistung erreicht.
+
+**Warum das schlimmer ist als ein ganz falscher Baum:** `pruefen` sucht nach
+den drei Zielgeräten, und die lagen oben — als Symlinks in den tiefen Baum. Der
+Bestand meldete „vorhanden", `reihe` hätte für die anderen 170 „Gerätedatei
+fehlt" gesagt. Eine grüne Zahl über etwas, das sie nicht gemessen hat
+(`CLAUDE.md` 6).
+
+Behoben an der Quelle: Der Schrägstrich fällt weg, bevor die Adresse benutzt
+wird. Am 02.09.2026 stand dasselbe Bild schon einmal da, mit anderer Ursache
+(eine fest verdrahtete `1`) — deshalb jetzt die Normalisierung und nicht die
+dritte Fassung derselben Rechnung.
+
+Dazu ein Warnhinweis in der `LIESMICH`: Jene Symlinks überleben ein `cp -rn`
+des tiefen Baums nach oben — der Name ist belegt, das echte Verzeichnis wird
+übersprungen, und nach dem Abräumen zeigen sie ins Leere. Genau so sind beim
+Aufräumen von Hand die drei Zielgeräte verschwunden, während `ls` weiter
+vollständig aussah.
+
+**Bestand danach:** SDK 9.2.0, **173 Gerätedateien** mit `compiler.json`,
+**1332 Schriften**, 0 fehlende Simulatorbibliotheken; `geraeteklassen.py`
+liefert **99** Geräte für Stufe I und **20** Vertreter für Stufe II.
+
 ## [Werkzeug: Wortliste sieht die Uhr an] — 2026-09-03
 
 **Der letzte Client, der nie durch die Wortliste lief, läuft jetzt durch sie**

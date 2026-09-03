@@ -69,11 +69,35 @@ Zwei Anforderungen an die Bereitstellung, beide nicht offensichtlich:
 - **`Devices/` und `Fonts/` liegen direkt unter der Adresse**, nicht tiefer.
 
 Die Adresse darf einen Pfad haben (`…/ciq`) oder in der Serverwurzel liegen;
-das Skript rechnet `--cut-dirs` aus der Adresse aus. Bis zum 02.09.2026 stand
+das Skript rechnet `--cut-dirs` aus der Adresse aus. **Ein Schrägstrich am
+Ende ist erlaubt** — er wird abgeschnitten, bevor die Adresse zusammengesetzt
+wird; sonst entstünde `https://host//Devices/`, und das leere Segment zählte
+für `wget` als Verzeichnisebene. Bis zum 02.09.2026 stand
 dort fest die 1, und damit landete alles unter einer Adresse **mit** Pfad als
 `Devices/Devices/<gerät>/` — der Baum eine Ebene zu tief, `monkeyc` findet kein
 Gerät, und das dokumentierte Beispiel oben war genau dieser Fall. Nachgemessen
 gegen einen örtlichen Testserver mit beiden Adressformen.
+
+**Am 03.09.2026 stand dasselbe Bild noch einmal da, mit anderer Ursache:** ein
+Schrägstrich am Ende der Adresse. `pfadtiefe()` misst die Adresse, nicht das
+Ergebnis der Zusammensetzung — und sah das leere Segment deshalb nicht.
+Herausgekommen ist ein **halb richtiger Baum**: 173 Geräte unter
+`Devices/Devices/`, 732 MB Schriften unter `Fonts/Fonts/`, daneben je ein
+korrekt abgelegter Teil (welche Datei wohin fällt, hängt davon ab, ob `wget`
+sie über die Startadresse oder über einen Verweis aus der
+Verzeichnisauflistung erreicht).
+
+Das ist die gefährliche Form. `pruefen` sucht nur nach den **drei
+Zielgeräten** — und die lagen oben, als Symlinks in den tiefen Baum. Der
+Bestand meldete also Vollzug, während `reihe` für die anderen 170
+„Gerätedatei fehlt" gesagt hätte: eine grüne Zahl über etwas, das sie nicht
+gemessen hat (`CLAUDE.md` 6). Seither wird die Adresse an der Quelle
+normalisiert, nicht in der Rechnung.
+
+**Vorsicht beim Aufräumen von Hand:** Jene Symlinks überleben ein `cp -rn` des
+tiefen Baums nach oben — der Name ist belegt, das echte Verzeichnis wird
+übersprungen, und nach dem `rm -rf` des tiefen Baums zeigen sie ins Leere. Die
+drei Zielgeräte sind dann fort, und `ls` sieht trotzdem vollständig aus.
 
 ### Wieviele Gerätedateien
 
