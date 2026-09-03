@@ -1175,6 +1175,61 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Tastenfolge eine Zeichenkette wie `Down,Down,hold:Return,wait:8` ist. Dann
     braucht die nächste Ansicht keine eigene Schleife.
 
+93. **`AUTH_VERGLEICHSWERT` trägt Kostenfaktor 10, PHP 8.4 legt 12 an.**
+    *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-13.*
+    Der feste Vergleichswert, gegen den `login.php` und `auth_salt.php` bei
+    unbekannter Adresse rechnen, wurde einmal erzeugt und liegt seither als
+    Konstante. Er kostet **57 ms**; ein echter Hash unter PHP 8.4 kostet
+    **228 ms**. Der Unterschied ist heute verdeckt, weil `rate_gleiche_dauer()`
+    ohnehin auf 0,35 s auffüllt — also ist nichts ablesbar. Verdeckt heißt
+    aber nicht beseitigt: Wächst die Mindestdauer nicht mit, wenn die Hardware
+    langsamer oder der Kostenfaktor höher wird, wird die Lücke wieder sichtbar.
+    **Vorschlag:** den Vergleichswert auf den tatsächlichen Kostenfaktor
+    ziehen, sobald keine Installation mehr auf PHP 8.3 läuft — oder
+    `rate_gleiche_dauer()` an dieser Stelle auf 0,5 s.
+
+94. **„bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/`.**
+    *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-05.*
+    Der Kopfkommentar von `erzeugen.sh` sagt, die erzeugten Kacheln seien
+    **bitgleich**; die `LIESMICH.md` daneben sagt **pixelgleich**. Beides kann
+    nicht stimmen: PNG trägt einen Zeitstempel-Chunk, und der ändert sich bei
+    jedem Lauf. Wer die Zusage prüft, prüft je nach gelesenem Dokument etwas
+    anderes.
+    **Vorschlag:** ein Wort ändern — oder `-define png:exclude-chunk=time`
+    setzen und die stärkere Zusage tatsächlich einlösen.
+
+95. **Die Rundlauffälle der Android-App lassen Daten im Admin-Konto zurück.**
+    *Aufgenommen 03.09.2026 aus der S5-Vorbereitung, Abschnitt 8.2.*
+    Gemessen: **9 Diensttage, 5 Einsätze und 14 439 Spurpunkte**, die kein
+    Prüffall wieder abräumt. Sie fallen nicht auf, solange niemand das
+    Admin-Konto ansieht — und verfälschen jede Zahl, die jemand daraus zieht.
+    **Vorschlag:** Aufräumen im `@After` der betroffenen Fälle, oder ein
+    eigenes Prüfkonto, das der Lauf am Ende löscht. Gehört zum S4-Rest, weil
+    er dieselben Prüffälle anfasst.
+
+96. **Uhr und Handy sagen nicht, dass gewartet wird.**
+    *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-08).*
+    Der Wartungsmodus antwortet mit **503** und einem `Retry-After`. Die
+    Clients behandeln das als gewöhnliches 5xx — sie puffern und liefern
+    nach, und genau das ist die Zusage des Vertrags. Was sie **nicht** tun:
+    es sagen. Auf der Uhr steht dann derselbe Rückstand wie bei einem
+    Funkloch, und `Retry-After` wertet niemand aus.
+    **Bewusst nicht in S5 gebaut:** Es hätte eine Uhr- und eine
+    Android-Auslieferung gekostet, für eine Lage, die wenige Minuten dauert.
+    **Nach v1.0** neu abwägen — dann gibt es mehr als eine Uhr.
+
+97. **Die Browser-Skripte zeigen den Wartungstext uneinheitlich.**
+    *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-10).*
+    Die 503-Antwort trägt ein Feld `meldung`. **`export.js`, `import_ui.js`
+    und `schneiden.js`** lesen es aus jeder Fehlerantwort und zeigen es an —
+    ohne eine Zeile Änderung. **`kopplung.js`** wirft `'HTTP ' + status`,
+    **`unlock.js`, `ortsfeld.js` und `ortswahl.js`** zeigen ihre allgemeine
+    Meldung. Wer während einer Wartung eine Adresse sucht, liest also je nach
+    Stelle etwas anderes.
+    **Bewusst so gelassen:** Drei davon sind Komfortwege, der vierte ist der
+    Kopplungstakt, der sich nach drei Fehlern selbst beendet — und während
+    einer Wartung koppelt ohnehin niemand.
+
 ## Erledigt
 
 
