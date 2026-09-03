@@ -48,9 +48,8 @@ Garmin-Anmeldung. Auf einem Rechner ohne Bildschirm ist er nicht zu bedienen.
 Wer am Arbeitsplatz ein eingerichtetes SDK hat, stellt `~/.Garmin/ConnectIQ`
 über HTTPS bereit. Die Adresse kommt als `CIQ_GERAETE_URL` herein und steht
 **bewusst nicht im Repositorium** — es ist öffentlich, die Dateien gehören
-Garmin (ausführliche Begründung in `tools/uhr-pruefstand/LIESMICH.md`). **Wer
-hier neu anfängt, hat die Adresse nicht und kann sie sich nicht herleiten —
-sie muss erfragt werden.**
+Garmin (ausführliche Begründung in `tools/uhr-pruefstand/LIESMICH.md`).
+Sie liegt seit dem 03.09.2026 in den **Umgebungsvariablen der Arbeitsumgebung** und ist in einer eingerichteten Umgebung bereits gesetzt; erfragt werden muss sie nur, wenn `$CIQ_GERAETE_URL` leer ist.
 
 ```bash
 export CIQ_GERAETE_URL=https://beispiel.invalid/ciq

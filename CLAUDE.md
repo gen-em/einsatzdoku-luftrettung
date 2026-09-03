@@ -154,8 +154,11 @@ statt sie als erledigt zu melden.
 
 **Uhr-Code** wird mit `tools/uhr-pruefstand/` geprüft: übersetzen für alle
 Zielgeräte (Stufe I) und im Simulator starten (Stufe II). Der Aufbau braucht
-eine Adresse in `CIQ_GERAETE_URL`, die nicht im Repositorium steht —
-erfragen. Anleitung in der dortigen `LIESMICH.md`.
+eine Adresse in `CIQ_GERAETE_URL`, die nicht im Repositorium steht. Sie liegt
+seit dem 03.09.2026 in den **Umgebungsvariablen der Arbeitsumgebung** und ist
+in einer eingerichteten Umgebung bereits gesetzt — prüfen mit
+`[ -n "$CIQ_GERAETE_URL" ]`, und nur erfragen, wenn sie fehlt. Anleitung in
+der dortigen `LIESMICH.md`.
 
 **Während P3 (Oberflächen-Redesign) treten zwei Werkzeuge an die Stelle des
 Stilvergleichs**, weil er dort die falsche Frage stellt (Begründung in

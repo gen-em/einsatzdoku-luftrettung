@@ -191,6 +191,26 @@ Die Vorgabewerte sind nicht frei gewählt, sondern die, die `kreislauf.py` und
 `aufnehmen.mjs` ohne Schalter erwarten. Damit läuft nach einem Aufruf jedes
 Werkzeug ohne Zusatzangabe.
 
+### Werkzeug — Wo `CIQ_GERAETE_URL` wohnt, stand nirgends
+
+Vier Dokumente sagten „muss erfragt werden" — `CLAUDE.md` 6,
+`docs/Lizenzen.md`, `docs/Technik.md` und beide LIESMICH der betroffenen
+Werkzeuge. Der Rahmenplan sagte daneben schon das Richtige („sie gehört in die
+Umgebungsvariablen der Arbeitsumgebung"), aber an einer durchgestrichenen,
+erledigten Zeile, die niemand mehr liest. Wer neu anfing, fragte deshalb nach
+einer Adresse, die längst hinterlegt war.
+
+Seit dem 03.09.2026 liegt sie in den Umgebungsvariablen. Die fünf Stellen
+sagen das jetzt, samt der Probe, die sie nicht ins Protokoll schreibt
+(`[ -n "$CIQ_GERAETE_URL" ]` und die Zeichenzahl statt des Werts) und samt
+dem Grund, aus dem sie trotzdem einmal leer sein kann: Umgebungsvariablen
+kommen beim **Start** eines Containers herein — eine Sitzung, die vor der
+Änderung begann, erbt sie nicht nach. Genau dieser Fall ist hier eingetreten
+und hat eine Viertelstunde gekostet.
+
+**Die Adresse selbst steht weiterhin nirgends im Repositorium**; gegengeprüft
+mit `git grep` über den ganzen Baum.
+
 ### Werkzeug — `tools/s5-anker/`, weil Zeilennummern Belege sind und keine Wegweiser
 
 Das S5-Konzept belegt jede Aussage mit einer Fundstelle samt Zeilennummer.

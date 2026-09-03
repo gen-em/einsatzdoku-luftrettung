@@ -43,9 +43,22 @@ tools/uhr-pruefstand/pruefstand.sh aufbau
 **Die Adresse steht bewusst nicht in diesem Repositorium.** Es ist öffentlich,
 die Dateien gehören Garmin, und eine Bereitstellung für den eigenen Gebrauch
 ist etwas anderes als eine Veröffentlichung. Aus demselben Grund werden die
-Dateien nicht eingecheckt. **Wer hier neu anfängt, hat die Adresse also nicht
-und kann sie sich auch nicht herleiten — sie muss erfragt werden.** Ohne sie
-bricht `aufbau` mit einem Hinweis ab, statt stillschweigend halb zu laufen.
+Dateien nicht eingecheckt.
+
+**Wo sie stattdessen liegt: in den Umgebungsvariablen der Arbeitsumgebung**
+(seit 03.09.2026; Rahmenplan Abschnitt 6). In einer eingerichteten Umgebung
+ist `CIQ_GERAETE_URL` damit schon gesetzt, und der `export` oben entfällt.
+Prüfen, ohne die Adresse ins Protokoll zu schreiben:
+
+```bash
+[ -n "$CIQ_GERAETE_URL" ] && echo "gesetzt (${#CIQ_GERAETE_URL} Zeichen)" || echo "NICHT gesetzt"
+```
+
+Ist sie leer, gibt es zwei Gründe, und beide sind harmlos: Die Umgebung wurde
+nach dem Start dieses Containers geändert — Umgebungsvariablen kommen beim
+**Start** herein, eine laufende Sitzung erbt sie nicht nach —, oder es ist eine
+fremde Umgebung. Dann erfragen. Ohne die Adresse bricht `aufbau` mit einem
+Hinweis ab, statt stillschweigend halb zu laufen.
 
 Zwei Anforderungen an die Bereitstellung, beide nicht offensichtlich:
 

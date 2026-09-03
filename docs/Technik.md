@@ -1810,8 +1810,9 @@ keine Uhren**: 20 Edge, 8 Outdoor-Handgeräte.
 
 > **Die Gerätedateien liegen nicht im Repositorium** — sie gehören Garmin und
 > werden nur vom SDK-Manager ausgeliefert. Ihre Bereitstellung kommt als
-> `CIQ_GERAETE_URL` herein und **muss erfragt werden**
-> (`tools/uhr-pruefstand/LIESMICH.md`). Ohne sie erzeugt
+> `CIQ_GERAETE_URL` herein und steht **nicht im Repositorium**
+> (`tools/uhr-pruefstand/LIESMICH.md`). Sie liegt seit dem 03.09.2026 in den **Umgebungsvariablen der Arbeitsumgebung** und ist in einer eingerichteten Umgebung bereits gesetzt; erfragt werden muss sie nur, wenn `$CIQ_GERAETE_URL` leer ist.
+> Ohne sie erzeugt
 > `erzeugen.py --leer` eine gültige, leere Tabelle: Die Anwendung läuft
 > vollständig, löst aber nichts auf — jede Teilenummer landet unverändert in
 > `geraet_teil`, und die Geräteliste zeigt „Uhr · 006-B4261-00" statt
