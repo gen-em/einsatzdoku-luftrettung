@@ -8,7 +8,7 @@ Android 0.7.7 — S7 gemergt).**
 > |---|---|
 > | Zweck | Beide S5-Konzepte gegen den Code prüfen und alles aufbauen, was die Umsetzung an Prüfmitteln braucht — **bevor** sie beginnt |
 > | Gebaut | Datenbank und Installation mit Demo-Bestand · Android-SDK, Baulauf und Rundlauf · **Uhr-Prüfstand vollständig** (SDK, 173 Gerätedateien, 1332 Schriften, Simulator) |
-> | Fehlt | nichts am Prüfstand. Offen sind Entscheidungen: **F-S5-01 bis -12** (Pakete A–D) und **F-S5Z-01 bis -05** (Paket E) |
+> | Fehlt | nichts am Prüfstand. Entschieden am 03.09.2026: F-S5-01 bis -04, -07 bis -09, -11, -12 (Konzept E-S5-32 bis -47). **Offen:** F-S5-05 (B), F-S5-06 und F-S5-10 (C), **F-S5Z-01 bis -05** (E) |
 > | S7 | gemergt, **ohne Wirkung auf S5** — `pair.php`, `ratelimit_lib.php`, `schema.sql`, `geraete_lib.php`, `watch/` und `android/` byteweise unverändert; alle 115 Anker gefunden (Abschnitt 8a) |
 > | Diese Datei | wird mit dem Abschluss von Paket A in das Prüfdokument nach K9 überführt und dann gelöscht |
 
@@ -266,6 +266,30 @@ Einträge" mit dem Präfix `manual-` an.
 eigentliche Fund: Zwei Wege zur selben Spalte, mit 32 und 128 Bit. Die
 zweite Hälfte gehört gestrichen — sonst sucht die Umsetzung eine dritte
 Stelle, die es nicht gibt.
+
+### V-S5-13 — bcrypt am Abfragetakt: 120 Prüfungen je Sitzung sind 27 s Rechenzeit
+
+Z-11 rechnet je `status`-Abfrage mit „einer `password_verify` (bcrypt,
+Kostenfaktor 10)". Gemessen im Container (PHP 8.4.19): `PASSWORD_DEFAULT`
+legt seit PHP 8.4 **Kostenfaktor 12** an — **228 ms** je Prüfung;
+`AUTH_VERGLEICHSWERT` (`db.php` 483) ist ein Hash mit Kostenfaktor 10 —
+**57 ms**. Zwei Folgen:
+
+1. **Rechenlast.** 120 Abfragen je Sitzung × 228 ms ≈ **27 s** CPU je
+   Kopplung — für einen Vergleich, der nichts schützt: Der Sitzungsschlüssel
+   sind 24 Zufallsbytes, kein Passwort. bcrypt bremst das Raten eines
+   *schwachen* Geheimnisses; bei 192 Bit Zufall bremst es nur den Server.
+2. **Drift des Blindvergleichs.** Der unbekannte Zweig läuft an drei Stellen
+   (`login.php` 135, `ingest.php` 71, `pair.php` 113) gegen Kostenfaktor 10,
+   der bekannte gegen 12 — 57 gegen 228 ms. Heute verdeckt das nur die
+   0,35-s-Mindestdauer aus `rate_gleiche_dauer()`; auf einem langsameren
+   Server als diesem Container kippt das. Der Kopfkommentar in `db.php`
+   („entspricht PHP 8.1 bis 8.3") sagt es selbst voraus.
+
+**Entschieden (Konzept E-S5-41 bis -43):** SHA-256 für `pair_sessions` und
+`devices`, bcrypt bleibt beim Anmeldetoken. Die Drift bleibt damit nur noch
+an `login.php` und ist ein **Backlog-Kandidat** (Vergleichswert auf den
+tatsächlichen Kostenfaktor nachziehen).
 
 ---
 
@@ -650,3 +674,4 @@ Beide hätten die Uhr-Instanz in ihrer ersten halben Stunde getroffen.
 | 1 | 02.09.2026 | Erstfassung: Prüfung des Konzepts (77 Fundstellen), 12 Befunde V-S5-01 bis V-S5-12, Prüfstand aufgebaut und mit Ausgangszahlen belegt, Fundstellen-Inventar, offene Zuarbeiten |
 | 2 | 03.09.2026 | Abschnitt 8: das Zusatzkonzept (Paket E) geprüft — 32 neue Anker, Antwort auf F-S5Z-06, Ausgangszahlen der Android-Prüfmittel, Rundlauf 167/167 belegt, Emulator als unmöglich gemessen |
 | 3 | 03.09.2026 | Abschnitt 8a: Uhr-Prüfstand vollständig (173 Gerätedateien, 1332 Schriften), Stufe I 99/0/0/0 als Ausgangsstand, **F-S5-11 beantwortet** (nur TLS mit bekannter CA), zwei Fehler im Prüfstand behoben; S7-Merge ohne Wirkung auf S5 |
+| 4 | 03.09.2026 | V-S5-13 (bcrypt-Kosten gemessen: 228 ms je Prüfung, Drift zu `AUTH_VERGLEICHSWERT`); Statusblock: Entscheidungen des Auftraggebers eingetragen, Paket A begonnen |
