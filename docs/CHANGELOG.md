@@ -13,96 +13,178 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
 ## [Uhr 3.0.0] — 2026-09-03
 
-### Uhr — Kopplung umgekehrt: die Uhr zeigt den Code (S5, Paket C)
+### Uhr — Die Kopplung läuft andersherum: die Uhr zeigt den Code (S5, Paket C)
 
-**Die Uhr tippt keinen Code mehr ein, sie zeigt einen.** Bis 2.0.0 erzeugte das
-Web den Kopplungscode, und die Trägerin tippte ihn auf dem Uhrendisplay ein —
-sechs Zeichen über einen `TextPicker`, die einzige Texteingabe der ganzen App
-und der unangenehmste Weg darin. Das setzte außerdem voraus, dass sie vorher am
-Rechner war. Jetzt holt sich die Uhr mit `start` eine Kopplungssitzung, zeigt
-den Code groß an, fragt alle fünf Sekunden nach, ob ihn jemand im Web
-eingetragen hat — und fragt dann **zurück**: „Mit ph\*\*\*@… koppeln?" Erst
-dieses Ja legt das Gerät an.
+**Bis 2.0.0 erzeugte das Web einen Code und die Trägerin tippte ihn auf der
+Uhr ein.** Das setzte voraus, dass sie vorher am Rechner war, und die
+Texteingabe über `WatchUi.TextPicker` war der unangenehmste Weg der ganzen
+App — sechs gleichförmige Zeichen auf einem Uhrendisplay, auf der Venu 3s über
+eine Bildschirmtastatur. Jetzt zeigt die Uhr, und das Web nimmt entgegen
+(E-R49-1).
 
-**Zwei Tore statt eines** (E-R49-5). Die Bestätigungsseite im Web fängt das
-fremde Gerät im eigenen Konto ab; die Rückfrage auf der Uhr fängt das eigene
-Gerät im fremden Konto ab. Wer eines von beiden wegnimmt, lässt eine der beiden
-Richtungen offen.
+Der Weg hat drei Schritte, und jeder ist ein Anliegen an `pair.php`:
+`start` holt eine Kopplungssitzung samt Anzeigecode und schwebenden
+Zugangsdaten, `status` fragt im Takt nach, ob ein Konto den Code eingetragen
+hat, `bestaetigen` gibt die Antwort der Trägerin. **Erst ihr Ja legt das Gerät
+an.**
 
-**Der Code weist nichts aus.** Er ist für den Menschen, der ihn abliest; wer ihn
-über die Schulter sieht, kann an der Uhr nichts auslösen. Was die Uhr ausweist,
-sind Kennung und Schlüssel aus `start` — und die sind bis zum Ja **schwebend**:
-Der Server kennt sie, `ingest.php` weist sie mit `401` ab, weil es das Gerät
-noch nicht gibt. Auf der Uhr liegen sie bis dahin **nur im Arbeitsspeicher**
-(E-S5-22); erst `200 {"ok":true}` schreibt `Storage "cred"`. Wer die App vorher
-verlässt, hat keine halbe Kopplung auf dem Gerät — die Sitzung verfällt
-serverseitig nach zehn Minuten. Das Kontolabel wird **nie** gespeichert.
+**Der Preis, und er ist nicht klein.** Nach dem Umstieg koppelt **keine
+ältere Uhr-Fassung mehr** — der alte Weg brauchte einen im Web erzeugten Code,
+und den gibt es nicht mehr (E-R49-7). Eine Uhr 2.0.0 am neuen Server bekommt
+`400 {"error":"aktion","meldung":"Uhr-App aktualisieren"}` und zeigt die
+Servermeldung als zweite Zeile; das ist der einzige Kanal, auf dem sie
+erfährt, was zu tun ist. **Und die eine Bestandsuhr muss einmal neu koppeln**,
+weil Web 13.0.0 den Geräteschlüssel als SHA-256 statt bcrypt vergleicht
+(E-S5-42) — vorher den Sync vollständig laufen lassen, sonst gehen gepufferte
+Ereignisse mit dem Trennen verloren.
 
-**Der Preis, und er ist diesmal doppelt.** Erstens koppelt **keine ältere
-Uhr-Fassung mehr**: Der alte Weg setzte einen im Web erzeugten Code voraus, und
-den gibt es nicht mehr (E-R49-7). Eine Uhr 2.0.0 am neuen Server bekommt
-`400 {"error":"aktion","meldung":"Uhr-App aktualisieren"}` und zeigt genau
-diesen Satz an — der einzige Kanal, auf dem sie erfährt, was zu tun ist.
-Zweitens muss die **eine Bestandsuhr neu gekoppelt** werden, und das ist neu
-gegenüber der ersten Planung: Ihr Schlüssel liegt als bcrypt-Hash, der Server
-vergleicht seit Web 13.0.0 gegen SHA-256 (E-S5-42). Vorher den Sync vollständig
-laufen lassen — sonst gehen gepufferte Ereignisse mit dem Trennen verloren.
-Bestehende Kopplungen sind davon **nur** deshalb betroffen; am Drahtvertrag von
-`ingest.php` ändert sich nichts.
+**Warum die Hauptnummer.** Es ist ein spürbar anderer Weg durch die Anwendung
+*und* ein Bruch der Anschlussfähigkeit. Bestehende Kopplungen bleiben davon
+unberührt: `ingest.php` und Vertragsabschnitt 1 ändern sich nicht.
 
-**Neu: `PairView.mc`.** Eine eigene Ansicht, kein vierter Zustand des
-Mittelblocks der Sync-Seite (E-S5-24) — aus drei Gründen, von denen jeder
-reicht: Der Code muss groß stehen und trägt Buchstaben, also scheidet eine
-Ziffernschrift aus (`Uhr-Layout_Regeln` 3.1: sie kennt keine Buchstaben und
-zeichnet leere Kästchen); die Seite hat eine Restzeit, die weiterläuft; und
-BACK bedeutet dort etwas anderes als auf der Sync-Seite. Der Code steht in zwei
-Dreiergruppen („CBF E4W"), weil sechs gleichförmige Zeichen abzulesen und
-fehlerfrei einzutippen die eigentliche Arbeit dieses Bildschirms ist.
+### Uhr — Die neue Kopplungsansicht, und warum sie eine eigene ist
 
-**Der Vorgabewert `serverUrl`** ist jetzt `nadoku.gen-em.org` (E-R49-8). Bis
-2.0.0 stand dort nichts, mit der Begründung „jede Installation hat ihren eigenen
-Server". Das stimmte, als es nur Selbsthoster gab; seit es eine öffentliche
-Installation gibt, kostete es jede Trägerin einen Weg durch die
-Garmin-Connect-Einstellungen, bevor sie überhaupt koppeln konnte. Selbsthoster
-tragen dort weiter ihre eigene Domain ein. `deviceId`/`apiKey` bleiben als
-Alt-Weg für die Handanlage.
+`PairView.mc` zeigt den Code groß in zwei Dreiergruppen („CBF E4W"), darüber
+„Code für das Web", darunter den Zielort im Web und die Restzeit. Ein vierter
+Zustand des Mittelblocks der Sync-Seite hätte nicht getragen (E-S5-24): Der
+Code muss groß stehen und **trägt Buchstaben** — eine Ziffernschrift scheidet
+damit aus (`Uhr-Layout_Regeln` 3.1), es bleibt `fitFont` über die
+Textschriften; die Seite hat eine Restzeit, die weiterläuft; und BACK bedeutet
+hier etwas anderes als dort, nämlich Abbrechen statt Blättern.
 
-**Kein Pfeil auf der Uhr, und zwar gemessen.** Das Konzept sah
-„Einstellungen → Geräte" vor und führte als offenen Punkt, ob die
-Geräteschriften „→" überhaupt tragen. Nachgesehen (fenix6pro, SDK 9.2.0, mit
-dem Pfeil übersetzt und fotografiert): Das Zeichen erscheint als
-**Platzhalter-Raute** — derselbe Fall wie bei den Ziffernschriften, nur mit
-einer Textschrift, und ebenso ohne Warnung und ohne Fehler. Auf der Uhr steht
-deshalb „Einstellungen, Geräte"; Web und Handbuch behalten den Pfeil, weil
-deren Schrift ihn trägt. Dass beide auseinanderlaufen, ist kein Versehen — die
-Uhr kann es nicht anders.
+**Der Pfeil ist gemessen und gestrichen.** Das Konzept zeichnete
+„Einstellungen → Geräte" und ließ offen, ob „→" in den Geräteschriften steht.
+Mit dem Pfeil übersetzt und im Simulator fotografiert (fenix6pro, SDK 9.2.0):
+Er erscheint als **Platzhalter-Raute**, ohne Warnung und ohne Fehler — der
+Fall aus `Uhr-Layout_Regeln` 3.1, nur mit einer Text- statt einer
+Ziffernschrift. Auf der Uhr steht deshalb „Einstellungen, Geräte"; Web und
+Handbuch behalten den Pfeil, weil deren Schrift ihn trägt.
 
-### Uhr — Behoben: die Tastensperre wurde nur in einer Reihenfolge erkannt
+**Der Verbindungshinweis steht über der Restzeit, nicht darunter.** Die
+unterste Zeile sitzt zwischen 84 und 91,5 % der Displayhöhe, und dort trägt
+die Kreissehne nur 128 px (Fenix 6 Pro), 118 (FR945) bzw. 193 (Venu 3s) —
+gerechnet aus den Schriftmetriken der Gerätedateien. „Telefon in Reichweite?
+(−104)" lief dort um 48 bis 111 px über den Rand, und `fitFont` konnte nicht
+retten: Unter 320 px Displayhöhe liefert `fontHint` selbst schon `FONT_XTINY`,
+es gibt keine kleinere Stufe. Jetzt steht in der engsten Zeile der einzige
+Text, dessen Länge bekannt ist (die Restzeit, 71/64/146 px), und der Hinweis
+eine Zeile höher, wo 173/163/271 px zur Verfügung stehen. Er heißt dort
+„Keine Verbindung (n)" statt „Telefon in Reichweite? (n)", weil auch der
+obere Platz für den langen Wortlaut nicht reicht.
 
-Am Gerät gemeldet. Wer die Tastensperre der Uhr mit **UP zuerst** und START
-dazu auslöste — die übliche Handhaltung —, bekam das Schnellmenü, während die
-Uhr sperrte.
+### Uhr — Was die Zugangsdaten bis zum Ja nicht tun: gespeichert werden
 
-Die Erkennung war da, aber einseitig: `ActionDelegate` merkte sich nur Tasten,
-die die jeweilige Seite selbst verfolgt (START immer, UP/DOWN allein auf der
-Reanimationsseite). Ein UP-Druck auf der Uhr-, Tempo-, Statistik- oder
-Sync-Seite hinterließ deshalb **keine Spur**; der folgende START-Druck sah ein
-leeres Feld und hielt sich für einen gewöhnlichen Langdruck. Dokumentiert war
-die Sperre entsprechend einseitig — „START + beliebige Taste", „während des
-langen START-Drucks".
+**Code, Gerätekennung, Schlüssel und Kontolabel liegen bis zum Ja
+ausschließlich im Arbeitsspeicher** (E-S5-22). Erst `200 {"ok":true}` auf
+`bestaetigen ja` schreibt `Storage "cred"`. Wer die App vorher verlässt, hat
+keine halbe Kopplung auf der Uhr; die Sitzung verfällt serverseitig nach zehn
+Minuten. Die maskierte E-Mail steht nur im Dialog und wird nie gespeichert.
 
-Jetzt merkt `onKeyPressed` **jede** gedrückte Taste, auch die, die es dem
-System überlässt. Kommt danach START, während eine andere Taste unten ist, gilt
-das als Sperre: kein Halte-Timer, und beim Loslassen auch kein kurzer Druck.
-Bleibt das Loslassen aus, weil die Uhr es während der Sperre nicht mehr
-zustellt, heilt es sich beim nächsten Druck derselben Taste — der Preis ist
-höchstens **ein** verschluckter Langdruck.
+Damit war dies die **erste Stelle des Projekts, an der zwei Web-Anfragen
+gleichzeitig offen sein können**: `bestaetigen nein` wird bewusst nicht
+abgewartet (E-S5-23), und daneben läuft schon der nächste `start`. `Uploader`
+serialisiert strikt über `_busy`, die Abfrage über `_pending` — für diese
+beiden gab es keine Buchführung. Kommen sie vertauscht zurück (Connect IQ
+sagt darüber nichts zu), schriebe ein `200 {"ok":true}` auf das **alte Nein**
+die Zugangsdaten der **neuen** Sitzung in den Speicher: Die Uhr hielte sich
+für gekoppelt, jeder Upload endete in 401, und ein Rückstand verhinderte sogar
+das Neukoppeln — eine Sackgasse. Deshalb trägt jetzt **jeder Rückruf mit,
+worauf er antwortet**: `start` eine Laufnummer, `status` und `bestaetigen` die
+Gerätekennung der Sitzung, `bestaetigen` zusätzlich das Ja oder Nein (der
+Server antwortet auf beides `200 {"ok":true}`).
 
-**Nicht belegt, und das gehört dazu:** Der Simulator bildet Tastensperren nicht
-ab (`docs/Geraete-Eingabe.md` 6). Belegt ist, dass es übersetzt und die übrige
-Bedienung unverändert läuft; ob der Fehlgriff verschwindet, zeigt allein das
-Gerät. Seit 3.0.0 wäre er übrigens teurer als vorher: Auf der Sync-Seite löst
-derselbe Fehlgriff jetzt eine Kopplungssitzung aus.
+### Uhr — Fehlerzweige, die eine lebende Sitzung nicht wegwerfen
+
+Ein `429 zu_viele_versuche` steht in `pair.php` **vor** der Aktionsprüfung und
+trifft jedes Anliegen; ein `500` nach `bestaetigen ja` bedeutet, dass der
+Server zurückgerollt hat und die Sitzung ausdrücklich **stehen lässt**
+(Vertrag 1a.3: „es darf wiederholen"). Beide als „Code abgelaufen" zu melden
+hätte eine gültige Sitzung weggeworfen und die Trägerin ohne Not von vorn
+geschickt — die Meldung hätte eine Ursache benannt, die nicht vorlag, und
+einen Weg, der nicht hinausführt. Jetzt bleibt der Code in beiden Fällen
+stehen, die Abfrage läuft weiter, und „Code abgelaufen" sagt nur noch, wer
+410 oder 401 bekommt. Alles Übrige nennt seine Zahl und die Servermeldung.
+
+**Die Frist wird jetzt auch ohne Server erreicht.** Ein Verbindungsfehler
+beendet die Sitzung nicht (E-S5-25) — aber „bis zur Frist" heißt eben auch:
+an der Frist ist Schluss. Vorher hätte die Ansicht bei „noch 0 s" gestanden
+und auf ein 410 gewartet, das bei fortgebliebenem Telefon nie kommt.
+
+### Uhr — BACK auf einer Bestätigung ruft `onResponse` nicht auf
+
+**Gemessen am Simulator, im Code nicht zu sehen.** Der Vertrag von
+`ConfirmationDelegate` legt es nicht fest; ein Druck auf BACK bei stehender
+`WatchUi.Confirmation` räumt den Dialog weg, und mehr geschieht nicht.
+
+Für die Kopplung war das folgenschwer: Beim Öffnen der Rückfrage schaltet die
+Abfrage ab, damit eine eintreffende Antwort keinen Platz hat, an dem sie etwas
+ändern dürfte. Ohne Antwort vom Dialog wurde sie **nie wieder eingeschaltet** —
+kein `status` mehr, keine Rückfrage mehr, nur ein Code, der still ablief, und
+die Fristprüfung stand hinter derselben Sperre. Erholbar allein über BACK, und
+ohne jeden Hinweis darauf.
+
+`PairView.onShow()` meldet jetzt die Rückkehr. Die Lage ist eindeutig zu
+erkennen: Ansicht wieder oben, Sitzung vorhanden, Abfrage steht still, kein Ja
+unterwegs — beim **ersten** Erscheinen der Ansicht läuft die Abfrage bereits.
+Behandelt wird sie wie ein Nein: Wer die Frage wegdrückt, hat nicht Ja gesagt,
+und die Sitzung zurückzugeben ist ehrlicher, als sie bis zur Frist offen zu
+lassen.
+
+### Uhr — Die Ansicht drängt sich nicht mehr über eine fremde Seite
+
+Zwischen dem langen Druck und dem Erscheinen der Kopplungsansicht liegt eine
+volle Funkrunde. Wer in dieser Zeit weiterblättert oder mit BACK herausgeht,
+bekam die Ansicht über eine Seite geschoben, die sie nicht aufgerufen hat — im
+schlimmsten Fall über den Rea-Countdown, wo die Ereignistasten tot wären, BACK
+etwas anderes bedeutet und die Uhr bei 0:00 unter einem fremden Bildschirm
+vibriert. Die Sync-Seite meldet jetzt, ob sie sichtbar ist; ist sie es nicht,
+wird die Sitzung zurückgegeben statt angezeigt. Derselbe Musterfehler steckte
+schon in 2.0.0 (`onTrennen` → `openInput()`), dort aber im Sonderfall.
+
+Dazu eine Sperre gegen einen **zweiten** `start`: Ein weiterer langer Druck
+während „Hole Code…" trug eine zweite Sitzung ein und schob eine zweite
+Ansicht — von denen eine unschließbar stehen blieb, weil die Buchführung nur
+einen Zustand kennt. Auf der Venu liegt der lange Druck absichtlich auf zwei
+Tasten, der zweite Druck ist dort einen Fehlgriff entfernt.
+
+### Uhr — Die Server-Adresse hat einen Vorgabewert
+
+`serverUrl` steht auf **`nadoku.gen-em.org`**, der öffentlichen Installation
+(E-R49-8, R63). Bis 2.0.0 stand dort nichts, mit der Begründung „jede
+Installation hat ihren eigenen Server" — das stimmte, als es nur Selbsthoster
+gab. Seit es eine öffentliche Installation gibt, kostete es jede Trägerin
+einen Weg durch die Garmin-Connect-Einstellungen, bevor sie überhaupt koppeln
+konnte. Selbsthoster tragen dort weiter ihre eigene Domain ein; das Feld
+bleibt überschreibbar, und `deviceId`/`apiKey` bleiben als Alt-Weg für die
+Handanlage. Belegt am Simulator: Die Sync-Seite sagt frisch installiert
+„Nicht eingerichtet / START halten: Gerät koppeln" statt „Erst Server-Adresse
+setzen".
+
+Ebendort ausgetragen: `nadoku.beispieldomain.de` in `properties.xml`,
+`settings.xml` und `Uploader.mc`. Und „Erst Server-**Domain** setzen" heißt
+jetzt „Erst Server-**Adresse** setzen" — zwei Namen für eine Einstellung
+konnten sogar gleichzeitig auf dem Bildschirm stehen; die Sync-Seite
+unterdrückt die Doppelung nun ohnehin.
+
+### Uhr — Behoben: Die Tastensperre öffnete das Schnellmenü
+
+**Am Gerät gemeldet, im Simulator nicht nachstellbar** (`Geraete-Eingabe.md` 6:
+Tastensperren bildet er nicht ab).
+
+`Input.mc` erkannte die Tastensperre nur in **einer** Reihenfolge. Es merkte
+sich allein die Tasten, die es selbst verfolgt — START immer, UP/DOWN nur auf
+der Reanimationsseite. Wer UP **zuerst** drückte und START dazu, die übliche
+Handhaltung, hinterließ keine Spur: START sah ein leeres Feld, hielt sich für
+einen gewöhnlichen Langdruck und öffnete das Schnellmenü, während die Uhr
+sperrte. Auf der Sync-Seite wäre es seit 3.0.0 eine angefangene Kopplung.
+
+`onKeyPressed` merkt jetzt **jede** gedrückte Taste, auch die, die es dem
+System überlässt. Bleibt das Loslassen aus, weil die Uhr es während der Sperre
+nicht mehr zustellt, heilt es sich beim nächsten Druck derselben Taste; der
+Preis ist höchstens ein verschluckter Langdruck — deutlich weniger als ein
+Schnellmenü, das sich beim Sperren öffnet. Die Dokumentation sagte dieselbe
+Einseitigkeit („während des langen START-Drucks zusätzlich eine andere Taste")
+und ist nachgezogen.
 
 ### Uhr — Behoben: die GPS-Zeile lief auf der Venu 3s über den Rand
 
@@ -122,6 +204,7 @@ vorher **„PS aus (kein Diens"** — beide Enden fort, ohne Warnung —, nachhe
 **„GPS aus (kein Dienst)"**. Auf dem Ausgangsstand desselben Geräts stand die
 Zeile vollständig da; es ist also keine Altlast, sondern die Folge der
 zusätzlichen Zeile.
+
 
 ## [Web 13.1.1] — 2026-09-03
 
@@ -437,8 +520,10 @@ das Wort hier ersetzte, schriebe eine Bedienanweisung, die auf einem echten
 Gerät nicht ausführbar ist. Also eine Ausnahme, Klasse G
 (`uhr-tastennamen`), beschränkt auf diese eine Datei und dieses eine Muster.
 
-Danach **0 / 0 / 0** in allen fünf Bereichen: 87 · 29 · 8 · 2 · 34 Dateien,
-78 Ausnahmeregeln, alle 78 gegriffen, 0 durchgerutschte Teilstring-Fallen.
+Danach **0 / 0 / 0** in allen fünf Bereichen: 87 · 29 · 8 · 2 · 34 Dateien
+zum Zeitpunkt dieses Eintrags, 78 Ausnahmeregeln, alle 78 gegriffen, 0
+durchgerutschte Teilstring-Fallen. (Mit Web 13.1.x und Uhr 3.0.0 sind es
+88 · 30 · 8 · 2 · 35 — die Bereiche wachsen mit dem Code.)
 
 ## [Web 13.0.0] — 2026-09-03
 

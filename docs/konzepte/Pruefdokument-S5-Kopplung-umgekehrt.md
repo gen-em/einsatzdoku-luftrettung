@@ -41,6 +41,45 @@ Protokollzeile `SMTP connect`). Ob die Mail Art, Modell, Kennung und den neuen
 Satz „Das Gerät hat den Code gezeigt, du hast ihn im Web eingegeben und am
 Gerät mit Ja bestätigt“ trägt, ist Sichtprüfung — Prüfliste 3.
 
+### 1.1a Uhr: der Verbindungsabriss ist nur zur Hälfte belegt
+
+**Der Simulator kann keine tote Verbindung nachstellen, die aussieht wie eine
+tote Verbindung.** Tötet man den lokalen Server, sieht die App **HTTP 404** —
+nicht den negativen Code, den ein Gerät ohne Telefon in Reichweite liefert.
+Dieselbe Eigenschaft hat `tools/netzprobe/` am 03.09.2026 schon für den
+CA-Fehler gemessen („https, selbstsigniert → die App sieht 404").
+
+**Belegt ist damit:** Die Uhr übersteht einen Server, der nicht mehr antwortet,
+wirft die Sitzung nicht weg und meldet ihn mit seiner Zahl statt mit einer
+erfundenen Ursache.
+
+**Nicht belegt ist:** der Zweig `code < 0` — „Keine Verbindung (n)" unter dem
+stehenbleibenden Code, Abfrage läuft weiter bis zur Frist. Er ist gelesen, aber
+nicht gelaufen. **Das braucht die Uhr in der Hand** (Prüfliste 7).
+
+### 1.1b Uhr: zwei von zwanzig Vertretern zeigen die `PairView` nicht
+
+`bildreihe` lief über alle **20** Vertreterklassen, **0 Abstürze**, 18 mit
+sichtbarer `PairView` und echtem Code. Die beiden übrigen, jeweils mit Grund:
+
+- **`fenix8solar47mm`** — die App läuft und zeichnet (der Startbildschirm ist
+  fotografiert), aber die Tastenautomatik brachte sie nicht auf die Sync-Seite.
+  Grenze des Prüfmittels, nicht der App.
+- **`fenix9prosolar51mm`** — der Simulator öffnet ein Fenster (446 × 700) und
+  zeichnet **das Gerät nicht**: nur Menüleiste und leere Fläche, 0 Meldungen in
+  der Konsole. Stufe I hat dasselbe Gerät fehlerfrei übersetzt.
+
+Beide sind **keine** Aussage über die Oberfläche auf diesen Geräten. Wer sie
+haben will, braucht einen Lauf am Arbeitsplatz oder das Gerät.
+
+### 1.1c Uhr: die Tastensperre ist im Simulator nicht nachstellbar
+
+`docs/Geraete-Eingabe.md` 6 sagt es ausdrücklich: Der Simulator bildet
+Systemgesten außerhalb der App — Steuerungsmenüs, **Tastensperren** — nicht ab.
+Die Behebung von B-S5-12 ist deshalb **übersetzt und gelesen, nicht erlebt**.
+Belegt ist nur, dass sie die 99 Zielgeräte ohne Warnung übersetzt und die
+übrigen Bedienwege im Simulator unverändert funktionieren. **Prüfliste 8.**
+
 ### 1.2 Die Antwortzeit auf dem Produktivserver
 
 Die Gleichheit der beiden 401-Zweige ist im Container gemessen (0,351 s und
@@ -136,6 +175,23 @@ Probe schickt Anfragen nacheinander; „zwei Browser mit demselben Code“ ist
 und den Rückfall in den Geräte-Zweig — gelesen, nicht unter Last gefahren.
 Der R17-Review in P6 prüft die Transaktion (Konzept 8.3).
 
+### Paket C — Uhr (03.09.2026)
+
+| Mittel | Was es gemessen hat | Zahl |
+|---|---|---|
+| `pruefstand.sh reihe … -l 3 -w` **vorher** | Ausgangsstand an `origin/main`, in einem eigenen Arbeitsbaum | **99 übersetzt · 0 fehlgeschlagen · 0 Warnungen · 0 Fehler** |
+| `pruefstand.sh reihe … -l 3 -w` **nachher** | derselbe Lauf mit Uhr 3.0.0 | **99 · 0 · 0 · 0** — unverändert; App wächst um Ø 9,4 kB (max. d2delta +9824 Byte) |
+| `pruefstand.sh bildreihe` | 20 Vertreterklassen aus `geraeteklassen.py`, Konsole auf `error\|crash\|exception` durchsucht | **20 Vertreter · 0 Abstürze · 18 Bilder der `PairView`** (die zwei übrigen: 1.1b) |
+| Simulator-Rundlauf | 6 Fälle × 3 Zielgeräte gegen die **echte** lokale Installation (Web 13.1.1) | **5 von 6 Fällen belegt**: Ja, Nein, BACK, Fristablauf, Gerätelimit. Der sechste nur zur Hälfte (1.1a) |
+| Gegenlesung des Uhr-Codes | fünf Dimensionen (Vertrag, Zustandsmaschine, Layout, Typprüfung, Texte), jeder Befund einzeln zu widerlegen versucht | **32 Befunde · 16 widerlegt · 16 bestätigt · 16 behoben** |
+| `tools/wortliste/` | fünf Bereiche, davon `e` neu (`watch/`, XML **und** Monkey C) | **0 Treffer außerhalb der Ausnahmen · 0 ungenutzte Ausnahmen · 0 durchgerutschte Fallen**; Bereich `e`: **35 Dateien**, 2 Treffer, beide erklärt |
+| `wortliste.py --probe` | Selbstprobe des Zerlegers, inkl. zwei neuer Monkey-C-Fälle | **21 / 21** |
+| Vertragsrundlauf über `curl` | `start` → `status offen` → `beansprucht` (maskiert) → `bestaetigen ja` → `gekoppelt`; dazu die alte Uhr ohne `aktion` | alle Antworten wie Vertrag 1a; `api_key_hash` **64 Zeichen** (SHA-256) |
+
+**Was diese Zahlen NICHT sagen:** Der Bilderlauf misst, dass etwas gezeichnet
+wurde und die Konsole schweigt — nicht, dass es richtig aussieht. Dafür sind
+die Bilder da, und die drei Zielgeräte sind einzeln angesehen worden.
+
 ## 3. Was im Browser geprüft wurde
 
 **Paket A** hat keine Oberfläche — dort war nichts zu klicken.
@@ -229,6 +285,71 @@ erkennen ist**.
   ohne das Skript etwas Falsches behauptet — etwa eine Restzeit, die stehen
   bleibt und nicht als Stand beim Seitenaufbau zu erkennen ist.
 - [ ] erledigt am ______
+
+### 7. Der Verbindungsabriss mit der Uhr in der Hand  *(nur am Gerät)*
+
+**Warum:** Der Simulator liefert für eine tote Verbindung HTTP 404 statt eines
+negativen Codes (1.1a). Der Zweig, der den Code stehenlässt und weiterfragt,
+ist damit ungeprüft.
+
+**Bedienweg:** Kopplung starten, bis der Code steht. Dann am Telefon Bluetooth
+ausschalten (oder sich außer Reichweite bewegen) und **mindestens zehn
+Sekunden** warten.
+
+**Erwartet:** Der Code bleibt stehen. Unter ihm erscheint rot
+„Keine Verbindung (−104)" oder eine andere negative Zahl, darunter unverändert
+die Restzeit. Bluetooth wieder an → die Zeile verschwindet beim nächsten
+Nachfragen, die Kopplung lässt sich zu Ende führen.
+
+**Scheitern erkennt man daran:** Die Uhr springt auf die Sync-Seite zurück und
+meldet „Code abgelaufen" oder „Kopplung fehlgeschlagen (n)" — dann wirft sie
+eine lebende Sitzung weg. Oder der Code bleibt zwar stehen, aber es erscheint
+keine Zeile — dann sieht die Trägerin nicht, warum nichts geschieht.
+
+---
+
+### 8. Die Tastensperre  *(nur am Gerät — der Grund, warum es sie gibt)*
+
+**Warum:** Der Simulator bildet Tastensperren nicht ab (1.1c). Die Behebung ist
+übersetzt und gelesen, nicht erlebt.
+
+**Bedienweg, alle vier Kombinationen einzeln:**
+1. Auf dem Startbildschirm **UP zuerst** halten, dann START dazu.
+2. Dasselbe mit **START zuerst**, dann UP.
+3. Auf der **Sync-Seite** beides noch einmal.
+4. Auf der **Reanimationsseite** beides noch einmal.
+
+**Erwartet:** Die Uhr sperrt, und die App tut **nichts** — kein Schnellmenü,
+keine Kopplung, kein Rea-Ereignis. Nach dem Entsperren ist die App unverändert
+bedienbar; ein einzelner langer Druck wirkt wieder normal.
+
+**Scheitern erkennt man daran:** Das Schnellmenü öffnet sich (der alte Fehler,
+Reihenfolge 1). Auf der Sync-Seite erscheint die Frage „Kopplung trennen und
+neu koppeln?" oder ein Code. Auf der Rea-Seite wird ein **Adrenalin** oder eine
+**Rhythmuskontrolle** eingetragen — das ist der schlimmste Fall, weil er stumm
+in die Dokumentation läuft. Oder umgekehrt: Nach dem Entsperren reagiert der
+erste lange Druck nicht mehr (dann bleibt `_fremdKey` hängen; der zweite muss
+wieder wirken, sonst ist die Behebung falsch).
+
+---
+
+### 9. Die Oberfläche auf zwei Geräteklassen  *(am Arbeitsplatz oder am Gerät)*
+
+**Warum:** `fenix8solar47mm` und `fenix9prosolar51mm` haben die `PairView` im
+Container nicht gezeigt (1.1b) — einmal die Automatik, einmal der Simulator
+selbst.
+
+**Bedienweg:** Am eingerichteten Arbeitsplatz mit der Monkey-C-Erweiterung für
+beide Geräte bauen, starten, DOWN → Sync-Seite, START halten.
+
+**Erwartet:** Derselbe Aufbau wie auf den drei Zielgeräten — „Code für das
+Web", der Code in zwei Dreiergruppen, „Einstellungen, Geräte", die Restzeit.
+
+**Scheitern erkennt man daran:** Der Code wird abgeschnitten oder überlappt
+eine Nachbarzeile; die untere Zeile läuft über den Rand. Beides wären
+Layoutfehler, die `Ui.fitFont` auf diesen Größen nicht auffängt.
+
+---
 
 ## 5. Grenzen der benutzten Prüfmittel
 
