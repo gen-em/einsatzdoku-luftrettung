@@ -177,7 +177,27 @@ class SyncView extends WatchUi.View {
         }
         var zone = untenY - Ui.s(dc, 8);
         var y = (zone - blockH) / 2;
-        if (y < Ui.s(dc, 20)) { y = Ui.s(dc, 20); }
+        /* UNTERGRENZE 34, NICHT 20 — sonst laeuft die oberste Zeile in die
+         * Stelle, an der der Kreis zulaeuft.
+         *
+         * Traegt der untere Block drei Zeilen (Meldung, Weg heraus, Version —
+         * seit Uhr 3.0.0 der gewoehnliche Fall nach einer abgebrochenen
+         * Kopplung), rueckt untenY nach oben, der Mittelblock rueckt mit und
+         * landet auf dieser Grenze. Bei 20 sitzt die GPS-Zeile dort, wo die
+         * Sehne nur noch 122/112/182 px traegt (Fenix/FR945/Venu 3s) —
+         * "GPS aus (kein Dienst)" braucht rund 140/130/230 px, und Ui.fitFont
+         * kann nichts mehr ausrichten: Die kleinste Schrift der Liste passt
+         * auch nicht, also zeichnet es sie trotzdem und der Kreis schneidet
+         * beide Enden ab. Auf der Venu 3s am Bild gesehen (03.09.2026): vom
+         * "G" fehlte die linke Haelfte, von der schliessenden Klammer der
+         * Rest.
+         *
+         * Bei 34 traegt die Sehne 158/146/238 px — auf allen drei Geraeten
+         * mehr als der Text braucht. Die Grenze greift ohnehin nur im engen
+         * Fall; wo Platz ist, zentriert die Zeile darueber ganz normal.
+         * Gegengerechnet bis zu fuenf Zeilen im unteren Block: Der Mittelblock
+         * endet dann immer noch oberhalb von untenY, es ueberlappt nichts. */
+        if (y < Ui.s(dc, 34)) { y = Ui.s(dc, 34); }
 
         /* AUCH DIESE ZEILE DURCH fitFont (Uhr-Layout_Regeln 4.2). Sie war die
          * einzige der Seite ohne, und bis Uhr 2.0.0 fiel das nicht auf: Der
