@@ -11,6 +11,224 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 13.1.1] — 2026-09-03
+
+### Web — Behoben: ein gelungenes Trennen leerte einen Topf, der ihm nicht gehört
+
+Gefunden bei der Vorarbeit zu Paket D, beim Nachzählen der Verbraucher des
+Ratenschutz-Topfes `pair`. Der Fehlerfund B-S5-04 nannte zwei — `pair.php` und
+das Token von `jobs.php`. **Es sind drei:** `server/gpx.php` zählt darin
+ebenfalls, an sieben Stellen (73, 131, 141, 165, 177, 206, 262, 280), und
+schützt damit die Freigabelinks der Spuren.
+
+`pair.php` rief nach einem gelungenen `trennen` `rate_erfolg('pair')` — und
+leerte damit den Zähler dieser Adresse **für alle drei**. Wer Freigabelinks
+durchprobiert, brauchte also nur ein eigenes Gerät zu trennen, um sich zehn
+frische Versuche zu holen; neu koppeln kostet einen Handgriff, und das beliebig
+oft. Eine Bremse, die sich vom Gebremsten zurücksetzen lässt, ist keine.
+
+Der Aufruf ist ersatzlos entfallen. Der Gedanke dahinter war der der
+Anmeldung — wer es richtig macht, soll nicht an einem früheren Vertippen
+hängenbleiben —, aber an diesem Endpunkt gibt es seit Web 13.0.0 nichts mehr zu
+vertippen: Den Code tippt ein Mensch im Web (Topf `pair_code`, mit eigenem
+`rate_erfolg`), und was hier ankommt, sind Kopfzeilen einer Maschine. Ein
+Gerät, das seinen Schlüssel zehnmal falsch schickt, ist kaputt oder fremd;
+beidem hilft kein Nachlass.
+
+**Der Preis, bewusst gezahlt:** Ein Gerät mit veralteten Zugangsdaten sperrt
+seine Adresse nach zehn Versuchen für zehn Minuten aus, und das gilt dann auch
+für den GPX-Abruf. Genau dafür ist der Topf da.
+
+### Web — Behoben: vier Meldungen an das Gerät trugen keine Umlaute
+
+`pair.php` schickt zu jedem Fehler ein Feld `meldung`, und die Uhr zeigt es an
+(`watch/source/Pair.mc` 331–332). Vier dieser Texte standen in
+Ersatzschreibung — „Bitte spaeter erneut", „Es sind bereits 5 Geraete … Erst
+eines loeschen" —, während die gleichwertige Meldung in `auth_salt.php` und
+sämtliche Mails derselben Datei Umlaute tragen. Es war keine Konvention,
+sondern eine Ungleichheit: Die **Kommentare** dieses Projekts sind in
+Ersatzschreibung, die **sichtbaren Texte** nicht. Eine davon ist mit Web 13.0.0
+neu dazugekommen („Der Server ist gerade ausgelastet").
+
+**Nachweis:** Kopplungsprobe **76 Erwartungen, 0 nicht erfüllt** (neu: ein
+gelungenes `trennen` lässt den Topf stehen — vorher vier Einträge, nachher
+vier).
+
+## [Web 13.1.0] — 2026-09-03
+
+### Web — Die Geräteseite nimmt den Code entgegen (S5, Paket B)
+
+Paket A hat den Server umgedreht; hier kommt die Seite dazu, an der ein Mensch
+den Code eingibt. Die Karte „Gerät koppeln" hat jetzt **drei Zustände** statt
+eines Knopfes, alle aus dem vorhandenen Vorrat gebaut (`Design.md` 9) — keine
+neue Klasse, keine neue Darstellung, kein Mockup nötig:
+
+**Eingabe.** Ein Feld „Code vom Gerät" in Festbreitenschrift (`.feld-fest`),
+darunter „Weiter". Der Code darf so eingetippt werden, wie das Gerät ihn
+zeigt — mit Leerzeichen, in jeder Schreibung, auch mit Bindestrich;
+`pair_code_normalisieren()` räumt das auf, bevor gesucht wird. Steht das Konto
+am Gerätelimit, erscheint gar kein Feld, sondern der Grund.
+
+**Rückfrage.** Passt der Code, zeigt die Karte, **was** da koppeln will: Art,
+Modell, den Code in zwei Dreiergruppen, die gekürzte Kennung und die Restzeit.
+Das ist das erste der beiden Tore aus E-S5-05 und der ganze Zweck des
+Zwischenschritts — wer einen fremden Code eingetippt bekommt („gib mal AB3 K7Q
+ein"), sieht spätestens hier ein Gerät, das nicht seines ist. Hat das Gerät
+nichts über sich gesagt, steht das als Warnung dabei, statt verschwiegen zu
+werden. Daneben: „Abbrechen", und dann geschieht nichts.
+
+**Warten.** Nach „Mit meinem Konto verbinden" gehört die Sitzung dem Konto, und
+das Gerät ist am Zug. Die Karte wartet sichtbar — mit dem Gerät, um das es
+geht, und der Restzeit — **und sie lädt von selbst nach, sobald am Gerät Ja
+gesagt wurde** (E-S5-53, Entscheidung des Auftraggebers gegen die
+Konzeptempfehlung E-S5-27). Das ist die einzige Stelle des ganzen Ablaufs, an
+der die Person nichts tun kann und trotzdem nicht weiß, ob es geklappt hat: Sie
+schaut auf die Uhr, drückt dort Ja, schaut zurück — und sah bis hierher einen
+Bildschirm mit dem alten Stand und der Aufforderung, selbst neu zu laden.
+
+### Web — Wie das Nachladen gebaut ist, und was es nicht darf
+
+Sechs Bedingungen, damit aus der Bequemlichkeit kein zweites Problem wird:
+
+1. **Ein Endpunkt, der genau eine Frage beantwortet** (`api/kopplung_stand.php`)
+   und **keine Eingabe nimmt**: Welche Sitzung gemeint ist, steht in der
+   PHP-Sitzung des Browsers, nicht in einem Parameter, den jemand mit einer
+   fremden Gerätekennung füllen könnte. Die Kontokennung steht in jeder
+   Bedingung mit.
+2. **Die Abfrage endet von selbst** — bei Erfolg, bei Ablehnung am Gerät, mit
+   dem Ende der Frist und nach drei Fehlversuchen in Folge. Länger als die zehn
+   Minuten, die eine Sitzung lebt, läuft sie nie.
+3. **Sie ruht im Hintergrund-Reiter** und holt beim Zurückkommen sofort nach.
+4. **Ohne JavaScript bleibt der Weg vollständig.** Die Karte sagt auch dann,
+   was am Gerät zu tun ist; das Skript nimmt nur den Handgriff ab.
+5. **Kein `reload()`.** Die wartende Karte steht im Regelfall auf einer Seite,
+   die aus einer Umleitung kam — dort wäre Neuladen harmlos. Sie steht aber
+   **auch** auf der Antwort eines POST, wenn jemand währenddessen ein anderes
+   Gerät umbenennt oder löscht; ein `reload()` hätte dann „Formular erneut
+   senden?" gefragt und im schlimmsten Fall das Löschen wiederholt.
+6. **Und das Ziel trägt kein Fragment** — nachgemessen: Eine Navigation, die
+   nur das Fragment ändert (`#koppeln` → `#geraeteliste`), ist keine; der
+   Browser scrollt und fragt den Server nicht. Die Karte hätte weiter auf ein
+   Gerät gewartet, das längst in der Liste stand. Das war der eine echte Fehler
+   dieses Pakets, und der Browserrundlauf hat ihn gefunden.
+
+Dazu die Umleitung nach dem Beanspruchen: Der Wartezustand ist der einzige auf
+dieser Seite, der Minuten dauert und sich von selbst ändert. Er darf beim
+Neuladen weder eine Rückfrage auslösen noch ein zweites Mal beanspruchen —
+also POST, dann `Location`, und der Zustand liegt in der Sitzung, nicht im
+Adressfeld: Die Gerätekennung ist kein Geheimnis, hat aber nichts im Verlauf
+des Browsers zu suchen.
+
+### Web — Ratenschutz: der Topf wird erst beim Beanspruchen geleert
+
+Der Topf `pair_code` zählt Fehlgriffe je Konto **und** je Adresse. Was **nicht**
+zählt, ist ein Code, der schon am Muster scheitert — die Datenbank wurde nicht
+gefragt, es ist nichts zu erraten, nur ein Vertipper (E-S5-17).
+
+Geleert wird der Topf **erst beim Beanspruchen**, nicht schon beim Finden — und
+das weicht bewusst vom Wortlaut in Z-08 ab (E-S5-54). Ein Treffer im Suchschritt
+verbraucht die Sitzung nämlich nicht: Wer sich über `pair.php` mit
+`aktion=start` selbst eine Sitzung holt, kennt einen gültigen Code, den er
+beliebig oft eingeben kann — und hätte damit alle zehn Versuche
+zurückgesetzt, so oft er will. Das Beanspruchen dagegen verbraucht die Sitzung;
+jedes Zurücksetzen kostet dann ein neues `start`, und das begrenzt der Topf
+`pair_start` auf zwanzig je zehn Minuten.
+
+### Web — Zwei Funde am Bestand, beide älter als S5
+
+**Die Handanlage vergab Gerätekennungen aus vier Zufallsbytes** (B-S5-01),
+während die Kopplung seit M4-08 sechzehn nimmt. Zwei Wege zu derselben Spalte,
+32 gegen 128 Bit — und der schwächere war ausgerechnet der, den niemand prüfte:
+Bei der Kopplung fängt der eindeutige Schlüssel eine Dublette ab und das Gerät
+versucht es erneut; hier bekäme die Nutzerin einen Datenbankfehler.
+Bestandsgeräte behalten ihre kurze Kennung — die Spalte ist `VARCHAR(64)`,
+`geraet_kennung_kurz()` kommt mit beiden Längen zurecht, keine Migration.
+
+**Der Reiter trug zwei primäre Knöpfe** (B-S5-09): den der Kopplungskarte und
+„Gerät anlegen". `Design.md` 9.16 nennt genau das als Anti-Muster — „Keiner ist
+mehr die Haupthandlung" —, und welche es hier ist, sagt die Anwendung selbst an
+zwei Stellen: Der Text neben der Handanlage nennt sie „die Alternative zum
+Koppeln", und E-R49-7 führt sie als Rückfall. Sie ist jetzt neutral.
+
+Dazu ein sichtbarer Text, den Paket A falsch hat werden lassen:
+`admin_demo.php` sagte der Administratorin, das Zurücksetzen des Demo-Kontos
+lösche „Kopplungscodes" — es sind seit 13.0.0 offene Kopplungssitzungen.
+
+### Werkzeuge — der Bilderlauf kann jetzt Zustände, die einen POST brauchen
+
+`tools/screenshots/` kannte genau einen Bedienschritt (`schublade`) und konnte
+deshalb von den drei Zuständen der Karte nur den ersten fotografieren. Zwei
+neue Schritte (`kopplung-rueckfrage`, `kopplung-warten`) holen sich über
+`pair.php` eine echte Kopplungssitzung — die Probe ist das Gerät, es gibt keine
+Attrappe — und klicken sich durch. Der Code wird je Schritt **einmal** geholt
+und über alle acht Breiten wiederverwendet: Der Topf `pair_start` lässt zwanzig
+Aufrufe je zehn Minuten zu, und ein Lauf mit einer Sitzung je Breite bräuchte
+sechzehn. Zurück bleibt eine Sitzung, die nach zehn Minuten verfällt, und keine
+Gerätezeile — das Gerät sagt in diesem Lauf nie Ja.
+
+Neu daneben: **`tools/kopplungsprobe/rundlauf.mjs`** — der ganze Weg im
+Browser, vom Anmelden bis zum abgemeldeten Prüfgerät, mit der Probe als Gerät
+auf der anderen Seite. Er ist der einzige automatisierte Beleg dafür, dass das
+Nachladen wirklich greift.
+
+**Nachweis:** Rundlauf **25 Erwartungen, 0 nicht erfüllt, 0 Konsolenfehler**
+(das Nachladen griff 3,2 s nach dem Ja) · Bilderlauf über die drei Zustände
+**24 Bilder in acht Breiten, 0 Überlauf, 0 Konsolenfehler, alle Knöpfe 44 px**,
+Gegenprobe 27 Dateien / 27 verschiedene Prüfsummen · Kopplungsprobe unverändert
+**75/75** · Ingestprobe **30/30** · Wortliste a–d **0/0/0**, 77 Ausnahmen alle
+gegriffen · Vollständigkeit **277 statt 272** — die fünf Zeichen sind benannt:
+drei in den Kommentaren der beiden neuen Dateien, zwei Pfeile mehr in
+sichtbarem Text, weil der Weg „Sync-Seite → Gerät koppeln" jetzt an drei
+Stellen steht statt an einer. Prüfung 1 (Klassen), 2 (Werte) und 4 (Knopfhöhe)
+sind Zeile für Zeile unverändert.
+
+## [Web 13.0.1] — 2026-09-03
+
+### Web — Behoben: ein später eintreffendes Paket löschte Ende, Strecke und Anstieg
+
+Gefunden bei der Gegenlesung des S5-Zusatzes (Befund B5.3), nachgestellt gegen
+eine laufende Installation, behoben in einem eigenen Schritt — der Fehler ist
+älter als S5 und soll getrennt nachvollziehbar bleiben.
+
+Der Upsert in `ingest.php` schrieb `ended_at`, `distance_m` und `ascent_m`
+bedingungslos aus dem eintreffenden Paket (`ended_at = VALUES(ended_at)`),
+während `final` seit jeher mit `GREATEST(final, VALUES(final))` geschützt war.
+**Genau diese drei Spalten trägt ein nicht-finales Paket aber nicht:** Solange
+ein Einsatz läuft, kennt die Uhr weder Ende noch Strecke noch Anstieg und
+sendet `null`.
+
+Kam ein solches Paket **nach** dem finalen an, setzte der Upsert alle drei auf
+NULL zurück — und `final` blieb wegen `GREATEST` auf 1. Übrig blieb ein
+abgeschlossener Einsatz ohne Ende, ohne Strecke, ohne Anstieg. Kein Fehler,
+keine Meldung, die Antwort lautete „ok". Am Ruhe-Segment zeigte sich derselbe
+Fehler als Widerspruch auf der Spurenseite eines Diensttags: „12:00 – offen
+Uhr" **ohne** den Zusatz „· läuft noch", weil die Zeile ihr Ende aus
+`ended_at` und den Zusatz aus `final` bezieht (`assets/schneiden.js` 341–346).
+
+**Dass das vorkommt, ist kein Gedankenspiel.** Jede Wiederholung eines
+früheren Teilstücks ist so ein Paket — die Ingestprobe schickt genau das seit
+S2 („Wiederholung unterhalb `n_original`", Teil 3) und hat nur nie
+hingesehen. Mit dem Nachsende-Speicher der Handy-App (S5-Zusatz, Paket E2)
+wird die Reihenfolge vollends unzuverlässig: Was beim Funkabriss
+liegenblieb, geht hinterher heraus, und zwar nach dem, was inzwischen
+gesendet wurde.
+
+Behoben mit `COALESCE(VALUES(x), x)` an allen vier Stellen (drei an
+`missions`, eine an `rest_segments`): Ein Wert überschreibt, ein NULL lässt
+stehen. **Eine Berichtigung bleibt möglich** — sendet die Uhr ein anderes
+Ende, gilt es; nur das Vergessen ist weg. Der umgekehrte Fall, ein Ende soll
+wieder verschwinden, ist keiner: `final` geht aus demselben Grund nie zurück.
+
+**Keine Migration.** Was einmal gelöscht wurde, lässt sich nicht
+zurückholen — der Wert stand nur im Paket, das ihn überschrieben hat. Auf der
+Betreiberinstallation ist kein Fall bekannt; wer einen Einsatz mit `final = 1`
+und leerem Ende findet, trägt das Ende von Hand nach.
+
+**Nachweis:** `tools/ingestprobe/` **Teil 7** (neu): nach dem finalen Paket
+stehen alle drei Werte, ein späteres nicht-finales Paket lässt sie stehen,
+`final` bleibt 1 — und die Gegenprobe, dass eine Berichtigung mit anderen
+Werten weiterhin durchgeht. Damit **30 Erwartungen, 0 nicht erfüllt** (vorher
+24). `tools/kopplungsprobe/` unverändert **75 / 75**.
 ## [Werkzeug: Ein Schrägstrich zu viel in der Geräteadresse] — 2026-09-03
 
 **Der Prüfstand legte den halben Gerätebaum eine Ebene zu tief ab und meldete

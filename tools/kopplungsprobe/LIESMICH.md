@@ -1,4 +1,55 @@
-# Kopplungsprobe — tut `pair.php` mit seinen vier Anliegen, was der Vertrag zusagt?
+# Kopplungsprobe — zwei Proben für denselben Vorgang
+
+Hier liegen **zwei** Prüfmittel, und sie stellen verschiedene Fragen:
+
+| Datei | Frage | Aufruf |
+|---|---|---|
+| `probe.php` | Antwortet `pair.php` so, wie der Vertrag es zusagt? | `php tools/kopplungsprobe/probe.php` |
+| `rundlauf.mjs` | Kann ein Mensch mit einem Gerät in der Hand ein Konto damit verbinden? | `node tools/kopplungsprobe/rundlauf.mjs` |
+
+Die erste misst den **Endpunkt**, die zweite den **Weg**. Beide brauchen eine
+laufende lokale Installation (`sh tools/referenzdatensatz/einspielen/lokal_starten.sh`),
+und in beiden ist die Probe selbst das Gerät: Sie holt sich ihre
+Kopplungssitzung über `pair.php` mit `aktion=start`, wie eine Uhr es tut.
+
+**Fahre sie nicht dicht hintereinander mit dem Bilderlauf.** Der Topf
+`pair_start` lässt zwanzig `start`-Aufrufe je zehn Minuten und Adresse zu;
+`tools/screenshots/` braucht zwei davon, der Rundlauf einen, und `probe.php`
+füllt ihn in Fall 21 absichtlich ganz. Sie räumt ihn danach wieder — der
+Bilderlauf tut das nicht.
+
+---
+
+## `rundlauf.mjs` — der Weg im Browser (S5 Paket B)
+
+25 Erwartungen in einem Zug: anmelden · die drei Zustände der Karte „Gerät
+koppeln" · beide Fehlerwege (Code mit „0", unbekannter Code) · die Eingabe
+**mit Leerzeichen und klein geschrieben**, so wie ein Mensch abliest · die
+Umleitung nach dem Beanspruchen · ein Neuladen im Wartezustand · das Ja am
+Gerät und **das Nachladen von selbst** · Vollzugsmeldung, Geräteliste,
+Rückkehr in Zustand 1 · Überlauf und Knopfhöhen · das Abmelden des Prüfgeräts.
+
+```bash
+node tools/kopplungsprobe/rundlauf.mjs
+node tools/kopplungsprobe/rundlauf.mjs --bilder /tmp/kopplung   # mit Bildern
+```
+
+Er läuft im **Demo-Konto** — dort ist Ausprobieren erwünscht, und der Reset
+alle 30 Minuten fängt auf, was ein Abbruch liegenlässt. Das Prüfgerät meldet
+er am Ende über `aktion=trennen` wieder ab; die Zahl der Geräte vorher und
+nachher steht im Bericht. **Bricht er mittendrin ab, bleibt ein Gerät im
+Demo-Konto stehen** — bei fünf davon ist das Limit erreicht und der nächste
+Lauf scheitert an einer Karte, die kein Feld mehr zeigt. Dann von Hand löschen
+oder den Demo-Reset abwarten.
+
+Konsolenfehler zählt er wie der Bilderlauf, mit derselben Rauschregel: Die
+Kartenkacheln kommen von einem fremden Server, den ein abgeschotteter
+Prüfstand nicht erreicht.
+
+---
+
+## `probe.php` — der Endpunkt
+
 
 Seit Web 13.0.0 (S5, R49) läuft die Kopplung umgekehrt: Das Gerät holt sich
 mit `start` eine Sitzung und **zeigt** den Code, ein Mensch tippt ihn im Web

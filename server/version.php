@@ -2150,5 +2150,50 @@ declare(strict_types=1);
  * bcrypt-Hash, der nie mehr passt, und koppelt einmal neu. Einen Umhash-Pfad
  * gibt es absichtlich nicht — ab 1.0 gibt es genau eine, frisch installierte
  * Installation (R60).
+ *
+ * 13.0.1 BEHEBT EINEN STILLEN DATENVERLUST IM UPLOAD, der aelter ist als S5
+ * und bei der Gegenlesung des S5-Zusatzes auffiel (Befund B5.3). Der Upsert in
+ * `ingest.php` schrieb `ended_at`, `distance_m` und `ascent_m` bedingungslos
+ * aus dem eintreffenden Paket — waehrend `final` seit jeher mit GREATEST
+ * geschuetzt war. Genau diese drei Spalten traegt ein NICHT-finales Paket
+ * aber nicht. Kam eines nach dem finalen an — jede Wiederholung eines
+ * frueheren Teilstuecks ist so eines —, blieb ein abgeschlossener Einsatz
+ * ohne Ende, ohne Strecke und ohne Anstieg zurueck. Die Antwort lautete "ok".
+ * Jetzt steht dort COALESCE: Ein Wert ueberschreibt, ein NULL laesst stehen;
+ * eine Berichtigung bleibt moeglich. Nachgestellt und seither gehalten von
+ * Teil 7 der Ingestprobe. Keine Migration — was einmal geloescht wurde, laesst
+ * sich nicht zurueckholen; auf der Betreiberinstallation ist kein Fall
+ * bekannt.
+ *
+ * 13.1.0 IST DIE GERAETESEITE ZUM NEUEN WEG (S5 Paket B). Die Karte „Gerät
+ * koppeln" hat jetzt drei Zustaende statt einem Knopf: ein Feld „Code vom
+ * Geraet", eine Rueckfrage mit Art, Modell und Kennung — das erste der beiden
+ * Tore aus E-S5-05 —, und einen Wartezustand, der von selbst nachlaedt, sobald
+ * das Geraet Ja gesagt hat (E-S5-53). Dafuer kommen ein angemeldeter Endpunkt
+ * (api/kopplung_stand.php, nimmt KEINE Eingabe) und eine kleine Skriptdatei
+ * (assets/kopplung.js) dazu; ohne JavaScript bleibt der Weg vollstaendig.
+ *
+ * NEBENNUMMER UND NICHT HAUPTNUMMER, obwohl sich der Weg durch die Seite
+ * aendert: Es ist derselbe Reiter, dieselbe Karte, dieselben Bausteine, und
+ * die Migration lag in 13.0.0. Was hier dazukommt, sind Felder und Zustaende —
+ * genau das, wofuer die Nebennummer da ist.
+ *
+ * DAZU ZWEI DINGE, DIE AELTER SIND ALS S5. Die Handanlage vergab
+ * Geraetekennungen aus VIER Zufallsbytes, waehrend die Kopplung seit M4-08
+ * sechzehn nimmt — zwei Wege zu derselben Spalte, und der schwaechere war der,
+ * den niemand geprueft hat (B-S5-01). Und der Reiter trug ZWEI primaere
+ * Knoepfe; Design.md 9.16 nennt das als Anti-Muster („Keiner ist mehr die
+ * Haupthandlung"). Die Handanlage ist jetzt neutral — sie ist ausdruecklich
+ * „die Alternative zum Koppeln" (B-S5-09).
+ *
+ * 13.1.1 NIMMT ZWEI DINGE ZURUECK, die bei der Vorarbeit zu Paket D auffielen.
+ * Der Topf `pair` hat DREI Verbraucher, nicht zwei: pair.php, das Token von
+ * jobs.php — und gpx.php, das damit die Freigabelinks der Spuren schuetzt (an
+ * sieben Zaehlstellen). Ein gelungenes `trennen` rief `rate_erfolg('pair')`
+ * und leerte den Zaehler fuer alle drei; wer Freigabelinks durchprobierte,
+ * holte sich mit einem getrennten eigenen Geraet zehn frische Versuche. Der
+ * Aufruf ist ersatzlos weg — seit 13.0.0 gibt es an diesem Endpunkt nichts
+ * mehr zu vertippen. Dazu vier Meldungen an das Geraet, die in
+ * Ersatzschreibung standen, obwohl die Uhr sie anzeigt.
  */
-const WEB_VERSION = '13.0.0';
+const WEB_VERSION = '13.1.1';

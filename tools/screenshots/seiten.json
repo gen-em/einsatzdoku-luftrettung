@@ -168,6 +168,20 @@
       "pfad": "einstellungen.php?t=geraete"
     },
     {
+      "name": "33a-geraete-rueckfrage",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "einstellungen.php?t=geraete",
+      "vorher": ["kopplung-rueckfrage"]
+    },
+    {
+      "name": "33b-geraete-warten",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "einstellungen.php?t=geraete",
+      "vorher": ["kopplung-warten"]
+    },
+    {
       "name": "34-einstellungen-backup",
       "gruppe": "Einstellungen",
       "rolle": "demo",

@@ -151,6 +151,15 @@ Daten erst nach Server-Bestätigung.
 │   │                       Herkunft und Prüfsummen in HERKUNFT.md
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
+│   ├── api/kopplung_stand.php  Wartet dieses Konto noch auf ein Gerät, und
+│   │                       hat es Ja gesagt? (S5, Web 13.1.0) GET, nimmt
+│   │                       KEINE Eingabe — welche Sitzung gemeint ist, steht
+│   │                       in der PHP-Sitzung. Fünf Zustände; das Skript
+│   │                       assets/kopplung.js fragt im Takt und hört von
+│   │                       selbst auf
+│   ├── assets/kopplung.js  Die Geräteseite lädt nach, wenn das Gerät Ja
+│   │                       gesagt hat (E-S5-53). Ohne sie bleibt der Weg
+│   │                       vollständig — sie nimmt einen Handgriff ab
 │   ├── kopplung_lib.php   Kopplungssitzungen (S5, Web 13.0.0): Frist-SQL,
 │   │                       Anlegen mit Dublettenschleife, Suche nach Kennung
 │   │                       und Code, Beanspruchen per UPDATE mit rowCount —
@@ -295,7 +304,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      verfällt, und dass der Huckepack-Weg wenig und
 │   │                      selten trägt. Legt eigene Waisen an und räumt hinter
 │   │                      sich auf — ändert am Bestand nichts (s. LIESMICH.md)
-│   ├── kopplungsprobe/    prüft `pair.php` mit seinen vier Anliegen über
+│   ├── kopplungsprobe/    zwei Proben. `probe.php` prüft `pair.php` über
 │   │                      ECHTES HTTP (S5, Web 13.0.0): Zustände, Frist,
 │   │                      Gerätelimit, Antwortgleichheit, drei Töpfe,
 │   │                      Obergrenze, Dublettenschleife, Aufräumjob —
@@ -473,7 +482,13 @@ fortlaufenden Zähler im Gerätespeicher und einem Zufallsanteil — **kein
 Zeitstempel mehr**, siehe `JSON-Vertrag.md` Abschnitt 8) und Punkte ab
 `seq_from`; der Server
 antwortet mit `next_seq` (erste noch fehlende Sequenz). Wiederholungen sind
-unschädlich (`INSERT IGNORE` auf den Punkte-PK, Upsert auf `client_ref`).
+unschädlich (`INSERT IGNORE` auf den Punkte-PK, Upsert auf `client_ref`) —
+**auch in der falschen Reihenfolge**: Seit Web 13.0.1 schreibt der Upsert
+`ended_at`, `distance_m` und `ascent_m` mit `COALESCE(VALUES(x), x)` statt
+bedingungslos, weil ein nicht-finales Paket diese drei Felder gar nicht trägt
+und sie sonst auf NULL zurücksetzte, während `final` (mit `GREATEST`
+geschützt) auf 1 blieb. Übrig blieb ein abgeschlossener Einsatz ohne Ende.
+Gehalten von `tools/ingestprobe/` Teil 7.
 Phasen/Rea werden je Upload **vollständig ersetzt** (kein Delta). Die Uhr darf
 lokal erst löschen, wenn `final` bestätigt und `next_seq` = Punktzahl.
 

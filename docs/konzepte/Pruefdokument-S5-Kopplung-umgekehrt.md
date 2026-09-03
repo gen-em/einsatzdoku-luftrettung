@@ -6,9 +6,10 @@ belegt?“*; dieses Dokument beantwortet *„was muss ich noch tun?“*. Es wird
 Paket ergänzt und bleibt nach dem Abschluss der Phase stehen, bis seine
 Prüfliste abgehakt ist (K9, R62).
 
-> **Stand: Paket A (Server) ist gebaut — Web 13.0.0 auf
-> `claude/s7-umsetzung-vorbereiten-s8kax0`.** B (Web), C (Uhr), D (Doku) und
-> E (Android-Zusatz) folgen; C und E laufen in eigenen Instanzen.
+> **Stand: Paket A (Server, Web 13.0.0), die Korrektur 13.0.1 und Paket B
+> (Weboberfläche, Web 13.1.0) sind gebaut** — auf
+> `claude/s7-umsetzung-vorbereiten-s8kax0`. C (Uhr), D (Doku) und E
+> (Android-Zusatz) folgen; C und E laufen in eigenen Instanzen.
 >
 > **Eine Migration ist zwingend** (`2026_09_03_kopplungssitzungen`): Nach dem
 > Deploy muss eine Administratorin **`update.php`** aufrufen. Sie legt
@@ -20,8 +21,10 @@ Prüfliste abgehakt ist (K9, R62).
 > SHA-256. Vorher den Sync vollständig laufen lassen — sonst gehen gepufferte
 > Ereignisse mit dem Trennen verloren.
 >
-> **Dieser Zweig geht nicht vor Paket B auf `main`:** Der Knopf
-> „Kopplungscode erzeugen“ auf der Geräteseite läuft seit A ins Leere.
+> **Der Zwischenzustand ist vorbei:** Mit Paket B ist die Geräteseite auf dem
+> neuen Weg; der Knopf „Kopplungscode erzeugen“ gibt es nicht mehr. Auf `main`
+> kommt die Phase trotzdem erst am Ende, nach Paket C und D — eine Uhr, die
+> den alten Weg spricht, kann sich nach dem Deploy nicht mehr koppeln.
 
 ---
 
@@ -47,16 +50,18 @@ ist die Datenbank langsamer und der Blindvergleich derselbe — der Fall, in dem
 das kippt, wäre eine Datenbankabfrage über 0,35 s, und die hätte andere
 Folgen zuerst. Nachmessen kostet zwei `curl`-Aufrufe — Prüfliste 4.
 
-### 1.3 Kein Gerät, kein Web
+### 1.3 Kein Gerät — das Web ist jetzt da
 
-Paket A ist der Server. Es gibt noch keine Geräteseite (B), keine Uhr (C) und
-kein Handy, das den neuen Weg spricht. Die Kopplungsprobe **ist** das Gerät:
-Sie sendet, was Vertrag 1a vorschreibt, und simuliert den Klick im Web über
-dieselbe Bibliotheksfunktion, die B rufen wird (`pair_sitzung_beanspruchen()`).
-Was sie nicht kann: einen Menschen, der den Code abliest und vertippt, eine
-Uhr, deren Funk abreißt, einen Browser, der die Seite zweimal absendet. Das
-kommt mit B (Bilderlauf, Browserprüfung), C (Simulator-Rundlauf) und dem
-Gerätetest (P2-Punkt 4.1).
+Mit Paket B gibt es die Geräteseite, und sie ist im Browser gefahren
+(Abschnitt 3). Was weiterhin fehlt, ist die **andere Seite**: eine Uhr (C) und
+ein Handy, die den neuen Weg wirklich sprechen.
+
+In beiden Proben ist die Probe selbst das Gerät: Sie holt sich über `pair.php`
+mit `aktion=start` eine echte Kopplungssitzung und antwortet später mit
+`bestaetigen`. Das ist kein Ersatz für eine Uhr — es prüft den Vertrag, nicht
+das Display. Was eine Uhr daraus macht (der Code lesbar in zwei Dreiergruppen,
+die maskierte Adresse im Dialog, BACK als Abbruch, der Takt der Abfrage),
+zeigt erst der Simulator-Rundlauf in Paket C und danach der Gerätetest.
 
 ### 1.4 Die Migration in der Produktion
 
@@ -74,6 +79,38 @@ nicht gesehen). Der Server liefert die Meldung mit 21 Zeichen (Fall 5). Ob sie
 auf der Uhr steht, zeigt Paket C im Simulator mit der **alten** App gegen den
 neuen Server — oder der Gerätetest.
 
+### 1.6 Paket B: was der Browser nicht beantwortet
+
+Der Rundlauf (`tools/kopplungsprobe/rundlauf.mjs`) fährt den ganzen Weg in
+**einem** Browser, in **einer** Breite, mit **einem** Konto. Nicht belegt ist
+damit:
+
+- **Ein zweiter Browser mit demselben Code.** Dass genau einer gewinnt, hängt
+  am `UPDATE … WHERE user_id IS NULL` und seinem `rowCount()` (E-S5-13); die
+  Kopplungsprobe prüft die Regel (Fall 9), nicht zwei gleichzeitige Klicks.
+- **Ein anderer Browser als Chromium.** Das Nachladen benutzt `fetch`,
+  `document.hidden` und `location.assign` — nichts Ausgefallenes, aber
+  gemessen ist es nur in Chromium.
+- **Ein Reiter, der stundenlang offen liegt.** Dass die Abfrage im Hintergrund
+  ruht und beim Zurückkommen sofort nachholt, ist gelesen, nicht gemessen.
+- **Der Weg ohne JavaScript.** Die Karte ist so gebaut, dass sie ohne das
+  Skript vollständig bleibt (die Auskunft steht im Text, ein Neuladen von Hand
+  führt zum selben Ergebnis) — gefahren wurde er nicht. Prüfliste 6.
+
+### 1.7 Die Vollständigkeit steht auf 277 statt 272
+
+Fünf Zeichen mehr, und sie sind einzeln benannt: **drei** Unicode-Zeichen in
+den Kommentaren der beiden neuen Dateien (`assets/kopplung.js`,
+`api/kopplung_stand.php`) und **zwei** Pfeile mehr in sichtbarem Text, weil
+der Weg „Sync-Seite → Gerät koppeln" jetzt an drei Stellen steht statt an
+einer (zwei Fehlermeldungen und der Erklärtext).
+
+Das ist kein neues Element und keine Klasse ohne Regel: **Prüfung 1 (Klassen),
+2 (Werte) und 4 (Knopfhöhe) sind Zeile für Zeile unverändert** — verglichen
+gegen den Stand vor Paket B mit `git stash -u`. Die betroffene Prüfung 3 zählt
+jedes `→` und `…` im Repositorium, auch in Kommentaren; 201 solche Zeichen
+gehören zum Bestand.
+
 ---
 
 ## 2. Was maschinell geprüft wurde — mit Mittel und Zahl
@@ -87,7 +124,11 @@ neuen Server — oder der Gerätetest.
 | `lokal_einrichten.sh` (frische Installation aus `schema.sql`) | Register nach `install.php` | **41 Kennungen, alle `skipped`**; Kopplungsprobe danach 75 / 75 |
 | `python3 tools/s5-anker/anker.py --paket B/C/D/E` | Anker der übrigen Pakete nach A | B 11 / 11 unverändert · C 27 / 27 · E 32 / 32 · D 16 (7 verschoben durch die Technik-Änderungen, 0 nicht gefunden) |
 | `python3 tools/wortliste/wortliste.py` | Bereiche a bis d (Bereich e kommt mit C) | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen (77 / 77), 0 durchgerutschte Fallen** — gefahren zuletzt, nach allen Textänderungen |
-| `php -l` | 16 geänderte oder neue PHP-Dateien | 0 Syntaxfehler |
+| `node tools/kopplungsprobe/rundlauf.mjs` (neu) | Der ganze Weg im Browser: anmelden, drei Zustände, beide Fehlerwege, Umleitung, Neuladen, das Ja am Gerät, das Nachladen, Vollzugsmeldung, Geräteliste, Abmelden | **25 Erwartungen, 0 nicht erfüllt, 0 Konsolenfehler**; das Nachladen griff **3,2 s** nach dem Ja |
+| `node tools/screenshots/aufnehmen.mjs --nur 33` | Die drei Zustände der Karte in acht Breiten | **24 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px**. Gegenprobe nach `LIESMICH.md`: **27 Dateien, 27 verschiedene Prüfsummen** — kein Bild zeigt dasselbe wie ein anderes |
+| `python3 tools/vollstaendigkeit/pruefen.py` | Stylesheet, Werte, Symbole, Knopfhöhen | **277** (Basis 272; die fünf sind in 1.7 benannt, Prüfung 1/2/4 unverändert) |
+| `python3 tools/s5-anker/anker.py` | Fundstellen der Pakete C, D, E | **0 nicht gefunden, 0 mehrdeutig**, 68 unverändert, 7 verschoben (A und B ausgetragen — ihre Stellen sind umgeschrieben) |
+| `php -l` | alle geänderten oder neuen PHP-Dateien (A: 16, B: 4) | 0 Syntaxfehler |
 
 **Was die 75 Erwartungen NICHT sind:** kein Beweis für Nebenläufigkeit. Die
 Probe schickt Anfragen nacheinander; „zwei Browser mit demselben Code“ ist
@@ -97,10 +138,22 @@ Der R17-Review in P6 prüft die Transaktion (Konzept 8.3).
 
 ## 3. Was im Browser geprüft wurde
 
-**Nichts** — Paket A hat keine Oberfläche. Die eine Berührung mit dem Browser
-ist die Geräteseite, deren Knopf „Kopplungscode erzeugen“ seit A ins Leere
-läuft; das ist gewollt und im Statusblock des Konzepts festgehalten. Paket B
-ersetzt die Karte.
+**Paket A** hat keine Oberfläche — dort war nichts zu klicken.
+
+**Paket B** ist im Browser gefahren, und zwar automatisiert: Der Rundlauf oben
+ist eine echte Bedienung mit Chromium, kein Abruf von Markup. Er klickt sich
+durch alle drei Zustände, tippt den Code so ein, wie ein Mensch ihn abliest
+(mit Leerzeichen, klein geschrieben), lädt im Wartezustand von Hand neu, lässt
+das Gerät Ja sagen und sieht zu, ob die Seite von selbst nachlädt. Dazu die
+Bilder in acht Breiten, von 360 bis 1920 px.
+
+**Der eine echte Fehler dieses Pakets ist dabei gefunden worden**, und er wäre
+beim Lesen nicht aufgefallen: Das Nachladen sprang auf
+`…?t=geraete#geraeteliste`, während die Seite auf `…?t=geraete#koppeln` stand.
+Eine Navigation, die nur das Fragment ändert, ist keine — der Browser scrollt
+und fragt den Server nicht. Die Karte wartete weiter auf ein Gerät, das längst
+in der Liste stand. Nachgemessen, behoben, und die Messung steht als
+Begründung im Code (E-S5-57).
 
 ## 4. Prüfliste — was du tun musst
 
@@ -164,6 +217,19 @@ erkennen ist**.
   nicht, und das Handbuch 12 muss den Fall ausdrücklich beschreiben.
 - [ ] erledigt am ______
 
+### 6. Die Geräteseite **ohne JavaScript**
+
+- **Weg:** In den Browsereinstellungen JavaScript für die Seite abschalten
+  (Chromium: Einstellungen → Datenschutz und Sicherheit → Website-Einstellungen
+  → JavaScript → Blockieren), dann eine Kopplung von Anfang bis Ende fahren.
+- **Erwartet:** Alle drei Zustände arbeiten. Im Wartezustand steht dieselbe
+  Auskunft, und nachdem am Gerät Ja gesagt wurde, zeigt ein Neuladen von Hand
+  das Gerät in der Liste samt Vollzugsmeldung.
+- **Scheitern:** Ein Zustand, in dem nichts weitergeht, oder eine Seite, die
+  ohne das Skript etwas Falsches behauptet — etwa eine Restzeit, die stehen
+  bleibt und nicht als Stand beim Seitenaufbau zu erkennen ist.
+- [ ] erledigt am ______
+
 ## 5. Grenzen der benutzten Prüfmittel
 
 - **Kopplungsprobe:** ein Aufrufer, nacheinander; kein Mailserver; die
@@ -179,5 +245,16 @@ erkennen ist**.
   rote Zeile „Löscht Daten“ ist **nicht gesehen worden**, weder im Browser
   noch auf der Kommandozeile; sie folgt aus dem Schlüssel `zerstoert` und dem
   Muster der Phase-10-Migration. Prüfliste 1 sieht sie.
-- **Anker:** finden Zeilen nach Inhalt; sie sagen, dass B, C und E ihre
-  Fundstellen noch haben, nicht, dass die Fundstellen noch stimmen.
+- **Anker:** finden Zeilen nach Inhalt; sie sagen, dass C, D und E ihre
+  Fundstellen noch haben, nicht, dass die Fundstellen noch stimmen. Die Anker
+  der Pakete A und B sind ausgetragen — ihre Stellen sind umgeschrieben.
+- **Der Browserrundlauf:** ein Browser (Chromium), eine Breite, ein Konto,
+  eine Sitzung. Er beweist, dass der Weg trägt — nicht, dass er unter zwei
+  gleichzeitigen Bedienungen trägt (dafür steht die Regel in E-S5-13 und
+  Kopplungsprobe Fall 9), und nicht, dass er ohne JavaScript trägt (Prüfliste
+  6). Er läuft im Demo-Konto und meldet sein Prüfgerät am Ende ab; bricht er
+  mittendrin ab, bleibt eines stehen.
+- **Der Bilderlauf:** misst Überlauf, Konsolenfehler und Knopfhöhen — nicht,
+  ob die Seite richtig aussieht. Seine beiden neuen Bedienschritte holen sich
+  eine echte Kopplungssitzung; sie kosten zwei der zwanzig `start`-Aufrufe,
+  die der Ratenschutz je zehn Minuten zulässt.

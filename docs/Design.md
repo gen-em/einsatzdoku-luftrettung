@@ -112,6 +112,16 @@ Drei Familien-Token: `--schrift-kopf` (Bricolage), `--schrift-text`
 Schreibmaschinenschrift die Aussage *ist*: Kopplungscode,
 Wiederherstellungsschlüssel, Geräte-ID).
 
+Das gilt seit Web 13.1.0 **in beide Richtungen**: Der Kopplungscode wird nicht
+mehr angezeigt, sondern abgetippt — das Gerät zeigt ihn, ein Mensch überträgt
+ihn ins Web. Er steht deshalb nicht mehr in einem `.codeblock`, sondern in
+einem Eingabefeld mit der Klasse `.feld-fest` (`style.css`, sie setzt allein
+`--schrift-fest` auf `.feld-eingabe`). Die Begründung bleibt dieselbe und wiegt
+im Feld eher schwerer: Wer sechs Zeichen von einem Uhrendisplay abliest und
+tippt, muss jedes einzeln sehen — der Codeblock selbst bleibt für die übrigen
+sechs Verwendungen (Wiederherstellungsschlüssel, Geräte-ID, API-Schlüssel,
+Cron-Zeile, Serverschlüssel, Setz-Link).
+
 ### 2.3 Logo und Logo-Wahl
 
 Es gibt **zwei** Bildmarken, und welche erscheint, ist einstellbar

@@ -231,7 +231,7 @@ sie an das neue. Die Uhr verweigert das Trennen deshalb, solange
 ## 2. Grundprinzipien
 
 - **Zeitstempel:** ISO 8601 in UTC mit `Z`-Suffix, Sekundenauflösung (`2026-07-16T08:31:05Z`). Track-Punkte nutzen kompakte Unix-Epochen (Sekunden, UTC).
-- **Idempotenz:** Jeder Einsatz und jedes Ruhe-Segment trägt eine von der Uhr erzeugte `client_ref` (eindeutig pro Gerät). Wiederholtes Senden derselben Daten ist unschädlich.
+- **Idempotenz:** Jeder Einsatz und jedes Ruhe-Segment trägt eine von der Uhr erzeugte `client_ref` (eindeutig pro Gerät). Wiederholtes Senden derselben Daten ist unschädlich — **auch in der falschen Reihenfolge** (seit Web 13.0.1): Ein Feld, das ein Paket nicht trägt (`ended_at`, `distance_m` und `ascent_m` sind `null`, solange der Einsatz läuft), löscht auf dem Server nichts. Ein Wert überschreibt, ein `null` lässt stehen. Eine Berichtigung bleibt damit möglich; ein einmal gesetztes Ende verschwindet nicht mehr, so wenig wie `final` zurückgeht.
 - **Inkrementeller Track:** Track-Punkte werden mit fortlaufender Sequenznummer gesendet. Die Uhr sendet ab `seq_from`; der Server ignoriert bereits bekannte Sequenzen und antwortet mit `next_seq`, ab dem die Uhr weitersenden soll. Nach bestätigtem Empfang darf die Uhr ihren lokalen Puffer bis `next_seq` leeren.
 - **Diensttag:** Feld `day` = Datum des Dienstbeginns (Format `YYYY-MM-DD`); die Uhr bestimmt es einmal bei „Einsatztag starten" und verwendet es für alle Uploads dieses Dienstes. Seit Vertrag 1.3 ist es **nicht mehr der Zuordnungsschlüssel**, sondern nur noch Sortier- und Anzeigedatum — die Zuordnung leistet `day_ref` (Abschnitt 2.1).
 - **Nachzügler:** Bei fehlender Verbindung puffert die Uhr und sendet später identisch nach — keine Sonderfelder nötig.

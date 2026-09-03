@@ -28,7 +28,7 @@ DREI ANTWORTEN, und die dritte ist die wichtige:
 Aufruf:
     python3 tools/s5-anker/anker.py            # alle Anker
     python3 tools/s5-anker/anker.py --knapp    # nur Abweichungen
-    python3 tools/s5-anker/anker.py --paket A  # nur die eines Pakets (A-D, E)
+    python3 tools/s5-anker/anker.py --paket C  # nur die eines Pakets (C, D, E)
 
 Rueckgabewert 0 = jeder Anker genau einmal gefunden, 1 = mindestens einer
 fehlt oder ist mehrdeutig.
@@ -42,6 +42,15 @@ import sys
 
 WURZEL = pathlib.Path(__file__).resolve().parents[2]
 
+# DIE ANKER DER PAKETE A UND B SIND FORT (03.09.2026), und das ist ihr
+# planmaessiges Ende: Sie waren dazu da, die Fundstellen des Konzepts nach der
+# Zeilendrift von S7 wiederzufinden — bis die Stelle umgeschrieben ist. Web
+# 13.0.0 und 13.1.0 haben genau das getan; von den 40 Ankern zeigten danach 15
+# ins Leere, weil es die Zeile nicht mehr gibt. Ein Werkzeug, das dauerhaft
+# Fehlendes meldet, wird nicht gelesen. Was sie fanden, steht in der
+# Git-Historie (Commit dieses Standes) — hier bleiben C, D und E, die noch
+# gebraucht werden.
+#
 # (Paket, Kennung, Datei, Sollzeile am 02.09.2026, Muster [, erwartete Trefferzahl])
 #
 # Das Muster ist ein regulaerer Ausdruck auf EINER Zeile. Gewaehlt ist
@@ -54,88 +63,8 @@ WURZEL = pathlib.Path(__file__).resolve().parents[2]
 # 3, meldet das Werkzeug es.
 ANKER: list[tuple] = [
     # ---- Paket A: Server ---------------------------------------------------
-    ("A", "pair.abweisen",        "server/pair.php",  56,
-     r"function abweisen\(int \$status"),
-    ("A", "pair.sperre-zuerst",   "server/pair.php",  68,
-     r"if \(!rate_erlaubt\('pair'\)\)"),
-    ("A", "pair.trennen",         "server/pair.php", 104,
-     r"=== 'trennen'"),
-    ("A", "pair.muster",          "server/pair.php", 171,
-     r"preg_match\(PAIR_RE, \$code\)"),
-    ("A", "pair.entwerten",       "server/pair.php", 190,
-     r"UPDATE pair_codes SET used_at"),
-    ("A", "pair.rowcount",        "server/pair.php", 194,
-     r"\$entwerten->rowCount\(\) !== 1"),
-    ("A", "pair.device-limit",    "server/pair.php", 220,
-     r"geraete_grenze_erreicht\(\$pdo, \$ownerId\)"),
-    ("A", "pair.kennung",         "server/pair.php", 249,
-     r"'dev-' \. bin2hex\(random_bytes\(16\)\)"),
-    ("A", "pair.block-lesen",     "server/pair.php", 270,
-     r"geraet_block_lesen\(\$b\['geraet'\]"),
-    ("A", "pair.mail",            "server/pair.php", 341,
-     r"Neues Ger.t gekoppelt"),
-    ("A", "db.pair-chars",        "server/db.php",   459,
-     r"^const PAIR_CHARS"),
-    ("A", "db.pair-ttl",          "server/db.php",   461,
-     r"^const PAIR_TTL_MIN"),
-    ("A", "db.pair-re",           "server/db.php",   462,
-     r"^const PAIR_RE"),
-    ("A", "db.vergleichswert",    "server/db.php",   483,
-     r"^const AUTH_VERGLEICHSWERT"),
-    ("A", "db.max-geraete",       "server/db.php",   580,
-     r"^const MAX_GERAETE"),
-    ("A", "rate.grenzen",         "server/ratelimit_lib.php",  51,
-     r"^const RATE_GRENZEN"),
-    ("A", "rate.topf-pair",       "server/ratelimit_lib.php",  55,
-     r"'pair'\s+=> \['max'"),
-    ("A", "rate.merkmale",        "server/ratelimit_lib.php",  96,
-     r"^function rate_merkmale"),
-    ("A", "rate.zaehlen",         "server/ratelimit_lib.php", 196,
-     r"^function rate_zaehlen"),
-    ("A", "rate.erfolg",          "server/ratelimit_lib.php", 209,
-     r"^function rate_erfolg"),
-    ("A", "rate.gleiche-dauer",   "server/ratelimit_lib.php", 234,
-     r"^function rate_gleiche_dauer"),
-    ("A", "rate.gesperrt-bis",    "server/ratelimit_lib.php", 245,
-     r"^function rate_gesperrt_bis"),
-    ("A", "jobs.katalog",         "server/jobs_lib.php", 202,
-     r"Papierkorb, Kopplungscodes"),
-    ("A", "jobs.schritt-codes",   "server/jobs_lib.php", 503,
-     r"'Kopplungscodes' => function"),
-    ("A", "jobs.php-topf",        "server/jobs.php", 99,
-     r"if \(!rate_erlaubt\('pair'\)\)"),
-    ("A", "schema.pair-codes",    "server/schema.sql", 420,
-     r"^CREATE TABLE pair_codes"),
-    ("A", "schema.register-ende", "server/schema.sql", 0,
-     r"'2026_09_02_geraetemodell_breiter'"),
-    ("A", "demo.tabellenliste",   "server/demo_lib.php", 387,
-     r"'devices', 'pair_codes'"),
-    ("A", "geraete.block-lesen",  "server/geraete_lib.php", 91,
-     r"^function geraet_block_lesen"),
 
     # ---- Paket B: Web ------------------------------------------------------
-    ("B", "einst.manuell-anlegen", "server/einstellungen.php", 261,
-     r"'dev-' \. bin2hex\(random_bytes\(4\)\)"),
-    ("B", "einst.pair-code-grenze", "server/einstellungen.php", 274,
-     r"\$action === 'pair_code' && geraete_grenze_erreicht"),
-    ("B", "einst.pair-code",        "server/einstellungen.php", 281,
-     r"elseif \(\$action === 'pair_code'\)"),
-    ("B", "einst.karte-koppeln",    "server/einstellungen.php", 2943,
-     r"ui_karte_start\(\['titel' => 'Ger.t koppeln'"),
-    ("B", "einst.code-eintippen",   "server/einstellungen.php", 2945,
-     r"Ger.t koppeln . Code eintippen"),
-    ("B", "einst.codeblock",        "server/einstellungen.php", 2961,
-     r'class="codeblock-titel">Kopplungscode'),
-    ("B", "einst.knopf-erzeugen",   "server/einstellungen.php", 2974,
-     r"'text' => 'Kopplungscode erzeugen'"),
-    ("B", "einst.geraeteliste",     "server/einstellungen.php", 2979,
-     r"ui_karte_start\(\['titel' => 'Ger.te'"),
-    ("B", "einst.haupthandlung",    "server/einstellungen.php", 3075,
-     r"bleibt .Kopplungscode erzeugen"),
-    ("B", "style.codeblock",        "server/assets/style.css", 2786,
-     r"^\.codeblock\{"),
-    ("B", "screenshots.seite33",    "tools/screenshots/seiten.json", 165,
-     r'"33-einstellungen-geraete"'),
 
     # ---- Paket C: Uhr ------------------------------------------------------
     ("C", "pair.mc.kopf",         "watch/source/Pair.mc",   3,
@@ -200,8 +129,10 @@ ANKER: list[tuple] = [
      r"beschrieben, nicht umgesetzt"),
     ("D", "vertrag.1b-429",        "docs/JSON-Vertrag.md", 206,
      r"gilt f.r beide Anliegen von"),
+    # Paket A hat die Zeile schon auf `pair_sessions` umgeschrieben (Web
+    # 13.0.0); Paket D liest sie erneut, wenn es das Datenmodell durchgeht.
     ("D", "technik.datenmodell",   "docs/Technik.md",  422,
-     r"^\| `pair_codes` \|"),
+     r"^\| `pair_sessions` \|"),
     ("D", "technik.mail-frist",    "docs/Technik.md", 1760,
      r"deshalb steht das Zeitlimit bei der Kopplung"),
     ("D", "technik.antwortgleich", "docs/Technik.md", 1936,
