@@ -149,7 +149,7 @@ module Pair {
      * das Handbuch schreiben an dieser Stelle weiter "Einstellungen → Geräte"
      * — dort traegt die Schrift den Pfeil. Dass Uhr und Web hier
      * auseinanderlaufen, ist kein Versehen: Die Uhr kann es nicht anders. */
-    const WEG_IM_WEB = "Einstellungen, Geräte";
+    const WEG_IM_WEB = "Im Web eingeben";
 
     // Laenge, die in der Hinweisschrift sicher aufs Display passt.
     const ZEILE_MAX = 26;
