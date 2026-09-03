@@ -80,6 +80,22 @@ Die Behebung von B-S5-12 ist deshalb **übersetzt und gelesen, nicht erlebt**.
 Belegt ist nur, dass sie die 99 Zielgeräte ohne Warnung übersetzt und die
 übrigen Bedienwege im Simulator unverändert funktionieren. **Prüfliste 8.**
 
+### 1.1d Uhr: die Restzeile hat auf der Venu 3s keine Reserve mehr
+
+Der Wortlaut „noch 10 min gültig" (Ansage 03.09.2026) misst auf der Venu 3s
+**194 px** gegen eine Sehne von **193 px** — einen Pixel über der Linie, die
+sich das Projekt selbst zieht, und zwar **nachdem** `Ui.fitFont` bereits auf
+die kleinste verfügbare Schrift zurückgefallen ist. Kleiner geht nicht.
+
+**Gezeichnet wird sie trotzdem vollständig**, weil `Ui.chordW` zusätzlich
+`Ui.s(dc,16)` = 24 px Sicherheitsrand abzieht; am Simulatorbild nachgesehen
+und die Tinte darin nachgemessen. Auf der Fenix 6 Pro (120/128 px) und der
+FR945 (111/118 px) bleiben 8 bzw. 7 px Reserve.
+
+**Kein sichtbarer Fehler heute — aber kein Puffer mehr.** Zwei Wege würden ihn
+kippen: ein längerer Wortlaut, oder ein Server, der ein größeres `frist_s`
+schickt („noch 100 min gültig"). Am echten Gerät ansehen (Prüfliste 10).
+
 ### 1.2 Die Antwortzeit auf dem Produktivserver
 
 Die Gleichheit der beiden 401-Zweige ist im Container gemessen (0,351 s und
@@ -183,6 +199,8 @@ Der R17-Review in P6 prüft die Transaktion (Konzept 8.3).
 | `pruefstand.sh reihe … -l 3 -w` **nachher** | derselbe Lauf mit Uhr 3.0.0 | **99 · 0 · 0 · 0** — unverändert; App wächst um Ø 9,4 kB (max. d2delta +9824 Byte) |
 | `pruefstand.sh bildreihe` | 20 Vertreterklassen aus `geraeteklassen.py`, Konsole auf `error\|crash\|exception` durchsucht | **20 Vertreter · 0 Abstürze · 18 Bilder der `PairView`** (die zwei übrigen: 1.1b) |
 | Simulator-Rundlauf | 6 Fälle × 3 Zielgeräte gegen die **echte** lokale Installation (Web 13.1.1) | **5 von 6 Fällen belegt**: Ja, Nein, BACK, Fristablauf, Gerätelimit. Der sechste nur zur Hälfte (1.1a) |
+| Bildstrecke aller Zustände | 10 Zustände × 3 Zielgeräte, dazu 4 Sonderfälle auf der fenix6pro | **34 Bilder**: Sync frisch · Kopplungsansicht · Rückfrage · gekoppelt · Trennen-Rückfrage · nicht gekoppelt · abgebrochen · abgelaufen · Gerätelimit · Serverfehler · Restzeit unter einer Minute · „Server antwortet nicht" über der Restzeit |
+| Textbreiten aus den Gerätedateien | die vier Zeilen der Kopplungsansicht, drei Zielgeräte, mit unabhängiger Gegenmessung (FreeType) | Code, „Kopplungscode" und „Im Web eingeben" passen mit Reserve; **Restzeile auf der Venu 3s 194 px gegen 193 px Sehne** — ein Pixel über der Sicherheitslinie, gezeichnet wird sie vollständig (1.1d) |
 | Gegenlesung des Uhr-Codes | fünf Dimensionen (Vertrag, Zustandsmaschine, Layout, Typprüfung, Texte), jeder Befund einzeln zu widerlegen versucht | **32 Befunde · 16 widerlegt · 16 bestätigt · 16 behoben** |
 | `tools/wortliste/` | fünf Bereiche, davon `e` neu (`watch/`, XML **und** Monkey C) | **0 Treffer außerhalb der Ausnahmen · 0 ungenutzte Ausnahmen · 0 durchgerutschte Fallen**; Bereich `e`: **35 Dateien**, 2 Treffer, beide erklärt |
 | `wortliste.py --probe` | Selbstprobe des Zerlegers, inkl. zwei neuer Monkey-C-Fälle | **21 / 21** |
@@ -348,6 +366,23 @@ Web", der Code in zwei Dreiergruppen, „Einstellungen, Geräte", die Restzeit.
 **Scheitern erkennt man daran:** Der Code wird abgeschnitten oder überlappt
 eine Nachbarzeile; die untere Zeile läuft über den Rand. Beides wären
 Layoutfehler, die `Ui.fitFont` auf diesen Größen nicht auffängt.
+
+---
+
+### 10. Die Restzeile auf einer echten Venu 3s  *(Sichtprüfung)*
+
+**Warum:** Sie liegt rechnerisch einen Pixel über der Sicherheitslinie (1.1d).
+Der Simulator zeichnet sie vollständig; ob das auf echter Hardware mit ihrem
+Gehäuserand ebenso aussieht, ist damit nicht beantwortet.
+
+**Bedienweg:** Auf einer Venu 3s koppeln, bis der Code steht.
+
+**Erwartet:** „noch 10 min gültig" steht vollständig da, mit sichtbarem
+schwarzem Rand zu beiden Seiten.
+
+**Scheitern erkennt man daran:** Das „n" am Anfang oder das „g" am Ende
+berührt den Gehäuserand oder fehlt teilweise. Dann den Wortlaut kürzen —
+„10 min gültig" ohne „noch" spart rund 40 px.
 
 ---
 
