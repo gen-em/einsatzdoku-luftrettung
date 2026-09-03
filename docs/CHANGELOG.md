@@ -11,6 +11,82 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 13.1.2] — 2026-09-03
+
+### Web — Die Dokumentation beschreibt den neuen Weg (S5, Paket D — erste Hälfte)
+
+Pakete A und B haben die Richtung der Kopplung umgedreht; die Dokumentation
+beschrieb weiter die alte. Das ist kein Schönheitsfehler: Wer nach dem Knopf
+„Kopplungscode erzeugen" sucht, findet ihn seit Web 13.0.0 nicht mehr — und
+zwei der Texte, die ihn nennen, standen nicht in einer Datei, sondern **auf
+dem Bildschirm**.
+
+**Die Trennen-Mail schickte den Empfänger auf einen Knopf, den es nicht mehr
+gibt.** Sie geht raus, wenn ein Gerät sich vom Konto löst, und erklärte den
+Rückweg mit „Einstellungen → Geräte → Kopplungscode erzeugen". Jetzt erklärt
+sie den heutigen: die Kopplung **am Gerät** starten und den Code, den es
+zeigt, im Web eingeben. Die Mail ist der einzige Kanal, auf dem jemand von
+einer Trennung erfährt, die er nicht selbst ausgelöst hat — eine falsche
+Wegbeschreibung darin ist teurer als anderswo.
+
+**Der Demo-Hinweis sagte „Uhr koppeln".** Seit Web 12.9.0 koppeln auch
+Handys; die Zeile stand noch auf der Uhr allein. Jetzt „Gerät koppeln", wie
+überall sonst.
+
+**Dazu Kommentare, die eine falsche Begründung trugen.** Der auffälligste:
+Die Obergrenze `MAX_GERAETE` in `db.php` berief sich darauf, dass „wer einen
+Kopplungscode abfängt, sich ein Gerät anlegt". Das trägt seit E-S5-03 nicht
+mehr — der Code des neuen Verfahrens weist nichts aus, wer ihn abliest, kann
+am Gerät nichts auslösen. **Die Grenze bleibt richtig, ihre Begründung war es
+nicht;** der Weg hinein ist heute die Überredung („Lies mir mal den Code
+vor"), und dagegen wirkt sie genauso. Ebenso: `reset_request.php` verwies auf
+„dasselbe Muster wie bei den Kopplungscodes" — ein Muster, das es dort nicht
+mehr gibt, weil eine Kopplungssitzung einem **Gerät** gehört und nicht einem
+Konto. Und der `.codeblock` im Stylesheet nannte den Kopplungscode als seinen
+ersten Zweck; der wandert seit S5 in ein Eingabefeld. Der Baustein bleibt,
+sechs andere Stellen benutzen ihn.
+
+**Neu in `docs/Technik.md`: ein Bedrohungsmodell der Kopplung (4.99b).** Zwölf
+Angriffe, jeder mit dem, was ihn aufhält, und — wo es einen gibt — dem
+Restrisiko. Der Grund, es aufzuschreiben: Bei S5 ist mehrfach die Frage
+gefallen, ob ein abgelesener Code reicht, um in ein fremdes Konto zu
+schreiben. Die Antwort ist nein, aber sie steckte in vier Dateien verteilt.
+Dazu ein Runbook-Eintrag **„Die Kopplung klappt nicht"** mit acht Schritten
+vom Ratenschutz bis zur Sitzungstabelle — die Fehlerbilder des neuen Wegs
+sehen anders aus als die des alten, und die häufigsten sind stumm.
+
+**`android/LIESMICH.md` sagt jetzt, was der Server-Rundlauf heute braucht.**
+Die Anleitung legte Kopplungscodes per SQL in `pair_codes` an — eine Tabelle,
+die es seit Web 13.0.0 nicht mehr gibt. Bis der Prüfling den neuen Weg
+spricht, brauchen alle drei Rundlaufklassen einen Server **vor** S5, und zwar
+Quelltext **und** Datenbank; die Anleitung enthält dafür ein
+`git worktree`-Rezept und beschreibt daneben, wie ein Prüfling heute an eine
+Kopplung kommt.
+
+**Was bewusst noch nicht dabei ist:** `docs/Handbuch.md`,
+`docs/Geraete-Eingabe.md` und die Uhr-Abschnitte der Technik. Sie beschreiben,
+was ein Mensch **an der Uhr** sieht, und die Uhr-Anzeigen entstehen in Paket C.
+Eine Bedienanleitung für einen Bildschirm, den es noch nicht gibt, wäre wieder
+das, was hier gerade behoben wird.
+
+**Nachweis:** Wortliste über **alle vier Bereiche, 128 Dateien** — 0 Treffer
+außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen (77 / 77), 0 durchgerutschte
+Fallen; der eine Treffer, den sie fand, war neu geschriebener Text dieses
+Pakets („drei Stationen") und ist ersetzt · Vollständigkeit **278 Befunde**,
+einer mehr als nach Paket B: der Pfeil in „Sync-Seite → Gerät koppeln" der
+neuen Trennen-Mail (`pair.php` 449) — gegen `dcaede6` per `git worktree`
+gemessen, Prüfung 1, 2 und 4 Zeile für Zeile unverändert · Kopplungsprobe
+**76 / 76** · Ingestprobe **30 / 30** · Browser-Rundlauf **25 / 25, 0
+Konsolenfehler**, das Nachladen griff 3,1 s nach dem Ja · S5-Anker **0 nicht
+gefunden, 0 mehrdeutig** (neun erledigte D-Anker ausgetragen, 83 → 66) ·
+`php -l` über die fünf geänderten PHP-Dateien **0 Fehler**.
+
+**Nicht geprüft:** die Trennen-Mail im echten Postausgang — die
+Prüfinstallation hat keinen Mailserver; geprüft ist ihr Wortlaut im Quelltext
+und der Versandweg (Kopplungsprobe Fall 26). Ebenso ungefahren: das
+`git worktree`-Rezept in `android/LIESMICH.md` — dafür bräuchte es einen
+zweiten Server und ein zweites Schema neben der laufenden Installation.
+
 ## [Web 13.1.1] — 2026-09-03
 
 ### Web — Behoben: ein gelungenes Trennen leerte einen Topf, der ihm nicht gehört

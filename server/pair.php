@@ -443,9 +443,11 @@ try {
             . "Einsatzdokumentation Notarzt soeben selbst getrennt:\n\n"
             . "  Geräte-ID: " . $devId . "\n"
             . "  Zeitpunkt: " . fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i') . " Uhr\n\n"
-            . "Das geschieht, wenn jemand die Uhr an ihr neu koppelt. Bereits\n"
+            . "Das geschieht, wenn jemand das Gerät an sein Konto koppelt. Bereits\n"
             . "hochgeladene Einsätze bleiben vollständig erhalten.\n\n"
-            . "War das nicht beabsichtigt, koppel die Uhr einfach wieder:\n"
+            . "War das nicht beabsichtigt, verbinde es einfach wieder: Starte die\n"
+            . "Kopplung auf dem Gerät (Sync-Seite → Gerät koppeln) und gib den Code,\n"
+            . "den es zeigt, hier ein:\n"
             . $CFG['app']['base_url'] . "/einstellungen.php?t=geraete\n\n"
             . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
             . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n",

@@ -125,28 +125,20 @@ ANKER: list[tuple] = [
      r"`watch/` FEHLT WEITERHIN"),
 
     # ---- Paket D: Doku -----------------------------------------------------
-    ("D", "vertrag.durchsetzung",  "docs/JSON-Vertrag.md",  45,
-     r"beschrieben, nicht umgesetzt"),
-    ("D", "vertrag.1b-429",        "docs/JSON-Vertrag.md", 206,
-     r"gilt f.r beide Anliegen von"),
-    # Paket A hat die Zeile schon auf `pair_sessions` umgeschrieben (Web
-    # 13.0.0); Paket D liest sie erneut, wenn es das Datenmodell durchgeht.
-    ("D", "technik.datenmodell",   "docs/Technik.md",  422,
-     r"^\| `pair_sessions` \|"),
-    ("D", "technik.mail-frist",    "docs/Technik.md", 1760,
-     r"deshalb steht das Zeitlimit bei der Kopplung"),
-    ("D", "technik.antwortgleich", "docs/Technik.md", 1936,
-     r"Zwei Stellen, an denen die Gleichheit von Antworten"),
-    ("D", "technik.jobs-topf",     "docs/Technik.md", 2294,
-     r"Ratenschutz-Topf `pair` \(zehn Fehlversuche"),
-    ("D", "technik.zeitrechnung",  "docs/Technik.md", 3701,
-     r"`TIMESTAMP` und `DATETIME` verhalten sich verschieden"),
+    #
+    # NEUN ANKER SIND MIT D HAELFTE 1 (Web 13.1.2) AUSGETRAGEN, weil ihre
+    # Stellen umgeschrieben sind und der Anker ab jetzt nur noch Laerm waere:
+    #   vertrag.durchsetzung · vertrag.1b-429 · technik.datenmodell ·
+    #   technik.mail-frist · technik.antwortgleich · technik.jobs-topf ·
+    #   technik.zeitrechnung · backup.pair-codes · android.rundlauf-sql
+    # Zwei davon meldete das Werkzeug beim letzten Lauf als NICHT GEFUNDEN
+    # (vertrag.1b-429, backup.pair-codes) — genau die Auskunft, fuer die es
+    # gebaut ist. Was stehen bleibt, gehoert D HAELFTE 2 (Handbuch, Rahmenplan)
+    # oder anderen Instanzen (Backlog und CLAUDE.md der Uhr, uhrbilder zu C).
     ("D", "handbuch.abschnitt12",  "docs/Handbuch.md", 2682,
      r"Ger.t koppeln . Code eintippen"),
     ("D", "handbuch.12-1",         "docs/Handbuch.md", 2718,
      r"im Web einen Code erzeugen und eintippen"),
-    ("D", "backup.pair-codes",     "docs/Backup-Format.md", 1006,
-     r"\*\*Kopplungscodes\*\* \(`pair_codes`\)"),
     ("D", "backlog.66",            "docs/Backlog.md", 697,
      r"^66\. \*\*Der Garmin-Uhrcode"),
     ("D", "backlog.84",            "docs/Backlog.md", 1067,
@@ -155,8 +147,6 @@ ANKER: list[tuple] = [
      r"S5-Umsetzung zu S6 und S7"),
     ("D", "claude.watch-fehlt",    "CLAUDE.md", 203,
      r"`watch/` fehlt noch und ist einer"),
-    ("D", "android.rundlauf-sql",  "android/LIESMICH.md", 71,
-     r"INSERT INTO pair_codes"),
     ("D", "uhrbilder.bitgleich",   "tools/uhr-bilder/erzeugen.sh", 13,
      r"sie BITGLEICH \(geprueft"),
     # ---- Paket E: Android-Ortung und Dienstende (Zusatzkonzept) ------------

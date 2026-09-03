@@ -42,6 +42,26 @@ Demo-Konto stehen** — bei fünf davon ist das Limit erreicht und der nächste
 Lauf scheitert an einer Karte, die kein Feld mehr zeigt. Dann von Hand löschen
 oder den Demo-Reset abwarten.
 
+**Derselbe Reset kann ihn aber auch umwerfen, und zwar am Anfang.** Fällt er
+in dem Moment an, in dem sich der Rundlauf anmeldet, zählt
+`demo_zuruecksetzen()` `session_epoch` hoch — das beendet **alle** offenen
+Sitzungen des Demo-Kontos, auch die eine Sekunde alte. Der Rundlauf ist dann
+angemeldet und beim nächsten Schritt wieder abgemeldet; er scheitert an der
+ersten Erwartung nach der Anmeldung („Das Feld ‚Code vom Gerät' steht da"),
+weil `einstellungen.php` ihn auf die Anmeldeseite schickt. **Woran du es
+erkennst:** `/tmp/php-server.log` zeigt `[302]: GET /einstellungen.php` und
+unmittelbar danach `[200]: GET /login.php`. **Was dann gilt:** Das ist kein
+Befund, sondern eine Überschneidung — einmal wiederholen. Die Restzeit steht
+in der Datenbank:
+
+```sql
+SELECT 1800 - (UNIX_TIMESTAMP() - v) AS rest_s
+  FROM app_state WHERE k = 'demo_letzter_reset';
+```
+
+Ist `rest_s` klein, erst den Reset abwarten (oder ihn im Adminbereich
+auslösen), dann fahren. Beobachtet am 03.09.2026 in D Hälfte 1.
+
 Konsolenfehler zählt er wie der Bilderlauf, mit derselben Rauschregel: Die
 Kartenkacheln kommen von einem fremden Server, den ein abgeschotteter
 Prüfstand nicht erreicht.
@@ -71,7 +91,7 @@ Erwartungen erfüllt, `1` = mindestens eine nicht. Dauer rund 25 s — davon
 stammen etwa acht Sekunden aus den Antwortzeit-Fällen, die je 0,35 s warten
 müssen, und rund zehn aus 1000 eingefügten Sitzungen.
 
-## Was sie prüft — 75 Erwartungen in sechs Teilen
+## Was sie prüft — 76 Erwartungen in sechs Teilen
 
 | Teil | Fälle (Nummern aus Konzept 10.2) |
 |---|---|
@@ -79,10 +99,10 @@ müssen, und rund zehn aus 1000 eingefügten Sitzungen.
 | 2 Weg zum Gerät | `status` offen mit Restzeit (7) · ohne Kopfzeilen 401 (31) · `antwort` fehlt oder falsch → 400 (32) · Ja im Zustand offen → 409 (10) · Beanspruchen über die Bibliothek, `status` beansprucht mit maskierter Adresse (8), zweite Beanspruchung scheitert (9) · `ingest.php` vor dem Ja 401, danach 200 (14) · Ja legt das Gerät an, Sitzung weg (11) · Versandweg der Mail nach der Antwort (27) · Ja wiederholt (12), `status` gekoppelt (13), Nein mit Gerätezugang lässt das Gerät stehen (E-S5-48) · `trennen` unverändert (26) · Nein offen und Nein beansprucht (15, 16) · `trennen` mit schwebenden Zugangsdaten wirkt wie Nein (E-S5-49) |
 | 3 Frist | nach elf Minuten: `status` 410 **ohne Verzögerung**, Ja 410, Beanspruchen scheitert, Zeile bleibt liegen, zählt nicht, Nein räumt trotzdem (17) |
 | 4 Gerätelimit | fünf Geräte am Konto → Ja 409 `device_limit`, Sitzung weg, zählt nicht (18) |
-| 5 Antwortgleichheit und Töpfe | unbekannte Kennung und falscher Schlüssel: gleiche Rümpfe, beide ≥ 0,35 s, beide zählen; ein gültiges `status` leert den Topf **nicht** (19) · zehn 401 → 429 auch mit richtigen Daten, auch für `trennen` (20) · zwanzig `start` → der 21. 429 ohne Sitzung (21) · 1000 unverfallene Sitzungen → 429 `zu_viele_sitzungen`, dieselben verfallen → 200 (22) · Topf `pair_code` sperrt und leert (23) · das Muster, auf das Paket B sich stützt (24) |
+| 5 Antwortgleichheit und Töpfe | unbekannte Kennung und falscher Schlüssel: gleiche Rümpfe, beide ≥ 0,35 s, beide zählen; ein gültiges `status` leert den Topf **nicht** (19) · zehn 401 → 429 auch mit richtigen Daten, auch für `trennen` (20) · zwanzig `start` → der 21. 429 ohne Sitzung (21) · 1000 unverfallene Sitzungen → 429 `zu_viele_sitzungen`, dieselben verfallen → 200 (22) · Topf `pair_code` sperrt und leert (23) · das Muster, auf das Paket B sich stützt (24) · ein gelungenes `trennen` lässt den Topf `pair` **stehen** — vier Einträge vorher, vier nachher (E51, seit Web 13.1.1: der Topf hat drei Verbraucher, und `rate_erfolg` leerte ihn für alle drei) |
 | 6 Bibliothek | Dublettenschleife beim Code-Ziehen mit eingeschobener Codequelle (25) · `email_maskieren()` (30) · Aufräumjob (28) · Migrationsregister: Kennung verbucht, `pair_sessions` da, `pair_codes` weg, 41 Kennungen (29) · Kontolöschung nimmt die beanspruchte Sitzung mit (34) |
 
-**Die Zahl, die zählt, steht in der letzten Zeile:** `-> 75 Erwartungen, 0
+**Die Zahl, die zählt, steht in der letzten Zeile:** `-> 76 Erwartungen, 0
 nicht erfuellt, 0 uebergangen`. Eine Zeile `[ -- ]` heißt „übergangen“ und
 wird gezählt, nicht verschwiegen — heute nur Fall 27, wenn das Protokoll
 fehlt.

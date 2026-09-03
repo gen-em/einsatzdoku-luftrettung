@@ -6,10 +6,17 @@ belegt?“*; dieses Dokument beantwortet *„was muss ich noch tun?“*. Es wird
 Paket ergänzt und bleibt nach dem Abschluss der Phase stehen, bis seine
 Prüfliste abgehakt ist (K9, R62).
 
-> **Stand: Paket A (Server, Web 13.0.0), die Korrektur 13.0.1 und Paket B
-> (Weboberfläche, Web 13.1.0) sind gebaut** — auf
-> `claude/s7-umsetzung-vorbereiten-s8kax0`. C (Uhr), D (Doku) und E
-> (Android-Zusatz) folgen; C und E laufen in eigenen Instanzen.
+> **Stand: Paket A (Server, Web 13.0.0), die Korrekturen 13.0.1 und 13.1.1,
+> Paket B (Weboberfläche, Web 13.1.0) und die erste Hälfte von Paket D
+> (Dokumentation, Web 13.1.2) sind gebaut** — auf
+> `claude/s7-umsetzung-vorbereiten-s8kax0`. Offen: C (Uhr), E
+> (Android-Zusatz) — beide in eigenen Instanzen — und **D Hälfte 2**, die auf C
+> wartet (E-S5-58).
+>
+> **Bis Paket C beschreibt `docs/Handbuch.md` 12 den alten Weg.** Das ist
+> gewollt und benannt: Die sieben Stellen nennen Wortlaute der Uhr, die Paket C
+> erst festlegt. Wer vor C nach der Bedienanleitung koppelt, kommt nicht ans
+> Ziel — für einen Zweig, der nicht auf `main` geht, ist das folgenlos.
 >
 > **Eine Migration ist zwingend** (`2026_09_03_kopplungssitzungen`): Nach dem
 > Deploy muss eine Administratorin **`update.php`** aufrufen. Sie legt
@@ -22,9 +29,15 @@ Prüfliste abgehakt ist (K9, R62).
 > Ereignisse mit dem Trennen verloren.
 >
 > **Der Zwischenzustand ist vorbei:** Mit Paket B ist die Geräteseite auf dem
-> neuen Weg; der Knopf „Kopplungscode erzeugen“ gibt es nicht mehr. Auf `main`
+> neuen Weg; den Knopf „Kopplungscode erzeugen“ gibt es nicht mehr. Auf `main`
 > kommt die Phase trotzdem erst am Ende, nach Paket C und D — eine Uhr, die
 > den alten Weg spricht, kann sich nach dem Deploy nicht mehr koppeln.
+>
+> **Der Server-Rundlauf der Android-Instanz ist seit Paket A stillgelegt.** Er
+> legte Kopplungscodes per SQL in `pair_codes`, und die Tabelle gibt es nicht
+> mehr. `android/LIESMICH.md` trägt seit D Hälfte 1 ein `git worktree`-Rezept
+> auf einen Stand vor S5 (Quelltext **und** Datenbank) — das ist ein Hinweis
+> für die andere Instanz, keine Prüfung, die hier abzuhaken wäre.
 
 ---
 
@@ -111,26 +124,77 @@ gegen den Stand vor Paket B mit `git stash -u`. Die betroffene Prüfung 3 zählt
 jedes `→` und `…` im Repositorium, auch in Kommentaren; 201 solche Zeichen
 gehören zum Bestand.
 
+### 1.8 Paket D: die Trennen-Mail geht nicht raus, und das Rezept ist ungefahren
+
+**Zwei Dinge aus D Hälfte 1 sind nur gelesen, nicht gefahren.**
+
+**Die Trennen-Mail.** Sie ist umgeschrieben — sie beschrieb den Rückweg über
+einen Knopf, den es seit Web 13.0.0 nicht mehr gibt. Geprüft ist ihr
+**Wortlaut im Quelltext** (`server/pair.php` 439–455) und der **Versandweg**
+(Kopplungsprobe Fall 26: `trennen` antwortet, danach wird verschickt). Nicht
+geprüft ist, was im Postfach ankommt: Der Prüfstand hat keinen Mailserver.
+Das gilt seit Paket A schon für die Kopplungsmail (1.1) — jetzt für beide.
+**Prüfliste Punkt 3** deckt beide ab.
+
+**Das `git worktree`-Rezept in `android/LIESMICH.md`.** Es beschreibt, wie
+sich ein Server vor S5 aufsetzen lässt, damit die Android-Instanz ihren
+Server-Rundlauf weiterfahren kann. **Es ist nicht gefahren worden** — dafür
+bräuchte es eine zweite Datenbank und einen zweiten PHP-Server neben der
+laufenden Installation, und der Prüfstand hat einen Port und ein Schema.
+Geprüft ist nur, dass die genannten Commits existieren und die genannten
+Dateien darin liegen. **Woran ein Scheitern zu erkennen wäre:** Die
+Android-Instanz meldet, dass `pair_codes` auch im Worktree fehlt (dann ist
+der Commit falsch gewählt) oder dass `install.lock` den zweiten Server
+blockiert (dann fehlt ein Schritt im Rezept).
+
+### 1.9 Die Handbuch-Stellen sind gezählt, nicht behoben
+
+Die Zahl **K3** aus der Konsistenzlesung („Kopplungscode erzeugen“ /
+„Code eintippen“ als Handlungsanweisung, außerhalb von Changelog, Archiv und
+erledigten Konzepten) steht nach D Hälfte 1 auf **sieben**, nicht auf null.
+Alle sieben stehen in `docs/Handbuch.md`: **2274, 2674, 2675, 2682, 2698,
+2700, 2718**. Sie gehören zu D Hälfte 2 und warten auf Paket C (E-S5-58).
+Wer K3 vor Hälfte 2 als Null meldet, meldet etwas, das er nicht gemessen hat.
+
+Dieselbe Teilung trifft **K4** (`beispieldomain` in `watch/` und im Handbuch):
+vier Zeilen, davon drei in `watch/` bei der Uhr-Instanz und eine im Handbuch
+(2668) bei Hälfte 2. Nach D Hälfte 1 steht K4 unverändert auf **vier**.
+
+### 1.10 Die Vollständigkeit steht jetzt auf 278 — das sechste Zeichen
+
+Ein Zeichen mehr als nach Paket B, und es ist benannt: **`server/pair.php`
+Zeile 449**, der Pfeil in „Sync-Seite → Gerät koppeln" in der neu
+geschriebenen Trennen-Mail. Prüfung 3 zählt jedes `→` im Repositorium, auch
+in Zeichenketten, die nie in Markup landen.
+
+**Warum er bleibt und nicht ausgeschrieben wird:** Die Kopplungsmail drei
+Funktionen weiter oben (`pair.php` 337, aus Paket A) schreibt den Menüpfad
+genauso — „Einstellungen → Geräte". Zwei Mails derselben Datei, die denselben
+Weg verschieden schreiben, wären die schlechtere Wahl. Gemessen per
+`git worktree` gegen `dcaede6`: **Prüfung 1 (Klassen), 2 (Werte) und 4
+(Knopfhöhe) Zeile für Zeile unverändert**, ein einziger neuer Eintrag in
+Prüfung 3.
+
 ---
 
 ## 2. Was maschinell geprüft wurde — mit Mittel und Zahl
 
 | Mittel | Was es misst | Zahl (03.09.2026) |
 |---|---|---|
-| `php tools/kopplungsprobe/probe.php` | `pair.php` über echtes HTTP: vier Anliegen, Zustände, Frist, Gerätelimit, Antwortgleichheit, drei Töpfe, Obergrenze, Bibliothek, Aufräumjob, Migrationsregister, Kaskade (Konzept 10.2, Fälle 1–34 plus E-S5-48 und E-S5-49) | **75 Erwartungen, 0 nicht erfüllt, 0 übergangen** — zweimal: gegen den Bestand nach gefahrener Migration und gegen die frische Installation |
-| `php tools/ingestprobe/probe.php` | `ingest.php` mit dem neuen Schlüsselverfahren (SHA-256, E-S5-42) | **24 / 24** |
+| `php tools/kopplungsprobe/probe.php` | `pair.php` über echtes HTTP: vier Anliegen, Zustände, Frist, Gerätelimit, Antwortgleichheit, drei Töpfe, Obergrenze, Bibliothek, Aufräumjob, Migrationsregister, Kaskade (Konzept 10.2, Fälle 1–34 plus E-S5-48 und E-S5-49) | **76 Erwartungen, 0 nicht erfüllt, 0 übergangen** (75 in A, dazu E51 in 13.1.1) — gefahren nach A, nach B und nach D Hälfte 1 |
+| `php tools/ingestprobe/probe.php` | `ingest.php` mit dem neuen Schlüsselverfahren (SHA-256, E-S5-42); seit 13.0.1 dazu Teil 7, der Upsert gegen ein spät eintreffendes Teilstück | **30 / 30** |
 | `php tools/geraeteprobe/probe.php` | Blocklesen `geraet` unverändert | **39 / 39** |
 | `php server/update.php` (CLI) auf dem Bestand mit `pair_codes` und einem Code darin | Migration `2026_09_03_kopplungssitzungen` | **applied**; Register 40 → **41**; `pair_codes` weg, `pair_sessions` mit UNIQUE auf `code` und `device_id`, FK CASCADE |
 | `lokal_einrichten.sh` (frische Installation aus `schema.sql`) | Register nach `install.php` | **41 Kennungen, alle `skipped`**; Kopplungsprobe danach 75 / 75 |
-| `python3 tools/s5-anker/anker.py --paket B/C/D/E` | Anker der übrigen Pakete nach A | B 11 / 11 unverändert · C 27 / 27 · E 32 / 32 · D 16 (7 verschoben durch die Technik-Änderungen, 0 nicht gefunden) |
-| `python3 tools/wortliste/wortliste.py` | Bereiche a bis d (Bereich e kommt mit C) | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen (77 / 77), 0 durchgerutschte Fallen** — gefahren zuletzt, nach allen Textänderungen |
-| `node tools/kopplungsprobe/rundlauf.mjs` (neu) | Der ganze Weg im Browser: anmelden, drei Zustände, beide Fehlerwege, Umleitung, Neuladen, das Ja am Gerät, das Nachladen, Vollzugsmeldung, Geräteliste, Abmelden | **25 Erwartungen, 0 nicht erfüllt, 0 Konsolenfehler**; das Nachladen griff **3,2 s** nach dem Ja |
+| `python3 tools/s5-anker/anker.py --paket B/C/D/E` | Anker der übrigen Pakete nach A | B 11 / 11 unverändert · C 27 / 27 · E 32 / 32 · D 16 (7 verschoben durch die Technik-Änderungen, 0 nicht gefunden) — Stand nach Paket A |
+| `python3 tools/wortliste/wortliste.py` | Bereiche a bis d (Bereich e kommt mit C) | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen (77 / 77), 0 durchgerutschte Fallen** über **128 Dateien** (a 88 · b 30 · c 8 · d 2) — gefahren zuletzt, nach allen Textänderungen. In D Hälfte 1 fand sie **einen** Treffer, und zwar in neu geschriebenem Text dieses Pakets („der Ablauf hat drei Stationen“, Technik-Runbook); ersetzt und erneut gefahren |
+| `node tools/kopplungsprobe/rundlauf.mjs` (neu) | Der ganze Weg im Browser: anmelden, drei Zustände, beide Fehlerwege, Umleitung, Neuladen, das Ja am Gerät, das Nachladen, Vollzugsmeldung, Geräteliste, Abmelden | **25 Erwartungen, 0 nicht erfüllt, 0 Konsolenfehler**; das Nachladen griff **3,2 s** nach dem Ja (B) und **3,1 s** (D Hälfte 1) |
 | `node tools/screenshots/aufnehmen.mjs --nur 33` | Die drei Zustände der Karte in acht Breiten | **24 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px**. Gegenprobe nach `LIESMICH.md`: **27 Dateien, 27 verschiedene Prüfsummen** — kein Bild zeigt dasselbe wie ein anderes |
-| `python3 tools/vollstaendigkeit/pruefen.py` | Stylesheet, Werte, Symbole, Knopfhöhen | **277** (Basis 272; die fünf sind in 1.7 benannt, Prüfung 1/2/4 unverändert) |
-| `python3 tools/s5-anker/anker.py` | Fundstellen der Pakete C, D, E | **0 nicht gefunden, 0 mehrdeutig**, 68 unverändert, 7 verschoben (A und B ausgetragen — ihre Stellen sind umgeschrieben) |
-| `php -l` | alle geänderten oder neuen PHP-Dateien (A: 16, B: 4) | 0 Syntaxfehler |
+| `python3 tools/vollstaendigkeit/pruefen.py` | Stylesheet, Werte, Symbole, Knopfhöhen | **278** (Basis 272; die fünf aus Paket B sind in 1.7 benannt, das sechste in 1.10; Prüfung 1/2/4 unverändert) |
+| `python3 tools/s5-anker/anker.py` | Fundstellen der Pakete C, D, E | nach D Hälfte 1: **0 nicht gefunden, 0 mehrdeutig**, 64 unverändert, 2 verschoben. Die Liste ist von 83 auf **66** geschrumpft — A und B (11, in Paket B) und neun von D sind ausgetragen, weil ihre Stellen umgeschrieben sind. **Zwei davon meldeten vor dem Austragen `NICHT GEFUNDEN`** (`vertrag.1b-429`, `backup.pair-codes`): die Gegenprobe, dass D Hälfte 1 sie wirklich angefasst hat |
+| `php -l` | alle geänderten oder neuen PHP-Dateien (A: 16, B: 4, D Hälfte 1: 5) | 0 Syntaxfehler |
 
-**Was die 75 Erwartungen NICHT sind:** kein Beweis für Nebenläufigkeit. Die
+**Was die 76 Erwartungen NICHT sind:** kein Beweis für Nebenläufigkeit. Die
 Probe schickt Anfragen nacheinander; „zwei Browser mit demselben Code“ ist
 über `rowCount()` belegt (Fall 9), „zwei Ja gleichzeitig“ über `FOR UPDATE`
 und den Rückfall in den Geräte-Zweig — gelesen, nicht unter Last gefahren.
@@ -154,6 +218,26 @@ Eine Navigation, die nur das Fragment ändert, ist keine — der Browser scrollt
 und fragt den Server nicht. Die Karte wartete weiter auf ein Gerät, das längst
 in der Liste stand. Nachgemessen, behoben, und die Messung steht als
 Begründung im Code (E-S5-57).
+
+**Paket D Hälfte 1** ändert zwei sichtbare Texte, und beide sind im Browser
+gegengelesen — der eine automatisiert, der andere nicht prüfbar:
+
+- **Der Demo-Hinweis** („Ausprobieren ist ausdrücklich erwünscht — ändern,
+  anlegen, löschen, **Gerät koppeln**"). Gemessen mit Chromium auf zwei Seiten
+  des Demo-Kontos (Startseite und Geräte-Reiter): „Gerät koppeln" **1× bzw.
+  3×**, „Uhr koppeln" **0×**. Er steht auf **jeder** Seite des Demo-Kontos
+  (`ui_leiste_ende()`), also auch auf allen, die der Rundlauf durchläuft.
+- **Die Trennen-Mail** — nicht im Browser prüfbar, siehe 1.8.
+
+Der Rundlauf selbst ist nach D Hälfte 1 noch einmal gefahren: **25 / 25, 0
+Konsolenfehler**, das Nachladen griff 3,1 s nach dem Ja. **Beim ersten
+Versuch scheiterte er**, und zwar nicht am Code: Der Demo-Reset fiel genau in
+die Anmeldung, `session_epoch` wurde hochgezählt, und die eine Sekunde alte
+Sitzung war beendet. Das ist eine Überschneidung des Prüfstands, keine
+Auskunft über die Anwendung; sie ist jetzt in
+`tools/kopplungsprobe/LIESMICH.md` beschrieben, mit dem Erkennungsmerkmal im
+Serverprotokoll (`[302]: GET /einstellungen.php` unmittelbar gefolgt von
+`[200]: GET /login.php`) und der SQL-Abfrage für die Restzeit.
 
 ## 4. Prüfliste — was du tun musst
 
@@ -194,6 +278,24 @@ erkennen ist**.
 - **Scheitern:** Keine Mail innerhalb einer Minute (Fehlerprotokoll: „Hinweis
   auf neues Geraet konnte nicht verschickt werden“), oder „Gerät unbekannt“,
   obwohl die Uhr einen Block gesendet hat.
+- [ ] erledigt am ______
+
+### 3a. Den Text der Trennen-Mail sichten  *(neu mit D Hälfte 1)*
+
+- **Weg:** ein gekoppeltes Gerät an ein **anderes** Konto koppeln (oder am
+  Gerät „trennen" auslösen) und die Mail „Gerät getrennt" im Postfach des
+  vorherigen Kontos lesen.
+- **Erwartet:** Geräte-ID, Zeitpunkt — und der **Rückweg in der neuen
+  Richtung**: „Starte die Kopplung auf dem Gerät (Sync-Seite → Gerät koppeln)
+  und gib den Code, den es zeigt, hier ein", darunter die Adresse
+  `…/einstellungen.php?t=geraete`.
+- **Scheitern:** Die Mail nennt „Kopplungscode erzeugen" oder schickt auf
+  einen Knopf, den die Geräteseite nicht mehr hat — dann ist eine ältere
+  Fassung von `server/pair.php` ausgeliefert. Ebenfalls Scheitern: Die Mail
+  kommt gar nicht (Fehlerprotokoll: „Hinweis auf getrenntes Geraet konnte
+  nicht verschickt werden").
+- **Warum du das prüfen musst:** Der Prüfstand hat keinen Mailserver — geprüft
+  ist nur der Wortlaut im Quelltext und der Versandweg (1.8).
 - [ ] erledigt am ______
 
 ### 4. Antwortgleichheit auf dem Produktivserver nachmessen
@@ -247,13 +349,23 @@ erkennen ist**.
   Muster der Phase-10-Migration. Prüfliste 1 sieht sie.
 - **Anker:** finden Zeilen nach Inhalt; sie sagen, dass C, D und E ihre
   Fundstellen noch haben, nicht, dass die Fundstellen noch stimmen. Die Anker
-  der Pakete A und B sind ausgetragen — ihre Stellen sind umgeschrieben.
+  der Pakete A und B sind ausgetragen, seit D Hälfte 1 auch neun von D — ihre
+  Stellen sind umgeschrieben.
 - **Der Browserrundlauf:** ein Browser (Chromium), eine Breite, ein Konto,
   eine Sitzung. Er beweist, dass der Weg trägt — nicht, dass er unter zwei
   gleichzeitigen Bedienungen trägt (dafür steht die Regel in E-S5-13 und
   Kopplungsprobe Fall 9), und nicht, dass er ohne JavaScript trägt (Prüfliste
   6). Er läuft im Demo-Konto und meldet sein Prüfgerät am Ende ab; bricht er
-  mittendrin ab, bleibt eines stehen.
+  mittendrin ab, bleibt eines stehen. **Und er kann am Demo-Reset scheitern:**
+  Fällt der in die Anmeldung, beendet `session_epoch + 1` seine gerade
+  entstandene Sitzung, und er läuft in die erste Erwartung danach. Ein
+  Fehlschlag an dieser Stelle ist zuerst gegen den Reset zu prüfen (Merkmal
+  und SQL in `tools/kopplungsprobe/LIESMICH.md`), nicht gegen den Code.
+- **Die Anker sind kein Prüfmittel** im Sinn von `CLAUDE.md` 6 (sagt ihre
+  eigene `LIESMICH.md`). Ihre Zahl schrumpft mit jedem Paket, weil erledigte
+  Stellen ausgetragen werden — **83 → 66**. Eine sinkende Zahl ist hier
+  Fortschritt und nicht Verlust; wer sie als Deckungsgrad liest, liest sie
+  falsch.
 - **Der Bilderlauf:** misst Überlauf, Konsolenfehler und Knopfhöhen — nicht,
   ob die Seite richtig aussieht. Seine beiden neuen Bedienschritte holen sich
   eine echte Kopplungssitzung; sie kosten zwei der zwanzig `start`-Aufrufe,

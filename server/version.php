@@ -2195,5 +2195,22 @@ declare(strict_types=1);
  * Aufruf ist ersatzlos weg — seit 13.0.0 gibt es an diesem Endpunkt nichts
  * mehr zu vertippen. Dazu vier Meldungen an das Geraet, die in
  * Ersatzschreibung standen, obwohl die Uhr sie anzeigt.
+ *
+ * 13.1.2 IST DIE DOKUMENTATION ZUM NEUEN WEG (S5 Paket D, erste Haelfte) —
+ * und die Stellen im Server, die noch die alte Richtung beschrieben. Zwei
+ * Dinge daran sind mehr als Text: Die Trennen-Mail schickte den Empfaenger
+ * auf einen Knopf, den es seit 13.0.0 nicht mehr gibt („Kopplungscode
+ * erzeugen"), und der Demo-Hinweis sagte „Uhr koppeln", obwohl seit 12.9.0
+ * auch Handys koppeln. Beides sind sichtbare Texte, deshalb ueberhaupt eine
+ * Nummer; alles andere sind Kommentare, die eine falsche Begruendung trugen —
+ * etwa die Obergrenze MAX_GERAETE, die sich auf „wer einen Kopplungscode
+ * abfaengt" berief. Das Abfangen traegt seit E-S5-03 nicht mehr: Der Code
+ * weist nichts aus. Die Grenze bleibt richtig, ihre Begruendung war es nicht.
+ *
+ * KORREKTURSTUFE UND NICHT NEBENNUMMER: Es kommt keine Funktion dazu und
+ * keine weg. Was sich aendert, sind zwei Saetze auf dem Bildschirm und die
+ * Erzaehlung darum herum. Der Rest des Pakets — Handbuch, Geraete-Eingabe,
+ * die Uhr-Abschnitte der Technik — wartet auf Paket C und kommt in der
+ * zweiten Haelfte.
  */
-const WEB_VERSION = '13.1.1';
+const WEB_VERSION = '13.1.2';

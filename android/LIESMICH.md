@@ -66,6 +66,48 @@ Installation überspringen sie sich, statt fehlzuschlagen:
 
 ```bash
 sh tools/referenzdatensatz/einspielen/lokal_starten.sh
+cd android
+./gradlew :handy:testDebugUnitTest --rerun-tasks \
+          -Pnadoku.rundlauf=http://127.0.0.1:8080/
+```
+
+**Vorher ist eine Kopplung anzulegen, und dafür gibt es seit S5 zwei
+Wege.** Welcher gilt, hängt nicht von der App ab, sondern vom Stand des
+Servers, gegen den sie läuft — und die drei Rundlaufklassen der App stehen
+heute noch auf dem alten. Deshalb beides, in dieser Reihenfolge.
+
+#### Heute: die drei Rundlaufklassen brauchen einen Server vom Stand vor S5
+
+`KopplungRundlaufTest`, `SendeRundlaufTest` und `MissionRundlaufTest`
+koppeln über `Kopplungsdienst.koppeln(basis, code, geraet)` — die App
+**sendet** also einen Code, den vorher jemand im Web erzeugt hat. Seit
+Web 13.0.0 gibt es diesen Weg nicht mehr (S5, R49): Das Gerät **zeigt**
+den Code, ein Mensch tippt ihn im Browser ein, und das Gerät bestätigt das
+Konto. `pair.php` antwortet einem Rumpf ohne `aktion` mit
+`400 {"error":"aktion","meldung":"Uhr-App aktualisieren"}`.
+
+**Woran ein falscher Serverstand zu erkennen ist:** Der Gutfall
+`kopplungGegenPairPhp` meldet `Abgewiesen(CODE_UNBRAUCHBAR)` statt
+`Gekoppelt` — die Fehlerabbildung in `Kopplungsdienst` macht aus jedem 400
+einen unbrauchbaren Code. Es scheitert also sichtbar, sagt aber nicht, was
+los ist.
+
+**„Stand vor S5" heißt: Quelltext *und* Datenbank.** Die Migration
+`2026_09_03_kopplungssitzungen` legt `pair_sessions` an und lässt
+`pair_codes` fallen. Ein `pair.php` von vorher greift dann auf eine
+Tabelle zu, die es nicht mehr gibt, und endet im Serverfehler;
+`/tmp/php-server.log` nennt `pair_codes` beim Namen. Der Rundlauf braucht
+deshalb eine eigene Installation:
+
+```bash
+# Den letzten Stand vor Web 13.0.0 finden und daneben auschecken:
+git log --oneline -- server/version.php | head     # „web v13.0.0 …" suchen
+git worktree add /tmp/vor-s5 <der Commit DAVOR>
+
+# Server aus diesem Stand fahren; die Datenbank frisch einrichten
+# (install.php im Browser) und update.php NICHT laufen lassen:
+WURZEL=/tmp/vor-s5/server sh tools/referenzdatensatz/einspielen/lokal_starten.sh
+
 # Kopplungscodes als Vorbedingung anlegen (sie sind einmal einlösbar):
 mariadb -e "DELETE FROM pair_codes; DELETE FROM devices;
   INSERT INTO pair_codes (user_id, code) VALUES
@@ -74,42 +116,89 @@ mariadb -e "DELETE FROM pair_codes; DELETE FROM devices;
    (1,'LN2P3Q'),(1,'LR4S5T'),(1,'LU6V7W'),(1,'LX8Y9Z'),
    (1,'RA2B3C'),(1,'RD4E5F'),(1,'RG6H7J'),(1,'MA2B3C'),(1,'MD4E5F'),
    (1,'UA2B3C');" nadoku
-
-cd android
-./gradlew :handy:testDebugUnitTest --rerun-tasks \
-          -Pnadoku.rundlauf=http://127.0.0.1:8080/
 ```
 
-**Warum Klartext-HTTP und nicht HTTPS:** Die lokale Installation trägt ein
-selbstsigniertes Zertifikat. Es in den Vertrauensspeicher des Prüflaufs zu
-legen hieße, dem Prüfstand etwas beizubringen, was die App nie tun darf. Dass
-die App **nur** HTTPS spricht (E-S4-14), ist an der Stelle belegt, an der diese
-Regel wohnt — `ServeradresseTest`.
+**Bis wann das so bleibt:** bis der S4-Rest das Kopplungsmodul der
+Handy-App auf den neuen Weg umbaut (Konzept S5, Abschnitt 7 beschreibt
+ihn). Danach koppeln die drei Klassen wie im nächsten Abschnitt, laufen
+wieder gegen den aktuellen Stand — und dieser Abschnitt hier fällt weg.
 
-**Warum die Codes von Hand in die Tabelle kommen:** Geprüft wird der Weg
-*App → `pair.php` → `devices`-Zeile*. Wie ein Kopplungscode im Browser
-entsteht, ist nicht Gegenstand dieses Falls, sondern seine Vorbedingung.
+#### So bekommt ein Prüfling heute eine Kopplung
+
+Die Codes stehen in keiner Tabelle mehr, in die man sie legen könnte: Sie
+entstehen bei `pair.php` selbst, zusammen mit den Zugangsdaten. Ein
+Prüfling holt sich seine Kopplung deshalb genauso, wie ein Gerät es tut —
+drei Schritte, von denen der mittlere im Betrieb ein Mensch im Browser
+ist:
+
+```bash
+# 1. Sitzung holen. Das tut sonst die App, wenn jemand „Kopplung starten"
+#    drückt: OHNE Kopfzeilen, mit der Handy-Form des Blocks `geraet`.
+antwort=$(curl -s --noproxy '*' -X POST http://127.0.0.1:8080/pair.php \
+  -H 'Content-Type: application/json' \
+  -d '{"aktion":"start","geraet":{"art":"handy","teil":null,
+        "hersteller":"samsung","modell":"SM-S921B","br":1080,"ho":2340,
+        "touch":true,"fw":"16","sdk":36,"app":"0.7.7"}}')
+#  -> {"code":"TKH9XS","device_id":"dev-…","api_key":"…","frist_s":600}
+code=$(printf '%s' "$antwort" | jq -r .code)
+dev=$( printf '%s' "$antwort" | jq -r .device_id)
+key=$( printf '%s' "$antwort" | jq -r .api_key)
+
+# 2. Den Code einem Konto zuordnen. Das tut sonst ein Mensch im Browser
+#    unter Einstellungen → Geräte („Code vom Gerät" → Weiter → Mit meinem
+#    Konto verbinden). Konto 1 ist das, welches die lokale Installation
+#    beim Einrichten anlegt.
+mariadb -e "UPDATE pair_sessions SET user_id = 1 WHERE code = '$code';" nadoku
+
+# 3. Ja sagen. Das tut sonst die Person am Gerät, nachdem es ihr die
+#    maskierte Adresse des Kontos gezeigt hat. MIT Kopfzeilen.
+curl -s --noproxy '*' -X POST http://127.0.0.1:8080/pair.php \
+  -H 'Content-Type: application/json' \
+  -H "X-Device-Id: $dev" -H "X-Api-Key: $key" \
+  -d '{"aktion":"bestaetigen","antwort":"ja"}'
+#  -> {"ok":true}. Ab jetzt steht die Zeile in `devices`, und $dev/$key
+#     sind gültige Zugangsdaten für ingest.php.
+```
+
+`--noproxy '*'` steht dort, weil im Container ein Proxy gesetzt ist und
+`127.0.0.1` nicht durch ihn gehört; `jq` liest nur die Antwort und ist
+keine Voraussetzung des Wegs.
+
+Drei Dinge, damit der Weg nicht an einer Kleinigkeit scheitert:
+
+- **Zehn Minuten für alles** (`frist_s`), gerechnet ab Schritt 1. Die
+  Zuordnung im Web verlängert nichts. Wer dazwischen etwas anderes tut,
+  fängt von vorn an; Schritt 3 antwortet dann `410 abgelaufen`.
+- **Schritt 1 zählt, auch wenn nichts daraus wird.** Der Topf `pair_start`
+  lässt zwanzig `start`-Aufrufe je zehn Minuten und Adresse zu (E-S5-33).
+  Wer eine Schleife darüber schreibt, sperrt sich selbst für zehn Minuten
+  aus (`429 zu_viele_versuche`) — und nimmt dabei dem Bilderlauf und der
+  Kopplungsprobe ihre Aufrufe weg, die aus demselben Topf kommen.
+- **Der saubere Rückweg** ist `{"aktion":"bestaetigen","antwort":"nein"}`
+  mit denselben Kopfzeilen: Er löscht die Sitzung. Für eine bereits
+  angelegte Gerätezeile ist es `{"aktion":"trennen"}` — dasselbe, was die
+  Fälle in ihrem `@After` tun.
+
+Wer den ganzen Endpunkt prüfen will statt nur eine Kopplung zu bekommen,
+nimmt `php tools/kopplungsprobe/probe.php`; sie fährt alle vier Anliegen,
+Fristen, Fehlerzweige und Bremsen über echtes HTTP durch.
+
+**Warum Klartext-HTTP und nicht HTTPS:** *(Zeile 83–87 unverändert)*
+
+**Warum die Kopplung als Vorbedingung von Hand entsteht:** Geprüft wird
+der Weg *App → `pair.php` → `devices`-Zeile*. Wie ein Code auf das Gerät
+kommt und wie er von dort in ein Konto gelangt, ist Sache des Geräts und
+der Weboberfläche — es ist die Vorbedingung dieser Fälle, nicht ihr
+Prüfling.
 
 **Seit Web 12.9.0 trägt diese `devices`-Zeile drei Spalten mehr** —
-`geraet_art`, `geraet_modell`, `geraet_teil` (R42). Der Rundlauf ist damit der
-einzige automatisierte Nachweis, dass die **Handy-Form** des Blocks
-(`Geraeteangabe`, E-S4-28) beim Server wirklich so ankommt, wie der Vertrag es
-sagt: Nach dem Koppeln steht dort `handy` / `Google Pixel 8` / `Google Pixel 8`
-statt dreimal `NULL`. Läuft die lokale Installation auf einem älteren Stand,
-bleiben die Spalten leer — das ist kein Fehlschlag der App. Auf Serverseite
-prüft `php tools/geraeteprobe/probe.php` dasselbe Auslesen ohne Datenbank.
+*(Zeile 93–100 unverändert)*
 
-**Die Fassung der Apps steigt dafür nicht.** S6 ändert keine Zeile unter
-`android/`; die drei Zählungen (Web, Uhr, Android) bleiben getrennt.
+**Die Fassung der Apps steigt dafür nicht.** Weder S6 noch S5 ändern eine
+Zeile Quelltext unter `android/`; S5 schreibt nur diese Anleitung fort.
+Die drei Zählungen (Web, Uhr, Android) bleiben getrennt.
 
-Die Fälle **räumen hinter sich auf**: Was sie koppeln, trennen sie wieder.
-Das ist Voraussetzung und nicht Ordnungsliebe — `MAX_GERAETE` ist 5, und JUnit
-sichert keine Reihenfolge zu. Beim ersten Lauf füllte der Grenzfall das Konto,
-und alles danach scheiterte an `device_limit`.
-
-Die APK liegen danach unter
-`handy/build/outputs/apk/release/handy-release-unsigned.apk` und
-`uhr/build/outputs/apk/release/uhr-release-unsigned.apk`.
+Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
