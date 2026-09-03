@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 24 (03.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 25 (03.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -9,12 +9,22 @@ Umsetzungsblöcken und die 50 Programmentscheidungen im Volltext —, liegt
 älteren Dokumenten auf „Rahmenplan Abschnitt 5" oder „Fassung 13" meinen
 das Archiv; sein Kopf sagt, welcher alte Abschnitt wo weiterlebt.
 
-**Stand am 03.09.2026:** `main` trägt **Web 12.9.2**, **Android 0.7.7** und
-**Uhr 2.0.0** (ausgeliefert; ein Push auf `main` deployt). Drei Migrationen
-aus S4 und S6 warten auf `update.php` — vom Auftraggeber zu bestätigen. Der
-S7-Zweig trägt **Web 12.9.4** (Schritt 4, gebaut und geprüft) und liegt als
-PR gegen `main`; er bringt **keine** Migration mit, `update.php` ist dafür
-nicht fällig.
+**Stand am 03.09.2026, abends:** `main` trägt **Web 13.2.0** und **Uhr
+3.0.0** (S5 ist gemergt, PR #28 und #29) sowie **Android 0.7.7**.
+
+> **VIER MIGRATIONEN WARTEN AUF `update.php`** — drei aus S4 und S6, dazu
+> `2026_09_03_kopplungssitzungen` aus S5. **Die letzte ist die dringende:**
+> Sie legt `pair_sessions` an. Bis sie gelaufen ist, gibt es die Tabelle auf
+> dem Produktivserver nicht, und **jeder Kopplungsversuch einer Uhr endet in
+> einem 500**. Der Deploy selbst ist mit dem Merge von PR #28 am 03.09.2026
+> um 18:59:58 UTC bereits gelaufen (FTPS-Action); nur der Aufruf von
+> `update.php` fehlt, und den kann nur eine Administratorin machen.
+
+**Paket E des S5-Zusatzes (Android-Ortung und Dienstende) ist gebaut, aber
+nicht gemergt** — Zweig `claude/s5-paket-e-android`, **Android 0.10.1**,
+E1 bis E3 fertig. Es berührt nur `android/` und Doku und hängt an keinem
+der übrigen Pakete; es geht **vor dem S4-Rest** auf `main` (beide fassen
+`HauptActivity.kt`, `strings.xml` und das Manifest an).
 
 > **Berichtigt mit Fassung 24.** Diese Zeile nannte bis zuletzt
 > „Web 12.4.2" und den S4-Zweig als noch offen. Fassung 23 hatte die
@@ -304,20 +314,25 @@ Abschnitt 6 und im Prüfdokument
 `docs/konzepte/Pruefdokument-S7-Backup-Begriff.md`. Das Konzept ist nach
 R62 gelöscht; die Git-Historie behält es.
 
-### Schritt 5 — S5 Umsetzung
+### Schritt 5 — S5 Umsetzung · **erledigt (Pakete A–D und W); Paket E gebaut, nicht gemergt**
 
-**Ziel:** Kopplung ohne Tippen auf der Uhr, für Garmin und Android
-dasselbe Protokoll. **Inhalt:** die vier Blöcke aus Schritt 3 · Migration
-(Sitzungstabelle) → `update.php` · Uhr-Auslieferung (Kopplung,
-Vorgabeadresse, S3-Kacheln; dabei Backlog 66: `watch/` in die Wortliste) ·
-Handbuch 12 und 2.x, Technik, `Geraete-Eingabe.md`, Changelog Web und Uhr.
-**Preis, angenommen:** Nach dem Server-Umstieg koppelt keine ältere
-Uhr-Fassung mehr (Bestand: eine Uhr). **Abnahme:** Uhr-Prüfstand über alle
-Geräte, Simulator-Rundlauf gegen lokalen Server (Start → Eingabe im Web →
-Status → Bestätigen, dazu Nein-Fall, Fristablauf, Gerätelimit),
-Ratenschutz-Proben, Bilderlauf Geräteseite, Wortliste; Gerätetest mit der
-Uhr (P2-Punkt 4.1). **Zuarbeit:** DNS und TLS für `nadoku.gen-em.org` vor
-dem Uhr-Build.
+Gebaut und geprüft am 03.09.2026 — **Web 13.0.0 bis 13.2.0** und **Uhr
+3.0.0**, gemergt als PR #28 und #29. Was es gebracht hat, steht in
+Abschnitt 8; was noch am Auftraggeber liegt, in Abschnitt 6 und im
+Prüfdokument `docs/konzepte/Pruefdokument-S5-Kopplung-umgekehrt.md`
+(zwölf Punkte).
+
+**Die Migration `2026_09_03_kopplungssitzungen` ist noch nicht gelaufen**
+— siehe den Kopf dieses Dokuments. Sie ist der erste Punkt der Prüfliste.
+
+**Paket E** (Android-Ortung und Dienstende, eigenes Zusatzkonzept) ist auf
+seinem Zweig fertig (Android 0.10.1) und wartet auf den Merge; es hängt an
+keinem der übrigen Pakete.
+
+**Die drei Konzepte stehen noch** (`Konzept-S5-Kopplung-umgekehrt.md`,
+`…-Zusatz-Wartungsmodus.md`, `…-Zusatz-Android-Ortung-Dienstende.md`). Nach
+R62 werden sie mit der Freigabe des Abschlusses gelöscht — die steht aus,
+und das Zusatzkonzept zu E gehört ohnehin einem noch offenen Paket.
 
 ### Schritt 6 — S4 Rest
 
@@ -484,8 +499,8 @@ und die Backlog-Nummern verlangen die Gegenproben aus Abschnitt 2.2.
 |---|---|
 | S4-Merge und Backlog-Runde (verschiedene Punkte, eigene Zweige) | S6 zu S4 (`schema.sql`, `update.php`, Vertrag) — S6 erst nach dem Merge |
 | S5-Konzept und S7 (Konzept schreibt keinen Code) | S7 zu S4 (`einstellungen.php`, `admin_user.php`, Handbuch, Technik) — S7 erst nach dem Merge |
-| Konzeptarbeit P5 (Hosting, Gespräche) zu allem | S5-Umsetzung zu S6 und S7 (`pair.php`, `devices`, `einstellungen.php`, Vertrag, Wartungsjob) |
-| Wear-OS-Gerätetest zu allem | S4-Rest zu S5 (Kopplungsmodul braucht 1a) |
+| Konzeptarbeit P5 (Hosting, Gespräche) zu allem | ~~S5-Umsetzung zu S6 und S7~~ — **entfällt, S5 ist gemergt** (Fassung 25) |
+| Wear-OS-Gerätetest zu allem | S4-Rest zu **Paket E** (`HauptActivity.kt`, `strings.xml`, Manifest) — E geht zuerst. Die alte Sperre „S4-Rest zu S5“ ist erfüllt: Vertragsabschnitt 1a steht |
 | — | Backlog 21 (43 Restfunde quer durch `server/`) zu jedem laufenden `server/`-Paket |
 | — | S8 zu S4-Rest und S7 (`einstellungen.php`, `admin_*.php`, `update.php`, Handbuch) — S8 erst nach beiden |
 
@@ -496,7 +511,8 @@ nach jeder Migration `update.php`.
 
 Jeder offene Punkt steht genau einmal. Nummern 63–67 sind für den
 S4-Zweig reserviert (dort heute 59–63); 68–79 sind mit Fassung 16, 80–83 mit
-Fassung 21 und 84–88 mit Fassung 22 angelegt.
+Fassung 21 und 84–88 mit Fassung 22 angelegt; **89–92 kamen aus S7 und S5/C,
+93–97 mit Fassung 25 aus S5** (Pakete A, W und der Vorbereitung).
 
 | Nr. | Punkt (kurz) | gehört zu | Bemerkung |
 |---|---|---|---|
@@ -552,6 +568,11 @@ Fassung 21 und 84–88 mit Fassung 22 angelegt.
 | 77 | Wartungsseite `update.php` in Unterseiten aufteilen | S8 | Schnitt im Konzept; Ort der Migrationsliste hängt an R60 |
 | 78 | Wertekasten zeigt Cron-Adresse und Token in Kopplungscode-Größe | S8 | `.codeblock-wert` nutzt `--groesse-5`; zweite Stufe für lange Werte; darf vorab in der Backlog-Runde laufen |
 | 79 | Backup-Optionen: Begriffe und Optionen gewachsen wie Wildwuchs | S8 | Bestandsaufnahme über Kontoseite, Sicherungsseite, Ziele, Komplettsicherung, Wartung |
+| 93 | `AUTH_VERGLEICHSWERT` trägt Kostenfaktor 10, PHP 8.4 legt 12 an | Backlog-Runde | aus S5/A (V-S5-13); 57 gegen 228 ms, heute von der Mindestdauer 0,35 s verdeckt |
+| 94 | „bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/` | Backlog-Runde | aus S5 (V-S5-05); ein Wort — oder `-define png:exclude-chunk=time` |
+| 95 | Die Android-Rundlauffälle lassen Daten im Admin-Konto zurück | Schritt 6 | 9 Diensttage, 5 Einsätze, 14 439 Punkte; Aufräumen im `@After` oder eigenes Prüfkonto |
+| 96 | Eigene Wartungsmeldung auf Uhr und Handy, `Retry-After` auswerten | nach v1.0 | aus S5/W (E-S5W-08); heute behandeln die Clients das 503 als gewöhnliches 5xx, und das genügt |
+| 97 | Browser-Skripte zeigen den Wartungstext uneinheitlich | Backlog-Runde | aus S5/W (E-S5W-10); `export.js`, `import_ui.js` und `schneiden.js` zeigen ihn, `kopplung.js`, `unlock.js`, `ortsfeld.js` und `ortswahl.js` nicht |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -560,6 +581,10 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 
 | Was | Wofür | Wann |
 |---|---|---|
+| **`update.php` aufrufen — VIER Migrationen** (drei aus S4/S6, dazu `2026_09_03_kopplungssitzungen` aus S5). Die letzte legt `pair_sessions` an und **löscht `pair_codes`**; bis dahin antwortet jeder Kopplungsversuch einer Uhr mit **500**. Der Deploy ist am 03.09.2026 um 18:59:58 UTC gelaufen | Schritt 5, Prüfliste S5 Punkt 1 | **sofort** |
+| **Prüfliste S5 (12 Punkte)**, darunter: die Bestandsuhr **einmal neu koppeln** (E-S5-42, vorher den Sync leerlaufen lassen), beide Kopplungsmails im Postfach sichten, Antwortgleichheit auf Produktiv nachmessen, die Geräteseite **ohne JavaScript**, drei Punkte nur am Gerät (Verbindungsabriss, Tastensperre, Oberfläche auf zwei Geräteklassen), **ein Update mit Wartungsmodus** und **eine Kopplung mit dem Handbuch in der Hand** (P2-Punkt 4.1) | S5-Abnahme | nach `update.php` |
+| **Freigabe des S5-Abschlusses** — danach löscht R62 die beiden Konzepte (`Konzept-S5-Kopplung-umgekehrt.md`, `…-Zusatz-Wartungsmodus.md`); das Prüfdokument bleibt bis zur abgehakten Prüfliste | Schritt 5 | — |
+| **Merge von Paket E** (Android-Ortung und Dienstende, Android 0.10.1) — muss **vor** den S4-Rest, beide fassen `HauptActivity.kt`, `strings.xml` und das Manifest an | Schritt 5 / Schritt 6 | vor Schritt 6 |
 | Neues NEF-Logo und -Favicon | P3, Logo-Wahl (Platzhalter liegt) | vor P6 |
 | Impressums- und Datenschutztext der Installation über den Editor eintragen | P3 (R32) | vor P6; Datenschutztext dann mit der Grenze der E2E (Nr. 43, Weg C) |
 | Sichtprüfung in WebKit und Firefox (Symbole am Dateiverweis) | P3-Abnahme | gelegentlich |
@@ -575,8 +600,8 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | Data Layer Uhr↔Handy auf **echter Hardware** — zwischen zwei Emulatoren nachweislich nicht prüfbar (die Wear-OS-Companion-App des Telefons ist im Baucontainer nicht zu beschaffen) | Schritt 6 | mit der Wear-OS-Uhr |
 | Dienst-Test mit der Handy-App auf dem S24 (zwei bis drei Runden) | Schritt 6 | nach dem ersten APK |
 | Wear-OS-Uhr für den Gerätetest | Schritt 6 | wenn vorhanden; blockiert nichts |
-| DNS-Eintrag und TLS für `nadoku.gen-em.org` | Schritt 5 | vor dem Uhr-Build |
-| Freigabe des S5-Konzepts | Schritt 3 | — |
+| **DNS-Eintrag und TLS für `nadoku.gen-em.org`** — die Uhr trägt die Adresse seit Uhr 3.0.0 als **Vorgabewert** (E-R49-8). Ohne DNS und Zertifikat läuft jede frisch aufgesetzte Uhr ins Leere, und zwar ohne dass sie sagen kann, warum | Schritt 5 | **fällig — die Uhr ist ausgeliefert** |
+| ~~Freigabe des S5-Konzepts~~ | Schritt 3 | **erledigt 03.09.2026** — Umsetzung ist gebaut und gemergt |
 | Drei Fragen aus `Konzept-V1-Ortsdaten.md` (Schutzbedarf der Spur; Passwortwechsel bei nicht synchronisierten Uhr-Daten; Stichtag oder rückwirkend) | Nr. 43, P6 | vor dem R17-Review |
 | Freigabe des S8-Konzepts und seiner Mockups; darin die Entscheidung zur Bedienhöhe am Schreibtisch (Nr. 74) | Schritt 7 | — |
 | Hosting-Entscheidung (Cron/SSH, DB-Kontingent, `max_user_connections`, DDoS-Schutz, Verschlüsselung at rest) | P5-Konzept | vor Schritt 9 |
@@ -779,6 +804,89 @@ vom leeren Rand befreit, Uhr-Kacheln neu gerastert · `tag_spuren.php` mit
 Seitengerüst · Backlog 57, 58 neu. *Reste:* Uhr-Kacheln reisen mit S5;
 Abschnitt 6.
 
+### S5 — Kopplung umgekehrt · Web 13.0.0 bis 13.2.0, Uhr 3.0.0 · 03.09.2026 (R49)
+Konzepte `docs/konzepte/Konzept-S5-Kopplung-umgekehrt.md` und
+`…-Zusatz-Wartungsmodus.md` — **stehen noch**, Löschung nach R62 mit der
+Freigabe des Abschlusses. Prüfdokument
+`docs/konzepte/Pruefdokument-S5-Kopplung-umgekehrt.md` **bleibt**, bis
+seine zwölf Punkte abgehakt sind. Letzter Commit vor dem Merge: `4caf1ff`;
+auf `main` als `771808c` (PR #28) und `076579b` (PR #29).
+
+**Die Kopplung läuft andersherum.** Bis Uhr 2.0.0 erzeugte das Web einen
+Sechs-Zeichen-Code, und die Trägerin tippte ihn **auf dem Uhrendisplay**
+ein — die unangenehmste Bedienung der ganzen Anwendung, für eine Uhr
+erträglich, für 500 Konten und einen zweiten Client nicht. Jetzt zeigt das
+**Gerät** den Code, ein Mensch gibt ihn im Web ein, und das **Gerät
+bestätigt** das Konto. Der `WatchUi.TextPicker` ist ersatzlos weg; auf der
+Venu 3s war er der einzige Weg, der eine Bildschirmtastatur brauchte.
+
+**Zwei Tore statt eines** (E-R49-5): Die Web-Seite sieht, **wer eingibt**,
+die Uhr sieht, **wessen Konto** es wäre. Wer den Code abliest, hat nichts —
+er kann am Gerät nichts auslösen (E-R49-3). Wer jemanden dazu bringt, einen
+fremden Code einzugeben, bekommt das Ja nicht. Das Bedrohungsmodell steht
+als eigener Abschnitt in `Technik.md` 4.99b: **zwölf Angriffe**, jeder mit
+dem, was ihn aufhält, und mit dem Restrisiko, wo eines bleibt.
+
+**Schwebende Zugangsdaten statt schwebender Geräte** (E-R49-2): `start`
+liefert Kennung und Schlüssel sofort mit — aber in `pair_sessions`, nicht
+in `devices`. Bis zum Ja gibt es das Gerät nicht, und `ingest.php` weist
+die Daten ab. Deshalb darf der Schlüssel schon im ersten Schritt über die
+Leitung: Er ist ohne Bestätigung wertlos.
+
+**Ein Verfahrenswechsel, der nicht im Plan stand** (E-S5-42): Geräte- und
+Sitzungsschlüssel liegen jetzt als **SHA-256**, nicht mehr als bcrypt.
+bcrypt bremst das Raten eines schwachen Geheimnisses; bei 192 Bit Zufall
+bremst es nur den Server — **228 ms je Upload**, und beim Abfragetakt der
+neuen Kopplung 27 s je Sitzung. Das Anmeldetoken bleibt bcrypt, weil es
+gestrecktes Passwort ist; die Regel steht seither in `db.php` bei
+`GERAET_VERGLEICHSWERT`. **Preis, bewusst gezahlt:** Die eine Bestandsuhr
+trägt einen bcrypt-Hash, der nie mehr passt, und koppelt einmal neu.
+
+**Der Wartungsmodus kam als Zusatz dazu** (Paket W, Web 13.2.0): ein
+Schalter auf der Wartungsseite, der die Installation für alle außer der
+Verwaltung mit **503** schließt. Der Unterschied zu einem 500 ist der, auf
+den es ankommt — der JSON-Vertrag sagt zu 5xx „später unverändert erneut",
+und Uhr wie Handy halten sich daran. **Kein Client wurde dafür geändert.**
+Der Zustand ist eine **Datei** (`server/wartung.lock`), keine Zeile in der
+Datenbank: Er wird gerade dann gebraucht, wenn die Datenbank umgebaut wird.
+
+**Ein Fehler, der älter ist als S5, und bei der Gegenlesung auffiel**
+(Web 13.0.1, Befund B5.3): Der Upsert in `ingest.php` schrieb `ended_at`,
+`distance_m` und `ascent_m` bedingungslos aus dem eintreffenden Paket —
+genau die drei Spalten, die ein **nicht-finales** Paket nicht trägt. Kam
+eines nach dem finalen an, blieb ein abgeschlossener Einsatz **ohne Ende,
+ohne Strecke und ohne Anstieg** zurück. Die Antwort lautete „ok".
+
+**Was der Simulator fand und der Code nicht zeigte** (Paket C): BACK auf
+einer `WatchUi.Confirmation` ruft `onResponse` **nicht** auf (E-S5-67), und
+„→" trägt in den Geräteschriften nicht — es erschiene als leeres Kästchen
+(E-S5-63, deshalb „Einstellungen, Geräte"). Eine Gegenlesung in fünf
+Dimensionen fand **32 Befunde**, 16 hielten der Widerlegung stand, alle
+behoben; darunter eine Antwort ohne Sitzungszuordnung, die fremde
+Zugangsdaten gespeichert hätte.
+
+*Prüfzahlen:* Kopplungsprobe **76 Erwartungen, 0 nicht erfüllt** ·
+Wartungsprobe **40 / 40** (neu) · Ingestprobe **30 / 30** · Geräteprobe
+**39 / 39** · Browser-Rundlauf **25 / 25, 0 Konsolenfehler** · Uhr-Prüfstand
+Stufe I **99 übersetzt / 0 fehlgeschlagen / 0 Warnungen / 0 Fehler**,
+Stufe II **20 Vertreter / 0 Abstürze** (18 mit `PairView`) ·
+Simulator-Rundlauf **5 von 6 Fällen belegt** · Wortliste **0 / 0 / 0** über
+**fünf** Bereiche und 164 Dateien (Bereich `e` — `watch/` samt Monkey C —
+kam mit diesem Paket dazu, Backlog 66) · Vollständigkeit **278** (272 + 6,
+jedes einzeln benannt) · Bilderlauf **40 Bilder** der berührten Seiten,
+0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px · Migrationsregister
+**41 = 41**, auf Bestand **und** frisch gefahren · Konsistenzlesung K3
+**7 → 0**, K4 **4 → 0** · `php -l` 0 Fehler.
+
+*Nicht belegt, und das steht im Prüfdokument an erster Stelle:* der Text
+beider Kopplungsmails (kein Mailserver im Prüfstand — nur Wortlaut und
+Versandweg), das Verhalten des FTPS-Deploys gegenüber `wartung.lock`
+(**der Merge von PR #28 wäre der Nachweis gewesen und lief ohne
+Wartungsmodus — die Messung ist auf den nächsten Deploy verschoben**), der
+negative Verbindungszweig auf der Uhr (der Simulator zeigt eine tote
+Verbindung als HTTP 404), und eine Kopplung mit Handbuch und Uhr in der
+Hand (P2-Prüfpunkt 4.1). *Reste:* Prüfliste in Abschnitt 6.
+
 ### S7 — Backup-Begriff · Web 12.9.3 und 12.9.4 · 02.–03.09.2026 (R50, R56)
 Konzept `docs/konzepte/Umstellung-Backup.md` — nach R62 **gelöscht**;
 zuletzt unter Commit `7057e7b`. Prüfdokument
@@ -879,3 +987,4 @@ beide sind die dokumentierten Grenzen. *Reste:* Prüfliste in Abschnitt 6.
 | **22** | **02.09.2026** | **Android-Rückmeldungen und Gerätestatistik entschieden:** feste Server-Adresse und Name der Android-App (R63); Nr. 83 als R64 entschieden — Momentaufnahme am Einsatz, eigene `origin`-Werte, Umsetzung im S4-Rest zusammen mit Nr. 63; Backlog 84–88 angelegt (feste Adresse, App-Name, Statusleiste, Web-App-Erhebung vor v1.0, NutzerInnen-Kachel); Schritt 6 und Schritt 10 ergänzt; Änderungsverlauf wieder aufsteigend |
 | **23** | **02.09.2026** | **Statuszeilen 1 und 2 auf den Stand von `main`:** S4-Merge und S6 sind gemergt (Web 12.9.2, Android 0.7.7); beide Migrationen warten auf `update.php`. Als Nächstes laufen Schritt 3 (S5-Konzept, Fable) und Schritt 4 (S7, Opus) parallel |
 | **24** | **03.09.2026** | **S7 erledigt** (Schritt 4, Web 12.9.3/12.9.4): „Sicherung“ heißt überall „Backup“ — 642 → 167 Fundstellen in `server/`, Handbuch 78 → 0, Historie unberührt; Entscheidungen E-S7-1 bis E-S7-4 (Bindestrich-Komposita, Kommentare gehen mit, offene Backlog-Punkte ja, `tools/` mit zwei Messgrundlagen als Ausnahme). Fünf Funde, die eine mechanische Ersetzung zerstört hätte, darunter die Kopfzeile des Komplett-Backup-Dumps, die zugleich Erkennungsmarke ist. Dazu **Backlog Nr. 89**: Das geplante Komplett-Backup lief von Web 12.2.0 bis 12.9.2 nie — eigene Korrekturstufe. Konzept nach R62 gelöscht, Prüfdokument bleibt. Zwei Zuarbeiten in Abschnitt 6. **Berichtigt:** die Standzeile im Kopf, die seit Fassung 23 „Web 12.4.2“ nannte, während Abschnitt 3 schon 12.9.2 sagte |
+| **25** | **03.09.2026** | **S5 gebaut und gemergt** (Schritt 5, Web 13.0.0–13.2.0, Uhr 3.0.0; PR #28 und #29): Die Kopplung läuft umgekehrt — das Gerät zeigt den Code, das Web nimmt ihn entgegen, das Gerät bestätigt. Dazu ein Verfahrenswechsel, der nicht im Plan stand (Geräteschlüssel bcrypt → SHA-256, E-S5-42, die Bestandsuhr koppelt einmal neu), der **Wartungsmodus** als Zusatzpaket W (Web 13.2.0, 503 statt 500 während eines Updates) und ein stiller Datenverlust im Upload, der älter ist als S5 (Web 13.0.1). Backlog 66 erledigt (`watch/` läuft durch die Wortliste), 89–92 aus S7 und S5/C, **93–97 neu**. **Vier Migrationen warten auf `update.php`** — die aus S5 ist die dringende, ohne sie endet jede Kopplung in einem 500. **Paket E** (Android 0.10.1) ist gebaut, aber nicht gemergt; es geht vor den S4-Rest. Die Freigabe des Abschlusses und damit die Löschung der Konzepte nach R62 steht aus. |
