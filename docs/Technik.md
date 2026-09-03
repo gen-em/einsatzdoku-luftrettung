@@ -151,6 +151,15 @@ Daten erst nach Server-Bestätigung.
 │   │                       Herkunft und Prüfsummen in HERKUNFT.md
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
+│   ├── api/kopplung_stand.php  Wartet dieses Konto noch auf ein Gerät, und
+│   │                       hat es Ja gesagt? (S5, Web 13.1.0) GET, nimmt
+│   │                       KEINE Eingabe — welche Sitzung gemeint ist, steht
+│   │                       in der PHP-Sitzung. Fünf Zustände; das Skript
+│   │                       assets/kopplung.js fragt im Takt und hört von
+│   │                       selbst auf
+│   ├── assets/kopplung.js  Die Geräteseite lädt nach, wenn das Gerät Ja
+│   │                       gesagt hat (E-S5-53). Ohne sie bleibt der Weg
+│   │                       vollständig — sie nimmt einen Handgriff ab
 │   ├── kopplung_lib.php   Kopplungssitzungen (S5, Web 13.0.0): Frist-SQL,
 │   │                       Anlegen mit Dublettenschleife, Suche nach Kennung
 │   │                       und Code, Beanspruchen per UPDATE mit rowCount —
@@ -295,7 +304,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      verfällt, und dass der Huckepack-Weg wenig und
 │   │                      selten trägt. Legt eigene Waisen an und räumt hinter
 │   │                      sich auf — ändert am Bestand nichts (s. LIESMICH.md)
-│   ├── kopplungsprobe/    prüft `pair.php` mit seinen vier Anliegen über
+│   ├── kopplungsprobe/    zwei Proben. `probe.php` prüft `pair.php` über
 │   │                      ECHTES HTTP (S5, Web 13.0.0): Zustände, Frist,
 │   │                      Gerätelimit, Antwortgleichheit, drei Töpfe,
 │   │                      Obergrenze, Dublettenschleife, Aufräumjob —

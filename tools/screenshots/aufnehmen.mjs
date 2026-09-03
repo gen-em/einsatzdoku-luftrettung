@@ -300,12 +300,79 @@ const PLATZ = await platzhalter();
  * Werkzeug tut etwas anderes als bestellt und meldet Erfolg.
  *
  * Rueckgabe: null bei Erfolg, sonst der Fehlertext. */
+/* ---- Die Kopplungskarte braucht ein GERAET auf der anderen Seite (S5) -----
+ *
+ * Zwei ihrer drei Zustaende entstehen erst, wenn jemand einen Code eingibt,
+ * den ein Geraet gezeigt hat. Die Probe ist dieses Geraet: Sie holt sich ueber
+ * `pair.php` mit `aktion=start` eine Kopplungssitzung — genau so, wie eine Uhr
+ * es tut, ueber echtes HTTP aus dem Seitenkontext. Keine Attrappe, kein
+ * SQL-Handgriff; was fotografiert wird, ist der Zustand, den die Anwendung
+ * wirklich zeigt.
+ *
+ * DER CODE WIRD JE SCHRITT EINMAL GEHOLT und ueber alle acht Breiten
+ * wiederverwendet. Das ist kein Geiz, sondern noetig: Der Ratenschutz-Topf
+ * `pair_start` laesst 20 Aufrufe je zehn Minuten und Adresse zu (E-S5-33).
+ * Ein Lauf mit einer Sitzung je Breite braeuchte sechzehn und stuende damit
+ * knapp vor der Sperre — zusammen mit `tools/kopplungsprobe/rundlauf.mjs` im
+ * selben Zeitfenster darueber.
+ *
+ * Der Wartezustand braucht ueberhaupt nur EINEN Durchgang: Er haengt an der
+ * PHP-Sitzung des Browsers, und die ueberlebt den Wechsel der Fensterbreite.
+ * Ab der zweiten Breite steht die Karte schon richtig da.
+ *
+ * WAS ZURUECKBLEIBT: eine Kopplungssitzung, die nach zehn Minuten verfaellt,
+ * und keine Geraetezeile — das Geraet sagt in diesem Lauf nie Ja. */
+const kopplungsSitzungen = new Map();
+
+async function kopplungSitzung(seite, schluessel, fehlerSammler) {
+  if (kopplungsSitzungen.has(schluessel)) { return kopplungsSitzungen.get(schluessel); }
+  const a = await seite.evaluate(async () => {
+    try {
+      const r = await fetch('pair.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aktion: 'start', geraet: { art: 'uhr', teil: '006-B4261-00' } }) });
+      return { status: r.status, ...(await r.json()) };
+    } catch (e) { return { status: 0, error: String(e) }; }
+  });
+  if (a.status !== 200 || !a.code) {
+    fehlerSammler.push(`Kopplungssitzung nicht bekommen (HTTP ${a.status}, `
+      + `${a.error || '—'}) — steht der Topf \`pair_start\` voll? Er lässt 20 Aufrufe `
+      + 'je 10 Minuten und Adresse zu; ein Lauf von tools/kopplungsprobe/rundlauf.mjs '
+      + 'im selben Zeitfenster kann ihn gefüllt haben.');
+    return null;
+  }
+  kopplungsSitzungen.set(schluessel, a);
+  return a;
+}
+
 async function vorher(seite, schritte, fehlerSammler) {
-  const BEKANNT = ['schublade'];
+  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
                        + BEKANNT.join(', '));
+      continue;
+    }
+    if (schritt === 'kopplung-rueckfrage' || schritt === 'kopplung-warten') {
+      /* Steht die Karte schon im Wartezustand, ist nichts mehr zu tun — die
+         PHP-Sitzung traegt ihn ueber die Breiten hinweg. */
+      if (await seite.locator('#kopplung-warten').count()) { continue; }
+      const sitzung = await kopplungSitzung(seite, schritt, fehlerSammler);
+      if (!sitzung) { continue; }
+      const feld = seite.locator('#koppeln input[name="code"]');
+      if (!(await feld.count())) {
+        fehlerSammler.push('Kein Feld „Code vom Gerät" auf der Seite — steht die '
+                         + 'Kopplungskarte in einem anderen Zustand (Gerätelimit erreicht)?');
+        continue;
+      }
+      await feld.fill(sitzung.code);
+      await Promise.all([seite.waitForNavigation({ timeout: 30000 }),
+                         seite.locator('#koppeln .knopf-primaer').click()]);
+      if (schritt === 'kopplung-warten') {
+        await Promise.all([seite.waitForNavigation({ timeout: 30000 }),
+                           seite.locator('#koppeln .knopf-primaer').click()]);
+      }
+      await seite.waitForLoadState('networkidle');
       continue;
     }
     if (schritt === 'schublade') {

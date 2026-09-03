@@ -2164,5 +2164,26 @@ declare(strict_types=1);
  * Teil 7 der Ingestprobe. Keine Migration — was einmal geloescht wurde, laesst
  * sich nicht zurueckholen; auf der Betreiberinstallation ist kein Fall
  * bekannt.
+ *
+ * 13.1.0 IST DIE GERAETESEITE ZUM NEUEN WEG (S5 Paket B). Die Karte „Gerät
+ * koppeln" hat jetzt drei Zustaende statt einem Knopf: ein Feld „Code vom
+ * Geraet", eine Rueckfrage mit Art, Modell und Kennung — das erste der beiden
+ * Tore aus E-S5-05 —, und einen Wartezustand, der von selbst nachlaedt, sobald
+ * das Geraet Ja gesagt hat (E-S5-53). Dafuer kommen ein angemeldeter Endpunkt
+ * (api/kopplung_stand.php, nimmt KEINE Eingabe) und eine kleine Skriptdatei
+ * (assets/kopplung.js) dazu; ohne JavaScript bleibt der Weg vollstaendig.
+ *
+ * NEBENNUMMER UND NICHT HAUPTNUMMER, obwohl sich der Weg durch die Seite
+ * aendert: Es ist derselbe Reiter, dieselbe Karte, dieselben Bausteine, und
+ * die Migration lag in 13.0.0. Was hier dazukommt, sind Felder und Zustaende —
+ * genau das, wofuer die Nebennummer da ist.
+ *
+ * DAZU ZWEI DINGE, DIE AELTER SIND ALS S5. Die Handanlage vergab
+ * Geraetekennungen aus VIER Zufallsbytes, waehrend die Kopplung seit M4-08
+ * sechzehn nimmt — zwei Wege zu derselben Spalte, und der schwaechere war der,
+ * den niemand geprueft hat (B-S5-01). Und der Reiter trug ZWEI primaere
+ * Knoepfe; Design.md 9.16 nennt das als Anti-Muster („Keiner ist mehr die
+ * Haupthandlung"). Die Handanlage ist jetzt neutral — sie ist ausdruecklich
+ * „die Alternative zum Koppeln" (B-S5-09).
  */
-const WEB_VERSION = '13.0.1';
+const WEB_VERSION = '13.1.0';

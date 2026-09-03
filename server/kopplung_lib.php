@@ -145,6 +145,66 @@ function pair_sitzung_nach_code(PDO $pdo, string $code): ?array
 }
 
 /**
+ * Der Code, wie ein Mensch ihn liest: zwei Dreiergruppen, „AB3 K7Q“.
+ *
+ * Dieselbe Form zeigt das Geraet (Konzept Z-03). Der Server SPEICHERT ihn ohne
+ * Trennzeichen; die Gruppierung ist reine Anzeige, und die Eingabe nimmt beide
+ * Formen (pair_code_normalisieren()). Geteilt wird in der Mitte, damit die
+ * Regel eine Aenderung von PAIR_LEN ueberlebt.
+ */
+function pair_code_anzeigen(string $code): string
+{
+    return implode(' ', str_split($code, (int)ceil(PAIR_LEN / 2)));
+}
+
+/**
+ * Restzeit in Worten (Konzept Z-18): volle Minuten, unter einer Minute
+ * Sekunden. „Noch 9 Minuten“ ist genauer, als es aussieht — die Zahl kommt vom
+ * Server, nicht von der Uhr des Geraets.
+ *
+ * OHNE NACHKOMMASTELLEN UND OHNE SEKUNDEN OBERHALB EINER MINUTE: Eine Anzeige,
+ * die im Sekundentakt springt, zieht den Blick auf sich und sagt nichts, was
+ * die Person tun koennte. Erst in der letzten Minute ist die Sekunde die
+ * Auskunft, auf die es ankommt.
+ */
+function pair_restzeit_text(int $sekunden): string
+{
+    if ($sekunden <= 0)  { return 'abgelaufen'; }
+    if ($sekunden < 60)  { return $sekunden . ' Sekunden'; }
+    $min = intdiv($sekunden, 60);
+    return $min === 1 ? 'eine Minute' : $min . ' Minuten';
+}
+
+/**
+ * Eine Sitzung verwerfen — der Abbruch im Web (S5 Paket B).
+ *
+ * DAS KONTO STEHT IN DER BEDINGUNG, nicht in einer vorherigen Abfrage: Wer
+ * eine fremde Kennung schickt, loescht nichts, und die Antwort ist dieselbe.
+ * Wirkung am Geraet: Seine naechste Frage laeuft ins Leere (401), und es sagt
+ * „Code abgelaufen — neuer Code“. Das ist richtig; die Sitzung ist weg.
+ */
+function pair_sitzung_verwerfen(PDO $pdo, string $deviceId, int $userId): bool
+{
+    $st = $pdo->prepare('DELETE FROM pair_sessions WHERE device_id = ? AND user_id = ?');
+    $st->execute([$deviceId, $userId]);
+    return $st->rowCount() === 1;
+}
+
+/**
+ * Gibt es zu dieser Kennung schon ein Geraet in diesem Konto?
+ *
+ * Die eine Frage, die das Web nach dem Beanspruchen wiederholt stellt, bis das
+ * Geraet Ja gesagt hat (E-S5-53). Sie steht hier und nicht als SQL in der
+ * Seite, damit der Endpunkt und die Seite dieselbe Antwort bekommen.
+ */
+function pair_geraet_da(PDO $pdo, string $deviceId, int $userId): bool
+{
+    $st = $pdo->prepare('SELECT 1 FROM devices WHERE device_id = ? AND user_id = ?');
+    $st->execute([$deviceId, $userId]);
+    return $st->fetchColumn() !== false;
+}
+
+/**
  * Beanspruchen: das Konto an die Sitzung binden (E-S5-13).
  *
  * Gilt nur bei rowCount() = 1. `user_id IS NULL` steht in der BEDINGUNG, nicht
