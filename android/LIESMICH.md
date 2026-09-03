@@ -469,32 +469,55 @@ ein echtes `ingest.php` und prüft am Server nach, dass Segment und Diensttag
 geschlossen sind. Er sagt nichts über Zeitpunkte und nichts über
 Prozesstode — aber alles über die Nachricht selbst.
 
-### Der Emulator — die Berichtigung von 0.7.2 gilt hier nicht mehr
+### Der Emulator — er läuft, und er ist ab 03.09.2026 Pflicht
 
-- ~~**Kein Emulator.**~~ **Das stimmte nicht** und ist seit 0.7.2 berichtigt.
+**Die Regel zuerst** (CLAUDE.md 6, angewiesen am 03.09.2026): Bei jeder
+Änderung an einem der beiden Android-Module läuft der Emulator mit, Aussehen
+**und** Funktion werden darin geprüft, und beides wird mit Bildern belegt —
+so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
+`android/werkzeuge/emulator.sh`.
 
-  **Nachtrag 03.09.2026, und er dreht es zurück:** In dem Container, in dem
-  Paket E entstand, läuft **kein** Emulator. Beide Wege sind gemessen:
+- ~~**Kein Emulator.**~~ ~~**Nachtrag 03.09.2026: In diesem Container läuft
+  keiner — das x86_64-Abbild braucht KVM.**~~ **Auch das war falsch, und zwar
+  am selben Tag berichtigt.**
 
-  | Weg | Ergebnis |
+  **Was stimmt:** KVM fehlt wirklich. `/dev/kvm` ist nicht da, `/proc/cpuinfo`
+  nennt weder `vmx` noch `svm`, und `emulator -accel-check` antwortet
+  „KVM requires a CPU that supports vmx or svm" — die CPU ist selbst
+  virtualisiert, Verschachtelung ist nicht freigegeben.
+
+  **Was nicht stimmt:** dass daraus „kein Emulator" folgt. Mit **`-accel off`**
+  übersetzt QEMU die x86_64-Befehle selbst (TCG) und braucht die
+  Verschachtelung nicht. Der Fehlschluss war, „startet nicht ohne Weiteres"
+  für „geht nicht" zu nehmen und deshalb gar nicht erst bis zum Startversuch
+  zu gehen. Er kostete Paket E die ganze Stufe II.
+
+  **Zwei Stolpersteine davor**, beide am 03.09.2026 gemessen:
+
+  | Stolperstein | Was zu tun ist |
   |---|---|
-  | **x86_64-Abbild** | braucht KVM. `/dev/kvm` fehlt, und `/proc/cpuinfo` nennt weder `vmx` noch `svm` — die CPU ist selbst virtualisiert, Verschachtelung ist nicht freigegeben. *In diesem Container nachgemessen.* |
-  | **arm64-Abbild** | `FATAL | Avd's CPU Architecture 'arm64' is not supported by the QEMU2 emulator on x86_64 host.` (Emulator 37.1.11) — der heutige Emulator übersetzt keine fremde Architektur mehr. *Übernommen aus der S5-Vorbereitung 8.3, dort gemessen.* |
+  | `emulator -version` scheitert an `libpulse.so.0` | `apt-get install -y libpulse0`. Die QEMU-Binärdatei bindet sie hart — auch mit `-no-audio`, auch mit `-no-window`. |
+  | `-accel auto` (die Vorgabe) bricht ab | `-accel off` setzen. Dazu `-gpu swiftshader_indirect`, denn die Grafik rechnet ebenfalls die CPU. |
 
-  **Beide Sätze stimmen, und der Unterschied ist der Container**, nicht die
-  App: Der Lauf von 0.7.2 fand einen älteren Emulator und ein Abbild vor, die
-  reine Software-Emulation noch zuließen. Wer sich auf den Emulator verlässt,
-  verlässt sich also auf eine Eigenschaft der Wegwerf-Umgebung — sie kann beim
-  nächsten Mal fehlen. **Deshalb ist er nicht der Hauptweg und darf es nicht
-  werden.** Vor dem Gebrauch nachsehen, ob er da ist; die vier Griffe, die
-  Konzept S5-Zusatz 9.3 für ihn vorsah (`adb emu geo fix`, Standort abschalten,
-  `cmd jobscheduler run -f`, `dumpsys notification`), fielen für Paket E
-  vollständig aus.
+  | Abbild | Ergebnis |
+  |---|---|
+  | **x86_64** (`system-images;android-34;google_apis;x86_64`) | **läuft** mit `-accel off`. |
+  | **arm64** | `FATAL | Avd's CPU Architecture 'arm64' is not supported by the QEMU2 emulator on x86_64 host.` (Emulator 37.1.11) — der heutige Emulator übersetzt keine fremde Architektur mehr. *Übernommen aus der S5-Vorbereitung 8.3, dort gemessen.* |
 
-  Was das nicht ändert: **Bilder entstehen ohnehin ohne Emulator**
-  (Abschnitt 2.2, Robolectric im NATIVE-Modus), und die instrumentierten
-  Prüffälle aus 0.7.6 bleiben, was sie sind — sie brauchen nur ein
-  Android-System, gleich welches.
+  **Was er kostet, und warum er trotzdem ans Ende gehört.** TCG rechnet
+  **einkernig**: Der QEMU-Prozess steht bei rund 100 % *eines* Kerns, `-cores 4`
+  ändert daran nichts. Boot und Aufspielen liegen darum in Minuten. Wer den
+  Emulator nach jeder Datei anwirft, verbraucht die Zeit, die die Änderung
+  selbst gebraucht hätte — er läuft **am Ende eines Arbeitspakets**, mit
+  Wortliste, Kontrasten und Bilderlauf.
+
+  Was das nicht ändert: **Der Bilderlauf bleibt** (Abschnitt 2.2, Robolectric
+  im NATIVE-Modus). Er und der Emulator messen Verschiedenes — der eine das
+  gerechnete Bild, deterministisch und in Sekunden, der andere das gelaufene
+  mit Systemleisten, echter Schriftrasterung, rundem Glas und Bedienzuständen.
+  Keiner ersetzt den anderen. Die instrumentierten Prüffälle aus 0.7.6 bleiben
+  ebenfalls, was sie sind — sie brauchen nur ein Android-System, gleich
+  welches.
 
   Was der Lauf von 0.7.2 kostete, zur Erinnerung:
   Der Emulator läuft ohne KVM in reiner Software-Emulation; beide Module
