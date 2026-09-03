@@ -72,7 +72,7 @@ $geraetKennung = 'dev-ingestprobe';
 $geraetKey     = bin2hex(random_bytes(24));
 $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
                VALUES (?,?,?,?,1)')
-    ->execute([$uid, $geraetKennung, password_hash($geraetKey, PASSWORD_DEFAULT),
+    ->execute([$uid, $geraetKennung, geraet_schluessel_hash($geraetKey),
                'Ingestprobe']);
 
 /** Eine Anfrage an ingest.php — echtes HTTP, wie die Uhr sie stellt. */

@@ -199,7 +199,7 @@ function jobs_katalog(): array
     $katalog = [
         'aufraeumen' => [
             'titel'        => 'Aufräumen',
-            'beschreibung' => 'Papierkorb, Kopplungscodes, Ratenschutz, '
+            'beschreibung' => 'Papierkorb, Kopplungssitzungen, Ratenschutz, '
                             . 'Passwort-Token, Erinnerung an die Administration',
             'taeglich'     => true,
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
@@ -500,10 +500,13 @@ function jobs_token(bool $neu = false): string
 function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
 {
     $schritte = [
-        'Kopplungscodes' => function (PDO $pdo): void {
-            $pdo->exec('DELETE FROM pair_codes
-                        WHERE used_at IS NOT NULL
-                           OR created_at < DATE_SUB(NOW(), INTERVAL ' . PAIR_TTL_MIN . ' MINUTE)');
+        'Kopplungssitzungen' => function (PDO $pdo): void {
+            /* Nur die VERFALLENEN: Bestaetigte und verworfene Sitzungen
+             * loescht pair.php sofort (E-S5-11). Die Obergrenze zaehlt
+             * verfallene Zeilen ohnehin nicht mit (E-S5-14) — dieser Schritt
+             * ist Hygiene, kein Schutz. */
+            $pdo->exec('DELETE FROM pair_sessions
+                        WHERE erstellt_am < DATE_SUB(NOW(), INTERVAL ' . PAIR_TTL_MIN . ' MINUTE)');
         },
         'Sperrliste geloeschter Kennungen' => function (PDO $pdo): void {
             $pdo->exec('DELETE FROM deleted_refs

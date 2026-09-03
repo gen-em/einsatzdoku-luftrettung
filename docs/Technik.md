@@ -151,6 +151,11 @@ Daten erst nach Server-Bestätigung.
 │   │                       Herkunft und Prüfsummen in HERKUNFT.md
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
+│   ├── kopplung_lib.php   Kopplungssitzungen (S5, Web 13.0.0): Frist-SQL,
+│   │                       Anlegen mit Dublettenschleife, Suche nach Kennung
+│   │                       und Code, Beanspruchen per UPDATE mit rowCount —
+│   │                       die eine Auslegung für pair.php, einstellungen.php
+│   │                       und die Kopplungsprobe
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
 │   │                       gelöschtes Konto, Passwortwechsel)
 │   ├── email_lib.php      E-Mail: Normalisierung, Prüfung, Dublettenerkennung
@@ -290,6 +295,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      verfällt, und dass der Huckepack-Weg wenig und
 │   │                      selten trägt. Legt eigene Waisen an und räumt hinter
 │   │                      sich auf — ändert am Bestand nichts (s. LIESMICH.md)
+│   ├── kopplungsprobe/    prüft `pair.php` mit seinen vier Anliegen über
+│   │                      ECHTES HTTP (S5, Web 13.0.0): Zustände, Frist,
+│   │                      Gerätelimit, Antwortgleichheit, drei Töpfe,
+│   │                      Obergrenze, Dublettenschleife, Aufräumjob —
+│   │                      75 Erwartungen. Legt eigene Konten an und räumt
+│   │                      ab (s. LIESMICH.md)
 │   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
 │   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
 │   ├── messstand/         stellt ein Konto mit 5000 Einsätzen her — aus der
@@ -440,7 +451,7 @@ Daten erst nach Server-Bestätigung.
 | `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
 | `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
-| `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; der Job `aufraeumen` entsorgt Altbestand |
+| `pair_sessions` | Kopplungssitzungen (seit Web 13.0.0, S5): Das **Gerät** holt sich mit `start` eine Sitzung und zeigt den Code, ein Mensch gibt ihn im Web ein (`user_id` wird gesetzt: beansprucht), das Gerät bestätigt mit Ja — erst dann entsteht die `devices`-Zeile; bis dahin sind Kennung und Schlüssel **schwebend**. Code **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **eine Frist von 10 Minuten ab `erstellt_am` für alles**; Schlüssel als SHA-256; die Datenbank ist der Schiedsrichter (Beanspruchen per `UPDATE … WHERE user_id IS NULL`, gültig bei `rowCount() = 1`); keine Endzustände — bestätigt und verworfen werden gelöscht, verfallen entsorgt der Job `aufraeumen`; Obergrenze `PAIR_SITZUNGEN_MAX` (1000) über unverfallene Zeilen. Löste `pair_codes` ab (Code im Web erzeugt, an der Uhr getippt); Ratenschutz über `rate_limits` mit drei Töpfen |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
@@ -1753,7 +1764,7 @@ Drei Fälle gab es, alle seit Web 4.4.0 geschlossen:
 | Endpunkt | Was den Unterschied machte | Wie er geschlossen ist |
 |---|---|---|
 | `login.php` | bei unbekannter Adresse lief keine bcrypt-Prüfung | Prüfung gegen `AUTH_VERGLEICHSWERT`, dazu `rate_gleiche_dauer()` |
-| `ingest.php` | bei unbekannter Gerätekennung lief keine bcrypt-Prüfung | dasselbe |
+| `ingest.php` | bei unbekannter Gerätekennung lief keine bcrypt-Prüfung | dasselbe — seit Web 13.0.0 gegen `GERAET_VERGLEICHSWERT` (SHA-256, E-S5-42): Der Unterschied wäre jetzt Mikrosekunden; der Blindvergleich bleibt, damit beide Zweige dieselben Schritte gehen |
 | `reset_request.php` | bei vorhandenem Konto lief ein vollständiges Mailgespräch | Antwort wird **vor** dem Versand abgeschlossen, dazu 0,5 s Mindestdauer |
 | `auth_salt.php` | der unbekannte Zweig macht *mehr* Arbeit (zweite Abfrage, HMAC) | 50 ms Mindestdauer, drei Größenordnungen über dem Unterschied |
 
@@ -1957,11 +1968,13 @@ Die verbindliche Beschreibung steht im JSON-Vertrag, Abschnitt 8.
 
 **Zwei Stellen, an denen die Gleichheit von Antworten zählt.** Der
 Salt-Endpunkt (`auth_salt.php`) und die Kopplung (`pair.php`) sind ohne
-Anmeldung erreichbar. Bei `pair.php` gilt das seit Web 9.15.0 für **beide**
-Anliegen: Der Trennen-Zweig läuft im unbekannten Fall gegen
-`AUTH_VERGLEICHSWERT`, wie `ingest.php` — sonst wäre aus der Antwortdauer
-ablesbar, welche Gerätekennungen es gibt, und die Kennung ist die Hälfte
-dessen, was ein Upload braucht. Beide müssen für "gibt es" und "gibt es nicht"
+Anmeldung erreichbar. Bei `pair.php` gilt das seit Web 13.0.0 für **alle
+vier** Anliegen (seit 9.15.0 für beide): Die kopfzeilen-ausgewiesenen Zweige
+laufen im unbekannten Fall gegen `GERAET_VERGLEICHSWERT`, wie `ingest.php`,
+und `410`/`409` kommen ohne Verzögerung, weil sie die richtigen Zugangsdaten
+voraussetzen (E-S5-31) — sonst wäre aus der Antwortdauer ablesbar, welche
+Gerätekennungen es gibt, und die Kennung ist die Hälfte dessen, was ein
+Upload braucht. Die Kopplungsprobe misst beide 401-Zweige nebeneinander. Beide müssen für "gibt es" und "gibt es nicht"
 Antworten liefern, die sich in **Länge, Zeichenvorrat, Aufbau und Dauer**
 nicht unterscheiden. Beim Salt war es zuletzt die Länge, die alles verriet:
 Ein echtes Salt hat 32 Hexzeichen, das Pseudo-Salt hatte 64. Wer hier etwas
@@ -2346,7 +2359,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 
 | Job | täglich? | was er tut |
 |---|---|---|
-| `aufraeumen` | ja, höchstens 1×/Kalendertag | Kopplungscodes, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Papierkorb, Passwort-Tokens, Erinnerung an die Administration |
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Papierkorb, Passwort-Tokens, Erinnerung an die Administration |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
@@ -3714,8 +3727,8 @@ Die Bausteine im Einzelnen:
 |---|---|---|
 | Prüfschicht | `validate_lib.php` | Wertebereiche, Längen, Formate, Mengen aller Einsatz- und Ruhesegmentfelder. Unterscheidet „Wert war ungültig" von „Wert war nicht vorhanden" (`Pruefliste`), damit ein Fehler nicht als Erfolg gemeldet werden kann. |
 | Kalendertag | `validate_lib.php` | Ein unmöglicher Tag wird abgelehnt statt still verschoben (30. Februar → 2. März). Sichtbar nur über die Warnungsabfrage der Datumsklasse. |
-| Ratenschutz | `ratelimit_lib.php` | Zählung je Konto **und** IP, in der Datenbank. Greift **vor** teuren Prüfungen (bcrypt, PBKDF2), Antwortzeit bei Misserfolg konstant. Seit Web 4.4.0 an allen vier Töpfen angewendet: `login`, `salt`, `reset`, `pair`. |
-| Fester Vergleichswert | `AUTH_VERGLEICHSWERT` in `db.php` | Ein bcrypt-Hash ohne zugehöriges Geheimnis, damit auch der Zweig „Kennung unbekannt" eine Passwortprüfung rechnet. Ohne ihn beantwortet die Antwortzeit die Frage, welche Konten und Geräte es gibt. |
+| Ratenschutz | `ratelimit_lib.php` | Zählung je Konto **und** IP, in der Datenbank. Greift **vor** teuren Prüfungen (bcrypt, PBKDF2), Antwortzeit bei Misserfolg konstant. Seit Web 4.4.0 an `login`, `salt`, `reset`, `pair`; seit 13.0.0 dazu `pair_start` (jede Sitzungsanfrage je Adresse) und `pair_code` (Code-Eingabe im Web je Konto und Adresse), E-S5-16. |
+| Fester Vergleichswert | `AUTH_VERGLEICHSWERT` in `db.php` | Ein bcrypt-Hash ohne zugehöriges Geheimnis, damit auch der Zweig „Kennung unbekannt" eine Passwortprüfung rechnet. Ohne ihn beantwortet die Antwortzeit die Frage, welche Konten und Geräte es gibt. Seit Web 13.0.0 daneben `GERAET_VERGLEICHSWERT` (SHA-256) für die Gerätepfade — dieselbe Aufgabe, anderes Verfahren (E-S5-42). |
 | Antwort abschließen | `antwort_abschliessen()` in `smtp.php` | Beendet die Antwort, bevor der Mailversand beginnt. Nimmt dem Versand die messbare Wirkung auf die Antwortzeit. |
 | Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
 | Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn nach derselben Frist ablaufen wie die Sitzung — **gleitend wie sie**: Jeder Treffer erneuert den Zeitstempel (R44, seit Web 12.9.0). Vorher war es eine feste Frist ab dem Entsperren, und genau daraus entstand der Entsperrdialog mitten in der Arbeit. **Muss vor `unlock.js` geladen werden.** |

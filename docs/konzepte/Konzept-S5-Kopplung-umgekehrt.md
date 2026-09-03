@@ -9,9 +9,9 @@ R62.**
 > | | |
 > |---|---|
 > | Stand | 03.09.2026 — **Umsetzung läuft** (Schritt 5); Freigabe der Paket-A-Fragen am 03.09.2026 |
-> | Paket in Arbeit | **A (Server)** auf `claude/s7-umsetzung-vorbereiten-s8kax0`. C (Uhr) und E (Android-Zusatz) laufen in eigenen Instanzen auf eigenen Zweigen; B und D folgen A hier |
-> | Erledigt | — |
-> | Wo es hakt | Entschieden sind F-S5-01 bis -04, -07 bis -09, -11 und die nachgetragene F-S5-12 (E-S5-32 bis -47). **Offen:** F-S5-05 (B), F-S5-06 und F-S5-10 (C) — Empfehlungen stehen, die Instanzen legen sie vor dem Paket vor. **Preisänderung durch E-S5-42:** die eine Bestandsuhr bleibt nach dem Deploy **nicht** gekoppelt (Abschnitt 8.1, nachgetragen) |
+> | Paket in Arbeit | **B (Web)** als nächstes auf `claude/s7-umsetzung-vorbereiten-s8kax0`. C (Uhr) und E (Android-Zusatz) laufen in eigenen Instanzen auf eigenen Zweigen; D folgt hier |
+> | Erledigt | **A — Server** (03.09.2026, Web **13.0.0**): `pair.php` mit vier Anliegen, `kopplung_lib.php`, Tabelle `pair_sessions`, Migration `2026_09_03_kopplungssitzungen`, drei Töpfe, Obergrenze, `email_maskieren()`, Geräte- und Sitzungsschlüssel als SHA-256, Kopplungsprobe **75/75**, Ingestprobe **24/24**, Geräteprobe **39/39**, Migration auf Bestand (41 = 41) und frisch (übersprungen) gefahren — Abschnitt 9 |
+> | Wo es hakt | Entschieden sind F-S5-01 bis -04, -07 bis -09, -11 und die nachgetragene F-S5-12 (E-S5-32 bis -47). **Offen:** F-S5-05 (B), F-S5-06 und F-S5-10 (C) — Empfehlungen stehen, die Instanzen legen sie vor dem Paket vor. **Preisänderung durch E-S5-42:** die eine Bestandsuhr bleibt nach dem Deploy **nicht** gekoppelt (Abschnitt 8.1, nachgetragen). **Zwischen A und B ist der Knopf „Kopplungscode erzeugen“ im Web tot** (die Tabelle dahinter ist weg) — dieser Zweig geht nicht vor B auf `main` |
 > | Fable-Schritt | **keiner** (R49: bekanntes Muster, keine neue Kryptographie; der R17-Review in P6 prüft mit) |
 > | Erhoben an | `main`, Commit `c2ac707` (02.09.2026, Merge PR #26): Web 12.9.2, Uhr 2.0.0, Android 0.7.7 |
 > | Erhoben aus | dem Repositorium allein — keine Uhr, kein Simulatorlauf, kein Server. Was sich so nicht ermitteln ließ, steht in Abschnitt 11 |
@@ -171,6 +171,11 @@ Abschnitt 5 mit Fundstelle.
 | **E-S5-45** | **`server/demo_lib.php` gehört zu Paket A** (V-S5-01): das Zurücksetzen des Demo-Kontos löscht aus `pair_sessions` statt `pair_codes` | Auftraggeber 03.09.2026 |
 | **E-S5-46** | **`docs/Backup-Format.md` gehört zu Paket D** (V-S5-02): die Zeile zu `pair_codes` wird umgeschrieben, nicht gestrichen — „diese Tabelle fehlt mit Absicht“ gilt für `pair_sessions` genauso | Auftraggeber 03.09.2026 |
 | **E-S5-47** | **`android/LIESMICH.md` gehört zu Paket D** (V-S5-06): die Anleitung zum Server-Rundlauf beschreibt den alten Weg; der Testkopf von `KopplungRundlaufTest.kt` bleibt dem S4-Rest. Bis dahin läuft der Android-Rundlauf gegen einen Server vom Stand `main` (Paket E baut seine Installation aus dem eigenen Zweig) | Auftraggeber 03.09.2026 |
+| **E-S5-48** | **`bestaetigen nein` mit Gerätezugang ist ein Nichtstun** — `200 {"ok":true}`, das Gerät bleibt. Der Fall: Das Ja hat das Gerät angelegt, die Antwort ging verloren, und statt zu wiederholen drückt jemand BACK. Ein Nein, das ein fertiges Gerät löschte, wäre ein Trennen ohne Trennen-Mail; das Gerät steht dann ohne Schlüsselhalter in der Liste, die Kopplungsmail hat es gemeldet, „neu“ zeigt es sieben Tage — löschen im Web. Kopplungsprobe Fall E48 | Umsetzung A |
+| **E-S5-49** | **`trennen` mit schwebenden Zugangsdaten wirkt wie `nein`:** Sitzung gelöscht, `200`. Es gibt kein Gerät, das sich trennen ließe; die Sitzung braucht danach niemand mehr. Ein konformer Client sendet das nie, aber der Zweig braucht eine Antwort, die nichts kaputtmacht | Umsetzung A |
+| **E-S5-50** | **`rate_erfolg('pair')` ruft nur `trennen`** (wie bisher). Ein gelungenes `status` oder `bestaetigen` leert den Topf nie: Sonst setzte ein Angreifer mit einer eigenen, gültigen Sitzung alle fünf Sekunden den IP-Zähler zurück, während er daneben fremde Kennungen durchprobiert. Kopplungsprobe Fall 19 misst es | Umsetzung A |
+| **E-S5-51** | **Die Bibliothek `server/kopplung_lib.php`** trägt Frist-SQL, Anlegen mit Dublettenschleife, Suche nach Kennung und Code und das Beanspruchen — Paket B ruft `pair_sitzung_nach_code()` und `pair_sitzung_beanspruchen()` und legt die Frist nirgends zweimal aus. Die Kopplungsprobe prüft die Dublettenschleife über eine eingeschobene Codequelle (Fall 25), weil sich der Zufall über HTTP nicht patchen lässt | Umsetzung A |
+| **E-S5-52** | **Doku-Schnitt zwischen A und D:** A berichtigt in `Technik.md` nur, was A falsch gemacht hätte (Datenmodellzeile `pair_sessions`, Jobkatalog, Antwortzeit- und Sicherheitstabelle, Verzeichnisstruktur); der Kopplungsweg selbst (JSON-Vertrag 1a, Handbuch 12, Technik 4.99b) bleibt bei D, wie die Dateiliste es vorsieht. Bis D beschreibt der Vertrag den alten Weg — der Statusblock sagt es | Umsetzung A |
 
 ---
 
@@ -724,7 +729,7 @@ Sperren (Rahmenplan 4): S5-Umsetzung nicht parallel zu S6 (erledigt) und S7
 
 | Paket | Stand | Probleme / Lösungen | Entscheidungen |
 |---|---|---|---|
-| A | **in Arbeit** seit 03.09.2026 | — | E-S5-32 bis -47 vor Beginn |
+| A | **erledigt** 03.09.2026 — Web **13.0.0** (Hauptnummer: neuer Weg **und** neues Verfahren, mit Migration). Dateien: `schema.sql`, `update.php`, `db.php`, `ratelimit_lib.php`, `pair.php` (neu geschrieben), **`kopplung_lib.php` (neu)**, `jobs_lib.php`, `demo_lib.php`, `ingest.php`, `einstellungen.php` 264, vier virtuelle Geräte, `tools/ingestprobe/`, **`tools/kopplungsprobe/` (neu)**, `version.php`, `CHANGELOG.md`, `Technik.md` (sechs Stellen), `Rahmenplan.md` Schritte 3 und 5 | **Nichts Unerwartetes im Code.** Zwei Stellen des Konzepts waren unterbestimmt und sind entschieden (E-S5-48, -49). `beansprucht_am` ist nicht da (E-S5-44). Die Probe fand beim ersten Lauf 75/75 — die eine Überraschung war organisatorisch: MariaDB war im Container gestorben (`aufbau.sh datenbank`). **Der Text der Kopplungsmail ist nicht maschinell belegt** (kein Mailserver), nur der Versandweg nach der Antwort — Prüfdokument | E-S5-48 bis -52 |
 | B | offen | — | — |
 | C | offen | — | — |
 | D | offen | — | — |
@@ -737,14 +742,14 @@ Sperren (Rahmenplan 4): S5-Umsetzung nicht parallel zu S6 (erledigt) und S7
 
 | Prüfmittel | Misst | Soll |
 |---|---|---|
-| `tools/kopplungsprobe/probe.php` (neu) | Endpunkt über echtes HTTP, alle vier Anliegen, Ratenschutz, Obergrenze, Migration | **alle** Erwartungen erfüllt; ≥ 34 Fälle (10.2), Zahl gemeldet |
-| `tools/geraeteprobe/probe.php` | Blocklesen unverändert | 39 / 39 |
+| `tools/kopplungsprobe/probe.php` (neu) | Endpunkt über echtes HTTP, alle vier Anliegen, Ratenschutz, Obergrenze, Migration | **alle** Erwartungen erfüllt; ≥ 34 Fälle (10.2), Zahl gemeldet — **A: 75 Erwartungen, 0 nicht erfüllt, 0 übergangen** (03.09.2026, gegen Bestand mit gefahrener Migration und gegen frische Installation) |
+| `tools/geraeteprobe/probe.php` | Blocklesen unverändert | 39 / 39 — **A: 39 / 39** |
 | `tools/uhr-pruefstand/pruefstand.sh reihe` | Übersetzen, strenge Typprüfung | 99 übersetzt, 0 fehlgeschlagen, 0 Warnungen, 0 Fehler |
 | `pruefstand.sh bildreihe` | Zeichnen auf Vertretern | 0 Abstürze; Bilder der `PairView` je Vertreter |
 | Simulator-Rundlauf | sechs Fälle auf drei Geräten | 18 / 18 (oder: welche davon aus welchem Grund nicht, an erster Stelle des Prüfdokuments) |
 | `tools/screenshots/` | Seite 33, acht Breiten, drei Zustände | 24 Bilder, 0 Überlauf, 0 Konsolenfehler, Knöpfe 44 px |
 | `tools/vollstaendigkeit/` | Stylesheet | unverändert |
-| `tools/wortliste/` | Bereiche a, c, **e** (neu, XML und `.mc`) | 0 / 0 / 0 je Bereich, Dateizahl genannt |
+| `tools/wortliste/` | Bereiche a, c, **e** (neu, XML und `.mc`) | 0 / 0 / 0 je Bereich, Dateizahl genannt — **A: Bereiche a–d 0 / 0 / 0 (77 Ausnahmen, 77 gegriffen), zuletzt gefahren** |
 | `tools/referenzdatensatz/vergleich/kreislauf.py` (csv, edbak) | Regressionspflicht R24 | 0 unerklärte Abweichungen, beide |
 | Gerätetest | eine Kopplung mit der Uhr in der Hand (P2-Punkt 4.1, R55) | Rundlauf Ja; zusätzlich Nein und Fristablauf, wenn Zeit ist |
 
@@ -818,7 +823,7 @@ lässt.
 | **B-S5-05** | Kopfkommentar von `Pair.mc` ist veraltet: „UP halten“, „5 Zeichen“ — es sind START halten und sechs Zeichen | `watch/source/Pair.mc` 3–4 | Paket C schreibt den Kopf ohnehin neu |
 | **B-S5-06** | Vertrag 1b sagt „429 gilt für beide Anliegen“ | `docs/JSON-Vertrag.md` 207 | Paket D: „für alle vier“ |
 | **B-S5-07** | Kommentar „die eine Haupthandlung dieses Reiters bleibt ‚Kopplungscode erzeugen‘“ wird mit B falsch | `server/einstellungen.php` 3072–3075 | Paket B |
-| **B-S5-08** | Vertrag 0, Zeile 413: „beschrieben, nicht umgesetzt“ steht seit S2 — nicht S5, nur beim Lesen wieder gesehen | `docs/JSON-Vertrag.md` 46 | keine Handlung in S5 |
+| **B-S5-08** | Vertrag 0, Zeile 46 (V-S5-07): „beschrieben, nicht umgesetzt“ steht seit S2 — nicht S5, nur beim Lesen wieder gesehen | `docs/JSON-Vertrag.md` 46 | keine Handlung in S5 |
 
 ---
 
@@ -838,3 +843,13 @@ lässt.
 5. Nach Freigabe des Abschlusses: R62-Schritte, Konzept löschen; das
    Prüfdokument bleibt bis zur abgehakten Prüfliste (darin P2-Punkt 4.1 und
    der Gerätetest).
+
+### 12.1 Backlog-Kandidaten aus der Umsetzung (Nummern beim Merge, K2)
+
+| Kandidat | Herkunft | Vorschlag |
+|---|---|---|
+| `AUTH_VERGLEICHSWERT` trägt Kostenfaktor 10, PHP 8.4 legt 12 an — 57 gegen 228 ms, verdeckt nur von der Mindestdauer 0,35 s | V-S5-13, Paket A | Vergleichswert auf den tatsächlichen Kostenfaktor ziehen, sobald keine Installation mehr auf PHP 8.3 läuft; oder `rate_gleiche_dauer()` an `login.php` auf 0,5 s |
+| `ingest.php` schreibt beim Upsert `ended_at = VALUES(ended_at)` bedingungslos, `final` mit `GREATEST` — ein spätes nicht-finales Paket setzt `ended_at` auf NULL zurück | Gegenlesung B5.3 (Vorbereitung 8.4) | `ended_at = COALESCE(VALUES(ended_at), ended_at)`; betrifft auch Paket E2 (Reihenfolge beim Nachsenden) |
+| Kopfkommentar von `tools/uhr-bilder/erzeugen.sh` sagt „bitgleich“, die LIESMICH daneben „pixelgleich“ | V-S5-05 | ein Wort, oder `-define png:exclude-chunk=time` |
+| Die manuelle Geräteanlage vergibt `dev-` + 4 Zufallsbytes, die Kopplung 16 | B-S5-01 (erste Hälfte) | in Paket B mitnehmen, weil `einstellungen.php` dort ohnehin offen ist — Entscheidung der Umsetzung |
+| Die Rundlauffälle der Android-App lassen 9 Diensttage, 5 Einsätze und 14 439 Punkte im Admin-Konto zurück | Vorbereitung 8.2 | Aufräumen im `@After` oder eigenes Prüfkonto |

@@ -53,25 +53,32 @@ if (strlen($raw) > $CFG['app']['max_body_bytes']) json_out(['error' => 'too_larg
 /* --- Geraet authentifizieren -------------------------------------------------
  *
  * ANTWORTZEIT (M4-07): Bei unbekannter Gerätekennung kam die Abweisung frueher
- * sofort, bei bekannter lief erst eine bcrypt-Pruefung. Der Unterschied ist
- * ohne jede Zugangsdaten messbar und beantwortet die Frage, welche
- * Geraetekennungen es gibt — und die Kennung ist die Haelfte dessen, was ein
- * Upload braucht. Deshalb laeuft auch der unbekannte Zweig gegen einen festen
- * Vergleichswert (AUTH_VERGLEICHSWERT, db.php).
+ * sofort, bei bekannter lief erst eine Pruefung des Schluessels. Der
+ * Unterschied ist ohne jede Zugangsdaten messbar und beantwortet die Frage,
+ * welche Geraetekennungen es gibt — und die Kennung ist die Haelfte dessen,
+ * was ein Upload braucht. Deshalb laeuft auch der unbekannte Zweig gegen einen
+ * festen Vergleichswert.
+ *
+ * SEIT WEB 13.0.0 IST DER SCHLUESSEL SHA-256, NICHT BCRYPT (S5, E-S5-42;
+ * die Verfahrenswahl steht in db.php bei GERAET_VERGLEICHSWERT). Der
+ * Schluessel sind 24 Zufallsbytes — bcrypt bremste hier nichts als den Server,
+ * 228 ms je Upload. Der Blindvergleich bleibt trotzdem: Beide Zweige gehen
+ * dieselben Schritte, und hash_equals() vergleicht in konstanter Zeit. Ein
+ * bcrypt-Hash aus der Zeit davor passt nie mehr; das Geraet koppelt neu.
  *
  * Die Abfolge bleibt sonst unveraendert: Der Fehlerschluessel 'auth' deckt
  * beide Faelle ab und sagt nicht, welcher es war.
  */
-$deviceId = $_SERVER['HTTP_X_DEVICE_ID'] ?? '';
-$apiKey   = $_SERVER['HTTP_X_API_KEY']   ?? '';
+$deviceId = (string)($_SERVER['HTTP_X_DEVICE_ID'] ?? '');
+$apiKey   = (string)($_SERVER['HTTP_X_API_KEY']   ?? '');
 $st = db()->prepare('SELECT id, user_id, api_key_hash, active FROM devices WHERE device_id = ?');
 $st->execute([$deviceId]);
 $dev = $st->fetch();
 if (!$dev) {
-    password_verify($apiKey, AUTH_VERGLEICHSWERT);
+    geraet_schluessel_gueltig($apiKey, GERAET_VERGLEICHSWERT);
     json_out(['error' => 'auth'], 401);
 }
-if (!password_verify($apiKey, $dev['api_key_hash'])) json_out(['error' => 'auth'], 401);
+if (!geraet_schluessel_gueltig($apiKey, (string)$dev['api_key_hash'])) json_out(['error' => 'auth'], 401);
 if (!(int)$dev['active']) json_out(['error' => 'device_disabled'], 403);
 
 /* Demo-Konto: faelliger Reset VOR der Verarbeitung (E-P1-18).

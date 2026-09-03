@@ -261,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $devId = 'dev-' . bin2hex(random_bytes(4));
             $key   = bin2hex(random_bytes(24));
             db()->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label) VALUES (?,?,?,?)')
-                ->execute([$userId, $devId, password_hash($key, PASSWORD_DEFAULT), $label ?: null]);
+                ->execute([$userId, $devId, geraet_schluessel_hash($key), $label ?: null]);
             $newKey = ['device_id' => $devId, 'api_key' => $key];
             $notice = 'Gerät angelegt. Schlüssel unten JETZT notieren — er wird nur einmal angezeigt.';
         }

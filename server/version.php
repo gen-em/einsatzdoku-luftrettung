@@ -2121,5 +2121,34 @@ declare(strict_types=1);
  * Parameter-Vorgabewert, die erst im Rumpf geladen wird — PHP wertet
  * Vorgabewerte beim Aufruf aus. Das geplante Komplett-Backup war damit
  * seit S2/AP8 ohne Wirkung.
+ *
+ *
+ * 13.0.0 DREHT DIE KOPPLUNG UM (S5, Paket A; R49) — und wechselt das
+ * Verfahren fuer den Geraeteschluessel. Beides zusammen ist die Hauptnummer:
+ * ein anderer Weg durch die Anwendung UND eine Aenderung an der
+ * Verschluesselung, mit Migration.
+ *
+ * DER WEG: Bis 12.9.4 erzeugte das Web den Code, und die Uhr tippte ihn.
+ * Jetzt holt sich das GERAET mit `start` eine Kopplungssitzung und zeigt den
+ * Code, ein Mensch gibt ihn im Web in sein Konto ein, und das Geraet
+ * bestaetigt mit Ja — erst dann entsteht die devices-Zeile. Bis dahin sind
+ * Kennung und Schluessel schwebend (Tabelle pair_sessions), und ingest.php
+ * weist sie ab. Vier Anliegen an pair.php (start, status, bestaetigen,
+ * trennen), drei Ratenschutz-Toepfe, eine Obergrenze offener Sitzungen. Die
+ * Migration 2026_09_03_kopplungssitzungen legt pair_sessions an und LOESCHT
+ * pair_codes. Paket A ist die Serverseite; die Geraeteseite im Web (B) und
+ * die Uhr (C) folgen auf demselben Zweig, und das Ganze kommt einmal auf
+ * main — bis dahin laeuft der Knopf „Kopplungscode erzeugen" ins Leere.
+ *
+ * DAS VERFAHREN: Der Geraeteschluessel sind 24 Zufallsbytes. bcrypt bremst das
+ * Raten eines schwachen Geheimnisses; bei 192 Bit Zufall bremst es nur den
+ * Server — 228 ms je Upload, und beim Abfragetakt der neuen Kopplung 27 s je
+ * Sitzung. Geraete- und Sitzungsschluessel liegen jetzt als SHA-256,
+ * verglichen in konstanter Zeit; das Anmeldetoken bleibt bcrypt, weil es
+ * gestrecktes Passwort ist (Regel bei GERAET_VERGLEICHSWERT in db.php). Der
+ * Preis, bewusst gezahlt: Ein vor 13.0.0 gekoppeltes Geraet traegt einen
+ * bcrypt-Hash, der nie mehr passt, und koppelt einmal neu. Einen Umhash-Pfad
+ * gibt es absichtlich nicht — ab 1.0 gibt es genau eine, frisch installierte
+ * Installation (R60).
  */
-const WEB_VERSION = '12.9.4';
+const WEB_VERSION = '13.0.0';

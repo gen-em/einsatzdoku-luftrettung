@@ -41,18 +41,43 @@ require_once __DIR__ . '/db.php';
  *   sperre  Dauer der Sperre in Sekunden
  *
  * Die Werte sind so gewaehlt, dass eine Person mit Tippfehlern sie im Alltag
- * nicht bemerkt, ein Durchprobieren aber aussichtslos wird. Beispiel Kopplung:
- * Sechs Zeichen aus einem Alphabet von 32 sind 30 Bit, also rund 1,07
- * Milliarden Moeglichkeiten. Mit 10 Versuchen je 10 Minuten und einer
- * Gueltigkeit von 10 Minuten bleibt der Coderaum praktisch unerreichbar —
- * frueher war er mit 5 Zeichen, 60 Minuten Gueltigkeit und ohne Ratenschutz in
- * rund 1,4 Stunden vollstaendig durchlaufbar.
+ * nicht bemerkt, ein Durchprobieren aber aussichtslos wird. Beispiel Kopplung
+ * (Topf `pair_code`, die Eingabe des Codes im Web): Sechs Zeichen aus einem
+ * Alphabet von 32 sind 30 Bit, also rund 1,07 Milliarden Moeglichkeiten. Mit
+ * 10 Versuchen je 10 Minuten und einer Gueltigkeit von 10 Minuten bleibt der
+ * Coderaum praktisch unerreichbar — frueher war er mit 5 Zeichen, 60 Minuten
+ * Gueltigkeit und ohne Ratenschutz in rund 1,4 Stunden vollstaendig
+ * durchlaufbar.
  */
 const RATE_GRENZEN = [
     'login' => ['max' => 10, 'fenster' =>  900, 'sperre' =>  900],
     'salt'  => ['max' => 30, 'fenster' =>  900, 'sperre' =>  900],
     'reset' => ['max' =>  5, 'fenster' => 3600, 'sperre' => 3600],
-    'pair'  => ['max' => 10, 'fenster' =>  600, 'sperre' =>  600],
+
+    /* KOPPLUNG: DREI ZAEHLUNGEN, DREI TOEPFE (Web 13.0.0, S5 E-S5-16), weil
+     * diese Tabelle am Topf haengt und nicht am Merkmal — drei verschiedene
+     * Grenzen brauchen drei Eintraege.
+     *
+     *   pair        401 an status/bestaetigen/trennen, je IP — Kennung oder
+     *               Schluessel unbekannt. Derselbe Topf schuetzt das Token von
+     *               jobs.php (B-S5-04): Wer diesen Topf dreht, dreht den
+     *               Wartungsschutz mit.
+     *   pair_start  JEDE Anfrage `start`, je IP (Muster rate_zaehlen(): Menge
+     *               begrenzen, wo es kein Scheitern gibt). 20 je 10 Minuten:
+     *               Der Kursfall — zwoelf Uhren hinter einer Adresse — passt
+     *               hinein; hundert machten den Topf wertlos gegen das
+     *               Fuellen der Obergrenze (5000 Sitzungen aus 50 Adressen).
+     *   pair_code   Fehlgriffe bei der Code-Eingabe im Web, je Konto UND IP.
+     *               Dieselben Zahlen wie `pair` (E-S5-06). Ein Code, der das
+     *               Muster PAIR_RE nicht erfuellt, zaehlt NICHT — die
+     *               Datenbank wurde nicht gefragt, es war nichts zu erraten
+     *               (E-S5-17).
+     *
+     * Die Obergrenze offener Sitzungen ist KEIN Topf, sondern eine
+     * SQL-Zaehlung ueber unverfallene Zeilen (PAIR_SITZUNGEN_MAX, db.php). */
+    'pair'       => ['max' => 10, 'fenster' =>  600, 'sperre' =>  600],
+    'pair_start' => ['max' => 20, 'fenster' =>  600, 'sperre' =>  600],
+    'pair_code'  => ['max' => 10, 'fenster' =>  600, 'sperre' =>  600],
 
     /* DEMO ZAEHLT ANDERS ALS DIE VIER DARUEBER: nicht Fehlversuche, sondern
      * GELUNGENE Anmeldungen am Demo-Konto (E-P1-20).
@@ -184,11 +209,12 @@ function rate_misserfolg(string $topf, ?string $konto = null,
 /**
  * Eine Anfrage verbuchen, ohne dass es einen Misserfolg gaebe.
  *
- * Zwei der vier Toepfe kennen kein Scheitern: Der Salz-Endpunkt antwortet
- * jeder Adresse — das ist gerade der Sinn des Pseudo-Salts. Und die
+ * Drei Toepfe kennen kein Scheitern: Der Salz-Endpunkt antwortet jeder
+ * Adresse — das ist gerade der Sinn des Pseudo-Salts. Die
  * Zuruecksetzen-Anforderung antwortet immer gleich, egal ob es das Konto gibt.
- * An beiden Stellen ist die MENGE der Anfragen das, was begrenzt werden soll,
- * nicht ein Fehlversuch.
+ * Und `start` an der Kopplung (Topf `pair_start`) legt jedem Geraet eine
+ * Sitzung an. An allen drei Stellen ist die MENGE der Anfragen das, was
+ * begrenzt werden soll, nicht ein Fehlversuch.
  *
  * Technisch dasselbe wie rate_misserfolg(); der eigene Name steht hier, damit
  * an der Aufrufstelle nicht "Misserfolg" steht, wo es keinen gibt.

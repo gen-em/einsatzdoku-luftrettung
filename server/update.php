@@ -1978,6 +1978,47 @@ $MIGRATIONS = [
             "ALTER TABLE devices MODIFY geraet_modell VARCHAR(191) NULL",
         ],
     ],
+    [
+        'id'    => '2026_09_03_kopplungssitzungen',
+        'web'   => '13.0.0',
+        'label' => 'Kopplung umgekehrt (S5): Sitzungstabelle pair_sessions, Tabelle pair_codes entfällt',
+        'zerstoert' => 'Die Tabelle pair_codes mit allen Kopplungscodes wird gelöscht.',
+        /* BEWUSST OHNE Inhaltspruefung (M6-01, wie 2026_07_19_phase10_entfernen):
+         * Ein Kopplungscode ist ein zehn Minuten gueltiger Zufallswert, den
+         * die Weboberflaeche erzeugt hat — nichts davon ist von Hand
+         * eingegeben, und ab Web 13.0.0 loest ihn kein Geraet mehr ein
+         * (E-S5-28). Eine Inhaltspruefung hielte die Migration genau dort
+         * auf, wo jemand zuletzt einen Code erzeugt hat.
+         *
+         * WARUM DIE TABELLE WEG MUSS UND NICHT STEHEN BLEIBT: Eine Tabelle
+         * ohne Leser ist ein Ort, an dem eine spaetere Migration stolpert —
+         * und das Komplett-Backup liest jede Tabelle des Schemas. */
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT table_name FROM information_schema.tables
+                              WHERE table_schema = DATABASE()
+                                AND table_name IN ('pair_sessions', 'pair_codes')");
+            $da = $q->fetchAll(PDO::FETCH_COLUMN);
+            return in_array('pair_sessions', $da, true) && !in_array('pair_codes', $da, true);
+        },
+        'sql'   => [
+            /* Wortgleich mit schema.sql — die Erklaerung steht dort. */
+            "CREATE TABLE IF NOT EXISTS pair_sessions (
+               id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               code          VARCHAR(8) NOT NULL UNIQUE,
+               device_id     VARCHAR(64) NOT NULL UNIQUE,
+               api_key_hash  VARCHAR(255) NOT NULL,
+               geraet_art    VARCHAR(16) NULL,
+               geraet_modell VARCHAR(191) NULL,
+               geraet_teil   VARCHAR(64) NULL,
+               user_id       INT UNSIGNED NULL,
+               erstellt_am   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+               FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+               INDEX (erstellt_am),
+               INDEX (user_id)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            "DROP TABLE IF EXISTS pair_codes",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

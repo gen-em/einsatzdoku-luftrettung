@@ -11,6 +11,96 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 13.0.0] — 2026-09-03
+
+### Web — Kopplung umgekehrt: das Gerät zeigt den Code (S5, Paket A — Server)
+
+Bis 12.9.4 erzeugte das Web den Kopplungscode, und die Uhr tippte ihn — sechs
+Zeichen über einen Textpicker am Handgelenk, mit Rückfragen, Tippfehlern und
+einer Uhr-Fassung je Änderung am Codeformat. Rahmenplan R49 dreht den Ablauf
+um: **Das Gerät holt sich mit `start` eine Kopplungssitzung und zeigt den
+Code, ein Mensch gibt ihn im Web in sein Konto ein, und das Gerät bestätigt
+mit Ja.** Dieses Paket baut die Serverseite; die Geräteseite im Web (Paket B)
+und die Uhr (Paket C) folgen auf demselben Zweig, und das Ganze kommt einmal
+auf `main` — **bis dahin läuft der Knopf „Kopplungscode erzeugen“ ins Leere**,
+weil die Tabelle dahinter nicht mehr existiert. Dieser Zweig geht nicht vor
+Paket B auf `main`.
+
+`pair.php` kennt vier Anliegen mit Pflichtfeld `aktion`: `start`, `status`,
+`bestaetigen` und das unveränderte `trennen`. Die Zugangsdaten entstehen bei
+`start` und sind bis zum Ja **schwebend** — sie liegen in der neuen Tabelle
+`pair_sessions`, nicht in `devices`, und `ingest.php` weist sie ab. Der Code
+ist nur für den Menschen: Er weist nichts aus; wer ihn abliest, kann am Gerät
+nichts auslösen. Das letzte Wort hat das Gerät, das die maskierte Adresse des
+Kontos sieht (`ph***@gen-em.org`) — die falsche Adresse fällt auf. Zwei
+Angriffsflächen, zwei Tore: Ein fremdes Gerät im eigenen Konto scheitert an
+der Bestätigungsseite (sie zeigt Art und Modell), das eigene Gerät im fremden
+Konto am Ja auf dem Gerät. Eine alte Uhr, die noch `{"code": …}` sendet,
+bekommt `400` mit der Meldung „Uhr-App aktualisieren“ — der einzige Kanal, auf
+dem sie erfährt, was zu tun ist.
+
+**Ratenschutz gedreht.** Drei Töpfe statt einem: `pair_start` zählt jede
+Sitzungsanfrage je Adresse (20 je zehn Minuten — ein Kurs mit zwölf Uhren
+hinter einer Adresse passt hinein), `pair_code` die Fehlgriffe bei der Eingabe
+im Web je Konto **und** Adresse, `pair` bleibt für 401 an den ausgewiesenen
+Anliegen und für das Token von `jobs.php`. Dazu eine Obergrenze von 1000
+unverfallenen Sitzungen, **per SQL gezählt, nicht per Zeile** — der
+Aufräumjob läuft täglich, die Frist ist zehn Minuten, und eine Zeilenzählung
+ließe sich an einem Tag mit toten Sitzungen füllen. Was zählt und was nicht,
+ist festgelegt: 401 zählt, ein Rumpf ohne Aktion nicht (das ist eine alte Uhr,
+kein Raten), 410 und 409 nicht (der Code war richtig). Und ein gelungenes
+`status` leert den Zähler **nicht** — sonst setzte ein Angreifer mit einer
+eigenen Sitzung alle fünf Sekunden den Adresszähler zurück, während er daneben
+fremde Kennungen durchprobiert.
+
+**Eine Migration ist zwingend** (`2026_09_03_kopplungssitzungen`): Sie legt
+`pair_sessions` an und **löscht `pair_codes`**. Die Codes darin sind zehn
+Minuten gültige Zufallswerte, nichts davon ist von Hand eingegeben, und kein
+Gerät löst sie mehr ein — deshalb ohne Inhaltsprüfung, nach dem Muster der
+Phase-10-Migration. Nach dem Deploy `update.php` aufrufen.
+
+### Web — Geräteschlüssel als SHA-256 statt bcrypt — deshalb die Hauptnummer
+
+Der Geräteschlüssel sind 24 Zufallsbytes. bcrypt bremst das Raten eines
+*schwachen* Geheimnisses; bei 192 Bit Zufall bremst es nur den Server:
+228 ms je Upload (PHP 8.4 legt Kostenfaktor 12 an, gemessen), und beim
+Abfragetakt der neuen Kopplung wären es 27 s Rechenzeit je Sitzung gewesen.
+Seit dieser Fassung liegen Geräte- **und** Sitzungsschlüssel als SHA-256
+(`geraet_schluessel_hash()`, `db.php`), verglichen in konstanter Zeit; das
+Anmeldetoken bleibt bcrypt, denn es ist gestrecktes Passwort. Die Regel, nach
+der das Projekt seine Verfahren wählt, steht in `db.php` bei
+`GERAET_VERGLEICHSWERT`: aus einem Passwort abgeleitet → bcrypt; Zufall ab
+128 Bit → SHA-256; muss der Server es zurücklesen → AES-GCM mit dem
+Serverschlüssel. HMAC mit dem Serverschlüssel wurde erwogen und verworfen —
+kein Zugewinn gegen den Datenbankdieb, aber eine Abhängigkeit von `config.php`
+an einem Weg, der sie nicht braucht.
+
+**Der Preis, bewusst gezahlt (E-S5-42):** Ein Gerät, das vor dieser Fassung
+gekoppelt wurde, trägt einen bcrypt-Hash, der nie mehr passt — es wird nach
+dem Deploy mit `401` abgewiesen und **koppelt einmal neu**, nachdem sein Sync
+vollständig ist. Einen Umhash-Pfad gibt es absichtlich nicht: Ab 1.0 gibt es
+genau eine, frisch installierte Installation (R60), und Code für einen
+Bestand, den es nicht geben soll, wäre die Flickschusterei, die 1.0 vermeiden
+will. Der Drahtvertrag von `ingest.php` ist byteweise unverändert; die
+Android-Prüffälle merken nichts. Die Demo-Geräte der Fixture behalten ihre
+bcrypt-Zeichenketten und passen damit nie — für Geräte, deren Klartextschlüssel
+niemand hat, der richtige Zustand.
+
+**Was bewusst stehen bleibt:** `AUTH_VERGLEICHSWERT` für die Anmeldung, mit
+Kostenfaktor 10 gegen die 12 der gespeicherten Hashes — verdeckt heute nur von
+der Mindestdauer 0,35 s (V-S5-13, Backlog-Kandidat). Die Beschreibung des
+Kopplungswegs im JSON-Vertrag (1a), im Handbuch (12) und in der Technik-Doku
+zieht Paket D nach; hier ist nur berichtigt, was dieses Paket falsch gemacht
+hätte (Datenmodell, Jobkatalog, Antwortzeit- und Sicherheitstabelle).
+
+**Nachweis:** `tools/kopplungsprobe/` (neu): **75 Erwartungen** über echtes
+HTTP, 0 nicht erfüllt — Zustände, Frist, Gerätelimit, Antwortgleichheit
+(beide 401-Zweige 0,351 s, Rümpfe byteweise gleich), drei Töpfe, Obergrenze
+mit 1000 Zeilen, Dublettenschleife, Aufräumjob, Kaskade. `tools/ingestprobe/`
+**24/24** mit dem neuen Hash, `tools/geraeteprobe/` **39/39**. Die Migration
+auf einer Installation mit `pair_codes` gefahren (41 Kennungen im Register,
+`pair_codes` weg) und auf einer frischen Installation als übersprungen verbucht.
+
 ## [Web 12.9.4] — 2026-09-02
 
 ### Web — Behoben: Das geplante Komplett-Backup lief nie

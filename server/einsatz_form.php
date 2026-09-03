@@ -502,7 +502,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
                                    VALUES (?,?,?,?,0)')
                         ->execute([$userId, $devKey,
-                                   password_hash(bin2hex(random_bytes(24)), PASSWORD_DEFAULT),
+                                   geraet_schluessel_hash(bin2hex(random_bytes(24))),
                                    'Manuelle Einträge']);
                     $devId = (int)$pdo->lastInsertId();
                 }

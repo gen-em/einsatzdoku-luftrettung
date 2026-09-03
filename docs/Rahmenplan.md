@@ -136,9 +136,9 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 |---|---|---|---|---|---|---|
 | 1 | **S4 — Merge** | Fehlerbehebung abschließen, Backlog-Nummern nachziehen, `main` holen, Merge = Deploy, `update.php` | — | liegt vor | Opus | **gemergt** (Web 12.8.0, Android 0.7.7 auf `main`); `update.php` für `2026_09_02_schnitte` vom Auftraggeber zu bestätigen; Prüfliste S4 (1, 2, 3, 5) offen |
 | 2 | **S6 — Gerätekennung und Schlüsselfrist** | Serverseite von R42, Behebung R44 | Schritt 1 | keins; R42 und R44 sind die Spezifikation | Opus | **gemergt und ausgeliefert** (Web 12.9.0 bis 12.9.2 auf `main`); `update.php` für `2026_09_02_geraetekennung` und `…_geraetemodell_breiter` zu bestätigen; Abnahme nach Abschnitt 6 offen |
-| 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | offen |
+| 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | erledigt 03.09.2026 — Freigabe mit E-S5-32 bis -47 |
 | 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | gelöscht nach R62 | Opus | **erledigt, Web 12.9.3/12.9.4** (Abschnitt 8); PR gegen `main` offen — der Merge deployt; Prüfliste S7 offen |
-| 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | offen |
+| 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | **in Arbeit** — Paket A (Server, Web 13.0.0) erledigt 03.09.2026 auf `claude/s7-umsetzung-vorbereiten-s8kax0`; C und E in eigenen Instanzen |
 | 6 | **S4 — Rest** | Kopplungsmodul, feste Server-Adresse, App-Name, Insets, Herkunft je Einsatz (R64), Gerätetest, Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | offen |
 | 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Backup-Optionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61) | Schritte 4 und 6 | neu, mit Mockups | Fable (Konzept) | offen |
 | 8 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
