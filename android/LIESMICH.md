@@ -113,7 +113,7 @@ Die APK liegen danach unter
 
 ### Was der Baulauf heute meldet
 
-Stand E3 (Android 0.10.0), `./gradlew build` im Container, 03.09.2026:
+Stand E3 (Android 0.10.1), `./gradlew build` im Container, 03.09.2026:
 
 | | `handy` | `uhr` |
 |---|---|---|
@@ -193,15 +193,15 @@ legen PNG unter `<modul>/build/bilder/` ab:
 
 ```bash
 ./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  6 Bilder
-./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 63 Bilder
+./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 66 Bilder
 ```
 
 | | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
 |---|---|---|
-| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | 63 — 21 Bildschirme × 3 Breiten (360, 411, 600 dp) |
-| Bedienhöhe | 48 dp je Bild | 48 dp an 60 von 63 (drei liegen unter der Faltkante) |
-| Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**, und was unter der **Faltkante** liegt |
-| Unterscheidbarkeit | alle 6 paarweise verschieden | alle 63 paarweise verschieden, **und je Breite** |
+| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | **66** — 22 Bildschirme × 3 Breiten (360, 411, 600 dp) |
+| Bedienhöhe | 48 dp je Bild | 48 dp an **66 von 66** |
+| Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**; dazu der **ganze** Inhalt gegen den sichtbaren Bereich |
+| Unterscheidbarkeit | alle 6 paarweise verschieden | alle 66 paarweise verschieden, **und je Breite** |
 
 **Warum die letzte Zeile die wichtigste ist (F-P3-AQ).** Der Bilderlauf des
 Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die
@@ -212,6 +212,15 @@ kamen **byteweise gleich** heraus, weil die Zeile auf der 192-dp-Uhr im
 Phasenmodus unter dem Rand lag und in keinem der beiden zu sehen war
 (B-S5Z-17). Ohne den Vergleich wären zwei Dateien entstanden, die nichts
 belegen.
+
+**Zwei Funde im Prüfmittel selbst, beide behoben.** Die erste Fassung
+maß den waagerechten Überlauf (siehe unten) — eine Zahl, die nichts messen
+konnte. Die zweite fand Knöpfe, die von der Faltkante **angeschnitten**
+werden, aber keinen, der **vollständig** darunter liegt: Sie meldete „kein
+Knopf unter der Faltkante", während einer 80 dp tiefer lag (B-S5Z-18). Der
+Lauf misst deshalb **zweimal** — einmal auf der Gerätehöhe für das Bild,
+einmal ohne Faltkante für die Zählung — und nennt in der Ausgabe „N von M
+Knöpfen, Inhalt X dp".
 
 **Was `HandyBildTest` ausdrücklich NICHT misst:** waagerechten Überlauf im
 Sinn des Web-Laufs. Die erste Fassung meldete ihn, und die Zahl war wertlos —

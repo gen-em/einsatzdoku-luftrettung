@@ -14,6 +14,49 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.10.1] — 2026-09-03
+
+### Android — „Einsatz abschließen" ist wieder ohne Schieben erreichbar
+
+Der neue Bilderlauf hat es gefunden, und gelesen hätte es niemand: Bei
+laufendem Einsatz war die Dienstansicht **1015 dp** hoch. Auf einem
+800-dp-Telefon lag „Einsatz abschließen" damit bei 771–819 dp — zur Hälfte
+unter dem Rand, und „Dienst beenden" bei 891–939 dp ganz darunter. Der
+Bildschirm rollt, es ging also nichts verloren; aber mit Handschuhen ist
+Schieben ein Bedienschritt mehr, und es traf ausgerechnet die Handlung, die
+den Einsatz beendet.
+
+Den Ausschlag gab die Phasenliste: acht Reihen zu 48 dp sind rund **412 dp**
+und damit der größte Block der Ansicht. Sie zeigt jetzt nur noch die
+**gesetzten** Phasen und die **nächste**; alles andere liegt hinter „Alle
+Phasen zeigen". Die gesetzten bleiben stehen, weil sie die Dokumentation sind
+und weil ein erneutes Tippen die Korrektur ist. Gemessen an drei Punkten eines
+Einsatzes:
+
+| Stand | Inhalt | „Einsatz abschließen" endet bei |
+|---|---|---|
+| Einsatz beginnt | 711 dp *(vorher 1015)* | **515 dp** *(vorher 819)* |
+| Mitte, drei Phasen gesetzt | 889 dp | **693 dp** |
+| Ende, alle acht gesetzt | 955 dp | **759 dp** |
+
+**Was das kostet, und es ist kein kleiner Preis:** Die Direktwahl einer
+beliebigen Phase rückt einen Druck weiter weg. Die Liste war ausdrücklich als
+„Übersicht und Direktwahl in einem" gebaut. Ein Knopf hinter einem Knopf ist
+trotzdem billiger als ein Knopf unter dem Rand.
+
+**Was bewusst stehen bleibt:** Sind alle acht Phasen gesetzt, liegt „Dienst
+beenden" weiterhin unter dem Rand (bei 879 dp). Ein Schichtende mitten in
+einem Einsatz ist der seltene Fall — und wer ihn braucht, findet den Knopf
+eine Wischbewegung tiefer.
+
+**Das Prüfmittel selbst war dabei zu schwach und ist mitkorrigiert.** Es
+suchte Knöpfe, die von der Faltkante **angeschnitten** werden. Einer, der
+vollständig darunter liegt, war für es unsichtbar — es meldete „kein Knopf
+unter der Faltkante", während einer 80 dp darunter lag. Genau die grüne Zahl,
+die nichts misst. Der Lauf misst jetzt zusätzlich den **ganzen** Inhalt und
+zählt, wie viele Knöpfe davon im sichtbaren Bereich liegen: „1 von 2 Knöpfen,
+Inhalt 955 dp" steht seither in der Ausgabe, statt Schweigen.
+
 ## [Android 0.10.0] — 2026-09-03
 
 ### Android — Die Uhr erfährt es, ohne zu fragen

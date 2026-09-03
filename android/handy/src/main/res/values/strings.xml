@@ -216,5 +216,10 @@
     <string name="einsatz_abschliessen_text">Danach wird der Einsatz mit Endzeit gesendet. Ein neues Ruhesegment beginnt.</string>
     <string name="einsatz_abschliessen_ja">Abschließen</string>
     <string name="phasenliste">Phasen</string>
+    <!-- Die Liste zeigt gesetzte und naechste Phase; der Rest liegt einen
+         Druck entfernt (B-S5Z-16). Acht Reihen zu 48 dp schoben "Einsatz
+         abschliessen" unter die Faltkante. -->
+    <string name="phasen_alle_zeigen">Alle Phasen zeigen</string>
+    <string name="phasen_weniger_zeigen">Weniger zeigen</string>
     <string name="trennen_erst_dienst_beenden">Erst den Dienst beenden. Ein Trennen mitten in der Aufzeichnung risse den laufenden Dienst von seinem Konto ab.</string>
 </resources>

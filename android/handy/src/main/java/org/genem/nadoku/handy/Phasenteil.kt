@@ -13,6 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -75,16 +79,55 @@ fun ColumnScope.Phasenteil(
     }
 
     if (einsatzLaeuft) {
+        /* DIE LISTE ZEIGT NICHT MEHR ALLE ACHT PHASEN (B-S5Z-16, E-S5Z-33).
+         *
+         * DER GRUND IST GEMESSEN: Acht Reihen zu 48 dp sind rund 412 dp und
+         * damit der größte Block der laufenden Ansicht (1015 dp gesamt). Auf
+         * einem 800-dp-Telefon lag „Einsatz abschließen" dadurch bei
+         * 771–819 dp — halb unter der Faltkante, also die Handlung, die den
+         * Einsatz beendet, nur mit Schieben erreichbar. Der Bilderlauf hat
+         * es gefunden; gelesen hätte es niemand.
+         *
+         * SICHTBAR SIND: alle **gesetzten** Phasen und die **nächste**. Die
+         * gesetzten bleiben, weil sie die Dokumentation sind und weil ein
+         * erneutes Tippen die Korrektur ist (E-R45-12); die nächste, weil sie
+         * der nächste Schritt ist. Alles andere liegt einen Druck entfernt.
+         *
+         * DIE DIREKTWAHL GEHT NICHT VERLOREN, sie wird einen Schritt tiefer
+         * (E-S4-21c hatte die Liste als „Übersicht und Direktwahl in einem"
+         * gebaut). Das ist der Preis, und er ist bewusst bezahlt: Ein Knopf
+         * unter dem Rand ist teurer als ein Knopf hinter einem Knopf.
+         *
+         * WAS DAS NICHT LÖST: Gegen Ende eines Einsatzes sind fast alle
+         * Phasen gesetzt, und dann ist die Liste wieder lang. Die Zahlen
+         * dazu stehen im Prüfdokument. */
+        var alleZeigen by remember(einsatzLaeuft) { mutableStateOf(false) }
+        val sichtbar = if (alleZeigen) {
+            Phasen.UEBERTRAGEN.toList()
+        } else {
+            Phasen.UEBERTRAGEN.filter { nummer ->
+                nummer == naechstePhase || gesetzte.any { it.nummer == nummer }
+            }
+        }
+
         Text(
             text = stringResource(R.string.phasenliste),
             color = Farbe.gedaempft, fontSize = 13.sp,
         )
         Column(verticalArrangement = Arrangement.spacedBy(Abstand.eins)) {
-            for (nummer in Phasen.UEBERTRAGEN) {
+            for (nummer in sichtbar) {
                 val zeiten = gesetzte.filter { it.nummer == nummer }
                 Phasenreihe(nummer, zeiten) { aufPhase(nummer) }
             }
         }
+        /* Der Knopf verschwindet, wenn es nichts mehr aufzuklappen gibt — ein
+         * Knopf, der nichts tut, ist schlimmer als keiner. */
+        if (sichtbar.size < Phasen.UEBERTRAGEN.count()) {
+            KnopfNeutral(stringResource(R.string.phasen_alle_zeigen)) { alleZeigen = true }
+        } else if (alleZeigen) {
+            KnopfNeutral(stringResource(R.string.phasen_weniger_zeigen)) { alleZeigen = false }
+        }
+
         // Beendende Handlung: vollflächig rot, mit Rückfrage (E-S4-22a).
         KnopfBeenden(stringResource(R.string.einsatz_abschliessen)) { aufAbschluss() }
     }

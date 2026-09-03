@@ -2361,7 +2361,25 @@ ausgeschaltetem Standort begonnen — am Handgelenk kann die App niemanden
 fragen, und ein wortloses „geht nicht" hülfe nicht weiter. Stattdessen
 vibriert das Telefon, und die Uhr zeigt „keine Ortung · keine Aufzeichnung".
 
-### 10.3 Was beim Dienstende geschieht
+### 10.3 Die Phasenliste im Einsatz
+
+*Seit Android 0.10.1.*
+
+Während eines Einsatzes zeigt die Liste unter dem großen Knopf **die bereits
+gesetzten Phasen und die nächste** — nicht alle acht. Ein Tippen auf eine
+gesetzte Phase setzt sie erneut; das ist die Korrektur, und beide Zeiten
+bleiben stehen.
+
+Wer eine Phase überspringen oder eine weiter hinten direkt setzen will, tippt
+**„Alle Phasen zeigen"**. Danach steht die vollständige Liste da, bis der
+Einsatz abgeschlossen ist.
+
+> **Warum nicht immer alle acht:** Mit voller Liste rutschte „Einsatz
+> abschließen" auf vielen Telefonen unter den unteren Bildrand und war nur
+> nach dem Schieben erreichbar — mit Handschuhen ein Griff zu viel an der
+> Stelle, an der es schnell gehen soll.
+
+### 10.4 Was beim Dienstende geschieht
 
 *Seit Android 0.9.0.*
 

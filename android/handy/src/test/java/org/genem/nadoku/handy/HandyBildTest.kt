@@ -117,6 +117,20 @@ class HandyBildTest {
          * die Bildschirmlänge, nicht über den Knopf.
          */
         val unterDerFaltkante: Boolean,
+        /**
+         * Wie hoch der **ganze** Inhalt ist, gemessen ohne Faltkante.
+         *
+         * DIESE ZAHL FEHLTE, und ihr Fehlen war ein Loch im Prüfmittel:
+         * [unterDerFaltkante] findet nur Knöpfe, die **angeschnitten** sind.
+         * Einer, der vollständig unter dem Rand liegt, war unsichtbar — und
+         * der Lauf meldete „kein Knopf unter der Faltkante", während einer
+         * 80 dp darunter lag. Genau die grüne Zahl, die nichts misst.
+         */
+        val inhaltDp: Int,
+        /** Farbige Knöpfe im ganzen Inhalt … */
+        val knoepfeGesamt: Int,
+        /** … und davon im sichtbaren Bereich vollständig. */
+        val knoepfeSichtbar: Int,
         val farben: Int,
         val pruefsumme: String,
     )
@@ -136,6 +150,7 @@ class HandyBildTest {
         sendelaufLaeuft: Boolean = false,
         einsatzLaeuft: Boolean = false,
         laufendePhase: Int = Phasen.FREI,
+        gesetztePhasen: List<Phasenzeile> = emptyList(),
     ): @Composable () -> Unit = {
         DienstAnsicht(
             stand = Dienststand(
@@ -151,7 +166,16 @@ class HandyBildTest {
                 einsatzLaeuft = einsatzLaeuft,
                 laufendePhase = laufendePhase,
                 phaseSeit = if (einsatzLaeuft) "09:12" else null,
-                naechstePhase = if (einsatzLaeuft) laufendePhase + 1 else Phasen.ERSTE,
+                /* Abgeleitet wie in der App (`klammer.naechstePhase()`) und
+                 * nicht als `laufendePhase + 1`: Nach der letzten Phase gibt
+                 * es keine nächste, und Phase 10 wirft. */
+                naechstePhase = when {
+                    !einsatzLaeuft -> Phasen.ERSTE
+                    gesetztePhasen.isNotEmpty() ->
+                        (gesetztePhasen.maxOf { it.nummer } + 1).takeIf { it <= Phasen.LETZTE }
+                    else -> laufendePhase + 1
+                },
+                gesetztePhasen = gesetztePhasen,
             ),
             serverBasis = "https://einsatz.beispieldomain.de/",
             logoWahl = LogoWahl.LUFT,
@@ -199,6 +223,17 @@ class HandyBildTest {
         ),
         "laufend-nur-aufzeichnen" to dienst(
             laeuft = true, ortung = Ortungsstand.OK, modus = Modus.NUR_AUFZEICHNEN,
+        ),
+
+        /* SPÄT IM EINSATZ — der Fall, an dem B-S5Z-16 hing. Mit allen acht
+         * gesetzten Phasen ist die Liste am längsten; wenn „Einsatz
+         * abschliessen" irgendwo unter die Faltkante rutscht, dann hier. */
+        "laufend-einsatz-spaet" to dienst(
+            laeuft = true, ortung = Ortungsstand.OK, einsatzLaeuft = true,
+            laufendePhase = Phasen.LETZTE,
+            gesetztePhasen = Phasen.UEBERTRAGEN.mapIndexed { i, n ->
+                Phasenzeile(n, "09:%02d".format(12 + i * 7))
+            },
         ),
 
         // -- Was das Senden anzeigt (E2, E-S5Z-12) --
@@ -267,15 +302,15 @@ class HandyBildTest {
 
         println("BILDERLAUF HANDY — ${messungen.size} Bilder, je ${hoeheDp} dp sichtbarer Bereich")
         println(
-            "%-38s %7s %9s %11s %6s %7s".format(
-                "Bild", "Breite", "Knopf", "Unterkante", "Rand", "Farben",
+            "%-38s %7s %9s %11s %8s %9s %6s".format(
+                "Bild", "Breite", "Knopf", "Unterkante", "Inhalt", "Knöpfe", "Rand",
             )
         )
         for (m in messungen) {
             println(
-                "%-38s %5d dp %6.1f dp %8d dp %6s %7d".format(
-                    m.name, m.breiteDp, m.knopfDp, m.knopfUnterkanteDp,
-                    if (m.amRand) "JA" else "-", m.farben,
+                "%-38s %5d dp %6.1f dp %8d dp %5d dp %4d/%-4d %6s".format(
+                    m.name, m.breiteDp, m.knopfDp, m.knopfUnterkanteDp, m.inhaltDp,
+                    m.knoepfeSichtbar, m.knoepfeGesamt, if (m.amRand) "JA" else "-",
                 )
             )
         }
@@ -336,13 +371,22 @@ class HandyBildTest {
          * ist erreichbar. Aber er ist ohne Schieben NICHT DA, und das gehört
          * gesagt statt verschwiegen — auf einem Gerät im Einsatz, mit
          * Handschuhen, ist Schieben ein Bedienschritt mehr. */
-        val abgeschnitten = messungen.filter { it.unterDerFaltkante }
-        if (abgeschnitten.isEmpty()) {
-            println("Kein Knopf liegt unter der Faltkante (${hoeheDp} dp).")
+        /* GEZÄHLT WIRD JETZT ÜBER DEN GANZEN INHALT, nicht nur über das Bild.
+         * Ein Knopf, der VOLLSTÄNDIG unter dem Rand liegt, war für die erste
+         * Fassung unsichtbar — sie fand nur angeschnittene, und der Lauf
+         * meldete „kein Knopf unter der Faltkante", während einer 80 dp
+         * darunter lag. */
+        val unerreichbar = messungen.filter { it.knoepfeSichtbar < it.knoepfeGesamt }
+        if (unerreichbar.isEmpty()) {
+            println("Alle Knöpfe liegen im sichtbaren Bereich (${hoeheDp} dp).")
         } else {
             println(
-                "UNTER DER FALTKANTE bei ${hoeheDp} dp — nur mit Bildlauf erreichbar: " +
-                    abgeschnitten.joinToString { "%s (%.0f dp sichtbar)".format(it.name, it.knopfDp) }
+                "NUR MIT BILDLAUF erreichbar (${hoeheDp} dp sichtbar): " +
+                    unerreichbar.joinToString(" · ") {
+                        "%s: %d von %d Knöpfen, Inhalt %d dp".format(
+                            it.name, it.knoepfeSichtbar, it.knoepfeGesamt, it.inhaltDp,
+                        )
+                    }
             )
         }
 
@@ -413,6 +457,25 @@ class HandyBildTest {
         val punkte = IntArray(breitePx * hoehePx)
         bild.getPixels(punkte, 0, breitePx, 0, 0, breitePx, hoehePx)
 
+        /* ZWEITE MESSUNG OHNE FALTKANTE. Sie beantwortet die Frage, die die
+         * erste nicht kann: Wie viel steht unterhalb, und wie viele Knöpfe
+         * sind das? Gezeichnet wird davon nichts — das Bild soll zeigen, was
+         * das Telefon zeigt. */
+        val hochPx = (2400 * dichte).toInt()
+        ansicht.measure(fest(breitePx), fest(hochPx))
+        ansicht.layout(0, 0, breitePx, hochPx)
+        shadowOf(Looper.getMainLooper()).idle()
+        val hoch = Bitmap.createBitmap(breitePx, hochPx, Bitmap.Config.ARGB_8888)
+        ansicht.draw(Canvas(hoch))
+        val hochPunkte = IntArray(breitePx * hochPx)
+        hoch.getPixels(hochPunkte, 0, breitePx, 0, 0, breitePx, hochPx)
+        val grund = hochPunkte.toList().groupingBy { it }.eachCount().maxBy { it.value }.key
+        var letzteZeile = 0
+        for (y in 0 until hochPx) {
+            if ((0 until breitePx).any { hochPunkte[y * breitePx + it] != grund }) letzteZeile = y
+        }
+        val alleBaender = knopfbaender(hochPunkte, breitePx, hochPx)
+
         val band = knopfband(punkte, breitePx, hoehePx)
         return Messung(
             name = name,
@@ -422,6 +485,9 @@ class HandyBildTest {
                 if (band == null) 0 else Math.round((band.last + 1) / dichte).toInt(),
             amRand = knopfAmRand(punkte, breitePx, hoehePx),
             unterDerFaltkante = band != null && band.last == hoehePx - 1,
+            inhaltDp = Math.round((letzteZeile + 1) / dichte).toInt(),
+            knoepfeGesamt = alleBaender.size,
+            knoepfeSichtbar = alleBaender.count { it.last < hoehePx },
             farben = punkte.toHashSet().size,
             pruefsumme = pruefsumme(ziel),
         )
@@ -454,6 +520,24 @@ class HandyBildTest {
         var anfang = ende
         while (anfang > 0 && istKnopfzeile[anfang - 1]) anfang--
         return anfang..ende
+    }
+
+    /** **Alle** zusammenhaengenden Knopfbaender, von oben nach unten. */
+    private fun knopfbaender(punkte: IntArray, breite: Int, hoehe: Int): List<IntRange> {
+        val schwelle = breite / 2
+        val baender = mutableListOf<IntRange>()
+        var y = 0
+        while (y < hoehe) {
+            val voll = { z: Int ->
+                (0 until breite).count { punkte[z * breite + it] in knopffarben } >= schwelle
+            }
+            if (voll(y)) {
+                val start = y
+                while (y < hoehe && voll(y)) y++
+                baender += start until y
+            } else y++
+        }
+        return baender
     }
 
     /**

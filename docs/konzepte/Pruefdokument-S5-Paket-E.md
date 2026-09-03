@@ -14,7 +14,7 @@ geschrieben, nicht für die Instanz am Code.
 
 | | |
 |---|---|
-| Stand | 03.09.2026 — **E1, E2 und E3 fertig** (Android 0.10.0). Was bleibt, ist der **Gerätetest** |
+| Stand | 03.09.2026 — **E1, E2 und E3 fertig** (Android 0.10.1). Was bleibt, ist der **Gerätetest** |
 | Zweig | `claude/s5-paket-e-android` |
 | Erhoben an | Zweigstand von `main` 696449d (Web 12.9.4, Android 0.7.7, Uhr 2.0.0) |
 
@@ -110,15 +110,15 @@ sagen. **Gemeldet, nicht bewertet** — es gehört zu `server/`, nicht zu Paket 
 
 ## 2. Was maschinell geprüft wurde — mit Mittel **und** Zahl
 
-Alles am Stand von E3 (Android 0.10.0), **nach** der letzten Änderung gefahren,
+Alles am Stand von E3 (Android 0.10.1), **nach** der letzten Änderung gefahren,
 nicht zwischendurch.
 
-| Prüfmittel | Was es gemessen hat | Vorher (0.7.7) | Nachher (0.10.0) |
+| Prüfmittel | Was es gemessen hat | Vorher (0.7.7) | Nachher (0.10.1) |
 |---|---|---|---|
 | `./gradlew build` | Übersetzen beider Module, Lint, alle Prüffälle in beiden Varianten | 0 Fehler, **14** Warnungen | 0 Fehler, **14** Warnungen |
 | Prüffälle `handy` | JUnit/Robolectric, je Variante | **167** (12 übersprungen) | **224** (12 übersprungen) |
 | Prüffälle `uhr` | dieselbe | **53** (0) | **71** (0) |
-| `HandyBildTest` | 21 Bildschirme × 3 Breiten, gezeichnet und vermessen | — *(gab es nicht)* | **63 Bilder**, alle paarweise verschieden |
+| `HandyBildTest` | 22 Bildschirme × 3 Breiten, gezeichnet und vermessen | — *(gab es nicht)* | **66 Bilder**, alle paarweise verschieden |
 | `UhrBildTest` | Uhr-Ansichten, gezeichnet und vermessen | 4 Bilder | **6 Bilder**, alle paarweise verschieden |
 | Fehlschläge | beide Module, beide Varianten | 0 | **0** |
 | `werkzeuge/kontraste.py` | Farbpaare gegen WCAG-Zielwert, aus `farben.xml` gerechnet | 16 Paare, 0 darunter | **24 Paare, 0 darunter** |
@@ -197,7 +197,7 @@ geschlossen:
 
 | Lauf | Bilder | Was gemessen wird | Ergebnis |
 |---|---|---|---|
-| `HandyBildTest` | **48** (16 Bildschirme × 360/411/600 dp) | Bedienhöhe, Knopf an der Bildkante, Knopf unter der Faltkante, Unterscheidbarkeit | 48 dp an 45 von 48; 0 an der Kante; **3 unter der Faltkante**; alle 48 verschieden |
+| `HandyBildTest` | **66** (22 Bildschirme × 360/411/600 dp) | Bedienhöhe, Knopf an der Bildkante, Knöpfe im sichtbaren Bereich gegen den ganzen Inhalt, Unterscheidbarkeit | 48 dp an **66 von 66**; 0 an der Kante; **3 Bilder mit einem Knopf unter dem Rand** (`laufend-einsatz-spaet`, 1 von 2, Inhalt 955 dp); alle 66 verschieden |
 | `UhrBildTest` | **6** | Bedienhöhe, Anteil außerhalb des runden Glases, Unterscheidbarkeit | 48 dp je Bild; **0 %** Knopffläche außerhalb; alle 6 verschieden |
 
 Die 16 Bildschirme decken beide Sperren vor dem Dienst, **alle sechs**
@@ -210,10 +210,14 @@ Die PNG liegen unter `handy/build/bilder/` und `uhr/build/bilder/`.
    Phasenmodus unter dem Rand. Betroffen war neben der neuen Ortungswarnung
    die **bestehende** „wartet aufs Handy · keine Aufzeichnung". Beide stehen
    jetzt oben in der Zustandszeile.
-2. **B-S5Z-16 (offen, bewusst):** Bei laufendem Einsatz mit Phasenknöpfen sind
-   vom Knopf „Dienst beenden" auf 800 dp nur **29 dp** sichtbar. Der
-   Bildschirm rollt; eine Kürzung wäre eine Gestaltungsänderung und braucht
-   eine Entscheidung.
+2. **B-S5Z-16 (behoben mit 0.10.1):** Bei laufendem Einsatz lag „Einsatz
+   abschließen" bei 771–819 dp und damit halb unter dem Rand. Die Phasenliste
+   zeigt jetzt gesetzte und nächste Phase (E-S5Z-33); der Abschluss endet bei
+   515 bis 759 dp. **Rest, bewusst stehen gelassen:** Bei acht gesetzten
+   Phasen liegt „Dienst beenden" weiter darunter (879 dp).
+3. **B-S5Z-18 (behoben mit 0.10.1):** Das Prüfmittel selbst fand nur
+   *angeschnittene* Knöpfe und schwieg über solche, die vollständig unter dem
+   Rand liegen. Es misst jetzt zusätzlich den ganzen Inhalt.
 
 **Was der Bilderlauf nicht sieht:** Bedienzustände. Kein Tippen, kein
 Bildlauf, keine Tastatur, keine Schriftrasterung eines echten Geräts, keine
@@ -244,7 +248,8 @@ GPS: Tiefgarage oder Handy in eine Metallbox.
 | **E1-11** | *(nur mit Wear-OS-Uhr)* E1-4 mit Blick auf die Uhr | unten in Rosa „keine Ortung · keine Aufzeichnung", binnen Sekunden; nach E1-5 verschwindet sie | Uhr bleibt stumm → die Standmeldung kommt nicht an. **Ohne Uhr ist dieser Punkt nicht prüfbar und bleibt offen** |
 | **E1-12** | *(nur mit einem Android-8/9/10-Gerät)* E1-4 dort | wie E1-4, **kein Absturz** | `AbstractMethodError` im Logcat — das belegte B-S5Z-01 rückwirkend für 0.7.7. **Ohne solches Gerät bleibt der Befund abgeleitet** |
 | **E1-13** | Dienst an der **Uhr** beginnen, während der Standort des Handys aus ist | Der Dienst **beginnt** (er wird nicht abgelehnt), das Handy vibriert sofort, die Uhr zeigt „keine Ortung · keine Aufzeichnung" | Die Uhr zeigt „Dienst läuft" ohne Hinweis, oder das Handy schweigt |
-| **E1-15** | Laufenden Einsatz mit Phasenknöpfen am S24 ansehen (B-S5Z-16) | „Dienst beenden" ist ohne Schieben sichtbar — **oder eben nicht**; dann notieren, wie weit gescrollt werden muss | Der Knopf ist erst nach Schieben da. Der Bilderlauf sagt: 29 von 48 dp sichtbar auf 800 dp. **Am Gerät gegenprüfen** — das S24 ist höher als 800 dp |
+| **E1-15** | Laufenden Einsatz mit **allen acht** gesetzten Phasen am S24 ansehen (B-S5Z-16) | **„Einsatz abschließen" ist ohne Schieben sichtbar** (gerechnet: endet bei 759 dp). „Dienst beenden" darf darunter liegen | „Einsatz abschließen" ist erst nach Schieben da → die Kürzung reicht auf diesem Gerät nicht. **Zahl notieren**, das S24 hat eine andere nutzbare Höhe als die gerechneten 800 dp |
+| **E1-17** | Im Einsatz „Alle Phasen zeigen" antippen | Die vollständige Liste erscheint und bleibt, bis der Einsatz abgeschlossen ist; eine gesetzte Phase erneut tippen setzt sie ein zweites Mal, **beide Zeiten bleiben stehen** | Die Liste klappt von selbst wieder zu; oder die zweite Zeit ersetzt die erste (das wäre ein Verstoß gegen E-R45-12) |
 | **E1-16** | *(mit Wear-OS-Uhr)* Laufenden Dienst mit Phasenknöpfen ansehen, während das Handy nichts aufzeichnet | „keine Ortung · keine Aufzeichnung" steht **oben** in der Zustandszeile, dort wo sonst Phase und Zeit stehen | Die Zeile fehlt — dann greift B-S5Z-17 noch, oder die Standmeldung kommt nicht an |
 | **E1-14** | Zwölfstundendienst mit E1 | Wächter und Sendetakt laufen durch; **Akkuverbrauch notieren** (Backlog 82) | Dienst abgeräumt („Apps im Tiefschlaf") |
 
@@ -313,6 +318,7 @@ Sie stehen und fallen mit E1-3, E1-6 und E1-7:
    „Dienst beenden"-Knopf unter der Faltkante bei laufendem Einsatz.
 3. **E1-11, E1-12, E2-6, E3-1 und E3-2** brauchen Geräte, die es hier nicht
    gibt (Wear-OS-Uhr; Android 8–10).
-4. **B-S5Z-16** — der Knopf „Dienst beenden" unter der Faltkante bei
-   laufendem Einsatz. Eine Kürzung der laufenden Ansicht ist eine
-   Gestaltungsänderung und braucht eine Entscheidung (Prüfpunkt E1-15).
+4. **Der Rest von B-S5Z-16** — bei acht gesetzten Phasen liegt „Dienst
+   beenden" weiter unter dem Rand (879 dp von 800 sichtbaren). Bewusst so
+   gelassen; am Gerät gegenzuprüfen (E1-15), weil die Zahl von Statusleiste
+   und Navigationsart abhängt.
