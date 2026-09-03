@@ -800,6 +800,12 @@ als eigener, offener Abschnitt geführt — nicht als erledigt erzählt.
 - Store-Verteilung (Play Store, Connect IQ) — Betriebsübergang nach v1.0
   (E-R45-6, R41); sie setzt die Mengenbremse (R19) und die Mengengrenze je
   Konto (R37.10) aus P5 voraus.
+  **Nachtrag 03.09.2026 (R65):** Der **interne Play-Test-Track** kommt mit
+  Schritt 6 in den S4-Rest (Organisationskonto der Gen-EM GbR,
+  Versionscode-Versatz für das Uhr-Modul — Backlog 98 —, vorhandener
+  Signaturschlüssel zu Play App Signing); die **Produktionsfreigabe** bleibt
+  Betriebsübergang, Welle 1. E-R45-6 ist damit ersetzt. Begründung in
+  `docs/konzepte/Konzept-Planung-v1.0.md`, E-PV-1.
 - Mengenbremse für `ingest.php` — P5 (R19); S4 hält sich mit E-S4-07 an
   das vermessene Sendeverhalten, damit die spätere Bremse beide Clients
   gleich behandeln kann.
@@ -925,6 +931,8 @@ Store-Verteilung steht ausdrücklich nicht im Umfang (Abschnitt 8). Die Warnung
 bleibt deshalb **stehen und gezählt**, statt stummgeschaltet zu werden — sie
 ist die Erinnerung an eine Entscheidung, die beim Betriebsübergang nach v1.0
 ansteht.
+*Nachtrag 03.09.2026:* Die Entscheidung, an die die Warnung erinnerte, ist
+mit **R65** gefallen (interner Test-Track ab Schritt 6); sie bleibt gezählt.
 
 **Entschieden und behoben in 0.7.4** — auf Ansage, direkt store-fähig zu
 planen (E-S4-52). Die Berechtigung ist aus dem Manifest ausgetragen, der
@@ -3141,6 +3149,23 @@ richtig; einzig die Kopplung hätte nach dem Rahmenplan-Schnitt „in Block B
 zuletzt" gehört — was zum Zeitpunkt der Beauftragung so noch nicht dastand.
 
 ---
+
+### 13.x Nachtrag 03.09.2026 — Play Console im S4-Rest (Rahmenplan Fassung 26, R65)
+
+Zum Schritt-6-Inhalt kommt ein Arbeitspaket **Play Console**, das den
+Punkten oben nachgeordnet ist (das Kopplungsmodul und die feste Adresse
+zuerst):
+
+| Punkt | Inhalt | Abnahme |
+|---|---|---|
+| Versionscode-Versatz (Backlog 98) | `version.properties`/`build.gradle.kts`: das Uhr-Modul erhält einen Versatz beim gerechneten Versionscode (etwa `+ 1 000 000` oder eine führende Formfaktor-Ziffer); Versionsname und Zählung bleiben eins (E-S4-02); `android/LIESMICH.md` erklärt das Schema | beide APK/AAB tragen unterschiedliche Versionscodes, denselben Versionsnamen; einmaliger Sprung dokumentiert |
+| Signaturweg | vorhandener Schlüssel (`078c…ad64`) als App-Signaturschlüssel bei Play App Signing hochgeladen; getrennter Upload-Schlüssel erzeugt, außerhalb des Repositoriums verwahrt (E-S4-16 bleibt: keine Signatur in der CI) | Play-Installation und Seitenladungs-APK tragen dasselbe Zertifikat; Update von der Seitenladungs-Fassung auf die Track-Fassung ohne Neuinstallation |
+| Deklarationen | soweit der interne Track sie verlangt (beim Einrichten prüfen): Vordergrunddienst/Standort mit Demo-Video auf echtem Gerät, Datensicherheitsformular (setzt die Datenschutzerklärung voraus) | vom Auftraggeber eingereicht; Zuarbeiten in Rahmenplan Abschnitt 6 |
+| Erstes Track-Release | Handy und Uhr unter einem Eintrag (`org.genem.nadoku`), Wear OS als eigener Track; Testerliste = der bekannte Kreis | Installation beider Apps aus dem Track auf dem S24 und einer Wear-OS-Uhr |
+| Doku | Handbuch 10.1 nennt den Track als Regelweg, die Karte „NAdoku für Android" bleibt als Rückfall bis zur Produktionsfreigabe; Changelog Android | Wortliste 0/0/0 |
+
+Voraussetzung ist das Organisationskonto (D-U-N-S) — Zuarbeit des
+Auftraggebers, längster Vorlauf im Programm.
 
 ## 14. E-S4-53 — Der Schnitt sperrt seinen Bereich, nicht das Segment
 

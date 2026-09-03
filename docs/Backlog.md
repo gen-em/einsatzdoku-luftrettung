@@ -42,6 +42,11 @@ API-Zweig. Die Punkte 68 bis 79 sind mit Fassung 16 angelegt, 80 bis 83 mit
 Fassung 21, 84 bis 88 mit Fassung 22; alle stehen unten; die Zuordnung aller offenen Punkte zu Paketen führt
 `docs/Rahmenplan.md`, Abschnitt 5.
 
+**Zu den Nummern 98 bis 113 (Rahmenplan Fassung 26, 03.09.2026).** 98–100
+kommen aus der vorgezogenen Planung v1.0 (R65–R67), 101–113 sind die
+Problemsammlung für Schritt 8 (S9, R73); ihre Kennungen PS-1 bis PS-10 stehen
+in `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
+
 **Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
 rekonstruierbar: Code und Changelog verweisen an neun Stellen namentlich auf
 sie („Backlog Nr. 10"), und aus diesen Fundstellen geht eindeutig hervor,
@@ -694,20 +699,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Preisschild an einer aufgeschobenen Entscheidung, und genau das sollen sie
     sein.
 
-66. **Der Garmin-Uhrcode läuft nicht durch die Wortliste.**
-    *Aufgenommen 02.09.2026 als Bereich `e` aus B-S4-06 (S4/D1).*
-    Seit D1 prüft `tools/wortliste/` vier Bereiche, darunter die
-    Android-Apps. **`watch/` fehlt weiterhin.** Die bisherige Begründung —
-    `watch/` „beschreibe die Garmin-Uhr als Gegenstand" — trifft auf
-    `docs/Uhr-Layout_Regeln.md` zu, **nicht** auf die sichtbaren Texte der App
-    selbst (`watch/resources/**/*.xml`): Die liest dieselbe Person, die auch
-    die Weboberfläche liest. Sie sind die **ältesten Texte des Projekts** und
-    damit die wahrscheinlichste Fundstelle.
-    **Auf Ansage einer anderen Instanz zugewiesen** (01.09.2026); sie braucht
-    Kenntnis der Monkey-C-Ressourcen und der historischen Begriffe. Der
-    Bereich heißt dort `e`; die Mechanik ist da (eine Art `xml` im Zerleger,
-    die Tags mit wegräumt), einzutragen ist die Bereichszeile.
-
 67. **`csrf_check()` hat keinen API-Zweig.**
     *Aufgenommen aus einer Gegenprüfung vom 23.08.2026; die Zahlen sind am
     02.09.2026 nachgezählt (S4/D2).*
@@ -994,16 +985,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Nicht als Dauerwarnung.** Ein Hinweis, den man bei jedem Dienstbeginn
     wegklickt, wird nicht gelesen — dieselbe Überlegung wie beim Hinweis auf
     neue Geräte (M4-10), der bestätigbar ist.
-    **Nachtrag 03.09.2026 (S5, Paket E1, B-S5Z-10):** Kandidat (c) nennt den
-    Text „Aufzeichnung läuft seit %1$s · GPS an". **Den gibt es nicht mehr.**
-    Android 0.8.0 hat ihn durch sechs Texte ersetzt, einen je Ortungszustand
-    (`dienst_laeuft_ok`, `…_sucht`, `…_kein_signal`, `…_ungenau`,
-    `…_standort_aus`, `…_freigabe_fehlt`); dieselben Texte tragen auch die
-    Dauermeldung. Wer (c) baut, hängt den Akkuhinweis also an **eine** dieser
-    Zeilen — vermutlich `dienst_laeuft_ok`, die einzige, in der wirklich
-    aufgezeichnet und damit Strom gezogen wird. Zu bedenken: Die Zeile ist
-    schon jetzt lang, und bei `KEIN_SIGNAL` trägt sie zusätzlich eine
-    Minutenzahl. Kandidat (a) und (b) sind davon unberührt.
     Zuordnung: **S4-Rest** (Schritt 6). Textänderung heißt `tools/wortliste/`
     fahren, Bereich (d).
 
@@ -1149,7 +1130,241 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `ui_kennzahl` aus P3 als Ausgangspunkt. Braucht die Spalten aus R64
     (Nr. 83, S4-Rest). Zuordnung: Backlog-Runde, nach dem S4-Rest.
 
-90. **Abgewiesene Pakete sichtbar machen und ausräumen.**
+---
+
+90. **Der Simulator kann keinen Verbindungsabriss herstellen.**
+    *Aufgenommen 03.09.2026 aus S5 Paket C.*
+    Der Rundlauf der Uhr-Kopplung sollte sechs Fälle belegen; der sechste —
+    „Telefon aus der Reichweite" — ist im Simulator **nicht** herstellbar. Wird
+    der Server getötet, sieht die App **HTTP 404**, keinen negativen Code
+    (dieselbe Eigenschaft, die `tools/netzprobe/` für den CA-Fehler gemessen
+    hat: eine fehlgeschlagene TLS-Verbindung erscheint als 404). Der Zweig
+    „`Keine Verbindung (n)`, Code bleibt stehen, Abfrage läuft weiter"
+    (E-S5-25) bleibt damit ungeprüft, und er ist kein Randfall — er ist der
+    häufigste Fehler im Betrieb.
+    **Woran es hängt:** `makeWebRequest` liefert negative Codes nur bei
+    Bluetooth-Fehlern, und der Simulator hat kein Bluetooth. Der einzige
+    gemessene Weg zu einem negativen Code ist blankes `http://` (−1001,
+    `SECURE_CONNECTION_REQUIRED`) — aber der trifft schon `start` und kommt
+    nie bis zur Kopplungsansicht.
+    **Mögliche Wege:** ein Proxy vor dem Simulator, der die Verbindung
+    mittendrin abbricht, und die Frage, was `makeWebRequest` daraus macht;
+    oder eine Prüf-Einstellung in der App, die einen negativen Code
+    einspeist (dann aber als Fremdkörper im ausgelieferten Code).
+
+91. **Die Auswahl in `WatchUi.Confirmation` ist im Bildabzug nicht zu sehen.**
+    *Aufgenommen 03.09.2026 aus S5 Paket C.*
+    Beim Rundlauf musste „Nein" auf der Rückfrage ausgelöst werden. Welche der
+    beiden Schaltflächen gerade gewählt ist, zeigt der Bildabzug **nicht** —
+    `Cancel` und `Confirm` stehen ohne erkennbare Hervorhebung nebeneinander,
+    und `Up`/`Down` änderten daran nichts Sichtbares. Gemessen: Ein `Return`
+    ohne weitere Taste **bestätigt** (die Vorauswahl steht also auf
+    `Confirm`), und BACK räumt den Dialog weg, **ohne** `onResponse` zu rufen.
+    **Folge für die Prüfmittel:** Ein Rundlauf, der eine Ablehnung im Dialog
+    belegen will, kann sie nicht am Bild ablesen — er muss sie an der Wirkung
+    messen (Datenbank: kein Gerät, keine Sitzung). Das ist gemacht, aber es
+    gehört aufgeschrieben, damit die nächste Instanz nicht wieder eine halbe
+    Stunde an der Tastensteuerung sucht.
+
+92. **`pruefstand.sh bildreihe` fotografiert nur den Startbildschirm.**
+    *Aufgenommen 03.09.2026 aus S5 Paket C.*
+    Für Stufe II verlangt die Abnahme „je Vertreter ein Bild der `PairView`".
+    `bildreihe` lädt die App, wartet und fotografiert — es gibt keinen Weg,
+    eine Tastenfolge mitzugeben. Paket C hat sich dafür eine eigene Schleife
+    gebaut (zweimal `Down`, weil der erste Druck nach dem Laden regelmäßig
+    verlorengeht, dann `keydown Return` / `sleep` / `keyup` für den Langdruck;
+    `pruefstand.sh halten` kann nur Maus, nicht Taste — und die
+    Drei-Tasten-Geräte brauchen stattdessen Wischen, gelesen aus
+    `monkey.jungle`).
+    **Vorschlag:** `bildreihe <liste> <ziel> [tastenfolge]`, wobei die
+    Tastenfolge eine Zeichenkette wie `Down,Down,hold:Return,wait:8` ist. Dann
+    braucht die nächste Ansicht keine eigene Schleife.
+
+93. **`AUTH_VERGLEICHSWERT` trägt Kostenfaktor 10, PHP 8.4 legt 12 an.**
+    *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-13.*
+    Der feste Vergleichswert, gegen den `login.php` und `auth_salt.php` bei
+    unbekannter Adresse rechnen, wurde einmal erzeugt und liegt seither als
+    Konstante. Er kostet **57 ms**; ein echter Hash unter PHP 8.4 kostet
+    **228 ms**. Der Unterschied ist heute verdeckt, weil `rate_gleiche_dauer()`
+    ohnehin auf 0,35 s auffüllt — also ist nichts ablesbar. Verdeckt heißt
+    aber nicht beseitigt: Wächst die Mindestdauer nicht mit, wenn die Hardware
+    langsamer oder der Kostenfaktor höher wird, wird die Lücke wieder sichtbar.
+    **Vorschlag:** den Vergleichswert auf den tatsächlichen Kostenfaktor
+    ziehen, sobald keine Installation mehr auf PHP 8.3 läuft — oder
+    `rate_gleiche_dauer()` an dieser Stelle auf 0,5 s.
+
+94. **„bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/`.**
+    *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-05.*
+    Der Kopfkommentar von `erzeugen.sh` sagt, die erzeugten Kacheln seien
+    **bitgleich**; die `LIESMICH.md` daneben sagt **pixelgleich**. Beides kann
+    nicht stimmen: PNG trägt einen Zeitstempel-Chunk, und der ändert sich bei
+    jedem Lauf. Wer die Zusage prüft, prüft je nach gelesenem Dokument etwas
+    anderes.
+    **Vorschlag:** ein Wort ändern — oder `-define png:exclude-chunk=time`
+    setzen und die stärkere Zusage tatsächlich einlösen.
+
+95. **Die Rundlauffälle der Android-App lassen Daten im Admin-Konto zurück.**
+    *Aufgenommen 03.09.2026 aus der S5-Vorbereitung, Abschnitt 8.2.*
+    Gemessen: **9 Diensttage, 5 Einsätze und 14 439 Spurpunkte**, die kein
+    Prüffall wieder abräumt. Sie fallen nicht auf, solange niemand das
+    Admin-Konto ansieht — und verfälschen jede Zahl, die jemand daraus zieht.
+    **Vorschlag:** Aufräumen im `@After` der betroffenen Fälle, oder ein
+    eigenes Prüfkonto, das der Lauf am Ende löscht. Gehört zum S4-Rest, weil
+    er dieselben Prüffälle anfasst.
+
+96. **Uhr und Handy sagen nicht, dass gewartet wird.**
+    *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-08).*
+    Der Wartungsmodus antwortet mit **503** und einem `Retry-After`. Die
+    Clients behandeln das als gewöhnliches 5xx — sie puffern und liefern
+    nach, und genau das ist die Zusage des Vertrags. Was sie **nicht** tun:
+    es sagen. Auf der Uhr steht dann derselbe Rückstand wie bei einem
+    Funkloch, und `Retry-After` wertet niemand aus.
+    **Bewusst nicht in S5 gebaut:** Es hätte eine Uhr- und eine
+    Android-Auslieferung gekostet, für eine Lage, die wenige Minuten dauert.
+    **Nach v1.0** neu abwägen — dann gibt es mehr als eine Uhr.
+
+97. **Die Browser-Skripte zeigen den Wartungstext uneinheitlich.**
+    *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-10).*
+    Die 503-Antwort trägt ein Feld `meldung`. **`export.js`, `import_ui.js`
+    und `schneiden.js`** lesen es aus jeder Fehlerantwort und zeigen es an —
+    ohne eine Zeile Änderung. **`kopplung.js`** wirft `'HTTP ' + status`,
+    **`unlock.js`, `ortsfeld.js` und `ortswahl.js`** zeigen ihre allgemeine
+    Meldung. Wer während einer Wartung eine Adresse sucht, liest also je nach
+    Stelle etwas anderes.
+    **Bewusst so gelassen:** Drei davon sind Komfortwege, der vierte ist der
+    Kopplungstakt, der sich nach drei Fehlern selbst beendet — und während
+    einer Wartung koppelt ohnehin niemand.
+
+98. **Versionscode-Versatz für das Uhr-Modul.**
+    *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R65).*
+    `version.properties` rechnet für Handy- und Uhr-Modul denselben
+    Versionscode (`Haupt·10000 + Neben·100 + Korrektur`, E-S4-02). Die Play
+    Console verlangt unter einem Paketnamen je APK einen eindeutigen Code —
+    ohne Versatz ist kein Wear-OS-Release möglich. Das Uhr-Modul bekommt einen
+    Versatz (Schema in der Umsetzung: etwa `+ 1 000 000` oder eine führende
+    Formfaktor-Ziffer); Versionsname und Zählung bleiben eins. Preis: ein
+    einmaliger Sprung, Neuinstallation auf der vorhandenen Uhr. Rahmenplan
+    Schritt 6 (S4-Rest).
+
+99. **Fassungsprüfung auf Klick.**
+    *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R66, Option A2).*
+    Ein Knopf „Auf neue Fassung prüfen" auf der Wartungsseite, der einmalig
+    die GitHub-Releases-Schnittstelle fragt — kein Hintergrundlauf, kein
+    Banner. Nur, wenn Selbsthoster es verlangen; die eigene Installation
+    braucht es nicht, weil Betreiberin und Entwicklung dieselben sind.
+    **Nach v1.0.**
+
+100. **Play-API-Upload aus der Auslieferungskette.**
+    *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R67).*
+    Upload-Schlüssel als GitHub-Secret plus Dienstkonto der Play-API; jeder
+    grüne Tag landet von selbst auf dem internen Test-Track, die
+    Produktionsfreigabe bleibt ein Klick in der Play Console. Vertretbar,
+    weil nach Play App Signing der Upload-Schlüssel der zurücksetzbare ist;
+    E-S4-16 dann um den Unterschied App-Signaturschlüssel / Upload-Schlüssel
+    ergänzen. **Nach v1.0**, wenn die Releases häufiger werden.
+
+101. **Adresssuche im Kartendialog.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-1), Rahmenplan
+    Schritt 8 (S9), R73.*
+    Im aufploppenden Kartendialog (Transportziel, Einsatzort usw.) kann kein
+    Ort per Adresse gesucht werden. Soll: Adress- und Ortssuche im Dialog;
+    ein Klick auf einen Treffer **setzt den Pin**, die Übernahme bleibt ein
+    eigener, bestätigender Schritt (F1). Zuerst zu prüfen: die
+    Geocoding-Quelle — dieselbe wie die heutigen Adressvorschläge oder keine
+    (`CLAUDE.md` 4, Datenschutz). Vorbereitung
+    `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
+
+102. **Weitere Rettungsmittel: die Auswahl wird nicht übernommen.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-2), Schritt 8 (S9).*
+    Die Suche im hinterlegten Stand liefert Treffer; ein Klick schließt den
+    Dialog, das Rettungsmittel wird aber nicht in den Einsatz übernommen.
+    Bug, nur Desktop/Web (F2).
+
+103. **Kompaktere Buttons Einsatzort, Standort, Zielklinik.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-3), Schritt 8 (S9).*
+    Die drei Buttons sollen kleiner werden; Prüfidee: die farbige Umrandung
+    der Icons von Standort und Zielklinik als Anzeige Einsatzbeginn/-ende
+    nutzen und die separate Anzeige sparen — ob das gestalterisch trägt, ist
+    offen; Icon-Größe separat justierbar. Liefergegenstand sind Mockups
+    mehrerer Optionen **im S9-Konzept** (Fable-Schritt, F8). Hängt an der
+    Bedienhöhe am Schreibtisch (Nr. 74, S8). Offen: F3–F6 (Rahmenplan
+    Abschnitt 6).
+
+104. **Windenkacheln fehlen bei Nullwert.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-4), Schritt 8 (S9).*
+    In Monats- und Jahresansicht fehlen die Windenkacheln, wenn im Zeitraum
+    keine Windeneinsätze geflogen wurden. Soll: Sobald ein Hubschrauber mit
+    Winde als Einsatzmittel ausgewählt war, erscheinen die Kacheln — auch
+    mit „0" (F7).
+
+105. **Hubschrauber-Icon in der linken Leiste.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-5), Schritt 8 (S9).*
+    Das Icon neben den Tagesdaten überzeugt nicht; Varianten entstehen im
+    S9-Konzept (Fable-Schritt, F8), nicht vorab.
+
+106. **Klinik- und Adressvorschläge überlagern sich.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-6), Schritt 8 (S9).*
+    Beide Vorschlagsarten in **einer** Liste: Kliniken oben, visuell
+    abgesetzt, darunter die Adressen. Klinikvorschläge nur im
+    Zielklinik-Kontext (F9), höchstens zwei (F10).
+
+107. **Zielklinik per Koordinaten und Karte.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-7), Schritt 8 (S9).*
+    An beiden Stellen (Vorbelegung bei den Rettungsmitteln,
+    Einsatzbearbeitung) zusätzlich Koordinateneingabe und Auswahl über den
+    standardisierten Kartendialog (Nr. 101). Koordinaten einheitlich wie in
+    den übrigen Feldern (F11); so gewählte Zielkliniken sind Ad-hoc-Einträge
+    je Einsatz, kein Stammdateneintrag (F12). Migration; Vertrag prüfen.
+
+108. **Schloss-Icon und Legende für verschlüsselte Felder.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.1), Schritt 8
+    (S9).*
+    Es ist nicht ersichtlich, welche Felder verschlüsselt gespeichert werden.
+    Soll: Schloss-Icon am Feld plus Legende (F13). Getrennt von Nr. 109.
+
+109. **Notizfeld verschlüsseln, Suche bleibt.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.2), Schritt 8
+    (S9).*
+    Das Notizfeld soll verschlüsselt werden und **durchsuchbar bleiben**, wie
+    in allen anderen Feldern (F14/F18); Filtern ist nicht nötig. **Offener
+    Zielkonflikt, im S9-Konzept als Erstes zu prüfen:** Werden die übrigen
+    durchsuchbaren Felder im Klartext gehalten und serverseitig durchsucht,
+    ist beides nicht ohne Kompromiss zu haben — dann Optionen mit Vor- und
+    Nachteilen, bevor entschieden wird. Betrifft Datenmodell und
+    Verschlüsselung (Migration); die Antwort geht in das Bedrohungsmodell
+    des R17-Reviews ein (Nr. 43, R69). Fable-Schritt.
+
+110. **Kachel „Spur" heißt „GPS-Daten".**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-9), Schritt 8 (S9).*
+    Die Kachel neben „editiert" zeigt z. B. „Spur · 852 Punkte"; „Spur" ist
+    schwer verständlich. Soll: „GPS-Daten", die Punktzahl entfällt (F15);
+    Wortliste nachziehen.
+
+111. **Neue Rettungsmittel-Arten.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.1), Schritt 8
+    (S9).*
+    Bergwachtnotarzt, Veranstaltungsnotarzt, Sonstiges — mit eigenem Icon,
+    ohne Rollen-Vorlagen, ein Standort kann eingegeben werden (F16).
+    Migration.
+
+112. **Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.2), Schritt 8
+    (S9).*
+    Ein Rettungsmittel kann in der Tageszuordnung manuell definiert werden;
+    es gilt nur für den Tag, die dauerhafte Aufnahme in den Stamm bleibt
+    manuell über die Einstellungen (F17). Bedingung: Suche und Filter müssen
+    für solche Einträge greifen.
+
+113. **Rollen unmittelbar nach der Auswahl bearbeitbar.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.3), Schritt 8
+    (S9).*
+    Heute muss erst gespeichert und erneut „bearbeiten" geklickt werden,
+    bevor Rollen editierbar sind. Soll: sofort bearbeitbar; sind Rollen für
+    das Rettungsmittel vordefiniert, werden sie nach der Auswahl automatisch
+    nachgeladen. Für manuell definierte Rettungsmittel (Nr. 112) und Arten
+    ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
+
+114. **Abgewiesene Pakete sichtbar machen und ausräumen.**
     *Aufgenommen 03.09.2026 aus S5 Paket E (B-S5Z-06).* Antwortet der Server
     auf ein Paket mit **400**, wird es im Puffer als `fehlerhaft = 1` markiert
     und damit aus der Warteschlange **und** aus der Anzeige genommen: Die App
@@ -1162,7 +1377,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Letzteres ist Datenverlust auf Knopfdruck. Zuordnung: Backlog-Runde, nach
     S5.
 
-91. **Die Rundlaufprüffälle räumen ihren hochgeladenen Bestand nicht ab.**
+115. **Die Rundlaufprüffälle räumen ihren hochgeladenen Bestand nicht ab.**
     *Aufgenommen 03.09.2026 aus S5 (Vorbereitung 8.2).* `android/LIESMICH.md`
     verspricht: „Die Fälle räumen hinter sich auf: Was sie koppeln, trennen
     sie wieder." Das stimmt für die **Geräte** und nicht für die **Daten**:
@@ -1175,7 +1390,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `day`-Kennungen sind den Fällen bekannt; ein Abräumen am Ende wäre
     machbar. Zuordnung: Backlog-Runde.
 
-92. **Das Kontrastwerkzeug misst nur, was in seiner Paarliste steht.**
+116. **Das Kontrastwerkzeug misst nur, was in seiner Paarliste steht.**
     *Aufgenommen 03.09.2026 aus S5 Paket E1 (B-S5Z-13, B-S5Z-15, B6.2).*
     `android/werkzeuge/kontraste.py` führt eine **feste Liste** von
     Farbpaaren. Ein Paar, das dort nicht eingetragen ist, wird nicht gemessen
@@ -1199,6 +1414,37 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+66. **Der Garmin-Uhrcode lief nicht durch die Wortliste — jetzt schon.**
+    *Aufgenommen 02.09.2026 als Bereich `e` aus B-S4-06 (S4/D1); erledigt am
+    03.09.2026 in S5, Paket C (E-S5-40, E-S5-61).*
+    Bis hierher prüfte `tools/wortliste/` vier Bereiche und ließ den ältesten
+    Client aus. Die frühere Begründung — `watch/` „beschreibe die Garmin-Uhr
+    als Gegenstand" — trifft auf `docs/Uhr-Layout_Regeln.md` zu, **nicht** auf
+    die sichtbaren Texte der App selbst: Die liest dieselbe Person, die auch
+    die Weboberfläche liest.
+
+    **Weiter gefasst als die Aufnahme.** Backlog 66 nannte
+    `watch/resources/**/*.xml` — das sind vier Zeichenketten (App-Name und die
+    drei Namen der Bildmarken-Wahl). Die eigentlichen Texte der Uhr stehen als
+    Literale im Quelltext. Bereich `e` umfasst deshalb **XML und Monkey C**
+    (`watch/resources*/**/*.xml`, `watch/source*/*.mc`); ein Bereich, der nur
+    die XML angesehen hätte, meldete wieder eine Null über etwas, das er nicht
+    gelesen hat — der Fall B-S4-06 selbst.
+
+    **Was dabei entstand:** eine Art `monkeyc` im Zerleger (derselbe Weg wie
+    JavaScript — gleiche Kommentarformen, keine regulären Ausdrücke), zwei
+    zusätzliche Probefälle dafür, und die Möglichkeit, einem Bereich **zwei
+    Arten** zu geben (`{".xml": "xml", ".mc": "monkeyc"}`); eine Endung ohne
+    Zuordnung bricht den Lauf ab, statt die Datei still zu übergehen.
+
+    **Ergebnis des ersten Laufs:** 34 Dateien, **2 Treffer**, beide dieselbe
+    Sache — `"START"` und `"START halten"` in
+    `watch/source-tasten5/DeviceProfile.mc`. Das ist der Aufdruck auf dem
+    Gehäuse von Fenix und Forerunner; die Venu 3s heißt dort „Action" und
+    trifft nicht. Eine Ausnahme, Klasse G (`uhr-tastennamen`) — genau die
+    Trennung, die E-P2-02 vorsieht. Danach **0 / 0 / 0** in allen fünf
+    Bereichen.
 
 89. **Der Job „Komplett-Backup der Installation" brach ab, bevor er
     anfing — von Web 12.2.0 bis 12.9.2.**

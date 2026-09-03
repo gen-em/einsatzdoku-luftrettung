@@ -183,7 +183,7 @@ senden"**, wenn etwas aussteht, und eine Ergebniszeile nach jedem Lauf
 („Gesendet · 12:41" / „Keine Verbindung · wird nachgeholt" / „Schlüssel
 abgewiesen · Gerät neu koppeln"). Ein **Weg**, ein abgewiesenes Paket
 loszuwerden, ist bewusst nicht dabei — ansehen, ausleiten oder verwerfen
-braucht eine Entscheidung darüber, was mit den Daten geschieht (Backlog 90).
+braucht eine Entscheidung darüber, was mit den Daten geschieht (Backlog 114).
 
 Die Rückfrage vor dem Dienstende sagt jetzt die Wahrheit: „Alles Offene wird
 abgeschlossen und gesendet — **ohne Netz, sobald es wieder da ist**." Vorher

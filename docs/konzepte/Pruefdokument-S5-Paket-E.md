@@ -138,7 +138,7 @@ cd android && ANDROID_HOME=/opt/android-sdk ./gradlew :handy:testDebugUnitTest \
 ```
 
 **Was er hinterlässt** — vor und nach dem Lauf gezählt, weil ein zweiter Lauf
-sonst den Bestand des ersten misst (Backlog 91):
+sonst den Bestand des ersten misst (Backlog 115):
 
 | Konto 1 (admin) | vor dem Lauf | nach dem Lauf |
 |---|---|---|
@@ -176,7 +176,7 @@ grüne Zahl erst dann ein Beleg ist, wenn sie das Gemessene benennt:
 - Die **24 Kontrastpaare** rechnen Farbwerte aus `farben.xml` nach. Sie
   prüfen **nicht**, dass die Farbe im Code tatsächlich an dieser Stelle steht
   — das Werkzeug führt eine feste Liste, und genau diese Lücke hat zwei Paare
-  jahrelang unbemerkt unter dem Zielwert stehen lassen (Backlog 92).
+  jahrelang unbemerkt unter dem Zielwert stehen lassen (Backlog 116).
 - Die **Wortliste** las 2 Dateien: `handy/…/strings.xml` und
   `uhr/…/strings.xml`. Sie hat die Kotlin-Quellen **nicht** angesehen; ein
   Text, der dort fest verdrahtet stünde, fiele nicht auf.
@@ -302,7 +302,7 @@ Sie stehen und fallen mit E1-3, E1-6 und E1-7:
 |---|---|
 | `./gradlew build` | jedes Verhalten auf einem Gerät. Es übersetzt, prüft statisch und lässt JVM-Fälle laufen |
 | JUnit/Robolectric | den echten `LocationManager`, den echten `NotificationManager`, den echten Data Layer. Robolectric stellt sie nach; die Nachstellung ist nicht die Sache |
-| `kontraste.py` | ob die Farbe im Code an dieser Stelle steht. **Feste Paarliste** — was nicht eingetragen ist, wird nicht gemessen und meldet folglich auch nichts (Backlog 92) |
+| `kontraste.py` | ob die Farbe im Code an dieser Stelle steht. **Feste Paarliste** — was nicht eingetragen ist, wird nicht gemessen und meldet folglich auch nichts (Backlog 116) |
 | `wortliste.py` Bereich d | alles außerhalb der beiden `strings.xml` |
 | Compose-Vorschauen | alles. Sie sind Quelltext, kein Bild — der Beleg kommt aus dem Bilderlauf |
 | `HandyBildTest` / `UhrBildTest` | Bedienzustände. Und **keinen waagerechten Überlauf**: `fillMaxSize()` lässt die Einschränkung immer gewinnen, ein zu breites Kind wird beschnitten statt gemeldet |
