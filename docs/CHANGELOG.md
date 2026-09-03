@@ -45,7 +45,17 @@ unberührt: `ingest.php` und Vertragsabschnitt 1 ändern sich nicht.
 ### Uhr — Die neue Kopplungsansicht, und warum sie eine eigene ist
 
 `PairView.mc` zeigt den Code groß in zwei Dreiergruppen („CBF E4W"), darüber
-„Code für das Web", darunter den Zielort im Web und die Restzeit. Ein vierter
+**„Kopplungscode"**, darunter **„Im Web eingeben"** und **„noch 10 min
+gültig"** (Wortlaut auf Ansage vom 03.09.2026).
+
+**Die Restzeile ist auf der Venu 3s randvoll**, und das ist nachgerechnet:
+194 px gegen 193 px Sehne — ein Pixel über der eigenen Sicherheitslinie,
+nachdem `fitFont` bereits auf die kleinste Schrift zurückgefallen ist.
+Gezeichnet wird sie trotzdem vollständig, weil `chordW` zusätzlich 24 px Rand
+abzieht; am Bild nachgesehen. Auf Fenix (120/128 px) und FR945 (111/118 px)
+bleiben 8 bzw. 7 px Reserve. Wer den Wortlaut verlängert — oder wer dem
+Server ein größeres `frist_s` erlaubt —, verliert auch dort den Rand. Der
+frühere Wortlaut „noch 10 min" maß auf der Venu 162 px. Ein vierter
 Zustand des Mittelblocks der Sync-Seite hätte nicht getragen (E-S5-24): Der
 Code muss groß stehen und **trägt Buchstaben** — eine Ziffernschrift scheidet
 damit aus (`Uhr-Layout_Regeln` 3.1), es bleibt `fitFont` über die
@@ -186,7 +196,7 @@ Schnellmenü, das sich beim Sperren öffnet. Die Dokumentation sagte dieselbe
 Einseitigkeit („während des langen START-Drucks zusätzlich eine andere Taste")
 und ist nachgezogen.
 
-### Uhr — Behoben: die GPS-Zeile lief auf der Venu 3s über den Rand
+### Uhr — Behoben: die GPS-Zeile lief über den Rand — zweimal, in zwei Achsen
 
 Sie war die **einzige** Zeile der Sync-Seite ohne `Ui.fitFont`
 (`Uhr-Layout_Regeln` 4.2), und bis 2.0.0 fiel das nicht auf: Der untere Block
@@ -204,6 +214,26 @@ vorher **„PS aus (kein Diens"** — beide Enden fort, ohne Warnung —, nachhe
 **„GPS aus (kein Dienst)"**. Auf dem Ausgangsstand desselben Geräts stand die
 Zeile vollständig da; es ist also keine Altlast, sondern die Folge der
 zusätzlichen Zeile.
+
+**Damit war es aber nur halb behoben, und das ist der lehrreiche Teil.**
+`Ui.fitFont` heilt die Schrift**wahl**, nicht die **Lage**. Trägt der untere
+Block drei Zeilen, rutscht der Mittelblock auf seine Untergrenze
+`Ui.s(dc, 20)` — und dort trägt die Sehne 122/112/**182** px
+(Fenix/FR945/Venu 3s), während der Text rund 140/130/**230** px braucht. Die
+kleinste Schrift der Liste passt dann ebenfalls nicht; `fitFont` gibt sie
+notgedrungen zurück und zeichnet über den Rand. Auf der Venu 3s fehlte vom
+„G" die linke Hälfte und von der schließenden Klammer der Rest.
+
+Die Untergrenze steht deshalb jetzt auf **`Ui.s(dc, 34)`** — Sehne
+158/146/238 px, auf allen drei Geräten mehr als der Text braucht;
+`Ui.s(dc, 30)` hätte auf der Venu noch nicht gereicht (224 gegen 230). Die
+Grenze greift nur im engen Fall, und bis zu fünf Zeilen im unteren Block
+überlappt nichts (gegengerechnet).
+
+**Gefunden hat das erst die Bildstrecke.** Die Meldung „behoben" nach dem
+`fitFont`-Schritt stützte sich auf die Schriftwahl, ohne den Fall mit drei
+Zeilen je angesehen zu haben — genau die Art grüner Zahl, vor der
+`CLAUDE.md` 6 warnt.
 
 
 ## [Web 13.1.1] — 2026-09-03

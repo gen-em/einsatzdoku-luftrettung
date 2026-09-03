@@ -39,7 +39,7 @@ feste Blöcke statt Absprache im Einzelfall:
 |---|---|---|
 | E-S5-32 bis -47 | Freigabe der offenen Fragen (Auftraggeber) | vergeben |
 | E-S5-48 bis -59 | **Server-Instanz** — Pakete A, B, D | 48–53 vergeben |
-| E-S5-60 bis -79 | **Uhr-Instanz** — Paket C | 60–69 vergeben |
+| E-S5-60 bis -79 | **Uhr-Instanz** — Paket C | 60–71 vergeben |
 | E-S5-80 ff. | **Android-Instanz**, falls sie am Hauptkonzept etwas einträgt (ihre eigenen Einträge zählen als E-S5Z-, eigener Namensraum, keine Kollision) | frei |
 
 Wer einen Block verlässt, sagt es hier, bevor er die Nummer benutzt.
@@ -205,6 +205,8 @@ Abschnitt 5 mit Fundstelle.
 | **E-S5-67** | **BACK auf einer `WatchUi.Confirmation` ruft `onResponse` NICHT auf** — am Simulator gemessen, im Code nicht zu sehen, vom Vertrag von `ConfirmationDelegate` nicht festgelegt. Folge ohne Behandlung: Beim Öffnen der Rückfrage hält die Abfrage an; ohne Antwort wird sie nie wieder eingeschaltet, und die Ansicht steht mit einem still ablaufenden Code da. `PairView.onShow()` meldet deshalb die Rückkehr; die Lage (Ansicht oben, Sitzung da, Abfrage still, kein Ja unterwegs) kann nur der weggeklickte Dialog sein. Behandelt wie ein Nein | Umsetzung C, gemessen |
 | **E-S5-68** | **Die Kopplungsansicht erscheint nur über der Sync-Seite.** Zwischen Tastendruck und Ansicht liegt eine Funkrunde; wer weiterblättert, bekam sie über eine fremde Seite geschoben — im schlimmsten Fall über den Rea-Countdown, wo die Ereignistasten tot wären und BACK anders wirkt. Die Sync-Seite meldet ihre Sichtbarkeit; ist sie fort, wird die Sitzung zurückgegeben. Dazu eine Sperre gegen einen zweiten `start` (der schob eine zweite, unschließbare Ansicht) | Umsetzung C |
 | **E-S5-69** | **Die Tastensperre wird in beiden Reihenfolgen erkannt** — B-S5-12, am Gerät gemeldet. `Input.mc` merkt sich jede gedrückte Taste, auch die, die es dem System überlässt. **Abweichung von K4** (Funde sammeln statt nebenbei beheben), ausdrücklich freigegeben: Es ist ein Uhr-Fehler, und S5 bringt die eine Uhr-Auslieferung (E-S5-29) — separat behoben käme er erst mit einer eigenen | Auftraggeber 03.09.2026 |
+| **E-S5-70** | **Wortlaut der Kopplungsansicht geändert** (Ansage 03.09.2026): „Kopplungscode" / Code / „Im Web eingeben" / „noch 10 min gültig" statt „Code für das Web" / „Einstellungen, Geräte" / „noch 10 min". Abschnitt 6.3 ist nachgezogen. **Preis, gemessen:** Auf der Venu 3s misst die Restzeile 194 px gegen 193 px Sehne — ein Pixel über der eigenen Sicherheitslinie, nachdem `fitFont` schon auf die kleinste Schrift zurückgefallen ist. Gezeichnet wird sie vollständig (chordW hält zusätzlich 24 px Rand), am Bild nachgesehen; auf Fenix und FR945 bleiben 8 bzw. 7 px Reserve. Wer den Wortlaut weiter verlängert oder dem Server ein größeres `frist_s` erlaubt, verliert auch dort den Rand | Auftraggeber 03.09.2026 |
+| **E-S5-71** | **Untergrenze des Sync-Mittelblocks auf `Ui.s(dc, 34)`** (B-S5-13, zweite Hälfte). `Ui.fitFont` heilt die Schriftwahl, nicht die Lage: Bei drei Zeilen im unteren Block sitzt der Mittelblock auf der Untergrenze, und bei 20 trägt die Sehne dort nur 122/112/182 px gegen rund 140/130/230 px Textbedarf — die kleinste Schrift passt dann auch nicht mehr, `fitFont` gibt sie trotzdem zurück, der Kreis schneidet ab. Bei 34 sind es 158/146/238 px; 30 hätte auf der Venu noch nicht gereicht. Bis zu fünf Zeilen im unteren Block überlappt nichts | Umsetzung C, gerechnet und am Bild belegt |
 
 ---
 
@@ -479,14 +481,14 @@ Buchstaben); Farben nach 7.
 ```
         ┌──────────────────────────┐
         │                          │
-        │      Code für das Web    │   fontHint, hellgrau
+        │      Kopplungscode       │   fontHint, hellgrau
         │                          │
         │        AB3 K7Q           │   FONT_LARGE → MEDIUM → SMALL (fitFont), weiß
         │                          │
-        │   Einstellungen → Geräte │   fontHint, hellgrau
+        │   Im Web eingeben        │   fontHint, hellgrau
         │                          │
-        │   noch 9 min             │   fontHint, hellgrau; ab 60 s „noch 45 s“, orange
-        │   Telefon in Reichweite? │   nur bei Verbindungsfehler, rot (Zeile ersetzt „noch …“ nicht)
+        │   Keine Verbindung (-104)│   nur bei Störung, rot — ÜBER der Restzeit (E-S5-64)
+        │   noch 9 min gültig      │   fontHint, hellgrau; ab 60 s „noch 45 s gültig“, orange
         │                          │
         └──────────────────────────┘
 ```
@@ -878,7 +880,7 @@ lässt.
    der Gerätetest).
 
 | **B-S5-12** | **Die Tastensperre wird nur in einer Reihenfolge erkannt.** `Input.mc` merkt sich allein die Tasten, die die Seite selbst verfolgt (START immer, UP/DOWN nur auf der Rea-Seite). Wer UP **zuerst** drückt und START dazu — die übliche Handhaltung —, hinterlässt keine Spur: START hält sich für einen gewöhnlichen Langdruck und öffnet das Schnellmenü, während die Uhr sperrt. Seit 3.0.0 wäre es auf der Sync-Seite eine angefangene Kopplung. Die Doku sagte dieselbe Einseitigkeit (`Technik.md` „START + beliebige Taste", Handbuch „während des langen START-Drucks") | `watch/source/Input.mc`; am Gerät gemeldet 03.09.2026 | **In Paket C behoben** (E-S5-69), abweichend von K4 und ausdrücklich freigegeben. Im Simulator nicht nachstellbar (`Geraete-Eingabe.md` 6) |
-| **B-S5-13** | **Die GPS-Zeile der Sync-Seite war die einzige ohne `Ui.fitFont`.** Bis 2.0.0 folgenlos: Der untere Block trug im Regelfall nur die Versionszeile. Mit 3.0.0 trägt er auf einem gewöhnlichen Weg drei Zeilen, `untenY` rückt nach oben, der Mittelblock rückt mit — und die Zeile landet, wo der Kreis zuläuft. Auf der Venu 3s fotografiert: „PS aus (kein Diens" | `watch/source/SyncView.mc` | **In Paket C behoben**, weil erst C den Fehler auslöst |
+| **B-S5-13** | **Die GPS-Zeile der Sync-Seite war die einzige ohne `Ui.fitFont`.** Bis 2.0.0 folgenlos: Der untere Block trug im Regelfall nur die Versionszeile. Mit 3.0.0 trägt er auf einem gewöhnlichen Weg drei Zeilen, `untenY` rückt nach oben, der Mittelblock rückt mit — und die Zeile landet, wo der Kreis zuläuft. Auf der Venu 3s fotografiert: „PS aus (kein Diens". **Zweitens — und das fiel erst bei der Bildstrecke auf — heilt `fitFont` nur die Schriftwahl, nicht die Lage:** Auf der Untergrenze `Ui.s(dc, 20)` trägt die Sehne 122/112/182 px gegen rund 140/130/230 px Bedarf; die kleinste Schrift passt dort ebenfalls nicht, und `fitFont` zeichnet sie trotzdem. Vom „G" fehlte die linke Hälfte | `watch/source/SyncView.mc` | **In Paket C behoben, in zwei Schritten** (E-S5-71). Die erste Meldung „behoben" war zu früh — sie stützte sich auf die Schriftwahl, ohne den Fall mit drei Zeilen angesehen zu haben |
 | **B-S5-14** | **Zwei normative Dokumente verweisen auf `Uhr-Layout.md`** — die Datei heißt `Uhr-Layout_Regeln.md`. Toter Verweis | `docs/Technik.md`, `docs/Geraete-Eingabe.md` | **In Paket C berichtigt** (beide Dateien fasst C ohnehin an) |
 | **B-S5-15** | **`Technik.md` sagt „App-Einstellungen ohne Vorgabewert"** (mit E-R49-8 falsch) **und „die App-Kennung im `manifest.xml` ist noch ein Platzhalter"** — letzteres seit Uhr 2.0.0 falsch; das `manifest.xml` sagt selbst „AB HIER NICHT MEHR AENDERN" | `docs/Technik.md`, Build-Absatz | **In Paket C berichtigt** |
 | **B-S5-16** | **Die Zeichenzahlen in Konzept 6.2 waren um eins zu niedrig** (23/24 statt 24/25) | dieses Konzept, 6.2 | **In Paket C nachgezählt und berichtigt** |
