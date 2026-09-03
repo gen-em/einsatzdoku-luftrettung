@@ -283,8 +283,16 @@ Abschnitt 3.5.
 | Anwendung | über `install.php` eingerichtet, Schema aus `schema.sql`, **40 Migrationen als `skipped` verbucht** |
 | Admin | `admin@gen-em.org` / `adminlokal2026` (die Vorgabe von `kreislauf.py` und `aufnehmen.mjs`) |
 | Demo | `demo@gen-em.org` / `nadokudemo0815`, aus `server/demo/fixture.json.gz` |
-| Bestand | **16 Diensttage, 87 Einsätze, 2 Geräte, 55 861 Spurpunkte** |
+| Bestand (Demo-Konto) | **16 Diensttage, 87 Einsätze, 2 Geräte, 181 Spuren mit 48 981 Punkten** |
 | Adressen | `http://127.0.0.1:8080` (PHP-Server) und `https://127.0.0.1:8443` (socat davor — das Sitzungs-Cookie ist `secure`) |
+
+**Die Punktzahl ist über `spur_lib` gezählt, nicht über `track_points`** — und
+das ist kein Detail. Ein `COUNT(*) FROM track_points` liefert je nach Stand des
+Verdichtungsjobs etwas anderes: Im ersten Lauf standen dort 55 861 Zeilen, nach
+ein paar Dutzend Seitenaufrufen 30 610 — der Job war huckepack gelaufen und
+hatte 125 Spuren in Blobs verschoben. Keine davon ist verloren, aber als
+Ausgangszahl taugt die Zeilenzahl nicht. `spur_zahlen()` zählt beide Ablagen
+und liefert dieselbe Zahl wie die Spurprobe (181 / 48 981).
 
 ### 3.2 Ausgangszahlen der Prüfmittel
 
@@ -526,8 +534,21 @@ Alles gemessen, nicht übernommen:
 Der Rundlauf ist der wichtigste dieser Punkte: **`SendeRundlaufTest` ist die
 Abnahme von Paket E2** („Segment am Server `final = 1`, `days.ended_at`
 gesetzt"), und dass er hier gegen eine echte Installation grün läuft, ist die
-Voraussetzung dafür. Die Prüffälle räumen hinter sich auf — nach dem Lauf
-stehen wieder nur die zwei Geräte des Demo-Kontos.
+Voraussetzung dafür.
+
+**Was der Rundlauf hinterlässt, ist mehr, als die Anleitung sagt.**
+`android/LIESMICH.md` verspricht: „Die Fälle räumen hinter sich auf: Was sie
+koppeln, trennen sie wieder." Das stimmt — die Geräte sind hinterher weg, es
+stehen wieder nur die zwei des Demo-Kontos. Der **hochgeladene Bestand**
+bleibt aber stehen: Nach einem Lauf trug das Admin-Konto **9 Diensttage,
+5 Einsätze und 14 439 Spurpunkte**, die vorher nicht da waren. Das ist kein
+Fehler der Prüffälle (der Sinn des Rundlaufs ist gerade, dass die Daten
+wirklich ankommen), aber es heißt: **Jeder weitere Lauf legt noch einmal so
+viel dazu.** Wer die Installation als Ausgangsstand braucht, räumt vorher das
+Admin-Konto ab oder baut sie mit `lokal_einrichten.sh` neu. Für das
+Prüfdokument von E2 gehört die Zahl vor und nach dem Lauf notiert — sonst
+misst der zweite Lauf den Bestand des ersten. **Backlog-Kandidat:** die
+Rundlauffälle räumen auch ihren Bestand ab (`day`-Kennungen sind bekannt).
 
 ### 8.3 Kein Emulator — gemessen, nicht vermutet
 
