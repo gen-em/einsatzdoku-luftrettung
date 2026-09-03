@@ -127,7 +127,15 @@ class SyncView extends WatchUi.View {
         if (Uploader.lastError != null) {
             lines.add([Uploader.lastError as Lang.String, Ui.ROT]);
         }
-        if (Pair.status != null) {
+        /* Steht dieselbe Zeile schon in der Mitte, wird sie hier NICHT
+         * wiederholt — dieselbe Regel wie beim Einrichtungsschritt weiter
+         * unten. Seit Uhr 3.0.0 kann das vorkommen: "Erst Server-Adresse
+         * setzen" ist der Text BEIDER Stellen, seit Pair.mc nicht mehr
+         * "Server-Domain" sagt. */
+        var s = schritt;
+        var doppelt = (einrichten && s != null && Pair.status != null
+                       && s.equals(Pair.status as Lang.String));
+        if (Pair.status != null && !doppelt) {
             var pc = Ui.ROT;                       // :error
             if (Pair.statusKind == :ok) { pc = Graphics.COLOR_GREEN; }
             else if (Pair.statusKind == :busy) { pc = Graphics.COLOR_LT_GRAY; }

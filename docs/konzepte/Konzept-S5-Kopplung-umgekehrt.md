@@ -397,7 +397,7 @@ mit Begründung, in Abschnitt 3 zur Entscheidung gestellt.
 | Z-13 | **Obergrenze offener Sitzungen** (`PAIR_SITZUNGEN_MAX`) | 1000, gezählt per SQL über unverfallene Zeilen | **Vorschlag** (F-S5-03) | R36: 1000 Konten — mehr gleichzeitige legitime Kopplungen gibt es nicht. Angriff E-R49-6: Bei 1000 gefüllten Sitzungen trifft ein Rateversuch mit ≤ 9,3 · 10⁻⁷; mit Z-08 braucht ein Angreifer rund 10⁵ Adress-Konto-Paare für **einen** erwarteten Treffer — und der läuft noch in das Tor der Rückbestätigung (E-S5-05b). Gegenrichtung (Verstopfen): Z-12 verlangt 50 Adressen je 10 Minuten, und die Sperre dauert Minuten |
 | Z-14 | Aufräumen | täglich, Job `aufraeumen`, Schritt „Kopplungssitzungen“ | Code | `jobs_lib.php` 200–207, 502–507: derselbe Schritt, andere Tabelle |
 | Z-15 | Mail-Zeitlimit | 5 s | Code | `pair.php` 355; `Technik.md` 1756–1761 |
-| Z-16 | Hinweiszeile der Uhr | 26 Zeichen | Code | `Pair.mc` 64 (`ZEILE_MAX`) |
+| Z-16 | Hinweiszeile der Uhr | 26 Zeichen | Code | `Pair.mc`, `ZEILE_MAX` (die Zeilennummer ist mit Paket C gewandert) |
 | Z-17 | Meldung an die alte Uhr | „Uhr-App aktualisieren“, 21 Zeichen | abgeleitet | Z-16 |
 | Z-18 | Restzeit-Anzeige | volle Minuten, ab 60 s in Sekunden | abgeleitet | `rest_s` aus `status`; die Uhr rechnet nicht selbst gegen die Frist (keine verlässliche Uhr gegenüber dem Server), sie zeigt den letzten Serverwert |
 | Z-19 | Migrationsregister | nach S6 **40** Kennungen in `schema.sql` und `update.php`, plus eine | abgeleitet | Rahmenplan Schritt 2 (39 = 39 nach `geraetekennung`, danach `geraetemodell_breiter`); beim Merge gegenzählen (Rahmenplan 2.2) |
@@ -455,8 +455,9 @@ geleert haben; der Text bleibt.
 | alles Übrige | Kopplung fehlgeschlagen (n) | Servermeldung, gekürzt | bestehend |
 
 „`lSelectHold()` + `: neuer Code`“ ergibt auf Fünf-Tasten-Uhren „START
-halten: neuer Code“ (23 Zeichen), auf der Venu „Action halten: neuer Code“
-(24) — beide unter Z-16.
+halten: neuer Code“ (24 Zeichen), auf der Venu „Action halten: neuer Code“
+(25) — beide unter Z-16 (26), Rest 2 bzw. 1 Zeichen. *(Beide Zahlen waren in
+der Konzeptfassung um eins zu niedrig; nachgezählt in Paket C.)*
 
 ### 6.3 Uhr — die Code-Ansicht (`PairView`), Skizze
 

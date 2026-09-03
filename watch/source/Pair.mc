@@ -128,11 +128,19 @@ module Pair {
 
     /* Wohin der Code im Web gehoert — die zweite Zeile unter dem Code.
      *
-     * OHNE PFEIL. Ob "→" in den Geraeteschriften vorhanden ist, stand im
-     * Konzept als offener Punkt (Abschnitt 11); ein fehlendes Glyph erscheint
-     * als leeres Kaestchen, ohne Warnung. Am Simulatorbild nachgesehen —
-     * Ergebnis steht im Pruefdokument. Das Komma sagt dasselbe und kann nicht
-     * fehlen. */
+     * KOMMA STATT PFEIL, UND ZWAR GEMESSEN. Ob "→" in den Geraeteschriften
+     * vorhanden ist, stand im Konzept als offener Punkt (Abschnitt 11).
+     * Am 03.09.2026 im Simulator nachgesehen, fenix6pro, SDK 9.2.0, mit
+     * "Einstellungen → Geräte" uebersetzt und fotografiert: Das Zeichen
+     * erscheint als PLATZHALTER-RAUTE, nicht als Pfeil — der Fall aus
+     * Uhr-Layout_Regeln 3.1, nur mit einer Textschrift statt einer
+     * Ziffernschrift. Es gibt keine Warnung und keinen Fehler, nur ein Bild,
+     * das niemand deuten kann.
+     *
+     * Das Komma sagt dasselbe und kann nicht fehlen. Die Weboberflaeche und
+     * das Handbuch schreiben an dieser Stelle weiter "Einstellungen → Geräte"
+     * — dort traegt die Schrift den Pfeil. Dass Uhr und Web hier
+     * auseinanderlaufen, ist kein Versehen: Die Uhr kann es nicht anders. */
     const WEG_IM_WEB = "Einstellungen, Geräte";
 
     // Laenge, die in der Hinweisschrift sicher aufs Display passt.
@@ -161,6 +169,13 @@ module Pair {
      * Sitzung nicht (E-S5-25) — sie lebt auf dem Server weiter, und die
      * Abfrage laeuft bis zur Frist. */
     var netzHinweis as Lang.String or Null = null;
+
+    /* Ist gerade ein `bestaetigen ja` unterwegs? Ohne diese Auskunft bliebe
+     * die Kopplungsansicht nach dem Ja unveraendert stehen — mit dem Code und
+     * der Aufforderung, ihn ins Web einzutragen, also genau der Handlung, die
+     * die Traegerin soeben erledigt hat. Sie waere die einzige Stelle des
+     * Weges ohne Rueckmeldung, und ausgerechnet die letzte. */
+    var jaLaeuft as Lang.Boolean = false;
 
     var _pending as Lang.Boolean = false;       // laeuft gerade eine status-Abfrage?
 
@@ -364,7 +379,13 @@ module Pair {
         if (_startLaeuft) { return; }          // zweiter Druck waehrend "Hole Code…"
         var base = Uploader.serverBase();
         if (base.length() == 0) {
-            status = "Erst Server-Domain setzen";
+            /* "Adresse", nicht "Domain": So heisst die Einstellung in
+             * settings.xml, im Handbuch, in SyncView und in StartView. Zwei
+             * Woerter fuer dieselbe Sache koennen hier sogar gleichzeitig auf
+             * dem Bildschirm stehen — die Sync-Seite zeigt in der Mitte
+             * "Erst Server-Adresse setzen" und haette darunter die andere
+             * Fassung gezeigt. */
+            status = "Erst Server-Adresse setzen";
             statusHint = null;
             statusKind = :error;
             WatchUi.requestUpdate();
@@ -619,7 +640,22 @@ module Pair {
          * unbekannt) sind fuer die Uhr dasselbe: Diese Sitzung traegt nicht
          * mehr, und der Weg heraus ist derselbe — von vorn. Deshalb eine
          * Meldung fuer beide (Vertrag 1a.2). */
-        _sitzungBeenden("Code abgelaufen", Input.lSelectHold() + ": neuer Code", :error);
+        if (code == 410 || code == 401) {
+            _sitzungBeenden("Code abgelaufen", Input.lSelectHold() + ": neuer Code",
+                            :error);
+            return;
+        }
+        /* Alles Uebrige bekommt den Zahlencode und, wenn der Server eine
+         * schickt, seine Meldung — wie in onStart. "Code abgelaufen" hier
+         * hinzuschreiben waere geraten: Es benennt eine Ursache, die gar nicht
+         * vorliegen muss, und schickt die Traegerin auf einen Weg, der dann
+         * nicht hilft (Tabelle 6.2, Zeile "alles Übrige"). */
+        var hinweis = null;
+        if (dict != null && dict["meldung"] instanceof Lang.String) {
+            hinweis = _kurz(dict["meldung"] as Lang.String);
+        }
+        _sitzungBeenden("Kopplung fehlgeschlagen (" + code.toString() + ")",
+                        hinweis, :error);
     }
 
     /* Schritt 3: Ja oder Nein zu dem Konto, das der Server genannt hat.
@@ -648,6 +684,8 @@ module Pair {
                 :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
             },
             cb.method(:onResponse));
+        // Nur fuers Ja: Das Nein raeumt die Ansicht ohnehin sofort ab.
+        if (antwort.equals("ja")) { jaLaeuft = true; WatchUi.requestUpdate(); }
         return true;
     }
 
@@ -725,6 +763,7 @@ module Pair {
             netzHinweis = (code < 0)
                           ? "Keine Verbindung (" + code.toString() + ")"
                           : "Server antwortet nicht";
+            jaLaeuft = false;      // der Hinweis tritt an die Stelle von "Kopple…"
             _abfragen = true;
             WatchUi.requestUpdate();
             return;
@@ -780,6 +819,7 @@ module Pair {
     }
 
     function _sitzungVergessen() as Void {
+        jaLaeuft = false;
         _code = null;
         _dev = null;
         _key = null;

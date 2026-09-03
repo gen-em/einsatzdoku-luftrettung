@@ -79,6 +79,11 @@ class PairView extends WatchUi.View {
          * Hinweis. Das ist auch der Grund, warum die Sync-Seite an derselben
          * Verankerung ueberlebt: Ihre unterste Zeile ist immer "Version 3.0.0". */
         var lines = [];
+        /* "Kopple…" waehrend das Ja unterwegs ist. Hellgrau nach
+         * Uhr-Layout_Regeln 7 ("laeuft gerade, noch keine Aussage"), Wortlaut
+         * aus 2.0.0 uebernommen. Der Block ist fuer eine schwankende
+         * Zeilenzahl gebaut, der Codeblock darueber weicht von selbst aus. */
+        if (Pair.jaLaeuft) { lines.add(["Kopple…", Graphics.COLOR_LT_GRAY]); }
         var netz = Pair.netzHinweis;
         if (netz != null) {
             lines.add([netz as Lang.String, Ui.ROT]);
