@@ -109,8 +109,28 @@ legen() {
   sag "aufgespielt: $(basename "$apk") in $(( $(date +%s) - beginn )) s"
 }
 
+# EIN screencap PRUEFT NICHT, WAS ER FOTOGRAFIERT. Am 03.09.2026 lieferte der
+# erste Lauf zwei byteweise gleich grosse Abzuege (52153 Bytes) -- beide
+# zeigten den Dialog "System UI isn't responding". Unter TCG ist der Emulator
+# so langsam, dass die SYSTEMOBERFLAECHE selbst in den ANR laeuft; die eigene
+# App startete dahinter und war nie zu sehen. Ohne Nachsehen waeren daraus
+# "zwei Bilder, kein Absturz" geworden -- dieselbe hohle Zahl wie die 176
+# Anmeldeseiten nach O9c (F-P3-AQ).
+#
+# Deshalb: vor jedem Abzug nachfragen, WER den Fokus hat. `mFocusedApp` genuegt
+# nicht -- es nannte im Fehlerfall bereits die richtige Activity, waehrend
+# `mCurrentFocus` den ANR-Dialog nannte. Sichtbar ist, was in mCurrentFocus
+# steht. Den Dialog raeumt ein Tipp auf "Wait" weg; danach steht die App.
+PAKET="${PAKET:-org.genem.nadoku.pruef}"
 bild() {
   mkdir -p "$ZIEL"
+  local fokus
+  fokus=$("$ADB" shell 'dumpsys window windows 2>/dev/null | grep mCurrentFocus' | tr -d '\r')
+  case "$fokus" in
+    *"$PAKET"*) : ;;
+    *) sag "KEIN ABZUG fuer '$1' -- im Vordergrund steht:${fokus#*mCurrentFocus=}"
+       return 1 ;;
+  esac
   "$ADB" exec-out screencap -p > "$ZIEL/$1.png"
   sag "abgezogen: $ZIEL/$1.png ($(stat -c%s "$ZIEL/$1.png") Bytes)"
 }
