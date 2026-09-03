@@ -4397,6 +4397,38 @@ Knopf „Jetzt senden" bei Rückstand und eine Ergebniszeile aus dem letzten
 Lauf. Die 400-Zeile schliesst die Lücke, durch die ein Paket bisher aus
 Warteschlange **und** Anzeige fiel.
 
+### Der Uhr-Spiegel
+
+*Seit Android 0.10.0 (S5, Paket E3).*
+
+Der Vordergrunddienst schickt den Ortungszustand bei **jedem Wechsel** ans
+Handgelenk — nicht mehr nur als Antwort auf ein Ereignis der Uhr. Wer keinen
+Knopf drückte, sah bis dahin „Dienst läuft", während nichts aufgezeichnet
+wurde.
+
+**Sechs Stufen, drei Anzeigen.** `Ortungscode.anzeige()` fasst zusammen:
+`KEINE_ORTUNG` (die vier Stufen ohne Aufzeichnung), `SUCHEN`, `STILL` (nur
+`OK` — und ein fehlendes Feld, also eine ältere Handy-Fassung). Die Regel
+liegt in `gemeinsam/` und wird von **beiden** Seiten benutzt: von der Uhr zum
+Zeichnen, vom Handy zum Entscheiden, ob überhaupt gesendet wird. Zwei Kopien
+liefen auseinander, und dann meldete das Handy Wechsel, die nichts ändern —
+oder einen nicht, den die Uhr angezeigt hätte. Ein Prüffall hält beide Enden
+aneinander: Die Stufen, bei denen das Handy warnt, sind genau die, bei denen
+die Uhr rot wird.
+
+**Zwei Ausführer, und der Unterschied ist begründet.** `NAdokuApp` hält den
+Sendeausführer (Server) **und** einen eigenen für die Uhr. Beide
+Warteschlangen haben verschiedene Fristen: Ein Upload kann eine Minute
+dauern, eine Uhrnachricht bis zu fünf Sekunden je Schritt blockieren. Lägen
+sie hintereinander, käme die Warnung zu spät ans Handgelenk oder ein Funkloch
+hielte einen Diensttag auf. Was E-S5Z-11 zusichert — nie zwei Läufe auf
+demselben Puffer — bleibt unberührt: Eine Uhrnachricht liest und schreibt
+nicht.
+
+**Eine verlorene Standmeldung wird nicht nachgeliefert.** Anders als ein
+Ereignis der Uhr (gepuffert bis zur Quittung) ist der Stand ein
+Augenblickswert; der nächste Wechsel trägt den dann gültigen.
+
 ### Was die App an den Server schickt
 
 Nichts Neues: denselben JSON-Vertrag wie die Uhr-App aus Abschnitt 5. **Der

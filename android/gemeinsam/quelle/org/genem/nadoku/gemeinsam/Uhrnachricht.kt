@@ -231,6 +231,32 @@ object Ortungscode {
      * die Nachricht „gerade entsteht keine Spur" ans Handgelenk.
      */
     val OHNE_AUFZEICHNUNG = setOf(FREIGABE_FEHLT, STANDORT_AUS, KEIN_SIGNAL, UNGENAU)
+
+    /**
+     * **Was die Uhr aus einem Code macht — drei Anzeigen für sechs Stufen.**
+     *
+     * Die Uhr stuft nicht ab: Sie kann keine der vier Ursachen beheben, das
+     * tut das Handy. Für sie zerfallen die sechs Stufen deshalb in drei
+     * Fälle, und diese Zusammenfassung steht **einmal** hier statt zweimal
+     * ausgeschrieben — in der Anzeige der Uhr und in der Entscheidung des
+     * Handys, wann es überhaupt meldet (E3).
+     */
+    enum class Anzeige {
+        /** Rot: „keine Ortung · keine Aufzeichnung". */
+        KEINE_ORTUNG,
+
+        /** Sand: „GPS sucht". */
+        SUCHEN,
+
+        /** Nichts — es läuft, oder das Handy sagt nichts dazu. */
+        STILL,
+    }
+
+    fun anzeige(code: String?): Anzeige = when {
+        code in OHNE_AUFZEICHNUNG -> Anzeige.KEINE_ORTUNG
+        code == SUCHT -> Anzeige.SUCHEN
+        else -> Anzeige.STILL
+    }
 }
 
 /**

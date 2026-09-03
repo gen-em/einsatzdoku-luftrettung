@@ -8,9 +8,9 @@ Auftrag des Auftraggebers vom 02.09.2026 nach der Geräteprüfung · Ablage
 >
 > | | |
 > |---|---|
-> | Stand | 03.09.2026 — **freigegeben, Umsetzung läuft** auf Zweig `claude/s5-paket-e-android` |
-> | Paket in Arbeit | **E3** (aktiver Uhr-Spiegel) |
-> | Erledigt | Freigabe und alle sechs Fragen (E-S5Z-15 bis -21); Prüfstand aufgebaut, Ausgangszahlen gemessen; **E1 (Android 0.8.0)**; **Bilderlauf beider Module (0.8.1)**; **E2 (Android 0.9.0)** |
+> | Stand | 03.09.2026 — **alle drei Teilpakete umgesetzt** auf Zweig `claude/s5-paket-e-android`; Freigabe des Abschlusses ausstehend |
+> | Paket in Arbeit | **keines** — E1, E2 und E3 sind fertig. Offen ist der **Gerätetest** (Prüfdokument, Listen E1-1 bis E1-16 und E2-1 bis E2-11) |
+> | Erledigt | Freigabe und alle sechs Fragen (E-S5Z-15 bis -21); Prüfstand aufgebaut, Ausgangszahlen gemessen; **E1 (Android 0.8.0)**; **Bilderlauf beider Module (0.8.1)**; **E2 (Android 0.9.0)**; **E3 (Android 0.10.0)** |
 > | Wo es hakt | Nichts Blockierendes. Die Diagnose 1.3 ist **beantwortet** (Abschnitt 8): belegt ist H2. Was bleibt: kein Emulator im Container, also ist Paket E gerätegebundener als Abschnitt 9.3 annimmt. Ursprünglich stand hier: Die Diagnose kann die Umsetzung nicht fahren — sie braucht das S24 und den Produktivserver. Sie liegt beim Auftraggeber und ist Voraussetzung für den *Beleg* in E2, nicht für den *Bau* (E2 behebt alle drei Ketten unabhängig davon). Dazu: kein Emulator im Container (Vorbereitung 8.3), also ist Paket E gerätegebundener als Abschnitt 9.3 annimmt |
 > | Fable-Schritt | **keiner** |
 > | Erhoben an | `main`, Commit `c2ac707` (02.09.2026): Android 0.7.7, Web 12.9.2 |
@@ -229,6 +229,9 @@ E-S4-08). Für beide Ketten gibt es dort ein Vorbild:
 | **E-S5Z-27** | **Der Wortlaut bei `OK` heisst „· GPS empfängt", nicht „· GPS ok".** Abschnitt 4.3 sah „ok" vor; Lint meldet dazu `Typos: "ok" is usually capitalized as "OK"` und die Warnungszahl stieg von 14 auf 15. Stummschalten verbietet `CLAUDE.md` 6, und „OK" mitten im Satz ist ein Schreien. „Empfängt" ist ohnehin die bessere Aussage: Es nennt das **Gemessene** — es kommen brauchbare Funde —, statt eine Güte zu behaupten, die diese App gar nicht abstuft. Die Garmin-Uhr hat drei Stufen („gut / ausreichend / zu schwach"), die App hat eine; „gut" zu schreiben hiesse, eine Abstufung zu versprechen, die es nicht gibt | Lint `Typos`; `SyncView.mc` 56–72 |
 | **E-S5Z-28** | **Die Warnung „keine Aufzeichnung" steht auf der Uhr in der Zustandszeile oben**, nicht in der Verbindungszeile unten — und sie **verdrängt** dort Phase und Zeit, statt eine Reihe hinzuzufügen. Gemessen mit `UhrBildTest` (B-S5Z-17): Auf der 192-dp-Uhr ist die laufende Ansicht mit Phasenknöpfen 221 dp hoch; die letzte Reihe liegt unter dem Rand. Drei Bilder mit drei verschiedenen Ortungszuständen kamen **byteweise gleich** heraus, weil keines die Zeile zeigte. Eine Warnung, die genau auf der engsten Uhr ausfällt, ist keine. **Die Reihe wächst dabei nicht** — es ist dieselbe eine Zeile, sie sagt nur etwas Anderes, solange es etwas Wichtigeres zu sagen gibt; der Glasüberlauf aus B-S4-08b kehrt also nicht zurück. Der Preis ist, dass „Phase 3 seit 09:12" währenddessen nicht dasteht, und das ist die richtige Reihenfolge: „Es entsteht gerade keine Spur" schlägt die Phasenzeit, und die Phasenliste ist einen Druck entfernt. **Dieselbe Verlegung gilt für die bestehende Zeile `dienst_schwebt`** — sie stand in derselben Reihe und war auf der kleinen Uhr ebenso unsichtbar | `UhrBildTest`; B-S5Z-17 |
 | **E-S5Z-29** | **Der Sendehinweis (ID 2) ist wegwischbar und still.** Das Konzept sagte es (5.1), die Begründung fehlte: Es gibt an dieser Meldung **nichts zu tun** — der Job arbeitet von selbst. Eine Vibration wäre eine Aufforderung ohne Handlung, und `setOngoing` machte sie zu genau der Meldung, die B-S5Z-03 beklagt: eine andauernde ohne Dienst dahinter. Wer sie wegwischt, hat sie zur Kenntnis genommen; der Job läuft unberührt weiter. **Ausnahme, die dazugehört:** Bei 401 bleibt sie ebenso wegwischbar, obwohl dort etwas zu tun ist — die Anweisung steht auch in der Ansicht (E-S5Z-12), und eine unwegwischbare Meldung, die man nur durch Neukoppeln loswird, wäre eine Geiselnahme | 5.1; B-S5Z-03 |
+| **E-S5Z-30** | **Die Standmeldung an die Uhr geht über einen eigenen Ausführer, nicht über den Sendeausführer** — das berichtigt E-S5Z-24. Der Gedanke dort war richtig (nicht vom Hauptfaden, weil `WearNachrichtenweg.sende()` je `Tasks.await` bis zu 5 s blockiert, B4.6); die Folgerung war es nicht. Beide Warteschlangen haben **verschiedene Fristen**: Ein Upload eines Zwölfstundendienstes braucht zwanzig Anfragen und kann eine Minute dauern — läge die Uhrnachricht dahinter, käme die Warnung „keine Ortung" eine Minute zu spät ans Handgelenk, und ihre Rechtzeitigkeit ist der einzige Grund, warum es E3 gibt. Umgekehrt darf eine Uhr im Funkloch keinen Diensttag aufhalten. **Was E-S5Z-11 zusichert, bleibt unberührt:** Dort geht es um zwei Läufe auf demselben **Puffer**; eine Uhrnachricht liest den Stand und schreibt nichts | B4.6; E-S5Z-11 |
+| **E-S5Z-31** | **Gemeldet wird bei einem Wechsel der ANZEIGE, nicht des Zustands.** Das Handy führt sechs Stufen, die Uhr zeigt drei Dinge (`KEINE_ORTUNG`, `SUCHEN`, `STILL`). Für sie sehen `STANDORT_AUS` und `KEIN_SIGNAL` gleich aus; eine Nachricht dazwischen änderte am Handgelenk nichts und kostete doch bis zu 5 s Wartezeit und einen Funkaufwacher. **Die Zusammenfassung steht einmal** (`Ortungscode.anzeige()` in `gemeinsam/`) und wird von beiden Seiten benutzt — von der Uhr zum Zeichnen, vom Handy zum Entscheiden. Zwei Kopien liefen auseinander, und dann meldete das Handy Wechsel, die nichts ändern, oder — schlimmer — einen nicht, den die Uhr angezeigt hätte. Ein Prüffall hält beide Enden aneinander: Die Stufen, bei denen das Handy warnt, sind genau die, bei denen die Uhr rot wird | E3 |
+| **E-S5Z-32** | **Eine verlorene Standmeldung wird nicht nachgeliefert.** Anders als ein Ereignis der Uhr — das gepuffert wird, bis das Handy quittiert (E-S4-10) — ist der Stand ein **Augenblickswert**. Der nächste Wechsel trägt den dann gültigen, und der ist mehr wert als der alte. Eine Warteschlange dafür wäre eine zweite Buchführung für Daten, die beim Ankommen schon veraltet sein können | E3 |
 
 ---
 
@@ -551,7 +554,7 @@ Prüfmittel **zuletzt** (`CLAUDE.md` 6). Vor E2 die Diagnose aus 1.3.
 | Diagnose 1.3 | **beantwortet** 03.09.2026 | Vom Auftraggeber: **am Handy beendet**, keine Fehlermeldung, **kein Rückstand** angezeigt — damit ist **H1 (Uhr) ausgeschlossen**. Die App-Beobachtung sah nach H3 aus; der Blick auf den Server hat das **widerlegt**: Das Segment vom 02.09. ist heute **nicht mehr offen**, wurde also später nachgeliefert. **Belegt ist H2 (Kette B1/B2)** — der Abschluss-Upload kam im Augenblick des Beendens nicht durch und wurde nie wiederholt, bis der nächste Dienst lief. Die App-Antwort „Alles gesendet" war eine Beobachtung von *später*; wer nur sie gefragt hätte, wäre bei H3 gelandet | **Die Abnahme von E2 sind 5.1 Punkt 1 und 2** — Vordergrunddienst halten, Nachsende-Job planen. E-S5Z-12 (400-Pakete sichtbar) bleibt richtig, ist aber Vorsorge und nicht der belegte Fehler |
 | E1 | **erledigt** 03.09.2026, Android **0.8.0**, Bilderlauf **0.8.1** | sechs Fundstellen, alle unten | E-S5Z-22 (rot statt orange), E-S5Z-23 (Handler-Token), E-S5Z-27 (Wortlaut „GPS empfängt") |
 | E2 | **erledigt** 03.09.2026, Android **0.9.0** | siehe unten | E-S5Z-29 |
-| E3 | offen | — | — |
+| E3 | **erledigt** 03.09.2026, Android **0.10.0** | Der Sendeausführer aus E-S5Z-24 war die falsche Warteschlange — siehe E-S5Z-30 | E-S5Z-30, E-S5Z-31 |
 
 #### Was in E1 entstanden ist
 
@@ -610,6 +613,25 @@ Installation — **221 von 221, 0 übersprungen, 0 Fehlschläge**; am Server
 | **`--` in einem XML-Kommentar** bricht den Manifest-Zusammenbau | `ManifestMerger2$MergeFailureException` — und die Meldung nennt die Zeile **nicht** | Gedankenstrich durch Komma ersetzt. Zum zweiten Mal in diesem Paket (E1 hatte es in `strings.xml`); der Fehler ist so leicht zu machen wie schwer zu lesen |
 | **Der Bestand des Rundlaufs sah nach Datenverlust aus** — `track_points` fiel von 55 861 auf 30 610 | beim Nachzählen vor/nach dem Lauf | Kein Verlust: Ich hatte **eine der zwei Ablagen** gezählt. Mit `track_blobs` sind es 70 300 (+14 439). Genau der Fehler, vor dem `CLAUDE.md` 4 zu `spur_lib.php` warnt — und ich bin per SQL hineingelaufen |
 | **Der bestehende `SendetaktTest` zählte `WIEDERVERBINDUNG` zu den sofortigen Auslösern** | Prüffall wurde rot | Er ist berichtigt und um fünf Fälle erweitert. Die Regel hat sich nicht gelockert: Dieser eine Auslöser kommt nicht von einem Menschen |
+
+#### Was in E3 entstanden ist
+
+| Datei | Was |
+|---|---|
+| `gemeinsam/Uhrnachricht.kt` | `Ortungscode.Anzeige` und `anzeige()` — sechs Stufen auf drei Anzeigen, **eine** Regel für beide Seiten |
+| `NAdokuApp.kt` | `uhrausfuehrer` — ein **zweiter** Faden neben dem Sendeausführer (E-S5Z-30) |
+| `aufzeichnung/AufzeichnungsDienst.kt` | `uhrSpiegeln()`: Standmeldung bei jedem Wechsel der **Anzeige** |
+| `uhr/UhrActivity.kt` | benutzt `anzeige()` statt zweier eigener Vergleiche |
+| Prüffälle | `OrtungsanzeigeTest` (7), `OrtungswaechterTest` +3 (die Brücke zwischen Handy und Uhr) |
+
+**Prüffälle: 285 → 295** (+10).
+
+#### Probleme in E3 und wie sie gelöst wurden
+
+| Was | Wie es auffiel | Lösung |
+|---|---|---|
+| **E-S5Z-24 wies die Uhrnachricht dem Sendeausführer zu** | beim Schreiben: Ein Upload dauert bis zu einer Minute, und die Warnung an die Uhr läge dahinter | Eigener Ausführer (E-S5Z-30). Die Zusicherung von E-S5Z-11 gilt dem **Puffer**, und den fasst eine Uhrnachricht nur lesend an |
+| **Eine Meldung je Zustandswechsel wäre zu viel** | Für die Uhr sehen vier der sechs Stufen gleich aus | Verglichen wird die **Anzeige**, nicht der Zustand (E-S5Z-31). Der Wechsel `STANDORT_AUS` → `KEIN_SIGNAL` löst damit keinen Funkaufwacher mehr aus |
 
 #### Was E1 bewusst stehen lässt
 

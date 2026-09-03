@@ -113,30 +113,33 @@ Die APK liegen danach unter
 
 ### Was der Baulauf heute meldet
 
-Stand E2 (Android 0.9.0), `./gradlew build` im Container, 03.09.2026:
+Stand E3 (Android 0.10.0), `./gradlew build` im Container, 03.09.2026:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **14** | **0** |
-| Prüffälle | **221**, davon 12 übersprungen | **64**, davon 0 übersprungen |
-| APK (unsigniert, Release) | **9 657 735 B** | **19 574 450 B** |
+| Prüffälle | **224**, davon 12 übersprungen | **71**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **9 657 735 B** | **19 574 446 B** |
 
-Zusammen **285 Prüffälle** — 65 mehr als der Stand davor (0.7.7: 167 / 53 =
-220). Sie verteilen sich auf `OrtungswaechterTest` (21),
-`OrtungszuhoererTest` (2), `AusduennerTest` (+5 für `brauchbar()`),
-`NachrichtenformatTest` (+5), `UhrsteuerungTest` (+3), `HandyBildTest` (1 Fall
-für 63 Bilder), `UhrBildTest` (+3 Fälle, 4 → 6 Bilder) sowie aus E2
-`NachsendenTest` (9), `DienstfolgeTest` (6), `AbgewieseneTest` (5) und
-`SendetaktTest` (+5).
+Zusammen **295 Prüffälle** — 75 mehr als der Stand davor (0.7.7: 167 / 53 =
+220). Woher sie kommen:
 
-**Mit laufender Installation sind es 221 von 221, 0 übersprungen** — dann
+| Paket | Prüffälle |
+|---|---|
+| E1 | `OrtungswaechterTest` 24, `OrtungszuhoererTest` 2, `AusduennerTest` +5 (`brauchbar()`), `NachrichtenformatTest` +5, `UhrsteuerungTest` +3 |
+| Bilderlauf | `HandyBildTest` 1 Fall für **63 Bilder**, `UhrBildTest` +3 Fälle (4 → 6 Bilder) |
+| E2 | `NachsendenTest` 9, `DienstfolgeTest` 6, `AbgewieseneTest` 5, `SendetaktTest` +5 |
+| E3 | `OrtungsanzeigeTest` 7 (die drei davon in `OrtungswaechterTest` sind oben schon gezählt) |
+
+Dass es so viele sind, ist kein Übereifer: Paket E ist zu einem großen Teil
+gerätegebunden, und diese Fälle sind das Einzige, was im Container überhaupt
+läuft (Abschnitt 7).
+
+**Mit laufender Installation sind es 224 von 224, 0 übersprungen** — dann
 laufen auch die drei Rundlaufklassen. `SendeRundlaufTest` ist die Abnahme von
 E2: Er belegt am echten `ingest.php`, dass ein Dienstende beim Server ankommt
-(`rest_segments.final = 1`, `ended_at` gesetzt, `days.ended_at` gesetzt). Dass es so viele
-sind, ist kein Übereifer: Paket E ist zu einem großen Teil gerätegebunden,
-und diese Fälle sind das Einzige, was im Container überhaupt läuft
-(Abschnitt 7).
+(`rest_segments.final = 1` mit `ended_at`, `days.ended_at` gesetzt).
 
 **Die Warnungszahl blieb bei 14, und einmal war sie 15.** Der neue Text
 „· GPS ok" ergab `Typos: "ok" is usually capitalized as "OK"`. Stummgeschaltet
@@ -147,7 +150,7 @@ behoben: `postDelayed(r, token, ms)` gibt es erst ab **API 28**, `minSdk` ist
 26 — vier Lint-Fehler `NewApi`. Der Weg, der ab API 1 trägt, ist
 `postAtTime(r, token, uptimeMillis() + ms)`.
 
-Die APKs sind gegenüber 0.7.7 um 58 824 B (Handy) und 82 656 B (Uhr) gewachsen. Dass die Uhr-APK doppelt so groß ist wie die
+Die APKs sind gegenüber 0.7.7 um 58 824 B (Handy) und 82 652 B (Uhr) gewachsen. Dass die Uhr-APK doppelt so groß ist wie die
 Handy-APK, ist kein Fehler: Compose für Wear OS bringt seine eigene
 Bausteinsammlung mit, und beide Module übersetzen `gemeinsam/` mit. Der Fund
 **B-S4-03** im Konzept hält fest, dass das für eine Uhr viel ist und worauf
@@ -176,8 +179,8 @@ Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.
 
 Die **12 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 196 von 196 (siehe unten). *(Hier stand „11" — die Zahl
-war seit 0.7.0 nicht nachgezogen worden; gezählt sind es zwölf.)* Die 64 Fälle der Uhr laufen
+Installation sind es 224 von 224 (siehe unten). *(Hier stand „11" — die Zahl
+war seit 0.7.0 nicht nachgezogen worden; gezählt sind es zwölf.)* Die 71 Fälle der Uhr laufen
 immer — sie brauchen weder Server noch Gerät, weil geprüft wird, was die
 Bedienung *entscheidet* und was der Funk *zusichert*, nicht was die Uhr
 *zeichnet* (E-S4-40).
@@ -449,6 +452,7 @@ Und was **E2** dazugelegt hat:
 | **Wann der Nachsende-Job wirklich anläuft** | `JobScheduler` unter Doze verhält sich auf einem Gerät anders als in der JVM; `adb shell cmd jobscheduler run -f` bräuchte einen Emulator, und den gibt es hier nicht | Gerätetest: Flugmodus an, Dienst beenden, Flugmodus aus, Zeit messen |
 | **Ob er einen Neustart übersteht** | `setPersisted` wird vom System über den Neustart getragen; nachstellen lässt sich das nur mit einem Neustart | Gerätetest, ausdrücklich **ohne** die App zu öffnen |
 | **Ob ein Dienstende von der Uhr ankommt** | keine Wear-OS-Uhr, keine Telefonseite des Data Layer | Gerätetest mit Uhr |
+| **Ob die aktive Standmeldung** (E3) auf Hardware ankommt | dasselbe — der Data Layer braucht eine Telefonseite | Gerätetest mit Uhr (E3-1) |
 | **Ob der Sendelauf beim Wegwischen der App abbricht** | Prozessverwaltung des Herstellers | Gerätetest: beenden, sofort wegwischen, Web ansehen |
 
 Was **stattdessen** belegt ist: `SendeRundlaufTest` fährt den ganzen Weg gegen

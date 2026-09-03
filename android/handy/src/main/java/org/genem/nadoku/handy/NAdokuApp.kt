@@ -112,6 +112,31 @@ class NAdokuApp : Application() {
         Executors.newSingleThreadExecutor { r -> Thread(r, "nadoku-senden") }
     }
 
+    /**
+     * Der Faden für Nachrichten **an die Uhr** — ein zweiter, und das ist eine
+     * Berichtigung von E-S5Z-24 (E3).
+     *
+     * DAS KONZEPT SAH DEN SENDEAUSFÜHRER VOR. Der Gedanke war richtig — die
+     * Meldung darf nicht auf den Hauptfaden, weil `WearNachrichtenweg.sende()`
+     * bis zu fünf Sekunden je `Tasks.await` blockiert (B4.6). Die Folgerung
+     * war es nicht: Beide Warteschlangen haben **verschiedene Fristen und
+     * verschiedene Fehlerbilder**.
+     *
+     * Ein Upload eines Zwölfstundendienstes braucht zwanzig Anfragen und kann
+     * eine Minute dauern. Läge die Uhrnachricht dahinter, erschiene die
+     * Warnung „keine Ortung" am Handgelenk eine Minute zu spät — und genau
+     * ihre Rechtzeitigkeit ist der Grund, warum es E3 gibt. Umgekehrt darf
+     * eine Uhr im Funkloch (fünf Sekunden Wartezeit, oft mehrfach) keinen
+     * Diensttag aufhalten.
+     *
+     * WAS E-S5Z-11 ZUSICHERT, BLEIBT UNBERÜHRT: Dort geht es um **zwei Läufe
+     * auf demselben Puffer**. Eine Uhrnachricht fasst den Puffer nur lesend
+     * an (den Stand), schreibt nichts und kann deshalb nichts verschränken.
+     */
+    val uhrausfuehrer: ExecutorService by lazy {
+        Executors.newSingleThreadExecutor { r -> Thread(r, "nadoku-uhr") }
+    }
+
     /** Eingereichte und laufende Sendeläufe — Grundlage von [sendelaufLaeuft]. */
     private val eingereicht = AtomicInteger(0)
 

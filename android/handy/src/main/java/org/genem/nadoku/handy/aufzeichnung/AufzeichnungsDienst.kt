@@ -26,10 +26,15 @@ import androidx.lifecycle.LifecycleService
 import org.genem.nadoku.R
 import org.genem.nadoku.handy.HauptActivity
 import org.genem.nadoku.handy.NAdokuApp
+import org.genem.nadoku.gemeinsam.Nachrichtenformat
+import org.genem.nadoku.gemeinsam.Nachrichtenweg
+import org.genem.nadoku.gemeinsam.Ortungscode
+import org.genem.nadoku.gemeinsam.WearNachrichtenweg
 import org.genem.nadoku.handy.senden.Nachsenden
 import org.genem.nadoku.handy.senden.Sendebericht
 import org.genem.nadoku.handy.senden.Sendehinweis
 import org.genem.nadoku.handy.senden.Sendetakt
+import org.genem.nadoku.handy.uhr.Uhrannahme
 import java.time.Instant
 
 /**
@@ -92,6 +97,16 @@ class AufzeichnungsDienst : LifecycleService() {
 
     /** Der zuletzt gestellte Meldungstext — damit nicht ohne Anlass neu gepostet wird. */
     private var letzterMeldungstext: String? = null
+
+    /**
+     * Was die Uhr zuletzt **angezeigt** bekommen hat (E3).
+     *
+     * Verglichen wird die Anzeige, nicht der Zustand: Für die Uhr sehen
+     * `STANDORT_AUS` und `KEIN_SIGNAL` gleich aus („keine Ortung"), und eine
+     * Nachricht, die nichts ändert, kostet trotzdem bis zu fünf Sekunden
+     * Wartezeit und einen Funkaufwacher.
+     */
+    private var letzteUhranzeige: Ortungscode.Anzeige? = null
 
     /**
      * Läuft das Dienstende gerade? (E-S5Z-07)
@@ -431,6 +446,7 @@ class AufzeichnungsDienst : LifecycleService() {
         val w = waechter ?: return
         app.ortung = Ortungslage(w.stand, w.seitMs, w.letzterFundMs)
         meldungAuffrischen()
+        uhrSpiegeln(w.stand)
         when (befehl) {
             Warnbefehl.POSTEN -> warnungStellen(w.stand, w.seitMs)
             Warnbefehl.LOESCHEN -> warnungLoeschen()
@@ -438,8 +454,55 @@ class AufzeichnungsDienst : LifecycleService() {
         }
     }
 
+    /**
+     * **Die Uhr erfährt es, ohne zu fragen** (E3).
+     *
+     * BIS 0.9.0 ERFUHR SIE ES NUR ALS ANTWORT auf ein eigenes Ereignis — wer
+     * einen Knopf drückte, bekam den Stand mitgeliefert. Wer keinen drückte,
+     * sah bis zum nächsten Druck „Dienst läuft", während das Handy längst
+     * nichts mehr aufzeichnete. Genau die Lücke, gegen die E-S4-10 an der
+     * Oberfläche gebaut ist.
+     *
+     * GEMELDET WIRD BEI JEDEM WECHSEL DER **ANZEIGE**, nicht des Zustands.
+     * Für die Uhr sehen `STANDORT_AUS` und `KEIN_SIGNAL` gleich aus; eine
+     * Nachricht dazwischen änderte am Handgelenk nichts und kostete doch bis
+     * zu fünf Sekunden Wartezeit und einen Funkaufwacher.
+     *
+     * NIE VOM HAUPTFADEN. `WearNachrichtenweg.sende()` blockiert je
+     * `Tasks.await`, und der Wächtertakt läuft auf dem Main-Looper — von dort
+     * gesendet, stünde die Oberfläche bis zu zehn Sekunden (B4.6). Der
+     * eigene Ausführer ist begründet in [NAdokuApp.uhrausfuehrer].
+     *
+     * EINE VERLORENE NACHRICHT WIRD NICHT NACHGELIEFERT, und das ist Absicht:
+     * Der nächste Wechsel trägt den dann gültigen Stand, und der ist mehr
+     * wert als der alte. Anders als ein Ereignis der Uhr (das gepuffert und
+     * quittiert wird) ist der Stand ein Augenblickswert.
+     */
+    private fun uhrSpiegeln(stand: Ortungsstand) {
+        val anzeige = Ortungscode.anzeige(stand.code)
+        if (anzeige == letzteUhranzeige) return
+        letzteUhranzeige = anzeige
+
+        val app = this.app
+        val kontext = applicationContext
+        app.uhrausfuehrer.execute {
+            val meldung = Uhrannahme(
+                app.puffer,
+                app.klammer,
+                modus = { app.einstellungen.letzterModus },
+                ortung = { app.ortung?.stand?.code },
+            ).stand()
+            val weg: Nachrichtenweg = WearNachrichtenweg(kontext)
+            val zugestellt = weg.sende(
+                Nachrichtenformat.PFAD_STAND, Nachrichtenformat.schreibe(meldung),
+            )
+            Log.i(MARKE, "Ortungsstand an die Uhr ($anzeige): zugestellt=$zugestellt")
+        }
+    }
+
     private fun waechterAbraeumen() {
         waechter = null
+        letzteUhranzeige = null
         taktgeber.removeCallbacksAndMessages(TOKEN_WAECHTER)
         warnungLoeschen()
         app.ortung = null

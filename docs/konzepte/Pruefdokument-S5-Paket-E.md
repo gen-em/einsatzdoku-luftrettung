@@ -14,7 +14,7 @@ geschrieben, nicht für die Instanz am Code.
 
 | | |
 |---|---|
-| Stand | 03.09.2026 — **E1 und E2 fertig** (Android 0.9.0), E3 offen |
+| Stand | 03.09.2026 — **E1, E2 und E3 fertig** (Android 0.10.0). Was bleibt, ist der **Gerätetest** |
 | Zweig | `claude/s5-paket-e-android` |
 | Erhoben an | Zweigstand von `main` 696449d (Web 12.9.4, Android 0.7.7, Uhr 2.0.0) |
 
@@ -52,7 +52,7 @@ das jetzt so.
 | Ob **`onProviderDisabled`** überhaupt eintrifft | Der Standort lässt sich hier nicht abschalten | E1-4 |
 | Der **`AbstractMethodError`** auf Android 8–10 | kein solches Gerät; der Befund ist aus der Plattform-Schnittstelle **abgeleitet**, nicht beobachtet | E1-12 |
 | Die **drei Meldungs-IDs** nebeneinander | `dumpsys notification` fällt aus | E1-10 |
-| Ob der **Data Layer** die Standmeldung wirklich zustellt | keine Wear-OS-Uhr, keine Telefonseite (`android/LIESMICH.md` 7) | E1-11 |
+| Ob der **Data Layer** die Standmeldung wirklich zustellt | keine Wear-OS-Uhr, keine Telefonseite (`android/LIESMICH.md` 7) | E1-11, **E3-1** |
 | **Wann der Nachsende-Job anläuft** (Doze, Samsungs Akkusteuerung) | `cmd jobscheduler run -f` bräuchte einen Emulator | E2-2, E2-3 |
 | Ob der Job einen **Neustart** übersteht | nachstellen geht nur mit einem Neustart | E2-4 |
 | Ob ein **Dienstende von der Uhr** ankommt | keine Uhr | E2-6 |
@@ -110,14 +110,14 @@ sagen. **Gemeldet, nicht bewertet** — es gehört zu `server/`, nicht zu Paket 
 
 ## 2. Was maschinell geprüft wurde — mit Mittel **und** Zahl
 
-Alles am Stand von E2 (Android 0.9.0), **nach** der letzten Änderung gefahren,
+Alles am Stand von E3 (Android 0.10.0), **nach** der letzten Änderung gefahren,
 nicht zwischendurch.
 
-| Prüfmittel | Was es gemessen hat | Vorher (0.7.7) | Nachher (0.9.0) |
+| Prüfmittel | Was es gemessen hat | Vorher (0.7.7) | Nachher (0.10.0) |
 |---|---|---|---|
 | `./gradlew build` | Übersetzen beider Module, Lint, alle Prüffälle in beiden Varianten | 0 Fehler, **14** Warnungen | 0 Fehler, **14** Warnungen |
-| Prüffälle `handy` | JUnit/Robolectric, je Variante | **167** (12 übersprungen) | **221** (12 übersprungen) |
-| Prüffälle `uhr` | dieselbe | **53** (0) | **64** (0) |
+| Prüffälle `handy` | JUnit/Robolectric, je Variante | **167** (12 übersprungen) | **224** (12 übersprungen) |
+| Prüffälle `uhr` | dieselbe | **53** (0) | **71** (0) |
 | `HandyBildTest` | 21 Bildschirme × 3 Breiten, gezeichnet und vermessen | — *(gab es nicht)* | **63 Bilder**, alle paarweise verschieden |
 | `UhrBildTest` | Uhr-Ansichten, gezeichnet und vermessen | 4 Bilder | **6 Bilder**, alle paarweise verschieden |
 | Fehlschläge | beide Module, beide Varianten | 0 | **0** |
@@ -126,7 +126,7 @@ nicht zwischendurch.
 | `werkzeuge/stroeme.py` | Ausdünnung gegen die Referenzregel, 5 Ströme | 0 Abweichungen | **0** |
 | `werkzeuge/bildmarken.sh pruefen` | 4 Bildmarken gegen ihre Quelle | 0 Abweichungen | **0** |
 | `tools/wortliste/` Bereich d | sichtbare Texte **beider** Module, 2 Dateien | 3 Treffer, 0 außerhalb | **3 Treffer, 0 außerhalb** |
-| **`SendeRundlaufTest`** gegen echtes `ingest.php` | ob ein Dienstende beim Server **ankommt** | — | **221 von 221, 0 übersprungen**; am Server `rest_segments.final = 1` mit `ended_at`, `days.ended_at` gesetzt |
+| **`SendeRundlaufTest`** gegen echtes `ingest.php` | ob ein Dienstende beim Server **ankommt** | — | **224 von 224, 0 übersprungen**; am Server `rest_segments.final = 1` mit `ended_at`, `days.ended_at` gesetzt |
 
 ### Der Rundlauf im Einzelnen — die Abnahme von E2
 
@@ -168,7 +168,7 @@ sonst den Bestand des ersten misst (Backlog 91):
 **Was diese Zahlen *nicht* messen** — die Regel aus `CLAUDE.md` 6, dass eine
 grüne Zahl erst dann ein Beleg ist, wenn sie das Gemessene benennt:
 
-- Die **285 Prüffälle** prüfen die *Entscheidungen*: die Zustandsmaschine mit
+- Die **295 Prüffälle** prüfen die *Entscheidungen*: die Zustandsmaschine mit
   eingespeister Zeit, die Genauigkeitsschwelle, den Rundlauf des
   Nachrichtenformats. Sie prüfen **nicht**, dass ein Rückruf des Systems
   eintrifft, dass ein Handy vibriert oder dass ein Text auf einem Bildschirm
@@ -267,6 +267,16 @@ Punkte, die den Vorfall vom 02.09.2026 abdecken.
 | **E2-10** | Zweimal schnell auf „Beenden" tippen | Es geschieht einmal etwas | zwei Sendeläufe im `logcat`, oder die App hängt |
 | **E2-11** | Nach einem Dienst mit abgewiesenem Paket in die App sehen | rote Zeile „1 Paket vom Server abgewiesen" | „Alles gesendet" bei offenem Segment im Web — das wäre B-S5Z-06 unverändert. *(Ein 400 lässt sich nicht bestellen; dieser Punkt fällt an, wenn er anfällt)* |
 
+## 4b. Prüfliste E3 — der aktive Uhr-Spiegel
+
+**Beide Punkte brauchen eine Wear-OS-Uhr.** Ohne sie ist E3 nicht prüfbar,
+und das steht hier so statt als „erledigt".
+
+| Nr. | Bedienweg | Erwartet | Scheitern erkennbar an |
+|---|---|---|---|
+| **E3-1** | Dienst läuft, Uhr am Handgelenk, **Uhr nicht anfassen**. Standort des Handys ausschalten | Binnen Sekunden steht **oben in der Zustandszeile** der Uhr „keine Ortung · keine Aufzeichnung" in Rosa — ohne jeden Knopfdruck. Nach dem Wiedereinschalten „GPS sucht", dann wieder Phase und Zeit | Die Uhr ändert sich erst beim nächsten Knopfdruck → die aktive Meldung kommt nicht an (`logcat`: „Ortungsstand an die Uhr … zugestellt=false"). Gar keine Änderung → das Feld fehlt, oder die Zeile liegt wieder unter dem Rand (B-S5Z-17) |
+| **E3-2** | Im Dienst zwischen zwei Warnzuständen wechseln lassen: Standort aus, dann zusätzlich in die Tiefgarage | Die Uhr zeigt durchgehend dasselbe, und im `logcat` steht **kein zweiter** „Ortungsstand an die Uhr" | Eine Meldung je **Zustands**wechsel statt je **Anzeige**wechsel — das kostet Akku und Funk für eine Anzeige, die sich nicht ändert (E-S5Z-31) |
+
 ### Was die Punkte messen sollen, das noch keine Zahl hat
 
 Drei Zahlen dieses Pakets sind **Vorschläge mit Herleitung**, keine Messungen.
@@ -301,5 +311,8 @@ Sie stehen und fallen mit E1-3, E1-6 und E1-7:
 2. ~~Ein Bilderlauf für das Handy-Modul.~~ **Erledigt mit 0.8.1** —
    `HandyBildTest`, 48 Bilder. Offen bleibt daraus **B-S5Z-16**: der
    „Dienst beenden"-Knopf unter der Faltkante bei laufendem Einsatz.
-3. **E1-11 und E1-12** brauchen Geräte, die es hier nicht gibt (Wear-OS-Uhr;
-   Android 8–10).
+3. **E1-11, E1-12, E2-6, E3-1 und E3-2** brauchen Geräte, die es hier nicht
+   gibt (Wear-OS-Uhr; Android 8–10).
+4. **B-S5Z-16** — der Knopf „Dienst beenden" unter der Faltkante bei
+   laufendem Einsatz. Eine Kürzung der laufenden Ansicht ist eine
+   Gestaltungsänderung und braucht eine Entscheidung (Prüfpunkt E1-15).

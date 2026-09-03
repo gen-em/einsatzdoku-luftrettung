@@ -1,5 +1,6 @@
 package org.genem.nadoku.handy.aufzeichnung
 
+import org.genem.nadoku.gemeinsam.Ortungscode
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -225,6 +226,42 @@ class OrtungswaechterTest {
             ),
             Ortungsstand.entries.filter { it.warnt },
         )
+    }
+
+    // ---- Die Bruecke zur Uhr (E3) ------------------------------------------
+
+    @Test
+    fun jede_stufe_hat_genau_einen_code() {
+        val codes = Ortungsstand.entries.map { it.code }
+        assertEquals("sechs Stufen, sechs Codes", 6, codes.toSet().size)
+        assertEquals(Ortungscode.OK, Ortungsstand.OK.code)
+        assertEquals(Ortungscode.STANDORT_AUS, Ortungsstand.STANDORT_AUS.code)
+    }
+
+    /**
+     * **Handy und Uhr sind sich einig, wann nichts aufgezeichnet wird.**
+     *
+     * Links entscheidet [Ortungsstand.warnt], ob das Handy vibriert; rechts
+     * entscheidet `Ortungscode.OHNE_AUFZEICHNUNG`, ob die Uhr rot wird. Das
+     * sind zwei Listen an zwei Orten, und sie müssen dieselbe sein — sonst
+     * vibriert das Handy, während die Uhr schweigt, oder umgekehrt. Wer eine
+     * siebte Stufe einführt, wird von dieser Zeile daran erinnert, beide zu
+     * pflegen.
+     */
+    @Test
+    fun was_das_handy_warnt_zeigt_die_uhr_als_keine_ortung() {
+        assertEquals(
+            Ortungsstand.entries.filter { it.warnt }.map { it.code }.toSet(),
+            Ortungscode.OHNE_AUFZEICHNUNG,
+        )
+    }
+
+    @Test
+    fun genau_die_stufe_die_aufzeichnet_laesst_die_uhr_still() {
+        val still = Ortungsstand.entries.filter {
+            Ortungscode.anzeige(it.code) == Ortungscode.Anzeige.STILL
+        }
+        assertEquals(listOf(Ortungsstand.OK), still)
     }
 
     @Test

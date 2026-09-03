@@ -389,9 +389,10 @@ private fun Zustandszeile(z: Uhrzustand) {
          * das ist die richtige Reihenfolge: „Es entsteht gerade keine Spur"
          * schlägt „Phase 3 seit 09:12", und die Phasenliste ist einen Druck
          * entfernt. */
+        val anzeige = Ortungscode.anzeige(z.ortung)
         val warnung = when {
             z.dienstSchwebt -> stringResource(R.string.dienst_schwebt)
-            z.ortung in Ortungscode.OHNE_AUFZEICHNUNG -> stringResource(R.string.ortung_keine)
+            anzeige == Ortungscode.Anzeige.KEINE_ORTUNG -> stringResource(R.string.ortung_keine)
             else -> null
         }
         when {
@@ -399,7 +400,7 @@ private fun Zustandszeile(z: Uhrzustand) {
                 text = warnung,
                 color = Farbe.rosa, fontSize = 13.sp, textAlign = TextAlign.Center,
             )
-            z.ortung == Ortungscode.SUCHT -> Text(
+            anzeige == Ortungscode.Anzeige.SUCHEN -> Text(
                 text = stringResource(R.string.ortung_sucht),
                 color = Farbe.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
             )

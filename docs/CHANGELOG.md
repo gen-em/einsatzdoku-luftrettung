@@ -14,6 +14,60 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.10.0] — 2026-09-03
+
+### Android — Die Uhr erfährt es, ohne zu fragen
+
+Seit 0.8.0 trägt die Standmeldung ans Handgelenk den Ortungszustand des
+Telefons. Sie ging bisher aber nur **als Antwort** hinaus: Wer einen Knopf an
+der Uhr drückte, bekam den Stand mitgeliefert. Wer keinen drückte — und das
+ist der Normalfall auf einer Anfahrt —, sah weiter „Dienst läuft", während das
+Telefon längst nichts mehr aufzeichnete. Genau die Lücke, gegen die die
+schwebende Zeile „wartet aufs Handy" seit C2 gebaut ist, nur eine Ebene
+später.
+
+Der Vordergrunddienst schickt den Stand jetzt bei **jedem Wechsel**. Auf der
+Uhr steht dann binnen Sekunden „keine Ortung · keine Aufzeichnung", ohne dass
+jemand etwas anfassen muss.
+
+**Gemeldet wird bei einem Wechsel der *Anzeige*, nicht des Zustands.** Das
+Telefon unterscheidet sechs Stufen, die Uhr zeigt drei Dinge: rot „keine
+Ortung", sandfarben „GPS sucht", oder nichts. Für sie sehen „Standort aus" und
+„kein Signal" gleich aus — eine Nachricht dazwischen änderte am Handgelenk
+nichts und kostete doch bis zu fünf Sekunden Wartezeit und einen
+Funkaufwacher. Die Zusammenfassung von sechs auf drei steht **einmal** im
+gemeinsamen Quelltext und wird von beiden Seiten benutzt: von der Uhr, um zu
+zeichnen, und vom Telefon, um zu entscheiden, ob es überhaupt sendet. Zwei
+Kopien derselben Regel würden auseinanderlaufen, und dann meldete das Telefon
+Wechsel, die nichts ändern — oder, schlimmer, einen nicht, den die Uhr
+angezeigt hätte.
+
+**Auf einem zweiten Faden, nicht auf dem des Sendens.** Das Konzept sah vor,
+die Nachricht beim Sendeausführer einzureihen. Der Gedanke war richtig — sie
+darf nicht auf den Hauptfaden, weil der Weg zur Uhr je Schritt bis zu fünf
+Sekunden blockiert — die Folgerung nicht: Ein Upload eines
+Zwölfstundendienstes braucht zwanzig Anfragen und kann eine Minute dauern.
+Läge die Uhrnachricht dahinter, käme die Warnung eine Minute zu spät ans
+Handgelenk — und ihre Rechtzeitigkeit ist der einzige Grund, warum es sie
+gibt. Umgekehrt darf eine Uhr im Funkloch keinen Diensttag aufhalten. Die
+Zusicherung „nie zwei Läufe auf demselben Puffer" bleibt davon unberührt: Eine
+Uhrnachricht liest den Stand und schreibt nichts.
+
+**Eine verlorene Standmeldung wird nicht nachgeliefert**, und das ist Absicht.
+Anders als ein Ereignis der Uhr — das gepuffert wird, bis das Telefon
+quittiert — ist der Stand ein Augenblickswert. Der nächste Wechsel trägt den
+dann gültigen, und der ist mehr wert als der alte.
+
+Ein neuer Prüffall hält Telefon und Uhr aneinander: Die vier Stufen, bei denen
+das Telefon vibriert, sind genau die vier, bei denen die Uhr rot wird. Das
+sind zwei Listen an zwei Orten; wer eine siebte Stufe einführt, wird von
+dieser Zeile daran erinnert, beide zu pflegen.
+
+**Nicht geprüft werden konnte,** ob die Meldung auf echter Hardware ankommt —
+dafür braucht es eine Wear-OS-Uhr und die Telefonseite des Data Layer, und
+beides gibt es hier nicht. Geprüft ist alles darüber: das Format, die
+Übernahme, die Anzeige und die Entscheidung, wann gesendet wird.
+
 ## [Android 0.9.0] — 2026-09-03
 
 ### Android — Was gesendet werden soll, wird gesendet
