@@ -1,12 +1,15 @@
 # Prüfdokument S7 — was **du** noch prüfen musst
 
-Zum Schritt 4 des Rahmenplans („S7 — Backup-Begriff", R50). Das
-Prüfprotokoll im Konzept beantwortet *„ist es belegt?"*; dieses Dokument
-beantwortet *„was muss ich noch tun?"*.
+Zum Schritt 4 des Rahmenplans („S7 — Backup-Begriff", R50). Das Konzept
+`docs/konzepte/Umstellung-Backup.md` ist nach R62 **gelöscht** (zuletzt
+unter Commit `7057e7b`); sein Prüfprotokoll beantwortete *„ist es belegt?"*
+und ist in `docs/Rahmenplan.md` Abschnitt 8 zusammengefasst. **Dieses**
+Dokument beantwortet die andere Frage: *„was muss ich noch tun?"* — es
+bleibt liegen, bis seine Prüfliste abgehakt ist.
 
 > **Stand:** Web **12.9.3** (Begriffsumstellung) und **12.9.4**
 > (Fehlerbehebung, Backlog Nr. 89). **Keine Migration** — `update.php` ist
-> nach diesem Deploy **nicht** fällig. Die beiden Migrationen aus S4 und S6
+> nach diesem Deploy **nicht** fällig. Die drei Migrationen aus S4 und S6
 > warten weiterhin auf ihre Bestätigung; daran ändert dieses Paket nichts.
 >
 > **Der wichtigste Punkt dieses Dokuments ist Nummer 4:** ein
