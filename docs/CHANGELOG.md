@@ -241,6 +241,241 @@ Grenze greift nur im engen Fall, und bis zu fünf Zeilen im unteren Block
 Zeilen je angesehen zu haben — genau die Art grüner Zahl, vor der
 `CLAUDE.md` 6 warnt.
 
+## [Web 13.2.0] — 2026-09-03
+
+### Web — Der Wartungsmodus: 503 statt 500, während umgebaut wird (S5, Paket W)
+
+Ein Update läuft heute so: Push auf `main`, FTPS lädt `server/` hoch, danach
+ruft eine Administratorin `update.php` und lässt die Migration laufen.
+**Zwischen der ersten und der letzten hochgeladenen Datei stehen alte und neue
+nebeneinander**, und zwischen dem Hochladen und der Migration erwartet neuer
+Code Tabellen, die es noch nicht gibt. Wer in dieses Fenster gerät, bekommt
+**500**.
+
+Für einen Menschen ist das ärgerlich. Für eine Uhr ist es etwas anderes: Der
+JSON-Vertrag sagt zu **5xx** „später unverändert erneut versuchen", und genau
+das tun Uhr und Handy — sie puffern und liefern nach. Ein 500 aus einer halb
+umgebauten Datenbank ist aber nicht dasselbe wie ein angekündigtes 503, und
+die Grenze zwischen beiden war bisher der Zufall.
+
+**Jetzt gibt es einen Schalter.** Auf der Wartungsseite, Karte
+„Serverbetrieb", nur für die Verwaltung. Steht er, bekommt **jede** Anfrage
+außer den Ausnahmen ein **503** mit `Retry-After: 300` — Seiten eine schlichte
+Wartungsseite, Geräte und Browser-Skripte
+`{"error":"maintenance","meldung":"…"}`. **Kein Client wurde dafür geändert:**
+Das Verhalten steht seit S4 im Vertrag und ist im S4-Prüfprotokoll gemessen
+(„5xx / 503 → später erneut, nichts markiert, nichts bestätigt").
+
+**Der Zustand ist eine Datei, keine Zeile in der Datenbank.**
+`server/wartung.lock`, JSON mit `seit` und `von`. Das ist die eine
+Entscheidung, an der alles hängt: Der Wartungsmodus wird gerade dann
+gebraucht, wenn die Datenbank umgebaut wird oder eine Migration auf halber
+Strecke gescheitert ist. Ein Schalter, der die Datenbank fragt, ob er schalten
+darf, ist im entscheidenden Moment stumm. Die Datei steht deshalb in
+`.gitignore` **und** in der Ausnahmeliste des Deploys — ohne den zweiten
+Eintrag löschte der nächste Push sie mitten im Update, für das sie da ist.
+Dasselbe Muster wie `config.php`, `install.lock`, `sicherungen/` und `apk/`.
+
+**Das Tor sitzt in `db.php`, nicht in `auth_guard.php`.** Durch `auth_guard`
+laufen nur die Seiten. `ingest.php` und `pair.php` laden `db.php` direkt — und
+das sind die beiden, auf die es ankommt, weil sie die Daten der Uhr bringen.
+Ein Tor, das sie nicht sieht, sperrt die Menschen aus und lässt die Geräte in
+die Baustelle laufen. Die Zeile steht hinter `json_out()` und **vor** jeder
+Datenbankverbindung; `db()` verbindet erst beim ersten Aufruf, also ist bis
+dahin nichts geschehen. Kostet im Normalfall einen `file_exists()`.
+
+**Sechs Skripte bleiben offen** (E-S5W-04), verglichen am Dateinamen und nicht
+am Pfad — `login.php` lädt `db.php` als Allererstes, ein Pfadmuster wäre zu
+spät: `update.php` und `wiederherstellen.php` (die Arbeit selbst und der
+Rückweg), `jobs.php` mit Token (**das Komplett-Backup läuft während der
+Wartung — genau dann ist es konsistent**), `login.php`, `logout.php`,
+`install.php`. Alles unter `assets/` läuft ohnehin nicht durch PHP, und die
+Kommandozeile ist nie getort.
+
+**Die Datei ist der Schalter, nicht ihr Inhalt.** Liegt sie da, ist aber
+unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
+dann „seit unbekannt". Andersherum wäre es falsch — ein Tippfehler im Inhalt
+darf keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
+
+**Eine Entscheidung gegen unsere Empfehlung** (E-S5W-09, Auftraggeber): Wer
+sich während der Wartung anmeldet und **nicht** verwaltet, wird sofort wieder
+abgemeldet und sieht die Wartungsseite. Wir hatten vorgeschlagen, die Sitzung
+stehen zu lassen; der Auftraggeber wollte es umgekehrt, und das ist das
+strengere Verhalten: Während des Umbaus liegt keine Sitzung mit entsperrtem
+Inhaltsschlüssel herum, und keine Anmeldung schreibt `last_login`, während
+`update.php` das Schema ändert. **Drei Dinge hängen daran und sind einzeln
+gemessen:** Der Passwortvergleich ist unverändert (der Zweig hängt am Erfolg,
+nicht am Vergleich — die Antwortgleichheit bleibt), die Ratenschutz-Zähler
+werden **trotzdem** geleert (das Passwort war richtig; wer während einer
+Wartung dreimal richtig tippt, darf sich danach nicht ausgesperrt finden), und
+was danach erscheint, ist die **Wartungsseite** und nicht das Anmeldeformular
+— das läse sich wie „Passwort falsch", und die Person tippte weiter, bis der
+Ratenschutz zuschlägt.
+
+**Kein automatisches Ausschalten**, keine Zeitsteuerung (E-S5W-05). Ein
+stehengebliebener Wartungsmodus kann nur auf zwei Seiten auffallen —
+`update.php` und `login.php` —, und auf beiden steht dann oben ein oranger
+Balken mit Zeitpunkt und Konto. Alles andere antwortet mit 503, und ein 503
+sagt nicht, dass es seit drei Tagen kommt.
+
+**Zwei Kleinigkeiten am Rand.** Die Wartungsseite kann `logo_stamm()` nicht
+rufen (Datenbank) und **würfelt** deshalb zwischen den beiden Standardlogos,
+wie es die Einstellung „wechselnd" ohnehin tut — eine Installation mit eigenem
+Logo sieht während der Wartung eines der beiden Standardlogos. Und eine
+Meldung auf der Wartungsseite stand in Ersatzschreibung („Das Token liess sich
+nicht erzeugen"), obwohl sie ein Mensch liest; sie hat jetzt Umlaute wie ihre
+Nachbarinnen.
+
+**Nachweis:** Wartungsprobe **40 Erwartungen, 0 nicht erfüllt** — beide
+Richtungen (was gesperrt wird, was offen bleibt), einschließlich „`ingest.php`
+mit **gültigem** Geräteschlüssel → 503 und **keine** Zeile in `missions`",
+„kein `Set-Cookie` auf dem 503" und „das 503 kommt schneller als die Antwort
+ohne Wartung" (0,3 ms statt 1,4 ms — das Tor greift vor Datenbank und
+Ratenschutz) · Bilderlauf der Wartungsseite und der Wartungsseite **mit**
+Balken: **16 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** ·
+Kopplungsprobe **76 / 76**, Ingestprobe **30 / 30** und der Browser-Rundlauf
+**25 / 25** unverändert (der Rundlauf meldet sich an — `login.php` ist
+angefasst) · Wortliste über alle vier Bereiche, **129 Dateien**,
+**0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen** ·
+Vollständigkeit **278** unverändert: Die Wartungsseite benutzt nur vorhandene
+Klassen · S5-Anker **0 nicht gefunden** · `php -l` über alle geänderten
+Dateien **0 Fehler**.
+
+**Nicht geprüft:** ob der FTPS-Deploy die `wartung.lock` wirklich stehen
+lässt. Die Ausnahme in `.github/workflows/deploy.yml` ist eine **Zusage** —
+bewiesen wird sie beim ersten Deploy im Wartungsmodus, und der ist der Merge
+dieser Phase selbst. Steht im Prüfdokument S5.
+
+## [Web 13.1.2] — 2026-09-03
+
+### Web — Die Dokumentation beschreibt den neuen Weg (S5, Paket D — erste Hälfte)
+
+Pakete A und B haben die Richtung der Kopplung umgedreht; die Dokumentation
+beschrieb weiter die alte. Das ist kein Schönheitsfehler: Wer nach dem Knopf
+„Kopplungscode erzeugen" sucht, findet ihn seit Web 13.0.0 nicht mehr — und
+zwei der Texte, die ihn nennen, standen nicht in einer Datei, sondern **auf
+dem Bildschirm**.
+
+**Die Trennen-Mail schickte den Empfänger auf einen Knopf, den es nicht mehr
+gibt.** Sie geht raus, wenn ein Gerät sich vom Konto löst, und erklärte den
+Rückweg mit „Einstellungen → Geräte → Kopplungscode erzeugen". Jetzt erklärt
+sie den heutigen: die Kopplung **am Gerät** starten und den Code, den es
+zeigt, im Web eingeben. Die Mail ist der einzige Kanal, auf dem jemand von
+einer Trennung erfährt, die er nicht selbst ausgelöst hat — eine falsche
+Wegbeschreibung darin ist teurer als anderswo.
+
+**Der Demo-Hinweis sagte „Uhr koppeln".** Seit Web 12.9.0 koppeln auch
+Handys; die Zeile stand noch auf der Uhr allein. Jetzt „Gerät koppeln", wie
+überall sonst.
+
+**Dazu Kommentare, die eine falsche Begründung trugen.** Der auffälligste:
+Die Obergrenze `MAX_GERAETE` in `db.php` berief sich darauf, dass „wer einen
+Kopplungscode abfängt, sich ein Gerät anlegt". Das trägt seit E-S5-03 nicht
+mehr — der Code des neuen Verfahrens weist nichts aus, wer ihn abliest, kann
+am Gerät nichts auslösen. **Die Grenze bleibt richtig, ihre Begründung war es
+nicht;** der Weg hinein ist heute die Überredung („Lies mir mal den Code
+vor"), und dagegen wirkt sie genauso. Ebenso: `reset_request.php` verwies auf
+„dasselbe Muster wie bei den Kopplungscodes" — ein Muster, das es dort nicht
+mehr gibt, weil eine Kopplungssitzung einem **Gerät** gehört und nicht einem
+Konto. Und der `.codeblock` im Stylesheet nannte den Kopplungscode als seinen
+ersten Zweck; der wandert seit S5 in ein Eingabefeld. Der Baustein bleibt,
+sechs andere Stellen benutzen ihn.
+
+**Neu in `docs/Technik.md`: ein Bedrohungsmodell der Kopplung (4.99b).** Zwölf
+Angriffe, jeder mit dem, was ihn aufhält, und — wo es einen gibt — dem
+Restrisiko. Der Grund, es aufzuschreiben: Bei S5 ist mehrfach die Frage
+gefallen, ob ein abgelesener Code reicht, um in ein fremdes Konto zu
+schreiben. Die Antwort ist nein, aber sie steckte in vier Dateien verteilt.
+Dazu ein Runbook-Eintrag **„Die Kopplung klappt nicht"** mit acht Schritten
+vom Ratenschutz bis zur Sitzungstabelle — die Fehlerbilder des neuen Wegs
+sehen anders aus als die des alten, und die häufigsten sind stumm.
+
+**`android/LIESMICH.md` sagt jetzt, was der Server-Rundlauf heute braucht.**
+Die Anleitung legte Kopplungscodes per SQL in `pair_codes` an — eine Tabelle,
+die es seit Web 13.0.0 nicht mehr gibt. Bis der Prüfling den neuen Weg
+spricht, brauchen alle drei Rundlaufklassen einen Server **vor** S5, und zwar
+Quelltext **und** Datenbank; die Anleitung enthält dafür ein
+`git worktree`-Rezept und beschreibt daneben, wie ein Prüfling heute an eine
+Kopplung kommt.
+
+**Was bewusst noch nicht dabei ist:** `docs/Handbuch.md`,
+`docs/Geraete-Eingabe.md` und die Uhr-Abschnitte der Technik. Sie beschreiben,
+was ein Mensch **an der Uhr** sieht, und die Uhr-Anzeigen entstehen in Paket C.
+Eine Bedienanleitung für einen Bildschirm, den es noch nicht gibt, wäre wieder
+das, was hier gerade behoben wird.
+
+**Nachweis:** Wortliste über **alle vier Bereiche, 128 Dateien** — 0 Treffer
+außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen (77 / 77), 0 durchgerutschte
+Fallen; der eine Treffer, den sie fand, war neu geschriebener Text dieses
+Pakets („drei Stationen") und ist ersetzt · Vollständigkeit **278 Befunde**,
+einer mehr als nach Paket B: der Pfeil in „Sync-Seite → Gerät koppeln" der
+neuen Trennen-Mail (`pair.php` 449) — gegen `dcaede6` per `git worktree`
+gemessen, Prüfung 1, 2 und 4 Zeile für Zeile unverändert · Kopplungsprobe
+**76 / 76** · Ingestprobe **30 / 30** · Browser-Rundlauf **25 / 25, 0
+Konsolenfehler**, das Nachladen griff 3,1 s nach dem Ja · S5-Anker **0 nicht
+gefunden, 0 mehrdeutig** (neun erledigte D-Anker ausgetragen, 83 → 66) ·
+`php -l` über die fünf geänderten PHP-Dateien **0 Fehler**.
+
+**Nicht geprüft:** die Trennen-Mail im echten Postausgang — die
+Prüfinstallation hat keinen Mailserver; geprüft ist ihr Wortlaut im Quelltext
+und der Versandweg (Kopplungsprobe Fall 26). Ebenso ungefahren: das
+`git worktree`-Rezept in `android/LIESMICH.md` — dafür bräuchte es einen
+zweiten Server und ein zweites Schema neben der laufenden Installation.
+
+### Web — Nachtrag: das Handbuch beschreibt den neuen Weg (S5, Paket D — zweite Hälfte)
+
+**Ohne eigene Fassung.** Was hier geändert wird, ist ausschließlich
+Dokumentation — `server/version.php` bleibt auf 13.1.2, und die Zählung der
+Uhr ist die von Paket C. Der Eintrag steht trotzdem hier, weil er das Paket
+abschließt, dessen erste Hälfte darüber steht.
+
+**Die zweite Hälfte wartete auf Paket C** (E-S5-58): `docs/Handbuch.md` 12 und
+12.1 nennen Wortlaute, die die Uhr anzeigt — und die legte Paket C erst fest.
+Jetzt stehen sie: „Code für das Web", „Einstellungen, Geräte", „noch 9 min",
+„Mit ph\*\*\*@… koppeln?", „Gekoppelt", und die neun Fehlerpaare aus `Pair.mc`.
+Alle sind aus dem Quelltext abgeschrieben, nicht aus dem Konzept — im Konzept
+standen Entwürfe, gebaut wurde teils anders.
+
+**Der Abschnitt sagt jetzt auch, warum es drei Schritte sind** und nicht einer:
+Zwischen Code und fertigem Gerät liegen zwei Tore — die Web-Seite sieht, *wer
+eingibt*, die Uhr sieht, *wessen Konto* es wäre. Wer den Code abschwatzt, hat
+nichts; wer jemanden dazu bringt, einen fremden Code einzugeben, bekommt das Ja
+nicht. Das stand bisher nur in `Technik.md` 4.99b, also da, wo es niemand
+sucht, der gerade eine Uhr in der Hand hat.
+
+**Dazu ein Fund, der nicht auf dem Zettel stand:** Abschnitt 10 („Geräte")
+beschrieb die Geräteseite noch so, wie sie **vor Paket B** aussah — nur
+„Gerät anlegen", kein Wort über das Feld „Code vom Gerät" und die drei
+Zustände der Karte. Paket B hatte die Seite gebaut und den Changelog
+geschrieben, aber das Handbuch nicht angefasst; D Hälfte 1 hatte den Abschnitt
+nicht auf der Liste, weil er in der Konsistenzlesung nur mit **einer** Zeile
+auffiel („noch ein Kopplungscode erzeugen"). Die eine Zeile war die Spitze:
+Der ganze Abschnitt war überholt. Er ist neu geschrieben — die drei Zustände,
+und „Gerät anlegen" ausdrücklich als **Alternative**, nicht als Hauptweg.
+
+**Nachweis:** Die beiden Zahlen aus der Konsistenzlesung stehen jetzt auf null.
+**K3** (Handlungsanweisungen „Code erzeugen"/„Code eintippen" außerhalb von
+Changelog, Archiv und erledigten Konzepten): **7 → 0**; die eine verbleibende
+Fundstelle (Handbuch 2153) ist die Adresseingabe „Plus Code eintippen" und war
+nie gemeint. **K4** (`beispieldomain` in `watch/` und Handbuch): **4 → 0** —
+drei Zeilen hat Paket C geschlossen, die vierte (Handbuch 2683) diese.
+Wortliste über **fünf Bereiche, 164 Dateien**, 0 Treffer außerhalb der
+Ausnahmen (78 / 78 gegriffen, 0 ungenutzt) — sie fand dabei **zwei** Treffer in
+neu geschriebenem Text dieses Pakets: „Uhr · Venu 3S" als Beispiel für Art und
+Modell, zweimal. Ein Gerätename gehört nach E-P2-02 in den ausdrücklichen
+Garmin-Zusatz, nicht in den geräteneutralen Ablauf; das Beispiel ist ersetzt
+durch das, was die Seite wirklich zeigt („die Art und das Modell, das das Gerät
+selbst gemeldet hat") — das ist ohnehin die bessere Auskunft, weil ein Leser
+mit einer anderen Uhr sich am fremden Modellnamen nur stößt.
+
+**Die S5-Anker sind abgeräumt.** Nach dem Merge von Paket C meldeten sie
+**13 `NICHT GEFUNDEN` und einen mehrdeutigen** — zehn davon in `watch/`, wo C
+`Pair.mc` neu geschrieben hat, dazu die beiden Handbuch-Anker dieses Pakets und
+`claude.watch-fehlt`. Das ist keine Panne, sondern genau die Auskunft, für die
+das Werkzeug gebaut wurde: Die Stelle ist umgeschrieben. Alle vierzehn sind
+ausgetragen (83 → 52), und der Lauf steht wieder auf **0 nicht gefunden, 0
+mehrdeutig**. Vollständigkeit **278** unverändert, `php -l` **0 Fehler**.
+
 
 ## [Web 13.1.1] — 2026-09-03
 

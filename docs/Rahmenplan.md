@@ -283,8 +283,10 @@ Die acht Beschlüsse E-R49-1 bis E-R49-8 sind gefallen; offen sind Zahlen
 des Ratenschutzes und der Sitzungsobergrenze, Abfragetakt der Uhr, Wortlaute
 der Uhr-Anzeigen und der Geräteseite, Paketschnitt mit Abnahmekriterien,
 Vertragsabschnitt 1a im Wortlaut (1b „trennen" bleibt). **Vier Blöcke:**
-Server (Sitzungstabelle statt `pair_codes`, drei Anliegen `start`/`status`/
-`bestaetigen`, Ratenschutz je Konto und IP, Aufräumen über den Job-Einstieg)
+Server (Sitzungstabelle statt `pair_codes`, vier Anliegen `start`/`status`/
+`bestaetigen`/`trennen` — das vierte übernommen und auf schwebende
+Zugangsdaten erweitert, Ratenschutz je Konto und IP, Aufräumen über den
+Job-Einstieg)
 · Web (Feld „Code vom Gerät", Bestätigungsseite mit Art und Modell,
 „Kopplungscode erzeugen" entfällt, manuelle Anlage bleibt) · Uhr
 (Code-Anzeige, Rückbestätigung mit maskierter E-Mail, Vorgabeadresse

@@ -1003,8 +1003,18 @@ Fehlen fällt erst auf, wenn man danach sucht:
   dagegen erhalten — sie verhindern, dass ein später eintreffender Upload
   einen Diensttag ein zweites Mal anlegt; ihr Feld `device_id` steht danach
   auf `null`.
-- **Kopplungscodes** (`pair_codes`). Sie sind kurzlebig und haben außerhalb
-  ihres Zeitfensters keine Bedeutung.
+- **Kopplungssitzungen** (`pair_sessions`). Sie sind kurzlebig und haben
+  außerhalb ihres Zeitfensters keine Bedeutung — seit Web 13.0.0 in doppelter
+  Hinsicht. Bis Web 12.9.4 hieß die Tabelle `pair_codes` und trug nur den
+  Code, den das Web erzeugte; seither zeigt das **Gerät** den Code, und die
+  Zeile hält für zehn Minuten auch die **schwebenden Zugangsdaten** —
+  Gerätekennung und den Hash eines Schlüssels für ein Gerät, das es noch nicht
+  gibt. Genau deshalb bleibt sie draußen: Sie ist von derselben Art wie die
+  Geräte darüber, nur mit einem Verfallsdatum. Eine mitgesicherte Sitzung wäre
+  in einer Datei, die Monate alt werden kann, ein Zugang ohne Halter — und
+  beim Einspielen ohnehin längst verfallen. Es fehlt hier also nichts, was
+  jemand vermissen könnte: Wer während einer Sicherung gerade koppelt, koppelt
+  danach neu.
 - **Die Sperrliste** (`deleted_refs`). Sie merkt sich, welche Uhr-Referenzen
   endgültig gelöscht wurden, damit ein Nachzügler-Upload sie nicht wieder
   anlegt. Nach einer Wiederherstellung ist sie leer — ein Upload einer noch

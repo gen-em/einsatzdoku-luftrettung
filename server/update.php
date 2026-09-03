@@ -2081,8 +2081,45 @@ if (!$istCli && $_SERVER['REQUEST_METHOD'] === 'POST'
                             . 'Zeitplan-Eintrag funktioniert damit nicht mehr — '
                             . 'bitte die Adresse dort austauschen.'];
     } catch (Throwable $ex) {
-        $jobsMeldung = ['fehler', 'Das Token liess sich nicht erzeugen: '
+        $jobsMeldung = ['fehler', 'Das Token ließ sich nicht erzeugen: '
                                 . $ex->getMessage()];
+    }
+}
+
+/* ---- Wartungsmodus ein- und ausschalten (S5 Paket W, E-S5W-01) -----------
+ *
+ * Der Schalter steht hier und nicht auf einer eigenen Seite: `update.php` ist
+ * die Seite, auf der ein Update ohnehin stattfindet, und wer die Wartung
+ * einschaltet, will als Naechstes die Migration laufen lassen. S8 (Nr. 77)
+ * verschiebt ihn spaeter auf die Unterseite „Serverbetrieb".
+ *
+ * NICHT AUF DER KOMMANDOZEILE: Der CLI-Notausgang laeuft ohne Sitzung und
+ * ohne CSRF; ein Schalter dort waere ein Schalter ohne Nachweis, wer ihn
+ * betaetigt hat. Wer per SSH schalten muss, legt `wartung.lock` von Hand an —
+ * die Datei IST der Schalter (E-S5W-02), und das steht im Runbook.
+ */
+$wartungMeldung = null;
+if (!$istCli && $_SERVER['REQUEST_METHOD'] === 'POST'
+    && in_array($_POST['action'] ?? '', ['wartung_an', 'wartung_aus'], true)) {
+    csrf_check();
+    /* Wer geschaltet hat, kommt in die Datei — Name, sonst Adresse. Der
+     * Balken zeigt es, und ohne diese Angabe waere bei mehreren Verwaltenden
+     * nicht zu erkennen, wessen Wartung gerade steht. */
+    $wer = trim((string)($userName ?? '')) !== '' ? (string)$userName : $userEmail;
+    if (($_POST['action'] ?? '') === 'wartung_an') {
+        $wartungMeldung = wartung_einschalten($wer)
+            ? ['ok', 'Wartungsmodus eingeschaltet — alle anderen Anfragen bekommen '
+                   . '503. Geräte liefern nach. Diese Seite, die Anmeldung und der '
+                   . 'Job-Abruf bleiben erreichbar.']
+            : ['fehler', 'Die Datei ' . WARTUNG_DATEI . ' ließ sich nicht anlegen. '
+                       . 'Der Wartungsmodus steht damit NICHT — bitte die '
+                       . 'Schreibrechte des Verzeichnisses prüfen.'];
+    } else {
+        $wartungMeldung = wartung_ausschalten()
+            ? ['ok', 'Wartungsmodus ausgeschaltet.']
+            : ['fehler', 'Die Datei ' . WARTUNG_DATEI . ' ließ sich nicht löschen. '
+                       . 'Der Wartungsmodus steht damit WEITERHIN — bitte die '
+                       . 'Rechte prüfen oder die Datei von Hand entfernen.'];
     }
 }
 
@@ -2398,6 +2435,68 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'wartung']); ?>
 
   <?php ui_titelzeile(['titel' => 'Wartung & Datenbank-Update']); ?>
+
+  <?php /* ---- Der Balken (S5 Paket W, Konzept 4.5) --------------------------
+     *
+     * GANZ OBEN und vor allem anderen: Es gibt kein automatisches
+     * Ausschalten (E-S5W-05), und diese Seite ist neben `login.php` die
+     * einzige, auf der ein stehengebliebener Wartungsmodus ueberhaupt
+     * auffallen kann — alle anderen antworten mit 503. Wer hier
+     * hereinschaut, soll es in der ersten Zeile sehen und nicht nach dem
+     * Scrollen. */ ?>
+  <?= wartung_balken() ?>
+
+  <?php /* ---- Serverbetrieb: der Schalter (S5 Paket W, E-S5W-01) ------------
+     *
+     * Eine eigene Karte, weil der Schalter nicht zum Datenbank-Update
+     * gehoert, sondern zum Betrieb drumherum: Man schaltet ihn VOR dem
+     * Deploy ein und NACH der Migration aus, und dazwischen liegt ein Push,
+     * der diese Seite gar nicht beruehrt. S8 (Nr. 77) verschiebt die Karte
+     * auf eine eigene Unterseite „Serverbetrieb"; bis dahin steht sie hier.
+     *
+     * Zwei Zustaende, ein Knopf. Im Normalzustand ist „einschalten" die
+     * Haupthandlung dieser Karte — aber NICHT die der Seite: Die ist das
+     * Update selbst. Deshalb `neutral` und nicht `primaer` (Design.md 9.16:
+     * zwei primaere Knoepfe auf einer Seite heisst, keiner ist mehr die
+     * Haupthandlung). Im Wartungsmodus ist „ausschalten" der Weg zurueck in
+     * den Betrieb und damit das, was jemand hier sucht — der bekommt den
+     * primaeren Knopf, denn der Balken darueber hat die Seite ohnehin schon
+     * zu einer Seite ueber die Wartung gemacht. */ ?>
+  <?php ui_karte_start(['titel' => 'Serverbetrieb',
+      'plakette' => wartung_aktiv()
+          ? ui_plakette('Wartung', ['ton' => 'orange'])
+          : ui_plakette('im Betrieb', ['ton' => 'neutral'])]); ?>
+    <?php if ($wartungMeldung !== null): ?>
+      <?= ui_meldung_markup($wartungMeldung[0], $wartungMeldung[1]) ?>
+    <?php endif; ?>
+    <?php if (wartung_aktiv()): ?>
+      <p class="feld-hinweis">Alle Anfragen außer dieser Seite, der Anmeldung,
+         dem Job-Abruf und der Wiederherstellung bekommen
+         <strong>503</strong> mit <code>Retry-After: <?= WARTUNG_RETRY_S ?></code>.
+         Uhr und Handy puffern und liefern nach — es geht nichts verloren.
+         Wer sich anmeldet und nicht verwaltet, wird sofort wieder abgemeldet
+         und sieht die Wartungsseite.</p>
+      <form method="post" action="update.php">
+        <?= csrf_field() ?><input type="hidden" name="action" value="wartung_aus">
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Wartungsmodus ausschalten', 'art' => 'primaer']) ?>
+        </div>
+      </form>
+    <?php else: ?>
+      <p class="feld-hinweis">Schließt die Installation vorübergehend für
+         alle außer der Verwaltung: Jede andere Anfrage bekommt
+         <strong>503</strong> statt eines Fehlers aus einer halb umgebauten
+         Datenbank. Einschalten <strong>vor</strong> dem Deploy, ausschalten
+         <strong>nach</strong> der Migration — der Ablauf steht in
+         <code>docs/Technik.md</code>, Abschnitt 7.</p>
+      <form method="post" action="update.php">
+        <?= csrf_field() ?><input type="hidden" name="action" value="wartung_an">
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Wartungsmodus einschalten', 'art' => 'neutral']) ?>
+        </div>
+      </form>
+    <?php endif; ?>
+  <?php ui_karte_ende(); ?>
 
   <?php /* ---- ZUSTAND ZUERST, TABELLE DANACH (Web 7.0.0) --------------------
      *

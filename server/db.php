@@ -31,7 +31,7 @@ function db(): PDO {
          *                    30 Tage; eine Zeitumstellung mitten darin darf
          *                    nichts verschieben.
          *   NOW()            fuer alles Kurzlebige — Ratenschutz-Fenster,
-         *                    Gueltigkeit von Tokens und Kopplungscodes. Diese
+         *                    Gueltigkeit von Tokens und Kopplungssitzungen. Diese
          *                    Werte werden in derselben Zeitrechnung
          *                    geschrieben und gelesen, oft im Abstand von
          *                    Sekunden.
@@ -264,6 +264,26 @@ function json_out(array $data, int $code = 200): never {
     echo json_encode($data);
     exit;
 }
+
+/* ---- DAS TOR DES WARTUNGSMODUS (S5 Paket W, E-S5W-06) --------------------
+ *
+ * Hier und nicht in `auth_guard.php`: Dort liefen nur die SEITEN durch.
+ * `ingest.php` und `pair.php` laden `db.php` direkt — und das sind die
+ * beiden, auf die es ankommt, weil sie die Daten der Uhr bringen.
+ *
+ * Und hier und nicht weiter oben: Die Zeile steht HINTER `json_out()`, damit
+ * die Reihenfolge der Datei stimmt, und VOR jedem `db()` — die Verbindung
+ * entsteht erst beim ersten Aufruf (statisch, siehe oben), also ist bis zu
+ * dieser Zeile noch nichts an der Datenbank geschehen. Genau das ist der
+ * Punkt: Der Wartungsmodus wird gebraucht, WEIL die Datenbank gerade
+ * umgebaut wird.
+ *
+ * `wartung_lib.php` laedt seinerseits nichts (auch nicht diese Datei) und
+ * kehrt auf der Kommandozeile sofort zurueck. Steht keine `wartung.lock`,
+ * kostet der Aufruf einen `file_exists()`.
+ */
+require_once __DIR__ . '/wartung_lib.php';
+wartung_tor();
 
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
@@ -658,10 +678,15 @@ const KDF_ITER_LISTE = [320000];
  * WARUM ES EINE OBERGRENZE GIBT
  * Ein Geraet ist ein Satz Zugangsdaten, mit dem sich Einsaetze in ein Konto
  * schreiben lassen. Ohne Obergrenze konnte ein Konto beliebig viele davon
- * ansammeln, und niemand haette es bemerkt: Wer einen Kopplungscode abfaengt,
- * legt sich ein Geraet an, das neben den echten unauffaellig in der Liste
- * steht. Die Grenze macht aus "faellt niemandem auf" ein "geht nicht mehr,
- * ohne dass jemand aufraeumt".
+ * ansammeln, und niemand haette es bemerkt: Ein eingeschleustes Geraet steht
+ * neben den echten unauffaellig in der Liste. Die Grenze macht aus "faellt
+ * niemandem auf" ein "geht nicht mehr, ohne dass jemand aufraeumt".
+ *
+ * (Bis Web 12.9.4 stand hier "wer einen Kopplungscode abfaengt, legt sich ein
+ * Geraet an". Das trifft seit S5 nicht mehr: Der Code weist nichts aus, wer
+ * ihn abliest, kann am Geraet nichts ausloesen — E-S5-03. Der Weg hinein ist
+ * heute die Ueberredung, nicht das Abfangen; die Obergrenze wirkt gegen beide
+ * gleich.)
  *
  * WAS GEZAEHLT WIRD
  * Alle Geraete eines Kontos, AKTIVE WIE DEAKTIVIERTE — ein deaktiviertes
@@ -837,10 +862,12 @@ function run_cleanup_if_due(): void {
      *
      * WARUM ES DIESEN WEG WEITERHIN GIBT. Eine frisch aufgesetzte
      * Installation hat weder Cron noch eingerichteten Abruf. Ohne den
-     * Rueckfall stuende sie still — der Papierkorb bliebe voll, die
-     * Kopplungscodes ewig gueltig. Wer einen der beiden anderen Ausloeser
-     * eingerichtet hat, merkt diesen hier nicht: Dann ist nichts mehr zu tun,
-     * und der Aufruf kostet zwei Abfragen.
+     * Rueckfall stuende sie still — der Papierkorb bliebe voll, verfallene
+     * Kopplungssitzungen blieben liegen (gueltig sind sie deshalb nicht: die
+     * Frist steckt im SQL, nicht im Aufraeumen — kopplung_lib.php). Wer
+     * einen der beiden anderen Ausloeser eingerichtet hat, merkt diesen hier
+     * nicht: Dann ist nichts mehr zu tun, und der Aufruf kostet zwei
+     * Abfragen.
      *
      * STILL GEGENUEBER DER ANFRAGE, wie bisher. Die Wartung darf keine Seite
      * kaputtmachen; was scheitert, steht im Fehlerprotokoll UND seit AP2 in

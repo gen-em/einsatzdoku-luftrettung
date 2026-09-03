@@ -67,8 +67,6 @@ ANKER: list[tuple] = [
     # ---- Paket B: Web ------------------------------------------------------
 
     # ---- Paket C: Uhr ------------------------------------------------------
-    ("C", "pair.mc.kopf",         "watch/source/Pair.mc",   3,
-     r"UP halten -> Code eintippen"),
     ("C", "pair.mc.trennen-dlg",  "watch/source/Pair.mc",  35,
      r"^class TrennenDelegate"),
     ("C", "pair.mc.zeile-max",    "watch/source/Pair.mc",  64,
@@ -77,22 +75,10 @@ ANKER: list[tuple] = [
      r"^\s*function start\(\) as Void"),
     ("C", "pair.mc.trennen",      "watch/source/Pair.mc", 113,
      r"^\s*function trennen\(\) as Void"),
-    ("C", "pair.mc.openinput",    "watch/source/Pair.mc", 176,
-     r"^\s*function openInput"),
     ("C", "pair.mc.geraeteinfo",  "watch/source/Pair.mc", 217,
      r"^\s*function _geraeteInfo"),
-    ("C", "pair.mc.request",      "watch/source/Pair.mc", 237,
-     r"^\s*function request\(code"),
-    ("C", "pair.mc.keine-domain", "watch/source/Pair.mc", 240,
-     r'"Erst Server-Domain setzen"'),
-    ("C", "pair.mc.onresponse",   "watch/source/Pair.mc", 289,
-     r"^\s*function onResponse\(code as Lang.Number, data as Lang.Object"),
     ("C", "pair.mc.verbindung",   "watch/source/Pair.mc", 317,
      r"\} else if \(code < 0\) \{"),
-    ("C", "pair.mc.unbekannt",    "watch/source/Pair.mc", 330,
-     r'"Kopplung fehlgeschlagen \("'),
-    ("C", "pair.mc.textpicker",   "watch/source/Pair.mc", 339,
-     r"^class PairTextDelegate"),
     ("C", "sync.timer",           "watch/source/SyncView.mc",  25,
      r"_timer\.start\(method\(:refresh\), 2000, true\)"),
     ("C", "sync.einrichtung",     "watch/source/SyncView.mc",  96,
@@ -111,52 +97,28 @@ ANKER: list[tuple] = [
      r"Sync unvollst.ndig", 2),
     ("C", "uploader.credentials", "watch/source/Uploader.mc", 180,
      r"^\s*function credentials"),
-    ("C", "uploader.beispiel",    "watch/source/Uploader.mc", 216,
-     r"nadoku\.beispieldomain\.de"),
     ("C", "props.serverurl",      "watch/resources/settings/properties.xml", 6,
      r'property id="serverUrl"'),
-    ("C", "props.ohne-vorgabe",   "watch/resources/settings/properties.xml", 5,
-     r"Bewusst ohne Vorgabewert"),
-    ("C", "settings.serverurl",   "watch/resources/settings/settings.xml", 3,
-     r"Server-Adresse der eigenen NAdoku"),
     ("C", "wortliste.bereiche",   "tools/wortliste/wortliste.py", 75,
      r"^BEREICHE"),
-    ("C", "wortliste.watch-fehlt", "tools/wortliste/wortliste.py", 69,
-     r"`watch/` FEHLT WEITERHIN"),
 
     # ---- Paket D: Doku -----------------------------------------------------
-    ("D", "vertrag.durchsetzung",  "docs/JSON-Vertrag.md",  45,
-     r"beschrieben, nicht umgesetzt"),
-    ("D", "vertrag.1b-429",        "docs/JSON-Vertrag.md", 206,
-     r"gilt f.r beide Anliegen von"),
-    # Paket A hat die Zeile schon auf `pair_sessions` umgeschrieben (Web
-    # 13.0.0); Paket D liest sie erneut, wenn es das Datenmodell durchgeht.
-    ("D", "technik.datenmodell",   "docs/Technik.md",  422,
-     r"^\| `pair_sessions` \|"),
-    ("D", "technik.mail-frist",    "docs/Technik.md", 1760,
-     r"deshalb steht das Zeitlimit bei der Kopplung"),
-    ("D", "technik.antwortgleich", "docs/Technik.md", 1936,
-     r"Zwei Stellen, an denen die Gleichheit von Antworten"),
-    ("D", "technik.jobs-topf",     "docs/Technik.md", 2294,
-     r"Ratenschutz-Topf `pair` \(zehn Fehlversuche"),
-    ("D", "technik.zeitrechnung",  "docs/Technik.md", 3701,
-     r"`TIMESTAMP` und `DATETIME` verhalten sich verschieden"),
-    ("D", "handbuch.abschnitt12",  "docs/Handbuch.md", 2682,
-     r"Ger.t koppeln . Code eintippen"),
-    ("D", "handbuch.12-1",         "docs/Handbuch.md", 2718,
-     r"im Web einen Code erzeugen und eintippen"),
-    ("D", "backup.pair-codes",     "docs/Backup-Format.md", 1006,
-     r"\*\*Kopplungscodes\*\* \(`pair_codes`\)"),
+    #
+    # NEUN ANKER SIND MIT D HAELFTE 1 (Web 13.1.2) AUSGETRAGEN, weil ihre
+    # Stellen umgeschrieben sind und der Anker ab jetzt nur noch Laerm waere:
+    #   vertrag.durchsetzung · vertrag.1b-429 · technik.datenmodell ·
+    #   technik.mail-frist · technik.antwortgleich · technik.jobs-topf ·
+    #   technik.zeitrechnung · backup.pair-codes · android.rundlauf-sql
+    # Zwei davon meldete das Werkzeug beim letzten Lauf als NICHT GEFUNDEN
+    # (vertrag.1b-429, backup.pair-codes) — genau die Auskunft, fuer die es
+    # gebaut ist. Was stehen bleibt, gehoert D HAELFTE 2 (Handbuch, Rahmenplan)
+    # oder anderen Instanzen (Backlog und CLAUDE.md der Uhr, uhrbilder zu C).
     ("D", "backlog.66",            "docs/Backlog.md", 697,
      r"^66\. \*\*Der Garmin-Uhrcode"),
     ("D", "backlog.84",            "docs/Backlog.md", 1067,
      r"^84\. \*\*Die Android-App kennt nur"),
     ("D", "rahmenplan.sperren",    "docs/Rahmenplan.md", 486,
      r"S5-Umsetzung zu S6 und S7"),
-    ("D", "claude.watch-fehlt",    "CLAUDE.md", 203,
-     r"`watch/` fehlt noch und ist einer"),
-    ("D", "android.rundlauf-sql",  "android/LIESMICH.md", 71,
-     r"INSERT INTO pair_codes"),
     ("D", "uhrbilder.bitgleich",   "tools/uhr-bilder/erzeugen.sh", 13,
      r"sie BITGLEICH \(geprueft"),
     # ---- Paket E: Android-Ortung und Dienstende (Zusatzkonzept) ------------

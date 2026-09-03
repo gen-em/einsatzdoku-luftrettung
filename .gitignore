@@ -7,6 +7,13 @@ watch/bin/
 # Lokale Server-Konfiguration (enthält Zugangsdaten — niemals ins Repo!)
 server/config.php
 server/install.lock
+# Der Schalter des Wartungsmodus (S5 Paket W, E-S5W-02). Wie install.lock:
+# Er ist ein ZUSTAND DIESER EINEN INSTALLATION und gehoert nicht ins
+# Repositorium -- ein eingecheckter Schalter schloesse jede Installation, die
+# den Stand auscheckt. Er steht zusaetzlich in der Ausnahmeliste des Deploys
+# (.github/workflows/deploy.yml), sonst loeschte ihn der naechste Push --
+# und zwar mitten im Update, fuer das er da ist.
+server/wartung.lock
 server/install-nachweis-*.txt
 server/wiederher-nachweis-*.txt
 

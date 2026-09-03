@@ -1,13 +1,29 @@
 # S5-Anker — Fundstellen am Inhalt wiederfinden
 
 ```
-python3 tools/s5-anker/anker.py            # alle 83 Anker
+python3 tools/s5-anker/anker.py            # alle 52 Anker
 python3 tools/s5-anker/anker.py --knapp    # nur Abweichungen
 python3 tools/s5-anker/anker.py --paket A  # nur die eines Arbeitspakets
 ```
 
 Rückgabewert 0 = jeder Anker genau so oft gefunden wie erwartet;
 1 = mindestens einer fehlt oder ist mehrdeutig.
+
+**Die Zahl schrumpft, und das gehört so.** Angefangen hat die Liste mit 83.
+Wer ein Paket abschließt, trägt die Anker aus, deren Stellen er umgeschrieben
+hat — sonst meldet das Werkzeug beim nächsten Lauf `NICHT GEFUNDEN` für etwas,
+das erledigt ist, und die Meldung, die etwas heißen soll, geht darin unter.
+Ausgetragen: **A und B** (11, Paket B), **neun von D** (D Hälfte 1) und
+**vierzehn** nach dem Merge von Paket C und D Hälfte 2 — zehn davon in
+`watch/`, wo C `Pair.mc` neu geschrieben hat, dazu die beiden Handbuch-Anker
+und `claude.watch-fehlt`. Die Begründungen stehen als Kommentar an der Stelle,
+an der sie standen.
+
+**Was jetzt noch dasteht, gehört fast nur Paket E** (Android-Zusatz, eigene
+Instanz) und ein paar Stellen, die S5 mitliest, aber nicht ändert. **Die
+Liste hat ihre Arbeit getan:** Jeder ausgetragene Anker hat vorher einmal
+`NICHT GEFUNDEN` gemeldet — genau die Auskunft, für die er da war. Mit dem
+Abschluss von S5 geht das Verzeichnis (siehe „Danach").
 
 ## Wozu
 

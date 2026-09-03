@@ -88,8 +88,10 @@ Daten erst nach Server-Bestätigung.
 │   ├── nachbearbeitung.php + nachbearbeitung_lib.php  einmalige Nachträge nach der Migration
 │   ├── einsatz_loeschen.php · diensttag_loeschen.php · papierkorb.php  Löschen mit Vorschau
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
-│   ├── pair.php           Gerätekopplung per Code, und Trennen einer
-│   │                      bestehenden Kopplung (JSON-Vertrag 1a/1b)
+│   ├── pair.php           Gerätekopplung: VIER Anliegen an einem Endpunkt —
+│   │                      start, status, bestaetigen, trennen (JSON-Vertrag
+│   │                      1a/1b). Seit Web 13.0.0 zeigt das GERÄT den Code,
+│   │                      ein Mensch gibt ihn im Web ein, das Gerät bestätigt
 │   ├── geraete_lib.php    Liest den Block `geraet` einer Kopplung — die
 │   │                      EINZIGE Stelle, die ihn auslegt (Uhr- und
 │   │                      Handy-Form), und die Beschriftungen der Gerätelisten
@@ -165,6 +167,11 @@ Daten erst nach Server-Bestätigung.
 │   │                       und Code, Beanspruchen per UPDATE mit rowCount —
 │   │                       die eine Auslegung für pair.php, einstellungen.php
 │   │                       und die Kopplungsprobe
+│   ├── wartung_lib.php    Wartungsmodus (S5 Paket W, Web 13.2.0): Schalter,
+│   │                       Tor, Wartungsseite, 503-JSON, Balken,
+│   │                       Ausnahmeliste. Lädt NICHTS — der Zustand ist eine
+│   │                       Datei (`wartung.lock`), damit er auch bei
+│   │                       umgebauter Datenbank greift
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
 │   │                       gelöschtes Konto, Passwortwechsel)
 │   ├── email_lib.php      E-Mail: Normalisierung, Prüfung, Dublettenerkennung
@@ -308,8 +315,15 @@ Daten erst nach Server-Bestätigung.
 │   │                      ECHTES HTTP (S5, Web 13.0.0): Zustände, Frist,
 │   │                      Gerätelimit, Antwortgleichheit, drei Töpfe,
 │   │                      Obergrenze, Dublettenschleife, Aufräumjob —
-│   │                      75 Erwartungen. Legt eigene Konten an und räumt
+│   │                      76 Erwartungen; dazu `rundlauf.mjs`, der den Weg
+│   │                      im Browser fährt (25). Legt eigene Konten an und räumt
 │   │                      ab (s. LIESMICH.md)
+│   ├── wartungsprobe/     prüft den Wartungsmodus über ECHTES HTTP (S5 Paket
+│   │                      W): was gesperrt wird, was offen bleibt, Schalten
+│   │                      per POST, kaputte Schalterdatei, Antwortzeit —
+│   │                      40 Erwartungen. **Legt den Schalter selbst um** und
+│   │                      räumt ihn im finally ab; nicht auf einer
+│   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
 │   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
 │   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
 │   ├── messstand/         stellt ein Konto mit 5000 Einsätzen her — aus der
@@ -1765,7 +1779,7 @@ HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) und
 JSON-POSTs (Header `X-CSRF`), PDO Prepared Statements durchgängig,
 Passwörter/Schlüssel nur als Hash, Ratenschutz an **allen** ohne Anmeldung
 erreichbaren Endpunkten — Anmeldung, Salz-Abfrage, Zurücksetzen-Anforderung,
-Kopplung (s. 4.99) —, Ingest mit Größen- (512 KB) und Wertevalidierung,
+Kopplung (s. 4.99 und 4.99b) —, Ingest mit Größen- (512 KB) und Wertevalidierung,
 sensible Dateien per .htaccess gesperrt, Referrer-Policy
 `strict-origin-when-cross-origin` (OSM-Kacheln).
 
@@ -1809,12 +1823,13 @@ die Uhr wartet, auf fünf statt fünfzehn Sekunden.
 
 ### Was ein Gerät beim Koppeln über sich meldet — seit Web 12.9.0 gespeichert
 
-Die Kopplung sendet neben dem Code einen Block `geraet`. Er kommt in **zwei
-Formen**, weil die Geräte Verschiedenes über sich wissen: Die Garmin-Uhr
+Das Gerät sendet den Block `geraet` mit `start` — der Anfrage, mit der es sich
+eine Kopplungssitzung holt; bis Web 12.9.4 lag er neben dem eingetippten Code.
+Er kommt in **zwei Formen**, weil die Geräte Verschiedenes über sich wissen: Die Garmin-Uhr
 (seit 1.9.0) schickt ihre **Teilenummer** samt Displaymaßen, Touch, Firmware,
 Plattform- und App-Fassung; die Android-Handy-App (seit 0.2.0) schickt
 **Hersteller und Modell** statt der Teilenummer, dazu die API-Stufe. Feldliste
-und Begründungen: `docs/JSON-Vertrag.md`, Abschnitt 1a.
+und Begründungen: `docs/JSON-Vertrag.md`, Abschnitt 1a.4.
 
 **Bis Web 12.9.0 hat `pair.php` den Block stillschweigend verworfen** — ein
 Jahr lang. Jede Kopplung aus dieser Zeit ist für die Statistik verloren; R42
@@ -1884,16 +1899,21 @@ Ende-zu-Ende-Verschlüsselung ist, gehört das nicht als Nebenprodukt
 eingeführt. Der Text entsteht nach R60/Schritt 10 aus einer Bestandsaufnahme
 des gesamten Projekts, vor v1.0.
 
-**Der Name des Geräts folgt der Art.** Beim Koppeln vergibt `pair.php` als
-Bezeichnung „Uhr", „Handy" oder „Gerät". Bis Web 12.9.0 stand dort fest
-„Uhr" — seit der Handy-App war das schlicht falsch. Wo keine Art gemeldet
-wird, bleibt es bei „Uhr": Ein Gerät ohne Block ist eine Uhr-Fassung vor
-1.9.0, und etwas anderes konnte damals nicht koppeln.
+**Der Name des Geräts folgt der Art.** Beim Anlegen des Geräts — seit Web
+13.0.0 im Augenblick des Ja am Gerät — vergibt `pair.php` als Bezeichnung
+„Uhr", „Handy" oder „Gerät". Bis Web 12.9.0 stand dort fest „Uhr" — seit der
+Handy-App war das schlicht falsch. Wo keine Art gemeldet wird, bleibt es bei
+„Uhr": Ein Gerät ohne Block war damals eine Uhr-Fassung vor 1.9.0, und etwas
+anderes konnte nicht koppeln. Der Block ist auch heute freiwillig — eine
+Kopplung scheitert nie an einer Statistikangabe; wo er fehlt, bleibt es bei
+der Vorgabe.
 
 ### Geräte je Konto
 
-Höchstens **fünf** (`MAX_GERAETE` in `db.php`), geprüft beim Koppeln
-(`pair.php`) und beim manuellen Anlegen (`einstellungen.php`). Gezählt werden
+Höchstens **fünf** (`MAX_GERAETE` in `db.php`), geprüft an **drei** Stellen:
+beim Eingeben des Codes im Web, noch einmal beim Ja am Gerät (`pair.php`) —
+dazwischen kann von Hand ein Gerät dazukommen — und beim manuellen Anlegen
+(`einstellungen.php`). Gezählt werden
 aktive **und** deaktivierte — ein deaktiviertes Gerät ist ein weiterhin
 vorhandener Zugangsdatensatz, der sich mit einem Klick wieder scharf schalten
 lässt. Löschen gibt einen Platz frei, Deaktivieren nicht.
@@ -1904,14 +1924,21 @@ Einsatzes, ist dauerhaft deaktiviert und taucht schon in der Geräteliste nicht
 auf (`GERAETE_ECHT_SQL`). Zählte es mit, nennten Grenze und angezeigte Liste
 verschiedene Zahlen.
 
-Ist die Grenze erreicht, wird **gar kein Kopplungscode mehr erzeugt** — sonst
-wäre er beim Einlösen verbraucht, ohne dass ein Gerät entsteht (`pair.php`
-entwertet vor der Prüfung, und das ist dort richtig so). Wird trotzdem einer
-eingelöst, antwortet `pair.php` mit 409 und `error: device_limit`.
+Ist die Grenze erreicht, nimmt die Geräteseite den Code **gar nicht erst an**
+und sagt es, bevor irgendetwas beansprucht ist. Der Code entsteht seit Web
+13.0.0 auf dem Gerät, und beim Erzeugen weiß der Server noch nicht, zu welchem
+Konto er gehören wird — die Grenze kann erst dort greifen, wo das Konto
+feststeht. Deshalb wird sie zweimal geprüft, und beide Male sind nötig: bei
+der Eingabe im Web und beim Ja am Gerät. Trifft das Ja auf ein volles Konto,
+antwortet `pair.php` mit `409` und `error: device_limit` und **löscht die
+Sitzung**; der Weg zurück ist ein Gerät löschen und von vorn beginnen
+(E-S5-18). Beanspruchte, unbestätigte Sitzungen zählen nicht mit.
 
 **Hinweis bei neuen Geräten,** zwei Spuren: eine E-Mail an den Kontoinhaber
-unmittelbar nach der Kopplung (erreicht die Person auch dann, wenn sie sich
-gerade nicht anmeldet — genau der Fall eines abgefangenen Codes), und ein
+unmittelbar nach der Kopplung — seit Web 13.0.0 beim **Ja am Gerät**, nicht
+beim Klick im Web, denn davor gibt es das Gerät noch nicht (E-S5-20). Sie
+erreicht die Person auch dann, wenn sie sich gerade nicht anmeldet — genau der
+Fall, in dem jemand sie zur Eingabe eines fremden Codes bewegt hat. Dazu ein
 Hinweis auf der Startseite sowie im Geräte-Reiter für alles, was in den letzten
 `GERAETE_NEU_TAGE` Tagen hinzugekommen ist.
 
@@ -1989,11 +2016,12 @@ laufen im unbekannten Fall gegen `GERAET_VERGLEICHSWERT`, wie `ingest.php`,
 und `410`/`409` kommen ohne Verzögerung, weil sie die richtigen Zugangsdaten
 voraussetzen (E-S5-31) — sonst wäre aus der Antwortdauer ablesbar, welche
 Gerätekennungen es gibt, und die Kennung ist die Hälfte dessen, was ein
-Upload braucht. Die Kopplungsprobe misst beide 401-Zweige nebeneinander. Beide müssen für "gibt es" und "gibt es nicht"
-Antworten liefern, die sich in **Länge, Zeichenvorrat, Aufbau und Dauer**
-nicht unterscheiden. Beim Salt war es zuletzt die Länge, die alles verriet:
-Ein echtes Salt hat 32 Hexzeichen, das Pseudo-Salt hatte 64. Wer hier etwas
-ändert, prüft bitte beide Zweige nebeneinander.
+Upload braucht. Beide müssen für „gibt es" und „gibt es nicht" Antworten
+liefern, die sich in **Länge, Zeichenvorrat, Aufbau und Dauer** nicht
+unterscheiden; die Kopplungsprobe misst die beiden 401-Zweige nebeneinander.
+Beim Salt war es zuletzt die Länge, die alles verriet: Ein echtes Salt hat 32
+Hexzeichen, das Pseudo-Salt hatte 64. Wer hier etwas ändert, prüft bitte beide
+Zweige nebeneinander.
 
 **Der Aufruf einer Seite darf nichts verändern.** `update.php` führt
 Migrationen erst auf eine bestätigte Absendung mit Formular-Token aus; der
@@ -2346,6 +2374,14 @@ Antwortzeit mit `rate_gleiche_dauer()` an — „Token gibt es gar nicht" darf
 nicht schneller kommen als „Token ist falsch". Gemessen: **403 / 403 / 200**
 für kein, falsches und richtiges Token, die beiden 403 in je **0,351 s**.
 
+**Der Topf `pair` gehört nicht `jobs.php` allein.** Drei Endpunkte zählen
+darin: dieser, `pair.php` (401 an den kopfzeilen-ausgewiesenen Anliegen) und
+`gpx.php` (die Freigabelinks der Spuren, sieben Zählstellen). Wer die Zahlen in
+`RATE_GRENZEN` ändert, ändert alle drei — und eine Sperre, die hier greift,
+kann von einem der anderen beiden stammen. Deshalb ruft seit Web 13.1.1 auch
+keiner von ihnen mehr `rate_erfolg('pair')`: Ein Erfolg im einen darf die
+Fehlversuche der anderen nicht löschen (4.99b, „Ein Topf, drei Verbraucher").
+
 **Der Ratenschutz zählt je IP, und das hat eine Folge, die man kennen sollte:**
 Nach zehn Fehlversuchen von derselben Adresse antwortet der Endpunkt zehn
 Minuten lang `429` — auch auf den *richtigen* Aufruf. Wer einen
@@ -2600,7 +2636,8 @@ Nutzerin selbst anklickt. Nach einer Mittagspause hätte sie
   Grund da: Die Datei entsteht vollständig im Arbeitsspeicher, weil ihre Länge
   in die Kopfzeile gehört. Gemessen mit der größten Spur des Referenzbestands
   (1063 Punkte) kosten hundert Spuren 9,7 MB Datei bei 23,4 MB Spitze — im
-  Budget von 64 MB (Z3). Dazu ein **Ratenschutz** im Topf `pair`, und zwar nur
+  Budget von 64 MB (Z3). Dazu ein **Ratenschutz** im Topf `pair` — demselben,
+  den `pair.php` und `jobs.php` benutzen (4.99b) —, und zwar nur
   auf Fehlgriffe: Ein gelungener Abruf geht nicht aufs Kontingent, sonst träfe
   die Bremse die Spurenseite eines Tages mit zwölf Einträgen. Gezählt wird,
   was auf ein Abtasten fremder Kennungen hindeutet.
@@ -3748,8 +3785,8 @@ Die Bausteine im Einzelnen:
 | Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
 | Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn nach derselben Frist ablaufen wie die Sitzung — **gleitend wie sie**: Jeder Treffer erneuert den Zeitstempel (R44, seit Web 12.9.0). Vorher war es eine feste Frist ab dem Entsperren, und genau daraus entstand der Entsperrdialog mitten in der Arbeit. **Muss vor `unlock.js` geladen werden.** |
 | Fehlerantwort der Endpunkte | `db.php` | `json_fehler()` protokolliert den vollen Ausnahmetext und gibt nach außen nur eine achtstellige Kennung. `fehler_kennung()` für Stellen mit eigener Antwortform (`ingest.php`). |
-| Zeitrechnung | `db.php` | **`TIMESTAMP` und `DATETIME` verhalten sich verschieden, und das ist bei jeder Zeitspalte mitzudenken.** `TIMESTAMP` rechnet MySQL beim Schreiben in UTC um und beim Lesen zurück — der gespeicherte Wert ist unabhängig von der Sitzungszone immer richtig (`pair_codes`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs`). `DATETIME` speichert unverändert, was dasteht; dort entscheidet die Sitzungszone (`rate_limits`, `password_resets.expires_at`, sowie die Einsatz- und Papierkorbzeiten — Letztere werden aber über `local_to_utc()` bzw. `UTC_TIMESTAMP()` befüllt und waren nie zonenabhängig). |
-| Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungscodes). Die **Anzeige** rechnet in PHP nach `$CFG['app']['timezone']` um. |
+| Zeitrechnung | `db.php` | **`TIMESTAMP` und `DATETIME` verhalten sich verschieden, und das ist bei jeder Zeitspalte mitzudenken.** `TIMESTAMP` rechnet MySQL beim Schreiben in UTC um und beim Lesen zurück — der gespeicherte Wert ist unabhängig von der Sitzungszone immer richtig (`pair_sessions.erstellt_am`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs`). `DATETIME` speichert unverändert, was dasteht; dort entscheidet die Sitzungszone (`rate_limits`, `password_resets.expires_at`, sowie die Einsatz- und Papierkorbzeiten — Letztere werden aber über `local_to_utc()` bzw. `UTC_TIMESTAMP()` befüllt und waren nie zonenabhängig). |
+| Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungssitzungen). Die **Anzeige** rechnet in PHP nach `$CFG['app']['timezone']` um. |
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden, Ablauf, gelöschtes Konto **und** Passwortwechsel; räumt die Schlüssel im Browser und nennt den Grund. `session_verwerfen()` für Abrufe, die JSON erwarten. |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
@@ -4026,6 +4063,127 @@ bequem und unwahr; richtig ist `Lang.Array<Lang.Numeric or Null>`.
 Lokale Variablen lassen sich übrigens **nicht** annotieren
 („Local variable types are inferred"); die Zusicherung gehört dann an die
 Zuweisung.
+
+### 4.99b Bedrohungsmodell der Kopplung (ab Web 13.0.0, S5)
+
+Die Kopplung ist die eine Stelle, an der ein fremdes Gerät in ein fremdes
+Konto geraten kann. Sie war es vor S5 und ist es danach — nur ist der Weg
+seit Web 13.0.0 umgedreht, und mit ihm sind es die Angriffe: Bis 12.9.4
+erzeugte das Web einen Code und die Uhr tippte ihn, also war der Code das
+Geheimnis auf dem Weg vom Bildschirm zum Handgelenk. Jetzt zeigt das Gerät
+den Code, ein Mensch gibt ihn im Browser ein, und das Gerät hat das letzte
+Wort. Der Code weist damit **nichts mehr aus** (E-S5-03): Wer ihn abliest,
+kann am Gerät nichts auslösen, weil sich `status` und `bestaetigen` mit
+`X-Device-Id` und `X-Api-Key` ausweisen und nicht mit ihm.
+
+**Zwei Angriffsflächen, zwei Tore** (E-S5-05). Ein fremdes Gerät soll nicht in
+mein Konto („gib mal AB3 K7Q ein"), und mein Gerät soll nicht in ein fremdes
+Konto (Code vom Handgelenk abgelesen und schneller eingegeben). Gegen das
+erste steht die Bestätigungsseite im Web, die zeigt, **was** da koppeln will;
+gegen das zweite die Rückbestätigung am Gerät, die zeigt, **wessen** Konto es
+wäre. Kein Tor allein trägt: Die Seite sieht nur, wer eingibt, das Gerät nur,
+wer bestätigt.
+
+**Schwebende Zugangsdaten statt schwebender Geräte** (E-R49-2). `start`
+liefert Kennung und Schlüssel sofort mit — aber in `pair_sessions`, nicht in
+`devices`. Bis zum Ja gibt es das Gerät nicht, und `ingest.php` weist die
+Daten ab. Das ist der Grund, warum der Schlüssel schon im ersten Schritt über
+die Leitung darf: Er ist ohne Bestätigung wertlos, und die Bestätigung
+braucht ein Konto.
+
+| Nr. | Angriff | Tor / Gegenmittel | Was bleibt |
+|---|---|---|---|
+| 1 | **Fremdes Gerät im eigenen Konto** — jemand bewegt eine Kontoinhaberin dazu, einen Code einzugeben, den er ihr nennt | Die Eingabe koppelt nichts, sie **sucht** erst (`einstellungen.php`, Aktion `koppeln_pruefen`): Die Karte „Dieses Gerät koppeln?" zeigt Art, Modell und gekürzte Kennung, und erst ein zweiter Knopf bindet die Sitzung ans Konto. Danach die Kopplungsmail beim Ja (`pair.php` 318–343) und die Plakette „neu" sieben Tage lang (`GERAETE_NEU_TAGE`, `db.php` 686) | Wer ein Gerät zeigt, das dem Opfer plausibel erscheint, kommt durch — das ist Social Engineering, keine Protokolllücke. Das Gerät ist danach löschbar, und was es hochgeladen hat, trägt seine Kennung |
+| 2 | **Eigenes Gerät im fremden Konto** — Code vom Handgelenk abgelesen und schneller eingegeben als die Trägerin | Die Rückbestätigung am Gerät. `status` liefert im Zustand `beansprucht` die **maskierte** Adresse des beanspruchenden Kontos (`pair.php` 226–228, `email_maskieren()` in `db.php` 504–511); das Gerät fragt damit, und eine fremde Adresse fällt auf | Wer eine Adresse mit denselben zwei Anfangszeichen **und** derselben Domain hat, gewinnt. Dagegen hülfe nur die volle Adresse, und die will R36/E-R49-4 nicht auf eine Uhr schreiben. **Bis Paket C steht dieses Tor nur auf der Serverseite** — der Server sagt, wer beansprucht hat; die Frage stellt erst die neue Uhr-Fassung |
+| 3 | **Code-Raum füllen und auf einen Treffer hoffen** | Drei Bremsen greifen ineinander: die Obergrenze offener Sitzungen (`PAIR_SITZUNGEN_MAX` = 1000, `db.php` 488; gezählt per SQL über unverfallene Zeilen, `kopplung_lib.php` 39–43, geprüft in `pair.php` 140–142), der Topf `pair_start` je Adresse (20/600 s, `ratelimit_lib.php` 79) und der Topf `pair_code` an der Eingabe im Web, **je Konto und je Adresse** (10/600 s, `ratelimit_lib.php` 80; gezählt in `einstellungen.php` bei „Code nicht gefunden") | Sechs Zeichen aus 32 sind 1,07 Mrd. Möglichkeiten; höchstens 1000 davon sind gleichzeitig belegt, und findbar sind nur **unbeanspruchte, unverfallene** Sitzungen (`pair_sitzung_nach_code()`, `kopplung_lib.php` 135–145). Das sind ≤ 9,3 · 10⁻⁷ je Versuch — und ein Treffer läuft noch in Angriff 2, also in die Rückbestätigung |
+| 4 | **Verstopfen** — die Obergrenze mit eigenen Sitzungen füllen, damit niemand mehr koppeln kann | `pair_start` macht daraus 50 Adressen je zehn Minuten; die Obergrenze zählt **nur unverfallene** Zeilen, ein Vorrat toter Sitzungen bringt also nichts (E-S5-14). Umgekehrt räumt `start` bewusst **nichts** vorab auf — sonst ließe sich der Server mit jeder Anfrage zum Aufräumen bringen; das tut der Job `aufraeumen` | Ein großer Adressvorrat verhindert für die Dauer des Angriffs **Neukopplungen**. Er berührt den laufenden Betrieb gekoppelter Geräte nicht: `ingest.php` kennt `pair_sessions` gar nicht |
+| 5 | **Rechenlast** — den Server mit Anfragen beschäftigen, die teuer sind | Seit Web 13.0.0 ist an diesem Pfad **nichts mehr teuer**: Geräte- und Sitzungsschlüssel liegen als SHA-256 (`geraet_schluessel_hash()`, `db.php` 575), nicht mehr als bcrypt. Eine `status`-Abfrage kostet einen indizierten `SELECT` und einen Hashvergleich, ein `start` einen `INSERT`. Was übrigbleibt, ist die **Mindestdauer** von 0,35 s, die `rate_gleiche_dauer()` (`ratelimit_lib.php` 260–265) jedem abgewiesenen Aufruf auferlegt — sie bindet einen PHP-Arbeitsprozess. Begrenzt wird sie von denselben Töpfen wie Angriff 3 und 4 | Der Angriff hat mit E-S5-42 seinen Gegenstand verloren, und das ist der Grund, warum der Abfragetakt von fünf Sekunden eine **Bedienzahl** sein darf und keine Lastzahl: 120 Abfragen je Sitzung kosten Mikrosekunden, unter bcrypt wären es rund 27 s gewesen |
+| 6 | **Schwebende Zugangsdaten mitnehmen** — ein Gerät holt sich mit `start` einen Schlüssel und bestätigt nie | Ohne `devices`-Zeile weist `ingest.php` mit `401` ab (es sucht ausschließlich in `devices`, `ingest.php` 74–81). Die Sitzung verfällt nach zehn Minuten (eine Frist für alles, `pair_frist_sql()` in `kopplung_lib.php` 33–36), und gespeichert ist ohnehin nur der Hash (`schema.sql` 439) | Keiner. Der Klartext geht genau einmal über die Leitung — in der Antwort auf `start` (`pair.php` 181) — und steht in keinem Protokoll: Die `catch`-Zweige loggen die Ausnahme, nie den Rumpf |
+| 7 | **Die maskierte Adresse ablesen** — ein Gerätehalter erfährt etwas über die Person, die seinen Code eingegeben hat | Maskiert werden alle Zeichen des lokalen Teils bis auf die ersten zwei; die Domain bleibt voll, weil sie die Trägerin ihr Konto erkennen lässt (`db.php` 486–511). Der Wert wird nur im Dialog gezeigt und **nirgends gespeichert** | Zwei Zeichen und eine Domain. Wer sie sieht, hat die Person gerade zur Eingabe bewegt — er kennt sie also ohnehin (das ist Angriff 1); ein neuer Personenbezug entsteht nicht |
+| 8 | **Zeitseitenkanal** — aus der Antwortdauer ablesen, welche Gerätekennungen es gibt | Jeder Zweig, der etwas über Fremdes sagen könnte, endet über `abweisen()` (`pair.php` 97–105) und damit über `rate_gleiche_dauer()`. Der unbekannte Zweig rechnet gegen `GERAET_VERGLEICHSWERT` dieselben Schritte wie der bekannte (`pair.php` 355–364), und die Rümpfe für „Kennung unbekannt" und „Schlüssel falsch" sind byteweise gleich — beide `{"error":"auth"}`. `410` und `409` kommen **ohne** Verzögerung (`antworten()`, `pair.php` 107–113): Sie setzen die richtige Kennung **und** den richtigen Schlüssel voraus und sagen einem Fremden nichts | Wie an `ingest.php` und `auth_salt.php`. Die Kopplungsprobe misst beide 401-Zweige nebeneinander; siehe „Die Antwortzeit als Auskunft" weiter oben |
+| 9 | **CSRF auf den Web-Aktionen** — eine fremde Seite lässt den angemeldeten Browser einen Code beanspruchen oder eine Sitzung abbrechen | `csrf_field()` an allen drei Formularen der Karte „Gerät koppeln" (`einstellungen.php`, Aktionen `koppeln_pruefen`, `koppeln_bestaetigen`, `koppeln_abbrechen`), wie an jeder Formularaktion der Anwendung | Der Nachlade-Endpunkt hat bewusst keine Prüfung — siehe Nr. 11 |
+| 10 | **Verlorene Antwort auf `bestaetigen`** — das Ja kommt an, die Antwort nicht, das Gerät wiederholt | Idempotenz über `devices` (E-S5-15): Ein wiederholtes Ja und ein `status` mit den Zugangsdaten eines bereits angelegten Geräts bekommen `200 {"ok":true}` bzw. `{"zustand":"gekoppelt"}` (`pair.php` 366–376). Auch das gleichzeitige zweite Ja endet dort: Es wartet an `SELECT … FOR UPDATE`, findet die Sitzung nicht mehr und fällt in den Geräte-Zweig (`pair.php` 262–271, 303, 346) | Ohne diese Antwort hinge die Kopplung an einem einzigen Funkpaket. Ein `bestaetigen nein` auf ein fertiges Gerät ist deshalb ein **Nichtstun** (E-S5-48): Ein Nein, das ein Gerät löschte, wäre ein Trennen ohne Trennen-Mail |
+| 11 | **Der Nachlade-Endpunkt als neue Tür** — `api/kopplung_stand.php` sagt, ob eine Kopplung fertig ist (E-S5-53) | Er **nimmt keine Eingabe**. Welche Sitzung gemeint ist, steht in der Browsersitzung (`$_SESSION['pair_warten']`, gesetzt beim Beanspruchen), nicht in einem Parameter, den jemand mit einer fremden Kennung füllen könnte; die Kontokennung steht zusätzlich in der Bedingung, damit eine Erinnerung aus einer fremden Sitzung — möglich nach einem Kontowechsel im selben Browser — nichts beantwortet. Er verlangt Anmeldung, ist GET-only und ändert nichts | Kein CSRF-Token und kein eigener Ratenschutz, beides begründet: Er liest, und er hat nichts zu erraten. Was er verrät, hat der Aufrufer eine Minute zuvor selbst angestoßen |
+| 12 | **Ein Reiter, der ewig fragt** — das Nachladeskript als selbstgemachte Last | `assets/kopplung.js` hört von selbst auf: bei Erfolg, bei Ablehnung am Gerät, mit dem Ende der Frist und nach drei Fehlversuchen in Folge; es ruht, solange der Reiter im Hintergrund liegt (`document.hidden`), und es lebt nie länger als die zehn Minuten der Sitzung | Ohne JavaScript bleibt der Weg vollständig — die Karte sagt auch dann, was am Gerät zu tun ist; das Skript nimmt nur den Handgriff „neu laden" ab |
+
+**Was das Modell nicht abdeckt.** Ein Angreifer, der den Browser der
+Kontoinhaberin schon in der Hand hat, braucht keine Kopplung — er ist
+angemeldet. Ein Angreifer, der `config.php` und die Datenbank hat, ebenso
+wenig. Und der Fall „jemand steht neben der Uhr und drückt selbst Ja" ist ein
+körperlicher Zugriff auf das Gerät; dagegen steht in dieser Anwendung nichts,
+und das ist eine bewusste Grenze.
+
+**Ein Topf, drei Verbraucher — und keiner leert ihn.** `pair` bremst nicht nur
+`pair.php`, sondern auch das Token von `jobs.php` und den GPX-Abruf in
+`gpx.php` (sieben Zählstellen dort). Wer die Zahlen in `RATE_GRENZEN` ändert,
+ändert alle drei.
+
+Bis Web 13.1.0 rief ein gelungenes `trennen` `rate_erfolg('pair')` und leerte
+damit den Zähler dieser Adresse **für alle drei** — wer Freigabelinks
+durchprobierte, holte sich also mit einem getrennten eigenen Gerät zehn
+frische Versuche, und neu koppeln kostet einen Handgriff. Der Aufruf ist mit
+13.1.1 ersatzlos entfallen: An diesem Endpunkt gibt es seit 13.0.0 nichts mehr
+zu vertippen — den Code tippt ein Mensch im Web, und dort hat er seinen
+eigenen Topf `pair_code` mit eigenem `rate_erfolg`. Was hier ankommt, sind
+Kopfzeilen einer Maschine.
+
+Dieselbe Überlegung galt schon für `status` und `bestaetigen` (E-S5-50): Ein
+Erfolg dort darf den Zähler nicht leeren, sonst setzte ein Angreifer mit einer
+eigenen, gültigen Sitzung alle fünf Sekunden zurück, während er daneben fremde
+Kennungen durchprobiert.
+
+**Wo dieselbe Frage sonst noch beantwortet wird:** „Die Antwortzeit als
+Auskunft" (Antwortgleichheit der vier anmeldungsfreien Endpunkte),
+„Geräte je Konto" (`MAX_GERAETE`, Kopplungsmail, Plakette „neu"), 4.99
+(Ratenschutz, fester Vergleichswert, Sitzungsende) und der JSON-Vertrag,
+Abschnitt 1a (die Antworten im Wortlaut).
+
+### 4.99c Wartungsmodus (ab Web 13.2.0, S5 Paket W)
+
+**Ein Schalter, der die Installation vorübergehend für alle außer der
+Verwaltung schließt.** Er beantwortet den Unterschied zwischen „kaputt" und
+„gleich wieder da": Während eines Updates antwortet die Anwendung sonst mit
+**500** — alte und neue Dateien nebeneinander, neuer Code über einem alten
+Schema. Mit dem Wartungsmodus antwortet sie mit **503**, und darauf haben Uhr
+und Handy eine Antwort: „später unverändert erneut versuchen" (JSON-Vertrag
+Abschnitt 5). Sie puffern und liefern nach. **Kein Client wurde dafür
+geändert** (E-S5W-08).
+
+| | |
+|---|---|
+| Zustand | Datei `server/wartung.lock`, JSON mit `seit` (ISO-UTC) und `von` (Anzeigename). **Keine Datenbank** — der Schalter wird gerade dann gebraucht, wenn sie umgebaut wird oder eine Migration auf halber Strecke steht |
+| Tor | `wartung_tor()` in `wartung_lib.php`, gerufen aus `db.php` **hinter `json_out()` und vor jeder Verbindung**. Nicht in `auth_guard.php`: Dort liefen nur die Seiten durch — `ingest.php` und `pair.php` laden `db.php` direkt, und das sind die beiden, die die Daten der Uhr bringen |
+| Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
+| Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript `ingest.php` oder `pair.php` heißt — die beiden liegen nicht unter `/api/`, und genau sie brauchen JSON |
+| Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
+| Ausnahmen | sechs Skripte, verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`, `install.php`. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Schalten | `update.php`, Karte „Serverbetrieb", POST mit CSRF, nur Admin. Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
+| Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `update.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
+| Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `update.php` mit, und zwar **vor** `require_admin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
+| Anmeldung | Der Passwortvergleich ist unverändert. **Nach** einem Erfolg entscheidet die Rolle: Admin weiter, alles andere sofort wieder abgemeldet und auf die Wartungsseite (E-S5W-09). Die Ratenschutz-Zähler werden trotzdem geleert — das Passwort war richtig |
+| Logo | Die Wartungsseite kann `logo_stamm()` nicht rufen (Datenbank) und **wirft eine Münze** zwischen den beiden Standardlogos, wie `logo_aufloesen('wechselnd')`. Eine Installation mit eigenem Logo sieht während der Wartung eines der beiden Standardlogos |
+
+**Die Datei ist der Schalter, nicht ihr Inhalt.** Liegt sie da, ist aber
+unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
+„seit unbekannt". Andersherum wäre es falsch — ein Tippfehler im Inhalt darf
+keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
+
+**Zwei Einträge, die zusammengehören:** `server/wartung.lock` steht in
+`.gitignore` **und** in der Ausnahmeliste von
+`.github/workflows/deploy.yml`. Ohne den ersten schlösse ein Checkout jede
+Installation; ohne den zweiten löschte der Push die Datei — mitten im Update,
+für das sie da ist. Dasselbe Muster wie `config.php`, `install.lock`,
+`sicherungen/` und `apk/`.
+
+**Nicht Umfang** (Konzept 9): der **Torwächter** aus Rahmenplan R40 (4) —
+Wartung automatisch bei ausstehender Migration — ist P5 und wird denselben
+Zustand setzen; Steuerung aus der Auslieferungskette ist P5 mit R67; eine
+eigene Wartungsmeldung auf Uhr und Handy ist Backlog-Kandidat.
+
+**Nachweis:** `php tools/wartungsprobe/probe.php` — 40 Erwartungen, beide
+Richtungen (zu wenig gesperrt / zu viel gesperrt), einschließlich der drei
+Regeln aus E-S5W-09 am Code. Betriebsablauf: Abschnitt 7.
+
 
 ### 5.1 Tastenbelegung je Geräteprofil
 
@@ -4313,9 +4471,10 @@ Kennungspräfixe unterscheiden die Quellen (`am-`/`ar-`/`ad-` für das Handy,
 JSON-Vertrag, Abschnitt 8 — der Nachtrag hing an R42 und ist mit S6 erledigt.
 
 **Die Kopplung ist seit Web 12.9.0 nicht mehr geräteneutral**, und das ist
-Absicht: `pair.php` liest den Block `geraet` aus und hält fest, was gekoppelt
-hat (R42). Die Neutralität gilt weiterhin für den Upload — dort entscheidet
-nichts am Verhalten des Servers, welcher Client sendet. Beim Koppeln ist die
+Absicht: `pair.php` liest den Block `geraet` aus — seit Web 13.0.0 in der
+Anfrage `start` — und hält fest, was gekoppelt hat (R42). Die Neutralität gilt
+weiterhin für den Upload — dort entscheidet nichts am Verhalten des Servers,
+welcher Client sendet. Beim Koppeln ist die
 Geräteart die Auskunft selbst.
 
 ### Prüfen ohne Gerät
@@ -4371,6 +4530,74 @@ existieren. Secrets: `FTP_SERVER` (nackter Hostname!), `FTP_USERNAME`,
 Repo.
 
 ## 7. Betrieb (Runbook)
+
+**Update mit Wartungsmodus (seit Web 13.2.0 der Regelweg, S5 Paket W):**
+Zwischen dem ersten und dem letzten per FTPS hochgeladenen File stehen alte
+und neue Dateien nebeneinander, und zwischen dem Hochladen und der Migration
+erwartet neuer Code Tabellen, die es noch nicht gibt. Wer in dieses Fenster
+gerät, bekommt **500**. Für eine Uhr ist das etwas anderes als ein 503: Der
+JSON-Vertrag sagt zu 5xx „später unverändert erneut versuchen" — sie puffert
+und liefert nach. Die sieben Schritte:
+
+1. **Wartungsseite → Komplett-Backup prüfen** (Zeitpunkt, Ziel erreichbar),
+   bei Bedarf „Jetzt sichern".
+2. **Wartungsmodus einschalten** — Karte „Serverbetrieb" oben auf
+   `update.php`. Ab jetzt bekommt jede Anfrage außer den Ausnahmen 503 mit
+   `Retry-After: 300`.
+3. **Push auf `main`** (die GitHub-Action lädt `server/` hoch).
+4. **`update.php` neu laden** → ausstehende Migrationen ausführen.
+5. **Startseite in einem zweiten Reiter prüfen.** Es *muss* 503 kommen —
+   kommt eine Seite, steht der Wartungsmodus nicht.
+6. **Wartungsmodus ausschalten.** Startseite erneut: antwortet, und die
+   Fassung in der Fußzeile ist die neue.
+7. Uhr und Handy synchronisieren beim nächsten Kontakt von selbst. Nichts
+   ist verloren gegangen; die Geräte haben gepuffert.
+
+**Was währenddessen erreichbar bleibt** (E-S5W-04): `update.php` und
+`wiederherstellen.php` (die Arbeit selbst und der Rückweg), `jobs.php` mit
+Token — das Komplett-Backup der Kette läuft **während** der Wartung, genau
+dann ist es konsistent —, `login.php`/`logout.php` und `install.php`. Alles
+unter `assets/` läuft ohnehin nicht durch PHP. Der CLI-Notausgang
+`php update.php` ist nie getort.
+
+**Wer sich während der Wartung anmeldet und nicht verwaltet**, wird nach der
+gelungenen Anmeldung **sofort wieder abgemeldet** und sieht die Wartungsseite
+(E-S5W-09). Das ist Absicht: Während des Umbaus soll keine Sitzung mit
+entsperrtem Inhaltsschlüssel herumliegen, und keine Anmeldung soll
+`last_login` schreiben, während das Schema geändert wird.
+
+**Der Wartungsmodus lässt sich nicht vergessen — theoretisch.** Es gibt kein
+automatisches Ausschalten und keine Zeitsteuerung (E-S5W-05). Auffallen kann
+ein stehengebliebener Wartungsmodus nur auf `update.php` und `login.php`; auf
+beiden steht dann oben ein oranger Balken mit Zeitpunkt und Konto. Alles
+andere antwortet mit 503, und ein 503 sagt nicht, dass es seit drei Tagen
+kommt.
+
+**Der Schalter ist eine Datei.** `server/wartung.lock`, JSON mit `seit` und
+`von`. Wer keinen Browserzugang mehr hat, legt sie per SSH an oder löscht
+sie — das ist der ganze Mechanismus:
+
+```bash
+echo '{"seit":"2026-09-03T14:12:00Z","von":"SSH"}' > server/wartung.lock  # ein
+rm server/wartung.lock                                                     # aus
+```
+
+**Die Datei ist der Schalter, nicht ihr Inhalt.** Ist sie da, aber unlesbar
+oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt dann
+„seit unbekannt". Andersherum wäre es falsch — ein Tippfehler im Inhalt darf
+keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
+
+**Sie steht in `.gitignore` und in der Ausnahmeliste des Deploys.** Beides
+muss so bleiben: Ohne den ersten Eintrag schlösse ein Checkout jede
+Installation, ohne den zweiten löschte der Push die Datei — mitten im Update,
+für das sie da ist.
+
+**Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
+(1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
+(neben `db.php`)? (2) Ist die aufgerufene Seite eine der sechs Ausnahmen?
+(3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
+`db()`-Aufruf? Nachweis für alle drei:
+`php tools/wartungsprobe/probe.php` (40 Erwartungen).
 
 **Demo-Konto einrichten (einmalig):** Fixture erzeugen —
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der
@@ -4463,6 +4690,127 @@ hinterher" — dann Punkt 1 oder 2 oben einrichten.
 **Gerät verloren / Schlüssel kompromittiert:** Web → „Geräte" (oder Verwaltung)
 → **Deaktivieren**. Wirkt sofort (Ingest antwortet `403`); Daten bleiben. Neue
 Uhr = neues Gerät anlegen.
+
+**Die Kopplung klappt nicht (seit Web 13.0.0 anders zu suchen als davor):**
+Der Ablauf hat drei Schritte — das Gerät holt sich einen Code, ein Mensch
+gibt ihn im Web ein, das Gerät bestätigt —, und jeder kann für sich scheitern.
+Die Meldung, die eine Person sieht, sagt selten, an welchem. Deshalb der Reihe
+nach, von der billigsten Prüfung zur teuersten. Alle SQL-Beispiele laufen auf
+der Anwendungsdatenbank; `10` ist `PAIR_TTL_MIN` aus `db.php`.
+
+1. **Ist die Migration gelaufen?** Ohne sie gibt es die Tabelle nicht, und
+   `start` antwortet mit `500`. Adminbereich → **`/update.php`**: die Zeile
+   `2026_09_03_kopplungssitzungen` muss „erledigt" tragen — auf einer frisch
+   installierten Anlage „übersprungen", weil `schema.sql` die Tabelle schon
+   mitbringt. Von der Kommandozeile:
+
+   ```sql
+   SHOW TABLES LIKE 'pair_sessions';
+   SELECT id, status, applied_at FROM schema_migrations
+    WHERE id = '2026_09_03_kopplungssitzungen';
+   ```
+
+   Fehlt beides, wurde `update.php` nach dem Ausrollen nie aufgerufen. Das ist
+   der häufigste Fall und der einzige, bei dem gar nichts geht.
+
+2. **Kommt der Code überhaupt beim Server an?** Wenn das Gerät einen Code
+   zeigt, steht er in der Tabelle — sonst zeigt es einen Fehler, nicht einen
+   Code.
+
+   ```sql
+   SELECT id, code, device_id, user_id, erstellt_am,
+          TIMESTAMPDIFF(SECOND, NOW(),
+                        DATE_ADD(erstellt_am, INTERVAL 10 MINUTE)) AS rest_s
+     FROM pair_sessions ORDER BY id DESC LIMIT 5;
+   ```
+
+   Keine Zeile aus der letzten Viertelstunde heißt: Die Anfrage `start` hat
+   den Server nie erreicht (Adresse, TLS, Telefon außer Reichweite) oder sie
+   wurde abgewiesen — dann weiter bei Punkt 4 und 5.
+
+3. **Ist die Frist abgelaufen?** `rest_s` aus der Abfrage oben. Es gibt
+   **eine** Frist von zehn Minuten ab `erstellt_am`, für alles: Eingeben im
+   Web und Bestätigen am Gerät müssen beide hineinfallen, und das Beanspruchen
+   verlängert nichts (E-S5-12). Ein Code aus Minute elf ist kein Fehler,
+   sondern Ablauf; das Gerät holt einen neuen. Zeilen mit `rest_s <= 0` bleiben
+   liegen, bis der Job `aufraeumen` sie entfernt — sie zählen aber nirgends
+   mehr mit.
+
+4. **Greift eine Sperre?** Drei Töpfe zählen an drei verschiedenen Stellen;
+   `merkmal` ist `ip:<adresse>` oder `id:<kontokennung>`.
+
+   ```sql
+   SELECT topf, merkmal, versuche, fenster_start, gesperrt_bis
+     FROM rate_limits
+    WHERE topf IN ('pair','pair_start','pair_code')
+      AND (gesperrt_bis > NOW() OR versuche > 0)
+    ORDER BY gesperrt_bis DESC;
+   ```
+
+   `pair_start` (20 je 10 min, je Adresse) sperrt das Holen eines Codes — das
+   Gerät meldet „Zu viele Versuche". `pair_code` (10 je 10 min, je Konto
+   **und** Adresse) sperrt die Eingabe im Web; die Seite nennt dann die
+   Uhrzeit, bis zu der sie nichts annimmt. `pair` (10 je 10 min, je Adresse)
+   sperrt die ausgewiesenen Anliegen — und, das ist beim Suchen zu wissen,
+   **auch das Token von `jobs.php` und den GPX-Abruf**: Ein gesperrter Topf
+   `pair` kann von einem falsch eingetragenen Zeitplan stammen und nicht von
+   der Kopplung. Eine Sperre läuft von selbst ab; wer nicht warten will,
+   löscht die betreffende Zeile.
+
+5. **Ist der Server an der Obergrenze?** Dann antwortet `start` mit `429` und
+   `zu_viele_sitzungen`, und das Gerät sagt „Server ausgelastet".
+
+   ```sql
+   SELECT COUNT(*) FROM pair_sessions
+    WHERE erstellt_am > DATE_SUB(NOW(), INTERVAL 10 MINUTE);
+   ```
+
+   Gegen `PAIR_SITZUNGEN_MAX` = 1000 (`db.php`) halten. Gezählt werden nur
+   unverfallene Zeilen; ein großer Bestand alter Zeilen ist also nicht die
+   Ursache, sondern nur unaufgeräumt. Erreicht diese Zahl im Betrieb die
+   Grenze, ist es kein Betriebsfall, sondern ein Angriff — Punkt 4 zeigt, von
+   welchen Adressen.
+
+6. **Ist das Konto voll?** Höchstens `MAX_GERAETE` (5) echte Geräte, aktive
+   wie deaktivierte.
+
+   ```sql
+   SELECT COUNT(*) FROM devices
+    WHERE user_id = <konto> AND device_id NOT LIKE 'manual-%';
+   ```
+
+   Ist die Grenze erreicht, nimmt die Geräteseite den Code gar nicht erst an
+   und sagt es. Kommt die Meldung dagegen **am Gerät** („Zu viele Geräte /
+   Erst eines im Web löschen"), ist zwischen Eingabe und Ja ein Gerät
+   dazugekommen; die Sitzung ist dann gelöscht, und der Weg zurück ist ein
+   Gerät löschen und von vorn beginnen (E-S5-18).
+
+7. **Trägt das Gerät noch einen bcrypt-Schlüssel?** Seit Web 13.0.0 liegen
+   Geräteschlüssel als SHA-256; ein Hash aus der Zeit davor passt **nie mehr**
+   (E-S5-42, kein Umhash-Pfad — Absicht).
+
+   ```sql
+   SELECT id, user_id, device_id, label, last_seen
+     FROM devices WHERE api_key_hash LIKE '$2y$%';
+   ```
+
+   Jede Zeile hier ist ein Gerät, das mit `401` abgewiesen wird — beim Upload
+   wie bei jedem Kopplungsanliegen. Abhilfe: **einmal neu koppeln**, nachdem
+   der Sync des Geräts vollständig ist. Die Demo-Geräte der Fixture stehen
+   absichtlich in dieser Liste; zu ihnen hat niemand einen Klartextschlüssel.
+
+8. **Sagt das Gerät „Uhr-App aktualisieren"?** Dann sendet es den alten
+   Rumpf `{"code": …}` ohne Feld `aktion`, und der Server antwortet `400` mit
+   `error: aktion`. Eine Übergangszeit, in der beide Wege gehen, gibt es nicht
+   (E-R49-7): Der alte Weg setzte einen im Web erzeugten Code voraus, und den
+   gibt es nicht mehr. Hilft nur die neue Client-Fassung.
+
+**Was in der Datenbank steht, wenn alles richtig läuft:** eine Zeile mit
+`user_id IS NULL`, solange niemand den Code eingegeben hat; dieselbe Zeile mit
+gesetzter `user_id` nach der Eingabe im Web; und **keine** Zeile mehr, sobald
+das Gerät Ja gesagt hat — dann steht stattdessen eine in `devices`. Anlegen
+und Löschen geschehen in einer Transaktion; einen Zwischenzustand, in dem
+beides oder keines von beidem existiert, gibt es nicht.
 
 **Die Geräteliste sagt bei einem Gerät „Gerät unbekannt":** Kein Fehler.
 Angaben über das Gerät entstehen **ausschließlich beim Koppeln** (seit Web

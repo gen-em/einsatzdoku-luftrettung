@@ -23,8 +23,12 @@ require_once __DIR__ . '/ratelimit_lib.php';
  *
  *  3. MENGE GUELTIGER TOKENS. Jede Anfrage legte einen weiteren Token an;
  *     alle blieben eine Stunde lang gueltig. Jetzt entwertet ein neuer den
- *     alten — es gibt zu jedem Zeitpunkt hoechstens einen. Dasselbe Muster
- *     wie bei den Kopplungscodes (einstellungen.php).
+ *     alten — es gibt zu jedem Zeitpunkt hoechstens einen.
+ *
+ *     (Bis Web 12.9.4 stand hier "dasselbe Muster wie bei den Kopplungscodes
+ *     (einstellungen.php)". Seit S5 gibt es dort kein solches Muster mehr:
+ *     Eine Kopplungssitzung gehoert einem GERAET, nicht einem Konto, und ein
+ *     Konto kann mehrere nebeneinander haben — jede mit eigener Frist.)
  *
  *     Bewusst NICHT umgesetzt: den vorhandenen Token einfach stehen lassen
  *     und keine zweite Mail schicken. Das erreicht dieselbe Zahl gueltiger
