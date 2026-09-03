@@ -18,6 +18,14 @@
 # beschleunigter Emulator Sekunden braucht. Deshalb gehoert er ans ENDE eines
 # Arbeitspakets, zu den uebrigen Pruefmitteln, nicht zwischen zwei Dateien.
 #
+# UND DIE ZWEITE ZAHL: -memory. Der erste Versuch am 03.09.2026 lief mit
+# 3072 MB und kam nach 23 Minuten nicht ueber die halbe SystemServer-Folge
+# hinaus -- `window` und `input` waren nicht registriert. Die Ursache war
+# NICHT die Rechenleistung: Die Gast-CPU stand zu 276 von 400 Prozent
+# untaetig, waehrend der Speicher bei 2,82 von 3,05 GB stand. Wer einen
+# haengenden Boot sieht, misst zuerst `adb shell top -n 1 -b | head -4` --
+# untaetige CPU bei vollem Speicher heisst: mehr -memory, nicht mehr Geduld.
+#
 # BERICHTIGUNG EINER FRUEHEREN MESSUNG. android/LIESMICH.md sagte bis 03.09.
 # "x86_64-Abbild braucht KVM". Das stimmt fuer den Standardaufruf, aber nicht
 # fuer `-accel off`: damit uebersetzt QEMU die x86_64-Befehle selbst und
@@ -45,8 +53,15 @@ ZIEL="${ZIEL:-$(pwd)/emulator-bilder}"
 # Einmal fuer alle Unterbefehle: sonst legt `aufbauen` die AVDs woanders ab,
 # als `start` sie sucht, und der Fehler lautet "Unknown AVD name".
 export ANDROID_AVD_HOME="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
-ABBILD="system-images;android-34;google_apis;x86_64"
-ABBILD_UHR="system-images;android-30;android-wear;x86"
+# WELCHES ABBILD. `default` statt `google_apis`: Der Erstboot des
+# google_apis-Abbilds entpackt die Chrome-, WebView- und Trichrome-Stubs und
+# uebersetzt anschliessend die Play-Dienste mit dex2oat vor -- unter TCG sind
+# das viele Minuten fuer etwas, das dieses Projekt nicht braucht. Der Data
+# Layer laesst sich ohnehin nicht pruefen, solange keine Companion-App da ist
+# (LIESMICH.md, Abschnitt 7); Ortung, JobScheduler und Meldungen brauchen die
+# Play-Dienste nicht. Wer sie doch braucht, setzt ABBILD von aussen.
+ABBILD="${ABBILD:-system-images;android-34;default;x86_64}"
+ABBILD_UHR="${ABBILD_UHR:-system-images;android-30;android-wear;x86}"
 
 sag() { printf '\033[1m%s\033[0m\n' "$*"; }
 
@@ -74,8 +89,11 @@ start() {
   # -no-window ist Pflicht: die GUI-Binaerdatei braucht ein X11 und Ton.
   # -accel off ist der Kern -- ohne /dev/kvm gibt es keinen anderen Weg.
   # -gpu swiftshader_indirect: die Grafik rechnet ebenfalls die CPU.
-  nohup "$EMU" -avd "$avd" -no-window -no-audio -no-boot-anim -no-snapshot \
-      -accel off -gpu swiftshader_indirect -memory 3072 -cores 4 \
+  # KEIN -no-snapshot: Der Erstboot kostet unter TCG Minuten, der zweite Start
+  # aus dem Abzug Sekunden. `aus` (adb emu kill) legt den Abzug an.
+  nohup "$EMU" -avd "$avd" -no-window -no-audio -no-boot-anim \
+      -accel off -gpu swiftshader_indirect -memory 6144 -partition-size 4096 \
+      -cores 4 \
       >"${TMPDIR:-/tmp}/emu-$avd.log" 2>&1 &
   sag "gestartet: $avd (Protokoll ${TMPDIR:-/tmp}/emu-$avd.log)"
   "$ADB" start-server >/dev/null 2>&1 || true
@@ -97,6 +115,11 @@ bild() {
   sag "abgezogen: $ZIEL/$1.png ($(stat -c%s "$ZIEL/$1.png") Bytes)"
 }
 
+# NICHT `pkill -f qemu` BENUTZEN, um einen haengenden Emulator loszuwerden:
+# Das Muster steht in der eigenen Befehlszeile der aufrufenden Shell, und die
+# bringt sich damit selbst um -- der Emulator laeuft weiter. Am 03.09.2026
+# zweimal passiert. Der Weg ist `adb emu kill`; hilft der nicht, die PID aus
+# `ps -eo pid,args | grep -- "-avd"` heraussuchen und einzeln toeten.
 aus() { "$ADB" emu kill >/dev/null 2>&1 || true; sag "beendet"; }
 
 case "${1:-}" in
