@@ -2185,5 +2185,15 @@ declare(strict_types=1);
  * Knoepfe; Design.md 9.16 nennt das als Anti-Muster („Keiner ist mehr die
  * Haupthandlung"). Die Handanlage ist jetzt neutral — sie ist ausdruecklich
  * „die Alternative zum Koppeln" (B-S5-09).
+ *
+ * 13.1.1 NIMMT ZWEI DINGE ZURUECK, die bei der Vorarbeit zu Paket D auffielen.
+ * Der Topf `pair` hat DREI Verbraucher, nicht zwei: pair.php, das Token von
+ * jobs.php — und gpx.php, das damit die Freigabelinks der Spuren schuetzt (an
+ * sieben Zaehlstellen). Ein gelungenes `trennen` rief `rate_erfolg('pair')`
+ * und leerte den Zaehler fuer alle drei; wer Freigabelinks durchprobierte,
+ * holte sich mit einem getrennten eigenen Geraet zehn frische Versuche. Der
+ * Aufruf ist ersatzlos weg — seit 13.0.0 gibt es an diesem Endpunkt nichts
+ * mehr zu vertippen. Dazu vier Meldungen an das Geraet, die in
+ * Ersatzschreibung standen, obwohl die Uhr sie anzeigt.
  */
-const WEB_VERSION = '13.1.0';
+const WEB_VERSION = '13.1.1';

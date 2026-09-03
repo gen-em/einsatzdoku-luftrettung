@@ -63,10 +63,12 @@ declare(strict_types=1);
  * WAS ZAEHLT UND WAS NICHT (E-S5-17): 401 zaehlt im Topf pair. Ein Rumpf ohne
  * oder mit unbekannter Aktion zaehlt nicht — das ist eine alte Uhr, kein
  * Raten. 410 und 409 zaehlen nicht („der Code war richtig, hier ist niemand
- * am Raten“). Und rate_erfolg() ruft nur `trennen`, wie bisher: Ein
- * gelungenes `status` darf den Zaehler NICHT leeren — sonst setzte ein
- * Angreifer mit einer eigenen, gueltigen Sitzung alle fuenf Sekunden den
- * IP-Zaehler zurueck, waehrend er daneben fremde Kennungen durchprobiert.
+ * am Raten“). Und GELEERT WIRD DER TOPF HIER GAR NICHT MEHR (Web 13.1.1,
+ * Begruendung am Ende der Datei): Ein gelungenes `status` duerfte den Zaehler
+ * ohnehin nicht leeren — sonst setzte ein Angreifer mit einer eigenen,
+ * gueltigen Sitzung alle fuenf Sekunden zurueck, waehrend er daneben fremde
+ * Kennungen durchprobiert. Und beim `trennen` war es schlimmer: Der Topf
+ * `pair` gehoert auch `jobs.php` und `gpx.php`.
  *
  * SCHLUESSEL LIEGEN ALS SHA-256 (E-S5-41, E-S5-42; db.php erklaert die
  * Verfahrenswahl): 24 Zufallsbytes brauchen kein bcrypt, und 120
@@ -132,13 +134,13 @@ if ($aktion === 'start') {
     // Sperre VOR jeder weiteren Arbeit; dann zaehlt die Anfrage — auch die,
     // die gleich an der Obergrenze scheitert.
     if (!rate_erlaubt('pair_start')) {
-        gesperrt('zu_viele_versuche', 'Zu viele Kopplungsversuche. Bitte spaeter erneut.');
+        gesperrt('zu_viele_versuche', 'Zu viele Kopplungsversuche. Bitte später erneut.');
     }
     rate_zaehlen('pair_start');
 
     $pdo = db();
     if (pair_sitzungen_offen($pdo) >= PAIR_SITZUNGEN_MAX) {
-        gesperrt('zu_viele_sitzungen', 'Der Server ist gerade ausgelastet. Bitte spaeter erneut.');
+        gesperrt('zu_viele_sitzungen', 'Der Server ist gerade ausgelastet. Bitte später erneut.');
     }
 
     /* ---- Was fuer ein Geraet koppelt hier? (R42, S6) ----------------------
@@ -186,7 +188,7 @@ if ($aktion === 'start') {
  * status, bestaetigen, trennen — mit Kopfzeilen ausgewiesen (1a.2, 1a.3, 1b)
  * ========================================================================= */
 if (!rate_erlaubt('pair')) {
-    gesperrt('zu_viele_versuche', 'Zu viele Kopplungsversuche. Bitte spaeter erneut.');
+    gesperrt('zu_viele_versuche', 'Zu viele Kopplungsversuche. Bitte später erneut.');
 }
 if (!in_array($aktion, ['status', 'bestaetigen', 'trennen'], true)) {
     // Ohne oder mit unbekannter Aktion: eine alte Uhr (E-S5-19) oder Unsinn.
@@ -280,8 +282,8 @@ if ($sitzung !== null) {
                 $pdo->prepare('DELETE FROM pair_sessions WHERE id = ?')->execute([$sid]);
                 $pdo->commit();
                 antworten(409, ['error'   => 'device_limit',
-                                'meldung' => 'Es sind bereits ' . MAX_GERAETE . ' Geraete mit diesem '
-                                           . 'Konto verbunden. Erst eines loeschen, dann neu koppeln.']);
+                                'meldung' => 'Es sind bereits ' . MAX_GERAETE . ' Geräte mit diesem '
+                                           . 'Konto verbunden. Erst eines löschen, dann neu koppeln.']);
             }
             $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label,
                                                 geraet_art, geraet_modell, geraet_teil)
@@ -395,7 +397,33 @@ try {
     antworten(500, ['error' => 'server']);
 }
 
-rate_erfolg('pair');
+/* ---- HIER STAND `rate_erfolg('pair')`, UND ES WAR FALSCH (Web 13.1.1) -----
+ *
+ * Der Gedanke dahinter war der der Anmeldung: Wer es richtig macht, soll nicht
+ * an einem frueheren Vertippen haengenbleiben. An diesem Endpunkt gibt es
+ * seit Web 13.0.0 aber nichts mehr zu vertippen — den Code tippt ein Mensch im
+ * WEB (Topf `pair_code`, mit eigenem `rate_erfolg`), und was hier ankommt,
+ * sind Kopfzeilen einer Maschine. Ein Geraet, das seinen Schluessel zehnmal
+ * falsch schickt, ist kaputt oder fremd; beidem hilft kein Nachlass.
+ *
+ * ENTSCHEIDEND IST ABER, DASS DER TOPF NICHT UNS ALLEIN GEHOERT. `pair` hat
+ * DREI Verbraucher, nicht zwei, wie B-S5-04 annahm:
+ *
+ *   pair.php   401 an status/bestaetigen/trennen
+ *   jobs.php   das Token des Wartungseinstiegs (jobs.php 99, 127)
+ *   gpx.php    die Freigabelinks der Spuren — sieben Zaehlstellen
+ *              (gpx.php 73, 131, 141, 165, 177, 206, 262, 280)
+ *
+ * Ein `rate_erfolg` hier leerte den Zaehler dieser Adresse fuer ALLE DREI. Wer
+ * Freigabelinks durchprobiert, brauchte also nur ein eigenes Geraet zu
+ * trennen, um sich zehn frische Versuche zu holen — beliebig oft, denn neu
+ * koppeln kostet einen Handgriff. Eine Bremse, die sich vom Gebremsten
+ * zuruecksetzen laesst, ist keine.
+ *
+ * Der Preis: Ein Geraet mit veralteten Zugangsdaten sperrt seine Adresse nach
+ * zehn Versuchen fuer zehn Minuten aus, und das gilt dann auch fuer den
+ * GPX-Abruf. Genau dafuer ist der Topf da.
+ */
 echo json_encode(['ok' => true]);
 
 /* Den Kontoinhaber unterrichten — dieselbe Ueberlegung wie beim Koppeln: Es

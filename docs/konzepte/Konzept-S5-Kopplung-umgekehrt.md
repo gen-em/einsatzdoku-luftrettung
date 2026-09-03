@@ -547,7 +547,7 @@ so; sei sicher, dass es deines ist.“
 
 | Fall | Ton | Text |
 |---|---|---|
-| Beanspruchung gelungen | info | Der Code ist deinem Konto zugeordnet. **Bestätige jetzt am Gerät mit Ja.** Danach erscheint das Gerät hier in der Liste — lade die Seite neu. |
+| Beanspruchung gelungen | info | Der Code ist deinem Konto zugeordnet. **Bestätige jetzt am Gerät mit Ja.** *(Der Nachsatz „lade die Seite neu" ist mit E-S5-53 entfallen — die Seite lädt selbst. Gebauter Wortlaut siehe Umsetzungsstand B.)* |
 | Code nicht gefunden (unbekannt, abgelaufen, schon beansprucht) | fehler | Diesen Code kennt der Server nicht — er ist falsch, abgelaufen oder schon verwendet. Auf dem Gerät einen neuen Code holen: Sync-Seite → Gerät koppeln. |
 | Code passt nicht zum Muster | fehler | Ein Code hat sechs Zeichen; 0, O, 1 und I kommen darin nicht vor. Bitte vergleiche mit der Anzeige auf dem Gerät. |
 | zu viele Versuche | fehler | Zu viele falsche Codes. Bis HH:MM Uhr nimmt der Server keine Eingabe von dir an. *(Zeit aus `rate_gesperrt_bis('pair_code', …)`)* |
@@ -842,6 +842,8 @@ lässt.
 | **B-S5-05** | Kopfkommentar von `Pair.mc` ist veraltet: „UP halten“, „5 Zeichen“ — es sind START halten und sechs Zeichen | `watch/source/Pair.mc` 3–4 | Paket C schreibt den Kopf ohnehin neu |
 | **B-S5-06** | Vertrag 1b sagt „429 gilt für beide Anliegen“ | `docs/JSON-Vertrag.md` 207 | Paket D: „für alle vier“ |
 | **B-S5-07** | Kommentar „die eine Haupthandlung dieses Reiters bleibt ‚Kopplungscode erzeugen‘“ wird mit B falsch | `server/einstellungen.php` 3072–3075 | Paket B |
+| **B-S5-10** | Der Topf `pair` hat **drei** Verbraucher, nicht zwei: `pair.php`, das Token von `jobs.php` — und **`gpx.php`**, das damit die Freigabelinks der Spuren schützt (sieben Zählstellen). B-S5-04 nennt nur die ersten beiden | `server/gpx.php` 73, 131, 141, 165, 177, 206, 262, 280 | **In Web 13.1.1 behoben, soweit es S5 betraf:** `rate_erfolg('pair')` nach einem gelungenen `trennen` leerte den Zähler für alle drei — wer Freigabelinks durchprobiert, holte sich mit einem getrennten eigenen Gerät zehn frische Versuche. Der Aufruf ist ersatzlos weg. Der Kommentar in `ratelimit_lib.php` nennt jetzt alle drei |
+| **B-S5-11** | Vier `meldung`-Texte in `pair.php` standen in Ersatzschreibung („spaeter", „Geraete", „loeschen"), obwohl die **Uhr sie anzeigt** (`Pair.mc` 331–332) und die gleichwertige Meldung in `auth_salt.php` Umlaute trägt. Keine Konvention, sondern eine Ungleichheit: Die Kommentare des Projekts stehen in Ersatzschreibung, die sichtbaren Texte nicht | `server/pair.php` | **In Web 13.1.1 behoben.** Eine der vier war mit 13.0.0 neu dazugekommen |
 | **B-S5-09** | Der Geräte-Reiter trug **zwei primäre Knöpfe** — den der Kopplungskarte und „Gerät anlegen". `Design.md` 9.16 nennt das als Anti-Muster („Keiner ist mehr die Haupthandlung"), 9.0 verlangt „die EINE Haupthandlung". Älter als S5; fiel auf, weil die Karte darüber neu gebaut wurde | `server/einstellungen.php` (Handanlage) | **In Paket B behoben:** Die Handanlage ist neutral. Welche die Haupthandlung ist, sagt die Anwendung selbst — der Text nebenan nennt sie „die Alternative zum Koppeln", E-R49-7 führt sie als Rückfall |
 | **B-S5-08** | Vertrag 0, Zeile 46 (V-S5-07): „beschrieben, nicht umgesetzt“ steht seit S2 — nicht S5, nur beim Lesen wieder gesehen | `docs/JSON-Vertrag.md` 46 | keine Handlung in S5 |
 

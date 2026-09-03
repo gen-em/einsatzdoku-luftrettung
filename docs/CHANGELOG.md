@@ -11,6 +11,49 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 13.1.1] — 2026-09-03
+
+### Web — Behoben: ein gelungenes Trennen leerte einen Topf, der ihm nicht gehört
+
+Gefunden bei der Vorarbeit zu Paket D, beim Nachzählen der Verbraucher des
+Ratenschutz-Topfes `pair`. Der Fehlerfund B-S5-04 nannte zwei — `pair.php` und
+das Token von `jobs.php`. **Es sind drei:** `server/gpx.php` zählt darin
+ebenfalls, an sieben Stellen (73, 131, 141, 165, 177, 206, 262, 280), und
+schützt damit die Freigabelinks der Spuren.
+
+`pair.php` rief nach einem gelungenen `trennen` `rate_erfolg('pair')` — und
+leerte damit den Zähler dieser Adresse **für alle drei**. Wer Freigabelinks
+durchprobiert, brauchte also nur ein eigenes Gerät zu trennen, um sich zehn
+frische Versuche zu holen; neu koppeln kostet einen Handgriff, und das beliebig
+oft. Eine Bremse, die sich vom Gebremsten zurücksetzen lässt, ist keine.
+
+Der Aufruf ist ersatzlos entfallen. Der Gedanke dahinter war der der
+Anmeldung — wer es richtig macht, soll nicht an einem früheren Vertippen
+hängenbleiben —, aber an diesem Endpunkt gibt es seit Web 13.0.0 nichts mehr zu
+vertippen: Den Code tippt ein Mensch im Web (Topf `pair_code`, mit eigenem
+`rate_erfolg`), und was hier ankommt, sind Kopfzeilen einer Maschine. Ein
+Gerät, das seinen Schlüssel zehnmal falsch schickt, ist kaputt oder fremd;
+beidem hilft kein Nachlass.
+
+**Der Preis, bewusst gezahlt:** Ein Gerät mit veralteten Zugangsdaten sperrt
+seine Adresse nach zehn Versuchen für zehn Minuten aus, und das gilt dann auch
+für den GPX-Abruf. Genau dafür ist der Topf da.
+
+### Web — Behoben: vier Meldungen an das Gerät trugen keine Umlaute
+
+`pair.php` schickt zu jedem Fehler ein Feld `meldung`, und die Uhr zeigt es an
+(`watch/source/Pair.mc` 331–332). Vier dieser Texte standen in
+Ersatzschreibung — „Bitte spaeter erneut", „Es sind bereits 5 Geraete … Erst
+eines loeschen" —, während die gleichwertige Meldung in `auth_salt.php` und
+sämtliche Mails derselben Datei Umlaute tragen. Es war keine Konvention,
+sondern eine Ungleichheit: Die **Kommentare** dieses Projekts sind in
+Ersatzschreibung, die **sichtbaren Texte** nicht. Eine davon ist mit Web 13.0.0
+neu dazugekommen („Der Server ist gerade ausgelastet").
+
+**Nachweis:** Kopplungsprobe **76 Erwartungen, 0 nicht erfüllt** (neu: ein
+gelungenes `trennen` lässt den Topf stehen — vorher vier Einträge, nachher
+vier).
+
 ## [Web 13.1.0] — 2026-09-03
 
 ### Web — Die Geräteseite nimmt den Code entgegen (S5, Paket B)
