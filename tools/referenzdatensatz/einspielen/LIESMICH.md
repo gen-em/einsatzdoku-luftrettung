@@ -18,8 +18,23 @@ Der **CSV-Import** läuft bewusst nicht hier, sondern im Browser (B4).
 ## Lokale Installation
 
 ```
-sh lokal_starten.sh          # MariaDB, PHP-Server, TLS davor
+sh lokal_einrichten.sh       # von Null: Datenbank, install.php, Admin, Demo-Konto
+sh lokal_starten.sh          # nur hochfahren: MariaDB, PHP-Server, TLS davor
 ```
+
+**Zwei Skripte, zwei Fragen.** `lokal_starten.sh` fährt hoch, was schon da
+ist — das ist der Alltag. `lokal_einrichten.sh` baut von Null auf und ist
+für die Wegwerf-Umgebung da, in der nach jedem Sitzungsende alles fort ist:
+Es **löscht** die Datenbank und `server/config.php` und geht dann denselben
+Weg wie eine Betreiberin — dieselbe Seite `install.php`, dasselbe Formular,
+dieselben Prüfungen (Formular-Token, Nachweisdatei, Schema, Admin-Anlage).
+Den Browserschritt baut es **nicht** nach, sondern ruft `passwort_setzen.mjs`
+(E-P1-10); das Demo-Konto entsteht über `demo_anlegen()` — dieselbe Funktion,
+die der Knopf im Adminbereich ruft.
+
+Die Vorgaben sind die, die die Prüfmittel ohne Schalter erwarten:
+`admin@gen-em.org` / `adminlokal2026` (`kreislauf.py`, `aufnehmen.mjs`) und
+`demo@gen-em.org` / `nadokudemo0815`.
 
 **Warum TLS.** Die Anwendung setzt ihr Sitzungs-Cookie mit `secure`
 (`login.php`, `auth_guard.php`) — richtig so, sie gehört hinter HTTPS. Über
@@ -29,8 +44,9 @@ Seite leitet zur Anmeldung um. Der eingebaute PHP-Server kann kein TLS;
 127.0.0.1. Die Skripte prüfen dieses Zertifikat nicht — für die eigene
 Maschine vertretbar, gegen eine echte Adresse bleibt die Prüfung an.
 
-Eingerichtet wird **einmal** über `install.php` im Browser; das macht dieses
-Skript nicht.
+Eingerichtet wird **einmal** über `install.php` — am Arbeitsplatz im Browser,
+in einer Wegwerf-Umgebung über `lokal_einrichten.sh` (oben). `lokal_starten.sh`
+selbst richtet nichts ein.
 
 ## Ablauf
 

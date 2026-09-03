@@ -18,6 +18,11 @@ declare(strict_types=1);
  *   Stufe 3,   seq >= n_original   verwerfen und quittieren
  *   jede Stufe, seq <  n_original  still uebergehen (Wiederholung)
  *
+ * SEIT WEB 13.0.1 KOMMT EINE ZWEITE FRAGE DAZU (Teil 7): Was macht so ein
+ * spaetes Paket mit den METADATEN? Es traegt kein Ende, keine Strecke, keinen
+ * Anstieg — und ueberschrieb sie damit bis 13.0.0 mit NULL, waehrend `final`
+ * auf 1 blieb. Teil 3 hat diesen Fall seit S2 gesendet, ohne hinzusehen.
+ *
  * Der zweite Fall darf den ersten nicht verschlucken: Wer statt der Stufe
  * pruefte, ob ueberhaupt ein Blob dasteht, wirft bei Stufe 2 genau die Punkte
  * weg, die der naechste Verdichtungslauf einarbeiten soll.
@@ -72,7 +77,7 @@ $geraetKennung = 'dev-ingestprobe';
 $geraetKey     = bin2hex(random_bytes(24));
 $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
                VALUES (?,?,?,?,1)')
-    ->execute([$uid, $geraetKennung, password_hash($geraetKey, PASSWORD_DEFAULT),
+    ->execute([$uid, $geraetKennung, geraet_schluessel_hash($geraetKey),
                'Ingestprobe']);
 
 /** Eine Anfrage an ingest.php — echtes HTTP, wie die Uhr sie stellt. */
@@ -306,6 +311,74 @@ $q->execute([$mid]);
 pruefe($q->fetchColumn() === null,
        'GEGENPROBE Stufe 2: dort wird NULL sehr wohl geschrieben',
        'sonst bliebe ein falscher Wert stehen, den niemand mehr los wird');
+
+/* ---- Teil 7 — Ein spaetes Paket darf nichts loeschen (Web 13.0.1) -------- */
+
+echo "\n  Teil 7 — Was einmal dastand, bleibt stehen (B5.3)\n";
+
+/* WARUM DIESER TEIL SPAETER KAM ALS DIE PROBE. Teil 3 schickt seit S2 eine
+ * "Wiederholung unterhalb n_original" — also genau so ein spaetes,
+ * nicht-finales Paket — und hat nur nie nachgesehen, was es an den
+ * Metadaten anrichtet. Es richtete etwas an: `ended_at`, `distance_m` und
+ * `ascent_m` gingen auf NULL, waehrend `final` wegen GREATEST auf 1 blieb.
+ * Uebrig blieb ein abgeschlossener Einsatz ohne Ende. Seit 13.0.1 steht dort
+ * COALESCE; dieser Teil haelt es fest. */
+
+function meta(PDO $pdo, string $tabelle, string $ref): array {
+    $spalten = $tabelle === 'missions' ? 'ended_at, distance_m, ascent_m, final' : 'ended_at, final';
+    $q = $pdo->prepare("SELECT $spalten FROM `$tabelle` WHERE client_ref = ?");
+    $q->execute([$ref]);
+    return $q->fetch(PDO::FETCH_ASSOC) ?: [];
+}
+
+$voll = ['kind' => 'mission', 'client_ref' => 'probe-spaet', 'day' => '2026-03-05',
+         'started_at' => '2026-03-05T06:00:00Z', 'ended_at' => '2026-03-05T08:00:00Z',
+         'final' => true, 'distance_m' => 12345, 'ascent_m' => 678,
+         'track' => ['seq_from' => 50, 'points' => []]];
+$laufend = ['kind' => 'mission', 'client_ref' => 'probe-spaet', 'day' => '2026-03-05',
+          'started_at' => '2026-03-05T06:00:00Z', 'ended_at' => null, 'final' => false,
+          'track' => ['seq_from' => 0, 'points' => []]];
+senden($laufend);
+senden($voll);
+$mMeta = meta($pdo, 'missions', 'probe-spaet');
+pruefe(($mMeta['ended_at'] ?? null) === '2026-03-05 08:00:00' && (int)($mMeta['distance_m'] ?? 0) === 12345
+       && (int)($mMeta['ascent_m'] ?? 0) === 678 && (int)($mMeta['final'] ?? 0) === 1,
+       'Nach dem finalen Paket stehen Ende, Strecke, Anstieg', json_encode($mMeta));
+
+senden($laufend);   // das spaete, nicht-finale Paket — es traegt drei NULL-Werte
+$mMeta = meta($pdo, 'missions', 'probe-spaet');
+pruefe(($mMeta['ended_at'] ?? null) === '2026-03-05 08:00:00',
+       'Ein spaeteres nicht-finales Paket loescht das ENDE nicht',
+       'ended_at ' . var_export($mMeta['ended_at'] ?? null, true)
+       . ' — sonst bliebe ein abgeschlossener Einsatz ohne Ende zurueck');
+pruefe((int)($mMeta['distance_m'] ?? 0) === 12345 && (int)($mMeta['ascent_m'] ?? 0) === 678,
+       '... und auch STRECKE und ANSTIEG nicht',
+       'distance_m ' . var_export($mMeta['distance_m'] ?? null, true)
+       . ', ascent_m ' . var_export($mMeta['ascent_m'] ?? null, true));
+pruefe((int)($mMeta['final'] ?? 0) === 1, '... und final bleibt 1 (GREATEST, unveraendert)');
+
+// GEGENPROBE: Eine BERICHTIGUNG muss weiterhin durchgehen — COALESCE haelt
+// nur NULL zurueck, nicht einen anderen Wert.
+$korrektur = $voll;
+$korrektur['ended_at']   = '2026-03-05T09:30:00Z';
+$korrektur['distance_m'] = 999;
+senden($korrektur);
+$mMeta = meta($pdo, 'missions', 'probe-spaet');
+pruefe(($mMeta['ended_at'] ?? null) === '2026-03-05 09:30:00' && (int)($mMeta['distance_m'] ?? 0) === 999,
+       'GEGENPROBE: eine Berichtigung mit anderen Werten gilt weiterhin',
+       json_encode($mMeta) . ' — sonst waere aus dem Schutz eine Sperre geworden');
+
+$rVoll = ['kind' => 'rest_segment', 'client_ref' => 'probe-spaet-r', 'day' => '2026-03-05',
+          'started_at' => '2026-03-05T12:00:00Z', 'ended_at' => '2026-03-05T13:00:00Z',
+          'final' => true, 'track' => ['seq_from' => 0, 'points' => []]];
+$rOffen = $rVoll;
+$rOffen['ended_at'] = null;
+$rOffen['final'] = false;
+senden($rVoll);
+senden($rOffen);
+$rMeta = meta($pdo, 'rest_segments', 'probe-spaet-r');
+pruefe(($rMeta['ended_at'] ?? null) === '2026-03-05 13:00:00' && (int)($rMeta['final'] ?? 0) === 1,
+       'Dasselbe am Ruhe-Segment: Ende bleibt, final bleibt', json_encode($rMeta));
 
 } finally {
     jobs_pause(0);

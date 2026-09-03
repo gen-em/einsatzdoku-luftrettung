@@ -154,8 +154,11 @@ statt sie als erledigt zu melden.
 
 **Uhr-Code** wird mit `tools/uhr-pruefstand/` geprüft: übersetzen für alle
 Zielgeräte (Stufe I) und im Simulator starten (Stufe II). Der Aufbau braucht
-eine Adresse in `CIQ_GERAETE_URL`, die nicht im Repositorium steht —
-erfragen. Anleitung in der dortigen `LIESMICH.md`.
+eine Adresse in `CIQ_GERAETE_URL`, die nicht im Repositorium steht. Sie liegt
+seit dem 03.09.2026 in den **Umgebungsvariablen der Arbeitsumgebung** und ist
+in einer eingerichteten Umgebung bereits gesetzt — prüfen mit
+`[ -n "$CIQ_GERAETE_URL" ]`, und nur erfragen, wenn sie fehlt. Anleitung in
+der dortigen `LIESMICH.md`.
 
 **Während P3 (Oberflächen-Redesign) treten zwei Werkzeuge an die Stelle des
 Stilvergleichs**, weil er dort die falsche Frage stellt (Begründung in
@@ -200,8 +203,9 @@ Ausblenden.
 >
 > Aufgestellt in S4 (B-S4-06), nachdem der Lauf nach dem letzten Android-Paket
 > 0 Treffer meldete, ohne eine Zeile der App angesehen zu haben. Bereich `d`
-> (Android) steht seither in der Liste; `watch/` fehlt noch und ist einer
-> anderen Instanz zugewiesen.
+> (Android) steht seither in der Liste, Bereich `e` (`watch/` — Ressourcen
+> **und** Monkey C) seit S5/C. **Damit läuft jeder Client durch die Liste**;
+> die Regel hat keine offene Stelle mehr, an der sie nur ein Vorsatz wäre.
 
 **Die Android-Apps prüfen sich selbst — `./gradlew build` im Ordner
 `android/`** (mit `ANDROID_HOME=/opt/android-sdk`). Anders als Web und

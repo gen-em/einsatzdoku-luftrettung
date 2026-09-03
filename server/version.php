@@ -2121,5 +2121,135 @@ declare(strict_types=1);
  * Parameter-Vorgabewert, die erst im Rumpf geladen wird — PHP wertet
  * Vorgabewerte beim Aufruf aus. Das geplante Komplett-Backup war damit
  * seit S2/AP8 ohne Wirkung.
+ *
+ *
+ * 13.0.0 DREHT DIE KOPPLUNG UM (S5, Paket A; R49) — und wechselt das
+ * Verfahren fuer den Geraeteschluessel. Beides zusammen ist die Hauptnummer:
+ * ein anderer Weg durch die Anwendung UND eine Aenderung an der
+ * Verschluesselung, mit Migration.
+ *
+ * DER WEG: Bis 12.9.4 erzeugte das Web den Code, und die Uhr tippte ihn.
+ * Jetzt holt sich das GERAET mit `start` eine Kopplungssitzung und zeigt den
+ * Code, ein Mensch gibt ihn im Web in sein Konto ein, und das Geraet
+ * bestaetigt mit Ja — erst dann entsteht die devices-Zeile. Bis dahin sind
+ * Kennung und Schluessel schwebend (Tabelle pair_sessions), und ingest.php
+ * weist sie ab. Vier Anliegen an pair.php (start, status, bestaetigen,
+ * trennen), drei Ratenschutz-Toepfe, eine Obergrenze offener Sitzungen. Die
+ * Migration 2026_09_03_kopplungssitzungen legt pair_sessions an und LOESCHT
+ * pair_codes. Paket A ist die Serverseite; die Geraeteseite im Web (B) und
+ * die Uhr (C) folgen auf demselben Zweig, und das Ganze kommt einmal auf
+ * main — bis dahin laeuft der Knopf „Kopplungscode erzeugen" ins Leere.
+ *
+ * DAS VERFAHREN: Der Geraeteschluessel sind 24 Zufallsbytes. bcrypt bremst das
+ * Raten eines schwachen Geheimnisses; bei 192 Bit Zufall bremst es nur den
+ * Server — 228 ms je Upload, und beim Abfragetakt der neuen Kopplung 27 s je
+ * Sitzung. Geraete- und Sitzungsschluessel liegen jetzt als SHA-256,
+ * verglichen in konstanter Zeit; das Anmeldetoken bleibt bcrypt, weil es
+ * gestrecktes Passwort ist (Regel bei GERAET_VERGLEICHSWERT in db.php). Der
+ * Preis, bewusst gezahlt: Ein vor 13.0.0 gekoppeltes Geraet traegt einen
+ * bcrypt-Hash, der nie mehr passt, und koppelt einmal neu. Einen Umhash-Pfad
+ * gibt es absichtlich nicht — ab 1.0 gibt es genau eine, frisch installierte
+ * Installation (R60).
+ *
+ * 13.0.1 BEHEBT EINEN STILLEN DATENVERLUST IM UPLOAD, der aelter ist als S5
+ * und bei der Gegenlesung des S5-Zusatzes auffiel (Befund B5.3). Der Upsert in
+ * `ingest.php` schrieb `ended_at`, `distance_m` und `ascent_m` bedingungslos
+ * aus dem eintreffenden Paket — waehrend `final` seit jeher mit GREATEST
+ * geschuetzt war. Genau diese drei Spalten traegt ein NICHT-finales Paket
+ * aber nicht. Kam eines nach dem finalen an — jede Wiederholung eines
+ * frueheren Teilstuecks ist so eines —, blieb ein abgeschlossener Einsatz
+ * ohne Ende, ohne Strecke und ohne Anstieg zurueck. Die Antwort lautete "ok".
+ * Jetzt steht dort COALESCE: Ein Wert ueberschreibt, ein NULL laesst stehen;
+ * eine Berichtigung bleibt moeglich. Nachgestellt und seither gehalten von
+ * Teil 7 der Ingestprobe. Keine Migration — was einmal geloescht wurde, laesst
+ * sich nicht zurueckholen; auf der Betreiberinstallation ist kein Fall
+ * bekannt.
+ *
+ * 13.1.0 IST DIE GERAETESEITE ZUM NEUEN WEG (S5 Paket B). Die Karte „Gerät
+ * koppeln" hat jetzt drei Zustaende statt einem Knopf: ein Feld „Code vom
+ * Geraet", eine Rueckfrage mit Art, Modell und Kennung — das erste der beiden
+ * Tore aus E-S5-05 —, und einen Wartezustand, der von selbst nachlaedt, sobald
+ * das Geraet Ja gesagt hat (E-S5-53). Dafuer kommen ein angemeldeter Endpunkt
+ * (api/kopplung_stand.php, nimmt KEINE Eingabe) und eine kleine Skriptdatei
+ * (assets/kopplung.js) dazu; ohne JavaScript bleibt der Weg vollstaendig.
+ *
+ * NEBENNUMMER UND NICHT HAUPTNUMMER, obwohl sich der Weg durch die Seite
+ * aendert: Es ist derselbe Reiter, dieselbe Karte, dieselben Bausteine, und
+ * die Migration lag in 13.0.0. Was hier dazukommt, sind Felder und Zustaende —
+ * genau das, wofuer die Nebennummer da ist.
+ *
+ * DAZU ZWEI DINGE, DIE AELTER SIND ALS S5. Die Handanlage vergab
+ * Geraetekennungen aus VIER Zufallsbytes, waehrend die Kopplung seit M4-08
+ * sechzehn nimmt — zwei Wege zu derselben Spalte, und der schwaechere war der,
+ * den niemand geprueft hat (B-S5-01). Und der Reiter trug ZWEI primaere
+ * Knoepfe; Design.md 9.16 nennt das als Anti-Muster („Keiner ist mehr die
+ * Haupthandlung"). Die Handanlage ist jetzt neutral — sie ist ausdruecklich
+ * „die Alternative zum Koppeln" (B-S5-09).
+ *
+ * 13.1.1 NIMMT ZWEI DINGE ZURUECK, die bei der Vorarbeit zu Paket D auffielen.
+ * Der Topf `pair` hat DREI Verbraucher, nicht zwei: pair.php, das Token von
+ * jobs.php — und gpx.php, das damit die Freigabelinks der Spuren schuetzt (an
+ * sieben Zaehlstellen). Ein gelungenes `trennen` rief `rate_erfolg('pair')`
+ * und leerte den Zaehler fuer alle drei; wer Freigabelinks durchprobierte,
+ * holte sich mit einem getrennten eigenen Geraet zehn frische Versuche. Der
+ * Aufruf ist ersatzlos weg — seit 13.0.0 gibt es an diesem Endpunkt nichts
+ * mehr zu vertippen. Dazu vier Meldungen an das Geraet, die in
+ * Ersatzschreibung standen, obwohl die Uhr sie anzeigt.
+ *
+ * 13.1.2 IST DIE DOKUMENTATION ZUM NEUEN WEG (S5 Paket D, erste Haelfte) —
+ * und die Stellen im Server, die noch die alte Richtung beschrieben. Zwei
+ * Dinge daran sind mehr als Text: Die Trennen-Mail schickte den Empfaenger
+ * auf einen Knopf, den es seit 13.0.0 nicht mehr gibt („Kopplungscode
+ * erzeugen"), und der Demo-Hinweis sagte „Uhr koppeln", obwohl seit 12.9.0
+ * auch Handys koppeln. Beides sind sichtbare Texte, deshalb ueberhaupt eine
+ * Nummer; alles andere sind Kommentare, die eine falsche Begruendung trugen —
+ * etwa die Obergrenze MAX_GERAETE, die sich auf „wer einen Kopplungscode
+ * abfaengt" berief. Das Abfangen traegt seit E-S5-03 nicht mehr: Der Code
+ * weist nichts aus. Die Grenze bleibt richtig, ihre Begruendung war es nicht.
+ *
+ * KORREKTURSTUFE UND NICHT NEBENNUMMER: Es kommt keine Funktion dazu und
+ * keine weg. Was sich aendert, sind zwei Saetze auf dem Bildschirm und die
+ * Erzaehlung darum herum. Der Rest des Pakets — Handbuch, Geraete-Eingabe,
+ * die Uhr-Abschnitte der Technik — wartet auf Paket C und kommt in der
+ * zweiten Haelfte.
+ *
+ * 13.2.0 IST DER WARTUNGSMODUS (S5 Paket W). Ein Schalter auf der
+ * Wartungsseite schliesst die Installation voruebergehend fuer alle ausser
+ * der Verwaltung: Jede andere Anfrage bekommt 503 statt eines 500 aus einer
+ * halb umgebauten Datenbank. Das ist der Unterschied, auf den es ankommt —
+ * der JSON-Vertrag sagt zu 5xx „spaeter unveraendert erneut versuchen", und
+ * Uhr wie Handy halten sich daran. Sie puffern und liefern nach. KEIN CLIENT
+ * WURDE DAFUER GEAENDERT (E-S5W-08); das Verhalten ist seit S4 da.
+ *
+ * DER ZUSTAND IST EINE DATEI (`server/wartung.lock`), keine Zeile in
+ * `app_state`. Der Wartungsmodus wird gerade dann gebraucht, wenn die
+ * Datenbank umgebaut wird oder eine Migration auf halber Strecke gescheitert
+ * ist; ein Schalter, der die Datenbank fragt, ob er schalten darf, ist im
+ * entscheidenden Moment stumm. Die Datei steht in `.gitignore` UND in der
+ * Ausnahmeliste des Deploys — ohne den zweiten Eintrag loeschte der Push sie
+ * mitten im Update, fuer das sie da ist.
+ *
+ * DAS TOR SITZT IN `db.php`, hinter `json_out()` und vor jeder Verbindung,
+ * und NICHT in `auth_guard.php`: Dort liefen nur die Seiten durch.
+ * `ingest.php` und `pair.php` laden `db.php` direkt — und das sind die
+ * beiden, auf die es ankommt, weil sie die Daten der Uhr bringen.
+ *
+ * AUSGENOMMEN sind sechs Skripte (E-S5W-04): update.php und
+ * wiederherstellen.php (die Arbeit selbst und der Rueckweg), jobs.php (das
+ * Komplett-Backup laeuft WAEHREND der Wartung — genau dann ist es
+ * konsistent), login.php und logout.php, install.php. Alles unter `assets/`
+ * laeuft ohnehin nicht durch PHP.
+ *
+ * NEBENNUMMER: eine neue Funktion, keine Migration, kein geaenderter
+ * Datenweg. Wer nicht schaltet, merkt nichts — der Aufruf kostet einen
+ * `file_exists()`.
+ *
+ * EINE ENTSCHEIDUNG GEGEN DIE EMPFEHLUNG (E-S5W-09, Auftraggeber): Wer sich
+ * waehrend der Wartung anmeldet und NICHT verwaltet, wird sofort wieder
+ * abgemeldet und sieht die Wartungsseite — nicht das Anmeldeformular, das
+ * laese sich wie „Passwort falsch". Damit liegt waehrend des Umbaus keine
+ * Sitzung mit entsperrtem Inhaltsschluessel herum, und keine Anmeldung
+ * schreibt `last_login`, waehrend `update.php` das Schema aendert. Die
+ * Ratenschutz-Zaehler werden trotzdem geleert: Das Passwort WAR richtig.
  */
-const WEB_VERSION = '12.9.4';
+const WEB_VERSION = '13.2.0';

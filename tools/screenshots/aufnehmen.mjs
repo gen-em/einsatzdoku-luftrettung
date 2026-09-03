@@ -36,7 +36,7 @@
  * hier nicht auf. Bedienzustände sind nur so weit erfasst, wie die Seitenliste
  * sie als `vorher`-Schritte führt.
  */
-import { mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -300,12 +300,79 @@ const PLATZ = await platzhalter();
  * Werkzeug tut etwas anderes als bestellt und meldet Erfolg.
  *
  * Rueckgabe: null bei Erfolg, sonst der Fehlertext. */
+/* ---- Die Kopplungskarte braucht ein GERAET auf der anderen Seite (S5) -----
+ *
+ * Zwei ihrer drei Zustaende entstehen erst, wenn jemand einen Code eingibt,
+ * den ein Geraet gezeigt hat. Die Probe ist dieses Geraet: Sie holt sich ueber
+ * `pair.php` mit `aktion=start` eine Kopplungssitzung — genau so, wie eine Uhr
+ * es tut, ueber echtes HTTP aus dem Seitenkontext. Keine Attrappe, kein
+ * SQL-Handgriff; was fotografiert wird, ist der Zustand, den die Anwendung
+ * wirklich zeigt.
+ *
+ * DER CODE WIRD JE SCHRITT EINMAL GEHOLT und ueber alle acht Breiten
+ * wiederverwendet. Das ist kein Geiz, sondern noetig: Der Ratenschutz-Topf
+ * `pair_start` laesst 20 Aufrufe je zehn Minuten und Adresse zu (E-S5-33).
+ * Ein Lauf mit einer Sitzung je Breite braeuchte sechzehn und stuende damit
+ * knapp vor der Sperre — zusammen mit `tools/kopplungsprobe/rundlauf.mjs` im
+ * selben Zeitfenster darueber.
+ *
+ * Der Wartezustand braucht ueberhaupt nur EINEN Durchgang: Er haengt an der
+ * PHP-Sitzung des Browsers, und die ueberlebt den Wechsel der Fensterbreite.
+ * Ab der zweiten Breite steht die Karte schon richtig da.
+ *
+ * WAS ZURUECKBLEIBT: eine Kopplungssitzung, die nach zehn Minuten verfaellt,
+ * und keine Geraetezeile — das Geraet sagt in diesem Lauf nie Ja. */
+const kopplungsSitzungen = new Map();
+
+async function kopplungSitzung(seite, schluessel, fehlerSammler) {
+  if (kopplungsSitzungen.has(schluessel)) { return kopplungsSitzungen.get(schluessel); }
+  const a = await seite.evaluate(async () => {
+    try {
+      const r = await fetch('pair.php', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aktion: 'start', geraet: { art: 'uhr', teil: '006-B4261-00' } }) });
+      return { status: r.status, ...(await r.json()) };
+    } catch (e) { return { status: 0, error: String(e) }; }
+  });
+  if (a.status !== 200 || !a.code) {
+    fehlerSammler.push(`Kopplungssitzung nicht bekommen (HTTP ${a.status}, `
+      + `${a.error || '—'}) — steht der Topf \`pair_start\` voll? Er lässt 20 Aufrufe `
+      + 'je 10 Minuten und Adresse zu; ein Lauf von tools/kopplungsprobe/rundlauf.mjs '
+      + 'im selben Zeitfenster kann ihn gefüllt haben.');
+    return null;
+  }
+  kopplungsSitzungen.set(schluessel, a);
+  return a;
+}
+
 async function vorher(seite, schritte, fehlerSammler) {
-  const BEKANNT = ['schublade'];
+  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
                        + BEKANNT.join(', '));
+      continue;
+    }
+    if (schritt === 'kopplung-rueckfrage' || schritt === 'kopplung-warten') {
+      /* Steht die Karte schon im Wartezustand, ist nichts mehr zu tun — die
+         PHP-Sitzung traegt ihn ueber die Breiten hinweg. */
+      if (await seite.locator('#kopplung-warten').count()) { continue; }
+      const sitzung = await kopplungSitzung(seite, schritt, fehlerSammler);
+      if (!sitzung) { continue; }
+      const feld = seite.locator('#koppeln input[name="code"]');
+      if (!(await feld.count())) {
+        fehlerSammler.push('Kein Feld „Code vom Gerät" auf der Seite — steht die '
+                         + 'Kopplungskarte in einem anderen Zustand (Gerätelimit erreicht)?');
+        continue;
+      }
+      await feld.fill(sitzung.code);
+      await Promise.all([seite.waitForNavigation({ timeout: 30000 }),
+                         seite.locator('#koppeln .knopf-primaer').click()]);
+      if (schritt === 'kopplung-warten') {
+        await Promise.all([seite.waitForNavigation({ timeout: 30000 }),
+                           seite.locator('#koppeln .knopf-primaer').click()]);
+      }
+      await seite.waitForLoadState('networkidle');
       continue;
     }
     if (schritt === 'schublade') {
@@ -397,6 +464,42 @@ const bericht = { basis: BASIS, skala: SKALA, seiten: [], knopf: [], stand: new 
 const verlorene = [];
 const ausgefallen = [];
 
+/* ---- Der Wartungsmodus als Zustand der Installation (S5 Paket W) ---------
+ *
+ * KEIN BEDIENSCHRITT IM BROWSER, deshalb nicht in vorher(): Die Wartungsseite
+ * entsteht nicht dadurch, dass jemand etwas klickt, sondern dadurch, dass eine
+ * DATEI auf dem Server liegt. Der Bilderlauf laeuft auf derselben Maschine
+ * wie die Installation und legt sie deshalb selbst an.
+ *
+ * Ein Eintrag mit "wartung": true schaltet vor seinen acht Breiten ein und
+ * danach wieder aus. Zusaetzlich haengt das Ausschalten am Prozessende:
+ * Bliebe die Datei nach einem Abbruch liegen, waere JEDE weitere Aufnahme
+ * ein Bild der Wartungsseite, und der Bericht meldete „0 Ueberlauf" fuer
+ * zweihundert Bilder desselben Textes — genau die Falle aus F-P3-AQ, wo 176
+ * von 248 Bildern die Anmeldeseite zeigten.
+ *
+ * EINE FREMDE WARTUNG WIRD NICHT ANGEFASST. Liegt beim Einschalten schon
+ * eine Datei, ruehrt der Lauf sie nicht an und loescht sie am Ende auch
+ * nicht — sonst oeffnete ein Bilderlauf eine Installation, die jemand
+ * ausdruecklich geschlossen hat. */
+const WARTUNGSDATEI = join(WURZEL, 'server', 'wartung.lock');
+let wartungVonUns = false;
+function wartungAn() {
+  if (existsSync(WARTUNGSDATEI)) { return; }   // fremde Wartung nicht anfassen
+  writeFileSync(WARTUNGSDATEI, JSON.stringify({
+    seit: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), von: 'Bilderlauf' }) + '\n');
+  wartungVonUns = true;
+}
+function wartungAus() {
+  if (!wartungVonUns) { return; }
+  if (existsSync(WARTUNGSDATEI)) { rmSync(WARTUNGSDATEI); }
+  wartungVonUns = false;
+}
+process.on('exit', wartungAus);
+for (const sig of ['SIGINT', 'SIGTERM']) {
+  process.on(sig, () => { wartungAus(); process.exit(1); });
+}
+
 for (const eintrag of liste) {
   /* Ein Platzhalter, der in PLATZ steht, MUSS einen Wert haben — sonst gibt
      es diese Seite im Bestand nicht, und ein Bild waere geraten. */
@@ -412,6 +515,8 @@ for (const eintrag of liste) {
   const seite = rolle.seite;
   const zeile = { name: eintrag.name, gruppe: eintrag.gruppe, pfad, breiten: [] };
   const bilder = [];
+
+  if (eintrag.wartung) { wartungAn(); }
 
   for (const { b, h, art } of BREITEN) {
     const adresse = `${BASIS}/${pfad}`;
@@ -516,6 +621,8 @@ for (const eintrag of liste) {
       if (k.hoehe !== soll) bericht.knopf.push({ seite: eintrag.name, breite: b, soll, ...k });
     }
   }
+
+  wartungAus();
 
   await kontaktbogen(eintrag.name, bilder);
   bericht.seiten.push(zeile);

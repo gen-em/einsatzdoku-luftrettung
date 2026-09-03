@@ -12,6 +12,25 @@ set -euo pipefail
 
 SDK_VERSION="${CIQ_SDK_VERSION:-9.2.0}"
 GERAETE_URL="${CIQ_GERAETE_URL:-}"      # Quelle fuer Devices/ und Fonts/
+# SCHRAEGSTRICH AM ENDE WEG — sonst entsteht ein leeres Pfadsegment.
+#
+# Die Adresse wird unten als "$GERAETE_URL/Devices/" zusammengesetzt. Endet sie
+# selbst auf einem Schraegstrich, steht dort "https://host//Devices/", und das
+# leere Segment zaehlt fuer wget als Verzeichnisebene. pfadtiefe() sieht es
+# nicht (es misst die Adresse, nicht das Ergebnis der Zusammensetzung), also
+# ist --cut-dirs um eins zu klein: Der Baum landet teils als
+# Devices/Devices/<geraet>/ und teils richtig — je nachdem, ob wget eine Datei
+# ueber die Startadresse oder ueber einen Verweis aus der Verzeichnisauflistung
+# erreicht. Der halb richtige Baum ist die unangenehme Form: `pruefen` findet
+# die drei Zielgeraete und meldet Vollzug, waehrend `reihe` fuer die anderen
+# 170 "Geraetedatei fehlt" sagt.
+#
+# Gemessen am 03.09.2026: 173 Geraete unter Devices/Devices, 732 MB Schriften
+# unter Fonts/Fonts, daneben je ein korrekt abgelegter Teil. Am 02.09. war
+# dasselbe Bild schon einmal da, mit anderer Ursache (fest verdrahtete 1) —
+# deshalb steht die Normalisierung jetzt hier, an der Quelle, und nicht in der
+# Rechnung.
+while [ "${GERAETE_URL%/}" != "$GERAETE_URL" ]; do GERAETE_URL="${GERAETE_URL%/}"; done
 BASIS="${CIQ_BASIS:-$HOME/.ciq-pruefstand}"
 GARMIN_HOME="$HOME/.Garmin/ConnectIQ"
 ZIEL_GERAETE="${CIQ_ZIELE:-fenix6pro fr945 venu3s}"
@@ -173,12 +192,38 @@ umgebung() {
     export JAVA_TOOL_OPTIONS=""      # sonst verrauscht der Proxy-Hinweis jede Ausgabe
 }
 
+# DER JUNGLE IST OPTIONAL, DIE SCHALTER SIND ES AUCH — und beides an
+# derselben Stelle. Bis zum 03.09.2026 nahm diese Funktion das zweite Argument
+# unbesehen als Jungle-Pfad. Der in der LIESMICH dokumentierte Aufruf
+#
+#     pruefstand.sh bauen fenix6pro -l 3
+#
+# uebergab damit "-l" als Jungle und "3" als Schalter; monkeyc brach ab mit
+# "Missing argument for option: f" und druckte seine Hilfe. Der Aufruf mit
+# eigenem Jungle (tools/eingabe-probe) funktionierte, der dokumentierte nicht —
+# und die strenge Typpruefung ist gerade der Schalter, den die Abnahme
+# verlangt. Ein zweites Argument, das mit "-" beginnt, ist deshalb ein
+# Schalter und kein Pfad.
 bauen() {
-    local geraet="${1:?Geraet fehlt}" jungle="${2:-$WURZEL/watch/monkey.jungle}"
+    local geraet="${1:?Geraet fehlt}"; shift
+    local jungle="$WURZEL/watch/monkey.jungle"
+    case "${1:-}" in
+        -*|"") ;;                       # Schalter oder nichts: Vorgabe behalten
+        *) jungle="$1"; shift ;;
+    esac
     umgebung; mkdir -p "$AUSGABE"
+    # DIESELBE GRAFIKFALLE WIE IN `reihe` (Begruendung dort): monkeyc skaliert
+    # das Launcher-Icon ueber java.awt.BufferedImage und braucht dafuer eine
+    # Grafikumgebung. Ohne sie endet der Lauf in einem AWTError statt in einer
+    # ERROR-Zeile. `reihe` setzt headless, `bauen` tat es bis zum 03.09.2026
+    # nicht — und `umgebung` leert JAVA_TOOL_OPTIONS sogar ausdruecklich.
+    # Aufgefallen an `bauen venu3s tools/eingabe-probe/monkey.jungle`; Geraete,
+    # deren Icon exakt passt (fenix6pro, fr945), bauen ohne die Zeile durch,
+    # und deshalb sah der Ausfall nach einem Geraeteproblem aus.
+    export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
     melde "Uebersetzen fuer $geraet"
     monkeyc -f "$jungle" -d "$geraet" -o "$AUSGABE/$geraet.prg" \
-            -y "$SCHLUESSEL" "${@:3}"
+            -y "$SCHLUESSEL" "$@"
     printf 'Kompilat: %s\n' "$AUSGABE/$geraet.prg"
 }
 
@@ -204,7 +249,17 @@ anzeige_starten() {
 
 simulator_starten() {
     umgebung; anzeige_starten
-    pgrep -f "$SDK_DIR/bin/simulator" >/dev/null && { melde "Simulator laeuft bereits"; return; }
+    # DAS MUSTER MUSS DER KOMMANDOZEILE ENTSPRECHEN, NICHT DEM PFAD.
+    # Gestartet wird unten mit `cd "$SDK_DIR/bin" && ./simulator` — in der
+    # Prozessliste steht deshalb "./simulator", niemals der volle Pfad. Die
+    # Abfrage mit `pgrep -f "$SDK_DIR/bin/simulator"` traf also NIE, und jeder
+    # Aufruf startete einen WEITEREN Simulator. Zwei davon auf derselben
+    # Anzeige schiessen einander ab: Der Bildabzug bleibt schwarz oder zeigt
+    # das Fenster des anderen, ohne dass irgendwo ein Fehler steht.
+    # Gemessen am 03.09.2026 waehrend der Bildstrecke von Paket C — die ersten
+    # zehn Abzuege waren deshalb leer. `pgrep -x` prueft den Prozessnamen und
+    # ist gegen den Aufrufpfad unempfindlich.
+    pgrep -x simulator >/dev/null && { melde "Simulator laeuft bereits"; return; }
     melde "Simulator starten"
     (cd "$SDK_DIR/bin" && setsid nohup ./simulator >"$BASIS/simulator.log" 2>&1 </dev/null &)
     sleep 18
@@ -410,7 +465,11 @@ speicher_leeren() {
 }
 
 beenden() {
-    pkill -f "$SDK_DIR/bin/simulator" 2>/dev/null || true
+    # Dasselbe Muster wie in simulator_starten, und derselbe Grund: In der
+    # Prozessliste steht "./simulator". `beenden` meldete deshalb Vollzug und
+    # liess den Simulator laufen — der naechste Lauf uebernahm ihn samt
+    # geladener App und altem Zustand.
+    pkill -x simulator 2>/dev/null || true
     pkill -f "Xvfb $ANZEIGE" 2>/dev/null || true
     melde "Simulator und Anzeige beendet"
 }

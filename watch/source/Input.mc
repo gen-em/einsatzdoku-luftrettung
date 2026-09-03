@@ -15,6 +15,19 @@
 // MARK_B          lang DOWN                         — (nur ueber Menue)
 // BACK            BACK                              kurz Zurueck, Wischen rechts
 //
+// DIE TASTENSPERRE (zwei Tasten gleichzeitig) ist KEIN Bedienwunsch, und die
+// App muss sie in BEIDEN Reihenfolgen erkennen. Bis 2.0.0 tat sie es nur in
+// einer: Sie merkte sich allein die Tasten, die sie selbst verfolgt (START
+// immer, UP/DOWN nur auf der Reanimationsseite). Wer UP ZUERST drueckte und
+// START dazu — die uebliche Handhaltung —, hinterliess keine Spur; START sah
+// ein leeres Feld, hielt sich fuer einen gewoehnlichen Langdruck und oeffnete
+// das Schnellmenue, waehrend die Uhr sperrte. Auf der Sync-Seite waere es seit
+// 3.0.0 eine angefangene Kopplung.
+// Deshalb merkt onKeyPressed jede gedrueckte Taste, auch die, die es dem
+// System ueberlaesst (_fremdKey). Am Geraet gemeldet am 03.09.2026; im
+// Simulator NICHT nachstellbar (Geraete-Eingabe.md 6: Tastensperren bildet er
+// nicht ab), der Beleg ist die Uhr.
+//
 // Warum SELECT_LONG auf der Venu doppelt liegt: Das Handbuch der Venu 3 nennt
 // ein Steuerungsmenue nach zwei Sekunden Halten der Action-Taste. Im Simulator
 // trat es nicht auf, auf echter Hardware ist es ungeprueft. Faengt die Uhr den
@@ -74,6 +87,12 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     private var _heldKey as Lang.Number or Null = null;
     private var _longFired as Lang.Boolean = false;
     private var _combo as Lang.Boolean = false;
+    /* Eine gedrueckte Taste, die diese Seite NICHT verfolgt (UP/DOWN ausserhalb
+     * der Reanimationsseite, BACK). Sie wird dem System ueberlassen — aber
+     * gemerkt, weil sonst niemand weiss, dass sie unten ist, wenn gleich START
+     * dazukommt. Genau daran ist die Erkennung der Tastensperre in einer
+     * Reihenfolge vorbeigelaufen. */
+    private var _fremdKey as Lang.Number or Null = null;
     private var _lastLongMs as Lang.Number = -100000;
     private var _upDown as Lang.Boolean = false;
 
@@ -112,7 +131,20 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
             if (_timer != null) { _timer.stop(); }
             return true;
         }
-        if (!_tracks(k)) { return false; }
+        if (!_tracks(k)) {
+            // Nicht verfolgt: Das System soll sie bekommen (return false) —
+            // gemerkt wird sie trotzdem.
+            _fremdKey = k;
+            return false;
+        }
+        /* Eine andere Taste ist bereits unten. Das ist die Tastensperre, nicht
+         * der Wunsch nach einem Langdruck. Kein Halte-Timer, und _combo sorgt
+         * dafuer, dass beim Loslassen auch kein KURZER Druck daraus wird. */
+        if (_fremdKey != null) {
+            _heldKey = k;
+            _combo = true;
+            return true;
+        }
         _heldKey = k;
         _longFired = false;
         _combo = false;
@@ -135,6 +167,13 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
 
     function onKeyReleased(evt as WatchUi.KeyEvent) as Lang.Boolean {
         var k = evt.getKey();
+        /* Fremde Taste losgelassen -> vergessen. Bleibt das Loslassen aus,
+         * weil die Uhr es waehrend der Sperre nicht mehr zustellt, heilt es
+         * sich beim naechsten Druck derselben Taste: Der setzt _fremdKey neu,
+         * das Loslassen raeumt es weg. Der Preis ist hoechstens EIN
+         * verschluckter Langdruck — deutlich weniger als ein Schnellmenue,
+         * das sich beim Sperren oeffnet. */
+        if (k == _fremdKey) { _fremdKey = null; }
         if (k != _heldKey) { return _heldKey != null; }
         if (_timer != null) { _timer.stop(); }
         _heldKey = null;

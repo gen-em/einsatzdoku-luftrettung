@@ -31,7 +31,7 @@ function db(): PDO {
          *                    30 Tage; eine Zeitumstellung mitten darin darf
          *                    nichts verschieben.
          *   NOW()            fuer alles Kurzlebige — Ratenschutz-Fenster,
-         *                    Gueltigkeit von Tokens und Kopplungscodes. Diese
+         *                    Gueltigkeit von Tokens und Kopplungssitzungen. Diese
          *                    Werte werden in derselben Zeitrechnung
          *                    geschrieben und gelesen, oft im Abstand von
          *                    Sekunden.
@@ -265,6 +265,26 @@ function json_out(array $data, int $code = 200): never {
     exit;
 }
 
+/* ---- DAS TOR DES WARTUNGSMODUS (S5 Paket W, E-S5W-06) --------------------
+ *
+ * Hier und nicht in `auth_guard.php`: Dort liefen nur die SEITEN durch.
+ * `ingest.php` und `pair.php` laden `db.php` direkt — und das sind die
+ * beiden, auf die es ankommt, weil sie die Daten der Uhr bringen.
+ *
+ * Und hier und nicht weiter oben: Die Zeile steht HINTER `json_out()`, damit
+ * die Reihenfolge der Datei stimmt, und VOR jedem `db()` — die Verbindung
+ * entsteht erst beim ersten Aufruf (statisch, siehe oben), also ist bis zu
+ * dieser Zeile noch nichts an der Datenbank geschehen. Genau das ist der
+ * Punkt: Der Wartungsmodus wird gebraucht, WEIL die Datenbank gerade
+ * umgebaut wird.
+ *
+ * `wartung_lib.php` laedt seinerseits nichts (auch nicht diese Datei) und
+ * kehrt auf der Kommandozeile sofort zurueck. Steht keine `wartung.lock`,
+ * kostet der Aufruf einen `file_exists()`.
+ */
+require_once __DIR__ . '/wartung_lib.php';
+wartung_tor();
+
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
 /**
@@ -441,10 +461,11 @@ function crew_role_label(string $code): string
 
 /* ---- Kopplungscodes: Alphabet, Laenge, Gueltigkeit -----------------------
  * An EINER Stelle, weil die Angaben an DREI Stellen gebraucht werden: beim
- * Erzeugen (einstellungen.php), beim Einloesen (pair.php) und beim Aufraeumen
- * (unten). Frueher standen sie dreimal verschieden im Code — das Pruefmuster
- * liess vier bis acht Zeichen zu und ausdruecklich auch solche, die das
- * Alphabet gar nicht enthaelt.
+ * Erzeugen (pair.php, Anliegen `start` — seit Web 13.0.0 zeigt das GERAET den
+ * Code, R49), beim Eintippen im Web (einstellungen.php, Muster PAIR_RE) und
+ * beim Aufraeumen (jobs_lib.php). Frueher standen sie dreimal verschieden im
+ * Code — das Pruefmuster liess vier bis acht Zeichen zu und ausdruecklich
+ * auch solche, die das Alphabet gar nicht enthaelt.
  *
  * SECHS Zeichen aus 32 sind 30 Bit, also rund 1,07 Milliarden Moeglichkeiten.
  * Die eigentliche Arbeit macht aber der Ratenschutz (ratelimit_lib.php): Ohne
@@ -454,21 +475,70 @@ function crew_role_label(string $code): string
  * keine Ergaenzung.
  *
  * Zehn Minuten Gueltigkeit statt sechzig: Die Kopplung geschieht mit der Uhr
- * in der Hand: Wer den Code erzeugt, tippt ihn unmittelbar danach ein.
+ * in der Hand. Sie zeigt den Code, und die Person tippt ihn unmittelbar
+ * danach im Web ein — der Ablauf hat sich mit S5 umgedreht, die Naehe ist
+ * dieselbe. EINE Frist ab `start` fuer alles (E-S5-12): Eingabe im Web und Ja
+ * am Geraet muessen in dieselben zehn Minuten fallen; die Eingabe verlaengert
+ * nichts, beide Seiten zeigen die Restzeit.
  */
 const PAIR_CHARS   = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // ohne 0/O und 1/I
 const PAIR_LEN     = 6;
 const PAIR_TTL_MIN = 10;
 const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
 
+/* ---- Obergrenze offener Kopplungssitzungen (S5, E-S5-14, E-S5-34) --------
+ *
+ * Seit Web 13.0.0 legt jedes Geraet mit `start` OHNE Anmeldung eine Sitzung
+ * an. Damit sich der Coderaum nicht mit fremden Sitzungen fuellen laesst
+ * (Angriff E-R49-6: Sitzungen anlegen und auf Vertipper hoffen), haelt der
+ * Server hoechstens so viele UNVERFALLENE Sitzungen, wie hier steht — der
+ * 1001. `start` bekommt 429 `zu_viele_sitzungen`.
+ *
+ * ZUR ZAHL: R36 rechnet mit 1000 Konten; mehr gleichzeitige legitime
+ * Kopplungen gibt es nicht. Bei 1000 gefuellten Sitzungen trifft ein
+ * Rateversuch im Web mit hoechstens 9,3e-7 — und laeuft dann noch in die
+ * Rueckbestaetigung am Geraet.
+ *
+ * GEZAEHLT WIRD PER SQL UEBER erstellt_am, nicht ueber Zeilen: Der Aufraeumjob
+ * laeuft taeglich, die Frist ist zehn Minuten. Eine Grenze, die verfallene
+ * Zeilen mitzaehlte, liesse sich an einem Tag mit toten Sitzungen fuellen.
+ * Und `start` raeumt NICHTS vorab auf — ein Angreifer soll den Server nicht
+ * mit jedem Aufruf aufraeumen lassen; das tut der Job.
+ */
+const PAIR_SITZUNGEN_MAX = 1000;
+
+/**
+ * E-Mail-Adresse fuer die Rueckbestaetigung am Geraet maskieren (E-S5-21).
+ *
+ * `philipp@gen-em.org` -> `ph***@gen-em.org`; ein lokaler Teil aus einem
+ * Zeichen zeigt dieses eine (`a@b.de` -> `a***@b.de`). Kleingeschrieben.
+ *
+ * DIE DOMAIN BLEIBT VOLL, mit Absicht: Sie laesst die Traegerin ihr Konto
+ * erkennen — darum geht es an dieser Stelle (E-R49-4: eigenes Geraet im
+ * fremden Konto, die falsche Adresse faellt auf) — und gibt einem Ableser
+ * nichts, was er nicht ohnehin weiss: Er hat die Person gerade zur Eingabe
+ * bewegt. Die volle Adresse dagegen will R36 nicht auf einer Uhr.
+ *
+ * Nur fuer den Dialog bestimmt, wird nirgends gespeichert.
+ */
+function email_maskieren(string $email): string
+{
+    $email  = mb_strtolower(trim($email));
+    $at     = mb_strrpos($email, '@');
+    $lokal  = $at === false ? $email : mb_substr($email, 0, $at);
+    $domain = $at === false ? ''     : mb_substr($email, $at + 1);
+    return mb_substr($lokal, 0, 2) . '***' . ($domain !== '' ? '@' . $domain : '');
+}
+
 /* ---- Fester Vergleichswert fuer unbekannte Kennungen ---------------------
  *
- * An zwei Stellen wird ein Geheimnis gegen einen gespeicherten bcrypt-Hash
- * geprueft: die Anmeldung (login.php, Auth-Token) und die Uhr (ingest.php,
- * Geraeteschluessel). An beiden lief die Pruefung nur, WENN es die Kennung
- * gab. Bei unbekannter Kennung kam die Abweisung sofort — und dieser
- * Zeitunterschied beantwortet dieselbe Frage wie eine unterschiedliche
- * Meldung: Gibt es dieses Konto, gibt es dieses Geraet?
+ * An EINER Stelle wird ein Geheimnis gegen einen gespeicherten bcrypt-Hash
+ * geprueft: die Anmeldung (login.php, Auth-Token). Bis Web 12.9.4 auch an
+ * den Geraetepfaden (ingest.php, pair.php) — seit 13.0.0 vergleichen die
+ * gegen SHA-256 und haben ihren eigenen Vergleichswert (unten). Die Pruefung
+ * lief frueher nur, WENN es die Kennung gab. Bei unbekannter Kennung kam die
+ * Abweisung sofort — und dieser Zeitunterschied beantwortet dieselbe Frage
+ * wie eine unterschiedliche Meldung: Gibt es dieses Konto?
  *
  * Deshalb laeuft auch der unbekannte Zweig gegen diesen Wert. Er ist kein
  * Geheimnis — er darf offen im Code stehen, weil zu ihm kein Passwort
@@ -479,8 +549,63 @@ const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
  * PHP 8.1 bis 8.3 arbeitet — also der Rundenzahl aller hier gespeicherten
  * Hashes. Legt eine spaetere PHP-Fassung teurere Hashes an, gehoert dieser
  * Wert nachgezogen, sonst faellt der unbekannte Zweig wieder aus dem Takt.
+ *
+ * STAND 03.09.2026 (S5, V-S5-13): Genau das ist eingetreten. PHP 8.4 legt
+ * Kostenfaktor 12 an — gemessen 228 ms je Pruefung gegen 57 ms fuer diesen
+ * Wert. Verdeckt wird der Unterschied heute nur von der Mindestdauer 0,35 s
+ * in rate_gleiche_dauer(); auf einem langsameren Rechner als dem Messstand
+ * kippt das. Backlog-Kandidat; hier nicht nebenbei geaendert, weil ein neuer
+ * Wert jede Installation betrifft, die noch auf PHP 8.3 laeuft.
  */
 const AUTH_VERGLEICHSWERT = '$2y$10$ZX1Xrc9GGuRDFtXcHFnamOR.a5ztKtqmvlaxsdApTgxVKhLdRmbJy';
+
+/* ---- Geraeteschluessel: SHA-256 statt bcrypt (Web 13.0.0, S5 E-S5-42) ----
+ *
+ * WELCHES VERFAHREN ZU WELCHEM GEHEIMNIS GEHOERT (E-S5-41):
+ *
+ *   aus einem Passwort abgeleitet  -> bcrypt (password_hash). Die Langsamkeit
+ *       ist der Schutz, denn die Entropie bleibt die des Passworts — auch nach
+ *       PBKDF2 im Browser. Das ist das Anmeldetoken (users.password_hash).
+ *   Zufall mit mindestens 128 Bit  -> SHA-256 + hash_equals. Langsamkeit kauft
+ *       hier nichts: Den Hash eines 192-Bit-Zufallswerts kehrt niemand um, und
+ *       bcrypt kostete an diesem Pfad 228 ms JE UPLOAD (PHP 8.4, Kostenfaktor
+ *       12) — fuer eine Bremse, die nichts bremst. Das sind der
+ *       Geraeteschluessel (devices.api_key_hash) und der Sitzungsschluessel
+ *       der Kopplung (pair_sessions.api_key_hash). Dasselbe Muster fuehren die
+ *       Reset-Token (password_resets.token_hash) seit jeher.
+ *   muss der Server es zurueckLESEN -> AES-256-GCM mit dem Serverschluessel
+ *       (serverkrypto_lib.php): die Zugangsdaten der Backup-Ziele.
+ *
+ * KEIN BESTANDSSCHUTZ, mit Absicht: Ab 1.0 gibt es genau eine, frisch
+ * installierte Installation (R60). Ein bcrypt-Hash in devices passt seit
+ * 13.0.0 nie mehr — das eine Bestandsgeraet koppelt einmal neu. Ein
+ * Umhash-Pfad ("beim naechsten Upload") waere Code fuer einen Fall, den es
+ * nicht geben soll.
+ *
+ * DER VERGLEICHSWERT hat dieselbe Aufgabe wie AUTH_VERGLEICHSWERT: Der Zweig
+ * "Kennung unbekannt" rechnet dieselben Schritte wie der Zweig "Kennung
+ * bekannt", damit die Dauer nichts verraet. Bei SHA-256 sind das
+ * Mikrosekunden — die Gleichheit ist trotzdem eine Eigenschaft, die man
+ * nicht dem Zufall ueberlaesst. Der Wert ist sha256('edgeraet|vergleichswert|
+ * kein Geraet') und kein Geheimnis: Zu ihm gehoert kein Schluessel.
+ */
+const GERAET_VERGLEICHSWERT = '25cd312037a32e762f924764a9cc97524c7d18c257a6575704421f8a208ee616';
+
+/** Der gespeicherte Wert zu einem Geraete- oder Sitzungsschluessel. */
+function geraet_schluessel_hash(string $schluessel): string
+{
+    return hash('sha256', $schluessel);
+}
+
+/**
+ * Passt der Schluessel zum gespeicherten Wert? Vergleich in konstanter Zeit.
+ * Ein bcrypt-Wert aus der Zeit vor 13.0.0 passt nie (andere Laenge) — siehe
+ * oben, das ist gewollt.
+ */
+function geraet_schluessel_gueltig(string $schluessel, string $hash): bool
+{
+    return hash_equals($hash, hash('sha256', $schluessel));
+}
 
 /* ---- Rundenzahl der Schluesselableitung (M2-01, S1) ----------------------
  *
@@ -553,10 +678,15 @@ const KDF_ITER_LISTE = [320000];
  * WARUM ES EINE OBERGRENZE GIBT
  * Ein Geraet ist ein Satz Zugangsdaten, mit dem sich Einsaetze in ein Konto
  * schreiben lassen. Ohne Obergrenze konnte ein Konto beliebig viele davon
- * ansammeln, und niemand haette es bemerkt: Wer einen Kopplungscode abfaengt,
- * legt sich ein Geraet an, das neben den echten unauffaellig in der Liste
- * steht. Die Grenze macht aus "faellt niemandem auf" ein "geht nicht mehr,
- * ohne dass jemand aufraeumt".
+ * ansammeln, und niemand haette es bemerkt: Ein eingeschleustes Geraet steht
+ * neben den echten unauffaellig in der Liste. Die Grenze macht aus "faellt
+ * niemandem auf" ein "geht nicht mehr, ohne dass jemand aufraeumt".
+ *
+ * (Bis Web 12.9.4 stand hier "wer einen Kopplungscode abfaengt, legt sich ein
+ * Geraet an". Das trifft seit S5 nicht mehr: Der Code weist nichts aus, wer
+ * ihn abliest, kann am Geraet nichts ausloesen — E-S5-03. Der Weg hinein ist
+ * heute die Ueberredung, nicht das Abfangen; die Obergrenze wirkt gegen beide
+ * gleich.)
  *
  * WAS GEZAEHLT WIRD
  * Alle Geraete eines Kontos, AKTIVE WIE DEAKTIVIERTE — ein deaktiviertes
@@ -732,10 +862,12 @@ function run_cleanup_if_due(): void {
      *
      * WARUM ES DIESEN WEG WEITERHIN GIBT. Eine frisch aufgesetzte
      * Installation hat weder Cron noch eingerichteten Abruf. Ohne den
-     * Rueckfall stuende sie still — der Papierkorb bliebe voll, die
-     * Kopplungscodes ewig gueltig. Wer einen der beiden anderen Ausloeser
-     * eingerichtet hat, merkt diesen hier nicht: Dann ist nichts mehr zu tun,
-     * und der Aufruf kostet zwei Abfragen.
+     * Rueckfall stuende sie still — der Papierkorb bliebe voll, verfallene
+     * Kopplungssitzungen blieben liegen (gueltig sind sie deshalb nicht: die
+     * Frist steckt im SQL, nicht im Aufraeumen — kopplung_lib.php). Wer
+     * einen der beiden anderen Ausloeser eingerichtet hat, merkt diesen hier
+     * nicht: Dann ist nichts mehr zu tun, und der Aufruf kostet zwei
+     * Abfragen.
      *
      * STILL GEGENUEBER DER ANFRAGE, wie bisher. Die Wartung darf keine Seite
      * kaputtmachen; was scheitert, steht im Fehlerprotokoll UND seit AP2 in

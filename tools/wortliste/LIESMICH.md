@@ -65,6 +65,7 @@ echt waren es zwei.
 | **b** | `server/assets/*.js` ohne `vendor/` — ohne Kommentare |
 | **c** | `README.md`, `docs/Handbuch.md`, `docs/Export-Format.md`, `docs/Technik.md`, `docs/Backup-Format.md`, `docs/JSON-Vertrag.md`, `docs/Design.md`, `docs/Lizenzen.md` |
 | **d** | `android/*/src/main/res/values/strings.xml` — die sichtbaren Texte der Handy- und der Wear-OS-App (seit S4/D1) |
+| **e** | `watch/resources*/**/*.xml` **und** `watch/source*/*.mc` — die sichtbaren Texte der Garmin-App (seit S5/C) |
 
 ### Die Regel dahinter
 
@@ -97,18 +98,42 @@ ihre `zeile` deshalb an den **Text**, nicht an den Schlüsselnamen.
 **Nicht geprüft**, und jedes mit Grund: `docs/CHANGELOG.md` (Historie — dort
 stehen die alten Begriffe zu Recht), die Konzept- und Prüfdokumente,
 `docs/Geraete-Eingabe.md` und `docs/Uhr-Layout_Regeln.md` (beschreiben die
-Garmin-Uhr als Gegenstand), `docs/Backlog.md` und `tools/` selbst.
+Garmin-Uhr als Gegenstand — anders als ihre Texte, die seit S5/C in Bereich
+`e` laufen), `docs/Backlog.md` und `tools/` selbst.
 Die Zuordnung folgt den Fundort-Klassen im Konzept P2, Abschnitt 5.1.
 
-> **`watch/` fehlt noch, und das ist Arbeitsteilung, kein Versehen.** Die
-> sichtbaren Texte der Garmin-App (`watch/resources/**/*.xml`) sind die
-> ältesten des Projekts und damit die wahrscheinlichste Fundstelle. Die
-> bisherige Begründung — `watch/` „beschreibe die Garmin-Uhr als Gegenstand"
-> — trifft auf `docs/Uhr-Layout_Regeln.md` zu, **nicht** auf die Texte der App
-> selbst: Die liest dieselbe Person, die auch die Weboberfläche liest.
-> Ihre Prüfung geht an eine andere Instanz (Ansage 01.09.2026); sie braucht
-> Kenntnis der Monkey-C-Ressourcen und der historischen Begriffe. Der Bereich
-> heißt dort **e** und gehört in dieselbe Liste, sobald er kommt.
+Bereich **e** kam in S5/C dazu (Backlog 66, E-S5-40) und schließt den letzten
+Client. Die sichtbaren Texte der Garmin-App sind die **ältesten des Projekts**
+— bis dahin waren sie als einziger Client ungeprüft. Die frühere Begründung,
+`watch/` „beschreibe die Garmin-Uhr als Gegenstand", trifft auf
+`docs/Uhr-Layout_Regeln.md` zu, **nicht** auf die Texte der App selbst: Die
+liest dieselbe Person, die auch die Weboberfläche liest.
+
+**Er umfasst XML *und* Monkey C** (E-S5-61). Backlog 66 nannte nur
+`watch/resources/**/*.xml`. Das sind vier Zeichenketten — der App-Name und die
+drei Namen der Bildmarken-Wahl. Die eigentlichen Texte der Uhr stehen als
+Literale im Quelltext: „Nicht eingerichtet", „Zu viele Geräte", „Sync
+vollständig", „Code für das Web". Ein Bereich, der die XML ansieht und die
+`.mc` übergeht, meldete wieder eine Null über etwas, das er nicht gelesen hat
+— genau der Fall B-S4-06, der die Regel oben nötig gemacht hat.
+
+Ein Bereich trägt deshalb erstmals **zwei Arten**: `"art": {".xml": "xml",
+".mc": "monkeyc"}`. Eine Endung, die dort fehlt, bricht den Lauf ab, statt die
+Datei still zu übergehen. Und `resources*` statt `resources`: Die
+vorgerasterten Bildmarken und Launcher-Symbole liegen in Geschwisterordnern
+(`resources-marke101`, `resources-icon54` …), die `monkey.jungle` je Gerät
+zuweist — sie tragen heute keinen sichtbaren Text, aber ein Ordner, den
+niemand ansieht, ist genau die Lücke, die dieser Bereich schließt.
+`watch/manifest.xml` bleibt draußen: Der App-Name steht dort als Verweis
+(`@Strings.AppName`), der Text selbst in `strings.xml`.
+
+Der erste Lauf fand **2 Treffer in 34 Dateien**, beide dieselbe Sache:
+`L_SELECT = "START"` und `L_SELECT_HOLD = "START halten"` in
+`watch/source-tasten5/DeviceProfile.mc`. Das ist der Aufdruck auf dem Gehäuse
+von Fenix und Forerunner — die Venu 3s heißt an derselben Stelle „Action" und
+trifft deshalb nicht. Eine Ausnahme, Klasse G (`uhr-tastennamen`): Genau diese
+Trennung sieht E-P2-02 vor, und die Oberflächen setzen den Namen über
+`Input.lSelectHold()` ein, ohne ihn selbst zu kennen.
 
 ## Wie eine Ausnahme begründet wird
 
@@ -164,10 +189,15 @@ keine Grammatik**:
   zwischen zwei Inseln betrachtet, findet die Kommentare des Blocks nicht
   mehr. Genau daran ist die erste Fassung gescheitert — in `index.php`
   blieben vierhundert Zeilen JS-Kommentar stehen.
+- **Monkey C benutzt den JS-Teil.** Es kommentiert genauso (`//`, `/* */`) und
+  kennt keine regulären Ausdrücke — die Unterscheidung Regex/Division läuft
+  dort also immer auf Division hinaus. Zwei der Probefälle sind Monkey C,
+  darunter die Division nach schließender Klammer (`(rest + 59) / 60`), die in
+  den Uhr-Oberflächen der häufigste Fall ist.
 - Im Zweifel bleibt Text stehen. Ein Treffer zu viel kostet eine Ausnahme,
   ein Treffer zu wenig kostet die Aussage.
 
-`python3 wortliste.py --probe` fährt **sechzehn Fälle mit Sollergebnis**,
+`python3 wortliste.py --probe` fährt **einundzwanzig Fälle mit Sollergebnis**,
 darunter die, an denen der naheliegende Einzeiler `re.sub(r'//.*$', …)`
 scheitert: eine URL im sichtbaren Text, ein `//` in einer Zeichenkette, ein
 regulärer Ausdruck mit `\/\/`, ein Nowdoc, die PHP-Insel im `<script>`-Block.
