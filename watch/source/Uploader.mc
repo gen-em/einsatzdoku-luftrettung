@@ -213,8 +213,10 @@ module Uploader {
         return u.substring(0, cut) as Lang.String;
     }
 
-    // Toleranz bei der Server-URL: "nadoku.beispieldomain.de" genuegt in den
-    // Einstellungen — Schema und /ingest.php werden ergaenzt.
+    // Toleranz bei der Server-URL: die blosse Domain genuegt in den
+    // Einstellungen (Vorgabe "nadoku.gen-em.org") — Schema und /ingest.php
+    // werden ergaenzt. Eine vollstaendige URL bleibt ebenso gueltig; sie
+    // endet dann auf ".php" und wird nicht angefasst.
     function _serverUrl() as Lang.String {
         var u = Properties.getValue("serverUrl");
         if (!(u instanceof Lang.String) || u.length() == 0) { return ""; }

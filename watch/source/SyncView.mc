@@ -20,13 +20,25 @@ class SyncView extends WatchUi.View {
         _fromStart = fromStart;
     }
 
+    /* Pair muss wissen, ob diese Seite noch auf dem Schirm ist.
+     *
+     * Zwischen dem langen Druck und dem Erscheinen der Kopplungsansicht liegt
+     * eine volle Funkrunde; wer in dieser Zeit weiterblaettert oder mit BACK
+     * herausgeht, bekaeme die Ansicht sonst ueber eine Seite geschoben, die
+     * sie nicht aufgerufen hat — im schlimmsten Fall ueber den Rea-Countdown,
+     * wo die Ereignistasten tot waeren und BACK etwas anderes bedeutet.
+     * Dass onHide auch feuert, wenn die Kopplungsansicht selbst darueber
+     * geschoben wird, ist unschaedlich: Pair liest den Merker VOR dem
+     * Schieben, und beim Zurueckkehren setzt onShow ihn wieder. */
     function onShow() as Void {
+        Pair.seiteSichtbar(true);
         if (_timer == null) { _timer = new Timer.Timer(); }
         _timer.start(method(:refresh), 2000, true);
         if (!Uploader.allSynced()) { Uploader.syncAll(); }
     }
 
     function onHide() as Void {
+        Pair.seiteSichtbar(false);
         if (_timer != null) { _timer.stop(); }
     }
 
@@ -226,8 +238,10 @@ class SyncDelegate extends ActionDelegate {
     }
 
     // Geraete-Kopplung (START halten bzw. Action halten). NICHT direkt in die
-    // Code-Eingabe: Besteht schon eine Kopplung, fragt Pair.start() zuerst und
-    // trennt sie ausdruecklich — Begruendung dort (Backlog Nr. 14).
+    // Kopplung: Besteht schon eine, fragt Pair.start() zuerst und trennt sie
+    // ausdruecklich — Begruendung dort (Backlog Nr. 14). Seit 3.0.0 folgt
+    // darauf kein Eingabefeld mehr, sondern `start` und die Kopplungsansicht:
+    // Die Uhr ZEIGT den Code, das Web nimmt ihn entgegen (E-R49-1).
     function actSelectLong() as Lang.Boolean {
         Pair.start();
         return true;

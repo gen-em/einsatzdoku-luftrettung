@@ -1,6 +1,6 @@
 <settings>
     <setting propertyKey="@Properties.serverUrl"
-             title="Server-Adresse der eigenen NAdoku (Domain genügt, z. B. nadoku.beispieldomain.de)">
+             title="Server-Adresse (Vorgabe: nadoku.gen-em.org; Selbsthoster tragen ihre Domain ein)">
         <settingConfig type="alphaNumeric"/>
     </setting>
     <setting propertyKey="@Properties.deviceId"

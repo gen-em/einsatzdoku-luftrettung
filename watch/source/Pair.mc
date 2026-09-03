@@ -1,10 +1,37 @@
-// NAdoku — Geraete-Kopplung per Kurzcode
+// NAdoku — Geraete-Kopplung: die Uhr ZEIGT einen Code
 //
-// Auf dem Startbildschirm UP halten -> Code eintippen (5 Zeichen, aus dem
-// Web unter Einstellungen -> Geraete). Die Uhr tauscht den Code bei pair.php
-// gegen frische Zugangsdaten und speichert sie dauerhaft im Uhr-Speicher —
-// deviceId/apiKey muessen nie mehr von Hand eingetragen werden.
-// Voraussetzung: Server-Domain in den App-Einstellungen (properties.xml).
+// Auf der Sync-Seite START halten (Venu 3s: Action halten oder Zurueck
+// halten). Die Uhr holt sich bei pair.php eine Kopplungssitzung, zeigt den
+// sechsstelligen Code gross an (PairView) und fragt im Takt nach, ob ihn
+// jemand im Web eingetragen hat. Hat ein Konto ihn eingetragen, fragt die Uhr
+// zurueck — "Mit ph***@… koppeln?" —, und erst dieses Ja legt das Geraet an.
+// Voraussetzung: Server-Adresse in den App-Einstellungen (properties.xml);
+// Vorgabe ist seit 3.0.0 die oeffentliche Installation (E-R49-8).
+//
+// WAS SICH MIT 3.0.0 GEDREHT HAT (S5, E-R49-1)
+// Bis 2.0.0 erzeugte das Web den Code und die Traegerin tippte ihn auf der Uhr
+// ein — fuenf, spaeter sechs Zeichen ueber einen TextPicker. Das setzte
+// voraus, dass sie vorher am Rechner war, und die Texteingabe auf einem
+// Uhrendisplay war der unangenehmste Weg der ganzen Anwendung. Jetzt zeigt die
+// Uhr, und das Web nimmt entgegen. Der Kopf dieser Datei stand bis dahin auf
+// "UP halten" und "5 Zeichen" — beides war schon vor S5 falsch (B-S5-05).
+//
+// DER CODE WEIST NICHTS AUS (E-S5-03). Er ist fuer den Menschen, der ihn
+// abliest und eintippt; wer ihn ueber die Schulter sieht, kann an der Uhr
+// nichts ausloesen. Was die Uhr ausweist, sind Kennung und Schluessel aus
+// `start` — und die sind bis zum Ja SCHWEBEND: Der Server kennt sie,
+// ingest.php weist sie aber mit 401 ab, weil es das Geraet noch nicht gibt.
+//
+// UND SIE LIEGEN BIS DAHIN NUR IM ARBEITSSPEICHER (E-S5-22). Erst
+// `200 {"ok":true}` auf `bestaetigen ja` schreibt Storage "cred". Wer die App
+// vorher verlaesst, hat keine halbe Kopplung auf der Uhr stehen; die Sitzung
+// verfaellt serverseitig nach zehn Minuten. Das Kontolabel — die maskierte
+// E-Mail — steht nur im Dialog und wird NIE gespeichert.
+//
+// ZWEI TORE, NICHT EINES (E-R49-5). Die Bestaetigungsseite im Web faengt das
+// fremde Geraet im eigenen Konto ab; die Rueckfrage hier faengt das eigene
+// Geraet im fremden Konto ab. Wer eines von beiden wegnimmt, laesst eine der
+// beiden Richtungen offen.
 using Toybox.Lang;
 using Toybox.WatchUi;
 using Toybox.Communications;
@@ -12,16 +39,55 @@ using Toybox.Application.Storage;
 using Toybox.Application.Properties;
 using Toybox.System;
 
-// Rueckruf-Traeger (method() existiert nur auf Objekten)
-class PairCb {
-    function initialize() { }
+// Rueckruf-Traeger (method() existiert nur auf Objekten).
+//
+// VIER ANLIEGEN, VIER TRAEGER. Ein gemeinsamer Rueckruf muesste aus Code und
+// Rumpf erraten, worauf er gerade antwortet — und `start`, `status` und
+// `bestaetigen` liefern im Erfolgsfall alle drei eine 200 mit einem anderen
+// Rumpf. Vier Klassen kosten vier Zeilen und keine Rateregel.
+/* JEDE ANTWORT BRINGT IHRE SITZUNG MIT. Bis zur Gegenlesung waren die drei
+ * Traeger wiederverwendete Singletons ohne Kennung, und die Rueckrufe
+ * entschieden an Modulflaggen — die aber sagen "laeuft gerade IRGENDEINE
+ * Sitzung", nicht "laeuft DIESE". Zwei Anfragen koennen hier erstmals im
+ * Projekt gleichzeitig offen sein (`bestaetigen nein` wird bewusst nicht
+ * abgewartet, E-S5-23, und daneben laeuft schon der naechste `start`).
+ * Kommen sie vertauscht zurueck — Connect IQ sagt darueber nichts zu —, dann
+ * beantwortet die Uhr die neue Sitzung mit dem Ergebnis der alten. Im
+ * schlimmsten Fall schriebe ein `200 {"ok":true}` auf ein altes `nein` die
+ * schwebenden Zugangsdaten der NEUEN Sitzung in Storage "cred": Die Uhr hielte
+ * sich fuer gekoppelt, jeder Upload endete in 401, und ein Rueckstand
+ * verhinderte sogar das Neukoppeln. Genau das schliesst E-S5-22 aus.
+ *
+ * Deshalb traegt jeder Rueckruf, worauf er antwortet. Fuer `start` ist das
+ * eine Laufnummer (eine Kennung gibt es da noch nicht), fuer die anderen die
+ * Geraetekennung der Sitzung — und `bestaetigen` zusaetzlich das Ja/Nein: Der
+ * Server antwortet auf beides `200 {"ok":true}` (pair.php), ein Rueckruf ohne
+ * dieses Wissen koennte sie nicht auseinanderhalten. */
+class PairStartCb {
+    var _lauf as Lang.Number;
+    function initialize(lauf as Lang.Number) { _lauf = lauf; }
     function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
-        Pair.onResponse(code, data);
+        Pair.onStart(_lauf, code, data);
     }
 }
 
-// Eigener Traeger fuers Trennen. Zwei Anliegen an denselben Endpunkt brauchen
-// zwei Rueckrufe — sonst muesste die Auswertung raten, worauf sie antwortet.
+class PairStatusCb {
+    var _fuer as Lang.String;
+    function initialize(fuer as Lang.String) { _fuer = fuer; }
+    function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
+        Pair.onStatus(_fuer, code, data);
+    }
+}
+
+class PairJaCb {
+    var _fuer as Lang.String;
+    var _ja as Lang.Boolean;
+    function initialize(fuer as Lang.String, ja as Lang.Boolean) { _fuer = fuer; _ja = ja; }
+    function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
+        Pair.onBestaetigt(_fuer, _ja, code, data);
+    }
+}
+
 class UnpairCb {
     function initialize() { }
     function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
@@ -42,7 +108,7 @@ class TrennenDelegate extends WatchUi.ConfirmationDelegate {
 
 module Pair {
 
-    var status as Lang.String or Null = null;   // Anzeige auf dem Startbildschirm
+    var status as Lang.String or Null = null;   // Anzeige auf der Sync-Seite
     /* Zweite Zeile fuer den Weg aus dem Fehler heraus.
      *
      * Die Meldungszeile wird mit drawText gezeichnet und NICHT umgebrochen —
@@ -60,6 +126,15 @@ module Pair {
     // Text auseinandernehmen zu muessen: :ok, :busy, :error
     var statusKind as Lang.Symbol = :busy;
 
+    /* Wohin der Code im Web gehoert — die zweite Zeile unter dem Code.
+     *
+     * OHNE PFEIL. Ob "→" in den Geraeteschriften vorhanden ist, stand im
+     * Konzept als offener Punkt (Abschnitt 11); ein fehlendes Glyph erscheint
+     * als leeres Kaestchen, ohne Warnung. Am Simulatorbild nachgesehen —
+     * Ergebnis steht im Pruefdokument. Das Komma sagt dasselbe und kann nicht
+     * fehlen. */
+    const WEG_IM_WEB = "Einstellungen, Geräte";
+
     // Laenge, die in der Hinweisschrift sicher aufs Display passt.
     const ZEILE_MAX = 26;
 
@@ -68,20 +143,78 @@ module Pair {
         // Lieber sichtbar gekuerzt als unsichtbar abgeschnitten.
         return t.substring(0, ZEILE_MAX - 1) + "…";
     }
-    var _cb as PairCb or Null = null;
+
+    /* --- Die schwebende Sitzung ------------------------------------------
+     *
+     * ALLES HIER IST FLUECHTIG, und das ist die Zusage (E-S5-22). Keine dieser
+     * Variablen wird gespeichert; ein App-Neustart laesst nichts zurueck.
+     * Wer eine davon nach Storage schreibt, nimmt der Bauform ihre Aussage —
+     * dann liegt auf der Uhr eine Kopplung, die es auf dem Server noch nicht
+     * gibt. */
+    var _code as Lang.String or Null = null;    // Anzeigecode, sechs Zeichen
+    var _dev  as Lang.String or Null = null;    // kuenftige Geraetekennung
+    var _key  as Lang.String or Null = null;    // kuenftiger Schluessel, Klartext
+    var _endeMs as Lang.Number = 0;             // Systemzeit, zu der die Frist faellt
+
+    /* Der Verbindungshinweis der Kopplungsansicht. Er steht dort UNTER dem
+     * Code und ersetzt die Restzeit nicht: Ein Verbindungsfehler beendet die
+     * Sitzung nicht (E-S5-25) — sie lebt auf dem Server weiter, und die
+     * Abfrage laeuft bis zur Frist. */
+    var netzHinweis as Lang.String or Null = null;
+
+    var _pending as Lang.Boolean = false;       // laeuft gerade eine status-Abfrage?
+
+    /* Laeuft gerade eine `start`-Anfrage? Ohne diese Sperre traegt ein zweiter
+     * langer Druck waehrend "Hole Code…" eine zweite Sitzung ein und schiebt
+     * eine ZWEITE Kopplungsansicht — die untere bliebe stehen, und `_viewOffen`
+     * kennt nur einen Zustand, poppt also nur einmal. Auf der Venu liegt
+     * SELECT_LONG sogar absichtlich auf zwei Tasten, der zweite Druck ist dort
+     * einen Fehlgriff entfernt. */
+    var _startLaeuft as Lang.Boolean = false;
+    /* Laufnummer der juengsten `start`-Anfrage. Die Sperre oben verhindert den
+     * zweiten Druck; diese Nummer faengt ab, was danach noch eintrudelt —
+     * etwa die Antwort auf einen `start`, der beim Abbrechen unterwegs war. */
+    var _lauf as Lang.Number = 0;
+
+    /* Ist die Sync-Seite gerade auf dem Schirm? Zwischen dem Tastendruck und
+     * dem Erscheinen der Kopplungsansicht liegt eine volle Funkrunde, und die
+     * Traegerin kann in dieser Zeit weiterblaettern oder mit BACK heraus. Die
+     * Ansicht draengte sich dann ueber eine Seite, die sie nicht aufgerufen
+     * hat — im schlimmsten Fall ueber den Rea-Countdown, wo die Ereignistasten
+     * tot waeren und BACK etwas anderes bedeutet. E-S5-24 sagt ausdruecklich
+     * "ueber der Sync-Seite". */
+    var _syncSichtbar as Lang.Boolean = false;
+
+    /* Eine Warnung, die den unmittelbar folgenden Kopplungsweg ueberdauert.
+     * `status`/`statusHint` taugen dafuer nicht — sie gehoeren dem laufenden
+     * Schritt, und `sitzungStarten()` setzt sie im selben Rueckruf neu. */
+    var _warnung as Lang.String or Null = null;
+    var _letzteFrageMs as Lang.Number = 0;
+    /* Darf abgefragt werden? Falsch, solange der Bestaetigungsdialog steht
+     * oder die Sitzung beendet ist. Der Zeitgeber der Ansicht laeuft
+     * unabhaengig davon weiter — er treibt die Restzeit. */
+    var _abfragen as Lang.Boolean = false;
+    var _viewOffen as Lang.Boolean = false;
+
     var _ucb as UnpairCb or Null = null;
+
+    /* Meldet die Sync-Seite beim Erscheinen und Verschwinden (B8).
+     * Dass onHide auch feuert, wenn die Kopplungsansicht selbst darueber
+     * geschoben wird, ist unschaedlich: onStart liest den Merker VOR dem
+     * Schieben, und beim Zurueckkehren setzt onShow ihn wieder. */
+    function seiteSichtbar(an as Lang.Boolean) as Void { _syncSichtbar = an; }
 
     /* Einstieg fuer „Gerät koppeln" (Sync-Seite, Auswahltaste halten).
      *
      * DER FALL IST DIE GETEILT GENUTZTE UHR (Backlog Nr. 14). Bis hierher
-     * fuehrte der Weg direkt in die Code-Eingabe. Schlug das Koppeln fehl —
-     * falscher Code, kein Telefon in Reichweite, Geraetegrenze erreicht —,
-     * blieben die ALTEN Zugangsdaten stehen und die Uhr dokumentierte
-     * stillschweigend weiter auf das vorherige Konto. Niemand sah es ihr an,
-     * und die Person davor bekam Einsaetze, die sie nicht gefahren ist.
+     * fuehrte der Weg direkt in die Kopplung. Schlug sie fehl — kein Telefon
+     * in Reichweite, Geraetegrenze erreicht —, blieben die ALTEN Zugangsdaten
+     * stehen und die Uhr dokumentierte stillschweigend weiter auf das
+     * vorherige Konto. Niemand sah es ihr an, und die Person davor bekam
+     * Einsaetze, die sie nicht gefahren ist.
      *
-     * Die Reihenfolge ist deshalb jetzt ausdruecklich: abfragen -> trennen ->
-     * neu koppeln. Scheitert das Koppeln danach, steht die Uhr SICHTBAR ohne
+     * Die Reihenfolge ist deshalb ausdruecklich: abfragen -> trennen -> neu
+     * koppeln. Scheitert das Koppeln danach, steht die Uhr SICHTBAR ohne
      * Kopplung da (die Sync-Seite sagt „Nicht eingerichtet") statt unsichtbar
      * mit der falschen.
      *
@@ -91,7 +224,8 @@ module Pair {
      * schlimmer — fremde Einsaetze in einem fremden Konto. Also erst senden.
      */
     function start() as Void {
-        if (!Uploader.hasCredentials()) { openInput(); return; }
+        _warnung = null;              // ein neuer Anlauf erbt keine alte Vormerkung
+        if (!Uploader.hasCredentials()) { sitzungStarten(); return; }
 
         var offen = Model.backlogCount();
         if (offen > 0) {
@@ -113,7 +247,7 @@ module Pair {
     function trennen() as Void {
         var cred = Uploader.credentials();
         var base = Uploader.serverBase();
-        if (cred == null || base.length() == 0) { lokalTrennen(); openInput(); return; }
+        if (cred == null || base.length() == 0) { lokalTrennen(); sitzungStarten(); return; }
 
         status = "Trenne…";
         statusHint = null;
@@ -157,25 +291,20 @@ module Pair {
      * Konto gebunden, das sie nicht mehr benutzen soll — der Zustand, den
      * dieser ganze Weg beseitigt. Bleibt der Servereintrag dabei stehen,
      * belegt er einen Geraeteplatz; das steht in der zweiten Zeile, weil es
-     * im Web mit einem Klick zu beheben ist. */
+     * im Web mit einem Klick zu beheben ist.
+     *
+     * DANACH GEHT ES WEITER, auch nach einem Fehler: Wer „trennen und neu
+     * koppeln" bestaetigt hat, will koppeln. Der belegte Platz laeuft
+     * gegebenenfalls in ein 409 mit eigener, klarer Meldung — das ist die
+     * bessere Auskunft als ein Abbruch an dieser Stelle. */
     function onTrennen(code as Lang.Number) as Void {
         lokalTrennen();
-        if (code == 200) {
-            status = "Getrennt";
-            statusHint = null;
-            statusKind = :ok;
-        } else {
-            status = "Nur auf der Uhr getrennt";
-            statusHint = "Gerät im Web löschen";
-            statusKind = :error;
-        }
-        WatchUi.requestUpdate();
-        openInput();
-    }
-
-    function openInput() as Void {
-        var tp = new WatchUi.TextPicker("");
-        WatchUi.pushView(tp, new PairTextDelegate(), WatchUi.SLIDE_LEFT);
+        /* HIER ZEIGEN GEHT NICHT: sitzungStarten() setzt status im selben
+         * Rueckruf auf "Hole Code…", die Zeile waere nie zu sehen. Sie wird
+         * deshalb vorgemerkt und am Ende des Weges ausgeliefert — dann steht
+         * unter "Gekoppelt" der Hinweis auf den belegten Geraeteplatz. */
+        if (code != 200) { _warnung = "Altes Gerät im Web löschen"; }
+        sitzungStarten();
     }
 
     /* Was fuer ein Geraet koppelt sich hier? (Statistik, Web-Konzept)
@@ -198,22 +327,17 @@ module Pair {
      * die Geraetedateien koennen es, deshalb loest der Server die Teilenummer
      * auf und seine Einstufung schlaegt diese Angabe (Web 12.9.0).
      *
-     * BIS S6 STAND HIER, Handy und Rechner erschienen "in der Statistik ueber
-     * die Web-Zugriffe, nicht hier". Fuer den Rechner stimmt das weiter, fuer
-     * das HANDY nicht mehr: Seit Android 0.2.0 koppelt die Handy-App ueber
-     * genau diesen Endpunkt und landet in derselben Tabelle
-     * (JSON-Vertrag 1a, Handy-Form). Nur diese Uhr-App kommt dort nie mit
-     * einer anderen Art an.
+     * SEIT 3.0.0 GEHT DER BLOCK AN `start` statt neben den Code (Vertrag
+     * 1a.1). Er ist damit die einzige Auskunft, aus der die Bestaetigungsseite
+     * im Web "Uhr · Venu 3S" bilden kann — ein Geraet, das nichts ueber sich
+     * sagt, erscheint dort als "Gerät unbekannt". Eine Kopplung scheitert
+     * daran trotzdem nie: Alle Felder sind fuer den Server freiwillig.
      *
      * WAS BEWUSST NICHT GESENDET WIRD: `uniqueIdentifier`. Das ist eine
      * dauerhafte, geraeteweite Kennung — fuer eine Stueckzahl-Statistik nicht
      * noetig, und in einer kleinen Gruppe ein Personenbezug mehr, als die
      * Frage rechtfertigt. Die Zuordnung leistet die device_id, die der Server
-     * bei der Kopplung ohnehin vergibt.
-     *
-     * Eine fehlende oder unbekannte Angabe darf die Kopplung NIE verhindern:
-     * Alle Felder sind fuer den Server freiwillig, und ein Geraet, das eines
-     * davon nicht kennt, sendet dort null. */
+     * bei der Kopplung ohnehin vergibt. */
     function _geraeteInfo() as Lang.Dictionary {
         var d = System.getDeviceSettings();
         var ciq = null;
@@ -234,7 +358,10 @@ module Pair {
         };
     }
 
-    function request(code as Lang.String) as Void {
+    /* Schritt 1: eine Kopplungssitzung holen (`start`, ohne Kopfzeilen —
+     * die Uhr hat noch keine). */
+    function sitzungStarten() as Void {
+        if (_startLaeuft) { return; }          // zweiter Druck waehrend "Hole Code…"
         var base = Uploader.serverBase();
         if (base.length() == 0) {
             status = "Erst Server-Domain setzen";
@@ -243,18 +370,17 @@ module Pair {
             WatchUi.requestUpdate();
             return;
         }
-        status = "Kopple…";
+        _sitzungVergessen();
+        status = "Hole Code…";
         statusHint = null;
         statusKind = :busy;
         WatchUi.requestUpdate();
-        // Lokal halten und in einem Zug anlegen — s. Uploader._send():
-        // die Typpruefung verfolgt eine Null-Pruefung nur ueber lokale
-        // Variablen, und ein nachgestelltes if waere unerreichbar.
-        var cb = _cb;
-        if (cb == null) { cb = new PairCb(); _cb = cb; }
+        _startLaeuft = true;
+        _lauf += 1;
+        var cb = new PairStartCb(_lauf);
         Communications.makeWebRequest(
             base + "pair.php",
-            { "code" => code.toUpper(), "geraet" => _geraeteInfo() },
+            { "aktion" => "start", "geraet" => _geraeteInfo() },
             {
                 :method => Communications.HTTP_REQUEST_METHOD_POST,
                 :headers => { "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
@@ -263,84 +389,423 @@ module Pair {
             cb.method(:onResponse));
     }
 
-    /* Antwort auswerten.
-     *
-     * WAS VORHER FEHLTE
-     * Es wurden nur 200 und 404 unterschieden. Alles andere endete in
-     * "Kopplung fehlgeschlagen (409)" — einer Meldung, die den Zahlencode
-     * nennt und sonst nichts. Ausgerechnet die 409 ist aber der Fall, den
-     * jemand selbst beheben kann: Es sind bereits fuenf Geraete verbunden,
-     * eines muss weg. Wer stattdessen eine Zahl liest, tippt den Code
-     * mehrmals neu ein und laeuft am Ende noch in die Sperre.
-     *
-     * WARUM DIE MELDUNG NICHT EINFACH VOM SERVER UEBERNOMMEN WIRD
-     * pair.php schickt zu jedem Fehler ein Feld "meldung". Es ist fuer die
-     * Weboberflaeche geschrieben: ganze Saetze, ohne Umlaute (der Server
-     * schreibt "Geraete"), zu lang fuer ein Uhrendisplay. Fuer die Faelle, die
-     * diese App kennt, steht der Text deshalb hier — kurz und mit Umlauten.
-     *
-     * Fuer alles UEBRIGE wird die Servermeldung genommen, sofern sie kommt:
-     * Ein kuenftiger Fehlerfall soll nicht wieder als nackte Zahl erscheinen,
-     * nur weil die Uhr ihn noch nicht kennt.
-     *
-     * Entschieden wird am Feld "error", nicht am Zahlencode: Der Schluessel
-     * benennt die Ursache, der Code nur ihre Klasse.
-     */
-    function onResponse(code as Lang.Number, data as Lang.Object or Null) as Void {
+    /* Antwort auf `start`. Bei Erfolg wird die Kopplungsansicht geschoben;
+     * jeder Fehler bleibt auf der Sync-Seite und ist zweizeilig. */
+    function onStart(lauf as Lang.Number, code as Lang.Number, data as Lang.Object or Null) as Void {
+        // Eine ueberholte Antwort — die Sitzung, zu der sie gehoert, gibt es
+        // nicht mehr. Sie darf weder anzeigen noch eine Ansicht schieben.
+        if (lauf != _lauf) { return; }
+        _startLaeuft = false;
         var dict = (data instanceof Lang.Dictionary) ? data : null;
+
+        if (code == 200 && dict != null
+            && dict["code"] instanceof Lang.String
+            && dict["device_id"] instanceof Lang.String
+            && dict["api_key"] instanceof Lang.String) {
+            _code = dict["code"] as Lang.String;
+            _dev  = dict["device_id"] as Lang.String;
+            _key  = dict["api_key"] as Lang.String;
+            // Frist ab JETZT, nicht ab der Serverzeit: Die Uhr hat keine
+            // verlaessliche Uhrzeit des Servers, und die Laufzeit der Antwort
+            // geht so zu unseren Lasten statt zu seinen.
+            var frist = 600;
+            if (dict["frist_s"] instanceof Lang.Number) {
+                frist = dict["frist_s"] as Lang.Number;
+            }
+            _endeMs = System.getTimer() + frist * 1000;
+            netzHinweis = null;
+            _pending = false;
+            /* Die erste Abfrage erst nach einem Takt: Zwischen dem Erscheinen
+             * des Codes und dem Klick im Web liegen mindestens die Sekunden,
+             * die jemand zum Ablesen und Tippen braucht. Eine Abfrage in
+             * derselben Sekunde beantwortet sich garantiert mit "offen". */
+            _letzteFrageMs = System.getTimer();
+            _abfragen = true;
+
+            /* Die Traegerin ist waehrend "Hole Code…" weitergeblaettert oder
+             * mit BACK heraus. Dann draengt sich die Kopplungsansicht NICHT
+             * ueber eine Seite, die sie nicht aufgerufen hat — im Zweifel
+             * ueber den Rea-Countdown, wo die Ereignistasten tot waeren und
+             * BACK etwas anderes bedeutet (E-S5-24: "ueber der Sync-Seite").
+             * Die Sitzung wird stattdessen zurueckgegeben; `nein` ist in JEDEM
+             * Zustand erlaubt, auch `offen`. Gespeichert wurde nichts
+             * (E-S5-22), und die Meldung steht bereit, wenn die Sync-Seite das
+             * naechste Mal aufgeschlagen wird. */
+            if (!_syncSichtbar) { ablehnen("Abgebrochen"); return; }
+
+            status = null;                 // die Sync-Seite tritt zurueck
+            statusHint = null;
+            statusKind = :busy;
+            _viewOffen = true;
+            WatchUi.pushView(new PairView(), new PairDelegate(), WatchUi.SLIDE_LEFT);
+            return;
+        }
+
         var fehler = (dict != null && dict["error"] instanceof Lang.String)
                      ? dict["error"] as Lang.String : null;
-
-        statusHint = null;
-        statusKind = :error;
-
-        if (code == 200 && dict != null && dict["device_id"] != null) {
-            // Cast wie in Model.save() — die strenge Pruefung erkennt das
-            // Literal sonst nicht als Sonderfall des PolyType. Kostet 0 Byte.
-            Storage.setValue("cred", {
-                "d" => dict["device_id"], "k" => dict["api_key"]
-            } as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
-            Uploader.lastError = null;
-            status = "Gekoppelt";   // ohne Haken-Glyph (Geraeteschrift kennt es nicht)
-            statusKind = :ok;
-        } else if (fehler != null && fehler.equals("device_limit")) {
-            // 409 — behebbar, und zwar nur im Web. Das gehoert in die Meldung.
-            status = "Zu viele Geräte";
-            statusHint = "Erst eines im Web löschen";
-        } else if (fehler != null && fehler.equals("zu_viele_versuche")) {
-            // 429 — Warten hilft, weiteres Tippen nicht.
-            status = "Zu viele Versuche";
-            statusHint = "Später noch einmal";
-        } else if (code == 404 || (fehler != null && fehler.equals("invalid"))) {
-            status = "Code ungültig/abgelaufen";
-            statusHint = "Im Web neuen Code holen";
+        var z1 = "Kopplung fehlgeschlagen (" + code.toString() + ")";
+        var z2 = null;
+        if (fehler != null && fehler.equals("zu_viele_versuche")) {
+            // 429 aus dem Topf pair_start — Warten hilft, Wiederholen nicht.
+            z1 = "Zu viele Versuche";
+            z2 = "Später noch einmal";
+        } else if (fehler != null && fehler.equals("zu_viele_sitzungen")) {
+            /* 429 aus der Sitzungsobergrenze. Das ist KEIN Vorwurf an diese
+             * Uhr — der Server haelt gerade so viele offene Sitzungen, wie er
+             * hoechstens haelt. Der Zustand dauert Minuten, nicht Stunden
+             * (die Frist ist zehn Minuten), deshalb dieselbe zweite Zeile. */
+            z1 = "Server ausgelastet";
+            z2 = "Später noch einmal";
         } else if (code < 0) {
             /* Negative Codes kommen nicht vom Server, sondern von der
              * Verbindung (kein Telefon in Reichweite, Bluetooth aus). Die
              * Zahl bleibt in der Meldung: Sie ist fuer eine Fehlersuche das
              * einzige Merkmal, und die Ursache liegt ausserhalb dieser App. */
-            status = "Keine Verbindung";
-            statusHint = "Telefon in Reichweite? (" + code.toString() + ")";
+            z1 = "Keine Verbindung";
+            z2 = "Telefon in Reichweite?";
         } else {
             /* Unbekannter Fall. Der Zahlencode steht oben, weil er sicher
              * passt und fuer eine Fehlersuche taugt; die Servermeldung kommt
-             * als zweite Zeile dazu, gekuerzt. So erscheint ein kuenftiger
-             * Fehler nicht wieder als nackte Zahl, nur weil die Uhr ihn noch
-             * nicht kennt. */
-            status = "Kopplung fehlgeschlagen (" + code.toString() + ")";
+             * als zweite Zeile dazu, gekuerzt. Genau ueber diesen Weg erfaehrt
+             * eine Uhr 2.0.0 am neuen Server, was zu tun ist: Sie sendet
+             * `{"code": …}` ohne `aktion` und bekommt
+             * `400 {"error":"aktion","meldung":"Uhr-App aktualisieren"}`
+             * (E-S5-19). */
             if (dict != null && dict["meldung"] instanceof Lang.String) {
-                statusHint = _kurz(dict["meldung"] as Lang.String);
+                z2 = _kurz(dict["meldung"] as Lang.String);
             }
+        }
+        // Die Vormerkung aus einem gescheiterten Trennen einloesen, wenn
+        // dieser Ausgang keine eigene zweite Zeile mitbringt.
+        if (z2 == null) { z2 = _warnung; }
+        /* Ueber _sitzungBeenden, nicht ueber _sitzungVergessen: Steht bereits
+         * eine Kopplungsansicht (weil ein frueherer Anlauf sie geschoben hat),
+         * bliebe sie sonst mit einem toten Code stehen — die Meldung darunter
+         * saehe niemand. */
+        _sitzungBeenden(z1, z2, :error);
+    }
+
+    /* Schritt 2: nachfragen, ob jemand den Code eingetragen hat.
+     *
+     * HOECHSTENS ALLE PAIR_TAKT_MS UND NIE UEBERLAPPEND (E-S5-25). Der
+     * Zeitgeber der Ansicht klopft alle zwei Sekunden an; hier wird
+     * entschieden, ob daraus eine Anfrage wird. Zwei Bedingungen, beide
+     * noetig: Die vorige Antwort muss da sein (sonst stapeln sich Anfragen,
+     * wenn die Verbindung langsam ist), und der Takt muss verstrichen sein
+     * (sonst waeren es 300 Anfragen je Sitzung statt 120). */
+    function abfrageAnstossen() as Void {
+        if (!_abfragen || _pending) { return; }
+        var dev = _dev;
+        var key = _key;
+        if (dev == null || key == null) { return; }
+        var base = Uploader.serverBase();
+        if (base.length() == 0) { return; }
+
+        /* Die Frist laeuft AUCH OHNE SERVER ab. Ein Verbindungsfehler beendet
+         * die Sitzung nicht (E-S5-25) — aber "bis zur Frist" heisst eben auch:
+         * an der Frist ist Schluss. Ohne diesen Zweig zeigte die Ansicht
+         * "noch 0 s" und wartete auf ein 410, das nie kommt, wenn das Telefon
+         * fort bleibt. */
+        if (restSekunden() <= 0) {
+            _sitzungBeenden("Code abgelaufen",
+                            Input.lSelectHold() + ": neuer Code", :error);
+            return;
+        }
+
+        var jetzt = System.getTimer();
+        /* getTimer() zaehlt Millisekunden seit dem Einschalten und laeuft
+         * irgendwann ueber. Faellt der Ueberlauf in diese zehn Minuten, waere
+         * die Differenz stark negativ und es kaeme nie wieder eine Abfrage.
+         * Einmal nachziehen kostet einen Takt und keinen Gedanken mehr. */
+        if (jetzt < _letzteFrageMs) { _letzteFrageMs = jetzt; return; }
+        if (jetzt - _letzteFrageMs < Const.PAIR_TAKT_MS) { return; }
+        _letzteFrageMs = jetzt;
+        _pending = true;
+
+        var cb = new PairStatusCb(dev);
+        Communications.makeWebRequest(
+            base + "pair.php",
+            { "aktion" => "status" },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => {
+                    "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON,
+                    "X-Device-Id"  => dev,
+                    "X-Api-Key"    => key
+                },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            cb.method(:onResponse));
+    }
+
+    function onStatus(fuer as Lang.String, code as Lang.Number,
+                      data as Lang.Object or Null) as Void {
+        /* GEHOERT DIE ANTWORT ZU DIESER SITZUNG? Die Pruefung steht VOR
+         * `_pending = false` — sonst loeschte eine Fremdantwort die
+         * Anfragebuchfuehrung der laufenden Sitzung mit, und die naechste
+         * Abfrage liefe los, waehrend die vorige noch unterwegs ist. */
+        var dev = _dev;
+        if (dev == null || !fuer.equals(dev)) { return; }
+        _pending = false;
+        if (!_abfragen) { return; }
+
+        var dict = (data instanceof Lang.Dictionary) ? data : null;
+        var zustand = (dict != null && dict["zustand"] instanceof Lang.String)
+                      ? dict["zustand"] as Lang.String : null;
+
+        if (code == 200 && zustand != null) {
+            netzHinweis = null;
+            // Die Restzeit vom Server ist die massgebliche — sie zieht die
+            // oertliche Rechnung bei jeder Antwort wieder gerade.
+            if (dict != null && dict["rest_s"] instanceof Lang.Number) {
+                _endeMs = System.getTimer() + (dict["rest_s"] as Lang.Number) * 1000;
+            }
+            if (zustand.equals("beansprucht")) {
+                /* Ein Konto hat den Code eingetragen. Jetzt das zweite Tor:
+                 * Die Abfrage haelt an, solange der Dialog steht — eine
+                 * Antwort, die waehrenddessen eintraefe, haette keinen Platz,
+                 * an dem sie etwas aendern duerfte. */
+                _abfragen = false;
+                var konto = (dict != null && dict["konto"] instanceof Lang.String)
+                            ? dict["konto"] as Lang.String : "diesem Konto";
+                WatchUi.pushView(new WatchUi.Confirmation("Mit " + konto + " koppeln?"),
+                                 new KoppelnDelegate(), WatchUi.SLIDE_LEFT);
+                return;
+            }
+            if (zustand.equals("gekoppelt")) {
+                /* Die Antwort auf ein frueheres `bestaetigen ja` ist auf dem
+                 * Rueckweg verlorengegangen — das Geraet gibt es bereits
+                 * (E-S5-15). Ohne diesen Zweig haenge die Kopplung an einem
+                 * einzigen Funkpaket: Der Server haette ein Geraet, von dem
+                 * die Uhr nichts weiss. */
+                _fertig();
+                return;
+            }
+            // "offen": nichts zu tun. Der Code steht weiter, die Restzeit
+            // laeuft, die naechste Frage kommt in einem Takt.
+            WatchUi.requestUpdate();
+            return;
+        }
+
+        var fehler = (dict != null && dict["error"] instanceof Lang.String)
+                     ? dict["error"] as Lang.String : null;
+
+        /* 429 IST KEIN FRISTABLAUF. Der Ratenschutz steht in pair.php VOR der
+         * Aktionspruefung und trifft jedes Anliegen — die Sitzung lebt weiter,
+         * und die naechste Abfrage in fuenf Sekunden kann schon wieder
+         * durchgehen. Sie als "Code abgelaufen" zu melden warfe eine gueltige
+         * Sitzung weg und schickte die Traegerin ohne Not von vorn los.
+         * Deshalb: Zeile setzen, Code stehenlassen, weiterfragen. */
+        if (fehler != null && fehler.equals("zu_viele_versuche")) {
+            netzHinweis = "Zu viele Versuche";
+            WatchUi.requestUpdate();
+            return;
+        }
+
+        if (code < 0 || code >= 500) {
+            /* Verbindungsfehler und Serverfehler beenden die Sitzung NICHT
+             * (E-S5-25; Vertrag 1a.3: "es darf wiederholen"). Sie lebt auf dem
+             * Server bis zur Frist; der Code bleibt gueltig, und wer das
+             * Telefon wieder in Reichweite bringt, macht dort weiter. Die
+             * Zeile steht deshalb UNTER dem Code und ersetzt ihn nicht. */
+            netzHinweis = (code < 0)
+                          ? "Keine Verbindung (" + code.toString() + ")"
+                          : "Server antwortet nicht";
+            WatchUi.requestUpdate();
+            return;
+        }
+
+        /* 410 (verfallen oder verworfen) und 401 (Kennung oder Schluessel
+         * unbekannt) sind fuer die Uhr dasselbe: Diese Sitzung traegt nicht
+         * mehr, und der Weg heraus ist derselbe — von vorn. Deshalb eine
+         * Meldung fuer beide (Vertrag 1a.2). */
+        _sitzungBeenden("Code abgelaufen", Input.lSelectHold() + ": neuer Code", :error);
+    }
+
+    /* Schritt 3: Ja oder Nein zu dem Konto, das der Server genannt hat.
+     *
+     * JA WIRD ABGEWARTET: Erst die 200 macht die Zugangsdaten gueltig, und
+     * erst dann duerfen sie in den Speicher (E-S5-22). Bis dahin steht die
+     * Kopplungsansicht weiter — sie zeigt den Code und die Restzeit, was in
+     * dieser Sekunde beides noch stimmt. */
+    function bestaetigen(antwort as Lang.String) as Lang.Boolean {
+        var dev = _dev;
+        var key = _key;
+        var base = Uploader.serverBase();
+        if (dev == null || key == null || base.length() == 0) { return false; }
+
+        var cb = new PairJaCb(dev, antwort.equals("ja"));
+        Communications.makeWebRequest(
+            base + "pair.php",
+            { "aktion" => "bestaetigen", "antwort" => antwort },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => {
+                    "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON,
+                    "X-Device-Id"  => dev,
+                    "X-Api-Key"    => key
+                },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            cb.method(:onResponse));
+        return true;
+    }
+
+    /* Nein — im Dialog abgelehnt oder mit BACK abgebrochen.
+     *
+     * WIRD NICHT ABGEWARTET (E-S5-23, Muster R47). Lokal ist die Sache sofort
+     * entschieden; die Sitzung stirbt serverseitig spaetestens mit der Frist.
+     * Auf eine Antwort zu warten hiesse, die Traegerin vor einem Bildschirm
+     * warten zu lassen, dessen Inhalt sie gerade abgelehnt hat.
+     *
+     * ZWEI WORTE FUER DENSELBEN WEG, weil es zwei verschiedene Lagen sind:
+     * Wer im Dialog „Nein" waehlt, hat ein fremdes Konto gesehen und es
+     * zurueckgewiesen — „Nicht gekoppelt". Wer BACK drueckt, hat es sich
+     * anders ueberlegt — „Abgebrochen". Beide Male steht darunter derselbe
+     * Weg zurueck. */
+    function ablehnen(text as Lang.String) as Void {
+        bestaetigen("nein");
+        /* Hellgrau, nicht rot: Es ist nichts schiefgegangen. Rot ist in
+         * dieser Anwendung Warnung und Fehler (Uhr-Layout_Regeln 7), und eine
+         * selbst getroffene Entscheidung ist keines von beidem. */
+        _sitzungBeenden(text, Input.lSelectHold() + ": neuer Code", :busy);
+    }
+
+    function onBestaetigt(fuer as Lang.String, ja as Lang.Boolean,
+                          code as Lang.Number, data as Lang.Object or Null) as Void {
+        /* GEHOERT DIE ANTWORT ZU DIESER SITZUNG UND ZU EINEM JA? Der Server
+         * antwortet auf `ja` und auf `nein` gleichermassen `200 {"ok":true}`.
+         * Ohne diese beiden Pruefungen koennte die verspaetete Antwort auf ein
+         * `nein` der VORIGEN Sitzung die schwebenden Zugangsdaten der neuen in
+         * Storage "cred" schreiben — die Uhr hielte sich fuer gekoppelt, jeder
+         * Upload endete in 401, und ein Rueckstand verhinderte sogar das
+         * Neukoppeln. Genau das schliesst E-S5-22 aus. */
+        if (!ja) { return; }
+        var dev = _dev;
+        if (dev == null || !fuer.equals(dev)) { return; }
+
+        if (code == 200) {
+            _fertig();
+            return;
+        }
+
+        var dict = (data instanceof Lang.Dictionary) ? data : null;
+        var fehler = (dict != null && dict["error"] instanceof Lang.String)
+                     ? dict["error"] as Lang.String : null;
+
+        if (fehler != null && fehler.equals("device_limit")) {
+            /* 409 — zwischen dem Klick im Web und dem Ja hier kann von Hand
+             * ein Geraet dazugekommen sein (E-S5-18). Behebbar, und zwar nur
+             * im Web. Das gehoert in die Meldung; die Sitzung ist fort. */
+            _sitzungBeenden("Zu viele Geräte", "Erst eines im Web löschen", :error);
+            return;
+        }
+
+        if (fehler != null && fehler.equals("zu_viele_versuche")) {
+            /* Ratenschutz, kein Fristablauf — die Sitzung steht noch. Zurueck
+             * in die Abfrage; die Rueckfrage kommt beim naechsten
+             * `beansprucht` erneut, und das Ja laesst sich wiederholen. */
+            netzHinweis = "Zu viele Versuche";
+            _abfragen = true;
+            WatchUi.requestUpdate();
+            return;
+        }
+
+        if (code < 0 || code >= 500) {
+            /* 500: Der Server hat zurueckgerollt — die Sitzung STEHT NOCH, mit
+             * Konto und Restfrist (pair.php legt Geraet und Loeschung in EINEN
+             * Commit; scheitert einer, bleibt die Sitzung). Vertrag 1a.3 sagt
+             * ausdruecklich "es darf wiederholen".
+             * Negativ: Die Verbindung brach WAEHREND des Ja. Ob der Server es
+             * ausgefuehrt hat, weiss die Uhr nicht — deshalb bleibt die
+             * Sitzung ebenfalls stehen und die Abfrage laeuft weiter: Kam das
+             * Ja an, antwortet das naechste `status` mit "gekoppelt" und die
+             * Kopplung schliesst sich von selbst (E-S5-15). Kam es nicht an,
+             * steht der Code weiter. */
+            netzHinweis = (code < 0)
+                          ? "Keine Verbindung (" + code.toString() + ")"
+                          : "Server antwortet nicht";
+            _abfragen = true;
+            WatchUi.requestUpdate();
+            return;
+        }
+
+        // 410 abgelaufen, 409 nicht_beansprucht, 401 und alles Uebrige.
+        _sitzungBeenden("Code abgelaufen", Input.lSelectHold() + ": neuer Code", :error);
+    }
+
+    /* BACK in der Kopplungsansicht (E-S5-23). */
+    function abbrechen() as Void {
+        ablehnen("Abgebrochen");
+    }
+
+    /* Geschafft: Die Zugangsdaten sind ab jetzt gueltig und duerfen — erst
+     * jetzt — in den Speicher (E-S5-22). */
+    function _fertig() as Void {
+        var dev = _dev;
+        var key = _key;
+        if (dev == null || key == null) { return; }
+        // Cast wie in Model.save() — die strenge Pruefung erkennt das
+        // Literal sonst nicht als Sonderfall des PolyType. Kostet 0 Byte.
+        Storage.setValue("cred", { "d" => dev, "k" => key }
+                         as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
+        Uploader.lastError = null;
+        // ohne Haken-Glyph (Geraeteschrift kennt es nicht)
+        _sitzungBeenden("Gekoppelt", null, :ok);
+    }
+
+    /* Sitzung beenden, Meldung auf die Sync-Seite, Ansicht zu.
+     *
+     * Ein Weg fuer alle Ausgaenge — Erfolg, Ablehnung, Abbruch, Fehler. Wer
+     * dafuer vier Wege pflegt, vergisst an einem davon das Vergessen; und
+     * eine schwebende Sitzung, die im Speicher liegenbleibt, waere genau die
+     * halbe Kopplung, die E-S5-22 ausschliesst. */
+    function _sitzungBeenden(text as Lang.String, hinweis as Lang.String or Null,
+                             art as Lang.Symbol) as Void {
+        _sitzungVergessen();
+        status = text;
+        /* Die Vormerkung aus einem gescheiterten Trennen einloesen, wenn
+         * dieser Ausgang keine eigene zweite Zeile mitbringt. Bringt er eine
+         * mit (etwa "Erst eines im Web löschen"), gewinnt die speziellere —
+         * sie sagt inhaltlich dasselbe. */
+        if (hinweis == null && _warnung != null) { hinweis = _warnung; }
+        _warnung = null;
+        statusHint = hinweis;
+        statusKind = art;
+        if (_viewOffen) {
+            _viewOffen = false;
+            WatchUi.popView(WatchUi.SLIDE_RIGHT);
         }
         WatchUi.requestUpdate();
     }
-}
 
-class PairTextDelegate extends WatchUi.TextPickerDelegate {
-    function initialize() { TextPickerDelegate.initialize(); }
-    function onTextEntered(text as Lang.String, changed as Lang.Boolean) as Lang.Boolean {
-        if (text.length() > 0) { Pair.request(text); }
-        return true;
+    function _sitzungVergessen() as Void {
+        _code = null;
+        _dev = null;
+        _key = null;
+        _endeMs = 0;
+        netzHinweis = null;
+        _abfragen = false;
+        _pending = false;
     }
-    function onCancel() as Lang.Boolean { return true; }
+
+    // --- Auskuenfte fuer die Kopplungsansicht ------------------------------
+
+    /* Der Code in zwei Dreiergruppen — „AB3 K7Q" statt „AB3K7Q" (Vertrag
+     * 1a.1). Sechs gleichfoermige Zeichen abzulesen und fehlerfrei
+     * einzutippen ist die eigentliche Arbeit dieses Bildschirms; die Luecke
+     * in der Mitte halbiert sie. Das Web nimmt den Code mit und ohne
+     * Leerzeichen entgegen. Eine andere Laenge als sechs wird unveraendert
+     * gezeigt — dann stimmt etwas anderes nicht, und Raten hilft nicht. */
+    function codeAnzeige() as Lang.String {
+        var c = _code;
+        if (c == null) { return ""; }
+        if (c.length() != 6) { return c; }
+        return c.substring(0, 3) + " " + c.substring(3, 6);
+    }
+
+    function restSekunden() as Lang.Number {
+        var r = (_endeMs - System.getTimer()) / 1000;
+        return (r > 0) ? r : 0;
+    }
 }
