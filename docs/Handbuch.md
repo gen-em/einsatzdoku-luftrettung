@@ -141,6 +141,21 @@ bedeutet, dass die Uhr gerade keine Punkte speichert. Außerhalb eines Dienstes
 steht dort „GPS aus". Unten die App-Version, bei Problemen der Fehlergrund;
 mit **START gedrückt halten** startest du hier die Geräte-Kopplung.
 
+**Koppeln — die Uhr zeigt einen Code.** Seit Uhr 3.0.0 läuft das andersherum
+als früher: Du tippst nichts mehr auf der Uhr ein. Sie holt sich beim Server
+eine Kopplungssitzung und zeigt **sechs Zeichen** groß an, darunter
+„Einstellungen, Geräte" und die Restzeit. Diesen Code gibst du **im Web** ein
+(Einstellungen → Geräte). Danach fragt die Uhr zurück — „Mit ph\*\*\*@… koppeln?"
+—, und erst dein **Ja auf der Uhr** schließt die Kopplung ab. So kann weder ein
+fremdes Gerät in dein Konto noch dein Gerät in ein fremdes.
+
+**Zurück** bricht ab. Nach **zehn Minuten** verfällt der Code; dann holst du mit
+demselben Tastenweg einen neuen — die Uhr sagt es dir („Code abgelaufen / START
+halten: neuer Code"). Ist eine Kopplung schon da, fragt die Uhr vorher, ob sie
+sie trennen soll, und besteht darauf, dass vorher alles gesendet ist: Offene
+Pakete gehören dem bisherigen Konto. Der ganze Weg von der leeren Uhr an steht
+in Abschnitt 12.
+
 **Reanimation:** siehe 2.3.
 
 ### 2.3 Reanimationsmodus

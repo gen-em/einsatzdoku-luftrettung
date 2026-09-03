@@ -203,8 +203,9 @@ Ausblenden.
 >
 > Aufgestellt in S4 (B-S4-06), nachdem der Lauf nach dem letzten Android-Paket
 > 0 Treffer meldete, ohne eine Zeile der App angesehen zu haben. Bereich `d`
-> (Android) steht seither in der Liste; `watch/` fehlt noch und ist einer
-> anderen Instanz zugewiesen.
+> (Android) steht seither in der Liste, Bereich `e` (`watch/` — Ressourcen
+> **und** Monkey C) seit S5/C. **Damit läuft jeder Client durch die Liste**;
+> die Regel hat keine offene Stelle mehr, an der sie nur ein Vorsatz wäre.
 
 **Die Android-Apps prüfen sich selbst — `./gradlew build` im Ordner
 `android/`** (mit `ANDROID_HOME=/opt/android-sdk`). Anders als Web und

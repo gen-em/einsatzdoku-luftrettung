@@ -20,13 +20,25 @@ class SyncView extends WatchUi.View {
         _fromStart = fromStart;
     }
 
+    /* Pair muss wissen, ob diese Seite noch auf dem Schirm ist.
+     *
+     * Zwischen dem langen Druck und dem Erscheinen der Kopplungsansicht liegt
+     * eine volle Funkrunde; wer in dieser Zeit weiterblaettert oder mit BACK
+     * herausgeht, bekaeme die Ansicht sonst ueber eine Seite geschoben, die
+     * sie nicht aufgerufen hat — im schlimmsten Fall ueber den Rea-Countdown,
+     * wo die Ereignistasten tot waeren und BACK etwas anderes bedeutet.
+     * Dass onHide auch feuert, wenn die Kopplungsansicht selbst darueber
+     * geschoben wird, ist unschaedlich: Pair liest den Merker VOR dem
+     * Schieben, und beim Zurueckkehren setzt onShow ihn wieder. */
     function onShow() as Void {
+        Pair.seiteSichtbar(true);
         if (_timer == null) { _timer = new Timer.Timer(); }
         _timer.start(method(:refresh), 2000, true);
         if (!Uploader.allSynced()) { Uploader.syncAll(); }
     }
 
     function onHide() as Void {
+        Pair.seiteSichtbar(false);
         if (_timer != null) { _timer.stop(); }
     }
 
@@ -115,7 +127,15 @@ class SyncView extends WatchUi.View {
         if (Uploader.lastError != null) {
             lines.add([Uploader.lastError as Lang.String, Ui.ROT]);
         }
-        if (Pair.status != null) {
+        /* Steht dieselbe Zeile schon in der Mitte, wird sie hier NICHT
+         * wiederholt — dieselbe Regel wie beim Einrichtungsschritt weiter
+         * unten. Seit Uhr 3.0.0 kann das vorkommen: "Erst Server-Adresse
+         * setzen" ist der Text BEIDER Stellen, seit Pair.mc nicht mehr
+         * "Server-Domain" sagt. */
+        var s = schritt;
+        var doppelt = (einrichten && s != null && Pair.status != null
+                       && s.equals(Pair.status as Lang.String));
+        if (Pair.status != null && !doppelt) {
             var pc = Ui.ROT;                       // :error
             if (Pair.statusKind == :ok) { pc = Graphics.COLOR_GREEN; }
             else if (Pair.statusKind == :busy) { pc = Graphics.COLOR_LT_GRAY; }
@@ -159,8 +179,28 @@ class SyncView extends WatchUi.View {
         var y = (zone - blockH) / 2;
         if (y < Ui.s(dc, 20)) { y = Ui.s(dc, 20); }
 
+        /* AUCH DIESE ZEILE DURCH fitFont (Uhr-Layout_Regeln 4.2). Sie war die
+         * einzige der Seite ohne, und bis Uhr 2.0.0 fiel das nicht auf: Der
+         * untere Block trug im Regelfall nur die Versionszeile, der
+         * Mittelblock sass tief genug, und "GPS aus (kein Dienst)" passte.
+         *
+         * Mit 3.0.0 traegt der untere Block auf einem GEWOEHNLICHEN Weg drei
+         * Zeilen — Meldung, Weg heraus, Version (etwa nach einem Abbruch der
+         * Kopplung). untenY rueckt damit nach oben, der zentrierte
+         * Mittelblock rueckt mit, und die GPS-Zeile landet dort, wo der Kreis
+         * zulaeuft. Am 03.09.2026 auf der Venu 3s fotografiert: Sie las
+         * "PS aus (kein Diens" — beide Enden fort, ohne Warnung und ohne
+         * Fehler. Auf dem Ausgangsstand desselben Geraets stand sie
+         * vollstaendig da; es ist also keine Altlast, sondern die Folge der
+         * zusaetzlichen Zeile.
+         *
+         * fontHint liefert auf der Venu die GROESSERE Schrift (ab 320 px), die
+         * Zeile ist dort also breiter als auf den kleinen Geraeten — deshalb
+         * trifft es ausgerechnet das groesste Display. */
         dc.setColor(gpsCol, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y, fKlein, gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, y,
+            Ui.fitFont(dc, gpsTxt, y, hKlein, [fKlein, Graphics.FONT_XTINY]),
+            gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
         y += hKlein + gGps;
 
         if (einrichten) {
@@ -226,8 +266,10 @@ class SyncDelegate extends ActionDelegate {
     }
 
     // Geraete-Kopplung (START halten bzw. Action halten). NICHT direkt in die
-    // Code-Eingabe: Besteht schon eine Kopplung, fragt Pair.start() zuerst und
-    // trennt sie ausdruecklich — Begruendung dort (Backlog Nr. 14).
+    // Kopplung: Besteht schon eine, fragt Pair.start() zuerst und trennt sie
+    // ausdruecklich — Begruendung dort (Backlog Nr. 14). Seit 3.0.0 folgt
+    // darauf kein Eingabefeld mehr, sondern `start` und die Kopplungsansicht:
+    // Die Uhr ZEIGT den Code, das Web nimmt ihn entgegen (E-R49-1).
     function actSelectLong() as Lang.Boolean {
         Pair.start();
         return true;
