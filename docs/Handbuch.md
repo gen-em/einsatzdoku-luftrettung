@@ -2487,7 +2487,59 @@ geht, sagt der Hoster. Die Adresse enthält ein **Geheimnis** — sie gehört ni
 in eine Mail und nicht in ein Ticket. „Neues Token erzeugen" macht die alte
 Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
-Unter **„Wartung"** stehen mehrere Auskünfte in eigenen Karten: das Logo der
+#### Der Wartungsmodus
+
+Ganz oben unter **„Wartung"** steht die Karte **„Serverbetrieb"** mit einem
+Schalter. Er schließt die Installation vorübergehend für alle außer der
+Verwaltung.
+
+**Wofür.** Während eines Updates werden die Dateien auf dem Server nach und
+nach ersetzt, und danach muss noch die Datenbank angepasst werden. Wer in
+dieses Fenster gerät, sieht eine Fehlerseite — und eine Uhr, die genau dann
+sendet, bekommt einen Fehler, mit dem sie nichts anfangen kann. Mit dem
+Wartungsmodus bekommen alle stattdessen eine **Wartungsseite**, und die Geräte
+bekommen eine Antwort, die sie kennen: *später noch einmal*. **Sie behalten
+ihre Daten und liefern von selbst nach, sobald du wieder ausschaltest.** Es
+geht nichts verloren.
+
+**So läuft ein Update mit Wartungsmodus:**
+
+1. Auf der Wartungsseite zuerst das **Komplett-Backup** prüfen — steht ein
+   frisches, und ist das Ziel erreichbar? Sonst „Jetzt sichern".
+2. **„Wartungsmodus einschalten"** klicken.
+3. Das Update einspielen lassen (das macht die Entwicklung).
+4. Die Seite **„Wartung"** neu laden und die anstehenden Migrationen
+   ausführen.
+5. In einem zweiten Reiter die Startseite aufrufen. **Es muss die
+   Wartungsseite kommen** — kommt die normale Seite, ist der Wartungsmodus
+   nicht an.
+6. **„Wartungsmodus ausschalten"** klicken. Startseite erneut aufrufen: Sie
+   antwortet, und unten in der Fußzeile steht die neue Fassung.
+7. Uhr und Handy melden sich beim nächsten Mal von selbst. Nichts zu tun.
+
+**Was währenddessen weiter geht.** Diese Seite, die Anmeldung, das Abmelden
+und der Abruf der Hintergrundjobs. Das ist Absicht: Das Komplett-Backup läuft
+am besten **während** der Wartung, weil dann niemand sonst schreibt.
+
+**Wer sich anmeldet, aber nicht verwaltet**, wird gleich wieder abgemeldet und
+sieht die Wartungsseite. Auch das ist Absicht — während umgebaut wird, soll
+niemand mitten in einer Eingabe stehen.
+
+> **Der Wartungsmodus schaltet sich nicht von selbst ab.** Es gibt keine
+> Zeitsteuerung. Solange er steht, siehst du auf dieser Seite und auf der
+> Anmeldeseite oben einen **orangen Balken** mit Zeitpunkt und Konto — das
+> sind die beiden einzigen Seiten, auf denen er überhaupt zu sehen ist. Alle
+> anderen zeigen die Wartungsseite, und die sagt nicht, seit wann.
+
+**Wenn du dich selbst aussperrst.** Es gibt zwei Wege zurück: die Anmeldeseite
+funktioniert weiter (melde dich mit einem Admin-Konto an, dann bist du wieder
+auf der Wartungsseite), und wer Zugang zum Webspace hat, löscht die Datei
+`wartung.lock` neben den übrigen Serverdateien. Mehr als diese Datei ist der
+Schalter nicht.
+
+
+Unter **„Wartung"** stehen mehrere Auskünfte in eigenen Karten: zuoberst der
+**Serverbetrieb** (der Wartungsmodus, gleich unten), dann das Logo der
 Installation, die Umgebung (Mailversand), die Hintergrundjobs samt ihren Auslösern, Einsätze
 ohne Diensttag und zuunterst das **Datenbank-Update**. Das bloße Öffnen der Seite
 ändert nichts — sie zeigt erst an, was anstünde, und wartet auf eine

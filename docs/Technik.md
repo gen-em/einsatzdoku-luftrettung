@@ -167,6 +167,11 @@ Daten erst nach Server-Bestätigung.
 │   │                       und Code, Beanspruchen per UPDATE mit rowCount —
 │   │                       die eine Auslegung für pair.php, einstellungen.php
 │   │                       und die Kopplungsprobe
+│   ├── wartung_lib.php    Wartungsmodus (S5 Paket W, Web 13.2.0): Schalter,
+│   │                       Tor, Wartungsseite, 503-JSON, Balken,
+│   │                       Ausnahmeliste. Lädt NICHTS — der Zustand ist eine
+│   │                       Datei (`wartung.lock`), damit er auch bei
+│   │                       umgebauter Datenbank greift
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
 │   │                       gelöschtes Konto, Passwortwechsel)
 │   ├── email_lib.php      E-Mail: Normalisierung, Prüfung, Dublettenerkennung
@@ -310,8 +315,15 @@ Daten erst nach Server-Bestätigung.
 │   │                      ECHTES HTTP (S5, Web 13.0.0): Zustände, Frist,
 │   │                      Gerätelimit, Antwortgleichheit, drei Töpfe,
 │   │                      Obergrenze, Dublettenschleife, Aufräumjob —
-│   │                      75 Erwartungen. Legt eigene Konten an und räumt
+│   │                      76 Erwartungen; dazu `rundlauf.mjs`, der den Weg
+│   │                      im Browser fährt (25). Legt eigene Konten an und räumt
 │   │                      ab (s. LIESMICH.md)
+│   ├── wartungsprobe/     prüft den Wartungsmodus über ECHTES HTTP (S5 Paket
+│   │                      W): was gesperrt wird, was offen bleibt, Schalten
+│   │                      per POST, kaputte Schalterdatei, Antwortzeit —
+│   │                      40 Erwartungen. **Legt den Schalter selbst um** und
+│   │                      räumt ihn im finally ab; nicht auf einer
+│   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
 │   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
 │   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
 │   ├── messstand/         stellt ein Konto mit 5000 Einsätzen her — aus der
@@ -4125,6 +4137,52 @@ Auskunft" (Antwortgleichheit der vier anmeldungsfreien Endpunkte),
 (Ratenschutz, fester Vergleichswert, Sitzungsende) und der JSON-Vertrag,
 Abschnitt 1a (die Antworten im Wortlaut).
 
+### 4.99c Wartungsmodus (ab Web 13.2.0, S5 Paket W)
+
+**Ein Schalter, der die Installation vorübergehend für alle außer der
+Verwaltung schließt.** Er beantwortet den Unterschied zwischen „kaputt" und
+„gleich wieder da": Während eines Updates antwortet die Anwendung sonst mit
+**500** — alte und neue Dateien nebeneinander, neuer Code über einem alten
+Schema. Mit dem Wartungsmodus antwortet sie mit **503**, und darauf haben Uhr
+und Handy eine Antwort: „später unverändert erneut versuchen" (JSON-Vertrag
+Abschnitt 5). Sie puffern und liefern nach. **Kein Client wurde dafür
+geändert** (E-S5W-08).
+
+| | |
+|---|---|
+| Zustand | Datei `server/wartung.lock`, JSON mit `seit` (ISO-UTC) und `von` (Anzeigename). **Keine Datenbank** — der Schalter wird gerade dann gebraucht, wenn sie umgebaut wird oder eine Migration auf halber Strecke steht |
+| Tor | `wartung_tor()` in `wartung_lib.php`, gerufen aus `db.php` **hinter `json_out()` und vor jeder Verbindung**. Nicht in `auth_guard.php`: Dort liefen nur die Seiten durch — `ingest.php` und `pair.php` laden `db.php` direkt, und das sind die beiden, die die Daten der Uhr bringen |
+| Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
+| Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript `ingest.php` oder `pair.php` heißt — die beiden liegen nicht unter `/api/`, und genau sie brauchen JSON |
+| Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
+| Ausnahmen | sechs Skripte, verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`, `install.php`. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Schalten | `update.php`, Karte „Serverbetrieb", POST mit CSRF, nur Admin. Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
+| Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `update.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
+| Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `update.php` mit, und zwar **vor** `require_admin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
+| Anmeldung | Der Passwortvergleich ist unverändert. **Nach** einem Erfolg entscheidet die Rolle: Admin weiter, alles andere sofort wieder abgemeldet und auf die Wartungsseite (E-S5W-09). Die Ratenschutz-Zähler werden trotzdem geleert — das Passwort war richtig |
+| Logo | Die Wartungsseite kann `logo_stamm()` nicht rufen (Datenbank) und **wirft eine Münze** zwischen den beiden Standardlogos, wie `logo_aufloesen('wechselnd')`. Eine Installation mit eigenem Logo sieht während der Wartung eines der beiden Standardlogos |
+
+**Die Datei ist der Schalter, nicht ihr Inhalt.** Liegt sie da, ist aber
+unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
+„seit unbekannt". Andersherum wäre es falsch — ein Tippfehler im Inhalt darf
+keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
+
+**Zwei Einträge, die zusammengehören:** `server/wartung.lock` steht in
+`.gitignore` **und** in der Ausnahmeliste von
+`.github/workflows/deploy.yml`. Ohne den ersten schlösse ein Checkout jede
+Installation; ohne den zweiten löschte der Push die Datei — mitten im Update,
+für das sie da ist. Dasselbe Muster wie `config.php`, `install.lock`,
+`sicherungen/` und `apk/`.
+
+**Nicht Umfang** (Konzept 9): der **Torwächter** aus Rahmenplan R40 (4) —
+Wartung automatisch bei ausstehender Migration — ist P5 und wird denselben
+Zustand setzen; Steuerung aus der Auslieferungskette ist P5 mit R67; eine
+eigene Wartungsmeldung auf Uhr und Handy ist Backlog-Kandidat.
+
+**Nachweis:** `php tools/wartungsprobe/probe.php` — 40 Erwartungen, beide
+Richtungen (zu wenig gesperrt / zu viel gesperrt), einschließlich der drei
+Regeln aus E-S5W-09 am Code. Betriebsablauf: Abschnitt 7.
+
 
 ### 5.1 Tastenbelegung je Geräteprofil
 
@@ -4466,6 +4524,74 @@ existieren. Secrets: `FTP_SERVER` (nackter Hostname!), `FTP_USERNAME`,
 Repo.
 
 ## 7. Betrieb (Runbook)
+
+**Update mit Wartungsmodus (seit Web 13.2.0 der Regelweg, S5 Paket W):**
+Zwischen dem ersten und dem letzten per FTPS hochgeladenen File stehen alte
+und neue Dateien nebeneinander, und zwischen dem Hochladen und der Migration
+erwartet neuer Code Tabellen, die es noch nicht gibt. Wer in dieses Fenster
+gerät, bekommt **500**. Für eine Uhr ist das etwas anderes als ein 503: Der
+JSON-Vertrag sagt zu 5xx „später unverändert erneut versuchen" — sie puffert
+und liefert nach. Die sieben Schritte:
+
+1. **Wartungsseite → Komplett-Backup prüfen** (Zeitpunkt, Ziel erreichbar),
+   bei Bedarf „Jetzt sichern".
+2. **Wartungsmodus einschalten** — Karte „Serverbetrieb" oben auf
+   `update.php`. Ab jetzt bekommt jede Anfrage außer den Ausnahmen 503 mit
+   `Retry-After: 300`.
+3. **Push auf `main`** (die GitHub-Action lädt `server/` hoch).
+4. **`update.php` neu laden** → ausstehende Migrationen ausführen.
+5. **Startseite in einem zweiten Reiter prüfen.** Es *muss* 503 kommen —
+   kommt eine Seite, steht der Wartungsmodus nicht.
+6. **Wartungsmodus ausschalten.** Startseite erneut: antwortet, und die
+   Fassung in der Fußzeile ist die neue.
+7. Uhr und Handy synchronisieren beim nächsten Kontakt von selbst. Nichts
+   ist verloren gegangen; die Geräte haben gepuffert.
+
+**Was währenddessen erreichbar bleibt** (E-S5W-04): `update.php` und
+`wiederherstellen.php` (die Arbeit selbst und der Rückweg), `jobs.php` mit
+Token — das Komplett-Backup der Kette läuft **während** der Wartung, genau
+dann ist es konsistent —, `login.php`/`logout.php` und `install.php`. Alles
+unter `assets/` läuft ohnehin nicht durch PHP. Der CLI-Notausgang
+`php update.php` ist nie getort.
+
+**Wer sich während der Wartung anmeldet und nicht verwaltet**, wird nach der
+gelungenen Anmeldung **sofort wieder abgemeldet** und sieht die Wartungsseite
+(E-S5W-09). Das ist Absicht: Während des Umbaus soll keine Sitzung mit
+entsperrtem Inhaltsschlüssel herumliegen, und keine Anmeldung soll
+`last_login` schreiben, während das Schema geändert wird.
+
+**Der Wartungsmodus lässt sich nicht vergessen — theoretisch.** Es gibt kein
+automatisches Ausschalten und keine Zeitsteuerung (E-S5W-05). Auffallen kann
+ein stehengebliebener Wartungsmodus nur auf `update.php` und `login.php`; auf
+beiden steht dann oben ein oranger Balken mit Zeitpunkt und Konto. Alles
+andere antwortet mit 503, und ein 503 sagt nicht, dass es seit drei Tagen
+kommt.
+
+**Der Schalter ist eine Datei.** `server/wartung.lock`, JSON mit `seit` und
+`von`. Wer keinen Browserzugang mehr hat, legt sie per SSH an oder löscht
+sie — das ist der ganze Mechanismus:
+
+```bash
+echo '{"seit":"2026-09-03T14:12:00Z","von":"SSH"}' > server/wartung.lock  # ein
+rm server/wartung.lock                                                     # aus
+```
+
+**Die Datei ist der Schalter, nicht ihr Inhalt.** Ist sie da, aber unlesbar
+oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt dann
+„seit unbekannt". Andersherum wäre es falsch — ein Tippfehler im Inhalt darf
+keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
+
+**Sie steht in `.gitignore` und in der Ausnahmeliste des Deploys.** Beides
+muss so bleiben: Ohne den ersten Eintrag schlösse ein Checkout jede
+Installation, ohne den zweiten löschte der Push die Datei — mitten im Update,
+für das sie da ist.
+
+**Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
+(1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
+(neben `db.php`)? (2) Ist die aufgerufene Seite eine der sechs Ausnahmen?
+(3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
+`db()`-Aufruf? Nachweis für alle drei:
+`php tools/wartungsprobe/probe.php` (40 Erwartungen).
 
 **Demo-Konto einrichten (einmalig):** Fixture erzeugen —
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der

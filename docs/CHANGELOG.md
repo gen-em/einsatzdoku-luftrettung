@@ -11,6 +11,111 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 13.2.0] — 2026-09-03
+
+### Web — Der Wartungsmodus: 503 statt 500, während umgebaut wird (S5, Paket W)
+
+Ein Update läuft heute so: Push auf `main`, FTPS lädt `server/` hoch, danach
+ruft eine Administratorin `update.php` und lässt die Migration laufen.
+**Zwischen der ersten und der letzten hochgeladenen Datei stehen alte und neue
+nebeneinander**, und zwischen dem Hochladen und der Migration erwartet neuer
+Code Tabellen, die es noch nicht gibt. Wer in dieses Fenster gerät, bekommt
+**500**.
+
+Für einen Menschen ist das ärgerlich. Für eine Uhr ist es etwas anderes: Der
+JSON-Vertrag sagt zu **5xx** „später unverändert erneut versuchen", und genau
+das tun Uhr und Handy — sie puffern und liefern nach. Ein 500 aus einer halb
+umgebauten Datenbank ist aber nicht dasselbe wie ein angekündigtes 503, und
+die Grenze zwischen beiden war bisher der Zufall.
+
+**Jetzt gibt es einen Schalter.** Auf der Wartungsseite, Karte
+„Serverbetrieb", nur für die Verwaltung. Steht er, bekommt **jede** Anfrage
+außer den Ausnahmen ein **503** mit `Retry-After: 300` — Seiten eine schlichte
+Wartungsseite, Geräte und Browser-Skripte
+`{"error":"maintenance","meldung":"…"}`. **Kein Client wurde dafür geändert:**
+Das Verhalten steht seit S4 im Vertrag und ist im S4-Prüfprotokoll gemessen
+(„5xx / 503 → später erneut, nichts markiert, nichts bestätigt").
+
+**Der Zustand ist eine Datei, keine Zeile in der Datenbank.**
+`server/wartung.lock`, JSON mit `seit` und `von`. Das ist die eine
+Entscheidung, an der alles hängt: Der Wartungsmodus wird gerade dann
+gebraucht, wenn die Datenbank umgebaut wird oder eine Migration auf halber
+Strecke gescheitert ist. Ein Schalter, der die Datenbank fragt, ob er schalten
+darf, ist im entscheidenden Moment stumm. Die Datei steht deshalb in
+`.gitignore` **und** in der Ausnahmeliste des Deploys — ohne den zweiten
+Eintrag löschte der nächste Push sie mitten im Update, für das sie da ist.
+Dasselbe Muster wie `config.php`, `install.lock`, `sicherungen/` und `apk/`.
+
+**Das Tor sitzt in `db.php`, nicht in `auth_guard.php`.** Durch `auth_guard`
+laufen nur die Seiten. `ingest.php` und `pair.php` laden `db.php` direkt — und
+das sind die beiden, auf die es ankommt, weil sie die Daten der Uhr bringen.
+Ein Tor, das sie nicht sieht, sperrt die Menschen aus und lässt die Geräte in
+die Baustelle laufen. Die Zeile steht hinter `json_out()` und **vor** jeder
+Datenbankverbindung; `db()` verbindet erst beim ersten Aufruf, also ist bis
+dahin nichts geschehen. Kostet im Normalfall einen `file_exists()`.
+
+**Sechs Skripte bleiben offen** (E-S5W-04), verglichen am Dateinamen und nicht
+am Pfad — `login.php` lädt `db.php` als Allererstes, ein Pfadmuster wäre zu
+spät: `update.php` und `wiederherstellen.php` (die Arbeit selbst und der
+Rückweg), `jobs.php` mit Token (**das Komplett-Backup läuft während der
+Wartung — genau dann ist es konsistent**), `login.php`, `logout.php`,
+`install.php`. Alles unter `assets/` läuft ohnehin nicht durch PHP, und die
+Kommandozeile ist nie getort.
+
+**Die Datei ist der Schalter, nicht ihr Inhalt.** Liegt sie da, ist aber
+unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
+dann „seit unbekannt". Andersherum wäre es falsch — ein Tippfehler im Inhalt
+darf keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
+
+**Eine Entscheidung gegen unsere Empfehlung** (E-S5W-09, Auftraggeber): Wer
+sich während der Wartung anmeldet und **nicht** verwaltet, wird sofort wieder
+abgemeldet und sieht die Wartungsseite. Wir hatten vorgeschlagen, die Sitzung
+stehen zu lassen; der Auftraggeber wollte es umgekehrt, und das ist das
+strengere Verhalten: Während des Umbaus liegt keine Sitzung mit entsperrtem
+Inhaltsschlüssel herum, und keine Anmeldung schreibt `last_login`, während
+`update.php` das Schema ändert. **Drei Dinge hängen daran und sind einzeln
+gemessen:** Der Passwortvergleich ist unverändert (der Zweig hängt am Erfolg,
+nicht am Vergleich — die Antwortgleichheit bleibt), die Ratenschutz-Zähler
+werden **trotzdem** geleert (das Passwort war richtig; wer während einer
+Wartung dreimal richtig tippt, darf sich danach nicht ausgesperrt finden), und
+was danach erscheint, ist die **Wartungsseite** und nicht das Anmeldeformular
+— das läse sich wie „Passwort falsch", und die Person tippte weiter, bis der
+Ratenschutz zuschlägt.
+
+**Kein automatisches Ausschalten**, keine Zeitsteuerung (E-S5W-05). Ein
+stehengebliebener Wartungsmodus kann nur auf zwei Seiten auffallen —
+`update.php` und `login.php` —, und auf beiden steht dann oben ein oranger
+Balken mit Zeitpunkt und Konto. Alles andere antwortet mit 503, und ein 503
+sagt nicht, dass es seit drei Tagen kommt.
+
+**Zwei Kleinigkeiten am Rand.** Die Wartungsseite kann `logo_stamm()` nicht
+rufen (Datenbank) und **würfelt** deshalb zwischen den beiden Standardlogos,
+wie es die Einstellung „wechselnd" ohnehin tut — eine Installation mit eigenem
+Logo sieht während der Wartung eines der beiden Standardlogos. Und eine
+Meldung auf der Wartungsseite stand in Ersatzschreibung („Das Token liess sich
+nicht erzeugen"), obwohl sie ein Mensch liest; sie hat jetzt Umlaute wie ihre
+Nachbarinnen.
+
+**Nachweis:** Wartungsprobe **40 Erwartungen, 0 nicht erfüllt** — beide
+Richtungen (was gesperrt wird, was offen bleibt), einschließlich „`ingest.php`
+mit **gültigem** Geräteschlüssel → 503 und **keine** Zeile in `missions`",
+„kein `Set-Cookie` auf dem 503" und „das 503 kommt schneller als die Antwort
+ohne Wartung" (0,3 ms statt 1,4 ms — das Tor greift vor Datenbank und
+Ratenschutz) · Bilderlauf der Wartungsseite und der Wartungsseite **mit**
+Balken: **16 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** ·
+Kopplungsprobe **76 / 76**, Ingestprobe **30 / 30** und der Browser-Rundlauf
+**25 / 25** unverändert (der Rundlauf meldet sich an — `login.php` ist
+angefasst) · Wortliste über alle vier Bereiche, **129 Dateien**,
+**0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen** ·
+Vollständigkeit **278** unverändert: Die Wartungsseite benutzt nur vorhandene
+Klassen · S5-Anker **0 nicht gefunden** · `php -l` über alle geänderten
+Dateien **0 Fehler**.
+
+**Nicht geprüft:** ob der FTPS-Deploy die `wartung.lock` wirklich stehen
+lässt. Die Ausnahme in `.github/workflows/deploy.yml` ist eine **Zusage** —
+bewiesen wird sie beim ersten Deploy im Wartungsmodus, und der ist der Merge
+dieser Phase selbst. Steht im Prüfdokument S5.
+
 ## [Web 13.1.2] — 2026-09-03
 
 ### Web — Die Dokumentation beschreibt den neuen Weg (S5, Paket D — erste Hälfte)

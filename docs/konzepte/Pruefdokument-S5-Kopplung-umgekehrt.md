@@ -7,11 +7,18 @@ Paket ergänzt und bleibt nach dem Abschluss der Phase stehen, bis seine
 Prüfliste abgehakt ist (K9, R62).
 
 > **Stand: Paket A (Server, Web 13.0.0), die Korrekturen 13.0.1 und 13.1.1,
-> Paket B (Weboberfläche, Web 13.1.0) und die erste Hälfte von Paket D
-> (Dokumentation, Web 13.1.2) sind gebaut** — auf
+> Paket B (Weboberfläche, Web 13.1.0), die erste Hälfte von Paket D
+> (Dokumentation, Web 13.1.2) und der Zusatz **Paket W — Wartungsmodus**
+> (Web 13.2.0) sind gebaut** — auf
 > `claude/s7-umsetzung-vorbereiten-s8kax0`. Offen: C (Uhr), E
 > (Android-Zusatz) — beide in eigenen Instanzen — und **D Hälfte 2**, die auf C
 > wartet (E-S5-58).
+>
+> **Paket W hat ein eigenes Konzept**
+> (`Konzept-S5-Zusatz-Wartungsmodus.md`) mit eigenem Nummernkreis; seine
+> Prüfpunkte stehen hier, weil es nur ein Prüfdokument je Phase gibt (K9).
+> Was du dafür tun musst, steht in Prüfliste **7 und 8** — und Punkt 7 ist
+> zugleich der einzige Nachweis, den der Container nicht führen kann (1.11).
 >
 > **Bis Paket C beschreibt `docs/Handbuch.md` 12 den alten Weg.** Das ist
 > gewollt und benannt: Die sieben Stellen nennen Wortlaute der Uhr, die Paket C
@@ -175,6 +182,34 @@ Weg verschieden schreiben, wären die schlechtere Wahl. Gemessen per
 (Knopfhöhe) Zeile für Zeile unverändert**, ein einziger neuer Eintrag in
 Prüfung 3.
 
+### 1.11 Paket W: der Deploy ist die eine Sache, die der Container nicht kann
+
+**Ob der FTPS-Sync die `server/wartung.lock` stehen lässt, ist NICHT
+geprüft.** Die Ausnahme in `.github/workflows/deploy.yml` ist eine Zusage —
+`wartung.lock` steht dort neben `config.php`, `install.lock`, `sicherungen/`
+und `apk/`. Bewiesen wird sie erst beim ersten Deploy im Wartungsmodus, und
+das ist der Merge dieser Phase selbst (Prüfliste Punkt 7).
+
+**Woran ein Scheitern zu erkennen wäre:** Nach dem Push antwortet die
+Installation wieder normal, obwohl niemand ausgeschaltet hat — dann hat der
+Sync die Datei gelöscht. **Was dann zu tun ist:** sofort wieder einschalten
+(die Datei ist der ganze Schalter) und den Eintrag in `deploy.yml` prüfen;
+die Aktion `SamKirkland/FTP-Deploy-Action` prüft Datei- und Verzeichnismuster
+getrennt, deshalb steht `sicherungen/` dort zweimal — `wartung.lock` ist eine
+Datei und braucht nur einen Eintrag.
+
+**Ebenfalls nicht geprüft: die Wartung mit einem echten Gerät in der Hand.**
+Dass Uhr und Handy ein 503 puffern und danach nachliefern, steht im
+JSON-Vertrag und ist im S4-Prüfprotokoll für die Android-App gemessen — hier
+ist es **gelesen, nicht gefahren**. Prüfliste Punkt 7 fährt es mit.
+
+**Und nicht geprüft: die Anmeldung im Wartungsmodus über HTTP.** `login.php`
+ist ohne im Browser abgeleitetes Token nicht zu erreichen. Fall 18 der
+Wartungsprobe liest die drei Regeln aus E-S5W-09 stattdessen **am Code** nach
+— dass `role` in der Abfrage steht, dass die Sitzung verworfen wird, und dass
+das **erst nach** `rate_erfolg` geschieht. Eine am Code gelesene Regel ist
+keine gefahrene; Prüfliste Punkt 8 fährt sie.
+
 ---
 
 ## 2. Was maschinell geprüft wurde — mit Mittel und Zahl
@@ -183,6 +218,7 @@ Prüfung 3.
 |---|---|---|
 | `php tools/kopplungsprobe/probe.php` | `pair.php` über echtes HTTP: vier Anliegen, Zustände, Frist, Gerätelimit, Antwortgleichheit, drei Töpfe, Obergrenze, Bibliothek, Aufräumjob, Migrationsregister, Kaskade (Konzept 10.2, Fälle 1–34 plus E-S5-48 und E-S5-49) | **76 Erwartungen, 0 nicht erfüllt, 0 übergangen** (75 in A, dazu E51 in 13.1.1) — gefahren nach A, nach B und nach D Hälfte 1 |
 | `php tools/ingestprobe/probe.php` | `ingest.php` mit dem neuen Schlüsselverfahren (SHA-256, E-S5-42); seit 13.0.1 dazu Teil 7, der Upsert gegen ein spät eintreffendes Teilstück | **30 / 30** |
+| `php tools/wartungsprobe/probe.php` (neu) | Den Wartungsmodus über echtes HTTP: was gesperrt wird (Seiten, `ingest.php` mit **gültigem** Schlüssel, `pair.php`, `/api/`), was offen bleibt (die sechs Ausnahmen), Schalten per POST mit CSRF, kaputte Schalterdatei, Antwortzeit, CLI-Notausgang, Ausnahmeliste gegen E-S5W-04, die drei Regeln aus E-S5W-09 am Code, der Münzwurf des Logos | **40 Erwartungen, 0 nicht erfüllt.** Darunter: keine Zeile in `missions` trotz gültigem Geräteschlüssel · kein `Set-Cookie` auf dem 503 · das 503 kommt in **0,3 ms** statt 1,4 ms — das Tor greift vor Datenbank und Ratenschutz |
 | `php tools/geraeteprobe/probe.php` | Blocklesen `geraet` unverändert | **39 / 39** |
 | `php server/update.php` (CLI) auf dem Bestand mit `pair_codes` und einem Code darin | Migration `2026_09_03_kopplungssitzungen` | **applied**; Register 40 → **41**; `pair_codes` weg, `pair_sessions` mit UNIQUE auf `code` und `device_id`, FK CASCADE |
 | `lokal_einrichten.sh` (frische Installation aus `schema.sql`) | Register nach `install.php` | **41 Kennungen, alle `skipped`**; Kopplungsprobe danach 75 / 75 |
@@ -190,9 +226,10 @@ Prüfung 3.
 | `python3 tools/wortliste/wortliste.py` | Bereiche a bis d (Bereich e kommt mit C) | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen (77 / 77), 0 durchgerutschte Fallen** über **128 Dateien** (a 88 · b 30 · c 8 · d 2) — gefahren zuletzt, nach allen Textänderungen. In D Hälfte 1 fand sie **einen** Treffer, und zwar in neu geschriebenem Text dieses Pakets („der Ablauf hat drei Stationen“, Technik-Runbook); ersetzt und erneut gefahren |
 | `node tools/kopplungsprobe/rundlauf.mjs` (neu) | Der ganze Weg im Browser: anmelden, drei Zustände, beide Fehlerwege, Umleitung, Neuladen, das Ja am Gerät, das Nachladen, Vollzugsmeldung, Geräteliste, Abmelden | **25 Erwartungen, 0 nicht erfüllt, 0 Konsolenfehler**; das Nachladen griff **3,2 s** nach dem Ja (B) und **3,1 s** (D Hälfte 1) |
 | `node tools/screenshots/aufnehmen.mjs --nur 33` | Die drei Zustände der Karte in acht Breiten | **24 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px**. Gegenprobe nach `LIESMICH.md`: **27 Dateien, 27 verschiedene Prüfsummen** — kein Bild zeigt dasselbe wie ein anderes |
+| `node tools/screenshots/aufnehmen.mjs --nur 07-wartungsseite,45a` | Die Wartungsseite und die Adminseite **mit** stehendem Wartungsmodus, je acht Breiten | **16 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
 | `python3 tools/vollstaendigkeit/pruefen.py` | Stylesheet, Werte, Symbole, Knopfhöhen | **278** (Basis 272; die fünf aus Paket B sind in 1.7 benannt, das sechste in 1.10; Prüfung 1/2/4 unverändert) |
 | `python3 tools/s5-anker/anker.py` | Fundstellen der Pakete C, D, E | nach D Hälfte 1: **0 nicht gefunden, 0 mehrdeutig**, 64 unverändert, 2 verschoben. Die Liste ist von 83 auf **66** geschrumpft — A und B (11, in Paket B) und neun von D sind ausgetragen, weil ihre Stellen umgeschrieben sind. **Zwei davon meldeten vor dem Austragen `NICHT GEFUNDEN`** (`vertrag.1b-429`, `backup.pair-codes`): die Gegenprobe, dass D Hälfte 1 sie wirklich angefasst hat |
-| `php -l` | alle geänderten oder neuen PHP-Dateien (A: 16, B: 4, D Hälfte 1: 5) | 0 Syntaxfehler |
+| `php -l` | alle geänderten oder neuen PHP-Dateien (A: 16, B: 4, D Hälfte 1: 5, W: 6) | 0 Syntaxfehler |
 
 **Was die 76 Erwartungen NICHT sind:** kein Beweis für Nebenläufigkeit. Die
 Probe schickt Anfragen nacheinander; „zwei Browser mit demselben Code“ ist
@@ -332,6 +369,66 @@ erkennen ist**.
   bleibt und nicht als Stand beim Seitenaufbau zu erkennen ist.
 - [ ] erledigt am ______
 
+### 7. Das erste Update mit Wartungsmodus  *(der Merge dieser Phase, Paket W)*
+
+Der erste Einsatz des Schalters ist der Merge, der ihn bringt. Das ist kein
+Zufall, sondern der Plan (Konzept W 6.2): Es gibt keinen zweiten Anlass, bei
+dem sich das Zusammenspiel aus Schalter, Deploy und Gerät so vollständig
+zeigt.
+
+- **Weg:** Wartung → Karte **„Serverbetrieb"** → *Wartungsmodus einschalten*.
+  Dann den Merge auf `main` auslösen. Danach `update.php` neu laden und die
+  Migrationen ausführen (bei diesem Merge steht keine an — die letzte war
+  13.0.0). Startseite in einem zweiten Reiter aufrufen. Dann *Wartungsmodus
+  ausschalten*, Startseite erneut.
+- **Und während der Wartungsmodus steht:** an der Uhr einen Einsatz
+  abschließen, damit sie sendet.
+- **Erwartet:**
+  1. Nach dem Einschalten steht auf `update.php` oben ein **oranger Balken**
+     mit Zeitpunkt und deinem Namen.
+  2. Der zweite Reiter zeigt die **Wartungsseite** (Logo, „Wartung", der
+     orange Kasten) — **nicht** die Startseite und **nicht** eine
+     Fehlermeldung.
+  3. **Nach dem Push steht der Balken immer noch.** Das ist der eigentliche
+     Nachweis: Der FTPS-Sync hat `wartung.lock` nicht gelöscht.
+  4. Die Uhr sagt „später erneut" und **behält ihren Puffer**.
+  5. Nach dem Ausschalten antwortet die Startseite, und in der Fußzeile steht
+     die neue Fassung.
+  6. Der Einsatz von der Uhr kommt beim nächsten Sync an — **vollständig**,
+     ohne dass du etwas tust.
+- **Scheitern, und was es heißt:**
+  - Nach dem Push ist der Balken **weg** und die Startseite antwortet → der
+    Deploy hat die Datei gelöscht. Sofort wieder einschalten und den Eintrag
+    `wartung.lock` in `.github/workflows/deploy.yml` prüfen (1.11).
+  - Der zweite Reiter zeigt die **Startseite** statt der Wartungsseite → der
+    Schalter greift nicht. `server/wartung.lock` muss neben `db.php` liegen.
+  - Die Uhr meldet einen **Fehler** statt „später erneut" → sie hat kein 503
+    bekommen, sondern etwas anderes. Im Fehlerprotokoll des Webspace nachsehen.
+  - Der Einsatz kommt nach dem Ausschalten **nicht** an → nicht der
+    Wartungsmodus, sondern der Sync. Der Puffer der Uhr leert sich erst nach
+    bestätigtem `next_seq`.
+- **Zeitpunkte und Ergebnis hier notieren:** eingeschaltet ______,
+  gepusht ______, ausgeschaltet ______, Einsatz angekommen ______.
+- [ ] erledigt am ______
+
+### 8. Anmelden während der Wartung  *(zwei Konten, Paket W)*
+
+- **Weg:** Wartungsmodus einschalten. In einem privaten Fenster mit einem
+  **Nicht-Admin-Konto** anmelden. Danach im selben Fenster mit einem
+  **Admin-Konto** anmelden.
+- **Erwartet:** Das Nicht-Admin-Konto sieht nach dem Absenden die
+  **Wartungsseite** — nicht das Anmeldeformular und keine Fehlermeldung; es
+  ist danach **nicht** angemeldet. Das Admin-Konto landet normal in der
+  Anwendung (die Startseite ist getort, also auf `update.php` gehen).
+- **Scheitern:** Erscheint wieder das **Anmeldeformular**, liest sich das wie
+  „Passwort falsch" — dann greift E-S5W-09 nicht richtig, und die Person tippt
+  weiter, bis der Ratenschutz zuschlägt. Ebenfalls Scheitern: Das
+  Nicht-Admin-Konto ist danach angemeldet und sieht überall 503.
+- **Und danach:** Mit demselben Nicht-Admin-Konto nach dem **Ausschalten**
+  anmelden. Es muss **sofort** gehen — der Ratenschutz darf die richtigen
+  Versuche von vorhin nicht gezählt haben (E-S5W-09 b).
+- [ ] erledigt am ______
+
 ## 5. Grenzen der benutzten Prüfmittel
 
 - **Kopplungsprobe:** ein Aufrufer, nacheinander; kein Mailserver; die
@@ -366,6 +463,11 @@ erkennen ist**.
   Stellen ausgetragen werden — **83 → 66**. Eine sinkende Zahl ist hier
   Fortschritt und nicht Verlust; wer sie als Deckungsgrad liest, liest sie
   falsch.
+- **Die Wartungsprobe:** ein Aufrufer, nacheinander; sie legt den Schalter
+  selbst um und ist deshalb auf einer Installation mit Betrieb nicht zu
+  fahren. Drei ihrer Erwartungen (Fall 18) sind **am Code gelesen**, nicht
+  gefahren — `login.php` ist ohne im Browser abgeleitetes Token nicht zu
+  erreichen. Und den Deploy sieht sie gar nicht (1.11).
 - **Der Bilderlauf:** misst Überlauf, Konsolenfehler und Knopfhöhen — nicht,
   ob die Seite richtig aussieht. Seine beiden neuen Bedienschritte holen sich
   eine echte Kopplungssitzung; sie kosten zwei der zwanzig `start`-Aufrufe,

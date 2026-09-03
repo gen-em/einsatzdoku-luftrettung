@@ -265,6 +265,26 @@ function json_out(array $data, int $code = 200): never {
     exit;
 }
 
+/* ---- DAS TOR DES WARTUNGSMODUS (S5 Paket W, E-S5W-06) --------------------
+ *
+ * Hier und nicht in `auth_guard.php`: Dort liefen nur die SEITEN durch.
+ * `ingest.php` und `pair.php` laden `db.php` direkt — und das sind die
+ * beiden, auf die es ankommt, weil sie die Daten der Uhr bringen.
+ *
+ * Und hier und nicht weiter oben: Die Zeile steht HINTER `json_out()`, damit
+ * die Reihenfolge der Datei stimmt, und VOR jedem `db()` — die Verbindung
+ * entsteht erst beim ersten Aufruf (statisch, siehe oben), also ist bis zu
+ * dieser Zeile noch nichts an der Datenbank geschehen. Genau das ist der
+ * Punkt: Der Wartungsmodus wird gebraucht, WEIL die Datenbank gerade
+ * umgebaut wird.
+ *
+ * `wartung_lib.php` laedt seinerseits nichts (auch nicht diese Datei) und
+ * kehrt auf der Kommandozeile sofort zurueck. Steht keine `wartung.lock`,
+ * kostet der Aufruf einen `file_exists()`.
+ */
+require_once __DIR__ . '/wartung_lib.php';
+wartung_tor();
+
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
 /**

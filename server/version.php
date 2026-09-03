@@ -2212,5 +2212,44 @@ declare(strict_types=1);
  * Erzaehlung darum herum. Der Rest des Pakets — Handbuch, Geraete-Eingabe,
  * die Uhr-Abschnitte der Technik — wartet auf Paket C und kommt in der
  * zweiten Haelfte.
+ *
+ * 13.2.0 IST DER WARTUNGSMODUS (S5 Paket W). Ein Schalter auf der
+ * Wartungsseite schliesst die Installation voruebergehend fuer alle ausser
+ * der Verwaltung: Jede andere Anfrage bekommt 503 statt eines 500 aus einer
+ * halb umgebauten Datenbank. Das ist der Unterschied, auf den es ankommt —
+ * der JSON-Vertrag sagt zu 5xx „spaeter unveraendert erneut versuchen", und
+ * Uhr wie Handy halten sich daran. Sie puffern und liefern nach. KEIN CLIENT
+ * WURDE DAFUER GEAENDERT (E-S5W-08); das Verhalten ist seit S4 da.
+ *
+ * DER ZUSTAND IST EINE DATEI (`server/wartung.lock`), keine Zeile in
+ * `app_state`. Der Wartungsmodus wird gerade dann gebraucht, wenn die
+ * Datenbank umgebaut wird oder eine Migration auf halber Strecke gescheitert
+ * ist; ein Schalter, der die Datenbank fragt, ob er schalten darf, ist im
+ * entscheidenden Moment stumm. Die Datei steht in `.gitignore` UND in der
+ * Ausnahmeliste des Deploys — ohne den zweiten Eintrag loeschte der Push sie
+ * mitten im Update, fuer das sie da ist.
+ *
+ * DAS TOR SITZT IN `db.php`, hinter `json_out()` und vor jeder Verbindung,
+ * und NICHT in `auth_guard.php`: Dort liefen nur die Seiten durch.
+ * `ingest.php` und `pair.php` laden `db.php` direkt — und das sind die
+ * beiden, auf die es ankommt, weil sie die Daten der Uhr bringen.
+ *
+ * AUSGENOMMEN sind sechs Skripte (E-S5W-04): update.php und
+ * wiederherstellen.php (die Arbeit selbst und der Rueckweg), jobs.php (das
+ * Komplett-Backup laeuft WAEHREND der Wartung — genau dann ist es
+ * konsistent), login.php und logout.php, install.php. Alles unter `assets/`
+ * laeuft ohnehin nicht durch PHP.
+ *
+ * NEBENNUMMER: eine neue Funktion, keine Migration, kein geaenderter
+ * Datenweg. Wer nicht schaltet, merkt nichts — der Aufruf kostet einen
+ * `file_exists()`.
+ *
+ * EINE ENTSCHEIDUNG GEGEN DIE EMPFEHLUNG (E-S5W-09, Auftraggeber): Wer sich
+ * waehrend der Wartung anmeldet und NICHT verwaltet, wird sofort wieder
+ * abgemeldet und sieht die Wartungsseite — nicht das Anmeldeformular, das
+ * laese sich wie „Passwort falsch". Damit liegt waehrend des Umbaus keine
+ * Sitzung mit entsperrtem Inhaltsschluessel herum, und keine Anmeldung
+ * schreibt `last_login`, waehrend `update.php` das Schema aendert. Die
+ * Ratenschutz-Zaehler werden trotzdem geleert: Das Passwort WAR richtig.
  */
-const WEB_VERSION = '13.1.2';
+const WEB_VERSION = '13.2.0';

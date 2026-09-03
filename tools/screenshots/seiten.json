@@ -1,5 +1,5 @@
 {
-  "_lies_mich": "Seitenliste der Bildaufnahme. Jede Zeile: name (Dateiname und Überschrift im Kontaktbogen), gruppe, rolle ('aus' = abgemeldet, 'demo', 'admin'), pfad (relativ zur Basis; Platzhalter in __GROSSBUCHSTABEN__ löst aufnehmen.mjs zur Laufzeit aus dem Bestand auf), karte (true = zusätzlich auf Leaflet warten), vorher (Bedienschritte vor der Aufnahme).",
+  "_lies_mich": "Seitenliste der Bildaufnahme. Jede Zeile: name (Dateiname und Überschrift im Kontaktbogen), gruppe, rolle ('aus' = abgemeldet, 'demo', 'admin'), pfad (relativ zur Basis; Platzhalter in __GROSSBUCHSTABEN__ löst aufnehmen.mjs zur Laufzeit aus dem Bestand auf), karte (true = zusätzlich auf Leaflet warten), vorher (Bedienschritte vor der Aufnahme), wartung (true = server/wartung.lock wird fuer diesen Eintrag angelegt und danach wieder entfernt; dazu gehoert status: 503).",
   "seiten": [
     {
       "name": "01-anmeldung",
@@ -172,14 +172,18 @@
       "gruppe": "Einstellungen",
       "rolle": "demo",
       "pfad": "einstellungen.php?t=geraete",
-      "vorher": ["kopplung-rueckfrage"]
+      "vorher": [
+        "kopplung-rueckfrage"
+      ]
     },
     {
       "name": "33b-geraete-warten",
       "gruppe": "Einstellungen",
       "rolle": "demo",
       "pfad": "einstellungen.php?t=geraete",
-      "vorher": ["kopplung-warten"]
+      "vorher": [
+        "kopplung-warten"
+      ]
     },
     {
       "name": "34-einstellungen-backup",
@@ -252,6 +256,21 @@
       "gruppe": "Administration",
       "rolle": "admin",
       "pfad": "update.php"
+    },
+    {
+      "name": "45a-wartung-aktiv",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "update.php",
+      "wartung": true
+    },
+    {
+      "name": "07-wartungsseite",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "index.php",
+      "status": 503,
+      "wartung": true
     }
   ]
 }

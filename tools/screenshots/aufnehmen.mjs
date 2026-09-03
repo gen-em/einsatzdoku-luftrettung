@@ -36,7 +36,7 @@
  * hier nicht auf. Bedienzustände sind nur so weit erfasst, wie die Seitenliste
  * sie als `vorher`-Schritte führt.
  */
-import { mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -464,6 +464,42 @@ const bericht = { basis: BASIS, skala: SKALA, seiten: [], knopf: [], stand: new 
 const verlorene = [];
 const ausgefallen = [];
 
+/* ---- Der Wartungsmodus als Zustand der Installation (S5 Paket W) ---------
+ *
+ * KEIN BEDIENSCHRITT IM BROWSER, deshalb nicht in vorher(): Die Wartungsseite
+ * entsteht nicht dadurch, dass jemand etwas klickt, sondern dadurch, dass eine
+ * DATEI auf dem Server liegt. Der Bilderlauf laeuft auf derselben Maschine
+ * wie die Installation und legt sie deshalb selbst an.
+ *
+ * Ein Eintrag mit "wartung": true schaltet vor seinen acht Breiten ein und
+ * danach wieder aus. Zusaetzlich haengt das Ausschalten am Prozessende:
+ * Bliebe die Datei nach einem Abbruch liegen, waere JEDE weitere Aufnahme
+ * ein Bild der Wartungsseite, und der Bericht meldete „0 Ueberlauf" fuer
+ * zweihundert Bilder desselben Textes — genau die Falle aus F-P3-AQ, wo 176
+ * von 248 Bildern die Anmeldeseite zeigten.
+ *
+ * EINE FREMDE WARTUNG WIRD NICHT ANGEFASST. Liegt beim Einschalten schon
+ * eine Datei, ruehrt der Lauf sie nicht an und loescht sie am Ende auch
+ * nicht — sonst oeffnete ein Bilderlauf eine Installation, die jemand
+ * ausdruecklich geschlossen hat. */
+const WARTUNGSDATEI = join(WURZEL, 'server', 'wartung.lock');
+let wartungVonUns = false;
+function wartungAn() {
+  if (existsSync(WARTUNGSDATEI)) { return; }   // fremde Wartung nicht anfassen
+  writeFileSync(WARTUNGSDATEI, JSON.stringify({
+    seit: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), von: 'Bilderlauf' }) + '\n');
+  wartungVonUns = true;
+}
+function wartungAus() {
+  if (!wartungVonUns) { return; }
+  if (existsSync(WARTUNGSDATEI)) { rmSync(WARTUNGSDATEI); }
+  wartungVonUns = false;
+}
+process.on('exit', wartungAus);
+for (const sig of ['SIGINT', 'SIGTERM']) {
+  process.on(sig, () => { wartungAus(); process.exit(1); });
+}
+
 for (const eintrag of liste) {
   /* Ein Platzhalter, der in PLATZ steht, MUSS einen Wert haben — sonst gibt
      es diese Seite im Bestand nicht, und ein Bild waere geraten. */
@@ -479,6 +515,8 @@ for (const eintrag of liste) {
   const seite = rolle.seite;
   const zeile = { name: eintrag.name, gruppe: eintrag.gruppe, pfad, breiten: [] };
   const bilder = [];
+
+  if (eintrag.wartung) { wartungAn(); }
 
   for (const { b, h, art } of BREITEN) {
     const adresse = `${BASIS}/${pfad}`;
@@ -583,6 +621,8 @@ for (const eintrag of liste) {
       if (k.hoehe !== soll) bericht.knopf.push({ seite: eintrag.name, breite: b, soll, ...k });
     }
   }
+
+  wartungAus();
 
   await kontaktbogen(eintrag.name, bilder);
   bericht.seiten.push(zeile);

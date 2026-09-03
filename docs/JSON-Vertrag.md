@@ -1,10 +1,13 @@
 # JSON-Vertrag Gerät → Server
 
-**Version:** 2.0 — die Kopplung ist umgekehrt (1a): Das **Gerät** zeigt den
+**Version:** 2.1 — die Kopplung ist umgekehrt (1a): Das **Gerät** zeigt den
 Code, das Web nimmt ihn entgegen, das Gerät bestätigt das Konto. `pair.php`
-kennt vier Anliegen statt zwei. Die Hauptnummer steigt, weil kein Client der
-Fassung 1.x sich mehr koppeln kann — bestehende Kopplungen und alles ab
-Abschnitt 2 sind unberührt.
+kennt vier Anliegen statt zwei. Die Hauptnummer stieg auf 2.0, weil kein
+Client der Fassung 1.x sich mehr koppeln kann — bestehende Kopplungen und
+alles ab Abschnitt 2 sind unberührt. **2.1** trägt den Wartungsmodus nach
+(Abschnitt 5): ein 503 mit `{"error":"maintenance"}`, das jeder Endpunkt
+schicken kann. Nebennummer, weil es für die Clients keine neue Regel ist —
+sie behandeln es als 5xx, wie bisher.
 **Endpunkt:** `POST https://<host>/ingest.php`
 **Content-Type:** `application/json`
 
@@ -46,6 +49,7 @@ schon durchsetzt und welche noch nicht.
 | Antwortfeld `cut_points` (5) | durchgesetzt seit Web 12.5.0 |
 | Block `geraet` wird gespeichert (1a) | durchgesetzt seit Web 12.9.0; davor stillschweigend verworfen |
 | Kopplung in drei Anliegen (1a) | durchgesetzt seit Web 13.0.0 — der alte Weg (Code aus dem Web, Uhr tippt ihn ein) ist ersatzlos entfallen |
+| 503 `{"error":"maintenance"}` während der Wartung (5) | durchgesetzt seit Web 13.2.0. **Für die Clients keine neue Regel** — es ist ein 5xx und wird als solches behandelt; der Zusatz `Retry-After` ist ein Hinweis, kein Auftrag |
 | 413 „Uhr halbiert die Chunk-Größe und wiederholt" (5) | **beschrieben, nicht umgesetzt** — `Uploader.mc` setzt bei jedem Fehlercode nur `lastError`, und `UPLOAD_CHUNK_POINTS` ist eine Konstante. Gefunden in S2/AP3; die Anwendung lehnt heute keine Chunk-Größe ab, die die Uhr sendet, deshalb tritt der Fall nicht auf |
 
 Bis auf eine Zeile lauten alle „durchgesetzt" — die Tabelle beschreibt damit
@@ -705,6 +709,22 @@ Fehler:
 | 405 | `{"error":"method"}` | Falsche HTTP-Methode |
 | 413 | `{"error":"too_large"}` | Chunk zu groß — Uhr halbiert die Chunk-Größe und wiederholt |
 | 5xx | — | Später unverändert erneut versuchen (Backoff) |
+| 503 | `{"error":"maintenance","meldung":"…"}` | **Wartungsmodus** — ein Sonderfall von 5xx, **kein neues Verhalten**: Der Server wird gerade aktualisiert und schließt sich für die Dauer. Behandlung genau wie 5xx, also Backoff und unverändert erneut. Die Antwort trägt zusätzlich `Retry-After` in Sekunden (heute 300) als Hinweis für Browser und Werkzeuge; **die Geräte müssen ihn nicht auswerten** und tun es heute nicht |
+
+**Warum das eigens dasteht, obwohl sich nichts ändert.** Der Wartungsmodus
+(Web 13.2.0) ist die einzige Lage, in der der Server ein 5xx **absichtlich**
+und **für längere Zeit** schickt. Wer einen neuen Client schreibt, soll
+wissen, dass diese Antwort erwartbar ist und keinen Fehlerzustand am Gerät
+bedeutet: Der Puffer bleibt, nichts wird markiert, nichts wird bestätigt.
+Genau das prüft das S4-Prüfprotokoll für die Android-App bereits nach
+(„5xx / 503 → später erneut, nichts markiert, nichts bestätigt").
+
+Alle Endpunkte antworten so — `ingest.php`, `pair.php` mit allen vier
+Anliegen, und die Skript-Endpunkte unter `/api/`. Ausgenommen sind die
+Skripte, die die Wartung selbst braucht (`update.php`,
+`wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`,
+`install.php`); sie antworten wie sonst. Einzelheiten und Betriebsablauf:
+`docs/Technik.md`, Abschnitte 4.99c und 7.
 
 ## 6. Chunk-Größen
 
