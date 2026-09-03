@@ -386,6 +386,61 @@ und der Versandweg (Kopplungsprobe Fall 26). Ebenso ungefahren: das
 `git worktree`-Rezept in `android/LIESMICH.md` — dafür bräuchte es einen
 zweiten Server und ein zweites Schema neben der laufenden Installation.
 
+### Web — Nachtrag: das Handbuch beschreibt den neuen Weg (S5, Paket D — zweite Hälfte)
+
+**Ohne eigene Fassung.** Was hier geändert wird, ist ausschließlich
+Dokumentation — `server/version.php` bleibt auf 13.1.2, und die Zählung der
+Uhr ist die von Paket C. Der Eintrag steht trotzdem hier, weil er das Paket
+abschließt, dessen erste Hälfte darüber steht.
+
+**Die zweite Hälfte wartete auf Paket C** (E-S5-58): `docs/Handbuch.md` 12 und
+12.1 nennen Wortlaute, die die Uhr anzeigt — und die legte Paket C erst fest.
+Jetzt stehen sie: „Code für das Web", „Einstellungen, Geräte", „noch 9 min",
+„Mit ph\*\*\*@… koppeln?", „Gekoppelt", und die neun Fehlerpaare aus `Pair.mc`.
+Alle sind aus dem Quelltext abgeschrieben, nicht aus dem Konzept — im Konzept
+standen Entwürfe, gebaut wurde teils anders.
+
+**Der Abschnitt sagt jetzt auch, warum es drei Schritte sind** und nicht einer:
+Zwischen Code und fertigem Gerät liegen zwei Tore — die Web-Seite sieht, *wer
+eingibt*, die Uhr sieht, *wessen Konto* es wäre. Wer den Code abschwatzt, hat
+nichts; wer jemanden dazu bringt, einen fremden Code einzugeben, bekommt das Ja
+nicht. Das stand bisher nur in `Technik.md` 4.99b, also da, wo es niemand
+sucht, der gerade eine Uhr in der Hand hat.
+
+**Dazu ein Fund, der nicht auf dem Zettel stand:** Abschnitt 10 („Geräte")
+beschrieb die Geräteseite noch so, wie sie **vor Paket B** aussah — nur
+„Gerät anlegen", kein Wort über das Feld „Code vom Gerät" und die drei
+Zustände der Karte. Paket B hatte die Seite gebaut und den Changelog
+geschrieben, aber das Handbuch nicht angefasst; D Hälfte 1 hatte den Abschnitt
+nicht auf der Liste, weil er in der Konsistenzlesung nur mit **einer** Zeile
+auffiel („noch ein Kopplungscode erzeugen"). Die eine Zeile war die Spitze:
+Der ganze Abschnitt war überholt. Er ist neu geschrieben — die drei Zustände,
+und „Gerät anlegen" ausdrücklich als **Alternative**, nicht als Hauptweg.
+
+**Nachweis:** Die beiden Zahlen aus der Konsistenzlesung stehen jetzt auf null.
+**K3** (Handlungsanweisungen „Code erzeugen"/„Code eintippen" außerhalb von
+Changelog, Archiv und erledigten Konzepten): **7 → 0**; die eine verbleibende
+Fundstelle (Handbuch 2153) ist die Adresseingabe „Plus Code eintippen" und war
+nie gemeint. **K4** (`beispieldomain` in `watch/` und Handbuch): **4 → 0** —
+drei Zeilen hat Paket C geschlossen, die vierte (Handbuch 2683) diese.
+Wortliste über **fünf Bereiche, 164 Dateien**, 0 Treffer außerhalb der
+Ausnahmen (78 / 78 gegriffen, 0 ungenutzt) — sie fand dabei **zwei** Treffer in
+neu geschriebenem Text dieses Pakets: „Uhr · Venu 3S" als Beispiel für Art und
+Modell, zweimal. Ein Gerätename gehört nach E-P2-02 in den ausdrücklichen
+Garmin-Zusatz, nicht in den geräteneutralen Ablauf; das Beispiel ist ersetzt
+durch das, was die Seite wirklich zeigt („die Art und das Modell, das das Gerät
+selbst gemeldet hat") — das ist ohnehin die bessere Auskunft, weil ein Leser
+mit einer anderen Uhr sich am fremden Modellnamen nur stößt.
+
+**Die S5-Anker sind abgeräumt.** Nach dem Merge von Paket C meldeten sie
+**13 `NICHT GEFUNDEN` und einen mehrdeutigen** — zehn davon in `watch/`, wo C
+`Pair.mc` neu geschrieben hat, dazu die beiden Handbuch-Anker dieses Pakets und
+`claude.watch-fehlt`. Das ist keine Panne, sondern genau die Auskunft, für die
+das Werkzeug gebaut wurde: Die Stelle ist umgeschrieben. Alle vierzehn sind
+ausgetragen (83 → 52), und der Lauf steht wieder auf **0 nicht gefunden, 0
+mehrdeutig**. Vollständigkeit **278** unverändert, `php -l` **0 Fehler**.
+
+
 ## [Web 13.1.1] — 2026-09-03
 
 ### Web — Behoben: ein gelungenes Trennen leerte einen Topf, der ihm nicht gehört

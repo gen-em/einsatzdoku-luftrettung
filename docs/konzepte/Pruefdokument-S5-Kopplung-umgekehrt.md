@@ -249,6 +249,29 @@ Wartungsprobe liest die drei Regeln aus E-S5W-09 stattdessen **am Code** nach
 das **erst nach** `rate_erfolg` geschieht. Eine am Code gelesene Regel ist
 keine gefahrene; Prüfliste Punkt 11 fährt sie.
 
+### 1.12 Das Handbuch ist gelesen, nicht bedient
+
+`docs/Handbuch.md` 10, 12 und 12.1 beschreiben jetzt den neuen Weg, und die
+Wortlaute sind **aus dem Quelltext abgeschrieben** — `PairView.mc` (Codeblock,
+Restzeit, Verbindungshinweis) und `Pair.mc` (Rückfrage, neun Fehlerpaare,
+Trennen). Nicht aus dem Konzept: Dort standen Entwürfe, gebaut wurde teils
+anders („Einstellungen, Geräte" statt „Einstellungen → Geräte", E-S5-63).
+
+**Was das nicht beweist:** dass jemand mit dem Handbuch in der einen und der
+Uhr in der anderen Hand durchkommt. Ein abgeschriebener Wortlaut kann an der
+richtigen Stelle stehen und trotzdem im falschen Schritt. **Das ist der
+P2-Prüfpunkt 4.1** (R55), und er steht als Prüflistenpunkt 12.
+
+**Zwei Zahlen dazu, beide auf null:** **K3** — Handlungsanweisungen „Code
+erzeugen"/„Code eintippen" außerhalb von Changelog, Archiv und erledigten
+Konzepten: nach D Hälfte 1 sieben, jetzt **0**. Die eine verbleibende
+Fundstelle (`Handbuch.md` 2153, „Plus Code eintippen") ist die Adresseingabe
+und war nie gemeint. **K4** — `beispieldomain` in `watch/` und Handbuch: vorher
+vier, jetzt **0**; drei Zeilen hat Paket C geschlossen, die vierte diese Hälfte.
+Was unter `beispieldomain` noch findbar ist, steht im Changelog, im
+Rahmenplan-Archiv und in `docs/mockups/S4-app.html` — Historie und ein
+Android-Mockup, beides kein Handlungstext.
+
 ---
 
 ## 2. Was maschinell geprüft wurde — mit Mittel und Zahl
@@ -547,6 +570,26 @@ zeigt.
 - **Und danach:** Mit demselben Nicht-Admin-Konto nach dem **Ausschalten**
   anmelden. Es muss **sofort** gehen — der Ratenschutz darf die richtigen
   Versuche von vorhin nicht gezählt haben (E-S5W-09 b).
+- [ ] erledigt am ______
+
+### 12. Eine Kopplung mit dem Handbuch in der Hand  *(P2-Prüfpunkt 4.1, R55)*
+
+Der Punkt, den der Rahmenplan seit P2 offen führt, und der einzige, der das
+Handbuch selbst prüft.
+
+- **Weg:** `docs/Handbuch.md` Abschnitt 12 **von oben nach unten**, mit einer
+  frisch aufgesetzten Uhr und ohne Vorwissen. Danach 12.1 mit einem zweiten
+  Konto.
+- **Erwartet:** Jeder Schritt geht ohne Zusatzwissen. Jede Bezeichnung im
+  Handbuch steht so auch auf der Uhr oder im Web — „Code für das Web",
+  „Einstellungen, Geräte", „noch 9 min", „Mit ph\*\*\*@… koppeln?",
+  „Gekoppelt", „Code vom Gerät".
+- **Scheitern, und woran du es merkst:** Ein Text auf der Uhr weicht vom
+  Handbuch ab, **besonders auf der Venu 3s** — sie hat andere Tasten, und der
+  Tastenname steht in der Hinweiszeile, nicht im Handbuch. Ebenfalls
+  Scheitern: Ein Schritt setzt etwas voraus, das erst weiter unten steht.
+- **Notiere, welche Uhr** du benutzt hast; die Tastenwege unterscheiden sich,
+  und ein Durchlauf auf einer Fenix beweist nichts für die Venu.
 - [ ] erledigt am ______
 
 ## 5. Grenzen der benutzten Prüfmittel

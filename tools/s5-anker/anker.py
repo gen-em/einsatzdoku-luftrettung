@@ -67,8 +67,6 @@ ANKER: list[tuple] = [
     # ---- Paket B: Web ------------------------------------------------------
 
     # ---- Paket C: Uhr ------------------------------------------------------
-    ("C", "pair.mc.kopf",         "watch/source/Pair.mc",   3,
-     r"UP halten -> Code eintippen"),
     ("C", "pair.mc.trennen-dlg",  "watch/source/Pair.mc",  35,
      r"^class TrennenDelegate"),
     ("C", "pair.mc.zeile-max",    "watch/source/Pair.mc",  64,
@@ -77,22 +75,10 @@ ANKER: list[tuple] = [
      r"^\s*function start\(\) as Void"),
     ("C", "pair.mc.trennen",      "watch/source/Pair.mc", 113,
      r"^\s*function trennen\(\) as Void"),
-    ("C", "pair.mc.openinput",    "watch/source/Pair.mc", 176,
-     r"^\s*function openInput"),
     ("C", "pair.mc.geraeteinfo",  "watch/source/Pair.mc", 217,
      r"^\s*function _geraeteInfo"),
-    ("C", "pair.mc.request",      "watch/source/Pair.mc", 237,
-     r"^\s*function request\(code"),
-    ("C", "pair.mc.keine-domain", "watch/source/Pair.mc", 240,
-     r'"Erst Server-Domain setzen"'),
-    ("C", "pair.mc.onresponse",   "watch/source/Pair.mc", 289,
-     r"^\s*function onResponse\(code as Lang.Number, data as Lang.Object"),
     ("C", "pair.mc.verbindung",   "watch/source/Pair.mc", 317,
      r"\} else if \(code < 0\) \{"),
-    ("C", "pair.mc.unbekannt",    "watch/source/Pair.mc", 330,
-     r'"Kopplung fehlgeschlagen \("'),
-    ("C", "pair.mc.textpicker",   "watch/source/Pair.mc", 339,
-     r"^class PairTextDelegate"),
     ("C", "sync.timer",           "watch/source/SyncView.mc",  25,
      r"_timer\.start\(method\(:refresh\), 2000, true\)"),
     ("C", "sync.einrichtung",     "watch/source/SyncView.mc",  96,
@@ -111,18 +97,10 @@ ANKER: list[tuple] = [
      r"Sync unvollst.ndig", 2),
     ("C", "uploader.credentials", "watch/source/Uploader.mc", 180,
      r"^\s*function credentials"),
-    ("C", "uploader.beispiel",    "watch/source/Uploader.mc", 216,
-     r"nadoku\.beispieldomain\.de"),
     ("C", "props.serverurl",      "watch/resources/settings/properties.xml", 6,
      r'property id="serverUrl"'),
-    ("C", "props.ohne-vorgabe",   "watch/resources/settings/properties.xml", 5,
-     r"Bewusst ohne Vorgabewert"),
-    ("C", "settings.serverurl",   "watch/resources/settings/settings.xml", 3,
-     r"Server-Adresse der eigenen NAdoku"),
     ("C", "wortliste.bereiche",   "tools/wortliste/wortliste.py", 75,
      r"^BEREICHE"),
-    ("C", "wortliste.watch-fehlt", "tools/wortliste/wortliste.py", 69,
-     r"`watch/` FEHLT WEITERHIN"),
 
     # ---- Paket D: Doku -----------------------------------------------------
     #
@@ -135,18 +113,12 @@ ANKER: list[tuple] = [
     # (vertrag.1b-429, backup.pair-codes) — genau die Auskunft, fuer die es
     # gebaut ist. Was stehen bleibt, gehoert D HAELFTE 2 (Handbuch, Rahmenplan)
     # oder anderen Instanzen (Backlog und CLAUDE.md der Uhr, uhrbilder zu C).
-    ("D", "handbuch.abschnitt12",  "docs/Handbuch.md", 2682,
-     r"Ger.t koppeln . Code eintippen"),
-    ("D", "handbuch.12-1",         "docs/Handbuch.md", 2718,
-     r"im Web einen Code erzeugen und eintippen"),
     ("D", "backlog.66",            "docs/Backlog.md", 697,
      r"^66\. \*\*Der Garmin-Uhrcode"),
     ("D", "backlog.84",            "docs/Backlog.md", 1067,
      r"^84\. \*\*Die Android-App kennt nur"),
     ("D", "rahmenplan.sperren",    "docs/Rahmenplan.md", 486,
      r"S5-Umsetzung zu S6 und S7"),
-    ("D", "claude.watch-fehlt",    "CLAUDE.md", 203,
-     r"`watch/` fehlt noch und ist einer"),
     ("D", "uhrbilder.bitgleich",   "tools/uhr-bilder/erzeugen.sh", 13,
      r"sie BITGLEICH \(geprueft"),
     # ---- Paket E: Android-Ortung und Dienstende (Zusatzkonzept) ------------
