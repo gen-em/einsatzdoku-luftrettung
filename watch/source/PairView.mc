@@ -80,17 +80,15 @@ class PairView extends WatchUi.View {
          * kleinere Schrift mehr zur Wahl (fontHint liefert dort selbst schon
          * FONT_XTINY). Uhr-Layout_Regeln 4.3 nennt genau diesen Fall.
          *
-         * DIE RESTZEIT SELBST IST AUF DER VENU 3S KNAPP. Mit dem Wortlaut
-         * "noch 10 min gültig" (Ansage vom 03.09.2026) misst sie dort 194 px
-         * gegen 193 px Sehne — ein Pixel ueber der eigenen Sicherheitslinie,
-         * nachdem fitFont bereits auf FONT_XTINY zurueckgefallen ist.
-         * Gezeichnet wird sie trotzdem vollstaendig, weil chordW zusaetzlich
-         * Ui.s(dc,16) = 24 px Rand abzieht; am Bild nachgesehen. Auf der Fenix
-         * (120/128) und der FR945 (111/118) bleiben 8 bzw. 7 px Reserve. Wer
-         * den Wortlaut verlaengert — oder wer dem Server ein groesseres
-         * `frist_s` erlaubt, "noch 100 min gültig" —, verliert auch dort den
-         * Rand. Die frueher hier genannten 71/64/146 px galten dem
-         * EINSTELLIGEN Fall ohne "gültig"; sie sind berichtigt.
+         * DAS "noch" FEHLT MIT ABSICHT. Der erste Entwurf hiess "noch 10 min
+         * gültig" und mass auf der Venu 3s 194 px gegen 193 px Sehne — einen
+         * Pixel ueber der eigenen Sicherheitslinie, nachdem fitFont bereits
+         * auf FONT_XTINY zurueckgefallen war. Gezeichnet wurde er trotzdem
+         * vollstaendig (chordW haelt zusaetzlich Ui.s(dc,16) = 24 px Rand),
+         * aber ohne jede Reserve. "10 min gültig" nimmt sie zurueck.
+         *
+         * Die frueher hier genannten 71/64/146 px galten dem EINSTELLIGEN
+         * Fall ohne "gültig"; sie sind berichtigt.
          *
          * Eine Zeile hoeher traegt die Sehne 173/163/271 px — dort passt der
          * Hinweis. Das ist auch der Grund, warum die Sync-Seite an derselben
@@ -109,14 +107,14 @@ class PairView extends WatchUi.View {
         if (rest > 60) {
             // Aufgerundet: Bei 540 s steht "noch 9 min", bei 541 "noch 10 min".
             // Abrunden hiesse, in der letzten Minute "noch 0 min" zu zeigen.
-            lines.add(["noch " + ((rest + 59) / 60).toString() + " min gültig",
+            lines.add([((rest + 59) / 60).toString() + " min gültig",
                        Graphics.COLOR_LT_GRAY]);
         } else {
             // Unter einer Minute auf Sekunden umschalten und in Orange: Die
             // Restzeit ist ab hier eine Kennzahl, auf die es ankommt
             // (Uhr-Layout_Regeln 7). Rot waere falsch — noch ist nichts
             // schiefgegangen.
-            lines.add(["noch " + rest.toString() + " s gültig", Ui.ORANGE]);
+            lines.add([rest.toString() + " s gültig", Ui.ORANGE]);
         }
 
         var untenY = h - Ui.s(dc, 22) - lines.size() * hKlein;

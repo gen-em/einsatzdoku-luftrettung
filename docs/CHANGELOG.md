@@ -45,17 +45,23 @@ unberührt: `ingest.php` und Vertragsabschnitt 1 ändern sich nicht.
 ### Uhr — Die neue Kopplungsansicht, und warum sie eine eigene ist
 
 `PairView.mc` zeigt den Code groß in zwei Dreiergruppen („CBF E4W"), darüber
-**„Kopplungscode"**, darunter **„Im Web eingeben"** und **„noch 10 min
+**„Kopplungscode"**, darunter **„Im Web eingeben"** und **„10 min
 gültig"** (Wortlaut auf Ansage vom 03.09.2026).
 
-**Die Restzeile ist auf der Venu 3s randvoll**, und das ist nachgerechnet:
-194 px gegen 193 px Sehne — ein Pixel über der eigenen Sicherheitslinie,
-nachdem `fitFont` bereits auf die kleinste Schrift zurückgefallen ist.
-Gezeichnet wird sie trotzdem vollständig, weil `chordW` zusätzlich 24 px Rand
-abzieht; am Bild nachgesehen. Auf Fenix (120/128 px) und FR945 (111/118 px)
-bleiben 8 bzw. 7 px Reserve. Wer den Wortlaut verlängert — oder wer dem
-Server ein größeres `frist_s` erlaubt —, verliert auch dort den Rand. Der
-frühere Wortlaut „noch 10 min" maß auf der Venu 162 px. Ein vierter
+**Das „noch" ist unterwegs weggefallen, und zwar aus einem gemessenen Grund.**
+Der erste Entwurf hieß „noch 10 min gültig" und maß auf der Venu 3s 194 px
+gegen eine Sehne von 193 px — einen Pixel über der Linie, die sich das Projekt
+selbst zieht, und zwar **nachdem** `Ui.fitFont` bereits auf die kleinste
+verfügbare Schrift zurückgefallen war. Gezeichnet wurde er trotzdem
+vollständig, weil `Ui.chordW` zusätzlich 24 px Sicherheitsrand abzieht; am
+Simulatorbild nachgesehen und die Tinte darin nachgemessen. Auf Fenix
+(120/128 px) und FR945 (111/118 px) blieben 8 bzw. 7 px.
+
+Kein sichtbarer Fehler also — aber kein Puffer, und zwei Wege hätten ihn
+gekippt: ein längerer Wortlaut oder ein Server, der ein größeres `frist_s`
+schickt. Ohne „noch" misst die Zeile rund 140 px gegen 193, die Reserve ist
+zurück. Der Fall zeigt, wofür der Rand in `chordW` da ist: Er hat den Fehler
+aufgefangen, statt ihn sichtbar zu machen. Ein vierter
 Zustand des Mittelblocks der Sync-Seite hätte nicht getragen (E-S5-24): Der
 Code muss groß stehen und **trägt Buchstaben** — eine Ziffernschrift scheidet
 damit aus (`Uhr-Layout_Regeln` 3.1), es bleibt `fitFont` über die

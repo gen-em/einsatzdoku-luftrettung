@@ -80,21 +80,23 @@ Die Behebung von B-S5-12 ist deshalb **übersetzt und gelesen, nicht erlebt**.
 Belegt ist nur, dass sie die 99 Zielgeräte ohne Warnung übersetzt und die
 übrigen Bedienwege im Simulator unverändert funktionieren. **Prüfliste 8.**
 
-### 1.1d Uhr: die Restzeile hat auf der Venu 3s keine Reserve mehr
+### 1.1d Uhr: die Restzeile war auf der Venu 3s randvoll — der Wortlaut wurde gekürzt
 
-Der Wortlaut „noch 10 min gültig" (Ansage 03.09.2026) misst auf der Venu 3s
-**194 px** gegen eine Sehne von **193 px** — einen Pixel über der Linie, die
-sich das Projekt selbst zieht, und zwar **nachdem** `Ui.fitFont` bereits auf
-die kleinste verfügbare Schrift zurückgefallen ist. Kleiner geht nicht.
+**Behoben, hier nur zur Nachvollziehbarkeit.** Der erste Entwurf der Restzeit
+hieß „noch 10 min gültig" und maß auf der Venu 3s **194 px** gegen eine Sehne
+von **193 px** — einen Pixel über der Linie, die sich das Projekt selbst
+zieht, und zwar **nachdem** `Ui.fitFont` bereits auf die kleinste verfügbare
+Schrift zurückgefallen war. Gezeichnet wurde er trotzdem vollständig, weil
+`Ui.chordW` zusätzlich `Ui.s(dc,16)` = 24 px Rand abzieht; am Simulatorbild
+nachgesehen und die Tinte darin nachgemessen. Auf Fenix 6 Pro (120/128 px)
+und FR945 (111/118 px) blieben 8 bzw. 7 px.
 
-**Gezeichnet wird sie trotzdem vollständig**, weil `Ui.chordW` zusätzlich
-`Ui.s(dc,16)` = 24 px Sicherheitsrand abzieht; am Simulatorbild nachgesehen
-und die Tinte darin nachgemessen. Auf der Fenix 6 Pro (120/128 px) und der
-FR945 (111/118 px) bleiben 8 bzw. 7 px Reserve.
+Auf Ansage vom 03.09.2026 heißt die Zeile jetzt **„10 min gültig"** — rund
+140 px gegen 193, die Reserve ist zurück. Am Bild belegt.
 
-**Kein sichtbarer Fehler heute — aber kein Puffer mehr.** Zwei Wege würden ihn
-kippen: ein längerer Wortlaut, oder ein Server, der ein größeres `frist_s`
-schickt („noch 100 min gültig"). Am echten Gerät ansehen (Prüfliste 10).
+**Was daran zu prüfen bleibt:** Der Simulator zeichnet mit denselben
+Schriftdateien wie das Gerät, aber der Gehäuserand einer echten Venu 3s ist
+nicht derselbe wie die gezeichnete Lünette. Prüfliste 10.
 
 ### 1.2 Die Antwortzeit auf dem Produktivserver
 
@@ -371,18 +373,19 @@ Layoutfehler, die `Ui.fitFont` auf diesen Größen nicht auffängt.
 
 ### 10. Die Restzeile auf einer echten Venu 3s  *(Sichtprüfung)*
 
-**Warum:** Sie liegt rechnerisch einen Pixel über der Sicherheitslinie (1.1d).
-Der Simulator zeichnet sie vollständig; ob das auf echter Hardware mit ihrem
-Gehäuserand ebenso aussieht, ist damit nicht beantwortet.
+**Warum:** Der erste Wortlaut lag rechnerisch einen Pixel über der
+Sicherheitslinie (1.1d); der gekürzte hat wieder Reserve. Am Simulator
+belegt — ob es auf echter Hardware mit ihrem Gehäuserand ebenso aussieht,
+ist damit nicht beantwortet.
 
 **Bedienweg:** Auf einer Venu 3s koppeln, bis der Code steht.
 
-**Erwartet:** „noch 10 min gültig" steht vollständig da, mit sichtbarem
+**Erwartet:** „10 min gültig" steht vollständig da, mit sichtbarem
 schwarzem Rand zu beiden Seiten.
 
-**Scheitern erkennt man daran:** Das „n" am Anfang oder das „g" am Ende
-berührt den Gehäuserand oder fehlt teilweise. Dann den Wortlaut kürzen —
-„10 min gültig" ohne „noch" spart rund 40 px.
+**Scheitern erkennt man daran:** Die „1" am Anfang oder das „g" am Ende
+berührt den Gehäuserand oder fehlt teilweise. Dann bleibt nur, die Zeile
+weiter zu kürzen — eine kleinere Schrift gibt es dort nicht mehr.
 
 ---
 
