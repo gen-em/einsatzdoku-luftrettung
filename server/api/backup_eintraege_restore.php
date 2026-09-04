@@ -52,7 +52,7 @@ $eintraege = $b['eintraege'];
 /* Die Fassung steht im Kopf der Datei und wird hier mitgeschickt: Der
  * Eintragsweg gibt es nur fuer Nutzlast 8, und das soll dastehen statt sich
  * daraus zu ergeben, dass niemand anders ihn ruft. */
-$eintraege['version'] = 8;
+$eintraege['version'] = 9;
 
 try {
     $stats = edbak_restore($userId, $eintraege,

@@ -7,8 +7,8 @@
       "feld": "version",
       "art": "wert",
       "von": "7",
-      "nach": "8",
-      "begruendung": "GEMESSEN 1x. Die Nutzlastfassung steigt von 7 auf 8 — genau das ist der Zweck dieses Laufs. Nutzlast 8 traegt keine Punktlisten mehr, sondern je Spur eine `spur_ref` und die Angaben Stufe/n_original/n; die Punkte stehen in eigenen Spurteilen."
+      "nach": "9",
+      "begruendung": "GEMESSEN 1x. Die Nutzlastfassung steigt von 7 auf 9 — genau das ist der Zweck dieses Laufs. Bis Web 14.1.0 stand hier 8; mit Nutzlast 9 (Geraete-Momentaufnahme und Sperrvermerke, R64 / Backlog Nr. 63) schreibt edbak_build() eine 9. Die Regel steht auf 'von 7' und 'nach 9', weil die Altformat-Referenz eingefroren bleibt: Sie IST der Beleg dafuer, dass eine alte Datei noch einspielbar ist."
     },
     {
       "bereich": "missions",
@@ -58,6 +58,12 @@
       "art": "wert",
       "nach": "None",
       "begruendung": "GEMESSEN 16x (je Diensttag einmal): days[].refs[].device_id wird im frischen Konto null. Geraete stehen in keinem Backup — sie tragen einen API-Schluessel, und ein mitgesichertes Geraet waere ein mitgesicherter Zugang. Die Dienstkennung day_ref selbst bleibt WOERTLICH erhalten; nur ihre Zuordnung zu einem Geraet nicht. Dieselbe Regel wie im Lauf `edbak`."
+    },
+    {
+      "bereich": "missions",
+      "feld": "schnitte",
+      "art": "wert",
+      "begruendung": "GEMESSEN 87x (04.09.2026, Stand vor der Referenz-Erneuerung in AP4). Die Liste der Sperrvermerke gibt es erst seit Nutzlast 9 (R64 / Backlog Nr. 63); die eingefrorene Altformat-Referenz vom 24.08.2026 traegt Nutzlast 7 und kennt den Schluessel nicht. Der Umlauf schreibt ihn an JEDEN Einsatz, leer erlaubt — deshalb 'None' -> '[]' an allen 87. Die Regel nennt bewusst kein 'nach': Sobald der Referenzbestand einen Schnitt traegt (E-R64-16), steht an einem Einsatz eine nicht leere Liste, und die Regel muss beides decken. ZAHL IN AP4 NEU MESSEN (dann 88 Einsaetze)."
     }
   ]
 }

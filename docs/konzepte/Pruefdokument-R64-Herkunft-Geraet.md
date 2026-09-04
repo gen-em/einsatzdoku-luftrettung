@@ -7,7 +7,7 @@ nicht für die Instanz am Code.
 
 | | |
 |---|---|
-| Stand | 04.09.2026 — **AP1 und AP3 fertig** (Web 14.0.0 und 14.1.0). AP2, AP4 und AP5 stehen aus; ihre Abschnitte hier sind als solche gekennzeichnet |
+| Stand | 04.09.2026 — **AP1, AP3 und AP2 fertig** (Web 14.0.0, 14.1.0, 14.2.0). AP4 und AP5 stehen aus; ihre Abschnitte hier sind als solche gekennzeichnet |
 | Zweig | `claude/rahmenplan-schritt-6-ewm0kx` (S4-Rest) |
 | Erhoben an | Zweigstand `14028a9`; Ausgangspunkt `main` vom 04.09.2026 (Web 13.2.0, Uhr 3.0.0, Android 0.10.2) |
 | Gehört zu | Prüfdokument S4 (`Pruefdokument-S4-Handy-Uhr-Client.md`) — dort steht eine Verweiszeile; die Server-Prüfungen von R64 stehen **hier** |
@@ -48,11 +48,17 @@ Gerätetest des S4-Rests.
 
 | Fehlt | Kommt mit |
 |---|---|
-| Die Sicherung trägt Momentaufnahme und Sperrvermerke | **AP2** |
-| Nutzlast 9, alle vier verdrahteten Nummern | **AP2** |
 | Referenzbestand mit gekoppelten Geräten und einem Schnitt | **AP4** |
 | Alle drei Kreisläufe auf 0 unerklärt | **AP4** |
 | Demo-Fixture im neuen Format | **AP4** |
+
+### 1.4 Der Messstand am 5000er-Bestand (R35)
+
+Er braucht seinen eigenen Prüfbestand, den diese Umgebung nicht trägt.
+Gemessen ist stattdessen dasselbe an der Referenz — 87 Einsätze, ein Fenster,
+ohne Spuren: **21,9 → 23,3 ms** Median (+1,4 ms), Datei **179 314 → 187 825
+Byte** (+4,7 %), Speicherspitze 4,0 MB unverändert. Das ist die **Obergrenze**
+des Zusatzaufwands bei durchweg leeren Vermerklisten, nicht der Regelfall.
 
 ---
 
@@ -108,7 +114,48 @@ Mit der Erneuerung der Referenz in **AP4** verschwinden sie. Eine
 Ausnahmeregel dafür wäre ein Filter und kein Ausnahmegrund
 (`tools/referenzdatensatz/vergleich/LIESMICH.md`).
 
-### 2.3 AP2, AP4, AP5
+### 2.3 AP2 — Sicherung: Nutzlast 9 (Web 14.2.0)
+
+| Prüfmittel | Ergebnis |
+|---|---|
+| `php tools/wiederherstellungs-probe/probe.php` | **94 Erwartungen, 0 nicht erfüllt** — davon **18 neu** in Teil 11 |
+| `node tools/containerprobe/probe.mjs` | **32 / 0** (vorher dauerhaft 31/1, siehe 1.5) |
+| `php tools/spurprobe/probe.php` | **45 / 0** — hier hängt die Zusage „zwei ganze Sicherungen desselben Kontos sind gleich" |
+| `php tools/ingestprobe/probe.php` | 39 / 0, unverändert |
+| `kreislauf.py --art edbak-alt --frisch` | **287 743 Einzelvergleiche, 647 erwartete, 0 unerklärte**, 0 ungenutzte Regeln |
+| `kreislauf.py --art edbak --frisch` | 253 343 Einzelvergleiche, 16 erwartete, **88 unerklärte** — 87 × `missions.schnitte` `None → []`, 1 × `kopf.version` `8 → 9` |
+| Wortliste | 0 / 0 / 0 bei 79 Regeln |
+| Vollständigkeit | **278 → 280** — beide neu in „Unicode-Zeichen als Symbol im Markup", beides Auslassungszeichen in **Kommentaren** |
+
+**Die 88 des edbak-Kreislaufs verschwinden mit AP4** und bekommen deshalb
+**keine** Ausnahmeregel: Sobald die Referenz selbst Nutzlast 9 ist, gleichen
+sich beide Seiten. Eine Regel dafür wäre ein Filter.
+
+**Die achtzehn neuen Fälle von Teil 11:** eine Nutzlast-9-Datei wird
+angenommen · Art und Modell kommen an Einsatz und Segment zurück · ein Einsatz
+ohne Angabe bleibt **NULL** · der Vermerk kommt an, mit unveränderten Zeiten
+und Punktzahl · seine Quelle zeigt auf das **eingespielte** Segment · der
+ursprüngliche `erstellt_am` reist mit · ein zweites Einspielen überspringt
+statt zu verdoppeln · verwaiste Quelle → verworfen, **mit genannter Kennung**
+· `bis_ts` vor `von_ts` → verworfen · `n_punkte = 0` → verworfen · unbekannte
+`quelle_art` → verworfen und **nichts geschrieben** (die ENUM-Falle) · eine
+Nutzlast-8-Datei ergibt keine Zähler und keine Meldung.
+
+### 1.5 Zwei Prüfmittel hatten aufgehört zu prüfen
+
+Das gehört hierher und nicht in eine Fußnote, weil es die Aussagekraft
+früherer Prüfungen berührt:
+
+- Die **Wiederherstellungsprobe** starb mitten in Teil 9 an einem fehlenden
+  `require` für `smtp.php` — nach 43 grünen Zeilen. **Teil 10 lief nie.** Am
+  Zweigstand vor AP2 nachgestellt: der Absturz war vorher da.
+- Die **Containerprobe** suchte in einer Fehlermeldung einen Wortlaut, den es
+  nicht mehr gibt, und stand dauerhaft auf 31/1. Ebenfalls gegengeprüft.
+
+Beides ist behoben. Wer eine ältere Meldung „Wiederherstellungsprobe grün"
+liest, sollte wissen, dass sie höchstens bis Teil 9 reichte.
+
+### 2.4 AP4, AP5
 
 *Steht aus.* Die Sollwerte stehen im Konzept, Abschnitt 7.1.
 
@@ -250,12 +297,54 @@ Scheitern zu erkennen ist**. Abhaken, was erledigt ist.
 > aufgeschrieben; R64 macht es nur sichtbar, weil es die Herkunft `schnitt`
 > überhaupt erst benennt.
 
-### P-9 bis P-… — Sperrvermerke und Referenz
+### P-9 — Ein Schnitt übersteht Sicherung und Wiedereinspielen
 
-*Entsteht mit AP2 und AP4.* Was dort geprüft werden muss, steht im Konzept,
-Abschnitt 7.1: der edbak-Kreislauf mit dem Schnitt der Referenz, die
-Wiederherstellungsprobe Teil 5 (fünf Grenzfälle), und der Demo-Reset als
-**Dauerbeleg** auf dem Produktivserver.
+- [ ] **Weg:** Einen Einsatz aus einer Ruhezeit schneiden (P-6). Danach eine
+      **Konto-Sicherung** erzeugen und in ein **frisches** Konto einspielen.
+- **Erwartet:** Die Rückmeldung nennt eine Zeile „Sperrvermerke des
+      Schneidens: 1 übernommen." Im Zielkonto trägt die Ruhezeit weiterhin
+      ihre Sperre — ein Gerät, das den geschnittenen Zeitraum nachliefert,
+      kommt dort **nicht** durch.
+- **Scheitern erkennbar an:** Die Zeile fehlt → die Datei trug keine Vermerke
+      (dann ist die Sicherung älter als Web 14.2.0). Sie sagt „verworfen" →
+      die Quelle war nicht auflösbar; die Aufschlüsselung nennt den Grund, die
+      Kennung steht in den abgelehnten Werten.
+- **Wichtig:** In **dasselbe** Konto einzuspielen ergibt „übersprungen", nicht
+      „übernommen" — das ist richtig so und keine Panne (Konzept 5.5).
+
+### P-10 — Eine ältere Sicherung lässt sich weiterhin einspielen
+
+- [ ] **Weg:** Eine Sicherung aus der Zeit **vor** Web 14.2.0 (Nutzlast 8)
+      in ein Testkonto einspielen.
+- **Erwartet:** Sie läuft durch wie bisher. Keine Zeile zu Sperrvermerken,
+      Geräteangaben bleiben leer.
+- **Scheitern erkennbar an:** „stammt aus einer neueren Fassung" — das wäre
+      verkehrt herum und hieße, dass die Schranke falsch steht.
+
+### P-11 — Eine neue Sicherung auf einem alten Stand
+
+- [ ] **Weg:** Nur falls eine zweite, ältere Installation zur Hand ist: eine
+      Sicherung aus Web 14.2.0 dort einspielen.
+- **Erwartet:** Sie wird **abgewiesen** mit „stammt aus einer neueren
+      Fassung". Genau dafür ist die Schranke gebaut.
+- **Scheitern erkennbar an:** Sie läuft durch — dann legt der alte Stand einen
+      halben Bestand an, und das fällt erst später auf.
+
+### P-12 — Eine Umdatierung nimmt die Sperre mit
+
+- [ ] **Weg:** Einen Diensttag mit einem geschnittenen Einsatz **umdatieren**
+      (auf einen anderen Tag verschieben). Danach die Ruhezeit ansehen.
+- **Erwartet:** Die Sperre liegt weiterhin über demselben **Stück Spur** wie
+      vorher, nicht über dem alten Uhrzeitfenster.
+- **Scheitern erkennbar an:** Ein Gerät liefert nach der Umdatierung den
+      geschnittenen Bereich nach und er kommt durch — die Fahrt liegt dann in
+      Einsatz und Segment. Das war bis Web 14.2.0 der Zustand.
+
+### P-13 bis P-… — Referenz und Demo
+
+*Entsteht mit AP4.* Was dort geprüft werden muss, steht im Konzept,
+Abschnitt 7.1: der edbak-Kreislauf mit dem Schnitt der Referenz und der
+Demo-Reset als **Dauerbeleg** auf dem Produktivserver.
 
 ---
 

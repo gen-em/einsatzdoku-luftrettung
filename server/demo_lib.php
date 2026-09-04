@@ -379,6 +379,21 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
                    JOIN rest_segments r ON r.id = tb.owner_id
                    WHERE tb.owner_type = 'rest' AND r.user_id = ?")->execute([$id]);
 
+    /* UND DIE SPERRVERMERKE DES SCHNITTS (Web 14.2.0, R64).
+     *
+     * Sie fehlten hier, und das war folgenlos, solange es im Demo-Konto
+     * keinen Schnitt gab. Seit E-R64-16 gibt es einen: Die Fixture traegt ihn,
+     * und der Reset spielt sie alle 30 Minuten neu ein. Ohne diese Zeile
+     * bliebe bei JEDEM Reset ein Vermerk liegen — 48 am Tag, und keiner davon
+     * je wieder auffindbar, weil seine Quelle mit dem Bestand verschwindet.
+     * Auch der Waisenjob findet sie nicht: Er sucht Spuren ohne Eigentuemer,
+     * und die Spurzeilen sind oben schon weg.
+     *
+     * UEBER spur_lib.php, wie alles an dieser Tabelle (CLAUDE.md 4). Der Weg
+     * `konto` ist genau dafuer da — er ist derselbe, den die Kontoloeschung
+     * geht. */
+    schnitte_loeschen($pdo, 'konto', [$id]);
+
     // Sperrliste haengt an der Geraetekennung, nicht am Konto.
     $pdo->prepare('DELETE dr FROM deleted_refs dr
                    JOIN devices d ON d.id = dr.device_id
@@ -402,9 +417,16 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
      * einem Geraet DIESES Kontos. Fehlt es zu diesem Zeitpunkt, bleibt die
      * Verknuepfung leer — die Kennung stuende dann zwar noch da, aber ohne
      * Geraet, und ein Upload derselben Uhr legte den Diensttag erneut an. */
+    /* ART UND MODELL KOMMEN MIT (Web 14.2.0, R64). Ohne sie zeigte die
+     * Geraeteseite des Demo-Kontos „Gerät unbekannt", waehrend die Einsaetze
+     * daneben ihre Momentaufnahme tragen — ein Widerspruch in derselben
+     * Ansicht. Beide Felder sind in der Fixture optional (aeltere Fixtures
+     * kennen sie nicht); fehlen sie, bleibt es bei NULL, und das heisst
+     * genau das Richtige. */
     $insDev = $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash,
-                                                  label, active)
-                             VALUES (?,?,?,?,1)');
+                                                  label, active,
+                                                  geraet_art, geraet_modell)
+                             VALUES (?,?,?,?,1,?,?)');
     $geraete = 0;
     foreach ((array)($fx['geraete'] ?? []) as $g) {
         if (!is_array($g) || empty($g['device_id']) || empty($g['api_key_hash'])) { continue; }
@@ -429,7 +451,8 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
          * 'manual-' in der Nutzlast der ausgelieferten Fixture. */
         if (geraet_virtuell((string)$g['device_id'])) { continue; }
         $insDev->execute([$id, (string)$g['device_id'], (string)$g['api_key_hash'],
-                          $g['label'] ?? null]);
+                          $g['label'] ?? null,
+                          $g['geraet_art'] ?? null, $g['geraet_modell'] ?? null]);
         $geraete++;
     }
 

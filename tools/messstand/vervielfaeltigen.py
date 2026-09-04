@@ -186,6 +186,16 @@ def runde_bauen(quelle: dict, runde: int, abstand_tage: int) -> dict:
         sek = int(delta.total_seconds())
         for pt in (n.get("track") or []):
             pt[4] = int(pt[4]) + sek
+        # Sperrvermerke des Schnitts (Nutzlast 9, R64). Sie kämen über die
+        # tiefe Kopie oben unverändert mit — mit der `quelle_ref` der Runde 0
+        # und einem Zeitfenster, das um `delta` danebenläge, während die Spur
+        # wandert. Beim Einspielen zeigten dann alle Runden auf DIESELBE
+        # Quelle oder es würde alles verworfen; beides verfälscht genau die
+        # Zahlen, für die dieser Bestand da ist (R35).
+        for c in (n.get("schnitte") or []):
+            c["quelle_ref"] = _kennung(c["quelle_ref"], runde)
+            c["von_ts"] = int(c["von_ts"]) + sek
+            c["bis_ts"] = int(c["bis_ts"]) + sek
         einsaetze.append(n)
 
     for r in quelle["rest_segments"]:

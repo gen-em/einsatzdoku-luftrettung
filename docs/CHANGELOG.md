@@ -14,6 +14,73 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 14.2.0] — 2026-09-04
+
+### Web — der Sperrvermerk des Schnitts übersteht jetzt die Sicherung (Nr. 63)
+
+Wer eine Ruhezeit schneidet, hinterlässt einen **Sperrvermerk**: Dieser
+Zeitraum ist für nachgelieferte Punkte gesperrt, sonst läge die Fahrt
+hinterher in Einsatz **und** Segment. Der Vermerk stand in **keiner**
+Konto-Sicherung. Nach einem Wiedereinspielen lieferte eine Uhr mit
+gepuffertem Speicher den geschnittenen Bereich nach, und er kam durch — ohne
+Meldung, ohne Weg zurück.
+
+Die Nutzlast steigt dafür von 8 auf **9**. Jeder Einsatz trägt jetzt eine
+Liste `schnitte`, leer erlaubt; die Quelle steht darin als **`client_ref`**
+und nicht als Datenbanknummer — die vergibt das Einspielen neu. Der
+Erstellungszeitpunkt reist mit: Ein Vermerk sagt, *wann* geschnitten wurde,
+und das ist ein Ereignis der Vergangenheit, keine Frist dieser Installation.
+
+**Beim Einspielen gibt es drei Ausgänge, und alle drei werden gezählt.**
+Übernommen; übersprungen, wenn der Einsatz schon dastand (eine bewusst
+zurückgenommene Sperre darf ein Restore nicht wiederbeleben); verworfen, wenn
+es kein Ziel, keine auflösbare Quelle oder unbrauchbare Werte gibt. Die
+Rückmeldung nennt die Zahlen, aber nur, wenn die Datei überhaupt Vermerke
+trug.
+
+### Web — und die Sicherung weiß jetzt, mit welchem Gerät aufgezeichnet wurde
+
+`geraet_art` und `geraet_modell` (seit 14.0.0 an jedem Einsatz und jeder
+Ruhezeit) stehen jetzt auch in der Datei. `device_id` bleibt draußen, und das
+ist kein Widerspruch, sondern der Grund für die Momentaufnahme: Der Verweis
+trägt nicht einmal in der eigenen Datenbank dauerhaft — in einer fremden erst
+recht nicht. Ein Name trägt überall.
+
+### Web — drei alte Fehler, die dabei aufgefallen sind
+
+Sie haben mit R64 nichts zu tun, standen ihm aber im Weg:
+
+1. **Die Umdatierung eines Diensttags verschob die Sperrvermerke nicht.**
+   Einsätze, Segmente, Phasen, Reanimationsereignisse und jeder Spurpunkt
+   wanderten — die Vermerke blieben stehen. Der Vermerk sperrte danach einen
+   Zeitraum, in dem die Spur gar nicht mehr liegt: nachgelieferte Punkte kamen
+   wieder durch, und die Fahrt lag doppelt. Seit Web 12.5.0 so; folgenlos nur,
+   solange der Vermerk die Datenbank nicht verließ.
+2. **Der Demo-Reset räumte `track_cuts` nicht ab.** `track_points` und
+   `track_blobs` löscht er ausdrücklich, mit Begründung. Mit einem Schnitt im
+   Demo-Bestand hätte das alle 30 Minuten eine Waise hinterlassen — 48 am Tag,
+   keine davon je wieder auffindbar.
+3. **Fixture und Demo-Reset führten von den Geräten nur drei Spalten mit.**
+   Die Geräteseite des Demo-Kontos hätte „Gerät unbekannt" gezeigt, während
+   die Einsätze daneben ihre Momentaufnahme tragen.
+
+### Web — zwei Prüfmittel hatten aufgehört zu prüfen
+
+Beim Anhängen des neuen Prüfteils kam heraus, dass zwei Werkzeuge seit einiger
+Zeit nichts mehr messen:
+
+- Die **Wiederherstellungsprobe** starb mitten in Teil 9 an einem fehlenden
+  `require` für `smtp.php` — nach dreiundvierzig grünen Zeilen. Alles dahinter
+  (Teil 10) lief **nie**. Ein Abbruch mitten im Lauf sieht aus wie ein Ende.
+  Ihr Kopf versprach außerdem „30 von 30"; es sind 94.
+- Die **Containerprobe** suchte in einer Fehlermeldung den Wortlaut „Teil
+  einer mehrteiligen"; die Meldung sagt seit Langem „einzelnes Teil eines
+  mehrteiligen Backups". Der Prüffall stand damit dauerhaft auf rot, ohne dass
+  jemand hinsah.
+
+Beides ist behoben. Ein Prüfmittel, das nichts misst, meldet nicht null — es
+meldet gar nichts.
+
 ## [Web 14.1.0] — 2026-09-04
 
 ### Web — die Anzeige sagt jetzt, was 14.0.0 erfasst hat

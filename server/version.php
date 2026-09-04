@@ -2380,5 +2380,71 @@ declare(strict_types=1);
  *
  * NEBENNUMMER: zwei Spalten und sechs Beschriftungen, kein Datenmodell, keine
  * Migration. Die vier Spalten dafuer hat 14.0.0 angelegt.
+ *
+ * 14.2.0 BRINGT DIE SPERRVERMERKE DES SCHNITTS DURCH DIE SICHERUNG — und die
+ * Momentaufnahme des Geraets gleich mit (Backlog Nr. 63 und R64, Nutzlast
+ * 8 -> 9).
+ *
+ * DER FEHLER, DEN ES BEHEBT, IST STILL UND ENDGUELTIG. Wer eine Ruhezeit
+ * schneidet, hinterlaesst einen Vermerk in `track_cuts`: Dieser Zeitraum ist
+ * fuer nachgelieferte Punkte gesperrt, sonst laege die Fahrt hinterher in
+ * Einsatz UND Segment. Der Vermerk stand in keiner Konto-Sicherung. Nach
+ * einem Wiedereinspielen lieferte eine Uhr mit gepuffertem Speicher den
+ * geschnittenen Bereich nach, und er kam durch — ohne Meldung, ohne Weg
+ * zurueck.
+ *
+ * ER REIST UEBER VERWEISE, nicht ueber Kennungen: `quelle_ref` ist die
+ * `client_ref` der Quelle. Datenbanknummern vergibt das Einspielen neu; das
+ * ist dieselbe Ueberlegung, die schon `day_refs` und `spur_ref` tragen.
+ * `erstellt_am` reist mit — ein Vermerk sagt, WANN geschnitten wurde, und das
+ * ist ein Ereignis der Vergangenheit, keine Frist dieser Installation
+ * (anders als `deleted_at`, das neu entsteht).
+ *
+ * DREI AUSGAENGE BEIM EINSPIELEN, und sie werden gezaehlt: uebernommen,
+ * uebersprungen (der Einsatz stand schon da — eine bewusst zurueckgenommene
+ * Sperre darf nicht wiederbelebt werden), verworfen (kein Ziel, keine Quelle,
+ * unbrauchbare Werte). „Uebersprungen" und „verworfen" in eine Zahl zu legen
+ * waere derselbe Fehler wie bei den uebersprungenen Einsaetzen: nicht deutbar.
+ *
+ * NEBENNUMMER UND KEINE HAUPTNUMMER, und das ist eine Entscheidung mit
+ * Praezedenzfall. Es aendert sich KEINE Spalte, es gibt KEINE Migration — die
+ * vier Spalten hat 14.0.0 angelegt. Was sich aendert, ist ein Dateiformat,
+ * und genau dafuer steht 11.1.0 (Nutzlast 7 -> 8, „nur das Dateiformat
+ * aendert sich, das Datenmodell nicht"). Die Hauptnummer fuer R64 ist mit
+ * 14.0.0 bereits gestiegen; dies ist die zweite Haelfte derselben Aenderung.
+ *
+ * WAS MITGEZOGEN WERDEN MUSSTE, alle fuenf Stellen: `edbak_build()` schreibt
+ * 9, `NUTZLAST_HOECHSTENS` steht auf 9, das Admin-Manifest nennt 9, und die
+ * beiden Stellen, die die Fassung beim Einspielen SETZEN
+ * (`adminbackup_lib.php`, `api/backup_eintraege_restore.php`). Der eine
+ * Vergleich, der ueber den Spurweg entscheidet, bleibt auf `>= 8` — eine
+ * Anhebung auf 9 wuerfe jede vorhandene 8er-Datei in den Punktlisten-Zweig
+ * und verloere still alle Spuren. Das ist der Fund F-S2-E in Gegenrichtung.
+ *
+ * DREI ALTE FEHLER SIND DABEI MIT AUFGEFALLEN und behoben worden. Sie haben
+ * nichts mit R64 zu tun, standen ihm aber im Weg:
+ *
+ *   1. DIE UMDATIERUNG EINES DIENSTTAGS verschob Einsaetze, Segmente,
+ *      Phasen, Reanimationsereignisse und jeden Spurpunkt — die Sperrvermerke
+ *      nicht. Der Vermerk sperrte danach einen Zeitraum, in dem die Spur gar
+ *      nicht mehr liegt: Nachgelieferte Punkte kamen wieder durch, und die
+ *      Fahrt lag doppelt. Seit Web 12.5.0 so, folgenlos nur, solange der
+ *      Vermerk die Datenbank nicht verliess. Ab Nutzlast 9 reiste das falsche
+ *      Fenster in jede Sicherung.
+ *   2. DER DEMO-RESET raeumte `track_points` und `track_blobs` ausdruecklich
+ *      ab und `track_cuts` nicht. Mit dem Schnitt im Demo-Bestand (E-R64-16)
+ *      haette das alle 30 Minuten einen verwaisten Vermerk hinterlassen —
+ *      48 am Tag, keiner davon je wieder auffindbar.
+ *   3. FIXTURE UND DEMO-RESET fuehrten von `devices` nur drei Spalten mit.
+ *      Die Geraeteseite des Demo-Kontos haette „Gerät unbekannt" gezeigt,
+ *      waehrend die Einsaetze daneben ihre Momentaufnahme tragen.
+ *
+ * UND ZWEI PRUEFMITTEL HABEN AUFGEHOERT ZU PRUEFEN, ohne dass es auffiel:
+ * Die Wiederherstellungsprobe starb mitten in Teil 9 an einem fehlenden
+ * `require` — nach dreiundvierzig gruenen Zeilen, und alles dahinter lief
+ * NIE. Die Containerprobe suchte in einer Meldung einen Wortlaut, den es
+ * nicht mehr gibt, und stand deshalb dauerhaft auf einem Fehlschlag. Beides
+ * ist behoben; die Probe zaehlt jetzt 94 Erwartungen statt der 30, die in
+ * ihrem Kopf standen.
  */
-const WEB_VERSION = '14.1.0';
+const WEB_VERSION = '14.2.0';

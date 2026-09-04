@@ -222,7 +222,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * hier einzutragen — und genau das ist der Punkt: Es ist eine
      * Entscheidung, keine Nebenwirkung. */
     $missionSpalten = 'client_ref, day_id, started_at, ended_at, distance_m, ascent_m,
-                       site_ele_m, final, manual, origin, edited, transport_dest,
+                       site_ele_m, final, manual, origin, edited,
+                       geraet_art, geraet_modell, transport_dest,
                        transport_mode, na_escort, false_alarm, start_src,
                        dest_lat, dest_lon,
                        winch, winch_cycles, winch_cycles_pat, winch_airload,
@@ -327,6 +328,10 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * REIHENFOLGE der Schluessel im Kopf ist eine andere, und JSON kennt keine
      * Reihenfolge. Der Kreislauf misst das nach. */
     $missionsJson = '';
+    /* Karteileichen unter den Sperrvermerken, ueber alle Fenster gezaehlt
+     * (s. u. bei `schnitte_zu_einsaetzen()`). Steht nur dann im Kopf, wenn es
+     * welche gab. */
+    $schnitteWaisen = 0;
     foreach (array_chunk($missionIds, EDBAK_FENSTER) as $fenster) {
         $zeilen = [];
         foreach (sql_in_bloecken($pdo,
@@ -386,6 +391,21 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         }
         unset($sitzungen, $ereignisseNach, $sitzungsIds);
 
+        /* ---- Die Sperrvermerke des Schnitts (Backlog Nr. 63, Nutzlast 9) --
+         *
+         * EINE ABFRAGE JE FENSTER, ueber `spur_lib.php` — `track_cuts` ist
+         * eine der drei Tabellen, an die nur diese Datei heranreicht
+         * (CLAUDE.md 4). Die Funktion loest die Quelle gleich zur `client_ref`
+         * auf: Eine Datenbankkennung gilt nur in DIESER Datenbank, und genau
+         * daran ist der Vermerk bisher gescheitert.
+         *
+         * Sie zaehlt dabei Vermerke, deren Quelle sich nicht mehr aufloesen
+         * laesst. Es kann sie nicht geben — `schnitte_loeschen_quelle()`
+         * raeumt beim Loeschen einer Quelle auf —, aber „kann nicht" ist
+         * keine Zusicherung, und eine stumm weggelassene Zeile ist die
+         * schlechteste Art, damit umzugehen. */
+        $schnitteNach = schnitte_zu_einsaetzen($pdo, $userId, $fenster, $schnitteWaisen);
+
         foreach ($fenster as $mid) {
             if (!isset($zeilen[$mid])) { continue; }
             $m = $zeilen[$mid];
@@ -394,6 +414,13 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
             $m['resources'] = $mittelNach[$mid]    ?? [];
             $m['resus']     = $sitzungenNach[$mid] ?? [];
             $m['crew']      = $einsatzCrewNach[$mid] ?? [];
+            /* `schnitte` STEHT AN JEDEM EINSATZ, leer erlaubt — wie die vier
+             * Listen darueber und ausdruecklich anders als `track`/`spur_ref`
+             * (E-R64-07). Der Unterschied hat einen Grund: Ein fehlendes
+             * `schnitte` waere zweideutig — „dieser Einsatz hat keine
+             * Vermerke" oder „diese Fassung kennt sie nicht". Ein leeres
+             * Feld sagt das erste. */
+            $m['schnitte']  = $schnitteNach[$mid]  ?? [];
             if ($ohneSpuren) {
                 /* KEIN `track` UND KEIN LEERES `track`. Ein leeres Feld saehe
                  * aus wie „hat keine Spur"; die Fassung sagt, dass die Punkte
@@ -412,7 +439,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
                            . json_encode($m, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             unset($m);
         }
-        unset($zeilen, $phasenNach, $mittelNach, $sitzungenNach, $einsatzCrewNach);
+        unset($zeilen, $phasenNach, $mittelNach, $sitzungenNach, $einsatzCrewNach,
+              $schnitteNach);
     }
     unset($spurNachEinsatz);
 
@@ -426,6 +454,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         $nach = [];
         foreach (sql_in_bloecken($pdo,
                 'SELECT id, client_ref, day_id, started_at, ended_at, final,
+                        geraet_art, geraet_modell,
                         deleted_at, deleted_with_day
                    FROM rest_segments WHERE user_id = ? AND id IN ({IDS})',
                 $restIdsFenster, [$userId]) as $r) {
@@ -634,18 +663,32 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          * Umgekehrt bleiben Version-6-Dateien vollstaendig einspielbar: Sie
          * enthalten keinen Papierkorb, `deleted_at` fehlt oder ist null, und
          * der Rueckweg legt sie als aktiven Bestand an — genau wie bisher. */
-        /* NUTZLAST 8 (S2/AP5): der Kern der Fassung 4 — ohne Punktlisten,
-         * dafuer mit `spur_ref`, `stufe`, `n_original` und `n` je Spur.
+        /* NUTZLAST 9 (R64 / Backlog Nr. 63, Web 14.2.0): wie 8, dazu die
+         * Geraete-Momentaufnahme je Einsatz und Segment und die
+         * Sperrvermerke des Schnitts je Einsatz (`schnitte`).
          *
          * DIE ZAHL SAGT, WIE DIE SPUREN DRINSTEHEN, und der Rueckweg
          * entscheidet daran, welchen der beiden Wege er nimmt: 6 und 7 tragen
-         * Punktlisten, 8 traegt Verweise. Das ist der Unterschied, an dem es
-         * haengt — nicht die Anwesenheit eines `track`-Feldes, denn eine Spur
-         * ohne Punkte saehe genauso aus.
+         * Punktlisten, 8 und 9 tragen Verweise. Das ist der Unterschied, an
+         * dem es haengt — nicht die Anwesenheit eines `track`-Feldes, denn
+         * eine Spur ohne Punkte saehe genauso aus. Der Vergleich dafuer steht
+         * auf `>= 8` und bleibt es (E-R64-08); eine Anhebung auf `>= 9`
+         * wuerfe jede vorhandene 8er-Datei in den Punktlisten-Zweig und
+         * verloere still alle Spuren.
          *
-         * Nutzlast 7 wird weiterhin GELESEN (E-S2-12) und nicht mehr
-         * geschrieben. Mit NaDoku 1.0 faellt sie weg (Backlog Nr. 46). */
-        'version' => $ohneSpuren ? 8 : 7,
+         * WARUM DIE 9 UEBERHAUPT KOMMT, wenn alle neuen Felder optional sind:
+         * Die Nummer sagt einem Leser, was in der Datei stehen KANN. Und sie
+         * ist der einzige Weg, `NUTZLAST_HOECHSTENS` seine Arbeit tun zu
+         * lassen — eine aeltere Installation soll eine 9er-Datei ABWEISEN
+         * statt sie halb einzulesen (der Kommentar dort ist genau fuer
+         * diesen Sprung geschrieben).
+         *
+         * NUTZLAST 7 BLEIBT DIE PUNKTLISTEN-VARIANTE und traegt die neuen
+         * Felder ebenfalls — sie unterscheidet sich weiter nur durch die
+         * Punkte. Sie wird weiterhin GELESEN (E-S2-12) und nur noch fuer die
+         * Demo-Fixture geschrieben. Mit NaDoku 1.0 faellt sie weg
+         * (Backlog Nr. 46). */
+        'version' => $ohneSpuren ? 9 : 7,
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-notarzt',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
@@ -678,6 +721,18 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         /* `missions` und `rest_segments` stehen hier NICHT — sie sind oben
          * schon kodiert (s. dort) und werden unten angehaengt. */
     ];
+
+    /* KARTEILEICHEN UNTER DEN SPERRVERMERKEN — nur, wenn es welche gab
+     * (Nutzlast 9, R64). Ein Vermerk, dessen Quelle sich nicht mehr aufloesen
+     * laesst, wird nicht geschrieben; dass er da war, gehoert trotzdem in die
+     * Datei. Dasselbe Muster wie bei `spur_karte` im Rueckweg: Ein Feld, das
+     * im Regelfall fehlt, ist kein Ballast — und ein Feld, das immer auf 0
+     * stuende, waere eins.
+     *
+     * Wer das hier liest, hat einen Befund: Entweder hat ein Loeschweg
+     * `schnitte_loeschen_quelle()` uebergangen, oder jemand hat von Hand in
+     * `track_cuts` geschrieben. Beides gehoert nachgesehen. */
+    if ($schnitteWaisen > 0) { $data['schnitte_verwaist'] = $schnitteWaisen; }
 
     /* DAS VERZEICHNIS DER SPUREN — ein ARBEITSFELD, das nicht in die Datei
      * gehoert (S2/AP5).
@@ -804,7 +859,22 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
               /* Wie viel davon in den PAPIERKORB gegangen ist (E-S1-08). Die
                * Zahlen stecken in den drei Zaehlern darueber MIT drin — sie
                * sagen nicht "zusaetzlich", sondern "davon". */
-              'papierkorb' => ['einsaetze' => 0, 'diensttage' => 0, 'ruhezeiten' => 0]];
+              'papierkorb' => ['einsaetze' => 0, 'diensttage' => 0, 'ruhezeiten' => 0],
+              /* DIE SPERRVERMERKE DES SCHNITTS (Nutzlast 9, Backlog Nr. 63).
+               *
+               * DREI AUSGAENGE UND NICHT ZWEI, weil sie Verschiedenes
+               * bedeuten: `uebersprungen` heisst „der Einsatz stand schon da"
+               * — dann stehen seine Vermerke auch schon, und ein Restore darf
+               * keine Sperre wiederbeleben, die jemand bewusst
+               * zurueckgenommen hat. `verworfen` heisst dagegen „konnte
+               * nicht", und das ist ein Befund. Beides in eine Zahl zu legen
+               * waere derselbe Fehler wie bei den uebersprungenen Einsaetzen
+               * (M5-14): nicht deutbar.
+               *
+               * Der Block bleibt bis zum Schluss auf null, wenn die Datei
+               * keine Vermerke trug — die Oberflaeche zeigt die Zeile dann
+               * gar nicht. */
+              'schnitte' => ['uebernommen' => 0, 'uebersprungen' => 0, 'verworfen' => 0]];
 
     /* URSACHEN GETRENNT ZAEHLEN (M5-14).
      * "40 uebersprungen" ist nicht deutbar: Es kann heissen "alles war schon
@@ -818,6 +888,12 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                * nichts auszusetzen; es fehlt ihnen der Tag. Wer die Meldung
                * liest, suchte den Fehler an der falschen Stelle. */
               'tag_uebersprungen' => 0,
+              /* Die vier Gruende, aus denen ein Sperrvermerk verworfen wird
+               * (Nutzlast 9). Sie stehen im selben Topf wie die uebrigen,
+               * damit die Oberflaeche sie ohne zweiten Weg anzeigen kann;
+               * `GRUND_TEXT` in einstellungen.php uebersetzt sie. */
+              'schnitt_ohne_ziel' => 0, 'schnitt_ohne_quelle' => 0,
+              'schnitt_werte' => 0, 'schnitt_aufbau' => 0,
               /* NEU (Backlog Nr. 34): Die Einsaetze eines Datei-Diensttags
                * liegen im Ziel an MEHREREN verschiedenen Tagen. Schritt 1 der
                * Wiedererkennung liefert dann kein Ergebnis, der Fingerabdruck
@@ -864,6 +940,41 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
      * Sie steht bewusst nicht in `$stats`: `$stats` ist die Rueckmeldung an
      * die Nutzerin und wird angezeigt; das hier ist eine Arbeitsangabe. */
     $spurKarte = [];
+
+    /* DIE KENNUNGSKARTE (Nutzlast 9, Backlog Nr. 63).
+     *
+     * `client_ref` aus der Datei -> Kennung im Zielkonto, je Art. Sie ist der
+     * Anker, mit dem der dritte Durchgang die QUELLE eines Sperrvermerks
+     * wiederfindet: In der Datei steht `quelle_ref`, in der Datenbank eine
+     * frisch vergebene Nummer, und dazwischen liegt genau diese Karte.
+     *
+     * SIE FUEHRT AUCH DIE UEBERSPRUNGENEN. Dieselbe Begruendung wie bei der
+     * Spurkarte eine Zeile darueber: Ein Einsatz oder Segment, das im Ziel
+     * schon steht, ist als Quelle genauso gueltig — und ein zweiter Anlauf
+     * nach einem Abbruch faende sonst gar nichts mehr.
+     *
+     * NUR NICHTLEERE KENNUNGEN. Fehlt die `client_ref` in der Datei, vergibt
+     * der Rueckweg unten eine Ersatzkennung (`bak-…`); der Schluessel waere
+     * dann fuer alle solchen Eintraege derselbe leere String, und zwei
+     * Eintraege ueberschrieben einander in der Karte. Ein Vermerk landete
+     * danach an der falschen Quelle — ohne Meldung, weil die Aufloesung ja
+     * „gelungen" waere. Wer keine Kennung hat, kann auch keine Quelle sein. */
+    $refKarte = ['mission' => [], 'rest' => []];
+    /* EIN SCHLUESSEL, EINE SCHREIBWEISE. Der Rueckweg schneidet die Kennung
+     * beim Anlegen ueber `pruef_text()` zu (Leerraum weg); die Karte muss
+     * dieselbe Schreibweise fuehren, sonst findet der dritte Durchgang einen
+     * Eintrag nicht wieder, den es gibt. */
+    $refSchluessel = static fn($ref): string => is_string($ref) ? trim($ref) : '';
+    $merke = static function (string $art, $ref, int $id)
+                             use (&$refKarte, $refSchluessel): void {
+        $k = $refSchluessel($ref);
+        if ($k === '') { return; }
+        $refKarte[$art][$k] = $id;
+    };
+    /* Welche Einsaetze in DIESEM Lauf NEU entstanden sind. Der dritte
+     * Durchgang unterscheidet daran „uebersprungen" von „uebernommen". */
+    $neueEinsaetze = [];
+
     $nutzlast = (int)($data['version'] ?? 0);
     $mitVerweisen = $nutzlast >= 8;
 
@@ -1423,13 +1534,20 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
          * zu verweigern hiesse, aus einem Teilverlust einen Totalverlust zu
          * machen. Gemeldet wird er ueber die gemeinsame Pruefschicht, also
          * dort, wo die Nutzerin die Ablehnungen ohnehin liest. */
-        $spurWiderspruch = function (string $typ, array $eintrag) use ($pruef): void {
+        /* DIE MELDUNG NENNT DIE FASSUNG NICHT MEHR ALS ZAHL (Web 14.2.0).
+         * Sie lautete woertlich „Die Datei nennt Nutzlast 8 …", und mit
+         * Nutzlast 9 waere sie schlicht falsch gewesen. Sie nennt jetzt die
+         * EIGENSCHAFT statt der Zahl — die gilt fuer 8, 9 und jede weitere
+         * Fassung ohne Punktlisten. Wer den Wortlaut aendert, aendert
+         * `tools/wiederherstellungs-probe/` mit: Teil 7 sucht diesen Text
+         * als Zeichenkette, und die beiden stehen weit auseinander. */
+        $spurWiderspruch = function (string $typ, array $eintrag) use ($pruef, $nutzlast): void {
             $liste = $eintrag['track'] ?? null;
             if (is_array($liste) && $liste) {
                 $pruef->melde($typ . '.track',
-                    'Die Datei nennt Nutzlast 8, traegt die Punkte aber im Eintrag. '
-                  . 'In Nutzlast 8 kommen sie als eigene Teile — diese Punkte '
-                  . 'wurden NICHT uebernommen');
+                    'Die Datei nennt Nutzlast ' . $nutzlast . ' und traegt die Punkte '
+                  . 'trotzdem im Eintrag. Ab Nutzlast 8 kommen sie als eigene Teile — '
+                  . 'diese Punkte wurden NICHT uebernommen');
             }
         };
         $FIELDS = require __DIR__ . '/mission_fields.php';
@@ -1507,6 +1625,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                     $spurKarte[(int)$m['spur_ref']] = ['art' => 'mission',
                                                        'id' => (int)$vorhandenId];
                 }
+                $merke('mission', $m['client_ref'] ?? null, (int)$vorhandenId);
                 $stats['missions_skipped']++; $grund['bereits_vorhanden']++; continue;
             }
 
@@ -1606,8 +1725,19 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
 
             $oe = edbak_origin_edited($m);
 
+            /* `geraet_art` und `geraet_modell` stehen in der FESTEN Liste und
+             * NICHT in `$extraCols` (E-R64-05). `$extraCols` kommt aus dem
+             * Formular-Feldkatalog (`mission_fields.php`) — die beiden stehen
+             * dort nicht und koennten es auch nicht: Sie sind keine
+             * Eingabefelder, sondern eine Momentaufnahme des Geraets. Wer sie
+             * dorthin legte, machte sie von einem Katalog abhaengig, der eine
+             * andere Frage beantwortet.
+             *
+             * FEHLEN SIE IN DER DATEI (Nutzlast <= 8), wird NULL geschrieben —
+             * und das ist richtig: „unbekannt" ist genau die Aussage. */
             $cols = ['user_id', 'client_ref', 'day_id', 'started_at', 'ended_at',
                      'manual', 'origin', 'edited', 'final', 'distance_m', 'ascent_m',
+                     'geraet_art', 'geraet_modell',
                      'deleted_at', 'deleted_with_day'];
             $vals = [$userId,
                      pruef_text($m['client_ref'] ?? null, 64, 'client_ref', $pruef)
@@ -1621,6 +1751,9 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                      pruef_flag($m['final'] ?? 1),
                      pruef_zahl($m['distance_m'] ?? null, 0, 100000000, 'distance_m', $pruef),
                      pruef_zahl($m['ascent_m'] ?? null, 0, 100000, 'ascent_m', $pruef),
+                     pruef_text($m['geraet_art'] ?? null, GERAET_MAX_ART, 'geraet_art', $pruef),
+                     pruef_text($m['geraet_modell'] ?? null, GERAET_MAX_MODELL,
+                                'geraet_modell', $pruef),
                      $mGeloescht ? $loeschZeit : null, $mitTag];
             foreach ($extraCols as $c) {
                 if (!array_key_exists($c, $m)) { continue; }
@@ -1647,6 +1780,11 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                  . implode(',', array_fill(0, count($cols), '?')) . ')';
             $pdo->prepare($sql)->execute($vals);
             $mid = (int)$pdo->lastInsertId();
+            /* $vals[1] und nicht $m['client_ref']: Das ist die Kennung, die
+             * TATSAECHLICH in der Zeile steht — die aus der Datei oder die
+             * Ersatzkennung. Beide sollen wiederfindbar sein. */
+            $merke('mission', $vals[1], $mid);
+            $neueEinsaetze[$vals[1]] = true;
 
             /* Abweichende Besatzung (`mission_crew`, E7). Bis Web 5.10.0 waren
              * es fuenf Spalten und wanderten ueber $extraCols mit; jetzt sind es
@@ -1750,6 +1888,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                     $spurKarte[(int)$r['spur_ref']] = ['art' => 'rest',
                                                        'id' => (int)$vorhandenRId];
                 }
+                $merke('rest', $r['client_ref'] ?? null, (int)$vorhandenRId);
                 $stats['rests_skipped']++; $grund['bereits_vorhanden']++; continue;
             }
             // Wie beim Einsatz: ohne Diensttag kein Ruhe-Segment (A11), und
@@ -1796,12 +1935,18 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
             }
             $pdo->prepare('INSERT INTO rest_segments
                 (user_id, client_ref, day_id, started_at, ended_at, final,
+                 geraet_art, geraet_modell,
                  deleted_at, deleted_with_day)
-                VALUES (?,?,?,?,?,?,?,?)')
+                VALUES (?,?,?,?,?,?,?,?,?,?)')
                 ->execute([$userId, $rRef, $rDayId, $rStart, $rEnde,
                            pruef_flag($r['final'] ?? 1),
+                           pruef_text($r['geraet_art'] ?? null, GERAET_MAX_ART,
+                                      'rest.geraet_art', $pruef),
+                           pruef_text($r['geraet_modell'] ?? null, GERAET_MAX_MODELL,
+                                      'rest.geraet_modell', $pruef),
                            $rGeloescht ? $loeschZeit : null, $rMitTag]);
             $rid = (int)$pdo->lastInsertId();
+            $merke('rest', $rRef, $rid);
             if ($mitVerweisen) {
                 if (isset($r['spur_ref'])) {
                     $spurKarte[(int)$r['spur_ref']] = ['art' => 'rest', 'id' => $rid];
@@ -1812,6 +1957,126 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
             }
             $stats['rests']++;
             if ($rGeloescht) { $stats['papierkorb']['ruhezeiten']++; }
+        }
+
+        /* ---- DRITTER DURCHGANG: die Sperrvermerke des Schnitts ------------
+         *      (Backlog Nr. 63, Nutzlast 9, E-R64-07/-12)
+         *
+         * ER LAEUFT NACH BEIDEN SCHLEIFEN UND IN DERSELBEN TRANSAKTION. Nach
+         * beiden, weil ein Vermerk auf ZWEI Datensaetze zeigt — das Ziel
+         * (einen Einsatz) und die Quelle (einen Einsatz ODER ein Segment).
+         * Solange die Segmentschleife nicht durch ist, gibt es Quellen, die
+         * es gleich geben wird. In derselben Transaktion, weil ein
+         * halb gesetzter Sperrvermerk schlimmer waere als keiner: Er sperrt
+         * einen Zeitraum, den niemand mehr zuordnen kann.
+         *
+         * DREI AUSGAENGE, und der Reihe nach:
+         *
+         *   1. DAS ZIEL WURDE NICHT ANGELEGT -> verworfen. Das trifft ALLE
+         *      Abbruchgruende der Einsatzschleife und nicht nur einen: Ein
+         *      Einsatz kann wegen eines kaputten Aufbaus, eines unbrauchbaren
+         *      Datums, eines uebersprungenen oder eines geloeschten Diensttags
+         *      liegenbleiben. Der Vermerk hat dann kein Ziel, und ein Vermerk
+         *      ohne Ziel ist keiner.
+         *
+         *   2. DAS ZIEL STAND SCHON DA -> uebersprungen. Ein Restore darf
+         *      keine Sperre wiederbeleben, die jemand im Zielkonto bewusst
+         *      zurueckgenommen hat (das Rueckgaengig des Schnitts loescht sie).
+         *      Und fuer einen unveraenderten Bestand stehen sie ohnehin.
+         *
+         *   3. Sonst wird geprueft und geschrieben -> uebernommen.
+         *
+         * JEDE ZEILE KOSTET NUR SICH SELBST (Web-8.0.0-Linie). Ein Vermerk mit
+         * unbrauchbaren Werten faellt heraus und wird gezaehlt; er nimmt weder
+         * die anderen Vermerke desselben Einsatzes mit noch die
+         * Wiederherstellung.
+         */
+        foreach (($data['missions'] ?? []) as $m) {
+            if (!is_array($m)) { continue; }
+            $liste = $m['schnitte'] ?? null;
+            if (!is_array($liste) || !$liste) { continue; }
+
+            $zielRef = $refSchluessel($m['client_ref'] ?? null);
+            $zielId  = $zielRef !== '' ? ($refKarte['mission'][$zielRef] ?? 0) : 0;
+            if ($zielId === 0) {
+                $stats['schnitte']['verworfen'] += count($liste);
+                $grund['schnitt_ohne_ziel'] += count($liste);
+                continue;
+            }
+            if (empty($neueEinsaetze[$zielRef])) {
+                $stats['schnitte']['uebersprungen'] += count($liste);
+                continue;
+            }
+
+            foreach (pruef_menge($liste, LIMIT_SCHNITTE, 'schnitte', $pruef) as $c) {
+                if (!is_array($c)) {
+                    $stats['schnitte']['verworfen']++; $grund['schnitt_aufbau']++; continue;
+                }
+
+                /* DIE QUELLART GEHT GEGEN EINE LISTE, NICHT ROH IN DIE SPALTE.
+                 * `track_cuts.owner_type` ist ein ENUM; ein unbekannter Wert
+                 * wird darin je nach `sql_mode` des Servers still zu einem
+                 * Leerstring ODER wirft — und die Verbindung setzt kein
+                 * `sql_mode` (db.php). Beides waere falsch: Der Leerwert
+                 * ergaebe einen Vermerk, den weder `schnitte_lesen()` noch
+                 * `schnitte_loeschen_quelle()` je wiederfaende; der Fehler
+                 * kostete die ganze Wiederherstellung. Genau diese Falle
+                 * steht in `update.php` bei der Migration 2026_09_04
+                 * beschrieben — hier ist die zweite Stelle, an der sie
+                 * zuschlagen koennte. */
+                $art = (string)($c['quelle_art'] ?? '');
+                if ($art !== 'mission' && $art !== 'rest') {
+                    $stats['schnitte']['verworfen']++;
+                    $pruef->melde('schnitte.quelle_art', 'weder mission noch rest');
+                    $grund['schnitt_aufbau']++;
+                    continue;
+                }
+
+                $qRef = $refSchluessel($c['quelle_ref'] ?? null);
+                $quelleId = $qRef !== '' ? ($refKarte[$art][$qRef] ?? 0) : 0;
+                if ($quelleId === 0) {
+                    /* DIE QUELLE IST NICHT AUFLOESBAR: Sie stand nicht in der
+                     * Datei, oder sie ist beim Einspielen liegengeblieben. Die
+                     * Kennung wird GENANNT — ohne sie liesse sich nicht
+                     * nachsehen, welcher Zeitraum jetzt ungesperrt ist. */
+                    $stats['schnitte']['verworfen']++;
+                    $pruef->melde('schnitte.quelle_ref',
+                                  'Quelle nicht gefunden: ' . ($qRef !== '' ? $qRef : '(leer)'));
+                    $grund['schnitt_ohne_quelle']++;
+                    continue;
+                }
+
+                /* Die Zeiten sind Sekunden seit 1970 und stehen als BIGINT in
+                 * der Tabelle. Die Obergrenze ist der 01.01.2100 — reichlich
+                 * und trotzdem eine Grenze; ein Wert daneben ist kein
+                 * Zeitpunkt, sondern Unfug. */
+                $von = pruef_zahl($c['von_ts'] ?? null, 0, 4102444800, 'schnitte.von_ts', $pruef);
+                $bis = pruef_zahl($c['bis_ts'] ?? null, 0, 4102444800, 'schnitte.bis_ts', $pruef);
+                $nPk = pruef_zahl($c['n_punkte'] ?? null, 1, LIMIT_TRACKPUNKTE_SPUR,
+                                  'schnitte.n_punkte', $pruef);
+                if ($von === null || $bis === null || $nPk === null || $bis < $von) {
+                    if ($bis !== null && $von !== null && $bis < $von) {
+                        $pruef->melde('schnitte.bis_ts', 'liegt vor von_ts');
+                    }
+                    $stats['schnitte']['verworfen']++; $grund['schnitt_werte']++;
+                    continue;
+                }
+
+                /* `erstellt_am` REIST MIT (E-R64-12), anders als `deleted_at`.
+                 * Der Unterschied ist die Art der Angabe: Ein Vermerk sagt,
+                 * WANN geschnitten wurde — ein Ereignis der Vergangenheit.
+                 * `deleted_at` traegt dagegen die Papierkorbfrist DIESER
+                 * Installation und muss deshalb neu beginnen. Ist der Wert
+                 * unbrauchbar, entsteht der Vermerk trotzdem, dann eben mit
+                 * dem Zeitpunkt des Einspielens: Ein Komfortwert darf keine
+                 * Sperre kosten. */
+                $wann = pruef_utc_oder_sql($c['erstellt_am'] ?? null,
+                                           'schnitte.erstellt_am', $pruef);
+
+                schnitt_vermerken($pdo, $userId, $art, $quelleId, $zielId,
+                                  $von, $bis, $nPk, $wann);
+                $stats['schnitte']['uebernommen']++;
+            }
         }
 
         // Hinweis: Bis Formatversion 1 enthielt das Backup einen Block

@@ -10,9 +10,9 @@ nimmt dieses Paket auf, sobald sie dort ankommt.**
 >
 > | | |
 > |---|---|
-> | Stand | 04.09.2026 — **AP1 und AP3 erledigt** (Web 14.0.0 und 14.1.0). Entscheidungen E-R64-01 bis E-R64-16 stehen; keine offene F-Frage |
-> | Paket in Arbeit | **AP2** (Sicherung: Momentaufnahme und Sperrvermerke, Nutzlast 9) |
-> | Erledigt | **AP1** — Datenmodell, Ableitung, anlegende Stellen, Migration `2026_09_04_herkunft_geraet`; Ingestprobe 39/0, Register 42 = 42 · **AP3** — Export und Anzeige; CSV-Kreislauf 8965/1023/5, Excel unverändert 31 Spalten, Wortliste 0/0/0 |
+> | Stand | 04.09.2026 — **AP1, AP3 und AP2 erledigt** (Web 14.0.0, 14.1.0, 14.2.0). Entscheidungen E-R64-01 bis **E-R64-20**; keine offene F-Frage |
+> | Paket in Arbeit | **AP4** (Referenz, Kreisläufe, Fixture — E-R64-15 und -16) |
+> | Erledigt | **AP1** — Datenmodell, Ableitung, anlegende Stellen, Migration `2026_09_04_herkunft_geraet`; Ingestprobe 39/0, Register 42 = 42 · **AP3** — Export und Anzeige; CSV-Kreislauf 8965/1023/5, Excel unverändert 31 Spalten · **AP2** — Nutzlast 9, Momentaufnahme und Sperrvermerke in der Sicherung; Wiederherstellungsprobe 94/0, edbak-alt-Kreislauf 0 unerklärt · **Vorarbeit AP5** — Vertrag 2.2, Prüfdokument |
 > | Reihenfolge | **AP1 → AP3 → AP2 → AP4 → AP5.** AP3 ist auf Weisung des Auftraggebers vorgezogen worden, weil die Anzeige zwischen AP1 und AP3 für `android`, `wear` und `schnitt` weiter „Uhr" zeigte. Kein fachlicher Konflikt: AP3 und AP2 fassen keine gemeinsame Datei an |
 > | Wo es hakt | nichts. Der größte Einzelposten bleibt AP4 (Referenz: Kopplungsweg und Schnitt im Werkzeug, alle drei Läufe von vorn) |
 > | Fable-Schritt | **keiner** (Spalten, eine Migration, ein Dateiformat mit Verweisen — Standardmodell nach K2) |
@@ -259,6 +259,19 @@ Merge-Kleinkram.
 | **E-R64-14** | **Eigenes Prüfdokument** `Pruefdokument-R64-Herkunft-Geraet.md` (K9); das Prüfdokument S4 bekommt eine Verweiszeile | Das Prüfdokument S4 prüft Handy und Uhr; dieses Paket hat eigene Proben und Zahlen |
 | **E-R64-15** (F-R64-01) | **Die Referenzgeräte werden echt gekoppelt.** Die Stufe `geraet` in `einspielen.py` geht den S5-Weg (`pair.php` `start` mit Geräteblock → Code im Web des Kontos einlösen → `bestaetigen`) statt der Geräteseite: ein Gerät `uhr` mit einer realen Teilenummer aus `geraetemodelle.php` (aufgelöstes Modell), eines `handy` mit Hersteller/Modell wie die Handy-App sie meldet. Kennungen und Schlüssel kommen aus der Kopplungsantwort. Die Momentaufnahme steht damit an allen 82 Uhr-Einsätzen und 95 Segmenten der Referenz | Der Kreislauf ist das Prüfmittel, an dem R24 hängt; mit NULL belegte er nichts. Und das Demo-Konto zeigt damit echte Gerätenamen — heute auf der Geräteseite, später in Kachel (Nr. 88) und Dashboard (Nr. 80). Der Kopplungsweg ist in `tools/kopplungsprobe/probe.php` beschrieben; Sitzung und CSRF hat `einspielen.py` schon |
 | **E-R64-16** (F-R64-02) | **Ein Schnitt im Referenzbestand.** Neue Einspielstufe `schneiden` (nach `zuordnen`, vor `nachtragen`): über `api/schneiden.php` wird aus **einem** festgelegten Ruhesegment **ein** Einsatz mit festgelegtem Zeitraum und den drei Schnitt-Phasen geschnitten; Segment, Zeitraum und Phasen stehen in den Quelldaten (`quelldaten/`, neues Objekt `schnitte`, `FORMAT.md`). Die Referenz zählt danach **88 Einsätze** (87 + 1 geschnittener), 100 Segmente (eines mit gewanderten Punkten), ein Vermerk. Die Wiederherstellungsprobe bekommt Teil 5 **nur für die Grenzfälle**, die die Referenz nicht zeigt (verwaiste Quelle, zweites Einspielen, unbrauchbare Zeiten) | Abweichend von der ersten Empfehlung (b), auf Einwand des Auftraggebers: Der Schnitt ist im **Demo-Konto sichtbar** (Plakette „Schnitt", Sperre am Segment, Handbuch 4.1b), und weil der Demo-Reset die Fixture alle 30 Minuten über den Rückweg einspielt, wird Nr. 63 **auf dem Produktivserver dauerhaft alle 30 Minuten geprüft** — ein besserer Beleg als jede Probe. Die Kosten (Quelldaten, Matrix, Ausnahmelisten neu gemessen) fallen wegen des Formatwechsels großteils ohnehin an |
+
+### Entscheidungen der Umsetzung (E-R64-17 bis -20, 04.09.2026)
+
+Vier Entscheidungen sind während AP2 gefallen, weil die Bestandsaufnahme
+Dinge fand, die das Konzept nicht kannte. Die ersten drei hat der
+Auftraggeber am 04.09.2026 getroffen.
+
+| Nr. | Entscheidung | Begründung |
+|---|---|---|
+| **E-R64-17** | **Die Umdatierung eines Diensttags verschiebt die Sperrvermerke mit** — in AP2, nicht als Backlog-Punkt. Nach QUELLE, nicht nach Ziel | Der Fehler ist ein Altfehler seit Web 12.5.0 und war folgenlos, solange der Vermerk die Datenbank nicht verließ. Ab Nutzlast 9 reist das falsche Zeitfenster in jede Sicherung — und was es anrichtet, ist wortgleich der Schaden, gegen den Nr. 63 antritt: Nachgelieferte Punkte kommen durch, die Fahrt liegt doppelt. Nach Quelle, weil `von_ts`/`bis_ts` einen Ausschnitt der QUELLspur beschreiben; nach Ziel zusätzlich verschöbe jeden Vermerk zweimal, dessen Quelle und Ziel am selben Tag hängen |
+| **E-R64-18** | **Nur Zähler, keine Einzelmeldung je verworfenem Vermerk in der Oberfläche.** Die Zeile nennt übernommen / übersprungen / verworfen; die Gründe stehen in der ohnehin angezeigten Aufschlüsselung, die `quelle_ref` nur in `stats.rejected` | Konzept 5.5 stützte die Meldung auf einen Kanal, den es auf dem Nutzerinnen-Weg nicht gibt: `restoreBericht()` zeigt `rejected` nicht an. Ihn nachzurüsten wäre eine Änderung am ganzen Wiederherstellungsweg und nicht an R64. Auftraggeber, 04.09.2026 |
+| **E-R64-19** | **Die betroffenen Prüfmittel werden in AP2 nachgezogen**, nicht in AP4 — `tools/messstand/vervielfaeltigen.py` (vervielfältigt die Vermerke sonst 60× mit veralteter Quellkennung) und die Prüfung von `tools/freigabeprobe/` | Wer das Format ändert, zieht die Werkzeuge im selben Paket nach. Sonst misst der Messstand ab AP4 einen Bestand, den es so nicht gibt, und niemand sucht die Ursache im Backup. Auftraggeber, 04.09.2026 |
+| **E-R64-20** | **Ein Vermerk, dessen ZIEL nicht angelegt wurde, gilt als verworfen — gleich aus welchem der vier Gründe.** „Übersprungen" bleibt dem einen Fall vorbehalten, dass das Ziel im Konto schon stand | Das Konzept kannte nur zwei Ausgänge, die Einsatzschleife hat aber fünf Abbruchgründe (`aufbau`, `bereits_vorhanden`, `tag_uebersprungen`, `datum_oder_zeit`, `tag_im_papierkorb`). Ein Vermerk ohne Ziel ist keiner — und ihn unter „übersprungen" zu zählen hieße, einen Verlust als Normalfall auszuweisen. Entscheidung der Umsetzung |
 
 ---
 
@@ -576,7 +589,7 @@ die geänderten Dateien und dem Push (K7).
 | Paket | Stand | Fassung | Zahlen | Anmerkung |
 |---|---|---|---|---|
 | AP1 | **erledigt** 04.09.2026 | Web **14.0.0** | Ingestprobe **39 Erwartungen, 0 nicht erfüllt** (davon 9 neu in Teil 8) · Migration an einer Installation mit 272 Einsätzen und 242 Segmenten: `origin` vorher watch 177 / manual 5 / import 90, nachher watch 162 / android 12 / wear 3 / manual 4 / import 90 / schnitt 1 · Momentaufnahme nachgefüllt: 85 von 272 Einsätzen (81 uhr, 4 handy), 108 von 242 Segmenten (100 uhr, 8 handy) — der Rest hat keinen Geräteverweis mehr · zweiter Lauf: `skip` greift · frische Installation aus `schema.sql`: vier Spalten da, `origin` VARCHAR(16) · **Register 42 = 42** · Schnitt über `api/schneiden.php`: `origin='schnitt'`, `manual=1`, Art und Modell von der Quelle geerbt | Einzelheiten unter „Umsetzungsstand AP1" |
-| AP2 | offen | | | |
+| AP2 | **erledigt** 04.09.2026 | Web **14.2.0** | Wiederherstellungsprobe **94 / 0** (18 neu in Teil 11) · Containerprobe **32 / 0** · Spurprobe 45 / 0 · Ingestprobe 39 / 0 · `edbak-alt`-Kreislauf **287 743 Einzelvergleiche, 647 erwartete, 0 unerklärte** · `edbak`-Kreislauf 88 unerklärte (87 × `schnitte` None→[], 1 × Fassung 8→9 — verschwinden mit AP4) · Kosten +1,4 ms und +4,7 % Datei je Fenster · Wortliste 0/0/0 · Vollständigkeit 278 → **280** (zwei Auslassungszeichen in Kommentaren) | Einzelheiten unter „Umsetzungsstand AP2" |
 | AP3 | **erledigt** 04.09.2026 (vorgezogen) | Web **14.1.0** | CSV-Kreislauf **8965 Einzelvergleiche, 1023 erwartete, 5 unerklärte** (alle fünf in `felder.csv`, Folge der noch nicht erneuerten Referenz — siehe unten), 0 ungenutzte Regeln · `einsaetze.csv` **94 Spalten**, `ruhezeiten.csv` **11** · Excel (Standard) **31 Spalten, unverändert** · Plaketten im Browser belegt: Handy, Wear, Schnitt · Wortliste **0/0/0** bei 79 Regeln · Vollständigkeit 278 | Einzelheiten unter „Umsetzungsstand AP3" |
 | AP4 | offen | | | |
 | AP5 | **Vorarbeit erledigt**, Rest offen | — (nur `docs/`) | **P-8 nachgemessen statt gelesen:** Ein Archiv aus Web 14.1.0 (mit den zwei neuen Spalten) durch einen frischen CSV-Umlauf — Profil erkannt, „12 Einsätze, 0 Hinweise, 0 Fehler", **2011 Einzelvergleiche, 171 erwartete, 0 unerklärte** · JSON-Vertrag auf **Fassung 2.2**: `cut-` in der Präfix-Tabelle nachgetragen (**B-R64-01 damit behoben**), Spalte „Herkunft (`origin`)" je Präfix, Abschnitt zur Ableitung · **Prüfdokument angelegt** (`Pruefdokument-R64-Herkunft-Geraet.md`) mit allen Zahlen aus AP1 und AP3 und acht Prüfpunkten · Verweiszeile im Prüfdokument S4 | Offen bleiben: `version.php`-Erzählung des Abschlusses, Technik.md, Backlog 63/83, Rahmenplan Fassung 27, Prüfpunkte zu AP2/AP4 |
@@ -624,6 +637,50 @@ Zuordnungstabelle haben beide einen Rückfall.
 für `android`, `wear` und `schnitt` weiterhin „Uhr", und der CSV-Export zeigt
 dort den Rohwert. Das ist kein Auslieferungsstand — der S4-Rest kommt als
 Ganzes auf `main` (K7).
+
+### Umsetzungsstand AP2 (04.09.2026, Web 14.2.0)
+
+**Geändert:** `server/version.php` (14.2.0) · `server/validate_lib.php`
+(`LIMIT_SCHNITTE`) · `server/spur_lib.php` (`schnitt_vermerken()` mit
+Zeitpunkt, **`schnitte_zu_einsaetzen()`**, **`schnitte_zeit_verschieben()`**) ·
+`server/backup_lib.php` (Nutzlast 9, zwei Spaltenlisten, `schnitte` je
+Einsatz, `schnitte_verwaist` im Kopf, Kennungskarte, dritter Durchgang,
+Zähler, neutraler Meldungstext) · `server/api/backup_restore.php`
+(`NUTZLAST_HOECHSTENS = 9`) · `server/adminbackup_lib.php` (zwei Nummern) ·
+`server/api/backup_eintraege_restore.php` (eine Nummer) ·
+`server/einstellungen.php` (`GRUND_TEXT`, Aufsummierung, Rückmeldungszeile) ·
+`server/tageszuordnung_lib.php` (Vermerke mitverschieben) ·
+`server/demo_lib.php` (`track_cuts` abräumen, Geräteangaben einspielen) ·
+`tools/referenzdatensatz/fixture/erzeugen.php` (Geräteangaben) ·
+`tools/wiederherstellungs-probe/probe.php` (**Teil 11**, `require smtp.php`,
+SMTP-Fall) · `tools/containerprobe/probe.mjs` · `tools/messstand/vervielfaeltigen.py` ·
+`tools/referenzdatensatz/vergleich/ausnahmen/edbak-alt_umlauf.json` ·
+`docs/Backup-Format.md` · `docs/CHANGELOG.md`.
+
+**Was gemessen wurde:**
+
+| Prüfmittel | Zahl |
+|---|---|
+| `tools/wiederherstellungs-probe/` | **94 Erwartungen, 0 nicht erfüllt** — davon **18 neu** in Teil 11 |
+| `tools/ingestprobe/` | 39 / 0, unverändert |
+| `tools/spurprobe/` | **45 / 0** — hier hängt die Zusicherung „zwei ganze Sicherungen desselben Kontos sind gleich"; die neue Abfrage hat eine feste Sortierung |
+| `tools/containerprobe/` | **32 / 0** (vorher dauerhaft 31/1, siehe Probleme) |
+| `kreislauf.py --art edbak-alt --frisch` | **287 743 Einzelvergleiche, 647 erwartete, 0 unerklärte**, 0 ungenutzte Regeln |
+| `kreislauf.py --art edbak --frisch` | 253 343 Einzelvergleiche, 16 erwartete, **88 unerklärte** — 87 × `missions.schnitte` `None → []`, 1 × `kopf.version` `8 → 9`. **Beide verschwinden mit AP4**, weil die Referenz dann selbst Nutzlast 9 ist; deshalb **keine** Ausnahmeregel (das wäre ein Filter) |
+| Kosten je Fenster (87 Einsätze, ohne Spuren) | **21,9 → 23,3 ms** Median (+1,4 ms), Datei **179 314 → 187 825 Byte** (+4,7 %), Speicherspitze 4,0 MB unverändert |
+| Wortliste | **0 / 0 / 0** bei 79 Regeln |
+| Vollständigkeit | **278 → 280** — beide neu in „Unicode-Zeichen als Symbol im Markup", beides Auslassungszeichen in **Kommentaren**; dieselbe Verwendung, die der Rahmenplan (Fassung 19) schon als Bestand vermerkt hat |
+| `php -l` / `node --check` | 0 Fehler |
+
+**Der CSV-Kreislauf ist NICHT erneut gefahren worden.** AP2 fasst den
+Exportweg nicht an (`export_data.php`, `export.js` unverändert); die Zahl aus
+AP3 (8965 / 1023 / 5) gilt weiter.
+
+**Der Messstand am 5000er-Bestand steht aus.** Er braucht seinen eigenen
+Bestand, den diese Umgebung nicht trägt. Gemessen ist stattdessen dasselbe an
+der Referenz (87 Einsätze, Zahl oben): eine Abfrage je Fenster plus zwei
+Auflösungsabfragen, +6 % Zeit und +4,7 % Datei bei durchweg **leeren**
+Vermerklisten. Das ist die Obergrenze des Zusatzaufwands, nicht der Regelfall.
 
 ### Umsetzungsstand AP3 (04.09.2026, Web 14.1.0) — **vorgezogen vor AP2**
 
@@ -714,6 +771,12 @@ drei Auslieferungen).
 | **P-R64-03** | Die Ingestprobe konnte den Rückfall „unbekanntes Präfix" nicht von der Regel unterscheiden: Mit einem einzigen Uhr-Gerät ergibt beides `watch` | Die Probe legt ein **zweites Gerät** an (`handy`). Damit trennen sich die Fälle: dasselbe unbekannte Präfix ergibt am Handy `android`, an der Uhr `watch` |
 | **P-R64-04** | Die Anmeldung der Schnitt-Probe scheiterte über `http://127.0.0.1:8080` **ohne jede Fehlermeldung** — das Sitzungs-Cookie trägt `secure` und kommt über blankes HTTP nicht zurück; die Anmeldung gelang (302), und die Folgeseite wies zurück auf die Anmeldung | Über die TLS-Terminierung gefahren (`lokal_starten.sh`, `https://127.0.0.1:8443`). Steht so schon in der LIESMICH des Einspielwerkzeugs — hier nur nicht gelesen |
 | **P-R64-05** | Die Wortliste meldete nach AP3 **6 Treffer** (`garmin`, `venu`) — der Wertevorrat der Herkunft muss die Garmin-App benennen, das ist der Inhalt von E-R64-02 | Eine Ausnahme der Klasse G (`herkunft-wertevorrat-garmin`) statt sechs. Dafür ist der Wortlaut an allen fünf Stellen auf „Garmin-Uhr-App" vereinheitlicht worden; das Modellbeispiel `Venu 3S` ist **entfallen** statt ausgenommen — „bei einer Uhr der Sammelname der Hardware" sagt dasselbe besser |
+| **P-R64-07** | Die **Wiederherstellungsprobe war kaputt** und niemand wusste es: Sie starb mitten in Teil 9 an `Call to undefined function smtp_eingerichtet()` — `smtp.php` wurde nirgends geladen. Der Abbruch kam nach 43 grünen Zeilen; alles dahinter (Teil 10) lief **nie**. Ihr Kopf versprach außerdem „30 von 30", es sind 94 | `require_once $server . '/smtp.php'` ergänzt, Kopf berichtigt. Am Zweigstand vor AP2 nachgestellt, um auszuschließen, dass es an R64 liegt |
+| **P-R64-08** | Danach fiel eine Erwartung in Teil 9 durch: „Ohne eingerichtetes SMTP wird nicht gemailt". Sie ist auf einer Installation **mit** SMTP-Host nicht erfüllbar — und die Prüfinstallation hat einen. Zusätzlich stand zu dem Zeitpunkt gar nichts mehr in der Ablage (die Zeile davor hatte sie geleert), die Schwellen konnten also ohnehin nicht anschlagen | Beides behoben: Die Probe legt jetzt vor der Messung etwas ab, und der Fall verzweigt an `smtp_eingerichtet()` — ohne SMTP wird die Zusage gemessen, mit SMTP wird gesagt, dass sie hier **nicht messbar** ist. Kein Umgehen, sondern eine benannte Grenze |
+| **P-R64-09** | Die **Containerprobe** stand dauerhaft auf 31/1: Ein Prüffall suchte in einer Fehlermeldung den Wortlaut „Teil einer mehrteiligen"; `crypto.js` sagt seit Langem „einzelnes Teil eines mehrteiligen Backups" | Suchtext auf den unveränderlichen Kern der Aussage gesetzt. Am Stand ohne AP2 gegengeprüft — der Fehlschlag war vorher da |
+| **P-R64-10** | Das Konzept nennt die Kindliste der Reanimationen im Beispiel-JSON (5.4) **`rea`**. Im gelieferten Format heißt sie **`resus`** | Nichts geändert — das Konzept irrt, nicht der Code. Hier vermerkt, damit niemand danach sucht |
+| **P-R64-11** | Das Konzept nennt als Ort der Rückmeldungszeile `server/wiederherstellen.php` und `server/assets/import_ui.js`. **Beide sind falsch:** Das eine ist die Notfallseite für eine leere Installation und ruft `edbak_restore()` nirgends auf, das andere ist der CSV-Import | Richtiger Ort ist `restoreBericht()` in `server/einstellungen.php` — dazu die feste Summierliste ein paar hundert Zeilen darunter, in der jeder neue Zähler stehen muss, sonst meldet die Oberfläche die Zahlen des letzten Fensters |
+| **P-R64-12** | Die AP2-Abnahme verlangt „Containerprobe grün; Kopf trägt `nutzlast: 9`". Das Manifest der Containerprobe hat **kein Feld `nutzlast`** | Gemeint war `version: 8 → 9` im Beispiel-Kopf (`probe.mjs:105`); das ist geändert. Die Abnahme ist damit erfüllt, die Formulierung war es nicht |
 | **B-R64-02** (Fund, kein Fehler dieses Pakets) | Beim Beleg von Prüfpunkt P-8 aufgefallen: Ein **geschnittener Einsatz kommt über den CSV-Rückimport nicht zurück**. `SCHNITT_PHASEN` vergibt nur die Phasen 3, 4 und 7 — nie die Phase 2 (Alarmierung) —, und `uhrzeit_ortszeit` ist im Importprofil `export_csv_v1` eine **Pflichtangabe**. Die Zeile erscheint als Fehler und muss von Hand nachgetragen oder übersprungen werden. Dasselbe trifft jeden Einsatz ohne Alarmierung. Gemessen: 4 von 16 Zeilen des Probe-Archivs | **Nicht behoben, sondern aufgeschrieben.** Es ist Bestandsverhalten seit Web 12.5.0 und liegt außerhalb von R64; eine Behebung hieße, die Pflichtangaben des Importprofils zu ändern, und das ist eine Entscheidung. Vermerkt im Prüfdokument bei P-8 und als **Backlog-Kandidat** für die Backlog-Runde nach dem S4-Rest. R64 macht den Fall nur sichtbar, weil es die Herkunft `schnitt` überhaupt erst benennt |
 | **P-R64-06** | Der CSV-Kreislauf steht nach AP3 auf **5 unerklärt** statt 0. Die Abweichungen liegen in `felder.csv` (vier neue Zeilen, eine geänderte Beschreibung) | **Keine Ausnahmeregel geschrieben.** Sie sind keine Eigenschaft des Umlaufs, sondern die Folge einer Referenzdatei, die älter ist als der Code; mit AP4 verschwinden sie. Eine Regel dafür wäre ein Filter (`vergleich/LIESMICH.md`). Die Zahl steht stattdessen in der Beschreibung der Ausnahmeliste und hier |
 
