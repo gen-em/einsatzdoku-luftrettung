@@ -131,12 +131,6 @@ try {
     $no->execute([$userId, $dayId, $m['started_at']]);
     $dayNo = (int)$no->fetchColumn();
 
-    // Phase 9 vorhanden? (Basis fuer Ende/Dauer)
-    $p9 = db()->prepare('SELECT MAX(occurred_at) FROM mission_phases
-                         WHERE mission_id = ? AND phase = 9');
-    $p9->execute([$id]);
-    $p9at = $p9->fetchColumn() ?: null;
-
     /* SPUR UEBER spur_lib.php (S2/AP1) — Zeilen und Blob zusammen. Die
      * Zeitstempel werden weiter gebraucht: Sie bestimmen unten je Phase den
      * naechstliegenden Punkt (`track_idx`). */
@@ -291,7 +285,14 @@ try {
         'origin'     => (string)($m['origin'] ?? 'watch'),
         'edited'     => (int)($m['edited'] ?? 0) === 1,
         'day_no'     => $dayNo,
-        'has_p9'     => $p9at !== null,
+        /* `hat_ende` statt `has_p9` (Web 14.2.2, F-R64-05). Die
+         * Einsatzansicht fragte damit, ob sie eine Endzeit anzeigen darf --
+         * und Phase 9 war dafuer nur ein Stellvertreter. Ein geschnittener
+         * oder importierter Einsatz hat keine Phase 9, aber sehr wohl ein
+         * Ende; die Seite schrieb daneben "kein Ende". Gefragt wird jetzt
+         * das, was gemeint ist -- und die eigene Abfrage nach Phase 9 ist
+         * damit ersatzlos entfallen: Sie hatte keinen zweiten Verwender. */
+        'hat_ende'   => $m['ended_at'] !== null,
         /* Zielklinik-Koordinate: KLARTEXT wie ihr Name (E40). Ihr Pin ist damit
          * ohne Freischalten sichtbar — anders als Einsatzort und Linie, deren
          * mittlerer Stuetzpunkt verschluesselt ist (A13o). */

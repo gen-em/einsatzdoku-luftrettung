@@ -14,6 +14,34 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 14.2.2] — 2026-09-04
+
+### Web — „kein Ende" an einem Einsatz, der zu Ende war
+
+Die Einsatztabelle rechnete die Dauer aus dem Beginn und der **Phase 9**
+(„Endzeit des Einsatzes"). Fehlte die Phase, stand in der Spalte „kein Ende" —
+auch an einem Einsatz mit `final = 1` und gesetztem `ended_at`. Dieselbe
+Rechnung stand in der Zeitraumübersicht und in der Suche, und die
+Einsatzansicht fragte über dasselbe Merkmal, ob sie überhaupt eine Endzeit
+anzeigen darf.
+
+Zwei Arten haben keine Phase 9 und sind trotzdem zu Ende: der **geschnittene**
+Einsatz (`api/schneiden.php` vergibt nur die Phasen 3, 4 und 7) und der
+**importierte**, dessen Datei keine Endphase führt. Bei einem Einsatz von der
+Uhr fallen Alarmierung, Phase 9 und `ended_at` zusammen — deshalb ist es nie
+aufgefallen. Seit Web 14.2.1 steht ein geschnittener Einsatz dauerhaft im
+Demo-Konto, also auf dem Produktivserver.
+
+„Dauer" heißt jetzt, was das Wort sagt: **wie lange der Einsatz gedauert hat**.
+Dass sich dabei keine bestehende Zeile ändert, ist gemessen und nicht
+angenommen: Über 330 aktive Einsätze fallen Phase 9 und `ended_at` **nullmal**
+auseinander (323 gleich, 3 mit Ende ohne Phase 9, 4 offene ohne beides).
+„kein Ende" bleibt genau dort, wo es hingehört — am Einsatz ohne Ende.
+
+Das Merkmal `has_p9` heißt jetzt `hat_ende` und sagt damit, was gemeint ist.
+Drei korrelierte Unterabfragen auf `mission_phases` sind ersatzlos entfallen:
+Sie holten je Zeile einen Wert, der als Spalte danebensteht.
+
 ## [Web 14.2.1] — 2026-09-04
 
 ### Web — der Referenzbestand trägt jetzt, was er prüfen soll (R64)

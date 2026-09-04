@@ -51,11 +51,14 @@ try {
      *
      * Der Join auf `days` ist seit Web 6.0.0 der vorgesehene Weg (Konzept
      * 4.11). Bis dahin trug jeder Einsatz sein Tagesdatum selbst. */
-    $st = db()->prepare('SELECT m.id, m.day_id, d.day, d.kind, m.started_at, m.distance_m,
+    /* `ended_at` STATT DER PHASE-9-UNTERABFRAGE (Web 14.2.2, F-R64-05).
+     * Sie war die einzige Verwenderin von `p9_at` hier -- und eine
+     * korrelierte Unterabfrage je Zeile fuer einen Wert, der als Spalte
+     * danebensteht. */
+    $st = db()->prepare('SELECT m.id, m.day_id, d.day, d.kind, m.started_at, m.ended_at,
+                           m.distance_m,
                            m.winch, m.bergwacht, m.secondary, m.winch_cycles,
-                           m.false_alarm, m.site_ele_m, m.pat_blob,
-                           (SELECT MAX(occurred_at) FROM mission_phases p
-                            WHERE p.mission_id = m.id AND p.phase = 9) AS p9_at
+                           m.false_alarm, m.site_ele_m, m.pat_blob
                          FROM missions m
                          JOIN days d ON d.id = m.day_id
                          WHERE m.user_id = ? AND d.day BETWEEN ? AND ?
@@ -65,9 +68,13 @@ try {
 
     $missions = [];
     foreach ($st->fetchAll() as $m) {
+        /* DAUER = BEGINN BIS ENDE (Web 14.2.2, F-R64-05). Vorher stand hier
+         * Phase 9; ein geschnittener oder importierter Einsatz hat keine und
+         * galt damit als „kein Ende", obwohl er abgeschlossen ist und ein
+         * `ended_at` traegt. Begruendung und Messung in `api/day.php`. */
         $dur = null;
-        if ($m['p9_at'] !== null) {
-            $dur = (new DateTime($m['p9_at']))->getTimestamp()
+        if ($m['ended_at'] !== null) {
+            $dur = (new DateTime($m['ended_at']))->getTimestamp()
                  - (new DateTime($m['started_at']))->getTimestamp();
         }
         $missions[] = [

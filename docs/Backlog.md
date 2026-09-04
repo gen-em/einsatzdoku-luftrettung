@@ -663,27 +663,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
     Ableitungen nachmessen.
 
-63. **Sperrvermerke des Schnitts überstehen das Konto-Backup nicht.**
-    *Aufgenommen 02.09.2026 als B-S4-10 (S4/A2).*
-    `track_cuts` (Web 12.5.0) hält den Zeitraum, den `ingest.php` an einer
-    geschnittenen Spur nicht mehr annimmt. Die **Komplett-Backup** trägt die
-    Tabelle mit — sie findet ihre Tabellen über `SHOW FULL TABLES`. Die
-    **Konto-Backup** (`edbak_build()`, Nutzlast 8) hat dagegen einen
-    aufgezählten Aufbau und kennt sie nicht.
-    **Die Folge nach einem Wiedereinspielen:** Ein Gerät, das Punkte des
-    geschnittenen Zeitraums noch im Puffer hat, liefert sie nach, und sie
-    landen wieder im Ruhesegment — die Fahrt läge dann in Einsatz *und*
-    Segment, also genau der Zustand, den E-S4-53 mit dem Verschieben statt
-    Kopieren vermeiden wollte. Der Einsatz selbst kommt vollständig durch;
-    beschädigt wird nichts, es fällt nur eine Sperre weg.
-    **Das Fenster ist schmal** (Wiedereinspielen ist selten, ein Gerätepuffer
-    umfasst Stunden), der Fehler aber echt. Nicht nebenbei behoben, weil die
-    Behebung den Nutzlastaufbau **und** beide Rückwege berührt: Der Vermerk
-    verweist auf zwei Kennungen (Quelle und Ziel), die das Einspielen erst neu
-    vergibt — er muss also wie die Spuren über Verweise laufen, nicht über
-    Kennungen. Dazu `docs/Backup-Format.md`, die Kreislaufproben und ein
-    Prüffall.
-
 65. **Vierzehn Fassungshinweise im Android-Baulauf hängen an einer
     Entscheidung.**
     *Aufgenommen 02.09.2026 als Rest aus B-S4-04 (S4/D1).*
@@ -991,73 +970,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Prüfweg:** Am Gerät ansehen, nicht im Emulator — die Symbolform ist eine
     Herstellereinstellung. Zuordnung: **S4-Rest** (Schritt 6), zusammen mit dem
     Gerätetest auf dem S24.
-
-83. **Welche Daten von Uhr und Handy wie gespeichert werden, damit sich
-    auswerten lässt, wer womit dokumentiert hat — Diskussion, dann Umsetzung.**
-    *Aufgenommen 02.09.2026 vom Auftraggeber, nach dem Befund unten. Hängt an
-    Nr. 80 (Auswertung) und muss VOR dieser entschieden sein.*
-    Nr. 80 fragt, **wie** ausgewertet wird. Dieser Punkt fragt, **ob die Daten
-    dafür überhaupt haltbar sind**. Sie sind es nur zur Hälfte.
-    **Was trägt** — beides steht als Spalte am Einsatz selbst und ist im
-    Backup: `missions.origin` (`watch` / `manual` / `import`, beim Anlegen
-    gesetzt, nie geändert) und das **Präfix der `client_ref`** (`m-` Garmin-Uhr,
-    `am-`/`ar-`/`ad-` Handy-App, `wm-` Wear, `man-` Formular, `imp-` Import;
-    JSON-Vertrag 8, seit Fassung 1.4). Damit ist „wie viele Einsätze mit dem
-    Webtool" vollständig und „mit welcher Client-Art" grob zu beantworten,
-    ohne eine Zeile Code.
-    **Was nicht trägt:** der Verweis `missions.device_id` → `devices`, an dem
-    seit Web 12.9.0 Art und Modell hängen. Er steht auf `ON DELETE SET NULL`,
-    und drei Wege löschen ein Gerät — einer davon (`pair.php` trennen) ist der
-    **vorgesehene Normalfall** bei einer geteilt genutzten Uhr (Nr. 14).
-    Ausserdem steht `device_id` **nicht im Backup** (bewusst, als
-    interner Verweis).
-    **Gemessen am 02.09.2026** an einem Demo-Konto, das über den regulären
-    Einspielweg entsteht: **82 von 82 Einsätzen und 95 von 95 Ruhesegmenten
-    ohne Geräteverweis** — obwohl 76 davon `origin = 'watch'` tragen. Zum
-    Vergleich: **`day_refs` 16 von 16 mit Verweis**, denn dort steht die
-    *öffentliche* Gerätekennung im Backup und wird beim Einspielen neu
-    verknüpft. Das richtige Muster existiert im Projekt also schon, nur an
-    einer Stelle.
-    **Warum es eilt:** R60 lässt v1.0 mit einem Neuaufsetzen und **einer
-    einmaligen Wiederherstellung** beginnen. Was bis dahin nicht haltbar ist,
-    ist für den Altbestand danach nicht mehr herstellbar.
-    **Drei Wege, zu entscheiden:**
-    (a) **`devices` weich löschen** statt hart — Spalte `geloescht_am`,
-    Zugangsdaten beim Trennen leeren, Zeile aus Listen und aus `MAX_GERAETE`
-    filtern; dazu den Verweis wie bei `day_refs` über die öffentliche Kennung
-    in das Backup. Hält ein bereits erlaubtes Datum am Leben und ist damit
-    R36-konform.
-    (b) **Art und Modell auf den Einsatz kopieren** (`missions.geraet_art`).
-    Überlebt alles, auch die Wiederherstellung — ist aber eine
-    Denormalisierung an der größten Tabelle und näher an „etwas Neues
-    erfassen", als R36 zulässt.
-    (c) **Nichts bauen** und nur über `origin` und das Präfix zählen. Kostet
-    nichts, trägt heute, verzichtet aber auf die Modellgenauigkeit.
-    **Eine Statistiktabelle wird für die Zählung selbst nicht gebraucht** — die
-    ist ein `GROUP BY`. Das Problem ist die Haltbarkeit des Verweises, und eine
-    Aggregattabelle löste es nicht, sondern schriebe denselben Verlust nur
-    früher fest.
-    **Mitzudenken:** Eine Wear-OS-Uhr koppelt nicht selbst (E-S4-11), das Handy
-    koppelt für sie — eine solche Installation erscheint ausschließlich als
-    `handy`. Und Geräte, die vor Web 12.9.0 gekoppelt haben, tragen gar keine
-    Angabe.
-    Zuordnung: **Diskussion in der Planung v1.0 (Schritt 10)**, Umsetzung
-    danach — jedenfalls vor dem Neuaufsetzen.
-    **Entschieden am 02.09.2026 (Rahmenplan R64), früher als hier vorgesehen:**
-    **Weg (b)** — `geraet_art` und `geraet_modell` als Momentaufnahme an
-    `missions` und `rest_segments`, beim Anlegen aus `devices` kopiert, in das
-    Backup aufgenommen (das Muster von `day_refs`), Bestand per Migration
-    nachgefüllt, solange die Geräte noch stehen; Trennen bleibt Löschen. Dazu
-    **eigene Herkunftswerte** in `origin`: `watch` bleibt für die Garmin-Uhr,
-    neu `android`, `wear` und `schnitt` neben `manual` und `import`, gesetzt
-    beim Anlegen aus Geräteart und `client_ref`-Präfix. Der Einwand an (b)
-    (näher an „etwas Neues erfassen") ist gesehen und so beantwortet: Es sind
-    dieselben Werte wie R42, nur festgehalten; die Datenschutzerklärung nennt
-    sie (Abschnitt 6 des Rahmenplans). Der Preis (Feldkatalog, Export- und
-    Backup-Format, Kreisläufe und Referenz nach R24) ist angenommen und wird
-    mit Nr. 63 in **einer** Formatänderung bezahlt. **Sichtbar** im Dashboard
-    (Nr. 80) **und** je NutzerIn (Nr. 88). Zuordnung damit: **S4-Rest**
-    (Speicherung), P5 (Dashboard), Nr. 88 (Kachel).
 
 87. **Die Weboberfläche als installierbare Web-App auf Android.**
     *Aufgenommen 02.09.2026 auf Anweisung des Auftraggebers: vor v1.0
@@ -2267,3 +2179,95 @@ zutreffen.
     *Geprüft:* Stufe I 99 übersetzt, 0 fehlgeschlagen, 0 Warnungen. Fünf Geräte
     im Simulator, eines je Stufe plus beide 390er. Speicher auf den beiden
     knappsten Geräten gemessen: fenix6 55,9/123,8 kB, FR 55 52,3/123,8 kB.
+
+83. **Welche Daten von Uhr und Handy wie gespeichert werden, damit sich
+    auswerten lässt, wer womit dokumentiert hat — Diskussion, dann Umsetzung.**
+    *Aufgenommen 02.09.2026 vom Auftraggeber, nach dem Befund unten. Hängt an
+    Nr. 80 (Auswertung) und muss VOR dieser entschieden sein.*
+    Nr. 80 fragt, **wie** ausgewertet wird. Dieser Punkt fragt, **ob die Daten
+    dafür überhaupt haltbar sind**. Sie sind es nur zur Hälfte.
+    **Was trägt** — beides steht als Spalte am Einsatz selbst und ist im
+    Backup: `missions.origin` (`watch` / `manual` / `import`, beim Anlegen
+    gesetzt, nie geändert) und das **Präfix der `client_ref`** (`m-` Garmin-Uhr,
+    `am-`/`ar-`/`ad-` Handy-App, `wm-` Wear, `man-` Formular, `imp-` Import;
+    JSON-Vertrag 8, seit Fassung 1.4). Damit ist „wie viele Einsätze mit dem
+    Webtool" vollständig und „mit welcher Client-Art" grob zu beantworten,
+    ohne eine Zeile Code.
+    **Was nicht trägt:** der Verweis `missions.device_id` → `devices`, an dem
+    seit Web 12.9.0 Art und Modell hängen. Er steht auf `ON DELETE SET NULL`,
+    und drei Wege löschen ein Gerät — einer davon (`pair.php` trennen) ist der
+    **vorgesehene Normalfall** bei einer geteilt genutzten Uhr (Nr. 14).
+    Ausserdem steht `device_id` **nicht im Backup** (bewusst, als
+    interner Verweis).
+    **Gemessen am 02.09.2026** an einem Demo-Konto, das über den regulären
+    Einspielweg entsteht: **82 von 82 Einsätzen und 95 von 95 Ruhesegmenten
+    ohne Geräteverweis** — obwohl 76 davon `origin = 'watch'` tragen. Zum
+    Vergleich: **`day_refs` 16 von 16 mit Verweis**, denn dort steht die
+    *öffentliche* Gerätekennung im Backup und wird beim Einspielen neu
+    verknüpft. Das richtige Muster existiert im Projekt also schon, nur an
+    einer Stelle.
+    **Warum es eilt:** R60 lässt v1.0 mit einem Neuaufsetzen und **einer
+    einmaligen Wiederherstellung** beginnen. Was bis dahin nicht haltbar ist,
+    ist für den Altbestand danach nicht mehr herstellbar.
+    **Drei Wege, zu entscheiden:**
+    (a) **`devices` weich löschen** statt hart — Spalte `geloescht_am`,
+    Zugangsdaten beim Trennen leeren, Zeile aus Listen und aus `MAX_GERAETE`
+    filtern; dazu den Verweis wie bei `day_refs` über die öffentliche Kennung
+    in das Backup. Hält ein bereits erlaubtes Datum am Leben und ist damit
+    R36-konform.
+    (b) **Art und Modell auf den Einsatz kopieren** (`missions.geraet_art`).
+    Überlebt alles, auch die Wiederherstellung — ist aber eine
+    Denormalisierung an der größten Tabelle und näher an „etwas Neues
+    erfassen", als R36 zulässt.
+    (c) **Nichts bauen** und nur über `origin` und das Präfix zählen. Kostet
+    nichts, trägt heute, verzichtet aber auf die Modellgenauigkeit.
+    **Eine Statistiktabelle wird für die Zählung selbst nicht gebraucht** — die
+    ist ein `GROUP BY`. Das Problem ist die Haltbarkeit des Verweises, und eine
+    Aggregattabelle löste es nicht, sondern schriebe denselben Verlust nur
+    früher fest.
+    **Mitzudenken:** Eine Wear-OS-Uhr koppelt nicht selbst (E-S4-11), das Handy
+    koppelt für sie — eine solche Installation erscheint ausschließlich als
+    `handy`. Und Geräte, die vor Web 12.9.0 gekoppelt haben, tragen gar keine
+    Angabe.
+    Zuordnung: **Diskussion in der Planung v1.0 (Schritt 10)**, Umsetzung
+    danach — jedenfalls vor dem Neuaufsetzen.
+    **Entschieden am 02.09.2026 (Rahmenplan R64), früher als hier vorgesehen:**
+    **Weg (b)** — `geraet_art` und `geraet_modell` als Momentaufnahme an
+    `missions` und `rest_segments`, beim Anlegen aus `devices` kopiert, in das
+    Backup aufgenommen (das Muster von `day_refs`), Bestand per Migration
+    nachgefüllt, solange die Geräte noch stehen; Trennen bleibt Löschen. Dazu
+    **eigene Herkunftswerte** in `origin`: `watch` bleibt für die Garmin-Uhr,
+    neu `android`, `wear` und `schnitt` neben `manual` und `import`, gesetzt
+    beim Anlegen aus Geräteart und `client_ref`-Präfix. Der Einwand an (b)
+    (näher an „etwas Neues erfassen") ist gesehen und so beantwortet: Es sind
+    dieselben Werte wie R42, nur festgehalten; die Datenschutzerklärung nennt
+    sie (Abschnitt 6 des Rahmenplans). Der Preis (Feldkatalog, Export- und
+    Backup-Format, Kreisläufe und Referenz nach R24) ist angenommen und wird
+    mit Nr. 63 in **einer** Formatänderung bezahlt. **Sichtbar** im Dashboard
+    (Nr. 80) **und** je NutzerIn (Nr. 88). Zuordnung damit: **S4-Rest**
+    (Speicherung), P5 (Dashboard), Nr. 88 (Kachel).
+
+    **Erledigt am 04.09.2026** als **R64** mit Web **14.0.0** bis **14.2.1**. Der Verweis `missions.device_id` bleibt, wie er ist — die Haltbarkeit kommt aus einer **Momentaufnahme**: `geraet_art` und `geraet_modell` stehen seit 14.0.0 als eigene Spalten am Einsatz *und* am Ruhesegment, beim Anlegen kopiert und nie nachgezogen. `ON DELETE SET NULL` kann ihnen damit nichts mehr anhaben. Dazu trägt `missions.origin` jetzt sechs Werte statt drei (`watch|android|wear|manual|import|schnitt`), abgeleitet aus dem Präfix der `client_ref`; der Bestand ist per Migration nachgefüllt. Die Momentaufnahme reist in der Konto-Sicherung mit (Nutzlast 9) und steht im CSV-Export in zwei neuen Spalten. **Der Gegenbeleg zur Messung von Fassung 21** („82 von 82 Einsätzen ohne Geräteverweis"): Im erneuerten Referenzbestand tragen **82 von 82** Einsätzen und **100 von 100** Ruhesegmenten die Momentaufnahme, und alle sechs Herkunftswerte sind belegt. Nr. 80 (Auswertung) hat damit eine haltbare Grundlage.
+
+63. **Sperrvermerke des Schnitts überstehen das Konto-Backup nicht.**
+    *Aufgenommen 02.09.2026 als B-S4-10 (S4/A2).*
+    `track_cuts` (Web 12.5.0) hält den Zeitraum, den `ingest.php` an einer
+    geschnittenen Spur nicht mehr annimmt. Die **Komplett-Backup** trägt die
+    Tabelle mit — sie findet ihre Tabellen über `SHOW FULL TABLES`. Die
+    **Konto-Backup** (`edbak_build()`, Nutzlast 8) hat dagegen einen
+    aufgezählten Aufbau und kennt sie nicht.
+    **Die Folge nach einem Wiedereinspielen:** Ein Gerät, das Punkte des
+    geschnittenen Zeitraums noch im Puffer hat, liefert sie nach, und sie
+    landen wieder im Ruhesegment — die Fahrt läge dann in Einsatz *und*
+    Segment, also genau der Zustand, den E-S4-53 mit dem Verschieben statt
+    Kopieren vermeiden wollte. Der Einsatz selbst kommt vollständig durch;
+    beschädigt wird nichts, es fällt nur eine Sperre weg.
+    **Das Fenster ist schmal** (Wiedereinspielen ist selten, ein Gerätepuffer
+    umfasst Stunden), der Fehler aber echt. Nicht nebenbei behoben, weil die
+    Behebung den Nutzlastaufbau **und** beide Rückwege berührt: Der Vermerk
+    verweist auf zwei Kennungen (Quelle und Ziel), die das Einspielen erst neu
+    vergibt — er muss also wie die Spuren über Verweise laufen, nicht über
+    Kennungen. Dazu `docs/Backup-Format.md`, die Kreislaufproben und ein
+    Prüffall.
+
+    **Erledigt am 04.09.2026** mit **Web 14.2.0** (Nutzlast 9) und **14.2.1** (Referenzbestand). Die Konto-Sicherung trägt seither je Einsatz eine Liste `schnitte`; der Vermerk verweist über `quelle_ref` auf die **Kennung** der Quelle, nicht auf ihre interne Nummer — genau das Muster, das `day_refs` schon benutzte. Ein Vermerk ohne Ziel wird gezählt und benannt, nicht stillschweigend verworfen. Belegt im **Dauerbetrieb**: Der Referenzbestand enthält seit 14.2.1 einen Schnitt, und weil der Demo-Reset die Fixture alle 30 Minuten einspielt, wird der Vermerk auf dem Produktivserver alle 30 Minuten geprüft. Zahlen: Wiederherstellungsprobe 94/0 (18 neue Erwartungen in Teil 11), edbak-Kreislauf 287 713 Einzelvergleiche / 0 unerklärt, Demo-Konto nach dem Reset 1 Sperrvermerk.

@@ -524,8 +524,11 @@ Pro Tag:
   selbst und auf der Kachel; auswerten lässt er sich in der
   Zeitraum-Übersicht und der Suche. Zahlenspalten stehen rechtsbündig,
   Haken zentriert; ein Klick auf eine Zeile öffnet den Einsatz, ein Klick
-  auf einen Spaltenkopf sortiert. Die Dauer rechnet von der Alarmierung bis
-  Phase 9; fehlt Phase 9, steht dort die Plakette „kein Ende".
+  auf einen Spaltenkopf sortiert. Die Dauer rechnet von Beginn bis Ende des
+  Einsatzes; ist er noch nicht abgeschlossen, steht dort die Plakette
+  „kein Ende". *Bis Web 14.2.1 rechnete sie bis Phase 9 — ein geschnittener
+  oder importierter Einsatz hat keine und galt damit als „kein Ende",
+  obwohl er längst zu Ende war.*
   Eine Spalte **abw. Crew** gab es von Web 5.4.0 bis 5.9.0; sie ist wieder
   entfallen, weil der Haken an den allermeisten Tagen in keiner Zeile stand.
   Ob für einen Einsatz eine vom Diensttag abweichende Besatzung eingetragen ist,
@@ -673,8 +676,8 @@ nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
 „Aktionen"; Escape schließt, die Tastatur bedient es vollständig — seit
 Web 9.3.0 dasselbe Blatt wie auf der Startseite). **Spur als GPX** erscheint
 nur, wenn der Einsatz überhaupt eine Spur hat, und lädt sie als GPX-Datei
-herunter — lesbar von jedem Kartenprogramm. In der Unterzeile stehen Zeitspanne — ohne
-Phase 9 „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
+herunter — lesbar von jedem Kartenprogramm. In der Unterzeile stehen Zeitspanne — bei einem
+Einsatz ohne Ende „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
 Rettungsmittel und Standort:
 
 | Kennzeichen | Bedeutung |

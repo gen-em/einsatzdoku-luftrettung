@@ -2479,4 +2479,31 @@ declare(strict_types=1);
  * Bestand — mit Geraetemodellen auf der Geraeteseite und einem geschnittenen
  * Einsatz mit Plakette.
  */
-const WEB_VERSION = '14.2.1';
+/*
+ * 14.2.2 SAGT „DAUER" UND MEINT ES.
+ *
+ * Die Einsatztabelle rechnete die Dauer aus dem Beginn und der PHASE 9
+ * („Endzeit des Einsatzes"). Fehlte die Phase, stand dort „kein Ende" --
+ * auch an einem Einsatz, der abgeschlossen ist und ein `ended_at` traegt.
+ * Der Kommentar an der Stelle nannte das ausdruecklich gewollt, und fuer
+ * einen Einsatz von der Uhr fiel es nie auf: Sie setzt beim Abschliessen
+ * beides, und beides ist derselbe Zeitpunkt.
+ *
+ * ZWEI ARTEN HABEN KEINE PHASE 9 UND SIND TROTZDEM ZU ENDE: der
+ * GESCHNITTENE Einsatz (`api/schneiden.php` vergibt nur 3, 4 und 7) und der
+ * IMPORTIERTE, dessen Datei keine Endphase fuehrt. Seit 14.2.1 steht ein
+ * geschnittener dauerhaft im Demo-Konto -- also auf dem Produktivserver,
+ * sichtbar fuer jeden, der die Anwendung ausprobiert.
+ *
+ * GEMESSEN, DASS SICH NICHTS ANDERES AENDERT: Ueber 330 aktive Einsaetze
+ * fallen Phase 9 und `ended_at` NULLMAL auseinander (323 gleich, 3 mit Ende
+ * ohne Phase 9, 4 offene ohne beides). „kein Ende" bleibt genau dort, wo es
+ * hingehoert -- am Einsatz ohne Ende.
+ *
+ * VIER STELLEN, NICHT EINE. Dieselbe Rechnung stand in `api/day.php`,
+ * `api/range.php` und `api/suchindex.php`; die Einsatzansicht fragte
+ * ueber `has_p9` dasselbe. Das Merkmal heisst jetzt `hat_ende` und sagt,
+ * was gemeint ist. Drei korrelierte Unterabfragen auf `mission_phases`
+ * sind dabei ersatzlos entfallen -- der Wert stand als Spalte daneben.
+ */
+const WEB_VERSION = '14.2.2';

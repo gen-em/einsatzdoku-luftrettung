@@ -522,7 +522,7 @@ Besatzungsspalten sind personenbezogen.
 | `crew_abweichend` | 0/1 | — | nein | missions.crew_override |
 | `beginn` | ts | — | nein | started_at |
 | `ende` | ts | — | nein | ended_at |
-| `dauer_min` | int | min | nein | Phase 2 → Phase 9, leer wenn unvollständig |
+| `dauer_min` | int | min | nein | Phase 2 → Phase 9, leer wenn unvollständig. **Nicht zu verwechseln mit der Dauer in der Oberfläche**, die seit Web 14.2.2 von `beginn` bis `ende` rechnet; diese Spalte bleibt bewusst die Spanne der *Phasen* |
 | `strecke_m` | int | m | nein | Einsatzstrecke (distance_m) |
 | `hoehenmeter_m` | int | m | nein | Höhenmeter (ascent_m) |
 | `hoehe_einsatzort_m` | int | m | **ja** | Höhe des Einsatzorts |

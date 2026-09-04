@@ -585,7 +585,11 @@ async function init(){
   const ORIGIN_LABEL = { watch: 'Uhr', android: 'Handy', wear: 'Wear',
                          manual: 'manuell', import: 'importiert',
                          schnitt: 'Schnitt' };
-  const zeitteil = m.has_p9
+  /* `hat_ende`, nicht `has_p9` (Web 14.2.2, F-R64-05): Ob eine Endzeit
+     dasteht, entscheidet das ENDE des Einsatzes und nicht, ob jemand die
+     Phase 9 gesetzt hat. Ein geschnittener Einsatz hat keine Phase 9 und
+     trotzdem ein Ende. */
+  const zeitteil = m.hat_ende
     ? `${m.start_hhmm} – ${m.end_hhmm} Uhr`
     : `${m.start_hhmm} Uhr – kein Ende`;
   /* SPUR-PLAKETTE (S2/AP4, E-S2-09): welche Fassung der Spur hier liegt.
@@ -762,7 +766,10 @@ async function init(){
   });
   if (m.phases.length) {
     document.getElementById('phasen-karte').hidden = false;
-    if (m.has_p9) {
+    /* Dieselbe Frage wie oben, dieselbe Antwort: Die Zahl im Kopf der
+       Phasenkarte rechnet ohnehin von Beginn bis Ende des Einsatzes, nicht
+       von Phase zu Phase — sie hing nur an Phase 9 als Stellvertreter. */
+    if (m.hat_ende) {
       document.getElementById('phasendauer').textContent =
         fmtDauer(minutenDiff(m.start_hhmm, m.end_hhmm));
     }

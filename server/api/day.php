@@ -275,9 +275,7 @@ try {
      * ohnehin gemeinsam vorliegen und entschluesselt sie dort, wo der Server es
      * gar nicht koennte (Konzept 4.6.1). */
     $st = db()->prepare('SELECT id, started_at, ended_at, distance_m, final,
-                           pat_blob, start_src, dest_lat, dest_lon' . $spaltenSql . ',
-                           (SELECT MAX(occurred_at) FROM mission_phases p
-                            WHERE p.mission_id = missions.id AND p.phase = 9) AS p9_at
+                           pat_blob, start_src, dest_lat, dest_lon' . $spaltenSql . '
                          FROM missions WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                          ORDER BY started_at');
     $st->execute([$userId, $dayId]);
@@ -287,11 +285,32 @@ try {
 
     $missions = [];
     foreach ($missionZeilen as $m) {
-        // Dauer = Alarmierung bis Phase 9; ohne Phase 9 bewusst null
-        // (Anzeige "kein Ende" — auch bei abgeschlossenen Einsaetzen ohne 9er)
+        /* DAUER = BEGINN BIS ENDE DES EINSATZES (Web 14.2.2, F-R64-05).
+         *
+         * VORHER STAND HIER PHASE 9, und ohne sie war die Dauer `null` --
+         * die Tabelle zeigte dann "kein Ende". Der Kommentar nannte das
+         * ausdruecklich gewollt ("auch bei abgeschlossenen Einsaetzen ohne
+         * 9er"), und fuer einen Einsatz von der Uhr fiel es nie auf: Sie
+         * setzt Phase 9 beim Abschliessen, `ended_at` traegt denselben
+         * Zeitpunkt.
+         *
+         * ES GIBT ABER EINSAETZE OHNE PHASE 9, DIE SEHR WOHL ZU ENDE SIND:
+         * ein GESCHNITTENER (`api/schneiden.php` vergibt nur die Phasen 3, 4
+         * und 7) und ein IMPORTIERTER, dessen Datei keine Endphase fuehrt.
+         * Beide haben `final = 1` und ein `ended_at` -- und die Tabelle
+         * behauptete daneben "kein Ende". Seit R64/AP4 steht ein solcher
+         * Einsatz dauerhaft im Demo-Konto, also auf dem Produktivserver.
+         *
+         * "Dauer" heisst jetzt, was das Wort sagt: wie lange der Einsatz
+         * gedauert hat. GEMESSEN, dass das keine bestehende Zeile aendert:
+         * ueber 330 aktive Einsaetze fallen Phase 9 und `ended_at`
+         * **null**mal auseinander (323 gleich, 3 mit Ende ohne Phase 9,
+         * 4 offen). "kein Ende" bleibt genau dort, wo es hingehoert -- am
+         * Einsatz ohne Ende. */
         $dur = null;
-        if ($m['p9_at'] !== null) {
-            $dur = (new DateTime($m['p9_at']))->getTimestamp() - (new DateTime($m['started_at']))->getTimestamp();
+        if ($m['ended_at'] !== null) {
+            $dur = (new DateTime($m['ended_at']))->getTimestamp()
+                 - (new DateTime($m['started_at']))->getTimestamp();
         }
         $zeile = [
             'id'         => (int)$m['id'],
@@ -299,7 +318,7 @@ try {
             'duration_s' => $dur,
             'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
             'final'      => (bool)$m['final'],
-            'has_p9'     => $m['p9_at'] !== null,
+            'hat_ende'   => $m['ended_at'] !== null,
             'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
             'track'      => $spurEinsatz[(int)$m['id']] ?? [],
             'start_src'  => $m['start_src'] !== null ? (string)$m['start_src'] : null,

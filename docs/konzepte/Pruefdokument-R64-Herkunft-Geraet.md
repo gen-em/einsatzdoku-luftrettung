@@ -195,6 +195,16 @@ mit und nennt beide Zahlen. Der Lauf nach AP4 sagt: 172 Dateien zugeordnet,
 | `tools/vollstaendigkeit/` | **280** — unverändert gegen AP2 |
 | `tools/screenshots/` | **336 Einzelbilder, 42 Kontaktbögen, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
 
+### 2.4a F-R64-05 — „Dauer" heißt jetzt Dauer (Web 14.2.2)
+
+| Mittel | Zahl |
+|---|---|
+| Gegenprobe vor der Änderung: fallen Phase 9 und `ended_at` je auseinander? | über **330 aktive Einsätze**: 323 gleich, **0 verschieden**, 3 mit Ende ohne Phase 9, 4 offen. Der Wechsel ändert also an keiner bestehenden Zeile etwas |
+| Tagesansicht 14.06.2026 (Chromium) | Zeile des Schnitts: `7 · 16:10 · **1h 05min**`; „kein Ende" kommt auf der Seite **nicht mehr** vor |
+| Einsatzansicht desselben Einsatzes | Kopfzeile „16:10 – 17:15 Uhr", Kopfzahl der Phasenkarte „1h 5min", **0** Konsolenfehler (ohne die bekannten Kartenkacheln) |
+| Zeitraumübersicht 2026 | „kein Ende" **genau 1×** — der tatsächlich offene Einsatz vom 05.07.2026, 19:40 |
+| `php -l` über die vier geänderten Dateien | 0 Fehler |
+
 ### 2.5 AP5
 
 *Steht aus.* Die Sollwerte stehen im Konzept, Abschnitt 7.1.
@@ -211,7 +221,7 @@ mit und nennt beide Zahlen. Der Lauf nach AP4 sagt: 172 Dateien zugeordnet,
 | Konsolenfehler auf diesen drei Seiten | nur die bekannten Kartenkachel-Abrufe (`ERR_CONNECTION_RESET`) — die Umgebung erreicht `tile.openstreetmap.org` aus Chromium nicht (dokumentiert in `tools/screenshots/aufnehmen.mjs`). **0** andere |
 | Schneiden über die Tagesansicht | nicht über die Oberfläche gefahren, sondern über `api/schneiden.php` mit angemeldeter Sitzung — siehe Prüfpunkt **P-6** |
 | **Geräteseite des Demo-Kontos** nach AP4 (Chromium, 1280 px) | zwei Geräte mit Modell: „Uhr Luftdienst (Referenz) · Uhr · fēnix 7 …" und „Handy Bodendienst (Referenz) · Handy · Samsung SM-S921B" — Beleg `docs/bilder/s4-rest/08-r64-geraete-mit-modell.png` |
-| **Tagesansicht 14.06.2026** nach AP4 | der geschnittene Einsatz als Nr. 7 um 16:10, am Ruhesegment „geschnitten 16:10 – 17:15" mit „Schnitt zurücknehmen" — Beleg `docs/bilder/s4-rest/09-r64-tag-mit-schnitt.png` |
+| **Tagesansicht 14.06.2026** nach AP4 | der geschnittene Einsatz als Nr. 7 um 16:10 mit der Dauer **1h 05min**, am Ruhesegment „geschnitten 16:10 – 17:15" mit „Schnitt zurücknehmen" — Beleg `docs/bilder/s4-rest/09-r64-tag-mit-schnitt.png` (nach der Behebung von F-R64-05 neu aufgenommen) |
 | **Einsatzansicht eines `am-`-Einsatzes im Bilderlauf** (1024 px) | Plakette **„Handy"** neben „editiert" und „Spur · 406 Punkte", Diagnose entschlüsselt — `tools/screenshots/ausgabe/einzeln/12-einsatzansicht-1024.png` |
 | **Geschützte Angaben im Demo-Konto nach dem Einspielen der Fixture** | lesbar (Diagnose „Schädel-Hirn-Trauma bei Motorradunfall"), **0 Konsolenfehler** |
 
@@ -415,13 +425,17 @@ die Sicherung nicht überstanden, und Backlog Nr. 63 ist nicht behoben. Genau
 das prüft dieser Weg — und weil der Reset alle 30 Minuten läuft, prüft er
 sich danach von selbst.
 
-> **Ein bekanntes Ärgernis an dieser Zeile** (F-R64-05): In der Dauer-Spalte
-> steht **„kein Ende"**, obwohl der Einsatz abgeschlossen ist und ein Ende
-> hat. Die Tabelle rechnet die Dauer aus Beginn und **Phase 9**, und ein
-> geschnittener Einsatz hat keine. `api/day.php` nennt das im Kommentar
-> ausdrücklich gewollt. **Das ist kein Fehlschlag dieses Prüfpunkts** — aber
-> es ist eine Entscheidung, die jetzt jemand treffen sollte, weil der Fall ab
-> hier dauerhaft im Demo-Konto steht.
+**Und die Dauer gehört dazu** (F-R64-05, behoben in Web 14.2.2): In der
+Spalte *Dauer* muss **„1h 05min"** stehen. Bis 14.2.1 stand dort „kein
+Ende" — die Tabelle rechnete aus Beginn und Phase 9, und ein geschnittener
+Einsatz hat keine. Steht dort wieder „kein Ende", ist die alte Rechnung
+zurück (oder der Browser hat eine alte `missiontable.js`).
+
+Dasselbe auf der **Einsatzansicht** dieses Einsatzes: Kopfzeile
+**„16:10 – 17:15 Uhr"** (nicht „16:10 Uhr – kein Ende"), Kopfzahl der Karte
+*Einsatzphasen* **„1h 5min"**. Und in der **Zeitraumübersicht** 2026 darf
+„kein Ende" **genau einmal** vorkommen — am tatsächlich offenen Einsatz vom
+05.07.2026, 19:40.
 
 ### P-15 — Ein CSV-Export lässt sich wieder einlesen
 
