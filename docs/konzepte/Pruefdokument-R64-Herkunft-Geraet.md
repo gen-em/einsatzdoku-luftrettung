@@ -221,19 +221,34 @@ Scheitern zu erkennen ist**. Abhaken, was erledigt ist.
 - **Scheitern erkennbar an:** Jede zusätzliche Spalte ist ein Fehler — die
       Geräteangaben gehören ausdrücklich **nicht** nach Excel (E-R64-10).
 
-### P-8 — Ein Export lässt sich weiterhin zurücklesen
+### P-8 — Ein Export lässt sich weiterhin zurücklesen — **hier bereits gemessen**
 
-- [ ] **Weg:** Das eben erzeugte CSV-Archiv über Import / Export wieder
-      einlesen (in ein Testkonto, nicht in den Echtbestand).
-- **Erwartet:** Der Import erkennt das Profil „CSV (Standard)" wie bisher.
-      Die eingelesenen Einsätze tragen `herkunft = import` und **keine**
-      Geräteangaben — beide beschreiben das Quellkonto und werden bewusst
-      nicht übernommen (`Export-Format.md` 5.1).
+- [x] **Weg:** Ein Archiv aus Web 14.1.0 (also **mit** den zwei neuen Spalten)
+      in ein frisches Konto einlesen und wieder exportieren.
+- **Gemessen am 04.09.2026** (`kreislauf.py --art csv --frisch` gegen ein
+      Archiv aus dem Admin-Konto, 12 Einsätze):
+      Profil **`export_csv_v1` erkannt**, „12 Einsätze, **0 Hinweise, 0
+      Fehler**, 0 Dubletten", Import „12 Einsätze angelegt", Umlauf
+      **2011 Einzelvergleiche, 171 erwartete, 0 unerklärte**.
+      Die zwei unbekannten Spalten erzeugen also weder eine Warnung noch eine
+      Abweichung — der Rückimport ordnet über Namen zu und geht über sie
+      hinweg. Damit ist dieser Punkt **belegt** und nicht nur gelesen.
+- **Trotzdem am Echtbestand nachziehen**, wenn dort andere Spalten stehen
+      (Besatzung, Tracks, personenbezogene Angaben); das Probe-Archiv war
+      klein — 21 Ausnahmeregeln haben mangels passender Daten nicht gegriffen.
 - **Scheitern erkennbar an:** Der Import erkennt das Profil **nicht** mehr →
-      dann stören die zwei neuen Spalten die Kopfzeilen-Erkennung, und das
-      wäre ein echter Fehler. (Am Code geprüft: Er ordnet über Namen zu und
-      geht über Unbekanntes hinweg — aber das ist eine Lesart, keine
-      Bedienprobe.)
+      dann stören die zwei neuen Spalten die Kopfzeilen-Erkennung.
+
+> **Dabei aufgefallen (B-R64-02, kein Fehler dieses Pakets):** Ein
+> **geschnittener** Einsatz kommt über den CSV-Rückimport **nicht** zurück.
+> Der Schnitt vergibt nur die Phasen 3, 4 und 7 (`SCHNITT_PHASEN`), nie die
+> Phase 2 (Alarmierung) — und `uhrzeit_ortszeit` ist im Importprofil eine
+> **Pflichtangabe**. Die Zeile wird deshalb als Fehler angezeigt und muss von
+> Hand korrigiert oder übersprungen werden. Dasselbe gilt für jeden Einsatz
+> ohne Alarmierung, gleich welcher Herkunft. Gemessen: 4 von 16 Zeilen des
+> Probe-Archivs. Das ist Bestandsverhalten seit Web 12.5.0 und war nirgends
+> aufgeschrieben; R64 macht es nur sichtbar, weil es die Herkunft `schnitt`
+> überhaupt erst benennt.
 
 ### P-9 bis P-… — Sperrvermerke und Referenz
 
