@@ -2213,6 +2213,33 @@ declare(strict_types=1);
  * die Uhr-Abschnitte der Technik — wartet auf Paket C und kommt in der
  * zweiten Haelfte.
  *
+ * 13.3.0 MACHT EINE DOPPELUNG SICHTBAR, DIE ES SEIT S4 GIBT (R57, E-S4-76).
+ * Zeichnen zwei Geraete denselben Dienst auf — die Uhr am Handgelenk und das
+ * Handy in der Tasche —, legt JEDES einen eigenen Diensttag an: `day_refs` ist
+ * je Geraet geschluesselt, das eine findet die Kennung des anderen nicht. Es
+ * geht dabei nichts verloren und nichts wird ueberschrieben; es steht alles
+ * doppelt. Derselbe Einsatz zweimal, dieselbe Spur zweimal, und in der
+ * Jahresuebersicht zaehlt der Dienst doppelt.
+ *
+ * Gemessen wurde das in S4 (F-S4-D, zwei Geraete gegen eine oertliche
+ * Installation: Diensttag 53 und 54, je ein Einsatz). Aufgefallen waere es
+ * sonst erst in der Statistik.
+ *
+ * DIE NEBENNUMMER, KEINE HAUPTNUMMER: Es kommt eine Anzeige dazu, sonst
+ * nichts. Kein Datenmodell, keine Migration, kein veraenderter Weg durch die
+ * Anwendung — wer die Doppelung nicht hat, merkt von dieser Fassung nichts.
+ *
+ * UND KEINE AUTOMATIK, mit Absicht (E-S4-76 gegen E-S4-50): Die beiden Tage
+ * bleiben stehen. Sie sind zwei vollstaendige Aufzeichnungen, und ein stiller
+ * Automatismus muesste raten, welche gilt. Der Hinweis macht sie sichtbar und
+ * fuehrt auf `diensttag_zusammenfuehren.php`, wo ein Mensch entscheidet.
+ *
+ * Die Schwelle steht auf einer VIERTELSTUNDE (`DT_UEBERLAPPUNG_MIN`). Der
+ * eigene Dienstwechsel ueberschneidet sich regelmaessig um Minuten — wer den
+ * neuen Tag beginnt, bevor er den alten beendet hat. Ein Hinweis, der dabei
+ * jedes Mal erschiene, wuerde ueberlesen und stuende dann unbemerkt da, wenn
+ * er einmal wirklich gemeint ist.
+ *
  * 13.2.0 IST DER WARTUNGSMODUS (S5 Paket W). Ein Schalter auf der
  * Wartungsseite schliesst die Installation voruebergehend fuer alle ausser
  * der Verwaltung: Jede andere Anfrage bekommt 503 statt eines 500 aus einer
@@ -2252,4 +2279,4 @@ declare(strict_types=1);
  * schreibt `last_login`, waehrend `update.php` das Schema aendert. Die
  * Ratenschutz-Zaehler werden trotzdem geleert: Das Passwort WAR richtig.
  */
-const WEB_VERSION = '13.2.0';
+const WEB_VERSION = '13.3.0';

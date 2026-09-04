@@ -14,6 +14,63 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 13.3.0] — 2026-09-04
+
+### Web — zwei Diensttage aus einem Dienst fallen jetzt auf
+
+Zeichnen zwei Geräte denselben Dienst auf — die Uhr am Handgelenk und das
+Handy in der Tasche —, legt **jedes einen eigenen Diensttag** an. Der Grund
+ist die Bauform: `day_refs` ist je Gerät geschlüsselt, das eine findet die
+Kennung des anderen nicht. Es geht dabei nichts verloren und nichts wird
+überschrieben — **es steht alles doppelt**: derselbe Einsatz zweimal,
+dieselbe Spur zweimal, und in der Jahresübersicht zählt der Dienst doppelt.
+
+Gemessen wurde das in S4 (F-S4-D, zwei Geräte gegen eine örtliche
+Installation). Aufgefallen wäre es sonst erst in der Statistik, also lange
+nach dem Dienst — der häufigste Fall ist die Uhr, die im Spind noch mitläuft,
+während man längst mit dem Handy im Dienst ist.
+
+Die Tagesübersicht zeigt jetzt einen Hinweis, wenn sich der angezeigte
+Diensttag mit einem anderen zeitlich überschneidet. Er nennt jeden anderen Tag
+mit Beginn, Überschneidungsdauer und der Zahl der Einsätze und Ruhesegmente,
+verlinkt ihn und führt mit einem Knopf auf **„Diensttage zusammenführen"**.
+
+**Er entscheidet nichts** (E-S4-76 gegen E-S4-50), und das ist der Kern: Die
+beiden Tage bleiben stehen. Sie sind zwei vollständige Aufzeichnungen, und ein
+stiller Automatismus müsste raten, welche gilt. Der Hinweis macht die Doppelung
+nur sichtbar; entscheiden tut ein Mensch, auf der Seite, die eine Vorschau
+zeigt und erst nach Bestätigung schreibt.
+
+**Er lässt sich nicht bestätigen**, anders als der Hinweis über neue Geräte
+direkt darüber. Der Unterschied ist kein Versehen: Jener beschreibt ein
+*Ereignis*, das vorbei ist, sobald man es zur Kenntnis genommen hat. Dieser
+beschreibt einen *Zustand*, der weiterbesteht — er endet von selbst, sobald
+die Tage zusammengeführt sind oder einer im Papierkorb liegt. Ein Bestätigen
+bräuchte eine Merkspalte je Tagespaar, also Datenmodell für einen Hinweis.
+
+**Die Schwelle ist eine Viertelstunde**, nicht eine Minute. Der eigene
+Dienstwechsel überschneidet sich regelmäßig um Minuten — wer den neuen Tag
+beginnt, bevor er den alten beendet hat. Ein Hinweis, der dabei jedes Mal
+erschiene, würde nach dem dritten Mal überlesen und stünde dann unbemerkt da,
+wenn er einmal wirklich gemeint ist. Zwischen „zwei Handgriffe in der falschen
+Reihenfolge" und „zwei Geräte zeichnen denselben Dienst auf" liegen
+Größenordnungen; die Schwelle muss nur dazwischen liegen.
+
+**Was der Bilderlauf dabei gefunden hat:** Die erste Fassung nannte je Tag nur
+Beginn und Dauer — und zwei Tage aus demselben Dienst standen damit wortgleich
+da („17.07.2026 19:00, 12 Stunden Überschneidung", zweimal). Sie tragen
+dieselbe Zeit, und ein frisch gekoppeltes Gerät hat weder Rettungsmittel noch
+Standort, also gerade im Auslöserfall. Jetzt steht die Zahl der Einsätze und
+Ruhesegmente dabei — dieselbe Angabe, mit der die Zusammenführen-Seite ihre
+Kandidaten seit jeher unterscheidet, und zugleich die, auf die es ankommt: Wer
+entscheidet, welcher Tag bleibt, fragt zuerst, was daran hängt.
+
+**Ohne Migration.** Die Erkennung rechnet auf `days`, wie sie ist. Ein
+laufender Tag endet dabei „jetzt" (`ended_at` ist NULL, solange der Dienst
+läuft); die Rechnung steht in SQL, damit dieses „jetzt" und der Vergleich aus
+derselben Uhr kommen — zwei Uhren, die des Servers und die der Datenbank,
+können auseinanderlaufen.
+
 ## [Android 0.11.0] — 2026-09-04
 
 ### Android — die App kann sich wieder koppeln

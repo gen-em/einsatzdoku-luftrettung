@@ -1467,6 +1467,36 @@ auch über verborgene: Ein geteilter Link kann nach einer Spalte sortieren, die
 der eigene Bestand nicht zeigt — die Reihenfolge stimmt dann trotzdem, nur der
 Pfeil hat keinen Kopf.
 
+**Überschneidende Diensttage (R57, E-S4-76, ab Web 13.3.0).**
+`dt_ueberlappungen()` (`diensttag_lib.php`) liefert die Diensttage, die sich
+mit einem gegebenen zeitlich überschneiden; `index.php` zeigt daraus einen
+Hinweis in der Tagesübersicht. Der Fall ist **F-S4-D**: Zwei Geräte am selben
+Dienst legen zwei Diensttage an, weil `day_refs` je Gerät geschlüsselt ist —
+es geht nichts verloren, es steht alles doppelt.
+
+Drei Festlegungen, jede mit einem Grund:
+
+- **„Aktiv" heißt „nicht im Papierkorb", nicht „läuft noch".** Im Code sind
+  beide Lesarten belegt (`deleted_at IS NULL` gegen `ended_at IS NULL`). Ein
+  Tag im Papierkorb ist keine Doppelung mehr — wer ihn dorthin gelegt hat, hat
+  den Fall entschieden. Ein **beendeter** Tag ist sehr wohl eine: Die Doppelung
+  fällt in der Jahresstatistik auf, also lange nach dem Dienst.
+- **Ein laufender Tag endet „jetzt".** `ended_at` ist NULL, solange der Dienst
+  läuft; ohne diesen Ersatz überschnitte er sich mit nichts. Die Rechnung steht
+  deshalb **in SQL** (`COALESCE(ended_at, NOW())`) und nicht in PHP: Das
+  „jetzt" und der Vergleich müssen aus derselben Uhr kommen, sonst meldet die
+  Funktion eine Überschneidung von Minuten, die es nie gab.
+- **`DT_UEBERLAPPUNG_MIN` = 15 Minuten.** Der eigene Dienstwechsel
+  überschneidet sich regelmäßig um Minuten; ein Hinweis, der dabei jedes Mal
+  erscheint, wird überlesen. Der Auslöserfall — die vergessene Uhr im Spind —
+  dauert Stunden.
+
+**Serverseitig, nicht über `api/day.php`.** `index.php` kennt den gewählten Tag
+bereits; die Abfrage kostet einen Index-Zugriff, und der Hinweis steht sofort
+da statt nach dem Nachladen. Der Papierkorb-Hinweis daneben geht den anderen
+Weg, weil er von `mitPapierkorb` abhängt — einer Angabe, die `dt_laden()` an
+dieser Stelle gar nicht holt.
+
 **Artsymbole an einer Stelle.** `dt_art_symbole()` (`diensttag_lib.php`) liefert
 🚁 / 🚑 / ◌ samt Textalternative. `dt_art_symbol()` greift darauf zu, und
 `zeitraum.php` wie `suche.php` setzen die Liste **vor** `missiontable.js` als

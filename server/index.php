@@ -43,6 +43,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'gerae
     exit;
 }
 $neueGeraete = geraete_neu(db(), $userId);
+
+/* Zeitlich ueberschneidende Diensttage (R57, E-S4-76). Der Fall ist F-S4-D:
+ * Garmin und Handy gleichzeitig im Dienst legen ZWEI Diensttage an, weil
+ * `day_refs` je Geraet geschluesselt ist. Es geht nichts verloren — es ist
+ * alles doppelt, und bis hierher fiel das erst in der Jahresstatistik auf.
+ *
+ * SERVERSEITIG UND NICHT UEBER api/day.php: Die Seite kennt den gewaehlten
+ * Tag bereits, die Abfrage kostet einen Index-Zugriff, und der Hinweis steht
+ * damit sofort da statt nach dem Nachladen. Der Papierkorb-Hinweis geht den
+ * anderen Weg, weil er von einer Angabe abhaengt, die `dt_laden()` hier gar
+ * nicht holt (`mitPapierkorb`); diese hier haengt an nichts dergleichen. */
+$ueberlappungen = $selDay !== null ? dt_ueberlappungen($userId, $selDay) : [];
+
 ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
 ?>
 
@@ -82,6 +95,82 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
             <?= csrf_field() ?><input type="hidden" name="action" value="geraete_ok">
             <?= ui_knopf(['text' => 'Verstanden, das war ich', 'art' => 'neutral']) ?>
           </form>
+        </div>
+      </div>
+    <?php endif; ?>
+    <?php if ($ueberlappungen): ?>
+      <?php /* R57 (E-S4-76): Ein HINWEIS, keine Automatik. Die beiden Tage
+               bleiben stehen — sie sind zwei vollstaendige Aufzeichnungen,
+               und ein stiller Automatismus muesste raten, welche gilt.
+
+               NICHT BESTAETIGBAR, anders als der Geraete-Hinweis darueber.
+               Der Unterschied ist kein Versehen: Jener beschreibt ein
+               EREIGNIS („ein Gerät kam dazu"), das vorbei ist, sobald man es
+               zur Kenntnis genommen hat. Dieser beschreibt einen ZUSTAND, der
+               weiterbesteht — er endet von selbst, sobald die Tage
+               zusammengefuehrt sind oder einer im Papierkorb liegt. Ein
+               Bestaetigen brauchte eine Merkspalte je Tagespaar, also
+               Datenmodell fuer einen Hinweis.
+
+               Ton „warn", nicht „fehler": Es ist nichts kaputt, und es geht
+               nichts verloren. Es ist nur alles doppelt. */ ?>
+      <div class="meldung meldung-warn" role="status">
+        <?= ui_symbol('warnung', 'symbol-gross') ?>
+        <p>
+          <?php if (count($ueberlappungen) === 1): ?>
+            Dieser Diensttag <strong>überschneidet sich zeitlich mit einem
+            zweiten</strong>.
+            Das entsteht, wenn zwei Geräte denselben Dienst aufzeichnen: Beide
+            legen einen eigenen Diensttag an, und dann steht alles doppelt —
+            derselbe Einsatz zweimal, dieselbe Spur zweimal.
+          <?php else: ?>
+            Dieser Diensttag überschneidet sich zeitlich mit
+            <strong><?= count($ueberlappungen) ?> weiteren</strong>. Das
+            entsteht, wenn mehrere Geräte denselben Dienst aufzeichnen: Jedes
+            legt einen eigenen Diensttag an, und dann steht alles mehrfach.
+          <?php endif; ?>
+        </p>
+        <p>
+          <?php /* DIE TAGE STEHEN ALS FLIESSTEXT, nicht als Liste — wie beim
+                   Geraete-Hinweis darueber, der seine Geraete genauso
+                   aufzaehlt. Eine <ul> haette hier eine eigene Klasse
+                   gebraucht, und die gaebe es im Stylesheet nicht: Was
+                   entstuende, waere ein ungestalteter Kasten ohne jede
+                   Fehlermeldung — genau der Fall, den ui_meldung_markup() in
+                   seinem Kopf beschreibt.
+
+                   Rettungsmittel und Standort stehen dabei, weil sie die
+                   Frage beantworten, die als Naechstes kommt: WELCHES Geraet
+                   war das? Beide sind eingefrorene Angaben am Tag und kosten
+                   keine zusaetzliche Abfrage. */ ?>
+          <?php foreach ($ueberlappungen as $i => $u): ?>
+            <?= $i > 0 ? ' · ' : '' ?>
+            <a href="index.php?d=<?= (int)$u['id'] ?>"><?= e(dt_lesbar($u, true)) ?></a><?php
+              /* WAS DEN TAG UNTERSCHEIDBAR MACHT, in dieser Reihenfolge:
+                 Rettungsmittel und Standort, wenn es sie gibt — sonst die
+                 Zahl der Einsätze und Ruhesegmente. Ohne das zweite standen
+                 zwei Tage aus demselben Dienst wortgleich da (im Bilderlauf
+                 gesehen): dieselbe Zeit, keine Zuordnung, kein Unterschied.
+                 Ein frisch gekoppeltes Gerät hat weder Rettungsmittel noch
+                 Standort — also gerade im Auslöserfall. */
+              $ort = array_filter([(string)($u['vehicle_name'] ?? ''),
+                                   (string)($u['base_name'] ?? '')]);
+              if ($ort) { echo ' (' . e(implode(' · ', $ort)) . ')'; }
+              ?>, <?= e(dt_dauer_lesbar((int)$u['minuten'])) ?> Überschneidung, <?php
+              $e = (int)$u['einsaetze']; $s = (int)$u['segmente'];
+              echo e($e . ($e === 1 ? ' Einsatz' : ' Einsätze') . ' · '
+                     . $s . ($s === 1 ? ' Ruhesegment' : ' Ruhesegmente'));
+              if ($u['laeuft']) { echo ', läuft noch'; } ?>.
+          <?php endforeach; ?>
+        </p>
+        <div class="meldung-aktion">
+          <?php /* DER AUSWEG STEHT IM RAHMEN (E-P3-16). Er fuehrt auf die
+                   Seite, auf der ein MENSCH entscheidet — sie zeigt eine
+                   Vorschau und fuehrt den Vorgang erst nach Bestaetigung aus
+                   (E13: nicht umkehrbar). Von hier geht also kein Klick
+                   unmittelbar in eine Zusammenfuehrung. */ ?>
+          <?= ui_knopf(['text' => 'Diensttage zusammenführen', 'art' => 'neutral',
+                        'href' => 'diensttag_zusammenfuehren.php?ziel=' . (int)$selDay]) ?>
         </div>
       </div>
     <?php endif; ?>

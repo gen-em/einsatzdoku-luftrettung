@@ -1213,6 +1213,45 @@ Tages landet von selbst richtig.
 Eine Rolle, die der gewählte Besatzungssatz nicht besetzt, der andere aber
 schon, wird von dort übernommen: Ein eingetragener Name geht nicht verloren.
 
+### 4.5b Wenn zwei Diensttage sich zeitlich überschneiden
+
+*Seit Web 13.3.0.* Überschneiden sich zwei deiner Diensttage zeitlich um mehr
+als eine Viertelstunde, steht in der Tagesübersicht ein Hinweis mit einem Knopf
+**„Diensttage zusammenführen"**. Er nennt den anderen Tag mit Beginn,
+Überschneidungsdauer und der Zahl der Einsätze und Ruhesegmente — und verlinkt
+ihn, damit du ihn ansehen kannst, bevor du entscheidest.
+
+**Wie das entsteht.** Zeichnen zwei Geräte denselben Dienst auf — die Uhr am
+Handgelenk und das Handy in der Tasche —, legt **jedes einen eigenen
+Diensttag** an. Die Geräte wissen nichts voneinander; jedes bekommt seine
+eigene Dienstkennung, und der Server ordnet danach zu. Es geht dabei nichts
+verloren und nichts wird überschrieben: **Es steht alles doppelt.** Derselbe
+Einsatz zweimal, dieselbe Spur zweimal — und in der Jahresübersicht zählt der
+Dienst doppelt.
+
+Der häufigste Fall ist die Uhr, die im Spind noch mitläuft, während du längst
+mit dem Handy im Dienst bist.
+
+**Was du tun kannst.** Der Hinweis entscheidet nichts von selbst, und das ist
+Absicht: Beide Tage sind vollständige Aufzeichnungen, und welche gelten soll,
+weiß nur, wer dabei war. Drei Wege stehen offen:
+
+- **Zusammenführen** (Abschnitt 4.5a) — beide werden zu einem. Die Doppelung
+  steht danach in *einem* Tag statt in zweien; die doppelten Einsätze räumst
+  du von Hand weg.
+- **Einen löschen**, wenn er nichts enthält, was der andere nicht auch hat.
+- **Stehen lassen**, wenn es tatsächlich zwei Dienste waren.
+
+**Der Hinweis lässt sich nicht wegklicken**, anders als der über neue Geräte.
+Er beschreibt keinen Vorgang, den man zur Kenntnis nimmt, sondern einen
+Zustand, der weiterbesteht — und er verschwindet von selbst, sobald die Tage
+zusammengeführt sind oder einer im Papierkorb liegt.
+
+**Eine Viertelstunde ist die Schwelle**, nicht eine Minute: Wer den neuen
+Dienst beginnt, bevor er den alten beendet hat, erzeugt eine Überschneidung von
+wenigen Minuten — die ist kein Fehler, sondern die Reihenfolge zweier
+Handgriffe. Ein Hinweis, der dabei jedes Mal erschiene, würde überlesen.
+
 ### 4.6 Suche
 
 Über **Suche** in der Kopfleiste durchsuchst du deinen gesamten Bestand — nicht

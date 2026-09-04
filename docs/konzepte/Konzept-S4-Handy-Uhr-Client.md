@@ -26,7 +26,7 @@ ungleiche Teile zerfallen, und nur einer davon ist Umsetzung im engeren Sinn:
 
 | Teil | Inhalt | Stand |
 |---|---|---|
-| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Paket 1 erledigt** (Android 0.11.0) |
+| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Paket 1 und 2 erledigt** (Android 0.11.0, Web 13.3.0) |
 | **B** | R64 — Herkunft und Gerät je Einsatz | **zurückgestellt**: Der Auftraggeber liefert ein Konzept nach. Die Bestandsaufnahme fand 18 offene Entscheidungsfragen zum Datenmodell und zu den Formaten, die R64 selbst nicht beantwortet |
 | **C** | Play Console, Signaturweg, Track-Release, Gerätetest | **blockiert am Auftraggeber**: D-U-N-S beantragt sich noch, der Signaturschlüssel liegt außerhalb des Repositoriums. Vorbereitet wird, was ohne ihn geht |
 
@@ -75,9 +75,28 @@ Emulator mit vier Bildern (`docs/bilder/s4-rest/`).
 3. **Kein signiertes APK.** Der Schlüssel liegt zu Recht nicht im
    Repositorium (E-S4-16); der Baulauf erzeugt ein unsigniertes Release.
 
-**Noch offen in Teil A:** R57 (Hinweis bei überlappenden aktiven
-Diensttagen), Backlog **81** (Benachrichtigungssymbol — braucht zuerst die
-App-Fassung vom Gerät), **82** (Akku-Warnung), **98** (Versionscode-Versatz),
+**Paket 2 (04.09.2026, Web 13.3.0) — erledigt: R57.** Die Tagesübersicht
+zeigt einen Hinweis, wenn sich der angezeigte Diensttag mit einem anderen um
+mehr als eine Viertelstunde überschneidet — der Fall F-S4-D, den bis dahin
+erst die Jahresstatistik sichtbar machte. Kein neuer Baustein (der
+Meldungskasten stand), keine Migration, keine Automatik: Die beiden Tage
+bleiben stehen, der Hinweis führt auf `diensttag_zusammenfuehren.php`, wo ein
+Mensch entscheidet. Belegt an einem **echten** Fall im Prüfkonto (zwei
+Überschneidungen von je 12 Stunden, von den Rundläufen erzeugt), im Browser
+bei 360 und 1280 px, Bilder in `docs/bilder/s4-rest/`.
+
+Zwei Funde dabei: Das **Demo-Konto taugt für diesen Nachweis nicht** — es
+setzt sich alle 30 Minuten zurück und nimmt einen nachgestellten Fall mit
+(deshalb zeigt `10-tagesuebersicht` im Bilderlauf keinen Hinweis, und das ist
+richtig so). Und die erste Fassung des Textes ließ **zwei Tage wortgleich**
+dastehen: dieselbe Zeit, keine Zuordnung, kein Unterschied — ein frisch
+gekoppeltes Gerät hat weder Rettungsmittel noch Standort, also gerade im
+Auslöserfall. Jetzt steht die Zahl der Einsätze und Ruhesegmente dabei.
+
+**Noch offen in Teil A:** Backlog **81** (Benachrichtigungssymbol — die App-Fassung auf dem
+Gerät war **0.7.7**, also nicht älter als 0.7.7; der Punkt erledigt sich
+damit **nicht** von selbst mit der nächsten Auslieferung, sondern ist ein
+echter Fund), **82** (Akku-Warnung), **98** (Versionscode-Versatz),
 **95** (die Rundläufe lassen Daten zurück; der SQL-Weg scheidet aus, siehe
 `Kopplungshilfe`), **63** (Sperrvermerke in der Konto-Sicherung — hängt an
 der Formatänderung aus Teil B).
