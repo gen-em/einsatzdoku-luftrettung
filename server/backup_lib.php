@@ -29,6 +29,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten()
+require_once __DIR__ . '/geraete_lib.php';         // HERKUNFT_WERTE, herkunft_ableiten() (R64)
 
 /**
  * Wie viele Einsaetze beziehungsweise Ruhesegmente `edbak_build()` auf einmal
@@ -729,30 +730,43 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
  * Leitet Herkunft (origin) und Bearbeitungsstatus (edited) fuer einen
  * wiederherzustellenden Einsatz ab. Enthaelt der Datensatz gueltige Werte,
  * werden diese uebernommen (Formatversion 4). Fehlen sie (Version <= 3),
- * gilt dieselbe Ableitungsregel wie in der Migration
- * 2026_07_30_herkunft_bearbeitungsstatus (update.php): client_ref-Praefix
- * 'man-' -> manual, 'imp-' -> import, sonst watch; edited = 1 nur, wenn
- * manual = 1 und kein solches Praefix vorliegt. Absichtlich an einer
- * einzigen Stelle formuliert, damit Migration und Restore die Regel nicht
- * zweimal unterschiedlich hinschreiben.
+ * gilt die Ableitung aus dem `client_ref`-Praefix; `edited` = 1 nur, wenn
+ * manual = 1 und kein solches Praefix vorliegt.
+ *
+ * DIE REGEL STAND HIER BIS WEB 13.3.0 EIN ZWEITES MAL (R64). Der Kommentar
+ * verlangte ausdruecklich, dass "Migration und Restore die Regel nicht
+ * zweimal unterschiedlich hinschreiben" — und genau das war der Zustand: hier
+ * in PHP, in der Migration 2026_07_30 in SQL und als Kommentar in
+ * `api/export_data.php` ein drittes Mal. Als Android und Wear dazukamen, wuchs
+ * nur eine der drei mit. Jetzt steht sie EINMAL, in `herkunft_ableiten()`
+ * (geraete_lib.php); die Migration 2026_09_04 spiegelt sie in SQL und sagt
+ * das dort.
+ *
+ * DIE GERAETEART BLEIBT HIER NULL, und das ist kein Versehen: Die Sicherung
+ * traegt `device_id` nicht (Backup-Format 4). Was sie ueber das Geraet weiss,
+ * steht als Momentaufnahme in der Datei — nicht in einem Verweis, aus dem
+ * sich eine Art nachschlagen liesse. Der Rueckfall ohne Praefix ist damit
+ * `watch`, genau wie bisher.
  */
 function edbak_origin_edited(array $m): array {
     $ref = (string)($m['client_ref'] ?? '');
-    $erlaubt = ['watch', 'manual', 'import'];
 
-    if (isset($m['origin']) && in_array($m['origin'], $erlaubt, true)) {
+    if (isset($m['origin']) && in_array($m['origin'], HERKUNFT_WERTE, true)) {
         $origin = $m['origin'];
-    } elseif (str_starts_with($ref, 'man-')) {
-        $origin = 'manual';
-    } elseif (str_starts_with($ref, 'imp-')) {
-        $origin = 'import';
     } else {
-        $origin = 'watch';
+        $origin = herkunft_ableiten($ref, null);
     }
 
     if (isset($m['edited'])) {
         $edited = (int)$m['edited'];
     } else {
+        /* `cut-` FEHLT HIER MIT ABSICHT. Ein geschnittener Einsatz traegt
+         * manual = 1 und wuerde nach dieser Regel als "bearbeitet" gelten,
+         * obwohl ihn niemand angefasst hat. Der Zweig greift aber nur fuer
+         * Dateien der Formatversion <= 3, und die sind aelter als der Schnitt
+         * (Web 12.5.0) — es kann keine solche Datei geben. Die Zeile
+         * einzubauen hiesse, toten Code gegen einen unmoeglichen Fall zu
+         * stellen; der Hinweis genuegt. */
         $edited = ((int)($m['manual'] ?? 0) === 1
                    && !str_starts_with($ref, 'man-')
                    && !str_starts_with($ref, 'imp-')) ? 1 : 0;

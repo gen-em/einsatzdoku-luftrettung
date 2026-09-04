@@ -14,6 +14,78 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 14.0.0] — 2026-09-04
+
+**MIGRATION ERFORDERLICH: `2026_09_04_herkunft_geraet`.** Nach dem Deploy muss
+eine Administratorin `update.php` aufrufen. Ohne die Migration fehlen vier
+Spalten, und jeder Upload der Uhr scheitert.
+
+### Web — woher ein Einsatz kommt, und mit welchem Gerät
+
+Zwei Dinge waren falsch, und zwar still.
+
+**Erstens die Herkunft.** `missions.origin` kannte drei Werte — `watch`,
+`manual`, `import`. Seit Web 12.8.0 sendet auch ein Android-Handy, seit S4
+lässt sich ein Einsatz an einer Wear-OS-Uhr beginnen; beide landeten auf
+`watch`. Ein Handy-Einsatz trug die Plakette „Uhr", und der Anzeige war das
+nicht anzusehen. Und der Schnitt (`api/schneiden.php`) legte seinen Einsatz
+als `manual` an, obwohl ihn niemand von Hand eingegeben hat. Die Herkunft
+kennt jetzt **sechs** Werte: `watch`, `android`, `wear`, `manual`, `import`,
+`schnitt` — **einen je Client-App, nicht je Hersteller.** Eine künftige App
+eines anderen Uhrenherstellers wird ein neuer Client mit eigenem Präfix und
+bekommt einen eigenen Wert; der Hersteller steht ohnehin im Modell.
+
+Entschieden wird am **Präfix der `client_ref`**, die Geräteart ist nur der
+Rückfall. Das ist keine Feinheit: `am-` und `wm-` kommen vom *selben* Gerät —
+die Wear-OS-App hat weder Serveradresse noch Schlüssel und schickt ihre
+Ereignisse an das Handy (E-S4-11). Nur das Präfix trennt „am Handy getippt"
+von „am Handgelenk getippt".
+
+**Zweitens das Gerät.** `devices` weiß seit Web 12.9.0, *was* sich gekoppelt
+hat; am Einsatz stand davon nichts. Der Verweis dorthin trägt nicht: Er steht
+auf `ON DELETE SET NULL`, und Trennen ist bei geteilter Uhr der vorgesehene
+Normalfall (R47). Gemessen am 02.09.2026: **82 von 82 Einsätzen und 95 von 95
+Segmenten** des Demo-Kontos ohne Geräteverweis, obwohl 76 davon von einer Uhr
+stammen. `missions` und `rest_segments` bekommen deshalb `geraet_art` und
+`geraet_modell` als **Momentaufnahme** — kopiert in dem Augenblick, in dem der
+Datensatz entsteht, und danach nie nachgezogen. Der Preis ist benannt: Ein
+Einsatz, dessen Modell beim Anlegen unbekannt war, trägt dauerhaft
+„unbekannt". Dafür überlebt die Angabe Trennen, Löschen des Geräts und die
+Konto-Sicherung — der Verweis tut keines davon.
+
+Das **Ruhesegment bekommt keine Herkunftsspalte**: Gezählt werden Einsätze,
+und woher ein Segment stammt, sagt sein Präfix. Eine Spalte, die niemand
+abfragt, wäre geschrieben und nie gelesen.
+
+### Web — die Ableitungsregel stand dreimal, jetzt einmal
+
+Aus dem `client_ref`-Präfix auf die Herkunft zu schließen, stand bis hierher
+an drei Stellen: in der Migration `2026_07_30` als SQL, in
+`edbak_origin_edited()` als PHP und als Beschreibung in einem Kommentar in
+`api/export_data.php` — obwohl der Kommentar in `backup_lib.php` ausdrücklich
+verlangte, sie „nicht zweimal unterschiedlich hinzuschreiben". Als Android und
+Wear dazukamen, wuchs keine der drei mit. Genau so entsteht der Fehler oben.
+
+Jetzt steht sie einmal, als `herkunft_ableiten()` in `geraete_lib.php`, und
+der Wertevorrat daneben als `HERKUNFT_WERTE`. Die neue Migration spiegelt die
+Regel in SQL und sagt das dort. **`origin` ist dafür vom ENUM auf
+`VARCHAR(16)` gewechselt** — dieselbe Begründung wie bei `devices.geraet_art`:
+Ein ENUM braucht für jeden neuen Client eine Migration. Ein neuer Client
+kostet jetzt drei Einträge (Vertrag, Wertliste, Beschriftungen) und keine
+Schemaänderung.
+
+### Web — was diese Fassung noch nicht tut
+
+Die Konto-Sicherung trägt die neuen Felder **noch nicht**; sie kommen mit der
+Nutzlast 9, zusammen mit den Sperrvermerken des Schnitts (Backlog Nr. 63). Und
+die Beschriftungen von CSV-Export und Einsatzansicht kennen die drei neuen
+Werte noch nicht — sie zeigen bis dahin den **Rohwert**. Das ist Absicht: Ein
+unbekannter Herkunftswert darf nicht als „Uhr" erscheinen, und genau dieser
+Rückfall ist in dieser Fassung entfallen.
+
+Nebenbei geradegerückt: Der Absatz zu 13.3.0 stand in `version.php` vor dem zu
+13.2.0.
+
 ## [Android 0.12.0] — 2026-09-04
 
 ### Android — die App meldet sich, wenn der Akku knapp wird

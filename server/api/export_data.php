@@ -92,9 +92,13 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  * 'manual' bedeutet ausschliesslich "die Uhr ueberschreibt Metadaten, Phasen
  * und Reanimation nicht mehr" (schema.sql:50).
  *
- * Die gleichlautende Ableitungsregel in backup_lib.php bleibt bestehen: Dort
- * ist sie noetig, weil Backups der Formatversion 3 und aelter die Spalten
- * 'origin' und 'edited' nicht kennen.
+ * DIE ABLEITUNGSREGEL STEHT SEIT WEB 14.0.0 AN EINER STELLE (R64):
+ * `herkunft_ableiten()` in geraete_lib.php. Bis dahin stand sie dreimal — in
+ * der Migration 2026_07_30 (SQL), in `edbak_origin_edited()` (PHP) und als
+ * Beschreibung in genau diesem Kommentar. Beim Einspielen wird sie weiterhin
+ * gebraucht, weil Backups der Formatversion 3 und aelter die Spalten 'origin'
+ * und 'edited' nicht kennen; HIER wird sie nicht gebraucht und nicht
+ * angewendet — die Spalte steht in der Datenbank.
  */
 const EXPORT_ORIGIN_LABEL = [
     'watch'  => 'uhr',
@@ -355,7 +359,16 @@ function export_meta(array $b, int $userId): never
     $missions = [];
     foreach ($missionRows as $r) {
         $id = (int)$r['id'];
-        $source = EXPORT_ORIGIN_LABEL[(string)$r['origin']] ?? 'uhr';
+        /* RUECKFALL IST DER ROHWERT UND NICHT MEHR 'uhr' (R64, E-R64-09).
+         * Seit `origin` ein VARCHAR ist (Web 14.0.0), kann dort ein Wert
+         * stehen, den diese Tabelle noch nicht kennt — ein kuenftiger Client.
+         * Ihn als "uhr" auszuliefern waere die schlechteste aller Antworten:
+         * falsch, und nicht als falsch zu erkennen. Der Rohwert ist im
+         * Zweifel unschoen, aber wahr.
+         *
+         * Die BESCHRIFTUNGEN der neuen Werte kommen mit AP3; bis dahin
+         * erscheinen 'android', 'wear' und 'schnitt' als sie selbst. */
+        $source = EXPORT_ORIGIN_LABEL[(string)$r['origin']] ?? (string)$r['origin'];
 
         $missions[] = [
             'id'               => $id,

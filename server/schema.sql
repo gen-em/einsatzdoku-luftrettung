@@ -304,8 +304,21 @@ CREATE TABLE missions (
   -- des Eintreffens schon 14 Tage still. NULL = noch nie gemessen.
   letzter_punkt_am DATETIME NULL,
   manual     TINYINT(1) NOT NULL DEFAULT 0,           -- ausschliesslich: Uhr ueberschreibt Metadaten/Phasen/Rea nicht mehr (NICHT "von Hand angelegt" -- dafuer siehe origin)
-  origin     ENUM('watch','manual','import') NOT NULL DEFAULT 'watch', -- Herkunft: wird beim Anlegen gesetzt und nie wieder geaendert
+  -- Herkunft: wird beim Anlegen gesetzt und nie wieder geaendert (R64).
+  -- VARCHAR und kein ENUM, seit Web 14.0.0: Ein ENUM braucht fuer jeden neuen
+  -- Client eine Migration. Der Wertevorrat steht in geraete_lib.php
+  -- (HERKUNFT_WERTE), die Ableitung aus dem client_ref-Praefix ebendort
+  -- (herkunft_ableiten()) -- ein Wert je Client-App, nicht je Hersteller.
+  origin     VARCHAR(16) NOT NULL DEFAULT 'watch',
   edited     TINYINT(1) NOT NULL DEFAULT 0,           -- wurde nach dem Anlegen veraendert
+  -- MOMENTAUFNAHME DES GERAETS beim Anlegen (R64, Weg b). Kopiert aus devices
+  -- und danach NIE nachgezogen: Was hier steht, galt in dem Augenblick, in dem
+  -- der Einsatz entstand. Die Begruendung zu Art, Modell und dazu, warum beide
+  -- dauerhaft NULL-bar sind, steht EINMAL an devices -- hier nicht wiederholt.
+  -- Warum kopiert und nicht ueber device_id gelesen: Der Verweis steht auf
+  -- ON DELETE SET NULL, und Trennen ist der Normalfall bei geteilter Uhr (R47).
+  geraet_art    VARCHAR(16)  NULL,
+  geraet_modell VARCHAR(191) NULL,
   -- Zusatzfelder (mission_fields.php):
   transport_mode ENUM('air','ground','ambulant') NULL, -- Luft | Boden | Ambulant (E17)
   na_escort  TINYINT(1) NOT NULL DEFAULT 0,        -- NA-Begleitung, nur bei Luft und Boden
@@ -402,6 +415,11 @@ CREATE TABLE rest_segments (
   started_at DATETIME NOT NULL,
   ended_at   DATETIME NULL,
   final      TINYINT(1) NOT NULL DEFAULT 0,
+  -- Momentaufnahme des Geraets, siehe missions (R64). Eine Herkunftsspalte
+  -- hat das Segment bewusst NICHT (E-R64-04): Gezaehlt werden Einsaetze, und
+  -- woher ein Segment kommt, sagt sein client_ref-Praefix.
+  geraet_art    VARCHAR(16)  NULL,
+  geraet_modell VARCHAR(191) NULL,
   letzter_punkt_am DATETIME NULL,          -- siehe missions (S2/AP3)
   deleted_at       DATETIME NULL,
   deleted_with_day TINYINT(1) NOT NULL DEFAULT 0,
@@ -694,4 +712,7 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_09_02_geraetemodell_breiter', 'skipped'),
   -- pair_sessions steht oben schon im Schema, pair_codes gibt es nicht mehr
   -- (Web 13.0.0, S5).
-  ('2026_09_03_kopplungssitzungen', 'skipped');
+  ('2026_09_03_kopplungssitzungen', 'skipped'),
+  -- origin steht oben schon als VARCHAR, die vier Geraetespalten an missions
+  -- und rest_segments ebenfalls (Web 14.0.0, R64).
+  ('2026_09_04_herkunft_geraet', 'skipped');

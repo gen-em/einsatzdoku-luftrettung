@@ -2213,33 +2213,6 @@ declare(strict_types=1);
  * die Uhr-Abschnitte der Technik — wartet auf Paket C und kommt in der
  * zweiten Haelfte.
  *
- * 13.3.0 MACHT EINE DOPPELUNG SICHTBAR, DIE ES SEIT S4 GIBT (R57, E-S4-76).
- * Zeichnen zwei Geraete denselben Dienst auf — die Uhr am Handgelenk und das
- * Handy in der Tasche —, legt JEDES einen eigenen Diensttag an: `day_refs` ist
- * je Geraet geschluesselt, das eine findet die Kennung des anderen nicht. Es
- * geht dabei nichts verloren und nichts wird ueberschrieben; es steht alles
- * doppelt. Derselbe Einsatz zweimal, dieselbe Spur zweimal, und in der
- * Jahresuebersicht zaehlt der Dienst doppelt.
- *
- * Gemessen wurde das in S4 (F-S4-D, zwei Geraete gegen eine oertliche
- * Installation: Diensttag 53 und 54, je ein Einsatz). Aufgefallen waere es
- * sonst erst in der Statistik.
- *
- * DIE NEBENNUMMER, KEINE HAUPTNUMMER: Es kommt eine Anzeige dazu, sonst
- * nichts. Kein Datenmodell, keine Migration, kein veraenderter Weg durch die
- * Anwendung — wer die Doppelung nicht hat, merkt von dieser Fassung nichts.
- *
- * UND KEINE AUTOMATIK, mit Absicht (E-S4-76 gegen E-S4-50): Die beiden Tage
- * bleiben stehen. Sie sind zwei vollstaendige Aufzeichnungen, und ein stiller
- * Automatismus muesste raten, welche gilt. Der Hinweis macht sie sichtbar und
- * fuehrt auf `diensttag_zusammenfuehren.php`, wo ein Mensch entscheidet.
- *
- * Die Schwelle steht auf einer VIERTELSTUNDE (`DT_UEBERLAPPUNG_MIN`). Der
- * eigene Dienstwechsel ueberschneidet sich regelmaessig um Minuten — wer den
- * neuen Tag beginnt, bevor er den alten beendet hat. Ein Hinweis, der dabei
- * jedes Mal erschiene, wuerde ueberlesen und stuende dann unbemerkt da, wenn
- * er einmal wirklich gemeint ist.
- *
  * 13.2.0 IST DER WARTUNGSMODUS (S5 Paket W). Ein Schalter auf der
  * Wartungsseite schliesst die Installation voruebergehend fuer alle ausser
  * der Verwaltung: Jede andere Anfrage bekommt 503 statt eines 500 aus einer
@@ -2278,5 +2251,95 @@ declare(strict_types=1);
  * Sitzung mit entsperrtem Inhaltsschluessel herum, und keine Anmeldung
  * schreibt `last_login`, waehrend `update.php` das Schema aendert. Die
  * Ratenschutz-Zaehler werden trotzdem geleert: Das Passwort WAR richtig.
+ *
+ * 13.3.0 MACHT EINE DOPPELUNG SICHTBAR, DIE ES SEIT S4 GIBT (R57, E-S4-76).
+ * Zeichnen zwei Geraete denselben Dienst auf — die Uhr am Handgelenk und das
+ * Handy in der Tasche —, legt JEDES einen eigenen Diensttag an: `day_refs` ist
+ * je Geraet geschluesselt, das eine findet die Kennung des anderen nicht. Es
+ * geht dabei nichts verloren und nichts wird ueberschrieben; es steht alles
+ * doppelt. Derselbe Einsatz zweimal, dieselbe Spur zweimal, und in der
+ * Jahresuebersicht zaehlt der Dienst doppelt.
+ *
+ * Gemessen wurde das in S4 (F-S4-D, zwei Geraete gegen eine oertliche
+ * Installation: Diensttag 53 und 54, je ein Einsatz). Aufgefallen waere es
+ * sonst erst in der Statistik.
+ *
+ * DIE NEBENNUMMER, KEINE HAUPTNUMMER: Es kommt eine Anzeige dazu, sonst
+ * nichts. Kein Datenmodell, keine Migration, kein veraenderter Weg durch die
+ * Anwendung — wer die Doppelung nicht hat, merkt von dieser Fassung nichts.
+ *
+ * UND KEINE AUTOMATIK, mit Absicht (E-S4-76 gegen E-S4-50): Die beiden Tage
+ * bleiben stehen. Sie sind zwei vollstaendige Aufzeichnungen, und ein stiller
+ * Automatismus muesste raten, welche gilt. Der Hinweis macht sie sichtbar und
+ * fuehrt auf `diensttag_zusammenfuehren.php`, wo ein Mensch entscheidet.
+ *
+ * Die Schwelle steht auf einer VIERTELSTUNDE (`DT_UEBERLAPPUNG_MIN`). Der
+ * eigene Dienstwechsel ueberschneidet sich regelmaessig um Minuten — wer den
+ * neuen Tag beginnt, bevor er den alten beendet hat. Ein Hinweis, der dabei
+ * jedes Mal erschiene, wuerde ueberlesen und stuende dann unbemerkt da, wenn
+ * er einmal wirklich gemeint ist.
+ *
+ * 14.0.0 SAGT ENDLICH, WOHER EIN EINSATZ KOMMT — UND MIT WELCHEM GERAET
+ * (R64, Backlog Nr. 83; Migration 2026_09_04_herkunft_geraet). Die
+ * Hauptnummer steht fuer beides zusammen: Das Datenmodell aendert sich, und
+ * eine Migration ist zwingend.
+ *
+ * ZWEI DINGE WAREN FALSCH, UND ZWAR STILL. `missions.origin` kannte drei
+ * Werte — watch, manual, import. Seit Web 12.8.0 sendet auch ein
+ * Android-Handy, seit S4 laesst sich ein Einsatz an einer Wear-OS-Uhr
+ * beginnen; beide landeten auf 'watch'. Ein Handy-Einsatz trug die Plakette
+ * "Uhr", und niemand konnte es der Anzeige ansehen. Und der Schnitt
+ * (api/schneiden.php) legte seinen Einsatz als 'manual' an, obwohl ihn
+ * niemand von Hand eingegeben hat. Die Herkunft kennt jetzt SECHS Werte —
+ * watch, android, wear, manual, import, schnitt —, einen je Client-App und
+ * nicht je Hersteller (E-R64-02).
+ *
+ * DIE SPALTE IST DABEI VOM ENUM AUF VARCHAR(16) GEWECHSELT. Dieselbe
+ * Begruendung wie bei `devices.geraet_art`: Ein ENUM braucht fuer jeden neuen
+ * Client eine Migration. Der Wertevorrat steht jetzt EINMAL im Code
+ * (HERKUNFT_WERTE in geraete_lib.php), die Ableitung aus dem
+ * `client_ref`-Praefix ebenso (herkunft_ableiten()). Bis hierher stand diese
+ * Regel DREIMAL — in der Migration 2026_07_30 als SQL, in
+ * edbak_origin_edited() als PHP und als Beschreibung in einem Kommentar in
+ * api/export_data.php —, obwohl der Kommentar in backup_lib.php ausdruecklich
+ * verlangte, sie nicht zweimal unterschiedlich hinzuschreiben. Als Android
+ * und Wear dazukamen, wuchs keine der drei mit. Genau so entsteht der Fehler
+ * eine Zeile weiter oben.
+ *
+ * DAZU DIE MOMENTAUFNAHME DES GERAETS. `missions` und `rest_segments`
+ * bekommen `geraet_art` und `geraet_modell`, kopiert aus `devices` in dem
+ * Augenblick, in dem der Datensatz entsteht — und danach nie nachgezogen.
+ * Der Grund fuer die Kopie statt eines Verweises ist gemessen: 82 von 82
+ * Einsaetzen und 95 von 95 Segmenten des Demo-Kontos standen am 02.09.2026
+ * OHNE Geraeteverweis da, obwohl 76 davon von einer Uhr stammen. `device_id`
+ * steht auf ON DELETE SET NULL, und Trennen ist bei geteilter Uhr der
+ * vorgesehene Normalfall (R47). Ein Verweis, der im Regelbetrieb reisst,
+ * beantwortet die Frage "welches Geraet hat das aufgezeichnet" nie.
+ *
+ * DER PREIS IST BENANNT (E-R64-05): Ein Einsatz, dessen Modell beim Anlegen
+ * unbekannt war, traegt dauerhaft "unbekannt". Das ist die Definition einer
+ * Momentaufnahme, und dafuer ueberlebt sie Trennen, Loeschen des Geraets und
+ * die Konto-Sicherung.
+ *
+ * DIE MIGRATION FUELLT DEN BESTAND NACH, solange die Verweise noch stehen —
+ * deshalb laeuft sie jetzt und nicht spaeter; jedes Trennen bis dahin liesse
+ * eine Zeile mehr unwiederbringlich leer. Wo `device_id` schon NULL ist,
+ * bleibt die Momentaufnahme NULL, dauerhaft: "Unbekannt" ist eine Sache der
+ * ANZEIGE und nicht der Spalte (dieselbe Linie wie an `devices`).
+ *
+ * WAS DIESE FASSUNG NOCH NICHT TUT: Die Sicherung traegt die neuen Felder
+ * noch nicht (Nutzlast 9 kommt als naechstes, zusammen mit den
+ * Sperrvermerken des Schnitts, Backlog Nr. 63), und die Beschriftungen von
+ * CSV und Einsatzansicht kennen die drei neuen Werte noch nicht — sie zeigen
+ * bis dahin den ROHWERT. Das ist Absicht: Ein unbekannter Herkunftswert darf
+ * nicht als "Uhr" erscheinen (E-R64-09), und der Rueckfall auf 'uhr' ist
+ * genau in dieser Fassung entfallen.
+ *
+ * MIGRATION ERFORDERLICH: 2026_09_04_herkunft_geraet. Ohne sie fehlen die
+ * vier Spalten, und jeder Upload der Uhr scheitert.
+ *
+ * NEBENBEI GERADEGERUECKT: Der Absatz zu 13.3.0 stand in dieser Datei VOR dem
+ * zu 13.2.0 — beim Eintragen war er an die falsche Stelle geraten. Die
+ * Erzaehlung liest sich der Reihe nach; das ist ihr einziger Zweck.
  */
-const WEB_VERSION = '13.3.0';
+const WEB_VERSION = '14.0.0';

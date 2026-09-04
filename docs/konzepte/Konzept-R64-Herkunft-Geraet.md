@@ -10,10 +10,10 @@ nimmt dieses Paket auf, sobald sie dort ankommt.**
 >
 > | | |
 > |---|---|
-> | Stand | 04.09.2026 — **Konzept**, Entscheidungen E-R64-01 bis E-R64-16 getroffen; **keine offene F-Frage** (F-R64-01 und -02 am 04.09.2026 entschieden, Abschnitt 4) |
-> | Paket in Arbeit | keines |
-> | Erledigt | — |
-> | Wo es hakt | nichts; die S4-Rest-Instanz meldet hier, sobald sie AP1 beginnt. Der größte Einzelposten ist AP4 (Referenz: Kopplungsweg und Schnitt im Werkzeug, alle drei Läufe von vorn) |
+> | Stand | 04.09.2026 — **AP1 erledigt** (Web 14.0.0). Entscheidungen E-R64-01 bis E-R64-16 stehen; keine offene F-Frage |
+> | Paket in Arbeit | **AP2** (Sicherung: Momentaufnahme und Sperrvermerke, Nutzlast 9) |
+> | Erledigt | **AP1** — Datenmodell, Ableitung, anlegende Stellen, Migration `2026_09_04_herkunft_geraet`; Ingestprobe 39/0, Register 42 = 42 |
+> | Wo es hakt | nichts. Der größte Einzelposten bleibt AP4 (Referenz: Kopplungsweg und Schnitt im Werkzeug, alle drei Läufe von vorn) |
 > | Fable-Schritt | **keiner** (Spalten, eine Migration, ein Dateiformat mit Verweisen — Standardmodell nach K2) |
 > | Erhoben an | `main` vom 04.09.2026, 05:59 UTC: **Web 13.2.0, Uhr 3.0.0, Android 0.10.2** (PR #31 und #32 gemergt — der Rahmenplan-Kopf sagt noch „Android 0.7.7, Paket E nicht gemergt", siehe B-R64-02). Kein S4-Rest-Zweig gepusht |
 > | Erhoben aus | dem Repositorium allein: `schema.sql`, `update.php`, `ingest.php`, `backup_lib.php`, `spur_lib.php`, `api/schneiden.php`, `api/export_data.php`, `api/backup_restore.php`, `adminbackup_lib.php`, `einsatz.php`, `geraete_lib.php`, `pair.php`, `docs/Backup-Format.md`, `docs/Export-Format.md`, `docs/JSON-Vertrag.md`, `docs/Backlog.md`, `tools/referenzdatensatz/`. Kein Server, kein Gerät in der Konzeptsitzung — was sich so nicht ermitteln ließ, steht in Abschnitt 9 |
@@ -574,17 +574,64 @@ die geänderten Dateien und dem Push (K7).
 
 | Paket | Stand | Fassung | Zahlen | Anmerkung |
 |---|---|---|---|---|
-| AP1 | offen | | | |
+| AP1 | **erledigt** 04.09.2026 | Web **14.0.0** | Ingestprobe **39 Erwartungen, 0 nicht erfüllt** (davon 9 neu in Teil 8) · Migration an einer Installation mit 272 Einsätzen und 242 Segmenten: `origin` vorher watch 177 / manual 5 / import 90, nachher watch 162 / android 12 / wear 3 / manual 4 / import 90 / schnitt 1 · Momentaufnahme nachgefüllt: 85 von 272 Einsätzen (81 uhr, 4 handy), 108 von 242 Segmenten (100 uhr, 8 handy) — der Rest hat keinen Geräteverweis mehr · zweiter Lauf: `skip` greift · frische Installation aus `schema.sql`: vier Spalten da, `origin` VARCHAR(16) · **Register 42 = 42** · Schnitt über `api/schneiden.php`: `origin='schnitt'`, `manual=1`, Art und Modell von der Quelle geerbt | Einzelheiten unter „Umsetzungsstand AP1" |
 | AP2 | offen | | | |
 | AP3 | offen | | | |
 | AP4 | offen | | | |
 | AP5 | offen | | | |
 
+### Umsetzungsstand AP1 (04.09.2026, Web 14.0.0)
+
+**Geändert:** `server/version.php` (14.0.0) · `server/schema.sql` (vier
+Spalten, `origin` VARCHAR, Register) · `server/update.php` (Migration
+`2026_09_04_herkunft_geraet`) · `server/geraete_lib.php` (`HERKUNFT_WERTE`,
+`herkunft_ableiten()`) · `server/ingest.php` (Geräteabfrage +2 Spalten, beide
+INSERTs) · `server/api/schneiden.php` (`origin='schnitt'`, Kopie von der
+Quelle) · `server/backup_lib.php` (nur `edbak_origin_edited()`) ·
+`server/api/export_data.php` (nur der Rückfall) · `tools/ingestprobe/probe.php`
+(Teil 8, zweites Gerät) · `docs/CHANGELOG.md`.
+
+**Ort der Wertliste: `geraete_lib.php`, wie im Konzept vorgeschlagen** (5.1).
+Die Alternative `db.php` war erwogen, weil `geraete_lib.php` die erzeugte
+Modelltabelle mitlädt (19 KB, 346 Zeilen) und `ingest.php` der heißeste Pfad
+der Anwendung ist. Dagegen entschieden: Das Gerätewissen bleibt an einer
+Stelle, und die Kosten sind mit OPcache nicht messbar. Wirkliche Verbraucher
+sind ohnehin nur `ingest.php` und `backup_lib.php` — Anzeige und Export
+brauchen die Liste nicht, weil ihr Rückfall der Rohwert ist.
+
+**Befund zu 5.7 (alle `origin`-Leser durchgegangen).** Gesucht über `server/`
+und `tools/`, ohne Vendor-Verzeichnis:
+
+| Stelle | Was sie tut | Bewertung |
+|---|---|---|
+| `api/mission.php:291` | reicht roh durch, Rückfall `'watch'` | setzt keine geschlossene Liste voraus — **unverändert richtig** |
+| `api/export_data.php` | `EXPORT_ORIGIN_LABEL` mit Rückfall | **in AP1 auf den Rohwert umgestellt**; Beschriftungen in AP3 |
+| `einsatz.php:589` | `ORIGIN_LABEL[m.origin]`, sonst „Uhr" | zeigt für die drei neuen Werte weiter „Uhr" → **AP3** |
+| `assets/export.js:702` | Beschreibungstext der Spalte `herkunft` in `felder.csv` | → **AP3** |
+| `backup_lib.php:225` | `$missionSpalten` | → **AP2** |
+| `einsatz_form.php`, `api/import_commit.php`, `api/gpx_import.php` | setzen ihren Wert ausdrücklich | **unverändert** (5.2) |
+| `tools/gpxprobe/`, `tools/spurprobe/` | legen Einsätze mit ausdrücklichem `origin` an | **unverändert** |
+
+Die im Konzept genannten Verdächtigen `api/day.php`, `suche.php`,
+`zeitraum.php`, `tag_spuren.php`, `gpx.php`, `gpx_lib.php`, `jobs_lib.php`
+und `trash_lib.php` nennen `origin` **überhaupt nicht**. Die Erwartung aus der
+Lektüre ist damit belegt statt vermutet: **Kein Leser setzt die drei alten
+Werte als vollständige Liste voraus**, und die einzigen zwei mit einer
+Zuordnungstabelle haben beide einen Rückfall.
+
+**Was AP1 bewusst offenlässt:** Zwischen AP1 und AP3 zeigt die Einsatzansicht
+für `android`, `wear` und `schnitt` weiterhin „Uhr", und der CSV-Export zeigt
+dort den Rohwert. Das ist kein Auslieferungsstand — der S4-Rest kommt als
+Ganzes auf `main` (K7).
+
 ### Probleme und wie sie gelöst wurden
 
 | Nr. | Was auffiel | Wie es gelöst wurde |
 |---|---|---|
-| — | | |
+| **P-R64-01** | In `server/version.php` stand der Absatz zu **13.3.0 vor dem zu 13.2.0** — beim Eintragen des R57-Hinweises war er an die falsche Stelle geraten. Die Datei ist eine Erzählung in Reihenfolge; das ist ihr einziger Zweck | Block verschoben, im Absatz zu 14.0.0 vermerkt |
+| **P-R64-02** | Der `edited`-Rückfall in `edbak_origin_edited()` kennt `cut-` nicht: Ein geschnittener Einsatz trägt `manual = 1` und gälte danach als „bearbeitet" | **Nicht geändert, sondern begründet.** Der Zweig greift nur für Dateien der Formatversion ≤ 3, und die sind älter als der Schnitt (Web 12.5.0) — es kann keine solche Datei geben. Die Zeile einzubauen hieße, toten Code gegen einen unmöglichen Fall zu stellen; ein Kommentar an Ort und Stelle sagt das |
+| **P-R64-03** | Die Ingestprobe konnte den Rückfall „unbekanntes Präfix" nicht von der Regel unterscheiden: Mit einem einzigen Uhr-Gerät ergibt beides `watch` | Die Probe legt ein **zweites Gerät** an (`handy`). Damit trennen sich die Fälle: dasselbe unbekannte Präfix ergibt am Handy `android`, an der Uhr `watch` |
+| **P-R64-04** | Die Anmeldung der Schnitt-Probe scheiterte über `http://127.0.0.1:8080` **ohne jede Fehlermeldung** — das Sitzungs-Cookie trägt `secure` und kommt über blankes HTTP nicht zurück; die Anmeldung gelang (302), und die Folgeseite wies zurück auf die Anmeldung | Über die TLS-Terminierung gefahren (`lokal_starten.sh`, `https://127.0.0.1:8443`). Steht so schon in der LIESMICH des Einspielwerkzeugs — hier nur nicht gelesen |
 
 ---
 

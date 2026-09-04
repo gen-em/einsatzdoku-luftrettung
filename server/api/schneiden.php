@@ -33,11 +33,23 @@ require_once __DIR__ . '/../spur_lib.php';
  * ab, darf nichts davon stehen.
  *
  * DER EINSATZ ENTSTEHT AUF DEM BESTANDSWEG. Virtuelles Geraet
- * `manual-<userId>`, `origin = 'manual'`, `manual = 1`, `client_ref` mit
- * Praefix — woertlich wie in `einsatz_form.php`. Das ist kein Zierrat: An
- * diesen drei Merkmalen haengt, ob der Einsatz durch Backup, Export und
- * Papierkorb kommt (R24), und ob `ingest.php` seine Phasen spaeter noch
- * anfasst.
+ * `manual-<userId>`, `manual = 1`, `client_ref` mit Praefix — woertlich wie
+ * in `einsatz_form.php`. Das ist kein Zierrat: An diesen Merkmalen haengt, ob
+ * der Einsatz durch Backup, Export und Papierkorb kommt (R24), und ob
+ * `ingest.php` seine Phasen spaeter noch anfasst.
+ *
+ * SEINE HERKUNFT IST SEIT WEB 14.0.0 `schnitt` UND NICHT MEHR `manual`
+ * (R64, E-R64-06). `manual = 1` bleibt davon unberuehrt — das ist der
+ * Schutzschalter gegen das Ueberschreiben durch die Uhr, nicht eine Aussage
+ * darueber, wer den Einsatz angelegt hat. Beides zusammenzuwerfen war der
+ * Fehler: Ein geschnittener Einsatz ist gerade NICHT von Hand eingegeben, er
+ * ist aus einer aufgezeichneten Spur herausgeschnitten.
+ *
+ * UND ER ERBT ART UND MODELL DER QUELLE. Das virtuelle Geraet weiss nichts;
+ * das Segment, aus dem geschnitten wurde, traegt seine Momentaufnahme seit
+ * R64 selbst. Am geschnittenen Einsatz steht damit beides: DASS er durch
+ * einen Schnitt entstand, und WELCHES Geraet die Spur aufgezeichnet hat, die
+ * er jetzt fuehrt.
  *
  * WAS ER NICHT TUT: Er fuellt keine Einsatzfelder. Einsatzort, Alter und
  * Diagnose sind Ende-zu-Ende-verschluesselt und entstehen im Browser; ein
@@ -91,6 +103,7 @@ function schnitt_ausfuehren(array $b, int $userId): never
      * der schwerste Fehler, den dieser Endpunkt machen kann; die Bedingung
      * gehoert deshalb in die Abfrage und nicht in eine Pruefung danach. */
     $q = $pdo->prepare('SELECT r.id, r.day_id, r.started_at, r.ended_at,
+                               r.geraet_art, r.geraet_modell,
                                d.day, d.deleted_at AS tag_geloescht
                           FROM rest_segments r
                           JOIN days d ON d.id = r.day_id AND d.user_id = r.user_id
@@ -158,10 +171,10 @@ function schnitt_ausfuehren(array $b, int $userId): never
         $devId = schnitt_geraet($pdo, $userId);
         $pdo->prepare("INSERT INTO missions
                          (user_id, device_id, client_ref, day_id, started_at,
-                          ended_at, final, manual, origin)
-                       VALUES (?,?,?,?,?,?,1,1,'manual')")
+                          ended_at, final, manual, origin, geraet_art, geraet_modell)
+                       VALUES (?,?,?,?,?,?,1,1,'schnitt',?,?)")
             ->execute([$userId, $devId, 'cut-' . uniqid(), (int)$seg['day_id'],
-                       $beginn, $ende]);
+                       $beginn, $ende, $seg['geraet_art'], $seg['geraet_modell']]);
         $misId = (int)$pdo->lastInsertId();
 
         $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at)

@@ -63,6 +63,78 @@ if (!defined('GERAETE_MODELLE')) { require_once __DIR__ . '/geraetemodelle.php';
  */
 const GERAET_ARTEN = ['uhr', 'handy', 'sonstiges'];
 
+/**
+ * Die erlaubten Herkunftswerte eines Einsatzes (R64, E-R64-02, E-R64-03).
+ *
+ * EIN WERT JE CLIENT-APP, nicht je Hersteller. `watch` ist die Garmin-App und
+ * bleibt es; eine kuenftige App eines anderen Uhrenherstellers ist ein NEUER
+ * Client mit eigenem Praefix im Vertrag und bekommt einen eigenen Wert. Der
+ * Hersteller steht ohnehin im Modell (`geraet_modell`, Momentaufnahme) — die
+ * Herkunft sagt, WELCHE ANWENDUNG die Daten geschickt hat, nicht welches
+ * Blech sie erzeugt hat.
+ *
+ * `android` UND `wear` KOMMEN VOM SELBEN GERAET. Beide sendet die Handy-App;
+ * `wear` heisst „an der Uhr ausgeloest, ueber das Handy gesendet". Nur das
+ * Praefix der `client_ref` trennt sie (`am-` gegen `wm-`), und deshalb schlaegt
+ * es die Geraeteart (E-R64-01).
+ *
+ * VARCHAR STATT ENUM (E-R64-03), dieselbe Begruendung wie eine Zeile hoeher
+ * bei GERAET_ARTEN: Ein ENUM braucht fuer jeden neuen Client eine Migration.
+ * Bis Web 13.3.0 war `origin` ein ENUM; die Migration dieses Pakets hat es
+ * aufgeloest. Ein neuer Client kostet jetzt drei Eintraege — Vertrag,
+ * diese Liste, Beschriftungen — und keine Schemaaenderung.
+ *
+ * DIE REIHENFOLGE IST DIE DER BESCHRIFTUNGEN (E-R64-09) und nicht zufaellig:
+ * erst die drei sendenden Clients, dann die drei Wege, auf denen ein Einsatz
+ * ohne Geraet entsteht.
+ */
+const HERKUNFT_WERTE = ['watch', 'android', 'wear', 'manual', 'import', 'schnitt'];
+
+/**
+ * Woher ein Einsatz stammt — abgeleitet aus seiner Client-Kennung
+ * (R64, E-R64-01).
+ *
+ * DAS PRAEFIX ENTSCHEIDET, DIE GERAETEART IST RUECKFALL. Das ist keine
+ * Feinheit, sondern der Kern: `am-` und `wm-` kommen vom **selben** Geraet
+ * (`devices.geraet_art = 'handy'`), und nur das Praefix sagt, ob die
+ * NutzerIn am Handy oder am Handgelenk getippt hat. Wer die Geraeteart
+ * gleichrangig naehme, koennte die beiden nie unterscheiden.
+ *
+ * KEIN PRAEFIX IST ANFANG EINES ANDEREN — `am-` beginnt nicht mit `m-`,
+ * `man-` auch nicht. Die Reihenfolge der Pruefung ist deshalb frei; die
+ * Liste unten ist die dokumentierte (Vertrag Abschnitt 8).
+ *
+ * `bak-` (Einspielen ohne eigene Kennung) faellt in „sonst" und wird `watch`.
+ * Das war schon bisher so, und es faellt kaum ins Gewicht: Eine Sicherung
+ * traegt in diesem Fall meist ihren eigenen `origin` mit.
+ *
+ * WER SIE AUFRUFT: `ingest.php` (beide Inserts) und `edbak_origin_edited()`,
+ * wenn die Datei keinen gueltigen Wert traegt. Formular, Import, GPX-Import
+ * und Schnitt setzen ihren Wert AUSDRUECKLICH — sie *sind* die Regel fuer ihr
+ * Praefix, ein Aufruf braechte dort nur eine Umleitung.
+ *
+ * @param string      $clientRef Die Kennung, mit der der Client den Datensatz
+ *                               fuehrt (Vertrag Abschnitt 8).
+ * @param string|null $geraetArt `devices.geraet_art`, falls bekannt.
+ */
+function herkunft_ableiten(string $clientRef, ?string $geraetArt): string
+{
+    if (str_starts_with($clientRef, 'wm-'))  { return 'wear'; }
+    if (str_starts_with($clientRef, 'am-')
+        || str_starts_with($clientRef, 'ar-')) { return 'android'; }
+    if (str_starts_with($clientRef, 'm-')
+        || str_starts_with($clientRef, 'r-'))  { return 'watch'; }
+    if (str_starts_with($clientRef, 'man-')) { return 'manual'; }
+    if (str_starts_with($clientRef, 'imp-')) { return 'import'; }
+    if (str_starts_with($clientRef, 'cut-')) { return 'schnitt'; }
+
+    /* Unbekanntes Praefix: Die Geraeteart ist der Rueckfall, und ohne sie
+     * gilt `watch` — die Vorgabe der Spalte, seit es sie gibt. Ein Einsatz
+     * ohne erkennbare Herkunft als „Uhr" zu fuehren ist die historisch
+     * richtige Annahme: Bis Web 12.8.0 konnte gar nichts anderes senden. */
+    return $geraetArt === 'handy' ? 'android' : 'watch';
+}
+
 /** Laengengrenzen der drei Spalten (schema.sql). */
 const GERAET_MAX_ART    = 16;
 /* 191 UND NICHT 64. Die 64 stand hier zuerst und war geraten — die
