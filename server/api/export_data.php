@@ -92,14 +92,31 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  * 'manual' bedeutet ausschliesslich "die Uhr ueberschreibt Metadaten, Phasen
  * und Reanimation nicht mehr" (schema.sql:50).
  *
- * Die gleichlautende Ableitungsregel in backup_lib.php bleibt bestehen: Dort
- * ist sie noetig, weil Backups der Formatversion 3 und aelter die Spalten
- * 'origin' und 'edited' nicht kennen.
+ * DIE ABLEITUNGSREGEL STEHT SEIT WEB 14.0.0 AN EINER STELLE (R64):
+ * `herkunft_ableiten()` in geraete_lib.php. Bis dahin stand sie dreimal — in
+ * der Migration 2026_07_30 (SQL), in `edbak_origin_edited()` (PHP) und als
+ * Beschreibung in genau diesem Kommentar. Beim Einspielen wird sie weiterhin
+ * gebraucht, weil Backups der Formatversion 3 und aelter die Spalten 'origin'
+ * und 'edited' nicht kennen; HIER wird sie nicht gebraucht und nicht
+ * angewendet — die Spalte steht in der Datenbank.
  */
 const EXPORT_ORIGIN_LABEL = [
-    'watch'  => 'uhr',
-    'manual' => 'manuell',
-    'import' => 'import',
+    /* Die drei alten Werte bleiben WORTGLEICH — daran haengt die Zusage oben.
+     * Die drei neuen (R64, E-R64-09) sind so kurz und deutsch wie sie:
+     * `handy` fuer die Android-App, `wear` fuer den Einsatz, der an der
+     * Wear-OS-Uhr begonnen und vom Handy gesendet wurde, `schnitt` fuer den,
+     * der aus einem Ruhesegment herausgeschnitten wurde.
+     *
+     * WARUM `wear` UND NICHT `uhr`: `uhr` ist seit dem ersten Export die
+     * Garmin-App. Eine zweite Uhr unter demselben Wort machte jede
+     * Auswertung, die auf `uhr` filtert, rueckwirkend mehrdeutig — und zwar
+     * ohne dass sich das der Datei ansehen liesse. */
+    'watch'   => 'uhr',
+    'android' => 'handy',
+    'wear'    => 'wear',
+    'manual'  => 'manuell',
+    'import'  => 'import',
+    'schnitt' => 'schnitt',
 ];
 
 /* Die chunkweise IN(...)-Abfrage stand bis Web 4.5.3 HIER und war die einzige
@@ -260,7 +277,9 @@ function export_meta(array $b, int $userId): never
     $st = $pdo->prepare(
         "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at,
                 x.distance_m, x.ascent_m,
-                x.final, x.manual, x.origin, x.edited, x.transport_dest, x.winch,
+                x.final, x.manual, x.origin, x.edited,
+                x.geraet_art, x.geraet_modell,
+                x.transport_dest, x.winch,
                 x.transport_mode, x.na_escort, x.false_alarm,
                 x.start_src, x.dest_lat, x.dest_lon,
                 x.winch_cycles, x.winch_cycles_pat, x.winch_airload, x.bergwacht,
@@ -355,7 +374,14 @@ function export_meta(array $b, int $userId): never
     $missions = [];
     foreach ($missionRows as $r) {
         $id = (int)$r['id'];
-        $source = EXPORT_ORIGIN_LABEL[(string)$r['origin']] ?? 'uhr';
+        /* RUECKFALL IST DER ROHWERT UND NICHT MEHR 'uhr' (R64, E-R64-09).
+         * Seit `origin` ein VARCHAR ist (Web 14.0.0), kann dort ein Wert
+         * stehen, den diese Tabelle noch nicht kennt — ein kuenftiger Client.
+         * Ihn als "uhr" auszuliefern waere die schlechteste aller Antworten:
+         * falsch, und nicht als falsch zu erkennen. Der Rohwert ist im
+         * Zweifel unschoen, aber wahr — und er ist der Hinweis darauf, dass
+         * hier eine Beschriftung fehlt. */
+        $source = EXPORT_ORIGIN_LABEL[(string)$r['origin']] ?? (string)$r['origin'];
 
         $missions[] = [
             'id'               => $id,
@@ -370,6 +396,14 @@ function export_meta(array $b, int $userId): never
             'manual'           => (int)$r['manual'],
             'source'           => $source,
             'edited'           => (int)$r['edited'],
+            /* Die Momentaufnahme des Geraets (R64, E-R64-10). Sie geht als
+             * ROHWERT hinaus, nicht uebersetzt: `geraet_art` traegt dieselben
+             * drei Werte wie die Geraeteseite (uhr | handy | sonstiges), und
+             * `geraet_modell` ist ein Name, kein Schluessel. NULL wird zu
+             * einer leeren Zelle — "unbekannt" hineinzuschreiben machte aus
+             * dem Fehlen eine Aussage. */
+            'geraet_art'       => $r['geraet_art'],
+            'geraet_modell'    => $r['geraet_modell'],
             'transport_dest'   => $r['transport_dest'],
             /* Die Felder der Etappe 2 (Web 6.1.0). Sie liegen im KLARTEXT und
              * brauchen deshalb keine Personenbezugs-Markierung: Transportart
@@ -409,7 +443,8 @@ function export_meta(array $b, int $userId): never
 
     /* ---- Ruhesegmente -------------------------------------------------- */
     $st = $pdo->prepare(
-        "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at, x.final
+        "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at, x.final,
+                x.geraet_art, x.geraet_modell
          FROM rest_segments x
          JOIN days d ON d.id = x.day_id
          WHERE x.user_id = ?$whereEins
@@ -428,6 +463,10 @@ function export_meta(array $b, int $userId): never
         'started_at'   => export_iso_utc($r['started_at']),
         'ended_at'     => export_iso_utc($r['ended_at']),
         'final'        => (int)$r['final'],
+        // Momentaufnahme wie beim Einsatz; eine Herkunft hat das Segment
+        // nicht (E-R64-04), sein Praefix sagt sie.
+        'geraet_art'   => $r['geraet_art'],
+        'geraet_modell' => $r['geraet_modell'],
         'track_points' => $trackCountByRest[(int)$r['id']] ?? 0,
     ], $restRows);
 

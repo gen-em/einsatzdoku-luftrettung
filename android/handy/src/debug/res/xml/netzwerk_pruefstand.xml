@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Klartext-HTTP fuer den Pruefstand — und AUSSCHLIESSLICH fuer ihn.
+
+    WARUM ES DIESE DATEI GEBEN MUSS. Die App spricht nur HTTPS (E-S4-14), und
+    Android setzt dasselbe seit Fassung 9 von sich aus durch: Ein Aufruf an
+    `http://` scheitert ohne Zutun der App. Das ist richtig und bleibt so.
+
+    Die oertliche Pruefinstallation spricht aber HTTP
+    (`tools/referenzdatensatz/einspielen/lokal_starten.sh`, Port 8080). Ihr
+    HTTPS-Port traegt ein selbstsigniertes Zertifikat, und dem zu trauen waere
+    der schlechtere Weg: Er brauchte einen eigenen Vertrauensspeicher im APK,
+    also genau die Faehigkeit, die die App im Feld nie haben darf.
+
+    WAS DIESE DATEI NICHT TUT: den ausgelieferten Stand beruehren. Sie liegt
+    unter `src/debug/` und geht damit nur in das Pruef-APK ein
+    (`org.genem.nadoku.pruef`, eigener Anwendungsname). Das Release-APK kennt
+    sie nicht — dort gilt weiterhin Androids Vorgabe, und ein `http://` fiele
+    dort durch, selbst wenn jemand es einbaute.
+
+    ZWEI ADRESSEN, KEINE DRITTE: `127.0.0.1` erreicht der Emulator ueber
+    `adb reverse tcp:8080 tcp:8080`; `10.0.2.2` ist derselbe Rechner ohne
+    Rueckleitung, aber nur, wenn der PHP-Server auf 0.0.0.0 hoert. Beide sind
+    Adressen, unter denen im Feld kein Server steht.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

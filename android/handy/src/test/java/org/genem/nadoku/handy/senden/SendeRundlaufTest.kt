@@ -10,13 +10,14 @@ import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.kopplung.Geraeteangabe
 import org.genem.nadoku.handy.kopplung.HttpNetzweg
 import org.genem.nadoku.handy.kopplung.Kopplungsdienst
-import org.genem.nadoku.handy.kopplung.Kopplungsergebnis
+import org.genem.nadoku.handy.kopplung.Kopplungshilfe
 import org.genem.nadoku.handy.puffer.Paketzeile
 import org.genem.nadoku.handy.puffer.Puffer
 import org.genem.nadoku.handy.tresor.PruefTresorschluessel
 import org.genem.nadoku.handy.tresor.Schluesseltresor
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -83,21 +84,31 @@ class SendeRundlaufTest {
 
     @After fun abbauen() {
         if (basis.isNotEmpty() && tresor.gekoppelt()) {
-            Kopplungsdienst(HttpNetzweg(), tresor).trennen(basis)
+            Kopplungsdienst(HttpNetzweg(), tresor, basis).trennen()
         }
+        /* Auch hier den Ratenschutz leeren: Diese Klassen koppeln ebenfalls
+         * über `start`, und alle drei Rundlaufklassen teilen sich den Topf
+         * von 127.0.0.1 (E-S5-33). Wer nur in einer aufräumt, sperrt die
+         * anderen aus. */
+        if (basis.isNotEmpty()) Kopplungshilfe.aufraeumen()
         if (this::puffer.isInitialized) puffer.close()
         if (this::kontext.isInitialized) kontext.deleteDatabase(DATENBANK)
         if (this::tresordatei.isInitialized) tresordatei.delete()
     }
 
-    private fun koppeln(code: String) {
-        val e = Kopplungsdienst(HttpNetzweg(), tresor).koppeln(basis, code, geraet)
-        assertEquals("Der Rundlauf braucht eine Kopplung", Kopplungsergebnis.Gekoppelt, e)
+    /**
+     * Eine Kopplung besorgen. Der Parameter `code` ist entfallen: Codes werden
+     * seit der Umkehr (R49) nicht mehr vorbereitet, sondern vom Server
+     * vergeben — [Kopplungshilfe] holt einen und ordnet ihn dem Prüfkonto zu.
+     */
+    private fun koppeln() {
+        val fehler = Kopplungshilfe.koppeln(Kopplungsdienst(HttpNetzweg(), tresor, basis), geraet)
+        assertNull("Der Rundlauf braucht eine Kopplung: $fehler", fehler)
     }
 
     private fun sender() = Sender(
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
-        basis = { basis }, phasenLeser = { puffer.phasen(it) },
+        basis = basis, phasenLeser = { puffer.phasen(it) },
     )
 
     /* EIN Zähler für den ganzen Prüffall, nicht einer je Klammer.
@@ -122,7 +133,7 @@ class SendeRundlaufTest {
      * dieser Client erzeugt.
      */
     @Test fun zwoelfStundenDienstLaeuftVollstaendigDurch() {
-        koppeln("RA2B3C")
+        koppeln()
 
         val k = klammer()
         k.beginnen(Modus.NUR_AUFZEICHNEN)
@@ -156,7 +167,7 @@ class SendeRundlaufTest {
      * an einem Strom nicht von einem anderen verdeckt wird.
      */
     @Test fun dieKurzenStroemeLaufenEbenfallsDurch() {
-        koppeln("RD4E5F")
+        koppeln()
 
         var anfragenGesamt = 0
         var punkteGesamt = 0
@@ -189,7 +200,7 @@ class SendeRundlaufTest {
      * `HttpURLConnection` beim Verbindungsabbruch von selbst herbeiführt.
      */
     @Test fun einZweitesSendenLegtNichtsDoppeltAn() {
-        koppeln("RG6H7J")
+        koppeln()
 
         val k = klammer()
         k.beginnen(Modus.NUR_AUFZEICHNEN)

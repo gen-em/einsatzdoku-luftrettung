@@ -22,7 +22,7 @@ einer Zahl benennt.
 
 | Ordner | Inhalt | eigene Anleitung |
 |---|---|---|
-| `quelldaten/` | die Wahrheit: 16 Diensttage, 87 Einsätze als JSON, dazu Schema und Prüfung | `quelldaten/FORMAT.md` |
+| `quelldaten/` | die Wahrheit: 16 Diensttage, 87 Einsätze als JSON, dazu die zwei Geräteblöcke, der eine Schnitt, Schema und Prüfung | `quelldaten/FORMAT.md` |
 | `generator/` | erzeugt daraus Ingest-Payloads, Formulardaten, CSV und GPX | `generator/LIESMICH.md` |
 | `einspielen/` | spielt alles über die **regulären** Wege ein (kein SQL) | `einspielen/LIESMICH.md` |
 | `browser/` | was es nur im Browser gibt: CSV-Import, P-07, Exporte, Demo-Abnahme | `browser/LIESMICH.md` |
@@ -41,7 +41,7 @@ einer Zahl benennt.
 | | |
 |---|---|
 | Diensttage | 16 (15 aktiv, 1 im Papierkorb) |
-| Einsätze | 87 (82 aktiv, 5 im Papierkorb) |
+| Einsätze | **88** (83 aktiv, 5 im Papierkorb) — 87 aus den Quelldaten plus der eine geschnittene, der erst auf dem Server entsteht |
 | Ruhesegmente | 100 (95 aktiv) |
 | Spurpunkte | 55 861 |
 | Stammdaten | 2 Standorte, 3 Rettungsmittel, 15 Besatzungs-Vorbelegungen, 8 Zielkliniken, 3 Bereitschaften, 8 weitere Rettungsmittel |
@@ -74,7 +74,7 @@ Beide Prüfungen nennen ihre Zahl. Eine Prüfung ohne Zahl ist keine.
 sh   einspielen/lokal_starten.sh                     # MariaDB, PHP, TLS davor
 python3 einspielen/einspielen.py --stufen konto
 node einspielen/passwort_setzen.mjs '<Link>' nadokudemo0815
-python3 einspielen/einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste
+python3 einspielen/einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
 node browser/csv_import.mjs                          # die vier CSV-Einsätze
 ```
 

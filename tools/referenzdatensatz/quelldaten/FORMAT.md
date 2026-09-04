@@ -10,6 +10,7 @@ Einsatzfelder nicht tragen.
 |---|---|
 | `dienste/D01.json` … `D16.json` | **die Quelle**: je Dienst ein Dokument mit Diensttag, Ruhesegmenten und Einsätzen |
 | `stammdaten.json` | Standorte, Rettungsmittel, Vorbelegungen (E-P1-05) |
+| `geraete.json` | die **zwei Geräte** mit dem Block, den sie beim Koppeln an `pair.php` schicken (JSON-Vertrag 1a.4) — und den Präfixen, die daraus folgen |
 | `pruefschritte/` | Abläufe, die **kein** Dauerzustand sind (Sperrlisten-Fall E-P1-16) |
 | `schema/` | JSON-Schema, gegen das alle Dokumente validieren |
 | `katalog.py` | Inhaltsvorrat für den erzeugten Betriebsalltag |
@@ -28,7 +29,10 @@ sind am Diensttag eingefroren. 87 Einzeldateien hätten diesen Zusammenhang
 
 ## Handgeschrieben und erzeugt
 
-Der Datensatz umfasst **16 Dienste (8 Luft, 8 Boden) mit 87 Einsätzen**.
+Der Datensatz umfasst **16 Dienste (8 Luft, 8 Boden) mit 87 Einsätzen**. Im
+Bestand sind es danach **88**: Der geschnittene Einsatz steht nicht in den
+Quelldaten, sondern entsteht auf dem Server aus dem Objekt `schnitte`
+(unten). Deshalb zählt `pruefen.py` weiter 87.
 Er besteht aus zweierlei:
 
 - **Prüffälle**, von Hand geschrieben. Jeder belegt mindestens eine Zeile
@@ -74,7 +78,64 @@ ausgeschrieben, weil Dienste über Mitternacht laufen.
 | `dienst.spur_ausgangspunkt` | nur bei einem Standort **ohne** Koordinaten: der reale Ausgangspunkt für die Spurerzeugung. Wird **nicht** als Stammdatum gespeichert |
 | `dienst.besatzung` | je Rolle des Rettungsmittels ein Eintrag, `null` erlaubt |
 | `papierkorb` | `null` oder `"diensttag"` — Dauerzustand nach E-P1-21 |
+| `schnitte` | **optional**, höchstens an einem Dienst: der Schnitt-Auftrag der Stufe `schneiden` (unten) |
 | `ziel_einsaetze` | Zielzahl; `aufbauen.py` füllt bis dahin auf |
+
+## Die zwei Geräte und ihre Präfixe
+
+`geraete.json` beschreibt, **womit** der Bestand aufgezeichnet wurde: Gerät
+**11** ist eine Garmin-Uhr (Luftdienste), Gerät **12** ein Android-Handy
+(Bodendienste). Beide werden beim Einspielen **echt gekoppelt** — über
+`pair.php`, nicht über die Geräteseite. Nur so tragen sie `geraet_art` und
+`geraet_modell`, und nur dann kopiert `ingest.php` diese **Momentaufnahme**
+an jeden Einsatz und jedes Ruhesegment.
+
+Aus der Geräteart folgt das Kennungspräfix, und aus dem Präfix leitet der
+Server die Herkunft ab (`herkunft_ableiten()`, JSON-Vertrag 8):
+
+| Gerät | Einsatz | Ruhesegment | Diensttag | Herkunft |
+|---|---|---|---|---|
+| 11 — Uhr | `m-11-…` | `r-11-…` | `d-11-…` | `watch` |
+| 12 — Handy | `am-12-…` | `ar-12-…` | `ad-12-…` | `android` |
+| 12 — Handy, an der Uhr begonnen | `wm-12-…` | — | — | `wear` |
+
+Die drei `wm-`-Einsätze stehen nur an **handgeschriebenen** Prüffällen:
+`aufbauen.py` vergibt sie nicht, weil „an der Uhr begonnen" eine Aussage
+darüber ist, wo jemand einen Knopf gedrückt hat — keine Eigenschaft, die
+sich erzeugen ließe.
+
+`pruefen.py` hält Präfix und Geräteart gegeneinander. Eine Kennung, die
+nicht zur Art ihres Geräts passt, ist ein Befund: Der Server leitete daraus
+eine andere Herkunft ab, als dieses Dokument behauptet, und niemand merkte
+es.
+
+## Der eine Schnitt
+
+Ein Dienst trägt ein Objekt `schnitte` — den Auftrag für die Einspielstufe
+`schneiden`, die über `api/schneiden.php` aus einem Ruhesegment einen
+Einsatz macht:
+
+| Feld | Bedeutung |
+|---|---|
+| `abdeckung` | Marken der Abdeckungsmatrix (hier `herkunft-schnitt`) |
+| `segment` | `client_ref` des Ruhesegments **desselben Dienstes** |
+| `beginn`, `ende` | lokale Zeiten, **innerhalb** der Spur des Segments |
+| `phasen` | genau `3`, `4`, `7` — mehr nimmt der Endpunkt nicht |
+
+**Der geschnittene Einsatz steht NICHT in den Quelldaten.** Er entsteht
+serverseitig und bekommt dort eine Kennung mit Präfix `cut-`; deshalb zählt
+`pruefen.py` weiter 87 Einsätze, der Bestand aber 88.
+
+`pruefen.py` prüft vier Randbedingungen, jede davon aus einem Fehlschlag
+gelernt: das Fenster liegt in der Spur des Segments (sonst wandert kein
+Punkt und der Server antwortet `409 leer`), es läuft nicht über Mitternacht
+(die Phasen rechnen mit dem Tagesversatz des **Beginns**), seine
+Beginnminute kommt am selben Diensttag kein zweites Mal vor (drei
+Einspielstufen suchen Einsätze über `start_hhmm`), und es liegt nicht am
+**neuesten** Diensttag (den öffnet `index.php` von selbst, und
+`sichtpruefung.mjs` wie vier Seiten des Bilderlaufs greifen auf dessen erste
+Einsatzzeile — die ein geschnittener Einsatz nicht bedienen kann, weil er
+keine geschützten Angaben hat).
 
 ## Felder eines Einsatzes
 

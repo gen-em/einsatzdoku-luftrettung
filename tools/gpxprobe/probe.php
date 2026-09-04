@@ -353,11 +353,28 @@ pruefe($b['code'] === 404,
 echo "\n  Teil 2 — Serverseitig gebaut gegen browserseitig gebaut\n";
 
 /* DIE STAERKSTE PRUEFUNG DIESES PAKETS. Der eingecheckte Referenzexport
- * enthaelt 171 GPX-Dateien, erzeugt von `assets/export.js` — einer voellig
- * anderen Umsetzung, in einer anderen Sprache, im Browser. Stimmen beide
- * ueberein, ist das mehr wert als ein Schemalauf. */
+ * enthaelt die GPX-Dateien, die `assets/export.js` gebaut hat — eine voellig
+ * andere Umsetzung, in einer anderen Sprache, im Browser. Stimmen beide
+ * ueberein, ist das mehr wert als ein Schemalauf.
+ *
+ * SIE HAT SICH EINMAL SELBST BETROGEN, und deshalb zaehlt sie seit R64/AP4
+ * mit (Fund F-R64-04). Die Zuordnung laeuft ueber die INTERNE Kennung im
+ * Dateinamen; was sie nicht wiederfindet, uebersprang die Schleife STILL.
+ * Nach dem Neuaufbau des Referenzbestands verglich sie noch EINE Datei
+ * statt 171 und meldete trotzdem „0 Abweichungen". Eine Untergrenze allein
+ * hilft nicht, weil die Zahl legitim schwankt: Sobald der Nachlauf eine Spur
+ * verdichtet hat, ist sie nicht mehr roh und gehoert uebersprungen.
+ *
+ * Was NICHT schwanken darf, ist die Zuordnung selbst: Jede GPX-Datei des
+ * Referenzexports MUSS eine Zeile im Demo-Konto haben. Findet sie keine, ist
+ * die Referenz aelter als die Datenbank — und dann misst dieser Teil etwas
+ * anderes als bestellt. Beides steht jetzt als eigene Erwartung da, mit
+ * Zahl. */
 $zipPfad = glob(dirname(__DIR__) . '/referenzdatensatz/referenz/*csv*.zip')[0] ?? null;
 $vergleiche = 0; $abweichungen = []; $dateien = 0;
+$uebersprungenStufe = 0;   // verdichtet -> zu Recht uebersprungen
+$uebersprungenFehlt = 0;   // keine Zeile im Konto -> Referenz und Bestand passen nicht
+$uebersprungenName  = 0;   // Dateiname ohne Kennung -> Format geaendert
 if ($zipPfad === null) {
     pruefe(false, 'Referenzexport gefunden', 'kein *csv*.zip unter tools/referenzdatensatz/referenz/');
 } else {
@@ -367,18 +384,21 @@ if ($zipPfad === null) {
     for ($i = 0; $i < $zip->numFiles; $i++) {
         $name = $zip->getNameIndex($i);
         if (!str_ends_with($name, '.gpx')) { continue; }
-        if (!preg_match('~/(mission|rest)_(\d+)_~', $name, $m)) { continue; }
+        if (!preg_match('~/(mission|rest)_(\d+)_~', $name, $m)) { $uebersprungenName++; continue; }
         $typ = $m[1] === 'mission' ? 'mission' : 'rest';
         $id  = (int)$m[2];
 
         // Nur Spuren, die es hier noch gibt und die NICHT ausgeduennt sind:
         // eine ausgeduennte hat zu Recht andere Punkte.
         $stand = spur_stand($pdo, $typ, $id);
-        if ($stand['stufe'] !== SPUR_STUFE_ROH) { continue; }
         $t = $typ === 'mission' ? 'missions' : 'rest_segments';
         $q = $pdo->prepare("SELECT COUNT(*) FROM `$t` WHERE id = ? AND user_id = ?");
         $q->execute([$id, $demo]);
-        if (!(int)$q->fetchColumn()) { continue; }
+        if (!(int)$q->fetchColumn()) { $uebersprungenFehlt++; continue; }
+        // Eine verdichtete Spur hat zu Recht andere Punkte. Das ist der EINE
+        // Grund, aus dem hier etwas uebersprungen werden darf -- und er wird
+        // gezaehlt, damit „0 Abweichungen" nicht „0 Vergleiche" heissen kann.
+        if ($stand['stufe'] !== SPUR_STUFE_ROH) { $uebersprungenStufe++; continue; }
 
         $sollXml = $zip->getFromIndex($i);
         $soll = gpx_punkte($sollXml);
@@ -424,11 +444,23 @@ if ($zipPfad === null) {
            'Auch die browsergebauten Referenzdateien sind schemagueltig',
            $refUngueltig === 0 ? "$refGeprueft Dateien, 0 ungueltig"
                                : "$refUngueltig von $refGeprueft — erste: $refErste");
+    pruefe($uebersprungenFehlt === 0,
+           'Jede GPX-Datei des Referenzexports hat eine Zeile im Demo-Konto',
+           $uebersprungenFehlt === 0
+               ? "$refGeprueft Dateien zugeordnet, 0 ohne Gegenstueck"
+               : "$uebersprungenFehlt von $refGeprueft ohne Gegenstueck — die "
+                 . 'Referenz ist aelter als die Datenbank; dieser Teil misst dann '
+                 . 'etwas anderes als bestellt');
+    pruefe($uebersprungenName === 0,
+           'Jeder GPX-Dateiname traegt seine Kennung',
+           "$uebersprungenName Namen ohne Kennung");
     pruefe($dateien > 0 && !$abweichungen,
            'Jeder Punkt stimmt mit der Browserfassung ueberein',
            $abweichungen
                ? count($abweichungen) . ' Abweichungen — erste: ' . $abweichungen[0]
-               : "$dateien Dateien, $vergleiche Einzelvergleiche, 0 Abweichungen");
+               : "$dateien von $refGeprueft Dateien verglichen ($vergleiche "
+                 . "Einzelvergleiche, 0 Abweichungen); uebersprungen: "
+                 . "$uebersprungenStufe verdichtet");
 }
 
 /* ---- Teil 3 — Struktur und Kennzeichnung, je Stufe ----------------------- */

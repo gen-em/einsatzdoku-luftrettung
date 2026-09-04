@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import org.genem.nadoku.gemeinsam.LogoWahl
+import org.genem.nadoku.handy.kopplung.Abweisung
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.gemeinsam.Phasen
 import org.genem.nadoku.handy.aufzeichnung.Ortungsstand
@@ -78,6 +79,28 @@ import java.security.MessageDigest
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w360dp-h800dp-xhdpi")
 class HandyBildTest {
+
+    /**
+     * Bildschirme, auf denen mit Absicht KEIN farbiger Knopf steht.
+     *
+     * Die Regel unten fragt „ist hier eine Handlung erreichbar?" und sucht
+     * dafür die Primärfarbe — bislang war der farbige Knopf immer die
+     * Haupthandlung. Es gibt einen Bildschirm, auf dem es keine gibt, und das
+     * ist kein Versäumnis:
+     *
+     * **`kopplung-code`** zeigt den Code und wartet darauf, dass ein Mensch
+     * ihn im Browser einträgt. Die App ist an dieser Stelle nicht am Zug; sie
+     * hat nichts anzubieten außer „Abbrechen", und den in die Primärfarbe zu
+     * setzen hieße, den Abbruch zur empfohlenen Handlung zu machen. Der
+     * Bildschirm ist trotzdem bedienbar — die Prüfung darunter zählt nach,
+     * dass ein Knopf sichtbar ist.
+     *
+     * Ein Eintrag hier ist eine Aussage über die Gestaltung, keine
+     * Stummschaltung: Er wird mitgeprüft (ungenutzte Ausnahmen fallen auf),
+     * und er verlangt weiterhin einen Ausweg auf dem Bildschirm.
+     */
+    private val OHNE_HAUPTHANDLUNG = listOf("kopplung-code")
+
 
     /**
      * Die Flächenfarben, an denen ein Bedienelement im Bild zu erkennen ist:
@@ -177,7 +200,6 @@ class HandyBildTest {
                 },
                 gesetztePhasen = gesetztePhasen,
             ),
-            serverBasis = "https://einsatz.beispieldomain.de/",
             logoWahl = LogoWahl.LUFT,
             rueckstand = rueckstand,
             abgewiesen = abgewiesen,
@@ -252,20 +274,60 @@ class HandyBildTest {
         ),
 
         // -- Nebenbildschirme --
-        "kopplung-wahl" to {
+        /* VIER KOPPLUNGSBILDER STATT ZWEI (R49, R63). Vorher waren es die
+         * Wahlseite und das Abtippen; beide Wege gibt es nicht mehr. Was
+         * jetzt zu sehen sein muss, sind die vier Punkte des Ablaufs aus
+         * Vertrag 1a -- besonders die beiden mittleren, denn dort steht je
+         * eine Zahl bzw. eine Adresse, die von diesem Bildschirm auf einen
+         * anderen wandert. Genau dort faellt ein Umbruch oder ein
+         * abgeschnittener Text auf. */
+        /* HIER STAND KURZ DER VERBRAUCHSHINWEIS (Backlog Nr. 82) — und der
+         * Versuch hat eine Grenze dieses Prüfmittels gefunden, die vorher
+         * niemand kannte: **Der Bilderlauf kann keine Dialoge.** Gemessen:
+         * 1 dp Inhalt bei allen drei Breiten, 0 Knöpfe. Ein Compose-
+         * `AlertDialog` rendert in einem EIGENEN Fenster, und `captureToImage`
+         * über die Wurzel-Composable sieht davon nichts.
+         *
+         * Der Fall ist deshalb wieder heraus: Ein Bild, das leer ist, belegt
+         * nichts und zählt trotzdem in der Gesamtzahl mit. Was der Hinweis
+         * tut, steht stattdessen in `VerbrauchhinweisTest`; wie er AUSSIEHT,
+         * ist am Emulator zu sehen — dort ist der Akku-Dialog derselben
+         * Bauform belegt (docs/bilder/s4-rest/07-akku-hinweis.png).
+         *
+         * Das gilt für JEDEN Dialog dieser App: Akkufrage, Rückfrage,
+         * Trennfrage. Keiner von ihnen ist im Bilderlauf abgebildet, und das
+         * ist keine Lücke im Fallkatalog, sondern eine des Mittels. */
+        "kopplung-bereit" to {
             KopplungAnsicht(
-                schritt = Kopplungsschritt.Wahl,
-                serverBasis = null,
+                schritt = Kopplungsschritt.Bereit,
                 logoWahl = LogoWahl.LUFT,
-                aufSchritt = {}, aufKoppeln = { _, _ -> },
+                aufStarten = {}, aufAntwort = {},
             )
         },
-        "kopplung-von-hand" to {
+        "kopplung-code" to {
             KopplungAnsicht(
-                schritt = Kopplungsschritt.VonHand,
-                serverBasis = "https://einsatz.beispieldomain.de/",
+                schritt = Kopplungsschritt.Wartet("AB3K7Q", restSekunden = 540),
                 logoWahl = LogoWahl.LUFT,
-                aufSchritt = {}, aufKoppeln = { _, _ -> },
+                aufStarten = {}, aufAntwort = {},
+            )
+        },
+        "kopplung-frage" to {
+            KopplungAnsicht(
+                schritt = Kopplungsschritt.Frage(
+                    "AB3K7Q", konto = "ph***@gen-em.org", restSekunden = 300,
+                ),
+                logoWahl = LogoWahl.LUFT,
+                aufStarten = {}, aufAntwort = {},
+            )
+        },
+        "kopplung-abgewiesen" to {
+            KopplungAnsicht(
+                schritt = Kopplungsschritt.Abgewiesen(
+                    Abweisung.ZU_VIELE_GERAETE,
+                    servermeldung = "Es sind bereits 5 Geraete gekoppelt.",
+                ),
+                logoWahl = LogoWahl.LUFT,
+                aufStarten = {}, aufAntwort = {},
             )
         },
         "einstellungen" to {
@@ -274,7 +336,8 @@ class HandyBildTest {
                 uhrSperre = true,
                 dienstLaeuft = false,
                 trennmeldung = null,
-                aufLogoWahl = {}, aufUhrSperre = {}, aufTrennen = {}, aufZurueck = {},
+                aufLogoWahl = {}, aufUhrSperre = {}, aufTrennen = {},
+                aufDatenschutz = {}, aufImpressum = {}, aufZurueck = {},
             )
         },
     )
@@ -325,11 +388,46 @@ class HandyBildTest {
         /* Ohne Bildlauf. Ein Bildschirm, dessen Knopf unter dem Rand liegt,
          * ist auf einem 800-dp-Telefon nicht bedienbar — und das faellt beim
          * Lesen des Quelltexts niemandem auf. */
-        val ohneKnopf = messungen.filter { it.knopfDp == 0.0 }
+        val ohneKnopf = messungen
+            .filter { it.knopfDp == 0.0 }
+            .filterNot { m -> OHNE_HAUPTHANDLUNG.any { m.name.startsWith(it) } }
         check(ohneKnopf.isEmpty()) {
             "Kein farbiger Knopf im sichtbaren Bereich (${hoeheDp} dp): " +
                 ohneKnopf.joinToString { it.name }
         }
+
+        /* DIE AUSNAHMEN MUESSEN GREIFEN. Eine Ausnahme, die nichts erklaert,
+         * beschreibt entweder einen Bildschirm, den es nicht mehr gibt, oder
+         * einen, der inzwischen doch einen Knopf hat -- in beiden Faellen
+         * prueft die Liste weniger, als sie vorgibt. Dieselbe Vorschrift wie
+         * bei der Wortliste (tools/wortliste/, "ungenutzte Ausnahmen"). */
+        val ungenutzt = OHNE_HAUPTHANDLUNG.filterNot { a ->
+            messungen.any { it.name.startsWith(a) && it.knopfDp == 0.0 }
+        }
+        check(ungenutzt.isEmpty()) {
+            "Ungenutzte Ausnahmen in OHNE_HAUPTHANDLUNG: ${ungenutzt.joinToString()}"
+        }
+
+        /* HIER STAND EINE PRUEFUNG, DIE NICHTS GEMESSEN HAETTE.
+         *
+         * Der Gedanke war: Wo keine Haupthandlung steht, steht wenigstens ein
+         * Ausweg -- also `knoepfeSichtbar > 0` verlangen. Der Lauf hat gezeigt,
+         * dass das nicht geht: `kopplung-code` traegt einen Abbrechen-Knopf
+         * und meldet trotzdem 0/0.
+         *
+         * DER GRUND IST EINE GRENZE DIESES PRUEFMITTELS: `knopfbaender()`
+         * sucht die PRIMAER- und die BEENDEN-Farbe. Ein neutraler Knopf ist
+         * weiss mit duennem Rand -- er hat keine Flaeche, die sich vom
+         * Untergrund abhebt, und faellt damit durch jede Farbmessung.
+         * `knoepfeSichtbar` heisst also nicht „sichtbare Knoepfe", sondern
+         * „sichtbare FARBIGE Knoepfe"; die Zahl 0/0 ist richtig gemessen und
+         * beantwortet nur eine andere Frage als die gestellte.
+         *
+         * Eine Pruefung, die das nicht kann, wird nicht so hingeschrieben,
+         * als koennte sie es. Dass der Ausweg da ist, steht im Quelltext
+         * (KopplungAnsicht, Zweig `Wartet`) und ist am Emulator zu sehen --
+         * nicht hier. Der Befund gehoert unter die Grenzen des Pruefmittels
+         * (Pruefdokument S4). */
 
         // ---- 3. Kein Knopf beruehrt den Bildrand ---------------------------
         val randberuehrer = messungen.filter { it.amRand }
@@ -348,7 +446,18 @@ class HandyBildTest {
          * die des Knopfes. Sie an der Bedienhöhe zu messen hiesse, eine
          * Aussage über die Bildschirmlänge als Aussage über den Knopf zu
          * verkaufen. Sie stehen stattdessen in ihrer eigenen Zeile unten. */
-        val zuFlach = messungen.filter { !it.unterDerFaltkante && it.knopfDp < sollDp - 1.0 }
+        /* `knopfDp > 0.0` STAND BIS ZU DIESEM PAKET NUR IM KOMMENTAR.
+         *
+         * Der Absatz darueber sagt seit jeher „nur dort geprueft, wo ein
+         * farbiger Knopf im Bild ist" -- die Bedingung dafuer fehlte im Code.
+         * Aufgefallen ist es erst, als mit `kopplung-code` der erste
+         * Bildschirm OHNE farbigen Knopf dazukam: Er meldete 0,0 dp und damit
+         * „Bedienhoehe unter 48 dp", obwohl er gar keinen Knopf hat, dessen
+         * Hoehe zu klein sein koennte. Eine Regel, die einen fehlenden Knopf
+         * als zu flachen meldet, misst nicht, was sie sagt. */
+        val zuFlach = messungen.filter {
+            it.knopfDp > 0.0 && !it.unterDerFaltkante && it.knopfDp < sollDp - 1.0
+        }
         check(zuFlach.isEmpty()) {
             "Bedienhöhe unter ${sollDp.toInt()} dp (R58): " + zuFlach.joinToString {
                 "%s %.1f dp".format(it.name, it.knopfDp)

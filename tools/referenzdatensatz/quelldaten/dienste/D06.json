@@ -17,7 +17,7 @@
     "rettungsmittel": "NEF Talwang 76/1",
     "beginn": "2026-03-28 20:00",
     "ende": "2026-03-29 06:00",
-    "day_ref": "d-12-3947261805",
+    "day_ref": "ad-12-3947261805",
     "spur_ausgangspunkt": {
       "lat": 47.559,
       "lon": 10.217
@@ -32,31 +32,31 @@
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-12-4122948558",
+      "client_ref": "ar-12-4122948558",
       "beginn": "2026-03-28 20:00",
       "ende": "2026-03-28 20:05",
       "final": true
     },
     {
-      "client_ref": "r-12-7959410700",
+      "client_ref": "ar-12-7959410700",
       "beginn": "2026-03-28 21:27",
       "ende": "2026-03-28 21:43",
       "final": true
     },
     {
-      "client_ref": "r-12-9471035643",
+      "client_ref": "ar-12-9471035643",
       "beginn": "2026-03-28 23:00",
       "ende": "2026-03-28 23:40",
       "final": true
     },
     {
-      "client_ref": "r-12-9295332214",
+      "client_ref": "ar-12-9295332214",
       "beginn": "2026-03-29 00:55",
       "ende": "2026-03-29 01:38",
       "final": true
     },
     {
-      "client_ref": "r-12-7127431811",
+      "client_ref": "ar-12-7127431811",
       "beginn": "2026-03-29 03:48",
       "ende": "2026-03-29 06:00",
       "final": true
@@ -64,7 +64,7 @@
   ],
   "einsaetze": [
     {
-      "client_ref": "m-12-7794332333",
+      "client_ref": "am-12-7794332333",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -151,7 +151,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-9563388890",
+      "client_ref": "am-12-9563388890",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -238,7 +238,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-7092451863",
+      "client_ref": "wm-12-7092451863",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -324,7 +324,7 @@
         "start": null
       },
       "abdeckung": [
-        "herkunft-watch",
+        "herkunft-wear",
         "erfassung-boden-track",
         "einsatzdatum-abweichend",
         "start-leer",
@@ -332,7 +332,7 @@
       ]
     },
     {
-      "client_ref": "m-12-4386015927",
+      "client_ref": "am-12-4386015927",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -453,7 +453,7 @@
         }
       },
       "abdeckung": [
-        "herkunft-watch",
+        "herkunft-android",
         "erfassung-boden-track",
         "zeitumstellung-fruehjahr",
         "start-manual",

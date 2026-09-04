@@ -1,0 +1,46 @@
+{
+  "$warum": "Die zwei Geraete des Referenzbestands, mit dem Block, den sie beim Koppeln an pair.php schicken (JSON-Vertrag 1a.4). Bis R64/AP4 legte die Einspielstufe `geraet` sie ueber die Geraeteseite an (action=add) -- nur mit Beschriftung, ohne Art und ohne Modell. Der Referenzbestand trug damit an 87 Einsaetzen und 100 Segmenten eine leere Momentaufnahme, und der Kreislauf belegte fuer R64 nichts. Seither gehen sie den echten Kopplungsweg, und die Bloecke dafuer stehen hier: in den Quelldaten, wo alles steht, was den Bestand bestimmt.",
+
+  "$warum_zwei_arten": "EINE UHR UND EIN HANDY, und nicht zwei Uhren (E-R64-15). Die Anwendung kennt seit Web 14.0.0 sechs Herkunftswerte; mit zwei Uhren belegte der Referenzbestand davon einen. Geraet 11 ist die Garmin-Uhr der Luftdienste, Geraet 12 das Android-Handy der Bodendienste. Aus dieser Zuordnung folgen die Kennungspraefixe der Quelldaten: `m-`/`r-`/`d-` fuer die Uhr, `am-`/`ar-`/`ad-` fuer das Handy, `wm-` fuer die drei Eintraege, die an der Wear-OS-Uhr begonnen wurden (E-R64-21).",
+
+  "$warum_teilenummer": "Die Uhr kennt ihren Modellnamen nicht und schickt ihre Teilenummer (JSON-Vertrag 1a.4); der Server loest sie in `geraetemodelle.php` auf. Die hier eingetragene Nummer ist eine ECHTE aus dieser Tabelle -- eine erfundene liefe in den Rueckfall `geraet_teil` und zeigte im Demo-Konto eine Nummer statt eines Modells, also gerade nicht das, was R64 belegen soll.",
+
+  "$warum_beschriftung": "Die Beschriftung entsteht NICHT beim Koppeln: `pair.php` setzt beim Ja `label = geraet_vorgabename(art)`, also schlicht `Uhr` oder `Handy`. Die sprechenden Namen kommen danach ueber `einstellungen.php action=rename`. Sie sind sichtbarer Text des Demo-Kontos auf dem Produktivserver und laufen deshalb seit R64/AP4 durch `tools/wortliste/` (Bereich f) -- der frueher hier stehende Name `Uhr Luftrettung (Referenz)` trug ein Sperrwort, und niemand hat es je gemessen.",
+
+  "geraete": [
+    {
+      "nummer": "11",
+      "beschriftung": "Uhr Luftdienst (Referenz)",
+      "dienstart": "air",
+      "praefix": { "einsatz": "m-", "ruhe": "r-", "dienst": "d-" },
+      "block": {
+        "art": "uhr",
+        "teil": "006-B3906-00",
+        "br": 260,
+        "ho": 260,
+        "touch": true,
+        "fw": "16.30",
+        "ciq": "5.1.0",
+        "app": "3.0.0"
+      }
+    },
+    {
+      "nummer": "12",
+      "beschriftung": "Handy Bodendienst (Referenz)",
+      "dienstart": "ground",
+      "praefix": { "einsatz": "am-", "ruhe": "ar-", "dienst": "ad-" },
+      "block": {
+        "art": "handy",
+        "teil": null,
+        "hersteller": "Samsung",
+        "modell": "SM-S921B",
+        "br": 1080,
+        "ho": 2340,
+        "touch": true,
+        "fw": "15",
+        "sdk": 35,
+        "app": "0.13.0"
+      }
+    }
+  ]
+}

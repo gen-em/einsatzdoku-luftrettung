@@ -4,14 +4,66 @@ Spielt den erzeugten Datensatz über die **regulären Wege** in eine
 Installation ein. Kein roher SQL-Weg (R4) — jede Zeile entsteht so, wie sie
 im Betrieb entstünde.
 
-## Die vier Wege
+## Die sechs Wege
 
 | Weg | Was darüber hereinkommt |
 |---|---|
+| `pair.php` + Geräteseite | die **Kopplung** der zwei Geräte — und damit `geraet_art` und `geraet_modell` (seit R64/AP4) |
 | `ingest.php` | Diensttage, Einsätze, Ruhe-Segmente, Phasen, Reanimationen, Spur |
 | `api/day.php` | Zuordnung der neutralen Diensttage (Standort, Rettungsmittel, Besatzung) |
 | `einsatz_form.php` | Nachtragen der Felder und der geschützten Angaben; `pat_blob` als `edk1:`-Chiffretext |
+| `api/schneiden.php` | der **eine Schnitt**: aus einem Ruhesegment ein Einsatz, mit Sperrvermerk |
 | Weboberfläche | Papierkorb und endgültiges Löschen |
+
+### Die Kopplung — vier Schritte je Gerät
+
+Bis R64/AP4 entstanden die zwei Geräte über `einstellungen.php action=add`:
+Beschriftung und sonst nichts, `geraet_art` und `geraet_modell` NULL. Weil
+`ingest.php` die **Momentaufnahme** beim Anlegen von dort kopiert, trug der
+ganze Bestand eine leere — und der edbak-Kreislauf verglich NULL gegen NULL.
+
+Jetzt geht die Stufe `geraet` den echten Weg:
+
+1. `POST pair.php {"aktion":"start","geraet":{…}}`, **ohne** Kopfzeilen.
+   Der Geräteblock kommt aus `quelldaten/geraete.json`. Die Antwort trägt
+   Code, Kennung und Schlüssel als JSON — damit fällt das Abklauben des
+   Markups weg, an dem der alte Weg zweimal zerbrochen ist (F-S2-A).
+2. Zustand sichern, **sofort**. Der Schlüssel geht genau einmal über die
+   Leitung.
+3. `POST einstellungen.php?t=geraete action=koppeln_bestaetigen` mit dem Code.
+4. `POST pair.php {"aktion":"bestaetigen","antwort":"ja"}` **mit**
+   `X-Device-Id`/`X-Api-Key`. Erst hier entsteht die Zeile in `devices`.
+
+Danach wird umbenannt: `pair.php` setzt beim Ja `label` auf „Uhr" bzw.
+„Handy"; die sprechenden Namen kommen über `action=rename`.
+
+> **Der Beleg für Schritt 3 ist Schritt 4, nicht die HTTP-Antwort.** Erfolg
+> ist dort eine 302, Misserfolg eine 200 mit Fehlertext im HTML — nach dem
+> Folgen der Umleitung sind beide 200. Bleibt Schritt 3 ohne Wirkung,
+> antwortet Schritt 4 mit `409 nicht_beansprucht`. Genau das prüft die Stufe.
+
+> **Ratenschutz:** `pair_start` lässt 20 Anfragen je 600 s und Adresse zu,
+> und **nichts** setzt den Topf zurück — es gibt kein `rate_erfolg`
+> dafür. Zwei Geräte je Lauf heißt **zehn Läufe je zehn Minuten**. Wer beim
+> Entwickeln öfter fahren muss, räumt den Topf so ab, wie es
+> `tools/kopplungsprobe/probe.php` tut; hier steht dafür kein SQL (R4).
+
+> **Die Aufräumschleife darf nie nach dem Ingest laufen.** `devices` hängt an
+> `missions`, `rest_segments` und `day_refs` mit `ON DELETE SET NULL`. Ein
+> Aufräumen danach löschte nicht zwei Zeilen, sondern **trennte den ganzen
+> Bestand von seinen Geräten** — ohne Fehlermeldung, sichtbar erst als leeres
+> `days[].refs[].device_id` im Referenz-Export.
+
+### Der Schnitt — warum er am **Ende** steht
+
+Die Stufe `schneiden` ist die letzte, nicht — wie zuerst vorgesehen — die
+zwischen `zuordnen` und `nachtragen`. Der Grund sind die drei Stufen
+dazwischen: `nachtragen`, `papierkorb` und `sperrliste` suchen ihre Einsätze
+über `start_hhmm`. Die erste bricht bei zwei Treffern ab, die zweite nimmt
+still `treffer[0]`. Ein geschnittener Einsatz wäre ab der Stufe ein
+zusätzlicher Einsatz in derselben Liste. Am Ende gibt es diese
+Überschneidung nicht — und der geschnittene Einsatz braucht keine der drei:
+Er bleibt bewusst leer.
 
 Der **CSV-Import** läuft bewusst nicht hier, sondern im Browser (B4).
 
@@ -53,7 +105,7 @@ selbst richtet nichts ein.
 ```
 python3 einspielen.py --stufen konto
 node passwort_setzen.mjs '<Einrichtungslink>' 'nadokudemo0815' rc.json
-python3 einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste
+python3 einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
 python3 messprotokoll.py
 node sichtpruefung.mjs
 ```

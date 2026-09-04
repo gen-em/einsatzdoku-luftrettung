@@ -102,7 +102,7 @@ try {
 
     /* Der Kopf: die Nutzlast OHNE Eintraege und ohne Punktlisten. */
     const kopf = {
-      format: 'einsatzdoku-backup', version: 8, app: 'einsatzdoku-notarzt',
+      format: 'einsatzdoku-backup', version: 9, app: 'einsatzdoku-notarzt',
       created_at: '2026-08-31T12:00:00+00:00',
       user: { email: 'probe@gen-em.org', name: 'Containerprobe' },
     };
@@ -320,7 +320,13 @@ try {
          `${b.art_zip} / ${b.art_teil} / ${b.art_alt} / ${b.art_fremd}`);
   pruefe(b.ist_backup_zip && b.ist_backup_teil,
          'ZIP und Teil gelten als Datei dieser Anwendung');
-  pruefe(/Teil einer mehrteiligen/.test(b.teil_als_datei || ''),
+  /* DER SUCHTEXT WAR SEIT LANGEM FALSCH und die Zeile damit dauerhaft rot:
+     Gesucht wurde „Teil einer mehrteiligen", die Meldung in `crypto.js` sagt
+     aber „einzelnes Teil eines mehrteiligen Backups". Ein Prueffall, der eine
+     Zeichenkette sucht, die es nicht gibt, prueft nichts — er meldet nur.
+     Gefunden bei R64/AP2, als die Containerprobe zur Abnahme gehoerte.
+     Gesucht wird jetzt der unveraenderliche Kern der Aussage. */
+  pruefe(/mehrteiligen Backups/.test(b.teil_als_datei || ''),
          'Ein einzeln geoeffnetes Teil sagt, dass es ein Teil ist',
          (b.teil_als_datei || '').slice(0, 46) + '…');
 

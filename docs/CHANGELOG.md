@@ -14,6 +14,654 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 14.2.2] — 2026-09-04
+
+### Web — „kein Ende" an einem Einsatz, der zu Ende war
+
+Die Einsatztabelle rechnete die Dauer aus dem Beginn und der **Phase 9**
+(„Endzeit des Einsatzes"). Fehlte die Phase, stand in der Spalte „kein Ende" —
+auch an einem Einsatz mit `final = 1` und gesetztem `ended_at`. Dieselbe
+Rechnung stand in der Zeitraumübersicht und in der Suche, und die
+Einsatzansicht fragte über dasselbe Merkmal, ob sie überhaupt eine Endzeit
+anzeigen darf.
+
+Zwei Arten haben keine Phase 9 und sind trotzdem zu Ende: der **geschnittene**
+Einsatz (`api/schneiden.php` vergibt nur die Phasen 3, 4 und 7) und der
+**importierte**, dessen Datei keine Endphase führt. Bei einem Einsatz von der
+Uhr fallen Alarmierung, Phase 9 und `ended_at` zusammen — deshalb ist es nie
+aufgefallen. Seit Web 14.2.1 steht ein geschnittener Einsatz dauerhaft im
+Demo-Konto, also auf dem Produktivserver.
+
+„Dauer" heißt jetzt, was das Wort sagt: **wie lange der Einsatz gedauert hat**.
+Dass sich dabei keine bestehende Zeile ändert, ist gemessen und nicht
+angenommen: Über 330 aktive Einsätze fallen Phase 9 und `ended_at` **nullmal**
+auseinander (323 gleich, 3 mit Ende ohne Phase 9, 4 offene ohne beides).
+„kein Ende" bleibt genau dort, wo es hingehört — am Einsatz ohne Ende.
+
+Das Merkmal `has_p9` heißt jetzt `hat_ende` und sagt damit, was gemeint ist.
+Drei korrelierte Unterabfragen auf `mission_phases` sind ersatzlos entfallen:
+Sie holten je Zeile einen Wert, der als Spalte danebensteht.
+
+## [Web 14.2.1] — 2026-09-04
+
+### Web — der Referenzbestand trägt jetzt, was er prüfen soll (R64)
+
+Mit 14.0.0 bekam jeder Einsatz und jedes Ruhesegment eine **Momentaufnahme**
+des Geräts: Art und Modell, festgehalten beim Anlegen. Der Referenzbestand
+konnte das nicht belegen. Sein Einspielwerkzeug legte die zwei Geräte über die
+Geräteseite an — Beschriftung und sonst nichts —, und weil `ingest.php` die
+Momentaufnahme von dort kopiert, stand sie im ganzen Bestand auf NULL. Der
+Kreislauf verglich NULL gegen NULL und meldete brav null Abweichungen.
+
+Jetzt gehen beide Geräte den echten Kopplungsweg über `pair.php`. Und eines
+davon ist ein **Handy**: Aus dem Kennungspräfix leitet der Server die Herkunft
+ab, und solange beide Geräte `m-`/`r-` schickten, war der ganze Bestand
+`watch`. Die 42 Einsätze und 52 Segmente des zweiten Geräts heißen deshalb
+jetzt `am-`/`ar-`/`ad-`, drei handgeschriebene Prüffälle `wm-` (an der Uhr
+begonnen, vom Handy gesendet). Von den sechs Herkunftswerten belegte der
+Bestand vorher einen, jetzt alle sechs.
+
+Dazu ein **Schnitt**: ein Einsatz, aus einem Ruhesegment geschnitten, mit
+Sperrvermerk. Weil der Demo-Reset die Fixture alle 30 Minuten einspielt, wird
+Nr. 63 damit auf dem Produktivserver dauerhaft geprüft — ein besserer Beleg
+als jede eigens gebaute Probe. Das Demo-Konto zeigt ab dem nächsten Reset
+Gerätemodelle auf der Geräteseite und einen geschnittenen Einsatz mit Plakette.
+
+### Web — die Anwendung schrieb eine CSV-Datei, die sie selbst nicht lesen konnte
+
+Aufgefallen ist es erst, als der Referenzbestand einen Schnitt trug: 83 Zeilen
+hinaus, 82 herein, eine mit Fehler.
+
+Die Spalte `uhrzeit_ortszeit` hieß immer „Alarmzeit" und kam aus **Phase 2**.
+Der eigene Import liest sie aber als den **Start** des Einsatzes — und
+verlangt sie. Bei einem Einsatz von der Uhr fallen Alarmierung und Beginn
+zusammen; deshalb ist es zwei Jahre lang niemandem aufgefallen. Ein
+geschnittener Einsatz hat keine Phase 2 (`api/schneiden.php` kennt nur 3, 4
+und 7), die Spalte blieb leer, und der Import wies die Zeile ab.
+
+Sie fällt jetzt auf den Einsatzbeginn zurück. Für jeden Einsatz mit Phase 2
+ändert sich nichts. Der umgekehrte Weg — den Import aus der Spalte `beginn`
+nachladen zu lassen — wäre die zweite Quelle für dieselbe Angabe gewesen,
+gegen die `import_profiles.js` an genau dieser Stelle argumentiert.
+
+Beim Wiedereinlesen entsteht aus dem Beginn eine Alarmierung. Das ist keine
+Verfälschung, sondern die Grenze des Formats: Das CSV kann eine Startzeit
+**ohne** Alarmierung nicht ausdrücken. Es steht als erwartete Abweichung in
+der Ausnahmeliste des Umlaufs, mit Zahl.
+
+### Prüfmittel — zwei stille Fallen bekommen eine Zahl
+
+Beide hätten den Neuaufbau verdorben, ohne dass etwas rot geworden wäre.
+
+**Der Generator zeichnete Luftlinien statt Straßen, wenn eine Kennung nicht
+passte.** `routen_soll.json` schlüsselt auf die `client_ref`; ein Fehlgriff
+lief in den Rückfall „Luftlinie mit 190 km/h" — ohne Meldung, ohne Zähler,
+sichtbar erst auf der Karte. Der Lauf sagt jetzt, wie viele Strecken aus OSRM
+kamen und wie viele ersetzt wurden (117 und 112; die 112 sind die acht
+Luftdienste, für die es zu Recht keine Straße gibt).
+
+**Die GPX-Probe verglich eine Datei statt 172 und meldete grün.** Sie ordnet
+über die interne Kennung im Dateinamen zu und übersprang still, was sie nicht
+wiederfand. Sie zählt jetzt mit — und eine GPX-Datei des Referenzexports ohne
+Zeile im Demo-Konto ist ein Befund, kein Übersprung.
+
+## [Android 0.13.0] — 2026-09-04
+
+Drei Punkte aus der Play-Console-Vorbereitung (Rahmenplan Schritt 6, Teil C).
+Sie sind bei der Bestandsaufnahme aufgefallen, nicht bei der Bedienung — und
+genau deshalb standen sie nirgends.
+
+### Android — die App führt jetzt zu Datenschutzerklärung und Impressum
+
+Bis 0.12.1 führte sie zu **keinem** Rechtstext. Beide existierten nur in der
+Weboberfläche und im Store-Eintrag. Eine App, die durchgehend den Standort
+aufzeichnet und ihn an einen Server schickt, sollte von sich aus sagen können,
+wer diesen Server betreibt und was dort geschieht; wer erst den Store öffnen
+muss, um das zu erfahren, findet es nicht.
+
+Unter den Einstellungen steht deshalb die Karte **„Rechtliches"** mit zwei
+Verweisen. Beide öffnen den **Browser** und keinen eingebauten Betrachter: Ein
+WebView wäre die einzige Stelle, an der fremdes Markup im Prozess dieser App
+liefe — für zwei Seiten, die im Browser genauso gut stehen. Fehlt ein Browser,
+sagt die App das, statt abzustürzen.
+
+Die Adressen leiten sich aus derselben eingebauten Serveradresse ab wie die
+zwei Endpunkte (R63). Eine zweite Adresse für die Rechtstexte wäre eine
+zweite Stelle, an der sie auf ein anderes Haus zeigen könnten als der Server,
+an den die App ihre Daten schickt.
+
+### Android — die Uhr verlangt jetzt gar keine Berechtigung mehr
+
+`WAKE_LOCK` war die einzige des Wear-Moduls und **im Quelltext unbenutzt**: Im
+ganzen Modul und im gemeinsamen Teil gibt es keinen Aufruf von `PowerManager`
+oder `newWakeLock`. Sie war eine Berechtigung auf Vorrat — genau das, wogegen
+das Handy-Manifest an zwei Stellen ausdrücklich argumentiert. Sie fragt zwar
+niemanden (Normalstufe, kein Dialog), erscheint aber im Store-Eintrag, und
+eine App, die nach etwas fragt, das sie nicht benutzt, erklärt sich schlechter
+als eine, die nach gar nichts fragt.
+
+Braucht eine künftige Fassung sie doch, kommt sie mit ihrem Aufrufer zurück
+und nicht vorher.
+
+### Android — der Geräteschlüssel folgt keiner Umleitung mehr
+
+`HttpURLConnection` folgt in der Voreinstellung einer 3xx-Antwort von selbst —
+und nimmt die Kopfzeilen mit. In diesen Kopfzeilen steht `X-Api-Key`, der
+Geräteschlüssel. Er wäre damit an eine Adresse gegangen, die nicht die ist, an
+die die App ihn schicken wollte.
+
+Bei eigener Adresse und TLS ist das folgenlos, und genau deshalb ist die
+Änderung eine Zeile: Sie kostet nichts und deckt den Fall ab, in dem es einmal
+nicht mehr folgenlos wäre — ein falsch eingerichteter Reverse Proxy, eine
+Weiterleitung auf eine fremde Domäne, ein Netz, das sich dazwischensetzt.
+
+Eine Umleitung landet dadurch erstmals in der Fehlerbehandlung. Sie wird
+ausdrücklich als **Serverfehler** eingeordnet und nicht als „unbekannt": Die
+App spricht mit genau zwei Endpunkten einer fest eingebauten Adresse; eine
+Umleitung ist dort ein Fehler der Einrichtung. **Der Sendeweg ist unberührt** —
+`Sendeantwort.lese()` behandelt alles außer 200/400/401/413 als „später
+erneut"; es geht kein Paket verloren. Nachgesehen, nicht angenommen.
+
+## [Web 14.2.0] — 2026-09-04
+
+### Web — der Sperrvermerk des Schnitts übersteht jetzt die Sicherung (Nr. 63)
+
+Wer eine Ruhezeit schneidet, hinterlässt einen **Sperrvermerk**: Dieser
+Zeitraum ist für nachgelieferte Punkte gesperrt, sonst läge die Fahrt
+hinterher in Einsatz **und** Segment. Der Vermerk stand in **keiner**
+Konto-Sicherung. Nach einem Wiedereinspielen lieferte eine Uhr mit
+gepuffertem Speicher den geschnittenen Bereich nach, und er kam durch — ohne
+Meldung, ohne Weg zurück.
+
+Die Nutzlast steigt dafür von 8 auf **9**. Jeder Einsatz trägt jetzt eine
+Liste `schnitte`, leer erlaubt; die Quelle steht darin als **`client_ref`**
+und nicht als Datenbanknummer — die vergibt das Einspielen neu. Der
+Erstellungszeitpunkt reist mit: Ein Vermerk sagt, *wann* geschnitten wurde,
+und das ist ein Ereignis der Vergangenheit, keine Frist dieser Installation.
+
+**Beim Einspielen gibt es drei Ausgänge, und alle drei werden gezählt.**
+Übernommen; übersprungen, wenn der Einsatz schon dastand (eine bewusst
+zurückgenommene Sperre darf ein Restore nicht wiederbeleben); verworfen, wenn
+es kein Ziel, keine auflösbare Quelle oder unbrauchbare Werte gibt. Die
+Rückmeldung nennt die Zahlen, aber nur, wenn die Datei überhaupt Vermerke
+trug.
+
+### Web — und die Sicherung weiß jetzt, mit welchem Gerät aufgezeichnet wurde
+
+`geraet_art` und `geraet_modell` (seit 14.0.0 an jedem Einsatz und jeder
+Ruhezeit) stehen jetzt auch in der Datei. `device_id` bleibt draußen, und das
+ist kein Widerspruch, sondern der Grund für die Momentaufnahme: Der Verweis
+trägt nicht einmal in der eigenen Datenbank dauerhaft — in einer fremden erst
+recht nicht. Ein Name trägt überall.
+
+### Web — drei alte Fehler, die dabei aufgefallen sind
+
+Sie haben mit R64 nichts zu tun, standen ihm aber im Weg:
+
+1. **Die Umdatierung eines Diensttags verschob die Sperrvermerke nicht.**
+   Einsätze, Segmente, Phasen, Reanimationsereignisse und jeder Spurpunkt
+   wanderten — die Vermerke blieben stehen. Der Vermerk sperrte danach einen
+   Zeitraum, in dem die Spur gar nicht mehr liegt: nachgelieferte Punkte kamen
+   wieder durch, und die Fahrt lag doppelt. Seit Web 12.5.0 so; folgenlos nur,
+   solange der Vermerk die Datenbank nicht verließ.
+2. **Der Demo-Reset räumte `track_cuts` nicht ab.** `track_points` und
+   `track_blobs` löscht er ausdrücklich, mit Begründung. Mit einem Schnitt im
+   Demo-Bestand hätte das alle 30 Minuten eine Waise hinterlassen — 48 am Tag,
+   keine davon je wieder auffindbar.
+3. **Fixture und Demo-Reset führten von den Geräten nur drei Spalten mit.**
+   Die Geräteseite des Demo-Kontos hätte „Gerät unbekannt" gezeigt, während
+   die Einsätze daneben ihre Momentaufnahme tragen.
+
+### Web — zwei Prüfmittel hatten aufgehört zu prüfen
+
+Beim Anhängen des neuen Prüfteils kam heraus, dass zwei Werkzeuge seit einiger
+Zeit nichts mehr messen:
+
+- Die **Wiederherstellungsprobe** starb mitten in Teil 9 an einem fehlenden
+  `require` für `smtp.php` — nach dreiundvierzig grünen Zeilen. Alles dahinter
+  (Teil 10) lief **nie**. Ein Abbruch mitten im Lauf sieht aus wie ein Ende.
+  Ihr Kopf versprach außerdem „30 von 30"; es sind 94.
+- Die **Containerprobe** suchte in einer Fehlermeldung den Wortlaut „Teil
+  einer mehrteiligen"; die Meldung sagt seit Langem „einzelnes Teil eines
+  mehrteiligen Backups". Der Prüffall stand damit dauerhaft auf rot, ohne dass
+  jemand hinsah.
+
+Beides ist behoben. Ein Prüfmittel, das nichts misst, meldet nicht null — es
+meldet gar nichts.
+
+## [Web 14.1.0] — 2026-09-04
+
+### Web — die Anzeige sagt jetzt, was 14.0.0 erfasst hat
+
+14.0.0 hat die Herkunft auf sechs Werte erweitert; die **Anzeige** kannte
+weiterhin drei. Ein Einsatz vom Handy stand als „Uhr" da, ein geschnittener als
+„manuell", und im CSV erschien der Rohwert. Das war zwischen den beiden
+Fassungen kurz schlechter als vorher, und genau das räumt diese auf.
+
+Die Einsatzansicht zeigt jetzt **sechs Plaketten**: „Uhr", „Handy", „Wear",
+„manuell", „importiert", „Schnitt". Im CSV heißt die Spalte `herkunft`
+entsprechend `uhr | handy | wear | manuell | import | schnitt`.
+
+**Der Rückfall ist überall der Rohwert und nicht mehr „Uhr".** Ein künftiger
+Client, dessen Beschriftung hier noch fehlt, soll auffallen und nicht in einer
+falschen Kategorie verschwinden. Eine falsche Antwort, die wie eine richtige
+aussieht, ist schlechter als eine unschöne.
+
+**Im CSV heißt die zweite Uhr `wear` und nicht `uhr`.** `uhr` ist seit dem
+ersten Export die Garmin-App. Eine zweite Uhr unter demselben Wort machte jede
+Auswertung, die auf `uhr` filtert, rückwirkend mehrdeutig — ohne dass sich das
+der Datei ansehen ließe. Welcher Hersteller es war, steht im Modell.
+
+### Web — zwei neue Spalten im CSV: mit welchem Gerät
+
+`einsaetze.csv` und `ruhezeiten.csv` tragen als **letzte zwei Spalten**
+`geraet_art` (uhr | handy | sonstiges) und `geraet_modell`; `felder.csv`
+beschreibt beide. Am Ende und nicht neben `herkunft`, weil Auswertungen Spalten
+von links zählen — und weil die beiden nicht den Einsatz beschreiben, sondern
+das Gerät, das ihn aufgezeichnet hat.
+
+**Leer heißt unbekannt, nicht „kein Gerät".** Nur die Kopplung kennt Art und
+Modell. Von Hand angelegte, importierte und vor Web 12.9.0 gekoppelte
+Datensätze haben nichts zu melden; dort bleibt die Zelle leer. Das Wort
+„unbekannt" steht bewusst nicht in der Datei.
+
+**Excel bleibt unverändert**, beide Fassungen — Standard wie GuteSeele. Die
+Übersichtstabelle liest ein Mensch, und sie beantwortet „was ist passiert",
+nicht „womit wurde es aufgezeichnet". Ihr Spaltensatz ist derselbe wie in
+13.3.0.
+
+**Der Rückimport nimmt die zwei Spalten nicht** — wie `herkunft` und `edited`:
+Sie beschreiben das Quellkonto, und beim Einlesen entsteht der Datensatz neu,
+ohne Gerät. Sie stehen trotzdem mit `target: null` im Profil, weil dessen
+Schlüsselliste zugleich die Beschreibung dessen ist, was das Format kennt.
+Unbekannte Spalten stören den Rückimport ohnehin nicht: Er ordnet über Namen zu
+und geht über alles hinweg, was er nicht kennt — eine Datei aus 14.1.0 liest
+sich auch auf einer älteren Installation.
+
+## [Web 14.0.0] — 2026-09-04
+
+**MIGRATION ERFORDERLICH: `2026_09_04_herkunft_geraet`.** Nach dem Deploy muss
+eine Administratorin `update.php` aufrufen. Ohne die Migration fehlen vier
+Spalten, und jeder Upload der Uhr scheitert.
+
+### Web — woher ein Einsatz kommt, und mit welchem Gerät
+
+Zwei Dinge waren falsch, und zwar still.
+
+**Erstens die Herkunft.** `missions.origin` kannte drei Werte — `watch`,
+`manual`, `import`. Seit Web 12.8.0 sendet auch ein Android-Handy, seit S4
+lässt sich ein Einsatz an einer Wear-OS-Uhr beginnen; beide landeten auf
+`watch`. Ein Handy-Einsatz trug die Plakette „Uhr", und der Anzeige war das
+nicht anzusehen. Und der Schnitt (`api/schneiden.php`) legte seinen Einsatz
+als `manual` an, obwohl ihn niemand von Hand eingegeben hat. Die Herkunft
+kennt jetzt **sechs** Werte: `watch`, `android`, `wear`, `manual`, `import`,
+`schnitt` — **einen je Client-App, nicht je Hersteller.** Eine künftige App
+eines anderen Uhrenherstellers wird ein neuer Client mit eigenem Präfix und
+bekommt einen eigenen Wert; der Hersteller steht ohnehin im Modell.
+
+Entschieden wird am **Präfix der `client_ref`**, die Geräteart ist nur der
+Rückfall. Das ist keine Feinheit: `am-` und `wm-` kommen vom *selben* Gerät —
+die Wear-OS-App hat weder Serveradresse noch Schlüssel und schickt ihre
+Ereignisse an das Handy (E-S4-11). Nur das Präfix trennt „am Handy getippt"
+von „am Handgelenk getippt".
+
+**Zweitens das Gerät.** `devices` weiß seit Web 12.9.0, *was* sich gekoppelt
+hat; am Einsatz stand davon nichts. Der Verweis dorthin trägt nicht: Er steht
+auf `ON DELETE SET NULL`, und Trennen ist bei geteilter Uhr der vorgesehene
+Normalfall (R47). Gemessen am 02.09.2026: **82 von 82 Einsätzen und 95 von 95
+Segmenten** des Demo-Kontos ohne Geräteverweis, obwohl 76 davon von einer Uhr
+stammen. `missions` und `rest_segments` bekommen deshalb `geraet_art` und
+`geraet_modell` als **Momentaufnahme** — kopiert in dem Augenblick, in dem der
+Datensatz entsteht, und danach nie nachgezogen. Der Preis ist benannt: Ein
+Einsatz, dessen Modell beim Anlegen unbekannt war, trägt dauerhaft
+„unbekannt". Dafür überlebt die Angabe Trennen, Löschen des Geräts und die
+Konto-Sicherung — der Verweis tut keines davon.
+
+Das **Ruhesegment bekommt keine Herkunftsspalte**: Gezählt werden Einsätze,
+und woher ein Segment stammt, sagt sein Präfix. Eine Spalte, die niemand
+abfragt, wäre geschrieben und nie gelesen.
+
+### Web — die Ableitungsregel stand dreimal, jetzt einmal
+
+Aus dem `client_ref`-Präfix auf die Herkunft zu schließen, stand bis hierher
+an drei Stellen: in der Migration `2026_07_30` als SQL, in
+`edbak_origin_edited()` als PHP und als Beschreibung in einem Kommentar in
+`api/export_data.php` — obwohl der Kommentar in `backup_lib.php` ausdrücklich
+verlangte, sie „nicht zweimal unterschiedlich hinzuschreiben". Als Android und
+Wear dazukamen, wuchs keine der drei mit. Genau so entsteht der Fehler oben.
+
+Jetzt steht sie einmal, als `herkunft_ableiten()` in `geraete_lib.php`, und
+der Wertevorrat daneben als `HERKUNFT_WERTE`. Die neue Migration spiegelt die
+Regel in SQL und sagt das dort. **`origin` ist dafür vom ENUM auf
+`VARCHAR(16)` gewechselt** — dieselbe Begründung wie bei `devices.geraet_art`:
+Ein ENUM braucht für jeden neuen Client eine Migration. Ein neuer Client
+kostet jetzt drei Einträge (Vertrag, Wertliste, Beschriftungen) und keine
+Schemaänderung.
+
+### Web — was diese Fassung noch nicht tut
+
+Die Konto-Sicherung trägt die neuen Felder **noch nicht**; sie kommen mit der
+Nutzlast 9, zusammen mit den Sperrvermerken des Schnitts (Backlog Nr. 63). Und
+die Beschriftungen von CSV-Export und Einsatzansicht kennen die drei neuen
+Werte noch nicht — sie zeigen bis dahin den **Rohwert**. Das ist Absicht: Ein
+unbekannter Herkunftswert darf nicht als „Uhr" erscheinen, und genau dieser
+Rückfall ist in dieser Fassung entfallen.
+
+Nebenbei geradegerückt: Der Absatz zu 13.3.0 stand in `version.php` vor dem zu
+13.2.0.
+
+## [Android 0.12.0] — 2026-09-04
+
+### Android — die App meldet sich, wenn der Akku knapp wird
+
+Bis 0.11.1 sagte sie das Thema **einmal** beim ersten Dienstbeginn und danach
+nie wieder — ein Satz, den man im Januar liest und im Juli gebraucht hätte.
+Jetzt beobachtet sie den Ladestand, solange sie aufzeichnet, und meldet sich
+bei drei Schwellen:
+
+| Schwelle | Meldung | Knopf „Dienst beenden" |
+|---|---|---|
+| **25 %** | Hinweis, nachzuladen | nein |
+| **15 %** | „ohne Nachladen reicht der Akku nicht durch den Dienst" | **ja** |
+| **10 %** | „gleich ist Schluss" | **ja** |
+
+**Drei Schwellen, weil sie Verschiedenes bedeuten.** Bei 25 % ist noch alles
+offen, bei 15 % wird es knapp, bei 10 % geht es zu Ende. Ein einziger
+Schwellwert müsste sich zwischen „zu früh, wird überlesen" und „zu spät, hilft
+nicht mehr" entscheiden.
+
+**Der Knopf erst ab 15 %**, und er löst dieselbe Aktion aus wie der in der
+Dauermeldung — es entsteht kein zweiter Weg, den Dienst zu beenden. Bei 25 %
+fehlt er mit Absicht: Da ist Nachladen die richtige Handlung, und ein Knopf,
+der das Aufgeben anbietet, bevor es naheliegt, wird beim dritten Mal gedrückt,
+ohne gelesen zu werden.
+
+**Je Stufe einmal, nicht je Messung.** Sonst stünde bei 24 % zwölf Stunden
+lang dieselbe Meldung, und die bei 10 % ginge darin unter. Am Kabel
+verschwindet die Warnung, und die Stufe setzt sich zurück — ein zweites
+Absacken ist ein zweites Ereignis, und es ist das gefährlichere, weil das
+Kabel dann nicht mehr da ist. Ein Anstieg *ohne* Kabel gilt dagegen nicht als
+Entwarnung: Von 9 % auf 12 % ist Rauschen.
+
+**Gemessen wird alle zwei Minuten**, über den Sticky-Intent statt über einen
+angemeldeten Empfänger: `ACTION_BATTERY_CHANGED` feuert bei jedem
+Prozentschritt und jeder Temperaturänderung — ein Empfänger dafür weckte den
+Prozess dutzendfach je Stunde, für eine Zahl, die alle zwei Minuten reicht.
+Ein Wächter, der vor Stromverbrauch warnt, sollte nicht selbst welchen
+erzeugen.
+
+### Android — warum die App bei niedrigem Akku trotzdem nichts abschaltet
+
+Eine automatische Abschaltung bei X % stand zur Wahl und ist verworfen worden.
+Sie wäre die bequeme Lösung und die falsche: Sie beendete die Aufzeichnung
+**still**, mitten im Dienst, genau in dem Augenblick, in dem niemand auf das
+Handy sieht. Was in der Dokumentation fehlt, fehlt hinterher
+unwiederbringlich — ein Dienst lässt sich nicht nachfahren. Paket E
+(Android 0.8.0) ist gegen genau diese Art Stille gebaut worden; hier dieselbe
+Linie. Der Mensch entscheidet, die App sagt ihm nur rechtzeitig Bescheid.
+
+### Android — und warum es keinen Sparmodus gibt
+
+Ein Sparmodus, der bei niedrigem Akku den GPS-Takt streckt, stand ebenfalls
+zur Wahl. Der Grund gegen ihn gehört festgehalten, weil er sonst wiederkehrt:
+
+**Der Track ist bereits ausgedünnt** (`Ausduenner`: 15 m **oder** 10 s) — und
+das spart Speicher und Übertragung, aber **keinen Akku**. Die Ausdünnung wirft
+Punkte weg, *nachdem* das GPS sie geliefert hat; der Empfänger läuft trotzdem
+durch. „Den Track gröber machen" ändert am Verbrauch nichts.
+
+Was Akku spart, wäre `MINDESTABSTAND_MS` — der GPS-Takt selbst. Dagegen
+sprechen drei Dinge: **Wie viel es spart, ist ungemessen** (ob Android das GPS
+zwischen den Messungen abschaltet, entscheidet das System, nicht die App).
+**Die Ausdünnung braucht Zwischenpunkte** — bei 30-s-Takt und 80 km/h greift
+die 15-m-Regel nie, und Strecke und Anstieg, die aus den Haversine-Abständen
+der aufgezeichneten Punkte entstehen, fielen systematisch zu kurz aus. Und
+**die Ausdünnung ist wortgleich die der Garmin-Uhr**; an der Zahl hängen die
+R19-Messung des Sendeverhaltens und der Messstand aus S2.
+
+Zu entscheiden wäre das mit zwei Zahlen aus dem Gerätetest: ein Dienst mit
+1 s, einer mit 5 s Mindestabstand, Akkustand über die Zeit. Bis dahin bleibt
+es, wie es ist.
+
+## [Android 0.11.1] — 2026-09-04
+
+### Android — die App sagt jetzt, dass sie den Akku leert
+
+Sie zeichnet über den ganzen Dienst mit GPS auf und war damit der mit Abstand
+größte Stromverbraucher — gesagt wurde es nirgends. Schlimmer: Der einzige
+Text zum Thema, die Führung zur Akku-Freistellung, erklärte, warum die App
+Strom ziehen **darf**. Wer nur den las, hielt den leeren Akku am Dienstende
+für einen Fehler.
+
+**Zwei Orte, weil einer nicht reicht.** Der Akku-Dialog bekommt einen zweiten
+Absatz — dort steht der Mensch ohnehin und trifft gerade eine Entscheidung.
+Aber dieser Dialog erscheint **nur, wenn die Freistellung noch nicht steht**;
+wer sie vorher gesetzt hat oder dessen Hersteller sie mitbringt, sieht ihn
+nie. Für die kommt der Hinweis nach dem **ersten** Dienstbeginn, einmal je
+Installation.
+
+**Nach dem Beginnen, nicht davor:** Ein Dialog, der den Start aufhält, steht
+im Weg, wenn es losgeht. Der Dienst läuft bereits, wenn der Hinweis erscheint
+— er ist eine Auskunft, keine Rückfrage, und hat deshalb einen Knopf statt
+zweier. Und er kommt **nicht**, wenn der Akku-Dialog ohnehin erscheint: Zwei
+Kästen übereinander im selben Augenblick liest niemand.
+
+**Keine Zahl im Text.** „Etwa X Prozent" wäre hilfreicher, ist aber ohne
+Messung am Gerät nicht zu verantworten — und der Gerätetest steht aus. Ein
+geratener Wert wäre schlimmer als keiner: Er würde geglaubt.
+
+### Android — der Versionscode der Uhr springt einmalig
+
+Die Play Console verlangt unter einer Anwendungs-ID je hochgeladenem APK einen
+eindeutigen Versionscode. Handy und Uhr tragen dieselbe ID (E-S4-01) und
+bisher denselben gerechneten Code — damit ließ sich das zweite der beiden
+nicht hochladen, und ohne das gibt es **kein Wear-OS-Release**.
+
+Die Uhr rechnet jetzt `+ 1 000 000`. Am APK nachgemessen: Handy **1100**, Uhr
+**1001100**, beide Versionsname `0.11.0` — die Zählung bleibt eine (E-S4-02).
+
+**Nur die Uhr, nicht beide.** Backlog Nr. 98 nannte auch eine führende
+Formfaktor-Ziffer; die hätte das Handy mitverschoben, wo kein Sprung nötig
+ist. Und die Uhr bekommt den **höheren** Code: Play fordert nur Eindeutigkeit,
+aber ein Versatz nach unten könnte mit einer künftigen Handy-Fassung
+kollidieren, einer nach oben nie — 1 000 000 entspräche der Handy-Version
+100.0.0.
+
+### Android — `android:roundIcon` ist ausgetragen
+
+Es stand in beiden Modulen auf **demselben** adaptiven Symbol wie
+`android:icon`. Das ist ein Kategorienfehler: `roundIcon` stammt aus Android
+7.1 und war die Übergangslösung, *bevor* es adaptive Symbole gab — wer es
+auswertet, erwartet dort ein fertig gerundetes Bild, das die Fläche füllt,
+kein 108-dp-Raster mit einem 52-dp-Motiv in der Mitte. Ab minSdk 26 gibt es
+kein Zielgerät, das es braucht.
+
+**Das ist die verbliebene Erklärung für Backlog Nr. 81** (App-Symbol im Kopf
+der Benachrichtigung zu groß und angeschnitten), nachdem zwei andere
+ausgeschlossen wurden: Die adaptive Kachel ist nachgerechnet und richtig, und
+„Themed Icons" waren auf dem Gerät **aus** — die `<monochrome>`-Ebene war also
+gar nicht im Spiel.
+
+**Ein Beleg ist es nicht.** Prüfen ließe es sich nur am Gerät; der Emulator
+führt AOSP und zeichnet den Benachrichtigungskopf anders als One UI.
+Ausgetragen wird das Attribut trotzdem, weil es unabhängig davon überflüssig
+und falsch belegt ist.
+
+### Android — zwei Grenzen der Prüfmittel, beim Belegen gefunden
+
+- **Der Bilderlauf kann keine Dialoge.** Der Verbrauchshinweis wurde als
+  Bildfall aufgenommen und ergab **1 dp Inhalt, 0 Knöpfe** bei allen drei
+  Breiten: Ein Compose-`AlertDialog` rendert in einem eigenen Fenster, das die
+  Bildaufnahme über die Wurzel-Composable nicht sieht. Der Fall ist wieder
+  heraus — ein leeres Bild belegt nichts und zählt trotzdem mit. Das gilt für
+  jeden Dialog der App (Akkufrage, Rückfrage, Trennfrage); keiner ist
+  abgebildet, und das ist eine Lücke des Mittels, nicht des Fallkatalogs.
+- **Der Emulator ist für den zweiten Weg zu zäh.** Der Verbrauchshinweis
+  erscheint nur bei gesetzter Freistellung, frischem Merker *und* bestehender
+  Kopplung; diese drei Bedingungen zugleich herzustellen kostete unter TCG
+  mehr Anläufe als der Beleg wert war — zweimal ist dabei der `system_server`
+  neu gestartet. Belegt ist deshalb der **Akku-Dialog** mit seinem neuen
+  Absatz (Bild `docs/bilder/s4-rest/07-akku-hinweis.png`), und der Merker
+  durch drei Prüffälle.
+
+## [Web 13.3.0] — 2026-09-04
+
+### Web — zwei Diensttage aus einem Dienst fallen jetzt auf
+
+Zeichnen zwei Geräte denselben Dienst auf — die Uhr am Handgelenk und das
+Handy in der Tasche —, legt **jedes einen eigenen Diensttag** an. Der Grund
+ist die Bauform: `day_refs` ist je Gerät geschlüsselt, das eine findet die
+Kennung des anderen nicht. Es geht dabei nichts verloren und nichts wird
+überschrieben — **es steht alles doppelt**: derselbe Einsatz zweimal,
+dieselbe Spur zweimal, und in der Jahresübersicht zählt der Dienst doppelt.
+
+Gemessen wurde das in S4 (F-S4-D, zwei Geräte gegen eine örtliche
+Installation). Aufgefallen wäre es sonst erst in der Statistik, also lange
+nach dem Dienst — der häufigste Fall ist die Uhr, die im Spind noch mitläuft,
+während man längst mit dem Handy im Dienst ist.
+
+Die Tagesübersicht zeigt jetzt einen Hinweis, wenn sich der angezeigte
+Diensttag mit einem anderen zeitlich überschneidet. Er nennt jeden anderen Tag
+mit Beginn, Überschneidungsdauer und der Zahl der Einsätze und Ruhesegmente,
+verlinkt ihn und führt mit einem Knopf auf **„Diensttage zusammenführen"**.
+
+**Er entscheidet nichts** (E-S4-76 gegen E-S4-50), und das ist der Kern: Die
+beiden Tage bleiben stehen. Sie sind zwei vollständige Aufzeichnungen, und ein
+stiller Automatismus müsste raten, welche gilt. Der Hinweis macht die Doppelung
+nur sichtbar; entscheiden tut ein Mensch, auf der Seite, die eine Vorschau
+zeigt und erst nach Bestätigung schreibt.
+
+**Er lässt sich nicht bestätigen**, anders als der Hinweis über neue Geräte
+direkt darüber. Der Unterschied ist kein Versehen: Jener beschreibt ein
+*Ereignis*, das vorbei ist, sobald man es zur Kenntnis genommen hat. Dieser
+beschreibt einen *Zustand*, der weiterbesteht — er endet von selbst, sobald
+die Tage zusammengeführt sind oder einer im Papierkorb liegt. Ein Bestätigen
+bräuchte eine Merkspalte je Tagespaar, also Datenmodell für einen Hinweis.
+
+**Die Schwelle ist eine Viertelstunde**, nicht eine Minute. Der eigene
+Dienstwechsel überschneidet sich regelmäßig um Minuten — wer den neuen Tag
+beginnt, bevor er den alten beendet hat. Ein Hinweis, der dabei jedes Mal
+erschiene, würde nach dem dritten Mal überlesen und stünde dann unbemerkt da,
+wenn er einmal wirklich gemeint ist. Zwischen „zwei Handgriffe in der falschen
+Reihenfolge" und „zwei Geräte zeichnen denselben Dienst auf" liegen
+Größenordnungen; die Schwelle muss nur dazwischen liegen.
+
+**Was der Bilderlauf dabei gefunden hat:** Die erste Fassung nannte je Tag nur
+Beginn und Dauer — und zwei Tage aus demselben Dienst standen damit wortgleich
+da („17.07.2026 19:00, 12 Stunden Überschneidung", zweimal). Sie tragen
+dieselbe Zeit, und ein frisch gekoppeltes Gerät hat weder Rettungsmittel noch
+Standort, also gerade im Auslöserfall. Jetzt steht die Zahl der Einsätze und
+Ruhesegmente dabei — dieselbe Angabe, mit der die Zusammenführen-Seite ihre
+Kandidaten seit jeher unterscheidet, und zugleich die, auf die es ankommt: Wer
+entscheidet, welcher Tag bleibt, fragt zuerst, was daran hängt.
+
+**Ohne Migration.** Die Erkennung rechnet auf `days`, wie sie ist. Ein
+laufender Tag endet dabei „jetzt" (`ended_at` ist NULL, solange der Dienst
+läuft); die Rechnung steht in SQL, damit dieses „jetzt" und der Vergleich aus
+derselben Uhr kommen — zwei Uhren, die des Servers und die der Datenbank,
+können auseinanderlaufen.
+
+## [Android 0.11.0] — 2026-09-04
+
+### Android — die App kann sich wieder koppeln
+
+**Sie konnte es seit dem 3. September nicht mehr**, und das war kein
+Nebenschaden: Mit Web 13.0.0 hat S5 den Kopplungsweg umgekehrt (R49), und die
+Handy-App war nach dem alten gebaut. Sie sendete einen Code an `pair.php`, der
+Server antwortete `400 {"error":"aktion"}` — und die App machte daraus „Code
+unvollständig". Eine Meldung, die in die Irre führt: Der Code war nicht
+unvollständig, es gab ihn nicht mehr.
+
+Der neue Weg hat drei Schritte statt einem. Die App bittet um eine Sitzung,
+**zeigt** den Code in zwei Dreiergruppen, fragt alle fünf Sekunden nach — und
+wenn ein Konto den Code eingetragen hat, steht auf dem Handy dessen
+**maskierte Adresse**, mit „Ja, koppeln" und „Nein, abbrechen" darunter. Damit
+steht das zweite Tor auch am Handy: Ein fremdes Gerät im eigenen Konto
+scheitert an der Bestätigungsseite im Browser, das eigene Gerät im fremden
+Konto an dieser Zeile hier — eine fremde Domain fällt auf.
+
+Der Kopplungsbildschirm ist dabei **einfacher** geworden, nicht komplizierter.
+Vorher standen dort zwei gleichwertige Wege nebeneinander (Kamera und
+Abtippen) und darüber ein Adressfeld. Jetzt steht dort ein Knopf, und danach
+eine Zahl zum Ablesen.
+
+### Android — die Serveradresse ist fest (R63, Backlog Nr. 84)
+
+Sie war ein Eingabefeld und kam wahlweise aus einem QR-Code. Beides entfällt.
+Diese App gehört zu **einer** Installation; ein Adressfeld verlangte von jeder
+NutzerIn eine Angabe, die für alle dieselbe ist — und war zugleich die einzige
+Stelle, an der ein Tippfehler die App still an einen fremden Server hängen
+konnte.
+
+Wer eine eigene Installation betreibt, baut ein eigenes APK. Die Adresse steht
+deshalb im **Bauskript** (`buildConfigField SERVER_BASIS`) und nicht als
+Konstante im Quelltext: Ein Selbsthoster ändert eine Zeile Gradle, keine Zeile
+Kotlin. Die Toleranzregeln bleiben — sie fangen jetzt ab, was jemand ins
+Bauskript schreibt, statt was jemand tippt, und ein Fehler fällt beim **Bauen**
+auf statt bei der Kopplung.
+
+**Das APK ist dadurch um 1,81 MB kleiner** (9 658 567 → 7 844 710 B). Mit dem
+Adress-QR gehen ZXing, vier CameraX-Bausteine und die **CAMERA-Berechtigung** —
+die einzige, die die App je zur Laufzeit erfragt hat. Die Liste der
+Fremdbestandteile geht von vier auf zwei.
+
+### Android — „Gen-EM NAdoku" am Handy, „NAdoku" auf der Uhr (Nr. 85)
+
+Am Handy steht der Name neben Dutzenden fremder und muss allein sagen, wozu er
+gehört. Auf einem Wear-OS-Zifferblatt steht er unter einem Symbol von wenigen
+Millimetern — dort bliebe von „Gen-EM NAdoku" sichtbar: „Gen-EM", also gerade
+der Teil, der nicht sagt, welche App das ist. Die Uhr steht ohnehin nie allein.
+
+### Android — die Statusleiste überlappt die App nicht mehr (Nr. 86)
+
+Seit `targetSdk = 36` zeichnet Android 15+ randlos, ohne zu fragen; die
+Systemleisten liegen über der App. Uhrzeit und Akkusymbol standen damit auf der
+Kopfleiste, teils auf dem Titel.
+
+**Warum es so lange niemandem auffiel:** `themen.xml` setzte
+`android:statusBarColor` und `android:navigationBarColor` — zwei Zeilen, die
+seit API 35 wirkungslos sind. Sie taten nichts, sahen aber so aus, als sei die
+Sache geregelt. Sie sind ausgetragen; an ihre Stelle treten
+`enableEdgeToEdge()` und Inset-Polster an Kopfleiste und Wurzelfläche.
+
+### Android — was der Umbau am Prüfstand geändert hat
+
+**Die drei Rundlaufklassen laufen wieder gegen den aktuellen Server.** Sie
+koppelten über den alten Weg und brauchten deshalb eine eigene Installation
+„vom Stand vor S5"; dieser Abschnitt der Anleitung ist entfallen. Der Schritt,
+den sonst ein Mensch im Browser tut, macht jetzt eine Prüfhilfe — sie ordnet
+den Code über `mariadb` einem Konto zu und begründet in ihrem Dateikopf, warum
+nicht über die Weboberfläche.
+
+**Drei Funde am Rande, jeder eine falsche Zusicherung:**
+
+- Der Bilderlauf prüfte „Bedienhöhe ≥ 48 dp" auch auf Bildschirmen **ohne**
+  farbigen Knopf. Der Kommentar darüber sagte seit jeher, dass er das nicht
+  tut; die Bedingung fehlte im Code. Aufgefallen ist es am ersten Bildschirm
+  ohne Haupthandlung — er meldete „unter 48 dp" für einen Knopf, den es nicht
+  gibt.
+- `knoepfeSichtbar` heißt nicht „sichtbare Knöpfe", sondern „sichtbare
+  **farbige** Knöpfe": Ein neutraler Knopf ist weiß mit dünnem Rand und fällt
+  durch jede Farbmessung. Eine geplante Prüfung „wenigstens ein Ausweg" wurde
+  deshalb nicht geschrieben, statt sie so hinzuschreiben, als könnte sie es.
+- Drei Dateien behaupteten, `pair.php` schreibe seine Meldungen „ohne
+  Umlaute". Das galt einmal und seit Web 13.0.0 nicht mehr. Gefunden hat es
+  ein Prüffall, der auf den umlautlosen Text prüfte — und der nur deshalb
+  durchging, weil er gegen einen Server vom alten Stand lief.
+
+**Was bewusst offen bleibt:** Backlog Nr. 95 (die Rundläufe lassen Daten im
+Konto zurück, gemessen 18 Diensttage, 10 Einsätze, 28 Ruhesegmente). Der
+naheliegende Weg — ein `DELETE` in derselben SQL-Zeile — scheidet aus:
+GPS-Punkte liegen je nach Alter in `track_points` **oder** `track_blobs`, und
+beides fasst ausschließlich `spur_lib.php` an (`CLAUDE.md` 4). Ein SQL-Löschen
+des Einsatzes ließe seine Spur als Waise zurück, ohne Fehlermeldung.
+
+### Web — ein Beispiel im JSON-Vertrag zeigte den alten Kopplungsweg
+
+`docs/JSON-Vertrag.md` 1a.4 führte im Beispiel der Handy-Form noch
+`"code": "AB3K7Q"` statt `"aktion": "start"` — den Weg also, den 1a.1 zwei
+Bildschirme weiter oben ausschließt. Ein Rest aus S5, gefunden beim Bau genau
+gegen dieses Beispiel.
 ## [Android 0.10.2] — 2026-09-03
 
 ### Android — Die Ansicht merkt jetzt, wenn die Ortungsfreigabe anderswo erteilt wurde

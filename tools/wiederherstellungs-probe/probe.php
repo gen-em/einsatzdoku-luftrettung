@@ -55,7 +55,19 @@ declare(strict_types=1);
  *     cp server/config.php /tmp/vorher/
  *     php tools/wiederherstellungs-probe/probe.php /tmp/vorher
  *
- * Erwartet: **30 von 30** mit dem heutigen Stand, Rueckgabe 0.
+ * Erwartet: **94 von 94** mit dem heutigen Stand, Rueckgabe 0.
+ *
+ * (Die Zahl stand bis Web 14.2.0 auf 30 und war seit Langem falsch — die
+ * Probe ist auf elf Teile gewachsen. Sie ist ausserdem seit einiger Zeit
+ * MITTEN IN TEIL 9 abgestuerzt, an einem fehlenden `require` fuer
+ * `smtp.php`; alles dahinter lief nie. Beides ist mit R64/AP2 behoben.)
+ *
+ *   TEIL 11 — NUTZLAST 9: MOMENTAUFNAHME UND SPERRVERMERKE (R64, Nr. 63).
+ *   Der Regelfall — ein Vermerk faehrt hin und kommt zurueck — steht im
+ *   edbak-Kreislauf des Referenzbestands. Hier stehen die Grenzfaelle, die
+ *   der Referenzbestand nicht zeigt: zweites Einspielen, verwaiste Quelle,
+ *   Zeiten verkehrt herum, `n_punkte` auf 0, eine unbekannte `quelle_art`
+ *   (die ENUM-Falle) und eine Nutzlast-8-Datei ohne die neuen Felder.
  *
  * WAS SIE ANFASST. Die Probe legt in der Datenbank aus `config.php` fuenf
  * Wegwerfkonten unterhalb von `@example.invalid` an und loescht sie am Ende
@@ -69,6 +81,13 @@ if ($server === false) { fwrite(STDERR, "server/ nicht gefunden\n"); exit(2); }
 require_once $server . '/db.php';
 require_once $server . '/backup_lib.php';
 require_once $server . '/trash_lib.php';
+/* `smtp.php` FEHLTE HIER, und die Probe ist daran gestorben — mit einem
+ * `Call to undefined function smtp_eingerichtet()` mitten in Teil 9. Alles
+ * dahinter (Teil 10, der Auftrag „Alle sichern") lief seitdem NIE, ohne dass
+ * es jemandem auffiel: Der Abbruch kam nach dreiundvierzig gruenen Zeilen,
+ * und wer nur auf die letzte Zeile sieht, sieht gar keine. Gefunden beim
+ * Anhaengen von Teil 11 (R64/AP2). */
+require_once $server . '/smtp.php';
 
 $pdo = db();
 $fehler = 0; $gesamt = 0;
@@ -661,14 +680,20 @@ $sag('Die Punkte werden NICHT geschrieben (die Fassung entscheidet)',
 $abgelehnt = $stats8['rejected'] ?? [];
 $treffer = [];
 foreach ($abgelehnt as $grund => $zahl) {
-    if (str_contains((string)$grund, 'Nutzlast 8')) { $treffer[(string)$grund] = $zahl; }
+    /* GESUCHT WIRD DIE EIGENSCHAFT, NICHT DIE ZAHL (Web 14.2.0).
+     * Bis dahin stand hier `str_contains($grund, 'Nutzlast 8')` — der einzige
+     * faktische Gleichheitsvergleich gegen die 8 im ganzen Repositorium, und
+     * zwar als Zeichenkettensuche 1200 Zeilen und zwei Verzeichnisse von der
+     * Meldung entfernt, die er sucht. Mit Nutzlast 9 haette er nichts mehr
+     * gefunden, und der Teil waere still gruen geblieben. */
+    if (str_contains((string)$grund, 'trotzdem im Eintrag')) { $treffer[(string)$grund] = $zahl; }
 }
 $sag('...und es wird GESAGT, je Art einmal',
      count($treffer) === 2 && array_sum($treffer) === 2,
      $treffer ? json_encode($treffer, JSON_UNESCAPED_UNICODE) : 'KEINE Meldung');
 $sag('GEGENPROBE: Nutzlast 8 OHNE Punktlisten meldet nichts dergleichen',
      !array_filter(array_keys((array)($stats['rejected'] ?? [])),
-                   fn($g) => str_contains((string)$g, 'Nutzlast 8')),
+                   fn($g) => str_contains((string)$g, 'trotzdem im Eintrag')),
      'aus Teil 5, dieselbe Fassung, aber mit spur_ref');
 $weg($uid8);
 
@@ -885,14 +910,47 @@ $sag('...und es liegt kein halbes Paket herum',
      !is_dir(edbak_ordner($k9)) || count(edbak_pakete($k9)) === 0,
      'kein Paket im Kontoordner');
 
-/* Schwellen: ohne eingerichtetes SMTP ein Hinweis, keine Mail. */
-edbak_marke_setzen('adminbackup_grenze_gb', '0.000001');
+/* Schwellen: ohne eingerichtetes SMTP ein Hinweis, keine Mail.
+ *
+ * ES MUSS ETWAS DALIEGEN, sonst prueft dieser Fall nichts. Die Schwellen
+ * greifen ab 70 % der Grenze; nach den Zeilen darueber ist die Ablage LEER —
+ * der Bauordner ist weg, und die Sicherung wurde abgelehnt, bevor sie etwas
+ * schrieb. `edbak_schwellen_melden()` sah damit 0 % und meldete nichts, und
+ * die Erwartung stand auf [70, 90].
+ *
+ * DASS DAS NIEMANDEM AUFFIEL, hat einen eigenen Grund: Die Probe ist eine
+ * Zeile darueber an einem fehlenden `require` gestorben (`smtp.php`, s. o.),
+ * und zwar nach dreiundvierzig gruenen Zeilen. Ein Abbruch mitten im Lauf
+ * sieht aus wie ein Ende. Gefunden beim Anhaengen von Teil 11 (R64/AP2). */
+edbak_marke_setzen('adminbackup_grenze_gb', '0.000001');   // ~1 KB
+$schwellRest = edbak_wurzel() . '/' . EDBAK_BAU_PRAEFIX . 'schwelle';
+@mkdir(edbak_wurzel(), 0770, true);
+@mkdir($schwellRest);
+file_put_contents($schwellRest . '/belegt.part', str_repeat('x', 2000));
 $m9 = edbak_schwellen_melden();
-$sag('Ohne eingerichtetes SMTP wird nicht gemailt, sondern vermerkt',
-     smtp_eingerichtet() === false && $m9['gemeldet'] === []
-       && $m9['hinweis'] === [70, 90],
-     'Hinweis fuer ' . implode('/', $m9['hinweis']) . ' %, Mails: '
-     . count($m9['gemeldet']));
+/* DIESER FALL HAENGT AN DER `config.php` DER PRUEFINSTALLATION, und das
+ * gehoert gesagt statt umgangen. Ist dort kein SMTP-Host eingetragen, laesst
+ * sich die Zusage messen: Es wird NICHT gemailt, sondern vermerkt. Ist einer
+ * eingetragen, geht `edbak_schwellen_melden()` den Mailweg — dann ist
+ * messbar, dass die Schwellen ueberhaupt ANSCHLAGEN, aber nicht, was ohne
+ * SMTP geschieht.
+ *
+ * Bis Web 14.2.0 stand hier die Erwartung fuer den ersten Fall unbedingt da.
+ * Sie war auf einer Installation mit SMTP nicht erfuellbar — und ist nie
+ * aufgefallen, weil die Probe eine Zeile darueber abbrach. */
+if (!smtp_eingerichtet()) {
+    $sag('Ohne eingerichtetes SMTP wird nicht gemailt, sondern vermerkt',
+         $m9['gemeldet'] === [] && $m9['hinweis'] === [70, 90],
+         'Hinweis fuer ' . implode('/', $m9['hinweis']) . ' %, Mails: '
+         . count($m9['gemeldet']));
+} else {
+    $sag('Die Schwellen schlagen an (SMTP ist hier eingerichtet — '
+         . 'der Hinweisweg ist damit NICHT messbar)',
+         $m9['hinweis'] === [] && (count($m9['gemeldet']) + count($m9['fehler'])) === 2,
+         'gemeldet ' . count($m9['gemeldet']) . ', fehlgeschlagen '
+         . count($m9['fehler']) . ' von 2 Schwellen');
+}
+edbak_ordner_leeren($schwellRest); @rmdir($schwellRest);
 $sag('smtp_eingerichtet() unterscheidet „nicht eingerichtet" von „fehlgeschlagen"',
      function_exists('smtp_eingerichtet'),
      'ohne sie kann E-S2-15 seine zwei Wege nicht auseinanderhalten');
@@ -992,6 +1050,208 @@ $sag('Der Rahmen misst jetzt auch den Speicher, nicht nur die Zeit',
 edbak_auftrag_schreiben(null);
 $markeZurueck($pdo, 'adminbackup_auftrag', $sicherAuftrag);
 $c = &edbak_marken_speicher(); $c = [];
+
+
+/* ==========================================================================
+ * TEIL 11 — NUTZLAST 9: MOMENTAUFNAHME UND SPERRVERMERKE (R64, Backlog Nr. 63)
+ *
+ * WOFUER. Bis Nutzlast 8 ueberlebte der Sperrvermerk eines Schnitts die
+ * Konto-Sicherung nicht. Nach einem Wiedereinspielen lieferte ein Geraet mit
+ * gepufferten Punkten den geschnittenen Zeitraum nach, und die Fahrt lag in
+ * Einsatz UND Segment — ohne ein Wort. Nutzlast 9 nimmt die Vermerke mit,
+ * und zwar ueber VERWEISE (`quelle_ref` = die `client_ref` der Quelle), weil
+ * die Datenbankkennungen beim Einspielen neu vergeben werden.
+ *
+ * Der Regelfall — ein Vermerk faehrt hin und kommt zurueck — steht im
+ * edbak-Kreislauf des Referenzbestands. HIER stehen die Grenzfaelle, die der
+ * Referenzbestand nicht zeigt, und die Momentaufnahme.
+ * ====================================================================== */
+echo "\n  Teil 11 — Nutzlast 9: Momentaufnahme und Sperrvermerke (R64 / Nr. 63)\n";
+require_once $server . '/spur_lib.php';
+$uid11 = $konto('probe-schnitte@example.invalid');
+
+/** Die Kennung eines Datensatzes im Zielkonto. */
+$holeId = function (string $tab, string $ref, int $u) use ($pdo): int {
+    $st = $pdo->prepare("SELECT id FROM `$tab` WHERE user_id = ? AND client_ref = ?");
+    $st->execute([$u, $ref]);
+    return (int)$st->fetchColumn();
+};
+
+/** Die Vermerke eines Kontos, ueber spur_lib.php gelesen. */
+$vermerke = function (int $u) use ($pdo): array {
+    $st = $pdo->prepare('SELECT id FROM missions WHERE user_id = ? ORDER BY id');
+    $st->execute([$u]);
+    $aus = [];
+    foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $mid) {
+        foreach (schnitte_zum_einsatz($pdo, (int)$mid) as $c) { $aus[] = $c; }
+    }
+    return $aus;
+};
+
+/** Ein vollstaendiges Nutzlast-9-Paket: ein Tag, zwei Einsaetze, ein Segment. */
+$paket9 = function (array $schnitte, array $zusatz = []) : array {
+    return array_merge([
+      'version' => 9,
+      'days' => [[
+         'id' => 910, 'day' => '2026-08-03',
+         'started_at' => '2026-08-03 05:00:00', 'ended_at' => '2026-08-03 17:00:00',
+         'kind' => 'air', 'vehicle_name' => 'Probe 11', 'base_name' => 'Probenstation',
+      ]],
+      'missions' => [
+        /* Der geschnittene Einsatz: traegt die Vermerke UND die
+         * Momentaufnahme, die er nach E-R64-06 von seiner Quelle geerbt hat. */
+        ['client_ref' => 'cut-s1', 'day_id' => 910,
+         'started_at' => '2026-08-03 09:00:00', 'ended_at' => '2026-08-03 09:30:00',
+         'origin' => 'schnitt', 'manual' => 1,
+         'geraet_art' => 'uhr', 'geraet_modell' => 'fēnix 7 / fēnix 7 Solar',
+         'schnitte' => $schnitte],
+        /* Der Gegenbeleg: kein Geraet, keine Vermerke. */
+        ['client_ref' => 'man-s2', 'day_id' => 910,
+         'started_at' => '2026-08-03 12:00:00', 'ended_at' => '2026-08-03 12:30:00',
+         'origin' => 'manual', 'schnitte' => []],
+      ],
+      'rest_segments' => [
+        ['client_ref' => 'r-s1', 'day_id' => 910,
+         'started_at' => '2026-08-03 06:00:00', 'ended_at' => '2026-08-03 11:00:00',
+         'geraet_art' => 'uhr', 'geraet_modell' => 'fēnix 7 / fēnix 7 Solar'],
+        ['client_ref' => 'r-s2', 'day_id' => 910,
+         'started_at' => '2026-08-03 13:00:00', 'ended_at' => '2026-08-03 14:00:00'],
+      ],
+    ], $zusatz);
+};
+
+$guterVermerk = ['quelle_art' => 'rest', 'quelle_ref' => 'r-s1',
+                 'von_ts' => 1786000000, 'bis_ts' => 1786001800,
+                 'n_punkte' => 143, 'erstellt_am' => '2026-08-03 09:31:07'];
+
+$s11 = edbak_restore($uid11, $paket9([$guterVermerk]));
+
+$sag('Eine Nutzlast-9-Datei wird angenommen',
+     ($s11['missions'] ?? 0) === 2 && ($s11['rests'] ?? 0) === 2,
+     ($s11['missions'] ?? 0) . ' Einsaetze, ' . ($s11['rests'] ?? 0) . ' Segmente');
+
+/* ---- Die Momentaufnahme ------------------------------------------------- */
+$holeGeraet = function (string $tab, string $ref) use ($pdo, &$uid11): array {
+    $st = $pdo->prepare("SELECT geraet_art, geraet_modell FROM `$tab`
+                          WHERE user_id = ? AND client_ref = ?");
+    $st->execute([$uid11, $ref]);
+    return $st->fetch(PDO::FETCH_ASSOC) ?: [];
+};
+$g1 = $holeGeraet('missions', 'cut-s1');
+$sag('Art und Modell eines Einsatzes kommen zurueck',
+     ($g1['geraet_art'] ?? null) === 'uhr'
+       && ($g1['geraet_modell'] ?? null) === 'fēnix 7 / fēnix 7 Solar',
+     json_encode($g1, JSON_UNESCAPED_UNICODE));
+$g2 = $holeGeraet('missions', 'man-s2');
+/* `??` WAERE HIER FALSCH und war es im ersten Anlauf: Der
+ * Null-Verschmelzungsoperator kann „steht auf NULL" nicht von „gibt es
+ * nicht" unterscheiden — genau die Unterscheidung, um die es geht. */
+$sag('GEGENPROBE: ein Einsatz ohne Angabe bleibt NULL',
+     array_key_exists('geraet_art', $g2) && $g2['geraet_art'] === null
+       && $g2['geraet_modell'] === null,
+     json_encode($g2));
+$g3 = $holeGeraet('rest_segments', 'r-s1');
+$sag('Dasselbe am Ruhesegment',
+     ($g3['geraet_art'] ?? null) === 'uhr'
+       && ($g3['geraet_modell'] ?? null) === 'fēnix 7 / fēnix 7 Solar',
+     json_encode($g3, JSON_UNESCAPED_UNICODE));
+
+/* ---- Der Vermerk selbst -------------------------------------------------- */
+$v = $vermerke($uid11);
+$sag('Der Sperrvermerk ist angekommen — genau einer',
+     count($v) === 1 && ($s11['schnitte']['uebernommen'] ?? 0) === 1,
+     count($v) . ' Vermerke, uebernommen ' . ($s11['schnitte']['uebernommen'] ?? 0));
+$sag('Zeiten und Punktzahl unveraendert',
+     count($v) === 1 && $v[0]['von_ts'] === 1786000000
+       && $v[0]['bis_ts'] === 1786001800 && $v[0]['n_punkte'] === 143,
+     count($v) === 1 ? json_encode($v[0]) : '—');
+$sag('Die Quelle zeigt auf das eingespielte Ruhesegment, nicht auf eine alte Kennung',
+     count($v) === 1 && $v[0]['owner_type'] === 'rest'
+       && $v[0]['owner_id'] === $holeId('rest_segments', 'r-s1', $uid11),
+     count($v) === 1 ? ($v[0]['owner_type'] . ' ' . $v[0]['owner_id']) : '—');
+$stErst = $pdo->prepare('SELECT erstellt_am FROM track_cuts WHERE user_id = ?');
+$stErst->execute([$uid11]);
+$sag('Der urspruengliche Zeitpunkt reist mit (E-R64-12)',
+     (string)$stErst->fetchColumn() === '2026-08-03 09:31:07',
+     'erstellt_am aus der Datei, nicht vom Einspielen');
+
+/* ---- (1) Zweites Einspielen derselben Datei ------------------------------ */
+$s11b = edbak_restore($uid11, $paket9([$guterVermerk]));
+$sag('Zweites Einspielen: uebersprungen statt verdoppelt',
+     ($s11b['schnitte']['uebersprungen'] ?? 0) === 1
+       && ($s11b['schnitte']['uebernommen'] ?? 0) === 0,
+     'uebersprungen ' . ($s11b['schnitte']['uebersprungen'] ?? 0));
+$sag('...und es steht weiterhin GENAU EIN Vermerk da',
+     count($vermerke($uid11)) === 1, count($vermerke($uid11)) . ' Vermerke');
+
+/* ---- (2)-(5) Die Grenzfaelle, jeder in einem frischen Konto -------------- */
+$grenzfall = function (string $mail, array $vermerk) use ($konto, $paket9, $vermerke, $weg) {
+    $u = $konto($mail);
+    $st = edbak_restore($u, $paket9([$vermerk]));
+    $n = count($vermerke($u));
+    $weg($u);
+    return [$st, $n];
+};
+
+[$sA, $nA] = $grenzfall('probe-schnitt-a@example.invalid',
+    array_merge($guterVermerk, ['quelle_ref' => 'r-gibt-es-nicht']));
+$sag('(2) Verwaiste Quelle: verworfen, Lauf laeuft durch',
+     ($sA['schnitte']['verworfen'] ?? 0) === 1 && $nA === 0 && ($sA['missions'] ?? 0) === 2,
+     'verworfen ' . ($sA['schnitte']['verworfen'] ?? 0) . ', ' . $nA . ' Vermerke');
+$sag('(2) ...und die Kennung wird GENANNT, nicht nur gezaehlt',
+     str_contains(json_encode($sA['rejected'] ?? []), 'r-gibt-es-nicht'),
+     json_encode($sA['rejected'] ?? [], JSON_UNESCAPED_UNICODE));
+$sag('(2) ...mit eigenem Grund in der Aufschluesselung',
+     (int)($sA['skipped_reasons']['schnitt_ohne_quelle'] ?? 0) === 1,
+     json_encode($sA['skipped_reasons'] ?? []));
+
+[$sB, $nB] = $grenzfall('probe-schnitt-b@example.invalid',
+    array_merge($guterVermerk, ['von_ts' => 1786001800, 'bis_ts' => 1786000000]));
+$sag('(3) bis_ts vor von_ts: verworfen',
+     ($sB['schnitte']['verworfen'] ?? 0) === 1 && $nB === 0
+       && (int)($sB['skipped_reasons']['schnitt_werte'] ?? 0) === 1,
+     'verworfen ' . ($sB['schnitte']['verworfen'] ?? 0));
+
+[$sC, $nC] = $grenzfall('probe-schnitt-c@example.invalid',
+    array_merge($guterVermerk, ['n_punkte' => 0]));
+$sag('(4) n_punkte = 0: verworfen',
+     ($sC['schnitte']['verworfen'] ?? 0) === 1 && $nC === 0,
+     'verworfen ' . ($sC['schnitte']['verworfen'] ?? 0));
+
+/* Die ENUM-Falle: `track_cuts.owner_type` ist ein ENUM, und die Verbindung
+ * setzt keinen `sql_mode`. Ein Wert aus der Datei, der ungeprueft dort
+ * hineinginge, wuerde je nach Servereinstellung still zu '' oder wuerfe —
+ * das erste ergaebe einen Vermerk, den kein Leseweg je wiederfaende. */
+[$sD, $nD] = $grenzfall('probe-schnitt-d@example.invalid',
+    array_merge($guterVermerk, ['quelle_art' => 'irgendwas']));
+$sag('(4a) Unbekannte quelle_art: verworfen, nichts geschrieben (ENUM-Falle)',
+     ($sD['schnitte']['verworfen'] ?? 0) === 1 && $nD === 0 && ($sD['missions'] ?? 0) === 2,
+     'verworfen ' . ($sD['schnitte']['verworfen'] ?? 0) . ', ' . $nD . ' Vermerke');
+
+/* ---- (5) Eine Nutzlast-8-Datei ohne `schnitte` --------------------------- */
+$uid11c = $konto('probe-schnitt-alt@example.invalid');
+$alt = $paket9([]);
+$alt['version'] = 8;
+foreach ($alt['missions'] as $i => $m) { unset($alt['missions'][$i]['schnitte']); }
+foreach ($alt['missions'] as $i => $m) {
+    unset($alt['missions'][$i]['geraet_art'], $alt['missions'][$i]['geraet_modell']);
+}
+foreach ($alt['rest_segments'] as $i => $r) {
+    unset($alt['rest_segments'][$i]['geraet_art'], $alt['rest_segments'][$i]['geraet_modell']);
+}
+$sAlt = edbak_restore($uid11c, $alt);
+$sag('(5) Nutzlast-8-Datei: keine Vermerke, keine Zaehler, keine Meldung',
+     ($sAlt['schnitte']['uebernommen'] ?? -1) === 0
+       && ($sAlt['schnitte']['uebersprungen'] ?? -1) === 0
+       && ($sAlt['schnitte']['verworfen'] ?? -1) === 0
+       && count($vermerke($uid11c)) === 0,
+     json_encode($sAlt['schnitte'] ?? []));
+$g8 = $pdo->prepare('SELECT geraet_art FROM missions WHERE user_id = ? AND client_ref = ?');
+$g8->execute([$uid11c, 'cut-s1']);
+$sag('(5) ...und die Momentaufnahme bleibt NULL statt leer',
+     $g8->fetchColumn() === null, 'geraet_art IS NULL');
+$weg($uid11c);
+$weg($uid11);
 
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);
 exit($fehler === 0 ? 0 : 1);

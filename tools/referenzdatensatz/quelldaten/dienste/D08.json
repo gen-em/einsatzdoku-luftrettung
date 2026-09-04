@@ -13,7 +13,7 @@
     "rettungsmittel": "NEF Talwang 76/1",
     "beginn": "2026-06-14 07:00",
     "ende": "2026-06-14 19:00",
-    "day_ref": "d-12-8471620935",
+    "day_ref": "ad-12-8471620935",
     "spur_ausgangspunkt": {
       "lat": 47.559,
       "lon": 10.217
@@ -28,43 +28,43 @@
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-12-8786954563",
+      "client_ref": "ar-12-8786954563",
       "beginn": "2026-06-14 07:00",
       "ende": "2026-06-14 07:05",
       "final": true
     },
     {
-      "client_ref": "r-12-6734522676",
+      "client_ref": "ar-12-6734522676",
       "beginn": "2026-06-14 08:28",
       "ende": "2026-06-14 08:52",
       "final": true
     },
     {
-      "client_ref": "r-12-1033866109",
+      "client_ref": "ar-12-1033866109",
       "beginn": "2026-06-14 09:32",
       "ende": "2026-06-14 09:51",
       "final": true
     },
     {
-      "client_ref": "r-12-1201623455",
+      "client_ref": "ar-12-1201623455",
       "beginn": "2026-06-14 11:01",
       "ende": "2026-06-14 11:22",
       "final": true
     },
     {
-      "client_ref": "r-12-5633055503",
+      "client_ref": "ar-12-5633055503",
       "beginn": "2026-06-14 12:54",
       "ende": "2026-06-14 13:18",
       "final": true
     },
     {
-      "client_ref": "r-12-2407230265",
+      "client_ref": "ar-12-2407230265",
       "beginn": "2026-06-14 14:05",
       "ende": "2026-06-14 14:24",
       "final": true
     },
     {
-      "client_ref": "r-12-1288367401",
+      "client_ref": "ar-12-1288367401",
       "beginn": "2026-06-14 15:21",
       "ende": "2026-06-14 19:00",
       "final": true
@@ -72,7 +72,7 @@
   ],
   "einsaetze": [
     {
-      "client_ref": "m-12-9530680027",
+      "client_ref": "am-12-9530680027",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -159,7 +159,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-1301135081",
+      "client_ref": "am-12-1301135081",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -236,7 +236,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-8418286294",
+      "client_ref": "am-12-8418286294",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -325,7 +325,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-2310739543",
+      "client_ref": "am-12-2310739543",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -412,7 +412,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-6487608678",
+      "client_ref": "am-12-6487608678",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -490,7 +490,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-9014269600",
+      "client_ref": "am-12-9014269600",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -580,5 +580,21 @@
       "abdeckung": []
     }
   ],
-  "ziel_einsaetze": 6
+  "ziel_einsaetze": 6,
+  "$warum_schnitt": "Der eine Schnitt des Referenzbestands (E-R64-16). Er belegt Backlog Nr. 63 dauerhaft: Weil der Demo-Reset die Fixture alle 30 Minuten einspielt, wird der Sperrvermerk auf dem Produktivserver alle 30 Minuten geprueft. WARUM HIER UND NICHT ANDERSWO -- drei Randbedingungen, jede an einem Pruefmittel gemessen: (1) NICHT am neuesten Diensttag (D16): `index.php` oeffnet ihn von selbst, `sichtpruefung.mjs` klickt dessen ERSTE Einsatzzeile und verlangt dort eine entschluesselte Diagnose -- die ein geschnittener Einsatz bauartbedingt nicht hat (api/schneiden.php legt keinen pat_blob an). Vier Seiten des Bilderlaufs haengen an derselben Zeile. (2) NICHT ueber Mitternacht: api/schneiden.php rechnet die Phasen mit dem Tagesversatz des BEGINNS; ein Schnitt ueber 00:00 verloere die Phasen danach still. (3) Die Beginnminute 16:10 kommt an D08 kein zweites Mal vor (Einsaetze: 07:05, 08:52, 09:51, 11:22, 13:18, 14:24) -- die Stufen `nachtragen`, `papierkorb` und `sperrliste` suchen Einsaetze ueber start_hhmm.",
+  "schnitte": [
+    {
+      "abdeckung": [
+        "herkunft-schnitt"
+      ],
+      "segment": "ar-12-1288367401",
+      "beginn": "2026-06-14 16:10",
+      "ende": "2026-06-14 17:15",
+      "phasen": {
+        "3": "2026-06-14 16:12",
+        "4": "2026-06-14 16:27",
+        "7": "2026-06-14 17:04"
+      }
+    }
+  ]
 }

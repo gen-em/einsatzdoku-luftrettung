@@ -285,11 +285,29 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
              * wanderten, die Blobpunkte blieben stehen, und die Spur haette
              * danach zwei Zeitrechnungen. */
             spur_zeit_verschieben($pdo, 'mission', $mIds, $delta);
+            /* UND DIE SPERRVERMERKE DES SCHNITTS (Web 14.2.0, R64).
+             *
+             * Sie standen bis hierher still, waehrend alles andere wanderte —
+             * ein Fehler seit Web 12.5.0, den erst die Sicherung sichtbar
+             * gemacht hat. Was er anrichtet: Der Vermerk sperrt danach einen
+             * Zeitraum, in dem die Spur gar nicht mehr liegt. Nachgelieferte
+             * Punkte des tatsaechlichen Zeitraums kommen wieder durch, und
+             * die Fahrt liegt in Einsatz UND Segment — wortgleich der
+             * Schaden, gegen den Backlog Nr. 63 antritt. Seit Nutzlast 9
+             * reist das falsche Fenster zusaetzlich in jede Sicherung.
+             *
+             * NACH QUELLE, wie in spur_lib.php begruendet: `von_ts`/`bis_ts`
+             * beschreiben einen Ausschnitt der QUELLspur. Wer zusaetzlich
+             * nach Ziel verschoebe, verschoebe jeden Vermerk zweimal, dessen
+             * Quelle und Ziel am selben Tag haengen — und das ist der
+             * Regelfall. */
+            schnitte_zeit_verschieben($pdo, 'mission', $mIds, $delta);
         }
         // 4. Spurpunkte der Ruhesegmente. Leicht zu uebersehen: Sie haengen
         //    nicht an einem Einsatz und tragen die Epoche, kein DATETIME.
         if ($rIds) {
             spur_zeit_verschieben($pdo, 'rest', $rIds, $delta);
+            schnitte_zeit_verschieben($pdo, 'rest', $rIds, $delta);
         }
 
         $pdo->commit();

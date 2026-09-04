@@ -71,7 +71,7 @@ class SenderTest {
 
     private fun sender() = Sender(
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
-        basis = { server.basis },
+        basis = server.basis,
         phasenLeser = { puffer.phasen(it) },
     )
 
@@ -216,7 +216,7 @@ class SenderTest {
         val adresse = server.basis
         server.close()                                  // die Gegenstelle ist fort
 
-        val s = Sender(puffer, HttpNetzweg(), tresor, { adresse })
+        val s = Sender(puffer, HttpNetzweg(), tresor, adresse)
         val bericht = s.sendeAlles()
 
         assertTrue("Es muss später erneut versucht werden", bericht.spaeterErneut)
@@ -441,11 +441,18 @@ class SenderTest {
         assertTrue(bericht.spaeterErneut)
     }
 
-    @Test fun ohneServerAdresseWirdNichtGesendet() {
-        einSegmentMitPunkten(10)
-        val s = Sender(puffer, HttpNetzweg(), tresor, { null })
-        assertEquals(0, s.sendeAlles().anfragen)
-    }
+    /* HIER STAND `ohneServerAdresseWirdNichtGesendet`.
+     *
+     * Der Fall prüfte, dass ein Sendelauf ohne eingetragene Serveradresse gar
+     * nicht erst anfängt. Seit R63 (Backlog Nr. 84) gibt es diesen Zustand
+     * nicht mehr: Die Adresse ist eine Konstante des Baulaufs, kein Feld, das
+     * jemand leer lassen könnte. Ein Prüffall für einen unerreichbaren Zustand
+     * ist keine Zusicherung, sondern eine Behauptung über eine Fassung, die es
+     * nicht mehr gibt.
+     *
+     * Was an seine Stelle tritt, steht in ServeradresseTest: Eine unbrauchbare
+     * `SERVER_BASIS` lässt den ERSTEN Zugriff werfen -- beim Bauen, nicht beim
+     * Senden. */
 
     private companion object {
         const val DATENBANK = "sendepruefung.db"

@@ -302,7 +302,21 @@
 
         'rea_json': { target: 'rea', parse: ['jsonRea'] },
         'track_datei': { target: null },                 // GPX wird nicht eingelesen
-        'track_punkte': { target: null }
+        'track_punkte': { target: null },
+
+        /* Die Momentaufnahme des Geräts (R64, Web 14.1.0) wird NICHT
+           übernommen — dieselbe Begründung wie bei `herkunft` ein Stück weiter
+           oben: Sie beschreibt, mit welchem Gerät der Einsatz IM QUELLKONTO
+           entstanden ist. Beim Einlesen entsteht er neu, und zwar ohne Gerät
+           (virtuelles `manual-<konto>`); ein Wert aus der Datei wäre eine
+           Aussage über eine fremde Installation.
+
+           Sie stehen hier trotzdem mit `target: null` und nicht gar nicht:
+           `expectedHeaders` leitet sich aus diesen Schlüsseln ab, und diese
+           Liste ist zugleich die Beschreibung dessen, was das Format kennt.
+           Eine Spalte, die hier fehlt, sähe aus wie eine vergessene. */
+        'geraet_art': { target: null },
+        'geraet_modell': { target: null }
     };
 
     // Phasenspalten ergaenzen — dieselbe Ableitung wie in assets/export.js,

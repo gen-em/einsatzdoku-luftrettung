@@ -651,7 +651,7 @@ declare(strict_types=1);
  *            Klasse ohne Regel im neuen Stylesheet. Sie standen seit dem
  *            Redesign in der Grundform des Browsers. Aufgefallen ist es
  *            niemandem, weil sie erst ab 200 Treffern erscheinen und der
- *            Referenzbestand 82 Einsaetze hat.
+ *            Referenzbestand 88 Einsaetze hat.
  *
  *   F-P3-AM  ZWEI KLASSENKOLLISIONEN, beide vor dem Festschreiben abgefangen
  *            — und jede von einem anderen Pruefmittel. `.filterzahl` gehoert
@@ -2251,5 +2251,259 @@ declare(strict_types=1);
  * Sitzung mit entsperrtem Inhaltsschluessel herum, und keine Anmeldung
  * schreibt `last_login`, waehrend `update.php` das Schema aendert. Die
  * Ratenschutz-Zaehler werden trotzdem geleert: Das Passwort WAR richtig.
+ *
+ * 13.3.0 MACHT EINE DOPPELUNG SICHTBAR, DIE ES SEIT S4 GIBT (R57, E-S4-76).
+ * Zeichnen zwei Geraete denselben Dienst auf — die Uhr am Handgelenk und das
+ * Handy in der Tasche —, legt JEDES einen eigenen Diensttag an: `day_refs` ist
+ * je Geraet geschluesselt, das eine findet die Kennung des anderen nicht. Es
+ * geht dabei nichts verloren und nichts wird ueberschrieben; es steht alles
+ * doppelt. Derselbe Einsatz zweimal, dieselbe Spur zweimal, und in der
+ * Jahresuebersicht zaehlt der Dienst doppelt.
+ *
+ * Gemessen wurde das in S4 (F-S4-D, zwei Geraete gegen eine oertliche
+ * Installation: Diensttag 53 und 54, je ein Einsatz). Aufgefallen waere es
+ * sonst erst in der Statistik.
+ *
+ * DIE NEBENNUMMER, KEINE HAUPTNUMMER: Es kommt eine Anzeige dazu, sonst
+ * nichts. Kein Datenmodell, keine Migration, kein veraenderter Weg durch die
+ * Anwendung — wer die Doppelung nicht hat, merkt von dieser Fassung nichts.
+ *
+ * UND KEINE AUTOMATIK, mit Absicht (E-S4-76 gegen E-S4-50): Die beiden Tage
+ * bleiben stehen. Sie sind zwei vollstaendige Aufzeichnungen, und ein stiller
+ * Automatismus muesste raten, welche gilt. Der Hinweis macht sie sichtbar und
+ * fuehrt auf `diensttag_zusammenfuehren.php`, wo ein Mensch entscheidet.
+ *
+ * Die Schwelle steht auf einer VIERTELSTUNDE (`DT_UEBERLAPPUNG_MIN`). Der
+ * eigene Dienstwechsel ueberschneidet sich regelmaessig um Minuten — wer den
+ * neuen Tag beginnt, bevor er den alten beendet hat. Ein Hinweis, der dabei
+ * jedes Mal erschiene, wuerde ueberlesen und stuende dann unbemerkt da, wenn
+ * er einmal wirklich gemeint ist.
+ *
+ * 14.0.0 SAGT ENDLICH, WOHER EIN EINSATZ KOMMT — UND MIT WELCHEM GERAET
+ * (R64, Backlog Nr. 83; Migration 2026_09_04_herkunft_geraet). Die
+ * Hauptnummer steht fuer beides zusammen: Das Datenmodell aendert sich, und
+ * eine Migration ist zwingend.
+ *
+ * ZWEI DINGE WAREN FALSCH, UND ZWAR STILL. `missions.origin` kannte drei
+ * Werte — watch, manual, import. Seit Web 12.8.0 sendet auch ein
+ * Android-Handy, seit S4 laesst sich ein Einsatz an einer Wear-OS-Uhr
+ * beginnen; beide landeten auf 'watch'. Ein Handy-Einsatz trug die Plakette
+ * "Uhr", und niemand konnte es der Anzeige ansehen. Und der Schnitt
+ * (api/schneiden.php) legte seinen Einsatz als 'manual' an, obwohl ihn
+ * niemand von Hand eingegeben hat. Die Herkunft kennt jetzt SECHS Werte —
+ * watch, android, wear, manual, import, schnitt —, einen je Client-App und
+ * nicht je Hersteller (E-R64-02).
+ *
+ * DIE SPALTE IST DABEI VOM ENUM AUF VARCHAR(16) GEWECHSELT. Dieselbe
+ * Begruendung wie bei `devices.geraet_art`: Ein ENUM braucht fuer jeden neuen
+ * Client eine Migration. Der Wertevorrat steht jetzt EINMAL im Code
+ * (HERKUNFT_WERTE in geraete_lib.php), die Ableitung aus dem
+ * `client_ref`-Praefix ebenso (herkunft_ableiten()). Bis hierher stand diese
+ * Regel DREIMAL — in der Migration 2026_07_30 als SQL, in
+ * edbak_origin_edited() als PHP und als Beschreibung in einem Kommentar in
+ * api/export_data.php —, obwohl der Kommentar in backup_lib.php ausdruecklich
+ * verlangte, sie nicht zweimal unterschiedlich hinzuschreiben. Als Android
+ * und Wear dazukamen, wuchs keine der drei mit. Genau so entsteht der Fehler
+ * eine Zeile weiter oben.
+ *
+ * DAZU DIE MOMENTAUFNAHME DES GERAETS. `missions` und `rest_segments`
+ * bekommen `geraet_art` und `geraet_modell`, kopiert aus `devices` in dem
+ * Augenblick, in dem der Datensatz entsteht — und danach nie nachgezogen.
+ * Der Grund fuer die Kopie statt eines Verweises ist gemessen: 82 von 82
+ * Einsaetzen und 95 von 95 Segmenten des Demo-Kontos standen am 02.09.2026
+ * OHNE Geraeteverweis da, obwohl 76 davon von einer Uhr stammen. `device_id`
+ * steht auf ON DELETE SET NULL, und Trennen ist bei geteilter Uhr der
+ * vorgesehene Normalfall (R47). Ein Verweis, der im Regelbetrieb reisst,
+ * beantwortet die Frage "welches Geraet hat das aufgezeichnet" nie.
+ *
+ * DER PREIS IST BENANNT (E-R64-05): Ein Einsatz, dessen Modell beim Anlegen
+ * unbekannt war, traegt dauerhaft "unbekannt". Das ist die Definition einer
+ * Momentaufnahme, und dafuer ueberlebt sie Trennen, Loeschen des Geraets und
+ * die Konto-Sicherung.
+ *
+ * DIE MIGRATION FUELLT DEN BESTAND NACH, solange die Verweise noch stehen —
+ * deshalb laeuft sie jetzt und nicht spaeter; jedes Trennen bis dahin liesse
+ * eine Zeile mehr unwiederbringlich leer. Wo `device_id` schon NULL ist,
+ * bleibt die Momentaufnahme NULL, dauerhaft: "Unbekannt" ist eine Sache der
+ * ANZEIGE und nicht der Spalte (dieselbe Linie wie an `devices`).
+ *
+ * WAS DIESE FASSUNG NOCH NICHT TUT: Die Sicherung traegt die neuen Felder
+ * noch nicht (Nutzlast 9 kommt als naechstes, zusammen mit den
+ * Sperrvermerken des Schnitts, Backlog Nr. 63), und die Beschriftungen von
+ * CSV und Einsatzansicht kennen die drei neuen Werte noch nicht — sie zeigen
+ * bis dahin den ROHWERT. Das ist Absicht: Ein unbekannter Herkunftswert darf
+ * nicht als "Uhr" erscheinen (E-R64-09), und der Rueckfall auf 'uhr' ist
+ * genau in dieser Fassung entfallen.
+ *
+ * MIGRATION ERFORDERLICH: 2026_09_04_herkunft_geraet. Ohne sie fehlen die
+ * vier Spalten, und jeder Upload der Uhr scheitert.
+ *
+ * NEBENBEI GERADEGERUECKT: Der Absatz zu 13.3.0 stand in dieser Datei VOR dem
+ * zu 13.2.0 — beim Eintragen war er an die falsche Stelle geraten. Die
+ * Erzaehlung liest sich der Reihe nach; das ist ihr einziger Zweck.
+ *
+ * 14.1.0 BESCHRIFTET, WAS 14.0.0 ERFASST HAT — und raeumt damit einen Zustand
+ * ab, der zwischen den beiden Fassungen kurz schlechter war als vorher: Die
+ * Einsatzansicht zeigte fuer `android`, `wear` und `schnitt` weiter "Uhr",
+ * weil ihre Zuordnungstabelle nur drei Werte kannte, und der CSV-Export gab
+ * den Rohwert aus.
+ *
+ * SECHS PLAKETTEN STATT DREI: Uhr, Handy, Wear, manuell, importiert, Schnitt.
+ * Und der Rueckfall ist ueberall der ROHWERT (E-R64-09) — nicht "Uhr". Ein
+ * kuenftiger Client, dessen Beschriftung hier noch fehlt, soll auffallen und
+ * nicht in einer falschen Kategorie verschwinden. Das ist der ganze Grund fuer
+ * die Aenderung an dieser Stelle: Eine falsche Antwort, die wie eine richtige
+ * aussieht, ist schlechter als eine unschoene.
+ *
+ * IM CSV HEISST DIE ZWEITE UHR `wear` UND NICHT `uhr`. `uhr` ist seit dem
+ * ersten Export die Garmin-App; eine zweite Uhr unter demselben Wort machte
+ * jede Auswertung, die auf `uhr` filtert, rueckwirkend mehrdeutig — und zwar
+ * ohne dass sich das der Datei ansehen liesse.
+ *
+ * DAZU ZWEI SPALTEN IN ZWEI DATEIEN: `geraet_art` und `geraet_modell` am ENDE
+ * von `einsaetze.csv` und `ruhezeiten.csv`, dazu ihre Beschreibung in
+ * `felder.csv`. Am Ende und nicht neben `herkunft`, weil Auswertungen Spalten
+ * von links zaehlen — und weil die beiden nicht den Einsatz beschreiben,
+ * sondern das Geraet, das ihn aufgezeichnet hat.
+ *
+ * EXCEL BLEIBT UNVERAENDERT, beide Fassungen (E-R64-10, Auftraggeber). Die
+ * Uebersichtstabelle liest ein Mensch, und sie beantwortet "was ist passiert",
+ * nicht "womit wurde es aufgezeichnet". Ihr Spaltensatz ist damit derselbe wie
+ * in 13.3.0.
+ *
+ * DER RUECKIMPORT NIMMT DIE ZWEI SPALTEN NICHT — wie `herkunft` und `edited`:
+ * Sie beschreiben das Quellkonto. Sie stehen trotzdem mit `target: null` im
+ * Profil, weil dessen Schluesselliste zugleich die Beschreibung dessen ist,
+ * was das Format kennt; eine fehlende Spalte saehe aus wie eine vergessene.
+ * Unbekannte Spalten stoert der Rueckimport ohnehin nicht — er ordnet ueber
+ * Namen zu und geht ueber alles hinweg, was er nicht kennt.
+ *
+ * NEBENNUMMER: zwei Spalten und sechs Beschriftungen, kein Datenmodell, keine
+ * Migration. Die vier Spalten dafuer hat 14.0.0 angelegt.
+ *
+ * 14.2.0 BRINGT DIE SPERRVERMERKE DES SCHNITTS DURCH DIE SICHERUNG — und die
+ * Momentaufnahme des Geraets gleich mit (Backlog Nr. 63 und R64, Nutzlast
+ * 8 -> 9).
+ *
+ * DER FEHLER, DEN ES BEHEBT, IST STILL UND ENDGUELTIG. Wer eine Ruhezeit
+ * schneidet, hinterlaesst einen Vermerk in `track_cuts`: Dieser Zeitraum ist
+ * fuer nachgelieferte Punkte gesperrt, sonst laege die Fahrt hinterher in
+ * Einsatz UND Segment. Der Vermerk stand in keiner Konto-Sicherung. Nach
+ * einem Wiedereinspielen lieferte eine Uhr mit gepuffertem Speicher den
+ * geschnittenen Bereich nach, und er kam durch — ohne Meldung, ohne Weg
+ * zurueck.
+ *
+ * ER REIST UEBER VERWEISE, nicht ueber Kennungen: `quelle_ref` ist die
+ * `client_ref` der Quelle. Datenbanknummern vergibt das Einspielen neu; das
+ * ist dieselbe Ueberlegung, die schon `day_refs` und `spur_ref` tragen.
+ * `erstellt_am` reist mit — ein Vermerk sagt, WANN geschnitten wurde, und das
+ * ist ein Ereignis der Vergangenheit, keine Frist dieser Installation
+ * (anders als `deleted_at`, das neu entsteht).
+ *
+ * DREI AUSGAENGE BEIM EINSPIELEN, und sie werden gezaehlt: uebernommen,
+ * uebersprungen (der Einsatz stand schon da — eine bewusst zurueckgenommene
+ * Sperre darf nicht wiederbelebt werden), verworfen (kein Ziel, keine Quelle,
+ * unbrauchbare Werte). „Uebersprungen" und „verworfen" in eine Zahl zu legen
+ * waere derselbe Fehler wie bei den uebersprungenen Einsaetzen: nicht deutbar.
+ *
+ * NEBENNUMMER UND KEINE HAUPTNUMMER, und das ist eine Entscheidung mit
+ * Praezedenzfall. Es aendert sich KEINE Spalte, es gibt KEINE Migration — die
+ * vier Spalten hat 14.0.0 angelegt. Was sich aendert, ist ein Dateiformat,
+ * und genau dafuer steht 11.1.0 (Nutzlast 7 -> 8, „nur das Dateiformat
+ * aendert sich, das Datenmodell nicht"). Die Hauptnummer fuer R64 ist mit
+ * 14.0.0 bereits gestiegen; dies ist die zweite Haelfte derselben Aenderung.
+ *
+ * WAS MITGEZOGEN WERDEN MUSSTE, alle fuenf Stellen: `edbak_build()` schreibt
+ * 9, `NUTZLAST_HOECHSTENS` steht auf 9, das Admin-Manifest nennt 9, und die
+ * beiden Stellen, die die Fassung beim Einspielen SETZEN
+ * (`adminbackup_lib.php`, `api/backup_eintraege_restore.php`). Der eine
+ * Vergleich, der ueber den Spurweg entscheidet, bleibt auf `>= 8` — eine
+ * Anhebung auf 9 wuerfe jede vorhandene 8er-Datei in den Punktlisten-Zweig
+ * und verloere still alle Spuren. Das ist der Fund F-S2-E in Gegenrichtung.
+ *
+ * DREI ALTE FEHLER SIND DABEI MIT AUFGEFALLEN und behoben worden. Sie haben
+ * nichts mit R64 zu tun, standen ihm aber im Weg:
+ *
+ *   1. DIE UMDATIERUNG EINES DIENSTTAGS verschob Einsaetze, Segmente,
+ *      Phasen, Reanimationsereignisse und jeden Spurpunkt — die Sperrvermerke
+ *      nicht. Der Vermerk sperrte danach einen Zeitraum, in dem die Spur gar
+ *      nicht mehr liegt: Nachgelieferte Punkte kamen wieder durch, und die
+ *      Fahrt lag doppelt. Seit Web 12.5.0 so, folgenlos nur, solange der
+ *      Vermerk die Datenbank nicht verliess. Ab Nutzlast 9 reiste das falsche
+ *      Fenster in jede Sicherung.
+ *   2. DER DEMO-RESET raeumte `track_points` und `track_blobs` ausdruecklich
+ *      ab und `track_cuts` nicht. Mit dem Schnitt im Demo-Bestand (E-R64-16)
+ *      haette das alle 30 Minuten einen verwaisten Vermerk hinterlassen —
+ *      48 am Tag, keiner davon je wieder auffindbar.
+ *   3. FIXTURE UND DEMO-RESET fuehrten von `devices` nur drei Spalten mit.
+ *      Die Geraeteseite des Demo-Kontos haette „Gerät unbekannt" gezeigt,
+ *      waehrend die Einsaetze daneben ihre Momentaufnahme tragen.
+ *
+ * UND ZWEI PRUEFMITTEL HABEN AUFGEHOERT ZU PRUEFEN, ohne dass es auffiel:
+ * Die Wiederherstellungsprobe starb mitten in Teil 9 an einem fehlenden
+ * `require` — nach dreiundvierzig gruenen Zeilen, und alles dahinter lief
+ * NIE. Die Containerprobe suchte in einer Meldung einen Wortlaut, den es
+ * nicht mehr gibt, und stand deshalb dauerhaft auf einem Fehlschlag. Beides
+ * ist behoben; die Probe zaehlt jetzt 94 Erwartungen statt der 30, die in
+ * ihrem Kopf standen.
  */
-const WEB_VERSION = '13.2.0';
+/*
+ * 14.2.1 SCHLIESST DEN KREIS DES REFERENZBESTANDS — und behebt dabei einen
+ * Fehler, den erst er sichtbar gemacht hat.
+ *
+ * DER REFERENZBESTAND TRAEGT JETZT, WAS ER PRUEFEN SOLL. Bis hierher legte
+ * das Einspielwerkzeug seine zwei Geraete ueber die Geraeteseite an — mit
+ * Beschriftung und sonst nichts. `geraet_art` und `geraet_modell` blieben
+ * NULL, und weil `ingest.php` die Momentaufnahme beim Anlegen von dort
+ * kopiert, trug der ganze Bestand eine leere. Der edbak-Kreislauf verglich
+ * damit NULL gegen NULL und belegte fuer R64 nichts. Seit diesem Stand gehen
+ * die zwei Geraete den echten Kopplungsweg (`pair.php`), und eines davon ist
+ * ein Handy: Von den sechs Herkunftswerten belegte der Bestand vorher einen,
+ * jetzt alle sechs.
+ *
+ * UND ER TRAEGT EINEN SCHNITT. Damit prueft der Demo-Reset auf dem
+ * Produktivserver den Sperrvermerk aus 14.2.0 alle 30 Minuten von selbst —
+ * ein besserer Beleg als jede eigens gebaute Probe.
+ *
+ * DER FEHLER: DIE ANWENDUNG SCHRIEB EINE DATEI, DIE SIE NICHT LESEN KONNTE.
+ * Die CSV-Spalte `uhrzeit_ortszeit` kam aus Phase 2 („Alarmierung"); der
+ * eigene Import liest sie als den START des Einsatzes und verlangt sie. Ein
+ * geschnittener Einsatz hat keine Phase 2 — die Spalte blieb leer, und der
+ * Import wies die Zeile ab. Bei einem Einsatz von der Uhr fallen Alarmierung
+ * und Beginn zusammen; deshalb ist es nie aufgefallen. Jetzt faellt die
+ * Spalte auf den Einsatzbeginn zurueck. Fuer jeden Einsatz mit Phase 2
+ * aendert sich nichts.
+ *
+ * WAS SICH FUER EINE BESTEHENDE INSTALLATION AENDERT: nichts am Datenmodell,
+ * keine Migration. Das Demo-Konto zeigt nach dem naechsten Reset den neuen
+ * Bestand — mit Geraetemodellen auf der Geraeteseite und einem geschnittenen
+ * Einsatz mit Plakette.
+ */
+/*
+ * 14.2.2 SAGT „DAUER" UND MEINT ES.
+ *
+ * Die Einsatztabelle rechnete die Dauer aus dem Beginn und der PHASE 9
+ * („Endzeit des Einsatzes"). Fehlte die Phase, stand dort „kein Ende" --
+ * auch an einem Einsatz, der abgeschlossen ist und ein `ended_at` traegt.
+ * Der Kommentar an der Stelle nannte das ausdruecklich gewollt, und fuer
+ * einen Einsatz von der Uhr fiel es nie auf: Sie setzt beim Abschliessen
+ * beides, und beides ist derselbe Zeitpunkt.
+ *
+ * ZWEI ARTEN HABEN KEINE PHASE 9 UND SIND TROTZDEM ZU ENDE: der
+ * GESCHNITTENE Einsatz (`api/schneiden.php` vergibt nur 3, 4 und 7) und der
+ * IMPORTIERTE, dessen Datei keine Endphase fuehrt. Seit 14.2.1 steht ein
+ * geschnittener dauerhaft im Demo-Konto -- also auf dem Produktivserver,
+ * sichtbar fuer jeden, der die Anwendung ausprobiert.
+ *
+ * GEMESSEN, DASS SICH NICHTS ANDERES AENDERT: Ueber 330 aktive Einsaetze
+ * fallen Phase 9 und `ended_at` NULLMAL auseinander (323 gleich, 3 mit Ende
+ * ohne Phase 9, 4 offene ohne beides). „kein Ende" bleibt genau dort, wo es
+ * hingehoert -- am Einsatz ohne Ende.
+ *
+ * VIER STELLEN, NICHT EINE. Dieselbe Rechnung stand in `api/day.php`,
+ * `api/range.php` und `api/suchindex.php`; die Einsatzansicht fragte
+ * ueber `has_p9` dasselbe. Das Merkmal heisst jetzt `hat_ende` und sagt,
+ * was gemeint ist. Drei korrelierte Unterabfragen auf `mission_phases`
+ * sind dabei ersatzlos entfallen -- der Wert stand als Spalte daneben.
+ */
+const WEB_VERSION = '14.2.2';

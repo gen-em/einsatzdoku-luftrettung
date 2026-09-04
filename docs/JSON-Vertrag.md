@@ -1,13 +1,16 @@
 # JSON-Vertrag Gerät → Server
 
-**Version:** 2.1 — die Kopplung ist umgekehrt (1a): Das **Gerät** zeigt den
-Code, das Web nimmt ihn entgegen, das Gerät bestätigt das Konto. `pair.php`
-kennt vier Anliegen statt zwei. Die Hauptnummer stieg auf 2.0, weil kein
-Client der Fassung 1.x sich mehr koppeln kann — bestehende Kopplungen und
+**Version:** 2.2 — die Kopplung ist seit 2.0 umgekehrt (1a): Das **Gerät**
+zeigt den Code, das Web nimmt ihn entgegen, das Gerät bestätigt das Konto.
+`pair.php` kennt vier Anliegen statt zwei. Die Hauptnummer stieg auf 2.0, weil
+kein Client der Fassung 1.x sich mehr koppeln kann — bestehende Kopplungen und
 alles ab Abschnitt 2 sind unberührt. **2.1** trägt den Wartungsmodus nach
 (Abschnitt 5): ein 503 mit `{"error":"maintenance"}`, das jeder Endpunkt
-schicken kann. Nebennummer, weil es für die Clients keine neue Regel ist —
-sie behandeln es als 5xx, wie bisher.
+schicken kann. **2.2** vervollständigt die Präfix-Tabelle (Abschnitt 8) um
+`cut-` und sagt, welche **Herkunft** der Server aus jedem Präfix ableitet
+(R64). Beide Nebennummern, weil es für die Clients keine neue Regel ist: Den
+Wartungsmodus behandeln sie als 5xx wie bisher, und die Herkunft leitet der
+Server allein ab — kein Client schickt sie, keiner liest sie.
 **Endpunkt:** `POST https://<host>/ingest.php`
 **Content-Type:** `application/json`
 
@@ -37,7 +40,7 @@ schon durchsetzt und welche noch nicht.
 | Reanimationsarten gegen die Liste (3.3) | durchgesetzt |
 | Idempotenz über Gerät + `client_ref` (2) | durchgesetzt |
 | Zufallsanteil in der Client-Kennung (8) | durchgesetzt seit Uhr 1.7.0 |
-| Präfixe der Client-Kennung (8) | beschrieben, vom Server bewusst nicht geprüft |
+| Präfixe der Client-Kennung (8) | beschrieben, vom Server bewusst nicht **geprüft** — seit Web 14.0.0 aber **ausgewertet**: Er leitet die Herkunft daraus ab (8) |
 | Kalendertag muss existieren (3.2) | durchgesetzt |
 | Koordinatenbereiche, Mengenbegrenzungen (3.2) | durchgesetzt |
 | Leere oder zu kurze Liste löscht nichts (3.1) | durchgesetzt |
@@ -309,7 +312,7 @@ das Gerät nicht beantworten kann. Der Vertrag stellt beides frei.
 
 ```json
 {
-  "code": "AB3K7Q",
+  "aktion": "start",
   "geraet": {
     "art":        "handy",
     "teil":       null,
@@ -764,18 +767,24 @@ Gerät**; zusammen mit der Gerätekennung bildet sie den Idempotenz-Anker. Sie
 wird von vier Stellen erzeugt, und an ihrem **Präfix hängt Verhalten** —
 deshalb gehört sie in den Vertrag und nicht nur in den Code.
 
-| Präfix | Erzeuger | Bedeutung |
-|---|---|---|
-| `m-` | Garmin-Uhr-App | Einsatz |
-| `r-` | Garmin-Uhr-App | Ruhe-Segment |
-| `d-` | Garmin-Uhr-App | **Dienst** (`day_ref`, Abschnitt 2.1) |
-| `am-` | Android-Handy-App | Einsatz |
-| `ar-` | Android-Handy-App | Ruhe-Segment |
-| `ad-` | Android-Handy-App | **Dienst** |
-| `wm-` | Wear-OS-App | Einsatz, an der Uhr begonnen — gesendet hat ihn das Handy |
-| `man-` | Weboberfläche, Einsatzformular | von Hand angelegt |
-| `imp-` | Import | aus einer Datei übernommen |
-| `bak-` | Wiedereinspielen | aus einem Backup, ohne eigene Kennung |
+| Präfix | Erzeuger | Bedeutung | Herkunft (`origin`) |
+|---|---|---|---|
+| `m-` | Garmin-Uhr-App | Einsatz | `watch` |
+| `r-` | Garmin-Uhr-App | Ruhe-Segment | — (Segmente tragen keine) |
+| `d-` | Garmin-Uhr-App | **Dienst** (`day_ref`, Abschnitt 2.1) | — |
+| `am-` | Android-Handy-App | Einsatz | `android` |
+| `ar-` | Android-Handy-App | Ruhe-Segment | — |
+| `ad-` | Android-Handy-App | **Dienst** | — |
+| `wm-` | Wear-OS-App | Einsatz, an der Uhr begonnen — gesendet hat ihn das Handy | `wear` |
+| `man-` | Weboberfläche, Einsatzformular | von Hand angelegt | `manual` |
+| `imp-` | Import | aus einer Datei übernommen | `import` |
+| `cut-` | Weboberfläche, Schneiden | aus einem Ruhe-Segment herausgeschnitten (`api/schneiden.php`, Web 12.5.0) | `schnitt` |
+| `bak-` | Wiedereinspielen | aus einem Backup, ohne eigene Kennung | `watch` (Rückfall) |
+
+**`cut-` fehlte in dieser Tabelle bis Fassung 2.2**, obwohl `api/schneiden.php`
+es seit Web 12.5.0 vergibt. Der Vertrag nannte zehn Präfixe, der Server elf —
+und weil an den Präfixen Verhalten hängt, war das keine Auslassung, sondern
+eine falsche Zusage. Gefunden bei der Umsetzung von R64 (B-R64-01).
 
 **Die vier Android-Präfixe stehen seit Fassung 1.4 hier** (nachgetragen mit
 S6, weil sie an R42 hingen). Sie sind der Grund, warum die Präfixe überhaupt
@@ -817,3 +826,31 @@ Regeln:
   Daten im Puffer hat, liefert sie unverändert nach.
 - der Server prüft das Präfix nicht; ein Client mit anderem Präfix
   funktioniert, bekommt aber die Sperrlisten-Sonderbehandlung von `man-` nicht
+
+### Die Herkunft wird abgeleitet, nicht gesendet (seit Web 14.0.0, R64)
+
+**Kein Client schickt eine Herkunft, und keiner liest sie.** Der Server leitet
+sie beim Anlegen aus dem Präfix ab (`herkunft_ableiten()` in
+`server/geraete_lib.php`) und ändert sie danach nie wieder. Für die Clients
+ändert sich damit nichts — dieser Abschnitt beschreibt, was mit ihrer Kennung
+geschieht, nicht was sie zu senden hätten.
+
+**Der Rückfall für ein unbekanntes Präfix** ist die Geräteart aus der Kopplung
+(1a): `handy` → `android`, sonst `watch`. Deshalb steht `bak-` oben auf
+`watch` — es kommt aus dem Wiedereinspielen, wo es kein Gerät gibt, und eine
+Sicherung trägt in diesem Fall ohnehin meist ihre eigene Herkunft mit.
+
+**Ein Wert je Client-App, nicht je Hersteller** (E-R64-02). Das ist die Regel
+für jeden künftigen Client, und sie hat einen Grund: `am-` und `wm-` kommen
+vom **selben Gerät** — die Wear-OS-App hat weder Serveradresse noch Schlüssel
+und schickt ihre Ereignisse an das Handy (E-S4-11). Nur das Präfix trennt sie.
+Wer eine App für eine Uhr eines anderen Herstellers baut, trägt hier ein neues
+Präfix ein und bekommt einen **eigenen** Herkunftswert; `watch` bleibt die
+Garmin-Uhr-App. Würde er unter `watch` mitgeführt, wäre jede Auswertung, die
+darauf filtert, rückwirkend mehrdeutig — und zwar ohne dass es den Daten
+anzusehen wäre. Welcher Hersteller es war, steht ohnehin im Modell
+(Abschnitt 1a, `geraet`).
+
+Der Wertevorrat steht an **einer** Stelle im Code (`HERKUNFT_WERTE`); ein
+neuer Client kostet drei Einträge — diese Tabelle, die Wertliste und die
+Beschriftungen (`docs/Export-Format.md` 3.6) — und keine Schemaänderung.

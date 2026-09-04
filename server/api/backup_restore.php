@@ -81,8 +81,16 @@ if ($nutzlast < 6) {
  * Fassung-8-Zweig und legte still einen halben Bestand an.
  *
  * Die Meldung sagt deshalb, was los ist — dieselbe Linie wie bei einem
- * Container aus einer neueren Fassung (`assets/crypto.js`). */
-const NUTZLAST_HOECHSTENS = 8;
+ * Container aus einer neueren Fassung (`assets/crypto.js`).
+ *
+ * DER SATZ DARUEBER HAT SICH BEWAEHRT: Fassung 9 ist mit Web 14.2.0
+ * gekommen (Geraete-Momentaufnahme und Sperrvermerke, R64 / Backlog Nr. 63),
+ * und die Schranke hat genau dafuer gearbeitet — eine 9er-Datei wird von
+ * jedem aelteren Stand ABGEWIESEN statt halb eingelesen. Wer die Zahl hier
+ * hochsetzt, ohne den Rueckweg auf die neuen Felder vorzubereiten, hebelt
+ * genau das aus. Die Schranke nach UNTEN bleibt bei 6; alle Felder ab
+ * Fassung 7 sind optional, und was fehlt, wird NULL. */
+const NUTZLAST_HOECHSTENS = 9;
 if ($nutzlast > NUTZLAST_HOECHSTENS) {
     json_out(['error' => 'version_neu',
               'meldung' => 'Dieses Backup hat das Format ' . $nutzlast

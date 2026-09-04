@@ -70,6 +70,66 @@
     },
     "$warum_formelzeichen": {
       "$ref": "#/$defs/erlaeuterung"
+    },
+    "$warum_schnitt": {
+      "type": "string"
+    },
+    "schnitte": {
+      "$kommentar": "Der Schnitt-Auftrag der Einspielstufe `schneiden` (R64/AP4, E-R64-16). Er ist KEIN Einsatz der Quelldaten -- der geschnittene Einsatz entsteht erst serverseitig ueber api/schneiden.php und traegt dort eine Kennung mit Praefix cut-. Deshalb zaehlt pruefen.py weiter 87 Einsaetze und nicht 88.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "abdeckung",
+          "segment",
+          "beginn",
+          "ende",
+          "phasen"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "abdeckung": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            }
+          },
+          "segment": {
+            "$kommentar": "client_ref des Ruhesegments, aus dem geschnitten wird. Muss in ruhesegmente desselben Dienstes stehen; pruefen.py prueft das.",
+            "type": "string",
+            "pattern": "^a?r-[0-9]+-[0-9]+$",
+            "maxLength": 64
+          },
+          "beginn": {
+            "$ref": "#/$defs/zeitpunkt"
+          },
+          "ende": {
+            "$ref": "#/$defs/zeitpunkt"
+          },
+          "phasen": {
+            "$kommentar": "Genau die drei Phasen, die der Schneide-Bereich anbietet (api/schneiden.php SCHNITT_PHASEN = 3, 4, 7). Jede muss innerhalb von beginn und ende liegen, sonst verwirft der Server sie still.",
+            "type": "object",
+            "required": [
+              "3",
+              "4",
+              "7"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "3": {
+                "$ref": "#/$defs/zeitpunkt"
+              },
+              "4": {
+                "$ref": "#/$defs/zeitpunkt"
+              },
+              "7": {
+                "$ref": "#/$defs/zeitpunkt"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "$defs": {
@@ -167,9 +227,9 @@
           "$ref": "#/$defs/zeitpunkt"
         },
         "day_ref": {
-          "$kommentar": "JSON-Vertrag 2.1 und 8: Praefix d-, hoechstens 64 Zeichen, keine Leerzeichen.",
+          "$kommentar": "JSON-Vertrag 2.1 und 8: Praefix d- (Garmin-Uhr) oder ad- (Android-Handy, Geraet 12 seit R64/AP4), hoechstens 64 Zeichen, keine Leerzeichen.",
           "type": "string",
-          "pattern": "^d-[0-9]+-[0-9]+$",
+          "pattern": "^a?d-[0-9]+-[0-9]+$",
           "maxLength": 64
         },
         "spur_ausgangspunkt": {
@@ -216,7 +276,7 @@
       "properties": {
         "client_ref": {
           "type": "string",
-          "pattern": "^r-[0-9]+-[0-9]+$",
+          "pattern": "^a?r-[0-9]+-[0-9]+$",
           "maxLength": 64
         },
         "beginn": {
@@ -257,11 +317,11 @@
       "additionalProperties": false,
       "properties": {
         "client_ref": {
-          "$kommentar": "NULL bei kanal=import und kanal=formular: Diese Wege vergeben die Kennung SELBST und nicht vorhersagbar (import_commit.php: 'imp-'.random_bytes(12); einsatz_form.php: 'man-'.uniqid()). Zur Nachverfolgung dient dann quell_kennung.",
+          "$kommentar": "Praefix m- (Garmin-Uhr), am- (Android-Handy) oder wm- (an der Wear-OS-Uhr begonnen, vom Handy gesendet) -- JSON-Vertrag 8. NULL bei kanal=import und kanal=formular: Diese Wege vergeben die Kennung SELBST und nicht vorhersagbar (import_commit.php: 'imp-'.random_bytes(12); einsatz_form.php: 'man-'.uniqid()). Zur Nachverfolgung dient dann quell_kennung.",
           "oneOf": [
             {
               "type": "string",
-              "pattern": "^m-[0-9]+-[0-9]+$",
+              "pattern": "^(a|w)?m-[0-9]+-[0-9]+$",
               "maxLength": 64
             },
             {

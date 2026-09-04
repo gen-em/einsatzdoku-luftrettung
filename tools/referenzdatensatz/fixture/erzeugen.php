@@ -59,7 +59,12 @@ $id = (int)$u['id'];
  * (device_id ist global eindeutig). Der Filter in demo_lib.php faengt das
  * auch fuer bereits ausgelieferte Fixtures ab; hier kommt es gar nicht erst
  * hinein. */
-$st = $pdo->prepare('SELECT device_id, api_key_hash, label FROM devices
+/* ART UND MODELL WANDERN MIT (Web 14.2.0, R64). Sonst zeigte das Demo-Konto
+ * auf der Geraeteseite „Gerät unbekannt", waehrend seine Einsaetze die
+ * Momentaufnahme tragen — und die Abnahme von R64 verlangt ausdruecklich,
+ * dort Modelle zu sehen. */
+$st = $pdo->prepare('SELECT device_id, api_key_hash, label, geraet_art, geraet_modell
+                     FROM devices
                      WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY id');
 $st->execute([$id]);
 $geraete = $st->fetchAll(PDO::FETCH_ASSOC);

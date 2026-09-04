@@ -2019,6 +2019,102 @@ $MIGRATIONS = [
             "DROP TABLE IF EXISTS pair_codes",
         ],
     ],
+    [
+        'id'    => '2026_09_04_herkunft_geraet',
+        'web'   => '14.0.0',
+        'label' => 'Herkunft je Client-App und Geräte-Momentaufnahme an Einsatz und Ruhezeit (R64)',
+        'skip'  => function (PDO $pdo): bool {
+            return _hat_spalte($pdo, 'missions', 'geraet_art');
+        },
+        'sql'   => [
+            /* WELCHES GERAET HAT DIESEN EINSATZ AUFGEZEICHNET — UND WELCHE APP?
+             * (R64, Backlog Nr. 83; Entscheidungen E-R64-01 bis -05, -11.)
+             *
+             * ZWEI FRAGEN, DIE DER BESTAND BIS HIER NICHT BEANTWORTEN KONNTE:
+             *
+             * 1. `missions.origin` kannte drei Werte — watch, manual, import.
+             *    Seit Web 12.8.0 sendet auch ein Android-Handy, und seit S4
+             *    laesst sich ein Einsatz an einer Wear-OS-Uhr beginnen. Beide
+             *    landeten auf `watch`: Ein Handy-Einsatz trug die Plakette
+             *    "Uhr". Und der Schnitt (api/schneiden.php, Web 12.5.0) legte
+             *    seinen neuen Einsatz als `manual` an, obwohl ihn niemand von
+             *    Hand eingegeben hat.
+             * 2. `devices` weiss seit Web 12.9.0, WAS sich gekoppelt hat (Art,
+             *    Modell, Rohangabe) — aber am Einsatz stand davon nichts, und
+             *    der Verweis dorthin haelt nicht: `device_id` steht auf
+             *    ON DELETE SET NULL, und Trennen ist der vorgesehene Normalfall
+             *    bei geteilter Uhr (R47, Backlog Nr. 14). Gemessen am
+             *    02.09.2026: 82 von 82 Einsaetzen und 95 von 95 Segmenten des
+             *    Demo-Kontos ohne Geraeteverweis, 76 davon mit origin='watch'.
+             *
+             * WEG (b) AUS R64: MOMENTAUFNAHME STATT VERWEIS. Art und Modell
+             * werden beim Anlegen an den Einsatz KOPIERT und danach nie wieder
+             * angefasst. Das ist die ganze Zusage — und ihr Preis: Ein Einsatz,
+             * dessen Modell beim Anlegen unbekannt war, traegt dauerhaft
+             * "unbekannt", auch wenn `devices` spaeter neu aufgeloest wuerde
+             * (E-R64-05, angenommen). Dafuer ueberlebt die Angabe das Trennen,
+             * das Loeschen des Geraets und die Konto-Sicherung — der Verweis
+             * tut keines davon.
+             *
+             * NACHGEFUELLT WIRD NUR UEBER DEN NOCH STEHENDEN VERWEIS. Wo
+             * `device_id` schon NULL ist, bleibt die Momentaufnahme NULL; es
+             * gibt keine zweite Quelle, aus der sie sich holen liesse. Deshalb
+             * laeuft diese Migration JETZT und nicht spaeter: Jedes Trennen bis
+             * dahin haette eine Zeile mehr unwiederbringlich leer gelassen.
+             *
+             * NULL BLEIBT NULL, DAUERHAFT — dieselbe Begruendung wie an
+             * `devices` (2026_09_02_geraetekennung, dort ausfuehrlich): Wer von
+             * Hand anlegt, importiert oder eine GPX-Datei einliest, hat nichts
+             * zu melden. Ein NOT NULL DEFAULT 'unbekannt' machte daraus eine
+             * Aussage, wo keine ist. "Unbekannt" ist Sache der ANZEIGE.
+             *
+             * VARCHAR(16) STATT ENUM FUER `origin` (E-R64-03): Ein ENUM braucht
+             * fuer jeden neuen Client eine Migration. Der Wertevorrat steht
+             * jetzt einmal im Code (`HERKUNFT_WERTE` in geraete_lib.php), die
+             * Ableitung aus dem Praefix ebenso (`herkunft_ableiten()`). Die
+             * drei UPDATEs unten sind die SQL-SPIEGELUNG genau dieser Funktion
+             * — bis Web 13.3.0 stand die Regel dreimal unterschiedlich da
+             * (Migration 2026_07_30, edbak_origin_edited(), ein Kommentar in
+             * api/export_data.php), was der Kommentar in backup_lib.php
+             * ausdruecklich verboten hatte.
+             *
+             * DIE REIHENFOLGE IST NICHT BELIEBIG: Der ENUM-Wechsel steht
+             * ZUERST. Liefe ein UPDATE auf 'schnitt' gegen die alte
+             * ENUM-Spalte, machte MariaDB je nach sql_mode daraus einen leeren
+             * String oder einen Fehler — beides falsch, das erste still.
+             *
+             * KEIN `zerstoert`, KEIN `inhalt`: Es faellt nichts weg. Der
+             * ENUM-Wechsel ist eine Erweiterung des Wertevorrats, die vier
+             * Spalten sind neu, und die drei UPDATEs schreiben genau das hin,
+             * was der Bestand ohnehin schon bedeutete. Ein Rueckweg ist
+             * trotzdem keiner: 'android' liesse sich nicht mehr von 'watch'
+             * unterscheiden, wenn man das ENUM wiederherstellte. */
+            "ALTER TABLE missions MODIFY origin VARCHAR(16) NOT NULL DEFAULT 'watch'",
+
+            "ALTER TABLE missions
+               ADD COLUMN geraet_art    VARCHAR(16)  NULL AFTER edited,
+               ADD COLUMN geraet_modell VARCHAR(191) NULL AFTER geraet_art",
+
+            "ALTER TABLE rest_segments
+               ADD COLUMN geraet_art    VARCHAR(16)  NULL AFTER final,
+               ADD COLUMN geraet_modell VARCHAR(191) NULL AFTER geraet_art",
+
+            /* Nachfuellung, solange die Verweise noch stehen (s. o.). */
+            "UPDATE missions m JOIN devices d ON d.id = m.device_id
+                SET m.geraet_art = d.geraet_art, m.geraet_modell = d.geraet_modell",
+            "UPDATE rest_segments r JOIN devices d ON d.id = r.device_id
+                SET r.geraet_art = d.geraet_art, r.geraet_modell = d.geraet_modell",
+
+            /* Die drei Praefixe, die bisher auf dem falschen Wert lagen.
+             * Wortgleich mit herkunft_ableiten() (geraete_lib.php) — wer die
+             * eine Stelle aendert, sieht hier nach. `m-`/`r-` bleiben `watch`,
+             * `man-` bleibt `manual`, `imp-` bleibt `import`: Die trugen den
+             * richtigen Wert schon. */
+            "UPDATE missions SET origin = 'schnitt' WHERE client_ref LIKE 'cut-%'",
+            "UPDATE missions SET origin = 'android' WHERE client_ref LIKE 'am-%'",
+            "UPDATE missions SET origin = 'wear'    WHERE client_ref LIKE 'wm-%'",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

@@ -73,23 +73,52 @@ $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kd
                VALUES (?, 'Ingestprobe', 'user', '', '', 320000)")->execute([$email]);
 $uid = (int)$pdo->lastInsertId();
 
+/* ZWEI GERAETE, UND BEIDE MIT KENNUNG (R64, Teil 8).
+ *
+ * Das erste gibt sich als UHR aus, das zweite als HANDY. Beide brauchen Art
+ * und Modell, denn seit Web 14.0.0 wandert diese Angabe als Momentaufnahme an
+ * jeden Einsatz und jedes Segment — und die Probe ist die einzige Stelle, an
+ * der sich das ueber echtes HTTP nachweisen laesst.
+ *
+ * WARUM ZWEI: Die Herkunft entsteht aus dem `client_ref`-PRAEFIX, und die
+ * Geraeteart ist nur der Rueckfall fuer ein unbekanntes Praefix (E-R64-01).
+ * Mit einem Geraet liesse sich der Rueckfall nicht von der Regel
+ * unterscheiden — beim Uhr-Geraet ist 'watch' beides. Das Handy-Geraet
+ * trennt die Faelle: Ein Praefix, das die Regel nicht kennt, muss dort
+ * 'android' ergeben und nicht 'watch'. */
 $geraetKennung = 'dev-ingestprobe';
 $geraetKey     = bin2hex(random_bytes(24));
-$pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
-               VALUES (?,?,?,?,1)')
+$pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active,
+                                    geraet_art, geraet_modell)
+               VALUES (?,?,?,?,1,?,?)')
     ->execute([$uid, $geraetKennung, geraet_schluessel_hash($geraetKey),
-               'Ingestprobe']);
+               'Ingestprobe', 'uhr', 'fēnix 7 / fēnix 7 Solar / fēnix 7 Sapphire Solar']);
 
-/** Eine Anfrage an ingest.php — echtes HTTP, wie die Uhr sie stellt. */
-function senden(array $koerper): array {
+$handyKennung = 'dev-ingestprobe-handy';
+$handyKey     = bin2hex(random_bytes(24));
+$pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active,
+                                    geraet_art, geraet_modell)
+               VALUES (?,?,?,?,1,?,?)')
+    ->execute([$uid, $handyKennung, geraet_schluessel_hash($handyKey),
+               'Ingestprobe Handy', 'handy', 'Google Pixel 8']);
+
+/**
+ * Eine Anfrage an ingest.php — echtes HTTP, wie die Uhr sie stellt.
+ *
+ * Ohne die beiden letzten Angaben spricht sie mit dem Uhr-Geraet; Teil 8
+ * reicht die Zugangsdaten des Handys herein.
+ */
+function senden(array $koerper, ?string $dev = null, ?string $key = null): array {
     global $basis, $geraetKennung, $geraetKey;
+    $dev = $dev ?? $geraetKennung;
+    $key = $key ?? $geraetKey;
     $ch = curl_init("$basis/ingest.php");
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER => ['Content-Type: application/json',
-                               'X-Device-Id: ' . $geraetKennung,
-                               'X-Api-Key: ' . $geraetKey],
+                               'X-Device-Id: ' . $dev,
+                               'X-Api-Key: ' . $key],
         CURLOPT_POSTFIELDS => json_encode($koerper),
         CURLOPT_TIMEOUT => 60,
     ]);
@@ -379,6 +408,102 @@ senden($rOffen);
 $rMeta = meta($pdo, 'rest_segments', 'probe-spaet-r');
 pruefe(($rMeta['ended_at'] ?? null) === '2026-03-05 13:00:00' && (int)($rMeta['final'] ?? 0) === 1,
        'Dasselbe am Ruhe-Segment: Ende bleibt, final bleibt', json_encode($rMeta));
+
+/* ---- Teil 8 — Herkunft und Momentaufnahme (R64, Web 14.0.0) -------------- */
+
+echo "\n  Teil 8 — Woher der Einsatz kommt und mit welchem Geraet (R64)\n";
+
+/* WARUM DIESER TEIL UEBER HTTP LAEUFT UND NICHT ALS FUNKTIONSPRUEFUNG.
+ * `herkunft_ableiten()` liesse sich mit sechs Zeilen aufrufen; was hier
+ * geprueft wird, ist etwas anderes: dass die Angabe den ganzen Weg geht — von
+ * der `devices`-Zeile ueber die Abfrage in `ingest.php` in den INSERT und in
+ * die richtige Spalte. Genau dieser Weg war es, der bis Web 13.3.0 fehlte,
+ * und zwar ohne dass irgendeine Antwort anders ausgesehen haette. */
+
+/** Die drei neuen Spalten eines Einsatzes oder Segments. */
+function herkunft(PDO $pdo, string $tabelle, string $ref): array {
+    $spalten = $tabelle === 'missions'
+        ? 'origin, geraet_art, geraet_modell' : 'geraet_art, geraet_modell';
+    $q = $pdo->prepare("SELECT $spalten FROM `$tabelle` WHERE client_ref = ?");
+    $q->execute([$ref]);
+    return $q->fetch(PDO::FETCH_ASSOC) ?: [];
+}
+
+/** Ein leeres Segment-Paket (die Punkte spielen hier keine Rolle). */
+function segment(string $ref): array {
+    return ['kind' => 'rest_segment', 'client_ref' => $ref, 'day' => '2026-03-08',
+            'started_at' => '2026-03-08T12:00:00Z', 'ended_at' => '2026-03-08T13:00:00Z',
+            'final' => true, 'track' => ['seq_from' => 0, 'points' => []]];
+}
+
+$fenix  = 'fēnix 7 / fēnix 7 Solar / fēnix 7 Sapphire Solar';
+$pixel  = 'Google Pixel 8';
+
+// 1. Die Garmin-Uhr: Praefix `m-`, Geraeteart `uhr` — beide sagen dasselbe.
+senden(paket('m-r64-1', 0, 3, true));
+$h = herkunft($pdo, 'missions', 'm-r64-1');
+pruefe(($h['origin'] ?? '') === 'watch'
+       && ($h['geraet_art'] ?? '') === 'uhr' && ($h['geraet_modell'] ?? '') === $fenix,
+       'Uhr-Einsatz (m-): origin=watch, Art und Modell der Uhr', json_encode($h));
+
+// 2. Das Android-Handy: Praefix `am-`, GEGEN die Geraeteart des Uhr-Geraets
+//    waere es 'watch' — genau der Fehler, den R64 behebt.
+senden(paket('am-r64-1', 0, 3, true), $handyKennung, $handyKey);
+$h = herkunft($pdo, 'missions', 'am-r64-1');
+pruefe(($h['origin'] ?? '') === 'android'
+       && ($h['geraet_art'] ?? '') === 'handy' && ($h['geraet_modell'] ?? '') === $pixel,
+       'Handy-Einsatz (am-): origin=android, Art und Modell des Handys', json_encode($h));
+
+// 3. An der Wear-OS-Uhr begonnen, vom HANDY gesendet (E-S4-11). Dasselbe
+//    Geraet wie oben — nur das Praefix unterscheidet die beiden Faelle.
+senden(paket('wm-r64-1', 0, 3, true), $handyKennung, $handyKey);
+$h = herkunft($pdo, 'missions', 'wm-r64-1');
+pruefe(($h['origin'] ?? '') === 'wear'
+       && ($h['geraet_art'] ?? '') === 'handy' && ($h['geraet_modell'] ?? '') === $pixel,
+       'Wear-Einsatz (wm-): origin=wear, Geraet bleibt das HANDY', json_encode($h));
+
+// 4. Der Rueckfall: unbekanntes Praefix — jetzt entscheidet die Geraeteart.
+senden(paket('probe-r64-unbekannt', 0, 3, true), $handyKennung, $handyKey);
+$h = herkunft($pdo, 'missions', 'probe-r64-unbekannt');
+pruefe(($h['origin'] ?? '') === 'android',
+       'Unbekanntes Praefix am Handy: origin=android (Rueckfall auf die Geraeteart)',
+       json_encode($h));
+
+senden(paket('probe-r64-unbekannt2', 0, 3, true));
+$h = herkunft($pdo, 'missions', 'probe-r64-unbekannt2');
+pruefe(($h['origin'] ?? '') === 'watch',
+       'GEGENPROBE: dasselbe an der Uhr ergibt origin=watch', json_encode($h));
+
+// 5. Die Segmente tragen die Momentaufnahme, aber keine Herkunft (E-R64-04).
+senden(segment('r-r64-1'));
+$h = herkunft($pdo, 'rest_segments', 'r-r64-1');
+pruefe(($h['geraet_art'] ?? '') === 'uhr' && ($h['geraet_modell'] ?? '') === $fenix,
+       'Ruhe-Segment der Uhr traegt Art und Modell', json_encode($h));
+
+senden(segment('ar-r64-1'), $handyKennung, $handyKey);
+$h = herkunft($pdo, 'rest_segments', 'ar-r64-1');
+pruefe(($h['geraet_art'] ?? '') === 'handy' && ($h['geraet_modell'] ?? '') === $pixel,
+       'Ruhe-Segment des Handys traegt Art und Modell', json_encode($h));
+
+/* 6. DIE ZUSICHERUNG, AN DER DER GANZE PUNKT HAENGT: Die Momentaufnahme wird
+ *    NIE nachgezogen (E-R64-05). Hier wird das Geraet zwischen zwei Paketen
+ *    umgeschrieben — so, wie eine spaetere Nachaufloesung es taete
+ *    (tools/geraetemodelle/nachaufloesen.php). Der Einsatz muss weiter das
+ *    tragen, was beim Anlegen galt; ein neuer Einsatz das Neue. Ginge die
+ *    Momentaufnahme mit, waere sie keine — dann koennte man auch gleich ueber
+ *    `device_id` lesen, und genau das trug nicht (R47). */
+$pdo->prepare('UPDATE devices SET geraet_modell = ? WHERE device_id = ?')
+    ->execute(['Nachtraeglich anders aufgeloest', $geraetKennung]);
+senden(paket('m-r64-1', 3, 3, true));
+$h = herkunft($pdo, 'missions', 'm-r64-1');
+pruefe(($h['geraet_modell'] ?? '') === $fenix,
+       'Ein zweites Paket zieht die Momentaufnahme NICHT nach', json_encode($h));
+
+senden(paket('m-r64-2', 0, 3, true));
+$h = herkunft($pdo, 'missions', 'm-r64-2');
+pruefe(($h['geraet_modell'] ?? '') === 'Nachtraeglich anders aufgeloest',
+       'GEGENPROBE: ein NEUER Einsatz bekommt den neuen Wert', json_encode($h));
+
 
 } finally {
     jobs_pause(0);

@@ -1389,17 +1389,172 @@ function spur_teilen(PDO $pdo, string $quelleTyp, int $quelleId,
  * Einsatz an und vermerkt — das gehoert in EINE Transaktion, und die kann nur
  * er aufmachen. `spur_teilen()` bringt eine eigene mit, weil es auch allein
  * aufgerufen werden kann; hier waere sie verschachtelt und PDO kennt das nicht.
+ *
+ * DER ZEITPUNKT IST SEIT WEB 14.2.0 UEBERGEBBAR (R64, E-R64-12), und das ist
+ * eine Zusage und keine Bequemlichkeit: Ein Vermerk ist ein EREIGNIS der
+ * Vergangenheit — er sagt, wann geschnitten wurde. Kommt er aus einer
+ * Sicherung zurueck, gehoert dort der urspruengliche Zeitpunkt hin und nicht
+ * der des Einspielens. Das ist der Unterschied zu `deleted_at`, das die Frist
+ * DIESER Installation traegt und deshalb neu entsteht.
+ *
+ * Der Vorgabewert `null` haelt alle bestehenden Aufrufer unveraendert: Wer
+ * jetzt schneidet, bekommt `UTC_TIMESTAMP()` wie bisher. Der Wert wird NICHT
+ * geprueft — das ist Sache der Pruefschicht beim Aufrufer, weil nur der weiss,
+ * ob er aus einer Datei kommt (dann `pruef_utc_oder_sql()`) oder aus dem
+ * eigenen Programm (dann nicht).
+ *
+ * @param string|null $erstelltAm UTC `Y-m-d H:i:s`, oder null fuer „jetzt"
  */
 function schnitt_vermerken(PDO $pdo, int $userId, string $quelleTyp, int $quelleId,
-                           int $missionId, int $vonTs, int $bisTs, int $nPunkte): int
+                           int $missionId, int $vonTs, int $bisTs, int $nPunkte,
+                           ?string $erstelltAm = null): int
 {
-    $pdo->prepare('INSERT INTO track_cuts
+    $wann = $erstelltAm === null ? 'UTC_TIMESTAMP()' : '?';
+    $werte = [$userId, $quelleTyp, $quelleId, $missionId, $vonTs, $bisTs, $nPunkte];
+    if ($erstelltAm !== null) { $werte[] = $erstelltAm; }
+    $pdo->prepare("INSERT INTO track_cuts
                      (user_id, owner_type, owner_id, mission_id,
                       von_ts, bis_ts, n_punkte, erstellt_am)
-                   VALUES (?,?,?,?,?,?,?,UTC_TIMESTAMP())')
-        ->execute([$userId, $quelleTyp, $quelleId, $missionId,
-                   $vonTs, $bisTs, $nPunkte]);
+                   VALUES (?,?,?,?,?,?,?,$wann)")
+        ->execute($werte);
     return (int)$pdo->lastInsertId();
+}
+
+/**
+ * Die Sperrvermerke zu VIELEN Einsaetzen auf einmal — fuer die Sicherung
+ * (R64 / Backlog Nr. 63, Web 14.2.0).
+ *
+ * WARUM ES DIESE FUNKTION GEBEN MUSS. `schnitte_zum_einsatz()` arbeitet auf
+ * genau einem Ziel. Die Sicherung baut aber in Fenstern zu
+ * `EDBAK_FENSTER` = 500 Einsaetzen (backup_lib.php) — je Fenster waeren das
+ * 500 Einzelabfragen. Genau dieses N+1 hat M5-12 im Backup abgeschafft; es
+ * hier wieder einzufuehren, kostete bei 5000 Einsaetzen 5000 Abfragen je
+ * Sicherung. Der Ausweg „dann eben direktes SQL in backup_lib.php" ist
+ * versperrt (CLAUDE.md 4) und waere auch der falsche: Genau die Aufloesung
+ * unten ist das, was ein zweiter Verbraucher falsch machen wuerde.
+ *
+ * SIE LOEST DIE QUELLE GLEICH MIT AUF, und deshalb liest sie ausnahmsweise
+ * `missions` und `rest_segments`. Eine Datenbankkennung gilt nur in DIESER
+ * Datenbank; die Datei muss die Quelle ueber ihre `client_ref` benennen —
+ * dieselbe Ueberlegung wie bei `day_refs` und bei `spur_ref`. Wer die
+ * Aufloesung dem Aufrufer ueberliesse, haette die Regel „track_cuts nur ueber
+ * spur_lib" zwar formal gehalten und den eigentlichen Fehler trotzdem
+ * ermoeglicht: einen Vermerk mit einer Kennung, die im Zielkonto etwas
+ * anderes bezeichnet.
+ *
+ * EIN VERMERK OHNE AUFLOESBARE QUELLE WIRD NICHT GELIEFERT. Es kann ihn nicht
+ * geben — `schnitte_loeschen_quelle()` raeumt beim Loeschen einer Quelle auf.
+ * Taucht doch einer auf, ist er eine Karteileiche; ihn in die Datei zu
+ * schreiben hiesse, sie beim Einspielen zwangslaeufig verwerfen zu lassen.
+ * Er wird gezaehlt zurueckgemeldet, damit das nicht stumm geschieht.
+ *
+ * DIE SORTIERUNG IST FEST (`mission_id, id`). `tools/spurprobe/` vergleicht
+ * zwei vollstaendige Sicherungen desselben Kontos auf Gleichheit; eine
+ * Reihenfolge, die von der Speicherlage abhaengt, machte diese Probe rot,
+ * ohne dass jemand die Ursache im Backup vermutete.
+ *
+ * @param list<int> $missionIds Ziele (geschnittene Einsaetze)
+ * @param int       $waisen     ZURUECK: Zahl der Vermerke ohne aufloesbare Quelle
+ * @return array<int, list<array{quelle_art:string,quelle_ref:string,von_ts:int,
+ *                               bis_ts:int,n_punkte:int,erstellt_am:string}>>
+ *         nach Einsatzkennung; Einsaetze ohne Vermerk fehlen
+ */
+function schnitte_zu_einsaetzen(PDO $pdo, int $userId, array $missionIds,
+                                int &$waisen = 0): array
+{
+    $missionIds = array_values(array_unique(array_map('intval', $missionIds)));
+    if (!$missionIds) { return []; }
+    require_once __DIR__ . '/db.php';
+
+    /* `user_id` STEHT IN DER BEDINGUNG, obwohl die Kennungen schon aus dem
+     * Konto stammen. Es ist derselbe Grundsatz wie in `api/schneiden.php`:
+     * Die Kontobindung gehoert in die Abfrage und nicht in eine Pruefung
+     * danach — eine Sicherung, die einen fremden Vermerk mitnaehme, gaebe
+     * einen Zeitraum preis, in dem sich jemand anderes aufgehalten hat. */
+    $roh = [];
+    foreach (sql_in_bloecken($pdo,
+        'SELECT mission_id, owner_type, owner_id, von_ts, bis_ts, n_punkte, erstellt_am
+           FROM track_cuts
+          WHERE user_id = ? AND mission_id IN ({IDS})
+          ORDER BY mission_id, id', $missionIds, [$userId]) as $r) {
+        $roh[] = $r;
+    }
+    if (!$roh) { return []; }
+
+    /* Die Quellen in EINER Abfrage je Art aufloesen — zwei Abfragen, nicht
+     * eine je Vermerk. Dasselbe Muster wie bei den Reanimationsereignissen
+     * im Backup: erst die Kennungen einsammeln, dann geschlossen fragen. */
+    $refs = ['mission' => [], 'rest' => []];
+    foreach ($roh as $r) {
+        $art = (string)$r['owner_type'];
+        if (isset($refs[$art])) { $refs[$art][(int)$r['owner_id']] = null; }
+    }
+    foreach (['mission' => 'missions', 'rest' => 'rest_segments'] as $art => $tab) {
+        if (!$refs[$art]) { continue; }
+        foreach (sql_in_bloecken($pdo,
+            "SELECT id, client_ref FROM `$tab` WHERE user_id = ? AND id IN ({IDS})",
+            array_keys($refs[$art]), [$userId]) as $q) {
+            $refs[$art][(int)$q['id']] = (string)$q['client_ref'];
+        }
+    }
+
+    $aus = [];
+    foreach ($roh as $r) {
+        $art = (string)$r['owner_type'];
+        $ref = $refs[$art][(int)$r['owner_id']] ?? null;
+        if ($ref === null || $ref === '') { $waisen++; continue; }
+        $aus[(int)$r['mission_id']][] = [
+            'quelle_art'  => $art,
+            'quelle_ref'  => $ref,
+            'von_ts'      => (int)$r['von_ts'],
+            'bis_ts'      => (int)$r['bis_ts'],
+            'n_punkte'    => (int)$r['n_punkte'],
+            'erstellt_am' => (string)$r['erstellt_am'],
+        ];
+    }
+    return $aus;
+}
+
+/**
+ * Die Zeitfenster der Sperrvermerke einer Quelle mitverschieben
+ * (Web 14.2.0, R64).
+ *
+ * WARUM DAS BIS HIERHER GEFEHLT HAT UND WARUM ES JETZT AUFFAELLT. Die
+ * Umdatierung eines Diensttags (`tageszuordnung_lib.php`) verschiebt den Tag,
+ * die Einsaetze, die Segmente, die Phasen, die Reanimationsereignisse — und
+ * ueber `spur_zeit_verschieben()` auch jeden Spurpunkt. Die Sperrvermerke
+ * blieben stehen. Solange sie nur in dieser Datenbank lagen, war das ein
+ * Schoenheitsfehler mit Folgen im Verborgenen: Der Vermerk sperrte einen
+ * Zeitraum, in dem die Spur nicht mehr liegt, nachgelieferte Punkte kamen
+ * wieder durch, und die Fahrt lag in Einsatz UND Segment.
+ *
+ * Das ist wortgleich der Schaden, gegen den Backlog Nr. 63 antritt — und ab
+ * Web 14.2.0 reist das falsche Fenster zusaetzlich in jede Sicherung.
+ * Deshalb wird es hier behoben und nicht vertagt.
+ *
+ * VERSCHOBEN WIRD NACH QUELLE, NICHT NACH ZIEL. `von_ts` und `bis_ts`
+ * beschreiben einen Ausschnitt der QUELLSPUR; wer zusaetzlich nach
+ * `mission_id` verschoebe, verschoebe jeden Vermerk zweimal, dessen Quelle
+ * und Ziel am selben Tag haengen — und das ist der Regelfall.
+ *
+ * @param list<int> $ids Kennungen der Quellen (Einsaetze oder Segmente)
+ * @return int Zahl der verschobenen Vermerke
+ */
+function schnitte_zeit_verschieben(PDO $pdo, string $ownerType, array $ids,
+                                   int $delta): int
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    if (!$ids || $delta === 0) { return 0; }
+    $n = 0;
+    foreach (array_chunk($ids, 1000) as $block) {
+        $platz = implode(',', array_fill(0, count($block), '?'));
+        $q = $pdo->prepare("UPDATE track_cuts
+                               SET von_ts = von_ts + ?, bis_ts = bis_ts + ?
+                             WHERE owner_type = ? AND owner_id IN ($platz)");
+        $q->execute(array_merge([$delta, $delta, $ownerType], $block));
+        $n += $q->rowCount();
+    }
+    return $n;
 }
 
 /**

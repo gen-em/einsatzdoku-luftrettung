@@ -6,11 +6,15 @@
 # von Android und deshalb hier NICHT aufgefuehrt. Was hier steht, sind die drei
 # zugelassenen Fremdbestandteile und ihr Pruefwerkzeug:
 #
-#   AndroidX / Compose        Apache-2.0   Oberflaeche, Kamera, Lebenszyklus
-#   ZXing (core)              Apache-2.0   QR-Erkennung aus dem Kamerabild
+#   AndroidX / Compose        Apache-2.0   Oberflaeche, Lebenszyklus
 #   play-services-wearable    proprietaer  ausschliesslich der Data Layer
 #
-# Alle drei werden NUR ZUR BAUZEIT bezogen; die App laedt zur Laufzeit nichts
+# ZWEI STATT VIER, seit R63 (Backlog Nr. 84). Der Adress-QR ist ersatzlos
+# entfallen -- die App kennt genau eine Serveradresse, es gibt nichts mehr zu
+# scannen. Mit ihm gingen ZXing (QR-Erkennung) und die vier CameraX-Bausteine;
+# die App fragt seither nicht mehr nach der Kamera.
+#
+# Beide werden NUR ZUR BAUZEIT bezogen; die App laedt zur Laufzeit nichts
 # nach. Herkunft, Lizenz und -- fuer die proprietaere Wearable-Bibliothek --
 # die Vertraeglichkeit mit der AGPL werden in docs/Lizenzen.md nachgetragen
 # (Block D, E-S4-04). Bis dahin ist diese Datei die vollstaendige Liste.
@@ -32,10 +36,6 @@ activityCompose = "1.10.1"
 composeBom = "2025.06.01"
 wearCompose = "1.4.1"
 wearInput = "1.2.0"
-camerax = "1.4.2"
-
-# --- ZXing (Apache-2.0) ---
-zxing = "3.5.4"
 
 # --- Google Play-Dienste (proprietaer, nur Data Layer) ---
 playServicesWearable = "20.0.1"
@@ -70,12 +70,7 @@ androidx-wear-compose-material = { group = "androidx.wear.compose", name = "comp
 androidx-wear-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "wearCompose" }
 androidx-wear-input = { group = "androidx.wear", name = "wear-input", version.ref = "wearInput" }
 
-androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
-androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
-androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
-androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
 
-zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
 

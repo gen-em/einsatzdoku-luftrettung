@@ -2384,6 +2384,14 @@ ui_seite_start(['titel' => 'Einstellungen']);
       tag_unbrauchbar:   'unbrauchbares Datum des Diensttags',
       tag_uebersprungen: 'Diensttag wurde übersprungen',
       tag_mehrdeutig:    'Diensttag nicht eindeutig zuzuordnen',
+      /* Die vier Gründe, aus denen ein Sperrvermerk des Schnitts verworfen
+         wird (Nutzlast 9). Ohne Eintrag hier greift der Rückfall
+         `GRUND_TEXT[k] || k` und zeigt den Rohwert — also „schnitt_ohne_quelle
+         3" statt eines Satzes. */
+      schnitt_ohne_ziel:   'Sperrvermerk ohne Einsatz',
+      schnitt_ohne_quelle: 'Sperrvermerk ohne Quelle',
+      schnitt_werte:       'Sperrvermerk mit unbrauchbaren Werten',
+      schnitt_aufbau:      'Sperrvermerk mit unbrauchbarem Aufbau',
     };
 
     /* „1 Diensttage" ist ein kleiner Fehler mit großer Wirkung: Er lässt den
@@ -2400,6 +2408,22 @@ ui_seite_start(['titel' => 'Einstellungen']);
         ? ` Übersprungen: ${zahlwort(s.missions_skipped, 'Einsatz', 'Einsätze')}, `
           + `${zahlwort(s.rests_skipped, 'Ruhesegment', 'Ruhesegmente')}${gruende}.`
         : '';
+      /* SPERRVERMERKE DES SCHNITTS (Nutzlast 9, Backlog Nr. 63).
+         Die Zeile erscheint NUR, wenn die Datei überhaupt welche trug — eine
+         Zeile „0 übernommen, 0 verworfen" wäre eine Antwort auf eine Frage,
+         die niemand gestellt hat. „Verworfen" wird nur genannt, wenn es
+         welche gab: Es ist die einzige der drei Zahlen, die einen Verlust
+         bedeutet, und sie soll auffallen statt in einer Aufzählung zu
+         verschwinden. Die Gründe stehen daneben in `skipped_reasons`. */
+      const sc = s.schnitte || {};
+      const scSumme = (sc.uebernommen || 0) + (sc.uebersprungen || 0) + (sc.verworfen || 0);
+      const schnitte = scSumme
+        ? ` Sperrvermerke des Schneidens: `
+          + `${sc.uebernommen || 0} übernommen`
+          + (sc.uebersprungen ? `, ${sc.uebersprungen} übersprungen (Einsatz war schon da)` : '')
+          + (sc.verworfen ? `, ${sc.verworfen} verworfen` : '')
+          + '.'
+        : '';
       const pk = s.papierkorb || {};
       const pkSumme = (pk.einsaetze || 0) + (pk.diensttage || 0) + (pk.ruhezeiten || 0);
       const papierkorb = pkSumme
@@ -2415,7 +2439,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
         + `${zahlwort(s.stammdaten, 'Standortdaten-Eintrag', 'Standortdaten-Einträge')}`
         + (s.stammdaten_skipped
             ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '')
-        + '.' + uebersprungen + papierkorb + (zusatz || '')
+        + '.' + uebersprungen + schnitte + papierkorb + (zusatz || '')
         /* Die Höhenberechnung läuft seit Web 4.6.0 NACH dem Einspielen und
          * kann einzeln scheitern, ohne die Wiederherstellung zu gefährden
          * (M5-05). Wenn das passiert, gehört es gesagt — sonst fehlt später
@@ -2696,6 +2720,16 @@ ui_seite_start(['titel' => 'Einstellungen']);
             }
             for (const k of Object.keys(o.stats.papierkorb || {})) {
               s.papierkorb[k] = (s.papierkorb[k] || 0) + o.stats.papierkorb[k];
+            }
+            /* Die Sperrvermerke (Nutzlast 9). EIGENE SCHLEIFE, weil sie wie
+               `papierkorb` ein verschachtelter Block sind — die feste Liste
+               oben summiert nur flache Zahlen und ließe diese fallen. Genau
+               das ist der Fehler, gegen den der Kommentar über der Schleife
+               geschrieben ist: Sonst meldete die Anwendung die Zahlen des
+               letzten Fensters als Ergebnis des Ganzen. */
+            for (const k of Object.keys(o.stats.schnitte || {})) {
+              s.schnitte = s.schnitte || {};
+              s.schnitte[k] = (s.schnitte[k] || 0) + o.stats.schnitte[k];
             }
             for (const [g, z] of Object.entries(o.stats.skipped_reasons || {})) {
               s.skipped_reasons = s.skipped_reasons || {};

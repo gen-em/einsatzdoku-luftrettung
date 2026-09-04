@@ -54,7 +54,15 @@ DEMO_EMAIL = "demo@gen-em.org"
 DEMO_PASSWORT = "nadokudemo0815"
 
 ALLE_STUFEN = ["konto", "stammdaten", "geraet", "ingest", "zuordnen",
-               "nachtragen", "manuell", "papierkorb", "sperrliste"]
+               "nachtragen", "manuell", "papierkorb", "sperrliste", "schneiden"]
+# `schneiden` STEHT AM ENDE und nicht, wie das Konzept es zuerst vorsah,
+# zwischen `zuordnen` und `nachtragen` (E-R64-22). Der Grund sind die drei
+# Stufen dazwischen: `nachtragen`, `papierkorb` und `sperrliste` suchen ihre
+# Einsaetze ueber `start_hhmm` -- die erste bricht bei zwei Treffern ab, die
+# zweite nimmt still `treffer[0]`. Ein geschnittener Einsatz waere ab der
+# Stufe ein zusaetzlicher Einsatz in derselben Liste. Am Ende gibt es diese
+# Ueberschneidung nicht, und der geschnittene Einsatz braucht ohnehin keine
+# der drei: Er bleibt bewusst leer (api/schneiden.php fuellt keine Felder).
 
 
 class Lauf:
@@ -213,71 +221,144 @@ def kennungen(s) -> dict:
 
 
 # --------------------------------------------------------------- 3. Geraet
+def _geraete_ids(s) -> set[str]:
+    """Die internen Kennungen der echten Geraete des Kontos.
+
+    UEBER DIE FORMULARKENNUNG, nicht ueber die Nachbarschaft der Felder. Die
+    Geraeteliste rendert je Geraet ein eigenes Loeschformular
+    `<form … id="f-devdel-<id>">`; die Knoepfe verweisen mit `form=` darauf
+    (P3/O11). Zwei aeltere Ausdruecke suchten nebeneinanderliegende
+    <input>-Felder und fanden seither NICHTS -- das Aufraeumen lief leer, und
+    jeder Wiederholungslauf hinterliess ein weiteres unbrauchbares Geraet,
+    bis die Grenze von fuenf je Konto erreicht war und `add` still scheiterte
+    (F-S2-A).
+    """
+    return set(re.findall(r'id="f-devdel-(\d+)"', s.get("einstellungen.php?t=geraete").text))
+
+
 def stufe_geraet(lauf: Lauf) -> None:
+    """Die zwei Referenzgeraete -- ueber den ECHTEN Kopplungsweg (E-R64-15).
+
+    WARUM NICHT MEHR ueber die Geraeteseite (`action=add`). Der kurze Weg legt
+    ein Geraet mit Beschriftung an und sonst nichts: `geraet_art` und
+    `geraet_modell` bleiben NULL. Seit Web 14.0.0 kopiert `ingest.php` beide
+    Spalten beim Anlegen an jeden Einsatz und jedes Segment (Momentaufnahme,
+    R64) -- mit NULL an der Quelle trug der ganze Referenzbestand eine leere
+    Momentaufnahme, und der edbak-Kreislauf belegte fuer R64 nichts. Art und
+    Modell entstehen AUSSCHLIESSLICH in `pair.php` im Ja-Zweig; einen
+    Nachtragsweg gibt es nicht.
+
+    VIER SCHRITTE JE GERAET, und der dritte laeuft im Browser des Kontos:
+
+      1. `POST pair.php {"aktion":"start","geraet":{...}}`, OHNE Kopfzeilen.
+         Die Antwort traegt Code, Kennung und Schluessel im JSON -- damit
+         faellt das Abklauben des Markups weg, das frueher an jeder
+         Umgestaltung der Seite zerbrach (F-S2-A).
+      2. Zustand sichern, SOFORT. Der Schluessel geht genau einmal ueber die
+         Leitung; ein Abbruch zwischen Schritt 1 und 4 hinterliesse sonst
+         eine Kopplungssitzung, zu der niemand mehr den Schluessel hat.
+      3. `POST einstellungen.php?t=geraete action=koppeln_bestaetigen` mit dem
+         Code -- das Einloesen im Konto.
+      4. `POST pair.php {"aktion":"bestaetigen","antwort":"ja"}` MIT
+         X-Device-Id/X-Api-Key. Erst hier entsteht die Zeile in `devices`,
+         und erst hier stehen Art und Modell darin.
+
+    DER BELEG FUER SCHRITT 3 IST SCHRITT 4, nicht die HTTP-Antwort. Erfolg ist
+    dort eine 302, Misserfolg eine 200 mit Fehlertext im HTML -- nach dem
+    automatischen Folgen der Umleitung sind beide 200. Wer sich darauf
+    verlaesst, meldet Erfolg und faellt erst spaeter auf. Bleibt Schritt 3
+    ohne Wirkung, antwortet Schritt 4 mit 409 `nicht_beansprucht`; das ist der
+    positive Beleg, und er wird hier ausdruecklich geprueft.
+
+    DIE BESCHRIFTUNG KOMMT ZULETZT. `pair.php` setzt beim Ja
+    `label = geraet_vorgabename(art)` -- also schlicht „Uhr" oder „Handy".
+    Die sprechenden Namen der Referenz entstehen danach ueber
+    `action=rename`.
+
+    RATENSCHUTZ: `pair_start` laesst 20 Anfragen je 600 s und Adresse zu, und
+    NICHTS setzt den Topf zurueck (kein `rate_erfolg('pair_start')` im Baum).
+    Zwei Geraete je Lauf heisst zehn Laeufe je zehn Minuten. Wer beim
+    Entwickeln oefter fahren muss, raeumt den Topf so ab, wie es
+    `tools/kopplungsprobe/probe.php` tut -- hier steht kein SQL (R4).
+    """
     s = lauf.demo_sitzung()
     if lauf.zustand.get("geraete"):
         melde("  Geräte bestehen bereits.")
         return
-    # ZUERST AUFRAEUMEN. Ein Geraeteschluessel wird GENAU EINMAL angezeigt
-    # (einstellungen.php). Liegt im Zustand keiner, ist ein etwa vorhandenes
-    # Geraet unbrauchbar — es laesst sich nicht mehr benutzen und nimmt nur
-    # einen Platz der Geraetegrenze weg. Also weg damit, bevor neue entstehen.
-    html = s.get("einstellungen.php?t=geraete").text
-    # UEBER DIE FORMULARKENNUNG, nicht ueber die Nachbarschaft der Felder.
-    # Die Geraeteliste rendert je Geraet ein eigenes Loeschformular
-    # `<form … id="f-devdel-<id>">`; die Knoepfe verweisen mit `form=` darauf
-    # (P3/O11). Die beiden alten Ausdruecke suchten nebeneinanderliegende
-    # <input>-Felder und fanden seither NICHTS — das Aufraeumen lief leer, und
-    # jeder Wiederholungslauf hinterliess ein weiteres unbrauchbares Geraet,
-    # bis die Grenze von fuenf je Konto erreicht war und `add` still scheiterte
-    # (F-S2-A). Die Formularkennung ist der stabilere Anker: Sie traegt die
-    # Geraetekennung selbst.
-    alt_ids = re.findall(r'id="f-devdel-(\d+)"', html)
-    for gid in set(alt_ids):
+
+    quelle = json.loads((QUELLE / "geraete.json").read_text("utf-8"))["geraete"]
+
+    # ZUERST AUFRAEUMEN, UND NUR HIER. Liegt im Zustand kein Schluessel, ist
+    # ein etwa vorhandenes Geraet unbrauchbar -- es laesst sich nicht mehr
+    # benutzen und nimmt nur einen Platz der Grenze von fuenf weg.
+    #
+    # DIESE SCHLEIFE DARF NIE NACH DEM INGEST LAUFEN: `devices` haengt an
+    # `missions`, `rest_segments` und `day_refs` mit ON DELETE SET NULL
+    # (schema.sql 252/357/430). Ein Aufraeumen danach loeschte nicht zwei
+    # Zeilen, sondern trennte den ganzen Bestand von seinen Geraeten -- ohne
+    # Fehlermeldung, sichtbar erst als leeres `days[].refs[].device_id` im
+    # Referenz-Export.
+    alt_ids = _geraete_ids(s)
+    for gid in alt_ids:
         s.csrf_auffrischen("einstellungen.php?t=geraete")
         s.post("einstellungen.php?t=geraete",
                {"csrf": s.csrf, "action": "delete", "id": gid})
     if alt_ids:
-        melde(f"  {len(set(alt_ids))} Gerät(e) ohne bekannten Schlüssel entfernt.")
+        melde(f"  {len(alt_ids)} Gerät(e) ohne bekannten Schlüssel entfernt.")
 
     geraete = {}
-    for kennung, beschriftung in (("11", "Uhr Luftrettung (Referenz)"),
-                                  ("12", "Uhr Bodendienst (Referenz)")):
-        s.csrf_auffrischen("einstellungen.php?t=geraete")
-        # MIT REITER. Die Einstellungsseite fuehrt ihre Abschnitte ueber `t`;
-        # ohne ihn antwortet sie mit dem Profil-Reiter, und der Schluesselkasten
-        # steht nur im Geraete-Reiter. Das Geraet entsteht trotzdem — der
-        # Schluessel waere dann fuer immer weg, denn er wird genau einmal
-        # angezeigt.
-        antwort = s.post("einstellungen.php?t=geraete",
-                         {"csrf": s.csrf, "action": "add", "label": beschriftung})
-        # Markup seit P3/O11 (Web 9.12.0) — der Kasten „Zugangsdaten des neuen
-        # Geraets" als Baustein `codeblock`, Titel und Wert als eigene <p>:
-        #   <p class="codeblock-titel">Geräte-ID</p>
-        #   <p class="codeblock-wert">dev-…</p>
-        #   <p class="codeblock-titel">API-Schlüssel</p>
-        #   <p class="codeblock-wert">…</p>
-        # Vorher stand dort <code>…</code>; danach fand dieser Leser nichts
-        # mehr, und das Geraet war mitsamt seinem nur einmal angezeigten
-        # Schluessel verloren (F-S2-A).
-        def wert_nach(titel: str) -> str | None:
-            m = re.search(r'codeblock-titel"[^>]*>\s*' + re.escape(titel)
-                          + r'\s*</p>\s*<p class="codeblock-wert"[^>]*>\s*(.*?)\s*</p>',
-                          antwort.text, re.S)
-            return m.group(1).strip() if m else None
+    bekannt = _geraete_ids(s)
+    for g in quelle:
+        kennung, beschriftung, block = g["nummer"], g["beschriftung"], g["block"]
 
-        geraeteId = wert_nach("Geräte-ID")
-        schluessel = wert_nach("API-Schlüssel")
-        if not geraeteId or not schluessel:
+        # --- 1. Sitzung eroeffnen (ohne Kopfzeilen) ------------------------
+        a = s.json_post("pair.php", {"aktion": "start", "geraet": block})
+        if a.status_code != 200:
+            raise RuntimeError(f"Gerät {kennung}: pair.php start antwortete "
+                               f"{a.status_code}: {a.text[:200]}")
+        o = a.json()
+        code, dev, key = o.get("code"), o.get("device_id"), o.get("api_key")
+        if not code or not dev or not key:
+            raise RuntimeError(f"Gerät {kennung}: start ohne Code, Kennung oder Schlüssel: {o}")
+
+        # --- 2. Zustand sofort sichern -------------------------------------
+        geraete[kennung] = {"device_id": dev, "api_key": key, "label": beschriftung,
+                            "art": block["art"], "schwebend": True}
+        lauf.zustand["geraete"] = geraete
+        lauf.sichern()
+
+        # --- 3. Code im Konto einloesen ------------------------------------
+        s.csrf_auffrischen("einstellungen.php?t=geraete")
+        s.post("einstellungen.php?t=geraete",
+               {"csrf": s.csrf, "action": "koppeln_bestaetigen", "code": code})
+
+        # --- 4. Am Geraet mit Ja bestaetigen -- und DAS ist der Beleg ------
+        b = s.s.post(f"{s.basis}/pair.php",
+                     json={"aktion": "bestaetigen", "antwort": "ja"}, timeout=60,
+                     headers={"X-Device-Id": dev, "X-Api-Key": key,
+                              "Content-Type": "application/json"})
+        s.anfragen += 1
+        if b.status_code != 200 or not b.json().get("ok"):
             raise RuntimeError(
-                "Gerät angelegt, aber Kennung oder Schlüssel nicht gefunden"
-                + (f" — Seite meldet: {fehlertext(antwort.text)}"
-                   if fehlertext(antwort.text) else "")
-                + ". Der Schlüssel wird nur EINMAL angezeigt; das Gerät ist damit "
-                  "unbrauchbar und wird beim nächsten Lauf aufgeräumt.")
-        geraete[kennung] = {"device_id": geraeteId, "api_key": schluessel,
-                            "label": beschriftung}
-        melde(f"  Gerät {kennung}: {geraete[kennung]['device_id']}")
+                f"Gerät {kennung}: das Ja am Gerät antwortete {b.status_code}: "
+                f"{b.text[:200]} — bei 409 `nicht_beansprucht` hat das Einlösen "
+                f"des Codes im Konto nicht gewirkt.")
+        geraete[kennung]["schwebend"] = False
+
+        # --- 5. Sprechende Beschriftung ------------------------------------
+        neu_ids = _geraete_ids(s) - bekannt
+        if len(neu_ids) != 1:
+            raise RuntimeError(f"Gerät {kennung}: nach dem Koppeln stehen "
+                               f"{len(neu_ids)} neue Geräte in der Liste, erwartet war eins")
+        intern = neu_ids.pop()
+        bekannt.add(intern)
+        s.csrf_auffrischen("einstellungen.php?t=geraete")
+        s.post("einstellungen.php?t=geraete",
+               {"csrf": s.csrf, "action": "rename", "id": intern, "label": beschriftung})
+        geraete[kennung]["intern"] = intern
+
+        melde(f"  Gerät {kennung} ({block['art']}): {dev} — {beschriftung}")
+
     lauf.zustand["geraete"] = geraete
 
 
@@ -635,6 +716,96 @@ def stufe_sperrliste(lauf: Lauf) -> None:
         raise RuntimeError("Sperrliste greift nicht: Der Einsatz wurde wieder angelegt.")
 
 
+# ----------------------------------------------------------- 10. Schneiden
+def stufe_schneiden(lauf: Lauf) -> None:
+    """Aus einem Ruhesegment einen Einsatz schneiden (E-R64-16).
+
+    WOFUER. Der Referenzbestand hatte keinen Schnitt -- und damit keinen
+    Sperrvermerk in `track_cuts`. Backlog Nr. 63 (der Vermerk muss die
+    Konto-Sicherung ueberstehen) war deshalb nur ueber eine eigens gebaute
+    Probe zu belegen. Mit einem Schnitt IM Bestand prueft ihn der Demo-Reset
+    auf dem Produktivserver alle 30 Minuten von selbst.
+
+    WAS DER SCHNITT ANLEGT: einen Einsatz mit `origin = schnitt`, die drei
+    Phasen 3/4/7, die gewanderten Spurpunkte und den Sperrvermerk am
+    Quellsegment. Er fuellt KEINE Einsatzfelder -- Einsatzort, Alter und
+    Diagnose sind Ende-zu-Ende-verschluesselt und entstehen im Browser.
+
+    WIE DAS SEGMENT GEFUNDEN WIRD. `api/schneiden.php` will die INTERNE
+    Kennung (`rest_id`); die Quelldaten kennen nur die `client_ref`, und
+    `api/day.php` liefert die client_ref nicht mit. Die Bruecke ist die
+    Beginnzeit: Sie ist innerhalb eines Diensttags eindeutig (gemessen ueber
+    alle 16 Dienste: keine Dublette), und `api/day.php` gibt sie als
+    `start_hhmm` fertig in Ortszeit heraus. Ueber UTC zu rechnen waere der
+    naheliegende und falsche Weg -- daran ist der Schnitt schon einmal zwei
+    Stunden danebengegriffen (api/day.php, Kommentar zu den Zeiten).
+    """
+    s = lauf.demo_sitzung()
+    if lauf.zustand.get("schnitte"):
+        melde("  Schnitt besteht bereits.")
+        return
+    if not lauf.zustand.get("diensttage"):
+        raise RuntimeError("Ohne die Stufe `zuordnen` gibt es keine Diensttag-Kennungen.")
+
+    getan = []
+    for pfad in sorted((QUELLE / "dienste").glob("D*.json")):
+        d = json.loads(pfad.read_text("utf-8"))
+        for sc in d.get("schnitte", []):
+            kennung = d["kennung"]
+            tag_id = lauf.zustand["diensttage"].get(kennung)
+            if not tag_id:
+                raise RuntimeError(f"{kennung}: kein Diensttag im Zustand")
+            quelle = next((r for r in d["ruhesegmente"]
+                           if r["client_ref"] == sc["segment"]), None)
+            if quelle is None:
+                raise RuntimeError(f"{kennung}: Quellsegment {sc['segment']} steht nicht im Dienst")
+
+            # LESEN IST EIN GET. Der POST auf api/day.php ist ein reines
+            # UPDATE des Diensttags (Kopfkommentar dort); die Segmente kommen
+            # ueber `?d=<day_id>`.
+            a = s.get(f"api/day.php?d={tag_id}")
+            if a.status_code != 200:
+                raise RuntimeError(f"{kennung}: api/day.php?d={tag_id} antwortete "
+                                   f"{a.status_code}")
+            liste = a.json()
+            treffer = [r for r in liste.get("rest_segments", [])
+                       if r.get("start_hhmm") == quelle["beginn"][11:16]]
+            if len(treffer) != 1:
+                raise RuntimeError(
+                    f"{kennung}: {len(treffer)} Ruhesegmente beginnen um "
+                    f"{quelle['beginn'][11:16]} — erwartet war genau eines")
+            rest_id = treffer[0]["id"]
+
+            antwort = s.json_post("api/schneiden.php", {
+                "action": "schneiden", "rest_id": rest_id,
+                "beginn": sc["beginn"][11:16], "ende": sc["ende"][11:16],
+                "beginn_tag": 0, "ende_tag": 0,
+                "phasen": {nr: wann[11:16] for nr, wann in sc["phasen"].items()},
+            })
+            if antwort.status_code != 200:
+                raise RuntimeError(f"{kennung}: api/schneiden.php antwortete "
+                                   f"{antwort.status_code}: {antwort.text[:300]}")
+            o = antwort.json()
+            # `genommen > 0` IST KEINE PRUEFUNG: Bei null Punkten rollt der
+            # Server zurueck und antwortet 409 -- eine 200 traegt darum immer
+            # mehr als null. Was hier wirklich schiefgehen kann, ist eine
+            # STILL verworfene Phase; sie steht als `rejected` im Rumpf.
+            if o.get("rejected"):
+                raise RuntimeError(f"{kennung}: der Schnitt hat Angaben verworfen: "
+                                   f"{o['rejected']}")
+            getan.append({"dienst": kennung, "segment": sc["segment"], "rest_id": rest_id,
+                          "mission_id": o.get("mission_id"), "genommen": o.get("genommen"),
+                          "geblieben": o.get("geblieben"),
+                          "phasen": len(sc["phasen"])})
+            melde(f"  {kennung}: aus {sc['segment']} geschnitten — Einsatz "
+                  f"{o.get('mission_id')}, {o.get('genommen')} Punkte gewandert, "
+                  f"{o.get('geblieben')} geblieben, {len(sc['phasen'])} Phasen")
+
+    if len(getan) != 1:
+        raise RuntimeError(f"erwartet wird genau ein Schnitt, ausgefuehrt: {len(getan)}")
+    lauf.zustand["schnitte"] = getan
+
+
 # ------------------------------------------------------------------ Ablauf
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__,
@@ -670,6 +841,7 @@ def main() -> int:
         "manuell": lambda: stufe_manuell(lauf),
         "papierkorb": lambda: stufe_papierkorb(lauf),
         "sperrliste": lambda: stufe_sperrliste(lauf),
+        "schneiden": lambda: stufe_schneiden(lauf),
     }
 
     for name in stufen:

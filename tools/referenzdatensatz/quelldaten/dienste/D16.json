@@ -14,7 +14,7 @@
     "rettungsmittel": "NEF Talwang 76/1",
     "beginn": "2026-12-27 07:00",
     "ende": "2026-12-27 19:00",
-    "day_ref": "d-12-7743019628",
+    "day_ref": "ad-12-7743019628",
     "spur_ausgangspunkt": {
       "lat": 47.559,
       "lon": 10.217
@@ -29,43 +29,43 @@
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-12-8198171391",
+      "client_ref": "ar-12-8198171391",
       "beginn": "2026-12-27 07:00",
       "ende": "2026-12-27 07:13",
       "final": true
     },
     {
-      "client_ref": "r-12-7560769284",
+      "client_ref": "ar-12-7560769284",
       "beginn": "2026-12-27 08:10",
       "ende": "2026-12-27 08:36",
       "final": true
     },
     {
-      "client_ref": "r-12-8094351368",
+      "client_ref": "ar-12-8094351368",
       "beginn": "2026-12-27 09:51",
       "ende": "2026-12-27 10:15",
       "final": true
     },
     {
-      "client_ref": "r-12-3823750980",
+      "client_ref": "ar-12-3823750980",
       "beginn": "2026-12-27 11:47",
       "ende": "2026-12-27 12:12",
       "final": true
     },
     {
-      "client_ref": "r-12-6796655553",
+      "client_ref": "ar-12-6796655553",
       "beginn": "2026-12-27 13:06",
       "ende": "2026-12-27 13:31",
       "final": true
     },
     {
-      "client_ref": "r-12-2434474629",
+      "client_ref": "ar-12-2434474629",
       "beginn": "2026-12-27 14:56",
       "ende": "2026-12-27 15:11",
       "final": true
     },
     {
-      "client_ref": "r-12-1327100288",
+      "client_ref": "ar-12-1327100288",
       "beginn": "2026-12-27 16:06",
       "ende": null,
       "final": false
@@ -73,7 +73,7 @@
   ],
   "einsaetze": [
     {
-      "client_ref": "m-12-2442188284",
+      "client_ref": "am-12-2442188284",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -162,7 +162,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-6509273311",
+      "client_ref": "am-12-6509273311",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -251,7 +251,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-8930335974",
+      "client_ref": "am-12-8930335974",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -338,7 +338,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-5766060351",
+      "client_ref": "am-12-5766060351",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -416,7 +416,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-7012456665",
+      "client_ref": "am-12-7012456665",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,

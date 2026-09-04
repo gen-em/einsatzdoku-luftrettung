@@ -129,7 +129,7 @@ Er ist **reproduzierbar**, und zwar vollständig aus dem Repositorium:
 sh   ../einspielen/lokal_starten.sh
 python3 ../einspielen/einspielen.py --stufen konto
 node ../einspielen/passwort_setzen.mjs '<Einrichtungslink>' nadokudemo0815
-python3 ../einspielen/einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste
+python3 ../einspielen/einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
 node ../browser/csv_import.mjs
 node ../browser/referenz_export.mjs
 ```

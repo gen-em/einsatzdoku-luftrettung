@@ -18,14 +18,26 @@ als eigene Datei daneben.
 
 ## Statusblock (K5, R62)
 
-**Stand: 02.09.2026** · Zweig `claude/s4-android-wear-blocks-b-c-x53l96` ·
-Web **12.8.0** · Android **0.7.7** · Fahrplan **Schritt 1 „S4 Merge"**
+**Stand: 04.09.2026** · Zweig `claude/rahmenplan-schritt-6-ewm0kx` ·
+Web **14.2.0** · Android **0.13.0** · Fahrplan **Schritt 6 „S4 Rest"**
 
-**In Arbeit:** der Merge nach `main` — `main` ist geholt, die Konflikte sind
-gelöst, Konzept und Prüfdokument liegen seit diesem Paket in
-`docs/konzepte/` (R62). Was noch fehlt, ist die Freigabe zum Push auf `main`;
-er deployt sofort, und danach muss eine Administratorin **`update.php`**
-aufrufen (Migration `2026_09_02_schnitte`).
+**In Arbeit: Schritt 6, Teil B (AP4).** Der Schritt ist beim Zuschnitt in
+drei ungleiche Teile zerfallen, und nur einer davon ist Umsetzung im engeren
+Sinn:
+
+| Teil | Inhalt | Stand |
+|---|---|---|
+| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Pakete 1–4 erledigt** (Android 0.11.0–0.12.0, Web 13.3.0). Offen nur Backlog **81** (Gegenprobe am S24) und **95** |
+| **B** | R64 — Herkunft und Gerät je Einsatz | **in Arbeit**: Konzept `Konzept-R64-Herkunft-Geraet.md` geliefert, **AP1, AP3, AP2 erledigt** (Web 14.0.0–14.2.0); offen **AP4** (Referenz) und **AP5** (Abschluss). Statusblock dort |
+| **C** | Play Console, Signaturweg, Track-Release, Gerätetest | **vorbereitet, soweit es ohne Schlüssel geht** (`Vorbereitung-Play-Console.md`, Android 0.13.0). Blockiert bleibt, was D-U-N-S und Signaturschlüssel braucht |
+
+**Paket 1 (04.09.2026, Android 0.11.0) — erledigt.** Die App konnte sich seit
+Web 13.0.0 nicht mehr koppeln; sie kann es wieder, und zwar nach dem
+umgekehrten Weg mit beiden Toren. Dazu die feste Adresse, der volle App-Name
+am Handy und die Fenster-Insets. Belegt: 301 Prüffälle grün (Handy 230, Uhr
+71), **0 übersprungen** — die 14 Rundlauffälle liefen zuletzt am 02.09.2026
+—, Wortliste 0/0/0, Bilderlauf 72 Bilder, und der volle Kopplungsweg am
+Emulator mit vier Bildern (`docs/bilder/s4-rest/`).
 
 **Erledigt:**
 
@@ -36,22 +48,140 @@ aufrufen (Migration `2026_09_02_schnitte`).
 | **A — Browser und Server** | A2a, A2b, A3, A1a | Web 12.5.0–12.8.0 |
 | **D — Abschluss** | D1, D2 | Android 0.7.6 |
 | Nacharbeit | 0.7.1–0.7.5, R58 (0.7.7) | |
+| **S4-Rest, Paket 1** | Kopplung 1a, Nr. 84/85/86 | Android 0.11.0 |
 
-**Wo es hakt — drei Dinge, die diese Instanz nicht abschließen kann:**
+**Zwei Stellen dieses Konzepts sind mit Paket 1 überholt:**
+
+1. **Abschnitt 13 sagt, der `geraet`-Block wandere „von `koppeln` nach
+   `bestaetigen`".** Das trifft nicht zu. Vertrag 1a.1 und `server/pair.php`
+   legen ihn an **`start`** — und das ist die Sache, nicht die Form: Die
+   Bestätigungsseite im Browser zeigt Art und Modell, und dafür muss der
+   Server sie kennen, bevor jemand „Verbinden" drückt. Gebaut ist nach dem
+   Vertrag.
+2. **Die Umfangszahlen sind zu klein.** Abschnitt 13 nennt fünf Quelldateien
+   und drei Prüfklassen. Tatsächlich rufen **vier** Prüfklassen `koppeln()`
+   bzw. `trennen()` (auch `MissionRundlaufTest` und `SendeRundlaufTest`), und
+   **acht** Dateien lasen die Serveradresse — darunter `Sender.kt` und
+   `HauptActivity.kt`, die dort nicht stehen.
+
+**Wo es hakt — was diese Instanz nicht abschließen kann:**
 
 1. **Der Gerätetest fehlt vollständig.** Es gab kein Telefon und keine Uhr.
    Was ein Emulator davon abdecken konnte, steht im Prüfdokument 1.1a; der
-   Rest ist die Prüfliste dort.
+   Rest ist die Prüfliste dort. Damit ist auch **Android 1.0.0 nicht
+   erreichbar** — sie gehört nach E-R45-7 an das Ende des Gerätetests.
 2. **Der Data Layer ist auf Hardware ungeprüft.** Zwischen zwei Emulatoren
    ist er nicht prüfbar — die Wear-OS-Companion-App des Telefons ist in
    diesem Container nachweislich nicht zu beschaffen (Prüfdokument 1.1a).
-3. **Die halbe A1 liegt.** QR-Kopplungscode und Vertragsnachtrag hängen an
-   S5 und R42; sie sind **Schritt 6**, nicht Schritt 1.
+3. **Kein signiertes APK.** Der Schlüssel liegt zu Recht nicht im
+   Repositorium (E-S4-16); der Baulauf erzeugt ein unsigniertes Release.
 
-**Nicht in diesem Schritt** (Fahrplan Schritt 6 „S4 Rest"): Kopplungsmodul
-auf Vertragsabschnitt 1a, Adress-QR, Gerätetest S24, Android 1.0.0,
-Changelog-Präfix `Android`, Umsetzung von E-S4-76 (R57). Backlog **63**
-gehört ebenfalls dorthin.
+**Paket 2 (04.09.2026, Web 13.3.0) — erledigt: R57.** Die Tagesübersicht
+zeigt einen Hinweis, wenn sich der angezeigte Diensttag mit einem anderen um
+mehr als eine Viertelstunde überschneidet — der Fall F-S4-D, den bis dahin
+erst die Jahresstatistik sichtbar machte. Kein neuer Baustein (der
+Meldungskasten stand), keine Migration, keine Automatik: Die beiden Tage
+bleiben stehen, der Hinweis führt auf `diensttag_zusammenfuehren.php`, wo ein
+Mensch entscheidet. Belegt an einem **echten** Fall im Prüfkonto (zwei
+Überschneidungen von je 12 Stunden, von den Rundläufen erzeugt), im Browser
+bei 360 und 1280 px, Bilder in `docs/bilder/s4-rest/`.
+
+Zwei Funde dabei: Das **Demo-Konto taugt für diesen Nachweis nicht** — es
+setzt sich alle 30 Minuten zurück und nimmt einen nachgestellten Fall mit
+(deshalb zeigt `10-tagesuebersicht` im Bilderlauf keinen Hinweis, und das ist
+richtig so). Und die erste Fassung des Textes ließ **zwei Tage wortgleich**
+dastehen: dieselbe Zeit, keine Zuordnung, kein Unterschied — ein frisch
+gekoppeltes Gerät hat weder Rettungsmittel noch Standort, also gerade im
+Auslöserfall. Jetzt steht die Zahl der Einsätze und Ruhesegmente dabei.
+
+**Paket 3 (04.09.2026, Android 0.11.1) — erledigt: Backlog 82 und 98.**
+Der Hinweis auf den Stromverbrauch steht an **zwei** Orten, weil einer nicht
+reicht: als zweiter Absatz im Akku-Dialog und — für alle, deren Freistellung
+schon stand und die den Dialog nie sehen — einmalig nach dem ersten
+Dienstbeginn. Der Versionscode der Uhr trägt einen Versatz von 1 000 000; am
+APK nachgemessen 1100 gegen 1001100 bei gleichem Versionsnamen. Dazu ist
+`android:roundIcon` aus beiden Manifesten ausgetragen (siehe unten).
+
+**Zwei Grenzen der Prüfmittel dabei gefunden:** Der **Bilderlauf kann keine
+Dialoge** (1 dp Inhalt gemessen — ein Compose-`AlertDialog` rendert in einem
+eigenen Fenster); der Bildfall ist deshalb wieder heraus, und das trifft jeden
+Dialog der App. Und der **Emulator war für den zweiten Weg zu zäh**: Er
+erscheint nur bei gesetzter Freistellung, frischem Merker *und* bestehender
+Kopplung, und unter TCG ist dabei zweimal der `system_server` neu gestartet.
+Belegt ist der Akku-Dialog im laufenden Dienst
+(`docs/bilder/s4-rest/07-akku-hinweis.png`), der Merker durch drei Prüffälle.
+
+**Paket 4 (04.09.2026, Android 0.12.0) — Akkuwarnung, auf Anweisung.** Nicht
+aus dem Rahmenplan, sondern aus der Arbeit an Nr. 82 heraus beauftragt: Die
+beiden einmaligen Hinweise sagen das Thema beim Einrichten — der Akku wird
+aber im Dienst knapp. Ein Wächter liest jetzt mit und meldet sich bei 25 %,
+15 % und 10 %, ab 15 % mit dem Knopf „Dienst beenden". Er **schaltet nichts
+ab**: Eine stille Abschaltung mitten im Dienst ist genau das, wogegen Paket E
+gebaut wurde. Belegt durch 14 Prüffälle; die Meldung selbst zeigt kein
+Bildmittel, weil sie eine Benachrichtigung ist.
+
+Dabei ist eine Frage entschieden worden, die sonst wiederkehrt: **Ein
+Sparmodus über den GPS-Takt kommt nicht.** Der Track ist bereits ausgedünnt,
+und das spart keinen Akku — die Ausdünnung wirft Punkte weg, *nachdem* das
+GPS sie geliefert hat. Was spart, wäre der Takt selbst; wie viel, ist
+ungemessen, und die Ausdünnung braucht Zwischenpunkte. Zu entscheiden mit
+zwei Zahlen aus dem Gerätetest.
+
+**Backlog 81 — zwei Ursachen ausgeschlossen, eine behoben, keine belegt.**
+Die App-Fassung auf dem Gerät war **0.7.7**, also nicht älter als 0.7.7 — der
+Punkt erledigt sich damit *nicht* mit der nächsten Auslieferung. Der Ort ist
+der **Kopf der Benachrichtigung**. „Themed Icons" waren **aus**, die
+`<monochrome>`-Ebene also gar nicht im Spiel; nachgerechnet wurde sie
+trotzdem, und sie ergibt entgegen der Vermutung eine **erkennbare** Silhouette
+(die Binnenzeichnung entsteht aus durchsichtigen Trennlinien, nicht aus den
+Farben). Was bleibt, ist `android:roundIcon`, das auf **dasselbe** adaptive
+Symbol zeigte wie `android:icon` — ein Attribut aus Android 7.1, das ein
+fertig gerundetes Bild erwartet. Es ist ausgetragen. **Ob der Befund damit
+erledigt ist, sagt nur der nächste Blick auf das S24**; der Emulator führt
+AOSP und zeichnet den Benachrichtigungskopf anders als One UI.
+
+**Noch offen in Teil A:** Backlog **81** — nur noch die Gegenprobe am S24,
+nichts mehr zu bauen — und **95** (die Rundläufe lassen Daten zurück; der
+SQL-Weg scheidet aus, siehe `Kopplungshilfe`). Backlog **63** gehört zu
+Teil B: Es hängt an derselben Formatänderung wie R64 und ist im Konzept
+`Konzept-R64-Herkunft-Geraet.md` als AP2 geschnitten.
+
+**Teil B ist beauftragt.** Der Auftraggeber hat am 04.09.2026 das Konzept
+`docs/konzepte/Konzept-R64-Herkunft-Geraet.md` geliefert (R64 und Nr. 63 als
+**eine** Formatänderung und **eine** Migration, AP1–AP5). Sein Auftrag sagt:
+„Android-Pakete des S4-Rests zuerst fertig bauen und pushen" — das ist mit
+diesem Paket geschehen.
+
+**Teil C (04.09.2026, Android 0.13.0) — vorbereitet, was ohne Schlüssel
+geht.** Die Erhebung liegt als `docs/konzepte/Vorbereitung-Play-Console.md`
+daneben: Kennungen und Zahlen zum Abschreiben, das Datensicherheitsformular
+ausgefüllt, die neun Berechtigungen begründet, der Store-Eintrag, der
+Wear-Teil, die Reihenfolge — und fünf Befunde, die vorher niemand
+aufgeschrieben hatte. **Vier davon sind mit Android 0.13.0 abgestellt:**
+
+- Die Uhr verlangt **gar keine Berechtigung** mehr (`WAKE_LOCK` war unbenutzt).
+  Damit ist die Prüfstandszeile aus B1 („Berechtigungen `uhr`: `WAKE_LOCK`,
+  kein `INTERNET`") ein Protokoll ihrer Zeit und nicht mehr der Ist-Stand.
+- Der **Geräteschlüssel folgt keiner Umleitung** mehr
+  (`instanceFollowRedirects = false`); eine 3xx gilt seither als Serverfehler.
+- Die App **führt zu Datenschutzerklärung und Impressum** — Karte
+  „Rechtliches" unter den Einstellungen, beide im Browser.
+- Die **Kopplungs- und Trennmails** des Servers tragen die Gerätebezeichnung;
+  das ist als Zuarbeit im Rahmenplan Abschnitt 6 vermerkt, damit es beim
+  Schreiben der Datenschutzerklärung nicht durchrutscht.
+
+Offen bleibt der fünfte: **Es wurde noch nie ein App Bundle gebaut.** Play
+nimmt für neue Apps kein APK mehr; `./gradlew bundleRelease` braucht den
+Signaturschlüssel und läuft deshalb erst beim Auftraggeber.
+
+Belegt am Emulator (Stufe II, ohne KVM): Kopplung gegen die örtliche
+Installation, `devices` mit `geraet_art = handy` und Modell — also die
+Momentaufnahme aus R64/AP1 am laufenden Gerät —, die neue Karte im Bild
+(`android/mockups/S4-handy-emulator-0.13.0-rechtliches.png`), beide
+Rechtstexte mit `[200]` im Serverprotokoll, und die Trennung wieder sauber.
+**Was der Emulator nicht konnte:** die Seite selbst anzeigen — der einzige
+Browser des Prüfabbilds ist ein WebView-Shell, und der antwortet unter QEMU
+ohne KVM nicht mehr. Zahlen und Grenzen in Abschnitt 9 der Vorbereitung.
 
 ---
 

@@ -4,9 +4,20 @@
 
     ES IST BEWUSST DUENN. Die Oberflaeche entsteht in Compose; ein XML-Thema
     wird nur noch fuer das gebraucht, was VOR der ersten Composable da sein
-    muss: die Fensterfarbe waehrend des Starts und die Farbe der Systemleisten.
+    muss: die Fensterfarbe waehrend des Starts.
     Alles andere — Farben, Abstaende, Schriftgroessen — steht in Compose und
     holt seine Werte aus `farben.xml`.
+
+    DIE FARBEN DER SYSTEMLEISTEN STANDEN HIER UND SIND AUSGETRAGEN
+    (Backlog Nr. 86). `android:statusBarColor` und `android:navigationBarColor`
+    sind seit API 35 wirkungslos — Android zeichnet die Leisten durchsichtig
+    ueber der App und waehlt die Symbolfarbe selbst. Die beiden Zeilen taten
+    also nichts, sahen aber so aus, als sei die Sache geregelt: Sie waren der
+    Grund, warum die Ueberlappung so lange niemandem auffiel.
+
+    Was jetzt dafuer sorgt: `enableEdgeToEdge()` in HauptActivity (Symbolfarbe)
+    und die Inset-Polster in `Bausteine.kt` und den drei Bildschirmen
+    (Freihalten der Flaeche).
 
     Das Elternthema ist die PLATTFORM-Fassung (`android:Theme.Material.Light`),
     nicht die von AppCompat oder Material Components: Beide waeren eine weitere
@@ -20,8 +31,6 @@
 <resources>
     <style name="Theme.NAdoku" parent="@android:style/Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/marke_rauch</item>
-        <item name="android:statusBarColor">@color/marke_dunkelblau</item>
-        <item name="android:navigationBarColor">@color/marke_rauch</item>
         <item name="android:colorAccent">@color/marke_orange</item>
     </style>
 </resources>

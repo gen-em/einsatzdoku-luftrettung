@@ -335,9 +335,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      Riegel: füllt nur ein Konto mit dem Präfix
 │   │                      „messstand" (s. LIESMICH.md)
 │   ├── referenzdatensatz/ erfundener Beispielbestand (16 Diensttage,
-│   │   │                  87 Einsätze) — Demo-Konto UND Regressionsreferenz
-│   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu Schema
-│   │   │                  und Prüfung (Abdeckungsmatrix, keine realen Namen)
+│   │   │                  88 Einsätze) — Demo-Konto UND Regressionsreferenz
+│   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu die zwei
+│   │   │                  Geräteblöcke (geraete.json), der eine Schnitt,
+│   │   │                  Schema und Prüfung (Abdeckungsmatrix, Sperrwörter
+│   │   │                  in den Gerätenamen, keine realen Namen)
 │   │   ├── generator/     erzeugt Ingest-Payloads, Formulardaten, CSV, GPX;
 │   │   │                  fester Zufallssamen, zwei Läufe gleiches Ergebnis
 │   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL;
@@ -1466,6 +1468,36 @@ gilt die Trefferliste selbst. **Sortiert** wird weiterhin über alle Spalten,
 auch über verborgene: Ein geteilter Link kann nach einer Spalte sortieren, die
 der eigene Bestand nicht zeigt — die Reihenfolge stimmt dann trotzdem, nur der
 Pfeil hat keinen Kopf.
+
+**Überschneidende Diensttage (R57, E-S4-76, ab Web 13.3.0).**
+`dt_ueberlappungen()` (`diensttag_lib.php`) liefert die Diensttage, die sich
+mit einem gegebenen zeitlich überschneiden; `index.php` zeigt daraus einen
+Hinweis in der Tagesübersicht. Der Fall ist **F-S4-D**: Zwei Geräte am selben
+Dienst legen zwei Diensttage an, weil `day_refs` je Gerät geschlüsselt ist —
+es geht nichts verloren, es steht alles doppelt.
+
+Drei Festlegungen, jede mit einem Grund:
+
+- **„Aktiv" heißt „nicht im Papierkorb", nicht „läuft noch".** Im Code sind
+  beide Lesarten belegt (`deleted_at IS NULL` gegen `ended_at IS NULL`). Ein
+  Tag im Papierkorb ist keine Doppelung mehr — wer ihn dorthin gelegt hat, hat
+  den Fall entschieden. Ein **beendeter** Tag ist sehr wohl eine: Die Doppelung
+  fällt in der Jahresstatistik auf, also lange nach dem Dienst.
+- **Ein laufender Tag endet „jetzt".** `ended_at` ist NULL, solange der Dienst
+  läuft; ohne diesen Ersatz überschnitte er sich mit nichts. Die Rechnung steht
+  deshalb **in SQL** (`COALESCE(ended_at, NOW())`) und nicht in PHP: Das
+  „jetzt" und der Vergleich müssen aus derselben Uhr kommen, sonst meldet die
+  Funktion eine Überschneidung von Minuten, die es nie gab.
+- **`DT_UEBERLAPPUNG_MIN` = 15 Minuten.** Der eigene Dienstwechsel
+  überschneidet sich regelmäßig um Minuten; ein Hinweis, der dabei jedes Mal
+  erscheint, wird überlesen. Der Auslöserfall — die vergessene Uhr im Spind —
+  dauert Stunden.
+
+**Serverseitig, nicht über `api/day.php`.** `index.php` kennt den gewählten Tag
+bereits; die Abfrage kostet einen Index-Zugriff, und der Hinweis steht sofort
+da statt nach dem Nachladen. Der Papierkorb-Hinweis daneben geht den anderen
+Weg, weil er von `mitPapierkorb` abhängt — einer Angabe, die `dt_laden()` an
+dieser Stelle gar nicht holt.
 
 **Artsymbole an einer Stelle.** `dt_art_symbole()` (`diensttag_lib.php`) liefert
 🚁 / 🚑 / ◌ samt Textalternative. `dt_art_symbol()` greift darauf zu, und
@@ -3864,7 +3896,7 @@ nicht bloß zugesichert:
 | Teil | Inhalt |
 |---|---|
 | `konto` | E-Mail, `password_hash`, `kdf_salt`, `kdf_iter`, `pat_wrap_pw`, `pat_wrap_rc`, `pat_key_check`, `account_key` |
-| `geraete` | `device_id`, `api_key_hash`, `label` — **ohne** das virtuelle Gerät „Manuelle Einträge" (s. u.) |
+| `geraete` | `device_id`, `api_key_hash`, `label`, seit Web 14.2.0 auch `geraet_art` und `geraet_modell` — **ohne** das virtuelle Gerät „Manuelle Einträge" (s. u.) |
 | `daten` | inneres Backup-JSON — `pat_blob` als **Chiffretext**, Papierkorb eingeschlossen |
 
 **Format 2 seit Web 8.0.0**: Der vierte Teil, `nachlauf`, ist entfallen
@@ -4437,6 +4469,32 @@ Gegenrichtung wuchs mit Android 0.8.0 um einen Schlüssel (`ortung`, ein
 Kurzcode des Ortungszustands) — auch er trägt kein Zugangsdatum, und ein
 eigener Prüffall zählt beide Mengen getrennt nach.
 
+**Die Uhr verlangt seit Android 0.13.0 gar keine Berechtigung mehr.** Sie
+hatte genau eine — `WAKE_LOCK` —, und die war im Quelltext unbenutzt: kein
+Aufruf von `PowerManager` oder `newWakeLock` im ganzen Modul. Eine
+Berechtigung auf Vorrat fragt zwar niemanden (Normalstufe, kein Dialog),
+erscheint aber im Store-Eintrag; sie ist ausgetragen. Das Handy führt acht,
+jede im Manifest begründet — und drei ausdrücklich **nicht**:
+`ACCESS_BACKGROUND_LOCATION` (ein sichtbarer Vordergrunddienst braucht sie
+nicht), `CAMERA` (mit R63 entfallen) und
+`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` (verstößt gegen die Inhaltsrichtlinie
+des Play Store).
+
+**Der Geräteschlüssel folgt keiner Umleitung** (seit Android 0.13.0).
+`HttpURLConnection` folgt in der Voreinstellung einer 3xx-Antwort von selbst
+und nimmt die Kopfzeilen mit — darunter `X-Api-Key`. `HttpNetzweg` setzt
+deshalb `instanceFollowRedirects = false`; eine Umleitung gilt seither als
+**Serverfehler**, weil die App mit genau zwei Endpunkten einer fest
+eingebauten Adresse spricht (R63). Der Sendeweg war nie betroffen: Er
+behandelt alles außer 200/400/401/413 als „später erneut".
+
+**Die App führt seit Android 0.13.0 zu den Rechtstexten.** Unter den
+Einstellungen stehen zwei Verweise auf `datenschutz.php` und `impressum.php`
+derselben Serveradresse; beide Seiten sind ohne Anmeldung erreichbar. Sie
+öffnen den Browser — die App hat **kein WebView**, und das soll sie nicht
+bekommen: Es wäre die einzige Stelle, an der fremdes Markup in ihrem Prozess
+liefe.
+
 Beide Module tragen dieselbe `applicationId` (`org.genem.nadoku`) und
 **müssen mit demselben Schlüssel signiert sein** — der Wear Data Layer
 stellt sonst nicht zu (E-S4-01). Der Signaturschlüssel entsteht außerhalb des
@@ -4502,7 +4560,7 @@ Drei Festlegungen dahinter, jede mit einem Grund:
   GPS.
 - **„Brauchbar" ist dieselbe Schwelle, nach der aufgezeichnet wird.**
   `Ausduenner.brauchbar()` ist öffentlich, damit Anzeige und Puffer nicht
-  zwei Regeln führen. Die Garmin-Uhr hält es genauso (`SyncView.mc` gegen
+  zwei Regeln führen. Die Uhr-App hält es genauso (`SyncView.mc` gegen
   `Track.mc`): Eine Anzeige mit anderer Schwelle wäre irreführend.
 - **Gemessen wird mit `SystemClock.elapsedRealtime()`**, nicht mit der
   Wanduhr und nicht mit der GPS-Zeit. Beide können springen; eine Frist, die

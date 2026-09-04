@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -84,6 +88,21 @@ fun Kopfleiste(titel: String, logoWahl: LogoWahl, modifier: Modifier = Modifier)
         modifier = modifier
             .fillMaxWidth()
             .background(Farbe.dunkelblau)
+            /* DIE STATUSLEISTE (Backlog Nr. 86).
+             *
+             * Seit `targetSdk = 36` zeichnet Android 15+ randlos, und zwar
+             * ohne zu fragen: Die App bekommt die volle Flaeche, und die
+             * Systemleisten liegen DARUEBER. Bis Android 0.10.1 hat niemand
+             * das beruecksichtigt -- Uhrzeit und Akkusymbol standen auf der
+             * Kopfleiste, teils auf dem Titel.
+             *
+             * DIE REIHENFOLGE DER DREI ZEILEN IST DIE LOESUNG, nicht ihre
+             * Anwesenheit: `background` VOR `windowInsetsPadding` faerbt die
+             * volle Hoehe einschliesslich des Streifens unter der
+             * Statusleiste; das Padding danach schiebt nur den INHALT
+             * herunter. Andersherum bliebe ein heller Streifen ueber der
+             * dunklen Leiste. */
+            .windowInsetsPadding(WindowInsets.statusBars)
             .padding(horizontal = Abstand.vier, vertical = Abstand.drei),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Abstand.drei),

@@ -124,6 +124,18 @@ const LIMIT_PHASEN      = 500;
 const LIMIT_REA_SESSION = 20;
 const LIMIT_REA_EREIGN  = 200;
 const LIMIT_RESSOURCEN  = 40;
+/* Die Sperrvermerke eines Einsatzes in einer Sicherung (Nutzlast 9, R64).
+ *
+ * SIE STEHT HIER UND NICHT IN backup_lib.php, obwohl heute nur die Sicherung
+ * sie braucht. Die Mengengrenzen sind Teil der gemeinsamen Pruefschicht
+ * (CLAUDE.md 4); eine Grenze daneben waere die erste, die man an zwei Orten
+ * suchen muesste.
+ *
+ * 200 IST REICHLICH UND SOLL ES SEIN. Ein Vermerk entsteht je Schnitt, und
+ * ein Schnitt ist eine Handbewegung in der Tagesansicht — zweistellig je
+ * Dienst waere schon viel. Wie ueberall hier schuetzt die Zahl vor einer
+ * entgleisten Nutzlast, nicht vor Betrieb. */
+const LIMIT_SCHNITTE    = 200;
 /* ZWEI GRENZEN, WEIL ES ZWEI FRAGEN SIND (F-S2-02, entschieden 31.08.2026).
  *
  * Bis Web 9.14.0 stand hier EINE Konstante, und sie wurde an zwei Stellen

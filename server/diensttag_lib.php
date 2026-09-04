@@ -631,6 +631,159 @@ function dt_zu_dayref(PDO $pdo, int $userId, int $deviceId, string $dayRef,
 const DT_NACHBARSCHAFT_TAGE = 3;
 
 /**
+ * Ab welcher Dauer eine zeitliche Ueberschneidung zweier Diensttage ein
+ * Hinweis ist (R57, E-S4-76). In Minuten.
+ *
+ * WARUM ES EINE SCHWELLE BRAUCHT UND NICHT "groesser als null" GENUEGT: Der
+ * eigene Dienstwechsel ueberschneidet sich regelmaessig um Minuten — wer den
+ * neuen Tag beginnt, bevor er den alten beendet hat, erzeugt eine
+ * Ueberschneidung, die kein Fehler ist, sondern die Reihenfolge zweier
+ * Handgriffe. Ein Hinweis, der dabei jedes Mal erscheint, wird nach dem
+ * dritten Mal ueberlesen — und steht dann unbemerkt da, wenn er einmal
+ * wirklich gemeint ist. Dieselbe Ueberlegung wie beim Geraete-Hinweis
+ * (M4-10), nur dass dieser sich nicht bestaetigen laesst.
+ *
+ * WARUM AUSGERECHNET 15: Der Fall, um den es geht, ist die vergessene Uhr im
+ * Spind — sie zeichnet den ganzen Dienst mit, also Stunden. Zwischen "zwei
+ * Handgriffe in der falschen Reihenfolge" und "zwei Geraete zeichnen
+ * denselben Dienst auf" liegen Groessenordnungen; die Schwelle muss nur
+ * irgendwo dazwischen liegen und nicht genau richtig sein. Eine Viertelstunde
+ * ist laenger als jeder Wechsel und kuerzer als jede Doppelaufzeichnung.
+ *
+ * Sie ist bewusst eine Konstante und kein Feld: Sollte sich zeigen, dass sie
+ * daneben liegt, ist sie an einer Stelle zu aendern — eine Einstellung je
+ * Konto waere eine Frage an Menschen, die den Fall gar nicht kennen.
+ */
+const DT_UEBERLAPPUNG_MIN = 15;
+
+/**
+ * Diensttage, die sich mit diesem zeitlich ueberschneiden (R57, E-S4-76).
+ *
+ * DER FALL, UM DEN ES GEHT (F-S4-D): Garmin und Handy sind gleichzeitig im
+ * Dienst. Beide legen ueber `dt_anlegen()` einen eigenen Diensttag an, weil
+ * `day_refs` je Geraet geschluesselt ist — das eine findet die Kennung des
+ * anderen nicht. Es geht nichts verloren und nichts wird ueberschrieben:
+ * **Es ist alles doppelt.** Zwei Diensttage, zwei Ruhesegment-Ketten,
+ * derselbe reale Einsatz zweimal, zwei Spuren desselben Wegs. In der
+ * Jahresstatistik zaehlt er doppelt, und bis hierher fiel das niemandem auf.
+ *
+ * DIESE FUNKTION AUTOMATISIERT NICHTS (E-S4-76 gegen E-S4-50). Die beiden
+ * Tage bleiben stehen — sie sind zwei vollstaendige Aufzeichnungen, und ein
+ * stiller Automatismus muesste raten, welche gilt. Sie macht die Doppelung
+ * nur **sichtbar**; was daraus folgt, entscheidet ein Mensch, und
+ * `dt_zusammenfuehren()` ist der Weg dafuer.
+ *
+ * "AKTIV" HEISST HIER: NICHT IM PAPIERKORB, nicht "laeuft noch". Im Code sind
+ * beide Lesarten belegt, und die Wahl ist keine Formsache:
+ *
+ *   - Ein Tag im Papierkorb ist keine Doppelung mehr — wer ihn dorthin
+ *     gelegt hat, hat den Fall entschieden.
+ *   - Ein BEENDETER Tag ist sehr wohl eine. Die Doppelung faellt in der
+ *     Jahresstatistik auf, also lange nach dem Dienst; ein Hinweis, der nur
+ *     waehrend des laufenden Dienstes erschiene, traefe genau den Zeitpunkt,
+ *     an dem niemand auf die Tagesuebersicht sieht.
+ *
+ * EIN LAUFENDER TAG ENDET "JETZT". `ended_at` ist NULL, solange der Dienst
+ * laeuft; ohne diesen Ersatz ueberschnitte er sich mit nichts. Ein Tag ohne
+ * `started_at` (von Hand angelegt, nie begonnen) hat keinen Zeitraum und
+ * bleibt aussen vor — er kann sich mit nichts ueberschneiden.
+ *
+ * @return list<array{id:int,day:string,started_at:?string,ended_at:?string,
+ *                    kind:?string,vehicle_name:?string,base_name:?string,
+ *                    minuten:int,laeuft:bool,einsaetze:int,segmente:int}>
+ *         nach Ueberschneidungsdauer absteigend; die groesste zuerst, weil
+ *         sie die wahrscheinlichste Doppelaufzeichnung ist.
+ */
+function dt_ueberlappungen(int $userId, int $dayId,
+                           int $minMinuten = DT_UEBERLAPPUNG_MIN): array
+{
+    $ziel = dt_laden($userId, $dayId);
+    if ($ziel === null || $ziel['started_at'] === null) { return []; }
+
+    /* Die Rechnung steht in SQL und nicht in PHP, weil der Ersatz fuer ein
+     * offenes Ende (`NOW()`) und der Vergleich aus DERSELBEN Uhr kommen
+     * muessen. Zwei Uhren — die des Servers und die der Datenbank — koennen
+     * auseinanderlaufen, und dann meldete die Funktion eine Ueberschneidung
+     * von wenigen Minuten, die es nie gab. */
+    $q = db()->prepare(
+        'SELECT d.id, d.day, d.started_at, d.ended_at, d.kind,
+                d.vehicle_name, d.base_name,
+                d.ended_at IS NULL AS laeuft,
+                /* Einsatz- und Segmentzahl stehen dabei, weil zwei Tage aus
+                 * demselben Dienst sonst NICHT ZU UNTERSCHEIDEN sind: Sie
+                 * tragen dieselbe Zeit, und ein Geraet, das gerade erst
+                 * gekoppelt hat, hat weder Rettungsmittel noch Standort. Im
+                 * Bilderlauf stand deshalb zweimal wortgleich
+                 * "17.07.2026 19:00, 12 Stunden Ueberschneidung".
+                 *
+                 * Es ist zugleich die Angabe, auf die es ankommt: Wer
+                 * entscheidet, welcher Tag bleibt, fragt zuerst, was daran
+                 * haengt. `diensttag_zusammenfuehren.php` unterscheidet seine
+                 * Kandidaten seit jeher genauso. */
+                (SELECT COUNT(*) FROM missions m
+                  WHERE m.day_id = d.id AND m.deleted_at IS NULL)  AS einsaetze,
+                (SELECT COUNT(*) FROM rest_segments r
+                  WHERE r.day_id = d.id AND r.deleted_at IS NULL)  AS segmente,
+                TIMESTAMPDIFF(
+                    MINUTE,
+                    GREATEST(d.started_at, :zStart),
+                    LEAST(COALESCE(d.ended_at, NOW()), COALESCE(:zEnde, NOW()))
+                ) AS minuten
+           FROM days d
+          WHERE d.user_id   = :user
+            AND d.id       <> :ziel
+            AND d.deleted_at IS NULL
+            AND d.started_at IS NOT NULL
+            /* Die eigentliche Ueberschneidungsbedingung: Zwei Zeitraeume
+             * ueberlappen sich genau dann, wenn jeder VOR dem Ende des
+             * anderen beginnt. */
+            AND d.started_at                        < COALESCE(:zEnde2, NOW())
+            AND COALESCE(d.ended_at, NOW())         > :zStart2
+         HAVING minuten >= :min
+          ORDER BY minuten DESC, d.started_at DESC'
+    );
+    $q->execute([
+        ':user'    => $userId,
+        ':ziel'    => $dayId,
+        ':zStart'  => $ziel['started_at'],
+        ':zStart2' => $ziel['started_at'],
+        ':zEnde'   => $ziel['ended_at'],
+        ':zEnde2'  => $ziel['ended_at'],
+        ':min'     => $minMinuten,
+    ]);
+
+    $liste = [];
+    foreach ($q->fetchAll() as $z) {
+        $z['id']      = (int)$z['id'];
+        $z['minuten']   = (int)$z['minuten'];
+        $z['laeuft']    = (bool)$z['laeuft'];
+        $z['einsaetze'] = (int)$z['einsaetze'];
+        $z['segmente']  = (int)$z['segmente'];
+        $liste[] = $z;
+    }
+    return $liste;
+}
+
+/**
+ * Die Ueberschneidungsdauer in Worten — "3 Stunden 20 Minuten".
+ *
+ * Stunden ab 60 Minuten, weil "412 Minuten" niemand liest. Die Minuten
+ * bleiben dabei stehen: Sie sind der Unterschied zwischen "die Uhr lief den
+ * halben Dienst mit" und "sie lief den ganzen mit".
+ */
+function dt_dauer_lesbar(int $minuten): string
+{
+    if ($minuten < 60) {
+        return $minuten . ($minuten === 1 ? ' Minute' : ' Minuten');
+    }
+    $std = intdiv($minuten, 60);
+    $min = $minuten % 60;
+    $text = $std . ($std === 1 ? ' Stunde' : ' Stunden');
+    if ($min > 0) { $text .= ' ' . $min . ($min === 1 ? ' Minute' : ' Minuten'); }
+    return $text;
+}
+
+/**
  * Vertragen sich die Arten zweier Diensttage? (E11)
  *
  * Gleiche Art ja, ein neutraler passt zu beidem, `air` gegen `ground` nicht.

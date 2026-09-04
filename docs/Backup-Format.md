@@ -96,17 +96,17 @@ Das Manifest im Klartext:
   "kennung": "9f3c…",              // 16 Byte Zufall, hex — bindet die Teile
   "erzeugt_am": "2026-08-31T12:00:00.000Z",
   "web_version": "11.1.0",
-  "nutzlast": 8,                   // Fassung der Nutzlast, s. Abschnitt 2
+  "nutzlast": 9,                   // Fassung der Nutzlast, s. Abschnitt 2
   "teile": [
     { "name": "kopf.edbak",          "art": "kopf",      "sha256": "…" },
     { "name": "eintraege/0001.edbak","art": "eintraege", "sha256": "…" },
     { "name": "spuren/0001.edbak",   "art": "spuren",    "sha256": "…" }
   ],
   "eintragsteile": 1,
-  "eintraege": 187,                // Einsätze und Ruhesegmente zusammen
+  "eintraege": 188,                // Einsätze und Ruhesegmente zusammen
   "spurteile": 1,
-  "spuren": 181,                   // wie viele Spuren die Datei trägt
-  "punkte": 48981,                 // und wie viele Punkte darin stecken
+  "spuren": 182,                   // wie viele Spuren die Datei trägt
+  "punkte": 55861,                 // und wie viele Punkte darin stecken
   "pat_key_check": "3f2a…",        // wie bisher, s. Abschnitt 2
   "unlesbar": 0                    // s. unten
 }
@@ -357,17 +357,38 @@ einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
 
-**Nutzlastversion 8 (seit Web 11.0.0).** Sie trägt **keine Punktlisten mehr**:
-Jedes spurtragende Objekt hat statt `track` eine `spur_ref` und die Angaben
-`stufe`, `n_original` und `n`; die Punkte stehen als SPUR1-Blobs in den
-Spurteilen des Containers (Abschnitt 1.2).
+**Nutzlastversion 9 (seit Web 14.2.0).** Wie 8 — keine Punktlisten, Spuren als
+Verweise —, dazu **drei Dinge mehr**:
+
+| Was | Wo |
+|---|---|
+| `geraet_art`, `geraet_modell` | je Einsatz **und** je Ruhesegment: die Momentaufnahme des aufzeichnenden Geräts (R64) |
+| `schnitte` | je Einsatz: die **Sperrvermerke des Schnitts**, über Verweise auf die Quelle (Backlog Nr. 63) |
+| `schnitte_verwaist` | im Kopf, **nur wenn > 0**: Vermerke, deren Quelle sich beim Erzeugen nicht auflösen ließ |
+
+**Alle drei sind optional.** Eine Datei ohne sie ist gültig; was fehlt, wird
+beim Einspielen zu NULL bzw. zu „keine Vermerke". Deshalb ändert sich am
+Rückweg der Spuren nichts.
+
+**Warum die Nummer dann überhaupt steigt:** Sie sagt einem Leser, was in der
+Datei stehen **kann** — und sie ist der einzige Weg, die Schranke nach oben
+arbeiten zu lassen. Eine Installation vor Web 14.2.0 soll eine 9er-Datei
+**abweisen** statt sie halb einzulesen; genau dafür ist `NUTZLAST_HOECHSTENS`
+gebaut.
+
+**Nutzlastversion 8 (Web 11.0.0 bis 14.1.0).** Sie trägt **keine Punktlisten
+mehr**: Jedes spurtragende Objekt hat statt `track` eine `spur_ref` und die
+Angaben `stufe`, `n_original` und `n`; die Punkte stehen als SPUR1-Blobs in
+den Spurteilen des Containers (Abschnitt 1.2).
 
 > **Die Fassung entscheidet, welchen Weg der Rückweg nimmt** — nicht die
 > Anwesenheit eines `track`-Feldes. Eine Spur ohne Punkte sähe genauso aus wie
 > ein Verweis, und dann liefe eine Fassung-8-Datei still in den alten Zweig
-> und verlöre alle Spuren. `api/backup_restore.php` prüft deshalb nach unten
-> **und nach oben**: unter 6 abgelehnt (s. u.), über 8 ebenfalls, mit der
-> Meldung „stammt aus einer neueren Fassung".
+> und verlöre alle Spuren. Der Vergleich steht auf **`>= 8`** und deckt damit
+> 9 mit ab; eine Anhebung auf `>= 9` würfe jede vorhandene 8er-Datei in den
+> Punktlisten-Zweig. `api/backup_restore.php` prüft nach unten **und nach
+> oben**: unter 6 abgelehnt (s. u.), über **9** ebenfalls, mit der Meldung
+> „stammt aus einer neueren Fassung".
 
 **Nutzlastversion 7 (Web 8.0.0 bis 10.3.0).** Der Container blieb Version 3,
 die Signatur `EDBAK2` unverändert — geändert hatte sich allein der **Inhalt**:
@@ -418,7 +439,7 @@ seit Web 4.1.2 auch:
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 8,                         // 8 = Verweise, 6/7 = Punktlisten
+  "version": 9,                         // 8/9 = Verweise, 6/7 = Punktlisten
   "app": "einsatzdoku-notarzt",         // Kennung der Anwendung
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
@@ -770,13 +791,67 @@ in Abschnitt 3.
   gehören nicht dem Konto und werden **nicht** exportiert. Beim Import werden
   Einträge, die zentral bereits (case-insensitiv) vorhanden sind, still
   übersprungen und in der Ergebnismeldung gezählt.
-- **`origin`** (`watch`/`manual`/`import`, seit Version 4): Herkunft des
-  Einsatzes, wird beim Anlegen einmalig gesetzt. **`edited`** (seit Version
-  4): wurde der Einsatz nach dem Anlegen verändert. Wie bei Version 3 gilt:
-  ältere Backups bleiben lesbar — fehlen die Felder (Version ≤ 3), werden sie
+- **`origin`** (seit Version 4): Herkunft des Einsatzes, wird beim Anlegen
+  einmalig gesetzt und nie wieder geändert. **Sechs Werte seit Web 14.0.0**
+  (vorher drei), einer je Client-App:
+
+  | Wert | Bedeutung |
+  |---|---|
+  | `watch` | Garmin-Uhr-App |
+  | `android` | Android-App auf dem Handy |
+  | `wear` | an der Wear-OS-Uhr begonnen, vom Handy gesendet |
+  | `manual` | im Einsatzformular angelegt |
+  | `import` | aus einer Datei übernommen |
+  | `schnitt` | aus einem Ruhesegment geschnitten |
+
+  **Ein unbekannter Wert wird nicht übernommen**, sondern aus `client_ref`
+  abgeleitet — dieselbe Regel wie bei einer Datei ohne das Feld. Der
+  Wertevorrat steht an einer Stelle im Code (`HERKUNFT_WERTE` in
+  `server/geraete_lib.php`), die Ableitung daneben (`herkunft_ableiten()`).
+
+  **`edited`** (seit Version 4): wurde der Einsatz nach dem Anlegen verändert.
+  Ältere Backups bleiben lesbar — fehlen die Felder (Version ≤ 3), werden sie
   beim Import aus `client_ref` abgeleitet: Präfix `man-` → `origin=manual`,
-  `imp-` → `origin=import`, sonst `origin=watch`; `edited=1` nur, wenn
-  `manual=1` und keines der beiden Präfixe zutrifft, sonst `edited=0`.
+  `imp-` → `origin=import`, `am-`/`ar-` → `android`, `wm-` → `wear`,
+  `cut-` → `schnitt`, sonst `origin=watch`; `edited=1` nur, wenn `manual=1`
+  und weder `man-` noch `imp-` zutrifft, sonst `edited=0`.
+
+- **`geraet_art`** (`uhr`/`handy`/`sonstiges`) und **`geraet_modell`** (seit
+  Nutzlast 9): die **Momentaufnahme** des Geräts, das den Datensatz
+  aufgezeichnet hat — an Einsätzen **und** Ruhesegmenten. Sie entsteht beim
+  Anlegen und wird nie nachgezogen. Fehlen sie oder stehen sie auf `null`,
+  heißt das **unbekannt** und nicht „kein Gerät": Nur eine Kopplung kennt Art
+  und Modell.
+
+  Sie stehen in der Datei, weil `device_id` es **nicht** tut (Abschnitt 4) —
+  der Verweis gälte nur in der Datenbank, aus der die Datei stammt. Die
+  Momentaufnahme gilt überall.
+
+- **`schnitte`** (seit Nutzlast 9): die Sperrvermerke des Schnitts, **an jedem
+  Einsatz, leer erlaubt**. Ein fehlender Schlüssel wäre zweideutig — „keine
+  Vermerke" oder „diese Fassung kennt sie nicht"; eine leere Liste sagt das
+  erste. Je Eintrag:
+
+  ```jsonc
+  { "quelle_art": "rest",              // "rest" | "mission"
+    "quelle_ref": "r-17-3391822034",   // client_ref der QUELLE, nicht ihre id
+    "von_ts": 1756718400,              // Sekunden seit 1970, ganzzahlig
+    "bis_ts": 1756722000,              // >= von_ts
+    "n_punkte": 143,                   // gewanderte Punkte, >= 1
+    "erstellt_am": "2026-09-02 10:14:31" }   // UTC, reist MIT
+  ```
+
+  **Die Quelle steht als `client_ref` da und nicht als Kennung.** Das ist
+  derselbe Anker, mit dem das Einspielen Einsätze wiedererkennt — eine
+  Datenbanknummer gälte nur in der Quelldatenbank. `erstellt_am` reist
+  ausdrücklich mit: Ein Vermerk ist ein **Ereignis der Vergangenheit** und
+  keine Frist dieser Installation (anders als `deleted_at`, das neu entsteht).
+
+- **`schnitte_verwaist`** (Kopf, seit Nutzlast 9, **nur wenn > 0**): Zahl der
+  Vermerke, deren Quelle sich beim Erzeugen nicht auflösen ließ und die
+  deshalb **nicht** in der Datei stehen. Es dürfte sie nicht geben — beim
+  Löschen einer Quelle werden ihre Vermerke mit entfernt. Steht das Feld da,
+  ist es ein Befund und keine Fußnote.
 
 ## 3. Import-Verhalten
 
@@ -925,6 +1000,46 @@ seine Zeile beziehungsweise seinen Punkt und erscheint gezählt unter
   `…track.seq: Nummer doppelt` gemeldet. Ein eigener Export erzeugt keine
   Wiedergänger — eine von Hand bearbeitete oder fremde Datei kann es.
 
+### Die Sperrvermerke des Schnitts beim Einspielen (seit Nutzlast 9)
+
+Sie kommen in einem **dritten Durchgang** zurück, nach den Einsätzen und nach
+den Ruhesegmenten und in derselben Transaktion. Nach beiden, weil ein Vermerk
+auf **zwei** Datensätze zeigt: das Ziel (einen Einsatz) und die Quelle (einen
+Einsatz *oder* ein Ruhesegment). Solange die Segmentschleife nicht durch ist,
+gibt es Quellen, die es gleich geben wird.
+
+**Drei Ausgänge, und alle drei werden gezählt** (`stats.schnitte`):
+
+| Lage | Ausgang |
+|---|---|
+| Das Ziel wurde in diesem Lauf **neu angelegt**, die Quelle ist auflösbar, die Werte sind brauchbar | **übernommen** |
+| Das Ziel **stand schon da** | **übersprungen** |
+| Das Ziel wurde gar nicht angelegt, die Quelle ist nicht auflösbar, oder ein Wert ist unbrauchbar | **verworfen** |
+
+**„Übersprungen" ist kein Fehler, sondern eine Zusage.** Ein Restore darf keine
+Sperre wiederbeleben, die jemand im Zielkonto bewusst zurückgenommen hat — das
+Rückgängigmachen eines Schnitts löscht sie. Und für einen unveränderten
+Bestand stehen sie ohnehin schon.
+
+**„Verworfen" trifft alle Abbruchgründe des Ziels**, nicht nur einen: Ein
+Einsatz kann wegen eines kaputten Aufbaus, eines unbrauchbaren Datums, eines
+übersprungenen oder eines gelöschten Diensttags liegenbleiben. Ein Vermerk
+ohne Ziel ist keiner. Die Aufschlüsselung nennt vier Gründe:
+`schnitt_ohne_ziel`, `schnitt_ohne_quelle`, `schnitt_werte`,
+`schnitt_aufbau`; die betroffene `quelle_ref` steht unter `rejected`.
+
+**Jede Zeile kostet nur sich selbst.** Ein unbrauchbarer Vermerk nimmt weder
+die anderen Vermerke desselben Einsatzes mit noch die Wiederherstellung —
+dieselbe Linie wie seit Web 8.0.0 überall sonst. Höchstens
+`LIMIT_SCHNITTE` = 200 Vermerke je Einsatz.
+
+**Die Grenze: eine Wiederaufnahme bringt keine Vermerke.** Bricht ein
+Einspiellauf zwischen Kern und Spurteilen ab, ist beim zweiten Anlauf **jeder**
+Einsatz „bereits vorhanden" — und damit jeder Vermerk „übersprungen". Wer sie
+braucht, spielt in ein **frisches** Konto ein. Anders als bei den Spuren ist
+das vertretbar: Spuren *müssen* nachgeliefert werden, Vermerke sind selten,
+und der Fall ist ein Abbruch in einem Abbruch.
+
 ## 4. Was NICHT in der Datei steht — und was nicht zurückkommt
 
 Seit Web 4.5.2 ist das Format **aufgezählt** statt „alles, was in der Tabelle
@@ -937,6 +1052,20 @@ automatisch in jedem Backup, ohne dass das jemand entschieden hätte.
   interne Verweise. Sie gelten nur in der Datenbank, aus der das Backup
   stammt; ein Backup soll sich auch in ein anderes Konto und eine andere
   Installation einspielen lassen.
+
+  **`device_id` bleibt draußen — Art und Modell stehen seit Nutzlast 9 aber
+  drin** (`geraet_art`, `geraet_modell`, Abschnitt 2). Das ist kein
+  Widerspruch, sondern der Grund für die Momentaufnahme: Der Verweis trägt
+  nicht einmal in der eigenen Datenbank dauerhaft (`ON DELETE SET NULL`, und
+  Trennen ist bei geteilter Uhr der Normalfall), in einer fremden erst recht
+  nicht. Ein Name trägt überall.
+
+  **Seit Nutzlast 9 kommen auch die Sperrvermerke des Schnitts zurück**
+  (`schnitte`). Sie standen bis dahin in keiner Konto-Sicherung — mit der
+  Folge, dass nach einem Wiedereinspielen ein Gerät mit gepufferten Punkten
+  den geschnittenen Zeitraum nachlieferte und die Fahrt in Einsatz **und**
+  Segment lag. Sie benennen ihre Quelle über deren `client_ref`, nicht über
+  eine Kennung.
 
   **Ausnahme: `days[].id` steht sehr wohl in der Datei** (`backup_lib.php`,
   Abfrage der Diensttage). Sie muss darin stehen, denn `missions[].day_id`
@@ -1087,7 +1216,7 @@ Ruhesegmente).
   "schluessel": { "pat_wrap_rc": "…", "pat_key_check": "…" },
   "umfang": { "einsaetze": 42, "diensttage": 12, "ruhezeiten": 3,
               "papierkorb": { "einsaetze": 5, "diensttage": 1, "ruhezeiten": 5 } },
-  "nutzlast":      8,          // Fassung des Kerns, s. Abschnitt 2
+  "nutzlast":      9,          // Fassung des Kerns, s. Abschnitt 2
   "eintraege":     45,         // Einsätze und Ruhesegmente zusammen
   "eintragsteile": 1,
   "spurteile":     1,
@@ -1108,7 +1237,7 @@ einspielbar" durchgegangen. **Fehlt das Feld** in einem Fassung-2-Paket, wird
 vorsichtig entschieden — der teurere Weg ist hier der sichere.
 
 **Ein Fassung-2-Kern darf nicht durch den einteiligen Rückweg.** Er trägt
-Nutzlast 8; die Punkte stehen in eigenen Teilen. Wer ihn an `edbak_restore()`
+Nutzlast 9 (bis Web 14.1.0: 8); die Punkte stehen in eigenen Teilen. Wer ihn an `edbak_restore()`
 übergibt, bekommt jeden Einsatz und **keine einzige Spur** — genau dieser Fall
 ist einmal eingetreten (F-S2-E, 91 208 Punkte). Deshalb:
 `edbak_paket_lesen()` verweigert Fassung 2 ausdrücklich, und eingespielt wird

@@ -85,7 +85,6 @@ class NAdokuApp : Application() {
             puffer = puffer,
             netzweg = HttpNetzweg(),
             tresor = tresor,
-            basis = { einstellungen.serverBasis },
             phasenLeser = { paketId -> puffer.phasen(paketId) },
         )
     }

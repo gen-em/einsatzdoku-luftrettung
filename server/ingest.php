@@ -4,6 +4,7 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/spur_lib.php';   // Fortsetzungsmarke ueber beide Stufen (S2)
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
+require_once __DIR__ . '/geraete_lib.php';  // herkunft_ableiten() (R64)
 
 /**
  * Aufnahme der Uhr-Daten.
@@ -71,7 +72,14 @@ if (strlen($raw) > $CFG['app']['max_body_bytes']) json_out(['error' => 'too_larg
  */
 $deviceId = (string)($_SERVER['HTTP_X_DEVICE_ID'] ?? '');
 $apiKey   = (string)($_SERVER['HTTP_X_API_KEY']   ?? '');
-$st = db()->prepare('SELECT id, user_id, api_key_hash, active FROM devices WHERE device_id = ?');
+/* Die Abfrage holt seit Web 14.0.0 zwei Spalten mehr: `geraet_art` und
+ * `geraet_modell` wandern als MOMENTAUFNAHME an jeden Einsatz und jedes
+ * Segment, das hier entsteht (R64). Sie kosten nichts — die Zeile wird
+ * ohnehin gelesen —, und sie sind der einzige Augenblick, in dem die Angabe
+ * ueberhaupt zu haben ist: Danach kann das Geraet getrennt werden (R47),
+ * und `device_id` steht auf ON DELETE SET NULL. */
+$st = db()->prepare('SELECT id, user_id, api_key_hash, active, geraet_art, geraet_modell
+                     FROM devices WHERE device_id = ?');
 $st->execute([$deviceId]);
 $dev = $st->fetch();
 if (!$dev) {
@@ -276,8 +284,20 @@ try {
          *
          * Gefunden bei der Gegenlesung des S5-Zusatzes (B5.3), nachgestellt
          * gegen eine laufende Installation, seither Teil 7 der Ingestprobe. */
-        $pdo->prepare('INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at, distance_m, ascent_m, final)
-                       VALUES (?,?,?,?,?,?,?,?,?)
+        /* HERKUNFT UND MOMENTAUFNAHME STEHEN NUR IM INSERT-TEIL, nicht im
+         * Upsert (R64, E-R64-01/-05). Beides gilt "beim Anlegen" — wie
+         * `origin` seit jeher, das hier bis Web 13.3.0 gar nicht vorkam und
+         * still auf der Spaltenvorgabe 'watch' landete. Genau daher stammt der
+         * Fehler, den dieses Paket behebt: Ein Einsatz vom Android-Handy trug
+         * die Plakette "Uhr".
+         *
+         * WARUM NICHT AUCH IM UPSERT: Ein zweites Paket zum selben Einsatz
+         * kaeme vom selben Geraet, brauchte also nichts zu aendern — es sei
+         * denn, jemand hat das Geraet zwischendurch neu gekoppelt und anders
+         * aufgeloest. Dann traegt der Einsatz weiter, was beim Anlegen galt.
+         * Das IST die Momentaufnahme. */
+        $pdo->prepare('INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at, distance_m, ascent_m, final, origin, geraet_art, geraet_modell)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
                        ON DUPLICATE KEY UPDATE
                          ended_at   = COALESCE(VALUES(ended_at),   ended_at),
                          distance_m = COALESCE(VALUES(distance_m), distance_m),
@@ -285,7 +305,9 @@ try {
                          final = GREATEST(final, VALUES(final)),
                          id = LAST_INSERT_ID(id)')
             ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt,
-                       $distanceM, $ascentM, $final]);
+                       $distanceM, $ascentM, $final,
+                       herkunft_ableiten($clientRef, $dev['geraet_art']),
+                       $dev['geraet_art'], $dev['geraet_modell']]);
         $ownerId = (int)$pdo->lastInsertId();
         $ownerType = 'mission';
 
@@ -413,13 +435,18 @@ try {
          * beide im Widerspruch: "12:00 – offen Uhr" OHNE "laeuft noch" — ein
          * Segment, das der Server fuer abgeschlossen haelt und dem trotzdem das
          * Ende fehlt. Wer die Seite las, sah einen Widerspruch ohne Ursache. */
-        $pdo->prepare('INSERT INTO rest_segments (user_id, device_id, client_ref, day_id, started_at, ended_at, final)
-                       VALUES (?,?,?,?,?,?,?)
+        /* Momentaufnahme wie beim Einsatz — aber KEINE Herkunftsspalte
+         * (E-R64-04): Gezaehlt werden Einsaetze, und woher ein Segment kommt,
+         * sagt sein Praefix (`r-` gegen `ar-`). Eine Spalte, die niemand
+         * abfragt, waere geschrieben und nie gelesen. */
+        $pdo->prepare('INSERT INTO rest_segments (user_id, device_id, client_ref, day_id, started_at, ended_at, final, geraet_art, geraet_modell)
+                       VALUES (?,?,?,?,?,?,?,?,?)
                        ON DUPLICATE KEY UPDATE
                          ended_at = COALESCE(VALUES(ended_at), ended_at),
                          final = GREATEST(final, VALUES(final)),
                          id = LAST_INSERT_ID(id)')
-            ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt, $final]);
+            ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt, $final,
+                       $dev['geraet_art'], $dev['geraet_modell']]);
         $ownerId = (int)$pdo->lastInsertId();
         $ownerType = 'rest';
     }

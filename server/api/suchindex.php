@@ -53,8 +53,9 @@ try {
                 m.bergwacht, m.bw_unit, m.bw_info,
                 m.secondary, m.other_ema, m.notes, m.crew_override,
                 m.pat_blob,
-                (SELECT MAX(occurred_at) FROM mission_phases p
-                  WHERE p.mission_id = m.id AND p.phase = 9) AS p9_at
+                /* `ended_at` statt der Phase-9-Unterabfrage
+                   (Web 14.2.2, F-R64-05) -- siehe api/day.php. */
+                m.ended_at
            FROM missions m
           WHERE m.user_id = ? AND m.deleted_at IS NULL
           ORDER BY m.started_at'
@@ -129,9 +130,13 @@ try {
         $dayId = $m['day_id'] !== null ? (int)$m['day_id'] : 0;
         $d     = $tage[$dayId] ?? null;
 
+        /* DAUER = BEGINN BIS ENDE (Web 14.2.2, F-R64-05). Vorher stand hier
+         * Phase 9; ein geschnittener oder importierter Einsatz hat keine und
+         * galt damit als „kein Ende", obwohl er abgeschlossen ist und ein
+         * `ended_at` traegt. Begruendung und Messung in `api/day.php`. */
         $dur = null;
-        if ($m['p9_at'] !== null) {
-            $dur = (new DateTime($m['p9_at']))->getTimestamp()
+        if ($m['ended_at'] !== null) {
+            $dur = (new DateTime($m['ended_at']))->getTimestamp()
                  - (new DateTime($m['started_at']))->getTimestamp();
         }
 

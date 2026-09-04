@@ -663,27 +663,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
     Ableitungen nachmessen.
 
-63. **Sperrvermerke des Schnitts überstehen das Konto-Backup nicht.**
-    *Aufgenommen 02.09.2026 als B-S4-10 (S4/A2).*
-    `track_cuts` (Web 12.5.0) hält den Zeitraum, den `ingest.php` an einer
-    geschnittenen Spur nicht mehr annimmt. Die **Komplett-Backup** trägt die
-    Tabelle mit — sie findet ihre Tabellen über `SHOW FULL TABLES`. Die
-    **Konto-Backup** (`edbak_build()`, Nutzlast 8) hat dagegen einen
-    aufgezählten Aufbau und kennt sie nicht.
-    **Die Folge nach einem Wiedereinspielen:** Ein Gerät, das Punkte des
-    geschnittenen Zeitraums noch im Puffer hat, liefert sie nach, und sie
-    landen wieder im Ruhesegment — die Fahrt läge dann in Einsatz *und*
-    Segment, also genau der Zustand, den E-S4-53 mit dem Verschieben statt
-    Kopieren vermeiden wollte. Der Einsatz selbst kommt vollständig durch;
-    beschädigt wird nichts, es fällt nur eine Sperre weg.
-    **Das Fenster ist schmal** (Wiedereinspielen ist selten, ein Gerätepuffer
-    umfasst Stunden), der Fehler aber echt. Nicht nebenbei behoben, weil die
-    Behebung den Nutzlastaufbau **und** beide Rückwege berührt: Der Vermerk
-    verweist auf zwei Kennungen (Quelle und Ziel), die das Einspielen erst neu
-    vergibt — er muss also wie die Spuren über Verweise laufen, nicht über
-    Kennungen. Dazu `docs/Backup-Format.md`, die Kreislaufproben und ein
-    Prüffall.
-
 65. **Vierzehn Fassungshinweise im Android-Baulauf hängen an einer
     Entscheidung.**
     *Aufgenommen 02.09.2026 als Rest aus B-S4-04 (S4/D1).*
@@ -963,134 +942,34 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     es 0.7.7, liegt es an einem Zeichenweg, der hier nicht nachgebaut wurde —
     Verdacht dann zuerst auf die `<monochrome>`-Ebene (Android 13+, „Themed
     Icons") und auf die Symbolform des Herstellers.
+    **Beantwortet am 04.09.2026:** Die App-Fassung auf dem Gerät war **0.7.7**
+    — also *nicht älter* als 0.7.7. Der Punkt erledigt sich damit **nicht** von
+    selbst mit der nächsten Auslieferung; er bleibt ein echter Fund. Der Ort
+    ist der **Kopf der Benachrichtigung** (One UI zeichnet ihn als runde
+    Kachel links), nicht das Symbol in der Statusleiste. Ob „Themed Icons"
+    eingeschaltet sind, ist noch offen.
+
+    **Nachgemessen am 04.09.2026 — und eine Vermutung damit widerlegt.** Der
+    Verdacht lag auf der `<monochrome>`-Ebene: Sie verweist in
+    `mipmap/symbol.xml` auf **dasselbe** Drawable wie der Vordergrund, und
+    `marke_luft_weiss.png` ist **nicht einfarbig** — sie trägt vier Farbtöne
+    (weiß 54,5 %, rot 23,1 %, blau 13,6 %, orange 8,8 %; „weiß" meint nur den
+    Korpus). Android nimmt aus einer monochromen Ebene nur den Alphakanal und
+    färbt ihn ein, also müsste daraus ein Klumpen ohne Binnenzeichnung werden.
+
+    **Wird es aber nicht.** Der Alphakanal wurde einfarbig gefüllt und
+    angesehen: Die Silhouette ist **erkennbar**, weil die Binnenzeichnung des
+    Motivs nicht aus den Farben entsteht, sondern aus **durchsichtigen
+    Trennlinien** zwischen den Farbflächen. Sie überleben die Einfärbung. Der
+    Verweis ist also unsauber, aber nicht die Ursache des gemeldeten Bildes.
+
+    **Was damit weiterhin fehlt:** ein Beleg, wie One UI den
+    Benachrichtigungskopf zeichnet. Der Emulator führt AOSP und beantwortet
+    das nicht — er kann nur zeigen, dass es *dort* richtig aussieht.
+
     **Prüfweg:** Am Gerät ansehen, nicht im Emulator — die Symbolform ist eine
     Herstellereinstellung. Zuordnung: **S4-Rest** (Schritt 6), zusammen mit dem
     Gerätetest auf dem S24.
-
-82. **Es fehlt die Warnung, dass die Daueraufzeichnung den Akku leert.**
-    *Aufgenommen 02.09.2026 vom Auftraggeber.* Die Handy-App zeichnet über den
-    ganzen Dienst mit `ACCESS_FINE_LOCATION` auf — bei einem Zwölfstundendienst
-    ist das der mit Abstand größte Verbraucher. Gesagt wird es nirgends.
-    **Was es schon gibt, sagt das Gegenteil:** Die Führung zur
-    Akku-Freistellung (E-S4-05, `akku_titel`/`akku_hinweis`) bittet darum, die
-    App **von** der Optimierung auszunehmen, damit die Aufzeichnung nicht
-    abbricht. Sie erklärt also, warum die App Strom ziehen **darf** — nicht,
-    dass sie es in erheblichem Maß **tut**. Wer nur diesen Text liest, hält den
-    leeren Akku am Dienstende für einen Fehler.
-    **Zu entscheiden:** Wo der Hinweis steht. Drei Kandidaten, sie schließen
-    sich nicht aus: (a) im Akku-Dialog als zweiter Absatz — dort steht der
-    Mensch ohnehin und trifft gerade eine Entscheidung; (b) beim ersten
-    „Dienst beginnen" — dort entsteht der Verbrauch; (c) in der laufenden
-    Meldung, die heute „Aufzeichnung läuft seit %1$s · GPS an" sagt.
-    **Nicht als Dauerwarnung.** Ein Hinweis, den man bei jedem Dienstbeginn
-    wegklickt, wird nicht gelesen — dieselbe Überlegung wie beim Hinweis auf
-    neue Geräte (M4-10), der bestätigbar ist.
-    Zuordnung: **S4-Rest** (Schritt 6). Textänderung heißt `tools/wortliste/`
-    fahren, Bereich (d).
-
-83. **Welche Daten von Uhr und Handy wie gespeichert werden, damit sich
-    auswerten lässt, wer womit dokumentiert hat — Diskussion, dann Umsetzung.**
-    *Aufgenommen 02.09.2026 vom Auftraggeber, nach dem Befund unten. Hängt an
-    Nr. 80 (Auswertung) und muss VOR dieser entschieden sein.*
-    Nr. 80 fragt, **wie** ausgewertet wird. Dieser Punkt fragt, **ob die Daten
-    dafür überhaupt haltbar sind**. Sie sind es nur zur Hälfte.
-    **Was trägt** — beides steht als Spalte am Einsatz selbst und ist im
-    Backup: `missions.origin` (`watch` / `manual` / `import`, beim Anlegen
-    gesetzt, nie geändert) und das **Präfix der `client_ref`** (`m-` Garmin-Uhr,
-    `am-`/`ar-`/`ad-` Handy-App, `wm-` Wear, `man-` Formular, `imp-` Import;
-    JSON-Vertrag 8, seit Fassung 1.4). Damit ist „wie viele Einsätze mit dem
-    Webtool" vollständig und „mit welcher Client-Art" grob zu beantworten,
-    ohne eine Zeile Code.
-    **Was nicht trägt:** der Verweis `missions.device_id` → `devices`, an dem
-    seit Web 12.9.0 Art und Modell hängen. Er steht auf `ON DELETE SET NULL`,
-    und drei Wege löschen ein Gerät — einer davon (`pair.php` trennen) ist der
-    **vorgesehene Normalfall** bei einer geteilt genutzten Uhr (Nr. 14).
-    Ausserdem steht `device_id` **nicht im Backup** (bewusst, als
-    interner Verweis).
-    **Gemessen am 02.09.2026** an einem Demo-Konto, das über den regulären
-    Einspielweg entsteht: **82 von 82 Einsätzen und 95 von 95 Ruhesegmenten
-    ohne Geräteverweis** — obwohl 76 davon `origin = 'watch'` tragen. Zum
-    Vergleich: **`day_refs` 16 von 16 mit Verweis**, denn dort steht die
-    *öffentliche* Gerätekennung im Backup und wird beim Einspielen neu
-    verknüpft. Das richtige Muster existiert im Projekt also schon, nur an
-    einer Stelle.
-    **Warum es eilt:** R60 lässt v1.0 mit einem Neuaufsetzen und **einer
-    einmaligen Wiederherstellung** beginnen. Was bis dahin nicht haltbar ist,
-    ist für den Altbestand danach nicht mehr herstellbar.
-    **Drei Wege, zu entscheiden:**
-    (a) **`devices` weich löschen** statt hart — Spalte `geloescht_am`,
-    Zugangsdaten beim Trennen leeren, Zeile aus Listen und aus `MAX_GERAETE`
-    filtern; dazu den Verweis wie bei `day_refs` über die öffentliche Kennung
-    in das Backup. Hält ein bereits erlaubtes Datum am Leben und ist damit
-    R36-konform.
-    (b) **Art und Modell auf den Einsatz kopieren** (`missions.geraet_art`).
-    Überlebt alles, auch die Wiederherstellung — ist aber eine
-    Denormalisierung an der größten Tabelle und näher an „etwas Neues
-    erfassen", als R36 zulässt.
-    (c) **Nichts bauen** und nur über `origin` und das Präfix zählen. Kostet
-    nichts, trägt heute, verzichtet aber auf die Modellgenauigkeit.
-    **Eine Statistiktabelle wird für die Zählung selbst nicht gebraucht** — die
-    ist ein `GROUP BY`. Das Problem ist die Haltbarkeit des Verweises, und eine
-    Aggregattabelle löste es nicht, sondern schriebe denselben Verlust nur
-    früher fest.
-    **Mitzudenken:** Eine Wear-OS-Uhr koppelt nicht selbst (E-S4-11), das Handy
-    koppelt für sie — eine solche Installation erscheint ausschließlich als
-    `handy`. Und Geräte, die vor Web 12.9.0 gekoppelt haben, tragen gar keine
-    Angabe.
-    Zuordnung: **Diskussion in der Planung v1.0 (Schritt 10)**, Umsetzung
-    danach — jedenfalls vor dem Neuaufsetzen.
-    **Entschieden am 02.09.2026 (Rahmenplan R64), früher als hier vorgesehen:**
-    **Weg (b)** — `geraet_art` und `geraet_modell` als Momentaufnahme an
-    `missions` und `rest_segments`, beim Anlegen aus `devices` kopiert, in das
-    Backup aufgenommen (das Muster von `day_refs`), Bestand per Migration
-    nachgefüllt, solange die Geräte noch stehen; Trennen bleibt Löschen. Dazu
-    **eigene Herkunftswerte** in `origin`: `watch` bleibt für die Garmin-Uhr,
-    neu `android`, `wear` und `schnitt` neben `manual` und `import`, gesetzt
-    beim Anlegen aus Geräteart und `client_ref`-Präfix. Der Einwand an (b)
-    (näher an „etwas Neues erfassen") ist gesehen und so beantwortet: Es sind
-    dieselben Werte wie R42, nur festgehalten; die Datenschutzerklärung nennt
-    sie (Abschnitt 6 des Rahmenplans). Der Preis (Feldkatalog, Export- und
-    Backup-Format, Kreisläufe und Referenz nach R24) ist angenommen und wird
-    mit Nr. 63 in **einer** Formatänderung bezahlt. **Sichtbar** im Dashboard
-    (Nr. 80) **und** je NutzerIn (Nr. 88). Zuordnung damit: **S4-Rest**
-    (Speicherung), P5 (Dashboard), Nr. 88 (Kachel).
-
-84. **Die Android-App kennt nur `nadoku.gen-em.org`.**
-    *Aufgenommen 02.09.2026, Entscheidung des Auftraggebers (Rahmenplan
-    R63).* Bisher sah R49 die Adresse als **Vorgabewert** vor, den
-    Selbsthoster über den Adress-QR der Geräteseite überschreiben
-    (E-R49-8, E-S4-15). Entschieden: **fest, nicht änderbar.** Adressfeld,
-    Adress-QR und die Adresswahl in der Kopplung entfallen; die Adresse
-    steht als Build-Konstante an einer Stelle, ein Selbsthoster baut sich
-    ein eigenes APK. Die Garmin-Uhr behält ihre Einstellung `serverUrl` mit
-    demselben Vorgabewert — sie hat kein QR und wird über Garmin Connect
-    konfiguriert. **Umsetzung mit dem Kopplungsmodul nach S5**, weil der
-    Bedienweg der Kopplung dort ohnehin neu geschnitten wird. Zuordnung:
-    S4-Rest.
-
-85. **Der Name der Handy-App wird „Gen-EM NAdoku".**
-    *Aufgenommen 02.09.2026, Entscheidung des Auftraggebers (R63).*
-    `android/handy/src/main/res/values/strings.xml` setzt `app_name` auf
-    „NAdoku". Am Handy soll der volle Name mit Bindestrich stehen, wie der
-    Programmname; das Wear-OS-Modul bleibt aus demselben Grund kurz wie die
-    Garmin-Uhr (R48: der Träger gehört in den Store-Eintrag, nicht auf ein
-    Uhrendisplay). Mitzuprüfen: Launcher-Beschriftung, die Benachrichtigung
-    des Vordergrunddienstes und jede Stelle, die den Namen sonst anzeigt.
-    Zuordnung: S4-Rest.
-
-86. **Die Statusleiste überlappt den oberen Rand der Handy-App.**
-    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers.*
-    **Wahrscheinliche Ursache, am Code gelesen und nicht auf dem Gerät
-    nachgestellt:** Das Handy-Modul zielt auf `targetSdk 36`. Seit Android 15
-    (API 35) zeichnet das System Apps mit diesem Ziel randlos, der Inhalt
-    beginnt unter der Statusleiste — und das Modul behandelt nirgends
-    Fenster-Insets (kein `WindowInsets`, kein `safeDrawing`, kein
-    `contentWindowInsets` in `android/handy/src/main`). Die Wear-App ist
-    nicht betroffen: rundes Glas, eigene Bausteine, in 0.7.3 gemessen.
-    **Zu tun:** Insets an der Wurzel der Handy-Oberfläche behandeln
-    (`Scaffold` mit `contentWindowInsets` oder `safeDrawingPadding()` am
-    Wurzelelement), auch für die Navigationsleiste unten; am S24 und im
-    Emulator prüfen, mit Bildabzug oben und unten. Zuordnung: S4-Rest.
 
 87. **Die Weboberfläche als installierbare Web-App auf Android.**
     *Aufgenommen 02.09.2026 auf Anweisung des Auftraggebers: vor v1.0
@@ -1234,17 +1113,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Bewusst so gelassen:** Drei davon sind Komfortwege, der vierte ist der
     Kopplungstakt, der sich nach drei Fehlern selbst beendet — und während
     einer Wartung koppelt ohnehin niemand.
-
-98. **Versionscode-Versatz für das Uhr-Modul.**
-    *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R65).*
-    `version.properties` rechnet für Handy- und Uhr-Modul denselben
-    Versionscode (`Haupt·10000 + Neben·100 + Korrektur`, E-S4-02). Die Play
-    Console verlangt unter einem Paketnamen je APK einen eindeutigen Code —
-    ohne Versatz ist kein Wear-OS-Release möglich. Das Uhr-Modul bekommt einen
-    Versatz (Schema in der Umsetzung: etwa `+ 1 000 000` oder eine führende
-    Formfaktor-Ziffer); Versionsname und Zählung bleiben eins. Preis: ein
-    einmaliger Sprung, Neuinstallation auf der vorhandenen Uhr. Rahmenplan
-    Schritt 6 (S4-Rest).
 
 99. **Fassungsprüfung auf Klick.**
     *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R66, Option A2).*
@@ -1414,6 +1282,141 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+82. **Es fehlt die Warnung, dass die Daueraufzeichnung den Akku leert.**
+    *Aufgenommen 02.09.2026 vom Auftraggeber; erledigt am 04.09.2026 im
+    S4-Rest, Paket 3 (Android 0.11.1).*
+    **Zwei Orte, weil einer nicht reicht** — von den drei Kandidaten sind (a)
+    und (b) gebaut, (c) nicht:
+
+    - **(a) Zweiter Absatz im Akku-Dialog.** Dort steht der Mensch ohnehin und
+      trifft gerade eine Entscheidung. Der Text sagt jetzt beides: warum die
+      App Strom ziehen *darf* — und dass sie es in erheblichem Maß *tut*.
+    - **(b) Einmalig nach dem ersten Dienstbeginn.** Der Akku-Dialog erscheint
+      **nur, wenn die Freistellung noch nicht steht**; wer sie vorher gesetzt
+      hat, sieht ihn nie und bekommt stattdessen diesen. Zwei getrennte Merker,
+      damit der eine den anderen nicht miterledigt.
+    - **(c) Laufende Meldung: nicht gebaut.** Sie müsste in allen sechs
+      Zustandsfassungen stehen, ist schon lang, und der Satz gehört nicht in
+      eine Zeile, die zwölf Stunden lang unverändert dasteht.
+
+    **Nach dem Beginnen, nicht davor** — ein Dialog, der den Start aufhält,
+    steht im Weg, wenn es losgeht. Ein Knopf statt zweier: Es gibt nichts zu
+    entscheiden, die Aufzeichnung läuft bereits.
+
+    **Keine Zahl.** „Etwa X Prozent" wäre hilfreicher, ist aber ohne Messung am
+    Gerät nicht zu verantworten, und der Gerätetest steht aus. Ein geratener
+    Wert wäre schlimmer als keiner: Er würde geglaubt.
+
+    **Belegt:** (a) am Emulator, im laufenden Dienst
+    (`docs/bilder/s4-rest/07-akku-hinweis.png`). (b) durch drei Prüffälle
+    (`VerbrauchhinweisTest`) — **nicht** im Bild: Der Bilderlauf kann keine
+    Dialoge (1 dp Inhalt gemessen), und am Emulator hätten drei Bedingungen
+    zugleich stehen müssen. Wortliste 0/0/0.
+
+    **Erweitert am 04.09.2026 auf Anweisung des Auftraggebers
+    (Android 0.12.0).** Die beiden einmaligen Hinweise sagen das Thema, sobald
+    die App eingerichtet ist — also im Januar, gebraucht wird es im Juli.
+    Dazu kommt ein **Akkuwächter**, der während des Dienstes mitliest und sich
+    bei drei Schwellen meldet: **25 %** (nachladen), **15 %** und **10 %**
+    (jeweils mit Knopf „Dienst beenden", derselbe wie in der Dauermeldung).
+
+    Je Stufe einmal, nicht je Messung; am Kabel verschwindet die Warnung und
+    die Stufe setzt sich zurück. Gemessen alle zwei Minuten über den
+    Sticky-Intent — ein angemeldeter Empfänger für `ACTION_BATTERY_CHANGED`
+    weckte den Prozess dutzendfach je Stunde.
+
+    **Die App schaltet nichts ab.** Eine automatische Abschaltung bei X %
+    stand zur Wahl und ist verworfen: Sie beendete die Aufzeichnung **still**,
+    genau dann, wenn niemand aufs Handy sieht, und was fehlt, lässt sich nicht
+    nachtragen. Paket E ist gegen diese Art Stille gebaut.
+
+    **Und kein Sparmodus.** Der GPS-Takt zu strecken stand ebenfalls zur Wahl.
+    Dagegen: Der Track **ist** schon ausgedünnt (15 m oder 10 s) — das spart
+    Speicher, aber keinen Akku, weil das GPS trotzdem durchläuft. Was spart,
+    wäre `MINDESTABSTAND_MS`; wie viel, ist **ungemessen**, die Ausdünnung
+    braucht Zwischenpunkte (bei 30 s und 80 km/h greift die 15-m-Regel nie),
+    und sie ist wortgleich die der Garmin-Uhr — an der Zahl hängen R19 und der
+    Messstand aus S2. Zu entscheiden mit zwei Zahlen aus dem Gerätetest.
+
+    **Belegt:** 14 Prüffälle (`AkkuwaechterTest`) über Schwellen, Hysterese,
+    Kabel und Grenzwerte. Die Meldung selbst ist **nicht** im Bild — sie ist
+    eine Benachrichtigung, und die zeigt weder der Bilderlauf noch ein
+    Screenshot der App.
+
+98. **Versionscode-Versatz für das Uhr-Modul.**
+    *Aufgenommen 03.09.2026 aus der Planung v1.0 (R65); erledigt am
+    04.09.2026 im S4-Rest, Paket 3 (Android 0.11.1).*
+    Die Uhr rechnet `+ 1 000 000` auf den gemeinsamen Code. Am APK
+    nachgemessen: Handy **1100**, Uhr **1001100**, beide Versionsname
+    `0.11.0` — die Zählung bleibt eine (E-S4-02).
+
+    **Nur die Uhr, nicht beide.** Nr. 98 nannte auch eine führende
+    Formfaktor-Ziffer; die hätte das Handy mitverschoben, wo kein Sprung nötig
+    ist. Der Versatz trifft das Modul, das ihn braucht.
+
+    **Die Uhr bekommt den höheren Code.** Play fordert nur Eindeutigkeit, aber
+    die Wahl ist einmalig: Ein Versatz nach unten könnte mit einer künftigen
+    Handy-Fassung kollidieren, einer nach oben nie — 1 000 000 entspräche der
+    Handy-Version 100.0.0.
+
+84. **Die Android-App kennt nur `nadoku.gen-em.org`.**
+    *Aufgenommen 02.09.2026 (Rahmenplan R63); erledigt am 04.09.2026 im
+    S4-Rest, Paket 1 (Android 0.11.0).*
+    Adressfeld, Adress-QR und Adresswahl sind ersatzlos entfallen. Die Adresse
+    steht als `buildConfigField SERVER_BASIS` im **Bauskript** und nicht als
+    Konstante im Quelltext — ein Selbsthoster ändert eine Zeile Gradle, keine
+    Zeile Kotlin, und derselbe Schalter führt den Prüfstand auf seine örtliche
+    Installation. Die Toleranzregeln aus `Serveradresse` bleiben; sie fangen
+    jetzt ab, was jemand ins Bauskript schreibt, und ein Fehler fällt beim
+    **Bauen** auf statt bei der Kopplung (`BASIS` wirft).
+
+    **Mitgegangen sind vier Fremdbestandteile und eine Berechtigung.** Ohne
+    Adress-QR gibt es keinen Verbraucher mehr für ZXing und die vier
+    CameraX-Bausteine; die CAMERA-Berechtigung — die einzige, die die App je
+    zur Laufzeit erfragt hat — ist aus dem Manifest ausgetragen. Das APK
+    schrumpft dadurch um **1,81 MB** (9 658 567 → 7 844 710 B), die Liste in
+    `docs/Lizenzen.md` 6a von vier auf zwei.
+
+    **Eine benannte Ausnahme von „nur HTTPS" (E-S4-14):** `localhost` und
+    IPv4-Adressen behalten `http`. Sie taugen ohnehin nicht als Adresse einer
+    ausgelieferten App, und ohne die Ausnahme liefe der Rundlauf gegen einen
+    TLS-Port, den die Prüfinstallation nicht hat — die App müsste dann einem
+    selbstsignierten Zertifikat trauen lernen, und genau das darf sie nie.
+
+85. **Der Name der Handy-App wird „Gen-EM NAdoku".**
+    *Aufgenommen 02.09.2026 (Rahmenplan R63); erledigt am 04.09.2026 im
+    S4-Rest, Paket 1 (Android 0.11.0).*
+    `app_name` im Handy-Modul trägt den vollen Namen, das Uhr-Modul bleibt bei
+    „NAdoku". Der Unterschied ist kein Versehen: Auf einem Wear-OS-Zifferblatt
+    steht der Name unter einem Symbol von wenigen Millimetern, und von
+    „Gen-EM NAdoku" bliebe dort „Gen-EM" stehen — gerade der Teil, der nicht
+    sagt, welche App das ist.
+
+    **Am Emulator nachgemessen**, weil die Länge nur an einer Stelle zur Frage
+    stand: Die Kopfleiste der Dienstansicht führt den Namen mit, und bei
+    360 dp steht er einzeilig neben der 28-dp-Bildmarke, ohne Umbruch und ohne
+    Kürzung (Bild `docs/bilder/s4-rest/04-gekoppelt.png`).
+
+86. **Die Statusleiste überlappt den oberen Rand der Handy-App.**
+    *Aufgenommen 02.09.2026 am Gerät gemeldet; erledigt am 04.09.2026 im
+    S4-Rest, Paket 1 (Android 0.11.0).*
+    Die Vermutung bei der Aufnahme stimmte: fehlende Fenster-Insets bei
+    `targetSdk 36`. Seit Android 15 zeichnet das System randlos, ohne zu
+    fragen; die Leisten liegen über der App.
+
+    **Warum es so lange stand:** `themen.xml` setzte `android:statusBarColor`
+    und `android:navigationBarColor`. Beide sind seit API 35 wirkungslos — sie
+    taten nichts, sahen aber so aus, als sei die Sache geregelt. Genau das ist
+    der Grund, warum niemand nachsah. Sie sind ausgetragen; an ihre Stelle
+    treten `enableEdgeToEdge()` in der Activity und Inset-Polster an
+    Kopfleiste (`statusBars`) und Wurzelfläche (`navigationBars`).
+
+    **Die Reihenfolge der Modifier ist die Lösung**, nicht ihre Anwesenheit:
+    `background` VOR `windowInsetsPadding` färbt die volle Höhe einschließlich
+    des Streifens unter der Leiste, das Padding danach schiebt nur den Inhalt.
+    Andersherum bliebe ein heller Streifen über der dunklen Leiste. Belegt am
+    Emulator (`docs/bilder/s4-rest/01-kopplung-bereit.png`).
 
 66. **Der Garmin-Uhrcode lief nicht durch die Wortliste — jetzt schon.**
     *Aufgenommen 02.09.2026 als Bereich `e` aus B-S4-06 (S4/D1); erledigt am
@@ -2176,3 +2179,95 @@ zutreffen.
     *Geprüft:* Stufe I 99 übersetzt, 0 fehlgeschlagen, 0 Warnungen. Fünf Geräte
     im Simulator, eines je Stufe plus beide 390er. Speicher auf den beiden
     knappsten Geräten gemessen: fenix6 55,9/123,8 kB, FR 55 52,3/123,8 kB.
+
+83. **Welche Daten von Uhr und Handy wie gespeichert werden, damit sich
+    auswerten lässt, wer womit dokumentiert hat — Diskussion, dann Umsetzung.**
+    *Aufgenommen 02.09.2026 vom Auftraggeber, nach dem Befund unten. Hängt an
+    Nr. 80 (Auswertung) und muss VOR dieser entschieden sein.*
+    Nr. 80 fragt, **wie** ausgewertet wird. Dieser Punkt fragt, **ob die Daten
+    dafür überhaupt haltbar sind**. Sie sind es nur zur Hälfte.
+    **Was trägt** — beides steht als Spalte am Einsatz selbst und ist im
+    Backup: `missions.origin` (`watch` / `manual` / `import`, beim Anlegen
+    gesetzt, nie geändert) und das **Präfix der `client_ref`** (`m-` Garmin-Uhr,
+    `am-`/`ar-`/`ad-` Handy-App, `wm-` Wear, `man-` Formular, `imp-` Import;
+    JSON-Vertrag 8, seit Fassung 1.4). Damit ist „wie viele Einsätze mit dem
+    Webtool" vollständig und „mit welcher Client-Art" grob zu beantworten,
+    ohne eine Zeile Code.
+    **Was nicht trägt:** der Verweis `missions.device_id` → `devices`, an dem
+    seit Web 12.9.0 Art und Modell hängen. Er steht auf `ON DELETE SET NULL`,
+    und drei Wege löschen ein Gerät — einer davon (`pair.php` trennen) ist der
+    **vorgesehene Normalfall** bei einer geteilt genutzten Uhr (Nr. 14).
+    Ausserdem steht `device_id` **nicht im Backup** (bewusst, als
+    interner Verweis).
+    **Gemessen am 02.09.2026** an einem Demo-Konto, das über den regulären
+    Einspielweg entsteht: **82 von 82 Einsätzen und 95 von 95 Ruhesegmenten
+    ohne Geräteverweis** — obwohl 76 davon `origin = 'watch'` tragen. Zum
+    Vergleich: **`day_refs` 16 von 16 mit Verweis**, denn dort steht die
+    *öffentliche* Gerätekennung im Backup und wird beim Einspielen neu
+    verknüpft. Das richtige Muster existiert im Projekt also schon, nur an
+    einer Stelle.
+    **Warum es eilt:** R60 lässt v1.0 mit einem Neuaufsetzen und **einer
+    einmaligen Wiederherstellung** beginnen. Was bis dahin nicht haltbar ist,
+    ist für den Altbestand danach nicht mehr herstellbar.
+    **Drei Wege, zu entscheiden:**
+    (a) **`devices` weich löschen** statt hart — Spalte `geloescht_am`,
+    Zugangsdaten beim Trennen leeren, Zeile aus Listen und aus `MAX_GERAETE`
+    filtern; dazu den Verweis wie bei `day_refs` über die öffentliche Kennung
+    in das Backup. Hält ein bereits erlaubtes Datum am Leben und ist damit
+    R36-konform.
+    (b) **Art und Modell auf den Einsatz kopieren** (`missions.geraet_art`).
+    Überlebt alles, auch die Wiederherstellung — ist aber eine
+    Denormalisierung an der größten Tabelle und näher an „etwas Neues
+    erfassen", als R36 zulässt.
+    (c) **Nichts bauen** und nur über `origin` und das Präfix zählen. Kostet
+    nichts, trägt heute, verzichtet aber auf die Modellgenauigkeit.
+    **Eine Statistiktabelle wird für die Zählung selbst nicht gebraucht** — die
+    ist ein `GROUP BY`. Das Problem ist die Haltbarkeit des Verweises, und eine
+    Aggregattabelle löste es nicht, sondern schriebe denselben Verlust nur
+    früher fest.
+    **Mitzudenken:** Eine Wear-OS-Uhr koppelt nicht selbst (E-S4-11), das Handy
+    koppelt für sie — eine solche Installation erscheint ausschließlich als
+    `handy`. Und Geräte, die vor Web 12.9.0 gekoppelt haben, tragen gar keine
+    Angabe.
+    Zuordnung: **Diskussion in der Planung v1.0 (Schritt 10)**, Umsetzung
+    danach — jedenfalls vor dem Neuaufsetzen.
+    **Entschieden am 02.09.2026 (Rahmenplan R64), früher als hier vorgesehen:**
+    **Weg (b)** — `geraet_art` und `geraet_modell` als Momentaufnahme an
+    `missions` und `rest_segments`, beim Anlegen aus `devices` kopiert, in das
+    Backup aufgenommen (das Muster von `day_refs`), Bestand per Migration
+    nachgefüllt, solange die Geräte noch stehen; Trennen bleibt Löschen. Dazu
+    **eigene Herkunftswerte** in `origin`: `watch` bleibt für die Garmin-Uhr,
+    neu `android`, `wear` und `schnitt` neben `manual` und `import`, gesetzt
+    beim Anlegen aus Geräteart und `client_ref`-Präfix. Der Einwand an (b)
+    (näher an „etwas Neues erfassen") ist gesehen und so beantwortet: Es sind
+    dieselben Werte wie R42, nur festgehalten; die Datenschutzerklärung nennt
+    sie (Abschnitt 6 des Rahmenplans). Der Preis (Feldkatalog, Export- und
+    Backup-Format, Kreisläufe und Referenz nach R24) ist angenommen und wird
+    mit Nr. 63 in **einer** Formatänderung bezahlt. **Sichtbar** im Dashboard
+    (Nr. 80) **und** je NutzerIn (Nr. 88). Zuordnung damit: **S4-Rest**
+    (Speicherung), P5 (Dashboard), Nr. 88 (Kachel).
+
+    **Erledigt am 04.09.2026** als **R64** mit Web **14.0.0** bis **14.2.1**. Der Verweis `missions.device_id` bleibt, wie er ist — die Haltbarkeit kommt aus einer **Momentaufnahme**: `geraet_art` und `geraet_modell` stehen seit 14.0.0 als eigene Spalten am Einsatz *und* am Ruhesegment, beim Anlegen kopiert und nie nachgezogen. `ON DELETE SET NULL` kann ihnen damit nichts mehr anhaben. Dazu trägt `missions.origin` jetzt sechs Werte statt drei (`watch|android|wear|manual|import|schnitt`), abgeleitet aus dem Präfix der `client_ref`; der Bestand ist per Migration nachgefüllt. Die Momentaufnahme reist in der Konto-Sicherung mit (Nutzlast 9) und steht im CSV-Export in zwei neuen Spalten. **Der Gegenbeleg zur Messung von Fassung 21** („82 von 82 Einsätzen ohne Geräteverweis"): Im erneuerten Referenzbestand tragen **82 von 82** Einsätzen und **100 von 100** Ruhesegmenten die Momentaufnahme, und alle sechs Herkunftswerte sind belegt. Nr. 80 (Auswertung) hat damit eine haltbare Grundlage.
+
+63. **Sperrvermerke des Schnitts überstehen das Konto-Backup nicht.**
+    *Aufgenommen 02.09.2026 als B-S4-10 (S4/A2).*
+    `track_cuts` (Web 12.5.0) hält den Zeitraum, den `ingest.php` an einer
+    geschnittenen Spur nicht mehr annimmt. Die **Komplett-Backup** trägt die
+    Tabelle mit — sie findet ihre Tabellen über `SHOW FULL TABLES`. Die
+    **Konto-Backup** (`edbak_build()`, Nutzlast 8) hat dagegen einen
+    aufgezählten Aufbau und kennt sie nicht.
+    **Die Folge nach einem Wiedereinspielen:** Ein Gerät, das Punkte des
+    geschnittenen Zeitraums noch im Puffer hat, liefert sie nach, und sie
+    landen wieder im Ruhesegment — die Fahrt läge dann in Einsatz *und*
+    Segment, also genau der Zustand, den E-S4-53 mit dem Verschieben statt
+    Kopieren vermeiden wollte. Der Einsatz selbst kommt vollständig durch;
+    beschädigt wird nichts, es fällt nur eine Sperre weg.
+    **Das Fenster ist schmal** (Wiedereinspielen ist selten, ein Gerätepuffer
+    umfasst Stunden), der Fehler aber echt. Nicht nebenbei behoben, weil die
+    Behebung den Nutzlastaufbau **und** beide Rückwege berührt: Der Vermerk
+    verweist auf zwei Kennungen (Quelle und Ziel), die das Einspielen erst neu
+    vergibt — er muss also wie die Spuren über Verweise laufen, nicht über
+    Kennungen. Dazu `docs/Backup-Format.md`, die Kreislaufproben und ein
+    Prüffall.
+
+    **Erledigt am 04.09.2026** mit **Web 14.2.0** (Nutzlast 9) und **14.2.1** (Referenzbestand). Die Konto-Sicherung trägt seither je Einsatz eine Liste `schnitte`; der Vermerk verweist über `quelle_ref` auf die **Kennung** der Quelle, nicht auf ihre interne Nummer — genau das Muster, das `day_refs` schon benutzte. Ein Vermerk ohne Ziel wird gezählt und benannt, nicht stillschweigend verworfen. Belegt im **Dauerbetrieb**: Der Referenzbestand enthält seit 14.2.1 einen Schnitt, und weil der Demo-Reset die Fixture alle 30 Minuten einspielt, wird der Vermerk auf dem Produktivserver alle 30 Minuten geprüft. Zahlen: Wiederherstellungsprobe 94/0 (18 neue Erwartungen in Teil 11), edbak-Kreislauf 287 713 Einzelvergleiche / 0 unerklärt, Demo-Konto nach dem Reset 1 Sperrvermerk.

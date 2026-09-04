@@ -399,6 +399,13 @@ Datensatz ist so gebaut, dass jede Funktion der Anwendung darin vorkommt —
 Luft- und Bodeneinsätze, Windeneinsätze, Bergwacht, Reanimationen, ein Dienst
 über Mitternacht, ein Diensttag ohne Einsatz, ein gefüllter Papierkorb.
 
+*Seit Web 14.2.1* auch die Herkunft: Unter **Einstellungen → Geräte** stehen
+zwei Geräte mit Modell — eine Uhr für die Luftdienste, ein Handy für die
+Bodendienste —, und jeder Einsatz trägt die Plakette des Geräts, das ihn
+aufgezeichnet hat. Ein Einsatz ist aus einer Ruhezeit **geschnitten**
+(Abschnitt 4.1b): Er trägt die Plakette „Schnitt", und am Ruhesegment steht
+der gesperrte Bereich.
+
 **Ausprobieren ist ausdrücklich erwünscht.** Ändere Einsätze, lege neue an,
 lösche welche, pflege Stammdaten, koppele eine Uhr. Es geht nichts verloren,
 was jemandem fehlen würde.
@@ -517,8 +524,11 @@ Pro Tag:
   selbst und auf der Kachel; auswerten lässt er sich in der
   Zeitraum-Übersicht und der Suche. Zahlenspalten stehen rechtsbündig,
   Haken zentriert; ein Klick auf eine Zeile öffnet den Einsatz, ein Klick
-  auf einen Spaltenkopf sortiert. Die Dauer rechnet von der Alarmierung bis
-  Phase 9; fehlt Phase 9, steht dort die Plakette „kein Ende".
+  auf einen Spaltenkopf sortiert. Die Dauer rechnet von Beginn bis Ende des
+  Einsatzes; ist er noch nicht abgeschlossen, steht dort die Plakette
+  „kein Ende". *Bis Web 14.2.1 rechnete sie bis Phase 9 — ein geschnittener
+  oder importierter Einsatz hat keine und galt damit als „kein Ende",
+  obwohl er längst zu Ende war.*
   Eine Spalte **abw. Crew** gab es von Web 5.4.0 bis 5.9.0; sie ist wieder
   entfallen, weil der Haken an den allermeisten Tagen in keiner Zeile stand.
   Ob für einen Einsatz eine vom Diensttag abweichende Besatzung eingetragen ist,
@@ -666,15 +676,29 @@ nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
 „Aktionen"; Escape schließt, die Tastatur bedient es vollständig — seit
 Web 9.3.0 dasselbe Blatt wie auf der Startseite). **Spur als GPX** erscheint
 nur, wenn der Einsatz überhaupt eine Spur hat, und lädt sie als GPX-Datei
-herunter — lesbar von jedem Kartenprogramm. In der Unterzeile stehen Zeitspanne — ohne
-Phase 9 „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
+herunter — lesbar von jedem Kartenprogramm. In der Unterzeile stehen Zeitspanne — bei einem
+Einsatz ohne Ende „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
 Rettungsmittel und Standort:
 
 | Kennzeichen | Bedeutung |
 |---|---|
-| **Uhr** | Von der Uhr aufgezeichnet |
+| **Uhr** | Von der Garmin-Uhr-App aufgezeichnet |
+| **Handy** | Von der Android-App auf dem Handy aufgezeichnet |
+| **Wear** | An der Wear-OS-Uhr begonnen — gesendet hat ihn das Handy |
 | **manuell** | Von Hand nachgetragen (Abschnitt 4.5/4.3) |
 | **importiert** | Über Import/Export eingespielt |
+| **Schnitt** | Aus einer Ruhezeit herausgeschnitten (Abschnitt 4.1b) |
+
+**Sechs Kennzeichen seit Web 14.0.0, vorher drei.** Ein Einsatz vom Handy und
+einer von der Wear-OS-Uhr standen bis dahin beide als „Uhr" da, ein
+geschnittener als „manuell" — die Anzeige konnte es nicht besser wissen, weil
+es der Datensatz selbst nicht wusste. Bestehende Einsätze sind beim Update
+mitgezogen worden.
+
+„Handy" und „Wear" kommen dabei vom **selben Gerät**: Die Uhr-App am Handgelenk
+hat keinen eigenen Zugang zum Server, sie reicht ihre Ereignisse ans Handy
+weiter, und das sendet. Der Unterschied sagt, **wo du getippt hast**, nicht
+welches Gerät hochgeladen hat.
 
 Trägt der Einsatz eine Spur, steht dort außerdem, wie viele Punkte sie hat —
 und ob sie noch die **Originalspur** ist oder bereits **ausgedünnt** (das
@@ -1212,6 +1236,45 @@ Tages landet von selbst richtig.
 
 Eine Rolle, die der gewählte Besatzungssatz nicht besetzt, der andere aber
 schon, wird von dort übernommen: Ein eingetragener Name geht nicht verloren.
+
+### 4.5b Wenn zwei Diensttage sich zeitlich überschneiden
+
+*Seit Web 13.3.0.* Überschneiden sich zwei deiner Diensttage zeitlich um mehr
+als eine Viertelstunde, steht in der Tagesübersicht ein Hinweis mit einem Knopf
+**„Diensttage zusammenführen"**. Er nennt den anderen Tag mit Beginn,
+Überschneidungsdauer und der Zahl der Einsätze und Ruhesegmente — und verlinkt
+ihn, damit du ihn ansehen kannst, bevor du entscheidest.
+
+**Wie das entsteht.** Zeichnen zwei Geräte denselben Dienst auf — die Uhr am
+Handgelenk und das Handy in der Tasche —, legt **jedes einen eigenen
+Diensttag** an. Die Geräte wissen nichts voneinander; jedes bekommt seine
+eigene Dienstkennung, und der Server ordnet danach zu. Es geht dabei nichts
+verloren und nichts wird überschrieben: **Es steht alles doppelt.** Derselbe
+Einsatz zweimal, dieselbe Spur zweimal — und in der Jahresübersicht zählt der
+Dienst doppelt.
+
+Der häufigste Fall ist die Uhr, die im Spind noch mitläuft, während du längst
+mit dem Handy im Dienst bist.
+
+**Was du tun kannst.** Der Hinweis entscheidet nichts von selbst, und das ist
+Absicht: Beide Tage sind vollständige Aufzeichnungen, und welche gelten soll,
+weiß nur, wer dabei war. Drei Wege stehen offen:
+
+- **Zusammenführen** (Abschnitt 4.5a) — beide werden zu einem. Die Doppelung
+  steht danach in *einem* Tag statt in zweien; die doppelten Einsätze räumst
+  du von Hand weg.
+- **Einen löschen**, wenn er nichts enthält, was der andere nicht auch hat.
+- **Stehen lassen**, wenn es tatsächlich zwei Dienste waren.
+
+**Der Hinweis lässt sich nicht wegklicken**, anders als der über neue Geräte.
+Er beschreibt keinen Vorgang, den man zur Kenntnis nimmt, sondern einen
+Zustand, der weiterbesteht — und er verschwindet von selbst, sobald die Tage
+zusammengeführt sind oder einer im Papierkorb liegt.
+
+**Eine Viertelstunde ist die Schwelle**, nicht eine Minute: Wer den neuen
+Dienst beginnt, bevor er den alten beendet hat, erzeugt eine Überschneidung von
+wenigen Minuten — die ist kein Fehler, sondern die Reihenfolge zweier
+Handgriffe. Ein Hinweis, der dabei jedes Mal erschiene, würde überlesen.
 
 ### 4.6 Suche
 
@@ -1840,9 +1903,13 @@ weiterhin „alles"; das ist eine bewusste Angabe.
 - **CSV (Standard)**: ein Archiv mit allen Feldern, die das System kennt, dazu
   Diensttage, Ruhezeiten, eine Feldbeschreibung und auf Wunsch die GPX-Tracks. Das
   ist das Format für Auswertungen und für den Rückweg. Es führt je Einsatz auch
-  die **Herkunft** (Uhr, manuell, importiert) und den **Bearbeitungsstatus** mit
-  — dieselben beiden Angaben, die in der Einsatzansicht als Kennzeichen stehen
-  (Abschnitt 4.2). Die beiden Exceltabellen führen sie nicht.
+  die **Herkunft** (uhr, handy, wear, manuell, import, schnitt) und den
+  **Bearbeitungsstatus** mit — dieselben beiden Angaben, die in der
+  Einsatzansicht als Kennzeichen stehen (Abschnitt 4.2). Seit Web 14.1.0 stehen
+  dort außerdem **Art und Modell des Geräts**, mit dem aufgezeichnet wurde — je
+  Einsatz und je Ruhezeit, als letzte zwei Spalten. Leer heißt „nicht bekannt":
+  Nur ein gekoppeltes Gerät meldet, was es ist. Die beiden Exceltabellen führen
+  nichts davon.
 - **Excel (Standard)**: eine Zeile je Einsatz, deutsche Spaltenbeschriftungen,
   alle Zeiten in Ortszeit. Zum Ansehen, Sortieren und Filtern. Ein Diensttag ohne
   Einsatz erscheint als eine Zeile mit Datum und lauter Bindestrichen.
@@ -2334,9 +2401,20 @@ Drei Dinge dazu, damit die Anzeige nicht mehr verspricht, als sie hält:
   das Gerät neuer als die Modelltabelle des Servers. Es funktioniert
   vollständig; nur der Klarname fehlt, und er lässt sich später nachtragen.
 
-Ausgewertet wird davon vorerst nichts — die Angabe wird gespeichert, damit
-später überhaupt zählbar ist, welche Geräte im Einsatz sind. Bevor eine
-Auswertung entsteht, wird sie in der Datenschutzerklärung benannt.
+**Seit Web 14.0.0 wird die Angabe an jedem Einsatz und jeder Ruhezeit
+festgehalten** — als Momentaufnahme in dem Augenblick, in dem der Datensatz
+entsteht. Das ist wichtiger, als es klingt: Wer eine Uhr im Team teilt, trennt
+sie regelmäßig wieder, und mit dem Gerät verschwand bis dahin auch die Auskunft,
+womit aufgezeichnet wurde. Jetzt bleibt sie am Einsatz stehen.
+
+**Sie wird nicht nachgezogen.** Koppelt dasselbe Gerät später neu oder wird sein
+Modellname nachträglich aufgelöst, ändert das an bestehenden Einsätzen nichts —
+dort steht weiter, was beim Anlegen galt. Sichtbar ist die Angabe im
+CSV-Export (Abschnitt 8), nicht in der Einsatzansicht.
+
+Darüber hinaus ausgewertet wird davon vorerst nichts — die Angabe wird
+gespeichert, damit später überhaupt zählbar ist, welche Geräte im Einsatz sind.
+Bevor eine Auswertung entsteht, wird sie in der Datenschutzerklärung benannt.
 
 ### 10.1 Die Android-App herunterladen
 
@@ -2394,6 +2472,54 @@ An der **Wear-OS-Uhr** ist das anders: Dort wird ein Dienst auch bei
 ausgeschaltetem Standort begonnen — am Handgelenk kann die App niemanden
 fragen, und ein wortloses „geht nicht" hülfe nicht weiter. Stattdessen
 vibriert das Telefon, und die Uhr zeigt „keine Ortung · keine Aufzeichnung".
+
+### 10.2a Was die App über den Akku sagt
+
+*Seit Android 0.12.0.* Die Aufzeichnung braucht durchgehend GPS und ist damit
+über einen langen Dienst der größte Stromverbraucher des Geräts. Die App sagt
+das an drei Stellen — und schaltet nichts davon selbst ab.
+
+**Einmal beim Einrichten.** Der Dialog zur Akku-Freistellung nennt es im
+zweiten Absatz; wer ihn nicht sieht, weil die Freistellung schon stand,
+bekommt beim **ersten** Dienstbeginn einen Hinweis. Beide einmal je
+Installation.
+
+**Und dann während des Dienstes**, wenn es knapp wird:
+
+| Ladestand | Was kommt |
+|---|---|
+| **25 %** | Hinweis: nachladen, solange es geht |
+| **15 %** | Hinweis **und** ein Knopf „Dienst beenden" |
+| **10 %** | dasselbe, dringlicher |
+
+**Je Stufe einmal.** Zwischen 24 % und 16 % kommt nichts Neues — sonst stünde
+zwölf Stunden lang dieselbe Meldung, und die bei 10 % ginge darin unter.
+Hängst du das Gerät ans Kabel, verschwindet die Warnung; fällt der Stand
+später wieder, warnt dieselbe Schwelle erneut.
+
+**Die App beendet den Dienst nicht von selbst.** Das ist Absicht: Eine
+Abschaltung bei einem festen Ladestand beendete die Aufzeichnung **still**,
+mitten im Dienst, genau dann, wenn niemand aufs Handy sieht — und was in der
+Dokumentation fehlt, lässt sich hinterher nicht nachtragen. Du entscheidest;
+die App sagt dir nur rechtzeitig Bescheid.
+
+**Was hilft:** im Fahrzeug oder an der Wache nachladen. Ein Zwölfstundendienst
+ohne Zwischenladung ist für die meisten Geräte zu viel.
+
+### 10.2b Datenschutzerklärung und Impressum in der App
+
+*Seit Android 0.13.0.*
+
+Unter **Einstellungen** (Knopf unter der Dienstkarte) steht unten die Karte
+**„Rechtliches"** mit zwei Knöpfen: **Datenschutzerklärung** und
+**Impressum**. Beide öffnen die entsprechende Seite **im Browser** — dieselbe,
+die auch in der Weboberfläche steht, denn beide Texte stammen von der
+Betreiberin des Servers, mit dem die App spricht. Eine Anmeldung ist dafür
+nicht nötig.
+
+Die App zeigt die Seiten bewusst nicht in sich selbst: Sie hat keinen
+eingebauten Betrachter, und sie soll auch keinen bekommen. Ist gar kein
+Browser installiert, sagt sie das, statt sich zu beenden.
 
 ### 10.3 Die Phasenliste im Einsatz
 

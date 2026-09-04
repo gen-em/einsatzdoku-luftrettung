@@ -597,7 +597,7 @@ function edbak_sicherung_erzeugen(int $userId): array
             'pat_key_check' => $u['pat_key_check'],
         ],
         'umfang'        => $umfang,
-        'nutzlast'      => 8,
+        'nutzlast'      => 9,
         'eintraege'     => $gesamtEintraege,
         'eintragsteile' => $eintragsteile,
         'spurteile'     => $spurteile,
@@ -2105,7 +2105,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
              * derselbe Grund wie in api/backup_eintraege_restore.php: Der
              * Eintragsweg gibt es nur fuer Nutzlast 8, und das soll dastehen
              * statt sich daraus zu ergeben, dass niemand anders ihn ruft. */
-            $f['version'] = 8;
+            $f['version'] = 9;
             $s2 = edbak_restore($zielUserId, $f, $dayMap);
             foreach ((array)($s2['spur_karte'] ?? []) as $ref => $ziel) {
                 $karte[(int)$ref] = $ziel;

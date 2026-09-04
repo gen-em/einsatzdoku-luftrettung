@@ -1,14 +1,14 @@
 {
   "name": "edbak-alt-umlauf",
-  "beschreibung": "Erwartete Abweichungen beim FORMATUEBERGREIFENDEN Umlauf: die einteilige Referenz mit Nutzlast 7 hinein, Containerfassung 4 mit Nutzlast 8 heraus (R11-Abnahme, S2/AP5). GEMESSEN am Referenzdatensatz: 287 282 Einzelvergleiche, 560 Abweichungen — 543 davon sind Felder, die es in Nutzlast 7 GAR NICHT GAB, 16 die bekannte device_id-Regel, eine die Fassungsnummer selbst. KEINE davon betrifft einen Spurpunkt: Die 55 861 Punkte kommen unveraendert zurueck, und genau das soll dieser Lauf belegen. Jede Regel traegt die Zahl, mit der sie belegt ist. DIESE LISTE FAELLT MIT NADOKU 1.0 WEG, zusammen mit dem Altformat (Backlog Nr. 46) — dann gibt es nur noch den Lauf `--art edbak`.",
+  "beschreibung": "Erwartete Abweichungen beim FORMATUEBERGREIFENDEN Umlauf: die einteilige Referenz mit Nutzlast 7 hinein, Containerfassung 4 mit Nutzlast 8 heraus (R11-Abnahme, S2/AP5). GEMESSEN am Referenzdatensatz nach R64/AP4: 287 743 Einzelvergleiche, 647 Abweichungen — die grosse Mehrheit sind Felder, die es in Nutzlast 7 GAR NICHT GAB (darunter seit Nutzlast 9 `geraet_art`, `geraet_modell` und `schnitte` an jedem Einsatz und jedem Segment), dazu die bekannte device_id-Regel und die Fassungsnummer selbst. Die Zahl 560 aus S2/AP5 gilt nicht mehr: Sie stammt aus der Zeit vor Nutzlast 9. KEINE davon betrifft einen Spurpunkt: Die 55 861 Punkte kommen unveraendert zurueck, und genau das soll dieser Lauf belegen. Jede Regel traegt die Zahl, mit der sie belegt ist. DIESE LISTE FAELLT MIT NADOKU 1.0 WEG, zusammen mit dem Altformat (Backlog Nr. 46) — dann gibt es nur noch den Lauf `--art edbak`.",
   "regeln": [
     {
       "bereich": "kopf",
       "feld": "version",
       "art": "wert",
       "von": "7",
-      "nach": "8",
-      "begruendung": "GEMESSEN 1x. Die Nutzlastfassung steigt von 7 auf 8 — genau das ist der Zweck dieses Laufs. Nutzlast 8 traegt keine Punktlisten mehr, sondern je Spur eine `spur_ref` und die Angaben Stufe/n_original/n; die Punkte stehen in eigenen Spurteilen."
+      "nach": "9",
+      "begruendung": "GEMESSEN 1x. Die Nutzlastfassung steigt von 7 auf 9 — genau das ist der Zweck dieses Laufs. Bis Web 14.1.0 stand hier 8; mit Nutzlast 9 (Geraete-Momentaufnahme und Sperrvermerke, R64 / Backlog Nr. 63) schreibt edbak_build() eine 9. Die Regel steht auf 'von 7' und 'nach 9', weil die Altformat-Referenz eingefroren bleibt: Sie IST der Beleg dafuer, dass eine alte Datei noch einspielbar ist."
     },
     {
       "bereich": "missions",
@@ -58,6 +58,12 @@
       "art": "wert",
       "nach": "None",
       "begruendung": "GEMESSEN 16x (je Diensttag einmal): days[].refs[].device_id wird im frischen Konto null. Geraete stehen in keinem Backup — sie tragen einen API-Schluessel, und ein mitgesichertes Geraet waere ein mitgesicherter Zugang. Die Dienstkennung day_ref selbst bleibt WOERTLICH erhalten; nur ihre Zuordnung zu einem Geraet nicht. Dieselbe Regel wie im Lauf `edbak`."
+    },
+    {
+      "bereich": "missions",
+      "feld": "schnitte",
+      "art": "wert",
+      "begruendung": "GEMESSEN 87x (04.09.2026, Stand vor der Referenz-Erneuerung in AP4). Die Liste der Sperrvermerke gibt es erst seit Nutzlast 9 (R64 / Backlog Nr. 63); die eingefrorene Altformat-Referenz vom 24.08.2026 traegt Nutzlast 7 und kennt den Schluessel nicht. Der Umlauf schreibt ihn an JEDEN Einsatz, leer erlaubt — deshalb 'None' -> '[]' an allen 87. Die Regel nennt bewusst kein 'nach': Sobald der Referenzbestand einen Schnitt traegt (E-R64-16), steht an einem Einsatz eine nicht leere Liste, und die Regel muss beides decken. ZAHL IN AP4 NEU MESSEN (dann 88 Einsaetze)."
     }
   ]
 }

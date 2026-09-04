@@ -216,10 +216,17 @@ unterscheidet die beiden Fälle, siehe 3.7.
 
 **Bewusst nicht in Excel (Standard)** (nur im CSV): Anderer Notarzt, Beschreibung
 Einsatzort, Höhenmeter, alle Phasen außer Alarmierung und Endzeit, sämtliche
-Koordinaten, Reanimationsdokumentation, Tracks, Ruhezeiten und die Herkunft des
-Datensatzes. Ebenfalls nicht enthalten, weil in einer Übersichtstabelle
+Koordinaten, Reanimationsdokumentation, Tracks, Ruhezeiten, die Herkunft des
+Datensatzes und — seit Web 14.1.0 — die **Geräteangaben** (`geraet_art`,
+`geraet_modell`). Ebenfalls nicht enthalten, weil in einer Übersichtstabelle
 entbehrlich: Windenzyklen mit PatientIn, Luftverladung und die
 Bergwacht-Zusatzangabe. Alle drei stehen weiterhin vollständig im CSV.
+
+Die Geräteangaben stehen aus demselben Grund draußen wie die Herkunft: Diese
+Tabelle liest ein Mensch, und sie beantwortet die Frage „was ist passiert", nicht
+„womit wurde es aufgezeichnet". **Der Spaltensatz von Excel (Standard) ist damit
+unverändert** — wer eine Auswertung darauf gebaut hat, merkt von Web 14.1.0
+nichts.
 
 **Effektive Besatzung:** Für jede Rolle gilt — bei abweichender Besatzung und
 belegtem Einsatzfeld der Wert vom Einsatz, sonst der Wert vom Diensttag. Woher der
@@ -368,6 +375,34 @@ Drei Spalten, die nach einer Angabe aussehen und drei verschiedene Dinge sagen:
 | `edited` | Wurde er danach verändert? | ja, sobald jemand ihn bearbeitet |
 | `manual` | Darf die Uhr ihn noch überschreiben? | ja, als Nebenwirkung einer Bearbeitung |
 
+**Der Wertevorrat von `herkunft`** — sechs Werte seit Web 14.0.0, **einer je
+Client-App**:
+
+| Wert | Bedeutung |
+|---|---|
+| `uhr` | Garmin-Uhr-App |
+| `handy` | Android-App auf dem Handy |
+| `wear` | an der Wear-OS-Uhr begonnen — **gesendet hat ihn das Handy** |
+| `manuell` | im Einsatzformular angelegt |
+| `import` | aus einer Datei übernommen (CSV oder GPX) |
+| `schnitt` | aus einem Ruhesegment herausgeschnitten (Handbuch 4.1b) |
+
+**`uhr` bleibt die Garmin-Uhr-App, dauerhaft.** Eine künftige App eines anderen
+Uhrenherstellers bekommt einen eigenen Wert und wird nicht unter `uhr`
+einsortiert — sonst würde jede Auswertung, die auf `uhr` filtert, rückwirkend
+mehrdeutig, ohne dass sich das der Datei ansehen ließe. Welcher Hersteller es
+war, steht in `geraet_modell`.
+
+**`handy` und `wear` kommen vom selben Gerät.** Die Wear-OS-App hat weder
+Serveradresse noch Zugangsschlüssel; sie schickt ihre Ereignisse an das Handy,
+und das Handy sendet. Der Unterschied sagt, *wo* der Einsatz begonnen wurde,
+nicht *wer* ihn hochgeladen hat.
+
+**Bis Web 14.0.0 gab es nur drei Werte**, und `handy` wie `wear` erschienen als
+`uhr`; der Schnitt erschien als `manuell`. Wer Dateien aus der Zeit davor
+auswertet, muss damit rechnen. Ein Wert, den diese Fassung nicht kennt, wird
+**unübersetzt** ausgegeben — nicht als `uhr`.
+
 Der Fall, an dem der Unterschied hängt: Ein von der Uhr aufgezeichneter Einsatz,
 den jemand im Formular korrigiert, behält `herkunft = uhr` und bekommt
 `edited = 1`. Er bekommt zusätzlich `manual = 1` — nicht, weil er von Hand
@@ -376,7 +411,37 @@ Korrektur nicht wieder überschreibt. Wer die Herkunft auswerten will, nimmt
 `herkunft`; `manual` ist ein Schutzschalter und taugt dafür nicht.
 
 Die Einsatzansicht der Anwendung zeigt dieselben beiden Angaben als Kennzeichen
-„Uhr / manuell / importiert" und zusätzlich „editiert".
+„Uhr / Handy / Wear / manuell / importiert / Schnitt" und zusätzlich „editiert".
+
+### 3.6a `geraet_art` und `geraet_modell`
+
+Seit Web 14.1.0 tragen `einsaetze.csv` **und** `ruhezeiten.csv` als letzte zwei
+Spalten, **mit welchem Gerät** der Datensatz aufgezeichnet wurde:
+
+| Spalte | Werte |
+|---|---|
+| `geraet_art` | `uhr` \| `handy` \| `sonstiges`; leer = unbekannt |
+| `geraet_modell` | Modellname, z. B. `Google Pixel 8`; bei einer Uhr der Sammelname der Hardware, unter dem sie verkauft wird; leer = unbekannt |
+
+Drei Dinge dazu, die man wissen muss:
+
+**Es ist eine Momentaufnahme.** Beide Werte werden in dem Augenblick kopiert, in
+dem der Datensatz entsteht, und danach **nie nachgezogen**. Ein Gerät, das
+später neu koppelt oder anders aufgelöst wird, ändert an einem bestehenden
+Einsatz nichts. Das ist Absicht: Die Angabe soll sagen, womit *damals*
+aufgezeichnet wurde.
+
+**Leer heißt unbekannt, nicht „kein Gerät".** Nur die Kopplung kennt Art und
+Modell (seit Web 12.9.0). Von Hand angelegte, importierte und vor 12.9.0
+gekoppelte Datensätze haben nichts zu melden; dort bleibt die Zelle leer. Das
+Wort „unbekannt" steht bewusst nicht in der Datei — es wäre eine Aussage, wo
+keine ist.
+
+**Sie stehen am Ende und nicht neben `herkunft`.** Wer schon Auswertungen auf
+diese Datei gebaut hat, zählt Spalten von links; und die beiden beschreiben
+nicht den Einsatz, sondern das Gerät.
+
+Beim **Rückimport** werden sie nicht übernommen (5.1) — wie `herkunft`.
 
 **Einschränkung für Altbestand:** Für Einsätze, die vor dem 30.07.2026 angelegt
 wurden, ließ sich `edited` nur dort zuverlässig herleiten, wo der Einsatz von
@@ -410,7 +475,7 @@ leeren Geburtsdatum wäre für ihn nur eine fehlende Angabe.
 > **Diese Listen stehen auch in der Exportdatei selbst.** `felder.csv` wird beim
 > Erzeugen aus derselben Quelle gebaut wie die Spalten — wer eine Datei in der
 > Hand hat, braucht dieses Dokument nicht. Es beschreibt den Stand von Web
-> 6.3.0.
+> 14.1.0.
 
 #### Die Besatzungsspalten entstehen aus dem Rollenkatalog
 
@@ -446,8 +511,8 @@ Besatzungsspalten sind personenbezogen.
 | `diensttag` | date | — | nein | Datum des Diensttags (days.day) |
 | `diensttag_id` | int | — | nein | interne ID des Diensttags — Bezugsschlüssel zum Blatt Diensttage |
 | `datum` | date | — | nein | Datum des Einsatzes in Ortszeit — bei einem Dienst über Mitternacht NICHT identisch zu diensttag |
-| `uhrzeit_ortszeit` | time | — | nein | Alarmzeit HH:MM, für Tabellenprogramme |
-| `herkunft` | text | — | nein | wie der Einsatz entstanden ist (missions.origin): uhr \| manuell \| import |
+| `uhrzeit_ortszeit` | time | — | nein | Alarmzeit HH:MM, für Tabellenprogramme — **ohne Phase 2 der Einsatzbeginn** (seit Web 14.2.1; ein geschnittener Einsatz hat keine Alarmierung, und der eigene Import verlangt diese Spalte) |
+| `herkunft` | text | — | nein | wie der Einsatz entstanden ist (missions.origin): uhr = Garmin-Uhr-App \| handy = Android-App \| wear = an der Wear-OS-Uhr begonnen, vom Handy gesendet \| manuell \| import \| schnitt = aus einem Ruhesegment geschnitten |
 | `final` | 0/1 | — | nein | abgeschlossen |
 | `manual` | 0/1 | — | nein | Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe Spalte herkunft) |
 | `edited` | 0/1 | — | nein | nach dem Anlegen verändert (missions.edited) — unabhängig von der Herkunft, nicht zu verwechseln mit manual |
@@ -457,7 +522,7 @@ Besatzungsspalten sind personenbezogen.
 | `crew_abweichend` | 0/1 | — | nein | missions.crew_override |
 | `beginn` | ts | — | nein | started_at |
 | `ende` | ts | — | nein | ended_at |
-| `dauer_min` | int | min | nein | Phase 2 → Phase 9, leer wenn unvollständig |
+| `dauer_min` | int | min | nein | Phase 2 → Phase 9, leer wenn unvollständig. **Nicht zu verwechseln mit der Dauer in der Oberfläche**, die seit Web 14.2.2 von `beginn` bis `ende` rechnet; diese Spalte bleibt bewusst die Spanne der *Phasen* |
 | `strecke_m` | int | m | nein | Einsatzstrecke (distance_m) |
 | `hoehenmeter_m` | int | m | nein | Höhenmeter (ascent_m) |
 | `hoehe_einsatzort_m` | int | m | **ja** | Höhe des Einsatzorts |
@@ -496,6 +561,8 @@ Besatzungsspalten sind personenbezogen.
 | `rea_json` | json | — | nein | Reanimationssitzungen mit Ereignissen, siehe 3.4; leer wenn keine Reanimation |
 | `track_datei` | text | — | nein | relativer Pfad unter tracks/, oder leer |
 | `track_punkte` | int | — | nein | Anzahl Trackpunkte |
+| `geraet_art` | text | — | nein | Art des aufzeichnenden Geräts, festgehalten beim Anlegen (missions.geraet_art): uhr \| handy \| sonstiges; leer = unbekannt (3.6a) |
+| `geraet_modell` | text | — | nein | Modell des aufzeichnenden Geräts, festgehalten beim Anlegen (missions.geraet_modell); leer = unbekannt. Wird NICHT nachgezogen, wenn das Gerät später anders aufgelöst wird |
 
 **Was seit Web 6.0.0 neu oder anders heißt:**
 
@@ -555,6 +622,12 @@ mehrere Diensttage auf einem Kalendertag liegen können.
 | `final` | 0/1 | — | nein | abgeschlossen |
 | `track_datei` | text | — | nein | relativer Pfad unter tracks/, oder leer |
 | `track_punkte` | int | — | nein | Anzahl Trackpunkte |
+| `geraet_art` | text | — | nein | Art des aufzeichnenden Geräts, festgehalten beim Anlegen (rest_segments.geraet_art): uhr \| handy \| sonstiges; leer = unbekannt (3.6a) |
+| `geraet_modell` | text | — | nein | Modell des aufzeichnenden Geräts, festgehalten beim Anlegen (rest_segments.geraet_modell); leer = unbekannt |
+
+Eine Spalte `herkunft` gibt es hier **nicht**: Das Ruhesegment trägt keine.
+Gezählt werden Einsätze, und woher ein Segment stammt, sagt seine
+Client-Kennung (JSON-Vertrag 8).
 
 ---
 
@@ -652,11 +725,19 @@ Textanfang verschwände. Wer die Dateien maschinell weiterverarbeitet, entfernt
 den Apostroph selbst (3.1 sagt das auch); wer die Datei zurückspielt und den
 Wert unverändert braucht, korrigiert die drei betroffenen Zellen im Formular.
 
-Ebenfalls nicht übernommen werden **`herkunft` und `edited`**. Beide beschreiben,
-wie ein Datensatz *in der Installation entstanden ist, aus der die Datei stammt*.
-Beim Einlesen entsteht er neu: Die Herkunft wird auf „importiert" gesetzt, der
-Bearbeitungsstatus beim Aktualisieren eines bestehenden Einsatzes. Ein Wert aus
-der Datei wäre an dieser Stelle eine Aussage über ein fremdes Konto.
+Ebenfalls nicht übernommen werden **`herkunft`, `edited`, `geraet_art` und
+`geraet_modell`**. Alle vier beschreiben, wie und womit ein Datensatz *in der
+Installation entstanden ist, aus der die Datei stammt*. Beim Einlesen entsteht
+er neu: Die Herkunft wird auf „importiert" gesetzt, der Bearbeitungsstatus beim
+Aktualisieren eines bestehenden Einsatzes, und ein Gerät gibt es dabei nicht —
+der Import läuft über das virtuelle Gerät des Kontos. Ein Wert aus der Datei
+wäre an dieser Stelle eine Aussage über ein fremdes Konto.
+
+**Unbekannte Spalten stören den Rückimport nicht.** Das Profil `export_csv_v1`
+ordnet über Spaltennamen zu und geht über jede Kopfzeile hinweg, die es nicht
+kennt; die Erkennungsschwelle zählt nur die Spalten, die es kennt. Eine Datei
+aus Web 14.1.0 lässt sich damit auch von einer älteren Installation einlesen —
+die zwei neuen Spalten fallen dort einfach weg.
 
 Eine Exportdatei ohne die Spalte `edited` (Auslieferungen bis Web 3.3.2) oder
 ohne `pat_alter` (bis Web 3.4.0) lässt sich unverändert einlesen — die
