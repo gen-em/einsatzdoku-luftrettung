@@ -30,6 +30,18 @@ import org.genem.nadoku.handy.kopplung.Trennergebnis
  * Uhr und das Trennen. Die Verwaltung bleibt im Browser (R45) — eine App, die
  * anfängt, Einsätze zu bearbeiten, ist der Anfang einer zweiten Anwendung.
  *
+ * SEIT 0.13.0 STEHEN DARUNTER ZWEI VERWEISE, und sie sind keine vierte
+ * Einstellung: Datenschutzerklärung und Impressum. Bis dahin führte die App
+ * zu **keinem** Rechtstext — beide existierten nur in der Weboberfläche und
+ * im Store-Eintrag. Eine App, die durchgehend den Standort aufzeichnet und
+ * ihn an einen Server schickt, sollte von sich aus sagen können, wer diesen
+ * Server betreibt und was dort geschieht; wer erst den Store öffnen muss, um
+ * das zu erfahren, findet es nicht.
+ *
+ * Sie öffnen den Browser und keinen eingebauten Betrachter — ein WebView
+ * wäre die einzige Stelle, an der fremdes Markup im Prozess dieser App liefe.
+ * Aufgefallen bei der Play-Console-Vorbereitung (Schritt 6, Teil C).
+ *
  * DIE SPERRE DER UHR STEHT HIER UND NICHT AUF DER UHR, weil die Uhr keine
  * eigenen Einstellungen hat: Sie übernimmt sie über den Nachrichtenweg (C2) —
  * wie die Garmin, ohne Abstimmungsbedarf zwischen den Geräten.
@@ -43,6 +55,8 @@ fun EinstellungenAnsicht(
     aufLogoWahl: (LogoWahl) -> Unit,
     aufUhrSperre: (Boolean) -> Unit,
     aufTrennen: () -> Unit,
+    aufDatenschutz: () -> Unit,
+    aufImpressum: () -> Unit,
     aufZurueck: () -> Unit,
 ) {
     Column(
@@ -123,6 +137,22 @@ fun EinstellungenAnsicht(
                 }
             }
 
+            /* KEIN NEUER BAUSTEIN. `Karte`, `Text` und `KnopfNeutral` gibt
+             * es; zwei Verweise rechtfertigen keine eigene Darstellung, und
+             * die Knopfhöhe von 48 dp gilt hier wie überall (R58). */
+            Karte {
+                Text(
+                    text = stringResource(R.string.einstellungen_recht),
+                    color = Farbe.dunkelblau, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                )
+                KnopfNeutral(stringResource(R.string.datenschutz)) { aufDatenschutz() }
+                KnopfNeutral(stringResource(R.string.impressum)) { aufImpressum() }
+                Text(
+                    text = stringResource(R.string.recht_hinweis),
+                    color = Farbe.gedaempft, fontSize = 13.sp,
+                )
+            }
+
             Text(
                 text = stringResource(R.string.fassung, BuildConfig.VERSION_NAME),
                 color = Farbe.gedaempft, fontSize = 12.sp,
@@ -136,5 +166,6 @@ fun EinstellungenAnsicht(
 @Composable
 private fun VorschauEinstellungen() = EinstellungenAnsicht(
     logoWahl = LogoWahl.WECHSELND, uhrSperre = true, dienstLaeuft = false,
-    trennmeldung = null, aufLogoWahl = {}, aufUhrSperre = {}, aufTrennen = {}, aufZurueck = {},
+    trennmeldung = null, aufLogoWahl = {}, aufUhrSperre = {}, aufTrennen = {},
+    aufDatenschutz = {}, aufImpressum = {}, aufZurueck = {},
 )

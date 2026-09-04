@@ -681,6 +681,48 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
   adb shell am instrument -w -e class <Klasse> \
     org.genem.nadoku.pruef.test/androidx.test.runner.AndroidJUnitRunner
   ```
+
+  **Dritter Lauf am 04.09.2026 (0.13.0): eine Ansicht hinter der Kopplung
+  ansehen.** Die Einstellungen sind aus `KopplungAnsicht` **nicht**
+  erreichbar — der Weg dorthin geht nur über `DienstAnsicht`, und die zeigt
+  sich erst, wenn `Schluesseltresor.gekoppelt()` wahr ist. Der Tresor ist mit
+  dem `AndroidKeyStore` verschlüsselt; von außen lässt sich nichts
+  hineinlegen. Der Weg, der trägt, ist die **echte Kopplung gegen die
+  örtliche Installation**:
+
+  ```bash
+  sh tools/referenzdatensatz/einspielen/lokal_starten.sh
+  ./gradlew --offline -Pnadoku.serverBasis=http://127.0.0.1:8080/ \
+      :handy:assembleDebug
+  adb reverse tcp:8080 tcp:8080          # 127.0.0.1 im Emulator = Host
+  adb install -r handy/build/outputs/apk/debug/handy-debug.apk
+  adb shell pm clear org.genem.nadoku.pruef   # alten Tresor loswerden
+  ```
+
+  Dann in der App „Kopplung starten", den Code aus
+  `SELECT code FROM pair_sessions ORDER BY id DESC LIMIT 1` nehmen und im
+  Browser bestätigen (`action=koppeln_bestaetigen`, ein POST mit `csrf`,
+  in **einer** Sitzung), zuletzt am Gerät „Ja, koppeln". Klartext-HTTP geht
+  nur im Prüf-APK — `src/debug/res/xml/netzwerk_pruefstand.xml`.
+
+  Zahlen des Laufs: Boot **621 s**, Handy-APK **60 s** (schon installiert,
+  daher schnell). Kopplung, Einstellungen, beide Rechtstext-Knöpfe und die
+  Trennung sind darin bedient worden.
+
+  **Drei Dinge, die dabei Zeit gekostet haben:**
+
+  - `input swipe` mit 300 ms Dauer **scrollt nicht** — Compose nimmt es als
+    Tipp. 900 ms über eine lange Strecke wirkt zuverlässig.
+  - Der Abzug kommt gelegentlich als **0-Byte-Datei** zurück (`screencap`
+    trifft einen Augenblick, in dem die Oberfläche neu zeichnet). Einfach
+    wiederholen; `file` sagt, ob ein PNG darin steht.
+  - **Der einzige Browser des Abbilds ist `org.chromium.webview_shell`**
+    (WebView Browser Tester 113.0.5672.136). Er nimmt einen `ACTION_VIEW`
+    an und zeigt die Adresse — aber er **rendert nicht**: „WebView Shell
+    isn't responding", auch nach „Wait" und 45 s. Chromium auf einem
+    emulierten Kern. Dass die Seite ankam, misst man deshalb **am Server**
+    (`tail /tmp/php-server.log` → `[200]: GET /datenschutz.php`), nicht am
+    Bild.
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf
   Hardware.

@@ -10,6 +10,7 @@ import android.os.SystemClock
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.genem.nadoku.BuildConfig
 import org.genem.nadoku.R
+import org.genem.nadoku.handy.kopplung.Serveradresse
 import org.genem.nadoku.gemeinsam.Farbe
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.handy.aufzeichnung.AufzeichnungsDienst
@@ -400,6 +402,8 @@ private fun GekoppelteOberflaeche(
             aufLogoWahl = { app.einstellungen.logoWahl = it; logoWahl = it },
             aufUhrSperre = { app.einstellungen.uhrSperre = it; uhrSperre = it },
             aufTrennen = { aufTrennfrage(true) },
+            aufDatenschutz = { rechtstextOeffnen(kontext, Serveradresse.datenschutz(Serveradresse.BASIS)) },
+            aufImpressum = { rechtstextOeffnen(kontext, Serveradresse.impressum(Serveradresse.BASIS)) },
             aufZurueck = { ansicht = Ansicht.Dienst },
         )
 
@@ -572,6 +576,30 @@ private fun standortEinstellungOeffnen(kontext: Context) {
         kontext.startActivity(
             Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
+    }
+}
+
+/**
+ * Einen Rechtstext im Browser oeffnen (seit 0.13.0).
+ *
+ * DIESELBE BAUART WIE DIE BEIDEN EINSTELLUNGSWEGE DARUNTER: Die App oeffnet
+ * eine Absicht und faengt den Fall ab, dass niemand sie annimmt. Der
+ * Unterschied ist der Rueckfall — bei den Systemeinstellungen gibt es einen
+ * zweiten Weg, hier nicht: Ohne Browser gibt es keinen. Statt abzustuerzen
+ * sagt die App es.
+ *
+ * KEIN WEBVIEW. Ein eingebauter Betrachter waere die einzige Stelle, an der
+ * fremdes Markup im Prozess dieser App liefe — fuer zwei Seiten, die im
+ * Browser genauso gut stehen.
+ */
+private fun rechtstextOeffnen(kontext: Context, adresse: String) {
+    try {
+        kontext.startActivity(
+            Intent(Intent.ACTION_VIEW, adresse.toUri())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    } catch (e: android.content.ActivityNotFoundException) {
+        Toast.makeText(kontext, R.string.recht_kein_browser, Toast.LENGTH_LONG).show()
     }
 }
 

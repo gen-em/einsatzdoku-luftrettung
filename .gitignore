@@ -78,3 +78,9 @@ tools/referenzdatensatz/einspielen/*rc.json
 # das Protokoll ihres Entstehens nicht.
 tools/referenzdatensatz/referenz/.export_lauf.json
 tools/screenshots/ausgabe/
+# Bildschirmabzuege des Emulators (android/werkzeuge/emulator.sh, Vorgabe
+# `./emulator-bilder/`). Sie entstehen bei JEDEM Lauf neu und in Menge --
+# ein Paket wirft ein Dutzend ab, jedes rund 100 kB. Was davon etwas belegt,
+# wird bewusst einzeln nach `android/mockups/` uebernommen und im Konzept
+# oder in der Dokumentation verwiesen; der Rest ist Arbeitsstand.
+emulator-bilder/

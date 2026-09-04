@@ -367,6 +367,17 @@ class Kopplungsdienst(
                 code == 401 -> Abweisung.SITZUNG_UNGUELTIG
                 code == 410 -> Abweisung.SITZUNG_ABGELAUFEN
                 code == 429 -> Abweisung.ZU_VIELE_VERSUCHE
+                /* EINE UMLEITUNG IST EIN SERVERFEHLER, seit 0.13.0.
+                 *
+                 * Vorher kam sie hier nie an: `HttpURLConnection` folgte ihr
+                 * von selbst — und nahm dabei den Geraeteschluessel im Kopf
+                 * mit. Seit `instanceFollowRedirects = false` (Netzweg.kt)
+                 * landet der 3xx hier, und er gehoert benannt: Die App
+                 * spricht mit genau zwei Endpunkten einer fest eingebauten
+                 * Adresse; eine Umleitung ist dort ein Fehler der
+                 * Einrichtung. Ohne diese Zeile hiesse er "unbekannt", und
+                 * das sagt der NutzerIn nichts. */
+                code in 300..399 -> Abweisung.SERVERFEHLER
                 code >= 500 -> Abweisung.SERVERFEHLER
                 else -> Abweisung.UNBEKANNT
             }

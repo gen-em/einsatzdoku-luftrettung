@@ -4467,6 +4467,32 @@ Gegenrichtung wuchs mit Android 0.8.0 um einen Schlüssel (`ortung`, ein
 Kurzcode des Ortungszustands) — auch er trägt kein Zugangsdatum, und ein
 eigener Prüffall zählt beide Mengen getrennt nach.
 
+**Die Uhr verlangt seit Android 0.13.0 gar keine Berechtigung mehr.** Sie
+hatte genau eine — `WAKE_LOCK` —, und die war im Quelltext unbenutzt: kein
+Aufruf von `PowerManager` oder `newWakeLock` im ganzen Modul. Eine
+Berechtigung auf Vorrat fragt zwar niemanden (Normalstufe, kein Dialog),
+erscheint aber im Store-Eintrag; sie ist ausgetragen. Das Handy führt acht,
+jede im Manifest begründet — und drei ausdrücklich **nicht**:
+`ACCESS_BACKGROUND_LOCATION` (ein sichtbarer Vordergrunddienst braucht sie
+nicht), `CAMERA` (mit R63 entfallen) und
+`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` (verstößt gegen die Inhaltsrichtlinie
+des Play Store).
+
+**Der Geräteschlüssel folgt keiner Umleitung** (seit Android 0.13.0).
+`HttpURLConnection` folgt in der Voreinstellung einer 3xx-Antwort von selbst
+und nimmt die Kopfzeilen mit — darunter `X-Api-Key`. `HttpNetzweg` setzt
+deshalb `instanceFollowRedirects = false`; eine Umleitung gilt seither als
+**Serverfehler**, weil die App mit genau zwei Endpunkten einer fest
+eingebauten Adresse spricht (R63). Der Sendeweg war nie betroffen: Er
+behandelt alles außer 200/400/401/413 als „später erneut".
+
+**Die App führt seit Android 0.13.0 zu den Rechtstexten.** Unter den
+Einstellungen stehen zwei Verweise auf `datenschutz.php` und `impressum.php`
+derselben Serveradresse; beide Seiten sind ohne Anmeldung erreichbar. Sie
+öffnen den Browser — die App hat **kein WebView**, und das soll sie nicht
+bekommen: Es wäre die einzige Stelle, an der fremdes Markup in ihrem Prozess
+liefe.
+
 Beide Module tragen dieselbe `applicationId` (`org.genem.nadoku`) und
 **müssen mit demselben Schlüssel signiert sein** — der Wear Data Layer
 stellt sonst nicht zu (E-S4-01). Der Signaturschlüssel entsteht außerhalb des

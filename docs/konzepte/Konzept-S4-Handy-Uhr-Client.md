@@ -19,16 +19,17 @@ als eigene Datei daneben.
 ## Statusblock (K5, R62)
 
 **Stand: 04.09.2026** · Zweig `claude/rahmenplan-schritt-6-ewm0kx` ·
-Web **13.2.0** · Android **0.11.0** · Fahrplan **Schritt 6 „S4 Rest"**
+Web **14.2.0** · Android **0.13.0** · Fahrplan **Schritt 6 „S4 Rest"**
 
-**In Arbeit: Schritt 6, Teil A.** Der Schritt ist beim Zuschnitt in drei
-ungleiche Teile zerfallen, und nur einer davon ist Umsetzung im engeren Sinn:
+**In Arbeit: Schritt 6, Teil B (AP4).** Der Schritt ist beim Zuschnitt in
+drei ungleiche Teile zerfallen, und nur einer davon ist Umsetzung im engeren
+Sinn:
 
 | Teil | Inhalt | Stand |
 |---|---|---|
-| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Pakete 1–4 erledigt** (Android 0.11.0–0.12.0, Web 13.3.0) |
-| **B** | R64 — Herkunft und Gerät je Einsatz | **zurückgestellt**: Der Auftraggeber liefert ein Konzept nach. Die Bestandsaufnahme fand 18 offene Entscheidungsfragen zum Datenmodell und zu den Formaten, die R64 selbst nicht beantwortet |
-| **C** | Play Console, Signaturweg, Track-Release, Gerätetest | **blockiert am Auftraggeber**: D-U-N-S beantragt sich noch, der Signaturschlüssel liegt außerhalb des Repositoriums. Vorbereitet wird, was ohne ihn geht |
+| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Pakete 1–4 erledigt** (Android 0.11.0–0.12.0, Web 13.3.0). Offen nur Backlog **81** (Gegenprobe am S24) und **95** |
+| **B** | R64 — Herkunft und Gerät je Einsatz | **in Arbeit**: Konzept `Konzept-R64-Herkunft-Geraet.md` geliefert, **AP1, AP3, AP2 erledigt** (Web 14.0.0–14.2.0); offen **AP4** (Referenz) und **AP5** (Abschluss). Statusblock dort |
+| **C** | Play Console, Signaturweg, Track-Release, Gerätetest | **vorbereitet, soweit es ohne Schlüssel geht** (`Vorbereitung-Play-Console.md`, Android 0.13.0). Blockiert bleibt, was D-U-N-S und Signaturschlüssel braucht |
 
 **Paket 1 (04.09.2026, Android 0.11.0) — erledigt.** Die App konnte sich seit
 Web 13.0.0 nicht mehr koppeln; sie kann es wieder, und zwar nach dem
@@ -150,6 +151,37 @@ Teil B: Es hängt an derselben Formatänderung wie R64 und ist im Konzept
 **eine** Formatänderung und **eine** Migration, AP1–AP5). Sein Auftrag sagt:
 „Android-Pakete des S4-Rests zuerst fertig bauen und pushen" — das ist mit
 diesem Paket geschehen.
+
+**Teil C (04.09.2026, Android 0.13.0) — vorbereitet, was ohne Schlüssel
+geht.** Die Erhebung liegt als `docs/konzepte/Vorbereitung-Play-Console.md`
+daneben: Kennungen und Zahlen zum Abschreiben, das Datensicherheitsformular
+ausgefüllt, die neun Berechtigungen begründet, der Store-Eintrag, der
+Wear-Teil, die Reihenfolge — und fünf Befunde, die vorher niemand
+aufgeschrieben hatte. **Vier davon sind mit Android 0.13.0 abgestellt:**
+
+- Die Uhr verlangt **gar keine Berechtigung** mehr (`WAKE_LOCK` war unbenutzt).
+  Damit ist die Prüfstandszeile aus B1 („Berechtigungen `uhr`: `WAKE_LOCK`,
+  kein `INTERNET`") ein Protokoll ihrer Zeit und nicht mehr der Ist-Stand.
+- Der **Geräteschlüssel folgt keiner Umleitung** mehr
+  (`instanceFollowRedirects = false`); eine 3xx gilt seither als Serverfehler.
+- Die App **führt zu Datenschutzerklärung und Impressum** — Karte
+  „Rechtliches" unter den Einstellungen, beide im Browser.
+- Die **Kopplungs- und Trennmails** des Servers tragen die Gerätebezeichnung;
+  das ist als Zuarbeit im Rahmenplan Abschnitt 6 vermerkt, damit es beim
+  Schreiben der Datenschutzerklärung nicht durchrutscht.
+
+Offen bleibt der fünfte: **Es wurde noch nie ein App Bundle gebaut.** Play
+nimmt für neue Apps kein APK mehr; `./gradlew bundleRelease` braucht den
+Signaturschlüssel und läuft deshalb erst beim Auftraggeber.
+
+Belegt am Emulator (Stufe II, ohne KVM): Kopplung gegen die örtliche
+Installation, `devices` mit `geraet_art = handy` und Modell — also die
+Momentaufnahme aus R64/AP1 am laufenden Gerät —, die neue Karte im Bild
+(`android/mockups/S4-handy-emulator-0.13.0-rechtliches.png`), beide
+Rechtstexte mit `[200]` im Serverprotokoll, und die Trennung wieder sauber.
+**Was der Emulator nicht konnte:** die Seite selbst anzeigen — der einzige
+Browser des Prüfabbilds ist ein WebView-Shell, und der antwortet unter QEMU
+ohne KVM nicht mehr. Zahlen und Grenzen in Abschnitt 9 der Vorbereitung.
 
 ---
 

@@ -336,7 +336,8 @@ class HandyBildTest {
                 uhrSperre = true,
                 dienstLaeuft = false,
                 trennmeldung = null,
-                aufLogoWahl = {}, aufUhrSperre = {}, aufTrennen = {}, aufZurueck = {},
+                aufLogoWahl = {}, aufUhrSperre = {}, aufTrennen = {},
+                aufDatenschutz = {}, aufImpressum = {}, aufZurueck = {},
             )
         },
     )

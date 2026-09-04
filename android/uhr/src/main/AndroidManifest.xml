@@ -19,16 +19,27 @@
     Einsaetze.
 
     Der Data Layer (C2) braucht KEINE eigene Berechtigung: Er laeuft ueber die
-    Play-Dienste, und die pruefen Paketnamen und Signatur (E-S4-01). Die
-    einzige Berechtigung der Uhr bleibt WAKE_LOCK.
+    Play-Dienste, und die pruefen Paketnamen und Signatur (E-S4-01).
+
+    DAMIT HAT DIE UHR SEIT 0.13.0 GAR KEINE BERECHTIGUNG MEHR. Bis dahin stand
+    hier WAKE_LOCK, und zwar unbenutzt: Im ganzen Modul und im gemeinsamen
+    Teil gibt es keinen Aufruf von `PowerManager` oder `newWakeLock`. Sie war
+    eine Berechtigung auf Vorrat — genau das, wogegen das Handy-Manifest an
+    zwei Stellen ausdruecklich argumentiert. Sie fragt zwar niemanden
+    (Normalstufe, kein Dialog), erscheint aber im Store-Eintrag, und eine App,
+    die nach etwas fragt, das sie nicht benutzt, erklaert sich schlechter als
+    eine, die nach gar nichts fragt.
+
+    Gefunden bei der Play-Console-Vorbereitung (Schritt 6, Teil C).
+    Braucht eine kuenftige Fassung sie doch — etwa, um waehrend einer
+    Uebertragung wach zu bleiben —, kommt sie mit ihrem Aufrufer zurueck und
+    nicht vorher.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-feature
         android:name="android.hardware.type.watch"
         android:required="true" />
-
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!--
         KEIN `android:roundIcon` (Backlog Nr. 81). Es stand hier wie im

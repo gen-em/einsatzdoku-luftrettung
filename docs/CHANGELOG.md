@@ -14,6 +14,63 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.13.0] — 2026-09-04
+
+Drei Punkte aus der Play-Console-Vorbereitung (Rahmenplan Schritt 6, Teil C).
+Sie sind bei der Bestandsaufnahme aufgefallen, nicht bei der Bedienung — und
+genau deshalb standen sie nirgends.
+
+### Android — die App führt jetzt zu Datenschutzerklärung und Impressum
+
+Bis 0.12.1 führte sie zu **keinem** Rechtstext. Beide existierten nur in der
+Weboberfläche und im Store-Eintrag. Eine App, die durchgehend den Standort
+aufzeichnet und ihn an einen Server schickt, sollte von sich aus sagen können,
+wer diesen Server betreibt und was dort geschieht; wer erst den Store öffnen
+muss, um das zu erfahren, findet es nicht.
+
+Unter den Einstellungen steht deshalb die Karte **„Rechtliches"** mit zwei
+Verweisen. Beide öffnen den **Browser** und keinen eingebauten Betrachter: Ein
+WebView wäre die einzige Stelle, an der fremdes Markup im Prozess dieser App
+liefe — für zwei Seiten, die im Browser genauso gut stehen. Fehlt ein Browser,
+sagt die App das, statt abzustürzen.
+
+Die Adressen leiten sich aus derselben eingebauten Serveradresse ab wie die
+zwei Endpunkte (R63). Eine zweite Adresse für die Rechtstexte wäre eine
+zweite Stelle, an der sie auf ein anderes Haus zeigen könnten als der Server,
+an den die App ihre Daten schickt.
+
+### Android — die Uhr verlangt jetzt gar keine Berechtigung mehr
+
+`WAKE_LOCK` war die einzige des Wear-Moduls und **im Quelltext unbenutzt**: Im
+ganzen Modul und im gemeinsamen Teil gibt es keinen Aufruf von `PowerManager`
+oder `newWakeLock`. Sie war eine Berechtigung auf Vorrat — genau das, wogegen
+das Handy-Manifest an zwei Stellen ausdrücklich argumentiert. Sie fragt zwar
+niemanden (Normalstufe, kein Dialog), erscheint aber im Store-Eintrag, und
+eine App, die nach etwas fragt, das sie nicht benutzt, erklärt sich schlechter
+als eine, die nach gar nichts fragt.
+
+Braucht eine künftige Fassung sie doch, kommt sie mit ihrem Aufrufer zurück
+und nicht vorher.
+
+### Android — der Geräteschlüssel folgt keiner Umleitung mehr
+
+`HttpURLConnection` folgt in der Voreinstellung einer 3xx-Antwort von selbst —
+und nimmt die Kopfzeilen mit. In diesen Kopfzeilen steht `X-Api-Key`, der
+Geräteschlüssel. Er wäre damit an eine Adresse gegangen, die nicht die ist, an
+die die App ihn schicken wollte.
+
+Bei eigener Adresse und TLS ist das folgenlos, und genau deshalb ist die
+Änderung eine Zeile: Sie kostet nichts und deckt den Fall ab, in dem es einmal
+nicht mehr folgenlos wäre — ein falsch eingerichteter Reverse Proxy, eine
+Weiterleitung auf eine fremde Domäne, ein Netz, das sich dazwischensetzt.
+
+Eine Umleitung landet dadurch erstmals in der Fehlerbehandlung. Sie wird
+ausdrücklich als **Serverfehler** eingeordnet und nicht als „unbekannt": Die
+App spricht mit genau zwei Endpunkten einer fest eingebauten Adresse; eine
+Umleitung ist dort ein Fehler der Einrichtung. **Der Sendeweg ist unberührt** —
+`Sendeantwort.lese()` behandelt alles außer 200/400/401/413 als „später
+erneut"; es geht kein Paket verloren. Nachgesehen, nicht angenommen.
+
 ## [Web 14.2.0] — 2026-09-04
 
 ### Web — der Sperrvermerk des Schnitts übersteht jetzt die Sicherung (Nr. 63)

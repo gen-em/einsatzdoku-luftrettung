@@ -291,6 +291,11 @@
     <string name="uhr_sperre_hinweis">Verhindert einen versehentlichen Druck mit Handschuhen. Entsperrt wird durch Halten.</string>
     <string name="an">an</string>
     <string name="aus">aus</string>
+    <string name="einstellungen_recht">Rechtliches</string>
+    <string name="datenschutz">Datenschutzerklärung</string>
+    <string name="impressum">Impressum</string>
+    <string name="recht_hinweis">Öffnet die Seite im Browser. Beide Texte stammen von der Betreiberin des Servers, mit dem diese App spricht.</string>
+    <string name="recht_kein_browser">Auf diesem Gerät ist kein Browser eingerichtet.</string>
     <string name="zurueck">Zurück</string>
 
     <!-- ==== Phasen und Einsätze (E-S4-08, E-S4-21b) ===================== -->

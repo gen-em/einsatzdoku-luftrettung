@@ -141,4 +141,24 @@ object Serveradresse {
 
     fun ingest(basis: String): String = basis + "ingest.php"
     fun pair(basis: String): String = basis + "pair.php"
+
+    /* DIE BEIDEN RECHTSTEXTE (seit 0.13.0).
+     *
+     * Sie stehen hier neben den zwei Endpunkten, weil sie dieselbe Herkunft
+     * haben: die eine eingebaute Serveradresse (R63). Eine zweite Adresse
+     * fuer die Rechtstexte waere eine zweite Stelle, an der man sie aendern
+     * muesste — und eine, an der sie auf ein anderes Haus zeigen koennten
+     * als der Server, auf den die App ihre Daten schickt.
+     *
+     * Beide Seiten sind OHNE ANMELDUNG erreichbar (`rechtstext_seite.php`);
+     * die App braucht dafuer weder Kopplung noch Konto. Der Inhalt ist ein
+     * Betreibertext aus der Datenbank — liegt keiner vor, zeigt die Seite
+     * das und nicht eine leere Seite.
+     *
+     * Sie werden im BROWSER geoeffnet, nicht in der App: Ein eingebauter
+     * Betrachter waere ein WebView, und den hat diese App bewusst nicht
+     * (er waere die einzige Stelle, an der fremdes Markup im Prozess der
+     * App liefe). */
+    fun datenschutz(basis: String): String = basis + "datenschutz.php"
+    fun impressum(basis: String): String = basis + "impressum.php"
 }

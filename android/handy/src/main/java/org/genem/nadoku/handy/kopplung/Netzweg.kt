@@ -58,6 +58,38 @@ class HttpNetzweg(
                 connectTimeout = verbindungslimitMs
                 readTimeout = lesegrenzeMs
                 useCaches = false
+                /* KEINE UMLEITUNG WIRD BEFOLGT (seit 0.13.0).
+                 *
+                 * Die Vorgabe der Plattform ist `true`: Antwortet die
+                 * Gegenstelle mit 3xx, ruft `HttpURLConnection` die neue
+                 * Adresse von sich aus auf — und nimmt die Kopfzeilen mit.
+                 * In diesen Kopfzeilen steht `X-Api-Key`, der
+                 * Geraeteschluessel. Er ginge damit an eine Adresse, die
+                 * nicht die ist, an die die App ihn schicken wollte.
+                 *
+                 * BEI EIGENER ADRESSE UND TLS IST DAS FOLGENLOS, und genau
+                 * deshalb steht die Zeile hier: Sie kostet nichts und deckt
+                 * den Fall ab, in dem es einmal nicht mehr folgenlos waere —
+                 * ein falsch eingerichteter Reverse Proxy, eine
+                 * Weiterleitung auf eine fremde Domaene, ein Netz, das sich
+                 * dazwischensetzt. Eine Umleitung ist an dieser Stelle
+                 * ohnehin kein erwarteter Fall: Die App spricht mit genau
+                 * zwei Endpunkten einer fest eingebauten Adresse (R63).
+                 *
+                 * FOLGE FUER DIE FEHLERBEHANDLUNG: Der 3xx kommt als
+                 * `Netzantwort.Server(3xx, …)` heraus — die Stromwahl unten
+                 * (`code in 200..399`) liest ihn aus dem Eingabestrom, also
+                 * den Rumpf der Umleitungsantwort, und der ist meist leer.
+                 * Erfolg ist im Kopplungsdienst nur `code == 200`; alles
+                 * andere geht durch `artAus()`, und das ordnet den 3xx
+                 * ausdruecklich als SERVERFEHLER ein; ohne jene Zeile hiesse
+                 * er "unbekannt", und das sagt der Nutzerin nichts. Der Sendeweg
+                 * ist davon unberuehrt: `Sendeantwort.lese()` behandelt
+                 * alles ausser 200/400/401/413 als "spaeter erneut" — es
+                 * geht also kein Paket verloren.
+                 *
+                 * Gefunden bei der Play-Console-Vorbereitung (Schritt 6). */
+                instanceFollowRedirects = false
                 setRequestProperty("Content-Type", "application/json; charset=utf-8")
                 setRequestProperty("Accept", "application/json")
                 kopfzeilen.forEach { (name, wert) -> setRequestProperty(name, wert) }

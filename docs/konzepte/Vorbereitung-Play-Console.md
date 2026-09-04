@@ -8,7 +8,7 @@ Nachdenken.
 
 | | |
 |---|---|
-| Stand | 04.09.2026, erhoben am Zweig `claude/rahmenplan-schritt-6-ewm0kx` (Android 0.12.0) |
+| Stand | 04.09.2026, erhoben am Zweig `claude/rahmenplan-schritt-6-ewm0kx` (Android 0.12.0); **drei Befunde daraus sind mit 0.13.0 behoben** (Abschnitt 8) |
 | Erhoben aus | dem Repositorium allein — Quelltext beider Module, Manifeste, Bauskripte, `server/`, Rahmenplan, Konzept Planung v1.0 |
 | Nicht erhoben | die Formulare der Play Console selbst. Was dort **wirklich** gefragt wird, sieht erst, wer davorsitzt. Dieses Dokument beantwortet die Fragen, die aus dem Code beantwortbar sind |
 
@@ -66,11 +66,12 @@ P7 einplanen.
 | Anwendungs-ID der Prüf-Bauart | `org.genem.nadoku.pruef` | `applicationIdSuffix` |
 | Sichtbarer Name, Handy | **Gen-EM NAdoku** | `handy/…/values/strings.xml` |
 | Sichtbarer Name, Uhr | **NAdoku** | `uhr/…/values/strings.xml` |
+| Berechtigungen der Uhr | **keine** (seit 0.13.0) | `uhr/src/main/AndroidManifest.xml` |
 | `minSdk` Handy / Uhr | **26** (Android 8.0) / **30** (Wear OS 3) | Bauskripte |
 | `targetSdk` / `compileSdk` | **36** (Android 16), beide Module | Bauskripte |
-| Versionsname | **0.12.0**, eine Nummer für beide Module | `android/version.properties` |
-| Versionscode Handy | **1200** — gerechnet: Haupt·10 000 + Neben·100 + Korrektur | `android/build.gradle.kts` |
-| Versionscode Uhr | **1 001 200** — derselbe Wert **+ 1 000 000** (`UHR_VERSATZ`, Backlog Nr. 98) | ebd. |
+| Versionsname | **0.13.0**, eine Nummer für beide Module | `android/version.properties` |
+| Versionscode Handy | **1300** — gerechnet: Haupt·10 000 + Neben·100 + Korrektur | `android/build.gradle.kts` |
+| Versionscode Uhr | **1 001 300** — derselbe Wert **+ 1 000 000** (`UHR_VERSATZ`, Backlog Nr. 98) | ebd. |
 | Verschleierung | `isMinifyEnabled = false` im Release | Bauskripte |
 
 **Warum ein Versatz und nicht zwei Anwendungs-IDs:** Der Wear Data Layer
@@ -213,14 +214,12 @@ eigenem Paketpräfix ist nichts, was in der Konsole erklärt wird.
 **`WAKE_LOCK` — und sonst nichts.** Kein `INTERNET`, keine Ortung, keine
 Kamera. Der Data Layer braucht keine eigene Berechtigung.
 
-> ⚠️ **Befund: `WAKE_LOCK` ist im Quelltext unbenutzt.** Über
-> `android/uhr/src` und `android/gemeinsam` gibt es keinen einzigen Aufruf von
-> `PowerManager` oder `newWakeLock` — selbst nachgeprüft. Sie ist eine
-> normale Berechtigung (kein Dialog), erscheint aber im Store-Eintrag. Das
-> Handy-Manifest argumentiert an anderer Stelle ausdrücklich gegen
-> Berechtigungen auf Vorrat. **Entscheidung nötig: streichen oder mit
-> Begründung stehenlassen?** Streichen wäre eine Zeile und eine
-> Android-Fassung; siehe Abschnitt 8.
+> ✅ **Erledigt mit Android 0.13.0: `WAKE_LOCK` ist gestrichen.** Sie war im
+> Quelltext unbenutzt — kein Aufruf von `PowerManager` oder `newWakeLock` im
+> ganzen Modul. **Die Uhr verlangt damit gar keine Berechtigung mehr**, und
+> das ist im Store-Eintrag die stärkste Aussage, die eine App über sich
+> machen kann. Der Vermerk im Manifest sagt, warum sie weg ist und unter
+> welcher Bedingung sie zurückkäme.
 
 ### 4.3 Die Deklaration des Vordergrunddienstes
 
@@ -271,7 +270,7 @@ und Punkt 3 zeigt, dass er dabei sichtbar bleibt.
 | Screenshots | fünf Handy-Abzüge vom Emulator (1080×2340) unter `docs/bilder/s4-rest/` — davon zeigen **vier den Kopplungsweg**, samt Kopplungscode und maskierter Kontoadresse. Als Store-Bilder taugen sie so nicht |
 | Wear-OS-Screenshots | **keine** |
 | Texte für Kurz- und Langbeschreibung | **keine fertigen.** Grundlage: `README.md`, `docs/Handbuch.md`, `android/LIESMICH.md` |
-| Datenschutz-URL | `https://nadoku.gen-em.org/datenschutz.php` — **erreichbar, sobald DNS und TLS stehen und der Text eingetragen ist.** Die Anwendung liefert keinen Text mit; Impressum und Datenschutzerklärung sind Betreibertexte, die unter Einstellungen → Rechtstexte eingetragen werden |
+| Datenschutz-URL | `https://nadoku.gen-em.org/datenschutz.php` — **erreichbar, sobald DNS und TLS stehen und der Text eingetragen ist.** Die Anwendung liefert keinen Text mit; Impressum und Datenschutzerklärung sind Betreibertexte, die unter Einstellungen → Rechtstexte eingetragen werden. **Seit Android 0.13.0 verweist die App selbst darauf** (Einstellungen → Rechtliches) |
 
 **Für Screenshots braucht es einen Lauf mit Beispieldaten**, nicht den
 Kopplungsweg: Dienstansicht mit laufendem Dienst, Einsatzansicht mit Phasen,
@@ -336,25 +335,100 @@ Fünf Dinge, die dabei aufgefallen sind und vorher niemand aufgeschrieben hatte:
    Abschnitt über den Signaturschlüssel. Play nimmt für neue Apps **kein
    APK** mehr, sondern ein **AAB**. Das ist ein `./gradlew bundleRelease`,
    den es so noch nie gab; er sollte **vor** dem ersten Upload einmal laufen.
-2. **`WAKE_LOCK` der Uhr ist unbenutzt** (Abschnitt 4.2). Entscheidung nötig.
+2. ~~`WAKE_LOCK` der Uhr ist unbenutzt.~~ **Erledigt (Android 0.13.0):
+   gestrichen.** Die Uhr verlangt keine Berechtigung mehr.
 3. **Der Server verschickt bei Kopplung und Trennung E-Mails**, die die
    Gerätebezeichnung tragen. Das ist eine Datenverarbeitung, die in die
    Datenschutzerklärung gehört — im Datensicherheitsformular ist sie nicht
-   gefragt (sie geschieht auf dem Server, nicht in der App), aber sie sollte
-   nicht vergessen werden.
-4. **Umleitungen werden nicht abgeschaltet.** `HttpNetzweg` setzt Zeitlimits,
-   Methode und Kopfzeilen, aber nicht `instanceFollowRedirects = false`.
-   Antwortet der Server mit 3xx, folgt die Plattform der Umleitung — und der
-   Geräteschlüssel im Kopf geht mit. Bei eigener Adresse und TLS ist das
-   folgenlos; sauber ist es nicht. **Backlog-Kandidat.**
-5. **Die App führt zu keinem Rechtstext.** Weder Handy noch Uhr enthalten
-   einen Verweis auf Datenschutzerklärung oder Impressum; beide existieren
-   nur im Store-Eintrag und in der Weboberfläche. Ob das genügt, ist eine
-   Frage an die Rechtsunterlagen (P8), nicht an dieses Dokument.
+   gefragt (sie geschieht auf dem Server, nicht in der App). **Vermerkt als
+   Zuarbeit im Rahmenplan, Abschnitt 6**, damit es beim Schreiben des Textes
+   nicht durchrutscht. Die Mails bleiben: Sie sind die einzige Stelle, an der
+   eine unbemerkte Fremdkopplung auffiele.
+4. ~~Umleitungen werden nicht abgeschaltet.~~ **Erledigt (Android 0.13.0):
+   `instanceFollowRedirects = false`.** Eine Umleitung gilt seither als
+   Serverfehler statt als „unbekannt". Der Sendeweg war nie betroffen —
+   nachgesehen, nicht angenommen: `Sendeantwort.lese()` behandelt alles außer
+   200/400/401/413 als „später erneut".
+5. ~~Die App führt zu keinem Rechtstext.~~ **Erledigt (Android 0.13.0):**
+   Unter den Einstellungen steht die Karte „Rechtliches" mit Verweisen auf
+   Datenschutzerklärung und Impressum. Beide öffnen den Browser; ein WebView
+   bekommt diese App nicht.
 
 ---
 
-## 9. Grenzen dieses Dokuments
+## 9. Prüfprotokoll der Umsetzung (Android 0.13.0)
+
+Vier der fünf Befunde aus Abschnitt 8 sind umgesetzt (2, 3, 4, 5); Befund 1
+bleibt offen, weil er einen Signaturschlüssel braucht.
+
+### 9.1 Was nicht geprüft werden konnte, und warum
+
+- **Der Rechtstext selbst im Browser.** Der Sprung dorthin ist belegt (9.3),
+  die **Darstellung** der Seite nicht: Der einzige Browser des Prüfabbilds
+  ist `org.chromium.webview_shell` (WebView Browser Tester 113.0.5672.136),
+  und der antwortet unter QEMU-TCG nicht mehr — `WebView Shell isn't
+  responding`, zweimal gemessen, auch nach „Wait" und 45 s Wartezeit. Das
+  ist eine Eigenschaft des Prüfstands (ein einziger emulierter Kern rechnet
+  Chromium), nicht der App: Die Adresse steht in der Adressleiste, und der
+  Server hat geantwortet. Wo es zu prüfen ist: auf einem echten Gerät
+  (Backlog Nr. 81), zusammen mit dem übrigen Gerätetest.
+- **Das App Bundle.** `./gradlew bundleRelease` ist nie gelaufen und läuft
+  auch hier nicht — er braucht den Schlüssel aus `android/signatur.properties`
+  (Befund 1).
+- **Die Uhr im Emulator.** Die Änderung an der Uhr ist eine **gestrichene
+  Zeile im Manifest**; sichtbar ist daran nichts. Belegt ist sie durch den
+  Bau (`:uhr:lint` — *No issues found*) und durch das Manifest selbst.
+
+### 9.2 Maschinell geprüft
+
+| Mittel | Zahl |
+|---|---|
+| `./gradlew --offline build` (beide Module) | **BUILD SUCCESSFUL in 4 m 17 s** |
+| Lint Handy | **0 Fehler**, 13 Warnungen |
+| Lint Uhr | **0 Fehler**, 0 Warnungen |
+| Prüffälle Handy | **494**, davon **0 Fehlschläge**, **0 übersprungen** — mit `-Pnadoku.rundlauf=http://127.0.0.1:8080/` gegen die laufende örtliche Installation, also inklusive der 28 Rundlauffälle, die sonst übersprungen werden (16 Kopplung, 6 Senden, 6 Einsatz). Genau sie gehen durch den geänderten `HttpNetzweg` |
+| Prüffälle Uhr | **142**, davon **0 Fehlschläge**, **0 übersprungen** |
+| `./gradlew --offline projects` | `NAdoku Android 0.13.0 (Versionscode Handy 1300, Uhr 1001300)` |
+| `tools/wortliste/` | **0 Treffer / 0 ungenutzte Ausnahmen** bei 79 Regeln, alle fünf Bereiche (a–e) |
+
+### 9.3 Im Emulator geprüft (Stufe II)
+
+Abbild `system-images;android-34;google_apis;x86_64`, AVD `handy34`, ohne KVM
+(`-accel off`). Boot **621 s**, Aufspielen des Handy-APK **60 s**. Gebaut
+gegen die örtliche Installation
+(`-Pnadoku.serverBasis=http://127.0.0.1:8080/`, `adb reverse tcp:8080
+tcp:8080`).
+
+| Schritt | Ergebnis |
+|---|---|
+| Kopplung gestartet | `pair_sessions` Nr. 60, Code `Y7B3Q5`, `geraet_art = handy`, `geraet_modell = unknown Android SDK built for x86_64` |
+| Code im Web bestätigt | 302 auf `einstellungen.php?t=geraete#koppeln` |
+| Am Gerät mit „Ja, koppeln" bestätigt | `devices` Nr. 68, `geraet_art = handy`, `geraet_modell = unknown Android SDK built for x86_64` — die Momentaufnahme aus R64/AP1, am laufenden Gerät entstanden |
+| Einstellungen geöffnet | Karte **„Rechtliches"** mit beiden Knöpfen und Hinweistext, darunter unverändert `Fassung 0.13.0-pruef` und „Zurück" — Beleg: `android/mockups/S4-handy-emulator-0.13.0-rechtliches.png` |
+| „Datenschutzerklärung" gedrückt | `org.chromium.webview_shell` kam nach vorn, Adressleiste `http://127.0.0.1:8080/datenschu…`, Server: `[200]: GET /datenschutz.php` um 12:56:55 |
+| „Impressum" gedrückt | Server: `[200]: GET /impressum.php` um 13:00:58 |
+
+Der Sprung in den Browser ist damit an **drei** unabhängigen Stellen belegt:
+am Fensterwechsel des Systems, an der Adressleiste und an der Antwort des
+Servers. Dass die Seite danach nicht rendert, steht in 9.1.
+
+### 9.4 Was der Emulatorlauf nebenbei mitgeprüft hat
+
+Kopplung **und** Trennung laufen über `Netzweg` — also über die Datei, in der
+`instanceFollowRedirects = false` neu steht (Befund 4). Beide Wege wurden im
+Lauf gegangen: die Kopplung in 9.3, die Trennung am Ende („Gerät trennen" →
+„Kopplung trennen?" → „Trennen"), Server `[200]: POST /pair.php` um 13:04:29,
+danach ist `devices` Nr. 68 fort und das Konto steht wieder bei zwei Geräten.
+Die Änderung hat den Kopplungsweg also nicht gebrochen.
+
+Nebenbei ist damit auch **Befund 3** an einer Zahl belegt: Beim Trennen
+schreibt der Server `SMTP connect: Connection refused` ins Protokoll — er
+**versucht** die Mail. Auf dieser Prüfinstallation steht kein Mailserver;
+auf einer echten geht sie hinaus, mit der Gerätebezeichnung darin.
+
+---
+
+## 10. Grenzen dieses Dokuments
 
 - **Es kennt die Formulare nicht.** Was die Play Console 2026 wirklich fragt,
   steht nicht im Repositorium und war nicht abrufbar. Dieses Dokument
@@ -363,5 +437,5 @@ Fünf Dinge, die dabei aufgefallen sind und vorher niemand aufgeschrieben hatte:
 - **Es ersetzt keine Rechtsprüfung.** Die Datenschutzerklärung ist ein
   Betreibertext; hier stehen die technischen Tatsachen, aus denen sie
   entstehen kann.
-- **Die Zahlen gelten für Android 0.12.0.** Steigt die Fassung, ändern sich
+- **Die Zahlen gelten für Android 0.13.0.** Steigt die Fassung, ändern sich
   Versionsname und -code; die Rechenregel bleibt.

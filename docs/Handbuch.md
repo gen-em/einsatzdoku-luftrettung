@@ -2496,6 +2496,21 @@ die App sagt dir nur rechtzeitig Bescheid.
 **Was hilft:** im Fahrzeug oder an der Wache nachladen. Ein Zwölfstundendienst
 ohne Zwischenladung ist für die meisten Geräte zu viel.
 
+### 10.2b Datenschutzerklärung und Impressum in der App
+
+*Seit Android 0.13.0.*
+
+Unter **Einstellungen** (Knopf unter der Dienstkarte) steht unten die Karte
+**„Rechtliches"** mit zwei Knöpfen: **Datenschutzerklärung** und
+**Impressum**. Beide öffnen die entsprechende Seite **im Browser** — dieselbe,
+die auch in der Weboberfläche steht, denn beide Texte stammen von der
+Betreiberin des Servers, mit dem die App spricht. Eine Anmeldung ist dafür
+nicht nötig.
+
+Die App zeigt die Seiten bewusst nicht in sich selbst: Sie hat keinen
+eingebauten Betrachter, und sie soll auch keinen bekommen. Ist gar kein
+Browser installiert, sagt sie das, statt sich zu beenden.
+
 ### 10.3 Die Phasenliste im Einsatz
 
 *Seit Android 0.10.1.*
