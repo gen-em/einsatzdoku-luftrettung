@@ -366,7 +366,10 @@ Runden) · **Backlog 81** (App-Symbol in der Benachrichtigung) und **82**
 (Warnung vor dem Akkuverbrauch der Daueraufzeichnung), beide am 02.09.2026 vom
 Auftraggeber gemeldet · Changelog-Präfix `Android` mit der ersten verteilten
 Fassung · Prüfdokument S4 fortschreiben, Erledigt-Zeile in Abschnitt 8 ·
-**Play Console nach R65:** Organisationskonto der Gen-EM GbR ist
+**Play Console nach R65** (Vorbereitung liegt vor:
+`docs/konzepte/Vorbereitung-Play-Console.md` — alles, was ohne D-U-N-S und
+Signaturschlüssel geht, samt ausgefülltem Datensicherheitsformular,
+Deklarationstext und Video-Drehbuch)**:** Organisationskonto der Gen-EM GbR ist
 eingerichtet (Zuarbeit, Abschnitt 6) · Versionscode-Versatz für das
 Uhr-Modul (Backlog 98; E-S4-02 bleibt eine Zählung) · vorhandener
 Signaturschlüssel als App-Signaturschlüssel bei Play App Signing,
