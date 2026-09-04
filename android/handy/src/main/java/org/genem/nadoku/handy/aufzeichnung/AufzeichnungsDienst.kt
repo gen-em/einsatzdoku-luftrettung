@@ -11,7 +11,9 @@ import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.location.Location
 import android.location.LocationManager
+import android.content.IntentFilter
 import android.net.ConnectivityManager
+import android.os.BatteryManager
 import android.net.Network
 import android.os.Build
 import android.os.Handler
@@ -94,6 +96,13 @@ class AufzeichnungsDienst : LifecycleService() {
 
     /** Der Ortungswächter des laufenden Dienstes; `null` = keiner läuft. */
     private var waechter: Ortungswaechter? = null
+
+    /**
+     * Der Akkuwächter (Backlog Nr. 82). Er lebt so lange wie der Dienst —
+     * seine gemerkte Warnstufe gehört zu DIESEM Dienst und nicht zum Gerät:
+     * Wer morgen wieder beginnt, soll die 25-Prozent-Warnung erneut bekommen.
+     */
+    private var akkuwaechter: Akkuwaechter? = null
 
     /** Der zuletzt gestellte Meldungstext — damit nicht ohne Anlass neu gepostet wird. */
     private var letzterMeldungstext: String? = null
@@ -406,6 +415,11 @@ class AufzeichnungsDienst : LifecycleService() {
         if (vorhanden == null) {
             val neu = Ortungswaechter(jetzt, freigegeben, anbieterAn)
             waechter = neu
+            /* Der Akkuwächter entsteht mit dem Ortungswächter und aus
+             * demselben Grund nur EINMAL je Dienst: Ein neuer setzte die
+             * gemerkte Warnstufe zurück und stellte dieselbe Warnung noch
+             * einmal — bei jeder Uhrnachricht. */
+            akkuwaechter = Akkuwaechter()
             waechterFolge(neu.anfangsbefehl(jetzt))
         } else {
             waechterFolge(vorhanden.freigabe(freigegeben, jetzt))
@@ -414,6 +428,118 @@ class AufzeichnungsDienst : LifecycleService() {
             )
         }
         waechtertaktStarten()
+        akkutaktStarten()
+    }
+
+    /**
+     * Der Akkutakt (Backlog Nr. 82) — **eigenes Token**, wie der Wächtertakt.
+     *
+     * Zwei Minuten statt zehn Sekunden: Ein Akku fällt über Stunden. Die
+     * Messung selbst kostet nichts — der Stand liegt als Sticky-Intent
+     * bereit, es wird kein Sensor geweckt —, aber jeder Weckruf des Handlers
+     * kostet, und ein Wächter, der vor Stromverbrauch warnt, sollte nicht
+     * selbst welchen erzeugen.
+     */
+    private fun akkutaktStarten() {
+        taktgeber.removeCallbacksAndMessages(TOKEN_AKKU)
+        akkuMessen()
+        spaeter(TOKEN_AKKU, Akkuwaechter.TAKT_MS, object : Runnable {
+            override fun run() {
+                akkuMessen()
+                spaeter(TOKEN_AKKU, Akkuwaechter.TAKT_MS, this)
+            }
+        })
+    }
+
+    /**
+     * Den Ladestand ablesen und den Wächter entscheiden lassen.
+     *
+     * ÜBER DEN STICKY-INTENT, nicht über einen angemeldeten Empfänger:
+     * `ACTION_BATTERY_CHANGED` feuert bei jedem Prozentschritt und bei jeder
+     * Temperaturänderung — ein Empfänger dafür weckte den Prozess Dutzende
+     * Male je Stunde, für eine Zahl, die wir alle zwei Minuten brauchen.
+     * `registerReceiver(null, filter)` liest den zuletzt gesendeten Stand,
+     * ohne irgendetwas anzumelden.
+     */
+    private fun akkuMessen() {
+        val w = akkuwaechter ?: return
+        val stand = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            ?: return
+
+        val stufe = stand.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+        val skala = stand.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+        if (stufe < 0 || skala <= 0) return          // Gerät ohne Akku (Emulator)
+
+        /* NICHT `BATTERY_STATUS_CHARGING` allein: `FULL` heißt ebenfalls am
+         * Kabel, und `EXTRA_PLUGGED` trägt den Fall, in dem das System den
+         * Status noch nicht fortgeschrieben hat. */
+        val status = stand.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+        val laedt = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+            status == BatteryManager.BATTERY_STATUS_FULL ||
+            stand.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0
+
+        when (w.messen(stufe * 100 / skala, laedt)) {
+            Akkubefehl.POSTEN -> akkuwarnungStellen(w.stand)
+            Akkubefehl.LOESCHEN -> akkuwarnungLoeschen()
+            Akkubefehl.NICHTS -> Unit
+        }
+    }
+
+    /**
+     * Die Akkuwarnung — ab [Akkustufe.NIEDRIG] **mit** dem Angebot, den
+     * Dienst zu beenden.
+     *
+     * DER KNOPF LÖST DIESELBE AKTION AUS wie der in der Dauermeldung
+     * ([BEENDEN]); es entsteht kein zweiter Weg, den Dienst zu beenden. Bei
+     * [Akkustufe.KNAPP] fehlt er mit Absicht: Da ist Nachladen die richtige
+     * Handlung, und ein Knopf, der das Aufgeben anbietet, bevor es naheliegt,
+     * wird beim dritten Mal gedrückt, ohne gelesen zu werden.
+     */
+    private fun akkuwarnungStellen(stufe: Akkustufe) {
+        val text = when (stufe) {
+            Akkustufe.KNAPP -> getString(R.string.warnung_akku_knapp)
+            Akkustufe.NIEDRIG -> getString(R.string.warnung_akku_niedrig)
+            Akkustufe.KRITISCH -> getString(R.string.warnung_akku_kritisch)
+            Akkustufe.OK -> return
+        }
+
+        val bau = NotificationCompat.Builder(this, KANAL_WARNUNG)
+            .setSmallIcon(R.drawable.symbol_meldung)
+            .setContentTitle(getString(R.string.warnung_akku_titel, stufe.schwelleProzent))
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    this, 2,
+                    Intent(this, HauptActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                    PendingIntent.FLAG_IMMUTABLE,
+                )
+            )
+            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_ERROR)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+        if (stufe.bietetDienstende) {
+            bau.addAction(
+                0,
+                getString(R.string.dienst_beenden),
+                PendingIntent.getService(
+                    this, 2,
+                    Intent(this, AufzeichnungsDienst::class.java).setAction(BEENDEN),
+                    PendingIntent.FLAG_IMMUTABLE,
+                ),
+            )
+        }
+
+        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .notify(AKKUWARNUNG_ID, bau.build())
+        Log.w(MARKE, "Akku: $stufe — gewarnt.")
+    }
+
+    private fun akkuwarnungLoeschen() {
+        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .cancel(AKKUWARNUNG_ID)
     }
 
     /**
@@ -504,7 +630,10 @@ class AufzeichnungsDienst : LifecycleService() {
         waechter = null
         letzteUhranzeige = null
         taktgeber.removeCallbacksAndMessages(TOKEN_WAECHTER)
+        taktgeber.removeCallbacksAndMessages(TOKEN_AKKU)
+        akkuwaechter = null
         warnungLoeschen()
+        akkuwarnungLoeschen()
         app.ortung = null
     }
 
@@ -781,6 +910,9 @@ class AufzeichnungsDienst : LifecycleService() {
         const val MELDUNG_ID = 1
         const val WARNUNG_ID = 3
 
+        /** 4 Akkuwarnung (Backlog Nr. 82). */
+        const val AKKUWARNUNG_ID = 4
+
         const val BEENDEN = "org.genem.nadoku.BEENDEN"
 
         /**
@@ -806,6 +938,7 @@ class AufzeichnungsDienst : LifecycleService() {
          */
         private val TOKEN_TAKT = Any()
         private val TOKEN_WAECHTER = Any()
+        private val TOKEN_AKKU = Any()
 
         /**
          * **Läuft der Vordergrunddienst gerade?** (E-S5Z-08)

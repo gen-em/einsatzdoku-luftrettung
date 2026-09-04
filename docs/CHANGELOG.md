@@ -14,6 +14,79 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.12.0] — 2026-09-04
+
+### Android — die App meldet sich, wenn der Akku knapp wird
+
+Bis 0.11.1 sagte sie das Thema **einmal** beim ersten Dienstbeginn und danach
+nie wieder — ein Satz, den man im Januar liest und im Juli gebraucht hätte.
+Jetzt beobachtet sie den Ladestand, solange sie aufzeichnet, und meldet sich
+bei drei Schwellen:
+
+| Schwelle | Meldung | Knopf „Dienst beenden" |
+|---|---|---|
+| **25 %** | Hinweis, nachzuladen | nein |
+| **15 %** | „ohne Nachladen reicht der Akku nicht durch den Dienst" | **ja** |
+| **10 %** | „gleich ist Schluss" | **ja** |
+
+**Drei Schwellen, weil sie Verschiedenes bedeuten.** Bei 25 % ist noch alles
+offen, bei 15 % wird es knapp, bei 10 % geht es zu Ende. Ein einziger
+Schwellwert müsste sich zwischen „zu früh, wird überlesen" und „zu spät, hilft
+nicht mehr" entscheiden.
+
+**Der Knopf erst ab 15 %**, und er löst dieselbe Aktion aus wie der in der
+Dauermeldung — es entsteht kein zweiter Weg, den Dienst zu beenden. Bei 25 %
+fehlt er mit Absicht: Da ist Nachladen die richtige Handlung, und ein Knopf,
+der das Aufgeben anbietet, bevor es naheliegt, wird beim dritten Mal gedrückt,
+ohne gelesen zu werden.
+
+**Je Stufe einmal, nicht je Messung.** Sonst stünde bei 24 % zwölf Stunden
+lang dieselbe Meldung, und die bei 10 % ginge darin unter. Am Kabel
+verschwindet die Warnung, und die Stufe setzt sich zurück — ein zweites
+Absacken ist ein zweites Ereignis, und es ist das gefährlichere, weil das
+Kabel dann nicht mehr da ist. Ein Anstieg *ohne* Kabel gilt dagegen nicht als
+Entwarnung: Von 9 % auf 12 % ist Rauschen.
+
+**Gemessen wird alle zwei Minuten**, über den Sticky-Intent statt über einen
+angemeldeten Empfänger: `ACTION_BATTERY_CHANGED` feuert bei jedem
+Prozentschritt und jeder Temperaturänderung — ein Empfänger dafür weckte den
+Prozess dutzendfach je Stunde, für eine Zahl, die alle zwei Minuten reicht.
+Ein Wächter, der vor Stromverbrauch warnt, sollte nicht selbst welchen
+erzeugen.
+
+### Android — warum die App bei niedrigem Akku trotzdem nichts abschaltet
+
+Eine automatische Abschaltung bei X % stand zur Wahl und ist verworfen worden.
+Sie wäre die bequeme Lösung und die falsche: Sie beendete die Aufzeichnung
+**still**, mitten im Dienst, genau in dem Augenblick, in dem niemand auf das
+Handy sieht. Was in der Dokumentation fehlt, fehlt hinterher
+unwiederbringlich — ein Dienst lässt sich nicht nachfahren. Paket E
+(Android 0.8.0) ist gegen genau diese Art Stille gebaut worden; hier dieselbe
+Linie. Der Mensch entscheidet, die App sagt ihm nur rechtzeitig Bescheid.
+
+### Android — und warum es keinen Sparmodus gibt
+
+Ein Sparmodus, der bei niedrigem Akku den GPS-Takt streckt, stand ebenfalls
+zur Wahl. Der Grund gegen ihn gehört festgehalten, weil er sonst wiederkehrt:
+
+**Der Track ist bereits ausgedünnt** (`Ausduenner`: 15 m **oder** 10 s) — und
+das spart Speicher und Übertragung, aber **keinen Akku**. Die Ausdünnung wirft
+Punkte weg, *nachdem* das GPS sie geliefert hat; der Empfänger läuft trotzdem
+durch. „Den Track gröber machen" ändert am Verbrauch nichts.
+
+Was Akku spart, wäre `MINDESTABSTAND_MS` — der GPS-Takt selbst. Dagegen
+sprechen drei Dinge: **Wie viel es spart, ist ungemessen** (ob Android das GPS
+zwischen den Messungen abschaltet, entscheidet das System, nicht die App).
+**Die Ausdünnung braucht Zwischenpunkte** — bei 30-s-Takt und 80 km/h greift
+die 15-m-Regel nie, und Strecke und Anstieg, die aus den Haversine-Abständen
+der aufgezeichneten Punkte entstehen, fielen systematisch zu kurz aus. Und
+**die Ausdünnung ist wortgleich die der Garmin-Uhr**; an der Zahl hängen die
+R19-Messung des Sendeverhaltens und der Messstand aus S2.
+
+Zu entscheiden wäre das mit zwei Zahlen aus dem Gerätetest: ein Dienst mit
+1 s, einer mit 5 s Mindestabstand, Akkustand über die Zeit. Bis dahin bleibt
+es, wie es ist.
+
 ## [Android 0.11.1] — 2026-09-04
 
 ### Android — die App sagt jetzt, dass sie den Akku leert

@@ -2434,6 +2434,39 @@ ausgeschaltetem Standort begonnen — am Handgelenk kann die App niemanden
 fragen, und ein wortloses „geht nicht" hülfe nicht weiter. Stattdessen
 vibriert das Telefon, und die Uhr zeigt „keine Ortung · keine Aufzeichnung".
 
+### 10.2a Was die App über den Akku sagt
+
+*Seit Android 0.12.0.* Die Aufzeichnung braucht durchgehend GPS und ist damit
+über einen langen Dienst der größte Stromverbraucher des Geräts. Die App sagt
+das an drei Stellen — und schaltet nichts davon selbst ab.
+
+**Einmal beim Einrichten.** Der Dialog zur Akku-Freistellung nennt es im
+zweiten Absatz; wer ihn nicht sieht, weil die Freistellung schon stand,
+bekommt beim **ersten** Dienstbeginn einen Hinweis. Beide einmal je
+Installation.
+
+**Und dann während des Dienstes**, wenn es knapp wird:
+
+| Ladestand | Was kommt |
+|---|---|
+| **25 %** | Hinweis: nachladen, solange es geht |
+| **15 %** | Hinweis **und** ein Knopf „Dienst beenden" |
+| **10 %** | dasselbe, dringlicher |
+
+**Je Stufe einmal.** Zwischen 24 % und 16 % kommt nichts Neues — sonst stünde
+zwölf Stunden lang dieselbe Meldung, und die bei 10 % ginge darin unter.
+Hängst du das Gerät ans Kabel, verschwindet die Warnung; fällt der Stand
+später wieder, warnt dieselbe Schwelle erneut.
+
+**Die App beendet den Dienst nicht von selbst.** Das ist Absicht: Eine
+Abschaltung bei einem festen Ladestand beendete die Aufzeichnung **still**,
+mitten im Dienst, genau dann, wenn niemand aufs Handy sieht — und was in der
+Dokumentation fehlt, lässt sich hinterher nicht nachtragen. Du entscheidest;
+die App sagt dir nur rechtzeitig Bescheid.
+
+**Was hilft:** im Fahrzeug oder an der Wache nachladen. Ein Zwölfstundendienst
+ohne Zwischenladung ist für die meisten Geräte zu viel.
+
 ### 10.3 Die Phasenliste im Einsatz
 
 *Seit Android 0.10.1.*

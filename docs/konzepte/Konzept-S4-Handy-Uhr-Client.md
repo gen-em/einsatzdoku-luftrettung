@@ -26,7 +26,7 @@ ungleiche Teile zerfallen, und nur einer davon ist Umsetzung im engeren Sinn:
 
 | Teil | Inhalt | Stand |
 |---|---|---|
-| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Pakete 1–3 erledigt** (Android 0.11.0/0.11.1, Web 13.3.0) |
+| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Pakete 1–4 erledigt** (Android 0.11.0–0.12.0, Web 13.3.0) |
 | **B** | R64 — Herkunft und Gerät je Einsatz | **zurückgestellt**: Der Auftraggeber liefert ein Konzept nach. Die Bestandsaufnahme fand 18 offene Entscheidungsfragen zum Datenmodell und zu den Formaten, die R64 selbst nicht beantwortet |
 | **C** | Play Console, Signaturweg, Track-Release, Gerätetest | **blockiert am Auftraggeber**: D-U-N-S beantragt sich noch, der Signaturschlüssel liegt außerhalb des Repositoriums. Vorbereitet wird, was ohne ihn geht |
 
@@ -109,6 +109,22 @@ erscheint nur bei gesetzter Freistellung, frischem Merker *und* bestehender
 Kopplung, und unter TCG ist dabei zweimal der `system_server` neu gestartet.
 Belegt ist der Akku-Dialog im laufenden Dienst
 (`docs/bilder/s4-rest/07-akku-hinweis.png`), der Merker durch drei Prüffälle.
+
+**Paket 4 (04.09.2026, Android 0.12.0) — Akkuwarnung, auf Anweisung.** Nicht
+aus dem Rahmenplan, sondern aus der Arbeit an Nr. 82 heraus beauftragt: Die
+beiden einmaligen Hinweise sagen das Thema beim Einrichten — der Akku wird
+aber im Dienst knapp. Ein Wächter liest jetzt mit und meldet sich bei 25 %,
+15 % und 10 %, ab 15 % mit dem Knopf „Dienst beenden". Er **schaltet nichts
+ab**: Eine stille Abschaltung mitten im Dienst ist genau das, wogegen Paket E
+gebaut wurde. Belegt durch 14 Prüffälle; die Meldung selbst zeigt kein
+Bildmittel, weil sie eine Benachrichtigung ist.
+
+Dabei ist eine Frage entschieden worden, die sonst wiederkehrt: **Ein
+Sparmodus über den GPS-Takt kommt nicht.** Der Track ist bereits ausgedünnt,
+und das spart keinen Akku — die Ausdünnung wirft Punkte weg, *nachdem* das
+GPS sie geliefert hat. Was spart, wäre der Takt selbst; wie viel, ist
+ungemessen, und die Ausdünnung braucht Zwischenpunkte. Zu entscheiden mit
+zwei Zahlen aus dem Gerätetest.
 
 **Backlog 81 — zwei Ursachen ausgeschlossen, eine behoben, keine belegt.**
 Die App-Fassung auf dem Gerät war **0.7.7**, also nicht älter als 0.7.7 — der

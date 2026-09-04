@@ -128,6 +128,30 @@
     <string name="trennen_rueckstand_hinweis">Sie gehören dem bisherigen Konto. Nach einer Neukopplung gingen sie an das neue.</string>
 
     <!--
+        ==== Akkuwarnung waehrend des Dienstes (Nr. 82, 04.09.2026) =========
+
+        DREI SCHWELLEN, weil sie Verschiedenes bedeuten: Bei 25 % ist noch
+        alles offen, bei 15 % wird es knapp, bei 10 % geht es zu Ende. Ein
+        einziger Schwellwert muesste sich zwischen "zu frueh, wird ueberlesen"
+        und "zu spaet, hilft nicht mehr" entscheiden.
+
+        JE STUFE EINMAL, nicht je Messung — sonst stuende bei 24 % zwoelf
+        Stunden dieselbe Meldung, und die letzte bei 10 % ginge darin unter.
+
+        AB 15 % MIT DEM ANGEBOT, DEN DIENST ZU BEENDEN. Bei 25 % fehlt es mit
+        Absicht: Da ist Nachladen die richtige Handlung.
+
+        DIE APP SCHALTET NICHTS AB. Eine automatische Abschaltung beendete die
+        Aufzeichnung STILL, mitten im Dienst, in dem Augenblick, in dem
+        niemand auf das Handy sieht — und was in der Dokumentation fehlt,
+        fehlt hinterher unwiederbringlich. Der Mensch entscheidet.
+    -->
+    <string name="warnung_akku_titel">Akku unter %1$d %%</string>
+    <string name="warnung_akku_knapp">Die Aufzeichnung läuft weiter und braucht durchgehend GPS. Lade nach, wenn du kannst — im Fahrzeug oder an der Wache.</string>
+    <string name="warnung_akku_niedrig">Die Aufzeichnung läuft weiter. Ohne Nachladen reicht der Akku nicht mehr durch den Dienst — dann bricht die Spur ab, ohne dass es jemand merkt.</string>
+    <string name="warnung_akku_kritisch">Gleich ist Schluss. Lade jetzt nach, oder beende den Dienst, solange du es noch selbst entscheidest: Ein Abschalten mitten im Dienst lässt den Diensttag ohne Ende stehen.</string>
+
+    <!--
         ==== Der Stromverbrauch, einmalig beim ersten Dienst (Nr. 82) =======
 
         WARUM ES DIESEN ZWEITEN ORT BRAUCHT, obwohl der Akku-Dialog es schon

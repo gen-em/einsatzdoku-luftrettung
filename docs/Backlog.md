@@ -1402,6 +1402,36 @@ zutreffen.
     Dialoge (1 dp Inhalt gemessen), und am Emulator hätten drei Bedingungen
     zugleich stehen müssen. Wortliste 0/0/0.
 
+    **Erweitert am 04.09.2026 auf Anweisung des Auftraggebers
+    (Android 0.12.0).** Die beiden einmaligen Hinweise sagen das Thema, sobald
+    die App eingerichtet ist — also im Januar, gebraucht wird es im Juli.
+    Dazu kommt ein **Akkuwächter**, der während des Dienstes mitliest und sich
+    bei drei Schwellen meldet: **25 %** (nachladen), **15 %** und **10 %**
+    (jeweils mit Knopf „Dienst beenden", derselbe wie in der Dauermeldung).
+
+    Je Stufe einmal, nicht je Messung; am Kabel verschwindet die Warnung und
+    die Stufe setzt sich zurück. Gemessen alle zwei Minuten über den
+    Sticky-Intent — ein angemeldeter Empfänger für `ACTION_BATTERY_CHANGED`
+    weckte den Prozess dutzendfach je Stunde.
+
+    **Die App schaltet nichts ab.** Eine automatische Abschaltung bei X %
+    stand zur Wahl und ist verworfen: Sie beendete die Aufzeichnung **still**,
+    genau dann, wenn niemand aufs Handy sieht, und was fehlt, lässt sich nicht
+    nachtragen. Paket E ist gegen diese Art Stille gebaut.
+
+    **Und kein Sparmodus.** Der GPS-Takt zu strecken stand ebenfalls zur Wahl.
+    Dagegen: Der Track **ist** schon ausgedünnt (15 m oder 10 s) — das spart
+    Speicher, aber keinen Akku, weil das GPS trotzdem durchläuft. Was spart,
+    wäre `MINDESTABSTAND_MS`; wie viel, ist **ungemessen**, die Ausdünnung
+    braucht Zwischenpunkte (bei 30 s und 80 km/h greift die 15-m-Regel nie),
+    und sie ist wortgleich die der Garmin-Uhr — an der Zahl hängen R19 und der
+    Messstand aus S2. Zu entscheiden mit zwei Zahlen aus dem Gerätetest.
+
+    **Belegt:** 14 Prüffälle (`AkkuwaechterTest`) über Schwellen, Hysterese,
+    Kabel und Grenzwerte. Die Meldung selbst ist **nicht** im Bild — sie ist
+    eine Benachrichtigung, und die zeigt weder der Bilderlauf noch ein
+    Screenshot der App.
+
 98. **Versionscode-Versatz für das Uhr-Modul.**
     *Aufgenommen 03.09.2026 aus der Planung v1.0 (R65); erledigt am
     04.09.2026 im S4-Rest, Paket 3 (Android 0.11.1).*
