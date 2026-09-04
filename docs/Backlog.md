@@ -1055,43 +1055,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (Nr. 80) **und** je NutzerIn (Nr. 88). Zuordnung damit: **S4-Rest**
     (Speicherung), P5 (Dashboard), Nr. 88 (Kachel).
 
-84. **Die Android-App kennt nur `nadoku.gen-em.org`.**
-    *Aufgenommen 02.09.2026, Entscheidung des Auftraggebers (Rahmenplan
-    R63).* Bisher sah R49 die Adresse als **Vorgabewert** vor, den
-    Selbsthoster über den Adress-QR der Geräteseite überschreiben
-    (E-R49-8, E-S4-15). Entschieden: **fest, nicht änderbar.** Adressfeld,
-    Adress-QR und die Adresswahl in der Kopplung entfallen; die Adresse
-    steht als Build-Konstante an einer Stelle, ein Selbsthoster baut sich
-    ein eigenes APK. Die Garmin-Uhr behält ihre Einstellung `serverUrl` mit
-    demselben Vorgabewert — sie hat kein QR und wird über Garmin Connect
-    konfiguriert. **Umsetzung mit dem Kopplungsmodul nach S5**, weil der
-    Bedienweg der Kopplung dort ohnehin neu geschnitten wird. Zuordnung:
-    S4-Rest.
-
-85. **Der Name der Handy-App wird „Gen-EM NAdoku".**
-    *Aufgenommen 02.09.2026, Entscheidung des Auftraggebers (R63).*
-    `android/handy/src/main/res/values/strings.xml` setzt `app_name` auf
-    „NAdoku". Am Handy soll der volle Name mit Bindestrich stehen, wie der
-    Programmname; das Wear-OS-Modul bleibt aus demselben Grund kurz wie die
-    Garmin-Uhr (R48: der Träger gehört in den Store-Eintrag, nicht auf ein
-    Uhrendisplay). Mitzuprüfen: Launcher-Beschriftung, die Benachrichtigung
-    des Vordergrunddienstes und jede Stelle, die den Namen sonst anzeigt.
-    Zuordnung: S4-Rest.
-
-86. **Die Statusleiste überlappt den oberen Rand der Handy-App.**
-    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers.*
-    **Wahrscheinliche Ursache, am Code gelesen und nicht auf dem Gerät
-    nachgestellt:** Das Handy-Modul zielt auf `targetSdk 36`. Seit Android 15
-    (API 35) zeichnet das System Apps mit diesem Ziel randlos, der Inhalt
-    beginnt unter der Statusleiste — und das Modul behandelt nirgends
-    Fenster-Insets (kein `WindowInsets`, kein `safeDrawing`, kein
-    `contentWindowInsets` in `android/handy/src/main`). Die Wear-App ist
-    nicht betroffen: rundes Glas, eigene Bausteine, in 0.7.3 gemessen.
-    **Zu tun:** Insets an der Wurzel der Handy-Oberfläche behandeln
-    (`Scaffold` mit `contentWindowInsets` oder `safeDrawingPadding()` am
-    Wurzelelement), auch für die Navigationsleiste unten; am S24 und im
-    Emulator prüfen, mit Bildabzug oben und unten. Zuordnung: S4-Rest.
-
 87. **Die Weboberfläche als installierbare Web-App auf Android.**
     *Aufgenommen 02.09.2026 auf Anweisung des Auftraggebers: vor v1.0
     prüfen, was es braucht, damit Android die Seite aus dem Browser heraus
@@ -1414,6 +1377,64 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+84. **Die Android-App kennt nur `nadoku.gen-em.org`.**
+    *Aufgenommen 02.09.2026 (Rahmenplan R63); erledigt am 04.09.2026 im
+    S4-Rest, Paket 1 (Android 0.11.0).*
+    Adressfeld, Adress-QR und Adresswahl sind ersatzlos entfallen. Die Adresse
+    steht als `buildConfigField SERVER_BASIS` im **Bauskript** und nicht als
+    Konstante im Quelltext — ein Selbsthoster ändert eine Zeile Gradle, keine
+    Zeile Kotlin, und derselbe Schalter führt den Prüfstand auf seine örtliche
+    Installation. Die Toleranzregeln aus `Serveradresse` bleiben; sie fangen
+    jetzt ab, was jemand ins Bauskript schreibt, und ein Fehler fällt beim
+    **Bauen** auf statt bei der Kopplung (`BASIS` wirft).
+
+    **Mitgegangen sind vier Fremdbestandteile und eine Berechtigung.** Ohne
+    Adress-QR gibt es keinen Verbraucher mehr für ZXing und die vier
+    CameraX-Bausteine; die CAMERA-Berechtigung — die einzige, die die App je
+    zur Laufzeit erfragt hat — ist aus dem Manifest ausgetragen. Das APK
+    schrumpft dadurch um **1,81 MB** (9 658 567 → 7 844 710 B), die Liste in
+    `docs/Lizenzen.md` 6a von vier auf zwei.
+
+    **Eine benannte Ausnahme von „nur HTTPS" (E-S4-14):** `localhost` und
+    IPv4-Adressen behalten `http`. Sie taugen ohnehin nicht als Adresse einer
+    ausgelieferten App, und ohne die Ausnahme liefe der Rundlauf gegen einen
+    TLS-Port, den die Prüfinstallation nicht hat — die App müsste dann einem
+    selbstsignierten Zertifikat trauen lernen, und genau das darf sie nie.
+
+85. **Der Name der Handy-App wird „Gen-EM NAdoku".**
+    *Aufgenommen 02.09.2026 (Rahmenplan R63); erledigt am 04.09.2026 im
+    S4-Rest, Paket 1 (Android 0.11.0).*
+    `app_name` im Handy-Modul trägt den vollen Namen, das Uhr-Modul bleibt bei
+    „NAdoku". Der Unterschied ist kein Versehen: Auf einem Wear-OS-Zifferblatt
+    steht der Name unter einem Symbol von wenigen Millimetern, und von
+    „Gen-EM NAdoku" bliebe dort „Gen-EM" stehen — gerade der Teil, der nicht
+    sagt, welche App das ist.
+
+    **Am Emulator nachgemessen**, weil die Länge nur an einer Stelle zur Frage
+    stand: Die Kopfleiste der Dienstansicht führt den Namen mit, und bei
+    360 dp steht er einzeilig neben der 28-dp-Bildmarke, ohne Umbruch und ohne
+    Kürzung (Bild `docs/bilder/s4-rest/04-gekoppelt.png`).
+
+86. **Die Statusleiste überlappt den oberen Rand der Handy-App.**
+    *Aufgenommen 02.09.2026 am Gerät gemeldet; erledigt am 04.09.2026 im
+    S4-Rest, Paket 1 (Android 0.11.0).*
+    Die Vermutung bei der Aufnahme stimmte: fehlende Fenster-Insets bei
+    `targetSdk 36`. Seit Android 15 zeichnet das System randlos, ohne zu
+    fragen; die Leisten liegen über der App.
+
+    **Warum es so lange stand:** `themen.xml` setzte `android:statusBarColor`
+    und `android:navigationBarColor`. Beide sind seit API 35 wirkungslos — sie
+    taten nichts, sahen aber so aus, als sei die Sache geregelt. Genau das ist
+    der Grund, warum niemand nachsah. Sie sind ausgetragen; an ihre Stelle
+    treten `enableEdgeToEdge()` in der Activity und Inset-Polster an
+    Kopfleiste (`statusBars`) und Wurzelfläche (`navigationBars`).
+
+    **Die Reihenfolge der Modifier ist die Lösung**, nicht ihre Anwesenheit:
+    `background` VOR `windowInsetsPadding` färbt die volle Höhe einschließlich
+    des Streifens unter der Leiste, das Padding danach schiebt nur den Inhalt.
+    Andersherum bliebe ein heller Streifen über der dunklen Leiste. Belegt am
+    Emulator (`docs/bilder/s4-rest/01-kopplung-bereit.png`).
 
 66. **Der Garmin-Uhrcode lief nicht durch die Wortliste — jetzt schon.**
     *Aufgenommen 02.09.2026 als Bereich `e` aus B-S4-06 (S4/D1); erledigt am

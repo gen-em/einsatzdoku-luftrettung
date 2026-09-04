@@ -4502,7 +4502,7 @@ Drei Festlegungen dahinter, jede mit einem Grund:
   GPS.
 - **„Brauchbar" ist dieselbe Schwelle, nach der aufgezeichnet wird.**
   `Ausduenner.brauchbar()` ist öffentlich, damit Anzeige und Puffer nicht
-  zwei Regeln führen. Die Garmin-Uhr hält es genauso (`SyncView.mc` gegen
+  zwei Regeln führen. Die Uhr-App hält es genauso (`SyncView.mc` gegen
   `Track.mc`): Eine Anzeige mit anderer Schwelle wäre irreführend.
 - **Gemessen wird mit `SystemClock.elapsedRealtime()`**, nicht mit der
   Wanduhr und nicht mit der GPS-Zeit. Beide können springen; eine Frist, die

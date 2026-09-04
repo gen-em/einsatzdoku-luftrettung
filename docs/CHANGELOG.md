@@ -14,6 +14,108 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.11.0] — 2026-09-04
+
+### Android — die App kann sich wieder koppeln
+
+**Sie konnte es seit dem 3. September nicht mehr**, und das war kein
+Nebenschaden: Mit Web 13.0.0 hat S5 den Kopplungsweg umgekehrt (R49), und die
+Handy-App war nach dem alten gebaut. Sie sendete einen Code an `pair.php`, der
+Server antwortete `400 {"error":"aktion"}` — und die App machte daraus „Code
+unvollständig". Eine Meldung, die in die Irre führt: Der Code war nicht
+unvollständig, es gab ihn nicht mehr.
+
+Der neue Weg hat drei Schritte statt einem. Die App bittet um eine Sitzung,
+**zeigt** den Code in zwei Dreiergruppen, fragt alle fünf Sekunden nach — und
+wenn ein Konto den Code eingetragen hat, steht auf dem Handy dessen
+**maskierte Adresse**, mit „Ja, koppeln" und „Nein, abbrechen" darunter. Damit
+steht das zweite Tor auch am Handy: Ein fremdes Gerät im eigenen Konto
+scheitert an der Bestätigungsseite im Browser, das eigene Gerät im fremden
+Konto an dieser Zeile hier — eine fremde Domain fällt auf.
+
+Der Kopplungsbildschirm ist dabei **einfacher** geworden, nicht komplizierter.
+Vorher standen dort zwei gleichwertige Wege nebeneinander (Kamera und
+Abtippen) und darüber ein Adressfeld. Jetzt steht dort ein Knopf, und danach
+eine Zahl zum Ablesen.
+
+### Android — die Serveradresse ist fest (R63, Backlog Nr. 84)
+
+Sie war ein Eingabefeld und kam wahlweise aus einem QR-Code. Beides entfällt.
+Diese App gehört zu **einer** Installation; ein Adressfeld verlangte von jeder
+NutzerIn eine Angabe, die für alle dieselbe ist — und war zugleich die einzige
+Stelle, an der ein Tippfehler die App still an einen fremden Server hängen
+konnte.
+
+Wer eine eigene Installation betreibt, baut ein eigenes APK. Die Adresse steht
+deshalb im **Bauskript** (`buildConfigField SERVER_BASIS`) und nicht als
+Konstante im Quelltext: Ein Selbsthoster ändert eine Zeile Gradle, keine Zeile
+Kotlin. Die Toleranzregeln bleiben — sie fangen jetzt ab, was jemand ins
+Bauskript schreibt, statt was jemand tippt, und ein Fehler fällt beim **Bauen**
+auf statt bei der Kopplung.
+
+**Das APK ist dadurch um 1,81 MB kleiner** (9 658 567 → 7 844 710 B). Mit dem
+Adress-QR gehen ZXing, vier CameraX-Bausteine und die **CAMERA-Berechtigung** —
+die einzige, die die App je zur Laufzeit erfragt hat. Die Liste der
+Fremdbestandteile geht von vier auf zwei.
+
+### Android — „Gen-EM NAdoku" am Handy, „NAdoku" auf der Uhr (Nr. 85)
+
+Am Handy steht der Name neben Dutzenden fremder und muss allein sagen, wozu er
+gehört. Auf einem Wear-OS-Zifferblatt steht er unter einem Symbol von wenigen
+Millimetern — dort bliebe von „Gen-EM NAdoku" sichtbar: „Gen-EM", also gerade
+der Teil, der nicht sagt, welche App das ist. Die Uhr steht ohnehin nie allein.
+
+### Android — die Statusleiste überlappt die App nicht mehr (Nr. 86)
+
+Seit `targetSdk = 36` zeichnet Android 15+ randlos, ohne zu fragen; die
+Systemleisten liegen über der App. Uhrzeit und Akkusymbol standen damit auf der
+Kopfleiste, teils auf dem Titel.
+
+**Warum es so lange niemandem auffiel:** `themen.xml` setzte
+`android:statusBarColor` und `android:navigationBarColor` — zwei Zeilen, die
+seit API 35 wirkungslos sind. Sie taten nichts, sahen aber so aus, als sei die
+Sache geregelt. Sie sind ausgetragen; an ihre Stelle treten
+`enableEdgeToEdge()` und Inset-Polster an Kopfleiste und Wurzelfläche.
+
+### Android — was der Umbau am Prüfstand geändert hat
+
+**Die drei Rundlaufklassen laufen wieder gegen den aktuellen Server.** Sie
+koppelten über den alten Weg und brauchten deshalb eine eigene Installation
+„vom Stand vor S5"; dieser Abschnitt der Anleitung ist entfallen. Der Schritt,
+den sonst ein Mensch im Browser tut, macht jetzt eine Prüfhilfe — sie ordnet
+den Code über `mariadb` einem Konto zu und begründet in ihrem Dateikopf, warum
+nicht über die Weboberfläche.
+
+**Drei Funde am Rande, jeder eine falsche Zusicherung:**
+
+- Der Bilderlauf prüfte „Bedienhöhe ≥ 48 dp" auch auf Bildschirmen **ohne**
+  farbigen Knopf. Der Kommentar darüber sagte seit jeher, dass er das nicht
+  tut; die Bedingung fehlte im Code. Aufgefallen ist es am ersten Bildschirm
+  ohne Haupthandlung — er meldete „unter 48 dp" für einen Knopf, den es nicht
+  gibt.
+- `knoepfeSichtbar` heißt nicht „sichtbare Knöpfe", sondern „sichtbare
+  **farbige** Knöpfe": Ein neutraler Knopf ist weiß mit dünnem Rand und fällt
+  durch jede Farbmessung. Eine geplante Prüfung „wenigstens ein Ausweg" wurde
+  deshalb nicht geschrieben, statt sie so hinzuschreiben, als könnte sie es.
+- Drei Dateien behaupteten, `pair.php` schreibe seine Meldungen „ohne
+  Umlaute". Das galt einmal und seit Web 13.0.0 nicht mehr. Gefunden hat es
+  ein Prüffall, der auf den umlautlosen Text prüfte — und der nur deshalb
+  durchging, weil er gegen einen Server vom alten Stand lief.
+
+**Was bewusst offen bleibt:** Backlog Nr. 95 (die Rundläufe lassen Daten im
+Konto zurück, gemessen 18 Diensttage, 10 Einsätze, 28 Ruhesegmente). Der
+naheliegende Weg — ein `DELETE` in derselben SQL-Zeile — scheidet aus:
+GPS-Punkte liegen je nach Alter in `track_points` **oder** `track_blobs`, und
+beides fasst ausschließlich `spur_lib.php` an (`CLAUDE.md` 4). Ein SQL-Löschen
+des Einsatzes ließe seine Spur als Waise zurück, ohne Fehlermeldung.
+
+### Web — ein Beispiel im JSON-Vertrag zeigte den alten Kopplungsweg
+
+`docs/JSON-Vertrag.md` 1a.4 führte im Beispiel der Handy-Form noch
+`"code": "AB3K7Q"` statt `"aktion": "start"` — den Weg also, den 1a.1 zwei
+Bildschirme weiter oben ausschließt. Ein Rest aus S5, gefunden beim Bau genau
+gegen dieses Beispiel.
+
 ## [Android 0.10.1] — 2026-09-03
 
 ### Android — „Einsatz abschließen" ist wieder ohne Schieben erreichbar

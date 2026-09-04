@@ -11,7 +11,25 @@
     erfaehrt die Art gar nicht — die Einordnung geschieht im Browser.
 -->
 <resources>
-    <string name="app_name">NAdoku</string>
+    <!--
+        DER NAME AM HANDY IST DER VOLLE (R63, Backlog Nr. 85): "Gen-EM NAdoku".
+        Er steht im Startprogramm, in der Anwendungsliste und ueber jeder
+        Benachrichtigung — an Stellen also, an denen er neben Dutzenden
+        fremder Namen steht und alleine sagen muss, wozu er gehoert.
+
+        DIE UHR BLEIBT "NAdoku", und das ist kein Versehen: Auf dem
+        Startbildschirm einer Wear-OS-Uhr steht der Name unter einem Symbol
+        von wenigen Millimetern. Ein zweiteiliger Name wird dort abgeschnitten
+        — sichtbar bliebe "Gen-EM", also gerade der Teil, der nicht sagt,
+        welche App das ist. Die Uhr steht ohnehin nie allein: Sie ist die
+        Fernbedienung des Handys daneben.
+
+        DIE KOPFLEISTE DER DIENSTANSICHT FUEHRT IHN MIT (DienstAnsicht.kt),
+        und der lange Name passt dort: am Emulator gemessen bei 360 dp
+        einzeilig neben der 28-dp-Bildmarke, ohne Umbruch und ohne Kuerzung.
+        Das war die einzige Stelle, an der die Laenge zur Frage stand.
+    -->
+    <string name="app_name">Gen-EM NAdoku</string>
     <string name="marke_luft_beschreibung">Bildmarke Rettungshubschrauber</string>
     <string name="marke_boden_beschreibung">Bildmarke Notarzteinsatzfahrzeug</string>
 
@@ -19,7 +37,7 @@
 
     <!-- ==== Sync-Anzeige: die drei Zustände (Backlog Nr. 11) ============ -->
     <string name="sync_nicht_eingerichtet">Nicht eingerichtet</string>
-    <string name="sync_fehlt_kopplung">Koppel die App mit deinem Konto: Im Browser unter <b>Einstellungen → Geräte</b> einen Kopplungscode erzeugen.</string>
+    <string name="sync_fehlt_kopplung">Koppel die App mit deinem Konto.</string>
     <!-- Mehrzahl über <plurals>, nicht über zwei Zeichenketten und ein if:
          Android kennt die Regeln der Sprache, der Code nicht. -->
     <plurals name="sync_rueckstand">
@@ -29,32 +47,49 @@
     <string name="sync_vollstaendig">Alles gesendet</string>
     <string name="sync_gekoppelt_mit">Gekoppelt · %1$s</string>
 
-    <!-- ==== Kopplung ==================================================== -->
+    <!-- ==== Kopplung (JSON-Vertrag 1a, umgekehrt seit R49/S5) ========= -->
+    <!--
+        DIE RICHTUNG HAT SICH GEDREHT, und die Texte tragen das. Vorher hiess
+        es "Im Browser einen Kopplungscode erzeugen" — die App war der
+        Empfaenger. Jetzt zeigt das GERAET den Code, und der Browser nimmt ihn
+        entgegen; jeder Satz hier muss deshalb sagen, wer gerade dran ist.
+
+        DREI SCHRITTE, DREI TEXTE: Code zeigen, warten, bestaetigen.
+    -->
     <string name="kopplung_titel">Gerät koppeln</string>
-    <string name="kopplung_server">Server-Adresse</string>
-    <string name="kopplung_server_beispiel">einsatz.beispieldomain.de</string>
-    <string name="kopplung_qr">QR-Code scannen</string>
+    <string name="kopplung_start">Kopplung starten</string>
+    <string name="kopplung_hinweis_start">Tippe auf <b>Kopplung starten</b>. Die App zeigt dir dann einen Code, den du im Browser unter <b>Einstellungen → Geräte</b> einträgst.</string>
+    <string name="kopplung_laeuft">Hole Code …</string>
+
     <!--
-        "Adresse UND Code" steht hier ausgeschrieben, und das ist der Kern der
-        Klarstellung: Wer diesen Knopf liest, sieht daran, was ihm der QR-Weg
-        abnimmt. Vorher hiess er nur "Code von Hand eingeben" - dann klingt
-        die Adresse nach etwas, das man ohnehin selbst eintraegt.
+        Der Code steht in zwei Dreiergruppen, so wie ihn die Bestaetigungsseite
+        im Browser auch zeigt. Wer abtippt, verliert sonst die Stelle.
     -->
-    <string name="kopplung_von_hand">Adresse und Code von Hand eingeben</string>
+    <string name="kopplung_code_zeigen">Diesen Code im Browser eintragen</string>
+    <string name="kopplung_code_wo">Browser → <b>Einstellungen → Geräte</b> → Feld <b>Code vom Gerät</b></string>
+    <string name="kopplung_wartet">Warte auf den Browser …</string>
     <!--
-        Der Hinweis auf der Wahlseite. Er sagt, WOHER der Code kommt und dass
-        der QR-Code die Adresse mitbringt - beides in einem Satz, weil der
-        Kasten sonst zur Anleitung wird.
+        Die Restzeit ist Minuten, nicht Sekunden: Eine sekundengenaue Anzeige
+        laedt zum Zusehen ein, und zehn Minuten sind reichlich Zeit. Unter
+        einer Minute wird es genau, weil es dann darauf ankommt.
     -->
-    <string name="kopplung_hinweis_qr">Im Browser unter <b>Einstellungen → Geräte</b> einen Kopplungscode erzeugen. Sein QR-Code bringt die Server-Adresse gleich mit.</string>
-    <string name="kopplung_code">Kopplungscode</string>
-    <string name="kopplung_code_beispiel">AB3K7Q</string>
-    <string name="kopplung_koppeln">Koppeln</string>
-    <string name="kopplung_laeuft">Kopple …</string>
-    <string name="kopplung_kamera_fehlt">Ohne Kamera-Freigabe geht der Scan nicht. Der Code lässt sich auch von Hand eintippen.</string>
-    <string name="kopplung_qr_zielen">Auf den QR-Code der Geräteseite zielen</string>
-    <string name="kopplung_qr_fremd">Das ist kein Kopplungscode von NAdoku.</string>
+    <string name="kopplung_rest_min">Noch %1$d Minuten</string>
+    <string name="kopplung_rest_sek">Noch %1$d Sekunden</string>
+
+    <!--
+        DAS ZWEITE TOR (Vertrag 1a.2). Hier steht die maskierte Adresse des
+        Kontos, das den Code eingegeben hat. Sie ist der ganze Zweck dieses
+        Bildschirms: Eine fremde Domain faellt auf, und genau daran scheitert
+        das eigene Geraet im fremden Konto.
+    -->
+    <string name="kopplung_frage_titel">Zu diesem Konto koppeln?</string>
+    <string name="kopplung_frage_text">Der Code wurde in diesem Konto eingetragen. Gehört es dir?</string>
+    <string name="kopplung_ja">Ja, koppeln</string>
+    <string name="kopplung_nein">Nein, abbrechen</string>
+    <string name="kopplung_bestaetigt">Gekoppelt</string>
+    <string name="kopplung_abgebrochen">Kopplung abgebrochen</string>
     <string name="kopplung_abbrechen">Abbrechen</string>
+    <string name="kopplung_neu">Neu beginnen</string>
 
     <!-- Ablehnungen: WAS ist los (erste Zeile) und WAS HILFT (zweite).
          Die Zweiteilung ist von der Garmin-Uhr übernommen (Pair.mc) — dort
@@ -62,22 +97,20 @@
          wurde und ausgerechnet der Teil wegfiel, der sagt, was zu tun ist.
          Am Handy ist der Platz da; die Trennung bleibt trotzdem, weil sie den
          Text zwingt, beide Fragen zu beantworten. -->
-    <string name="fehler_code_unbrauchbar">Code unvollständig</string>
-    <string name="fehler_code_unbrauchbar_hinweis">Sechs Zeichen, ohne 0, O, 1 und I — die gibt es im Code nicht.</string>
-    <string name="fehler_code_ungueltig">Code ungültig oder abgelaufen</string>
-    <string name="fehler_code_ungueltig_hinweis">Ein Code gilt zehn Minuten und nur einmal. Im Browser einen neuen holen.</string>
+    <string name="fehler_sitzung_ungueltig">Kopplung nicht mehr gültig</string>
+    <string name="fehler_sitzung_ungueltig_hinweis">Der Vorgang wurde im Browser abgebrochen oder ist verfallen. Neu beginnen.</string>
+    <string name="fehler_sitzung_abgelaufen">Zeit abgelaufen</string>
+    <string name="fehler_sitzung_abgelaufen_hinweis">Ein Code gilt zehn Minuten. Neu beginnen und den neuen Code eintragen.</string>
     <string name="fehler_zu_viele_geraete">Zu viele Geräte</string>
     <string name="fehler_zu_viele_geraete_hinweis">Erst ein Gerät im Browser löschen, dann neu koppeln.</string>
     <string name="fehler_zu_viele_versuche">Zu viele Versuche</string>
     <string name="fehler_zu_viele_versuche_hinweis">Später noch einmal — weiteres Tippen hilft jetzt nicht.</string>
     <string name="fehler_keine_verbindung">Keine Verbindung</string>
-    <string name="fehler_keine_verbindung_hinweis">Adresse richtig? Netz da? Später unverändert erneut versuchen.</string>
+    <string name="fehler_keine_verbindung_hinweis">Netz da? Später unverändert erneut versuchen.</string>
     <string name="fehler_serverfehler">Der Server hat einen Fehler gemeldet</string>
     <string name="fehler_serverfehler_hinweis">Das liegt nicht am Gerät. Später erneut versuchen.</string>
     <string name="fehler_unbekannt">Kopplung fehlgeschlagen</string>
     <string name="fehler_unbekannt_hinweis">Unerwartete Antwort des Servers.</string>
-    <string name="fehler_server_adresse">Server-Adresse unbrauchbar</string>
-    <string name="fehler_server_adresse_hinweis">Zum Beispiel einsatz.beispieldomain.de — Schema und Pfad ergänzt die App.</string>
 
     <!-- ==== Trennen (E-S4-12, Backlog Nr. 14) =========================== -->
     <string name="trennen">Gerät trennen</string>

@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import org.genem.nadoku.R
 import org.genem.nadoku.gemeinsam.Bildmarke
 import org.genem.nadoku.gemeinsam.Farbe
+import org.genem.nadoku.handy.kopplung.Serveradresse
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.gemeinsam.Motiv
 import org.genem.nadoku.gemeinsam.Modus
@@ -102,7 +106,6 @@ data class Dienststand(
 @Composable
 fun DienstAnsicht(
     stand: Dienststand,
-    serverBasis: String?,
     logoWahl: LogoWahl,
     rueckstand: Int,
     abgewiesen: Int = 0,
@@ -119,7 +122,14 @@ fun DienstAnsicht(
     aufEinsatzAbschluss: () -> Unit = {},
 ) {
     Column(
-        modifier = Modifier.fillMaxSize().background(Farbe.rauch),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Farbe.rauch)
+            /* Die Navigationsleiste unten -- und im Querformat die seitliche
+             * Geste (Backlog Nr. 86). Wie oben gilt: `background` zuerst, damit
+             * die Flaeche bis zum Rand faerbt, das Padding danach, damit der
+             * Inhalt nicht darunter geraet. */
+            .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         Kopfleiste(titel = stringResource(R.string.app_name), logoWahl = logoWahl)
 
@@ -129,7 +139,7 @@ fun DienstAnsicht(
         ) {
             Karte {
                 Zustandsblock(
-                    stand, serverBasis, rueckstand, abgewiesen,
+                    stand, rueckstand, abgewiesen,
                     sendeergebnis, sendelaufLaeuft, aufJetztSenden,
                 )
 
@@ -174,7 +184,6 @@ fun DienstAnsicht(
 @Composable
 private fun Zustandsblock(
     stand: Dienststand,
-    serverBasis: String?,
     rueckstand: Int,
     abgewiesen: Int,
     sendeergebnis: Sendeergebnis?,
@@ -196,10 +205,14 @@ private fun Zustandsblock(
             )
         }
     }
+    /* DIE ADRESSE STEHT WEITER DA, OBWOHL SIE FEST IST (R63). Sie ist keine
+     * Einstellung mehr, sondern eine Auskunft: Wohin sendet dieses Gerät? Bei
+     * einem selbstgebauten APK (Selbsthoster, Pruefstand) ist das die einzige
+     * Stelle, an der es sichtbar wird -- und dort ist die Frage echt. */
     Zustandszeile(
         text = stringResource(
             R.string.sync_gekoppelt_mit,
-            serverBasis?.removePrefix("https://")?.trimEnd('/').orEmpty(),
+            Serveradresse.BASIS.removePrefix("https://").removePrefix("http://").trimEnd('/'),
         ),
         punktfarbe = Farbe.blau, schriftfarbe = Farbe.blauTief,
     )
@@ -417,7 +430,7 @@ private fun ortungsfarbe(stand: Ortungsstand?) = when (stand) {
 @Composable
 private fun VorschauRuhend() = DienstAnsicht(
     stand = Dienststand(false, null, Modus.MIT_PHASENKNOEPFEN, 0, "0,0", true),
-    serverBasis = "https://einsatz.beispieldomain.de/", logoWahl = LogoWahl.LUFT,
+             logoWahl = LogoWahl.LUFT,
     rueckstand = 0, aufModus = {}, aufBeginnen = {}, aufBeenden = {},
     aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
 )
@@ -430,7 +443,7 @@ private fun VorschauStandortAus() = DienstAnsicht(
         false, null, Modus.MIT_PHASENKNOEPFEN, 0, "0,0",
         ortungFreigegeben = true, standortAn = false,
     ),
-    serverBasis = "https://einsatz.beispieldomain.de/", logoWahl = LogoWahl.LUFT,
+             logoWahl = LogoWahl.LUFT,
     rueckstand = 0, aufModus = {}, aufBeginnen = {}, aufBeenden = {},
     aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
 )
@@ -442,7 +455,7 @@ private fun VorschauLaufendNurAufzeichnen() = DienstAnsicht(
         true, "07:02", Modus.NUR_AUFZEICHNEN, 1483, "126,4",
         ortungFreigegeben = true, ortung = Ortungsstand.OK,
     ),
-    serverBasis = "https://einsatz.beispieldomain.de/", logoWahl = LogoWahl.BODEN,
+             logoWahl = LogoWahl.BODEN,
     rueckstand = 2, aufModus = {}, aufBeginnen = {}, aufBeenden = {},
     aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
 )
@@ -455,7 +468,7 @@ private fun VorschauLaufendOhneSignal() = DienstAnsicht(
         true, "07:02", Modus.NUR_AUFZEICHNEN, 1483, "126,4",
         ortungFreigegeben = true, ortung = Ortungsstand.KEIN_SIGNAL, ortungSeitMin = 3,
     ),
-    serverBasis = "https://einsatz.beispieldomain.de/", logoWahl = LogoWahl.BODEN,
+             logoWahl = LogoWahl.BODEN,
     rueckstand = 0, aufModus = {}, aufBeginnen = {}, aufBeenden = {},
     aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
 )

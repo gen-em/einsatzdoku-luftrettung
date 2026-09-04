@@ -76,52 +76,35 @@ Wege.** Welcher gilt, hängt nicht von der App ab, sondern vom Stand des
 Servers, gegen den sie läuft — und die drei Rundlaufklassen der App stehen
 heute noch auf dem alten. Deshalb beides, in dieser Reihenfolge.
 
-#### Heute: die drei Rundlaufklassen brauchen einen Server vom Stand vor S5
+#### Die drei Rundlaufklassen laufen wieder gegen den aktuellen Stand
 
-`KopplungRundlaufTest`, `SendeRundlaufTest` und `MissionRundlaufTest`
-koppeln über `Kopplungsdienst.koppeln(basis, code, geraet)` — die App
-**sendet** also einen Code, den vorher jemand im Web erzeugt hat. Seit
-Web 13.0.0 gibt es diesen Weg nicht mehr (S5, R49): Das Gerät **zeigt**
-den Code, ein Mensch tippt ihn im Browser ein, und das Gerät bestätigt das
-Konto. `pair.php` antwortet einem Rumpf ohne `aktion` mit
-`400 {"error":"aktion","meldung":"Uhr-App aktualisieren"}`.
+*Bis Android 0.10.1 stand hier eine Anleitung, wie man neben der Installation
+eine zweite „vom Stand vor S5" aufsetzt.* Sie wurde gebraucht, weil
+`KopplungRundlaufTest`, `SendeRundlaufTest` und `MissionRundlaufTest` über
+`Kopplungsdienst.koppeln(basis, code, geraet)` koppelten — den alten Weg, den
+`pair.php` seit Web 13.0.0 mit `400 {"error":"aktion"}` beantwortet.
 
-**Woran ein falscher Serverstand zu erkennen ist:** Der Gutfall
-`kopplungGegenPairPhp` meldet `Abgewiesen(CODE_UNBRAUCHBAR)` statt
-`Gekoppelt` — die Fehlerabbildung in `Kopplungsdienst` macht aus jedem 400
-einen unbrauchbaren Code. Es scheitert also sichtbar, sagt aber nicht, was
-los ist.
-
-**„Stand vor S5" heißt: Quelltext *und* Datenbank.** Die Migration
-`2026_09_03_kopplungssitzungen` legt `pair_sessions` an und lässt
-`pair_codes` fallen. Ein `pair.php` von vorher greift dann auf eine
-Tabelle zu, die es nicht mehr gibt, und endet im Serverfehler;
-`/tmp/php-server.log` nennt `pair_codes` beim Namen. Der Rundlauf braucht
-deshalb eine eigene Installation:
+**Mit Android 0.11.0 ist das erledigt.** Die drei Klassen koppeln über die
+drei Anliegen aus Vertrag 1a, und die Vorbereitung ist eine Zeile weniger:
 
 ```bash
-# Den letzten Stand vor Web 13.0.0 finden und daneben auschecken:
-git log --oneline -- server/version.php | head     # „web v13.0.0 …" suchen
-git worktree add /tmp/vor-s5 <der Commit DAVOR>
-
-# Server aus diesem Stand fahren; die Datenbank frisch einrichten
-# (install.php im Browser) und update.php NICHT laufen lassen:
-WURZEL=/tmp/vor-s5/server sh tools/referenzdatensatz/einspielen/lokal_starten.sh
-
-# Kopplungscodes als Vorbedingung anlegen (sie sind einmal einlösbar):
-mariadb -e "DELETE FROM pair_codes; DELETE FROM devices;
-  INSERT INTO pair_codes (user_id, code) VALUES
-   (1,'AB3K7Q'),(1,'CD4M8R'),(1,'EF5N9S'),(1,'GH6P2T'),
-   (1,'LA2B3C'),(1,'LD4E5F'),(1,'LG6H7J'),(1,'LK8L9M'),
-   (1,'LN2P3Q'),(1,'LR4S5T'),(1,'LU6V7W'),(1,'LX8Y9Z'),
-   (1,'RA2B3C'),(1,'RD4E5F'),(1,'RG6H7J'),(1,'MA2B3C'),(1,'MD4E5F'),
-   (1,'UA2B3C');" nadoku
+sh tools/referenzdatensatz/einspielen/lokal_starten.sh
+cd android
+./gradlew :handy:testDebugUnitTest --rerun-tasks \
+          -Pnadoku.rundlauf=http://127.0.0.1:8080/
 ```
 
-**Bis wann das so bleibt:** bis der S4-Rest das Kopplungsmodul der
-Handy-App auf den neuen Weg umbaut (Konzept S5, Abschnitt 7 beschreibt
-ihn). Danach koppeln die drei Klassen wie im nächsten Abschnitt, laufen
-wieder gegen den aktuellen Stand — und dieser Abschnitt hier fällt weg.
+**Kopplungscodes werden nicht mehr vorbereitet** — es gibt keine Tabelle mehr,
+in die man sie legen könnte. Den Schritt, den sonst ein Mensch im Browser tut,
+übernimmt `kopplung/Kopplungshilfe.kt`: Sie ordnet den Code über `mariadb`
+dem Konto 1 zu. Ihr Dateikopf begründet, warum nicht über die Weboberfläche.
+
+**Sie leert auch den Ratenschutz**, und das ist keine Bequemlichkeit: `pair.php`
+lässt zwanzig `start`-Aufrufe je zehn Minuten und Absenderadresse zu
+(E-S5-33). Die drei Rundlaufklassen machen in einem Lauf mehr als zwanzig,
+und alle kommen von `127.0.0.1`. Ohne das Leeren läuft der erste Durchgang
+grün und der zweite meldet für jeden Fall `429` — wer das sieht, sucht den
+Fehler in der App. Genau das ist beim ersten Lauf dieses Pakets passiert.
 
 #### So bekommt ein Prüfling heute eine Kopplung
 
@@ -217,7 +200,7 @@ Zusammen **295 Prüffälle** — 75 mehr als der Stand davor (0.7.7: 167 / 53 =
 | Paket | Prüffälle |
 |---|---|
 | E1 | `OrtungswaechterTest` 24, `OrtungszuhoererTest` 2, `AusduennerTest` +5 (`brauchbar()`), `NachrichtenformatTest` +5, `UhrsteuerungTest` +3 |
-| Bilderlauf | `HandyBildTest` 1 Fall für **63 Bilder**, `UhrBildTest` +3 Fälle (4 → 6 Bilder) |
+| Bilderlauf | `HandyBildTest` 1 Fall für **72 Bilder** (24 Bildschirme × 3 Breiten), `UhrBildTest` +3 Fälle (4 → 6 Bilder) |
 | E2 | `NachsendenTest` 9, `DienstfolgeTest` 6, `AbgewieseneTest` 5, `SendetaktTest` +5 |
 | E3 | `OrtungsanzeigeTest` 7 (die drei davon in `OrtungswaechterTest` sind oben schon gezählt) |
 
@@ -282,13 +265,13 @@ legen PNG unter `<modul>/build/bilder/` ab:
 
 ```bash
 ./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  6 Bilder
-./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 66 Bilder
+./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 72 Bilder
 ```
 
 | | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
 |---|---|---|
-| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | **66** — 22 Bildschirme × 3 Breiten (360, 411, 600 dp) |
-| Bedienhöhe | 48 dp je Bild | 48 dp an **66 von 66** |
+| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | **72** — 24 Bildschirme × 3 Breiten (360, 411, 600 dp) |
+| Bedienhöhe | 48 dp je Bild | 48 dp an **69 von 72** — die drei `kopplung-code` tragen keinen farbigen Knopf und werden nicht daran gemessen (benannte Ausnahme im Prüffall) |
 | Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**; dazu der **ganze** Inhalt gegen den sichtbaren Bereich |
 | Unterscheidbarkeit | alle 6 paarweise verschieden | alle 66 paarweise verschieden, **und je Breite** |
 
@@ -385,6 +368,30 @@ yes | /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 Rund 460 MB. Die Zuarbeitenliste des Konzepts (Abschnitt 9) nennt die
 Kommandozeilenwerkzeuge als „im Container"; sie waren es nicht — der Schritt
 oben ist der Nachtrag dazu.
+
+### HTTP zum Prüfstand: nur das Prüf-APK
+
+Die App spricht **nur HTTPS** (E-S4-14), und Android setzt dasselbe seit
+Fassung 9 von sich aus durch. Die örtliche Prüfinstallation spricht aber HTTP
+(Port 8080); ihr HTTPS-Port trägt ein selbstsigniertes Zertifikat.
+
+Wer den Kopplungsweg **am Emulator** gegen sie ansehen will, braucht deshalb
+zweierlei — beides seit Android 0.11.0 im Baum:
+
+```bash
+adb reverse tcp:8080 tcp:8080          # 127.0.0.1 im Gerät -> Host
+./gradlew :handy:assembleDebug -Pnadoku.serverBasis=http://127.0.0.1:8080/
+```
+
+Die Klartext-Ausnahme liegt in `handy/src/debug/` und geht damit **nur** in
+das Prüf-APK ein (`org.genem.nadoku.pruef`). Das Release-APK kennt sie nicht;
+dort fiele ein `http://` durch, selbst wenn jemand es einbaute.
+
+**Ohne die Rückleitung sieht man nichts:** Der PHP-Server der
+Prüfinstallation hört auf `127.0.0.1:8080`, nicht auf `0.0.0.0` — aus dem
+Emulator ist er über `10.0.2.2` also nicht zu erreichen. Der erste Versuch
+dieses Pakets endete deshalb dreimal bei „Keine Verbindung", und die Ursache
+lag nicht dort, wo man sie suchte.
 
 ### Netzfreigaben
 

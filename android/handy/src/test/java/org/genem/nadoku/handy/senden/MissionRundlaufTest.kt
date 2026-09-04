@@ -12,13 +12,14 @@ import org.genem.nadoku.handy.dienst.Zeit
 import org.genem.nadoku.handy.kopplung.Geraeteangabe
 import org.genem.nadoku.handy.kopplung.HttpNetzweg
 import org.genem.nadoku.handy.kopplung.Kopplungsdienst
-import org.genem.nadoku.handy.kopplung.Kopplungsergebnis
+import org.genem.nadoku.handy.kopplung.Kopplungshilfe
 import org.genem.nadoku.handy.puffer.Paketzeile
 import org.genem.nadoku.handy.puffer.Puffer
 import org.genem.nadoku.handy.tresor.PruefTresorschluessel
 import org.genem.nadoku.handy.tresor.Schluesseltresor
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -74,8 +75,13 @@ class MissionRundlaufTest {
 
     @After fun abbauen() {
         if (basis.isNotEmpty() && this::tresor.isInitialized && tresor.gekoppelt()) {
-            Kopplungsdienst(HttpNetzweg(), tresor).trennen(basis)
+            Kopplungsdienst(HttpNetzweg(), tresor, basis).trennen()
         }
+        /* Auch hier den Ratenschutz leeren: Diese Klassen koppeln ebenfalls
+         * über `start`, und alle drei Rundlaufklassen teilen sich den Topf
+         * von 127.0.0.1 (E-S5-33). Wer nur in einer aufräumt, sperrt die
+         * anderen aus. */
+        if (basis.isNotEmpty()) Kopplungshilfe.aufraeumen()
         if (this::puffer.isInitialized) puffer.close()
         if (this::kontext.isInitialized) kontext.deleteDatabase(DATENBANK)
         if (this::tresordatei.isInitialized) tresordatei.delete()
@@ -83,7 +89,7 @@ class MissionRundlaufTest {
 
     private fun sender() = Sender(
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
-        basis = { basis }, phasenLeser = { puffer.phasen(it) },
+        basis = basis, phasenLeser = { puffer.phasen(it) },
     )
 
     private fun klammer() = Dienstklammer(
@@ -96,8 +102,9 @@ class MissionRundlaufTest {
      * Einsatz … — genau die Kette, die ein Diensttag erzeugt.
      */
     @Test fun einDienstMitDreiEinsaetzenLaeuftVollstaendigDurch() {
-        val e = Kopplungsdienst(HttpNetzweg(), tresor).koppeln(basis, "MA2B3C", geraet)
-        assertEquals(Kopplungsergebnis.Gekoppelt, e)
+        assertNull(
+            Kopplungshilfe.koppeln(Kopplungsdienst(HttpNetzweg(), tresor, basis), geraet)
+        )
 
         val k = klammer()
         k.beginnen(Modus.MIT_PHASENKNOEPFEN)
@@ -156,9 +163,8 @@ class MissionRundlaufTest {
      * zurück oder ein `rejected`.
      */
     @Test fun doppeltePhaseneintraegeUeberstehenDenRundlauf() {
-        assertEquals(
-            Kopplungsergebnis.Gekoppelt,
-            Kopplungsdienst(HttpNetzweg(), tresor).koppeln(basis, "MD4E5F", geraet),
+        assertNull(
+            Kopplungshilfe.koppeln(Kopplungsdienst(HttpNetzweg(), tresor, basis), geraet)
         )
 
         val k = klammer()
@@ -208,9 +214,8 @@ class MissionRundlaufTest {
      * (Fund B-S4-05).
      */
     @Test fun derWegDerUhrEndetBeimServer() {
-        assertEquals(
-            Kopplungsergebnis.Gekoppelt,
-            Kopplungsdienst(HttpNetzweg(), tresor).koppeln(basis, "UA2B3C", geraet),
+        assertNull(
+            Kopplungshilfe.koppeln(Kopplungsdienst(HttpNetzweg(), tresor, basis), geraet)
         )
 
         val k = klammer()

@@ -250,9 +250,20 @@ Abhängigkeit des Projekts.
 | Bestandteil | Version | Lizenz | wofür |
 |---|---|---|---|
 | **AndroidX / Jetpack Compose** (`core-ktx`, `lifecycle`, `activity-compose`, Compose-BOM, `wear.compose`, `wear-input`) | BOM 2025.06.01, Wear-Compose 1.4.1 | Apache-2.0 | Die gesamte Oberfläche beider Module |
-| **CameraX** (`camera-core`, `camera2`, `lifecycle`, `view`) | 1.4.2 | Apache-2.0 | Das Kamerabild für das Scannen des Kopplungscodes |
-| **ZXing** (`core`) | 3.5.4 | Apache-2.0 | QR-Erkennung *aus* diesem Kamerabild |
 | **play-services-wearable** | 20.0.1 | **proprietär** (Google APIs ToS) | **Ausschließlich** der Wear Data Layer — der Weg zwischen Uhr und Handy |
+
+**Zwei statt vier seit Android 0.11.0.** Bis dahin standen hier auch
+**CameraX** (`camera-core`, `camera2`, `lifecycle`, `view`, 1.4.2,
+Apache-2.0) für das Kamerabild und **ZXing** (`core`, 3.5.4, Apache-2.0) für
+die QR-Erkennung daraus. Beide hingen an einer einzigen Funktion: dem
+Adress-QR der Kopplung (E-S4-15). Mit R63 kennt die App genau eine
+Serveradresse, es gibt nichts mehr zu scannen — und damit keinen Verbraucher
+mehr für die beiden. Sie sind aus `android/gradle/libs.versions.toml` und dem
+Bauskript ausgetragen, die `CAMERA`-Berechtigung aus dem Manifest.
+
+Der Eintrag bleibt als Absatz stehen und wird nicht bloß gelöscht: Eine
+Abhängigkeit, die es einmal gab, ist eine Angabe über frühere Auslieferungen,
+und die Fassungen 0.2.0 bis 0.10.1 haben sie mitgeführt.
 
 Nur zum Prüfen, nichts davon liegt im APK der Anwendung: JUnit 4.13.2
 (EPL-1.0), Robolectric 4.16.1 (Apache-2.0), `androidx.test` 1.7.0 / 1.3.0
@@ -408,6 +419,7 @@ Laufzeit wird nichts nachgeladen, die Zusage aus Abschnitt 2 bleibt unberührt.
 |---|---|
 | Web 12.9.0 (S6) | Abschnitt 7a: die erzeugte Modelltabelle `server/geraetemodelle.php`. Sie liegt im ausgelieferten Verzeichnis und stammt aus Garmins Connect-IQ-Gerätedateien — übernommen sind Teilenummern und Produktnamen als Sachangaben, nicht die Dateien selbst. |
 | S4/D2 | `androidx.test:runner` 1.7.0 in Abschnitt 6a — der Läufer für die instrumentierten Prüffälle (Keystore, Wearable-Erreichbarkeit). Test-only, Apache-2.0, nicht im App-APK. |
+| Android 0.11.0 (S4-Rest) | Abschnitt 6a: **CameraX und ZXing ausgetragen** (R63, Backlog Nr. 84). Der Adress-QR entfällt, damit ihr einziger Verbraucher; die `CAMERA`-Berechtigung geht mit. Vier Fremdbestandteile werden zwei, das APK wird um 1,81 MB kleiner. |
 | S4/D1 | Abschnitt 6a: die Android-Apps. Vier Fremdbestandteile, drei davon Apache-2.0; die vierte (`play-services-wearable`) ist proprietär und bekommt eine eigene Begründung — sie steckt nicht im APK, ist auf **eine** Datei eingegrenzt, überträgt nichts nach außen, und der Preis (keine Uhr ohne Play-Dienste) steht dabei. |
 | Web 10.3.0 (S2/AP4) | Abschnitt 7.1: das vendorierte GPX-1.1-Schema von TopoGrafix, mit Herkunft und SHA-256. Es liegt unter `tools/` und wird zur Laufzeit nie geladen. |
 | Web 9.13.0 (P3/O12) | Erstfassung. Zusammengetragen aus den Dateiköpfen unter `server/assets/vendor/`, dem Stylesheet-Kommentar zu den Schriften, `LICENSE-tabler-icons.txt` und den Adressen in `map_layers.js`, `ortsfeld.js` und `ortswahl.js`. |

@@ -74,8 +74,8 @@ class SchluesseltresorTest {
      */
     @Test fun keinKlartextImSpeicherabbild() {
         // Zweite Ablage anlegen, damit es überhaupt etwas zu verwechseln gibt.
-        org.genem.nadoku.handy.Einstellungen(kontext).serverBasis =
-            "einsatz.beispieldomain.de"
+        org.genem.nadoku.handy.Einstellungen(kontext).letzterModus =
+            org.genem.nadoku.gemeinsam.Modus.MIT_PHASENKNOEPFEN
         tresor.speichern(zugang)
 
         val durchsucht = mutableListOf<File>()

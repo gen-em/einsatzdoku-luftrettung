@@ -22,18 +22,17 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!--
-        Die Kamera dient AUSSCHLIESSLICH dem Kopplungs-QR (E-S4-15), und die
-        Freigabe wird erst in dem Augenblick erfragt, in dem jemand "QR-Code
-        scannen" antippt — nicht beim Erststart. Wer sie ablehnt, tippt den
-        Code von Hand ein; die App bleibt vollstaendig benutzbar.
+        HIER STAND DIE KAMERA-FREIGABE. Sie diente ausschliesslich dem
+        Kopplungs-QR (E-S4-15), und der ist mit R63 (Backlog Nr. 84) entfallen:
+        Der Code trug die Serveradresse, und die App kennt jetzt genau eine.
 
-        `required="false"`: Ein Geraet ohne Kamera kann NAdoku trotzdem
-        benutzen. Mit `true` verschwaende die App im Store fuer solche Geraete
-        — und das waere fuer einen Kameraschwenk, der eine Abkuerzung ist, die
-        falsche Aussage.
+        Der Vermerk bleibt stehen, weil eine gestrichene Berechtigung mehr ist
+        als eine geloeschte Zeile. Sie war das einzige Recht, das die App je
+        zur Laufzeit erfragt hat, ohne dass die Aufzeichnung es brauchte:
+        Wer die App im Store ansieht, sieht ihren Wegfall, und diese Zeile
+        sagt, warum. Eine spaetere Fassung, die wieder eine Kamera will,
+        braucht dafuer einen eigenen Grund.
     -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <!--
         Ortung und Vordergrunddienst (E-S4-05).

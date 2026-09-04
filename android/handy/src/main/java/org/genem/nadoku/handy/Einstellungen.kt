@@ -5,7 +5,6 @@ import androidx.core.content.edit
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.gemeinsam.Kennungen
 import org.genem.nadoku.gemeinsam.Modus
-import org.genem.nadoku.handy.kopplung.Serveradresse
 
 /**
  * Die Einstellungen der App — alles, was **kein Geheimnis** ist.
@@ -25,16 +24,17 @@ class Einstellungen(kontext: Context) {
     private val ablage =
         kontext.applicationContext.getSharedPreferences(ABLAGE, Context.MODE_PRIVATE)
 
-    /** Basisadresse des Servers, `null` wenn keine gesetzt ist. */
-    var serverBasis: String?
-        get() = ablage.getString(SERVER, null)
-        set(wert) {
-            val sauber = Serveradresse.normalisiere(wert)
-            ablage.edit {
-                if (sauber == null) remove(SERVER) else putString(SERVER, sauber)
-            }
-        }
+    /* HIER STAND DIE SERVERADRESSE. Sie ist mit R63 (Backlog Nr. 84) eine
+     * Konstante des Baulaufs geworden (`Serveradresse.BASIS`) und damit keine
+     * Einstellung mehr -- eine Angabe, die fuer alle dieselbe ist, gehoert
+     * nicht in eine Ablage je Geraet.
+     *
+     * EIN ALTBESTAND-EINTRAG `server_basis` BLEIBT LIEGEN und wird von
+     * niemandem mehr gelesen. Ihn zu loeschen waere Code fuer einen Fall, den
+     * es kaum gibt: Die App war nie im Store, und eine seitengeladene Fassung
+     * kann sich seit Web 13.0.0 ohnehin nicht mehr koppeln.
 
+     */
     /**
      * Die Logo-Wahl (E-S4-22b). Vorgabe **„wechselnd"** — sie wird einmal je
      * App-Start gewürfelt und bleibt dann stehen; das Würfeln selbst macht
@@ -90,7 +90,6 @@ class Einstellungen(kontext: Context) {
 
     private companion object {
         const val ABLAGE = "nadoku"
-        const val SERVER = "server_basis"
         const val LOGO = "logo_wahl"
         const val UHR_SPERRE = "uhr_sperre"
         const val MODUS = "letzter_modus"

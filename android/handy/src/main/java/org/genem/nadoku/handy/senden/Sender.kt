@@ -67,7 +67,13 @@ class Sender(
     private val puffer: Puffer,
     private val netzweg: Netzweg,
     private val tresor: Schluesseltresor,
-    private val basis: () -> String?,
+    /**
+     * Die Basisadresse. Seit R63 eine Konstante des Baulaufs und deshalb kein
+     * Lambda mehr: Vorher konnte sie sich zwischen zwei Sendeläufen ändern
+     * (die NutzerIn tippte eine neue ein), heute nicht. Der Parameter bleibt,
+     * damit der Prüfstand gegen seine örtliche Installation senden kann.
+     */
+    private val basis: String = Serveradresse.BASIS,
     private val phasenLeser: (Long) -> List<Phaseneintrag> = { emptyList() },
 ) {
 
@@ -80,8 +86,7 @@ class Sender(
      * Fehlerpfad den Lauf beendet.
      */
     fun sendeAlles(): Sendebericht {
-        val adresse = basis()?.let { Serveradresse.ingest(it) }
-            ?: return Sendebericht(spaeterErneut = true)
+        val adresse = Serveradresse.ingest(basis)
         val zugang = tresor.lesen()
             ?: return Sendebericht(spaeterErneut = true)
 

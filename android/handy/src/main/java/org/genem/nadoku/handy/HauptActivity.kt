@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,8 +45,11 @@ import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.dienst.Zeit
 import org.genem.nadoku.handy.kopplung.Geraeteangabe
 import org.genem.nadoku.handy.kopplung.HttpNetzweg
+import org.genem.nadoku.handy.kopplung.Abweisung
+import org.genem.nadoku.handy.kopplung.Bestaetigungsergebnis
 import org.genem.nadoku.handy.kopplung.Kopplungsdienst
-import org.genem.nadoku.handy.kopplung.Kopplungsergebnis
+import org.genem.nadoku.handy.kopplung.Sitzungsergebnis
+import org.genem.nadoku.handy.kopplung.Sitzungsstand
 import org.genem.nadoku.handy.kopplung.Trennergebnis
 import java.time.Instant
 
@@ -68,6 +72,23 @@ import java.time.Instant
 class HauptActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        /* RANDLOS, UND ZWAR AUSDRUECKLICH (Backlog Nr. 86).
+         *
+         * Seit `targetSdk = 36` bekommt die App die volle Flaeche ohnehin --
+         * Android 15+ fragt nicht mehr. Der Aufruf aendert daran nichts; er
+         * aendert, ob wir es WISSEN. Zwei Dinge kommen mit ihm:
+         *
+         * 1. Die Systemleisten werden durchsichtig statt farbig. `themen.xml`
+         *    setzte dafuer `statusBarColor` -- ein Attribut, das seit API 35
+         *    wirkungslos ist und deshalb ausgetragen wurde.
+         * 2. Die Symbole der Leisten (Uhrzeit, Akku, Navigation) werden hell
+         *    oder dunkel nach dem Untergrund gewaehlt. Bei uns liegt oben die
+         *    dunkelblaue Kopfleiste, unten die helle Flaeche -- ohne diese
+         *    Wahl waere eines von beiden unlesbar.
+         *
+         * Das Freihalten der Flaeche selbst leisten die Bausteine
+         * (`Kopfleiste` oben, `Bildschirm` unten), nicht dieser Aufruf. */
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent { NAdokuOberflaeche(NAdokuApp.von(this)) }
     }
@@ -102,30 +123,93 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
         Geraeteangabe.vomGeraet(masse.widthPixels, masse.heightPixels, BuildConfig.VERSION_NAME)
     }
 
-    var serverBasis by remember { mutableStateOf(app.einstellungen.serverBasis) }
     var gekoppelt by remember { mutableStateOf(tresor.gekoppelt()) }
-    var schritt by remember { mutableStateOf<Kopplungsschritt>(Kopplungsschritt.Wahl) }
+    var schritt by remember { mutableStateOf<Kopplungsschritt>(Kopplungsschritt.Bereit) }
     var trennmeldung by remember { mutableStateOf<Trennergebnis?>(null) }
     var trennfrageOffen by remember { mutableStateOf(false) }
 
     if (!gekoppelt) {
+        /* DIE ABFRAGE HÄNGT AM ZUSTAND, NICHT AN EINEM EIGENEN FADEN.
+         *
+         * `LaunchedEffect` mit dem Code als Schlüssel: Sie läuft, solange
+         * gewartet wird, und Compose beendet sie von selbst, sobald der
+         * Schritt wechselt oder die Ansicht verschwindet. Ein selbstverwalteter
+         * Faden müsste beides von Hand können — und der Fall, den man dabei
+         * vergisst, ist immer derselbe: Die Ansicht ist weg, die Abfrage
+         * läuft weiter und zählt gegen den Ratenschutz.
+         *
+         * FÜNF SEKUNDEN, UND ERST NACH DER ANTWORT (Vertrag 1a.2): Die Pause
+         * steht VOR der nächsten Abfrage, nicht daneben — damit eine langsame
+         * Antwort den Takt streckt statt Abfragen zu stapeln. */
+        val laufenderCode = when (val s = schritt) {
+            is Kopplungsschritt.Wartet -> s.code
+            is Kopplungsschritt.Frage -> s.code
+            else -> null
+        }
+        LaunchedEffect(laufenderCode) {
+            if (laufenderCode == null) return@LaunchedEffect
+            while (true) {
+                delay(Kopplungsdienst.ABFRAGETAKT_MS)
+                when (val stand = withContext(Dispatchers.IO) { dienst.nachfragen() }) {
+                    is Sitzungsstand.Offen ->
+                        schritt = Kopplungsschritt.Wartet(laufenderCode, stand.restSekunden)
+
+                    is Sitzungsstand.Beansprucht ->
+                        schritt = Kopplungsschritt.Frage(
+                            laufenderCode, stand.konto, stand.restSekunden,
+                        )
+
+                    /* Der Fall, in dem die Antwort auf `ja` verlorenging: Der
+                     * Server kennt das Gerät bereits. Dann ist die Kopplung
+                     * fertig, und nur die App weiß es noch nicht. */
+                    is Sitzungsstand.Gekoppelt -> {
+                        tresor.bestaetigen()
+                        gekoppelt = true
+                        schritt = Kopplungsschritt.Bereit
+                        return@LaunchedEffect
+                    }
+
+                    is Sitzungsstand.Abgewiesen -> {
+                        /* KEIN NETZ IST KEIN ABBRUCH. Die Sitzung lebt auf dem
+                         * Server weiter, bis die Frist abläuft (Vertrag 1a.2);
+                         * wer hier abbräche, würfe eine gültige Kopplung weg,
+                         * weil ein Funkloch drei Sekunden gedauert hat. */
+                        if (stand.art != Abweisung.KEINE_VERBINDUNG) {
+                            schritt = Kopplungsschritt.Abgewiesen(stand.art, stand.meldung)
+                            return@LaunchedEffect
+                        }
+                    }
+                }
+            }
+        }
+
         KopplungAnsicht(
             schritt = schritt,
-            serverBasis = serverBasis,
             logoWahl = app.einstellungen.logoWahl,
-            aufSchritt = { schritt = it },
-            aufKoppeln = { basis, code ->
-                schritt = Kopplungsschritt.Laeuft
+            aufStarten = {
+                schritt = Kopplungsschritt.Startet
                 hilfsfaden.launch {
-                    val e = withContext(Dispatchers.IO) { dienst.koppeln(basis, code, geraet) }
-                    when (e) {
-                        is Kopplungsergebnis.Gekoppelt -> {
-                            app.einstellungen.serverBasis = basis
-                            serverBasis = basis
+                    when (val e = withContext(Dispatchers.IO) { dienst.starten(geraet) }) {
+                        is Sitzungsergebnis.Offen ->
+                            schritt = Kopplungsschritt.Wartet(e.code, e.fristSekunden)
+
+                        is Sitzungsergebnis.Abgewiesen ->
+                            schritt = Kopplungsschritt.Abgewiesen(e.art, e.meldung)
+                    }
+                }
+            },
+            aufAntwort = { ja ->
+                schritt = if (ja) Kopplungsschritt.Bestaetigt else Kopplungsschritt.Abgebrochen
+                hilfsfaden.launch {
+                    when (val e = withContext(Dispatchers.IO) { dienst.bestaetigen(ja) }) {
+                        is Bestaetigungsergebnis.Gekoppelt -> {
                             gekoppelt = true
-                            schritt = Kopplungsschritt.Wahl
+                            schritt = Kopplungsschritt.Bereit
                         }
-                        is Kopplungsergebnis.Abgewiesen ->
+                        is Bestaetigungsergebnis.Abgebrochen ->
+                            schritt = Kopplungsschritt.Abgebrochen
+
+                        is Bestaetigungsergebnis.Abgewiesen ->
                             schritt = Kopplungsschritt.Abgewiesen(e.art, e.meldung)
                     }
                 }
@@ -136,14 +220,13 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
 
     GekoppelteOberflaeche(
         app = app,
-        serverBasis = serverBasis,
         trennmeldung = trennmeldung,
         trennfrageOffen = trennfrageOffen,
         aufTrennfrage = { trennfrageOffen = it },
         aufTrennen = {
             trennfrageOffen = false
             hilfsfaden.launch {
-                val e = withContext(Dispatchers.IO) { dienst.trennen(serverBasis.orEmpty()) }
+                val e = withContext(Dispatchers.IO) { dienst.trennen() }
                 trennmeldung = e
                 if (e !is Trennergebnis.Rueckstand) {
                     schritt = Kopplungsschritt.Getrennt(nurLokal = e is Trennergebnis.NurLokal)
@@ -157,7 +240,6 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
 @Composable
 private fun GekoppelteOberflaeche(
     app: NAdokuApp,
-    serverBasis: String?,
     trennmeldung: Trennergebnis?,
     trennfrageOffen: Boolean,
     aufTrennfrage: (Boolean) -> Unit,
@@ -315,7 +397,6 @@ private fun GekoppelteOberflaeche(
 
         is Ansicht.Dienst -> DienstAnsicht(
             stand = stand,
-            serverBasis = serverBasis,
             logoWahl = logoWahl,
             rueckstand = rueckstand,
             abgewiesen = abgewiesen,

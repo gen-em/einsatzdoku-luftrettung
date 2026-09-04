@@ -40,6 +40,27 @@ android {
         versionCode = rootProject.extra["nadokuVersionCode"] as Int
         versionName = rootProject.extra["nadokuVersionName"] as String
 
+        /* DIE SERVERADRESSE STEHT FEST (R63, Backlog Nr. 84).
+         *
+         * Bis Android 0.10.1 war sie ein Eingabefeld und kam wahlweise aus
+         * einem QR-Code. Beides entfaellt: Diese App spricht mit genau einer
+         * Installation, und wer eine eigene betreibt, baut ein eigenes APK --
+         * genau dafuer steht die Adresse HIER und nicht als Konstante im
+         * Quelltext. Ein Selbsthoster aendert eine Zeile im Bauskript, nicht
+         * eine Zeile Kotlin.
+         *
+         * WARUM DAS FELD UEBERHAUPT AUSTAUSCHBAR IST, wo die Adresse doch
+         * fest sein soll: Der Pruefstand braucht sie. Die Rundlauffaelle
+         * sprechen mit einer oertlichen Installation
+         * (-Pnadoku.rundlauf=http://127.0.0.1:8080/), und ein Kopplungsmodul,
+         * das sich nur gegen einen selbstgebauten Server pruefen laesst, ist
+         * nicht geprueft. */
+        buildConfigField(
+            "String",
+            "SERVER_BASIS",
+            "\"${project.findProperty("nadoku.serverBasis") ?: "https://nadoku.gen-em.org/"}\"",
+        )
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -181,18 +202,14 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    // Kamera fuer den QR-Scan der Kopplung (E-S4-15). CameraX gehoert zu
-    // AndroidX und faellt damit unter den ersten der drei zugelassenen
-    // Fremdbestandteile (E-S4-04).
-    implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.view)
-
-    // ZXing: die QR-Erkennung selbst. NUR der Kern -- das Android-Beiwerk
-    // (zxing-android-embedded) braechte eine eigene Activity und eine eigene
-    // Oberflaeche mit; gebraucht wird der Dekodierer.
-    implementation(libs.zxing.core)
+    /* HIER STANDEN CAMERAX UND ZXING -- der QR-Scan der Kopplung (E-S4-15).
+     * Beide sind mit R63 (Backlog Nr. 84) entfallen: Der QR-Code trug die
+     * Serveradresse, und die App kennt jetzt genau eine. Damit gibt es nichts
+     * mehr zu scannen, und die App fragt nicht mehr nach der Kamera.
+     *
+     * Die Zeile bleibt als Vermerk stehen, weil der Wegfall einer
+     * Abhaengigkeit sonst nur eine Luecke ist: Wer spaeter einen QR-Weg
+     * vermisst, findet hier, dass es ihn gab und warum er weg ist. */
 
     // Der Wear Data Layer (E-S4-10): der EINZIGE Grund fuer diese
     // proprietaere Bibliothek. Beide Module brauchen sie -- die Uhr sendet,

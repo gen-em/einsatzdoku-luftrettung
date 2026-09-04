@@ -18,14 +18,25 @@ als eigene Datei daneben.
 
 ## Statusblock (K5, R62)
 
-**Stand: 02.09.2026** · Zweig `claude/s4-android-wear-blocks-b-c-x53l96` ·
-Web **12.8.0** · Android **0.7.7** · Fahrplan **Schritt 1 „S4 Merge"**
+**Stand: 04.09.2026** · Zweig `claude/rahmenplan-schritt-6-ewm0kx` ·
+Web **13.2.0** · Android **0.11.0** · Fahrplan **Schritt 6 „S4 Rest"**
 
-**In Arbeit:** der Merge nach `main` — `main` ist geholt, die Konflikte sind
-gelöst, Konzept und Prüfdokument liegen seit diesem Paket in
-`docs/konzepte/` (R62). Was noch fehlt, ist die Freigabe zum Push auf `main`;
-er deployt sofort, und danach muss eine Administratorin **`update.php`**
-aufrufen (Migration `2026_09_02_schnitte`).
+**In Arbeit: Schritt 6, Teil A.** Der Schritt ist beim Zuschnitt in drei
+ungleiche Teile zerfallen, und nur einer davon ist Umsetzung im engeren Sinn:
+
+| Teil | Inhalt | Stand |
+|---|---|---|
+| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Paket 1 erledigt** (Android 0.11.0) |
+| **B** | R64 — Herkunft und Gerät je Einsatz | **zurückgestellt**: Der Auftraggeber liefert ein Konzept nach. Die Bestandsaufnahme fand 18 offene Entscheidungsfragen zum Datenmodell und zu den Formaten, die R64 selbst nicht beantwortet |
+| **C** | Play Console, Signaturweg, Track-Release, Gerätetest | **blockiert am Auftraggeber**: D-U-N-S beantragt sich noch, der Signaturschlüssel liegt außerhalb des Repositoriums. Vorbereitet wird, was ohne ihn geht |
+
+**Paket 1 (04.09.2026, Android 0.11.0) — erledigt.** Die App konnte sich seit
+Web 13.0.0 nicht mehr koppeln; sie kann es wieder, und zwar nach dem
+umgekehrten Weg mit beiden Toren. Dazu die feste Adresse, der volle App-Name
+am Handy und die Fenster-Insets. Belegt: 301 Prüffälle grün (Handy 230, Uhr
+71), **0 übersprungen** — die 14 Rundlauffälle liefen zuletzt am 02.09.2026
+—, Wortliste 0/0/0, Bilderlauf 72 Bilder, und der volle Kopplungsweg am
+Emulator mit vier Bildern (`docs/bilder/s4-rest/`).
 
 **Erledigt:**
 
@@ -36,22 +47,40 @@ aufrufen (Migration `2026_09_02_schnitte`).
 | **A — Browser und Server** | A2a, A2b, A3, A1a | Web 12.5.0–12.8.0 |
 | **D — Abschluss** | D1, D2 | Android 0.7.6 |
 | Nacharbeit | 0.7.1–0.7.5, R58 (0.7.7) | |
+| **S4-Rest, Paket 1** | Kopplung 1a, Nr. 84/85/86 | Android 0.11.0 |
 
-**Wo es hakt — drei Dinge, die diese Instanz nicht abschließen kann:**
+**Zwei Stellen dieses Konzepts sind mit Paket 1 überholt:**
+
+1. **Abschnitt 13 sagt, der `geraet`-Block wandere „von `koppeln` nach
+   `bestaetigen`".** Das trifft nicht zu. Vertrag 1a.1 und `server/pair.php`
+   legen ihn an **`start`** — und das ist die Sache, nicht die Form: Die
+   Bestätigungsseite im Browser zeigt Art und Modell, und dafür muss der
+   Server sie kennen, bevor jemand „Verbinden" drückt. Gebaut ist nach dem
+   Vertrag.
+2. **Die Umfangszahlen sind zu klein.** Abschnitt 13 nennt fünf Quelldateien
+   und drei Prüfklassen. Tatsächlich rufen **vier** Prüfklassen `koppeln()`
+   bzw. `trennen()` (auch `MissionRundlaufTest` und `SendeRundlaufTest`), und
+   **acht** Dateien lasen die Serveradresse — darunter `Sender.kt` und
+   `HauptActivity.kt`, die dort nicht stehen.
+
+**Wo es hakt — was diese Instanz nicht abschließen kann:**
 
 1. **Der Gerätetest fehlt vollständig.** Es gab kein Telefon und keine Uhr.
    Was ein Emulator davon abdecken konnte, steht im Prüfdokument 1.1a; der
-   Rest ist die Prüfliste dort.
+   Rest ist die Prüfliste dort. Damit ist auch **Android 1.0.0 nicht
+   erreichbar** — sie gehört nach E-R45-7 an das Ende des Gerätetests.
 2. **Der Data Layer ist auf Hardware ungeprüft.** Zwischen zwei Emulatoren
    ist er nicht prüfbar — die Wear-OS-Companion-App des Telefons ist in
    diesem Container nachweislich nicht zu beschaffen (Prüfdokument 1.1a).
-3. **Die halbe A1 liegt.** QR-Kopplungscode und Vertragsnachtrag hängen an
-   S5 und R42; sie sind **Schritt 6**, nicht Schritt 1.
+3. **Kein signiertes APK.** Der Schlüssel liegt zu Recht nicht im
+   Repositorium (E-S4-16); der Baulauf erzeugt ein unsigniertes Release.
 
-**Nicht in diesem Schritt** (Fahrplan Schritt 6 „S4 Rest"): Kopplungsmodul
-auf Vertragsabschnitt 1a, Adress-QR, Gerätetest S24, Android 1.0.0,
-Changelog-Präfix `Android`, Umsetzung von E-S4-76 (R57). Backlog **63**
-gehört ebenfalls dorthin.
+**Noch offen in Teil A:** R57 (Hinweis bei überlappenden aktiven
+Diensttagen), Backlog **81** (Benachrichtigungssymbol — braucht zuerst die
+App-Fassung vom Gerät), **82** (Akku-Warnung), **98** (Versionscode-Versatz),
+**95** (die Rundläufe lassen Daten zurück; der SQL-Weg scheidet aus, siehe
+`Kopplungshilfe`), **63** (Sperrvermerke in der Konto-Sicherung — hängt an
+der Formatänderung aus Teil B).
 
 ---
 

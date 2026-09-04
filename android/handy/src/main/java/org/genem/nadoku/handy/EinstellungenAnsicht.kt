@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -42,7 +45,16 @@ fun EinstellungenAnsicht(
     aufTrennen: () -> Unit,
     aufZurueck: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxSize().background(Farbe.rauch)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Farbe.rauch)
+            /* Die Navigationsleiste unten -- und im Querformat die seitliche
+             * Geste (Backlog Nr. 86). Wie oben gilt: `background` zuerst, damit
+             * die Flaeche bis zum Rand faerbt, das Padding danach, damit der
+             * Inhalt nicht darunter geraet. */
+            .windowInsetsPadding(WindowInsets.navigationBars)
+    ) {
         Kopfleiste(titel = stringResource(R.string.einstellungen), logoWahl = logoWahl)
 
         Column(

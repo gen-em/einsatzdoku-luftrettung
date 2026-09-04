@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Nur fuer das Pruef-APK (`org.genem.nadoku.pruef`).
+
+    Es haengt die Netzwerkregel des Pruefstands ein, damit der Emulator mit
+    der oertlichen Installation ueber HTTP sprechen kann. Begruendung und
+    Grenzen: `res/xml/netzwerk_pruefstand.xml`.
+
+    Das Release-Manifest bleibt unberuehrt — der ausgelieferte Stand spricht
+    weiterhin ausschliesslich HTTPS (E-S4-14).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:networkSecurityConfig="@xml/netzwerk_pruefstand" />
+</manifest>

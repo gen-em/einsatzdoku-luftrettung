@@ -309,7 +309,7 @@ das Gerät nicht beantworten kann. Der Vertrag stellt beides frei.
 
 ```json
 {
-  "code": "AB3K7Q",
+  "aktion": "start",
   "geraet": {
     "art":        "handy",
     "teil":       null,

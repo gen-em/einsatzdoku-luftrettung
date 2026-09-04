@@ -24,6 +24,20 @@ import java.io.File
  * Klartext daneben und sagte, was dort liegt. Eine Datei ohne Struktur sagt
  * nichts — und `SharedPreferences` schreibt zusätzlich eine
  * `.bak`-Zwischendatei, also eine zweite Stelle, an der es steht.
+ *
+ * SEIT DER UMGEKEHRTEN KOPPLUNG (R49, S5) HAT DER TRESOR ZWEI ZUSTÄNDE.
+ * Zugangsdaten entstehen jetzt schon beim ersten Schritt (`start`), sind aber
+ * bis zum Ja des Menschen **schwebend**: `ingest.php` weist sie mit `401` ab,
+ * weil es das Gerät noch nicht gibt (Vertrag 1a.1). Sie liegen trotzdem in der
+ * Datei und nicht im Arbeitsspeicher — die beiden folgenden Anliegen brauchen
+ * sie als Kopfzeilen, und ein Prozesstod zwischen zwei Abfragen dürfte die
+ * Sitzung nicht wertlos machen.
+ *
+ * Der Unterschied steht als drittes Feld in der Datei. Er wird gebraucht, weil
+ * sonst [gekoppelt] schon nach `start` wahr wäre: Die App zeigte die
+ * Dienstansicht, der Aufzeichnungsdienst liefe an, und jedes Paket ginge gegen
+ * eine `401`. **Eine alte Datei ohne das Feld gilt als gültig** — sie stammt
+ * aus der Zeit, als jede gespeicherte Kopplung eine fertige war.
  */
 class Schluesseltresor(
     private val datei: File,
@@ -51,10 +65,43 @@ class Schluesseltresor(
         }
     }
 
-    fun speichern(zugang: Zugangsdaten) {
+    /**
+     * Zugangsdaten einer fertigen Kopplung ablegen.
+     *
+     * Der Weg über `pair.php` benutzt ihn nicht mehr — dort entstehen die
+     * Daten schwebend ([speichernSchwebend]) und werden mit [bestaetigen]
+     * gültig. Er bleibt für den von Hand angelegten Zugang: Wer im Web „Gerät
+     * anlegen" wählt, bekommt Kennung und Schlüssel fertig in die Hand, und
+     * für sie gibt es keine Sitzung, die zu bestätigen wäre.
+     */
+    fun speichern(zugang: Zugangsdaten) = schreiben(zugang, schwebend = false)
+
+    /**
+     * Zugangsdaten ablegen, die es serverseitig noch nicht gibt (Vertrag 1a.1).
+     *
+     * Bis zum Ja weist `ingest.php` sie ab. [gekoppelt] bleibt deshalb
+     * `false`, und die App zeigt weiter den Kopplungsbildschirm.
+     */
+    fun speichernSchwebend(zugang: Zugangsdaten) = schreiben(zugang, schwebend = true)
+
+    /**
+     * Aus schwebend wird gültig — der eine Schritt nach `bestaetigen ja`.
+     *
+     * Er liest und schreibt neu, statt ein Feld zu ändern: Die Datei ist ein
+     * verschlüsseltes Paket, kein Datensatz mit Feldern, die sich einzeln
+     * anfassen ließen. Ohne lesbaren Inhalt tut er nichts — dann gibt es keine
+     * Sitzung, die gültig werden könnte.
+     */
+    fun bestaetigen() {
+        val zugang = lesen() ?: return
+        schreiben(zugang, schwebend = false)
+    }
+
+    private fun schreiben(zugang: Zugangsdaten, schwebend: Boolean) {
         val klartext = JSONObject()
             .put(FELD_KENNUNG, zugang.geraeteKennung)
             .put(FELD_SCHLUESSEL, zugang.schluessel)
+            .put(FELD_SCHWEBEND, schwebend)
             .toString()
             .toByteArray(Charsets.UTF_8)
 
@@ -84,11 +131,35 @@ class Schluesseltresor(
         File(datei.parentFile, datei.name + ".neu").delete()
     }
 
-    fun gekoppelt(): Boolean = lesen() != null
+    /**
+     * Ist das Gerät gekoppelt — also **fertig**, nicht bloß in einer laufenden
+     * Sitzung? Schwebende Zugangsdaten zählen ausdrücklich nicht.
+     */
+    fun gekoppelt(): Boolean = !schwebend() && lesen() != null
+
+    /**
+     * Liegen schwebende Zugangsdaten? `false` auch dann, wenn gar keine
+     * Datei da ist — „schwebend" ist eine Aussage über eine vorhandene
+     * Sitzung, nicht über deren Fehlen.
+     */
+    fun schwebend(): Boolean {
+        if (!datei.exists()) return false
+        return try {
+            val o = JSONObject(String(schluessel.entschluesseln(datei.readBytes()), Charsets.UTF_8))
+            // Vorgabe false: Eine Datei aus der Zeit vor der umgekehrten
+            // Kopplung kennt das Feld nicht und war immer eine fertige.
+            o.optBoolean(FELD_SCHWEBEND, false)
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     companion object {
         const val DATEINAME = "tresor.bin"
         private const val FELD_KENNUNG = "d"
         private const val FELD_SCHLUESSEL = "k"
+
+        /** Einbuchstabig wie die beiden anderen: Die Datei soll nichts erzählen. */
+        private const val FELD_SCHWEBEND = "s"
     }
 }
