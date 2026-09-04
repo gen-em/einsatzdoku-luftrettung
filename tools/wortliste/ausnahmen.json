@@ -534,6 +534,12 @@
       "datei": "server/geraetemodelle.php",
       "klasse": "G",
       "begruendung": "Die erzeugte Modelltabelle (tools/geraetemodelle/). Sie enthaelt oeffentliche Produktnamen von Garmin — „Forerunner\", „Venu\", „fēnix\", „Edge\" —, und die sind hier die Sache selbst und keine Formulierung, die sich ersetzen liesse: Der Server loest damit die Teilenummer auf, die eine Uhr beim Koppeln sendet (JSON-Vertrag 1a, R42). DATEIWEIT und nicht je Zeile: Der Bestand wechselt mit jedem Lauf des Erzeugers; ein Muster auf einzelne Namen waere danach entweder unvollstaendig oder ungenutzt, und beides ist ein Fehlschlag. Zur gemeldeten Zahl: Sie ist KLEINER als der Bestand — Garmin schreibt „fēnix\" mit Makron, das Sperrmuster lautet \\bfenix und trifft diese Zeilen nicht. Wer die Zahl liest, weiss das besser."
+    },
+    {
+      "id": "herkunft-wertevorrat-garmin",
+      "zeile": "Garmin-Uhr-App",
+      "klasse": "G",
+      "begruendung": "Der Wertevorrat der Herkunft (R64, E-R64-02) fuehrt EINEN Wert je Client-App, und `uhr` IST die Garmin-App — daneben stehen `handy` (Android-App) und `wear` (Wear-OS-App). Genau das ist die Aussage: Eine kuenftige App eines anderen Uhrenherstellers bekommt einen EIGENEN Wert und wird nicht unter `uhr` einsortiert, weil sonst jede Auswertung, die auf `uhr` filtert, rueckwirkend mehrdeutig wuerde. Wer hier „Uhr-App\" schriebe, naehme dem Wert genau die Unterscheidung, fuer die es ihn gibt — und zwar in einem Text, der drei Uhren nebeneinander erklaeren muss. Das ist der plattformspezifische Fall aus E-P2-15, nur an einer neuen Stelle: in der Beschriftungstabelle selbst (assets/export.js, Export-Format.md 3.6 und 3.8, Handbuch 4.2). Der Wortlaut ist absichtlich ueberall derselbe, damit diese eine Regel reicht und keine zweite auf Vorrat entsteht."
     }
   ]
 }

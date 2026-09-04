@@ -572,7 +572,19 @@ async function init(){
    * Spalten des Diensttags (E8). Faellt das Datum des Dienstes vom echten
    * Einsatzdatum ab (E9), wird der Dienst ausdruecklich genannt — ohne das
    * saehe die Zuordnung wie ein Fehler aus. */
-  const ORIGIN_LABEL = { watch: 'Uhr', manual: 'manuell', import: 'importiert' };
+  /* DIE PLAKETTE DER HERKUNFT (R64, E-R64-09).
+     Sechs Werte seit Web 14.0.0, einer je Client-App. `Wear` heisst: an der
+     Wear-OS-Uhr begonnen, vom Handy gesendet — das Geraet ist das Handy, der
+     Handgriff war an der Uhr.
+
+     RUECKFALL IST DER ROHWERT und nicht mehr 'Uhr'. `origin` ist eine
+     VARCHAR-Spalte; was hier ankommt und nicht in der Tabelle steht, ist ein
+     Client, den diese Fassung noch nicht kennt. Ihn als „Uhr" auszuweisen
+     waere falsch und nicht als falsch zu erkennen — der Rohwert ist unschoen
+     und sagt der Leserin, dass hier eine Beschriftung fehlt. */
+  const ORIGIN_LABEL = { watch: 'Uhr', android: 'Handy', wear: 'Wear',
+                         manual: 'manuell', import: 'importiert',
+                         schnitt: 'Schnitt' };
   const zeitteil = m.has_p9
     ? `${m.start_hhmm} – ${m.end_hhmm} Uhr`
     : `${m.start_hhmm} Uhr – kein Ende`;
@@ -586,7 +598,7 @@ async function init(){
           ? `Spur ausgedünnt · ${SPUR.n} von ${SPUR.n0} Punkten`
           : `Spur · ${SPUR.n} Punkte`)
     : '';
-  const kennzeichen = plakette('neutral', ORIGIN_LABEL[m.origin] || 'Uhr')
+  const kennzeichen = plakette('neutral', ORIGIN_LABEL[m.origin] || m.origin || 'Uhr')
     + (m.edited ? ' ' + plakette('neutral', 'editiert') : '')
     + spurPlakette;
   const rest = [];

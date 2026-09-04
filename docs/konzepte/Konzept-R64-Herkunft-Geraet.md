@@ -10,9 +10,10 @@ nimmt dieses Paket auf, sobald sie dort ankommt.**
 >
 > | | |
 > |---|---|
-> | Stand | 04.09.2026 — **AP1 erledigt** (Web 14.0.0). Entscheidungen E-R64-01 bis E-R64-16 stehen; keine offene F-Frage |
+> | Stand | 04.09.2026 — **AP1 und AP3 erledigt** (Web 14.0.0 und 14.1.0). Entscheidungen E-R64-01 bis E-R64-16 stehen; keine offene F-Frage |
 > | Paket in Arbeit | **AP2** (Sicherung: Momentaufnahme und Sperrvermerke, Nutzlast 9) |
-> | Erledigt | **AP1** — Datenmodell, Ableitung, anlegende Stellen, Migration `2026_09_04_herkunft_geraet`; Ingestprobe 39/0, Register 42 = 42 |
+> | Erledigt | **AP1** — Datenmodell, Ableitung, anlegende Stellen, Migration `2026_09_04_herkunft_geraet`; Ingestprobe 39/0, Register 42 = 42 · **AP3** — Export und Anzeige; CSV-Kreislauf 8965/1023/5, Excel unverändert 31 Spalten, Wortliste 0/0/0 |
+> | Reihenfolge | **AP1 → AP3 → AP2 → AP4 → AP5.** AP3 ist auf Weisung des Auftraggebers vorgezogen worden, weil die Anzeige zwischen AP1 und AP3 für `android`, `wear` und `schnitt` weiter „Uhr" zeigte. Kein fachlicher Konflikt: AP3 und AP2 fassen keine gemeinsame Datei an |
 > | Wo es hakt | nichts. Der größte Einzelposten bleibt AP4 (Referenz: Kopplungsweg und Schnitt im Werkzeug, alle drei Läufe von vorn) |
 > | Fable-Schritt | **keiner** (Spalten, eine Migration, ein Dateiformat mit Verweisen — Standardmodell nach K2) |
 > | Erhoben an | `main` vom 04.09.2026, 05:59 UTC: **Web 13.2.0, Uhr 3.0.0, Android 0.10.2** (PR #31 und #32 gemergt — der Rahmenplan-Kopf sagt noch „Android 0.7.7, Paket E nicht gemergt", siehe B-R64-02). Kein S4-Rest-Zweig gepusht |
@@ -576,7 +577,7 @@ die geänderten Dateien und dem Push (K7).
 |---|---|---|---|---|
 | AP1 | **erledigt** 04.09.2026 | Web **14.0.0** | Ingestprobe **39 Erwartungen, 0 nicht erfüllt** (davon 9 neu in Teil 8) · Migration an einer Installation mit 272 Einsätzen und 242 Segmenten: `origin` vorher watch 177 / manual 5 / import 90, nachher watch 162 / android 12 / wear 3 / manual 4 / import 90 / schnitt 1 · Momentaufnahme nachgefüllt: 85 von 272 Einsätzen (81 uhr, 4 handy), 108 von 242 Segmenten (100 uhr, 8 handy) — der Rest hat keinen Geräteverweis mehr · zweiter Lauf: `skip` greift · frische Installation aus `schema.sql`: vier Spalten da, `origin` VARCHAR(16) · **Register 42 = 42** · Schnitt über `api/schneiden.php`: `origin='schnitt'`, `manual=1`, Art und Modell von der Quelle geerbt | Einzelheiten unter „Umsetzungsstand AP1" |
 | AP2 | offen | | | |
-| AP3 | offen | | | |
+| AP3 | **erledigt** 04.09.2026 (vorgezogen) | Web **14.1.0** | CSV-Kreislauf **8965 Einzelvergleiche, 1023 erwartete, 5 unerklärte** (alle fünf in `felder.csv`, Folge der noch nicht erneuerten Referenz — siehe unten), 0 ungenutzte Regeln · `einsaetze.csv` **94 Spalten**, `ruhezeiten.csv` **11** · Excel (Standard) **31 Spalten, unverändert** · Plaketten im Browser belegt: Handy, Wear, Schnitt · Wortliste **0/0/0** bei 79 Regeln · Vollständigkeit 278 | Einzelheiten unter „Umsetzungsstand AP3" |
 | AP4 | offen | | | |
 | AP5 | offen | | | |
 
@@ -624,6 +625,60 @@ für `android`, `wear` und `schnitt` weiterhin „Uhr", und der CSV-Export zeigt
 dort den Rohwert. Das ist kein Auslieferungsstand — der S4-Rest kommt als
 Ganzes auf `main` (K7).
 
+### Umsetzungsstand AP3 (04.09.2026, Web 14.1.0) — **vorgezogen vor AP2**
+
+**Warum vorgezogen.** Der Auftraggeber hat nach dem Abschluss von AP1
+verlangt, die dort benannte Anzeigelücke sofort zu schließen: Zwischen AP1 und
+AP3 zeigte die Einsatzansicht für `android`, `wear` und `schnitt` weiterhin
+„Uhr", und der CSV-Export gab den Rohwert aus. Das war für diese drei Werte
+kurzzeitig schlechter als vor AP1. Die Reihenfolge ist damit **AP1 → AP3 →
+AP2 → AP4 → AP5**; fachlich kostet das nichts, weil AP3 (`export_data.php`,
+`einsatz.php`, `export.js`, Formatdoku) und AP2 (Sicherungsdateien) keine
+gemeinsame Datei anfassen.
+
+**Geändert:** `server/version.php` (14.1.0) · `server/api/export_data.php`
+(`EXPORT_ORIGIN_LABEL` sechs Werte, beide Abfragen +2 Spalten, beide
+Nutzlasten) · `server/assets/export.js` (zwei Spalten am Ende von
+`einsaetze.csv` und `ruhezeiten.csv`, `herkunft`-Beschreibung) ·
+`server/assets/import_profiles.js` (zwei Spalten mit `target: null`) ·
+`server/einsatz.php` (`ORIGIN_LABEL` sechs Werte, Rückfall Rohwert) ·
+`docs/Export-Format.md` (2, 3.6, **neu 3.6a**, 3.8, 5.1) ·
+`docs/Handbuch.md` (Kennzeichen 4.2, Export 8, Geräte 10) ·
+`docs/CHANGELOG.md` · `tools/referenzdatensatz/vergleich/ausnahmen/csv_umlauf.json`
+(zwei Regeln) · `tools/wortliste/ausnahmen.json` (eine Regel).
+
+**Was gemessen wurde:**
+
+| Prüfmittel | Zahl |
+|---|---|
+| Einsatzansicht im Browser (Chromium, angemeldet) | drei Einsätze, drei Plaketten: **„Handy"** (257, `am-`), **„Wear"** (263, `wm-`), **„Schnitt"** (393, `cut-`). Konsolenfehler außer den bekannten Kachelabrufen: 0 |
+| CSV-Export, echter Lauf über die Oberfläche | `einsaetze.csv` **94 Spalten**, die letzten beiden `geraet_art`, `geraet_modell`; `herkunft` = handy 12 / wear 3 / schnitt 1; `geraet_art` = handy 5, leer 11 · `ruhezeiten.csv` **11 Spalten**, letzte beide dieselben, `geraet_art` = handy 8, leer 34, **keine** Spalte `herkunft` · `felder.csv` beschreibt alle vier neuen Zeilen |
+| **Excel (Standard), Gegenprobe** | **31 Spalten, unverändert** — dieselbe Liste wie in Export-Format.md 2 |
+| CSV-Kreislauf (`kreislauf.py --art csv --frisch`) | 8965 Einzelvergleiche, **1023 erwartete**, **5 unerklärte**, 0 ungenutzte Regeln |
+| Wortliste | **0 / 0 / 0** bei 79 Regeln, alle gegriffen |
+| Vollständigkeit | 278 (unverändert) |
+
+**Die fünf unerklärten Abweichungen sind benannt und bleiben stehen.** Sie
+liegen sämtlich in `felder.csv`: vier neue Zeilen (`geraet_art`,
+`geraet_modell` je in `einsaetze.csv` und `ruhezeiten.csv`) und eine geänderte
+Beschreibung (`herkunft`). Das ist **keine Eigenschaft des Umlaufs**, sondern
+die Folge davon, dass die Referenzdatei vom 24.08.2026 älter ist als der Code
+— mit der Erneuerung der Referenz in AP4 verschwinden sie. Eine Ausnahmeregel
+dafür wäre ein Filter, kein Ausnahmegrund (`vergleich/LIESMICH.md`). Die zwei
+Regeln, die **hinzugekommen** sind, beschreiben dagegen einen echten Verlust
+des Umlaufs: `einsaetze.geraet_art` und `-modell` werden vom Rückimport nicht
+übernommen, gemessen 82×.
+
+**Eine Wortlisten-Ausnahme ist neu** (`herkunft-wertevorrat-garmin`, Klasse G).
+Der Wertevorrat der Herkunft muss die Garmin-App **benennen** — das ist der
+Inhalt der Entscheidung E-R64-02, nicht Nachlässigkeit: `uhr` ist die
+Garmin-App, und eine künftige App eines anderen Herstellers bekommt einen
+eigenen Wert. Damit eine einzige Regel reicht, ist der Wortlaut an allen fünf
+Stellen auf „Garmin-Uhr-App" vereinheitlicht worden. Ein Modellbeispiel
+(`Venu 3S`) ist dabei **entfallen** statt ausgenommen zu werden — es trug
+nichts, was der Satz „bei einer Uhr der Sammelname der Hardware" nicht besser
+sagt.
+
 ### Probleme und wie sie gelöst wurden
 
 | Nr. | Was auffiel | Wie es gelöst wurde |
@@ -632,6 +687,8 @@ Ganzes auf `main` (K7).
 | **P-R64-02** | Der `edited`-Rückfall in `edbak_origin_edited()` kennt `cut-` nicht: Ein geschnittener Einsatz trägt `manual = 1` und gälte danach als „bearbeitet" | **Nicht geändert, sondern begründet.** Der Zweig greift nur für Dateien der Formatversion ≤ 3, und die sind älter als der Schnitt (Web 12.5.0) — es kann keine solche Datei geben. Die Zeile einzubauen hieße, toten Code gegen einen unmöglichen Fall zu stellen; ein Kommentar an Ort und Stelle sagt das |
 | **P-R64-03** | Die Ingestprobe konnte den Rückfall „unbekanntes Präfix" nicht von der Regel unterscheiden: Mit einem einzigen Uhr-Gerät ergibt beides `watch` | Die Probe legt ein **zweites Gerät** an (`handy`). Damit trennen sich die Fälle: dasselbe unbekannte Präfix ergibt am Handy `android`, an der Uhr `watch` |
 | **P-R64-04** | Die Anmeldung der Schnitt-Probe scheiterte über `http://127.0.0.1:8080` **ohne jede Fehlermeldung** — das Sitzungs-Cookie trägt `secure` und kommt über blankes HTTP nicht zurück; die Anmeldung gelang (302), und die Folgeseite wies zurück auf die Anmeldung | Über die TLS-Terminierung gefahren (`lokal_starten.sh`, `https://127.0.0.1:8443`). Steht so schon in der LIESMICH des Einspielwerkzeugs — hier nur nicht gelesen |
+| **P-R64-05** | Die Wortliste meldete nach AP3 **6 Treffer** (`garmin`, `venu`) — der Wertevorrat der Herkunft muss die Garmin-App benennen, das ist der Inhalt von E-R64-02 | Eine Ausnahme der Klasse G (`herkunft-wertevorrat-garmin`) statt sechs. Dafür ist der Wortlaut an allen fünf Stellen auf „Garmin-Uhr-App" vereinheitlicht worden; das Modellbeispiel `Venu 3S` ist **entfallen** statt ausgenommen — „bei einer Uhr der Sammelname der Hardware" sagt dasselbe besser |
+| **P-R64-06** | Der CSV-Kreislauf steht nach AP3 auf **5 unerklärt** statt 0. Die Abweichungen liegen in `felder.csv` (vier neue Zeilen, eine geänderte Beschreibung) | **Keine Ausnahmeregel geschrieben.** Sie sind keine Eigenschaft des Umlaufs, sondern die Folge einer Referenzdatei, die älter ist als der Code; mit AP4 verschwinden sie. Eine Regel dafür wäre ein Filter (`vergleich/LIESMICH.md`). Die Zahl steht stattdessen in der Beschreibung der Ausnahmeliste und hier |
 
 ---
 

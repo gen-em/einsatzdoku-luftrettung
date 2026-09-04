@@ -2341,5 +2341,44 @@ declare(strict_types=1);
  * NEBENBEI GERADEGERUECKT: Der Absatz zu 13.3.0 stand in dieser Datei VOR dem
  * zu 13.2.0 — beim Eintragen war er an die falsche Stelle geraten. Die
  * Erzaehlung liest sich der Reihe nach; das ist ihr einziger Zweck.
+ *
+ * 14.1.0 BESCHRIFTET, WAS 14.0.0 ERFASST HAT — und raeumt damit einen Zustand
+ * ab, der zwischen den beiden Fassungen kurz schlechter war als vorher: Die
+ * Einsatzansicht zeigte fuer `android`, `wear` und `schnitt` weiter "Uhr",
+ * weil ihre Zuordnungstabelle nur drei Werte kannte, und der CSV-Export gab
+ * den Rohwert aus.
+ *
+ * SECHS PLAKETTEN STATT DREI: Uhr, Handy, Wear, manuell, importiert, Schnitt.
+ * Und der Rueckfall ist ueberall der ROHWERT (E-R64-09) — nicht "Uhr". Ein
+ * kuenftiger Client, dessen Beschriftung hier noch fehlt, soll auffallen und
+ * nicht in einer falschen Kategorie verschwinden. Das ist der ganze Grund fuer
+ * die Aenderung an dieser Stelle: Eine falsche Antwort, die wie eine richtige
+ * aussieht, ist schlechter als eine unschoene.
+ *
+ * IM CSV HEISST DIE ZWEITE UHR `wear` UND NICHT `uhr`. `uhr` ist seit dem
+ * ersten Export die Garmin-App; eine zweite Uhr unter demselben Wort machte
+ * jede Auswertung, die auf `uhr` filtert, rueckwirkend mehrdeutig — und zwar
+ * ohne dass sich das der Datei ansehen liesse.
+ *
+ * DAZU ZWEI SPALTEN IN ZWEI DATEIEN: `geraet_art` und `geraet_modell` am ENDE
+ * von `einsaetze.csv` und `ruhezeiten.csv`, dazu ihre Beschreibung in
+ * `felder.csv`. Am Ende und nicht neben `herkunft`, weil Auswertungen Spalten
+ * von links zaehlen — und weil die beiden nicht den Einsatz beschreiben,
+ * sondern das Geraet, das ihn aufgezeichnet hat.
+ *
+ * EXCEL BLEIBT UNVERAENDERT, beide Fassungen (E-R64-10, Auftraggeber). Die
+ * Uebersichtstabelle liest ein Mensch, und sie beantwortet "was ist passiert",
+ * nicht "womit wurde es aufgezeichnet". Ihr Spaltensatz ist damit derselbe wie
+ * in 13.3.0.
+ *
+ * DER RUECKIMPORT NIMMT DIE ZWEI SPALTEN NICHT — wie `herkunft` und `edited`:
+ * Sie beschreiben das Quellkonto. Sie stehen trotzdem mit `target: null` im
+ * Profil, weil dessen Schluesselliste zugleich die Beschreibung dessen ist,
+ * was das Format kennt; eine fehlende Spalte saehe aus wie eine vergessene.
+ * Unbekannte Spalten stoert der Rueckimport ohnehin nicht — er ordnet ueber
+ * Namen zu und geht ueber alles hinweg, was er nicht kennt.
+ *
+ * NEBENNUMMER: zwei Spalten und sechs Beschriftungen, kein Datenmodell, keine
+ * Migration. Die vier Spalten dafuer hat 14.0.0 angelegt.
  */
-const WEB_VERSION = '14.0.0';
+const WEB_VERSION = '14.1.0';

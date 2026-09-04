@@ -672,9 +672,23 @@ Rettungsmittel und Standort:
 
 | Kennzeichen | Bedeutung |
 |---|---|
-| **Uhr** | Von der Uhr aufgezeichnet |
+| **Uhr** | Von der Garmin-Uhr-App aufgezeichnet |
+| **Handy** | Von der Android-App auf dem Handy aufgezeichnet |
+| **Wear** | An der Wear-OS-Uhr begonnen — gesendet hat ihn das Handy |
 | **manuell** | Von Hand nachgetragen (Abschnitt 4.5/4.3) |
 | **importiert** | Über Import/Export eingespielt |
+| **Schnitt** | Aus einer Ruhezeit herausgeschnitten (Abschnitt 4.1b) |
+
+**Sechs Kennzeichen seit Web 14.0.0, vorher drei.** Ein Einsatz vom Handy und
+einer von der Wear-OS-Uhr standen bis dahin beide als „Uhr" da, ein
+geschnittener als „manuell" — die Anzeige konnte es nicht besser wissen, weil
+es der Datensatz selbst nicht wusste. Bestehende Einsätze sind beim Update
+mitgezogen worden.
+
+„Handy" und „Wear" kommen dabei vom **selben Gerät**: Die Uhr-App am Handgelenk
+hat keinen eigenen Zugang zum Server, sie reicht ihre Ereignisse ans Handy
+weiter, und das sendet. Der Unterschied sagt, **wo du getippt hast**, nicht
+welches Gerät hochgeladen hat.
 
 Trägt der Einsatz eine Spur, steht dort außerdem, wie viele Punkte sie hat —
 und ob sie noch die **Originalspur** ist oder bereits **ausgedünnt** (das
@@ -1879,9 +1893,13 @@ weiterhin „alles"; das ist eine bewusste Angabe.
 - **CSV (Standard)**: ein Archiv mit allen Feldern, die das System kennt, dazu
   Diensttage, Ruhezeiten, eine Feldbeschreibung und auf Wunsch die GPX-Tracks. Das
   ist das Format für Auswertungen und für den Rückweg. Es führt je Einsatz auch
-  die **Herkunft** (Uhr, manuell, importiert) und den **Bearbeitungsstatus** mit
-  — dieselben beiden Angaben, die in der Einsatzansicht als Kennzeichen stehen
-  (Abschnitt 4.2). Die beiden Exceltabellen führen sie nicht.
+  die **Herkunft** (uhr, handy, wear, manuell, import, schnitt) und den
+  **Bearbeitungsstatus** mit — dieselben beiden Angaben, die in der
+  Einsatzansicht als Kennzeichen stehen (Abschnitt 4.2). Seit Web 14.1.0 stehen
+  dort außerdem **Art und Modell des Geräts**, mit dem aufgezeichnet wurde — je
+  Einsatz und je Ruhezeit, als letzte zwei Spalten. Leer heißt „nicht bekannt":
+  Nur ein gekoppeltes Gerät meldet, was es ist. Die beiden Exceltabellen führen
+  nichts davon.
 - **Excel (Standard)**: eine Zeile je Einsatz, deutsche Spaltenbeschriftungen,
   alle Zeiten in Ortszeit. Zum Ansehen, Sortieren und Filtern. Ein Diensttag ohne
   Einsatz erscheint als eine Zeile mit Datum und lauter Bindestrichen.
@@ -2373,9 +2391,20 @@ Drei Dinge dazu, damit die Anzeige nicht mehr verspricht, als sie hält:
   das Gerät neuer als die Modelltabelle des Servers. Es funktioniert
   vollständig; nur der Klarname fehlt, und er lässt sich später nachtragen.
 
-Ausgewertet wird davon vorerst nichts — die Angabe wird gespeichert, damit
-später überhaupt zählbar ist, welche Geräte im Einsatz sind. Bevor eine
-Auswertung entsteht, wird sie in der Datenschutzerklärung benannt.
+**Seit Web 14.0.0 wird die Angabe an jedem Einsatz und jeder Ruhezeit
+festgehalten** — als Momentaufnahme in dem Augenblick, in dem der Datensatz
+entsteht. Das ist wichtiger, als es klingt: Wer eine Uhr im Team teilt, trennt
+sie regelmäßig wieder, und mit dem Gerät verschwand bis dahin auch die Auskunft,
+womit aufgezeichnet wurde. Jetzt bleibt sie am Einsatz stehen.
+
+**Sie wird nicht nachgezogen.** Koppelt dasselbe Gerät später neu oder wird sein
+Modellname nachträglich aufgelöst, ändert das an bestehenden Einsätzen nichts —
+dort steht weiter, was beim Anlegen galt. Sichtbar ist die Angabe im
+CSV-Export (Abschnitt 8), nicht in der Einsatzansicht.
+
+Darüber hinaus ausgewertet wird davon vorerst nichts — die Angabe wird
+gespeichert, damit später überhaupt zählbar ist, welche Geräte im Einsatz sind.
+Bevor eine Auswertung entsteht, wird sie in der Datenschutzerklärung benannt.
 
 ### 10.1 Die Android-App herunterladen
 

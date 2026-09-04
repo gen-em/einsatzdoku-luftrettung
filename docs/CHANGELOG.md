@@ -14,6 +14,55 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 14.1.0] — 2026-09-04
+
+### Web — die Anzeige sagt jetzt, was 14.0.0 erfasst hat
+
+14.0.0 hat die Herkunft auf sechs Werte erweitert; die **Anzeige** kannte
+weiterhin drei. Ein Einsatz vom Handy stand als „Uhr" da, ein geschnittener als
+„manuell", und im CSV erschien der Rohwert. Das war zwischen den beiden
+Fassungen kurz schlechter als vorher, und genau das räumt diese auf.
+
+Die Einsatzansicht zeigt jetzt **sechs Plaketten**: „Uhr", „Handy", „Wear",
+„manuell", „importiert", „Schnitt". Im CSV heißt die Spalte `herkunft`
+entsprechend `uhr | handy | wear | manuell | import | schnitt`.
+
+**Der Rückfall ist überall der Rohwert und nicht mehr „Uhr".** Ein künftiger
+Client, dessen Beschriftung hier noch fehlt, soll auffallen und nicht in einer
+falschen Kategorie verschwinden. Eine falsche Antwort, die wie eine richtige
+aussieht, ist schlechter als eine unschöne.
+
+**Im CSV heißt die zweite Uhr `wear` und nicht `uhr`.** `uhr` ist seit dem
+ersten Export die Garmin-App. Eine zweite Uhr unter demselben Wort machte jede
+Auswertung, die auf `uhr` filtert, rückwirkend mehrdeutig — ohne dass sich das
+der Datei ansehen ließe. Welcher Hersteller es war, steht im Modell.
+
+### Web — zwei neue Spalten im CSV: mit welchem Gerät
+
+`einsaetze.csv` und `ruhezeiten.csv` tragen als **letzte zwei Spalten**
+`geraet_art` (uhr | handy | sonstiges) und `geraet_modell`; `felder.csv`
+beschreibt beide. Am Ende und nicht neben `herkunft`, weil Auswertungen Spalten
+von links zählen — und weil die beiden nicht den Einsatz beschreiben, sondern
+das Gerät, das ihn aufgezeichnet hat.
+
+**Leer heißt unbekannt, nicht „kein Gerät".** Nur die Kopplung kennt Art und
+Modell. Von Hand angelegte, importierte und vor Web 12.9.0 gekoppelte
+Datensätze haben nichts zu melden; dort bleibt die Zelle leer. Das Wort
+„unbekannt" steht bewusst nicht in der Datei.
+
+**Excel bleibt unverändert**, beide Fassungen — Standard wie GuteSeele. Die
+Übersichtstabelle liest ein Mensch, und sie beantwortet „was ist passiert",
+nicht „womit wurde es aufgezeichnet". Ihr Spaltensatz ist derselbe wie in
+13.3.0.
+
+**Der Rückimport nimmt die zwei Spalten nicht** — wie `herkunft` und `edited`:
+Sie beschreiben das Quellkonto, und beim Einlesen entsteht der Datensatz neu,
+ohne Gerät. Sie stehen trotzdem mit `target: null` im Profil, weil dessen
+Schlüsselliste zugleich die Beschreibung dessen ist, was das Format kennt.
+Unbekannte Spalten stören den Rückimport ohnehin nicht: Er ordnet über Namen zu
+und geht über alles hinweg, was er nicht kennt — eine Datei aus 14.1.0 liest
+sich auch auf einer älteren Installation.
+
 ## [Web 14.0.0] — 2026-09-04
 
 **MIGRATION ERFORDERLICH: `2026_09_04_herkunft_geraet`.** Nach dem Deploy muss

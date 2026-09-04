@@ -699,7 +699,7 @@
         { feld: 'diensttag_id', typ: 'int', einheit: '', beschreibung: 'interne ID des Diensttags — Bezugsschlüssel zum Blatt Diensttage', get: function (c) { return c.m.day_id; } },
         { feld: 'datum', typ: 'date', einheit: '', beschreibung: 'Datum des Einsatzes in Ortszeit — bei einem Dienst über Mitternacht NICHT identisch zu diensttag', get: function (c) { return dateOnlyLocal(c.m.started_at, APP_TZ); } },
         { feld: 'uhrzeit_ortszeit', typ: 'time', einheit: '', beschreibung: 'Alarmzeit HH:MM, für Tabellenprogramme', get: function (c) { return hhmmLocal(phaseAt(c.m, 2), APP_TZ) || ''; } },
-        { feld: 'herkunft', typ: 'text', einheit: '', beschreibung: 'wie der Einsatz entstanden ist (missions.origin): uhr | manuell | import', get: function (c) { return c.m.source; } },
+        { feld: 'herkunft', typ: 'text', einheit: '', beschreibung: 'wie der Einsatz entstanden ist (missions.origin): uhr = Garmin-Uhr-App | handy = Android-App | wear = an der Wear-OS-Uhr begonnen, vom Handy gesendet | manuell | import | schnitt = aus einem Ruhesegment geschnitten', get: function (c) { return c.m.source; } },
         { feld: 'final', typ: '0/1', einheit: '', beschreibung: 'abgeschlossen', get: function (c) { return c.m.final; } },
         { feld: 'manual', typ: '0/1', einheit: '', beschreibung: 'Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe Spalte herkunft)', get: function (c) { return c.m.manual; } },
         // 'edited' steht unmittelbar hinter 'manual', weil genau dort die
@@ -816,7 +816,21 @@
 
             { feld: 'rea_json', typ: 'json', einheit: '', beschreibung: 'Reanimationssitzungen mit Ereignissen, siehe 3.4; leer wenn keine Reanimation', get: function (c) { return buildReaJson(c.m, APP_TZ); } },
             { feld: 'track_datei', typ: 'text', einheit: '', beschreibung: 'relativer Pfad unter tracks/, oder leer', get: function (c) { return c.trackFile || ''; } },
-            { feld: 'track_punkte', typ: 'int', einheit: '', beschreibung: 'Anzahl Trackpunkte', get: function (c) { return c.m.track_points; } }
+            { feld: 'track_punkte', typ: 'int', einheit: '', beschreibung: 'Anzahl Trackpunkte', get: function (c) { return c.m.track_points; } },
+
+            /* DIE MOMENTAUFNAHME DES GERÄTS (R64, E-R64-10) — ganz am Ende und
+               nicht neben 'herkunft'. Zwei Gründe: Wer schon Auswertungen auf
+               diese Datei gebaut hat, zählt Spalten von links; und die beiden
+               beschreiben nicht den Einsatz, sondern das Gerät, das ihn
+               aufgezeichnet hat — sie gehören zu 'track_datei' und
+               'track_punkte', nicht zu den Einsatzfeldern.
+
+               LEER HEISST UNBEKANNT und nicht "kein Gerät": Nur die Kopplung
+               kennt Art und Modell (seit Web 12.9.0). Von Hand angelegte,
+               importierte und ältere Einsätze haben nichts zu melden — deshalb
+               ist die Zelle leer und trägt nicht das Wort „unbekannt". */
+            { feld: 'geraet_art', typ: 'text', einheit: '', beschreibung: 'Art des aufzeichnenden Geräts, festgehalten beim Anlegen (missions.geraet_art): uhr | handy | sonstiges; leer = unbekannt', get: function (c) { return orEmpty(c.m.geraet_art); } },
+            { feld: 'geraet_modell', typ: 'text', einheit: '', beschreibung: 'Modell des aufzeichnenden Geräts, festgehalten beim Anlegen (missions.geraet_modell); leer = unbekannt. Wird NICHT nachgezogen, wenn das Gerät später anders aufgelöst wird', get: function (c) { return orEmpty(c.m.geraet_modell); } }
         ]);
 
     var FIELD_DEFS_DIENSTTAGE = [
@@ -849,7 +863,11 @@
         { feld: 'dauer_min', typ: 'int', einheit: 'min', beschreibung: 'ende − beginn', get: function (c) { return durationMinutes(c.r.started_at, c.r.ended_at); } },
         { feld: 'final', typ: '0/1', einheit: '', beschreibung: 'abgeschlossen', get: function (c) { return c.r.final; } },
         { feld: 'track_datei', typ: 'text', einheit: '', beschreibung: 'relativer Pfad unter tracks/, oder leer', get: function (c) { return c.trackFile || ''; } },
-        { feld: 'track_punkte', typ: 'int', einheit: '', beschreibung: 'Anzahl Trackpunkte', get: function (c) { return c.r.track_points; } }
+        { feld: 'track_punkte', typ: 'int', einheit: '', beschreibung: 'Anzahl Trackpunkte', get: function (c) { return c.r.track_points; } },
+        // Wie bei einsaetze.csv (R64). Eine Spalte 'herkunft' gibt es hier
+        // NICHT: Das Ruhesegment trägt keine (E-R64-04).
+        { feld: 'geraet_art', typ: 'text', einheit: '', beschreibung: 'Art des aufzeichnenden Geräts, festgehalten beim Anlegen (rest_segments.geraet_art): uhr | handy | sonstiges; leer = unbekannt', get: function (c) { return orEmpty(c.r.geraet_art); } },
+        { feld: 'geraet_modell', typ: 'text', einheit: '', beschreibung: 'Modell des aufzeichnenden Geräts, festgehalten beim Anlegen (rest_segments.geraet_modell); leer = unbekannt', get: function (c) { return orEmpty(c.r.geraet_modell); } }
     ];
 
     function numOrEmpty(v) { return (v === null || v === undefined) ? '' : v; }
