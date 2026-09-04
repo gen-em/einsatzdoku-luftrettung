@@ -76,13 +76,53 @@ def iso_offset(ts: int) -> str:
 
 
 # --------------------------------------------------------------- Spuren bauen
+# Wie oft ist eine Strasse gesucht und nicht gefunden worden (R64/AP4,
+# B-R64-03)? Die Zahl steht am Ende des Laufs und ist die Antwort auf die
+# stillste Falle dieses Werkzeugs.
+STRASSE_GEFUNDEN = 0
+STRASSE_ERSATZ = 0
+
+
+def _routen_nachschlagen(routen: dict, ref: str, abschnitt: int):
+    """Eine Strecke nachschlagen UND mitzaehlen, ob es sie gab.
+
+    WARUM DIESER UMWEG STATT `routen.get(...)`. Findet der Index nichts,
+    zeichnet der Generator eine Luftlinie -- ohne Meldung, ohne Zaehler.
+    Fuer die acht LUFTdienste ist das richtig: ein Hubschrauber faehrt
+    keine Strasse, und fuer Geraet 11 steht bewusst keine einzige Strecke in
+    `routen_soll.json`. Fuer die acht BODENdienste ist es ein Fehler, der
+    sich als Erfolg meldet -- 190 km/h Luftlinie statt der OSRM-Route,
+    sichtbar erst auf der Karte.
+
+    Aufgefallen in R64/AP4: Dort wurden die Kennungen des Geraets 12 von
+    `m-`/`r-` auf `am-`/`ar-` umgestellt, und `routen_soll.json` schluesselt
+    genau auf diese Kennungen. Waere die Datei nicht mitgezogen worden,
+    haetten alle 117 Strecken lautlos ihre Strassengeometrie verloren. Seit
+    diesem Paket sagt der Lauf, wie oft er eine Strecke ersetzt hat; ein
+    Sprung in dieser Zahl ist der Befund, den es vorher nicht gab.
+    """
+    global STRASSE_GEFUNDEN, STRASSE_ERSATZ
+    geo = routen.get((ref, abschnitt))
+    if geo is None:
+        STRASSE_ERSATZ += 1
+    else:
+        STRASSE_GEFUNDEN += 1
+    return geo
+
+
 def _routen_index() -> dict:
     soll = json.loads((ROUTEN / "routen_soll.json").read_text("utf-8"))
     index: dict[tuple[str, int], dict] = {}
+    fehlend = []
     for a in soll:
         pfad = ROUTEN / a["datei"]
         if pfad.exists():
             index[(a["client_ref"], a["abschnitt"])] = json.loads(pfad.read_text("utf-8"))
+        else:
+            fehlend.append(a["datei"])
+    if fehlend:
+        print(f"  ACHTUNG: {len(fehlend)} Streckendateien aus routen_soll.json "
+              f"fehlen auf der Platte, z. B. {fehlend[0]}")
     return index
 
 
@@ -131,7 +171,7 @@ def spur_bauen(dienst: dict, einsatz: dict, koords: list, routen: dict) -> list[
     abschnitte = []
     for i in range(legs):
         t0, t1 = fenster[i]
-        geo = routen.get((einsatz["client_ref"], i))
+        geo = _routen_nachschlagen(routen, einsatz["client_ref"], i)
         if geo:
             abschnitte.append(spur.fahrt(geo["geometry"]["coordinates"], t0, t1))
         else:
@@ -185,7 +225,7 @@ def ruhespur(dienst: dict, stueck: dict, routen: dict) -> list[tuple]:
     if von == nach:
         return spur.ausduennen(spur.halt(nach, t0, t1, spur.TAKT_RUHE, stueck["ref"]))
 
-    geo = routen.get((stueck["ref"], 0))
+    geo = _routen_nachschlagen(routen, stueck["ref"], 0)
     # 0,95 und nicht 0,8: Ist das Ruhe-Segment kurz, wurde der Rueckweg
     # frueher in vier Fuenftel davon gepresst -- und der Rueckflug erreichte
     # 346 km/h. Er darf das Segment fast ganz ausfuellen; danach steht das
@@ -609,6 +649,8 @@ def main() -> int:
     print(f"Formular: neu anlegen    {zahl['formular_neu']}")
     print(f"CSV-Importzeilen         {zahl['import_zeilen']}")
     print(f"GPX-Dateien              {zahl['gpx_dateien']}")
+    print(f"Strecken aus OSRM        {STRASSE_GEFUNDEN}  "
+          f"(Luftlinie ersatzweise: {STRASSE_ERSATZ})")
     return 0
 
 

@@ -64,6 +64,21 @@ VERBOTENE_NAMEN = [
     "Marktoberdorf", "Ulm", "Augsburg", "München", "Muenchen",
 ]
 
+def teilenummern() -> set[str]:
+    """Die Teilenummern aus `server/geraetemodelle.php`.
+
+    GELESEN, NICHT ABGESCHRIEBEN. Die Tabelle ist erzeugt und waechst; eine
+    Kopie hier waere nach dem naechsten Lauf des Holskripts falsch, ohne dass
+    etwas anschlaegt. Der Umweg ueber einen regulaeren Ausdruck ist haesslich
+    und ehrlich: Er scheitert sichtbar, wenn die Tabelle ihre Form aendert,
+    statt eine leere Menge zu liefern.
+    """
+    quelle = HIER.parent.parent.parent / "server" / "geraetemodelle.php"
+    if not quelle.exists():
+        return set()
+    return set(re.findall(r"'(\d{3}-[A-Z0-9]+-\d{2})'\s*=>", quelle.read_text("utf-8")))
+
+
 # --- Abdeckungsmatrix (Konzept Abschnitt 5) --------------------------------
 # Je Zeile: (Dimension, Anforderung, Marken -- eine davon genuegt).
 # Zeilen mit leerer Markenmenge werden STRUKTURELL geprueft (siehe unten).
@@ -71,9 +86,19 @@ MATRIX = [
     ("Erfassungsart (R4)", "luftgebunden mit Track (Ingest)", ["erfassung-luft-track"]),
     ("Erfassungsart (R4)", "bodengebunden mit Track (Ingest)", ["erfassung-boden-track"]),
     ("Erfassungsart (R4)", "nachträglich ohne Track", ["erfassung-nachtraeglich-ohne-track"]),
+    # ALLE SECHS HERKUNFTSWERTE (server/geraete_lib.php HERKUNFT_WERTE), seit
+    # R64/AP4. Bis dahin standen hier drei -- und die Zeile "watch" blieb
+    # gruen, obwohl sechs der Einsaetze, die sie trugen, an einem HANDY
+    # haengen. Eine Matrix, die drei von sechs Werten prueft und dabei gruen
+    # meldet, ist genau das Muster F-P3-AQ.
     ("Herkunft", "watch", ["herkunft-watch"]),
+    ("Herkunft", "android", ["herkunft-android"]),
+    ("Herkunft", "wear", ["herkunft-wear"]),
     ("Herkunft", "manual", ["herkunft-manuell"]),
     ("Herkunft", "import", ["herkunft-import"]),
+    ("Herkunft", "schnitt", ["herkunft-schnitt"]),
+    ("Geräte", "beide Geräte mit Block (Momentaufnahme möglich)", []),
+    ("Geräte", "eine Uhr und ein Handy", []),
     ("Diensttage", "Luftdienst", ["dienst-luft"]),
     ("Diensttage", "Bodendienst", ["dienst-boden"]),
     ("Diensttage", "Kalendertag mit zwei Diensten", ["zwei-dienste-ein-tag"]),
@@ -233,6 +258,16 @@ def main() -> int:
     dienstdateien = sorted((HIER / "dienste").glob("D*.json"))
     dienste = [json.loads(p.read_text("utf-8")) for p in dienstdateien]
     sperrliste = json.loads((HIER / "pruefschritte" / "sperrliste.json").read_text("utf-8"))
+    # DIE ZWEI GERAETEBLOECKE (R64/AP4). Sie bestimmen, was beim Koppeln an
+    # `pair.php` geht -- und damit die Momentaufnahme, die an jedem Einsatz
+    # und jedem Segment haengt. Ohne sie stuende sie im ganzen Bestand auf
+    # NULL, und der edbak-Kreislauf belegte fuer R64 nichts.
+    geraete = json.loads((HIER / "geraete.json").read_text("utf-8"))["geraete"]
+    MODELLE = teilenummern()
+    # DER NEUESTE DIENSTTAG. `index.php` oeffnet ihn ohne Zutun, und daran
+    # haengen sichtpruefung.mjs und vier Seiten des Bilderlaufs -- deshalb
+    # darf der Schnitt nicht dort liegen.
+    neuester_tag = max(d["dienst"]["day"] for d in dienste)
 
     # ---- 1. Schema --------------------------------------------------------
     v_dienst = Draft202012Validator(
@@ -589,6 +624,99 @@ def main() -> int:
                         f"{d['kennung']}: Import-Einsatz an einem Datum mit mehreren Diensten "
                         f"— der Import löst nur über das Datum auf (B-04)")
 
+    # ---- Geraete (R64/AP4) ------------------------------------------------
+    nummern = sorted(g["nummer"] for g in geraete)
+    lauf.pruefe(nummern == ["11", "12"],
+                f"geraete.json: erwartet werden die Nummern 11 und 12, da stehen {nummern}")
+    for g in geraete:
+        wo, b = f"geraete.json/{g['nummer']}", g["block"]
+        lauf.pruefe(b["art"] in ("uhr", "handy", "sonstiges"),
+                    f"{wo}: art {b['art']!r} ist keine der drei des Vertrags")
+        if b["art"] == "uhr":
+            # DIE TEILENUMMER MUSS ES GEBEN UND SIE MUSS ECHT SEIN. Eine
+            # erfundene liefe in den Rueckfall `geraet_teil`; das Demo-Konto
+            # zeigte dann eine Nummer statt eines Modells -- also gerade
+            # nicht das, was R64 belegen soll.
+            lauf.pruefe(bool(b.get("teil")), f"{wo}: eine Uhr braucht eine Teilenummer")
+            lauf.pruefe(not MODELLE or b.get("teil") in MODELLE,
+                        f"{wo}: Teilenummer {b.get('teil')!r} steht nicht in "
+                        f"server/geraetemodelle.php ({len(MODELLE)} bekannte)")
+            lauf.pruefe("ciq" in b, f"{wo}: eine Uhr sendet ciq (JSON-Vertrag 1a.4)")
+        else:
+            lauf.pruefe(b.get("teil") is None, f"{wo}: ein Handy hat keine Teilenummer")
+            lauf.pruefe(bool(b.get("hersteller")) and bool(b.get("modell")),
+                        f"{wo}: ein Handy sendet hersteller und modell")
+            lauf.pruefe("ciq" not in b,
+                        f"{wo}: ciq entfaellt beim Handy und wird nicht auf null gesetzt")
+            lauf.pruefe("sdk" in b, f"{wo}: ein Handy sendet sdk")
+        for feld in ("br", "ho", "touch", "fw", "app"):
+            lauf.pruefe(feld in b, f"{wo}: Feld {feld} fehlt im Geraeteblock")
+        # DIE PRAEFIXE SIND DIE HERKUNFT. Steht hier etwas anderes als in den
+        # Quelldaten, leitet der Server eine andere Herkunft ab, als dieses
+        # Dokument behauptet -- und niemand merkt es.
+        soll = ({"einsatz": "m-", "ruhe": "r-", "dienst": "d-"} if b["art"] == "uhr"
+                else {"einsatz": "am-", "ruhe": "ar-", "dienst": "ad-"})
+        lauf.pruefe(g["praefix"] == soll,
+                    f"{wo}: Praefixe {g['praefix']} passen nicht zur Art {b['art']!r} "
+                    f"(erwartet {soll})")
+        erlaubt = tuple(soll.values()) + (("wm-",) if b["art"] == "handy" else ())
+        for kennung, wo2 in refs.items():
+            teile = kennung.split("-")
+            if len(teile) < 3 or teile[1] != g["nummer"]:
+                continue
+            lauf.pruefe(kennung.startswith(erlaubt),
+                        f"{wo2}: Kennung {kennung} passt nicht zu Geraet {g['nummer']} "
+                        f"({b['art']}, erlaubt: {', '.join(erlaubt)})")
+
+    # ---- Schnitte (R64/AP4, E-R64-16) -------------------------------------
+    schnittzahl = 0
+    for d in dienste:
+        n = d["kennung"]
+        segmente = {r["client_ref"]: r for r in d["ruhesegmente"]}
+        startminuten = [e["beginn"][11:16] for e in d["einsaetze"]]
+        for sc in d.get("schnitte", []):
+            schnittzahl += 1
+            wo = f"{n}/schnitt {sc['segment']}"
+            merke(sc["abdeckung"], wo)
+            seg = segmente.get(sc["segment"])
+            lauf.pruefe(seg is not None,
+                        f"{wo}: das Quellsegment steht nicht in diesem Dienst")
+            if seg is None:
+                continue
+            sb, se = lokal(sc["beginn"]), lokal(sc["ende"])
+            lauf.pruefe(sb < se, f"{wo}: Ende liegt nicht nach dem Beginn")
+            # INNERHALB DER SPUR DES SEGMENTS. Liegt das Fenster daneben,
+            # wandert kein Punkt; api/schneiden.php antwortet 409 `leer` und
+            # der Einspiellauf braeche ab -- mit einer Ursache, die nirgends
+            # steht.
+            lauf.pruefe(lokal(seg["beginn"]) <= sb,
+                        f"{wo}: Beginn liegt vor dem Segment ({seg['beginn']})")
+            lauf.pruefe(seg["ende"] is not None and se <= lokal(seg["ende"]),
+                        f"{wo}: Ende liegt hinter dem Segment ({seg['ende']})")
+            # NICHT UEBER MITTERNACHT: api/schneiden.php rechnet die Phasen
+            # mit dem Tagesversatz des BEGINNS und verwirft still, was
+            # danach liegt.
+            lauf.pruefe(sc["beginn"][:10] == sc["ende"][:10],
+                        f"{wo}: der Schnitt laeuft ueber Mitternacht")
+            for nr, wann in sorted(sc["phasen"].items()):
+                lauf.pruefe(sb <= lokal(wann) <= se,
+                            f"{wo}: Phase {nr} ({wann}) liegt ausserhalb von Beginn und Ende")
+                lauf.pruefe(wann[:10] == sc["beginn"][:10],
+                            f"{wo}: Phase {nr} liegt an einem anderen Kalendertag")
+            # DIE BEGINNMINUTE MUSS EINMALIG SEIN: Die Stufen `nachtragen`,
+            # `papierkorb` und `sperrliste` suchen Einsaetze ueber start_hhmm.
+            lauf.pruefe(sc["beginn"][11:16] not in startminuten,
+                        f"{wo}: Beginnminute {sc['beginn'][11:16]} kommt an diesem "
+                        f"Diensttag schon als Einsatzbeginn vor")
+            # NICHT AM NEUESTEN DIENSTTAG: index.php oeffnet ihn von selbst,
+            # und sichtpruefung.mjs wie vier Bilder des Bilderlaufs greifen
+            # auf seine erste Einsatzzeile -- ein geschnittener Einsatz hat
+            # aber keine entschluesselbare Diagnose.
+            lauf.pruefe(d["dienst"]["day"] != neuester_tag,
+                        f"{wo}: der Schnitt liegt am neuesten Diensttag ({neuester_tag})")
+    lauf.pruefe(schnittzahl == 1,
+                f"erwartet wird genau ein Schnitt im Bestand (E-R64-16), gezaehlt: {schnittzahl}")
+
     # ---- Reale Namen ------------------------------------------------------
     # NUR IN DEN DATEN, nicht in den Erlaeuterungen: Die $warum-Bloecke nennen
     # reale Namen absichtlich -- sie begruenden ja gerade, warum keiner
@@ -610,6 +738,12 @@ def main() -> int:
 
     # ---- Strukturelle Matrixzeilen ---------------------------------------
     strukturell = {
+        "beide Geräte mit Block (Momentaufnahme möglich)": (
+            len(geraete) == 2 and all(g.get("block") for g in geraete),
+            f"Bloecke: {[bool(g.get('block')) for g in geraete]}"),
+        "eine Uhr und ein Handy": (
+            sorted(g["block"]["art"] for g in geraete) == ["handy", "uhr"],
+            f"Arten: {sorted(g['block']['art'] for g in geraete)}"),
         "alle Rollen des Katalogs belegt": (rollen_belegt == CREW_ROLES,
                                             f"belegt: {sorted(rollen_belegt)}"),
         "alle Phasen 2–9 im Datensatz": (alle_phasen == PHASEN,

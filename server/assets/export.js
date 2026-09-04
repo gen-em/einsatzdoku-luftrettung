@@ -698,7 +698,31 @@
         { feld: 'diensttag', typ: 'date', einheit: '', beschreibung: 'Datum des Diensttags (days.day)', get: function (c) { return c.m.day; } },
         { feld: 'diensttag_id', typ: 'int', einheit: '', beschreibung: 'interne ID des Diensttags — Bezugsschlüssel zum Blatt Diensttage', get: function (c) { return c.m.day_id; } },
         { feld: 'datum', typ: 'date', einheit: '', beschreibung: 'Datum des Einsatzes in Ortszeit — bei einem Dienst über Mitternacht NICHT identisch zu diensttag', get: function (c) { return dateOnlyLocal(c.m.started_at, APP_TZ); } },
-        { feld: 'uhrzeit_ortszeit', typ: 'time', einheit: '', beschreibung: 'Alarmzeit HH:MM, für Tabellenprogramme', get: function (c) { return hhmmLocal(phaseAt(c.m, 2), APP_TZ) || ''; } },
+        /* DER RUECKFALL AUF DEN EINSATZBEGINN IST KEIN SCHOENHEITSFEHLER
+           (Fund F-R64-03, R64/AP4).
+
+           Die Spalte hiess immer „Alarmzeit" und kam aus Phase 2. Der EIGENE
+           Import liest sie aber als den START des Einsatzes: In
+           `import_profiles.js` zeigt `uhrzeit_ortszeit` auf `alarm`, und
+           `import_ui.js` macht daraus `started_local`. Fuer einen Einsatz von
+           der Uhr fallen beide zusammen — sie beginnt mit der Alarmierung —,
+           und deshalb ist es zwei Jahre lang niemandem aufgefallen.
+
+           EIN GESCHNITTENER EINSATZ HAT KEINE PHASE 2. `api/schneiden.php`
+           kennt nur die drei Phasen 3, 4 und 7. Die Spalte blieb damit leer,
+           und weil sie im Profil `export_csv_v1` als `required` steht, wies
+           der Import die Zeile ab: Die Anwendung schrieb eine Datei, die sie
+           selbst nicht mehr einlesen konnte. Gefunden hat es der
+           CSV-Kreislauf, sobald der Referenzbestand einen Schnitt trug — 83
+           Zeilen hinaus, 82 herein, 1 Fehler.
+
+           WARUM HIER UND NICHT IM IMPORT: Der Wert, den die Zeile braucht,
+           ist der Einsatzbeginn, und der steht in `missions.started_at`. Ihn
+           beim Lesen aus einer zweiten Spalte zusammenzusuchen waere die
+           zweite Quelle fuer dieselbe Angabe, gegen die `import_profiles.js`
+           an dieser Stelle ausdruecklich argumentiert. Fuer einen Einsatz MIT
+           Phase 2 aendert sich nichts. */
+        { feld: 'uhrzeit_ortszeit', typ: 'time', einheit: '', beschreibung: 'Alarmzeit HH:MM, für Tabellenprogramme — ohne Phase 2 (geschnittener Einsatz) der Einsatzbeginn', get: function (c) { return hhmmLocal(phaseAt(c.m, 2), APP_TZ) || hhmmLocal(c.m.started_at, APP_TZ) || ''; } },
         { feld: 'herkunft', typ: 'text', einheit: '', beschreibung: 'wie der Einsatz entstanden ist (missions.origin): uhr = Garmin-Uhr-App | handy = Android-App | wear = an der Wear-OS-Uhr begonnen, vom Handy gesendet | manuell | import | schnitt = aus einem Ruhesegment geschnitten', get: function (c) { return c.m.source; } },
         { feld: 'final', typ: '0/1', einheit: '', beschreibung: 'abgeschlossen', get: function (c) { return c.m.final; } },
         { feld: 'manual', typ: '0/1', einheit: '', beschreibung: 'Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe Spalte herkunft)', get: function (c) { return c.m.manual; } },

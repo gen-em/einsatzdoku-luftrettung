@@ -63,6 +63,30 @@ SAMEN = 20260101          # fester Zufallssamen (B2-Abnahme: Determinismus)
 TEMPO_KMH = {"air": 190.0, "ground": 42.0}
 
 PUFFER_MIN = 12           # Mindestabstand zwischen zwei Einsaetzen
+
+
+def praefix(geraet: int, art: str) -> str:
+    """Das Kennungs-Praefix eines Geraets, nach JSON-Vertrag 8.
+
+    GERAET 11 IST EINE GARMIN-UHR, GERAET 12 EIN ANDROID-HANDY (R64/AP4,
+    E-R64-21). Aus dem Praefix leitet der Server die Herkunft ab
+    (`herkunft_ableiten()` in server/geraete_lib.php): `m-`/`r-` sind die
+    Uhr, `am-`/`ar-` das Handy. Solange beide Geraete `m-`/`r-` schickten,
+    trug der ganze Referenzbestand `origin = watch` -- auch die Haelfte, die
+    laut Geraeteblock ein Handy ist.
+
+    DIE ZIFFERNFOLGE BLEIBT DIESELBE. Sie kommt aus `randrange()` mit festem
+    Samen und haengt nicht am Praefix; ein Lauf vor und nach dieser Aenderung
+    liefert dieselben Kennungen mit anderem Vorspann. Die Umstellung im
+    Bestand ist deshalb eine reine Textersetzung -- gemessen: nach dem
+    Ruecksetzen `am-12-`->`m-12-` und `ar-12-`->`r-12-` sind alle 16
+    Dienstdateien byteidentisch zum Stand davor.
+
+    `wm-` (an der Uhr begonnen, vom Handy gesendet) vergibt diese Funktion
+    NICHT: Es ist eine Aussage darueber, wo ein Knopf gedrueckt wurde, und
+    steht deshalb nur an handgeschriebenen Prueffaellen.
+    """
+    return art if geraet == 11 else "a" + art
 MIN_LUECKE = 46           # kuerzeste Luecke, in die noch ein Einsatz passt
 
 
@@ -262,7 +286,7 @@ class Werk:
         route = ["basis", "ort", "ziel"] if dest_lat is not None else ["basis", "ort", "basis"]
 
         return {
-            "client_ref": f"m-{geraet}-{self.z.randrange(10**9, 10**10)}",
+            "client_ref": f"{praefix(geraet, 'm')}-{geraet}-{self.z.randrange(10**9, 10**10)}",
             "kanal": "ingest", "nachtrag": True, "papierkorb": None, "erzeugt": True,
             "beginn": nach_lokal(beginn),
             "ende": nach_lokal(beginn + timedelta(minutes=ende)),
@@ -389,7 +413,7 @@ def main() -> int:
             nonlocal lauf
             lauf += 1
             segmente.append({
-                "client_ref": f"r-{geraet}-{z.randrange(10**9, 10**10)}",
+                "client_ref": f"{praefix(geraet, 'r')}-{geraet}-{z.randrange(10**9, 10**10)}",
                 "beginn": nach_lokal(a),
                 "ende": nach_lokal(b) if b else None,
                 "final": b is not None,

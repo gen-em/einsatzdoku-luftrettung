@@ -16,7 +16,7 @@
     "rettungsmittel": "NEF Talwang 76/1",
     "beginn": "2026-10-24 19:00",
     "ende": "2026-10-25 07:00",
-    "day_ref": "d-12-1573864029",
+    "day_ref": "ad-12-1573864029",
     "spur_ausgangspunkt": {
       "lat": 47.559,
       "lon": 10.217
@@ -31,31 +31,31 @@
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-12-3773568715",
+      "client_ref": "ar-12-3773568715",
       "beginn": "2026-10-24 20:11",
       "ende": "2026-10-24 20:31",
       "final": true
     },
     {
-      "client_ref": "r-12-7414636965",
+      "client_ref": "ar-12-7414636965",
       "beginn": "2026-10-24 21:46",
       "ende": "2026-10-24 22:04",
       "final": true
     },
     {
-      "client_ref": "r-12-4684746884",
+      "client_ref": "ar-12-4684746884",
       "beginn": "2026-10-24 23:03",
       "ende": "2026-10-24 23:15",
       "final": true
     },
     {
-      "client_ref": "r-12-6432339343",
+      "client_ref": "ar-12-6432339343",
       "beginn": "2026-10-25 00:28",
       "ende": "2026-10-25 01:32",
       "final": true
     },
     {
-      "client_ref": "r-12-8410822338",
+      "client_ref": "ar-12-8410822338",
       "beginn": "2026-10-25 03:40",
       "ende": "2026-10-25 07:00",
       "final": true
@@ -63,7 +63,7 @@
   ],
   "einsaetze": [
     {
-      "client_ref": "m-12-3937208380",
+      "client_ref": "am-12-3937208380",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -141,7 +141,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-3885972806",
+      "client_ref": "am-12-3885972806",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -228,7 +228,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-1457939898",
+      "client_ref": "am-12-1457939898",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -315,7 +315,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-8845270913",
+      "client_ref": "am-12-8845270913",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -401,7 +401,7 @@
         "start": null
       },
       "abdeckung": [
-        "herkunft-watch",
+        "herkunft-android",
         "erfassung-boden-track",
         "einsatzdatum-abweichend",
         "zielklinik-ohne-koordinate"
@@ -415,7 +415,7 @@
       "$warum_spur": "SPUR-ZIEL: 'Klinik Talwang' führt keine Koordinate; gefahren wurde trotzdem dorthin."
     },
     {
-      "client_ref": "m-12-5106938274",
+      "client_ref": "am-12-5106938274",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -502,7 +502,7 @@
         "start": null
       },
       "abdeckung": [
-        "herkunft-watch",
+        "herkunft-android",
         "erfassung-boden-track",
         "zeitumstellung-herbst",
         "start-prevdest",

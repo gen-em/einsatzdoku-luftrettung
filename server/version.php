@@ -2447,4 +2447,36 @@ declare(strict_types=1);
  * ist behoben; die Probe zaehlt jetzt 94 Erwartungen statt der 30, die in
  * ihrem Kopf standen.
  */
-const WEB_VERSION = '14.2.0';
+/*
+ * 14.2.1 SCHLIESST DEN KREIS DES REFERENZBESTANDS — und behebt dabei einen
+ * Fehler, den erst er sichtbar gemacht hat.
+ *
+ * DER REFERENZBESTAND TRAEGT JETZT, WAS ER PRUEFEN SOLL. Bis hierher legte
+ * das Einspielwerkzeug seine zwei Geraete ueber die Geraeteseite an — mit
+ * Beschriftung und sonst nichts. `geraet_art` und `geraet_modell` blieben
+ * NULL, und weil `ingest.php` die Momentaufnahme beim Anlegen von dort
+ * kopiert, trug der ganze Bestand eine leere. Der edbak-Kreislauf verglich
+ * damit NULL gegen NULL und belegte fuer R64 nichts. Seit diesem Stand gehen
+ * die zwei Geraete den echten Kopplungsweg (`pair.php`), und eines davon ist
+ * ein Handy: Von den sechs Herkunftswerten belegte der Bestand vorher einen,
+ * jetzt alle sechs.
+ *
+ * UND ER TRAEGT EINEN SCHNITT. Damit prueft der Demo-Reset auf dem
+ * Produktivserver den Sperrvermerk aus 14.2.0 alle 30 Minuten von selbst —
+ * ein besserer Beleg als jede eigens gebaute Probe.
+ *
+ * DER FEHLER: DIE ANWENDUNG SCHRIEB EINE DATEI, DIE SIE NICHT LESEN KONNTE.
+ * Die CSV-Spalte `uhrzeit_ortszeit` kam aus Phase 2 („Alarmierung"); der
+ * eigene Import liest sie als den START des Einsatzes und verlangt sie. Ein
+ * geschnittener Einsatz hat keine Phase 2 — die Spalte blieb leer, und der
+ * Import wies die Zeile ab. Bei einem Einsatz von der Uhr fallen Alarmierung
+ * und Beginn zusammen; deshalb ist es nie aufgefallen. Jetzt faellt die
+ * Spalte auf den Einsatzbeginn zurueck. Fuer jeden Einsatz mit Phase 2
+ * aendert sich nichts.
+ *
+ * WAS SICH FUER EINE BESTEHENDE INSTALLATION AENDERT: nichts am Datenmodell,
+ * keine Migration. Das Demo-Konto zeigt nach dem naechsten Reset den neuen
+ * Bestand — mit Geraetemodellen auf der Geraeteseite und einem geschnittenen
+ * Einsatz mit Plakette.
+ */
+const WEB_VERSION = '14.2.1';

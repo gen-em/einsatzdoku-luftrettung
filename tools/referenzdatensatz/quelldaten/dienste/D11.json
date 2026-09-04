@@ -16,7 +16,7 @@
     "rettungsmittel": "NEF Talwang 76/1",
     "beginn": "2026-08-16 06:30",
     "ende": "2026-08-16 20:00",
-    "day_ref": "d-12-6802457391",
+    "day_ref": "ad-12-6802457391",
     "spur_ausgangspunkt": {
       "lat": 47.559,
       "lon": 10.217
@@ -31,43 +31,43 @@
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-12-1186189900",
+      "client_ref": "ar-12-1186189900",
       "beginn": "2026-08-16 06:30",
       "ende": "2026-08-16 06:42",
       "final": true
     },
     {
-      "client_ref": "r-12-9019705263",
+      "client_ref": "ar-12-9019705263",
       "beginn": "2026-08-16 08:10",
       "ende": "2026-08-16 08:35",
       "final": true
     },
     {
-      "client_ref": "r-12-7577608960",
+      "client_ref": "ar-12-7577608960",
       "beginn": "2026-08-16 09:48",
       "ende": "2026-08-16 10:32",
       "final": true
     },
     {
-      "client_ref": "r-12-8685489586",
+      "client_ref": "ar-12-8685489586",
       "beginn": "2026-08-16 11:32",
       "ende": "2026-08-16 11:51",
       "final": true
     },
     {
-      "client_ref": "r-12-1186474292",
+      "client_ref": "ar-12-1186474292",
       "beginn": "2026-08-16 12:49",
       "ende": "2026-08-16 13:02",
       "final": true
     },
     {
-      "client_ref": "r-12-6817440805",
+      "client_ref": "ar-12-6817440805",
       "beginn": "2026-08-16 14:20",
       "ende": "2026-08-16 16:40",
       "final": true
     },
     {
-      "client_ref": "r-12-3336414390",
+      "client_ref": "ar-12-3336414390",
       "beginn": "2026-08-16 18:05",
       "ende": "2026-08-16 20:00",
       "final": true
@@ -75,7 +75,7 @@
   ],
   "einsaetze": [
     {
-      "client_ref": "m-12-9247296857",
+      "client_ref": "am-12-9247296857",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -165,7 +165,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-9053871426",
+      "client_ref": "wm-12-9053871426",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -252,7 +252,7 @@
         "start": null
       },
       "abdeckung": [
-        "herkunft-watch",
+        "herkunft-wear",
         "erfassung-boden-track",
         "start-leer",
         "transport-ground",
@@ -260,7 +260,7 @@
       ]
     },
     {
-      "client_ref": "m-12-2880451977",
+      "client_ref": "am-12-2880451977",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -350,7 +350,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-4488873017",
+      "client_ref": "am-12-4488873017",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -437,7 +437,7 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-1687240539",
+      "client_ref": "wm-12-1687240539",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
@@ -511,7 +511,7 @@
         "start": null
       },
       "abdeckung": [
-        "herkunft-watch",
+        "herkunft-wear",
         "erfassung-boden-track",
         "transport-ambulant"
       ]
