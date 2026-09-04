@@ -15,6 +15,14 @@ beantwortet *„was muss ich noch tun?"*.
 > **Prüfliste 1** — das Schneidewerkzeug einmal an einem echten Diensttag
 > bedienen. **Prüfliste 6** — der Gerätetest, für den es hier gar keinen
 > Ersatz gibt.
+>
+> **Der Server-Teil des S4-Rests hat ein EIGENES Prüfdokument** (E-R64-14):
+> `Pruefdokument-R64-Herkunft-Geraet.md`. Dort stehen die Prüfpunkte zu R64
+> (Herkunft und Gerät je Einsatz) und zu Backlog Nr. 63 (Sperrvermerke des
+> Schnitts in der Konto-Sicherung) — **samt der zweiten zwingenden
+> Migration** `2026_09_04_herkunft_geraet`. Wer diese Liste abarbeitet,
+> arbeitet die dortige mit ab; sie ist kein Anhang, sondern eine eigene
+> Abnahme mit eigenen Zahlen.
 
 ---
 

@@ -579,7 +579,7 @@ die geänderten Dateien und dem Push (K7).
 | AP2 | offen | | | |
 | AP3 | **erledigt** 04.09.2026 (vorgezogen) | Web **14.1.0** | CSV-Kreislauf **8965 Einzelvergleiche, 1023 erwartete, 5 unerklärte** (alle fünf in `felder.csv`, Folge der noch nicht erneuerten Referenz — siehe unten), 0 ungenutzte Regeln · `einsaetze.csv` **94 Spalten**, `ruhezeiten.csv` **11** · Excel (Standard) **31 Spalten, unverändert** · Plaketten im Browser belegt: Handy, Wear, Schnitt · Wortliste **0/0/0** bei 79 Regeln · Vollständigkeit 278 | Einzelheiten unter „Umsetzungsstand AP3" |
 | AP4 | offen | | | |
-| AP5 | offen | | | |
+| AP5 | **Vorarbeit erledigt**, Rest offen | — (nur `docs/`) | JSON-Vertrag auf **Fassung 2.2**: `cut-` in der Präfix-Tabelle nachgetragen (**B-R64-01 damit behoben**), Spalte „Herkunft (`origin`)" je Präfix, Abschnitt zur Ableitung · **Prüfdokument angelegt** (`Pruefdokument-R64-Herkunft-Geraet.md`) mit allen Zahlen aus AP1 und AP3 und acht Prüfpunkten · Verweiszeile im Prüfdokument S4 | Offen bleiben: `version.php`-Erzählung des Abschlusses, Technik.md, Backlog 63/83, Rahmenplan Fassung 27, Prüfpunkte zu AP2/AP4 |
 
 ### Umsetzungsstand AP1 (04.09.2026, Web 14.0.0)
 
@@ -678,6 +678,32 @@ Stellen auf „Garmin-Uhr-App" vereinheitlicht worden. Ein Modellbeispiel
 (`Venu 3S`) ist dabei **entfallen** statt ausgenommen zu werden — es trug
 nichts, was der Satz „bei einer Uhr der Sammelname der Hardware" nicht besser
 sagt.
+
+### Vorgezogene AP5-Arbeit (04.09.2026, keine Fassungserhöhung)
+
+Zwei Stücke aus AP5 sind vorgezogen worden, weil sie an AP2 nichts hängen und
+beide Male ein **Befund** dahintersteht, der nicht auf das Ende warten sollte:
+
+**`docs/JSON-Vertrag.md` auf Fassung 2.2 (B-R64-01).** Die Präfix-Tabelle in
+Abschnitt 8 nannte zehn Präfixe, `api/schneiden.php` vergibt seit Web 12.5.0
+ein elftes (`cut-`). Weil an den Präfixen Verhalten hängt — der Vertrag sagt
+das selbst —, war das keine Auslassung, sondern eine falsche Zusage. Die
+Tabelle trägt jetzt elf Zeilen und eine **vierte Spalte** mit der Herkunft je
+Präfix; dazu ein Abschnitt, der sagt, dass kein Client eine Herkunft schickt
+oder liest, wie der Rückfall aussieht und warum ein künftiger Client einen
+**eigenen** Wert bekommt statt unter `watch` mitzulaufen. Abschnitt 0 („Stand
+der Durchsetzung") sagt jetzt, dass der Server die Präfixe weiterhin nicht
+**prüft**, sie seit Web 14.0.0 aber **auswertet**.
+
+**`docs/konzepte/Pruefdokument-R64-Herkunft-Geraet.md` angelegt** (E-R64-14),
+mit allen Zahlen aus AP1 und AP3, acht abhakbaren Prüfpunkten und den Grenzen
+der benutzten Prüfmittel. Es trägt einen Kasten, der sagt, dass es unfertig
+ist. **Erster Prüfpunkt ist `update.php`** — ohne die Migration antwortet
+jeder Upload mit einem Fehler, und das sieht man an den Geräten, nicht im Web.
+Das Prüfdokument S4 hat die Verweiszeile bekommen.
+
+**Keine Fassungserhöhung**: Es ist nur `docs/` (CLAUDE.md 2 — drei Zählungen,
+drei Auslieferungen).
 
 ### Probleme und wie sie gelöst wurden
 
