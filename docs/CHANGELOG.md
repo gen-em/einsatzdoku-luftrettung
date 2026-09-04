@@ -14,6 +14,69 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 14.2.1] — 2026-09-04
+
+### Web — der Referenzbestand trägt jetzt, was er prüfen soll (R64)
+
+Mit 14.0.0 bekam jeder Einsatz und jedes Ruhesegment eine **Momentaufnahme**
+des Geräts: Art und Modell, festgehalten beim Anlegen. Der Referenzbestand
+konnte das nicht belegen. Sein Einspielwerkzeug legte die zwei Geräte über die
+Geräteseite an — Beschriftung und sonst nichts —, und weil `ingest.php` die
+Momentaufnahme von dort kopiert, stand sie im ganzen Bestand auf NULL. Der
+Kreislauf verglich NULL gegen NULL und meldete brav null Abweichungen.
+
+Jetzt gehen beide Geräte den echten Kopplungsweg über `pair.php`. Und eines
+davon ist ein **Handy**: Aus dem Kennungspräfix leitet der Server die Herkunft
+ab, und solange beide Geräte `m-`/`r-` schickten, war der ganze Bestand
+`watch`. Die 42 Einsätze und 52 Segmente des zweiten Geräts heißen deshalb
+jetzt `am-`/`ar-`/`ad-`, drei handgeschriebene Prüffälle `wm-` (an der Uhr
+begonnen, vom Handy gesendet). Von den sechs Herkunftswerten belegte der
+Bestand vorher einen, jetzt alle sechs.
+
+Dazu ein **Schnitt**: ein Einsatz, aus einem Ruhesegment geschnitten, mit
+Sperrvermerk. Weil der Demo-Reset die Fixture alle 30 Minuten einspielt, wird
+Nr. 63 damit auf dem Produktivserver dauerhaft geprüft — ein besserer Beleg
+als jede eigens gebaute Probe. Das Demo-Konto zeigt ab dem nächsten Reset
+Gerätemodelle auf der Geräteseite und einen geschnittenen Einsatz mit Plakette.
+
+### Web — die Anwendung schrieb eine CSV-Datei, die sie selbst nicht lesen konnte
+
+Aufgefallen ist es erst, als der Referenzbestand einen Schnitt trug: 83 Zeilen
+hinaus, 82 herein, eine mit Fehler.
+
+Die Spalte `uhrzeit_ortszeit` hieß immer „Alarmzeit" und kam aus **Phase 2**.
+Der eigene Import liest sie aber als den **Start** des Einsatzes — und
+verlangt sie. Bei einem Einsatz von der Uhr fallen Alarmierung und Beginn
+zusammen; deshalb ist es zwei Jahre lang niemandem aufgefallen. Ein
+geschnittener Einsatz hat keine Phase 2 (`api/schneiden.php` kennt nur 3, 4
+und 7), die Spalte blieb leer, und der Import wies die Zeile ab.
+
+Sie fällt jetzt auf den Einsatzbeginn zurück. Für jeden Einsatz mit Phase 2
+ändert sich nichts. Der umgekehrte Weg — den Import aus der Spalte `beginn`
+nachladen zu lassen — wäre die zweite Quelle für dieselbe Angabe gewesen,
+gegen die `import_profiles.js` an genau dieser Stelle argumentiert.
+
+Beim Wiedereinlesen entsteht aus dem Beginn eine Alarmierung. Das ist keine
+Verfälschung, sondern die Grenze des Formats: Das CSV kann eine Startzeit
+**ohne** Alarmierung nicht ausdrücken. Es steht als erwartete Abweichung in
+der Ausnahmeliste des Umlaufs, mit Zahl.
+
+### Prüfmittel — zwei stille Fallen bekommen eine Zahl
+
+Beide hätten den Neuaufbau verdorben, ohne dass etwas rot geworden wäre.
+
+**Der Generator zeichnete Luftlinien statt Straßen, wenn eine Kennung nicht
+passte.** `routen_soll.json` schlüsselt auf die `client_ref`; ein Fehlgriff
+lief in den Rückfall „Luftlinie mit 190 km/h" — ohne Meldung, ohne Zähler,
+sichtbar erst auf der Karte. Der Lauf sagt jetzt, wie viele Strecken aus OSRM
+kamen und wie viele ersetzt wurden (117 und 112; die 112 sind die acht
+Luftdienste, für die es zu Recht keine Straße gibt).
+
+**Die GPX-Probe verglich eine Datei statt 172 und meldete grün.** Sie ordnet
+über die interne Kennung im Dateinamen zu und übersprang still, was sie nicht
+wiederfand. Sie zählt jetzt mit — und eine GPX-Datei des Referenzexports ohne
+Zeile im Demo-Konto ist ein Befund, kein Übersprung.
+
 ## [Android 0.13.0] — 2026-09-04
 
 Drei Punkte aus der Play-Console-Vorbereitung (Rahmenplan Schritt 6, Teil C).

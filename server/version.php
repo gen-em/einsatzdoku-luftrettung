@@ -651,7 +651,7 @@ declare(strict_types=1);
  *            Klasse ohne Regel im neuen Stylesheet. Sie standen seit dem
  *            Redesign in der Grundform des Browsers. Aufgefallen ist es
  *            niemandem, weil sie erst ab 200 Treffern erscheinen und der
- *            Referenzbestand 82 Einsaetze hat.
+ *            Referenzbestand 88 Einsaetze hat.
  *
  *   F-P3-AM  ZWEI KLASSENKOLLISIONEN, beide vor dem Festschreiben abgefangen
  *            — und jede von einem anderen Pruefmittel. `.filterzahl` gehoert

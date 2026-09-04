@@ -624,6 +624,36 @@ def main() -> int:
                         f"{d['kennung']}: Import-Einsatz an einem Datum mit mehreren Diensten "
                         f"— der Import löst nur über das Datum auf (B-04)")
 
+    # ---- Sperrwoerter in den Geraetebeschriftungen (R64/AP4) ---------------
+    #
+    # WARUM HIER UND NICHT IN tools/wortliste/. Die Beschriftungen der zwei
+    # Referenzgeraete werden ueber `server/demo/fixture.json.gz` zu SICHTBAREM
+    # TEXT des Demo-Kontos -- auf dem Produktivserver, alle 30 Minuten neu.
+    # Die Wortliste kennt fuenf Bereiche (server/*.php, assets/*.js,
+    # normative Dokumentation, Android, watch/); `tools/` ist in keinem davon,
+    # und das war kein Versehen: Dort steht Werkzeug, kein Client. Diese zwei
+    # Zeichenketten sind aber weder Werkzeug noch Client, sondern Daten, die
+    # als Text herauskommen -- und bis R64/AP4 hiess das eine davon
+    # „Uhr Luftrettung (Referenz)", mit einem Sperrwort darin, das nie jemand
+    # gemessen hat.
+    #
+    # DIE LISTE WIRD GELESEN, NICHT KOPIERT. Eine zweite Liste ginge beim
+    # naechsten Eintrag auseinander, und dann prueft diese Stelle gegen einen
+    # Stand, den es nicht mehr gibt.
+    sperr = HIER.parent.parent / "wortliste" / "sperrliste.json"
+    if sperr.exists():
+        muster = json.loads(sperr.read_text("utf-8"))["muster"]
+        for g in geraete:
+            for m in muster:
+                if re.search(m["regex"], g["beschriftung"], re.IGNORECASE):
+                    lauf.befunde.append(
+                        f"geraete.json/{g['nummer']}: die Beschriftung "
+                        f"{g['beschriftung']!r} enthaelt das Sperrwort "
+                        f"{m['id']!r} (tools/wortliste/sperrliste.json). Sie wird "
+                        f"ueber die Fixture zu sichtbarem Text des Demo-Kontos. "
+                        f"Ersatz: {m['ersatz']}")
+                lauf.pruefungen += 1
+
     # ---- Geraete (R64/AP4) ------------------------------------------------
     nummern = sorted(g["nummer"] for g in geraete)
     lauf.pruefe(nummern == ["11", "12"],

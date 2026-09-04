@@ -399,6 +399,13 @@ Datensatz ist so gebaut, dass jede Funktion der Anwendung darin vorkommt —
 Luft- und Bodeneinsätze, Windeneinsätze, Bergwacht, Reanimationen, ein Dienst
 über Mitternacht, ein Diensttag ohne Einsatz, ein gefüllter Papierkorb.
 
+*Seit Web 14.2.1* auch die Herkunft: Unter **Einstellungen → Geräte** stehen
+zwei Geräte mit Modell — eine Uhr für die Luftdienste, ein Handy für die
+Bodendienste —, und jeder Einsatz trägt die Plakette des Geräts, das ihn
+aufgezeichnet hat. Ein Einsatz ist aus einer Ruhezeit **geschnitten**
+(Abschnitt 4.1b): Er trägt die Plakette „Schnitt", und am Ruhesegment steht
+der gesperrte Bereich.
+
 **Ausprobieren ist ausdrücklich erwünscht.** Ändere Einsätze, lege neue an,
 lösche welche, pflege Stammdaten, koppele eine Uhr. Es geht nichts verloren,
 was jemandem fehlen würde.

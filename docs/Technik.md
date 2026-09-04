@@ -335,9 +335,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      Riegel: füllt nur ein Konto mit dem Präfix
 │   │                      „messstand" (s. LIESMICH.md)
 │   ├── referenzdatensatz/ erfundener Beispielbestand (16 Diensttage,
-│   │   │                  87 Einsätze) — Demo-Konto UND Regressionsreferenz
-│   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu Schema
-│   │   │                  und Prüfung (Abdeckungsmatrix, keine realen Namen)
+│   │   │                  88 Einsätze) — Demo-Konto UND Regressionsreferenz
+│   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu die zwei
+│   │   │                  Geräteblöcke (geraete.json), der eine Schnitt,
+│   │   │                  Schema und Prüfung (Abdeckungsmatrix, Sperrwörter
+│   │   │                  in den Gerätenamen, keine realen Namen)
 │   │   ├── generator/     erzeugt Ingest-Payloads, Formulardaten, CSV, GPX;
 │   │   │                  fester Zufallssamen, zwei Läufe gleiches Ergebnis
 │   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL;
@@ -3894,7 +3896,7 @@ nicht bloß zugesichert:
 | Teil | Inhalt |
 |---|---|
 | `konto` | E-Mail, `password_hash`, `kdf_salt`, `kdf_iter`, `pat_wrap_pw`, `pat_wrap_rc`, `pat_key_check`, `account_key` |
-| `geraete` | `device_id`, `api_key_hash`, `label` — **ohne** das virtuelle Gerät „Manuelle Einträge" (s. u.) |
+| `geraete` | `device_id`, `api_key_hash`, `label`, seit Web 14.2.0 auch `geraet_art` und `geraet_modell` — **ohne** das virtuelle Gerät „Manuelle Einträge" (s. u.) |
 | `daten` | inneres Backup-JSON — `pat_blob` als **Chiffretext**, Papierkorb eingeschlossen |
 
 **Format 2 seit Web 8.0.0**: Der vierte Teil, `nachlauf`, ist entfallen

@@ -511,7 +511,7 @@ Besatzungsspalten sind personenbezogen.
 | `diensttag` | date | — | nein | Datum des Diensttags (days.day) |
 | `diensttag_id` | int | — | nein | interne ID des Diensttags — Bezugsschlüssel zum Blatt Diensttage |
 | `datum` | date | — | nein | Datum des Einsatzes in Ortszeit — bei einem Dienst über Mitternacht NICHT identisch zu diensttag |
-| `uhrzeit_ortszeit` | time | — | nein | Alarmzeit HH:MM, für Tabellenprogramme |
+| `uhrzeit_ortszeit` | time | — | nein | Alarmzeit HH:MM, für Tabellenprogramme — **ohne Phase 2 der Einsatzbeginn** (seit Web 14.2.1; ein geschnittener Einsatz hat keine Alarmierung, und der eigene Import verlangt diese Spalte) |
 | `herkunft` | text | — | nein | wie der Einsatz entstanden ist (missions.origin): uhr = Garmin-Uhr-App \| handy = Android-App \| wear = an der Wear-OS-Uhr begonnen, vom Handy gesendet \| manuell \| import \| schnitt = aus einem Ruhesegment geschnitten |
 | `final` | 0/1 | — | nein | abgeschlossen |
 | `manual` | 0/1 | — | nein | Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe Spalte herkunft) |

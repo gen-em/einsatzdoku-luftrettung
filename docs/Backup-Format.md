@@ -103,10 +103,10 @@ Das Manifest im Klartext:
     { "name": "spuren/0001.edbak",   "art": "spuren",    "sha256": "…" }
   ],
   "eintragsteile": 1,
-  "eintraege": 187,                // Einsätze und Ruhesegmente zusammen
+  "eintraege": 188,                // Einsätze und Ruhesegmente zusammen
   "spurteile": 1,
-  "spuren": 181,                   // wie viele Spuren die Datei trägt
-  "punkte": 48981,                 // und wie viele Punkte darin stecken
+  "spuren": 182,                   // wie viele Spuren die Datei trägt
+  "punkte": 55861,                 // und wie viele Punkte darin stecken
   "pat_key_check": "3f2a…",        // wie bisher, s. Abschnitt 2
   "unlesbar": 0                    // s. unten
 }

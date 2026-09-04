@@ -71,7 +71,7 @@ mehreren Anfragen hinaus, 18 davon an der 500-Punkte-Grenze.
 ## Was `pruefen.py` misst
 
 Kein Stichprobenverfahren: **jede** Anfrage gegen jede Grenze des
-JSON-Vertrags. Zuletzt 283 738 Einzelprüfungen ohne Befund über 526
+JSON-Vertrags. Zuletzt 283 990 Einzelprüfungen ohne Befund über 526
 Anfragen und 56 587 Trackpunkte. Dazu:
 
 - **Folge der Teilstücke** — `seq_from` lückenlos und ohne Überlappung

@@ -191,7 +191,7 @@ if (schritte.includes('anlegen')) {
   melde(`angelegt: ${JSON.stringify(z)}`);
   ergebnis.nach_anlegen = z;
   pruefe(!z.__leer, `Anlegen ohne Wirkung: ${z.__leer}`);
-  pruefe((z['einsätze'] || '') === '82', `Einsätze nach Anlegen: ${z['einsätze']}`);
+  pruefe((z['einsätze'] || '') === '83', `Einsätze nach Anlegen: ${z['einsätze']}`);
   pruefe((z['diensttage'] || '') === '15', `Diensttage: ${z['diensttage']}`);
   pruefe((z['ruhesegmente'] || '') === '95', `Ruhesegmente: ${z['ruhesegmente']}`);
   pruefe((z['einsätze im papierkorb'] || '') === '5',
@@ -287,7 +287,7 @@ if (schritte.includes('reset')) {
   const nachher = await zustand();
   melde(`nach dem Reset: ${JSON.stringify(nachher)}`);
   ergebnis.nach_reset = nachher;
-  pruefe((nachher['einsätze'] || '') === '82', `Einsätze nach Reset: ${nachher['einsätze']}`);
+  pruefe((nachher['einsätze'] || '') === '83', `Einsätze nach Reset: ${nachher['einsätze']}`);
   pruefe((nachher['einsätze im papierkorb'] || '') === '5',
          `Papierkorb nach Reset: ${nachher['einsätze im papierkorb']}`);
   pruefe((nachher['geräte'] || '') === '2', `Geräte nach Reset: ${nachher['geräte']}`);

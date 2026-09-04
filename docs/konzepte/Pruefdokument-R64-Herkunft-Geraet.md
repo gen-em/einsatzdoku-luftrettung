@@ -141,7 +141,7 @@ statt zu verdoppeln · verwaiste Quelle → verworfen, **mit genannter Kennung**
 `quelle_art` → verworfen und **nichts geschrieben** (die ENUM-Falle) · eine
 Nutzlast-8-Datei ergibt keine Zähler und keine Meldung.
 
-### 1.5 Zwei Prüfmittel hatten aufgehört zu prüfen
+### 1.5 Drei Prüfmittel hatten aufgehört zu prüfen
 
 Das gehört hierher und nicht in eine Fußnote, weil es die Aussagekraft
 früherer Prüfungen berührt:
@@ -155,7 +155,47 @@ früherer Prüfungen berührt:
 Beides ist behoben. Wer eine ältere Meldung „Wiederherstellungsprobe grün"
 liest, sollte wissen, dass sie höchstens bis Teil 9 reichte.
 
-### 2.4 AP4, AP5
+**Das dritte kam in AP4 dazu (F-R64-04).** Die **GPX-Probe** vergleicht in
+Teil 2 die eingecheckten Referenz-GPX punktweise gegen die Datenbank und
+ordnet über die interne Kennung im Dateinamen zu. Was sie nicht wiederfand,
+übersprang sie **still** — und meldete „0 Abweichungen". Sie zählt seither
+mit und nennt beide Zahlen. Der Lauf nach AP4 sagt: 172 Dateien zugeordnet,
+0 ohne Gegenstück, **1 verglichen, 171 verdichtet übersprungen**.
+
+> **Und das ist eine Grenze, keine Beruhigung.** Der Punkt-für-Punkt-Vergleich
+> greift nur bei **rohen** Spuren; sobald der Nachlauf sie zu Blobs verdichtet
+> hat, gehören sie zu Recht übersprungen. Wer die volle Aussagekraft dieses
+> Teils will, fährt ihn **unmittelbar nach dem Einspiellauf**, bevor der
+> Nachlauf gearbeitet hat. Vorher stand dieselbe Einschränkung auch schon da —
+> nur unsichtbar.
+
+### 2.4 AP4 — Referenz, Kreisläufe, Fixture (Web 14.2.1)
+
+| Mittel | Zahl |
+|---|---|
+| `quelldaten/pruefen.py` | 16 Dienste, **87 Einsätze**, 100 Ruhesegmente, 1129 Zeitstempel, **5959 Einzelprüfungen**, **83 Matrixzeilen, 0 offen**, 99 Marken, 0 Befunde |
+| dieselbe Prüfung gegen **fünf absichtlich eingebaute Fehler** | **5 von 5 gefangen**: Uhr-Präfix an einem Handy-Einsatz, Phase außerhalb des Schnittfensters, erfundene Teilenummer, Schnitt am neuesten Diensttag, zwei Uhren statt Uhr und Handy. Dazu die alte Beschriftung „Uhr Luftrettung (Referenz)" — sie fällt jetzt als Sperrwort auf |
+| `generator/erzeugen.py` | 87 Einsätze, 100 Segmente, **56 587 Spurpunkte**, 526 Ingest-Anfragen, 82 GPX, **117 Strecken aus OSRM / 112 Luftlinie** (beides erstmals gezählt) |
+| `generator/pruefen.py` | **283 990 Einzelprüfungen**, 182 Spuren, 81 Krypto-Rundläufe, **0 Befunde** |
+| Einspiellauf (alle Stufen, reguläre Wege) | Kopplung 2 Geräte, **526 Ingest-Anfragen, 0 Fehler**, 16 Diensttage zugeordnet, 79 nachgetragen, 2 manuell, Papierkorb, Sperrliste **bestanden**, Schnitt: **65 Punkte gewandert, 259 geblieben, 3 Phasen** |
+| Bestand danach | **88 Einsätze** (5 im Papierkorb), **100 Ruhesegmente**, **16 Diensttage**, **1 Sperrvermerk** |
+| Momentaufnahme im Bestand | **0 von 82** Einsätzen und **0 von 100** Segmenten ohne `geraet_art` — also überall gesetzt |
+| Herkunft im Bestand | android **39**, watch **39**, wear **3**, manual **2**, import **4**, schnitt **1** — **alle sechs Werte belegt** (vorher: einer) |
+| `kreislauf.py --art edbak --frisch` | **287 713 Einzelvergleiche, 16 erwartete, 0 unerklärte.** Die 88 unerklärten aus AP2 sind ohne eine einzige Ausnahmeregel verschwunden |
+| `kreislauf.py --art csv --frisch` | **9080 Einzelvergleiche, 1021 erwartete, 0 unerklärte** (eine neue Regel, GEMESSEN 1×) |
+| `kreislauf.py --art edbak-alt --frisch` | **287 743 Einzelvergleiche, 647 erwartete, 0 unerklärte** |
+| Fixture (`fixture/erzeugen.php`) | 88 Einsätze (85 mit Chiffretext), 100 Segmente, 16 Diensttage, 55 861 Spurpunkte, **2 Geräte mit Art und Modell**, **1 Sperrvermerk** in `daten` |
+| Demo-Konto aus der Fixture (`demo_anlegen()`) | **88 / 5 / 100 / 16 / 1 Vermerk / 2 Geräte** — die Fixture spielt sich vollständig ein |
+| `tools/spurprobe/` | 45 Erwartungen, **0 nicht erfüllt** |
+| `tools/ingestprobe/` | 39 Erwartungen, **0 nicht erfüllt** |
+| `tools/containerprobe/` | 32 Erwartungen, **0 nicht erfüllt** |
+| `tools/wiederherstellungs-probe/` | 94 Erwartungen, **0 nicht erfüllt** |
+| `tools/gpxprobe/` | **77** Erwartungen (2 neue), 0 nicht erfüllt — davon **172 GPX zugeordnet, 0 ohne Gegenstück**; verglichen wurden **1 von 172**, 171 sind vom Nachlauf verdichtet (siehe 1.5) |
+| `tools/wortliste/` | **0 Treffer / 0 ungenutzte Ausnahmen**, 79 Regeln, alle fünf Bereiche |
+| `tools/vollstaendigkeit/` | **280** — unverändert gegen AP2 |
+| `tools/screenshots/` | **336 Einzelbilder, 42 Kontaktbögen, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+
+### 2.5 AP5
 
 *Steht aus.* Die Sollwerte stehen im Konzept, Abschnitt 7.1.
 
@@ -170,6 +210,10 @@ liest, sollte wissen, dass sie höchstens bis Teil 9 reichte.
 | dasselbe an einem `cut-`-Einsatz | Plakette **„Schnitt"**, dazu „Spur · 181 Punkte" |
 | Konsolenfehler auf diesen drei Seiten | nur die bekannten Kartenkachel-Abrufe (`ERR_CONNECTION_RESET`) — die Umgebung erreicht `tile.openstreetmap.org` aus Chromium nicht (dokumentiert in `tools/screenshots/aufnehmen.mjs`). **0** andere |
 | Schneiden über die Tagesansicht | nicht über die Oberfläche gefahren, sondern über `api/schneiden.php` mit angemeldeter Sitzung — siehe Prüfpunkt **P-6** |
+| **Geräteseite des Demo-Kontos** nach AP4 (Chromium, 1280 px) | zwei Geräte mit Modell: „Uhr Luftdienst (Referenz) · Uhr · fēnix 7 …" und „Handy Bodendienst (Referenz) · Handy · Samsung SM-S921B" — Beleg `docs/bilder/s4-rest/08-r64-geraete-mit-modell.png` |
+| **Tagesansicht 14.06.2026** nach AP4 | der geschnittene Einsatz als Nr. 7 um 16:10, am Ruhesegment „geschnitten 16:10 – 17:15" mit „Schnitt zurücknehmen" — Beleg `docs/bilder/s4-rest/09-r64-tag-mit-schnitt.png` |
+| **Einsatzansicht eines `am-`-Einsatzes im Bilderlauf** (1024 px) | Plakette **„Handy"** neben „editiert" und „Spur · 406 Punkte", Diagnose entschlüsselt — `tools/screenshots/ausgabe/einzeln/12-einsatzansicht-1024.png` |
+| **Geschützte Angaben im Demo-Konto nach dem Einspielen der Fixture** | lesbar (Diagnose „Schädel-Hirn-Trauma bei Motorradunfall"), **0 Konsolenfehler** |
 
 ---
 
@@ -340,11 +384,58 @@ Scheitern zu erkennen ist**. Abhaken, was erledigt ist.
       geschnittenen Bereich nach und er kommt durch — die Fahrt liegt dann in
       Einsatz und Segment. Das war bis Web 14.2.0 der Zustand.
 
-### P-13 bis P-… — Referenz und Demo
+### P-13 — Das Demo-Konto zeigt nach dem Deploy den neuen Bestand
 
-*Entsteht mit AP4.* Was dort geprüft werden muss, steht im Konzept,
-Abschnitt 7.1: der edbak-Kreislauf mit dem Schnitt der Referenz und der
-Demo-Reset als **Dauerbeleg** auf dem Produktivserver.
+**Weg:** Nach dem Merge auf `main` und dem Aufruf von `update.php` das
+Demo-Konto öffnen (`demo@gen-em.org` / `nadokudemo0815`) und **einen
+Reset abwarten** (höchstens 30 Minuten) oder ihn im Adminbereich auslösen.
+
+**Erwartet:** Die Tagesliste zeigt **16 Diensttage**, der Bestand **83
+aktive Einsätze**. Unter *Einstellungen → Geräte* stehen **zwei** Geräte mit
+Modell: „Uhr Luftdienst (Referenz) · Uhr · fēnix 7 …" und „Handy Bodendienst
+(Referenz) · Handy · Samsung SM-S921B".
+
+**Scheitern erkennt man daran:** Die Geräteseite zeigt „Gerät unbekannt"
+oder gar keine Modellzeile → die Fixture ist nicht mitgegangen (sie liegt
+unter `server/demo/` und wird vom Deploy mit hochgeladen; ohne erhöhte
+`WEB_VERSION` sieht der Browser außerdem alte Dateien).
+
+### P-14 — Der geschnittene Einsatz und seine Sperre
+
+**Weg:** Im Demo-Konto den **14.06.2026** öffnen.
+
+**Erwartet:** In der Einsatzliste steht als letzter Eintrag ein Einsatz um
+**16:10** ohne Einsatzort, Alter und Diagnose. Unter *Ruhesegmente* trägt das
+Segment ab 15:21 den Vermerk **„geschnitten 16:10 – 17:15"** und den Knopf
+**„Schnitt zurücknehmen"**. Die Einsatzansicht dieses Einsatzes zeigt die
+Plakette **„Schnitt"** und „Spur · 65 Punkte".
+
+**Scheitern erkennt man daran:** Der Vermerk fehlt → der Sperrvermerk hat
+die Sicherung nicht überstanden, und Backlog Nr. 63 ist nicht behoben. Genau
+das prüft dieser Weg — und weil der Reset alle 30 Minuten läuft, prüft er
+sich danach von selbst.
+
+> **Ein bekanntes Ärgernis an dieser Zeile** (F-R64-05): In der Dauer-Spalte
+> steht **„kein Ende"**, obwohl der Einsatz abgeschlossen ist und ein Ende
+> hat. Die Tabelle rechnet die Dauer aus Beginn und **Phase 9**, und ein
+> geschnittener Einsatz hat keine. `api/day.php` nennt das im Kommentar
+> ausdrücklich gewollt. **Das ist kein Fehlschlag dieses Prüfpunkts** — aber
+> es ist eine Entscheidung, die jetzt jemand treffen sollte, weil der Fall ab
+> hier dauerhaft im Demo-Konto steht.
+
+### P-15 — Ein CSV-Export lässt sich wieder einlesen
+
+**Weg:** Im Demo-Konto *Einstellungen → Import / Export* → Export als CSV
+mit personenbezogenen Angaben. Das Archiv in ein **frisches** Konto
+importieren.
+
+**Erwartet:** Die Prüftabelle meldet **83 Einsätze, 0 Fehler**. Vor Web
+14.2.1 war es **82 Einsätze und 1 Fehler** — der geschnittene fiel durch,
+weil ihm die Alarmzeit fehlte.
+
+**Scheitern erkennt man daran:** „1 Zeile(n) mit Fehler sind weder korrigiert
+noch übersprungen" und der Import bleibt gesperrt → der Rückfall auf den
+Einsatzbeginn in `export.js` greift nicht (alte Datei im Browser-Zwischenspeicher?).
 
 ---
 
@@ -353,8 +444,9 @@ Demo-Reset als **Dauerbeleg** auf dem Produktivserver.
 | Mittel | Was es **nicht** sagt |
 |---|---|
 | **Ingestprobe** | Sie spricht mit `ingest.php` über echtes HTTP, aber mit **selbst angelegten** Geräten per SQL. Ob die Kopplung Art und Modell richtig einträgt, prüft `tools/kopplungsprobe/`, nicht sie. Und sie sagt nichts über die Uhr selbst — dass die Garmin-App `m-` und die Handy-App `am-` vergibt, steht in deren Quelltext und wird dort geprüft |
+| **Der Einspiellauf** | Er koppelt seit AP4 **echt** über `pair.php` — damit prüft er den Kopplungsweg mit. Was er nicht prüft: den Weg der Uhr und der Handy-App bis dorthin. Dass die Garmin-App `m-` und die Handy-App `am-` vergibt, steht in deren Quelltext und wird dort geprüft |
 | **Migration an einer lokalen Kopie** | Die Zahlen gelten für **diesen** Bestand. Die Migration selbst ist dieselbe; die Wirkung ist es nicht |
-| **CSV-Kreislauf** | Er misst den **Umlauf**, nicht die Anzeige. Und er vergleicht gegen eine Referenz vom 24.08.2026 — solange die nicht erneuert ist (AP4), sind Format­änderungen als Abweichung sichtbar und keine Regression |
+| **CSV-Kreislauf** | Er misst den **Umlauf**, nicht die Anzeige. Seit AP4 vergleicht er gegen die erneuerte Referenz vom 04.09.2026; die fünf Abweichungen aus AP3 sind damit verschwunden |
 | **Browserprüfung der Plaketten** | Drei Seiten, ein Browser, eine Fensterbreite. Sie sagt nichts über andere Bildschirmgrößen — die Plakette ist allerdings ein vorhandener Baustein und keine neue Darstellung (`Design.md` 9) |
 | **Wortliste** | Sie zählt Wörter, nicht Sinn. Dass „Wear" für die Wear-OS-App die richtige Beschriftung ist, hat sie nicht geprüft — das ist eine Entscheidung (E-R64-09) |
-| **Vollständigkeit** | Sie zählt CSS-Klassen und Symbole. R64 hat an der Gestaltung nichts geändert; die unveränderte 278 ist deshalb ein **Ausschluss** („nichts kaputtgemacht"), kein Nachweis |
+| **Vollständigkeit** | Sie zählt CSS-Klassen und Symbole. R64 hat an der Gestaltung nichts geändert; die unveränderte **280** ist deshalb ein **Ausschluss** („nichts kaputtgemacht"), kein Nachweis |

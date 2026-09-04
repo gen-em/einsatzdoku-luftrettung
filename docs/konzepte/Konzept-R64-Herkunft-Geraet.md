@@ -10,11 +10,11 @@ nimmt dieses Paket auf, sobald sie dort ankommt.**
 >
 > | | |
 > |---|---|
-> | Stand | 04.09.2026 — **AP1, AP3 und AP2 erledigt** (Web 14.0.0, 14.1.0, 14.2.0). Entscheidungen E-R64-01 bis **E-R64-20**; keine offene F-Frage |
-> | Paket in Arbeit | **AP4** (Referenz, Kreisläufe, Fixture — E-R64-15 und -16) |
-> | Erledigt | **AP1** — Datenmodell, Ableitung, anlegende Stellen, Migration `2026_09_04_herkunft_geraet`; Ingestprobe 39/0, Register 42 = 42 · **AP3** — Export und Anzeige; CSV-Kreislauf 8965/1023/5, Excel unverändert 31 Spalten · **AP2** — Nutzlast 9, Momentaufnahme und Sperrvermerke in der Sicherung; Wiederherstellungsprobe 94/0, edbak-alt-Kreislauf 0 unerklärt · **Vorarbeit AP5** — Vertrag 2.2, Prüfdokument |
+> | Stand | 04.09.2026 — **AP1, AP3, AP2 und AP4 erledigt** (Web 14.0.0, 14.1.0, 14.2.0, 14.2.1). Entscheidungen E-R64-01 bis **E-R64-23**; keine offene F-Frage. Zwei Funde am Code (F-R64-03, F-R64-05), einer behoben, einer dem Auftraggeber vorgelegt |
+> | Paket in Arbeit | **AP5** (Doku, Buchführung, Prüfdokument, Rahmenplan) |
+> | Erledigt | **AP1** — Datenmodell, Ableitung, anlegende Stellen, Migration `2026_09_04_herkunft_geraet`; Ingestprobe 39/0, Register 42 = 42 · **AP3** — Export und Anzeige; CSV-Kreislauf 8965/1023/5, Excel unverändert 31 Spalten · **AP2** — Nutzlast 9, Momentaufnahme und Sperrvermerke in der Sicherung; Wiederherstellungsprobe 94/0, edbak-alt-Kreislauf 0 unerklärt · **AP4** — Referenzbestand mit echt gekoppelten Geräten und einem Schnitt; alle sechs Herkunftswerte belegt; drei Kreisläufe **0/0/0** unerklärt · **Vorarbeit AP5** — Vertrag 2.2, Prüfdokument |
 > | Reihenfolge | **AP1 → AP3 → AP2 → AP4 → AP5.** AP3 ist auf Weisung des Auftraggebers vorgezogen worden, weil die Anzeige zwischen AP1 und AP3 für `android`, `wear` und `schnitt` weiter „Uhr" zeigte. Kein fachlicher Konflikt: AP3 und AP2 fassen keine gemeinsame Datei an |
-> | Wo es hakt | nichts. Der größte Einzelposten bleibt AP4 (Referenz: Kopplungsweg und Schnitt im Werkzeug, alle drei Läufe von vorn) |
+> | Wo es hakt | nichts. Offen ist nur eine **Entscheidung des Auftraggebers** (F-R64-05): Die Einsatztabelle zeigt für einen abgeschlossenen Einsatz ohne Phase 9 „kein Ende", obwohl `ended_at` gesetzt ist — im Demo-Konto ab jetzt dauerhaft sichtbar. Der Kommentar in `api/day.php` nennt das ausdrücklich gewollt; deshalb nicht eigenmächtig geändert |
 > | Fable-Schritt | **keiner** (Spalten, eine Migration, ein Dateiformat mit Verweisen — Standardmodell nach K2) |
 > | Erhoben an | `main` vom 04.09.2026, 05:59 UTC: **Web 13.2.0, Uhr 3.0.0, Android 0.10.2** (PR #31 und #32 gemergt — der Rahmenplan-Kopf sagt noch „Android 0.7.7, Paket E nicht gemergt", siehe B-R64-02). Kein S4-Rest-Zweig gepusht |
 > | Erhoben aus | dem Repositorium allein: `schema.sql`, `update.php`, `ingest.php`, `backup_lib.php`, `spur_lib.php`, `api/schneiden.php`, `api/export_data.php`, `api/backup_restore.php`, `adminbackup_lib.php`, `einsatz.php`, `geraete_lib.php`, `pair.php`, `docs/Backup-Format.md`, `docs/Export-Format.md`, `docs/JSON-Vertrag.md`, `docs/Backlog.md`, `tools/referenzdatensatz/`. Kein Server, kein Gerät in der Konzeptsitzung — was sich so nicht ermitteln ließ, steht in Abschnitt 9 |
@@ -584,6 +584,22 @@ die geänderten Dateien und dem Push (K7).
 | **Dateien** | `server/version.php` · `docs/CHANGELOG.md` · `docs/JSON-Vertrag.md` 8 · `docs/Technik.md` · `docs/Backlog.md` 63/83 · `docs/Rahmenplan.md` (Abschnitt 10) · `docs/konzepte/Pruefdokument-R64-Herkunft-Geraet.md` (neu, K9) · `docs/konzepte/Pruefdokument-S4-Handy-Uhr-Client.md` (eine Verweiszeile) · dieses Konzept (Statusblock, Umsetzungsstand) |
 | **Abnahme** | Wortliste a–d 0/0/0 · Vollständigkeit nach CLAUDE.md 6 · Gegenproben aus Abschnitt 10 grün · Prüfdokument nach K9-Muster mit **allen Zahlen aus AP1–AP4** und der abhakbaren Liste 7.2 |
 
+### Entscheidungen der Umsetzung, Teil 2 (E-R64-21 bis -23, 04.09.2026)
+
+| Nr. | Entscheidung | Begründung |
+|---|---|---|
+| **E-R64-21** | **Das zweite Referenzgerät wird ein echtes Handy — mit seinen Kennungen.** Die 42 Einsätze und 52 Ruhesegmente des Geräts 12 heißen jetzt `am-`/`ar-`, seine acht Diensttage `ad-`; drei handgeschriebene Prüffälle heißen `wm-` (an der Wear-OS-Uhr begonnen, vom Handy gesendet). Auftraggeber, 04.09.2026 | E-R64-15 sagt „eines `handy`", lässt die Kennungen aber bei `m-`/`r-`. Das ist in sich widersprüchlich: `herkunft_ableiten()` liest die Herkunft aus dem Präfix, ein Handy mit `m-` erzeugte also 42 Einsätze mit `origin = watch`. Und die Abdeckungsmatrix belegte von sechs Herkunftswerten genau einen. Die Umstellung kostet nichts, was AP4 nicht ohnehin neu misst — die Ziffernfolge der Kennungen bleibt dieselbe, weil sie aus `randrange()` mit festem Samen kommt und nicht am Präfix hängt (gemessen: nach dem Zurücksetzen der Präfixe sind alle 16 Dienstdateien byteidentisch) |
+| **E-R64-22** | **Die Stufe `schneiden` steht am ENDE der Kette**, nicht zwischen `zuordnen` und `nachtragen` | Die drei Stufen dazwischen suchen ihre Einsätze über `start_hhmm`: `nachtragen` bricht bei zwei Treffern ab, `papierkorb` nimmt still `treffer[0]`, `sperrliste` löscht endgültig. Ein geschnittener Einsatz wäre ab der Stufe ein zusätzlicher Einsatz in derselben Liste. Am Ende gibt es die Überschneidung nicht — und der geschnittene Einsatz braucht keine der drei, er bleibt bewusst leer. Zusätzlich prüft `quelldaten/pruefen.py` die Beginnminute auf Einmaligkeit im Diensttag; zwei Riegel sind hier billiger als ein stiller Fehlgriff |
+| **E-R64-23** | **AP4 stuft die Web-Version hoch (14.2.1)**, obwohl es „nur" den Referenzbestand erneuert | `server/demo/fixture.json.gz` liegt unter `server/` und steht **nicht** in der Ausnahmeliste des Deploys. Der Satz aus CLAUDE.md 2 („eine Änderung, die nur `tools/` oder `docs/` anfasst, stuft keine Zählung hoch") gilt hier gerade nicht: Ein Push auf `main` lädt die Fixture sofort auf den Produktivserver, und das Demo-Konto zeigt ab dem nächsten Reset den neuen Bestand. Dazu kommt die Behebung von F-R64-03, also ohnehin eine Codeänderung |
+
+### Funde am Code (F-R64)
+
+| Nr. | Fund | Stand |
+|---|---|---|
+| **F-R64-03** | **Die Anwendung schrieb eine CSV-Datei, die sie selbst nicht lesen konnte.** `uhrzeit_ortszeit` kam aus Phase 2, der eigene Import liest die Spalte als Startzeit und verlangt sie (`import_profiles.js`, `required: true`). Ein geschnittener Einsatz hat keine Phase 2 — die Spalte blieb leer, der Import wies die Zeile ab: 83 Zeilen hinaus, 82 herein, 1 Fehler | **behoben** in Web 14.2.1: Rückfall auf `started_at` in `export.js`. Für jeden Einsatz mit Phase 2 ändert sich nichts. Die beim Wiedereinlesen entstehende Alarmierung steht als erwartete Abweichung mit Zahl in `ausnahmen/csv_umlauf.json` |
+| **F-R64-04** | **Die GPX-Probe verglich eine Datei statt 172 und meldete grün.** Teil 2 ordnet über die interne Kennung im Dateinamen zu und übersprang still, was es nicht wiederfand | **behoben**: Sie zählt jetzt mit und meldet „x von y verglichen, z verdichtet übersprungen". Eine GPX-Datei ohne Zeile im Demo-Konto ist seither ein eigener Befund. Gemessen nach AP4: 172 zugeordnet, 0 ohne Gegenstück, 1 verglichen, 171 verdichtet — die niedrige Vergleichszahl ist der Nachlauf, nicht ein Fehler, und sie steht jetzt da, statt sich hinter „0 Abweichungen" zu verstecken |
+| **F-R64-05** | **„kein Ende" an einem abgeschlossenen Einsatz.** Die Einsatztabelle rechnet die Dauer aus Beginn und **Phase 9**; fehlt die, zeigt sie „kein Ende" — auch wenn `final = 1` und `ended_at` gesetzt sind. Betroffen sind geschnittene und importierte Einsätze (gemessen: 3 im ganzen Bestand). Ab AP4 steht so ein Einsatz **dauerhaft im Demo-Konto** | **offen, Entscheidung des Auftraggebers.** `api/day.php` nennt das Verhalten im Kommentar ausdrücklich gewollt („ohne Phase 9 bewusst null … auch bei abgeschlossenen Einsätzen ohne 9er"), deshalb nicht eigenmächtig geändert. Der Rückfall wäre dieselbe Zeile wie bei F-R64-03: `ended_at` nehmen, wenn Phase 9 fehlt und der Einsatz abgeschlossen ist |
+
 ### Umsetzungsstand (wird fortgeschrieben)
 
 | Paket | Stand | Fassung | Zahlen | Anmerkung |
@@ -591,7 +607,7 @@ die geänderten Dateien und dem Push (K7).
 | AP1 | **erledigt** 04.09.2026 | Web **14.0.0** | Ingestprobe **39 Erwartungen, 0 nicht erfüllt** (davon 9 neu in Teil 8) · Migration an einer Installation mit 272 Einsätzen und 242 Segmenten: `origin` vorher watch 177 / manual 5 / import 90, nachher watch 162 / android 12 / wear 3 / manual 4 / import 90 / schnitt 1 · Momentaufnahme nachgefüllt: 85 von 272 Einsätzen (81 uhr, 4 handy), 108 von 242 Segmenten (100 uhr, 8 handy) — der Rest hat keinen Geräteverweis mehr · zweiter Lauf: `skip` greift · frische Installation aus `schema.sql`: vier Spalten da, `origin` VARCHAR(16) · **Register 42 = 42** · Schnitt über `api/schneiden.php`: `origin='schnitt'`, `manual=1`, Art und Modell von der Quelle geerbt | Einzelheiten unter „Umsetzungsstand AP1" |
 | AP2 | **erledigt** 04.09.2026 | Web **14.2.0** | Wiederherstellungsprobe **94 / 0** (18 neu in Teil 11) · Containerprobe **32 / 0** · Spurprobe 45 / 0 · Ingestprobe 39 / 0 · `edbak-alt`-Kreislauf **287 743 Einzelvergleiche, 647 erwartete, 0 unerklärte** · `edbak`-Kreislauf 88 unerklärte (87 × `schnitte` None→[], 1 × Fassung 8→9 — verschwinden mit AP4) · Kosten +1,4 ms und +4,7 % Datei je Fenster · Wortliste 0/0/0 · Vollständigkeit 278 → **280** (zwei Auslassungszeichen in Kommentaren) | Einzelheiten unter „Umsetzungsstand AP2" |
 | AP3 | **erledigt** 04.09.2026 (vorgezogen) | Web **14.1.0** | CSV-Kreislauf **8965 Einzelvergleiche, 1023 erwartete, 5 unerklärte** (alle fünf in `felder.csv`, Folge der noch nicht erneuerten Referenz — siehe unten), 0 ungenutzte Regeln · `einsaetze.csv` **94 Spalten**, `ruhezeiten.csv` **11** · Excel (Standard) **31 Spalten, unverändert** · Plaketten im Browser belegt: Handy, Wear, Schnitt · Wortliste **0/0/0** bei 79 Regeln · Vollständigkeit 278 | Einzelheiten unter „Umsetzungsstand AP3" |
-| AP4 | offen | | | |
+| AP4 | **erledigt** 04.09.2026 | Web **14.2.1** | Quelldaten 87/100, **83 Matrixzeilen, 0 offen**, 5959 Einzelprüfungen · Generator **283 990** Prüfungen, 56 587 Spurpunkte, **117 Strecken aus OSRM** (112 Luftlinie, beides erstmals gezählt) · Einspiellauf 526 Ingest-Anfragen, 0 Fehler · Bestand **88 Einsätze / 100 Segmente / 16 Diensttage**, Momentaufnahme an **82 von 82** Einsätzen und **100 von 100** Segmenten, Herkunft android 39 / watch 39 / wear 3 / manual 2 / import 4 / schnitt 1 · Schnitt: 65 Punkte gewandert, 259 geblieben, 1 Vermerk · Kreisläufe **edbak 287 713/0**, **csv 9080/0**, **edbak-alt 287 743/0** unerklärt · Fixture 88/16/100, 1 Vermerk, 2 Geräte mit Modell · Spurprobe 45/0, Ingestprobe 39/0, Containerprobe 32/0, Wiederherstellungsprobe 94/0, GPX-Probe **77**/0 (zwei neue Erwartungen) · Wortliste 0/0/0, Vollständigkeit 280, Bilderlauf 336 Bilder / 0 Überlauf / 0 Konsolenfehler | Einzelheiten unter „Umsetzungsstand AP4" |
 | AP5 | **Vorarbeit erledigt**, Rest offen | — (nur `docs/`) | **P-8 nachgemessen statt gelesen:** Ein Archiv aus Web 14.1.0 (mit den zwei neuen Spalten) durch einen frischen CSV-Umlauf — Profil erkannt, „12 Einsätze, 0 Hinweise, 0 Fehler", **2011 Einzelvergleiche, 171 erwartete, 0 unerklärte** · JSON-Vertrag auf **Fassung 2.2**: `cut-` in der Präfix-Tabelle nachgetragen (**B-R64-01 damit behoben**), Spalte „Herkunft (`origin`)" je Präfix, Abschnitt zur Ableitung · **Prüfdokument angelegt** (`Pruefdokument-R64-Herkunft-Geraet.md`) mit allen Zahlen aus AP1 und AP3 und acht Prüfpunkten · Verweiszeile im Prüfdokument S4 | Offen bleiben: `version.php`-Erzählung des Abschlusses, Technik.md, Backlog 63/83, Rahmenplan Fassung 27, Prüfpunkte zu AP2/AP4 |
 
 ### Umsetzungsstand AP1 (04.09.2026, Web 14.0.0)
@@ -781,6 +797,64 @@ drei Auslieferungen).
 | **P-R64-06** | Der CSV-Kreislauf steht nach AP3 auf **5 unerklärt** statt 0. Die Abweichungen liegen in `felder.csv` (vier neue Zeilen, eine geänderte Beschreibung) | **Keine Ausnahmeregel geschrieben.** Sie sind keine Eigenschaft des Umlaufs, sondern die Folge einer Referenzdatei, die älter ist als der Code; mit AP4 verschwinden sie. Eine Regel dafür wäre ein Filter (`vergleich/LIESMICH.md`). Die Zahl steht stattdessen in der Beschreibung der Ausnahmeliste und hier |
 
 ---
+
+#### Umsetzungsstand AP4
+
+**Was gebaut wurde.** Die Stufe `geraet` geht den S5-Kopplungsweg
+(`pair.php start` → Code im Konto einlösen → Ja am Gerät → `action=rename`);
+die Geräteblöcke stehen als neue Datei `quelldaten/geraete.json`. Die
+Kennungen des Geräts 12 sind auf `am-`/`ar-`/`ad-` umgestellt, drei
+handgeschriebene Prüffälle auf `wm-` (E-R64-21). Neu ist die Stufe
+`schneiden` am Ende der Kette (E-R64-22) und das Objekt `schnitte` in
+`D08.json`. `quelldaten/pruefen.py` prüft seither die Geräteblöcke, die
+Präfixe gegen die Geräteart, den Schnitt gegen sein Segment und die
+Beschriftungen gegen die Sperrliste der Wortliste.
+
+**Probleme und wie sie gelöst wurden.**
+
+1. **Die Umbenennung hätte die Straßengeometrie lautlos gekostet.**
+   `generator/routen/routen_soll.json` schlüsselt auf die `client_ref`; ein
+   Fehlgriff lief in den Rückfall „Luftlinie mit 190 km/h", ohne Meldung und
+   ohne Zähler. Die Datei ist mit umbenannt worden (117 Einträge), und
+   `erzeugen.py` **zählt jetzt mit**: 117 Strecken aus OSRM, 112 ersatzweise
+   Luftlinie (die acht Luftdienste, für die es zu Recht keine Straße gibt).
+2. **Das JSON-Schema wies die neuen Kennungen ab.** Die Muster standen auf
+   `^m-…` und `^r-…`; 94 Einträge wären durchgefallen. Erweitert auf
+   `^(a|w)?m-…`, `^a?r-…`, `^a?d-…`, dazu das neue Objekt `schnitte`.
+3. **Der Schnitt darf nicht überall liegen.** Vier Randbedingungen, jede an
+   einem Prüfmittel gemessen und jede jetzt in `pruefen.py`: nicht am
+   neuesten Diensttag (`sichtpruefung.mjs` und vier Seiten des Bilderlaufs
+   greifen auf dessen erste Einsatzzeile), nicht über Mitternacht (die
+   Phasen rechnen mit dem Tagesversatz des Beginns), im Fenster der Spur des
+   Segments, und die Beginnminute einmalig im Diensttag.
+4. **Der Beleg für das Einlösen des Codes ist nicht die HTTP-Antwort.**
+   Erfolg ist eine 302, Misserfolg eine 200 mit Fehlertext — nach dem Folgen
+   der Umleitung sind beide 200. Die Stufe prüft deshalb den *nächsten*
+   Schritt: `pair.php bestaetigen` antwortet mit `409 nicht_beansprucht`,
+   wenn das Einlösen nicht gewirkt hat.
+5. **Der CSV-Kreislauf legte einen Fehler der Anwendung offen** (F-R64-03,
+   oben). Behoben; die verbleibende Abweichung ist eine Eigenschaft des
+   Formats und steht mit Zahl in der Ausnahmeliste.
+6. **Die GPX-Probe meldete grün und maß fast nichts** (F-R64-04, oben).
+   Behoben.
+7. **Ein Griff daneben beim Aufräumen einer Gegenprobe** hat die
+   Quelldaten-Arbeit einmal zurückgesetzt (`git checkout` auf das ganze
+   Verzeichnis statt auf eine Kopie). Wiederhergestellt; die Gegenproben
+   laufen seither in einer Kopie unter dem Ablagefach, nie im Arbeitsstand.
+
+**Dass die neuen Prüfungen greifen, ist gemessen, nicht angenommen.** Fünf
+absichtlich eingebaute Fehler — Uhr-Präfix an einem Handy-Einsatz, Phase
+außerhalb des Schnittfensters, erfundene Teilenummer, Schnitt am neuesten
+Diensttag, zwei Uhren statt Uhr und Handy — wurden **alle fünf** gefangen;
+dazu die alte Beschriftung „Uhr Luftrettung (Referenz)", die jetzt als
+Sperrwort auffällt.
+
+**Was AP4 nicht konnte.** `browser/demo_pruefen.mjs` läuft nicht auf einer
+Installation, deren `demo@gen-em.org` das Referenzkonto ist — das Werkzeug
+sagt das selbst und bricht ab. Was es für AP4 belegen soll, ist stattdessen
+einzeln gemessen: Fixture-Zahlen 88/16/100, ein Sperrvermerk, zwei Geräte
+mit Modell, und die geschützten Angaben im Browser lesbar (Diagnose des
+ersten Einsatzes des neuesten Tages, 0 Konsolenfehler).
 
 ## 7. Prüfprotokoll-Soll (für das Prüfdokument, K9)
 

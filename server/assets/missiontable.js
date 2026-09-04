@@ -407,7 +407,7 @@ const EdMissionTable = (() => {
        * Klasse hat im neuen Stylesheet keine Regel mehr — die beiden Knoepfe
        * waren seit dem Redesign in der Grundform des Browsers. Aufgefallen ist
        * es niemandem, weil sie erst ab 200 Treffern erscheinen und der
-       * Referenzbestand 82 Einsaetze hat. */
+       * Referenzbestand 88 Einsaetze hat. */
       mehrKnopf = document.createElement('button');
       mehrKnopf.type = 'button';
       mehrKnopf.className = 'knopf knopf-neutral';
