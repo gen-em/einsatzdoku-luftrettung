@@ -34,7 +34,10 @@ android {
         minSdk = 30
         targetSdk = 36
 
-        versionCode = rootProject.extra["nadokuVersionCode"] as Int
+        /* Der Versatz aus Backlog Nr. 98: Play verlangt je APK unter
+         * derselben Anwendungs-ID einen eindeutigen Code. Begruendung des
+         * Schemas im Wurzel-Bauskript (`UHR_VERSATZ`). */
+        versionCode = rootProject.extra["nadokuVersionCodeUhr"] as Int
         versionName = rootProject.extra["nadokuVersionName"] as String
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

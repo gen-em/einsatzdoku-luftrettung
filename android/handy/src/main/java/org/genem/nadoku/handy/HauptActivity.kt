@@ -254,6 +254,7 @@ private fun GekoppelteOberflaeche(
     var beendenFrageOffen by remember { mutableStateOf(false) }
     var abschlussFrageOffen by remember { mutableStateOf(false) }
     var akkuFrageOffen by remember { mutableStateOf(false) }
+    var verbrauchFrageOffen by remember { mutableStateOf(false) }
 
     var ortungFrei by remember {
         mutableStateOf(
@@ -328,6 +329,13 @@ private fun GekoppelteOberflaeche(
          * (E-S4-52). */
         if (ortungFrei && !app.einstellungen.akkuHinweisGezeigt && !akkuFreigestellt(kontext)) {
             akkuFrageOffen = true
+        }
+    }
+
+    if (verbrauchFrageOffen) {
+        Verbrauchhinweis {
+            verbrauchFrageOffen = false
+            app.einstellungen.verbrauchHinweisGezeigt = true
         }
     }
 
@@ -420,6 +428,21 @@ private fun GekoppelteOberflaeche(
                     app.klammer.beginnen(modus)
                     AufzeichnungsDienst.starten(kontext)
                     if (!app.einstellungen.akkuHinweisGezeigt) akkuFrageOffen = true
+                    /* DER VERBRAUCHSHINWEIS, EINMAL JE INSTALLATION
+                     * (Backlog Nr. 82).
+                     *
+                     * NACH dem Beginnen und nicht davor: Ein Dialog, der den
+                     * Start aufhaelt, steht im Weg, wenn es losgeht. Der
+                     * Dienst laeuft bereits, wenn der Hinweis erscheint — er
+                     * ist eine Auskunft, keine Rueckfrage.
+                     *
+                     * NUR WENN DER AKKU-DIALOG NICHT OHNEHIN KOMMT: Zwei
+                     * Kaesten uebereinander im selben Augenblick liest
+                     * niemand, und der Akku-Dialog traegt denselben Satz seit
+                     * diesem Paket in seinem zweiten Absatz. */
+                    if (!akkuFrageOffen && !app.einstellungen.verbrauchHinweisGezeigt) {
+                        verbrauchFrageOffen = true
+                    }
                     takt++
                 }
             },
@@ -607,6 +630,32 @@ private fun Rueckfrage(
         dismissButton = {
             TextButton(onClick = aufNein) {
                 Text(stringResource(R.string.trennen_nein), color = Farbe.dunkelblau)
+            }
+        },
+        containerColor = Farbe.schnee,
+    )
+}
+
+@Composable
+internal fun Verbrauchhinweis(aufVerstanden: () -> Unit) {
+    /* EIN KNOPF, KEINE WAHL. Es gibt nichts zu entscheiden — die Aufzeichnung
+     * laeuft bereits, und abschalten laesst sich der Stromverbrauch nicht,
+     * ohne den Dienst zu beenden. Ein zweiter Knopf ("Spaeter") taeuschte eine
+     * Wahl vor, die es nicht gibt.
+     *
+     * `onDismissRequest` setzt denselben Merker: Wer danebentippt, hat den
+     * Text gesehen; ihn beim naechsten Dienst noch einmal zu zeigen, machte
+     * aus dem einmaligen Hinweis eine Dauerwarnung (Backlog Nr. 82). */
+    AlertDialog(
+        onDismissRequest = aufVerstanden,
+        title = { Text(stringResource(R.string.verbrauch_titel), color = Farbe.dunkelblau) },
+        text = { Text(stringResource(R.string.verbrauch_hinweis), color = Farbe.asphalt) },
+        confirmButton = {
+            TextButton(onClick = aufVerstanden) {
+                Text(
+                    stringResource(R.string.verbrauch_verstanden),
+                    color = Farbe.blauTief, fontWeight = FontWeight.SemiBold,
+                )
             }
         },
         containerColor = Farbe.schnee,

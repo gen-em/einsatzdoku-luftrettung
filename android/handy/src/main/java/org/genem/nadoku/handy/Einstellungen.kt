@@ -77,6 +77,25 @@ class Einstellungen(kontext: Context) {
         set(wert) = ablage.edit { putBoolean(AKKU, wert) }
 
     /**
+     * Wurde der Hinweis auf den Stromverbrauch gezeigt? (Backlog Nr. 82)
+     *
+     * EIN ZWEITER MERKER NEBEN [akkuHinweisGezeigt], und das ist kein
+     * Versehen: Die beiden Hinweise beantworten verschiedene Fragen und
+     * erreichen verschiedene Menschen. Der Akku-Dialog erklaert, warum die App
+     * Strom ziehen DARF, und erscheint nur, wenn die Freistellung noch nicht
+     * steht. Dieser hier sagt, dass sie es in erheblichem Mass TUT — und er
+     * erreicht gerade die, die den ersten nie sehen, weil ihre Freistellung
+     * schon stand.
+     *
+     * Sie an EINEN Merker zu haengen hiesse: Wer den Akku-Dialog gesehen hat,
+     * bekommt den Verbrauchshinweis nie — und das sind zwei verschiedene
+     * Auskuenfte.
+     */
+    var verbrauchHinweisGezeigt: Boolean
+        get() = ablage.getBoolean(VERBRAUCH, false)
+        set(wert) = ablage.edit { putBoolean(VERBRAUCH, wert) }
+
+    /**
      * Der fortlaufende Zähler der Client-Kennungen (Vertrag 8).
      *
      * Er liegt hier, weil er **Neustarts überleben muss** und weil er kein
@@ -94,6 +113,7 @@ class Einstellungen(kontext: Context) {
         const val UHR_SPERRE = "uhr_sperre"
         const val MODUS = "letzter_modus"
         const val AKKU = "akku_hinweis"
+        const val VERBRAUCH = "verbrauch_hinweis"
         const val ZAEHLER = "kennungszaehler"
     }
 }

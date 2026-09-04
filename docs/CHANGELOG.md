@@ -14,6 +14,87 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.11.1] — 2026-09-04
+
+### Android — die App sagt jetzt, dass sie den Akku leert
+
+Sie zeichnet über den ganzen Dienst mit GPS auf und war damit der mit Abstand
+größte Stromverbraucher — gesagt wurde es nirgends. Schlimmer: Der einzige
+Text zum Thema, die Führung zur Akku-Freistellung, erklärte, warum die App
+Strom ziehen **darf**. Wer nur den las, hielt den leeren Akku am Dienstende
+für einen Fehler.
+
+**Zwei Orte, weil einer nicht reicht.** Der Akku-Dialog bekommt einen zweiten
+Absatz — dort steht der Mensch ohnehin und trifft gerade eine Entscheidung.
+Aber dieser Dialog erscheint **nur, wenn die Freistellung noch nicht steht**;
+wer sie vorher gesetzt hat oder dessen Hersteller sie mitbringt, sieht ihn
+nie. Für die kommt der Hinweis nach dem **ersten** Dienstbeginn, einmal je
+Installation.
+
+**Nach dem Beginnen, nicht davor:** Ein Dialog, der den Start aufhält, steht
+im Weg, wenn es losgeht. Der Dienst läuft bereits, wenn der Hinweis erscheint
+— er ist eine Auskunft, keine Rückfrage, und hat deshalb einen Knopf statt
+zweier. Und er kommt **nicht**, wenn der Akku-Dialog ohnehin erscheint: Zwei
+Kästen übereinander im selben Augenblick liest niemand.
+
+**Keine Zahl im Text.** „Etwa X Prozent" wäre hilfreicher, ist aber ohne
+Messung am Gerät nicht zu verantworten — und der Gerätetest steht aus. Ein
+geratener Wert wäre schlimmer als keiner: Er würde geglaubt.
+
+### Android — der Versionscode der Uhr springt einmalig
+
+Die Play Console verlangt unter einer Anwendungs-ID je hochgeladenem APK einen
+eindeutigen Versionscode. Handy und Uhr tragen dieselbe ID (E-S4-01) und
+bisher denselben gerechneten Code — damit ließ sich das zweite der beiden
+nicht hochladen, und ohne das gibt es **kein Wear-OS-Release**.
+
+Die Uhr rechnet jetzt `+ 1 000 000`. Am APK nachgemessen: Handy **1100**, Uhr
+**1001100**, beide Versionsname `0.11.0` — die Zählung bleibt eine (E-S4-02).
+
+**Nur die Uhr, nicht beide.** Backlog Nr. 98 nannte auch eine führende
+Formfaktor-Ziffer; die hätte das Handy mitverschoben, wo kein Sprung nötig
+ist. Und die Uhr bekommt den **höheren** Code: Play fordert nur Eindeutigkeit,
+aber ein Versatz nach unten könnte mit einer künftigen Handy-Fassung
+kollidieren, einer nach oben nie — 1 000 000 entspräche der Handy-Version
+100.0.0.
+
+### Android — `android:roundIcon` ist ausgetragen
+
+Es stand in beiden Modulen auf **demselben** adaptiven Symbol wie
+`android:icon`. Das ist ein Kategorienfehler: `roundIcon` stammt aus Android
+7.1 und war die Übergangslösung, *bevor* es adaptive Symbole gab — wer es
+auswertet, erwartet dort ein fertig gerundetes Bild, das die Fläche füllt,
+kein 108-dp-Raster mit einem 52-dp-Motiv in der Mitte. Ab minSdk 26 gibt es
+kein Zielgerät, das es braucht.
+
+**Das ist die verbliebene Erklärung für Backlog Nr. 81** (App-Symbol im Kopf
+der Benachrichtigung zu groß und angeschnitten), nachdem zwei andere
+ausgeschlossen wurden: Die adaptive Kachel ist nachgerechnet und richtig, und
+„Themed Icons" waren auf dem Gerät **aus** — die `<monochrome>`-Ebene war also
+gar nicht im Spiel.
+
+**Ein Beleg ist es nicht.** Prüfen ließe es sich nur am Gerät; der Emulator
+führt AOSP und zeichnet den Benachrichtigungskopf anders als One UI.
+Ausgetragen wird das Attribut trotzdem, weil es unabhängig davon überflüssig
+und falsch belegt ist.
+
+### Android — zwei Grenzen der Prüfmittel, beim Belegen gefunden
+
+- **Der Bilderlauf kann keine Dialoge.** Der Verbrauchshinweis wurde als
+  Bildfall aufgenommen und ergab **1 dp Inhalt, 0 Knöpfe** bei allen drei
+  Breiten: Ein Compose-`AlertDialog` rendert in einem eigenen Fenster, das die
+  Bildaufnahme über die Wurzel-Composable nicht sieht. Der Fall ist wieder
+  heraus — ein leeres Bild belegt nichts und zählt trotzdem mit. Das gilt für
+  jeden Dialog der App (Akkufrage, Rückfrage, Trennfrage); keiner ist
+  abgebildet, und das ist eine Lücke des Mittels, nicht des Fallkatalogs.
+- **Der Emulator ist für den zweiten Weg zu zäh.** Der Verbrauchshinweis
+  erscheint nur bei gesetzter Freistellung, frischem Merker *und* bestehender
+  Kopplung; diese drei Bedingungen zugleich herzustellen kostete unter TCG
+  mehr Anläufe als der Beleg wert war — zweimal ist dabei der `system_server`
+  neu gestartet. Belegt ist deshalb der **Akku-Dialog** mit seinem neuen
+  Absatz (Bild `docs/bilder/s4-rest/07-akku-hinweis.png`), und der Merker
+  durch drei Prüffälle.
+
 ## [Web 13.3.0] — 2026-09-04
 
 ### Web — zwei Diensttage aus einem Dienst fallen jetzt auf

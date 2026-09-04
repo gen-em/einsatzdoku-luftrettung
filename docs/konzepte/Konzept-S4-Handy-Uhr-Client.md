@@ -26,7 +26,7 @@ ungleiche Teile zerfallen, und nur einer davon ist Umsetzung im engeren Sinn:
 
 | Teil | Inhalt | Stand |
 |---|---|---|
-| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Paket 1 und 2 erledigt** (Android 0.11.0, Web 13.3.0) |
+| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Pakete 1–3 erledigt** (Android 0.11.0/0.11.1, Web 13.3.0) |
 | **B** | R64 — Herkunft und Gerät je Einsatz | **zurückgestellt**: Der Auftraggeber liefert ein Konzept nach. Die Bestandsaufnahme fand 18 offene Entscheidungsfragen zum Datenmodell und zu den Formaten, die R64 selbst nicht beantwortet |
 | **C** | Play Console, Signaturweg, Track-Release, Gerätetest | **blockiert am Auftraggeber**: D-U-N-S beantragt sich noch, der Signaturschlüssel liegt außerhalb des Repositoriums. Vorbereitet wird, was ohne ihn geht |
 
@@ -93,13 +93,47 @@ dastehen: dieselbe Zeit, keine Zuordnung, kein Unterschied — ein frisch
 gekoppeltes Gerät hat weder Rettungsmittel noch Standort, also gerade im
 Auslöserfall. Jetzt steht die Zahl der Einsätze und Ruhesegmente dabei.
 
-**Noch offen in Teil A:** Backlog **81** (Benachrichtigungssymbol — die App-Fassung auf dem
-Gerät war **0.7.7**, also nicht älter als 0.7.7; der Punkt erledigt sich
-damit **nicht** von selbst mit der nächsten Auslieferung, sondern ist ein
-echter Fund), **82** (Akku-Warnung), **98** (Versionscode-Versatz),
-**95** (die Rundläufe lassen Daten zurück; der SQL-Weg scheidet aus, siehe
-`Kopplungshilfe`), **63** (Sperrvermerke in der Konto-Sicherung — hängt an
-der Formatänderung aus Teil B).
+**Paket 3 (04.09.2026, Android 0.11.1) — erledigt: Backlog 82 und 98.**
+Der Hinweis auf den Stromverbrauch steht an **zwei** Orten, weil einer nicht
+reicht: als zweiter Absatz im Akku-Dialog und — für alle, deren Freistellung
+schon stand und die den Dialog nie sehen — einmalig nach dem ersten
+Dienstbeginn. Der Versionscode der Uhr trägt einen Versatz von 1 000 000; am
+APK nachgemessen 1100 gegen 1001100 bei gleichem Versionsnamen. Dazu ist
+`android:roundIcon` aus beiden Manifesten ausgetragen (siehe unten).
+
+**Zwei Grenzen der Prüfmittel dabei gefunden:** Der **Bilderlauf kann keine
+Dialoge** (1 dp Inhalt gemessen — ein Compose-`AlertDialog` rendert in einem
+eigenen Fenster); der Bildfall ist deshalb wieder heraus, und das trifft jeden
+Dialog der App. Und der **Emulator war für den zweiten Weg zu zäh**: Er
+erscheint nur bei gesetzter Freistellung, frischem Merker *und* bestehender
+Kopplung, und unter TCG ist dabei zweimal der `system_server` neu gestartet.
+Belegt ist der Akku-Dialog im laufenden Dienst
+(`docs/bilder/s4-rest/07-akku-hinweis.png`), der Merker durch drei Prüffälle.
+
+**Backlog 81 — zwei Ursachen ausgeschlossen, eine behoben, keine belegt.**
+Die App-Fassung auf dem Gerät war **0.7.7**, also nicht älter als 0.7.7 — der
+Punkt erledigt sich damit *nicht* mit der nächsten Auslieferung. Der Ort ist
+der **Kopf der Benachrichtigung**. „Themed Icons" waren **aus**, die
+`<monochrome>`-Ebene also gar nicht im Spiel; nachgerechnet wurde sie
+trotzdem, und sie ergibt entgegen der Vermutung eine **erkennbare** Silhouette
+(die Binnenzeichnung entsteht aus durchsichtigen Trennlinien, nicht aus den
+Farben). Was bleibt, ist `android:roundIcon`, das auf **dasselbe** adaptive
+Symbol zeigte wie `android:icon` — ein Attribut aus Android 7.1, das ein
+fertig gerundetes Bild erwartet. Es ist ausgetragen. **Ob der Befund damit
+erledigt ist, sagt nur der nächste Blick auf das S24**; der Emulator führt
+AOSP und zeichnet den Benachrichtigungskopf anders als One UI.
+
+**Noch offen in Teil A:** Backlog **81** — nur noch die Gegenprobe am S24,
+nichts mehr zu bauen — und **95** (die Rundläufe lassen Daten zurück; der
+SQL-Weg scheidet aus, siehe `Kopplungshilfe`). Backlog **63** gehört zu
+Teil B: Es hängt an derselben Formatänderung wie R64 und ist im Konzept
+`Konzept-R64-Herkunft-Geraet.md` als AP2 geschnitten.
+
+**Teil B ist beauftragt.** Der Auftraggeber hat am 04.09.2026 das Konzept
+`docs/konzepte/Konzept-R64-Herkunft-Geraet.md` geliefert (R64 und Nr. 63 als
+**eine** Formatänderung und **eine** Migration, AP1–AP5). Sein Auftrag sagt:
+„Android-Pakete des S4-Rests zuerst fertig bauen und pushen" — das ist mit
+diesem Paket geschehen.
 
 ---
 

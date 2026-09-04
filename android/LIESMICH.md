@@ -393,6 +393,52 @@ Emulator ist er über `10.0.2.2` also nicht zu erreichen. Der erste Versuch
 dieses Pakets endete deshalb dreimal bei „Keine Verbindung", und die Ursache
 lag nicht dort, wo man sie suchte.
 
+### Der Versionscode: zwei Zahlen, eine Fassung
+
+Seit Android 0.11.1 (Backlog Nr. 98) tragen die beiden Module **verschiedene**
+Versionscodes bei **gleichem** Versionsnamen:
+
+| Modul | Versionscode | Versionsname |
+|---|---|---|
+| `handy` | `Haupt·10000 + Neben·100 + Korrektur` | aus `version.properties` |
+| `uhr` | derselbe **+ 1 000 000** (`UHR_VERSATZ`) | derselbe |
+
+**Wozu:** Die Play Console verlangt unter einer Anwendungs-ID je hochgeladenem
+APK einen eindeutigen Code. Beide Module tragen dieselbe ID (E-S4-01) — ohne
+Versatz lässt sich das zweite nicht hochladen, und ohne das gibt es kein
+Wear-OS-Release.
+
+**Die Zählung bleibt trotzdem eine** (E-S4-02): `version.properties` führt
+genau eine Nummer, und beide Module tragen sie als Versionsnamen. Was sich
+unterscheidet, ist eine Zahl, die nur Play liest.
+
+Der Baulauf nennt beide, damit eine falsche auffällt:
+
+```
+NAdoku Android 0.11.0 (Versionscode Handy 1100, Uhr 1001100)
+```
+
+**Nachmessen am fertigen APK**, nicht an dieser Ausgabe:
+
+```bash
+$ANDROID_HOME/build-tools/*/aapt2 dump badging <apk> | head -1
+```
+
+### Was der Bilderlauf nicht kann: Dialoge
+
+Gefunden am 04.09.2026 beim Versuch, den Verbrauchshinweis (Nr. 82) als
+Bildfall aufzunehmen: **1 dp Inhalt, 0 Knöpfe** bei allen drei Breiten. Ein
+Compose-`AlertDialog` rendert in einem **eigenen Fenster**, und die
+Bildaufnahme über die Wurzel-Composable sieht davon nichts.
+
+Das trifft jeden Dialog der App — Akkufrage, Verbrauchshinweis, Rückfrage,
+Trennfrage. Keiner ist im Bilderlauf abgebildet, und das ist eine Lücke des
+**Mittels**, nicht des Fallkatalogs: Ein Fall dafür ergäbe ein leeres Bild,
+das nichts belegt und trotzdem in der Gesamtzahl mitzählt.
+
+**Wo Dialoge stattdessen belegt werden:** am Emulator (Aussehen) und über
+Prüffälle auf den Merkern (Verhalten, `VerbrauchhinweisTest`).
+
 ### Netzfreigaben
 
 Der Baulauf spricht mit fünf Bezugsquellen; alle fünf standen in der

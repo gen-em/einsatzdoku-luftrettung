@@ -127,6 +127,25 @@
     </plurals>
     <string name="trennen_rueckstand_hinweis">Sie gehören dem bisherigen Konto. Nach einer Neukopplung gingen sie an das neue.</string>
 
+    <!--
+        ==== Der Stromverbrauch, einmalig beim ersten Dienst (Nr. 82) =======
+
+        WARUM ES DIESEN ZWEITEN ORT BRAUCHT, obwohl der Akku-Dialog es schon
+        sagt: Der erscheint NUR, wenn die Freistellung noch nicht steht
+        (HauptActivity, `akkuFreigestellt`). Wer sie vorher gesetzt hat — oder
+        wessen Hersteller sie mitbringt —, sieht ihn nie. Genau diese Person
+        beginnt aber ihren ersten Dienst.
+
+        EINMAL JE INSTALLATION, und NACH dem Dienstbeginn, nicht davor: Ein
+        Dialog, der den Start aufhaelt, steht im Weg, wenn es losgeht. Und
+        einer, den man bei JEDEM Dienstbeginn wegklickt, wird nicht gelesen
+        (Backlog Nr. 82: "Nicht als Dauerwarnung", dieselbe Ueberlegung wie
+        beim Geraete-Hinweis M4-10).
+    -->
+    <string name="verbrauch_titel">Der Dienst läuft — ein Wort zum Akku</string>
+    <string name="verbrauch_hinweis">Die Aufzeichnung braucht durchgehend GPS. Über einen langen Dienst ist sie damit der größte Stromverbraucher des Geräts.\n\nEin leerer Akku am Dienstende ist kein Fehler, sondern der Preis dafür. <b>Lade zwischendurch</b>, wenn du kannst — im Fahrzeug oder an der Wache.</string>
+    <string name="verbrauch_verstanden">Verstanden</string>
+
     <!-- ==== Einstellungen =============================================== -->
     <string name="einstellungen">Einstellungen</string>
 
@@ -223,7 +242,17 @@
         NAdoku finden. Ohne diesen Satz steht die NutzerIn vor einer langen
         Liste und weiss nicht, was sie dort soll.
     -->
-    <string name="akku_hinweis">Android darf Apps im Hintergrund anhalten. Für einen Dienst über zwölf Stunden heißt das: Die Aufzeichnung bricht ab, ohne dass es jemand merkt.\n\nIn der Liste, die sich gleich öffnet: <b>NAdoku</b> suchen und auf <b>Nicht optimieren</b> stellen.</string>
+    <!--
+        DER ZWEITE ABSATZ IST NEU (Backlog Nr. 82). Bis dahin erklaerte dieser
+        Text nur, warum die App Strom ziehen DARF — nicht, dass sie es in
+        erheblichem Mass TUT. Wer nur das las, hielt den leeren Akku am
+        Dienstende fuer einen Fehler.
+
+        KEINE ZAHL. "Etwa X Prozent" waere hilfreicher, ist aber ohne Messung
+        am Geraet nicht zu verantworten, und der Geraetetest steht aus. Ein
+        geratener Wert waere schlimmer als keiner: Er wuerde geglaubt.
+    -->
+    <string name="akku_hinweis">Android darf Apps im Hintergrund anhalten. Für einen Dienst über zwölf Stunden heißt das: Die Aufzeichnung bricht ab, ohne dass es jemand merkt.\n\nIn der Liste, die sich gleich öffnet: <b>NAdoku</b> suchen und auf <b>Nicht optimieren</b> stellen.\n\n<b>Umgekehrt gilt:</b> Die Aufzeichnung braucht durchgehend GPS und ist damit über einen langen Dienst der größte Stromverbraucher. Ein leerer Akku am Dienstende ist kein Fehler, sondern der Preis dafür — <b>lade zwischendurch</b>.</string>
     <string name="akku_oeffnen">Liste öffnen</string>
     <string name="akku_spaeter">Später</string>
 

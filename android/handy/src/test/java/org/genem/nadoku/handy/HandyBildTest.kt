@@ -281,6 +281,22 @@ class HandyBildTest {
          * eine Zahl bzw. eine Adresse, die von diesem Bildschirm auf einen
          * anderen wandert. Genau dort faellt ein Umbruch oder ein
          * abgeschnittener Text auf. */
+        /* HIER STAND KURZ DER VERBRAUCHSHINWEIS (Backlog Nr. 82) — und der
+         * Versuch hat eine Grenze dieses Prüfmittels gefunden, die vorher
+         * niemand kannte: **Der Bilderlauf kann keine Dialoge.** Gemessen:
+         * 1 dp Inhalt bei allen drei Breiten, 0 Knöpfe. Ein Compose-
+         * `AlertDialog` rendert in einem EIGENEN Fenster, und `captureToImage`
+         * über die Wurzel-Composable sieht davon nichts.
+         *
+         * Der Fall ist deshalb wieder heraus: Ein Bild, das leer ist, belegt
+         * nichts und zählt trotzdem in der Gesamtzahl mit. Was der Hinweis
+         * tut, steht stattdessen in `VerbrauchhinweisTest`; wie er AUSSIEHT,
+         * ist am Emulator zu sehen — dort ist der Akku-Dialog derselben
+         * Bauform belegt (docs/bilder/s4-rest/07-akku-hinweis.png).
+         *
+         * Das gilt für JEDEN Dialog dieser App: Akkufrage, Rückfrage,
+         * Trennfrage. Keiner von ihnen ist im Bilderlauf abgebildet, und das
+         * ist keine Lücke im Fallkatalog, sondern eine des Mittels. */
         "kopplung-bereit" to {
             KopplungAnsicht(
                 schritt = Kopplungsschritt.Bereit,

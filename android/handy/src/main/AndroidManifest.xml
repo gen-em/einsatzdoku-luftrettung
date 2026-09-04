@@ -113,6 +113,34 @@
     -->
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
+    <!--
+        ANDROID:ROUNDICON IST AUSGETRAGEN (Backlog Nr. 81, 04.09.2026).
+
+        Es stand auf `@mipmap/symbol` — also auf DEMSELBEN adaptiven Symbol wie
+        `android:icon`. Das ist ein Kategorienfehler: `roundIcon` stammt aus
+        Android 7.1 und war die Uebergangsloesung, BEVOR es adaptive Symbole
+        gab. Wer es auswertet, erwartet dort ein FERTIG GERUNDETES Bild, das
+        die Flaeche fuellt — kein 108-dp-Raster mit einem 52-dp-Motiv in der
+        Mitte. Ab minSdk 26 gibt es kein Zielgeraet, das es braucht: Die Maske
+        macht der Launcher.
+
+        WARUM DAS HIER STEHT: Der Auftraggeber hat am 02.09.2026 gemeldet, dass
+        das App-Symbol im KOPF DER BENACHRICHTIGUNG zu gross und angeschnitten
+        erscheint — weisser Korpus bis an den Rand, farbige Flaechen links. Die
+        adaptive Kachel selbst ist nachgerechnet und richtig; „Themed Icons"
+        waren aus, die `<monochrome>`-Ebene also gar nicht im Spiel (beides am
+        04.09.2026 geklaert). Was bleibt, ist dieser doppelte Verweis: Eine
+        Oberflaeche, die `roundIcon` bevorzugt und es als fertiges Bild
+        behandelt, zeichnet den Vordergrund auf die volle Flaeche — und das
+        ergibt genau das gemeldete Bild.
+
+        DAS IST EINE ERKLAERUNG, KEIN BELEG. Sie liesse sich nur am Geraet
+        pruefen; der Emulator fuehrt AOSP und zeichnet den
+        Benachrichtigungskopf anders als One UI. Ausgetragen wird das Attribut
+        trotzdem, denn es ist unabhaengig davon ueberfluessig und falsch
+        belegt. Ob der Befund damit erledigt ist, sagt der naechste Blick auf
+        das S24.
+    -->
     <application
         android:name=".handy.NAdokuApp"
         android:allowBackup="false"
@@ -120,7 +148,6 @@
         android:fullBackupContent="false"
         android:icon="@mipmap/symbol"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/symbol"
         android:supportsRtl="true"
         android:theme="@style/Theme.NAdoku">
 

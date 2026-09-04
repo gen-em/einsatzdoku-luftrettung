@@ -963,30 +963,34 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     es 0.7.7, liegt es an einem Zeichenweg, der hier nicht nachgebaut wurde —
     Verdacht dann zuerst auf die `<monochrome>`-Ebene (Android 13+, „Themed
     Icons") und auf die Symbolform des Herstellers.
+    **Beantwortet am 04.09.2026:** Die App-Fassung auf dem Gerät war **0.7.7**
+    — also *nicht älter* als 0.7.7. Der Punkt erledigt sich damit **nicht** von
+    selbst mit der nächsten Auslieferung; er bleibt ein echter Fund. Der Ort
+    ist der **Kopf der Benachrichtigung** (One UI zeichnet ihn als runde
+    Kachel links), nicht das Symbol in der Statusleiste. Ob „Themed Icons"
+    eingeschaltet sind, ist noch offen.
+
+    **Nachgemessen am 04.09.2026 — und eine Vermutung damit widerlegt.** Der
+    Verdacht lag auf der `<monochrome>`-Ebene: Sie verweist in
+    `mipmap/symbol.xml` auf **dasselbe** Drawable wie der Vordergrund, und
+    `marke_luft_weiss.png` ist **nicht einfarbig** — sie trägt vier Farbtöne
+    (weiß 54,5 %, rot 23,1 %, blau 13,6 %, orange 8,8 %; „weiß" meint nur den
+    Korpus). Android nimmt aus einer monochromen Ebene nur den Alphakanal und
+    färbt ihn ein, also müsste daraus ein Klumpen ohne Binnenzeichnung werden.
+
+    **Wird es aber nicht.** Der Alphakanal wurde einfarbig gefüllt und
+    angesehen: Die Silhouette ist **erkennbar**, weil die Binnenzeichnung des
+    Motivs nicht aus den Farben entsteht, sondern aus **durchsichtigen
+    Trennlinien** zwischen den Farbflächen. Sie überleben die Einfärbung. Der
+    Verweis ist also unsauber, aber nicht die Ursache des gemeldeten Bildes.
+
+    **Was damit weiterhin fehlt:** ein Beleg, wie One UI den
+    Benachrichtigungskopf zeichnet. Der Emulator führt AOSP und beantwortet
+    das nicht — er kann nur zeigen, dass es *dort* richtig aussieht.
+
     **Prüfweg:** Am Gerät ansehen, nicht im Emulator — die Symbolform ist eine
     Herstellereinstellung. Zuordnung: **S4-Rest** (Schritt 6), zusammen mit dem
     Gerätetest auf dem S24.
-
-82. **Es fehlt die Warnung, dass die Daueraufzeichnung den Akku leert.**
-    *Aufgenommen 02.09.2026 vom Auftraggeber.* Die Handy-App zeichnet über den
-    ganzen Dienst mit `ACCESS_FINE_LOCATION` auf — bei einem Zwölfstundendienst
-    ist das der mit Abstand größte Verbraucher. Gesagt wird es nirgends.
-    **Was es schon gibt, sagt das Gegenteil:** Die Führung zur
-    Akku-Freistellung (E-S4-05, `akku_titel`/`akku_hinweis`) bittet darum, die
-    App **von** der Optimierung auszunehmen, damit die Aufzeichnung nicht
-    abbricht. Sie erklärt also, warum die App Strom ziehen **darf** — nicht,
-    dass sie es in erheblichem Maß **tut**. Wer nur diesen Text liest, hält den
-    leeren Akku am Dienstende für einen Fehler.
-    **Zu entscheiden:** Wo der Hinweis steht. Drei Kandidaten, sie schließen
-    sich nicht aus: (a) im Akku-Dialog als zweiter Absatz — dort steht der
-    Mensch ohnehin und trifft gerade eine Entscheidung; (b) beim ersten
-    „Dienst beginnen" — dort entsteht der Verbrauch; (c) in der laufenden
-    Meldung, die heute „Aufzeichnung läuft seit %1$s · GPS an" sagt.
-    **Nicht als Dauerwarnung.** Ein Hinweis, den man bei jedem Dienstbeginn
-    wegklickt, wird nicht gelesen — dieselbe Überlegung wie beim Hinweis auf
-    neue Geräte (M4-10), der bestätigbar ist.
-    Zuordnung: **S4-Rest** (Schritt 6). Textänderung heißt `tools/wortliste/`
-    fahren, Bereich (d).
 
 83. **Welche Daten von Uhr und Handy wie gespeichert werden, damit sich
     auswerten lässt, wer womit dokumentiert hat — Diskussion, dann Umsetzung.**
@@ -1198,17 +1202,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kopplungstakt, der sich nach drei Fehlern selbst beendet — und während
     einer Wartung koppelt ohnehin niemand.
 
-98. **Versionscode-Versatz für das Uhr-Modul.**
-    *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R65).*
-    `version.properties` rechnet für Handy- und Uhr-Modul denselben
-    Versionscode (`Haupt·10000 + Neben·100 + Korrektur`, E-S4-02). Die Play
-    Console verlangt unter einem Paketnamen je APK einen eindeutigen Code —
-    ohne Versatz ist kein Wear-OS-Release möglich. Das Uhr-Modul bekommt einen
-    Versatz (Schema in der Umsetzung: etwa `+ 1 000 000` oder eine führende
-    Formfaktor-Ziffer); Versionsname und Zählung bleiben eins. Preis: ein
-    einmaliger Sprung, Neuinstallation auf der vorhandenen Uhr. Rahmenplan
-    Schritt 6 (S4-Rest).
-
 99. **Fassungsprüfung auf Klick.**
     *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R66, Option A2).*
     Ein Knopf „Auf neue Fassung prüfen" auf der Wartungsseite, der einmalig
@@ -1377,6 +1370,53 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+82. **Es fehlt die Warnung, dass die Daueraufzeichnung den Akku leert.**
+    *Aufgenommen 02.09.2026 vom Auftraggeber; erledigt am 04.09.2026 im
+    S4-Rest, Paket 3 (Android 0.11.1).*
+    **Zwei Orte, weil einer nicht reicht** — von den drei Kandidaten sind (a)
+    und (b) gebaut, (c) nicht:
+
+    - **(a) Zweiter Absatz im Akku-Dialog.** Dort steht der Mensch ohnehin und
+      trifft gerade eine Entscheidung. Der Text sagt jetzt beides: warum die
+      App Strom ziehen *darf* — und dass sie es in erheblichem Maß *tut*.
+    - **(b) Einmalig nach dem ersten Dienstbeginn.** Der Akku-Dialog erscheint
+      **nur, wenn die Freistellung noch nicht steht**; wer sie vorher gesetzt
+      hat, sieht ihn nie und bekommt stattdessen diesen. Zwei getrennte Merker,
+      damit der eine den anderen nicht miterledigt.
+    - **(c) Laufende Meldung: nicht gebaut.** Sie müsste in allen sechs
+      Zustandsfassungen stehen, ist schon lang, und der Satz gehört nicht in
+      eine Zeile, die zwölf Stunden lang unverändert dasteht.
+
+    **Nach dem Beginnen, nicht davor** — ein Dialog, der den Start aufhält,
+    steht im Weg, wenn es losgeht. Ein Knopf statt zweier: Es gibt nichts zu
+    entscheiden, die Aufzeichnung läuft bereits.
+
+    **Keine Zahl.** „Etwa X Prozent" wäre hilfreicher, ist aber ohne Messung am
+    Gerät nicht zu verantworten, und der Gerätetest steht aus. Ein geratener
+    Wert wäre schlimmer als keiner: Er würde geglaubt.
+
+    **Belegt:** (a) am Emulator, im laufenden Dienst
+    (`docs/bilder/s4-rest/07-akku-hinweis.png`). (b) durch drei Prüffälle
+    (`VerbrauchhinweisTest`) — **nicht** im Bild: Der Bilderlauf kann keine
+    Dialoge (1 dp Inhalt gemessen), und am Emulator hätten drei Bedingungen
+    zugleich stehen müssen. Wortliste 0/0/0.
+
+98. **Versionscode-Versatz für das Uhr-Modul.**
+    *Aufgenommen 03.09.2026 aus der Planung v1.0 (R65); erledigt am
+    04.09.2026 im S4-Rest, Paket 3 (Android 0.11.1).*
+    Die Uhr rechnet `+ 1 000 000` auf den gemeinsamen Code. Am APK
+    nachgemessen: Handy **1100**, Uhr **1001100**, beide Versionsname
+    `0.11.0` — die Zählung bleibt eine (E-S4-02).
+
+    **Nur die Uhr, nicht beide.** Nr. 98 nannte auch eine führende
+    Formfaktor-Ziffer; die hätte das Handy mitverschoben, wo kein Sprung nötig
+    ist. Der Versatz trifft das Modul, das ihn braucht.
+
+    **Die Uhr bekommt den höheren Code.** Play fordert nur Eindeutigkeit, aber
+    die Wahl ist einmalig: Ein Versatz nach unten könnte mit einer künftigen
+    Handy-Fassung kollidieren, einer nach oben nie — 1 000 000 entspräche der
+    Handy-Version 100.0.0.
 
 84. **Die Android-App kennt nur `nadoku.gen-em.org`.**
     *Aufgenommen 02.09.2026 (Rahmenplan R63); erledigt am 04.09.2026 im
