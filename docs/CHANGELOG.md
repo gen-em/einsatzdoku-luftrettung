@@ -662,6 +662,45 @@ des Einsatzes ließe seine Spur als Waise zurück, ohne Fehlermeldung.
 `"code": "AB3K7Q"` statt `"aktion": "start"` — den Weg also, den 1a.1 zwei
 Bildschirme weiter oben ausschließt. Ein Rest aus S5, gefunden beim Bau genau
 gegen dieses Beispiel.
+## [Android 0.10.2] — 2026-09-03
+
+### Android — Die Ansicht merkt jetzt, wenn die Ortungsfreigabe anderswo erteilt wurde
+
+**Der erste Fehler, den der Emulator gefunden hat**, und Lesen hätte ihn nicht
+gefunden: Die Dienstansicht las die Ortungsfreigabe genau einmal, beim Aufbau
+der Oberfläche. Wurde sie danach anderswo erteilt, blieb „Ortung nicht
+freigegeben" stehen — auch nach dem Verlassen und Zurückkehren. Erst ein
+vollständiger Neustart der App räumte die Meldung weg.
+
+**Warum das mehr ist als ein Schönheitsfehler.** Der Weg, auf dem es im
+Betrieb passiert, ist ausgerechnet der wichtigste. Wer einmal „Nicht mehr
+fragen" gewählt hat, bekommt vom Knopf „Ortung freigeben" keinen Dialog mehr;
+für sie oder ihn führt der einzige Weg über die Android-Einstellungen. Genau
+diese Person kam zurück und las, das Problem bestehe fort — und der Knopf, den
+die App anbot, half nicht. Das ist das Gegenteil dessen, wofür E1 angetreten
+ist: dass die App über die Ortung die Wahrheit sagt.
+
+**Die Ursache war eine Zeile, und daneben stand ihre eigene Widerlegung.**
+`var ortungFrei by remember { mutableStateOf(checkSelfPermission(…)) }` wertet
+einmal aus; fortgeschrieben wurde der Wert nur im Rückruf der
+Berechtigungsfrage, und einen `onResume`-Beobachter gibt es im Handy-Modul
+nicht. Wenige Zeilen darunter steht seit jeher ein Sekundentakt für den
+Punktzähler, mit dem Kommentar „DER ZUSTAND WIRD ABGEFRAGT, NICHT GEHALTEN".
+Die Freigabe hängt sich jetzt an denselben Takt. `checkSelfPermission` für das
+eigene Paket ist ein billiger Aufruf, und die Begründung des Kommentars gilt
+für sie genauso.
+
+**Was bewusst bleibt:** Der Rückruf der Berechtigungsfrage setzt den Wert
+weiterhin selbst. Er ist sofort da statt bis zum nächsten Takt zu warten, und
+er hängt die Akkufrage daran.
+
+**Wie es gefunden wurde, mit den Zahlen.** Im Emulator (API 28, `-accel off`)
+war der Abzug nach `Home` und Rückkehr **byteweise gleich** dem davor
+(md5 `08c9a62a…` zweimal), der nach `force-stop` und Neustart war es nicht.
+Nach der Behebung sind dieselben zwei Abzüge verschieden (`5819f85b…` gegen
+`ec26ad4f…`), ohne dass die App neu gestartet wurde. Der Fehler ist älter als
+Paket E — die Zeile stammt aus Android 0.3.0 —, aber er trifft eine Zusage,
+die E1 gemacht hat, und deshalb wird er hier behoben und nicht gebucht.
 
 ## [Android 0.10.1] — 2026-09-03
 

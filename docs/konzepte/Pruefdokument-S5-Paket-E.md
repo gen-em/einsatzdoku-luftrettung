@@ -22,38 +22,75 @@ geschrieben, nicht für die Instanz am Code.
 
 ## 1. Was **nicht** geprüft werden konnte — und warum
 
-**Das steht an erster Stelle, nicht in einer Fußnote.** Paket E ist zu einem
-grösseren Teil gerätegebunden, als das Konzept annahm (Abschnitt 9.3 dort
-rechnete mit einem Emulator). Er fehlt.
+**Das steht an erster Stelle, nicht in einer Fußnote.** Paket E ist
+gerätegebunden — aber weniger, als hier bis zum 03.09.2026 stand.
 
-### 1.1 Kein Emulator — beide Wege gemessen, beide zu
+### 1.1 Berichtigung: Der Emulator läuft doch
 
-| Weg | Ergebnis | Wo gemessen |
-|---|---|---|
-| **x86_64-Abbild** | braucht KVM. `/dev/kvm` **fehlt**, `/proc/cpuinfo` nennt weder `vmx` noch `svm` | **In diesem Container, 03.09.2026** |
-| **arm64-Abbild** | `FATAL | Avd's CPU Architecture 'arm64' is not supported by the QEMU2 emulator on x86_64 host.` (Emulator 37.1.11) | Übernommen aus S5-Vorbereitung 8.3, dort gemessen |
+**Hier stand, in diesem Container laufe kein Emulator, weil das x86_64-Abbild
+KVM brauche. Das war falsch, und der Satz kostete Paket E die ganze Stufe II.**
 
-**Der Widerspruch zu `android/LIESMICH.md` ist echt und aufgelöst:** Dort steht
-seit 0.7.2, „ein Emulator läuft", und das stimmte — in **jenem** Container, mit
-einem älteren Emulator. Beide Sätze sind wahr; der Unterschied ist die
-Wegwerf-Umgebung, nicht die App. Die Fassung in `LIESMICH.md` Abschnitt 7 sagt
-das jetzt so.
+KVM fehlt wirklich: `/dev/kvm` ist nicht da, `/proc/cpuinfo` nennt weder `vmx`
+noch `svm`, und `emulator -accel-check` sagt es ausdrücklich. Daraus folgt aber
+nicht, dass kein Emulator läuft — mit **`-accel off`** übersetzt QEMU die
+Befehle selbst. Der Satz verwechselte „startet nicht ohne Weiteres" mit „geht
+nicht" und verhinderte damit, dass überhaupt jemand den Startversuch machte.
 
-**Was damit ausfällt:** die vier Emulator-Griffe aus Konzept 9.3 —
-`adb emu geo fix`, das Abschalten des Standorts, `cmd jobscheduler run -f`,
-`dumpsys notification` — **und das, wofür sie als Ersatz gedacht waren.**
+**Drei Anläufe, alle am 03.09.2026 in diesem Container gemessen:**
+
+| Anlauf | Abbild | Speicher | Ergebnis |
+|---|---|---|---|
+| 1 | API 34 `google_apis` | 3 GB | Kein Bootabschluss nach 23 min. Gast-CPU 276 von 400 % **untätig**, Speicher 2,82 von 3,05 GB; `window` und `input` nie registriert; Aufspielen scheitert an `NullPointerException` in `StorageManagerService.allocateBytes` |
+| 2 | API 34 `default` | 6 GB | Speicher entlastet (2,0/5,9 GB), aber **Watchdog-Schleife**: `ActivityManagerService.systemReady()` überschreitet die 60-s-Grenze, `*** GOODBYE!`, Framework startet neu, von vorn |
+| 3 | **API 28 `default`** | 4 GB | **Boot 232 s** (mit warmem Cache 147 s), APK aufspielen **81 s**, **0 Watchdog-Abbrüche** |
+
+Anlauf 2 widerlegt die Diagnose aus Anlauf 1 zur Hälfte: Der Speicher war *ein*
+Problem, nicht *das* Problem. Unter reiner Software-Emulation ist API 34 kein
+brauchbares Ziel; `minSdk` der App ist 26, API 28 ist zulässig.
+
+**Was damit möglich wurde** (und vorher hier als „fällt aus" stand):
+
+| Vorher „fällt aus" | Jetzt |
+|---|---|
+| Die App auf einem laufenden Android sehen | **Erledigt** — Kopplungsansicht, Handeingabe, Dienstansicht, je mit Abzug |
+| `FREIGABE_FEHLT` am laufenden Programm | **Erledigt** — Freigabe entzogen, Zustand gezeigt, Abzug |
+| Kopplung über HTTPS | **Erledigt** — eigene CA im System-Lager des Emulators, `HTTP/1.1 200 OK`, Code verbraucht, Gerät in der Datenbank |
+| `adb emu geo fix` | **Erledigt** — Antwort `OK`, GNSS liefert `SV_STATUS` |
+
+**Und der Emulator hat sofort geliefert, wofür er da ist:** einen Fehler, den
+kein Lesen und kein gezeichnetes Bild gefunden hätte (B-S5Z-17, behoben mit
+Android 0.10.2 — die Ansicht merkte eine anderswo erteilte Ortungsfreigabe
+nicht).
+
+### 1.1a Was der Emulator trotzdem nicht leistet
+
+- **Er ist eine Eigenschaft des Wegwerf-Containers.** Beim nächsten Mal kann er
+  fehlen. `CLAUDE.md` 6 verlangt deshalb den *Versuch mit Zahl*, nicht den
+  Erfolg.
+- **Unter TCG läuft die Systemoberfläche selbst zeitweise in den ANR.** Die
+  ersten beiden Abzüge dieses Laufs zeigten den Dialog „System UI isn't
+  responding" — bei exakt gleicher Dateigröße (52153 Bytes). `bild` prüft
+  seither `mCurrentFocus`, bevor es abzieht. **`mFocusedApp` genügt nicht:** Es
+  nannte im Fehlerfall bereits die richtige Activity.
+- **Die App kann sich mit einem Server ab Web 13.0.0 nicht koppeln.** `pair.php`
+  antwortet `{"error":"aktion","meldung":"Uhr-App aktualisieren"}` (S5/R49: das
+  Gerät zeigt jetzt den Code). Bekannt und als S4-Rest verplant. Für diesen Lauf
+  stand der Serverstand von vor dem Merge daneben. **Damit gilt auch die Zahl
+  `SendeRundlaufTest 224/224` nur gegen einen Server vom Stand vor S5.**
+- **Bedienung ist zäh.** `am start -W` meldet beim Erststart `Status: timeout`
+  — kein Absturz, sondern die Wartegrenze von `am`.
 
 ### 1.2 Was nur ein Gerät beantwortet
 
 | Offen | Warum nicht hier | Prüfliste unten |
 |---|---|---|
-| **Vibration** der Warnung, und ob „Nicht stören" sie unterdrückt | kein Gerät, kein Emulator | E1-4, E1-9 |
+| **Vibration** der Warnung, und ob „Nicht stören" sie unterdrückt | kein Gerät; der Emulator hat keinen Vibrationsmotor, `dumpsys vibrator` sagt nichts über das Gefühl am Handgelenk | E1-4, E1-9 |
 | **Die Fristen 120 s und 60 s** — beide sind **hergeleitet, nicht gemessen** | kein GPS | E1-3, E1-6 |
 | Ob **`onProviderDisabled`** überhaupt eintrifft | Der Standort lässt sich hier nicht abschalten | E1-4 |
 | Der **`AbstractMethodError`** auf Android 8–10 | kein solches Gerät; der Befund ist aus der Plattform-Schnittstelle **abgeleitet**, nicht beobachtet | E1-12 |
 | Die **drei Meldungs-IDs** nebeneinander | `dumpsys notification` fällt aus | E1-10 |
 | Ob der **Data Layer** die Standmeldung wirklich zustellt | keine Wear-OS-Uhr, keine Telefonseite (`android/LIESMICH.md` 7) | E1-11, **E3-1** |
-| **Wann der Nachsende-Job anläuft** (Doze, Samsungs Akkusteuerung) | `cmd jobscheduler run -f` bräuchte einen Emulator | E2-2, E2-3 |
+| **Wann der Nachsende-Job anläuft** (Doze, Samsungs Akkusteuerung) | `cmd jobscheduler run -f` ist im Emulator jetzt möglich, beantwortet aber nur „läuft der Job überhaupt an“. Ob und wann Doze und die Akkusteuerung des Herstellers ihn zulassen, entscheidet das Gerät | E2-2, E2-3 |
 | Ob der Job einen **Neustart** übersteht | nachstellen geht nur mit einem Neustart | E2-4 |
 | Ob ein **Dienstende von der Uhr** ankommt | keine Uhr | E2-6 |
 | Ob der Sendelauf beim **Wegwischen** der App abbricht | Prozessverwaltung des Herstellers | E2-1 |
