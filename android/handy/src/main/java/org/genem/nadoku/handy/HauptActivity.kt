@@ -173,6 +173,28 @@ private fun GekoppelteOberflaeche(
     var abschlussFrageOffen by remember { mutableStateOf(false) }
     var akkuFrageOffen by remember { mutableStateOf(false) }
 
+    /* AUCH DIE FREIGABE WIRD ABGEFRAGT, NICHT GEHALTEN (B-S5Z-17).
+     *
+     * `remember { … }` wertet einmal aus. Bis 0.10.1 war das der einzige
+     * Lesevorgang ausser dem Rückruf der Berechtigungsfrage — und damit sah
+     * die Ansicht eine Freigabe nicht, die anderswo erteilt wurde. Der Weg,
+     * auf dem das im Betrieb passiert, ist ausgerechnet der wichtigste: Wer
+     * einmal „Nicht mehr fragen" gewählt hat, bekommt von `freigabeFrage`
+     * keinen Dialog mehr; für sie oder ihn führt der einzige Weg über die
+     * Android-Einstellungen. Zurück in der App stand dann weiter
+     * „Ortung nicht freigegeben" — die App sagte jemandem, der das Problem
+     * gerade behoben hatte, es bestehe fort. Erst ein vollständiger Neustart
+     * räumte die Meldung weg.
+     *
+     * Gefunden am 03.09.2026 im Emulator, nicht durch Lesen: Der Abzug nach
+     * `Home` und Rückkehr war byteweise gleich dem davor (md5 08c9a62a…),
+     * der nach `force-stop` und Neustart war es nicht.
+     *
+     * Der Takt unten fragt ohnehin jede Sekunde den Puffer ab, mit genau
+     * dieser Begründung. Die Freigabe hängt sich daran; `checkSelfPermission`
+     * für das eigene Paket ist ein billiger Aufruf. Der Rückruf setzt den
+     * Wert weiterhin selbst — er ist sofort da, statt bis zum nächsten Takt
+     * zu warten, und er hängt die Akkufrage daran. */
     var ortungFrei by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(kontext, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -191,6 +213,13 @@ private fun GekoppelteOberflaeche(
             delay(1000)
             takt++
         }
+    }
+
+    /* Siehe die Begründung oben bei `ortungFrei` (B-S5Z-17). */
+    LaunchedEffect(takt) {
+        ortungFrei =
+            ContextCompat.checkSelfPermission(kontext, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
     }
 
     val rueckstand = remember(takt) { app.puffer.rueckstand() }
