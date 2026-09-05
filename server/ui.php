@@ -737,10 +737,25 @@ function ui_leiste_einstellungen(string $aktiv): void
          * mit Mockup (docs/Design.md, Kapitel 9); der Vorrat reicht. */
         'admin_komplettsicherung' => ['admin_komplettsicherung.php',
                                       'Komplett-Backup', 'datenbank'],
-        /* Zwischen Backups und Demo-Konto — so steht es in Mockup 35. */
-        'admin_rechtstexte' => ['admin_rechtstexte.php', 'Rechtstexte',           'rechtstexte'],
+        /* Zwischen Backups und Demo-Konto — so steht es in Mockup 35.
+         * Aus „Rechtstexte" ist mit S8/AP3 „Installation" geworden: Impressum,
+         * Datenschutz UND das Logo — alles, was diese Anlage nach aussen
+         * zeigt (E-S8-05). */
+        'admin_installation' => ['admin_installation.php', 'Installation',        'rechtstexte'],
         'admin_demo'        => ['admin_demo.php',        'Demo-Konto',            'kolben'],
-        'wartung'           => ['update.php',            'Wartung',               'werkzeug'],
+        /* DREI EINTRAEGE STATT „WARTUNG" (S8/AP3). Die Wartungsseite ist mit
+         * AP2 in drei Seiten aufgegangen, und ihre Adresse ist seit AP3 eine
+         * Weiterleitung. Bis AP5 den Block „Betrieb" baut, stehen sie hier
+         * flach in der Liste — sonst waeren zwei von ihnen ueberhaupt nur
+         * ueber die Adresse erreichbar. */
+        'betrieb_updates'   => ['betrieb_updates.php',   'Updates',               'werkzeug'],
+        /* `kalender`, weil die Jobs nach einem Zeitplan laufen; `datenbank`,
+         * weil auf den Servereinstellungen der Speicher der Installation
+         * steht — beide Zeichen sind im Vorrat mehrfach vergeben, und das ist
+         * hier Praxis (siehe `tausch` und `sicherung` weiter oben). Ein NEUES
+         * Symbol braeuchte Freigabe mit Mockup (docs/Design.md, Kapitel 9). */
+        'betrieb_jobs'      => ['betrieb_jobs.php',      'Hintergrundjobs',       'kalender'],
+        'betrieb_server'    => ['betrieb_server.php',    'Servereinstellungen',   'datenbank'],
     ];
     ?>
     <h2 class="leiste-kopfzeile">Einstellungen</h2>
@@ -800,9 +815,11 @@ function ui_einstellungen_uebersicht(): void
             ['admin_sicherungen.php','Backups',           'sicherung'],
             ['admin_sicherungsziele.php', 'Backup-Ziele',   'tausch'],
             ['admin_komplettsicherung.php', 'Komplett-Backup', 'datenbank'],
-            ['admin_rechtstexte.php','Rechtstexte',           'rechtstexte'],
+            ['admin_installation.php','Installation',         'rechtstexte'],
             ['admin_demo.php',       'Demo-Konto',            'kolben'],
-            ['update.php',           'Wartung',               'werkzeug'],
+            ['betrieb_updates.php',  'Updates',               'werkzeug'],
+            ['betrieb_jobs.php',     'Hintergrundjobs',       'kalender'],
+            ['betrieb_server.php',   'Servereinstellungen',   'datenbank'],
         ]];
     }
 

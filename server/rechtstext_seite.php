@@ -98,8 +98,8 @@ ui_kopf(['menue' => false, 'zurueck' => $zurueck]);
                 : 'noch keine Datenschutzerklärung hinterlegt.')) ?>
         <?php if ($istAdmin): ?>
           <p class="feld-hinweis">Du bist als Administration angemeldet und kannst
-             den Text unter <a href="admin_rechtstexte.php">Einstellungen →
-             Rechtstexte</a> hinterlegen.</p>
+             den Text unter <a href="admin_installation.php">Einstellungen →
+             Installation</a> hinterlegen.</p>
         <?php endif; ?>
       <?php else: ?>
         <div class="text">

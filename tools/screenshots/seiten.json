@@ -240,10 +240,10 @@
       "pfad": "admin_komplettsicherung.php"
     },
     {
-      "name": "43a-rechtstexte",
+      "name": "43a-installation",
       "gruppe": "Administration",
       "rolle": "admin",
-      "pfad": "admin_rechtstexte.php"
+      "pfad": "admin_installation.php"
     },
     {
       "name": "44-demo-konto",
@@ -251,13 +251,6 @@
       "rolle": "admin",
       "pfad": "admin_demo.php"
     },
-    {
-      "name": "45-wartung",
-      "gruppe": "Administration",
-      "rolle": "admin",
-      "pfad": "update.php"
-    },
-
     {
       "name": "46-betrieb-updates",
       "gruppe": "Betrieb",

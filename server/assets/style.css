@@ -323,6 +323,7 @@
    * kleinste Rundung, und ergibt einen Punkt, der neben 13-px-Text
    * (--groesse-2) lesbar ist, ohne ihn zu überragen. */
   --balken:8px;                        /* Höhe des Speicherbalkens */
+  --logo-kachel:var(--kopf);           /* Vorschau-Kachel der Installation … */
   --balken-punkt:10px;                 /* Farbpunkt in seiner Legende */
   --anmeldekarte:400px;                /* Karte der Anmeldung (E-P3-38) */
   --zeile-frei:1.4em;                  /* Mindesthöhe der Zustandszeile */
@@ -3102,3 +3103,23 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   display:flex;align-items:center;gap:var(--abstand-3);
   margin-top:var(--abstand-3);flex-wrap:wrap;
 }
+
+/* ---- Logo-Vorschau der Installation (S8/AP3, Mockup 09) -------------------
+ * Kachel links, Erklärung rechts. Die Kachel ist so hoch wie die Kopfleiste
+ * (--logo-kachel = --kopf) und dunkelblau wie sie — das Logo soll dort zu
+ * sehen sein, wo man es täglich sieht, und nicht auf einem Weiß, auf dem es
+ * nirgends steht. Bei schmalem Raum bricht die Erklärung unter die Kachel. */
+.logo-vorschau{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  margin-bottom:var(--abstand-4);flex-wrap:wrap;
+}
+.logo-kachel{
+  flex:0 0 auto;
+  width:var(--logo-kachel);height:var(--logo-kachel);
+  border-radius:var(--radius);
+  background:var(--dunkelblau);
+  display:flex;align-items:center;justify-content:center;
+}
+/* Die Erklärung nimmt den Rest der Zeile — ohne das bliebe sie bei kurzem
+ * Text schmal neben der Kachel stehen und bräche mitten im Satz. */
+.logo-vorschau > .feld-hinweis{flex:1 1 12rem;margin:0}
