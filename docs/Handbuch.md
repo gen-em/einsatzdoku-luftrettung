@@ -253,8 +253,9 @@ links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 **Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie listet Profil,
 **Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
 finden darunter einen zweiten Block **Administration** mit NutzerInnen,
-**Stammdaten systemweit**, Backups, **Backup-Ziele**, **Rechtstexte**,
-Demo-Konto und Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
+**Stammdaten systemweit**, **Konto-Backups**, **Backup-Ziele**,
+**Komplett-Backup**, **Installation**, Demo-Konto sowie **Updates**,
+**Hintergrundjobs** und **Servereinstellungen** (Abschnitt 11). Abmelden steht getrennt am Ende und
 fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
 Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
 „Standorte".
@@ -384,8 +385,8 @@ Die **Anmeldeseite** zeigt immer den Standard der Installation. Dort ist noch
 niemand angemeldet, und die Wahl hängt am Konto. (Bis Web 9.9.0 zeigte sie
 stattdessen immer den Hubschrauber, gleich wie der Standard eingestellt war.)
 
-Den **Standard der Installation** setzt die Administration unter
-Einstellungen → Wartung. Er wirkt sofort, auch für bereits angemeldete Konten —
+Den **Standard der Installation** setzt die Verwaltung unter
+Einstellungen → Installation (bis Web 15.1.0: Wartung). Er wirkt sofort, auch für bereits angemeldete Konten —
 aber nur bei denen, die hier „Standard der Installation" stehen haben. Eine
 getroffene eigene Wahl bleibt unberührt.
 
@@ -427,7 +428,7 @@ damit die nächste Person hereinkommt. Alles andere ist offen.
 
 **Und in der Administration** (seit Web 12.4.1): Auf der Kontoseite des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
-**gesperrt**, die Karte „Backups" fehlt dort ganz, und der Anzeigename
+**gesperrt**, die Karte „Konto-Backups" fehlt dort ganz, und der Anzeigename
 lautet **„Demo NutzerIn"**. Verwaltet wird das Konto ausschließlich über den
 Reiter **Demo-Konto**: anlegen, zurücksetzen, entfernen. Der Grund ist der
 Reset — was auf der Kontoseite eingetragen würde, wäre spätestens nach dreißig
@@ -1682,31 +1683,40 @@ beschädigt" — was beides nicht stimmte.)
 Der Aufbau der Datei ist in `docs/Backup-Format.md` vollständig beschrieben —
 sie lässt sich damit auch ohne dieses Programm entschlüsseln.
 
-### 6.1 Backup durch die Administration
+### 6.1 Konto-Backups durch die Verwaltung
 
-Seit Web 5.9.0 kann die Administration zusätzlich **Backups aller Konten**
-anlegen. Das ist eine Rückfallebene für den Fall, dass in einem Konto etwas
-schiefgeht — sie ersetzt dein eigenes Backup nicht.
+Seit Web 5.9.0 kann die Verwaltung zusätzlich **Konto-Backups** anlegen — je
+Konto ein Paket, das auf dem Server liegt. Das ist eine Rückfallebene für den
+Fall, dass in einem Konto etwas schiefgeht; sie ersetzt dein eigenes Backup
+nicht.
 
-**Die Administration sieht dabei keine Inhalte.** Im Backup stecken die
+> **Drei Backups, drei Namen** (seit Web 15.2.0). **Backup** ist die Datei,
+> die du dir selbst herunterlädst (Abschnitt 6). **Konto-Backup** ist das
+> Paket, das die Verwaltung je Konto anlegt — dieser Abschnitt.
+> **Komplett-Backup** ist der Stand der ganzen Installation (Abschnitt 6.3).
+> Vorher hieß alles drei „Backup", und das Konto-Backup zusätzlich
+> „Admin-Backup".
+
+**Die Verwaltung sieht dabei keine Inhalte.** Im Backup stecken die
 geschützten Angaben genau so verschlüsselt wie in der Datenbank; lesbar werden
 sie erst in einem Browser, der den Schlüssel hat. Die Übersicht in der
-Administration zeigt Zeitpunkt, Anzahl der Einsätze, Diensttage und
+Verwaltung zeigt Zeitpunkt, Anzahl der Einsätze, Diensttage und
 Ruhezeiten, davon die Anzahl im Papierkorb, und die Dateigröße — mehr nicht.
 
-**Wenn dein Konto weiterbesteht**, spielt die Administration ein solches
-Backup unmittelbar zurück; du musst nichts tun. Eingespielt wird immer
-**ergänzend**: Was schon da ist, bleibt unverändert.
+**Wenn dein Konto weiterbesteht**, spielt die Verwaltung ein solches Paket
+unmittelbar ein; du musst nichts tun. Eingespielt wird immer **ergänzend**:
+Was schon da ist, bleibt unverändert.
 
 **Wenn dein Konto neu aufgesetzt wurde**, geht das nicht — und zwar aus einem
 Grund, der sich nicht umgehen lässt: Die geschützten Angaben des alten Backups
 hängen am alten Inhaltsschlüssel, und den öffnet allein dein
-**Wiederherstellungsschlüssel**. Die Administration gibt das Backup dann für
-dein Konto frei. Unter **Einstellungen → „Backup"** erscheint danach ein
+**Wiederherstellungsschlüssel**. Die Verwaltung **gibt** das Paket dann für
+dein Konto **frei**. Unter **Einstellungen → „Backup"** erscheint danach ein
 Abschnitt *Für dich freigegebenes Backup*: Dort gibst du deinen
 Wiederherstellungsschlüssel ein, dein Browser schlüsselt die Angaben auf deinen
 neuen Schlüssel um und spielt sie ein. Solange du eine Freigabe nicht eingelöst
-hast, kann die Administration sie zurücknehmen.
+hast, kann die Verwaltung sie zurücknehmen — auf deiner Kontoseite steht
+seit Web 15.2.0 sichtbar, dass eine Freigabe läuft, für wen und seit wann.
 
 **Grenzen des Verfahrens** — sie gehören genannt, bevor man sich darauf verlässt:
 
@@ -1717,23 +1727,25 @@ hast, kann die Administration sie zurücknehmen.
 - Die einzige Voraussetzung ist deshalb nichttechnisch: **Verwahre deinen
   Wiederherstellungsschlüssel.** Er wird bei der Ersteinrichtung einmalig
   angezeigt und danach nie wieder (Abschnitt 5).
-- Es wird **nicht automatisch** gesichert. Wann ein Backup entsteht,
-  entscheidet die Administration von Hand; es gibt nur eine Erinnerung.
-- Je Konto liegen höchstens **zwei** Backups (die Administration kann die
-  Zahl unter „Backups" ändern; bis Web 11.2.0 waren es drei). Das älteste
+- Es wird **nicht automatisch** gesichert. Wann ein Konto-Backup entsteht,
+  entscheidet die Verwaltung von Hand; es gibt nur eine Erinnerung. Der Grund
+  ist derselbe wie oben: Ein nächtlicher Lauf hätte nichts, womit er die
+  geschützten Angaben lesen könnte.
+- Je Konto liegen höchstens **zwei** Pakete (die Verwaltung kann die Zahl
+  unter „Konto-Backups" ändern; bis Web 11.2.0 waren es drei). Das älteste
   wird beim nächsten Sichern verdrängt — nach Alter wird dagegen nie etwas
-  entfernt.
-- Wird dein Konto gelöscht, entscheidet die Administration dabei ausdrücklich,
-  ob die Backups mitgehen. Die Vorgabe ist: **mitlöschen**.
-- Die Backups können zusätzlich auf einen **anderen Server** geschoben
-  werden (Abschnitt 6.2). Ob das eingerichtet ist, weiss die Administration.
+  entfernt. Das jüngste und ein freigegebenes bleiben immer.
+- Wird dein Konto gelöscht, entscheidet die Verwaltung dabei ausdrücklich,
+  ob die Pakete mitgehen. Die Vorgabe ist: **mitlöschen**.
+- Die Pakete können zusätzlich auf einen **anderen Server** geschoben
+  werden (Abschnitt 6.2). Ob das eingerichtet ist, weiss die Verwaltung.
 
 ### 6.2 Wohin die Backups gehen (nur Administration)
 
-Seit Web 12.1.0 kann die Administration unter **Einstellungen →
-Backup-Ziele** eine Gegenstelle eintragen, auf die die Backups
+Seit Web 12.1.0 kann die Verwaltung unter **Einstellungen →
+Backup-Ziele** eine Gegenstelle eintragen, auf die die Konto-Backups
 geschoben werden — per FTP, FTPS oder SFTP. Der Grund ist schlicht: Ein
-Backup, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
+Paket, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
 wenn dieser Server ausfällt.
 
 Nicht zu verwechseln mit dem **Transportziel** eines Einsatzes — das ist die
@@ -1753,7 +1765,8 @@ Was dabei zu wissen ist:
   Datenbankdump hat, hat die Passwörter nicht.
 - **Auf dem Ziel wird nie etwas gelöscht.** Die Regel „höchstens zwei je
   Konto" gilt für die Ablage auf dem eigenen Server; drüben sammelt sich
-  alles an, bis dort jemand aufräumt.
+  alles an, bis dort jemand aufräumt. Was dort liegt, zählt deshalb auch
+  nicht in die Speichergrenze — der Server kennt die Größe nicht.
 
 Für dein Konto ändert sich dadurch nichts: Der Inhalt des Backups bleibt
 verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort
@@ -1772,7 +1785,8 @@ zweiten, grösseren Knopf. Der Unterschied zu allem darüber ist der Zweck:
 
 **Was zu tun ist.** Einen Zeitplan setzen (täglich, wöchentlich oder
 monatlich) — mehr braucht es im Regelfall nicht. Der Lauf arbeitet in kleinen
-Portionen im Hintergrund weiter; wie oft er drankommt, hängt an der Wartung.
+Portionen im Hintergrund weiter; wie oft er drankommt, hängt am eingerichteten
+Auslöser (Betrieb → Hintergrundjobs).
 Wer sofort einen Stand will, drückt *Jetzt sichern*.
 
 **Wie viele aufbewahrt werden**, steht daneben; Vorgabe sind zwei. Ältere
@@ -2582,10 +2596,11 @@ koppeln".
 
 ## 11. Administration (Admin und BetreiberIn)
 
-Die Administration führt zwei Seiten für Konten: die **Liste** aller
+Die Verwaltung führt zwei Seiten für Konten: die **Liste** aller
 NutzerInnen (11.2) und je Konto dessen **Kontoseite** (11.1). Angelegt wird in
 der Liste, gelöscht auf der Kontoseite — dort gehört die Entscheidung dazu, was
-mit den Backups geschieht.
+mit den Konto-Backups geschieht. Dazu kommen **Konto-Backups** (die Regeln für
+alle Konten, Abschnitt 11.3), **Installation** (11.3) und **Demo-Konto**.
 
 Seit Web 15.0.0 gibt es **drei Rollen**; welche was darf, steht in 11.3 unter
 „Drei Rollen". Alles in diesem Kapitel können Admin **und** BetreiberIn.
@@ -2603,9 +2618,13 @@ Darunter:
 |---|---|
 | **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
-| **Backups** | Die Backups **dieses** Kontos mit Zeitpunkt, Umfang, Größe und Zustand; dazu „Jetzt sichern" und „Für Zielkonto freigeben". |
-| **Abonnement** | Reservierter Platz. Tarif, Laufzeit und Rechnungen kommen mit den Abomodellen. |
+| **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
+
+> Die Karte **„Abonnement · ab P5"** gibt es seit Web 15.2.0 nicht mehr. Sie
+> war ein reservierter Platz und hat auf jeder Kontoseite eine Zusage
+> wiederholt, für die es keinen Termin gab. Tarif, Laufzeit und Rechnungen
+> kommen mit den Abomodellen — dann als Karte mit Inhalt.
 
 Am breiten Bildschirm stehen die Karten in zwei Spalten, auf dem Handy
 untereinander; dort öffnet ein **„⋯"** je Zeile dieselben Handlungen.
@@ -2619,48 +2638,61 @@ verschickter Link wird dabei ungültig — es gilt immer nur der zuletzt
 verschickte. Kommt die E-Mail nicht weg, **zeigt die Seite den Link an**; er ist
 eine Stunde gültig und darf nur an die Person selbst weitergegeben werden.
 
-**Die Backups dieses Kontos.** Jede Zeile nennt Zeitpunkt, Umfang (wie viele
-Diensttage, Einsätze und Ruhezeiten, wie viel davon im Papierkorb liegt) und
-Größe, dazu eine Plakette: *lesbar*, *freigegeben* oder *nicht lesbar*. Über der
-Liste steht der Stand des Kontos — *aktuell*, *überfällig · n Tage* oder *nie
-gesichert*.
+**Die Konto-Backups dieses Kontos.** Im Kartenkopf steht der Zustand als
+Plakette — *aktuell*, *überfällig · n Tage* oder *nie gesichert* — und rechts
+**„Jetzt sichern"**. Jede Zeile nennt Zeitpunkt, Umfang (wie viele Diensttage,
+Einsätze und Ruhezeiten, wie viel davon im Papierkorb liegt) und Größe. Eine
+Plakette bekommt nur, was etwas zu sagen hat: *freigegeben*, oder *nicht
+lesbar*. Seit Web 15.2.0 steht dort **kein** *lesbar* mehr an jeder Zeile — ein
+Wort, das immer dasselbe sagt, sagt nichts.
 
-- **Einspielen** bringt ein Backup zurück in **dieses** Konto. Zur
-  Bestätigung ist die E-Mail-Adresse des Kontos abzutippen. Eingespielt wird
+- **Einspielen** bringt ein Paket zurück in **dieses** Konto. Zur Bestätigung
+  ist die E-Mail-Adresse des Kontos abzutippen. Eingespielt wird
   **ergänzend**: Vorhandenes bleibt stehen, es wird nichts überschrieben.
-- **Für Zielkonto freigeben** gibt ein Backup an ein **anderes** Konto
-  weiter — der Weg für ein neu aufgesetztes Konto. Die NutzerIn sieht es
-  danach in ihrem eigenen Backup-Bereich und spielt es dort mit ihrem
-  Wiederherstellungsschlüssel ein. Die Administration bekommt zu keinem
+- **Paket löschen** steht im **„⋯"** der Zeile — es ist endgültig, und
+  endgültige Handlungen liegen eine Ebene tiefer. Ist es das **letzte** Paket
+  des Kontos, ist zusätzlich die E-Mail-Adresse abzutippen.
+- **Für Zielkonto freigeben** unten in der Karte gibt ein Paket an ein
+  **anderes** Konto weiter — der Weg für ein neu aufgesetztes Konto. Die
+  NutzerIn sieht es danach in ihrem eigenen Backup-Bereich und spielt es dort
+  mit ihrem Wiederherstellungsschlüssel ein. Die Verwaltung bekommt zu keinem
   Zeitpunkt Klartext zu sehen.
-- **Löschen** entfernt ein Paket endgültig. Ist es die **letzte** Backup des
-  Kontos, ist zusätzlich die E-Mail-Adresse abzutippen.
+
+**Läuft eine Freigabe, sagt die Karte es** (seit Web 15.2.0). Eine blaue Zeile
+über den Paketen nennt, **für wen** freigegeben ist, **seit wann** und
+**welches Paket** — dazu, was die andere Seite noch tun muss, und einen Knopf
+**„Widerrufen"**. Vorher war das nur an einer Plakette und im Aktionsmenü zu
+erkennen: Ein Paket dieses Kontos stand für jemand anderen offen, und wer nicht
+danach suchte, sah es nicht. Gibt es das Zielkonto nicht mehr, steht auch das
+dort — die Freigabe läuft dann ins Leere und kann widerrufen werden.
 
 **Aufbewahrung.** Je Konto bleiben die letzten *n* Pakete stehen (Vorgabe:
-**zwei** seit Web 12.0.0, vorher drei — einstellbar unter „Backups");
-ältere verschwinden beim nächsten Sichern. Zwei bleiben immer: die **jüngste**
-Backup und eine, die gerade **freigegeben** ist. Nach **Alter** wird nie
-etwas entfernt.
+**zwei** seit Web 12.0.0, vorher drei — einstellbar unter „Konto-Backups");
+ältere verschwinden beim nächsten Sichern. Zwei bleiben immer: das **jüngste**
+und eines, das gerade **freigegeben** ist. Nach **Alter** wird nie etwas
+entfernt.
 
 **Konto löschen** entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
 und Geräte endgültig — ohne Papierkorb. Vorher ist zu entscheiden, was mit den
-Backups geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts zurück.
-Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
-„Backups" als Backup ohne Konto. Zur Bestätigung ist die E-Mail-Adresse
-abzutippen.
+Konto-Backups geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts
+zurück. Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
+**Konto-Backups** als „Backup ohne Konto". Zur Bestätigung ist die
+E-Mail-Adresse abzutippen.
 
 ### 11.2 Die Liste der NutzerInnen
 
-Oben stehen vier Zahlen: **Konten**, **Admins**, **Backup überfällig**,
-**nie gesichert**. Sie zählen den ganzen Bestand, und jede ist ein Weg: Ein
-Klick öffnet die Liste, die sie meint.
+Oben stehen vier Zahlen: **Konten**, **Admins**, **Konto-Backup überfällig**,
+**nie Konto-Backup**. Sie zählen den ganzen Bestand, und jede ist ein Weg: Ein
+Klick öffnet die Liste, die sie meint. Seit Web 15.2.0 heißen Zahl, Filter und
+Spalte **gleich** — vorher gab es vier Namen für zwei Filter, und wer den einen
+suchte, fand den anderen nicht.
 
 Darunter die Liste selbst.
 
 - **Suchen** nach Name oder E-Mail-Adresse. Gesucht wird über alle Konten, nicht
   nur über die angezeigte Seite.
-- **Filtern** über die Plaketten daneben: Alle, Admins, Backup überfällig,
-  Nie gesichert, Ohne Gerät. Die Zahl an einer Plakette sagt, was der Filter
+- **Filtern** über die Plaketten daneben: Alle, Admins, Konto-Backup
+  überfällig, nie Konto-Backup, Ohne Gerät. Die Zahl an einer Plakette sagt, was der Filter
   **bei der laufenden Suche** ergäbe — deshalb ändert sie sich, wenn im Suchfeld
   etwas steht, während die Zahlen oben stehen bleiben.
 - **Sortieren** durch Klick auf einen Spaltenkopf; ein zweiter Klick dreht die
@@ -2669,11 +2701,11 @@ Darunter die Liste selbst.
   sind („Konten 1–50 von 304"), unten rechts die Seitenzahlen.
 - **Ein Klick auf eine Zeile** öffnet die Kontoseite (11.1).
 
-Die Spalte **Backup** sagt je Konto eines von fünf Worten: *aktuell*,
+Die Spalte **Konto-Backup** sagt je Konto eines von fünf Worten: *aktuell*,
 *überfällig · n Tage*, *nie gesichert*, *ohne Kennung* (ein Konto aus der Zeit
-vor den Admin-Backups — es lässt sich erst sichern, wenn die Wartung
-gelaufen ist) oder *Stand unbekannt* (die Begleitdatei des Kontos ist nicht
-lesbar; die Kontoseite sagt dann, was wirklich da ist).
+vor den Konto-Backups — es lässt sich erst sichern, wenn der Migrationslauf
+unter Betrieb → Updates durch ist) oder *Stand unbekannt* (die Begleitdatei des
+Kontos ist nicht lesbar; die Kontoseite sagt dann, was wirklich da ist).
 
 **Mehrere Konten auf einmal sichern.** Vor jeder Zeile steht ein Kästchen.
 Sobald eines gesetzt ist, erscheint unten eine Leiste: „n ausgewählt · Auswahl
@@ -2687,9 +2719,10 @@ E-Mail-Adresse, Name und Rolle; das Konto entsteht ohne Passwort, und die Person
 bekommt einen Link, mit dem sie es selbst setzt (24 Stunden gültig).
 
 **Löschen** steht nicht in der Liste, sondern auf der Kontoseite (11.1): Dort
-gehört die Entscheidung dazu, was mit den Backups des Kontos geschehen soll.
+gehört die Entscheidung dazu, was mit den Konto-Backups des Kontos geschehen
+soll.
 
-### 11.3 Anlegen, Rollen und Wartung
+### 11.3 Anlegen, Rollen und Betrieb
 
 **Beim Anlegen gibt es drei mögliche Antworten**, und die Seite sagt, welche
 zutrifft:
@@ -2717,7 +2750,7 @@ alles, was eine NutzerIn kann.
 | Rolle | Was sie kann |
 |---|---|
 | **NutzerIn** | die eigenen Diensttage und Einsätze dokumentieren, eigene Stammdaten, Geräte, Backup, Import und Export — alles unter dem Zahnrad, was mit „ich" zu tun hat |
-| **Admin** | zusätzlich: Konten anlegen, ändern und löschen, Backups je Konto, Rechtstexte, Demo-Konto |
+| **Admin** | zusätzlich: Konten anlegen, ändern und löschen, Konto-Backups, Installation, Demo-Konto |
 | **BetreiberIn** | zusätzlich: alles, was die **Installation** betrifft — Serverschlüssel, Wartungsmodus, Migrationen, Hintergrundjobs, Speichergrenze, Komplett-Backup und Backup-Ziele |
 
 Warum die dritte Rolle: Eine Fehlbedienung in der Verwaltung trifft **ein**
@@ -2823,9 +2856,10 @@ geht nichts verloren.
    antwortet, und unten in der Fußzeile steht die neue Fassung.
 7. Uhr und Handy melden sich beim nächsten Mal von selbst. Nichts zu tun.
 
-**Was währenddessen weiter geht.** Diese Seite, die Anmeldung, das Abmelden
-und der Abruf der Hintergrundjobs. Das ist Absicht: Das Komplett-Backup läuft
-am besten **während** der Wartung, weil dann niemand sonst schreibt.
+**Was währenddessen weiter geht.** Die drei Betriebsseiten, die Anmeldung, das
+Abmelden und der Abruf der Hintergrundjobs. Das ist Absicht: Das
+Komplett-Backup läuft am besten **während** des Wartungsmodus, weil dann
+niemand sonst schreibt.
 
 **Wer sich anmeldet, aber nicht verwaltet**, wird gleich wieder abgemeldet und
 sieht die Wartungsseite. Auch das ist Absicht — während umgebaut wird, soll
@@ -2925,18 +2959,24 @@ Hinweis darauf hin (keine Blockade). Seit Web 9.10.0 gilt das auch für
 ein systemweiter Standort, den ein Dutzend Konten bereits selbst angelegt
 hatte, entstand ohne jede Warnung.
 
-Unter **„Backups"** stehen seit Web 9.10.0 nur noch die Dinge, die für
-**alle** Konten gelten. Wer ein bestimmtes Backup sucht, ist hier falsch:
+#### Konto-Backups
+
+Unter **„Konto-Backups"** stehen seit Web 9.10.0 nur noch die Dinge, die für
+**alle** Konten gelten. Der Untertitel sagt seit Web 15.2.0, welches der drei
+Backups gemeint ist: *Pakete, die die Verwaltung je Konto anlegt — nicht die
+Backups, die NutzerInnen selbst herunterladen.* Wer ein bestimmtes Paket
+sucht, ist hier falsch:
 
 | Was du willst | Wo es steht |
 |---|---|
-| Wie steht es um die Installation? Welche Regeln gelten? | **Backups** |
-| Welche Konten sind überfällig? Mehrere auf einmal sichern | **NutzerInnen** (Kachel „Backup überfällig" bzw. „nie gesichert") |
-| Die Backups **eines** Kontos einspielen, freigeben, löschen | Die **Kontoseite** dieses Kontos (11.1) |
+| Welche Regeln gelten für alle Konten? | **Konto-Backups** |
+| Welche Konten sind überfällig? Mehrere auf einmal sichern | **NutzerInnen** (Kachel „Konto-Backup überfällig" bzw. „nie Konto-Backup") |
+| Die Pakete **eines** Kontos einspielen, freigeben, löschen | Die **Kontoseite** dieses Kontos (11.1) |
+| Wie viel Platz belegt ist, und wo die Ablage liegt | **Betrieb → Servereinstellungen** |
 
-Oben vier Zahlen: Konten, Pakete samt Größe der Ablage, überfällig, nie
-gesichert. Die letzten beiden sind anklickbar und öffnen die NutzerInnen-Liste
-mit genau diesem Filter.
+Oben vier Zahlen: Pakete samt Größe, Konten, *Konto-Backup überfällig*, *nie
+Konto-Backup*. Die letzten beiden sind anklickbar und öffnen die
+NutzerInnen-Liste mit genau diesem Filter — und heißen dort wortgleich.
 
 **Regeln.** Drei Einstellungen, ein Speichern:
 
@@ -2993,18 +3033,46 @@ ein Auftrag läuft, steht sein Stand oben auf der Seite.
 bewusst nicht vorgesehen: Sie bräuchten den Inhaltsschlüssel, und den hat der
 Server nicht.
 
-**Ablage** nennt hier nur noch, ob sie bereit ist, wann zuletzt gesichert wurde
-und wie viele Konten eine Ablage haben; Pfad, Belegung und Reste stehen unter
-Betrieb → Servereinstellungen, dort, wo auch die Grenze steht, gegen die sie
-gemessen werden. **Backups ohne Konto** steht
-zugeklappt darunter: Ordner, zu deren Konto es keine Zeile mehr gibt — der Fall
-„Konto gelöscht und neu aufgesetzt". Sie überleben die Löschung mit Absicht;
-genau dafür sind sie da. An den Rückfragen ändert sich nichts: Vor dem
+**Die Karte „Ablage" gibt es seit Web 15.2.0 nicht mehr.** Pfad, Zustand,
+Belegung und Reste stehen unter **Betrieb → Servereinstellungen** — dort, wo
+auch die Grenze steht, gegen die sie gemessen werden. Ist die Ablage nicht
+beschreibbar, sagt das eine Meldung oben auf der Seite; ohne beschreibbare
+Ablage entsteht kein Konto-Backup.
+
+**Backups ohne Konto** steht zugeklappt am Rand: Ordner, zu deren Konto es
+keine Zeile mehr gibt — der Fall „Konto gelöscht und neu aufgesetzt". Sie
+überleben die Löschung mit Absicht; genau dafür sind sie da. Seit Web 15.2.0
+steht dort **eine Zeile je Ordner** statt je Paket, mit der Kontokennung als
+Titel und der Herkunft darunter. Daneben zwei leise Knöpfe — **Einspielen** und
+**Freigeben** —, und im **„⋯"** die beiden endgültigen Wege: *Einzelnes Paket
+löschen* und *Ganzen Ordner löschen*. Welches Paket gemeint ist, wird im Dialog
+gewählt; jüngstes zuerst. An den Rückfragen ändert sich nichts: Vor dem
 Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
 
-Unter **„Rechtstexte"** stehen Impressum und Datenschutzerklärung dieser
-Installation. Beide Seiten sind **ohne Anmeldung** erreichbar und in jeder
-Fußzeile verlinkt.
+**„Was hier gilt"** am Ende der Seite fasst zusammen, was die drei Backups
+unterscheidet, warum Konto-Backups nie von selbst entstehen, wie die Freigabe
+funktioniert und wohin die Pakete von hier aus gehen.
+
+#### Installation
+
+Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: das
+**Logo**, das **Impressum** und die **Datenschutzerklärung**. Bis Web 15.1.0
+hieß die Seite „Rechtstexte" und das Logo lag auf der Wartungsseite; die alte
+Adresse führt weiterhin hierher.
+
+**Das Logo** links wählt zwischen *Hubschrauber (RTH)*, *Fahrzeug (NEF)* und
+*wechselnd*. Es ist der **Standard dieser Installation** — er gilt für die
+Anmeldeseite und für jedes Konto, das im Profil keine eigene Wahl getroffen
+hat; eine getroffene Wahl bleibt unberührt. Die Änderung wirkt sofort, auch für
+bereits angemeldete Konten. *Wechselnd* würfelt je Anmeldung neu; innerhalb
+einer Sitzung bleibt das Logo stehen, damit es beim Blättern nicht springt. Die
+Kachel daneben zeigt, was gerade gilt. Das Logo hat einen **eigenen** Knopf —
+es soll nicht auf einen halbfertigen Rechtstext warten.
+
+**Impressum und Datenschutzerklärung** stehen rechts, mit **„Ansehen"** im
+Kartenkopf: Der Link öffnet die öffentliche Seite. Beide sind **ohne
+Anmeldung** erreichbar und in jeder Fußzeile verlinkt. Sie teilen sich eine
+Speichern-Leiste, und die nennt, **was** ungespeichert ist.
 
 > **Die Anwendung liefert keinen Text mit.** Was in Impressum und
 > Datenschutzerklärung steht, ist Sache des Betreibers — eine mitgelieferte

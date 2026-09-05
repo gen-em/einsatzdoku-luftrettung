@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                     }
                 } else {
                     $notice = 'Der Durchgang ist zu Ende, der Lauf noch nicht. '
-                            . 'Er macht mit dem nächsten Wartungslauf weiter — oder '
+                            . 'Er macht mit dem nächsten Aufräumlauf weiter — oder '
                             . 'gleich hier mit „Fortsetzen".';
                 }
             } catch (Throwable $ex) {
@@ -160,7 +160,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                         'menue' => 'admin_komplettsicherung']); ?>
 
   <form method="post" id="f-sichern" hidden
-        data-confirm="Jetzt ein Komplett-Backup der ganzen Installation erzeugen? Es umfasst alle Konten, Stammdaten und Spuren; das dauert und belegt Platz. Was in einem Durchgang nicht fertig wird, läuft mit der Wartung weiter."
+        data-confirm="Jetzt ein Komplett-Backup der ganzen Installation erzeugen? Es umfasst alle Konten, Stammdaten und Spuren; das dauert und belegt Platz. Was in einem Durchgang nicht fertig wird, läuft mit dem Aufräumjob weiter."
         data-confirm-ok="Sichern" data-confirm-tone="normal">
     <?= csrf_field() ?><input type="hidden" name="action" value="jetzt_sichern">
   </form>
@@ -228,7 +228,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                 'plaketten' => ui_plakette(edbak_groesse_text((int)($z['roh_bytes'] ?? 0)),
                                            ['ton' => 'neutral'])]);
       ui_zeile(['text' => 'Begonnen',
-                'klein' => 'Ein Lauf darf über mehrere Wartungsläufe gehen.',
+                'klein' => 'Ein Lauf darf über mehrere Aufräumläufe gehen.',
                 'plaketten' => ui_plakette(edbak_zeitpunkt_text((string)($z['begonnen'] ?? '')),
                                            ['ton' => 'neutral'])]);
       ?>
@@ -269,8 +269,8 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                        'klein' => 'Der Plan sagt nicht WANN, sondern OB: Er legt fest, '
                                 . 'wie alt der jüngste Stand höchstens sein darf. Wann '
                                 . 'tatsächlich gearbeitet wird, entscheidet der '
-                                . 'eingerichtete Auslöser — nachzusehen auf der '
-                                . 'Wartungsseite.']); ?>
+                                . 'eingerichtete Auslöser — nachzusehen unter '
+                                . 'Betrieb → Hintergrundjobs.']); ?>
         <?php ui_feld(['name' => 'aufbewahrung', 'label' => 'Stände aufbewahren',
                        'art' => 'number', 'attr' => 'min="1" max="20"',
                        'wert' => (string)komp_aufbewahrung(),

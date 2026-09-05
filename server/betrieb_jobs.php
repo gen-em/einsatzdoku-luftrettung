@@ -79,7 +79,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
                    ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
                    : ui_plakette('läuft', ['ton' => 'blau']))))]); ?>
     <?php if ($jobPause !== null): ?>
-      <?= ui_meldung_markup('warn', 'Die Wartung ist angehalten bis '
+      <?= ui_meldung_markup('warn', 'Die Hintergrundarbeit ist angehalten bis '
           . e(fmt_local($jobPause, 'd.m.Y H:i')) . '. Bis dahin wird nichts '
           . 'verdichtet, ausgedünnt oder aufgeräumt. Die Pause läuft von '
           . 'selbst ab; aufheben lässt sie sich mit '

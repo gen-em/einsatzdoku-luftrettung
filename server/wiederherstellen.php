@@ -558,14 +558,15 @@ ui_kopf(['menue' => false]);
                       'klein' => 'Backup: Web ' . $dumpWeb . ' · hier läuft Web '
                                . WEB_VERSION . '. Der Migrationslauf ist deshalb '
                                . 'nicht optional.',
-                      'plaketten' => ui_plakette('Wartung aufrufen', ['ton' => 'orange'])]);
+                      'plaketten' => ui_plakette('Updates ausführen', ['ton' => 'orange'])]);
         }
         ?>
         <p class="feld-hinweis"><strong>Jetzt in dieser Reihenfolge:</strong></p>
         <p class="feld-hinweis">1. <a href="index.php">Anmelden</a> — mit dem
         Administrationskonto aus dem Backup; die Passwörter sind dieselben wie
         vorher.<br>
-        2. <a href="update.php">Wartung</a> aufrufen und den Migrationslauf ausführen.
+        2. <a href="betrieb_updates.php">Betrieb → Updates</a> aufrufen und den
+        Migrationslauf ausführen.
         Er läuft hier bewusst nicht mit: Migrationen können Spalten löschen, und
         dazwischen gehört eine angemeldete Person und ein Knopf.<br>
         3. Danach unten aufräumen — der ausgepackte Klartext und die Nachweisdatei
@@ -713,7 +714,7 @@ ui_kopf(['menue' => false]);
       Datenbank anlegen (leer) · Anwendungsdateien hochladen ·
       <code>config.php</code> aus dem Wiederanlaufpaket daneben legen ·
       Backup-Datei nach <code>sicherungen/<?= WH_EINGANG ?>/</code> ·
-      diese Seite · anmelden · <a href="update.php">Wartung</a>. Ausführlich steht
+      diese Seite · anmelden · <a href="betrieb_updates.php">Updates</a>. Ausführlich steht
       es im Runbook, <code>docs/Technik.md</code>, Abschnitt 7.</p>
 
       <p class="feld-hinweis"><strong>Der Serverschlüssel entscheidet.</strong> Eine

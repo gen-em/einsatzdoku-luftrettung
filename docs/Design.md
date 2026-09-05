@@ -325,7 +325,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-91 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+92 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
@@ -340,7 +340,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 18 |  |
-| `--dunkelblau` | `#1A2E4D` | 47 |  |
+| `--dunkelblau` | `#1A2E4D` | 48 |  |
 | `--gedaempft` | `#6E6459` | 46 |  |
 | `--auf-dunkel` | `#FFFFFF` | 7 | Schrift auf Dunkelblau, 13,62:1 |
 
@@ -403,8 +403,8 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--abstand-1` | `4px` | 55 |  |
 | `--abstand-2` | `8px` | 83 |  |
-| `--abstand-3` | `12px` | 108 |  |
-| `--abstand-4` | `16px` | 50 |  |
+| `--abstand-3` | `12px` | 109 |  |
+| `--abstand-4` | `16px` | 51 |  |
 | `--abstand-5` | `24px` | 20 |  |
 
 **Radien**
@@ -412,7 +412,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 18 | Plakette, Kästchen, Eingabefeld |
-| `--radius` | `10px` | 16 | Knopf, Meldung |
+| `--radius` | `10px` | 17 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 6 | Karte, Blatt, Dialog |
 
 **Maße**
@@ -443,6 +443,7 @@ auseinanderlaufen kann.
 | `--geo-schild` | `36px` | 2 | Kästchen für Standort und Zielklinik |
 | `--geo-ring` | `3px` | 10 | Ringstärke Start/Ende am Schild |
 | `--balken` | `8px` | 1 | Höhe des Speicherbalkens |
+| `--logo-kachel` | `var(--kopf)` | 2 | Vorschau-Kachel der Installation … |
 | `--balken-punkt` | `10px` | 2 | Farbpunkt in seiner Legende |
 | `--anmeldekarte` | `400px` | 1 | Karte der Anmeldung (E-P3-38) |
 | `--zeile-frei` | `1.4em` | 1 | Mindesthöhe der Zustandszeile |
@@ -736,7 +737,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 |---|---|--:|
 | `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 2 |
-| `datenbank.svg` | Tabler Icons „database" (MIT) | 12 |
+| `datenbank.svg` | Tabler Icons „database" (MIT) | 14 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 0 |
@@ -744,12 +745,12 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `haken.svg` | Tabler Icons „check" (MIT) | 23 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 3 |
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 19 |
-| `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 24 |
-| `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
+| `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
+| `kalender.svg` | Tabler Icons „calendar" (MIT) | 6 |
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 2 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 4 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 20 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 8 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
@@ -775,7 +776,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 27 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 2 |
-| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 14 |
+| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 15 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 27 |
 
@@ -837,28 +838,28 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_geruest_ende()` | `.inhalt` | ja | 508 |
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 547 |
 | `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 700 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja | 786 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 866 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 909 |
-| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 976 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1022 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1075 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1101 |
-| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1131 |
-| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1182 |
-| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1198 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1240 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1282 |
-| `ui_feld()` | `.feld` | ja (+23 Unterklassen) | 1351 |
-| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1416 |
-| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1460 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1513 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1557 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1640 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1698 |
-| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1739 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1796 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 1949 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja | 801 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 883 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 926 |
+| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 993 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1039 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1092 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1118 |
+| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1154 |
+| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1212 |
+| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1228 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1270 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1312 |
+| `ui_feld()` | `.feld` | ja (+24 Unterklassen) | 1381 |
+| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1446 |
+| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1490 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1543 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1587 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1670 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1732 |
+| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1773 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1830 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 1983 |
 
 33 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -1491,6 +1492,53 @@ Servereinstellungen ist die erste. Eine Formularzeile über 1600 px zu ziehen
 macht sie nicht besser lesbar, sondern schlechter. Seiten mit vielen Karten
 bekommen stattdessen die Zweispaltenregel (E-S8-18, ab AP5).
 
+### 9.21 Logo-Vorschau der Installation (`.logo-vorschau`)
+
+*Neu mit Web 15.2.0, Mockup 09 (freigegeben 05.09.2026).* Eine Kachel mit dem
+gerade gültigen Logo, daneben der Satz, worauf es wirkt. Steht in der Karte
+„Logo" auf **Verwaltung → Installation**, über der Segmentwahl.
+
+```html
+<div class="logo-vorschau">
+  <div class="logo-kachel"><img src="…_weiss.svg" width="54" height="34" alt=""></div>
+  <p class="feld-hinweis">Kopfleiste, Browser-Symbol und Anmeldeseite. …</p>
+</div>
+```
+
+| Maß | Wert | Herkunft |
+|---|---|---|
+| Kachel | `--logo-kachel` = `--kopf` (56 px) | so hoch wie die Kopfleiste — dort sieht man das Logo täglich |
+| Logo darin | 34 px hoch, Breite aus `ui_logo_masse(34)` | dieselbe Zahl wie in der Kopfleiste |
+| Fläche | `--dunkelblau` | ebenfalls die der Kopfleiste. Auf Weiß stünde das Logo nirgends |
+| Radius | `--radius` | wie Knopf und Meldung |
+
+**Die Kachel zeigt das AUFGELÖSTE Logo**, nicht die Einstellung: Bei
+„wechselnd" also das Ergebnis dieser Sitzung. Sonst zeigte sie bei einer der
+drei Wahlmöglichkeiten gar nichts.
+
+**Die Breite steht am `<img>`, nicht im Stylesheet.** Sie ist eine Eigenschaft
+der Datei — Luft 400,16 × 249,81, Boden 420 × 335 —, und `width`/`height` am
+Bild-Tag ist das Einzige, was der Browser vor dem Laden kennt (S3/AP11).
+
+**Bricht die Erklärung um**, rutscht sie unter die Kachel (`flex-wrap`); die
+Kachel bleibt unverändert groß.
+
+### 9.22 Kopfaktion als Absendeknopf
+
+*Neu mit Web 15.2.0.* `ui_karte_start(['aktion' => [… 'form' => 'f-sichern']])`
+gibt statt des `<a class="karte-aktion">` ein
+`<button type="submit" class="karte-aktion" form="…">` aus — gleiche Klasse,
+gleiches Aussehen, gleicher 44-px-Anfassbereich.
+
+**Warum es das braucht.** „Jetzt sichern" auf der Kontoseite ist ein POST, kein
+Link. Ein `<form>` um den Knopf ginge nicht: Der Kartenkopf steht bereits in
+einem Formular, und verschachtelte Formulare gibt es in HTML nicht. Das
+`form="…"`-Attribut ist der Weg, den die Seite ohnehin für Blattzeilen und
+Titelaktionen benutzt.
+
+**Es bleibt bei EINER Kopfaktion je Karte** (E-P3-25). Was mehr braucht,
+bekommt ein Aktionsmenü.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Fünf Typen
@@ -1498,7 +1546,7 @@ bekommen stattdessen die Zweispaltenregel (E-S8-18, ab AP5).
 | Typ | Hülle | Leiste | Beispiele |
 |---|---|---|---|
 | **Inhaltsseite** | `ui_geruest_start(['leiste' => 'diensttage'])` | Diensttage | Tagesübersicht, Einsatzansicht, Formular, Papierkorb, Zeitraum |
-| **Einstellungsseite** | `ui_geruest_start(['leiste' => 'einstellungen'])` | Einstellungsmenü | Profil, Standorte, Geräte, Backups, Wartung |
+| **Einstellungsseite** | `ui_geruest_start(['leiste' => 'einstellungen'])` | Einstellungsmenü | Profil, Standorte, Geräte, Konto-Backups, Installation, Betrieb |
 | **Suchseite** | `ui_geruest_start(['leiste' => 'filter'])` | Filter, von der Seite gefüllt | Suche |
 | **Öffentliche Lesespalte** | `ui_kopf(['menue' => false])` + `.rahmen rahmen-lesespalte` | keine | Impressum, Datenschutz, Abbruchseite |
 | **Anmeldehülle** | `.anmeldung-body` + `<main class="anmeldung">` | keine | Anmeldung, Passwort setzen, Einrichter |

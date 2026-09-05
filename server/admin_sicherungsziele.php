@@ -97,9 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $an = ($_POST['versand_auto'] ?? '') === '1';
         if (sz_auto_setzen($an)) {
             $notice = $an
-                ? 'Der Versand läuft ab jetzt mit dem Wartungsjob mit. Wie oft '
+                ? 'Der Versand läuft ab jetzt mit dem Aufräumjob mit. Wie oft '
                 . 'das ist, hängt vom eingerichteten Auslöser ab — nachzusehen '
-                . 'auf der Wartungsseite.'
+                . 'unter Betrieb → Hintergrundjobs.'
                 : 'Der Versand ist abgeschaltet. Die Ziele bleiben eingetragen; '
                 . 'es geht nur nichts mehr von selbst hinaus.';
         } else {
@@ -198,9 +198,9 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php if (!$tabelleDa): ?>
     <?= ui_meldung_markup('fehler', 'Die Tabelle für die Backup-Ziele fehlt '
         . 'noch. Sie entsteht mit der Migration „Backup-Ziele" — bitte '
-        . 'einmal die Wartung aufrufen und die Updates anwenden.',
+        . 'einmal unter Betrieb → Updates die ausstehenden Updates ausführen.',
         'Migration steht aus.') ?>
-    <p class="feld-hinweis"><a href="update.php">Zur Wartung</a></p>
+    <p class="feld-hinweis"><a href="betrieb_updates.php">Zu den Updates</a></p>
   <?php endif; ?>
 
   <?php /* ---- Das Ergebnis der Verbindungsprüfung ------------------------
@@ -262,7 +262,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
 
   <?php /* ---- Versand ----------------------------------------------------
        Der Schalter sagt OB, nicht WANN. Wann etwas läuft, entscheidet der
-       eingerichtete Auslöser (Wartungsseite) — eine zweite Uhr hier wäre
+       eingerichtete Auslöser (Betrieb → Hintergrundjobs) — eine zweite Uhr hier wäre
        eine zweite Wahrheit. */ ?>
   <?php if ($tabelleDa && $schluesselDa): ?>
     <?php ui_karte_start(['titel' => 'Versand']); ?>
@@ -270,7 +270,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         <?= csrf_field() ?><input type="hidden" name="action" value="versand_schalter">
         <?php ui_schalter(['name' => 'versand_auto', 'label' => 'Backups automatisch versenden',
                            'an' => $autoAn,
-                           'klein' => 'Der Wartungsjob schiebt neue Pakete auf die '
+                           'klein' => 'Der Aufräumjob schiebt neue Pakete auf die '
                                     . 'aktiven Ziele. Es wird nur ergänzt — auf dem '
                                     . 'Ziel wird nie etwas gelöscht.']); ?>
         <div class="listen-form-fuss">

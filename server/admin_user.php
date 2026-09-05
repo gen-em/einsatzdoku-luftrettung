@@ -305,7 +305,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    . 'Zielkontos überein — es wurde nichts freigegeben.';
         } elseif (edbak_freigeben($kennung, $datei, (int)$ziel['id'])) {
             $notice = 'Freigegeben für ' . $ziel['email'] . '. Die NutzerIn sieht das '
-                    . 'Backup jetzt im eigenen Backup-Bereich und spielt es dort '
+                    . 'Paket jetzt im eigenen Backup-Bereich und spielt es dort '
                     . 'mit ihrem Wiederherstellungsschlüssel ein.';
         } else {
             $error = 'Die Freigabe liess sich nicht speichern.';
@@ -819,32 +819,40 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         $istFreigabe = $freigabe && ($freigabe['datei'] ?? '') === $p['datei'];
         $lesbar = paket_lesbar($kennung, (string)$p['datei']);
         $zeit = edbak_zeitpunkt_text($p['erzeugt']);
+        /* NUR DER BEFUND TRAEGT EINE PLAKETTE (S8/AP3). „lesbar" stand
+           bisher an JEDER Zeile — bei drei Paketen dreimal dasselbe Wort,
+           das nie etwas anderes sagt. Dieselbe Ueberlegung wie bei den
+           Statuskacheln der NutzerInnen-Liste: Null ist kein Befund. */
         $plaketten = $istFreigabe ? ui_plakette('freigegeben', ['ton' => 'blau']) : '';
-        $plaketten .= $lesbar
-            ? ui_plakette('lesbar', ['ton' => 'neutral'])
-            : ui_plakette('nicht lesbar', ['ton' => 'rot']);
+        if (!$lesbar) { $plaketten .= ui_plakette('nicht lesbar', ['ton' => 'rot']); }
         /* HART BESTÄTIGEN, WENN ES DIE LETZTE IST (E24). Bleibt ein weiteres
-           Backup dieses Kontos stehen, genügt die übliche Rückfrage. */
+           Paket dieses Kontos stehen, genügt die übliche Rückfrage. */
         $hart = count($pakete) === 1;
+        $wPaket = ' data-w-datei="' . e((string)$p['datei'])
+                . '" data-w-zeit="' . e($zeit) . '"';
         ui_zeile([
           'text'  => $zeit,
           'klein' => edbak_umfang_text($p),
           'plaketten' => $plaketten,
-          'aktionen' => ui_zeilenaktionen(['titel' => $zeit, 'eintraege' => [
-              ['text' => 'Einspielen', 'href' => '#',
-               'attr' => ' data-dialog="dlg-einspielen" data-w-datei="' . e((string)$p['datei'])
-                       . '" data-w-zeit="' . e($zeit) . '"'],
-              ['text' => 'Löschen', 'art' => 'gefahr', 'href' => '#',
-               'attr' => ' data-dialog="dlg-paket-weg" data-w-datei="' . e((string)$p['datei'])
-                       . '" data-w-zeit="' . e($zeit) . '" data-w-hart="' . ($hart ? '1' : '')
-                       . '"'],
-          ]]),
+          /* „Einspielen" als leiser Knopf, „Löschen" eine Ebene tiefer
+             (Mockup 08 C, Regel 3). `ui_zeilenaktionen()` zeigte beide ab
+             720 px als Knopfreihe — die unumkehrbare Handlung stand damit
+             gleichrangig neben der harmlosen. */
+          'aktionen' =>
+              ui_knopf(['text' => 'Einspielen', 'art' => 'leise', 'typ' => 'button',
+                        'attr' => ' data-dialog="dlg-einspielen"' . $wPaket])
+            . ui_aktionen(['titel' => $zeit, 'id' => 'pa-' . $i, 'eintraege' => [
+                  ['text' => 'Paket löschen', 'gefahr' => true, 'href' => '#',
+                   'symbol' => 'korb',
+                   'attr' => ' data-dialog="dlg-paket-weg"' . $wPaket
+                           . ' data-w-hart="' . ($hart ? '1' : '') . '"'],
+              ]]),
         ]);
       endforeach; ?>
       <p class="feld-hinweis">Aufbewahrung: die letzten <?= edbak_aufbewahrung() ?> Pakete je
          Konto (Einstellung unter <a href="admin_sicherungen.php">Konto-Backups</a>).
          Das jüngste und ein freigegebenes bleiben immer. Einspielen ergänzt,
-         ersetzt nicht; die Administration sieht keinen Klartext.</p>
+         ersetzt nicht; die Verwaltung sieht keinen Klartext.</p>
       <?php if ($pakete): ?>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Für Zielkonto freigeben', 'symbol' => 'tausch',
@@ -971,7 +979,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <div class="dialog-inhalt">
         <p>Das freigegebene Paket erscheint im Backup-Bereich des Zielkontos.
            Eingespielt wird es dort von der NutzerIn selbst, mit ihrem
-           Wiederherstellungsschlüssel — die Administration sieht keinen Klartext.</p>
+           Wiederherstellungsschlüssel — die Verwaltung sieht keinen Klartext.</p>
         <?php
         $paketwahl = [];
         foreach ($pakete as $p) { $paketwahl[(string)$p['datei']] = edbak_zeitpunkt_text($p['erzeugt']); }

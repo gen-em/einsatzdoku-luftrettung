@@ -1678,7 +1678,10 @@ function ui_speichern_leiste(array $o = []): void
      * IMMER sichtbar (der Hinweis eines Formulars erscheint erst ab 720 px).
      *
      * $o: text, symbol, name, wert, attr, hinweis, id, form, zahl (Hinweis
-     *     immer sichtbar), kein_haken (nicht an forms.js hängen) */
+     *     immer sichtbar), kein_haken (nicht an forms.js hängen),
+     *     hinweis_vorlage (S8/AP3: forms.js ersetzt den Hinweis dann durch
+     *     „<Vorlage>: Karte A und Karte B" — die Titel der Karten, in denen
+     *     etwas geändert wurde) */
     $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
     ?>
 <div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
@@ -1692,6 +1695,7 @@ function ui_speichern_leiste(array $o = []): void
            Vorlesereihenfolge auseinander. */ ?>
   <div class="speichern-innen">
     <p class="speichern-hinweis<?= !empty($o['zahl']) ? ' speichern-zahl' : '' ?>"
+       <?= !empty($o['hinweis_vorlage']) ? 'data-hinweis-vorlage="' . ui_e((string)$o['hinweis_vorlage']) . '"' : '' ?>
        <?= !empty($o['zahl']) ? 'id="' . ui_e((string)$o['zahl']) . '"' : '' ?>><?= ui_e((string)($o['hinweis']
         ?? 'Es gibt ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
     <?= ui_knopf([

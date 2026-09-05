@@ -462,7 +462,7 @@ function render_form(array $v, array $errors, string $nachweis,
                          'wert' => (string)($v['logo_path'] ?? 'assets/images/gen-em_logo_helicopter.svg'),
                          'klein' => 'Nur für ein EIGENES Logo. Zeigt der Pfad auf eines '
                                   . 'der beiden mitgelieferten, entscheidet die Logo-Wahl '
-                                  . '(Wartung und Profil).']); ?>
+                                  . '(Betrieb und Profil).']); ?>
         </div>
       <?php ui_karte_ende(); ?>
 

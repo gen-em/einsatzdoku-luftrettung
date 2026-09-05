@@ -14,6 +14,93 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.2.0] — 2026-09-05
+
+### Web — die Verwaltung bekommt eine Ordnung (S8/AP3)
+
+Drei Seiten, drei Befunde aus der S8-Sichtung. Alle drei haben denselben
+Kern: Ein Ort trug etwas, das nicht dorthin gehört, oder ein Wort bedeutete
+mehr als eine Sache.
+
+**Aus „Rechtstexte" wird „Installation"** (E-S8-05, B-S8-10). Impressum,
+Datenschutz und das Logo beantworten dieselbe Frage — was zeigt diese Anlage
+Menschen, die noch nicht angemeldet sind? Das Logo lag auf der Wartungsseite
+zwischen Migrationsliste und Hintergrundjobs; der Logo-Standard ist aber
+Gestaltung und keine Wartung. Links das Logo mit einer Vorschau-Kachel, rechts
+die beiden Texte mit „Ansehen" im Kartenkopf — der Link auf die öffentliche
+Seite, die bisher nur über die Fußzeile erreichbar war. Zwei Formulare, zwei
+Speicherwege: Die Texte teilen sich die Speichern-Leiste, das Logo hat einen
+eigenen Knopf. Es wirkt sofort und soll nicht auf einen halbfertigen
+Rechtstext warten. Damit ist der letzte Grund fort, warum `update.php` im
+Browser noch etwas anzeigte — sie ist jetzt eine Weiterleitung auf
+Betrieb → Updates und bleibt es bis P6 (Nr. 77). Der Notausgang
+`php update.php` auf der Kommandozeile ist unberührt.
+
+**Aus „Backups" werden „Konto-Backups"** (E-S8-06, B-S8-08). Das Wort hieß
+dreierlei: die Pakete, die die Verwaltung je Konto anlegt; die `.edbak`-Datei,
+die eine NutzerIn sich selbst herunterlädt; und der Komplett-Stand der
+Installation. Der Untertitel der Seite sagt jetzt in einem Satz, welches
+gemeint ist. **Und Kennzahl, Filter und Tabellenspalte heißen überall gleich** —
+vorher gab es vier Namen für zwei Filter („Backup überfällig" hier,
+„überfällig · Liste öffnen" dort, „Nie gesichert" als Filter, „nie gesichert"
+als Kachel), und wer den einen suchte, fand den anderen nicht.
+
+Die Karte **„Ablage" ist fort**: Pfad, Zustand, Belegung und Reste stehen seit
+15.1.0 unter Servereinstellungen, bei der Grenze, gegen die sie gemessen
+werden. **„Backups ohne Konto"** trägt jetzt eine Zeile je *Ordner* statt je
+Paket — bei einem Ordner mit zehn Paketen waren das zehn Zeilen für eine
+Sache, die man einmal im Jahr anfasst. Die Kontokennung ist der Titel, die
+Herkunft der Kleintext; daneben *Einspielen* und *Freigeben* als leise Knöpfe,
+und im ⋯ die beiden endgültigen Wege. Welches Paket gemeint ist, wird im
+Dialog gewählt.
+
+**Einspielen und Freigeben haben getrennte Dialoge.** Sie teilten sich eines
+mit zwei Absendeknöpfen — beide verlangen dieselben Felder, also lag das nahe.
+Es war trotzdem falsch: Der Dialog hieß „Backup ohne Konto einspielen" und trug
+unten einen Knopf „Freigeben", der etwas ganz anderes tut. Das Paket wandert
+dabei **nicht** ins Zielkonto; es wird der Person angeboten, und einspielen
+kann es nur sie selbst, mit ihrem Wiederherstellungsschlüssel.
+
+**Die Freigabe wird sichtbar** (B-S8-09). Sie war ein Zustand ohne Anzeige: Ein
+Paket dieses Kontos stand für jemand anderen offen, und zu sehen war das als
+Plakette an einer Zeile und als Eintrag im Aktionsmenü. Jetzt sagt eine
+Zustandszeile in der Karte, für wen, seit wann, welches Paket und was die
+andere Seite noch tun muss — mit „Widerrufen". Gibt es das Zielkonto nicht
+mehr, steht auch das dort.
+
+**Ersatzlos entfallen** ist die Karte „Abonnement · ab P5" (B-S8-11). Sie stand
+seit Web 9.9.0 auf jeder Kontoseite und wiederholte eine Zusage, die niemand
+terminiert hat. Ein Platzhalter, der auf jedem Datensatz erscheint, ist kein
+Platzhalter mehr, sondern ein Versprechen. R33 steht im Rahmenplan; die Karte
+entsteht mit ihrem Inhalt.
+
+**Ein Fehler nebenbei behoben:** Die Kachel „Pakete · Größe" wog den *ganzen*
+Ablagebaum — Komplett-Backups, Begleitdateien, Reste abgebrochener Läufe. Sie
+sagt „Pakete", also muss sie die Pakete wiegen. Gemessen an einem Bestand mit
+einem 2-MB-Komplett-Stand: 2,6 MB behauptet, 692 KB tatsächlich. Der Fehler
+stand seit Web 12.0.0 und fiel nicht auf, weil beide Zahlen plausibel aussehen;
+eine getrennte Summe gibt es erst seit 15.1.0.
+
+**Zwei Bausteine, beide aus dem freigegebenen Mockup 09.** Die Logo-Vorschau —
+Kachel so hoch wie die Kopfleiste und dunkelblau wie sie, weil das Logo dort
+steht, wo man es täglich sieht. Und die **Kopfaktion als Absendeknopf**:
+„Jetzt sichern" ist ein POST, kein Link, und ein `<form>` um den Knopf ginge
+nicht, weil der Kartenkopf schon in einem steht.
+
+**Die Speichern-Leiste nennt, was ungespeichert ist.** „Es gibt ungespeicherte
+Änderungen" beantwortet auf einer Seite mit drei Karten die Frage nicht, die
+man hat: welche? Sie sagt jetzt „Ungespeichert: Impressum und
+Datenschutzerklärung" — die Titel der Karten, in denen etwas geändert wurde.
+
+**Wortliste durchgezogen** (Konzept S8, Abschnitt 5.4): „Admin-Backup" ist
+gestrichen, „Wartung" als Seitenname ebenso — auch dort, wo er außerhalb der
+AP3-Seiten stand (Backup-Ziele, Komplett-Backup, Einrichter). „Paket" heißt
+jetzt die einzelne Datei, „Konto-Backup" das Ganze. Die Karte „Für dich
+freigegebenes Backup" behält ihren Titel: Aus Sicht der NutzerIn ist es genau
+das.
+
+**Keine Migration.** Es ändert sich kein Feld und keine Tabelle.
+
 ## [Web 15.1.0] — 2026-09-05
 
 ### Web — die Wartungsseite ist aufgelöst (S8/AP2, Backlog Nr. 77 und 78)

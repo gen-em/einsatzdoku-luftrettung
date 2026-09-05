@@ -373,7 +373,7 @@ function edbak_sicherung_erzeugen(int $userId): array
     if (!$u) { return [false, 'Konto nicht gefunden.', null]; }
     if (!edbak_kennung_gueltig($u['account_key'])) {
         return [false, 'Diesem Konto fehlt die Kontokennung. Bitte zuerst die '
-                     . 'Wartung aufrufen und die Migration ausführen.', null];
+                     . 'unter Betrieb → Updates die Migration ausführen.', null];
     }
     $kennung = (string)$u['account_key'];
     $ordner  = edbak_ordner($kennung);

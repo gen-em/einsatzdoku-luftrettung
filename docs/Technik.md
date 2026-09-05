@@ -71,8 +71,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       gefiltert und seitenweise (50 je Seite), mit
 │   │                       Statuskacheln und Sammelleiste
 │   │                       Die Kontoseite ist seit Web 9.8.0 die Drehscheibe
-│   │                       eines Kontos: Kontodaten, Geräte, Backups
-│   │                       dieses Kontos, Abonnement (Platz für R33), Löschung
+│   │                       eines Kontos: Kontodaten, Geräte, Konto-Backups
+│   │                       dieses Kontos mit Freigabe-Zustandszeile, Löschung
 │   ├── admin_stammdaten.php  Systemweite Stammdaten aller sechs Typen
 │   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`;
 │   │                        seit Web 9.10.0 EIN Menuepunkt „Stammdaten
@@ -113,7 +113,7 @@ Daten erst nach Server-Bestätigung.
 │   │                       Sperre)
 │   ├── backup_lib.php     Backup-Serialisierung (Kern mit oder ohne Spuren)
 │   │                       · trash_lib.php Papierkorb-Logik
-│   ├── adminbackup_lib.php  Admin-Backups: Ablage (ZIP, Fassung 2),
+│   ├── adminbackup_lib.php  Konto-Backups: Ablage (ZIP, Fassung 2),
 │   │                       Übersicht, Freigabe, Speichergrenze, Auftrag (A8, S2/AP6)
 │   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
 │   │                       Regeln, Ablage und Backups ohne Konto;
@@ -200,7 +200,10 @@ Daten erst nach Server-Bestätigung.
 │   ├── rechtstexte_lib.php   Ablage, Pruefung und der eingeschraenkte
 │   │                      Markdown-Renderer rt_html() — die EINZIGE Stelle des
 │   │                      Projekts, an der aus einer Eingabe HTML wird
-│   ├── admin_rechtstexte.php  Editor dazu (Administration)
+│   ├── admin_installation.php  Wie diese Installation nach aussen auftritt
+│   │                       (S8/AP3): Logo der Installation, Impressum,
+│   │                       Datenschutz. `admin_rechtstexte.php` leitet
+│   │                       hierher weiter (302, Lesezeichen)
 │   ├── apk_lib.php        Was in server/apk/ liegt — Name, Größe, Fassung,
 │   │                       Datum, SHA-256 (S4/A1, siehe 4.97g)
 │   │                       · apk.php liefert die Datei aus
@@ -2827,7 +2830,7 @@ das Skript.
 
 ### 4.97c Backup-Ziele: das Backup verlässt das Haus (ab Web 12.1.0, S2/AP7, E-S2-22)
 
-Bis Web 12.0.0 entstanden die Admin-Backups unter `server/sicherungen/`
+Bis Web 12.0.0 entstanden die Konto-Backups unter `server/sicherungen/`
 und blieben dort. Das ist die Rückfallebene für einen gelöschten Einsatz —
 aber nicht für den Fall, für den man Backups macht: dass dieser Server weg
 ist. Ab Web 12.1.0 gehen sie auf eine **Gegenstelle**.
@@ -2991,7 +2994,7 @@ Stelle ihrer `LIESMICH.md`.
 
 ### 4.97d Komplett-Backup der Installation (ab Web 12.2.0, S2/AP8, E-S2-19 bis E-S2-21)
 
-Das Admin-Backup (Abschnitt „Admin-Backups") sichert ein **Konto**.
+Das Konto-Backup (Abschnitt „Konto-Backups") sichert ein **Konto**.
 Diese hier sichert die **Installation**: alle Konten, Stammdaten, Geräte,
 Schlüsselhüllen, `app_state`, den Migrationsstand — jede Tabelle, die in
 dieser Datenbank steht. Der Fall, gegen den sie hilft, ist nicht „jemand hat
@@ -5469,7 +5472,7 @@ sie durchnummeriert; Verweise aus Code und Dokumentation nennen die Nummer
 
 ---
 
-## Admin-Backups (A8, seit Web 5.9.0)
+## Konto-Backups (A8, seit Web 5.9.0; Name seit Web 15.2.0, E-S8-06)
 
 **Zweck.** Administration soll Konten sichern und wiederherstellen können, ohne
 Einblick in die Daten zu bekommen. Der Serverteil war im Kern vorhanden:
@@ -5664,10 +5667,23 @@ Konten 304 Abfragen und 27,7 ms.
 ### Die Kontoseite (E-P3-41, seit Web 9.8.0)
 
 Alles zu **einem** Konto liegt auf `admin_user.php?id=…`: Kontodaten (ein
-Formular, ein Speichern), Geräte, die Backups **dieses** Kontos, ein
-reservierter Platz für das Abonnement (R33) und die Löschung als
-Gefahrenzone. `admin_sicherungen.php` behält die Regeln — und seit Web 9.10.0
-nur noch sie (Abschnitt „Backups: was auf welcher Seite steht").
+Formular, ein Speichern), Geräte, die Konto-Backups **dieses** Kontos und die
+Löschung als Gefahrenzone. `admin_sicherungen.php` behält die Regeln — und
+seit Web 9.10.0 nur noch sie (Abschnitt „Backups: was auf welcher Seite
+steht").
+
+**Der reservierte Platz für das Abonnement ist mit Web 15.2.0 fort**
+(B-S8-11). Er stand seit Web 9.9.0 als Karte „Abonnement · ab P5" auf jeder
+Kontoseite und wiederholte dort eine Zusage, die niemand terminiert hat. R33
+steht im Rahmenplan; die Karte entsteht mit ihrem Inhalt und nicht davor.
+
+**Die Freigabe hat seit Web 15.2.0 eine Zustandszeile** (B-S8-09). Sie war
+vorher ein Zustand ohne Anzeige: Ein Paket dieses Kontos stand für jemand
+anderen offen, sichtbar nur als Plakette an einer Zeile und als Eintrag im
+Aktionsmenü. Jetzt sagt eine Meldung in der Karte, für wen, seit wann, welches
+Paket, was die andere Seite noch tun muss — mit „Widerrufen". Ist das
+Zielkonto inzwischen gelöscht, sagt sie auch das: Die Freigabe läuft dann ins
+Leere.
 
 Der Grund ist nicht nur Bedienung, sondern Menge: `edbak_uebersicht()` liest
 für **jedes** Konto ein Verzeichnis und eine Begleitdatei, um eine Zeile zu
@@ -5788,18 +5804,29 @@ im Kopfkommentar. Er verschwindet damit von selbst, sobald die echten Dateien
 liegen — sie ersetzen den Platzhalter 1:1 (gleicher Name, gleicher `viewBox`).
 
 
-### Rechtstexte: Impressum und Datenschutz (R32, seit Web 9.11.0)
+### Installation: Logo, Impressum und Datenschutz (R32, seit Web 9.11.0;
+Seite seit Web 15.2.0)
 
 **Die Anwendung liefert keinen Rechtstext mit.** Was darin steht, ist Sache des
 Betreibers; die Anwendung stellt zwei öffentliche Seiten, einen Editor und die
 Verweise in jeder Fußzeile. Der Leerzustand ist die Auslieferung.
+
+**Aus „Rechtstexte" ist mit Web 15.2.0 „Installation" geworden** (E-S8-05).
+Impressum, Datenschutz und das **Logo der Installation** beantworten dieselbe
+Frage — was zeigt diese Anlage Menschen, die noch nicht angemeldet sind? Das
+Logo lag bis dahin auf der Wartungsseite, und das war ein Befund (B-S8-10):
+Der Logo-Standard ist Gestaltung, keine Wartung. Zwei Formulare, zwei
+Speicherwege: Die beiden Texte teilen sich die Speichern-Leiste, das Logo hat
+einen eigenen Knopf — es wirkt sofort und soll nicht auf einen halbfertigen
+Rechtstext warten.
 
 | Datei | Aufgabe |
 |---|---|
 | `rechtstexte_lib.php` | Ablage (`rt_lesen`, `rt_speichern`, `rt_pruefen`) und der Renderer `rt_html()` |
 | `rechtstext_seite.php` | Die öffentliche Seite — beide Dokumente teilen sie sich |
 | `impressum.php`, `datenschutz.php` | Zwei Zeilen: Schlüssel setzen, Seite laden |
-| `admin_rechtstexte.php` | Editor, ein Formular für beide Texte |
+| `admin_installation.php` | Editor, ein Formular für beide Texte — und daneben das Logo der Installation (S8/AP3, E-S8-05) |
+| `admin_rechtstexte.php` | Weiterleitung (302) auf `admin_installation.php`; die Adresse steht in Lesezeichen |
 | `tools/rechtstexte/` | Angriffsprobe für `rt_html()` |
 
 #### `rt_html()` — erst maskieren, dann Struktur erkennen

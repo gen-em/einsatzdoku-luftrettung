@@ -2599,4 +2599,43 @@ declare(strict_types=1);
  * gibt: `webspace_gb`, `speicher_db_bytes`, `speicher_dateien_bytes`,
  * `speicher_stand`.
  */
-const WEB_VERSION = '15.1.0';
+/*
+ * 15.2.0 ORDNET DIE VERWALTUNG.
+ *
+ * Drei Seiten, drei Befunde aus der S8-Sichtung:
+ *
+ * AUS „RECHTSTEXTE" WIRD „INSTALLATION" (E-S8-05, B-S8-10). Impressum,
+ * Datenschutz und das Logo beantworten dieselbe Frage — was zeigt diese
+ * Anlage Menschen, die noch nicht angemeldet sind? Das Logo lag auf der
+ * Wartungsseite und war dort falsch: Der Logo-Standard ist Gestaltung, keine
+ * Wartung. Damit ist der letzte Grund fort, warum `update.php` im Browser
+ * noch etwas anzeigte; sie ist jetzt eine Weiterleitung auf Betrieb →
+ * Updates und bleibt es bis P6 (Nr. 77).
+ *
+ * AUS „BACKUPS" WERDEN „KONTO-BACKUPS" (E-S8-06, B-S8-08). Das Wort hiess
+ * dreierlei: die Pakete der Verwaltung, das `.edbak`, das eine NutzerIn sich
+ * selbst herunterlaedt, und der Komplett-Stand der Installation. Der
+ * Untertitel der Seite sagt jetzt in einem Satz, welches gemeint ist — und
+ * Kennzahl, Filter und Tabellenspalte heissen ueberall gleich. Vorher gab es
+ * VIER Namen fuer ZWEI Filter, und wer den einen suchte, fand den anderen
+ * nicht.
+ *
+ * DIE FREIGABE WIRD SICHTBAR (B-S8-09). Sie war ein Zustand ohne Anzeige:
+ * ein Paket dieses Kontos stand fuer jemand anderen offen, und zu sehen war
+ * das als Plakette an einer Zeile und als Eintrag im Aktionsmenue. Jetzt
+ * sagt eine Zustandszeile in der Karte, fuer wen, seit wann, welches Paket
+ * und was die andere Seite noch tun muss.
+ *
+ * ERSATZLOS ENTFALLEN ist die Karte „Abonnement · ab P5" (B-S8-11). Sie
+ * stand seit Web 9.9.0 auf jeder Kontoseite und wiederholte eine Zusage, die
+ * niemand terminiert hat. R33 steht im Rahmenplan; die Karte entsteht mit
+ * ihrem Inhalt.
+ *
+ * ZWEI BAUSTEINE, beide aus dem freigegebenen Mockup 09: die Logo-Vorschau
+ * (Kachel so hoch wie die Kopfleiste, dunkelblau wie sie) und die Kopfaktion
+ * als Absendeknopf — „Jetzt sichern" ist ein POST, kein Link, und ein
+ * <form> um den Knopf ginge nicht, weil der Kartenkopf schon in einem steht.
+ *
+ * KEINE MIGRATION. Es aendert sich kein Feld und keine Tabelle.
+ */
+const WEB_VERSION = '15.2.0';

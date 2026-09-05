@@ -153,8 +153,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ((int)($laufend['ges'] ?? 0) === 0) {
             edbak_auftrag_schreiben(null);
-            $error = 'Es gibt kein Konto mit Kontokennung. Bitte zuerst die Wartung '
-                   . 'aufrufen und die Migration ausführen.';
+            $error = 'Es gibt kein Konto mit Kontokennung. Bitte zuerst unter '
+                   . 'Betrieb → Updates die Migration ausführen.';
         } else {
             $t0 = microtime(true);
             $e = edbak_auftrag_schub(
@@ -345,7 +345,8 @@ ui_seite_start(['titel' => 'Konto-Backups']);
         . edbak_auftrag_offen($auftrag) . ' offen'
         . ((int)($auftrag['feh'] ?? 0) > 0
             ? ', ' . (int)$auftrag['feh'] . ' gescheitert' : '')
-        . '. Der Aufräumjob arbeitet den Rest in Schüben ab; „Alle sichern" '
+        . '. Der Aufräumjob arbeitet den Rest in Schüben zu '
+        . (int)SICHERN_BUDGET . ' Sekunden ab; „Alle sichern" '
         . 'macht sofort dort weiter.'
         . (($auftrag['seit'] ?? null)
             ? ' Begonnen ' . fmt_local(str_replace(['T', 'Z'], [' ', ''],
@@ -395,9 +396,15 @@ ui_seite_start(['titel' => 'Konto-Backups']);
        * Namen fuer denselben Filter, und wer den einen sucht, findet den
        * anderen nicht. */ ?>
   <div class="kennzahl-raster kennzahl-raster-4">
+    <?php /* `pakete_bytes`, NICHT `bytes` (F-S8-P-07). `bytes` ist der ganze
+             Ablagebaum — Komplett-Backups, Begleitdateien, .htaccess, Reste
+             abgebrochener Läufe. Die Kachel sagt „Pakete", also muss sie die
+             Pakete wiegen. Der Fehler stand hier seit Web 12.0.0 und fiel
+             nicht auf, weil beide Zahlen plausibel aussehen; erst seit
+             Web 15.1.0 gibt es überhaupt eine getrennte Summe. */ ?>
     <?= ui_kennzahl(['wert' => number_format($ablage['pakete'], 0, ',', '.'),
                      'label' => ($ablage['pakete'] === 1 ? 'Paket · ' : 'Pakete · ')
-                              . edbak_groesse_text($ablage['bytes'])]) ?>
+                              . edbak_groesse_text($ablage['pakete_bytes'])]) ?>
     <?= ui_kennzahl(['wert' => number_format($zahlen['konten'], 0, ',', '.'),
                      'label' => 'Konten', 'href' => 'admin_users.php']) ?>
     <?= ui_kennzahl(['wert' => (string)$zahlen['ueberfaellig'],
@@ -414,7 +421,7 @@ ui_seite_start(['titel' => 'Konto-Backups']);
   <div class="form-spalte">
 
     <?php /* ---- Regeln ---------------------------------------------------- */ ?>
-    <?php ui_karte_start(['titel' => 'Regeln']); ?>
+    <?php ui_karte_start(['titel' => 'Regeln', 'id' => 'k-regeln']); ?>
       <form method="post">
         <?= csrf_field() ?><input type="hidden" name="action" value="regeln">
         <div class="fld-reihe">

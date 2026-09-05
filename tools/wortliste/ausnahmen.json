@@ -554,6 +554,13 @@
       "zeile": "'hubschrauber' => 'Hubschrauber \\(RTH\\)',",
       "klasse": "Homonym",
       "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Bis Web 15.0.0 deckte die dateiweite Ausnahme `update-migrationen` diese Zeile mit ab; seit S8/AP2 steht der Migrationskatalog woanders, und seit S8/AP3 steht die Logo-Karte auf der Seite „Installation“. Es ist jetzt EINE Zeile: Die Konstante INSTALLATION_LOGOS ist die einzige Stelle mit den drei Werten — Rueckmeldung und Segmentwahl lesen beide aus ihr."
+    },
+    {
+      "id": "handbuch-logowahl-installation",
+      "datei": "docs/Handbuch.md",
+      "zeile": "\\*\\*Das Logo\\*\\* links wählt zwischen",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz benennt, WELCHES BILD zur Wahl steht — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Begruendung wie `logowahl-installation` fuer den Code (server/admin_installation.php); der Handbuch-Abschnitt „Installation“ (11.3) ist mit S8/AP3 entstanden und beschreibt dieselbe Bedienung."
     }
   ]
 }

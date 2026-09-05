@@ -8,9 +8,9 @@ mit Fable nach R14 · Ablage `docs/konzepte/` (R62), Mockups in
 >
 > | | |
 > |---|---|
-> | Stand | 05.09.2026 — **AP1 und AP2 erledigt** (Web 15.0.0 und 15.1.0). Umsetzung auf `claude/umsetzung-buuvfq` |
-> | Paket in Arbeit | **AP3 — Verwaltung: Installation, Konto-Backups, Kontoseite** |
-> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3) |
+> | Stand | 05.09.2026 — **AP1 bis AP3 erledigt** (Web 15.0.0, 15.1.0, 15.2.0). Umsetzung auf `claude/umsetzung-buuvfq` |
+> | Paket in Arbeit | **AP4 — Betrieb, Teil 2: Status, Statistik** |
+> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4) |
 > | Wo es hakt | nichts Blockierendes. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). Zu prüfen in AP4: ob eine letzte Mailzustellung aufgezeichnet wird (Z-01); was die Wear-OS-App als `art` sendet (Z-02) |
 > | Umsetzungsumgebung | lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (MariaDB 10.11.14, PHP 8.4.19, Chromium); `00-ist-*`-Bilder vor AP1 aufgenommen |
 > | Fable-Schritt | **das Konzept selbst** (R14, Rahmenplan Schritt 7); die Umsetzung läuft nach K2 mit Opus. Mockup-Freigabe je Darstellung durch den Auftraggeber (`CLAUDE.md` 5) |
@@ -1102,7 +1102,7 @@ PS-3). Wer zuerst mergt, der andere zieht nach.
 | | |
 |---|---|
 | Entscheidungen | E-S8-01 Regel 5, -04, -07, -14, -15; Mockup 01, 03 (Leiste) |
-| Inhalt | (1) `ui.php`: **eine Quelle** `ui_einstellungen_punkte(string $rolle): array` (Block, Text, Ziel, Symbol, Zähler) für `ui_leiste_einstellungen()` und `ui_einstellungen_uebersicht()` (löst B-S8-01); drei Blöcke nach 5.1, Block nach Rolle (Verwaltung ab Admin, Betrieb nur BetreiberIn); Blockname **„Verwaltung"**; Stammdaten systemweit ohne Eintrag. (2) Leiste: Blöcke als **Akkordeon** (`details` + `.akkordeon-zeile`/`-winkel`/`-inhalt`), Zustand je Sitzung in `sessionStorage`; Vorgabe: Block der aktiven Seite offen, Einstellungen immer, ab 1024 px alle; zugeklappter Block zeigt die Zahl der Einträge im `.akkordeon-text`. (3) **Zähler** (`.zaehler`) an Status (Achtung + Warnung, orange/rot nach höchster Stufe), Updates (ausstehend, neutral), Hintergrundjobs (Fehler, rot), Konto-Backups (überfällig + nie, orange) — Werte aus einer leichten Abfrage je Seitenaufruf mit 60-s-Zwischenspeicher in `app_state` oder Sitzung; Messung, dass kein Seitenaufbau messbar langsamer wird. (4) **Unterpunkte** (Baustein `.eintrag-unter`): Seiten melden ihre Karten über `ui_karte_start(['anker' => 'id'])`; die Leiste rendert unter dem aktiven Eintrag die Titel als Sprungmarken (28 px, `--groesse-2`, ohne Strich, ohne Symbol); Skript mit `IntersectionObserver`: **je Spalte die oberste sichtbare Karte fett**; in der Schublade ohne Markierung; Anker mit `scroll-margin-top` unter der Kopfleiste. (5) Nr. 75: Fettdruck nur für den aktiven Eintrag; Stylesheet `.leiste-liste` auf Reste aus S3 Block F prüfen. (6) Übersichtsseite: erster Block ohne Überschrift, „Verwaltung" und „Betrieb" mit `.uebersicht-block`; am Schreibtisch drei Spalten. (7) **Regel 5 auf allen Seiten** der drei Blöcke geprüft: je Seite höchstens eine Karte „Was hier gilt", zugeklappt, am Ende — die heutigen „Was der Reset umfasst", „Bericht des letzten Laufs" (Demo) werden zu einer Karte. (8) Zweispaltenregel `.karten-raster` (ab 1200 px, Seiten mit mehr als vier Karten) im Stylesheet, angewandt auf Status, Statistik, Updates, Hintergrundjobs, Konto-Backups, Installation, Geräte. (9) **Symbole des Menüs** — bestätigt am 05.09.2026 auf Rückfrage aus AP3: Mockup 01 zeichnet für „Updates" einen Kreispfeil und für „Installation" ein Haus; beide gibt es im Vorrat nicht. AP3 hat deshalb aus dem Vorrat geliehen (`werkzeug` für Updates, `kalender` für Hintergrundjobs, `datenbank` für Servereinstellungen, `rechtstexte` für Installation) und die Frage hierher verschoben. **Neue Symbole sind ausdrücklich erwünscht** — sie entstehen in AP5 nach dem Weg aus `docs/Design.md` Kapitel 9: Entwurf als Mockup, Freigabe, dann eine SVG-Datei je Zeichen unter `server/assets/images/symbole/` mit Eintrag in deren `LIESMICH.md` und in `docs/Lizenzen.md` (Herkunft Tabler Icons, MIT — oder eigener Entwurf mit Vermerk). |
+| Inhalt | (1) `ui.php`: **eine Quelle** `ui_einstellungen_punkte(string $rolle): array` (Block, Text, Ziel, Symbol, Zähler) für `ui_leiste_einstellungen()` und `ui_einstellungen_uebersicht()` (löst B-S8-01); drei Blöcke nach 5.1, Block nach Rolle (Verwaltung ab Admin, Betrieb nur BetreiberIn); Blockname **„Verwaltung"**; Stammdaten systemweit ohne Eintrag. (2) Leiste: Blöcke als **Akkordeon** (`details` + `.akkordeon-zeile`/`-winkel`/`-inhalt`), Zustand je Sitzung in `sessionStorage`; Vorgabe: Block der aktiven Seite offen, Einstellungen immer, ab 1024 px alle; zugeklappter Block zeigt die Zahl der Einträge im `.akkordeon-text`. (3) **Zähler** (`.zaehler`) an Status (Achtung + Warnung, orange/rot nach höchster Stufe), Updates (ausstehend, neutral), Hintergrundjobs (Fehler, rot), Konto-Backups (überfällig + nie, orange) — Werte aus einer leichten Abfrage je Seitenaufruf mit 60-s-Zwischenspeicher in `app_state` oder Sitzung; Messung, dass kein Seitenaufbau messbar langsamer wird. (4) **Unterpunkte** (Baustein `.eintrag-unter`): Seiten melden ihre Karten über `ui_karte_start(['anker' => 'id'])` — **die Karten tragen seit AP2/AP3 bereits IDs mit `k-`-Vorsatz** (`k-regeln`, `k-ohne`, `k-gilt`, `k-logo`, `k-konto-backups` …), und die Sprungmarken müssen dazu passen; **`scroll-margin-top` gibt es im Stylesheet noch nicht** — ohne sie verschwindet eine angesprungene Karte unter der klebenden Kopfleiste, und das fällt erst auf, wenn die Unterpunkte gebaut sind; die Leiste rendert unter dem aktiven Eintrag die Titel als Sprungmarken (28 px, `--groesse-2`, ohne Strich, ohne Symbol); Skript mit `IntersectionObserver`: **je Spalte die oberste sichtbare Karte fett**; in der Schublade ohne Markierung; Anker mit `scroll-margin-top` unter der Kopfleiste. (5) Nr. 75: Fettdruck nur für den aktiven Eintrag; Stylesheet `.leiste-liste` auf Reste aus S3 Block F prüfen. (6) Übersichtsseite: erster Block ohne Überschrift, „Verwaltung" und „Betrieb" mit `.uebersicht-block`; am Schreibtisch drei Spalten. (7) **Regel 5 auf allen Seiten** der drei Blöcke geprüft: je Seite höchstens eine Karte „Was hier gilt", zugeklappt, am Ende — die heutigen „Was der Reset umfasst", „Bericht des letzten Laufs" (Demo) werden zu einer Karte. (8) Zweispaltenregel `.karten-raster` (ab 1200 px, Seiten mit mehr als vier Karten) im Stylesheet, angewandt auf Status, Statistik, Updates, Hintergrundjobs, Konto-Backups, Installation, Geräte. (9) **Symbole des Menüs** — bestätigt am 05.09.2026 auf Rückfrage aus AP3: Mockup 01 zeichnet für „Updates" einen Kreispfeil und für „Installation" ein Haus; beide gibt es im Vorrat nicht. AP3 hat deshalb aus dem Vorrat geliehen (`werkzeug` für Updates, `kalender` für Hintergrundjobs, `datenbank` für Servereinstellungen, `rechtstexte` für Installation) und die Frage hierher verschoben. **Neue Symbole sind ausdrücklich erwünscht** — sie entstehen in AP5 nach dem Weg aus `docs/Design.md` Kapitel 9: Entwurf als Mockup, Freigabe, dann eine SVG-Datei je Zeichen unter `server/assets/images/symbole/` mit Eintrag in deren `LIESMICH.md` und in `docs/Lizenzen.md` (Herkunft Tabler Icons, MIT — oder eigener Entwurf mit Vermerk). |
 | Doku | Handbuch 3 (Menü), 11 (Verwaltung, Betrieb), 9.4 (Vermerk ohne Menüpunkt); `Design.md` 9: Unterpunkte, Zweispaltenregel, Akkordeon in der Einstellungsleiste; `CHANGELOG.md`. |
 | Abnahme | Sichtbarkeit je Rolle mit drei Konten: NutzerIn ein Block ohne Überschrift, Admin zwei, BetreiberIn drei (P-25); Zähler stimmen mit den Seiten überein (P-26); Unterpunkte springen und markieren, auch zweispaltig (P-27); Akkordeonzustand überlebt den Seitenwechsel, nicht die Sitzung (P-28); Seitenaufbau nicht messbar langsamer (P-24); kein Fettdruck außer aktiv (P-29); Bilderlauf Leiste und Übersicht (P-30). |
 | Berührung | S3 Block F (Leiste), P5 (Listen bekommen Zähler nach derselben Regel). |
@@ -1508,12 +1508,134 @@ Der Bericht „Einsätze ohne Diensttag" ist mit E-S8-17 ersatzlos entfallen.
 
 ---
 
+### 11.4 AP3 — Verwaltung: Installation, Konto-Backups, Kontoseite (05.09.2026, Web 15.2.0)
+
+**Version:** Web **15.2.0** — Nebennummer. Eine neue Seite, zwei Bausteine,
+ein Haufen Begriffe; **keine Migration**, kein Feld, keine Tabelle. Die Wege
+durch die Anwendung ändern sich erst mit dem Menü in AP5.
+
+**Gebaut** (in vier Commits plus Nachbesserung):
+
+| Was | Wo |
+|---|---|
+| „Rechtstexte" wird „Installation": Logo links, Impressum und Datenschutz rechts, „Ansehen" im Kartenkopf | `server/admin_installation.php` (neu) |
+| Weiterleitungen (302) | `server/admin_rechtstexte.php`, `server/update.php` (Web-Teil) |
+| Baustein Logo-Vorschau, Token `--logo-kachel` | `server/assets/style.css`, `docs/Design.md` 9.21 |
+| Kopfaktion als Absendeknopf (`aktion['form']`) | `server/ui.php`, `docs/Design.md` 9.22 |
+| Speichern-Leiste nennt die geänderten Karten | `server/assets/forms.js`, `server/ui.php` |
+| „Backups" wird „Konto-Backups": Untertitel, Kennzahlen, Ablage fort, eine Zeile je Ordner, drei Dialoge, „Was hier gilt" | `server/admin_sicherungen.php` |
+| Auswahlfeld aus `data-w-*` füllen | `server/assets/dialog.js` |
+| Kontoseite: Kartenaktion, Freigabe-Zustandszeile, „Abonnement" fort, „Einspielen" leise / „Paket löschen" im ⋯ | `server/admin_user.php` |
+| Kennzahl, Filter, Spalte wortgleich | `server/admin_users.php` |
+| Karte „Für dich freigegebenes Backup": Text und Knopf | `server/einstellungen.php` |
+| „Wartung" als Seitenname ausgetragen | `admin_sicherungsziele.php`, `admin_komplettsicherung.php`, `adminbackup_lib.php`, `komplett_lib.php`, `install.php`, `betrieb_jobs.php` |
+| Doku | `docs/Handbuch.md` 3, 6.1, 6.2, 11, 11.1–11.3, `docs/Technik.md` 2, Kontoseite, Installation, `docs/Backup-Format.md` (Begriffskasten, Abschnitt 5), `docs/Design.md`, `docs/Backlog.md` 77, 79, 121, `docs/CHANGELOG.md` |
+
+**Entscheidungen der Umsetzung (U-Nummern):**
+
+- **U-AP3-01 — Die Vorschau der Rechtstexte bleibt.** Mockup 09 zeigt sie
+  nicht und notiert „Markdown-Vorschau (wäre neu — Backlog-Kandidat)". Sie
+  gibt es aber seit Web 9.11.0: serverseitig gerendert, unter dem Feld, mit
+  dem Stand des zuletzt **Gespeicherten**. Eine laufende Funktion ungefragt
+  zu streichen wäre schlechter als eine Abweichung vom Bild. Backlog Nr. 121
+  ist entsprechend berichtigt: Was fehlt, ist das Mitlaufen beim Tippen.
+- **U-AP3-02 — Keine neuen Symbole in AP3.** Mockup 01 zeichnet für „Updates"
+  einen Kreispfeil und für „Installation" ein Haus; beide gibt es im Vorrat
+  nicht. AP3 hat geliehen (`werkzeug`, `kalender`, `datenbank`,
+  `rechtstexte`) und die Frage nach AP5 verschoben — dort wird das Menü
+  ohnehin gebaut. **Auf Rückfrage bestätigt (05.09.2026): neue Symbole sind
+  erwünscht** und entstehen in AP5 nach dem Weg aus `Design.md` Kapitel 9.
+- **U-AP3-03 — Das Logo hat einen eigenen Speichern-Knopf.** Mockup 09 zeigt
+  eine gemeinsame Leiste für alle drei Karten. Ein gemeinsames Speichern
+  hieße aber, dass ein halbfertiger Rechtstext die Logo-Wahl aufhält — und
+  die wirkt sofort, auch für bereits angemeldete Konten. Zwei Formulare, zwei
+  Wege; die Leiste gehört den Texten.
+- **U-AP3-04 — „Backups ohne Konto": eine Zeile je Ordner, Paketwahl im
+  Dialog.** Das Mockup zeigt die Ordnerzeile ohne Paketliste. Ohne Ersatz
+  wäre damit das Einspielen eines **älteren** Pakets fort — eine
+  Funktionsminderung, die das Mockup nicht beabsichtigt (es sagt selbst:
+  „Nicht gezeigt: die Dialoge"). Die Wahl steht deshalb im Dialog, jüngstes
+  zuerst; `dialog.js` baut die Einträge aus `data-w-pakete`.
+- **U-AP3-05 — Einspielen und Freigeben bekommen getrennte Dialoge.** Sie
+  teilten sich eines mit zwei Absendeknöpfen. Das war nie richtig: Der Dialog
+  hieß „einspielen" und trug unten „Freigeben", das etwas anderes tut — das
+  Paket wandert nicht ins Zielkonto, sondern wird der Person angeboten. Zwei
+  Handlungen, zwei Erklärungen.
+- **U-AP3-06 — Die Kartenzahl der Seite ist kleiner als im Mockup.** Konto-
+  Backups trägt drei Karten (Regeln, Backups ohne Konto, Was hier gilt), nicht
+  vier: „Ablage" ist mit AP2 nach Servereinstellungen gezogen. Was dabei
+  verlorenging, ist die Zeile „Letztes Backup" — sie ist **nicht** ersetzt
+  worden. Der Wert `adminbackup_last` steht weiter in `app_state`; wo er
+  angezeigt wird, entscheidet AP4 mit der Statusseite (dort ist die Zeile
+  „Konto-Backups: überfällig, nie" ohnehin vorgesehen).
+- **U-AP3-07 — Der Ton der Kachel „nie Konto-Backup" bleibt rot.** Mockup 08
+  färbt beide Statuskacheln orange. `Design.md` unterscheidet aber: orange
+  mahnt, rot sagt „hier fehlt etwas". Ein Konto, das **nie** gesichert wurde,
+  hat keine Rückfallebene — das ist der stärkere Zustand. Bestand behalten,
+  Abweichung benannt.
+- **U-AP3-08 — Die Anker-IDs tragen den Vorsatz `k-`.** Mockup 08 verlangt
+  `regeln`, `ohne`, `gilt`. AP2 hat mit `k-zustand`, `k-ausloeser`, `k-gilt`
+  begonnen, und ein Vorsatz trennt Karten-Anker von allem anderen im
+  Dokument. AP5 baut die Sprungmarken und muss dazu passen; der Hinweis steht
+  jetzt in AP5, zusammen mit dem fehlenden `scroll-margin-top`.
+- **U-AP3-09 — Der Kartentitel „Für dich freigegebenes Backup" bleibt.** Aus
+  Sicht der NutzerIn ist es genau das. Dass die Verwaltung es angelegt hat,
+  sagt der Hinweistext („Die Verwaltung hat ein Konto-Backup vom …"). Sie
+  eine Unterscheidung lernen zu lassen, die sie nichts angeht, wäre der
+  falsche Weg herum.
+- **U-AP3-10 — „lesbar" verschwindet als Plakette.** Sie stand an jeder
+  Paketzeile und sagte nie etwas anderes. Nur der Befund trägt eine Plakette:
+  *freigegeben* und *nicht lesbar*. Dieselbe Überlegung wie bei den
+  Statuskacheln („Null ist kein Befund", O11).
+
+**Probleme und Funde:**
+
+- **F-S8-P-07 (behoben, Bestandsfehler seit Web 12.0.0): Die Kachel „Pakete ·
+  Größe" wog den ganzen Ablagebaum.** Sie las `$ablage['bytes']` —
+  Komplett-Backups, Begleitdateien, `.htaccess`, Reste abgebrochener Läufe.
+  Gemessen an einem Bestand mit einem 2-MB-Komplett-Stand: **2,6 MB
+  behauptet, 692 KB tatsächlich**, ein Faktor von 3,8. Der Fehler fiel nicht
+  auf, weil beide Zahlen plausibel aussehen; eine getrennte Summe
+  (`pakete_bytes`) gibt es überhaupt erst seit Web 15.1.0, als sie für den
+  Speicherbalken gebraucht wurde. Behoben.
+- **F-S8-P-08 (behoben): „Wartung" als Seitenname stand an neun sichtbaren
+  Stellen außerhalb der AP3-Seiten** — darunter ein Link
+  `<a href="update.php">Zur Wartung</a>` auf den Backup-Zielen, der seit
+  demselben Paket auf eine 302-Weiterleitung zeigte. P-19 sucht `server/`
+  ganz; ohne diese Stellen wäre die Trefferzahl nicht null gewesen, und es
+  hätte keinen Ort dafür gegeben. Alle neun ausgetragen.
+- **Kein Fehler, aber festgehalten: `ui_zeilenaktionen()` ist für zwei
+  gleichrangige Wege gebaut.** Sie zeigt ihre Einträge ab 720 px als
+  Knopfreihe — die unumkehrbare Handlung steht damit gleichrangig neben der
+  harmlosen. Wo eine der beiden endgültig ist, gehört `ui_aktionen()` hin
+  (Regel 3: Ausnahmen eine Ebene tiefer). Umgestellt an zwei Stellen: die
+  Ordnerzeile der Konto-Backups und die Paketzeilen der Kontoseite.
+
+**Werkzeugeinsatz.** Die Bestandsaufnahme für AP3 ist mit einem Workflow
+gefahren worden: fünf Leserinnen parallel (drei Seiten, die Bibliothek, das
+Konzept), dazu eine Mockup-Lesung, danach ein Abgleich-Durchgang gegen den
+Code. Ergebnis: 73 Einzelforderungen, davon 49 bereits erfüllt, 13 offen,
+7 im Widerspruch, 4 unklar. **Drei der vier hier festgehaltenen Funde stammen
+aus diesem Abgleich** (F-S8-P-07, F-S8-P-08 und der Hinweis auf
+`ui_zeilenaktionen`) — sie wären beim Lesen der Mockups allein nicht
+aufgefallen. Der Abgleich hat außerdem bestätigt, dass **kein neuer Baustein**
+nötig war: Jede CSS-Klasse des Mockups wurde einzeln gegen `style.css`
+geprüft.
+
+**Was AP3 ausdrücklich noch nicht tut:** den Menüblock „Verwaltung". Bis AP5
+stehen die Seiten flach unter „Administration", und `betrieb_jobs.php` sowie
+`betrieb_server.php` sind nur deshalb erreichbar, weil AP3 sie als drei
+Einträge in die Liste gehängt hat.
+
+---
+
 ---
 
 ## Änderungsverlauf dieses Dokuments
 
 | Datum | Was |
 |---|---|
+| 05.09.2026 | **AP3 erledigt** (Web 15.2.0): „Rechtstexte" wird „Installation" (mit dem Logo), „Backups" werden „Konto-Backups", die Freigabe bekommt eine Zustandszeile, „Abonnement" entfällt. Zwei Bausteine (Logo-Vorschau, Kopfaktion als Absendeknopf), zwei Funde (F-S8-P-07 Kachel wog den ganzen Baum, F-S8-P-08 „Wartung" an neun Stellen), Umsetzungsentscheidungen U-AP3-01 bis -10. Bestandsaufnahme mit einem Workflow gefahren |
 | 05.09.2026 | **AP2 erledigt** (Web 15.1.0): die Wartungsseite aufgelöst — `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`; Migrationskatalog nach `migration_lib.php`; Speichermessung im Aufräumjob (`speicher_lib.php`); zwei Bausteine (`codeblock-lang`, `speicher-balken`). Drei Funde (F-S8-P-04 bis -06), alle behoben — darunter ein Wartungsmodus, der sich selbst aussperrte. Umsetzungsentscheidungen U-AP2-01 bis -07 |
 | 05.09.2026 | **AP1 erledigt** (Web 15.0.0): dritte Rolle mit Migration, Hierarchie über `ist_admin()`, zwei Schranken, `install.php` legt BetreiberIn an, Profil zeigt die Rolle. Drei Funde (F-S8-P-01 bis -03), alle behoben — darunter eine seit dem Merge `589982b` unbrauchbare `ausnahmen.json` der Wortliste. Umsetzungsentscheidungen U-AP1-01 bis -06 |
 | 05.09.2026 | **Schritt 5 erledigt** (Umsetzungsinstanz, Opus): Konzept, Prüfdokument und zwölf Mockups im Repositorium; Rahmenplan auf Fassung 28 (R74–R77, Schritte 7, 8, 10, Abschnitte 4, 5, 6, K1), Backlog 73–80 vermerkt, 80 geteilt, 117–122 angelegt. Statusblock, Abschnitt 10 und **Abschnitt 11 (Umsetzungsprotokoll)** angelegt |

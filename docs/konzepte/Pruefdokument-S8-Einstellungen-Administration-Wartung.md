@@ -9,10 +9,10 @@ Arbeitspaket fortgeschrieben und mit dem Konzept gepusht (K7).
 >
 > | | |
 > |---|---|
-> | Stand | 05.09.2026 — **AP1 und AP2 geprüft** (Web 15.0.0 und 15.1.0) |
-> | Geprüft | P-02 bis P-13 vollständig · P-01 **teilweise** (Zwischenstand nach AP1, siehe dort) · P-30 für die berührten Seiten (AP1: 4, AP2: 5) |
-> | Offen | P-01 (Endfassung nach AP5), P-09 **zur Hälfte** (zweiter Browser fehlt im Container), P-14 bis P-29, P-31 bis P-42 |
-> | Fehlerfunde | **sechs, alle behoben:** F-S8-P-01 bis -06 (Abschnitt 2) |
+> | Stand | 05.09.2026 — **AP1 bis AP3 geprüft** (Web 15.0.0, 15.1.0, 15.2.0) |
+> | Geprüft | P-02 bis P-19 vollständig · P-01 **teilweise** (Zwischenstand nach AP1, siehe dort) · P-09 **halb** (zweiter Browser fehlt) · P-30 für die berührten Seiten (AP1: 4, AP2: 5, AP3: 9) |
+> | Offen | P-01 (Endfassung nach AP5), P-13 **erneut nach AP3** (jetzt 302 statt Übergangsseite — geprüft), P-20 bis P-29, P-31 bis P-42 |
+> | Fehlerfunde | **acht, alle behoben:** F-S8-P-01 bis -08 (Abschnitt 2) |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto). **Keine Kopie der Produktivdaten** — für P-02, P-10, P-21 und P-24 steht deshalb die Prüfung an echten Mengen aus (siehe „Was nicht geprüft werden konnte") |
 > | Ist-Bilder | **aufgenommen vor AP1** — vollständiger Lauf: 336 Einzelbilder, 42 Kontaktbögen, 8 Breiten (360, 390, 420, 768, 1024, 1280, 1440, 1920); Überlauf 0, Konsolenfehler 0, Knöpfe ≠ 44 px 0. Gegenprobe auf gleiche Bilder: 336 Dateien, **333 verschiedene Prüfsummen** — die drei Doppelten sind die Tagesübersicht mit und ohne Schublade bei 1024, 1280 und 1440, wo die Schublade bauartbedingt nichts tut. Zehn davon liegen als Kontaktbogen (360, 768, 1024, 1280) unter `docs/konzepte/konzept-s8/ist/`; die 336 Einzelbilder nicht — `tools/screenshots/ausgabe/` steht mit Grund in `.gitignore`, und sie sind aus dem Commit `cecbc76` jederzeit neu zu erzeugen |
 
@@ -70,18 +70,24 @@ Stand: `offen` · `geprüft` · `Fehler` (mit Fund-Nummer) · `entfällt` (mit G
 | — | Vollständigkeit | `python3 tools/vollstaendigkeit/pruefen.py` | **geprüft** | **280 Befunde vor AP2, 286 nachher.** Die sechs sind erklärt: **2 ×** `style="width:…%"` (die Balkenbreite ist ein gerechneter Wert und gehört nicht in eine Klasse), **4 ×** Unicode in Kommentaren und Menüpfaden. Dazu **4 informative** „Regel im Stylesheet, im Markup nicht gefunden" für `sb-konto`, `sb-komplett`, `sb-db`, `sb-dateien` — sie entstehen zur Laufzeit in `speicher_balken()` |
 | — | Syntax | `php -l` über alle **95** Dateien in `server/` und `server/api/` | **geprüft** | 0 Fehler |
 
-### AP3 — Verwaltung
+### AP3 — Verwaltung · **erledigt 05.09.2026, Web 15.2.0**
 
 | Nr. | Was | Wie | Stand | Ergebnis |
 |---|---|---|---|---|
-| P-13 | `update.php` Weiterleitung | 302 auf Updates, mit und ohne Parameter | offen | |
-| P-14 | Backup-Wege verhaltensgleich | Prüfdokument S7 Paket E wiederholen | offen | |
-| P-15 | Logo von Installation aus | Kopfleiste, Browser-Symbol, Anmeldeseite | offen | |
-| P-16 | Weiterleitung `admin_rechtstexte.php` | mit und ohne Parameter | offen | |
-| P-17 | Freigabe-Zustandszeile | freigeben, widerrufen, NutzerInnen-Seite parallel | offen | |
-| P-18 | kein Platzhalter „Abonnement" | Kontoseite | offen | |
-| P-19 | Wortliste (Teil 1) | Suche in `server/`: „Sicherung" als Substantiv, „Admin-Backup", „Datenbank-Update" | offen | |
-| P-30 | Bilderlauf Installation, Konto-Backups, Kontoseite, NutzerInnen | acht Breiten | offen | |
+| P-13 | `update.php` Weiterleitung | Aufruf als angemeldete BetreiberIn und als NutzerIn | **geprüft** | BetreiberIn: **302** auf `betrieb_updates.php`, Ziel erreicht (HTTP 200 nach der Kette). NutzerIn: **403** wie vor dem Umbau — der Wächter greift vor der Weiterleitung. Der CLI-Notausgang ist unberührt: `php update.php` liefert weiter 43 Zeilen Migrationsausgabe (Wartungsprobe, Erwartung 16) |
+| P-14 | Backup-Wege verhaltensgleich | **sechs** Wege über die Oberfläche gefahren, je mit Rückmeldung; dazu die vier Wege der Karte „Backups ohne Konto" an einem eigens angelegten verwaisten Ordner | **geprüft** | (1) *Jetzt sichern* über die neue **Kartenaktion** → „Konto-Backup erzeugt.", Pakete 1 → 2. (2) *Alle sichern* → „2 von 2 Konten gesichert." (3) *Einspielen* → „Konto-Backup eingespielt." (4) *Freigeben* → „Freigegeben für demo@gen-em.org …", Plakette und Zustandszeile erscheinen. (5) *Widerrufen* → „Freigabe widerrufen.", Zustandszeile weg. (6) *Paket löschen* aus dem ⋯ → „Paket gelöscht." Ohne Konto: falsche Adresse **abgewiesen**, richtige eingespielt, freigegeben, einzelnes Paket gelöscht (Vorschau 2 → 1 Paket), ganzer Ordner gelöscht (Vorschau „keine") |
+| P-15 | Logo von Installation aus | umstellen, dann Kachel, Kopfleiste und **eine zweite Browsersitzung ohne Anmeldung** ansehen | **geprüft** | Auf „Fahrzeug (NEF)": Kachel `gen-em_logo_nef_weiss.svg`, **Anmeldeseite** `gen-em_logo_nef.svg`. Zurück auf „Hubschrauber (RTH)": Anmeldeseite `gen-em_logo_helicopter.svg`. Die Änderung wirkt ohne Neuanmeldung |
+| P-16 | Weiterleitung `admin_rechtstexte.php` | Aufruf als BetreiberIn und als NutzerIn | **geprüft** | BetreiberIn: **302** auf `admin_installation.php`, Ziel erreicht. NutzerIn: **403**, keine Weiterleitung — der Wächter steht davor |
+| P-17 | Freigabe-Zustandszeile | freigeben, Zeile lesen, widerrufen | **geprüft** | Nach dem Freigeben: „Freigegeben für demo@gen-em.org, seit 05.09.2026. Das Paket vom 05.09.2026 · 20:20. Die NutzerIn spielt es in ihrem eigenen Backup-Bereich mit ihrem Wiederherstellungsschlüssel ein …" mit Knopf **Widerrufen**. Nach dem Widerruf: **0** Meldungen in der Karte. Der Fall „Zielkonto gelöscht" ist **im Code** gelöst (Rückfall „ein gelöschtes Konto" plus Zusatzsatz), aber nicht gefahren — dafür müsste ein Konto mit laufender Freigabe gelöscht werden, und die Löschung räumt die Pakete mit |
+| P-18 | kein Platzhalter „Abonnement" | Volltextsuche im ausgelieferten Markup zweier Seiten | **geprüft** | Kontoseite: `false`. NutzerInnen-Liste: `false`. Karten der Kontoseite: **Konto, Geräte, Konto-Backups, Konto löschen** |
+| P-19 | Wortliste (Teil 1) | Suche in `server/` nach den gestrichenen Begriffen | **geprüft** | „Datenbank-Update": **0**. „Admin-Backup": **0 in sichtbaren Texten** (13 Vorkommen, alle in Kommentaren als Werdegang — die Wortliste misst Bereich (a) ohne Kommentare). „Sicherung" als Substantiv im sichtbaren Text: **0**. „Wartung" als Seitenname: **0** — dafür waren neun Stellen außerhalb der AP3-Seiten auszutragen (F-S8-P-08) |
+| P-30 | Bilderlauf Installation, Konto-Backups, Kontoseite, NutzerInnen | acht Breiten, dazu die AP2-Seiten zur Gegenprobe (9 Seiten) | **geprüft** | **72 Einzelbilder, 9 Kontaktbögen.** Überlauf 0, Konsolenfehler 0, Knöpfe ≠ 44 px 0. Gegenprobe: 72 Dateien, **72 verschiedene Prüfsummen**. Am Bild nachgesehen (K9): `41-kontoseite-1280.png` zeigt die **echte Kontoseite** (der Platzhalter `__KONTO__` hat aufgelöst, nicht die Anmeldeseite), mit Karte „Konto-Backups", Plakette „aktuell", Kartenaktion „Jetzt sichern" und **ohne** „Abonnement" |
+| — | Konsolenfehler getrennt gemessen | `requestfailed` je Seite, nicht nur `console.error` | **geprüft** | Auf den vier AP3-Seiten: **0 Konsolenfehler, 0 fehlgeschlagene Anfragen**. Die 10 Fehler, die ein Lauf über die Startseite meldet, kommen sämtlich von `tile.openstreetmap.org` — der bekannte Egress-Block F-P3-AC, nicht die neuen Seiten |
+| — | Kennzahl gegen die Wahrheit | `pakete_bytes` gegen `bytes` bei vorhandenem Komplett-Stand | **geprüft** | Mit einem 2-MB-Komplett-Stand in der Ablage: alte Kachel **„4 Pakete · 2,6 MB"**, neue **„4 Pakete · 692 KB"** bei tatsächlich 708 328 B in den Paketdateien (`find -name '*.zip'`). Faktor **3,8** (F-S8-P-07) |
+| — | Wortliste | `python3 tools/wortliste/wortliste.py`, alle fünf Bereiche, **nach** der Dokumentation | **geprüft** | **0 Treffer außerhalb der Ausnahmen (in 0 Zeilen), 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen.** 82 Regeln, 82 gegriffen — die Logo-Ausnahme ist auf `admin_installation.php` umgehängt, eine zweite für den neuen Handbuch-Abschnitt kam dazu |
+| — | Vollständigkeit | `python3 tools/vollstaendigkeit/pruefen.py`, gegen denselben Lauf im Stand vor Schritt 5 | **geprüft** | **292 Befunde vorher, 300 nachher.** Die acht sind erklärt: **6 ×** `→` in Menüpfaden sichtbarer Texte („Betrieb → Updates"), **2 ×** `⋯` in Kommentaren. Keine neue Klasse ohne Regel, kein neuer Pixelwert, kein neues `style="…"` |
+| — | Design-Tabellen | `python3 tools/design/tabellen.py alle`, alle vier Blöcke ersetzt | **geprüft** | **92 Token** (vorher 91, neu `--logo-kachel`), **33 Bausteine**, Symbol- und Schwellentabelle nachgezogen. Die Zählungen der Symbole haben sich mitverschoben (`datenbank` 12 → 14, `kalender` 4 → 6, `korb` 20 → 22) — das sind die neuen Menüeinträge und die beiden Aktionsmenüs |
+| — | Syntax | `php -l` über alle 96 Dateien in `server/` und `server/api/`, `node --check` über die berührten Skripte | **geprüft** | 0 Fehler |
 
 ### AP4 — Betrieb, Teil 2
 
@@ -152,6 +158,8 @@ Stand: `offen` · `geprüft` · `Fehler` (mit Fund-Nummer) · `entfällt` (mit G
 | F-S8-P-03 | AP1 | **Ein `disabled` an einem Eingabefeld ist unsichtbar.** `.feld-eingabe` setzt `background` und `color` selbst und überschreibt damit die Graufärbung des Browsers; eine Regel `.feld-eingabe:disabled` gibt es nicht. Das gesperrte Rollenfeld sah aus wie ein bedienbares. Betrifft grundsätzlich jedes einzeln gesperrte Feld, nicht nur dieses | AP1 | **behoben ohne Stylesheet-Änderung** — das Feld steht in einem `.feldsatz-gesperrt`-Feldsatz (S3/AP10, für genau diesen Zweck gebaut). Gemessen: `:disabled` wahr, Deckkraft 0,55. Eine Regel `:disabled` am Feld selbst bleibt ein **Kandidat für AP7** (Bedienhöhe fasst das Stylesheet ohnehin an) |
 | F-S8-P-04 | AP2 | **Der Wartungsmodus sperrte die Seite mit dem Ausschalter aus.** `betrieb_updates.php` stand nicht in `WARTUNG_AUSNAHMEN`. Einschalten gelang; das Neuladen derselben Seite antwortete mit **503**. Der Weg zurück wäre `rm server/wartung.lock` per SSH gewesen — auf einer Produktivinstallation heißt das: geschlossen, bis jemand mit Shell-Zugang wach wird. Der Fehler entstand, weil die Ausnahmeliste am Dateinamen vergleicht und die alte Seite noch mit dabei war; die neue fiel dadurch niemandem auf | AP2 | **behoben** — alle drei Betriebsseiten stehen in der Liste (neun Einträge). Die Wartungsprobe misst es je Seite einzeln (Erwartung 6), damit es beim nächsten Umzug auffällt |
 | F-S8-P-05 | AP2 | **Nach einem Migrationsfehler verschwanden die Migrationen dahinter aus der Anzeige.** Der Lauf bricht beim ersten Fehler ab — richtig so, denn die Reihenfolge ist der Mechanismus. Die Ausgabe zeigte danach aber **nur die versuchten**, und die Karte zählte daraufhin weniger Ausstehende, als es gab. Die Zahl war also **kleiner** als die Wahrheit, und das ist die gefährliche Richtung: „2 stehen aus" nach einem Fehler, wo 5 offen sind | AP2 | **behoben** — jede Migration hinter dem Abbruch trägt `steht aus` mit dem Text „NICHT MEHR VERSUCHT — der Lauf hat davor abgebrochen." Gemessen mit vier Testmigrationen (eine scheiternd): Zählung **3** in Karte, Liste und Meldung |
+| F-S8-P-07 | AP3 | **Die Kachel „Pakete · Größe" wog den ganzen Ablagebaum.** Sie las `$ablage['bytes']` — das ist die Summe über *alles* unter `server/sicherungen/`: Komplett-Backups, Begleitdateien, `.htaccess`, Reste abgebrochener Läufe. Die Kachel sagt aber „Pakete". Bestandsfehler seit Web 12.0.0; er fiel nicht auf, weil beide Zahlen plausibel aussehen, und eine getrennte Summe gab es bis Web 15.1.0 gar nicht (`pakete_bytes` entstand für den Speicherbalken). Gefunden im maschinellen Abgleich gegen das Konzept, nicht beim Lesen | AP3 | **behoben** — gemessen mit einem 2-MB-Komplett-Stand in der Ablage: alt „4 Pakete · **2,6 MB**", neu „4 Pakete · **692 KB**" bei tatsächlich 708 328 B in den Paketdateien. Faktor 3,8 |
+| F-S8-P-08 | AP3 | **„Wartung" als Seitenname stand an neun sichtbaren Stellen außerhalb der AP3-Seiten** — Backup-Ziele (5 ×, darunter ein Link `<a href="update.php">Zur Wartung</a>`, der seit AP3 auf eine 302 zeigt), Komplett-Backup (4 ×), dazu `adminbackup_lib.php`, `komplett_lib.php`, `install.php`, `wiederherstellen.php`. P-19 sucht `server/` **ganz** — ohne diese Stellen wäre die Trefferzahl nicht null gewesen, und es hätte keinen Ort dafür gegeben. Der Wortlisten-Lauf hätte sie NICHT gefunden: „Wartung" steht nicht auf seiner Sperrliste, es ist eine Vorgabe des S8-Konzepts (5.4) | AP3 | **behoben** — alle neun ausgetragen; die Verweise zeigen jetzt auf Betrieb → Updates bzw. Betrieb → Hintergrundjobs, der Wartungsjob heißt durchgängig Aufräumjob |
 | F-S8-P-06 | AP2 | **Die Wartungsprobe maß gegen die alte Entscheidung.** Nach AP2 meldete `tools/wartungsprobe/probe.php` **6 von 40 Erwartungen nicht erfüllt**: Sie holte den Schalter von `update.php` (Fälle 6, 13), verlangte die **sechs** alten Ausnahmen (17) und suchte in `login.php` den Vergleich `!== 'admin'` (18), den AP1 durch `rolle_darf_verwalten()` ersetzt hat. Kein Fehler der Anwendung — aber ein Prüfmittel, das ab hier bei jedem Lauf rot gemeldet hätte, ist wertlos: Man gewöhnt sich an das Rot | AP2 | **behoben und erweitert** — Schalter auf `betrieb_updates.php`, das verwaltende Konto der Probe trägt jetzt `betreiberin` (`require_betreiberin()`), zwei neue Erwartungen (die beiden anderen Betriebsseiten, die Übergangsseite). **42 Erwartungen, 0 nicht erfüllt.** `LIESMICH.md` nachgezogen, zwei neue Zeilen in der Fehlertabelle |
 
 ---
@@ -186,6 +194,17 @@ abzeichnen:
   von InnoDB —, zeigt erst der Produktivbestand. Nach dem Ausrollen einmal
   Betrieb → Servereinstellungen aufrufen und die Zahlen gegen die Angaben des
   Hosters halten.
+- **Aus AP3: der Fall „Freigabe läuft, Zielkonto ist gelöscht"** ist im Code
+  gelöst (die Zustandszeile sagt „ein gelöschtes Konto" und dass die Freigabe
+  ins Leere läuft), aber **nicht gefahren**: Um ihn herzustellen, müsste ein
+  Konto mit laufender Freigabe gelöscht werden, und die Löschung räumt die
+  Pakete standardmäßig mit. Prüfweg für die Abnahme: Konto löschen und dabei
+  „Pakete erhalten" wählen, dann die Kontoseite des freigebenden Kontos
+  ansehen.
+- **Aus AP3: „Admin-Backup" steht noch 13-mal in Kommentaren.** Sichtbar ist
+  nichts davon; die Kommentare erzählen den Werdegang und sind nach der
+  Arbeitsanweisung erwünscht. Wer sie trotzdem angleichen will, tut es in
+  einem eigenen Durchgang — nicht mitten in einem Paket.
 - **Aus AP2: die Karten „Schlüsselableitung" und „Umgebung" sind
   vorübergehend nirgends sichtbar.** Sie ziehen in AP4 auf
   `betrieb_status.php`. Bis dahin ist ein Konto mit unbrauchbarer `kdf_iter`
@@ -199,6 +218,7 @@ abzeichnen:
 
 | Datum | Was |
 |---|---|
+| 05.09.2026 | **AP3 geprüft** (Web 15.2.0): P-13 bis P-19 und P-30 mit Zahlen belegt; sechs Backup-Wege plus vier Wege „ohne Konto" über die Oberfläche gefahren; Bilderlauf 72 Bilder / 72 Prüfsummen mit Sichtprüfung der Kontoseite; Wortliste 0/0/0 bei 82 Regeln, Vollständigkeit 292 → 300 mit Erklärung je Befund, Design-Tabellen neu erzeugt (92 Token, 33 Bausteine), `php -l` über 96 Dateien; zwei Fehlerfunde (F-S8-P-07 Kachel, F-S8-P-08 „Wartung"); zwei Reste ergänzt |
 | 05.09.2026 | **AP2 geprüft** (Web 15.1.0): P-07 bis P-13 und P-30 mit Zahlen belegt (P-09 halb — der zweite Browser fehlt); Wartungsprobe 42/0, Migrationsregister 43 = 43, Wortliste 0/0/0 mit 82 Regeln, Vollständigkeit 280 → 286 mit Erklärung je Befund, `php -l` über 95 Dateien; drei Fehlerfunde aufgenommen und behoben (F-S8-P-04 bis -06); vier Reste ergänzt |
 | 05.09.2026 | **AP1 geprüft** (Web 15.0.0): P-02 bis P-06 und P-30 mit Zahlen belegt, P-01 als Zwischenstand mit Wiederholung nach AP5; Wortliste 0/0/0 und Vollständigkeit 280 = 280; drei Fehlerfunde aufgenommen und behoben; Abschnitt 0 („was nicht geprüft werden konnte") angelegt; Ist-Bilder aufgenommen und gegengeprüft |
 | 05.09.2026 | Angelegt mit Schritt 4 des Konzepts: P-01 bis P-42 je Paket, Klärpunkte Z-01 bis Z-03 |

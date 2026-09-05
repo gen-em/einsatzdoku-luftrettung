@@ -883,6 +883,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (E-S8-17: das ist Nutzersache und steht als „Zuordnung offen" in der
     Diensttage-Leiste). `update.php` wird Weiterleitung bis P6. Umsetzung in
     S8 AP2 und AP4.
+    **Stand 05.09.2026:** Der Web-Teil von `update.php` ist seit Web 15.2.0
+    eine **302-Weiterleitung** auf Betrieb → Updates (S8/AP3); der Notausgang
+    `php update.php` auf der Kommandozeile bleibt. Offen bleibt allein, dass
+    die Adresse überhaupt noch existiert — das räumt P6 (Nr. 77 bleibt
+    deshalb offen).
 
 78. **Der Wertekasten zeigt Cron-Adresse und Token in der Schriftgröße des
     Kopplungscodes.**
@@ -932,6 +937,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     „nie Konto-Backup", weil sie genau das messen und nichts über die
     Dateien der NutzerInnen wissen (B-S8-07, jetzt Nr. 117). Umsetzung in S8
     AP2 und AP3.
+    **Erledigt mit Web 15.2.0 (S8/AP3).** Die drei Namen stehen in Oberfläche,
+    Handbuch 6 und 11 sowie `Backup-Format.md`; „Admin-Backup" und „Wartung"
+    als Seitenname sind ausgetragen, auch außerhalb der AP3-Seiten. Nummer
+    bleibt bis zum Abschluss der Phase stehen und geht dann nach *Erledigt*.
 
 ---
 
@@ -1389,16 +1398,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Versandweg geht und das Ergebnis in derselben Zeile zeigt. **Neue
     Funktion**, deshalb nicht Teil von S8. Zuordnung: Backlog-Runde.
 
-121. **Vorschau für die Rechtstexte.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09).* Impressum und
-    Datenschutzerklärung werden in eingeschränktem Markdown geschrieben; wie
-    der Text aussieht, sieht man erst auf der öffentlichen Seite nach dem
-    Speichern. Die neue Seite Verwaltung → Installation hat dafür „Ansehen ›"
-    — ein Weg, aber kein Nebeneinander. **Zu tun:** eine Vorschau neben dem
-    Feld, gerendert mit demselben eingeschränkten Markdown wie die
-    öffentliche Seite (kein zweiter Renderer, sonst zeigt die Vorschau
-    etwas anderes als die Seite). **Neue Funktion.** Zuordnung:
-    Backlog-Runde.
+121. **Vorschau der Rechtstexte beim Tippen.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09); Titel und Text
+    berichtigt 05.09.2026 in S8/AP3.* **Eine Vorschau gibt es seit Web
+    9.11.0** — sie steht unter dem Feld, entsteht auf dem SERVER mit
+    `rt_html()` und zeigt den zuletzt **gespeicherten** Stand. Der Mockup-Text
+    hatte sie übersehen; sie ist nicht neu zu bauen. Was fehlt, ist das
+    Mitlaufen beim Tippen. **Zu tun:** entscheiden, wie — ein zweiter
+    Renderer im Browser ist ausgeschlossen (er müsste dieselbe Positivliste
+    für Linkziele, dieselbe Maskierreihenfolge und dieselben Zeichenfilter
+    führen, und beim nächsten Fund würde einer von beiden vergessen, E-P3-38);
+    bliebe ein Abruf gegen den Server beim Innehalten. **Neue Funktion.**
+    Zuordnung: Backlog-Runde.
 
 122. **Freie Zeiträume und Diagramme in der Statistik.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite

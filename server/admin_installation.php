@@ -289,7 +289,8 @@ ui_seite_start(['titel' => 'Installation']);
                f.querySelector('[data-speichern]'). Ausserhalb erschiene sie nie,
                ohne Fehlermeldung. */ ?>
       <?php ui_speichern_leiste(['text' => 'Änderungen speichern',
-                                 'hinweis' => 'Es gibt ungespeicherte Änderungen']); ?>
+                                 'hinweis' => 'Es gibt ungespeicherte Änderungen',
+                                 'hinweis_vorlage' => 'Ungespeichert']); ?>
     </form>
 
   </div>
