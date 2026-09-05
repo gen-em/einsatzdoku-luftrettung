@@ -14,6 +14,43 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.3.3] — 2026-09-05
+
+### Web — der Passwortverwalter erkennt das Kontopasswort wieder
+
+Auf der Backup-Seite lässt sich statt eines eigenen Backup-Passworts das
+**Kontopasswort** verwenden — ein Schalter, der dasselbe Feld umdeutet und
+umbeschriftet. Für einen Passwortverwalter blieb es trotzdem ein fremdes
+Feld: Es trug fest `autocomplete="new-password"` und überhaupt keinen
+`name`. Genau daran entscheidet ein Verwalter, ob er ein bekanntes Passwort
+anbietet oder ein neues vorschlägt — `new-password` heißt „hier entsteht
+etwas Neues", und dann bietet er nichts an. Wer sein Anmeldepasswort nicht im
+Kopf hat, musste es also von Hand aus dem Verwalter holen.
+
+Das Feld heißt jetzt `name="password"` wie das der Anmeldeseite, und der
+Schalter setzt die Ankündigung mit um: `current-password`, solange er an ist,
+sonst wieder `new-password`. Denselben `name` bekommt das Feld im
+Entsperr-Dialog (`assets/unlock.js`) — das fragt ohnehin immer nach dem
+Kontopasswort. Der `name` ist reine Beschriftung für den Browser: Beide
+Felder werden von JavaScript ausgelesen und nie abgeschickt, und das
+Kontopasswort verlässt den Browser weiterhin nicht.
+
+**Was nicht geprüft werden konnte:** das Verhalten eines echten
+Passwortverwalters — die Prüfumgebung hat keinen. Gemessen ist, was er liest:
+im angeschalteten Zustand `name=password autocomplete=current-password`,
+wortgleich mit dem Feld der Anmeldeseite, im Ausgangszustand
+`new-password`.
+
+Dazu **Backlog Nr. 123**: Der Schalter selbst steht zu weit von seiner
+Beschriftung entfernt — `.schalter-text` drückt den Griff an den rechten
+Kartenrand, und am Schreibtisch liegt die halbe Bildschirmbreite dazwischen.
+Gemeldet mit Bild. Das ist der Baustein und keine Seite (neun Stellen in vier
+Dateien); die Änderung braucht Mockup, Freigabe und Stilvergleich und ist
+S8/AP7 zugeordnet, wo das Stylesheet für die zweite Bedienhöhe ohnehin
+angefasst wird.
+
+Keine Migration.
+
 ## [Web 15.3.2] — 2026-09-05
 
 ### Web — die Wortmarke heißt Gen-EM NAdoku

@@ -2728,5 +2728,25 @@ declare(strict_types=1);
  *         den alten Namen darin ueberschriebe.
  *
  * KEINE MIGRATION.
+ *
+ * 15.3.3  DAS PASSWORTFELD DER BACKUP-SEITE HEISST WIE DAS DER ANMELDUNG,
+ *         sobald der Schalter „Mein Kontopasswort verwenden" an ist. Ein
+ *         Passwortverwalter entscheidet an `name` und `autocomplete`, ob er
+ *         ein bekanntes Passwort anbietet oder ein neues vorschlaegt. Das
+ *         Feld trug fest `autocomplete="new-password"` und gar kein `name` —
+ *         also sah jeder Verwalter ein neues Feld und bot nichts an, auch in
+ *         dem Augenblick nicht, in dem das Feld nach dem Kontopasswort
+ *         fragte. Jetzt: `name="password"`, und der Schalter setzt
+ *         `current-password` bzw. `new-password`. Derselbe `name` steht am
+ *         Entsperr-Dialog (`assets/unlock.js`), der ohnehin immer nach dem
+ *         Kontopasswort fragt.
+ *
+ *         NICHT GEPRUEFT werden konnte das Verhalten eines echten
+ *         Passwortverwalters — die Pruefumgebung hat keinen. Gemessen ist,
+ *         was der Verwalter liest: `name=password autocomplete=current-password`
+ *         bei angeschaltetem Schalter, wortgleich mit dem Feld der
+ *         Anmeldeseite, und `new-password` im Ausgangszustand.
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '15.3.2';
+const WEB_VERSION = '15.3.3';

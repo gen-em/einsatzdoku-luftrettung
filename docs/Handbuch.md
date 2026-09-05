@@ -1652,7 +1652,10 @@ der Eingabe, wie stark das Gewählte ist. Wer mag, setzt stattdessen das Häkche
 **„Mein Kontopasswort verwenden“** und tippt sein Anmeldepasswort ein — dann
 gibt es ein Passwort weniger zu verwahren, und die Datei ist genauso geschützt
 wie die Daten in der Datenbank. Ob das Passwort stimmt, prüft der Browser
-selbst; der Server bekommt es nicht zu sehen.
+selbst; der Server bekommt es nicht zu sehen. Ist das Häkchen gesetzt, meldet
+sich auch der **Passwortverwalter** und bietet das gespeicherte
+Anmeldepasswort an — das Feld heißt dann für ihn dasselbe wie das auf der
+Anmeldeseite.
 
 Nicht geeignet ist das Kontopasswort, wenn die Datei an jemand anderen gehen
 soll — dann bekommt der Empfänger das Anmeldepasswort mit.

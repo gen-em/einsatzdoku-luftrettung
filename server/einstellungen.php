@@ -1807,7 +1807,17 @@ ui_seite_start(['titel' => 'Einstellungen']);
          schwächer geschützt, und es ist ein Passwort weniger zu verwahren.
          <strong>Nicht</strong> geeignet, wenn die Datei an jemand anderen gehen soll.</p>
 
+      <?php /* `name="password"` UND `autocomplete` WIE BEI DER ANMELDUNG,
+               sobald der Schalter oben an ist (gemeldet 05.09.2026). Ein
+               Passwortverwalter entscheidet an genau diesen beiden Angaben,
+               ob er ein bekanntes Passwort anbietet oder ein neues vorschlägt:
+               `new-password` heisst „hier entsteht etwas Neues", und dann
+               bietet er nichts an — auch nicht, wenn das Feld in diesem
+               Augenblick nach dem Kontopasswort fragt. Das Umschalten
+               übernimmt der Schalter-Handler weiter unten. Der Ausgangswert
+               ist `new-password`, weil der Schalter aus ist. */ ?>
       <?php ui_feld(['label' => 'Passwort für das Backup', 'id' => 'bpw1',
+                     'name' => 'password',
                      'art' => 'password', 'klasse' => 'bpw1-feld',
                      'klein' => 'Mindestens 10 Zeichen.',
                      'attr' => ' minlength="10" autocomplete="new-password"']); ?>
@@ -2016,6 +2026,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
         : 'Passwort für das Backup';
       document.querySelector('.bpw1-feld .feld-klein').hidden = an;
       bpwGuete.hidden = an;
+      /* Das Feld wechselt seine BEDEUTUNG, also auch seine Ankuendigung an
+         den Passwortverwalter: an = das Kontopasswort, das er kennt
+         (`current-password`); aus = ein frisch zu waehlendes Backup-Passwort
+         (`new-password`). Mit dem festen `new-password` sah jeder Verwalter
+         hier ein neues Feld und bot nichts an. */
+      bpw1.autocomplete = an ? 'current-password' : 'new-password';
       bpw1.value = '';
       expState.textContent = '';
     });

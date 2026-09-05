@@ -1423,6 +1423,23 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
 
+123. **Der Schalter steht zu weit von seiner Beschriftung entfernt.**
+    *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin.*
+    `.schalter-text` trägt `flex:1 1 auto` und drückt den Griff an den
+    rechten Rand der Karte. Auf dem Handy sind das wenige Zentimeter; am
+    Schreibtisch liegt zwischen „Mein Kontopasswort verwenden" und dem Griff
+    die ganze Kartenbreite, und der Schalter ist dort kaum noch als zu
+    dieser Zeile gehörig zu erkennen — man sieht ihn schlicht nicht.
+    **Gewünscht:** der Griff **links vom Text** oder **unmittelbar rechts
+    daneben**. **Zu bedenken:** Das ist der Baustein, nicht eine Seite — er
+    steht an neun Stellen in vier Dateien (`admin_sicherungsziele.php` 4 ×,
+    `import.php` 3 ×, `einstellungen.php`, `admin_sicherungen.php`). Eine geänderte
+    Darstellung eines Bausteins braucht Mockup und Freigabe
+    (`CLAUDE.md` 5) und einen Stilvergleich, weil sie eine Flex-Regel
+    verschiebt. **Zuordnung: S8/AP7** — dort wird das Stylesheet für die
+    zweite Bedienhöhe (R76) ohnehin angefasst, und dieselben Zeilen sind
+    betroffen.
+
 ---
 
 ## Erledigt
