@@ -737,13 +737,39 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
  * Rückgabe: Liste von Blöcken, je
  *   ['schluessel' => 'einstellungen'|'verwaltung'|'betrieb',
  *    'titel' => string,          // '' beim ersten Block: er braucht keine Überschrift
- *    'punkte' => [ ['key','href','text','symbol'] … ] ]
+ *    'punkte' => [ ['key','href','text','symbol','zaehler'] … ] ]
+ *
+ * `zaehler` ist null oder ['n' => int, 'ton' => 'rot'|'orange'|'neutral'] —
+ * die Zahl am Menüpunkt (S8/AP5, Konzept (3)). Sie kommt aus
+ * `status_lib.php` und steht nur da, wo sie über null steht; welche vier
+ * Punkte eine tragen und warum, steht dort.
  *
  * WER WAS SIEHT, entscheidet diese Funktion und niemand sonst — die Wächter
  * der Seiten prüfen es ein zweites Mal (`require_admin()`,
  * `require_betreiberin()`). Ein Menü, das mehr zeigt als erreichbar ist,
  * führt ins 403; eines, das weniger zeigt, verschweigt eine Funktion.
  */
+/**
+ * Die Zahl an einem Menüpunkt — oder nichts (S8/AP5).
+ *
+ * `$z` ist ['n' => int, 'ton' => 'rot'|'orange'|'neutral'] oder null.
+ * Sie steht NUR, wenn es etwas zu tun gibt: Eine „0" am Menüpunkt ist keine
+ * Auskunft, sondern eine Verzierung, und sie nimmt dem Fall, in dem wirklich
+ * etwas ansteht, die Aufmerksamkeit.
+ *
+ * `aria-label` statt der nackten Zahl: Ein Vorleseprogramm sagt sonst
+ * „Status 3" und lässt offen, was die Drei zählt.
+ */
+function ui_zaehler(?array $z): string
+{
+    if ($z === null || (int)$z['n'] < 1) { return ''; }
+    $ton = (string)($z['ton'] ?? 'rot');
+    $wort = $ton === 'neutral' ? 'ausstehend' : 'offen';
+    return '<span class="zaehler' . ($ton === 'rot' ? '' : ' zaehler-' . ui_e($ton)) . '"'
+         . ' aria-label="' . (int)$z['n'] . ' ' . $wort . '">' . (int)$z['n'] . '</span>';
+}
+
+
 function ui_einstellungen_punkte(): array
 {
     $bloecke = [[
@@ -762,13 +788,28 @@ function ui_einstellungen_punkte(): array
         ],
     ]];
 
+    /* DIE ZAEHLER KOSTEN NUR, WO SIE STEHEN. `status_lib.php` wird erst
+     * geladen, wenn die Rolle den Block ueberhaupt sieht — `install.php`
+     * laedt `ui.php` ohne Datenbank, und ein `require` auf oberster Ebene
+     * haette den Einrichter mitgerissen. */
+    $zaehler = [];
+    if (function_exists('ist_admin') && ist_admin()) {
+        require_once __DIR__ . '/status_lib.php';
+        $zaehler = menue_zaehler_konto();
+        if (function_exists('ist_betreiberin') && ist_betreiberin()) {
+            $zaehler += menue_zaehler_betrieb();
+        }
+    }
+    $z = static fn(string $key): ?array => $zaehler[$key] ?? null;
+
     if (function_exists('ist_admin') && ist_admin()) {
         $bloecke[] = [
             'schluessel' => 'verwaltung',
             'titel'      => 'Verwaltung',
             'punkte'     => [
                 ['admin',              'admin_users.php',        'NutzerInnen',   'gruppe'],
-                ['admin_sicherungen',  'admin_sicherungen.php',  'Konto-Backups', 'sicherung'],
+                ['admin_sicherungen',  'admin_sicherungen.php',  'Konto-Backups', 'sicherung',
+                                                                  $z('admin_sicherungen')],
                 /* `haus` statt `rechtstexte` (Mockup 13, freigegeben
                  * 05.09.2026): Die Seite heisst nicht mehr „Rechtstexte",
                  * und das Zeichen lag seit P3 ungenutzt im Vorrat. */
@@ -792,10 +833,13 @@ function ui_einstellungen_punkte(): array
                  * übrigen 44. Der Zylinder (`datenbank`) bleibt dem
                  * Komplett-Backup: dort wird wirklich die Datenbank
                  * gesichert. */
-                ['betrieb_status',    'betrieb_status.php',    'Status',              'status'],
+                ['betrieb_status',    'betrieb_status.php',    'Status',              'status',
+                                                                      $z('betrieb_status')],
                 ['betrieb_statistik', 'betrieb_statistik.php', 'Statistik',           'balken'],
-                ['betrieb_updates',   'betrieb_updates.php',   'Updates',             'aktualisieren'],
-                ['betrieb_jobs',      'betrieb_jobs.php',      'Hintergrundjobs',     'uhrzeit'],
+                ['betrieb_updates',   'betrieb_updates.php',   'Updates',             'aktualisieren',
+                                                                      $z('betrieb_updates')],
+                ['betrieb_jobs',      'betrieb_jobs.php',      'Hintergrundjobs',     'uhrzeit',
+                                                                      $z('betrieb_jobs')],
                 ['betrieb_server',    'betrieb_server.php',    'Servereinstellungen', 'server'],
                 ['admin_komplettsicherung', 'admin_komplettsicherung.php',
                                                                'Komplett-Backup',     'datenbank'],
@@ -877,10 +921,12 @@ function ui_leiste_einstellungen(string $aktiv): void
               class="gruppen-zahl" aria-hidden="true"> · <?= count($b['punkte']) ?></span></span>
           </summary>
           <div class="akkordeon-inhalt">
-            <?php foreach ($b['punkte'] as [$key, $href, $text, $sym]): ?>
+            <?php foreach ($b['punkte'] as $punkt): ?>
+              <?php [$key, $href, $text, $sym] = $punkt; $zz = $punkt[4] ?? null; ?>
               <a class="eintrag<?= $aktiv === $key ? ' aktiv' : '' ?>" href="<?= ui_e($href) ?>"
                  <?= $aktiv === $key ? 'aria-current="page"' : '' ?>>
                 <?= ui_symbol($sym) ?><span class="eintrag-text"><?= ui_e($text) ?></span>
+                <?= ui_zaehler($zz) ?>
               </a>
             <?php endforeach; ?>
           </div>
@@ -924,10 +970,12 @@ function ui_einstellungen_uebersicht(): void
             echo '  <h2 class="uebersicht-block">' . ui_e($b['titel']) . "</h2>\n";
         }
         ui_karte_start([]);
-        foreach ($b['punkte'] as [$key, $href, $text, $sym]) {
+        foreach ($b['punkte'] as $punkt) {
+            [$key, $href, $text, $sym] = $punkt;
             echo '    <a class="uebersicht-zeile" href="' . ui_e($href) . '">'
                . ui_symbol($sym, 'symbol-gross')
                . '<span class="uebersicht-text">' . ui_e($text) . '</span>'
+               . ui_zaehler($punkt[4] ?? null)
                . ui_symbol('winkel', 'symbol-rechts uebersicht-winkel') . "</a>\n";
         }
         ui_karte_ende();

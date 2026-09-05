@@ -908,6 +908,16 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   background:var(--rot);color:var(--auf-dunkel);
   font-size:var(--groesse-1);font-weight:700;
 }
+/* DREI TÖNE, DIESELBEN WIE DIE AMPEL (S8/AP5, Design.md 9.23). Rot bleibt die
+ * Grundform — den Zähler gab es bis Web 15.3.3 nur für die offene Zuordnung,
+ * und die ist rot. Orange heißt „braucht Aufmerksamkeit, arbeitet aber",
+ * neutral „eine Zahl ohne Wertung": ausstehende Updates sind kein Fehler,
+ * sondern Arbeit, die jemand auslösen muss.
+ *
+ * NEUTRAL STEHT AUF SAND, NICHT AUF ROT MIT WENIGER SÄTTIGUNG. Ein blasses
+ * Rot liest sich als „fast schlimm"; die Zahl soll aber gar nichts bewerten. */
+.zaehler-orange{background:var(--orange);color:var(--dunkelblau)}
+.zaehler-neutral{background:var(--sand);color:var(--dunkelblau)}
 
 
 /* == 6. KARTE, ZEILE, TITELZEILE ===========================================
