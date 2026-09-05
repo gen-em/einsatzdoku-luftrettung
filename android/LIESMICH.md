@@ -783,9 +783,15 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
   - **Fehlerdialoge abschalten, bevor es losgeht:**
     `adb shell settings put global hide_error_dialogs 1` — dazu die drei
     Animationsmaßstäbe auf 0. Beides überlebt einen Neustart des Rahmenwerks.
-  - **Wenn es doch klemmt: `adb root`, `adb shell stop`, `adb shell start`**
-    statt eines Kaltstarts — das Rahmenwerk kommt in Minuten zurück, APK und
-    Einstellungen bleiben.
+  - **`adb shell stop` / `adb shell start` hilft NICHT.** Das Rahmenwerk kam
+    nach 210 s zurück, die Dialoge waren fort — aber die Anzeige blieb
+    **schwarz**: `screencap` lieferte 15 197 Bytes reines Schwarz, bei
+    `mWakefulness=Awake`, auch nach Schlafen/Wecken und `dismiss-keyguard`.
+    SwiftShader hängt nach dem Neustart des Rahmenwerks nicht mehr am
+    Bildschirm. Der Weg, der trägt, ist der Kaltstart: QEMU beenden (`kill`
+    auf die PID, **nicht** `adb emu kill`, das den kaputten Zustand als
+    Abzug sichern würde) und `emulator.sh start` erneut. APK und
+    Einstellungen (auch `hide_error_dialogs`) liegen auf `/data` und bleiben.
   - `mCurrentFocus` steht zweimal in `dumpsys window` (ein Eintrag je
     Anzeige); `emulator.sh bild` liest die erste Zeile und verweigert den
     Abzug, obwohl die App den Fokus hat. Für diesen Lauf ein eigener Abzug
