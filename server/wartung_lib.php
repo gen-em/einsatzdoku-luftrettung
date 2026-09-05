@@ -102,6 +102,7 @@ const WARTUNG_RETRY_S = 300;
  * Stylesheet, Schriften, Symbole laufen gar nicht durch PHP.
  */
 const WARTUNG_AUSNAHMEN = [
+    'betrieb_status.php',
     'betrieb_updates.php',
     'betrieb_jobs.php',
     'betrieb_server.php',

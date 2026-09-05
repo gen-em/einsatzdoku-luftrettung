@@ -114,6 +114,41 @@ function smtp_eingerichtet(): bool
     return is_array($cfg) && trim((string)($cfg['host'] ?? '')) !== '';
 }
 
+/**
+ * WAS AUS EINEM VERSAND WIRD (S8/AP4, Z-01).
+ *
+ * DIE FRAGE, DIE NIEMAND BEANTWORTEN KONNTE: „Kommt hier ueberhaupt Post
+ * heraus?" `smtp_eingerichtet()` sagt nur, ob eine Adresse in der
+ * `config.php` steht — nicht, ob der Server sie annimmt. Ein falsches
+ * Passwort oder ein umgezogener Host fiel bisher erst auf, wenn jemand einen
+ * Setz-Link erwartete, der nie ankam; im Fehlerprotokoll des Webspace stand
+ * es, und dort sieht niemand nach.
+ *
+ * Vermerkt werden ZWEI Werte: wann zuletzt versendet wurde und ob es geklappt
+ * hat. Nicht vermerkt wird, WAS versendet wurde und AN WEN — das gehoerte in
+ * ein Protokoll, und ein Protokoll ueber Mailempfaenger ist etwas, das diese
+ * Anwendung nicht fuehren will.
+ *
+ * SIE SCHREIBT NUR, WENN ES EINE DATENBANK GIBT. `smtp.php` ist die eine
+ * Datei, die ohne alles auskommt — sie laeuft im Einrichter, bevor es eine
+ * Datenbank gibt, und in `register_shutdown_function`, wo die Verbindung
+ * schon zu sein kann. Ein Vermerk, der einen Versand scheitern liesse, waere
+ * die Frage nicht wert; deshalb `function_exists` und `try`.
+ */
+function smtp_versand_vermerken(bool $ok): void
+{
+    if (!function_exists('db')) { return; }
+    try {
+        db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?), (?, ?)
+                       ON DUPLICATE KEY UPDATE v = VALUES(v)')
+            ->execute(['smtp_last', gmdate('Y-m-d\TH:i:s\Z'),
+                       'smtp_last_ok', $ok ? '1' : '0']);
+    } catch (Throwable $ex) {
+        /* Still: Der Versand ist gelaufen, der Vermerk nicht. Das ist die
+         * richtige Reihenfolge der Wichtigkeit. */
+    }
+}
+
 function smtp_send(string $toEmail, string $subject, string $textBody,
                    int $zeitlimit = 15): bool {
     /* Einmal laden, beides entnehmen (M1-14).
@@ -148,7 +183,11 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
     $fp = @stream_socket_client('ssl://' . $cfg['host'] . ':' . $cfg['port'],
         $errno, $errstr, $zeitlimit, STREAM_CLIENT_CONNECT,
         stream_context_create(['ssl' => ['verify_peer' => true]]));
-    if (!$fp) { error_log("SMTP connect: $errstr"); return false; }
+    if (!$fp) {
+        error_log("SMTP connect: $errstr");
+        smtp_versand_vermerken(false);
+        return false;
+    }
     stream_set_timeout($fp, $zeitlimit);
 
     $expect = function (string $code) use ($fp): bool {
@@ -179,5 +218,6 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
     $send('QUIT');
     fclose($fp);
     if (!$ok) error_log('SMTP: Versand an ' . $toEmail . ' fehlgeschlagen');
+    smtp_versand_vermerken($ok);
     return $ok;
 }

@@ -748,6 +748,7 @@ function ui_leiste_einstellungen(string $aktiv): void
          * Weiterleitung. Bis AP5 den Block „Betrieb" baut, stehen sie hier
          * flach in der Liste — sonst waeren zwei von ihnen ueberhaupt nur
          * ueber die Adresse erreichbar. */
+        'betrieb_status'    => ['betrieb_status.php',    'Status',                'hinweis'],
         'betrieb_updates'   => ['betrieb_updates.php',   'Updates',               'werkzeug'],
         /* `kalender`, weil die Jobs nach einem Zeitplan laufen; `datenbank`,
          * weil auf den Servereinstellungen der Speicher der Installation
@@ -817,6 +818,7 @@ function ui_einstellungen_uebersicht(): void
             ['admin_komplettsicherung.php', 'Komplett-Backup', 'datenbank'],
             ['admin_installation.php','Installation',         'rechtstexte'],
             ['admin_demo.php',       'Demo-Konto',            'kolben'],
+            ['betrieb_status.php',   'Status',                'hinweis'],
             ['betrieb_updates.php',  'Updates',               'werkzeug'],
             ['betrieb_jobs.php',     'Hintergrundjobs',       'kalender'],
             ['betrieb_server.php',   'Servereinstellungen',   'datenbank'],

@@ -252,6 +252,12 @@
       "pfad": "admin_demo.php"
     },
     {
+      "name": "45-betrieb-status",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_status.php"
+    },
+    {
       "name": "46-betrieb-updates",
       "gruppe": "Betrieb",
       "rolle": "admin",
