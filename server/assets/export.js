@@ -931,7 +931,7 @@
             + ' ' + erzeugtDatum.h + ':' + erzeugtDatum.mi + ' (' + APP_TZ + ')';
         var zeitraum = opts.von ? (opts.von + ' bis ' + opts.bis) : 'gesamter Zeitraum';
         return [
-            'Einsatzdoku — Export (vollständiges CSV)',
+            'Gen-EM NAdoku — Export (vollständiges CSV)',
             '========================================',
             '',
             'Erzeugt am: ' + erzeugt,
@@ -1028,7 +1028,7 @@
             return '<trkpt lat="' + lat + '" lon="' + lon + '">' + eleTag + '<time>' + timeIso + '</time></trkpt>';
         }).join('');
         return '<?xml version="1.0" encoding="UTF-8"?>\n'
-            + '<gpx version="1.1" creator="Einsatzdoku" xmlns="http://www.topografix.com/GPX/1/1">\n'
+            + '<gpx version="1.1" creator="Gen-EM NAdoku" xmlns="http://www.topografix.com/GPX/1/1">\n'
             + '<metadata><time>' + genTimeIso + '</time></metadata>\n'
             + '<trk><name>' + xmlEscape(name) + '</name><trkseg>' + trkpts + '</trkseg></trk>\n'
             + '</gpx>';

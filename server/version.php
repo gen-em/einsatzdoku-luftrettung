@@ -2701,5 +2701,32 @@ declare(strict_types=1);
  *   „<Seite> — Gen-EM NAdoku", wie das Programm.
  *
  * KEINE MIGRATION.
+ *
+ * 15.3.2  DIE WORTMARKE HEISST GEN-EM NADOKU. Die Uhr traegt den Namen seit
+ *         Uhr 2.0.0; Web und Handbuch hiessen weiter „Einsatzdoku", und der
+ *         Rahmenplan hatte die Umbenennung fuer P7 (Schritt 13) vorgesehen.
+ *         Auf Anweisung vom 05.09.2026 vorgezogen, weil ein Programm, das
+ *         sich an vier Stellen anders nennt als an fuenf anderen, jeden
+ *         dieser Namen schwaecht.
+ *
+ *         Geaendert: Kopfleiste und Schublade (`ui.php`), Anmeldeseite
+ *         (`login.php`), Passwortseiten (`pw_handling.php`), Einrichter
+ *         (`install.php`), Absendername der System-E-Mails (Vorgabe in
+ *         `install.php` und `config.example.php`), Urheberfeld der GPX-
+ *         (`gpx_lib.php`, `assets/export.js`) und CSV-Ausgabe, die
+ *         Markierungsdateien von Einrichtung und Wiederherstellung, die
+ *         Dateikopf-Kommentare von neun Skripten und die Titel von README,
+ *         Handbuch, Technik, Backlog, Changelog und zwei weiteren Dokumenten.
+ *
+ *         NICHT GEAENDERT: die Langform „Gen-EM Einsatzdokumentation
+ *         Notarzt" in den Texten der System-E-Mails (20 Stellen in sechs
+ *         Dateien). Sie ist der beschreibende Name des Vorhabens, nicht die
+ *         Marke — und sie steht in Betreffzeilen, die Bestandsnutzerinnen in
+ *         ihren Postfaechern wiederfinden. Die Entscheidung darueber liegt
+ *         bei P7. Ebenfalls unveraendert bleibt diese Datei ab hier
+ *         aufwaerts: Sie erzaehlt, was WANN hiess, und waere falsch, wenn man
+ *         den alten Namen darin ueberschriebe.
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '15.3.1';
+const WEB_VERSION = '15.3.2';

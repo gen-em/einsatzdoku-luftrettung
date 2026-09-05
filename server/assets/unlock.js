@@ -1,4 +1,4 @@
-/* Einsatzdoku — Entsperren der geschuetzten Angaben an Ort und Stelle.
+/* Gen-EM NAdoku — Entsperren der geschuetzten Angaben an Ort und Stelle.
  *
  * Warum es diesen Baustein gibt:
  *   Die Anmeldung haengt am PHP-Sitzungscookie (30 min Inaktivitaet), der

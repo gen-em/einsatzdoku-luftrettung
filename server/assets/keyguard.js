@@ -1,4 +1,4 @@
-/* Einsatzdoku — Bindung und Lebensdauer des Inhaltsschlüssels (Baustein B5).
+/* Gen-EM NAdoku — Bindung und Lebensdauer des Inhaltsschlüssels (Baustein B5).
  *
  * WARUM ES DIESEN BAUSTEIN GIBT
  * Der Zwischenspeicher liefert den Inhaltsschlüssel heute zurück, OHNE zu

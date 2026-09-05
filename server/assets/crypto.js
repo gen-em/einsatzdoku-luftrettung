@@ -1,4 +1,4 @@
-/* Einsatzdoku — Ende-zu-Ende-Krypto für das PatientInnendaten-Modul.
+/* Gen-EM NAdoku — Ende-zu-Ende-Krypto für das PatientInnendaten-Modul.
  *
  * Prinzip (angelehnt an Bitwarden):
  *  - Aus dem Login-Passwort leitet der Browser per PBKDF2 (Rundenzahl je

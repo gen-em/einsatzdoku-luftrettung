@@ -357,7 +357,7 @@ function ui_kopf(array $o = []): void
       <?php $lm = ui_logo_masse(34); ?>
       <img src="<?= ui_e(ui_logo(true)) ?>" alt=""
            width="<?= $lm['breite'] ?>" height="<?= $lm['hoehe'] ?>">
-      <span class="kopf-name">Gen-EM Einsatzdoku</span>
+      <span class="kopf-name">Gen-EM NAdoku</span>
       <?php if ($menue): ?><span class="kopf-nutzer"><?= ui_e(ui_user_label()) ?></span><?php endif; ?>
     </a>
 
@@ -447,7 +447,7 @@ function ui_geruest_start(array $o = []): void
       <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
         <?= ui_symbol('schliessen', 'symbol-gross') ?>
       </button>
-      <span class="kopf-name">Einsatzdoku</span>
+      <span class="kopf-name">Gen-EM NAdoku</span>
     </div>
     <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
       <a class="eintrag<?= ($o['aktiv'] ?? '') === 'start' ? ' aktiv' : '' ?>" href="index.php">

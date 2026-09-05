@@ -143,7 +143,7 @@ if (!is_writable(__DIR__)) {
     $nachweisOk = false;
 } elseif (!file_exists($nachweisDatei)) {
     $inhalt = $nachweis . "\n\n"
-            . "Diese Datei gehoert zur Ersteinrichtung der Einsatzdoku.\n"
+            . "Diese Datei gehoert zur Ersteinrichtung von Gen-EM NAdoku.\n"
             . "Die Zeichenfolge oben ist im Einrichtungsformular einzutragen.\n"
             . "Sie beweist, dass die einrichtende Person Zugriff auf dieses\n"
             . "Verzeichnis hat. Nach der Einrichtung wird die Datei geloescht;\n"
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $smtp = [
         'host' => $in('smtp_host'), 'port' => (int)($in('smtp_port') ?: 465),
         'user' => $in('smtp_user'), 'pass' => (string)($_POST['smtp_pass'] ?? ''),
-        'from' => $in('smtp_from'), 'from_name' => $in('smtp_from_name') ?: 'Einsatzdoku',
+        'from' => $in('smtp_from'), 'from_name' => $in('smtp_from_name') ?: 'Gen-EM NAdoku',
     ];
 
     /* Nachweis zuerst pruefen (M1-11).
@@ -376,7 +376,7 @@ function render_form(array $v, array $errors, string $nachweis,
                      string $nachweisMuster, bool $nachweisOk): void {
     $guessUrl = 'https://' . ($_SERVER['HTTP_HOST'] ?? 'einsatz.example.de');
     ob_start(); ?>
-    <h1>Einsatzdoku einrichten</h1>
+    <h1>Gen-EM NAdoku einrichten</h1>
     <p class="seiten-erklaerung">Diese Angaben werden in <code>config.php</code>
        gespeichert und die Datenbank wird angelegt. Der Einrichter läuft nur
        dieses eine Mal.</p>
@@ -485,7 +485,7 @@ function render_form(array $v, array $errors, string $nachweis,
           <?php ui_feld(['name' => 'smtp_from', 'label' => 'Absender-Adresse',
                          'wert' => (string)($v['smtp_from'] ?? '')]); ?>
           <?php ui_feld(['name' => 'smtp_from_name', 'label' => 'Absender-Name',
-                         'wert' => (string)($v['smtp_from_name'] ?? 'Einsatzdoku')]); ?>
+                         'wert' => (string)($v['smtp_from_name'] ?? 'Gen-EM NAdoku')]); ?>
         </div>
       <?php ui_karte_ende(); ?>
 

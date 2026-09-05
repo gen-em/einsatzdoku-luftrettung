@@ -1,4 +1,4 @@
-/* Einsatzdoku — die Geraeteseite laedt nach, wenn das Geraet Ja gesagt hat
+/* Gen-EM NAdoku — die Geraeteseite laedt nach, wenn das Geraet Ja gesagt hat
  * (S5 Paket B, E-S5-53).
  *
  * WOFUER. Nach der Eingabe des Codes steht die Karte „Am Geraet bestaetigen"

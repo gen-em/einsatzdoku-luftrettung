@@ -1,11 +1,11 @@
-# Einsatzdoku — Handbuch
+# Gen-EM NAdoku — Handbuch
 
 *Stand: 24.08.2026 · Für die technische Struktur siehe `Technik.md`, für
 Änderungen `CHANGELOG.md`.*
 
-## 1. Was ist die Einsatzdoku?
+## 1. Was ist Gen-EM NAdoku?
 
-Die Einsatzdoku dokumentiert Notarzteinsätze direkt vom Handgelenk — luft-
+Gen-EM NAdoku dokumentiert Notarzteinsätze direkt vom Handgelenk — luft-
 gebunden wie bodengebunden (RTH, NEF, NAW): Eine Uhr-App (derzeit für
 Garmin-Uhren: Fenix 6 Pro, Forerunner 945, Venu 3s) erfasst Einsatzphasen
 mit Zeitstempeln, GPS-Tracks und
@@ -234,7 +234,7 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 
 ## 3. Die Web-Oberfläche — Überblick
 
-Die Kopfleiste zeigt links das Logo und den Namen **Einsatzdoku**; am breiten
+Die Kopfleiste zeigt links das Logo und den Namen **Gen-EM NAdoku**; am breiten
 Bildschirm steht der eigene Name daneben (im Profil setzbar, sonst die
 E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6) und
 das Zahnrad für die **Einstellungen**. Sie bleibt beim Scrollen oben stehen.
@@ -3225,10 +3225,9 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
 2. **Server-Adresse prüfen.** Seit Uhr 3.0.0 steht dort ein Vorgabewert —
    `nadoku.gen-em.org`, die öffentliche Installation. Wer eine eigene betreibt,
    trägt die eigene Domain ein; sonst ist hier nichts zu tun.
-   **Die Uhr-App heißt „NAdoku"** — der künftige Name, seit Uhr 2.0.0. Die
-   Weboberfläche und dieses Handbuch tragen noch „Einsatzdoku" und ziehen mit
-   dem v1.0-Schnitt nach; wer die App in der Liste sucht, sucht also nach
-   **NAdoku**.
+   **Die Uhr-App heißt „NAdoku"** — so heißt sie seit Uhr 2.0.0, und seit
+   Web 15.3.2 heißt auch die Weboberfläche so: **Gen-EM NAdoku**. Wer die
+   App in der Liste sucht, sucht also nach **NAdoku**.
    *Bei Garmin: in Garmin Connect unter den App-Einstellungen.*
 3. **Auf der Uhr die Kopplung starten:** Sync-Seite, Auswahltaste **gedrückt
    halten**. Die Uhr sagt kurz „Hole Code…" und zeigt dann den **Code für das

@@ -18,6 +18,6 @@ return [
         'user' => 'noreply@example.de',
         'pass' => 'CHANGE_ME',
         'from' => 'noreply@example.de',
-        'from_name' => 'Einsatzdoku',
+        'from_name' => 'Gen-EM NAdoku',
     ],
 ];

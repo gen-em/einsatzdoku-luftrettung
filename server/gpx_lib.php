@@ -45,7 +45,7 @@ require_once __DIR__ . '/validate_lib.php';
 /** Formatfassung, die wir schreiben. */
 const GPX_FASSUNG = '1.1';
 const GPX_NS      = 'http://www.topografix.com/GPX/1/1';
-const GPX_CREATOR = 'Einsatzdoku';
+const GPX_CREATOR = 'Gen-EM NAdoku';
 
 /**
  * Wie viele Spuren hoechstens in EINE Datei duerfen (S2/AP4).

@@ -203,7 +203,7 @@ if (!$darfNachweis) {
     $nachweisOk = false;
 } elseif (!file_exists($nachweisDatei)) {
     $inhalt = $nachweis . "\n\n"
-            . "Diese Datei gehoert zur Wiederherstellung der Einsatzdoku.\n"
+            . "Diese Datei gehoert zur Wiederherstellung von Gen-EM NAdoku.\n"
             . "Die Zeichenfolge oben ist im Formular einzutragen. Sie beweist,\n"
             . "dass die wiederherstellende Person Zugriff auf dieses Verzeichnis\n"
             . "hat. Nach getaner Arbeit wird die Datei geloescht; sie kann auch\n"

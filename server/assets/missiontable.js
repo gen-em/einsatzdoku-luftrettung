@@ -1,4 +1,4 @@
-/* Einsatzdoku — gemeinsame Einsatztabelle fuer zeitraum.php und suche.php.
+/* Gen-EM NAdoku — gemeinsame Einsatztabelle fuer zeitraum.php und suche.php.
  *
  * Beide Seiten zeigen dieselbe Liste: gleiche Spalten, gleiche Sortierung,
  * gleicher Zeilenaufbau, Klick auf die Zeile oeffnet den Einsatz. Der Code

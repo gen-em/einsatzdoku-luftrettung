@@ -1,4 +1,4 @@
-# Changelog — Einsatzdoku
+# Changelog — Gen-EM NAdoku
 
 Format nach [Keep a Changelog](https://keepachangelog.com/de/).
 
@@ -13,6 +13,43 @@ Web 5.4.0 steht dort der Zeitstempel der jeweiligen Datei, damit nach einem
 Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
+
+## [Web 15.3.2] — 2026-09-05
+
+### Web — die Wortmarke heißt Gen-EM NAdoku
+
+Die Uhr-App trägt den Namen seit **Uhr 2.0.0**. Weboberfläche und Handbuch
+hießen weiter „Einsatzdoku", und der Rahmenplan hatte die Umbenennung für
+**P7, Schritt 13** vorgesehen — „Umbenennung überall". Sie ist jetzt
+vorgezogen worden, und zwar aus dem Grund, der den Programmpunkt überhaupt
+rechtfertigt: Ein Programm, das sich in der Kopfleiste anders nennt als auf
+der Uhr, im Tab-Titel anders als im Handbuch und im GPX-Export noch einmal
+anders, schwächt jeden dieser Namen. Aufgefallen war es beim Tab-Titel in
+Web 15.3.1, wo dieselbe Inkonsequenz stehen blieb.
+
+**Geändert** sind alle Stellen, an denen der Name als Name auftritt:
+Kopfleiste und Schublade, Anmeldeseite, Passwortseiten, Einrichter, der
+Absendername der System-E-Mails (Vorgabe für `config.php`), das Urheberfeld
+der GPX-Ausgabe auf beiden Wegen (Server und Browser), der Titel des
+vollständigen CSV, die Markierungsdateien von Einrichtung und
+Wiederherstellung, die Dateikopf-Kommentare von neun Skripten sowie die Titel
+von README, Handbuch, Technik, Backlog, Changelog, Geräte-Eingabe und
+Uhr-Layoutregeln.
+
+**Nicht geändert** ist die Langform **„Gen-EM Einsatzdokumentation Notarzt"**
+in den Texten der System-E-Mails — Betreff, Anrede und Grußformel, 20 Stellen
+in sechs Dateien. Sie ist der beschreibende Name des Vorhabens und nicht die
+Marke, und sie steht in Betreffzeilen, die Bestandsnutzerinnen in ihren
+Postfächern wiederfinden. Die Entscheidung darüber gehört zur
+Doku-Neufassung in P7. Ebenso bleibt der alte Name dort stehen, wo er
+Geschichte erzählt: im Kopfkommentar von `version.php`, in den älteren
+Einträgen dieses Changelogs, in `Design.md` und im Rahmenplan-Archiv. Wer
+den alten Namen dort überschreibt, macht die Aufzeichnung falsch.
+
+Die Untertitelzeile der Anmeldeseite („Einsatzdokumentation Notarzt") bleibt
+ebenfalls: Sie erklärt die Marke, statt sie zu wiederholen.
+
+Keine Migration.
 
 ## [Web 15.3.1] — 2026-09-05
 
@@ -49,8 +86,9 @@ dauerhaft Rechenzeit für einen Fall, den es dort nicht mehr gibt.
 **Der Tab-Titel hieß „&lt;Seite&gt; — Einsatzdoku".** Er heißt jetzt
 „&lt;Seite&gt; — Gen-EM NAdoku", wie das Programm. Zwei Stellen: das Gerüst
 in `ui.php` und die Wartungsseite in `wartung_lib.php`. Die Wortmarke in der
-Kopfleiste bleibt vorerst „Gen-EM Einsatzdoku" — sie ist eine
-Gestaltungsentscheidung und wird nicht nebenbei mitgeändert.
+Kopfleiste blieb an dieser Stelle noch „Gen-EM Einsatzdoku" — sie ist eine
+Gestaltungsentscheidung und wurde nicht nebenbei mitgeändert; Web 15.3.2
+zieht sie auf Anweisung nach.
 
 Keine Migration.
 

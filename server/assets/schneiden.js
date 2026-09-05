@@ -1,4 +1,4 @@
-/* Einsatzdoku — Schneidewerkzeug in der Tagesansicht (S4/A2b, E-S4-17).
+/* Gen-EM NAdoku — Schneidewerkzeug in der Tagesansicht (S4/A2b, E-S4-17).
  *
  * WOFUER. Wer waehrend eines Einsatzes keinen Knopf gedrueckt hat, hat den
  * Einsatz nicht — seine Spur aber schon: Sie liegt im Ruhesegment, in dem das
