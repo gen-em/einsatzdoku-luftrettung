@@ -290,8 +290,10 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                   : ui_plakette(edbak_zeitpunkt_text((string)$staende[0]['zeit']),
                                 ['ton' => 'blau'])]);
     ui_zeile(['text' => 'Belegt von Komplett-Backups',
-              'klein' => 'Zählt auf die Speichergrenze mit — sie steht unter '
-                       . '„Backups".',
+              'klein' => 'Zählt auf die Speichergrenze mit — sie steht seit '
+                       . 'Web 15.1.0 unter Betrieb → Servereinstellungen, '
+                       . 'zusammen mit der Belegung nach Art.',
+              'href' => 'betrieb_server.php',
               'plaketten' => ui_plakette(edbak_groesse_text((int)$zahlen['komplett_bytes']),
                                          ['ton' => 'neutral'])]);
     ui_zeile(['text' => 'Wartet auf den nächsten Lauf',

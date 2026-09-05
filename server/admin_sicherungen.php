@@ -71,47 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $teile[] = 'Aufbewahrung ' . $pakete . ' Pakete';
             }
         }
-        /* ---- Speichergrenze und Warnschwellen (E-S2-15) ---------------- */
-        if ($error === null) {
-            $gb = str_replace(',', '.', trim((string)($_POST['grenze'] ?? '')));
-            if (!is_numeric($gb) || (float)$gb <= 0 || (float)$gb > 10000) {
-                $error = 'Bitte eine Speichergrenze zwischen 0,1 und 10000 GB angeben.';
-            } elseif (abs((float)$gb * 1024 * 1024 * 1024 - edbak_grenze_bytes()) > 1) {
-                edbak_marke_setzen('adminbackup_grenze_gb', (string)(float)$gb);
-                /* DIE GEMELDETEN SCHWELLEN VERGESSEN. Eine neue Grenze macht
-                 * aus denselben Bytes einen anderen Prozentsatz — was bei der
-                 * alten Grenze gemeldet war, ist bei der neuen eine andere
-                 * Aussage. Ohne dieses Zuruecksetzen bliebe eine Warnung aus,
-                 * die nach der Aenderung faellig waere. */
-                edbak_marke_setzen('adminbackup_schwellen_gemeldet', '');
-                edbak_marke_setzen('adminbackup_schwellen_offen', '');
-                $teile[] = 'Speichergrenze ' . $gb . ' GB';
-            }
-        }
-        if ($error === null) {
-            $roh = trim((string)($_POST['schwellen'] ?? ''));
-            $neu = [];
-            foreach (explode(',', $roh) as $t) {
-                $t = trim($t);
-                if ($t === '') { continue; }
-                if (!ctype_digit($t) || (int)$t < 1 || (int)$t > 100) {
-                    $error = 'Warnschwellen sind ganze Zahlen zwischen 1 und 100, '
-                           . 'durch Komma getrennt (z. B. „70, 90").';
-                    break;
-                }
-                $neu[(int)$t] = true;
-            }
-            if ($error === null) {
-                $neu = array_keys($neu); sort($neu);
-                if ($neu !== edbak_schwellen()) {
-                    edbak_marke_setzen('adminbackup_schwellen', implode(',', $neu));
-                    edbak_marke_setzen('adminbackup_schwellen_gemeldet', '');
-                    edbak_marke_setzen('adminbackup_schwellen_offen', '');
-                    $teile[] = $neu ? 'Warnschwellen ' . implode(' / ', $neu) . ' %'
-                                    : 'Warnschwellen aus';
-                }
-            }
-        }
+        /* SPEICHERGRENZE UND WARNSCHWELLEN STEHEN SEIT WEB 15.1.0 NICHT
+         * MEHR HIER (E-S8-05, B-S8-06). Sie wirkten auf Konto-Backups UND auf
+         * die Komplett-Staende, standen aber unter „Backups", und die
+         * Komplett-Seite verwies mit einem Satz auf sie. Jetzt liegen sie im
+         * Betrieb unter „Servereinstellungen", zusammen mit der Belegung.
+         *
+         * Was hier bleibt, gilt JE KONTO: Erinnerung, Aufbewahrung, Admin-Mail.
+         * Der Schnitt ist die Antwort auf Nr. 79 — die Ordnung folgt der
+         * Zielgruppe (R74), nicht der Reihenfolge des Einbaus. */
         if ($error === null) {
             $mailAn = ($_POST['mail'] ?? '') === '1';
             if ($mailAn !== edbak_admin_mail_an()) {
@@ -361,7 +329,7 @@ ui_seite_start(['titel' => 'Backups']);
         . edbak_groesse_text($speicher['grenze']) . '). Es wird nicht mehr '
         . 'gesichert. Es wurde nichts gelöscht und nichts überschrieben — bitte '
         . 'alte Backups entfernen, die Aufbewahrung senken oder die Grenze '
-        . 'erhöhen.') ?>
+        . 'erhöhen (Betrieb → Servereinstellungen).') ?>
   <?php elseif ($offeneSchwellen): ?>
     <?= ui_meldung_markup('warn', 'Die Ablage hat '
         . max($offeneSchwellen) . ' % der Speichergrenze erreicht ('
@@ -427,18 +395,6 @@ ui_seite_start(['titel' => 'Backups']);
                          'klein' => 'Pakete. Ältere werden beim nächsten Sichern '
                                   . 'gelöscht — das jüngste und ein freigegebenes nie.']); ?>
         </div>
-        <div class="fld-reihe">
-          <?php ui_feld(['name' => 'grenze', 'label' => 'Speichergrenze',
-                         'wert' => rtrim(rtrim(number_format(
-                             edbak_grenze_bytes() / (1024 * 1024 * 1024), 3, ',', ''), '0'), ','),
-                         'klein' => 'GB für alle Backups zusammen. Ist sie '
-                                  . 'erreicht, wird nicht mehr gesichert — es wird '
-                                  . 'nichts gelöscht und nichts überschrieben.']); ?>
-          <?php ui_feld(['name' => 'schwellen', 'label' => 'Warnschwellen',
-                         'wert' => implode(', ', edbak_schwellen()),
-                         'klein' => 'Prozent, durch Komma getrennt. Je Schwelle '
-                                  . 'kommt einmal eine Meldung, nicht bei jedem Lauf.']); ?>
-        </div>
         <?php ui_schalter(['name' => 'mail', 'label' => 'Erinnerung an Admins per E-Mail',
                            'an' => edbak_admin_mail_an(),
                            'klein' => 'Liste der überfälligen Konten, höchstens einmal '
@@ -447,6 +403,11 @@ ui_seite_start(['titel' => 'Backups']);
           <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
         </div>
       </form>
+      <p class="feld-klein"><strong>Speichergrenze, Warnschwellen und die
+         Belegung</strong> stehen unter
+         <a href="betrieb_server.php">Betrieb → Servereinstellungen</a>: Sie
+         gelten für Konto-Backups <em>und</em> Komplett-Backups zusammen und
+         sind damit eine Einstellung der Installation, keine der Konten.</p>
       <?php /* Der frühere Absatz sagte „Es gibt keinen Zeitplan. Auf diesem
                Webspace läuft kein Cron" — das stimmt seit dem Job-Einstieg
                (S2/AP2) nicht mehr: `jobs.php` kennt drei Auslöser, und CLI ist
@@ -469,40 +430,30 @@ ui_seite_start(['titel' => 'Backups']);
   </div><?php /* .form-spalte (links) */ ?>
   <div class="form-spalte">
 
-    <?php /* ---- Ablage ---------------------------------------------------- */ ?>
+    <?php /* ---- Ablage: nur noch der Weg dorthin (S8/AP2) --------------
+         *
+         * Pfad, Zustand, Belegung und Reste stehen seit Web 15.1.0 unter
+         * Betrieb → Servereinstellungen — dort, wo auch die Grenze steht,
+         * gegen die sie gemessen werden. Was hier bleibt, ist die Frage, die
+         * auf DIESE Seite gehoert: Ist ueberhaupt gesichert worden, und wohin
+         * gehen die Pakete von hier aus? */ ?>
     <?php ui_karte_start(['titel' => 'Ablage']); ?>
       <?php
-      ui_zeile(['text' => 'Pfad', 'klein' => edbak_wurzel()]);
       ui_zeile(['text' => 'Zustand',
+                'klein' => $ablageBereit
+                    ? 'Die Ablage ist bereit — Pfad, Belegung und Reste unter '
+                    . 'Servereinstellungen'
+                    : 'Ohne beschreibbare Ablage entsteht kein Backup',
                 'plaketten' => $ablageBereit
-                    ? ui_plakette('bereit · beschreibbar', ['ton' => 'blau'])
-                    : ui_plakette('nicht bereit', ['ton' => 'rot'])]);
+                    ? ui_plakette('bereit', ['ton' => 'blau'])
+                    : ui_plakette('nicht bereit', ['ton' => 'rot']),
+                'href' => 'betrieb_server.php']);
       ui_zeile(['text' => 'Letztes Backup',
                 'klein' => $letzte ? fmt_local($letzte . ' 00:00:00', 'd.m.Y') : 'noch keine',
                 'plaketten' => $letzte ? '' : ui_plakette('nie', ['ton' => 'rot'])]);
-      ui_zeile(['text' => 'Ordner', 'klein' => $ablage['ordner'] . ' Konten haben eine Ablage']);
-      /* BELEGUNG GEGEN DIE GRENZE (E-S2-15). Die Zahl misst das GANZE
-         Verzeichnis, nicht nur die Pakete — es fuellt sich auch mit dem,
-         was nicht auf der Paketliste steht. */
-      ui_zeile(['text' => 'Belegt',
-                'klein' => edbak_groesse_text($speicher['bytes']) . ' von '
-                         . edbak_groesse_text($speicher['grenze']) . ' · '
-                         . $speicher['pakete'] . ' Pakete',
-                'plaketten' => $speicher['voll']
-                    ? ui_plakette($speicher['prozent'] . ' %', ['ton' => 'rot'])
-                    : ($offeneSchwellen
-                        ? ui_plakette($speicher['prozent'] . ' %', ['ton' => 'orange'])
-                        : ui_plakette($speicher['prozent'] . ' %', ['ton' => 'blau']))]);
-      if ($speicher['reste'] > 0) {
-          /* LIEGENGEBLIEBENES WIRD GENANNT (S2/AP6). Bis Web 11.2.0 war ein
-             abgebrochener Lauf unsichtbar: Sein Rest zaehlte auf der Platte,
-             stand in keiner Liste und blockierte das Loeschen des Ordners. */
-          ui_zeile(['text' => 'Reste abgebrochener Läufe',
-                    'klein' => edbak_groesse_text($speicher['sonstige_bytes'])
-                             . ' liegen ausserhalb der Pakete',
-                    'plaketten' => ui_plakette($speicher['reste'] . ' Reste',
-                                               ['ton' => 'orange'])]);
-      }
+      ui_zeile(['text' => 'Ordner', 'klein' => $ablage['ordner'] . ' Konten haben eine Ablage',
+                'plaketten' => ui_plakette((string)$ablage['pakete'] . ' Pakete',
+                                           ['ton' => 'neutral'])]);
       ?>
       <p class="feld-hinweis"><strong>Wohin sie von hier aus gehen</strong>, steht unter
          <a href="admin_sicherungsziele.php">Backup-Ziele</a> — FTP-, FTPS- oder
