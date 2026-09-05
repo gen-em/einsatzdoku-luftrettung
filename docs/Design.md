@@ -736,52 +736,57 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | Datei | Herkunft (Tabler-Name) | Nennungen im Code |
 |---|---|--:|
 | `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
-| `balken.svg` | Tabler Icons „chart-bar" (MIT) | 4 |
-| `datenbank.svg` | Tabler Icons „database" (MIT) | 15 |
+| `aktualisieren.svg` | Tabler Icons „refresh" (MIT) | 1 |
+| `balken.svg` | Tabler Icons „chart-bar" (MIT) | 1 |
+| `datenbank.svg` | Tabler Icons „database" (MIT) | 10 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
-| `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
+| `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 20 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 0 |
-| `gruppe.svg` | Tabler Icons „users" (MIT) | 21 |
+| `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 23 |
-| `haus.svg` | Tabler Icons „home" (MIT) | 3 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 21 |
+| `haus.svg` | Tabler Icons „home" (MIT) | 4 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 19 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
-| `kalender.svg` | Tabler Icons „calendar" (MIT) | 6 |
+| `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 2 |
-| `kolben.svg` | Tabler Icons „flask" (MIT) | 4 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
+| `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 21 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 8 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 8 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 16 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 15 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 4 |
-| `profil.svg` | Tabler Icons „user" (MIT) | 13 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 17 |
+| `profil.svg` | Tabler Icons „user" (MIT) | 12 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 23 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
-| `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 3 |
+| `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 9 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 9 |
-| `sicherung.svg` | Tabler Icons „archive" (MIT) | 12 |
+| `server.svg` | Tabler Icons „server" (MIT) | 6 |
+| `sicherung.svg` | Tabler Icons „archive" (MIT) | 10 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
-| `standort.svg` | Tabler Icons „map-pin" (MIT) | 5 |
+| `standort.svg` | Tabler Icons „map-pin" (MIT) | 4 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 27 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 9 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 7 |
-| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 14 |
-| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 278 |
+| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 11 |
+| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
+| `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
-| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 27 |
-| `werkzeug.svg` | Tabler Icons „tool" (MIT) | 2 |
-| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 15 |
+| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 26 |
+| `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
+| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 13 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
+| `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 27 |
 
-44 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
-**Nirgends genannt:** `geraet-entkoppeln`, `luftlinie`, `reanimation`.
+49 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
+**Nirgends genannt:** `geraet-entkoppeln`, `luftlinie`, `reanimation`, `werkzeug`.
 
 ## 9. Bausteine
 

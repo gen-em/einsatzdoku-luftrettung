@@ -154,7 +154,7 @@ Namen nicht weiterführen. Hier wird nichts verändert.
 `server/assets/images/symbole/LICENSE-tabler-icons.txt`
 (© 2020–2026 Paweł Kuna).
 
-44 Dateien unter `server/assets/images/symbole/`, je Zeichen eine Datei,
+49 Dateien unter `server/assets/images/symbole/`, je Zeichen eine Datei,
 24 × 24, Strich 2 px, Farbe über `currentColor`. Jede Datei trägt im Kommentar
 ihren Tabler-Namen; die Zuordnungstabelle steht in der `LIESMICH.md` daneben.
 Eine erzeugte Übersicht liefert `python3 tools/design/tabellen.py symbole`.
