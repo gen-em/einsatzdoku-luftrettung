@@ -59,15 +59,31 @@ zählt, sondern gar nicht zählt — und ein Lauf, der abbricht, meldet keine Nu
 gefahren haben, ohne es zu bemerken; sie ist in dieser Zeit schlicht nicht
 gelaufen.
 
-Derselbe Merge hat die zweite Hälfte derselben Änderung zerrissen: Er nahm die
-Formulierung „Die Uhr-App hält es genauso" aus dem einen Elternteil und die
-darauf gemünzte Ausnahme aus dem anderen. Deshalb stand die Ausnahme
-`technik-abgrenzung-beide-uhren` anschließend ungenutzt da. Wiederhergestellt
-ist der Wortlaut aus S5 Paket E — „Die **Garmin**-Uhr hält es genauso" —, und
-zwar aus dem Grund, den die Ausnahme selbst nennt: Der Satz steht im
-Android-Kapitel und vergleicht die Wear-OS-Uhr mit der Connect-IQ-Uhr. Genau
-dort ist „Uhr-App" zweideutig, und der Markenname ist die Unterscheidung
-(Klasse G, E-P2-15).
+**Dahinter kam ein zweiter Fehler zum Vorschein, und der Bruch hat ihn
+verdeckt.** Zwei Zweige haben denselben Wortliste-Treffer gegensätzlich
+gelöst, jeder für sich schlüssig:
+
+- `23b8a67` (Android 0.10.2, 03.09.) trug für den Satz „Die Garmin-Uhr hält es
+  genauso" in `docs/Technik.md` die Ausnahme `technik-abgrenzung-beide-uhren`
+  ein — mit Begründung: Der Satz steht im Android-Kapitel und vergleicht die
+  Wear-OS-Uhr mit der Connect-IQ-Uhr; dort ist „Uhr-App" zweideutig, und der
+  Markenname ist die Unterscheidung (Klasse G, E-P2-15).
+- `e97e85c` (android v0.11.0, 04.09.) schrieb auf dem anderen Zweig denselben
+  Satz auf „Die Uhr-App hält es genauso" um. Dort gab es die Ausnahme nicht,
+  die Wortliste meldete „Garmin" als unerklärten Treffer, und das Umschreiben
+  brachte sie zum Schweigen. Ohne Changelog-Eintrag und ohne Eintrag in
+  `ausnahmen.json`.
+
+Der Merge nahm den Text des einen Zweigs und die Ausnahme des anderen. Damit
+stand eine Ausnahme ohne Fundstelle da — und **genau das hätte die Wortliste
+gemeldet**, wäre sie nicht im selben Merge unbrauchbar geworden. Der eine
+Fehler hat den anderen zugedeckt.
+
+Aufgelöst zugunsten des Markennamens: „Die **Garmin**-Uhr hält es genauso."
+Das ist eine Abwägung, keine Wiederherstellung — die Ausnahme trägt ein
+ausformuliertes Argument für diese eine Stelle, das Umschreiben trug keines.
+Wer es anders sieht, dreht den Satz um **und** streicht die Ausnahme; beides
+zusammen, sonst steht der nächste Lauf wieder auf 1.
 
 Danach: 80 Regeln, 80 gegriffen, 0 ungenutzt, 0 Treffer außerhalb der
 Ausnahmen, 0 durchgerutschte Teilstring-Fallen, Rückgabewert 0.
