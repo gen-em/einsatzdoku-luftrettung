@@ -23,7 +23,7 @@ require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste
  * seine Zeile suchen.
  *
  * Jetzt liegt alles zu EINEM Konto hier: Kontodaten in einem Formular mit
- * einem Speichern, Geraete, Backups, Abonnement (Platz fuer R33) und die
+ * einem Speichern, Geraete, Konto-Backups und die
  * Loeschung als abgesetzte Gefahrenzone. admin_sicherungen.php behaelt nur
  * die REGELN (O9c).
  *
@@ -239,7 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'sichern') {
         [$ok, $grund, $erg] = edbak_sicherung_erzeugen($uid);
         if ($ok) {
-            $notice = 'Backup erzeugt.'
+            $notice = 'Konto-Backup erzeugt.'
                 . (!empty($erg['verdraengt'])
                     ? ' ' . count($erg['verdraengt']) . ' ältere verdrängt.'
                     : '');
@@ -267,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
-            $error = 'Das Backup liess sich nicht lesen.';
+            $error = 'Das Paket liess sich nicht lesen.';
         } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Kontos überein — es wurde nichts eingespielt.';
@@ -277,12 +277,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Einspielen nicht möglich. ' . $warum;
             } elseif ($weg === 'freigabe') {
                 $error = 'Unmittelbares Einspielen ist gesperrt. ' . $warum
-                       . ' Bitte stattdessen das Backup für dieses Konto freigeben.';
+                       . ' Bitte stattdessen das Paket für dieses Konto freigeben.';
             } else {
                 try {
                     [$okE, $grundE, $bericht] =
                         edbak_paket_zurueckspielen($kennung, $datei, $uid);
-                    if ($okE) { $notice = 'Backup eingespielt.'; }
+                    if ($okE) { $notice = 'Konto-Backup eingespielt.'; }
                     else { $error = (string)$grundE; }
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
@@ -299,7 +299,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
-            $error = 'Das Backup liess sich nicht lesen.';
+            $error = 'Das Paket liess sich nicht lesen.';
         } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Zielkontos überein — es wurde nichts freigegeben.';
@@ -331,9 +331,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht überein — es wurde '
                    . 'nichts gelöscht.';
         } elseif (edbak_paket_loeschen($kennung, $datei)) {
-            $notice = 'Backup gelöscht.';
+            $notice = 'Paket gelöscht.';
         } else {
-            $error = 'Das Backup liess sich nicht löschen.';
+            $error = 'Das Paket liess sich nicht löschen.';
         }
     }
 
@@ -380,9 +380,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * Ein Konto zu entfernen und das Backup stehen zu lassen,
                  * OBWOHL das Gegenteil gewählt wurde, wäre die schlechteste
                  * der drei möglichen Ausgänge. */
-                $error = 'Die Backups dieses Kontos liessen sich nicht entfernen — '
-                       . 'das Konto wurde deshalb NICHT gelöscht. Bitte unter '
-                       . '„Backups" nachsehen.';
+                $error = 'Die Konto-Backups dieses Kontos liessen sich nicht '
+                       . 'entfernen — das Konto wurde deshalb NICHT gelöscht. Bitte '
+                       . 'unter „Konto-Backups" nachsehen.';
             } else {
                 /* DIE SPUREN ZUERST, UND AUSDRUECKLICH (F-S2-B, S2/AP1).
                  *
@@ -465,6 +465,19 @@ $zielkonten = db()->prepare('SELECT id, email FROM users WHERE id <> ? ORDER BY 
 $zielkonten->execute([$uid]);
 $zielkonten = $zielkonten->fetchAll();
 
+/* WER BEKOMMT DIE FREIGABE? (S8/AP3, B-S8-09) In der Begleitdatei steht nur
+ * die Kennung des Zielkontos. Fuer die Zustandszeile braucht es die Adresse —
+ * eine Abfrage, und nur dann, wenn ueberhaupt etwas freigegeben ist. Ist das
+ * Zielkonto inzwischen geloescht, bleibt der Platz leer statt einer erfundenen
+ * Adresse; die Freigabe selbst ist damit wirkungslos und laesst sich
+ * widerrufen. */
+$freigabeZiel = null;
+if ($freigabe && (int)($freigabe['ziel_user'] ?? 0) > 0) {
+    $fz = db()->prepare('SELECT email FROM users WHERE id = ?');
+    $fz->execute([(int)$freigabe['ziel_user']]);
+    $freigabeZiel = $fz->fetchColumn() ?: null;
+}
+
 /** Ist das Paket formal lesbar?
  *
  *  Seit S2/AP6 nur noch der KOPF: Bei Fassung 2 ist das das Manifest im ZIP,
@@ -517,7 +530,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   </form>
   <?php if ($freigabe): ?>
     <form method="post" id="f-widerrufen" hidden
-          data-confirm="Freigabe widerrufen? Die NutzerIn sieht das Backup danach nicht mehr."
+          data-confirm="Freigabe widerrufen? Die NutzerIn sieht das Paket danach nicht mehr."
           data-confirm-ok="Widerrufen">
       <?= csrf_field() ?><input type="hidden" name="action" value="widerrufen">
       <input type="hidden" name="id" value="<?= $uid ?>">
@@ -748,14 +761,59 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
              hergestellt — ein Backup davon waere eine Kopie einer Datei,
              die ohnehin im Git liegt. */ ?>
     <?php if (!$istDemo): ?>
-    <?php ui_karte_start(['titel' => 'Backups', 'zahl' => (string)count($pakete),
-                          'plakette' => ui_plakette($standText, ['ton' => $standTon])]); ?>
+    <?php /* „JETZT SICHERN" IST DIE KARTENAKTION (Mockup 08). Sie stand
+             bisher nur als Knopf am Kartenfuss und ein zweites Mal in der
+             Titelzeile — am Kartenkopf steht sie dort, wo die Karte sagt,
+             worum es geht, und der Fuss bleibt den seltenen Wegen. */ ?>
+    <?php ui_karte_start(['titel' => 'Konto-Backups', 'zahl' => (string)count($pakete),
+                          'id' => 'k-konto-backups',
+                          'plakette' => ui_plakette($standText, ['ton' => $standTon]),
+                          'aktion' => ['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
+                                       'art' => 'blau', 'form' => 'f-sichern']]); ?>
       <?php if ($kennung === ''): ?>
         <?= ui_meldung_markup('warn', 'Diesem Konto fehlt die Kontokennung. Bitte zuerst '
-            . 'die Wartung aufrufen und die Migration ausführen — ohne Kennung lässt '
+            . 'unter Betrieb → Updates die Migration ausführen — ohne Kennung lässt '
             . 'sich das Konto nicht sichern.') ?>
       <?php elseif (!$pakete): ?>
-        <p class="feld-hinweis">Für dieses Konto gibt es noch kein Backup.</p>
+        <p class="feld-hinweis">Für dieses Konto gibt es noch kein Konto-Backup.</p>
+      <?php endif; ?>
+
+      <?php /* ---- Zustandszeile der Freigabe (B-S8-09) --------------------
+           *
+           * DIE FREIGABE WAR EIN ZUSTAND OHNE ANZEIGE. Sichtbar war sie nur
+           * als Plakette „freigegeben" an einer Paketzeile und als Eintrag
+           * „Freigabe widerrufen" im Aktionsmenü — wer nicht danach suchte,
+           * sah nicht, dass ein Paket dieses Kontos gerade fuer jemand
+           * anderen offensteht. Sie sagt jetzt in einem Satz: fuer wen, seit
+           * wann, welches Paket, und was die andere Seite noch tun muss. */ ?>
+      <?php if ($freigabe): ?>
+        <?php
+          $fDatei = (string)($freigabe['datei'] ?? '');
+          $fZeit  = null;
+          foreach ($pakete as $pk) {
+              if ((string)$pk['datei'] === $fDatei) { $fZeit = edbak_zeitpunkt_text($pk['erzeugt']); break; }
+          }
+          $fSeit = !empty($freigabe['erstellt'])
+              ? fmt_local(str_replace(['T', 'Z'], [' ', ''], (string)$freigabe['erstellt']), 'd.m.Y')
+              : null;
+          /* ui_meldung_markup() maskiert seinen Text — Fettdruck geht nur
+             ueber den Auftakt, und der ist genau die eine Angabe, die man
+             sucht: fuer WEN. */
+          $fAuftakt = 'Freigegeben für '
+                    . ($freigabeZiel !== null ? (string)$freigabeZiel : 'ein gelöschtes Konto')
+                    . ($fSeit !== null ? ', seit ' . $fSeit : '') . '.';
+          $fText = ($fZeit !== null ? 'Das Paket vom ' . $fZeit . '. ' : '')
+                 . 'Die NutzerIn spielt es in ihrem eigenen Backup-Bereich mit ihrem '
+                 . 'Wiederherstellungsschlüssel ein; die Verwaltung kann das nicht '
+                 . 'für sie tun.'
+                 . ($freigabeZiel === null
+                     ? ' Das Zielkonto gibt es nicht mehr — die Freigabe läuft ins '
+                       . 'Leere und kann widerrufen werden.'
+                     : '');
+        ?>
+        <?= ui_meldung_markup('info', $fText, $fAuftakt,
+              ui_knopf(['text' => 'Widerrufen', 'art' => 'neutral',
+                        'attr' => ' form="f-widerrufen"'])) ?>
       <?php endif; ?>
       <?php foreach ($pakete as $i => $p):
         $istFreigabe = $freigabe && ($freigabe['datei'] ?? '') === $p['datei'];
@@ -784,26 +842,26 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         ]);
       endforeach; ?>
       <p class="feld-hinweis">Aufbewahrung: die letzten <?= edbak_aufbewahrung() ?> Pakete je
-         Konto (Einstellung unter <a href="admin_sicherungen.php">Konto-Backups</a>). Einspielen
-         ergänzt, ersetzt nicht; die Administration sieht keinen Klartext.</p>
-      <div class="listen-form-fuss">
-        <?= ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
-                      'art' => 'primaer', 'attr' => ' form="f-sichern"']) ?>
-        <?php if ($pakete): ?>
+         Konto (Einstellung unter <a href="admin_sicherungen.php">Konto-Backups</a>).
+         Das jüngste und ein freigegebenes bleiben immer. Einspielen ergänzt,
+         ersetzt nicht; die Administration sieht keinen Klartext.</p>
+      <?php if ($pakete): ?>
+        <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Für Zielkonto freigeben', 'symbol' => 'tausch',
                         'art' => 'neutral', 'typ' => 'button',
                         'attr' => ' data-dialog="dlg-freigeben"']) ?>
-        <?php endif; ?>
-      </div>
+        </div>
+      <?php endif; ?>
     <?php ui_karte_ende(); ?>
     <?php endif; /* !$istDemo */ ?>
 
-    <?php /* ---- Abonnement: reservierter Platz (R33) ---------------------- */ ?>
-    <?php ui_karte_start(['titel' => 'Abonnement', 'zahl' => 'ab P5']); ?>
-      <p class="feld-hinweis">Tarif, Laufzeit, Zahlungsstand und Rechnungen dieses Kontos.
-         Der Platz ist hier reserviert; der Inhalt kommt mit den Abomodellen
-         (Rahmenplan R33).</p>
-    <?php ui_karte_ende(); ?>
+    <?php /* DIE KARTE „ABONNEMENT · AB P5" IST FORT (S8/AP3, B-S8-11). Sie
+             stand seit Web 9.9.0 als reservierter Platz auf jeder Kontoseite
+             und sagte: Tarif, Laufzeit, Zahlungsstand — „kommt mit den
+             Abomodellen". Ein Kasten, der auf jeder Kontoseite eine Zusage
+             wiederholt, die niemand terminiert hat, ist kein Platzhalter,
+             sondern ein Versprechen. R33 steht im Rahmenplan; dort gehoert
+             es hin, und die Karte entsteht mit ihrem Inhalt. */ ?>
 
     <?php /* ---- Gefahrenzone ---------------------------------------------- */ ?>
     <?php ui_karte_start(['titel' => 'Konto löschen', 'klasse' => 'karte-gefahr',
@@ -829,16 +887,17 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <p class="feld-hinweis">Entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
            und Geräte <strong>endgültig</strong> — ohne Papierkorb, nicht rückgängig zu
            machen. Ob danach nichts mehr lesbar ist, hängt von der Wahl unten ab:
-           Bleiben die Backups erhalten, überleben sie die Löschung und erscheinen
-           unter „Backups" als Backup ohne Konto.</p>
+           Bleiben die Pakete erhalten, überleben sie die Löschung und erscheinen
+           unter <a href="admin_sicherungen.php">Konto-Backups</a> als „Backup ohne
+           Konto".</p>
         <form method="post" data-confirm="Konto endgültig löschen?"
               data-confirm-ok="Endgültig löschen">
           <?= csrf_field() ?><input type="hidden" name="action" value="user_delete">
           <input type="hidden" name="id" value="<?= $uid ?>">
-          <?php ui_feld(['name' => 'sicherungen_mit', 'label' => 'Backups dieses Kontos',
+          <?php ui_feld(['name' => 'sicherungen_mit', 'label' => 'Konto-Backups dieses Kontos',
                          'art' => 'select', 'wert' => '1', 'optionen' => [
                              '1' => 'mitlöschen (Vorgabe)',
-                             '0' => 'erhalten — erscheinen als Backup ohne Konto']]); ?>
+                             '0' => 'erhalten — erscheinen als „Backup ohne Konto"']]); ?>
           <?php ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse',
                          'pflicht' => true,
                          'attr' => 'autocomplete="off" placeholder="' . e((string)$u['email']) . '"',
@@ -860,7 +919,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?= csrf_field() ?><input type="hidden" name="action" value="einspielen">
       <input type="hidden" name="id" value="<?= $uid ?>">
       <input type="hidden" name="datei" data-fuell="datei">
-      <div class="dialog-kopf"><h2>Backup einspielen</h2></div>
+      <div class="dialog-kopf"><h2>Konto-Backup einspielen</h2></div>
       <div class="dialog-inhalt">
         <p>Paket <strong data-fuell="zeit"></strong> in
            <strong><?= e((string)$u['email']) ?></strong> einspielen. Vorhandenes bleibt
@@ -884,14 +943,14 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <input type="hidden" name="id" value="<?= $uid ?>">
       <input type="hidden" name="datei" data-fuell="datei">
       <input type="hidden" name="hart" data-fuell="hart">
-      <div class="dialog-kopf"><h2>Backup löschen</h2></div>
+      <div class="dialog-kopf"><h2>Paket löschen</h2></div>
       <div class="dialog-inhalt">
         <p>Paket <strong data-fuell="zeit"></strong> endgültig entfernen.</p>
         <?php if (count($pakete) === 1): ?>
           <?php ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse des Kontos',
                          'pflicht' => true,
                          'attr' => 'autocomplete="off" placeholder="' . e((string)$u['email']) . '"',
-                         'klein' => 'Es ist das letzte Backup dieses Kontos — '
+                         'klein' => 'Es ist das letzte Paket dieses Kontos — '
                                   . 'zur Bestätigung die Adresse abtippen.']); ?>
         <?php endif; ?>
       </div>
@@ -910,13 +969,13 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <input type="hidden" name="id" value="<?= $uid ?>">
       <div class="dialog-kopf"><h2>Für ein Zielkonto freigeben</h2></div>
       <div class="dialog-inhalt">
-        <p>Das freigegebene Backup erscheint im Backup-Bereich des Zielkontos.
-           Eingespielt wird sie dort von der NutzerIn selbst, mit ihrem
+        <p>Das freigegebene Paket erscheint im Backup-Bereich des Zielkontos.
+           Eingespielt wird es dort von der NutzerIn selbst, mit ihrem
            Wiederherstellungsschlüssel — die Administration sieht keinen Klartext.</p>
         <?php
         $paketwahl = [];
         foreach ($pakete as $p) { $paketwahl[(string)$p['datei']] = edbak_zeitpunkt_text($p['erzeugt']); }
-        ui_feld(['name' => 'datei', 'label' => 'Backup', 'art' => 'select',
+        ui_feld(['name' => 'datei', 'label' => 'Paket', 'art' => 'select',
                  'optionen' => $paketwahl]);
         $zielwahl = ['' => '— Konto wählen —'];
         foreach ($zielkonten as $z) { $zielwahl[(string)$z['id']] = (string)$z['email']; }

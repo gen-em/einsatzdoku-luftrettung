@@ -1142,8 +1142,14 @@ function ui_plakette(string $text, array $o = []): string
  * Zugeklappte Karten tragen den Winkel links im Kopf und eine Vorschau rechts
  * („keine", „vom Diensttag", „3 · 1 ausgewählt").
  *
- * $o: titel, zahl, aktion ['text','href','symbol','art'], zu (bool),
- *     vorschau, klasse, id
+ * $o: titel, zahl, aktion ['text','href','symbol','art','form','attr'],
+ *     zu (bool), vorschau, klasse, id, plakette
+ *
+ * DIE KOPFAKTION KANN AUCH EIN ABSENDEKNOPF SEIN (S8/AP3). „Jetzt sichern"
+ * auf der Kontoseite ist ein POST, kein Link — mit `form` wird aus dem <a>
+ * ein <button type="submit" form="…">, gleiche Klasse, gleiches Aussehen.
+ * Ein <form> um den Knopf ginge nicht: Der Kartenkopf steht bereits in einem
+ * Formular, und verschachtelte Formulare gibt es in HTML nicht.
  * ------------------------------------------------------------------------ */
 function ui_karte_start(array $o = []): void
 {
@@ -1185,11 +1191,18 @@ function ui_karte_start(array $o = []): void
         if (!empty($o['aktion'])) {
             $a = $o['aktion'];
             $art = (string)($a['art'] ?? 'blau');
-            echo '    <a class="karte-aktion karte-aktion-' . ui_e($art) . '" href="'
-               . ui_e((string)($a['href'] ?? '#')) . '"'
-               . (!empty($a['attr']) ? ' ' . (string)$a['attr'] : '') . '>'
-               . (!empty($a['symbol']) ? ui_symbol((string)$a['symbol']) : '')
-               . '<span>' . ui_e((string)($a['text'] ?? '')) . "</span></a>\n";
+            $k   = 'karte-aktion karte-aktion-' . ui_e($art);
+            $inhalt = (!empty($a['symbol']) ? ui_symbol((string)$a['symbol']) : '')
+                    . '<span>' . ui_e((string)($a['text'] ?? '')) . '</span>';
+            $extra = !empty($a['attr']) ? ' ' . (string)$a['attr'] : '';
+            if (!empty($a['form'])) {
+                echo '    <button type="submit" class="' . $k . '" form="'
+                   . ui_e((string)$a['form']) . '"' . $extra . '>' . $inhalt . "</button>\n";
+            } else {
+                echo '    <a class="' . $k . '" href="'
+                   . ui_e((string)($a['href'] ?? '#')) . '"' . $extra . '>'
+                   . $inhalt . "</a>\n";
+            }
         }
         echo "  </div>\n";
     }
