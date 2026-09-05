@@ -105,6 +105,33 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
         _upDown = trackUpDown && DeviceProfile.HAS_UP_DOWN;
     }
 
+    /* Die Erinnerung an eine fremde Taste wegraeumen.
+     *
+     * ZU RUFEN VON JEDER AKTION, DIE EINE ANSICHT SCHIEBT UND DIESEN DELEGATE
+     * DABEI AM LEBEN LAESST — also von jedem pushView. Sonst bleibt _fremdKey
+     * fuer immer gesetzt: Das Loslassen geht an die NEUE Ansicht, und der
+     * Zweig in onKeyReleased, der es wegraeumen wuerde, wird nie erreicht.
+     * Der Delegate haelt danach jeden START fuer eine Tastensperre und
+     * verschluckt ihn — bei JEDER Druckdauer.
+     *
+     * Am Geraet gemeldet und bestaetigt am 05.09.2026 (Fenix 6 Pro): Nach
+     * einem DOWN-Druck vom Startbildschirm auf die Sync-Seite und zurueck
+     * begann kein Druck auf START mehr den Dienst. Erst ein UP-Druck auf dem
+     * Startbildschirm machte ihn wieder gangbar — UP wechselt dort die Ansicht
+     * nicht, sein Loslassen kommt also an und raeumt _fremdKey weg.
+     *
+     * IM SIMULATOR IST DER FALL NICHT ZU ERZEUGEN: `xdotool key Down` drueckt
+     * und loest in derselben Millisekunde aus, das Loslassen erreicht noch den
+     * alten Delegate. Ein Daumen braucht Zehntelsekunden, und da ist die
+     * Ansicht laengst gewechselt. Wer den Fix nachmisst, braucht getrenntes
+     * keydown/keyup.
+     *
+     * switchToView und popView brauchen den Aufruf NICHT: Nav.build legt fuer
+     * jede Ansicht einen frischen Delegate an, und ein gepoppter wird
+     * verworfen. Nur der Delegate UNTER einem pushView ueberlebt den Wechsel —
+     * heute genau einer, StartDelegate. */
+    function fremdVergessen() as Void { _fremdKey = null; }
+
     // ---- Aktionen, von den Oberflaechen zu ueberschreiben -----------------
 
     function actPagePrev() as Lang.Boolean    { return true; }

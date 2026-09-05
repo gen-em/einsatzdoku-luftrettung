@@ -23,7 +23,7 @@ module Const {
      *        Bestehende Kopplungen sind davon nicht beruehrt: ingest.php und
      *        Vertragsabschnitt 1 aendern sich nicht.
      */
-    const APP_VERSION = "3.0.1";
+    const APP_VERSION = "3.0.2";
 
     /* Wie oft die Kopplungsansicht nachfragt, ob jemand den Code eingetragen
      * hat (E-S5-32, Vertrag 1a.2: "hoechstens alle fuenf Sekunden").

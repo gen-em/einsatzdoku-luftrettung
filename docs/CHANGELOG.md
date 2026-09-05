@@ -14,6 +14,55 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 3.0.2] — 2026-09-05
+
+### Uhr — nach einem Blick auf die Sync-Seite ließ sich kein Dienst mehr beginnen
+
+**Vom Gerät gemeldet, nicht vom Prüfstand.** Wer vom Startbildschirm mit DOWN
+auf die Sync-Seite ging und zurückkam, konnte danach mit START keinen Dienst
+mehr beginnen — weder mit einem sehr kurzen noch mit einem sehr langen Druck.
+Die App war damit in ihrer Hauptfunktion tot, bis sie neu gestartet wurde.
+
+Die Ursache liegt in `Input.mc` und ist älter als diese Fassung. `_fremdKey`
+merkt sich eine Taste, die diese Seite **nicht** verfolgt, damit ein
+anschließender START als Tastensperre der Uhr erkannt und geschluckt werden
+kann. Aufgeräumt wird die Erinnerung beim **Loslassen**:
+
+```
+if (k == _fremdKey) { _fremdKey = null; }
+```
+
+Auf dem Startbildschirm verfolgt `StartDelegate` UP und DOWN nicht. Ein
+DOWN-Druck wird also gemerkt und ans System durchgereicht, das daraus
+`onNextPage` macht — und `actPageNext()` schiebt die Sync-Seite mit
+`pushView`. **Die Ansicht wechselt beim Drücken; das Loslassen bekommt die
+neue Ansicht.** Der `StartDelegate` darunter überlebt und behält `_fremdKey`
+für immer. Jeder folgende START lief danach in den Sperr-Zweig und wurde
+verschluckt — unabhängig von der Druckdauer, weil `_combo` vor der Abfrage
+auf kurz oder lang steht.
+
+`actPageNext()` ruft jetzt `fremdVergessen()`, bevor es schiebt. `switchToView`
+und `popView` brauchen das nicht: `Nav.build` legt für jede Ansicht einen
+frischen Delegate an, und ein gepoppter wird verworfen. **Nur der Delegate
+unter einem `pushView` überlebt den Wechsel** — heute genau einer. Die Regel
+steht als Auftrag im Kopf von `fremdVergessen()`, damit der nächste
+`pushView` sie nicht neu lernen muss.
+
+**Was nicht belegt werden konnte, und das ist der wichtigere Teil.** Der
+Simulator gibt den Fehler nicht her. `xdotool key Down` drückt und löst in
+derselben Millisekunde aus; das Loslassen erreicht noch den alten Delegate.
+Auch getrenntes `keydown`/`keyup` mit 0,6 s und 1,2 s Haltezeit erzeugte ihn
+nicht — auf 3.0.1 begann der Dienst in beiden Läufen. **Die Behebung ist
+deshalb hier nicht nachgemessen**, sondern hergeleitet: aus dem Code und aus
+einer Vorhersage, die am Gerät eingetroffen ist. Nach der Lesart oben muss ein
+UP-Druck auf dem Startbildschirm die Sperre lösen, weil UP dort die Ansicht
+nicht wechselt und sein Loslassen deshalb ankommt. Genau das tut es (am Gerät
+bestätigt, 05.09.2026). Belegt ist im Simulator nur, dass die Änderung nichts
+bricht: Sync-Abstecher, Rückweg, Dienstbeginn und Reigen laufen unverändert.
+
+Der Grenzfall steht jetzt in `docs/Geraete-Eingabe.md` 6 — samt der Warnung,
+dass ein ausbleibender Fehlschlag dort **kein** Gegenbeweis ist.
+
 ## [Uhr 3.0.1] — 2026-09-05
 
 ### Uhr — die Sync-Seite vor Dienstbeginn ließ sich mit UP nicht verlassen

@@ -117,7 +117,14 @@ class StartDelegate extends ActionDelegate {
     function initialize() { ActionDelegate.initialize(false); }
 
     // Sync-Status & App-Version (kurz DOWN bzw. Wischen nach unten)
+    //
+    // VOR dem pushView die fremde Taste vergessen. Dieser Delegate bleibt
+    // unter der geschobenen Ansicht am Leben, aber das Loslassen von DOWN
+    // wird der neuen zugestellt — ohne das Wegraeumen hielte er danach jeden
+    // START fuer eine Tastensperre und verschluckte ihn. Begruendung und
+    // Messung: Input.mc, fremdVergessen().
     function actPageNext() as Lang.Boolean {
+        fremdVergessen();
         WatchUi.pushView(new SyncView(true), new SyncDelegate(true), WatchUi.SLIDE_UP);
         return true;
     }
