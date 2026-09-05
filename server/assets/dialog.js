@@ -26,6 +26,20 @@
  * der Öffner nichts sagt, bleibt unberührt — das ist der Grund für die
  * Schleife über die Attribute des Öffners und nicht über die Felder.
  *
+ * EIN AUSWAHLFELD, DESSEN EINTRÄGE ERST DER ÖFFNER KENNT (S8/AP3). „Backups
+ * ohne Konto" trägt eine Zeile je ORDNER, und welches PAKET eingespielt
+ * werden soll, wird im Dialog gewählt. Die Pakete unterscheiden sich je
+ * Ordner — ein festes <option>-Gerüst im Markup gäbe es also nicht. Deshalb
+ * baut ein `<select data-fuell-optionen="pakete">` seine Einträge aus dem
+ * Wert des Öffners:
+ *
+ *     data-w-pakete="datei1|03.08.2026 · 22:10 · vollständig\ndatei2|…"
+ *
+ * Eine Zeile je Eintrag, `wert|Beschriftung`. Der erste ist vorgewählt — die
+ * Liste kommt jüngstes zuerst, und das ist fast immer das gemeinte. Steht
+ * kein Wert bereit, bleibt das Feld leer statt mit einem geratenen Eintrag
+ * gefüllt.
+ *
  * OHNE showModal() PASSIERT NICHTS. <dialog> ist seit 2022 überall da; sollte
  * es doch fehlen, öffnet sich kein Dialog, statt dass ein halb sichtbares
  * Formular ohne Schleier stehen bleibt.
@@ -33,12 +47,30 @@
 (function () {
   'use strict';
 
+  /* Einträge eines Auswahlfelds aus „wert|Text" je Zeile bauen. */
+  function optionenSetzen(feld, wert) {
+    feld.innerHTML = '';
+    var zeilen = String(wert || '').split('\n');
+    for (var i = 0; i < zeilen.length; i++) {
+      if (!zeilen[i]) { continue; }
+      var trenn = zeilen[i].indexOf('|');
+      var o = document.createElement('option');
+      o.value = trenn < 0 ? zeilen[i] : zeilen[i].slice(0, trenn);
+      o.textContent = trenn < 0 ? zeilen[i] : zeilen[i].slice(trenn + 1);
+      feld.appendChild(o);
+    }
+    if (feld.options.length) { feld.selectedIndex = 0; }
+  }
+
   function fuellen(dialog, oeffner) {
     var attrs = oeffner.attributes;
     for (var i = 0; i < attrs.length; i++) {
       var name = attrs[i].name;
       if (name.indexOf('data-w-') !== 0) { continue; }
-      var ziel = dialog.querySelector('[data-fuell="' + name.slice(7) + '"]');
+      var schluessel = name.slice(7);
+      var liste = dialog.querySelector('[data-fuell-optionen="' + schluessel + '"]');
+      if (liste) { optionenSetzen(liste, attrs[i].value); }
+      var ziel = dialog.querySelector('[data-fuell="' + schluessel + '"]');
       if (!ziel) { continue; }
       if ('value' in ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'SELECT'
           || ziel.tagName === 'TEXTAREA')) {

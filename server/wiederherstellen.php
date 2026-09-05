@@ -539,7 +539,7 @@ ui_kopf(['menue' => false]);
       Konten. Eine Wiederherstellung würde sie überschreiben, und deshalb passiert
       hier nichts mehr.</p>
       <p class="feld-hinweis">Wer einen einzelnen Stand zurückholen will, tut das
-      angemeldet unter <a href="admin_sicherungen.php">Backups</a>. Wer wirklich
+      angemeldet unter <a href="admin_sicherungen.php">Konto-Backups</a>. Wer wirklich
       die ganze Installation ersetzen will, leert die Datenbank vorher mit dem
       Werkzeug des Hosters — eine bewusste Handlung an der richtigen Stelle.</p>
     <?php ui_karte_ende(); ?>

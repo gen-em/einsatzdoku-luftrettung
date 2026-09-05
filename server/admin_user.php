@@ -784,7 +784,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         ]);
       endforeach; ?>
       <p class="feld-hinweis">Aufbewahrung: die letzten <?= edbak_aufbewahrung() ?> Pakete je
-         Konto (Einstellung unter <a href="admin_sicherungen.php">Backups</a>). Einspielen
+         Konto (Einstellung unter <a href="admin_sicherungen.php">Konto-Backups</a>). Einspielen
          ergänzt, ersetzt nicht; die Administration sieht keinen Klartext.</p>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',

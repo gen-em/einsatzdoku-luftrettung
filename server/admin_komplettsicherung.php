@@ -400,7 +400,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
     schon dastand. Wer es genauer braucht, lässt nachts sichern.</p>
 
     <p class="feld-hinweis"><strong>Ein Konto einzeln</strong> holt man sich
-    nicht hier, sondern unter <a href="admin_sicherungen.php">Backups</a>.
+    nicht hier, sondern unter <a href="admin_sicherungen.php">Konto-Backups</a>.
     Diese Seite ist für den Fall „der Server ist weg", nicht für „jemand hat
     sich vertan".</p>
   <?php ui_karte_ende(true); ?>

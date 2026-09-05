@@ -715,7 +715,7 @@ function ui_leiste_einstellungen(string $aktiv): void
          * sich nur im Reiter unterschieden. Der Reiter gehoert in die Seite
          * (Segmentwahl in der Titelzeile), nicht in die Leiste. */
         'admin_stammdaten'  => ['admin_stammdaten.php',  'Stammdaten systemweit', 'datenbank'],
-        'admin_sicherungen' => ['admin_sicherungen.php', 'Backups',           'sicherung'],
+        'admin_sicherungen' => ['admin_sicherungen.php', 'Konto-Backups',     'sicherung'],
         /* BACKUP-ZIELE STEHEN DIREKT UNTER BACKUPS (S2/AP7). Sie sind
          * die Fortsetzung derselben Sache: erst die Regeln, dann wohin.
          * Das Symbol ist `tausch` — dasselbe wie bei Import/Export, und aus
@@ -812,7 +812,7 @@ function ui_einstellungen_uebersicht(): void
         $bloecke[] = ['Administration', [
             ['admin_users.php',      'NutzerInnen',           'gruppe'],
             ['admin_stammdaten.php', 'Stammdaten systemweit', 'datenbank'],
-            ['admin_sicherungen.php','Backups',           'sicherung'],
+            ['admin_sicherungen.php','Konto-Backups',     'sicherung'],
             ['admin_sicherungsziele.php', 'Backup-Ziele',   'tausch'],
             ['admin_komplettsicherung.php', 'Komplett-Backup', 'datenbank'],
             ['admin_installation.php','Installation',         'rechtstexte'],
