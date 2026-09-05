@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S8 · Mockup 01 — Menü in drei Blöcken</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ---- Token aus server/assets/style.css (Auszug, unverändert) ---------- */
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;
+  --asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;--auf-dunkel:#FFFFFF;
+  --auf-dunkel-flaeche:rgba(255,255,255,.14);--auf-dunkel-strich:rgba(255,255,255,.35);
+  --linie:#E3DAC6;--linie-stark:var(--gedaempft);
+  --orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;
+  --rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --schrift-text:'Open Sans',system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;--groesse-6:24px;--groesse-titel:28px;
+  --zeile:1.55;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --kopf:56px;--knopf:44px;--leiste:260px;--leiste-schmal:220px;--schublade:320px;
+  --symbol:20px;--symbol-gross:24px;--strich:1px;--strich-stark:2px;
+  --schleier:rgba(26,46,77,.55);
+}
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) --------------------------- */
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:var(--zeile)}
+.mock-kopf{padding:20px 24px 8px;max-width:1400px;margin:0 auto}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.mock-reihe{display:flex;flex-wrap:wrap;gap:28px;padding:16px 24px 40px;max-width:1400px;margin:0 auto;align-items:flex-start}
+.mock-frame{background:var(--rauch);border:1px solid #CFC7B5;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(26,46,77,.10);position:relative;flex:0 0 auto}
+.mock-label{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px}
+.mock-spalte{flex:0 0 auto}
+.frame-mobil{width:360px;height:740px}
+.frame-desktop{width:1280px;height:720px}
+@media (max-width:1380px){.frame-desktop{zoom:.72}}
+@media (max-width:760px){.frame-desktop{zoom:.27}}
+.mock-anmerkungen{max-width:1400px;margin:0 auto;padding:0 24px 48px}
+.mock-anmerkungen h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);color:var(--dunkelblau);margin:0 0 8px}
+.mock-anmerkungen ol{margin:0;padding-left:20px}
+.mock-anmerkungen li{margin-bottom:6px}
+.mock-marke{position:absolute;right:10px;top:10px;font-family:var(--schrift-kopf);font-size:11px;font-weight:600;color:var(--gedaempft);background:rgba(255,252,250,.85);padding:2px 6px;border-radius:6px;z-index:99}
+
+/* ---- Anwendung: Regeln aus style.css, für das Mockup zusammengezogen ---- */
+a{color:var(--blau-tief)}
+.symbol{width:var(--symbol);height:var(--symbol);flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
+.kopf{position:sticky;top:0;z-index:40;background:var(--dunkelblau);color:var(--auf-dunkel);height:var(--kopf)}
+.kopf-innen{display:flex;align-items:center;gap:var(--abstand-2);height:var(--kopf);padding:0 var(--abstand-3)}
+.knopf{display:inline-flex;align-items:center;justify-content:center;gap:var(--abstand-2);height:var(--knopf);padding:0 var(--abstand-4);border-radius:var(--radius);border:var(--strich-stark) solid transparent;font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-3);text-decoration:none;cursor:pointer;white-space:nowrap;background:none;color:inherit}
+.knopf-symbol{width:var(--knopf);padding:0}
+.knopf-leise{color:var(--gedaempft);padding:0 var(--abstand-2)}
+.knopf-breit{width:100%}
+.kopf .knopf{color:var(--auf-dunkel)}
+.kopf-menue{margin-left:-8px}
+.kopf-marke{display:flex;align-items:center;gap:var(--abstand-2);color:var(--auf-dunkel);text-decoration:none;min-width:0;flex:1 1 auto}
+.kopf-marke .logo{width:34px;height:34px;flex:0 0 auto}
+.kopf-name{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kopf-nutzer{display:none}
+.kopf-punkte{display:flex;align-items:center;gap:var(--abstand-1);margin-left:auto}
+.kopf-punkt{display:none;align-items:center;gap:var(--abstand-1);height:var(--knopf);padding:0 var(--abstand-3);color:var(--auf-dunkel);text-decoration:none;border-bottom:var(--strich-stark) solid transparent;font-family:var(--schrift-kopf);font-weight:600}
+.kopf-punkt.aktiv{border-bottom-color:var(--orange)}
+.kopf-zahnrad{margin-right:-8px}
+.kopf-zahnrad.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
+.rahmen{display:flex;align-items:flex-start}
+.inhalt{flex:1 1 auto;min-width:0;padding:var(--abstand-4) var(--abstand-3) var(--abstand-5)}
+.leiste{position:absolute;inset:0 auto 0 0;z-index:60;width:86%;max-width:var(--schublade);background:var(--schnee);border-right:var(--strich) solid var(--linie);display:flex;flex-direction:column;transform:translateX(-100%)}
+.schublade-auf .leiste{transform:none}
+.schleier{position:absolute;inset:0;z-index:50;background:var(--schleier);display:none}
+.schublade-auf .schleier{display:block}
+.leiste-kopf{display:flex;align-items:center;gap:var(--abstand-2);height:var(--kopf);flex:0 0 auto;padding:0 var(--abstand-3);border-bottom:var(--strich) solid var(--linie);color:var(--dunkelblau)}
+.leiste-haupt{padding:var(--abstand-3) var(--abstand-2) 0;flex:0 0 auto}
+.leiste-liste{flex:1 1 auto;overflow-y:auto;padding:var(--abstand-2)}
+.leiste-fuss{flex:0 0 auto;padding:var(--abstand-2);border-top:var(--strich) solid var(--linie)}
+.eintrag{display:flex;align-items:center;gap:var(--abstand-2);min-height:var(--knopf);padding:0 var(--abstand-2);border-radius:var(--radius-klein);border-left:var(--abstand-1) solid transparent;color:var(--asphalt);text-decoration:none}
+.eintrag .symbol{color:var(--dunkelblau)}
+.eintrag-text{flex:1 0 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--schrift-kopf);font-weight:400}
+.eintrag.aktiv{background:var(--orange-hell);border-left-color:var(--orange)}
+.eintrag.aktiv .eintrag-text{color:var(--dunkelblau);font-weight:600}
+.eintrag-leise .symbol,.eintrag-leise .eintrag-text{color:var(--gedaempft)}
+.rueckweg{display:inline-flex;align-items:center;gap:var(--abstand-1);min-height:var(--knopf);color:var(--blau-tief);font-weight:600;text-decoration:none}
+.nur-schublade{display:block}
+.titelzeile{margin-bottom:var(--abstand-4)}
+.seitentitel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-titel);line-height:1.3;color:var(--dunkelblau);margin:0}
+.titelzeile-unter{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
+.karte{background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);margin-bottom:var(--abstand-5)}
+.karte-inhalt{padding:var(--abstand-2) var(--abstand-2)}
+.uebersicht-zeile{display:flex;align-items:center;gap:var(--abstand-3);min-height:calc(var(--knopf) + var(--abstand-3));padding:0 var(--abstand-2);border-bottom:var(--strich) solid var(--linie);color:var(--asphalt);text-decoration:none}
+.uebersicht-zeile:last-child{border-bottom:0}
+.uebersicht-zeile .symbol{color:var(--dunkelblau)}
+.uebersicht-text{flex:1 1 auto;min-width:0;font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4)}
+.uebersicht-winkel{color:var(--sand)}
+.uebersicht-block{font-family:var(--schrift-kopf);font-size:var(--groesse-1);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gedaempft);margin:var(--abstand-5) 0 var(--abstand-2) var(--abstand-1)}
+.plakette{display:inline-flex;align-items:center;gap:var(--abstand-1);padding:2px var(--abstand-2);border-radius:var(--radius-klein);font-size:var(--groesse-1);font-weight:600;white-space:nowrap;line-height:1.4}
+.plakette-neutral{background:var(--rauch);color:var(--gedaempft);border:var(--strich) solid var(--linie)}
+
+/* ---- NEU (E-S8-07): Gruppen als <details> in der Leiste ---------------- */
+.leiste-gruppe{margin-bottom:var(--abstand-2)}
+.leiste-gruppe > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:var(--abstand-2);font-family:var(--schrift-kopf);font-size:var(--groesse-3);font-weight:600;color:var(--asphalt);padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);min-height:var(--knopf);box-sizing:border-box;border-radius:var(--radius-klein)}
+.leiste-gruppe > summary::-webkit-details-marker{display:none}
+.leiste-gruppe > summary:hover{background:var(--rauch)}
+.leiste-gruppe > summary .gruppen-winkel{margin-left:auto;color:var(--sand);transition:transform .18s ease-out}
+.leiste-gruppe[open] > summary .gruppen-winkel{transform:rotate(90deg)}
+.leiste-gruppe > summary .gruppen-zahl{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2)}
+.leiste-gruppe:not([open]) > summary .gruppen-zahl{display:inline}
+.leiste-gruppe[open] > summary .gruppen-zahl{display:none}
+
+/* ---- Schreibtisch (≥ 1024): dieselben Klassen, andere Lage -------------- */
+.desktop .leiste{position:sticky;inset:auto;top:var(--kopf);z-index:1;width:var(--leiste);max-width:none;height:calc(720px - var(--kopf));transform:none;flex:0 0 auto}
+.desktop .schleier{display:none}
+.desktop .kopf-menue{display:none}
+.desktop .kopf-punkt{display:inline-flex}
+.desktop .kopf-nutzer{display:inline-block;color:var(--sand);font-size:var(--groesse-3);font-weight:400;line-height:1;white-space:nowrap}
+.desktop .nur-schublade{display:none}
+.desktop .inhalt{padding:var(--abstand-5) var(--abstand-5)}
+.desktop .seitentitel{font-size:30px}
+.desktop .uebersicht-raster{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--abstand-5);align-items:start}
+.desktop .uebersicht-raster .uebersicht-block{margin-top:0}
+</style>
+</head>
+<body>
+
+<div class="mock-kopf">
+  <h1>S8 · Mockup 01 — Das Menü in drei Blöcken</h1>
+  <p>E-S8-04 (Einstellungen · Verwaltung · Betrieb), E-S8-07 (Gruppen auf- und zuklappbar, Fettdruck nur aktiv), E-S8-14 (kein „Stammdaten systemweit"). Angemeldet ist eine BetreiberIn; aktive Seite: Konto-Backups. Symbole sind Platzhalter aus dem Vorrat.</p>
+</div>
+
+<div class="mock-reihe">
+
+  <!-- ===================== A · Mobil: Übersichtsseite ===================== -->
+  <div class="mock-spalte">
+    <p class="mock-label">A · 360 px — Übersicht (Zahnrad)</p>
+    <div class="mock-frame frame-mobil">
+      <span class="mock-marke">A</span>
+      <header class="kopf"><div class="kopf-innen">
+        <button class="knopf knopf-symbol kopf-menue" aria-label="Menü öffnen"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <a class="kopf-marke" href="#"><svg class="logo" viewBox="0 0 34 34"><rect x="3" y="14" width="18" height="10" rx="3" fill="#FFF"/><path d="M6 11h26M20 14l6 -3" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/><rect x="21" y="16" width="6" height="7" rx="1.5" fill="#FF8F1F"/><rect x="27" y="17" width="4" height="6" rx="1.5" fill="#4280E5"/><rect x="9" y="16" width="9" height="7" rx="1.5" fill="#D63338"/></svg><span class="kopf-name">Gen-EM Einsatzdoku</span></a>
+        <nav class="kopf-punkte"><a class="knopf knopf-symbol kopf-zahnrad aktiv" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a></nav>
+      </div></header>
+      <div class="rahmen"><main class="inhalt">
+        <div class="titelzeile"><h1 class="seitentitel">Einstellungen</h1><div class="titelzeile-unter">Philipp Chadid · BetreiberIn</div></div>
+
+        <div class="karte"><div class="karte-inhalt">
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="uebersicht-text">Profil</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><rect x="7" y="5" width="10" height="14" rx="3"/><path d="M9 5V2h6v3M9 19v3h6v-3M12 9v3l2 1"/></svg><span class="uebersicht-text">Geräte</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M12 22s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><span class="uebersicht-text">Standorte</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M3 15V9h11l4 4h3v4h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 17h6"/></svg><span class="uebersicht-text">Rettungsmittel</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="uebersicht-text">Backup</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg><span class="uebersicht-text">Import / Export</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+        </div></div>
+
+        <h2 class="uebersicht-block">Verwaltung</h2>
+        <div class="karte"><div class="karte-inhalt">
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6M16 14c3 0 6 2 6 5"/></svg><span class="uebersicht-text">NutzerInnen</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="uebersicht-text">Konto-Backups</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/></svg><span class="uebersicht-text">Installation</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7 15h10"/></svg><span class="uebersicht-text">Demo-Konto</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+        </div></div>
+
+        <h2 class="uebersicht-block">Betrieb</h2>
+        <div class="karte"><div class="karte-inhalt">
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg><span class="uebersicht-text">Serverbetrieb</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg><span class="uebersicht-text">Updates</span><span class="plakette plakette-neutral">1 offen</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span class="uebersicht-text">Komplett-Backup</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg><span class="uebersicht-text">Backup-Ziele</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+        </div></div>
+
+        <div class="karte"><div class="karte-inhalt" style="padding:var(--abstand-2)">
+          <a class="knopf knopf-leise knopf-breit" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg>Abmelden</a>
+        </div></div>
+      </main></div>
+    </div>
+  </div>
+
+  <!-- ===================== B · Mobil: Schublade offen ===================== -->
+  <div class="mock-spalte">
+    <p class="mock-label">B · 360 px — Schublade auf einer Unterseite</p>
+    <div class="mock-frame frame-mobil schublade-auf">
+      <span class="mock-marke">B</span>
+      <header class="kopf"><div class="kopf-innen">
+        <button class="knopf knopf-symbol kopf-menue" aria-label="Menü öffnen"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <a class="kopf-marke" href="#"><svg class="logo" viewBox="0 0 34 34"><rect x="3" y="14" width="18" height="10" rx="3" fill="#FFF"/><path d="M6 11h26M20 14l6 -3" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/><rect x="21" y="16" width="6" height="7" rx="1.5" fill="#FF8F1F"/><rect x="27" y="17" width="4" height="6" rx="1.5" fill="#4280E5"/><rect x="9" y="16" width="9" height="7" rx="1.5" fill="#D63338"/></svg><span class="kopf-name">Gen-EM Einsatzdoku</span></a>
+        <nav class="kopf-punkte"><a class="knopf knopf-symbol kopf-zahnrad aktiv" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a></nav>
+      </div></header>
+      <div class="schleier"></div>
+      <div class="rahmen">
+        <aside class="leiste">
+          <div class="leiste-kopf nur-schublade"><button class="knopf knopf-symbol" aria-label="Menü schließen"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><span class="kopf-name">Einsatzdoku</span></div>
+          <nav class="leiste-haupt nur-schublade">
+            <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="eintrag-text">Startseite</span></a>
+            <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span class="eintrag-text">Suche</span></a>
+          </nav>
+          <div class="leiste-liste">
+            <details class="leiste-gruppe" open>
+              <summary>Einstellungen <span class="gruppen-zahl">· 6</span><svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="eintrag-text">Profil</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><rect x="7" y="5" width="10" height="14" rx="3"/><path d="M9 5V2h6v3M9 19v3h6v-3M12 9v3l2 1"/></svg><span class="eintrag-text">Geräte</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 22s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><span class="eintrag-text">Standorte</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 15V9h11l4 4h3v4h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 17h6"/></svg><span class="eintrag-text">Rettungsmittel</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="eintrag-text">Backup</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg><span class="eintrag-text">Import / Export</span></a>
+            </details>
+            <details class="leiste-gruppe" open>
+              <summary>Verwaltung <span class="gruppen-zahl">· 4</span><svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6M16 14c3 0 6 2 6 5"/></svg><span class="eintrag-text">NutzerInnen</span></a>
+              <a class="eintrag aktiv" href="#" aria-current="page"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="eintrag-text">Konto-Backups</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/></svg><span class="eintrag-text">Installation</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7 15h10"/></svg><span class="eintrag-text">Demo-Konto</span></a>
+            </details>
+            <details class="leiste-gruppe">
+              <summary>Betrieb <span class="gruppen-zahl">· 4</span><svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/></svg><span class="eintrag-text">Serverbetrieb</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg><span class="eintrag-text">Updates</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span class="eintrag-text">Komplett-Backup</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg><span class="eintrag-text">Backup-Ziele</span></a>
+            </details>
+          </div>
+          <div class="leiste-fuss">
+            <a class="eintrag eintrag-leise" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg><span class="eintrag-text">Abmelden</span></a>
+          </div>
+        </aside>
+        <main class="inhalt">
+          <a class="rueckweg nur-schublade" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg><span>Einstellungen</span></a>
+          <div class="titelzeile"><h1 class="seitentitel">Konto-Backups</h1></div>
+          <div class="karte"><div class="karte-inhalt" style="padding:var(--abstand-4);color:var(--gedaempft)">… Seiteninhalt (Mockup 04)</div></div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== C · Schreibtisch 1280 ===================== -->
+  <div class="mock-spalte" style="flex-basis:100%">
+    <p class="mock-label">C · 1280 px — Leiste fest daneben, Übersicht in drei Spalten</p>
+    <div class="mock-frame frame-desktop desktop">
+      <span class="mock-marke">C</span>
+      <header class="kopf"><div class="kopf-innen">
+        <a class="kopf-marke" href="#"><svg class="logo" viewBox="0 0 34 34"><rect x="3" y="14" width="18" height="10" rx="3" fill="#FFF"/><path d="M6 11h26M20 14l6 -3" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/><rect x="21" y="16" width="6" height="7" rx="1.5" fill="#FF8F1F"/><rect x="27" y="17" width="4" height="6" rx="1.5" fill="#4280E5"/><rect x="9" y="16" width="9" height="7" rx="1.5" fill="#D63338"/></svg><span class="kopf-name">Gen-EM Einsatzdoku</span><span class="kopf-nutzer">Philipp Chadid</span></a>
+        <nav class="kopf-punkte">
+          <a class="kopf-punkt" href="#"><svg class="symbol" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Startseite</span></a>
+          <a class="kopf-punkt" href="#"><svg class="symbol" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>Suche</span></a>
+          <a class="knopf knopf-symbol kopf-zahnrad aktiv" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
+        </nav>
+      </div></header>
+      <div class="rahmen">
+        <aside class="leiste">
+          <div class="leiste-liste">
+            <details class="leiste-gruppe" open>
+              <summary>Einstellungen<svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="eintrag-text">Profil</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><rect x="7" y="5" width="10" height="14" rx="3"/><path d="M9 5V2h6v3M9 19v3h6v-3M12 9v3l2 1"/></svg><span class="eintrag-text">Geräte</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 22s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><span class="eintrag-text">Standorte</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 15V9h11l4 4h3v4h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 17h6"/></svg><span class="eintrag-text">Rettungsmittel</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="eintrag-text">Backup</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg><span class="eintrag-text">Import / Export</span></a>
+            </details>
+            <details class="leiste-gruppe" open>
+              <summary>Verwaltung<svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6M16 14c3 0 6 2 6 5"/></svg><span class="eintrag-text">NutzerInnen</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="eintrag-text">Konto-Backups</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/></svg><span class="eintrag-text">Installation</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7 15h10"/></svg><span class="eintrag-text">Demo-Konto</span></a>
+            </details>
+            <details class="leiste-gruppe" open>
+              <summary>Betrieb<svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/></svg><span class="eintrag-text">Serverbetrieb</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg><span class="eintrag-text">Updates</span><span class="plakette plakette-neutral">1</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span class="eintrag-text">Komplett-Backup</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg><span class="eintrag-text">Backup-Ziele</span></a>
+            </details>
+          </div>
+          <div class="leiste-fuss">
+            <a class="eintrag eintrag-leise" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg><span class="eintrag-text">Abmelden</span></a>
+          </div>
+        </aside>
+        <main class="inhalt">
+          <div class="titelzeile"><h1 class="seitentitel">Einstellungen</h1><div class="titelzeile-unter">Philipp Chadid · BetreiberIn</div></div>
+          <div class="uebersicht-raster">
+            <div>
+              <h2 class="uebersicht-block">Einstellungen</h2>
+              <div class="karte"><div class="karte-inhalt">
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="uebersicht-text">Profil</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><rect x="7" y="5" width="10" height="14" rx="3"/><path d="M9 5V2h6v3M9 19v3h6v-3M12 9v3l2 1"/></svg><span class="uebersicht-text">Geräte</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M12 22s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><span class="uebersicht-text">Standorte</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M3 15V9h11l4 4h3v4h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 17h6"/></svg><span class="uebersicht-text">Rettungsmittel</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="uebersicht-text">Backup</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg><span class="uebersicht-text">Import / Export</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+              </div></div>
+            </div>
+            <div>
+              <h2 class="uebersicht-block">Verwaltung</h2>
+              <div class="karte"><div class="karte-inhalt">
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6M16 14c3 0 6 2 6 5"/></svg><span class="uebersicht-text">NutzerInnen</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="uebersicht-text">Konto-Backups</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/></svg><span class="uebersicht-text">Installation</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7 15h10"/></svg><span class="uebersicht-text">Demo-Konto</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+              </div></div>
+            </div>
+            <div>
+              <h2 class="uebersicht-block">Betrieb</h2>
+              <div class="karte"><div class="karte-inhalt">
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/></svg><span class="uebersicht-text">Serverbetrieb</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg><span class="uebersicht-text">Updates</span><span class="plakette plakette-neutral">1 offen</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span class="uebersicht-text">Komplett-Backup</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+                <a class="uebersicht-zeile" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg><span class="uebersicht-text">Backup-Ziele</span><svg class="symbol uebersicht-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+              </div></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="mock-anmerkungen">
+  <h2>Was das Mockup zeigt — und was nicht</h2>
+  <ol>
+    <li><strong>Drei Blöcke, eine Liste.</strong> Übersicht (A, C) und Leiste (B, C) tragen dieselben 14 Einträge in derselben Reihenfolge; die Blocküberschrift „Einstellungen" steht in der Übersicht nicht über der ersten Karte (wie heute, Mockup 07 aus P3), in der Leiste aber als Gruppenkopf, weil dort alle drei Gruppen gleich behandelt werden.</li>
+    <li><strong>Gruppen (E-S8-07).</strong> In der Schublade ist „Betrieb" zugeklappt und zeigt seine Zahl „· 4"; der Block der aktiven Seite und „Einstellungen" sind offen. Am Schreibtisch (C) sind alle drei offen — 14 Einträge zu 44 px plus drei Köpfe passen in 720 px Höhe. Der Winkel dreht sich beim Öffnen; kein neuer Baustein, eine <code>&lt;details&gt;</code>-Gruppe mit den vorhandenen Klassen.</li>
+    <li><strong>Fettdruck nur aktiv (Nr. 75).</strong> Nur „Konto-Backups" in B ist fett und trägt den orangenen Randstrich; alle anderen Einträge stehen im Grundschnitt.</li>
+    <li><strong>Betrieb nur für BetreiberIn (E-S8-02).</strong> Ein Admin sähe A und C ohne den Block „Betrieb"; eine NutzerIn nur den ersten Block ohne Überschrift — wie heute.</li>
+    <li><strong>Plakette „1 offen"</strong> an „Updates" zeigt ausstehende Migrationen schon im Menü — Vorschlag, kein Beschluss (die Plakette ist ein vorhandener Baustein).</li>
+    <li><strong>Nicht gezeigt:</strong> die 1024-px-Stufe mit 220 px Leiste; Zwischenbreiten; der Rückweg „‹ Einstellungen" nur in B sichtbar. Symbole sind Platzhalter aus dem Vorrat (dieselben Doppelungen wie heute: Backup/Konto-Backups, Import-Export/Backup-Ziele). Schriften über Google Fonts geladen; in der Anwendung vendoriert.</li>
+  </ol>
+</div>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 27 (04.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 28 (05.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -86,6 +86,8 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
   Abnahmekriterien, Prüfprotokoll, gesammelte Fehlerfunde. Es ist die
   Übergabeeinheit an die umsetzende Instanz. **Ablage: `docs/konzepte/`**,
   Mockups in einem Unterordner daneben; Lebenszyklus in 2.2 (R62).
+  **Ein Konzept benennt für jede neue Funktion ihren Ort** nach dem
+  Ordnungsprinzip (R74); ohne benannten Ort kein Merge.
 - **K2** Konzepte nennen keine Modellempfehlung je Arbeitspaket.
   **Standardmodell der Umsetzung ist Opus.** Schritte, die Fable erfordern,
   sind im Konzept ausdrücklich als Fable-Schritt markiert.
@@ -166,7 +168,7 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | gelöscht nach R62 | Opus | **erledigt, Web 12.9.3/12.9.4** (Abschnitt 8); PR gegen `main` offen — der Merge deployt; Prüfliste S7 offen |
 | 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | **in Arbeit** — Paket A (Server, Web 13.0.0) erledigt 03.09.2026 auf `claude/s7-umsetzung-vorbereiten-s8kax0`; C und E in eigenen Instanzen |
 | 6 | **S4 — Rest** | Kopplungsmodul, feste Server-Adresse, App-Name, Insets, Herkunft je Einsatz (R64), Gerätetest, **Play Console nach R65** (interner Test-Track für Handy und Uhr, Versionscode-Versatz, Signaturweg), Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | **auf dem Zweig gebaut** (Web 14.2.2, Android 0.13.0): Teil A, Teil B (R64 und Nr. 63) und Teil C (Play-Console-Vorbereitung) sind fertig. **Offen:** Gerätetest am S24 und mit der Wear-OS-Uhr (Backlog 81, Abschnitt 6), Android 1.0.0 nach E-R45-7, D-U-N-S und Signaturschlüssel für die Play Console — und der Push auf `main` |
-| 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Backup-Optionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61) | Schritte 4 und 6 | neu, mit Mockups | Fable (Konzept) | offen |
+| 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Backup-Optionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61); dazu die Rolle **BetreiberIn** (R75), der Block **Betrieb** mit sieben Seiten und das **Ordnungsprinzip** (R74) | Schritte 4 und 6 | **liegt vor** (Fable, 05.09.2026), `docs/konzepte/Konzept-S8-Einstellungen-Administration-Wartung.md`, zwölf Mockups | Fable (Konzept), Opus (Umsetzung) | **Umsetzung begonnen** — acht Arbeitspakete nach Konzept Abschnitt 7 |
 | 8 | **S9 — Einsatzbearbeitung und Rettungsmittel** | Problemsammlung vom 03.09.2026 (Nr. 101–113): Adresssuche und gemeinsamer Kartendialog, Rettungsmittel-Übernahme, kompaktere Buttons, Windenkacheln, Hubschrauber-Icon, Vorschlagsliste, Zielklinik ad hoc, Schloss-Kennzeichnung, Notizfeld, Kachel „GPS-Daten", neue Rettungsmittel-Arten, Tageszuordnung, Rollen | Schritt 7 (S8-Konzept, Nr. 74); F3–F6 beantwortet | neu; Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md` | Fable (Konzept; Mockups PS-3/PS-5, Zielkonflikt PS-8.2), Umsetzung Opus | offen |
 | 9 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
 | 10 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb | Schritte 2, 5 und 7; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
@@ -420,15 +422,32 @@ Sicherungsoptionen vereinheitlicht (Begriffe nach S7; Aufbewahrung,
 Speichergrenze, Ziele, Zeitplan, je Konto gegen je Installation) · (4) die
 Einzelpunkte 73, 74, 75, 77, 78, 79 · (5) eine Vorgabe für P5, wo
 Support-Adresse, Rechtstexte, Betriebsart der Registrierung und die
-S2-Optionen liegen (R31, R32, R37). **Entscheidung im Konzept:** die
-Bedienhöhe am Schreibtisch (Nr. 74) — eine Änderung an `CLAUDE.md` 5 und
-`Design.md` nur mit Begründung und Kontrastprüfung. **Abnahme:** Bilderlauf
+S2-Optionen liegen (R31, R32, R37) · **(6) die Rolle „BetreiberIn"**
+(E-S8-02, R75) — dritte Rolle neben `user` und `admin`, Hierarchie
+BetreiberIn ⊇ Admin ⊇ NutzerIn, Migration macht alle heutigen Admins zu
+BetreiberInnen · **(7) die Seiten Status und Statistik** im neuen Block
+„Betrieb" (E-S8-16, E-S8-05) — die Wartungsseite wird aufgelöst · **(8) das
+Ordnungsprinzip** als Programmregel (E-S8-01, R74). **Entscheidung im
+Konzept:** die Bedienhöhe am Schreibtisch (Nr. 74) — entschieden als **zwei
+Stufen** (44 px, am Zeigergerät ab 1024 px 36 px; R76), Nachtrag in
+`CLAUDE.md` 5 und `Design.md`. **Abnahme:** Bilderlauf
 in acht Breiten, Vollständigkeit, Wortliste, Stilvergleich mit
 Soll-Ist-Liste, Bedienprüfung jeder umgezogenen Funktion; Handbuch
 nachgezogen, verschobene und entfernte Funktionen ausgetragen. **Nicht
-Umfang:** neue Verwaltungsfunktionen und Rollen (P5, R38). **Lage:** nach
+Umfang:** neue Verwaltungsfunktionen und Rollen (P5, R38) — **außer** der
+Rolle BetreiberIn (R75). **Lage:** nach
 S4-Rest und S7, weil alle drei `einstellungen.php` und die Admin-Seiten
 anfassen.
+
+**Konzept:** liegt vor (Fable, 05.09.2026),
+`docs/konzepte/Konzept-S8-Einstellungen-Administration-Wartung.md`; Mockups
+01 und 03–12 freigegeben, 02 verworfen (Ablage
+`docs/konzepte/konzept-s8/mockups/`). Prüfdokument daneben (K9).
+**Acht Arbeitspakete** nach Konzept Abschnitt 7: AP1 Rolle BetreiberIn ·
+AP2 Betrieb Teil 1 (Updates, Hintergrundjobs, Servereinstellungen) · AP3
+Verwaltung (Installation, Konto-Backups, Kontoseite) · AP4 Betrieb Teil 2
+(Status, Statistik) · AP5 Menü und Leiste · AP6 Einstellungen (Geräte,
+Wertekasten, Filterreihe) · AP7 Bedienhöhe · AP8 Abschluss.
 
 ### Schritt 8 — S9 Einsatzbearbeitung und Rettungsmittel
 
@@ -450,7 +469,13 @@ PS-9 — **Mockups zu PS-3 und PS-5 sind Fable-Schritte** (K2), Freigabe je
 Darstellung (`CLAUDE.md` 5); PS-3 setzt die Entscheidung zu Nr. 74 aus dem
 S8-Konzept voraus. **Reihenfolge:** Konzept nach dem S8-Konzept; Umsetzung
 parallel zur S8-Umsetzung zulässig, wenn beide Konzepte ihre Berührungen
-benennen (Stylesheet, Stammdaten- und Einstellungsseiten). P5 setzt S9
+benennen (Stylesheet, Stammdaten- und Einstellungsseiten). **Vorgabe aus
+S8** (05.09.2026): das Ordnungsprinzip (R74) gilt auch für die
+Tagesübersicht — S8 5.7 sagt, was dort eine Ebene tiefer gehört (Spuren,
+Ruhezeiten, Schneiden, GPX einfügen, Spuren als GPX, Zusammenführen,
+Zuordnung); S8 fasst `index.php` nicht an (E-S8-03). Die **Bedienhöhe ist
+entschieden** (44/36, R76) und wird in S8 AP7 umgesetzt — PS-3 baut darauf
+auf und wartet darauf. P5 setzt S9
 nicht voraus, **P6 schon**. **Abnahme:** Bilderlauf in acht Breiten,
 Kreisläufe csv und edbak (Datenmodell), Wortliste, Bedienprüfung je Punkt
 auf dem Auftraggeber-Client, Handbuch nachgezogen, Register gegengezählt.
@@ -486,6 +511,21 @@ Autodeploy auf Produktiv — **Aufbau der Auslieferungskette nach R67**:
 Staging automatisch, Prüftor Stufen 1 und 2, Umgebung „produktion" mit
 Freigabe- und Backup-Tor. **Backlog:** 8, 17, 37, 48, 49, 54, 67. **Demo-
 Konto** in jeder Betriebsart mitdenken (R25).
+
+**Wo das alles liegt — Vorgabe aus S8** (E-S8-12, 05.09.2026; P5 erfindet
+keine neuen Orte, sondern ergänzt Karten auf vorhandenen Seiten):
+
+| Kommt in P5 | Seite |
+|---|---|
+| Support-Adresse (R31), Rechtstexte (R32), Betriebsart der Registrierung und Einwilligungen mit Fassung (R37), Ankündigungsbanner (R38) | Verwaltung → **Installation** |
+| Konto-Lebenszyklus, Kontostatus, Selbstlöschung (R37) | Verwaltung → **Kontoseite** und **NutzerInnen** |
+| Support-Rolle (R38) — vierter Rollenwert neben `user`, `admin`, `betreiberin` (R75) | Verwaltung → **NutzerInnen** (Rollenauswahl) |
+| Admin-TOTP (R38) | Einstellungen → **Profil**, Karte „Sicherheit" (nur Admin und BetreiberIn) |
+| Audit-Protokoll, Fehlerprotokoll-Sicht, Health-Endpunkt (R38) | Betrieb → **Status** (Health, Fehlerprotokoll); Audit als eigene Seite oder Unterseite von Status |
+| Betriebslage-Dashboard, Geräteverteilung nach R64-Herkunft (R38, R42, Nr. 80) | Betrieb → **Statistik** — die Seite entsteht in S8 (AP4) mit Modellen und Nutzung; Status bleibt reine Ampel |
+| Torwächter für ausstehende Migrationen (R40.4, R66) | Betrieb → **Updates** |
+| Mengenbremse `ingest.php`, IP-Grenzwerte (R19, R37) | Betrieb → **Servereinstellungen** |
+| S2-Sicherungseinstellungen | bereits verortet (R77): **Konto-Backups** und **Servereinstellungen** |
 
 ### Schritt 11 — Planung v1.0 · **Festlegungen entschieden 03.09.2026**
 
@@ -605,7 +645,7 @@ und die Backlog-Nummern verlangen die Gegenproben aus Abschnitt 2.2.
 | Konzeptarbeit P5 (Hosting, Gespräche) zu allem | ~~S5-Umsetzung zu S6 und S7~~ — **entfällt, S5 ist gemergt** (Fassung 25) |
 | Wear-OS-Gerätetest zu allem | S4-Rest zu **Paket E** (`HauptActivity.kt`, `strings.xml`, Manifest) — E geht zuerst. Die alte Sperre „S4-Rest zu S5“ ist erfüllt: Vertragsabschnitt 1a steht |
 | — | Backlog 21 (43 Restfunde quer durch `server/`) zu jedem laufenden `server/`-Paket |
-| — | S8 zu S4-Rest und S7 (`einstellungen.php`, `admin_*.php`, `update.php`, Handbuch) — S8 erst nach beiden |
+| — | ~~S8 zu S4-Rest und S7~~ — **erfüllt** (beide gemergt, Fassung 27); S8 läuft seit 05.09.2026 |
 | S9-Umsetzung zur S8-Umsetzung (verschiedene Seiten), wenn beide Konzepte ihre Berührungen benennen (R73) | S8 und S9: Stylesheet, Stammdaten- und Einstellungsseiten — wer zuerst mergt, der andere zieht nach (K7); S9-Konzept erst nach dem S8-Konzept (Nr. 74) |
 
 **Merge-Reihenfolge auf `main`:** ein Push je Paket nach Freigabe (K7);
@@ -654,7 +694,7 @@ für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt).
 | 55 | Komplettsicherung ohne scharfen Schnappschuss | nach v1.0 | — |
 | 57 | Tagesübersicht baut ihre Tabelle zweimal | Backlog-Runde | Vereinheitlichung |
 | 58 | Prüfmittel: Seite ohne Gerüst | Backlog-Runde | Prüfmittel, ein Nachmittag |
-| 80 | Auswertung der Gerätestatistik (Rest von 59) | **P5** | Dashboard je Installation; Datenschutzerklärung ist Vorbedingung (Abschnitt 6); die NutzerInnen-Sicht ist Nr. 88 |
+| 80 | Auswertung der Gerätestatistik (Rest von 59) | **geteilt: S8 und P5** | **Gerätemodelle und Nutzung: S8** (Seite „Statistik", AP4 — Modelle, Hersteller abgeleitet, Anteile, CSV). **Herkunft je Einsatz (R64-Werte) und Betriebslage-Dashboard: P5**, mit der Datenschutzerklärung als Vorbedingung (Abschnitt 6); die NutzerInnen-Sicht ist Nr. 88 |
 | 81 | App-Symbol in der Benachrichtigung zu groß und angeschnitten | **S4-Rest** | am Gerät gemeldet; aus dem heutigen Quellstand nicht nachvollziehbar — zuerst die installierte App-Fassung klären |
 | 82 | Warnung fehlt, dass die Daueraufzeichnung den Akku leert | **S4-Rest** | der vorhandene Akku-Dialog (E-S4-05) sagt das Gegenteil: warum die App Strom ziehen darf |
 | 83 | Herkunft und Gerät je Einsatz: welche Daten wie gespeichert werden | **S4-Rest** | **entschieden als R64** (02.09.2026): Momentaufnahme am Einsatz, eigene `origin`-Werte, Bestand per Migration nachgefüllt; mit Nr. 63 in einer Formatänderung |
@@ -673,13 +713,13 @@ für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt).
 | 70 | „Auf der Karte setzen" für Standorte | Backlog-Runde | P3-Zulieferung, jetzt nummeriert |
 | 71 | Regionen mit Unteradmins | nach v1.0 | verworfen, festgehalten (R39) |
 | 72 | Richtungspfeile auf der Spur zeigen teils falsch | Backlog-Runde | neu; wahrscheinlich `transform` auf einem Inline-`<span>` (`geo.js`, `.geo-pfeil`), Sichtprüfung Pflicht |
-| 73 | Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen | S8 | am Baustein, nicht an der Seite |
-| 74 | Bedienhöhe 44 px am Schreibtisch: nötig oder schmaler? | S8 | Entscheidung im S8-Konzept; berührt `CLAUDE.md` 5, `Design.md`, `tools/screenshots/` |
-| 75 | Unterpunkte des Admin-Menüs fett und nicht einklappbar | S8 | mit der Menüstruktur |
+| 73 | Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen | S8 | **Konzept liegt vor** (E-S8-08): Suchfeld in eigener Zeile, Filter darunter mit erlaubtem Umbruch; am Baustein, nicht an der Seite; AP6 |
+| 74 | Bedienhöhe 44 px am Schreibtisch: nötig oder schmaler? | S8 | **entschieden** (E-S8-09, R76): zwei Stufen — 44 px, am Zeigergerät ab 1024 px 36 px; `CLAUDE.md` 5, `Design.md` und `tools/screenshots/` ziehen nach; AP7 |
+| 75 | Unterpunkte des Admin-Menüs fett und nicht einklappbar | S8 | **Konzept liegt vor** (E-S8-07): Fettdruck nur aktiv, drei Blöcke als Akkordeon; mit der Menüstruktur, AP5 |
 | 76 | Demo-Reset läuft alle 30 Minuten, auch ohne Änderung | Backlog-Runde | erst messen (Laufzeit, Last), dann entscheiden |
-| 77 | Wartungsseite `update.php` in Unterseiten aufteilen | S8 | Schnitt im Konzept; **Unterseite „Migrationen" zeigt nur Ausstehende mit „Ausstehende ausführen", der Torwächter liest dasselbe Register (R66)**; ausgeführte Kennungen bis P5 eingeklappt, danach im Audit-Protokoll; der Wartungsmodus-Schalter (Paket W) zieht auf die Unterseite „Serverbetrieb" |
-| 78 | Wertekasten zeigt Cron-Adresse und Token in Kopplungscode-Größe | S8 | `.codeblock-wert` nutzt `--groesse-5`; zweite Stufe für lange Werte; darf vorab in der Backlog-Runde laufen |
-| 79 | Backup-Optionen: Begriffe und Optionen gewachsen wie Wildwuchs | S8 | Bestandsaufnahme über Kontoseite, Sicherungsseite, Ziele, Komplettsicherung, Wartung |
+| 77 | Wartungsseite `update.php` in Unterseiten aufteilen | S8 | **Konzept liegt vor** (E-S8-05): die Seite wird **aufgelöst**; der Block Betrieb trägt Status, Statistik, Updates, Hintergrundjobs, Servereinstellungen, Komplett-Backup und Backup-Ziele. Wartungsmodus **und** ausstehende Migrationen liegen zusammen auf „Updates" (R66: nur Ausstehende mit „Ausstehende ausführen", ausgeführte bis P5 eingeklappt, danach im Audit-Protokoll); `update.php` wird Weiterleitung bis P6. AP2 und AP4 |
+| 78 | Wertekasten zeigt Cron-Adresse und Token in Kopplungscode-Größe | S8 | **Konzept liegt vor** (E-S8-10): zweite Stufe `codeblock-lang` (`--groesse-2`, Umbruch) mit leisem Knopf „Kopieren"; **fünf** Stellen, nicht vier — dazu Geräte-ID und API-Schlüssel (B-S8-13). AP2 und AP6 |
+| 79 | Backup-Optionen: Begriffe und Optionen gewachsen wie Wildwuchs | S8 | **Konzept liegt vor** (E-S8-06, R77): drei Namen, drei Orte, ein Verb — Backup, Konto-Backup, Komplett-Backup; AP2 und AP3 |
 | 93 | `AUTH_VERGLEICHSWERT` trägt Kostenfaktor 10, PHP 8.4 legt 12 an | Backlog-Runde | aus S5/A (V-S5-13); 57 gegen 228 ms, heute von der Mindestdauer 0,35 s verdeckt |
 | 94 | „bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/` | Backlog-Runde | aus S5 (V-S5-05); ein Wort — oder `-define png:exclude-chunk=time` |
 | 95 | Die Android-Rundlauffälle lassen Daten im Admin-Konto zurück | Schritt 6 | 9 Diensttage, 5 Einsätze, 14 439 Punkte; Aufräumen im `@After` oder eigenes Prüfkonto |
@@ -732,7 +772,9 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | **DNS-Eintrag und TLS für `nadoku.gen-em.org`** — die Uhr trägt die Adresse seit Uhr 3.0.0 als **Vorgabewert** (E-R49-8). Ohne DNS und Zertifikat läuft jede frisch aufgesetzte Uhr ins Leere, und zwar ohne dass sie sagen kann, warum | Schritt 5 | **fällig — die Uhr ist ausgeliefert** |
 | ~~Freigabe des S5-Konzepts~~ | Schritt 3 | **erledigt 03.09.2026** — Umsetzung ist gebaut und gemergt |
 | Drei Fragen aus `Konzept-V1-Ortsdaten.md` (Schutzbedarf der Spur; Passwortwechsel bei nicht synchronisierten Uhr-Daten; Stichtag oder rückwirkend) | Nr. 43, P6 | vor dem R17-Review — spätestens mit dem Abschluss von P5 (R69) |
-| Freigabe des S8-Konzepts und seiner Mockups; darin die Entscheidung zur Bedienhöhe am Schreibtisch (Nr. 74) | Schritt 7 | — |
+| ~~Freigabe des S8-Konzepts und seiner Mockups; darin die Entscheidung zur Bedienhöhe am Schreibtisch (Nr. 74)~~ | Schritt 7 | **erledigt 05.09.2026** — E-S8-01 bis -18 bestätigt, Mockups 01 und 03–12 freigegeben (02 verworfen), Bedienhöhe als zwei Stufen entschieden (R76) |
+| **Play-Store-Beitrittslink des internen Tests** — für die Karte „App installieren" auf der Geräte-Seite (S8 AP6). Ohne ihn steht dort die Zeile ohne Knopf; die Adresse ist danach an **einer** Stelle nachzutragen (Konstante `PLAY_TEST_URL`) | Schritt 7 (S8 AP6), R65 | vor der Produktionsfreigabe |
+| **Adresse der Uhr-App im Connect-IQ-Store**, falls sie dort veröffentlicht ist — dieselbe Karte, dieselbe Mechanik (Konstante `CONNECT_IQ_URL`) | Schritt 7 (S8 AP6) | wenn die Uhr-App im Store steht |
 | Hosting-Entscheidung (Cron/SSH, DB-Kontingent, `max_user_connections`, DDoS-Schutz, Verschlüsselung at rest) | P5-Konzept | vor Schritt 10 |
 | Staging-Installation samt FTP-Zugang; **samt Demo-Konto, Referenzdatensatz und Messstand-Konto — Staging ist die Prüfumgebung (R67)** | P5-Beginn | vor Schritt 10 |
 | GitHub-Umgebung „produktion" mit Pflichtfreigabe (Betreiberin) und den FTPS-Zugangsdaten der Produktion als Umgebungsgeheimnisse; GitHub-App auf dem Handy mit Push-Nachrichten; prüfen, ob `CIQ_GERAETE_URL` als CI-Secret taugt (Stufe 1) | R67, Freigabe-Tor | mit dem Aufbau der Kette in P5 |
@@ -839,6 +881,10 @@ werden nie neu vergeben.
 | R71 | **Drei Phasen vor v1.0** (Beschluss 03.09.2026, E-PV-7): **P6 Review und Bereinigung** (Fable-Eingang; Sofort-, Pflicht- und Aufräumpakete, Kommentardurchgang, Weg B) · **P7 Gesicht v1.0** (Umbenennung, Vertrag v1, Doku-Neufassung, Manifest, Changelog, Backlog, Altformat, Kommentarregel) · **P8 Schnitt** (Neuaufsetzen, Register neu, Repo-Umzug mit Inventur, Kette im neuen Repositorium, Rechtsunterlagen, Abnahme R11, Erklärung v1.0). Je Phase ein Konzept nach K1 mit eigenem Paketschnitt; P6 → P7 → P8, nichts parallel. Frühere „P6"-Nennungen sind nach `docs/konzepte/Konzept-Planung-v1.0.md` 6.2.8.5 zugeordnet | gilt; Schritte 12–14 |
 | R72 | **Anforderungen an die Doku-Neufassung** (Beschluss 03.09.2026, E-PV-8; beantwortet das Anforderungsgespräch aus R16): vier Dokumente nach Zielgruppe — Handbuch (NutzerIn), Betreiberhandbuch mit Notfall-FAQ und Betriebsakte-Vorlage (generisch, ohne Zugänge), Installation und Selbsthosting, Technik mit Bedrohungsmodell — dazu der Vertrag; Markdown mit Sprungmarken; **das Handbuch reist als statisches HTML mit jedem Release** in die Installation (Link „Hilfe"), nicht von GitHub zur Laufzeit; Screenshots erzeugt (1920×1080, 414×896), Uhr drei Simulatorbilder, Handy aus dem Gerätetest; kurz und prägnant — je Aufgabe ein Bild, Referenz im Anhang, keine Fassungsgeschichte; Abnahmemaß höchstens ein Drittel des heutigen Umfangs. Begründung E-PV-8 | gilt; Umsetzung P7 |
 | R73 | **Problemsammlung als S9** (Beschluss 03.09.2026, E-PV-9): Schritt 8 „S9 — Einsatzbearbeitung und Rettungsmittel", Konzept nach K1 mit Fable (Mockups PS-3/PS-5, Zielkonflikt PS-8.2 als Fable-Schritte), Backlog 101–113, Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`; Konzept nach dem S8-Konzept (Nr. 74), Umsetzung parallel zulässig; P5 setzt S9 nicht voraus, P6 schon; Zielkonflikt PS-8.2 geht in das Bedrohungsmodell ein (Nr. 43, R69); erste Prüffrage Geocoding-Quelle (PS-1). Schritte 8–13 → 9–14 | gilt; Konzept nach Go des Auftraggebers |
+| R74 | **Ordnungsprinzip — programmweit** (Beschluss 05.09.2026, E-S8-01): Jede Funktion hat **genau einen Ort**, und der folgt aus drei Fragen, nie aus dem Zeitpunkt des Baus. **(1) Wer** (Zielgruppe) → der Menübereich: Einstellungen (NutzerIn), Verwaltung (Admin), Betrieb (BetreiberIn); ein Bereich ist nur sichtbar, wer ihn benutzen darf. **(2) Woran** (Objekt) → die Seite: Handlungen an einem Diensttag oder Einsatz liegen bei diesem Objekt; Kontoeinstellungen unter Einstellungen; Installationseinstellungen unter Verwaltung (Inhalt, Konten, Texte) oder Betrieb (Server, Speicher, Updates). **(3) Wie oft** (Häufigkeit) → die Ebene auf der Seite: Die Primärfläche trägt nur den Regelweg; **Ausnahmen liegen eine Ebene tiefer** (Aktionsmenü, zugeklappte Karte, Unterseite) und bekommen **nie** einen eigenen Hauptmenüpunkt. Dazu drei Regeln der Darstellung: **(4)** Diagnosekarten erscheinen oben und nur, wenn es etwas zu tun gibt · **(5)** Erklärtext einheitlich als **eine** zugeklappte Karte „Was hier gilt" am Seitenende, sonst Verweis ins Handbuch · **(6)** ein Begriff je Ding, ein Ding je Begriff, über alle Zielgruppen. Und die Regel, die den Wildwuchs künftig verhindert: **(7) Wer eine Funktion baut, benennt ihren Ort** nach 1–6 im Konzept oder im Backlog-Punkt; ein Paket ohne benannten Ort wird nicht gemergt (**K1 ergänzt**). Begründung: Konzept S8, Abschnitte 1.3 und 4 | gilt, dauerhaft; erste Anwendung S8, Vorgabe an S9 (5.7) und P5 (E-S8-12) |
+| R75 | **Rolle „BetreiberIn"** (Beschluss 05.09.2026, E-S8-02; Ausnahme zu R38, die Support-Rolle bleibt dort): dritte Rolle `betreiberin` in `users.role`. **Rechte:** BetreiberIn ⊇ Admin ⊇ NutzerIn — die BetreiberIn kann alles, was ein Admin kann, und sieht als Einzige den Block „Betrieb" (Server, Speicher, Updates, Jobs, Komplett-Backup, Backup-Ziele). **Bestand:** die Migration macht **alle** vorhandenen Admins zu BetreiberInnen — niemand verliert Zugriff, Rückstufung von Hand. **Vergabe:** nur eine BetreiberIn vergibt oder entzieht die Rolle; das **letzte** BetreiberIn-Konto lässt sich weder zurückstufen noch löschen; `install.php` legt das erste Konto als BetreiberIn an. Die Rechteänderung geht in das Bedrohungsmodell (R69, P6); Support-Rolle, TOTP und Audit bleiben P5 | gilt; umgesetzt in S8 AP1 |
+| R76 | **Bedienhöhe in zwei Stufen** (Beschluss 05.09.2026, E-S8-09; beantwortet Nr. 74): **44 px bleibt die Vorgabe**; für Zeigergeräte (`@media (hover: hover) and (pointer: fine)`, ab 1024 px) gilt eine **dichte Stufe von 36 px** für Knöpfe, Felder, Listenzeilen und Menüeinträge. Begründung: Die häufigste Arbeit — Einsätze nach der Aufzeichnung ausfüllen — ist Formulararbeit am Schreibtisch; 36 px liegt über der Mindestzielgröße von WCAG 2.5.8 (24 px); Touch-Laptops mit Maus als Hauptzeiger bekommen 36, reine Touch-Geräte 44. Kontrast ändert sich nicht (Höhe, keine Farbe). `CLAUDE.md` 5 und `Design.md` tragen beide Stufen, `tools/screenshots/` misst zwei Sollwerte. Die Android-Apps bleiben bei 48 dp (R58) | gilt; umgesetzt in S8 AP7, Voraussetzung für S9 PS-3 |
+| R77 | **Drei Backup-Begriffe** (Beschluss 05.09.2026, E-S8-06; beantwortet Nr. 79, setzt R50/R56 fort): **Backup** = die `.edbak`-Datei der NutzerIn (Einstellungen → Backup) · **Konto-Backup** = das Paket je Konto auf dem Server (Verwaltung → Konto-Backups) · **Komplett-Backup** = der Dump der Installation (Betrieb → Komplett-Backup). Dazu **Backup-Ziele** (Versand von Konto-Backups) und **Speicher** (Grenze und Belegung aller drei, Betrieb → Servereinstellungen). Verben: **sichern** für das Erzeugen (R56), **einspielen** für jeden Rückweg in ein Konto — für NutzerIn wie Verwaltung gleich —, **wiederherstellen** nur für die Installation. Kennzahlen und Filter heißen „Konto-Backup überfällig" und „nie Konto-Backup", weil sie genau das messen (B-S8-07). „Admin-Backup" und „Sicherung" als Substantiv sind gestrichen | gilt; umgesetzt in S8 AP2 und AP3 |
 
 ## 8. Erledigt — Kurzübersicht
 
@@ -1141,3 +1187,4 @@ beide sind die dokumentierten Grenzen. *Reste:* Prüfliste in Abschnitt 6.
 | **25** | **03.09.2026** | **S5 gebaut und gemergt** (Schritt 5, Web 13.0.0–13.2.0, Uhr 3.0.0; PR #28 und #29): Die Kopplung läuft umgekehrt — das Gerät zeigt den Code, das Web nimmt ihn entgegen, das Gerät bestätigt. Dazu ein Verfahrenswechsel, der nicht im Plan stand (Geräteschlüssel bcrypt → SHA-256, E-S5-42, die Bestandsuhr koppelt einmal neu), der **Wartungsmodus** als Zusatzpaket W (Web 13.2.0, 503 statt 500 während eines Updates) und ein stiller Datenverlust im Upload, der älter ist als S5 (Web 13.0.1). Backlog 66 erledigt (`watch/` läuft durch die Wortliste), 89–92 aus S7 und S5/C, **93–97 neu**. **Vier Migrationen warten auf `update.php`** — die aus S5 ist die dringende, ohne sie endet jede Kopplung in einem 500. **Paket E** (Android 0.10.1) ist gebaut, aber nicht gemergt; es geht vor den S4-Rest. Die Freigabe des Abschlusses und damit die Löschung der Konzepte nach R62 steht aus. |
 | **26** | **03.09.2026** | **Schritt 11 (Planung v1.0) vorgezogen und entschieden** (Konzept `docs/konzepte/Konzept-Planung-v1.0.md`): **R65** Store-Verteilung in zwei Stufen — interner Play-Test-Track ab Schritt 6, Produktion mit Welle 1; Organisationskonto der Gen-EM GbR, Versionscode-Versatz (Nr. 98), Signaturschlüssel zu Play App Signing, Seitenladung bis zur Produktionsfreigabe; sieben Zuarbeiten, D-U-N-S sofort; E-R45-6 ersetzt; Abschnitt 1 und Betriebsübergang angepasst · **R66** Update-Weg: keine Selbstprüfung, kein Selbst-Update, Produktion nur auf Handauslösung, nur ausstehende Migrationen sichtbar (Nr. 77 damit für S8 beantwortet), Register beginnt bei v1.0 neu (Nr. 99) · **R67** Auslieferungskette: Staging automatisch und Prüfumgebung, Freigabe- und Backup-Tor, Rollback, Prüftor in drei Stufen, Android-Signatur außerhalb der CI (Nr. 100) · **R68** Repositorium: eines, frisch, öffentlich, `gen-em/nadoku`; P8-Paket „Repo-Umzug und Inventur" · **R69** Review-Umfang: alles in zwölf Stücken, Bedrohungsmodell zuerst, Kommentardurchgang ohne Beschluss- und Fassungsverweise, zwei Wege für Funde (Sofortpaket / Pflichtpaket P6), Paketschnitt nach der Freigaberunde; R13 und R31 gehen darin auf · **R70** Web-App-Manifest: Manifest allein, in P7, „NAdoku Web" mit eigenem Symbol; Nr. 87 als Erhebung erledigt · **R71** Phasenschnitt: P6 Review und Bereinigung, P7 Gesicht v1.0, P8 Schnitt — Schritt 11 (alt) in drei Schritte geteilt, alle P6-Nennungen zugeordnet · **R72** Doku-Anforderungen: vier Dokumente nach Zielgruppe, Handbuch reist mit dem Release als HTML, erzeugte Screenshots, kurz und prägnant; Betreiberhandbuch generisch mit Notfall-FAQ und Betriebsakte · **R73** Problemsammlung vom 03.09.2026 als **Schritt 8 „S9 — Einsatzbearbeitung und Rettungsmittel"** (Nr. 101–113, Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`, Konzept mit Fable nach dem S8-Konzept); **Schrittnummern 8–11 → 9–12, dazu die neuen Schritte 13 und 14**. Torwächter in P5 hängt am Wartungsmodus aus Paket W. **Berichtigt:** der Absatz zu Nr. 83 im Planungsschritt nannte den Punkt als offen, obwohl Fassung 22 ihn als R64 entschieden hatte. Abschnitte 1, 2, 3, 4, 5, 6, 7 entsprechend; Backlog 98–113 angelegt. |
 | **27** | **04.09.2026** | **Schritt 6 gebaut** (Zweig `claude/rahmenplan-schritt-6-ewm0kx`, Web 14.0.0–14.2.2, Android 0.11.0–0.13.0). **Teil A:** Kopplungsmodul auf Vertrag 1a, feste Server-Adresse und App-Name (R63, Backlog 84/85/86), R57 (Überschneidungshinweis), Akkuwarnung und Verbrauchshinweis (Backlog 82/98). **Teil B — R64 und Backlog Nr. 63 als *eine* Formatänderung** (eigenes Konzept `Konzept-R64-Herkunft-Geraet.md`, AP1–AP5): `origin` trägt sechs Werte statt drei, abgeleitet aus dem `client_ref`-Präfix; **Momentaufnahme** `geraet_art`/`geraet_modell` am Einsatz *und* am Ruhesegment, beim Anlegen kopiert — damit ist Nr. 83 gegen `ON DELETE SET NULL` gefeit; Konto-Sicherung auf **Nutzlast 9** (Sperrvermerke des Schnitts **und** Momentaufnahme), womit Nr. 63 erledigt ist; **der Referenzbestand ist neu gebaut**: zwei Geräte über den echten Kopplungsweg (eine Uhr, ein Handy), alle sechs Herkunftswerte belegt, ein Schnitt darin — und weil der Demo-Reset die Fixture alle 30 Minuten einspielt, prüft der Produktivserver Nr. 63 seither dauerhaft. **Teil C:** Play-Console-Vorbereitung, soweit sie ohne D-U-N-S und Signaturschlüssel geht (`Vorbereitung-Play-Console.md`); vier ihrer fünf Befunde abgestellt (Uhr ohne jede Berechtigung, keine Umleitungen für den Geräteschlüssel, Rechtstexte in der App, Kopplungs-Mails als Zuarbeit vermerkt). **Drei Funde am Code, alle behoben:** Die Anwendung schrieb eine CSV-Datei, die sie selbst nicht einlesen konnte (`uhrzeit_ortszeit` aus Phase 2, vom Import als Startzeit verlangt); die GPX-Probe verglich nach dem Neuaufbau eine Datei statt 172 und meldete grün; die Einsatztabelle zeigte „kein Ende" an abgeschlossenen Einsätzen ohne Phase 9 (Entscheidung des Auftraggebers: Dauer = Beginn bis Ende). **Backlog 63 und 83 erledigt.** Der Push auf `main` steht aus. |
+| **28** | **05.09.2026** | **S8-Konzept eingetroffen und Umsetzung begonnen** (Schritt 7, Zweig `claude/umsetzung-buuvfq`). Das Konzept liegt als `docs/konzepte/Konzept-S8-Einstellungen-Administration-Wartung.md` mit Prüfdokument und zwölf Mockups (01 und 03–12 freigegeben, 02 verworfen). **Vier neue Programmentscheidungen:** **R74** Ordnungsprinzip — jede Funktion hat genau einen Ort nach Zielgruppe, Objekt und Häufigkeit, Ausnahmen eine Ebene tiefer, ein Paket ohne benannten Ort wird nicht gemergt (K1 ergänzt) · **R75** dritte Rolle **BetreiberIn** mit Hierarchie BetreiberIn ⊇ Admin ⊇ NutzerIn; die Migration macht alle heutigen Admins zu BetreiberInnen, das letzte solche Konto ist geschützt — eine **Ausnahme zu „Nicht Umfang: Rollen"** in Schritt 7, die Support-Rolle bleibt bei R38 · **R76** Bedienhöhe in **zwei Stufen** (44 px, am Zeigergerät ab 1024 px 36 px) — beantwortet Nr. 74, auf die S9 PS-3 wartet · **R77** drei Backup-Begriffe (Backup, Konto-Backup, Komplett-Backup) mit einem Verb je Rückweg. Dazu: die **Wartungsseite wird aufgelöst** (Nr. 77) und der Block **Betrieb** trägt sieben Seiten, darunter die neuen **Status** und **Statistik**; **Backlog Nr. 80 ist geteilt** — Gerätemodelle und Nutzung nach S8, Herkunft je Einsatz und Dashboard bleiben P5; sechs neue Backlog-Kandidaten (117–122). Schritt 10 nennt jetzt je P5-Option ihre Seite (E-S8-12), Schritt 8 die Vorgabe für die Tagesübersicht. Zwei Zuarbeiten in Abschnitt 6 (Play-Beitrittslink, Connect-IQ-Adresse); die Freigabe des Konzepts ist erledigt. Die Sperre „S8 zu S4-Rest und S7" ist erfüllt |

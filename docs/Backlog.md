@@ -805,6 +805,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Suchfeld über den Filtern, oder Filter in einer Zeile mit Umbruchregel —
     und am Baustein umsetzen, nicht an der Seite; `tools/screenshots/` in
     allen acht Breiten. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-08):** Suchfeld in eigener
+    Zeile in voller Breite (Höchstbreite 36 rem), Filterplaketten darunter
+    mit erlaubtem Umbruch und festem Abstand — dann ist der Umbruch Absicht
+    und nicht Unfall. Gilt für jede Liste mit Suche und Filtern. Umsetzung
+    in S8 AP6.
 
 74. **Bedienhöhe am Schreibtisch: müssen es 44 px sein?**
     *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* `CLAUDE.md` 5 und
@@ -815,6 +820,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `Design.md` — oder es bleibt bei einer Höhe. Berührt die Messung
     „Knöpfe ≠ 44 px" in `tools/screenshots/`, die dann zwei Sollwerte
     kennen muss. Zuordnung: S8 (Entscheidung).
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-09; Rahmenplan R76):** zwei
+    Stufen. 44 px bleibt die Vorgabe; für Zeigergeräte
+    (`@media (hover: hover) and (pointer: fine)`, ab 1024 px) gilt 36 px für
+    Knöpfe, Felder, Listenzeilen und Menüeinträge. Begründung: Die häufigste
+    Arbeit — Einsätze nach der Aufzeichnung ausfüllen — ist Formulararbeit am
+    Schreibtisch; 36 px liegt über der Mindestzielgröße von WCAG 2.5.8
+    (24 px); ein Touch-Laptop mit Maus als Hauptzeiger bekommt 36, ein reines
+    Touch-Gerät 44. Der Kontrast ändert sich nicht — es ist eine Höhe, keine
+    Farbe. Die Android-Apps bleiben bei 48 dp (R58). Umsetzung in S8 AP7;
+    S9 PS-3 baut darauf auf.
 
 75. **Die Unterpunkte des Admin-Menüs sind fett und nicht einklappbar.**
     *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* S3 (Block F) hatte den
@@ -825,6 +840,12 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ausgenommen blieb oder eine eigene Regel trägt; Fettdruck nur für den
     aktiven Punkt; Gruppen ein- und ausklappbar, Zustand je Sitzung merken.
     Gehört zur Menüstruktur, die S8 ohnehin neu ordnet. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-07):** Fettdruck nur für den
+    aktiven Eintrag; die **drei** Blöcke (Einstellungen, Verwaltung, Betrieb)
+    werden auf- und zuklappbare Gruppen — kein neuer Baustein, sondern das
+    Akkordeon der Diensttage-Leiste. Zustand je Sitzung in `sessionStorage`;
+    der Block der aktiven Seite ist offen, „Einstellungen" immer, ab 1024 px
+    alle. Umsetzung in S8 AP5.
 
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
     hat.**
@@ -850,6 +871,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     sichtbar bleiben muss — das hängt am Update-Weg ab v1.0 (R60). Handbuch
     und Technik ziehen nach, die alte Adresse bleibt als Weiterleitung, bis
     P6 neu aufsetzt. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-05):** Die Seite wird nicht
+    aufgeteilt, sondern **aufgelöst**. Der neue Menüblock „Betrieb" trägt
+    sieben Seiten — Status, Statistik, Updates, Hintergrundjobs,
+    Servereinstellungen, Komplett-Backup, Backup-Ziele —, jede mit *einem*
+    Anliegen. Wartungsmodus und ausstehende Migrationen liegen zusammen auf
+    **Updates**, weil beide zum Deploy gehören (R66: nur Ausstehende mit
+    „Ausstehende ausführen", Ausgeführte bis P5 eingeklappt). Die Karte
+    „Logo" zieht nach Verwaltung → Installation (sie ist Gestaltung, keine
+    Wartung), die Karte „Einsätze ohne Diensttag" entfällt ersatzlos
+    (E-S8-17: das ist Nutzersache und steht als „Zuordnung offen" in der
+    Diensttage-Leiste). `update.php` wird Weiterleitung bis P6. Umsetzung in
+    S8 AP2 und AP4.
 
 78. **Der Wertekasten zeigt Cron-Adresse und Token in der Schriftgröße des
     Kopplungscodes.**
@@ -864,6 +897,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     oder `-3`, ohne Sperrung), Herkunft in `Design.md` nachtragen; der
     Kopplungscode behält die große Stufe. Darf als Kleinstkorrektur vorab in
     der Backlog-Runde laufen. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-10):** zweite Stufe
+    `codeblock-lang` — `--schrift-fest` in `--groesse-2`, ohne Sperrung, mit
+    Umbruch an beliebiger Stelle —, dazu ein leiser Knopf **„Kopieren"** in
+    der Kartenecke, weil lange Werte abgeschrieben Fehler machen. **Fünf
+    Stellen, nicht vier** (B-S8-13): Cron-Zeile, Token-Adresse, Setz-Link,
+    Serverschlüssel-Zeile — und die Geräte-ID samt API-Schlüssel beim
+    Anlegen von Hand, die in der Rückmeldung fehlte. Umsetzung in S8 AP2
+    (Baustein, Jobs) und AP6 (übrige Stellen).
 
 79. **Backup-Optionen: Begriffe und Optionen sind gewachsen wie
     Wildwuchs.**
@@ -877,6 +918,20 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Installation, NutzerIn gegen Admin gegen Betreiberin) und ein
     Begriffssatz; Handbuch 6 und `Backup-Format.md` nachziehen. Zuordnung:
     S8, als Kern der Sichtung.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-06; Rahmenplan R77):** drei
+    Namen, drei Orte, ein Verb je Weg. **Backup** ist die `.edbak`-Datei der
+    NutzerIn (Einstellungen → Backup), **Konto-Backup** das Paket je Konto
+    auf dem Server (Verwaltung → Konto-Backups), **Komplett-Backup** der
+    Dump der Installation (Betrieb → Komplett-Backup); dazu **Backup-Ziele**
+    für den Versand und **Speicher** für Grenze und Belegung aller drei
+    (Betrieb → Servereinstellungen, was B-S8-06 auflöst: die Grenze stand
+    unter „Backups" und wirkte auch auf die Komplett-Stände). Verben:
+    *sichern* fürs Erzeugen, *einspielen* für jeden Rückweg in ein Konto —
+    für NutzerIn und Verwaltung gleich —, *wiederherstellen* nur für die
+    Installation. Kennzahlen und Filter heißen „Konto-Backup überfällig" und
+    „nie Konto-Backup", weil sie genau das messen und nichts über die
+    Dateien der NutzerInnen wissen (B-S8-07, jetzt Nr. 117). Umsetzung in S8
+    AP2 und AP3.
 
 ---
 
@@ -911,6 +966,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wissen.
     **Nicht mehr zu tun:** Die Spalten sind da, die Teilenummer wird
     aufgelöst, und die Geräteliste zeigt Art und Modell (Nr. 59).
+    **Geteilt am 05.09.2026 (Konzept S8, E-S8-05; Rahmenplan Fassung 28):**
+    Der Teil, der **keine** Datenschutz-Vorbedingung hat, zieht nach S8 vor
+    — die Seite **Betrieb → Statistik** (AP4) zeigt Konten, Geräte, Einsätze
+    und eine Tabelle der **Gerätemodelle** (Hersteller abgeleitet, Anteile,
+    CSV), alles ohne Demo-Konto. Bei P5 bleibt, was am Einsatz hängt: die
+    **Herkunft je Einsatz** (R64-Werte) und das Betriebslage-Dashboard —
+    dafür gilt die Vorbedingung unverändert. Auch die Lücke oben bleibt
+    wahr: Die Wear-OS-Uhr koppelt nicht und erscheint als `handy`; die
+    Statistik-Seite sagt es dazu.
     **Die Modelltabelle steht** (Web 12.9.1): 325 Teilenummern auf 173
     Modelle, davon 28 keine Uhren. Eine Zählung nach `geraet_art` trägt damit
     — aber nur für Geräte, die **nach** dem Füllen gekoppelt haben. Ältere
@@ -1274,6 +1338,79 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     der Liste fehlen. Das Zweite ist deutlich billiger und fängt denselben
     Fehler. Dieselbe Frage stellt sich für
     `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
+
+---
+
+117. **Niemand weiß, ob eine NutzerIn je ein Backup gezogen hat.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-07).* Die Kennzahlen
+    „Backup überfällig" und „nie gesichert", der Filter der
+    NutzerInnen-Liste und die Erinnerungsmail messen **ausschließlich** die
+    Konto-Backups der Verwaltung — den Stand des jüngsten Pakets im
+    Kontoordner (`edbak_konto_stand()`). Ob eine NutzerIn selbst je ein
+    Backup heruntergeladen hat, weiß niemand: Die Datei entsteht im Browser
+    und der Server sieht sie nie. S8 hat die Begriffe ehrlich gemacht — die
+    Kennzahlen heißen jetzt „Konto-Backup überfällig" und „nie
+    Konto-Backup" —, aber die Lücke selbst bleibt. **Zu klären:** ob ein
+    Zeitstempel „zuletzt Backup erzeugt" je Konto überhaupt gewollt ist. Er
+    wäre eine neue Erhebung über eine Handlung der NutzerIn und keine
+    Kleinigkeit; die Alternative ist, es dabei zu belassen und im Handbuch
+    zu sagen, dass die Anwendung es nicht weiß. Zuordnung: Backlog-Runde
+    (Entscheidung), Umsetzung frühestens P5.
+
+118. **Die Hintergrundjobs lassen sich nur auf der Kommandozeile anhalten.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-16).* `php jobs.php
+    --pause <Minuten>` ist die einzige Job-Handlung ohne Oberfläche. Die
+    Seite „Hintergrundjobs" (S8 AP2) zeigt den Pausenzustand an und nennt
+    den Befehl, kann ihn aber nicht auslösen. Wer keinen Shell-Zugang hat —
+    und das ist auf geteiltem Hosting die Regel —, kann die Jobs nicht
+    anhalten, wenn etwas schiefläuft. **Zu tun:** ein Knopf „Jobs anhalten"
+    mit Dauerwahl auf derselben Seite, serverseitig derselbe
+    `app_state`-Schlüssel. Das ist eine **neue Funktion** und deshalb nicht
+    Teil von S8. Zuordnung: Backlog-Runde oder P5.
+
+119. **„Import / Export" ist als Sammelpunkt unvollständig.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-18).* Der Menüpunkt
+    verspricht, alle Wege für Daten hinein und hinaus zu tragen — tatsächlich
+    liegt der **GPX-Import je Diensttag** auf der Tagesübersicht (neben
+    „Spuren als GPX", E-S4-18) und der Backup-Rückweg auf „Backup". Nach dem
+    Ordnungsprinzip (R74, Regel 2) ist das für den GPX-Weg sogar richtig — er
+    gehört zu *diesem* Diensttag —, aber dann ist der Name des Sammelpunkts
+    zu weit. **Zu klären mit S9**, das die Tagesübersicht ohnehin umbaut: ob
+    „Import / Export" enger heißt (etwa „Einsatzliste") oder ob die Seite die
+    anderen Wege wenigstens nennt. Zuordnung: Backlog-Runde, mit S9 abstimmen.
+
+120. **Eine Testmail aus der Oberfläche senden.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (E-S8-16).* Die Statusseite
+    (S8 AP4) zeigt für E-Mail nur, ob SMTP **eingerichtet** ist — ob eine
+    Zustellung tatsächlich funktioniert, weiß sie nicht, und ob die letzte
+    Zustellung aufgezeichnet wird, war beim Bau zu prüfen. Eine Warnmail, die
+    nie ankommt, fällt damit erst auf, wenn jemand sie vermisst. **Zu tun:**
+    ein Knopf „Testmail an mich" auf der Statusseite, der über den regulären
+    Versandweg geht und das Ergebnis in derselben Zeile zeigt. **Neue
+    Funktion**, deshalb nicht Teil von S8. Zuordnung: Backlog-Runde.
+
+121. **Vorschau für die Rechtstexte.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09).* Impressum und
+    Datenschutzerklärung werden in eingeschränktem Markdown geschrieben; wie
+    der Text aussieht, sieht man erst auf der öffentlichen Seite nach dem
+    Speichern. Die neue Seite Verwaltung → Installation hat dafür „Ansehen ›"
+    — ein Weg, aber kein Nebeneinander. **Zu tun:** eine Vorschau neben dem
+    Feld, gerendert mit demselben eingeschränkten Markdown wie die
+    öffentliche Seite (kein zweiter Renderer, sonst zeigt die Vorschau
+    etwas anderes als die Seite). **Neue Funktion.** Zuordnung:
+    Backlog-Runde.
+
+122. **Freie Zeiträume und Diagramme in der Statistik.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
+    Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
+    6 Monate — und zeigt Zahlen in Tabellen. Für den Blick auf einen
+    bestimmten Monat oder auf eine Entwicklung über ein Jahr reicht das
+    nicht. **Zu tun:** ein frei wählbarer Zeitraum (Von/Bis wie in der
+    Einsatzsuche) und eine grafische Darstellung der Entwicklung. Beides
+    sind **neue Darstellungen** und brauchen Mockup und Freigabe
+    (`CLAUDE.md` 5); die Diagrammfrage berührt außerdem die Zusage „keine
+    fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
+    werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
 
 ---
 
