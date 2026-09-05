@@ -132,6 +132,12 @@
       "begruendung": "Der Tastenweg der Kopplung als ausdruecklicher Zusatz mit genannter Plattform (E-P2-02). Er steht getrennt vom geraetefreien Ablauf darueber, weil er nur fuer Fenix und Forerunner gilt; die Venu 3s hat weder START noch DOWN. Die Tabelle je Uhr steht im Handbuch, Abschnitt 2.0."
     },
     {
+      "id": "statistik-hersteller-garmin",
+      "datei": "server/betrieb_statistik.php",
+      "klasse": "G",
+      "begruendung": "Die Statistik ZAEHLT Hersteller — sie beschreibt nicht die Bedienung, sondern das, was tatsaechlich gekoppelt ist. „Garmin-Uhren“ gegen „Android-Handys“ ist genau die Unterscheidung, um die es dort geht; ein geraetefreies „Uhren“ waere hier keine Neutralitaet, sondern eine geloeschte Information. Drei Stellen: die Ableitung des Herstellers aus der Geraeteart (art = 'uhr' -> Garmin, weil die Wear-OS-App bauartbedingt nicht koppelt, E-S4-11), die Zeile der Geraetekarte und die Fussnote, die die Ableitung erklaert. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
+    },
+    {
       "id": "garmin-zusatz",
       "zeile": "bei Garmin\\b",
       "klasse": "G",

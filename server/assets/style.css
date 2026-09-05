@@ -1843,6 +1843,12 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .tabelle tr.clickable:focus-visible{outline-offset:calc(var(--strich-stark) * -1)}
 .tabelle td.dash,.tabelle .patfehler{color:var(--gedaempft)}
 .tabelle .patfehler .symbol{color:var(--rot-tief)}
+/* EIN ZEILENKOPF IST EINE BESCHRIFTUNG, KEINE SPALTENÜBERSCHRIFT (S8/AP4).
+ * `.tabelle th` steht auf `text-align:center` — richtig für die Kopfzeile,
+ * falsch für die erste Spalte einer Kennzahlentabelle, in der links die
+ * Beschriftung und rechts die Zahlen stehen. Die Regel greift NUR bei
+ * `scope="row"`; bis Web 15.3.0 gab es keine solche Tabelle. */
+.tabelle th[scope="row"]{text-align:left;font-weight:600}
 .tabelle td.zahl-spalte{text-align:right}
 .tabelle td.haken-spalte{text-align:center}
 /* Eine Dauer wie „1h 06min" ist EINE Angabe und wird nicht getrennt. */

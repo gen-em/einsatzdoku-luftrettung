@@ -103,6 +103,7 @@ const WARTUNG_RETRY_S = 300;
  */
 const WARTUNG_AUSNAHMEN = [
     'betrieb_status.php',
+    'betrieb_statistik.php',
     'betrieb_updates.php',
     'betrieb_jobs.php',
     'betrieb_server.php',

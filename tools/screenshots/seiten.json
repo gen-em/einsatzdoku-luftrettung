@@ -258,6 +258,12 @@
       "pfad": "betrieb_status.php"
     },
     {
+      "name": "45a-betrieb-statistik",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_statistik.php"
+    },
+    {
       "name": "46-betrieb-updates",
       "gruppe": "Betrieb",
       "rolle": "admin",
