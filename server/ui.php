@@ -833,6 +833,11 @@ function ui_einstellungen_punkte(): array
  * Griff haben sollen. `.leiste-gruppe` setzt nur Schriftgrad und Farbe der
  * bisherigen `.leiste-kopfzeile` — die Blocküberschrift sieht aus wie zuvor
  * und hat einen Winkel dazubekommen.
+ *
+ * OFFEN IST: „Einstellungen" und der Block der aktiven Seite — in JEDER
+ * Breite. Das Konzept sah ab 1024 px alle Blöcke offen vor; damit blieb es
+ * bei 1280 × 900 bei 14 von 17 erreichbaren Einträgen, also bei genau dem
+ * Zustand, gegen den das Akkordeon gebaut wurde. So sind es 17 von 17.
  */
 function ui_leiste_einstellungen(string $aktiv): void
 {
@@ -841,30 +846,31 @@ function ui_leiste_einstellungen(string $aktiv): void
     <div class="leiste-liste" data-menue>
       <?php foreach ($bloecke as $b): ?>
         <?php
-        /* JEDER BLOCK IST EIN <details> — ALLE OFFEN AUS DEM SERVER.
+        /* JEDER BLOCK IST EIN <details>, UND DER SERVER RENDERT DIE VORGABE:
+         * „Einstellungen" ist offen, dazu der Block der aktiven Seite; die
+         * uebrigen sind zu.
          *
-         * Der Zielzustand haengt von der Breite ab (Konzept AP5 (2)): ab
-         * 1024 px alle offen, darunter nur „Einstellungen" und der Block der
-         * aktiven Seite. PHP kennt die Fensterbreite nicht, also muss das
-         * Skript nachziehen — und die Frage ist nur, in welche Richtung.
+         * DIESELBE VORGABE IN JEDER BREITE. Das Konzept sah ab 1024 px alle
+         * Bloecke offen vor; gemessen loest das den Grund fuer das Akkordeon
+         * nicht: Bei 1280 x 900 blieben mit allen offenen Bloecken 14 von 17
+         * Eintraegen erreichbar — genau der Zustand, gegen den das Akkordeon
+         * gebaut wurde. Mit dieser Vorgabe sind es 17 von 17. Entschieden am
+         * 05.09.2026 auf Nachfrage; die Abweichung steht im Konzept.
          *
-         * ALLE OFFEN ist die flimmerfreie Richtung. Ab 1024 px steht der
-         * Serverzustand schon richtig, das Skript hat nichts zu tun.
-         * Darunter liegt die Leiste als Schublade mit
-         * `transform:translateX(-100%)` ausserhalb des Bildes — was das
-         * Skript dort zuklappt, hat nie jemand gesehen. Umgekehrt (alles zu,
-         * Skript oeffnet) blitzte am Schreibtisch bei jedem Seitenaufruf ein
-         * zusammengeklapptes Menue auf.
+         * WARUM PHP UND NICHT DAS SKRIPT. Der Serverzustand ist damit schon
+         * der Zielzustand — in jeder Breite, ohne Skript. `menue.js` legt nur
+         * noch darueber, was in dieser Sitzung von Hand geaendert wurde. Ein
+         * Skript, das die Vorgabe selbst herstellt, laesst am Schreibtisch
+         * bei jedem Seitenaufruf kurz den anderen Zustand aufblitzen.
          *
-         * `data-aktiv` sagt dem Skript, welcher Block die aktive Seite
-         * traegt; `data-gruppe` ist der Schluessel im sessionStorage. */
+         * `data-gruppe` ist der Schluessel im sessionStorage. */
         $titel  = $b['titel'] !== '' ? $b['titel'] : 'Einstellungen';
         $hatAkt = false;
         foreach ($b['punkte'] as $pk) { if ($aktiv === $pk[0]) { $hatAkt = true; } }
+        $offen  = $hatAkt || $b['schluessel'] === 'einstellungen';
         ?>
-        <details class="akkordeon leiste-gruppe" open
-                 data-gruppe="<?= ui_e($b['schluessel']) ?>"
-                 <?= $hatAkt ? 'data-aktiv' : '' ?>>
+        <details class="akkordeon leiste-gruppe"<?= $offen ? ' open' : '' ?>
+                 data-gruppe="<?= ui_e($b['schluessel']) ?>">
           <summary class="akkordeon-zeile">
             <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
             <span class="akkordeon-text"><?= ui_e($titel) ?><span

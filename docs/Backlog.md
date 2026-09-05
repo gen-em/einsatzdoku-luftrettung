@@ -1440,6 +1440,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zweite Bedienhöhe (R76) ohnehin angefasst, und dieselben Zeilen sind
     betroffen.
 
+124. **Das Aktionsblatt öffnet weit weg von seinem Knopf.**
+    *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin
+    (Tagesübersicht am Handy).* Das „⋯" steht oben rechts neben dem
+    Seitentitel; das Blatt fährt vom **unteren** Bildschirmrand herein
+    (`.blatt{position:fixed;inset:auto 0 0 0}`). Dazwischen liegt der halbe
+    Bildschirm, und der Zusammenhang zwischen Knopf und Menü ist nicht zu
+    sehen — man sucht die Antwort dort, wo man gedrückt hat.
+    **Das ist kein Fehler, sondern eine Entscheidung** (E-P3-27, `Design.md`
+    9.12): mobil ein Blatt von unten, ab 1024 px dasselbe Markup als
+    Aufklappmenü am Knopf. Das Blatt folgt der Plattformkonvention und liegt
+    im Daumenbereich — was bei einem Menü am oberen Bildschirmrand gerade
+    nicht der Fall ist. Die Meldung ist damit ein Zielkonflikt, kein Defekt.
+    **Drei Wege:** (a) auch mobil am Knopf aufklappen — sichtbarer
+    Zusammenhang, schlechter erreichbar; (b) Blatt behalten und den
+    Zusammenhang zeigen: das „⋯" bleibt hervorgehoben, solange das Blatt
+    offen ist, und das Blatt fährt sichtbar aus seiner Richtung auf;
+    (c) so lassen. **Empfehlung: (b)** — behält die Erreichbarkeit, behebt
+    das Gemeldete und ist die kleinste Änderung. Alle drei ändern die
+    Darstellung eines Bausteins und brauchen Mockup und Freigabe
+    (`CLAUDE.md` 5); betroffen ist jede Seite mit `ui_aktionen()` (zehn
+    Aufrufe). Zuordnung: Backlog-Runde oder P7 (Gesicht v1.0).
+
 ---
 
 ## Erledigt
