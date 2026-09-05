@@ -163,6 +163,28 @@ Der Simulator bildet Verhalten des Betriebssystems außerhalb der App nicht
 zuverlässig ab — Steuerungsmenüs, Tastensperren, Displaydimmung. Diese Punkte
 sind mit ⚠️ gekennzeichnet und brauchen eine Gegenprobe auf echter Hardware.
 
+**Und er bildet die Dauer eines Druckes nicht ab.** Am 05.09.2026 kam ein
+Fehler vom Gerät, den der Simulator nicht hergibt: Nach einem DOWN-Druck vom
+Startbildschirm auf die Sync-Seite und zurück begann kein Druck auf START mehr
+den Dienst — bei jeder Druckdauer. Ursache war eine hängende Erinnerung an
+eine „fremde" Taste (`_fremdKey` in `Input.mc`): Die Ansicht wechselt beim
+**Drücken**, das **Loslassen** wird deshalb der neuen Ansicht zugestellt, und
+der alte Delegate räumt nie auf. Er hielt danach jeden START für eine
+Tastensperre.
+
+Nachgestellt werden konnte das hier **nicht**. `xdotool key Down` drückt und
+löst in derselben Millisekunde aus; das Loslassen erreicht noch den alten
+Delegate. Auch getrenntes `keydown`/`keyup` mit 0,6 s und 1,2 s Haltezeit
+erzeugte den Fehler nicht — auf 3.0.1 begann der Dienst in beiden Läufen
+(Abzüge `x3`, `y3`). Ein Daumen auf einer Fenix-Taste trifft die Lage
+offenbar anders.
+
+**Was daraus folgt:** Ein Eingabefehler, der von der *Reihenfolge* aus
+Tastenereignis und Ansichtswechsel abhängt, ist hier nicht zu belegen — weder
+sein Vorhandensein noch seine Behebung. Solche Befunde brauchen das Gerät, und
+der Prüfstand ist ausdrücklich **kein** Gegenbeweis: Dass er den Fehler nicht
+zeigt, heißt nicht, dass es ihn nicht gibt.
+
 ---
 
 ## 7. Wear OS — `android/uhr/` (seit S4)

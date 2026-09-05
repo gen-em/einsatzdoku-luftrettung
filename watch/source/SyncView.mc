@@ -295,13 +295,25 @@ class SyncDelegate extends ActionDelegate {
         return true;
     }
 
+    // UNTEN ist vom Start aus nichts: Der Abstecher auf die Sync-Seite hat
+    // keine Nachbarseiten, der Reigen der Oberflaechen beginnt erst mit dem
+    // Dienst.
     function actPageNext() as Lang.Boolean {
         if (_fromStart) { return true; }           // vom Start: keine Nachbarseiten
         Nav.go(1); return true;
     }
 
+    // OBEN dagegen liegt der Startbildschirm — man ist ja mit DOWN von dort
+    // gekommen (StartDelegate.actPageNext schiebt mit SLIDE_UP). UP muss
+    // deshalb mit der Gegenbewegung wieder hinausfuehren, und nicht bloss
+    // geschluckt werden.
+    //
+    // Bis 3.0.1 stand hier derselbe Waechter wie bei actPageNext, ohne eigene
+    // Begruendung: "keine Nachbarseiten" galt fuer beide Richtungen. Fuer UP
+    // war das falsch — UP ist hier keine Nachbarseite, sondern der Rueckweg.
+    // Wer ihn drueckte, sass fest und kam nur mit BACK wieder heraus.
     function actPagePrev() as Lang.Boolean {
-        if (_fromStart) { return true; }
+        if (_fromStart) { return actBack(); }
         Nav.go(-1); return true;
     }
 

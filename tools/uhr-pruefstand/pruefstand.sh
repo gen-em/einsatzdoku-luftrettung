@@ -127,26 +127,52 @@ pfadtiefe() {
     printf '%s\n' "$p" | tr '/' '\n' | grep -c .
 }
 
-# Geraetedateien und Schriften gehoeren Garmin und werden vom SDK-Manager
-# ausgeliefert, der eine Anmeldung verlangt und nur als Fensteranwendung
-# existiert. In einer Wegwerf-Umgebung ist beides nicht zu haben — deshalb der
-# Umweg ueber eine selbst bereitgestellte Quelle. Deren Adresse steht in
-# CIQ_GERAETE_URL und bewusst nicht in diesem Repositorium: sie ist privat, und
-# die Dateien duerfen nicht oeffentlich weiterverbreitet werden.
+# Welche Geraete zum UEBERSETZEN gebraucht werden, sagt nicht CIQ_ZIELE,
+# sondern das Manifest. monkey.jungle ordnet JEDEM Produkt des Manifests ein
+# Ressourcen- und Quellprofil zu, und monkeyc prueft jeden dieser Qualifier
+# gegen die installierten Geraetedateien — bevor es das Zielgeraet ansieht.
+# Ein fehlendes Geraet ist deshalb kein fehlendes Ziel, sondern ein
+# Uebersetzungsfehler, auch fuer ein Ziel, das daliegt.
+#
+# Gemessen am 05.09.2026: `aufbau` mit der Vorgabe holte die drei Zielgeraete,
+# danach brach `bauen fenix6pro` mit "is not a valid device / family
+# qualifier" fuer die uebrigen 96 Manifest-Geraete ab. Bis dahin stand in
+# LIESMICH.md, die drei Zielgeraete reichten "fuer Bauen und Starten" — das
+# galt vor dem geraeteweisen Jungle und war seither falsch.
+manifest_geraete() {
+    grep -o 'iq:product id="[^"]*"' "$WURZEL/watch/manifest.xml" | cut -d'"' -f2
+}
+
 geraetedateien() {
-    local fehlt=0
+    local fehlende="" schriften_fehlen=0 voll=0
+
     if [ "$ZIEL_GERAETE" = "alle" ]; then
         # Bei "alle" ist die Frage nicht, ob ein bestimmtes Geraet daliegt,
-        # sondern ob ueberhaupt etwas dasteht — die Liste kennt man ja erst
-        # danach.
-        [ -n "$(ls "$GARMIN_HOME/Devices" 2>/dev/null)" ] || fehlt=1
+        # sondern ob der GANZE Bestand steht — und den kennt man erst, wenn
+        # man ihn geholt hat. Ein "ist nicht leer" beantwortet das nicht: Am
+        # 05.09.2026 lagen drei Geraete da, und die Pruefung meldete Vollzug,
+        # waehrend 96 fehlten. Deshalb eine Marke, die der vollstaendige Lauf
+        # selbst setzt — sie sagt aus, was gemessen wurde, statt es zu raten.
+        [ -f "$GARMIN_HOME/Devices/.vollstaendig" ] || voll=1
     else
-        for g in $ZIEL_GERAETE; do
-            [ -f "$GARMIN_HOME/Devices/$g/compiler.json" ] || fehlt=1
+        for g in $(manifest_geraete) $ZIEL_GERAETE; do
+            [ -f "$GARMIN_HOME/Devices/$g/compiler.json" ] \
+                || fehlende="$fehlende $g"
         done
+        # Ein Geraet kann in beiden Listen stehen; zweimal holen waere nur
+        # Zeit.
+        fehlende="$(printf '%s\n' $fehlende | sort -u | tr '\n' ' ')"
     fi
-    [ -d "$GARMIN_HOME/Fonts" ] || fehlt=1
-    [ "$fehlt" -eq 0 ] && { melde "Geraetedateien und Schriften liegen bereits"; return; }
+
+    # Schriften und Geraete werden GETRENNT geprueft und getrennt geholt.
+    # Bis zum 05.09.2026 hingen beide an einem Merker: Fehlte ein Geraet, kam
+    # der Schriftenabruf mit — 1,2 GB fuer eine Datei von 40 kB.
+    [ -n "$(ls -A "$GARMIN_HOME/Fonts" 2>/dev/null)" ] || schriften_fehlen=1
+
+    if [ -z "${fehlende// /}" ] && [ "$voll" -eq 0 ] && [ "$schriften_fehlen" -eq 0 ]; then
+        melde "Geraetedateien und Schriften liegen bereits"
+        return
+    fi
 
     [ -n "$GERAETE_URL" ] || fehler \
 "Geraetedateien fehlen und CIQ_GERAETE_URL ist nicht gesetzt.
@@ -156,31 +182,41 @@ geraetedateien() {
    Abschnitt Quelle."
 
     local schnitt=$(( $(pfadtiefe "$GERAETE_URL") + 1 ))
-    mkdir -p "$GARMIN_HOME/Devices" && cd "$GARMIN_HOME/Devices"
-    if [ "$ZIEL_GERAETE" = "alle" ]; then
+
+    if [ "$voll" -eq 1 ]; then
         # Fuer Stufe I und geraeteklassen.py wird der GANZE Bestand gebraucht:
         # Welche Geraete es gibt, steht nirgends sonst — die Liste ist das
         # Verzeichnis selbst.
         melde "Geraetedateien holen (alle)"
+        mkdir -p "$GARMIN_HOME/Devices" && cd "$GARMIN_HOME/Devices"
         wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Devices/" \
             || fehler "Geraeteverzeichnis nicht abrufbar"
-    else
-        melde "Geraetedateien holen ($ZIEL_GERAETE)"
-        for g in $ZIEL_GERAETE; do
+        # Die Marke erst NACH dem Abruf — ein abgebrochener Lauf soll beim
+        # naechsten Mal wieder holen und nicht Vollzug melden.
+        touch "$GARMIN_HOME/Devices/.vollstaendig"
+        cd - >/dev/null
+    elif [ -n "${fehlende// /}" ]; then
+        melde "Geraetedateien holen ($(printf '%s\n' $fehlende | grep -c .) fehlend)"
+        mkdir -p "$GARMIN_HOME/Devices" && cd "$GARMIN_HOME/Devices"
+        for g in $fehlende; do
             wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Devices/$g/" \
                 || fehler "Geraet $g nicht abrufbar"
         done
+        cd - >/dev/null
     fi
 
-    # Die Schriften sind rund 1,2 GB. Welche Datei zu welchem Geraet gehoert,
-    # steht nur im Geraeteabbild (.bin) — deshalb wird der ganze Bestand
-    # geholt statt geraten. Ein fehlender Zeichensatz aeussert sich als
-    # "Invalid Font Specified" und beendet die App beim ersten Zeichnen.
-    melde "Schriften holen (rund 1,2 GB, dauert)"
-    mkdir -p "$GARMIN_HOME/Fonts" && cd "$GARMIN_HOME/Fonts"
-    wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Fonts/" \
-        || fehler "Schriften nicht abrufbar"
-    cd - >/dev/null
+    if [ "$schriften_fehlen" -eq 1 ]; then
+        # Die Schriften sind rund 1,2 GB. Welche Datei zu welchem Geraet
+        # gehoert, steht nur im Geraeteabbild (.bin) — deshalb wird der ganze
+        # Bestand geholt statt geraten. Ein fehlender Zeichensatz aeussert sich
+        # als "Invalid Font Specified" und beendet die App beim ersten
+        # Zeichnen.
+        melde "Schriften holen (rund 1,2 GB, dauert)"
+        mkdir -p "$GARMIN_HOME/Fonts" && cd "$GARMIN_HOME/Fonts"
+        wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Fonts/" \
+            || fehler "Schriften nicht abrufbar"
+        cd - >/dev/null
+    fi
 }
 
 # ----------------------------------------------------------------- Nutzen ----
@@ -480,9 +516,29 @@ pruefen() {
     printf '%-28s %s\n' "SDK"        "$(monkeyc --version 2>/dev/null || { echo 'FEHLT'; mangel=1; })"
     printf '%-28s %s\n' "Schluessel" "$([ -f "$SCHLUESSEL" ] && echo vorhanden || { echo FEHLT; mangel=1; })"
     printf '%-28s %s\n' "Schriften"  "$(find "$GARMIN_HOME/Fonts" -name '*.cft' 2>/dev/null | wc -l) Dateien"
+    # Die Zahl, die ueber Bauen oder Nicht-Bauen entscheidet, ist die
+    # Manifest-Abdeckung — nicht die der Zielgeraete. Sie steht deshalb hier
+    # und nennt beide Seiten: gefunden von gebraucht. Bis zum 05.09.2026
+    # meldete `pruefen` drei vorhandene Zielgeraete und damit Vollzug, obwohl
+    # 96 Manifest-Geraete fehlten und kein einziger Uebersetzungslauf durchkam.
+    local soll ist
+    soll="$(manifest_geraete | grep -c .)"
+    ist=0
+    for g in $(manifest_geraete); do
+        [ -f "$GARMIN_HOME/Devices/$g/compiler.json" ] && ist=$(( ist + 1 ))
+    done
+    printf '%-28s %s\n' "Manifest-Geraete" "$ist von $soll"
+    [ "$ist" -eq "$soll" ] || mangel=1
     if [ "$ZIEL_GERAETE" = "alle" ]; then
-        printf '%-28s %s\n' "Geraete" \
-            "$(find "$GARMIN_HOME/Devices" -name compiler.json 2>/dev/null | wc -l) mit compiler.json"
+        # Die Marke wird VOR dem printf abgefragt: In einer $()-Ersetzung
+        # liefe das mangel=1 in einer Subshell und waere danach fort — der
+        # Mangel wuerde angezeigt und trotzdem nicht gemeldet.
+        local marke="Bestand vollstaendig"
+        if [ ! -f "$GARMIN_HOME/Devices/.vollstaendig" ]; then
+            marke="Bestand NICHT als vollstaendig vermerkt"; mangel=1
+        fi
+        printf '%-28s %s\n' "Geraete gesamt" \
+            "$(find "$GARMIN_HOME/Devices" -name compiler.json 2>/dev/null | wc -l) mit compiler.json, $marke"
     else
         for g in $ZIEL_GERAETE; do
             printf '%-28s %s\n' "Geraet $g" \

@@ -101,10 +101,23 @@ drei Zielgeräte sind dann fort, und `ls` sieht trotzdem vollständig aus.
 
 ### Wieviele Gerätedateien
 
-`aufbau` holt nur die drei Zielgeräte aus `CIQ_ZIELE` — das reicht für Bauen
-und Starten und spart Zeit. Für **Stufe I** (unten) und für
-`geraeteklassen.py` wird dagegen der ganze Bestand gebraucht: Welche Geräte es
-überhaupt gibt, steht nirgends sonst als im Verzeichnis selbst.
+**Zum Übersetzen wird jedes Gerät des Manifests gebraucht, nicht nur das
+Zielgerät.** `monkey.jungle` ordnet jedem der 99 Produkte aus
+`watch/manifest.xml` ein Ressourcen- und Quellprofil zu, und `monkeyc` prüft
+**jeden** dieser Qualifier gegen die installierten Gerätedateien — bevor es
+das Zielgerät überhaupt ansieht. Ein fehlendes Gerät ist deshalb kein
+fehlendes Ziel, sondern ein Übersetzungsfehler, auch für ein Ziel, das
+daliegt. `aufbau` holt daher die **Manifest-Geräte plus `CIQ_ZIELE`**.
+
+> **Bis zum 05.09.2026 stand hier**, `aufbau` hole nur die drei Zielgeräte,
+> und „das reicht für Bauen und Starten". Das galt vor dem geräteweisen
+> Jungle und war seither falsch: Nach einem Aufbau mit der Vorgabe brach
+> `bauen fenix6pro` mit `is not a valid device / family qualifier` für die
+> übrigen 96 Geräte ab. Der Satz kostete einen vollständigen Bauversuch.
+
+Für **Stufe I** (unten) und für `geraeteklassen.py` wird darüber hinaus der
+ganze Bestand gebraucht: Welche Geräte es überhaupt gibt, steht nirgends
+sonst als im Verzeichnis selbst.
 
 ```bash
 CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau
@@ -113,6 +126,21 @@ CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau
 Zum Stand vom 03.09.2026 sind das **173 Geräte mit `compiler.json`**. Die
 Schriften (rund 1,2 GB) kommen in beiden Fällen vollständig — welche Datei zu
 welchem Gerät gehört, steht nur im Geräteabbild.
+
+**Geräte und Schriften hängen nicht mehr an einem Merker.** Bis zum
+05.09.2026 taten sie das: Fehlte ein einziges Gerät, kam der Schriftenabruf
+mit — 1,2 GB für eine Datei von 40 kB. Seither wird beides getrennt geprüft
+und getrennt geholt, und bei den Geräten werden nur die **fehlenden**
+nachgezogen.
+
+**Bei `CIQ_ZIELE=alle` entscheidet eine Marke, nicht die Leere.** Die alte
+Prüfung fragte, ob `Devices/` nicht leer sei — und meldete damit am
+05.09.2026 Vollzug über einen Bestand von drei Geräten, während 96 fehlten.
+Das ist die grüne Zahl über etwas, das sie nicht gemessen hat (`CLAUDE.md`
+6). Der vollständige Lauf legt jetzt `Devices/.vollstaendig` an, **nach** dem
+Abruf; ein abgebrochener Lauf holt beim nächsten Mal wieder. Wer einen
+Bestand von Hand zusammenstellt, setzt die Marke selbst — oder lässt sie weg
+und nimmt einen weiteren Abruf in Kauf.
 
 **Die 99 weiter unten sind etwas anderes** und wurden hier bis zum 03.09.2026
 verwechselt: Sie sind nicht die Zahl der Gerätedateien, sondern die **Auswahl**,

@@ -14,6 +14,129 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 3.0.2] — 2026-09-05
+
+### Uhr — nach einem Blick auf die Sync-Seite ließ sich kein Dienst mehr beginnen
+
+**Vom Gerät gemeldet, nicht vom Prüfstand.** Wer vom Startbildschirm mit DOWN
+auf die Sync-Seite ging und zurückkam, konnte danach mit START keinen Dienst
+mehr beginnen — weder mit einem sehr kurzen noch mit einem sehr langen Druck.
+Die App war damit in ihrer Hauptfunktion tot, bis sie neu gestartet wurde.
+
+Die Ursache liegt in `Input.mc` und ist älter als diese Fassung. `_fremdKey`
+merkt sich eine Taste, die diese Seite **nicht** verfolgt, damit ein
+anschließender START als Tastensperre der Uhr erkannt und geschluckt werden
+kann. Aufgeräumt wird die Erinnerung beim **Loslassen**:
+
+```
+if (k == _fremdKey) { _fremdKey = null; }
+```
+
+Auf dem Startbildschirm verfolgt `StartDelegate` UP und DOWN nicht. Ein
+DOWN-Druck wird also gemerkt und ans System durchgereicht, das daraus
+`onNextPage` macht — und `actPageNext()` schiebt die Sync-Seite mit
+`pushView`. **Die Ansicht wechselt beim Drücken; das Loslassen bekommt die
+neue Ansicht.** Der `StartDelegate` darunter überlebt und behält `_fremdKey`
+für immer. Jeder folgende START lief danach in den Sperr-Zweig und wurde
+verschluckt — unabhängig von der Druckdauer, weil `_combo` vor der Abfrage
+auf kurz oder lang steht.
+
+`actPageNext()` ruft jetzt `fremdVergessen()`, bevor es schiebt. `switchToView`
+und `popView` brauchen das nicht: `Nav.build` legt für jede Ansicht einen
+frischen Delegate an, und ein gepoppter wird verworfen. **Nur der Delegate
+unter einem `pushView` überlebt den Wechsel** — heute genau einer. Die Regel
+steht als Auftrag im Kopf von `fremdVergessen()`, damit der nächste
+`pushView` sie nicht neu lernen muss.
+
+**Was nicht belegt werden konnte, und das ist der wichtigere Teil.** Der
+Simulator gibt den Fehler nicht her. `xdotool key Down` drückt und löst in
+derselben Millisekunde aus; das Loslassen erreicht noch den alten Delegate.
+Auch getrenntes `keydown`/`keyup` mit 0,6 s und 1,2 s Haltezeit erzeugte ihn
+nicht — auf 3.0.1 begann der Dienst in beiden Läufen. **Die Behebung ist
+deshalb hier nicht nachgemessen**, sondern hergeleitet: aus dem Code und aus
+einer Vorhersage, die am Gerät eingetroffen ist. Nach der Lesart oben muss ein
+UP-Druck auf dem Startbildschirm die Sperre lösen, weil UP dort die Ansicht
+nicht wechselt und sein Loslassen deshalb ankommt. Genau das tut es (am Gerät
+bestätigt, 05.09.2026). Belegt ist im Simulator nur, dass die Änderung nichts
+bricht: Sync-Abstecher, Rückweg, Dienstbeginn und Reigen laufen unverändert.
+
+Der Grenzfall steht jetzt in `docs/Geraete-Eingabe.md` 6 — samt der Warnung,
+dass ein ausbleibender Fehlschlag dort **kein** Gegenbeweis ist.
+
+## [Uhr 3.0.1] — 2026-09-05
+
+### Uhr — die Sync-Seite vor Dienstbeginn ließ sich mit UP nicht verlassen
+
+**Vom Startbildschirm führt ein kurzer DOWN-Druck auf die Sync-Seite** — dort
+stehen Kopplungszustand, Serveradresse und die App-Version, und dort startet
+der lange Druck die Kopplung. Der Rückweg mit UP tat nichts. Wer nicht
+wusste, dass BACK der einzige Ausgang ist, saß fest.
+
+Die Ursache liegt seit dem 16.08.2026 im Code: `SyncDelegate` bekam für beide
+Richtungen denselben Wächter. Für DOWN ist er richtig und trägt die
+Begründung „vom Start: keine Nachbarseiten" — unterhalb dieses Abstechers
+liegt tatsächlich nichts, der Reigen der Oberflächen beginnt erst mit dem
+Dienst. Für UP wurde er mitgezogen, ohne eigene Begründung, und dort ist er
+falsch: **UP ist hier keine Nachbarseite, sondern der Rückweg.** Man ist mit
+DOWN gekommen, also muss UP wieder hinausführen.
+
+Jetzt ruft `actPagePrev()` in diesem Zustand `actBack()` auf, statt den Druck
+zu schlucken. Damit ist die Bewegung die Umkehrung des Hinwegs — hinein mit
+`SLIDE_UP`, hinaus mit `SLIDE_DOWN` — und beide Ausgänge, UP und BACK, gehen
+über dieselbe Zeile. Ein zweiter Weg mit eigenem `popView` hätte sich beim
+nächsten Umbau auseinanderentwickelt.
+
+**DOWN bleibt bewusst wirkungslos.** Unterhalb der Sync-Seite ist vor
+Dienstbeginn nichts, und ein Rundlauf über eine einzige Seite wäre nur
+Bewegung ohne Ziel.
+
+Der Weg stand bisher in keinem Dokument. `docs/Handbuch.md` 2.1 beschreibt ihn
+jetzt — samt beider Ausgänge.
+
+### Prüfmittel — die Wortliste lief seit dem 04.09.2026 überhaupt nicht mehr
+
+Beim Pflichtlauf zu dieser Korrektur brach `tools/wortliste/` mit einem
+`JSONDecodeError` ab: `ausnahmen.json` war kein gültiges JSON. Der Merge
+`589982b` vom 04.09.2026 hatte zwei Ausnahmen ineinandergeschoben — dem einen
+Objekt fehlte die schließende Klammer, dem anderen die öffnende. Beide Eltern
+waren für sich gültig und trugen je 79 Regeln; herausgekommen sind 79 plus ein
+Trümmerstück.
+
+**Das ist die schlimmere Sorte Fehler**, weil das Werkzeug dabei nicht falsch
+zählt, sondern gar nicht zählt — und ein Lauf, der abbricht, meldet keine Null
+(`CLAUDE.md` 6). Zwischen dem 04.09. und heute konnte niemand die Liste
+gefahren haben, ohne es zu bemerken; sie ist in dieser Zeit schlicht nicht
+gelaufen.
+
+**Dahinter kam ein zweiter Fehler zum Vorschein, und der Bruch hat ihn
+verdeckt.** Zwei Zweige haben denselben Wortliste-Treffer gegensätzlich
+gelöst, jeder für sich schlüssig:
+
+- `23b8a67` (Android 0.10.2, 03.09.) trug für den Satz „Die Garmin-Uhr hält es
+  genauso" in `docs/Technik.md` die Ausnahme `technik-abgrenzung-beide-uhren`
+  ein — mit Begründung: Der Satz steht im Android-Kapitel und vergleicht die
+  Wear-OS-Uhr mit der Connect-IQ-Uhr; dort ist „Uhr-App" zweideutig, und der
+  Markenname ist die Unterscheidung (Klasse G, E-P2-15).
+- `e97e85c` (android v0.11.0, 04.09.) schrieb auf dem anderen Zweig denselben
+  Satz auf „Die Uhr-App hält es genauso" um. Dort gab es die Ausnahme nicht,
+  die Wortliste meldete „Garmin" als unerklärten Treffer, und das Umschreiben
+  brachte sie zum Schweigen. Ohne Changelog-Eintrag und ohne Eintrag in
+  `ausnahmen.json`.
+
+Der Merge nahm den Text des einen Zweigs und die Ausnahme des anderen. Damit
+stand eine Ausnahme ohne Fundstelle da — und **genau das hätte die Wortliste
+gemeldet**, wäre sie nicht im selben Merge unbrauchbar geworden. Der eine
+Fehler hat den anderen zugedeckt.
+
+Aufgelöst zugunsten des Markennamens: „Die **Garmin**-Uhr hält es genauso."
+Das ist eine Abwägung, keine Wiederherstellung — die Ausnahme trägt ein
+ausformuliertes Argument für diese eine Stelle, das Umschreiben trug keines.
+Wer es anders sieht, dreht den Satz um **und** streicht die Ausnahme; beides
+zusammen, sonst steht der nächste Lauf wieder auf 1.
+
+Danach: 80 Regeln, 80 gegriffen, 0 ungenutzt, 0 Treffer außerhalb der
+Ausnahmen, 0 durchgerutschte Teilstring-Fallen, Rückgabewert 0.
+
 ## [Web 14.2.2] — 2026-09-04
 
 ### Web — „kein Ende" an einem Einsatz, der zu Ende war
