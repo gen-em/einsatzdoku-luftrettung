@@ -2638,4 +2638,51 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION. Es aendert sich kein Feld und keine Tabelle.
  */
-const WEB_VERSION = '15.2.0';
+/*
+ * 15.3.0 GIBT DEM BETRIEB SEIN BILD.
+ *
+ * ZWEI SEITEN, UND SIE BEANTWORTEN ZWEI VERSCHIEDENE FRAGEN.
+ *
+ * STATUS: „Ist hier etwas zu tun?" Der Befund war die Verstreuung (B-S8-12).
+ * Der Serverschluessel meldete sich als rote Karte bei den Backup-Zielen, die
+ * Schluesselableitung als rote Karte auf der Wartungsseite, der Speicherstand
+ * als Balken unter den Backups, die Job-Fehler als Plakette in einer Liste.
+ * Jede fuer sich richtig; zusammen ergaben sie kein Bild. Wer wissen wollte,
+ * ob diese Installation in Ordnung ist, musste sechs Seiten aufrufen und auf
+ * jeder wissen, worauf zu achten ist.
+ *
+ * Jetzt: vier Karten, eine Ampelzeile je Sache, eine Meldung oben, die zaehlt.
+ * Die Ampel ist eine TABELLE und keine Meinung — blau heisst „in Ordnung",
+ * orange „braucht Aufmerksamkeit und arbeitet", rot „arbeitet nicht", neutral
+ * „nicht eingerichtet". Keine neuen Toene; neu ist die feste Bedeutung.
+ *
+ * Die Seite aendert nichts. Die einzige Ausnahme ist der fehlende
+ * Serverschluessel: Von der Seite, die das Problem meldet, auf eine andere zu
+ * schicken, wo derselbe Knopf steht, waere ein Umweg ohne Zweck.
+ *
+ * STATISTIK: „Was traegt diese Installation?" Konten nach Rolle, Geraete nach
+ * Art, Einsaetze in drei Zeitraeumen, Geraetemodelle als sortierbare Tabelle
+ * mit CSV. Durchgaengig OHNE Demo-Konto — sein Bestand ist erfunden und wird
+ * alle dreissig Minuten aus der Fixture neu hergestellt; ihn mitzuzaehlen
+ * hiesse, 88 erfundene Einsaetze als Nutzung auszugeben.
+ *
+ * ZWEI OFFENE FRAGEN DES KONZEPTS SIND BEANTWORTET:
+ *
+ *   Z-01: Eine letzte Mailzustellung wurde NICHT aufgezeichnet.
+ *         `smtp_eingerichtet()` prueft die config.php, nicht den Mailserver —
+ *         ein falsches Passwort fiel erst auf, wenn jemand einen Setz-Link
+ *         erwartete, der nie ankam. `smtp_send()` vermerkt jetzt Zeitpunkt und
+ *         Erfolg in `app_state`, gekapselt und ohne Datenbankzwang. Ohne den
+ *         Vermerk waere „SMTP-Fehler beim letzten Versand" ein Ampelzustand,
+ *         den es nie zu sehen gaebe.
+ *
+ *   Z-02: Eine Wear-OS-Uhr bekommt NIE eine Geraetezeile. Sie hat weder
+ *         Serveradresse noch Schluessel (E-S4-11) und koppelt nicht; gekoppelt
+ *         ist das Handy. Die im Mockup vorgesehene Zeile „Wear-OS-Uhren" waere
+ *         dauerhaft null gewesen — eine Zeile, die bauartbedingt nie etwas
+ *         zaehlt, sagt nicht „null", sondern verschweigt, dass es hier nichts
+ *         zu zaehlen gibt. Statt der Zeile steht ein Satz.
+ *
+ * KEINE MIGRATION. `smtp_last` und `smtp_last_ok` liegen in `app_state`.
+ */
+const WEB_VERSION = '15.3.0';

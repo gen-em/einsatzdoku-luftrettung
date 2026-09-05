@@ -254,8 +254,9 @@ links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 **Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
 finden darunter einen zweiten Block **Administration** mit NutzerInnen,
 **Stammdaten systemweit**, **Konto-Backups**, **Backup-Ziele**,
-**Komplett-Backup**, **Installation**, Demo-Konto sowie **Updates**,
-**Hintergrundjobs** und **Servereinstellungen** (Abschnitt 11). Abmelden steht getrennt am Ende und
+**Komplett-Backup**, **Installation**, Demo-Konto sowie **Status**,
+**Statistik**, **Updates**, **Hintergrundjobs** und **Servereinstellungen**
+(Abschnitt 11). Abmelden steht getrennt am Ende und
 fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
 Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
 „Standorte".
@@ -2878,6 +2879,75 @@ auf der Wartungsseite), und wer Zugang zum Webspace hat, löscht die Datei
 Schalter nicht.
 
 
+#### Betrieb → Status
+
+**Eine Seite, die man ansieht und dann weiß, ob etwas zu tun ist.** Bis
+Web 15.2.0 lag diese Auskunft verstreut: Der Serverschlüssel meldete sich bei
+den Backup-Zielen, die Schlüsselableitung auf der Wartungsseite, der
+Speicherstand unter den Backups, ein Job-Fehler als Plakette in einer Liste.
+Wer wissen wollte, ob die Installation in Ordnung ist, musste sechs Seiten
+aufrufen.
+
+Oben steht eine Meldung mit einer Zahl — *„2 Punkte brauchen Aufmerksamkeit"*
+oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
+**Hintergrundjobs** und **Backups**, je Sache eine Zeile mit einer Plakette.
+
+**Die Plakettenfarbe bedeutet auf dieser Seite überall dasselbe:**
+
+| Farbe | heißt |
+|---|---|
+| **blau** | Es ist in Ordnung. |
+| **orange** | Es braucht Aufmerksamkeit, arbeitet aber. |
+| **rot** | Es arbeitet nicht — oder es geht dabei etwas verloren. |
+| grau | Nicht eingerichtet, oder eine reine Zahl ohne Wertung. |
+
+**Die Seite ändert nichts.** Jede Zeile führt auf die Seite, auf der sich
+etwas ändern lässt. Die einzige Ausnahme ist der fehlende **Serverschlüssel** —
+ohne ihn gibt es weder Komplett-Backup noch Versand auf ein Backup-Ziel, und
+der Weg dorthin ist ein Knopf.
+
+**Die Zahlen sind nicht alle gleich alt.** Wartungsmodus, Migrationen, Jobs,
+Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von
+Datenbank und Dateien kommt aus der täglichen Messung im Aufräumjob; die
+Zeile „Datenbank" sagt, wann sie entstanden ist.
+
+#### Betrieb → Statistik
+
+**Was diese Installation trägt** — Konten, Geräte, Einsätze. Rein lesend,
+keine Ampel: Der Status bewertet, die Statistik zählt.
+
+> **Ohne Demo-Konto**, und zwar in jeder Zahl. Sein Bestand ist erfunden und
+> wird alle dreißig Minuten neu aus einer Vorlage hergestellt; ihn
+> mitzuzählen hieße, erfundene Einsätze als Nutzung auszugeben. „Von 11
+> Konten" meint elf echte.
+
+- **Konten** nach Rolle, dazu wie viele ohne Gerät sind, und eine Tabelle
+  *zuletzt angemeldet / neu angelegt* über 7 Tage, 30 Tage und 6 Monate.
+- **Geräte** nach Art — Garmin-Uhren, Android-Handys, deaktivierte —, dazu
+  *zuletzt gemeldet / gekoppelt* über dieselben Zeiträume.
+- **Einsätze**: Zahl, wie viele NutzerInnen einen Einsatz hatten, und zwei
+  Durchschnitte — je aktiver NutzerIn und je NutzerIn gesamt.
+- **Gerätemodelle** als Tabelle: Gerät, Hersteller, Art, Zahl und Anteil.
+  Ein Klick auf einen Spaltenkopf sortiert; **„Als CSV"** im Kartenkopf lädt
+  dieselben Spalten als Datei herunter, für Excel gemacht (Semikolon,
+  Umlaute richtig).
+
+**Gezählt wird nach Diensttag**, wie in der eigenen Statistik — nicht nach
+dem Beginn des Einsatzes. Sonst fiele ein Einsatz von 23:50 bis 00:20 in
+einen anderen Zeitraum als der Dienst, zu dem er gehört. Der Papierkorb zählt
+nicht mit. „6 Monate" sind 180 Tage.
+
+> **Wear-OS-Uhren erscheinen hier nicht**, und das ist kein Fehler: Die
+> Uhr-App kennt weder Serveradresse noch Schlüssel. Sie schickt ihre
+> Ereignisse an das Handy, und das Handy sendet — gekoppelt ist also das
+> Handy. Eine verlorene Uhr gibt keinen Zugang preis; das ist der Zweck
+> dieser Bauform.
+
+> **Der Hersteller steht nirgends gespeichert**, er wird abgeleitet: Eine
+> Uhr, die koppelt, ist eine Garmin-Uhr; bei einem Handy gilt das erste Wort
+> des Modellnamens, weil der Name aus Hersteller und Modell zusammengezogen
+> ist. Eine Faustregel, keine Zusage.
+
 #### Die Seite „Wartung" gibt es nicht mehr
 
 Bis Web 15.0.0 trug sie neun Blöcke auf einer Fläche: Serverbetrieb, Logo,
@@ -2891,6 +2961,7 @@ jede Seite trägt ein Anliegen. Was wohin gegangen ist:
 | Zustand der Hintergrundjobs, die drei Auslöser, das Token | Betrieb → **Hintergrundjobs** |
 | Speichergrenze, Warnschwellen, Belegung, Ablage | Betrieb → **Servereinstellungen** |
 | Logo der Installation | Verwaltung → **Installation** |
+| Schlüsselableitung, Umgebung (PHP, Zeitzone) | Betrieb → **Status** |
 | Einsätze ohne Diensttag | **entfallen** — jede NutzerIn sieht ihre eigenen als „Zuordnung offen" in der Diensttage-Leiste (8.1) und ordnet sie selbst zu |
 
 Die alte Adresse führt weiter zum Ziel; ein Lesezeichen bleibt gültig.

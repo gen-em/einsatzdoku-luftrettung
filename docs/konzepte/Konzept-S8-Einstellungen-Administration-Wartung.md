@@ -8,10 +8,10 @@ mit Fable nach R14 · Ablage `docs/konzepte/` (R62), Mockups in
 >
 > | | |
 > |---|---|
-> | Stand | 05.09.2026 — **AP1 bis AP3 erledigt** (Web 15.0.0, 15.1.0, 15.2.0). Umsetzung auf `claude/umsetzung-buuvfq` |
-> | Paket in Arbeit | **AP4 — Betrieb, Teil 2: Status, Statistik** |
-> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4) |
-> | Wo es hakt | nichts Blockierendes. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). Zu prüfen in AP4: ob eine letzte Mailzustellung aufgezeichnet wird (Z-01); was die Wear-OS-App als `art` sendet (Z-02) |
+> | Stand | 05.09.2026 — **AP1 bis AP4 erledigt** (Web 15.0.0 bis 15.3.0). Umsetzung auf `claude/umsetzung-buuvfq` |
+> | Paket in Arbeit | **AP5 — Menü und Leiste** |
+> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4); **AP4** (Betrieb Teil 2, Abschnitt 11.5) |
+> | Wo es hakt | nichts Blockierendes. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). **Z-01 und Z-02 sind in AP4 beantwortet** (Abschnitt 11.5) |
 > | Umsetzungsumgebung | lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (MariaDB 10.11.14, PHP 8.4.19, Chromium); `00-ist-*`-Bilder vor AP1 aufgenommen |
 > | Fable-Schritt | **das Konzept selbst** (R14, Rahmenplan Schritt 7); die Umsetzung läuft nach K2 mit Opus. Mockup-Freigabe je Darstellung durch den Auftraggeber (`CLAUDE.md` 5) |
 > | Erhoben an | `main` vom 04.09.2026, 21:14 UTC: **Web 14.2.2, Uhr 3.0.0, Android 0.13.0** (PR #33, Schritt 6 gemergt), Rahmenplan Fassung 27 |
@@ -1629,12 +1629,113 @@ Einträge in die Liste gehängt hat.
 
 ---
 
+### 11.5 AP4 — Betrieb, Teil 2: Status und Statistik (05.09.2026, Web 15.3.0)
+
+**Version:** Web **15.3.0** — Nebennummer. Zwei neue Seiten, eine
+Stylesheet-Regel, ein Vermerk in `app_state`; **keine Migration**, kein Feld,
+keine Tabelle.
+
+**Gebaut:**
+
+| Was | Wo |
+|---|---|
+| Status: vier Karten, Ampelzeilen, zählende Meldung oben | `server/betrieb_status.php` (neu) |
+| Statistik: Konten, Geräte, Einsätze, Gerätemodelle mit CSV | `server/betrieb_statistik.php` (neu) |
+| Letzten Mailversand vermerken (Z-01) | `server/smtp.php` |
+| `th[scope="row"]` links statt mittig | `server/assets/style.css`, `docs/Design.md` 9.24 |
+| Ampelbedeutung der vier Töne | `docs/Design.md` 9.23 |
+| Beide Seiten in Menü, Ausnahmeliste und Bilderlauf | `server/ui.php`, `server/wartung_lib.php`, `tools/screenshots/seiten.json` |
+| Wartungsprobe auf fünf Betriebsseiten und die 302 | `tools/wartungsprobe/probe.php` + `LIESMICH.md` |
+| Doku | `docs/Handbuch.md` 3, 11.3 (Status, Statistik, Wegweiser), `docs/Technik.md` 2, **4.99e (neu)**, 4.99c, 4.99d, `docs/CHANGELOG.md` |
+
+**Die beiden offenen Fragen sind beantwortet:**
+
+- **Z-01 — wird eine letzte Mailzustellung aufgezeichnet?** **Nein, sie wurde
+  es nicht.** `smtp_eingerichtet()` prüft die `config.php`, nicht den
+  Mailserver; ein falsches Passwort oder ein umgezogener Host fiel erst auf,
+  wenn jemand einen Setz-Link erwartete, der nie ankam — im Fehlerprotokoll
+  des Webspace stand es, und dort sieht niemand nach. Ohne Vermerk wäre
+  „SMTP-Fehler beim letzten Versand" ein Ampelzustand, den es nie zu sehen
+  gäbe. `smtp_send()` schreibt jetzt `smtp_last` und `smtp_last_ok` nach
+  `app_state` — gekapselt, ohne Datenbankzwang (`smtp.php` läuft auch im
+  Einrichter und im Shutdown-Handler) und ohne Empfänger oder Betreff.
+- **Z-02 — was sendet die Wear-OS-App als `art`?** **Nichts, sie sendet
+  nicht.** Die Wear-OS-App hat weder Serveradresse noch Schlüssel (E-S4-11);
+  sie schickt ihre Ereignisse an das Handy, und das Handy koppelt. In
+  `devices` steht deshalb nur `art = 'uhr'` (Garmin, mit Teilenummer) oder
+  `art = 'handy'` (`Geraeteangabe.ART_HANDY`). Belegt am Quelltext:
+  `android/handy/…/kopplung/Geraeteangabe.kt` kennt genau eine Konstante, und
+  im `uhr`-Modul gibt es keine Kopplung.
+
+**Entscheidungen der Umsetzung (U-Nummern):**
+
+- **U-AP4-01 — Die Zeile „Wear-OS-Uhren" entfällt, ein Satz tritt an ihre
+  Stelle.** Mockup 04 führt sie und eine Geräteart „Uhr (Wear OS)"; beide
+  wären dauerhaft null. Eine Zeile, die bauartbedingt nie etwas zählt, sagt
+  nicht „null Wear-OS-Uhren" — sie verschweigt, dass es hier nichts zu zählen
+  gibt. Der Satz erklärt stattdessen die Bauform, und die ist eine
+  Sicherheitsaussage.
+- **U-AP4-02 — Der Hersteller wird über die Geräteart abgeleitet, nicht über
+  die Teilenummer.** Die Regel des Konzepts stimmt, ist aber nicht
+  vollständig: `geraet_teil` bleibt leer, wenn eine ältere Uhr-Fassung nichts
+  über sich meldet. Im Referenzbestand steht bei der `fēnix 7` genau das, und
+  die Regel machte daraus den Hersteller **„fēnix"** — im Prüflauf gesehen.
+- **U-AP4-03 — Die Meldung oben entsteht zuletzt und wird zuerst ausgegeben.**
+  Sie nennt eine Zahl („2 Punkte brauchen Aufmerksamkeit"), und die kann nur
+  zählen, wer die Karten schon gerechnet hat. Der Rumpf läuft deshalb in einen
+  Ausgabepuffer. Ein Vorlauf, der die Zeilen zweimal rechnet, hätte die
+  Messungen zweimal gekostet; eine von Hand gepflegte Zahl wäre beim nächsten
+  Umbau falsch.
+- **U-AP4-04 — Die Statusseite ändert genau eine Sache: nichts.** Ausnahme ist
+  der fehlende Serverschlüssel, und auch dort nur als Weg auf die Seite mit
+  dem Knopf. Von der Seite, die das Problem meldet, auf eine andere zu
+  schicken, wo derselbe Knopf steht, wäre ein Umweg ohne Zweck.
+- **U-AP4-05 — „6 Monate" sind 180 Tage.** Ein Monat ist keine feste Länge;
+  drei verschieden lange Monate in einer Spalte wären eine stille
+  Ungenauigkeit. Steht so in der Fußnote.
+- **U-AP4-06 — Einsätze zählen nach Diensttag, ohne Papierkorb.** Wie die
+  Statistik der NutzerIn — zwei Zählweisen für dieselbe Zahl wären zwei
+  Wahrheiten. Geprüft wird `deleted_at IS NULL` an `missions` **und** an
+  `days`: Ein Einsatz kann für sich gelöscht sein oder mit seinem Diensttag.
+- **U-AP4-07 — `th[scope="row"]` bekommt eine eigene Regel.** `.tabelle th`
+  steht auf `center`; das ist für die Kopfzeile richtig und für einen
+  Zeilenkopf falsch. Die Regel greift nur bei `scope="row"`, und bis Web
+  15.2.0 gab es keine solche Tabelle — sie ändert also an keiner Bestandsseite
+  etwas.
+- **U-AP4-08 — Der Anteil unter einer Zahl benutzt `zeile-klein`.** Die Klasse
+  ist der gedämpfte Zusatz in kleiner Schrift; eine eigene Klasse dafür wäre
+  eine zweite Regel mit demselben Inhalt.
+
+**Probleme und Funde:**
+
+- **F-S8-P-09 (behoben): Die Wartungsprobe scheiterte an der eigenen
+  Weiterleitung.** Erwartung 7 verlangte für `update.php` im Wartungsmodus
+  HTTP 200 — seit S8/AP3 ist die Adresse eine 302. Die Probe hat also
+  richtig gemessen und die falsche Zahl erwartet; „offen" heißt für diese
+  Adresse jetzt „leitet weiter" und nicht „antwortet". Angepasst; dazu die
+  fünf Betriebsseiten in Erwartung 6 und die elf Ausnahmen in Erwartung 17.
+- **Zwei Ampelzustände sind schwer zu erreichen, und das ist eine Eigenschaft
+  der Anwendung — kein Fehler.** „Kein Job-Lauf seit über 24 h" widerlegt sich
+  beim Aufruf der Statusseite selbst: Der Huckepack-Weg läuft auf **dieser**
+  Anfrage mit. Sichtbar wird der Zustand, wenn die Jobs pausiert sind — so
+  wurde er auch geprüft. Und „Ablage nicht beschreibbar" lässt sich als `root`
+  nicht über Rechte erzwingen; geprüft wurde er, indem eine **Datei** an die
+  Stelle des Verzeichnisses trat, sodass `mkdir()` scheitert. Beides steht im
+  Prüfdokument.
+
+**Was AP4 ausdrücklich noch nicht tut:** die Zähler an den Menüeinträgen
+(„Status · 3"). Sie gehören zu AP5, das die Leiste baut; bis dahin sind beide
+Seiten flach in der Liste erreichbar.
+
+---
+
 ---
 
 ## Änderungsverlauf dieses Dokuments
 
 | Datum | Was |
 |---|---|
+| 05.09.2026 | **AP4 erledigt** (Web 15.3.0): Betrieb → Status mit Ampel (vier Karten, zählende Meldung) und Betrieb → Statistik (ohne Demo-Konto, mit CSV). **Z-01 und Z-02 beantwortet** — eine Mailzustellung wurde nicht aufgezeichnet (jetzt schon), und eine Wear-OS-Uhr koppelt bauartbedingt nie. Ein Fund (F-S8-P-09), Umsetzungsentscheidungen U-AP4-01 bis -08 |
 | 05.09.2026 | **AP3 erledigt** (Web 15.2.0): „Rechtstexte" wird „Installation" (mit dem Logo), „Backups" werden „Konto-Backups", die Freigabe bekommt eine Zustandszeile, „Abonnement" entfällt. Zwei Bausteine (Logo-Vorschau, Kopfaktion als Absendeknopf), zwei Funde (F-S8-P-07 Kachel wog den ganzen Baum, F-S8-P-08 „Wartung" an neun Stellen), Umsetzungsentscheidungen U-AP3-01 bis -10. Bestandsaufnahme mit einem Workflow gefahren |
 | 05.09.2026 | **AP2 erledigt** (Web 15.1.0): die Wartungsseite aufgelöst — `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`; Migrationskatalog nach `migration_lib.php`; Speichermessung im Aufräumjob (`speicher_lib.php`); zwei Bausteine (`codeblock-lang`, `speicher-balken`). Drei Funde (F-S8-P-04 bis -06), alle behoben — darunter ein Wartungsmodus, der sich selbst aussperrte. Umsetzungsentscheidungen U-AP2-01 bis -07 |
 | 05.09.2026 | **AP1 erledigt** (Web 15.0.0): dritte Rolle mit Migration, Hierarchie über `ist_admin()`, zwei Schranken, `install.php` legt BetreiberIn an, Profil zeigt die Rolle. Drei Funde (F-S8-P-01 bis -03), alle behoben — darunter eine seit dem Merge `589982b` unbrauchbare `ausnahmen.json` der Wortliste. Umsetzungsentscheidungen U-AP1-01 bis -06 |

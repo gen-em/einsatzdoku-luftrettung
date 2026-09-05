@@ -14,6 +14,87 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.3.0] — 2026-09-05
+
+### Web — Betrieb bekommt Status und Statistik (S8/AP4)
+
+Zwei Seiten, zwei Fragen. **Status** beantwortet „ist hier etwas zu tun?",
+**Statistik** „was trägt diese Installation?". Beide sind rein lesend; die
+eine bewertet, die andere zählt.
+
+**Status: der Befund war die Verstreuung** (B-S8-12). Der Serverschlüssel
+meldete sich als rote Karte bei den Backup-Zielen, die Schlüsselableitung als
+rote Karte auf der Wartungsseite, der Speicherstand als Balken unter den
+Backups, die Job-Fehler als Plakette in einer Liste. Jede für sich richtig;
+zusammen ergaben sie kein Bild. Wer wissen wollte, ob diese Installation in
+Ordnung ist, musste sechs Seiten aufrufen und auf jeder wissen, worauf zu
+achten ist.
+
+Jetzt vier Karten — Server, E-Mail, Hintergrundjobs, Backups —, je Sache eine
+Zeile mit Ampel, und oben eine Meldung, die zählt: „2 Punkte brauchen
+Aufmerksamkeit" oder „Alles läuft". **Die Ampel ist eine Tabelle, keine
+Meinung:** blau heißt *in Ordnung*, orange *braucht Aufmerksamkeit und
+arbeitet*, rot *arbeitet nicht*, neutral *nicht eingerichtet*. Keine neuen
+Töne — neu ist, dass sie auf dieser Seite überall dasselbe bedeuten.
+
+Die Seite ändert nichts; jede Zeile führt dorthin, wo sich etwas ändern
+lässt. Die einzige Ausnahme ist der fehlende Serverschlüssel: Von der Seite,
+die das Problem meldet, auf eine andere zu schicken, wo derselbe Knopf steht,
+wäre ein Umweg ohne Zweck.
+
+**Eine offene Frage des Konzepts ist damit beantwortet und hat eine kleine
+Änderung nach sich gezogen** (Z-01): Eine letzte Mailzustellung wurde bisher
+nirgends aufgezeichnet. `smtp_eingerichtet()` prüft die `config.php`, nicht
+den Mailserver — ein falsches Passwort oder ein umgezogener Host fiel erst
+auf, wenn jemand einen Setz-Link erwartete, der nie ankam; im Fehlerprotokoll
+des Webspace stand es, und dort sieht niemand nach. `smtp_send()` vermerkt
+jetzt Zeitpunkt und Erfolg. Nicht vermerkt wird, **was** versendet wurde und
+**an wen** — das gehörte in ein Protokoll, und ein Protokoll über
+Mailempfänger führt diese Anwendung nicht.
+
+**Statistik: durchgängig ohne Demo-Konto.** Sein Bestand ist erfunden, liegt
+als Fixture im Repositorium und wird alle dreißig Minuten daraus neu
+hergestellt. Ihn mitzuzählen hieße, 88 erfundene Einsätze als Nutzung
+auszugeben. Die Bezugsgröße steht deshalb an jeder Karte: „von 11 Konten"
+meint elf echte.
+
+Konten nach Rolle, Geräte nach Art, Einsätze in drei Zeiträumen — jeweils mit
+Anteil. **Einsätze werden nach Diensttag gezählt**, wie die Statistik der
+NutzerIn: Sonst fällt ein Einsatz von 23:50 bis 00:20 in einen anderen
+Zeitraum als der Dienst, zu dem er gehört. Ohne Papierkorb, denn ein
+gelöschter Einsatz ist keine Nutzung. „6 Monate" sind 180 Tage — ein Monat
+ist keine feste Länge, und drei verschieden lange Monate in einer Spalte
+wären eine stille Ungenauigkeit.
+
+Dazu eine sortierbare Tabelle **Gerätemodelle** mit Ausfuhr als CSV.
+Semikolon und UTF-8-BOM, beides für Excel in deutscher Einstellung: Es liest
+Komma-CSV als eine Spalte und UTF-8 ohne BOM als Latin-1 — aus „fēnix" wird
+„fÄ“nix", und wer die Datei danach speichert, hat den Fehler in seinen Daten.
+Sortiert wird über die Adresse, ohne Skript, mit demselben Markup wie die
+NutzerInnen-Liste.
+
+**Wear-OS-Uhren erscheinen in keiner Zahl, und das ist kein Versehen**
+(Z-02). Die Uhr-App hat weder Serveradresse noch Schlüssel — sie koppelt
+nicht, sie schickt ihre Ereignisse an das Handy, und das Handy sendet.
+Gekoppelt ist also das Handy. Das Mockup führte eine Zeile „Wear-OS-Uhren"
+und eine Geräteart „Uhr (Wear OS)"; beide wären dauerhaft null. Eine Zeile,
+die bauartbedingt nie etwas zählt, sagt nicht „null", sondern verschweigt,
+dass es hier nichts zu zählen gibt. An ihrer Stelle steht ein Satz, der die
+Bauform erklärt.
+
+**Der Hersteller wird über die Geräteart abgeleitet**, nicht über die
+Teilenummer. Die Regel des Konzepts („Teilenummer vorhanden → Garmin")
+stimmt, ist aber nicht vollständig: `geraet_teil` bleibt leer, wenn eine
+ältere Uhr-Fassung nichts über sich meldet. Im Referenzbestand steht bei der
+`fēnix 7` genau das, und die Regel machte daraus den Hersteller „fēnix".
+
+**Eine neue Regel im Stylesheet:** `th[scope="row"]` steht links statt mittig.
+`.tabelle th` ist auf `center` — richtig für die Kopfzeile, falsch für die
+erste Spalte einer Kennzahlentabelle, in der links die Beschriftung und
+rechts die Zahlen stehen. Bis jetzt gab es keine solche Tabelle.
+
+**Keine Migration.** `smtp_last` und `smtp_last_ok` liegen in `app_state`.
+
 ## [Web 15.2.0] — 2026-09-05
 
 ### Web — die Verwaltung bekommt eine Ordnung (S8/AP3)

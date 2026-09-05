@@ -736,15 +736,15 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | Datei | Herkunft (Tabler-Name) | Nennungen im Code |
 |---|---|--:|
 | `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
-| `balken.svg` | Tabler Icons „chart-bar" (MIT) | 2 |
-| `datenbank.svg` | Tabler Icons „database" (MIT) | 14 |
+| `balken.svg` | Tabler Icons „chart-bar" (MIT) | 4 |
+| `datenbank.svg` | Tabler Icons „database" (MIT) | 15 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 0 |
-| `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
+| `gruppe.svg` | Tabler Icons „users" (MIT) | 21 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 23 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 3 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 19 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 21 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 6 |
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
@@ -756,7 +756,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
-| `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 7 |
+| `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 8 |
 | `plus.svg` | Tabler Icons „plus" (MIT) | 16 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 4 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 13 |
@@ -767,12 +767,12 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 9 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 12 |
-| `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 3 |
+| `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 5 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 9 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 7 |
-| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 13 |
-| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 273 |
+| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 14 |
+| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 278 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 27 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 2 |
@@ -838,28 +838,28 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_geruest_ende()` | `.inhalt` | ja | 508 |
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 547 |
 | `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 700 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja | 801 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 883 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 926 |
-| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 993 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1039 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1092 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1118 |
-| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1154 |
-| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1212 |
-| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1228 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1270 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1312 |
-| `ui_feld()` | `.feld` | ja (+24 Unterklassen) | 1381 |
-| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1446 |
-| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1490 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1543 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1587 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1670 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1732 |
-| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1773 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1830 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 1983 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja | 803 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 887 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 930 |
+| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 997 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1043 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1096 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1122 |
+| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1158 |
+| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1216 |
+| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1232 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1274 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1316 |
+| `ui_feld()` | `.feld` | ja (+24 Unterklassen) | 1385 |
+| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1450 |
+| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1494 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1547 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1591 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1674 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1736 |
+| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1777 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1834 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 1987 |
 
 33 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -1538,6 +1538,49 @@ Titelaktionen benutzt.
 
 **Es bleibt bei EINER Kopfaktion je Karte** (E-P3-25). Was mehr braucht,
 bekommt ein Aktionsmenü.
+
+### 9.23 Die Ampel: was die vier Plakettentöne auf einer Statusseite heißen
+
+*Neu mit Web 15.3.0 (S8/AP4, E-S8-16).* **Keine neuen Töne** — die vier gibt
+es seit P3 (9.4). Neu ist, dass sie auf **Betrieb → Status** eine feste
+Bedeutung tragen, und dass diese Bedeutung an einer Stelle steht.
+
+| Ton | heißt | woran man es erkennt |
+|---|---|---|
+| **blau** | Es ist in Ordnung. | Der Normalzustand. Eine blaue Zeile fordert nichts. |
+| **orange** | Es braucht Aufmerksamkeit, **arbeitet aber**. | Wartungsmodus an, Job mit Rückstand, Backup überfällig. |
+| **rot** | Es **arbeitet nicht** — oder es geht dabei etwas verloren. | Serverschlüssel fehlt, Job mit Fehler, Ablage nicht beschreibbar. |
+| neutral | Nicht eingerichtet, oder eine reine Zahl ohne Wertung. | Kein Backup-Ziel, PHP-Fassung. |
+
+**Der Unterschied zwischen orange und rot ist nicht die Schwere, sondern die
+Frage „läuft es noch?".** Ein überfälliges Konto-Backup ist ärgerlich, aber
+die Anwendung arbeitet; ein fehlender Serverschlüssel heißt, dass kein
+Komplett-Backup mehr entsteht. Wer diese Grenze verschiebt, macht die Farbe
+zur Meinung — und dann liest sie niemand mehr.
+
+**Null ist kein Befund.** Eine Zahl von 0 bekommt den neutralen Ton, nicht
+den warnenden. „0 überfällig" in Orange behauptet ein Problem, wo gerade
+keines ist (dieselbe Regel wie bei den Statuskacheln, O11).
+
+**Eine Statusseite bewertet, eine Statistik zählt.** Was nichts fordert,
+gehört nicht in die Ampel — `betrieb_statistik.php` trägt deshalb keine.
+
+### 9.24 Zeilenkopf in einer Kennzahlentabelle
+
+*Neu mit Web 15.3.0.* `.tabelle th[scope="row"]` steht **links**, nicht
+mittig. `.tabelle th` ist auf `center` — richtig für die Kopfzeile, falsch für
+die erste Spalte einer Tabelle, in der links die Beschriftung und rechts die
+Zahlen stehen.
+
+```html
+<tr><th scope="row">Zuletzt angemeldet</th>
+    <td class="zahl-spalte">9 <span class="zeile-klein">82 %</span></td></tr>
+```
+
+**`zeile-klein` in einer Tabellenzelle** ist Absicht und kein Missgriff: Die
+Klasse ist der gedämpfte Zusatz in kleiner Schrift, und genau das ist der
+Anteil unter der Zahl. Eine eigene Klasse dafür wäre eine zweite Regel mit
+demselben Inhalt.
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 

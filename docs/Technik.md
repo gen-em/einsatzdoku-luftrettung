@@ -507,7 +507,7 @@ Daten erst nach Server-Bestätigung.
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
@@ -1872,9 +1872,10 @@ dieser Reihenfolge:
 
 Welcher Weg auf der eigenen Installation greift, stand bis Web 15.0.0 auf der
 Wartungsseite unter „Umgebung". Es ist die Eigenschaft, an der die Gleichheit
-beider Zweige hängt, und sie ließ sich sonst nirgends ablesen. **Seit S8/AP2 ist
-sie vorübergehend nirgends abzulesen** — die Karte zieht in S8/AP4 auf
-Betrieb → Status; bis dahin hilft nur `php -m` bzw. ein Blick in `phpinfo()`.
+beider Zweige hängt, und sie ließ sich sonst nirgends ablesen. **Seit
+Web 15.3.0 steht sie auf Betrieb → Status**, in der Zeile „Antwort und
+Versand" der Karte E-Mail. In Web 15.1.0 und 15.2.0 war sie vorübergehend
+nicht abzulesen.
 
 **Bewusst keine Warteschlange.** Es gibt keinen Cronjob; die Wartung läuft
 huckepack, höchstens einmal täglich. Eine Warteschlange hätte den Link zum
@@ -3860,7 +3861,7 @@ Die Bausteine im Einzelnen:
 | Migrationsschutz | `migration_lib.php` (`migrationen_inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert). Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
 | Blockabfrage | `db.php` (`sql_in_bloecken()`) | Eine Abfrage je Tabelle statt einer je Datensatz, in Blöcken zu 1000 IDs. Benutzt von Export, Tagesansicht und Backup. Die Vorlage trägt `{IDS}` und ist **keine** Formatzeichenkette — ein Prozentzeichen im SQL bleibt ein Prozentzeichen. |
 | Formatkennung des Chiffretexts | `assets/crypto.js` (`CHIFFRE_PRAEFIX`), `validate_lib.php` (`PAT_BLOB_RE`, `WRAP_RE`) | `edk1:` vor jedem Chiffretext. Schreiben immer, Lesen großzügig (keine Kennung = erste Fassung), unbekannte Kennung wird als solche gemeldet. Betrifft `pat_blob` **und** beide Schlüsselhüllen — sie kommen aus derselben Funktion. |
-| Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Karte „Schlüsselableitung" meldete diesen Zustand — sie ist seit S8/AP2 vorübergehend nicht sichtbar und zieht in S8/AP4 auf Betrieb → Status. |
+| Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Zeile „Schlüsselableitung" auf Betrieb → Status meldet diesen Zustand (rot, „Anmeldung blockiert"). |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
 | Seitenhülle | `ui.php` (`ui_seite_start()`, `ui_seite_ende()`) | Ab Web 7.1.0. Doctype, `<head>`, Eröffnung und Abschluss des `<body>` — vorher 28-mal von Hand, mit zwei Schreibweisen des Viewports und zwei Titeltrennern. Leaflet-CSS nur auf Kartenseiten und **vor** `style.css`, damit eigene Regeln die des Kartenwerks überschreiben. **Ohne Abhängigkeit auf oberster Ebene**, damit `install.php` sie vor der Ersteinrichtung laden kann; `asset()`, `e()` und `favicon_tags()` werden über `ui_asset()`/`ui_e()`/`ui_favicon()` nur benutzt, wo es sie gibt. **`install.php` lädt sie seit Web 9.10.1 am Dateianfang** — vorher stand das `require_once` in `render_page()` selbst, und weil die Aufrufer ihr Argument mit `ui_meldung_markup()` und `ui_knopf()` bauen (PHP wertet Argumente vor dem Aufruf aus), endete jeder Zweig in „Call to undefined function". Der Einrichter war damit seit Web 9.1.0 unbenutzbar (F-P3-AR). |
@@ -4221,7 +4222,7 @@ geändert** (E-S5W-08).
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript `ingest.php` oder `pair.php` heißt — die beiden liegen nicht unter `/api/`, und genau sie brauchen JSON |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
-| Ausnahmen | neun Skripte, verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`, `install.php`. **Die drei Betriebsseiten stehen seit S8/AP2 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Ausnahmen | elf Skripte, verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`, `install.php`. **Die fünf Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
 | Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
 | Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
 | Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
@@ -4489,7 +4490,7 @@ zuerst die anderen drei. S8 teilt sie nicht auf, sondern **löst sie auf**
 | Wartungsmodus, Migrationen, Fassung | `betrieb_updates.php` (Betrieb → Updates) |
 | Hintergrundjobs, Auslöser, Token | `betrieb_jobs.php` (Betrieb → Hintergrundjobs) |
 | Speichergrenze, Warnschwellen, Ablage | `betrieb_server.php` (Betrieb → Servereinstellungen) |
-| Schlüsselableitung, Umgebung | `betrieb_status.php` (S8/AP4 — bis dahin nicht sichtbar) |
+| Schlüsselableitung, Umgebung | `betrieb_status.php` (seit Web 15.3.0) |
 | Logo der Installation | `admin_installation.php` (S8/AP3 — bis dahin auf `update.php`) |
 | Einsätze ohne Diensttag | ersatzlos entfallen (E-S8-17) |
 
@@ -4552,7 +4553,7 @@ Webspace laut Hosting. Drei Eigenheiten, die den Aufbau erklären:
    zweiten Balken als eigene Segmente; zweimal in dieselbe Summe genommen
    ergäbe das einen Balken über 100 %.
 
-`speicher_ton()` färbt Balken, Legende und (ab AP4) Statusseite nach **denselben**
+`speicher_ton()` färbt Balken, Legende und Statusseite nach **denselben**
 Schwellen wie die Warnmail (Vorgabe 70/90) — sonst färbte sich der Balken
 orange, während die Mail schweigt. Genauigkeit gemessen (P-10): Dateien
 7 632 622 B gegen `du -sb --exclude=sicherungen` 7 632 622 B, Datenbank
@@ -4569,6 +4570,107 @@ Ohne JavaScript bliebe sonst ein Knopf stehen, der nichts tut. Der Weg ist
 sicherer Kontext), markiert das Skript den Text und meldet „markiert — Strg+C".
 Die Rückmeldung steht **im Knopf**, nicht daneben — eine Zeile, die auftaucht
 und wieder verschwindet, verschiebt sonst das Layout.
+
+### 4.99e Status und Statistik: bewerten und zählen (ab Web 15.3.0, S8/AP4)
+
+**Zwei Seiten, zwei Fragen — und die Trennung ist die Sache.**
+`betrieb_status.php` beantwortet „ist hier etwas zu tun?", `betrieb_statistik.php`
+„was trägt diese Installation?". Eine Zahl, die auf der Statistik orange wäre,
+gehört auf den Status; eine Auskunft, die nichts fordert, gehört nicht in die
+Ampel.
+
+#### Die Ampel ist eine Tabelle
+
+Vier Töne, und sie bedeuten auf der Statusseite **überall** dasselbe. Es sind
+keine neuen — `ui_plakette()` kennt sie seit P3 (Design.md 9.4); neu ist die
+feste Bedeutung.
+
+| Ton | heißt | Beispiele |
+|---|---|---|
+| **blau** | in Ordnung | Wartungsmodus aus · keine ausstehende Migration · Schlüssel vorhanden · Job ohne Fehler und ohne Rückstand · SMTP zugestellt · Komplett-Stand jünger als der Plan · Speicher unter der ersten Schwelle · Ablage beschreibbar |
+| **orange** | braucht Aufmerksamkeit, arbeitet aber | Wartungsmodus an · Migration ausstehend · Job mit Rückstand · Auslöser huckepack · Komplett-Stand älter als der Plan · Konto-Backups überfällig oder nie · Speicher ab der ersten Schwelle · Backup-Ziel aktiv, aber nie versendet · Antwort nicht sicher entkoppelt |
+| **rot** | arbeitet nicht, oder es geht etwas verloren | Serverschlüssel fehlt · verwaiste Rundenzahl · kein Job-Lauf seit über 24 h · Job mit Fehler · SMTP-Fehler beim letzten Versand · Komplett-Backup nie bei gesetztem Plan · Speicher ab der zweiten Schwelle · Ablage nicht beschreibbar · Tabelle `jobs` fehlt |
+| neutral | nicht eingerichtet, oder eine reine Zahl | SMTP nicht eingerichtet · kein Backup-Ziel · Plan „aus" · PHP-Fassung |
+
+Die Zuordnung steht an **einer** Stelle — `status_zeile()` in
+`betrieb_status.php` nimmt den Ton entgegen und zählt ihn zugleich. Deshalb
+kann die Meldung oben eine Zahl nennen, ohne dass jemand sie von Hand pflegt:
+Der Rumpf der Seite entsteht in einem **Ausgabepuffer**, die Meldung danach,
+ausgegeben wird sie davor. Ein Vorlauf, der die Zeilen zweimal rechnet, hätte
+die Messungen zweimal gekostet.
+
+**Zwei Ampelzustände sind schwer zu erreichen, und das ist eine Eigenschaft
+der Anwendung.** „Kein Job-Lauf seit über 24 h" wird beim Aufruf der
+Statusseite normalerweise sofort widerlegt: Der Huckepack-Weg
+(`run_cleanup_if_due` in `db.php`) läuft auf **dieser** Anfrage mit. Zu sehen
+ist er, wenn die Jobs pausiert sind (`php jobs.php --pause`) — dann steht
+darüber ohnehin die orange Zeile „Pause". Und „Ablage nicht beschreibbar"
+lässt sich als `root` nicht erzwingen: Die Rechteprüfung greift für `root`
+nicht, und `edbak_ablage_bereit()` legt das Verzeichnis notfalls neu an.
+
+#### Was die Statistik nicht zählt
+
+**Das Demo-Konto — in keiner Zahl.** Sein Bestand ist erfunden, liegt als
+Fixture im Repositorium und wird alle dreißig Minuten daraus neu hergestellt
+(4.99a). Jede Abfrage der Seite trägt deshalb `WHERE … <> :demo`; fehlt die
+Marke `demo_user_id`, ist der Wert 0 und die Bedingung wahr für alle —
+dieselbe Abfrage, ein Sonderfall weniger.
+
+**Den Papierkorb.** Ein gelöschter Einsatz ist keine Nutzung, und er käme beim
+Wiederherstellen zurück. Geprüft wird `deleted_at IS NULL` an `missions`
+**und** an `days`: Ein Einsatz kann für sich gelöscht sein oder mit seinem
+Diensttag.
+
+**Wear-OS-Uhren** — sie erscheinen in keiner Zahl, weil sie in `devices` nie
+eine Zeile bekommen. Die Wear-OS-App hat weder Serveradresse noch Schlüssel
+(E-S4-11); sie schickt ihre Ereignisse an das Handy, und das Handy koppelt.
+`devices.geraet_art` ist deshalb `'uhr'` (Garmin, mit Teilenummer) oder
+`'handy'` (Android). Das Mockup sah eine Zeile „Wear-OS-Uhren" und eine Art
+„Uhr (Wear OS)" vor; beide wären dauerhaft null gewesen. **Eine Zeile, die
+bauartbedingt nie etwas zählt, sagt nicht „null" — sie verschweigt, dass es
+hier nichts zu zählen gibt.** An ihrer Stelle steht ein Satz.
+
+#### Gezählt wird nach Diensttag
+
+`missions` JOIN `days` über `day_id`, gefiltert auf `days.day`. Nicht auf
+`missions.started_at`: Ein Einsatz von 23:50 bis 00:20 fiele sonst in einen
+anderen Zeitraum als der Dienst, zu dem er gehört — und die Statistik der
+NutzerIn zählt ebenso. Zwei Zählweisen für dieselbe Zahl wären zwei
+Wahrheiten.
+
+**„6 Monate" sind 180 Tage.** Ein Monat ist keine feste Länge; drei
+verschieden lange Monate in einer Spalte wären eine stille Ungenauigkeit.
+
+#### Der Hersteller ist abgeleitet, nicht gespeichert
+
+Eine Spalte `hersteller` gäbe es nicht zu füllen: `geraete_lib.php` zieht
+Hersteller und Modell ausdrücklich zusammen, weil `Build.MANUFACTURER` ohne
+`Build.MODEL` wertlos ist („google" allein beantwortet nichts). Abgeleitet
+wird über die **Art**:
+
+| `geraet_art` | Hersteller |
+|---|---|
+| `uhr` | Garmin — eine Uhr, die koppelt, ist eine Garmin-Uhr |
+| `handy` | erstes Wort von `geraet_modell`, denn genau so ist der Name zusammengezogen |
+| sonst | — |
+
+**Nicht über die Teilenummer**, obwohl das Konzept es so vorsah. „Teilenummer
+vorhanden → Garmin" stimmt, ist aber nicht vollständig: `geraet_teil` bleibt
+leer, wenn eine ältere Uhr-Fassung nichts über sich meldet oder ein Gerät von
+Hand angelegt wurde. Im Referenzbestand steht bei der `fēnix 7` genau das, und
+die Regel machte daraus den Hersteller „fēnix".
+
+#### Die CSV-Ausfuhr ist für Excel gemacht
+
+**Semikolon und UTF-8-BOM**, beides aus demselben Grund: Excel in deutscher
+Einstellung liest Komma-CSV als eine Spalte und UTF-8 ohne BOM als Latin-1 —
+aus „fēnix" wird „fÄ“nix". Wer die Datei danach speichert, hat den Fehler in
+seinen Daten. Ein Werkzeug, das UTF-8 erkennt, verträgt den BOM; Excel
+verträgt sein Fehlen nicht. Der Dateiname trägt das Datum
+(`geraetemodelle-2026-09-05.csv`), damit zwei Ausfuhren nicht denselben Namen
+haben.
+
+Gemessen: erste Bytes `ef bb bf`, danach `Gerät` als `47 65 72 c3 a4 74`.
 
 ## 5a. Android-Apps (Kotlin/Compose) — Handy und Wear OS
 
@@ -4923,8 +5025,9 @@ und liefert nach. Die sieben Schritte:
 7. Uhr und Handy synchronisieren beim nächsten Kontakt von selbst. Nichts
    ist verloren gegangen; die Geräte haben gepuffert.
 
-**Was währenddessen erreichbar bleibt** (E-S5W-04): die drei Betriebsseiten
-`betrieb_updates.php`, `betrieb_jobs.php` und `betrieb_server.php`, dazu
+**Was währenddessen erreichbar bleibt** (E-S5W-04): die fünf Betriebsseiten
+`betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`,
+`betrieb_jobs.php` und `betrieb_server.php`, dazu
 `update.php` und
 `wiederherstellen.php` (die Arbeit selbst und der Rückweg), `jobs.php` mit
 Token — das Komplett-Backup der Kette läuft **während** der Wartung, genau
@@ -4967,7 +5070,7 @@ für das sie da ist.
 
 **Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
 (1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
-(neben `db.php`)? (2) Ist die aufgerufene Seite eine der neun Ausnahmen?
+(neben `db.php`)? (2) Ist die aufgerufene Seite eine der elf Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
 `php tools/wartungsprobe/probe.php` (40 Erwartungen).
@@ -5339,9 +5442,9 @@ wurde nichts übertragen und kein Passwort gesendet.
 wurden. Entweder den alten wieder eintragen (Wiederanlaufpaket) oder die
 Zugangsdaten am Ziel neu erfassen.
 
-**Karte „Schlüsselableitung" (seit Web 5.0.1; bis Web 15.0.0 auf der
-Wartungsseite, seit S8/AP2 vorübergehend nicht sichtbar, ab S8/AP4 auf
-Betrieb → Status):** Erscheint
+**Zeile „Schlüsselableitung" auf Betrieb → Status (seit Web 5.0.1; bis
+Web 15.0.0 auf der Wartungsseite, in 15.1.0 und 15.2.0 vorübergehend nicht
+sichtbar):** Erscheint
 **nur, wenn es etwas zu melden gibt** — Konten, deren `kdf_iter` nicht in
 `KDF_ITER_LISTE` steht. Sie können sich nicht
 anmelden, und an der Anmeldemaske ist die Ursache nicht zu erkennen — der

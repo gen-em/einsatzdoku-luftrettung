@@ -293,18 +293,25 @@ pruefe(str_contains($a6['rumpf'], 'Wartungsmodus ausschalten'),
 
 $a6b = hole('betrieb_jobs.php', $sidAdmin);
 $a6c = hole('betrieb_server.php', $sidAdmin);
-pruefe($a6b['code'] === 200 && $a6c['code'] === 200,
-       '6   ... und die beiden anderen Betriebsseiten ebenso (F-S8-P-04)',
-       'jobs HTTP ' . $a6b['code'] . ', server HTTP ' . $a6c['code']);
+$a6d = hole('betrieb_status.php', $sidAdmin);
+$a6e = hole('betrieb_statistik.php', $sidAdmin);
+pruefe($a6b['code'] === 200 && $a6c['code'] === 200
+       && $a6d['code'] === 200 && $a6e['code'] === 200,
+       '6   ... und die vier anderen Betriebsseiten ebenso (F-S8-P-04)',
+       'jobs ' . $a6b['code'] . ', server ' . $a6c['code']
+       . ', status ' . $a6d['code'] . ', statistik ' . $a6e['code']);
 
 $a7 = hole('betrieb_updates.php', $sidUser);
 pruefe($a7['code'] !== 503,
        '7   betrieb_updates.php mit NUTZER-Sitzung: nicht 503 (Abweisung wie sonst)',
        'HTTP ' . $a7['code']);
 
+/* `update.php` ist seit S8/AP3 eine 302 auf betrieb_updates.php — offen
+ * heisst hier also 302 und nicht 503. Genau das ist die Aussage: Die alte
+ * Adresse bleibt im Wartungsmodus erreichbar und leitet weiter. */
 $a7b = hole('update.php', $sidAdmin);
-pruefe($a7b['code'] === 200,
-       '7   update.php (Uebergangsseite) bleibt ebenfalls offen', 'HTTP ' . $a7b['code']);
+pruefe($a7b['code'] === 302,
+       '7   update.php (alte Adresse) leitet weiter statt 503', 'HTTP ' . $a7b['code']);
 
 require_once $wurzel . '/jobs_lib.php';
 $token = jobs_token(false);
@@ -383,14 +390,15 @@ pruefe($rc === 0 && count($aus) > 3,
 /* Die Ausnahmeliste wird gegen die Entscheidung gezaehlt, nicht gegen sich
  * selbst: Wer eine Datei aus E-S5W-04 herausnimmt, soll hier scheitern und
  * nicht erst auf dem Produktivserver. */
-$sollAusnahmen = ['betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
+$sollAusnahmen = ['betrieb_status.php', 'betrieb_statistik.php',
+                  'betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
                   'update.php', 'wiederherstellen.php', 'jobs.php',
                   'login.php', 'logout.php', 'install.php'];
 sort($sollAusnahmen);
 $istAusnahmen = WARTUNG_AUSNAHMEN;
 sort($istAusnahmen);
 pruefe($istAusnahmen === $sollAusnahmen,
-       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2',
+       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4',
        implode(', ', $istAusnahmen));
 
 /* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer
