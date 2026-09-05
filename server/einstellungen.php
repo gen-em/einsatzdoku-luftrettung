@@ -1854,6 +1854,13 @@ ui_seite_start(['titel' => 'Einstellungen']);
              ein solches Paket nicht einspielen — sie gibt es frei, und das
              Umschlüsseln passiert in diesem Browser. */ ?>
     <div id="freigabebox" hidden>
+      <?php /* DER TITEL BLEIBT „BACKUP" (S8/AP3, E-S8-06). Aus SICHT der
+               NutzerIn ist es genau das: ein Backup ihres Kontos, das sie
+               einspielt. Dass es die Verwaltung angelegt hat, sagt der
+               Hinweistext darunter — „Konto-Backup" ist der Name aus dem
+               Blickwinkel der Verwaltung, und ihn hier zu benutzen hiesse,
+               eine NutzerIn eine Unterscheidung lernen zu lassen, die sie
+               nichts angeht. */ ?>
       <?php ui_karte_start(['titel' => 'Für dich freigegebenes Backup']); ?>
         <p class="feld-hinweis" id="freigabeinfo"></p>
         <?php /* DIE HÜLLE TRÄGT DIE KENNUNG, NICHT DAS FELD (F-S2-F).
@@ -1873,12 +1880,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
                        'platzhalter' => 'XXXX-XXXX-XXXX-XXXX',
                        'klein' => 'Der Schlüssel, der bei der Ersteinrichtung einmalig '
                                 . 'angezeigt wurde — nicht das Kontopasswort. Ohne ihn lassen '
-                                . 'sich die geschützten Angaben dieses Backups von niemandem '
+                                . 'sich die geschützten Angaben dieses Pakets von niemandem '
                                 . 'mehr öffnen.',
                        'attr' => ' autocomplete="off"']); ?>
         </div>
         <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => 'Backup einspielen', 'art' => 'primaer',
+          <?= ui_knopf(['text' => 'Einspielen', 'art' => 'primaer',
                         'typ' => 'button', 'attr' => ' id="freigabebtn"']) ?>
         </div>
         <div id="freigabestate" class="zustandszeile"></div>
@@ -2877,7 +2884,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
             + `beginnt dabei neu.`
           : '';
         document.getElementById('freigabeinfo').textContent =
-          `Die Administration hat ein Backup vom `
+          `Die Verwaltung hat ein Konto-Backup vom `
           + `${(d.freigabe.erzeugt || '').replace('T', ' ').replace('Z', ' UTC')} `
           + `für dich freigegeben: ${u.einsaetze || 0} Einsätze, `
           + `${u.diensttage || u.flugtage || 0} Diensttage, ${u.ruhezeiten || 0} Ruhezeiten.`

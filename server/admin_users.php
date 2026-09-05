@@ -77,8 +77,15 @@ const KONTEN_SAMMELBUDGET = 20.0;
 const KONTEN_FILTER = [
     'alle'        => 'Alle',
     'admins'      => 'Admins',
-    'ueberfaellig'=> 'Backup überfällig',
-    'nie'         => 'Nie gesichert',
+    /* WORTGLEICH MIT DEN KENNZAHLEN, die auf sie zeigen (S8/AP3, B-S8-07,
+     * B-S8-19). Bis Web 15.1.0 hiess die Kennzahl „Backup überfällig" und der
+     * Filter ebenso, die Kennzahl auf der Backup-Seite aber „überfällig ·
+     * Liste öffnen" und der zweite Filter „Nie gesichert" gegen „nie
+     * gesichert" — vier Namen fuer zwei Filter. Und „Backup" allein war
+     * ohnehin zweideutig: Gemeint ist das Paket der VERWALTUNG, nicht das,
+     * was eine NutzerIn sich selbst herunterlaedt (E-S8-06). */
+    'ueberfaellig'=> 'Konto-Backup überfällig',
+    'nie'         => 'nie Konto-Backup',
     'ohne-geraet' => 'Ohne Gerät',
 ];
 
@@ -89,7 +96,7 @@ const KONTEN_SPALTEN = [
     'seit'       => 'Seit',
     'angemeldet' => 'Zuletzt angemeldet',
     'geraete'    => 'Geräte',
-    'sicherung'  => 'Backup',
+    'sicherung'  => 'Konto-Backup',
 ];
 
 $notice = null; $error = null; $setzLink = null;
@@ -206,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         . $link . "\n\n"
                         . "Dabei wird auch dein Wiederherstellungsschlüssel angezeigt. Bitte notiere ihn dir\n"
                         . "sicher — ohne ihn lassen sich die verschlüsselten Angaben nach einem späteren\n"
-                        . "Passwort-Reset nicht wiederherstellen.\n\n"
+                        . "Passwort-Reset von niemandem mehr öffnen.\n\n"
                         . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
                         . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n");
                     if ($ok) {
@@ -251,7 +258,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 [$ok, $grund, ] = edbak_sicherung_erzeugen($id);
                 if ($ok) { $gut++; } else { $schlecht[] = $grund; }
             }
-            $notice = $gut . ' ' . ($gut === 1 ? 'Backup' : 'Backups') . ' erzeugt.';
+            $notice = $gut . ' ' . ($gut === 1 ? 'Konto-Backup' : 'Konto-Backups')
+                    . ' erzeugt.';
             if ($rest) {
                 $notice .= ' ' . count($rest) . ' ' . (count($rest) === 1 ? 'Konto ist' : 'Konten sind')
                          . ' noch ausgewählt — die Zeit für eine Anfrage reicht nicht für alle '
@@ -485,7 +493,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
 
   <?php ui_titelzeile(['titel' => 'NutzerInnen']); ?>
   <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite mit allen
-     Verwaltungsaufgaben: Kontodaten, Geräte, Backups, später Abonnement.
+     Verwaltungsaufgaben: Kontodaten, Geräte und Konto-Backups.
      Ein Klick auf eine Zeile öffnet sie.</p>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
@@ -503,7 +511,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
        Jede ist ein Weg in die Liste, die sie meint. Die beiden linken tragen
        keinen Ton — sie sind Bestandszahlen, keine Befunde. */ ?>
   <?php /* NULL IST KEIN BEFUND. Der Ton haengt an der Zahl, nicht an der
-           Kachel: „0 Backup überfällig" in Warnorange behauptete ein
+           Kachel: „0 Konto-Backup überfällig" in Warnorange behauptete ein
            Problem, wo gerade keines ist — und wer das ein paarmal gesehen
            hat, sieht die Farbe nicht mehr, wenn sie einmal etwas bedeutet.
            Bei 0 ist die Kachel eine gewoehnliche Bestandszahl.
@@ -524,10 +532,10 @@ ui_seite_start(['titel' => 'NutzerInnen']);
     <?= ui_kennzahl(['wert' => (string)$gesamt['admins'], 'label' => 'Admins',
                      'href' => konten_weg(['f' => 'admins', 'q' => '', 's' => ''])]) ?>
     <?= ui_kennzahl(['wert' => (string)$gesamt['ueberfaellig'],
-                     'label' => 'Backup überfällig',
+                     'label' => 'Konto-Backup überfällig',
                      'ton' => $gesamt['ueberfaellig'] > 0 ? 'orange' : '',
                      'href' => konten_weg(['f' => 'ueberfaellig', 'q' => '', 's' => ''])]) ?>
-    <?= ui_kennzahl(['wert' => (string)$gesamt['nie'], 'label' => 'nie gesichert',
+    <?= ui_kennzahl(['wert' => (string)$gesamt['nie'], 'label' => 'nie Konto-Backup',
                      'ton' => $gesamt['nie'] > 0 ? 'rot' : '',
                      'href' => konten_weg(['f' => 'nie', 'q' => '', 's' => ''])]) ?>
   </div>

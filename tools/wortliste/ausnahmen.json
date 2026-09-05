@@ -549,18 +549,11 @@
       "begruendung": "Steht im Android-Kapitel (5a), nicht im Uhr-Kapitel, und dort ist der Markenname die Unterscheidung: Das Kapitel spricht ueber die Wear-OS-Uhr, der Satz vergleicht mit der Connect-IQ-Uhr (SyncView.mc gegen Track.mc). 'Uhr-App' waere hier zweideutig, und zwar genau an der Stelle, an der es auf den Unterschied ankommt. Aufgenommen 03.09.2026 mit S5 Paket E."
     },
     {
-      "id": "logowahl-installation-namen",
-      "datei": "server/update.php",
-      "zeile": "\\$namen = \\['hubschrauber' => 'Hubschrauber \\(RTH\\)'",
+      "id": "logowahl-installation",
+      "datei": "server/admin_installation.php",
+      "zeile": "'hubschrauber' => 'Hubschrauber \\(RTH\\)',",
       "klasse": "Homonym",
-      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Bis Web 15.0.0 deckte die dateiweite Ausnahme `update-migrationen` diese beiden Zeilen mit ab; seit S8/AP2 traegt `server/update.php` nur noch die Logo-Karte, und der Migrationskatalog steht woanders. Die Karte selbst zieht in AP3 auf die Seite „Installation“ — dann wandert auch diese Ausnahme. Diese Zeile benennt die drei Werte fuer die Rueckmeldung."
-    },
-    {
-      "id": "logowahl-installation-option",
-      "datei": "server/update.php",
-      "zeile": "'optionen' => \\['hubschrauber' => 'Hubschrauber \\(RTH\\)'",
-      "klasse": "Homonym",
-      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Bis Web 15.0.0 deckte die dateiweite Ausnahme `update-migrationen` diese beiden Zeilen mit ab; seit S8/AP2 traegt `server/update.php` nur noch die Logo-Karte, und der Migrationskatalog steht woanders. Die Karte selbst zieht in AP3 auf die Seite „Installation“ — dann wandert auch diese Ausnahme. Diese Zeile ist die Beschriftung der Segmentwahl; die Zeile darunter nennt das Fahrzeug."
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Bis Web 15.0.0 deckte die dateiweite Ausnahme `update-migrationen` diese Zeile mit ab; seit S8/AP2 steht der Migrationskatalog woanders, und seit S8/AP3 steht die Logo-Karte auf der Seite „Installation“. Es ist jetzt EINE Zeile: Die Konstante INSTALLATION_LOGOS ist die einzige Stelle mit den drei Werten — Rueckmeldung und Segmentwahl lesen beide aus ihr."
     }
   ]
 }
