@@ -14,6 +14,64 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 3.0.1] — 2026-09-05
+
+### Uhr — die Sync-Seite vor Dienstbeginn ließ sich mit UP nicht verlassen
+
+**Vom Startbildschirm führt ein kurzer DOWN-Druck auf die Sync-Seite** — dort
+stehen Kopplungszustand, Serveradresse und die App-Version, und dort startet
+der lange Druck die Kopplung. Der Rückweg mit UP tat nichts. Wer nicht
+wusste, dass BACK der einzige Ausgang ist, saß fest.
+
+Die Ursache liegt seit dem 16.08.2026 im Code: `SyncDelegate` bekam für beide
+Richtungen denselben Wächter. Für DOWN ist er richtig und trägt die
+Begründung „vom Start: keine Nachbarseiten" — unterhalb dieses Abstechers
+liegt tatsächlich nichts, der Reigen der Oberflächen beginnt erst mit dem
+Dienst. Für UP wurde er mitgezogen, ohne eigene Begründung, und dort ist er
+falsch: **UP ist hier keine Nachbarseite, sondern der Rückweg.** Man ist mit
+DOWN gekommen, also muss UP wieder hinausführen.
+
+Jetzt ruft `actPagePrev()` in diesem Zustand `actBack()` auf, statt den Druck
+zu schlucken. Damit ist die Bewegung die Umkehrung des Hinwegs — hinein mit
+`SLIDE_UP`, hinaus mit `SLIDE_DOWN` — und beide Ausgänge, UP und BACK, gehen
+über dieselbe Zeile. Ein zweiter Weg mit eigenem `popView` hätte sich beim
+nächsten Umbau auseinanderentwickelt.
+
+**DOWN bleibt bewusst wirkungslos.** Unterhalb der Sync-Seite ist vor
+Dienstbeginn nichts, und ein Rundlauf über eine einzige Seite wäre nur
+Bewegung ohne Ziel.
+
+Der Weg stand bisher in keinem Dokument. `docs/Handbuch.md` 2.1 beschreibt ihn
+jetzt — samt beider Ausgänge.
+
+### Prüfmittel — die Wortliste lief seit dem 04.09.2026 überhaupt nicht mehr
+
+Beim Pflichtlauf zu dieser Korrektur brach `tools/wortliste/` mit einem
+`JSONDecodeError` ab: `ausnahmen.json` war kein gültiges JSON. Der Merge
+`589982b` vom 04.09.2026 hatte zwei Ausnahmen ineinandergeschoben — dem einen
+Objekt fehlte die schließende Klammer, dem anderen die öffnende. Beide Eltern
+waren für sich gültig und trugen je 79 Regeln; herausgekommen sind 79 plus ein
+Trümmerstück.
+
+**Das ist die schlimmere Sorte Fehler**, weil das Werkzeug dabei nicht falsch
+zählt, sondern gar nicht zählt — und ein Lauf, der abbricht, meldet keine Null
+(`CLAUDE.md` 6). Zwischen dem 04.09. und heute konnte niemand die Liste
+gefahren haben, ohne es zu bemerken; sie ist in dieser Zeit schlicht nicht
+gelaufen.
+
+Derselbe Merge hat die zweite Hälfte derselben Änderung zerrissen: Er nahm die
+Formulierung „Die Uhr-App hält es genauso" aus dem einen Elternteil und die
+darauf gemünzte Ausnahme aus dem anderen. Deshalb stand die Ausnahme
+`technik-abgrenzung-beide-uhren` anschließend ungenutzt da. Wiederhergestellt
+ist der Wortlaut aus S5 Paket E — „Die **Garmin**-Uhr hält es genauso" —, und
+zwar aus dem Grund, den die Ausnahme selbst nennt: Der Satz steht im
+Android-Kapitel und vergleicht die Wear-OS-Uhr mit der Connect-IQ-Uhr. Genau
+dort ist „Uhr-App" zweideutig, und der Markenname ist die Unterscheidung
+(Klasse G, E-P2-15).
+
+Danach: 80 Regeln, 80 gegriffen, 0 ungenutzt, 0 Treffer außerhalb der
+Ausnahmen, 0 durchgerutschte Teilstring-Fallen, Rückgabewert 0.
+
 ## [Web 14.2.2] — 2026-09-04
 
 ### Web — „kein Ende" an einem Einsatz, der zu Ende war

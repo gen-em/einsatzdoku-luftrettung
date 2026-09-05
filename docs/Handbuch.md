@@ -84,6 +84,13 @@ erfasst.
 Ein Neustart der Uhr oder der App mitten im Dienst ist unkritisch: Phase,
 Track und eine laufende Reanimation werden nahtlos fortgesetzt.
 
+**Schon vor dem Dienstbeginn** führt **kurz DOWN** vom Startbildschirm auf die
+**Sync-Seite**. Sie zeigt Kopplungszustand, Serveradresse und die
+App-Version — und dort startet auch die Kopplung (*lang START*, Abschnitt 12).
+Zurück zum Startbildschirm geht es mit **kurz UP** oder mit **BACK**; beide
+tun dasselbe. Weiter nach unten führt von hier nichts: Die Oberflächen aus
+Abschnitt 2.2 gibt es erst im laufenden Dienst.
+
 ### 2.2 Die Oberflächen
 
 Mit **kurz UP/DOWN** blätterst du im Kreis durch: **Uhr → Tempo → Statistik →
