@@ -1745,8 +1745,13 @@ function edbak_schwellen_melden(): array
         return $aus;
     }
 
+    /* An ALLE mit Verwaltungsrechten, also auch an die BetreiberInnen
+     * (R75). Die Speichergrenze ist seit S8 eine Betriebseinstellung — wer
+     * sie aendern kann, muss von ihrem Erreichen erfahren. Die Bedingung
+     * steht als Konstante in db.php, damit die naechste Rolle (Support, R38)
+     * nicht genau hier vergessen wird. */
     $ziele = [];
-    foreach (db()->query("SELECT email FROM users WHERE role = 'admin'
+    foreach (db()->query("SELECT email FROM users WHERE " . ROLLEN_VERWALTUNG_SQL . "
                           ORDER BY id")->fetchAll(PDO::FETCH_COLUMN) as $m) {
         if (is_string($m) && $m !== '') { $ziele[] = $m; }
     }
@@ -1792,7 +1797,9 @@ function edbak_stand_zaehlen(): array
     $z = ['konten' => count($konten), 'admins' => 0, 'aktuell' => 0,
           'ueberfaellig' => 0, 'nie' => 0, 'ohne_kennung' => 0, 'unbekannt' => 0];
     foreach ($konten as $k) {
-        if ($k['role'] === 'admin') { $z['admins']++; }
+        /* Wie in admin_users.php: „Admins" zaehlt jedes Konto mit
+         * Verwaltungsrechten, BetreiberInnen eingeschlossen (R75). */
+        if (rolle_darf_verwalten($k['role'])) { $z['admins']++; }
         $stand = edbak_stand_aus_karte($k['account_key'], $karte)['stand'];
         if (isset($z[$stand])) { $z[$stand]++; }
     }
@@ -1906,7 +1913,8 @@ function edbak_erinnerung_planen(): int
     if (!$faellig) { return 0; }
 
     $admins = db()->query("SELECT email, name FROM users
-                            WHERE role = 'admin' AND password_hash IS NOT NULL
+                            WHERE " . ROLLEN_VERWALTUNG_SQL . "
+                              AND password_hash IS NOT NULL
                             ORDER BY email")->fetchAll();
     if (!$admins) { return 0; }
 

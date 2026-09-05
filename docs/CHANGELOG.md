@@ -14,6 +14,78 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.0.0] — 2026-09-05
+
+### Web — der Betrieb bekommt eine eigene Rolle (S8/AP1, R75)
+
+Zwei Rollen, drei Zielgruppen: Das war der erste Befund der S8-Sichtung
+(B-S8-15). Wer Konten anlegt, Rechtstexte pflegt und das Demo-Konto
+zurücksetzt, und wer den **Serverschlüssel** erzeugt, den **Wartungsmodus**
+schaltet, **Migrationen** ausführt und die **Speichergrenze** setzt, war
+dieselbe Rolle `admin` — obwohl das Erste ein Konto trifft und das Zweite die
+ganze Installation.
+
+Ab dieser Fassung gibt es **drei Rollen**: `user`, `admin` und `betreiberin`.
+Sie stehen nicht nebeneinander, sondern ineinander — **BetreiberIn ⊇ Admin ⊇
+NutzerIn**. Es gibt keine Handlung, die nur ein Admin darf und eine
+BetreiberIn nicht; deshalb liefert die eine Rollenprüfung `ist_admin()` auch
+für eine BetreiberIn wahr, und keine bestehende Seite braucht eine zweite
+Prüfung. Das war genau der Fall, den der Kommentar an dieser Funktion seit Web
+4.0.0 vorhergesagt hatte: „wird beim nächsten Zusatz — etwa einer dritten
+Rolle — an vier Stellen richtig geändert". Er stand an einer Stelle, und die
+Änderung war eine Zeile.
+
+**Die Migration macht alle vorhandenen Admins zu BetreiberInnen.** Die
+Alternative — nur das älteste Konto — wäre enger und praktisch falsch: Sie
+nähme bestehenden Admins ohne Ankündigung den Zugriff auf Seiten, die sie
+gestern noch bedient haben. Wer zurückstufen will, tut es danach von Hand und
+weiß dann, was er tut. Ein zweiter Lauf der Migration ändert nichts; sie
+erkennt am ENUM, dass sie schon lief.
+
+**Zwei Schranken tragen das Modell, beide serverseitig geprüft:**
+
+- Die Rolle „BetreiberIn" vergibt und entzieht **nur eine BetreiberIn**. Ein
+  Admin bekommt die Option im Auswahlfeld gar nicht zu sehen — sonst könnte er
+  sich selbst hochstufen, und die Rolle wäre eine Beschriftung statt einer
+  Grenze.
+- Das **letzte** BetreiberIn-Konto lässt sich weder zurückstufen noch löschen.
+  Ohne diese Schranke könnte sich eine Installation aus ihrem eigenen
+  Betriebsbereich aussperren, und der Rückweg führte über die Datenbank — auf
+  geteiltem Hosting also nirgendwohin. Beide Seiten sagen es, bevor man es
+  versucht: das Rollenfeld als abgeschaltete Auswahl mit Kleintext, die
+  Gefahrenzone mit einem Absatz statt des Formulars.
+
+`install.php` legt das **erste Konto** ab hier als BetreiberIn an — wer eine
+Installation einrichtet, ist die, die sie betreibt, und in diesem Augenblick
+die Einzige. Die Kennzahl „Admins" und der gleichnamige Filter der
+NutzerInnen-Liste zählen jedes Konto mit Verwaltungsrechten, BetreiberInnen
+eingeschlossen: Sie beantworten die Frage „wie viele können hier verwalten?",
+und darauf ist eine BetreiberIn ein Ja. Wer wissen will, wer betreibt, liest
+die Rollenspalte — sie nennt jetzt drei Werte und sortiert nach Rechten. Das
+Profil zeigt die eigene Rolle; es ist der einzige Ort, an dem eine NutzerIn
+sie nachsehen kann, und er erklärt, warum zwei Konten verschiedene Menüs
+sehen.
+
+Auch die **Warn- und Erinnerungsmails** gehen jetzt an alle mit
+Verwaltungsrechten. Die Speichergrenze ist eine Betriebseinstellung; wer sie
+ändern kann, muss von ihrem Erreichen erfahren. Die Bedingung dafür steht als
+Konstante an einer Stelle, damit die nächste Rolle (Support, R38) nicht genau
+dort vergessen wird.
+
+**Was noch nicht da ist:** der Bereich „Betrieb" selbst. Er entsteht in den
+folgenden Paketen von S8 — Updates, Hintergrundjobs, Servereinstellungen,
+Status, Statistik. Bis dahin sieht eine BetreiberIn genau das, was ein Admin
+sieht. Die Rolle kommt zuerst, weil jede dieser Seiten mit
+`require_betreiberin()` beginnt.
+
+**Migration zwingend:** `2026_09_05_rolle_betreiberin`. Ohne sie kennt die
+Datenbank den Rollenwert nicht, und das Anlegen einer BetreiberIn schlägt fehl.
+Ein **Komplett-Backup aus der Zeit davor** bringt beim Wiederherstellen das
+alte ENUM und lauter `admin` zurück — das ist kein Fehler und sperrt niemanden
+aus (ein Admin darf verwalten und kommt an die Wartung), aber der Migrationslauf
+danach ist Pflicht und stellt die Rollen wieder her. Der Wiederherstellungsweg
+sagt das ohnehin an zweiter Stelle.
+
 ## [Web 14.2.2] — 2026-09-04
 
 ### Web — „kein Ende" an einem Einsatz, der zu Ende war

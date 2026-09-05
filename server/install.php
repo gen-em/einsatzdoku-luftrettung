@@ -3,7 +3,7 @@ declare(strict_types=1);
 /**
  * Einrichtungs-Assistent.
  * - Läuft nur, solange weder config.php noch install.lock existieren.
- * - Testet die DB-Verbindung, spielt schema.sql ein, legt den Admin an,
+ * - Testet die DB-Verbindung, spielt schema.sql ein, legt die BetreiberIn an,
  *   schreibt config.php und setzt danach install.lock (Wiederausführungssperre).
  * Diese Datei benötigt selbst KEINE config.php.
  */
@@ -84,11 +84,11 @@ $setupLink = '';
 /* ---- Nachweis von Dateisystemzugriff (M1-11, D9) --------------------------
  *
  * WAS DIESE SEITE OHNE IHN IST
- * Ein unangemeldeter Endpunkt, der eine Datenbank einrichtet, einen
- * Administrator anlegt und einen Einrichtungslink dafuer ausgibt. Wer eine
- * frisch hochgeladene Installation vor ihrem Betreiber findet, richtet sie
- * ein — und ist Administrator. Das Zeitfenster ist kurz, aber es ist genau
- * das Fenster, in dem niemand hinsieht.
+ * Ein unangemeldeter Endpunkt, der eine Datenbank einrichtet, das erste
+ * Konto anlegt und einen Einrichtungslink dafuer ausgibt. Wer eine frisch
+ * hochgeladene Installation vor ihrer Betreiberin findet, richtet sie ein —
+ * und ist die BetreiberIn. Das Zeitfenster ist kurz, aber es ist genau das
+ * Fenster, in dem niemand hinsieht.
  *
  * WAS IHN SCHLIESST
  * Die Seite legt eine Datei mit einer Zufallskennung an und verlangt diese
@@ -197,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Datenbank-Host, -Name und -Benutzer sind erforderlich.';
     }
     if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Bitte eine gültige Admin-E-Mail angeben.';
+        $errors[] = 'Bitte eine gültige E-Mail-Adresse für den Zugang angeben.';
     }
     if (!preg_match('#^https?://#', $baseUrl)) {
         $errors[] = 'Die Basis-URL muss mit http:// oder https:// beginnen.';
@@ -265,10 +265,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * Hosters — beides bewusste Handlungen an der richtigen Stelle. */
             run_sql_file($pdo, $schemaPath);
 
-            // Bewusst OHNE Passwort: Der Server darf das Passwort nie sehen.
-            // Es wird ueber pw_handling.php im Browser gesetzt; dort entstehen
-            // zugleich Inhalts- und Wiederherstellungsschluessel.
-            $pdo->prepare('INSERT INTO users (email, role, account_key) VALUES (?, "admin", ?)')
+            /* Bewusst OHNE Passwort: Der Server darf das Passwort nie sehen.
+             * Es wird ueber pw_handling.php im Browser gesetzt; dort entstehen
+             * zugleich Inhalts- und Wiederherstellungsschluessel.
+             *
+             * DAS ERSTE KONTO IST DIE BETREIBERIN (R75, Web 15.0.0). Wer eine
+             * Installation einrichtet, ist per Definition die, die sie
+             * betreibt — und sie ist in diesem Augenblick die Einzige. Legte
+             * die Einrichtung ein Admin-Konto an, stuende die frische
+             * Installation ohne Zugang zu ihrem eigenen Betriebsbereich da:
+             * Serverschluessel, Wartungsmodus, Migrationen, Speichergrenze.
+             * Der Weg zurueck fuehrte ueber die Datenbank. */
+            $pdo->prepare('INSERT INTO users (email, role, account_key)
+                           VALUES (?, "betreiberin", ?)')
                 ->execute([$adminEmail, bin2hex(random_bytes(8))]);
             $adminId = (int)$pdo->lastInsertId();
             $setupToken = bin2hex(random_bytes(32));
@@ -277,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$adminId, hash('sha256', $setupToken)]);
             $setupLink = $baseUrl . '/pw_handling.php?token=' . $setupToken;
         } catch (Throwable $ex) {
-            $errors[] = 'Beim Anlegen der Tabellen/des Admins ist ein Fehler aufgetreten: '
+            $errors[] = 'Beim Anlegen der Tabellen/des ersten Kontos ist ein Fehler aufgetreten: '
                       . $ex->getMessage()
                       . ' — Tipp: eine leere Datenbank verwenden. Bestehende '
                       . 'Tabellen werden von der Einrichtung bewusst nicht mehr '
@@ -345,7 +354,7 @@ if ($done) {
         ui_meldung_markup('ok', 'Einrichtung erfolgreich. Die Konfiguration wurde '
             . 'gespeichert und der Installer ist jetzt gesperrt.', 'Fertig.')
         . '<p><strong>Letzter Schritt:</strong> Über den folgenden Link legst du das '
-        . 'Passwort des Administrator-Zugangs fest. Dabei wird einmalig dein '
+        . 'Passwort des BetreiberIn-Zugangs fest. Dabei wird einmalig dein '
         . 'Wiederherstellungsschlüssel angezeigt — bitte sicher notieren. '
         . 'Der Link ist 24 Stunden gültig.</p>'
         . '<p>' . ui_knopf(['text' => 'Passwort jetzt festlegen', 'href' => $setupLink,
@@ -405,7 +414,7 @@ function render_form(array $v, array $errors, string $nachweis,
              oder den Inhalt der Datei — alle drei enthalten dieselbe Angabe).</p>
           <p class="feld-hinweis">Das belegt, dass du Zugriff auf dieses Verzeichnis
              hast. Ohne diesen Nachweis könnte jemand, der die frisch hochgeladene
-             Installation vor dir findet, sich selbst als Administrator eintragen.</p>
+             Installation vor dir findet, sich selbst als BetreiberIn eintragen.</p>
           <?php ui_feld(['name' => 'nachweis', 'label' => 'Zeichenfolge aus dem Dateinamen',
                          'wert' => (string)($v['nachweis'] ?? ''), 'pflicht' => true,
                          'attr' => ' autocomplete="off" spellcheck="false"']); ?>
@@ -428,10 +437,15 @@ function render_form(array $v, array $errors, string $nachweis,
            Vorhandene Tabellen werden nicht gelöscht.</p>
       <?php ui_karte_ende(); ?>
 
-      <?php ui_karte_start(['titel' => 'Administrator-Zugang']); ?>
+      <?php ui_karte_start(['titel' => 'Zugang der BetreiberIn']); ?>
         <?php ui_feld(['name' => 'admin_email', 'label' => 'E-Mail (= Anmeldung)',
                        'art' => 'email', 'pflicht' => true,
                        'wert' => (string)($v['admin_email'] ?? '')]); ?>
+        <p class="feld-hinweis">Dieses erste Konto bekommt die Rolle
+           <strong>BetreiberIn</strong>: Es kann alles, was ein Admin kann, und
+           zusätzlich den Bereich <em>Betrieb</em> — Serverbetrieb, Updates,
+           Hintergrundjobs, Speicher, Komplett-Backup und Backup-Ziele. Weitere
+           Konten legst du später in der Verwaltung an.</p>
         <p class="feld-hinweis">Das Passwort wird nicht hier gesetzt: Es verlässt den
            Browser nie. Nach der Einrichtung erscheint ein Link, über den du es
            festlegst — zusammen mit dem Wiederherstellungsschlüssel.</p>
@@ -453,7 +467,7 @@ function render_form(array $v, array $errors, string $nachweis,
       <?php ui_karte_ende(); ?>
 
       <?php ui_karte_start(['titel' => 'SMTP', 'zahl' => 'optional']); ?>
-        <p class="feld-hinweis">Kann leer bleiben — der Admin-Zugang funktioniert auch
+        <p class="feld-hinweis">Kann leer bleiben — der Zugang funktioniert auch
            ohne. Ohne SMTP können NutzerInnen ihr Passwort aber nicht per Mail
            zurücksetzen.</p>
         <div class="fld-reihe">

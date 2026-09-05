@@ -1555,3 +1555,28 @@ Drei Wege spielen dieselbe Datei ein:
 Nach jedem davon gehört der **Migrationslauf** (`update.php`), wenn der Dump
 aus einer älteren Fassung stammt. Das Runbook (`docs/Technik.md`, Abschnitt 7)
 führt die ganze Reihenfolge auf.
+
+### 6.8 Die Rolle im Dump (seit Web 15.0.0)
+
+Der Dump enthält die ganze Tabelle `users`, also auch `role`. Ein Stand aus
+der Zeit **vor Web 15.0.0** bringt deshalb das alte zweiwertige
+`ENUM('user','admin')` und lauter `admin` zurück — die Rolle `betreiberin` gab
+es dort noch nicht.
+
+**Das ist gültig und sperrt niemanden aus.** Ein Admin darf verwalten
+(`rolle_darf_verwalten()` ist für ihn wahr), kommt also an `update.php` und
+kann den Migrationslauf starten. Angehoben wird beim Einspielen **nichts**:
+Der Dump wird so eingespielt, wie er ist, und die Migration
+`2026_09_05_rolle_betreiberin` erledigt danach genau das, was sie beim ersten
+Mal erledigt hat — ENUM erweitern, alle Admins zu BetreiberInnen machen. Sie
+läuft erneut, weil sie am ENUM erkennt, dass sie in dieser Datenbank noch
+nicht gelaufen ist.
+
+Bis dahin hat die Installation **keine BetreiberIn** und damit keinen Zugang
+zum Bereich Betrieb. Deshalb steht der Migrationslauf im Wiederherstellungsweg
+an zweiter Stelle, direkt nach dem Anmelden.
+
+**Das Konto-Backup (`.edbak`) trägt keine Rolle** — es ist die Datei *einer*
+NutzerIn und sagt nichts darüber, was sie darf. Wer ein Konto-Backup in ein
+anderes Konto einspielt, ändert dessen Rolle nicht; das ist Absicht und war
+nie anders.

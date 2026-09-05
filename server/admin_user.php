@@ -108,13 +108,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return implode(', ', $t) . ' und ' . $letzt;
         };
         $name = trim((string)($_POST['name'] ?? ''));
-        $role = ($_POST['role'] ?? '') === 'admin' ? 'admin' : 'user';
+        /* DREI ROLLEN, DREI SCHRANKEN (R75, S8/AP1).
+         *
+         * Bis Web 14.2.2 stand hier ein Zweiwegvergleich und genau eine
+         * Schranke: „nicht sich selbst die Admin-Rolle entziehen". Mit der
+         * dritten Rolle kommen zwei dazu, und alle drei sitzen SERVERSEITIG —
+         * das Auswahlfeld unten blendet aus, was nicht angeboten wird, aber
+         * ein POST von Hand kennt das Feld trotzdem.
+         *
+         *  (1) NUR EINE BETREIBERIN VERGIBT ODER ENTZIEHT DIE ROLLE. Ein
+         *      Admin, der 'betreiberin' schickt, koennte sich sonst selbst
+         *      hochstufen — und die Rolle waere keine Grenze, sondern eine
+         *      Beschriftung. Auch das Entziehen gehoert dazu: Ein Admin darf
+         *      eine BetreiberIn nicht zurueckstufen.
+         *  (2) NIEMAND ENTZIEHT SICH SELBST DIE VERWALTUNGSRECHTE. Wer das
+         *      taete, saehe die Seite, auf der er steht, nach dem Absenden
+         *      nicht mehr — und muesste jemand anderen bitten.
+         *  (3) DAS LETZTE BETREIBERIN-KONTO BLEIBT EINE BETREIBERIN. Ohne
+         *      diese Schranke koennte sich eine Installation aus ihrem
+         *      eigenen Betriebsbereich aussperren; der Rueckweg fuehrte ueber
+         *      die Datenbank, und den hat auf geteiltem Hosting niemand.
+         */
+        $role  = rolle_normieren($_POST['role'] ?? '');
+        $rolleAlt = rolle_normieren($u['role'] ?? null);
         $teile = [];
 
-        if ($uid === $userId && $role !== 'admin') {
-            $error = 'Du kannst dir nicht selbst die Admin-Rolle entziehen — '
+        $rollenwechsel = ($role !== $rolleAlt);
+        if ($rollenwechsel && !ist_betreiberin()
+            && ($role === 'betreiberin' || $rolleAlt === 'betreiberin')) {
+            $error = 'Die Rolle „BetreiberIn" vergibt und entzieht nur eine BetreiberIn — '
                    . 'die Rolle wurde nicht geändert.';
-        } elseif ($role !== (string)$u['role']) {
+        } elseif ($rollenwechsel && $uid === $userId && !rolle_darf_verwalten($role)) {
+            $error = 'Du kannst dir nicht selbst die Verwaltungsrechte entziehen — '
+                   . 'die Rolle wurde nicht geändert.';
+        } elseif ($rollenwechsel && $role !== 'betreiberin'
+                  && ist_letzte_betreiberin(db(), $uid, $rolleAlt)) {
+            $error = 'Das ist das letzte Konto mit der Rolle „BetreiberIn". '
+                   . 'Es lässt sich nicht zurückstufen — lege zuerst eine zweite '
+                   . 'BetreiberIn an. Die Rolle wurde nicht geändert.';
+        } elseif ($rollenwechsel) {
             db()->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $uid]);
             $teile[] = 'Rolle';
         }
@@ -311,6 +343,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $eingabe = trim((string)($_POST['confirm_email'] ?? ''));
         if ($uid === $userId) {
             $error = 'Das eigene Konto kann hier nicht gelöscht werden.';
+        } elseif (ist_letzte_betreiberin(db(), $uid, $u['role'] ?? null)) {
+            /* Dieselbe Zusage wie beim Zurueckstufen (R75), nur der andere
+             * Weg dorthin: Eine Installation ohne BetreiberIn hat keinen
+             * Zugang mehr zu ihrem Betriebsbereich. */
+            $error = 'Das ist das letzte Konto mit der Rolle „BetreiberIn" — es lässt '
+                   . 'sich nicht löschen. Lege zuerst eine zweite BetreiberIn an. '
+                   . 'Es wurde nichts gelöscht.';
         } elseif (!edbak_bestaetigung_passt($eingabe, (string)$u['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht überein — nichts wurde gelöscht.';
         } else {
@@ -441,7 +480,14 @@ function paket_lesbar(string $kennung, string $datei): bool
 }
 
 $kennung = (string)($u['account_key'] ?? '');
-$rolleText = $u['role'] === 'admin' ? 'Admin' : 'NutzerIn';
+$rolleText = rolle_text($u['role'] ?? null);
+/* Fuer die Anzeige unten: Darf die Angemeldete die Rolle dieses Kontos
+ * ueberhaupt aendern, und ist es die letzte BetreiberIn? Beides wird im
+ * Schreibweg oben noch einmal geprueft — hier entscheidet es nur, was das
+ * Auswahlfeld anbietet und was der Kleintext sagt. */
+$istLetzteBetreiberin = ist_letzte_betreiberin(db(), $uid, $u['role'] ?? null);
+$rolleGesperrt = $istLetzteBetreiberin
+    || (!ist_betreiberin() && rolle_ist_betreiberin($u['role'] ?? null));
 $unterTeile = [e((string)$u['email']), e($rolleText)];
 if (!empty($u['created_at'])) {
     $unterTeile[] = 'seit ' . e(fmt_local($u['created_at'], 'd.m.Y'));
@@ -580,11 +626,62 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'name', 'label' => 'Name', 'wert' => (string)($u['name'] ?? ''),
                          'attr' => 'maxlength="120" placeholder="z. B. Vorname Nachname"']); ?>
-          <?php ui_feld(['name' => 'role', 'label' => 'Rolle', 'art' => 'select',
-                         'wert' => (string)$u['role'],
-                         'optionen' => ['user' => 'NutzerIn', 'admin' => 'Admin'],
-                         'klein' => $istIch ? 'Das eigene Konto bleibt Admin.' : null]); ?>
+          <?php
+            /* ROLLENFELD (R75). Drei Zustaende:
+             *
+             *   offen      — die Angemeldete darf die Rolle dieses Kontos
+             *                aendern; angeboten wird, was rollen_auswahl()
+             *                hergibt (BetreiberIn nur fuer eine BetreiberIn).
+             *   gesperrt   — das Feld steht in einem eigenen
+             *                `.feldsatz-gesperrt`-Feldsatz mit `disabled`, und
+             *                ein verstecktes Feld DAHINTER traegt den
+             *                unveraenderten Wert mit. Der Feldsatz ist der
+             *                vorhandene Baustein fuer genau diesen Zweck
+             *                (S3/AP10) — ein blosses `disabled` am Auswahlfeld
+             *                waere UNSICHTBAR: `.feld-eingabe` setzt Farbe und
+             *                Hintergrund selbst und ueberschreibt damit das,
+             *                was der Browser sonst graut. Und OHNE das
+             *                versteckte Feld schickte der Browser gar nichts,
+             *                der Schreibweg lese daraus „NutzerIn" und
+             *                antwortete auf jedes Speichern von Name oder
+             *                Adresse mit einer Rollen-Fehlermeldung.
+             *   eigenes    — Kleintext wie bisher, aber ohne Sperre: Man darf
+             *                sich hochstufen, nur nicht herabstufen (das
+             *                faengt der Schreibweg).
+             *
+             * Das `disabled` ist die ANZEIGE der Regel; die Regel selbst
+             * sitzt oben im Schreibweg und faengt auch einen POST von Hand. */
+            $rolleKlein = null;
+            if ($istLetzteBetreiberin) {
+                $rolleKlein = 'Letztes Konto mit dieser Rolle — es lässt sich weder '
+                            . 'zurückstufen noch löschen.';
+            } elseif ($rolleGesperrt) {
+                $rolleKlein = 'Die Rolle „BetreiberIn" ändert nur eine BetreiberIn.';
+            } elseif ($istIch) {
+                $rolleKlein = 'Die eigenen Verwaltungsrechte lassen sich hier nicht abgeben.';
+            }
+            $rolleOptionen = rollen_auswahl();
+            /* Traegt das Konto eine Rolle, die die Angemeldete gar nicht
+             * vergeben darf, steht sie trotzdem im Feld — sonst zeigte das
+             * Auswahlfeld eine falsche Rolle an. */
+            $rolleWert = rolle_normieren($u['role'] ?? null);
+            if (!isset($rolleOptionen[$rolleWert])) {
+                $rolleOptionen[$rolleWert] = ROLLEN[$rolleWert];
+            }
+            $rolleFeld = ['name' => 'role', 'label' => 'Rolle', 'art' => 'select',
+                          'wert' => $rolleWert, 'optionen' => $rolleOptionen,
+                          'klein' => $rolleKlein];
+            if ($rolleGesperrt): ?>
+            <fieldset class="feldsatz-gesperrt" disabled><?php ui_feld($rolleFeld); ?></fieldset>
+          <?php else:
+            ui_feld($rolleFeld);
+          endif; ?>
         </div>
+        <?php if ($rolleGesperrt): ?>
+          <?php /* AUSSERHALB des gesperrten Feldsatzes — ein `disabled`
+                   fieldset schickt auch versteckte Felder darin nicht mit. */ ?>
+          <input type="hidden" name="role" value="<?= e($rolleWert) ?>">
+        <?php endif; ?>
         <?php ui_feld(['name' => 'email', 'label' => 'E-Mail (Anmeldung)', 'art' => 'email',
                        'wert' => (string)$u['email'], 'pflicht' => true]); ?>
         <div class="listen-form-fuss">
@@ -718,6 +815,16 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
            vorbei, die sich merkt, welches Konto das Demo-Konto ist.</p>
       <?php elseif ($istIch): ?>
         <p class="feld-hinweis">Das eigene Konto lässt sich hier nicht löschen.</p>
+      <?php elseif ($istLetzteBetreiberin): ?>
+        <?php /* Dieselbe Zusage wie am Rollenfeld (R75) — hier gesagt, wo man
+                 die Handlung versucht, und nicht erst als Fehlermeldung
+                 danach. Der Schreibweg faengt es trotzdem noch einmal. */ ?>
+        <p class="feld-hinweis">Das ist das letzte Konto mit der Rolle
+           <strong>BetreiberIn</strong>. Es lässt sich nicht löschen — sonst hätte
+           diese Installation niemanden mehr, der ihren Bereich <em>Betrieb</em>
+           öffnen kann: Serverbetrieb, Updates, Hintergrundjobs, Speicher,
+           Komplett-Backup und Backup-Ziele. Lege zuerst eine zweite BetreiberIn
+           an; danach lässt sich dieses Konto löschen.</p>
       <?php else: ?>
         <p class="feld-hinweis">Entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
            und Geräte <strong>endgültig</strong> — ohne Papierkorb, nicht rückgängig zu

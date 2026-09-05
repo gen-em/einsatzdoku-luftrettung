@@ -357,6 +357,11 @@ Unter dem Zahnrad → **Profil** stehen dein Anzeigename (er erscheint in der
 Kopfleiste neben der Marke), deine Anmelde-Adresse und seit Web 9.7.0 die
 **Logo-Wahl**.
 
+Seit Web 15.0.0 steht dort auch deine **Rolle** — NutzerIn, Admin oder
+BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter dem
+Zahnrad verschieden viel sehen; geändert wird sie in der Administration
+(11.3), nicht hier.
+
 Die Anwendung bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug.
 Welches du siehst, entscheidest du selbst:
 
@@ -2575,12 +2580,15 @@ koppeln".
 
 ---
 
-## 11. Administration (nur Admin)
+## 11. Administration (Admin und BetreiberIn)
 
 Die Administration führt zwei Seiten für Konten: die **Liste** aller
 NutzerInnen (11.2) und je Konto dessen **Kontoseite** (11.1). Angelegt wird in
 der Liste, gelöscht auf der Kontoseite — dort gehört die Entscheidung dazu, was
 mit den Backups geschieht.
+
+Seit Web 15.0.0 gibt es **drei Rollen**; welche was darf, steht in 11.3 unter
+„Drei Rollen". Alles in diesem Kapitel können Admin **und** BetreiberIn.
 
 ### 11.1 Die Kontoseite
 
@@ -2699,6 +2707,47 @@ zutrifft:
 **Rollenwechsel und Löschen wirken sofort**, auch bei jemandem, der gerade
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
 Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig.
+
+#### Drei Rollen
+
+Seit Web 15.0.0 gibt es drei Rollen. Sie stehen nicht nebeneinander, sondern
+**ineinander**: Wer betreibt, kann alles, was ein Admin kann, und wer verwaltet,
+alles, was eine NutzerIn kann.
+
+| Rolle | Was sie kann |
+|---|---|
+| **NutzerIn** | die eigenen Diensttage und Einsätze dokumentieren, eigene Stammdaten, Geräte, Backup, Import und Export — alles unter dem Zahnrad, was mit „ich" zu tun hat |
+| **Admin** | zusätzlich: Konten anlegen, ändern und löschen, Backups je Konto, Rechtstexte, Demo-Konto |
+| **BetreiberIn** | zusätzlich: alles, was die **Installation** betrifft — Serverschlüssel, Wartungsmodus, Migrationen, Hintergrundjobs, Speichergrenze, Komplett-Backup und Backup-Ziele |
+
+Warum die dritte Rolle: Eine Fehlbedienung in der Verwaltung trifft **ein**
+Konto, eine im Betrieb die **ganze Installation**. Wer den Wartungsmodus
+einschaltet, schließt alle aus; wer eine Migration ausführt, ändert das
+Datenmodell. Das ist eine andere Art von Verantwortung als „ein Konto anlegen",
+und sie hat deshalb eine eigene Rolle.
+
+**Wer welche Rolle vergibt.** Die Rolle „BetreiberIn" vergibt und entzieht
+**nur eine BetreiberIn**. Ein Admin sieht die Option im Auswahlfeld gar nicht —
+sonst könnte er sich selbst hochstufen. Alles andere (NutzerIn ↔ Admin) darf
+jede Person mit Verwaltungsrechten.
+
+**Was geschützt ist.** Das **letzte** Konto mit der Rolle BetreiberIn lässt
+sich weder zurückstufen noch löschen. Beide Stellen sagen es, bevor man es
+versucht: Das Rollenfeld ist abgeschaltet und trägt den Grund als Kleintext,
+und statt des Löschformulars steht ein Absatz. Wer dieses Konto wirklich
+loswerden will, legt zuerst eine zweite BetreiberIn an.
+
+Außerdem lässt sich niemand die **eigenen** Verwaltungsrechte entziehen — man
+sähe die Seite, auf der man gerade steht, nach dem Absenden nicht mehr.
+
+**Bei einer bestehenden Installation** sind mit dem Update auf Web 15.0.0 alle
+bisherigen Admins zu BetreiberInnen geworden. Niemand hat dabei Zugriff
+verloren. Wer zurückstufen will, tut es danach von Hand. Bei einer **neuen**
+Installation ist das erste Konto — das aus der Ersteinrichtung — die
+BetreiberIn.
+
+Die **eigene Rolle** steht im Profil (3.1a). Sie erklärt, warum zwei Konten
+unter dem Zahnrad verschieden viel sehen.
 
 Unter **„Wartung"** steht in der Karte **„Hintergrundjobs"**, ob die
 regelmäßige Arbeit noch läuft: je Job wann er zuletzt lief, wer ihn angestoßen

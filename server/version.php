@@ -2506,4 +2506,51 @@ declare(strict_types=1);
  * was gemeint ist. Drei korrelierte Unterabfragen auf `mission_phases`
  * sind dabei ersatzlos entfallen -- der Wert stand als Spalte daneben.
  */
-const WEB_VERSION = '14.2.2';
+/*
+ * 15.0.0 GIBT DEM BETRIEB EINE EIGENE ROLLE.
+ *
+ * Bis hierher gab es zwei Rollen und drei Zielgruppen. Wer Konten anlegt und
+ * Rechtstexte pflegt, und wer den Serverschluessel erzeugt, den Wartungsmodus
+ * schaltet, Migrationen ausfuehrt und die Speichergrenze setzt, war dieselbe
+ * Rolle `admin` — obwohl das Erste ein Konto trifft und das Zweite die ganze
+ * Installation. Die Sichtung in S8 hat das als Erstes gefunden (B-S8-15), und
+ * der Auftraggeber hat daraus eine Rolle gemacht: `betreiberin`, dritter Wert
+ * in `users.role`, mit einer Migration (R75).
+ *
+ * WARUM DAS EINE HAUPTNUMMER IST. Nicht wegen der Spalte — ein ENUM um einen
+ * Wert zu erweitern ist wenig. Sondern weil sich die Wege durch die Anwendung
+ * aendern, und zwar je nachdem, wer angemeldet ist: Ein Admin, der gestern
+ * die Wartungsseite sah, sieht sie ab hier nicht mehr, wenn ihn jemand
+ * zurueckstuft. Dieselbe Begruendung wie bei 7.0.0, die ebenfalls ohne
+ * Datenmodell-Umbau eine Hauptnummer bekam.
+ *
+ * DIE HIERARCHIE IST DAS GANZE MODELL: BetreiberIn ⊇ Admin ⊇ NutzerIn. Es
+ * gibt keine Handlung, die nur ein Admin darf. Deshalb liefert `ist_admin()`
+ * fuer beide obere Rollen wahr und keine bestehende Seite braucht eine zweite
+ * Pruefung — die Aenderung war eine Zeile. Genau dafuer stand die eine
+ * Rollenpruefung (M1-15) seit Web 4.0.0 da; der Kommentar dort hat den Fall
+ * „eine dritte Rolle" wortwoertlich vorhergesagt.
+ *
+ * ALLE VORHANDENEN ADMINS WERDEN BETREIBERINNEN. Die Alternative — nur das
+ * aelteste Konto — waere enger und praktisch falsch: Sie naehme bestehenden
+ * Admins ohne Ankuendigung Zugriff auf Seiten, die sie gestern bedient haben.
+ * Wer zurueckstufen will, tut es danach von Hand.
+ *
+ * ZWEI SCHRANKEN, DIE DAS MODELL TRAGEN, und beide serverseitig: Nur eine
+ * BetreiberIn vergibt oder entzieht die Rolle, und das LETZTE
+ * BetreiberIn-Konto laesst sich weder zurueckstufen noch loeschen. Ohne die
+ * zweite koennte sich eine Installation aus ihrem eigenen Betriebsbereich
+ * aussperren, und der Rueckweg fuehrte ueber die Datenbank — auf geteiltem
+ * Hosting also nirgendwohin.
+ *
+ * MIGRATION ZWINGEND: `2026_09_05_rolle_betreiberin`. Sie ist idempotent (der
+ * zweite Lauf sieht den Wert im ENUM und tut nichts) und nimmt nichts weg.
+ * `install.php` legt das erste Konto ab hier als BetreiberIn an.
+ *
+ * WAS NOCH NICHT DA IST: der Bereich „Betrieb" selbst. Er entsteht in den
+ * folgenden Paketen von S8 (Updates, Hintergrundjobs, Servereinstellungen,
+ * Status, Statistik); bis dahin sieht eine BetreiberIn genau das, was ein
+ * Admin sieht. Die Rolle kommt zuerst, weil jede dieser Seiten mit
+ * `require_betreiberin()` beginnt.
+ */
+const WEB_VERSION = '15.0.0';

@@ -17,7 +17,7 @@ CREATE TABLE users (
   pat_wrap_pw   TEXT NULL,                           -- Inhaltsschluessel, passwortverpackt (Pflicht-Verschlüsselung)
   pat_wrap_rc   TEXT NULL,                           -- Inhaltsschluessel, mit Wiederherstellungsschluessel verpackt
   pat_key_check CHAR(32) NULL,                       -- Pruefsumme des Inhaltsschluessels (im Browser gerechnet); NULL = Altbestand
-  role          ENUM('user','admin') NOT NULL DEFAULT 'user',
+  role          ENUM('user','admin','betreiberin') NOT NULL DEFAULT 'user',  -- BetreiberIn ⊇ Admin ⊇ NutzerIn (R75)
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich (E17)
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
@@ -715,4 +715,9 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_09_03_kopplungssitzungen', 'skipped'),
   -- origin steht oben schon als VARCHAR, die vier Geraetespalten an missions
   -- und rest_segments ebenfalls (Web 14.0.0, R64).
-  ('2026_09_04_herkunft_geraet', 'skipped');
+  ('2026_09_04_herkunft_geraet', 'skipped'),
+  -- Der Rollenwert 'betreiberin' steht oben schon im ENUM (Web 15.0.0, R75).
+  -- Das Nachziehen des Bestands (alle Admins werden BetreiberInnen) hat auf
+  -- einer frischen Installation nichts zu tun: Sie hat keinen Bestand, und
+  -- ihr erstes Konto legt install.php gleich als BetreiberIn an.
+  ('2026_09_05_rolle_betreiberin', 'skipped');

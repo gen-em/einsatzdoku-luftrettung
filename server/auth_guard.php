@@ -143,7 +143,7 @@ if (!isset($_SESSION['epoch'])) {
 }
 
 /* ---- Rolle: aus der Zeile, nicht aus der Sitzung -------------------------- */
-$userRole = (($row['role'] ?? 'user') === 'admin') ? 'admin' : 'user';
+$userRole = rolle_normieren($row['role'] ?? null);
 
 /**
  * Die EINE Rollenpruefung (M1-15).
@@ -154,10 +154,16 @@ $userRole = (($row['role'] ?? 'user') === 'admin') ? 'admin' : 'user';
  * Rollenpruefung, die an fuenf Stellen unabhaengig formuliert ist, wird beim
  * naechsten Zusatz — etwa einer dritten Rolle — an vier Stellen richtig
  * geaendert.
+ *
+ * DIE DRITTE ROLLE IST DA (Web 15.0.0, R75), und der Satz oben hat sich
+ * bewahrheitet: Weil die Frage an einer Stelle steht, kostete sie hier eine
+ * Zeile. `ist_admin()` heisst "darf verwalten" und ist fuer eine BetreiberIn
+ * ebenfalls wahr — BetreiberIn ⊇ Admin ⊇ NutzerIn (Zielbild 5.3). Wer
+ * ausschliesslich den Betriebsbereich meint, fragt ist_betreiberin().
  */
 function ist_admin(): bool {
     global $userRole;
-    return $userRole === 'admin';
+    return rolle_darf_verwalten($userRole);
 }
 
 function require_admin(): void {
@@ -165,6 +171,51 @@ function require_admin(): void {
         if (ist_api_aufruf()) { json_out(['error' => 'forbidden'], 403); }
         ui_abbruch(403, 'Kein Zugriff.');
     }
+}
+
+/**
+ * Darf die Angemeldete den Bereich BETRIEB sehen und bedienen?
+ *
+ * Betrieb ist alles, was die INSTALLATION betrifft und nicht ihren Inhalt:
+ * Serverbetrieb und Wartungsmodus, ausstehende Updates, Hintergrundjobs,
+ * Speichergrenzen, Komplett-Backup, Backup-Ziele. Eine Fehlbedienung dort
+ * trifft nicht ein Konto, sondern alle — deshalb hat der Bereich eine eigene
+ * Rolle und nicht nur eine eigene Seite.
+ */
+function ist_betreiberin(): bool {
+    global $userRole;
+    return rolle_ist_betreiberin($userRole);
+}
+
+function require_betreiberin(): void {
+    if (!ist_betreiberin()) {
+        if (ist_api_aufruf()) { json_out(['error' => 'forbidden'], 403); }
+        ui_abbruch(403, 'Kein Zugriff — dieser Bereich ist der BetreiberIn vorbehalten.');
+    }
+}
+
+/** Die Rolle der Angemeldeten als Wert ('user' | 'admin' | 'betreiberin'). */
+function eigene_rolle(): string {
+    global $userRole;
+    return $userRole;
+}
+
+/**
+ * Die Rollen, die die Angemeldete vergeben darf (R75).
+ *
+ * Nur eine BetreiberIn vergibt oder entzieht die Rolle „BetreiberIn". Ein
+ * Admin bekommt die Option gar nicht erst zu sehen — er koennte sich sonst
+ * selbst hochstufen, und die Rolle waere keine Grenze.
+ *
+ * HIER UND NICHT IN db.php, obwohl der Rollenkatalog dort steht: Die Antwort
+ * haengt an der ANGEMELDETEN, also an der Sitzung. Alles, was eine Sitzung
+ * braucht, steht in dieser Datei.
+ */
+function rollen_auswahl(): array
+{
+    $o = ['user' => ROLLEN['user'], 'admin' => ROLLEN['admin']];
+    if (ist_betreiberin()) { $o['betreiberin'] = ROLLEN['betreiberin']; }
+    return $o;
 }
 
 function csrf_field(): string {

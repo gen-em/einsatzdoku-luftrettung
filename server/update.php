@@ -2115,6 +2115,69 @@ $MIGRATIONS = [
             "UPDATE missions SET origin = 'wear'    WHERE client_ref LIKE 'wm-%'",
         ],
     ],
+    [
+        'id'    => '2026_09_05_rolle_betreiberin',
+        'web'   => '15.0.0',
+        'label' => 'Dritte Rolle „BetreiberIn"; alle vorhandenen Admins werden BetreiberInnen (R75)',
+        'skip'  => function (PDO $pdo): bool {
+            /* Steht der Wert schon im ENUM, ist die Migration gelaufen —
+             * oder die Datenbank ist frisch aus schema.sql entstanden. Beide
+             * Faelle brauchen nichts, und beide sind vom zweiten Lauf nicht
+             * zu unterscheiden. Genau das ist die Zusage: idempotent. */
+            $q = $pdo->prepare("SELECT column_type FROM information_schema.columns
+                                WHERE table_schema = DATABASE()
+                                  AND table_name = 'users' AND column_name = 'role'");
+            $q->execute();
+            return str_contains((string)$q->fetchColumn(), 'betreiberin');
+        },
+        'sql'   => [
+            /* DIE DRITTE ROLLE (R75, S8/AP1)
+             *
+             * WARUM UEBERHAUPT EINE ROLLE UND NICHT NUR EIN MENUEBLOCK. Die
+             * Sichtung in S8 hat zwei Zielgruppen in einer Rolle gefunden:
+             * Wer Konten anlegt und Rechtstexte pflegt (Admin), und wer den
+             * Serverschluessel erzeugt, den Wartungsmodus schaltet,
+             * Migrationen ausfuehrt und die Speichergrenze setzt
+             * (BetreiberIn). Eine Fehlbedienung der zweiten Sorte trifft
+             * nicht ein Konto, sondern die Installation. Ein Menueblock, den
+             * jeder Admin oeffnen kann, ist dafuer keine Grenze, sondern nur
+             * eine Sortierung.
+             *
+             * HIERARCHIE STATT NEBENEINANDER: BetreiberIn ⊇ Admin ⊇
+             * NutzerIn. Es gibt keine Handlung, die nur ein Admin darf und
+             * eine BetreiberIn nicht — deshalb liefert ist_admin() fuer
+             * beide wahr (auth_guard.php) und dieselbe Seite braucht keine
+             * zweite Pruefung.
+             *
+             * ALLE ADMINS WERDEN BETREIBERINNEN (F-S8-07, bestaetigt). Die
+             * Alternative — nur das aelteste Admin-Konto — waere
+             * sicherheitstechnisch enger und praktisch falsch: Sie naehme
+             * bestehenden Admins ohne Ankuendigung Zugriff auf Seiten, die
+             * sie gestern noch bedient haben, und das an einer Installation,
+             * die niemand darauf vorbereitet hat. Wer zurueckstufen will,
+             * tut es danach von Hand und weiss dann, was er tut.
+             *
+             * REIHENFOLGE: ENUM zuerst. Liefe das UPDATE gegen die alte
+             * Spalte, machte MariaDB je nach sql_mode einen leeren String
+             * oder einen Fehler daraus — beides falsch, das erste still.
+             * Dieselbe Falle wie bei 2026_09_04_herkunft_geraet.
+             *
+             * WARUM ENUM UND NICHT VARCHAR wie bei `origin`: Dort war der
+             * Wertevorrat offen (jede neue Client-App ein Wert). Rollen sind
+             * das Gegenteil — sie werden bewusst und selten vergeben, und die
+             * Datenbank darf und soll ausschliessen, was der Code nicht
+             * kennt. Die vierte Rolle (Support, R38) kostet dann eine
+             * Migration, und das ist richtig so.
+             *
+             * KEIN `zerstoert`, KEIN `inhalt`: Es faellt nichts weg. Der
+             * Rueckweg ist trotzdem keiner — waere das ENUM wieder
+             * zweiwertig, liesse sich nicht mehr sagen, wer vorher Admin und
+             * wer BetreiberIn war. */
+            "ALTER TABLE users
+               MODIFY role ENUM('user','admin','betreiberin') NOT NULL DEFAULT 'user'",
+            "UPDATE users SET role = 'betreiberin' WHERE role = 'admin'",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

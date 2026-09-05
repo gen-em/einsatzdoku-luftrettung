@@ -4560,7 +4560,7 @@ Drei Festlegungen dahinter, jede mit einem Grund:
   GPS.
 - **„Brauchbar" ist dieselbe Schwelle, nach der aufgezeichnet wird.**
   `Ausduenner.brauchbar()` ist öffentlich, damit Anzeige und Puffer nicht
-  zwei Regeln führen. Die Uhr-App hält es genauso (`SyncView.mc` gegen
+  zwei Regeln führen. Die Garmin-Uhr hält es genauso (`SyncView.mc` gegen
   `Track.mc`): Eine Anzeige mit anderer Schwelle wäre irreführend.
 - **Gemessen wird mit `SystemClock.elapsedRealtime()`**, nicht mit der
   Wanduhr und nicht mit der GPS-Zeit. Beide können springen; eine Frist, die
@@ -5255,11 +5255,37 @@ Browser, kein Backup. Betroffen sind die Phasenzeiten im Einsatzformular
 letztere sind reine Clientfilter und erreichen den Server nie.
 
 **Neuinstallation:** leere DB + `server/` hochladen → `index.php` leitet zum
-Installer. Der Installer fragt **kein** Admin-Passwort mehr ab; er legt den
+Installer. Der Installer fragt **kein** Passwort mehr ab; er legt den
 Zugang ohne Passwort an und zeigt auf der Erfolgsseite einen 24 h gültigen
 Einmal-Link auf `pw_handling.php`, über den Passwort und
 Wiederherstellungsschlüssel im Browser entstehen. Nach Erfolg sperrt
 `install.lock`; `install.php` danach löschen.
+
+**Das erste Konto ist die BetreiberIn** (seit Web 15.0.0, R75). Wer eine
+Installation einrichtet, ist die, die sie betreibt — und in diesem Augenblick
+die Einzige. Legte der Installer ein Admin-Konto an, stünde die frische
+Installation ohne Zugang zu ihrem eigenen Betriebsbereich da: Serverschlüssel,
+Wartungsmodus, Migrationen, Speichergrenze. Der Weg zurück führte über die
+Datenbank.
+
+**Drei Rollen, eine Hierarchie** (R75): `user` ⊂ `admin` ⊂ `betreiberin`. Die
+Prüfung steht an zwei Stellen und nirgends sonst — `rolle_darf_verwalten()`
+und `rolle_ist_betreiberin()` in `db.php` als reine Prädikate (auch ohne
+Sitzung benutzbar: `login.php` prüft vor dem Anmelden, ob der Wartungsmodus
+jemanden durchlässt, `rechtstext_seite.php` liest eine fremde Zeile),
+`ist_admin()`, `ist_betreiberin()`, `require_admin()` und
+`require_betreiberin()` in `auth_guard.php` für die angemeldete Sitzung.
+`ist_admin()` heißt „darf verwalten" und ist für eine BetreiberIn ebenfalls
+wahr. Zwei Zusagen sitzen serverseitig und sind nicht umgehbar: Nur eine
+BetreiberIn vergibt oder entzieht die Rolle, und das **letzte**
+BetreiberIn-Konto lässt sich weder zurückstufen noch löschen
+(`ist_letzte_betreiberin()`).
+
+**Ein Komplett-Backup aus der Zeit vor 15.0.0** bringt beim Wiederherstellen
+das alte zweiwertige ENUM und lauter `admin` zurück. Das sperrt niemanden aus
+— ein Admin darf verwalten und kommt an `update.php` —, aber der
+Migrationslauf danach ist Pflicht und stellt die Rollen wieder her. Der
+Wiederherstellungsweg nennt ihn ohnehin als zweiten Schritt.
 
 **Dateizugriffsnachweis (seit 4.7.0, M1-11):** Der Installer legt beim ersten
 Aufruf eine Datei `install-nachweis-<32 Hexzeichen>.txt` im Verzeichnis

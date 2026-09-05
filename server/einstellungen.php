@@ -879,6 +879,17 @@ ui_seite_start(['titel' => 'Einstellungen']);
                        'attr' => ' maxlength="120"']); ?>
         <?php ui_feld(['label' => 'E-Mail-Adresse (Anmeldung)', 'name' => 'email',
                        'art' => 'email', 'wert' => $userEmail, 'pflicht' => true]); ?>
+        <?php /* DIE EIGENE ROLLE, NUR ZU LESEN (R75, Web 15.0.0).
+                 Sie steht hier, weil sie erklaert, warum zwei Konten
+                 verschiedene Menues sehen — und weil es der einzige Ort ist,
+                 an dem eine NutzerIn ihre eigene Rolle nachsehen kann.
+                 Geaendert wird sie ausschliesslich in der Verwaltung; ein
+                 Feld waere hier eine Einladung, die ins Leere fuehrt. */ ?>
+        <p class="feld-hinweis">Rolle: <strong><?= e(rolle_text(eigene_rolle())) ?></strong><?php
+          if (ist_betreiberin()): ?> — du siehst zusätzlich den Bereich
+          <em>Betrieb</em>.<?php elseif (ist_admin()): ?> — du siehst zusätzlich den
+          Bereich <em>Verwaltung</em>.<?php endif; ?> Geändert wird sie in der
+          Verwaltung, nicht hier.</p>
       <?php ui_karte_ende(); ?>
 
       <?php /* LOGO-WAHL (E-P3-20, Mockup 13). Sie gilt für Kopfleiste UND

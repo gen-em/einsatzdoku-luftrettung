@@ -141,7 +141,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      */
     if ($action === 'user_add') {
         $email = email_pruefen($_POST['email'] ?? '');
-        $role  = ($_POST['role'] ?? 'user') === 'admin' ? 'admin' : 'user';
+        /* ROLLE AUS DEM FORMULAR — UND ZWEIMAL GEPRUEFT (R75).
+         *
+         * rolle_normieren() faengt alles ab, was nicht im Katalog steht; die
+         * zweite Pruefung faengt den Fall, der davon nicht erfasst wird: Ein
+         * Admin schickt 'betreiberin', obwohl das Auswahlfeld ihm die Option
+         * gar nicht angeboten hat. Die Oberflaeche blendet sie aus, aber ein
+         * ausgeblendetes Feld ist keine Pruefung — ein POST von Hand kennt
+         * das Feld trotzdem. Wer nicht selbst BetreiberIn ist, kann keine
+         * anlegen; das Konto entsteht dann als Admin. */
+        $role  = rolle_normieren($_POST['role'] ?? 'user');
+        if ($role === 'betreiberin' && !ist_betreiberin()) { $role = 'admin'; }
         $name  = trim((string)($_POST['name'] ?? ''));
 
         if ($email === null) {
@@ -319,7 +329,12 @@ $gesamt = [
     'nie'          => 0,
 ];
 foreach ($alle as $k) {
-    if ($k['role'] === 'admin') { $gesamt['admins']++; }
+    /* „Admins" zaehlt JEDES Konto mit Verwaltungsrechten, also auch die
+     * BetreiberInnen (R75). Die Kennzahl beantwortet die Frage „wie viele
+     * koennen hier verwalten?" — und darauf ist eine BetreiberIn ein Ja.
+     * Wer wissen will, wer betreibt, sieht die Rollenspalte: Sie nennt drei
+     * Werte, die Kennzahl fasst zwei davon zusammen. */
+    if (rolle_darf_verwalten($k['role'])) { $gesamt['admins']++; }
     if ($k['stand']['stand'] === 'ueberfaellig') { $gesamt['ueberfaellig']++; }
     if ($k['stand']['stand'] === 'nie') { $gesamt['nie']++; }
 }
@@ -340,7 +355,7 @@ if ($q !== '') {
 function konten_trifft(array $k, string $f): bool
 {
     return match ($f) {
-        'admins'       => $k['role'] === 'admin',
+        'admins'       => rolle_darf_verwalten($k['role']),
         'ueberfaellig' => $k['stand']['stand'] === 'ueberfaellig',
         'nie'          => $k['stand']['stand'] === 'nie',
         'ohne-geraet'  => $k['geraete'] === 0,
@@ -410,7 +425,11 @@ function konten_sortschluessel(string $text): string
 function konten_sortwert(array $k, string $sort): string
 {
     return match ($sort) {
-        'rolle'      => $k['role'] === 'admin' ? '0' : '1',
+        /* Drei Stufen, absteigend nach Rechten: BetreiberIn, Admin,
+         * NutzerIn. Aufsteigend steht damit oben, wer am meisten darf. */
+        'rolle'      => match (rolle_normieren($k['role'])) {
+            'betreiberin' => '0', 'admin' => '1', default => '2',
+        },
         'seit'       => (string)($k['created_at'] ?? ''),
         /* Nie angemeldet sortiert ans ENDE der aufsteigenden Reihenfolge und
          * nicht an den Anfang: Ein leerer Wert ist kein frueher Zeitpunkt. */
@@ -591,7 +610,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
                      Groesse zum Vergleichen; mittig stehen sie unter ihrem
                      Titel. KONTO bleibt linksbuendig: Name und Adresse sind
                      Text und werden gelesen, nicht verglichen. */ ?>
-            <td class="mitte-spalte"><?= $k['role'] === 'admin' ? 'Admin' : 'NutzerIn' ?></td>
+            <td class="mitte-spalte"><?= e(rolle_text($k['role'])) ?></td>
             <td class="mitte-spalte"><?= e($k['created_at'] ? fmt_local($k['created_at'], 'd.m.Y') : '—') ?></td>
             <td class="mitte-spalte"><?= e($k['last_login'] ? fmt_local($k['last_login'], 'd.m.Y') : '—') ?></td>
             <td class="mitte-spalte"><?= (int)$k['geraete'] ?></td>
@@ -612,7 +631,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
     <div class="nur-unter-720">
       <?php foreach ($zeilen as $k):
         [$standText, $standTon] = edbak_stand_plakette($k['stand']);
-        $klein = [$k['role'] === 'admin' ? 'Admin' : 'NutzerIn'];
+        $klein = [rolle_text($k['role'])];
         $klein[] = (int)$k['geraete'] . ($k['geraete'] === 1 ? ' Gerät' : ' Geräte');
         $klein[] = 'zuletzt ' . ($k['last_login'] ? fmt_local($k['last_login'], 'd.m.Y') : '—');
         ui_zeile([
@@ -687,8 +706,15 @@ ui_seite_start(['titel' => 'NutzerInnen']);
           <?php ui_feld(['name' => 'name', 'label' => 'Name',
                          'attr' => 'maxlength="120" placeholder="z. B. Vorname Nachname"',
                          'klein' => 'Kann später ergänzt werden.']); ?>
+          <?php /* Die Option „BetreiberIn" sieht nur, wer selbst eine ist
+                   (R75). Geprueft wird sie oben im Schreibweg noch einmal —
+                   das Ausblenden ist die Anzeige der Regel, nicht die
+                   Regel. */ ?>
           <?php ui_feld(['name' => 'role', 'label' => 'Rolle', 'art' => 'select',
-                         'optionen' => ['user' => 'NutzerIn', 'admin' => 'Admin']]); ?>
+                         'optionen' => rollen_auswahl(),
+                         'klein'    => ist_betreiberin()
+                             ? 'BetreiberIn kann zusätzlich den Bereich Betrieb.'
+                             : null]); ?>
         </div>
       </div>
       <div class="dialog-fuss">

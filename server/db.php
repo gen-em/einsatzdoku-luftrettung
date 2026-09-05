@@ -530,6 +530,117 @@ function email_maskieren(string $email): string
     return mb_substr($lokal, 0, 2) . '***' . ($domain !== '' ? '@' . $domain : '');
 }
 
+/* ---- Die drei Rollen (Web 15.0.0, S8/AP1; Rahmenplan R75) ----------------
+ *
+ * DREI ROLLEN, ZWEI STUFEN VON RECHTEN, EINE HIERARCHIE:
+ *
+ *   user          dokumentiert eigene Einsaetze
+ *   admin         verwaltet Konten, Konto-Backups, Rechtstexte, Demo
+ *   betreiberin   dazu der Bereich BETRIEB: Server, Speicher, Updates, Jobs,
+ *                 Komplett-Backup, Backup-Ziele
+ *
+ * BetreiberIn ⊇ Admin ⊇ NutzerIn: Wer betreibt, kann alles, was ein Admin
+ * kann. Deshalb liefert ist_admin() (auth_guard.php) auch fuer eine
+ * BetreiberIn wahr — es gibt genau EINE Rollenpruefung je Frage, und die
+ * Frage "darf verwalten?" hat zwei richtige Antworten.
+ *
+ * WARUM HIER UND NICHT IN auth_guard.php. Die Wachen dort haengen an der
+ * angemeldeten Sitzung. Zwei Stellen brauchen die Frage aber OHNE Sitzung:
+ * login.php entscheidet vor dem Anmelden, ob der Wartungsmodus jemanden
+ * durchlaesst, und rechtstext_seite.php liest die Rolle einer moeglicherweise
+ * fremden Zeile. Beide koennen auth_guard.php nicht laden — es leitet auf die
+ * Anmeldung um. Die reinen Praedikate stehen deshalb hier, wo sie jede Datei
+ * hat, und auth_guard.php baut seine Wachen darauf.
+ *
+ * DIE BEZEICHNUNG IST WEIBLICH, weil die Anwendung durchgehend die weibliche
+ * Form fuehrt (NutzerIn, BetreiberIn) — der Datenbankwert heisst deshalb
+ * 'betreiberin' und nicht 'operator'. Das ist eine Anzeige- und keine
+ * Rechteentscheidung: Die Rolle ist geschlechtsneutral gemeint.
+ */
+const ROLLEN = [
+    'user'        => 'NutzerIn',
+    'admin'       => 'Admin',
+    'betreiberin' => 'BetreiberIn',
+];
+
+/** Ist das ein gueltiger Rollenwert? Alles andere wird zu 'user'. */
+function rolle_gueltig(string $rolle): bool
+{
+    return array_key_exists($rolle, ROLLEN);
+}
+
+/**
+ * Rollenwert aus einer beliebigen Quelle — Formular, Datenbank, Sicherung.
+ *
+ * DER RUECKFALL IST 'user', UND ZWAR IMMER. Ein unbekannter Wert (ein alter
+ * Bestand, ein manipuliertes Formularfeld, eine Sicherung aus einer spaeteren
+ * Fassung mit einer vierten Rolle) bekommt die geringsten Rechte, nicht die
+ * hoechsten. Das ist die einzige Richtung, in die ein Irrtum billig ist.
+ */
+function rolle_normieren(?string $rolle): string
+{
+    $r = (string)$rolle;
+    return rolle_gueltig($r) ? $r : 'user';
+}
+
+/** Darf diese Rolle verwalten (Konten, Konto-Backups, Texte, Demo)? */
+function rolle_darf_verwalten(?string $rolle): bool
+{
+    $r = rolle_normieren($rolle);
+    return $r === 'admin' || $r === 'betreiberin';
+}
+
+/** Darf diese Rolle den Bereich Betrieb sehen und bedienen? */
+function rolle_ist_betreiberin(?string $rolle): bool
+{
+    return rolle_normieren($rolle) === 'betreiberin';
+}
+
+/** Beschriftung fuer die Anzeige. */
+function rolle_text(?string $rolle): string
+{
+    return ROLLEN[rolle_normieren($rolle)];
+}
+
+/**
+ * SQL-Bedingung fuer "hat Verwaltungsrechte".
+ *
+ * Als Konstante, damit die Liste der berechtigten Rollen an einer Stelle
+ * steht. Wer sie in einer Abfrage ausschreibt, vergisst beim naechsten
+ * Rollenzuwachs (Support-Rolle, R38) genau diese eine.
+ */
+const ROLLEN_VERWALTUNG_SQL = "role IN ('admin','betreiberin')";
+
+/**
+ * Zahl der BetreiberInnen-Konten.
+ *
+ * Gebraucht fuer die eine Zusage, die das Rollenmodell traegt: Das LETZTE
+ * BetreiberIn-Konto laesst sich weder zuruckstufen noch loeschen. Ohne sie
+ * koennte sich eine Installation aus ihrem eigenen Betriebsbereich
+ * aussperren, und der Rueckweg fuehrte ueber die Datenbank.
+ */
+function betreiberinnen_zahl(PDO $pdo): int
+{
+    return (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role = 'betreiberin'")
+                    ->fetchColumn();
+}
+
+/**
+ * Ist dieses Konto die letzte BetreiberIn?
+ *
+ * WIRD MIT DER ROLLE DES KONTOS GEFRAGT, nicht nur mit seiner Kennung: Ein
+ * Konto, das gar keine BetreiberIn ist, ist nie die letzte — und die Abfrage
+ * unterbleibt dann ganz.
+ */
+function ist_letzte_betreiberin(PDO $pdo, int $userId, ?string $rolle): bool
+{
+    if (!rolle_ist_betreiberin($rolle)) { return false; }
+    $q = $pdo->prepare("SELECT COUNT(*) FROM users
+                        WHERE role = 'betreiberin' AND id <> ?");
+    $q->execute([$userId]);
+    return (int)$q->fetchColumn() === 0;
+}
+
 /* ---- Fester Vergleichswert fuer unbekannte Kennungen ---------------------
  *
  * An EINER Stelle wird ein Geheimnis gegen einen gespeicherten bcrypt-Hash

@@ -8,9 +8,9 @@ mit Fable nach R14 · Ablage `docs/konzepte/` (R62), Mockups in
 >
 > | | |
 > |---|---|
-> | Stand | 05.09.2026 — **Schritt 5 erledigt** (Konzept, Prüfdokument und zwölf Mockups liegen im Repositorium; Rahmenplan auf Fassung 28 mit R74–R77, Backlog 73–80 vermerkt und 117–122 angelegt). **Umsetzung begonnen** auf `claude/umsetzung-buuvfq` |
-> | Paket in Arbeit | **AP1 — Rolle „BetreiberIn"** |
-> | Erledigt | Schritte 1–5 des Konzeptablaufs (Befund, Entscheidungen E-S8-01 bis -18, Zielbild, zwölf Mockups, acht Arbeitspakete, Push) |
+> | Stand | 05.09.2026 — **AP1 erledigt** (Web 15.0.0, Migration `2026_09_05_rolle_betreiberin`). Umsetzung auf `claude/umsetzung-buuvfq` |
+> | Paket in Arbeit | **AP2 — Betrieb, Teil 1: Updates, Hintergrundjobs, Servereinstellungen** |
+> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2) |
 > | Wo es hakt | nichts Blockierendes. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). Zu prüfen in AP4: ob eine letzte Mailzustellung aufgezeichnet wird (Z-01); was die Wear-OS-App als `art` sendet (Z-02) |
 > | Umsetzungsumgebung | lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (MariaDB 10.11.14, PHP 8.4.19, Chromium); `00-ist-*`-Bilder vor AP1 aufgenommen |
 > | Fable-Schritt | **das Konzept selbst** (R14, Rahmenplan Schritt 7); die Umsetzung läuft nach K2 mit Opus. Mockup-Freigabe je Darstellung durch den Auftraggeber (`CLAUDE.md` 5) |
@@ -1303,12 +1303,102 @@ stuft keine der drei Zählungen hoch) und kein Changelog-Eintrag.
 
 **Probleme:** keine.
 
+### 11.2 AP1 — Rolle „BetreiberIn" (05.09.2026, Web 15.0.0)
+
+**Version:** Web **15.0.0** — Hauptnummer nach der Zählweise in `version.php`.
+Nicht wegen der Spalte (ein ENUM um einen Wert zu erweitern ist wenig),
+sondern weil sich die Wege durch die Anwendung ändern, und zwar je nachdem,
+wer angemeldet ist. Dieselbe Begründung wie bei 7.0.0.
+
+**Gebaut:**
+
+| Was | Wo |
+|---|---|
+| Rollenkatalog und reine Prädikate (`ROLLEN`, `rolle_normieren()`, `rolle_darf_verwalten()`, `rolle_ist_betreiberin()`, `rolle_text()`, `ROLLEN_VERWALTUNG_SQL`, `betreiberinnen_zahl()`, `ist_letzte_betreiberin()`) | `server/db.php` |
+| Wächter der Sitzung (`ist_betreiberin()`, `require_betreiberin()`, `eigene_rolle()`, `rollen_auswahl()`); `ist_admin()` gilt jetzt auch für BetreiberInnen | `server/auth_guard.php` |
+| Migration `2026_09_05_rolle_betreiberin` (ENUM erweitern, dann alle Admins zu BetreiberInnen), Register in `schema.sql` | `server/update.php`, `server/schema.sql` |
+| Rolle anlegen, zählen, filtern, sortieren, anzeigen | `server/admin_users.php` |
+| Rollenwechsel mit drei Schranken, Löschschranke, gesperrtes Rollenfeld, Hinweis in der Gefahrenzone | `server/admin_user.php` |
+| Mails an alle mit Verwaltungsrechten, Standzählung | `server/adminbackup_lib.php` |
+| Wartungsmodus lässt Verwaltende durch | `server/login.php` |
+| Adminhinweis auf der öffentlichen Rechtstextseite | `server/rechtstext_seite.php` |
+| Erstes Konto wird BetreiberIn; Texte auf „BetreiberIn" | `server/install.php` |
+| Eigene Rolle im Profil (nur lesend) | `server/einstellungen.php` |
+| Doku | `docs/Handbuch.md` 3.1a, 11, 11.3 („Drei Rollen"), `docs/Technik.md` 7, `docs/Backup-Format.md` 6.8, `docs/CHANGELOG.md` |
+
+**Entscheidungen der Umsetzung (U-Nummern, ergänzen die E-Nummern):**
+
+- **U-AP1-01 — Der Rollenkatalog liegt in `db.php`, die Wächter in
+  `auth_guard.php`.** Zwei Stellen brauchen die Rollenfrage **ohne Sitzung**:
+  `login.php` entscheidet vor dem Anmelden, ob der Wartungsmodus jemanden
+  durchlässt, und `rechtstext_seite.php` liest die Rolle einer möglicherweise
+  fremden Zeile. Beide können `auth_guard.php` nicht laden — es leitet auf die
+  Anmeldung um. Die reinen Prädikate stehen deshalb in `db.php`; alles, was an
+  der angemeldeten Sitzung hängt, in `auth_guard.php`.
+- **U-AP1-02 — „Admins" zählt jedes Konto mit Verwaltungsrechten.** Kennzahl
+  und Filter der NutzerInnen-Liste (und dieselbe Zählung in
+  `adminbackup_lib.php`) beantworten die Frage „wie viele können hier
+  verwalten?"; darauf ist eine BetreiberIn ein Ja. Wer wissen will, wer
+  betreibt, liest die Rollenspalte — sie nennt drei Werte und sortiert nach
+  Rechten (BetreiberIn, Admin, NutzerIn). Ein eigener Filter „BetreiberInnen"
+  wäre bei zwei bis drei solchen Konten eine Plakette ohne Nutzen; er kann in
+  P5 mit der Support-Rolle entstehen.
+- **U-AP1-03 — Die Betrieb-Seiten behalten in AP1 ihren `require_admin()`.**
+  `admin_komplettsicherung.php`, `admin_sicherungsziele.php` und `update.php`
+  ziehen erst mit dem Menü in den Block Betrieb (AP5); ihre Wächter wechseln
+  mit dem Umzug. Sie vorher zu verschärfen hieße, Menüeinträge stehen zu
+  lassen, die für einen Admin auf 403 zeigen. **Folge für die Abnahme:** P-01
+  ist an dieser Stelle noch nicht die Endfassung der Rechtematrix 5.3 — das
+  Prüfdokument sagt es und wiederholt den Punkt nach AP5.
+- **U-AP1-04 — Ein `disabled` allein ist auf einem Feld unsichtbar.** Siehe
+  Fund F-S8-P-03; gelöst mit dem vorhandenen Baustein `feldsatz-gesperrt`
+  statt mit einer neuen Regel im Stylesheet.
+- **U-AP1-05 — Das gesperrte Rollenfeld trägt seinen Wert in einem versteckten
+  Feld mit.** Ein `disabled` fieldset schickt nichts mit; ohne das versteckte
+  Feld läse der Schreibweg „NutzerIn" und antwortete auf jedes Speichern von
+  Name oder Adresse mit einer Rollen-Fehlermeldung. Das versteckte Feld steht
+  **außerhalb** des Feldsatzes.
+- **U-AP1-06 — Das Profil zeigt die eigene Rolle**, nur lesend. Es ist der
+  einzige Ort, an dem eine NutzerIn sie nachsehen kann, und er erklärt, warum
+  zwei Konten unter dem Zahnrad verschieden viel sehen. Kein neuer Baustein —
+  ein `feld-hinweis` in der vorhandenen Karte „Angaben".
+
+**Probleme und Funde** (Nummern wie im Prüfdokument):
+
+- **F-S8-P-01 (blockierend, behoben): `tools/wortliste/ausnahmen.json` war
+  kein gültiges JSON.** Zwischen den Einträgen `herkunft-wertevorrat-garmin`
+  und `technik-abgrenzung-beide-uhren` fehlte `},\n{` — die
+  Konfliktauflösung im Merge `589982b` hat sie verloren. Die Wortliste bricht
+  seither mit `JSONDecodeError` ab, **statt zu messen**; sie kann also seit
+  diesem Merge nicht gelaufen sein. Behoben, weil sie für jede Textänderung
+  Pflicht ist (`CLAUDE.md` 6) und der Fund die laufende Arbeit blockierte
+  (K4).
+- **F-S8-P-02 (behoben, Folge desselben Merges):** Nach der Reparatur meldete
+  die Wortliste eine **ungenutzte Ausnahme** — `technik-abgrenzung-beide-uhren`
+  erwartet in `docs/Technik.md` den Wortlaut „Die **Garmin-Uhr** hält es
+  genauso"; dort stand „Die Uhr-App hält es genauso". Die Begründung der
+  Ausnahme sagt selbst, warum das falsch ist: Der Satz steht im
+  Android-Kapitel und vergleicht mit der Connect-IQ-Uhr; „Uhr-App" ist genau
+  dort zweideutig, wo es auf den Unterschied ankommt. Wortlaut
+  wiederhergestellt.
+- **F-S8-P-03 (behoben): Ein `disabled` am Auswahlfeld war unsichtbar.**
+  `.feld-eingabe` setzt `background` und `color` selbst und überschreibt
+  damit, was der Browser sonst graut; eine Regel `:disabled` gibt es nicht.
+  Das gesperrte Rollenfeld sah aus wie ein bedienbares. Gelöst **ohne**
+  Stylesheet-Änderung mit dem vorhandenen `feldsatz-gesperrt` (S3/AP10, für
+  genau diesen Zweck gebaut): gemessen `:disabled` = wahr, Deckkraft 0,55.
+
+**Was AP1 ausdrücklich noch nicht tut:** den Bereich „Betrieb" selbst. Bis
+AP5 sieht eine BetreiberIn dasselbe wie ein Admin. Die Rolle kommt zuerst,
+weil jede Seite von AP2 und AP4 mit `require_betreiberin()` beginnt.
+
 ---
 
 ## Änderungsverlauf dieses Dokuments
 
 | Datum | Was |
 |---|---|
+| 05.09.2026 | **AP1 erledigt** (Web 15.0.0): dritte Rolle mit Migration, Hierarchie über `ist_admin()`, zwei Schranken, `install.php` legt BetreiberIn an, Profil zeigt die Rolle. Drei Funde (F-S8-P-01 bis -03), alle behoben — darunter eine seit dem Merge `589982b` unbrauchbare `ausnahmen.json` der Wortliste. Umsetzungsentscheidungen U-AP1-01 bis -06 |
 | 05.09.2026 | **Schritt 5 erledigt** (Umsetzungsinstanz, Opus): Konzept, Prüfdokument und zwölf Mockups im Repositorium; Rahmenplan auf Fassung 28 (R74–R77, Schritte 7, 8, 10, Abschnitte 4, 5, 6, K1), Backlog 73–80 vermerkt, 80 geteilt, 117–122 angelegt. Statusblock, Abschnitt 10 und **Abschnitt 11 (Umsetzungsprotokoll)** angelegt |
 | 05.09.2026 | Angelegt: Statusblock, Konzeptablauf, Aufgabe, Befund (Abschnitt 2 vollständig), F-S8-01 bis -06; F-S8-01, -03, -05 beantwortet |
 | 05.09.2026 | F-S8-02 (Betreiberin-Oberfläche mit Rolle), F-S8-03 (Menüpunkt raus in S8) und F-S8-04 (APK-Karte jetzt) beantwortet; F-S8-07 (Rolle: Rahmenplan-Änderung, Rechte, Bestand, Vergabe) und F-S8-08 (SD-04) angelegt; Abschnitt 1.4 angepasst |

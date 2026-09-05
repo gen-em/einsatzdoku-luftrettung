@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * „Passwort falsch" und tippte weiter — bis der Ratenschutz
              * zuschlaegt. Es ist die Wartungsseite, und die sagt, was los
              * ist. */
-            if (wartung_aktiv() && (string)($u['role'] ?? 'user') !== 'admin') {
+            if (wartung_aktiv() && !rolle_darf_verwalten($u['role'] ?? null)) {
                 session_verwerfen();
                 wartung_antwort_seite();
             }

@@ -255,7 +255,12 @@ function demo_anlegen(): array
                 $k['kdf_salt'] ?? null, (int)($k['kdf_iter'] ?? 0),
                 $k['pat_wrap_pw'] ?? null, $k['pat_wrap_rc'] ?? null,
                 $k['pat_key_check'] ?? null,
-                'user',                      // NIEMALS admin (E-P1-09)
+                /* NIEMALS eine Rolle mit Rechten (E-P1-09). Seit Web 15.0.0
+                 * gibt es drei Rollen (R75) — der Satz gilt fuer beide oberen
+                 * unveraendert. Der Reset unten schreibt denselben Wert
+                 * zurueck, damit ein waehrend der Sitzung erhoehtes Konto
+                 * spaetestens nach dreissig Minuten wieder eine NutzerIn ist. */
+                'user',
                 $k['account_key'] ?? null,
             ]);
         $id = (int)$pdo->lastInsertId();

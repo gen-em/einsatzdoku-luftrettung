@@ -60,7 +60,7 @@ if (!empty($_SESSION['user_id'])) {
     try {
         $st = db()->prepare('SELECT role FROM users WHERE id = ?');
         $st->execute([(int)$_SESSION['user_id']]);
-        $istAdmin = ((string)$st->fetchColumn() === 'admin');
+        $istAdmin = rolle_darf_verwalten((string)$st->fetchColumn());
     } catch (Throwable) {
         // Keine Datenbank: dann eben kein Adminhinweis. Die Seite bleibt lesbar.
     }
