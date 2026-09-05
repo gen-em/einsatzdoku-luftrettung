@@ -304,6 +304,45 @@ Scheiterns-Merkmal je Punkt. Die Reihenfolge, die ich empfehle:
 5. Funkloch (Handy aus, drei Ereignisse, Handy an).
 6. Zwölf Stunden Dauerlauf.
 
+**Nachtrag 05.09.2026 — Android 0.13.1, die vier Befunde vom S24.** Alle
+vier sind am Code behoben oder beantwortet und am Emulator (AOSP) belegt;
+was zählt, ist der zweite Blick auf das Gerät. Je Punkt: Bedienweg,
+Erwartung, woran ein Scheitern zu erkennen ist.
+
+- [ ] **Zweierwahl.** Dienstansicht vor dem Dienst, „Nur aufzeichnen"
+      antippen, dann „Mit Phasenknöpfen". **Erwartet:** Die gewählte Hälfte
+      ist bis zur unteren Rahmenlinie blau, der Text steht mittig, zwischen
+      den Hälften ein grauer Strich. **Scheitern:** ein heller Streifen unter
+      dem Blau, oder kein Strich.
+- [ ] **Zurück-Geste.** Einstellungen öffnen, vom Rand nach innen wischen
+      (oder die Zurück-Taste). **Erwartet:** die Dienstansicht.
+      **Scheitern:** die App verschwindet, der Startbildschirm des Telefons
+      erscheint.
+- [ ] **Code kopieren.** Gerät trennen, „Kopplung starten", unter dem Code
+      „Code kopieren" tippen; Browser öffnen, im Feld „Code vom Gerät"
+      einfügen. **Erwartet:** sechs Zeichen ohne Leerzeichen; auf Android 13+
+      eine Einblendung des Systems beim Kopieren, darunter „Code kopiert".
+      Dazu: lange auf den Code drücken — er lässt sich markieren.
+      **Scheitern:** das Feld bleibt leer, oder es fügt etwas anderes ein.
+- [ ] **Symbol in der Leiste (Backlog 117).** Dienst beginnen. **Erwartet:**
+      ein Punkt links in der Statusleiste, in der Leiste die Meldung
+      „Gen-EM NAdoku · Aufzeichnung läuft seit …". **Wenn nicht:** Steht auf
+      der Dienstansicht „Benachrichtigungen ausgeschaltet"? Dann den Knopf
+      darunter, in den Einstellungen einschalten, zurück — der Hinweis muss
+      von selbst verschwinden und das Symbol erscheinen. Steht der Hinweis
+      nicht und fehlt das Symbol trotzdem: Leiste herunterziehen; steht die
+      Meldung dort, ist es die Symbolanzeige des Herstellers; steht sie
+      nicht, `adb shell dumpsys notification --noredact | grep -A5 nadoku`
+      und das Ergebnis in Backlog 117.
+- [ ] **Kopf der Benachrichtigung (Backlog 81).** Dieselbe Meldung
+      aufklappen. **Erwartet:** die Bildmarke klein und mittig in der runden
+      Kachel, mit Luft zum Rand. **Scheitern:** weißer Korpus bis an den
+      Rand, farbige Flächen links — dann zeichnet One UI den Vordergrund auf
+      einem anderen Weg als angenommen; Bild an Backlog 81.
+- [ ] **Startbildschirm-Symbol, Handy und Uhr.** **Erwartet:** wie im
+      Benachrichtigungskopf — Marke mittig, mit Luft; auf der Uhr dasselbe.
+      Vorher stand das Motiv bei kleinen Kacheln zu groß.
+
 ### 5. Nach dem ersten Deploy: liegt das APK noch da?
 
 **Weg:** Ein APK per FTPS nach `server/apk/` legen, auf dem Geräte-Reiter

@@ -8,13 +8,30 @@
     unkenntlichen Klecks. Genommen wird deshalb ein Aufnahmepunkt: ein voller
     Kreis, das Zeichen für „läuft", und derselbe rote Punkt, den die App auf
     jedem laufenden Bildschirm trägt (E-S4-22a). Die Farbe kommt vom System.
+
+    HIER STAND `android:tint="?android:attr/colorControlNormal"`, seit 0.3.0
+    und bis 0.13.0. Ausgetragen in 0.13.1, und zwar aus einem Grund, der
+    unabhängig vom Befund gilt: Ein Meldungssymbol wird nicht von dieser App
+    gezeichnet, sondern von der Systemoberfläche. Die lädt das Drawable in
+    IHREM Prozess und löst ein Themenattribut gegen IHR Thema auf — welches
+    das ist und was dabei herauskommt, bestimmt der Hersteller, nicht wir.
+    Geleistet hat die Zeile dabei nichts: Das System nimmt den Alphakanal,
+    und der ist mit oder ohne Tönung derselbe. Ein Attribut, das nichts
+    leistet und in einem fremden Prozess aufgelöst wird, ist eine Fehlerquelle
+    ohne Gegenwert.
+
+    Der Anlass: Am 05.09.2026 wurde vom S24 gemeldet, dass während der
+    Aufzeichnung in der Leiste KEIN Symbol mehr erscheint. Ob es an dieser
+    Zeile lag, sagt nur das Gerät — der Emulator führt AOSP, nicht One UI.
+    Was die App sonst noch dazu tut: Sie sagt seit 0.13.1 auf der
+    Dienstansicht, wenn ihre Benachrichtigungen abgeschaltet sind
+    (HauptActivity, `meldungenErlaubt`), denn auch dann gibt es kein Symbol.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
-    android:viewportHeight="24"
-    android:tint="?android:attr/colorControlNormal">
+    android:viewportHeight="24">
     <path
         android:fillColor="#FFFFFFFF"
         android:pathData="M12,5 A7,7 0 1,0 12,19 A7,7 0 1,0 12,5 Z" />

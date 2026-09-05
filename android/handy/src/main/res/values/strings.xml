@@ -77,6 +77,19 @@
     <string name="kopplung_rest_sek">Noch %1$d Sekunden</string>
 
     <!--
+        DER CODE LAESST SICH KOPIEREN (Android 0.13.1). Wer die Weboberflaeche
+        auf demselben Handy oeffnet, tippt ihn nicht ab, sondern fuegt ihn ein.
+        Der Knopf legt die sechs Zeichen ohne Leerzeichen in die Zwischenablage;
+        die Anzeige selbst laesst sich seither auch markieren (lange druecken).
+
+        "Code kopiert" nur bis Android 12: Ab 13 bestaetigt das System das
+        Kopieren mit einer eigenen Einblendung, und ein zweiter Hinweis
+        darueber waere einer zu viel.
+    -->
+    <string name="kopplung_code_kopieren">Code kopieren</string>
+    <string name="kopplung_code_kopiert">Code kopiert</string>
+
+    <!--
         DAS ZWEITE TOR (Vertrag 1a.2). Hier steht die maskierte Adresse des
         Kontos, das den Code eingegeben hat. Sie ist der ganze Zweck dieses
         Bildschirms: Eine fremde Domain faellt auf, und genau daran scheitert
@@ -220,6 +233,15 @@
     <string name="standort_aus">Standort ausgeschaltet</string>
     <string name="standort_aus_hinweis">Ohne eingeschalteten Standort beginnt kein Dienst. Tippe hier, um ihn einzuschalten.</string>
     <string name="standort_einschalten">Standort einschalten</string>
+
+    <!-- Ohne Benachrichtigungen gibt es die Dauermeldung nicht — und mit ihr
+         fehlt das Symbol in der Leiste, das im Dienst die einzige Auskunft
+         ist, solange die App zu ist (Android 0.13.1). KEIN Sperrgrund: Der
+         Dienst laeuft auch so. Aber gesagt wird es, wie bei Freigabe und
+         Standort — erst was los ist, dann was hilft. -->
+    <string name="meldungen_aus">Benachrichtigungen ausgeschaltet</string>
+    <string name="meldungen_aus_hinweis">Ohne sie fehlt im Dienst die Meldung in der Leiste, und Warnungen kommen nicht an. Tippe hier, um sie einzuschalten.</string>
+    <string name="meldungen_einschalten">Benachrichtigungen einschalten</string>
 
     <!-- Die Warnung (ID 3, eigener Kanal, Vibration ohne Ton; E-S5Z-04).
          Ein Titel fuer alle vier Ursachen: Was zaehlt, ist "es wird nichts

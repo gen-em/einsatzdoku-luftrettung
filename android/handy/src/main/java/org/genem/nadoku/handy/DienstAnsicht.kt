@@ -88,6 +88,16 @@ data class Dienststand(
     val phaseSeit: String? = null,
     val naechstePhase: Int? = null,
     val gesetztePhasen: List<Phasenzeile> = emptyList(),
+    /**
+     * Darf die App Benachrichtigungen stellen, und ist der Kanal der
+     * Dauermeldung offen? (Android 0.13.1)
+     *
+     * Ohne sie gibt es die Dauermeldung nicht — und damit weder das Symbol
+     * in der Leiste noch die Warnungen. Kein Sperrgrund wie [standortAn]:
+     * Der Dienst läuft auch so. Aber gesagt wird es, wie bei den beiden
+     * anderen.
+     */
+    val meldungenErlaubt: Boolean = true,
 )
 
 /**
@@ -120,6 +130,7 @@ fun DienstAnsicht(
     aufEinstellungen: () -> Unit,
     aufPhase: (Int) -> Unit = {},
     aufEinsatzAbschluss: () -> Unit = {},
+    aufMeldungenEinschalten: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -166,6 +177,26 @@ fun DienstAnsicht(
                     )
                     KnopfPrimaer(stringResource(R.string.standort_einschalten)) {
                         aufStandortEinschalten()
+                    }
+                }
+
+                /* KEINE DRITTE SPERRE, SONDERN EIN HINWEIS (Android 0.13.1).
+                 * Ohne Benachrichtigungen läuft der Dienst — nur sieht man ihn
+                 * nicht, solange die App zu ist: keine Dauermeldung, kein
+                 * Symbol in der Leiste, keine Warnung. Am 05.09.2026 wurde vom
+                 * S24 genau das gemeldet („in der Leiste ist nichts mehr"),
+                 * und die App hatte dazu nichts zu sagen. Jetzt sagt sie es,
+                 * an derselben Stelle wie Freigabe und Standort; „Dienst
+                 * beginnen" bleibt darunter stehen, und deshalb ist der Knopf
+                 * neutral — die eine Handlung der Ansicht ist er nicht. */
+                if (!stand.meldungenErlaubt) {
+                    Meldungsblock(
+                        titel = stringResource(R.string.meldungen_aus),
+                        hinweis = stringResource(R.string.meldungen_aus_hinweis),
+                        warnend = true,
+                    )
+                    KnopfNeutral(stringResource(R.string.meldungen_einschalten)) {
+                        aufMeldungenEinschalten()
                     }
                 }
 

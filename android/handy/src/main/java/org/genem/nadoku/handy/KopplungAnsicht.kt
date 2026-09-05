@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -87,6 +88,10 @@ sealed interface Kopplungsschritt {
  * Was bleibt, ist ein Knopf und danach eine Zahl zum Ablesen. Das ist der
  * eigentliche Gewinn der Umkehr: Der Bildschirm, der vorher eine Eingabemaske
  * war, ist jetzt eine Anzeige.
+ *
+ * @param aufKopieren der Code soll in die Zwischenablage (seit 0.13.1). Die
+ *   Ablage selbst ist Sache der Activity — dieser Bildschirm zeigt und ruft,
+ *   wie bei allen anderen Handlungen auch.
  */
 @Composable
 fun KopplungAnsicht(
@@ -94,6 +99,7 @@ fun KopplungAnsicht(
     logoWahl: LogoWahl,
     aufStarten: () -> Unit,
     aufAntwort: (ja: Boolean) -> Unit,
+    aufKopieren: (code: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -121,7 +127,7 @@ fun KopplungAnsicht(
 
                 when (schritt) {
                     is Kopplungsschritt.Wartet -> {
-                        Codeanzeige(schritt.code)
+                        Codeanzeige(schritt.code) { aufKopieren(schritt.code) }
                         Hinweiskasten(stringResource(R.string.kopplung_code_wo))
                         Text(
                             text = stringResource(R.string.kopplung_wartet),
@@ -218,9 +224,22 @@ fun KopplungAnsicht(
  * wird von hier auf einen anderen Bildschirm übertragen, oft mit dem Handy in
  * der einen und der Maus in der anderen Hand. `letterSpacing` gibt es dazu
  * nicht — die Gruppierung leistet dasselbe und überlebt jede Schriftgröße.
+ *
+ * UND ER LÄSST SICH KOPIEREN (0.13.1) — denn der andere Bildschirm ist oft
+ * derselbe: Wer die Weboberfläche auf dem Handy öffnet, wechselt in den
+ * Browser und fügt ein, statt sechs Zeichen abzutippen. Bis 0.13.0 ging das
+ * nicht; ein `Text` in Compose lässt sich auf Android weder markieren noch
+ * kopieren, und das fiel am 05.09.2026 am Gerät auf. Zwei Wege, weil sie
+ * verschiedene Hände bedienen: der Knopf für den Alltag (ein Tipp, auch mit
+ * Handschuhen), der `SelectionContainer` für alle, die aus Gewohnheit lange
+ * drücken und markieren.
+ *
+ * Der Knopf ist neutral und nicht orange: Die Handlung dieser Seite ist das
+ * Eintragen im Browser, nicht das Kopieren — und das Abbrechen darunter ist
+ * es erst recht nicht (`HandyBildTest`, `OHNE_HAUPTHANDLUNG`).
  */
 @Composable
-private fun Codeanzeige(code: String) {
+private fun Codeanzeige(code: String, aufKopieren: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Abstand.eins),
@@ -229,14 +248,17 @@ private fun Codeanzeige(code: String) {
             text = stringResource(R.string.kopplung_code_zeigen),
             color = Farbe.gedaempft, fontSize = 13.sp,
         )
-        Text(
-            text = Kopplungscode.gruppiert(code),
-            color = Farbe.asphalt,
-            fontSize = 34.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        SelectionContainer {
+            Text(
+                text = Kopplungscode.gruppiert(code),
+                color = Farbe.asphalt,
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        KnopfNeutral(stringResource(R.string.kopplung_code_kopieren)) { aufKopieren() }
     }
 }
 

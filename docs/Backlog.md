@@ -971,6 +971,20 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Herstellereinstellung. Zuordnung: **S4-Rest** (Schritt 6), zusammen mit dem
     Gerätetest auf dem S24.
 
+    **Ursache gefunden und behoben am 05.09.2026 (Android 0.13.1)** — nicht
+    beim Hersteller, sondern am Vordergrund selbst: `symbol_vordergrund.xml`
+    stand mit **festen 52 × 33 dp** in der 108-dp-Kachel. Das ist nur
+    richtig, wenn die Kachel 108 dp groß gezeichnet wird; ein
+    Benachrichtigungskopf zeichnet sie mit rund 40 dp, und die Ebene bekommt
+    das Anderthalbfache davon (60 dp) — darin ragt ein festes 52-dp-Motiv
+    über den sichtbaren Kreis hinaus: weißer Korpus bis an den Rand, farbige
+    Flächen links. Die Nachrechnung oben rechnete mit 108 dp und konnte es
+    deshalb nicht finden. Jetzt ist der Vordergrund ein `inset` mit
+    Bruchteilen, in beiden Modulen; `SymbolBildTest` zählt den Anteil bei 40
+    und 108 dp nach (72 % bei beiden). `roundIcon` war nicht die Ursache und
+    bleibt trotzdem ausgetragen. **Offen bleibt die Gegenprobe am S24** —
+    erst sie schließt den Punkt; der Prüfweg steht im Prüfdokument S4.
+
 87. **Die Weboberfläche als installierbare Web-App auf Android.**
     *Aufgenommen 02.09.2026 auf Anweisung des Auftraggebers: vor v1.0
     prüfen, was es braucht, damit Android die Seite aus dem Browser heraus
@@ -1274,6 +1288,30 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     der Liste fehlen. Das Zweite ist deutlich billiger und fängt denselben
     Fehler. Dieselbe Frage stellt sich für
     `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
+
+117. **Kein Symbol in der Statusleiste während der Aufzeichnung (S24).**
+    *Aufgenommen 05.09.2026 vom Auftraggeber: „Im Statusbereich wird beim
+    Tracking nun nichts mehr angezeigt links oben. Zuvor war nur das Logo
+    nicht passend, jetzt ist nichts mehr da."*
+    **Nicht nachstellbar** im Container: Der Emulator führt AOSP und zeigt
+    den Punkt; das S24 führt One UI. Am Code hat sich das Meldungssymbol seit
+    0.3.0 nicht geändert, und keine Fassung seit 0.7.7 hat am Weg der
+    Dauermeldung etwas verändert.
+    **Getan mit Android 0.13.1:** das Themenattribut
+    `?android:attr/colorControlNormal` am Meldungssymbol ausgetragen — es
+    wird von der Systemoberfläche in deren Prozess aufgelöst und leistete
+    nichts; die App zeigt auf der Dienstansicht einen Hinweis mit Knopf, wenn
+    ihre Benachrichtigungen oder der Kanal „Aufzeichnung" abgeschaltet sind —
+    die eine Ursache, die genauso aussieht und die sie selbst erkennen kann.
+    **Prüfweg am S24, in dieser Reihenfolge:** (1) 0.13.1 installieren,
+    Dienst beginnen — steht auf der Dienstansicht „Benachrichtigungen
+    ausgeschaltet"? Dann einschalten; erledigt. (2) Sonst die Leiste
+    herunterziehen: Steht dort „Gen-EM NAdoku · Aufzeichnung läuft seit …"?
+    Dann zeigt nur die Leiste das Symbol nicht — Herstellereinstellung
+    (Einstellungen → Benachrichtigungen → Erweiterte Einstellungen,
+    Benachrichtigungssymbole). (3) Steht auch die Meldung nicht:
+    `adb shell dumpsys notification --noredact | grep -A5 nadoku`, und das
+    Ergebnis hierher. Zuordnung: **Gerätetest, Schritt 6** (mit Nr. 81).
 
 ---
 

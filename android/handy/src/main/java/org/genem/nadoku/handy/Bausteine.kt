@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.navigationBars
@@ -278,6 +280,26 @@ fun Eingabefeld(
  * Wahlliste im Web (E-P3-20). In der App waehlt Blau — damit die Rolle aus
  * Design.md 3.1 sichtbar wird. Der Unterschied ist mit der Freigabe vom
  * 31.08.2026 bestaetigt (E-S4-22a).
+ *
+ * DIE ZEILE HAT EINE FESTE HOEHE, UND DIE HAELFTEN FUELLEN SIE (Android
+ * 0.13.1). Bis 0.13.0 stand an der Zeile nur `heightIn(min = BEDIENHOEHE)`,
+ * und die Haelften trugen `fillMaxHeight()`. Das liest sich richtig und war
+ * es nicht: Eine `Row` misst ihre Kinder mit Mindesthoehe 0 und der
+ * Hoechsthoehe, die sie selbst bekommt — und in einer rollenden Spalte ist
+ * die unendlich. Eine unendliche Hoehe kann `fillMaxHeight()` nicht fuellen;
+ * es tut dann nichts. Jede Haelfte wurde so hoch wie ihr Text samt Polster
+ * (rund 42 dp), die Zeile selbst aber 48 dp, und die Haelften standen oben
+ * an. Die Folge, am 05.09.2026 vom S24 gemeldet: ein ungefaerbter Streifen
+ * unter der blauen Haelfte, der Text um drei Punkte zu hoch — und der
+ * Trennstrich dazwischen mit Hoehe 0, also unsichtbar. Der Bilderlauf hat es
+ * nicht bemerkt: Er misst die Bedienhoehe an den FARBIGEN Knoepfen, nicht an
+ * dieser Zeile. `ZweierwahlBildTest` misst sie jetzt hier.
+ *
+ * `height(IntrinsicSize.Min)` gibt der Zeile eine feste Hoehe — die groesste
+ * Mindesthoehe ihrer Kinder, durch `heightIn` davor auf mindestens 48 dp
+ * gehoben. Gegen eine FESTE Hoehe koennen die Kinder fuellen, und der
+ * Trennstrich bekommt sie auch. Die Reihenfolge traegt: `heightIn` VOR
+ * `height(IntrinsicSize.Min)`, sonst greift die Untergrenze nicht.
  */
 @Composable
 fun Zweierwahl(
@@ -291,6 +313,7 @@ fun Zweierwahl(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = BEDIENHOEHE)
+            .height(IntrinsicSize.Min)
             .border(1.dp, Farbe.gedaempft, RoundedCornerShape(Radius.normal))
             .clip(RoundedCornerShape(Radius.normal)),
     ) {

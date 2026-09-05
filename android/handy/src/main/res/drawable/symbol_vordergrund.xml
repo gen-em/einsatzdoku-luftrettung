@@ -4,18 +4,39 @@
 
     Die Kachel eines adaptiven Symbols ist 108 x 108 dp; sichtbar ist davon
     garantiert nur der innere Kreis von 66 dp (der Rest wird je nach Hersteller
-    beschnitten). Die Marke steht deshalb auf 52 dp Breite, mittig — innerhalb
-    des sicheren Bereichs, mit Luft.
+    beschnitten). Die Marke steht deshalb auf 52 von 108 Teilen der Breite,
+    mittig — innerhalb des sicheren Bereichs, mit Luft.
 
-    `android:gravity="center"` mit fester Breite und Hoehe statt einer
-    Skalierung auf die volle Kachel: Die Vorlage liegt quer (1,602:1); auf die
-    Kachel gestreckt waere sie verzerrt, und die Verzerrung faellt an einem
-    Symbol sofort auf.
+    ANTEILE STATT DP — das ist die Behebung von Backlog Nr. 81 (Android
+    0.13.1). Bis 0.13.0 stand hier eine `layer-list` mit einem Eintrag von
+    FEST 52 x 33 dp, mittig. Das ist nur dann richtig, wenn die Kachel
+    tatsaechlich 108 dp gross gezeichnet wird — und das tut niemand. Ein
+    Startprogramm zeichnet sie mit rund 48 bis 60 dp, der Kopf einer
+    Benachrichtigung mit rund 40; die Ebene bekommt dann das Anderthalbfache
+    davon als Flaeche (72 bis 90 dp bzw. 60 dp). Ein festes 52-dp-Motiv ist
+    darin kein „Motiv mit Luft" mehr, sondern fuellt die Flaeche, und bei
+    40 dp ragt es ueber den sichtbaren Kreis hinaus. Genau das Bild hat der
+    Auftraggeber am 02.09.2026 gemeldet: weisser Korpus bis an den Rand,
+    farbige Flaechen links. Die Nachrechnung vom selben Tag hatte mit 108 dp
+    gerechnet — dort stimmt es — und deshalb nichts gefunden. Und
+    `android:roundIcon`, das 0.11.1 dafuer ausgetragen hat, war nicht die
+    Ursache; ausgetragen bleibt es trotzdem, aus den dort genannten Gruenden.
+
+    Ein `inset` mit BRUCHTEILEN (seit API 26; minSdk ist 26) waechst und
+    schrumpft mit der Flaeche: links und rechts je 25,93 % (bleiben 48,15 %,
+    also 52 von 108), oben und unten je 34,93 % (bleiben 30,14 %). Die
+    beiden Zahlen sind so gewaehlt, dass der Innenraum das Seitenverhaeltnis
+    der Vorlage traegt (500 x 313 px, 1,597:1) — die Bitmap fuellt ihn, und
+    eine Verzerrung fiele an einem Symbol sofort auf.
+
+    DIE `monochrome`-EBENE ZEIGT AUF DIESELBE DATEI (mipmap/symbol.xml). Sie
+    ist damit ebenso skaliert, aber weiterhin nicht einfarbig — die Silhouette
+    bleibt erkennbar, weil die Binnenzeichnung aus durchsichtigen Trennlinien
+    entsteht (Backlog 81). Eine einfarbige Fassung braucht eine eigene Vorlage.
 -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="52dp"
-        android:height="33dp"
-        android:drawable="@drawable/marke_luft_weiss"
-        android:gravity="center" />
-</layer-list>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/marke_luft_weiss"
+    android:insetLeft="25.93%"
+    android:insetRight="25.93%"
+    android:insetTop="34.93%"
+    android:insetBottom="34.93%" />

@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Vordergrund des adaptiven Symbols.
+    Vordergrund des adaptiven Symbols — wortgleich zum Handy
+    (handy/src/main/res/drawable/symbol_vordergrund.xml), und die Begruendung
+    steht dort.
 
-    Die Kachel eines adaptiven Symbols ist 108 x 108 dp; sichtbar ist davon
-    garantiert nur der innere Kreis von 66 dp (der Rest wird je nach Hersteller
-    beschnitten). Die Marke steht deshalb auf 52 dp Breite, mittig — innerhalb
-    des sicheren Bereichs, mit Luft.
-
-    `android:gravity="center"` mit fester Breite und Hoehe statt einer
-    Skalierung auf die volle Kachel: Die Vorlage liegt quer (1,602:1); auf die
-    Kachel gestreckt waere sie verzerrt, und die Verzerrung faellt an einem
-    Symbol sofort auf.
+    Kurz: Bis 0.13.0 stand hier ein Eintrag von FEST 52 x 33 dp in einer
+    108-dp-Kachel. Das stimmt nur, wenn die Kachel tatsaechlich 108 dp gross
+    gezeichnet wird; ein Startprogramm zeichnet sie mit 48 bis 60 dp, und auf
+    einer Uhr eher kleiner. Ein festes Motiv fuellt dann die Flaeche oder ragt
+    ueber den sichtbaren Kreis hinaus (Backlog Nr. 81). Bruchteile skalieren
+    mit: links und rechts je 25,93 %, oben und unten je 34,93 % — der
+    Innenraum traegt das Seitenverhaeltnis der Vorlage (500 x 313 px).
 -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="52dp"
-        android:height="33dp"
-        android:drawable="@drawable/marke_luft_weiss"
-        android:gravity="center" />
-</layer-list>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/marke_luft_weiss"
+    android:insetLeft="25.93%"
+    android:insetRight="25.93%"
+    android:insetTop="34.93%"
+    android:insetBottom="34.93%" />

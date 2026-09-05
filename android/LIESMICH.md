@@ -185,6 +185,34 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand 0.13.1, 05.09.2026** — `./gradlew build` im Container, 5 min 19 s
+bei warmem Zwischenspeicher:
+
+| | `handy` | `uhr` |
+|---|---|---|
+| Lint-Fehler | **0** | **0** |
+| Lint-Warnungen | **14** — unverändert, alle auf `libs.versions.toml` (siehe unten) | **0** |
+| Prüffälle | **249**, davon 14 übersprungen (der Server-Rundlauf) | **71**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **7 869 238 B** | **19 574 402 B** |
+
+Neu sind drei Prüffälle, alle Bildmessungen — Antworten auf Befunde vom S24,
+die der Bilderlauf nicht gesehen hatte, obwohl sie in seinen Bildern standen:
+
+- `ZweierwahlBildTest`: Die Wahl „Mit Phasenknöpfen / Nur aufzeichnen" füllt
+  ihre 48-dp-Zeile — gemessen in einer **rollenden** Spalte, weil der Fehler
+  nur dort entsteht (`fillMaxHeight()` gegen unendliche Höhe). Gemessen:
+  Rahmen 48,0 dp, Hellblau 46,0 dp, Trennstrich 2 px, Schriftversatz
+  0,00 dp. Der Bilderlauf misst die Bedienhöhe an den **farbigen** Knöpfen
+  und hatte darum nichts zu sagen.
+- `SymbolBildTest`: Der Vordergrund des adaptiven Symbols nimmt bei 40 und
+  108 dp denselben Anteil ein (72 % der Kachel) und bleibt im sicheren
+  Kreis — Backlog Nr. 81, mit festen dp wäre er bei 40 dp größer als die
+  Kachel.
+- Zwei Bildschirme mehr im `HandyBildTest` (**78 Bilder statt 72**): der
+  Hinweis „Benachrichtigungen ausgeschaltet" vor dem Dienst und darin.
+
+Der Stand davor, zur Einordnung der Zahlen:
+
 Stand E3 (Android 0.10.1), `./gradlew build` im Container, 03.09.2026:
 
 | | `handy` | `uhr` |
@@ -270,10 +298,22 @@ legen PNG unter `<modul>/build/bilder/` ab:
 
 | | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
 |---|---|---|
-| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | **72** — 24 Bildschirme × 3 Breiten (360, 411, 600 dp) |
-| Bedienhöhe | 48 dp je Bild | 48 dp an **69 von 72** — die drei `kopplung-code` tragen keinen farbigen Knopf und werden nicht daran gemessen (benannte Ausnahme im Prüffall) |
+| Bilder | 6 — zwei Marken, laufende Ansicht, zwei Ortungszustände, 227-dp-Uhr | **78** — 26 Bildschirme × 3 Breiten (360, 411, 600 dp); bis 0.13.0 waren es 24 × 3 |
+| Bedienhöhe | 48 dp je Bild | 48 dp an **75 von 78** — die drei `kopplung-code` tragen keinen farbigen Knopf und werden nicht daran gemessen (benannte Ausnahme im Prüffall) |
 | Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**; dazu der **ganze** Inhalt gegen den sichtbaren Bereich |
-| Unterscheidbarkeit | alle 6 paarweise verschieden | alle 66 paarweise verschieden, **und je Breite** |
+| Unterscheidbarkeit | alle 6 paarweise verschieden | alle 78 paarweise verschieden, **und je Breite** |
+
+**Was der Bilderlauf nicht misst, obwohl es im Bild steht (0.13.1):** alles,
+was keine Primär- oder Beenden-Farbe trägt. Die Zweierwahl füllte ihre Zeile
+in 72 Bildern nicht, und keine Zahl sagte es — die Bedienhöhe wird an den
+farbigen Knöpfen gemessen, und die Wahl ist hellblau auf Schnee. Seither
+stehen zwei Messungen daneben, beide nach demselben Muster (Robolectric,
+NATIVE, selbst gezeichnet): `ZweierwahlBildTest` (Höhe der blauen Fläche,
+Trennstrich, Schriftmitte gegen Rahmenmitte — in einer **rollenden** Spalte,
+weil der Fehler nur dort entsteht) und `SymbolBildTest` (das adaptive Symbol
+bei 40 und 108 dp; der Vordergrund nimmt bei beiden denselben Anteil ein).
+Eine Regel, die nur Farbflächen zählt, misst nur Farbflächen; wer einen
+Baustein ohne solche ändert, schreibt ihm seine Messung dazu.
 
 **Warum die letzte Zeile die wichtigste ist (F-P3-AQ).** Der Bilderlauf des
 Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die
@@ -723,6 +763,35 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
     emulierten Kern. Dass die Seite ankam, misst man deshalb **am Server**
     (`tail /tmp/php-server.log` → `[200]: GET /datenschutz.php`), nicht am
     Bild.
+
+  **Vierter Lauf am 05.09.2026 (0.13.1): die vier Befunde vom S24.** Boot
+  **569 s** (Kaltstart, `handy34`), Handy-APK **61 s**. Der Weg wie beim
+  dritten Lauf: örtliche Installation (`lokal_einrichten.sh`, dafür MariaDB
+  und socat nachinstalliert — beides fehlt im Container), Prüf-APK gegen
+  `http://127.0.0.1:8080/`, `adb reverse`, Kopplung über
+  `UPDATE pair_sessions SET user_id = 1` (der Weg der `Kopplungshilfe`).
+
+  **Was diesmal Zeit gekostet hat — und was dagegen hilft:**
+
+  - **Nie einen Gradle-Lauf neben dem Emulator.** Der neue Prüffall lief
+    zweimal parallel zur Stufe II, und jedes Mal stellte das System
+    „Process system isn't responding" — und zwar **dauerhaft**: Der Dialog
+    ist selbst ein Systemfenster, seine Eingabe läuft in denselben Stau, und
+    jeder Tipp auf „Wait" erzeugte den nächsten Dialog. `system_server` stand
+    danach bei 150 % und kam nicht mehr herunter; die Kopplungssitzung lief
+    währenddessen ab (zehn Minuten sind unter TCG schnell um).
+  - **Fehlerdialoge abschalten, bevor es losgeht:**
+    `adb shell settings put global hide_error_dialogs 1` — dazu die drei
+    Animationsmaßstäbe auf 0. Beides überlebt einen Neustart des Rahmenwerks.
+  - **Wenn es doch klemmt: `adb root`, `adb shell stop`, `adb shell start`**
+    statt eines Kaltstarts — das Rahmenwerk kommt in Minuten zurück, APK und
+    Einstellungen bleiben.
+  - `mCurrentFocus` steht zweimal in `dumpsys window` (ein Eintrag je
+    Anzeige); `emulator.sh bild` liest die erste Zeile und verweigert den
+    Abzug, obwohl die App den Fokus hat. Für diesen Lauf ein eigener Abzug
+    mit Wiederholung; das Skript bleibt, wie es ist — der Befund gehört hier
+    hinein, nicht in eine dritte Fassung des Werkzeugs.
+
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf
   Hardware.

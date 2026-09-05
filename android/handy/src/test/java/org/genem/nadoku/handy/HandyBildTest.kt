@@ -174,6 +174,7 @@ class HandyBildTest {
         einsatzLaeuft: Boolean = false,
         laufendePhase: Int = Phasen.FREI,
         gesetztePhasen: List<Phasenzeile> = emptyList(),
+        meldungenErlaubt: Boolean = true,
     ): @Composable () -> Unit = {
         DienstAnsicht(
             stand = Dienststand(
@@ -184,6 +185,7 @@ class HandyBildTest {
                 streckeKm = if (laeuft) "126,4" else "0,0",
                 ortungFreigegeben = ortungFreigegeben,
                 standortAn = standortAn,
+                meldungenErlaubt = meldungenErlaubt,
                 ortung = ortung,
                 ortungSeitMin = ortungSeitMin,
                 einsatzLaeuft = einsatzLaeuft,
@@ -225,6 +227,14 @@ class HandyBildTest {
         "sperre-freigabe-fehlt" to dienst(ortungFreigegeben = false),
         "sperre-standort-aus" to dienst(standortAn = false),
         "dienst-ruhend-rueckstand" to dienst(rueckstand = 2),
+        /* KEINE SPERRE, EIN HINWEIS (0.13.1): Ohne Benachrichtigungen bleibt
+         * „Dienst beginnen" stehen -- der farbige Knopf ist also da, und die
+         * Regel unten misst ihn wie ueberall. Einmal vor dem Dienst, einmal
+         * darin, weil der Block in beiden Lagen erscheint und in der zweiten
+         * ueber der Dienstanzeige steht. */
+        "hinweis-meldungen-aus" to dienst(meldungenErlaubt = false),
+        "laufend-meldungen-aus" to
+            dienst(laeuft = true, ortung = Ortungsstand.OK, meldungenErlaubt = false),
 
         // -- Im Dienst, je Ortungszustand (E-S5Z-01) --
         "laufend-ok" to dienst(laeuft = true, ortung = Ortungsstand.OK),

@@ -2358,6 +2358,10 @@ Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
 1. **Ein Feld „Code vom Gerät".** Du startest die Kopplung **am Gerät**; es
    zeigt sechs Zeichen, die du hier eintippst. Groß- und Kleinschreibung und
    ein Leerzeichen in der Mitte sind egal.
+   **Am Handy steht unter dem Code der Knopf „Code kopieren"** *(seit
+   Android 0.13.1)* — für den Fall, dass der Browser auf demselben Gerät
+   läuft: kopieren, in den Browser wechseln, hier einfügen. Die Anzeige
+   lässt sich auch markieren (lange drücken).
 2. **Eine Rückfrage.** Sie zeigt, **welches Gerät** sich meldet: die Art
    („Uhr" oder „Handy") und das Modell, das es selbst gemeldet hat, dazu den
    Code in zwei Dreiergruppen und die gekürzte Gerätekennung. Erst **„Verbinden"** ordnet die Sitzung deinem
@@ -2527,6 +2531,36 @@ nicht nötig.
 Die App zeigt die Seiten bewusst nicht in sich selbst: Sie hat keinen
 eingebauten Betrachter, und sie soll auch keinen bekommen. Ist gar kein
 Browser installiert, sagt sie das, statt sich zu beenden.
+
+Zurück zur Dienstansicht führt der Knopf **Zurück** am Ende der Seite — und
+*seit Android 0.13.1* auch die Zurück-Geste des Telefons (Wischen vom Rand
+oder die Zurück-Taste). Bis dahin beendete die Geste die App, statt zur
+Dienstansicht zu führen.
+
+### 10.2c Wenn in der Leiste kein Symbol steht
+
+*Seit Android 0.13.1.*
+
+Während eines Dienstes steht in der Statusleiste des Telefons ein Punkt —
+das Symbol der Dauermeldung „Aufzeichnung läuft seit …". Solange die App zu
+ist, ist er die einzige Auskunft darüber, dass aufgezeichnet wird. Fehlt er,
+sind es meist die **Benachrichtigungen der App**, die abgeschaltet sind: beim
+Einrichten abgelehnt (Android fragt seit Version 13 danach) oder später in
+den Einstellungen stummgestellt, im Ganzen oder nur der Kanal „Aufzeichnung".
+
+Die App sagt das jetzt selbst: Auf der Dienstansicht steht dann
+**„Benachrichtigungen ausgeschaltet"** mit dem Knopf **„Benachrichtigungen
+einschalten"** — er führt auf die Benachrichtigungsseite der App in den
+Systemeinstellungen. Der Dienst beginnt und läuft auch ohne; der Hinweis
+verschwindet von selbst, sobald die Schalter stehen.
+
+> **Steht der Hinweis nicht und das Symbol fehlt trotzdem,** liegt es nicht
+> an den Schaltern. Dann hilft ein Blick in die Benachrichtigungsleiste (nach
+> unten wischen): Steht die Meldung „Aufzeichnung läuft seit …" dort, zeigt
+> das Telefon nur ihr Symbol nicht — das ist eine Einstellung des Herstellers
+> (bei Samsung unter *Einstellungen → Benachrichtigungen → Erweiterte
+> Einstellungen*, die Anzeige der Benachrichtigungssymbole). Steht auch die
+> Meldung nicht, bitte melden — mit Fassung der App und Android-Version.
 
 ### 10.3 Die Phasenliste im Einsatz
 

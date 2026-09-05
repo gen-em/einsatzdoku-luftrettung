@@ -14,6 +14,131 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.13.1] — 2026-09-05
+
+Vier Befunde vom S24, am 05.09.2026 gemeldet — der erste Blick eines
+Menschen auf die Fassungen 0.11 bis 0.13, die bis dahin nur der Emulator
+gesehen hatte. Drei davon sind am Code belegt und behoben. Beim vierten ist
+behoben, was am Code dafür in Frage kommt, und die App sagt jetzt, was sie
+bis dahin verschwieg; ob das Symbol damit zurück ist, sagt nur das Gerät.
+
+### Android — die Wahl „Mit Phasenknöpfen / Nur aufzeichnen" füllt ihre Zeile
+
+**Gemeldet:** Die gewählte Hälfte ist nicht ganz blau — unten bleibt ein
+Streifen frei, und der Text sitzt zu hoch. Beides stimmt, und dazu fehlte der
+Trennstrich zwischen den Hälften; das fiel niemandem auf, weil die blaue Kante
+seine Stelle vertrat.
+
+Die Ursache ist eine Zeile, die sich richtig liest und es nicht war. Die Zeile
+trug `heightIn(min = 48 dp)`, die Hälften `fillMaxHeight()`. Eine `Row` misst
+ihre Kinder aber mit Mindesthöhe 0 und der Höchsthöhe, die sie selbst bekommt
+— und in einer rollenden Spalte ist die unendlich. Eine unendliche Höhe kann
+`fillMaxHeight()` nicht füllen; es tut dann nichts. Jede Hälfte wurde so hoch
+wie ihr Text samt Polster, rund 42 dp, die Zeile selbst 48, und die Hälften
+standen oben an: sechs Punkte ungefärbt, der Text drei Punkte über der Mitte,
+der Trennstrich mit Höhe 0.
+
+Die Zeile bekommt jetzt eine feste Höhe (`height(IntrinsicSize.Min)` nach dem
+`heightIn`), und gegen eine feste Höhe füllen die Kinder. **Der Bilderlauf
+hat den Fehler nicht gesehen, obwohl er in 72 Bildern stand** — er misst die
+Bedienhöhe an den farbigen Knöpfen, und die Zweierwahl trägt keine.
+`ZweierwahlBildTest` misst sie jetzt, in einer rollenden Spalte wie in der
+Dienstansicht, mit drei Zahlen: Höhe der blauen Fläche, ein Trennstrich über
+die ganze Höhe, Schriftmitte gegen Rahmenmitte. Gegen den Rahmen, nicht gegen
+das Blau — in ihrer 42-dp-Hälfte war die Schrift durchaus mittig.
+
+### Android — der Zurück-Wisch führt aus den Einstellungen zurück
+
+**Gemeldet:** „In der App selbst, z. B. aus Einstellungen heraus, funktioniert
+der Zurück-Wisch nicht." Er tat etwas, nur das Falsche: Die App hat eine
+Activity und wechselt ihre Ansichten selbst; für das System gab es nichts,
+wohin zurück führen könnte, also führte es nach Hause. Mit `targetSdk 36`
+kommt hinzu, dass Android 16 die vorausschauende Zurück-Geste für diese App
+von selbst einschaltet und `onBackPressed` gar nicht mehr ruft — was zählt,
+ist ein angemeldeter Rückruf.
+
+`BackHandler` meldet ihn an, solange die Einstellungen offen sind, und führt
+zur Dienstansicht. Nur dort: Über der Dienstansicht und dem
+Kopplungsbildschirm liegt keine Ansicht; dort bleibt zurück, was es ist —
+nach Hause, und die Aufzeichnung läuft im Vordergrunddienst weiter. Dialoge
+fangen die Geste selbst ab.
+
+### Android — der Kopplungscode lässt sich kopieren
+
+**Gemeldet:** „Der Kopplungscode sollte kopiert werden können, aktuell kann
+man ihn nicht einmal auswählen." Ein `Text` in Compose lässt sich auf Android
+weder markieren noch kopieren — und der andere Bildschirm, auf den der Code
+gehört, ist oft derselbe: Wer die Weboberfläche auf dem Handy öffnet, tippte
+sechs Zeichen ab.
+
+Zwei Wege, weil sie verschiedene Hände bedienen: ein Knopf **„Code kopieren"**
+unter dem Code (ein Tipp, auch mit Handschuhen) und ein `SelectionContainer`
+um die Anzeige für alle, die aus Gewohnheit lange drücken. In die Ablage
+gehen die sechs Zeichen ohne Leerzeichen — was das Webfeld erwartet, nicht,
+was es verzeiht. Ab Android 13 ist die Kopie als empfindlich gekennzeichnet:
+Der Code ist ein Geheimnis auf Zeit, und die Vorschau der Zwischenablage
+zeigt ihn dann nicht im Klartext; die Bestätigung kommt dort vom System, die
+App legt keine zweite darüber. Darunter sagt sie „Code kopiert" selbst.
+
+Der Knopf ist neutral, nicht orange: Die Handlung dieser Seite ist das
+Eintragen im Browser, und `kopplung-code` bleibt der eine Bildschirm ohne
+Haupthandlung (`HandyBildTest`).
+
+### Android — das Symbol in der Leiste: was behoben ist, und was die App jetzt sagt
+
+**Gemeldet:** Während der Aufzeichnung erscheint links oben in der Leiste
+nichts mehr — „zuvor war nur das Logo nicht passend, jetzt ist nichts mehr
+da." **Das ist hier nicht nachstellbar**, und das steht zuerst: Der Emulator
+führt AOSP, das S24 One UI, und was die Systemoberfläche eines Herstellers
+aus einem Meldungssymbol macht, sieht man nur dort. Am Code hat sich das
+Symbol seit 0.3.0 nicht geändert. Drei Dinge sind trotzdem getan, jedes für
+sich begründet:
+
+1. **Das Themenattribut am Meldungssymbol ist ausgetragen.**
+   `symbol_meldung.xml` trug `android:tint="?android:attr/colorControlNormal"`.
+   Ein Meldungssymbol zeichnet nicht die App, sondern die Systemoberfläche —
+   in ihrem Prozess, gegen ihr Thema. Was dabei herauskommt, bestimmt der
+   Hersteller. Geleistet hat die Zeile nichts: Das System nimmt den
+   Alphakanal, und der ist mit oder ohne Tönung derselbe. Ein Attribut, das
+   nichts leistet und in einem fremden Prozess aufgelöst wird, ist eine
+   Fehlerquelle ohne Gegenwert.
+
+2. **Die App sagt, wenn ihre Benachrichtigungen abgeschaltet sind.** Das ist
+   die eine Ursache, die genauso aussieht — kein Symbol, keine Meldung — und
+   die die App selbst erkennen kann. Bis 0.13.0 schwieg sie dazu: Wer die
+   Freigabe beim Einrichten abgelehnt oder den Kanal „Aufzeichnung" später
+   stummgestellt hat, sah einen Dienst, der lief, und eine Leiste, in der
+   nichts stand. Jetzt steht auf der Dienstansicht ein Hinweis mit dem Knopf
+   **„Benachrichtigungen einschalten"**, an derselben Stelle wie „Ortung
+   freigeben" und „Standort einschalten" — aber als Hinweis, nicht als
+   Sperre: Der Dienst läuft auch ohne, nur sieht man ihn nicht. Der Knopf
+   führt zur Benachrichtigungsseite dieser App und nicht zur
+   Berechtigungsfrage: Die stellt Android höchstens zweimal, danach täte der
+   Knopf still nichts.
+
+3. **Backlog 81 ist dabei gefunden worden** — am Vordergrund des adaptiven
+   Symbols, das One UI im Kopf der Benachrichtigung zeichnet und das der
+   Auftraggeber am 02.09.2026 als „zu groß und angeschnitten" gemeldet hatte.
+   Der Vordergrund stand mit **festen 52 × 33 dp** in der 108-dp-Kachel. Das
+   stimmt, wenn die Kachel 108 dp groß gezeichnet wird, und das tut niemand:
+   Ein Startprogramm zeichnet sie mit 48 bis 60 dp, ein Benachrichtigungskopf
+   mit rund 40 — die Ebene bekommt das Anderthalbfache davon als Fläche, und
+   darin ragt ein festes 52-dp-Motiv über den sichtbaren Kreis hinaus. Weißer
+   Korpus bis an den Rand, farbige Flächen links: genau das gemeldete Bild.
+   Die Nachrechnung vom 02.09. hatte mit 108 dp gerechnet und deshalb nichts
+   gefunden; `android:roundIcon`, in 0.11.1 dafür ausgetragen, war nicht die
+   Ursache und bleibt aus den dort genannten Gründen trotzdem draußen. Der
+   Vordergrund ist jetzt ein `inset` mit **Bruchteilen** (seit API 26,
+   `minSdk` ist 26): 25,93 % links und rechts, 34,93 % oben und unten — er
+   wächst und schrumpft mit der Kachel, bei jeder Größe 52 von 108 Teilen
+   breit, im Seitenverhältnis der Vorlage. Handy und Uhr gleichermaßen;
+   `SymbolBildTest` zeichnet das Symbol bei 40 und 108 dp und zählt nach,
+   dass der Vordergrund bei beiden denselben Anteil einnimmt.
+
+Was das alles **nicht** ist: ein Beleg, dass das Symbol auf dem S24 zurück
+ist. Das sagt nur der nächste Blick auf das Gerät (Backlog Nr. 117); die
+Prüfliste dafür steht im Prüfdokument S4.
+
 ## [Uhr 3.0.2] — 2026-09-05
 
 ### Uhr — nach einem Blick auf die Sync-Seite ließ sich kein Dienst mehr beginnen

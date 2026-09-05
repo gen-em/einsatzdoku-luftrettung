@@ -4495,6 +4495,33 @@ derselben Serveradresse; beide Seiten sind ohne Anmeldung erreichbar. Sie
 bekommen: Es wäre die einzige Stelle, an der fremdes Markup in ihrem Prozess
 liefe.
 
+**Die App sagt seit Android 0.13.1, wenn ihre Benachrichtigungen
+abgeschaltet sind.** Die Dauermeldung des Vordergrunddienstes ist im Dienst
+die einzige Auskunft, solange die App zu ist; ohne die Freigabe
+(`POST_NOTIFICATIONS`, seit Android 13 eine Berechtigung) oder mit
+stummgestelltem Kanal „Aufzeichnung" gibt es sie nicht — und bis 0.13.0 auch
+keinen Hinweis darauf. `HauptActivity` fragt beides im Sekundentakt ab
+(`NotificationManagerCompat`) und zeigt auf der Dienstansicht einen
+Meldungsblock mit Knopf zur Benachrichtigungsseite der App. Ein Hinweis,
+keine Sperre: Der Dienst läuft auch ohne, nur sieht man ihn nicht.
+
+**Das adaptive Symbol skaliert seit 0.13.1 mit seiner Kachel.** Der
+Vordergrund war ein `layer-list`-Eintrag mit festen 52 × 33 dp — richtig nur
+bei 108 dp, und so groß zeichnet niemand ein Symbol; im Kopf einer
+Benachrichtigung (rund 40 dp) ragte das Motiv über den sichtbaren Kreis
+hinaus (Backlog 81). Jetzt ist er ein `inset` mit Bruchteilen (25,93 %
+seitlich, 34,93 % oben und unten), in beiden Modulen; `SymbolBildTest`
+zeichnet es bei 40 und 108 dp und zählt den Anteil nach. Das Meldungssymbol
+(`symbol_meldung.xml`) trägt seither kein Themenattribut mehr — es wird von
+der Systemoberfläche in deren Prozess aufgelöst, und die App hat auf das
+Ergebnis keinen Einfluss.
+
+**Die Zurück-Geste.** Die App hat eine Activity mit selbstverwalteten
+Ansichten; ein `BackHandler` führt aus den Einstellungen zur Dienstansicht,
+sonst gilt das Systemverhalten. Mit `targetSdk 36` ist die vorausschauende
+Geste auf Android 16 von selbst eingeschaltet, und `onBackPressed` wird nicht
+mehr gerufen — der angemeldete Rückruf ist der einzige Weg, der dort zählt.
+
 Beide Module tragen dieselbe `applicationId` (`org.genem.nadoku`) und
 **müssen mit demselben Schlüssel signiert sein** — der Wear Data Layer
 stellt sonst nicht zu (E-S4-01). Der Signaturschlüssel entsteht außerhalb des

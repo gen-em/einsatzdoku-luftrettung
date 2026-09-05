@@ -1,6 +1,9 @@
 package org.genem.nadoku.handy
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipDescription
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,11 +11,13 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.SystemClock
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
@@ -216,6 +222,7 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
                     }
                 }
             },
+            aufKopieren = { code -> codeKopieren(kontext, code) },
         )
         return
     }
@@ -257,6 +264,27 @@ private fun GekoppelteOberflaeche(
     var abschlussFrageOffen by remember { mutableStateOf(false) }
     var akkuFrageOffen by remember { mutableStateOf(false) }
     var verbrauchFrageOffen by remember { mutableStateOf(false) }
+
+    /* DIE ZURÜCK-GESTE FÜHRT AUS DEN EINSTELLUNGEN ZURÜCK (Android 0.13.1).
+     *
+     * Die App hat EINE Activity und wechselt ihre Ansichten selbst
+     * (`ansicht`); für das System gab es deshalb nichts, wohin „zurück"
+     * führen könnte — es beendete die App. Am 05.09.2026 vom S24 gemeldet:
+     * „aus den Einstellungen heraus funktioniert der Zurück-Wisch nicht".
+     *
+     * Mit `targetSdk 36` kommt dazu, dass Android 16 die vorausschauende
+     * Zurück-Geste für diese App von selbst einschaltet und `onBackPressed`
+     * nicht mehr ruft; was zählt, ist ein ANGEMELDETER Rückruf. `BackHandler`
+     * meldet ihn über den `OnBackPressedDispatcher` an, und der hängt sich ab
+     * Android 13 selbst an den `OnBackInvokedDispatcher` — ein Weg für beide
+     * Welten, ohne Manifest-Schalter.
+     *
+     * NUR in den Einstellungen. Über der Dienstansicht und über dem
+     * Kopplungsbildschirm liegt keine Ansicht; dort bleibt das
+     * Systemverhalten — zurück heißt dort nach Hause, und die Aufzeichnung
+     * läuft im Vordergrunddienst weiter. Dialoge (`AlertDialog`) fangen die
+     * Geste selbst ab. */
+    BackHandler(enabled = ansicht is Ansicht.Einstellungen) { ansicht = Ansicht.Dienst }
 
     /* AUCH DIE FREIGABE WIRD ABGEFRAGT, NICHT GEHALTEN (B-S5Z-17).
      *
@@ -335,6 +363,7 @@ private fun GekoppelteOberflaeche(
             streckeKm = "%.1f".format(app.klammer.streckeM() / 1000.0),
             ortungFreigegeben = ortungFrei,
             standortAn = standortAn(kontext),
+            meldungenErlaubt = meldungenErlaubt(kontext),
             ortung = lage?.stand,
             ortungSeitMin = lage
                 ?.let { ((SystemClock.elapsedRealtime() - it.seitMs) / 60_000L).toInt() }
@@ -482,6 +511,7 @@ private fun GekoppelteOberflaeche(
             aufBeenden = { beendenFrageOffen = true },
             aufOrtungFreigeben = { freigabeFrage.launch(noetigeFreigaben()) },
             aufStandortEinschalten = { standortEinstellungOeffnen(kontext) },
+            aufMeldungenEinschalten = { meldungseinstellungOeffnen(kontext) },
             aufEinstellungen = { ansicht = Ansicht.Einstellungen },
             aufPhase = { nummer ->
                 app.klammer.phaseSetzen(nummer)
@@ -605,6 +635,107 @@ private fun standortEinstellungOeffnen(kontext: Context) {
         kontext.startActivity(
             Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
+    }
+}
+
+/**
+ * Darf die App Benachrichtigungen stellen — und ist der Kanal der
+ * Dauermeldung offen? (Android 0.13.1)
+ *
+ * ZWEI FRAGEN, WEIL ES ZWEI SCHALTER GIBT. Seit Android 13 ist die Freigabe
+ * eine Berechtigung (`POST_NOTIFICATIONS`), die die App zusammen mit der
+ * Ortung erfragt (`noetigeFreigaben`); wer sie ablehnt, bekommt keine
+ * Meldung — und nach zwei Ablehnungen fragt Android gar nicht mehr. Davor
+ * und daneben lässt sich jede App in den Systemeinstellungen stummstellen,
+ * im Ganzen oder je Kanal. Ein abgeschalteter Kanal „Aufzeichnung" nimmt der
+ * Dauermeldung ihr Symbol genauso wie die fehlende Berechtigung; die
+ * Warnungen liegen auf einem eigenen Kanal und werden hier bewusst nicht
+ * mitgeprüft — ohne die Dauermeldung ist der Dienst unsichtbar, ohne die
+ * Warnungen nur leiser.
+ *
+ * Der Kanal entsteht erst mit dem ersten Dienst (`kanalAnlegen`); solange es
+ * ihn nicht gibt, gibt es auch nichts, das abgeschaltet sein könnte.
+ *
+ * WARUM DIE APP DAS ÜBERHAUPT SAGT: Am 05.09.2026 wurde vom S24 gemeldet, in
+ * der Leiste sei während der Aufzeichnung nichts mehr zu sehen. Abgeschaltete
+ * Benachrichtigungen sind eine der Ursachen, die genau so aussehen — und die
+ * einzige, die die App selbst erkennen kann. Bis 0.13.0 schwieg sie dazu.
+ */
+private fun meldungenErlaubt(kontext: Context): Boolean {
+    val melder = NotificationManagerCompat.from(kontext)
+    if (!melder.areNotificationsEnabled()) return false
+    val kanal = melder.getNotificationChannel(AufzeichnungsDienst.KANAL) ?: return true
+    return kanal.importance != NotificationManagerCompat.IMPORTANCE_NONE
+}
+
+/**
+ * Die Benachrichtigungseinstellung DIESER App öffnen (Android 0.13.1).
+ *
+ * DIE EINSTELLUNGSSEITE UND NICHT DIE BERECHTIGUNGSFRAGE, obwohl die auf
+ * Android 13+ einen Schritt kürzer wäre: Das System stellt sie höchstens
+ * zweimal, danach kehrt `launch` still mit „nein" zurück, und die NutzerIn
+ * sähe einen Knopf, der nichts tut. Die Seite gibt es auf jedem Android ab
+ * 8.0 (`ACTION_APP_NOTIFICATION_SETTINGS` mit `EXTRA_APP_PACKAGE`), sie
+ * zeigt beide Schalter — den der App und die je Kanal —, und ein Schalter,
+ * den man dort umlegt, ist dieselbe Freigabe. Dieselbe Bauart wie bei der
+ * Akku-Liste (E-S4-52): ein Weg, der immer trägt, statt eines kürzeren, der
+ * manchmal ins Leere geht. Der Sekundentakt der Ansicht liest nach der
+ * Rückkehr neu; der Block verschwindet von selbst.
+ */
+private fun meldungseinstellungOeffnen(kontext: Context) {
+    val absicht = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+        .putExtra(Settings.EXTRA_APP_PACKAGE, kontext.packageName)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        kontext.startActivity(absicht)
+    } catch (e: android.content.ActivityNotFoundException) {
+        /* Gibt es die Seite nicht — kein bekanntes Android, aber ein
+         * Hersteller kann sie umbenennen —, bleibt die App-Seite. Von dort
+         * führt jedes Android zu den Benachrichtigungen. */
+        kontext.startActivity(
+            Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                "package:${kontext.packageName}".toUri(),
+            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+}
+
+/**
+ * Den Kopplungscode in die Zwischenablage legen (Android 0.13.1).
+ *
+ * WOZU, wo der Code doch auf einen anderen Bildschirm gehört: Der andere
+ * Bildschirm ist oft derselbe. Wer die Weboberfläche auf dem Handy öffnet,
+ * tippt nicht ab, sondern wechselt in den Browser und fügt ein. Bis 0.13.0
+ * ging das nicht — der Code war ein `Text`, und den kann man auf Android
+ * weder markieren noch kopieren.
+ *
+ * DIE SECHS ZEICHEN OHNE LEERZEICHEN, nicht die Anzeige in Dreiergruppen:
+ * Das Webfeld räumt ein Leerzeichen zwar auf, aber eingefügt werden soll,
+ * was das Feld erwartet, nicht, was es verzeiht.
+ *
+ * ALS EMPFINDLICH GEKENNZEICHNET (Android 13+): Der Code ist ein Geheimnis
+ * auf Zeit — zehn Minuten, einmal einlösbar —, aber eines. Das System zeigt
+ * die Ablage dann in seiner Vorschau nicht im Klartext, und eine Tastatur
+ * mit Verlauf legt ihn nicht offen ab. Auf dem Bildschirm steht er ohnehin
+ * in 34 sp; verborgen wird die Kopie, nicht die Anzeige.
+ *
+ * KEIN EIGENER HINWEIS AB ANDROID 13: Das System bestätigt das Kopieren dort
+ * selbst mit einer Einblendung, und die Plattform rät ausdrücklich von einer
+ * zweiten ab. Darunter sagt es die App, sonst wüsste niemand, ob der Tipp
+ * etwas getan hat.
+ */
+private fun codeKopieren(kontext: Context, code: String) {
+    val ablage = kontext.getSystemService(ClipboardManager::class.java)
+    val inhalt = ClipData.newPlainText(kontext.getString(R.string.kopplung_titel), code)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        inhalt.description.extras = PersistableBundle().apply {
+            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+        }
+    }
+    ablage.setPrimaryClip(inhalt)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        Toast.makeText(kontext, R.string.kopplung_code_kopiert, Toast.LENGTH_SHORT).show()
     }
 }
 

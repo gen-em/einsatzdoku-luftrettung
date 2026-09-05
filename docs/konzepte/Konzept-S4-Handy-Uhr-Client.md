@@ -18,8 +18,9 @@ als eigene Datei daneben.
 
 ## Statusblock (K5, R62)
 
-**Stand: 04.09.2026** · Zweig `claude/rahmenplan-schritt-6-ewm0kx` ·
-Web **14.2.0** · Android **0.13.0** · Fahrplan **Schritt 6 „S4 Rest"**
+**Stand: 05.09.2026** · Schritt 6 liegt auf `main` (PR #33, Web 14.2.2,
+Android 0.13.0); Zweig `claude/android-ui-bugs-uc1gcv` trägt
+Android **0.13.1** · Fahrplan **Schritt 6 „S4 Rest"**
 
 **In Arbeit: Schritt 6, Teil B (AP4).** Der Schritt ist beim Zuschnitt in
 drei ungleiche Teile zerfallen, und nur einer davon ist Umsetzung im engeren
@@ -27,7 +28,7 @@ Sinn:
 
 | Teil | Inhalt | Stand |
 |---|---|---|
-| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Pakete 1–4 erledigt** (Android 0.11.0–0.12.0, Web 13.3.0). Offen nur Backlog **81** (Gegenprobe am S24) und **95** |
+| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Pakete 1–5 erledigt** (Android 0.11.0–0.13.1, Web 13.3.0). Offen Backlog **81** und **117** (beide: Gegenprobe am S24) und **95** |
 | **B** | R64 — Herkunft und Gerät je Einsatz | **in Arbeit**: Konzept `Konzept-R64-Herkunft-Geraet.md` geliefert, **AP1, AP3, AP2 erledigt** (Web 14.0.0–14.2.0); offen **AP4** (Referenz) und **AP5** (Abschluss). Statusblock dort |
 | **C** | Play Console, Signaturweg, Track-Release, Gerätetest | **vorbereitet, soweit es ohne Schlüssel geht** (`Vorbereitung-Play-Console.md`, Android 0.13.0). Blockiert bleibt, was D-U-N-S und Signaturschlüssel braucht |
 
@@ -182,6 +183,43 @@ Rechtstexte mit `[200]` im Serverprotokoll, und die Trennung wieder sauber.
 **Was der Emulator nicht konnte:** die Seite selbst anzeigen — der einzige
 Browser des Prüfabbilds ist ein WebView-Shell, und der antwortet unter QEMU
 ohne KVM nicht mehr. Zahlen und Grenzen in Abschnitt 9 der Vorbereitung.
+
+**Paket 5 (05.09.2026, Android 0.13.1) — vier Befunde vom S24, auf
+Anweisung.** Der erste Blick eines Menschen auf die Fassungen 0.11 bis
+0.13, die bis dahin nur der Emulator gesehen hatte, ergab vier Befunde, alle
+an der Oberfläche:
+
+1. **Die Zweierwahl füllte ihre Zeile nicht** — ein Streifen unter dem Blau,
+   der Text zu hoch, der Trennstrich unsichtbar. Ursache: `fillMaxHeight()`
+   in einer `Row`, die in einer rollenden Spalte unendliche Höhe bekommt;
+   behoben mit `height(IntrinsicSize.Min)`. **Der Bilderlauf hatte es in
+   72 Bildern und meldete nichts** — er misst die Bedienhöhe an den farbigen
+   Knöpfen. `ZweierwahlBildTest` misst die Zeile jetzt selbst.
+2. **Die Zurück-Geste beendete aus den Einstellungen die App** — es gab
+   keinen angemeldeten Rückruf, und mit `targetSdk 36` ruft Android 16
+   `onBackPressed` gar nicht mehr. `BackHandler`, nur in den Einstellungen.
+3. **Der Kopplungscode ließ sich weder markieren noch kopieren.** Ein
+   Knopf „Code kopieren" (sechs Zeichen ohne Leerzeichen, ab Android 13 als
+   empfindlich gekennzeichnet) und ein `SelectionContainer` um die Anzeige.
+4. **In der Statusleiste erscheint während der Aufzeichnung kein Symbol
+   mehr** — hier **nicht nachstellbar** (AOSP gegen One UI). Getan: das
+   Themenattribut am Meldungssymbol ausgetragen, und die App sagt jetzt auf
+   der Dienstansicht, wenn ihre Benachrichtigungen abgeschaltet sind (die
+   eine Ursache, die genauso aussieht und die sie erkennen kann). Als
+   **Backlog 117** offen, mit Prüfweg am Gerät.
+
+Dabei ist **Backlog 81 gefunden** worden: Der Vordergrund des adaptiven
+Symbols stand mit festen 52 × 33 dp in der 108-dp-Kachel — richtig nur bei
+108 dp; ein Benachrichtigungskopf zeichnet 40. Jetzt ein `inset` mit
+Bruchteilen, in beiden Modulen; `SymbolBildTest` zählt bei 40 und 108 dp
+denselben Anteil nach. Die Gegenprobe am S24 bleibt.
+
+Belegt: Baulauf grün, Lint 0/0 Fehler, 249 + 71 Prüffälle ohne Fehlschlag
+(14 übersprungen, der Rundlauf), Bilderlauf 78 Bilder paarweise verschieden,
+Wortliste über alle fünf Bereiche, Kontraste unverändert — und Stufe II am
+Emulator, siehe Prüfstand in `android/LIESMICH.md` 7. **Nicht belegt**, und
+das steht zuerst: dass das Symbol auf dem S24 zurück ist. Die Prüfliste dafür
+steht im Prüfdokument, Abschnitt 4.
 
 ---
 
