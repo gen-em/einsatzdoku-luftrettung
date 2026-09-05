@@ -530,6 +530,27 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
             require_once __DIR__ . '/adminbackup_lib.php';
             edbak_erinnerung_planen();
         },
+        /* SPEICHER MESSEN (S8/AP2, E-S8-18).
+         *
+         * Zwei Zahlen, die eine Seite nicht bei jedem Aufruf holen darf: die
+         * Summe ueber `information_schema` und ein Verzeichnislauf ueber das
+         * ganze Anwendungsverzeichnis. Sie aendern sich in Stunden, nicht in
+         * Sekunden — einmal taeglich reicht, und die Seite liest nur ab.
+         *
+         * WARUM IM AUFRAEUMJOB UND NICHT ALS EIGENER JOB: Ein eigener Job
+         * braechte eine eigene Zeile in der Liste, einen eigenen Rueckstand
+         * und eine eigene Fehlerplakette — fuer zwei Abfragen, die keine
+         * Wiederaufnahme kennen. Der Aufraeumjob ist der taegliche, und genau
+         * das ist der Takt.
+         *
+         * DER SCHRITT DARF SCHEITERN, OHNE DEN JOB ZU KIPPEN: Er steht als
+         * letzter, und die Schleife darum faengt jeden Fehler und meldet ihn
+         * mit Namen. Eine fehlende Speicherzahl ist ein Anzeigeproblem, kein
+         * Betriebsproblem. */
+        'Speicher messen' => function (PDO $pdo): void {
+            require_once __DIR__ . '/speicher_lib.php';
+            speicher_messen($pdo);
+        },
     ];
 
     $fehler = [];

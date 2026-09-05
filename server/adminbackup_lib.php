@@ -1563,7 +1563,7 @@ function edbak_ablage_zahlen(bool $frisch = false): array
 
     $wurzel = edbak_wurzel();
     $z = ['ordner' => 0, 'pakete' => 0, 'bytes' => 0,
-          'sonstige_bytes' => 0, 'reste' => 0,
+          'pakete_bytes' => 0, 'sonstige_bytes' => 0, 'reste' => 0,
           'komplett' => 0, 'komplett_bytes' => 0];
     if (!is_dir($wurzel)) { return $letzte = $z; }
 
@@ -1634,6 +1634,11 @@ function edbak_ablage_zahlen(bool $frisch = false): array
             }
         }
     }
+    /* `pakete_bytes` seit Web 15.1.0: Der Speicherbalken (E-S8-18) zeigt
+     * Konto-Backups und Komplett-Backups als getrennte Segmente, und dafuer
+     * braucht er die erste Zahl. Sie fiel hier ohnehin an — sie hiess nur
+     * `$inPaketen` und blieb in der Funktion. */
+    $z['pakete_bytes']   = $inPaketen;
     $z['sonstige_bytes'] = max(0, $z['bytes'] - $inPaketen - $z['komplett_bytes']);
     return $letzte = $z;
 }
