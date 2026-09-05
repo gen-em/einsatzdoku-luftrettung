@@ -1,5 +1,5 @@
 {
-  "_lies_mich": "Seitenliste der Bildaufnahme. Jede Zeile: name (Dateiname und Überschrift im Kontaktbogen), gruppe, rolle ('aus' = abgemeldet, 'demo', 'admin'), pfad (relativ zur Basis; Platzhalter in __GROSSBUCHSTABEN__ löst aufnehmen.mjs zur Laufzeit aus dem Bestand auf), karte (true = zusätzlich auf Leaflet warten), vorher (Bedienschritte vor der Aufnahme), wartung (true = server/wartung.lock wird fuer diesen Eintrag angelegt und danach wieder entfernt; dazu gehoert status: 503).",
+  "_lies_mich": "Seitenliste der Bildaufnahme. Jede Zeile: name (Dateiname und Überschrift im Kontaktbogen), gruppe, rolle ('aus' = abgemeldet, 'demo', 'admin'), pfad (relativ zur Basis; Platzhalter in __GROSSBUCHSTABEN__ löst aufnehmen.mjs zur Laufzeit aus dem Bestand auf), karte (true = zusätzlich auf Leaflet warten), vorher (Bedienschritte vor der Aufnahme), wartung (true = server/wartung.lock wird fuer diesen Eintrag angelegt und danach wieder entfernt; dazu gehoert status: 503). Die Gruppe 'Betrieb' (seit Web 15.1.0, S8/AP2) laeuft unter der Rolle 'admin' — das Konto admin@gen-em.org ist seit Web 15.0.0 BetreiberIn und sieht damit beides.",
   "seiten": [
     {
       "name": "01-anmeldung",
@@ -263,6 +263,24 @@
       "rolle": "admin",
       "pfad": "update.php",
       "wartung": true
+    },
+    {
+      "name": "46-betrieb-updates",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_updates.php"
+    },
+    {
+      "name": "47-betrieb-jobs",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_jobs.php"
+    },
+    {
+      "name": "48-betrieb-server",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_server.php"
     },
     {
       "name": "07-wartungsseite",
