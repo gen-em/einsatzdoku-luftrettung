@@ -317,6 +317,13 @@
   --geo-kreis:32px;                    /* Einsatzort-Kreis auf der Karte */
   --geo-schild:36px;                   /* Kästchen für Standort und Zielklinik */
   --geo-ring:3px;                      /* Ringstärke Start/Ende am Schild */
+  /* Speicherbalken (E-S8-18, Web 15.1.0). Zwei Maße, beide abgeleitet:
+   * 8 px ist --abstand-2, also eine Stufe des Vierer-Rasters — ein Balken,
+   * der eine Zeile Grafik ist und keine Fläche; 10 px ist --radius, die
+   * kleinste Rundung, und ergibt einen Punkt, der neben 13-px-Text
+   * (--groesse-2) lesbar ist, ohne ihn zu überragen. */
+  --balken:8px;                        /* Höhe des Speicherbalkens */
+  --balken-punkt:10px;                 /* Farbpunkt in seiner Legende */
   --anmeldekarte:400px;                /* Karte der Anmeldung (E-P3-38) */
   --zeile-frei:1.4em;                  /* Mindesthöhe der Zustandszeile */
   --balken-glied:28px;                 /* ein Segment des Passwortstärke- … */
@@ -2810,6 +2817,90 @@ h1 + .seiten-erklaerung{margin-top:0}
   word-break:break-all;
   margin:0;
 }
+
+/* ZWEITE STUFE FÜR LANGE WERTE (E-S8-10, Backlog Nr. 78, Web 15.1.0).
+ *
+ * Die große Stufe darüber ist für sechs Zeichen gemacht — Geräte-ID,
+ * Wiederherstellungsschlüssel. Benutzt wurde sie auch für die Cron-Zeile, die
+ * Token-Adresse, den Setz-Link und die Serverschlüssel-Zeile: Werte mit
+ * sechzig bis hundert Zeichen, die in dieser Größe über drei Zeilen brechen
+ * und dabei aussehen, als seien sie zum Vorlesen gedacht.
+ *
+ * Zwei Stufen also, ein Kasten. Die kleine trägt kein Sperrmaß (letter-spacing
+ * hilft beim Abschreiben von sechs Zeichen und schadet beim Lesen von
+ * hundert), bricht an beliebiger Stelle und steht neben einem leisen Knopf
+ * „Kopieren" — weil ein hundertstelliges Geheimnis abgeschrieben ein
+ * Tippfehler ist.
+ *
+ * KEIN SYMBOL AM KNOPF: Der Vorrat hat keines für „kopieren", und ein neues
+ * bräuchte Freigabe mit Mockup (Design.md 9). Das Wort tut es. */
+.codeblock-lang{display:flex;align-items:flex-start;gap:var(--abstand-2)}
+.codeblock-text{flex:1 1 auto;min-width:0}
+.codeblock-lang .knopf{flex:0 0 auto}
+.codeblock-wert-lang{
+  font-family:var(--schrift-fest);
+  font-size:var(--groesse-2);font-weight:400;
+  color:var(--dunkelblau);
+  word-break:break-all;
+  line-height:1.5;
+  margin:0;
+}
+
+/* SPEICHERBALKEN — Belegung nach Art (E-S8-18, Mockup 07, Web 15.1.0).
+ *
+ * WOFÜR. Zwei Fragen, die eine Zahlenreihe nicht beantwortet: Wie voll ist es,
+ * und woraus besteht das? „1,3 GB von 2 GB" sagt das Erste; erst die Segmente
+ * sagen, dass davon 0,9 GB Konto-Backups sind und 0,4 GB Komplett-Stände —
+ * und damit, an welcher Schraube man dreht.
+ *
+ * ACHT PIXEL HOCH UND OHNE BESCHRIFTUNG IM BALKEN. Er ist eine Zeile Grafik
+ * neben einer Zeile Text, kein Diagramm: Die Zahlen stehen in der Legende
+ * darunter und in der Überschrift darüber. Ein Balken mit Text darin bräuchte
+ * Kontrast gegen fünf verschiedene Untergründe.
+ *
+ * DIE FARBEN SIND KLASSEN, NICHT INLINE. Die Breite eines Segments ist
+ * gerechnet und steht deshalb am Element; die Farbe darf es nicht — sonst
+ * stünde ein Token im Markup (`CLAUDE.md` 5). Dieselbe Art hat in beiden
+ * Balken dieselbe Farbe: Wer von „Backups" nach „Installation gesamt" schaut,
+ * soll die Konto-Backups wiedererkennen.
+ *
+ * DER SCHWELLENSTRICH ist ein leeres Segment mit fester Breite, kein absolut
+ * positionierter Zeiger: Er sitzt damit im selben Fluss wie die Segmente und
+ * verrutscht nicht, wenn der Balken schmaler wird. */
+.speicher-balken{
+  height:var(--balken);
+  border-radius:var(--radius-rund);
+  background:var(--linie);
+  overflow:hidden;
+  display:flex;
+  margin:var(--abstand-2) 0 var(--abstand-1);
+}
+.speicher-balken > span{display:block;height:100%}
+.speicher-luecke{background:transparent}
+.speicher-marke{width:var(--strich-stark);background:var(--gedaempft)}
+.speicher-legende{
+  display:flex;flex-wrap:wrap;gap:var(--abstand-3);
+  font-size:var(--groesse-2);color:var(--gedaempft);
+  /* Abstand nach unten am BAUSTEIN, nicht an der Überschrift darunter:
+   * `.listen-form-titel` steht auf vielen Seiten und braucht dort keinen
+   * oberen Abstand. Wer zwei Balken untereinander stellt, braucht ihn hier. */
+  margin-bottom:var(--abstand-3);
+}
+.speicher-legende i{
+  display:inline-block;
+  width:var(--balken-punkt);height:var(--balken-punkt);
+  border-radius:var(--radius-rund);
+  margin-right:var(--abstand-1);
+  vertical-align:middle;
+}
+/* Die vier Arten und „frei". Blau und Dunkelblau für die beiden Backup-Arten
+ * (sie gehören zusammen), Orange für die Datenbank (sie wächst und ist der
+ * Grund, warum die Grenze NICHT für sie gilt), Sand für die Dateien. */
+.sb-konto{background:var(--blau)}
+.sb-komplett{background:var(--dunkelblau)}
+.sb-db{background:var(--orange)}
+.sb-dateien{background:var(--sand)}
+.sb-frei{background:var(--linie)}
 
 /* ZUSTANDSZEILE — Fortschritt und Ergebnis einer langen Handlung (Backup,
  * Import). Sie hält ihre Höhe frei, damit der Kasten beim Erscheinen der

@@ -406,6 +406,7 @@ function ui_kopf(array $o = []): void
  *     zeitraum ['jahr'=>'2026','monat'=>'08'] — markiert Jahres- bzw.
  *              Monatszeile der Leiste (nur bei 'diensttage', E-P3-37)
  *     menue    aktiver Eintrag des Einstellungsmenüs (nur bei 'einstellungen')
+ *     lesespalte  true = Inhaltsspalte auf Lesebreite (760 px) begrenzen
  *     titel    Überschrift der Leiste bei 'filter'
  *
  * Bei 'filter' gibt diese Funktion die Leiste NICHT aus: Die Suchseite füllt
@@ -417,9 +418,15 @@ function ui_geruest_start(array $o = []): void
     $leiste = (string)($o['leiste'] ?? '');
     ui_hat_tagesleiste($leiste === 'diensttage');
     ui_kopf(['aktiv' => (string)($o['aktiv'] ?? '')]);
+    /* LESESPALTE (Web 15.1.0, E-S8-18): Eine Seite mit wenigen Karten und viel
+     * Erklärtext liest sich auf 760 px besser als über die volle Breite eines
+     * 1920er Bildschirms. Die Regel `.rahmen-lesespalte` gab es längst — sie
+     * war nur für Seiten OHNE Leiste gebaut (Anmeldung, Rechtstexte,
+     * Wiederherstellung) und über das Gerüst nicht erreichbar. */
+    $rahmen = 'rahmen' . (!empty($o['lesespalte']) ? ' rahmen-lesespalte' : '');
     ?>
 <div class="schleier" data-schublade="zu" hidden></div>
-<div class="rahmen">
+<div class="<?= ui_e($rahmen) ?>">
   <?php /* tabindex="-1": Beim Öffnen der Schublade fokussiert schublade.js
            die Leiste SELBST, nicht ihr erstes Bedienelement — sonst trüge
            das X beim Öffnen einen Fokusring, den niemand bestellt hat
@@ -1040,6 +1047,43 @@ function ui_knopf(array $o): string
     if (!empty($o['name'])) { $b .= ' name="' . ui_e((string)$o['name']) . '"'; }
     if (isset($o['wert']))  { $b .= ' value="' . ui_e((string)$o['wert']) . '"'; }
     return $b . $attr . '>' . $inneres . '</button>';
+}
+
+
+/* ---------------------------------------------------------------------------
+ * WERTEKASTEN, KLEINE STUFE  (.codeblock.codeblock-lang)
+ *
+ * Fuer LANGE Werte: Cron-Zeile, Token-Adresse, Setz-Link,
+ * Serverschluessel-Zeile, Geraete-ID und API-Schluessel. Die grosse Stufe
+ * (`.codeblock-wert`) ist fuer sechs Zeichen gemacht und sperrt sie zusaetzlich
+ * — bei hundert Zeichen ergibt das drei Zeilen in Plakatgroesse (Backlog
+ * Nr. 78, E-S8-10).
+ *
+ * DER KNOPF IST TEIL DES BAUSTEINS und nicht Sache der Seite: Ein Wert, den man
+ * kopieren soll, und ein Knopf, der ihn kopiert, gehoeren zusammen — sonst
+ * baut ihn die naechste Seite anders. Er braucht `assets/kopieren.js`; wer
+ * diesen Baustein benutzt, nimmt das Skript in `ui_seite_ende(['skripte' =>
+ * …])` mit.
+ *
+ * OHNE JAVASCRIPT bleibt der Wert lesbar und markierbar — der Knopf verschwindet
+ * dann (das Skript blendet ihn ein). Ein Knopf, der nichts tut, waere schlechter
+ * als keiner.
+ *
+ * $wert  der Wert selbst (wird maskiert)
+ * $titel optionale Kleinzeile darueber ("Adresse")
+ * ------------------------------------------------------------------------ */
+function ui_codeblock_lang(string $wert, string $titel = ''): string
+{
+    $h  = '<div class="codeblock codeblock-lang">' . "\n";
+    $h .= '  <div class="codeblock-text">' . "\n";
+    if ($titel !== '') {
+        $h .= '    <p class="codeblock-titel">' . ui_e($titel) . "</p>\n";
+    }
+    $h .= '    <p class="codeblock-wert-lang" data-kopierwert>' . ui_e($wert) . "</p>\n";
+    $h .= "  </div>\n";
+    $h .= '  ' . ui_knopf(['text' => 'Kopieren', 'art' => 'leise', 'typ' => 'button',
+                            'attr' => ' data-kopieren hidden']) . "\n";
+    return $h . "</div>\n";
 }
 
 
