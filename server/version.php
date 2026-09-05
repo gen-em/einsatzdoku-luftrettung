@@ -2684,5 +2684,22 @@ declare(strict_types=1);
  *         zu zaehlen gibt. Statt der Zeile steht ein Satz.
  *
  * KEINE MIGRATION. `smtp_last` und `smtp_last_ok` liegen in `app_state`.
+ *
+ * 15.3.1  ZWEI GEMELDETE FEHLER, beide ausserhalb von S8 aufgefallen.
+ *
+ *   Die KARTE der Tagesuebersicht nutzte ab 1600 px nur ihren oberen Teil.
+ *   Leaflet misst seinen Behaelter einmal beim Anlegen; ab 1600 px waechst
+ *   die Karte aber erst, wenn die Einsatztabelle daneben steht, und die
+ *   entsteht aus nachgeladenen Daten. Gemessen bei 1920 x 1080: Behaelter
+ *   400 x 840 px, Leaflet rechnete mit 400 x 324 px — 516 px ohne Kachel,
+ *   und Herauszoomen half nicht, weil auch der Kachelbereich aus der
+ *   gemerkten Groesse folgt. Behoben mit einem ResizeObserver in
+ *   `attachBaseLayers()`, dem einen Aufruf, den jede Karte macht.
+ *   Betroffen waren `index.php` und `zeitraum.php`.
+ *
+ *   Der TAB-TITEL hiess „<Seite> — Einsatzdoku". Er heisst jetzt
+ *   „<Seite> — Gen-EM NAdoku", wie das Programm.
+ *
+ * KEINE MIGRATION.
  */
-const WEB_VERSION = '15.3.0';
+const WEB_VERSION = '15.3.1';

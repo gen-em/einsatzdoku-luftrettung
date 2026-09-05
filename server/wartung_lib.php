@@ -311,7 +311,7 @@ function wartung_seite_html(): string
       . '<html lang="de">' . "\n"
       . '<head>' . "\n"
       . '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' . "\n"
-      . '<title>Wartung — Einsatzdoku</title>' . "\n"
+      . '<title>Wartung — Gen-EM NAdoku</title>' . "\n"
       . '<link rel="stylesheet" href="' . $h($v('assets/style.css')) . '">' . "\n"
       . '</head>' . "\n"
       . '<body>' . "\n"

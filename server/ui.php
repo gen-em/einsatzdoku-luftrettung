@@ -39,7 +39,7 @@ declare(strict_types=1);
  * ueberschreiben, und nur auf Kartenseiten (AK-A2-3).
  *
  * Schluessel von $o:
- *   titel    Pflicht. Der Wortlaut VOR dem Trenner; " — Einsatzdoku" haengt
+ *   titel    Pflicht. Der Wortlaut VOR dem Trenner; " — Gen-EM NAdoku" haengt
  *            diese Funktion an. Der Text wird hier maskiert — Aufrufer
  *            uebergeben Klartext, kein Markup.
  *   klasse   Klasse am <body> (z. B. 'anmeldung-body'); fehlt sie, hat das
@@ -71,7 +71,7 @@ function ui_seite_start(array $o): void
             . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '">',
         '<head>',
         '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
-        '<title>' . ui_e((string)$o['titel']) . ' — Einsatzdoku</title>',
+        '<title>' . ui_e((string)$o['titel']) . ' — Gen-EM NAdoku</title>',
     ];
     if (!empty($o['kopf'])) {
         $zeilen[] = rtrim((string)$o['kopf'], "\n");
@@ -489,6 +489,204 @@ function ui_leiste_ende(): void
     echo '  <main class="inhalt" id="inhalt">' . "\n";
     ui_demo_hinweis();
 }
+
+
+
+/**
+ * Schließt Inhalt und Rahmen, setzt die Fußzeile darunter und lädt die
+ * Skripte des Gerüsts.
+ *
+ * DIE VIER SKRIPTE DES GERÜSTS stehen hier und nicht auf den Seiten: Sie
+ * gehören zur Hülle, und eine Seite, die eines davon zu laden vergisst, fällt
+ * nicht auf — sie verhält sich nur an einer Stelle anders als alle anderen.
+ * Genau so war es bis Web 8.0.1 mit confirm.js, das auf drei Seiten zweimal
+ * und auf drei anderen gar nicht eingebunden war.
+ *
+ * daylist.js kommt nur mit, wo es eine Diensttage-Leiste gibt: Auf
+ * Einstellungen, Import, Administration und Wartung sucht es sein Akkordeon,
+ * findet nichts und kehrt zurück — eine Anfrage und ein Parse-Durchgang für
+ * nichts.
+ */
+function ui_geruest_ende(array $o = []): void
+{
+    echo "  </main>\n</div>\n";
+    ui_fuss_seite($o);
+
+    $skripte = ['assets/symbol.js', 'assets/schublade.js', 'assets/blatt.js',
+                'assets/confirm.js'];
+    if (ui_hat_tagesleiste()) { $skripte[] = 'assets/daylist.js'; }
+    foreach ($skripte as $s) {
+        echo '<script src="' . ui_e(ui_asset($s)) . '"></script>' . "\n";
+    }
+}
+
+
+/* ---------------------------------------------------------------------------
+ * LEISTENINHALT: DIENSTTAGE
+ *
+ * SIE LISTET DIENSTTAGE, NICHT KALENDERTAGE (E9, Web 6.0.0): Jeder Einsatz
+ * hängt an einer Zeile in `days`, und diese Zeile IST der Eintrag. Zwei
+ * Dienste an einem Kalendertag stehen als zwei Zeilen untereinander;
+ * auseinandergehalten werden sie durch die Uhrzeit des Dienstbeginns — aber
+ * nur dann, denn im Regelfall kostet sie nur Breite.
+ *
+ * DREI ÄNDERUNGEN GEGENÜBER DEM BESTAND (E-P3-09):
+ *
+ *  1  Die ganze Zeile klappt das Akkordeon, nicht nur das Dreieck. Bisher war
+ *     der TEXT der Link auf die Jahres-/Monatsübersicht und nur das Dreieck
+ *     der Schalter — auf einem Touchgerät nicht zu unterscheiden. Jetzt
+ *     klappt die Zeile, und der Weg in die Übersicht ist ein eigenes Symbol
+ *     rechts (Balken).
+ *  2  Der Winkel steht in Sand: Er ist Mechanik, keine Botschaft.
+ *  3  Lange Rettungsmittelnamen werden mit Ellipse abgeschnitten; der volle
+ *     Name steht im Tooltip und im Seitentitel. Unter 1200 px entfällt der
+ *     Name ganz, das Artzeichen bleibt.
+ *
+ * Das Artzeichen kommt aus dem Symbolvorrat statt als Emoji (E-P3-18) — es
+ * lässt sich damit färben und auf Kontrast prüfen, und es sieht auf jedem
+ * Betriebssystem gleich aus.
+ * ------------------------------------------------------------------------ */
+function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
+{
+    global $userId;
+    require_once __DIR__ . '/diensttag_lib.php';
+    $tage = dt_liste($userId, 500);
+
+    $monatsnamen = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+        'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    $baum = [];
+    foreach ($tage as $t) {
+        $d = (string)$t['day'];
+        $baum[substr($d, 0, 4)][substr($d, 5, 2)][] = $t;
+    }
+
+    // Welches Jahr und welcher Monat sollen offen sein? Der gewählte Diensttag
+    // hat Vorrang, sonst der jüngste vorhandene.
+    $aktuellesDatum = null;
+    foreach ($tage as $t) {
+        if ($currentDayId !== null && (int)$t['id'] === $currentDayId) {
+            $aktuellesDatum = (string)$t['day'];
+            break;
+        }
+    }
+    $offenesJahr = null; $offenerMonat = null;
+    if ($aktuellesDatum !== null) {
+        $offenesJahr  = substr($aktuellesDatum, 0, 4);
+        $offenerMonat = substr($aktuellesDatum, 5, 2);
+    } elseif ($tage) {
+        $offenesJahr  = substr((string)$tage[0]['day'], 0, 4);
+        $offenerMonat = substr((string)$tage[0]['day'], 5, 2);
+    }
+
+    /* DER ANGEZEIGTE ZEITRAUM WIRD MARKIERT (E-P3-37). Wer auf der
+       Jahres- oder Monatsübersicht steht, sah in der Leiste bisher nichts
+       davon — der aktive Eintrag war stets ein Diensttag, und den gibt es
+       dort nicht. Jetzt trägt die Jahres- bzw. Monatszeile die Markierung,
+       und der Zweig wird dafür aufgeklappt. */
+    $aktivesJahr  = isset($zeitraum['jahr'])  ? (string)$zeitraum['jahr']  : '';
+    $aktiverMonat = isset($zeitraum['monat']) ? (string)$zeitraum['monat'] : '';
+    if ($aktivesJahr !== '') {
+        $offenesJahr = $aktivesJahr;
+        if ($aktiverMonat !== '') { $offenerMonat = $aktiverMonat; }
+    }
+    ?>
+    <h2 class="leiste-kopfzeile">Diensttage</h2>
+    <div class="leiste-liste">
+      <?php if (!$baum): ?><p class="leiste-leer">noch keine</p><?php endif; ?>
+      <?php foreach ($baum as $jahr => $monate):
+          /* PHP macht aus numerischen Array-Schlüsseln Integer ("2026" -> 2026,
+             "07" bleibt String). Deshalb überall ausdrücklich nach String
+             wandeln — sonst bricht ui_e() unter strict_types ab und
+             Monatsvergleiche schlagen ab Oktober fehl. */
+          $jahrS = (string)$jahr; ?>
+        <?php /* Aktiv ist die JAHRESzeile nur bei der Jahresübersicht — steht
+                 ein Monat an, trägt der Monat die Markierung. */
+              $jahrAktiv = $aktivesJahr === $jahrS && $aktiverMonat === ''; ?>
+        <details class="akkordeon<?= $jahrAktiv ? ' aktiv' : '' ?>"
+                 <?= $jahrS === $offenesJahr ? 'open' : '' ?>>
+          <?php /* Der Balken-Link steht IM summary: Als Kind des <details>
+                   wäre er an jeder zugeklappten Zeile unsichtbar — der Inhalt
+                   eines geschlossenen <details> wird nicht gerendert
+                   (F-P3-R). daylist.js fängt den Klick ab, damit er nicht
+                   zusätzlich auf- und zuklappt. */ ?>
+          <summary class="akkordeon-zeile">
+            <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
+            <span class="akkordeon-text"><?= ui_e($jahrS) ?></span>
+            <a class="akkordeon-uebersicht" href="zeitraum.php?y=<?= ui_e($jahrS) ?>"
+               <?= $jahrAktiv ? 'aria-current="page"' : '' ?>
+               aria-label="Jahresübersicht <?= ui_e($jahrS) ?>" title="Jahresübersicht">
+              <?= ui_symbol('balken') ?>
+            </a>
+          </summary>
+          <div class="akkordeon-inhalt">
+          <?php foreach ($monate as $monat => $monatsTage):
+              $monatS = str_pad((string)$monat, 2, '0', STR_PAD_LEFT); ?>
+            <?php $monatAktiv = $aktivesJahr === $jahrS && $aktiverMonat === $monatS; ?>
+            <details class="akkordeon akkordeon-monat<?= $monatAktiv ? ' aktiv' : '' ?>"
+                     <?= ($jahrS === $offenesJahr && $monatS === $offenerMonat) ? 'open' : '' ?>>
+              <summary class="akkordeon-zeile">
+                <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
+                <span class="akkordeon-text"><?= ui_e($monatsnamen[(int)$monatS]) ?></span>
+                <a class="akkordeon-uebersicht"
+                   href="zeitraum.php?y=<?= ui_e($jahrS) ?>&amp;m=<?= ui_e($monatS) ?>"
+                   <?= $monatAktiv ? 'aria-current="page"' : '' ?>
+                   aria-label="Monatsübersicht <?= ui_e($monatsnamen[(int)$monatS]) ?>"
+                   title="Monatsübersicht"><?= ui_symbol('balken') ?></a>
+              </summary>
+              <div class="akkordeon-inhalt">
+              <?php foreach ($monatsTage as $t):
+                  $kind = $t['kind'] === null ? null : (string)$t['kind'];
+                  $sym  = dt_art_symbol($kind);
+                  $name = (string)($t['vehicle_name'] ?? '');
+                  $titel = $name !== '' ? $name . ' — ' . $sym['text'] : $sym['text'];
+                  $ist = (int)$t['id'] === $currentDayId; ?>
+                <a class="eintrag<?= $ist ? ' aktiv' : '' ?>"
+                   href="index.php?d=<?= (int)$t['id'] ?>"
+                   <?= $ist ? 'aria-current="page"' : '' ?> title="<?= ui_e($titel) ?>">
+                  <?= ui_artzeichen($kind) ?>
+                  <span class="eintrag-text"><?= ui_e(dt_lesbar($t, (bool)$t['mehrfach'])) ?></span>
+                  <?php if ($name !== ''): ?>
+                    <span class="eintrag-neben"><?= ui_e($name) ?></span>
+                  <?php else: ?>
+                    <span class="eintrag-neben">—</span>
+                  <?php endif; ?>
+                </a>
+              <?php endforeach; ?>
+              </div>
+            </details>
+          <?php endforeach; ?>
+          </div>
+        </details>
+      <?php endforeach; ?>
+    </div>
+    <?php
+      require_once __DIR__ . '/trash_lib.php';
+      $trashLeer = !trash_list_days($userId) && !trash_list_missions($userId);
+      require_once __DIR__ . '/nachbearbeitung_lib.php';
+      $nbOffen = nb_offen_gesamt($userId);
+    ?>
+    <div class="leiste-fuss">
+      <?php /* Die Nachbearbeitung erscheint NUR, solange etwas offen ist (E24,
+               A12, bestätigt in E-P3-09). Ein dauerhafter Eintrag für eine
+               einmalige Aufgabe wäre genau der Hinweis, den man nicht
+               loswird. */ ?>
+      <?php if ($nbOffen > 0): ?>
+        <a class="eintrag eintrag-offen" href="nachbearbeitung.php">
+          <?= ui_symbol('warnung') ?>
+          <span class="eintrag-text">Zuordnung offen</span>
+          <span class="zaehler"><?= (int)$nbOffen ?></span>
+        </a>
+      <?php endif; ?>
+      <a class="eintrag eintrag-anlegen" href="diensttag_neu.php">
+        <?= ui_symbol('plus') ?><span class="eintrag-text">Diensttag anlegen</span>
+      </a>
+      <a class="eintrag eintrag-leise" href="papierkorb.php"
+         title="<?= $trashLeer ? 'Papierkorb ist leer' : 'Papierkorb' ?>">
+        <?= ui_symbol('korb') ?><span class="eintrag-text">Papierkorb</span>
+      </a>
+    </div>
+<?php }
+
 
 /* ---------------------------------------------------------------------------
  * DAS MENÜ DER EINSTELLUNGEN — EINE QUELLE (S8/AP5, E-S8-04, löst B-S8-01)

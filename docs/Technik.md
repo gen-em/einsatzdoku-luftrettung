@@ -736,7 +736,8 @@ die Plus-Code-Dekodierung nutzt die gevendorte Bibliothek
 Zustand vollständig in Closures — keine globalen Variablen, damit mehrere
 Karten pro Seite (aktuell max. eine) nicht kollidieren würden. Alle drei
 Kartenseiten (`index.php`, `einsatz.php`, `zeitraum.php`) rufen dieselben
-zwei Funktionen auf, kein Duplikat-Code je Seite.
+zwei Funktionen auf, kein Duplikat-Code je Seite; `tag_spuren.php` und der
+Ortswahl-Dialog (`assets/ortswahl.js`) rufen `attachBaseLayers` ebenfalls.
 
 `attachFullscreenControl` nutzt primär die native Fullscreen-API auf dem
 Karten-Container (inkl. `webkit`-Präfix); wo diese für beliebige Elemente
@@ -766,6 +767,22 @@ steht.
 `{z}/{x}/{y}` wie die drei anderen. Vertauscht liefert er kommentarlos falsche
 oder leere Kacheln. Der Layer ist **nicht** Standard: Er lädt deutlich größere
 Kacheln, und die Karte soll beim Öffnen einer Einsatzansicht schnell dastehen.
+
+**`attachBaseLayers` startet seit Web 15.3.1 auch die Größenüberwachung.**
+Leaflet misst seinen Behälter **einmal**, beim Anlegen der Karte, und rechnet
+danach mit dem gemerkten Wert; von selbst bemerkt es nur eine Änderung des
+*Fensters*. Wächst der Behälter ohne Fensterwechsel, lädt es Kacheln nur für
+den alten Ausschnitt — der Rest bleibt der Hintergrund von `.geo`, und
+Herauszoomen hilft nicht, weil auch der Kachelbereich aus der gemerkten Größe
+folgt. Genau das trat ab 1600 px auf, wo die Karte in der rechten Spalte des
+Tagesrasters steht (E-P3-31) und mit der nachgeladenen Einsatztabelle wächst:
+gemessen bei 1920 × 1080 ein Behälter von 400 × 840 px gegen eine gemerkte
+Größe von 400 × 324 px, also 516 px ohne Kachel. Ein `ResizeObserver` auf dem
+Behälter zieht `invalidateSize()` nach, gebündelt über
+`requestAnimationFrame`. Er sitzt in `attachBaseLayers()`, weil das der
+**eine** Aufruf ist, den jede Karte macht — eine eigene Datei bräuchte fünf
+Einbindungen, und die vergessene fünfte fiele nicht auf, sondern zeigte eine
+halbe Karte. Browser ohne `ResizeObserver` behalten das alte Verhalten.
 
 **Marker-Satz und Spurfarben (`assets/geo.js`, ab Web 9.2.0):** Das
 `EdGeo`-Modul liefert alles, was auf einer Einsatzkarte steht, aus einer
@@ -3864,7 +3881,7 @@ Die Bausteine im Einzelnen:
 | Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Zeile „Schlüsselableitung" auf Betrieb → Status meldet diesen Zustand (rot, „Anmeldung blockiert"). |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
-| Seitenhülle | `ui.php` (`ui_seite_start()`, `ui_seite_ende()`) | Ab Web 7.1.0. Doctype, `<head>`, Eröffnung und Abschluss des `<body>` — vorher 28-mal von Hand, mit zwei Schreibweisen des Viewports und zwei Titeltrennern. Leaflet-CSS nur auf Kartenseiten und **vor** `style.css`, damit eigene Regeln die des Kartenwerks überschreiben. **Ohne Abhängigkeit auf oberster Ebene**, damit `install.php` sie vor der Ersteinrichtung laden kann; `asset()`, `e()` und `favicon_tags()` werden über `ui_asset()`/`ui_e()`/`ui_favicon()` nur benutzt, wo es sie gibt. **`install.php` lädt sie seit Web 9.10.1 am Dateianfang** — vorher stand das `require_once` in `render_page()` selbst, und weil die Aufrufer ihr Argument mit `ui_meldung_markup()` und `ui_knopf()` bauen (PHP wertet Argumente vor dem Aufruf aus), endete jeder Zweig in „Call to undefined function". Der Einrichter war damit seit Web 9.1.0 unbenutzbar (F-P3-AR). |
+| Seitenhülle | `ui.php` (`ui_seite_start()`, `ui_seite_ende()`) | Ab Web 7.1.0. Doctype, `<head>`, Eröffnung und Abschluss des `<body>` — vorher 28-mal von Hand, mit zwei Schreibweisen des Viewports und zwei Titeltrennern. **Der Tab-Titel lautet seit Web 15.3.1 „&lt;Seite&gt; — Gen-EM NAdoku"** (vorher „— Einsatzdoku"); die zweite Stelle, die einen Titel selbst setzt, ist die Wartungsseite in `wartung_lib.php`. Leaflet-CSS nur auf Kartenseiten und **vor** `style.css`, damit eigene Regeln die des Kartenwerks überschreiben. **Ohne Abhängigkeit auf oberster Ebene**, damit `install.php` sie vor der Ersteinrichtung laden kann; `asset()`, `e()` und `favicon_tags()` werden über `ui_asset()`/`ui_e()`/`ui_favicon()` nur benutzt, wo es sie gibt. **`install.php` lädt sie seit Web 9.10.1 am Dateianfang** — vorher stand das `require_once` in `render_page()` selbst, und weil die Aufrufer ihr Argument mit `ui_meldung_markup()` und `ui_knopf()` bauen (PHP wertet Argumente vor dem Aufruf aus), endete jeder Zweig in „Call to undefined function". Der Einrichter war damit seit Web 9.1.0 unbenutzbar (F-P3-AR). |
 | Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und schreibt ins Fehlerlog**: Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
 | Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
 | Abbruchseite | `ui.php` (`ui_abbruch()`) | Ab Web 7.2.0. Statt `exit('… nicht gefunden.')` eine richtige Seite mit Kopfleiste und Rückweg — 16 Stellen, darunter `require_admin()` und `csrf_check()` in `auth_guard.php`. Wortlaut und HTTP-Code unverändert; der API-Zweig von `require_admin()` antwortet weiter mit JSON. |

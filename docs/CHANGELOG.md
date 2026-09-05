@@ -14,6 +14,46 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.3.1] — 2026-09-05
+
+### Web — zwei gemeldete Fehler behoben
+
+**Die Karte der Tagesübersicht nutzte am breiten Schreibtisch nur ihren
+oberen Teil.** Gemeldet mit Bild: Kacheln in einem Streifen oben, darunter
+die leere Fläche; Herauszoomen lud nichts nach, und erst beim Verschieben
+füllte sich der Rest nach und nach.
+
+Die Ursache liegt in der Art, wie Leaflet rechnet. Es misst seinen Behälter
+**einmal**, beim Anlegen der Karte, und arbeitet danach mit dem gemerkten
+Wert; von selbst merkt es nur, wenn sich das *Fenster* ändert. Ab 1600 px
+steht die Karte aber in der rechten Spalte des Tagesrasters (E-P3-31) und
+wächst mit der Einsatztabelle daneben — und die entsteht erst, wenn die Daten
+nachgeladen sind, also nach dem Anlegen. Gemessen bei 1920 × 1080: Behälter
+400 × 840 px, Leaflet rechnete mit 400 × 324 px. **516 px, 61 Prozent der
+Höhe, bekamen nie eine Kachel**, und weil auch der Kachelbereich aus der
+gemerkten Größe folgt, half Herauszoomen nicht. Unter 1600 px hat die Karte
+eine feste Höhe; dort stimmte sie, was erklärt, warum der Fehler lange
+unbemerkt blieb. Betroffen waren `index.php` und `zeitraum.php`.
+
+Behoben mit einem `ResizeObserver` auf dem Kartenbehälter, der
+`invalidateSize()` nachzieht. Er sitzt in `attachBaseLayers()` — dem **einen**
+Aufruf, den jede der fünf Karten der Anwendung macht. Eine eigene Datei hätte
+fünf Einbindungen und fünf Aufrufe gebraucht, und eine Seite, die einen davon
+vergisst, fällt nicht auf: Sie zeigt eine halbe Karte, also genau den Fehler,
+um den es geht. Der Beobachter greift damit auch bei jedem anderen Grund, aus
+dem eine Karte wächst — aufgeklapptes Formular daneben, Schublade, Vollbild,
+gedrehtes Handy. Browser ohne `ResizeObserver` behalten bewusst das alte
+Verhalten: Ein Zeitgeber, der sekundenweise nachmisst, kostet auf jeder Karte
+dauerhaft Rechenzeit für einen Fall, den es dort nicht mehr gibt.
+
+**Der Tab-Titel hieß „&lt;Seite&gt; — Einsatzdoku".** Er heißt jetzt
+„&lt;Seite&gt; — Gen-EM NAdoku", wie das Programm. Zwei Stellen: das Gerüst
+in `ui.php` und die Wartungsseite in `wartung_lib.php`. Die Wortmarke in der
+Kopfleiste bleibt vorerst „Gen-EM Einsatzdoku" — sie ist eine
+Gestaltungsentscheidung und wird nicht nebenbei mitgeändert.
+
+Keine Migration.
+
 ## [Web 15.3.0] — 2026-09-05
 
 ### Web — Betrieb bekommt Status und Statistik (S8/AP4)

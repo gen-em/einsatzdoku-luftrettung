@@ -24,7 +24,15 @@
  *
  * Aufruf je Karte: attachBaseLayers(map). Fuegt den Standardlayer der Karte
  * hinzu und haengt das Leaflet-eigene Layer-Control (kein Plugin, Teil von
- * Leaflet selbst) oben rechts an. */
+ * Leaflet selbst) oben rechts an.
+ *
+ * UND SEIT WEB 15.3.1 STARTET ER DIE GROESSENUEBERWACHUNG (F-S8-P-10). Der
+ * Grund, warum sie ausgerechnet hier steht und nicht in einer eigenen Datei:
+ * Diese Funktion ist der EINE Aufruf, den jede der fuenf Karten der Anwendung
+ * macht -- Tag, Einsatz, Zeitraum, Tagesspuren, Ortswahl. Eine zweite Datei
+ * haette fuenf Einbindungen und fuenf Aufrufe gebraucht, und eine Seite, die
+ * einen davon vergisst, faellt nicht auf: Sie zeigt eine halbe Karte. Genau
+ * das war der Fehler, den die Ueberwachung behebt. */
 (function () {
   'use strict';
 
@@ -69,5 +77,62 @@
       'Topographisch (OpenTopoMap)': topo,
       'Satellitenbild (Esri)': satellit
     }, null, { position: 'topright' }).addTo(map);
+
+    groesseBeobachten(map);
   };
+
+  /* ---------------------------------------------------------------------
+   * DIE KARTE MUSS IHRE GROESSE NACHMESSEN  (F-S8-P-10)
+   *
+   * DER FEHLER. Leaflet misst seinen Behaelter EINMAL, bei L.map(), und
+   * rechnet danach mit dem gemerkten Wert weiter. Es merkt von selbst nur
+   * eines: dass sich das FENSTER aendert. Waechst der Behaelter, ohne dass
+   * das Fenster sich ruehrt, laedt Leaflet Kacheln nur fuer den alten
+   * Ausschnitt -- der Rest bleibt der Hintergrund von `.geo`, und
+   * Herauszoomen hilft nicht, weil auch der Kachelbereich aus der gemerkten
+   * Groesse gerechnet wird. Erst ein Verschieben deckt die Flaeche nach und
+   * nach auf.
+   *
+   * WO ER AUFTRAT. Auf der Tagesuebersicht ab 1600 px: Dort steht die Karte
+   * in der rechten Spalte des Rasters (E-P3-31) und waechst mit der
+   * Einsatztabelle daneben -- und die entsteht erst, wenn die Daten da sind,
+   * also NACH L.map(). Gemessen am 05.09.2026 bei 1920 x 1080:
+   * Behaelter 400 x 840 px, Leaflet rechnete mit 400 x 324 px. 516 px,
+   * 61 Prozent der Hoehe, bekamen nie eine Kachel. Unter 1600 px hat die
+   * Karte eine feste Hoehe, und dort stimmte sie.
+   *
+   * DIE LOESUNG ist ein ResizeObserver auf dem Behaelter. Er greift bei
+   * jedem Grund, aus dem eine Karte waechst: nachgeladene Daten, ein
+   * aufgeklapptes Formular daneben, die Schublade, der Wechsel in den
+   * Vollbildmodus, ein gedrehtes Handy. invalidateSize() aendert die
+   * Kastengroesse nicht, es liest sie nur -- eine Rueckkopplung gibt es
+   * nicht; der Vergleich mit der letzten Groesse und das
+   * requestAnimationFrame buendeln trotzdem, damit ein Zug an der
+   * Fensterkante nicht dreissig Neuberechnungen ausloest.
+   *
+   * OHNE ResizeObserver (Browser vor 2020) bleibt es beim alten Verhalten.
+   * Das ist Absicht: Ein Zeitgeber, der sekundenweise nachmisst, kostet auf
+   * jeder Karte dauerhaft Rechenzeit fuer einen Fall, den es dort nicht
+   * mehr gibt.
+   * ------------------------------------------------------------------- */
+  function groesseBeobachten(map) {
+    if (typeof ResizeObserver !== 'function') { return; }
+    const el = map.getContainer();
+    let breit = el.clientWidth, hoch = el.clientHeight, bild = 0;
+    const beobachter = new ResizeObserver(function () {
+      if (el.clientWidth === breit && el.clientHeight === hoch) { return; }
+      breit = el.clientWidth;
+      hoch  = el.clientHeight;
+      if (bild) { cancelAnimationFrame(bild); }
+      bild = requestAnimationFrame(function () {
+        bild = 0;
+        /* Ein Behaelter mit Hoehe 0 ist ein verborgener Behaelter (Dialog zu,
+         * Karte eingeklappt). Dann waere die Rechnung sinnlos -- und beim
+         * Aufklappen kommt der Beobachter ohnehin noch einmal. */
+        if (el.clientWidth > 0 && el.clientHeight > 0) { map.invalidateSize(); }
+      });
+    });
+    beobachter.observe(el);
+    map.on('unload', function () { beobachter.disconnect(); });
+  }
 })();
