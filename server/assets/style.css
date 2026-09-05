@@ -740,6 +740,25 @@ img,svg,video{max-width:100%;height:auto}
 }
 .leiste-leer{color:var(--gedaempft);padding:0 var(--abstand-3)}
 
+/* ---- Die drei Blöcke des Einstellungsmenüs (E-S8-07) ---------------------
+ * Ein `<details>` je Block, gebaut aus dem Akkordeon-Baustein. Diese Regeln
+ * setzen nur, was die Blocküberschrift von einer Jahreszeile unterscheidet:
+ * Schriftgrad und Farbe der bisherigen `.leiste-kopfzeile`. Der Rest — Winkel
+ * links, Drehung, Trefferfläche, Innenabstand — kommt vom Baustein und bleibt
+ * damit gleich wie in der Diensttage-Leiste.
+ *
+ * DIE ZAHL STEHT NUR AM ZUGEKLAPPTEN BLOCK. Sie sagt, was verborgen ist
+ * („Betrieb · 7"); über einer offenen Liste wäre sie das Abzählen dessen, was
+ * man sieht. `aria-hidden`, weil ein Vorleseprogramm die Einträge selbst
+ * zählt und die Zahl sonst zweimal ansagt. */
+.leiste-gruppe > .akkordeon-zeile{
+  font-size:var(--groesse-3);
+  color:var(--asphalt);
+}
+.leiste-gruppe > .akkordeon-inhalt{padding-left:0}
+.gruppen-zahl{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2)}
+.leiste-gruppe[open] > .akkordeon-zeile .gruppen-zahl{display:none}
+
 /* ---- Fußzeile ------------------------------------------------------------
  * Zweizeilig, zentriert, unter dem Inhalt — und außerhalb von <main>. */
 .fuss-seite{

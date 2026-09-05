@@ -243,6 +243,17 @@ function ui_hat_tagesleiste(?bool $setzen = null): bool
     return $ja;
 }
 
+/**
+ * Dasselbe für die Einstellungsleiste — sie braucht `assets/menue.js`
+ * (Akkordeonzustand der drei Blöcke).
+ */
+function ui_hat_menueleiste(?bool $setzen = null): bool
+{
+    static $ja = false;
+    if ($setzen !== null) { $ja = $setzen; }
+    return $ja;
+}
+
 /** Anzeigename der angemeldeten Person — Name, sonst E-Mail. */
 function ui_user_label(): string {
     global $userName, $userEmail;
@@ -417,6 +428,7 @@ function ui_geruest_start(array $o = []): void
 {
     $leiste = (string)($o['leiste'] ?? '');
     ui_hat_tagesleiste($leiste === 'diensttage');
+    ui_hat_menueleiste($leiste === 'einstellungen');
     ui_kopf(['aktiv' => (string)($o['aktiv'] ?? '')]);
     /* LESESPALTE (Web 15.1.0, E-S8-18): Eine Seite mit wenigen Karten und viel
      * Erklärtext liest sich auf 760 px besser als über die volle Breite eines
@@ -515,6 +527,7 @@ function ui_geruest_ende(array $o = []): void
     $skripte = ['assets/symbol.js', 'assets/schublade.js', 'assets/blatt.js',
                 'assets/confirm.js'];
     if (ui_hat_tagesleiste()) { $skripte[] = 'assets/daylist.js'; }
+    if (ui_hat_menueleiste()) { $skripte[] = 'assets/menue.js'; }
     foreach ($skripte as $s) {
         echo '<script src="' . ui_e(ui_asset($s)) . '"></script>' . "\n";
     }
@@ -805,24 +818,67 @@ function ui_einstellungen_punkte(): array
  * FETTDRUCK NUR FÜR DEN AKTIVEN EINTRAG (Backlog Nr. 75, E-S8-07). Bis Web
  * 15.3.0 waren in der Administration ALLE Einträge fett, weil `.leiste-liste`
  * dort eine eigene Regel trug; der aktive war damit nicht mehr zu erkennen.
+ *
+ * DIE BLÖCKE KLAPPEN (E-S8-07, Konzept AP5 (2)). Für eine BetreiberIn stehen
+ * siebzehn Einträge untereinander, und das passt in kein übliches
+ * Browserfenster: Gemessen am 05.09.2026 bei 1280 × 900 waren **14 von 17**
+ * ohne Rollen erreichbar, bei 720 px Fensterhöhe noch **10 von 17** — die
+ * Liste ist 883 px hoch, die Leiste bot 603. Wer „Backup-Ziele" sucht, sieht
+ * nicht, dass es den Eintrag gibt.
+ *
+ * Gebaut aus dem vorhandenen Akkordeon-Baustein (`.akkordeon-zeile`,
+ * `-winkel`, `-inhalt`) — demselben, den die Diensttage-Leiste benutzt. Das
+ * freigegebene Mockup 01 zeichnet den Winkel rechts; hier steht er links,
+ * weil er in der anderen Leiste links steht und beide Leisten denselben
+ * Griff haben sollen. `.leiste-gruppe` setzt nur Schriftgrad und Farbe der
+ * bisherigen `.leiste-kopfzeile` — die Blocküberschrift sieht aus wie zuvor
+ * und hat einen Winkel dazubekommen.
  */
 function ui_leiste_einstellungen(string $aktiv): void
 {
     $bloecke = ui_einstellungen_punkte();
     ?>
-    <div class="leiste-liste">
+    <div class="leiste-liste" data-menue>
       <?php foreach ($bloecke as $b): ?>
-        <?php if ($b['titel'] !== ''): ?>
-          <h2 class="leiste-kopfzeile"><?= ui_e($b['titel']) ?></h2>
-        <?php else: ?>
-          <h2 class="leiste-kopfzeile">Einstellungen</h2>
-        <?php endif; ?>
-        <?php foreach ($b['punkte'] as [$key, $href, $text, $sym]): ?>
-          <a class="eintrag<?= $aktiv === $key ? ' aktiv' : '' ?>" href="<?= ui_e($href) ?>"
-             <?= $aktiv === $key ? 'aria-current="page"' : '' ?>>
-            <?= ui_symbol($sym) ?><span class="eintrag-text"><?= ui_e($text) ?></span>
-          </a>
-        <?php endforeach; ?>
+        <?php
+        /* JEDER BLOCK IST EIN <details> — ALLE OFFEN AUS DEM SERVER.
+         *
+         * Der Zielzustand haengt von der Breite ab (Konzept AP5 (2)): ab
+         * 1024 px alle offen, darunter nur „Einstellungen" und der Block der
+         * aktiven Seite. PHP kennt die Fensterbreite nicht, also muss das
+         * Skript nachziehen — und die Frage ist nur, in welche Richtung.
+         *
+         * ALLE OFFEN ist die flimmerfreie Richtung. Ab 1024 px steht der
+         * Serverzustand schon richtig, das Skript hat nichts zu tun.
+         * Darunter liegt die Leiste als Schublade mit
+         * `transform:translateX(-100%)` ausserhalb des Bildes — was das
+         * Skript dort zuklappt, hat nie jemand gesehen. Umgekehrt (alles zu,
+         * Skript oeffnet) blitzte am Schreibtisch bei jedem Seitenaufruf ein
+         * zusammengeklapptes Menue auf.
+         *
+         * `data-aktiv` sagt dem Skript, welcher Block die aktive Seite
+         * traegt; `data-gruppe` ist der Schluessel im sessionStorage. */
+        $titel  = $b['titel'] !== '' ? $b['titel'] : 'Einstellungen';
+        $hatAkt = false;
+        foreach ($b['punkte'] as $pk) { if ($aktiv === $pk[0]) { $hatAkt = true; } }
+        ?>
+        <details class="akkordeon leiste-gruppe" open
+                 data-gruppe="<?= ui_e($b['schluessel']) ?>"
+                 <?= $hatAkt ? 'data-aktiv' : '' ?>>
+          <summary class="akkordeon-zeile">
+            <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
+            <span class="akkordeon-text"><?= ui_e($titel) ?><span
+              class="gruppen-zahl" aria-hidden="true"> · <?= count($b['punkte']) ?></span></span>
+          </summary>
+          <div class="akkordeon-inhalt">
+            <?php foreach ($b['punkte'] as [$key, $href, $text, $sym]): ?>
+              <a class="eintrag<?= $aktiv === $key ? ' aktiv' : '' ?>" href="<?= ui_e($href) ?>"
+                 <?= $aktiv === $key ? 'aria-current="page"' : '' ?>>
+                <?= ui_symbol($sym) ?><span class="eintrag-text"><?= ui_e($text) ?></span>
+              </a>
+            <?php endforeach; ?>
+          </div>
+        </details>
       <?php endforeach; ?>
     </div>
     <div class="leiste-fuss">
