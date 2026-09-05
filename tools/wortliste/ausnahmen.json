@@ -25,9 +25,9 @@
     },
     {
       "id": "update-migrationen",
-      "datei": "server/update.php",
+      "datei": "server/migration_lib.php",
       "klasse": "E",
-      "begruendung": "Migrationsbeschriftungen und SQL frueherer Schemafassungen. Sie beschreiben, was eine Migration DAMALS getan hat — eine Umbenennung machte die Beschreibung falsch. Entfallen mit R11 (Uebergabeliste an P6, Konzept 10.3)."
+      "begruendung": "Migrationsbeschriftungen und SQL frueherer Schemafassungen. Sie beschreiben, was eine Migration DAMALS getan hat — eine Umbenennung machte die Beschreibung falsch. Entfallen mit R11 (Uebergabeliste an P6, Konzept 10.3). DIE DATEI HAT SICH GEAENDERT: Bis Web 15.0.0 lag der Katalog in `server/update.php`; seit S8/AP2 steht er in `server/migration_lib.php`, weil zwei Aufrufer ihn brauchen — die neue Seite Betrieb → Updates und der Notausgang auf der Kommandozeile. Der Regelname bleibt, die Fundstelle nicht."
     },
     {
       "id": "config-beispiel",
@@ -547,6 +547,20 @@
       "zeile": "Die Garmin-Uhr hält es genauso",
       "klasse": "G",
       "begruendung": "Steht im Android-Kapitel (5a), nicht im Uhr-Kapitel, und dort ist der Markenname die Unterscheidung: Das Kapitel spricht ueber die Wear-OS-Uhr, der Satz vergleicht mit der Connect-IQ-Uhr (SyncView.mc gegen Track.mc). 'Uhr-App' waere hier zweideutig, und zwar genau an der Stelle, an der es auf den Unterschied ankommt. Aufgenommen 03.09.2026 mit S5 Paket E."
+    },
+    {
+      "id": "logowahl-installation-namen",
+      "datei": "server/update.php",
+      "zeile": "\\$namen = \\['hubschrauber' => 'Hubschrauber \\(RTH\\)'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Bis Web 15.0.0 deckte die dateiweite Ausnahme `update-migrationen` diese beiden Zeilen mit ab; seit S8/AP2 traegt `server/update.php` nur noch die Logo-Karte, und der Migrationskatalog steht woanders. Die Karte selbst zieht in AP3 auf die Seite „Installation“ — dann wandert auch diese Ausnahme. Diese Zeile benennt die drei Werte fuer die Rueckmeldung."
+    },
+    {
+      "id": "logowahl-installation-option",
+      "datei": "server/update.php",
+      "zeile": "'optionen' => \\['hubschrauber' => 'Hubschrauber \\(RTH\\)'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Bis Web 15.0.0 deckte die dateiweite Ausnahme `update-migrationen` diese beiden Zeilen mit ab; seit S8/AP2 traegt `server/update.php` nur noch die Logo-Karte, und der Migrationskatalog steht woanders. Die Karte selbst zieht in AP3 auf die Seite „Installation“ — dann wandert auch diese Ausnahme. Diese Zeile ist die Beschriftung der Segmentwahl; die Zeile darunter nennt das Fahrzeug."
     }
   ]
 }

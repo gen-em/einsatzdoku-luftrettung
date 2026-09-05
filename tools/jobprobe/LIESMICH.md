@@ -50,7 +50,7 @@ nicht als Erwartung.
 - **Das Verhalten unter echter Last.** Die Zeiten hier sind an einem
   Referenzbestand von rund 3,3 Mio. Zeilen gemessen; für die Zielmenge Z2 gibt
   es keine Messung, sondern eine Rechnung.
-- **Die Wartungsseite.** Was `update.php` anzeigt, ist Oberfläche und wird im
+- **Die Jobs-Seite.** Was `betrieb_jobs.php` anzeigt (bis Web 15.0.0 `update.php`), ist Oberfläche und wird im
   Browser geprüft.
 
 ## Voraussetzungen

@@ -1,6 +1,6 @@
 # Einsatzdoku — Technische Dokumentation
 
-*Stand: 24.08.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
+*Stand: 05.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
 Historie: `CHANGELOG.md`.*
 
 ## 1. Architekturüberblick
@@ -13,7 +13,7 @@ Historie: `CHANGELOG.md`.*
 └─────────────────┘                           │  ingest.php   (Uhr-API)  │
                                               │  api/…        (Lese-API) │
 ┌─────────────────┐  HTTPS (Session-Login)    │  *.php        (Seiten)   │
-│ Browser         │ ────────────────────────► │  update.php   (Migration)│
+│ Browser         │ ────────────────────────► │  betrieb_*.php (Betrieb) │
 └─────────────────┘                           │  install.php  (Setup)    │
                                               └──────────────────────────┘
 ```
@@ -172,6 +172,22 @@ Daten erst nach Server-Bestätigung.
 │   │                       Ausnahmeliste. Lädt NICHTS — der Zustand ist eine
 │   │                       Datei (`wartung.lock`), damit er auch bei
 │   │                       umgebauter Datenbank greift
+│   ├── betrieb_updates.php  Betrieb → Updates (S8/AP2): Wartungsmodus,
+│   │                       ausstehende Migrationen mit Vorschau und Lauf,
+│   │                       ausgeführte Migrationen, Fassung
+│   ├── betrieb_jobs.php   Betrieb → Hintergrundjobs (S8/AP2): Zustand je Job,
+│   │                       die drei Auslöser mit Befehl und Adresse zum
+│   │                       Kopieren (assets/kopieren.js), Regeln
+│   ├── betrieb_server.php  Betrieb → Servereinstellungen (S8/AP2): Speicher
+│   │                       der Installation als Balken, Grenze und Schwellen
+│   │                       der Konto-Backups, Webspace-Angabe
+│   ├── speicher_lib.php   Was die Installation belegt (S8/AP2): Datenbank aus
+│   │                       information_schema, Dateien per Verzeichnislauf,
+│   │                       Stand in settings, Ton nach Schwellen. Gemessen
+│   │                       wird im Aufräumjob, nicht beim Seitenaufruf
+│   ├── assets/kopieren.js  Der Knopf „kopieren" an einem Wertekasten —
+│   │                       Zwischenablage mit Rückfall auf Markieren; ohne
+│   │                       JavaScript bleibt der Wert lesbar und markierbar
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
 │   │                       gelöschtes Konto, Passwortwechsel)
 │   ├── email_lib.php      E-Mail: Normalisierung, Prüfung, Dublettenerkennung
@@ -190,7 +206,14 @@ Daten erst nach Server-Bestätigung.
 │   │                       · apk.php liefert die Datei aus
 │   │                       · apk/ die Dateien selbst (entstehen nur auf dem
 │   │                         Server, im Deploy ausgenommen)
-│   ├── install.php        Serverinstallation · update.php Migrations-Runner
+│   ├── install.php        Serverinstallation
+│   ├── migration_lib.php  Migrationskatalog und Lauf (S8/AP2): Katalog,
+│   │                       Register, Lauf, Stand, Inhaltszählung. Die EINZIGE
+│   │                       Stelle mit den Migrationen selbst — update.php und
+│   │                       betrieb_updates.php rufen sie nur auf
+│   ├── update.php         Übergangsseite und CLI-Notausgang. Im Browser nur
+│   │                       noch Wegweiser auf die drei Betriebsseiten;
+│   │                       `php update.php` führt die Migrationen aus
 │   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
 │   ├── api/               day.php · mission.php · range.php · suchindex.php ·
 │   │                      backup_data.php (`?teil=kopf` und
@@ -252,7 +275,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      Reset-Fälligkeit (Abschnitt 4.99a)
 │   ├── admin_demo.php     die zugehörige Adminseite
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
-│   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt wird über update.php)
+│   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt
+│   │                      wird über Betrieb → Updates, siehe migration_lib.php)
 │   └── .htaccess          HTTPS-Zwang, Dateisperren, Sicherheits-Kopfzeilen
 ├── watch/                 Connect-IQ-Projekt (Monkey C)
 │   ├── manifest.xml, monkey.jungle
@@ -480,7 +504,7 @@ Daten erst nach Server-Bestätigung.
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
@@ -1149,8 +1173,8 @@ PatientIn", Fallback Phase 6, Toleranz 300 s (Konstante
 Aufgerufen von `ingest.php` (nach jedem Uhr-Upload), `einsatz_form.php` (nach
 manuellem Speichern — Phasen ändern sich, der Track bleibt gleich),
 `backup_lib.php` (nach Restore — aus den gerade eingespielten Phasen/Track neu
-berechnet statt aus der Datei übernommen) und `update.php` (Backfill bei der
-Migration). Kein Formularfeld, daher nicht in `mission_fields.php`.
+berechnet statt aus der Datei übernommen) und `migration_lib.php` (Backfill bei
+der Migration). Kein Formularfeld, daher nicht in `mission_fields.php`.
 
 Auf dem Uhr-Weg und beim Wiedereinspielen läuft die Berechnung **nach** dem
 Abschluss der Transaktion und in einem eigenen Fehlerblock: Die Höhe ist ein
@@ -1187,7 +1211,7 @@ nicht auftaucht, aber mitzählt.
 try/catch (Muster ursprünglich aus `api/backup_restore.php`) und antworten bei
 einer Ausnahme mit `{"error": "<endpunkt>", "meldung": "<Exception-Message>"}`
 statt eines leeren HTTP 500 — wichtig z. B. direkt nach einem Deploy mit
-DB-Änderung, aber vor dem Aufruf von `/update.php`. Neue Endpunkte sollten
+DB-Änderung, aber vor dem Migrationslauf (Betrieb → Updates). Neue Endpunkte sollten
 demselben Muster folgen. Die jeweiligen Frontends (`zeitraum.php`,
 `einsatz.php`, `index.php`, `suche.php`) zeigen `error`+`meldung` in einer
 Fehlerbox an.
@@ -1606,8 +1630,11 @@ Uhr einen **neuen** Tag auslöst (die Dienstkennung in `day_refs` wird auf ihn
 umgebogen); `trash_purge_day()` nimmt **alles** am Tag mit statt nur das
 Gelöschte, und die Rückfrage nennt das Aktive vorher einzeln
 (`trash_aktiv_am_tag()`); und beim Einspielen eines Backups gilt E-S1-19.
-Altbestand meldet `update.php` unter „Einsätze ohne Diensttag" — als Bericht,
-nicht als Migration. `ingest.php` quittiert Uploads für
+Altbestand meldete die Wartungsseite bis Web 15.0.0 unter „Einsätze ohne
+Diensttag" — als Bericht, nicht als Migration. Der Bericht ist mit S8/AP2
+ersatzlos entfallen (E-S8-17): Er stand seit dem Ausrollen von Web 5.4.0 auf
+null und hätte auf jeder Installation, die je einen Migrationslauf gesehen hat,
+auch nie wieder etwas anderes gezeigt. `ingest.php` quittiert Uploads für
 Einträge im Papierkorb, verwirft sie aber; erst das endgültige Löschen schreibt
 die Referenz nach `deleted_refs`. Schwere Löschungen laufen über serverseitige
 Zwischenseiten mit Umfangsanzeige statt über Browser-Dialoge.
@@ -1840,9 +1867,11 @@ dieser Reihenfolge:
    „üblicherweise" ist keine Zusicherung, weil ein vorgelagerter Server puffern
    darf.
 
-Welcher Weg auf der eigenen Installation greift, steht auf der **Wartungsseite
-unter „Umgebung"**. Es ist die Eigenschaft, an der die Gleichheit beider Zweige
-hängt, und sie ließ sich sonst nirgends ablesen.
+Welcher Weg auf der eigenen Installation greift, stand bis Web 15.0.0 auf der
+Wartungsseite unter „Umgebung". Es ist die Eigenschaft, an der die Gleichheit
+beider Zweige hängt, und sie ließ sich sonst nirgends ablesen. **Seit S8/AP2 ist
+sie vorübergehend nirgends abzulesen** — die Karte zieht in S8/AP4 auf
+Betrieb → Status; bis dahin hilft nur `php -m` bzw. ein Blick in `phpinfo()`.
 
 **Bewusst keine Warteschlange.** Es gibt keinen Cronjob; die Wartung läuft
 huckepack, höchstens einmal täglich. Eine Warteschlange hätte den Link zum
@@ -2055,7 +2084,7 @@ Beim Salt war es zuletzt die Länge, die alles verriet: Ein echtes Salt hat 32
 Hexzeichen, das Pseudo-Salt hatte 64. Wer hier etwas ändert, prüft bitte beide
 Zweige nebeneinander.
 
-**Der Aufruf einer Seite darf nichts verändern.** `update.php` führt
+**Der Aufruf einer Seite darf nichts verändern.** `betrieb_updates.php` führt
 Migrationen erst auf eine bestätigte Absendung mit Formular-Token aus; der
 Aufruf zeigt nur an, was anstünde. Migrationen können Spalten löschen, und
 eine unwiderrufliche Handlung auf einen GET hin ist immer falsch — auch dann,
@@ -2364,8 +2393,9 @@ Deshalb ein Rahmen: `server/jobs_lib.php` (Katalog und Ausführung),
 #### Die drei Auslöser (E-S2-17)
 
 **Einer genügt.** Eingerichtet werden muss keiner — dann läuft die Arbeit
-weiter huckepack mit. Die Wartungsseite (`update.php`) zeigt alle drei mit
-fertigem Befehl bzw. fertiger Adresse.
+weiter huckepack mit. **Betrieb → Hintergrundjobs** (`betrieb_jobs.php`) zeigt
+alle drei mit fertigem Befehl bzw. fertiger Adresse, je in einem Wertekasten mit
+Knopf „kopieren".
 
 | Auslöser | Aufruf | Zeitbudget je Lauf | gedacht für |
 |---|---|---|---|
@@ -2420,7 +2450,7 @@ Minuten lang `429` — auch auf den *richtigen* Aufruf. Wer einen
 Zeitplan-Eintrag mit falschem Token stehen hat, sperrt damit seinen eigenen
 Zeitplan aus; nach dem Berichtigen dauert es zehn Minuten, bis er wieder
 greift. Das ist gewollt: Die Alternative wäre ein Endpunkt, an dem sich ein
-Token ungebremst durchprobieren lässt. Auf der Wartungsseite gibt es
+Token ungebremst durchprobieren lässt. Auf Betrieb → Hintergrundjobs gibt es
 „Neues Token erzeugen"; das alte wird damit ungültig, und ein bestehender
 Zeitplan-Eintrag läuft danach ins Leere. Der Hinweis steht am Knopf.
 
@@ -2524,8 +2554,8 @@ Verdichtung **9395 Spuren in 44,3 s**, 2 936 497 Zeilen entfernt, Spitze
 `php jobs.php --pause <Sekunden>` (0 hebt auf). Die Pause gilt für **alle drei
 Auslöser** — sonst räumte ein Cron weg, was gerade gemessen wird — und läuft
 von selbst ab (`JOB_PAUSE_MAX_S` = 2 h); eine Pause ohne Ende wäre eine, die
-jemand vergisst. Die Wartungsseite zeigt sie als eigene Plakette an, damit eine
-laufende Pause nicht wie ein arbeitender Job aussieht.
+jemand vergisst. Betrieb → Hintergrundjobs zeigt sie als eigene Plakette an,
+damit eine laufende Pause nicht wie ein arbeitender Job aussieht.
 
 **Warum es sie gibt.** Seit die Jobs Zeilen löschen und Blobs ersetzen, ändern
 sie den Bestand, während eine Messung darüber läuft. Der Kreislauf spielt ein
@@ -2582,7 +2612,7 @@ Zwei Fehler steckten hier beim ersten Anlauf, beide beim Messen aufgefallen:
 
 #### Sichtbarkeit
 
-`update.php` zeigt je Job letzten Lauf, Auslöser, Rückstand und letzten
+`betrieb_jobs.php` zeigt je Job letzten Lauf, Auslöser, Rückstand und letzten
 Fehler. `letzter_fehler` steht in der Tabelle und nicht nur im
 Fehlerprotokoll: Auf geteiltem Hosting kommt an dieses Protokoll nicht jede
 Betreiberin heran, und ein dauerhaft scheiternder Job soll auffallen. Die
@@ -3154,7 +3184,7 @@ nebeneinander wären zwei Wahrheiten (wie E-S2-17).
 #### Der Rückweg
 
 `wiederherstellen.php` füllt die Lücke zwischen `install.php` (verweigert
-sich, sobald es eine `config.php` gibt) und `update.php` (verlangt eine
+sich, sobald es eine `config.php` gibt) und dem Migrationslauf (verlangt eine
 Anmeldung, die es ohne Konten nicht geben kann). Drei Schranken:
 
 1. **Die Datenbank muss leer sein** — und zwar fürs *Anfangen*. Ab dem
@@ -3177,7 +3207,7 @@ Die `SET`-Zeilen (`FOREIGN_KEY_CHECKS`, `UNIQUE_CHECKS`, `SQL_MODE`) werden
 ist eine neue Anfrage mit einer neuen. In der Datei stehen sie trotzdem — für
 `mysql` und phpMyAdmin.
 
-**Migrationen laufen dort nicht mit.** `update.php` ist seit M6-01
+**Migrationen laufen dort nicht mit.** Der Migrationslauf ist seit M6-01
 zweistufig, weil Migrationen Spalten löschen können. Eine Seite ohne
 Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Absicherung
 heraus. Die Seite vergleicht stattdessen die Web-Fassung des Dumps mit der
@@ -3824,10 +3854,10 @@ Die Bausteine im Einzelnen:
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |
-| Migrationsschutz | `update.php` (`inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert). Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
+| Migrationsschutz | `migration_lib.php` (`migrationen_inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert). Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
 | Blockabfrage | `db.php` (`sql_in_bloecken()`) | Eine Abfrage je Tabelle statt einer je Datensatz, in Blöcken zu 1000 IDs. Benutzt von Export, Tagesansicht und Backup. Die Vorlage trägt `{IDS}` und ist **keine** Formatzeichenkette — ein Prozentzeichen im SQL bleibt ein Prozentzeichen. |
 | Formatkennung des Chiffretexts | `assets/crypto.js` (`CHIFFRE_PRAEFIX`), `validate_lib.php` (`PAT_BLOB_RE`, `WRAP_RE`) | `edk1:` vor jedem Chiffretext. Schreiben immer, Lesen großzügig (keine Kennung = erste Fassung), unbekannte Kennung wird als solche gemeldet. Betrifft `pat_blob` **und** beide Schlüsselhüllen — sie kommen aus derselben Funktion. |
-| Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Wartungsseite meldet diesen Zustand unter „Schlüsselableitung". |
+| Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Karte „Schlüsselableitung" meldete diesen Zustand — sie ist seit S8/AP2 vorübergehend nicht sichtbar und zieht in S8/AP4 auf Betrieb → Status. |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
 | Seitenhülle | `ui.php` (`ui_seite_start()`, `ui_seite_ende()`) | Ab Web 7.1.0. Doctype, `<head>`, Eröffnung und Abschluss des `<body>` — vorher 28-mal von Hand, mit zwei Schreibweisen des Viewports und zwei Titeltrennern. Leaflet-CSS nur auf Kartenseiten und **vor** `style.css`, damit eigene Regeln die des Kartenwerks überschreiben. **Ohne Abhängigkeit auf oberster Ebene**, damit `install.php` sie vor der Ersteinrichtung laden kann; `asset()`, `e()` und `favicon_tags()` werden über `ui_asset()`/`ui_e()`/`ui_favicon()` nur benutzt, wo es sie gibt. **`install.php` lädt sie seit Web 9.10.1 am Dateianfang** — vorher stand das `require_once` in `render_page()` selbst, und weil die Aufrufer ihr Argument mit `ui_meldung_markup()` und `ui_knopf()` bauen (PHP wertet Argumente vor dem Aufruf aus), endete jeder Zweig in „Call to undefined function". Der Einrichter war damit seit Web 9.1.0 unbenutzbar (F-P3-AR). |
@@ -4188,11 +4218,11 @@ geändert** (E-S5W-08).
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript `ingest.php` oder `pair.php` heißt — die beiden liegen nicht unter `/api/`, und genau sie brauchen JSON |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
-| Ausnahmen | sechs Skripte, verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`, `install.php`. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
-| Schalten | `update.php`, Karte „Serverbetrieb", POST mit CSRF, nur Admin. Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
-| Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `update.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
-| Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `update.php` mit, und zwar **vor** `require_admin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
-| Anmeldung | Der Passwortvergleich ist unverändert. **Nach** einem Erfolg entscheidet die Rolle: Admin weiter, alles andere sofort wieder abgemeldet und auf die Wartungsseite (E-S5W-09). Die Ratenschutz-Zähler werden trotzdem geleert — das Passwort war richtig |
+| Ausnahmen | neun Skripte, verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`, `install.php`. **Die drei Betriebsseiten stehen seit S8/AP2 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
+| Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
+| Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
+| Anmeldung | Der Passwortvergleich ist unverändert. **Nach** einem Erfolg entscheidet die Rolle: Admin und BetreiberIn weiter, alles andere sofort wieder abgemeldet und auf die Wartungsseite (E-S5W-09). Die Ratenschutz-Zähler werden trotzdem geleert — das Passwort war richtig |
 | Logo | Die Wartungsseite kann `logo_stamm()` nicht rufen (Datenbank) und **wirft eine Münze** zwischen den beiden Standardlogos, wie `logo_aufloesen('wechselnd')`. Eine Installation mit eigenem Logo sieht während der Wartung eines der beiden Standardlogos |
 
 **Die Datei ist der Schalter, nicht ihr Inhalt.** Liegt sie da, ist aber
@@ -4441,6 +4471,101 @@ Die Grenzen bleiben die des Simulators, unverändert: keine echte Hardware,
 keine Systemgesten, kein Server. Ein Lauf zeigt, dass es startet und wie es
 aussieht — nicht, dass es richtig ist. Anleitung:
 `tools/uhr-pruefstand/LIESMICH.md`.
+
+### 4.99d Betrieb: drei Seiten statt einer Wartungsseite (ab Web 15.1.0, S8/AP2)
+
+**Die Wartungsseite war neun Blöcke auf einer Fläche** — Wartungsmodus,
+Schlüsselableitung, Logo, Umgebung, Hintergrundjobs, Job-Auslöser, Einsätze
+ohne Diensttag, Migrationsliste und der Balken darüber. Sie beantwortete vier
+verschiedene Fragen an einem Ort (B-S8-03), und wer eine davon suchte, las
+zuerst die anderen drei. S8 teilt sie nicht auf, sondern **löst sie auf**
+(E-S8-05):
+
+| bisher auf der Wartungsseite | jetzt |
+|---|---|
+| Wartungsmodus, Migrationen, Fassung | `betrieb_updates.php` (Betrieb → Updates) |
+| Hintergrundjobs, Auslöser, Token | `betrieb_jobs.php` (Betrieb → Hintergrundjobs) |
+| Speichergrenze, Warnschwellen, Ablage | `betrieb_server.php` (Betrieb → Servereinstellungen) |
+| Schlüsselableitung, Umgebung | `betrieb_status.php` (S8/AP4 — bis dahin nicht sichtbar) |
+| Logo der Installation | `admin_installation.php` (S8/AP3 — bis dahin auf `update.php`) |
+| Einsätze ohne Diensttag | ersatzlos entfallen (E-S8-17) |
+
+Alle drei neuen Seiten beginnen mit `require_betreiberin()` (S8/AP1, R75) und
+stehen in `WARTUNG_AUSNAHMEN` — **ohne das sperrt sich der Wartungsmodus selbst
+aus**: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04, gemessen).
+
+**`update.php` bleibt übergangsweise stehen**, aus zwei Gründen und beide enden
+bald: Der Notausgang `php update.php` auf der Kommandozeile läuft ohne Sitzung —
+für den Fall, dass die Anmeldung selbst von einer Migration abhängt —, und die
+Logo-Karte hätte bis AP3 sonst keinen Ort. Im Browser zeigt die Datei seither
+nur noch einen Wegweiser auf die drei neuen Seiten. Ab AP3 ist der Web-Teil eine
+Weiterleitung; die Adresse steht in zu vielen Lesezeichen, als dass ein 404 die
+richtige Antwort wäre (Backlog Nr. 77).
+
+#### Der Migrationskatalog ist eine eigene Datei
+
+`migration_lib.php` trägt seit S8/AP2 den Katalog **und** den Lauf; `update.php`
+und `betrieb_updates.php` rufen nur noch auf. Vorher stand beides in
+`update.php`, und die Seite war damit die einzige Stelle des Projekts, an der
+sich Darstellung und Datenmodell nicht trennen ließen.
+
+| Funktion | Antwort |
+|---|---|
+| `migrationen_katalog()` | die Migrationen selbst, in Reihenfolge — **die einzige Stelle** |
+| `migrationen_register(PDO)` | legt `schema_migrations` an, falls sie fehlt |
+| `migrationen_lauf(PDO, bool $ausfuehren, array $forcieren)` | Vorschau (`false`) oder Lauf (`true`); liefert `results`, `offen`, `blockiert`, `gelaufen` |
+| `migrationen_stand(PDO)` | Zahl, letzte Kennung und Datum der ausgeführten |
+| `migrationen_inhalt_zaehlen()` / `…_text()` | der Migrationsschutz: Was ginge verloren? |
+
+**Was hinter einem Fehler steht, wird nicht mehr verschwiegen.** Bis Web 15.0.0
+brach der Lauf bei einem Fehler ab, und die Migrationen dahinter tauchten in der
+Ausgabe gar nicht auf — die Karte zählte dann weniger Ausstehende, als es gab
+(F-S8-P-05). Seither trägt jede von ihnen den Zustand `steht aus` mit dem Text
+„NICHT MEHR VERSUCHT — der Lauf hat davor abgebrochen." Gemessen: vier
+Testmigrationen, eine davon scheiternd; Zählung 3 in allen drei Ansichten.
+
+#### Speicher der Installation
+
+`speicher_lib.php` beantwortet zwei Fragen mit zwei Balken: Was belegen die
+**Backups** von der Speichergrenze, und was belegt die **Installation** vom
+Webspace laut Hosting. Drei Eigenheiten, die den Aufbau erklären:
+
+1. **Gemessen wird im Aufräumjob, nicht beim Seitenaufruf.** Der
+   Verzeichnislauf über `server/` und die Summe über `information_schema`
+   kosten zusammen mehr, als eine Seite kosten darf; die Zahlen ändern sich in
+   Stunden, nicht in Sekunden. `speicher_messen()` hängt als letzter Schritt am
+   täglichen `job_aufraeumen()` und schreibt nach `app_state`
+   (`speicher_db_bytes`, `speicher_dateien_bytes`, `speicher_stand`). Die Seite
+   liest nur. Ein Teilergebnis wird **auch** geschrieben: Scheitert der
+   Verzeichnislauf, steht dort 0 — als „nicht messbar" erkennbar, während ein
+   alter Wert mit frischem Zeitstempel eine Lüge wäre.
+2. **Der freie Webspace wird nicht gemessen, sondern angegeben.**
+   `disk_free_space()` liefert auf geteiltem Hosting den Datenträger des
+   *Hosts*, nicht die Quota dieses Kontos — eine Zahl im Terabyte-Bereich, die
+   nichts mit dem Tarif zu tun hat. Sie wäre schlimmer als keine. Der Wert
+   `webspace_gb` ist deshalb eine Angabe der BetreiberIn; ohne sie zeigt der
+   zweite Balken nur die Summe, ohne Anteil und ohne Warnung.
+3. **`sicherungen/` zählt im Dateilauf nicht mit.** Die Backups stehen im
+   zweiten Balken als eigene Segmente; zweimal in dieselbe Summe genommen
+   ergäbe das einen Balken über 100 %.
+
+`speicher_ton()` färbt Balken, Legende und (ab AP4) Statusseite nach **denselben**
+Schwellen wie die Warnmail (Vorgabe 70/90) — sonst färbte sich der Balken
+orange, während die Mail schweigt. Genauigkeit gemessen (P-10): Dateien
+7 632 622 B gegen `du -sb --exclude=sicherungen` 7 632 622 B, Datenbank
+4 800 512 B gegen die SQL-Summe 4 800 512 B — **0 % Abweichung**; verlangt
+waren < 2 %. Für eine Abrechnung taugt die InnoDB-Schätzung trotzdem nicht,
+für die Frage „wie viel Platz brauche ich?" genau.
+
+#### Der Knopf „kopieren"
+
+`assets/kopieren.js` gehört zum Baustein `ui_codeblock_lang()` (Design.md 9.18).
+Der Knopf steht **hidden** im Markup und wird erst vom Skript sichtbar gemacht:
+Ohne JavaScript bliebe sonst ein Knopf stehen, der nichts tut. Der Weg ist
+`navigator.clipboard.writeText`; scheitert er (fehlende Berechtigung, kein
+sicherer Kontext), markiert das Skript den Text und meldet „markiert — Strg+C".
+Die Rückmeldung steht **im Knopf**, nicht daneben — eine Zeile, die auftaucht
+und wieder verschwindet, verschiebt sonst das Layout.
 
 ## 5a. Android-Apps (Kotlin/Compose) — Handy und Wear OS
 
@@ -4779,13 +4904,15 @@ gerät, bekommt **500**. Für eine Uhr ist das etwas anderes als ein 503: Der
 JSON-Vertrag sagt zu 5xx „später unverändert erneut versuchen" — sie puffert
 und liefert nach. Die sieben Schritte:
 
-1. **Wartungsseite → Komplett-Backup prüfen** (Zeitpunkt, Ziel erreichbar),
-   bei Bedarf „Jetzt sichern".
-2. **Wartungsmodus einschalten** — Karte „Serverbetrieb" oben auf
-   `update.php`. Ab jetzt bekommt jede Anfrage außer den Ausnahmen 503 mit
-   `Retry-After: 300`.
+1. **Komplett-Backup prüfen** (Zeitpunkt, Ziel erreichbar), bei Bedarf
+   „Jetzt sichern". Der Weg dorthin steht auf **Betrieb → Updates** in der
+   Karte „Ausstehende Updates": Sie nennt den jüngsten Komplett-Stand mit
+   Alter und verlinkt die Komplett-Sicherung.
+2. **Wartungsmodus einschalten** — Karte „Wartungsmodus" oben auf
+   **Betrieb → Updates** (`betrieb_updates.php`). Ab jetzt bekommt jede
+   Anfrage außer den Ausnahmen 503 mit `Retry-After: 300`.
 3. **Push auf `main`** (die GitHub-Action lädt `server/` hoch).
-4. **`update.php` neu laden** → ausstehende Migrationen ausführen.
+4. **Betrieb → Updates neu laden** → ausstehende Migrationen ausführen.
 5. **Startseite in einem zweiten Reiter prüfen.** Es *muss* 503 kommen —
    kommt eine Seite, steht der Wartungsmodus nicht.
 6. **Wartungsmodus ausschalten.** Startseite erneut: antwortet, und die
@@ -4793,7 +4920,9 @@ und liefert nach. Die sieben Schritte:
 7. Uhr und Handy synchronisieren beim nächsten Kontakt von selbst. Nichts
    ist verloren gegangen; die Geräte haben gepuffert.
 
-**Was währenddessen erreichbar bleibt** (E-S5W-04): `update.php` und
+**Was währenddessen erreichbar bleibt** (E-S5W-04): die drei Betriebsseiten
+`betrieb_updates.php`, `betrieb_jobs.php` und `betrieb_server.php`, dazu
+`update.php` und
 `wiederherstellen.php` (die Arbeit selbst und der Rückweg), `jobs.php` mit
 Token — das Komplett-Backup der Kette läuft **während** der Wartung, genau
 dann ist es konsistent —, `login.php`/`logout.php` und `install.php`. Alles
@@ -4808,7 +4937,8 @@ entsperrtem Inhaltsschlüssel herumliegen, und keine Anmeldung soll
 
 **Der Wartungsmodus lässt sich nicht vergessen — theoretisch.** Es gibt kein
 automatisches Ausschalten und keine Zeitsteuerung (E-S5W-05). Auffallen kann
-ein stehengebliebener Wartungsmodus nur auf `update.php` und `login.php`; auf
+ein stehengebliebener Wartungsmodus nur auf `betrieb_updates.php` und
+`login.php`; auf
 beiden steht dann oben ein oranger Balken mit Zeitpunkt und Konto. Alles
 andere antwortet mit 503, und ein 503 sagt nicht, dass es seit drei Tagen
 kommt.
@@ -4834,7 +4964,7 @@ für das sie da ist.
 
 **Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
 (1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
-(neben `db.php`)? (2) Ist die aufgerufene Seite eine der sechs Ausnahmen?
+(neben `db.php`)? (2) Ist die aufgerufene Seite eine der neun Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
 `php tools/wartungsprobe/probe.php` (40 Erwartungen).
@@ -4874,9 +5004,9 @@ Prüfmittels: `tools/messstand/LIESMICH.md`.
 **Hintergrundjobs einrichten (empfohlen, seit Web 10.1.0):** Nichts tun ist
 erlaubt — dann läuft die Wartung huckepack auf den Anfragen mit, höchstens 3 s
 je Anfrage und frühestens alle 5 Minuten je Job. Ab einigen hunderttausend
-Spurpunkten sollte trotzdem ein echter Zeitgeber her. Adminbereich →
-**`/update.php`** → Abschnitt **„Wann die Jobs laufen"**; dort stehen Befehl
-und Adresse fertig zum Kopieren:
+Spurpunkten sollte trotzdem ein echter Zeitgeber her.
+**Betrieb → Hintergrundjobs** → Karte **„Auslöser"**; dort stehen Befehl
+und Adresse je in einem Wertekasten mit Knopf „kopieren":
 
 1. **Kommandozeile** (bevorzugt): `* * * * * php …/server/jobs.php`. Jede
    Minute ist unbedenklich — ein Lauf ohne Arbeit kostet zwei Abfragen. Die
@@ -4888,8 +5018,9 @@ und Adresse fertig zum Kopieren:
    in eine Mail, nicht in ein Ticket. Ein neues Token macht das alte ungültig;
    ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
-**Spuren werden nicht verdichtet (Rückstand wächst):** `/update.php` → Karte
-„Hintergrundjobs" → Zeile **„Spuren verdichten"**. Darunter steht, was
+**Spuren werden nicht verdichtet (Rückstand wächst):**
+**Betrieb → Hintergrundjobs** → Karte „Zustand" → Zeile
+**„Spuren verdichten"**. Darunter steht, was
 liegenbleibt und warum, mit Kennung: *Lücke in der Nummernfolge* (eine Uhr hat
 ein Teilstück nie nachgeliefert — die Spur bleibt als Zeilen stehen, das ist
 richtig so), *Zu viele Punkte* (über 50 000; aus einem Backup nicht
@@ -4904,7 +5035,7 @@ im Papierkorb liegt.
 **Die Jobs vorübergehend anhalten** (vor einer großen Wiederherstellung, vor
 einer Messung): `php jobs.php --pause 1800`, aufheben mit `--pause 0`. Die
 Pause gilt für alle drei Auslöser, läuft nach höchstens zwei Stunden von selbst
-ab, und die Wartungsseite zeigt sie an. **Sie ist kein Ersatz für ein
+ab, und Betrieb → Hintergrundjobs zeigt sie an. **Sie ist kein Ersatz für ein
 Backup:** Was der Ausdünnungsjob einmal ersetzt hat, ist weg.
 
 **Nach dem Ausrollen von Web 10.2.0 auf einen gewachsenen Bestand:** Der erste
@@ -4916,14 +5047,15 @@ oder ruft einmal `php jobs.php verdichtung` von Hand auf.
 
 **Zeitplan-Eintrag antwortet `429` (`zu_viele_versuche`):** Das Token stimmt
 nicht, und zehn Fehlversuche haben die IP für zehn Minuten gesperrt. Adresse
-aus `/update.php` neu kopieren, dann **zehn Minuten warten** — vorher wird auch
+aus **Betrieb → Hintergrundjobs** neu kopieren, dann **zehn Minuten warten** — vorher wird auch
 der richtige Aufruf abgewiesen.
 
-**Läuft die Wartung noch?** `/update.php` → Karte **„Hintergrundjobs"**: je Job
+**Läuft die Wartung noch?** **Betrieb → Hintergrundjobs** → Karte
+**„Zustand"**: je Job
 letzter Lauf, Auslöser, Rückstand und letzter Fehler. Plakette „scheitert" =
 mindestens ein Job wirft dauerhaft; der Text steht darunter. Plakette
-„Migration ausstehend" = die Tabelle `jobs` fehlt, also wurde `update.php` nach
-dem Ausrollen von Web 10.1.0 nie ausgeführt. Ein wachsender **Rückstand** beim
+„Migration ausstehend" = die Tabelle `jobs` fehlt, also lief der Migrationslauf
+nach dem Ausrollen von Web 10.1.0 nie. Ein wachsender **Rückstand** beim
 Job `waisen` heißt nicht „kaputt", sondern „kommt am Huckepack-Weg nicht
 hinterher" — dann Punkt 1 oder 2 oben einrichten.
 
@@ -4939,7 +5071,8 @@ nach, von der billigsten Prüfung zur teuersten. Alle SQL-Beispiele laufen auf
 der Anwendungsdatenbank; `10` ist `PAIR_TTL_MIN` aus `db.php`.
 
 1. **Ist die Migration gelaufen?** Ohne sie gibt es die Tabelle nicht, und
-   `start` antwortet mit `500`. Adminbereich → **`/update.php`**: die Zeile
+   `start` antwortet mit `500`. **Betrieb → Updates** → Karte „Ausgeführt":
+   die Zeile
    `2026_09_03_kopplungssitzungen` muss „erledigt" tragen — auf einer frisch
    installierten Anlage „übersprungen", weil `schema.sql` die Tabelle schon
    mitbringt. Von der Kommandozeile:
@@ -4950,7 +5083,7 @@ der Anwendungsdatenbank; `10` ist `PAIR_TTL_MIN` aus `db.php`.
     WHERE id = '2026_09_03_kopplungssitzungen';
    ```
 
-   Fehlt beides, wurde `update.php` nach dem Ausrollen nie aufgerufen. Das ist
+   Fehlt beides, lief der Migrationslauf nach dem Ausrollen nie. Das ist
    der häufigste Fall und der einzige, bei dem gar nichts geht.
 
 2. **Kommt der Code überhaupt beim Server an?** Wenn das Gerät einen Code
@@ -5080,15 +5213,17 @@ Solange die Tabelle die Teilenummer nicht kennt, steht in `geraet_art` die
 `"uhr"` — ein Radcomputer wäre bis zum Nachauflösen als Uhr gezählt.
 
 **Code-Update mit DB-Änderung ausrollen:** pushen (Deploy läuft automatisch)
-→ als Admin **`/update.php`** aufrufen → jede Zeile muss die Plakette
-**„erledigt"** tragen. (Bis Web 9.11.1 stand dort ein ✔; seit P3/O11 sagt der
+→ als BetreiberIn **Betrieb → Updates** aufrufen → nach dem Lauf muss die
+Karte „Ausstehende Updates" leer sein („Alles aktuell"), und in der Karte
+„Ausgeführt" muss jede Zeile die Plakette **„erledigt"** tragen. (Bis Web 9.11.1 stand dort ein ✔; seit P3/O11 sagt der
 Status ein Wort — `erledigt` blau, `steht aus` orange, `blockiert` rot,
 `Fehler` rot —, weil Schriftzeichen als Symbol ausgeschlossen sind, E-P3-18.)
 Fehlgeschlagene Migrationen werden nicht verbucht und beim nächsten Aufruf
 erneut versucht; Folge-Migrationen stoppen bis dahin. **Version in `version.php`
 erhöhen** nicht vergessen, sonst sieht der Browser alte Dateien.
 
-**Neue Zusatzfelder für Einsätze:** 1) Migration in `update.php` ergänzen
+**Neue Zusatzfelder für Einsätze:** 1) Migration in `migration_lib.php`
+(`migrationen_katalog()`) ergänzen
 (`ALTER TABLE missions ADD COLUMN …`) und die ID zusätzlich in die
 `skipped`-Liste in `schema.sql` eintragen, 2) Spalte auch ans `CREATE TABLE
 missions` in `schema.sql` anfügen (sonst weichen Neuinstallation und
@@ -5135,7 +5270,7 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
    dort weiter, wo der vorige aufhörte.
 6. **Anmelden** — mit dem Administrationskonto aus dem Backup; die
    Passwörter sind dieselben wie vorher.
-7. **Wartung (`update.php`) aufrufen** und den Migrationslauf ausführen.
+7. **Betrieb → Updates aufrufen** und den Migrationslauf ausführen.
    Nicht optional, wenn das Backup aus einer älteren Fassung stammt — die
    Seite sagt es dann auch. Der Lauf passiert dort und nicht in Schritt 5,
    weil Migrationen Spalten löschen können und dazwischen eine angemeldete
@@ -5201,7 +5336,9 @@ wurde nichts übertragen und kein Passwort gesendet.
 wurden. Entweder den alten wieder eintragen (Wiederanlaufpaket) oder die
 Zugangsdaten am Ziel neu erfassen.
 
-**Wartungsseite, Abschnitt „Schlüsselableitung" (seit Web 5.0.1):** Erscheint
+**Karte „Schlüsselableitung" (seit Web 5.0.1; bis Web 15.0.0 auf der
+Wartungsseite, seit S8/AP2 vorübergehend nicht sichtbar, ab S8/AP4 auf
+Betrieb → Status):** Erscheint
 **nur, wenn es etwas zu melden gibt** — Konten, deren `kdf_iter` nicht in
 `KDF_ITER_LISTE` steht. Sie können sich nicht
 anmelden, und an der Anmeldemaske ist die Ursache nicht zu erkennen — der
@@ -5283,7 +5420,8 @@ BetreiberIn-Konto lässt sich weder zurückstufen noch löschen
 
 **Ein Komplett-Backup aus der Zeit vor 15.0.0** bringt beim Wiederherstellen
 das alte zweiwertige ENUM und lauter `admin` zurück. Das sperrt niemanden aus
-— ein Admin darf verwalten und kommt an `update.php` —, aber der
+— ein Admin darf verwalten, und der CLI-Notausgang `php update.php` fragt
+ohnehin nicht nach einer Rolle —, aber der
 Migrationslauf danach ist Pflicht und stellt die Rollen wieder her. Der
 Wiederherstellungsweg nennt ihn ohnehin als zweiten Schritt.
 
@@ -5625,7 +5763,8 @@ Drei Ebenen, von unten nach oben:
 1. `LOGO_STANDARD_VORGABE` in `session_lib.php` — Hubschrauber. Gilt, solange
    es keine Datenbank gibt (Einrichter) oder nichts gesetzt ist.
 2. `app_state.logo_standard` — der Standard **dieser Installation**, gesetzt in
-   der Wartung (`update.php`). `logo_standard()` liest ihn je Anfrage einmal
+   der Wartung (`update.php`; zieht in S8/AP3 auf Verwaltung → Installation).
+   `logo_standard()` liest ihn je Anfrage einmal
    und fängt jede Ausnahme ab: Das Logo ist Zierde, kein Zugang.
 3. `users.logo_wahl` — die Wahl **eines Kontos** (`''` = folgt dem Standard,
    `hubschrauber`, `fahrzeug`, `wechselnd`).
@@ -5642,7 +5781,7 @@ getroffen haben.
 `$CFG['app']['logo_path']` gewinnt nur noch, wenn dort eine **fremde** Datei
 steht (F-P3-AN). `pw_handling.php` lädt dafür `session_lib.php`.
 
-**Der Platzhalterhinweis** auf der Wartungsseite fragt die Datei, nicht eine
+**Der Platzhalterhinweis** an der Logo-Karte fragt die Datei, nicht eine
 Zahl im Code: `logo_platzhalter_liegt()` liest die ersten 400 Byte von
 `gen-em_logo_fahrzeug.svg` und `…_weiss.svg` und sucht das Wort „PLATZHALTER"
 im Kopfkommentar. Er verschwindet damit von selbst, sobald die echten Dateien

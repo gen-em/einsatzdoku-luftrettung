@@ -460,7 +460,7 @@ $hatSchnitte = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.tables
                                   WHERE table_schema = DATABASE()
                                     AND table_name = 'track_cuts'")->fetchColumn() > 0;
 pruefe($hatSchnitte, 'Tabelle track_cuts vorhanden',
-       $hatSchnitte ? '' : 'update.php ausfuehren (Migration 2026_09_02_schnitte)');
+       $hatSchnitte ? '' : 'Migrationslauf ueber Betrieb -> Updates (2026_09_02_schnitte)');
 
 if ($hatSchnitte) {
     $pdo->beginTransaction();

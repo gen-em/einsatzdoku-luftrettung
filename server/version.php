@@ -2553,4 +2553,50 @@ declare(strict_types=1);
  * Admin sieht. Die Rolle kommt zuerst, weil jede dieser Seiten mit
  * `require_betreiberin()` beginnt.
  */
-const WEB_VERSION = '15.0.0';
+/*
+ * 15.1.0 LOEST DIE WARTUNGSSEITE AUF.
+ *
+ * Sie trug neun Bloecke auf einer Flaeche — Wartungsmodus, Schluesselableitung,
+ * Logo, Umgebung, Hintergrundjobs, Job-Ausloeser, Einsaetze ohne Diensttag,
+ * Migrationsliste und den Balken darueber. Backlog Nr. 77 hiess „aufteilen";
+ * die S8-Sichtung hat daraus „aufloesen" gemacht (E-S8-05, B-S8-03: vier
+ * verschiedene Anliegen auf einer Seite).
+ *
+ * DREI NEUE SEITEN, JEDE MIT EINEM ANLIEGEN:
+ *
+ *   betrieb_updates.php   Wartungsmodus und ausstehende Migrationen. Beides
+ *                         gehoert zusammen, weil es DERSELBE Vorgang ist: Der
+ *                         Ablauf eines Updates ist fuenfstufig, und drei
+ *                         Stufen finden hier statt. Die Karte nennt ihn.
+ *   betrieb_jobs.php      Zustand je Job und die drei Ausloeser.
+ *   betrieb_server.php    Speichergrenze, Warnschwellen, Belegung, Ablage.
+ *
+ * Alle drei verlangen `require_betreiberin()` (R75) — sie sind der erste
+ * Inhalt des Blocks BETRIEB, den 15.0.0 vorbereitet hat. Bis AP5 sind sie nur
+ * ueber die Adresse erreichbar; `update.php` traegt uebergangsweise eine Liste
+ * mit den drei Zielen und die Logo-Karte, die in AP3 umzieht.
+ *
+ * WAS DIE SPEICHERGRENZE HIER ZU SUCHEN HAT. Sie stand unter „Backups", galt
+ * aber auch fuer die Komplett-Staende, und die Komplett-Seite verwies mit
+ * einem Satz auf sie (B-S8-06). Jetzt steht sie mit der Belegung an einer
+ * Stelle. Dazu ein ZWEITER Bezug, den es vorher nicht gab: die ganze
+ * Installation gegen den Webspace laut Hosting. Datenbank und Dateien werden
+ * einmal taeglich im Aufraeumjob gemessen (`speicher_lib.php`); der freie
+ * Webspace wird NICHT gemessen, weil `disk_free_space()` auf geteiltem Hosting
+ * den Datentraeger des Hosts zeigt und nicht die Quota. Er ist eine ANGABE.
+ *
+ * DER MIGRATIONSKATALOG STEHT JETZT IN `migration_lib.php`. Zwei Aufrufer
+ * brauchen ihn — die neue Seite und der Notausgang `php update.php`, der ohne
+ * Sitzung laeuft. Ein Katalog an zwei Stellen waere die schlimmste Loesung:
+ * Die Reihenfolge der Migrationen IST der Mechanismus.
+ *
+ * ZWEI BAUSTEINE SIND DAZUGEKOMMEN, beide freigegeben (E-S8-10, E-S8-18):
+ * `codeblock-lang` — der Wertekasten in kleiner Stufe mit „Kopieren", fuer
+ * Werte mit hundert Zeichen statt sechs (Nr. 78) — und `speicher-balken` mit
+ * Legende und Schwellenstrich. Kein neues Symbol, keine neue Farbe.
+ *
+ * KEINE MIGRATION. Alle neuen Werte liegen in `app_state`, das es laengst
+ * gibt: `webspace_gb`, `speicher_db_bytes`, `speicher_dateien_bytes`,
+ * `speicher_stand`.
+ */
+const WEB_VERSION = '15.1.0';

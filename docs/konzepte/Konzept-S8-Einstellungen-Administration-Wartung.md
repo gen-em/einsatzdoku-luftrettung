@@ -8,9 +8,9 @@ mit Fable nach R14 · Ablage `docs/konzepte/` (R62), Mockups in
 >
 > | | |
 > |---|---|
-> | Stand | 05.09.2026 — **AP1 erledigt** (Web 15.0.0, Migration `2026_09_05_rolle_betreiberin`). Umsetzung auf `claude/umsetzung-buuvfq` |
-> | Paket in Arbeit | **AP2 — Betrieb, Teil 1: Updates, Hintergrundjobs, Servereinstellungen** |
-> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2) |
+> | Stand | 05.09.2026 — **AP1 und AP2 erledigt** (Web 15.0.0 und 15.1.0). Umsetzung auf `claude/umsetzung-buuvfq` |
+> | Paket in Arbeit | **AP3 — Verwaltung: Installation, Konto-Backups, Kontoseite** |
+> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3) |
 > | Wo es hakt | nichts Blockierendes. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). Zu prüfen in AP4: ob eine letzte Mailzustellung aufgezeichnet wird (Z-01); was die Wear-OS-App als `art` sendet (Z-02) |
 > | Umsetzungsumgebung | lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (MariaDB 10.11.14, PHP 8.4.19, Chromium); `00-ist-*`-Bilder vor AP1 aufgenommen |
 > | Fable-Schritt | **das Konzept selbst** (R14, Rahmenplan Schritt 7); die Umsetzung läuft nach K2 mit Opus. Mockup-Freigabe je Darstellung durch den Auftraggeber (`CLAUDE.md` 5) |
@@ -1392,12 +1392,129 @@ wer angemeldet ist. Dieselbe Begründung wie bei 7.0.0.
 AP5 sieht eine BetreiberIn dasselbe wie ein Admin. Die Rolle kommt zuerst,
 weil jede Seite von AP2 und AP4 mit `require_betreiberin()` beginnt.
 
+### 11.3 AP2 — Betrieb, Teil 1: Updates, Jobs, Servereinstellungen (05.09.2026, Web 15.1.0)
+
+**Version:** Web **15.1.0** — Nebennummer. Drei neue Seiten und zwei neue
+Bausteine sind neue Funktionen, kein Umbau: Das Datenmodell bleibt, es gibt
+**keine Migration** (alle neuen Werte liegen in `app_state`, das es längst
+gibt), und die Wege durch die Anwendung ändern sich erst mit dem Menü in AP5 —
+bis dahin sind die drei Seiten nur über ihre Adresse erreichbar. Die
+Hauptnummer 15 hat AP1 vergeben, und zwar für die Rolle.
+
+**Gebaut** (in fünf Commits, je einer Stufe entsprechend):
+
+| Was | Wo |
+|---|---|
+| Migrationskatalog, Register, Lauf, Stand, Inhaltszählung — aus `update.php` herausgelöst | `server/migration_lib.php` (neu, 2 486 Zeilen) |
+| Baustein `ui_codeblock_lang()` (Wertekasten zweite Stufe mit „kopieren") und `lesespalte` im Gerüst | `server/ui.php`, `server/assets/style.css`, `server/assets/kopieren.js` (neu) |
+| Speicher der Installation: zwei Bezüge, Messung im Aufräumjob, Ton nach Schwellen | `server/speicher_lib.php` (neu), `server/jobs_lib.php` |
+| Betrieb → Updates: Wartungsmodus mit Ablauf-Kurzform, Ausstehende, Ausgeführt, Fassung | `server/betrieb_updates.php` (neu) |
+| Betrieb → Hintergrundjobs: Zustand, die drei Auslöser zum Kopieren, „Was hier gilt" | `server/betrieb_jobs.php` (neu) |
+| Betrieb → Servereinstellungen: zwei Speicherbalken, Grenze, Schwellen, Webspace, Ablage | `server/betrieb_server.php` (neu) |
+| Die drei Seiten in die Ausnahmeliste des Wartungsmodus | `server/wartung_lib.php` |
+| Grenze und Schwellen ziehen aus der Backup-Seite ab; Ablage-Karte schlank mit Verweis | `server/admin_sicherungen.php`, `server/admin_komplettsicherung.php` |
+| Übergangsseite mit Wegweiser und Logo-Karte; CLI-Notausgang unverändert | `server/update.php` |
+| Bilderlauf: drei neue Seiten, Wartungsaufnahme zieht auf `betrieb_updates.php` | `tools/screenshots/seiten.json` |
+| Wartungsprobe an die neue Lage angepasst (siehe F-S8-P-06) | `tools/wartungsprobe/probe.php` + `LIESMICH.md` |
+| Doku | `docs/Handbuch.md` 8, `docs/Technik.md` 2, 4.99c, **4.99d (neu)**, 7, `docs/Design.md` 9.18–9.20, `docs/CHANGELOG.md` |
+
+**Entscheidungen der Umsetzung (U-Nummern):**
+
+- **U-AP2-01 — Der Migrationskatalog wird herausgelöst, bevor die Seite
+  entsteht.** Zwei Aufrufer brauchen ihn: die neue Seite und der Notausgang
+  `php update.php`, der ohne Sitzung läuft. Ein `require_once 'update.php'`
+  aus der neuen Seite heraus hätte deren Ausgabe mitgezogen; ein zweiter
+  Katalog wäre die schlimmste Lösung, denn **die Reihenfolge der Migrationen
+  ist der Mechanismus**. Deshalb zuerst `migration_lib.php`, dann alles
+  andere. Gegenprobe nach dem Herauslösen: 43 Einträge im Katalog gegen 43 in
+  der `skipped`-Liste von `schema.sql`.
+- **U-AP2-02 — Der Knopf „kopieren" steht `hidden` im Markup.** Ohne
+  JavaScript bliebe sonst ein Knopf stehen, der nichts tut; das Skript macht
+  ihn sichtbar. Rückfall bei fehlender Berechtigung (kein sicherer Kontext,
+  abgelehnte Freigabe): Text markieren und „markiert — Strg+C" melden. Die
+  Rückmeldung steht **im Knopf** — eine Zeile daneben, die auftaucht und
+  wieder verschwindet, verschöbe das Layout.
+- **U-AP2-03 — Der freie Webspace wird angegeben, nicht gemessen.**
+  `disk_free_space()` liefert auf geteiltem Hosting den Datenträger des
+  *Hosts*, nicht die Quota dieses Kontos. Eine Zahl im Terabyte-Bereich wäre
+  schlimmer als keine: Man glaubte, es sei Platz. Ohne die Angabe zeigt der
+  zweite Balken nur die Summe — ohne Anteil und ohne Warnung.
+- **U-AP2-04 — Gemessen wird im Aufräumjob, nicht beim Seitenaufruf.**
+  Verzeichnislauf plus `information_schema` kosten mehr, als eine Seite kosten
+  darf, und die Zahlen ändern sich in Stunden. `speicher_messen()` hängt als
+  letzter Schritt am täglichen `job_aufraeumen()`. Ein **Teilergebnis wird
+  auch geschrieben**: Scheitert der Verzeichnislauf, steht dort 0 — als „nicht
+  messbar" erkennbar, während ein alter Wert mit frischem Zeitstempel eine
+  Lüge wäre.
+- **U-AP2-05 — `sicherungen/` zählt im Dateilauf nicht mit.** Die Backups
+  stehen im zweiten Balken als eigene Segmente; zweimal in dieselbe Summe
+  genommen ergäbe das einen Balken über 100 %.
+- **U-AP2-06 — Die Karte „Wartungsmodus" trägt den Ablauf als nummerierte
+  Liste.** Fünf Schritte, drei davon auf dieser Seite. Der Ablauf stand bisher
+  nur im Runbook; wer den Schalter sieht, sieht jetzt auch, wo im Vorgang er
+  steht. Kein neuer Baustein — ein `<ol>` in einem `<div class="text">`.
+- **U-AP2-07 — Die Wartungsaufnahme des Bilderlaufs zieht mit dem Schalter
+  um.** `45a-wartung-aktiv` (auf `update.php`) ist entfallen,
+  `46a-betrieb-updates-wartung` ist an seine Stelle getreten. Die
+  Übergangsseite trägt den Balken zwar weiter, aber die Aufnahme soll die
+  Seite zeigen, auf der man den Modus **schaltet**.
+
+**Probleme und Funde:**
+
+- **F-S8-P-04 (behoben): Der Wartungsmodus sperrte sich selbst aus.**
+  `betrieb_updates.php` stand nicht in `WARTUNG_AUSNAHMEN`. Einschalten
+  gelang, und die Antwort auf das Neuladen war **503** — von genau der Seite,
+  auf der der Ausschalter steht. Der Weg zurück wäre `rm server/wartung.lock`
+  per SSH gewesen. Alle drei Betriebsseiten stehen jetzt in der Liste, und die
+  Wartungsprobe misst es (Erwartung 6, für alle drei einzeln).
+- **F-S8-P-05 (behoben): Nach einem Fehler verschwanden die Migrationen
+  dahinter aus der Anzeige.** Der Lauf brach ab, und die Karte zählte
+  daraufhin weniger Ausstehende, als es gab — die Zahl war also **kleiner**
+  als die Wahrheit, was die gefährlichere Richtung ist. Jetzt trägt jede
+  Migration hinter dem Abbruch den Zustand `steht aus` mit dem Text „NICHT
+  MEHR VERSUCHT — der Lauf hat davor abgebrochen." Gemessen mit vier
+  Testmigrationen, eine davon scheiternd: Zählung 3 in allen drei Ansichten.
+- **F-S8-P-06 (behoben): Die Wartungsprobe maß gegen die alte Entscheidung.**
+  Nach AP2 meldete `tools/wartungsprobe/probe.php` **6 von 40 Erwartungen
+  nicht erfüllt** — sie holte den Schalter von `update.php`, verlangte die
+  sechs alten Ausnahmen und suchte in `login.php` nach dem Vergleich
+  `!== 'admin'`, den AP1 durch `rolle_darf_verwalten()` ersetzt hat. Das ist
+  kein Fehler der Anwendung, sondern ein Prüfmittel, das seiner Sache
+  hinterherhinkt — und ohne die Anpassung hätte es ab hier bei **jedem** Lauf
+  rot gemeldet und wäre dadurch wertlos geworden. Angepasst und um zwei
+  Erwartungen erweitert (die beiden anderen Betriebsseiten, die
+  Übergangsseite): **42 Erwartungen, 0 nicht erfüllt.** Das verwaltende Konto
+  der Probe trägt jetzt die Rolle `betreiberin` — ein bloßer `admin` käme an
+  `betrieb_updates.php` nicht hinein, und die Probe mäße den Wächter statt des
+  Tors.
+- **Kein Fehler der Anwendung, aber festgehalten:** Eine Testmigration mit
+  `SELECT 1` brach mit `SQLSTATE[HY000] 2014 Cannot execute queries while
+  other unbuffered queries are active` ab. Das ist eine Eigenschaft des
+  ungepufferten PDO-Modus und trifft jede Migration, die eine Ergebnismenge
+  offen lässt — echte Migrationen sind DDL und haben keine. Die Testmigration
+  wurde auf `CREATE TABLE IF NOT EXISTS` umgestellt.
+- **Aufgeräumt (Vollständigkeit):** Drei Pixelwerte außerhalb der Token
+  (`border-radius:2px`, `margin-right:4px`, `vertical-align:-1px`) sind durch
+  `var(--radius-rund)`, `var(--abstand-1)` und `middle` ersetzt; zwei
+  abgeleitete Token (`--balken`, `--balken-punkt`) sind neu und in `Design.md`
+  eingetragen.
+
+**Was AP2 ausdrücklich noch nicht tut:** die Karten **Schlüsselableitung** und
+**Umgebung**. Sie ziehen in AP4 auf `betrieb_status.php` und sind bis dahin
+**nirgends sichtbar** — bewusst in Kauf genommen (die Übergangsseite sagt es),
+weil beide nur im Fehlerfall etwas zeigen und ein vierter Ort in AP2 ein Ort
+zu viel gewesen wäre. Die Logo-Karte steht bis AP3 weiter auf `update.php`.
+Der Bericht „Einsätze ohne Diensttag" ist mit E-S8-17 ersatzlos entfallen.
+
+---
+
 ---
 
 ## Änderungsverlauf dieses Dokuments
 
 | Datum | Was |
 |---|---|
+| 05.09.2026 | **AP2 erledigt** (Web 15.1.0): die Wartungsseite aufgelöst — `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`; Migrationskatalog nach `migration_lib.php`; Speichermessung im Aufräumjob (`speicher_lib.php`); zwei Bausteine (`codeblock-lang`, `speicher-balken`). Drei Funde (F-S8-P-04 bis -06), alle behoben — darunter ein Wartungsmodus, der sich selbst aussperrte. Umsetzungsentscheidungen U-AP2-01 bis -07 |
 | 05.09.2026 | **AP1 erledigt** (Web 15.0.0): dritte Rolle mit Migration, Hierarchie über `ist_admin()`, zwei Schranken, `install.php` legt BetreiberIn an, Profil zeigt die Rolle. Drei Funde (F-S8-P-01 bis -03), alle behoben — darunter eine seit dem Merge `589982b` unbrauchbare `ausnahmen.json` der Wortliste. Umsetzungsentscheidungen U-AP1-01 bis -06 |
 | 05.09.2026 | **Schritt 5 erledigt** (Umsetzungsinstanz, Opus): Konzept, Prüfdokument und zwölf Mockups im Repositorium; Rahmenplan auf Fassung 28 (R74–R77, Schritte 7, 8, 10, Abschnitte 4, 5, 6, K1), Backlog 73–80 vermerkt, 80 geteilt, 117–122 angelegt. Statusblock, Abschnitt 10 und **Abschnitt 11 (Umsetzungsprotokoll)** angelegt |
 | 05.09.2026 | Angelegt: Statusblock, Konzeptablauf, Aufgabe, Befund (Abschnitt 2 vollständig), F-S8-01 bis -06; F-S8-01, -03, -05 beantwortet |

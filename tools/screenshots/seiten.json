@@ -257,18 +257,19 @@
       "rolle": "admin",
       "pfad": "update.php"
     },
-    {
-      "name": "45a-wartung-aktiv",
-      "gruppe": "Administration",
-      "rolle": "admin",
-      "pfad": "update.php",
-      "wartung": true
-    },
+
     {
       "name": "46-betrieb-updates",
       "gruppe": "Betrieb",
       "rolle": "admin",
       "pfad": "betrieb_updates.php"
+    },
+    {
+      "name": "46a-betrieb-updates-wartung",
+      "gruppe": "Betrieb",
+      "rolle": "admin",
+      "pfad": "betrieb_updates.php",
+      "wartung": true
     },
     {
       "name": "47-betrieb-jobs",

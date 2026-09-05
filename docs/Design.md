@@ -325,37 +325,37 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-89 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+91 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--schnee` | `#FFFCFA` | 37 |  |
-| `--rauch` | `#F7F5ED` | 23 |  |
-| `--sand` | `#D4C7AD` | 8 |  |
+| `--schnee` | `#FFFCFA` | 34 |  |
+| `--rauch` | `#F7F5ED` | 24 |  |
+| `--sand` | `#D4C7AD` | 10 |  |
 
 **Schrift**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 18 |  |
-| `--dunkelblau` | `#1A2E4D` | 43 |  |
-| `--gedaempft` | `#6E6459` | 43 |  |
+| `--dunkelblau` | `#1A2E4D` | 47 |  |
+| `--gedaempft` | `#6E6459` | 46 |  |
 | `--auf-dunkel` | `#FFFFFF` | 7 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 28 |  |
+| `--linie` | `#E3DAC6` | 29 |  |
 | `--linie-stark` | `var(--gedaempft)` | 11 |  |
 
 **Orange — Handeln**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--orange` | `#FF8F1F` | 25 |  |
+| `--orange` | `#FF8F1F` | 27 |  |
 | `--orange-tief` | `#C25A00` | 13 |  |
 | `--orange-hell` | `#FFEBD6` | 18 |  |
 
@@ -363,7 +363,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--blau` | `#4280E5` | 10 |  |
+| `--blau` | `#4280E5` | 11 |  |
 | `--blau-tief` | `#1F4E9C` | 14 |  |
 | `--blau-hell` | `#D9ECFD` | 4 |  |
 
@@ -371,9 +371,9 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--rot` | `#D63338` | 12 |  |
-| `--rot-tief` | `#9E2226` | 13 |  |
-| `--rosa` | `#FCE2D6` | 5 |  |
+| `--rot` | `#D63338` | 13 |  |
+| `--rot-tief` | `#9E2226` | 15 |  |
+| `--rosa` | `#FCE2D6` | 6 |  |
 
 **Primärknopf**
 
@@ -387,8 +387,8 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--groesse-1` | `12px` | 6 |  |
-| `--groesse-2` | `13px` | 34 |  |
-| `--groesse-3` | `15px` | 8 |  |
+| `--groesse-2` | `13px` | 36 |  |
+| `--groesse-3` | `15px` | 9 |  |
 | `--groesse-4` | `16px` | 10 |  |
 | `--groesse-5` | `19px` | 6 |  |
 | `--groesse-6` | `24px` | 3 |  |
@@ -401,11 +401,11 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 53 |  |
-| `--abstand-2` | `8px` | 76 |  |
-| `--abstand-3` | `12px` | 99 |  |
-| `--abstand-4` | `16px` | 54 |  |
-| `--abstand-5` | `24px` | 15 |  |
+| `--abstand-1` | `4px` | 55 |  |
+| `--abstand-2` | `8px` | 83 |  |
+| `--abstand-3` | `12px` | 108 |  |
+| `--abstand-4` | `16px` | 50 |  |
+| `--abstand-5` | `24px` | 20 |  |
 
 **Radien**
 
@@ -413,7 +413,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 18 | Plakette, Kästchen, Eingabefeld |
 | `--radius` | `10px` | 16 | Knopf, Meldung |
-| `--radius-gross` | `12px` | 5 | Karte, Blatt, Dialog |
+| `--radius-gross` | `12px` | 6 | Karte, Blatt, Dialog |
 
 **Maße**
 
@@ -434,14 +434,16 @@ auseinanderlaufen kann.
 | `--symbol` | `20px` | 10 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 9 | Symbolgröße im Knopf und Kartenkopf |
 | `--strich` | `1px` | 38 | Haarlinie |
-| `--strich-stark` | `2px` | 26 | Aktivstrich, Randstrich, Fokus |
-| `--radius-rund` | `999px` | 12 | Zähler, Griff, Punkt — voll rund |
+| `--strich-stark` | `2px` | 28 | Aktivstrich, Randstrich, Fokus |
+| `--radius-rund` | `999px` | 16 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
 | `--schalter-punkt` | `20px` | 4 | 44-px-Zeile passt und greifbar bleibt |
 | `--geo-kreis` | `32px` | 2 | Einsatzort-Kreis auf der Karte |
 | `--geo-schild` | `36px` | 2 | Kästchen für Standort und Zielklinik |
 | `--geo-ring` | `3px` | 10 | Ringstärke Start/Ende am Schild |
+| `--balken` | `8px` | 1 | Höhe des Speicherbalkens |
+| `--balken-punkt` | `10px` | 2 | Farbpunkt in seiner Legende |
 | `--anmeldekarte` | `400px` | 1 | Karte der Anmeldung (E-P3-38) |
 | `--zeile-frei` | `1.4em` | 1 | Mindesthöhe der Zustandszeile |
 | `--balken-glied` | `28px` | 1 | ein Segment des Passwortstärke- … |
@@ -485,7 +487,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--dauer` | `.18s` | 7 |  |
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
-| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 8 |  |
+| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 7 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
 | `--auf-dunkel-leise` | `rgba(255,255,255,.55)` | 1 |  |
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 2 |  |
@@ -661,10 +663,10 @@ neben „Standard der Installation" sprengt sonst jede Zeile.
 | `@media (min-width:1600px)` | 2 |
 | `@media (min-width:1200px)` | 3 |
 | `@media (min-width:1024px)` | 2 |
-| `@media (min-width:720px)` | 11 |
+| `@media (min-width:720px)` | 12 |
 | `@media (max-width:479px)` | 1 |
 
-Zusammen 19 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 20 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -734,22 +736,22 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 |---|---|--:|
 | `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 2 |
-| `datenbank.svg` | Tabler Icons „database" (MIT) | 5 |
+| `datenbank.svg` | Tabler Icons „database" (MIT) | 12 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
-| `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 19 |
+| `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 0 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 19 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 23 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 3 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 20 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 19 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 24 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
-| `karte.svg` | Tabler Icons „map-2" (MIT) | 12 |
+| `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 2 |
-| `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 17 |
+| `kolben.svg` | Tabler Icons „flask" (MIT) | 4 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 20 |
 | `luftlinie.svg` | — | 0 |
-| `lupe.svg` | Tabler Icons „search" (MIT) | 9 |
+| `lupe.svg` | Tabler Icons „search" (MIT) | 8 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
@@ -757,25 +759,25 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `plus.svg` | Tabler Icons „plus" (MIT) | 16 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 4 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 13 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 14 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 17 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 3 |
-| `schliessen.svg` | Tabler Icons „x" (MIT) | 8 |
+| `schliessen.svg` | Tabler Icons „x" (MIT) | 9 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
-| `schloss.svg` | Tabler Icons „lock" (MIT) | 7 |
-| `sicherung.svg` | Tabler Icons „archive" (MIT) | 11 |
+| `schloss.svg` | Tabler Icons „lock" (MIT) | 9 |
+| `sicherung.svg` | Tabler Icons „archive" (MIT) | 12 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 3 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 5 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 9 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 7 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 13 |
-| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 4 |
+| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 273 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
-| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 15 |
+| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 27 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 2 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 14 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
-| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 25 |
+| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 27 |
 
 44 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `geraet-entkoppeln`, `luftlinie`, `reanimation`.
@@ -828,36 +830,38 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 108 |
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 141 |
 | `ui_symbol()` | `.symbol` | ja (+6 Unterklassen) | 194 |
-| `ui_logo()` | — | Hüllenfunktion, kein eigenes Element | 261 |
-| `ui_kopf()` | `.kopf` | ja (+21 Unterklassen) | 317 |
-| `ui_geruest_start()` | `.inhalt` | ja | 389 |
-| `ui_leiste_ende()` | `.leiste` | ja (+8 Unterklassen) | 453 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 475 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 514 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 667 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja | 742 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 821 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 864 |
-| `ui_meldung_markup()` | `.meldung` | ja (+10 Unterklassen) | 931 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 965 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1007 |
-| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1037 |
-| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1088 |
-| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1104 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1146 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1188 |
-| `ui_feld()` | `.feld` | ja (+20 Unterklassen) | 1252 |
-| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1310 |
-| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1354 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1407 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1451 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1534 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1584 |
-| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1625 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1682 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 1835 |
+| `ui_logo_masse()` | `.logo-masse` | **keine** | 286 |
+| `ui_kopf()` | `.kopf` | ja (+21 Unterklassen) | 341 |
+| `ui_geruest_start()` | `.inhalt` | ja | 416 |
+| `ui_leiste_ende()` | `.leiste` | ja (+8 Unterklassen) | 486 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 508 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 547 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 700 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja | 786 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 866 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 909 |
+| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 976 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1022 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1075 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1101 |
+| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1131 |
+| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1182 |
+| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1198 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1240 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1282 |
+| `ui_feld()` | `.feld` | ja (+23 Unterklassen) | 1351 |
+| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1416 |
+| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1460 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1513 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1557 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1640 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1698 |
+| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1739 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1796 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 1949 |
 
-32 Funktionen mit Markup in `server/ui.php`, davon 5 Hüllenfunktionen ohne eigenes Element.
+33 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+**Ohne Regel im Stylesheet:** `ui_logo_masse()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
 
@@ -1380,6 +1384,112 @@ die Umsetzung ihm bewusst nicht folgt — die Begründung steht im Kopf von
 Regionseinstellung des Betriebssystems und wird bei einer 12-Stunden-Region
 zu „01:30 PM", auch auf deutscher Oberfläche. In einer Notfalldokumentation
 ist das eine Fehlerquelle.
+
+### 9.18 Wertekasten, zweite Stufe (`.codeblock-lang`)
+
+*Neu mit Web 15.1.0 (S8/AP2). Entscheidung E-S8-10, Backlog Nr. 78, Mockup
+`docs/konzepte/konzept-s8/mockups/06-hintergrundjobs.html`, freigegeben am
+05.09.2026.*
+
+Der Wertekasten hat zwei Stufen, und der Unterschied ist die **Länge des
+Werts**:
+
+| Stufe | Klasse | Wofür | Schrift |
+|---|---|---|---|
+| groß | `.codeblock-wert` | sechs Zeichen, die jemand abschreibt: Geräte-ID, Wiederherstellungsschlüssel | `--groesse-5`, 600, gesperrt (`.06em`) |
+| klein | `.codeblock-wert-lang` | sechzig bis hundert Zeichen, die jemand kopiert: Cron-Zeile, Token-Adresse, Setz-Link, Serverschlüssel-Zeile, API-Schlüssel | `--groesse-2`, 400, ohne Sperrung, `word-break:break-all` |
+
+```
+.codeblock.codeblock-lang     der Kasten (flex, Wert links, Knopf rechts)
+  .codeblock-text             die Textspalte (flex:1 1 auto, min-width:0)
+    .codeblock-titel          optionale Kleinzeile darüber („Adresse")
+    .codeblock-wert-lang      der Wert, data-kopierwert
+  .knopf.knopf-leise          „Kopieren", data-kopieren, im Markup hidden
+```
+
+**Gebaut wird er mit `ui_codeblock_lang($wert, $titel)`** — der Knopf ist Teil
+des Bausteins und nicht Sache der Seite. Ein Wert, den man kopieren soll, und
+ein Knopf, der ihn kopiert, gehören zusammen; sonst baut ihn die nächste Seite
+anders. Die Seite nimmt `assets/kopieren.js` in `ui_seite_ende(['skripte' =>
+…])` mit.
+
+**Der Knopf steht im Markup auf `hidden`** und wird vom Skript eingeblendet.
+Ohne JavaScript gäbe es sonst einen Knopf, der nichts tut — und das ist
+schlechter als keiner. Der Wert bleibt in beiden Fällen lesbar und markierbar.
+
+**Kein Symbol am Knopf.** Der Vorrat (Kapitel 8) hat keines für „kopieren",
+und ein neues bräuchte Freigabe mit Mockup. Das Wort tut es. Ohne
+Zwischenablage-Berechtigung markiert der Knopf den Wert und sagt „markiert —
+Strg+C"; die Rückmeldung steht **im Knopf** und nicht daneben, weil ein Kasten,
+der aufklappt, den Rest der Seite verschiebt.
+
+### 9.19 Speicherbalken (`.speicher-balken`)
+
+*Neu mit Web 15.1.0 (S8/AP2). Entscheidung E-S8-18, Mockup
+`docs/konzepte/konzept-s8/mockups/07-servereinstellungen.html` Fassung 2,
+freigegeben am 05.09.2026.*
+
+Zwei Fragen, die eine Zahlenreihe nicht beantwortet: **Wie voll ist es, und
+woraus besteht das?** „1,3 GB von 2 GB" sagt das Erste; erst die Segmente
+sagen, dass davon 0,9 GB Konto-Backups sind und 0,4 GB Komplett-Stände — und
+damit, an welcher Schraube man dreht.
+
+```
+.speicher-balken              8 px hoch (--balken), voll gerundet, flex
+  > span.sb-*                 ein Segment je Art, Breite inline (gerechnet)
+  > span.speicher-luecke      unsichtbarer Platzhalter bis zur Schwelle
+  > span.speicher-marke       der Schwellenstrich (--strich-stark)
+.speicher-legende             darunter, --groesse-2, gedämpft
+  > span > i.sb-*             der Farbpunkt (--balken-punkt, voll gerundet)
+```
+
+| Klasse | Art | Farbe |
+|---|---|---|
+| `.sb-konto` | Konto-Backups | `--blau` |
+| `.sb-komplett` | Komplett-Backups | `--dunkelblau` |
+| `.sb-db` | Datenbank | `--orange` |
+| `.sb-dateien` | Dateien der Anwendung | `--sand` |
+| `.sb-frei` | frei (nur in der Legende) | `--linie` |
+
+**Die Breite steht inline, die Farbe nicht.** Die Breite ist ein gerechneter
+Wert und kann gar nicht anders als am Element stehen; die Farbe kommt aus einer
+Klasse, damit kein Token im Markup landet (Grundregel 4). Die beiden
+`style="width:…%"` sind der einzige neue Eintrag in der Zählung der
+Vollständigkeitsprüfung.
+
+**Dieselbe Art hat in beiden Balken dieselbe Farbe.** Wer von „Backups" nach
+„Installation gesamt" schaut, soll die Konto-Backups wiedererkennen.
+
+**Ohne Bezugsgröße keine Anteile.** Fehlt die Webspace-Angabe, werden die
+Segmente anteilig **zueinander** gezeichnet, und die Legende nennt nur die
+Summe: Der Balken zeigt dann die Zusammensetzung, nicht die Füllung. Alles
+andere hieße, eine Bezugsgröße zu erfinden.
+
+**Der Ton der Plakette folgt den Warnschwellen** — unter der ersten neutral
+(blau), ab der ersten orange, ab der letzten rot. Eine Regel
+(`speicher_ton()`) für Balken, Plakette und später die Statusseite; sonst
+färbt sich der Balken orange, während der Status noch „in Ordnung" sagt.
+Gemessen bei Schwellen 70/90: 36 % blau, 71 % orange, 88 % orange, 95 % rot,
+100 % rot.
+
+**Zwei neue Token, beide abgeleitet:** `--balken: 8px` ist `--abstand-2`, also
+eine Stufe des Vierer-Rasters — ein Balken, der eine Zeile Grafik ist und keine
+Fläche. `--balken-punkt: 10px` ist `--radius`, die kleinste Rundung der Skala,
+und ergibt einen Punkt, der neben 13-px-Text lesbar ist, ohne ihn zu
+überragen.
+
+### 9.20 Lesespalte im Gerüst
+
+*Neu mit Web 15.1.0.* `ui_geruest_start(['lesespalte' => true])` setzt
+`.rahmen-lesespalte` und begrenzt die Inhaltsspalte auf `--lesespalte`
+(760 px). Die Regel gab es seit P3 — sie war nur für Seiten **ohne** Leiste
+gebaut (Anmeldung, Rechtstexte, Wiederherstellung) und über das Gerüst nicht
+erreichbar.
+
+**Wann.** Seiten mit wenigen Karten und viel Erklärtext: Betrieb →
+Servereinstellungen ist die erste. Eine Formularzeile über 1600 px zu ziehen
+macht sie nicht besser lesbar, sondern schlechter. Seiten mit vielen Karten
+bekommen stattdessen die Zweispaltenregel (E-S8-18, ab AP5).
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 

@@ -14,6 +14,99 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.1.0] — 2026-09-05
+
+### Web — die Wartungsseite ist aufgelöst (S8/AP2, Backlog Nr. 77 und 78)
+
+Neun Blöcke auf einer Fläche: Wartungsmodus, Schlüsselableitung, Logo,
+Umgebung, Hintergrundjobs, Job-Auslöser, Einsätze ohne Diensttag,
+Migrationsliste — und darüber der Balken. Der Backlog-Punkt hieß
+„aufteilen"; die S8-Sichtung hat daraus **auflösen** gemacht, weil das
+eigentliche Problem nicht die Menge war, sondern die Mischung: vier
+verschiedene Anliegen, die nichts miteinander zu tun haben (B-S8-03).
+
+**Drei neue Seiten, jede mit einem Anliegen** — die ersten des neuen
+Menüblocks *Betrieb*, alle mit `require_betreiberin()` (R75):
+
+- **Updates** trägt den **Wartungsmodus** und die **ausstehenden
+  Migrationen**. Beides zusammen, weil es derselbe Vorgang ist: Der Ablauf
+  eines Updates ist fünfstufig — Backup prüfen, Wartung an, Deploy,
+  Migrationen, Wartung aus —, und drei dieser Stufen finden hier statt. Die
+  Karte nennt den Ablauf, statt ihn im Runbook zu lassen. Die Liste zeigt
+  nach **R66 nur noch, was aussteht**; die 43 ausgeführten liegen zugeklappt
+  darunter und entfallen mit dem Audit-Protokoll in P5. Statt des alten
+  Knopfs „Zum Backup", der auf die `.edbak`-Datei eines Kontos zeigte —
+  also auf das falsche Backup —, nennt eine Meldung jetzt den **jüngsten
+  Komplett-Stand mit Alter**.
+- **Hintergrundjobs** trägt Zustand und Auslöser. Der Fehlertext eines Jobs
+  steht in seiner Kleinzeile statt als eigene Meldung darunter: Er gehört an
+  den Job, und bei sieben Jobs kostete jede Meldung eine eigene Fläche.
+- **Servereinstellungen** trägt **Speichergrenze, Warnschwellen und
+  Belegung**. Die Grenze stand unter „Backups", galt aber auch für die
+  Komplett-Stände, und die Komplett-Seite verwies mit einem Satz auf sie
+  (B-S8-06) — genau die Art von gewachsener Ordnung, um die es in Nr. 79
+  geht. Was **je Konto** gilt (Erinnerung, Aufbewahrung, Admin-Mail), bleibt
+  bei den Konto-Backups.
+
+**Zwei Balken, zwei Bezüge.** „Backups" gegen die Speichergrenze, wie
+bisher — und neu „Installation gesamt" gegen den **Webspace laut Hosting**:
+Datenbank, Dateien, Konto-Backups, Komplett-Backups. Datenbank und Dateien
+werden einmal täglich im Aufräumjob gemessen (`information_schema` und ein
+Verzeichnislauf ohne `sicherungen/`); der Stand steht im Kartenkopf. Der
+**freie Webspace wird nicht gemessen**: `disk_free_space()` liefert auf
+geteiltem Hosting den Datenträger des Hosts und nicht die Quota — eine Zahl
+im Terabyte-Bereich, die nichts mit dem Tarif zu tun hat. Er ist deshalb
+eine **Angabe** der Betreiberin, und ohne sie zeigt der zweite Balken nur
+die Zusammensetzung, ohne Füllstand. Versendete Pakete auf Backup-Zielen
+zählen nirgends mit; sie liegen außerhalb dieses Webspace.
+
+**Der Wertekasten hat eine zweite Stufe** (Backlog Nr. 78). Die große ist
+für sechs Zeichen gemacht — Geräte-ID, Wiederherstellungsschlüssel — und
+wurde auch für die Cron-Zeile, die Token-Adresse, den Setz-Link und die
+Serverschlüssel-Zeile benutzt: Werte mit hundert Zeichen, die in dieser
+Größe über drei Zeilen brechen und aussehen, als seien sie zum Vorlesen
+gedacht. Die kleine Stufe bricht an beliebiger Stelle und steht neben einem
+leisen Knopf **„Kopieren"** — weil ein hundertstelliges Geheimnis
+abgeschrieben ein Tippfehler ist. Ohne JavaScript erscheint der Knopf gar
+nicht erst; ohne Zwischenablage-Berechtigung markiert er den Wert und sagt
+es. Ein Symbol bekommt er nicht: Der Vorrat hat keines für „kopieren", und
+ein neues bräuchte Freigabe mit Mockup.
+
+**Der Migrationskatalog steht jetzt in `migration_lib.php`.** Zwei Aufrufer
+brauchen ihn — die neue Seite und der Notausgang `php update.php`, der ohne
+Sitzung läuft, für den Fall, dass die Anmeldung selbst von einer Migration
+abhängt. Ein Katalog an zwei Stellen wäre die schlechteste aller Lösungen:
+Die Reihenfolge der Migrationen *ist* der Mechanismus.
+
+**Drei Funde bei der Prüfung, alle behoben:**
+
+- Die Seite, die den Wartungsmodus einschaltet, sperrte sich damit **selbst
+  aus**: `betrieb_updates.php` stand nicht in der Ausnahmeliste, und der
+  Ausschalter antwortete mit 503. Alle drei Betriebsseiten stehen jetzt
+  darin, jede mit eigener Begründung.
+- Nach einer **gescheiterten** Migration verschwanden die dahinterstehenden
+  aus der Anzeige — die Kette hält an, und die Übrigen bekamen keine Zeile.
+  Auf der alten Seite fiel das kaum auf, weil sie ohnehin alle 43 zeigte;
+  auf der neuen steht eine **Zahl** im Kartenkopf, und die war damit falsch.
+  Sie stehen jetzt als „NICHT MEHR VERSUCHT" da.
+- Die **Wartungsprobe** (`tools/wartungsprobe/`) maß gegen die alte Lage und
+  meldete 6 von 40 Erwartungen nicht erfüllt — sie suchte den Schalter auf
+  `update.php`, verlangte die sechs alten Ausnahmen und den Rollenvergleich,
+  den 15.0.0 durch ein Prädikat ersetzt hat. Kein Fehler der Anwendung, aber
+  ein Prüfmittel, das ab hier jedes Mal rot gemeldet hätte, ist wertlos:
+  Man gewöhnt sich an das Rot. Angepasst und um die beiden anderen
+  Betriebsseiten erweitert — **42 Erwartungen, 0 nicht erfüllt**.
+
+`update.php` trägt übergangsweise nur noch die Logo-Karte und eine Liste mit
+den drei Zielen; ab AP3 ist es eine Weiterleitung und bleibt es bis P6. Die
+Karte **„Einsätze ohne Diensttag" ist ersatzlos entfallen** (E-S8-17): Jede
+NutzerIn sieht ihre eigenen als *Zuordnung offen* in der Diensttage-Leiste
+und ordnet sie selbst zu — die Admin-Karte war ein Reparaturwerkzeug aus der
+Einführung des Diensttag-Modells und blieb stehen.
+
+**Keine Migration.** Alle neuen Werte liegen in `app_state`: `webspace_gb`,
+`speicher_db_bytes`, `speicher_dateien_bytes`, `speicher_stand`.
+
 ## [Web 15.0.0] — 2026-09-05
 
 ### Web — der Betrieb bekommt eine eigene Rolle (S8/AP1, R75)

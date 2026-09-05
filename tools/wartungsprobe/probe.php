@@ -9,9 +9,14 @@ declare(strict_types=1);
  * zu scheitern. Sie kann zu WENIG sperren — dann laeuft eine Uhr waehrend
  * einer Migration in eine halb umgebaute Datenbank und bekommt 500 statt
  * 503, und ein 500 ist fuer sie ein Grund, den Puffer NICHT zu behalten.
- * Und sie kann zu VIEL sperren — dann kommt die Administratorin nicht mehr
- * an `update.php`, und die Installation bleibt geschlossen, bis jemand per
- * SSH eine Datei loescht. Beide Richtungen misst diese Probe.
+ * Und sie kann zu VIEL sperren — dann kommt die Betreiberin nicht mehr an
+ * `betrieb_updates.php`, und die Installation bleibt geschlossen, bis jemand
+ * per SSH eine Datei loescht. Beide Richtungen misst diese Probe.
+ *
+ * SEIT S8/AP2 liegt der Schalter auf `betrieb_updates.php` statt auf
+ * `update.php`, und die drei Betriebsseiten stehen in der Ausnahmeliste. Sie
+ * MUESSEN dort stehen: Ohne den Eintrag antwortete ausgerechnet die Seite mit
+ * dem Ausschalter mit 503 (F-S8-P-04). Genau das misst Erwartung 6.
  *
  * UEBER ECHTES HTTP (Muster `tools/kopplungsprobe/`): Geprueft wird ein
  * Verhalten, das an Kopfzeilen haengt — Statuscode, `Retry-After`,
@@ -175,8 +180,11 @@ function wartung_weg(): void {
 $emailAdmin = 'wartungsprobe-admin@gen-em.org';
 $emailUser  = 'wartungsprobe-user@gen-em.org';
 $pdo->prepare('DELETE FROM users WHERE email IN (?, ?)')->execute([$emailAdmin, $emailUser]);
+/* Rolle `betreiberin` seit S8/AP1: `betrieb_updates.php` — die Seite mit dem
+ * Schalter — beginnt mit `require_betreiberin()`. Ein blosser `admin` kaeme
+ * dort nicht hinein, und die Probe maesse dann den Waechter statt des Tors. */
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
-               VALUES (?, 'Wartungsprobe Admin', 'admin', '', '', 320000)")->execute([$emailAdmin]);
+               VALUES (?, 'Wartungsprobe BetreiberIn', 'betreiberin', '', '', 320000)")->execute([$emailAdmin]);
 $uidAdmin = (int)$pdo->lastInsertId();
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'Wartungsprobe Nutzer', 'user', '', '', 320000)")->execute([$emailUser]);
@@ -275,16 +283,28 @@ pruefe($a5['code'] === 503 && ($a5['daten']['error'] ?? '') === 'maintenance'
  * ====================================================================== */
 echo "\n  Teil 2 — mit Wartung: was offen bleibt\n";
 
-$a6 = hole('update.php', $sidAdmin);
-pruefe($a6['code'] === 200, '6   update.php mit Admin-Sitzung -> 200', 'HTTP ' . $a6['code']);
+$a6 = hole('betrieb_updates.php', $sidAdmin);
+pruefe($a6['code'] === 200, '6   betrieb_updates.php mit BetreiberIn-Sitzung -> 200',
+       'HTTP ' . $a6['code']);
 pruefe(str_contains($a6['rumpf'], 'Wartungsmodus seit'),
        '6   ... traegt den Balken „Wartungsmodus seit"');
 pruefe(str_contains($a6['rumpf'], 'Wartungsmodus ausschalten'),
        '6   ... und den Knopf „Wartungsmodus ausschalten"');
 
-$a7 = hole('update.php', $sidUser);
-pruefe($a7['code'] !== 503, '7   update.php mit NUTZER-Sitzung: nicht 503 (Abweisung wie sonst)',
+$a6b = hole('betrieb_jobs.php', $sidAdmin);
+$a6c = hole('betrieb_server.php', $sidAdmin);
+pruefe($a6b['code'] === 200 && $a6c['code'] === 200,
+       '6   ... und die beiden anderen Betriebsseiten ebenso (F-S8-P-04)',
+       'jobs HTTP ' . $a6b['code'] . ', server HTTP ' . $a6c['code']);
+
+$a7 = hole('betrieb_updates.php', $sidUser);
+pruefe($a7['code'] !== 503,
+       '7   betrieb_updates.php mit NUTZER-Sitzung: nicht 503 (Abweisung wie sonst)',
        'HTTP ' . $a7['code']);
+
+$a7b = hole('update.php', $sidAdmin);
+pruefe($a7b['code'] === 200,
+       '7   update.php (Uebergangsseite) bleibt ebenfalls offen', 'HTTP ' . $a7b['code']);
 
 require_once $wurzel . '/jobs_lib.php';
 $token = jobs_token(false);
@@ -316,19 +336,19 @@ pruefe($a12['code'] === 200, '12  assets/style.css -> 200 (statisch, ungetort)',
  * ====================================================================== */
 echo "\n  Teil 3 — Schalten, kaputter Inhalt, Antwortzeit\n";
 
-$a13 = hole('update.php', $sidAdmin, ['action' => 'wartung_aus', 'csrf' => $csrfAdmin]);
+$a13 = hole('betrieb_updates.php', $sidAdmin, ['action' => 'wartung_aus', 'csrf' => $csrfAdmin]);
 pruefe($a13['code'] === 200 && !file_exists(WARTUNG_DATEI),
-       '13  Ausschalten ueber update.php (POST, CSRF) -> Datei weg',
+       '13  Ausschalten ueber betrieb_updates.php (POST, CSRF) -> Datei weg',
        'HTTP ' . $a13['code']);
 $a13b = hole('index.php');
 pruefe($a13b['code'] !== 503, '13  ... und index.php antwortet wieder',
        'HTTP ' . $a13b['code']);
 
-$a13c = hole('update.php', $sidAdmin, ['action' => 'wartung_an', 'csrf' => $csrfAdmin]);
+$a13c = hole('betrieb_updates.php', $sidAdmin, ['action' => 'wartung_an', 'csrf' => $csrfAdmin]);
 pruefe($a13c['code'] === 200 && file_exists(WARTUNG_DATEI),
-       '13  Einschalten ueber update.php -> Datei da', 'HTTP ' . $a13c['code']);
+       '13  Einschalten ueber betrieb_updates.php -> Datei da', 'HTTP ' . $a13c['code']);
 $d = json_decode((string)file_get_contents(WARTUNG_DATEI), true);
-pruefe(is_array($d) && ($d['von'] ?? '') === 'Wartungsprobe Admin' && !empty($d['seit']),
+pruefe(is_array($d) && ($d['von'] ?? '') === 'Wartungsprobe BetreiberIn' && !empty($d['seit']),
        '13  ... und traegt Zeitpunkt und Konto', json_encode($d));
 
 wartung_setzen("kein json {{{\n");
@@ -363,13 +383,14 @@ pruefe($rc === 0 && count($aus) > 3,
 /* Die Ausnahmeliste wird gegen die Entscheidung gezaehlt, nicht gegen sich
  * selbst: Wer eine Datei aus E-S5W-04 herausnimmt, soll hier scheitern und
  * nicht erst auf dem Produktivserver. */
-$sollAusnahmen = ['update.php', 'wiederherstellen.php', 'jobs.php',
+$sollAusnahmen = ['betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
+                  'update.php', 'wiederherstellen.php', 'jobs.php',
                   'login.php', 'logout.php', 'install.php'];
 sort($sollAusnahmen);
 $istAusnahmen = WARTUNG_AUSNAHMEN;
 sort($istAusnahmen);
 pruefe($istAusnahmen === $sollAusnahmen,
-       '17  Ausnahmeliste ist genau die aus E-S5W-04',
+       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2',
        implode(', ', $istAusnahmen));
 
 /* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer
@@ -379,10 +400,13 @@ pruefe($istAusnahmen === $sollAusnahmen,
 $loginQuelle = (string)file_get_contents($wurzel . '/login.php');
 pruefe(str_contains($loginQuelle, 'kdf_iter, logo_wahl, role'),
        '18  login.php liest `role` in seiner Nutzerabfrage (E-S5W-09 c)');
-pruefe(preg_match('/wartung_aktiv\(\)\s*&&.*?!==\s*\'admin\'/s', $loginQuelle) === 1
+/* Seit S8/AP1 fragt login.php nicht mehr `!== 'admin'`, sondern das Praedikat
+ * `rolle_darf_verwalten()` — sonst haette die neue Rolle `betreiberin` als
+ * Nicht-Admin gegolten und sich waehrend der Wartung selbst ausgesperrt. */
+pruefe(preg_match('/wartung_aktiv\(\)\s*&&\s*!rolle_darf_verwalten\(/s', $loginQuelle) === 1
        && str_contains($loginQuelle, 'session_verwerfen();')
        && str_contains($loginQuelle, 'wartung_antwort_seite();'),
-       '18  ... und verwirft im Wartungsmodus die Sitzung eines Nicht-Admins');
+       '18  ... und verwirft im Wartungsmodus die Sitzung ohne Verwaltungsrecht');
 $posErfolg = strpos($loginQuelle, "rate_erfolg('login'");
 $posTor    = strpos($loginQuelle, 'wartung_aktiv() &&');
 pruefe($posErfolg !== false && $posTor !== false && $posErfolg < $posTor,

@@ -2749,7 +2749,7 @@ BetreiberIn.
 Die **eigene Rolle** steht im Profil (3.1a). Sie erklärt, warum zwei Konten
 unter dem Zahnrad verschieden viel sehen.
 
-Unter **„Wartung"** steht in der Karte **„Hintergrundjobs"**, ob die
+Unter **Betrieb → Hintergrundjobs** steht in der Karte **„Zustand"**, ob die
 regelmäßige Arbeit noch läuft: je Job wann er zuletzt lief, wer ihn angestoßen
 hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
 **„scheitert"**, wird unter anderem der Papierkorb nicht mehr geleert; die
@@ -2782,9 +2782,9 @@ zu verlieren. Und die Uhr kann zu einem ausgedünnten Einsatz keine Punkte mehr
 nachliefern; sie bekommt eine Bestätigung, damit sie ihren Speicher leert, die
 Punkte werden aber nicht mehr aufgenommen.
 
-Darunter, in **„Wann die Jobs laufen"**, stehen die drei Wege, auf denen diese
-Arbeit angestoßen werden kann — mit fertigem Befehl bzw. fertiger Adresse zum
-Kopieren. **Eingerichtet werden muss keiner:** Ohne Einrichtung läuft die
+Daneben, in der Karte **„Auslöser"**, stehen die drei Wege, auf denen diese
+Arbeit angestoßen werden kann — mit fertigem Befehl bzw. fertiger Adresse und
+seit Web 15.1.0 einem Knopf **„Kopieren"** daneben. **Eingerichtet werden muss keiner:** Ohne Einrichtung läuft die
 Arbeit in kleinen Portionen auf den Anfragen mit. Wer viele Daten hat, richtet
 besser einen Zeitplan ein, weil der Rückstand sonst wächst; welcher der beiden
 geht, sagt der Hoster. Die Adresse enthält ein **Geheimnis** — sie gehört nicht
@@ -2793,8 +2793,10 @@ Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
 #### Der Wartungsmodus
 
-Ganz oben unter **„Wartung"** steht die Karte **„Serverbetrieb"** mit einem
-Schalter. Er schließt die Installation vorübergehend für alle außer der
+Ganz oben unter **Betrieb → Updates** steht die Karte **„Wartungsmodus"** mit
+einem Schalter. Sie steht dort und nicht auf einer eigenen Seite, weil sie zum
+selben Vorgang gehört wie die Migrationen darunter: Man schaltet vor dem
+Deploy ein und nach der Migration aus. Er schließt die Installation vorübergehend für alle außer der
 Verwaltung.
 
 **Wofür.** Während eines Updates werden die Dateien auf dem Server nach und
@@ -2812,7 +2814,7 @@ geht nichts verloren.
    frisches, und ist das Ziel erreichbar? Sonst „Jetzt sichern".
 2. **„Wartungsmodus einschalten"** klicken.
 3. Das Update einspielen lassen (das macht die Entwicklung).
-4. Die Seite **„Wartung"** neu laden und die anstehenden Migrationen
+4. Die Seite **„Updates"** neu laden und die anstehenden Migrationen
    ausführen.
 5. In einem zweiten Reiter die Startseite aufrufen. **Es muss die
    Wartungsseite kommen** — kommt die normale Seite, ist der Wartungsmodus
@@ -2842,19 +2844,73 @@ auf der Wartungsseite), und wer Zugang zum Webspace hat, löscht die Datei
 Schalter nicht.
 
 
-Unter **„Wartung"** stehen mehrere Auskünfte in eigenen Karten: zuoberst der
-**Serverbetrieb** (der Wartungsmodus, gleich unten), dann das Logo der
-Installation, die Umgebung (Mailversand), die Hintergrundjobs samt ihren Auslösern, Einsätze
-ohne Diensttag und zuunterst das **Datenbank-Update**. Das bloße Öffnen der Seite
-ändert nichts — sie zeigt erst an, was anstünde, und wartet auf eine
-Bestätigung.
+#### Die Seite „Wartung" gibt es nicht mehr
 
-Jede Migration steht als eigene Zeile mit ihrem Stand als Plakette:
-**erledigt** (blau), **steht aus** (orange), **blockiert** (rot) oder
-**Fehler** (rot). Nach einem Update müssen alle „erledigt" tragen. Eine
-*blockierte* Migration würde eine Spalte löschen, in der noch Daten stehen;
-sie läuft nur, wenn du das Kästchen vor ihrer Zeile setzt — und dieses
-Kästchen heißt: **Die Daten sind gesichert.**
+Bis Web 15.0.0 trug sie neun Blöcke auf einer Fläche: Serverbetrieb, Logo,
+Umgebung, Schlüsselableitung, Hintergrundjobs, Auslöser, Einsätze ohne
+Diensttag und das Datenbank-Update. Seit Web 15.1.0 ist sie **aufgelöst**, und
+jede Seite trägt ein Anliegen. Was wohin gegangen ist:
+
+| Was du suchst | Wo es jetzt steht |
+|---|---|
+| Wartungsmodus, ausstehende Updates, Fassung | Betrieb → **Updates** |
+| Zustand der Hintergrundjobs, die drei Auslöser, das Token | Betrieb → **Hintergrundjobs** |
+| Speichergrenze, Warnschwellen, Belegung, Ablage | Betrieb → **Servereinstellungen** |
+| Logo der Installation | Verwaltung → **Installation** |
+| Einsätze ohne Diensttag | **entfallen** — jede NutzerIn sieht ihre eigenen als „Zuordnung offen" in der Diensttage-Leiste (8.1) und ordnet sie selbst zu |
+
+Die alte Adresse führt weiter zum Ziel; ein Lesezeichen bleibt gültig.
+
+#### Betrieb → Updates
+
+Zwei Karten, ein Vorgang. Oben der **Wartungsmodus** mit dem fünfstufigen
+Ablauf als Kurzform, darunter die **ausstehenden Updates**.
+
+Das bloße Öffnen der Seite ändert nichts — sie zeigt erst an, was anstünde,
+und wartet auf den Knopf **„Ausstehende ausführen"**.
+
+**Gezeigt wird nur, was aussteht.** Bis Web 15.0.0 standen alle 43 Migrationen
+da, davon 41 mit „Bereits angewendet" — man musste scrollen, um die zwei
+Zeilen zu finden, um die es ging. Die ausgeführten liegen jetzt zugeklappt in
+der Karte **„Ausgeführt"** darunter.
+
+Jede Zeile trägt ihren Stand als Plakette: **steht aus** (orange),
+**blockiert** (rot) oder **Fehler** (rot). Eine *blockierte* Migration würde
+eine Spalte löschen, in der noch Daten stehen; sie läuft nur, wenn du das
+Kästchen vor ihrer Zeile setzt — und dieses Kästchen heißt: **Die Daten sind
+gesichert.**
+
+**Scheitert eine Migration, hält die Kette an.** Was dahinter stand, bleibt
+unangetastet und steht als „NICHT MEHR VERSUCHT" da — der nächste Lauf nimmt
+es sich vor, sobald die Ursache behoben ist.
+
+Über der Liste nennt eine Meldung das **jüngste Komplett-Backup** mit Alter.
+Gibt es keines, ist die Meldung eine Warnung: Migrationen können Spalten und
+Daten unwiderruflich entfernen, und dagegen schützt nur das Komplett-Backup der
+Installation — nicht das Backup eines einzelnen Kontos.
+
+Die Karte **„Fassung"** nennt zuunterst Web-Version, Datenbankstand und den
+Stand der Apps. Für die **Uhr-App gibt es keinen Mindeststand**: Der Server
+nimmt jede Fassung an, weil der Datenvertrag abwärtskompatibel gehalten ist.
+
+#### Betrieb → Servereinstellungen
+
+Hier steht, wie viel Platz belegt ist — als **zwei Balken**:
+
+- **Backups** gegen die **Speichergrenze**: Konto-Backups und Komplett-Backups
+  zusammen. Ist die Grenze erreicht, wird nicht mehr gesichert; gelöscht wird
+  nichts.
+- **Installation gesamt** gegen den **Webspace laut Hosting**: Datenbank,
+  Dateien und beide Backup-Arten.
+
+**Der Webspace ist eine Angabe, keine Messung.** Er steht in deinem
+Hosting-Tarif und lässt sich von der Anwendung aus nicht ermitteln — was ein
+Server über den freien Platz meldet, ist auf geteiltem Hosting der Datenträger
+des Hosts und nicht dein Kontingent. Ohne die Angabe zeigt der zweite Balken
+nur die Zusammensetzung, ohne Füllstand.
+
+Gemessen wird **einmal täglich** im Aufräumjob; der Stand steht im Kartenkopf.
+Darunter Speichergrenze, Warnschwellen, Ablage und Reste abgebrochener Läufe.
 
 Unter **„Stammdaten systemweit"** pflegt der Admin dieselben sechs Bereiche wie
 eine NutzerIn unter Standorte und Rettungsmittel (9.1–9.3), jedoch für **alle**
@@ -2896,16 +2952,16 @@ mit genau diesem Filter.
   > Die Rückmeldung des Laufs nennt jede verdrängte Datei, und wer drei behalten
   > will, trägt drei ein.
 
-- **Speichergrenze** — wie viel Platz alle Backups zusammen belegen dürfen
-  (Vorgabe 2 GB). Ist sie erreicht, wird **nicht mehr gesichert**. Es wird
-  nichts gelöscht und nichts überschrieben — ein Backup, das eine andere
-  wegräumt, um selbst zu passen, wäre das Gegenteil einer Rückfallebene.
-- **Warnschwellen** — Prozentwerte, durch Komma getrennt (Vorgabe 70, 90). Je
-  Schwelle kommt **einmal** eine Meldung, nicht bei jedem Lauf. Fällt der
-  Verbrauch wieder darunter, wird beim nächsten Überschreiten erneut gewarnt.
-  Ist kein SMTP eingerichtet, steht die Warnung stattdessen dauerhaft oben auf
-  dieser Seite.
 - **Erinnerung an Admins per E-Mail** — aus Vorsicht standardmäßig **aus**.
+
+> **Speichergrenze und Warnschwellen stehen seit Web 15.1.0 nicht mehr hier**,
+> sondern unter **Betrieb → Servereinstellungen**. Sie gelten für Konto-Backups
+> *und* Komplett-Backups zusammen und sind damit eine Einstellung der
+> Installation, keine der Konten — dass sie unter „Backups" standen und die
+> Komplett-Seite mit einem Satz auf sie verwies, war einer der Gründe für die
+> Neuordnung. Ist die Grenze erreicht, wird **nicht mehr gesichert**; es wird
+> nichts gelöscht und nichts überschrieben. Ein Backup, das ein anderes
+> wegräumt, um selbst zu passen, wäre das Gegenteil einer Rückfallebene.
 
 **Die Erinnerungsmail** nennt die überfälligen und die nie gesicherten Konten
 mit Adresse und Alter des letzten Backups — keine Namen und keine Zahlen aus
@@ -2913,7 +2969,7 @@ den Konten, denn eine Mail liegt unverschlüsselt im Postfach. Sie geht an alle
 Admins mit gesetztem Passwort.
 
 > **Sie hängt an einem Zeitgeber.** Die Erinnerung fährt auf dem täglichen
-> Aufräumjob mit (Wartung → „Hintergrundjobs"). Ist dort ein Zeitplan
+> Aufräumjob mit (Betrieb → „Hintergrundjobs"). Ist dort ein Zeitplan
 > eingerichtet, kommt sie zuverlässig — höchstens einmal je Woche und nur, wenn
 > es etwas zu melden gibt. Ohne Zeitplan hängt sie an der Benutzung: Der Job
 > startet dann bei der ersten Anfrage des Tages, und wird die Anwendung zwei
@@ -2937,8 +2993,10 @@ ein Auftrag läuft, steht sein Stand oben auf der Seite.
 bewusst nicht vorgesehen: Sie bräuchten den Inhaltsschlüssel, und den hat der
 Server nicht.
 
-**Ablage** nennt den Pfad, ob er beschreibbar ist, wann zuletzt gesichert wurde
-und wie viele Konten eine Ablage haben. **Backups ohne Konto** steht
+**Ablage** nennt hier nur noch, ob sie bereit ist, wann zuletzt gesichert wurde
+und wie viele Konten eine Ablage haben; Pfad, Belegung und Reste stehen unter
+Betrieb → Servereinstellungen, dort, wo auch die Grenze steht, gegen die sie
+gemessen werden. **Backups ohne Konto** steht
 zugeklappt darunter: Ordner, zu deren Konto es keine Zeile mehr gibt — der Fall
 „Konto gelöscht und neu aufgesetzt". Sie überleben die Löschung mit Absicht;
 genau dafür sind sie da. An den Rückfragen ändert sich nichts: Vor dem
