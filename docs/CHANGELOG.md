@@ -14,6 +14,150 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.5.2] — 2026-09-06
+
+### Web — zwei Wege, die es gab und die nicht ankamen (Backlog Nr. 148, 149)
+
+**Beide Funde kommen vom Auftraggeber, keiner von einem Prüfmittel.** Das ist
+nicht nebensächlich, sondern der eigentliche Befund dieser Stufe: Der
+Bilderlauf fotografiert 30 Seiten in acht Breiten und **klickt keinen Knopf**;
+die Wortliste zählt Wörter; die Vollständigkeitsprüfung sieht das Stylesheet
+an; automatisierte Prüffälle gibt es für den Webteil nicht. Ein Verweis, der
+ins Leere zeigt, und ein Zähler, der zweierlei zählt, fallen durch alles
+davon. Deshalb steht neben jeder der beiden Behebungen ein Prüfmittel.
+
+#### Der Knopf „Diensttage zusammenführen" führte auf 404 (Nr. 148)
+
+Laufen zwei Diensttage zeitgleich, zeigt die Tagesübersicht seit Web 13.3.0
+die R57-Warnung mit dem Ausweg „Diensttage zusammenführen". Der Knopf verwies
+auf `diensttag_zusammenfuehren.php?ziel=<Kennung>`; die Seite liest
+`$_GET['d']`. Damit blieb die Zielkennung 0, der Diensttag wurde nicht
+gefunden, und der Aufruf endete auf einer **404-Seite** — in genau dem Fall,
+für den die Warnung gebaut ist. Zwei andere Verweise auf dieselbe Seite, keine
+vierzig Zeilen entfernt, benutzten `?d=` richtig. Behoben mit einer Zeile.
+
+**Neu dazu: `tools/linkprobe/`.** Es hält jede Zeichenkette
+`<seite>.php?<name>=` unter `server/` — in PHP und JavaScript — gegen die
+Parameter, die die Zielseite tatsächlich liest. Gemessen: **99 Zielseiten,
+131 Verweise, 0 unbekannte Abweichungen**, dazu 10 Verweise auf Seiten, die
+ihre Parameter über eine Variable lesen und damit statisch nicht entscheidbar
+sind. Gegen den Stand vor der Behebung gefahren, meldet es die eine Zeile mit
+Datei und Zeilennummer.
+
+Zwei Dinge daran sind absichtlich so: Das Werkzeug prüft **Namen, nicht
+Werte** — ein `?d=<Datum>` an einer Seite, die dort eine Kennung erwartet,
+findet es nicht. Und was es findet, aber nicht behoben ist, steht mit
+**Backlog-Nummer** in seiner `ausnahmen.md`, nicht in einer Ausblendliste: Der
+Fund bleibt bei jedem Lauf sichtbar, und eine Zeile, die kein Verweis mehr
+braucht, macht den Lauf rot. Genau ein solcher Fall steht heute dort — siehe
+Nr. 151 unten.
+
+#### Die Seite Updates zählte anders als Status und Menü (Nr. 149)
+
+Eine Migration, deren Schema schon aktuell ist, deren Vermerk im Register aber
+fehlt, hat nichts auszuführen und trotzdem etwas offen: **den Vermerk**. Der
+Migrationslauf zählte sie deshalb als offen — Status und Menüzähler meldeten
+„1 Migration steht aus" —, gab ihr aber zugleich den Status „erledigt". Die
+Seite Updates sortierte sie damit unter *Ausgeführt*, meldete daneben „Alles
+aktuell" und zeigte den Knopf **„Ausstehende ausführen" gar nicht**. Der
+Vermerk ließ sich im Web also nicht nachholen, und der Zähler wäre stehen
+geblieben, bis irgendwann die nächste echte Migration läuft.
+
+**Wo das herkommt, gehört dazu.** Der Erstdeploy von S8 war im Web nicht
+ausführbar: `betrieb_updates.php` verlangt seit S8/AP5 die Rolle BetreiberIn,
+und die vergibt erst die Migration, die dort ausgeführt werden soll;
+`update.php` leitet einen Admin auf dieselbe Seite weiter, und der
+Kommandozeilen-Notausgang braucht eine Kommandozeile, die der Webspace nicht
+hat. Ausweg am 06.09.2026 waren die beiden SQL-Anweisungen über phpMyAdmin —
+und der Zustand danach war genau der beschriebene. S8 hatte das Aussperren der
+**letzten** BetreiberIn bedacht (R75), nicht das Fehlen der **ersten**. Die
+Regel daraus steht jetzt im Runbook: *Eine Migration, die Rechte einführt,
+muss ohne diese Rechte ausführbar sein.* Sie gilt für die nächste
+Rollenmigration (Support-Rolle, P5), und der phpMyAdmin-Notweg steht daneben.
+
+Behoben mit **einer** Zählweise: Die Vorschauzeile bekommt einen eigenen
+Anzeigestatus, steht unter *Ausstehend* mit der neutralen Plakette **„nicht
+nötig"**, und der Knopf ist da. Status und Menü bleiben unberührt — sie lasen
+immer schon dieselbe Zahl. Drei Feinheiten, die beim Bauen erst sichtbar
+wurden:
+
+- **Nur die Vorschau bekommt den neuen Status.** Nach dem Lauf ist die
+  Migration verbucht und heißt zu Recht „erledigt"; wer beide Zweige
+  umstellte, bekäme eine Zeile, die auch nach dem Knopfdruck unter
+  *Ausstehend* stehen bliebe.
+- **Zwei Stellen, nicht eine.** Die Seite sortiert nach dem Status *und*
+  wählt daraus die Plakette — und ihre Auswahl hat einen Auffangzweig auf
+  „Fehler"/rot. Wer nur die Sortierung anfasst, zeigt eine Migration, die
+  nichts zu tun hat, als gescheitert an. Beides gehört in dieselbe Änderung.
+- **Die Meldung nach dem Knopfdruck.** Sie hing daran, ob eine Migration
+  wirklich *ausgeführt* wurde — und beim bloßen Verbuchen war sie es nicht.
+  Die Seite hätte nach genau diesem Knopfdruck „Es war nichts anzuwenden"
+  gemeldet, während der Vermerk gerade geschrieben wurde: Die einzige
+  Handlung, die dieser Fall kennt, hätte sich selbst dementiert. Ein
+  geschriebener Registervermerk gilt jetzt als geschehen.
+
+Nebenbei richtig geworden: Die Karte „Ausgeführt" nannte 43, der Datenbankstand
+zwei Zeilen weiter 42 verbucht. Jetzt nennen beide dieselbe Zahl.
+
+**Die Wartungsprobe bekommt Teil 6** — sieben Erwartungen, die den
+Produktivzustand nachbauen (Registerzeile heraus, Schema aktuell) und messen,
+dass Status, Menüzähler und Seite dieselbe 1 nennen, die Plakette stimmt, der
+Knopf da ist und nach dem Klick 0 und `skipped` stehen. Sollwert damit **50
+statt 43 Erwartungen, 0 nicht erfüllt**; gegen den Stand vor der Behebung
+gefahren sind 4 der 7 rot.
+
+Der Fall steht **ganz am Ende** der Probe, denn Erwartung 16 ruft
+`php update.php` auf und legte die entfernte Registerzeile sonst
+stillschweigend wieder an — die Messung wäre grün gewesen und hätte nichts
+mehr gemessen. Er sucht seine Kennung, statt sie hinzuschreiben, drückt
+**nicht**, wenn auf der Installation ohnehin etwas offen steht (der Knopf
+führt alle ausstehenden Migrationen aus, darunter solche, die Spalten
+löschen), und legt die Zeile mit ihrem ursprünglichen Zeitpunkt zurück.
+
+Dabei ein Fund an der Probe selbst, den nur die Gegenprobe zeigte: Die
+Erwartung „der Knopf ist da" suchte den **Wortlaut** „Ausstehende ausführen"
+— und der steht auf derselben Seite ein zweites Mal, als Schritt 4 im Ablauf
+der Karte „Wartungsmodus". Sie war damit auch dann grün, wenn der Knopf
+fehlte, also genau im Fehlerfall. Sie misst jetzt gegen das Formular, das nur
+der Knopf trägt.
+
+**Keine Migration.** Was fehlt, ist eine Zeile im Register — und die holt der
+Knopf nach. Nach dem Deploy ist auf dem Produktivserver einmal
+Betrieb → Updates zu öffnen und „Ausstehende ausführen" zu drücken; danach
+verschwindet der Zähler an Updates und Status. **Der Menüzähler hängt 60
+Sekunden nach** (Zwischenspeicher in `app_state`) — das ist kein Fehlschlag,
+sondern die Zwischenspeicherung; ein Neuladen nach einer Minute zeigt es.
+
+#### Was auffiel und bewusst stehen bleibt
+
+- **`import_ui.js` verweist nach einem Import auf `index.php?day=<Datum>`.**
+  Die Startseite liest `d` und erwartet dort eine **Kennung** — seit E9 können
+  mehrere Diensttage auf einem Kalendertag liegen, ein Datum bestimmt also
+  keinen Tag mehr. Der Verweis „Ersten Tag öffnen" führt deshalb still auf den
+  jüngsten statt auf den importierten Tag. Anders als Nr. 148 scheitert er
+  ohne Fehlerseite. Die Behebung braucht mehr als einen Namen — die
+  Import-Schnittstelle muss die Tageskennung mitliefern —, deshalb steht er
+  als **Nr. 151** im Backlog und mit Nummer in der Ausnahmeliste der
+  Linkprobe. Gefunden hat ihn das neue Prüfmittel an seinem ersten Tag.
+- **Die Warnung „Es gibt noch KEIN Komplett-Backup"** erscheint auch dann,
+  wenn nur ein Vermerk nachzutragen ist und nichts gelöscht werden kann. Das
+  bleibt so: Der Knopf führt *alle* ausstehenden Migrationen aus, und die
+  Vorsicht gilt dem Knopf, nicht der einzelnen Zeile.
+- **Die Kommandozeile sieht den neuen Status nie.** `php update.php` ruft den
+  Lauf immer ausführend auf, und dort ist die Migration verbucht, bevor eine
+  Zeile gedruckt wird. Ihre Ausgabe gibt den Status generisch aus und trüge
+  ihn, falls sich das einmal ändert; eine Änderung war nicht nötig, und eine
+  vorsorgliche wäre eine Zeile ohne Fall gewesen.
+
+Dazu ein neuer Backlog-Punkt ohne Codeänderung: **Nr. 150** — der Cron-Befehl
+für den Job-Einstieg steht an vier Stellen mit dem **Repositoriumspfad**
+(`…/server/jobs.php`), obwohl der Deploy den Inhalt von `server/` nach
+`httpdocs/` legt; einen Unterordner `server/` gibt es auf einer Installation
+nicht. Wer ihn abtippt, bekommt „Could not open input file" — so geschehen
+beim Einrichten des Plesk-Cron auf luftrettung.net. Die Karte „Auslöser" auf
+Betrieb → Hintergrundjobs ist davon **nicht** betroffen: Sie baut den Befehl
+aus dem tatsächlichen Verzeichnis und ist damit der verlässliche Weg.
+
 ## [Web 15.5.1] — 2026-09-06
 
 ### Web — der Wartungsbalken auf allen fünf Ausnahmeseiten (S8/AP8)

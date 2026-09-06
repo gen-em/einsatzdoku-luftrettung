@@ -173,7 +173,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
                    liest `$_GET['d']` — wie die beiden anderen Wege dorthin
                    (Aktionsmenue oben und `daymergelink` in `loadDay()`). Mit
                    `?ziel=` blieb `$zielId` auf 0, `dt_laden()` lieferte null,
-                   und die Seite endete auf `ui_abbruch(404, …)`: genau der
+                   und die Seite endete in `ui_abbruch()` mit 404: genau der
                    Fall, fuer den diese Warnung gebaut ist, fuehrte auf eine
                    Fehlerseite. Der geoeffnete Tag ist der ZIELtag — das ist
                    die Zusage der Seite, und `$selDay` ist er. */ ?>

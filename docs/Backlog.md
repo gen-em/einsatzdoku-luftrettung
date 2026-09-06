@@ -56,6 +56,14 @@ hat zwölf Verweise „R74" auf den Krypto-Review zu **R78** berichtigt (der
 Beschluss ist mit Fassung 31 umnummeriert worden, diese Datei nicht) und
 Nr. 115 in Nr. 95 aufgehen lassen — beide beschrieben denselben Fund.
 
+**Zu den Nummern 150 und 151 (06.09.2026, Korrekturstufe Web 15.5.2).** 150
+kommt vom Auftraggeber (der Cron-Befehl mit dem Repositoriumspfad), 151 vom
+neuen `tools/linkprobe/`, das in derselben Stufe entstanden ist — es hat den
+zweiten Verweis gefunden, der auf einen Parameter zeigt, den seine Zielseite
+nicht liest. **148 und 149 stehen seit dieser Stufe unter *Erledigt***; ihre
+Nummern bleiben, und Teil (a) von 149 ist als Regel im Runbook abgelegt und
+wird in P5 und P6 wieder aufgerufen.
+
 **Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
 rekonstruierbar: Code und Changelog verweisen an neun Stellen namentlich auf
 sie („Backlog Nr. 10"), und aus diesen Fundstellen geht eindeutig hervor,
@@ -1624,6 +1632,67 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (Nr. 101, gemeinsamer Kartendialog) — der Dialog entsteht dort ohnehin
     neu.
 
+
+150. **Der Cron-Befehl für den Job-Einstieg steht mit dem Repositoriumspfad in der Dokumentation.**
+    *Aufgenommen 06.09.2026 vom Auftraggeber, geprüft gegen `main`.* Der
+    Deploy legt den **Inhalt** von `server/` nach `./httpdocs/`
+    (`docs/konzepte/Konzept-Planung-v1.0.md`, Abschnitt 2.3) — einen
+    Unterordner `server/` gibt es auf einer Installation also nicht. Vier
+    Stellen dokumentieren den Aufruf trotzdem mit dem Pfad, den das
+    Repositorium hat: `server/jobs.php:13` („`php /pfad/zu/server/jobs.php`"),
+    `docs/Technik.md:2424` und `:5220` sowie `docs/CHANGELOG.md:6210` (je
+    „`* * * * * php …/server/jobs.php`"). Wer den Befehl aus dem Docstring
+    oder aus `Technik.md` abtippt, bekommt **„Could not open input file"** —
+    genau das ist beim Einrichten des Plesk-Cron auf der Installation
+    luftrettung.net passiert.
+    **Nicht betroffen, und das gehört ausdrücklich festgehalten:**
+    `server/betrieb_jobs.php:186` baut den Befehl über `__DIR__` und gibt
+    damit den korrekten Installationspfad aus. Die Karte **„Auslöser"** auf
+    Betrieb → Hintergrundjobs ist richtig; der Kopier-Knopf (E-S8-10) ist der
+    verlässliche Weg, und daran ist nichts zu ändern. Ebenso wenig gemeint
+    sind Nennungen der Datei als *Datei* (`docs/Technik.md:2413`: „`server/jobs.php`
+    (Einstieg)") — dort ist der Repositoriumspfad der richtige.
+    **Zu klären:** (1) Ob `docs/CHANGELOG.md` angefasst wird. Changelog-Einträge
+    sind historische Protokolle; rückwirkendes Ändern kann unerwünscht sein —
+    die Alternative wäre, die Stelle stehen zu lassen und nur die drei
+    lebenden Fundstellen zu berichtigen. (2) Welche Schreibweise künftig gilt:
+    entweder ein neutraler Platzhalter ohne `server/` (etwa
+    „`php /pfad/zur/installation/jobs.php`") oder gar kein abtippbarer
+    Beispielpfad mehr, sondern der konsequente Verweis auf den Kopier-Knopf
+    im Betreiberbereich, der den Pfad dieser Installation kennt.
+    **Zu tun:** nach der Klärung die betroffenen Stellen angleichen; keine
+    Codeänderung an der Mechanik. Zuordnung: **Backlog-Runde**.
+
+151. **Nach einem Import führt „Ersten Tag öffnen" auf den falschen Diensttag.**
+    *Aufgenommen 06.09.2026 aus der Korrekturstufe zu Nr. 148, gefunden vom
+    neuen `tools/linkprobe/` an seinem ersten Tag.* `import_ui.js:751` baut
+    den Verweis `index.php?day=<Kalendertag>`; `index.php:25` liest
+    `$_GET['d']` und erwartet dort eine **Kennung**. Der Kommentar darüber
+    sagt es selbst: „NICHT mehr ein Datum: Seit E9 können mehrere Diensttage
+    auf einem Kalendertag liegen, ein Datum bestimmt also keinen Tag mehr."
+    Zweimal falsch also — der Parametername **und** die Form des Werts.
+    **Anders als Nr. 148 scheitert das still:** `index.php` fällt auf
+    `dt_neuester()` zurück und zeigt den jüngsten Tag. Wer nach einem Import
+    auf den Verweis klickt, landet auf einer plausibel aussehenden Seite, die
+    nicht die versprochene ist — und merkt es nur, wenn der importierte Tag
+    zufällig nicht der jüngste ist.
+    **Zu tun:** `api/import_commit.php` liefert die Tageskennung mit — sie
+    liegt dort in `$dayIdByDate[$tag]` bereits vor —, `import_ui.js` verweist
+    auf `index.php?d=<Kennung>`. Danach die Zeile aus der Tabelle „Bekannte
+    Abweichungen" in `tools/linkprobe/ausnahmen.md` **entfernen**; eine tote
+    Zeile dort macht den Lauf rot, und das ist Absicht. Nicht in der
+    Korrekturstufe zu Nr. 148/149 mitbehoben, weil die Behebung die
+    Import-Schnittstelle berührt und damit mehr ist als ein Name (K4).
+    Zuordnung: **Backlog-Runde**.
+
+---
+
+## Erledigt
+
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
+
 148. **Der Knopf „Diensttage zusammenführen" in der Überschneidungswarnung führt auf 404.**
     *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Laufen
     zwei Diensttage zeitgleich, zeigt `index.php` seit Web 13.3.0 die
@@ -1640,6 +1709,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `index.php` gegen die gelesenen Parameter der Zielseiten hält — oder
     wenigstens ein Browserlauf mit Klick. Zuordnung: **Backlog-Runde,
     sofort**, eine Korrekturstufe mit Nr. 149.
+    **Erledigt mit Web 15.5.2 am 06.09.2026.** `?ziel=` → `?d=` in
+    `index.php`, eine Zeile, mit der Begründung im Kommentar daneben.
+    Browserlauf mit zwei zeitlich überlappenden aktiven Diensttagen im
+    Prüfkonto: vorher **HTTP 404** „Diensttag nicht gefunden", nachher
+    **HTTP 200** „Diensttag aufnehmen" mit dem geöffneten Tag in der
+    Unterzeile („Aufnehmender Diensttag: 05.09.2026 08:00 … — dieser
+    bleibt"). Dazu das Prüfmittel, das der Punkt verlangt hat:
+    **`tools/linkprobe/`** hält jede Adresse `<seite>.php?<name>=` unter
+    `server/` gegen die Parameter, die die Zielseite liest — 99 Zielseiten,
+    131 Verweise, 0 unbekannte Abweichungen; gegen den Stand vor der
+    Behebung gefahren meldet es die eine Zeile mit Datei und Zeilennummer.
+    Es hat dabei einen zweiten Fall gleicher Art gefunden, der **nicht**
+    mitbehoben ist: Nr. 151.
 
 149. **Die Seite Updates zählt anders als Status und Menü — und die Rollenmigration war ohne die Rolle nicht ausführbar.**
     *Aufgenommen 06.09.2026 am Produktivstand, unmittelbar nach dem
@@ -1680,14 +1762,35 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     gehört ins Runbook (`Technik.md` 7). Zuordnung: **Backlog-Runde,
     sofort** (b), eine Korrekturstufe mit Nr. 148; (a) Runbook jetzt, Regel
     P5/P6.
-
----
-
-## Erledigt
-
-
-Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
-zutreffen.
+    **Erledigt mit Web 15.5.2 am 06.09.2026 — Teil (b).** Die Vorschauzeile
+    bekommt den eigenen Anzeigestatus `skip` und zählt weiter als offen;
+    `betrieb_updates.php` führt sie unter *Ausstehend* mit der neutralen
+    Plakette „nicht nötig" und zeigt den Knopf. Zwei Stellen dort, nicht
+    eine: der Filter **und** die Plakettenauswahl, deren `default`-Zweig die
+    Zeile sonst als roten „Fehler" gezeigt hätte. `status_lib.php` und der
+    Menüzähler blieben unberührt — sie lesen `offen` und nie den Status.
+    **Dazu ein Fund, den der Auftrag nicht nannte:** Nach dem Knopfdruck
+    meldete die Seite „Es war nichts anzuwenden", obwohl der Registervermerk
+    gerade geschrieben wurde; ein geschriebener Vermerk gilt jetzt als
+    geschehen. Nebenbei richtig geworden: „Ausgeführt" nannte 43, der
+    Datenbankstand daneben 42 — jetzt beide 42.
+    **Prüfung:** `tools/wartungsprobe/` Teil 6, sieben Erwartungen, Sollwert
+    damit **50 statt 43**, 0 nicht erfüllt; gegen den Stand vor der Behebung
+    sind 4 der 7 rot. Der Fall baut den Produktivzustand nach, sucht seine
+    Kennung statt sie hinzuschreiben, drückt nicht, wenn ohnehin etwas offen
+    steht, und legt die Registerzeile mit ihrem ursprünglichen Zeitpunkt
+    zurück.
+    **Teil (a) ist keine Codeänderung und bleibt aufgerufen.** Der
+    phpMyAdmin-Notweg und die Regel — *eine Migration, die Rechte einführt,
+    muss ohne diese Rechte ausführbar sein* — stehen jetzt im Runbook
+    (`docs/Technik.md`, Abschnitt 7) samt den beiden SQL-Anweisungen und der
+    Reihenfolge, in der sie laufen müssen. Die Regel gilt für die nächste
+    Rollenmigration (**Support-Rolle, R38, P5**) und gehört ins
+    **Bedrohungsmodell (P6, R69)**; dort wird sie wieder aufgerufen.
+    **Offen bleibt eine Handlung des Auftraggebers:** nach dem Deploy einmal
+    Betrieb → Updates öffnen und „Ausstehende ausführen" drücken, damit
+    `2026_09_05_rolle_betreiberin` im Register steht (Rahmenplan
+    Abschnitt 6).
 
 115. **Die Rundlaufprüffälle räumen ihren hochgeladenen Bestand nicht ab.**
     *Aufgenommen 03.09.2026 aus S5 (Vorbereitung 8.2).* `android/LIESMICH.md`
