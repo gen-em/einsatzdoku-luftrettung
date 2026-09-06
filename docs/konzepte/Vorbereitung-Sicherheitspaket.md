@@ -6,10 +6,10 @@ Preisen und den offenen Entscheidungen, aus der nach dem Go des
 Auftraggebers ein Konzept nach K1 entsteht. **Anlass:** Frage vom
 06.09.2026 zu `Review-Krypto-Sicherheit.md`: *„Kann man diese Punkte
 angehen? Oder sind sie schon adressiert? Was sind deine Vorschläge?"*
-**Status:** Vorschläge, nichts umgesetzt, nichts im Backlog. **Vier
-Entscheidungen sind am 06.09.2026 gefallen (Abschnitt 6a), sechs stehen
-offen (Abschnitt 6b).** **Stand:** 06.09.2026, Web 14.2.2, Uhr 3.0.2,
-Android 0.13.0.
+**Status:** Vorschläge, nichts umgesetzt. **Sieben Entscheidungen sind am
+06.09.2026 gefallen (Abschnitt 6a), drei stehen offen (Abschnitt 6b).**
+Rahmenplan Fassung 28 (R74) und Backlog 117–136 tragen den Stand.
+**Stand:** 06.09.2026, Web 14.2.2, Uhr 3.0.2, Android 0.13.0.
 
 **Bezeichner:** Die Vorschläge heißen **SP-1 bis SP-14**, die offenen
 Entscheidungen **F-SP-1 bis F-SP-10**. Befundnummern (K-1 …, AN-1 …) sind
@@ -298,6 +298,12 @@ wird der Lauf rot und eine Mail geht an die Betreiberin.
   Passwörter berührt).
 - **Preis:** ein Nachmittag; kein Serverzugriff nötig, nur HTTPS.
   Läuft in `.github/workflows/`, keine Versionsstufe.
+- **Keine eigene Mailadresse nötig:** Ein fehlgeschlagener Lauf löst die
+  gewöhnliche GitHub-Benachrichtigung an die Person aus, die den Workflow
+  zuletzt geändert hat (Einstellung „Actions" in den
+  GitHub-Benachrichtigungen). Eine eigene Adresse bräuchte es nur, wenn
+  die Meldung woanders ankommen soll. Die frühere Formulierung „Adresse
+  ist Zuarbeit" ist damit zurückgenommen.
 
 ### SP-7 — Schlüssel als nicht-extrahierbarer `CryptoKey` (P6-Frage)
 
@@ -389,9 +395,13 @@ alter Spuren im Browser, F-SP-6). Reanimationsereignisse und Zielklinik
 können denselben Umschlag nehmen; dann verliert die Statistik
 „Reanimationen je Jahr" und „Fahrten je Klinik" ihre serverseitige Zählung
 (Entscheidung F-SP-7). **Rang: Haupt** auf allen drei Zählungen; Konzept
-nach K1 mit Fable; als eigene Phase nach P6, wie Konzept-V1 empfiehlt —
-oder, wenn der Auftraggeber den Riss für dringlicher hält als die
-Bereinigung, vor P6 (F-SP-5).
+nach K1 mit Fable; **entschieden als S11, Schritt 12a des Rahmenplans:
+nach P6 und vor der Öffnung** (F-SP-5, F-SP-6). Der Altbestand wird
+**nicht** über einen Produktweg umgeschlüsselt, sondern über ein
+**Einmalwerkzeug im Browser** — dort liegt der private Schlüssel —, das
+für das eine bestehende Konto läuft und danach aus dem Repositorium
+entfernt wird. Das setzt voraus, dass zu diesem Zeitpunkt nur dieses eine
+Konto Bestand hat; mit der Öffnung gälte die Entscheidung nicht mehr.
 
 ---
 
@@ -468,7 +478,7 @@ Punkt, kein Konzept nach K1, Prüfdokument mit Zahlen), **Rang Neben**:
 | K-11 | Auskunft in `wiederherstellen.php` | Fehlerkennung statt Fehlertext (`fehler_kennung()` existiert), „in Betrieb" ohne Kontenzahl |
 | K-12 | Freitext ohne Hinweis | Schlüssel `hinweis` im Feldkatalog für `bw_info`, `notes` und die Besatzungs-Freitexte; `days.notes` im Diensttagformular; Text „Klartext — keine Patientendaten" (Backlog 108 bringt später das Symbol) |
 | K-13 | Klartext-Reste | Bauordner `sicherungen/komplett/.bau-*` nach Fehlschlag sofort räumen; Rest bleibt und wird in `Technik.md` benannt |
-| K-14 | Verlorene Uhr | Handbuch 12: „Uhr verloren → sofort trennen"; **F-SP-8** klärt, ob `ingest.php` Phasen eines abgeschlossenen Einsatzes noch ersetzen darf |
+| K-14 | Verlorene Uhr | Handbuch 12: „Uhr verloren → sofort trennen"; **Zeitfenster ab Einsatzbeginn** für das Ersetzen von Phasen und das Anhängen von Punkten an bestehende Einsätze, danach `ok` ohne Ersetzen; Neuanlage immer; die Zahl ist **F-SP-8** |
 | K-15 | Header und Escaping | `JSON_HEX_TAG\|JSON_HEX_AMP\|JSON_HEX_APOS\|JSON_HEX_QUOT` als Vorgabe in `ui_krypto_bootstrap()` und den anderen Inline-`json_encode`-Stellen; `csrf_check()` mit `(string)`-Cast; HSTS-Erweiterung mit SP-5 |
 | K-6a | Photon-Hinweis und Schalter | SP-12 (a) |
 | K-1c | Weg C | SP-8 (nur Dokumente, kein Versionssprung) |
@@ -497,12 +507,12 @@ Eine Android-Versionsstufe Neben; Emulator-Lauf mit Bildern nach
 | Schritt | Inhalt | Form | Rang |
 |---|---|---|---|
 | 0 | SP-4 GitHub-Zuarbeit; SP-12 (a) Datenschutztext | Zuarbeit, kein Code | — |
-| 1 | **Sofortpaket Web:** SP-1, SP-2, SP-8, SP-12 (a) Hinweis und Schalter, SP-13 | Kleinauslieferung, Muster R42, Prüfdokument | Web Neben |
-| 2 | **Sofortpaket Android:** SP-14 | Kleinauslieferung | Android Neben |
-| 3 | **Zwischenpaket „Sicherheit":** SP-3 Server-Anteil samt Schlüsselblatt und Kennung, SP-10 Adminpakete; SP-6 Integritätswache je nach F-SP-9 schon in Schritt 1 | Konzept nach K1 (Fable), Umsetzung Opus, Prüfdokument | Web Haupt |
+| 1 | **Sofortpaket Web:** SP-1, SP-2, SP-8, SP-12 (a) Hinweis und Schalter, SP-13 — Rahmenplan Schritt 9a, Backlog 117–128 | Kleinauslieferung, Muster R42, Prüfdokument | Web Neben |
+| 2 | **Sofortpaket Android:** SP-14 — Rahmenplan Schritt 9a, Backlog 132–135 und 114 | Kleinauslieferung | Android Neben |
+| 3 | **Zwischenpaket „Sicherheit":** SP-3 Server-Anteil samt Schlüsselblatt und Kennung, SP-10 Adminpakete; SP-6 Integritätswache je nach F-SP-9 schon in Schritt 1 — Rahmenplan Schritt 9b, **S10**, vor P5 | Konzept nach K1 (Fable), Umsetzung Opus, Prüfdokument | Web Haupt |
 | 4 | **P5** nimmt SP-5 (CSP-Bauplan) und SP-11 (Zweitfaktor für alle) als Präzisierung von Backlog 8 und R38 auf | im P5-Konzept | — |
 | 5 | **P6-Bedrohungsmodell** entscheidet SP-3b, SP-7, Passkeys/PRF, F-SP-7 | Review R17 Stück 1 | — |
-| 6 | **Weg B** (SP-9) als eigene Phase | Konzept nach K1 (Fable) | Web, Uhr, Android Haupt |
+| 6 | **Weg B** (SP-9) als eigene Phase — Rahmenplan Schritt 12a, S11, vor der Öffnung | Konzept nach K1 (Fable) | Web, Uhr, Android Haupt |
 
 Schritt 1 und 2 sind unabhängig voneinander und von 3. Schritt 3 ist ein
 Hauptversionssprung und gehört **nicht** in die Backlog-Runde.
@@ -513,21 +523,117 @@ Hauptversionssprung und gehört **nicht** in die Backlog-Runde.
 
 | Nr. | Frage | Entscheidung |
 |---|---|---|
-| F-SP-1 | Sofortpaket Web und Android (Schritt 1 und 2) | **Ja, als Ganzes.** Jeder Punkt ein Commit, einzeln rücknehmbar |
-| F-SP-2 | SP-3 Server-Anteil am Datenschlüssel | **Ja**, mit der Rückfrage nach dem Archiv — beantwortet in SP-3 (Schlüsselblatt, Kennung, Nachtragen-Weg, Rotation); Verlust von `config.php` ist damit kein Reset für alle mehr, sondern ein Griff in die Betriebsakte |
-| F-SP-3 | Zweitfaktor | **Wie vorgeschlagen:** für alle Konten angeboten, für Admins Pflicht (SP-11, in P5 als Erweiterung von R38) |
-| F-SP-5 | Weg B: Zeitpunkt | **Nach P6, als eigene Phase** (Ermessen an den Bearbeiter übertragen; Begründung: P6 braucht das Bedrohungsmodell, Weg B braucht P6 nicht — und Weg C aus dem Sofortpaket nimmt dem Riss vorher den Widerspruch). Die Design-Skizze SP-9 geht in P6 Stück 1 ein |
+| F-SP-1 | Sofortpaket Web und Android (Schritt 1 und 2) | **Ja, als Ganzes.** Jeder Punkt ein Commit, einzeln rücknehmbar. Rahmenplan Schritt 9a, Backlog 117–128 und 132–135 |
+| F-SP-2 | SP-3 Server-Anteil am Datenschlüssel | **Ja**, mit der Rückfrage nach dem Archiv — beantwortet in SP-3 (Schlüsselblatt, Kennung, Nachtragen-Weg, Rotation); Verlust von `config.php` ist damit kein Reset für alle mehr, sondern ein Griff in die Betriebsakte. Rahmenplan Schritt 9b, S10 |
+| F-SP-3 | Zweitfaktor | **Wie vorgeschlagen:** für alle Konten angeboten, für Admins Pflicht (SP-11, Backlog 131, P5 als Erweiterung von R38) |
+| F-SP-5 | Weg B: Zeitpunkt | **Nach P6, als eigene Phase S11** (Ermessen an den Bearbeiter übertragen); **vor der Öffnung**, weil F-SP-6 ein einziges Konto voraussetzt. Rahmenplan Schritt 12a |
+| F-SP-6 | Weg B: Altbestand | **Einmalwerkzeug.** Es gibt nur ein Konto; die alten Spuren werden einmal umgeschlüsselt — im Browser, weil nur dort der Schlüssel liegt — über eine eigene Datei, die danach verworfen wird. Kein dauerhafter Produktweg, keine Umschlüsselung „auf Vorrat" |
+| F-SP-7 | Weg B: Umfang | **(c)** — Spur, Phasenkoordinaten, Reanimationsereignisse **und** Zielklinik. Folge: beide Statistiken zählt der Browser, der Klinik-Pin erscheint erst nach dem Entsperren; die Klartext-Entscheidung in `mission_fields.php:354` wird dort umgekehrt und begründet |
+| F-SP-10 | Deploy-Tor | **(b)** — erst mit dem Staging-Aufbau (R40 (2), P5-Beginn). Bis dahin: Branch-Schutz und 2FA (SP-4.1, 4.2) sofort; der Autodeploy bleibt |
 
-## 6b. Offen — vor dem Konzept zu klären
+## 6b. Offen — drei Fragen, ausführlicher erklärt
 
-| Nr. | Frage | Optionen | Vorschlag und Folge |
-|---|---|---|---|
-| F-SP-4 | **Photon:** Wie weit jetzt? | (a) Hinweis am Feld, Datenschutztext, Schalter je Installation; Vorgabe **an** — (b) wie (a), Vorgabe **aus** — (c) Adresssuche ganz abschaffen, nur Koordinaten und Karte | **(a).** Vorgabe „an" ändert für niemanden etwas und macht den Abfluss sichtbar; „aus" überraschte jede NutzerIn beim nächsten Einsatz. Selbstbetrieb bleibt die Frage von S9 PS-1 mit der Hosting-Entscheidung |
-| F-SP-6 | **Weg B, Bestand:** alte Spuren umschlüsseln oder Stichtag? | (a) Umschlüsselung im Browser anbieten, je Konto einmal, nicht erzwungen — (b) Stichtag „ab hier verschlüsselt", Altbestand bleibt Klartext — (c) Umschlüsselung erzwingen beim ersten Anmelden nach dem Update | **(a).** Die Spur von gestern ist dieselbe Auskunft wie die von morgen; erzwingen (c) hieße bei 5 000 Einsätzen Minuten Wartezeit beim Anmelden. Folge: Zwei Formate leben dauerhaft nebeneinander, beide nur über `spur_lib.php` |
-| F-SP-7 | **Weg B, Umfang:** Reanimationsereignisse und Zielklinik mit in den Umschlag? | (a) nur Spur und Phasenkoordinaten — (b) dazu Reanimation — (c) dazu Reanimation **und** Zielklinik | **(c).** Reanimation ist ein Behandlungsdatum; die Zielklinik ohne die Phasenkoordinate „Ankunft Klinik" zu lassen wäre Symbolik (Konzept-V1 5). Folge: „Reanimationen je Jahr" und „Fahrten je Klinik" zählt der Browser; der Klinik-Pin erscheint erst nach dem Entsperren — das kehrt die Entscheidung aus `mission_fields.php:354` um und muss dort begründet werden |
-| F-SP-8 | **Verlorene Uhr:** Darf ein Gerät Phasen eines Einsatzes ersetzen, der im Web bearbeitet wurde? Heute ja — `ingest.php:361` löscht und schreibt neu, das ist zugleich der Nachlieferungsweg | (a) wie heute — (b) nein, sobald `missions.edited = 1` (die Spalte gibt es, `schema.sql`; `einsatz_form.php:477` setzt sie) — (c) nie nach `final = 1` | **(b).** Die Spalte existiert, der Nachlieferungsweg bleibt für unbearbeitete Einsätze offen; (c) bräche die Nachlieferung nach Funkloch. Folge: `ingest.php` antwortet für bearbeitete Einsätze mit `ok` ohne Ersetzen (idempotent, kein Fehler auf der Uhr), `JSON-Vertrag.md` und Handbuch 12 nennen es |
-| F-SP-9 | **Integritätswache (SP-6):** jetzt oder in R67 aufgehen lassen? | (a) jetzt, als Action im selben Zweig wie das Sofortpaket — (b) mit R67 — (c) gar nicht | **(a).** Ein Nachmittag, kein Serverzugriff, und R67 ersetzt sie nicht: R67 sichert den Weg **auf** den Server, die Wache sieht, was **danach** mit ihm geschieht. Folge: eine Mail an die Betreiberin bei Abweichung; die Adresse ist Zuarbeit |
-| F-SP-10 | **Deploy-Tor jetzt (SP-4.3):** Secrets in eine Umgebung „produktion" mit Freigabe, sodass jeder Push auf `main` auf ein Ja wartet? | (a) ja, sofort — (b) erst mit dem Staging-Aufbau (R40 (2), P5-Beginn) — (c) Zwischenweg: Deploy nur noch per Handauslösung (`workflow_dispatch`), ohne Umgebung | **(a).** Das Repositorium ist öffentlich, Umgebungs-Freigaben kosten nichts; der Autodeploy ohne Tor ist der Zustand, den R40 (2) ohnehin beenden will. Folge: Der Bearbeiter pusht, die Betreiberin klickt „Freigeben" — für den heutigen Ein-Personen-Betrieb ein Klick mehr je Deploy, dafür kann ein fremdes Push-Recht nie mehr allein deployen |
+### F-SP-4 — Photon: was ist das Problem, was die Absicht
+
+**Das Problem.** Wer im Einsatzformular den Einsatzort tippt, löst ab dem
+dritten Zeichen und nach 400 ms Ruhe eine Anfrage an
+`https://photon.komoot.io/api/?q=…` aus (`ortsfeld.js:82,360`) — mit dem
+getippten Text und, wie bei jeder HTTP-Anfrage, der IP-Adresse der
+NutzerIn. Wer den Ort auf der Karte wählt, schickt die Koordinate an die
+Umkehrsuche (`ortswahl.js:34`). Photon ist ein kostenloser
+Gemeinschaftsdienst der Firma komoot: kein Vertrag, kein
+Auftragsverarbeitungsvertrag, keine Zusage über Protokollierung oder
+Speicherdauer. Die Adresse des Einsatzorts — genau das Feld, das die
+Anwendung Ende-zu-Ende verschlüsselt, damit **der eigene Server** es nie
+sieht — geht damit im Klartext an einen **fremden** Server, jedes Mal,
+während des Tippens. Die Kachelserver (OpenStreetMap, OpenTopoMap,
+openmaps.fr, Esri) sehen Ähnliches gröber: den Kartenausschnitt, den die
+NutzerIn ansieht, also die Gegend um den Einsatzort. Das ist kein
+Angriff und kein Fehler im Code — die Anwendung tut, was sie soll —,
+sondern ein **Abfluss an Dritte, den die Zusage in `CLAUDE.md` 4 nicht
+nennt** („keine fremde Quelle zur Laufzeit" meint Skripte und Schriften,
+nicht Datenabfragen) und den die Datenschutzerklärung nennen muss.
+
+**Die Absicht des Vorschlags.** Nicht die Adresssuche abschaffen — sie ist
+im Einsatz nützlich —, sondern drei Dinge: **Transparenz** (ein Satz am
+Feld, ein Absatz im Datenschutztext), **Wahl** (ein Schalter je
+Installation, damit ein Betreiber, der den Abfluss nicht will, ihn ohne
+Codeänderung abstellen kann; die Komponente hat die Option `adresssuche`
+bereits) und **die eigentliche Lösung dorthin, wo sie hingehört** —
+Selbstbetrieb eines Geocoders ist eine Hosting-Frage (Java, PostGIS,
+zweistellige Gigabyte) und wird in S9 PS-1 mit der Hosting-Entscheidung
+beantwortet.
+
+| Option | Was passiert | Folge |
+|---|---|---|
+| (a) Hinweis, Datenschutztext, Schalter — Vorgabe **an** | Für die heutige Installation ändert sich nichts Sichtbares außer dem Hinweis; wer will, schaltet ab | Abfluss bleibt bis S9, ist aber benannt und abschaltbar |
+| (b) wie (a), Vorgabe **aus** | Adressvorschläge und Umkehrsuche sind aus, bis die Administration sie einschaltet; Koordinaten, Plus-Codes und Kartenwahl bleiben | Jede NutzerIn verliert die Vorschläge, bis jemand den Schalter findet |
+| (c) Adresssuche abschaffen | Nur Koordinaten, Plus-Codes und Karte; die Karte selbst braucht weiter Kacheln | Der Abfluss der Adresse endet, der der Kacheln nicht; Bedienung im Einsatz wird spürbar schlechter |
+
+**Vorschlag: (a).**
+
+### F-SP-8 — Ersetzfenster der Uhr: was schon geschützt ist, und die Zahl
+
+**Was heute schon gilt** (beim Nachsehen am 06.09.2026 gefunden):
+`ingest.php:251` überspringt Einsätze mit `manual = 1` vollständig —
+Metadaten, Phasen, Reanimation bleiben, nur Spurpunkte werden angehängt —,
+und `manual = 1` setzt `einsatz_form.php:477`, sobald jemand im Web die
+Zeiten ändert. Dazu ersetzt `ingest.php:359` Phasen nur, wenn der Upload
+**mindestens so viele** bringt wie gespeichert sind. Der Fall „ich
+bearbeite früher, die Uhr ist noch nicht gesynct" ist damit heute schon
+abgedeckt: Der spätere Sync überschreibt die Handarbeit nicht.
+Der Vorschlag (b) aus der ersten Fassung war deshalb überflüssig — und
+er ist zurückgenommen.
+
+**Was bleibt:** Ein **unbearbeiteter** Einsatz von vor drei Wochen kann
+von einer verlorenen Uhr mit denselben Kennungen überschrieben werden, so
+lange das Gerät nicht getrennt ist. Dagegen hilft genau das
+**Zeitfenster ab Einsatzbeginn**, das der Auftraggeber vorgeschlagen hat:
+Innerhalb des Fensters darf ein Gerät Phasen ersetzen und Punkte
+anhängen (Nachlieferung nach Funkloch), danach antwortet `ingest.php`
+mit `ok` **ohne** zu ersetzen — idempotent, kein Fehler auf der Uhr, aber
+mit `kept_phases` benannt (JSON-Vertrag 5). Neue Einsätze werden immer
+angenommen; sie sind sichtbar und löschbar.
+
+| Zahl | Für | Gegen |
+|---|---|---|
+| **48 h** (Auftraggeber) | knapp, kleines Fenster für einen Finder | ein Freitagsdienst, der erst am Montag synchronisiert, käme nicht mehr nach |
+| **72 h** (Review) | deckt das Wochenende | ein Tag mehr Fenster |
+| 7 Tage | deckt Urlaub mit Uhr im Koffer | für einen Finder eine ganze Woche |
+
+**Vorschlag: 72 h**, als Konstante in `db.php` neben `PAIR_TTL_MIN`; die
+Zahl steht im Handbuch 12 bei „Uhr verloren: sofort trennen" und im
+`JSON-Vertrag.md`.
+
+### F-SP-9 — Integritätswache: was das ist
+
+Der eine Angriff, gegen den keine Verschlüsselung im Browser hilft, ist
+ein Server, der **veränderten Code** ausliefert: eine Zeile in
+`crypto.js`, und das nächste Passwort geht mit. Verhindern lässt sich
+das nur durch Zugangsschutz (SP-4, R67). **Erkennen** lässt es sich —
+und darum geht es hier. Die Integritätswache ist eine GitHub-Action
+(`.github/workflows/integritaet.yml`), die **täglich** und nach jedem
+Deploy von der Produktivinstallation die öffentlich ausgelieferten
+Skripte lädt — `assets/crypto.js`, `keyguard.js`, `unlock.js` und den
+Inline-Skriptblock der Anmeldeseite — und ihre SHA-256 mit den Dateien
+des ausgelieferten Standes im Repositorium vergleicht. Stimmt etwas
+nicht, wird der Lauf rot, und GitHub schickt seine gewöhnliche
+Fehlermeldung an die Person, die den Workflow zuletzt geändert hat —
+**eine eigene Mailadresse braucht es nicht** (die frühere Angabe
+„Adresse ist Zuarbeit" ist zurückgenommen). Sie braucht keinen
+Serverzugriff, nur HTTPS; sie erkennt Manipulation per FTP oder
+Hoster-Panel, nicht einen Angreifer mit Push-Recht (dagegen SP-4) und
+nicht PHP-Code, der nicht ausgeliefert wird (der Vergleich der
+Anmeldeseite fängt den Teil, der Passwörter berührt). Preis: ein
+Nachmittag, keine Versionsstufe.
+
+| Option | Folge |
+|---|---|
+| (a) jetzt, im Zweig des Sofortpakets | ab dann täglich ein stiller grüner Lauf; ein roter ist ein Alarm |
+| (b) mit R67 | erst mit der Auslieferungskette in P5/P8; bis dahin merkt niemand eine Manipulation |
+| (c) gar nicht | Erkennung bleibt dem Zufall überlassen |
+
+**Vorschlag: (a).**
 
 ## 7. Was dieses Dokument nicht ist
 

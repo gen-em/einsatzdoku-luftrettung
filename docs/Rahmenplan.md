@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 27 (04.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 28 (06.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -169,9 +169,12 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Backup-Optionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61) | Schritte 4 und 6 | neu, mit Mockups | Fable (Konzept) | offen |
 | 8 | **S9 — Einsatzbearbeitung und Rettungsmittel** | Problemsammlung vom 03.09.2026 (Nr. 101–113): Adresssuche und gemeinsamer Kartendialog, Rettungsmittel-Übernahme, kompaktere Buttons, Windenkacheln, Hubschrauber-Icon, Vorschlagsliste, Zielklinik ad hoc, Schloss-Kennzeichnung, Notizfeld, Kachel „GPS-Daten", neue Rettungsmittel-Arten, Tageszuordnung, Rollen | Schritt 7 (S8-Konzept, Nr. 74); F3–F6 beantwortet | neu; Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md` | Fable (Konzept; Mockups PS-3/PS-5, Zielkonflikt PS-8.2), Umsetzung Opus | offen |
 | 9 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
-| 10 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb | Schritte 2, 5 und 7; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
+| 9a | **Sofortpaket Sicherheit** (R74) | Web: Nr. 117–128 (Rundenzahl 600 000, Login-CSRF, E-Mail-Nachweis, Ordner, GPX, `wiederherstellen.php`, Freitext-Hinweis, Bauordner, Ersetzfenster der Uhr, Maskierung, Photon-Schalter, Weg C); Android: Nr. 132–135 und der Räumteil von 114 | Web sofort; Android nach Schritt 6 auf `main` | keins; `docs/konzepte/Vorbereitung-Sicherheitspaket.md` ist die Spezifikation (Muster R42, Prüfdokument mit Zahlen) | Opus | offen — **F-SP-4 und F-SP-8 vorher zu entscheiden** (Abschnitt 6) |
+| 9b | **S10 — Sicherheit** (R74) | Server-Anteil am Datenschlüssel mit Schlüsselblatt, Kennung und Rotation (SP-3); Adminpakete versiegeln, `ftp` abschaffen (Nr. 129); Integritätswache (SP-6, F-SP-9) | Schritt 9a; **vor P5** (Hauptstufe, Umstellung aller Hüllen) | neu, nach K1 aus der Vorbereitung | Fable (Konzept), Opus | offen |
+| 10 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb; Zweitfaktor für alle Konten (Nr. 131) und CSP nach Bauplan SP-5 (Nr. 8) | Schritte 2, 5, 7 und 9b; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt: Store-Verteilung (R65), Update-Weg (R66), Auslieferungskette (R67), Repositorium (R68), Code-Review (R69), Web-App auf Android (R70), Phasenschnitt (R71), Doku-Anforderungen (R72), Problemsammlung (R73); Ergebnis sind die Konzepte der Phasen P6–P8 mit je eigenem Paketschnitt | Festlegungen: keine (vorgezogen); Paketschnitte: die jeweilige Vorphase, P6 nach der Freigaberunde des Reviews | `docs/konzepte/Konzept-Planung-v1.0.md` | Fable (R14) | **Festlegungen entschieden** 03.09.2026 (R65–R73); offen nur die Paketschnitte je Phasenkonzept |
-| 12 | **P6 — Review und Bereinigung** | Bedrohungsmodell; Bug- und Sicherheitsreview in zwölf Stücken (R17, R69); Freigaberunde; Sofortpaket; Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); Weg B (Nr. 43); R5-Ausnahmeliste | Schritte 8 und 10; Nr. 43-Fragen beantwortet | `docs/konzepte/Review-R17.md`, Paketschnitt nach der Freigaberunde | Fable (Review, Kryptographie), sonst Opus | offen |
+| 12 | **P6 — Review und Bereinigung** | Bedrohungsmodell (Eingang: `Review-Krypto-Sicherheit.md`, R74); Bug- und Sicherheitsreview in zwölf Stücken (R17, R69); Freigaberunde; Sofortpaket; Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); Fragen Nr. 136; R5-Ausnahmeliste | Schritte 8 und 10; Nr. 43-Fragen beantwortet (R74) | `docs/konzepte/Review-R17.md`, Paketschnitt nach der Freigaberunde | Fable (Review, Kryptographie), sonst Opus | offen |
+| 12a | **S11 — Ortsdaten verschlüsselt (Weg B)** (R74) | Konto-Schlüsselpaar (Nr. 53); Uhr und Handy verschlüsseln Spur, Phasenkoordinaten, Reanimationsereignisse und Zielklinik vor dem Upload; serverseitige Spurfunktionen wandern in den Browser; Altbestand per Einmalwerkzeug (Nr. 43) | Schritt 12; **vor der Öffnung** — die Entscheidung zum Altbestand setzt ein einziges Konto voraus | neu, nach K1 (Skizze SP-9 in `Vorbereitung-Sicherheitspaket.md`) | Fable (Konzept), Opus | offen |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall, neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung (R16, R72); Web-App-Manifest (Nr. 87, R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung abschaffen (Nr. 46); Kommentarregel `CLAUDE.md` (R69) | Schritt 12 | eigenes Konzept nach K1 | Opus | offen |
 | 14 | **P8 — Schnitt** | Neuaufsetzen (R40 (3)); Migrationsregister neu (R66); Repo-Umzug und Inventur (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Erklärung v1.0 | Schritt 13 | eigenes Konzept nach K1 | Opus | offen |
 | — | Betriebsübergang | Öffnung in Wellen; Produktionsfreigabe in den Stores (R65) | nach v1.0 | — | — | — |
@@ -463,6 +466,40 @@ Konzept nach K1; ein Punkt, der eine neue Darstellung braucht, bekommt
 vorher ein Mockup und eine Freigabe (`CLAUDE.md` 5). Läuft jederzeit ab
 Schritt 1 parallel, auf eigenem Zweig; die Dateiregel aus Abschnitt 4 gilt.
 
+### Schritt 9a — Sofortpaket Sicherheit
+
+**Ziel:** die kleinen Befunde des Krypto-Reviews (R74) schließen, bevor
+irgendetwas Größeres beginnt. **Inhalt:** Web Nr. 117–128 und Android
+Nr. 132–135 samt dem Räumteil von Nr. 114 — je Punkt ein Commit, kein
+Konzept nach K1, Prüfdokument mit Zahlen (Muster R42: eigener Zweig, eigene
+Versionsstufe, Deploy nach Freigabe). Die Spezifikation ist
+`docs/konzepte/Vorbereitung-Sicherheitspaket.md` (SP-1, SP-2, SP-8, SP-12 (a),
+SP-13, SP-14). **Vorher zu entscheiden:** der Umfang des Photon-Schalters
+(F-SP-4) und die Zahl des Ersetzfensters der Uhr (F-SP-8) — Abschnitt 6.
+**Abnahme:** Bilderlauf der berührten Seiten, Wortliste 0/0/0,
+`tools/gpxprobe/` für Nr. 120, ein Browserlauf mit Zahl für Nr. 117 und
+118, Emulatorbilder für Android.
+
+### Schritt 9b — S10 Sicherheit
+
+**Ziel:** Der Datenbankabzug allein reicht nicht mehr für einen
+Offline-Angriff auf das Passwort, und nichts verlässt das Haus
+unversiegelt. **Inhalt (R74):** **Server-Anteil am Datenschlüssel** —
+ein zweites Geheimnis in `config.php`, je Konto per HMAC abgeleitet, nur an
+die angemeldete Sitzung ausgeliefert, per HKDF in den Datenschlüssel
+gemischt; `pat_wrap_rc` bleibt unabhängig; Umstellung still beim nächsten
+Anmelden über den verallgemeinerten Anhebungsweg; dazu **Schlüsselblatt**
+(Wartungsseite druckt beide Geheimnisse mit Kennung), **Kennung in
+`app_state`** gegen stille Aussperrung, Nachtragen-Weg mit Prüfung,
+Rotation von Anfang an · **Adminpakete versiegeln** mit `sk_versiegeln()`,
+Protokoll `ftp` abschaffen (Nr. 129) · **Integritätswache**, wenn F-SP-9
+so entschieden wird. **Rang:** Web Haupt. **Konzept** nach K1 aus SP-3,
+SP-6, SP-10 der Vorbereitung; Fable. **Voraussetzung:** Schritt 9a;
+**vor P5**, weil die Umstellung jede Hülle berührt und vor der Registrierung
+gelaufen sein soll. **Abnahme:** Umstellungslauf mit dem Referenzbestand,
+Reset-Weg, Freigabeweg, Demo-Reset (bleibt ohne Anteil), Wartungsseite mit
+falscher Kennung, Prüfdokument.
+
 ### Schritt 10 — P5 Dienstbetrieb
 
 **Ziel:** Die Anwendung trägt eine größere Nutzerbasis sicher. Baut auf
@@ -525,7 +562,8 @@ Sicherheitslücken, ungebrauchter Code, Karteileichen und Probleme,
 einschließlich Verschlüsselungsverfahren, Containerfassung 4, SPUR1,
 Komplettbackup und Serverschlüssel, Demo-Konstruktion (R25), Schlüsselablage
 auf dem Handy, S5-Kopplungsweg und Adress-QR, Umgang mit Dumps und
-Klartext-Koordinaten (R41, Nr. 43 — **Weg B entscheidet der Review**),
+Klartext-Koordinaten (R41, Nr. 43 — **Weg B ist entschieden, R74; der
+Review prüft die Skizze SP-9 und die Fragen aus Nr. 136**),
 Signaturschlüssel bei Google (R65), Geheimnisse der Kette (R67), die
 Antwort auf den Notizfeld-Zielkonflikt aus S9 (Nr. 109) ·
 **Kommentardurchgang:** keine Verweise auf Beschlüsse, Backlog-Nummern,
@@ -536,10 +574,33 @@ Auftraggeber entscheidet je Fund; danach der **Paketschnitt** ·
 Aufräumpakete** (je Codebasis gebündelt) für alles andere — v1.0 wird nicht
 erklärt, solange ein Fund offen ist · R5-Ausnahmeliste beschließen
 (zugeliefert: leer). **Voraussetzung:** die drei Fragen aus
-`Konzept-V1-Ortsdaten.md` beantwortet; P5 und S9 gemergt. **Abnahme:**
+`Konzept-V1-Ortsdaten.md` beantwortet (R74); P5 und S9 gemergt. **Abnahme:**
 Review-Dokument vollständig (zwölf Stücke, jeder Fund entschieden),
 Sofort- und Pflichtpakete abgenommen, Prüfmittel unverändert grün,
 Wortliste 0/0/0.
+
+### Schritt 12a — S11 Ortsdaten verschlüsselt (Weg B)
+
+**Ziel:** Der Einsatzort ist nicht mehr aus der Datenbank rekonstruierbar.
+**Inhalt (R74, Nr. 43 und 53):** ein **Konto-Schlüsselpaar** (ECDH P-256),
+privater Teil unter dem Inhaltsschlüssel gehüllt, öffentlicher Teil ans
+Gerät; Uhr und Handy verschlüsseln **Spur, Phasenkoordinaten,
+Reanimationsereignisse und Zielklinik** vor dem Upload (Garmin: ECDH,
+AES-256-CBC, HMAC-SHA256 ab Connect IQ 3.0.0 — geprüft 06.09.2026; kein
+GCM); `seq` und Zeitstempel bleiben Klartext, damit Reihenfolge,
+Nachlieferung und Phasenzuordnung serverseitig bleiben; ein verlorenes
+Gerät kann nichts entschlüsseln, ein Passwortwechsel berührt nichts.
+**Preis:** Ausdünnung Stufe 3, serverseitiger GPX-Abruf, Schneiden,
+Verschieben, Ortshöhe und Zusammenführung wandern in den Browser oder
+entfallen; Statistik „Reanimationen je Jahr" und „Fahrten je Klinik" zählt
+der Browser; der Klinik-Pin erscheint erst nach dem Entsperren; SPUR2 als
+Liste versiegelter Stücke, weiter nur über `spur_lib.php`; Vertrag, Uhr-
+und Android-Code, Backup Fassung 4. **Altbestand:** ein **Einmalwerkzeug
+im Browser** (dort liegt der Schlüssel), für das eine Konto vor der
+Öffnung, danach entfernt — kein dauerhafter Produktweg. **Rang:** Web,
+Uhr, Android Haupt. **Konzept** nach K1, Fable. **Voraussetzung:**
+Schritt 12; **vor der Öffnung** (Betriebsübergang) — mit mehreren Konten
+gilt die Altbestand-Entscheidung nicht mehr.
 
 ### Schritt 13 — P7 Gesicht v1.0
 
@@ -618,7 +679,8 @@ S4-Zweig reserviert (dort heute 59–63); 68–79 sind mit Fassung 16, 80–83 m
 Fassung 21 und 84–88 mit Fassung 22 angelegt; **89–92 kamen aus S7 und S5/C,
 93–97 mit Fassung 25 aus S5** (Pakete A, W und der Vorbereitung); **98–113
 mit Fassung 26** (98–100 aus der Planung v1.0, 101–113 die Problemsammlung
-für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt).
+für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt);
+**117–136 mit Fassung 28** aus dem Krypto-Review (R74).
 
 > Die drei aus Paket E standen dort zunächst als 90–92 und mussten beim
 > Zusammenführen mit Fassung 26 weichen: 89–92 waren schon an S7 und S5/C
@@ -628,7 +690,7 @@ für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt).
 
 | Nr. | Punkt (kurz) | gehört zu | Bemerkung |
 |---|---|---|---|
-| 8 | Content-Security-Policy | P5 | mit HSTS, `frame-ancestors`, `nosniff` |
+| 8 | Content-Security-Policy | P5 | mit HSTS, `frame-ancestors`, `nosniff`; **Bauplan SP-5** (Nonce, Report-Only zuerst) in `Vorbereitung-Sicherheitspaket.md` (R74) |
 | 17 | Mengenbremse `ingest.php` | P5 | Grundsatzfrage zuerst (R19); Messung liegt |
 | 19 | `$title` in `einsatz_loeschen.php` ungenutzt | Backlog-Runde | zusammen mit 21 |
 | 21 | 43 A4-Restfunde sichten (mit 18) | Backlog-Runde | Felder mit Vertrags- oder Uhrberührung nur nach Vertragsabgleich (R21) |
@@ -701,6 +763,26 @@ für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt).
 | 111 | Neue Rettungsmittel-Arten mit eigenem Icon, ohne Rollen-Vorlagen (PS-10.1) | S9 | F16; Migration |
 | 112 | Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung (PS-10.2) | S9 | gilt nur für den Tag (F17); Suche und Filter müssen greifen |
 | 113 | Rollen unmittelbar nach Auswahl bearbeitbar, Vorlagen nachladen (PS-10.3) | S9 | entfällt für Arten ohne Vorlagen (F19) |
+| 117 | Anmeldeformular ohne CSRF-Token (K-8) | Sofortpaket Sicherheit | Token liegt beim GET schon vor |
+| 118 | E-Mail-Wechsel ohne Passwortnachweis (K-7) | Sofortpaket Sicherheit / P5 | Nachweis und Hinweismail sofort; Bestätigung der neuen Adresse mit R37.6 |
+| 119 | `apk/` und `demo/` ungesperrt (K-9) | Sofortpaket Sicherheit | zwei `RewriteRule`-Zeilen |
+| 120 | DOCTYPE-Sperre GPX umgehbar (K-10) | Sofortpaket Sicherheit | UTF-8-Pflicht, kein Nullbyte; `tools/gpxprobe/` |
+| 121 | `wiederherstellen.php` gibt Auskunft (K-11) | Sofortpaket Sicherheit | Kennung statt Text, keine Kontenzahl |
+| 122 | Freitextfelder ohne Klartext-Hinweis (K-12) | Sofortpaket Sicherheit | `hinweis` im Feldkatalog; Symbol kommt mit Nr. 108 |
+| 123 | Klartext-Reste auf dem Server (K-13) | Sofortpaket Sicherheit | Bauordner räumen; Rest benennen |
+| 124 | Verlorene Uhr kann Phasen ersetzen (K-14) | Sofortpaket Sicherheit | Zeitfenster ab Einsatzbeginn; **Zahl offen (F-SP-8)** |
+| 125 | Kopfzeilen und Maskierung (K-15) | Sofortpaket Sicherheit / P5 | `JSON_HEX`, Cast sofort; Kopfzeilen mit Nr. 8 |
+| 126 | Rundenzahl 600 000 und Passwortregeln (K-3) | Sofortpaket Sicherheit | SP-1, SP-2 |
+| 127 | Photon und Kachelserver (K-6) | Sofortpaket Sicherheit / S9 | Hinweis, Datenschutztext, Schalter; **Umfang offen (F-SP-4)**; Selbstbetrieb mit Nr. 101 |
+| 128 | Weg C — Zusage eingrenzen (K-1) | Sofortpaket Sicherheit | nur Dokumente, keine Versionsstufe |
+| 129 | Adminpakete unversiegelt, `ftp` (K-4) | S10 | `sk_versiegeln()`; `Backup-Format.md` 5 neu |
+| 130 | Push auf `main` ist Deploy (K-16) | Zuarbeit / S10 | Branch-Schutz und 2FA sofort; Deploy-Tor mit Staging (R40 (2)); Integritätswache **offen (F-SP-9)** |
+| 131 | Zweitfaktor für alle Konten (K-5) | P5 | erweitert R38 |
+| 132 | Android: HTTP-Ausnahme im Release (AN-1) | Sofortpaket Sicherheit (Android) | Debug-only, Klartextverbot |
+| 133 | Android: Pinning-Entscheidung festhalten (AN-3) | Sofortpaket Sicherheit (Android) | eine Zeile in `android/LIESMICH.md` |
+| 134 | Android: Data-Layer ohne Absenderprüfung (AN-4) | Sofortpaket Sicherheit (Android) | Knotenabgleich, Zeitplausibilität |
+| 135 | Android: Gradle-Wrapper ohne Prüfsumme (AN-5) | Sofortpaket Sicherheit (Android) | `distributionSha256Sum` |
+| 136 | Fragen an das Bedrohungsmodell (Argon2id, `CryptoKey`, Passkeys/PRF) | P6 | R17 Stück 1; dazu Skizze SP-9 |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -731,7 +813,14 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | Wear-OS-Uhr für den Gerätetest — jetzt auch für die Wear-OS-Prüfrunde und den Installationstest aus dem Track (R65) | Schritt 6 | vor dem ersten Uhr-Release |
 | **DNS-Eintrag und TLS für `nadoku.gen-em.org`** — die Uhr trägt die Adresse seit Uhr 3.0.0 als **Vorgabewert** (E-R49-8). Ohne DNS und Zertifikat läuft jede frisch aufgesetzte Uhr ins Leere, und zwar ohne dass sie sagen kann, warum | Schritt 5 | **fällig — die Uhr ist ausgeliefert** |
 | ~~Freigabe des S5-Konzepts~~ | Schritt 3 | **erledigt 03.09.2026** — Umsetzung ist gebaut und gemergt |
-| Drei Fragen aus `Konzept-V1-Ortsdaten.md` (Schutzbedarf der Spur; Passwortwechsel bei nicht synchronisierten Uhr-Daten; Stichtag oder rückwirkend) | Nr. 43, P6 | vor dem R17-Review — spätestens mit dem Abschluss von P5 (R69) |
+| ~~Drei Fragen aus `Konzept-V1-Ortsdaten.md` (Schutzbedarf der Spur; Passwortwechsel bei nicht synchronisierten Uhr-Daten; Stichtag oder rückwirkend)~~ | Nr. 43, P6 | **beantwortet 06.09.2026 (R74):** Spur, Phasen, Reanimation und Zielklinik sind schutzbedürftig und werden verschlüsselt; der Passwortwechsel berührt das Konto-Schlüsselpaar nicht; Altbestand per Einmalwerkzeug vor der Öffnung |
+| **GitHub: Branch-Schutz auf `main`** (Pull Request und Review Pflicht, keine Umgehung für Admins, keine Force-Pushes) und **2FA-Zwang in der Organisation** — das Repositorium ist öffentlich, beides kostet nichts (Nr. 130, SP-4) | Schritt 9a | sofort |
+| **Entscheidung F-SP-4** — Umfang des Photon-Schalters: (a) Hinweis, Datenschutztext, Schalter je Installation mit Vorgabe „an"; (b) dasselbe mit Vorgabe „aus"; (c) Adresssuche abschaffen (Nr. 127) | Schritt 9a | vor dem Sofortpaket |
+| **Entscheidung F-SP-8** — Zahl des Ersetzfensters der Uhr ab Einsatzbeginn: 48 h (Auftraggeber) oder 72 h (Review, damit ein Freitagsdienst am Montag nachkommt) (Nr. 124) | Schritt 9a | vor dem Sofortpaket |
+| **Entscheidung F-SP-9** — Integritätswache: (a) jetzt im Sofortpaket, (b) mit R67, (c) gar nicht (Nr. 130) | Schritt 9b | vor dem S10-Konzept |
+| **Datenschutzerklärung: Photon (`photon.komoot.io`) und die vier Kachelanbieter nennen**, dazu die Grenze der Verschlüsselung nach Weg C (Nr. 127, 128; R41) | Schritt 9a | mit dem Text |
+| **Passwort des eigenen Kontos prüfen** — mindestens zwölf Zeichen oder eine Passphrase, nirgends wiederverwendet; der Server kann es nicht prüfen (Nr. 126) | Krypto-Review | sofort |
+| **Schlüsselblatt der Installation ablegen** (Betriebsakte und Passwortmanager), sobald S10 es druckt; danach Ablageort in der Betriebsakte vermerken | Schritt 9b | nach S10 |
 | Freigabe des S8-Konzepts und seiner Mockups; darin die Entscheidung zur Bedienhöhe am Schreibtisch (Nr. 74) | Schritt 7 | — |
 | Hosting-Entscheidung (Cron/SSH, DB-Kontingent, `max_user_connections`, DDoS-Schutz, Verschlüsselung at rest) | P5-Konzept | vor Schritt 10 |
 | Staging-Installation samt FTP-Zugang; **samt Demo-Konto, Referenzdatensatz und Messstand-Konto — Staging ist die Prüfumgebung (R67)** | P5-Beginn | vor Schritt 10 |
@@ -838,6 +927,7 @@ werden nie neu vergeben.
 | R70 | **Web-App-Manifest** (Beschluss 03.09.2026, E-PV-6; erledigt die Erhebung zu Nr. 87): die Weboberfläche wird als installierbare Web-App ausgeliefert — **Manifest allein, kein Service Worker** (Chrome auf Android verlangt seit Version 108 keinen; kein Cache, keine alten Dateien), **in P7 mit der Umbenennung**, Name „NAdoku Web", eigenes Symbol (gleicher Hubschrauber wie die Handy-App, andere Hintergrundfarbe, Browser-Marke; der Tracker bekommt eine GPS-Nadel); Entwurf im P7-Konzept. Nachweis am S24 mit Chrome, Samsung Internet und Firefox sowie auf einem iPhone (Safari) — für iPhone-NutzerInnen die einzige App-Form. R44 gilt unverändert. Begründung E-PV-6 | gilt; P7 |
 | R71 | **Drei Phasen vor v1.0** (Beschluss 03.09.2026, E-PV-7): **P6 Review und Bereinigung** (Fable-Eingang; Sofort-, Pflicht- und Aufräumpakete, Kommentardurchgang, Weg B) · **P7 Gesicht v1.0** (Umbenennung, Vertrag v1, Doku-Neufassung, Manifest, Changelog, Backlog, Altformat, Kommentarregel) · **P8 Schnitt** (Neuaufsetzen, Register neu, Repo-Umzug mit Inventur, Kette im neuen Repositorium, Rechtsunterlagen, Abnahme R11, Erklärung v1.0). Je Phase ein Konzept nach K1 mit eigenem Paketschnitt; P6 → P7 → P8, nichts parallel. Frühere „P6"-Nennungen sind nach `docs/konzepte/Konzept-Planung-v1.0.md` 6.2.8.5 zugeordnet | gilt; Schritte 12–14 |
 | R72 | **Anforderungen an die Doku-Neufassung** (Beschluss 03.09.2026, E-PV-8; beantwortet das Anforderungsgespräch aus R16): vier Dokumente nach Zielgruppe — Handbuch (NutzerIn), Betreiberhandbuch mit Notfall-FAQ und Betriebsakte-Vorlage (generisch, ohne Zugänge), Installation und Selbsthosting, Technik mit Bedrohungsmodell — dazu der Vertrag; Markdown mit Sprungmarken; **das Handbuch reist als statisches HTML mit jedem Release** in die Installation (Link „Hilfe"), nicht von GitHub zur Laufzeit; Screenshots erzeugt (1920×1080, 414×896), Uhr drei Simulatorbilder, Handy aus dem Gerätetest; kurz und prägnant — je Aufgabe ein Bild, Referenz im Anhang, keine Fassungsgeschichte; Abnahmemaß höchstens ein Drittel des heutigen Umfangs. Begründung E-PV-8 | gilt; Umsetzung P7 |
+| R74 | **Krypto- und Sicherheitsreview vorgezogen, Befunde entschieden** (Beschlüsse 06.09.2026; Befunde in `docs/konzepte/Review-Krypto-Sicherheit.md`, Vorschläge und Entscheidungen in `docs/konzepte/Vorbereitung-Sicherheitspaket.md`; beide gehen in R17 Stück 1 ein): **(1)** Das Verfahren steht (PBKDF2, zufälliger Inhaltsschlüssel, AES-256-GCM, zwei Hüllen; kein serverseitiger Weg kennt den Schlüssel); die Zusage hält gegen den Datenbankabzug so lange wie das Passwort, nicht gegen einen Angreifer, der Code ausliefert, und nicht für die Klartext-Ortsdaten (Nr. 43). **(2) Sofortpaket Sicherheit** (Schritt 9a): Web Nr. 117–128, Android Nr. 132–135 und 114, Muster R42, kein K1. **(3) S10 — Sicherheit** (Schritt 9b, vor P5, Hauptstufe): Server-Anteil am Datenschlüssel in `config.php`, je Konto per HMAC, nur an die angemeldete Sitzung, per HKDF in den Datenschlüssel; `pat_wrap_rc` unabhängig; Schlüsselblatt mit Kennung, Kennung in `app_state`, Nachtragen-Weg mit Prüfung, Rotation — der Verlust von `config.php` ist damit ein Griff in die Betriebsakte, kein Reset für alle · Adminpakete versiegeln, `ftp` abschaffen (Nr. 129). **(4) Zweitfaktor für alle Konten**, Admins Pflicht (Nr. 131, erweitert R38, P5). **(5) CSP** nach Bauplan SP-5 (Nr. 8, P5). **(6) Weg B entschieden — S11** (Schritt 12a, nach P6, **vor der Öffnung**): Konto-Schlüsselpaar (löst Nr. 53 mit), Umfang Spur, Phasenkoordinaten, Reanimation **und** Zielklinik (kehrt die Klartext-Entscheidung zur Zielklinik in `mission_fields.php` um), Altbestand per Einmalwerkzeug im Browser für das eine Konto, danach entfernt; Weg C sofort (Nr. 128). **(7) Deploy-Tor** erst mit dem Staging-Aufbau (R40 (2)) — bestätigt; Branch-Schutz und 2FA sofort (Nr. 130). **(8) Offen:** Photon-Umfang (F-SP-4), Ersetzfenster (F-SP-8), Integritätswache (F-SP-9) — Abschnitt 6; die P6-Fragen als Nr. 136. Modell: Review und Konzepte Fable, Umsetzung Opus | gilt |
 | R73 | **Problemsammlung als S9** (Beschluss 03.09.2026, E-PV-9): Schritt 8 „S9 — Einsatzbearbeitung und Rettungsmittel", Konzept nach K1 mit Fable (Mockups PS-3/PS-5, Zielkonflikt PS-8.2 als Fable-Schritte), Backlog 101–113, Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`; Konzept nach dem S8-Konzept (Nr. 74), Umsetzung parallel zulässig; P5 setzt S9 nicht voraus, P6 schon; Zielkonflikt PS-8.2 geht in das Bedrohungsmodell ein (Nr. 43, R69); erste Prüffrage Geocoding-Quelle (PS-1). Schritte 8–13 → 9–14 | gilt; Konzept nach Go des Auftraggebers |
 
 ## 8. Erledigt — Kurzübersicht
@@ -1140,4 +1230,5 @@ beide sind die dokumentierten Grenzen. *Reste:* Prüfliste in Abschnitt 6.
 | **24** | **03.09.2026** | **S7 erledigt** (Schritt 4, Web 12.9.3/12.9.4): „Sicherung“ heißt überall „Backup“ — 642 → 167 Fundstellen in `server/`, Handbuch 78 → 0, Historie unberührt; Entscheidungen E-S7-1 bis E-S7-4 (Bindestrich-Komposita, Kommentare gehen mit, offene Backlog-Punkte ja, `tools/` mit zwei Messgrundlagen als Ausnahme). Fünf Funde, die eine mechanische Ersetzung zerstört hätte, darunter die Kopfzeile des Komplett-Backup-Dumps, die zugleich Erkennungsmarke ist. Dazu **Backlog Nr. 89**: Das geplante Komplett-Backup lief von Web 12.2.0 bis 12.9.2 nie — eigene Korrekturstufe. Konzept nach R62 gelöscht, Prüfdokument bleibt. Zwei Zuarbeiten in Abschnitt 6. **Berichtigt:** die Standzeile im Kopf, die seit Fassung 23 „Web 12.4.2“ nannte, während Abschnitt 3 schon 12.9.2 sagte |
 | **25** | **03.09.2026** | **S5 gebaut und gemergt** (Schritt 5, Web 13.0.0–13.2.0, Uhr 3.0.0; PR #28 und #29): Die Kopplung läuft umgekehrt — das Gerät zeigt den Code, das Web nimmt ihn entgegen, das Gerät bestätigt. Dazu ein Verfahrenswechsel, der nicht im Plan stand (Geräteschlüssel bcrypt → SHA-256, E-S5-42, die Bestandsuhr koppelt einmal neu), der **Wartungsmodus** als Zusatzpaket W (Web 13.2.0, 503 statt 500 während eines Updates) und ein stiller Datenverlust im Upload, der älter ist als S5 (Web 13.0.1). Backlog 66 erledigt (`watch/` läuft durch die Wortliste), 89–92 aus S7 und S5/C, **93–97 neu**. **Vier Migrationen warten auf `update.php`** — die aus S5 ist die dringende, ohne sie endet jede Kopplung in einem 500. **Paket E** (Android 0.10.1) ist gebaut, aber nicht gemergt; es geht vor den S4-Rest. Die Freigabe des Abschlusses und damit die Löschung der Konzepte nach R62 steht aus. |
 | **26** | **03.09.2026** | **Schritt 11 (Planung v1.0) vorgezogen und entschieden** (Konzept `docs/konzepte/Konzept-Planung-v1.0.md`): **R65** Store-Verteilung in zwei Stufen — interner Play-Test-Track ab Schritt 6, Produktion mit Welle 1; Organisationskonto der Gen-EM GbR, Versionscode-Versatz (Nr. 98), Signaturschlüssel zu Play App Signing, Seitenladung bis zur Produktionsfreigabe; sieben Zuarbeiten, D-U-N-S sofort; E-R45-6 ersetzt; Abschnitt 1 und Betriebsübergang angepasst · **R66** Update-Weg: keine Selbstprüfung, kein Selbst-Update, Produktion nur auf Handauslösung, nur ausstehende Migrationen sichtbar (Nr. 77 damit für S8 beantwortet), Register beginnt bei v1.0 neu (Nr. 99) · **R67** Auslieferungskette: Staging automatisch und Prüfumgebung, Freigabe- und Backup-Tor, Rollback, Prüftor in drei Stufen, Android-Signatur außerhalb der CI (Nr. 100) · **R68** Repositorium: eines, frisch, öffentlich, `gen-em/nadoku`; P8-Paket „Repo-Umzug und Inventur" · **R69** Review-Umfang: alles in zwölf Stücken, Bedrohungsmodell zuerst, Kommentardurchgang ohne Beschluss- und Fassungsverweise, zwei Wege für Funde (Sofortpaket / Pflichtpaket P6), Paketschnitt nach der Freigaberunde; R13 und R31 gehen darin auf · **R70** Web-App-Manifest: Manifest allein, in P7, „NAdoku Web" mit eigenem Symbol; Nr. 87 als Erhebung erledigt · **R71** Phasenschnitt: P6 Review und Bereinigung, P7 Gesicht v1.0, P8 Schnitt — Schritt 11 (alt) in drei Schritte geteilt, alle P6-Nennungen zugeordnet · **R72** Doku-Anforderungen: vier Dokumente nach Zielgruppe, Handbuch reist mit dem Release als HTML, erzeugte Screenshots, kurz und prägnant; Betreiberhandbuch generisch mit Notfall-FAQ und Betriebsakte · **R73** Problemsammlung vom 03.09.2026 als **Schritt 8 „S9 — Einsatzbearbeitung und Rettungsmittel"** (Nr. 101–113, Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`, Konzept mit Fable nach dem S8-Konzept); **Schrittnummern 8–11 → 9–12, dazu die neuen Schritte 13 und 14**. Torwächter in P5 hängt am Wartungsmodus aus Paket W. **Berichtigt:** der Absatz zu Nr. 83 im Planungsschritt nannte den Punkt als offen, obwohl Fassung 22 ihn als R64 entschieden hatte. Abschnitte 1, 2, 3, 4, 5, 6, 7 entsprechend; Backlog 98–113 angelegt. |
+| **28** | **06.09.2026** | **Krypto- und Sicherheitsreview vorgezogen und entschieden (R74).** Auf die Frage „ist das sicher?" liegt der Befund in `docs/konzepte/Review-Krypto-Sicherheit.md`: Verfahren richtig gebaut, kein kritischer Fund; drei Wege bleiben — schwaches Passwort plus Datenbankabzug, Angreifer mit Codezugang, Klartext-Ortsdaten. Entschieden: **Sofortpaket Sicherheit** als Schritt 9a (Nr. 117–128, 132–135), **S10 — Sicherheit** als Schritt 9b vor P5 (Server-Anteil am Datenschlüssel mit Schlüsselblatt, Adminpakete versiegeln), Zweitfaktor für alle in P5 (Nr. 131), CSP-Bauplan zu Nr. 8, **Weg B als S11** (Schritt 12a, nach P6, vor der Öffnung; Nr. 43 und 53 zusammengeführt; die drei Fragen aus `Konzept-V1-Ortsdaten.md` beantwortet), Deploy-Tor mit Staging. Backlog 117–136 angelegt; 8, 43, 53, 114 ergänzt. Offen in Abschnitt 6: F-SP-4, F-SP-8, F-SP-9. Vorschläge in `docs/konzepte/Vorbereitung-Sicherheitspaket.md`. |
 | **27** | **04.09.2026** | **Schritt 6 gebaut** (Zweig `claude/rahmenplan-schritt-6-ewm0kx`, Web 14.0.0–14.2.2, Android 0.11.0–0.13.0). **Teil A:** Kopplungsmodul auf Vertrag 1a, feste Server-Adresse und App-Name (R63, Backlog 84/85/86), R57 (Überschneidungshinweis), Akkuwarnung und Verbrauchshinweis (Backlog 82/98). **Teil B — R64 und Backlog Nr. 63 als *eine* Formatänderung** (eigenes Konzept `Konzept-R64-Herkunft-Geraet.md`, AP1–AP5): `origin` trägt sechs Werte statt drei, abgeleitet aus dem `client_ref`-Präfix; **Momentaufnahme** `geraet_art`/`geraet_modell` am Einsatz *und* am Ruhesegment, beim Anlegen kopiert — damit ist Nr. 83 gegen `ON DELETE SET NULL` gefeit; Konto-Sicherung auf **Nutzlast 9** (Sperrvermerke des Schnitts **und** Momentaufnahme), womit Nr. 63 erledigt ist; **der Referenzbestand ist neu gebaut**: zwei Geräte über den echten Kopplungsweg (eine Uhr, ein Handy), alle sechs Herkunftswerte belegt, ein Schnitt darin — und weil der Demo-Reset die Fixture alle 30 Minuten einspielt, prüft der Produktivserver Nr. 63 seither dauerhaft. **Teil C:** Play-Console-Vorbereitung, soweit sie ohne D-U-N-S und Signaturschlüssel geht (`Vorbereitung-Play-Console.md`); vier ihrer fünf Befunde abgestellt (Uhr ohne jede Berechtigung, keine Umleitungen für den Geräteschlüssel, Rechtstexte in der App, Kopplungs-Mails als Zuarbeit vermerkt). **Drei Funde am Code, alle behoben:** Die Anwendung schrieb eine CSV-Datei, die sie selbst nicht einlesen konnte (`uhrzeit_ortszeit` aus Phase 2, vom Import als Startzeit verlangt); die GPX-Probe verglich nach dem Neuaufbau eine Datei statt 172 und meldete grün; die Einsatztabelle zeigte „kein Ende" an abgeschlossenen Einsätzen ohne Phase 9 (Entscheidung des Auftraggebers: Dauer = Beginn bis Ende). **Backlog 63 und 83 erledigt.** Der Push auf `main` steht aus. |
