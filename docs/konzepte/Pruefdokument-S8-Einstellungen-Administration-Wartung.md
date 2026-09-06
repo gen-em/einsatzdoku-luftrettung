@@ -17,9 +17,51 @@ Zielbild, 11.x Umsetzungsprotokoll) zeigen auf den Stand unter jenem Commit.
 > | Stand | 06.09.2026 — **AP1 bis AP8 geprüft** (Web 15.0.0 bis 15.5.1) · **Phase abgeschlossen**, Erledigt-Zeile in `Rahmenplan.md` Abschnitt 8, Fassung 31 |
 > | Geprüft | P-02 bis P-30 vollständig · P-01 **teilweise** (Zwischenstand nach AP1; die Endfassung ist mit AP5 fällig geworden, weil das Menü jetzt steht) · P-09 **halb** (zweiter Browser fehlt) · P-24 **am Referenzbestand**, nicht an Produktivdaten · P-30 für die berührten Seiten (AP1: 4, AP2: 5, AP3: 9, AP4: 2, AP5: alle 46 einmal vollständig, AP7: alle 46 in **beiden** Eingabearten) · **Z-01 und Z-02 geklärt** |
 > | Offen | P-01 (Endfassung — jetzt fällig) · **P-34 gemessen NICHT erfüllt** (789 statt 780 px, siehe AP6) · P-02, P-09, P-10, P-21, P-24 in den Grenzen aus Abschnitt 0 |
-> | Fehlerfunde | **fünfzehn, alle behoben:** F-S8-P-01 bis -15 (Abschnitt 2) |
+> | Fehlerfunde | **fünfzehn, alle behoben:** F-S8-P-01 bis -15 (Abschnitt 2) · **zwei Nachträge vom Produktivstand, offen:** F-S8-P-16 und -17 (Nachtrag oben, Backlog Nr. 149) |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto). **Keine Kopie der Produktivdaten** — für P-02, P-10, P-21 und P-24 steht deshalb die Prüfung an echten Mengen aus (siehe „Was nicht geprüft werden konnte") |
 > | Ist-Bilder | **aufgenommen vor AP1** — vollständiger Lauf: 336 Einzelbilder, 42 Kontaktbögen, 8 Breiten (360, 390, 420, 768, 1024, 1280, 1440, 1920); Überlauf 0, Konsolenfehler 0, Knöpfe ≠ 44 px 0. Gegenprobe auf gleiche Bilder: 336 Dateien, **333 verschiedene Prüfsummen** — die drei Doppelten sind die Tagesübersicht mit und ohne Schublade bei 1024, 1280 und 1440, wo die Schublade bauartbedingt nichts tut. Zehn davon liegen als Kontaktbogen (360, 768, 1024, 1280) unter `docs/konzepte/konzept-s8/ist/`; die 336 Einzelbilder nicht — `tools/screenshots/ausgabe/` steht mit Grund in `.gitignore`, und sie sind aus dem Commit `cecbc76` jederzeit neu zu erzeugen |
+
+---
+
+## Nachtrag 06.09.2026 — zwei Funde am Produktivstand, die diese Prüfung übersehen hat
+
+*Eingetragen mit Rahmenplan Fassung 32, Backlog Nr. 149 und 148. Beide sind
+keine Prüflistenpunkte, sondern Lücken der Prüfung selbst — deshalb hier
+oben und nicht in Abschnitt 3.*
+
+**F-S8-P-16 — Der Erstdeploy war im Web nicht ausführbar.** P-02 sagt
+„Betrieb → Updates aufrufen". Auf dem Produktivserver war das nach dem
+Deploy von 15.5.1 unmöglich: `betrieb_updates.php` verlangt seit AP5
+`require_betreiberin()`, und die Rolle vergibt erst die Migration, die
+dort ausgeführt werden soll. `update.php` lässt einen Admin durch und
+leitet auf dieselbe Seite (302 → 403). Der Notausgang `php update.php`
+braucht eine Kommandozeile, die der Webspace nicht hat. P-01 hat die
+Rechtematrix **nach** der Migration gemessen (36 Aufrufe) und den Zustand
+**davor** nie — und U-AP1-03 hat den Wächter in AP5 nachgezogen, ohne den
+Erstlauf zu wiederholen. **Ausweg am 06.09.2026:** die beiden
+SQL-Anweisungen der Migration über phpMyAdmin. **Regel daraus (Nr. 149 a):**
+Eine Migration, die Rechte einführt, muss ohne diese Rechte ausführbar
+sein; der Erstdeploy-Weg gehört in jede Prüfliste, die einen Wächter
+verschiebt. Der Notweg gehört ins Runbook.
+
+**F-S8-P-17 — Updates-Seite und Status zählen verschieden.** Nach dem
+Notweg kennt das Schema die Rolle, das Register nicht. `migrationen_lauf()`
+zählt die Migration als offen (Status: „1 Migration steht aus", Menüzähler
+„1"), die Seite Updates sortiert sie nach Status `ok` unter *Ausgeführt*,
+meldet „Alles aktuell" und zeigt keinen Knopf. P-08 hat vier
+Testmigrationen gefahren — laufend, blockiert, scheiternd, wartend —, aber
+nicht den fünften Zustand „nicht nötig, nicht verbucht". Die Wartungsprobe
+(43 Erwartungen) misst den Zähler nicht. **Zu tun (Nr. 149 b):** eine
+Zählweise für beide Seiten, Knopf auch für „nicht nötig", eine Erwartung in
+der Wartungsprobe. Danach auf dem Produktivserver einmal „Ausstehende
+ausführen" — P-02 („jedes frühere Admin-Konto heißt BetreiberIn") bleibt
+davon unberührt und ist nach dem Notweg prüfbar.
+
+**Nr. 148 (nicht S8, aber am selben Tag gefunden):** Der Knopf „Diensttage
+zusammenführen" in der R57-Warnung führt auf 404 (`?ziel=` statt `?d=`).
+Der Bilderlauf fotografiert Warnungen, klickt aber keinen Knopf — dieselbe
+Lücke, die F-S8-P-15 (Ausnahmeseite ohne Balken, gefunden vom Handbuch)
+schon gezeigt hat.
 
 ---
 

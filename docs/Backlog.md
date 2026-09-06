@@ -47,6 +47,15 @@ kommen aus der vorgezogenen Planung v1.0 (R65–R67), 101–113 sind die
 Problemsammlung für Schritt 8 (S9, R73); ihre Kennungen PS-1 bis PS-10 stehen
 in `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
 
+**Zu den Nummern 147 bis 149 (Rahmenplan Fassung 32, 06.09.2026).** 147 ist
+die aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung (S9, als
+PS-11 der Vorbereitung); 148 und 149 sind zwei Funde am Produktivstand nach
+dem S8-Deploy vom 06.09.2026 — ein Knopf, der auf 404 führt, und eine
+Migration, die im Web weder ausführbar noch verbuchbar war. Dieselbe Fassung
+hat zwölf Verweise „R74" auf den Krypto-Review zu **R78** berichtigt (der
+Beschluss ist mit Fassung 31 umnummeriert worden, diese Datei nicht) und
+Nr. 115 in Nr. 95 aufgehen lassen — beide beschrieben denselben Fund.
+
 **Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
 rekonstruierbar: Code und Changelog verweisen an neun Stellen namentlich auf
 sie („Backlog Nr. 10"), und aus diesen Fundstellen geht eindeutig hervor,
@@ -59,7 +68,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 ## Offen
 
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
-    *Ergänzung 06.09.2026 (Krypto-Review, R74):* Die Bestandsaufnahme
+    *Ergänzung 06.09.2026 (Krypto-Review, R78):* Die Bestandsaufnahme
     macht sie enger möglich als hier angenommen — **null**
     Inline-Ereignisbehandler, **ein** `style`-Attribut, alle Skriptblöcke
     über `ui_seite_start()`. Der Bauplan (Nonce je Anfrage, Report-Only
@@ -378,7 +387,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfprotokoll, statt die Zahl schönzurechnen.
 
 43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt.**
-    *Entschieden 06.09.2026 (R74):* **Weg C sofort** (Sofortpaket, nur
+    *Entschieden 06.09.2026 (R78):* **Weg C sofort** (Sofortpaket, nur
     Dokumente: die Zusage in `CLAUDE.md` 4, `Technik.md`, README, Handbuch
     und im Datenschutztext auf das eingrenzen, was sie hält), **Weg B als
     eigene Phase S11 nach P6, vor der Öffnung** — mit einem
@@ -576,7 +585,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Festlegung und kein Handgriff.
 
 53. **Konto-Schlüsselpaar für versiegelte Serversicherungen.**
-    *Ergänzung 06.09.2026 (R74):* Dasselbe Schlüsselpaar ist der Schlüssel
+    *Ergänzung 06.09.2026 (R78):* Dasselbe Schlüsselpaar ist der Schlüssel
     auf der Uhr für Weg B (Nr. 43): privater Teil unter dem
     Inhaltsschlüssel gehüllt, öffentlicher Teil im Klartext ans Gerät. Die
     offenen Fragen von hier (wo der private Teil lebt, Passwortwechsel)
@@ -862,59 +871,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die Adresse überhaupt noch existiert — das räumt P6 (Nr. 77 bleibt
     deshalb offen).
 
-78. **Der Wertekasten zeigt Cron-Adresse und Token in der Schriftgröße des
-    Kopplungscodes.**
-    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
-    (Rahmenplan Fassung 16).* `.codeblock-wert` (`style.css`) setzt
-    `--groesse-5`, 600 und gesperrt — gedacht für sechs Zeichen
-    Kopplungscode, benutzt aber auch für die Cron-Zeile und die Token-Adresse
-    auf der Wartungsseite, den Setz-Link auf der Kontoseite und die
-    Serverschlüssel-Zeile der Backup-Ziele. Lange Werte brechen in dieser
-    Größe über mehrere Zeilen und wirken unpassend. **Zu tun:** eine zweite
-    Stufe des Bausteins für lange Werte (`--schrift-fest` in `--groesse-2`
-    oder `-3`, ohne Sperrung), Herkunft in `Design.md` nachtragen; der
-    Kopplungscode behält die große Stufe. Darf als Kleinstkorrektur vorab in
-    der Backlog-Runde laufen. Zuordnung: S8.
-    **Entschieden 05.09.2026 (Konzept S8, E-S8-10):** zweite Stufe
-    `codeblock-lang` — `--schrift-fest` in `--groesse-2`, ohne Sperrung, mit
-    Umbruch an beliebiger Stelle —, dazu ein leiser Knopf **„Kopieren"** in
-    der Kartenecke, weil lange Werte abgeschrieben Fehler machen. **Fünf
-    Stellen, nicht vier** (B-S8-13): Cron-Zeile, Token-Adresse, Setz-Link,
-    Serverschlüssel-Zeile — und die Geräte-ID samt API-Schlüssel beim
-    Anlegen von Hand, die in der Rückmeldung fehlte. Umsetzung in S8 AP2
-    (Baustein, Jobs) und AP6 (übrige Stellen).
-
-79. **Backup-Optionen: Begriffe und Optionen sind gewachsen wie
-    Wildwuchs.**
-    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* P3 hat Backups je
-    Konto und Backup-Regeln auf die Kontoseite gelegt, S2 hat
-    Speichergrenze, Warnschwellen, Aufbewahrung, Backup-Ziele, Zeitplan
-    und Komplett-Backup dazugebaut, S7 stellt den Begriff um. Was wo
-    einstellbar ist und wie es heißt, ist nicht mehr aus einem Guss.
-    **Zu tun:** Bestandsaufnahme aller Backup-Optionen mit Fundort,
-    Begriff und Zielgruppe; dann eine Ordnung (je Konto gegen je
-    Installation, NutzerIn gegen Admin gegen Betreiberin) und ein
-    Begriffssatz; Handbuch 6 und `Backup-Format.md` nachziehen. Zuordnung:
-    S8, als Kern der Sichtung.
-    **Entschieden 05.09.2026 (Konzept S8, E-S8-06; Rahmenplan R77):** drei
-    Namen, drei Orte, ein Verb je Weg. **Backup** ist die `.edbak`-Datei der
-    NutzerIn (Einstellungen → Backup), **Konto-Backup** das Paket je Konto
-    auf dem Server (Verwaltung → Konto-Backups), **Komplett-Backup** der
-    Dump der Installation (Betrieb → Komplett-Backup); dazu **Backup-Ziele**
-    für den Versand und **Speicher** für Grenze und Belegung aller drei
-    (Betrieb → Servereinstellungen, was B-S8-06 auflöst: die Grenze stand
-    unter „Backups" und wirkte auch auf die Komplett-Stände). Verben:
-    *sichern* fürs Erzeugen, *einspielen* für jeden Rückweg in ein Konto —
-    für NutzerIn und Verwaltung gleich —, *wiederherstellen* nur für die
-    Installation. Kennzahlen und Filter heißen „Konto-Backup überfällig" und
-    „nie Konto-Backup", weil sie genau das messen und nichts über die
-    Dateien der NutzerInnen wissen (B-S8-07, jetzt Nr. 117). Umsetzung in S8
-    AP2 und AP3.
-    **Erledigt mit Web 15.2.0 (S8/AP3).** Die drei Namen stehen in Oberfläche,
-    Handbuch 6 und 11 sowie `Backup-Format.md`; „Admin-Backup" und „Wartung"
-    als Seitenname sind ausgetragen, auch außerhalb der AP3-Seiten. Nummer
-    bleibt bis zum Abschluss der Phase stehen und geht dann nach *Erledigt*.
-
 ---
 
 80. **Auswertung der Gerätestatistik — und die zweite Hälfte der Frage.**
@@ -1136,6 +1092,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Vorschlag:** Aufräumen im `@After` der betroffenen Fälle, oder ein
     eigenes Prüfkonto, das der Lauf am Ende löscht. Gehört zum S4-Rest, weil
     er dieselben Prüffälle anfasst.
+    **Stand 06.09.2026 (Fassung 32):** Der S4-Rest ist gemergt und hat den
+    Punkt nicht mitgenommen; Nr. 115 (aus Paket E) meldete denselben Fund und
+    ist hier aufgegangen. Zuordnung jetzt: **Backlog-Runde (Android)**.
 
 96. **Uhr und Handy sagen nicht, dass gewartet wird.**
     *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-08).*
@@ -1296,19 +1255,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Letzteres ist Datenverlust auf Knopfdruck. Zuordnung: Backlog-Runde, nach
     S5.
 
-115. **Die Rundlaufprüffälle räumen ihren hochgeladenen Bestand nicht ab.**
-    *Aufgenommen 03.09.2026 aus S5 (Vorbereitung 8.2).* `android/LIESMICH.md`
-    verspricht: „Die Fälle räumen hinter sich auf: Was sie koppeln, trennen
-    sie wieder." Das stimmt für die **Geräte** und nicht für die **Daten**:
-    Nach einem Lauf standen 9 Diensttage, 5 Einsätze und 14 439 Spurpunkte
-    zusätzlich im Admin-Konto, und jeder weitere Lauf legt dasselbe noch
-    einmal dazu. Das ist kein Fehler der Prüffälle — der Sinn des Rundlaufs
-    ist gerade, dass die Daten wirklich ankommen —, aber es heißt: Wer die
-    Installation als Ausgangsstand braucht, muss sie neu einrichten, und wer
-    Zahlen misst, muss sie vor **und** nach dem Lauf notieren. Die
-    `day`-Kennungen sind den Fällen bekannt; ein Abräumen am Ende wäre
-    machbar. Zuordnung: Backlog-Runde.
-
 116. **Das Kontrastwerkzeug misst nur, was in seiner Paarliste steht.**
     *Aufgenommen 03.09.2026 aus S5 Paket E1 (B-S5Z-13, B-S5Z-15, B6.2).*
     `android/werkzeuge/kontraste.py` führt eine **feste Liste** von
@@ -1461,7 +1407,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nicht betroffen (kein `edk`, fremde Hülle öffnet nicht), aber Eingaben
     landen im fremden Konto. Die Sitzung besteht beim GET schon
     (`login.php:13`), das Token ist also da. Zuordnung: Sofortpaket
-    Sicherheit (R74).
+    Sicherheit (R78).
 
 128. **E-Mail-Wechsel im Profil ohne Passwortnachweis.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-7).* `einstellungen.php:92-106`
@@ -1472,7 +1418,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Offenlegung, aber Kontoübernahme für Klartextfelder und Aussperren.
     Sofortpaket: Nachweis per `old_token` wie beim Passwortwechsel, Hinweismail
     an die alte Adresse bei beiden Wegen; Bestätigung der neuen Adresse
-    kommt mit R37.6 in P5. Zuordnung: Sofortpaket Sicherheit (R74), Rest P5.
+    kommt mit R37.6 in P5. Zuordnung: Sofortpaket Sicherheit (R78), Rest P5.
 
 129. **`apk/` und `demo/` liegen ungesperrt im Webroot.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-9).* `apk.php` verlangt
@@ -1524,7 +1470,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     im Web getrennt ist. Was schon geschützt ist: Einsätze mit
     `manual = 1` überspringt `ingest.php` ganz (Z. 251), und Phasen werden
     nur ersetzt, wenn der Upload mindestens so viele bringt (Z. 359).
-    **Entschieden (R74):** ein **Zeitfenster ab Einsatzbeginn**, innerhalb
+    **Entschieden (R78):** ein **Zeitfenster ab Einsatzbeginn**, innerhalb
     dessen ein Gerät ersetzen darf; danach `ok` ohne Ersetzen (idempotent,
     kein Fehler auf der Uhr); Neuanlage immer. **Entschieden: 72 h**
     (damit ein Freitagsdienst am Montag noch nachkommt) — Konstante in `db.php`,
@@ -1568,7 +1514,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zuordnung: Sofortpaket Sicherheit, Rest S9.
 
 138. **Weg C: die Zusage auf das eingrenzen, was sie hält.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-1), entschieden R74.*
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-1), entschieden R78.*
     Nur Dokumente, keine Versionsstufe: `CLAUDE.md` 4, `Technik.md` 4.98,
     README, Handbuch 5 und der Entwurf des Datenschutztextes sagen, dass
     Spur, Phasenkoordinaten, Zielklinik, Zeiten und Reanimationsereignisse
@@ -1584,7 +1530,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `Backup-Format.md` 5 („kein Schlüssel, ohne ihn zu speichern") ist seit
     dem Serverschlüssel (Web 12.1.0) überholt. Versiegeln mit
     `sk_versiegeln()` wie das Komplettbackup, `ftp` aus der Auswahl,
-    bestehende `ftp`-Ziele mit rotem Hinweis. Zuordnung: **S10** (R74).
+    bestehende `ftp`-Ziele mit rotem Hinweis. Zuordnung: **S10** (R78).
 
 140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-16).* Die
@@ -1593,7 +1539,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nächsten Anmelden abgreifen — der eine Angriff, gegen den keine
     Browser-Verschlüsselung hilft. Das Repositorium ist öffentlich;
     Branch-Schutz, 2FA-Zwang und Umgebungs-Freigaben kosten nichts.
-    **Entschieden (R74):** Branch-Schutz und 2FA sofort (Zuarbeit), das
+    **Entschieden (R78):** Branch-Schutz und 2FA sofort (Zuarbeit), das
     Deploy-Tor erst mit dem Staging-Aufbau (R40 (2)); die
     **Integritätswache** (tägliche Action vergleicht die ausgelieferten
     Skripte mit dem Release) kommt sofort mit dem Sofortpaket (F-SP-9).
@@ -1603,7 +1549,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 141. **Zweitfaktor für alle Konten.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
     Anmeldung **und** Datenschlüssel; Phishing genügt für alles. R38 sieht
-    TOTP nur für Admin-Konten vor. **Entschieden (R74):** für alle Konten
+    TOTP nur für Admin-Konten vor. **Entschieden (R78):** für alle Konten
     angeboten, für Admins Pflicht; Geheimnis serverseitig versiegelt
     (`sk_versiegeln()`), `otpauth://`-Text statt QR-Fremdbestandteil, acht
     Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
@@ -1618,7 +1564,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Release-`network_security_config`. Auf Android 8.0/8.1 ginge
     `X-Api-Key` bei einer Selbsthoster-Adresse per IP im Klartext; der
     Standardbau ist nicht betroffen. Ausnahme an `BuildConfig.DEBUG`,
-    Klartextverbot im Release. Zuordnung: Sofortpaket Android (R74).
+    Klartextverbot im Release. Zuordnung: Sofortpaket Android (R78).
 
 143. **Android: Verzicht auf Certificate Pinning ist nicht festgehalten.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-3).* Vertretbar bei
@@ -1644,7 +1590,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Begründung steht. Zuordnung: Sofortpaket Android.
 
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.**
-    *Aufgenommen 06.09.2026 (R74).* Drei Fragen, keine Fehler: **Argon2id
+    *Aufgenommen 06.09.2026 (R78).* Drei Fragen, keine Fehler: **Argon2id
     statt PBKDF2** (WASM-Fremdbestandteil gegen GPU-Resistenz; nach S10
     klein, weil der Abzug allein dann nichts mehr nützt) · **Inhaltsschlüssel
     als nicht-extrahierbarer `CryptoKey`** statt Hex im `sessionStorage`
@@ -1655,6 +1601,86 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Design-Skizze für Weg B (Nr. 43, SP-9) zur Prüfung. Zuordnung: P6,
     R17 Stück 1.
 
+147. **Die aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung zeigen.**
+    *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Wer im
+    Einsatzformular „Auf der Karte wählen" öffnet (`ortswahl.js`, Fadenkreuz),
+    sieht eine leere Karte — obwohl der Einsatz eine GPS-Aufzeichnung hat und
+    `api/mission.php` sie längst liefert. Der Ort, der gesucht wird, liegt fast
+    immer **auf** der Spur; ohne sie sucht man ihn auf der Karte neu.
+    **Soll:** Liegt eine Aufzeichnung vor (`$hatTrack`, dieselbe Schwelle wie
+    das Formular: mehr als ein Punkt), zeichnet der Dialog sie in der ersten
+    Spurfarbe; ist das Feld noch leer, öffnet die Karte auf der Spur
+    (`fitBounds`), sonst wie heute auf der Koordinate. **Nur die Spur, keine
+    Luftlinie** — `luftlinie.js` bleibt außen vor; eine gedachte Verbindung
+    hilft beim Suchen nicht und wäre im Auswahldialog eine Falschaussage. Gilt
+    für **jeden** Kartendialog des Einsatzformulars: heute den Einsatzort,
+    mit PS-7 (Nr. 107) auch die Zielklinik — der manuelle Abfahrtort erscheint
+    ohne Spur ohnehin nicht. An Photon geht weiterhin nur die Koordinate
+    (Umkehrsuche), nie ein Spurpunkt. **Ort nach R74:** der vorhandene
+    Pin-Knopf am Feld — kein neuer Menüpunkt, keine neue Darstellung, der
+    Dialog bekommt eine Ebene mehr. Verträglich mit S11 (Weg B): Der Dialog
+    läuft im Browser, wo die Spur nach S11 entschlüsselt vorliegt.
+    Zuordnung: **S9**, als PS-11 der Vorbereitung und Ergänzung zu PS-1
+    (Nr. 101, gemeinsamer Kartendialog) — der Dialog entsteht dort ohnehin
+    neu.
+
+148. **Der Knopf „Diensttage zusammenführen" in der Überschneidungswarnung führt auf 404.**
+    *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Laufen
+    zwei Diensttage zeitgleich, zeigt `index.php` seit Web 13.3.0 die
+    R57-Warnung mit dem Ausweg „Diensttage zusammenführen". Der Knopf
+    verlinkt `diensttag_zusammenfuehren.php?ziel=<id>` (`index.php:173`); die
+    Seite liest aber `$_GET['d']` (`diensttag_zusammenfuehren.php:26`) —
+    wie der zweite Link auf derselben Seite im Aktionsmenü (`?d=`, Zeile 201)
+    und `daymergelink` in `loadDay()`. `$zielId` ist damit 0, `dt_laden()`
+    liefert null, `ui_abbruch(404, 'Diensttag nicht gefunden.')`. **Genau
+    der Fall, für den die Warnung gebaut ist, endet auf einer Fehlerseite.**
+    Kein Prüfmittel deckt das: Der Bilderlauf fotografiert die Warnung, klickt
+    aber nichts; die Prüfliste S4 nennt R57 nicht. **Zu tun:** `?ziel=` →
+    `?d=` (eine Zeile); dazu ein Prüffall, der die Ziele aller `href` auf
+    `index.php` gegen die gelesenen Parameter der Zielseiten hält — oder
+    wenigstens ein Browserlauf mit Klick. Zuordnung: **Backlog-Runde,
+    sofort**, eine Korrekturstufe mit Nr. 149.
+
+149. **Die Seite Updates zählt anders als Status und Menü — und die Rollenmigration war ohne die Rolle nicht ausführbar.**
+    *Aufgenommen 06.09.2026 am Produktivstand, unmittelbar nach dem
+    S8-Deploy (Rahmenplan Fassung 32).* Zwei Funde, eine Ursache: Der
+    Erstdeploy von S8 ist nie durchgespielt worden.
+    **(a) Die Sperre.** `2026_09_05_rolle_betreiberin` macht Admins zu
+    BetreiberInnen. Ausführen lässt sie sich nur über Betrieb → Updates, und
+    `betrieb_updates.php` beginnt mit `require_betreiberin()` — der Rolle,
+    die es vor der Migration nicht gibt. `update.php` lässt einen Admin
+    durch und leitet per 302 auf dieselbe Seite (403). Der Notausgang
+    `php update.php` braucht eine Kommandozeile, die es auf dem Webspace
+    nicht gibt (`Technik.md`: kein `exec()`). S8 hatte das Aussperren der
+    **letzten** BetreiberIn bedacht (R75), nicht das Fehlen der **ersten**;
+    das Prüfdokument S8 sagt zu P-02 „Betrieb → Updates aufrufen" und hat
+    den Wächter aus AP5 nicht gegen den Erstlauf gehalten. Ausweg am
+    06.09.2026: die beiden SQL-Anweisungen der Migration über phpMyAdmin.
+    **(b) Der Phantomzähler.** Danach kennt das Schema die Rolle; die
+    Migration steht ohne Register-Vermerk da. `migrationen_lauf()` stuft
+    sie als „nicht nötig — wird beim Ausführen als erledigt vermerkt" ein
+    und zählt sie **trotzdem als offen** (`offen = 1`) — das lesen Status
+    („1 Migration steht aus") und der Menüzähler (`status_lib.php`). Die
+    Seite Updates dagegen sortiert nach Status `ok`, legt dieselbe Migration
+    unter *Ausgeführt* ab, meldet „Alles aktuell" und **zeigt den Knopf
+    „Ausstehende ausführen" nicht**. Im Web lässt sich der Vermerk also
+    nicht nachholen; der Zähler bleibt, bis die nächste echte Migration
+    läuft. Zwei Zählweisen für denselben Sachverhalt — der Fall, den S8
+    abschaffen wollte (E-S8-16: die eine zählende Meldung).
+    **Zu tun:** (b) zuerst — die Seite Updates zählt mit `offen` wie Status
+    und Menü, listet eine „nicht nötig"-Migration unter *Ausstehend* mit
+    neutraler Plakette („nicht nötig") und bietet den Knopf an; die
+    Wartungsprobe bekommt eine Erwartung für genau diesen Zustand
+    (Register ohne die jüngste Kennung, Schema aktuell). Danach ist auf dem
+    Produktivserver einmal „Ausstehende ausführen" zu drücken (Rahmenplan
+    Abschnitt 6). (a) als **Regel:** Eine Migration, die Rechte einführt,
+    muss ohne diese Rechte ausführbar sein — für diese Installation
+    erledigt; für die nächste Rollenmigration (Support-Rolle, R38, P5) und
+    für das Bedrohungsmodell (R69) festhalten, und der phpMyAdmin-Notweg
+    gehört ins Runbook (`Technik.md` 7). Zuordnung: **Backlog-Runde,
+    sofort** (b), eine Korrekturstufe mit Nr. 148; (a) Runbook jetzt, Regel
+    P5/P6.
+
 ---
 
 ## Erledigt
@@ -1662,6 +1688,82 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+115. **Die Rundlaufprüffälle räumen ihren hochgeladenen Bestand nicht ab.**
+    *Aufgenommen 03.09.2026 aus S5 (Vorbereitung 8.2).* `android/LIESMICH.md`
+    verspricht: „Die Fälle räumen hinter sich auf: Was sie koppeln, trennen
+    sie wieder." Das stimmt für die **Geräte** und nicht für die **Daten**:
+    Nach einem Lauf standen 9 Diensttage, 5 Einsätze und 14 439 Spurpunkte
+    zusätzlich im Admin-Konto, und jeder weitere Lauf legt dasselbe noch
+    einmal dazu. Das ist kein Fehler der Prüffälle — der Sinn des Rundlaufs
+    ist gerade, dass die Daten wirklich ankommen —, aber es heißt: Wer die
+    Installation als Ausgangsstand braucht, muss sie neu einrichten, und wer
+    Zahlen misst, muss sie vor **und** nach dem Lauf notieren. Die
+    `day`-Kennungen sind den Fällen bekannt; ein Abräumen am Ende wäre
+    machbar. Zuordnung: Backlog-Runde.
+    **Zusammengelegt mit Rahmenplan Fassung 32:** Nr. 95 (aus S5, Vorbereitung
+    8.2) beschreibt denselben Fund mit denselben Zahlen; er wird dort
+    weitergeführt (Backlog-Runde, Android). Diese Nummer bleibt als Verweis.
+
+79. **Backup-Optionen: Begriffe und Optionen sind gewachsen wie
+    Wildwuchs.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* P3 hat Backups je
+    Konto und Backup-Regeln auf die Kontoseite gelegt, S2 hat
+    Speichergrenze, Warnschwellen, Aufbewahrung, Backup-Ziele, Zeitplan
+    und Komplett-Backup dazugebaut, S7 stellt den Begriff um. Was wo
+    einstellbar ist und wie es heißt, ist nicht mehr aus einem Guss.
+    **Zu tun:** Bestandsaufnahme aller Backup-Optionen mit Fundort,
+    Begriff und Zielgruppe; dann eine Ordnung (je Konto gegen je
+    Installation, NutzerIn gegen Admin gegen Betreiberin) und ein
+    Begriffssatz; Handbuch 6 und `Backup-Format.md` nachziehen. Zuordnung:
+    S8, als Kern der Sichtung.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-06; Rahmenplan R77):** drei
+    Namen, drei Orte, ein Verb je Weg. **Backup** ist die `.edbak`-Datei der
+    NutzerIn (Einstellungen → Backup), **Konto-Backup** das Paket je Konto
+    auf dem Server (Verwaltung → Konto-Backups), **Komplett-Backup** der
+    Dump der Installation (Betrieb → Komplett-Backup); dazu **Backup-Ziele**
+    für den Versand und **Speicher** für Grenze und Belegung aller drei
+    (Betrieb → Servereinstellungen, was B-S8-06 auflöst: die Grenze stand
+    unter „Backups" und wirkte auch auf die Komplett-Stände). Verben:
+    *sichern* fürs Erzeugen, *einspielen* für jeden Rückweg in ein Konto —
+    für NutzerIn und Verwaltung gleich —, *wiederherstellen* nur für die
+    Installation. Kennzahlen und Filter heißen „Konto-Backup überfällig" und
+    „nie Konto-Backup", weil sie genau das messen und nichts über die
+    Dateien der NutzerInnen wissen (B-S8-07, jetzt Nr. 117). Umsetzung in S8
+    AP2 und AP3.
+    **Erledigt mit Web 15.2.0 (S8/AP3).** Die drei Namen stehen in Oberfläche,
+    Handbuch 6 und 11 sowie `Backup-Format.md`; „Admin-Backup" und „Wartung"
+    als Seitenname sind ausgetragen, auch außerhalb der AP3-Seiten. Nummer
+    bleibt bis zum Abschluss der Phase stehen und geht dann nach *Erledigt*.
+    **Nach *Erledigt* mit Rahmenplan Fassung 32** — die Phase S8 ist am
+    06.09.2026 abgeschlossen; der Rest (Kennzahl „nie Konto-Backup") ist
+    Nr. 117.
+
+78. **Der Wertekasten zeigt Cron-Adresse und Token in der Schriftgröße des
+    Kopplungscodes.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
+    (Rahmenplan Fassung 16).* `.codeblock-wert` (`style.css`) setzt
+    `--groesse-5`, 600 und gesperrt — gedacht für sechs Zeichen
+    Kopplungscode, benutzt aber auch für die Cron-Zeile und die Token-Adresse
+    auf der Wartungsseite, den Setz-Link auf der Kontoseite und die
+    Serverschlüssel-Zeile der Backup-Ziele. Lange Werte brechen in dieser
+    Größe über mehrere Zeilen und wirken unpassend. **Zu tun:** eine zweite
+    Stufe des Bausteins für lange Werte (`--schrift-fest` in `--groesse-2`
+    oder `-3`, ohne Sperrung), Herkunft in `Design.md` nachtragen; der
+    Kopplungscode behält die große Stufe. Darf als Kleinstkorrektur vorab in
+    der Backlog-Runde laufen. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-10):** zweite Stufe
+    `codeblock-lang` — `--schrift-fest` in `--groesse-2`, ohne Sperrung, mit
+    Umbruch an beliebiger Stelle —, dazu ein leiser Knopf **„Kopieren"** in
+    der Kartenecke, weil lange Werte abgeschrieben Fehler machen. **Fünf
+    Stellen, nicht vier** (B-S8-13): Cron-Zeile, Token-Adresse, Setz-Link,
+    Serverschlüssel-Zeile — und die Geräte-ID samt API-Schlüssel beim
+    Anlegen von Hand, die in der Rückmeldung fehlte. Umsetzung in S8 AP2
+    (Baustein, Jobs) und AP6 (übrige Stellen).
+    **Erledigt mit Web 15.1.0 und 15.4.1 (S8/AP2 und AP6).** Die zweite
+    Stufe `codeblock-lang` steht an allen fünf Stellen, der Kopieren-Knopf
+    daneben (`Design.md` 9); die Phase ist am 06.09.2026 abgeschlossen
+    (Rahmenplan Abschnitt 8), die Nummer geht mit Fassung 32 hierher.
 
 75. **Die Unterpunkte des Admin-Menüs sind fett und nicht einklappbar.**
     *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* S3 (Block F) hatte den

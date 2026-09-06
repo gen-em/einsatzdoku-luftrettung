@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 31 (06.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 32 (06.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -9,30 +9,28 @@ Umsetzungsblöcken und die 50 Programmentscheidungen im Volltext —, liegt
 älteren Dokumenten auf „Rahmenplan Abschnitt 5" oder „Fassung 13" meinen
 das Archiv; sein Kopf sagt, welcher alte Abschnitt wo weiterlebt.
 
-**Stand am 03.09.2026, abends:** `main` trägt **Web 13.2.0** und **Uhr
-3.0.0** (S5 ist gemergt, PR #28 und #29) sowie **Android 0.7.7**.
+**Stand am 06.09.2026, abends:** `main` trägt **Web 15.5.1**, **Uhr 3.0.2**
+und **Android 0.13.0**. Seit Fassung 25 sind gemergt: **Paket E** des
+S5-Zusatzes (PR #31, 03.09., Android 0.8.0–0.10.1), **Schritt 6 — S4-Rest**
+Teile A bis C (PR #33, 04.09., Web 13.3.0–14.2.2, Android 0.11.0–0.13.0),
+zwei vom Gerät gemeldete Uhr-Korrekturen (PR #34, 05.09., Uhr 3.0.1/3.0.2)
+und **S8** (PR #35, 06.09., Web 15.0.0–15.5.1).
 
-> **Stand am 04.09.2026, abends — auf dem Zweig, nicht auf `main`:** Der
-> Arbeitszweig `claude/rahmenplan-schritt-6-ewm0kx` trägt **Web 14.2.2** und
-> **Android 0.13.0**. Darin stecken Schritt 6 Teil A (Kopplungsmodul, feste
-> Adresse, R57, Backlog 82/98), Teil B (**R64** und Backlog Nr. 63, Web
-> 14.0.0–14.2.2) und Teil C (Play-Console-Vorbereitung, Android 0.13.0).
-> **Der Push auf `main` steht aus** — er deployt sofort, und mit ihm gehen
-> eine Migration und eine erneuerte Demo-Fixture hinaus.
+**Alle Migrationen sind angewendet.** `update.php` ist am 04.09.2026 um
+23:15 gelaufen und hat die vier aus S4, S6 und S5 sowie
+`2026_09_04_herkunft_geraet` verbucht. Die sechste,
+`2026_09_05_rolle_betreiberin`, ist am 06.09.2026 **von Hand über
+phpMyAdmin** ausgeführt worden — der Web-Weg war versperrt (Nr. 149): Die
+Seite, die Migrationen ausführt, verlangt die Rolle, die erst diese
+Migration vergibt. **Ihr Register-Vermerk fehlt noch.** Bis Nr. 149 gebaut
+ist, zeigen Status und Menü deshalb „1 Migration steht aus", die Seite
+Updates aber „Alles aktuell" — zwei Zählweisen, ein Sachverhalt; nach dem
+Einspielen von Nr. 149 einmal „Ausstehende ausführen" drücken (Abschnitt 6).
 
-> **VIER MIGRATIONEN WARTEN AUF `update.php`** — drei aus S4 und S6, dazu
-> `2026_09_03_kopplungssitzungen` aus S5. **Die letzte ist die dringende:**
-> Sie legt `pair_sessions` an. Bis sie gelaufen ist, gibt es die Tabelle auf
-> dem Produktivserver nicht, und **jeder Kopplungsversuch einer Uhr endet in
-> einem 500**. Der Deploy selbst ist mit dem Merge von PR #28 am 03.09.2026
-> um 18:59:58 UTC bereits gelaufen (FTPS-Action); nur der Aufruf von
-> `update.php` fehlt, und den kann nur eine Administratorin machen.
-
-**Paket E des S5-Zusatzes (Android-Ortung und Dienstende) ist gebaut, aber
-nicht gemergt** — Zweig `claude/s5-paket-e-android`, **Android 0.10.1**,
-E1 bis E3 fertig. Es berührt nur `android/` und Doku und hängt an keinem
-der übrigen Pakete; es geht **vor dem S4-Rest** auf `main` (beide fassen
-`HauptActivity.kt`, `strings.xml` und das Manifest an).
+**Als Nächstes:** die Korrekturstufe mit **Nr. 148 und 149** (Auftrag liegt
+vor, Claude Code), dann **Schritt 9a** (Sofortpaket Sicherheit, Claude
+Code) und parallel dazu das **S9-Konzept** (Schritt 8, Fable, im
+Projektraum) — die Zuarbeit F3–F6 liegt seit dem 06.09.2026 vor.
 
 **Die Planung v1.0 (Schritt 11) ist vorgezogen und entschieden** — R65 bis
 R73, Konzept `docs/konzepte/Konzept-Planung-v1.0.md`; der v1.0-Schnitt ist
@@ -41,11 +39,13 @@ in drei Phasen geteilt (P6, P7, P8, R71), die Problemsammlung vom
 liegt, steht in Abschnitt 6 — zuvorderst die **D-U-N-S-Nummer** für das
 Play-Console-Organisationskonto (R65).
 
-> **Berichtigt mit Fassung 24.** Diese Zeile nannte bis zuletzt
-> „Web 12.4.2" und den S4-Zweig als noch offen. Fassung 23 hatte die
-> Statuszeilen in Abschnitt 3 auf den Stand von `main` gezogen, den Kopf
-> aber stehen lassen — zwei Aussagen über denselben Sachverhalt, und die
-> auffälligere war falsch.
+> **Berichtigt mit Fassung 32.** Der Kopf nannte bis Fassung 31 „Web 13.2.0
+> auf `main`", einen ausstehenden Push für Schritt 6, ein ungemergtes
+> Paket E und vier wartende Migrationen — alles seit dem 04.09.2026
+> überholt, während Abschnitt 10 die Merges längst führte. Dieselbe Sorte
+> Fehler wie die, die Fassung 24 berichtigt hatte: Der Kopf wird beim
+> Abschluss einer Phase nicht mitgelesen. Wer eine Erledigt-Zeile
+> schreibt, liest ab jetzt den Kopf gegen (Abschnitt 9).
 
 **So wird gelesen:** Abschnitt 3 sagt, was als Nächstes dran ist und in
 welcher Reihenfolge. Abschnitt 5 sagt, wohin jeder offene Backlog-Punkt
@@ -166,11 +166,11 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 2 | **S6 — Gerätekennung und Schlüsselfrist** | Serverseite von R42, Behebung R44 | Schritt 1 | keins; R42 und R44 sind die Spezifikation | Opus | **gemergt und ausgeliefert** (Web 12.9.0 bis 12.9.2 auf `main`); `update.php` für `2026_09_02_geraetekennung` und `…_geraetemodell_breiter` zu bestätigen; Abnahme nach Abschnitt 6 offen |
 | 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | erledigt 03.09.2026 — Freigabe mit E-S5-32 bis -47 |
 | 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | gelöscht nach R62 | Opus | **erledigt, Web 12.9.3/12.9.4** (Abschnitt 8); PR gegen `main` offen — der Merge deployt; Prüfliste S7 offen |
-| 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | **in Arbeit** — Paket A (Server, Web 13.0.0) erledigt 03.09.2026 auf `claude/s7-umsetzung-vorbereiten-s8kax0`; C und E in eigenen Instanzen |
-| 6 | **S4 — Rest** | Kopplungsmodul, feste Server-Adresse, App-Name, Insets, Herkunft je Einsatz (R64), Gerätetest, **Play Console nach R65** (interner Test-Track für Handy und Uhr, Versionscode-Versatz, Signaturweg), Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | **auf dem Zweig gebaut** (Web 14.2.2, Android 0.13.0): Teil A, Teil B (R64 und Nr. 63) und Teil C (Play-Console-Vorbereitung) sind fertig. **Offen:** Gerätetest am S24 und mit der Wear-OS-Uhr (Backlog 81, Abschnitt 6), Android 1.0.0 nach E-R45-7, D-U-N-S und Signaturschlüssel für die Play Console — und der Push auf `main` |
+| 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | **erledigt und gemergt** (Web 13.0.0–13.2.0, Uhr 3.0.0, PR #28/#29; **Paket E** Android 0.8.0–0.10.1, PR #31); Prüfliste S5 und Freigabe des Abschlusses offen (Abschnitt 6) |
+| 6 | **S4 — Rest** | Kopplungsmodul, feste Server-Adresse, App-Name, Insets, Herkunft je Einsatz (R64), Gerätetest, **Play Console nach R65** (interner Test-Track für Handy und Uhr, Versionscode-Versatz, Signaturweg), Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | **gemergt** (PR #33, 04.09.2026; Web 13.3.0–14.2.2, Android 0.11.0–0.13.0): Teil A, Teil B (R64 und Nr. 63) und Teil C (Play-Console-Vorbereitung) sind auf `main`, `update.php` ist gelaufen. **Offen:** Gerätetest am S24 und mit der Wear-OS-Uhr (Backlog 81, Abschnitt 6), Android 1.0.0 nach E-R45-7, D-U-N-S und Signaturschlüssel für die Play Console |
 | 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Backup-Optionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61); dazu die Rolle **BetreiberIn** (R75), der Block **Betrieb** mit sieben Seiten und das **Ordnungsprinzip** (R74) | Schritte 4 und 6 | **liegt vor** (Fable, 05.09.2026), `docs/konzepte/Konzept-S8-Einstellungen-Administration-Wartung.md`, zwölf Mockups | Fable (Konzept), Opus (Umsetzung) | **erledigt, Web 15.0.0 bis 15.5.1** (Abschnitt 8) — acht Arbeitspakete, Konzept nach R62 gelöscht, Prüfdokument bleibt |
-| 8 | **S9 — Einsatzbearbeitung und Rettungsmittel** | Problemsammlung vom 03.09.2026 (Nr. 101–113): Adresssuche und gemeinsamer Kartendialog, Rettungsmittel-Übernahme, kompaktere Buttons, Windenkacheln, Hubschrauber-Icon, Vorschlagsliste, Zielklinik ad hoc, Schloss-Kennzeichnung, Notizfeld, Kachel „GPS-Daten", neue Rettungsmittel-Arten, Tageszuordnung, Rollen | Schritt 7 (S8-Konzept, Nr. 74); F3–F6 beantwortet | neu; Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md` | Fable (Konzept; Mockups PS-3/PS-5, Zielkonflikt PS-8.2), Umsetzung Opus | offen |
-| 9 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
+| 8 | **S9 — Einsatzbearbeitung und Rettungsmittel** | Problemsammlung vom 03.09.2026 (Nr. 101–113): Adresssuche und gemeinsamer Kartendialog, Rettungsmittel-Übernahme, kompaktere Kartenschilder, Windenkacheln, Hubschrauber-Icon, Vorschlagsliste, Zielklinik ad hoc, Schloss-Kennzeichnung, Notizfeld, Kachel „GPS-Daten", neue Rettungsmittel-Arten, Tageszuordnung, Rollen; dazu **Nr. 147** (Spur im Kartendialog) | Schritt 7 **erfüllt**; F3–F6 **beantwortet 06.09.2026** | neu; Vorbereitung `docs/konzepte/Vorbereitung-S9-Problemsammlung.md` (Fassung vom 06.09.2026 mit F3–F6 und PS-11) | Fable (Konzept; Mockups PS-3/PS-5, Zielkonflikt PS-8.2), Umsetzung Opus | **Konzept kann beginnen** — nächster Fable-Schritt; Umsetzung nach Schritt 9a auf `main` (Berührung Nr. 137/101) |
+| 9 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen — **zuerst die Korrekturstufe mit Nr. 148 und 149** (Zusammenführen-Knopf, Updates-Zähler und Erstdeploy-Regel); Auftrag liegt vor |
 | 9a | **Sofortpaket Sicherheit** (R78) | Web: Nr. 127–138 (Rundenzahl 600 000, Login-CSRF, E-Mail-Nachweis, Ordner, GPX, `wiederherstellen.php`, Freitext-Hinweis, Bauordner, Ersetzfenster der Uhr, Maskierung, Photon-Schalter, Weg C, Integritätswache aus Nr. 140); Android: Nr. 142–145 und der Räumteil von 114 | Web sofort; Android nach Schritt 6 auf `main` | keins; `docs/konzepte/Vorbereitung-Sicherheitspaket.md` ist die Spezifikation (Muster R42, Prüfdokument mit Zahlen) | Opus | offen — alle Entscheidungen liegen vor (R78) |
 | 9b | **S10 — Sicherheit** (R78) | Server-Anteil am Datenschlüssel mit Schlüsselblatt, Kennung und Rotation (SP-3); Adminpakete versiegeln, `ftp` abschaffen (Nr. 139) | Schritt 9a; **vor P5** (Hauptstufe, Umstellung aller Hüllen) | neu, nach K1 aus der Vorbereitung | Fable (Konzept), Opus | offen |
 | 10 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb; Zweitfaktor für alle Konten (Nr. 141) und CSP nach Bauplan SP-5 (Nr. 8) | Schritte 2, 5, 7 und 9b; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
@@ -338,7 +338,7 @@ Abschnitt 6 und im Prüfdokument
 `docs/konzepte/Pruefdokument-S7-Backup-Begriff.md`. Das Konzept ist nach
 R62 gelöscht; die Git-Historie behält es.
 
-### Schritt 5 — S5 Umsetzung · **erledigt (Pakete A–D und W); Paket E gebaut, nicht gemergt**
+### Schritt 5 — S5 Umsetzung · **erledigt (Pakete A–E und W)**
 
 Gebaut und geprüft am 03.09.2026 — **Web 13.0.0 bis 13.2.0** und **Uhr
 3.0.0**, gemergt als PR #28 und #29. Was es gebracht hat, steht in
@@ -346,12 +346,13 @@ Abschnitt 8; was noch am Auftraggeber liegt, in Abschnitt 6 und im
 Prüfdokument `docs/konzepte/Pruefdokument-S5-Kopplung-umgekehrt.md`
 (zwölf Punkte).
 
-**Die Migration `2026_09_03_kopplungssitzungen` ist noch nicht gelaufen**
-— siehe den Kopf dieses Dokuments. Sie ist der erste Punkt der Prüfliste.
+**Die Migration `2026_09_03_kopplungssitzungen` ist am 04.09.2026
+gelaufen** (mit `update.php`, zusammen mit den übrigen aus S4 und S6) —
+Punkt 1 der Prüfliste ist damit erledigt; die Uhr koppelt wieder.
 
-**Paket E** (Android-Ortung und Dienstende, eigenes Zusatzkonzept) ist auf
-seinem Zweig fertig (Android 0.10.1) und wartet auf den Merge; es hängt an
-keinem der übrigen Pakete.
+**Paket E** (Android-Ortung und Dienstende, eigenes Zusatzkonzept) ist am
+03.09.2026 gemergt (PR #31, Android 0.8.0–0.10.1); es hing an keinem der
+übrigen Pakete. Was es gebracht hat, steht in Abschnitt 8.
 
 **Die drei Konzepte stehen noch** (`Konzept-S5-Kopplung-umgekehrt.md`,
 `…-Zusatz-Wartungsmodus.md`, `…-Zusatz-Android-Ortung-Dienstende.md`). Nach
@@ -400,6 +401,16 @@ S24 und einer Wear-OS-Uhr, Update von der Seitenladungs-Fassung auf die
 Track-Fassung **ohne Neuinstallation** (gleiche Signatur).
 **Wear-OS-Uhr:** Gerätetest, sobald eine vorliegt; für die
 Wear-OS-Prüfrunde des Tracks gebraucht.
+
+**Stand 06.09.2026:** Teile A, B und C sind seit dem 04.09.2026 auf `main`
+(PR #33), `update.php` ist gelaufen (`2026_09_04_herkunft_geraet` verbucht
+um 23:15). Erledigt-Zeile in Abschnitt 8. **Was den Schritt noch offen
+hält, liegt nicht am Code:** der Gerätetest am S24 und mit einer
+Wear-OS-Uhr, Android 1.0.0 nach E-R45-7, D-U-N-S und Signaturschlüssel
+(Abschnitt 6). Die Konzepte S4 und R64 bleiben nach R62 bis zur Freigabe
+des Abschlusses liegen. **Ein Fund am Produktivstand:** Der Knopf
+„Diensttage zusammenführen" in der R57-Warnung führt ins Leere (Nr. 148,
+Backlog-Runde) — kein Prüfmittel klickt Knöpfe.
 
 ### Schritt 7 — S8 Einstellungen, Administration und Wartung
 
@@ -483,6 +494,28 @@ nicht voraus, **P6 schon**. **Abnahme:** Bilderlauf in acht Breiten,
 Kreisläufe csv und edbak (Datenmodell), Wortliste, Bedienprüfung je Punkt
 auf dem Auftraggeber-Client, Handbuch nachgezogen, Register gegengezählt.
 
+**Zuarbeit F3–F6 liegt vor (06.09.2026), und sie stellt PS-3 richtig:**
+Gemeint sind die **Schilder auf der Karte** der Einsatzansicht — die
+Kästchen für Standort und Zielklinik (`--geo-schild`, 36 px), der Kreis des
+Einsatzorts (`--geo-kreis`) und die Start/Ende-Ringe (`--geo-ring`, 3 px) —,
+**nicht Formularknöpfe**. Die Abhängigkeit von Nr. 74 ist damit schwächer
+als angenommen (Kartenschild, nicht Bedienhöhe; R76 gilt trotzdem als
+Untergrenze am Finger). **F3:** zwei Screenshots (Desktop-Vollbild und der
+kleine Kartenausschnitt der Einsatzansicht) in
+`docs/konzepte/vorbereitung-s9/`; Befund: Schilder teils zu groß, vor
+allem die Umrandung — der Standort trägt Rahmen, Doppelring und
+Weißraum übereinander. **F4:** alle Lagen, vor allem Desktop und Handy.
+**F5:** die Beginn/Ende-Anzeige zeigt keine Uhrzeiten — ein Ring kann sie
+tragen. **F6:** kein zweites Merkmal neben der Farbe, aber eine schmale
+Trennlinie zwischen den Farben. **Dazu Nr. 147** (Fassung 32) als PS-11
+der Vorbereitung: die aufgezeichnete Spur im Kartendialog der
+Einsatzbearbeitung — nur die Spur über den Spur-Weg, **keine Luftlinie**,
+in jedem Kartendialog des Einsatzformulars (heute Einsatzort, mit PS-7
+auch Zielklinik), Zoom auf die Spur, solange das Feld leer ist; Ergänzung
+zu PS-1, verträglich mit S11 (der Dialog bleibt im Browser). **Berührung
+mit Schritt 9a:** Nr. 137 (Photon-Schalter) und Nr. 101 (Adresssuche)
+teilen sich die Quelle — die S9-Umsetzung setzt auf dem 9a-Stand auf.
+
 ### Schritt 9 — Backlog-Runde
 
 **Ziel:** Die Einzelpunkte aus Abschnitt 5, die keiner Phase bedürfen.
@@ -490,6 +523,19 @@ auf dem Auftraggeber-Client, Handbuch nachgezogen, Register gegengezählt.
 Konzept nach K1; ein Punkt, der eine neue Darstellung braucht, bekommt
 vorher ein Mockup und eine Freigabe (`CLAUDE.md` 5). Läuft jederzeit ab
 Schritt 1 parallel, auf eigenem Zweig; die Dateiregel aus Abschnitt 4 gilt.
+
+**Sofort, als eine Korrekturstufe (Auftrag vom 06.09.2026):** **Nr. 148**
+— der Knopf „Diensttage zusammenführen" in der R57-Warnung verlinkt
+`diensttag_zusammenfuehren.php?ziel=`, die Seite liest `d`; Ergebnis 404
+„Diensttag nicht gefunden" genau in dem Fall, für den die Warnung gebaut
+ist. **Nr. 149** — die Seite Updates zählt anders als Status und Menü: Eine
+Migration, die das Schema schon kennt („nicht nötig"), zählt als offen,
+liegt aber unter *Ausgeführt* und bekommt keinen Knopf; der Register-Vermerk
+lässt sich im Web nicht nachholen. Dazu die Regel aus dem Erstdeploy von
+S8: **Eine Migration, die Rechte einführt, muss ohne diese Rechte ausführbar
+sein** — die Rollenmigration war es nicht (Betrieb → Updates verlangt die
+Rolle, die sie erst vergibt; auf dem Webspace gibt es keine Kommandozeile;
+Ausweg war phpMyAdmin). Beide Funde stehen im S8-Prüfdokument (Nachtrag).
 
 ### Schritt 9a — Sofortpaket Sicherheit
 
@@ -713,10 +759,11 @@ und die Backlog-Nummern verlangen die Gegenproben aus Abschnitt 2.2.
 | S4-Merge und Backlog-Runde (verschiedene Punkte, eigene Zweige) | S6 zu S4 (`schema.sql`, `update.php`, Vertrag) — S6 erst nach dem Merge |
 | S5-Konzept und S7 (Konzept schreibt keinen Code) | S7 zu S4 (`einstellungen.php`, `admin_user.php`, Handbuch, Technik) — S7 erst nach dem Merge |
 | Konzeptarbeit P5 (Hosting, Gespräche) zu allem | ~~S5-Umsetzung zu S6 und S7~~ — **entfällt, S5 ist gemergt** (Fassung 25) |
-| Wear-OS-Gerätetest zu allem | S4-Rest zu **Paket E** (`HauptActivity.kt`, `strings.xml`, Manifest) — E geht zuerst. Die alte Sperre „S4-Rest zu S5“ ist erfüllt: Vertragsabschnitt 1a steht |
+| Wear-OS-Gerätetest zu allem | ~~S4-Rest zu **Paket E**~~ — **erfüllt** (E am 03.09., S4-Rest am 04.09. gemergt, Fassung 32). Die alte Sperre „S4-Rest zu S5“ war schon erfüllt: Vertragsabschnitt 1a steht |
 | — | Backlog 21 (43 Restfunde quer durch `server/`) zu jedem laufenden `server/`-Paket |
 | — | ~~S8 zu S4-Rest und S7~~ — **erfüllt** (beide gemergt, Fassung 27); S8 läuft seit 05.09.2026 |
-| S9-Umsetzung zur S8-Umsetzung (verschiedene Seiten), wenn beide Konzepte ihre Berührungen benennen (R73) | S8 und S9: Stylesheet, Stammdaten- und Einstellungsseiten — wer zuerst mergt, der andere zieht nach (K7); S9-Konzept erst nach dem S8-Konzept (Nr. 74) |
+| S9-Konzept zu Schritt 9a (das Konzept schreibt keinen Code) | ~~S8 und S9~~ — **erfüllt** (S8 gemergt, Fassung 32). **S9-Umsetzung zu 9a:** beide fassen die Photon-Anbindung an (Nr. 137 Schalter, Nr. 101 Adresssuche, `ortsfeld.js`/`ortswahl.js`) — 9a geht zuerst, S9 setzt auf seinem Stand auf |
+| Korrekturstufe Nr. 148/149 zu 9a (`index.php`, `betrieb_updates.php`, `migration_lib.php` gegen die Sicherheitsdateien; Buchführung mechanisch) | — die Korrekturstufe ist klein und geht **zuerst** auf `main` |
 
 **Merge-Reihenfolge auf `main`:** ein Push je Paket nach Freigabe (K7);
 nach jeder Migration `update.php`.
@@ -728,9 +775,14 @@ S4-Zweig reserviert (dort heute 59–63); 68–79 sind mit Fassung 16, 80–83 m
 Fassung 21 und 84–88 mit Fassung 22 angelegt; **89–92 kamen aus S7 und S5/C,
 93–97 mit Fassung 25 aus S5** (Pakete A, W und der Vorbereitung); **98–113
 mit Fassung 26** (98–100 aus der Planung v1.0, 101–113 die Problemsammlung
-für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt);
+für S9); **114–116 aus S5 Paket E** (gemergt 03.09.2026);
 **117–126 mit Fassung 28** aus S8 (Konzept und Umsetzung);
-**127–146 mit Fassung 30** aus dem Krypto-Review (R78).
+**127–146 mit Fassung 30** aus dem Krypto-Review (R78); **147–149 mit
+Fassung 32** (Spur im Kartendialog für S9; zwei Funde am Produktivstand
+nach dem S8-Deploy). Mit Fassung 32 sind die dreizehn erledigten Nummern aus
+der Tabelle genommen (63, 66, 73–75, 78, 79, 82–86, 98 — S4-Rest und S8) und die
+sechs fehlenden offenen ergänzt (90–92 aus S5/C, 114–116 aus Paket E);
+Nr. 115 ist in Nr. 95 aufgegangen.
 
 > Die drei aus Paket E standen dort zunächst als 90–92 und mussten beim
 > Zusammenführen mit Fassung 26 weichen: 89–92 waren schon an S7 und S5/C
@@ -766,38 +818,28 @@ für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt);
 | 55 | Komplettsicherung ohne scharfen Schnappschuss | nach v1.0 | — |
 | 57 | Tagesübersicht baut ihre Tabelle zweimal | Backlog-Runde | Vereinheitlichung |
 | 58 | Prüfmittel: Seite ohne Gerüst | Backlog-Runde | Prüfmittel, ein Nachmittag |
-| 80 | Auswertung der Gerätestatistik (Rest von 59) | **geteilt: S8 und P5** | **Gerätemodelle und Nutzung: S8** (Seite „Statistik", AP4 — Modelle, Hersteller abgeleitet, Anteile, CSV). **Herkunft je Einsatz (R64-Werte) und Betriebslage-Dashboard: P5**, mit der Datenschutzerklärung als Vorbedingung (Abschnitt 6); die NutzerInnen-Sicht ist Nr. 88 |
+| 80 | Auswertung der Gerätestatistik (Rest von 59) | **P5** (Rest) | Gerätemodelle und Nutzung sind **gebaut** (S8 AP4, Betrieb → Statistik). Offen: **Herkunft je Einsatz (R64-Werte) und Betriebslage-Dashboard**, mit der Datenschutzerklärung als Vorbedingung (Abschnitt 6); die NutzerInnen-Sicht ist Nr. 88 |
 | 81 | App-Symbol in der Benachrichtigung zu groß und angeschnitten | **S4-Rest** | am Gerät gemeldet; aus dem heutigen Quellstand nicht nachvollziehbar — zuerst die installierte App-Fassung klären |
-| 82 | Warnung fehlt, dass die Daueraufzeichnung den Akku leert | **S4-Rest** | der vorhandene Akku-Dialog (E-S4-05) sagt das Gegenteil: warum die App Strom ziehen darf |
-| 83 | Herkunft und Gerät je Einsatz: welche Daten wie gespeichert werden | **S4-Rest** | **entschieden als R64** (02.09.2026): Momentaufnahme am Einsatz, eigene `origin`-Werte, Bestand per Migration nachgefüllt; mit Nr. 63 in einer Formatänderung |
-| 84 | Android-App kennt nur `nadoku.gen-em.org` | S4-Rest | R63; Adressfeld und Adress-QR entfallen; mit dem Kopplungsmodul |
-| 85 | Handy-App heißt „Gen-EM NAdoku", Uhr bleibt „NAdoku" | S4-Rest | R63; eine Zeichenkette plus Sichtprüfung |
-| 86 | Statusleiste überlappt die Handy-App | S4-Rest | wahrscheinlich fehlende Fenster-Insets bei `targetSdk 36`; am Gerät prüfen |
 | 87 | Weboberfläche als installierbare Web-App auf Android | P7 (R70) | Manifest allein, kein Service Worker; Name „NAdoku Web", eigenes Symbol; Erhebung erledigt (R70) |
 | 88 | Kachel „Einsätze je Gerät" in der Zeitraumübersicht der NutzerIn | Backlog-Runde, nach S4-Rest | neue Darstellung: Mockup und Freigabe (R64) |
+| 90 | Der Simulator kann keinen Verbindungsabriss herstellen | nach v1.0 | aus S5/C; Prüfmittel der Uhr, nur am Gerät nachweisbar (Prüfliste S5) |
+| 91 | Auswahl in `WatchUi.Confirmation` im Bildabzug nicht sichtbar | Backlog-Runde | aus S5/C; Prüfmittel `tools/uhr-bilder/` |
+| 92 | `pruefstand.sh bildreihe` fotografiert nur den Startbildschirm | Backlog-Runde | aus S5/C; Tastenfolge als Parameter |
 | 62 | Logodateien mit alten Farbwerten | Backlog-Runde | `Design.md` 2.5 mitziehen |
-| 63 | Sperrvermerke des Schnitts in der Konto-Sicherung | S4-Rest | `Backup-Format.md`, Kreisläufe |
 | 65 | 14 Fassungshinweise, AGP 9 | Backlog-Runde | eigene Runde nach dem S4-Rest, nur `android/` |
-| 66 | `watch/` läuft nicht durch die Wortliste | S5 | mit der Uhr-Auslieferung |
 | 67 | `csrf_check()` ohne API-Zweig | P5 | CSRF-Umfeld (R21) |
 | 68 | Vorschlagsfelder über `<datalist>` zeigen mobil nichts (Crew-Felder, Zielklinik, alle weiteren) | Backlog-Runde | neu; alle Felder prüfen, Muster ist das Ortsfeld aus S3 |
 | 69 | Kurzname je Rettungsmittel | Backlog-Runde | P3-Zulieferung, jetzt nummeriert |
 | 70 | „Auf der Karte setzen" für Standorte | Backlog-Runde | P3-Zulieferung, jetzt nummeriert |
 | 71 | Regionen mit Unteradmins | nach v1.0 | verworfen, festgehalten (R39) |
 | 72 | Richtungspfeile auf der Spur zeigen teils falsch | Backlog-Runde | neu; wahrscheinlich `transform` auf einem Inline-`<span>` (`geo.js`, `.geo-pfeil`), Sichtprüfung Pflicht |
-| 73 | Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen | S8 | **Konzept liegt vor** (E-S8-08): Suchfeld in eigener Zeile, Filter darunter mit erlaubtem Umbruch; am Baustein, nicht an der Seite; AP6 |
-| 74 | Bedienhöhe 44 px am Schreibtisch: nötig oder schmaler? | S8 | **entschieden** (E-S8-09, R76): zwei Stufen — 44 px, am Zeigergerät ab 1024 px 36 px; `CLAUDE.md` 5, `Design.md` und `tools/screenshots/` ziehen nach; AP7 |
-| 75 | Unterpunkte des Admin-Menüs fett und nicht einklappbar | S8 | **Konzept liegt vor** (E-S8-07): Fettdruck nur aktiv, drei Blöcke als Akkordeon; mit der Menüstruktur, AP5 |
 | 76 | Demo-Reset läuft alle 30 Minuten, auch ohne Änderung | Backlog-Runde | erst messen (Laufzeit, Last), dann entscheiden |
-| 77 | Wartungsseite `update.php` in Unterseiten aufteilen | S8 | **Konzept liegt vor** (E-S8-05): die Seite wird **aufgelöst**; der Block Betrieb trägt Status, Statistik, Updates, Hintergrundjobs, Servereinstellungen, Komplett-Backup und Backup-Ziele. Wartungsmodus **und** ausstehende Migrationen liegen zusammen auf „Updates" (R66: nur Ausstehende mit „Ausstehende ausführen", ausgeführte bis P5 eingeklappt, danach im Audit-Protokoll); `update.php` wird Weiterleitung bis P6. AP2 und AP4 |
-| 78 | Wertekasten zeigt Cron-Adresse und Token in Kopplungscode-Größe | S8 | **Konzept liegt vor** (E-S8-10): zweite Stufe `codeblock-lang` (`--groesse-2`, Umbruch) mit leisem Knopf „Kopieren"; **fünf** Stellen, nicht vier — dazu Geräte-ID und API-Schlüssel (B-S8-13). AP2 und AP6 |
-| 79 | Backup-Optionen: Begriffe und Optionen gewachsen wie Wildwuchs | S8 | **Konzept liegt vor** (E-S8-06, R77): drei Namen, drei Orte, ein Verb — Backup, Konto-Backup, Komplett-Backup; AP2 und AP3 |
+| 77 | Wartungsseite `update.php` in Unterseiten aufteilen | **P6** (Rest) | **Konzept liegt vor** (E-S8-05): die Seite wird **aufgelöst**; der Block Betrieb trägt Status, Statistik, Updates, Hintergrundjobs, Servereinstellungen, Komplett-Backup und Backup-Ziele. Wartungsmodus **und** ausstehende Migrationen liegen zusammen auf „Updates" (R66: nur Ausstehende mit „Ausstehende ausführen", ausgeführte bis P5 eingeklappt, danach im Audit-Protokoll); `update.php` wird Weiterleitung bis P6. AP2 und AP4 |
 | 93 | `AUTH_VERGLEICHSWERT` trägt Kostenfaktor 10, PHP 8.4 legt 12 an | Backlog-Runde | aus S5/A (V-S5-13); 57 gegen 228 ms, heute von der Mindestdauer 0,35 s verdeckt |
 | 94 | „bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/` | Backlog-Runde | aus S5 (V-S5-05); ein Wort — oder `-define png:exclude-chunk=time` |
-| 95 | Die Android-Rundlauffälle lassen Daten im Admin-Konto zurück | Schritt 6 | 9 Diensttage, 5 Einsätze, 14 439 Punkte; Aufräumen im `@After` oder eigenes Prüfkonto |
+| 95 | Die Android-Rundlauffälle lassen Daten im Admin-Konto zurück | Backlog-Runde (Android) | 9 Diensttage, 5 Einsätze, 14 439 Punkte; Aufräumen im `@After` oder eigenes Prüfkonto; **Nr. 115 (Paket E) sagte dasselbe und ist hier aufgegangen** (Fassung 32); Schritt 6 hat es nicht mitgenommen |
 | 96 | Eigene Wartungsmeldung auf Uhr und Handy, `Retry-After` auswerten | nach v1.0 | aus S5/W (E-S5W-08); heute behandeln die Clients das 503 als gewöhnliches 5xx, und das genügt |
 | 97 | Browser-Skripte zeigen den Wartungstext uneinheitlich | Backlog-Runde | aus S5/W (E-S5W-10); `export.js`, `import_ui.js` und `schneiden.js` zeigen ihn, `kopplung.js`, `unlock.js`, `ortsfeld.js` und `ortswahl.js` nicht |
-| 98 | Versionscode-Versatz für das Uhr-Modul | S4-Rest | R65; Play verlangt je APK einen eindeutigen Code, E-S4-02 rechnet für beide Module denselben; eine Zählung bleibt |
 | 99 | Fassungsprüfung auf Klick der Administratorin (GitHub-Releases) | nach v1.0 | R66, Option A2; nur wenn Selbsthoster es verlangen; kein Hintergrundlauf |
 | 100 | Play-API-Upload aus der Auslieferungskette | nach v1.0 | R67; Upload-Schlüssel als GitHub-Secret plus Dienstkonto, wenn die Releases häufiger werden; E-S4-16 dann ergänzen |
 | 101 | Adresssuche im Kartendialog (PS-1) | S9 | Treffer setzt den Pin, Übernahme bleibt eigener Schritt (F1); Geocoding-Quelle erste Prüffrage (R73) |
@@ -813,6 +855,8 @@ für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt);
 | 111 | Neue Rettungsmittel-Arten mit eigenem Icon, ohne Rollen-Vorlagen (PS-10.1) | S9 | F16; Migration |
 | 112 | Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung (PS-10.2) | S9 | gilt nur für den Tag (F17); Suche und Filter müssen greifen |
 | 113 | Rollen unmittelbar nach Auswahl bearbeitbar, Vorlagen nachladen (PS-10.3) | S9 | entfällt für Arten ohne Vorlagen (F19) |
+| 114 | Abgewiesene Pakete sichtbar machen und ausräumen | **geteilt: Sofortpaket Sicherheit (Android) und Backlog-Runde** | Räumteil (30 Tage, beim Trennen) im Sofortpaket (R78); der Bedienweg zum Sichtbarmachen bleibt Backlog-Runde |
+| 116 | Kontrastwerkzeug misst nur seine Paarliste | Backlog-Runde | Android-Prüfmittel `android/werkzeuge/kontraste.py`; Paare aus dem Code ableiten |
 | 117 | Kein Vermerk, ob eine NutzerIn je ein Backup gezogen hat (B-S8-07) | Backlog-Runde | Spalte an `users`, Zeile auf der Kontoseite |
 | 118 | Hintergrundjobs nur auf der Kommandozeile anzuhalten (B-S8-16) | Backlog-Runde | Schalter auf Betrieb → Hintergrundjobs |
 | 119 | „Import / Export" als Sammelpunkt unvollständig (B-S8-18) | Backlog-Runde / S9 | der GPX-Import je Diensttag fehlt dort |
@@ -842,6 +886,9 @@ für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt);
 | 144 | Android: Data-Layer ohne Absenderprüfung (AN-4) | Sofortpaket Sicherheit (Android) | Knotenabgleich, Zeitplausibilität |
 | 145 | Android: Gradle-Wrapper ohne Prüfsumme (AN-5) | Sofortpaket Sicherheit (Android) | `distributionSha256Sum` |
 | 146 | Fragen an das Bedrohungsmodell (Argon2id, `CryptoKey`, Passkeys/PRF) | P6 | R17 Stück 1; dazu Skizze SP-9 |
+| 147 | Aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung | **S9** (PS-11) | Ergänzung zu PS-1 (Nr. 101): nur die Spur, keine Luftlinie; jeder Kartendialog des Einsatzformulars; Zoom auf die Spur bei leerem Feld; Ort nach R74: der vorhandene Pin-Knopf, kein neuer Menüpunkt |
+| 148 | Knopf „Diensttage zusammenführen" der R57-Warnung führt auf 404 | **Backlog-Runde, sofort** | `?ziel=` statt `?d=` in `index.php`; eine Zeile; Prüfmittel klicken keine Knöpfe |
+| 149 | Updates-Seite zählt anders als Status und Menü; Rollenmigration ohne Rolle nicht ausführbar | **Backlog-Runde, sofort** (Zähler und Knopf); Regel ins Runbook (`Technik.md` 7) und ins Bedrohungsmodell (P6) | eine Korrekturstufe mit Nr. 148; nach dem Einspielen einmal „Ausstehende ausführen" (Abschnitt 6) |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -850,10 +897,11 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 
 | Was | Wofür | Wann |
 |---|---|---|
-| **`update.php` aufrufen — VIER Migrationen** (drei aus S4/S6, dazu `2026_09_03_kopplungssitzungen` aus S5). Die letzte legt `pair_sessions` an und **löscht `pair_codes`**; bis dahin antwortet jeder Kopplungsversuch einer Uhr mit **500**. Der Deploy ist am 03.09.2026 um 18:59:58 UTC gelaufen | Schritt 5, Prüfliste S5 Punkt 1 | **sofort** |
+| ~~**`update.php` aufrufen — VIER Migrationen**~~ | Schritt 5, Prüfliste S5 Punkt 1 | **erledigt 04.09.2026, 23:15** — alle vier und `2026_09_04_herkunft_geraet` verbucht; `2026_09_05_rolle_betreiberin` am 06.09.2026 per phpMyAdmin (Nr. 149) |
+| **Nach dem Einspielen von Nr. 149: einmal Betrieb → Updates öffnen und „Ausstehende ausführen" drücken** — die Seite verbucht dann `2026_09_05_rolle_betreiberin` als „nicht nötig" im Register, und der Zähler „1" an Updates und Status verschwindet. Danach die NutzerInnen-Liste ansehen: jedes frühere Admin-Konto heißt „BetreiberIn" (Prüfliste S8, P-02) | Nr. 149, Prüfliste S8 | nach der Korrekturstufe |
 | **Prüfliste S5 (12 Punkte)**, darunter: die Bestandsuhr **einmal neu koppeln** (E-S5-42, vorher den Sync leerlaufen lassen), beide Kopplungsmails im Postfach sichten, Antwortgleichheit auf Produktiv nachmessen, die Geräteseite **ohne JavaScript**, drei Punkte nur am Gerät (Verbindungsabriss, Tastensperre, Oberfläche auf zwei Geräteklassen), **ein Update mit Wartungsmodus** und **eine Kopplung mit dem Handbuch in der Hand** (P2-Punkt 4.1) | S5-Abnahme | nach `update.php` |
 | **Freigabe des S5-Abschlusses** — danach löscht R62 die beiden Konzepte (`Konzept-S5-Kopplung-umgekehrt.md`, `…-Zusatz-Wartungsmodus.md`); das Prüfdokument bleibt bis zur abgehakten Prüfliste | Schritt 5 | — |
-| **Merge von Paket E** (Android-Ortung und Dienstende, Android 0.10.1) — muss **vor** den S4-Rest, beide fassen `HauptActivity.kt`, `strings.xml` und das Manifest an | Schritt 5 / Schritt 6 | vor Schritt 6 |
+| ~~**Merge von Paket E**~~ | Schritt 5 / Schritt 6 | **erledigt 03.09.2026** (PR #31); der S4-Rest folgte am 04.09.2026 (PR #33) |
 | Neues NEF-Logo und -Favicon | P3, Logo-Wahl (Platzhalter liegt) | vor P7 (R71) |
 | Impressums- und Datenschutztext der Installation über den Editor eintragen | P3 (R32) | vor P7; für das Datensicherheitsformular der Play Console schon vor dem ersten Track-Release (R65); Datenschutztext dann mit der Grenze der E2E (Nr. 43, Weg C) |
 | Sichtprüfung in WebKit und Firefox (Symbole am Dateiverweis) | P3-Abnahme | gelegentlich |
@@ -863,7 +911,7 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | Bilderlauf für die zweite Logo-Wahl; Autosuche gegen den echten Photon; Bedienzustände | S3-Reste | gelegentlich |
 | Prüfliste S4 (1, 2, 3, 5) am echten Diensttag | Schritt 1 | nach dem Merge |
 | ~~**Adresse der Connect-IQ-Gerätedateien (`CIQ_GERAETE_URL`)**~~ — **geliefert am 02.09.2026.** `server/geraetemodelle.php` trägt jetzt 325 Teilenummern auf 173 Modelle (Web 12.9.1/12.9.2). Die Adresse selbst steht weiterhin **nicht** im Repositorium — sie liegt seit dem 03.09.2026 in den **Umgebungsvariablen der Arbeitsumgebung**, nicht in einer Datei. Jede neue Sitzung findet sie dort von selbst; eine laufende erbt sie nicht nach, weil Umgebungsvariablen beim Start des Containers hereinkommen | Schritt 2 (S6) | **erledigt** |
-| **Abnahme S6:** je eine Kopplung mit Garmin-Uhr und Handy-App (zeigt die Liste Art und Modell?), dazu eine Sitzung über 30 Minuten mit Bedienung (kein Dialog) und ein Leerlauf darüber (Abmeldung) | Schritt 2 (S6) | nach dem Deploy, zusammen mit `update.php` |
+| **Abnahme S6:** je eine Kopplung mit Garmin-Uhr und Handy-App (zeigt die Liste Art und Modell?), dazu eine Sitzung über 30 Minuten mit Bedienung (kein Dialog) und ein Leerlauf darüber (Abmeldung) | Schritt 2 (S6) | `update.php` ist gelaufen — Abnahme offen |
 | **Datenschutzerklärung um die Gerätekennung ergänzen** — seit Web 12.9.0 wird beim Koppeln Art und Modell erhoben; Backlog Nr. 80 macht die Nennung zur Vorbedingung der Auswertung. Der Text entsteht nach R60 aus einer Bestandsaufnahme des gesamten Projekts | Schritt 11, vor v1.0 | vor jeder Auswertung (P5) |
 | **Datenschutzerklärung: die beiden Kopplungs-Mails nennen.** Aufgefallen bei der Play-Console-Vorbereitung (Schritt 6, Teil C) und hier vermerkt, damit es beim Schreiben des Textes nicht durchrutscht: `pair.php` verschickt **nach jeder erfolgreichen Kopplung** eine Nachricht an die Kontoadresse — mit **Gerätebezeichnung** (Hersteller und Modell), Zeitpunkt und dem Weg, das Gerät wieder zu entfernen — und **beim Trennen** eine zweite. Das ist eine Verarbeitung personenbezogener Daten (Kontoadresse) mit einer Geräteangabe darin; sie geschieht auf dem Server, nicht in der App, und taucht deshalb im Datensicherheitsformular der Play Console **nicht** auf. In der Datenschutzerklärung gehört sie genannt. Die Mails sind gewollt und sollen bleiben: Sie sind die einzige Stelle, an der eine unbemerkte Fremdkopplung auffiele | Schritt 11, vor v1.0 | mit dem Datenschutztext |
 | **Signaturschlüssel des APK verwahren** — erzeugt am 31.08.2026 (RSA 4096, Zertifikat `078c…ad64`, gültig bis 2056), am 02.09.2026 an den Auftraggeber übergeben; er lag bis dahin nur im Ablagefach der Arbeitssitzung; **wird nach R65 als App-Signaturschlüssel bei Play App Signing hochgeladen** — dazu kommt ein Upload-Schlüssel, gleich verwahrt | Schritt 6 und jede spätere Auslieferung | **sofort** — ohne genau diesen Schlüssel ist jede spätere Fassung für Android eine andere App |
@@ -902,7 +950,7 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | Wahl der Symbole für Handy-App und Web-App (gleicher Hubschrauber, zwei Hintergrundfarben, GPS-Nadel / Browser-Marke) aus dem Entwurf im P7-Konzept; iPhone für den Safari-Nachweis | R70, P7 | mit dem P7-Konzept |
 | Drei repräsentative Uhr-Darstellungen benennen (welche Bildschirme) und Handy-Screenshots aus dem Gerätetest mit dem Demo-Konto | R72, P7 | mit dem P7-Konzept |
 | Betriebsakte der eigenen Installation ausfüllen (Hoster, Domain, Mail, Aufsichtsbehörde, zweiter Admin, Ablageort des Wiederanlaufpakets, Play Console) — außerhalb des Repositoriums | R41, R72 | vor der Öffnung |
-| F3–F6 zu PS-3: Screenshot des Ist-Zustands in realer Nutzungsbreite; Client und Zielbreite (Desktop / Tablet quer / hoch); ob die Beginn/Ende-Anzeige Uhrzeiten zeigt; Zusatzmerkmal neben der Farbe (Sonnenlicht, Farbfehlsichtigkeit) | S9, Nr. 103 | vor dem S9-Konzept |
+| ~~F3–F6 zu PS-3~~ | S9, Nr. 103 | **beantwortet 06.09.2026** — zwei Screenshots in `docs/konzepte/vorbereitung-s9/`, alle Lagen (vor allem Desktop und Handy), keine Uhrzeiten in der Anzeige, kein zweites Merkmal, aber Trennlinie zwischen den Farben; PS-3 meint die Kartenschilder (Schritt 8) |
 | Wellenplan der Öffnung | Betriebsübergang | vor der Öffnung |
 | **Prüfliste S7** (`docs/konzepte/Pruefdokument-S7-Backup-Begriff.md`), sechs offene Punkte. Der wichtigste ist **Nummer 4: ein Komplett-Backup aus der Zeit VOR diesem Deploy einspielen** — die Kopfzeile des Dumps ist zugleich Erkennungsmarke, und ob die Vorsorge am echten Bestand trägt, lässt sich nur dort sehen. Dazu die beiden Warnmails (SMTP), die Bedienzustände der Dialoge, der Wiederanlaufweg in einer leeren Datenbank und ein Backup-Umlauf in dasselbe Konto | Schritt 4 (S7) | nach dem Deploy |
 | **Das geplante Komplett-Backup einmal im Betrieb sehen** — Plan auf „täglich", einen Tag warten, danach steht auf der Wartungsseite ein Zeitpunkt und keine Fehlerzeile. Erster Betriebsnachweis für Backlog Nr. 89: Dieser Job lief von Web 12.2.0 bis 12.9.2 nie | Schritt 4 (S7) | nach dem Deploy |
@@ -961,7 +1009,7 @@ werden nie neu vergeben.
 | R42 | Gerätekennung beim Koppeln | Uhr-Seite erledigt (1.9.0); **Speicherung erledigt (Web 12.9.0, S6)** — drei Spalten statt zwei, begründet im Changelog; Auswertung P5 (Backlog 80) |
 | R43 | Zwischenpaket S3 | erledigt |
 | R44 | Inhaltsschlüssel führt eine Inaktivitätsfrist wie die Sitzung | **erledigt (Web 12.9.0, S6)** — als Aufräumen, nicht als Behebung des Dialogs (E-S6-4): Der Fristablauf kostete ein stilles Neu-Entpacken, keinen Dialog. Der Dialog kommt vom tabweisen `sessionStorage`, bleibt und steht jetzt im Handbuch |
-| R45 | Zwischenpaket S4 mit E-R45-1 bis E-R45-13 | in Arbeit (Schritte 1 und 6); **E-R45-6 ersetzt durch R65** |
+| R45 | Zwischenpaket S4 mit E-R45-1 bis E-R45-13 | Schritt 1 gemergt, Schritt 6 Teile A–C gemergt (04.09.2026); offen Gerätetest und Android 1.0.0 (E-R45-7); **E-R45-6 ersetzt durch R65** |
 | R46 | Keine Apple Watch; P7 entfällt | gilt |
 | R47 | Garmin-Uhr-Auslieferung vorgezogen | erledigt (Uhr 1.10.1 bis 1.11.1, Web 9.15.0) |
 | R48 | Uhr heißt NAdoku, echte Anwendungs-ID | erledigt (Uhr 2.0.0) |
@@ -973,14 +1021,14 @@ werden nie neu vergeben.
 | R54 | R-Einträge nur als Kurzregister, Volltext im Archiv | gilt (F16) |
 | R55 | P0-Bedienprüfung und P2-Prüfliste überholt; P2-Punkt 4.1 geht in S5 | gilt (F16) |
 | R56 | S7: Verb „sichern", Symbolname und `admin_sicherungen.php` bleiben | gilt (F16) |
-| R57 | Überlappende aktive Diensttage: Hinweis im Browser (F-S4-D, Weg c) | gilt, S4-Rest |
+| R57 | Überlappende aktive Diensttage: Hinweis im Browser (F-S4-D, Weg c) | **umgesetzt** (Web 13.3.0, Handbuch 4.5b); der Knopf der Warnung führt auf 404 — Nr. 148 |
 | R58 | Android-Bedienhöhe 48 dp in beiden Modulen; `CLAUDE.md` 5 ergänzen | gilt, S4-Merge |
 | R59 | Vor v1.0 ein Planungsgespräch: Umfang des Code-Reviews, Aufteilung in mehrere Repositorien, Auslieferungskette; Ergebnis sind die Konzepte P6–P8 (R71) | vorgezogen und entschieden: R65–R73 (Fassung 26); Schritt 11 |
 | R60 | Ab v1.0 keine Rückwärtskompatibilität, auch bei Updates; v1.0 beginnt mit dem Neuaufsetzen; eine ältere Sicherung wird einmal über ein Wegwerf-Formular eingespielt, danach nie wieder. Der Update-Weg der Installation (Selbstprüfung gegen das Repositorium, Benachrichtigung, Einspielen selbst oder per FTP, Sichtbarkeit der Migrationsliste) ist mit **R66** entschieden | gilt; Update-Weg entschieden (R66) |
 | R61 | Zwischenpaket S8 „Einstellungen, Administration und Wartung": ergebnisoffene Sichtung und Neuordnung vor P5, mit Konzept und Mockups; die Sicherungsoptionen, die Menüstruktur und die Aufteilung der Wartungsseite gehören hinein | gilt, Schritt 7 |
 | R62 | Konzeptablage `docs/konzepte/` mit Lebenszyklus: Statusblock und Push nach jedem Arbeitspaket, damit andere Instanzen den Stand sehen; nach Freigabe des Abschlusses Erledigt-Zeile hier und Löschung des Konzepts; Prüfdokument bleibt bis zur abgehakten Prüfliste; Bestand bis S3 in `docs/konzepte/erledigt/` | gilt (F16), Regel in 2.2 |
-| R63 | Die Android-App kennt nur `nadoku.gen-em.org`, fest und nicht änderbar: Adressfeld, Adress-QR (E-S4-15) und Adresswahl entfallen, Selbsthoster bauen ein eigenes APK. E-R45-2 und E-R49-8 gelten für Android insoweit nicht mehr; die Garmin-Uhr behält Vorgabewert und Einstellung. Dazu: Handy-App heißt „Gen-EM NAdoku", Wear-OS-Uhr bleibt „NAdoku" | gilt, S4-Rest (Nr. 84–86) |
-| R64 | **Herkunft und Gerät je Einsatz** (Beschluss 02.09.2026 zu Nr. 83, Weg b): **(1)** Geräteart und Modell werden beim Anlegen als Momentaufnahme an `missions` und `rest_segments` kopiert, in die Sicherung aufgenommen, der Bestand per Migration aus `devices` nachgefüllt; Trennen bleibt Löschen (R47). **(2)** `origin` bekommt eigene Werte: `watch` bleibt für die Garmin-Uhr, neu `android`, `wear` und `schnitt` neben `manual` und `import`, gesetzt beim Anlegen aus Geräteart und `client_ref`-Präfix; Feldkatalog, Export- und Backup-Format, Kreisläufe (R24) und Referenz ziehen nach. **(3)** Sichtbar im Betriebslage-Dashboard je Installation (Nr. 80, P5) **und** je NutzerIn als Kachel der Zeitraumübersicht (Nr. 88). Keine neue Erhebung über R42 hinaus — dieselben Werte, festgehalten; die Datenschutzerklärung nennt es (R41, Abschnitt 6) | gilt; Speicherung S4-Rest, Dashboard P5, Kachel Nr. 88 |
+| R63 | Die Android-App kennt nur `nadoku.gen-em.org`, fest und nicht änderbar: Adressfeld, Adress-QR (E-S4-15) und Adresswahl entfallen, Selbsthoster bauen ein eigenes APK. E-R45-2 und E-R49-8 gelten für Android insoweit nicht mehr; die Garmin-Uhr behält Vorgabewert und Einstellung. Dazu: Handy-App heißt „Gen-EM NAdoku", Wear-OS-Uhr bleibt „NAdoku" | **erledigt** (Android 0.11.0, Nr. 84–86) |
+| R64 | **Herkunft und Gerät je Einsatz** (Beschluss 02.09.2026 zu Nr. 83, Weg b): **(1)** Geräteart und Modell werden beim Anlegen als Momentaufnahme an `missions` und `rest_segments` kopiert, in die Sicherung aufgenommen, der Bestand per Migration aus `devices` nachgefüllt; Trennen bleibt Löschen (R47). **(2)** `origin` bekommt eigene Werte: `watch` bleibt für die Garmin-Uhr, neu `android`, `wear` und `schnitt` neben `manual` und `import`, gesetzt beim Anlegen aus Geräteart und `client_ref`-Präfix; Feldkatalog, Export- und Backup-Format, Kreisläufe (R24) und Referenz ziehen nach. **(3)** Sichtbar im Betriebslage-Dashboard je Installation (Nr. 80, P5) **und** je NutzerIn als Kachel der Zeitraumübersicht (Nr. 88). Keine neue Erhebung über R42 hinaus — dieselben Werte, festgehalten; die Datenschutzerklärung nennt es (R41, Abschnitt 6) | gilt; **Speicherung erledigt** (Web 14.0.0, Konzept R64, Nutzlast 9), Dashboard P5, Kachel Nr. 88 |
 | R65 | **Store-Verteilung in zwei Stufen** (Beschluss 03.09.2026, E-PV-1; ersetzt E-R45-6): Play-Console-Organisationskonto der Gen-EM GbR (D-U-N-S); **interner Test-Track ab Schritt 6** als Regelweg für den bekannten Kreis, Handy und Uhr unter einem Eintrag; **Produktionsfreigabe erst als Welle 1** des Betriebsübergangs (R41), nach P5 und MDR-Abgrenzung; Versionscode je Modul mit Versatz (E-S4-02 bleibt eine Zählung, Nr. 98); vorhandener Signaturschlüssel wird App-Signaturschlüssel bei Play App Signing, getrennter Upload-Schlüssel — der Schlüssel liegt danach auch bei Google (R17); Seitenladung bleibt bis zur Produktionsfreigabe und entfällt mit Welle 1; Connect IQ unverändert. Begründung in `docs/konzepte/Konzept-Planung-v1.0.md`, E-PV-1 | gilt; Konto sofort, Track in Schritt 6, Produktion Betriebsübergang |
 | R66 | **Update-Weg ab v1.0** (Beschluss 03.09.2026, E-PV-2; beantwortet R60): keine Selbstprüfung auf neue Fassungen, kein Selbst-Update — die Installation ändert ihren Code nie selbst, neuer Code kommt nur über die Auslieferungskette (R40, R67); **Produktion nur auf ausdrückliche Auslösung der Betreiberin, nie automatisch**, damit vorher Backups geprüft werden können; Wartungsseite zeigt nur ausstehende Migrationen mit „Ausstehende ausführen", der Torwächter liest dasselbe Register, ausgeführte Kennungen ab P5 im Audit-Protokoll; Migrationsregister beginnt bei v1.0 neu. Selbsthoster: Release-Archiv, FTP, Migrationen von Hand (Betreiberhandbuch). Fassungsprüfung auf Klick als Nr. 99 nach v1.0. Begründung E-PV-2 | gilt; Unterseite in S8 (Nr. 77), Audit in P5, Neubeginn des Registers in P8 |
 | R67 | **Auslieferungskette** (Beschluss 03.09.2026, E-PV-3; präzisiert R40 (4)): `main` deployt automatisch auf Staging, das zugleich Prüfumgebung ist (Demo-Konto, Referenzdatensatz, Messstand-Konto); ein Release-Tag startet den Produktiv-Lauf, der in der GitHub-Umgebung „produktion" auf die **Freigabe der Betreiberin** wartet — die Produktiv-Zugangsdaten liegen nur dort; der freigegebene Lauf **stößt zuerst das Komplett-Backup an und bricht ohne Erfolg ab**, dann Deploy, Migrationen von Hand (R66); mit dem Wartungsmodus aus Paket W: Wartung an → Backup → Deploy → Migrationen → Wartung aus; **Rollback** = voriger Tag plus Wiederherstellung; **Prüftor in drei Stufen** (je Push statisch und Android-Build, rot = kein Merge; nach Staging-Deploy Kreisläufe, Bilderlauf, Messstand bei Tags, rot = nicht freigabefähig; Produktion nach Freigabe); Android in der CI unsigniert, Signatur und Play-Upload auf dem Rechner der Betreiberin (E-S4-16 bleibt), Play-API-Upload nach v1.0 (Nr. 100). Pflichtfreigaben setzen ein **öffentliches** Repositorium voraus (R68). Begründung E-PV-3 | gilt; gebaut in P5 (R40 (2)), vollständig ab dem neuen Repositorium (R40 (4)) |
@@ -1194,6 +1242,59 @@ negative Verbindungszweig auf der Uhr (der Simulator zeigt eine tote
 Verbindung als HTTP 404), und eine Kopplung mit Handbuch und Uhr in der
 Hand (P2-Prüfpunkt 4.1). *Reste:* Prüfliste in Abschnitt 6.
 
+**Paket E — Android-Ortung und Dienstende · Android 0.8.0 bis 0.10.2 ·
+03.09.2026, gemergt als PR #31** (Zusatzkonzept
+`Konzept-S5-Zusatz-Android-Ortung-Dienstende.md`, Prüfdokument
+`Pruefdokument-S5-Paket-E.md`, beide bleiben bis zur Freigabe). Der
+**Ortungswächter** misst, was ankommt, statt zu melden, was freigegeben ist
+(0.8.0); **Dienstende und Nachsenden** — der Sendelauf lief bis dahin in
+einem Prozess ohne Dienst, den Android abräumen durfte, der Diensttag blieb
+dann im Web ohne Ende (0.9.0); die **Uhr erfährt den Zustand** mit jeder
+Quittung (0.10.0); Phasenliste gekürzt, „Einsatz abschließen" wieder
+erreichbar (0.10.1). Bilderlauf für beide Module. *Reste:* Backlog 114
+(Räumteil im Sofortpaket, Bedienweg Backlog-Runde), 115 (in 95
+aufgegangen), 116.
+
+### S4-Rest, Teile A bis C · Web 13.3.0 bis 14.2.2, Android 0.11.0 bis 0.13.0 · 04.09.2026, gemergt als PR #33 (R57, R63, R64, R65)
+Konzepte `Konzept-S4-Handy-Uhr-Client.md` (Abschnitt 13) und
+`Konzept-R64-Herkunft-Geraet.md` mit Prüfdokumenten — **bleiben** nach R62,
+weil der Schritt erst mit dem Gerätetest abgeschlossen ist (Abschnitt 3).
+Erledigt-Zeile nachgetragen mit Fassung 32; der Werdegang steht in
+Abschnitt 10, Fassung 27.
+
+**Teil A:** Kopplungsmodul auf Vertragsabschnitt 1a — die App konnte sich
+seit Web 13.0.0 nicht mehr koppeln (Android 0.11.0); feste Server-Adresse,
+App-Name „Gen-EM NAdoku", Fenster-Insets (R63, Nr. 84–86); das APK um
+1,81 MB kleiner, weil Adress-QR, ZXing und die CAMERA-Berechtigung
+entfallen · **Überschneidungshinweis** für zeitlich überlappende Diensttage
+(R57, Web 13.3.0, Handbuch 4.5b) · Akku-Hinweis und Akkuwarnung bei
+25/15/10 % (Nr. 82, Android 0.11.1/0.12.0), Versionscode-Versatz der Uhr
+(Nr. 98). **Teil B — R64 und Nr. 63 als eine Formatänderung** (Web
+14.0.0–14.2.2): `origin` mit sechs Werten aus dem `client_ref`-Präfix,
+Momentaufnahme `geraet_art`/`geraet_modell` an Einsatz und Ruhesegment,
+Konto-Backup auf Nutzlast 9, Referenzbestand neu gebaut mit zwei Geräten
+über den echten Kopplungsweg. **Teil C:** Play-Console-Vorbereitung ohne
+D-U-N-S und Signaturschlüssel (`Vorbereitung-Play-Console.md`, Android
+0.13.0). *Drei Funde am Code, alle behoben* (CSV, die die Anwendung selbst
+nicht einlesen konnte; GPX-Probe, die eine Datei statt 172 verglich; „kein
+Ende" an abgeschlossenen Einsätzen ohne Phase 9).
+
+*Prüfzahlen (Prüfdokument R64):* Kreisläufe `edbak-alt` **287 743
+Einzelvergleiche, 0 unerklärt**, `edbak` **287 713, 0 unerklärt** (die 88
+aus AP2 ohne eine Ausnahmeregel verschwunden), `csv` 8 965 · Wortliste
+**0/0/0** (79 Regeln) · Vollständigkeit **278 → 280**, beide in Kommentaren
+· Migrationsregister **42 = 42**. *Reste:* Gerätetest S24 und Wear-OS,
+Android 1.0.0, Backlog 81 und 95 (Abschnitt 5 und 6); **Nr. 148** (der
+Knopf der R57-Warnung, gefunden am 06.09.2026).
+
+### Uhr-Korrekturen vom Gerät · Uhr 3.0.1 und 3.0.2 · 05.09.2026, gemergt als PR #34
+Zwei Meldungen vom Gerät, nicht vom Prüfstand: Die Sync-Seite ließ sich
+mit UP nicht verlassen (3.0.1), und nach einem Blick darauf ließ sich mit
+START kein Dienst mehr beginnen — `_fremdKey` in `Input.mc` wurde beim
+Loslassen nicht aufgeräumt, die App war in ihrer Hauptfunktion tot bis zum
+Neustart (3.0.2). Beides älter als S5. Was der Simulator davon zeigen kann,
+steht im Changelog; der Rest ist Prüfliste S5 am Gerät.
+
 ### S7 — Backup-Begriff · Web 12.9.3 und 12.9.4 · 02.–03.09.2026 (R50, R56)
 Konzept `docs/konzepte/Umstellung-Backup.md` — nach R62 **gelöscht**;
 zuletzt unter Commit `7057e7b`. Prüfdokument
@@ -1304,6 +1405,9 @@ Prüfdokuments), Backlog 117–122 und 124–126.
   kompakt; die Begründung steht im betroffenen Konzept. Nie umnummerieren.
 - **Keine Fassungsvermerke im Kopf.** Jede Änderung ist eine Zeile in
   Abschnitt 10; der Kopf trägt nur die Fassungsnummer und den Stand.
+  **Wer eine Erledigt-Zeile schreibt oder einen Merge einträgt, liest den
+  Kopf gegen** — zweimal (Fassung 24 und 32) nannte er einen Stand, den
+  Abschnitt 3 und 10 längst überholt hatten.
 - **Das Archiv wird nicht fortgeschrieben.** Was dorthin gehört, ist der
   Volltext einer abgeschlossenen Phase oder einer neuen Entscheidung ohne
   Konzept; er wird angehängt, nie verändert.
@@ -1344,4 +1448,5 @@ Prüfdokuments), Backlog 117–122 und 124–126.
 | **28** | **05.09.2026** | **S8-Konzept eingetroffen und Umsetzung begonnen** (Schritt 7, Zweig `claude/umsetzung-buuvfq`). Das Konzept liegt als `docs/konzepte/Konzept-S8-Einstellungen-Administration-Wartung.md` mit Prüfdokument und zwölf Mockups (01 und 03–12 freigegeben, 02 verworfen). **Vier neue Programmentscheidungen:** **R74** Ordnungsprinzip — jede Funktion hat genau einen Ort nach Zielgruppe, Objekt und Häufigkeit, Ausnahmen eine Ebene tiefer, ein Paket ohne benannten Ort wird nicht gemergt (K1 ergänzt) · **R75** dritte Rolle **BetreiberIn** mit Hierarchie BetreiberIn ⊇ Admin ⊇ NutzerIn; die Migration macht alle heutigen Admins zu BetreiberInnen, das letzte solche Konto ist geschützt — eine **Ausnahme zu „Nicht Umfang: Rollen"** in Schritt 7, die Support-Rolle bleibt bei R38 · **R76** Bedienhöhe in **zwei Stufen** (44 px, am Zeigergerät ab 1024 px 36 px) — beantwortet Nr. 74, auf die S9 PS-3 wartet · **R77** drei Backup-Begriffe (Backup, Konto-Backup, Komplett-Backup) mit einem Verb je Rückweg. Dazu: die **Wartungsseite wird aufgelöst** (Nr. 77) und der Block **Betrieb** trägt sieben Seiten, darunter die neuen **Status** und **Statistik**; **Backlog Nr. 80 ist geteilt** — Gerätemodelle und Nutzung nach S8, Herkunft je Einsatz und Dashboard bleiben P5; sechs neue Backlog-Kandidaten (117–122). Schritt 10 nennt jetzt je P5-Option ihre Seite (E-S8-12), Schritt 8 die Vorgabe für die Tagesübersicht. Zwei Zuarbeiten in Abschnitt 6 (Play-Beitrittslink, Connect-IQ-Adresse); die Freigabe des Konzepts ist erledigt. Die Sperre „S8 zu S4-Rest und S7" ist erfüllt |
 | **29** | **05.09.2026** | **Die Wortmarke ist vorgezogen** (Web 15.3.2, Auftrag vom 05.09.2026). Schritt 13 (P7) sah „Umbenennung überall" vor; ausgelöst hat es der Tab-Titel, der in Web 15.3.1 auf **Gen-EM NAdoku** ging und die Kopfleiste mit „Gen-EM Einsatzdoku" daneben stehen ließ. Jetzt heißt der Name überall dort so, wo er als Name auftritt: Kopfleiste, Schublade, Anmeldeseite, Passwortseiten, Einrichter, Absendername der System-E-Mails, Urheberfeld von GPX (beide Wege) und CSV, die Markierungsdateien von Einrichtung und Wiederherstellung, neun Skript-Dateiköpfe und die Titel von README, Handbuch, Technik, Backlog, Changelog, Geräte-Eingabe und Uhr-Layoutregeln. **Bei P7 bleibt** die Langform „Gen-EM Einsatzdokumentation Notarzt" in den Texten der System-E-Mails (20 Stellen in sechs Dateien) — sie ist der beschreibende Name und steht in Betreffzeilen, die Bestandsnutzerinnen wiederfinden; und die Historie bleibt unberührt (`version.php`, ältere Changelog-Einträge, `Design.md`, Archiv). Damit ist die Abnahme „kein ‚Einsatzdoku' mehr" in Schritt 13 auf eine Frage zusammengeschrumpft. Dazu zwei gemeldete Fehler behoben (Web 15.3.1): die Karte nutzte ab 1600 px nur ihren oberen Teil (Leaflet rechnete mit 400 × 324 statt 400 × 840 px), und der Tab-Titel |
 | **30** | **06.09.2026** | **Krypto- und Sicherheitsreview vorgezogen und entschieden (R78).** Auf die Frage „ist das sicher?" liegt der Befund in `docs/konzepte/Review-Krypto-Sicherheit.md`: Verfahren richtig gebaut, kein kritischer Fund; drei Wege bleiben — schwaches Passwort plus Datenbankabzug, Angreifer mit Codezugang, Klartext-Ortsdaten. Entschieden: **Sofortpaket Sicherheit** als Schritt 9a (Nr. 127–138, 142–145), **S10 — Sicherheit** als Schritt 9b vor P5 (Server-Anteil am Datenschlüssel mit Schlüsselblatt, Adminpakete versiegeln), Zweitfaktor für alle in P5 (Nr. 141), CSP-Bauplan zu Nr. 8, **Weg B als S11** (Schritt 12a, nach P6, vor der Öffnung; Nr. 43 und 53 zusammengeführt; die drei Fragen aus `Konzept-V1-Ortsdaten.md` beantwortet), Deploy-Tor mit Staging. Backlog 127–146 angelegt; 8, 43, 53, 114 ergänzt. Am selben Tag nachentschieden: Photon-Schalter mit Vorgabe „an" (F-SP-4), Ersetzfenster 72 h (F-SP-8), Integritätswache sofort (F-SP-9). Vorschläge und Entscheidungen in `docs/konzepte/Vorbereitung-Sicherheitspaket.md`. |
+| **32** | **06.09.2026** | **Stand auf `main` gezogen, zwei Funde, S9 frei.** Der Kopf nannte seit Fassung 25 „Web 13.2.0", einen ausstehenden Push für Schritt 6, ein ungemergtes Paket E und vier wartende Migrationen — tatsächlich sind Paket E (PR #31, 03.09.), Schritt 6 Teile A–C (PR #33, 04.09.), Uhr 3.0.1/3.0.2 (PR #34, 05.09.) und S8 (PR #35, 06.09.) gemergt, `update.php` lief am 04.09. um 23:15, und `main` trägt Web 15.5.1, Uhr 3.0.2, Android 0.13.0. Erledigt-Zeilen für Paket E, den S4-Rest und die Uhr-Korrekturen nachgetragen (Abschnitt 8), Sperren in Abschnitt 4 erfüllt, Abschnitt 5 bereinigt (dreizehn erledigte Nummern raus, 90–92 und 114–116 rein, 115 in 95 aufgegangen), R45/R57/R63/R64 im Register nachgeführt. **Zwei Funde am Produktivstand:** die Rollenmigration aus S8 war im Web nicht ausführbar — Betrieb → Updates verlangt die Rolle, die sie erst vergibt; gelöst per phpMyAdmin, und seither zählen Updates-Seite und Status die Migration verschieden (**Nr. 149**, Regel: eine Migration, die Rechte einführt, muss ohne sie laufen); der Knopf „Diensttage zusammenführen" in der R57-Warnung führt auf 404 (**Nr. 148**, `?ziel=` statt `?d=`). Beide als eine Korrekturstufe vor Schritt 9a, Auftrag liegt vor. **Nr. 147** angelegt: die aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung, S9 (PS-11). **Zuarbeit F3–F6 zu PS-3 erledigt** — und PS-3 richtiggestellt: gemeint sind die Kartenschilder, nicht Formularknöpfe; Screenshots in `docs/konzepte/vorbereitung-s9/`. Backlog: zwölf Verweise „R74" auf den Krypto-Review zu **R78** berichtigt (Rest der Umnummerierung aus Fassung 31), 78 und 79 nach *Erledigt*, S8-Prüfdokument um einen Nachtrag ergänzt. Nächster Schritt: Korrekturstufe, dann 9a; parallel das S9-Konzept |
 | **31** | **06.09.2026** | **S8 erledigt** (Schritt 7, Web 15.0.0 bis 15.5.1, Zweig `claude/umsetzung-buuvfq`): drei Menüblöcke aus einer Quelle, dritte Rolle **BetreiberIn** (R75), die Seite „Wartung" aufgelöst in fünf Betriebsseiten, **Betrieb → Status** als Ampel und Prüfstelle nach dem Deploy, **zwei Bedienhöhen** (R76), Handbuch neu gegliedert (Kapitel 11 Verwaltung, Kapitel 12 Betrieb). Fünfzehn Fehlerfunde, alle behoben. Konzept nach R62 gelöscht, Prüfdokument bleibt. **Zugleich der Merge des Sicherheitszweigs** `claude/crypto-security-review-eee2et`: Backlog **117–136 → 127–146** und **R74 → R78** umnummeriert, weil beide Zweige dieselben Nummern vergeben hatten und die S8-Nummern bereits in ausgelieferten Changelog-Einträgen und zwölf Server-Dateien stehen. Der Auftrag für Schritt 9a lautet damit **Backlog 127 bis 138 und 140** |

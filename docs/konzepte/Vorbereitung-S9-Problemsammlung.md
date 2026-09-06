@@ -3,20 +3,21 @@
 **Zielpfad:** `docs/konzepte/Vorbereitung-S9-Problemsammlung.md` — dasselbe
 Muster wie `Vorbereitung-S5-Kopplung-umgekehrt.md`: die Sammlung mit den
 bereits gefallenen Entscheidungen, aus der das S9-Konzept nach K1 entsteht.
-**Rahmenplan:** Schritt 8 (Fassung 26), Backlog Nr. 101–113.
-**Status:** Sammlung abgeschlossen, Rückfragen weitgehend geklärt — Analyse
-und Konzept stehen noch aus. **Stand:** 03.09.2026.
+**Rahmenplan:** Schritt 8 (Fassung 26), Backlog Nr. 101–113 **und 147**
+(PS-11, Fassung 32).
+**Status:** Sammlung abgeschlossen, **alle Rückfragen geklärt** — Analyse
+und Konzept können beginnen. **Stand:** 06.09.2026.
 **Vorgehen:** Repo-Analyse und Konzepterstellung erfolgen gebündelt nach
 ausdrücklichem Go des Auftraggebers; Konzept mit Fable (R14), Umsetzung
 Opus, Fable-Schritte im Konzept markiert (K2).
-**Noch offen:** F3–F6 zu PS-3 (Screenshot Ist-Zustand, Client/Zielbreite,
-Zeitstempel-Darstellung, Zusatzmerkmal neben Farbe) — Zuarbeit in
-Rahmenplan Abschnitt 6, vor dem S9-Konzept.
+**F3–F6 zu PS-3 sind am 06.09.2026 beantwortet** (siehe dort) — und die
+Antwort stellt PS-3 richtig: Es geht um die **Schilder auf der Karte**, nicht
+um Formularknöpfe. Die Screenshots liegen in `vorbereitung-s9/`.
 
 **Bezeichner:** Die Punkte heißen hier **PS-1 bis PS-10** (in der
 Ursprungsfassung P1–P10 — umbenannt, weil „P3" und „P5" im Rahmenplan
 Phasen sind). Die Entscheidungen F1–F19 dieser Sammlung übernimmt das
-S9-Konzept als E-S9-…; die offenen F3–F6 werden dort F-S9-….
+S9-Konzept als E-S9-…; F3–F6 sind beantwortet und gehen als E-S9-… ein.
 
 **Zuordnung zum Backlog (Fassung 26):**
 
@@ -35,6 +36,7 @@ S9-Konzept als E-S9-…; die offenen F3–F6 werden dort F-S9-….
 | 111 | PS-10.1 | Neue Rettungsmittel-Arten: Bergwachtnotarzt, Veranstaltungsnotarzt, Sonstiges | Erweiterung |
 | 112 | PS-10.2 | Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung | Erweiterung |
 | 113 | PS-10.3 | Rollen unmittelbar nach Auswahl bearbeitbar, Vorlagen nachladen | Bug / Workflow |
+| 147 | PS-11 | Aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung (Fassung 32) | Erweiterung |
 
 **Verbindungen in den Rahmenplan (beim Einordnen festgehalten):**
 
@@ -87,9 +89,14 @@ angebotenes Rettungsmittel schließt den Dialog, das Rettungsmittel wird jedoch 
 
 ---
 
-## PS-3 — Kompaktere Buttons Einsatzort / Standort / Zielklinik
+## PS-3 — Kompaktere Schilder Einsatzort / Standort / Zielklinik auf der Karte
 
-**Bereich:** Buttonleiste Einsatzort, Standort, Zielklinik
+**Bereich:** die Karte der Einsatzansicht (`einsatz.php`, `geo.js`) — **richtiggestellt
+am 06.09.2026:** Gemeint sind nicht Knöpfe im Formular, sondern die **Schilder auf der
+Karte**: das Kästchen für Standort und Zielklinik (`.geo-schild`, Token `--geo-schild`
+36 px), der Kreis des Einsatzorts (`.geo-kreis`, `--geo-kreis`) und die Ringe für Start
+und Ende der Aufzeichnung (`.geo-ring-*`, `--geo-ring` 3 px; `Design.md` Schwellen).
+Der Text unten ist der Wortlaut vom 03.09.2026 mit „Buttons" und meint diese Schilder.
 
 **Soll:**
 - Buttons „Einsatzort", „Standort" und „Zielklinik" sollen kleiner werden.
@@ -105,13 +112,30 @@ Icon-Größe, zur Auswahl vor der Umsetzung.
 **Entscheidung (F8, gilt auch hier):** Mockups werden **erst bei der Konzepterstellung**
 erzeugt, nicht vorab.
 
-**Noch offen:**
-- **F3** Screenshot Ist-Zustand in realer Nutzungsbreite
-- **F4** Client und Zielbreite (Desktop / Tablet quer / Tablet hoch)
-- **F5** Zeigt die Einsatzbeginn/Einsatzende-Anzeige aktuell nur den Zustand oder auch
-  Uhrzeiten? Bei sichtbaren Uhrzeiten kann eine Umrandung sie nicht ersetzen.
-- **F6** Zusätzliches nicht-farbliches Merkmal (Randstärke, gefüllt/ungefüllt) neben der
-  Farbe — wegen Sonnenlicht im Cockpit und Farbfehlsichtigkeit
+**Beantwortet am 06.09.2026 (Auftraggeber, Rahmenplan Fassung 32):**
+- **F3 — Screenshots:** `vorbereitung-s9/PS-3-ist-einsatzansicht-desktop.png` (Vollbild
+  der Karte, 2880 × 1800) und `vorbereitung-s9/PS-3-ist-kartenausschnitt.png` (die
+  kleine Karte der Einsatzansicht, 920 × 754). **Befund des Auftraggebers:** Im kleinen
+  Ausschnitt sind die Schilder teils zu groß; verkleinern und Platz sparen, **vor allem
+  bei der Umrandung**. Was auf den Bildern zu sehen ist: Das Standort-Schild trägt
+  Rahmen, Weißraum und den Doppelring (rot außen = Ende, blau innen = Start)
+  übereinander — drei Ränder um ein 36-px-Kästchen; das Klinik-Schild denselben Rahmen
+  ohne Ring; der Einsatzort ist der orangefarbene Kreis.
+- **F4 — Client und Lage:** **alle Lagen**, vor allem **Desktop und Handy**. Die Mockups
+  entstehen deshalb in mindestens zwei Breiten (Desktop-Vollkarte, Handy-Karte) und
+  werden gegen die kleine Karte der Einsatzansicht gehalten, nicht nur gegen das Vollbild.
+- **F5 — Uhrzeiten:** Die Beginn/Ende-Anzeige **zeigt keine Uhrzeiten**, nur den Zustand
+  (Ring am Schild oder eigener Ringpunkt). Ein Ring kann sie deshalb tragen; die Zeiten
+  stehen weiter in der Phasenliste.
+- **F6 — zweites Merkmal:** **Nein**, Farbcodierung genügt — aber eine **schmale
+  Trennlinie zwischen den Farben** (etwa zwischen Ring und Füllung, oder zwischen zwei
+  Ringen) ist gewünscht, damit die Farbflächen im Sonnenlicht nicht ineinanderlaufen.
+
+**Für das Konzept daraus:** Die Frage ist eine Gestaltungsfrage an drei Token
+(`--geo-schild`, `--geo-kreis`, `--geo-ring`) und die Klassen in `geo.js`/`style.css`;
+sie hängt **nicht** an der Bedienhöhe R76 (Nr. 74), auch wenn 44/36 px als Untergrenze
+für ein antippbares Schild gilt. Mockups nach K2 als Fable-Schritt, mehrere Varianten,
+Freigabe je Darstellung (`CLAUDE.md` 5).
 
 ---
 
@@ -284,9 +308,42 @@ Sie gilt nur für Rettungsmittel mit hinterlegten Rollen.
 | PS-7 | PS-1 | gemeinsamer standardisierter Kartendialog inkl. Adresssuche |
 | PS-7 | PS-6 | Vorschlagsliste im Klinik-/Adressfeld |
 | PS-6 | PS-1 | Adressvorschläge stammen aus derselben Suchquelle |
+| PS-11 | PS-1 | Spur wird im gemeinsamen Kartendialog gezeichnet |
+| PS-11 | PS-7 | Zielklinik bekommt denselben Dialog samt Spur |
 | PS-2 | PS-10.2 | Übernahme aus Rettungsmittel-Suchdialog, freie Einträge |
 | PS-3 | PS-5 | Icon-Gestaltung und Icon-Größen in der Oberfläche |
 | PS-10.1 | PS-10.3 | Arten ohne Rollen-Vorlagen bestimmen, wo Rollenbearbeitung entfällt |
+
+---
+
+## PS-11 — Aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung
+
+*Nachgetragen 06.09.2026 (Backlog Nr. 147, Rahmenplan Fassung 32).*
+
+**Bereich:** Kartendialog „Auf der Karte wählen" im Einsatzformular (`ortswahl.js`).
+
+**Ist:** Der Dialog zeigt eine leere Karte mit Fadenkreuz — auch wenn der Einsatz eine
+GPS-Aufzeichnung hat, die `api/mission.php` bereits liefert. Der gesuchte Ort liegt fast
+immer auf der Spur.
+
+**Soll:** Liegt eine Aufzeichnung vor (Schwelle wie `$hatTrack` im Formular: mehr als ein
+Punkt), zeichnet der Dialog sie in der ersten Spurfarbe; ist das Feld leer, öffnet die
+Karte auf der Spur (`fitBounds`), sonst auf der Koordinate.
+
+**Entscheidungen (Auftraggeber, 06.09.2026):**
+- **Nur die aufgezeichnete Spur, keine Luftlinie** — `luftlinie.js` bleibt außen vor; eine
+  gedachte Verbindung wäre im Auswahldialog eine Falschaussage.
+- **In jedem Kartendialog des Einsatzformulars:** heute Einsatzort, mit PS-7 auch die
+  Zielklinik (dasselbe Feld — „ad hoc" heißt nur: kein Stammdateneintrag, F12). Der
+  manuelle Abfahrtort erscheint ohne Spur ohnehin nicht.
+- **Zoom auf die Spur**, solange das Feld leer ist.
+
+**Grenzen:** An Photon geht weiterhin nur die Koordinate der Umkehrsuche, nie ein
+Spurpunkt. Verträglich mit S11 (Weg B), weil der Dialog im Browser läuft. Ort nach R74:
+der vorhandene Pin-Knopf — kein neuer Menüpunkt, keine neue Darstellung.
+
+**Abhängigkeiten:** PS-1 (gemeinsamer Kartendialog — dort entsteht der Dialog neu, die
+Spur gehört von Anfang an hinein), PS-7 (Zielklinik bekommt den Dialog).
 
 ---
 
@@ -305,7 +362,7 @@ Sie gilt nur für Rettungsmittel mit hinterlegten Rollen.
 
 | Nr. | Punkt | Frage |
 |-----|-------|-------|
-| F3 | PS-3 | Screenshot Ist-Zustand in realer Nutzungsbreite |
-| F4 | PS-3 | Client und Zielbreite |
-| F5 | PS-3 | Einsatzbeginn/Einsatzende: nur Zustand oder mit Uhrzeiten? |
-| F6 | PS-3 | Zusatzmerkmal neben Farbe erforderlich? |
+| F3 | PS-3 | ~~Screenshot Ist-Zustand in realer Nutzungsbreite~~ — **beantwortet 06.09.2026**, zwei Bilder in `vorbereitung-s9/` |
+| F4 | PS-3 | ~~Client und Zielbreite~~ — **alle Lagen, vor allem Desktop und Handy** |
+| F5 | PS-3 | ~~Einsatzbeginn/Einsatzende: nur Zustand oder mit Uhrzeiten?~~ — **nur Zustand, keine Uhrzeiten** |
+| F6 | PS-3 | ~~Zusatzmerkmal neben Farbe erforderlich?~~ — **nein; schmale Trennlinie zwischen den Farben gewünscht** |
