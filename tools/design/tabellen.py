@@ -39,6 +39,26 @@ def css_text() -> str:
     return CSS.read_text(encoding='utf-8')
 
 
+def css_ohne_kommentare() -> str:
+    """Das Stylesheet ohne seine Kommentare.
+
+    ZWEIMAL HAT EIN KOMMENTAR EINE ZAHL VERFAELSCHT, und beide Male fiel es
+    erst auf, als sich die Zahl aus einem anderen Grund aenderte:
+
+      * Die Schwellentabelle las „@media-Abfragen" aus dem Prosakopf und
+        nahm den halben :root-Block als Abfrage mit (S8/AP7).
+      * Die Bausteintabelle zaehlte fuer `ui_feld()` „+24 Unterklassen",
+        wo es 18 gibt — jede Nennung einer Klasse in einem Kommentar zaehlte
+        mit. Aufgefallen ist es erst, als eine EINZIGE neue Regel die Zahl um
+        DREI erhoehte: Der Kommentar darueber nennt `.feld-eingabe` dreimal
+        beim Namen (S8/AP7). Elf der 34 Zeilen standen zu hoch.
+
+    Ein Kommentar erklaert das Stylesheet; er ist kein Stylesheet. Wer eine
+    Regel, einen Selektor oder eine Abfrage zaehlt, zaehlt hier.
+    """
+    return re.sub(r'/\*.*?\*/', '', css_text(), flags=re.S)
+
+
 # ---------------------------------------------------------------- Token
 
 def root_block(text: str) -> tuple[str, int]:
@@ -130,11 +150,32 @@ def tabelle_token() -> str:
 # ------------------------------------------------------------ Schwellen
 
 def tabelle_schwellen() -> str:
-    text = css_text()
+    """Die Medienabfragen mit einer Breite — die ganze Abfrage, nicht nur ihr
+    Breitenteil.
+
+    WARUM DIE GANZE ABFRAGE. Bis Web 15.4.1 suchte der Ausdruck nach einer
+    Klammer unmittelbar hinter `@media`, die eine Breite enthaelt. Eine
+    zusammengesetzte Abfrage wie
+    `@media (hover: hover) and (pointer: fine) and (min-width:1024px)`
+    (die zweite Bedienhoehe, S8/AP7) faengt aber mit `(hover: hover)` an —
+    sie fiel damit aus der Tabelle heraus, und die Tabelle behauptete
+    Vollstaendigkeit, die sie nicht hatte. Jetzt wird die Abfrage bis zur
+    geschweiften Klammer gelesen und aufgenommen, sobald irgendwo darin eine
+    Breite steht.
+    """
+    # KOMMENTARE ZUERST HERAUS. Der Stylesheet-Kopf erklaert die Schwellen in
+    # Prosa und schreibt dabei „@media-Abfragen" — der Ausdruck fand das und
+    # las bis zur naechsten geschweiften Klammer weiter, also ueber den
+    # halben :root-Block. Die Tabelle bekam eine Zeile mit dem gesamten
+    # Kommentartext darin.
+    text = css_ohne_kommentare()
     treffer: dict[str, int] = {}
-    for m in re.finditer(r'@media\s*\(([^)]*width:\s*\d+px)\)', text):
-        schl = re.sub(r'\s+', '', m.group(1))
-        treffer[schl] = treffer.get(schl, 0) + 1
+    for m in re.finditer(r'@media([^{]*)\{', text):
+        abfrage = re.sub(r'\s+', ' ', m.group(1)).strip()
+        if not re.search(r'width:\s*\d+px', abfrage):
+            continue          # z. B. prefers-reduced-motion — keine Schwelle
+        abfrage = re.sub(r'\(\s*', '(', re.sub(r'\s*\)', ')', abfrage))
+        treffer[abfrage] = treffer.get(abfrage, 0) + 1
 
     def sortwert(s: str) -> tuple[int, int]:
         px = int(re.search(r'(\d+)px', s).group(1))
@@ -143,8 +184,8 @@ def tabelle_schwellen() -> str:
     zeilen = ['<!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->',
               '', '| Abfrage | Regelblöcke |', '|---|--:|']
     for s in sorted(treffer, key=sortwert):
-        zeilen.append(f'| `@media ({s})` | {treffer[s]} |')
-    breiten = {int(re.search(r'(\d+)px', s).group(1)) for s in treffer}
+        zeilen.append(f'| `@media {s}` | {treffer[s]} |')
+    breiten = {int(w) for s in treffer for w in re.findall(r'width:\s*(\d+)px', s)}
     zeilen += ['', f'Zusammen {sum(treffer.values())} Medienblöcke über '
                    f'{len(breiten)} verschiedene Breiten: '
                    + ', '.join(f'{b} px' for b in sorted(breiten)) + '.']
@@ -208,7 +249,9 @@ def bausteine_lesen() -> list[dict]:
     steht ein Fragezeichen und keine Behauptung.
     """
     text = UI.read_text(encoding='utf-8')
-    css = css_text()
+    # OHNE KOMMENTARE, sonst zaehlt ein erklaerender Absatz als Unterklasse —
+    # die Begruendung steht bei `css_ohne_kommentare()`.
+    css = css_ohne_kommentare()
     eintraege: list[dict] = []
     # WO DER NAME NICHT DIE KLASSE IST. Die Ableitung aus dem Funktionsnamen
     # trifft zwei Drittel der Bausteine; die uebrigen heissen anders als ihre

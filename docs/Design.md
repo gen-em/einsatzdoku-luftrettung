@@ -332,7 +332,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--schnee` | `#FFFCFA` | 34 |  |
-| `--rauch` | `#F7F5ED` | 25 |  |
+| `--rauch` | `#F7F5ED` | 26 |  |
 | `--sand` | `#D4C7AD` | 11 |  |
 
 **Schrift**
@@ -341,7 +341,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 20 |  |
 | `--dunkelblau` | `#1A2E4D` | 51 |  |
-| `--gedaempft` | `#6E6459` | 48 |  |
+| `--gedaempft` | `#6E6459` | 49 |  |
 | `--auf-dunkel` | `#FFFFFF` | 7 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
@@ -534,11 +534,35 @@ Schriftgrößen außerhalb jeder Skala; heute sind es **0**.
 
 Was für **jede** Seite gilt, unabhängig vom Baustein. Stylesheet, Abschnitt 3.
 
-**Eine Höhe für Bedienelemente: 44 px** (`--knopf`), mobil wie am
-Schreibtisch, auch für Zeilenaktionen. Es gibt keine Kompaktvariante — was
+**Zwei Höhen für Bedienelemente — und eine Bedingung, die beide trennt**
+(`--knopf`, E-S8-09, R76):
+
+| | Höhe | wann |
+|---|--:|---|
+| Finger | **44 px** | überall, wo getippt wird — und überall unter 1024 px |
+| Zeiger | **36 px** | `(hover: hover) and (pointer: fine) and (min-width: 1024px)` |
+
+44 px ist die Vorgabe und kommt aus WCAG 2.5.8 und den Plattformvorgaben; sie
+ist für die Fingerkuppe gerechnet. Ein Zeiger trifft ein 36 px hohes Ziel
+genauso sicher — was er nicht hat, ist die Ungenauigkeit, für die die acht
+Pixel da sind. Bezahlt werden sie in Formularhöhe: Das Einsatzformular hat
+über dreissig Felder, acht Pixel je Zeile sind dort eine Bildschirmhöhe.
+
+**Alle drei Bedingungen müssen gelten.** Die Breite allein genügt nicht — ein
+Touch-Laptop mit 1920 px ist ein Fingergerät, ein iPad im Querformat meldet
+1024 px. Die Medienmerkmale allein genügen auch nicht: Ein Zeiger an einem
+schmalen Fenster bekommt die grosse Höhe, weil die Zeilen dort ohnehin knapp
+sind.
+
+**Was seine eigenen Token hat, ändert sich nicht:** Kopfleiste (`--kopf`, 56),
+Schalter (`--schalter-*`), Zeile des Aktionsblatts (`--blatt-zeile`, 50 — gilt
+nur unter 1024 px), grosses Suchfeld (`--suchfeld`, 48), Sprungmarke unter dem
+Menüpunkt (`--unterpunkt`, 28).
+
+Es gibt weiterhin keine Kompaktvariante innerhalb einer Eingabeart — was
 kleiner ist, ist kein Knopf, sondern ein Link mit Symbol (E-P3-22). Der
-Bilderlauf misst jedes `.knopf` in allen acht Breiten; Abweichung ist ein
-Fehler, kein Geschmack.
+Bilderlauf misst jedes `.knopf` in allen acht Breiten **gegen den Sollwert der
+emulierten Eingabeart**; Abweichung ist ein Fehler, kein Geschmack.
 
 **Der Fokusring ist sichtbar und liegt an der richtigen Stelle.** Zwei
 Pixel Blau mit Abstand. Wo ein Bedienelement aus einem *ausgeblendeten*
@@ -666,11 +690,12 @@ neben „Standard der Installation" sprengt sonst jede Zeile.
 |---|--:|
 | `@media (min-width:1600px)` | 2 |
 | `@media (min-width:1200px)` | 3 |
+| `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px)` | 2 |
 | `@media (min-width:720px)` | 12 |
 | `@media (max-width:479px)` | 1 |
 
-Zusammen 20 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 21 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -840,9 +865,9 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 141 |
 | `ui_symbol()` | `.symbol` | ja (+6 Unterklassen) | 194 |
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 297 |
-| `ui_kopf()` | `.kopf` | ja (+21 Unterklassen) | 352 |
+| `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 352 |
 | `ui_geruest_start()` | `.inhalt` | ja | 427 |
-| `ui_leiste_ende()` | `.leiste` | ja (+12 Unterklassen) | 498 |
+| `ui_leiste_ende()` | `.leiste` | ja (+11 Unterklassen) | 498 |
 | `ui_geruest_ende()` | `.inhalt` | ja | 522 |
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 562 |
 | `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 763 |
@@ -851,22 +876,22 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_fuss_seite()` | `.fuss-seite` | ja | 1041 |
 | `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1084 |
 | `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1151 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1197 |
+| `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1197 |
 | `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1250 |
 | `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1276 |
-| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1312 |
-| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1370 |
+| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1312 |
+| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1370 |
 | `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1386 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1428 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1428 |
 | `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1470 |
-| `ui_feld()` | `.feld` | ja (+24 Unterklassen) | 1539 |
-| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1604 |
-| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1648 |
+| `ui_feld()` | `.feld` | ja (+18 Unterklassen) | 1539 |
+| `ui_schalter()` | `.schalter` | ja (+16 Unterklassen) | 1604 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1648 |
 | `ui_wahlliste()` | `.wahlliste` | ja | 1701 |
 | `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1745 |
 | `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1844 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1906 |
-| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1947 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 1906 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 1947 |
 | `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2004 |
 | `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2157 |
 
@@ -990,9 +1015,11 @@ wäre auf dem Handy eine Bildschirmlänge je Zeile.
 <a class="knopf knopf-leise" href="…"><span>Abbrechen</span></a>
 ```
 
-**Eine Höhe: 44 px.** Der Bestand hatte sechs Varianten und sechs
-ortsgebundene Größen; `.btn-primary` trug global `width:100%` und wurde an
-zehn Stellen zurückgenommen.
+**Eine Höhe je Eingabeart: 44 px am Finger, 36 px am Zeiger ab 1024 px**
+(Kapitel 6). Der Bestand hatte sechs Varianten und sechs ortsgebundene
+Größen; `.btn-primary` trug global `width:100%` und wurde an zehn Stellen
+zurückgenommen. Die zweite Stufe ist keine Rückkehr dazu: Sie hängt an einer
+Medienabfrage, nicht am Ort.
 
 ### 9.5 Meldung
 
@@ -1095,6 +1122,23 @@ falsch. Orte, Personen, Kliniken und Rettungsmittel in Platzhaltern sind
 deshalb **erfunden** — erkennbar erfunden, nicht bloß ein anderer echter
 Ort. Die Regel gilt für jedes Formular der Anwendung, auch für den
 Einrichter, und sie gilt ab S3 für jede neue Stelle.
+
+**Ein gesperrtes Feld sieht gesperrt aus** (`.feld-eingabe:disabled`, seit
+S8/AP7). Bis dahin nicht: `.feld-eingabe` setzt Fläche und Schrift selbst und
+übermalte damit die Graufärbung, die der Browser einem `disabled` gibt — ein
+einzeln gesperrtes Feld war von einem bedienbaren nicht zu unterscheiden
+(F-S8-P-03). Es trägt jetzt die **Seitenfläche** statt der Kartenfläche,
+gedämpfte Schrift und `cursor:not-allowed`. Die Fläche allein trägt die
+Aussage nicht — Rauch auf Schnee sind 1,07:1 —, die Schrift trägt sie:
+19,29:1 im bedienbaren Feld gegen 5,30:1 im gesperrten. Der Rand bleibt
+`--linie-stark` und damit über den 3:1, die WCAG 1.4.11 für die Begrenzung
+eines Bedienelements verlangt.
+
+**Zwei Wege, ein Bild.** Ein einzelnes Feld bekommt `disabled` selbst; eine
+ganze Gruppe steht in `.feldsatz-gesperrt` (ein `<fieldset>`, das nur
+gruppiert, Web 12.4.1). Der Feldsatz dämpft die Gruppe samt Beschriftungen
+über `opacity`, die Regel am Feld sagt, welches Element gemeint ist. Beide
+greifen zugleich, und das ist gewollt.
 
 **Das Dateifeld ist der eine Sonderfall.** `input[type=file]` stellt seinen
 nativen Knopf auf die Textzeile, und die steht in einem 44 px hohen Feld ohne
@@ -1817,6 +1861,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 15.5.0 (S8/AP7)** | Kapitel 6: **zwei Höhen für Bedienelemente** — 44 px am Finger, 36 px am Zeiger ab 1024 px, an drei Medienmerkmalen zugleich (`hover`, `pointer`, `min-width`). Kapitel 9.4 nachgezogen. Kapitel 9.7: neue Regel `.feld-eingabe:disabled` (F-S8-P-03) und der Zusammenhang mit `.feldsatz-gesperrt`. Die erzeugten Tabellen zählen seither **ohne Kommentare**: Die Schwellentabelle hatte eine zusammengesetzte Abfrage verschluckt (20 → 21 Medienblöcke), die Bausteintabelle zählte Klassennamen aus Kommentaren als Unterklassen mit — elf Zeilen korrigiert, `ui_feld()` von „+24" auf **+18**. |
 | **Web 12.4.2 (S3/AP11)** | Kapitel 2.3: Logotabelle auf die tatsächlichen Dateinamen gebracht (sie führte noch die Namen von vor dem NEF-Platzhalter-Ersatz) und um die Rahmenmaße ergänzt. Neue Zusage: **Rahmen = Zeichnung** — das Bodenlogo war auf ein Quadrat gepolstert, ein Zehntel seiner Höhe war leer. Dazu zwei Warnungen für den nächsten, der eine SVG anfasst (`getBBox()` prüfen; XML verbietet `--` im Kommentar). |
 | **Web 12.4.1 (S3/AP10)** | Kapitel 9.7: neue Regel `.feldsatz-gesperrt` — ein `<fieldset>`, das nur gruppiert, für das `disabled`-Attribut. Die Elementregeln für `fieldset` sind mit O11 gefallen; ohne diese Rücknahme bringt der Browser Rahmen und Polsterung mit. |
 | **Web 12.3.3 (S3/AP8)** | Kapitel 9.7: Die Wahlliste ist eine **schlichte Liste** — vier Zeilen mit eigenem Rahmen auf eigener Fläche sahen aus wie vier Karten und sind eine Wahl. Kapitel 9.13: Das Ortsfeld sucht **beim Tippen**, mit drei Grenzen (400 ms, drei Zeichen, eine offene Anfrage) und dem Verweis auf `Lizenzen.md` 6.2. |

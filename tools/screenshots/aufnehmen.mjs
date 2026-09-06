@@ -15,9 +15,11 @@
  * WAS ES MISST (und damit belegt, statt zu behaupten):
  *   - waagerechter Überlauf   scrollWidth > innerWidth  je Seite und Breite
  *   - Konsolenfehler          je Seite und Breite
- *   - Knopfhöhen              jede .knopf-Regel muss 44 px hoch sein (P-P3-04);
- *                             einzige benannte Ausnahme: der Filterknopf
- *                             neben dem 48-px-Suchfeld der Suche (O6)
+ *   - Knopfhöhen              ZWEI Sollwerte seit Web 15.5.0 (E-S8-09, R76):
+ *                             44 px am Fingergerät und unter 1024 px,
+ *                             36 px am Zeigergerät ab 1024 px. Benannte
+ *                             Ausnahme: der Filterknopf neben dem
+ *                             48-px-Suchfeld der Suche (O6)
  *   - Kontraste der Token     aus dem Stylesheet gerechnet (P-P3-05)
  *
  * AUFRUF
@@ -25,6 +27,16 @@
  *   node tools/screenshots/aufnehmen.mjs
  *   node tools/screenshots/aufnehmen.mjs --nur 10-,12-        (Teilmenge)
  *   node tools/screenshots/aufnehmen.mjs --klein              (1x statt 2x)
+ *   node tools/screenshots/aufnehmen.mjs --finger             (Fingergerät)
+ *
+ * ZEIGER ODER FINGER. Ohne `--finger` laeuft der Browser als Zeigergeraet
+ * (`hasTouch:false`) — das ist der Regelfall an einem Bildschirm ab 1024 px
+ * und damit das, was die Bilder zeigen sollen. Mit `--finger` laeuft
+ * derselbe Lauf als Fingergeraet; dort gelten ueberall 44 px. Das Konzept S8
+ * beschrieb es andersherum (Finger als Regel, Zeiger als Zugabe); gedreht
+ * wurde es, weil ein Bildschirm ab 1024 px in aller Regel eine Maus hat und
+ * die Bilder den Regelfall zeigen sollen. Beide Laeufe messen, nur der
+ * Sollwert unterscheidet sich.
  *
  * AUSGABE unter tools/screenshots/ausgabe/ (steht in .gitignore):
  *   einzeln/<seite>-<breite>.png      die Einzelbilder
@@ -69,6 +81,7 @@ const BASIS  = wert('--basis', 'https://127.0.0.1:8443');
 const DEMO   = { email: wert('--demo', 'demo@gen-em.org'),  pw: wert('--demo-pw', 'nadokudemo0815') };
 const ADMIN  = { email: wert('--admin', 'admin@gen-em.org'), pw: wert('--admin-pw', 'adminlokal2026') };
 const SKALA  = flag('--klein') ? 1 : 2;
+const FINGER = flag('--finger');
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 
 /* Acht Breiten, je mit einer realistischen Höhe. Die Höhe entscheidet nur
@@ -186,6 +199,7 @@ async function anmelden(rolle) {
   const kontext = await browser.newContext({
     ignoreHTTPSErrors: true, deviceScaleFactor: SKALA,
     viewport: { width: 1280, height: 900 },
+    hasTouch: FINGER,
   });
   for (const muster of KACHELMUSTER) await kontext.route(muster, kachelAntwort);
   const seite = await kontext.newPage();
@@ -204,7 +218,38 @@ async function anmelden(rolle) {
     }
   });
   seite.on('pageerror', e => fehler.push('pageerror: ' + e.message));
-  return { kontext, seite, fehler, rolle, setzeAdresse: (a) => { adresse = a; } };
+
+  /* ---- Die Eingabeart haelt nicht von selbst (Fund aus S8/AP7) -----------
+   *
+   * `hasTouch` am Kontext setzt sie richtig — aber nur bis zum ersten
+   * VOLLSEITEN-SCREENSHOT. Danach meldet der Browser wieder `hover: hover`
+   * und `pointer: fine`, und ab 1024 px misst der Lauf 36 statt der
+   * erwarteten 44 px. Gemessen im ersten `--finger`-Lauf: bei 360 px
+   * `hover:false fine:false`, ab 390 px `true`/`true` — der Lauf meldete
+   * daraufhin 28 „falsche" Knopfhoehen, die keine waren. Ein Pruefmittel,
+   * das seine eigene Emulation verliert, misst etwas anderes, als es sagt.
+   *
+   * `Emulation.setEmulatedMedia` HILFT HIER NICHT: Es kennt `prefers-*` und
+   * `forced-colors`, nicht `hover` und `pointer` — der Aufruf laeuft durch
+   * und aendert nichts (gemessen). Was hilft, ist
+   * `Emulation.setTouchEmulationEnabled`; die beiden Medienmerkmale folgen
+   * daraus. Es wird deshalb vor JEDER Breite erneut gesendet. */
+  const cdp = await kontext.newCDPSession(seite);
+  const eingabeart = async () => {
+    /* NUR IM FINGERLAUF SENDEN. `setTouchEmulationEnabled {enabled:false}`
+     * ist NICHT das Gegenteil von `{enabled:true}`: Gemessen an einem
+     * Kontext mit `hasTouch:false` (also bereits Zeigergeraet) kippte der
+     * Aufruf `hover` und `pointer` auf `none`/`coarse` — der Zeigerlauf mass
+     * daraufhin 44 px, wo 36 stehen sollten, also denselben Fehler
+     * spiegelverkehrt. Der Zeigerlauf braucht ihn ohnehin nicht: Sein
+     * Zustand ist der Grundzustand des Browsers und geht nicht verloren. */
+    if (!FINGER) { return; }
+    await cdp.send('Emulation.setTouchEmulationEnabled',
+      { enabled: true, maxTouchPoints: 5 }).catch(() => {});
+  };
+  await eingabeart();
+
+  return { kontext, seite, fehler, rolle, eingabeart, setzeAdresse: (a) => { adresse = a; } };
 }
 
 const rollen = { aus: await anmelden('aus'), demo: await anmelden('demo'), admin: await anmelden('admin') };
@@ -510,7 +555,11 @@ for (const eintrag of liste) {
     console.log(`${eintrag.name.padEnd(34)} OHNE BILD — Platzhalter ${eintrag.pfad} nicht auflösbar`);
     continue;
   }
-  const pfad = aufgeloest;
+  let pfad = aufgeloest;
+  /* Ob dieser Eintrag von einer im Lauf ermittelten Kennung abhaengt —
+     davon haengt ab, ob ein 404 heilbar ist (siehe unten). */
+  const ausPlatzhalter = Object.prototype.hasOwnProperty.call(PLATZ, eintrag.pfad);
+  let nachgeloest = false;
   const rolle = rollen[eintrag.rolle || 'demo'];
   const seite = rolle.seite;
   const zeile = { name: eintrag.name, gruppe: eintrag.gruppe, pfad, breiten: [] };
@@ -519,13 +568,48 @@ for (const eintrag of liste) {
   if (eintrag.wartung) { wartungAn(); }
 
   for (const { b, h, art } of BREITEN) {
-    const adresse = `${BASIS}/${pfad}`;
+    let adresse = `${BASIS}/${pfad}`;
     rolle.fehler.length = 0;
     rolle.setzeAdresse(adresse);
     await seite.setViewportSize({ width: b, height: h });
+    /* DIE EINGABEART WIRD VOR JEDER BREITE NEU GESETZT. Warum, steht in
+     * `anmelden()`: Der Vollseiten-Screenshot der vorigen Breite hat sie
+     * verloren. */
+    await rolle.eingabeart();
 
-    const hin = await gehZu(rolle, adresse, pfad);
-    const status = hin.status;
+    let hin = await gehZu(rolle, adresse, pfad);
+    let status = hin.status;
+
+    /* ---- 404 NACH EINEM DEMO-RESET: KENNUNGEN NEU HOLEN (S8/AP7) --------
+     *
+     * `platzhalter()` laeuft einmal, zu Beginn. Das Demo-Konto setzt sich
+     * alle 30 Minuten zurueck, ein voller Lauf dauert laenger als das — und
+     * danach zeigen `?d=` und `?id=` auf Zeilen, die es nicht mehr gibt.
+     * Gemessen am 06.09.2026: Die Einsatzseiten (frueh im Lauf) standen, die
+     * sechs Tag- und Aktionsseiten dahinter antworteten mit 404; 48 von 368
+     * Aufnahmen fielen aus. Kein Fehler der Anwendung, sondern eine Kennung,
+     * die dem Bestand davongelaufen ist.
+     *
+     * Deshalb: EINMAL JE SEITE neu aufloesen und denselben Aufruf
+     * wiederholen. Nicht oefter — ein 404, der auch mit frischen Kennungen
+     * bleibt, ist ein echter, und den soll der Bericht zeigen. */
+    if (ausPlatzhalter && status === 404 && (eintrag.status || 200) !== 404
+        && !nachgeloest) {
+      nachgeloest = true;
+      Object.assign(PLATZ, await platzhalter());
+      if (PLATZ[eintrag.pfad]) {
+        pfad = PLATZ[eintrag.pfad];
+        zeile.pfad = pfad;
+        adresse = `${BASIS}/${pfad}`;
+        await seite.setViewportSize({ width: b, height: h });
+        await rolle.eingabeart();
+        rolle.fehler.length = 0;
+        rolle.setzeAdresse(adresse);
+        hin = await gehZu(rolle, adresse, pfad);
+        status = hin.status;
+        console.log(`${''.padEnd(34)} Kennung erneuert (Demo-Reset): ${eintrag.name} → ${pfad}`);
+      }
+    }
     /* DER STATUS MUSS STIMMEN (O11). Eine Seite, die 404 liefert, zeigt die
        Abbruchseite — ein Bild davon unter dem Namen einer anderen Seite ist
        so wertlos wie ein Bild der Anmeldung. Erwartet wird 200; eine Seite,
@@ -551,6 +635,25 @@ for (const eintrag of liste) {
         rolle.fehler.push('laden: ' + e.message);
       }
     }
+
+    /* ---- ERST MESSEN, WENN DAS STYLESHEET GREIFT (Fund aus S8/AP7) ------
+     *
+     * `domcontentloaded` heisst nicht, dass `style.css` angewendet ist.
+     * Gemessen an der Abbruchseite bei 1024 px: `getComputedStyle` lieferte
+     * fuer den Knopf `height: auto`, `font-family: Times New Roman`,
+     * `border-width: 0` — die ungestaltete Seite, Hoehe 35 px statt 36. Der
+     * Lauf meldete das als „Knopf mit falscher Hoehe", und es war keiner.
+     *
+     * Gefaehrlicher ist die Gegenrichtung: Eine ungestaltete Seite laeuft
+     * nicht ueber und wirft keinen Konsolenfehler — sie meldet zweimal
+     * Null. Das Token `--knopf` steht nur in `:root` von `style.css`; ist es
+     * da, ist das Stylesheet da. */
+    await seite.waitForFunction(
+      () => getComputedStyle(document.documentElement)
+              .getPropertyValue('--knopf').trim() !== '',
+      null, { timeout: 5000 })
+      .catch(() => rolle.fehler.push(
+        'Stylesheet nach 5 s nicht angewendet — gemessen wurde die ungestaltete Seite'));
 
     const mass = await seite.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
@@ -617,7 +720,11 @@ for (const eintrag of liste) {
       konsole: rolle.fehler.slice(),
     });
     for (const k of mass.knoepfe) {
-      const soll = k.suchzwilling ? 48 : 44;   // siehe Kommentar oben
+      /* ZWEI SOLLWERTE (E-S8-09). 36 px gilt nur, wo beides zutrifft:
+       * Zeigergeraet UND mindestens 1024 px — dieselbe Bedingung wie im
+       * Stylesheet. Eine Zahl hier, die dort nicht steht, machte den
+       * Pruefstand zur zweiten Quelle. */
+      const soll = k.suchzwilling ? 48 : ((!FINGER && b >= 1024) ? 36 : 44);
       if (k.hoehe !== soll) bericht.knopf.push({ seite: eintrag.name, breite: b, soll, ...k });
     }
   }
@@ -665,14 +772,15 @@ const gesamtKonsole   = bericht.seiten.reduce((n, s) => n + s.breiten.reduce((m,
 const bilderZahl      = bericht.seiten.length * BREITEN.length;
 
 let md = `# Bildaufnahme — Bericht\n\n`;
-md += `Stand ${bericht.stand} · Basis ${BASIS} · Maßstab ${SKALA}×\n\n`;
+md += `Stand ${bericht.stand} · Basis ${BASIS} · Maßstab ${SKALA}× · `
+   + `Eingabe **${FINGER ? 'Finger' : 'Zeiger'}** (Sollhöhe ${FINGER ? '44 px überall' : '44 px unter 1024, 36 px ab 1024'})\n\n`;
 md += `| | |\n|---|---|\n`;
 md += `| Seiten | ${bericht.seiten.length} |\n`;
 md += `| Breiten | ${BREITEN.map(x => x.b).join(', ')} |\n`;
 md += `| Einzelbilder | ${bilderZahl} |\n`;
 md += `| Waagerechter Überlauf | **${gesamtUeberlauf}** von ${bilderZahl} |\n`;
 md += `| Konsolenfehler | **${gesamtKonsole}** |\n`;
-md += `| Knöpfe nicht 44 px | **${bericht.knopf.length}** |\n\n`;
+md += `| Knöpfe mit falscher Höhe | **${bericht.knopf.length}** |\n\n`;
 md += `## Je Seite\n\n| Seite | Gruppe | Überlauf bei | Verursacher | Konsole |\n|---|---|---|---|---|\n`;
 for (const s of bericht.seiten) {
   const breit = s.breiten.filter(x => x.ueberlauf);
@@ -690,7 +798,7 @@ if (gesamtKonsole) {
   }
 }
 if (bericht.knopf.length) {
-  md += `\n## Knöpfe außerhalb der 44 px\n\n| Seite | Breite | Knopf | Höhe |\n|---|---|---|---|\n`;
+  md += `\n## Knöpfe mit falscher Höhe\n\n| Seite | Breite | Knopf | Höhe |\n|---|---|---|---|\n`;
   for (const k of bericht.knopf) {
     md += `| ${k.seite} | ${k.breite} | ${k.text} | ${k.hoehe} px (soll ${k.soll}) |\n`;
   }
@@ -719,7 +827,8 @@ writeFileSync(join(AUSGABE, 'bericht.md'), md);
 writeFileSync(join(AUSGABE, 'bericht.json'), JSON.stringify(bericht, null, 2) + '\n');
 
 console.log(`\n${bilderZahl} Einzelbilder, ${bericht.seiten.length} Kontaktbögen.`);
-console.log(`Überlauf: ${gesamtUeberlauf} · Konsolenfehler: ${gesamtKonsole} · Knöpfe ≠ 44 px: ${bericht.knopf.length}`);
+console.log(`Überlauf: ${gesamtUeberlauf} · Konsolenfehler: ${gesamtKonsole}`
+  + ` · Knöpfe falscher Höhe: ${bericht.knopf.length}`  + ` (${FINGER ? 'Finger, 44 px' : 'Zeiger, 44/36 px'})`);
 if (verlorene.length)   { console.log(`Sitzung neu aufgebaut: ${verlorene.length}× (Demo-Reset, normal)`); }
 if (ausgefallen.length) { console.log(`OHNE BILD: ${ausgefallen.length} Aufnahmen — Sitzung nicht zu halten`); }
 console.log(`Bericht: ${join(AUSGABE, 'bericht.md')}`);

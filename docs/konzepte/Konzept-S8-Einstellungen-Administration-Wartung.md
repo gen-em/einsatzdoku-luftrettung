@@ -8,9 +8,9 @@ mit Fable nach R14 · Ablage `docs/konzepte/` (R62), Mockups in
 >
 > | | |
 > |---|---|
-> | Stand | 06.09.2026 — **AP1 bis AP6 erledigt** (Web 15.0.0 bis 15.4.1). Umsetzung auf `claude/umsetzung-buuvfq` |
-> | Paket in Arbeit | **AP7 — Bedienhöhe** |
-> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4); **AP4** (Betrieb Teil 2, Abschnitt 11.5); **AP5** (Menü und Leiste, Abschnitt 11.6); **AP6** (Geräte, Wertekasten, Filterreihe, Abschnitt 11.7) |
+> | Stand | 06.09.2026 — **AP1 bis AP7 erledigt** (Web 15.0.0 bis 15.5.0). Umsetzung auf `claude/umsetzung-buuvfq` |
+> | Paket in Arbeit | **AP8 — Abschluss: Doku, Rahmenplan, Backlog** |
+> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4); **AP4** (Betrieb Teil 2, Abschnitt 11.5); **AP5** (Menü und Leiste, Abschnitt 11.6); **AP6** (Geräte, Wertekasten, Filterreihe, Abschnitt 11.7); **AP7** (Bedienhöhe, Abschnitt 11.8) |
 > | Abweichung vom Konzept | **AP5 (2), Vorgabe des Akkordeons:** Das Konzept sah „ab 1024 px alle Blöcke offen" vor. Gemessen löst das den Grund für das Akkordeon nicht — bei 1280 × 900 ist die Liste dann 896 px hoch und die Leiste 783 px, es bleibt beim Rollen. **Entschieden am 05.09.2026 auf Nachfrage:** dieselbe Vorgabe in jeder Breite — „Einstellungen" plus der Block der aktiven Seite. Damit passt die Liste bei 1280 × 900 und 1920 × 1080 ohne Rollen; bei 720 px Fensterhöhe bleibt eine Betriebsseite 117 px zu lang, und wer will, klappt „Einstellungen" zu (wird für die Sitzung gemerkt) |
 > | Wo es hakt | nichts Blockierendes. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). **Z-01 und Z-02 sind in AP4 beantwortet** (Abschnitt 11.5) |
 > | Umsetzungsumgebung | lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (MariaDB 10.11.14, PHP 8.4.19, Chromium); `00-ist-*`-Bilder vor AP1 aufgenommen |
@@ -1862,6 +1862,110 @@ Praxis: keine — an den acht Prüfbreiten liegt die Inhaltsbreite entweder übe
 die Karte nennt die Plattformen, weil der Weg zur App je Plattform ein anderer
 ist. Ein gerätefreies „Store" wäre hier keine Neutralität, sondern eine
 Anleitung, der niemand folgen kann.
+
+---
+
+### 11.8 AP7 — Bedienhöhe (06.09.2026, Web 15.5.0)
+
+**Version:** Web **15.5.0** — Nebennummer, weil sich das *Verhalten* der
+Oberfläche ändert und nicht nur ihr Aussehen: Was am Zeigergerät 44 px hoch
+war, ist jetzt 36. **Keine Migration.**
+
+**Gebaut:**
+
+| Was | Wo |
+|---|---|
+| Zweite Bedienhöhe, drei Bedingungen | `server/assets/style.css` (`:root` im Medienblock) |
+| Schalter neben die Beschriftung (Backlog Nr. 123) | `server/assets/style.css` (`.schalter-text`) |
+| Gesperrtes Feld sichtbar gesperrt (F-S8-P-03, Rest aus AP1) | `server/assets/style.css` (`.feld-eingabe:disabled`) |
+| Zwei Sollwerte und `--finger` | `tools/screenshots/aufnehmen.mjs`, `LIESMICH.md` |
+| Kennungen nach Demo-Reset erneuern, erst nach dem Stylesheet messen | `tools/screenshots/aufnehmen.mjs` |
+| `:disabled` in der Pseudoprobe | `tools/stilvergleich/proben.py`, `LIESMICH.md` |
+| Erzeugte Tabellen zählen ohne Kommentare | `tools/design/tabellen.py` (`css_ohne_kommentare()`) |
+| Doku | `docs/Design.md` 6, 9.4, 9.7 und 12, `CLAUDE.md` 5, `docs/CHANGELOG.md`, `docs/Backlog.md` (74, 75, 123 erledigt) |
+
+**Fünf Funde am Prüfmittel, alle nur durch Messen sichtbar** (F-S8-P-13, F-S8-P-14):
+
+1. **Die Eingabeart hält nicht von selbst.** `hasTouch` am Playwright-Kontext
+   setzt sie richtig, aber der erste Vollseiten-Screenshot verliert sie: Ab
+   der zweiten Breite meldete der Browser wieder ein Zeigergerät, und der
+   Fingerlauf zählte **28 „falsche" Knopfhöhen, die keine waren**. Zwei
+   Sackgassen dazwischen, beide gemessen: `Emulation.setEmulatedMedia` kennt
+   `hover` und `pointer` nicht, und `setTouchEmulationEnabled
+   {enabled:false}` ist nicht das Gegenteil von `{enabled:true}`. Behoben mit
+   `setTouchEmulationEnabled` vor jeder Breite, nur im Fingerlauf.
+
+2. **Die erzeugten Tabellen in `Design.md` zählten Kommentare mit.** Zwei
+   Stellen, ein Grund: Der Erzeuger las das Stylesheet als Text, und ein
+   Kommentar ist Text. Die *Schwellentabelle* suchte eine Breite in der
+   ersten Klammer hinter `@media` — die neue, zusammengesetzte Abfrage fiel
+   damit heraus, und zugleich fand der Ausdruck das Wort „@media-Abfragen"
+   im Prosakopf und las den halben `:root`-Block als Abfrage. 20 → **21**
+   Medienblöcke. Die *Bausteintabelle* zählte Klassennamen aus Kommentaren
+   als Unterklassen: `ui_feld()` stand mit „+24" da, es sind **18**; elf der
+   34 Zeilen waren zu hoch. Aufgefallen ist es nur, weil die neue Regel
+   `.feld-eingabe:disabled` die Zahl um **drei** erhöhte statt um eins — der
+   Kommentar darüber nennt die Klasse dreimal beim Namen. Beide zählen jetzt
+   über `css_ohne_kommentare()`.
+
+3. **Der Stilvergleich hatte für `:disabled` keine Probe.** Der Katalog baut
+   aus einem Selektor ohne Tag ein `<div>`, und ein `<div>` lässt sich nicht
+   sperren — die neue Regel `.feld-eingabe:disabled` wäre in **keiner** Probe
+   gemessen worden. `:disabled` steht deshalb jetzt in der Ersetzungsliste von
+   `proben.py`, wie `:hover` und `:focus`. Dabei fiel zweitens auf, dass die
+   Pseudoprobe gegen die **umgeschriebenen** Stylesheets laufen muss: Der
+   erste Lauf maß sie gegen die Originale, meldete 6197 Abweichungen und
+   schwieg zu jedem Zustand. Beide Läufe stehen jetzt in der `LIESMICH.md`.
+
+4. **Der Bilderlauf verlor 48 von 368 Aufnahmen.** `__TAG_…__` und
+   `__EINSATZ__` werden einmal zu Beginn aufgelöst; das Demo-Konto setzt sich
+   alle 30 Minuten zurück, und ein voller Lauf dauert länger. Die
+   Einsatzseiten (früh im Lauf) standen, die sechs Tag- und Aktionsseiten
+   dahinter antworteten mit **404**. Der Lauf hat das laut gemeldet und keine
+   Null behauptet — brauchbar war er trotzdem nicht. Er holt die Kennungen
+   jetzt **einmal je Seite** neu und wiederholt den Aufruf.
+
+5. **Er maß, bevor das Stylesheet griff.** `domcontentloaded` heißt nicht,
+   dass `style.css` angewendet ist: An der Abbruchseite bei 1024 px lieferte
+   `getComputedStyle` für den Knopf `height: auto`, `font-family: Times New
+   Roman`, `border-width: 0` — die ungestaltete Seite, **35 px** statt 36.
+   Sechs Meldungen „Knopf mit falscher Höhe", keine davon eine. Die
+   gefährlichere Richtung ist die andere: Eine ungestaltete Seite läuft nicht
+   über und wirft keinen Konsolenfehler — sie meldet **zweimal Null**. Vor
+   jeder Messung wird jetzt gewartet, bis `--knopf` in `:root` steht.
+
+**Der Stilvergleich ist zum ersten Mal seit P3 wieder gelaufen** (ab P4 wacht
+er wieder, `CLAUDE.md` 6). Bei einer beabsichtigten Gestaltungsänderung ist
+sein Ergebnis keine Null, sondern eine Liste — und diese Liste deckt sich mit
+der geplanten: Kaskade **0 entfallen, 4 neu, 1 geändert, 0 vertauscht**;
+berechnete Stile **64 948 Elementmessungen, 6204 Abweichungen in 18
+Eigenschaften**, davon 14 Geometrie aus `--knopf`, dazu `flex` (Schalter) und
+`background`/`color`/`cursor` samt `outline`-Farbe (gesperrtes Feld). Unter
+1024 px weichen genau zwei Elemente ab. Keine sechste Änderung.
+
+**Eine Abweichung vom Konzept, mit Begründung:** Das Konzept sah den
+**Fingerlauf als Regel** und den Zeigerlauf als Zugabe ab 1024 px vor. Gedreht
+wurde es, weil ein Bildschirm ab 1024 px in aller Regel eine Maus hat und die
+Bilder den Regelfall zeigen sollen. Beide Läufe messen vollständig; nur der
+Sollwert unterscheidet sich, und beide liefen über alle 46 Seiten mit
+**0 Befunden**.
+
+**Der Rest aus AP1 ist mit erledigt** (F-S8-P-03). Ein einzeln gesperrtes
+Eingabefeld war von einem bedienbaren nicht zu unterscheiden, weil
+`.feld-eingabe` Fläche und Schrift selbst setzt und die Graufärbung des
+Browsers übermalte. In AP1 mit dem vorhandenen `.feldsatz-gesperrt` umgangen,
+hier an der Wurzel behoben: Seitenfläche, gedämpfte Schrift,
+`cursor:not-allowed`. Gemessen an vier gesperrten Feldern auf zwei
+Kontoseiten — Schrift 19,29:1 bedienbar gegen 5,30:1 gesperrt; die Fläche
+allein wäre mit 1,07:1 kein Unterschied gewesen und ist deshalb ausdrücklich
+nicht die Aussage.
+
+**Backlog Nr. 123 ist mit umgesetzt** (der Schalter, am 05.09.2026 mit Bild
+gemeldet). Von den beiden gewünschten Anordnungen — Griff links vom Text oder
+unmittelbar rechts daneben — ist die zweite gewählt: die kleinere Änderung,
+und die Leserichtung bleibt Beschriftung → Schalter. Gemessen an vier
+Schaltern: 832 beziehungsweise 1072 px Abstand vorher, 12 px nachher; die
+Trefferfläche bleibt die ganze Zeile.
 
 ---
 

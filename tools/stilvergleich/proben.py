@@ -101,8 +101,16 @@ def jsprobe():
     return '\n'.join(teile)
 
 
+# `:disabled` STEHT MIT IN DIESER LISTE, obwohl es kein Bedienzustand im Sinne
+# von :hover ist: Es laesst sich an einem `<div>` des Katalogs nicht herstellen,
+# und der Katalog baut aus jedem Selektor ein `<div>`, wenn der Selektor keinen
+# Tag nennt. Die Regel `.feld-eingabe:disabled` (S8/AP7) waere damit in KEINER
+# Probe gemessen worden — der Stilvergleich haette zu ihr geschwiegen und das
+# wie ein „unveraendert" ausgesehen. Mit der Ersetzung traegt der Katalog ein
+# `div.feld-eingabe.pcdisabled`, und beide Staende werden daran gemessen.
 PSEUDO = [(':focus-visible', '.pcfocusvis'), (':focus-within', '.pcfocuswithin'),
-          (':focus', '.pcfocus'), (':hover', '.pchover'), (':active', '.pcactive')]
+          (':focus', '.pcfocus'), (':hover', '.pchover'), (':active', '.pcactive'),
+          (':disabled', '.pcdisabled')]
 
 
 def ohne_pseudo(sel):

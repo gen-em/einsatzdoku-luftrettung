@@ -796,42 +796,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
     Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
 
-74. **Bedienhöhe am Schreibtisch: müssen es 44 px sein?**
-    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* `CLAUDE.md` 5 und
-    `Design.md` verlangen eine Höhe für Bedienelemente, mobil wie am
-    Schreibtisch. Am Schreibtisch wirken die Knöpfe hoch. **Zu klären im
-    S8-Konzept:** eine zweite Stufe für Zeigergeräte (etwa 36 px, nur über
-    `pointer:fine`) mit Begründung, Kontrastprüfung und Nachtrag in
-    `Design.md` — oder es bleibt bei einer Höhe. Berührt die Messung
-    „Knöpfe ≠ 44 px" in `tools/screenshots/`, die dann zwei Sollwerte
-    kennen muss. Zuordnung: S8 (Entscheidung).
-    **Entschieden 05.09.2026 (Konzept S8, E-S8-09; Rahmenplan R76):** zwei
-    Stufen. 44 px bleibt die Vorgabe; für Zeigergeräte
-    (`@media (hover: hover) and (pointer: fine)`, ab 1024 px) gilt 36 px für
-    Knöpfe, Felder, Listenzeilen und Menüeinträge. Begründung: Die häufigste
-    Arbeit — Einsätze nach der Aufzeichnung ausfüllen — ist Formulararbeit am
-    Schreibtisch; 36 px liegt über der Mindestzielgröße von WCAG 2.5.8
-    (24 px); ein Touch-Laptop mit Maus als Hauptzeiger bekommt 36, ein reines
-    Touch-Gerät 44. Der Kontrast ändert sich nicht — es ist eine Höhe, keine
-    Farbe. Die Android-Apps bleiben bei 48 dp (R58). Umsetzung in S8 AP7;
-    S9 PS-3 baut darauf auf.
-
-75. **Die Unterpunkte des Admin-Menüs sind fett und nicht einklappbar.**
-    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* S3 (Block F) hatte den
-    Fettdruck der Seitenleiste auf den ausgewählten Punkt begrenzt; in der
-    Administration (`ui_leiste_einstellungen()`, `.leiste-liste`) erscheinen
-    die Unterpunkte weiter fett, und die Überschriften der Gruppen heben
-    sich nicht ab. **Zu tun:** nachsehen, ob der Admin-Teil von S3
-    ausgenommen blieb oder eine eigene Regel trägt; Fettdruck nur für den
-    aktiven Punkt; Gruppen ein- und ausklappbar, Zustand je Sitzung merken.
-    Gehört zur Menüstruktur, die S8 ohnehin neu ordnet. Zuordnung: S8.
-    **Entschieden 05.09.2026 (Konzept S8, E-S8-07):** Fettdruck nur für den
-    aktiven Eintrag; die **drei** Blöcke (Einstellungen, Verwaltung, Betrieb)
-    werden auf- und zuklappbare Gruppen — kein neuer Baustein, sondern das
-    Akkordeon der Diensttage-Leiste. Zustand je Sitzung in `sessionStorage`;
-    der Block der aktiven Seite ist offen, „Einstellungen" immer, ab 1024 px
-    alle. Umsetzung in S8 AP5.
-
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
     hat.**
     *Aufgenommen 02.09.2026 als Frage des Auftraggebers (Rahmenplan Fassung
@@ -1408,23 +1372,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
 
-123. **Der Schalter steht zu weit von seiner Beschriftung entfernt.**
-    *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin.*
-    `.schalter-text` trägt `flex:1 1 auto` und drückt den Griff an den
-    rechten Rand der Karte. Auf dem Handy sind das wenige Zentimeter; am
-    Schreibtisch liegt zwischen „Mein Kontopasswort verwenden" und dem Griff
-    die ganze Kartenbreite, und der Schalter ist dort kaum noch als zu
-    dieser Zeile gehörig zu erkennen — man sieht ihn schlicht nicht.
-    **Gewünscht:** der Griff **links vom Text** oder **unmittelbar rechts
-    daneben**. **Zu bedenken:** Das ist der Baustein, nicht eine Seite — er
-    steht an neun Stellen in vier Dateien (`admin_sicherungsziele.php` 4 ×,
-    `import.php` 3 ×, `einstellungen.php`, `admin_sicherungen.php`). Eine geänderte
-    Darstellung eines Bausteins braucht Mockup und Freigabe
-    (`CLAUDE.md` 5) und einen Stilvergleich, weil sie eine Flex-Regel
-    verschiebt. **Zuordnung: S8/AP7** — dort wird das Stylesheet für die
-    zweite Bedienhöhe (R76) ohnehin angefasst, und dieselben Zeilen sind
-    betroffen.
-
 124. **Das Aktionsblatt öffnet weit weg von seinem Knopf.**
     *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin
     (Tagesübersicht am Handy).* Das „⋯" steht oben rechts neben dem
@@ -1469,6 +1416,104 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+75. **Die Unterpunkte des Admin-Menüs sind fett und nicht einklappbar.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* S3 (Block F) hatte den
+    Fettdruck der Seitenleiste auf den ausgewählten Punkt begrenzt; in der
+    Administration (`ui_leiste_einstellungen()`, `.leiste-liste`) erscheinen
+    die Unterpunkte weiter fett, und die Überschriften der Gruppen heben
+    sich nicht ab. **Zu tun:** nachsehen, ob der Admin-Teil von S3
+    ausgenommen blieb oder eine eigene Regel trägt; Fettdruck nur für den
+    aktiven Punkt; Gruppen ein- und ausklappbar, Zustand je Sitzung merken.
+    Gehört zur Menüstruktur, die S8 ohnehin neu ordnet. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-07):** Fettdruck nur für den
+    aktiven Eintrag; die **drei** Blöcke (Einstellungen, Verwaltung, Betrieb)
+    werden auf- und zuklappbare Gruppen — kein neuer Baustein, sondern das
+    Akkordeon der Diensttage-Leiste. Zustand je Sitzung in `sessionStorage`;
+    der Block der aktiven Seite ist offen, „Einstellungen" immer, ab 1024 px
+    alle. Umsetzung in S8 AP5.
+    **Erledigt 06.09.2026 (Web 15.4.0, S8/AP5):** Beides. Fettdruck: gemessen
+    mit `getComputedStyle` über alle Einträge der Leiste — bei einer
+    BetreiberIn mit **17** Einträgen ist **genau einer** fett, bei 1280 und
+    bei 360 px, in beiden Rollen. Klappen: drei `<details>` aus dem
+    Akkordeon-Baustein, Zustand je Sitzung im `sessionStorage`. Die Vorgabe
+    ist gegenüber dem Beschluss geändert und **misst sich**: „Einstellungen
+    plus der Block der aktiven Seite" gilt in **jeder** Breite, weil „ab
+    1024 px alle offen" den Grund für das Klappen nicht löst (bei 1280 × 900
+    blieb die Liste 896 px hoch in einer 783 px hohen Leiste). Begründung im
+    Konzept, Abschnitt 11.6.
+
+74. **Bedienhöhe am Schreibtisch: müssen es 44 px sein?**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* `CLAUDE.md` 5 und
+    `Design.md` verlangen eine Höhe für Bedienelemente, mobil wie am
+    Schreibtisch. Am Schreibtisch wirken die Knöpfe hoch. **Zu klären im
+    S8-Konzept:** eine zweite Stufe für Zeigergeräte (etwa 36 px, nur über
+    `pointer:fine`) mit Begründung, Kontrastprüfung und Nachtrag in
+    `Design.md` — oder es bleibt bei einer Höhe. Berührt die Messung
+    „Knöpfe ≠ 44 px" in `tools/screenshots/`, die dann zwei Sollwerte
+    kennen muss. Zuordnung: S8 (Entscheidung).
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-09; Rahmenplan R76):** zwei
+    Stufen. 44 px bleibt die Vorgabe; für Zeigergeräte
+    (`@media (hover: hover) and (pointer: fine)`, ab 1024 px) gilt 36 px für
+    Knöpfe, Felder, Listenzeilen und Menüeinträge. Begründung: Die häufigste
+    Arbeit — Einsätze nach der Aufzeichnung ausfüllen — ist Formulararbeit am
+    Schreibtisch; 36 px liegt über der Mindestzielgröße von WCAG 2.5.8
+    (24 px); ein Touch-Laptop mit Maus als Hauptzeiger bekommt 36, ein reines
+    Touch-Gerät 44. Der Kontrast ändert sich nicht — es ist eine Höhe, keine
+    Farbe. Die Android-Apps bleiben bei 48 dp (R58). Umsetzung in S8 AP7;
+    S9 PS-3 baut darauf auf.
+    **Erledigt 06.09.2026 (Web 15.5.0, S8/AP7):** Zwei Stufen, wie
+    entschieden. `@media (hover: hover) and (pointer: fine) and
+    (min-width: 1024px) { :root { --knopf: 36px } }` — alle drei Bedingungen
+    müssen gelten. Gemessen an vier Breiten und beiden Eingabearten: Zeiger
+    ab 1024 px durchgehend 36 px, Zeiger darunter und Finger überall 44 px.
+    Unverändert, weil eigene Token: Kopfleiste 56, Schalter 46 × 26,
+    Aktionsblatt 50 (nur mobil), Suchfeld 48, Sprungmarke 28. Der Bilderlauf
+    kennt seither zwei Sollwerte und eine Schaltung `--finger`; er meldete in
+    beiden Läufen **0** falsche Höhen. Kein Ziel ist unter 24 × 24 px
+    gerutscht: Die Zahl der Elemente unter 24 px ist vor und nach der
+    Änderung **identisch** (32 bei 1440 px) — es sind durchweg Links in
+    Fließtext, die WCAG 2.5.8 ausdrücklich ausnimmt.
+
+123. **Der Schalter steht zu weit von seiner Beschriftung entfernt.**
+    *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin.*
+    `.schalter-text` trägt `flex:1 1 auto` und drückt den Griff an den
+    rechten Rand der Karte. Auf dem Handy sind das wenige Zentimeter; am
+    Schreibtisch liegt zwischen „Mein Kontopasswort verwenden" und dem Griff
+    die ganze Kartenbreite, und der Schalter ist dort kaum noch als zu
+    dieser Zeile gehörig zu erkennen — man sieht ihn schlicht nicht.
+    **Gewünscht:** der Griff **links vom Text** oder **unmittelbar rechts
+    daneben**. **Zu bedenken:** Das ist der Baustein, nicht eine Seite — er
+    steht an neun Stellen in vier Dateien (`admin_sicherungsziele.php` 4 ×,
+    `import.php` 3 ×, `einstellungen.php`, `admin_sicherungen.php`). Eine geänderte
+    Darstellung eines Bausteins braucht Mockup und Freigabe
+    (`CLAUDE.md` 5) und einen Stilvergleich, weil sie eine Flex-Regel
+    verschiebt. **Zuordnung: S8/AP7** — dort wird das Stylesheet für die
+    zweite Bedienhöhe (R76) ohnehin angefasst, und dieselben Zeilen sind
+    betroffen.
+    **Erledigt 06.09.2026 (Web 15.5.0, S8/AP7):** `.schalter-text` trägt
+    `flex:0 1 auto` statt `1 1 auto`; der Griff steht damit unmittelbar
+    rechts neben der Beschriftung. Von den beiden gewünschten Anordnungen
+    ist das die kleinere Änderung — die Leserichtung bleibt Beschriftung →
+    Schalter. Gemessen an vier Schaltern auf drei Seiten, Abstand vom Ende
+    des Textes bis zum Griff:
+
+    | Stelle | vorher | nachher |
+    |---|--:|--:|
+    | „Mein Kontopasswort verwenden" @ 1440 | 832 px | **12 px** |
+    | „Mein Kontopasswort verwenden" @ 1920 | 1072 px | **12 px** |
+    | „Personenbezogene Angaben" (Import) | 763 px | **12 px** |
+    | „Mit Passwort schützen" (Import) | 833 px | **12 px** |
+
+    Die **Trefferfläche bleibt die ganze Zeile**: Das `<label>` behält seine
+    Breite, nur sein Inhalt rückt zusammen. Gemessen mit einem Klick 200 px
+    vom rechten Rand — der Schalter kippt.
+
+    Die beiden Auflagen des Eintrags sind erfüllt: Die **Freigabe** liegt als
+    Meldung der Auftraggeberin vor, die beide Anordnungen ausdrücklich
+    zulässt; der **Stilvergleich** ist gelaufen und meldet für diese Änderung
+    genau eine Eigenschaft an genau einem Selektor (`.schalter-text flex:
+    1 1 auto → 0 1 auto`), in allen dreizehn Breiten dieselbe.
 
 73. **Die Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen.**
     *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto

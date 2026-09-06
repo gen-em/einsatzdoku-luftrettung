@@ -61,8 +61,11 @@ die sonst niemand nachhält:
 - **waagerechter Überlauf** (`scrollWidth > innerWidth`) je Seite und Breite —
   der Prüfpunkt P-P3-06;
 - **Konsolenfehler** je Seite und Breite;
-- **Knopfhöhen**: jedes `.knopf` muss 44 px hoch sein, mobil wie Desktop
-  (P-P3-04).
+- **Knopfhöhen**: jedes `.knopf` muss so hoch sein, wie es die **emulierte
+  Eingabeart** verlangt (P-P3-04, seit Web 15.5.0 zwei Sollwerte):
+  **44 px** am Fingergerät und unter 1024 px, **36 px** am Zeigergerät ab
+  1024 px (E-S8-09/R76). Benannte Ausnahme bleibt der Filterknopf neben dem
+  48-px-Suchfeld der Suche.
 
 Die Kontraste der Token rechnet `kontrast.py` daneben (P-P3-05).
 
@@ -83,11 +86,38 @@ Wie sie entsteht, steht in `tools/referenzdatensatz/LIESMICH.md`.
 node tools/screenshots/aufnehmen.mjs                  # alles
 node tools/screenshots/aufnehmen.mjs --nur 10-,12-    # nur diese Seiten
 node tools/screenshots/aufnehmen.mjs --klein          # 1× statt 2×
+node tools/screenshots/aufnehmen.mjs --finger         # als Fingergerät
 python3 tools/screenshots/kontrast.py                 # Kontraste der Token
 ```
 
-Rückgabewert ≠ 0, sobald Überlauf, Konsolenfehler oder ein Knopf ≠ 44 px
-gefunden wird.
+Rückgabewert ≠ 0, sobald Überlauf, Konsolenfehler oder ein Knopf mit falscher
+Höhe gefunden wird.
+
+### Zeiger oder Finger
+
+Ohne `--finger` läuft der Browser als **Zeigergerät** — das ist der Regelfall
+an einem Bildschirm ab 1024 px, und die Bilder sollen den Regelfall zeigen.
+Mit `--finger` läuft derselbe Lauf als **Fingergerät**; dort gelten überall
+44 px. Beide Läufe messen alles, nur der Sollwert der Knopfhöhe unterscheidet
+sich. Das Konzept S8 beschrieb es andersherum (Finger als Regel, Zeiger als
+Zugabe); gedreht wurde es aus dem genannten Grund.
+
+> **Ein Fund, den man kennen muss, wenn man hier etwas ändert.** Die
+> Eingabeart hält nicht von selbst: `hasTouch` am Playwright-Kontext setzt
+> sie richtig, aber der erste **Vollseiten-Screenshot** verliert sie.
+> Gemessen im ersten `--finger`-Lauf: bei 360 px `hover:false pointer:coarse`,
+> ab 390 px wieder `hover:true pointer:fine` — und damit ab 1024 px 36 statt
+> 44 px. Der Lauf meldete daraufhin **28 „falsche" Knopfhöhen, die keine
+> waren**. Behoben mit `Emulation.setTouchEmulationEnabled` über CDP, vor
+> jeder Breite erneut gesendet.
+>
+> Zwei Sackgassen auf dem Weg dorthin, beide gemessen: `Emulation.
+> setEmulatedMedia` kennt `prefers-*` und `forced-colors`, **nicht** `hover`
+> und `pointer` — der Aufruf läuft durch und ändert nichts. Und
+> `setTouchEmulationEnabled {enabled:false}` ist **nicht** das Gegenteil von
+> `{enabled:true}`: An einem Kontext, der ohnehin Zeigergerät ist, kippt der
+> Aufruf die Merkmale auf `none`/`coarse`. Im Zeigerlauf wird deshalb gar
+> nichts gesendet.
 
 ## Ausgabe
 
@@ -134,7 +164,7 @@ Zustands aufzunehmen. Zurück bleibt eine Sitzung, die nach zehn Minuten
 verfällt — eine Gerätezeile entsteht nie, denn das Gerät sagt in diesem Lauf
 kein Ja.
 
-## Drei Fallen, die hier schon zugeschnappt sind
+## Fünf Fallen, die hier schon zugeschnappt sind
 
 **Der Inhaltsschlüssel hängt an der Registerkarte.** Der erste Entwurf
 öffnete je Aufnahme eine neue Seite. Jede davon startete mit leerem
@@ -161,6 +191,27 @@ liest den Proxy wiederum nur, wenn `NODE_USE_ENV_PROXY` **beim
 Prozessstart** gesetzt ist — das Skript startet sich dafür einmal selbst
 neu. Ohne Proxy (lokaler Rechner) läuft derselbe Weg unverändert direkt;
 Nebeneffekt überall: deterministische Kartenbilder.
+
+**Eine Kennung läuft dem Bestand davon.** Die Seiten mit `__TAG_…__` und
+`__EINSATZ__` bekommen ihre Kennung einmal, zu Beginn des Laufs. Das
+Demo-Konto setzt sich **alle 30 Minuten** zurück; ein voller Lauf dauert
+länger. Gemessen am 06.09.2026: Die Einsatzseiten (früh im Lauf) standen, die
+sechs Tag- und Aktionsseiten dahinter antworteten mit **404** — 48 von 368
+Aufnahmen fielen aus. Der Lauf hat das laut gemeldet und keine Null behauptet,
+das war richtig; brauchbar war er trotzdem nicht. Jetzt löst er die
+Kennungen **einmal je Seite** neu auf, wenn ein 404 kommt, und wiederholt den
+Aufruf. Bleibt der 404 auch mit frischen Kennungen, ist er echt.
+
+**Gemessen, bevor das Stylesheet greift.** `domcontentloaded` heißt nicht,
+dass `style.css` angewendet ist. Gemessen an der Abbruchseite bei 1024 px:
+`getComputedStyle` lieferte für den Knopf `height: auto`, `font-family:
+Times New Roman`, `border-width: 0` — die ungestaltete Seite, Höhe **35 px**
+statt 36. Sechs solcher Meldungen standen im Bericht als „Knopf mit falscher
+Höhe", und keine war eine. Die Gegenrichtung ist die gefährlichere: Eine
+ungestaltete Seite läuft nicht über und wirft keinen Konsolenfehler — sie
+meldet **zweimal Null**. Vor jeder Messung wird jetzt gewartet, bis
+`--knopf` in `:root` steht; ist es nach fünf Sekunden nicht da, steht das als
+Fehler im Bericht statt als grüne Zahl.
 
 ## Grenzen
 

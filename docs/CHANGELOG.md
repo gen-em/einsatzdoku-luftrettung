@@ -14,6 +14,106 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.5.0] — 2026-09-06
+
+### Web — zwei Bedienhöhen, und der Schalter rückt an seine Beschriftung (S8/AP7)
+
+**44 px bleibt die Vorgabe. Am Zeigergerät ab 1024 px sind es 36.** Die Zahl
+44 kommt aus WCAG 2.5.8 und den Plattformvorgaben und ist für die Fingerkuppe
+gerechnet. Ein Zeiger trifft ein 36 px hohes Ziel genauso sicher — was er
+nicht hat, ist die Ungenauigkeit, für die die acht Pixel da sind. Bezahlt
+werden sie in Formularhöhe: Das Einsatzformular hat über dreissig Felder,
+acht Pixel je Zeile sind dort eine Bildschirmhöhe, und wer am Schreibtisch
+dokumentiert, rollt sie bei jedem Einsatz.
+
+**Alle drei Bedingungen müssen gelten** — `hover: hover`, `pointer: fine`,
+`min-width: 1024px`. Die Breite allein genügt nicht: Ein Touch-Laptop mit
+1920 px ist ein Fingergerät, ein iPad im Querformat meldet 1024 px. Die
+Medienmerkmale allein genügen auch nicht — ein Zeiger an einem schmalen
+Fenster bekommt weiterhin die grosse Höhe.
+
+**Was eigene Token hat, ändert sich nicht:** Kopfleiste (56), Schalter
+(46 × 26), Zeile des Aktionsblatts (50, gilt nur unter 1024 px), grosses
+Suchfeld (48), Sprungmarke unter dem Menüpunkt (28). Gemessen an sechs Seiten
+und zwei Eingabearten.
+
+**Der Bilderlauf kennt jetzt zwei Sollwerte** und eine Schaltung `--finger`,
+die ihn als Fingergerät laufen lässt. Ohne sie läuft er als Zeigergerät —
+das ist der Regelfall an einem Bildschirm ab 1024 px, und die Bilder sollen
+den Regelfall zeigen. Beide vollen Läufe: **368 Bilder, 0 Überlauf,
+0 Konsolenfehler, 0 Knöpfe mit falscher Höhe.**
+
+Dabei ein Fund am Prüfmittel selbst, der ohne Messung nicht aufgefallen wäre:
+**Die Eingabeart hält nicht von selbst.** `hasTouch` am Playwright-Kontext
+setzt sie richtig, aber der erste Vollseiten-Screenshot verliert sie — ab der
+zweiten Breite meldete der Browser wieder ein Zeigergerät, und der
+Fingerlauf zählte **28 „falsche" Knopfhöhen, die keine waren**. Zwei
+Sackgassen auf dem Weg zur Behebung, beide gemessen: `Emulation.
+setEmulatedMedia` kennt `hover` und `pointer` nicht (der Aufruf läuft durch
+und ändert nichts), und `setTouchEmulationEnabled {enabled:false}` ist nicht
+das Gegenteil von `{enabled:true}` — an einem Kontext, der ohnehin
+Zeigergerät ist, kippt es die Merkmale. Behoben, dokumentiert in
+`tools/screenshots/LIESMICH.md`.
+
+**Der Schalter steht jetzt neben seiner Beschriftung** (Backlog Nr. 123, mit
+Bild gemeldet). `.schalter-text` trug `flex:1 1 auto` und drückte den Griff
+an den rechten Kartenrand: gemessen **832 px** zwischen dem Ende von „Mein
+Kontopasswort verwenden" und dem Griff bei 1440 px, **1072 px** bei 1920 px.
+Man sah den Schalter dort nicht mehr als zu dieser Zeile gehörig — oft sah
+man ihn gar nicht. Jetzt sind es 12 px, an allen vier Schaltern der
+Anwendung. **Die Trefferfläche bleibt die ganze Zeile**: Das `<label>` behält
+seine Breite, nur sein Inhalt rückt zusammen (gemessen mit einem Klick 200 px
+vom rechten Rand).
+
+**Ein gesperrtes Feld sieht endlich gesperrt aus.** `.feld-eingabe` setzt
+Fläche und Schrift selbst und übermalte damit die Graufärbung, die der
+Browser einem `disabled` gibt — ein einzeln gesperrtes Feld war von einem
+bedienbaren nicht zu unterscheiden. Der Fund stammt aus S8/AP1 (F-S8-P-03)
+und wartete auf dieses Paket, weil es das Stylesheet ohnehin anfasst. Das
+gesperrte Feld trägt jetzt die Seitenfläche statt der Kartenfläche,
+gedämpfte Schrift und `cursor:not-allowed`. Die Fläche allein trägt die
+Aussage nicht — Rauch auf Schnee sind 1,07:1 —, die Schrift trägt sie:
+**19,29:1 im bedienbaren Feld gegen 5,30:1 im gesperrten**. Der Rand bleibt
+unverändert und damit über den 3:1, die WCAG 1.4.11 für die Begrenzung eines
+Bedienelements verlangt. Gemessen an vier gesperrten Feldern auf zwei
+Kontoseiten.
+
+**Und die erzeugten Tabellen in `Design.md` zählten Kommentare mit.** Zwei
+Stellen, derselbe Grund: Der Erzeuger las das Stylesheet als Text, und ein
+Kommentar ist Text. Die Schwellentabelle suchte eine Breite in der *ersten*
+Klammer hinter `@media` — eine zusammengesetzte Abfrage wie die neue fällt
+damit heraus, und zugleich fand der Ausdruck das Wort „@media-Abfragen" im
+Prosakopf und las den halben `:root`-Block als Abfrage. Aus 20 Medienblöcken
+werden damit **21**. Die Bausteintabelle zählte Klassennamen aus Kommentaren
+als Unterklassen mit: `ui_feld()` stand mit „+24 Unterklassen" da, es sind
+**18**; elf der 34 Zeilen waren zu hoch. Beide zählen jetzt über eine
+gemeinsame Stelle, die die Kommentare vorher entfernt — eine Tabelle, die
+Vollständigkeit behauptet, muss sie auch haben.
+
+**Und zwei weitere Löcher im Bilderlauf, beide erst im vollen Lauf
+sichtbar.** Die Kennungen der Tag- und Einsatzseiten (`?d=`, `?id=`) werden
+einmal zu Beginn geholt; das Demo-Konto setzt sich alle 30 Minuten zurück,
+und ein voller Lauf dauert länger — 48 von 368 Aufnahmen fielen deshalb mit
+404 aus. Der Lauf holt sie jetzt einmal je Seite neu und wiederholt den
+Aufruf. Und er maß, bevor das Stylesheet griff: `domcontentloaded` heißt
+nicht, dass `style.css` angewendet ist, und die ungestaltete Abbruchseite gab
+für den Knopf 35 px statt 36 — sechs Meldungen „falsche Höhe", keine davon
+eine. Die gefährlichere Richtung wäre die andere gewesen: Eine ungestaltete
+Seite läuft nicht über und wirft keinen Konsolenfehler, sie meldet zweimal
+Null. Vor jeder Messung wird jetzt gewartet, bis `--knopf` in `:root` steht.
+
+**Der Stilvergleich hat für `:disabled` jetzt eine Probe.** Sein Katalog baut
+aus einem Selektor ohne Tag ein `<div>`, und ein `<div>` lässt sich nicht
+sperren — die neue Regel wäre in keiner Probe gemessen worden, und ein
+Werkzeug, das zu einer Regel schweigt, sieht aus wie eines, das sie für
+unverändert hält. `:disabled` steht deshalb in derselben Ersetzungsliste wie
+`:hover` und `:focus`.
+
+Backlog Nr. 74 (zweite Bedienhöhe), Nr. 75 (Fettdruck und Klappen im Menü)
+und Nr. 123 (Schalterposition) sind erledigt.
+
+Keine Migration.
+
 ## [Web 15.4.1] — 2026-09-06
 
 ### Web — die Geräteseite, der Wertekasten und die Filterreihe (S8/AP6)

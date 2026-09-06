@@ -396,6 +396,40 @@
   :root{ --groesse-titel:30px; }
 }
 
+/* ---- Die zweite Bedienhöhe: 36 px am Zeigergerät (E-S8-09, R76) ----------
+ *
+ * 44 px BLEIBT DIE VORGABE, und sie gilt überall dort, wo ein Finger tippt.
+ * Die Zahl kommt aus WCAG 2.5.8 (Zielgröße mindestens 24 × 24 px) und aus
+ * den Plattformvorgaben, die 44 beziehungsweise 48 nennen — sie ist für die
+ * Fingerkuppe gerechnet, nicht für den Mauszeiger.
+ *
+ * WARUM ES AM SCHREIBTISCH ZU VIEL IST. Ein Zeiger trifft ein 36 px hohes
+ * Ziel genauso sicher wie ein 44 px hohes; was er nicht hat, ist die
+ * Ungenauigkeit, für die die acht Pixel da sind. Bezahlt werden sie in
+ * Formularhöhe: Das Einsatzformular hat über dreissig Felder, und acht Pixel
+ * je Zeile sind dort eine Bildschirmhöhe. Wer am Schreibtisch dokumentiert,
+ * rollt sie bei jedem Einsatz.
+ *
+ * DREI BEDINGUNGEN, UND ALLE DREI MÜSSEN GELTEN:
+ *
+ *   hover: hover     das Gerät kann zeigen, ohne zu drücken
+ *   pointer: fine    das primäre Zeigegerät ist genau (Maus, Trackpad, Stift)
+ *   min-width 1024   und es ist der Schreibtisch, nicht ein grosses Tablet
+ *
+ * Die Breite allein genügt NICHT: Ein Touch-Laptop mit 1920 px ist ein
+ * Fingergerät, und ein iPad im Querformat meldet 1024 px. Umgekehrt genügen
+ * die Medienmerkmale allein auch nicht — ein Zeiger an einem schmalen Fenster
+ * bekommt weiterhin die grosse Höhe, weil dort die Zeilen ohnehin knapp sind.
+ *
+ * WAS SICH NICHT ÄNDERT, weil es eigene Token hat: die Kopfleiste
+ * (`--kopf`, 56), der Schalter (`--schalter-*`), die Zeile des Aktionsblatts
+ * (`--blatt-zeile`, 50 — sie gilt nur unter 1024 px), das grosse Suchfeld
+ * (`--suchfeld`, 48) und die Sprungmarke unter dem Menüpunkt
+ * (`--unterpunkt`, 28). */
+@media (hover: hover) and (pointer: fine) and (min-width:1024px){
+  :root{ --knopf:36px; }
+}
+
 
 /* == 3. GRUNDLAGEN =========================================================
  *
@@ -1269,6 +1303,27 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
 }
+/* GESPERRT MUSS GESPERRT AUSSEHEN (F-S8-P-03, aufgenommen in S8/AP1).
+ * `.feld-eingabe` setzt Flaeche und Schrift selbst und ueberschreibt damit
+ * die Graufaerbung, die der Browser einem `disabled` gibt — ein einzeln
+ * gesperrtes Feld war von einem bedienbaren nicht zu unterscheiden. Es
+ * bekommt deshalb die Seitenflaeche statt der Kartenflaeche: dieselbe
+ * Aussage wie beim gesperrten Feldsatz, aber ohne dessen `opacity`, die
+ * auch den Rand aufhellt. Der Rand bleibt `--linie-stark` und damit ueber
+ * den 3:1, die WCAG 1.4.11 fuer die Begrenzung eines Bedienelements
+ * verlangt — gemessen 5,30:1 auf Rauch.
+ *
+ * DIE FLAECHE ALLEIN TRAEGT DIE AUSSAGE NICHT: Rauch auf Schnee sind
+ * 1,07:1, sichtbar erst im Vergleich zweier Felder nebeneinander. Die
+ * Aussage traegt die Schrift — 19,29:1 im bedienbaren Feld (Asphalt auf
+ * Schnee) gegen 5,30:1 im gesperrten. Beides zusammen ist das Bild, das
+ * ein Browser von Haus aus zeichnet und das `.feld-eingabe` uebermalt
+ * hatte.
+ *
+ * Es GILT ZUSAETZLICH im gesperrten Feldsatz (`.feldsatz-gesperrt[disabled]`
+ * vererbt `disabled` an seine Felder). Das ist gewollt: Die Deckkraft daempft
+ * die ganze Gruppe, die Flaeche sagt, welches Element gemeint ist. */
+.feld-eingabe:disabled{background:var(--rauch);color:var(--gedaempft);cursor:not-allowed}
 .feld-mehrzeilig{height:auto;padding:var(--abstand-3)}
 /* DAS DATEIFELD: sein Knopf hängt oben, solange ihn nichts in die Mitte holt.
  *
@@ -1307,7 +1362,18 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
   display:flex;align-items:center;gap:var(--abstand-3);
   min-height:var(--knopf);cursor:pointer;
 }
-.schalter-text{flex:1 1 auto;font-weight:600}
+/* DER GRIFF STEHT NEBEN DER BESCHRIFTUNG, NICHT AM RAND (Backlog Nr. 123,
+ * gemeldet 05.09.2026 mit Bild). Bis Web 15.4.1 trug `.schalter-text`
+ * `flex:1 1 auto` und drückte den Griff an den rechten Rand der Karte.
+ * Gemessen: bei 1440 px lagen zwischen dem Ende von „Mein Kontopasswort
+ * verwenden" und dem Griff **832 px**, bei 1920 px **1072 px** — mehr als
+ * eine halbe Bildschirmbreite. Man sieht den Schalter dort nicht mehr als zu
+ * dieser Zeile gehörig; man sieht ihn oft gar nicht.
+ *
+ * `flex:0 1 auto` lässt den Text nur so breit werden, wie er ist. Die
+ * TREFFERFLÄCHE bleibt die ganze Zeile: Das `<label>` behält seine Breite,
+ * nur sein Inhalt rückt zusammen. */
+.schalter-text{flex:0 1 auto;font-weight:600}
 .schalter-klein{display:block;font-weight:400;color:var(--gedaempft);font-size:var(--groesse-2)}
 .schalter-griff{
   flex:0 0 auto;position:relative;

@@ -2800,4 +2800,27 @@ declare(strict_types=1);
  *          hinzu. Was da war, steht anders — und zwei Store-Adressen sind
  *          als leere Konstanten vorbereitet.
  */
-const WEB_VERSION = '15.4.1';
+/* 15.5.0  ZWEI BEDIENHOEHEN (S8/AP7, E-S8-09, R76). 44 px bleibt die
+ *          Vorgabe; am Zeigergeraet ab 1024 px sind es 36. Alle drei
+ *          Bedingungen muessen gelten — `hover: hover`, `pointer: fine`,
+ *          `min-width: 1024px`: Ein Touch-Laptop mit 1920 px ist ein
+ *          Fingergeraet, ein iPad im Querformat meldet 1024 px. Eigene Token
+ *          bleiben, wie sie sind: Kopfleiste 56, Schalter 46 x 26,
+ *          Aktionsblatt 50 (nur mobil), Suchfeld 48, Sprungmarke 28.
+ *
+ *          Dazu der Schalter aus Backlog Nr. 123: Sein Griff stand am
+ *          rechten Kartenrand, gemessen 832 px vom Ende der Beschriftung bei
+ *          1440 px und 1072 px bei 1920 px. Jetzt steht er daneben; die
+ *          Trefferflaeche bleibt die ganze Zeile.
+ *
+ *          Und ein gesperrtes Eingabefeld sieht endlich gesperrt aus:
+ *          `.feld-eingabe` setzte Flaeche und Schrift selbst und uebermalte
+ *          damit die Graufaerbung des Browsers (Fund aus S8/AP1). Es traegt
+ *          jetzt die Seitenflaeche, gedaempfte Schrift und
+ *          `cursor:not-allowed`.
+ *
+ *          NEBENNUMMER, weil sich das Verhalten der Oberflaeche aendert —
+ *          nicht nur ihr Aussehen: Was am Zeigergeraet 44 px hoch war, ist
+ *          jetzt 36. Keine Migration.
+ */
+const WEB_VERSION = '15.5.0';
