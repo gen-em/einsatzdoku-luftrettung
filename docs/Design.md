@@ -325,7 +325,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-94 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+95 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
@@ -364,7 +364,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--blau` | `#4280E5` | 11 |  |
-| `--blau-tief` | `#1F4E9C` | 14 |  |
+| `--blau-tief` | `#1F4E9C` | 15 |  |
 | `--blau-hell` | `#D9ECFD` | 4 |  |
 
 **Rot — Aufmerksamkeit**
@@ -388,7 +388,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--groesse-1` | `12px` | 6 |  |
 | `--groesse-2` | `13px` | 38 |  |
-| `--groesse-3` | `15px` | 10 |  |
+| `--groesse-3` | `15px` | 11 |  |
 | `--groesse-4` | `16px` | 10 |  |
 | `--groesse-5` | `19px` | 6 |  |
 | `--groesse-6` | `24px` | 3 |  |
@@ -403,7 +403,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--abstand-1` | `4px` | 55 |  |
 | `--abstand-2` | `8px` | 85 |  |
-| `--abstand-3` | `12px` | 109 |  |
+| `--abstand-3` | `12px` | 110 |  |
 | `--abstand-4` | `16px` | 53 |  |
 | `--abstand-5` | `24px` | 21 |  |
 
@@ -430,6 +430,7 @@ auseinanderlaufen kann.
 | `--schublade` | `320px` | 1 | Höchstbreite der mobilen Schublade |
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
 | `--unterpunkt` | `28px` | 2 | Sprungmarke unter dem Menüpunkt |
+| `--listensuche-breit` | `36rem` | 1 | Höchstbreite des Suchfelds einer Liste |
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
 | `--symbol-klein` | `16px` | 2 | Zusatzzeichen an einer Beschriftung |
@@ -665,11 +666,11 @@ neben „Standard der Installation" sprengt sonst jede Zeile.
 |---|--:|
 | `@media (min-width:1600px)` | 2 |
 | `@media (min-width:1200px)` | 3 |
-| `@media (min-width:1024px)` | 3 |
+| `@media (min-width:1024px)` | 2 |
 | `@media (min-width:720px)` | 12 |
 | `@media (max-width:479px)` | 1 |
 
-Zusammen 21 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 20 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -743,7 +744,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `datenbank.svg` | Tabler Icons „database" (MIT) | 10 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 20 |
-| `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 0 |
+| `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 23 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
@@ -753,7 +754,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 2 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 21 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 8 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
@@ -782,13 +783,13 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 27 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
-| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 16 |
+| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 17 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 27 |
 
 49 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
-**Nirgends genannt:** `geraet-entkoppeln`, `luftlinie`, `reanimation`, `werkzeug`.
+**Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
 
 ## 9. Bausteine
 
@@ -863,11 +864,11 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1648 |
 | `ui_wahlliste()` | `.wahlliste` | ja | 1701 |
 | `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1745 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1828 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1890 |
-| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1931 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1988 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2141 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1844 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1906 |
+| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1947 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2004 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2157 |
 
 34 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.

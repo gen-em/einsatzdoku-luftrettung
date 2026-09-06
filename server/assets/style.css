@@ -305,6 +305,7 @@
   --schublade:320px;                   /* Höchstbreite der mobilen Schublade */
   --blatt-zeile:50px;                  /* Zeilenhöhe im Aktionsblatt */
   --unterpunkt:28px;                   /* Sprungmarke unter dem Menüpunkt */
+  --listensuche-breit:36rem;           /* Höchstbreite des Suchfelds einer Liste */
   --uebersicht-spalte:240px;           /* schmalste Spalte der Einstellungs-Übersicht */
   --suchfeld:48px;                     /* das große Suchfeld */
   --symbol-klein:16px;                 /* Zusatzzeichen an einer Beschriftung */
@@ -3076,15 +3077,22 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* ---- Kopf einer langen Liste: Suche und Filter --------------------------- */
 .listenkopf{display:flex;flex-direction:column;gap:var(--abstand-3);
   margin-bottom:var(--abstand-4)}
-.listensuche{display:flex;gap:var(--abstand-2);align-items:center}
-/* Ab 1024 px stehen Suche und Filter NEBENEINANDER (Mockup 41). Darunter
- * untereinander: Fünf Filterplaketten neben einem Suchfeld ergäben auf einem
- * Tablet fünf einzeilige Spalten. */
-@media (min-width:1024px){
-  .listenkopf{flex-direction:row;align-items:center}
-  .listensuche{flex:0 1 26rem}
-  .filterreihe{flex:1 1 auto}
-}
+/* DAS SUCHFELD STEHT IN EIGENER ZEILE, IN JEDER BREITE (E-S8-08, Backlog
+ * Nr. 73). Bis Web 15.4.0 rückten Suche und Filter ab 1024 px NEBENEINANDER
+ * (Mockup 41 aus P3), das Suchfeld auf `flex:0 1 26rem`. Gemessen an
+ * `admin_users.php` mit fünf Filtern: Bei 1440, 1280 und 1024 px fiel der
+ * letzte Filter allein in eine zweite Zeile — ein Umbruch, der wie ein Unfall
+ * aussah, weil die erste Zeile halb leer blieb. Genau das war die gemeldete
+ * Beobachtung.
+ *
+ * Untereinander ist der Umbruch der Filterreihe Absicht: Sie beginnt links,
+ * füllt die Breite und bricht am Ende. Das Suchfeld bekommt eine
+ * Höchstbreite — über 36 rem wird ein Eingabefeld nicht besser lesbar,
+ * sondern nur breiter.
+ *
+ * Es gilt für JEDE Liste mit Suche und Filtern, nicht für diese eine Seite. */
+.listensuche{display:flex;gap:var(--abstand-2);align-items:center;
+  max-width:var(--listensuche-breit)}
 
 /* FILTERREIHE (.filterreihe) — Verweise, keine Knöpfe im Formular: Ein Filter
  * ändert die angezeigte Liste, und das ist eine Navigation. So trägt jeder

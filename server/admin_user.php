@@ -600,7 +600,11 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         'Der Link konnte nicht per E-Mail zugestellt werden. Er ist eine Stunde '
         . 'gültig — bitte auf einem anderen Weg an die Person selbst weitergeben. '
         . 'Die Ursache des Fehlschlags steht im Fehlerprotokoll des Webspace.') ?>
-    <p class="codeblock"><?= e($setzLink) ?></p>
+    <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Der Link
+             ist über hundert Zeichen lang; in der grossen Stufe stand er
+             gesperrt in Plakatgrösse über drei Zeilen — und ohne Knopf,
+             obwohl er zum Weitergeben da ist. */ ?>
+    <?= ui_codeblock_lang((string)$setzLink, 'Setz-Link') ?>
   <?php endif; ?>
 
   <?php if ($bericht): ?>
@@ -1005,4 +1009,4 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   <?php endif; ?>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(['skripte' => ['assets/dialog.js']]); ?>
+<?php ui_seite_ende(['skripte' => ['assets/dialog.js', 'assets/kopieren.js']]); ?>

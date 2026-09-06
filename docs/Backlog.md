@@ -796,21 +796,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
     Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
 
-73. **Die Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen.**
-    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
-    (Rahmenplan Fassung 16).* Auf `admin_users.php` stehen die Filter „Alle,
-    Admins, Backup überfällig, Nie gesichert, Ohne Gerät" rechts neben
-    dem Suchfeld; bei üblicher Schreibtischbreite fällt „Ohne Gerät" allein
-    in eine zweite Zeile. **Zu tun:** Anordnung im S8-Konzept festlegen —
-    Suchfeld über den Filtern, oder Filter in einer Zeile mit Umbruchregel —
-    und am Baustein umsetzen, nicht an der Seite; `tools/screenshots/` in
-    allen acht Breiten. Zuordnung: S8.
-    **Entschieden 05.09.2026 (Konzept S8, E-S8-08):** Suchfeld in eigener
-    Zeile in voller Breite (Höchstbreite 36 rem), Filterplaketten darunter
-    mit erlaubtem Umbruch und festem Abstand — dann ist der Umbruch Absicht
-    und nicht Unfall. Gilt für jede Liste mit Suche und Filtern. Umsetzung
-    in S8 AP6.
-
 74. **Bedienhöhe am Schreibtisch: müssen es 44 px sein?**
     *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* `CLAUDE.md` 5 und
     `Design.md` verlangen eine Höhe für Bedienelemente, mobil wie am
@@ -1484,6 +1469,43 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+73. **Die Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
+    (Rahmenplan Fassung 16).* Auf `admin_users.php` stehen die Filter „Alle,
+    Admins, Backup überfällig, Nie gesichert, Ohne Gerät" rechts neben
+    dem Suchfeld; bei üblicher Schreibtischbreite fällt „Ohne Gerät" allein
+    in eine zweite Zeile. **Zu tun:** Anordnung im S8-Konzept festlegen —
+    Suchfeld über den Filtern, oder Filter in einer Zeile mit Umbruchregel —
+    und am Baustein umsetzen, nicht an der Seite; `tools/screenshots/` in
+    allen acht Breiten. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-08):** Suchfeld in eigener
+    Zeile in voller Breite (Höchstbreite 36 rem), Filterplaketten darunter
+    mit erlaubtem Umbruch und festem Abstand — dann ist der Umbruch Absicht
+    und nicht Unfall. Gilt für jede Liste mit Suche und Filtern. Umsetzung
+    in S8 AP6.
+    **Erledigt 06.09.2026 (Web 15.4.1, S8/AP6):** Das Suchfeld steht in eigener
+    Zeile, in jeder Breite, mit der Höchstbreite `--listensuche-breit` (36 rem);
+    die Filterreihe darunter bricht mit festem Abstand. Die Regel `.listenkopf`
+    wird ab 1024 px nicht mehr zur Reihe — genau das war die Ursache. Gemessen
+    an `admin_users.php` mit fünf Filtern (zusammen 789 px breit):
+
+    | Breite | Inhaltsbreite | vorher | nachher |
+    |---|--:|---|---|
+    | 1920 | 1354 px | 1 Zeile | 1 Zeile |
+    | 1440 | 1114 px | **2 Zeilen** | 1 Zeile |
+    | 1280 | 954 px | **2 Zeilen** | 1 Zeile |
+    | 1024 | 738 px | 2 Zeilen | 2 Zeilen (4+1) |
+    | 900 | 834 px | 1 Zeile | 1 Zeile |
+    | 768 | 702 px | 2 Zeilen | 2 Zeilen (4+1) |
+    | 360 | 302 px | 4 Zeilen | 4 Zeilen |
+
+    Wo der Inhalt breiter ist als die Reihe, steht sie einzeilig; wo er
+    schmaler ist (1024 und 768 — beide unter 789 px), ist der Umbruch die
+    richtige Antwort und nicht mehr der halb leere erste Rand von vorher.
+    **Die Abnahme P-34 nennt 780 px Inhaltsbreite ohne Umbruch; gemessen
+    braucht die Reihe 789 px** — neun Pixel mehr. Diese Breite kommt an keiner
+    der acht Prüfbreiten vor.
 
 82. **Es fehlt die Warnung, dass die Daueraufzeichnung den Akku leert.**
     *Aufgenommen 02.09.2026 vom Auftraggeber; erledigt am 04.09.2026 im

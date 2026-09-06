@@ -250,7 +250,11 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       <p class="feld-hinweis">Klappt das nicht (weil <code>config.php</code> nicht
          beschreibbar ist), diese Zeile von Hand einfügen, gleich hinter
          <code>return [</code>:</p>
-      <p class="codeblock"><?= e(serverschluessel_zeile($vorschlag)) ?></p>
+      <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Die
+               Zeile ist zum Einfuegen in die `config.php` da — abtippen wird
+               sie niemand. In der grossen Stufe stand sie gesperrt in
+               Plakatgroesse und ohne Knopf. */ ?>
+      <?= ui_codeblock_lang(serverschluessel_zeile($vorschlag), 'Zeile für die config.php') ?>
       <p class="feld-hinweis"><strong>Genau eine Zeile eintragen.</strong> Bei jedem
          Neuladen dieser Seite steht dort ein anderer Schlüssel — welcher es
          wird, ist gleich, aber es darf nur einer sein. Und er gehört ins
@@ -495,4 +499,4 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php ui_karte_ende(true); ?>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(); ?>
+<?php ui_seite_ende(['skripte' => ['assets/kopieren.js']]); ?>

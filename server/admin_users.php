@@ -504,7 +504,11 @@ ui_seite_start(['titel' => 'NutzerInnen']);
         . 'ist angelegt, der Link 24 Stunden gültig — bitte auf einem anderen Weg '
         . 'an die Person selbst weitergeben. Wer ihn hat, kann das Passwort des '
         . 'neuen Kontos setzen. Die Ursache steht im Fehlerprotokoll des Webspace.') ?>
-    <p class="codeblock"><?= e($setzLink) ?></p>
+    <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Der Link
+             ist über hundert Zeichen lang; in der grossen Stufe stand er
+             gesperrt in Plakatgrösse über drei Zeilen — und ohne Knopf,
+             obwohl er zum Weitergeben da ist. */ ?>
+    <?= ui_codeblock_lang((string)$setzLink, 'Einladungslink') ?>
   <?php endif; ?>
 
   <?php /* ---- Die vier Statuskacheln (Mockup 41) --------------------------
@@ -830,4 +834,4 @@ ui_seite_start(['titel' => 'NutzerInnen']);
   });
 })();
 </script>
-<?php ui_seite_ende(['skripte' => ['assets/dialog.js']]); ?>
+<?php ui_seite_ende(['skripte' => ['assets/dialog.js', 'assets/kopieren.js']]); ?>

@@ -2787,4 +2787,17 @@ declare(strict_types=1);
  * KEINE MIGRATION. Der Zwischenspeicher der Zaehler legt zwei Schluessel in
  * `app_state` an, sobald er zum ersten Mal rechnet.
  */
-const WEB_VERSION = '15.4.0';
+/* 15.4.1  S8/AP6: die Geraeteseite nach Mockup 10 (Reihenfolge nach
+ *          Haeufigkeit, Zeile mit Modell und Datum, alle Handlungen im
+ *          Punkte-Menue, „Entkoppeln" statt „Loeschen", Karte „App
+ *          installieren" mit zwei Store-Wegen und dem APK als Rueckfall,
+ *          „Geraet ohne Code" zugeklappt am Ende) · Wertekasten der kleinen
+ *          Stufe an den letzten drei Stellen (Setz-Link, Einladungslink,
+ *          Serverschluessel-Zeile) · Filterreihe: das Suchfeld steht in
+ *          eigener Zeile, die Filter brechen darunter (Backlog Nr. 73).
+ *
+ *          KORREKTURNUMMER, nicht Nebennummer: Es kommt keine Funktion
+ *          hinzu. Was da war, steht anders — und zwei Store-Adressen sind
+ *          als leere Konstanten vorbereitet.
+ */
+const WEB_VERSION = '15.4.1';
