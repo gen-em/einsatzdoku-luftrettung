@@ -131,10 +131,14 @@ Oberflächenänderung anfängt, liest zuerst dort. Kurz:
   nachgetragen. Die Skala ist geschlossen.
 - Kontrast gegen die tatsächliche Fläche prüfen (Schnee/Rauch, nicht Weiß),
   Zielwert AA. `python3 tools/screenshots/kontrast.py` rechnet ihn nach.
-- Eine Höhe für Bedienelemente: **44 px**, mobil wie am Schreibtisch —
-  das gilt für die **Weboberfläche**. Die Android-Apps folgen der
-  Plattformvorgabe von **48 dp** (R58, 02.09.2026): Sie werden mit
-  Handschuhen bedient, und dafür ist die Android-Zahl gemacht.
+- Bedienhöhe der **Weboberfläche**: **44 px** — und **36 px am Zeigergerät
+  ab 1024 px** (`(hover:hover) and (pointer:fine) and (min-width:1024px)`,
+  E-S8-09/R76, seit Web 15.5.0). Alle drei Bedingungen müssen gelten: Ein
+  Touch-Laptop mit 1920 px ist ein Fingergerät. Der Bilderlauf misst gegen
+  beide Sollwerte (`--finger` schaltet ihn auf Fingergerät um). Die
+  Android-Apps folgen der Plattformvorgabe von **48 dp** (R58, 02.09.2026):
+  Sie werden mit Handschuhen bedient, und dafür ist die Android-Zahl
+  gemacht.
 - Spaltenbreiten in Tabellen nie über `:nth-child` — sie zählen Spalten ab und
   rutschen beim Streichen einer Spalte still auf die falsche. Klassen benutzen.
 - Die Tabellen in `Design.md` (Token, Schwellen, Symbole, Bausteine) sind

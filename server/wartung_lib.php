@@ -68,9 +68,25 @@ const WARTUNG_RETRY_S = 300;
  * Pfadmuster waere an dieser Stelle zu spaet und zu ungenau.
  *
  * Warum jede einzelne:
- *   update.php           die Arbeit selbst — ohne sie kaeme niemand an die
- *                        Migration und damit nie wieder aus der Wartung
- *                        heraus. Traegt auch den Schalter.
+ *   betrieb_updates.php  die Arbeit selbst (seit Web 15.1.0) — sie traegt den
+ *                        Schalter UND die Migrationen. Ohne sie schaltete man
+ *                        die Wartung ein und saesse davor: Die Seite, auf der
+ *                        der Ausschalter steht, waere die erste, die 503
+ *                        antwortet. Genau das ist in der Bedienpruefung von
+ *                        S8/AP2 passiert (F-S8-P-04).
+ *   update.php           der Notausgang und die alte Adresse. Sie wird in AP3
+ *                        eine Weiterleitung (Nr. 77) und bleibt so lange in
+ *                        der Liste: Eine Weiterleitung, die im Wartungsmodus
+ *                        503 antwortet, fuehrt niemanden mehr auf die neue
+ *                        Seite. Der CLI-Aufruf ist ohnehin nie getort.
+ *   betrieb_jobs.php     der Zustand der Jobs waehrend der Wartung — das
+ *                        Komplett-Backup der Kette laeuft GENAU DANN
+ *                        (`jobs.php` unten), und wer wissen will, ob es
+ *                        durchgelaufen ist, braucht diese Seite offen.
+ *   betrieb_server.php   die Belegung. Wer waehrend eines Updates merkt, dass
+ *                        die Grenze erreicht ist, muss sie hier anheben
+ *                        koennen — sonst scheitert das Backup, das dem
+ *                        Update vorausgehen soll.
  *   wiederherstellen.php der Rueckweg, wenn die Migration schiefging.
  *   jobs.php             der Token-Weg. Das Komplett-Backup der Kette laeuft
  *                        WAEHREND der Wartung — genau dann ist es
@@ -86,6 +102,11 @@ const WARTUNG_RETRY_S = 300;
  * Stylesheet, Schriften, Symbole laufen gar nicht durch PHP.
  */
 const WARTUNG_AUSNAHMEN = [
+    'betrieb_status.php',
+    'betrieb_statistik.php',
+    'betrieb_updates.php',
+    'betrieb_jobs.php',
+    'betrieb_server.php',
     'update.php',
     'wiederherstellen.php',
     'jobs.php',
@@ -98,9 +119,9 @@ const WARTUNG_AUSNAHMEN = [
 function wartung_aktiv(): bool
 {
     /* clearstatcache(), weil derselbe Prozess die Datei kurz zuvor
-     * geschrieben oder geloescht haben kann (update.php schaltet und zeigt
-     * danach den Balken). Ohne den Aufruf zeigte die Seite den Zustand von
-     * vor dem Klick. */
+     * geschrieben oder geloescht haben kann (betrieb_updates.php schaltet und
+     * zeigt danach den Balken). Ohne den Aufruf zeigte die Seite den Zustand
+     * von vor dem Klick. */
     clearstatcache(true, WARTUNG_DATEI);
     return file_exists(WARTUNG_DATEI);
 }
@@ -290,7 +311,7 @@ function wartung_seite_html(): string
       . '<html lang="de">' . "\n"
       . '<head>' . "\n"
       . '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' . "\n"
-      . '<title>Wartung — Einsatzdoku</title>' . "\n"
+      . '<title>Wartung — Gen-EM NAdoku</title>' . "\n"
       . '<link rel="stylesheet" href="' . $h($v('assets/style.css')) . '">' . "\n"
       . '</head>' . "\n"
       . '<body>' . "\n"
@@ -315,7 +336,10 @@ function wartung_seite_html(): string
 }
 
 /**
- * Der Balken fuer die Ausnahmeseiten (`update.php`, `login.php`).
+ * Der Balken fuer die Ausnahmeseiten: die FUENF Betriebsseiten
+ * (`betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`,
+ * `betrieb_jobs.php`, `betrieb_server.php`) und `login.php`. NICHT
+ * `update.php` — die ist im Web seit S8/AP3 nur noch eine Weiterleitung.
  *
  * Er ist die einzige Stelle, an der ein stehengebliebener Wartungsmodus
  * auffaellt — es gibt kein automatisches Ausschalten (E-S5W-05). Deshalb

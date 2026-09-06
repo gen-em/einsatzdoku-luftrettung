@@ -18,10 +18,23 @@ versiegelten Teilen. Die einteiligen Fassungen 2 und 3 werden weiterhin
 | 3 | eine versiegelte Datei (`EDBAK2`, Kopf mit Rundenzahl) | Web 5.0.0 – 10.3.0 | ja, bis NaDoku 1.0 |
 | 2 | eine versiegelte Datei ohne Rundenzahl im Kopf | bis Web 4.7.0 | ja, bis NaDoku 1.0 |
 
-**Das Komplett-Backup der INSTALLATION ist etwas anderes** und steht in
-Abschnitt 6: `.edk`, Format `EDKOMP1`, ein SQL-Dump jeder Tabelle statt der
-Daten eines Kontos. Sie hilft gegen „der Webspace ist weg", nicht gegen
-„jemand hat sich vertan".
+### Drei Backups, drei Namen (S8/AP3, E-S8-06)
+
+Das Wort „Backup" hieß in dieser Anwendung dreierlei, und dieses Dokument
+beschreibt zwei davon. Seit Web 15.2.0 heißt jedes anders:
+
+| Name | Was | Wer legt es an | Wo |
+|---|---|---|---|
+| **Backup** | `.edbak`, die Daten *einer* NutzerIn | die NutzerIn selbst, im eigenen Bereich | Abschnitte 1–4 |
+| **Konto-Backup** | dasselbe Format, aber von der Verwaltung angelegt und auf dem Server abgelegt | die Verwaltung, je Konto | Abschnitt 5 |
+| **Komplett-Backup** | `.edk`, Format `EDKOMP1`, ein SQL-Dump jeder Tabelle | die Verwaltung, für die ganze Installation | Abschnitt 6 |
+
+**Bis Web 15.1.0 hieß das Konto-Backup „Admin-Backup"** — der Begriff ist
+gestrichen (Konzept S8, Abschnitt 5.4). Gleich geblieben ist alles andere:
+Format, Ablage, Freigabeweg.
+
+**Das Komplett-Backup hilft gegen „der Webspace ist weg"**, nicht gegen
+„jemand hat sich vertan". Backup und Konto-Backup können beides.
 
 ---
 
@@ -1174,7 +1187,7 @@ Absicht: Es soll eine Entscheidung sein, keine Nebenwirkung.
 
 ---
 
-## 5. Admin-Backup, Fassung 2 (seit Web 12.0.0)
+## 5. Konto-Backup, Fassung 2 (seit Web 12.0.0)
 
 Ein anderes Format als die `.edbak`-Datei — es umschliesst sie. Erzeugt von
 `adminbackup_lib.php`, abgelegt unter `server/sicherungen/<kontokennung>/`.
@@ -1249,7 +1262,7 @@ Läufe — ein Bauordner `.bau-<8 Hex>/` oder eine `<paket>.zip.tmp`. Die
 Speichergrenze (Abschnitt 5b) zählt sie **mit**; die Ordnerlöschung räumt sie
 **mit**.
 
-### 5a. Admin-Backup, Fassung 1 (Web 5.9.0 bis 11.1.1)
+### 5a. Konto-Backup, Fassung 1 (Web 5.9.0 bis 11.1.1)
 
 Wird **gelesen, nicht mehr geschrieben** — und beim ersten Lauf nach dem
 Umstieg entfernt (Entscheidung vom 31.08.2026). Eine einzige JSON-Datei
@@ -1555,3 +1568,29 @@ Drei Wege spielen dieselbe Datei ein:
 Nach jedem davon gehört der **Migrationslauf** (`update.php`), wenn der Dump
 aus einer älteren Fassung stammt. Das Runbook (`docs/Technik.md`, Abschnitt 7)
 führt die ganze Reihenfolge auf.
+
+### 6.8 Die Rolle im Dump (seit Web 15.0.0)
+
+Der Dump enthält die ganze Tabelle `users`, also auch `role`. Ein Stand aus
+der Zeit **vor Web 15.0.0** bringt deshalb das alte zweiwertige
+`ENUM('user','admin')` und lauter `admin` zurück — die Rolle `betreiberin` gab
+es dort noch nicht.
+
+**Das ist gültig und sperrt niemanden aus.** Ein Admin darf verwalten
+(`rolle_darf_verwalten()` ist für ihn wahr), kommt also an `update.php` und
+kann den Migrationslauf starten. Angehoben wird beim Einspielen **nichts**:
+Der Dump wird so eingespielt, wie er ist, und die Migration
+`2026_09_05_rolle_betreiberin` erledigt danach genau das, was sie beim ersten
+Mal erledigt hat — ENUM erweitern, alle Admins zu BetreiberInnen machen. Sie
+läuft erneut, weil sie am ENUM erkennt, dass sie in dieser Datenbank noch
+nicht gelaufen ist.
+
+Bis dahin hat die Installation **keine BetreiberIn** und damit keinen Zugang
+zum Bereich Betrieb. Deshalb steht der Migrationslauf im Wiederherstellungsweg
+an zweiter Stelle, direkt nach dem Anmelden.
+
+**Ein `.edbak` trägt keine Rolle** — weder das Backup, das eine NutzerIn sich
+selbst herunterlädt, noch das Konto-Backup der Verwaltung. Es ist die Datei
+*einer* NutzerIn und sagt nichts darüber, was sie darf. Wer es in ein anderes
+Konto einspielt, ändert dessen Rolle nicht; das ist Absicht und war nie
+anders.

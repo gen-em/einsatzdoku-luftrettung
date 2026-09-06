@@ -83,11 +83,25 @@ Eigenschaften, die in einem der beiden Stylesheets überhaupt vorkommen — bei
 
 ```
 python3 proben.py <alt.css> [<neu.css>] [<ausgabeordner>]
-node stilvergleich.js <ausgabeordner> <alt.css> <neu.css>
+PROBEN=seiten.html,katalog.html,js_markup.html \
+  node stilvergleich.js <ausgabeordner> <alt.css> <neu.css>
+PROBEN=pseudo.html \
+  node stilvergleich.js <ausgabeordner> <ausgabeordner>/pseudo_alt.css \
+                                        <ausgabeordner>/pseudo_neu.css
 ```
 
-`PROBEN=seiten.html,katalog.html` wählt einzelne Proben aus (Vorgabe: die
-ersten beiden). `CHROMIUM=<pfad>` setzt den Browser.
+`PROBEN=…` wählt die Proben aus (Vorgabe: die ersten beiden).
+`CHROMIUM=<pfad>` setzt den Browser.
+
+> **Zwei Läufe, und der zweite braucht die umgeschriebenen Stylesheets.** Die
+> Pseudoprobe misst Zustände, die es als Pseudoklasse gibt; `proben.py` hat
+> sie dafür in beiden Ständen durch echte Klassen ersetzt und die Ergebnisse
+> als `pseudo_alt.css` und `pseudo_neu.css` abgelegt. Wer `pseudo.html` gegen
+> die **Original**-Stylesheets misst, misst einen Katalog ohne Zustände — und
+> bekommt eine Zahl, die aussieht wie ein Nachweis. In S8/AP7 ist genau das
+> passiert: Der Lauf meldete 6197 Abweichungen und **schwieg** zu der einen
+> neuen Regel, um die es ging (`.feld-eingabe:disabled`). Erst der Lauf gegen
+> `pseudo_neu.css` zeigte sie.
 
 ## Die vier Proben
 
@@ -96,7 +110,14 @@ ersten beiden). `CHROMIUM=<pfad>` setzt den Browser.
 | `seiten.html` | Das Markup aller Seiten (PHP entfernt, **alle** Zweige bleiben stehen) |
 | `js_markup.html` | Markup, das erst im Browser entsteht — HTML-Zeichenketten der JS-Module |
 | `katalog.html` | Ein Element je Selektor aus `style.css` — fängt Regeln, die im echten Markup nicht vorkommen |
-| `pseudo.html` | Hover-, Fokus- und Aktiv-Zustände; die Pseudoklassen werden in **beiden** Ständen gleich durch echte Klassen ersetzt |
+| `pseudo.html` | Hover-, Fokus-, Aktiv- **und Sperrzustände**; die Pseudoklassen werden in **beiden** Ständen gleich durch echte Klassen ersetzt |
+
+**`:disabled` steht seit S8/AP7 mit in der Ersetzungsliste.** Es ist kein
+Bedienzustand wie `:hover`, aber es teilt dessen Problem: Der Katalog baut aus
+einem Selektor ohne Tag ein `<div>`, und ein `<div>` lässt sich nicht sperren.
+Die Regel `.feld-eingabe:disabled` wäre damit in **keiner** Probe gemessen
+worden — und ein Werkzeug, das zu einer Regel schweigt, sieht aus wie eines,
+das sie für unverändert hält.
 
 ## Härtetest für die Meldungen aus `kaskade.py`
 

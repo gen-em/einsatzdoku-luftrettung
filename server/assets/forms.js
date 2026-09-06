@@ -35,6 +35,9 @@
   'use strict';
 
   const dirtyForms = new Set();
+  /* Je Formular die Karten, in denen etwas geaendert wurde — fuer den
+     Hinweistext der Leiste (S8/AP3, Mockup 09). */
+  const schmutzigeKarten = new WeakMap();
 
   function istFormularfeld(el) {
     return el && (el.tagName === 'INPUT' || el.tagName === 'SELECT'
@@ -50,21 +53,63 @@
     if (l) { l.hidden = !an; }
   }
 
-  function merken(f) {
+  /* DIE LEISTE NENNT, WAS UNGESPEICHERT IST (S8/AP3, Mockup 09).
+   *
+   * „Es gibt ungespeicherte Änderungen" beantwortet die Frage nicht, die man
+   * auf einer Seite mit drei Karten hat: WELCHE? Auf „Installation" stehen
+   * Impressum und Datenschutz in einem Formular, und wer nach zehn Minuten
+   * wiederkommt, weiss nicht mehr, woran er war.
+   *
+   * Der Text entsteht aus den Kartentiteln der geaenderten Felder. Traegt der
+   * Hinweis ein `data-hinweis-vorlage`, wird daraus „<Vorlage>: A und B";
+   * ohne Vorlage bleibt der Text im Markup stehen. Findet sich keine Karte
+   * (ein Formular ohne Karten), bleibt es ebenfalls beim Ausgangstext — ein
+   * Doppelpunkt ohne Aufzaehlung waere schlechter als der allgemeine Satz. */
+  function hinweisSetzen(f) {
+    const l = f.querySelector('[data-speichern]');
+    if (!l) { return; }
+    const p = l.querySelector('.speichern-hinweis');
+    if (!p || !p.hasAttribute('data-hinweis-vorlage')) { return; }
+    const namen = Array.from(schmutzigeKarten.get(f) || []);
+    if (!namen.length) { return; }
+    const liste = namen.length === 1 ? namen[0]
+                : namen.slice(0, -1).join(', ') + ' und ' + namen[namen.length - 1];
+    p.textContent = p.getAttribute('data-hinweis-vorlage') + ': ' + liste;
+  }
+
+  /* Der Titel der Karte, in der dieses Feld steht — oder nichts. */
+  function kartenTitel(el) {
+    const k = el.closest('.karte');
+    if (!k) { return null; }
+    const t = k.querySelector('.karte-titel');
+    return t ? t.textContent.trim() : null;
+  }
+
+  function merken(f, feld) {
     if (!f || !f.hasAttribute('data-dirty-track')) { return; }
     dirtyForms.add(f);
+    if (feld) {
+      const titel = kartenTitel(feld);
+      if (titel) {
+        if (!schmutzigeKarten.has(f)) { schmutzigeKarten.set(f, new Set()); }
+        schmutzigeKarten.get(f).add(titel);
+      }
+    }
     leisteZeigen(f, true);
+    hinweisSetzen(f);
   }
 
   document.addEventListener('input', ev => {
-    if (istFormularfeld(ev.target)) { merken(ev.target.form); }
+    if (istFormularfeld(ev.target)) { merken(ev.target.form, ev.target); }
   });
   document.addEventListener('change', ev => {
-    if (istFormularfeld(ev.target)) { merken(ev.target.form); }
+    if (istFormularfeld(ev.target)) { merken(ev.target.form, ev.target); }
   });
   document.addEventListener('submit', ev => {
     const f = ev.target;
-    if (f instanceof HTMLFormElement) { dirtyForms.delete(f); leisteZeigen(f, false); }
+    if (f instanceof HTMLFormElement) {
+      dirtyForms.delete(f); schmutzigeKarten.delete(f); leisteZeigen(f, false);
+    }
   });
 
   window.addEventListener('beforeunload', ev => {

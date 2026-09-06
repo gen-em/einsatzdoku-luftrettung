@@ -1,6 +1,6 @@
 # Symbolvorrat Gen-EM NAdoku (P3, E-P3-18)
 
-44 Zeichen, je eine Datei. Grundlage ist **Tabler Icons** (MIT-Lizenz,
+49 Zeichen, je eine Datei. Grundlage ist **Tabler Icons** (MIT-Lizenz,
 Paweł Kuna; Lizenztext in `LICENSE-tabler-icons.txt`): 24 × 24, Strich 2 px,
 runde Enden und Ecken, Farbe über `currentColor`. Ein Zeichen (Luftlinie)
 ist ein eigener Entwurf im selben Stil. Jede Datei trägt im Kommentar den
@@ -25,6 +25,11 @@ CSS-Drehung. Gefüllter Stern: per CSS `fill:currentColor`.
 | `punkte.svg` | dots | Aktionsmenü und Zeilenaktionen mobil |
 | `zahnrad.svg` | settings | Einstellungen (Kopfleiste) |
 | `kalender.svg` | calendar | Startseite; Datum ändern |
+| `status.svg` | activity | Betrieb → Status (S8/AP5, Mockup 13) |
+| `aktualisieren.svg` | refresh | Betrieb → Updates (S8/AP5, Mockup 13) |
+| `uhrzeit.svg` | clock | Betrieb → Hintergrundjobs (S8/AP5, Mockup 13) |
+| `server.svg` | server | Betrieb → Servereinstellungen (S8/AP5, Mockup 13) |
+| `ziel-fern.svg` | cloud-upload | Betrieb → Backup-Ziele (S8/AP5, Mockup 13) |
 | `lupe.svg` | search | Suche; Ortssuche |
 | `plus.svg` | plus | Anlegen, Nachtragen, Hinzufügen |
 | `stift.svg` | pencil | Bearbeiten |
@@ -36,7 +41,7 @@ CSS-Drehung. Gefüllter Stern: per CSS `fill:currentColor`.
 | `schloss.svg` | lock | geschützte Angaben gesperrt |
 | `schloss-offen.svg` | lock-open | geschützte Angaben entsperrt |
 | `vollbild.svg` | maximize | Karte im Vollbild |
-| `balken.svg` | chart-bar | Jahres-/Monatsübersicht |
+| `balken.svg` | chart-bar | Jahres-/Monatsübersicht; Betrieb → Statistik |
 | `sortieren.svg` | arrows-sort | Sortierung (Kachelkopf mobil) |
 | `pfeil-hoch.svg` | arrow-up | Sortierrichtung (Tabellenkopf) |
 | `zurueck.svg` | arrow-left | Zurück zur Anmeldung (Rechtstexte) |
@@ -46,16 +51,16 @@ CSS-Drehung. Gefüllter Stern: per CSS `fill:currentColor`.
 | `sicherung.svg` | archive | Backup, Sicherungen |
 | `tausch.svg` | arrows-exchange | Import/Export, Freigeben, Verschieben |
 | `gruppe.svg` | users | NutzerInnen |
-| `datenbank.svg` | database | Stammdaten systemweit |
+| `datenbank.svg` | database | Stammdaten systemweit; Betrieb → Komplett-Backup |
 | `rechtstexte.svg` | file-text | Rechtstexte (Admin) |
 | `kolben.svg` | flask | Demo-Konto, Demo-Hinweis |
-| `werkzeug.svg` | tool | Wartung |
+| `werkzeug.svg` | tool | (frei, seit S8/AP5 — „Wartung“ als Seite gibt es nicht mehr) |
 | `abmelden.svg` | logout | Abmelden |
 | `ordner-plus.svg` | folder-plus | Anderen Diensttag aufnehmen |
 | `geraet-entkoppeln.svg` | link-off | Gerät entkoppeln |
 | `reanimation.svg` | activity | Reanimation |
 | `einsatzort.svg` | map-pin-plus | Einsatzort (Karte, Formular) |
-| `haus.svg` | home | Standort auf der Karte |
+| `haus.svg` | home | Verwaltung → Installation (S8/AP5; bis dahin ungenutzt) |
 | `klinik.svg` | building-hospital | Zielklinik auf der Karte |
 | `position.svg` | current-location | Meine Position übernehmen |
 | `karte.svg` | map-2 | Auf der Karte wählen |

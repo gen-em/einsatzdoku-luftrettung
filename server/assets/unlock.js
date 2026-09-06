@@ -1,4 +1,4 @@
-/* Einsatzdoku — Entsperren der geschuetzten Angaben an Ort und Stelle.
+/* Gen-EM NAdoku — Entsperren der geschuetzten Angaben an Ort und Stelle.
  *
  * Warum es diesen Baustein gibt:
  *   Die Anmeldung haengt am PHP-Sitzungscookie (30 min Inaktivitaet), der
@@ -53,7 +53,8 @@ const EdUnlock = (() => {
       ' gesperrt. Zum Entsperren bitte das Kontopasswort eingeben — es wird' +
       ' nur im Browser verwendet und nicht übertragen.</p>' +
       '  <div class="feld"><label class="feld-label">Kontopasswort' +
-      '    <input class="feld-eingabe" type="password" autocomplete="current-password">' +
+      '    <input class="feld-eingabe" type="password" name="password"' +
+      ' autocomplete="current-password">' +
       '  </label></div>' +
       '  <p class="meldung" data-msg hidden></p>' +
       '</div>' +

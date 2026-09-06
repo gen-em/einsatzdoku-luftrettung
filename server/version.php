@@ -2506,4 +2506,334 @@ declare(strict_types=1);
  * was gemeint ist. Drei korrelierte Unterabfragen auf `mission_phases`
  * sind dabei ersatzlos entfallen -- der Wert stand als Spalte daneben.
  */
-const WEB_VERSION = '14.2.2';
+/*
+ * 15.0.0 GIBT DEM BETRIEB EINE EIGENE ROLLE.
+ *
+ * Bis hierher gab es zwei Rollen und drei Zielgruppen. Wer Konten anlegt und
+ * Rechtstexte pflegt, und wer den Serverschluessel erzeugt, den Wartungsmodus
+ * schaltet, Migrationen ausfuehrt und die Speichergrenze setzt, war dieselbe
+ * Rolle `admin` — obwohl das Erste ein Konto trifft und das Zweite die ganze
+ * Installation. Die Sichtung in S8 hat das als Erstes gefunden (B-S8-15), und
+ * der Auftraggeber hat daraus eine Rolle gemacht: `betreiberin`, dritter Wert
+ * in `users.role`, mit einer Migration (R75).
+ *
+ * WARUM DAS EINE HAUPTNUMMER IST. Nicht wegen der Spalte — ein ENUM um einen
+ * Wert zu erweitern ist wenig. Sondern weil sich die Wege durch die Anwendung
+ * aendern, und zwar je nachdem, wer angemeldet ist: Ein Admin, der gestern
+ * die Wartungsseite sah, sieht sie ab hier nicht mehr, wenn ihn jemand
+ * zurueckstuft. Dieselbe Begruendung wie bei 7.0.0, die ebenfalls ohne
+ * Datenmodell-Umbau eine Hauptnummer bekam.
+ *
+ * DIE HIERARCHIE IST DAS GANZE MODELL: BetreiberIn ⊇ Admin ⊇ NutzerIn. Es
+ * gibt keine Handlung, die nur ein Admin darf. Deshalb liefert `ist_admin()`
+ * fuer beide obere Rollen wahr und keine bestehende Seite braucht eine zweite
+ * Pruefung — die Aenderung war eine Zeile. Genau dafuer stand die eine
+ * Rollenpruefung (M1-15) seit Web 4.0.0 da; der Kommentar dort hat den Fall
+ * „eine dritte Rolle" wortwoertlich vorhergesagt.
+ *
+ * ALLE VORHANDENEN ADMINS WERDEN BETREIBERINNEN. Die Alternative — nur das
+ * aelteste Konto — waere enger und praktisch falsch: Sie naehme bestehenden
+ * Admins ohne Ankuendigung Zugriff auf Seiten, die sie gestern bedient haben.
+ * Wer zurueckstufen will, tut es danach von Hand.
+ *
+ * ZWEI SCHRANKEN, DIE DAS MODELL TRAGEN, und beide serverseitig: Nur eine
+ * BetreiberIn vergibt oder entzieht die Rolle, und das LETZTE
+ * BetreiberIn-Konto laesst sich weder zurueckstufen noch loeschen. Ohne die
+ * zweite koennte sich eine Installation aus ihrem eigenen Betriebsbereich
+ * aussperren, und der Rueckweg fuehrte ueber die Datenbank — auf geteiltem
+ * Hosting also nirgendwohin.
+ *
+ * MIGRATION ZWINGEND: `2026_09_05_rolle_betreiberin`. Sie ist idempotent (der
+ * zweite Lauf sieht den Wert im ENUM und tut nichts) und nimmt nichts weg.
+ * `install.php` legt das erste Konto ab hier als BetreiberIn an.
+ *
+ * WAS NOCH NICHT DA IST: der Bereich „Betrieb" selbst. Er entsteht in den
+ * folgenden Paketen von S8 (Updates, Hintergrundjobs, Servereinstellungen,
+ * Status, Statistik); bis dahin sieht eine BetreiberIn genau das, was ein
+ * Admin sieht. Die Rolle kommt zuerst, weil jede dieser Seiten mit
+ * `require_betreiberin()` beginnt.
+ */
+/*
+ * 15.1.0 LOEST DIE WARTUNGSSEITE AUF.
+ *
+ * Sie trug neun Bloecke auf einer Flaeche — Wartungsmodus, Schluesselableitung,
+ * Logo, Umgebung, Hintergrundjobs, Job-Ausloeser, Einsaetze ohne Diensttag,
+ * Migrationsliste und den Balken darueber. Backlog Nr. 77 hiess „aufteilen";
+ * die S8-Sichtung hat daraus „aufloesen" gemacht (E-S8-05, B-S8-03: vier
+ * verschiedene Anliegen auf einer Seite).
+ *
+ * DREI NEUE SEITEN, JEDE MIT EINEM ANLIEGEN:
+ *
+ *   betrieb_updates.php   Wartungsmodus und ausstehende Migrationen. Beides
+ *                         gehoert zusammen, weil es DERSELBE Vorgang ist: Der
+ *                         Ablauf eines Updates ist fuenfstufig, und drei
+ *                         Stufen finden hier statt. Die Karte nennt ihn.
+ *   betrieb_jobs.php      Zustand je Job und die drei Ausloeser.
+ *   betrieb_server.php    Speichergrenze, Warnschwellen, Belegung, Ablage.
+ *
+ * Alle drei verlangen `require_betreiberin()` (R75) — sie sind der erste
+ * Inhalt des Blocks BETRIEB, den 15.0.0 vorbereitet hat. Bis AP5 sind sie nur
+ * ueber die Adresse erreichbar; `update.php` traegt uebergangsweise eine Liste
+ * mit den drei Zielen und die Logo-Karte, die in AP3 umzieht.
+ *
+ * WAS DIE SPEICHERGRENZE HIER ZU SUCHEN HAT. Sie stand unter „Backups", galt
+ * aber auch fuer die Komplett-Staende, und die Komplett-Seite verwies mit
+ * einem Satz auf sie (B-S8-06). Jetzt steht sie mit der Belegung an einer
+ * Stelle. Dazu ein ZWEITER Bezug, den es vorher nicht gab: die ganze
+ * Installation gegen den Webspace laut Hosting. Datenbank und Dateien werden
+ * einmal taeglich im Aufraeumjob gemessen (`speicher_lib.php`); der freie
+ * Webspace wird NICHT gemessen, weil `disk_free_space()` auf geteiltem Hosting
+ * den Datentraeger des Hosts zeigt und nicht die Quota. Er ist eine ANGABE.
+ *
+ * DER MIGRATIONSKATALOG STEHT JETZT IN `migration_lib.php`. Zwei Aufrufer
+ * brauchen ihn — die neue Seite und der Notausgang `php update.php`, der ohne
+ * Sitzung laeuft. Ein Katalog an zwei Stellen waere die schlimmste Loesung:
+ * Die Reihenfolge der Migrationen IST der Mechanismus.
+ *
+ * ZWEI BAUSTEINE SIND DAZUGEKOMMEN, beide freigegeben (E-S8-10, E-S8-18):
+ * `codeblock-lang` — der Wertekasten in kleiner Stufe mit „Kopieren", fuer
+ * Werte mit hundert Zeichen statt sechs (Nr. 78) — und `speicher-balken` mit
+ * Legende und Schwellenstrich. Kein neues Symbol, keine neue Farbe.
+ *
+ * KEINE MIGRATION. Alle neuen Werte liegen in `app_state`, das es laengst
+ * gibt: `webspace_gb`, `speicher_db_bytes`, `speicher_dateien_bytes`,
+ * `speicher_stand`.
+ */
+/*
+ * 15.2.0 ORDNET DIE VERWALTUNG.
+ *
+ * Drei Seiten, drei Befunde aus der S8-Sichtung:
+ *
+ * AUS „RECHTSTEXTE" WIRD „INSTALLATION" (E-S8-05, B-S8-10). Impressum,
+ * Datenschutz und das Logo beantworten dieselbe Frage — was zeigt diese
+ * Anlage Menschen, die noch nicht angemeldet sind? Das Logo lag auf der
+ * Wartungsseite und war dort falsch: Der Logo-Standard ist Gestaltung, keine
+ * Wartung. Damit ist der letzte Grund fort, warum `update.php` im Browser
+ * noch etwas anzeigte; sie ist jetzt eine Weiterleitung auf Betrieb →
+ * Updates und bleibt es bis P6 (Nr. 77).
+ *
+ * AUS „BACKUPS" WERDEN „KONTO-BACKUPS" (E-S8-06, B-S8-08). Das Wort hiess
+ * dreierlei: die Pakete der Verwaltung, das `.edbak`, das eine NutzerIn sich
+ * selbst herunterlaedt, und der Komplett-Stand der Installation. Der
+ * Untertitel der Seite sagt jetzt in einem Satz, welches gemeint ist — und
+ * Kennzahl, Filter und Tabellenspalte heissen ueberall gleich. Vorher gab es
+ * VIER Namen fuer ZWEI Filter, und wer den einen suchte, fand den anderen
+ * nicht.
+ *
+ * DIE FREIGABE WIRD SICHTBAR (B-S8-09). Sie war ein Zustand ohne Anzeige:
+ * ein Paket dieses Kontos stand fuer jemand anderen offen, und zu sehen war
+ * das als Plakette an einer Zeile und als Eintrag im Aktionsmenue. Jetzt
+ * sagt eine Zustandszeile in der Karte, fuer wen, seit wann, welches Paket
+ * und was die andere Seite noch tun muss.
+ *
+ * ERSATZLOS ENTFALLEN ist die Karte „Abonnement · ab P5" (B-S8-11). Sie
+ * stand seit Web 9.9.0 auf jeder Kontoseite und wiederholte eine Zusage, die
+ * niemand terminiert hat. R33 steht im Rahmenplan; die Karte entsteht mit
+ * ihrem Inhalt.
+ *
+ * ZWEI BAUSTEINE, beide aus dem freigegebenen Mockup 09: die Logo-Vorschau
+ * (Kachel so hoch wie die Kopfleiste, dunkelblau wie sie) und die Kopfaktion
+ * als Absendeknopf — „Jetzt sichern" ist ein POST, kein Link, und ein
+ * <form> um den Knopf ginge nicht, weil der Kartenkopf schon in einem steht.
+ *
+ * KEINE MIGRATION. Es aendert sich kein Feld und keine Tabelle.
+ */
+/*
+ * 15.3.0 GIBT DEM BETRIEB SEIN BILD.
+ *
+ * ZWEI SEITEN, UND SIE BEANTWORTEN ZWEI VERSCHIEDENE FRAGEN.
+ *
+ * STATUS: „Ist hier etwas zu tun?" Der Befund war die Verstreuung (B-S8-12).
+ * Der Serverschluessel meldete sich als rote Karte bei den Backup-Zielen, die
+ * Schluesselableitung als rote Karte auf der Wartungsseite, der Speicherstand
+ * als Balken unter den Backups, die Job-Fehler als Plakette in einer Liste.
+ * Jede fuer sich richtig; zusammen ergaben sie kein Bild. Wer wissen wollte,
+ * ob diese Installation in Ordnung ist, musste sechs Seiten aufrufen und auf
+ * jeder wissen, worauf zu achten ist.
+ *
+ * Jetzt: vier Karten, eine Ampelzeile je Sache, eine Meldung oben, die zaehlt.
+ * Die Ampel ist eine TABELLE und keine Meinung — blau heisst „in Ordnung",
+ * orange „braucht Aufmerksamkeit und arbeitet", rot „arbeitet nicht", neutral
+ * „nicht eingerichtet". Keine neuen Toene; neu ist die feste Bedeutung.
+ *
+ * Die Seite aendert nichts. Die einzige Ausnahme ist der fehlende
+ * Serverschluessel: Von der Seite, die das Problem meldet, auf eine andere zu
+ * schicken, wo derselbe Knopf steht, waere ein Umweg ohne Zweck.
+ *
+ * STATISTIK: „Was traegt diese Installation?" Konten nach Rolle, Geraete nach
+ * Art, Einsaetze in drei Zeitraeumen, Geraetemodelle als sortierbare Tabelle
+ * mit CSV. Durchgaengig OHNE Demo-Konto — sein Bestand ist erfunden und wird
+ * alle dreissig Minuten aus der Fixture neu hergestellt; ihn mitzuzaehlen
+ * hiesse, 88 erfundene Einsaetze als Nutzung auszugeben.
+ *
+ * ZWEI OFFENE FRAGEN DES KONZEPTS SIND BEANTWORTET:
+ *
+ *   Z-01: Eine letzte Mailzustellung wurde NICHT aufgezeichnet.
+ *         `smtp_eingerichtet()` prueft die config.php, nicht den Mailserver —
+ *         ein falsches Passwort fiel erst auf, wenn jemand einen Setz-Link
+ *         erwartete, der nie ankam. `smtp_send()` vermerkt jetzt Zeitpunkt und
+ *         Erfolg in `app_state`, gekapselt und ohne Datenbankzwang. Ohne den
+ *         Vermerk waere „SMTP-Fehler beim letzten Versand" ein Ampelzustand,
+ *         den es nie zu sehen gaebe.
+ *
+ *   Z-02: Eine Wear-OS-Uhr bekommt NIE eine Geraetezeile. Sie hat weder
+ *         Serveradresse noch Schluessel (E-S4-11) und koppelt nicht; gekoppelt
+ *         ist das Handy. Die im Mockup vorgesehene Zeile „Wear-OS-Uhren" waere
+ *         dauerhaft null gewesen — eine Zeile, die bauartbedingt nie etwas
+ *         zaehlt, sagt nicht „null", sondern verschweigt, dass es hier nichts
+ *         zu zaehlen gibt. Statt der Zeile steht ein Satz.
+ *
+ * KEINE MIGRATION. `smtp_last` und `smtp_last_ok` liegen in `app_state`.
+ *
+ * 15.3.1  ZWEI GEMELDETE FEHLER, beide ausserhalb von S8 aufgefallen.
+ *
+ *   Die KARTE der Tagesuebersicht nutzte ab 1600 px nur ihren oberen Teil.
+ *   Leaflet misst seinen Behaelter einmal beim Anlegen; ab 1600 px waechst
+ *   die Karte aber erst, wenn die Einsatztabelle daneben steht, und die
+ *   entsteht aus nachgeladenen Daten. Gemessen bei 1920 x 1080: Behaelter
+ *   400 x 840 px, Leaflet rechnete mit 400 x 324 px — 516 px ohne Kachel,
+ *   und Herauszoomen half nicht, weil auch der Kachelbereich aus der
+ *   gemerkten Groesse folgt. Behoben mit einem ResizeObserver in
+ *   `attachBaseLayers()`, dem einen Aufruf, den jede Karte macht.
+ *   Betroffen waren `index.php` und `zeitraum.php`.
+ *
+ *   Der TAB-TITEL hiess „<Seite> — Einsatzdoku". Er heisst jetzt
+ *   „<Seite> — Gen-EM NAdoku", wie das Programm.
+ *
+ * KEINE MIGRATION.
+ *
+ * 15.3.2  DIE WORTMARKE HEISST GEN-EM NADOKU. Die Uhr traegt den Namen seit
+ *         Uhr 2.0.0; Web und Handbuch hiessen weiter „Einsatzdoku", und der
+ *         Rahmenplan hatte die Umbenennung fuer P7 (Schritt 13) vorgesehen.
+ *         Auf Anweisung vom 05.09.2026 vorgezogen, weil ein Programm, das
+ *         sich an vier Stellen anders nennt als an fuenf anderen, jeden
+ *         dieser Namen schwaecht.
+ *
+ *         Geaendert: Kopfleiste und Schublade (`ui.php`), Anmeldeseite
+ *         (`login.php`), Passwortseiten (`pw_handling.php`), Einrichter
+ *         (`install.php`), Absendername der System-E-Mails (Vorgabe in
+ *         `install.php` und `config.example.php`), Urheberfeld der GPX-
+ *         (`gpx_lib.php`, `assets/export.js`) und CSV-Ausgabe, die
+ *         Markierungsdateien von Einrichtung und Wiederherstellung, die
+ *         Dateikopf-Kommentare von neun Skripten und die Titel von README,
+ *         Handbuch, Technik, Backlog, Changelog und zwei weiteren Dokumenten.
+ *
+ *         NICHT GEAENDERT: die Langform „Gen-EM Einsatzdokumentation
+ *         Notarzt" in den Texten der System-E-Mails (20 Stellen in sechs
+ *         Dateien). Sie ist der beschreibende Name des Vorhabens, nicht die
+ *         Marke — und sie steht in Betreffzeilen, die Bestandsnutzerinnen in
+ *         ihren Postfaechern wiederfinden. Die Entscheidung darueber liegt
+ *         bei P7. Ebenfalls unveraendert bleibt diese Datei ab hier
+ *         aufwaerts: Sie erzaehlt, was WANN hiess, und waere falsch, wenn man
+ *         den alten Namen darin ueberschriebe.
+ *
+ * KEINE MIGRATION.
+ *
+ * 15.3.3  DAS PASSWORTFELD DER BACKUP-SEITE HEISST WIE DAS DER ANMELDUNG,
+ *         sobald der Schalter „Mein Kontopasswort verwenden" an ist. Ein
+ *         Passwortverwalter entscheidet an `name` und `autocomplete`, ob er
+ *         ein bekanntes Passwort anbietet oder ein neues vorschlaegt. Das
+ *         Feld trug fest `autocomplete="new-password"` und gar kein `name` —
+ *         also sah jeder Verwalter ein neues Feld und bot nichts an, auch in
+ *         dem Augenblick nicht, in dem das Feld nach dem Kontopasswort
+ *         fragte. Jetzt: `name="password"`, und der Schalter setzt
+ *         `current-password` bzw. `new-password`. Derselbe `name` steht am
+ *         Entsperr-Dialog (`assets/unlock.js`), der ohnehin immer nach dem
+ *         Kontopasswort fragt.
+ *
+ *         NICHT GEPRUEFT werden konnte das Verhalten eines echten
+ *         Passwortverwalters — die Pruefumgebung hat keinen. Gemessen ist,
+ *         was der Verwalter liest: `name=password autocomplete=current-password`
+ *         bei angeschaltetem Schalter, wortgleich mit dem Feld der
+ *         Anmeldeseite, und `new-password` im Ausgangszustand.
+ *
+ * KEINE MIGRATION.
+ */
+
+/* ---------------------------------------------------------------------------
+ * 15.4.0  MENUE UND LEISTE DES EINSTELLUNGSBEREICHS (S8/AP5)
+ *
+ * EINE QUELLE FUER DAS MENUE. Die Punkte standen zweimal im Code — einmal
+ * fuer die Leiste, einmal fuer die Uebersichtsseite — und waren
+ * auseinandergelaufen. `ui_einstellungen_punkte()` ist jetzt die eine Stelle;
+ * ein neuer Punkt kostet eine Zeile.
+ *
+ * DREI BLOECKE, DIE KLAPPEN. Fuer eine BetreiberIn stehen siebzehn Punkte
+ * untereinander: gemessen bei 1280 x 900 eine 896 px hohe Liste in einer
+ * 783 px hohen Leiste. Offen sind „Einstellungen" und der Block der aktiven
+ * Seite; was von Hand umgestellt wird, gilt fuer die Sitzung
+ * (`sessionStorage`).
+ *
+ * ZAEHLER AN VIER PUNKTEN — Status, Updates, Hintergrundjobs,
+ * Konto-Backups —, und nur ueber null. Damit die Zahl nicht etwas anderes
+ * sagt als die Seite, auf die sie fuehrt, ist die Erhebung der Statusseite
+ * nach `status_lib.php` gewandert: eine Erhebung, die Seite zeichnet sie,
+ * der Zaehler zaehlt sie. Zwischenspeicher 60 s in `app_state`; warm kostet
+ * er 0,46 ms, die volle Erhebung 8,15 ms.
+ *
+ * UNTERPUNKTE unter dem aktiven Eintrag: die Kartentitel der Seite als
+ * Sprungmarken, mit der obersten sichtbaren Karte fett. Sie entstehen im
+ * Browser aus den Karten selbst — dafuer haben 27 Karten in sieben Dateien
+ * eine `id` bekommen.
+ *
+ * DIE UEBERSICHT STEHT AM SCHREIBTISCH IN DREI SPALTEN, das Demo-Konto hat
+ * statt zweier Erklaerkarten eine, und `.karten-raster` verteilt vier Karten
+ * ohne thematische Ordnung selbst auf zwei Spalten (Betrieb -> Updates:
+ * 1206 px einspaltig, 977 px zweispaltig).
+ *
+ * FUENF NEUE ZEICHEN (Mockup 13) und die Wortmarke aus 15.3.2 sind darin
+ * schon enthalten.
+ *
+ * KEINE MIGRATION. Der Zwischenspeicher der Zaehler legt zwei Schluessel in
+ * `app_state` an, sobald er zum ersten Mal rechnet.
+ */
+/* 15.4.1  S8/AP6: die Geraeteseite nach Mockup 10 (Reihenfolge nach
+ *          Haeufigkeit, Zeile mit Modell und Datum, alle Handlungen im
+ *          Punkte-Menue, „Entkoppeln" statt „Loeschen", Karte „App
+ *          installieren" mit zwei Store-Wegen und dem APK als Rueckfall,
+ *          „Geraet ohne Code" zugeklappt am Ende) · Wertekasten der kleinen
+ *          Stufe an den letzten drei Stellen (Setz-Link, Einladungslink,
+ *          Serverschluessel-Zeile) · Filterreihe: das Suchfeld steht in
+ *          eigener Zeile, die Filter brechen darunter (Backlog Nr. 73).
+ *
+ *          KORREKTURNUMMER, nicht Nebennummer: Es kommt keine Funktion
+ *          hinzu. Was da war, steht anders — und zwei Store-Adressen sind
+ *          als leere Konstanten vorbereitet.
+ */
+/* 15.5.0  ZWEI BEDIENHOEHEN (S8/AP7, E-S8-09, R76). 44 px bleibt die
+ *          Vorgabe; am Zeigergeraet ab 1024 px sind es 36. Alle drei
+ *          Bedingungen muessen gelten — `hover: hover`, `pointer: fine`,
+ *          `min-width: 1024px`: Ein Touch-Laptop mit 1920 px ist ein
+ *          Fingergeraet, ein iPad im Querformat meldet 1024 px. Eigene Token
+ *          bleiben, wie sie sind: Kopfleiste 56, Schalter 46 x 26,
+ *          Aktionsblatt 50 (nur mobil), Suchfeld 48, Sprungmarke 28.
+ *
+ *          Dazu der Schalter aus Backlog Nr. 123: Sein Griff stand am
+ *          rechten Kartenrand, gemessen 832 px vom Ende der Beschriftung bei
+ *          1440 px und 1072 px bei 1920 px. Jetzt steht er daneben; die
+ *          Trefferflaeche bleibt die ganze Zeile.
+ *
+ *          Und ein gesperrtes Eingabefeld sieht endlich gesperrt aus:
+ *          `.feld-eingabe` setzte Flaeche und Schrift selbst und uebermalte
+ *          damit die Graufaerbung des Browsers (Fund aus S8/AP1). Es traegt
+ *          jetzt die Seitenflaeche, gedaempfte Schrift und
+ *          `cursor:not-allowed`.
+ *
+ *          NEBENNUMMER, weil sich das Verhalten der Oberflaeche aendert —
+ *          nicht nur ihr Aussehen: Was am Zeigergeraet 44 px hoch war, ist
+ *          jetzt 36. Keine Migration.
+ */
+/* 15.5.1  DER WARTUNGSBALKEN AUF ALLEN FUENF AUSNAHMESEITEN (S8/AP8).
+ *          `betrieb_statistik.php` stand als einzige der fuenf Seiten, die im
+ *          Wartungsmodus noch antworten, OHNE den Balken da — ausgerechnet
+ *          die, auf der man am laengsten liest. Der Balken ist die einzige
+ *          Stelle, an der ein stehengebliebener Wartungsmodus auffaellt
+ *          (E-S5W-05); eine Luecke darin ist keine Kleinigkeit. Gefunden
+ *          beim Nachrechnen fuer das Handbuch, nicht von einem Pruefmittel —
+ *          die Wartungsprobe zaehlte, DASS die Seite antwortet, nicht WAS.
+ *          Sie misst es jetzt (43 Erwartungen).
+ *
+ *          KORREKTURNUMMER: eine fehlende Zeile und ein veralteter
+ *          Kopfkommentar. Keine Migration.
+ */
+const WEB_VERSION = '15.5.1';

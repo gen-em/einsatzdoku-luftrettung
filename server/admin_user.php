@@ -23,7 +23,7 @@ require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste
  * seine Zeile suchen.
  *
  * Jetzt liegt alles zu EINEM Konto hier: Kontodaten in einem Formular mit
- * einem Speichern, Geraete, Backups, Abonnement (Platz fuer R33) und die
+ * einem Speichern, Geraete, Konto-Backups und die
  * Loeschung als abgesetzte Gefahrenzone. admin_sicherungen.php behaelt nur
  * die REGELN (O9c).
  *
@@ -108,13 +108,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return implode(', ', $t) . ' und ' . $letzt;
         };
         $name = trim((string)($_POST['name'] ?? ''));
-        $role = ($_POST['role'] ?? '') === 'admin' ? 'admin' : 'user';
+        /* DREI ROLLEN, DREI SCHRANKEN (R75, S8/AP1).
+         *
+         * Bis Web 14.2.2 stand hier ein Zweiwegvergleich und genau eine
+         * Schranke: „nicht sich selbst die Admin-Rolle entziehen". Mit der
+         * dritten Rolle kommen zwei dazu, und alle drei sitzen SERVERSEITIG —
+         * das Auswahlfeld unten blendet aus, was nicht angeboten wird, aber
+         * ein POST von Hand kennt das Feld trotzdem.
+         *
+         *  (1) NUR EINE BETREIBERIN VERGIBT ODER ENTZIEHT DIE ROLLE. Ein
+         *      Admin, der 'betreiberin' schickt, koennte sich sonst selbst
+         *      hochstufen — und die Rolle waere keine Grenze, sondern eine
+         *      Beschriftung. Auch das Entziehen gehoert dazu: Ein Admin darf
+         *      eine BetreiberIn nicht zurueckstufen.
+         *  (2) NIEMAND ENTZIEHT SICH SELBST DIE VERWALTUNGSRECHTE. Wer das
+         *      taete, saehe die Seite, auf der er steht, nach dem Absenden
+         *      nicht mehr — und muesste jemand anderen bitten.
+         *  (3) DAS LETZTE BETREIBERIN-KONTO BLEIBT EINE BETREIBERIN. Ohne
+         *      diese Schranke koennte sich eine Installation aus ihrem
+         *      eigenen Betriebsbereich aussperren; der Rueckweg fuehrte ueber
+         *      die Datenbank, und den hat auf geteiltem Hosting niemand.
+         */
+        $role  = rolle_normieren($_POST['role'] ?? '');
+        $rolleAlt = rolle_normieren($u['role'] ?? null);
         $teile = [];
 
-        if ($uid === $userId && $role !== 'admin') {
-            $error = 'Du kannst dir nicht selbst die Admin-Rolle entziehen — '
+        $rollenwechsel = ($role !== $rolleAlt);
+        if ($rollenwechsel && !ist_betreiberin()
+            && ($role === 'betreiberin' || $rolleAlt === 'betreiberin')) {
+            $error = 'Die Rolle „BetreiberIn" vergibt und entzieht nur eine BetreiberIn — '
                    . 'die Rolle wurde nicht geändert.';
-        } elseif ($role !== (string)$u['role']) {
+        } elseif ($rollenwechsel && $uid === $userId && !rolle_darf_verwalten($role)) {
+            $error = 'Du kannst dir nicht selbst die Verwaltungsrechte entziehen — '
+                   . 'die Rolle wurde nicht geändert.';
+        } elseif ($rollenwechsel && $role !== 'betreiberin'
+                  && ist_letzte_betreiberin(db(), $uid, $rolleAlt)) {
+            $error = 'Das ist das letzte Konto mit der Rolle „BetreiberIn". '
+                   . 'Es lässt sich nicht zurückstufen — lege zuerst eine zweite '
+                   . 'BetreiberIn an. Die Rolle wurde nicht geändert.';
+        } elseif ($rollenwechsel) {
             db()->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $uid]);
             $teile[] = 'Rolle';
         }
@@ -207,7 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'sichern') {
         [$ok, $grund, $erg] = edbak_sicherung_erzeugen($uid);
         if ($ok) {
-            $notice = 'Backup erzeugt.'
+            $notice = 'Konto-Backup erzeugt.'
                 . (!empty($erg['verdraengt'])
                     ? ' ' . count($erg['verdraengt']) . ' ältere verdrängt.'
                     : '');
@@ -235,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
-            $error = 'Das Backup liess sich nicht lesen.';
+            $error = 'Das Paket liess sich nicht lesen.';
         } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Kontos überein — es wurde nichts eingespielt.';
@@ -245,12 +277,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Einspielen nicht möglich. ' . $warum;
             } elseif ($weg === 'freigabe') {
                 $error = 'Unmittelbares Einspielen ist gesperrt. ' . $warum
-                       . ' Bitte stattdessen das Backup für dieses Konto freigeben.';
+                       . ' Bitte stattdessen das Paket für dieses Konto freigeben.';
             } else {
                 try {
                     [$okE, $grundE, $bericht] =
                         edbak_paket_zurueckspielen($kennung, $datei, $uid);
-                    if ($okE) { $notice = 'Backup eingespielt.'; }
+                    if ($okE) { $notice = 'Konto-Backup eingespielt.'; }
                     else { $error = (string)$grundE; }
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
@@ -267,13 +299,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
-            $error = 'Das Backup liess sich nicht lesen.';
+            $error = 'Das Paket liess sich nicht lesen.';
         } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Zielkontos überein — es wurde nichts freigegeben.';
         } elseif (edbak_freigeben($kennung, $datei, (int)$ziel['id'])) {
             $notice = 'Freigegeben für ' . $ziel['email'] . '. Die NutzerIn sieht das '
-                    . 'Backup jetzt im eigenen Backup-Bereich und spielt es dort '
+                    . 'Paket jetzt im eigenen Backup-Bereich und spielt es dort '
                     . 'mit ihrem Wiederherstellungsschlüssel ein.';
         } else {
             $error = 'Die Freigabe liess sich nicht speichern.';
@@ -299,9 +331,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht überein — es wurde '
                    . 'nichts gelöscht.';
         } elseif (edbak_paket_loeschen($kennung, $datei)) {
-            $notice = 'Backup gelöscht.';
+            $notice = 'Paket gelöscht.';
         } else {
-            $error = 'Das Backup liess sich nicht löschen.';
+            $error = 'Das Paket liess sich nicht löschen.';
         }
     }
 
@@ -311,6 +343,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $eingabe = trim((string)($_POST['confirm_email'] ?? ''));
         if ($uid === $userId) {
             $error = 'Das eigene Konto kann hier nicht gelöscht werden.';
+        } elseif (ist_letzte_betreiberin(db(), $uid, $u['role'] ?? null)) {
+            /* Dieselbe Zusage wie beim Zurueckstufen (R75), nur der andere
+             * Weg dorthin: Eine Installation ohne BetreiberIn hat keinen
+             * Zugang mehr zu ihrem Betriebsbereich. */
+            $error = 'Das ist das letzte Konto mit der Rolle „BetreiberIn" — es lässt '
+                   . 'sich nicht löschen. Lege zuerst eine zweite BetreiberIn an. '
+                   . 'Es wurde nichts gelöscht.';
         } elseif (!edbak_bestaetigung_passt($eingabe, (string)$u['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht überein — nichts wurde gelöscht.';
         } else {
@@ -341,9 +380,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * Ein Konto zu entfernen und das Backup stehen zu lassen,
                  * OBWOHL das Gegenteil gewählt wurde, wäre die schlechteste
                  * der drei möglichen Ausgänge. */
-                $error = 'Die Backups dieses Kontos liessen sich nicht entfernen — '
-                       . 'das Konto wurde deshalb NICHT gelöscht. Bitte unter '
-                       . '„Backups" nachsehen.';
+                $error = 'Die Konto-Backups dieses Kontos liessen sich nicht '
+                       . 'entfernen — das Konto wurde deshalb NICHT gelöscht. Bitte '
+                       . 'unter „Konto-Backups" nachsehen.';
             } else {
                 /* DIE SPUREN ZUERST, UND AUSDRUECKLICH (F-S2-B, S2/AP1).
                  *
@@ -426,6 +465,19 @@ $zielkonten = db()->prepare('SELECT id, email FROM users WHERE id <> ? ORDER BY 
 $zielkonten->execute([$uid]);
 $zielkonten = $zielkonten->fetchAll();
 
+/* WER BEKOMMT DIE FREIGABE? (S8/AP3, B-S8-09) In der Begleitdatei steht nur
+ * die Kennung des Zielkontos. Fuer die Zustandszeile braucht es die Adresse —
+ * eine Abfrage, und nur dann, wenn ueberhaupt etwas freigegeben ist. Ist das
+ * Zielkonto inzwischen geloescht, bleibt der Platz leer statt einer erfundenen
+ * Adresse; die Freigabe selbst ist damit wirkungslos und laesst sich
+ * widerrufen. */
+$freigabeZiel = null;
+if ($freigabe && (int)($freigabe['ziel_user'] ?? 0) > 0) {
+    $fz = db()->prepare('SELECT email FROM users WHERE id = ?');
+    $fz->execute([(int)$freigabe['ziel_user']]);
+    $freigabeZiel = $fz->fetchColumn() ?: null;
+}
+
 /** Ist das Paket formal lesbar?
  *
  *  Seit S2/AP6 nur noch der KOPF: Bei Fassung 2 ist das das Manifest im ZIP,
@@ -441,7 +493,14 @@ function paket_lesbar(string $kennung, string $datei): bool
 }
 
 $kennung = (string)($u['account_key'] ?? '');
-$rolleText = $u['role'] === 'admin' ? 'Admin' : 'NutzerIn';
+$rolleText = rolle_text($u['role'] ?? null);
+/* Fuer die Anzeige unten: Darf die Angemeldete die Rolle dieses Kontos
+ * ueberhaupt aendern, und ist es die letzte BetreiberIn? Beides wird im
+ * Schreibweg oben noch einmal geprueft — hier entscheidet es nur, was das
+ * Auswahlfeld anbietet und was der Kleintext sagt. */
+$istLetzteBetreiberin = ist_letzte_betreiberin(db(), $uid, $u['role'] ?? null);
+$rolleGesperrt = $istLetzteBetreiberin
+    || (!ist_betreiberin() && rolle_ist_betreiberin($u['role'] ?? null));
 $unterTeile = [e((string)$u['email']), e($rolleText)];
 if (!empty($u['created_at'])) {
     $unterTeile[] = 'seit ' . e(fmt_local($u['created_at'], 'd.m.Y'));
@@ -471,7 +530,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   </form>
   <?php if ($freigabe): ?>
     <form method="post" id="f-widerrufen" hidden
-          data-confirm="Freigabe widerrufen? Die NutzerIn sieht das Backup danach nicht mehr."
+          data-confirm="Freigabe widerrufen? Die NutzerIn sieht das Paket danach nicht mehr."
           data-confirm-ok="Widerrufen">
       <?= csrf_field() ?><input type="hidden" name="action" value="widerrufen">
       <input type="hidden" name="id" value="<?= $uid ?>">
@@ -541,7 +600,11 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         'Der Link konnte nicht per E-Mail zugestellt werden. Er ist eine Stunde '
         . 'gültig — bitte auf einem anderen Weg an die Person selbst weitergeben. '
         . 'Die Ursache des Fehlschlags steht im Fehlerprotokoll des Webspace.') ?>
-    <p class="codeblock"><?= e($setzLink) ?></p>
+    <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Der Link
+             ist über hundert Zeichen lang; in der grossen Stufe stand er
+             gesperrt in Plakatgrösse über drei Zeilen — und ohne Knopf,
+             obwohl er zum Weitergeben da ist. */ ?>
+    <?= ui_codeblock_lang((string)$setzLink, 'Setz-Link') ?>
   <?php endif; ?>
 
   <?php if ($bericht): ?>
@@ -580,11 +643,62 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'name', 'label' => 'Name', 'wert' => (string)($u['name'] ?? ''),
                          'attr' => 'maxlength="120" placeholder="z. B. Vorname Nachname"']); ?>
-          <?php ui_feld(['name' => 'role', 'label' => 'Rolle', 'art' => 'select',
-                         'wert' => (string)$u['role'],
-                         'optionen' => ['user' => 'NutzerIn', 'admin' => 'Admin'],
-                         'klein' => $istIch ? 'Das eigene Konto bleibt Admin.' : null]); ?>
+          <?php
+            /* ROLLENFELD (R75). Drei Zustaende:
+             *
+             *   offen      — die Angemeldete darf die Rolle dieses Kontos
+             *                aendern; angeboten wird, was rollen_auswahl()
+             *                hergibt (BetreiberIn nur fuer eine BetreiberIn).
+             *   gesperrt   — das Feld steht in einem eigenen
+             *                `.feldsatz-gesperrt`-Feldsatz mit `disabled`, und
+             *                ein verstecktes Feld DAHINTER traegt den
+             *                unveraenderten Wert mit. Der Feldsatz ist der
+             *                vorhandene Baustein fuer genau diesen Zweck
+             *                (S3/AP10) — ein blosses `disabled` am Auswahlfeld
+             *                waere UNSICHTBAR: `.feld-eingabe` setzt Farbe und
+             *                Hintergrund selbst und ueberschreibt damit das,
+             *                was der Browser sonst graut. Und OHNE das
+             *                versteckte Feld schickte der Browser gar nichts,
+             *                der Schreibweg lese daraus „NutzerIn" und
+             *                antwortete auf jedes Speichern von Name oder
+             *                Adresse mit einer Rollen-Fehlermeldung.
+             *   eigenes    — Kleintext wie bisher, aber ohne Sperre: Man darf
+             *                sich hochstufen, nur nicht herabstufen (das
+             *                faengt der Schreibweg).
+             *
+             * Das `disabled` ist die ANZEIGE der Regel; die Regel selbst
+             * sitzt oben im Schreibweg und faengt auch einen POST von Hand. */
+            $rolleKlein = null;
+            if ($istLetzteBetreiberin) {
+                $rolleKlein = 'Letztes Konto mit dieser Rolle — es lässt sich weder '
+                            . 'zurückstufen noch löschen.';
+            } elseif ($rolleGesperrt) {
+                $rolleKlein = 'Die Rolle „BetreiberIn" ändert nur eine BetreiberIn.';
+            } elseif ($istIch) {
+                $rolleKlein = 'Die eigenen Verwaltungsrechte lassen sich hier nicht abgeben.';
+            }
+            $rolleOptionen = rollen_auswahl();
+            /* Traegt das Konto eine Rolle, die die Angemeldete gar nicht
+             * vergeben darf, steht sie trotzdem im Feld — sonst zeigte das
+             * Auswahlfeld eine falsche Rolle an. */
+            $rolleWert = rolle_normieren($u['role'] ?? null);
+            if (!isset($rolleOptionen[$rolleWert])) {
+                $rolleOptionen[$rolleWert] = ROLLEN[$rolleWert];
+            }
+            $rolleFeld = ['name' => 'role', 'label' => 'Rolle', 'art' => 'select',
+                          'wert' => $rolleWert, 'optionen' => $rolleOptionen,
+                          'klein' => $rolleKlein];
+            if ($rolleGesperrt): ?>
+            <fieldset class="feldsatz-gesperrt" disabled><?php ui_feld($rolleFeld); ?></fieldset>
+          <?php else:
+            ui_feld($rolleFeld);
+          endif; ?>
         </div>
+        <?php if ($rolleGesperrt): ?>
+          <?php /* AUSSERHALB des gesperrten Feldsatzes — ein `disabled`
+                   fieldset schickt auch versteckte Felder darin nicht mit. */ ?>
+          <input type="hidden" name="role" value="<?= e($rolleWert) ?>">
+        <?php endif; ?>
         <?php ui_feld(['name' => 'email', 'label' => 'E-Mail (Anmeldung)', 'art' => 'email',
                        'wert' => (string)$u['email'], 'pflicht' => true]); ?>
         <div class="listen-form-fuss">
@@ -651,62 +765,115 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
              hergestellt — ein Backup davon waere eine Kopie einer Datei,
              die ohnehin im Git liegt. */ ?>
     <?php if (!$istDemo): ?>
-    <?php ui_karte_start(['titel' => 'Backups', 'zahl' => (string)count($pakete),
-                          'plakette' => ui_plakette($standText, ['ton' => $standTon])]); ?>
+    <?php /* „JETZT SICHERN" IST DIE KARTENAKTION (Mockup 08). Sie stand
+             bisher nur als Knopf am Kartenfuss und ein zweites Mal in der
+             Titelzeile — am Kartenkopf steht sie dort, wo die Karte sagt,
+             worum es geht, und der Fuss bleibt den seltenen Wegen. */ ?>
+    <?php ui_karte_start(['titel' => 'Konto-Backups', 'zahl' => (string)count($pakete),
+                          'id' => 'k-konto-backups',
+                          'plakette' => ui_plakette($standText, ['ton' => $standTon]),
+                          'aktion' => ['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
+                                       'art' => 'blau', 'form' => 'f-sichern']]); ?>
       <?php if ($kennung === ''): ?>
         <?= ui_meldung_markup('warn', 'Diesem Konto fehlt die Kontokennung. Bitte zuerst '
-            . 'die Wartung aufrufen und die Migration ausführen — ohne Kennung lässt '
+            . 'unter Betrieb → Updates die Migration ausführen — ohne Kennung lässt '
             . 'sich das Konto nicht sichern.') ?>
       <?php elseif (!$pakete): ?>
-        <p class="feld-hinweis">Für dieses Konto gibt es noch kein Backup.</p>
+        <p class="feld-hinweis">Für dieses Konto gibt es noch kein Konto-Backup.</p>
+      <?php endif; ?>
+
+      <?php /* ---- Zustandszeile der Freigabe (B-S8-09) --------------------
+           *
+           * DIE FREIGABE WAR EIN ZUSTAND OHNE ANZEIGE. Sichtbar war sie nur
+           * als Plakette „freigegeben" an einer Paketzeile und als Eintrag
+           * „Freigabe widerrufen" im Aktionsmenü — wer nicht danach suchte,
+           * sah nicht, dass ein Paket dieses Kontos gerade fuer jemand
+           * anderen offensteht. Sie sagt jetzt in einem Satz: fuer wen, seit
+           * wann, welches Paket, und was die andere Seite noch tun muss. */ ?>
+      <?php if ($freigabe): ?>
+        <?php
+          $fDatei = (string)($freigabe['datei'] ?? '');
+          $fZeit  = null;
+          foreach ($pakete as $pk) {
+              if ((string)$pk['datei'] === $fDatei) { $fZeit = edbak_zeitpunkt_text($pk['erzeugt']); break; }
+          }
+          $fSeit = !empty($freigabe['erstellt'])
+              ? fmt_local(str_replace(['T', 'Z'], [' ', ''], (string)$freigabe['erstellt']), 'd.m.Y')
+              : null;
+          /* ui_meldung_markup() maskiert seinen Text — Fettdruck geht nur
+             ueber den Auftakt, und der ist genau die eine Angabe, die man
+             sucht: fuer WEN. */
+          $fAuftakt = 'Freigegeben für '
+                    . ($freigabeZiel !== null ? (string)$freigabeZiel : 'ein gelöschtes Konto')
+                    . ($fSeit !== null ? ', seit ' . $fSeit : '') . '.';
+          $fText = ($fZeit !== null ? 'Das Paket vom ' . $fZeit . '. ' : '')
+                 . 'Die NutzerIn spielt es in ihrem eigenen Backup-Bereich mit ihrem '
+                 . 'Wiederherstellungsschlüssel ein; die Verwaltung kann das nicht '
+                 . 'für sie tun.'
+                 . ($freigabeZiel === null
+                     ? ' Das Zielkonto gibt es nicht mehr — die Freigabe läuft ins '
+                       . 'Leere und kann widerrufen werden.'
+                     : '');
+        ?>
+        <?= ui_meldung_markup('info', $fText, $fAuftakt,
+              ui_knopf(['text' => 'Widerrufen', 'art' => 'neutral',
+                        'attr' => ' form="f-widerrufen"'])) ?>
       <?php endif; ?>
       <?php foreach ($pakete as $i => $p):
         $istFreigabe = $freigabe && ($freigabe['datei'] ?? '') === $p['datei'];
         $lesbar = paket_lesbar($kennung, (string)$p['datei']);
         $zeit = edbak_zeitpunkt_text($p['erzeugt']);
+        /* NUR DER BEFUND TRAEGT EINE PLAKETTE (S8/AP3). „lesbar" stand
+           bisher an JEDER Zeile — bei drei Paketen dreimal dasselbe Wort,
+           das nie etwas anderes sagt. Dieselbe Ueberlegung wie bei den
+           Statuskacheln der NutzerInnen-Liste: Null ist kein Befund. */
         $plaketten = $istFreigabe ? ui_plakette('freigegeben', ['ton' => 'blau']) : '';
-        $plaketten .= $lesbar
-            ? ui_plakette('lesbar', ['ton' => 'neutral'])
-            : ui_plakette('nicht lesbar', ['ton' => 'rot']);
+        if (!$lesbar) { $plaketten .= ui_plakette('nicht lesbar', ['ton' => 'rot']); }
         /* HART BESTÄTIGEN, WENN ES DIE LETZTE IST (E24). Bleibt ein weiteres
-           Backup dieses Kontos stehen, genügt die übliche Rückfrage. */
+           Paket dieses Kontos stehen, genügt die übliche Rückfrage. */
         $hart = count($pakete) === 1;
+        $wPaket = ' data-w-datei="' . e((string)$p['datei'])
+                . '" data-w-zeit="' . e($zeit) . '"';
         ui_zeile([
           'text'  => $zeit,
           'klein' => edbak_umfang_text($p),
           'plaketten' => $plaketten,
-          'aktionen' => ui_zeilenaktionen(['titel' => $zeit, 'eintraege' => [
-              ['text' => 'Einspielen', 'href' => '#',
-               'attr' => ' data-dialog="dlg-einspielen" data-w-datei="' . e((string)$p['datei'])
-                       . '" data-w-zeit="' . e($zeit) . '"'],
-              ['text' => 'Löschen', 'art' => 'gefahr', 'href' => '#',
-               'attr' => ' data-dialog="dlg-paket-weg" data-w-datei="' . e((string)$p['datei'])
-                       . '" data-w-zeit="' . e($zeit) . '" data-w-hart="' . ($hart ? '1' : '')
-                       . '"'],
-          ]]),
+          /* „Einspielen" als leiser Knopf, „Löschen" eine Ebene tiefer
+             (Mockup 08 C, Regel 3). `ui_zeilenaktionen()` zeigte beide ab
+             720 px als Knopfreihe — die unumkehrbare Handlung stand damit
+             gleichrangig neben der harmlosen. */
+          'aktionen' =>
+              ui_knopf(['text' => 'Einspielen', 'art' => 'leise', 'typ' => 'button',
+                        'attr' => ' data-dialog="dlg-einspielen"' . $wPaket])
+            . ui_aktionen(['titel' => $zeit, 'id' => 'pa-' . $i, 'eintraege' => [
+                  ['text' => 'Paket löschen', 'gefahr' => true, 'href' => '#',
+                   'symbol' => 'korb',
+                   'attr' => ' data-dialog="dlg-paket-weg"' . $wPaket
+                           . ' data-w-hart="' . ($hart ? '1' : '') . '"'],
+              ]]),
         ]);
       endforeach; ?>
       <p class="feld-hinweis">Aufbewahrung: die letzten <?= edbak_aufbewahrung() ?> Pakete je
-         Konto (Einstellung unter <a href="admin_sicherungen.php">Backups</a>). Einspielen
-         ergänzt, ersetzt nicht; die Administration sieht keinen Klartext.</p>
-      <div class="listen-form-fuss">
-        <?= ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
-                      'art' => 'primaer', 'attr' => ' form="f-sichern"']) ?>
-        <?php if ($pakete): ?>
+         Konto (Einstellung unter <a href="admin_sicherungen.php">Konto-Backups</a>).
+         Das jüngste und ein freigegebenes bleiben immer. Einspielen ergänzt,
+         ersetzt nicht; die Verwaltung sieht keinen Klartext.</p>
+      <?php if ($pakete): ?>
+        <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Für Zielkonto freigeben', 'symbol' => 'tausch',
                         'art' => 'neutral', 'typ' => 'button',
                         'attr' => ' data-dialog="dlg-freigeben"']) ?>
-        <?php endif; ?>
-      </div>
+        </div>
+      <?php endif; ?>
     <?php ui_karte_ende(); ?>
     <?php endif; /* !$istDemo */ ?>
 
-    <?php /* ---- Abonnement: reservierter Platz (R33) ---------------------- */ ?>
-    <?php ui_karte_start(['titel' => 'Abonnement', 'zahl' => 'ab P5']); ?>
-      <p class="feld-hinweis">Tarif, Laufzeit, Zahlungsstand und Rechnungen dieses Kontos.
-         Der Platz ist hier reserviert; der Inhalt kommt mit den Abomodellen
-         (Rahmenplan R33).</p>
-    <?php ui_karte_ende(); ?>
+    <?php /* DIE KARTE „ABONNEMENT · AB P5" IST FORT (S8/AP3, B-S8-11). Sie
+             stand seit Web 9.9.0 als reservierter Platz auf jeder Kontoseite
+             und sagte: Tarif, Laufzeit, Zahlungsstand — „kommt mit den
+             Abomodellen". Ein Kasten, der auf jeder Kontoseite eine Zusage
+             wiederholt, die niemand terminiert hat, ist kein Platzhalter,
+             sondern ein Versprechen. R33 steht im Rahmenplan; dort gehoert
+             es hin, und die Karte entsteht mit ihrem Inhalt. */ ?>
 
     <?php /* ---- Gefahrenzone ---------------------------------------------- */ ?>
     <?php ui_karte_start(['titel' => 'Konto löschen', 'klasse' => 'karte-gefahr',
@@ -718,20 +885,31 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
            vorbei, die sich merkt, welches Konto das Demo-Konto ist.</p>
       <?php elseif ($istIch): ?>
         <p class="feld-hinweis">Das eigene Konto lässt sich hier nicht löschen.</p>
+      <?php elseif ($istLetzteBetreiberin): ?>
+        <?php /* Dieselbe Zusage wie am Rollenfeld (R75) — hier gesagt, wo man
+                 die Handlung versucht, und nicht erst als Fehlermeldung
+                 danach. Der Schreibweg faengt es trotzdem noch einmal. */ ?>
+        <p class="feld-hinweis">Das ist das letzte Konto mit der Rolle
+           <strong>BetreiberIn</strong>. Es lässt sich nicht löschen — sonst hätte
+           diese Installation niemanden mehr, der ihren Bereich <em>Betrieb</em>
+           öffnen kann: Serverbetrieb, Updates, Hintergrundjobs, Speicher,
+           Komplett-Backup und Backup-Ziele. Lege zuerst eine zweite BetreiberIn
+           an; danach lässt sich dieses Konto löschen.</p>
       <?php else: ?>
         <p class="feld-hinweis">Entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
            und Geräte <strong>endgültig</strong> — ohne Papierkorb, nicht rückgängig zu
            machen. Ob danach nichts mehr lesbar ist, hängt von der Wahl unten ab:
-           Bleiben die Backups erhalten, überleben sie die Löschung und erscheinen
-           unter „Backups" als Backup ohne Konto.</p>
+           Bleiben die Pakete erhalten, überleben sie die Löschung und erscheinen
+           unter <a href="admin_sicherungen.php">Konto-Backups</a> als „Backup ohne
+           Konto".</p>
         <form method="post" data-confirm="Konto endgültig löschen?"
               data-confirm-ok="Endgültig löschen">
           <?= csrf_field() ?><input type="hidden" name="action" value="user_delete">
           <input type="hidden" name="id" value="<?= $uid ?>">
-          <?php ui_feld(['name' => 'sicherungen_mit', 'label' => 'Backups dieses Kontos',
+          <?php ui_feld(['name' => 'sicherungen_mit', 'label' => 'Konto-Backups dieses Kontos',
                          'art' => 'select', 'wert' => '1', 'optionen' => [
                              '1' => 'mitlöschen (Vorgabe)',
-                             '0' => 'erhalten — erscheinen als Backup ohne Konto']]); ?>
+                             '0' => 'erhalten — erscheinen als „Backup ohne Konto"']]); ?>
           <?php ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse',
                          'pflicht' => true,
                          'attr' => 'autocomplete="off" placeholder="' . e((string)$u['email']) . '"',
@@ -753,7 +931,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?= csrf_field() ?><input type="hidden" name="action" value="einspielen">
       <input type="hidden" name="id" value="<?= $uid ?>">
       <input type="hidden" name="datei" data-fuell="datei">
-      <div class="dialog-kopf"><h2>Backup einspielen</h2></div>
+      <div class="dialog-kopf"><h2>Konto-Backup einspielen</h2></div>
       <div class="dialog-inhalt">
         <p>Paket <strong data-fuell="zeit"></strong> in
            <strong><?= e((string)$u['email']) ?></strong> einspielen. Vorhandenes bleibt
@@ -777,14 +955,14 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <input type="hidden" name="id" value="<?= $uid ?>">
       <input type="hidden" name="datei" data-fuell="datei">
       <input type="hidden" name="hart" data-fuell="hart">
-      <div class="dialog-kopf"><h2>Backup löschen</h2></div>
+      <div class="dialog-kopf"><h2>Paket löschen</h2></div>
       <div class="dialog-inhalt">
         <p>Paket <strong data-fuell="zeit"></strong> endgültig entfernen.</p>
         <?php if (count($pakete) === 1): ?>
           <?php ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse des Kontos',
                          'pflicht' => true,
                          'attr' => 'autocomplete="off" placeholder="' . e((string)$u['email']) . '"',
-                         'klein' => 'Es ist das letzte Backup dieses Kontos — '
+                         'klein' => 'Es ist das letzte Paket dieses Kontos — '
                                   . 'zur Bestätigung die Adresse abtippen.']); ?>
         <?php endif; ?>
       </div>
@@ -803,13 +981,13 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <input type="hidden" name="id" value="<?= $uid ?>">
       <div class="dialog-kopf"><h2>Für ein Zielkonto freigeben</h2></div>
       <div class="dialog-inhalt">
-        <p>Das freigegebene Backup erscheint im Backup-Bereich des Zielkontos.
-           Eingespielt wird sie dort von der NutzerIn selbst, mit ihrem
-           Wiederherstellungsschlüssel — die Administration sieht keinen Klartext.</p>
+        <p>Das freigegebene Paket erscheint im Backup-Bereich des Zielkontos.
+           Eingespielt wird es dort von der NutzerIn selbst, mit ihrem
+           Wiederherstellungsschlüssel — die Verwaltung sieht keinen Klartext.</p>
         <?php
         $paketwahl = [];
         foreach ($pakete as $p) { $paketwahl[(string)$p['datei']] = edbak_zeitpunkt_text($p['erzeugt']); }
-        ui_feld(['name' => 'datei', 'label' => 'Backup', 'art' => 'select',
+        ui_feld(['name' => 'datei', 'label' => 'Paket', 'art' => 'select',
                  'optionen' => $paketwahl]);
         $zielwahl = ['' => '— Konto wählen —'];
         foreach ($zielkonten as $z) { $zielwahl[(string)$z['id']] = (string)$z['email']; }
@@ -831,4 +1009,4 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   <?php endif; ?>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(['skripte' => ['assets/dialog.js']]); ?>
+<?php ui_seite_ende(['skripte' => ['assets/dialog.js', 'assets/kopieren.js']]); ?>

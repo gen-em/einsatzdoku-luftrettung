@@ -97,9 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $an = ($_POST['versand_auto'] ?? '') === '1';
         if (sz_auto_setzen($an)) {
             $notice = $an
-                ? 'Der Versand läuft ab jetzt mit dem Wartungsjob mit. Wie oft '
+                ? 'Der Versand läuft ab jetzt mit dem Aufräumjob mit. Wie oft '
                 . 'das ist, hängt vom eingerichteten Auslöser ab — nachzusehen '
-                . 'auf der Wartungsseite.'
+                . 'unter Betrieb → Hintergrundjobs.'
                 : 'Der Versand ist abgeschaltet. Die Ziele bleiben eingetragen; '
                 . 'es geht nur nichts mehr von selbst hinaus.';
         } else {
@@ -198,9 +198,9 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php if (!$tabelleDa): ?>
     <?= ui_meldung_markup('fehler', 'Die Tabelle für die Backup-Ziele fehlt '
         . 'noch. Sie entsteht mit der Migration „Backup-Ziele" — bitte '
-        . 'einmal die Wartung aufrufen und die Updates anwenden.',
+        . 'einmal unter Betrieb → Updates die ausstehenden Updates ausführen.',
         'Migration steht aus.') ?>
-    <p class="feld-hinweis"><a href="update.php">Zur Wartung</a></p>
+    <p class="feld-hinweis"><a href="betrieb_updates.php">Zu den Updates</a></p>
   <?php endif; ?>
 
   <?php /* ---- Das Ergebnis der Verbindungsprüfung ------------------------
@@ -212,7 +212,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         e((string)$ergebnis['meldung']),
         'Ziel „' . e((string)$ergebnis['ziel']) . '"') ?>
     <?php if ($ergebnis['schritte']): ?>
-      <?php ui_karte_start(['titel' => 'Was die Prüfung getan hat']); ?>
+      <?php ui_karte_start(['titel' => 'Was die Prüfung getan hat', 'id' => 'k-pruefung']); ?>
         <?php foreach ($ergebnis['schritte'] as $i => $s): ?>
           <?php ui_zeile(['text' => (string)($i + 1) . '. ' . $s]); ?>
         <?php endforeach; ?>
@@ -233,7 +233,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
 
   <?php /* ---- Der Serverschlüssel ------------------------------------- */ ?>
   <?php if (!$schluesselDa): ?>
-    <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt']); ?>
+    <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
       <p class="feld-hinweis">Die Zugangsdaten der Ziele werden verschlüsselt in
          der Datenbank abgelegt. Der Schlüssel dazu steht in
          <code>config.php</code> und damit <strong>nicht</strong> im
@@ -250,7 +250,11 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       <p class="feld-hinweis">Klappt das nicht (weil <code>config.php</code> nicht
          beschreibbar ist), diese Zeile von Hand einfügen, gleich hinter
          <code>return [</code>:</p>
-      <p class="codeblock"><?= e(serverschluessel_zeile($vorschlag)) ?></p>
+      <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Die
+               Zeile ist zum Einfuegen in die `config.php` da — abtippen wird
+               sie niemand. In der grossen Stufe stand sie gesperrt in
+               Plakatgroesse und ohne Knopf. */ ?>
+      <?= ui_codeblock_lang(serverschluessel_zeile($vorschlag), 'Zeile für die config.php') ?>
       <p class="feld-hinweis"><strong>Genau eine Zeile eintragen.</strong> Bei jedem
          Neuladen dieser Seite steht dort ein anderer Schlüssel — welcher es
          wird, ist gleich, aber es darf nur einer sein. Und er gehört ins
@@ -262,15 +266,15 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
 
   <?php /* ---- Versand ----------------------------------------------------
        Der Schalter sagt OB, nicht WANN. Wann etwas läuft, entscheidet der
-       eingerichtete Auslöser (Wartungsseite) — eine zweite Uhr hier wäre
+       eingerichtete Auslöser (Betrieb → Hintergrundjobs) — eine zweite Uhr hier wäre
        eine zweite Wahrheit. */ ?>
   <?php if ($tabelleDa && $schluesselDa): ?>
-    <?php ui_karte_start(['titel' => 'Versand']); ?>
+    <?php ui_karte_start(['titel' => 'Versand', 'id' => 'k-versand']); ?>
       <form method="post">
         <?= csrf_field() ?><input type="hidden" name="action" value="versand_schalter">
         <?php ui_schalter(['name' => 'versand_auto', 'label' => 'Backups automatisch versenden',
                            'an' => $autoAn,
-                           'klein' => 'Der Wartungsjob schiebt neue Pakete auf die '
+                           'klein' => 'Der Aufräumjob schiebt neue Pakete auf die '
                                     . 'aktiven Ziele. Es wird nur ergänzt — auf dem '
                                     . 'Ziel wird nie etwas gelöscht.']); ?>
         <div class="listen-form-fuss">
@@ -305,7 +309,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
 
   <?php /* ---- Die Liste ------------------------------------------------- */ ?>
   <?php if ($tabelleDa): ?>
-    <?php ui_karte_start(['titel' => 'Ziele', 'zahl' => count($ziele)]); ?>
+    <?php ui_karte_start(['titel' => 'Ziele', 'id' => 'k-ziele', 'zahl' => count($ziele)]); ?>
       <?php if (!$ziele): ?>
         <p class="feld-hinweis">Es ist noch kein Ziel eingetragen. Ohne Ziel bleiben
            die Backups dort, wo sie entstehen — auf demselben Server, dessen
@@ -474,7 +478,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'vorschau' => 'drei Protokolle']); ?>
+  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt', 'vorschau' => 'drei Protokolle']); ?>
     <p class="feld-hinweis"><strong>SFTP ist die Empfehlung.</strong> Es verschlüsselt
        nicht nur, es erkennt den Server auch wieder: Beim ersten Prüfen wird der
        Fingerabdruck des Hostschlüssels übernommen, danach bei jeder Verbindung
@@ -495,4 +499,4 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php ui_karte_ende(true); ?>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(); ?>
+<?php ui_seite_ende(['skripte' => ['assets/kopieren.js']]); ?>

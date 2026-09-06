@@ -1,11 +1,17 @@
-# Einsatzdoku — Handbuch
+# Gen-EM NAdoku — Handbuch
 
-*Stand: 24.08.2026 · Für die technische Struktur siehe `Technik.md`, für
+*Stand: 06.09.2026 · Für die technische Struktur siehe `Technik.md`, für
 Änderungen `CHANGELOG.md`.*
 
-## 1. Was ist die Einsatzdoku?
+> **Aufbau.** Kapitel 1 bis 10 gelten für **alle**: die Uhr, die
+> Weboberfläche, die eigenen Daten. **Kapitel 11 (Verwaltung)** und
+> **Kapitel 12 (Betrieb)** folgen den beiden Menüblöcken, die nur Admins
+> bzw. BetreiberInnen sehen — Abschnitt für Abschnitt in der Reihenfolge
+> des Menüs. Wer nur dokumentiert, braucht die beiden nicht.
 
-Die Einsatzdoku dokumentiert Notarzteinsätze direkt vom Handgelenk — luft-
+## 1. Was ist Gen-EM NAdoku?
+
+Gen-EM NAdoku dokumentiert Notarzteinsätze direkt vom Handgelenk — luft-
 gebunden wie bodengebunden (RTH, NEF, NAW): Eine Uhr-App (derzeit für
 Garmin-Uhren: Fenix 6 Pro, Forerunner 945, Venu 3s) erfasst Einsatzphasen
 mit Zeitstempeln, GPS-Tracks und
@@ -241,7 +247,7 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 
 ## 3. Die Web-Oberfläche — Überblick
 
-Die Kopfleiste zeigt links das Logo und den Namen **Einsatzdoku**; am breiten
+Die Kopfleiste zeigt links das Logo und den Namen **Gen-EM NAdoku**; am breiten
 Bildschirm steht der eigene Name daneben (im Profil setzbar, sonst die
 E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6) und
 das Zahnrad für die **Einstellungen**. Sie bleibt beim Scrollen oben stehen.
@@ -257,14 +263,44 @@ darunter der Teil, der zur Seite gehört (Diensttage, Einstellungen oder die
 Filter der Suche). Schließen lässt sie sich auf drei Wegen: über das × oben
 links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 
-**Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie listet Profil,
-**Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
-finden darunter einen zweiten Block **Administration** mit NutzerInnen,
-**Stammdaten systemweit**, Backups, **Backup-Ziele**, **Rechtstexte**,
-Demo-Konto und Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
-fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
-Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
-„Standorte".
+**Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie ist in **drei
+Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
+
+| Block | wer sieht ihn | was darin steht |
+|---|---|---|
+| **Einstellungen** | alle | Profil, Geräte, **Standorte**, **Rettungsmittel**, Backup, Import / Export — Kapitel 3 bis 10 |
+| **Verwaltung** | Admins | NutzerInnen, **Konto-Backups**, **Installation**, Demo-Konto — **Kapitel 11** |
+| **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** — **Kapitel 12** |
+
+Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen Geräten
+untereinander. Abmelden steht getrennt am Ende und fragt sicherheitshalber
+nach. Bis Web 6.3.0 hieß der Punkt für Standorte und Rettungsmittel zusammen
+„Standortdaten"; der alte Link führt weiterhin zu „Standorte". **Stammdaten
+systemweit** hat seit Web 15.4.0 keinen Menüpunkt mehr — die Seite bleibt und
+ist über ihre Adresse erreichbar (Abschnitt 9.4).
+
+**In der Leiste klappen dieselben drei Blöcke auf und zu.** Offen sind
+„Einstellungen" und der Block, in dem die gerade geöffnete Seite steht; die
+übrigen zeigen nur ihren Namen und die Zahl der Einträge dahinter
+(„Betrieb · 7"). Ein Klick auf die Zeile klappt sie auf. Was man dabei
+umstellt, gilt für diese Sitzung — beim nächsten Anmelden steht das Menü
+wieder in der Vorgabe. Der Grund für das Klappen ist Platz: Eine BetreiberIn
+hat siebzehn Menüpunkte, und die passen untereinander in kein übliches
+Browserfenster.
+
+**Eine Zahl am Menüpunkt heißt: hier ist etwas zu tun.** Sie steht an vier
+Punkten und nur dann, wenn sie über null liegt — **Status** (Punkte, die
+Aufmerksamkeit brauchen; rot, sobald einer davon gar nicht arbeitet),
+**Updates** (ausstehende Migrationen), **Hintergrundjobs** (Jobs mit Fehler)
+und **Konto-Backups** (überfällige und nie gesicherte Konten). Die Zahl ist
+höchstens eine Minute alt.
+
+**Unter dem geöffneten Menüpunkt stehen die Karten der Seite** als
+Sprungmarken — kleiner und ohne Symbol, damit sie nicht wie eigene Seiten
+aussehen. Ein Klick springt zur Karte; während man liest, ist die Marke der
+Karte fett, die gerade oben steht. Am Handy stehen die Sprungmarken auch, dort
+ohne Markierung: Die Schublade liegt vor dem Inhalt, und wer sie geöffnet hat,
+sieht die Karten nicht. Ein Sprung schließt sie.
 
 ![Dieselbe Seite bei 390 px und die geöffnete Schublade](bilder/schublade-mobil.png)
 
@@ -280,7 +316,7 @@ gilt überall: Stammdaten, Geräte, NutzerInnen, Papierkorb.
 **Ganz unten auf jeder Seite** steht die Fußzeile — auch vor der Anmeldung.
 Sie ist zweizeilig: oben Lizenz und Versionsnummer, darunter die Verweise auf
 **Impressum** und **Datenschutz**. Beide Seiten sind ohne Anmeldung erreichbar;
-was darin steht, hinterlegt die Administration (Abschnitt 11.3).
+was darin steht, hinterlegt die Verwaltung (Abschnitt 11.5).
 
 Die einzige Seite ohne diese Verweise ist der **Einrichter**: Er läuft, bevor
 die Anwendung eine Datenbank hat, und die beiden Rechtstextseiten brauchen
@@ -364,6 +400,11 @@ Unter dem Zahnrad → **Profil** stehen dein Anzeigename (er erscheint in der
 Kopfleiste neben der Marke), deine Anmelde-Adresse und seit Web 9.7.0 die
 **Logo-Wahl**.
 
+Seit Web 15.0.0 steht dort auch deine **Rolle** — NutzerIn, Admin oder
+BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter dem
+Zahnrad verschieden viel sehen; geändert wird sie in der Verwaltung
+(11.5), nicht hier.
+
 Die Anwendung bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug.
 Welches du siehst, entscheidest du selbst:
 
@@ -386,10 +427,10 @@ Die **Anmeldeseite** zeigt immer den Standard der Installation. Dort ist noch
 niemand angemeldet, und die Wahl hängt am Konto. (Bis Web 9.9.0 zeigte sie
 stattdessen immer den Hubschrauber, gleich wie der Standard eingestellt war.)
 
-Den **Standard der Installation** setzt die Administration unter
-Einstellungen → Wartung. Er wirkt sofort, auch für bereits angemeldete Konten —
-aber nur bei denen, die hier „Standard der Installation" stehen haben. Eine
-getroffene eigene Wahl bleibt unberührt.
+Den **Standard der Installation** setzt die Verwaltung unter
+**Verwaltung → Installation** (11.5). Er wirkt sofort, auch für bereits
+angemeldete Konten — aber nur bei denen, die hier „Standard der Installation"
+stehen haben. Eine getroffene eigene Wahl bleibt unberührt.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -427,9 +468,9 @@ nicht ändern, und „Passwort vergessen" führt für diese Adresse zu nichts.
 Beides ist Absicht — die Zugangsdaten sind öffentlich und müssen es bleiben,
 damit die nächste Person hereinkommt. Alles andere ist offen.
 
-**Und in der Administration** (seit Web 12.4.1): Auf der Kontoseite des
+**Und in der Verwaltung** (seit Web 12.4.1): Auf der Kontoseite des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
-**gesperrt**, die Karte „Backups" fehlt dort ganz, und der Anzeigename
+**gesperrt**, die Karte „Konto-Backups" fehlt dort ganz, und der Anzeigename
 lautet **„Demo NutzerIn"**. Verwaltet wird das Konto ausschließlich über den
 Reiter **Demo-Konto**: anlegen, zurücksetzen, entfernen. Der Grund ist der
 Reset — was auf der Kontoseite eingetragen würde, wäre spätestens nach dreißig
@@ -953,8 +994,6 @@ Lage vor Ort). Das Feld gehört seit Web 3.3.0 zum verschlüsselten Block: Bei
 gesperrter Verschlüsselung ist es deaktiviert und bleibt beim Speichern
 unverändert, und die Suche findet seinen Inhalt erst nach dem Entsperren.
 Ausfüllen ist freiwillig.
-
-
 
 **Abfahrtort.** Unmittelbar unter dem Einsatzort steht, von wo aus ausgerückt
 wurde — **aber nur, wenn dieser Einsatz keine GPS-Aufzeichnung hat** (seit
@@ -1568,6 +1607,20 @@ Datei und kann nicht auseinanderlaufen.
 
 ## 6. Backup
 
+> **Drei Dinge heißen „Backup", und sie sind nicht dasselbe.** Wer das eine
+> sucht und das andere findet, hält am Ende eine Datei in der Hand, die nicht
+> enthält, was er braucht:
+>
+> | | wer macht es | was drin ist | wo |
+> |---|---|---|---|
+> | **Backup** | du selbst | **deine** Einsätze, Diensttage, Stammdaten | Einstellungen → **Backup** (dieses Kapitel) |
+> | **Konto-Backup** | die Verwaltung, je Konto | die Daten **einer** NutzerIn, verschlüsselt mit deren Schlüssel | Verwaltung → **Konto-Backups** (Regeln, 11.4) und die **Kontoseite** (Pakete, 11.1); was es für dich bedeutet: 6.1 |
+> | **Komplett-Backup** | die BetreiberIn, einmal für alles | **alle** Konten, Stammdaten, Geräte, Spuren — jede Tabelle | Betrieb → **Komplett-Backup** (12.6) |
+>
+> Dazu kommen die **Backup-Ziele** (12.7): eine Gegenstelle, auf die die
+> Konto-Backups zusätzlich geschoben werden. Sie sind kein viertes Backup,
+> sondern ein zweiter Ablageort für das zweite.
+
 Unter **Einstellungen → „Backup"** (Zahnrad in der Kopfleiste) lädst du alle
 deine Daten als **eine** verschlüsselte Datei (`.edbak`) herunter — Passwort
 frei wählbar, mindestens 10 Zeichen, wird nirgends gespeichert. In dieser
@@ -1652,7 +1705,10 @@ der Eingabe, wie stark das Gewählte ist. Wer mag, setzt stattdessen das Häkche
 **„Mein Kontopasswort verwenden“** und tippt sein Anmeldepasswort ein — dann
 gibt es ein Passwort weniger zu verwahren, und die Datei ist genauso geschützt
 wie die Daten in der Datenbank. Ob das Passwort stimmt, prüft der Browser
-selbst; der Server bekommt es nicht zu sehen.
+selbst; der Server bekommt es nicht zu sehen. Ist das Häkchen gesetzt, meldet
+sich auch der **Passwortverwalter** und bietet das gespeicherte
+Anmeldepasswort an — das Feld heißt dann für ihn dasselbe wie das auf der
+Anmeldeseite.
 
 Nicht geeignet ist das Kontopasswort, wenn die Datei an jemand anderen gehen
 soll — dann bekommt der Empfänger das Anmeldepasswort mit.
@@ -1684,133 +1740,62 @@ beschädigt" — was beides nicht stimmte.)
 Der Aufbau der Datei ist in `docs/Backup-Format.md` vollständig beschrieben —
 sie lässt sich damit auch ohne dieses Programm entschlüsseln.
 
-### 6.1 Backup durch die Administration
+### 6.1 Konto-Backups durch die Verwaltung
 
-Seit Web 5.9.0 kann die Administration zusätzlich **Backups aller Konten**
-anlegen. Das ist eine Rückfallebene für den Fall, dass in einem Konto etwas
-schiefgeht — sie ersetzt dein eigenes Backup nicht.
+Seit Web 5.9.0 kann die Verwaltung zusätzlich **Konto-Backups** anlegen — je
+Konto ein Paket, das auf dem Server liegt. Das ist eine Rückfallebene für den
+Fall, dass in einem Konto etwas schiefgeht; sie ersetzt dein eigenes Backup
+nicht.
 
-**Die Administration sieht dabei keine Inhalte.** Im Backup stecken die
+> **Drei Backups, drei Namen** (seit Web 15.2.0). **Backup** ist die Datei,
+> die du dir selbst herunterlädst (Abschnitt 6). **Konto-Backup** ist das
+> Paket, das die Verwaltung je Konto anlegt — dieser Abschnitt.
+> **Komplett-Backup** ist der Stand der ganzen Installation (Abschnitt 12.6).
+> Vorher hieß alles drei „Backup", und das Konto-Backup zusätzlich
+> „Admin-Backup".
+
+**Die Verwaltung sieht dabei keine Inhalte.** Im Backup stecken die
 geschützten Angaben genau so verschlüsselt wie in der Datenbank; lesbar werden
 sie erst in einem Browser, der den Schlüssel hat. Die Übersicht in der
-Administration zeigt Zeitpunkt, Anzahl der Einsätze, Diensttage und
+Verwaltung zeigt Zeitpunkt, Anzahl der Einsätze, Diensttage und
 Ruhezeiten, davon die Anzahl im Papierkorb, und die Dateigröße — mehr nicht.
 
-**Wenn dein Konto weiterbesteht**, spielt die Administration ein solches
-Backup unmittelbar zurück; du musst nichts tun. Eingespielt wird immer
-**ergänzend**: Was schon da ist, bleibt unverändert.
+**Wenn dein Konto weiterbesteht**, spielt die Verwaltung ein solches Paket
+unmittelbar ein; du musst nichts tun. Eingespielt wird immer **ergänzend**:
+Was schon da ist, bleibt unverändert.
 
 **Wenn dein Konto neu aufgesetzt wurde**, geht das nicht — und zwar aus einem
 Grund, der sich nicht umgehen lässt: Die geschützten Angaben des alten Backups
 hängen am alten Inhaltsschlüssel, und den öffnet allein dein
-**Wiederherstellungsschlüssel**. Die Administration gibt das Backup dann für
-dein Konto frei. Unter **Einstellungen → „Backup"** erscheint danach ein
+**Wiederherstellungsschlüssel**. Die Verwaltung **gibt** das Paket dann für
+dein Konto **frei**. Unter **Einstellungen → „Backup"** erscheint danach ein
 Abschnitt *Für dich freigegebenes Backup*: Dort gibst du deinen
 Wiederherstellungsschlüssel ein, dein Browser schlüsselt die Angaben auf deinen
 neuen Schlüssel um und spielt sie ein. Solange du eine Freigabe nicht eingelöst
-hast, kann die Administration sie zurücknehmen.
+hast, kann die Verwaltung sie zurücknehmen — auf deiner Kontoseite steht
+seit Web 15.2.0 sichtbar, dass eine Freigabe läuft, für wen und seit wann.
 
 **Grenzen des Verfahrens** — sie gehören genannt, bevor man sich darauf verlässt:
 
 - Es ist eine Rückfallebene gegen **selbstverschuldete Probleme im Konto**,
   **kein Schutz gegen Kontoverlust**. Ohne Wiederherstellungsschlüssel ist ein
-  neu aufgesetztes Konto **nicht** wiederherstellbar — auch die Administration
+  neu aufgesetztes Konto **nicht** wiederherstellbar — auch die Verwaltung
   kann daran nichts ändern, weil der Schlüssel nirgends sonst existiert.
 - Die einzige Voraussetzung ist deshalb nichttechnisch: **Verwahre deinen
   Wiederherstellungsschlüssel.** Er wird bei der Ersteinrichtung einmalig
   angezeigt und danach nie wieder (Abschnitt 5).
-- Es wird **nicht automatisch** gesichert. Wann ein Backup entsteht,
-  entscheidet die Administration von Hand; es gibt nur eine Erinnerung.
-- Je Konto liegen höchstens **zwei** Backups (die Administration kann die
-  Zahl unter „Backups" ändern; bis Web 11.2.0 waren es drei). Das älteste
+- Es wird **nicht automatisch** gesichert. Wann ein Konto-Backup entsteht,
+  entscheidet die Verwaltung von Hand; es gibt nur eine Erinnerung. Der Grund
+  ist derselbe wie oben: Ein nächtlicher Lauf hätte nichts, womit er die
+  geschützten Angaben lesen könnte.
+- Je Konto liegen höchstens **zwei** Pakete (die Verwaltung kann die Zahl
+  unter „Konto-Backups" ändern; bis Web 11.2.0 waren es drei). Das älteste
   wird beim nächsten Sichern verdrängt — nach Alter wird dagegen nie etwas
-  entfernt.
-- Wird dein Konto gelöscht, entscheidet die Administration dabei ausdrücklich,
-  ob die Backups mitgehen. Die Vorgabe ist: **mitlöschen**.
-- Die Backups können zusätzlich auf einen **anderen Server** geschoben
-  werden (Abschnitt 6.2). Ob das eingerichtet ist, weiss die Administration.
-
-### 6.2 Wohin die Backups gehen (nur Administration)
-
-Seit Web 12.1.0 kann die Administration unter **Einstellungen →
-Backup-Ziele** eine Gegenstelle eintragen, auf die die Backups
-geschoben werden — per FTP, FTPS oder SFTP. Der Grund ist schlicht: Ein
-Backup, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
-wenn dieser Server ausfällt.
-
-Nicht zu verwechseln mit dem **Transportziel** eines Einsatzes — das ist die
-Zielklinik und steht unter Stammdaten.
-
-Was dabei zu wissen ist:
-
-- **SFTP ist die Empfehlung.** Es ist das einzige der drei Protokolle, das den
-  Server beim nächsten Mal wiedererkennt. Meldet sich dort plötzlich ein
-  anderer, bricht die Verbindung ab, bevor ein Passwort hinausgeht.
-- **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht.** Das
-  schützt gegen Mitlesen, nicht gegen einen untergeschobenen Server.
-- **FTP überträgt alles im Klartext**, auch das Passwort. Es steht zur
-  Auswahl, weil einfacher Webspace oft nichts anderes anbietet.
-- Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
-  dazu steht in einer Datei, die nicht mitgesichert wird — wer den
-  Datenbankdump hat, hat die Passwörter nicht.
-- **Auf dem Ziel wird nie etwas gelöscht.** Die Regel „höchstens zwei je
-  Konto" gilt für die Ablage auf dem eigenen Server; drüben sammelt sich
-  alles an, bis dort jemand aufräumt.
-
-Für dein Konto ändert sich dadurch nichts: Der Inhalt des Backups bleibt
-verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort
-nicht zu öffnen.
-
-### 6.3 Das Komplett-Backup (nur Administration)
-
-Seit Web 12.2.0 gibt es unter **Einstellungen → Komplett-Backup** einen
-zweiten, grösseren Knopf. Der Unterschied zu allem darüber ist der Zweck:
-
-| | Backup eines Kontos | Komplett-Backup |
-|---|---|---|
-| enthält | die Daten **einer** NutzerIn | **alle** Konten, Stammdaten, Geräte, Spuren — jede Tabelle |
-| hilft gegen | „jemand hat sich vertan" | „der Server ist weg" |
-| wo | Einstellungen → Backups | Einstellungen → Komplett-Backup |
-
-**Was zu tun ist.** Einen Zeitplan setzen (täglich, wöchentlich oder
-monatlich) — mehr braucht es im Regelfall nicht. Der Lauf arbeitet in kleinen
-Portionen im Hintergrund weiter; wie oft er drankommt, hängt an der Wartung.
-Wer sofort einen Stand will, drückt *Jetzt sichern*.
-
-**Wie viele aufbewahrt werden**, steht daneben; Vorgabe sind zwei. Ältere
-werden nach einem erfolgreichen Lauf gelöscht — hier, nicht auf dem
-Backup-Ziel.
-
-**Zwei Wege heraus:**
-
-- *Herunterladen* gibt die Datei **unverschlüsselt** als `.sql.gz`. Das ist
-  die Fassung, die `mysql` oder phpMyAdmin einspielen kann.
-- *Versiegelt herunterladen* verlangt eine Passphrase und gibt die Datei unter
-  dieser Passphrase verschlossen heraus. Das ist die Fassung zum Weitergeben
-  oder für einen USB-Stick. **Die Passphrase wird nirgends gespeichert** — wer
-  sie verliert, hat die Datei verloren.
-
-Was von selbst auf ein Backup-Ziel geschoben wird, ist immer die
-verschlossene Fassung.
-
-**Das Wichtigste steht nicht in der Datei.** Das Komplett-Backup enthält
-absichtlich *nicht* die Datei `config.php` des Servers. In ihr steht der
-Schlüssel, mit dem sich das Backup öffnen lässt — beides zusammen
-aufzubewahren wäre, als klebte der Schlüssel am Schloss. Sie gehört an einen
-anderen Ort, zusammen mit dem Zugang zum Backup-Ziel. Diese drei Dinge
-zusammen heissen **Wiederanlaufpaket**, und ohne sie nützt das beste Backup
-nichts.
-
-**Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
-gebraucht: wenn alles weg ist. Er arbeitet nur auf einer **leeren** Datenbank
-und verlangt einen Nachweis, dass man Zugriff auf das Verzeichnis der
-Anwendung hat. Die Schritte stehen im Runbook (`docs/Technik.md`, Abschnitt 7);
-die Seite selbst führt durch sie hindurch.
-
-**Einmal im Halbjahr ausprobieren.** Ein Backup, das nie zurückgespielt
-wurde, ist eine Vermutung.
-
----
+  entfernt. Das jüngste und ein freigegebenes bleiben immer.
+- Wird dein Konto gelöscht, entscheidet die Verwaltung dabei ausdrücklich,
+  ob die Pakete mitgehen. Die Vorgabe ist: **mitlöschen**.
+- Die Pakete können zusätzlich auf einen **anderen Server** geschoben
+  werden (Abschnitt 12.7). Ob das eingerichtet ist, weiss die Verwaltung.
 
 ## 7. Import und Export
 
@@ -1905,7 +1890,6 @@ lässt, bekommt seit 4.5.1 eine Rückfrage. Vorher wurde die halbe Angabe
 stillschweigend übergangen und **der gesamte Bestand** ausgeleitet — ohne
 Hinweis, nur mit einer größeren Datei als erwartet. Beide Felder leer heißt
 weiterhin „alles"; das ist eine bewusste Angabe.
-
 
 - **CSV (Standard)**: ein Archiv mit allen Feldern, die das System kennt, dazu
   Diensttage, Ruhezeiten, eine Feldbeschreibung und auf Wunsch die GPX-Tracks. Das
@@ -2316,7 +2300,7 @@ möglich.
 
 Zu jeder Zielklinik lassen sich **Koordinaten** hinterlegen, auf denselben drei
 Wegen wie beim Einsatzort (Adresssuche, Koordinatenpaar, Plus Code) und auf drei
-Ebenen: zentral durch die Administration, hier im eigenen Konto und einmalig am
+Ebenen: zentral durch die Verwaltung, hier im eigenen Konto und einmalig am
 einzelnen Einsatz. Wird ein Vorschlag mit hinterlegten Koordinaten übernommen,
 sind sie vorbelegt und lassen sich am Einsatz überschreiben.
 
@@ -2327,8 +2311,9 @@ eingefroren.
 
 ### 9.4 Vordefinierte (systemweite) Stammdaten
 
-Der Admin kann alle sechs Bereiche zusätzlich **systemweit** hinterlegen (siehe
-Abschnitt 11). **Vordefinierte Standorte erscheinen erst in deinen
+Der Admin kann alle sechs Bereiche zusätzlich **systemweit** hinterlegen — auf
+einer eigenen Seite, die zu keinem Menüblock gehört (Kasten am Ende dieses
+Abschnitts). **Vordefinierte Standorte erscheinen erst in deinen
 Auswahllisten, wenn du sie unter „Standorte → Vordefinierte Standorte" angehakt
 hast** — sonst stünden in einem gemeinsam genutzten System alle Standorte aller
 Häuser in jeder Liste. Der Block hieß bis Web 6.3.0 „Zentrale Standorte
@@ -2344,6 +2329,24 @@ Existiert umgekehrt schon ein persönlicher Eintrag, bevor der Admin denselben
 Namen systemweit anlegt, bleibt dein Eintrag bestehen und erhält lediglich einen
 Warnhinweis („identisch mit systemweitem Eintrag") — du kannst ihn dann bei
 Bedarf löschen.
+
+**So kommt die Verwaltung dorthin.** Die Seite pflegt dieselben sechs Bereiche
+wie eine NutzerIn unter Standorte und Rettungsmittel (9.1–9.3), jedoch für
+**alle** Konten gemeinsam; oben rechts steht die Wahl zwischen **Standorte**
+und **Rettungsmittel**. Namensgleiche Einträge werden auch hier abgelehnt;
+existieren bereits persönliche Einträge mit demselben Namen bei einzelnen
+NutzerInnen, weist ein Hinweis darauf hin (keine Blockade). Seit Web 9.10.0
+gilt das auch für **Standorte** — dort fehlte der Hinweis als einzigem der
+sechs Bereiche, und ein systemweiter Standort, den ein Dutzend Konten bereits
+selbst angelegt hatte, entstand ohne jede Warnung.
+
+> **Die Seite hat seit Web 15.4.0 keinen Menüpunkt mehr** (E-S8-14) — und das
+> ist der Grund, warum sie hier steht und nicht in Kapitel 11 oder 12: Sie
+> gehört zu keinem der beiden Blöcke. **Zwei Wege führen hin:** die Adresse
+> `admin_stammdaten.php` (Lesezeichen) und der Verweis „Stammdaten" im Text
+> von Betrieb → Backup-Ziele. Der Grund für den Wegfall: Sie wird einmal bei
+> der Einrichtung gepflegt und danach jahrelang nicht — ein Menüpunkt, den man
+> einmal benutzt, kostet siebzehn Mal Platz.
 
 ---
 
@@ -2367,32 +2370,46 @@ Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
    lädt von selbst nach, sobald es soweit ist — du musst nichts neu laden.
    Bis dahin läuft die Restzeit mit, und du kannst den Vorgang hier abbrechen.
 
-**„Gerät anlegen"** ist die Alternative dazu und erzeugt Geräte-ID und
-API-Schlüssel von Hand — der Schlüssel wird **nur einmal** angezeigt, also
-sofort notieren bzw. eintragen. Man braucht sie, wenn ein Gerät nicht koppeln
-kann. **Deaktivieren**
-sperrt den Upload sofort (z. B. bei Verlust); alle bereits hochgeladenen Daten
-bleiben erhalten, und **Aktivieren** schaltet dasselbe Gerät wieder frei.
+**Die Seite steht in der Reihenfolge, in der man sie braucht** *(seit Web
+15.4.1)*: koppeln, die Geräte ansehen, die App holen — und ganz unten,
+zugeklappt, die Ausnahme „Gerät ohne Code anlegen" (Abschnitt 10.1a).
 
-**Höchstens fünf Geräte je Konto.** Die Seite zeigt den Zählstand („belegt:
-3 von 5"). Deaktivierte Geräte zählen mit — ihre Zugangsdaten bestehen weiter
-und lassen sich mit einem Klick wieder freischalten. Erst **Löschen** gibt
-einen Platz frei. Ist die Grenze erreicht, lässt sich weder ein Gerät anlegen
+**Alle Handlungen an einem Gerät stehen in seinem Menü** — dem Knopf mit den
+drei Punkten am rechten Rand der Zeile, in jeder Bildschirmbreite. Darin:
+**Bezeichnung ändern**, **Deaktivieren** beziehungsweise **Aktivieren** und
+**Entkoppeln**. Deaktivieren sperrt den Upload sofort (etwa bei Verlust); alle
+bereits hochgeladenen Daten bleiben erhalten, und Aktivieren schaltet dasselbe
+Gerät wieder frei.
+
+**„Entkoppeln" hieß bis Web 15.4.1 „Löschen".** Der neue Name sagt, was
+geschieht: Der Zugangsschlüssel wird ungültig, das Gerät kann nichts mehr
+hochladen — und die **Daten bleiben**. „Löschen" las sich, als gingen sie mit.
+
+**Höchstens fünf Geräte je Konto.** Der erste Satz der Seite nennt den
+Zählstand („3 von 5 Plätzen belegt"). Deaktivierte Geräte zählen mit — ihre
+Zugangsdaten bestehen weiter und lassen sich mit einem Klick wieder
+freischalten. Erst **Entkoppeln** gibt einen Platz frei. Ist die Grenze erreicht, lässt sich weder ein Gerät anlegen
 noch ein Code entgegennehmen; die Karte sagt es dann statt des Feldes, und das
 Gerät selbst meldet „Zu viele Geräte / Erst eines im Web löschen".
+
+**Ist ein Gerät neu**, steht in seiner Zeile sieben Tage lang eine orange
+Plakette **„neu"**; ist es deaktiviert, eine neutrale **„deaktiviert"**. Das
+Datum der Kopplung steht in der Kleinzeile darunter, zusammen mit Art, Modell
+und dem letzten Kontakt.
 
 **Du wirst benachrichtigt, wenn ein Gerät hinzukommt.** Nach jeder erfolgreichen
 Kopplung geht eine E-Mail an deine Adresse — mit Gerätekennung, Zeitpunkt und
 dem Weg, das Gerät wieder zu entfernen. Zusätzlich steht auf der Übersicht und
 im Geräte-Reiter ein Hinweis auf alles, was in den letzten sieben Tagen dazukam.
 
-**Kommt dir ein Gerät unbekannt vor, lösche es.** Ab diesem Moment kann es
+**Kommt dir ein Gerät unbekannt vor, entkopple es.** Ab diesem Moment kann es
 nichts mehr hochladen. Bereits hochgeladene Daten bleiben erhalten, damit du
 sie in Ruhe ansehen kannst.
 
 **In der Liste steht, was für ein Gerät es ist** *(seit Web 12.9.0)*: erst die
-Art — **Uhr** oder **Handy** —, dann das Modell, dann Zustand und letzter
-Kontakt; bei einem Handy also etwa „Handy · Google Pixel 8". Wer mehrere Geräte
+Art — **Uhr** oder **Handy** —, dann das Modell, dann das Kopplungsdatum und
+der letzte Kontakt; bei einem Handy also etwa „Handy · Google Pixel 8 ·
+gekoppelt 14.06.2026 · zuletzt gemeldet 04.09.2026". Wer mehrere Geräte
 gekoppelt hat, unterscheidet sie sonst nur an einer selbst vergebenen
 Bezeichnung — und die fehlt beim frisch gekoppelten Gerät gerade.
 
@@ -2423,19 +2440,40 @@ Darüber hinaus ausgewertet wird davon vorerst nichts — die Angabe wird
 gespeichert, damit später überhaupt zählbar ist, welche Geräte im Einsatz sind.
 Bevor eine Auswertung entsteht, wird sie in der Datenschutzerklärung benannt.
 
-### 10.1 Die Android-App herunterladen
+### 10.1 Die App installieren
 
-*Seit Web 12.8.0.* Unter der Geräteliste steht die Karte **„NAdoku für
-Android"** — sofern die Betreiberin eine App-Datei hinterlegt hat. Sie zeigt
-Dateiname, Größe, Fassung und Stand, dazu die **SHA-256-Prüfsumme**: Wer der
-Seite nicht traut, rechnet sie an der heruntergeladenen Datei nach.
+*Seit Web 15.4.1.* Unter der Geräteliste steht die Karte **„App
+installieren"** mit zwei Zeilen — der Weg zur App ist je Gerät ein anderer:
 
-Die App wird hier verteilt und **nicht über einen App-Store**. Beim ersten
-Öffnen fragt Android deshalb nach, ob Installationen aus dieser Quelle
-erlaubt sind — das ist bei einer Verteilung ohne Store der vorgesehene Weg.
+- **Garmin-Uhr:** im Connect-IQ-Store auf dem Handy nach **NAdoku** suchen und
+  auf die Uhr laden. Danach auf der Sync-Seite der Uhr „Gerät koppeln"
+  starten.
+- **Android-Handy oder Wear-OS-Uhr:** über den Play Store.
 
-Steht die Karte nicht da, liegt auf dieser Installation keine App-Datei. Frag
-die Administration.
+**Solange eine Adresse fehlt, steht die Zeile ohne Knopf da** — mit dem Weg
+als Text. Das ist der derzeitige Stand: Der Beitrittslink des internen
+Play-Tests und die Adresse der Uhr-App im Store liegen noch nicht vor. Ein
+Knopf, der ins Leere führte, wäre schlechter als keiner.
+
+**Ohne Play Store: das APK von Hand.** Darunter klappt ein Fach auf, in dem
+die App-Datei liegt, sofern die Betreiberin eine hinterlegt hat: Fassung,
+Größe, Stand und die **SHA-256-Prüfsumme** mit einem Knopf „Kopieren" — wer
+der Seite nicht traut, rechnet sie an der heruntergeladenen Datei nach. Beim
+ersten Öffnen fragt Android nach, ob Installationen aus dieser Quelle erlaubt
+sind; das ist bei einer Verteilung ohne Store der vorgesehene Weg. **Updates
+kommen dann nicht von selbst** — das ist der Grund, warum der Store der
+bessere Weg ist.
+
+Ist das Fach nicht da, liegt auf dieser Installation keine App-Datei. Frag
+die Verwaltung.
+
+### 10.1a Gerät ohne Code anlegen
+
+*Die Ausnahme, zugeklappt am Ende der Seite.* Für Geräte, die keinen Code
+anzeigen können. Du bekommst **Geräte-ID und API-Schlüssel** und trägst sie in
+der App ein — bei Garmin in Garmin Connect unter den App-Einstellungen. Beide
+Werte stehen anschließend in einem Kasten mit Knopf **„Kopieren"**; der
+Schlüssel wird **nur einmal** angezeigt, also sofort eintragen.
 
 ### 10.2 Was die App über die Aufzeichnung sagt
 
@@ -2582,12 +2620,25 @@ koppeln".
 
 ---
 
-## 11. Administration (nur Admin)
+## 11. Verwaltung (Admin)
 
-Die Administration führt zwei Seiten für Konten: die **Liste** aller
-NutzerInnen (11.2) und je Konto dessen **Kontoseite** (11.1). Angelegt wird in
-der Liste, gelöscht auf der Kontoseite — dort gehört die Entscheidung dazu, was
-mit den Backups geschieht.
+**Was andere Konten und die Anlage nach außen betrifft.** Der Block
+**Verwaltung** unter dem Zahnrad hat vier Punkte, und dieses Kapitel folgt
+ihnen:
+
+| Menüpunkt | Abschnitt | wozu |
+|---|---|---|
+| **NutzerInnen** | 11.2, 11.3 | Konten sehen, anlegen, ändern, löschen; je Konto die Kontoseite (11.1) |
+| **Konto-Backups** | 11.4 | die Regeln, die für **alle** Konten gelten |
+| **Installation** | 11.5 | Logo, Impressum, Datenschutzerklärung |
+| **Demo-Konto** | 11.6 | anlegen, zurücksetzen, entfernen |
+
+Angelegt wird in der Liste, gelöscht auf der Kontoseite — dort gehört die
+Entscheidung dazu, was mit den Konto-Backups geschieht.
+
+Alles in diesem Kapitel können **Admin und BetreiberIn**. Was nur eine
+BetreiberIn kann — der Server selbst —, steht in Kapitel 12. Seit Web 15.0.0
+gibt es **drei Rollen**; welche was darf, steht in 11.3 unter „Drei Rollen".
 
 ### 11.1 Die Kontoseite
 
@@ -2602,9 +2653,13 @@ Darunter:
 |---|---|
 | **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
-| **Backups** | Die Backups **dieses** Kontos mit Zeitpunkt, Umfang, Größe und Zustand; dazu „Jetzt sichern" und „Für Zielkonto freigeben". |
-| **Abonnement** | Reservierter Platz. Tarif, Laufzeit und Rechnungen kommen mit den Abomodellen. |
+| **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
+
+> Die Karte **„Abonnement · ab P5"** gibt es seit Web 15.2.0 nicht mehr. Sie
+> war ein reservierter Platz und hat auf jeder Kontoseite eine Zusage
+> wiederholt, für die es keinen Termin gab. Tarif, Laufzeit und Rechnungen
+> kommen mit den Abomodellen — dann als Karte mit Inhalt.
 
 Am breiten Bildschirm stehen die Karten in zwei Spalten, auf dem Handy
 untereinander; dort öffnet ein **„⋯"** je Zeile dieselben Handlungen.
@@ -2618,48 +2673,64 @@ verschickter Link wird dabei ungültig — es gilt immer nur der zuletzt
 verschickte. Kommt die E-Mail nicht weg, **zeigt die Seite den Link an**; er ist
 eine Stunde gültig und darf nur an die Person selbst weitergegeben werden.
 
-**Die Backups dieses Kontos.** Jede Zeile nennt Zeitpunkt, Umfang (wie viele
-Diensttage, Einsätze und Ruhezeiten, wie viel davon im Papierkorb liegt) und
-Größe, dazu eine Plakette: *lesbar*, *freigegeben* oder *nicht lesbar*. Über der
-Liste steht der Stand des Kontos — *aktuell*, *überfällig · n Tage* oder *nie
-gesichert*.
+**Die Konto-Backups dieses Kontos.** Im Kartenkopf steht der Zustand als
+Plakette — *aktuell*, *überfällig · n Tage* oder *nie gesichert* — und rechts
+**„Jetzt sichern"**. Jede Zeile nennt Zeitpunkt, Umfang (wie viele Diensttage,
+Einsätze und Ruhezeiten, wie viel davon im Papierkorb liegt) und Größe. Eine
+Plakette bekommt nur, was etwas zu sagen hat: *freigegeben*, oder *nicht
+lesbar*. Seit Web 15.2.0 steht dort **kein** *lesbar* mehr an jeder Zeile — ein
+Wort, das immer dasselbe sagt, sagt nichts.
 
-- **Einspielen** bringt ein Backup zurück in **dieses** Konto. Zur
-  Bestätigung ist die E-Mail-Adresse des Kontos abzutippen. Eingespielt wird
+- **Einspielen** bringt ein Paket zurück in **dieses** Konto. Zur Bestätigung
+  ist die E-Mail-Adresse des Kontos abzutippen. Eingespielt wird
   **ergänzend**: Vorhandenes bleibt stehen, es wird nichts überschrieben.
-- **Für Zielkonto freigeben** gibt ein Backup an ein **anderes** Konto
-  weiter — der Weg für ein neu aufgesetztes Konto. Die NutzerIn sieht es
-  danach in ihrem eigenen Backup-Bereich und spielt es dort mit ihrem
-  Wiederherstellungsschlüssel ein. Die Administration bekommt zu keinem
+- **Paket löschen** steht im **„⋯"** der Zeile — es ist endgültig, und
+  endgültige Handlungen liegen eine Ebene tiefer. Ist es das **letzte** Paket
+  des Kontos, ist zusätzlich die E-Mail-Adresse abzutippen.
+- **Für Zielkonto freigeben** unten in der Karte gibt ein Paket an ein
+  **anderes** Konto weiter — der Weg für ein neu aufgesetztes Konto. Die
+  NutzerIn sieht es danach in ihrem eigenen Backup-Bereich und spielt es dort
+  mit ihrem Wiederherstellungsschlüssel ein. Die Verwaltung bekommt zu keinem
   Zeitpunkt Klartext zu sehen.
-- **Löschen** entfernt ein Paket endgültig. Ist es die **letzte** Backup des
-  Kontos, ist zusätzlich die E-Mail-Adresse abzutippen.
+
+**Läuft eine Freigabe, sagt die Karte es** (seit Web 15.2.0). Eine blaue Zeile
+über den Paketen nennt, **für wen** freigegeben ist, **seit wann** und
+**welches Paket** — dazu, was die andere Seite noch tun muss, und einen Knopf
+**„Widerrufen"**. Vorher war das nur an einer Plakette und im Aktionsmenü zu
+erkennen: Ein Paket dieses Kontos stand für jemand anderen offen, und wer nicht
+danach suchte, sah es nicht. Gibt es das Zielkonto nicht mehr, steht auch das
+dort — die Freigabe läuft dann ins Leere und kann widerrufen werden.
 
 **Aufbewahrung.** Je Konto bleiben die letzten *n* Pakete stehen (Vorgabe:
-**zwei** seit Web 12.0.0, vorher drei — einstellbar unter „Backups");
-ältere verschwinden beim nächsten Sichern. Zwei bleiben immer: die **jüngste**
-Backup und eine, die gerade **freigegeben** ist. Nach **Alter** wird nie
-etwas entfernt.
+**zwei** seit Web 12.0.0, vorher drei — einstellbar unter „Konto-Backups");
+ältere verschwinden beim nächsten Sichern. Zwei bleiben immer: das **jüngste**
+und eines, das gerade **freigegeben** ist. Nach **Alter** wird nie etwas
+entfernt.
 
 **Konto löschen** entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
 und Geräte endgültig — ohne Papierkorb. Vorher ist zu entscheiden, was mit den
-Backups geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts zurück.
-Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
-„Backups" als Backup ohne Konto. Zur Bestätigung ist die E-Mail-Adresse
-abzutippen.
+Konto-Backups geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts
+zurück. Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
+**Konto-Backups** als „Backup ohne Konto". Zur Bestätigung ist die
+E-Mail-Adresse abzutippen.
 
 ### 11.2 Die Liste der NutzerInnen
 
-Oben stehen vier Zahlen: **Konten**, **Admins**, **Backup überfällig**,
-**nie gesichert**. Sie zählen den ganzen Bestand, und jede ist ein Weg: Ein
-Klick öffnet die Liste, die sie meint.
+Oben stehen vier Zahlen: **Konten**, **Admins**, **Konto-Backup überfällig**,
+**nie Konto-Backup**. Sie zählen den ganzen Bestand, und jede ist ein Weg: Ein
+Klick öffnet die Liste, die sie meint. Seit Web 15.2.0 heißen Zahl, Filter und
+Spalte **gleich** — vorher gab es vier Namen für zwei Filter, und wer den einen
+suchte, fand den anderen nicht.
 
 Darunter die Liste selbst.
 
-- **Suchen** nach Name oder E-Mail-Adresse. Gesucht wird über alle Konten, nicht
-  nur über die angezeigte Seite.
-- **Filtern** über die Plaketten daneben: Alle, Admins, Backup überfällig,
-  Nie gesichert, Ohne Gerät. Die Zahl an einer Plakette sagt, was der Filter
+- **Suchen** nach Name oder E-Mail-Adresse. Das Feld steht seit Web 15.4.1 in
+  einer eigenen Zeile über den Filtern — vorher standen beide nebeneinander,
+  und bei üblicher Schreibtischbreite fiel der letzte Filter allein in eine
+  zweite Zeile. Gesucht wird über alle Konten, nicht nur über die angezeigte
+  Seite.
+- **Filtern** über die Plaketten darunter: Alle, Admins, Konto-Backup
+  überfällig, nie Konto-Backup, Ohne Gerät. Die Zahl an einer Plakette sagt, was der Filter
   **bei der laufenden Suche** ergäbe — deshalb ändert sie sich, wenn im Suchfeld
   etwas steht, während die Zahlen oben stehen bleiben.
 - **Sortieren** durch Klick auf einen Spaltenkopf; ein zweiter Klick dreht die
@@ -2668,11 +2739,11 @@ Darunter die Liste selbst.
   sind („Konten 1–50 von 304"), unten rechts die Seitenzahlen.
 - **Ein Klick auf eine Zeile** öffnet die Kontoseite (11.1).
 
-Die Spalte **Backup** sagt je Konto eines von fünf Worten: *aktuell*,
+Die Spalte **Konto-Backup** sagt je Konto eines von fünf Worten: *aktuell*,
 *überfällig · n Tage*, *nie gesichert*, *ohne Kennung* (ein Konto aus der Zeit
-vor den Admin-Backups — es lässt sich erst sichern, wenn die Wartung
-gelaufen ist) oder *Stand unbekannt* (die Begleitdatei des Kontos ist nicht
-lesbar; die Kontoseite sagt dann, was wirklich da ist).
+vor den Konto-Backups — es lässt sich erst sichern, wenn der Migrationslauf
+unter Betrieb → Updates durch ist) oder *Stand unbekannt* (die Begleitdatei des
+Kontos ist nicht lesbar; die Kontoseite sagt dann, was wirklich da ist).
 
 **Mehrere Konten auf einmal sichern.** Vor jeder Zeile steht ein Kästchen.
 Sobald eines gesetzt ist, erscheint unten eine Leiste: „n ausgewählt · Auswahl
@@ -2686,9 +2757,10 @@ E-Mail-Adresse, Name und Rolle; das Konto entsteht ohne Passwort, und die Person
 bekommt einen Link, mit dem sie es selbst setzt (24 Stunden gültig).
 
 **Löschen** steht nicht in der Liste, sondern auf der Kontoseite (11.1): Dort
-gehört die Entscheidung dazu, was mit den Backups des Kontos geschehen soll.
+gehört die Entscheidung dazu, was mit den Konto-Backups des Kontos geschehen
+soll.
 
-### 11.3 Anlegen, Rollen und Wartung
+### 11.3 Anlegen und Rollen
 
 **Beim Anlegen gibt es drei mögliche Antworten**, und die Seite sagt, welche
 zutrifft:
@@ -2707,7 +2779,428 @@ zutrifft:
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
 Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig.
 
-Unter **„Wartung"** steht in der Karte **„Hintergrundjobs"**, ob die
+#### Drei Rollen
+
+Seit Web 15.0.0 gibt es drei Rollen. Sie stehen nicht nebeneinander, sondern
+**ineinander**: Wer betreibt, kann alles, was ein Admin kann, und wer verwaltet,
+alles, was eine NutzerIn kann.
+
+| Rolle | Was sie kann |
+|---|---|
+| **NutzerIn** | die eigenen Diensttage und Einsätze dokumentieren, eigene Stammdaten, Geräte, Backup, Import und Export — alles unter dem Zahnrad, was mit „ich" zu tun hat |
+| **Admin** | zusätzlich: Konten anlegen, ändern und löschen, Konto-Backups, Installation, Demo-Konto |
+| **BetreiberIn** | zusätzlich: alles, was die **Anlage** betrifft — Status, Statistik, Wartungsmodus, Migrationen, Hintergrundjobs, Speichergrenze, Komplett-Backup und Backup-Ziele (Kapitel 12) |
+
+Warum die dritte Rolle: Eine Fehlbedienung in der Verwaltung trifft **ein**
+Konto, eine im Betrieb die **ganze Installation**. Wer den Wartungsmodus
+einschaltet, schließt alle aus; wer eine Migration ausführt, ändert das
+Datenmodell. Das ist eine andere Art von Verantwortung als „ein Konto anlegen",
+und sie hat deshalb eine eigene Rolle.
+
+**Wer welche Rolle vergibt.** Die Rolle „BetreiberIn" vergibt und entzieht
+**nur eine BetreiberIn**. Ein Admin sieht die Option im Auswahlfeld gar nicht —
+sonst könnte er sich selbst hochstufen. Alles andere (NutzerIn ↔ Admin) darf
+jede Person mit Verwaltungsrechten.
+
+**Was geschützt ist.** Das **letzte** Konto mit der Rolle BetreiberIn lässt
+sich weder zurückstufen noch löschen. Beide Stellen sagen es, bevor man es
+versucht: Das Rollenfeld ist abgeschaltet und trägt den Grund als Kleintext,
+und statt des Löschformulars steht ein Absatz. Wer dieses Konto wirklich
+loswerden will, legt zuerst eine zweite BetreiberIn an.
+
+Außerdem lässt sich niemand die **eigenen** Verwaltungsrechte entziehen — man
+sähe die Seite, auf der man gerade steht, nach dem Absenden nicht mehr.
+
+**Bei einer bestehenden Installation** sind mit dem Update auf Web 15.0.0 alle
+bisherigen Admins zu BetreiberInnen geworden. Niemand hat dabei Zugriff
+verloren. Wer zurückstufen will, tut es danach von Hand. Bei einer **neuen**
+Installation ist das erste Konto — das aus der Ersteinrichtung — die
+BetreiberIn.
+
+Die **eigene Rolle** steht im Profil (3.1a). Sie erklärt, warum zwei Konten
+unter dem Zahnrad verschieden viel sehen.
+
+### 11.4 Konto-Backups
+
+Unter **„Konto-Backups"** stehen seit Web 9.10.0 nur noch die Dinge, die für
+**alle** Konten gelten. Der Untertitel sagt seit Web 15.2.0, welches der drei
+Backups gemeint ist: *Pakete, die die Verwaltung je Konto anlegt — nicht die
+Backups, die NutzerInnen selbst herunterladen.* Wer ein bestimmtes Paket
+sucht, ist hier falsch:
+
+| Was du willst | Wo es steht |
+|---|---|
+| Welche Regeln gelten für alle Konten? | **Konto-Backups** |
+| Welche Konten sind überfällig? Mehrere auf einmal sichern | **NutzerInnen** (Kachel „Konto-Backup überfällig" bzw. „nie Konto-Backup") |
+| Die Pakete **eines** Kontos einspielen, freigeben, löschen | Die **Kontoseite** dieses Kontos (11.1) |
+| Wie viel Platz belegt ist, und wo die Ablage liegt | **Betrieb → Servereinstellungen** |
+
+Oben vier Zahlen: Pakete samt Größe, Konten, *Konto-Backup überfällig*, *nie
+Konto-Backup*. Die letzten beiden sind anklickbar und öffnen die
+NutzerInnen-Liste mit genau diesem Filter — und heißen dort wortgleich.
+
+**Regeln.** Drei Einstellungen, ein Speichern:
+
+- **Erinnerung nach** — nach wie vielen Tagen ein Konto als überfällig gilt
+  (Vorgabe 30).
+- **Aufbewahrung je Konto** — wie viele Pakete je Konto liegen bleiben (Vorgabe
+  **2** seit Web 12.0.0, vorher 3). Ältere werden beim nächsten Sichern
+  gelöscht; das jüngste und ein freigegebenes nie. Bis Web 9.9.0 war das eine
+  feste Zahl im Programm.
+
+  > **Wer die Zahl nie angefasst hat, verliert beim nächsten Sichern je Konto
+  > den ältesten von drei Ständen.** Das steht hier und nicht im Kleingedruckten:
+  > Die Rückmeldung des Laufs nennt jede verdrängte Datei, und wer drei behalten
+  > will, trägt drei ein.
+
+- **Erinnerung an Admins per E-Mail** — aus Vorsicht standardmäßig **aus**.
+
+> **Speichergrenze und Warnschwellen stehen seit Web 15.1.0 nicht mehr hier**,
+> sondern unter **Betrieb → Servereinstellungen**. Sie gelten für Konto-Backups
+> *und* Komplett-Backups zusammen und sind damit eine Einstellung der
+> Installation, keine der Konten — dass sie unter „Backups" standen und die
+> Komplett-Seite mit einem Satz auf sie verwies, war einer der Gründe für die
+> Neuordnung. Ist die Grenze erreicht, wird **nicht mehr gesichert**; es wird
+> nichts gelöscht und nichts überschrieben. Ein Backup, das ein anderes
+> wegräumt, um selbst zu passen, wäre das Gegenteil einer Rückfallebene.
+
+**Die Erinnerungsmail** nennt die überfälligen und die nie gesicherten Konten
+mit Adresse und Alter des letzten Backups — keine Namen und keine Zahlen aus
+den Konten, denn eine Mail liegt unverschlüsselt im Postfach. Sie geht an alle
+Admins mit gesetztem Passwort.
+
+> **Sie hängt an einem Zeitgeber.** Die Erinnerung fährt auf dem täglichen
+> Aufräumjob mit (Betrieb → „Hintergrundjobs"). Ist dort ein Zeitplan
+> eingerichtet, kommt sie zuverlässig — höchstens einmal je Woche und nur, wenn
+> es etwas zu melden gibt. Ohne Zeitplan hängt sie an der Benutzung: Der Job
+> startet dann bei der ersten Anfrage des Tages, und wird die Anwendung zwei
+> Wochen nicht angefasst, kommt die Mail zwei Wochen später.
+
+**„Alle sichern"** oben rechts sichert **alle** Konten mit Kontokennung. Sind
+es sehr viele, hört die Reihe nach etwa 20 Sekunden auf und sagt, wie viele
+geschafft und wie viele übrig sind. Ein zweiter Klick macht **genau dort**
+weiter, und der Wartungsjob arbeitet den Rest ohnehin in Schüben ab; solange
+ein Auftrag läuft, steht sein Stand oben auf der Seite.
+
+> **Bis Web 11.1.1 gab es keinen Merkzettel.** Die Konten wurden nach dem Alter
+> ihres letzten Backups sortiert, und der zweite Klick sollte deshalb von
+> selbst weitermachen. Das trug nur, solange sich die Konten um mindestens
+> einen ganzen Tag unterschieden — wer heute alle sicherte, hatte danach lauter
+> Nullen, und die letzten Konten kamen unter Umständen nie dran. Jetzt merkt
+> sich der Auftrag, wie weit er ist: **jedes Konto genau einmal**, und ein
+> Abbruch verliert höchstens das laufende.
+
+**Automatisch entsteht kein Backup.** Nächtliche Backups je Konto sind
+bewusst nicht vorgesehen: Sie bräuchten den Inhaltsschlüssel, und den hat der
+Server nicht.
+
+**Die Karte „Ablage" gibt es seit Web 15.2.0 nicht mehr.** Pfad, Zustand,
+Belegung und Reste stehen unter **Betrieb → Servereinstellungen** — dort, wo
+auch die Grenze steht, gegen die sie gemessen werden. Ist die Ablage nicht
+beschreibbar, sagt das eine Meldung oben auf der Seite; ohne beschreibbare
+Ablage entsteht kein Konto-Backup.
+
+**Backups ohne Konto** steht zugeklappt am Rand: Ordner, zu deren Konto es
+keine Zeile mehr gibt — der Fall „Konto gelöscht und neu aufgesetzt". Sie
+überleben die Löschung mit Absicht; genau dafür sind sie da. Seit Web 15.2.0
+steht dort **eine Zeile je Ordner** statt je Paket, mit der Kontokennung als
+Titel und der Herkunft darunter. Daneben zwei leise Knöpfe — **Einspielen** und
+**Freigeben** —, und im **„⋯"** die beiden endgültigen Wege: *Einzelnes Paket
+löschen* und *Ganzen Ordner löschen*. Welches Paket gemeint ist, wird im Dialog
+gewählt; jüngstes zuerst. An den Rückfragen ändert sich nichts: Vor dem
+Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
+
+**„Was hier gilt"** am Ende der Seite fasst zusammen, was die drei Backups
+unterscheidet, warum Konto-Backups nie von selbst entstehen, wie die Freigabe
+funktioniert und wohin die Pakete von hier aus gehen.
+
+### 11.5 Installation
+
+Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: das
+**Logo**, das **Impressum** und die **Datenschutzerklärung**. Bis Web 15.1.0
+hieß die Seite „Rechtstexte", und das Logo lag auf der alten Seite „Wartung"; die alte
+Adresse führt weiterhin hierher.
+
+**Das Logo** links wählt zwischen *Hubschrauber (RTH)*, *Fahrzeug (NEF)* und
+*wechselnd*. Es ist der **Standard dieser Installation** — er gilt für die
+Anmeldeseite und für jedes Konto, das im Profil keine eigene Wahl getroffen
+hat; eine getroffene Wahl bleibt unberührt. Die Änderung wirkt sofort, auch für
+bereits angemeldete Konten. *Wechselnd* würfelt je Anmeldung neu; innerhalb
+einer Sitzung bleibt das Logo stehen, damit es beim Blättern nicht springt. Die
+Kachel daneben zeigt, was gerade gilt. Das Logo hat einen **eigenen** Knopf —
+es soll nicht auf einen halbfertigen Rechtstext warten.
+
+**Impressum und Datenschutzerklärung** stehen rechts, mit **„Ansehen"** im
+Kartenkopf: Der Link öffnet die öffentliche Seite. Beide sind **ohne
+Anmeldung** erreichbar und in jeder Fußzeile verlinkt. Sie teilen sich eine
+Speichern-Leiste, und die nennt, **was** ungespeichert ist.
+
+> **Die Anwendung liefert keinen Text mit.** Was in Impressum und
+> Datenschutzerklärung steht, ist Sache des Betreibers — eine mitgelieferte
+> Datenschutzerklärung wäre eine Rechtsauskunft, die dieses Projekt nicht geben
+> kann. Solange nichts hinterlegt ist, zeigen die Seiten: „Der Betreiber dieser
+> Installation hat noch kein Impressum hinterlegt." Als Verwaltung siehst du
+> dort zusätzlich den Weg hierher.
+
+**Geschrieben wird in eingeschränktem Markdown.** Erlaubt sind vier Dinge:
+
+| Schreibweise | Ergebnis |
+|---|---|
+| `## Überschrift` | eine Überschrift (`###` für eine kleinere) |
+| Leerzeile dazwischen | ein neuer Absatz. Zeilen **ohne** Leerzeile bleiben ein Absatz mit Umbrüchen — so setzt man eine Anschrift untereinander |
+| `- Punkt` oder `1. Punkt` | eine Aufzählung bzw. Nummerierung |
+| `[Text](https://…)` | ein Link. Auch `mailto:` und eigene Seiten wie `datenschutz.php` |
+
+**HTML wird nicht ausgeführt, sondern angezeigt.** Wer `<b>fett</b>` schreibt,
+sieht `<b>fett</b>` auf der Seite stehen. Das ist Absicht: Diese beiden Seiten
+sind die einzigen, auf denen fremder Text zu Struktur wird, und die einzige
+sichere Regel dafür ist, gar kein HTML durchzulassen. Aus demselben Grund gibt
+es keine Bilder — sie würden von einem fremden Server geladen, und die Anwendung
+lädt zur Laufzeit nichts von außen.
+
+**Das Standdatum setzt du selbst.** Es erscheint als „Stand: …" am Ende der
+Seite; leer lassen heißt: kein Datum. Es wird **nicht** automatisch gesetzt —
+bei einem Rechtstext ist das Datum eine Aussage darüber, auf welchem Stand der
+Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
+
+**Die Vorschau zeigt den zuletzt gespeicherten Stand**, nicht das gerade
+Getippte. Sie entsteht auf dem Server, mit demselben Renderer wie die
+öffentliche Seite.
+
+### 11.6 Demo-Konto
+
+Unter **Verwaltung → Demo-Konto** wird das Demo-Konto **angelegt**,
+**zurückgesetzt** oder **entfernt**. Was es ist, wie es sich alle dreißig
+Minuten selbst zurücksetzt und was darin nicht geht, steht in Abschnitt 3.2 —
+dort aus Sicht dessen, der es benutzt.
+
+Zwei Dinge, die nur die Verwaltung betreffen: Auf der **Kontoseite** des
+Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
+abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
+
+---
+
+## 12. Betrieb (BetreiberIn)
+
+**Der Server selbst.** Dieser Block erscheint nur für die Rolle
+**BetreiberIn** (11.3) und hat sieben Punkte — dieses Kapitel folgt ihnen:
+
+| Menüpunkt | Abschnitt | wozu |
+|---|---|---|
+| **Status** | 12.1 | eine Seite ansehen und wissen, ob etwas zu tun ist |
+| **Statistik** | 12.2 | was diese Installation trägt: Konten, Geräte, Einsätze |
+| **Updates** | 12.3 | Wartungsmodus und ausstehende Datenbank-Updates |
+| **Hintergrundjobs** | 12.4 | ob die regelmäßige Arbeit läuft, und die drei Auslöser |
+| **Servereinstellungen** | 12.5 | Speichergrenze, Warnschwellen, Belegung, Ablage |
+| **Komplett-Backup** | 12.6 | die ganze Installation in eine Datei |
+| **Backup-Ziele** | 12.7 | wohin die Konto-Backups zusätzlich geschoben werden |
+
+**Der Unterschied zu Kapitel 11 in einem Satz:** Die Verwaltung kümmert sich um
+**Konten**, der Betrieb um die **Anlage**. Wer den Betrieb sieht, sieht auch
+die Verwaltung.
+
+**Wo früher „Wartung" stand**
+
+Bis Web 15.0.0 trug sie neun Blöcke auf einer Fläche: Serverbetrieb, Logo,
+Umgebung, Schlüsselableitung, Hintergrundjobs, Auslöser, Einsätze ohne
+Diensttag und das Datenbank-Update. Seit Web 15.1.0 ist sie **aufgelöst**, und
+jede Seite trägt ein Anliegen. Was wohin gegangen ist:
+
+| Was du suchst | Wo es jetzt steht |
+|---|---|
+| Wartungsmodus, ausstehende Updates, Fassung | Betrieb → **Updates** |
+| Zustand der Hintergrundjobs, die drei Auslöser, das Token | Betrieb → **Hintergrundjobs** |
+| Speichergrenze, Warnschwellen, Belegung, Ablage | Betrieb → **Servereinstellungen** |
+| Logo der Installation | Verwaltung → **Installation** |
+| Schlüsselableitung, Umgebung (PHP, Zeitzone) | Betrieb → **Status** |
+| Einsätze ohne Diensttag | **entfallen** — jede NutzerIn sieht ihre eigenen als „Zuordnung offen" in der Diensttage-Leiste (8.1) und ordnet sie selbst zu |
+
+Die alte Adresse führt weiter zum Ziel; ein Lesezeichen bleibt gültig.
+
+### 12.1 Status
+
+**Eine Seite, die man ansieht und dann weiß, ob etwas zu tun ist.** Bis
+Web 15.2.0 lag diese Auskunft verstreut: Der Serverschlüssel meldete sich bei
+den Backup-Zielen, die Schlüsselableitung auf der alten Seite „Wartung", der
+Speicherstand unter den Backups, ein Job-Fehler als Plakette in einer Liste.
+Wer wissen wollte, ob die Installation in Ordnung ist, musste sechs Seiten
+aufrufen.
+
+Oben steht eine Meldung mit einer Zahl — *„2 Punkte brauchen Aufmerksamkeit"*
+oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
+**Hintergrundjobs** und **Backups**, je Sache eine Zeile mit einer Plakette.
+
+**Die Plakettenfarbe bedeutet auf dieser Seite überall dasselbe:**
+
+| Farbe | heißt |
+|---|---|
+| **blau** | Es ist in Ordnung. |
+| **orange** | Es braucht Aufmerksamkeit, arbeitet aber. |
+| **rot** | Es arbeitet nicht — oder es geht dabei etwas verloren. |
+| grau | Nicht eingerichtet, oder eine reine Zahl ohne Wertung. |
+
+**Die Seite ändert nichts.** Jede Zeile führt auf die Seite, auf der sich
+etwas ändern lässt. Die einzige Ausnahme ist der fehlende **Serverschlüssel** —
+ohne ihn gibt es weder Komplett-Backup noch Versand auf ein Backup-Ziel, und
+der Weg dorthin ist ein Knopf.
+
+**Die Zahlen sind nicht alle gleich alt.** Wartungsmodus, Migrationen, Jobs,
+Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von
+Datenbank und Dateien kommt aus der täglichen Messung im Aufräumjob; die
+Zeile „Datenbank" sagt, wann sie entstanden ist.
+
+### 12.2 Statistik
+
+**Was diese Installation trägt** — Konten, Geräte, Einsätze. Rein lesend,
+keine Ampel: Der Status bewertet, die Statistik zählt.
+
+> **Ohne Demo-Konto**, und zwar in jeder Zahl. Sein Bestand ist erfunden und
+> wird alle dreißig Minuten neu aus einer Vorlage hergestellt; ihn
+> mitzuzählen hieße, erfundene Einsätze als Nutzung auszugeben. „Von 11
+> Konten" meint elf echte.
+
+- **Konten** nach Rolle, dazu wie viele ohne Gerät sind, und eine Tabelle
+  *zuletzt angemeldet / neu angelegt* über 7 Tage, 30 Tage und 6 Monate.
+- **Geräte** nach Art — Garmin-Uhren, Android-Handys, deaktivierte —, dazu
+  *zuletzt gemeldet / gekoppelt* über dieselben Zeiträume.
+- **Einsätze**: Zahl, wie viele NutzerInnen einen Einsatz hatten, und zwei
+  Durchschnitte — je aktiver NutzerIn und je NutzerIn gesamt.
+- **Gerätemodelle** als Tabelle: Gerät, Hersteller, Art, Zahl und Anteil.
+  Ein Klick auf einen Spaltenkopf sortiert; **„Als CSV"** im Kartenkopf lädt
+  dieselben Spalten als Datei herunter, für Excel gemacht (Semikolon,
+  Umlaute richtig).
+
+**Gezählt wird nach Diensttag**, wie in der eigenen Statistik — nicht nach
+dem Beginn des Einsatzes. Sonst fiele ein Einsatz von 23:50 bis 00:20 in
+einen anderen Zeitraum als der Dienst, zu dem er gehört. Der Papierkorb zählt
+nicht mit. „6 Monate" sind 180 Tage.
+
+> **Wear-OS-Uhren erscheinen hier nicht**, und das ist kein Fehler: Die
+> Uhr-App kennt weder Serveradresse noch Schlüssel. Sie schickt ihre
+> Ereignisse an das Handy, und das Handy sendet — gekoppelt ist also das
+> Handy. Eine verlorene Uhr gibt keinen Zugang preis; das ist der Zweck
+> dieser Bauform.
+
+> **Der Hersteller steht nirgends gespeichert**, er wird abgeleitet: Eine
+> Uhr, die koppelt, ist eine Garmin-Uhr; bei einem Handy gilt das erste Wort
+> des Modellnamens, weil der Name aus Hersteller und Modell zusammengezogen
+> ist. Eine Faustregel, keine Zusage.
+
+### 12.3 Updates
+
+Zwei Karten, ein Vorgang. Oben der **Wartungsmodus** mit dem fünfstufigen
+Ablauf als Kurzform, darunter die **ausstehenden Updates**.
+
+Das bloße Öffnen der Seite ändert nichts — sie zeigt erst an, was anstünde,
+und wartet auf den Knopf **„Ausstehende ausführen"**.
+
+**Wann du hier hin musst:** nach jedem Code-Update, das die Datenbank ändert.
+Ohne diesen Aufruf bleibt die Anwendung auf dem alten Datenbankstand stehen —
+sie sagt es auf dieser Seite und im Status (12.1), aber sie tut es nicht von
+selbst. Auf der Kommandozeile geht es auch: `php update.php` läuft ohne
+Sitzung, für den Fall, dass die Anmeldung selbst von einer Migration abhängt.
+
+**Gezeigt wird nur, was aussteht.** Bis Web 15.0.0 standen alle 43 Migrationen
+da, davon 41 mit „Bereits angewendet" — man musste scrollen, um die zwei
+Zeilen zu finden, um die es ging. Die ausgeführten liegen jetzt zugeklappt in
+der Karte **„Ausgeführt"** darunter. Diese Tabelle steht **auf dem Kopf**:
+neueste Einträge oben, mit einer Spalte **„Web"**, die die Fassung nennt, mit
+der das Update ausgeliefert wurde. Ausgeführt werden die Updates weiterhin in
+ihrer ursprünglichen Reihenfolge — sie bauen aufeinander auf; gedreht ist
+allein die Anzeige.
+
+Jede Zeile trägt ihren Stand als Plakette: **steht aus** (orange),
+**blockiert** (rot) oder **Fehler** (rot). Eine *blockierte* Migration würde
+eine Spalte löschen, in der noch Daten stehen; sie läuft nur, wenn du das
+Kästchen vor ihrer Zeile setzt — und dieses Kästchen heißt: **Die Daten sind
+gesichert.**
+
+**Scheitert eine Migration, hält die Kette an.** Was dahinter stand, bleibt
+unangetastet und steht als „NICHT MEHR VERSUCHT" da — der nächste Lauf nimmt
+es sich vor, sobald die Ursache behoben ist.
+
+Über der Liste nennt eine Meldung das **jüngste Komplett-Backup** mit Alter.
+Gibt es keines, ist die Meldung eine Warnung: Migrationen können Spalten und
+Daten unwiderruflich entfernen, und dagegen schützt nur das Komplett-Backup der
+Installation — nicht das Backup eines einzelnen Kontos.
+
+Die Karte **„Fassung"** nennt zuunterst Web-Version, Datenbankstand und den
+Stand der Apps. Für die **Uhr-App gibt es keinen Mindeststand**: Der Server
+nimmt jede Fassung an, weil der Datenvertrag abwärtskompatibel gehalten ist.
+
+#### Der Wartungsmodus
+
+Ganz oben unter **Betrieb → Updates** steht die Karte **„Wartungsmodus"** mit
+einem Schalter. Sie steht dort und nicht auf einer eigenen Seite, weil sie zum
+selben Vorgang gehört wie die Migrationen darunter: Man schaltet vor dem
+Deploy ein und nach der Migration aus. Er schließt die Installation vorübergehend für alle außer der
+Verwaltung.
+
+**Wofür.** Während eines Updates werden die Dateien auf dem Server nach und
+nach ersetzt, und danach muss noch die Datenbank angepasst werden. Wer in
+dieses Fenster gerät, sieht eine Fehlerseite — und eine Uhr, die genau dann
+sendet, bekommt einen Fehler, mit dem sie nichts anfangen kann. Mit dem
+Wartungsmodus bekommen alle stattdessen eine **Wartungsseite**, und die Geräte
+bekommen eine Antwort, die sie kennen: *später noch einmal*. **Sie behalten
+ihre Daten und liefern von selbst nach, sobald du wieder ausschaltest.** Es
+geht nichts verloren.
+
+**So läuft ein Update mit Wartungsmodus:**
+
+1. **Vorher** das **Komplett-Backup** machen — nicht danach. Betrieb →
+   Komplett-Backup, „Jetzt sichern". Die Seite Updates nennt darüber das
+   jüngste Paket mit Alter; ist es alt, ist jetzt der Zeitpunkt. Warum vorher:
+   Sobald der Wartungsmodus steht, ist die Seite Komplett-Backup selbst
+   gesperrt (gemessen: HTTP 503).
+2. **„Wartungsmodus einschalten"** klicken.
+3. Das Update einspielen lassen (das macht die Entwicklung).
+4. Die Seite **„Updates"** neu laden und die anstehenden Migrationen
+   ausführen.
+5. In einem zweiten Reiter die Startseite aufrufen. **Es muss die
+   Wartungsseite kommen** — kommt die normale Seite, ist der Wartungsmodus
+   nicht an.
+6. **„Wartungsmodus ausschalten"** klicken. Startseite erneut aufrufen: Sie
+   antwortet, und unten in der Fußzeile steht die neue Fassung.
+7. Uhr und Handy melden sich beim nächsten Mal von selbst. Nichts zu tun.
+
+**Was währenddessen weiter geht.** Die **fünf Betriebsseiten** (Status,
+Statistik, Updates, Hintergrundjobs, Servereinstellungen), die Anmeldung, das
+Abmelden und der Abruf der Hintergrundjobs. **Sonst nichts** — auch nicht die
+Verwaltung, das Komplett-Backup und die Backup-Ziele. Gemessen mit
+eingeschaltetem Wartungsmodus: fünf Seiten antworten mit 200, die neun
+übrigen mit 503. Das ist Absicht: Wer umbaut, soll den Zustand der Anlage
+sehen können und sonst nichts anfassen.
+
+**Ein laufendes Komplett-Backup läuft weiter.** Gesperrt ist die *Seite*, nicht
+die Arbeit: Der Abruf der Hintergrundjobs bleibt offen, und das
+Komplett-Backup arbeitet in Portionen darüber. Genau dann ist sein Stand
+sogar am saubersten — weil sonst niemand schreibt. Anstoßen lässt es sich
+während der Wartung nur nicht mehr; deshalb steht es in Schritt 1.
+
+**Wer sich anmeldet, aber nicht verwaltet**, wird gleich wieder abgemeldet und
+sieht die Wartungsseite. Auch das ist Absicht — während umgebaut wird, soll
+niemand mitten in einer Eingabe stehen.
+
+> **Der Wartungsmodus schaltet sich nicht von selbst ab.** Es gibt keine
+> Zeitsteuerung. Solange er steht, trägt **jede der fünf Betriebsseiten** und
+> die **Anmeldeseite** oben einen **orangen Balken** mit Zeitpunkt und Konto —
+> das sind die sechs einzigen Seiten, auf denen er überhaupt zu sehen ist.
+> Alle anderen zeigen die Wartungsseite, und die sagt nicht, seit wann.
+> (Bis Web 15.5.1 fehlte er auf der **Statistik**: die eine Betriebsseite, auf
+> der man länger liest als anderswo.)
+
+**Wenn du dich selbst aussperrst.** Es gibt zwei Wege zurück. Der erste: Die
+**Anmeldeseite funktioniert weiter**. Melde dich mit einem BetreiberIn-Konto
+an — die Anmeldung führt danach auf die Startseite, und die zeigt im
+Wartungsmodus die Wartungsseite. **Von dort führt kein Knopf weiter**; tippe
+die Adresse **`betrieb_updates.php`** in die Adresszeile, dann steht der
+Schalter wieder vor dir. Der zweite Weg: Wer Zugang zum Webspace hat, löscht
+die Datei `wartung.lock` neben den übrigen Serverdateien. Mehr als diese Datei
+ist der Schalter nicht.
+
+### 12.4 Hintergrundjobs
+
+Unter **Betrieb → Hintergrundjobs** steht in der Karte **„Zustand"**, ob die
 regelmäßige Arbeit noch läuft: je Job wann er zuletzt lief, wer ihn angestoßen
 hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
 **„scheitert"**, wird unter anderem der Papierkorb nicht mehr geleert; die
@@ -2740,237 +3233,122 @@ zu verlieren. Und die Uhr kann zu einem ausgedünnten Einsatz keine Punkte mehr
 nachliefern; sie bekommt eine Bestätigung, damit sie ihren Speicher leert, die
 Punkte werden aber nicht mehr aufgenommen.
 
-Darunter, in **„Wann die Jobs laufen"**, stehen die drei Wege, auf denen diese
-Arbeit angestoßen werden kann — mit fertigem Befehl bzw. fertiger Adresse zum
-Kopieren. **Eingerichtet werden muss keiner:** Ohne Einrichtung läuft die
+Daneben, in der Karte **„Auslöser"**, stehen die drei Wege, auf denen diese
+Arbeit angestoßen werden kann — mit fertigem Befehl bzw. fertiger Adresse und
+seit Web 15.1.0 einem Knopf **„Kopieren"** daneben. **Eingerichtet werden muss keiner:** Ohne Einrichtung läuft die
 Arbeit in kleinen Portionen auf den Anfragen mit. Wer viele Daten hat, richtet
 besser einen Zeitplan ein, weil der Rückstand sonst wächst; welcher der beiden
 geht, sagt der Hoster. Die Adresse enthält ein **Geheimnis** — sie gehört nicht
 in eine Mail und nicht in ein Ticket. „Neues Token erzeugen" macht die alte
 Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
-#### Der Wartungsmodus
+### 12.5 Servereinstellungen
 
-Ganz oben unter **„Wartung"** steht die Karte **„Serverbetrieb"** mit einem
-Schalter. Er schließt die Installation vorübergehend für alle außer der
-Verwaltung.
+Hier steht, wie viel Platz belegt ist — als **zwei Balken**:
 
-**Wofür.** Während eines Updates werden die Dateien auf dem Server nach und
-nach ersetzt, und danach muss noch die Datenbank angepasst werden. Wer in
-dieses Fenster gerät, sieht eine Fehlerseite — und eine Uhr, die genau dann
-sendet, bekommt einen Fehler, mit dem sie nichts anfangen kann. Mit dem
-Wartungsmodus bekommen alle stattdessen eine **Wartungsseite**, und die Geräte
-bekommen eine Antwort, die sie kennen: *später noch einmal*. **Sie behalten
-ihre Daten und liefern von selbst nach, sobald du wieder ausschaltest.** Es
-geht nichts verloren.
+- **Backups** gegen die **Speichergrenze**: Konto-Backups und Komplett-Backups
+  zusammen. Ist die Grenze erreicht, wird nicht mehr gesichert; gelöscht wird
+  nichts.
+- **Installation gesamt** gegen den **Webspace laut Hosting**: Datenbank,
+  Dateien und beide Backup-Arten.
 
-**So läuft ein Update mit Wartungsmodus:**
+**Der Webspace ist eine Angabe, keine Messung.** Er steht in deinem
+Hosting-Tarif und lässt sich von der Anwendung aus nicht ermitteln — was ein
+Server über den freien Platz meldet, ist auf geteiltem Hosting der Datenträger
+des Hosts und nicht dein Kontingent. Ohne die Angabe zeigt der zweite Balken
+nur die Zusammensetzung, ohne Füllstand.
 
-1. Auf der Wartungsseite zuerst das **Komplett-Backup** prüfen — steht ein
-   frisches, und ist das Ziel erreichbar? Sonst „Jetzt sichern".
-2. **„Wartungsmodus einschalten"** klicken.
-3. Das Update einspielen lassen (das macht die Entwicklung).
-4. Die Seite **„Wartung"** neu laden und die anstehenden Migrationen
-   ausführen.
-5. In einem zweiten Reiter die Startseite aufrufen. **Es muss die
-   Wartungsseite kommen** — kommt die normale Seite, ist der Wartungsmodus
-   nicht an.
-6. **„Wartungsmodus ausschalten"** klicken. Startseite erneut aufrufen: Sie
-   antwortet, und unten in der Fußzeile steht die neue Fassung.
-7. Uhr und Handy melden sich beim nächsten Mal von selbst. Nichts zu tun.
+Gemessen wird **einmal täglich** im Aufräumjob; der Stand steht im Kartenkopf.
+Darunter Speichergrenze, Warnschwellen, Ablage und Reste abgebrochener Läufe.
 
-**Was währenddessen weiter geht.** Diese Seite, die Anmeldung, das Abmelden
-und der Abruf der Hintergrundjobs. Das ist Absicht: Das Komplett-Backup läuft
-am besten **während** der Wartung, weil dann niemand sonst schreibt.
+### 12.6 Komplett-Backup
 
-**Wer sich anmeldet, aber nicht verwaltet**, wird gleich wieder abgemeldet und
-sieht die Wartungsseite. Auch das ist Absicht — während umgebaut wird, soll
-niemand mitten in einer Eingabe stehen.
+Seit Web 12.2.0 gibt es unter **Betrieb → Komplett-Backup** einen
+zweiten, grösseren Knopf. Der Unterschied zu allem darüber ist der Zweck:
 
-> **Der Wartungsmodus schaltet sich nicht von selbst ab.** Es gibt keine
-> Zeitsteuerung. Solange er steht, siehst du auf dieser Seite und auf der
-> Anmeldeseite oben einen **orangen Balken** mit Zeitpunkt und Konto — das
-> sind die beiden einzigen Seiten, auf denen er überhaupt zu sehen ist. Alle
-> anderen zeigen die Wartungsseite, und die sagt nicht, seit wann.
+| | Backup eines Kontos | Komplett-Backup |
+|---|---|---|
+| enthält | die Daten **einer** NutzerIn | **alle** Konten, Stammdaten, Geräte, Spuren — jede Tabelle |
+| hilft gegen | „jemand hat sich vertan" | „der Server ist weg" |
+| wo | Verwaltung → **Konto-Backups** (Regeln) und die Kontoseite (Pakete) | Betrieb → **Komplett-Backup** |
+| wer | Admin und BetreiberIn | nur BetreiberIn |
 
-**Wenn du dich selbst aussperrst.** Es gibt zwei Wege zurück: die Anmeldeseite
-funktioniert weiter (melde dich mit einem Admin-Konto an, dann bist du wieder
-auf der Wartungsseite), und wer Zugang zum Webspace hat, löscht die Datei
-`wartung.lock` neben den übrigen Serverdateien. Mehr als diese Datei ist der
-Schalter nicht.
+**Was zu tun ist.** Einen Zeitplan setzen (täglich, wöchentlich oder
+monatlich) — mehr braucht es im Regelfall nicht. Der Lauf arbeitet in kleinen
+Portionen im Hintergrund weiter; wie oft er drankommt, hängt am eingerichteten
+Auslöser (Betrieb → Hintergrundjobs).
+Wer sofort einen Stand will, drückt *Jetzt sichern*.
 
+**Wie viele aufbewahrt werden**, steht daneben; Vorgabe sind zwei. Ältere
+werden nach einem erfolgreichen Lauf gelöscht — hier, nicht auf dem
+Backup-Ziel.
 
-Unter **„Wartung"** stehen mehrere Auskünfte in eigenen Karten: zuoberst der
-**Serverbetrieb** (der Wartungsmodus, gleich unten), dann das Logo der
-Installation, die Umgebung (Mailversand), die Hintergrundjobs samt ihren Auslösern, Einsätze
-ohne Diensttag und zuunterst das **Datenbank-Update**. Das bloße Öffnen der Seite
-ändert nichts — sie zeigt erst an, was anstünde, und wartet auf eine
-Bestätigung.
+**Zwei Wege heraus:**
 
-Jede Migration steht als eigene Zeile mit ihrem Stand als Plakette:
-**erledigt** (blau), **steht aus** (orange), **blockiert** (rot) oder
-**Fehler** (rot). Nach einem Update müssen alle „erledigt" tragen. Eine
-*blockierte* Migration würde eine Spalte löschen, in der noch Daten stehen;
-sie läuft nur, wenn du das Kästchen vor ihrer Zeile setzt — und dieses
-Kästchen heißt: **Die Daten sind gesichert.**
+- *Herunterladen* gibt die Datei **unverschlüsselt** als `.sql.gz`. Das ist
+  die Fassung, die `mysql` oder phpMyAdmin einspielen kann.
+- *Versiegelt herunterladen* verlangt eine Passphrase und gibt die Datei unter
+  dieser Passphrase verschlossen heraus. Das ist die Fassung zum Weitergeben
+  oder für einen USB-Stick. **Die Passphrase wird nirgends gespeichert** — wer
+  sie verliert, hat die Datei verloren.
 
-Unter **„Stammdaten systemweit"** pflegt der Admin dieselben sechs Bereiche wie
-eine NutzerIn unter Standorte und Rettungsmittel (9.1–9.3), jedoch für **alle**
-Konten gemeinsam (siehe 9.4). Oben rechts steht die Wahl zwischen **Standorte**
-und **Rettungsmittel** — bis Web 9.9.0 waren das zwei Menüpunkte, die auf
-dieselbe Seite führten.
+Was von selbst auf ein Backup-Ziel geschoben wird, ist immer die
+verschlossene Fassung.
 
-Namensgleiche Einträge werden auch hier abgelehnt; existieren bereits
-persönliche Einträge mit demselben Namen bei einzelnen NutzerInnen, weist ein
-Hinweis darauf hin (keine Blockade). Seit Web 9.10.0 gilt das auch für
-**Standorte** — dort fehlte der Hinweis als einzigem der sechs Bereiche, und
-ein systemweiter Standort, den ein Dutzend Konten bereits selbst angelegt
-hatte, entstand ohne jede Warnung.
+**Das Wichtigste steht nicht in der Datei.** Das Komplett-Backup enthält
+absichtlich *nicht* die Datei `config.php` des Servers. In ihr steht der
+Schlüssel, mit dem sich das Backup öffnen lässt — beides zusammen
+aufzubewahren wäre, als klebte der Schlüssel am Schloss. Sie gehört an einen
+anderen Ort, zusammen mit dem Zugang zum Backup-Ziel. Diese drei Dinge
+zusammen heissen **Wiederanlaufpaket**, und ohne sie nützt das beste Backup
+nichts.
 
-Unter **„Backups"** stehen seit Web 9.10.0 nur noch die Dinge, die für
-**alle** Konten gelten. Wer ein bestimmtes Backup sucht, ist hier falsch:
+**Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
+gebraucht: wenn alles weg ist. Er arbeitet nur auf einer **leeren** Datenbank
+und verlangt einen Nachweis, dass man Zugriff auf das Verzeichnis der
+Anwendung hat. Die Schritte stehen im Runbook (`docs/Technik.md`, Abschnitt 7);
+die Seite selbst führt durch sie hindurch.
 
-| Was du willst | Wo es steht |
-|---|---|
-| Wie steht es um die Installation? Welche Regeln gelten? | **Backups** |
-| Welche Konten sind überfällig? Mehrere auf einmal sichern | **NutzerInnen** (Kachel „Backup überfällig" bzw. „nie gesichert") |
-| Die Backups **eines** Kontos einspielen, freigeben, löschen | Die **Kontoseite** dieses Kontos (11.1) |
-
-Oben vier Zahlen: Konten, Pakete samt Größe der Ablage, überfällig, nie
-gesichert. Die letzten beiden sind anklickbar und öffnen die NutzerInnen-Liste
-mit genau diesem Filter.
-
-**Regeln.** Drei Einstellungen, ein Speichern:
-
-- **Erinnerung nach** — nach wie vielen Tagen ein Konto als überfällig gilt
-  (Vorgabe 30).
-- **Aufbewahrung je Konto** — wie viele Pakete je Konto liegen bleiben (Vorgabe
-  **2** seit Web 12.0.0, vorher 3). Ältere werden beim nächsten Sichern
-  gelöscht; das jüngste und ein freigegebenes nie. Bis Web 9.9.0 war das eine
-  feste Zahl im Programm.
-
-  > **Wer die Zahl nie angefasst hat, verliert beim nächsten Sichern je Konto
-  > den ältesten von drei Ständen.** Das steht hier und nicht im Kleingedruckten:
-  > Die Rückmeldung des Laufs nennt jede verdrängte Datei, und wer drei behalten
-  > will, trägt drei ein.
-
-- **Speichergrenze** — wie viel Platz alle Backups zusammen belegen dürfen
-  (Vorgabe 2 GB). Ist sie erreicht, wird **nicht mehr gesichert**. Es wird
-  nichts gelöscht und nichts überschrieben — ein Backup, das eine andere
-  wegräumt, um selbst zu passen, wäre das Gegenteil einer Rückfallebene.
-- **Warnschwellen** — Prozentwerte, durch Komma getrennt (Vorgabe 70, 90). Je
-  Schwelle kommt **einmal** eine Meldung, nicht bei jedem Lauf. Fällt der
-  Verbrauch wieder darunter, wird beim nächsten Überschreiten erneut gewarnt.
-  Ist kein SMTP eingerichtet, steht die Warnung stattdessen dauerhaft oben auf
-  dieser Seite.
-- **Erinnerung an Admins per E-Mail** — aus Vorsicht standardmäßig **aus**.
-
-**Die Erinnerungsmail** nennt die überfälligen und die nie gesicherten Konten
-mit Adresse und Alter des letzten Backups — keine Namen und keine Zahlen aus
-den Konten, denn eine Mail liegt unverschlüsselt im Postfach. Sie geht an alle
-Admins mit gesetztem Passwort.
-
-> **Sie hängt an einem Zeitgeber.** Die Erinnerung fährt auf dem täglichen
-> Aufräumjob mit (Wartung → „Hintergrundjobs"). Ist dort ein Zeitplan
-> eingerichtet, kommt sie zuverlässig — höchstens einmal je Woche und nur, wenn
-> es etwas zu melden gibt. Ohne Zeitplan hängt sie an der Benutzung: Der Job
-> startet dann bei der ersten Anfrage des Tages, und wird die Anwendung zwei
-> Wochen nicht angefasst, kommt die Mail zwei Wochen später.
-
-**„Alle sichern"** oben rechts sichert **alle** Konten mit Kontokennung. Sind
-es sehr viele, hört die Reihe nach etwa 20 Sekunden auf und sagt, wie viele
-geschafft und wie viele übrig sind. Ein zweiter Klick macht **genau dort**
-weiter, und der Wartungsjob arbeitet den Rest ohnehin in Schüben ab; solange
-ein Auftrag läuft, steht sein Stand oben auf der Seite.
-
-> **Bis Web 11.1.1 gab es keinen Merkzettel.** Die Konten wurden nach dem Alter
-> ihres letzten Backups sortiert, und der zweite Klick sollte deshalb von
-> selbst weitermachen. Das trug nur, solange sich die Konten um mindestens
-> einen ganzen Tag unterschieden — wer heute alle sicherte, hatte danach lauter
-> Nullen, und die letzten Konten kamen unter Umständen nie dran. Jetzt merkt
-> sich der Auftrag, wie weit er ist: **jedes Konto genau einmal**, und ein
-> Abbruch verliert höchstens das laufende.
-
-**Automatisch entsteht kein Backup.** Nächtliche Backups je Konto sind
-bewusst nicht vorgesehen: Sie bräuchten den Inhaltsschlüssel, und den hat der
-Server nicht.
-
-**Ablage** nennt den Pfad, ob er beschreibbar ist, wann zuletzt gesichert wurde
-und wie viele Konten eine Ablage haben. **Backups ohne Konto** steht
-zugeklappt darunter: Ordner, zu deren Konto es keine Zeile mehr gibt — der Fall
-„Konto gelöscht und neu aufgesetzt". Sie überleben die Löschung mit Absicht;
-genau dafür sind sie da. An den Rückfragen ändert sich nichts: Vor dem
-Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
-
-Unter **„Rechtstexte"** stehen Impressum und Datenschutzerklärung dieser
-Installation. Beide Seiten sind **ohne Anmeldung** erreichbar und in jeder
-Fußzeile verlinkt.
-
-> **Die Anwendung liefert keinen Text mit.** Was in Impressum und
-> Datenschutzerklärung steht, ist Sache des Betreibers — eine mitgelieferte
-> Datenschutzerklärung wäre eine Rechtsauskunft, die dieses Projekt nicht geben
-> kann. Solange nichts hinterlegt ist, zeigen die Seiten: „Der Betreiber dieser
-> Installation hat noch kein Impressum hinterlegt." Als Administration siehst du
-> dort zusätzlich den Weg hierher.
-
-**Geschrieben wird in eingeschränktem Markdown.** Erlaubt sind vier Dinge:
-
-| Schreibweise | Ergebnis |
-|---|---|
-| `## Überschrift` | eine Überschrift (`###` für eine kleinere) |
-| Leerzeile dazwischen | ein neuer Absatz. Zeilen **ohne** Leerzeile bleiben ein Absatz mit Umbrüchen — so setzt man eine Anschrift untereinander |
-| `- Punkt` oder `1. Punkt` | eine Aufzählung bzw. Nummerierung |
-| `[Text](https://…)` | ein Link. Auch `mailto:` und eigene Seiten wie `datenschutz.php` |
-
-**HTML wird nicht ausgeführt, sondern angezeigt.** Wer `<b>fett</b>` schreibt,
-sieht `<b>fett</b>` auf der Seite stehen. Das ist Absicht: Diese beiden Seiten
-sind die einzigen, auf denen fremder Text zu Struktur wird, und die einzige
-sichere Regel dafür ist, gar kein HTML durchzulassen. Aus demselben Grund gibt
-es keine Bilder — sie würden von einem fremden Server geladen, und die Anwendung
-lädt zur Laufzeit nichts von außen.
-
-**Das Standdatum setzt du selbst.** Es erscheint als „Stand: …" am Ende der
-Seite; leer lassen heißt: kein Datum. Es wird **nicht** automatisch gesetzt —
-bei einem Rechtstext ist das Datum eine Aussage darüber, auf welchem Stand der
-Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
-
-**Die Vorschau zeigt den zuletzt gespeicherten Stand**, nicht das gerade
-Getippte. Sie entsteht auf dem Server, mit demselben Renderer wie die
-öffentliche Seite.
-
-Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
-(siehe Technik-Doku, Betrieb). Die Seite läuft **zweistufig**: Der Aufruf zeigt
-nur an, was anstünde, und ändert nichts; erst der Knopf **„Updates jetzt
-anwenden"** führt sie aus. Vorher ein Backup erstellen — Migrationen können
-Spalten und die darin enthaltenen Daten unwiderruflich entfernen.
-
-Seit Web 7.0.0 steht der **Zustand zuerst** (Schlüsselableitung, Umgebung,
-Hintergrundjobs) und die Updatetabelle darunter — das ist die Auskunft, wegen der man
-die Seite im Betrieb öffnet. Die Tabelle steht **auf dem Kopf**: neueste Einträge
-oben, mit einer Spalte **„Web"**, die die Fassung nennt, mit der das Update
-ausgeliefert wurde. Der Startknopf steht **über** der Tabelle. Ausgeführt werden
-die Updates weiterhin in ihrer ursprünglichen Reihenfolge — sie bauen
-aufeinander auf; gedreht ist allein die Anzeige.
-
-Die Seite zeigt außerdem unter **„Schlüsselableitung"**, ob alle Konten mit
-Einstellungen rechnen, die diese Programmfassung anbietet. Steht dort eine
-Warnung, können sich die genannten Konten **nicht anmelden** — die Behebung
-steht dabei.
-
-Ein Update, das eine Spalte löscht, trägt in der Liste die Plakette **blockiert
-gekennzeichnet** und mit einem Satz versehen, was verlorenginge. Steht in einer
-solchen Spalte noch etwas, wird das Update **nicht ausgeführt** — die Zeile
-nennt stattdessen Spalte und Zeilenzahl. Alle übrigen Updates laufen trotzdem
-durch.
-
-Diese Daten lassen sich nicht automatisch in den verschlüsselten Block
-überführen; er entsteht ausschließlich im Browser. Wer sie behalten will, trägt
-sie vorher von Hand in den jeweiligen Einsatz ein (oder sichert sie außerhalb)
-und setzt danach das Häkchen an genau dieser einen Zeile.
+**Einmal im Halbjahr ausprobieren.** Ein Backup, das nie zurückgespielt
+wurde, ist eine Vermutung.
 
 ---
 
-## 12. Eine neue Uhr einrichten (Kurzanleitung)
+### 12.7 Backup-Ziele
+
+Seit Web 12.1.0 kann die BetreiberIn unter **Betrieb →
+Backup-Ziele** eine Gegenstelle eintragen, auf die die Konto-Backups
+geschoben werden — per FTP, FTPS oder SFTP. Der Grund ist schlicht: Ein
+Paket, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
+wenn dieser Server ausfällt.
+
+Nicht zu verwechseln mit dem **Transportziel** eines Einsatzes — das ist die
+Zielklinik und steht unter Stammdaten.
+
+Was dabei zu wissen ist:
+
+- **SFTP ist die Empfehlung.** Es ist das einzige der drei Protokolle, das den
+  Server beim nächsten Mal wiedererkennt. Meldet sich dort plötzlich ein
+  anderer, bricht die Verbindung ab, bevor ein Passwort hinausgeht.
+- **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht.** Das
+  schützt gegen Mitlesen, nicht gegen einen untergeschobenen Server.
+- **FTP überträgt alles im Klartext**, auch das Passwort. Es steht zur
+  Auswahl, weil einfacher Webspace oft nichts anderes anbietet.
+- Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
+  dazu steht in einer Datei, die nicht mitgesichert wird — wer den
+  Datenbankdump hat, hat die Passwörter nicht.
+- **Auf dem Ziel wird nie etwas gelöscht.** Die Regel „höchstens zwei je
+  Konto" gilt für die Ablage auf dem eigenen Server; drüben sammelt sich
+  alles an, bis dort jemand aufräumt. Was dort liegt, zählt deshalb auch
+  nicht in die Speichergrenze — der Server kennt die Größe nicht.
+
+Für dein Konto ändert sich dadurch nichts: Der Inhalt des Backups bleibt
+verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort
+nicht zu öffnen.
+
+---
+
+## 13. Eine neue Uhr einrichten (Kurzanleitung)
 
 Die Schritte gelten für jede Uhr. Wo die Plattform eigene Wege hat, steht der
 Zusatz kursiv darunter — bei Garmin die folgenden.
@@ -2980,16 +3358,17 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
 > den Code, du gibst ihn **im Web** ein, und die Uhr fragt zum Schluss zurück,
 > ob sie zu diesem Konto gehören soll. Auf der Uhr wird nichts mehr getippt.
 
-1. **App auf die Uhr laden** (siehe `Technik.md`).
-   *Bei Garmin: aus dem Connect-IQ-Projekt gebaut und per USB übertragen;
-   Abschnitt 5 der Technik-Doku.*
+1. **App auf die Uhr laden.** Der Weg dahin steht auf der Geräte-Seite in der
+   Karte **„App installieren"** (Abschnitt 10.1) — dort ist er je Plattform
+   benannt.
+   *Solange die Uhr-App im Store nicht steht: aus dem Connect-IQ-Projekt gebaut
+   und per USB übertragen; Abschnitt 5 der Technik-Doku.*
 2. **Server-Adresse prüfen.** Seit Uhr 3.0.0 steht dort ein Vorgabewert —
    `nadoku.gen-em.org`, die öffentliche Installation. Wer eine eigene betreibt,
    trägt die eigene Domain ein; sonst ist hier nichts zu tun.
-   **Die Uhr-App heißt „NAdoku"** — der künftige Name, seit Uhr 2.0.0. Die
-   Weboberfläche und dieses Handbuch tragen noch „Einsatzdoku" und ziehen mit
-   dem v1.0-Schnitt nach; wer die App in der Liste sucht, sucht also nach
-   **NAdoku**.
+   **Die Uhr-App heißt „NAdoku"** — so heißt sie seit Uhr 2.0.0, und seit
+   Web 15.3.2 heißt auch die Weboberfläche so: **Gen-EM NAdoku**. Wer die
+   App in der Liste sucht, sucht also nach **NAdoku**.
    *Bei Garmin: in Garmin Connect unter den App-Einstellungen.*
 3. **Auf der Uhr die Kopplung starten:** Sync-Seite, Auswahltaste **gedrückt
    halten**. Die Uhr sagt kurz „Hole Code…" und zeigt dann den **Code für das
@@ -3042,7 +3421,7 @@ und was hilft:
 | „Uhr-App aktualisieren" | Die Uhr spricht den alten Weg (bis Uhr 2.0.0) und der Server den neuen. Die App auf 3.0.0 bringen. |
 | „Kopplung fehlgeschlagen (n)" | Alles Übrige, mit dem Zahlencode und — wenn der Server einen schickt — seinem Hinweis. Der Zahlencode gehört in die Fehlermeldung an die Betreuung. |
 
-### 12.1 Eine Uhr an eine andere Person übergeben
+### 13.1 Eine Uhr an eine andere Person übergeben
 
 Die Uhr trennt sich **zuerst ausdrücklich**, bevor sie neu koppelt. Der Weg
 dorthin ist derselbe wie beim ersten Mal (Sync-Seite, Auswahltaste halten),
@@ -3075,3 +3454,4 @@ einem Klick zu entfernen.
 Code-Eingabe. Schlug das Koppeln fehl, blieben die alten Zugangsdaten stehen
 und die Uhr dokumentierte stillschweigend weiter auf das vorherige Konto —
 niemand sah es ihr an.
+

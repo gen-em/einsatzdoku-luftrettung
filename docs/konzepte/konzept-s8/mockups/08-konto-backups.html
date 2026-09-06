@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S8 · Mockup 04 — Statistik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;
+  --asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;--auf-dunkel:#FFFFFF;
+  --auf-dunkel-flaeche:rgba(255,255,255,.14);
+  --linie:#E3DAC6;--linie-stark:var(--gedaempft);
+  --orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;
+  --rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --schrift-text:'Open Sans',system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --schrift-fest:ui-monospace,'SF Mono','Cascadia Mono','JetBrains Mono',Consolas,monospace;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;--groesse-6:24px;--groesse-titel:28px;
+  --zeile:1.55;--zeile-eng:1.3;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --kopf:56px;--knopf:44px;--leiste:260px;--schublade:320px;
+  --symbol:20px;--symbol-gross:24px;--strich:1px;--strich-stark:2px;
+  --schalter-breit:46px;--schalter-hoch:26px;--schalter-punkt:20px;--dauer:.18s;
+}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:var(--zeile)}
+p{margin:0}
+.mock-kopf{padding:20px 24px 8px;max-width:1400px;margin:0 auto}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{color:var(--gedaempft);font-size:var(--groesse-2)}
+.mock-reihe{display:flex;flex-wrap:wrap;gap:28px;padding:16px 24px 40px;max-width:1400px;margin:0 auto;align-items:flex-start}
+.mock-frame{background:var(--rauch);border:1px solid #CFC7B5;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(26,46,77,.10);position:relative;flex:0 0 auto}
+.mock-label{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px}
+.mock-spalte{flex:0 0 auto}
+.frame-mobil{width:360px;height:1700px}
+.frame-desktop{width:1280px;height:1040px}
+@media (max-width:1380px){.frame-desktop{zoom:.72}}
+@media (max-width:760px){.frame-desktop{zoom:.27}}
+.mock-anmerkungen{max-width:1400px;margin:0 auto;padding:0 24px 48px}
+.mock-anmerkungen h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);color:var(--dunkelblau);margin:0 0 8px}
+.mock-anmerkungen ol{margin:0;padding-left:20px}
+.mock-anmerkungen li{margin-bottom:6px}
+.mock-marke{position:absolute;right:10px;top:10px;font-family:var(--schrift-kopf);font-size:11px;font-weight:600;color:var(--gedaempft);background:rgba(255,252,250,.85);padding:2px 6px;border-radius:6px;z-index:99}
+
+/* ---- Anwendung (Auszug style.css) --------------------------------------- */
+a{color:var(--blau-tief)}
+code{font-family:var(--schrift-fest);font-size:.92em}
+strong{font-weight:600}
+.symbol{width:var(--symbol);height:var(--symbol);flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
+.kopf{position:sticky;top:0;z-index:40;background:var(--dunkelblau);color:var(--auf-dunkel);height:var(--kopf)}
+.kopf-innen{display:flex;align-items:center;gap:var(--abstand-2);height:var(--kopf);padding:0 var(--abstand-3)}
+.knopf{display:inline-flex;align-items:center;justify-content:center;gap:var(--abstand-2);height:var(--knopf);padding:0 var(--abstand-4);border-radius:var(--radius);border:var(--strich-stark) solid transparent;font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-3);text-decoration:none;cursor:pointer;white-space:nowrap;background:none;color:inherit;box-sizing:border-box}
+.knopf-symbol{width:var(--knopf);padding:0}
+.knopf-leise{color:var(--gedaempft);padding:0 var(--abstand-2)}
+.knopf-primaer{background:var(--orange);color:var(--dunkelblau);border-color:var(--orange)}
+.knopf-neutral{background:var(--schnee);color:var(--dunkelblau);border-color:var(--linie-stark)}
+.kopf .knopf{color:var(--auf-dunkel)}
+.kopf-menue{margin-left:-8px}
+.kopf-marke{display:flex;align-items:center;gap:var(--abstand-2);color:var(--auf-dunkel);text-decoration:none;min-width:0;flex:1 1 auto}
+.kopf-marke .logo{width:34px;height:34px;flex:0 0 auto}
+.kopf-name{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kopf-nutzer{display:none}
+.kopf-punkte{display:flex;align-items:center;gap:var(--abstand-1);margin-left:auto}
+.kopf-punkt{display:none;align-items:center;gap:var(--abstand-1);height:var(--knopf);padding:0 var(--abstand-3);color:var(--auf-dunkel);text-decoration:none;border-bottom:var(--strich-stark) solid transparent;font-family:var(--schrift-kopf);font-weight:600}
+.kopf-zahnrad{margin-right:-8px}
+.kopf-zahnrad.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
+.rahmen{display:flex;align-items:flex-start}
+.inhalt{flex:1 1 auto;min-width:0;padding:var(--abstand-4) var(--abstand-3) var(--abstand-5)}
+.leiste{display:none}
+.leiste-liste{flex:1 1 auto;overflow-y:auto;padding:var(--abstand-2)}
+.leiste-fuss{flex:0 0 auto;padding:var(--abstand-2);border-top:var(--strich) solid var(--linie)}
+.eintrag{display:flex;align-items:center;gap:var(--abstand-2);min-height:var(--knopf);padding:0 var(--abstand-2);border-radius:var(--radius-klein);border-left:var(--abstand-1) solid transparent;color:var(--asphalt);text-decoration:none}
+.eintrag .symbol{color:var(--dunkelblau)}
+.eintrag-text{flex:1 0 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--schrift-kopf);font-weight:400}
+.eintrag.aktiv{background:var(--orange-hell);border-left-color:var(--orange)}
+.eintrag.aktiv .eintrag-text{color:var(--dunkelblau);font-weight:600}
+.eintrag-leise .symbol,.eintrag-leise .eintrag-text{color:var(--gedaempft)}
+.leiste-gruppe{margin-bottom:var(--abstand-2)}
+.leiste-gruppe > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:var(--abstand-2);font-family:var(--schrift-kopf);font-size:var(--groesse-3);font-weight:600;color:var(--asphalt);padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);min-height:var(--knopf);box-sizing:border-box;border-radius:var(--radius-klein)}
+.leiste-gruppe > summary::-webkit-details-marker{display:none}
+.leiste-gruppe > summary .gruppen-winkel{margin-left:auto;color:var(--sand);transition:transform .18s ease-out}
+.leiste-gruppe[open] > summary .gruppen-winkel{transform:rotate(90deg)}
+.rueckweg{display:inline-flex;align-items:center;gap:var(--abstand-1);min-height:var(--knopf);color:var(--blau-tief);font-weight:600;text-decoration:none}
+.nur-schublade{display:block}
+.titelzeile{margin-bottom:var(--abstand-4)}
+.seitentitel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-titel);line-height:1.3;color:var(--dunkelblau);margin:0}
+.karte{background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);margin-bottom:var(--abstand-5)}
+.karte-kopf{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);padding:var(--abstand-3) var(--abstand-4);border-bottom:var(--strich) solid var(--linie);list-style:none}
+.karte-kopf::-webkit-details-marker{display:none}
+.karte-titel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);flex:0 1 auto;min-width:0;color:var(--dunkelblau);margin:0}
+.karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2);flex:0 0 auto}
+.karte-vorschau{margin-left:auto;color:var(--gedaempft);font-size:var(--groesse-2);text-align:right}
+.karte-inhalt{padding:var(--abstand-4)}
+.karte-klappbar > .karte-kopf{cursor:pointer;border-bottom:0}
+.karte-klappbar[open] > .karte-kopf{border-bottom:var(--strich) solid var(--linie)}
+.akkordeon-winkel{color:var(--sand);transform:rotate(90deg)}
+.karte-klappbar[open] .akkordeon-winkel{transform:none}
+.zeile{display:flex;align-items:center;gap:var(--abstand-3);padding:var(--abstand-3) 0;border-bottom:var(--strich) solid var(--linie)}
+.zeile:last-child{border-bottom:0;padding-bottom:0}
+.zeile:first-child{padding-top:0}
+.zeile-text{flex:1 1 auto;min-width:0}
+.zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+.zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto;justify-content:flex-end}
+.plakette{display:inline-flex;align-items:center;gap:var(--abstand-1);padding:var(--abstand-1) var(--abstand-2);border-radius:var(--radius-klein);font-size:var(--groesse-1);font-weight:600;white-space:nowrap;line-height:1.2}
+.plakette-neutral{background:var(--rauch);color:var(--gedaempft);border:var(--strich) solid var(--linie)}
+.plakette-orange{background:var(--orange-hell);color:var(--asphalt)}
+.plakette-blau{background:var(--blau-hell);color:var(--dunkelblau)}
+.plakette-rot{background:var(--rosa);color:var(--rot-tief)}
+.meldung{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);padding:var(--abstand-3) var(--abstand-4);border-radius:var(--radius);margin-bottom:var(--abstand-5)}
+.meldung p{flex:1 1 16rem;min-width:0}
+.meldung-warn{background:var(--orange-hell);color:var(--asphalt)}
+.meldung-warn .symbol{color:var(--orange-tief)}
+.meldung-fehler{background:var(--rosa);color:var(--rot-tief)}
+.meldung-fehler .symbol{color:var(--rot)}
+.feld{margin-bottom:var(--abstand-3)}
+.feld-label{display:block;font-weight:600;margin-bottom:var(--abstand-1)}
+.feld-eingabe{display:block;width:100%;height:var(--knopf);padding:0 var(--abstand-3);background:var(--schnee);color:var(--asphalt);border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein);box-sizing:border-box;font:inherit}
+.feld-klein{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
+.feld-hinweis{color:var(--gedaempft);font-size:var(--groesse-2)}
+.feld-hinweis + form,.feld-hinweis + .feld{margin-top:var(--abstand-3)}
+.fld-reihe{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 var(--abstand-3)}
+.listen-form-titel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-3);color:var(--dunkelblau);margin:var(--abstand-4) 0 var(--abstand-2)}
+.listen-form-titel:first-child{margin-top:0}
+.listen-form-fuss{display:flex;flex-wrap:wrap;gap:var(--abstand-2);margin-top:var(--abstand-4)}
+.feld-klein-inline{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2);margin-left:var(--abstand-1)}
+.codeblock{background:var(--rauch);border:var(--strich) solid var(--linie);border-radius:var(--radius);padding:var(--abstand-3);margin:var(--abstand-3) 0}
+.codeblock-titel{font-size:var(--groesse-2);color:var(--gedaempft);margin:0 0 var(--abstand-1)}
+.zeilenaktionen{margin-left:auto;flex:0 0 auto}
+
+/* ---- NEU (E-S8-10): zweite Stufe des Wertekastens ----------------------- */
+.codeblock-lang{display:flex;align-items:flex-start;gap:var(--abstand-2)}
+.codeblock-lang .codeblock-text{flex:1 1 auto;min-width:0}
+.codeblock-wert-lang{font-family:var(--schrift-fest);font-size:var(--groesse-2);font-weight:400;color:var(--dunkelblau);letter-spacing:0;word-break:break-all;line-height:1.5;margin:0}
+.codeblock-lang .knopf{flex:0 0 auto;height:36px;padding:0 var(--abstand-2);margin:-4px -4px 0 0}
+/* ---- NEU (Vorschlag): Speicherbalken ------------------------------------ */
+.speicher-balken{height:8px;border-radius:var(--radius-rund);background:var(--linie);overflow:hidden;display:flex;margin:var(--abstand-2) 0 var(--abstand-1)}
+.speicher-balken > span{display:block;height:100%}
+.speicher-legende{display:flex;flex-wrap:wrap;gap:var(--abstand-3);font-size:var(--groesse-2);color:var(--gedaempft)}
+.speicher-legende i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.speicher-marke{position:relative}
+.speicher-marke::after{content:"";position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--gedaempft)}
+
+/* ---- Schreibtisch ------------------------------------------------------- */
+.desktop .leiste{display:flex;position:sticky;top:var(--kopf);z-index:1;width:var(--leiste);flex:0 0 auto;flex-direction:column;background:var(--schnee);border-right:var(--strich) solid var(--linie);height:calc(1040px - var(--kopf));box-sizing:border-box}
+.desktop .kopf-menue{display:none}
+.desktop .kopf-punkt{display:inline-flex}
+.desktop .kopf-nutzer{display:inline-block;color:var(--sand);font-size:var(--groesse-3);font-weight:400;line-height:1;white-space:nowrap}
+.desktop .nur-schublade{display:none}
+.desktop .inhalt{padding:var(--abstand-5) var(--abstand-5)}
+.desktop .seitentitel{font-size:30px}
+.desktop .karten-raster{display:grid;grid-template-columns:1fr 1fr;gap:0 var(--abstand-5);align-items:start}
+.desktop .karten-raster > .karte{margin-bottom:var(--abstand-5)}
+
+/* ---- NEU (E-S8-15): Unterpunkte der aktiven Seite in der Leiste --------- */
+.eintrag-unter{list-style:none;margin:2px 0 var(--abstand-2);padding:0 0 0 calc(var(--abstand-2) + var(--abstand-1) + var(--symbol) + var(--abstand-2))}
+.eintrag-unter a{display:flex;align-items:center;min-height:28px;padding:0 var(--abstand-2);border-radius:var(--radius-klein);color:var(--gedaempft);font-size:var(--groesse-2);text-decoration:none}
+.eintrag-unter a:hover{background:var(--rauch);color:var(--asphalt)}
+.eintrag-unter a.aktiv{color:var(--dunkelblau);font-weight:600}
+/* ---- Statusseite (E-S8-16): Zeilen mit Ampelplakette --------------------- */
+.status-zeile .zeile-plaketten{flex:0 0 auto}
+.status-link{color:var(--blau-tief);font-weight:600;font-size:var(--groesse-2);white-space:nowrap}
+.meldung-zaehler{display:flex;gap:var(--abstand-2);flex-wrap:wrap}
+.karte-anker{scroll-margin-top:calc(var(--kopf) + var(--abstand-3))}
+.plakette-punkt{width:8px;height:8px;border-radius:var(--radius-rund);display:inline-block}
+.kennzahl-raster{display:grid;gap:var(--abstand-3);grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:var(--abstand-4)}
+.kennzahl{display:flex;flex-direction:column;justify-content:center;padding:var(--abstand-3);background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius)}
+.kennzahl-wert{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-6);line-height:1.3;color:var(--dunkelblau)}
+.kennzahl-text{color:var(--gedaempft);font-size:var(--groesse-2)}
+.desktop .kennzahl-raster{grid-template-columns:repeat(4,minmax(0,1fr))}
+.desktop .karten-raster{display:grid;grid-template-columns:1fr 1fr;gap:0 var(--abstand-5);align-items:start}
+
+/* ---- NEU: Zeitraum-Raster (Zahl und Anteil je Zeitraum) ------------------ */
+.zeitraum{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr));gap:0 var(--abstand-2);align-items:baseline;padding:var(--abstand-2) 0;border-bottom:var(--strich) solid var(--linie)}
+.zeitraum:last-child{border-bottom:0}
+.zeitraum-kopf{font-size:var(--groesse-1);color:var(--gedaempft);font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:0 0 var(--abstand-1)}
+.zeitraum-kopf > span:not(:first-child){text-align:right}
+.zeitraum > strong{font-weight:600}
+.zeitraum-wert{text-align:right;font-family:var(--schrift-kopf);font-weight:600;color:var(--dunkelblau);white-space:nowrap}
+.zeitraum-wert small{display:block;font-family:var(--schrift-text);font-weight:400;color:var(--gedaempft);font-size:var(--groesse-1)}
+.anteil{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2);margin-left:var(--abstand-1)}
+/* ---- Tabelle (Regeln wie NutzerInnen-Liste, sortierbar) ------------------ */
+.tabelle-scroll{overflow-x:auto;margin:0 calc(-1 * var(--abstand-4))}
+.tabelle{width:100%;border-collapse:collapse;font-size:var(--groesse-2);min-width:640px}
+.tabelle th,.tabelle td{padding:var(--abstand-2) var(--abstand-3);text-align:left;border-bottom:var(--strich) solid var(--linie);white-space:nowrap}
+.tabelle th{font-family:var(--schrift-kopf);font-weight:600;color:var(--gedaempft);font-size:var(--groesse-1);text-transform:uppercase;letter-spacing:.06em}
+.tabelle th a{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:2px}
+.tabelle th.sortiert a{color:var(--dunkelblau)}
+.tabelle th .symbol{width:14px;height:14px}
+.tabelle td.zahl,.tabelle th.zahl{text-align:right}
+.tabelle td.zahl{font-family:var(--schrift-kopf);font-weight:600;color:var(--dunkelblau)}
+.tabelle td.zahl .anteil{font-family:var(--schrift-text)}
+.tabelle tr:last-child td{border-bottom:0}
+.karte-aktion{margin-left:auto;flex:0 0 auto;display:inline-flex;align-items:center;gap:var(--abstand-2);min-height:var(--knopf);padding:0 var(--abstand-2);font-family:var(--schrift-kopf);font-weight:600;color:var(--blau-tief);text-decoration:none}
+.desktop .voll{grid-column:1 / -1}
+
+.kaestchen{display:flex;align-items:flex-start;gap:var(--abstand-2);cursor:pointer}
+.kaestchen input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--orange)}
+.migration{display:flex;align-items:flex-start;gap:var(--abstand-3);padding:var(--abstand-3) 0;border-bottom:var(--strich) solid var(--linie)}
+.migration:last-child{border-bottom:0}
+.migration-nr{font-family:var(--schrift-fest);font-size:var(--groesse-2);color:var(--gedaempft);flex:0 0 auto;padding-top:2px}
+.migration-text{flex:1 1 auto;min-width:0}
+.migration .zeile-plaketten{flex:0 0 auto}
+.ablauf{margin:0;padding-left:20px}
+.ablauf li{margin-bottom:4px}
+.meldung-info{background:var(--blau-hell);color:var(--blau-tief)}
+.meldung-info .symbol{color:var(--blau-tief)}
+.desktop .einspaltig{max-width:760px}
+
+.schalter{margin-bottom:var(--abstand-3)}
+.schalter-label{display:flex;align-items:center;gap:var(--abstand-3);min-height:var(--knopf);cursor:pointer}
+.schalter-text{flex:1 1 auto;font-weight:600}
+.schalter-klein{display:block;font-weight:400;color:var(--gedaempft);font-size:var(--groesse-2)}
+.schalter-griff{flex:0 0 auto;position:relative;width:var(--schalter-breit);height:var(--schalter-hoch);border-radius:var(--radius-rund);background:var(--sand)}
+.schalter-griff::after{content:"";position:absolute;top:3px;left:3px;width:var(--schalter-punkt);height:var(--schalter-punkt);border-radius:var(--radius-rund);background:var(--schnee)}
+.schalter-griff.an{background:var(--orange)}
+.schalter-griff.an::after{left:auto;right:3px}
+.titelzeile-haupt{display:flex;align-items:flex-start;gap:var(--abstand-3);flex-wrap:wrap}
+.titelzeile-text{flex:1 1 auto;min-width:0}
+.titelzeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto;margin-left:auto}
+.knopf-punkte{width:var(--knopf);padding:0;color:var(--gedaempft)}
+.frame-konto{width:360px;height:900px}
+</style>
+</head>
+<body>
+<div class="mock-kopf">
+  <h1>S8 · Mockup 08 — Verwaltung → Konto-Backups, dazu die Karte auf der Kontoseite (freigegeben 05.09.2026)</h1>
+  <p>E-S8-06: „Konto-Backup" als Name für die Pakete der Verwaltung; Kennzahlen heißen „Konto-Backup überfällig" und „nie Konto-Backup"; Speichergrenze und Ablage sind nach Servereinstellungen umgezogen; die Freigabe bekommt auf der Kontoseite eine Zustandszeile (B-S8-09).</p>
+</div>
+<div class="mock-reihe">
+  <div class="mock-spalte">
+    <p class="mock-label">A · 360 px — Konto-Backups</p>
+    <div class="mock-frame frame-mobil"><span class="mock-marke">A</span>
+      <header class="kopf"><div class="kopf-innen">
+        <button class="knopf knopf-symbol kopf-menue"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <a class="kopf-marke" href="#"><svg class="logo" viewBox="0 0 34 34"><rect x="3" y="14" width="18" height="10" rx="3" fill="#FFF"/><path d="M6 11h26M20 14l6 -3" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/><rect x="21" y="16" width="6" height="7" rx="1.5" fill="#FF8F1F"/><rect x="27" y="17" width="4" height="6" rx="1.5" fill="#4280E5"/><rect x="9" y="16" width="9" height="7" rx="1.5" fill="#D63338"/></svg><span class="kopf-name">Gen-EM Einsatzdoku</span></a>
+        <nav class="kopf-punkte"><a class="knopf knopf-symbol kopf-zahnrad aktiv" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a></nav>
+      </div></header>
+      <div class="rahmen"><main class="inhalt" id="inhalt-a">
+        <a class="rueckweg nur-schublade" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg><span>Einstellungen</span></a>
+        <div class="titelzeile"><div class="titelzeile-haupt"><div class="titelzeile-text"><h1 class="seitentitel">Konto-Backups</h1><div class="titelzeile-unter">Pakete, die die Verwaltung je Konto anlegt — nicht die Backups, die NutzerInnen selbst herunterladen</div></div><div class="titelzeile-aktionen"><a class="knopf knopf-primaer" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>Alle sichern</a></div></div></div>
+      </main></div>
+    </div>
+  </div>
+  <div class="mock-spalte">
+    <p class="mock-label">C · 360 px — Kontoseite, Karte „Konto-Backups"</p>
+    <div class="mock-frame frame-konto"><span class="mock-marke">C</span>
+      <header class="kopf"><div class="kopf-innen">
+        <button class="knopf knopf-symbol kopf-menue"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <a class="kopf-marke" href="#"><svg class="logo" viewBox="0 0 34 34"><rect x="3" y="14" width="18" height="10" rx="3" fill="#FFF"/><path d="M6 11h26M20 14l6 -3" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/><rect x="21" y="16" width="6" height="7" rx="1.5" fill="#FF8F1F"/><rect x="27" y="17" width="4" height="6" rx="1.5" fill="#4280E5"/><rect x="9" y="16" width="9" height="7" rx="1.5" fill="#D63338"/></svg><span class="kopf-name">Gen-EM Einsatzdoku</span></a>
+        <nav class="kopf-punkte"><a class="knopf knopf-symbol kopf-zahnrad aktiv" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a></nav>
+      </div></header>
+      
+      <div class="rahmen"><main class="inhalt">
+        <a class="rueckweg nur-schublade" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg><span>NutzerInnen</span></a>
+        <div class="titelzeile"><h1 class="seitentitel">newroz@gen-em.de</h1><div class="titelzeile-unter">Newroz · NutzerIn · seit 12.03.2026</div></div>
+        <div class="karte" style="opacity:.45"><div class="karte-kopf"><h2 class="karte-titel">Konto</h2></div><div class="karte-inhalt"><p class="feld-hinweis">Name, Rolle, E-Mail — wie heute</p></div></div>
+        <div class="karte" style="opacity:.45"><div class="karte-kopf"><h2 class="karte-titel">Geräte</h2></div><div class="karte-inhalt"><p class="feld-hinweis">Deaktivieren, Entkoppeln — wie heute</p></div></div>
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Konto-Backups</h2><span class="plakette plakette-orange">überfällig · 41 Tage</span><a class="karte-aktion" href="#">Jetzt sichern</a></div>
+          <div class="karte-inhalt">
+            <div class="meldung meldung-info" style="margin-bottom:12px"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><p><strong>Freigegeben für max@gen-em.de</strong> seit 03.09.2026 — das Paket vom 26.07. Die NutzerIn spielt es dort mit ihrem Wiederherstellungsschlüssel ein. <a class="status-link" href="#">Widerrufen</a></p></div>
+            <div class="zeile"><div class="zeile-text"><strong>26.07.2026 09:12</strong><span class="zeile-klein">vollständig · 8,4 MB · freigegeben</span></div><div class="zeile-plaketten"><a class="knopf knopf-leise" href="#">Einspielen</a><a class="knopf knopf-symbol knopf-punkte" href="#" aria-label="Weitere Aktionen"><svg class="symbol" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></a></div></div>
+            <div class="zeile"><div class="zeile-text"><strong>14.06.2026 03:10</strong><span class="zeile-klein">vollständig · 7,9 MB</span></div><div class="zeile-plaketten"><a class="knopf knopf-leise" href="#">Einspielen</a><a class="knopf knopf-symbol knopf-punkte" href="#" aria-label="Weitere Aktionen"><svg class="symbol" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></a></div></div>
+            <p class="feld-klein" style="margin-top:12px">Aufbewahrung: 2 Pakete; das jüngste und ein freigegebenes bleiben immer.</p>
+          </div>
+        </div>
+        <div class="karte" style="opacity:.45;border-color:var(--rot)"><div class="karte-kopf"><h2 class="karte-titel">Konto löschen</h2></div><div class="karte-inhalt"><p class="feld-hinweis">Gefahrenzone — wie heute; „Abonnement · ab P5" ist ausgeblendet</p></div></div>
+      </main></div>
+    </div>
+  </div>
+  <div class="mock-spalte" style="flex-basis:100%">
+    <p class="mock-label">B · 1280 px — Konto-Backups</p>
+    <div class="mock-frame frame-desktop desktop"><span class="mock-marke">B</span>
+      <header class="kopf"><div class="kopf-innen">
+        <a class="kopf-marke" href="#"><svg class="logo" viewBox="0 0 34 34"><rect x="3" y="14" width="18" height="10" rx="3" fill="#FFF"/><path d="M6 11h26M20 14l6 -3" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/><rect x="21" y="16" width="6" height="7" rx="1.5" fill="#FF8F1F"/><rect x="27" y="17" width="4" height="6" rx="1.5" fill="#4280E5"/><rect x="9" y="16" width="9" height="7" rx="1.5" fill="#D63338"/></svg><span class="kopf-name">Gen-EM Einsatzdoku</span><span class="kopf-nutzer">Philipp Chadid</span></a>
+        <nav class="kopf-punkte">
+          <a class="kopf-punkt" href="#"><svg class="symbol" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Startseite</span></a>
+          <a class="kopf-punkt" href="#"><svg class="symbol" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>Suche</span></a>
+          <a class="knopf knopf-symbol kopf-zahnrad aktiv" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
+        </nav>
+      </div></header>
+      <div class="rahmen">
+        <aside class="leiste">
+          <div class="leiste-liste">
+            <details class="leiste-gruppe"><summary>Einstellungen<svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary></details>
+            <details class="leiste-gruppe" open>
+              <summary>Verwaltung<svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6M16 14c3 0 6 2 6 5"/></svg><span class="eintrag-text">NutzerInnen</span></a>
+              <a class="eintrag aktiv" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="eintrag-text">Konto-Backups</span><span class="plakette plakette-orange">3</span></a>
+              <ul class="eintrag-unter">
+                <li><a href="#regeln" class="aktiv">Regeln</a></li>
+                <li><a href="#ohne">Backups ohne Konto</a></li>
+                <li><a href="#gilt">Was hier gilt</a></li>
+              </ul>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/></svg><span class="eintrag-text">Installation</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7 15h10"/></svg><span class="eintrag-text">Demo-Konto</span></a>
+            </details>
+            <details class="leiste-gruppe"><summary>Betrieb <span class="gruppen-zahl" style="color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2)">· 7</span><svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary></details>
+          </div>
+          <div class="leiste-fuss"><a class="eintrag eintrag-leise" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg><span class="eintrag-text">Abmelden</span></a></div>
+        </aside>
+        <main class="inhalt" id="inhalt-b">
+          <div class="titelzeile"><div class="titelzeile-haupt"><div class="titelzeile-text"><h1 class="seitentitel">Konto-Backups</h1><div class="titelzeile-unter">Pakete, die die Verwaltung je Konto anlegt — nicht die Backups, die NutzerInnen selbst herunterladen</div></div><div class="titelzeile-aktionen"><a class="knopf knopf-primaer" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>Alle sichern</a></div></div></div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<template id="seite">
+  <div class="kennzahl-raster" data-spalte="0">
+    <div class="kennzahl"><span class="kennzahl-wert">23</span><span class="kennzahl-text">Pakete · 0,9 GB</span></div>
+    <div class="kennzahl"><span class="kennzahl-wert">11</span><span class="kennzahl-text">Konten</span></div>
+    <a class="kennzahl" href="#" style="text-decoration:none"><span class="kennzahl-wert" style="color:var(--orange-tief)">2</span><span class="kennzahl-text">Konto-Backup überfällig ›</span></a>
+    <a class="kennzahl" href="#" style="text-decoration:none"><span class="kennzahl-wert" style="color:var(--orange-tief)">1</span><span class="kennzahl-text">nie Konto-Backup ›</span></a>
+  </div>
+
+  <div class="meldung meldung-info" data-spalte="0"><svg class="symbol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><p><strong>„Alle sichern" läuft:</strong> 8 von 11 Konten, in Schüben zu 20 Sekunden — den Rest holt der Wartungsjob nach. Zuletzt gesichert: max@gen-em.de, 09:41.</p></div>
+
+  <div class="karte karte-anker" id="regeln" data-spalte="1">
+    <div class="karte-kopf"><h2 class="karte-titel">Regeln</h2></div>
+    <div class="karte-inhalt">
+      <form>
+        <div class="fld-reihe">
+          <div class="feld"><label class="feld-label">Erinnerung nach</label><input class="feld-eingabe" value="30"><p class="feld-klein">Tage seit dem letzten Konto-Backup — ab dann gilt ein Konto als überfällig (Kennzahl, Filter, Mail).</p></div>
+          <div class="feld"><label class="feld-label">Aufbewahrung je Konto</label><input class="feld-eingabe" value="2"><p class="feld-klein">Pakete. Das jüngste und ein freigegebenes werden nie gelöscht.</p></div>
+        </div>
+        <div class="schalter"><label class="schalter-label"><span class="schalter-griff"></span><span class="schalter-text">Erinnerung an Admins per E-Mail<span class="schalter-klein">Einmal je Konto und Frist, über den täglichen Aufräumjob. Ohne SMTP als Dauermeldung auf dieser Seite.</span></span></label></div>
+        <div class="listen-form-fuss"><a class="knopf knopf-primaer" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Speichern</a></div>
+      </form>
+      <p class="feld-klein" style="margin-top:12px">Speichergrenze und Warnschwellen gelten für alle Backups zusammen und stehen unter <a class="status-link" href="#">Servereinstellungen ›</a> (Betrieb).</p>
+    </div>
+  </div>
+
+  <details class="karte karte-klappbar karte-anker" id="ohne" data-spalte="2">
+    <summary class="karte-kopf"><h2 class="karte-titel">Backups ohne Konto</h2><span class="karte-vorschau">1 Ordner · 2 Pakete · 12 MB</span><svg class="symbol akkordeon-winkel" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="karte-inhalt">
+      <p class="feld-hinweis">Pakete, deren Konto gelöscht wurde. Sie bleiben, bis jemand sie einspielt oder löscht — typisch nach „Konto gelöscht und neu aufgesetzt".</p>
+      <div style="margin-top:12px">
+      <div class="zeile"><div class="zeile-text"><strong>Kontokennung 7c3f…a19e</strong><span class="zeile-klein">Herkunft newroz@gen-em.de · 2 Pakete · jüngstes 28.08.2026</span></div><div class="zeile-plaketten"><a class="knopf knopf-leise" href="#">Einspielen</a><a class="knopf knopf-leise" href="#">Freigeben</a><a class="knopf knopf-symbol knopf-punkte" href="#" aria-label="Weitere Aktionen"><svg class="symbol" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></a></div></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="karte karte-klappbar karte-anker" id="gilt" data-spalte="2">
+    <summary class="karte-kopf"><h2 class="karte-titel">Was hier gilt</h2><span class="karte-vorschau">Drei Backups · Freigabe · Schlüssel</span><svg class="symbol akkordeon-winkel" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="karte-inhalt"><p class="feld-hinweis">Ein Konto-Backup legt die Verwaltung an; es liegt auf dem Server, adressiert über die Kontokennung. Die geschützten Angaben bleiben mit dem Inhaltsschlüssel des Kontos verschlüsselt — der Server kann sie nicht lesen, deshalb entstehen Konto-Backups nie von selbst. Ein Backup, das NutzerInnen selbst herunterladen, zählt hier nicht. Das Komplett-Backup der Installation ist ein Drittes und liegt unter Betrieb.</p></div>
+  </details>
+</template>
+
+<script>
+  const t = document.getElementById('seite').content;
+  document.getElementById('inhalt-a').appendChild(t.cloneNode(true));
+  const b = document.getElementById('inhalt-b'); const c = t.cloneNode(true);
+  c.querySelectorAll('[data-spalte="0"]').forEach(k => b.appendChild(k));
+  const raster = document.createElement('div'); raster.className='karten-raster';
+  const s1=document.createElement('div'), s2=document.createElement('div');
+  c.querySelectorAll('[data-spalte]').forEach(k => (k.dataset.spalte==='1'?s1:s2).appendChild(k));
+  raster.append(s1,s2); b.appendChild(raster);
+</script>
+<div class="mock-anmerkungen">
+  <h2>Was das Mockup zeigt — und was nicht</h2>
+  <ol>
+    <li><strong>Die Seite sagt im Untertitel, was sie ist</strong> — Pakete der Verwaltung, nicht die Backups der NutzerInnen (B-S8-08). Kennzahlen: Pakete mit Größe, Konten, „Konto-Backup überfällig" und „nie Konto-Backup" als Links auf die Filter der NutzerInnen-Liste (B-S8-07, B-S8-19). „Alle sichern" bleibt Titelaktion; der Auftragsstand erscheint als Meldung, solange er läuft.</li>
+    <li><strong>Regeln</strong> ohne Speichergrenze und Schwellen — die stehen jetzt unter Servereinstellungen, der Kleintext verweist dorthin. Der Schalter für die Admin-Mail wie heute (Baustein aus E-P3-28).</li>
+    <li><strong>Backups ohne Konto</strong> zugeklappt mit Vorschau; je Ordner Einspielen und Freigeben als leise Knöpfe, Löschen und „Ganzen Ordner löschen" im ⋯-Menü (Regel 3: Ausnahmen eine Ebene tiefer). Die Karte „Ablage" ist fort (→ Servereinstellungen).</li>
+    <li><strong>Kontoseite (C):</strong> die Karte heißt „Konto-Backups", trägt die Überfälligkeit als Plakette und „Jetzt sichern" als Kartenaktion. Neu ist die <strong>Zustandszeile der Freigabe</strong> als blaue Meldung: für wen, seit wann, welches Paket, was die NutzerIn tun muss, mit „Widerrufen" — heute sieht man die Freigabe nur im ⋯-Menü (B-S8-09). „Abonnement · ab P5" ist ausgeblendet (B-S8-11).</li>
+    <li><strong>Schreibtisch:</strong> Kennzahlen in einer Reihe, Meldung, dann zwei Spalten — links Regeln, rechts die beiden zugeklappten Karten. Die Leiste zeigt den Block Verwaltung offen, Betrieb zugeklappt mit „· 7"; die Plakette „3" an Konto-Backups zählt überfällig und nie.</li>
+    <li><strong>Nicht gezeigt:</strong> die Dialoge Einspielen und Freigeben (wie heute, mit E-Mail-Bestätigung), die NutzerInnen-Sicht „Für dich freigegebenes Backup" (unverändert), der Leerzustand ohne Pakete.</li>
+  </ol>
+</div>
+</body>
+</html>

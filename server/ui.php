@@ -39,7 +39,7 @@ declare(strict_types=1);
  * ueberschreiben, und nur auf Kartenseiten (AK-A2-3).
  *
  * Schluessel von $o:
- *   titel    Pflicht. Der Wortlaut VOR dem Trenner; " — Einsatzdoku" haengt
+ *   titel    Pflicht. Der Wortlaut VOR dem Trenner; " — Gen-EM NAdoku" haengt
  *            diese Funktion an. Der Text wird hier maskiert — Aufrufer
  *            uebergeben Klartext, kein Markup.
  *   klasse   Klasse am <body> (z. B. 'anmeldung-body'); fehlt sie, hat das
@@ -71,7 +71,7 @@ function ui_seite_start(array $o): void
             . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '">',
         '<head>',
         '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
-        '<title>' . ui_e((string)$o['titel']) . ' — Einsatzdoku</title>',
+        '<title>' . ui_e((string)$o['titel']) . ' — Gen-EM NAdoku</title>',
     ];
     if (!empty($o['kopf'])) {
         $zeilen[] = rtrim((string)$o['kopf'], "\n");
@@ -243,6 +243,17 @@ function ui_hat_tagesleiste(?bool $setzen = null): bool
     return $ja;
 }
 
+/**
+ * Dasselbe für die Einstellungsleiste — sie braucht `assets/menue.js`
+ * (Akkordeonzustand der drei Blöcke).
+ */
+function ui_hat_menueleiste(?bool $setzen = null): bool
+{
+    static $ja = false;
+    if ($setzen !== null) { $ja = $setzen; }
+    return $ja;
+}
+
 /** Anzeigename der angemeldeten Person — Name, sonst E-Mail. */
 function ui_user_label(): string {
     global $userName, $userEmail;
@@ -357,7 +368,7 @@ function ui_kopf(array $o = []): void
       <?php $lm = ui_logo_masse(34); ?>
       <img src="<?= ui_e(ui_logo(true)) ?>" alt=""
            width="<?= $lm['breite'] ?>" height="<?= $lm['hoehe'] ?>">
-      <span class="kopf-name">Gen-EM Einsatzdoku</span>
+      <span class="kopf-name">Gen-EM NAdoku</span>
       <?php if ($menue): ?><span class="kopf-nutzer"><?= ui_e(ui_user_label()) ?></span><?php endif; ?>
     </a>
 
@@ -406,6 +417,7 @@ function ui_kopf(array $o = []): void
  *     zeitraum ['jahr'=>'2026','monat'=>'08'] — markiert Jahres- bzw.
  *              Monatszeile der Leiste (nur bei 'diensttage', E-P3-37)
  *     menue    aktiver Eintrag des Einstellungsmenüs (nur bei 'einstellungen')
+ *     lesespalte  true = Inhaltsspalte auf Lesebreite (760 px) begrenzen
  *     titel    Überschrift der Leiste bei 'filter'
  *
  * Bei 'filter' gibt diese Funktion die Leiste NICHT aus: Die Suchseite füllt
@@ -416,10 +428,17 @@ function ui_geruest_start(array $o = []): void
 {
     $leiste = (string)($o['leiste'] ?? '');
     ui_hat_tagesleiste($leiste === 'diensttage');
+    ui_hat_menueleiste($leiste === 'einstellungen');
     ui_kopf(['aktiv' => (string)($o['aktiv'] ?? '')]);
+    /* LESESPALTE (Web 15.1.0, E-S8-18): Eine Seite mit wenigen Karten und viel
+     * Erklärtext liest sich auf 760 px besser als über die volle Breite eines
+     * 1920er Bildschirms. Die Regel `.rahmen-lesespalte` gab es längst — sie
+     * war nur für Seiten OHNE Leiste gebaut (Anmeldung, Rechtstexte,
+     * Wiederherstellung) und über das Gerüst nicht erreichbar. */
+    $rahmen = 'rahmen' . (!empty($o['lesespalte']) ? ' rahmen-lesespalte' : '');
     ?>
 <div class="schleier" data-schublade="zu" hidden></div>
-<div class="rahmen">
+<div class="<?= ui_e($rahmen) ?>">
   <?php /* tabindex="-1": Beim Öffnen der Schublade fokussiert schublade.js
            die Leiste SELBST, nicht ihr erstes Bedienelement — sonst trüge
            das X beim Öffnen einen Fokusring, den niemand bestellt hat
@@ -440,7 +459,7 @@ function ui_geruest_start(array $o = []): void
       <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
         <?= ui_symbol('schliessen', 'symbol-gross') ?>
       </button>
-      <span class="kopf-name">Einsatzdoku</span>
+      <span class="kopf-name">Gen-EM NAdoku</span>
     </div>
     <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
       <a class="eintrag<?= ($o['aktiv'] ?? '') === 'start' ? ' aktiv' : '' ?>" href="index.php">
@@ -483,6 +502,8 @@ function ui_leiste_ende(): void
     ui_demo_hinweis();
 }
 
+
+
 /**
  * Schließt Inhalt und Rahmen, setzt die Fußzeile darunter und lädt die
  * Skripte des Gerüsts.
@@ -506,6 +527,7 @@ function ui_geruest_ende(array $o = []): void
     $skripte = ['assets/symbol.js', 'assets/schublade.js', 'assets/blatt.js',
                 'assets/confirm.js'];
     if (ui_hat_tagesleiste()) { $skripte[] = 'assets/daylist.js'; }
+    if (ui_hat_menueleiste()) { $skripte[] = 'assets/menue.js'; }
     foreach ($skripte as $s) {
         echo '<script src="' . ui_e(ui_asset($s)) . '"></script>' . "\n";
     }
@@ -680,80 +702,236 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
 
 
 /* ---------------------------------------------------------------------------
- * LEISTENINHALT: EINSTELLUNGEN
+ * DAS MENÜ DER EINSTELLUNGEN — EINE QUELLE (S8/AP5, E-S8-04, löst B-S8-01)
  *
- * Derselbe Baustein wie die Diensttage-Leiste — bis Web 8.0.1 trug das
- * Einstellungsmenü buchstäblich die Klasse `.daylist` und erbte damit jede
- * Regel der Tagesleiste, einschließlich der 100-vh-Höhe, die auf dem Handy
- * anderthalb Bildschirme vor den Inhalt schob.
+ * ES GAB DIESE LISTE ZWEIMAL. `ui_leiste_einstellungen()` führte sie für die
+ * Seitenleiste, `ui_einstellungen_uebersicht()` noch einmal für die
+ * Übersichtsseite — dieselben Einträge, dieselben Symbole, zwei Stellen. Sie
+ * sind auseinandergelaufen, und zwar messbar: Bis Web 15.3.0 stand
+ * „Stammdaten systemweit" in beiden, „Komplett-Backup" nur in einer, und die
+ * Reihenfolge unterschied sich. Wer einen Punkt hinzufügte, fügte ihn an
+ * einer Stelle hinzu und merkte es nie.
  *
- * Die Administration steht als abgesetzter zweiter Block und nur für Admins.
- * „Abmelden" steht getrennt am Ende (E-P3-11).
+ * `ui_einstellungen_punkte()` ist jetzt die eine Quelle. Beide Darstellungen
+ * lesen daraus; ein neuer Punkt kostet eine Zeile.
+ *
+ * DREI BLÖCKE NACH ROLLE (E-S8-04, Zielbild 5.1):
+ *
+ *   Einstellungen   alle             das eigene Konto und seine Daten
+ *   Verwaltung      Admin +          andere Konten und was die Anlage zeigt
+ *   Betrieb         BetreiberIn      der Server selbst
+ *
+ * Die Reihenfolge ist die der Zuständigkeit, nicht die der Häufigkeit: Wer
+ * den dritten Block sieht, sieht auch die ersten beiden, und wer nur den
+ * ersten sieht, soll nicht raten müssen, ob es weitere gibt.
+ *
+ * „STAMMDATEN SYSTEMWEIT" HAT KEINEN EINTRAG MEHR (E-S8-14). Die Seite bleibt
+ * und ist über ihre Adresse erreichbar; sie wird einmal bei der Einrichtung
+ * gepflegt und danach jahrelang nicht. Ein Menüpunkt, den man einmal
+ * benutzt, kostet siebzehn Mal Platz. Der Weg dorthin steht im Handbuch.
  * ------------------------------------------------------------------------ */
+
+/**
+ * Die Menüpunkte der Einstellungen, nach Blöcken.
+ *
+ * Rückgabe: Liste von Blöcken, je
+ *   ['schluessel' => 'einstellungen'|'verwaltung'|'betrieb',
+ *    'titel' => string,          // '' beim ersten Block: er braucht keine Überschrift
+ *    'punkte' => [ ['key','href','text','symbol','zaehler'] … ] ]
+ *
+ * `zaehler` ist null oder ['n' => int, 'ton' => 'rot'|'orange'|'neutral'] —
+ * die Zahl am Menüpunkt (S8/AP5, Konzept (3)). Sie kommt aus
+ * `status_lib.php` und steht nur da, wo sie über null steht; welche vier
+ * Punkte eine tragen und warum, steht dort.
+ *
+ * WER WAS SIEHT, entscheidet diese Funktion und niemand sonst — die Wächter
+ * der Seiten prüfen es ein zweites Mal (`require_admin()`,
+ * `require_betreiberin()`). Ein Menü, das mehr zeigt als erreichbar ist,
+ * führt ins 403; eines, das weniger zeigt, verschweigt eine Funktion.
+ */
+/**
+ * Die Zahl an einem Menüpunkt — oder nichts (S8/AP5).
+ *
+ * `$z` ist ['n' => int, 'ton' => 'rot'|'orange'|'neutral'] oder null.
+ * Sie steht NUR, wenn es etwas zu tun gibt: Eine „0" am Menüpunkt ist keine
+ * Auskunft, sondern eine Verzierung, und sie nimmt dem Fall, in dem wirklich
+ * etwas ansteht, die Aufmerksamkeit.
+ *
+ * `aria-label` statt der nackten Zahl: Ein Vorleseprogramm sagt sonst
+ * „Status 3" und lässt offen, was die Drei zählt.
+ */
+function ui_zaehler(?array $z): string
+{
+    if ($z === null || (int)$z['n'] < 1) { return ''; }
+    $ton = (string)($z['ton'] ?? 'rot');
+    $wort = $ton === 'neutral' ? 'ausstehend' : 'offen';
+    return '<span class="zaehler' . ($ton === 'rot' ? '' : ' zaehler-' . ui_e($ton)) . '"'
+         . ' aria-label="' . (int)$z['n'] . ' ' . $wort . '">' . (int)$z['n'] . '</span>';
+}
+
+
+function ui_einstellungen_punkte(): array
+{
+    $bloecke = [[
+        'schluessel' => 'einstellungen',
+        'titel'      => '',
+        'punkte'     => [
+            ['profil',         'einstellungen.php?t=profil',         'Profil',          'profil'],
+            /* GERÄTE VOR DEN STAMMDATEN (Zielbild 5.1): Das Koppeln ist der
+             * erste Schritt jeder neuen NutzerIn; Standorte und
+             * Rettungsmittel werden einmal gepflegt. */
+            ['geraete',        'einstellungen.php?t=geraete',        'Geräte',          'uhr'],
+            ['standorte',      'einstellungen.php?t=standorte',      'Standorte',       'standort'],
+            ['rettungsmittel', 'einstellungen.php?t=rettungsmittel', 'Rettungsmittel',  'fahrzeug'],
+            ['backup',         'einstellungen.php?t=backup',         'Backup',          'sicherung'],
+            ['import',         'import.php',                         'Import / Export', 'tausch'],
+        ],
+    ]];
+
+    /* DIE ZAEHLER KOSTEN NUR, WO SIE STEHEN. `status_lib.php` wird erst
+     * geladen, wenn die Rolle den Block ueberhaupt sieht — `install.php`
+     * laedt `ui.php` ohne Datenbank, und ein `require` auf oberster Ebene
+     * haette den Einrichter mitgerissen. */
+    $zaehler = [];
+    if (function_exists('ist_admin') && ist_admin()) {
+        require_once __DIR__ . '/status_lib.php';
+        $zaehler = menue_zaehler_konto();
+        if (function_exists('ist_betreiberin') && ist_betreiberin()) {
+            $zaehler += menue_zaehler_betrieb();
+        }
+    }
+    $z = static fn(string $key): ?array => $zaehler[$key] ?? null;
+
+    if (function_exists('ist_admin') && ist_admin()) {
+        $bloecke[] = [
+            'schluessel' => 'verwaltung',
+            'titel'      => 'Verwaltung',
+            'punkte'     => [
+                ['admin',              'admin_users.php',        'NutzerInnen',   'gruppe'],
+                ['admin_sicherungen',  'admin_sicherungen.php',  'Konto-Backups', 'sicherung',
+                                                                  $z('admin_sicherungen')],
+                /* `haus` statt `rechtstexte` (Mockup 13, freigegeben
+                 * 05.09.2026): Die Seite heisst nicht mehr „Rechtstexte",
+                 * und das Zeichen lag seit P3 ungenutzt im Vorrat. */
+                ['admin_installation', 'admin_installation.php', 'Installation',  'haus'],
+                ['admin_demo',         'admin_demo.php',         'Demo-Konto',    'kolben'],
+            ],
+        ];
+    }
+
+    if (function_exists('ist_betreiberin') && ist_betreiberin()) {
+        $bloecke[] = [
+            'schluessel' => 'betrieb',
+            'titel'      => 'Betrieb',
+            'punkte'     => [
+                /* FÜNF NEUE ZEICHEN (Mockup 13, freigegeben 05.09.2026).
+                 * AP3 hatte für die neuen Betriebsseiten aus dem Vorrat
+                 * geliehen — dabei entstanden vier Doppelbelegungen, und in
+                 * einer Leiste mit siebzehn Einträgen untereinander ist das
+                 * keine Sparsamkeit mehr, sondern eine Verwechslungsgefahr.
+                 * Alle fünf sind unveränderte Tabler Icons (MIT), wie die
+                 * übrigen 44. Der Zylinder (`datenbank`) bleibt dem
+                 * Komplett-Backup: dort wird wirklich die Datenbank
+                 * gesichert. */
+                ['betrieb_status',    'betrieb_status.php',    'Status',              'status',
+                                                                      $z('betrieb_status')],
+                ['betrieb_statistik', 'betrieb_statistik.php', 'Statistik',           'balken'],
+                ['betrieb_updates',   'betrieb_updates.php',   'Updates',             'aktualisieren',
+                                                                      $z('betrieb_updates')],
+                ['betrieb_jobs',      'betrieb_jobs.php',      'Hintergrundjobs',     'uhrzeit',
+                                                                      $z('betrieb_jobs')],
+                ['betrieb_server',    'betrieb_server.php',    'Servereinstellungen', 'server'],
+                ['admin_komplettsicherung', 'admin_komplettsicherung.php',
+                                                               'Komplett-Backup',     'datenbank'],
+                ['admin_sicherungsziele',   'admin_sicherungsziele.php',
+                                                               'Backup-Ziele',        'ziel-fern'],
+            ],
+        ];
+    }
+
+    return $bloecke;
+}
+
+/**
+ * Die Seitenleiste des Einstellungsbereichs.
+ *
+ * Sie zeigt dieselben Punkte wie die Übersichtsseite, in derselben
+ * Reihenfolge, mit denselben Symbolen — beide lesen aus
+ * `ui_einstellungen_punkte()`.
+ *
+ * FETTDRUCK NUR FÜR DEN AKTIVEN EINTRAG (Backlog Nr. 75, E-S8-07). Bis Web
+ * 15.3.0 waren in der Administration ALLE Einträge fett, weil `.leiste-liste`
+ * dort eine eigene Regel trug; der aktive war damit nicht mehr zu erkennen.
+ *
+ * DIE BLÖCKE KLAPPEN (E-S8-07, Konzept AP5 (2)). Für eine BetreiberIn stehen
+ * siebzehn Einträge untereinander, und das passt in kein übliches
+ * Browserfenster: Gemessen am 05.09.2026 bei 1280 × 900 waren **14 von 17**
+ * ohne Rollen erreichbar, bei 720 px Fensterhöhe noch **10 von 17** — die
+ * Liste ist 883 px hoch, die Leiste bot 603. Wer „Backup-Ziele" sucht, sieht
+ * nicht, dass es den Eintrag gibt.
+ *
+ * Gebaut aus dem vorhandenen Akkordeon-Baustein (`.akkordeon-zeile`,
+ * `-winkel`, `-inhalt`) — demselben, den die Diensttage-Leiste benutzt. Das
+ * freigegebene Mockup 01 zeichnet den Winkel rechts; hier steht er links,
+ * weil er in der anderen Leiste links steht und beide Leisten denselben
+ * Griff haben sollen. `.leiste-gruppe` setzt nur Schriftgrad und Farbe der
+ * bisherigen `.leiste-kopfzeile` — die Blocküberschrift sieht aus wie zuvor
+ * und hat einen Winkel dazubekommen.
+ *
+ * OFFEN IST: „Einstellungen" und der Block der aktiven Seite — in JEDER
+ * Breite. Das Konzept sah ab 1024 px alle Blöcke offen vor; damit blieb es
+ * bei 1280 × 900 bei 14 von 17 erreichbaren Einträgen, also bei genau dem
+ * Zustand, gegen den das Akkordeon gebaut wurde. So sind es 17 von 17.
+ */
 function ui_leiste_einstellungen(string $aktiv): void
 {
-    $punkte = [
-        'profil'         => ['einstellungen.php?t=profil',         'Profil',          'profil'],
-        'standorte'      => ['einstellungen.php?t=standorte',      'Standorte',       'standort'],
-        'rettungsmittel' => ['einstellungen.php?t=rettungsmittel', 'Rettungsmittel',  'fahrzeug'],
-        'geraete'        => ['einstellungen.php?t=geraete',        'Geräte',          'uhr'],
-        'backup'         => ['einstellungen.php?t=backup',         'Backup',          'sicherung'],
-        'import'         => ['import.php',                         'Import / Export', 'tausch'],
-    ];
-    $admin = [
-        'admin'             => ['admin_users.php',       'NutzerInnen',           'gruppe'],
-        /* EIN PUNKT STATT ZWEIER (O9c). Bis Web 9.9.0 standen „Standorte
-         * systemweit" und „Rettungsmittel systemweit" nebeneinander — zwei
-         * Eintraege mit demselben Symbol, die auf dieselbe Datei zeigten und
-         * sich nur im Reiter unterschieden. Der Reiter gehoert in die Seite
-         * (Segmentwahl in der Titelzeile), nicht in die Leiste. */
-        'admin_stammdaten'  => ['admin_stammdaten.php',  'Stammdaten systemweit', 'datenbank'],
-        'admin_sicherungen' => ['admin_sicherungen.php', 'Backups',           'sicherung'],
-        /* BACKUP-ZIELE STEHEN DIREKT UNTER BACKUPS (S2/AP7). Sie sind
-         * die Fortsetzung derselben Sache: erst die Regeln, dann wohin.
-         * Das Symbol ist `tausch` — dasselbe wie bei Import/Export, und aus
-         * demselben Grund: Es geht in beiden Faellen um Dateien, die das Haus
-         * verlassen oder hereinkommen. Ein NEUES Symbol braeuchte Freigabe mit
-         * Mockup (docs/Design.md, Kapitel 9); der Vorrat reicht hier.
-         *
-         * NICHT „Transportziele" — so heissen unter Stammdaten die
-         * Zielkliniken (F-S2-G). */
-        'admin_sicherungsziele' => ['admin_sicherungsziele.php', 'Backup-Ziele', 'tausch'],
-        /* KOMPLETT-BACKUP DIREKT DAHINTER (S2/AP8). Die drei gehoeren
-         * zusammen und stehen in der Reihenfolge, in der man sie braucht:
-         * erst die Regeln fuer die Konto-Backups, dann wohin sie gehen,
-         * dann das Backup der ganzen Installation.
-         *
-         * Das Symbol ist `datenbank` — dasselbe wie bei „Stammdaten
-         * systemweit", und aus dem naheliegenden Grund: Hier wird die
-         * Datenbank als solche gesichert. Ein NEUES Symbol braeuchte Freigabe
-         * mit Mockup (docs/Design.md, Kapitel 9); der Vorrat reicht. */
-        'admin_komplettsicherung' => ['admin_komplettsicherung.php',
-                                      'Komplett-Backup', 'datenbank'],
-        /* Zwischen Backups und Demo-Konto — so steht es in Mockup 35. */
-        'admin_rechtstexte' => ['admin_rechtstexte.php', 'Rechtstexte',           'rechtstexte'],
-        'admin_demo'        => ['admin_demo.php',        'Demo-Konto',            'kolben'],
-        'wartung'           => ['update.php',            'Wartung',               'werkzeug'],
-    ];
+    $bloecke = ui_einstellungen_punkte();
     ?>
-    <h2 class="leiste-kopfzeile">Einstellungen</h2>
-    <div class="leiste-liste">
-      <?php foreach ($punkte as $key => [$href, $text, $sym]): ?>
-        <a class="eintrag<?= $aktiv === $key ? ' aktiv' : '' ?>" href="<?= ui_e($href) ?>"
-           <?= $aktiv === $key ? 'aria-current="page"' : '' ?>>
-          <?= ui_symbol($sym) ?><span class="eintrag-text"><?= ui_e($text) ?></span>
-        </a>
+    <div class="leiste-liste" data-menue>
+      <?php foreach ($bloecke as $b): ?>
+        <?php
+        /* JEDER BLOCK IST EIN <details>, UND DER SERVER RENDERT DIE VORGABE:
+         * „Einstellungen" ist offen, dazu der Block der aktiven Seite; die
+         * uebrigen sind zu.
+         *
+         * DIESELBE VORGABE IN JEDER BREITE. Das Konzept sah ab 1024 px alle
+         * Bloecke offen vor; gemessen loest das den Grund fuer das Akkordeon
+         * nicht: Bei 1280 x 900 blieben mit allen offenen Bloecken 14 von 17
+         * Eintraegen erreichbar — genau der Zustand, gegen den das Akkordeon
+         * gebaut wurde. Mit dieser Vorgabe sind es 17 von 17. Entschieden am
+         * 05.09.2026 auf Nachfrage; die Abweichung steht im Konzept.
+         *
+         * WARUM PHP UND NICHT DAS SKRIPT. Der Serverzustand ist damit schon
+         * der Zielzustand — in jeder Breite, ohne Skript. `menue.js` legt nur
+         * noch darueber, was in dieser Sitzung von Hand geaendert wurde. Ein
+         * Skript, das die Vorgabe selbst herstellt, laesst am Schreibtisch
+         * bei jedem Seitenaufruf kurz den anderen Zustand aufblitzen.
+         *
+         * `data-gruppe` ist der Schluessel im sessionStorage. */
+        $titel  = $b['titel'] !== '' ? $b['titel'] : 'Einstellungen';
+        $hatAkt = false;
+        foreach ($b['punkte'] as $pk) { if ($aktiv === $pk[0]) { $hatAkt = true; } }
+        $offen  = $hatAkt || $b['schluessel'] === 'einstellungen';
+        ?>
+        <details class="akkordeon leiste-gruppe"<?= $offen ? ' open' : '' ?>
+                 data-gruppe="<?= ui_e($b['schluessel']) ?>">
+          <summary class="akkordeon-zeile">
+            <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
+            <span class="akkordeon-text"><?= ui_e($titel) ?><span
+              class="gruppen-zahl" aria-hidden="true"> · <?= count($b['punkte']) ?></span></span>
+          </summary>
+          <div class="akkordeon-inhalt">
+            <?php foreach ($b['punkte'] as $punkt): ?>
+              <?php [$key, $href, $text, $sym] = $punkt; $zz = $punkt[4] ?? null; ?>
+              <a class="eintrag<?= $aktiv === $key ? ' aktiv' : '' ?>" href="<?= ui_e($href) ?>"
+                 <?= $aktiv === $key ? 'aria-current="page"' : '' ?>>
+                <?= ui_symbol($sym) ?><span class="eintrag-text"><?= ui_e($text) ?></span>
+                <?= ui_zaehler($zz) ?>
+              </a>
+            <?php endforeach; ?>
+          </div>
+        </details>
       <?php endforeach; ?>
-
-      <?php if (function_exists('ist_admin') && ist_admin()): ?>
-        <h2 class="leiste-kopfzeile">Administration</h2>
-        <?php foreach ($admin as $key => [$href, $text, $sym]): ?>
-          <a class="eintrag<?= $aktiv === $key ? ' aktiv' : '' ?>" href="<?= ui_e($href) ?>"
-             <?= $aktiv === $key ? 'aria-current="page"' : '' ?>>
-            <?= ui_symbol($sym) ?><span class="eintrag-text"><?= ui_e($text) ?></span>
-          </a>
-        <?php endforeach; ?>
-      <?php endif; ?>
     </div>
     <div class="leiste-fuss">
       <a class="eintrag eintrag-leise" href="logout.php"
@@ -771,53 +949,57 @@ function ui_leiste_einstellungen(string $aktiv): void
  * Sie führt dieselben Punkte wie die Leiste, aber als Liste im Inhalt: Symbol,
  * Text, Winkel. Auf dem Handy ist sie der einzige Weg, der zeigt, WAS es
  * gibt — dort ist die Leiste eine Schublade, und ein Zahnrad, das ungefragt
- * auf „Profil" landet, verschweigt die übrigen elf Punkte.
+ * auf „Profil" landet, verschweigt die übrigen sechzehn Punkte.
  *
- * Die Administration steht als abgesetzter zweiter Block. „Abmelden" steht
+ * Verwaltung und Betrieb stehen als abgesetzte Blöcke. „Abmelden" steht
  * getrennt am Ende, darunter nur der Name der angemeldeten Person.
  */
 function ui_einstellungen_uebersicht(): void
 {
-    $bloecke = [['', [
-        ['einstellungen.php?t=profil',         'Profil',           'profil'],
-        ['einstellungen.php?t=standorte',      'Standorte',        'standort'],
-        ['einstellungen.php?t=rettungsmittel', 'Rettungsmittel',   'fahrzeug'],
-        ['einstellungen.php?t=geraete',        'Geräte',           'uhr'],
-        ['einstellungen.php?t=backup',         'Backup',           'sicherung'],
-        ['import.php',                         'Import / Export',  'tausch'],
-    ]]];
-    if (function_exists('ist_admin') && ist_admin()) {
-        $bloecke[] = ['Administration', [
-            ['admin_users.php',      'NutzerInnen',           'gruppe'],
-            ['admin_stammdaten.php', 'Stammdaten systemweit', 'datenbank'],
-            ['admin_sicherungen.php','Backups',           'sicherung'],
-            ['admin_sicherungsziele.php', 'Backup-Ziele',   'tausch'],
-            ['admin_komplettsicherung.php', 'Komplett-Backup', 'datenbank'],
-            ['admin_rechtstexte.php','Rechtstexte',           'rechtstexte'],
-            ['admin_demo.php',       'Demo-Konto',            'kolben'],
-            ['update.php',           'Wartung',               'werkzeug'],
-        ]];
-    }
+    $bloecke = ui_einstellungen_punkte();
 
     ui_seite_start(['titel' => 'Einstellungen']);
     ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => '']);
     ui_titelzeile(['titel' => 'Einstellungen', 'unter' => ui_e(ui_user_label())]);
-    foreach ($bloecke as [$titel, $punkte]) {
+
+    /* AM SCHREIBTISCH DREI SPALTEN (Konzept AP5 (6)). Gestapelt sind es für
+     * eine BetreiberIn drei Karten mit siebzehn Zeilen — anderthalb
+     * Bildschirme, auf denen nur die erste Karte ohne Rollen zu sehen ist.
+     * Nebeneinander passt der ganze Bereich auf einen Blick. Das Raster
+     * füllt sich nach Rolle von selbst: eine Spalte für eine NutzerIn, zwei
+     * für eine Admin, drei für eine BetreiberIn. */
+    echo '  <div class="uebersicht-raster">' . "\n";
+    foreach ($bloecke as $b) {
+        echo '  <section class="uebersicht-gruppe">' . "\n";
         /* Die Blocküberschrift steht ÜBER der Karte, nicht in ihr — Mockup 07
          * zeigt „ADMINISTRATION" als gesperrte Versalzeile außerhalb
-         * (Fable-Kontrolle, F-P3-W). */
-        if ($titel !== '') {
-            echo '  <h2 class="uebersicht-block">' . ui_e($titel) . "</h2>\n";
-        }
+         * (Fable-Kontrolle, F-P3-W).
+         *
+         * DER ERSTE BLOCK TRÄGT SIE NUR NEBENEINANDER. Gestapelt stünde
+         * „EINSTELLUNGEN" unmittelbar unter der Seitenüberschrift
+         * „Einstellungen" — eine Dublette, und deshalb sah das Konzept hier
+         * keine Überschrift vor. In drei Spalten ist sie etwas anderes: Sie
+         * benennt die Spalte, und ohne sie stünde eine namenlose neben zwei
+         * benannten. Das Stylesheet blendet sie unter 1024 px aus; im Markup
+         * steht sie immer, damit ein Vorleseprogramm alle drei Blöcke
+         * gleich benennt. */
+        $erst = $b['titel'] === '';
+        echo '    ' . ($erst
+                ? '<h2 class="uebersicht-block uebersicht-block-erst">Einstellungen</h2>'
+                : '<h2 class="uebersicht-block">' . ui_e($b['titel']) . '</h2>') . "\n";
         ui_karte_start([]);
-        foreach ($punkte as [$href, $text, $sym]) {
+        foreach ($b['punkte'] as $punkt) {
+            [$key, $href, $text, $sym] = $punkt;
             echo '    <a class="uebersicht-zeile" href="' . ui_e($href) . '">'
                . ui_symbol($sym, 'symbol-gross')
                . '<span class="uebersicht-text">' . ui_e($text) . '</span>'
+               . ui_zaehler($punkt[4] ?? null)
                . ui_symbol('winkel', 'symbol-rechts uebersicht-winkel') . "</a>\n";
         }
         ui_karte_ende();
+        echo '  </section>' . "\n";
     }
+    echo '  </div>' . "\n";
     ui_karte_start();
     echo '    ' . ui_knopf(['text' => 'Abmelden', 'href' => 'logout.php', 'art' => 'leise',
         'symbol' => 'abmelden', 'breit' => true,
@@ -1044,6 +1226,43 @@ function ui_knopf(array $o): string
 
 
 /* ---------------------------------------------------------------------------
+ * WERTEKASTEN, KLEINE STUFE  (.codeblock.codeblock-lang)
+ *
+ * Fuer LANGE Werte: Cron-Zeile, Token-Adresse, Setz-Link,
+ * Serverschluessel-Zeile, Geraete-ID und API-Schluessel. Die grosse Stufe
+ * (`.codeblock-wert`) ist fuer sechs Zeichen gemacht und sperrt sie zusaetzlich
+ * — bei hundert Zeichen ergibt das drei Zeilen in Plakatgroesse (Backlog
+ * Nr. 78, E-S8-10).
+ *
+ * DER KNOPF IST TEIL DES BAUSTEINS und nicht Sache der Seite: Ein Wert, den man
+ * kopieren soll, und ein Knopf, der ihn kopiert, gehoeren zusammen — sonst
+ * baut ihn die naechste Seite anders. Er braucht `assets/kopieren.js`; wer
+ * diesen Baustein benutzt, nimmt das Skript in `ui_seite_ende(['skripte' =>
+ * …])` mit.
+ *
+ * OHNE JAVASCRIPT bleibt der Wert lesbar und markierbar — der Knopf verschwindet
+ * dann (das Skript blendet ihn ein). Ein Knopf, der nichts tut, waere schlechter
+ * als keiner.
+ *
+ * $wert  der Wert selbst (wird maskiert)
+ * $titel optionale Kleinzeile darueber ("Adresse")
+ * ------------------------------------------------------------------------ */
+function ui_codeblock_lang(string $wert, string $titel = ''): string
+{
+    $h  = '<div class="codeblock codeblock-lang">' . "\n";
+    $h .= '  <div class="codeblock-text">' . "\n";
+    if ($titel !== '') {
+        $h .= '    <p class="codeblock-titel">' . ui_e($titel) . "</p>\n";
+    }
+    $h .= '    <p class="codeblock-wert-lang" data-kopierwert>' . ui_e($wert) . "</p>\n";
+    $h .= "  </div>\n";
+    $h .= '  ' . ui_knopf(['text' => 'Kopieren', 'art' => 'leise', 'typ' => 'button',
+                            'attr' => ' data-kopieren hidden']) . "\n";
+    return $h . "</div>\n";
+}
+
+
+/* ---------------------------------------------------------------------------
  * PLAKETTE  (.plakette)
  *
  * Plaketten tragen KEIN Häkchen: Ihr Vorhandensein ist das Häkchen. Und sie
@@ -1081,8 +1300,14 @@ function ui_plakette(string $text, array $o = []): string
  * Zugeklappte Karten tragen den Winkel links im Kopf und eine Vorschau rechts
  * („keine", „vom Diensttag", „3 · 1 ausgewählt").
  *
- * $o: titel, zahl, aktion ['text','href','symbol','art'], zu (bool),
- *     vorschau, klasse, id
+ * $o: titel, zahl, aktion ['text','href','symbol','art','form','attr'],
+ *     zu (bool), vorschau, klasse, id, plakette
+ *
+ * DIE KOPFAKTION KANN AUCH EIN ABSENDEKNOPF SEIN (S8/AP3). „Jetzt sichern"
+ * auf der Kontoseite ist ein POST, kein Link — mit `form` wird aus dem <a>
+ * ein <button type="submit" form="…">, gleiche Klasse, gleiches Aussehen.
+ * Ein <form> um den Knopf ginge nicht: Der Kartenkopf steht bereits in einem
+ * Formular, und verschachtelte Formulare gibt es in HTML nicht.
  * ------------------------------------------------------------------------ */
 function ui_karte_start(array $o = []): void
 {
@@ -1124,11 +1349,18 @@ function ui_karte_start(array $o = []): void
         if (!empty($o['aktion'])) {
             $a = $o['aktion'];
             $art = (string)($a['art'] ?? 'blau');
-            echo '    <a class="karte-aktion karte-aktion-' . ui_e($art) . '" href="'
-               . ui_e((string)($a['href'] ?? '#')) . '"'
-               . (!empty($a['attr']) ? ' ' . (string)$a['attr'] : '') . '>'
-               . (!empty($a['symbol']) ? ui_symbol((string)$a['symbol']) : '')
-               . '<span>' . ui_e((string)($a['text'] ?? '')) . "</span></a>\n";
+            $k   = 'karte-aktion karte-aktion-' . ui_e($art);
+            $inhalt = (!empty($a['symbol']) ? ui_symbol((string)$a['symbol']) : '')
+                    . '<span>' . ui_e((string)($a['text'] ?? '')) . '</span>';
+            $extra = !empty($a['attr']) ? ' ' . (string)$a['attr'] : '';
+            if (!empty($a['form'])) {
+                echo '    <button type="submit" class="' . $k . '" form="'
+                   . ui_e((string)$a['form']) . '"' . $extra . '>' . $inhalt . "</button>\n";
+            } else {
+                echo '    <a class="' . $k . '" href="'
+                   . ui_e((string)($a['href'] ?? '#')) . '"' . $extra . '>'
+                   . $inhalt . "</a>\n";
+            }
         }
         echo "  </div>\n";
     }
@@ -1569,12 +1801,28 @@ function ui_zeilenaktionen(array $o): string
     static $lfd = 0;
     $id = (string)($o['id'] ?? ('za-' . (++$lfd)));
 
-    /* Desktop: die Knöpfe. Mobil: das „⋯" und dasselbe wieder im Blatt. */
-    $m  = '<div class="zeile-knoepfe nur-ab-720">';
-    foreach ($eintraege as $e) { $m .= $knopf($e, 'knopf'); }
-    $m .= '</div>';
+    /* Desktop: die Knöpfe. Mobil: das „⋯" und dasselbe wieder im Blatt.
+     *
+     * `blatt_immer` LÄSST DIE KNOPFREIHE WEG (S8/AP6, Mockup 10, freigegeben):
+     * Dann steht der Punkte-Knopf in jeder Breite, und ab 1024 px klappt
+     * daran das Aufklappmenü auf — dasselbe Markup, das Stylesheet entscheidet.
+     *
+     * WOFÜR. Die Geräteliste trägt drei Handlungen, von denen eine
+     * unumkehrbar ist. Als Knopfreihe stünde „Entkoppeln" in Rot unmittelbar
+     * neben „Deaktivieren", und zwar in jeder Zeile — drei Knöpfe mal drei
+     * Geräte sind neun Ziele für drei Wege. Im Menü liegt die gefährliche
+     * Handlung eine Ebene tiefer, abgesetzt und rot.
+     *
+     * Es bleibt die Ausnahme: Wo die Handlungen harmlos und häufig sind
+     * (Stammdaten, Papierkorb), ist die Knopfreihe der schnellere Weg. */
+    $m = '';
+    if (empty($o['blatt_immer'])) {
+        $m .= '<div class="zeile-knoepfe nur-ab-720">';
+        foreach ($eintraege as $e) { $m .= $knopf($e, 'knopf'); }
+        $m .= '</div>';
+    }
 
-    $m .= '<div class="aktionen nur-unter-720">';
+    $m .= '<div class="aktionen' . (empty($o['blatt_immer']) ? ' nur-unter-720' : '') . '">';
     $m .= '<button type="button" class="knopf knopf-symbol" data-blatt="' . $id . '"'
         . ' aria-expanded="false" aria-controls="' . $id . '"'
         . ' title="Weitere Handlungen">' . ui_symbol('punkte', '', 'Weitere Handlungen') . '</button>';
@@ -1604,7 +1852,10 @@ function ui_speichern_leiste(array $o = []): void
      * IMMER sichtbar (der Hinweis eines Formulars erscheint erst ab 720 px).
      *
      * $o: text, symbol, name, wert, attr, hinweis, id, form, zahl (Hinweis
-     *     immer sichtbar), kein_haken (nicht an forms.js hängen) */
+     *     immer sichtbar), kein_haken (nicht an forms.js hängen),
+     *     hinweis_vorlage (S8/AP3: forms.js ersetzt den Hinweis dann durch
+     *     „<Vorlage>: Karte A und Karte B" — die Titel der Karten, in denen
+     *     etwas geändert wurde) */
     $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
     ?>
 <div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
@@ -1618,6 +1869,7 @@ function ui_speichern_leiste(array $o = []): void
            Vorlesereihenfolge auseinander. */ ?>
   <div class="speichern-innen">
     <p class="speichern-hinweis<?= !empty($o['zahl']) ? ' speichern-zahl' : '' ?>"
+       <?= !empty($o['hinweis_vorlage']) ? 'data-hinweis-vorlage="' . ui_e((string)$o['hinweis_vorlage']) . '"' : '' ?>
        <?= !empty($o['zahl']) ? 'id="' . ui_e((string)$o['zahl']) . '"' : '' ?>><?= ui_e((string)($o['hinweis']
         ?? 'Es gibt ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
     <?= ui_knopf([

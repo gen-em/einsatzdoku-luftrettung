@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S8 · Mockup 04 — Statistik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;
+  --asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;--auf-dunkel:#FFFFFF;
+  --auf-dunkel-flaeche:rgba(255,255,255,.14);
+  --linie:#E3DAC6;--linie-stark:var(--gedaempft);
+  --orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;
+  --rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --schrift-text:'Open Sans',system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --schrift-fest:ui-monospace,'SF Mono','Cascadia Mono','JetBrains Mono',Consolas,monospace;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;--groesse-6:24px;--groesse-titel:28px;
+  --zeile:1.55;--zeile-eng:1.3;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --kopf:56px;--knopf:44px;--leiste:260px;--schublade:320px;
+  --symbol:20px;--symbol-gross:24px;--strich:1px;--strich-stark:2px;
+  --schalter-breit:46px;--schalter-hoch:26px;--schalter-punkt:20px;--dauer:.18s;
+}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:var(--zeile)}
+p{margin:0}
+.mock-kopf{padding:20px 24px 8px;max-width:1400px;margin:0 auto}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{color:var(--gedaempft);font-size:var(--groesse-2)}
+.mock-reihe{display:flex;flex-wrap:wrap;gap:28px;padding:16px 24px 40px;max-width:1400px;margin:0 auto;align-items:flex-start}
+.mock-frame{background:var(--rauch);border:1px solid #CFC7B5;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(26,46,77,.10);position:relative;flex:0 0 auto}
+.mock-label{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px}
+.mock-spalte{flex:0 0 auto}
+.frame-mobil{width:360px;height:1560px}
+.frame-desktop{width:1280px;height:980px}
+@media (max-width:1380px){.frame-desktop{zoom:.72}}
+@media (max-width:760px){.frame-desktop{zoom:.27}}
+.mock-anmerkungen{max-width:1400px;margin:0 auto;padding:0 24px 48px}
+.mock-anmerkungen h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);color:var(--dunkelblau);margin:0 0 8px}
+.mock-anmerkungen ol{margin:0;padding-left:20px}
+.mock-anmerkungen li{margin-bottom:6px}
+.mock-marke{position:absolute;right:10px;top:10px;font-family:var(--schrift-kopf);font-size:11px;font-weight:600;color:var(--gedaempft);background:rgba(255,252,250,.85);padding:2px 6px;border-radius:6px;z-index:99}
+
+/* ---- Anwendung (Auszug style.css) --------------------------------------- */
+a{color:var(--blau-tief)}
+code{font-family:var(--schrift-fest);font-size:.92em}
+strong{font-weight:600}
+.symbol{width:var(--symbol);height:var(--symbol);flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
+.kopf{position:sticky;top:0;z-index:40;background:var(--dunkelblau);color:var(--auf-dunkel);height:var(--kopf)}
+.kopf-innen{display:flex;align-items:center;gap:var(--abstand-2);height:var(--kopf);padding:0 var(--abstand-3)}
+.knopf{display:inline-flex;align-items:center;justify-content:center;gap:var(--abstand-2);height:var(--knopf);padding:0 var(--abstand-4);border-radius:var(--radius);border:var(--strich-stark) solid transparent;font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-3);text-decoration:none;cursor:pointer;white-space:nowrap;background:none;color:inherit;box-sizing:border-box}
+.knopf-symbol{width:var(--knopf);padding:0}
+.knopf-leise{color:var(--gedaempft);padding:0 var(--abstand-2)}
+.knopf-primaer{background:var(--orange);color:var(--dunkelblau);border-color:var(--orange)}
+.knopf-neutral{background:var(--schnee);color:var(--dunkelblau);border-color:var(--linie-stark)}
+.kopf .knopf{color:var(--auf-dunkel)}
+.kopf-menue{margin-left:-8px}
+.kopf-marke{display:flex;align-items:center;gap:var(--abstand-2);color:var(--auf-dunkel);text-decoration:none;min-width:0;flex:1 1 auto}
+.kopf-marke .logo{width:34px;height:34px;flex:0 0 auto}
+.kopf-name{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kopf-nutzer{display:none}
+.kopf-punkte{display:flex;align-items:center;gap:var(--abstand-1);margin-left:auto}
+.kopf-punkt{display:none;align-items:center;gap:var(--abstand-1);height:var(--knopf);padding:0 var(--abstand-3);color:var(--auf-dunkel);text-decoration:none;border-bottom:var(--strich-stark) solid transparent;font-family:var(--schrift-kopf);font-weight:600}
+.kopf-zahnrad{margin-right:-8px}
+.kopf-zahnrad.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
+.rahmen{display:flex;align-items:flex-start}
+.inhalt{flex:1 1 auto;min-width:0;padding:var(--abstand-4) var(--abstand-3) var(--abstand-5)}
+.leiste{display:none}
+.leiste-liste{flex:1 1 auto;overflow-y:auto;padding:var(--abstand-2)}
+.leiste-fuss{flex:0 0 auto;padding:var(--abstand-2);border-top:var(--strich) solid var(--linie)}
+.eintrag{display:flex;align-items:center;gap:var(--abstand-2);min-height:var(--knopf);padding:0 var(--abstand-2);border-radius:var(--radius-klein);border-left:var(--abstand-1) solid transparent;color:var(--asphalt);text-decoration:none}
+.eintrag .symbol{color:var(--dunkelblau)}
+.eintrag-text{flex:1 0 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--schrift-kopf);font-weight:400}
+.eintrag.aktiv{background:var(--orange-hell);border-left-color:var(--orange)}
+.eintrag.aktiv .eintrag-text{color:var(--dunkelblau);font-weight:600}
+.eintrag-leise .symbol,.eintrag-leise .eintrag-text{color:var(--gedaempft)}
+.leiste-gruppe{margin-bottom:var(--abstand-2)}
+.leiste-gruppe > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:var(--abstand-2);font-family:var(--schrift-kopf);font-size:var(--groesse-3);font-weight:600;color:var(--asphalt);padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);min-height:var(--knopf);box-sizing:border-box;border-radius:var(--radius-klein)}
+.leiste-gruppe > summary::-webkit-details-marker{display:none}
+.leiste-gruppe > summary .gruppen-winkel{margin-left:auto;color:var(--sand);transition:transform .18s ease-out}
+.leiste-gruppe[open] > summary .gruppen-winkel{transform:rotate(90deg)}
+.rueckweg{display:inline-flex;align-items:center;gap:var(--abstand-1);min-height:var(--knopf);color:var(--blau-tief);font-weight:600;text-decoration:none}
+.nur-schublade{display:block}
+.titelzeile{margin-bottom:var(--abstand-4)}
+.seitentitel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-titel);line-height:1.3;color:var(--dunkelblau);margin:0}
+.karte{background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);margin-bottom:var(--abstand-5)}
+.karte-kopf{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);padding:var(--abstand-3) var(--abstand-4);border-bottom:var(--strich) solid var(--linie);list-style:none}
+.karte-kopf::-webkit-details-marker{display:none}
+.karte-titel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);flex:0 1 auto;min-width:0;color:var(--dunkelblau);margin:0}
+.karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2);flex:0 0 auto}
+.karte-vorschau{margin-left:auto;color:var(--gedaempft);font-size:var(--groesse-2);text-align:right}
+.karte-inhalt{padding:var(--abstand-4)}
+.karte-klappbar > .karte-kopf{cursor:pointer;border-bottom:0}
+.karte-klappbar[open] > .karte-kopf{border-bottom:var(--strich) solid var(--linie)}
+.akkordeon-winkel{color:var(--sand);transform:rotate(90deg)}
+.karte-klappbar[open] .akkordeon-winkel{transform:none}
+.zeile{display:flex;align-items:center;gap:var(--abstand-3);padding:var(--abstand-3) 0;border-bottom:var(--strich) solid var(--linie)}
+.zeile:last-child{border-bottom:0;padding-bottom:0}
+.zeile:first-child{padding-top:0}
+.zeile-text{flex:1 1 auto;min-width:0}
+.zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+.zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto;justify-content:flex-end}
+.plakette{display:inline-flex;align-items:center;gap:var(--abstand-1);padding:var(--abstand-1) var(--abstand-2);border-radius:var(--radius-klein);font-size:var(--groesse-1);font-weight:600;white-space:nowrap;line-height:1.2}
+.plakette-neutral{background:var(--rauch);color:var(--gedaempft);border:var(--strich) solid var(--linie)}
+.plakette-orange{background:var(--orange-hell);color:var(--asphalt)}
+.plakette-blau{background:var(--blau-hell);color:var(--dunkelblau)}
+.plakette-rot{background:var(--rosa);color:var(--rot-tief)}
+.meldung{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);padding:var(--abstand-3) var(--abstand-4);border-radius:var(--radius);margin-bottom:var(--abstand-5)}
+.meldung p{flex:1 1 16rem;min-width:0}
+.meldung-warn{background:var(--orange-hell);color:var(--asphalt)}
+.meldung-warn .symbol{color:var(--orange-tief)}
+.meldung-fehler{background:var(--rosa);color:var(--rot-tief)}
+.meldung-fehler .symbol{color:var(--rot)}
+.feld{margin-bottom:var(--abstand-3)}
+.feld-label{display:block;font-weight:600;margin-bottom:var(--abstand-1)}
+.feld-eingabe{display:block;width:100%;height:var(--knopf);padding:0 var(--abstand-3);background:var(--schnee);color:var(--asphalt);border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein);box-sizing:border-box;font:inherit}
+.feld-klein{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
+.feld-hinweis{color:var(--gedaempft);font-size:var(--groesse-2)}
+.feld-hinweis + form,.feld-hinweis + .feld{margin-top:var(--abstand-3)}
+.fld-reihe{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 var(--abstand-3)}
+.listen-form-titel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-3);color:var(--dunkelblau);margin:var(--abstand-4) 0 var(--abstand-2)}
+.listen-form-titel:first-child{margin-top:0}
+.listen-form-fuss{display:flex;flex-wrap:wrap;gap:var(--abstand-2);margin-top:var(--abstand-4)}
+.feld-klein-inline{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2);margin-left:var(--abstand-1)}
+.codeblock{background:var(--rauch);border:var(--strich) solid var(--linie);border-radius:var(--radius);padding:var(--abstand-3);margin:var(--abstand-3) 0}
+.codeblock-titel{font-size:var(--groesse-2);color:var(--gedaempft);margin:0 0 var(--abstand-1)}
+.zeilenaktionen{margin-left:auto;flex:0 0 auto}
+
+/* ---- NEU (E-S8-10): zweite Stufe des Wertekastens ----------------------- */
+.codeblock-lang{display:flex;align-items:flex-start;gap:var(--abstand-2)}
+.codeblock-lang .codeblock-text{flex:1 1 auto;min-width:0}
+.codeblock-wert-lang{font-family:var(--schrift-fest);font-size:var(--groesse-2);font-weight:400;color:var(--dunkelblau);letter-spacing:0;word-break:break-all;line-height:1.5;margin:0}
+.codeblock-lang .knopf{flex:0 0 auto;height:36px;padding:0 var(--abstand-2);margin:-4px -4px 0 0}
+/* ---- NEU (Vorschlag): Speicherbalken ------------------------------------ */
+.speicher-balken{height:8px;border-radius:var(--radius-rund);background:var(--linie);overflow:hidden;display:flex;margin:var(--abstand-2) 0 var(--abstand-1)}
+.speicher-balken > span{display:block;height:100%}
+.speicher-legende{display:flex;flex-wrap:wrap;gap:var(--abstand-3);font-size:var(--groesse-2);color:var(--gedaempft)}
+.speicher-legende i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.speicher-marke{position:relative}
+.speicher-marke::after{content:"";position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--gedaempft)}
+
+/* ---- Schreibtisch ------------------------------------------------------- */
+.desktop .leiste{display:flex;position:sticky;top:var(--kopf);z-index:1;width:var(--leiste);flex:0 0 auto;flex-direction:column;background:var(--schnee);border-right:var(--strich) solid var(--linie);height:calc(980px - var(--kopf));box-sizing:border-box}
+.desktop .kopf-menue{display:none}
+.desktop .kopf-punkt{display:inline-flex}
+.desktop .kopf-nutzer{display:inline-block;color:var(--sand);font-size:var(--groesse-3);font-weight:400;line-height:1;white-space:nowrap}
+.desktop .nur-schublade{display:none}
+.desktop .inhalt{padding:var(--abstand-5) var(--abstand-5)}
+.desktop .seitentitel{font-size:30px}
+.desktop .karten-raster{display:grid;grid-template-columns:1fr 1fr;gap:0 var(--abstand-5);align-items:start}
+.desktop .karten-raster > .karte{margin-bottom:var(--abstand-5)}
+
+/* ---- NEU (E-S8-15): Unterpunkte der aktiven Seite in der Leiste --------- */
+.eintrag-unter{list-style:none;margin:2px 0 var(--abstand-2);padding:0 0 0 calc(var(--abstand-2) + var(--abstand-1) + var(--symbol) + var(--abstand-2))}
+.eintrag-unter a{display:flex;align-items:center;min-height:28px;padding:0 var(--abstand-2);border-radius:var(--radius-klein);color:var(--gedaempft);font-size:var(--groesse-2);text-decoration:none}
+.eintrag-unter a:hover{background:var(--rauch);color:var(--asphalt)}
+.eintrag-unter a.aktiv{color:var(--dunkelblau);font-weight:600}
+/* ---- Statusseite (E-S8-16): Zeilen mit Ampelplakette --------------------- */
+.status-zeile .zeile-plaketten{flex:0 0 auto}
+.status-link{color:var(--blau-tief);font-weight:600;font-size:var(--groesse-2);white-space:nowrap}
+.meldung-zaehler{display:flex;gap:var(--abstand-2);flex-wrap:wrap}
+.karte-anker{scroll-margin-top:calc(var(--kopf) + var(--abstand-3))}
+.plakette-punkt{width:8px;height:8px;border-radius:var(--radius-rund);display:inline-block}
+.kennzahl-raster{display:grid;gap:var(--abstand-3);grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:var(--abstand-4)}
+.kennzahl{display:flex;flex-direction:column;justify-content:center;padding:var(--abstand-3);background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius)}
+.kennzahl-wert{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-6);line-height:1.3;color:var(--dunkelblau)}
+.kennzahl-text{color:var(--gedaempft);font-size:var(--groesse-2)}
+.desktop .kennzahl-raster{grid-template-columns:repeat(4,minmax(0,1fr))}
+.desktop .karten-raster{display:grid;grid-template-columns:1fr 1fr;gap:0 var(--abstand-5);align-items:start}
+
+/* ---- NEU: Zeitraum-Raster (Zahl und Anteil je Zeitraum) ------------------ */
+.zeitraum{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr));gap:0 var(--abstand-2);align-items:baseline;padding:var(--abstand-2) 0;border-bottom:var(--strich) solid var(--linie)}
+.zeitraum:last-child{border-bottom:0}
+.zeitraum-kopf{font-size:var(--groesse-1);color:var(--gedaempft);font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:0 0 var(--abstand-1)}
+.zeitraum-kopf > span:not(:first-child){text-align:right}
+.zeitraum > strong{font-weight:600}
+.zeitraum-wert{text-align:right;font-family:var(--schrift-kopf);font-weight:600;color:var(--dunkelblau);white-space:nowrap}
+.zeitraum-wert small{display:block;font-family:var(--schrift-text);font-weight:400;color:var(--gedaempft);font-size:var(--groesse-1)}
+.anteil{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2);margin-left:var(--abstand-1)}
+/* ---- Tabelle (Regeln wie NutzerInnen-Liste, sortierbar) ------------------ */
+.tabelle-scroll{overflow-x:auto;margin:0 calc(-1 * var(--abstand-4))}
+.tabelle{width:100%;border-collapse:collapse;font-size:var(--groesse-2);min-width:640px}
+.tabelle th,.tabelle td{padding:var(--abstand-2) var(--abstand-3);text-align:left;border-bottom:var(--strich) solid var(--linie);white-space:nowrap}
+.tabelle th{font-family:var(--schrift-kopf);font-weight:600;color:var(--gedaempft);font-size:var(--groesse-1);text-transform:uppercase;letter-spacing:.06em}
+.tabelle th a{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:2px}
+.tabelle th.sortiert a{color:var(--dunkelblau)}
+.tabelle th .symbol{width:14px;height:14px}
+.tabelle td.zahl,.tabelle th.zahl{text-align:right}
+.tabelle td.zahl{font-family:var(--schrift-kopf);font-weight:600;color:var(--dunkelblau)}
+.tabelle td.zahl .anteil{font-family:var(--schrift-text)}
+.tabelle tr:last-child td{border-bottom:0}
+.karte-aktion{margin-left:auto;flex:0 0 auto;display:inline-flex;align-items:center;gap:var(--abstand-2);min-height:var(--knopf);padding:0 var(--abstand-2);font-family:var(--schrift-kopf);font-weight:600;color:var(--blau-tief);text-decoration:none}
+.desktop .voll{grid-column:1 / -1}
+
+.kaestchen{display:flex;align-items:flex-start;gap:var(--abstand-2);cursor:pointer}
+.kaestchen input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--orange)}
+.migration{display:flex;align-items:flex-start;gap:var(--abstand-3);padding:var(--abstand-3) 0;border-bottom:var(--strich) solid var(--linie)}
+.migration:last-child{border-bottom:0}
+.migration-nr{font-family:var(--schrift-fest);font-size:var(--groesse-2);color:var(--gedaempft);flex:0 0 auto;padding-top:2px}
+.migration-text{flex:1 1 auto;min-width:0}
+.migration .zeile-plaketten{flex:0 0 auto}
+.ablauf{margin:0;padding-left:20px}
+.ablauf li{margin-bottom:4px}
+.meldung-info{background:var(--blau-hell);color:var(--blau-tief)}
+.meldung-info .symbol{color:var(--blau-tief)}
+</style>
+</head>
+<body>
+<div class="mock-kopf">
+  <h1>S8 · Mockup 05 — Betrieb → Updates (freigegeben 05.09.2026)</h1>
+  <p>E-S8-05 (Wartungsmodus zieht zum Update) und R66 (nur Ausstehende, „Ausstehende ausführen", Ausgeführte zugeklappt bis P5). Zustand: Betrieb, zwei Updates ausstehend, eines davon blockiert. <code>update.php</code> leitet hierher weiter.</p>
+</div>
+<div class="mock-reihe">
+  <div class="mock-spalte">
+    <p class="mock-label">A · 360 px</p>
+    <div class="mock-frame frame-mobil"><span class="mock-marke">A</span>
+      <header class="kopf"><div class="kopf-innen">
+        <button class="knopf knopf-symbol kopf-menue"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <a class="kopf-marke" href="#"><svg class="logo" viewBox="0 0 34 34"><rect x="3" y="14" width="18" height="10" rx="3" fill="#FFF"/><path d="M6 11h26M20 14l6 -3" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/><rect x="21" y="16" width="6" height="7" rx="1.5" fill="#FF8F1F"/><rect x="27" y="17" width="4" height="6" rx="1.5" fill="#4280E5"/><rect x="9" y="16" width="9" height="7" rx="1.5" fill="#D63338"/></svg><span class="kopf-name">Gen-EM Einsatzdoku</span></a>
+        <nav class="kopf-punkte"><a class="knopf knopf-symbol kopf-zahnrad aktiv" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a></nav>
+      </div></header>
+      <div class="rahmen"><main class="inhalt" id="inhalt-a">
+        <a class="rueckweg nur-schublade" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg><span>Einstellungen</span></a>
+        <div class="titelzeile"><h1 class="seitentitel">Updates</h1></div>
+      </main></div>
+    </div>
+  </div>
+  <div class="mock-spalte" style="flex-basis:100%">
+    <p class="mock-label">B · 1280 px</p>
+    <div class="mock-frame frame-desktop desktop"><span class="mock-marke">B</span>
+      <header class="kopf"><div class="kopf-innen">
+        <a class="kopf-marke" href="#"><svg class="logo" viewBox="0 0 34 34"><rect x="3" y="14" width="18" height="10" rx="3" fill="#FFF"/><path d="M6 11h26M20 14l6 -3" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/><rect x="21" y="16" width="6" height="7" rx="1.5" fill="#FF8F1F"/><rect x="27" y="17" width="4" height="6" rx="1.5" fill="#4280E5"/><rect x="9" y="16" width="9" height="7" rx="1.5" fill="#D63338"/></svg><span class="kopf-name">Gen-EM Einsatzdoku</span><span class="kopf-nutzer">Philipp Chadid</span></a>
+        <nav class="kopf-punkte">
+          <a class="kopf-punkt" href="#"><svg class="symbol" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Startseite</span></a>
+          <a class="kopf-punkt" href="#"><svg class="symbol" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>Suche</span></a>
+          <a class="knopf knopf-symbol kopf-zahnrad aktiv" href="#"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
+        </nav>
+      </div></header>
+      <div class="rahmen">
+        <aside class="leiste">
+          <div class="leiste-liste">
+            <details class="leiste-gruppe"><summary>Einstellungen<svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary></details>
+            <details class="leiste-gruppe"><summary>Verwaltung<svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary></details>
+            <details class="leiste-gruppe" open>
+              <summary>Betrieb<svg class="symbol gruppen-winkel" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></summary>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span class="eintrag-text">Status</span><span class="plakette plakette-orange">3</span></a>
+              
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="eintrag-text">Statistik</span></a>
+              
+              <a class="eintrag aktiv" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg><span class="eintrag-text">Updates</span><span class="plakette plakette-neutral">2</span></a>
+              <ul class="eintrag-unter">
+                <li><a href="#wartung" class="aktiv">Wartungsmodus</a></li>
+                <li><a href="#ausstehend" class="aktiv">Ausstehende Updates</a></li>
+                <li><a href="#ausgefuehrt">Ausgeführt</a></li>
+                <li><a href="#fassung">Fassung</a></li>
+              </ul>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="eintrag-text">Hintergrundjobs</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/></svg><span class="eintrag-text">Servereinstellungen</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span class="eintrag-text">Komplett-Backup</span></a>
+              <a class="eintrag" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg><span class="eintrag-text">Backup-Ziele</span></a>
+            </details>
+          </div>
+          <div class="leiste-fuss"><a class="eintrag eintrag-leise" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg><span class="eintrag-text">Abmelden</span></a></div>
+        </aside>
+        <main class="inhalt" id="inhalt-b">
+          <div class="titelzeile"><h1 class="seitentitel">Updates</h1></div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<template id="seite">
+
+  <div class="karte karte-anker" id="wartung" data-spalte="1">
+    <div class="karte-kopf"><h2 class="karte-titel">Wartungsmodus</h2><span class="plakette plakette-neutral">aus · im Betrieb</span></div>
+    <div class="karte-inhalt">
+      <p class="feld-hinweis">Schließt die Installation vorübergehend für alle außer Verwaltung und Betrieb: Jede andere Anfrage bekommt <strong>503</strong> statt eines Fehlers aus einer halb umgebauten Datenbank; Geräte liefern nach. Der Ablauf eines Updates:</p>
+      <ol class="ablauf" style="margin-top:12px">
+        <li>Komplett-Backup prüfen oder anstoßen</li>
+        <li><strong>Wartungsmodus einschalten</strong></li>
+        <li>Dateien einspielen (Deploy)</li>
+        <li>Hier „Ausstehende ausführen"</li>
+        <li><strong>Wartungsmodus ausschalten</strong></li>
+      </ol>
+      <div class="listen-form-fuss"><a class="knopf knopf-neutral" href="#">Wartungsmodus einschalten</a></div>
+    </div>
+  </div>
+
+  <div class="karte karte-anker" id="ausstehend" data-spalte="2">
+    <div class="karte-kopf"><h2 class="karte-titel">Ausstehende Updates</h2><span class="plakette plakette-orange">2 Updates</span></div>
+    <div class="karte-inhalt">
+      <div class="meldung meldung-info" style="margin-bottom:12px"><svg class="symbol" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><p>Jüngstes Komplett-Backup: <strong>05.09.2026 02:00</strong>, vor 7 Stunden. <a class="status-link" href="#">Komplett-Backup ›</a></p></div>
+      <div class="migration"><span class="migration-nr">044</span><div class="migration-text"><strong>Rolle „BetreiberIn"</strong><span class="zeile-klein">S8 — dritter Wert in <code>users.role</code>; alle Admins werden BetreiberInnen (E-S8-02)</span></div><div class="zeile-plaketten"><span class="plakette plakette-orange">steht aus</span></div></div>
+      <div class="migration"><span class="migration-nr">045</span><div class="migration-text"><strong>Speicherregeln nach <code>app_state</code></strong><span class="zeile-klein">S8 — zieht Speichergrenze und Schwellen um; verändert bestehende Werte</span><label class="kaestchen" style="margin-top:8px"><input type="checkbox"><span>Freigeben — das Komplett-Backup oben ist aktuell</span></label></div><div class="zeile-plaketten"><span class="plakette plakette-rot">blockiert</span></div></div>
+      <div class="listen-form-fuss"><a class="knopf knopf-primaer" href="#"><svg class="symbol" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>Ausstehende ausführen</a></div>
+      <p class="feld-klein" style="margin-top:8px">Führt der Reihe nach aus, was oben steht; Blockierte nur mit Häkchen. Danach steht hier „Alles aktuell".</p>
+    </div>
+  </div>
+
+  <details class="karte karte-klappbar karte-anker" id="ausgefuehrt" data-spalte="1">
+    <summary class="karte-kopf"><h2 class="karte-titel">Ausgeführt</h2><span class="karte-vorschau">43 · zuletzt 043 am 04.09.2026 21:10</span><svg class="symbol akkordeon-winkel" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="karte-inhalt">
+      <div class="migration"><span class="migration-nr">043</span><div class="migration-text"><strong>Herkunft am Einsatz</strong><span class="zeile-klein">R64 — 04.09.2026 21:10</span></div><div class="zeile-plaketten"><span class="plakette plakette-blau">erledigt</span></div></div>
+      <div class="migration"><span class="migration-nr">042</span><div class="migration-text"><strong>Gerätemodell 191 Zeichen</strong><span class="zeile-klein">S4 — 03.09.2026 21:22</span></div><div class="zeile-plaketten"><span class="plakette plakette-blau">erledigt</span></div></div>
+      <div class="migration"><span class="migration-nr">…</span><div class="migration-text"><span class="zeile-klein">41 weitere — bis P5 hier, danach im Audit-Protokoll (R66)</span></div></div>
+    </div>
+  </details>
+
+  <div class="karte karte-anker" id="fassung" data-spalte="1">
+    <div class="karte-kopf"><h2 class="karte-titel">Fassung</h2></div>
+    <div class="karte-inhalt">
+      <div class="zeile"><div class="zeile-text"><strong>Web</strong><span class="zeile-klein"><code>version.php</code></span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">14.2.2</span></div></div>
+      <div class="zeile"><div class="zeile-text"><strong>Datenbankstand</strong><span class="zeile-klein">höchste ausgeführte Migration</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">043</span></div></div>
+      <div class="zeile"><div class="zeile-text"><strong>Uhr-App</strong><span class="zeile-klein">Mindeststand, den der Server annimmt</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">3.0.0</span></div></div>
+      <div class="zeile"><div class="zeile-text"><strong>Android-App</strong><span class="zeile-klein">im internen Test-Track</span></div><div class="zeile-plaketten"><span class="plakette plakette-neutral">0.13.0</span></div></div>
+    </div>
+  </div>
+</template>
+
+<script>
+  const t = document.getElementById('seite').content;
+  document.getElementById('inhalt-a').appendChild(t.cloneNode(true));
+  const b = document.getElementById('inhalt-b'); const c = t.cloneNode(true);
+  const raster = document.createElement('div'); raster.className='karten-raster';
+  const s1=document.createElement('div'), s2=document.createElement('div');
+  c.querySelectorAll('[data-spalte]').forEach(k => (k.dataset.spalte==='1'?s1:s2).appendChild(k));
+  raster.append(s1,s2); b.appendChild(raster);
+</script>
+<div class="mock-anmerkungen">
+  <h2>Was das Mockup zeigt — und was nicht</h2>
+  <ol>
+    <li><strong>Wartungsmodus zuerst</strong>, mit dem fünfstufigen Ablauf aus Technik 7 direkt in der Karte — der Grund, warum er hierher zieht. Eingeschaltet: Plakette „Wartung seit …", der orangene Balken oben auf jeder Seite (wie heute), Knopf „ausschalten".</li>
+    <li><strong>Ausstehende Updates</strong> zeigt nur, was zu tun ist (R66): je Update Nummer, Name, Herkunft (Schritt oder Beschluss) und Zustand. <strong>Blockierte</strong> tragen ein Kästchen mit dem Grund; ohne Häkchen überspringt „Ausstehende ausführen" sie. Die Backup-Meldung oben nennt das jüngste Komplett-Backup mit Alter und Link — statt des Knopfs „Zum Backup" von heute.</li>
+    <li><strong>Ausgeführt</strong> ist zugeklappt (Vorschau: Zahl, letzte Nummer, Datum) — bis P5 mit Audit-Protokoll (R66); danach entfällt die Karte.</li>
+    <li><strong>Fassung</strong> ersetzt den Kopf der alten Wartungsseite: Web, Datenbankstand, Mindeststand der Uhr-App, Android-Stand. Das ist die Stelle, an der der Torwächter (P5) später anzeigt, dass er die Seite gesperrt hat.</li>
+    <li><strong>Leer- und Fehlzustand:</strong> ohne Ausstehende steht in der Karte „Alles aktuell · 043 am 04.09.2026" mit blauer Plakette und ohne Knopf; scheitert eine Migration, bleibt sie mit roter Plakette „Fehler" und Meldungstext oben stehen — nicht gezeigt.</li>
+    <li><strong>Schreibtisch:</strong> zwei Spalten — links Wartungsmodus, Ausgeführt, Fassung; rechts Ausstehende Updates. Unterpunkte: Wartungsmodus und Ausstehende Updates fett.</li>
+  </ol>
+</div>
+</body>
+</html>

@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                     }
                 } else {
                     $notice = 'Der Durchgang ist zu Ende, der Lauf noch nicht. '
-                            . 'Er macht mit dem nächsten Wartungslauf weiter — oder '
+                            . 'Er macht mit dem nächsten Aufräumlauf weiter — oder '
                             . 'gleich hier mit „Fortsetzen".';
                 }
             } catch (Throwable $ex) {
@@ -160,7 +160,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                         'menue' => 'admin_komplettsicherung']); ?>
 
   <form method="post" id="f-sichern" hidden
-        data-confirm="Jetzt ein Komplett-Backup der ganzen Installation erzeugen? Es umfasst alle Konten, Stammdaten und Spuren; das dauert und belegt Platz. Was in einem Durchgang nicht fertig wird, läuft mit der Wartung weiter."
+        data-confirm="Jetzt ein Komplett-Backup der ganzen Installation erzeugen? Es umfasst alle Konten, Stammdaten und Spuren; das dauert und belegt Platz. Was in einem Durchgang nicht fertig wird, läuft mit dem Aufräumjob weiter."
         data-confirm-ok="Sichern" data-confirm-tone="normal">
     <?= csrf_field() ?><input type="hidden" name="action" value="jetzt_sichern">
   </form>
@@ -192,7 +192,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php if (!$schluesselDa): ?>
-    <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt']); ?>
+    <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
       <p class="feld-hinweis">Ein Komplett-Backup enthält jede Tabelle dieser
       Datenbank. Sie wird deshalb <strong>immer versiegelt</strong> abgelegt —
       und dafür braucht es den Serverschlüssel aus <code>config.php</code>.
@@ -206,7 +206,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
   <?php endif; ?>
 
   <?php if ($laeuft): ?>
-    <?php ui_karte_start(['titel' => 'Läuft gerade']); ?>
+    <?php ui_karte_start(['titel' => 'Läuft gerade', 'id' => 'k-laeuft-gerade']); ?>
       <?php
       $tabellen = count($z['folge'] ?? []);
       ui_zeile(['text' => 'Stand',
@@ -228,13 +228,13 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                 'plaketten' => ui_plakette(edbak_groesse_text((int)($z['roh_bytes'] ?? 0)),
                                            ['ton' => 'neutral'])]);
       ui_zeile(['text' => 'Begonnen',
-                'klein' => 'Ein Lauf darf über mehrere Wartungsläufe gehen.',
+                'klein' => 'Ein Lauf darf über mehrere Aufräumläufe gehen.',
                 'plaketten' => ui_plakette(edbak_zeitpunkt_text((string)($z['begonnen'] ?? '')),
                                            ['ton' => 'neutral'])]);
       ?>
     <?php ui_karte_ende(); ?>
   <?php elseif ($stand === 'fertig'): ?>
-    <?php ui_karte_start(['titel' => 'Letzter Lauf']); ?>
+    <?php ui_karte_start(['titel' => 'Letzter Lauf', 'id' => 'k-letzter-lauf']); ?>
       <?php
       ui_zeile(['text' => 'Fertig geworden',
                 'klein' => (string)($z['name'] ?? ''),
@@ -260,7 +260,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
-  <?php ui_karte_start(['titel' => 'Regeln']); ?>
+  <?php ui_karte_start(['titel' => 'Regeln', 'id' => 'k-regeln']); ?>
     <form method="post">
       <?= csrf_field() ?><input type="hidden" name="action" value="regeln">
       <div class="fld-reihe">
@@ -269,8 +269,8 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                        'klein' => 'Der Plan sagt nicht WANN, sondern OB: Er legt fest, '
                                 . 'wie alt der jüngste Stand höchstens sein darf. Wann '
                                 . 'tatsächlich gearbeitet wird, entscheidet der '
-                                . 'eingerichtete Auslöser — nachzusehen auf der '
-                                . 'Wartungsseite.']); ?>
+                                . 'eingerichtete Auslöser — nachzusehen unter '
+                                . 'Betrieb → Hintergrundjobs.']); ?>
         <?php ui_feld(['name' => 'aufbewahrung', 'label' => 'Stände aufbewahren',
                        'art' => 'number', 'attr' => 'min="1" max="20"',
                        'wert' => (string)komp_aufbewahrung(),
@@ -290,8 +290,10 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                   : ui_plakette(edbak_zeitpunkt_text((string)$staende[0]['zeit']),
                                 ['ton' => 'blau'])]);
     ui_zeile(['text' => 'Belegt von Komplett-Backups',
-              'klein' => 'Zählt auf die Speichergrenze mit — sie steht unter '
-                       . '„Backups".',
+              'klein' => 'Zählt auf die Speichergrenze mit — sie steht seit '
+                       . 'Web 15.1.0 unter Betrieb → Servereinstellungen, '
+                       . 'zusammen mit der Belegung nach Art.',
+              'href' => 'betrieb_server.php',
               'plaketten' => ui_plakette(edbak_groesse_text((int)$zahlen['komplett_bytes']),
                                          ['ton' => 'neutral'])]);
     ui_zeile(['text' => 'Wartet auf den nächsten Lauf',
@@ -304,7 +306,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
     ?>
   <?php ui_karte_ende(); ?>
 
-  <?php ui_karte_start(['titel' => 'Stände', 'zahl' => count($staende)]); ?>
+  <?php ui_karte_start(['titel' => 'Stände', 'id' => 'k-staende', 'zahl' => count($staende)]); ?>
     <?php if ($staende === []): ?>
       <p class="feld-hinweis">Es liegt noch kein Komplett-Backup vor.</p>
     <?php else: ?>
@@ -374,7 +376,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'vorschau' => 'Wiederanlauf']); ?>
+  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt', 'vorschau' => 'Wiederanlauf']); ?>
     <p class="feld-hinweis"><strong>Zwei Wege heraus.</strong> „Herunterladen"
     liefert den Dump <em>unverschlüsselt</em> als <code>.sql.gz</code> — genau
     das, was <code>mysql</code> und phpMyAdmin einspielen können. „Versiegelt
@@ -398,7 +400,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
     schon dastand. Wer es genauer braucht, lässt nachts sichern.</p>
 
     <p class="feld-hinweis"><strong>Ein Konto einzeln</strong> holt man sich
-    nicht hier, sondern unter <a href="admin_sicherungen.php">Backups</a>.
+    nicht hier, sondern unter <a href="admin_sicherungen.php">Konto-Backups</a>.
     Diese Seite ist für den Fall „der Server ist weg", nicht für „jemand hat
     sich vertan".</p>
   <?php ui_karte_ende(true); ?>

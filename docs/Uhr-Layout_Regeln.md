@@ -1,4 +1,4 @@
-# Einsatzdoku — Layoutregeln der Uhr-Oberflächen
+# Gen-EM NAdoku — Layoutregeln der Uhr-Oberflächen
 
 Was beim Zeichnen auf Garmin-Uhren zu beachten ist. **Referenzdokument**: Wer
 eine Oberfläche anfasst oder ein neues Gerät aufnimmt, liest zuerst hier.

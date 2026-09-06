@@ -1,4 +1,4 @@
-/* Einsatzdoku — HTML-Maskierung im Browser (Baustein B7).
+/* Gen-EM NAdoku — HTML-Maskierung im Browser (Baustein B7).
  *
  * WARUM ES DIESE DATEI GIBT
  * Dieselbe Aufgabe wurde im Browser an vier Stellen geloest, in zwei

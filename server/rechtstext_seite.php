@@ -60,7 +60,7 @@ if (!empty($_SESSION['user_id'])) {
     try {
         $st = db()->prepare('SELECT role FROM users WHERE id = ?');
         $st->execute([(int)$_SESSION['user_id']]);
-        $istAdmin = ((string)$st->fetchColumn() === 'admin');
+        $istAdmin = rolle_darf_verwalten((string)$st->fetchColumn());
     } catch (Throwable) {
         // Keine Datenbank: dann eben kein Adminhinweis. Die Seite bleibt lesbar.
     }
@@ -97,9 +97,9 @@ ui_kopf(['menue' => false, 'zurueck' => $zurueck]);
                 ? 'noch kein Impressum hinterlegt.'
                 : 'noch keine Datenschutzerklärung hinterlegt.')) ?>
         <?php if ($istAdmin): ?>
-          <p class="feld-hinweis">Du bist als Administration angemeldet und kannst
-             den Text unter <a href="admin_rechtstexte.php">Einstellungen →
-             Rechtstexte</a> hinterlegen.</p>
+          <p class="feld-hinweis">Du bist mit Verwaltungsrechten angemeldet und
+             kannst den Text unter <a href="admin_installation.php">Verwaltung →
+             Installation</a> hinterlegen.</p>
         <?php endif; ?>
       <?php else: ?>
         <div class="text">

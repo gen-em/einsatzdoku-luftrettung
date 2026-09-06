@@ -6,7 +6,21 @@ require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/smtp.php';        // smtp_eingerichtet() (E-S2-15)
 
 /**
- * BACKUPS — die REGELN, und sonst nichts mehr (E-P3-41, P3/O9c).
+ * KONTO-BACKUPS — die Pakete, die die VERWALTUNG je Konto anlegt.
+ *
+ * DER NAME IST DER BEFUND (E-S8-06, B-S8-08). „Backups" hiess hier dreierlei:
+ * die Pakete der Verwaltung, das `.edbak`, das eine NutzerIn sich selbst
+ * herunterlaedt, und der Komplett-Stand der Installation. Drei Dinge, ein
+ * Wort — und der Untertitel dieser Seite sagt jetzt in einem Satz, welches
+ * gemeint ist. Die beiden anderen heissen „Backup" (NutzerIn) und
+ * „Komplett-Backup" (Installation).
+ *
+ * WAS IN S8/AP3 GEGANGEN IST: die Karte „Ablage". Pfad, Zustand, Belegung und
+ * Reste stehen unter Betrieb → Servereinstellungen, zusammen mit der Grenze,
+ * gegen die sie gemessen werden — und seit AP3 auch das juengste Paket. Was
+ * hier bleibt, gilt JE KONTO.
+ *
+ * Der Werdegang bis dahin (E-P3-41, P3/O9c):
  *
  * WAS SICH GEAENDERT HAT. Bis Web 9.9.0 stand hier alles: eine Tabelle mit
  * jedem Konto und seinen Paketen, eine zweite mit jedem einzelnen Backup
@@ -21,10 +35,12 @@ require_once __DIR__ . '/smtp.php';        // smtp_eingerichtet() (E-S2-15)
  *
  *   die REGELN       Erinnerungsintervall, Aufbewahrung je Konto,
  *                    Erinnerung an die Administration per E-Mail
- *   die ABLAGE       Pfad, Zustand, letztes Backup
  *   „OHNE KONTO"     Ordner, zu denen es keine Kontozeile mehr gibt — der
  *                    Fall „Konto geloescht und neu aufgesetzt" (A8.2). Sie
  *                    haben keine Kontoseite; ihr Weg ist nur hier.
+ *   „WAS HIER GILT"  die drei Backups, die Freigabe, die Schluessel — eine
+ *                    zugeklappte Karte am Ende, wie auf jeder Seite der drei
+ *                    Bloecke (Regel 5 aus E-S8-01).
  *
  * Die Seite liest damit EIN Verzeichnis fuer die Zahlen (edbak_ablage_zahlen)
  * und EIN weiteres fuer die verwaisten Ordner. Die Kontenschleife ist fort.
@@ -71,47 +87,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $teile[] = 'Aufbewahrung ' . $pakete . ' Pakete';
             }
         }
-        /* ---- Speichergrenze und Warnschwellen (E-S2-15) ---------------- */
-        if ($error === null) {
-            $gb = str_replace(',', '.', trim((string)($_POST['grenze'] ?? '')));
-            if (!is_numeric($gb) || (float)$gb <= 0 || (float)$gb > 10000) {
-                $error = 'Bitte eine Speichergrenze zwischen 0,1 und 10000 GB angeben.';
-            } elseif (abs((float)$gb * 1024 * 1024 * 1024 - edbak_grenze_bytes()) > 1) {
-                edbak_marke_setzen('adminbackup_grenze_gb', (string)(float)$gb);
-                /* DIE GEMELDETEN SCHWELLEN VERGESSEN. Eine neue Grenze macht
-                 * aus denselben Bytes einen anderen Prozentsatz — was bei der
-                 * alten Grenze gemeldet war, ist bei der neuen eine andere
-                 * Aussage. Ohne dieses Zuruecksetzen bliebe eine Warnung aus,
-                 * die nach der Aenderung faellig waere. */
-                edbak_marke_setzen('adminbackup_schwellen_gemeldet', '');
-                edbak_marke_setzen('adminbackup_schwellen_offen', '');
-                $teile[] = 'Speichergrenze ' . $gb . ' GB';
-            }
-        }
-        if ($error === null) {
-            $roh = trim((string)($_POST['schwellen'] ?? ''));
-            $neu = [];
-            foreach (explode(',', $roh) as $t) {
-                $t = trim($t);
-                if ($t === '') { continue; }
-                if (!ctype_digit($t) || (int)$t < 1 || (int)$t > 100) {
-                    $error = 'Warnschwellen sind ganze Zahlen zwischen 1 und 100, '
-                           . 'durch Komma getrennt (z. B. „70, 90").';
-                    break;
-                }
-                $neu[(int)$t] = true;
-            }
-            if ($error === null) {
-                $neu = array_keys($neu); sort($neu);
-                if ($neu !== edbak_schwellen()) {
-                    edbak_marke_setzen('adminbackup_schwellen', implode(',', $neu));
-                    edbak_marke_setzen('adminbackup_schwellen_gemeldet', '');
-                    edbak_marke_setzen('adminbackup_schwellen_offen', '');
-                    $teile[] = $neu ? 'Warnschwellen ' . implode(' / ', $neu) . ' %'
-                                    : 'Warnschwellen aus';
-                }
-            }
-        }
+        /* SPEICHERGRENZE UND WARNSCHWELLEN STEHEN SEIT WEB 15.1.0 NICHT
+         * MEHR HIER (E-S8-05, B-S8-06). Sie wirkten auf Konto-Backups UND auf
+         * die Komplett-Staende, standen aber unter „Backups", und die
+         * Komplett-Seite verwies mit einem Satz auf sie. Jetzt liegen sie im
+         * Betrieb unter „Servereinstellungen", zusammen mit der Belegung.
+         *
+         * Was hier bleibt, gilt JE KONTO: Erinnerung, Aufbewahrung, Admin-Mail.
+         * Der Schnitt ist die Antwort auf Nr. 79 — die Ordnung folgt der
+         * Zielgruppe (R74), nicht der Reihenfolge des Einbaus. */
         if ($error === null) {
             $mailAn = ($_POST['mail'] ?? '') === '1';
             if ($mailAn !== edbak_admin_mail_an()) {
@@ -169,8 +153,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ((int)($laufend['ges'] ?? 0) === 0) {
             edbak_auftrag_schreiben(null);
-            $error = 'Es gibt kein Konto mit Kontokennung. Bitte zuerst die Wartung '
-                   . 'aufrufen und die Migration ausführen.';
+            $error = 'Es gibt kein Konto mit Kontokennung. Bitte zuerst unter '
+                   . 'Betrieb → Updates die Migration ausführen.';
         } else {
             $t0 = microtime(true);
             $e = edbak_auftrag_schub(
@@ -184,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $notice .= ' ' . $e['offen'] . ' '
                          . ($e['offen'] === 1 ? 'Konto ist' : 'Konten sind')
                          . ' noch offen — die Zeit für eine Anfrage reicht nicht für '
-                         . 'alle. Der Wartungsjob macht in Schüben weiter; ein zweiter '
+                         . 'alle. Der Aufräumjob macht in Schüben weiter; ein zweiter '
                          . 'Klick auf „Alle sichern" ebenfalls, und zwar genau dort, wo '
                          . 'dieser Durchgang aufgehört hat.';
             }
@@ -195,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Einspielen aus einem Backup OHNE KONTO (A8.6) ---------------- */
+    /* ---- Einspielen aus einem Konto-Backup OHNE KONTO (A8.6) ---------- */
     if ($action === 'einspielen') {
         $ziel = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
         /* NUR DER KOPF FUER DIE ENTSCHEIDUNG (S2/AP6). edbak_weg() braucht
@@ -207,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
-            $error = 'Das Backup liess sich nicht lesen.';
+            $error = 'Das Paket liess sich nicht lesen.';
         } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Zielkontos überein — es wurde nichts eingespielt.';
@@ -217,12 +201,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Einspielen nicht möglich. ' . $warum;
             } elseif ($weg === 'freigabe') {
                 $error = 'Unmittelbares Einspielen ist gesperrt. ' . $warum
-                       . ' Bitte stattdessen das Backup für dieses Konto freigeben.';
+                       . ' Bitte stattdessen das Paket für dieses Konto freigeben.';
             } else {
                 try {
                     [$okE, $grundE, $bericht] =
                         edbak_paket_zurueckspielen($kennung, $datei, (int)$ziel['id']);
-                    if ($okE) { $notice = 'Backup eingespielt in ' . $ziel['email'] . '.'; }
+                    if ($okE) { $notice = 'Konto-Backup eingespielt in ' . $ziel['email'] . '.'; }
                     else { $error = (string)$grundE; }
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
@@ -239,13 +223,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
-            $error = 'Das Backup liess sich nicht lesen.';
+            $error = 'Das Paket liess sich nicht lesen.';
         } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Zielkontos überein — es wurde nichts freigegeben.';
         } elseif (edbak_freigeben($kennung, $datei, (int)$ziel['id'])) {
             $notice = 'Freigegeben für ' . $ziel['email'] . '. Die NutzerIn sieht das '
-                    . 'Backup jetzt im eigenen Backup-Bereich und spielt es dort '
+                    . 'Paket jetzt im eigenen Backup-Bereich und spielt es dort '
                     . 'mit ihrem Wiederherstellungsschlüssel ein.';
         } else {
             $error = 'Die Freigabe liess sich nicht speichern.';
@@ -280,11 +264,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . 'nichts gelöscht.';
         } elseif ($action === 'paket_loeschen') {
             $notice = edbak_paket_loeschen($kennung, $datei)
-                ? 'Backup gelöscht.' : null;
-            if ($notice === null) { $error = 'Das Backup liess sich nicht löschen.'; }
+                ? 'Paket gelöscht.' : null;
+            if ($notice === null) { $error = 'Das Paket liess sich nicht löschen.'; }
         } else {
             $notice = edbak_ordner_loeschen($kennung)
-                ? 'Alle Backups dieses Ordners wurden gelöscht.' : null;
+                ? 'Alle Pakete dieses Ordners wurden gelöscht.' : null;
             if ($notice === null) {
                 $error = 'Der Ordner liess sich nicht vollständig löschen. Enthält er '
                        . 'Dateien, die nicht von dieser Anwendung stammen, bleibt er '
@@ -315,6 +299,14 @@ $auftrag = edbak_auftrag_lesen();
 $verwaist  = edbak_verwaiste();
 $letzte    = edbak_marke_lesen('adminbackup_last');
 $paketeOhneKonto = array_sum(array_map(static fn($v) => count($v['pakete']), $verwaist));
+/* Die Vorschau im Kartenkopf nennt Ordner, Pakete UND Groesse (Mockup 08):
+ * Ob sich das Aufklappen lohnt, entscheidet nicht die Zahl allein — zwei
+ * Pakete zu 6 MB sind etwas anderes als zwei zu 600 MB. Die Groessen liegen
+ * schon vor; `edbak_pakete()` liest sie beim Verzeichnislauf mit. */
+$bytesOhneKonto = 0;
+foreach ($verwaist as $v) {
+    foreach ($v['pakete'] as $pk) { $bytesOhneKonto += (int)$pk['groesse']; }
+}
 
 /* Zielkonten für das Einspielen eines Backups ohne Konto. Eine Abfrage,
  * kein Dateizugriff — und nur nötig, wenn es überhaupt verwaiste Ordner gibt. */
@@ -322,21 +314,26 @@ $konten = $verwaist
     ? db()->query('SELECT id, email FROM users ORDER BY email')->fetchAll()
     : [];
 
-ui_seite_start(['titel' => 'Backups']);
+ui_seite_start(['titel' => 'Konto-Backups']);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin_sicherungen']); ?>
 
   <form method="post" id="f-alle" hidden
-        data-confirm="Für alle Konten ein Backup erzeugen? Das dauert — je Konto wird der ganze Bestand gelesen und eine Datei geschrieben. Was in einem Durchgang nicht fertig wird, bleibt offen; ein zweiter Klick macht dort weiter."
+        data-confirm="Für alle Konten ein Konto-Backup erzeugen? Das dauert — je Konto wird der ganze Bestand gelesen und eine Datei geschrieben. Was in einem Durchgang nicht fertig wird, bleibt offen; ein zweiter Klick macht dort weiter."
         data-confirm-ok="Alle sichern" data-confirm-tone="normal">
     <?= csrf_field() ?><input type="hidden" name="action" value="sichern_alle">
   </form>
 
+  <?php /* DER UNTERTITEL IST DIE ABGRENZUNG (B-S8-08). Er sagt in einem Satz,
+           welches der drei Backups gemeint ist — das war bisher nirgends zu
+           lesen, und der Name allein sagt es nicht. */ ?>
   <?php ui_titelzeile([
-      'titel' => 'Backups',
-      'unter' => 'Regeln für alle Konten. Die Backups einzelner Konten liegen auf '
-               . 'deren Kontoseite unter <a href="admin_users.php">NutzerInnen</a>.',
+      'titel' => 'Konto-Backups',
+      'unter' => 'Pakete, die die Verwaltung je Konto anlegt — nicht die Backups, '
+               . 'die NutzerInnen selbst herunterladen. Die Pakete eines einzelnen '
+               . 'Kontos stehen auf dessen Seite unter '
+               . '<a href="admin_users.php">NutzerInnen</a>.',
       'aktionen' => ui_knopf(['text' => 'Alle sichern', 'symbol' => 'sicherung',
                               'art' => 'primaer', 'attr' => ' form="f-alle"']),
   ]); ?>
@@ -348,7 +345,8 @@ ui_seite_start(['titel' => 'Backups']);
         . edbak_auftrag_offen($auftrag) . ' offen'
         . ((int)($auftrag['feh'] ?? 0) > 0
             ? ', ' . (int)$auftrag['feh'] . ' gescheitert' : '')
-        . '. Der Wartungsjob arbeitet den Rest in Schüben ab; „Alle sichern" '
+        . '. Der Aufräumjob arbeitet den Rest in Schüben zu '
+        . (int)SICHERN_BUDGET . ' Sekunden ab; „Alle sichern" '
         . 'macht sofort dort weiter.'
         . (($auftrag['seit'] ?? null)
             ? ' Begonnen ' . fmt_local(str_replace(['T', 'Z'], [' ', ''],
@@ -360,8 +358,8 @@ ui_seite_start(['titel' => 'Backups']);
         . edbak_groesse_text($speicher['bytes']) . ' von '
         . edbak_groesse_text($speicher['grenze']) . '). Es wird nicht mehr '
         . 'gesichert. Es wurde nichts gelöscht und nichts überschrieben — bitte '
-        . 'alte Backups entfernen, die Aufbewahrung senken oder die Grenze '
-        . 'erhöhen.') ?>
+        . 'alte Pakete entfernen, die Aufbewahrung senken oder die Grenze '
+        . 'erhöhen (Betrieb → Servereinstellungen).') ?>
   <?php elseif ($offeneSchwellen): ?>
     <?= ui_meldung_markup('warn', 'Die Ablage hat '
         . max($offeneSchwellen) . ' % der Speichergrenze erreicht ('
@@ -391,19 +389,30 @@ ui_seite_start(['titel' => 'Backups']);
     <p class="codeblock"><?= e(json_encode($bericht, JSON_UNESCAPED_UNICODE)) ?></p>
   <?php endif; ?>
 
-  <?php /* ---- Vier Zahlen, zwei davon ein Weg ---------------------------- */ ?>
+  <?php /* ---- Vier Zahlen, zwei davon ein Weg (Mockup 08) -----------------
+       * „Konto-Backup überfällig" und „nie Konto-Backup" heissen wortgleich
+       * wie die Filter, auf die sie zeigen (B-S8-07, B-S8-19). Vorher stand
+       * hier „überfällig · Liste öffnen" und dort „Backup überfällig" — zwei
+       * Namen fuer denselben Filter, und wer den einen sucht, findet den
+       * anderen nicht. */ ?>
   <div class="kennzahl-raster kennzahl-raster-4">
+    <?php /* `pakete_bytes`, NICHT `bytes` (F-S8-P-07). `bytes` ist der ganze
+             Ablagebaum — Komplett-Backups, Begleitdateien, .htaccess, Reste
+             abgebrochener Läufe. Die Kachel sagt „Pakete", also muss sie die
+             Pakete wiegen. Der Fehler stand hier seit Web 12.0.0 und fiel
+             nicht auf, weil beide Zahlen plausibel aussehen; erst seit
+             Web 15.1.0 gibt es überhaupt eine getrennte Summe. */ ?>
+    <?= ui_kennzahl(['wert' => number_format($ablage['pakete'], 0, ',', '.'),
+                     'label' => ($ablage['pakete'] === 1 ? 'Paket · ' : 'Pakete · ')
+                              . edbak_groesse_text($ablage['pakete_bytes'])]) ?>
     <?= ui_kennzahl(['wert' => number_format($zahlen['konten'], 0, ',', '.'),
                      'label' => 'Konten', 'href' => 'admin_users.php']) ?>
-    <?= ui_kennzahl(['wert' => number_format($ablage['pakete'], 0, ',', '.'),
-                     'label' => 'Pakete · ' . edbak_groesse_text($ablage['bytes'])
-                              . ' in der Ablage']) ?>
     <?= ui_kennzahl(['wert' => (string)$zahlen['ueberfaellig'],
-                     'label' => 'überfällig · Liste öffnen',
+                     'label' => 'Konto-Backup überfällig',
                      'ton' => $zahlen['ueberfaellig'] > 0 ? 'orange' : '',
                      'href' => 'admin_users.php?f=ueberfaellig']) ?>
     <?= ui_kennzahl(['wert' => (string)$zahlen['nie'],
-                     'label' => 'nie gesichert · Liste öffnen',
+                     'label' => 'nie Konto-Backup',
                      'ton' => $zahlen['nie'] > 0 ? 'rot' : '',
                      'href' => 'admin_users.php?f=nie']) ?>
   </div>
@@ -412,32 +421,20 @@ ui_seite_start(['titel' => 'Backups']);
   <div class="form-spalte">
 
     <?php /* ---- Regeln ---------------------------------------------------- */ ?>
-    <?php ui_karte_start(['titel' => 'Regeln']); ?>
+    <?php ui_karte_start(['titel' => 'Regeln', 'id' => 'k-regeln']); ?>
       <form method="post">
         <?= csrf_field() ?><input type="hidden" name="action" value="regeln">
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'tage', 'label' => 'Erinnerung nach', 'art' => 'number',
                          'wert' => (string)edbak_intervall(),
                          'attr' => 'min="1" max="3650"',
-                         'klein' => 'Tagen. Konten, deren letztes Backup älter ist, '
-                                  . 'gelten als überfällig.']); ?>
+                         'klein' => 'Tagen. Konten, deren letztes Konto-Backup älter '
+                                  . 'ist, gelten als überfällig.']); ?>
           <?php ui_feld(['name' => 'pakete', 'label' => 'Aufbewahrung je Konto',
                          'art' => 'number', 'wert' => (string)edbak_aufbewahrung(),
                          'attr' => 'min="1" max="100"',
                          'klein' => 'Pakete. Ältere werden beim nächsten Sichern '
                                   . 'gelöscht — das jüngste und ein freigegebenes nie.']); ?>
-        </div>
-        <div class="fld-reihe">
-          <?php ui_feld(['name' => 'grenze', 'label' => 'Speichergrenze',
-                         'wert' => rtrim(rtrim(number_format(
-                             edbak_grenze_bytes() / (1024 * 1024 * 1024), 3, ',', ''), '0'), ','),
-                         'klein' => 'GB für alle Backups zusammen. Ist sie '
-                                  . 'erreicht, wird nicht mehr gesichert — es wird '
-                                  . 'nichts gelöscht und nichts überschrieben.']); ?>
-          <?php ui_feld(['name' => 'schwellen', 'label' => 'Warnschwellen',
-                         'wert' => implode(', ', edbak_schwellen()),
-                         'klein' => 'Prozent, durch Komma getrennt. Je Schwelle '
-                                  . 'kommt einmal eine Meldung, nicht bei jedem Lauf.']); ?>
         </div>
         <?php ui_schalter(['name' => 'mail', 'label' => 'Erinnerung an Admins per E-Mail',
                            'an' => edbak_admin_mail_an(),
@@ -447,87 +444,43 @@ ui_seite_start(['titel' => 'Backups']);
           <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
         </div>
       </form>
-      <?php /* Der frühere Absatz sagte „Es gibt keinen Zeitplan. Auf diesem
-               Webspace läuft kein Cron" — das stimmt seit dem Job-Einstieg
-               (S2/AP2) nicht mehr: `jobs.php` kennt drei Auslöser, und CLI ist
-               der empfohlene Regelfall. Was bleibt, ist der Kern der Aussage —
-               Backups entstehen nicht von selbst. */ ?>
-      <p class="feld-hinweis"><strong>Backups entstehen nicht von selbst.</strong>
-         Sie werden angestoßen: hier über „Alle sichern", auf der Kontoseite je Konto
-         oder über die Auswahl in der NutzerInnen-Liste. Nächtliche Backups je
-         Konto sind bewusst nicht vorgesehen — sie bräuchten den Inhaltsschlüssel,
-         und den hat der Server nicht.
-         <br><br>
-         Was <em>angestoßen</em> ist, arbeitet der Wartungsjob in Schüben ab; die
-         Warteschlange überlebt einen Abbruch. Wie oft er läuft, hängt vom
-         eingerichteten Auslöser ab (Wartungsseite: Cron, Token-Aufruf oder
-         huckepack an einer Anfrage). Die wöchentliche Erinnerung fährt auf
-         demselben Weg mit — wird die Anwendung zwei Wochen nicht angefasst,
-         kommt die Mail zwei Wochen später.</p>
+      <p class="feld-klein"><strong>Speichergrenze, Warnschwellen, Belegung und
+         Ablage</strong> stehen unter
+         <a href="betrieb_server.php">Betrieb → Servereinstellungen</a>: Sie
+         gelten für Konto-Backups <em>und</em> Komplett-Backups zusammen und
+         sind damit eine Einstellung der Installation, keine der Konten.</p>
     <?php ui_karte_ende(); ?>
 
   </div><?php /* .form-spalte (links) */ ?>
   <div class="form-spalte">
 
-    <?php /* ---- Ablage ---------------------------------------------------- */ ?>
-    <?php ui_karte_start(['titel' => 'Ablage']); ?>
-      <?php
-      ui_zeile(['text' => 'Pfad', 'klein' => edbak_wurzel()]);
-      ui_zeile(['text' => 'Zustand',
-                'plaketten' => $ablageBereit
-                    ? ui_plakette('bereit · beschreibbar', ['ton' => 'blau'])
-                    : ui_plakette('nicht bereit', ['ton' => 'rot'])]);
-      ui_zeile(['text' => 'Letztes Backup',
-                'klein' => $letzte ? fmt_local($letzte . ' 00:00:00', 'd.m.Y') : 'noch keine',
-                'plaketten' => $letzte ? '' : ui_plakette('nie', ['ton' => 'rot'])]);
-      ui_zeile(['text' => 'Ordner', 'klein' => $ablage['ordner'] . ' Konten haben eine Ablage']);
-      /* BELEGUNG GEGEN DIE GRENZE (E-S2-15). Die Zahl misst das GANZE
-         Verzeichnis, nicht nur die Pakete — es fuellt sich auch mit dem,
-         was nicht auf der Paketliste steht. */
-      ui_zeile(['text' => 'Belegt',
-                'klein' => edbak_groesse_text($speicher['bytes']) . ' von '
-                         . edbak_groesse_text($speicher['grenze']) . ' · '
-                         . $speicher['pakete'] . ' Pakete',
-                'plaketten' => $speicher['voll']
-                    ? ui_plakette($speicher['prozent'] . ' %', ['ton' => 'rot'])
-                    : ($offeneSchwellen
-                        ? ui_plakette($speicher['prozent'] . ' %', ['ton' => 'orange'])
-                        : ui_plakette($speicher['prozent'] . ' %', ['ton' => 'blau']))]);
-      if ($speicher['reste'] > 0) {
-          /* LIEGENGEBLIEBENES WIRD GENANNT (S2/AP6). Bis Web 11.2.0 war ein
-             abgebrochener Lauf unsichtbar: Sein Rest zaehlte auf der Platte,
-             stand in keiner Liste und blockierte das Loeschen des Ordners. */
-          ui_zeile(['text' => 'Reste abgebrochener Läufe',
-                    'klein' => edbak_groesse_text($speicher['sonstige_bytes'])
-                             . ' liegen ausserhalb der Pakete',
-                    'plaketten' => ui_plakette($speicher['reste'] . ' Reste',
-                                               ['ton' => 'orange'])]);
-      }
-      ?>
-      <p class="feld-hinweis"><strong>Wohin sie von hier aus gehen</strong>, steht unter
-         <a href="admin_sicherungsziele.php">Backup-Ziele</a> — FTP-, FTPS- oder
-         SFTP-Gegenstellen. Ohne ein solches Ziel liegen die Backups auf
-         demselben Server, dessen Ausfall der Grund für ein Backup wäre.</p>
-      <p class="feld-hinweis">Die Ablage liegt außerhalb der Auslieferung und wird beim
-         Aufspielen einer neuen Fassung nicht angefasst. Sie ist über den Browser nicht
-         erreichbar: eine <code>.htaccess</code> sperrt sie, und der Ordnername je Konto
-         ist nicht zu erraten.</p>
-    <?php ui_karte_ende(); ?>
-
-    <?php /* ---- Backups ohne Konto ------------------------------------
-         Zugeklappt: Im Regelfall ist die Karte leer, und eine Liste, die
-         meistens nichts enthält, soll nicht die halbe Seite einnehmen. Die
-         Vorschau im Kopf sagt, ob es sich lohnt. */ ?>
-    <?php ui_karte_start(['titel' => 'Backups ohne Konto',
+    <?php /* ---- Backups ohne Konto (Mockup 08) --------------------------
+         *
+         * Zugeklappt: Im Regelfall ist die Karte leer, und eine Liste, die
+         * meistens nichts enthält, soll nicht die halbe Seite einnehmen. Die
+         * Vorschau im Kopf sagt, ob es sich lohnt.
+         *
+         * EINE ZEILE JE ORDNER, nicht je Paket. Vorher stand hier je Paket
+         * eine Zeile mit eigenem ⋯-Menü — bei einem Ordner mit zehn Paketen
+         * zehn Zeilen für eine Sache, die man einmal im Jahr anfasst. Jetzt
+         * trägt der Ordner die beiden Wege (Einspielen, Freigeben) als leise
+         * Knöpfe, und WELCHES Paket es sein soll, wird im Dialog gewählt —
+         * dort, wo ohnehin das Zielkonto steht (Regel 3: Ausnahmen eine
+         * Ebene tiefer). Löschen und „Ganzen Ordner löschen" liegen im
+         * ⋯-Menü, weil beides endgültig ist. */ ?>
+    <?php ui_karte_start(['titel' => 'Backups ohne Konto', 'id' => 'k-ohne',
                           'vorschau' => $verwaist
-                              ? $paketeOhneKonto . ($paketeOhneKonto === 1 ? ' Paket' : ' Pakete')
+                              ? count($verwaist) . (count($verwaist) === 1 ? ' Ordner · ' : ' Ordner · ')
+                                . $paketeOhneKonto . ($paketeOhneKonto === 1 ? ' Paket · ' : ' Pakete · ')
+                                . edbak_groesse_text($bytesOhneKonto)
                               : 'keine']); ?>
-      <p class="feld-hinweis">Ordner, zu denen es kein Konto mehr gibt — der Fall
-         „Konto gelöscht und neu aufgesetzt". Sie überleben die Löschung mit Absicht;
-         genau dafür sind sie da. Einspielen geht nur in ein bestehendes Konto, und
-         weicht die Kontokennung ab, ist der Weg die <strong>Freigabe</strong>: Die
-         geschützten Angaben öffnet nur der Wiederherstellungsschlüssel der Person,
-         und der liegt ausschließlich bei ihr.</p>
+      <p class="feld-hinweis">Pakete, deren Konto gelöscht wurde. Sie bleiben, bis
+         jemand sie einspielt oder löscht — typisch nach „Konto gelöscht und neu
+         aufgesetzt". Sie überleben die Löschung mit Absicht; genau dafür sind sie
+         da. Einspielen geht nur in ein bestehendes Konto, und weicht die
+         Kontokennung ab, ist der Weg die <strong>Freigabe</strong>: Die geschützten
+         Angaben öffnet nur der Wiederherstellungsschlüssel der Person, und der
+         liegt ausschließlich bei ihr.</p>
 
       <?php if (!$verwaist): ?>
         <p class="feld-hinweis">Zurzeit keine.</p>
@@ -535,49 +488,108 @@ ui_seite_start(['titel' => 'Backups']);
 
       <?php foreach ($verwaist as $v):
         $handgriff = edbak_handgriff((string)$v['account_key']);
-        $titel = $v['lesbar'] && $v['email'] ? (string)$v['email'] : 'Herkunft unbekannt'; ?>
-        <div class="sd-liste">
-          <p class="sd-titel"><?= e($titel) ?>
-            <span class="sd-zahl"><?= count($v['pakete']) ?></span>
-            <?php if (!$v['lesbar']): ?>
-              <?= ui_plakette('Begleitdatei nicht lesbar', ['ton' => 'orange']) ?>
-            <?php endif; ?>
-            <?php if ($v['freigabe']): ?>
-              <?= ui_plakette('freigegeben', ['ton' => 'blau']) ?>
-            <?php endif; ?>
-          </p>
-          <?php foreach ($v['pakete'] as $p):
-            $zeit = edbak_zeitpunkt_text($p['erzeugt']);
-            ui_zeile([
-              'text'  => $zeit,
-              'klein' => edbak_umfang_text($p),
-              'aktionen' => ui_zeilenaktionen(['titel' => $zeit, 'eintraege' => [
-                  ['text' => 'Einspielen', 'href' => '#',
-                   'attr' => ' data-dialog="dlg-einspielen"'
-                           . ' data-w-handgriff="' . e($handgriff) . '"'
-                           . ' data-w-datei="' . e((string)$p['datei']) . '"'
-                           . ' data-w-zeit="' . e($zeit) . '"'],
-                  ['text' => 'Löschen', 'art' => 'gefahr', 'href' => '#',
-                   'attr' => ' data-dialog="dlg-paket-weg"'
-                           . ' data-w-handgriff="' . e($handgriff) . '"'
-                           . ' data-w-datei="' . e((string)$p['datei']) . '"'
-                           . ' data-w-zeit="' . e($zeit) . '"'
-                           . ' data-w-soll="' . e((string)($v['email'] ?? '')) . '"'
-                           . ' data-w-unlesbar="' . ($v['lesbar'] ? '' : '1') . '"'],
+        /* DIE KONTOKENNUNG IST DER TITEL, die Herkunft der Kleintext
+           (Mockup 08). Der Ordner heisst nach der Kennung; wer ihn im
+           Dateisystem sucht, sucht danach. Die Adresse steht in der
+           Begleitdatei und kann fehlen — ein Titel, der manchmal
+           „Herkunft unbekannt" heisst, ist als Titel untauglich. */
+        $kennungKurz = substr((string)$v['account_key'], 0, 4) . '…'
+                     . substr((string)$v['account_key'], -4);
+        $herkunft = $v['lesbar'] && $v['email']
+            ? 'Herkunft ' . (string)$v['email']
+            : 'Herkunft unbekannt';
+        $juengstes = $v['pakete'] ? edbak_zeitpunkt_text($v['pakete'][0]['erzeugt']) : null;
+        $plaketten = '';
+        if (!$v['lesbar']) { $plaketten .= ui_plakette('Begleitdatei nicht lesbar', ['ton' => 'orange']); }
+        if ($v['freigabe']) { $plaketten .= ui_plakette('freigegeben', ['ton' => 'blau']); }
+        /* Die Paketwahl des Dialogs — als Datenfeld am Knopf, damit derselbe
+           Dialog für jeden Ordner taugt (assets/dialog.js füllt aus
+           `data-w-*`). Aufbau: Datei|Beschriftung, Einträge durch \n. */
+        $paketliste = [];
+        foreach ($v['pakete'] as $pk) {
+            /* Zeitpunkt und Groesse, nicht der volle Umfang: In einem
+               Auswahlfeld steht der Text auf EINER Zeile, und
+               „16 Diensttage · 88 Einsätze · 100 Ruhezeiten · davon 11 im
+               Papierkorb" laeuft dort aus dem Feld heraus. Unterscheidbar
+               sind die Pakete am Datum. */
+            $paketliste[] = (string)$pk['datei'] . '|' . edbak_zeitpunkt_text($pk['erzeugt'])
+                          . ' · ' . edbak_groesse_text((int)$pk['groesse']);
+        }
+        $wDaten = ' data-w-handgriff="' . e($handgriff) . '"'
+                . ' data-w-titel="' . e('Kontokennung ' . $kennungKurz) . '"'
+                . ' data-w-soll="' . e((string)($v['email'] ?? '')) . '"'
+                . ' data-w-unlesbar="' . ($v['lesbar'] ? '' : '1') . '"'
+                . ' data-w-pakete="' . e(implode("\n", $paketliste)) . '"';
+        ui_zeile([
+          'text'  => 'Kontokennung ' . $kennungKurz,
+          'klein' => $herkunft . ' · ' . count($v['pakete'])
+                   . (count($v['pakete']) === 1 ? ' Paket' : ' Pakete')
+                   . ($juengstes !== null ? ' · jüngstes ' . $juengstes : ''),
+          'plaketten' => $plaketten,
+          'aktionen' =>
+              ui_knopf(['text' => 'Einspielen', 'art' => 'leise', 'typ' => 'button',
+                        'attr' => ' data-dialog="dlg-einspielen"' . $wDaten])
+            . ui_knopf(['text' => 'Freigeben', 'art' => 'leise', 'typ' => 'button',
+                        'attr' => ' data-dialog="dlg-freigeben"' . $wDaten])
+            /* AKTIONSMENUE, NICHT ZEILENAKTIONEN (Mockup 08). Beides gibt es:
+               `ui_zeilenaktionen()` zeigt die Eintraege ab 720 px als Knoepfe
+               und nur darunter als Blatt — hier stuenden dann vier Knoepfe
+               nebeneinander, zwei davon endgueltig. `ui_aktionen()` haelt sie
+               auf JEDER Breite eine Ebene tiefer, und genau das verlangt
+               Regel 3 (Ausnahmen eine Ebene tiefer). */
+            . ui_aktionen(['titel' => 'Kontokennung ' . $kennungKurz,
+                'id' => 'za-' . substr((string)$v['account_key'], 0, 8),
+                'eintraege' => [
+                  ['text' => 'Einzelnes Paket löschen', 'gefahr' => true, 'href' => '#',
+                   'symbol' => 'korb',
+                   'attr' => ' data-dialog="dlg-paket-weg"' . $wDaten],
+                  ['text' => 'Ganzen Ordner löschen', 'gefahr' => true, 'href' => '#',
+                   'symbol' => 'korb',
+                   'attr' => ' data-dialog="dlg-ordner-weg"' . $wDaten],
               ]]),
-            ]);
-          endforeach; ?>
-          <div class="listen-form-fuss">
-            <?= ui_knopf(['text' => 'Ganzen Ordner löschen', 'symbol' => 'korb',
-                          'art' => 'gefahr', 'typ' => 'button',
-                          'attr' => ' data-dialog="dlg-ordner-weg"'
-                                  . ' data-w-handgriff="' . e($handgriff) . '"'
-                                  . ' data-w-titel="' . e($titel) . '"'
-                                  . ' data-w-soll="' . e((string)($v['email'] ?? '')) . '"'
-                                  . ' data-w-unlesbar="' . ($v['lesbar'] ? '' : '1') . '"']) ?>
-          </div>
-        </div>
-      <?php endforeach; ?>
+        ]);
+      endforeach; ?>
+    <?php ui_karte_ende(true); ?>
+
+    <?php /* ---- Was hier gilt (Regel 5 aus E-S8-01) -----------------------
+         * Eine Karte je Seite, zugeklappt, am Ende. Sie beantwortet die
+         * Frage, die dieser Seite ihren Namen gegeben hat: Welches der drei
+         * Backups ist das hier? */ ?>
+    <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
+                          'vorschau' => 'Drei Backups · Freigabe · Schlüssel']); ?>
+      <p class="feld-hinweis"><strong>Drei Backups, drei Namen.</strong> Ein
+         <strong>Konto-Backup</strong> legt die Verwaltung an; es liegt auf dem
+         Server, adressiert über die Kontokennung. Ein <strong>Backup</strong>
+         lädt eine NutzerIn sich im eigenen Bereich selbst herunter — es zählt
+         hier nicht. Das <strong>Komplett-Backup</strong> der Installation ist
+         ein Drittes und liegt unter
+         <a href="admin_komplettsicherung.php">Betrieb → Komplett-Backup</a>.</p>
+      <p class="feld-hinweis"><strong>Konto-Backups entstehen nie von selbst.</strong>
+         Die geschützten Angaben bleiben mit dem Inhaltsschlüssel des Kontos
+         verschlüsselt, und den hat der Server nicht — ein nächtlicher Lauf hätte
+         nichts, womit er sie lesen könnte. Angestoßen werden sie hier über „Alle
+         sichern", auf der Kontoseite je Konto oder über die Auswahl in der
+         NutzerInnen-Liste.</p>
+      <p class="feld-hinweis"><strong>Was angestoßen ist, arbeitet der
+         Aufräumjob in Schüben ab</strong>; die Warteschlange überlebt einen
+         Abbruch. Wie oft er läuft, hängt vom eingerichteten Auslöser ab —
+         Kommandozeile, Token-Aufruf oder huckepack an einer Anfrage
+         (<a href="betrieb_jobs.php">Betrieb → Hintergrundjobs</a>). Die
+         wöchentliche Erinnerung fährt auf demselben Weg mit: Wird die Anwendung
+         zwei Wochen nicht angefasst, kommt die Mail zwei Wochen später.</p>
+      <p class="feld-hinweis"><strong>Die Freigabe</strong> ist der Weg, wenn die
+         Kontokennung nicht passt — etwa nach „Konto gelöscht und neu aufgesetzt".
+         Die Verwaltung gibt ein Paket für ein Konto frei; einspielen kann es nur
+         die NutzerIn selbst, in ihrem Backup-Bereich, mit ihrem
+         <strong>Wiederherstellungsschlüssel</strong>. Der liegt ausschließlich
+         bei ihr — auch die Verwaltung hat ihn nicht.</p>
+      <p class="feld-hinweis"><strong>Wohin die Pakete von hier aus gehen</strong>,
+         steht unter <a href="admin_sicherungsziele.php">Backup-Ziele</a> —
+         FTP-, FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
+         Backups auf demselben Server, dessen Ausfall der Grund für ein Backup
+         wäre. Die Ablage selbst ist über den Browser nicht erreichbar: eine
+         <code>.htaccess</code> sperrt sie, und der Ordnername je Konto ist nicht
+         zu erraten.</p>
     <?php ui_karte_ende(true); ?>
 
   </div><?php /* .form-spalte (rechts) */ ?>
@@ -593,34 +605,78 @@ ui_seite_start(['titel' => 'Backups']);
   $zielwahl = ['' => '— Konto wählen —'];
   foreach ($konten as $z) { $zielwahl[(string)$z['id']] = (string)$z['email']; }
   ?>
+  <?php /* DREI DIALOGE STATT ZWEI (S8/AP3). Einspielen und Freigeben teilten
+           sich bis Web 15.1.0 ein Formular mit zwei Absendeknöpfen — beide
+           verlangten dieselben Felder, also lag das nahe. Es war trotzdem
+           falsch: Der Dialog hieß „Backup ohne Konto einspielen" und trug
+           unten einen Knopf „Freigeben", der etwas ganz anderes tut (das
+           Paket wandert NICHT ins Zielkonto, sondern wird der Person zum
+           Selbst-Einspielen angeboten). Zwei Handlungen, zwei Dialoge, zwei
+           Erklärungen. */ ?>
+
   <dialog class="dialog" id="dlg-einspielen">
     <form method="post">
-      <?= csrf_field() ?>
+      <?= csrf_field() ?><input type="hidden" name="action" value="einspielen">
       <input type="hidden" name="handgriff" data-fuell="handgriff">
-      <input type="hidden" name="datei" data-fuell="datei">
-      <div class="dialog-kopf"><h2>Backup ohne Konto einspielen</h2></div>
+      <div class="dialog-kopf"><h2>Konto-Backup einspielen</h2></div>
       <div class="dialog-inhalt">
-        <p>Paket <strong data-fuell="zeit"></strong>. Eingespielt wird
+        <p><strong data-fuell="titel"></strong>. Eingespielt wird
            <strong>ergänzend</strong>: Vorhandenes im Zielkonto bleibt stehen.</p>
         <?php
+        ui_feld(['name' => 'datei', 'label' => 'Paket', 'art' => 'select',
+                 'optionen' => [], 'pflicht' => true,
+                 'attr' => ' data-fuell-optionen="pakete"',
+                 'klein' => 'Jüngstes zuerst.']);
         ui_feld(['name' => 'ziel_user', 'label' => 'Zielkonto', 'art' => 'select',
                  'optionen' => $zielwahl, 'pflicht' => true]);
         ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse des Zielkontos',
-                 'pflicht' => true, 'attr' => 'autocomplete="off"',
+                 'pflicht' => true, 'attr' => ' autocomplete="off"',
                  'klein' => 'Zur Bestätigung abtippen — geprüft wird das Ziel, '
                           . 'nicht die Herkunft.']);
         ?>
         <p class="feld-hinweis">Stimmt die Kontokennung im Paket mit der des Zielkontos
            überein, lässt sich unmittelbar einspielen. Weicht sie ab und enthält das
-           Paket geschützte Angaben, ist das gesperrt — dann ist die Freigabe der Weg.</p>
+           Paket geschützte Angaben, ist das gesperrt — dann ist die
+           <strong>Freigabe</strong> der Weg.</p>
       </div>
       <div class="dialog-fuss">
         <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
                       'attr' => ' data-dialog-zu']) ?>
-        <?= ui_knopf(['text' => 'Freigeben', 'art' => 'neutral',
-                      'name' => 'action', 'wert' => 'freigeben']) ?>
-        <?= ui_knopf(['text' => 'Einspielen', 'art' => 'primaer',
-                      'name' => 'action', 'wert' => 'einspielen']) ?>
+        <?= ui_knopf(['text' => 'Einspielen', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog" id="dlg-freigeben">
+    <form method="post">
+      <?= csrf_field() ?><input type="hidden" name="action" value="freigeben">
+      <input type="hidden" name="handgriff" data-fuell="handgriff">
+      <div class="dialog-kopf"><h2>Konto-Backup freigeben</h2></div>
+      <div class="dialog-inhalt">
+        <p><strong data-fuell="titel"></strong>. Das Paket wandert <strong>nicht</strong>
+           ins Zielkonto — es wird der Person angeboten. Sie sieht es in ihrem
+           Backup-Bereich und spielt es dort mit ihrem
+           <strong>Wiederherstellungsschlüssel</strong> selbst ein. Nur sie kann
+           die geschützten Angaben öffnen.</p>
+        <?php
+        ui_feld(['name' => 'datei', 'label' => 'Paket', 'art' => 'select',
+                 'optionen' => [], 'pflicht' => true,
+                 'attr' => ' data-fuell-optionen="pakete"',
+                 'klein' => 'Jüngstes zuerst.']);
+        ui_feld(['name' => 'ziel_user', 'label' => 'Freigeben für', 'art' => 'select',
+                 'optionen' => $zielwahl, 'pflicht' => true]);
+        ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse des Kontos',
+                 'pflicht' => true, 'attr' => ' autocomplete="off"',
+                 'klein' => 'Zur Bestätigung abtippen.']);
+        ?>
+        <p class="feld-hinweis">Je Ordner gilt <strong>eine</strong> Freigabe. Eine
+           neue ersetzt die bisherige; widerrufen wird sie auf der Kontoseite der
+           Person.</p>
+      </div>
+      <div class="dialog-fuss">
+        <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
+                      'attr' => ' data-dialog-zu']) ?>
+        <?= ui_knopf(['text' => 'Freigeben', 'art' => 'primaer']) ?>
       </div>
     </form>
   </dialog>
@@ -629,19 +685,24 @@ ui_seite_start(['titel' => 'Backups']);
     <form method="post">
       <?= csrf_field() ?><input type="hidden" name="action" value="paket_loeschen">
       <input type="hidden" name="handgriff" data-fuell="handgriff">
-      <input type="hidden" name="datei" data-fuell="datei">
       <input type="hidden" name="soll_email" data-fuell="soll">
       <input type="hidden" name="unlesbar" data-fuell="unlesbar">
-      <div class="dialog-kopf"><h2>Backup löschen</h2></div>
+      <div class="dialog-kopf"><h2>Einzelnes Paket löschen</h2></div>
       <div class="dialog-inhalt">
-        <p>Paket <strong data-fuell="zeit"></strong> endgültig entfernen. Zu diesem
-           Paket gibt es kein Konto mehr, das es neu erzeugen könnte.</p>
-        <?php ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse der Herkunft',
-                       'attr' => 'autocomplete="off"',
-                       'klein' => 'Zur Bestätigung abtippen. Ist die Begleitdatei nicht '
-                                . 'lesbar, gibt es keine Adresse — dann genügt der Haken.']); ?>
+        <p><strong data-fuell="titel"></strong> — ein Paket endgültig entfernen. Zu
+           diesem Ordner gibt es kein Konto mehr, das es neu erzeugen könnte.</p>
+        <?php
+        ui_feld(['name' => 'datei', 'label' => 'Paket', 'art' => 'select',
+                 'optionen' => [], 'pflicht' => true,
+                 'attr' => ' data-fuell-optionen="pakete"',
+                 'klein' => 'Jüngstes zuerst.']);
+        ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse der Herkunft',
+                 'attr' => ' autocomplete="off"',
+                 'klein' => 'Zur Bestätigung abtippen. Ist die Begleitdatei nicht '
+                          . 'lesbar, gibt es keine Adresse — dann genügt der Haken.']);
+        ?>
         <label><input type="checkbox" name="confirm_unlesbar" value="ja">
-          Ich entferne ein Backup, das sich keinem Konto mehr zuordnen lässt.</label>
+          Ich entferne ein Paket, das sich keinem Konto mehr zuordnen lässt.</label>
       </div>
       <div class="dialog-fuss">
         <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
@@ -659,14 +720,14 @@ ui_seite_start(['titel' => 'Backups']);
       <input type="hidden" name="unlesbar" data-fuell="unlesbar">
       <div class="dialog-kopf"><h2>Ganzen Ordner löschen</h2></div>
       <div class="dialog-inhalt">
-        <p><strong data-fuell="titel"></strong> — <strong>alle</strong> Backups dieses
+        <p><strong data-fuell="titel"></strong> — <strong>alle</strong> Pakete dieses
            Ordners endgültig entfernen. Danach ist von diesem Konto nichts mehr da.</p>
         <?php ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse der Herkunft',
-                       'attr' => 'autocomplete="off"',
+                       'attr' => ' autocomplete="off"',
                        'klein' => 'Zur Bestätigung abtippen. Ist die Begleitdatei nicht '
                                 . 'lesbar, gibt es keine Adresse — dann genügt der Haken.']); ?>
         <label><input type="checkbox" name="confirm_unlesbar" value="ja">
-          Ich entferne ein Backup, das sich keinem Konto mehr zuordnen lässt.</label>
+          Ich entferne ein Paket, das sich keinem Konto mehr zuordnen lässt.</label>
       </div>
       <div class="dialog-fuss">
         <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',

@@ -1231,7 +1231,7 @@ function komp_auftrag_starten(): array
         return ['ok' => false, 'meldung' => 'Der Auftrag liess sich nicht vormerken.'];
     }
     return ['ok' => true, 'meldung' => 'Das Komplett-Backup ist vorgemerkt. '
-        . 'Es läuft mit dem nächsten Wartungslauf in Häppchen an.'];
+        . 'Es läuft mit dem nächsten Aufräumlauf in Häppchen an.'];
 }
 
 /** Einen laufenden Auftrag abbrechen und den Bauordner raeumen. */

@@ -224,7 +224,7 @@ ui_seite_start([
           aber Fliesstext, und bei 400 px liest er sich wie auf dem
           Handy — was er dort ohnehin tut. */ ?>
  <div class="anmeldung-karte">
-  <img src="<?= e(logo_src()) ?>" alt="Einsatzdoku" class="anmeldung-logo">
+  <img src="<?= e(logo_src()) ?>" alt="Gen-EM NAdoku" class="anmeldung-logo">
 
   <?php if ($done): ?>
     <h1 class="anmeldung-titel">Fertig</h1>

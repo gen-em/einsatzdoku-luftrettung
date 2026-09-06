@@ -1,4 +1,4 @@
-# Einsatzdoku — Backlog
+# Gen-EM NAdoku — Backlog
 
 Bewusst offene Punkte. 
 
@@ -59,6 +59,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 ## Offen
 
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
+    *Ergänzung 06.09.2026 (Krypto-Review, R74):* Die Bestandsaufnahme
+    macht sie enger möglich als hier angenommen — **null**
+    Inline-Ereignisbehandler, **ein** `style`-Attribut, alle Skriptblöcke
+    über `ui_seite_start()`. Der Bauplan (Nonce je Anfrage, Report-Only
+    zuerst, Quellenliste für Kacheln und Photon) steht in
+    `docs/konzepte/Vorbereitung-Sicherheitspaket.md`, SP-5. Warum es
+    zählt: Daten- und Inhaltsschlüssel liegen als Hex im `sessionStorage`;
+    jede XSS-Lücke, auch eine in Leaflet oder SheetJS, liest sie aus.
    Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
    (Nr. 12), die Regel muss also nichts von außen erlauben.
 17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
@@ -370,6 +378,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfprotokoll, statt die Zahl schönzurechnen.
 
 43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt.**
+    *Entschieden 06.09.2026 (R74):* **Weg C sofort** (Sofortpaket, nur
+    Dokumente: die Zusage in `CLAUDE.md` 4, `Technik.md`, README, Handbuch
+    und im Datenschutztext auf das eingrenzen, was sie hält), **Weg B als
+    eigene Phase S11 nach P6, vor der Öffnung** — mit einem
+    Konto-Schlüsselpaar (Nr. 53), Umfang Spur, Phasenkoordinaten,
+    Reanimationsereignisse und Zielklinik, Altbestand per Einmalwerkzeug im
+    Browser. Die Uhr kann es: ECDH P-256, AES-256-CBC, HMAC-SHA256 ab
+    Connect IQ 3.0.0 (geprüft). Skizze in
+    `docs/konzepte/Vorbereitung-Sicherheitspaket.md`, SP-9.
     *Aufgenommen 30.08.2026 aus der ersten Rückmeldungsrunde.* Der Einsatzort
     ist mit Adresse und Koordinaten Ende-zu-Ende verschlüsselt — die Spur, die
     dorthin führt, und die Koordinate jeder Phase liegen im Klartext. Der Ort
@@ -559,6 +576,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Festlegung und kein Handgriff.
 
 53. **Konto-Schlüsselpaar für versiegelte Serversicherungen.**
+    *Ergänzung 06.09.2026 (R74):* Dasselbe Schlüsselpaar ist der Schlüssel
+    auf der Uhr für Weg B (Nr. 43): privater Teil unter dem
+    Inhaltsschlüssel gehüllt, öffentlicher Teil im Klartext ans Gerät. Die
+    offenen Fragen von hier (wo der private Teil lebt, Passwortwechsel)
+    sind damit beantwortet — er lebt wie `pat_wrap_rc`, und ein
+    Passwortwechsel berührt ihn nicht. Zuordnung damit **S11**, nicht mehr
+    „nach v1.0".
     Aus E-S2-19. Nächtliche Backups je Konto ohne Browser sind abgelehnt
     worden, weil der Server den Inhaltsschlüssel nicht hat und ihn nicht
     bekommen soll. Ein **öffentlicher** Schlüssel je Konto würde die Lücke
@@ -796,36 +820,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
     Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
 
-73. **Die Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen.**
-    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
-    (Rahmenplan Fassung 16).* Auf `admin_users.php` stehen die Filter „Alle,
-    Admins, Backup überfällig, Nie gesichert, Ohne Gerät" rechts neben
-    dem Suchfeld; bei üblicher Schreibtischbreite fällt „Ohne Gerät" allein
-    in eine zweite Zeile. **Zu tun:** Anordnung im S8-Konzept festlegen —
-    Suchfeld über den Filtern, oder Filter in einer Zeile mit Umbruchregel —
-    und am Baustein umsetzen, nicht an der Seite; `tools/screenshots/` in
-    allen acht Breiten. Zuordnung: S8.
-
-74. **Bedienhöhe am Schreibtisch: müssen es 44 px sein?**
-    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* `CLAUDE.md` 5 und
-    `Design.md` verlangen eine Höhe für Bedienelemente, mobil wie am
-    Schreibtisch. Am Schreibtisch wirken die Knöpfe hoch. **Zu klären im
-    S8-Konzept:** eine zweite Stufe für Zeigergeräte (etwa 36 px, nur über
-    `pointer:fine`) mit Begründung, Kontrastprüfung und Nachtrag in
-    `Design.md` — oder es bleibt bei einer Höhe. Berührt die Messung
-    „Knöpfe ≠ 44 px" in `tools/screenshots/`, die dann zwei Sollwerte
-    kennen muss. Zuordnung: S8 (Entscheidung).
-
-75. **Die Unterpunkte des Admin-Menüs sind fett und nicht einklappbar.**
-    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* S3 (Block F) hatte den
-    Fettdruck der Seitenleiste auf den ausgewählten Punkt begrenzt; in der
-    Administration (`ui_leiste_einstellungen()`, `.leiste-liste`) erscheinen
-    die Unterpunkte weiter fett, und die Überschriften der Gruppen heben
-    sich nicht ab. **Zu tun:** nachsehen, ob der Admin-Teil von S3
-    ausgenommen blieb oder eine eigene Regel trägt; Fettdruck nur für den
-    aktiven Punkt; Gruppen ein- und ausklappbar, Zustand je Sitzung merken.
-    Gehört zur Menüstruktur, die S8 ohnehin neu ordnet. Zuordnung: S8.
-
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
     hat.**
     *Aufgenommen 02.09.2026 als Frage des Auftraggebers (Rahmenplan Fassung
@@ -850,6 +844,23 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     sichtbar bleiben muss — das hängt am Update-Weg ab v1.0 (R60). Handbuch
     und Technik ziehen nach, die alte Adresse bleibt als Weiterleitung, bis
     P6 neu aufsetzt. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-05):** Die Seite wird nicht
+    aufgeteilt, sondern **aufgelöst**. Der neue Menüblock „Betrieb" trägt
+    sieben Seiten — Status, Statistik, Updates, Hintergrundjobs,
+    Servereinstellungen, Komplett-Backup, Backup-Ziele —, jede mit *einem*
+    Anliegen. Wartungsmodus und ausstehende Migrationen liegen zusammen auf
+    **Updates**, weil beide zum Deploy gehören (R66: nur Ausstehende mit
+    „Ausstehende ausführen", Ausgeführte bis P5 eingeklappt). Die Karte
+    „Logo" zieht nach Verwaltung → Installation (sie ist Gestaltung, keine
+    Wartung), die Karte „Einsätze ohne Diensttag" entfällt ersatzlos
+    (E-S8-17: das ist Nutzersache und steht als „Zuordnung offen" in der
+    Diensttage-Leiste). `update.php` wird Weiterleitung bis P6. Umsetzung in
+    S8 AP2 und AP4.
+    **Stand 05.09.2026:** Der Web-Teil von `update.php` ist seit Web 15.2.0
+    eine **302-Weiterleitung** auf Betrieb → Updates (S8/AP3); der Notausgang
+    `php update.php` auf der Kommandozeile bleibt. Offen bleibt allein, dass
+    die Adresse überhaupt noch existiert — das räumt P6 (Nr. 77 bleibt
+    deshalb offen).
 
 78. **Der Wertekasten zeigt Cron-Adresse und Token in der Schriftgröße des
     Kopplungscodes.**
@@ -864,6 +875,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     oder `-3`, ohne Sperrung), Herkunft in `Design.md` nachtragen; der
     Kopplungscode behält die große Stufe. Darf als Kleinstkorrektur vorab in
     der Backlog-Runde laufen. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-10):** zweite Stufe
+    `codeblock-lang` — `--schrift-fest` in `--groesse-2`, ohne Sperrung, mit
+    Umbruch an beliebiger Stelle —, dazu ein leiser Knopf **„Kopieren"** in
+    der Kartenecke, weil lange Werte abgeschrieben Fehler machen. **Fünf
+    Stellen, nicht vier** (B-S8-13): Cron-Zeile, Token-Adresse, Setz-Link,
+    Serverschlüssel-Zeile — und die Geräte-ID samt API-Schlüssel beim
+    Anlegen von Hand, die in der Rückmeldung fehlte. Umsetzung in S8 AP2
+    (Baustein, Jobs) und AP6 (übrige Stellen).
 
 79. **Backup-Optionen: Begriffe und Optionen sind gewachsen wie
     Wildwuchs.**
@@ -877,6 +896,24 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Installation, NutzerIn gegen Admin gegen Betreiberin) und ein
     Begriffssatz; Handbuch 6 und `Backup-Format.md` nachziehen. Zuordnung:
     S8, als Kern der Sichtung.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-06; Rahmenplan R77):** drei
+    Namen, drei Orte, ein Verb je Weg. **Backup** ist die `.edbak`-Datei der
+    NutzerIn (Einstellungen → Backup), **Konto-Backup** das Paket je Konto
+    auf dem Server (Verwaltung → Konto-Backups), **Komplett-Backup** der
+    Dump der Installation (Betrieb → Komplett-Backup); dazu **Backup-Ziele**
+    für den Versand und **Speicher** für Grenze und Belegung aller drei
+    (Betrieb → Servereinstellungen, was B-S8-06 auflöst: die Grenze stand
+    unter „Backups" und wirkte auch auf die Komplett-Stände). Verben:
+    *sichern* fürs Erzeugen, *einspielen* für jeden Rückweg in ein Konto —
+    für NutzerIn und Verwaltung gleich —, *wiederherstellen* nur für die
+    Installation. Kennzahlen und Filter heißen „Konto-Backup überfällig" und
+    „nie Konto-Backup", weil sie genau das messen und nichts über die
+    Dateien der NutzerInnen wissen (B-S8-07, jetzt Nr. 117). Umsetzung in S8
+    AP2 und AP3.
+    **Erledigt mit Web 15.2.0 (S8/AP3).** Die drei Namen stehen in Oberfläche,
+    Handbuch 6 und 11 sowie `Backup-Format.md`; „Admin-Backup" und „Wartung"
+    als Seitenname sind ausgetragen, auch außerhalb der AP3-Seiten. Nummer
+    bleibt bis zum Abschluss der Phase stehen und geht dann nach *Erledigt*.
 
 ---
 
@@ -911,6 +948,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wissen.
     **Nicht mehr zu tun:** Die Spalten sind da, die Teilenummer wird
     aufgelöst, und die Geräteliste zeigt Art und Modell (Nr. 59).
+    **Geteilt am 05.09.2026 (Konzept S8, E-S8-05; Rahmenplan Fassung 28):**
+    Der Teil, der **keine** Datenschutz-Vorbedingung hat, zieht nach S8 vor
+    — die Seite **Betrieb → Statistik** (AP4) zeigt Konten, Geräte, Einsätze
+    und eine Tabelle der **Gerätemodelle** (Hersteller abgeleitet, Anteile,
+    CSV), alles ohne Demo-Konto. Bei P5 bleibt, was am Einsatz hängt: die
+    **Herkunft je Einsatz** (R64-Werte) und das Betriebslage-Dashboard —
+    dafür gilt die Vorbedingung unverändert. Auch die Lücke oben bleibt
+    wahr: Die Wear-OS-Uhr koppelt nicht und erscheint als `handy`; die
+    Statistik-Seite sagt es dazu.
     **Die Modelltabelle steht** (Web 12.9.1): 325 Teilenummern auf 173
     Modelle, davon 28 keine Uhren. Eine Zählung nach `geraet_art` trägt damit
     — aber nur für Geräte, die **nach** dem Füllen gekoppelt haben. Ältere
@@ -1233,6 +1279,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
 
 114. **Abgewiesene Pakete sichtbar machen und ausräumen.**
+    *Ergänzung 06.09.2026 (Krypto-Review AN-2):* Die Pakete bleiben samt
+    GPS-Spur **dauerhaft** liegen — sie überleben Trennen und Neukopplung,
+    und `dienst`-Zeilen werden nie gelöscht (`puffer/Puffer.kt:449-514`).
+    Das Sofortpaket Android räumt nach 30 Tagen und beim Trennen; der
+    Bedienweg von hier bleibt offen.
     *Aufgenommen 03.09.2026 aus S5 Paket E (B-S5Z-06).* Antwortet der Server
     auf ein Paket mit **400**, wird es im Puffer als `fehlerhaft = 1` markiert
     und damit aus der Warteschlange **und** aus der Anzeige genommen: Die App
@@ -1275,6 +1326,335 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Fehler. Dieselbe Frage stellt sich für
     `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
 
+117. **Niemand weiß, ob eine NutzerIn je ein Backup gezogen hat.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-07).* Die Kennzahlen
+    „Backup überfällig" und „nie gesichert", der Filter der
+    NutzerInnen-Liste und die Erinnerungsmail messen **ausschließlich** die
+    Konto-Backups der Verwaltung — den Stand des jüngsten Pakets im
+    Kontoordner (`edbak_konto_stand()`). Ob eine NutzerIn selbst je ein
+    Backup heruntergeladen hat, weiß niemand: Die Datei entsteht im Browser
+    und der Server sieht sie nie. S8 hat die Begriffe ehrlich gemacht — die
+    Kennzahlen heißen jetzt „Konto-Backup überfällig" und „nie
+    Konto-Backup" —, aber die Lücke selbst bleibt. **Zu klären:** ob ein
+    Zeitstempel „zuletzt Backup erzeugt" je Konto überhaupt gewollt ist. Er
+    wäre eine neue Erhebung über eine Handlung der NutzerIn und keine
+    Kleinigkeit; die Alternative ist, es dabei zu belassen und im Handbuch
+    zu sagen, dass die Anwendung es nicht weiß. Zuordnung: Backlog-Runde
+    (Entscheidung), Umsetzung frühestens P5.
+
+118. **Die Hintergrundjobs lassen sich nur auf der Kommandozeile anhalten.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-16).* `php jobs.php
+    --pause <Minuten>` ist die einzige Job-Handlung ohne Oberfläche. Die
+    Seite „Hintergrundjobs" (S8 AP2) zeigt den Pausenzustand an und nennt
+    den Befehl, kann ihn aber nicht auslösen. Wer keinen Shell-Zugang hat —
+    und das ist auf geteiltem Hosting die Regel —, kann die Jobs nicht
+    anhalten, wenn etwas schiefläuft. **Zu tun:** ein Knopf „Jobs anhalten"
+    mit Dauerwahl auf derselben Seite, serverseitig derselbe
+    `app_state`-Schlüssel. Das ist eine **neue Funktion** und deshalb nicht
+    Teil von S8. Zuordnung: Backlog-Runde oder P5.
+
+119. **„Import / Export" ist als Sammelpunkt unvollständig.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-18).* Der Menüpunkt
+    verspricht, alle Wege für Daten hinein und hinaus zu tragen — tatsächlich
+    liegt der **GPX-Import je Diensttag** auf der Tagesübersicht (neben
+    „Spuren als GPX", E-S4-18) und der Backup-Rückweg auf „Backup". Nach dem
+    Ordnungsprinzip (R74, Regel 2) ist das für den GPX-Weg sogar richtig — er
+    gehört zu *diesem* Diensttag —, aber dann ist der Name des Sammelpunkts
+    zu weit. **Zu klären mit S9**, das die Tagesübersicht ohnehin umbaut: ob
+    „Import / Export" enger heißt (etwa „Einsatzliste") oder ob die Seite die
+    anderen Wege wenigstens nennt. Zuordnung: Backlog-Runde, mit S9 abstimmen.
+
+120. **Eine Testmail aus der Oberfläche senden.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (E-S8-16).* Die Statusseite
+    (S8 AP4) zeigt für E-Mail nur, ob SMTP **eingerichtet** ist — ob eine
+    Zustellung tatsächlich funktioniert, weiß sie nicht, und ob die letzte
+    Zustellung aufgezeichnet wird, war beim Bau zu prüfen. Eine Warnmail, die
+    nie ankommt, fällt damit erst auf, wenn jemand sie vermisst. **Zu tun:**
+    ein Knopf „Testmail an mich" auf der Statusseite, der über den regulären
+    Versandweg geht und das Ergebnis in derselben Zeile zeigt. **Neue
+    Funktion**, deshalb nicht Teil von S8. Zuordnung: Backlog-Runde.
+
+121. **Vorschau der Rechtstexte beim Tippen.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09); Titel und Text
+    berichtigt 05.09.2026 in S8/AP3.* **Eine Vorschau gibt es seit Web
+    9.11.0** — sie steht unter dem Feld, entsteht auf dem SERVER mit
+    `rt_html()` und zeigt den zuletzt **gespeicherten** Stand. Der Mockup-Text
+    hatte sie übersehen; sie ist nicht neu zu bauen. Was fehlt, ist das
+    Mitlaufen beim Tippen. **Zu tun:** entscheiden, wie — ein zweiter
+    Renderer im Browser ist ausgeschlossen (er müsste dieselbe Positivliste
+    für Linkziele, dieselbe Maskierreihenfolge und dieselben Zeichenfilter
+    führen, und beim nächsten Fund würde einer von beiden vergessen, E-P3-38);
+    bliebe ein Abruf gegen den Server beim Innehalten. **Neue Funktion.**
+    Zuordnung: Backlog-Runde.
+
+122. **Freie Zeiträume und Diagramme in der Statistik.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 04).* Die Seite
+    Betrieb → Statistik (S8 AP4) rechnet feste Zeiträume — 7 Tage, 30 Tage,
+    6 Monate — und zeigt Zahlen in Tabellen. Für den Blick auf einen
+    bestimmten Monat oder auf eine Entwicklung über ein Jahr reicht das
+    nicht. **Zu tun:** ein frei wählbarer Zeitraum (Von/Bis wie in der
+    Einsatzsuche) und eine grafische Darstellung der Entwicklung. Beides
+    sind **neue Darstellungen** und brauchen Mockup und Freigabe
+    (`CLAUDE.md` 5); die Diagrammfrage berührt außerdem die Zusage „keine
+    fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
+    werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
+
+124. **Das Aktionsblatt öffnet weit weg von seinem Knopf.**
+    *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin
+    (Tagesübersicht am Handy).* Das „⋯" steht oben rechts neben dem
+    Seitentitel; das Blatt fährt vom **unteren** Bildschirmrand herein
+    (`.blatt{position:fixed;inset:auto 0 0 0}`). Dazwischen liegt der halbe
+    Bildschirm, und der Zusammenhang zwischen Knopf und Menü ist nicht zu
+    sehen — man sucht die Antwort dort, wo man gedrückt hat.
+    **Das ist kein Fehler, sondern eine Entscheidung** (E-P3-27, `Design.md`
+    9.12): mobil ein Blatt von unten, ab 1024 px dasselbe Markup als
+    Aufklappmenü am Knopf. Das Blatt folgt der Plattformkonvention und liegt
+    im Daumenbereich — was bei einem Menü am oberen Bildschirmrand gerade
+    nicht der Fall ist. Die Meldung ist damit ein Zielkonflikt, kein Defekt.
+    **Drei Wege:** (a) auch mobil am Knopf aufklappen — sichtbarer
+    Zusammenhang, schlechter erreichbar; (b) Blatt behalten und den
+    Zusammenhang zeigen: das „⋯" bleibt hervorgehoben, solange das Blatt
+    offen ist, und das Blatt fährt sichtbar aus seiner Richtung auf;
+    (c) so lassen. **Empfehlung: (b)** — behält die Erreichbarkeit, behebt
+    das Gemeldete und ist die kleinste Änderung. Alle drei ändern die
+    Darstellung eines Bausteins und brauchen Mockup und Freigabe
+    (`CLAUDE.md` 5); betroffen ist jede Seite mit `ui_aktionen()` (zehn
+    Aufrufe). Zuordnung: Backlog-Runde oder P7 (Gesicht v1.0).
+
+125. **`.form-raster` und `.zweispalter` sind dieselbe Regel unter zwei Namen.**
+    *Aufgenommen 05.09.2026 bei S8/AP5 (8).* Beide sind ab 1200 px ein Grid
+    mit zwei gleichen Spalten und `align-items:start`; der einzige
+    Unterschied ist, dass die Kindelemente einmal `.form-spalte` heißen und
+    einmal ein blankes `<div>` sind. `.form-raster` steht auf sechs Seiten,
+    `.zweispalter` auf einer (`admin_installation.php`). **Zu tun:** eine
+    Regel behalten, die andere austragen — die Seite mit dem blanken `<div>`
+    ist die, die umzustellen ist. Das ist keine Gestaltungsänderung: Die
+    berechneten Werte sind identisch, der Stilvergleich muss null melden.
+    **Warum es nicht in S8 erledigt wurde:** AP5 hat mit `.karten-raster`
+    eine dritte Klasse hinzugefügt, die etwas anderes tut (der Browser teilt
+    auf, nicht die Seite) — die beiden alten zusammenzulegen wäre eine
+    Änderung an sechs Seiten außerhalb des Pakets gewesen. Zuordnung:
+    Aufräumpaket P6 oder Backlog-Runde.
+
+126. **Von der Wartungsseite führt kein Weg zurück in die Verwaltung.**
+    *Aufgenommen 06.09.2026 bei S8/AP8, aus dem Umschreiben von Handbuch 12.3.*
+    Wer sich während des Wartungsmodus anmeldet, landet auf der Startseite —
+    und die zeigt die **Wartungsseite** (503). Von dort führt **kein Knopf**
+    weiter; der einzige Weg ist, `betrieb_updates.php` von Hand in die
+    Adresszeile zu tippen. Das Handbuch hat das bis AP8 anders beschrieben
+    („dann bist du wieder auf der Wartungsseite" — richtig, aber es fehlte,
+    dass es dort aufhört); jetzt steht die Adresse da.
+    **Zu bedenken, und deshalb kein Nebenbei-Bau:** Die Wartungsseite ist
+    das, was **jeder Besucher** sieht. Sie entsteht **ohne Datenbank** —
+    `wartung_tor()` steht in `db.php` vor jeder Verbindung, und
+    `wartung_seite_html()` lädt nichts. Sie kann die Rolle also nicht kennen;
+    ein Link stünde für alle da. Das ist verkraftbar (die Adresse steht im
+    Handbuch, und die Seite dahinter hat ihre eigene Schranke), aber es ist
+    eine Entscheidung, keine Selbstverständlichkeit. **Vorschlag:** eine
+    unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
+    Wartungsseite. Zuordnung: Backlog-Runde oder P6.
+
+127. **Anmeldeformular ohne CSRF-Token.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-8).* `login.php:246`
+    trägt kein Token; eine fremde Seite kann einen abgemeldeten Browser per
+    Top-Level-POST in ein Angreiferkonto anmelden. Patientenfelder sind
+    nicht betroffen (kein `edk`, fremde Hülle öffnet nicht), aber Eingaben
+    landen im fremden Konto. Die Sitzung besteht beim GET schon
+    (`login.php:13`), das Token ist also da. Zuordnung: Sofortpaket
+    Sicherheit (R74).
+
+128. **E-Mail-Wechsel im Profil ohne Passwortnachweis.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-7).* `einstellungen.php:92-106`
+    schreibt die Adresse allein mit CSRF-Token um — kein `old_token`, kein
+    `session_epoch`, keine Mail an die alte Adresse; die Verwaltung kann
+    sie ebenfalls ändern (`admin_user.php:127-133`). Die Kette endet im
+    Reset-Modus, der den Wiederherstellungsschlüssel braucht — keine
+    Offenlegung, aber Kontoübernahme für Klartextfelder und Aussperren.
+    Sofortpaket: Nachweis per `old_token` wie beim Passwortwechsel, Hinweismail
+    an die alte Adresse bei beiden Wegen; Bestätigung der neuen Adresse
+    kommt mit R37.6 in P5. Zuordnung: Sofortpaket Sicherheit (R74), Rest P5.
+
+129. **`apk/` und `demo/` liegen ungesperrt im Webroot.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-9).* `apk.php` verlangt
+    die Anmeldung, der Ordner selbst nicht (`apk_lib.php:22`, Dateinamen
+    vorhersagbar); `demo/fixture.json.gz` trägt das Schlüsselmaterial des
+    Demo-Kontos (öffentliches Passwort, also harmlos, aber unnötig). Anders
+    als `sicherungen/` legt kein Code eine Sperre an, und eine Datei in
+    `apk/` käme wegen der Deploy-Ausnahmeliste nie an. Zwei
+    `RewriteRule`-Zeilen in `.htaccess`. Zuordnung: Sofortpaket Sicherheit.
+
+130. **DOCTYPE-Sperre im GPX-Import umgehbar.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-10).* `gpx_lib.php:332`
+    prüft `/<!DOCTYPE/i` auf dem Rohtext; ein UTF-16-kodiertes GPX passiert
+    die Regex, libxml versteht es. Folge: interne Entitäten trotz Sperre
+    (Billion Laughs), XXE nicht (kein `NOENT`, `NONET`). Nur angemeldet,
+    12 MB Grenze. Vor der Regex: gültiges UTF-8 und kein Nullbyte —
+    GPX aus Geräten ist UTF-8. Zuordnung: Sofortpaket Sicherheit.
+
+131. **`wiederherstellen.php` gibt unangemeldet Auskunft.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-11).* Zeile 530 zeigt
+    den Datenbank-Fehlertext (Rechnername, Nutzer möglich), Zeile 538 die
+    Kontenzahl jedem Besucher. Fehlerkennung statt Text, „in Betrieb" ohne
+    Zahl. Zuordnung: Sofortpaket Sicherheit.
+
+132. **Klartext-Freitextfelder ohne Hinweis.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-12).* `notes` trägt den
+    Placeholder „Freitext (keine Patientendaten!)", `bw_info` („Namen /
+    Infos"), die Besatzungs-Freitexte und `days.notes` nicht
+    (`mission_fields.php:395,426,459`). Bedienfehler tragen Patientendaten
+    in den Klartext. Ein Schlüssel `hinweis` im Feldkatalog, ein Text für
+    alle; das Symbol dazu bringt Nr. 108. Zuordnung: Sofortpaket Sicherheit.
+
+133. **Klartext-Reste auf dem Server.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-13).* Während des
+    Komplettbackup-Baus liegt `dump.sql.gz` unversiegelt in
+    `sicherungen/komplett/.bau-*/`, Reste bis zum nächsten Lauf
+    (`komplett_lib.php:53-55,454,471`); Reset-Token bis zur Einlösung in der
+    PHP-Sitzungsdatei und im Zugriffslog des ersten GET (M1-06 kennt es);
+    bei Mailfehler zeigt die Verwaltung den Setz-Link. Sofortpaket: Bauordner
+    nach Fehlschlag räumen; der Rest wird in `Technik.md` benannt und
+    bleibt. Zuordnung: Sofortpaket Sicherheit.
+
+134. **Verlorene Uhr kann Phasen alter Einsätze ersetzen.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-14).* Der Geräteschlüssel
+    liegt auf der Garmin-Uhr im Klartext (`watch/source/Pair.mc:853`; die
+    Plattform hat nichts Besseres). Lesen kann ein Finder nichts —
+    `ingest.php` ist POST-only —, aber er kann Einsätze hochladen und
+    Phasen bestehender Einsätze ersetzen (`ingest.php:361`), bis das Gerät
+    im Web getrennt ist. Was schon geschützt ist: Einsätze mit
+    `manual = 1` überspringt `ingest.php` ganz (Z. 251), und Phasen werden
+    nur ersetzt, wenn der Upload mindestens so viele bringt (Z. 359).
+    **Entschieden (R74):** ein **Zeitfenster ab Einsatzbeginn**, innerhalb
+    dessen ein Gerät ersetzen darf; danach `ok` ohne Ersetzen (idempotent,
+    kein Fehler auf der Uhr); Neuanlage immer. **Entschieden: 72 h**
+    (damit ein Freitagsdienst am Montag noch nachkommt) — Konstante in `db.php`,
+    `JSON-Vertrag.md` und Handbuch 12 („Uhr verloren: sofort trennen").
+    Zuordnung: Sofortpaket Sicherheit.
+
+135. **Kleinigkeiten an Kopfzeilen und Maskierung.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-15).* `json_encode` in
+    Inline-Skripten ohne `JSON_HEX_TAG` (Seitenbruch möglich, keine
+    Ausführung, weil `\/` maskiert wird — `ui.php:1928-1940` und drei
+    weitere Stellen); `csrf_check()` ohne `(string)`-Cast (`csrf[]=x` →
+    500, `auth_guard.php:175`); HSTS ohne `includeSubDomains`, keine
+    `Permissions-Policy`; `querySelector` mit Wert aus dem URL-Fragment in
+    `suche.php:535` (Bruch, kein XSS). Sofortpaket: die `JSON_HEX`-Vorgabe
+    und der Cast; die Kopfzeilen mit der CSP (Nr. 8). Zuordnung:
+    Sofortpaket Sicherheit / P5.
+
+136. **Rundenzahl und Passwortregeln.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-3).* Gegen den
+    Datenbankabzug ist das Passwort die einzige Schranke, und der Server
+    kann seine Qualität nach Bauart nicht prüfen. 320 000 Runden liegen
+    unter der Empfehlung von 600 000 (OWASP 2023, Bitwarden); gemessen
+    165 → 285 ms je Ableitung auf einem CPU-Kern, für den Angreifer die
+    halbe Rate. `KDF_ITER_ZIEL = 600000`, Altwert in der Liste, stille
+    Anhebung wie M2-01; `pwquality.js` auf Mindestlänge 12 mit
+    Passphrasen-Empfehlung, Sperrliste um naheliegende Muster; der Satz
+    zur Bauform ins Handbuch 3.1 und aufs Notfallblatt (R37.11).
+    Zuordnung: Sofortpaket Sicherheit.
+
+137. **Photon und Kachelserver bekommen den Einsatzort im Klartext.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-6).* Beim Tippen der
+    Adresse geht der Text ab drei Zeichen an `photon.komoot.io`
+    (`ortsfeld.js:82,360`), die Umkehrsuche schickt die Koordinate
+    (`ortswahl.js:34`), die Kachelserver sehen den Ausschnitt. Nicht der
+    eigene Server, aber ein Dritter ohne Vertrag — der Wortlaut „keine
+    fremde Quelle zur Laufzeit" (`CLAUDE.md` 4) deckt es nicht. Sofortpaket:
+    Hinweis am Feld, Nennung im Datenschutztext, Schalter je Installation
+    (die Komponente hat `adresssuche` schon, `ortsfeld.js:118`);
+    **Entschieden (F-SP-4): Schalter je Installation, Vorgabe „an".** Selbstbetrieb ist
+    die Frage von Nr. 101 (S9 PS-1) mit der Hosting-Entscheidung.
+    Zuordnung: Sofortpaket Sicherheit, Rest S9.
+
+138. **Weg C: die Zusage auf das eingrenzen, was sie hält.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-1), entschieden R74.*
+    Nur Dokumente, keine Versionsstufe: `CLAUDE.md` 4, `Technik.md` 4.98,
+    README, Handbuch 5 und der Entwurf des Datenschutztextes sagen, dass
+    Spur, Phasenkoordinaten, Zielklinik, Zeiten und Reanimationsereignisse
+    im Klartext liegen und der Einsatzort daraus rekonstruierbar ist (Nr. 43,
+    `Konzept-V1-Ortsdaten.md` Weg C). Zuordnung: Sofortpaket Sicherheit.
+
+139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
+    Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
+    mit allen Klartextfeldern, E-Mail, Name und `pat_wrap_rc`; der Versand
+    lässt reines `ftp` zu (`schema.sql:512`) und prüft bei FTPS kein
+    Zertifikat (`sicherungsziel_lib.php:31-33`). Die Begründung in
+    `Backup-Format.md` 5 („kein Schlüssel, ohne ihn zu speichern") ist seit
+    dem Serverschlüssel (Web 12.1.0) überholt. Versiegeln mit
+    `sk_versiegeln()` wie das Komplettbackup, `ftp` aus der Auswahl,
+    bestehende `ftp`-Ziele mit rotem Hinweis. Zuordnung: **S10** (R74).
+
+140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-16).* Die
+    FTPS-Action deployt jeden Push mit Klartext-Zugangsdaten in Secrets;
+    jedes Konto mit Push-Recht kann `crypto.js` ändern und Passwörter beim
+    nächsten Anmelden abgreifen — der eine Angriff, gegen den keine
+    Browser-Verschlüsselung hilft. Das Repositorium ist öffentlich;
+    Branch-Schutz, 2FA-Zwang und Umgebungs-Freigaben kosten nichts.
+    **Entschieden (R74):** Branch-Schutz und 2FA sofort (Zuarbeit), das
+    Deploy-Tor erst mit dem Staging-Aufbau (R40 (2)); die
+    **Integritätswache** (tägliche Action vergleicht die ausgelieferten
+    Skripte mit dem Release) kommt sofort mit dem Sofortpaket (F-SP-9).
+    Zuordnung: Zuarbeit sofort, Sofortpaket Sicherheit (Wache), S10
+    (Deploy-Tor mit R40 (2)).
+
+141. **Zweitfaktor für alle Konten.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
+    Anmeldung **und** Datenschlüssel; Phishing genügt für alles. R38 sieht
+    TOTP nur für Admin-Konten vor. **Entschieden (R74):** für alle Konten
+    angeboten, für Admins Pflicht; Geheimnis serverseitig versiegelt
+    (`sk_versiegeln()`), `otpauth://`-Text statt QR-Fremdbestandteil, acht
+    Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
+    nicht den Offline-Angriff (dafür S10). Zuordnung: **P5** (erweitert
+    R38).
+
+142. **Android: HTTP-Ausnahme gilt auch im Release-Build.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-1).*
+    `Serveradresse.kt:108,119` lässt `localhost` und IPv4-Adressen mit
+    `http` durch und stuft ein ausdrückliches `https://127.0.0.1/` herab
+    (Test `oertlicheAdressenBehaltenHttp`); keine
+    Release-`network_security_config`. Auf Android 8.0/8.1 ginge
+    `X-Api-Key` bei einer Selbsthoster-Adresse per IP im Klartext; der
+    Standardbau ist nicht betroffen. Ausnahme an `BuildConfig.DEBUG`,
+    Klartextverbot im Release. Zuordnung: Sofortpaket Android (R74).
+
+143. **Android: Verzicht auf Certificate Pinning ist nicht festgehalten.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-3).* Vertretbar bei
+    fester Domain mit rotierendem Zertifikat, aber nirgends entschieden
+    (`docs/` und `android/`: kein Treffer). Eine Zeile in
+    `android/LIESMICH.md`. Zuordnung: Sofortpaket Android.
+
+144. **Android: Data-Layer-Empfang ohne Absender- und Plausibilitätsprüfung.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-4).*
+    `HandyHorcher.kt:30-32` und `Uhrannahme.kt:63-92` prüfen keinen
+    `sourceNodeId` und keine Zeitstempel; jede `uhr`-Kennung wird als neue
+    Uhr geführt. Kein Abflussweg, nur Störung — das Vertrauen ruht auf der
+    proprietären Bibliothek (gleiches Paket, gleiche Signatur). Absender
+    gegen die verbundenen Knoten, Zeiten gegen Dienstfenster;
+    Robolectric-Prüffall mit Attrappe. Zuordnung: Sofortpaket Android.
+
+145. **Android: Gradle-Wrapper ohne Prüfsumme.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-5).*
+    `gradle-wrapper.properties:3-5` ohne `distributionSha256Sum` (begründet
+    mit dem gesperrten `downloads.gradle.org` — die Summe wird aber nur
+    beim Herunterladen geprüft und stört den Container nicht);
+    `gradle-wrapper.jar` im Repositorium unvalidiert. R8 bleibt aus,
+    Begründung steht. Zuordnung: Sofortpaket Android.
+
+146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.**
+    *Aufgenommen 06.09.2026 (R74).* Drei Fragen, keine Fehler: **Argon2id
+    statt PBKDF2** (WASM-Fremdbestandteil gegen GPU-Resistenz; nach S10
+    klein, weil der Abzug allein dann nichts mehr nützt) · **Inhaltsschlüssel
+    als nicht-extrahierbarer `CryptoKey`** statt Hex im `sessionStorage`
+    (ein XSS könnte dann entschlüsseln, den Schlüssel aber nicht mitnehmen;
+    anderes Lebensdauermodell, „ein Tab, ein Schlüssel") · **Passkeys** als
+    Zweitfaktor (WebAuthn-Serverbibliothek) und **Passkeys mit PRF** als
+    Ersatz der Passwortableitung (Bitwarden seit 2024). Dazu die
+    Design-Skizze für Weg B (Nr. 43, SP-9) zur Prüfung. Zuordnung: P6,
+    R17 Stück 1.
+
 ---
 
 ## Erledigt
@@ -1282,6 +1662,141 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+75. **Die Unterpunkte des Admin-Menüs sind fett und nicht einklappbar.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* S3 (Block F) hatte den
+    Fettdruck der Seitenleiste auf den ausgewählten Punkt begrenzt; in der
+    Administration (`ui_leiste_einstellungen()`, `.leiste-liste`) erscheinen
+    die Unterpunkte weiter fett, und die Überschriften der Gruppen heben
+    sich nicht ab. **Zu tun:** nachsehen, ob der Admin-Teil von S3
+    ausgenommen blieb oder eine eigene Regel trägt; Fettdruck nur für den
+    aktiven Punkt; Gruppen ein- und ausklappbar, Zustand je Sitzung merken.
+    Gehört zur Menüstruktur, die S8 ohnehin neu ordnet. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-07):** Fettdruck nur für den
+    aktiven Eintrag; die **drei** Blöcke (Einstellungen, Verwaltung, Betrieb)
+    werden auf- und zuklappbare Gruppen — kein neuer Baustein, sondern das
+    Akkordeon der Diensttage-Leiste. Zustand je Sitzung in `sessionStorage`;
+    der Block der aktiven Seite ist offen, „Einstellungen" immer, ab 1024 px
+    alle. Umsetzung in S8 AP5.
+    **Erledigt 06.09.2026 (Web 15.4.0, S8/AP5):** Beides. Fettdruck: gemessen
+    mit `getComputedStyle` über alle Einträge der Leiste — bei einer
+    BetreiberIn mit **17** Einträgen ist **genau einer** fett, bei 1280 und
+    bei 360 px, in beiden Rollen. Klappen: drei `<details>` aus dem
+    Akkordeon-Baustein, Zustand je Sitzung im `sessionStorage`. Die Vorgabe
+    ist gegenüber dem Beschluss geändert und **misst sich**: „Einstellungen
+    plus der Block der aktiven Seite" gilt in **jeder** Breite, weil „ab
+    1024 px alle offen" den Grund für das Klappen nicht löst (bei 1280 × 900
+    blieb die Liste 896 px hoch in einer 783 px hohen Leiste). Begründung im
+    Konzept, Abschnitt 11.6.
+
+74. **Bedienhöhe am Schreibtisch: müssen es 44 px sein?**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* `CLAUDE.md` 5 und
+    `Design.md` verlangen eine Höhe für Bedienelemente, mobil wie am
+    Schreibtisch. Am Schreibtisch wirken die Knöpfe hoch. **Zu klären im
+    S8-Konzept:** eine zweite Stufe für Zeigergeräte (etwa 36 px, nur über
+    `pointer:fine`) mit Begründung, Kontrastprüfung und Nachtrag in
+    `Design.md` — oder es bleibt bei einer Höhe. Berührt die Messung
+    „Knöpfe ≠ 44 px" in `tools/screenshots/`, die dann zwei Sollwerte
+    kennen muss. Zuordnung: S8 (Entscheidung).
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-09; Rahmenplan R76):** zwei
+    Stufen. 44 px bleibt die Vorgabe; für Zeigergeräte
+    (`@media (hover: hover) and (pointer: fine)`, ab 1024 px) gilt 36 px für
+    Knöpfe, Felder, Listenzeilen und Menüeinträge. Begründung: Die häufigste
+    Arbeit — Einsätze nach der Aufzeichnung ausfüllen — ist Formulararbeit am
+    Schreibtisch; 36 px liegt über der Mindestzielgröße von WCAG 2.5.8
+    (24 px); ein Touch-Laptop mit Maus als Hauptzeiger bekommt 36, ein reines
+    Touch-Gerät 44. Der Kontrast ändert sich nicht — es ist eine Höhe, keine
+    Farbe. Die Android-Apps bleiben bei 48 dp (R58). Umsetzung in S8 AP7;
+    S9 PS-3 baut darauf auf.
+    **Erledigt 06.09.2026 (Web 15.5.0, S8/AP7):** Zwei Stufen, wie
+    entschieden. `@media (hover: hover) and (pointer: fine) and
+    (min-width: 1024px) { :root { --knopf: 36px } }` — alle drei Bedingungen
+    müssen gelten. Gemessen an vier Breiten und beiden Eingabearten: Zeiger
+    ab 1024 px durchgehend 36 px, Zeiger darunter und Finger überall 44 px.
+    Unverändert, weil eigene Token: Kopfleiste 56, Schalter 46 × 26,
+    Aktionsblatt 50 (nur mobil), Suchfeld 48, Sprungmarke 28. Der Bilderlauf
+    kennt seither zwei Sollwerte und eine Schaltung `--finger`; er meldete in
+    beiden Läufen **0** falsche Höhen. Kein Ziel ist unter 24 × 24 px
+    gerutscht: Die Zahl der Elemente unter 24 px ist vor und nach der
+    Änderung **identisch** (32 bei 1440 px) — es sind durchweg Links in
+    Fließtext, die WCAG 2.5.8 ausdrücklich ausnimmt.
+
+123. **Der Schalter steht zu weit von seiner Beschriftung entfernt.**
+    *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin.*
+    `.schalter-text` trägt `flex:1 1 auto` und drückt den Griff an den
+    rechten Rand der Karte. Auf dem Handy sind das wenige Zentimeter; am
+    Schreibtisch liegt zwischen „Mein Kontopasswort verwenden" und dem Griff
+    die ganze Kartenbreite, und der Schalter ist dort kaum noch als zu
+    dieser Zeile gehörig zu erkennen — man sieht ihn schlicht nicht.
+    **Gewünscht:** der Griff **links vom Text** oder **unmittelbar rechts
+    daneben**. **Zu bedenken:** Das ist der Baustein, nicht eine Seite — er
+    steht an neun Stellen in vier Dateien (`admin_sicherungsziele.php` 4 ×,
+    `import.php` 3 ×, `einstellungen.php`, `admin_sicherungen.php`). Eine geänderte
+    Darstellung eines Bausteins braucht Mockup und Freigabe
+    (`CLAUDE.md` 5) und einen Stilvergleich, weil sie eine Flex-Regel
+    verschiebt. **Zuordnung: S8/AP7** — dort wird das Stylesheet für die
+    zweite Bedienhöhe (R76) ohnehin angefasst, und dieselben Zeilen sind
+    betroffen.
+    **Erledigt 06.09.2026 (Web 15.5.0, S8/AP7):** `.schalter-text` trägt
+    `flex:0 1 auto` statt `1 1 auto`; der Griff steht damit unmittelbar
+    rechts neben der Beschriftung. Von den beiden gewünschten Anordnungen
+    ist das die kleinere Änderung — die Leserichtung bleibt Beschriftung →
+    Schalter. Gemessen an vier Schaltern auf drei Seiten, Abstand vom Ende
+    des Textes bis zum Griff:
+
+    | Stelle | vorher | nachher |
+    |---|--:|--:|
+    | „Mein Kontopasswort verwenden" @ 1440 | 832 px | **12 px** |
+    | „Mein Kontopasswort verwenden" @ 1920 | 1072 px | **12 px** |
+    | „Personenbezogene Angaben" (Import) | 763 px | **12 px** |
+    | „Mit Passwort schützen" (Import) | 833 px | **12 px** |
+
+    Die **Trefferfläche bleibt die ganze Zeile**: Das `<label>` behält seine
+    Breite, nur sein Inhalt rückt zusammen. Gemessen mit einem Klick 200 px
+    vom rechten Rand — der Schalter kippt.
+
+    Die beiden Auflagen des Eintrags sind erfüllt: Die **Freigabe** liegt als
+    Meldung der Auftraggeberin vor, die beide Anordnungen ausdrücklich
+    zulässt; der **Stilvergleich** ist gelaufen und meldet für diese Änderung
+    genau eine Eigenschaft an genau einem Selektor (`.schalter-text flex:
+    1 1 auto → 0 1 auto`), in allen dreizehn Breiten dieselbe.
+
+73. **Die Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
+    (Rahmenplan Fassung 16).* Auf `admin_users.php` stehen die Filter „Alle,
+    Admins, Backup überfällig, Nie gesichert, Ohne Gerät" rechts neben
+    dem Suchfeld; bei üblicher Schreibtischbreite fällt „Ohne Gerät" allein
+    in eine zweite Zeile. **Zu tun:** Anordnung im S8-Konzept festlegen —
+    Suchfeld über den Filtern, oder Filter in einer Zeile mit Umbruchregel —
+    und am Baustein umsetzen, nicht an der Seite; `tools/screenshots/` in
+    allen acht Breiten. Zuordnung: S8.
+    **Entschieden 05.09.2026 (Konzept S8, E-S8-08):** Suchfeld in eigener
+    Zeile in voller Breite (Höchstbreite 36 rem), Filterplaketten darunter
+    mit erlaubtem Umbruch und festem Abstand — dann ist der Umbruch Absicht
+    und nicht Unfall. Gilt für jede Liste mit Suche und Filtern. Umsetzung
+    in S8 AP6.
+    **Erledigt 06.09.2026 (Web 15.4.1, S8/AP6):** Das Suchfeld steht in eigener
+    Zeile, in jeder Breite, mit der Höchstbreite `--listensuche-breit` (36 rem);
+    die Filterreihe darunter bricht mit festem Abstand. Die Regel `.listenkopf`
+    wird ab 1024 px nicht mehr zur Reihe — genau das war die Ursache. Gemessen
+    an `admin_users.php` mit fünf Filtern (zusammen 789 px breit):
+
+    | Breite | Inhaltsbreite | vorher | nachher |
+    |---|--:|---|---|
+    | 1920 | 1354 px | 1 Zeile | 1 Zeile |
+    | 1440 | 1114 px | **2 Zeilen** | 1 Zeile |
+    | 1280 | 954 px | **2 Zeilen** | 1 Zeile |
+    | 1024 | 738 px | 2 Zeilen | 2 Zeilen (4+1) |
+    | 900 | 834 px | 1 Zeile | 1 Zeile |
+    | 768 | 702 px | 2 Zeilen | 2 Zeilen (4+1) |
+    | 360 | 302 px | 4 Zeilen | 4 Zeilen |
+
+    Wo der Inhalt breiter ist als die Reihe, steht sie einzeilig; wo er
+    schmaler ist (1024 und 768 — beide unter 789 px), ist der Umbruch die
+    richtige Antwort und nicht mehr der halb leere erste Rand von vorher.
+    **Die Abnahme P-34 nennt 780 px Inhaltsbreite ohne Umbruch; gemessen
+    braucht die Reihe 789 px** — neun Pixel mehr. Diese Breite kommt an keiner
+    der acht Prüfbreiten vor.
 
 82. **Es fehlt die Warnung, dass die Daueraufzeichnung den Akku leert.**
     *Aufgenommen 02.09.2026 vom Auftraggeber; erledigt am 04.09.2026 im

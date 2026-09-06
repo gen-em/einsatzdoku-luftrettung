@@ -31,7 +31,7 @@ behält, was das Häppchen schon geschrieben hatte — genau die Lage, die ein
 Zeitlimit hinterlässt. Erlebt ist er nicht.
 
 **Kein Migrationslauf.** Er gehört einer angemeldeten Administration
-(`update.php`, zweistufig seit M6-01) und läuft in keiner Probe mit.
+(Betrieb → Updates, zweistufig seit M6-01) und läuft in keiner Probe mit.
 
 **Keine fremde Datenbank.** Gemessen wird gegen MariaDB 10.11. Ob ein
 anderer Server dieselben `SHOW CREATE TABLE` zurückgibt, ist damit nicht

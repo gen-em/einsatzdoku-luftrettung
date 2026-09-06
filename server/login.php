@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * „Passwort falsch" und tippte weiter — bis der Ratenschutz
              * zuschlaegt. Es ist die Wartungsseite, und die sagt, was los
              * ist. */
-            if (wartung_aktiv() && (string)($u['role'] ?? 'user') !== 'admin') {
+            if (wartung_aktiv() && !rolle_darf_verwalten($u['role'] ?? null)) {
                 session_verwerfen();
                 wartung_antwort_seite();
             }
@@ -231,7 +231,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
 <main class="anmeldung">
  <div class="anmeldung-karte">
   <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
-  <h1 class="anmeldung-titel">Einsatzdoku</h1>
+  <h1 class="anmeldung-titel">Gen-EM NAdoku</h1>
   <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
   <?php /* Der Wartungsbalken (S5 Paket W, Konzept 4.5). Er steht UEBER der
            Meldung und nicht darunter: Wer hier ankommt, waehrend die Wartung

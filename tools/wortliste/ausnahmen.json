@@ -25,9 +25,9 @@
     },
     {
       "id": "update-migrationen",
-      "datei": "server/update.php",
+      "datei": "server/migration_lib.php",
       "klasse": "E",
-      "begruendung": "Migrationsbeschriftungen und SQL frueherer Schemafassungen. Sie beschreiben, was eine Migration DAMALS getan hat — eine Umbenennung machte die Beschreibung falsch. Entfallen mit R11 (Uebergabeliste an P6, Konzept 10.3)."
+      "begruendung": "Migrationsbeschriftungen und SQL frueherer Schemafassungen. Sie beschreiben, was eine Migration DAMALS getan hat — eine Umbenennung machte die Beschreibung falsch. Entfallen mit R11 (Uebergabeliste an P6, Konzept 10.3). DIE DATEI HAT SICH GEAENDERT: Bis Web 15.0.0 lag der Katalog in `server/update.php`; seit S8/AP2 steht er in `server/migration_lib.php`, weil zwei Aufrufer ihn brauchen — die neue Seite Betrieb → Updates und der Notausgang auf der Kommandozeile. Der Regelname bleibt, die Fundstelle nicht."
     },
     {
       "id": "config-beispiel",
@@ -130,6 +130,34 @@
       "bis": "</p>",
       "klasse": "G",
       "begruendung": "Der Tastenweg der Kopplung als ausdruecklicher Zusatz mit genannter Plattform (E-P2-02). Er steht getrennt vom geraetefreien Ablauf darueber, weil er nur fuer Fenix und Forerunner gilt; die Venu 3s hat weder START noch DOWN. Die Tabelle je Uhr steht im Handbuch, Abschnitt 2.0."
+    },
+    {
+      "id": "app-installieren-plattformen",
+      "datei": "server/einstellungen.php",
+      "von": "ui_karte_start\\(\\['titel' => 'App installieren'",
+      "bis": "ui_karte_ende\\(\\); \\?>",
+      "klasse": "G",
+      "begruendung": "Die Karte „App installieren\" auf dem Geraete-Reiter (S8/AP6, Mockup 10) nennt die Plattformen, WEIL der Weg zur App je Plattform ein anderer ist: Die Uhr-App kommt aus dem Connect-IQ-Store, die Handy- und Wear-OS-App aus dem Play Store, und das APK ist der Rueckfall fuer den zweiten Fall. Ein geraetefreies „Store\" waere hier keine Neutralitaet, sondern eine Anleitung, der niemand folgen kann. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02) und `statistik-hersteller-garmin`: genannt wird die Plattform dort, wo sie die Sache IST."
+    },
+    {
+      "id": "handbuch-app-installieren",
+      "datei": "docs/Handbuch.md",
+      "abschnitt": "^### 10\\.1 Die App installieren",
+      "klasse": "G",
+      "begruendung": "Der Handbuch-Abschnitt „Die App installieren\" nennt die Plattformen, WEIL der Weg zur App je Plattform ein anderer ist: Connect-IQ-Store fuer die Uhr, Play Store fuer Handy und Wear OS, APK als Rueckfall. Ein geraetefreies „Store\" waere hier keine Neutralitaet, sondern eine Anleitung, der niemand folgen kann. Gegenstueck zu `app-installieren-plattformen` fuer den Code."
+    },
+    {
+      "id": "statistik-hersteller-garmin",
+      "datei": "server/betrieb_statistik.php",
+      "klasse": "G",
+      "begruendung": "Die Statistik ZAEHLT Hersteller — sie beschreibt nicht die Bedienung, sondern das, was tatsaechlich gekoppelt ist. „Garmin-Uhren“ gegen „Android-Handys“ ist genau die Unterscheidung, um die es dort geht; ein geraetefreies „Uhren“ waere hier keine Neutralitaet, sondern eine geloeschte Information. Drei Stellen: die Ableitung des Herstellers aus der Geraeteart (art = 'uhr' -> Garmin, weil die Wear-OS-App bauartbedingt nicht koppelt, E-S4-11), die Zeile der Geraetekarte und die Fussnote, die die Ableitung erklaert. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
+    },
+    {
+      "id": "handbuch-statistik-garmin",
+      "datei": "docs/Handbuch.md",
+      "abschnitt": "^### 12\\.2 Statistik",
+      "klasse": "G",
+      "begruendung": "Der Handbuch-Abschnitt 12.2 „Statistik“ (bis S8/AP8 „Betrieb → Statistik“) beschreibt eine Zaehlung von Herstellern. „Garmin-Uhren“ gegen „Android-Handys“ ist genau die Unterscheidung, um die es dort geht; ein geraetefreies „Uhren“ waere keine Neutralitaet, sondern eine geloeschte Information. Zwei Stellen: die Aufzaehlung der Geraetearten und der Kasten, der die Herstellerableitung erklaert. Dieselbe Begruendung wie `statistik-hersteller-garmin` fuer den Code."
     },
     {
       "id": "garmin-zusatz",
@@ -547,6 +575,20 @@
       "zeile": "Die Garmin-Uhr hält es genauso",
       "klasse": "G",
       "begruendung": "Steht im Android-Kapitel (5a), nicht im Uhr-Kapitel, und dort ist der Markenname die Unterscheidung: Das Kapitel spricht ueber die Wear-OS-Uhr, der Satz vergleicht mit der Connect-IQ-Uhr (SyncView.mc gegen Track.mc). 'Uhr-App' waere hier zweideutig, und zwar genau an der Stelle, an der es auf den Unterschied ankommt. Aufgenommen 03.09.2026 mit S5 Paket E."
+    },
+    {
+      "id": "logowahl-installation",
+      "datei": "server/admin_installation.php",
+      "zeile": "'hubschrauber' => 'Hubschrauber \\(RTH\\)',",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Bis Web 15.0.0 deckte die dateiweite Ausnahme `update-migrationen` diese Zeile mit ab; seit S8/AP2 steht der Migrationskatalog woanders, und seit S8/AP3 steht die Logo-Karte auf der Seite „Installation“. Es ist jetzt EINE Zeile: Die Konstante INSTALLATION_LOGOS ist die einzige Stelle mit den drei Werten — Rueckmeldung und Segmentwahl lesen beide aus ihr."
+    },
+    {
+      "id": "handbuch-logowahl-installation",
+      "datei": "docs/Handbuch.md",
+      "zeile": "\\*\\*Das Logo\\*\\* links wählt zwischen",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz benennt, WELCHES BILD zur Wahl steht — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Begruendung wie `logowahl-installation` fuer den Code (server/admin_installation.php); der Handbuch-Abschnitt „Installation“ (11.3) ist mit S8/AP3 entstanden und beschreibt dieselbe Bedienung."
     }
   ]
 }

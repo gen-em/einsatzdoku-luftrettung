@@ -77,8 +77,15 @@ const KONTEN_SAMMELBUDGET = 20.0;
 const KONTEN_FILTER = [
     'alle'        => 'Alle',
     'admins'      => 'Admins',
-    'ueberfaellig'=> 'Backup überfällig',
-    'nie'         => 'Nie gesichert',
+    /* WORTGLEICH MIT DEN KENNZAHLEN, die auf sie zeigen (S8/AP3, B-S8-07,
+     * B-S8-19). Bis Web 15.1.0 hiess die Kennzahl „Backup überfällig" und der
+     * Filter ebenso, die Kennzahl auf der Backup-Seite aber „überfällig ·
+     * Liste öffnen" und der zweite Filter „Nie gesichert" gegen „nie
+     * gesichert" — vier Namen fuer zwei Filter. Und „Backup" allein war
+     * ohnehin zweideutig: Gemeint ist das Paket der VERWALTUNG, nicht das,
+     * was eine NutzerIn sich selbst herunterlaedt (E-S8-06). */
+    'ueberfaellig'=> 'Konto-Backup überfällig',
+    'nie'         => 'nie Konto-Backup',
     'ohne-geraet' => 'Ohne Gerät',
 ];
 
@@ -89,7 +96,7 @@ const KONTEN_SPALTEN = [
     'seit'       => 'Seit',
     'angemeldet' => 'Zuletzt angemeldet',
     'geraete'    => 'Geräte',
-    'sicherung'  => 'Backup',
+    'sicherung'  => 'Konto-Backup',
 ];
 
 $notice = null; $error = null; $setzLink = null;
@@ -141,7 +148,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      */
     if ($action === 'user_add') {
         $email = email_pruefen($_POST['email'] ?? '');
-        $role  = ($_POST['role'] ?? 'user') === 'admin' ? 'admin' : 'user';
+        /* ROLLE AUS DEM FORMULAR — UND ZWEIMAL GEPRUEFT (R75).
+         *
+         * rolle_normieren() faengt alles ab, was nicht im Katalog steht; die
+         * zweite Pruefung faengt den Fall, der davon nicht erfasst wird: Ein
+         * Admin schickt 'betreiberin', obwohl das Auswahlfeld ihm die Option
+         * gar nicht angeboten hat. Die Oberflaeche blendet sie aus, aber ein
+         * ausgeblendetes Feld ist keine Pruefung — ein POST von Hand kennt
+         * das Feld trotzdem. Wer nicht selbst BetreiberIn ist, kann keine
+         * anlegen; das Konto entsteht dann als Admin. */
+        $role  = rolle_normieren($_POST['role'] ?? 'user');
+        if ($role === 'betreiberin' && !ist_betreiberin()) { $role = 'admin'; }
         $name  = trim((string)($_POST['name'] ?? ''));
 
         if ($email === null) {
@@ -196,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         . $link . "\n\n"
                         . "Dabei wird auch dein Wiederherstellungsschlüssel angezeigt. Bitte notiere ihn dir\n"
                         . "sicher — ohne ihn lassen sich die verschlüsselten Angaben nach einem späteren\n"
-                        . "Passwort-Reset nicht wiederherstellen.\n\n"
+                        . "Passwort-Reset von niemandem mehr öffnen.\n\n"
                         . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
                         . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n");
                     if ($ok) {
@@ -241,7 +258,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 [$ok, $grund, ] = edbak_sicherung_erzeugen($id);
                 if ($ok) { $gut++; } else { $schlecht[] = $grund; }
             }
-            $notice = $gut . ' ' . ($gut === 1 ? 'Backup' : 'Backups') . ' erzeugt.';
+            $notice = $gut . ' ' . ($gut === 1 ? 'Konto-Backup' : 'Konto-Backups')
+                    . ' erzeugt.';
             if ($rest) {
                 $notice .= ' ' . count($rest) . ' ' . (count($rest) === 1 ? 'Konto ist' : 'Konten sind')
                          . ' noch ausgewählt — die Zeit für eine Anfrage reicht nicht für alle '
@@ -319,7 +337,12 @@ $gesamt = [
     'nie'          => 0,
 ];
 foreach ($alle as $k) {
-    if ($k['role'] === 'admin') { $gesamt['admins']++; }
+    /* „Admins" zaehlt JEDES Konto mit Verwaltungsrechten, also auch die
+     * BetreiberInnen (R75). Die Kennzahl beantwortet die Frage „wie viele
+     * koennen hier verwalten?" — und darauf ist eine BetreiberIn ein Ja.
+     * Wer wissen will, wer betreibt, sieht die Rollenspalte: Sie nennt drei
+     * Werte, die Kennzahl fasst zwei davon zusammen. */
+    if (rolle_darf_verwalten($k['role'])) { $gesamt['admins']++; }
     if ($k['stand']['stand'] === 'ueberfaellig') { $gesamt['ueberfaellig']++; }
     if ($k['stand']['stand'] === 'nie') { $gesamt['nie']++; }
 }
@@ -340,7 +363,7 @@ if ($q !== '') {
 function konten_trifft(array $k, string $f): bool
 {
     return match ($f) {
-        'admins'       => $k['role'] === 'admin',
+        'admins'       => rolle_darf_verwalten($k['role']),
         'ueberfaellig' => $k['stand']['stand'] === 'ueberfaellig',
         'nie'          => $k['stand']['stand'] === 'nie',
         'ohne-geraet'  => $k['geraete'] === 0,
@@ -410,7 +433,11 @@ function konten_sortschluessel(string $text): string
 function konten_sortwert(array $k, string $sort): string
 {
     return match ($sort) {
-        'rolle'      => $k['role'] === 'admin' ? '0' : '1',
+        /* Drei Stufen, absteigend nach Rechten: BetreiberIn, Admin,
+         * NutzerIn. Aufsteigend steht damit oben, wer am meisten darf. */
+        'rolle'      => match (rolle_normieren($k['role'])) {
+            'betreiberin' => '0', 'admin' => '1', default => '2',
+        },
         'seit'       => (string)($k['created_at'] ?? ''),
         /* Nie angemeldet sortiert ans ENDE der aufsteigenden Reihenfolge und
          * nicht an den Anfang: Ein leerer Wert ist kein frueher Zeitpunkt. */
@@ -466,7 +493,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
 
   <?php ui_titelzeile(['titel' => 'NutzerInnen']); ?>
   <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite mit allen
-     Verwaltungsaufgaben: Kontodaten, Geräte, Backups, später Abonnement.
+     Verwaltungsaufgaben: Kontodaten, Geräte und Konto-Backups.
      Ein Klick auf eine Zeile öffnet sie.</p>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
@@ -477,14 +504,18 @@ ui_seite_start(['titel' => 'NutzerInnen']);
         . 'ist angelegt, der Link 24 Stunden gültig — bitte auf einem anderen Weg '
         . 'an die Person selbst weitergeben. Wer ihn hat, kann das Passwort des '
         . 'neuen Kontos setzen. Die Ursache steht im Fehlerprotokoll des Webspace.') ?>
-    <p class="codeblock"><?= e($setzLink) ?></p>
+    <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Der Link
+             ist über hundert Zeichen lang; in der grossen Stufe stand er
+             gesperrt in Plakatgrösse über drei Zeilen — und ohne Knopf,
+             obwohl er zum Weitergeben da ist. */ ?>
+    <?= ui_codeblock_lang((string)$setzLink, 'Einladungslink') ?>
   <?php endif; ?>
 
   <?php /* ---- Die vier Statuskacheln (Mockup 41) --------------------------
        Jede ist ein Weg in die Liste, die sie meint. Die beiden linken tragen
        keinen Ton — sie sind Bestandszahlen, keine Befunde. */ ?>
   <?php /* NULL IST KEIN BEFUND. Der Ton haengt an der Zahl, nicht an der
-           Kachel: „0 Backup überfällig" in Warnorange behauptete ein
+           Kachel: „0 Konto-Backup überfällig" in Warnorange behauptete ein
            Problem, wo gerade keines ist — und wer das ein paarmal gesehen
            hat, sieht die Farbe nicht mehr, wenn sie einmal etwas bedeutet.
            Bei 0 ist die Kachel eine gewoehnliche Bestandszahl.
@@ -505,16 +536,17 @@ ui_seite_start(['titel' => 'NutzerInnen']);
     <?= ui_kennzahl(['wert' => (string)$gesamt['admins'], 'label' => 'Admins',
                      'href' => konten_weg(['f' => 'admins', 'q' => '', 's' => ''])]) ?>
     <?= ui_kennzahl(['wert' => (string)$gesamt['ueberfaellig'],
-                     'label' => 'Backup überfällig',
+                     'label' => 'Konto-Backup überfällig',
                      'ton' => $gesamt['ueberfaellig'] > 0 ? 'orange' : '',
                      'href' => konten_weg(['f' => 'ueberfaellig', 'q' => '', 's' => ''])]) ?>
-    <?= ui_kennzahl(['wert' => (string)$gesamt['nie'], 'label' => 'nie gesichert',
+    <?= ui_kennzahl(['wert' => (string)$gesamt['nie'], 'label' => 'nie Konto-Backup',
                      'ton' => $gesamt['nie'] > 0 ? 'rot' : '',
                      'href' => konten_weg(['f' => 'nie', 'q' => '', 's' => ''])]) ?>
   </div>
 
   <?php ui_karte_start([
-      'titel' => 'Konten', 'zahl' => number_format($treffer, 0, ',', '.'),
+      'titel' => 'Konten', 'id' => 'k-konten',
+      'zahl' => number_format($treffer, 0, ',', '.'),
       'aktion' => ['text' => 'Anlegen', 'symbol' => 'plus', 'art' => 'orange',
                    'href' => '#', 'attr' => 'data-dialog="dlg-anlegen"'],
   ]); ?>
@@ -591,7 +623,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
                      Groesse zum Vergleichen; mittig stehen sie unter ihrem
                      Titel. KONTO bleibt linksbuendig: Name und Adresse sind
                      Text und werden gelesen, nicht verglichen. */ ?>
-            <td class="mitte-spalte"><?= $k['role'] === 'admin' ? 'Admin' : 'NutzerIn' ?></td>
+            <td class="mitte-spalte"><?= e(rolle_text($k['role'])) ?></td>
             <td class="mitte-spalte"><?= e($k['created_at'] ? fmt_local($k['created_at'], 'd.m.Y') : '—') ?></td>
             <td class="mitte-spalte"><?= e($k['last_login'] ? fmt_local($k['last_login'], 'd.m.Y') : '—') ?></td>
             <td class="mitte-spalte"><?= (int)$k['geraete'] ?></td>
@@ -612,7 +644,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
     <div class="nur-unter-720">
       <?php foreach ($zeilen as $k):
         [$standText, $standTon] = edbak_stand_plakette($k['stand']);
-        $klein = [$k['role'] === 'admin' ? 'Admin' : 'NutzerIn'];
+        $klein = [rolle_text($k['role'])];
         $klein[] = (int)$k['geraete'] . ($k['geraete'] === 1 ? ' Gerät' : ' Geräte');
         $klein[] = 'zuletzt ' . ($k['last_login'] ? fmt_local($k['last_login'], 'd.m.Y') : '—');
         ui_zeile([
@@ -687,8 +719,15 @@ ui_seite_start(['titel' => 'NutzerInnen']);
           <?php ui_feld(['name' => 'name', 'label' => 'Name',
                          'attr' => 'maxlength="120" placeholder="z. B. Vorname Nachname"',
                          'klein' => 'Kann später ergänzt werden.']); ?>
+          <?php /* Die Option „BetreiberIn" sieht nur, wer selbst eine ist
+                   (R75). Geprueft wird sie oben im Schreibweg noch einmal —
+                   das Ausblenden ist die Anzeige der Regel, nicht die
+                   Regel. */ ?>
           <?php ui_feld(['name' => 'role', 'label' => 'Rolle', 'art' => 'select',
-                         'optionen' => ['user' => 'NutzerIn', 'admin' => 'Admin']]); ?>
+                         'optionen' => rollen_auswahl(),
+                         'klein'    => ist_betreiberin()
+                             ? 'BetreiberIn kann zusätzlich den Bereich Betrieb.'
+                             : null]); ?>
         </div>
       </div>
       <div class="dialog-fuss">
@@ -795,4 +834,4 @@ ui_seite_start(['titel' => 'NutzerInnen']);
   });
 })();
 </script>
-<?php ui_seite_ende(['skripte' => ['assets/dialog.js']]); ?>
+<?php ui_seite_ende(['skripte' => ['assets/dialog.js', 'assets/kopieren.js']]); ?>

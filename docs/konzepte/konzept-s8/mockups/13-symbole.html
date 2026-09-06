@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S8 · Mockup 13 — Symbole des Menüs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;
+  --asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;--auf-dunkel:#FFFFFF;
+  --linie:#E3DAC6;--orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;
+  --rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;
+  --schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;
+  --zeile:1.55;--abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --kopf:56px;--knopf:44px;--leiste:260px;--symbol:20px;--symbol-gross:24px;--strich:1px;
+}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);
+     font-size:var(--groesse-3);line-height:var(--zeile)}
+p{margin:0}
+.mock-kopf{padding:20px 24px 8px;max-width:1200px;margin:0 auto}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{color:var(--gedaempft);font-size:var(--groesse-2)}
+.wrap{max-width:1200px;margin:0 auto;padding:8px 24px 48px}
+.karte{background:var(--schnee);border:var(--strich) solid var(--linie);
+       border-radius:var(--radius-gross);margin-bottom:var(--abstand-5)}
+.karte-kopf{display:flex;align-items:center;gap:var(--abstand-3);min-height:var(--knopf);
+            padding:var(--abstand-2) var(--abstand-4);border-bottom:var(--strich) solid var(--linie)}
+.karte-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0;color:var(--dunkelblau)}
+.karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2)}
+.karte-inhalt{padding:var(--abstand-4)}
+.sym-raster{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:var(--abstand-4)}
+.sym{display:flex;gap:var(--abstand-3);align-items:flex-start;
+     padding:var(--abstand-3);border:var(--strich) solid var(--linie);border-radius:var(--radius)}
+.sym.neu{border-color:var(--orange);background:#FFF8F1}
+.sym-bild{flex:0 0 auto;width:44px;height:44px;border-radius:var(--radius);
+          background:var(--dunkelblau);color:var(--auf-dunkel);
+          display:flex;align-items:center;justify-content:center}
+.sym-bild svg{width:24px;height:24px}
+.sym-text strong{font-family:var(--schrift-kopf);display:block;color:var(--dunkelblau)}
+.sym-text span{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+.plakette{display:inline-flex;align-items:center;gap:var(--abstand-1);
+          padding:1px var(--abstand-2);border-radius:var(--radius-klein);
+          font-size:var(--groesse-1);font-weight:600}
+.p-neu{background:var(--orange-hell);color:var(--orange-tief)}
+.p-alt{background:var(--blau-hell);color:var(--blau-tief)}
+.leiste{width:var(--leiste);background:var(--schnee);border-right:var(--strich) solid var(--linie);
+        padding:var(--abstand-3) 0;border-radius:var(--radius-gross)}
+.leiste-kopf{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;
+             color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;
+             padding:var(--abstand-3) var(--abstand-4) var(--abstand-1)}
+.eintrag{display:flex;align-items:center;gap:var(--abstand-3);min-height:var(--knopf);
+         padding:0 var(--abstand-4);color:var(--asphalt);text-decoration:none;font-size:var(--groesse-3)}
+.eintrag svg{width:var(--symbol);height:var(--symbol);flex:0 0 auto;color:var(--dunkelblau)}
+.eintrag.aktiv{background:var(--orange-hell);font-weight:600;
+               box-shadow:inset 3px 0 0 var(--orange)}
+.zaehler{margin-left:auto;background:var(--orange-hell);color:var(--orange-tief);
+         border-radius:var(--radius-rund);font-size:var(--groesse-1);font-weight:600;
+         min-width:20px;text-align:center;padding:0 6px}
+.text p{margin:0 0 var(--abstand-3)}
+.text p:last-child{margin-bottom:0}
+.zwei{display:flex;gap:var(--abstand-5);align-items:flex-start;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div class="mock-kopf">
+  <h1>S8 · Mockup 13 — Symbole des Menüs</h1>
+  <p>Zur Freigabe. Fünf neue Zeichen für den Block <strong>Betrieb</strong>, dazu zwei
+     Umbelegungen aus dem vorhandenen Vorrat. Alle fünf sind unveränderte
+     <strong>Tabler Icons</strong> (MIT) im Stil des Vorrats: 24 × 24, Strich 2 px, runde
+     Enden, <code>currentColor</code>. Kein eigener Entwurf.</p>
+</div>
+
+<div class="wrap">
+
+  <div class="karte">
+    <div class="karte-kopf"><h2 class="karte-titel">Neu — fünf Zeichen</h2>
+      <span class="karte-zahl">Tabler Icons, unverändert übernommen</span></div>
+    <div class="karte-inhalt">
+      <div class="sym-raster">
+
+        <div class="sym neu">
+          <div class="sym-bild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12h4l3 8l4 -16l3 8h4"/></svg></div>
+          <div class="sym-text"><strong>status.svg</strong>
+            <span>Tabler <code>activity</code></span>
+            <span>Betrieb → <strong>Status</strong></span>
+            <span class="plakette p-neu">neu</span></div>
+        </div>
+
+        <div class="sym neu">
+          <div class="sym-bild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/>
+            <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg></div>
+          <div class="sym-text"><strong>aktualisieren.svg</strong>
+            <span>Tabler <code>refresh</code></span>
+            <span>Betrieb → <strong>Updates</strong></span>
+            <span class="plakette p-neu">neu</span></div>
+        </div>
+
+        <div class="sym neu">
+          <div class="sym-bild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 7v5l3 3"/></svg></div>
+          <div class="sym-text"><strong>uhrzeit.svg</strong>
+            <span>Tabler <code>clock</code></span>
+            <span>Betrieb → <strong>Hintergrundjobs</strong></span>
+            <span class="plakette p-neu">neu</span></div>
+        </div>
+
+        <div class="sym neu">
+          <div class="sym-bild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z"/>
+            <path d="M3 15a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z"/>
+            <path d="M7 8l0 .01"/><path d="M7 16l0 .01"/></svg></div>
+          <div class="sym-text"><strong>server.svg</strong>
+            <span>Tabler <code>server</code></span>
+            <span>Betrieb → <strong>Servereinstellungen</strong></span>
+            <span class="plakette p-neu">neu</span></div>
+        </div>
+
+        <div class="sym neu">
+          <div class="sym-bild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1"/>
+            <path d="M9 15l3 -3l3 3"/><path d="M12 12l0 9"/></svg></div>
+          <div class="sym-text"><strong>ziel-fern.svg</strong>
+            <span>Tabler <code>cloud-upload</code></span>
+            <span>Betrieb → <strong>Backup-Ziele</strong></span>
+            <span class="plakette p-neu">neu</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="karte">
+    <div class="karte-kopf"><h2 class="karte-titel">Umbelegt — aus dem Vorrat</h2>
+      <span class="karte-zahl">kein neues Zeichen, nur ein anderer Ort</span></div>
+    <div class="karte-inhalt">
+      <div class="sym-raster">
+
+        <div class="sym">
+          <div class="sym-bild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12l-2 0l9 -9l9 9l-2 0"/>
+            <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/>
+            <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></div>
+          <div class="sym-text"><strong>haus.svg</strong>
+            <span>Tabler <code>home</code> — liegt seit P3 im Vorrat und wird nirgends benutzt</span>
+            <span>Verwaltung → <strong>Installation</strong> (bisher <code>rechtstexte</code>)</span>
+            <span class="plakette p-alt">vorhanden</span></div>
+        </div>
+
+        <div class="sym">
+          <div class="sym-bild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6"/>
+            <path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10"/>
+            <path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14"/>
+            <path d="M4 20h14"/></svg></div>
+          <div class="sym-text"><strong>balken.svg</strong>
+            <span>Tabler <code>chart-bar</code> — schon im Vorrat</span>
+            <span>Betrieb → <strong>Statistik</strong></span>
+            <span class="plakette p-alt">vorhanden</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="karte">
+    <div class="karte-kopf"><h2 class="karte-titel">So sieht der Block Betrieb damit aus</h2>
+      <span class="karte-zahl">Leiste, 1280 px, BetreiberIn</span></div>
+    <div class="karte-inhalt">
+      <div class="zwei">
+
+        <div>
+          <p class="karte-zahl" style="margin-bottom:8px">HEUTE (geliehen aus dem Vorrat)</p>
+          <div class="leiste">
+            <div class="leiste-kopf">Betrieb</div>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 9h.01"/><path d="M11 12h1v4h1"/></svg><span>Status</span><span class="zaehler">3</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6"/><path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10"/><path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14"/><path d="M4 20h14"/></svg><span>Statistik</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10h3v-3l-3.5 -3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1 -3 3l-6 -6a6 6 0 0 1 -8 -8l3.5 3.5"/></svg><span>Updates</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg><span>Hintergrundjobs</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0 -16 0"/><path d="M4 6v6a8 3 0 0 0 16 0v-6"/><path d="M4 12v6a8 3 0 0 0 16 0v-6"/></svg><span>Servereinstellungen</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0 -16 0"/><path d="M4 6v6a8 3 0 0 0 16 0v-6"/><path d="M4 12v6a8 3 0 0 0 16 0v-6"/></svg><span>Komplett-Backup</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4l-4 4"/><path d="M10 7l11 0"/><path d="M7 21l-4 -4l4 -4"/><path d="M14 17l-11 0"/></svg><span>Backup-Ziele</span></a>
+          </div>
+          <p class="karte-zahl" style="margin-top:8px">Zwei Zeichen doppelt (Datenbank),
+             zwei fremd geliehen (Schraubenschlüssel für Updates, Kalender für Jobs).</p>
+        </div>
+
+        <div>
+          <p class="karte-zahl" style="margin-bottom:8px">VORSCHLAG</p>
+          <div class="leiste">
+            <div class="leiste-kopf">Betrieb</div>
+            <a class="eintrag aktiv" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8l4 -16l3 8h4"/></svg><span>Status</span><span class="zaehler">3</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -6"/><path d="M15 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -10"/><path d="M9 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -14"/><path d="M4 20h14"/></svg><span>Statistik</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg><span>Updates</span><span class="zaehler" style="background:var(--blau-hell);color:var(--blau-tief)">1</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 7v5l3 3"/></svg><span>Hintergrundjobs</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z"/><path d="M3 15a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z"/><path d="M7 8l0 .01"/><path d="M7 16l0 .01"/></svg><span>Servereinstellungen</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0 -16 0"/><path d="M4 6v6a8 3 0 0 0 16 0v-6"/><path d="M4 12v6a8 3 0 0 0 16 0v-6"/></svg><span>Komplett-Backup</span></a>
+            <a class="eintrag" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1"/><path d="M9 15l3 -3l3 3"/><path d="M12 12l0 9"/></svg><span>Backup-Ziele</span></a>
+          </div>
+          <p class="karte-zahl" style="margin-top:8px">Jedes Zeichen einmal. Der Zylinder
+             bleibt dem Komplett-Backup — dort wird wirklich die Datenbank gesichert.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="karte">
+    <div class="karte-kopf"><h2 class="karte-titel">Was das Mockup zeigt — und was nicht</h2></div>
+    <div class="karte-inhalt text">
+      <p><strong>Warum überhaupt.</strong> AP3 hat für die drei neuen Betriebsseiten aus dem
+         Vorrat geliehen, weil ein neues Zeichen Freigabe braucht (Design.md 9). Dabei sind
+         vier Doppelbelegungen entstanden: <code>datenbank</code> für Stammdaten,
+         Komplett-Backup <em>und</em> Servereinstellungen, <code>kalender</code> für die
+         Startseite <em>und</em> die Hintergrundjobs, <code>tausch</code> für Import/Export
+         <em>und</em> Backup-Ziele, <code>werkzeug</code> für Updates. In einer Leiste mit
+         siebzehn Einträgen untereinander ist das keine Sparsamkeit mehr, sondern eine
+         Verwechslungsgefahr.</p>
+      <p><strong>Alle fünf sind unveränderte Tabler Icons</strong> — dieselbe Quelle wie die
+         übrigen 44, dieselbe Lizenz (MIT), derselbe Stil. Kein eigener Entwurf; die
+         LIESMICH des Vorrats verlangt genau diese Reihenfolge („zuerst bei Tabler suchen").</p>
+      <p><strong>Zwei bleiben absichtlich doppelt.</strong> <code>sicherung</code> (Schild
+         mit Haken) trägt „Backup" und „Konto-Backups" — dasselbe Ding aus zwei Blickwinkeln,
+         und ein zweites Schild wäre eine Unterscheidung ohne Unterschied.
+         <code>datenbank</code> trägt „Stammdaten systemweit" und „Komplett-Backup"; der
+         erste Eintrag verschwindet in AP5 ohnehin aus dem Menü (E-S8-14).</p>
+      <p><strong>Nicht gezeigt:</strong> die Blöcke Einstellungen und Verwaltung (unverändert
+         außer <code>haus</code> für Installation), das Akkordeon, die Unterpunkte. Die
+         Zähler stehen hier nur als Beispiel — ihre Regel steht in Mockup 01.</p>
+      <p><strong>Was mit der Freigabe passiert:</strong> fünf Dateien unter
+         <code>server/assets/images/symbole/</code>, je mit Herkunft im Kopfkommentar und
+         <code>&lt;g id="i"&gt;</code> als Anker; Einträge in der dortigen
+         <code>LIESMICH.md</code>, in <code>docs/Design.md</code> (Symboltabelle, erzeugt)
+         und in <code>docs/Lizenzen.md</code>.</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

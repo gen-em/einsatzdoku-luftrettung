@@ -1,4 +1,4 @@
-/* Einsatzdoku — Zeiteingabe im 24-Stunden-Format (Auftragspunkt 4, E1).
+/* Gen-EM NAdoku — Zeiteingabe im 24-Stunden-Format (Auftragspunkt 4, E1).
  *
  * WARUM ES DIESE DATEI GIBT. <input type="time"> zeigt sein Format nach der
  * Sprach- bzw. Regionseinstellung des Betriebssystems an. Steht dort eine

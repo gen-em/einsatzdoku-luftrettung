@@ -1,4 +1,4 @@
-/* Einsatzdoku — Passwortgüte (Baustein B9).
+/* Gen-EM NAdoku — Passwortgüte (Baustein B9).
  *
  * WARUM DIESE PRÜFUNG NUR IM BROWSER STATTFINDEN KANN
  * Der Server sieht das Passwort nie. Er bekommt ausschließlich das daraus
