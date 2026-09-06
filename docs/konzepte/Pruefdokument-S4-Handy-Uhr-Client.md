@@ -310,21 +310,23 @@ vier sind am Code behoben oder beantwortet und am Emulator (AOSP 34) belegt
 7; was zählt, ist der zweite Blick auf das Gerät. Je Punkt: Bedienweg,
 Erwartung, woran ein Scheitern zu erkennen ist.
 
-- [ ] **Zweierwahl.** Dienstansicht vor dem Dienst, „Nur aufzeichnen"
+- [x] **Zweierwahl.** Dienstansicht vor dem Dienst, „Nur aufzeichnen"
       antippen, dann „Mit Phasenknöpfen". **Erwartet:** Die gewählte Hälfte
       ist bis zur unteren Rahmenlinie blau, der Text steht mittig, zwischen
       den Hälften ein grauer Strich. **Scheitern:** ein heller Streifen unter
-      dem Blau, oder kein Strich.
+      dem Blau, oder kein Strich. **06.09.2026 vom S24: „Darstellung
+      passt"** — so gelesen, dass dieser Punkt gemeint ist; zu bestätigen.
 - [ ] **Zurück-Geste.** Einstellungen öffnen, vom Rand nach innen wischen
       (oder die Zurück-Taste). **Erwartet:** die Dienstansicht.
       **Scheitern:** die App verschwindet, der Startbildschirm des Telefons
       erscheint.
-- [ ] **Code kopieren.** Gerät trennen, „Kopplung starten", unter dem Code
+- [x] **Code kopieren.** Gerät trennen, „Kopplung starten", unter dem Code
       „Code kopieren" tippen; Browser öffnen, im Feld „Code vom Gerät"
       einfügen. **Erwartet:** sechs Zeichen ohne Leerzeichen; auf Android 13+
       eine Einblendung des Systems beim Kopieren, darunter „Code kopiert".
       Dazu: lange auf den Code drücken — er lässt sich markieren.
       **Scheitern:** das Feld bleibt leer, oder es fügt etwas anderes ein.
+      **06.09.2026 vom S24: „Kopieren geht."**
 - [ ] **Symbol in der Leiste (Backlog 117).** Dienst beginnen. **Erwartet:**
       ein Punkt links in der Statusleiste, in der Leiste die Meldung
       „Gen-EM NAdoku · Aufzeichnung läuft seit …". **Wenn nicht:** Steht auf
@@ -334,7 +336,12 @@ Erwartung, woran ein Scheitern zu erkennen ist.
       nicht und fehlt das Symbol trotzdem: Leiste herunterziehen; steht die
       Meldung dort, ist es die Symbolanzeige des Herstellers; steht sie
       nicht, `adb shell dumpsys notification --noredact | grep -A5 nadoku`
-      und das Ergebnis in Backlog 117.
+      und das Ergebnis in Backlog 117. **06.09.2026 vom S24: weiterhin
+      nicht da** — ohne Antwort auf die Frage, ob die Meldung in der
+      heruntergezogenen Liste steht. Genau die entscheidet; der Prüfweg
+      steht in zweiter Fassung in Backlog 117 (sechs Fragen, die erste ist
+      die wichtigste). Die Manifest-Änderung von 0.11.1 (`roundIcon`) ist
+      als Ursache ausgeschlossen und wird nicht zurückgenommen.
 - [ ] **Kopf der Benachrichtigung (Backlog 81).** Dieselbe Meldung
       aufklappen. **Erwartet:** die Bildmarke klein und mittig in der runden
       Kachel, mit Luft zum Rand. **Scheitern:** weißer Korpus bis an den
@@ -343,6 +350,15 @@ Erwartung, woran ein Scheitern zu erkennen ist.
 - [ ] **Startbildschirm-Symbol, Handy und Uhr.** **Erwartet:** wie im
       Benachrichtigungskopf — Marke mittig, mit Luft; auf der Uhr dasselbe.
       Vorher stand das Motiv bei kleinen Kacheln zu groß.
+
+**Rückmeldung vom 06.09.2026, zusammengefasst:** zwei Punkte bestätigt
+(Code kopieren; Darstellung — gelesen als die Zweierwahl), einer weiterhin
+offen (Symbol in der Leiste), drei nicht berichtet (Zurück-Geste, Kopf der
+Benachrichtigung, Startbildschirm-Symbol). Dabei aufgefallen, ohne dass es
+am Gerät sichtbar wäre: **Jede Prüf-APK ist anders signiert** (Backlog
+119) — das S24 hat 0.13.0 und 0.13.1 als Neuinstallationen bekommen, mit
+zurückgesetzten Berechtigungen und Kategorien. Für den nächsten Blick heißt
+das: erst die Fragen aus Backlog 117 beantworten, dann eine neue Fassung.
 
 ### 5. Nach dem ersten Deploy: liegt das APK noch da?
 

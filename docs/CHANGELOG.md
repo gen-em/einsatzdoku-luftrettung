@@ -164,6 +164,12 @@ Kaltstart mit `-wipe-data`); sie stehen in `emulator.sh` und
 verbunden", weil eine leere Nachlieferung als Zustellung zählt — Backlog
 Nr. 118, nicht in dieser Fassung behoben.
 
+**Nachtrag 06.09.2026, vom Gerät:** Kopieren geht, Darstellung passt — das
+Symbol in der Leiste fehlt weiterhin. Die Manifest-Änderung von 0.11.1
+(`roundIcon`) ist als Ursache ausgeschlossen und bleibt; was stattdessen
+gefunden wurde — jede Prüf-APK ist anders signiert, jede Auslieferung war
+eine Neuinstallation — steht in Backlog 117 und 119.
+
 ## [Uhr 3.0.2] — 2026-09-05
 
 ### Uhr — nach einem Blick auf die Sync-Seite ließ sich kein Dienst mehr beginnen

@@ -2559,7 +2559,9 @@ verschwindet von selbst, sobald die Schalter stehen.
 > unten wischen): Steht die Meldung „Aufzeichnung läuft seit …" dort, zeigt
 > das Telefon nur ihr Symbol nicht — das ist eine Einstellung des Herstellers
 > (bei Samsung unter *Einstellungen → Benachrichtigungen → Erweiterte
-> Einstellungen*, die Anzeige der Benachrichtigungssymbole). Steht auch die
+> Einstellungen*, die Anzeige der Benachrichtigungssymbole — in der Vorgabe
+> stehen dort nur drei, und stille Meldungen wie diese kommen zuletzt;
+> „Alle" zeigt auch den Punkt). Steht auch die
 > Meldung nicht, bitte melden — mit Fassung der App und Android-Version.
 
 ### 10.3 Die Phasenliste im Einsatz

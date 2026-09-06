@@ -984,6 +984,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     und 108 dp nach (72 % bei beiden). `roundIcon` war nicht die Ursache und
     bleibt trotzdem ausgetragen. **Offen bleibt die Gegenprobe am S24** —
     erst sie schließt den Punkt; der Prüfweg steht im Prüfdokument S4.
+    **06.09.2026:** Die Gegenprobe steht weiter aus — solange die Meldung
+    am S24 nicht erscheint (Nr. 117), ist auch ihr Kopf nicht zu sehen.
 
 87. **Die Weboberfläche als installierbare Web-App auf Android.**
     *Aufgenommen 02.09.2026 auf Anweisung des Auftraggebers: vor v1.0
@@ -1315,6 +1317,59 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `adb shell dumpsys notification --noredact | grep -A5 nadoku`, und das
     Ergebnis hierher. Zuordnung: **Gerätetest, Schritt 6** (mit Nr. 81).
 
+    **Nachtrag 06.09.2026 — zweiter Blick vom S24, und die Ursache ist nicht
+    die Manifest-Änderung.** Rückmeldung mit 0.13.1: Kopieren geht,
+    Darstellung passt, aber „die Anzeige der laufenden App rechts oben in
+    der Benachrichtigungsleiste / -liste ist weiterhin nicht da. Vor dem
+    versuchten Fix des dort falsch gestellten Logos war die Anzeige
+    allerdings noch vorhanden." Der Verdacht des Auftraggebers liegt damit
+    auf 0.11.1, dem Austragen von `android:roundIcon` (Nr. 81). **Am Code
+    nachgeprüft, und das kann es nicht sein:** `roundIcon` zeigte auf
+    `@mipmap/symbol`, dieselbe Kachel wie `android:icon`. Ein Gerät, das
+    runde Symbole bevorzugt, setzt lediglich den einen Verweis an die Stelle
+    des anderen — mit und ohne das Attribut zeichnet das System dasselbe
+    Drawable, und ob eine Benachrichtigung erscheint, hängt an dem Attribut
+    überhaupt nicht. Der Weg der Dauermeldung ist seit 0.7.7 unverändert
+    (`git diff 95962d6 HEAD` auf `AufzeichnungsDienst.kt`):
+    `startForeground(1, …)` mit Typ `location`, Kanal „aufzeichnung" mit
+    `IMPORTANCE_LOW`, Symbol `symbol_meldung`; die Meldungs-IDs 1/2/3/4
+    sind ohne Kollision, und kein Weg zieht die ID 1 zurück (`cancel()`
+    trifft nur die 2 des Sendehinweises). Das Attribut wird deshalb
+    **nicht** wieder eingetragen: Ein Placebo im nächsten Prüf-APK würde die
+    nächste Beobachtung verfälschen.
+
+    **Was sich am Gerät tatsächlich geändert hat, ohne im Code zu stehen:**
+    (1) **Jede Prüf-APK trägt eine andere Signatur** (Nr. 119) — der
+    Debug-Schlüssel entsteht je Container neu. 0.13.0 und 0.13.1 konnten
+    auf dem S24 darum keine Aktualisierungen sein, sondern Neuinstallationen
+    nach Deinstallation, und die setzen Berechtigungen **und**
+    Benachrichtigungskategorien zurück. Die Freigabe fragt die App bei
+    Dienstbeginn erneut ab; eine Ablehnung fängt der Hinweis aus 0.13.1.
+    (2) **One UI zeigt in der Statusleiste in der Vorgabe nur drei
+    Symbole**, und stille Meldungen (`LOW`) stehen in der Reihenfolge hinter
+    allen, die klingeln — der Punkt der Aufzeichnung fällt hinter drei
+    Nachrichten von Messengern heraus, unabhängig von der Fassung der App
+    (das Bildschirmfoto vom 05.09.2026 zeigt genau drei Symbole). (3)
+    „Rechts oben in der Liste" ist bei One UI — wenn ich den Ort richtig
+    lese — der Knopf **„Aktive Apps"**, der nur erscheint, solange ein
+    Vordergrunddienst läuft; fehlt er, läuft der Dienst nicht als solcher,
+    und dann fehlt auch die Aufzeichnung selbst.
+
+    **Prüfweg, zweite Fassung — was zu beantworten ist:** (1) Während
+    eines laufenden Dienstes die Leiste herunterziehen: Steht die Karte
+    „Gen-EM NAdoku · Aufzeichnung läuft seit …" — ja oder nein? Dazu ein
+    Bildschirmfoto von Leiste und Liste in diesem Zustand. (2) Auf der
+    Dienstansicht: Steht „Benachrichtigungen ausgeschaltet"? (3)
+    Einstellungen → Apps → NAdoku → Benachrichtigungen: an? Und die
+    Kategorie „Aufzeichnung": an, lautlos oder minimiert? (4) Einstellungen
+    → Benachrichtigungen → Erweiterte Einstellungen → Anzeige der
+    Benachrichtigungssymbole: „Alle" oder „3 aktuellste"? (5) Android- und
+    One-UI-Fassung des S24 (Einstellungen → Telefoninfo →
+    Softwareinformationen). (6) Wenn die Karte fehlt:
+    `adb shell dumpsys notification --noredact | grep -A5 nadoku` und
+    `adb shell dumpsys activity services org.genem.nadoku.pruef | grep -B2 -A2 isForeground`.
+    Ohne (1) ist keine Ursache benennbar; mit (1) ist die Suche halbiert.
+
 118. **Die Wear-OS-Uhr sagt „Handy verbunden", ohne je ein Handy erreicht zu
     haben.**
     *Aufgenommen 06.09.2026 beim Emulatorlauf zu Android 0.13.1, am Rand.*
@@ -1330,6 +1385,52 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     und die Behebung einen Prüffall in `UhrfunkTest` mitbringt: `true` nur,
     wenn `zugestellt > 0`, sonst den Wert stehen lassen. Zuordnung:
     **S4-Rest**, vor dem Gerätetest mit der Uhr.
+
+119. **Jede Prüf-APK trägt eine andere Signatur — und jede Auslieferung ist
+    damit eine Neuinstallation.**
+    *Aufgenommen 06.09.2026 bei der Suche nach Nr. 117.* Das Prüf-APK
+    (`org.genem.nadoku.pruef`) wird mit dem **Debug-Schlüssel des
+    Containers** signiert (`~/.android/debug.keystore`), und der entsteht in
+    jedem Container neu — der dieser Sitzung am 05.09.2026 um 22:00 UTC,
+    Fingerabdruck `4fc04e60…5545`. Android erkennt eine App an Paketname
+    **und** Signatur: Eine Prüf-APK aus einer anderen Sitzung lässt sich
+    über die vorhandene nicht installieren; das Gerät verlangt die
+    Deinstallation, und die nimmt Kopplung, Puffer, Berechtigungen und
+    Benachrichtigungskategorien mit. Ob es am S24 so lief, weiß nur der
+    Auftraggeber; die Schlüssel der Sitzungen sind jedenfalls verschieden,
+    und damit ist jeder Vergleich „vorher ging es" zwischen zwei Prüf-APKs
+    unscharf: Verglichen wird nicht nur die App, sondern auch ein frisch
+    gesetztes Gerät.
+    **Drei Wege, Entscheidung des Auftraggebers:** (a) ein **eigener
+    Prüfschlüssel im Repositorium** — ein Debug-Schlüssel ist kein
+    Geheimnis (Android liefert seinen mit bekannten Passwörtern aus), er
+    signiert nie ein Release, und E-S4-16 (kein Signaturschlüssel im
+    Repositorium) bliebe für den Auslieferungsschlüssel unberührt; die
+    `.gitignore`-Regel `*.jks` bekäme eine benannte Ausnahme. (b) Ein
+    Prüfschlüssel des Auftraggebers als Datei außerhalb des Repositoriums in
+    jeder Sitzung — derselbe Weg wie `signatur.properties`, nur für den
+    Prüfbau. (c) So lassen und vor jeder Prüf-APK deinstallieren, mit dem
+    Wissen, dass jede Auslieferung ein frisches Gerät prüft. Empfehlung (a).
+    Zuordnung: **Schritt 6, Teil C** (Signaturweg), vor der nächsten
+    Prüf-APK.
+
+120. **Die laufende Aufzeichnung dauerhaft in der Leiste — „Live Updates"
+    (Android 16) und Samsungs Now Bar.**
+    *Aufgenommen 06.09.2026 als Angebot, nicht als Beschluss.* Die
+    Dauermeldung ist eine stille Meldung niedriger Wichtigkeit; ob ihr
+    Symbol in der Statusleiste steht, entscheidet seit jeher das Gerät
+    (Nr. 117: One UI zeigt in der Vorgabe drei Symbole, stille zuletzt).
+    Android 16 kennt dafür eine eigene Form: eine **angeforderte
+    Dauermeldung** („Live Update", `setRequestPromotedOngoing`), die als
+    Chip neben der Uhr steht, in der Liste oben festgehalten wird und die
+    One UI 8 nach Samsungs Ankündigung in der **Now Bar** auf dem
+    Sperrbildschirm zeigt. Genau dafür ist sie gedacht: eine Sache, die
+    läuft, während das Handy in der Tasche steckt. Auf älteren Systemen
+    bleibt die Meldung, was sie ist. Preis: eine Neben-Fassung,
+    `androidx.core` ab 1.17, ein Blick in die Bedingungen (Stil, Text,
+    Berechtigung), und die Prüfung geht nur am Gerät — der Emulator hier
+    führt API 34. Zuordnung: **Entscheidung des Auftraggebers** nach der
+    Antwort auf Nr. 117; wenn ja, als eigenes Paket in Schritt 6.
 
 ---
 

@@ -602,6 +602,17 @@ erkennt eine App an Paketname **und** Signatur; ein Wechsel bedeutet für
 jedes Gerät Deinstallation samt Datenverlust. Deshalb wird der Schlüssel
 einmal erzeugt und dem Auftraggeber zur Verwahrung übergeben.
 
+**Das Prüf-APK ist davon nicht ausgenommen — es hat nur einen anderen
+Schlüssel.** Der Debug-Bau signiert mit `~/.android/debug.keystore`, und den
+erzeugt jeder Container neu (in der Sitzung vom 05./06.09.2026 um 22:00 UTC;
+`apksigner verify --print-certs` nennt den Fingerabdruck). Zwei Prüf-APKs aus
+zwei Sitzungen sind für Android deshalb zwei Apps mit demselben Namen: Die
+zweite lässt sich nur nach Deinstallation der ersten aufspielen, und die
+nimmt Kopplung, Puffer, Berechtigungen und Benachrichtigungskategorien mit.
+Wer eine Prüf-APK auf ein Gerät gibt, sagt das dazu; wer zwei Fassungen
+vergleicht, vergleicht auch ein frisch gesetztes Gerät. Abhilfe steht als
+Backlog 119 zur Entscheidung (fester Prüfschlüssel).
+
 ## 6. Die Werkzeuge unter `werkzeuge/`
 
 | Skript | Was es prüft | Sollstand |
