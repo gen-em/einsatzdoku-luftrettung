@@ -235,9 +235,11 @@ ui_seite_start(['titel' => 'Demo-Konto']);
     <?= ui_kennzahl(['wert' => (string)$zahlen['Geräte'],       'label' => 'Geräte']) ?>
   </div>
 
-  <div class="form-raster">
-  <div class="form-spalte">
-
+  <?php /* KEIN ZWEISPALTEN-RASTER MEHR. Es stand hier mit einer einzigen
+           Spalte darin — die rechte Haelfte blieb ab 1200 px leer, und mit
+           dem Zusammenlegen der beiden Erklaerkarten waere sie es endgueltig
+           geblieben. Drei Karten sind eine Spalte (Konzept AP5 (8): zwei
+           Spalten erst ab mehr als vier Karten). */ ?>
     <?php ui_karte_start(['titel' => 'Zustand', 'id' => 'k-zustand']); ?>
       <?php
       ui_zeile(['text' => 'Konto', 'klein' => (string)$email]);
@@ -274,20 +276,20 @@ ui_seite_start(['titel' => 'Demo-Konto']);
          worden.</p>
     <?php ui_karte_ende(); ?>
 
-  </div>
-  <div class="form-spalte">
-
-    <?php if ($bericht !== null): ?>
-      <?php ui_karte_start(['titel' => 'Bericht des letzten Laufs', 'id' => 'k-bericht', 'zu' => true]); ?>
-        <pre><?= e(json_encode($bericht,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre>
-      <?php ui_karte_ende(true); ?>
-    <?php endif; ?>
-
-    <?php ui_karte_start(['titel' => 'Was der Reset umfasst', 'id' => 'k-reset-umfang', 'zu' => true]); ?>
+  <?php /* EINE ERKLAERKARTE JE SEITE, ZUGEKLAPPT, AM ENDE (E-S8-01, Regel 5).
+           Bis Web 15.3.3 standen hier ZWEI: „Was der Reset umfasst" und
+           „Bericht des letzten Laufs" — dieselbe Frage („was tut der Reset
+           und was hat er getan") in zwei Kaesten, und der Bericht erschien
+           nur manchmal, so dass die Seite mal drei und mal vier Karten
+           hatte. Jetzt eine Karte am Ende ueber die volle Breite, mit dem
+           Bericht als letztem Abschnitt darin. */ ?>
+  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt', 'zu' => true,
+                        'vorschau' => 'Umfang des Resets'
+                                    . ($bericht !== null ? ' · letzter Lauf' : '')]); ?>
       <?php /* `.text` ist der Lesetext-Baustein: nur darin haben ul/li
                Punkte und Einzug (Stylesheet, Abschnitt 13). Eine eigene
                Klasse fuer eine vierzeilige Liste waere ein Sonderfall. */ ?>
+      <p class="feld-hinweis"><strong>Was der Reset umfasst.</strong></p>
       <div class="text">
       <ul>
         <li>Diensttage, Einsätze, Ruhesegmente, Spuren, Stammdaten — vollständig
@@ -304,10 +306,12 @@ ui_seite_start(['titel' => 'Demo-Konto']);
             gelingt ganz, oder er ändert nichts.</li>
       </ul>
       </div>
-    <?php ui_karte_ende(true); ?>
-
-  </div>
-  </div>
+      <?php if ($bericht !== null): ?>
+        <p class="feld-hinweis"><strong>Bericht des letzten Laufs.</strong></p>
+        <pre><?= e(json_encode($bericht,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre>
+      <?php endif; ?>
+  <?php ui_karte_ende(true); ?>
 
 <?php endif; ?>
 

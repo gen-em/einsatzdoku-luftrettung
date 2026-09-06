@@ -961,14 +961,32 @@ function ui_einstellungen_uebersicht(): void
     ui_seite_start(['titel' => 'Einstellungen']);
     ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => '']);
     ui_titelzeile(['titel' => 'Einstellungen', 'unter' => ui_e(ui_user_label())]);
+
+    /* AM SCHREIBTISCH DREI SPALTEN (Konzept AP5 (6)). Gestapelt sind es für
+     * eine BetreiberIn drei Karten mit siebzehn Zeilen — anderthalb
+     * Bildschirme, auf denen nur die erste Karte ohne Rollen zu sehen ist.
+     * Nebeneinander passt der ganze Bereich auf einen Blick. Das Raster
+     * füllt sich nach Rolle von selbst: eine Spalte für eine NutzerIn, zwei
+     * für eine Admin, drei für eine BetreiberIn. */
+    echo '  <div class="uebersicht-raster">' . "\n";
     foreach ($bloecke as $b) {
+        echo '  <section class="uebersicht-gruppe">' . "\n";
         /* Die Blocküberschrift steht ÜBER der Karte, nicht in ihr — Mockup 07
          * zeigt „ADMINISTRATION" als gesperrte Versalzeile außerhalb
-         * (Fable-Kontrolle, F-P3-W). Der erste Block trägt keine: Er ist die
-         * Seite selbst, und die heisst schon „Einstellungen". */
-        if ($b['titel'] !== '') {
-            echo '  <h2 class="uebersicht-block">' . ui_e($b['titel']) . "</h2>\n";
-        }
+         * (Fable-Kontrolle, F-P3-W).
+         *
+         * DER ERSTE BLOCK TRÄGT SIE NUR NEBENEINANDER. Gestapelt stünde
+         * „EINSTELLUNGEN" unmittelbar unter der Seitenüberschrift
+         * „Einstellungen" — eine Dublette, und deshalb sah das Konzept hier
+         * keine Überschrift vor. In drei Spalten ist sie etwas anderes: Sie
+         * benennt die Spalte, und ohne sie stünde eine namenlose neben zwei
+         * benannten. Das Stylesheet blendet sie unter 1024 px aus; im Markup
+         * steht sie immer, damit ein Vorleseprogramm alle drei Blöcke
+         * gleich benennt. */
+        $erst = $b['titel'] === '';
+        echo '    ' . ($erst
+                ? '<h2 class="uebersicht-block uebersicht-block-erst">Einstellungen</h2>'
+                : '<h2 class="uebersicht-block">' . ui_e($b['titel']) . '</h2>') . "\n";
         ui_karte_start([]);
         foreach ($b['punkte'] as $punkt) {
             [$key, $href, $text, $sym] = $punkt;
@@ -979,7 +997,9 @@ function ui_einstellungen_uebersicht(): void
                . ui_symbol('winkel', 'symbol-rechts uebersicht-winkel') . "</a>\n";
         }
         ui_karte_ende();
+        echo '  </section>' . "\n";
     }
+    echo '  </div>' . "\n";
     ui_karte_start();
     echo '    ' . ui_knopf(['text' => 'Abmelden', 'href' => 'logout.php', 'art' => 'leise',
         'symbol' => 'abmelden', 'breit' => true,

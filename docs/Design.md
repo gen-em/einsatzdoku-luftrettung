@@ -325,7 +325,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-93 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+94 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
@@ -404,7 +404,7 @@ auseinanderlaufen kann.
 | `--abstand-1` | `4px` | 55 |  |
 | `--abstand-2` | `8px` | 85 |  |
 | `--abstand-3` | `12px` | 109 |  |
-| `--abstand-4` | `16px` | 51 |  |
+| `--abstand-4` | `16px` | 53 |  |
 | `--abstand-5` | `24px` | 21 |  |
 
 **Radien**
@@ -430,6 +430,7 @@ auseinanderlaufen kann.
 | `--schublade` | `320px` | 1 | Höchstbreite der mobilen Schublade |
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
 | `--unterpunkt` | `28px` | 2 | Sprungmarke unter dem Menüpunkt |
+| `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
 | `--symbol-klein` | `16px` | 2 | Zusatzzeichen an einer Beschriftung |
 | `--symbol` | `20px` | 10 | Symbolgröße in der Zeile |
@@ -664,11 +665,11 @@ neben „Standard der Installation" sprengt sonst jede Zeile.
 |---|--:|
 | `@media (min-width:1600px)` | 2 |
 | `@media (min-width:1200px)` | 3 |
-| `@media (min-width:1024px)` | 2 |
+| `@media (min-width:1024px)` | 3 |
 | `@media (min-width:720px)` | 12 |
 | `@media (max-width:479px)` | 1 |
 
-Zusammen 20 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 21 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -845,28 +846,28 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 562 |
 | `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 763 |
 | `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 886 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja | 957 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1021 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1064 |
-| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1131 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1177 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1230 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1256 |
-| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1292 |
-| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1350 |
-| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1366 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1408 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1450 |
-| `ui_feld()` | `.feld` | ja (+24 Unterklassen) | 1519 |
-| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1584 |
-| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1628 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1681 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1725 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1808 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1870 |
-| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1911 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1968 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2121 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 957 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1041 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1084 |
+| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1151 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1197 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1250 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1276 |
+| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1312 |
+| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1370 |
+| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1386 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1428 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1470 |
+| `ui_feld()` | `.feld` | ja (+24 Unterklassen) | 1539 |
+| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1604 |
+| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1648 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1701 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1745 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1828 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1890 |
+| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1931 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1988 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2141 |
 
 34 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.

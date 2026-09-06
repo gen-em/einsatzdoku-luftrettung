@@ -305,6 +305,7 @@
   --schublade:320px;                   /* Höchstbreite der mobilen Schublade */
   --blatt-zeile:50px;                  /* Zeilenhöhe im Aktionsblatt */
   --unterpunkt:28px;                   /* Sprungmarke unter dem Menüpunkt */
+  --uebersicht-spalte:240px;           /* schmalste Spalte der Einstellungs-Übersicht */
   --suchfeld:48px;                     /* das große Suchfeld */
   --symbol-klein:16px;                 /* Zusatzzeichen an einer Beschriftung */
   --symbol:20px;                       /* Symbolgröße in der Zeile */
@@ -1768,6 +1769,30 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .eintrag-neben{display:block}
   .geo{height:var(--karte-desktop)}
   .zweispalter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-4);align-items:start}
+
+  /* ---- Karten, die sich selbst auf zwei Spalten verteilen (E-S8-15) -------
+   *
+   * DER UNTERSCHIED ZU `.form-raster` UND `.zweispalter`: Dort entscheidet
+   * die Seite, welche Karte in welche Spalte gehört, und schreibt dafür zwei
+   * Behälter ins Markup. Hier fließen die Karten selbst — der Umbruch fällt
+   * beim Zeichnen, und eine Karte, die dazukommt, braucht keine Zuordnung.
+   *
+   * Deshalb Mehrspaltensatz und nicht Grid: Grid bräuchte die Zuordnung
+   * wieder. `break-inside:avoid` hält jede Karte zusammen; ohne das reißt der
+   * Satz sie mitten im Text auseinander, und zwar ohne Fehlermeldung.
+   *
+   * WANN. Ab 1200 px. Das Konzept nannte „mehr als vier Karten"; gemessen
+   * ist die Zahl nicht die Frage, sondern die Höhe. Von den sieben dort
+   * genannten Seiten stehen Status, Statistik und Konto-Backups längst
+   * zweispaltig (`.form-raster`, mit einer thematischen Zuordnung von Hand,
+   * die eine automatische Verteilung verschlechtern würde), Installation
+   * über `.zweispalter`, und Hintergrundjobs (3 Karten) wie Geräte (2)
+   * haben zu wenige. Übrig bleibt Updates mit vier: 1206 px hoch einspaltig,
+   * 977 px zweispaltig — 229 px, und damit passt die Seite auf einen
+   * üblichen Bildschirm. Die Regel gilt also für vier Karten aufwärts, wenn
+   * sie keine thematische Ordnung haben. */
+  .karten-raster{columns:2;column-gap:var(--abstand-4)}
+  .karten-raster > .karte{break-inside:avoid}
 }
 
 /* ---- ab 1600: die Karte steht neben Daten und Tabelle -------------------- */
@@ -1804,6 +1829,30 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   font-weight:600;letter-spacing:.08em;text-transform:uppercase;
   color:var(--gedaempft);
   margin:var(--abstand-5) 0 var(--abstand-2) var(--abstand-1);
+}
+/* GESTAPELT KEINE ÜBERSCHRIFT AM ERSTEN BLOCK (Konzept AP5 (6)): Sie stünde
+ * unmittelbar unter der Seitenüberschrift „Einstellungen" und sagte dasselbe
+ * noch einmal. Nebeneinander benennt sie die Spalte und muss da sein — sonst
+ * stünde eine namenlose neben zwei benannten. Im Markup steht sie immer,
+ * damit ein Vorleseprogramm alle drei Blöcke gleich benennt. */
+.uebersicht-block-erst{display:none}
+/* Ohne Überschrift beginnt die erste Karte oben; der Abstand der übrigen
+ * Blöcke gehört zur Überschrift und entfällt mit ihr. */
+.uebersicht-gruppe:first-child > .uebersicht-block + .karte{margin-top:0}
+
+/* AM SCHREIBTISCH DREI SPALTEN. `auto-fit` füllt nach Rolle: eine Spalte für
+ * eine NutzerIn, zwei für eine Admin, drei für eine BetreiberIn — ohne dass
+ * das Stylesheet die Rolle kennen müsste. Die 240 px sind die Breite, unter
+ * der „Rettungsmittel" mit Symbol und Winkel umbricht. */
+@media (min-width:1024px){
+  .uebersicht-block-erst{display:block}
+  .uebersicht-raster{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(var(--uebersicht-spalte),1fr));
+    gap:0 var(--abstand-4);
+    align-items:start;
+  }
+  .uebersicht-gruppe > .uebersicht-block{margin-top:0}
 }
 
 /* Die Anmeldekarte des Einrichters und der Passwortvergabe ist breiter: Dort

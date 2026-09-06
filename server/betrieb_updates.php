@@ -117,6 +117,13 @@ ui_seite_start(['titel' => 'Updates']);
 
   <?= wartung_balken() ?>
 
+  <?php /* VIER KARTEN, ZWEI SPALTEN (Konzept AP5 (8)). `.karten-raster` teilt
+           sie selbst auf — anders als `.form-raster` braucht es dafuer keine
+           Zuordnung im Markup. Die Karten dieser Seite haben keine
+           thematische Ordnung, die eine Zuordnung von Hand rechtfertigen
+           wuerde. */ ?>
+  <div class="karten-raster">
+
   <?php /* ---- Wartungsmodus (S5 Paket W, zieht mit E-S8-05 hierher) ------
      *
      * Zwei Zustaende, ein Knopf. Im Normalzustand ist „einschalten" die
@@ -319,6 +326,8 @@ ui_seite_start(['titel' => 'Updates']);
                 'plaketten' => ui_plakette($apkV ?? '—', ['ton' => 'neutral'])]);
     ?>
   <?php ui_karte_ende(); ?>
+
+  </div><?php /* .karten-raster */ ?>
 
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>
