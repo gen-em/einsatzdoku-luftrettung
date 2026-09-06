@@ -8,11 +8,11 @@ mit Fable nach R14 · Ablage `docs/konzepte/` (R62), Mockups in
 >
 > | | |
 > |---|---|
-> | Stand | 05.09.2026 — **AP1 bis AP4 erledigt** (Web 15.0.0 bis 15.3.0). Umsetzung auf `claude/umsetzung-buuvfq` |
-> | Paket in Arbeit | **AP5 — Menü und Leiste** |
-> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4); **AP4** (Betrieb Teil 2, Abschnitt 11.5) |
+> | Stand | 06.09.2026 — **AP1 bis AP5 erledigt** (Web 15.0.0 bis 15.4.0). Umsetzung auf `claude/umsetzung-buuvfq` |
+> | Paket in Arbeit | **AP6 — Einstellungen: Geräte, Wertekasten, Filterreihe** |
+> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4); **AP4** (Betrieb Teil 2, Abschnitt 11.5); **AP5** (Menü und Leiste, Abschnitt 11.6) |
 > | Abweichung vom Konzept | **AP5 (2), Vorgabe des Akkordeons:** Das Konzept sah „ab 1024 px alle Blöcke offen" vor. Gemessen löst das den Grund für das Akkordeon nicht — bei 1280 × 900 ist die Liste dann 896 px hoch und die Leiste 783 px, es bleibt beim Rollen. **Entschieden am 05.09.2026 auf Nachfrage:** dieselbe Vorgabe in jeder Breite — „Einstellungen" plus der Block der aktiven Seite. Damit passt die Liste bei 1280 × 900 und 1920 × 1080 ohne Rollen; bei 720 px Fensterhöhe bleibt eine Betriebsseite 117 px zu lang, und wer will, klappt „Einstellungen" zu (wird für die Sitzung gemerkt) |
-| Wo es hakt | nichts Blockierendes. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). **Z-01 und Z-02 sind in AP4 beantwortet** (Abschnitt 11.5) |
+> | Wo es hakt | nichts Blockierendes. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). **Z-01 und Z-02 sind in AP4 beantwortet** (Abschnitt 11.5) |
 > | Umsetzungsumgebung | lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (MariaDB 10.11.14, PHP 8.4.19, Chromium); `00-ist-*`-Bilder vor AP1 aufgenommen |
 > | Fable-Schritt | **das Konzept selbst** (R14, Rahmenplan Schritt 7); die Umsetzung läuft nach K2 mit Opus. Mockup-Freigabe je Darstellung durch den Auftraggeber (`CLAUDE.md` 5) |
 > | Erhoben an | `main` vom 04.09.2026, 21:14 UTC: **Web 14.2.2, Uhr 3.0.0, Android 0.13.0** (PR #33, Schritt 6 gemergt), Rahmenplan Fassung 27 |
@@ -1727,6 +1727,89 @@ keine Tabelle.
 **Was AP4 ausdrücklich noch nicht tut:** die Zähler an den Menüeinträgen
 („Status · 3"). Sie gehören zu AP5, das die Leiste baut; bis dahin sind beide
 Seiten flach in der Liste erreichbar.
+
+---
+
+### 11.6 AP5 — Menü und Leiste (06.09.2026, Web 15.4.0)
+
+**Version:** Web **15.4.0** — Nebennummer. Neue Funktionen (Akkordeon,
+Zähler, Unterpunkte, Dreispalter), eine neue Bibliothek, zwei neue Token;
+**keine Migration**. Der Zwischenspeicher der Zähler legt zwei Schlüssel in
+`app_state` an, sobald er zum ersten Mal rechnet.
+
+Dazwischen liegen drei Korrekturfassungen, die nicht zu AP5 gehören, aber im
+selben Zweig stehen: **15.3.1** (Kartenfläche, Tab-Titel), **15.3.2** (die
+Wortmarke heißt Gen-EM NAdoku), **15.3.3** (Passwortverwalter erkennt das
+Kontopasswort). Alle drei wurden während der Arbeit gemeldet.
+
+**Gebaut, in sechs Schritten:**
+
+| Schritt | Was | Wo |
+|---|---|---|
+| 1 | Eine Quelle für das Menü; fünf neue Zeichen (Mockup 13) | `server/ui.php`, `server/assets/images/symbole/` (5 neu + `LIESMICH.md`), `docs/Lizenzen.md`, `docs/Design.md` |
+| 2 | Blöcke als Akkordeon, Zustand je Sitzung | `server/ui.php`, `server/assets/menue.js` (neu), `server/assets/style.css` |
+| 2b | Dieselbe Vorgabe in jeder Breite (Abweichung, s. u.) | `server/ui.php`, `server/assets/menue.js` |
+| 3 | Zähler an vier Punkten; Erhebung der Statusseite herausgelöst | `server/status_lib.php` (neu), `server/betrieb_status.php`, `server/ui.php`, `server/assets/style.css` |
+| 4 | Unterpunkte mit Sprung und Markierung; 27 Karten-`id` | `server/assets/menue.js`, `server/assets/style.css`, sieben Seiten |
+| 5 | Übersicht dreispaltig, eine Erklärkarte je Seite, `.karten-raster` | `server/ui.php`, `server/admin_demo.php`, `server/betrieb_updates.php`, `server/assets/style.css` |
+| 6 | Doku, Version, Konzept, Prüfdokument | `docs/Handbuch.md` 3, 9.4; `docs/Design.md` 9.25–9.27; `docs/Technik.md` 2, **4.99f (neu)**; `docs/CHANGELOG.md`; `docs/Backlog.md` 123–125 |
+
+**Drei Abweichungen vom Konzept, alle gemessen begründet:**
+
+1. **Die Vorgabe des Akkordeons unterscheidet nicht nach Breite.** Das
+   Konzept sah ab 1024 px alle Blöcke offen vor. Gemessen löst das den Grund
+   für das Akkordeon nicht: Bei 1280 × 900 ist die Liste dann 896 px hoch und
+   die Leiste 783 px — es bleibt beim Rollen. Mit „Einstellungen plus der
+   Block der aktiven Seite" passt sie bei 1280 × 900 und 1920 × 1080.
+   Entschieden am 05.09.2026 auf Nachfrage.
+
+2. **Keine `scroll-margin-top` an der Karte.** Das Konzept nannte sie als
+   fehlend — richtig für den Namen, falsch für die Sache: `html` trägt
+   `scroll-padding-top`, und beides addiert sich (gemessen: 140 px statt 72).
+
+3. **Der Winkel des Akkordeons steht links, nicht rechts wie in Mockup 01.**
+   In der Diensttage-Leiste steht er links, und beide Leisten sollen denselben
+   Griff haben. Das Konzept selbst nennt für AP5 (2) den vorhandenen Baustein
+   (`.akkordeon-zeile`, `-winkel`, `-inhalt`), und dessen Winkel steht links.
+
+**Zwei Entscheidungen, die das Konzept offenließ:**
+
+- **Die Unterpunkte entstehen im Browser, nicht in PHP.** Das Konzept sah
+  `ui_karte_start(['anker' => 'id'])` vor, also eine Anmeldung durch die
+  Seite. Die Leiste wird jedoch **vor** dem Inhalt gezeichnet: Die Seite
+  müsste ihre Kartentitel vorab an `ui_geruest_start()` geben und ein zweites
+  Mal an `ui_karte_start()` — zwei Listen derselben Sache. `menue.js` liest
+  stattdessen die Karten, die dastehen. Preis: ohne JavaScript keine
+  Sprungmarken.
+
+- **`.karten-raster` gilt ab vier Karten, nicht ab fünf.** „Mehr als vier"
+  hätte die Regel auf keine Seite angewandt: Status, Statistik und
+  Konto-Backups stehen längst zweispaltig, Installation über `.zweispalter`,
+  Hintergrundjobs (3) und Geräte (2) haben zu wenige. Übrig blieb Updates mit
+  vier — und dort sind es gemessen 1206 px einspaltig gegen 977 px
+  zweispaltig.
+
+**Ein Fehlerfund im eigenen Werk (F-S8-P-11):** Der Umbau in Schritt 1 riss
+`ui_leiste_diensttage()` und `ui_geruest_ende()` aus `ui.php` heraus;
+`index.php` antwortete mit 500, und der Commit war bereits gepusht. Ursache
+der Nichtentdeckung: Der Bilderlauf lief **gefiltert** über fünf
+Einstellungsseiten, und die waren heil. Daraus die Regel: **Nach einer
+Änderung an `ui.php` läuft der Bilderlauf ungefiltert.**
+
+**Drei Funde beim Messen der Markierung**, die beim Lesen nicht auffallen:
+die doppelte Sprungdistanz (oben), die hohe Karte, die mit zwei Pixeln
+Unterkante „oberste sichtbare" bleibt, und die Karte außerhalb der Spalten,
+die als eigener Topf dauerhaft markiert war.
+
+**Drei neue Backlog-Punkte aus der Arbeit:** Nr. 123 (der Schalter steht zu
+weit von seiner Beschriftung — gemeldet mit Bild, S8/AP7 zugeordnet), Nr. 124
+(das Aktionsblatt öffnet weit weg von seinem Knopf — Zielkonflikt, drei Wege
+mit Empfehlung), Nr. 125 (`.form-raster` und `.zweispalter` sind dieselbe
+Regel unter zwei Namen).
+
+**Was AP5 ausdrücklich nicht tut:** die Neugliederung von Handbuch-Kapitel 11
+(„Verwaltung" und ein eigenes Kapitel „Betrieb"). Sie steht in AP8; Kapitel 3
+und 9.4 sind hier nachgezogen.
 
 ---
 

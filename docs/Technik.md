@@ -236,6 +236,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
 │   │                      keyguard.js (Bindung/Lebensdauer des Inhaltsschlüssels),
 │   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
+│   │                      menue.js (Einstellungsleiste: Blöcke klappen, Unterpunkte),
 │   │                      html.js (HTML-Maskierung, die eine Fassung für alle Seiten),
 │   │                      missiontable.js (gemeinsame Einsatztabelle, s. u.),
 │   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
@@ -4688,6 +4689,74 @@ verträgt sein Fehlen nicht. Der Dateiname trägt das Datum
 haben.
 
 Gemessen: erste Bytes `ef bb bf`, danach `Gerät` als `47 65 72 c3 a4 74`.
+
+### 4.99f Menü und Leiste des Einstellungsbereichs (ab Web 15.4.0, S8/AP5)
+
+**Eine Quelle.** `ui_einstellungen_punkte()` in `server/ui.php` liefert die
+Blöcke — Schlüssel, Titel, Punkte, je Punkt `[key, href, text, symbol,
+zaehler]`. `ui_leiste_einstellungen()` und `ui_einstellungen_uebersicht()`
+lesen beide daraus; die Rollenfrage wird an dieser einen Stelle beantwortet
+(`ist_admin()`, `ist_betreiberin()`), die Wächter der Seiten prüfen sie ein
+zweites Mal. Ein Menü, das mehr zeigt als erreichbar ist, führt ins 403; eines,
+das weniger zeigt, verschweigt eine Funktion.
+
+**Die Blöcke sind `<details>`, und PHP rendert die Vorgabe** — „Einstellungen"
+plus der Block der aktiven Seite, in jeder Breite. Damit ist der Serverzustand
+schon der Zielzustand; `assets/menue.js` legt nur darüber, was in dieser
+Sitzung von Hand geändert wurde (`sessionStorage`, ein Schlüssel je Block).
+Ein Skript, das die Vorgabe selbst herstellt, ließe bei jedem Seitenaufruf
+kurz den anderen Zustand aufblitzen. Ausnahme beim Anwenden des gemerkten
+Zustands: Der Block, der die aktive Seite trägt, bleibt offen — sonst stünde
+der aktive Eintrag unsichtbar in einem zugeklappten Block.
+
+**Die Zähler kommen aus `status_lib.php`.** Diese Datei ist mit AP5 aus
+`betrieb_status.php` herausgelöst worden und enthält die **eine** Erhebung:
+`status_erhebung()` liefert unter `karten` die Zeilen samt Ampelton und unter
+`zahlen` die Rohwerte (ausstehende Migrationen, Jobs mit Fehler, kranke
+Konto-Backups). `betrieb_status.php` zeichnet die Karten,
+`menue_zaehler_betrieb()` und `menue_zaehler_konto()` bauen daraus die Zahlen.
+Der Grund für die Trennung ist nicht Ordnung, sondern Wahrheit: Ein Zähler mit
+eigener Rechnung sagt früher oder später etwas anderes als die Seite, auf die
+er führt.
+
+Zwei Zwischenspeicher in `app_state` (`menue_zaehler_betrieb`,
+`menue_zaehler_konto`), je 60 Sekunden, als JSON mit Zeitstempel. Zwei und
+nicht einer, weil „Konto-Backups" im Block Verwaltung steht und schon für eine
+Admin gilt — die soll nicht die volle Betriebserhebung bezahlen. Die
+Statusseite selbst liest keinen Speicher; sie rechnet immer neu und frischt
+ihn dabei auf. Gemessen: warm 0,46 ms, kalt mit voller Erhebung 8,15 ms;
+Serverantwortzeit der Seiten des Bereichs 7 bis 9 ms (Median, neun Läufe).
+
+**`status_lib.php` wird lazy geladen.** Das `require_once` steht in
+`ui_einstellungen_punkte()` hinter der Rollenprüfung, nicht auf oberster
+Ebene: `install.php` lädt `ui.php` **ohne Datenbank**, und ein `require` auf
+oberster Ebene hätte den Einrichter mitgerissen (dieselbe Falle wie F-P3-AR).
+
+**Die Unterpunkte entstehen im Browser.** `assets/menue.js` liest die Karten
+der Seite (`#inhalt .karte[id]`) und hängt ihre Titel als Sprungmarken unter
+den aktiven Eintrag. Die Alternative — die Seite meldet ihre Karten an
+`ui_geruest_start()` — scheitert daran, dass die Leiste **vor** dem Inhalt
+gezeichnet wird: Die Seite müsste ihre Kartentitel zweimal nennen, und die
+eine Liste liefe der anderen davon. Voraussetzung ist eine `id` an der Karte,
+mit dem Vorsatz `k-`; 27 Karten in sieben Dateien haben mit AP5 eine bekommen.
+
+Die Markierung („welche Karte steht gerade oben") läuft über einen
+`IntersectionObserver`, dessen `rootMargin` die Kopfhöhe plus einen Saum
+abzieht. Drei Regeln, die alle aus einer Messung stammen:
+
+* Der `rootMargin` liest `--kopf` aus dem Stylesheet. Eine Zahl im Skript wäre
+  die zweite Stelle, an der die Kopfhöhe steht.
+* Eine Karte zählt erst, wenn unter der Kopfleiste noch ein Saum von ihr
+  steht. Ohne das bleibt eine hohe Karte mit zwei Pixeln Unterkante die
+  „oberste sichtbare", während man längst die nächste liest.
+* Der Topf, in dem „oberste" gilt, wird an der **Lage** erkannt (linker Rand
+  der `.form-spalte`), nicht an der Fensterbreite: Das Zweispalten-Raster
+  greift erst ab 1200 px, darunter stehen dieselben Kästen untereinander.
+
+**Keine `scroll-margin-top`.** Das Konzept sah eine vor; `html` trägt jedoch
+seit Langem `scroll-padding-top: calc(var(--kopf) + var(--abstand-4))`, und
+beides addiert sich — gemessen landete die angesprungene Karte 68 px zu tief.
+Mit `scroll-padding-top` allein sitzt der Sprung bei 72 px.
 
 ## 5a. Android-Apps (Kotlin/Compose) — Handy und Wear OS
 

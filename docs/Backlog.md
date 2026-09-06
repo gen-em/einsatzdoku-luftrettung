@@ -1462,6 +1462,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (`CLAUDE.md` 5); betroffen ist jede Seite mit `ui_aktionen()` (zehn
     Aufrufe). Zuordnung: Backlog-Runde oder P7 (Gesicht v1.0).
 
+125. **`.form-raster` und `.zweispalter` sind dieselbe Regel unter zwei Namen.**
+    *Aufgenommen 05.09.2026 bei S8/AP5 (8).* Beide sind ab 1200 px ein Grid
+    mit zwei gleichen Spalten und `align-items:start`; der einzige
+    Unterschied ist, dass die Kindelemente einmal `.form-spalte` heißen und
+    einmal ein blankes `<div>` sind. `.form-raster` steht auf sechs Seiten,
+    `.zweispalter` auf einer (`admin_installation.php`). **Zu tun:** eine
+    Regel behalten, die andere austragen — die Seite mit dem blanken `<div>`
+    ist die, die umzustellen ist. Das ist keine Gestaltungsänderung: Die
+    berechneten Werte sind identisch, der Stilvergleich muss null melden.
+    **Warum es nicht in S8 erledigt wurde:** AP5 hat mit `.karten-raster`
+    eine dritte Klasse hinzugefügt, die etwas anderes tut (der Browser teilt
+    auf, nicht die Seite) — die beiden alten zusammenzulegen wäre eine
+    Änderung an sechs Seiten außerhalb des Pakets gewesen. Zuordnung:
+    Aufräumpaket P6 oder Backlog-Runde.
+
 ---
 
 ## Erledigt

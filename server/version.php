@@ -2749,4 +2749,42 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION.
  */
-const WEB_VERSION = '15.3.3';
+
+/* ---------------------------------------------------------------------------
+ * 15.4.0  MENUE UND LEISTE DES EINSTELLUNGSBEREICHS (S8/AP5)
+ *
+ * EINE QUELLE FUER DAS MENUE. Die Punkte standen zweimal im Code — einmal
+ * fuer die Leiste, einmal fuer die Uebersichtsseite — und waren
+ * auseinandergelaufen. `ui_einstellungen_punkte()` ist jetzt die eine Stelle;
+ * ein neuer Punkt kostet eine Zeile.
+ *
+ * DREI BLOECKE, DIE KLAPPEN. Fuer eine BetreiberIn stehen siebzehn Punkte
+ * untereinander: gemessen bei 1280 x 900 eine 896 px hohe Liste in einer
+ * 783 px hohen Leiste. Offen sind „Einstellungen" und der Block der aktiven
+ * Seite; was von Hand umgestellt wird, gilt fuer die Sitzung
+ * (`sessionStorage`).
+ *
+ * ZAEHLER AN VIER PUNKTEN — Status, Updates, Hintergrundjobs,
+ * Konto-Backups —, und nur ueber null. Damit die Zahl nicht etwas anderes
+ * sagt als die Seite, auf die sie fuehrt, ist die Erhebung der Statusseite
+ * nach `status_lib.php` gewandert: eine Erhebung, die Seite zeichnet sie,
+ * der Zaehler zaehlt sie. Zwischenspeicher 60 s in `app_state`; warm kostet
+ * er 0,46 ms, die volle Erhebung 8,15 ms.
+ *
+ * UNTERPUNKTE unter dem aktiven Eintrag: die Kartentitel der Seite als
+ * Sprungmarken, mit der obersten sichtbaren Karte fett. Sie entstehen im
+ * Browser aus den Karten selbst — dafuer haben 27 Karten in sieben Dateien
+ * eine `id` bekommen.
+ *
+ * DIE UEBERSICHT STEHT AM SCHREIBTISCH IN DREI SPALTEN, das Demo-Konto hat
+ * statt zweier Erklaerkarten eine, und `.karten-raster` verteilt vier Karten
+ * ohne thematische Ordnung selbst auf zwei Spalten (Betrieb -> Updates:
+ * 1206 px einspaltig, 977 px zweispaltig).
+ *
+ * FUENF NEUE ZEICHEN (Mockup 13) und die Wortmarke aus 15.3.2 sind darin
+ * schon enthalten.
+ *
+ * KEINE MIGRATION. Der Zwischenspeicher der Zaehler legt zwei Schluessel in
+ * `app_state` an, sobald er zum ersten Mal rechnet.
+ */
+const WEB_VERSION = '15.4.0';

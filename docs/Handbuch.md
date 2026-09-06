@@ -250,16 +250,44 @@ darunter der Teil, der zur Seite gehört (Diensttage, Einstellungen oder die
 Filter der Suche). Schließen lässt sie sich auf drei Wegen: über das × oben
 links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 
-**Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie listet Profil,
-**Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
-finden darunter einen zweiten Block **Administration** mit NutzerInnen,
-**Stammdaten systemweit**, **Konto-Backups**, **Backup-Ziele**,
-**Komplett-Backup**, **Installation**, Demo-Konto sowie **Status**,
-**Statistik**, **Updates**, **Hintergrundjobs** und **Servereinstellungen**
-(Abschnitt 11). Abmelden steht getrennt am Ende und
-fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
-Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
-„Standorte".
+**Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie ist in **drei
+Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
+
+| Block | wer sieht ihn | was darin steht |
+|---|---|---|
+| **Einstellungen** | alle | Profil, Geräte, **Standorte**, **Rettungsmittel**, Backup, Import / Export |
+| **Verwaltung** | Admins | NutzerInnen, **Konto-Backups**, **Installation**, Demo-Konto |
+| **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** |
+
+Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen Geräten
+untereinander. Abmelden steht getrennt am Ende und fragt sicherheitshalber
+nach. Bis Web 6.3.0 hieß der Punkt für Standorte und Rettungsmittel zusammen
+„Standortdaten"; der alte Link führt weiterhin zu „Standorte". **Stammdaten
+systemweit** hat seit Web 15.4.0 keinen Menüpunkt mehr — die Seite bleibt und
+ist über ihre Adresse erreichbar (Abschnitt 9.4).
+
+**In der Leiste klappen dieselben drei Blöcke auf und zu.** Offen sind
+„Einstellungen" und der Block, in dem die gerade geöffnete Seite steht; die
+übrigen zeigen nur ihren Namen und die Zahl der Einträge dahinter
+(„Betrieb · 7"). Ein Klick auf die Zeile klappt sie auf. Was man dabei
+umstellt, gilt für diese Sitzung — beim nächsten Anmelden steht das Menü
+wieder in der Vorgabe. Der Grund für das Klappen ist Platz: Eine BetreiberIn
+hat siebzehn Menüpunkte, und die passen untereinander in kein übliches
+Browserfenster.
+
+**Eine Zahl am Menüpunkt heißt: hier ist etwas zu tun.** Sie steht an vier
+Punkten und nur dann, wenn sie über null liegt — **Status** (Punkte, die
+Aufmerksamkeit brauchen; rot, sobald einer davon gar nicht arbeitet),
+**Updates** (ausstehende Migrationen), **Hintergrundjobs** (Jobs mit Fehler)
+und **Konto-Backups** (überfällige und nie gesicherte Konten). Die Zahl ist
+höchstens eine Minute alt.
+
+**Unter dem geöffneten Menüpunkt stehen die Karten der Seite** als
+Sprungmarken — kleiner und ohne Symbol, damit sie nicht wie eigene Seiten
+aussehen. Ein Klick springt zur Karte; während man liest, ist die Marke der
+Karte fett, die gerade oben steht. Am Handy stehen die Sprungmarken auch, dort
+ohne Markierung: Die Schublade liegt vor dem Inhalt, und wer sie geöffnet hat,
+sieht die Karten nicht. Ein Sprung schließt sie.
 
 ![Dieselbe Seite bei 390 px und die geöffnete Schublade](bilder/schublade-mobil.png)
 
@@ -2360,6 +2388,12 @@ Existiert umgekehrt schon ein persönlicher Eintrag, bevor der Admin denselben
 Namen systemweit anlegt, bleibt dein Eintrag bestehen und erhält lediglich einen
 Warnhinweis („identisch mit systemweitem Eintrag") — du kannst ihn dann bei
 Bedarf löschen.
+
+**Die Seite hat seit Web 15.4.0 keinen Menüpunkt mehr.** Sie ist über ihre
+Adresse `admin_stammdaten.php` erreichbar und sonst unverändert. Der Grund:
+Sie wird einmal bei der Einrichtung gepflegt und danach jahrelang nicht —
+ein Menüpunkt, den man einmal benutzt, kostet siebzehn Mal Platz. Wer sie
+regelmäßig braucht, legt sich ein Lesezeichen an.
 
 ---
 

@@ -1590,6 +1590,77 @@ Klasse ist der gedämpfte Zusatz in kleiner Schrift, und genau das ist der
 Anteil unter der Zahl. Eine eigene Klasse dafür wäre eine zweite Regel mit
 demselben Inhalt.
 
+### 9.25 Die Einstellungsleiste: drei Blöcke, Zähler, Unterpunkte
+
+Drei Bausteine, die nur hier vorkommen und zusammengehören (S8/AP5, E-S8-04,
+E-S8-07, E-S8-15). Alle drei entstehen in `ui_leiste_einstellungen()` und
+`assets/menue.js`.
+
+**Der Block ist ein Akkordeon.** `<details class="akkordeon leiste-gruppe">`
+mit `<summary class="akkordeon-zeile">` — derselbe Baustein wie in der
+Diensttage-Leiste, nur mit Schriftgrad und Farbe der früheren
+`.leiste-kopfzeile`. Der Winkel steht **links**, wie dort; das freigegebene
+Mockup 01 zeichnet ihn rechts, und diese Abweichung ist Absicht: Zwei Leisten
+mit demselben Mechanismus sollen denselben Griff haben.
+
+Offen sind „Einstellungen" und der Block der aktiven Seite — **in jeder
+Breite**. Der zugeklappte Block zeigt die Zahl seiner Einträge
+(`.gruppen-zahl`, nur zugeklappt, `aria-hidden`): Sie sagt, was verborgen
+ist, nicht was man sieht.
+
+**Der Zähler** (`.zaehler`) steht rechts im Eintrag und nur über null. Drei
+Töne, dieselben wie die Ampel in 9.23: rot (Grundform), `.zaehler-orange`,
+`.zaehler-neutral`. Neutral steht auf Sand, nicht auf blassem Rot — ein
+blasses Rot läse sich als „fast schlimm", die Zahl soll aber gar nichts
+bewerten.
+
+**Die Unterpunkte** (`.eintrag-unterliste` mit `.eintrag-unter`, Marke der
+obersten sichtbaren Karte `.hier`) stehen unter dem aktiven Eintrag: die
+Kartentitel der Seite als Sprungmarken, `--unterpunkt` (28 px) hoch, eine
+Schriftstufe kleiner, ohne Symbol und ohne Randstrich. Sie sind **keine**
+Menüpunkte zweiter Ordnung; wer sie dafür hält, sucht dahinter eine eigene
+Seite. Die Markierung ist **fett, nicht orange**: Orange heißt in dieser
+Oberfläche „hier stehst du" und gehört dem aktiven Menüpunkt.
+
+Sie entstehen im Browser aus den Karten der Seite, nicht aus PHP. Der Grund
+steht im Kopf von `assets/menue.js`: Die Leiste wird vor dem Inhalt
+gezeichnet, die Seite müsste ihre Kartentitel also zweimal nennen.
+**Voraussetzung ist eine `id` an der Karte** — mit dem Vorsatz `k-`; ohne
+sie ist die Karte kein Sprungziel und erscheint nicht.
+
+### 9.26 Zwei Kartenspalten — drei Wege, und wann welcher
+
+| Klasse | ab | wer teilt auf | wofür |
+|---|---|---|---|
+| `.form-raster` + `.form-spalte` | 1200 | die Seite, im Markup | Karten mit thematischer Ordnung: links Server und E-Mail, rechts Jobs und Backups |
+| `.zweispalter` + zwei `<div>` | 1200 | die Seite, im Markup | zwei Blöcke beliebigen Inhalts, nicht nur Karten |
+| `.karten-raster` | 1200 | der Browser (Mehrspaltensatz) | eine Reihe gleichrangiger Karten ohne Ordnung |
+
+`.karten-raster` nimmt die Karten **direkt** als Kinder und lässt sie
+fließen; `break-inside:avoid` hält jede zusammen. Eine Karte, die dazukommt,
+braucht keine Zuordnung — dafür lässt sich keine erzwingen.
+
+**Wann zwei Spalten?** Nicht nach Anzahl, sondern nach Höhe. Gemessen an
+Betrieb → Updates: vier Karten, einspaltig 1206 px, zweispaltig 977 px. Ab
+vier Karten ohne thematische Ordnung lohnt es sich; darunter nicht.
+
+`.form-raster` und `.zweispalter` tun dasselbe unter zwei Namen — das ist ein
+Altbestand und steht als Aufräumpunkt im Backlog, nicht als Vorbild.
+
+### 9.27 Die Einstellungs-Übersicht in drei Spalten
+
+`.uebersicht-raster` mit einer `.uebersicht-gruppe` je Block, ab 1024 px als
+Grid mit `repeat(auto-fit, minmax(var(--uebersicht-spalte), 1fr))`. Die Zahl
+der Spalten ergibt sich damit aus der Zahl der Blöcke und die aus der Rolle —
+eine für eine NutzerIn, zwei für eine Admin, drei für eine BetreiberIn, ohne
+dass das Stylesheet die Rolle kennt.
+
+Die Überschrift des ersten Blocks (`.uebersicht-block-erst`) steht nur
+nebeneinander. Gestapelt stünde „EINSTELLUNGEN" unmittelbar unter der
+Seitenüberschrift „Einstellungen"; in drei Spalten benennt sie die Spalte,
+und ohne sie stünde eine namenlose neben zwei benannten. Im Markup steht sie
+immer, damit ein Vorleseprogramm alle Blöcke gleich benennt.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Fünf Typen

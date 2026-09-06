@@ -14,6 +14,99 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.4.0] — 2026-09-06
+
+### Web — Menü und Leiste des Einstellungsbereichs (S8/AP5)
+
+**Eine Quelle für das Menü.** Die Punkte standen zweimal im Code: einmal in
+`ui_leiste_einstellungen()` für die Seitenleiste, einmal in
+`ui_einstellungen_uebersicht()` für die Übersichtsseite. Nach AP3 und AP4
+waren die beiden Listen bereits auseinandergelaufen — „Stammdaten systemweit"
+stand in beiden, „Komplett-Backup" nur in einer, und die Reihenfolge
+unterschied sich. `ui_einstellungen_punkte()` ist jetzt die eine Stelle, und
+sie beantwortet auch die Rollenfrage: **Einstellungen** für alle,
+**Verwaltung** ab Admin, **Betrieb** für BetreiberInnen.
+
+**Die drei Blöcke klappen.** Für eine BetreiberIn stehen siebzehn Punkte
+untereinander, und das passt in kein übliches Browserfenster: gemessen bei
+1280 × 900 eine 896 px hohe Liste in einer 783 px hohen Leiste — 14 von 17
+Einträgen ohne Rollen erreichbar, bei 720 px Fensterhöhe noch 10. Wer
+„Backup-Ziele" sucht, sah nicht, dass es den Eintrag gibt.
+
+Offen sind „Einstellungen" und der Block der aktiven Seite. Das Konzept sah
+ab 1024 px alle Blöcke offen vor; gemessen löst das den Grund für das
+Akkordeon nicht — es bliebe bei denselben 14 von 17. Mit dieser Vorgabe passt
+die Liste bei 1280 × 900 und 1920 × 1080 ohne Rollen. Was von Hand umgestellt
+wird, gilt für die Sitzung und nicht darüber hinaus: Ein zugeklappter Block
+ist eine Entscheidung für diesen Arbeitsgang, keine Einstellung.
+
+**Eine Zahl am Menüpunkt heißt: hier ist etwas zu tun.** Sie steht an Status
+(Punkte, die Aufmerksamkeit brauchen; rot, sobald einer gar nicht arbeitet),
+Updates (ausstehende Migrationen), Hintergrundjobs (Jobs mit Fehler) und
+Konto-Backups (überfällige und nie gesicherte Konten) — und nur über null.
+Eine „0" am Menüpunkt ist keine Auskunft, sondern eine Verzierung.
+
+Damit die Zahl nicht etwas anderes sagt als die Seite, auf die sie führt, ist
+die **Erhebung der Statusseite in `status_lib.php` gewandert**. Bis dahin
+standen Abfragen, Ampelentscheidung und Ausgabe zusammen in
+`betrieb_status.php`; ein Zähler daneben hätte seine eigene Rechnung
+angestellt und früher oder später auf „2" gestanden, während die Seite drei
+Punkte zeigte. Jetzt gibt es eine Erhebung: Die Seite zeichnet sie, der
+Zähler zählt sie. Das gerenderte HTML der Statusseite ist vor und nach dem
+Umbau zeichengleich. Der Zwischenspeicher hält 60 Sekunden in `app_state` —
+warm kostet der Zähler 0,46 ms, die volle Erhebung 8,15 ms; die
+Serverantwortzeit der Seiten des Bereichs bleibt bei 7 bis 9 ms.
+
+**Unter dem geöffneten Menüpunkt stehen die Karten der Seite** als
+Sprungmarken, und während man liest, ist die Marke der obersten sichtbaren
+Karte fett. Sie entstehen im Browser aus den Karten selbst: Die Leiste wird
+vor dem Inhalt gezeichnet, die Seite müsste ihre Kartentitel sonst zweimal
+nennen — und die eine Liste liefe der anderen davon, sobald jemand eine Karte
+umbenennt. Dafür haben 27 Karten in sieben Dateien eine `id` bekommen. Am
+Handy stehen die Sprungmarken auch, dort ohne Markierung: Die Schublade liegt
+vor dem Inhalt.
+
+Drei Dinge, die beim Messen auffielen und die man nicht sieht, wenn man nur
+liest: Eine `scroll-margin-top` an der Karte, wie das Konzept sie vorsah,
+wäre **zu viel** gewesen — `html` trägt längst `scroll-padding-top`, und
+beides addiert sich (die angesprungene Karte landete 68 px zu tief). „Sichtbar"
+allein taugt nicht als Regel für „die oberste Karte": Eine hohe Karte hängt
+mit zwei Pixeln Unterkante noch ins Bild und blieb dadurch fett, während man
+längst die nächste las. Und eine Karte außerhalb der Spalten — „Was hier
+gilt" — ist keine dritte Spalte; als eigener Topf war sie dauerhaft markiert.
+
+**Die Übersichtsseite steht am Schreibtisch in drei Spalten**, eine je Block.
+Das Raster füllt sich nach Rolle von selbst, ohne dass das Stylesheet die
+Rolle kennt.
+
+**Eine Erklärkarte je Seite** (Regel 5). Das Demo-Konto hatte zwei — „Was der
+Reset umfasst" und „Bericht des letzten Laufs" —, und der Bericht erschien
+nur manchmal, so dass die Seite mal drei und mal vier Karten hatte. Die
+übrigen zwölf Seiten der drei Blöcke wurden nachgezählt.
+
+**`.karten-raster`** verteilt Karten selbst auf zwei Spalten, wo es keine
+thematische Ordnung gibt. Die Zahl aus dem Konzept („mehr als vier Karten")
+hätte die Regel auf keine Seite angewandt; entscheidend ist die Höhe.
+Gemessen an Betrieb → Updates: vier Karten, 1206 px einspaltig, 977 px
+zweispaltig.
+
+**„Stammdaten systemweit" hat keinen Menüpunkt mehr.** Die Seite bleibt und
+ist über ihre Adresse erreichbar; sie wird einmal bei der Einrichtung
+gepflegt und danach jahrelang nicht.
+
+Dazu **fünf neue Zeichen** (Mockup 13, freigegeben): `status`,
+`aktualisieren`, `uhrzeit`, `server`, `ziel-fern`. AP3 hatte für die neuen
+Betriebsseiten aus dem Vorrat geliehen; in einer Leiste mit siebzehn
+Einträgen standen dadurch vier Zeichen doppelt.
+
+Zwei neue Token (`--unterpunkt`, `--uebersicht-spalte`) und zwei neue
+Backlog-Punkte: Nr. 123 (der Schalter steht zu weit von seiner Beschriftung),
+Nr. 125 (`.form-raster` und `.zweispalter` sind dieselbe Regel unter zwei
+Namen).
+
+Keine Migration. Der Zwischenspeicher der Zähler legt zwei Schlüssel in
+`app_state` an, sobald er zum ersten Mal rechnet.
+
 ## [Web 15.3.3] — 2026-09-05
 
 ### Web — der Passwortverwalter erkennt das Kontopasswort wieder
