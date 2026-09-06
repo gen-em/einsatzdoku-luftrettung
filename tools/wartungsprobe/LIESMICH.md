@@ -14,6 +14,23 @@ Rückgabewert 0 = alle Erwartungen erfüllt, 1 = mindestens eine nicht.
 > sagt es in der ersten Zeile. **Auf einer Installation mit Betrieb nicht
 > fahren:** Für die Dauer des Laufs ist die Installation geschlossen.
 
+> **Und seit Teil 6 fasst sie das Migrationsregister an** (Backlog Nr. 149).
+> Sie nimmt **eine** Zeile aus `schema_migrations` heraus, misst daran, drückt
+> „Ausstehende ausführen" und legt die Zeile im `finally` mit ihrem
+> **ursprünglichen Zeitpunkt** zurück. Drei Sicherungen dagegen, dass daraus
+> ein Eingriff wird:
+>
+> - Die Kennung wird **gesucht**, nicht hingeschrieben — sie muss im Register
+>   stehen **und** eine `skip`-Prüfung haben, die wahr liefert. Sonst führte
+>   der Knopfdruck echtes SQL aus.
+> - Steht auf der Installation ohnehin etwas offen (`offen > 0`), **drückt die
+>   Probe nicht**: Der Knopf führt alle ausstehenden Migrationen aus, darunter
+>   solche, die Spalten löschen. Erwartung 21 wird dann rot, 22 bis 27 melden
+>   „nicht gemessen".
+> - Zurückgelegt wird **mit `applied_at`**. Ein bloßes Neuanlegen setzte
+>   `CURRENT_TIMESTAMP` und änderte still, was `migrationen_stand()` auf zwei
+>   Karten als „zuletzt … am …" anzeigt und was der Bilderlauf fotografiert.
+
 ## Wozu — eine Sperre kann auf zwei Arten falsch sein
 
 Der Wartungsmodus (S5 Paket W) beantwortet während eines Updates jede Anfrage
@@ -37,7 +54,7 @@ Seit S8/AP2 liegt der Schalter auf **Betrieb → Updates**, nicht mehr auf
 ist seit S8/AP3 eine **302** auf Betrieb → Updates; Fall 7 prüft, dass die
 alte Adresse im Wartungsmodus weiterleitet statt 503 zu antworten.
 
-## Was sie prüft — 43 Erwartungen in sechs Teilen
+## Was sie prüft — 50 Erwartungen in sieben Teilen
 
 | Teil | Fälle (Nummern aus Konzept 6.1) |
 |---|---|
@@ -47,8 +64,9 @@ alte Adresse im Wartungsmodus weiterleitet statt 503 zu antworten.
 | 3 Schalten | Ausschalten über `betrieb_updates.php` (POST, CSRF) → Datei weg, Startseite antwortet wieder; Einschalten → Datei da, mit Zeitpunkt und Konto (13) · `wartung.lock` mit kaputtem Inhalt → **trotzdem 503**, Balken „seit unbekannt" (14) · das 503 kommt schneller als die Antwort ohne Wartung — das Tor greift vor Datenbank und Ratenschutz (15) |
 | 4 Kommandozeile und Regeln | `php update.php` läuft im Wartungsmodus (16, Notausgang) · die Ausnahmeliste ist **genau** die aus E-S5W-04 plus die fünf Betriebsseiten aus S8/AP2 und AP4 — elf Einträge (17) · `login.php` liest `role`, prüft es seit S8/AP1 über `rolle_darf_verwalten()` und verwirft im Wartungsmodus die Sitzung ohne Verwaltungsrecht, und zwar **erst nach** `rate_erfolg` (18, E-S5W-09) |
 | 5 die Seite | Stylesheet verlinkt, **kein Skript**, beide Sätze da (19) · das Logo wirft in 20 Aufrufen beide Standardlogos (20) |
+| 6 eine Zählweise | Register ohne die jüngste Kennung, Schema aktuell: Vorbedingung (21) · Status nennt „1 Migration steht aus" (22) · Menüzähler an „Updates" nennt dieselbe 1 (23) · die Karte nennt „1 Update" und nicht „Alles aktuell" (24) · die Zeile trägt die neutrale Plakette „nicht nötig" (25) · der Knopf „Ausstehende ausführen" ist da (26) · nach dem Klick 0 offen, Register `skipped`, und die Meldung sagt es (27) — **Backlog Nr. 149** |
 
-**Die Zahl, die zählt, steht in der letzten Zeile:** `-> 43 Erwartungen, 0
+**Die Zahl, die zählt, steht in der letzten Zeile:** `-> 50 Erwartungen, 0
 nicht erfuellt`.
 
 **Das verwaltende Konto der Probe trägt seit S8/AP2 die Rolle `betreiberin`**,
@@ -89,6 +107,10 @@ vorfindet: `user_id`, `epoch`, `last_seen`, `csrf`.
 - **Nebenläufigkeit.** Ein Aufrufer, nacheinander. „Jemand schaltet aus,
   während eine Uhr sendet" ist nicht gemessen; die Datei ist der Schalter, und
   eine Anfrage sieht sie entweder oder nicht.
+- **Teil 6 misst den Fall „nicht nötig, nicht verbucht" — nicht die
+  Migrationen selbst.** Ob eine Migration richtig migriert, steht anderswo;
+  hier geht es allein darum, dass Status, Menü und die Seite Updates dieselbe
+  Zahl nennen.
 
 ## Wenn etwas rot ist
 
@@ -97,6 +119,8 @@ vorfindet: `user_id`, `epoch`, `last_seen`, `csrf`.
 | Fälle 1–5 grün, 6–12 rot | Die Ausnahmeliste in `wartung_lib.php` stimmt nicht mehr mit E-S5W-04 überein — Fall 17 sagt, welche |
 | Fall 3 rot mit HTTP 200 | Das Tor sitzt nicht mehr vor `db()`. Die Zeile in `db.php` steht hinter `json_out()` **und** vor jedem `db()`-Aufruf; wer sie verschiebt, lässt Geräte in die Baustelle |
 | Fall 13 rot mit HTTP 403 | Kein gültiges CSRF-Token — meist, weil eine Sitzung nach der ersten Ausgabe angelegt wurde (siehe oben) |
+| Fall 21 rot | Auf dieser Installation steht eine Migration offen, oder keine verbuchte hat eine `skip`-Prüfung, die wahr liefert. 22–27 melden dann „nicht gemessen" — **das ist kein Fehler der Anwendung**, sondern der Ausgangslage. Erst `php update.php` fahren, dann erneut |
+| Fälle 24–27 rot, 22 und 23 grün | Genau der Zustand aus Backlog Nr. 149: `migrationen_lauf()` zählt die Migration als offen, die Seite Updates sortiert sie aber unter *Ausgeführt* und zeigt keinen Knopf. Zwei Stellen gehören zusammen — der Filter **und** der `match` für die Plakette in `betrieb_updates.php` |
 | Fall 15 rot | Das 503 dauert länger als die normale Antwort. Dann läuft vor dem Tor etwas, das nicht dort hingehört |
 | Fall 6 rot mit HTTP 503 | Eine der fünf Betriebsseiten fehlt in `WARTUNG_AUSNAHMEN`. Die Seite mit dem Ausschalter sperrt sich dann selbst aus (F-S8-P-04) |
 | Fall 6 rot mit HTTP 403 | Das Konto der Probe ist kein `betreiberin` mehr, oder eine Betriebsseite hat ihren Wächter gewechselt |

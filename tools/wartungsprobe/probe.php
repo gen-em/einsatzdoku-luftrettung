@@ -205,6 +205,11 @@ if ($warVorher) {
     $inhaltVorher = (string)file_get_contents(WARTUNG_DATEI);
 }
 $geraet = null;
+/* Teil 6 raeumt eine Registerzeile beiseite. Die drei Variablen stehen VOR
+ * dem `try`, damit der `finally` sie auch dann kennt, wenn es vorher
+ * abbricht — sonst bliebe das Migrationsregister der Installation stehen,
+ * wie die Probe es hinterlassen hat. */
+$kandidat = null; $migAlt = null; $registerWeg = null;
 
 try {
 
@@ -465,6 +470,134 @@ pruefe(count($logos) === 2,
        '20  Das Logo wirft eine Muenze — beide Standardlogos kommen vor',
        implode(', ', array_keys($logos)));
 
+/* ======================================================================
+ * Teil 6 — Migrationen: EINE Zaehlweise (Backlog Nr. 149)
+ * ======================================================================
+ *
+ * DER FALL, DEN NIEMAND GEMESSEN HAT. Eine Migration, deren Schema schon
+ * aktuell ist, die aber im Register fehlt, zaehlt als offen — Status und
+ * Menue melden „1 Migration steht aus". Bis Web 15.5.2 sortierte die Seite
+ * Updates dieselbe Zeile mit Status `ok` unter „Ausgefuehrt", meldete
+ * daneben „Alles aktuell" und zeigte den Knopf nicht. Zwei Zaehlweisen fuer
+ * einen Sachverhalt, und der Registervermerk war im Web nicht nachzuholen.
+ *
+ * Genau dieser Zustand stand am 06.09.2026 auf dem Produktivserver: Die
+ * Rollenmigration aus S8 war von Hand ueber phpMyAdmin gelaufen (der
+ * Web-Weg verlangte die Rolle, die sie erst vergibt), der Registervermerk
+ * fehlte. Hier wird er nachgebaut.
+ *
+ * WARUM DIESER TEIL GANZ AM ENDE STEHT. Erwartung 16 in Teil 4 ruft
+ * `php update.php` auf — und das FUEHRT AUS. Stuende dieser Teil davor,
+ * legte Erwartung 16 die geloeschte Registerzeile stillschweigend wieder an;
+ * die Messung waere gruen und maesse nichts mehr.
+ *
+ * WARUM SIE IM WARTUNGSMODUS LAEUFT. Teil 5 hat die `wartung.lock` gesetzt,
+ * und sie bleibt stehen. Das ist kein Versehen: Ein Update laeuft nun einmal
+ * in der Wartung, und beide Seiten stehen in WARTUNG_AUSNAHMEN (Erwartung 6).
+ * ====================================================================== */
+echo "\n  Teil 6 — Migrationen: eine Zaehlweise (Nr. 149)\n";
+
+require_once $wurzel . '/migration_lib.php';
+
+/* Die Kennung wird GESUCHT, nicht hingeschrieben: Sie muss im Register
+ * stehen UND eine `skip`-Pruefung haben, die wahr liefert — sonst fuehrte
+ * der Knopfdruck weiter unten echtes SQL aus. Ein fest verdrahteter String
+ * zeigte ausserdem auf die falsche Migration, sobald eine neue angehaengt
+ * wird. */
+$imRegister = $pdo->query('SELECT id FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN);
+$kandidat   = null;
+foreach (array_reverse(migrationen_katalog()) as $m) {
+    if (!in_array($m['id'], $imRegister, true) || !isset($m['skip'])) { continue; }
+    try {
+        if (($m['skip'])($pdo)) { $kandidat = (string)$m['id']; break; }
+    } catch (Throwable $ex) { /* nicht feststellbar — naechste */ }
+}
+
+/* VORBEDINGUNG, und sie ist eine Sicherung, keine Formalie: Der Knopf fuehrt
+ * ALLE ausstehenden Migrationen aus, nicht nur die eine. Steht auf dieser
+ * Installation ohnehin etwas offen, darf die Probe ihn nicht druecken —
+ * darunter waeren Migrationen, die Spalten loeschen. */
+$vorLauf = migrationen_lauf($pdo, false);
+$bereit  = $kandidat !== null && (int)$vorLauf['offen'] === 0;
+if ($bereit) {
+    $abfrage = $pdo->prepare('SELECT status, applied_at FROM schema_migrations WHERE id = ?');
+    $abfrage->execute([$kandidat]);
+    $migAlt  = $abfrage->fetch(PDO::FETCH_ASSOC) ?: null;
+    $bereit  = $migAlt !== null;
+}
+pruefe($bereit,
+       '21  Vorbedingung: nichts offen, eine verbuchte Migration mit skip=wahr',
+       $kandidat === null ? 'keine Kennung mit skip=wahr gefunden'
+                          : $kandidat . ', offen ' . (int)$vorLauf['offen']);
+
+/* Der Menuezaehler liegt 60 s in `app_state` (STATUS_CACHE_S). Wer ihn nicht
+ * leert, misst den Zwischenspeicher statt der Anwendung — und zwar in beide
+ * Richtungen: vor dem Loeschen die alte Null, nach dem Klick die alte Eins. */
+$frisch = static function () use ($pdo): void {
+    $pdo->exec("DELETE FROM app_state
+                 WHERE k IN ('menue_zaehler_betrieb', 'status_ampel')");
+};
+$nichtGemessen = 'Vorbedingung 21 nicht erfuellt — nicht gemessen';
+
+if ($bereit) {
+    $pdo->prepare('DELETE FROM schema_migrations WHERE id = ?')->execute([$kandidat]);
+    $registerWeg = $kandidat;   // fuer den finally, falls es hier abbricht
+
+    $frisch();
+    $s21 = hole('betrieb_status.php', $sidAdmin);
+    pruefe(str_contains($s21['rumpf'], '1 Migration steht aus'),
+           '22  Status: „1 Migration steht aus"', 'HTTP ' . $s21['code']);
+
+    /* Der Menuepunkt traegt den Zaehler als eigenes Element mit `aria-label`
+     * — gegen das Markup gemessen und nicht gegen die blosse Ziffer, die auf
+     * einer Seite mit siebzehn Menuepunkten auch anderswo steht. */
+    pruefe((bool)preg_match('/Updates<\/span>\s*<span class="zaehler[^"]*"'
+                            . '\s*aria-label="1 ausstehend">1<\/span>/', $s21['rumpf']),
+           '23  Menuezaehler an „Updates" nennt dieselbe 1');
+
+    $frisch();
+    $u21 = hole('betrieb_updates.php', $sidAdmin);
+    pruefe(str_contains($u21['rumpf'], '1 Update')
+           && !str_contains($u21['rumpf'], 'Es steht nichts an.'),
+           '24  Updates: Karte nennt „1 Update", nicht „Alles aktuell"',
+           'HTTP ' . $u21['code']);
+    pruefe(str_contains($u21['rumpf'], 'nicht nötig')
+           && str_contains($u21['rumpf'], $kandidat),
+           '25  ... die Zeile traegt die neutrale Plakette „nicht nötig"');
+    /* GEGEN DAS FORMULAR GEMESSEN, NICHT GEGEN DEN WORTLAUT. Der Text
+     * „Ausstehende ausführen" steht auf dieser Seite ZWEIMAL: als Knopf und
+     * als Schritt 4 im fuenfstufigen Ablauf der Karte „Wartungsmodus". Der
+     * erste Entwurf suchte nur den Wortlaut — und war damit auch dann gruen,
+     * wenn der Knopf fehlte, also genau im Fehlerfall von Nr. 149. Gemessen
+     * in der Gegenprobe gegen den Stand vor der Behebung: 26 gruen, obwohl
+     * kein Knopf da war. `form="migform"` traegt nur der Knopf. */
+    pruefe((bool)preg_match('/<button[^>]*form="migform"[^>]*>.*?Ausstehende ausführen/su',
+                            $u21['rumpf']),
+           '26  ... und der Knopf „Ausstehende ausführen" ist da (form="migform")');
+
+    /* Druecken — derselbe POST, den der Knopf schickt. */
+    $klick = hole('betrieb_updates.php', $sidAdmin,
+                  ['action' => 'migrate', 'csrf' => $csrfAdmin]);
+    $frisch();
+    $nach    = migrationen_lauf($pdo, false);
+    $eintrag = $pdo->prepare('SELECT status FROM schema_migrations WHERE id = ?');
+    $eintrag->execute([$kandidat]);
+    $status  = $eintrag->fetchColumn();
+    if ($status !== false) { $registerWeg = null; }
+    pruefe((int)$nach['offen'] === 0 && $status === 'skipped'
+           && str_contains($klick['rumpf'], 'wurden angewendet'),
+           '27  Nach dem Klick: 0 offen, Register „skipped", Meldung sagt es',
+           'offen ' . (int)$nach['offen'] . ', Register '
+           . var_export($status, true) . ', HTTP ' . $klick['code']);
+} else {
+    pruefe(false, '22  Status: „1 Migration steht aus"',                       $nichtGemessen);
+    pruefe(false, '23  Menuezaehler an „Updates" nennt dieselbe 1',            $nichtGemessen);
+    pruefe(false, '24  Updates: Karte nennt „1 Update", nicht „Alles aktuell"', $nichtGemessen);
+    pruefe(false, '25  ... die Zeile traegt die neutrale Plakette „nicht nötig"', $nichtGemessen);
+    pruefe(false, '26  ... und der Knopf „Ausstehende ausführen" ist da',      $nichtGemessen);
+    pruefe(false, '27  Nach dem Klick: 0 offen, Register „skipped", Meldung sagt es', $nichtGemessen);
+}
+
 } finally {
     if ($warVorher) { wartung_setzen($inhaltVorher ?? ''); } else { wartung_weg(); }
     sitzung_weg($sidAdmin);
@@ -472,10 +605,27 @@ pruefe(count($logos) === 2,
     if ($geraet !== null) {
         $pdo->prepare('DELETE FROM devices WHERE device_id = ?')->execute([$geraet]);
     }
+    /* Die Registerzeile zurueck, MIT ihrem alten Zeitpunkt. Ein blosses
+     * Neuanlegen setzte CURRENT_TIMESTAMP — und damit still um, was
+     * `migrationen_stand()` auf zwei Karten als „zuletzt … am …" anzeigt und
+     * was der Bilderlauf fotografiert. */
+    if ($registerWeg !== null && $migAlt !== null) {
+        $pdo->prepare('INSERT INTO schema_migrations (id, status, applied_at)
+                       VALUES (?, ?, ?)
+                       ON DUPLICATE KEY UPDATE status = VALUES(status),
+                                               applied_at = VALUES(applied_at)')
+            ->execute([$registerWeg, $migAlt['status'], $migAlt['applied_at']]);
+    } elseif ($migAlt !== null && $kandidat !== null) {
+        // Der Klick hat sie neu angelegt — alten Zeitpunkt zuruecklegen.
+        $pdo->prepare('UPDATE schema_migrations SET status = ?, applied_at = ? WHERE id = ?')
+            ->execute([$migAlt['status'], $migAlt['applied_at'], $kandidat]);
+    }
+    $pdo->exec("DELETE FROM app_state WHERE k IN ('menue_zaehler_betrieb', 'status_ampel')");
     foreach ([$uidAdmin, $uidUser] as $u) {
         if ($u > 0) { $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$u]); }
     }
-    echo "\n  Schalter, Sitzungen, Geraet und Konten der Probe wieder entfernt"
+    echo "\n  Schalter, Sitzungen, Geraet, Konten und Migrationsregister der Probe"
+       . " wieder hergestellt"
        . ($warVorher ? " (die vorgefundene wartung.lock steht wieder)" : "") . ".\n";
 }
 

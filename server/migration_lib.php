@@ -2282,6 +2282,23 @@ function migrationen_register(PDO $pdo): void
  *   $ausfuehren = true    fuehrt aus. Der Aufrufer hat vorher das
  *                         Formular-Token geprueft (oder ist die Kommandozeile).
  *
+ * SECHS ANZEIGESTATUS, und `offen` wird NICHT aus ihnen abgeleitet:
+ *
+ *   ok     bereits angewendet, oder gerade erfolgreich gelaufen
+ *   todo   steht an — oder wurde nach einem Abbruch nicht mehr versucht
+ *   skip   nicht noetig (Schema aktuell), aber noch NICHT verbucht; nur in
+ *          der Vorschau. Zaehlt als offen — der Knopf holt den Vermerk nach
+ *          (Backlog Nr. 149). Nicht zu verwechseln mit dem Registerwert
+ *          `skipped`, der das Gegenteil sagt: verbucht.
+ *   stopp  destruktiv und Daten stehen darin — laeuft nur nach Freigabe
+ *   warn   Zustand nicht feststellbar (die skip-Pruefung hat geworfen)
+ *   fail   gescheitert; die Kette haelt an
+ *
+ * Wer einen Status hinzufuegt, sucht seine Leser: `betrieb_updates.php`
+ * sortiert nach ihm in zwei Listen UND waehlt daraus die Plakette (dort ein
+ * `match` mit `default` — ein unbekannter Status wird sonst still zu einem
+ * roten „Fehler"), `update.php` druckt ihn.
+ *
  * @param array<string,bool> $forcieren Kennungen, die trotz Inhalt laufen sollen
  * @return array{results:list<array>, offen:int, blockiert:int, gelaufen:bool}
  */
@@ -2326,13 +2343,42 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
         }
         if ($nichtNoetig) {
             if ($ausfuehren) {
+                /* ZWEI WOERTER, DIE FAST GLEICH AUSSEHEN (Backlog Nr. 149).
+                 * Hier steht `skipped` — der Wert der REGISTERSPALTE
+                 * `schema_migrations.status`, und er heisst: verbucht,
+                 * ausgefuehrt wurde nichts. Acht Zeilen tiefer steht `skip` —
+                 * der ANZEIGESTATUS der Vorschauzeile, und der heisst das
+                 * Gegenteil: noch NICHT verbucht. Wer die beiden verwechselt,
+                 * baut den Phantomzaehler wieder ein. */
                 $pdo->prepare('INSERT INTO schema_migrations (id, status) VALUES (?, "skipped")')
                     ->execute([$m['id']]);
                 $results[] = [$m['id'], $m['label'], 'ok',
                               'Nicht nötig (Schema bereits aktuell) — als erledigt vermerkt.',
                               null, null, $m['web'] ?? null];
+                /* ES IST ETWAS GESCHEHEN, auch wenn keine Anweisung lief:
+                 * Der Registervermerk ist gerade geschrieben worden, und der
+                 * Zaehler an Status und Menue faellt dadurch auf 0. Ohne diese
+                 * Zeile meldete die Seite nach genau diesem Knopfdruck „Es war
+                 * nichts anzuwenden." — die einzige Handlung, die dieser Fall
+                 * kennt, haette sich selbst dementiert (Nr. 149). */
+                $gelaufen = true;
             } else {
-                $results[] = [$m['id'], $m['label'], 'ok',
+                /* STATUS `skip`, NICHT `ok` (Backlog Nr. 149).
+                 *
+                 * Diese Zeile zaehlt als offen (`$offen++` gleich darunter) —
+                 * Status und Menuezaehler lesen genau diese Zahl. Mit dem
+                 * Status `ok` sortierte `betrieb_updates.php` sie zugleich
+                 * unter „Ausgefuehrt", meldete „Alles aktuell" und zeigte den
+                 * Knopf nicht: zwei Zaehlweisen fuer einen Sachverhalt, und
+                 * der Registervermerk war im Web nicht mehr nachzuholen.
+                 * Genau das ist auf dem Produktivserver passiert, nachdem die
+                 * Rollenmigration von Hand ueber phpMyAdmin lief.
+                 *
+                 * Der eigene Status haelt beide Seiten zusammen: Die Zeile
+                 * steht unter „Ausstehend" (mit neutraler Plakette „nicht
+                 * noetig", denn zu tun ist nichts als das Verbuchen), der
+                 * Knopf erscheint, und die Zahl ist dieselbe wie im Menue. */
+                $results[] = [$m['id'], $m['label'], 'skip',
                               'Nicht nötig (Schema bereits aktuell) — wird beim Ausführen als erledigt vermerkt.',
                               null, null, $m['web'] ?? null];
                 $offen++;
