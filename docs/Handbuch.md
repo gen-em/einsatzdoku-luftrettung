@@ -2417,32 +2417,46 @@ Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
    lädt von selbst nach, sobald es soweit ist — du musst nichts neu laden.
    Bis dahin läuft die Restzeit mit, und du kannst den Vorgang hier abbrechen.
 
-**„Gerät anlegen"** ist die Alternative dazu und erzeugt Geräte-ID und
-API-Schlüssel von Hand — der Schlüssel wird **nur einmal** angezeigt, also
-sofort notieren bzw. eintragen. Man braucht sie, wenn ein Gerät nicht koppeln
-kann. **Deaktivieren**
-sperrt den Upload sofort (z. B. bei Verlust); alle bereits hochgeladenen Daten
-bleiben erhalten, und **Aktivieren** schaltet dasselbe Gerät wieder frei.
+**Die Seite steht in der Reihenfolge, in der man sie braucht** *(seit Web
+15.4.1)*: koppeln, die Geräte ansehen, die App holen — und ganz unten,
+zugeklappt, die Ausnahme „Gerät ohne Code anlegen" (Abschnitt 10.1a).
 
-**Höchstens fünf Geräte je Konto.** Die Seite zeigt den Zählstand („belegt:
-3 von 5"). Deaktivierte Geräte zählen mit — ihre Zugangsdaten bestehen weiter
-und lassen sich mit einem Klick wieder freischalten. Erst **Löschen** gibt
-einen Platz frei. Ist die Grenze erreicht, lässt sich weder ein Gerät anlegen
+**Alle Handlungen an einem Gerät stehen in seinem Menü** — dem Knopf mit den
+drei Punkten am rechten Rand der Zeile, in jeder Bildschirmbreite. Darin:
+**Bezeichnung ändern**, **Deaktivieren** beziehungsweise **Aktivieren** und
+**Entkoppeln**. Deaktivieren sperrt den Upload sofort (etwa bei Verlust); alle
+bereits hochgeladenen Daten bleiben erhalten, und Aktivieren schaltet dasselbe
+Gerät wieder frei.
+
+**„Entkoppeln" hieß bis Web 15.4.1 „Löschen".** Der neue Name sagt, was
+geschieht: Der Zugangsschlüssel wird ungültig, das Gerät kann nichts mehr
+hochladen — und die **Daten bleiben**. „Löschen" las sich, als gingen sie mit.
+
+**Höchstens fünf Geräte je Konto.** Der erste Satz der Seite nennt den
+Zählstand („3 von 5 Plätzen belegt"). Deaktivierte Geräte zählen mit — ihre
+Zugangsdaten bestehen weiter und lassen sich mit einem Klick wieder
+freischalten. Erst **Entkoppeln** gibt einen Platz frei. Ist die Grenze erreicht, lässt sich weder ein Gerät anlegen
 noch ein Code entgegennehmen; die Karte sagt es dann statt des Feldes, und das
 Gerät selbst meldet „Zu viele Geräte / Erst eines im Web löschen".
+
+**Ist ein Gerät neu**, steht in seiner Zeile sieben Tage lang eine orange
+Plakette **„neu"**; ist es deaktiviert, eine neutrale **„deaktiviert"**. Das
+Datum der Kopplung steht in der Kleinzeile darunter, zusammen mit Art, Modell
+und dem letzten Kontakt.
 
 **Du wirst benachrichtigt, wenn ein Gerät hinzukommt.** Nach jeder erfolgreichen
 Kopplung geht eine E-Mail an deine Adresse — mit Gerätekennung, Zeitpunkt und
 dem Weg, das Gerät wieder zu entfernen. Zusätzlich steht auf der Übersicht und
 im Geräte-Reiter ein Hinweis auf alles, was in den letzten sieben Tagen dazukam.
 
-**Kommt dir ein Gerät unbekannt vor, lösche es.** Ab diesem Moment kann es
+**Kommt dir ein Gerät unbekannt vor, entkopple es.** Ab diesem Moment kann es
 nichts mehr hochladen. Bereits hochgeladene Daten bleiben erhalten, damit du
 sie in Ruhe ansehen kannst.
 
 **In der Liste steht, was für ein Gerät es ist** *(seit Web 12.9.0)*: erst die
-Art — **Uhr** oder **Handy** —, dann das Modell, dann Zustand und letzter
-Kontakt; bei einem Handy also etwa „Handy · Google Pixel 8". Wer mehrere Geräte
+Art — **Uhr** oder **Handy** —, dann das Modell, dann das Kopplungsdatum und
+der letzte Kontakt; bei einem Handy also etwa „Handy · Google Pixel 8 ·
+gekoppelt 14.06.2026 · zuletzt gemeldet 04.09.2026". Wer mehrere Geräte
 gekoppelt hat, unterscheidet sie sonst nur an einer selbst vergebenen
 Bezeichnung — und die fehlt beim frisch gekoppelten Gerät gerade.
 
@@ -2473,19 +2487,40 @@ Darüber hinaus ausgewertet wird davon vorerst nichts — die Angabe wird
 gespeichert, damit später überhaupt zählbar ist, welche Geräte im Einsatz sind.
 Bevor eine Auswertung entsteht, wird sie in der Datenschutzerklärung benannt.
 
-### 10.1 Die Android-App herunterladen
+### 10.1 Die App installieren
 
-*Seit Web 12.8.0.* Unter der Geräteliste steht die Karte **„NAdoku für
-Android"** — sofern die Betreiberin eine App-Datei hinterlegt hat. Sie zeigt
-Dateiname, Größe, Fassung und Stand, dazu die **SHA-256-Prüfsumme**: Wer der
-Seite nicht traut, rechnet sie an der heruntergeladenen Datei nach.
+*Seit Web 15.4.1.* Unter der Geräteliste steht die Karte **„App
+installieren"** mit zwei Zeilen — der Weg zur App ist je Gerät ein anderer:
 
-Die App wird hier verteilt und **nicht über einen App-Store**. Beim ersten
-Öffnen fragt Android deshalb nach, ob Installationen aus dieser Quelle
-erlaubt sind — das ist bei einer Verteilung ohne Store der vorgesehene Weg.
+- **Garmin-Uhr:** im Connect-IQ-Store auf dem Handy nach **NAdoku** suchen und
+  auf die Uhr laden. Danach auf der Sync-Seite der Uhr „Gerät koppeln"
+  starten.
+- **Android-Handy oder Wear-OS-Uhr:** über den Play Store.
 
-Steht die Karte nicht da, liegt auf dieser Installation keine App-Datei. Frag
+**Solange eine Adresse fehlt, steht die Zeile ohne Knopf da** — mit dem Weg
+als Text. Das ist der derzeitige Stand: Der Beitrittslink des internen
+Play-Tests und die Adresse der Uhr-App im Store liegen noch nicht vor. Ein
+Knopf, der ins Leere führte, wäre schlechter als keiner.
+
+**Ohne Play Store: das APK von Hand.** Darunter klappt ein Fach auf, in dem
+die App-Datei liegt, sofern die Betreiberin eine hinterlegt hat: Fassung,
+Größe, Stand und die **SHA-256-Prüfsumme** mit einem Knopf „Kopieren" — wer
+der Seite nicht traut, rechnet sie an der heruntergeladenen Datei nach. Beim
+ersten Öffnen fragt Android nach, ob Installationen aus dieser Quelle erlaubt
+sind; das ist bei einer Verteilung ohne Store der vorgesehene Weg. **Updates
+kommen dann nicht von selbst** — das ist der Grund, warum der Store der
+bessere Weg ist.
+
+Ist das Fach nicht da, liegt auf dieser Installation keine App-Datei. Frag
 die Administration.
+
+### 10.1a Gerät ohne Code anlegen
+
+*Die Ausnahme, zugeklappt am Ende der Seite.* Für Geräte, die keinen Code
+anzeigen können. Du bekommst **Geräte-ID und API-Schlüssel** und trägst sie in
+der App ein — bei Garmin in Garmin Connect unter den App-Einstellungen. Beide
+Werte stehen anschließend in einem Kasten mit Knopf **„Kopieren"**; der
+Schlüssel wird **nur einmal** angezeigt, also sofort eintragen.
 
 ### 10.2 Was die App über die Aufzeichnung sagt
 
@@ -2727,9 +2762,12 @@ suchte, fand den anderen nicht.
 
 Darunter die Liste selbst.
 
-- **Suchen** nach Name oder E-Mail-Adresse. Gesucht wird über alle Konten, nicht
-  nur über die angezeigte Seite.
-- **Filtern** über die Plaketten daneben: Alle, Admins, Konto-Backup
+- **Suchen** nach Name oder E-Mail-Adresse. Das Feld steht seit Web 15.4.1 in
+  einer eigenen Zeile über den Filtern — vorher standen beide nebeneinander,
+  und bei üblicher Schreibtischbreite fiel der letzte Filter allein in eine
+  zweite Zeile. Gesucht wird über alle Konten, nicht nur über die angezeigte
+  Seite.
+- **Filtern** über die Plaketten darunter: Alle, Admins, Konto-Backup
   überfällig, nie Konto-Backup, Ohne Gerät. Die Zahl an einer Plakette sagt, was der Filter
   **bei der laufenden Suche** ergäbe — deshalb ändert sie sich, wenn im Suchfeld
   etwas steht, während die Zahlen oben stehen bleiben.
@@ -3256,9 +3294,11 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
 > den Code, du gibst ihn **im Web** ein, und die Uhr fragt zum Schluss zurück,
 > ob sie zu diesem Konto gehören soll. Auf der Uhr wird nichts mehr getippt.
 
-1. **App auf die Uhr laden** (siehe `Technik.md`).
-   *Bei Garmin: aus dem Connect-IQ-Projekt gebaut und per USB übertragen;
-   Abschnitt 5 der Technik-Doku.*
+1. **App auf die Uhr laden.** Der Weg dahin steht auf der Geräte-Seite in der
+   Karte **„App installieren"** (Abschnitt 10.1) — dort ist er je Plattform
+   benannt.
+   *Solange die Uhr-App im Store nicht steht: aus dem Connect-IQ-Projekt gebaut
+   und per USB übertragen; Abschnitt 5 der Technik-Doku.*
 2. **Server-Adresse prüfen.** Seit Uhr 3.0.0 steht dort ein Vorgabewert —
    `nadoku.gen-em.org`, die öffentliche Installation. Wer eine eigene betreibt,
    trägt die eigene Domain ein; sonst ist hier nichts zu tun.

@@ -9,9 +9,9 @@ Arbeitspaket fortgeschrieben und mit dem Konzept gepusht (K7).
 >
 > | | |
 > |---|---|
-> | Stand | 06.09.2026 — **AP1 bis AP5 geprüft** (Web 15.0.0 bis 15.4.0) |
+> | Stand | 06.09.2026 — **AP1 bis AP6 geprüft** (Web 15.0.0 bis 15.4.1) |
 > | Geprüft | P-02 bis P-30 vollständig · P-01 **teilweise** (Zwischenstand nach AP1; die Endfassung ist mit AP5 fällig geworden, weil das Menü jetzt steht) · P-09 **halb** (zweiter Browser fehlt) · P-24 **am Referenzbestand**, nicht an Produktivdaten · P-30 für die berührten Seiten (AP1: 4, AP2: 5, AP3: 9, AP4: 2, AP5: alle 46 einmal vollständig) · **Z-01 und Z-02 geklärt** |
-> | Offen | P-01 (Endfassung — jetzt fällig, siehe unten), P-31 bis P-42 |
+> | Offen | P-01 (Endfassung — jetzt fällig), P-35 bis P-42 · **P-34 gemessen NICHT erfüllt** (789 statt 780 px, siehe AP6) |
 > | Fehlerfunde | **zwölf, alle behoben:** F-S8-P-01 bis -12 (Abschnitt 2) |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto). **Keine Kopie der Produktivdaten** — für P-02, P-10, P-21 und P-24 steht deshalb die Prüfung an echten Mengen aus (siehe „Was nicht geprüft werden konnte") |
 > | Ist-Bilder | **aufgenommen vor AP1** — vollständiger Lauf: 336 Einzelbilder, 42 Kontaktbögen, 8 Breiten (360, 390, 420, 768, 1024, 1280, 1440, 1920); Überlauf 0, Konsolenfehler 0, Knöpfe ≠ 44 px 0. Gegenprobe auf gleiche Bilder: 336 Dateien, **333 verschiedene Prüfsummen** — die drei Doppelten sind die Tagesübersicht mit und ohne Schublade bei 1024, 1280 und 1440, wo die Schublade bauartbedingt nichts tut. Zehn davon liegen als Kontaktbogen (360, 768, 1024, 1280) unter `docs/konzepte/konzept-s8/ist/`; die 336 Einzelbilder nicht — `tools/screenshots/ausgabe/` steht mit Grund in `.gitignore`, und sie sind aus dem Commit `cecbc76` jederzeit neu zu erzeugen |
@@ -126,17 +126,19 @@ Stand: `offen` · `geprüft` · `Fehler` (mit Fund-Nummer) · `entfällt` (mit G
 | — | Rendering unverändert | HTML der Statusseite vor und nach dem Herauslösen von `status_lib.php`, normalisiert um Asset-Zeitstempel und Leerraum zwischen Tags | **geprüft** | **zeichengleich** |
 | — | Syntax | `php -l` über alle Serverdateien, `node --check` über alle Skripte | **geprüft** | 0 Fehler |
 
-### AP6 — Einstellungen
+### AP6 — Einstellungen: Geräte, Wertekasten, Filterreihe · **erledigt 06.09.2026, Web 15.4.1**
 
 | Nr. | Was | Wie | Stand | Ergebnis |
 |---|---|---|---|---|
-| P-09 | Kopieren an Setz-Link, Serverschlüssel, Zugangsdaten | wie AP2 | offen | |
-| P-31 | Kopplung verhaltensgleich | Prüfdokument S5 wiederholen, drei Zustände | offen | |
-| P-32 | APK | Download, SHA-256 gegen Anzeige | offen | |
-| P-33 | Geräte-Handlungen im ⋯-Menü | umbenennen, deaktivieren, aktivieren, entkoppeln | offen | |
-| P-34 | Filterreihe | 780 px Inhaltsbreite eine Zeile, 360 px gleichmäßiger Umbruch | offen | |
-| P-30 | Bilderlauf Geräte, NutzerInnen | acht Breiten | offen | |
-| Z-03 | **Zuarbeit:** Play-Store-Beitrittslink, Connect-IQ-Adresse | Rahmenplan Abschnitt 6 | offen | |
+| P-31 | Kopplung verhaltensgleich | die drei Zustände der Kopplungskarte über den Bilderlauf (`33-geraete`, `33a-geraete-rueckfrage`, `33b-geraete-warten`), dazu Lesen des unveränderten Codes | **geprüft, mit Grenze** | Alle drei Zustände stehen und laufen ohne Konsolenfehler in acht Breiten. AP6 hat an der Kopplung **keine Zeile** geändert — nur die Reihenfolge der Karten darum herum; der volle Rundlauf mit einem echten Gerät steht im Prüfdokument S5 und ist hier **nicht** wiederholt worden (kein Gerät im Container) |
+| P-32 | APK | im Browser heruntergeladen, SHA-256 der Datei gegen die Anzeige | **geprüft** | Angezeigt `56118339 3ca04b4e …`, gerechnet über die geladene Datei **identisch**; 9 400 000 Bytes. Die Prüfsumme steht seit AP6 **vollständig** im Wertekasten (64 Zeichen), nicht gekürzt — gekürzt ließe sie sich nicht vergleichen |
+| P-33 | Geräte-Handlungen im Punkte-Menü | umbenennen, deaktivieren, entkoppeln — jede über das Menü der Zeile, bei 1440, 900 und 390 px | **geprüft** | In allen drei Breiten: **keine** Knopfreihe, **ein** Punkte-Knopf, sichtbar. Menüinhalt „Bezeichnung ändern · Deaktivieren · Entkoppeln", letzteres rot. Umbenennen öffnet das Formular mit dem alten Namen im Feld; Deaktivieren setzt die Plakette (`neu`, `deaktiviert`); Entkoppeln fragt zurück („… wirklich entkoppeln? Es kann danach nichts mehr hochladen; bereits hochgeladene Daten bleiben erhalten") und entfernt die Zeile — die Belegung ging dabei von „2 von 5" auf **„1 von 5"** |
+| P-09 | Kopieren-Knopf | Wertekasten der kleinen Stufe, Knopf gedrückt und Zwischenablage gelesen | **geprüft (ein Browser)** | Der Knopf ist nach dem Laden **sichtbar** (das Skript blendet ihn ein) und legt den Wert in die Zwischenablage: gelesen `5611 8339 3ca0 4b4e …`. **Der zweite Browser fehlt weiterhin** (Abschnitt 0), und die Ablehnung der Berechtigung ist nicht geprüft |
+| P-34 | Filterreihe | `admin_users.php` mit fünf Filtern, acht Breiten, Zeilen und Inhaltsbreite gemessen — vorher und nachher | **geprüft, ein Kriterium NICHT erfüllt** | Die Reihe braucht **789 px**. Vorher/nachher: 1920 (1354 px Inhalt) 1/1 · **1440 (1114 px) 2/1** · **1280 (954 px) 2/1** · 1024 (738 px) 2/2 · 900 (834 px) 1/1 · 768 (702 px) 2/2 · 420 (362 px) 3/3 · 360 (302 px) 4/4. Das Suchfeld steht in eigener Zeile, 576 px = 36 rem. **P-34 verlangt 780 px Inhaltsbreite ohne Umbruch — gemessen sind 789 px nötig, neun mehr.** Die Zahl im Konzept war geschätzt; die Breite kommt an keiner Prüfbreite vor |
+| P-30 | Bilderlauf | acht Breiten je berührter Seite (Geräte ×3, NutzerInnen, Kontoseite, Backup-Ziele) | **geprüft** | 24 + 48 Bilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px**; Sichtprüfung an `40-nutzerinnen-1280` (Suchfeld über den Filtern, fünf Filter einzeilig) und einem eigenen Bild der Geräteseite bei 1440 px mit aufgeklapptem APK-Fach und aufgeklappter Ausnahme |
+| — | Wortliste | `python3 tools/wortliste/wortliste.py` nach jedem Schritt | **geprüft** | **0/0/0** bei **86 Regeln.** Zwei neue Ausnahmen als Paar: `app-installieren-plattformen` (Code) und `handbuch-app-installieren` (Doku) — die Karte nennt die Plattformen, weil der Weg zur App je Plattform ein anderer ist |
+| — | Vollständigkeit | `python3 tools/vollstaendigkeit/pruefen.py` | **geprüft** | **300 = 300.** Zwischendurch gemeldet und behoben: sechs Unicode-Zeichen im sichtbaren Text und in Kommentaren (drei Auslassungspunkte, drei Pfeile) — ausgeschrieben statt gesetzt |
+| — | Syntax | `php -l` über alle Serverdateien | **geprüft** | 0 Fehler |
 
 ### AP7 — Bedienhöhe
 
@@ -243,6 +245,7 @@ abzeichnen:
 
 | Datum | Was |
 |---|---|
+| 06.09.2026 | **AP6 geprüft** (Web 15.4.1): P-09, P-30 bis P-34 mit Zahlen belegt — APK heruntergeladen und die Prüfsumme gerechnet (identisch), alle drei Geräte-Handlungen über das Punkte-Menü gefahren, Filterreihe in acht Breiten vorher/nachher gemessen. **P-34 ist gemessen nicht erfüllt** (789 statt 780 px) und steht so da. Zwei neue Wortlisten-Ausnahmen als Paar; Wortliste 0/0/0 bei 86 Regeln, Vollständigkeit 300 = 300 |
 | 06.09.2026 | **AP5 geprüft** (Web 15.4.0): P-24 bis P-30 mit Zahlen belegt — Zähler warm 0,46 ms und kalt 8,15 ms, jeder der sechs Zählerzustände einzeln erzwungen und gegen die Seite gehalten, Sprungziel bei 72 px, Markierung über fünf Breiten, Akkordeonzustand über Seitenwechsel und Sitzung, Fettdruck genau einmal je Leiste. Rendering der Statusseite vor und nach dem Herauslösen von `status_lib.php` **zeichengleich**. Zwei Fehlerfunde (F-S8-P-11 eigener 500 auf `index.php`, F-S8-P-12 drei Fehler in der Markierung), drei Backlog-Punkte (123–125), drei Abweichungen vom Konzept begründet. Wortliste 0/0/0 bei 84 Regeln, Vollständigkeit 300 = 300, Design-Tabellen neu erzeugt (94 Token, 34 Bausteine) |
 | 05.09.2026 | **AP4 geprüft** (Web 15.3.0): P-11, P-20 bis P-24 und P-30 mit Zahlen belegt — zwölf Ampelzustände einzeln erzwungen (12 von 12), Kennzahlen zweimal gegen Hand-SQL, CSV byteweise gelesen, Seitenaufbau als Median aus sieben Läufen. **Z-01 und Z-02 geklärt** und im Ergebnis festgehalten. Ein Fund (F-S8-P-09), zwei Einträge in Abschnitt 0 (Ampelzustände nur mit Umweg, P-24 ohne Produktivdaten), zwei Reste ergänzt |
 | 05.09.2026 | **AP3 geprüft** (Web 15.2.0): P-13 bis P-19 und P-30 mit Zahlen belegt; sechs Backup-Wege plus vier Wege „ohne Konto" über die Oberfläche gefahren; Bilderlauf 72 Bilder / 72 Prüfsummen mit Sichtprüfung der Kontoseite; Wortliste 0/0/0 bei 82 Regeln, Vollständigkeit 292 → 300 mit Erklärung je Befund, Design-Tabellen neu erzeugt (92 Token, 33 Bausteine), `php -l` über 96 Dateien; zwei Fehlerfunde (F-S8-P-07 Kachel, F-S8-P-08 „Wartung"); zwei Reste ergänzt |

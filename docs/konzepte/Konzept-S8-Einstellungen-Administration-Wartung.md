@@ -8,9 +8,9 @@ mit Fable nach R14 · Ablage `docs/konzepte/` (R62), Mockups in
 >
 > | | |
 > |---|---|
-> | Stand | 06.09.2026 — **AP1 bis AP5 erledigt** (Web 15.0.0 bis 15.4.0). Umsetzung auf `claude/umsetzung-buuvfq` |
-> | Paket in Arbeit | **AP6 — Einstellungen: Geräte, Wertekasten, Filterreihe** |
-> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4); **AP4** (Betrieb Teil 2, Abschnitt 11.5); **AP5** (Menü und Leiste, Abschnitt 11.6) |
+> | Stand | 06.09.2026 — **AP1 bis AP6 erledigt** (Web 15.0.0 bis 15.4.1). Umsetzung auf `claude/umsetzung-buuvfq` |
+> | Paket in Arbeit | **AP7 — Bedienhöhe** |
+> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4); **AP4** (Betrieb Teil 2, Abschnitt 11.5); **AP5** (Menü und Leiste, Abschnitt 11.6); **AP6** (Geräte, Wertekasten, Filterreihe, Abschnitt 11.7) |
 > | Abweichung vom Konzept | **AP5 (2), Vorgabe des Akkordeons:** Das Konzept sah „ab 1024 px alle Blöcke offen" vor. Gemessen löst das den Grund für das Akkordeon nicht — bei 1280 × 900 ist die Liste dann 896 px hoch und die Leiste 783 px, es bleibt beim Rollen. **Entschieden am 05.09.2026 auf Nachfrage:** dieselbe Vorgabe in jeder Breite — „Einstellungen" plus der Block der aktiven Seite. Damit passt die Liste bei 1280 × 900 und 1920 × 1080 ohne Rollen; bei 720 px Fensterhöhe bleibt eine Betriebsseite 117 px zu lang, und wer will, klappt „Einstellungen" zu (wird für die Sitzung gemerkt) |
 > | Wo es hakt | nichts Blockierendes. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). **Z-01 und Z-02 sind in AP4 beantwortet** (Abschnitt 11.5) |
 > | Umsetzungsumgebung | lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (MariaDB 10.11.14, PHP 8.4.19, Chromium); `00-ist-*`-Bilder vor AP1 aufgenommen |
@@ -1810,6 +1810,58 @@ Regel unter zwei Namen).
 **Was AP5 ausdrücklich nicht tut:** die Neugliederung von Handbuch-Kapitel 11
 („Verwaltung" und ein eigenes Kapitel „Betrieb"). Sie steht in AP8; Kapitel 3
 und 9.4 sind hier nachgezogen.
+
+---
+
+### 11.7 AP6 — Einstellungen: Geräte, Wertekasten, Filterreihe (06.09.2026, Web 15.4.1)
+
+**Version:** Web **15.4.1** — **Korrektur**nummer, nicht Neben: Es kommt keine
+Funktion hinzu. Was da war, steht anders; zwei Store-Adressen sind als leere
+Konstanten vorbereitet. **Keine Migration.**
+
+**Gebaut, in drei Schritten:**
+
+| Schritt | Was | Wo |
+|---|---|---|
+| 1 | Geräteseite nach Mockup 10: Reihenfolge, Zeile, Punkte-Menü, Entkoppeln, „App installieren", „Gerät ohne Code" | `server/einstellungen.php`, `server/ui.php` (`blatt_immer`), `server/db.php` (zwei Konstanten), `server/assets/style.css` |
+| 2 | Wertekasten der kleinen Stufe an den letzten drei Stellen | `server/admin_user.php`, `server/admin_users.php`, `server/admin_sicherungsziele.php` |
+| 3 | Filterreihe (Backlog Nr. 73) | `server/assets/style.css` |
+| 4 | Doku, Version, Konzept, Prüfdokument | `docs/Handbuch.md` 10, 10.1, 10.1a, 11.2, 12; `docs/Design.md` 9.18, 9.18a; `docs/CHANGELOG.md`; `docs/Backlog.md` (73 erledigt) |
+
+**Eine Erweiterung eines Bausteins, mit Mockup gedeckt:** `ui_zeilenaktionen()`
+bekommt `blatt_immer`. Mockup 10 zeichnet bei 1280 px den Punkte-Knopf, nicht
+die Knopfreihe — die Freigabe des Mockups ist damit die Freigabe der
+Schaltung. Sie bleibt die Ausnahme; die Begründung steht im Code und in
+`Design.md`.
+
+**Zwei Abweichungen vom Mockup, beide begründet:**
+
+1. **Die Prüfsumme des APK steht vollständig, nicht gekürzt.** Mockup 10 zeigt
+   „3fa1…c92e". Gekürzt taugt sie für nichts: Wer nachrechnet, braucht alle 64
+   Zeichen, und wer nicht nachrechnet, braucht sie gar nicht. Sie steht
+   deshalb im Wertekasten der kleinen Stufe, mit Knopf.
+2. **„Sync-Seite → Gerät koppeln" ist ausgeschrieben.** Der Pfeil ist ein
+   Unicode-Zeichen im sichtbaren Text, und die Vollständigkeitsprüfung meldet
+   solche zu Recht (`Design.md` 9.16).
+
+**Was AP6 nicht leisten konnte:** Die **beiden Store-Adressen fehlen** (Z-03,
+bestätigt am 06.09.2026). Die Karte „App installieren" steht deshalb im
+Rückfall: beide Zeilen ohne Knopf, der Weg als Text. Nachzutragen ist je eine
+Zeile in `server/db.php`; die beiden Zuarbeiten stehen in Rahmenplan
+Abschnitt 6.
+
+**Ein Abnahmekriterium ist gemessen NICHT erfüllt:** P-34 nennt 780 px
+Inhaltsbreite ohne Umbruch der Filterreihe; gemessen braucht sie **789 px**.
+Die Zahl im Konzept war nicht gemessen, sondern geschätzt. Wirkung in der
+Praxis: keine — an den acht Prüfbreiten liegt die Inhaltsbreite entweder über
+789 px (dann steht die Reihe einzeilig) oder deutlich darunter (1024: 738 px,
+768: 702 px; dort ist der Umbruch die richtige Antwort).
+
+**Eine neue Wortlisten-Ausnahme mit Gegenstück:**
+`app-installieren-plattformen` (Code) und `handbuch-app-installieren` (Doku) —
+die Karte nennt die Plattformen, weil der Weg zur App je Plattform ein anderer
+ist. Ein gerätefreies „Store" wäre hier keine Neutralität, sondern eine
+Anleitung, der niemand folgen kann.
 
 ---
 

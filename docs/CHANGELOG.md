@@ -14,6 +14,80 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.4.1] — 2026-09-06
+
+### Web — die Geräteseite, der Wertekasten und die Filterreihe (S8/AP6)
+
+**Die Geräteseite steht in der Reihenfolge, in der man sie braucht:** koppeln,
+die Geräte ansehen, die App holen — und ganz unten, zugeklappt, die Ausnahme
+„Gerät ohne Code anlegen". Bis hierher stand das Anlegen von Hand als Formular
+**mitten in der Geräteliste**, unter den Zeilen: an genau der Stelle, an der
+man nach dem Umbenennen sucht.
+
+**Alle Handlungen an einem Gerät stehen in seinem Menü**, in jeder
+Bildschirmbreite. Dafür bekommt `ui_zeilenaktionen()` die Schaltung
+`blatt_immer`: Sie lässt die Knopfreihe weg, der Punkte-Knopf steht immer da,
+und ab 1024 px klappt daran das Aufklappmenü auf — dasselbe Markup, das
+Stylesheet entscheidet. Der Grund ist nicht Ordnung, sondern Gefahr: Die Liste
+trägt drei Handlungen, von denen eine unumkehrbar ist, und als Knopfreihe
+stand „Entkoppeln" in Rot unmittelbar neben „Deaktivieren" — in jeder Zeile.
+Es bleibt die Ausnahme; wo die Handlungen harmlos und häufig sind (Stammdaten,
+Papierkorb), ist die Knopfreihe der schnellere Weg.
+
+**„Entkoppeln" statt „Löschen"** (B-S8-21). Der neue Name sagt, was geschieht:
+Der Zugangsschlüssel wird ungültig, die hochgeladenen Daten bleiben. „Löschen"
+las sich, als gingen sie mit. Die Handlung dahinter ist unverändert.
+
+**Die Zeile sagt, was das Gerät ist und seit wann:** Modell, Art, gekoppelt
+seit, zuletzt gemeldet. „aktiv" ist heraus — es war der Normalfall und damit
+die häufigste Auskunft ohne Aussage; „deaktiviert" sagt jetzt eine Plakette.
+Ebenso das Kopplungsdatum in der Plakette (es stand zweimal da) und die
+gekürzte Gerätekennung: Sie sollte zwei gleich benannte Geräte
+auseinanderhalten, und das leistet die Kleinzeile mit Modell, Art und Datum
+besser.
+
+**„App installieren" statt „NAdoku für Android".** Zwei Zeilen — Garmin-Uhr
+über den Connect-IQ-Store, Android-Handy oder Wear-OS-Uhr über den Play
+Store —, das APK als zugeklapptes Fach darunter. Die Karte steht jetzt
+**immer**: Sie beantwortet die Frage „wie bekomme ich die App", und die stellt
+sich auf jeder Installation. Vorher erschien sie nur, wenn ein APK auf dem
+Server lag, und die Uhr kam darin gar nicht vor.
+
+**Beide Store-Adressen sind leer** (Konstanten `CONNECT_IQ_URL` und
+`PLAY_TEST_URL` in `db.php`, R65). Weder der Beitrittslink des internen
+Play-Tests noch die Adresse der Uhr-App liegen vor. Solange eine leer ist,
+steht ihre Zeile **ohne Knopf** da, mit dem Weg als Text: „im Store nach
+NAdoku suchen" ist auch ohne Link eine Anleitung, ein Knopf ins Leere wäre
+schlechter als keiner. Nachzutragen ist danach je eine Zeile.
+
+**Der Wertekasten der kleinen Stufe steht jetzt an allen sieben Stellen mit
+langen Werten** (E-S8-10, Backlog Nr. 78): dazugekommen sind Setz-Link,
+Einladungslink, Serverschlüssel-Zeile, Geräte-ID, API-Schlüssel und die
+SHA-256-Prüfsumme des APK. Alle sind über hundert beziehungsweise sechzig
+Zeichen lang und standen in der großen Stufe gesperrt in Plakatgröße über drei
+Zeilen — und ohne Knopf, obwohl sie zum Weitergeben, Einfügen oder Abtippen da
+sind. Die große Stufe bleibt zwei Werten: dem Kopplungscode und dem
+Wiederherstellungsschlüssel.
+
+Die Prüfsumme des APK steht dabei **vollständig** im Kasten, nicht gekürzt wie
+im Mockup: Wer nachrechnet, braucht alle 64 Zeichen; wer nicht nachrechnet,
+braucht sie gar nicht.
+
+**Die Filterreihe bricht nicht mehr aus Versehen** (Backlog Nr. 73, E-S8-08).
+Das Suchfeld steht in eigener Zeile, in jeder Breite, mit einer Höchstbreite
+von 36 rem; die Filter brechen darunter mit festem Abstand. Die Regel, die
+`.listenkopf` ab 1024 px zur Reihe machte, ist fort — genau sie war die
+Ursache. Gemessen an der NutzerInnen-Liste mit fünf Filtern (zusammen 789 px
+breit): bei 1440 und 1280 px vorher zwei Zeilen, jetzt eine; bei 1024 und
+768 px bleibt es bei zwei, dort ist der Inhalt aber auch nur 738
+beziehungsweise 702 px breit, und der Umbruch ist die richtige Antwort.
+
+**Nicht erreicht:** Die Abnahme des Konzepts nennt 780 px Inhaltsbreite ohne
+Umbruch; gemessen braucht die Reihe 789 px — neun Pixel mehr. Diese Breite
+kommt an keiner der acht Prüfbreiten vor, aber die Zahl steht so da.
+
+Keine Migration.
+
 ## [Web 15.4.0] — 2026-09-06
 
 ### Web — Menü und Leiste des Einstellungsbereichs (S8/AP5)

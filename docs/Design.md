@@ -1427,6 +1427,33 @@ anders. Die Seite nimmt `assets/kopieren.js` in `ui_seite_ende(['skripte' =>
 Ohne JavaScript gäbe es sonst einen Knopf, der nichts tut — und das ist
 schlechter als keiner. Der Wert bleibt in beiden Fällen lesbar und markierbar.
 
+**Seit Web 15.4.1 ist die Umstellung vollständig** (S8/AP6). Die kleine Stufe
+steht jetzt an allen sieben Stellen mit langen Werten: Cron-Zeile und
+Token-Adresse (Hintergrundjobs), Setz-Link (Kontoseite), Einladungslink
+(NutzerInnen-Liste), Serverschlüssel-Zeile (Backup-Ziele), Geräte-ID und
+API-Schlüssel (Geräte) sowie die SHA-256-Prüfsumme des APK. **Die große Stufe
+bleibt zwei Werten:** dem Kopplungscode und dem Wiederherstellungsschlüssel —
+beide sind kurz und werden abgeschrieben, nicht kopiert.
+
+### 9.18a Kopf einer langen Liste: Suche über den Filtern
+
+`.listenkopf` ist eine **Spalte, in jeder Breite**: oben `.listensuche` (mit
+der Höchstbreite `--listensuche-breit`, 36 rem), darunter `.filterreihe` mit
+`flex-wrap`.
+
+**Bis Web 15.4.0 rückten beide ab 1024 px nebeneinander**, das Suchfeld auf
+`flex:0 1 26rem`. Gemessen an der NutzerInnen-Liste mit fünf Filtern (zusammen
+789 px): Bei 1440, 1280 und 1024 px fiel der letzte Filter allein in eine
+zweite Zeile, während die erste halb leer blieb — ein Umbruch, der wie ein
+Unfall aussah. Genau das war Backlog Nr. 73.
+
+Untereinander ist der Umbruch Absicht: Die Reihe beginnt links, füllt die
+Breite und bricht am Ende. Über 36 rem wird ein Eingabefeld nicht besser
+lesbar, sondern nur breiter.
+
+**Die Regel gilt für jede Liste mit Suche und Filtern**, nicht für die eine
+Seite, auf der sie aufgefallen ist.
+
 **Kein Symbol am Knopf.** Der Vorrat (Kapitel 8) hat keines für „kopieren",
 und ein neues bräuchte Freigabe mit Mockup. Das Wort tut es. Ohne
 Zwischenablage-Berechtigung markiert der Knopf den Wert und sagt „markiert —
