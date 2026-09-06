@@ -1,6 +1,6 @@
 # Gen-EM NAdoku — Technische Dokumentation
 
-*Stand: 05.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
+*Stand: 06.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
 Historie: `CHANGELOG.md`.*
 
 ## 1. Architekturüberblick
@@ -357,7 +357,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
 │   ├── linkprobe/         hält jede Adresse `<seite>.php?<name>=` unter
 │   │                      `server/` (PHP und JavaScript) gegen die Parameter,
-│   │                      die die Zielseite tatsächlich liest — 99 Zielseiten,
+│   │                      die die Zielseite tatsächlich liest — 98 Zielseiten,
 │   │                      132 Verweise. Entstanden aus Backlog Nr. 148: Der
 │   │                      Bilderlauf fotografiert Warnungen und klickt keine
 │   │                      Knöpfe. Bekannte, noch nicht behobene Abweichungen
@@ -4560,8 +4560,8 @@ verbucht — nur in der Vorschau; seit Web 15.5.2, Backlog Nr. 149) · `stopp`
 sich ein Status hinzufügen lässt, ohne die Zählung zu berühren — genau das
 tut `skip`.
 
-> **`skip` und `skipped` sind zwei verschiedene Dinge, und sie stehen acht
-> Zeilen auseinander.** `skip` ist der **Anzeigestatus** einer Zeile und sagt
+> **`skip` und `skipped` sind zwei verschiedene Dinge, und sie stehen im
+> selben `if`-Block, im jeweils anderen Zweig.** `skip` ist der **Anzeigestatus** einer Zeile und sagt
 > „noch nicht verbucht"; `skipped` ist ein Wert der **Registerspalte**
 > `schema_migrations.status` und sagt das Gegenteil: „verbucht, ausgeführt
 > wurde nichts". Wer sie verwechselt, baut den Phantomzähler aus Nr. 149
@@ -5214,7 +5214,7 @@ für das sie da ist.
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
 `php tools/wartungsprobe/probe.php` (50 Erwartungen; seit Web 15.5.2 misst
-ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149).
+ihr Teil 6 zusätzlich die Zählweise der Migrationen, Backlog Nr. 149).
 
 **Demo-Konto einrichten (einmalig):** Fixture erzeugen —
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der

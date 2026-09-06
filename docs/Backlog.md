@@ -1639,9 +1639,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (`docs/konzepte/Konzept-Planung-v1.0.md`, Abschnitt 2.3) — einen
     Unterordner `server/` gibt es auf einer Installation also nicht. Vier
     Stellen dokumentieren den Aufruf trotzdem mit dem Pfad, den das
-    Repositorium hat: `server/jobs.php:13` („`php /pfad/zu/server/jobs.php`"),
-    `docs/Technik.md:2424` und `:5220` sowie `docs/CHANGELOG.md:6210` (je
-    „`* * * * * php …/server/jobs.php`"). Wer den Befehl aus dem Docstring
+    Repositorium hat: der Kopfkommentar von `server/jobs.php` (Weg 1,
+    „`php /pfad/zu/server/jobs.php`"), die Auslöser-Tabelle in
+    `docs/Technik.md` 4.97a, der Runbook-Punkt „Hintergrundjobs einrichten"
+    in `docs/Technik.md` 7 und die Tabelle im Changelog-Eintrag zu Web 10.1.0
+    (je „`* * * * * php …/server/jobs.php`"). Wer den Befehl aus dem Docstring
     oder aus `Technik.md` abtippt, bekommt **„Could not open input file"** —
     genau das ist beim Einrichten des Plesk-Cron auf der Installation
     luftrettung.net passiert.
@@ -1650,8 +1652,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     damit den korrekten Installationspfad aus. Die Karte **„Auslöser"** auf
     Betrieb → Hintergrundjobs ist richtig; der Kopier-Knopf (E-S8-10) ist der
     verlässliche Weg, und daran ist nichts zu ändern. Ebenso wenig gemeint
-    sind Nennungen der Datei als *Datei* (`docs/Technik.md:2413`: „`server/jobs.php`
-    (Einstieg)") — dort ist der Repositoriumspfad der richtige.
+    sind Nennungen der Datei als *Datei* (`docs/Technik.md` 4.97a nennt
+    „`server/jobs.php` (Einstieg)" als Fundort im Quelltext) — dort ist der
+    Repositoriumspfad der richtige.
+    *Keine Zeilennummern hier, mit Grund:* Die vier Stellen wurden am
+    06.09.2026 mit Zeilennummern notiert und waren nach der Korrekturstufe
+    Web 15.5.2 schon falsch — dieselbe Stufe hat `Technik.md` und
+    `CHANGELOG.md` verlängert. Abschnittsangaben überleben das.
     **Zu klären:** (1) Ob `docs/CHANGELOG.md` angefasst wird. Changelog-Einträge
     sind historische Protokolle; rückwirkendes Ändern kann unerwünscht sein —
     die Alternative wäre, die Stelle stehen zu lassen und nur die drei
@@ -1717,7 +1724,7 @@ zutreffen.
     Unterzeile („Aufnehmender Diensttag: 05.09.2026 08:00 … — dieser
     bleibt"). Dazu das Prüfmittel, das der Punkt verlangt hat:
     **`tools/linkprobe/`** hält jede Adresse `<seite>.php?<name>=` unter
-    `server/` gegen die Parameter, die die Zielseite liest — 99 Zielseiten,
+    `server/` gegen die Parameter, die die Zielseite liest — 98 Zielseiten,
     132 Verweise, 0 unbekannte Abweichungen; gegen den Stand vor der
     Behebung gefahren meldet es die eine Zeile mit Datei und Zeilennummer.
     Es hat dabei einen zweiten Fall gleicher Art gefunden, der **nicht**

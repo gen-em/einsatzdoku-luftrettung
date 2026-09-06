@@ -22,15 +22,20 @@ Genau so ist **Backlog Nr. 148** entstanden. Die Überschneidungswarnung der
 Startseite (R57) verwies auf `diensttag_zusammenfuehren.php?ziel=`, die Seite
 liest `$_GET['d']`. `$zielId` blieb 0, `dt_laden()` lieferte null, die Seite
 endete auf `ui_abbruch(404, 'Diensttag nicht gefunden.')` — in genau dem Fall,
-für den die Warnung gebaut ist. Zwei andere Verweise auf dieselbe Seite, keine
-vierzig Zeilen entfernt, benutzten `?d=` richtig. Der Fund kam vom
-Auftraggeber, nicht von einer Maschine.
+für den die Warnung gebaut ist. Zwei andere Verweise auf dieselbe Seite, in
+derselben Datei, benutzten `?d=` richtig. Der Fund kam vom Auftraggeber,
+nicht von einer Maschine.
 
-Gegengeprobt: Mit dem alten `?ziel=` meldet die Probe
+Gegengeprobt — heutiger Baum, in dem allein die eine Zeichenkette auf
+`?ziel=` zurückgedreht ist:
 
 ```
 server/index.php:181  diensttag_zusammenfuehren.php?ziel=  [FEHLT] die Seite liest: d, q
 ```
+
+Im echten Stand vor der Behebung (`37d457b`) steht derselbe Verweis in
+**Zeile 173** — die acht Kommentarzeilen der Behebung verschieben ihn. Der
+Backlog nennt 173.
 
 ## Was sie misst
 
@@ -39,8 +44,9 @@ JavaScript, auch in zusammengesetzten Adressen —, gehalten gegen die
 Parameter, die die Zielseite tatsächlich liest: `$_GET[…]`, `$_REQUEST[…]`,
 `filter_input(INPUT_GET, …)`.
 
-**Jeder** Parameter der Adresse, nicht nur der erste: `?t=rettungsmittel&ev=`
-sind zwei. Der erste Entwurf las nur bis zum ersten `=` und übersah damit acht
+Jeder Parameter **innerhalb desselben Zeichenkettenliterals**, nicht nur der
+erste: `?t=rettungsmittel&ev=` sind zwei, und `&amp;` gilt als Trenner wie
+`&`. Der erste Entwurf las nur bis zum ersten `=` und übersah damit **elf**
 Verweise; er hätte trotzdem eine runde Zahl gemeldet.
 
 | Ergebnis | Bedeutung |
@@ -78,12 +84,25 @@ Wortliste.
   Genau darin liegt der zweite Teil von Nr. 151: Dort stimmt nicht nur der
   Name nicht, sondern auch die Form des Werts.
 - **Ein Verweis, dessen Ziel erst zur Laufzeit entsteht**, taucht hier nicht
-  auf. Es gibt einen: `admin_stammdaten.php:571` baut
-  `$seite . '&ev=' . $vid` — die Zielseite steht in einer Variablen, und die
+  auf. In `admin_stammdaten.php` gibt es fünf davon (`$seite . '&ev=' . $vid`
+  und vier gleichartige) — die Zielseite steht in einer Variablen, und die
   Probe weiß dann nicht, wogegen sie halten soll. Von Hand nachgesehen: Die
-  Seite liest `ev` über `$pickNach()`, der Verweis stimmt. Käme ein solcher
-  Fall neu dazu, fände die Probe ihn nicht — deshalb steht er hier und nicht
-  in einer Ausnahmeliste, die ihn verschwinden ließe.
+  Seite liest `ev`, `ec`, `et`, `er` und `ew` über `$pickNach()`, alle fünf
+  Verweise stimmen. Käme ein solcher Fall neu dazu, fände die Probe ihn nicht
+  — deshalb steht er hier und nicht in einer Ausnahmeliste, die ihn
+  verschwinden ließe.
+- **Ein Parameter, der als eigenes Literal angehängt wird**, fällt ebenso
+  durch: `'?export=csv&sort=' . e($sort) . '&richtung=' . e($richtung)`
+  (`betrieb_statistik.php:441`). Das Muster liest, was in *einer*
+  Zeichenkette zusammensteht; wo PHP oder JavaScript die Adresse
+  zusammensetzt, endet der statische Abgleich.
+- **Ein Verweis ohne Parameter** (`'index.php'`) wird gar nicht angesehen —
+  auch dann nicht, wenn es die Zieldatei nicht gäbe. Die Probe misst
+  Parameternamen, nicht die Erreichbarkeit von Seiten.
+- **Relative Pfade werden nicht aufgelöst.** Jedes Ziel wird gegen
+  `server/<name>` gehalten, nie gegen das Verzeichnis der aufrufenden Datei.
+  In diesem Bestand trifft das zu; ein `../`-Verweis wäre eine falsche
+  Auskunft.
 - **Sie ersetzt keinen Klick.** Ob der Knopf überhaupt sichtbar ist, ob die
   Seite mit dem richtigen Parameter auch das Richtige zeigt, und ob der Weg
   dahinter trägt, sagt der Browser.
@@ -95,5 +114,5 @@ Wortliste.
 Bei jeder Änderung, die einen Verweis anfasst oder einen Parameter einer Seite
 umbenennt — und im Prüflauf am Ende eines Arbeitspakets, zusammen mit
 Wortliste, Vollständigkeit und Bilderlauf (`CLAUDE.md` 6). Sie ist billig:
-ein Lauf über 99 Zielseiten und 132 Verweise dauert den Bruchteil einer
+ein Lauf über 98 Zielseiten und 132 Verweise dauert den Bruchteil einer
 Sekunde.

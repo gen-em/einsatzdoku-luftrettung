@@ -12,14 +12,15 @@ diesen Knopf drueckt.
 Genau so ist Backlog Nr. 148 entstanden: Die Ueberschneidungswarnung der
 Startseite verwies auf `diensttag_zusammenfuehren.php?ziel=`, die Seite liest
 `$_GET['d']`. Ergebnis war eine 404-Seite — und zwar in genau dem Fall, fuer
-den die Warnung gebaut ist. Zwei andere Verweise auf dieselbe Seite, keine
-vierzig Zeilen entfernt, benutzten `?d=` richtig.
+den die Warnung gebaut ist. Zwei andere Verweise auf dieselbe Seite in
+derselben Datei benutzten `?d=` richtig.
 
 WAS SIE MISST. Alle Zeichenketten der Form `<seite>.php?…` in `server/`
 (PHP und JavaScript, auch in zusammengesetzten Adressen), gehalten gegen die
 Parameter, die die Zielseite tatsaechlich liest: `$_GET[…]`, `$_REQUEST[…]`,
-`filter_input(INPUT_GET, …)`. JEDER Parameter der Adresse, nicht nur der
-erste, und `&amp;` gilt als Trenner wie `&`. Drei Ergebnisse je Fund:
+`filter_input(INPUT_GET, …)`. Jeder Parameter INNERHALB DESSELBEN
+Zeichenkettenliterals, nicht nur der erste, und `&amp;` gilt als Trenner wie
+`&`. Drei Ergebnisse je Fund:
 
   FEHLT      die Zielseite liest diesen Namen nicht — ein Befund
   ZIEL WEG   die Zieldatei gibt es nicht — ein Befund
@@ -30,10 +31,18 @@ erste, und `&amp;` gilt als Trenner wie `&`. Drei Ergebnisse je Fund:
 WAS SIE NICHT KANN, und warum das kein Mangel ist:
 
   - Ein Verweis, dessen ZIEL erst zur Laufzeit entsteht, taucht hier nicht
-    auf. Es gibt einen: `admin_stammdaten.php:571` baut
-    `$seite . '&ev=' . $vid`. Von Hand nachgesehen und richtig — aber die
+    auf. In `admin_stammdaten.php` gibt es fuenf (`$seite . '&ev=' . $vid`
+    und vier gleichartige). Von Hand nachgesehen und richtig — aber die
     Probe koennte es nicht sagen, und das steht hier statt in einer
     Ausnahmeliste, die es verschwinden liesse.
+  - Ein Parameter, der als EIGENES Literal angehaengt wird, faellt ebenso
+    durch (`'?export=csv&sort=' . e($sort) . '&richtung=' . e($richtung)`,
+    `betrieb_statistik.php:441`). Das Muster kann nur lesen, was in einer
+    Zeichenkette zusammensteht; wo PHP oder JavaScript die Adresse
+    zusammensetzt, endet der statische Abgleich.
+  - Ein Verweis OHNE Parameter (`'index.php'`) wird gar nicht angesehen —
+    auch dann nicht, wenn es die Zieldatei nicht gibt. Die Probe misst
+    Parameternamen, nicht die Erreichbarkeit von Seiten.
   - Sie prueft NAMEN, nicht WERTE. Ein `?d=<Kalendertag>` an einer Seite, die
     unter `d` eine Kennung erwartet, ist fuer sie in Ordnung — er ist es
     nicht. Das ist die Grenze eines statischen Abgleichs und steht so in
@@ -59,6 +68,14 @@ SERVER = os.path.join(WURZEL, 'server')
 # Verzeichnisse, die nicht uns gehoeren: fremde Bibliotheken und Schriften.
 FREMD = ('vendor', 'fonts', 'demo')
 
+# `config.php` steht in `.gitignore` und in der Ausnahmeliste des Deploys
+# (CLAUDE.md 3) — sie liegt NUR auf dem Server und in einer eingerichteten
+# Testinstallation. Ohne diesen Ausschluss zaehlte die Probe im Arbeitsbaum 99
+# Zielseiten und in einem frischen Klon 98; die gemeldete Zahl waere von etwas
+# abhaengig, das gar nicht im Repositorium steht. Eine Seite ist die Datei
+# ohnehin nicht.
+UNGEZAEHLT = ('config.php',)
+
 # Ein Verweis: `seite.php?…` in einer Zeichenkette, einfach oder doppelt
 # gequotet — samt dem Rest DIESER Zeichenkette, damit auch der zweite und
 # dritte Parameter mitkommen (`?t=rettungsmittel&ev=`). Der Punkt vor `php`
@@ -66,8 +83,8 @@ FREMD = ('vendor', 'fonts', 'demo')
 # Fragezeichenoperators mit ein.
 #
 # Der erste Entwurf las nur den ERSTEN Parameter und uebersah damit jedes
-# `&name=` — in diesem Bestand allein acht Stueck. Ein Pruefmittel, das die
-# Haelfte misst und die ganze Zahl meldet, ist schlimmer als keines.
+# `&name=` — in diesem Bestand elf Stueck (120 statt 131). Ein Pruefmittel,
+# das die Haelfte misst und die ganze Zahl meldet, ist schlimmer als keines.
 VERWEIS = re.compile(r"""['"]([A-Za-z0-9_./-]+\.php)\?([^'"]*)""")
 # Ein Parametername steht am Anfang des Abfrageteils oder hinter einem
 # Trenner. `&amp;` gehoert dazu: Im Markup steht der Trenner maskiert
@@ -98,7 +115,7 @@ def quelldateien(endungen):
     for dp, dns, fns in os.walk(SERVER):
         dns[:] = [d for d in dns if d not in FREMD]
         for fn in sorted(fns):
-            if fn.endswith(endungen):
+            if fn.endswith(endungen) and fn not in UNGEZAEHLT:
                 yield os.path.join(dp, fn)
 
 
@@ -162,7 +179,12 @@ def pruefen(ausfuehrlich=False):
                 continue
             for treffer in VERWEIS.finditer(zeile):
                 ziel = treffer.group(1)
-                rel  = ziel.lstrip('./')
+                # KEIN lstrip('./'): Das schneidet ZEICHEN ab, nicht ein
+                # Praefix — aus '../x.php' wuerde 'x.php'. Ein relativer
+                # Verweis aus einem Unterverzeichnis wird hier ohnehin
+                # immer gegen `server/<name>` gehalten; das steht als
+                # Grenze in LIESMICH.md.
+                rel  = ziel[2:] if ziel.startswith('./') else ziel.lstrip('/')
                 for name in PARAMETER.findall(treffer.group(2)):
                     gezaehlt += 1
                     schluessel = rel + '?' + name + '='

@@ -2346,10 +2346,12 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
                 /* ZWEI WOERTER, DIE FAST GLEICH AUSSEHEN (Backlog Nr. 149).
                  * Hier steht `skipped` — der Wert der REGISTERSPALTE
                  * `schema_migrations.status`, und er heisst: verbucht,
-                 * ausgefuehrt wurde nichts. Acht Zeilen tiefer steht `skip` —
-                 * der ANZEIGESTATUS der Vorschauzeile, und der heisst das
-                 * Gegenteil: noch NICHT verbucht. Wer die beiden verwechselt,
-                 * baut den Phantomzaehler wieder ein. */
+                 * ausgefuehrt wurde nichts. Im anderen Zweig desselben
+                 * `if ($nichtNoetig)` steht `skip` — der ANZEIGESTATUS der
+                 * Vorschauzeile, und der heisst das Gegenteil: noch NICHT
+                 * verbucht. (Keine Zeilenangabe hier: Die Kommentare, die
+                 * das erklaeren, verschieben sie selbst.) Wer die beiden
+                 * verwechselt, baut den Phantomzaehler wieder ein. */
                 $pdo->prepare('INSERT INTO schema_migrations (id, status) VALUES (?, "skipped")')
                     ->execute([$m['id']]);
                 $results[] = [$m['id'], $m['label'], 'ok',

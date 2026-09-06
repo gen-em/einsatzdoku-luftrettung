@@ -20,7 +20,7 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
 **Beide Funde kommen vom Auftraggeber, keiner von einem Prüfmittel.** Das ist
 nicht nebensächlich, sondern der eigentliche Befund dieser Stufe: Der
-Bilderlauf fotografiert 30 Seiten in acht Breiten und **klickt keinen Knopf**;
+Bilderlauf fotografiert 46 Seiten in acht Breiten und **klickt keinen Knopf**;
 die Wortliste zählt Wörter; die Vollständigkeitsprüfung sieht das Stylesheet
 an; automatisierte Prüffälle gibt es für den Webteil nicht. Ein Verweis, der
 ins Leere zeigt, und ein Zähler, der zweierlei zählt, fallen durch alles
@@ -38,7 +38,7 @@ vierzig Zeilen entfernt, benutzten `?d=` richtig. Behoben mit einer Zeile.
 
 **Neu dazu: `tools/linkprobe/`.** Es hält jede Zeichenkette
 `<seite>.php?<name>=` unter `server/` — in PHP und JavaScript — gegen die
-Parameter, die die Zielseite tatsächlich liest. Gemessen: **99 Zielseiten,
+Parameter, die die Zielseite tatsächlich liest. Gemessen: **98 Zielseiten,
 132 Verweise, 0 unbekannte Abweichungen**, dazu 10 Verweise auf Seiten, die
 ihre Parameter über eine Variable lesen und damit statisch nicht entscheidbar
 sind. Gegen den Stand vor der Behebung gefahren, meldet es die eine Zeile mit
@@ -48,8 +48,9 @@ Es hat dabei **zwei blinde Stellen bei sich selbst** gefunden, und zwar nicht
 im grünen Lauf, sondern erst auf die Frage, worüber die Zahl gerechnet war:
 Der erste Entwurf las nur den **ersten** Parameter je Adresse
 (`?t=rettungsmittel&ev=` sind zwei) und übersah `&amp;` als Trenner
-(`zeitraum.php?y=…&amp;m=…` im Markup). Beides behoben, bevor das Werkzeug
-eingecheckt wurde; die Zahl stieg dabei von 120 über 131 auf 132 Verweise.
+(`zeitraum.php?y=…&amp;m=…` im Markup). Die erste Lücke ist vor dem
+Einchecken geschlossen worden (elf übersehene Verweise, 120 → 131), die
+zweite unmittelbar danach in einem Nachtragscommit (131 → 132).
 Ein Prüfmittel, das die Hälfte misst und die ganze Zahl meldet, ist
 schlimmer als keines.
 

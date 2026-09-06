@@ -517,8 +517,15 @@ foreach (array_reverse(migrationen_katalog()) as $m) {
  * ALLE ausstehenden Migrationen aus, nicht nur die eine. Steht auf dieser
  * Installation ohnehin etwas offen, darf die Probe ihn nicht druecken —
  * darunter waeren Migrationen, die Spalten loeschen. */
+/* `blockiert` GEHOERT MIT IN DIE BEDINGUNG, und das ist keine Formsache: Eine
+ * destruktive Migration, in deren Spalten noch Daten stehen, zaehlt NICHT als
+ * `offen`, sondern getrennt als `blockiert` (migration_lib.php, M6-01). Ohne
+ * diesen Zweig liefe Teil 6 auf einer solchen Installation an, `$ausstehend`
+ * enthielte zwei Zeilen, die Karte meldete „2 Updates" — und die Erwartungen
+ * 24 und 27 waeren rot, ohne dass an der Anwendung etwas falsch waere. */
 $vorLauf = migrationen_lauf($pdo, false);
-$bereit  = $kandidat !== null && (int)$vorLauf['offen'] === 0;
+$bereit  = $kandidat !== null && (int)$vorLauf['offen'] === 0
+                              && (int)$vorLauf['blockiert'] === 0;
 if ($bereit) {
     $abfrage = $pdo->prepare('SELECT status, applied_at FROM schema_migrations WHERE id = ?');
     $abfrage->execute([$kandidat]);
@@ -526,9 +533,11 @@ if ($bereit) {
     $bereit  = $migAlt !== null;
 }
 pruefe($bereit,
-       '21  Vorbedingung: nichts offen, eine verbuchte Migration mit skip=wahr',
-       $kandidat === null ? 'keine Kennung mit skip=wahr gefunden'
-                          : $kandidat . ', offen ' . (int)$vorLauf['offen']);
+       '21  Vorbedingung: nichts offen/blockiert, eine verbuchte Migration mit skip',
+       $kandidat === null
+           ? 'keine Kennung mit skip=wahr gefunden'
+           : $kandidat . ', offen ' . (int)$vorLauf['offen']
+             . ', blockiert ' . (int)$vorLauf['blockiert']);
 
 /* Der Menuezaehler liegt 60 s in `app_state` (STATUS_CACHE_S). Wer ihn nicht
  * leert, misst den Zwischenspeicher statt der Anwendung — und zwar in beide
@@ -557,13 +566,21 @@ if ($bereit) {
 
     $frisch();
     $u21 = hole('betrieb_updates.php', $sidAdmin);
-    pruefe(str_contains($u21['rumpf'], '1 Update')
+    /* MIT ABGRENZUNG GEMESSEN. `str_contains('1 Update')` waere auch bei
+     * „11 Updates" und „21 Updates" wahr — dieselbe Sorte Zusicherung, die
+     * bei Erwartung 26 schon einmal gruen blieb, obwohl nichts da war. Der
+     * Kartenkopf setzt die Zahl in ein eigenes Element. */
+    pruefe((bool)preg_match('/>\s*1 Update\s*</u', $u21['rumpf'])
            && !str_contains($u21['rumpf'], 'Es steht nichts an.'),
            '24  Updates: Karte nennt „1 Update", nicht „Alles aktuell"',
            'HTTP ' . $u21['code']);
-    pruefe(str_contains($u21['rumpf'], 'nicht nötig')
+    /* DEN TON MITMESSEN, nicht nur den Text. Wer den `match` in
+     * `betrieb_updates.php` auf `['nicht nötig', 'orange']` aenderte, bekaeme
+     * sonst weiter gruen — und Orange heisst auf dieser Seite „hier ist etwas
+     * zu tun, das die Datenbank aendert". Genau das ist hier nicht der Fall. */
+    pruefe((bool)preg_match('/plakette-neutral[^>]*>\s*nicht nötig\s*</u', $u21['rumpf'])
            && str_contains($u21['rumpf'], $kandidat),
-           '25  ... die Zeile traegt die neutrale Plakette „nicht nötig"');
+           '25  ... die Zeile traegt die NEUTRALE Plakette „nicht nötig"');
     /* GEGEN DAS FORMULAR GEMESSEN, NICHT GEGEN DEN WORTLAUT. Der Text
      * „Ausstehende ausführen" steht auf dieser Seite ZWEIMAL: als Knopf und
      * als Schritt 4 im fuenfstufigen Ablauf der Karte „Wartungsmodus". Der
