@@ -541,7 +541,8 @@ ui_seite_start(['titel' => 'NutzerInnen']);
   </div>
 
   <?php ui_karte_start([
-      'titel' => 'Konten', 'zahl' => number_format($treffer, 0, ',', '.'),
+      'titel' => 'Konten', 'id' => 'k-konten',
+      'zahl' => number_format($treffer, 0, ',', '.'),
       'aktion' => ['text' => 'Anlegen', 'symbol' => 'plus', 'art' => 'orange',
                    'href' => '#', 'attr' => 'data-dialog="dlg-anlegen"'],
   ]); ?>

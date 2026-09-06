@@ -192,7 +192,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php if (!$schluesselDa): ?>
-    <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt']); ?>
+    <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
       <p class="feld-hinweis">Ein Komplett-Backup enthält jede Tabelle dieser
       Datenbank. Sie wird deshalb <strong>immer versiegelt</strong> abgelegt —
       und dafür braucht es den Serverschlüssel aus <code>config.php</code>.
@@ -206,7 +206,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
   <?php endif; ?>
 
   <?php if ($laeuft): ?>
-    <?php ui_karte_start(['titel' => 'Läuft gerade']); ?>
+    <?php ui_karte_start(['titel' => 'Läuft gerade', 'id' => 'k-laeuft-gerade']); ?>
       <?php
       $tabellen = count($z['folge'] ?? []);
       ui_zeile(['text' => 'Stand',
@@ -234,7 +234,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
       ?>
     <?php ui_karte_ende(); ?>
   <?php elseif ($stand === 'fertig'): ?>
-    <?php ui_karte_start(['titel' => 'Letzter Lauf']); ?>
+    <?php ui_karte_start(['titel' => 'Letzter Lauf', 'id' => 'k-letzter-lauf']); ?>
       <?php
       ui_zeile(['text' => 'Fertig geworden',
                 'klein' => (string)($z['name'] ?? ''),
@@ -260,7 +260,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
-  <?php ui_karte_start(['titel' => 'Regeln']); ?>
+  <?php ui_karte_start(['titel' => 'Regeln', 'id' => 'k-regeln']); ?>
     <form method="post">
       <?= csrf_field() ?><input type="hidden" name="action" value="regeln">
       <div class="fld-reihe">
@@ -306,7 +306,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
     ?>
   <?php ui_karte_ende(); ?>
 
-  <?php ui_karte_start(['titel' => 'Stände', 'zahl' => count($staende)]); ?>
+  <?php ui_karte_start(['titel' => 'Stände', 'id' => 'k-staende', 'zahl' => count($staende)]); ?>
     <?php if ($staende === []): ?>
       <p class="feld-hinweis">Es liegt noch kein Komplett-Backup vor.</p>
     <?php else: ?>
@@ -376,7 +376,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'vorschau' => 'Wiederanlauf']); ?>
+  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt', 'vorschau' => 'Wiederanlauf']); ?>
     <p class="feld-hinweis"><strong>Zwei Wege heraus.</strong> „Herunterladen"
     liefert den Dump <em>unverschlüsselt</em> als <code>.sql.gz</code> — genau
     das, was <code>mysql</code> und phpMyAdmin einspielen können. „Versiegelt

@@ -873,7 +873,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
     <form method="post">
       <?= csrf_field() ?><input type="hidden" name="action" value="profile">
 
-      <?php ui_karte_start(['titel' => 'Angaben']); ?>
+      <?php ui_karte_start(['titel' => 'Angaben', 'id' => 'k-angaben']); ?>
         <?php ui_feld(['label' => 'Name', 'name' => 'name', 'wert' => (string)($userName ?? ''),
                        'platzhalter' => 'wird in der Kopfleiste angezeigt',
                        'attr' => ' maxlength="120"']); ?>
@@ -895,7 +895,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
       <?php /* LOGO-WAHL (E-P3-20, Mockup 13). Sie gilt für Kopfleiste UND
                Browser-Symbol; die Anmeldeseite zeigt immer den Standard, weil
                dort noch niemand angemeldet ist und die Wahl am Konto hängt. */ ?>
-      <?php ui_karte_start(['titel' => 'Logo']); ?>
+      <?php ui_karte_start(['titel' => 'Logo', 'id' => 'k-logo']); ?>
         <p class="feld-hinweis">Gilt für Kopfleiste und Browser-Symbol. Die Wahl
           übersteuert den Standard der Installation.</p>
         <?php ui_wahlliste([
@@ -926,7 +926,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
       <input type="hidden" name="new_iter" id="pw_newiter">
       <input type="hidden" name="wrap_pw" id="pw_wrap">
       <input type="hidden" name="key_check" id="pw_keychk">
-      <?php ui_karte_start(['titel' => 'Passwort ändern']); ?>
+      <?php ui_karte_start(['titel' => 'Passwort ändern', 'id' => 'k-passwort']); ?>
         <?php ui_feld(['label' => 'Aktuelles Passwort', 'name' => 'old', 'id' => 'pw_old',
                        'art' => 'password', 'pflicht' => true,
                        'attr' => ' autocomplete="current-password"']); ?>
@@ -1789,7 +1789,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                                 'typ' => 'button', 'attr' => ' id="lockwarn_unlock"'])]); ?>
     </div>
 
-    <?php ui_karte_start(['titel' => 'Backup erstellen']); ?>
+    <?php ui_karte_start(['titel' => 'Backup erstellen', 'id' => 'k-erstellen']); ?>
       <?php /* WAS IN DER DATEI STEHT, GEHÖRT VOR DIE PASSWORTWAHL (M2-03).
                Vorher stand hier „ohne dieses Passwort ist die Datei wertlos" —
                richtig, aber es beantwortet die falsche Frage. Wer ein Passwort
@@ -1833,7 +1833,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
       <div id="expstate" class="zustandszeile"></div>
     <?php ui_karte_ende(); ?>
 
-    <?php ui_karte_start(['titel' => 'Backup einspielen']); ?>
+    <?php ui_karte_start(['titel' => 'Backup einspielen', 'id' => 'k-einspielen']); ?>
       <p class="feld-hinweis">Spielt ein Backup in <strong>dieses</strong> Konto
          zurück. Vorhandene Einsätze, Tage und Stammdaten bleiben unangetastet —
          das Einspielen ergänzt nur Fehlendes und ist gefahrlos wiederholbar.</p>
@@ -1871,7 +1871,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                Blickwinkel der Verwaltung, und ihn hier zu benutzen hiesse,
                eine NutzerIn eine Unterscheidung lernen zu lassen, die sie
                nichts angeht. */ ?>
-      <?php ui_karte_start(['titel' => 'Für dich freigegebenes Backup']); ?>
+      <?php ui_karte_start(['titel' => 'Für dich freigegebenes Backup', 'id' => 'k-freigegeben']); ?>
         <p class="feld-hinweis" id="freigabeinfo"></p>
         <?php /* DIE HÜLLE TRÄGT DIE KENNUNG, NICHT DAS FELD (F-S2-F).
                  `freigabeLaden()` blendet die Frage nach dem
@@ -3365,7 +3365,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
              (Mockup A0, freigegeben): Die eine Haupthandlung dieses Reiters
              bleibt „Weiter" am Feld „Code vom Gerät" (S5, B-S5-07). */ ?>
     <?php $apks = apk_liste(); if ($apks): ?>
-      <?php ui_karte_start(['titel' => 'NAdoku für Android']); ?>
+      <?php ui_karte_start(['titel' => 'NAdoku für Android', 'id' => 'k-android']); ?>
         <p class="feld-hinweis">Die Handy-App zeichnet die Spur des Dienstes
            auf und dokumentiert die Einsatzphasen — am Handy oder an einer
            verbundenen Wear-OS-Uhr. Sie wird hier verteilt, nicht über einen
@@ -3393,7 +3393,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
     <?php endif; ?>
 
     <?php if ($newKey): ?>
-      <?php ui_karte_start(['titel' => 'Zugangsdaten des neuen Geräts']); ?>
+      <?php ui_karte_start(['titel' => 'Zugangsdaten des neuen Geräts', 'id' => 'k-zugangsdaten']); ?>
         <p class="feld-hinweis">Beide Werte in den Einstellungen der App
            eintragen; als Server genügt die Domain.</p>
         <p class="feld-klein">Bei Garmin stehen diese Einstellungen in Garmin Connect.</p>

@@ -212,7 +212,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         e((string)$ergebnis['meldung']),
         'Ziel „' . e((string)$ergebnis['ziel']) . '"') ?>
     <?php if ($ergebnis['schritte']): ?>
-      <?php ui_karte_start(['titel' => 'Was die Prüfung getan hat']); ?>
+      <?php ui_karte_start(['titel' => 'Was die Prüfung getan hat', 'id' => 'k-pruefung']); ?>
         <?php foreach ($ergebnis['schritte'] as $i => $s): ?>
           <?php ui_zeile(['text' => (string)($i + 1) . '. ' . $s]); ?>
         <?php endforeach; ?>
@@ -233,7 +233,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
 
   <?php /* ---- Der Serverschlüssel ------------------------------------- */ ?>
   <?php if (!$schluesselDa): ?>
-    <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt']); ?>
+    <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
       <p class="feld-hinweis">Die Zugangsdaten der Ziele werden verschlüsselt in
          der Datenbank abgelegt. Der Schlüssel dazu steht in
          <code>config.php</code> und damit <strong>nicht</strong> im
@@ -265,7 +265,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
        eingerichtete Auslöser (Betrieb → Hintergrundjobs) — eine zweite Uhr hier wäre
        eine zweite Wahrheit. */ ?>
   <?php if ($tabelleDa && $schluesselDa): ?>
-    <?php ui_karte_start(['titel' => 'Versand']); ?>
+    <?php ui_karte_start(['titel' => 'Versand', 'id' => 'k-versand']); ?>
       <form method="post">
         <?= csrf_field() ?><input type="hidden" name="action" value="versand_schalter">
         <?php ui_schalter(['name' => 'versand_auto', 'label' => 'Backups automatisch versenden',
@@ -305,7 +305,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
 
   <?php /* ---- Die Liste ------------------------------------------------- */ ?>
   <?php if ($tabelleDa): ?>
-    <?php ui_karte_start(['titel' => 'Ziele', 'zahl' => count($ziele)]); ?>
+    <?php ui_karte_start(['titel' => 'Ziele', 'id' => 'k-ziele', 'zahl' => count($ziele)]); ?>
       <?php if (!$ziele): ?>
         <p class="feld-hinweis">Es ist noch kein Ziel eingetragen. Ohne Ziel bleiben
            die Backups dort, wo sie entstehen — auf demselben Server, dessen
@@ -474,7 +474,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
-  <?php ui_karte_start(['titel' => 'Was hier gilt', 'vorschau' => 'drei Protokolle']); ?>
+  <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt', 'vorschau' => 'drei Protokolle']); ?>
     <p class="feld-hinweis"><strong>SFTP ist die Empfehlung.</strong> Es verschlüsselt
        nicht nur, es erkennt den Server auch wieder: Beim ersten Prüfen wird der
        Fingerabdruck des Hostschlüssels übernommen, danach bei jeder Verbindung

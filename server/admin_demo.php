@@ -217,7 +217,7 @@ ui_seite_start(['titel' => 'Demo-Konto']);
 
 <?php if ($demoId === null): ?>
 
-  <?php ui_karte_start(['titel' => 'Zustand']); ?>
+  <?php ui_karte_start(['titel' => 'Zustand', 'id' => 'k-zustand']); ?>
     <p class="feld-hinweis">Es gibt derzeit <strong>kein</strong> Demo-Konto.
        „Demo-Konto anlegen" legt es an und spielt die Fixture ein.</p>
   <?php ui_karte_ende(); ?>
@@ -238,7 +238,7 @@ ui_seite_start(['titel' => 'Demo-Konto']);
   <div class="form-raster">
   <div class="form-spalte">
 
-    <?php ui_karte_start(['titel' => 'Zustand']); ?>
+    <?php ui_karte_start(['titel' => 'Zustand', 'id' => 'k-zustand']); ?>
       <?php
       ui_zeile(['text' => 'Konto', 'klein' => (string)$email]);
       ui_zeile(['text' => 'Letzter Reset',
@@ -255,7 +255,7 @@ ui_seite_start(['titel' => 'Demo-Konto']);
              Seit er aus der Fixture kommt, meldet der Reset drei
              (`stats.papierkorb`), und eine Ansicht, die nur eine davon zeigt,
              laesst zwei Fehlerbilder unsichtbar. */ ?>
-    <?php ui_karte_start(['titel' => 'Papierkorb']); ?>
+    <?php ui_karte_start(['titel' => 'Papierkorb', 'id' => 'k-papierkorb']); ?>
       <?php
       /* DIE BESCHRIFTUNG TRAEGT DIE ART, DER WERT NUR DIE ZAHL. Bis Web
          9.9.0 hiessen die drei Zeilen „im Papierkorb", „im Papierkorb,
@@ -278,13 +278,13 @@ ui_seite_start(['titel' => 'Demo-Konto']);
   <div class="form-spalte">
 
     <?php if ($bericht !== null): ?>
-      <?php ui_karte_start(['titel' => 'Bericht des letzten Laufs', 'zu' => true]); ?>
+      <?php ui_karte_start(['titel' => 'Bericht des letzten Laufs', 'id' => 'k-bericht', 'zu' => true]); ?>
         <pre><?= e(json_encode($bericht,
             JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre>
       <?php ui_karte_ende(true); ?>
     <?php endif; ?>
 
-    <?php ui_karte_start(['titel' => 'Was der Reset umfasst', 'zu' => true]); ?>
+    <?php ui_karte_start(['titel' => 'Was der Reset umfasst', 'id' => 'k-reset-umfang', 'zu' => true]); ?>
       <?php /* `.text` ist der Lesetext-Baustein: nur darin haben ul/li
                Punkte und Einzug (Stylesheet, Abschnitt 13). Eine eigene
                Klasse fuer eine vierzeilige Liste waere ein Sonderfall. */ ?>

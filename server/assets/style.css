@@ -304,6 +304,7 @@
   --lesespalte:760px;                  /* Fließtext */
   --schublade:320px;                   /* Höchstbreite der mobilen Schublade */
   --blatt-zeile:50px;                  /* Zeilenhöhe im Aktionsblatt */
+  --unterpunkt:28px;                   /* Sprungmarke unter dem Menüpunkt */
   --suchfeld:48px;                     /* das große Suchfeld */
   --symbol-klein:16px;                 /* Zusatzzeichen an einer Beschriftung */
   --symbol:20px;                       /* Symbolgröße in der Zeile */
@@ -758,6 +759,41 @@ img,svg,video{max-width:100%;height:auto}
 .leiste-gruppe > .akkordeon-inhalt{padding-left:0}
 .gruppen-zahl{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2)}
 .leiste-gruppe[open] > .akkordeon-zeile .gruppen-zahl{display:none}
+
+/* ---- Unterpunkte: die Karten der offenen Seite (E-S8-15) -----------------
+ * Unter dem aktiven Menüpunkt stehen die Kartentitel der Seite als
+ * Sprungmarken. Sie sind KEINE Menüpunkte zweiter Ordnung: 28 px statt 44,
+ * eine Schriftstufe kleiner, ohne Symbol und ohne Randstrich. Wer sie für
+ * Menüpunkte hält, sucht dahinter eine eigene Seite.
+ *
+ * `menue.js` erzeugt sie aus den Karten der Seite — deshalb steht hier keine
+ * Regel für einen leeren Behälter: Ohne Karten entsteht keiner.
+ *
+ * DIE MARKIERUNG IST FETT, NICHT ORANGE. Orange heißt in dieser Oberfläche
+ * „hier stehst du" und gehört dem aktiven Menüpunkt; die oberste sichtbare
+ * Karte ist etwas Schwächeres — ein Hinweis, wo im Text man gerade liest. */
+.eintrag-unterliste{
+  display:flex;flex-direction:column;
+  margin:0 0 var(--abstand-2) var(--abstand-5);
+}
+.eintrag-unter{
+  display:block;min-height:var(--unterpunkt);line-height:var(--unterpunkt);
+  padding:0 var(--abstand-2);
+  border-radius:var(--radius-klein);
+  font-size:var(--groesse-2);color:var(--gedaempft);
+  text-decoration:none;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.eintrag-unter:hover{background:var(--rauch);color:var(--asphalt);text-decoration:none}
+.eintrag-unter.hier{color:var(--dunkelblau);font-weight:600}
+
+/* KEINE `scroll-margin-top` AN DER KARTE. Das Konzept sah eine vor — „gibt es
+ * im Stylesheet noch nicht" — und das stimmte für den Namen, nicht für die
+ * Sache: `html` trägt seit Langem `scroll-padding-top: --kopf + --abstand-4`
+ * (Abschnitt 1), und das löst dasselbe Problem eine Ebene höher. Beides
+ * zusammen addiert sich: gemessen landete die angesprungene Karte bei 140 px
+ * statt bei 72, also 68 px zu tief. Die Regel ist deshalb wieder heraus; der
+ * Sprung sitzt mit `scroll-padding-top` allein richtig (gemessen 72 px). */
 
 /* ---- Fußzeile ------------------------------------------------------------
  * Zweizeilig, zentriert, unter dem Inhalt — und außerhalb von <main>. */

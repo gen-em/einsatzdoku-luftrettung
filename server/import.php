@@ -54,7 +54,7 @@ ui_seite_start(['titel' => 'Import / Export']);
     <?php /* DREI SCHRITTE, DREI KARTEN (E-P3-35). Schritt 2 und 3 sind
              verborgen, bis der vorige getan ist — die Schrittfolge steht damit
              als Zahl im Kartenkopf und nicht als Überschrift im Fließtext. */ ?>
-    <?php ui_karte_start(['titel' => '1. Datei wählen']); ?>
+    <?php ui_karte_start(['titel' => '1. Datei wählen', 'id' => 'k-datei']); ?>
       <?php ui_feld(['label' => 'Datei', 'id' => 'datei', 'art' => 'file',
                      'klein' => 'Excel (.xlsx, .xls, .ods), CSV oder ein Archiv aus dem '
                               . 'CSV-Export (.zip) — die Tabelle darin wird von selbst '
@@ -104,7 +104,7 @@ ui_seite_start(['titel' => 'Import / Export']);
     <?php ui_karte_ende(); ?>
 
     <div id="schritt2" hidden>
-      <?php ui_karte_start(['titel' => '2. Prüfen und korrigieren']); ?>
+      <?php ui_karte_start(['titel' => '2. Prüfen und korrigieren', 'id' => 'k-pruefen']); ?>
         <p class="feld-hinweis" id="bilanz"></p>
         <?php /* Die Filterwahl als Segment: drei Zustände, von denen genau
                  einer gilt — dasselbe Muster wie die Artenwahl im Zeitraum. */ ?>
@@ -122,7 +122,7 @@ ui_seite_start(['titel' => 'Import / Export']);
     </div>
 
     <div id="schritt3" hidden>
-      <?php ui_karte_start(['titel' => '3. Übernehmen']); ?>
+      <?php ui_karte_start(['titel' => '3. Übernehmen', 'id' => 'k-uebernehmen']); ?>
         <p class="feld-hinweis" id="bereit"></p>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Import ausführen', 'art' => 'primaer',
