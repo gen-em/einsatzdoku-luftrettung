@@ -185,15 +185,15 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
-**Stand 0.13.1, 05.09.2026** — `./gradlew build` im Container, 5 min 19 s
-bei warmem Zwischenspeicher:
+**Stand 0.13.1, 06.09.2026** — `./gradlew build` im Container, 4 min 26 s
+bei warmem Zwischenspeicher (der Abschlusslauf nach Stufe II):
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **14** — unverändert, alle auf `libs.versions.toml` (siehe unten) | **0** |
 | Prüffälle | **249**, davon 14 übersprungen (der Server-Rundlauf) | **71**, davon 0 übersprungen |
-| APK (unsigniert, Release) | **7 869 238 B** | **19 574 402 B** |
+| APK (unsigniert, Release) | **7 869 238 B** | **19 574 398 B** |
 
 Neu sind drei Prüffälle, alle Bildmessungen — Antworten auf Befunde vom S24,
 die der Bilderlauf nicht gesehen hatte, obwohl sie in seinen Bildern standen:

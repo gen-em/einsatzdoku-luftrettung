@@ -139,8 +139,8 @@ Was das alles **nicht** ist: ein Beleg, dass das Symbol auf dem S24 zurück
 ist. Das sagt nur der nächste Blick auf das Gerät (Backlog Nr. 117); die
 Prüfliste dafür steht im Prüfdokument S4.
 
-**Geprüft:** Baulauf grün (5 min 19 s), Lint 0 Fehler / 14 Warnungen (Handy,
-unverändert) und 0/0 (Uhr); 249 + 71 Prüffälle ohne Fehlschlag, 14
+**Geprüft:** Baulauf grün (4 min 26 s im Abschlusslauf), Lint 0 Fehler / 14
+Warnungen (Handy, unverändert) und 0/0 (Uhr); 249 + 71 Prüffälle ohne Fehlschlag, 14
 übersprungen (der Rundlauf); Bilderlauf 78 Bilder, alle paarweise
 verschieden, Bedienhöhe 48,0 dp an 75 von 78; `ZweierwahlBildTest` Rahmen
 48,0 dp, Hellblau 46,0 dp, Trennstrich 2 px, Schriftversatz 0,00 dp;
