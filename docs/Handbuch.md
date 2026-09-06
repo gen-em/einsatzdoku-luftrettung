@@ -3109,11 +3109,30 @@ der das Update ausgeliefert wurde. Ausgeführt werden die Updates weiterhin in
 ihrer ursprünglichen Reihenfolge — sie bauen aufeinander auf; gedreht ist
 allein die Anzeige.
 
-Jede Zeile trägt ihren Stand als Plakette: **steht aus** (orange),
-**blockiert** (rot) oder **Fehler** (rot). Eine *blockierte* Migration würde
-eine Spalte löschen, in der noch Daten stehen; sie läuft nur, wenn du das
-Kästchen vor ihrer Zeile setzt — und dieses Kästchen heißt: **Die Daten sind
-gesichert.**
+Jede Zeile trägt ihren Stand als Plakette: **steht aus** (orange), **nicht
+nötig** (grau), **blockiert** (rot) oder **Fehler** (rot). Eine *blockierte*
+Migration würde eine Spalte löschen, in der noch Daten stehen; sie läuft nur,
+wenn du das Kästchen vor ihrer Zeile setzt — und dieses Kästchen heißt: **Die
+Daten sind gesichert.**
+
+**„nicht nötig" heißt: Am Datenbankstand ist nichts zu tun, es fehlt nur der
+Vermerk.** *Seit Web 15.5.2.* Das kommt vor, wenn eine Änderung auf anderem
+Weg schon eingespielt wurde — etwa von Hand über das Datenbankwerkzeug des
+Hosters, weil der Weg über diese Seite versperrt war (siehe unten). Die
+Anwendung sieht dann ein Schema, das schon stimmt, und ein Buch, in dem der
+Eintrag fehlt. Der Knopf **„Ausstehende ausführen"** trägt ihn nach; ausgeführt
+wird dabei nichts, und die Zeile wandert danach in die Karte „Ausgeführt".
+
+Bis dahin **zählt diese Zeile mit**: Die Seite, die Zeile „Updates" im Status
+(12.1) und die Zahl am Menüpunkt nennen dieselbe Zahl. Vor Web 15.5.2 taten sie
+das nicht — Status und Menü zählten die Zeile, die Seite legte sie unter
+„Ausgeführt" und meldete „Alles aktuell", und dann gab es hier keinen Knopf,
+mit dem sich der Vermerk hätte nachholen lassen.
+
+> **Der Zähler am Menüpunkt hängt bis zu einer Minute nach.** Er wird
+> zwischengespeichert, damit nicht jeder Seitenaufruf die volle Erhebung
+> bezahlt. Steht nach dem Knopfdruck noch eine Zahl dort, ist das kein
+> Fehlschlag — lade die Seite eine Minute später noch einmal.
 
 **Scheitert eine Migration, hält die Kette an.** Was dahinter stand, bleibt
 unangetastet und steht als „NICHT MEHR VERSUCHT" da — der nächste Lauf nimmt
@@ -3188,6 +3207,16 @@ niemand mitten in einer Eingabe stehen.
 > Alle anderen zeigen die Wartungsseite, und die sagt nicht, seit wann.
 > (Bis Web 15.5.1 fehlte er auf der **Statistik**: die eine Betriebsseite, auf
 > der man länger liest als anderswo.)
+
+**Wenn die Seite selbst gesperrt ist, weil eine Migration erst die Rolle
+vergibt.** Diesen Fall gibt es, und er ist am 06.09.2026 eingetreten: Betrieb →
+Updates verlangt die Rolle **BetreiberIn**, und wenn ausgerechnet die
+ausstehende Migration diese Rolle einführt, kommt niemand auf die Seite, die
+sie ausführen müsste. Der Weg heraus führt über das Datenbankwerkzeug des
+Hosters (phpMyAdmin oder gleichwertig) — er steht mit den genauen Schritten im
+Runbook (`Technik.md`, Abschnitt 7). Danach steht die Migration hier als
+**„nicht nötig"**, und ein Druck auf „Ausstehende ausführen" trägt den Vermerk
+nach.
 
 **Wenn du dich selbst aussperrst.** Es gibt zwei Wege zurück. Der erste: Die
 **Anmeldeseite funktioniert weiter**. Melde dich mit einem BetreiberIn-Konto

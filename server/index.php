@@ -169,8 +169,16 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
                    Vorschau und fuehrt den Vorgang erst nach Bestaetigung aus
                    (E13: nicht umkehrbar). Von hier geht also kein Klick
                    unmittelbar in eine Zusammenfuehrung. */ ?>
+          <?php /* `?d=` UND NICHT `?ziel=` (Backlog Nr. 148). Die Zielseite
+                   liest `$_GET['d']` — wie die beiden anderen Wege dorthin
+                   (Aktionsmenue oben und `daymergelink` in `loadDay()`). Mit
+                   `?ziel=` blieb `$zielId` auf 0, `dt_laden()` lieferte null,
+                   und die Seite endete in `ui_abbruch()` mit 404: genau der
+                   Fall, fuer den diese Warnung gebaut ist, fuehrte auf eine
+                   Fehlerseite. Der geoeffnete Tag ist der ZIELtag — das ist
+                   die Zusage der Seite, und `$selDay` ist er. */ ?>
           <?= ui_knopf(['text' => 'Diensttage zusammenführen', 'art' => 'neutral',
-                        'href' => 'diensttag_zusammenfuehren.php?ziel=' . (int)$selDay]) ?>
+                        'href' => 'diensttag_zusammenfuehren.php?d=' . (int)$selDay]) ?>
         </div>
       </div>
     <?php endif; ?>

@@ -2836,4 +2836,31 @@ declare(strict_types=1);
  *          KORREKTURNUMMER: eine fehlende Zeile und ein veralteter
  *          Kopfkommentar. Keine Migration.
  */
-const WEB_VERSION = '15.5.1';
+/* 15.5.2  ZWEI FUNDE AM PRODUKTIVSTAND (Backlog Nr. 148 und 149). Kein neues
+ *          Verhalten, keine neue Funktion — zwei Wege, die es schon gab und
+ *          die nicht ankamen. Beide sind vom Auftraggeber gemeldet worden,
+ *          keiner von einem Pruefmittel; das ist der eigentliche Befund
+ *          dieser Stufe.
+ *
+ *          Nr. 148: Der Knopf „Diensttage zusammenfuehren" in der
+ *          R57-Ueberschneidungswarnung verwies auf `?ziel=`, die Zielseite
+ *          liest `d` — HTTP 404 in genau dem Fall, fuer den die Warnung
+ *          gebaut ist. Eine Zeile. Dazu `tools/linkprobe/`, das jede Adresse
+ *          `<seite>.php?<name>=` gegen die Parameter der Zielseite haelt:
+ *          Der Bilderlauf fotografiert Warnungen und klickt keine Knoepfe,
+ *          und automatisierte Tests gibt es fuer den Webteil nicht.
+ *
+ *          Nr. 149: Eine Migration, deren Schema aktuell ist, deren
+ *          Registervermerk aber fehlt, zaehlte an Status und Menue als offen
+ *          und lag auf der Seite Updates unter „Ausgefuehrt" — zwei
+ *          Zaehlweisen, ein Sachverhalt, und der Vermerk war im Web nicht
+ *          nachzuholen. Sie bekommt den eigenen Anzeigestatus `skip`, steht
+ *          unter „Ausstehend" mit neutraler Plakette „nicht noetig", und der
+ *          Knopf ist da. `status_lib.php` und der Menuezaehler bleiben
+ *          unberuehrt: Sie lasen immer schon `offen`.
+ *
+ *          KORREKTURNUMMER: zwei falsche Zuordnungen, kein neuer Weg durch
+ *          die Anwendung. Keine Migration — und das ist hier die Pointe: Was
+ *          fehlt, ist eine ZEILE IM REGISTER, und die holt der Knopf nach.
+ */
+const WEB_VERSION = '15.5.2';

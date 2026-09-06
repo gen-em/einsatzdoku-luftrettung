@@ -80,9 +80,22 @@ $blockiert = $lauf['blockiert'];
 
 /* Zwei Listen aus einem Ergebnis: was ansteht und was erledigt ist. Die
  * Trennung ist die ganze Aenderung an R66 — sie geschieht hier und nicht im
- * Katalog, damit die Kommandozeile weiterhin alles sieht. */
+ * Katalog, damit die Kommandozeile weiterhin alles sieht.
+ *
+ * `skip` GEHOERT UNTER AUSSTEHEND (Backlog Nr. 149). Eine Migration, deren
+ * Schema schon aktuell ist, die aber im Register fehlt, hat nichts
+ * auszufuehren und trotzdem etwas offen: den Vermerk. `migrationen_lauf()`
+ * zaehlt sie deshalb als `offen`, und Status und Menue melden „1 Migration
+ * steht aus". Solange sie hier als `ok` unter „Ausgefuehrt" lag, sagte diese
+ * Seite daneben „Alles aktuell" und zeigte keinen Knopf — der Vermerk war im
+ * Web nicht nachzuholen. Zwei Zaehlweisen fuer einen Sachverhalt; genau das,
+ * was E-S8-16 abschaffen wollte.
+ *
+ * DIE ZWEITE STELLE STEHT WEITER UNTEN. Der `match` fuer die Plakette hat
+ * einen `default`-Zweig auf „Fehler"/rot. Wer nur diesen Filter erweitert,
+ * zeigt eine Migration, die nichts zu tun hat, als gescheitert an. */
 $ausstehend = array_values(array_filter($results,
-    static fn(array $r): bool => in_array($r[2], ['todo', 'stopp', 'warn', 'fail'], true)));
+    static fn(array $r): bool => in_array($r[2], ['todo', 'skip', 'stopp', 'warn', 'fail'], true)));
 $erledigt   = array_values(array_filter($results,
     static fn(array $r): bool => $r[2] === 'ok'));
 
@@ -233,11 +246,17 @@ ui_seite_start(['titel' => 'Updates']);
 
     <?php foreach ($ausstehend as [$id, $label, $status, $detail, $zerstoert, $blockId, $web]): ?>
       <?php
+        /* `nicht nötig` IST NEUTRAL, NICHT ORANGE (Backlog Nr. 149). Orange
+           heisst auf dieser Seite „hier ist etwas zu tun, das die Datenbank
+           aendert"; hier ist nur ein Vermerk nachzutragen. Ein `default`-Zweig
+           steht darunter — ein Status, den dieser `match` nicht kennt, wird
+           dort still zu einem roten „Fehler". */
         [$statusText, $statusTon] = match ($status) {
-            'todo'  => ['steht aus', 'orange'],
-            'warn'  => ['Hinweis',   'orange'],
-            'stopp' => ['blockiert', 'rot'],
-            default => ['Fehler',    'rot'],
+            'todo'  => ['steht aus',  'orange'],
+            'skip'  => ['nicht nötig', 'neutral'],
+            'warn'  => ['Hinweis',    'orange'],
+            'stopp' => ['blockiert',  'rot'],
+            default => ['Fehler',     'rot'],
         };
         $klein = [$detail];
         if ($zerstoert !== null) { $klein[] = 'Löscht Daten: ' . $zerstoert; }

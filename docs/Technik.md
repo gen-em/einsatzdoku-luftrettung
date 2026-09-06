@@ -348,10 +348,22 @@ Daten erst nach Server-Bestätigung.
 │   │                      ab (s. LIESMICH.md)
 │   ├── wartungsprobe/     prüft den Wartungsmodus über ECHTES HTTP (S5 Paket
 │   │                      W): was gesperrt wird, was offen bleibt, Schalten
-│   │                      per POST, kaputte Schalterdatei, Antwortzeit —
-│   │                      43 Erwartungen. **Legt den Schalter selbst um** und
-│   │                      räumt ihn im finally ab; nicht auf einer
+│   │                      per POST, kaputte Schalterdatei, Antwortzeit — und
+│   │                      seit Web 15.5.2 die Zählweise der Migrationen
+│   │                      (Teil 6, Backlog Nr. 149) — 50 Erwartungen.
+│   │                      **Legt den Schalter selbst um** und nimmt für
+│   │                      Teil 6 eine Zeile aus dem Migrationsregister;
+│   │                      räumt beides im finally ab. Nicht auf einer
 │   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
+│   ├── linkprobe/         hält jede Adresse `<seite>.php?<name>=` unter
+│   │                      `server/` (PHP und JavaScript) gegen die Parameter,
+│   │                      die die Zielseite tatsächlich liest — 99 Zielseiten,
+│   │                      132 Verweise. Entstanden aus Backlog Nr. 148: Der
+│   │                      Bilderlauf fotografiert Warnungen und klickt keine
+│   │                      Knöpfe. Bekannte, noch nicht behobene Abweichungen
+│   │                      stehen mit Backlog-Nummer in `ausnahmen.md`; eine
+│   │                      tote Zeile dort macht den Lauf rot. Nur Python 3,
+│   │                      keine Installation nötig (s. LIESMICH.md)
 │   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
 │   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
 │   ├── messstand/         stellt ein Konto mit 5000 Einsätzen her — aus der
@@ -4539,6 +4551,31 @@ sich Darstellung und Datenmodell nicht trennen ließen.
 | `migrationen_stand(PDO)` | Zahl, letzte Kennung und Datum der ausgeführten |
 | `migrationen_inhalt_zaehlen()` / `…_text()` | der Migrationsschutz: Was ginge verloren? |
 
+**Sechs Anzeigestatus je Zeile, und `offen` wird nicht aus ihnen abgeleitet.**
+`ok` (bereits angewendet oder gerade gelaufen) · `todo` (steht an, oder nach
+einem Abbruch nicht mehr versucht) · **`skip`** (nicht nötig, aber noch nicht
+verbucht — nur in der Vorschau; seit Web 15.5.2, Backlog Nr. 149) · `stopp`
+(destruktiv, Daten stehen darin) · `warn` (Zustand nicht feststellbar) ·
+`fail` (gescheitert, die Kette hält an). `offen` zählt getrennt mit, weshalb
+sich ein Status hinzufügen lässt, ohne die Zählung zu berühren — genau das
+tut `skip`.
+
+> **`skip` und `skipped` sind zwei verschiedene Dinge, und sie stehen acht
+> Zeilen auseinander.** `skip` ist der **Anzeigestatus** einer Zeile und sagt
+> „noch nicht verbucht"; `skipped` ist ein Wert der **Registerspalte**
+> `schema_migrations.status` und sagt das Gegenteil: „verbucht, ausgeführt
+> wurde nichts". Wer sie verwechselt, baut den Phantomzähler aus Nr. 149
+> wieder ein.
+
+**Wer einen Status hinzufügt, sucht seine Leser.** Es sind drei, und zwei
+davon liegen in derselben Datei: `betrieb_updates.php` sortiert nach ihm in
+die Listen *Ausstehend* und *Ausgeführt* **und** wählt daraus die Plakette —
+letzteres über ein `match` mit `default`-Zweig, das einen unbekannten Status
+still zu einem roten „Fehler" macht. `update.php` druckt ihn generisch. Ein
+neuer Status, der nur in eine der beiden Stellen eingetragen wird, ist
+schlimmer als keiner: Steht er nur im `match`, verschwindet die Zeile aus
+beiden Karten; steht er nur im Filter, erscheint sie als gescheitert.
+
 **Was hinter einem Fehler steht, wird nicht mehr verschwiegen.** Bis Web 15.0.0
 brach der Lauf bei einem Fehler ab, und die Migrationen dahinter tauchten in der
 Ausgabe gar nicht auf — die Karte zählte dann weniger Ausstehende, als es gab
@@ -5176,7 +5213,8 @@ für das sie da ist.
 (neben `db.php`)? (2) Ist die aufgerufene Seite eine der elf Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/wartungsprobe/probe.php` (43 Erwartungen).
+`php tools/wartungsprobe/probe.php` (50 Erwartungen; seit Web 15.5.2 misst
+ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149).
 
 **Demo-Konto einrichten (einmalig):** Fixture erzeugen —
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der
@@ -5425,11 +5463,60 @@ Solange die Tabelle die Teilenummer nicht kennt, steht in `geraet_art` die
 → als BetreiberIn **Betrieb → Updates** aufrufen → nach dem Lauf muss die
 Karte „Ausstehende Updates" leer sein („Alles aktuell"), und in der Karte
 „Ausgeführt" muss jede Zeile die Plakette **„erledigt"** tragen. (Bis Web 9.11.1 stand dort ein ✔; seit P3/O11 sagt der
-Status ein Wort — `erledigt` blau, `steht aus` orange, `blockiert` rot,
-`Fehler` rot —, weil Schriftzeichen als Symbol ausgeschlossen sind, E-P3-18.)
+Status ein Wort — `erledigt` blau, `steht aus` orange, **`nicht nötig`
+neutral** (seit Web 15.5.2), `blockiert` rot, `Fehler` rot —, weil
+Schriftzeichen als Symbol ausgeschlossen sind, E-P3-18.)
 Fehlgeschlagene Migrationen werden nicht verbucht und beim nächsten Aufruf
 erneut versucht; Folge-Migrationen stoppen bis dahin. **Version in `version.php`
 erhöhen** nicht vergessen, sonst sieht der Browser alte Dateien.
+
+**Eine Zeile „nicht nötig" ist kein Fehler und keine Ausnahme** (seit Web
+15.5.2, Backlog Nr. 149). Sie heißt: Das Schema stimmt schon, es fehlt nur der
+Vermerk im Register — der Fall, den ein Eingriff von Hand hinterlässt (siehe
+den Notweg unten). Sie steht unter **Ausstehend**, zählt in dieselbe Zahl wie
+Status und Menüzähler, und der Knopf „Ausstehende ausführen" trägt den Vermerk
+nach, ohne etwas auszuführen. Der Anzeigestatus heißt `skip` und ist etwas
+anderes als der Registerwert `skipped`: Der eine sagt „noch nicht verbucht",
+der andere „verbucht, ausgeführt wurde nichts".
+
+**Notweg: Betrieb → Updates verweigert den Zugang, weil eine Migration die
+Rolle erst vergibt.** Eingetreten am 06.09.2026 mit
+`2026_09_05_rolle_betreiberin` (Backlog Nr. 149 a). Die Lage: Die Seite, die
+Migrationen ausführt, beginnt mit `require_betreiberin()`; die Rolle
+`betreiberin` legt aber erst diese Migration an. `update.php` lässt eine Admin
+durch und leitet mit 302 auf dieselbe Seite — also auf ein 403. Der
+Kommandozeilen-Notausgang `php update.php` braucht eine Kommandozeile, und die
+gibt es auf einfachem Webspace nicht. **So kommt man heraus:**
+
+1. Im Datenbankwerkzeug des Hosters (phpMyAdmin oder gleichwertig) die
+   SQL-Anweisungen der Migration ausführen. Sie stehen im Katalog in
+   `migration_lib.php` unter ihrer Kennung — **in ihrer Reihenfolge**, denn
+   sie bauen aufeinander auf. Für die genannte waren es zwei:
+
+   ```sql
+   ALTER TABLE users MODIFY role ENUM('user','admin','betreiberin')
+                     NOT NULL DEFAULT 'user';
+   UPDATE users SET role = 'betreiberin' WHERE role = 'admin';
+   ```
+
+   Erst `ALTER`, dann `UPDATE`: Liefe das `UPDATE` gegen die alte,
+   zweiwertige Spalte, machte MariaDB je nach `sql_mode` einen leeren String
+   oder einen Fehler daraus — das erste still.
+2. **Den Registervermerk NICHT von Hand setzen.** Neu anmelden (die Rolle
+   greift mit der nächsten Sitzung), **Betrieb → Updates** aufrufen — die
+   Migration steht jetzt als **„nicht nötig"** da — und **„Ausstehende
+   ausführen"** drücken. Die Anwendung schreibt den Vermerk selbst, mit dem
+   richtigen Status `skipped`, und der Zähler an Updates und Status
+   verschwindet. Ein von Hand gesetzter Eintrag hätte denselben Effekt und
+   keine Prüfung dahinter.
+
+> **Regel daraus: Eine Migration, die Rechte einführt, muss ohne diese Rechte
+> ausführbar sein.** S8 hatte das Aussperren der **letzten** BetreiberIn
+> bedacht (R75) und das Fehlen der **ersten** nicht. Wer einen Wächter vor
+> eine Seite zieht, prüft den **Erstlauf** mit — den Zustand *vor* der
+> Migration, nicht nur den danach. Die nächste Rollenmigration ist die
+> Support-Rolle in P5 (R38); dort gilt die Regel, und sie gehört ins
+> Bedrohungsmodell (P6, R69).
 
 **Neue Zusatzfelder für Einsätze:** 1) Migration in `migration_lib.php`
 (`migrationen_katalog()`) ergänzen
