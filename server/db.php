@@ -818,6 +818,24 @@ const KDF_ITER_LISTE = [320000];
  * fuer eine Ersatzuhr, ein Testgeraet und ein noch nicht geloeschtes Altgeraet
  * und sind trotzdem eine Zahl, bei der ein zusaetzlicher Eintrag auffaellt.
  */
+/* ---------------------------------------------------------------------------
+ * DIE BEIDEN STORE-ADRESSEN (S8/AP6, R65)
+ *
+ * Sie stehen an genau EINER Stelle, und beide sind leer: Weder der
+ * Beitrittslink des internen Play-Tests noch die Adresse der Uhr-App im
+ * Connect-IQ-Store liegen vor (Rahmenplan Abschnitt 6, Stand 06.09.2026).
+ *
+ * SOLANGE EINE LEER IST, steht ihre Zeile auf der Geraeteseite ohne Knopf da —
+ * mit dem Weg als Text. Ein Knopf ins Leere waere schlechter als keiner.
+ *
+ * Sie stehen hier und nicht in der `config.php`: Es sind keine Einstellungen
+ * dieser Installation, sondern Adressen des Programms — jede Installation
+ * verweist auf denselben Store-Eintrag. Mit der Produktionsfreigabe tritt bei
+ * PLAY_TEST_URL die Store-Adresse an die Stelle des Testlinks.
+ */
+const CONNECT_IQ_URL = '';
+const PLAY_TEST_URL  = '';
+
 const MAX_GERAETE      = 5;
 const GERAETE_NEU_TAGE = 7;   // so lange gilt ein Geraet in der Oberflaeche als "neu"
 

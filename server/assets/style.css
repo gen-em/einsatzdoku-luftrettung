@@ -758,6 +758,13 @@ img,svg,video{max-width:100%;height:auto}
   color:var(--asphalt);
 }
 .leiste-gruppe > .akkordeon-inhalt{padding-left:0}
+
+/* ---- Das APK-Fach auf dem Geräte-Reiter (S8/AP6, Mockup 10) --------------
+ * Der Rückfall neben zwei Store-Wegen: zugeklappt sagt die Zeile, dass es ihn
+ * gibt, ohne ihn anzubieten. Derselbe Akkordeon-Baustein wie in den Leisten,
+ * nur mit dem Abstand einer Kartenzeile darüber. */
+.apk-fach{margin-top:var(--abstand-3)}
+.apk-fach > .akkordeon-zeile{font-size:var(--groesse-3);color:var(--blau-tief)}
 .gruppen-zahl{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2)}
 .leiste-gruppe[open] > .akkordeon-zeile .gruppen-zahl{display:none}
 

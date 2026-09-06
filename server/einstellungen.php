@@ -3111,11 +3111,13 @@ ui_seite_start(['titel' => 'Einstellungen']);
 
   <?php else: ?>
     <?php ui_titelzeile(['titel' => 'Geräte']); ?>
-    <p class="seiten-erklaerung">Jedes Gerät — Uhr oder Handy — bekommt eigene
-       Zugangsdaten für den Upload. Deaktivieren sperrt den Schlüssel — hochgeladene Daten
-       bleiben. Je Konto sind <?= MAX_GERAETE ?> Geräte möglich, belegt sind
-       <?= count($devices) ?>; deaktivierte zählen mit, erst Löschen gibt einen
-       Platz frei.</p>
+    <?php /* EIN SATZ MIT BELEGUNG UND GRENZE (Mockup 10). Vorher standen hier
+             drei Sätze, und die Belegung kam zuletzt — die Zahl, wegen der man
+             die Erklärung überhaupt liest. */ ?>
+    <p class="seiten-erklaerung">Uhr oder Handy zeichnet den Dienst auf und
+       liefert ihn hierher. <strong><?= count($devices) ?> von <?= MAX_GERAETE ?></strong>
+       Plätzen belegt — deaktivierte zählen mit, erst Entkoppeln gibt einen Platz
+       frei.</p>
 
     <?php if ($devNeu > 0): ?>
       <?php /* Zweite Spur neben der E-Mail beim Koppeln: Wer die Post nicht
@@ -3123,8 +3125,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
       <?php ui_meldung(
           ($devNeu === 1 ? 'Ein Gerät ist' : $devNeu . ' Geräte sind')
           . ' in den letzten ' . GERAETE_NEU_TAGE . ' Tagen hinzugekommen — unten mit '
-          . '„neu" gekennzeichnet. Kommt dir davon etwas unbekannt vor, lösche es hier; '
-          . 'danach kann es nichts mehr hochladen.', null, 'warn', '      '); ?>
+          . '„neu" gekennzeichnet. Kommt dir davon etwas unbekannt vor, entkopple es '
+          . 'hier; danach kann es nichts mehr hochladen.', null, 'warn', '      '); ?>
     <?php endif; ?>
 
     <?php /* ---- Die Karte „Gerät koppeln" in drei Zuständen (S5, E-S5-26) ----
@@ -3270,9 +3272,14 @@ ui_seite_start(['titel' => 'Einstellungen']);
                gekoppelten Geraet gerade. Vorhandener Baustein, keine neue
                Darstellung: dieselbe Kleinzeile, die schon Zustand und letzten
                Kontakt traegt. */
+            /* DIE KLEINZEILE SAGT, WAS DAS GERAET IST UND SEIT WANN
+               (Mockup 10): Modell und Art, gekoppelt seit, zuletzt gemeldet.
+               „aktiv" steht nicht mehr darin — es war der Normalfall und
+               damit die haeufigste Auskunft ohne Aussage; „deaktiviert" sagt
+               jetzt die Plakette. */
             $klein = geraet_bezeichnung($d['geraet_art'], $d['geraet_modell'], $d['geraet_teil'])
-                   . ' · ' . ($aktiv ? 'aktiv' : 'deaktiviert')
-                   . ' · zuletzt gesehen: '
+                   . ' · gekoppelt ' . fmt_local($d['created_at'], 'd.m.Y')
+                   . ' · zuletzt gemeldet '
                    . ($d['last_seen'] ? fmt_local($d['last_seen'], 'd.m.Y H:i') : 'nie');
             ?>
         <form method="post" id="f-dev-<?= $did ?>" class="nur-vorlesen"
@@ -3282,114 +3289,201 @@ ui_seite_start(['titel' => 'Einstellungen']);
         </form>
         <form method="post" id="f-devdel-<?= $did ?>" class="nur-vorlesen"
               action="einstellungen.php?t=geraete"
-              data-confirm="Gerät „<?= e($d['label'] ?? $d['device_id']) ?>“ wirklich löschen? Bereits hochgeladene Daten bleiben erhalten.">
+              data-confirm="Gerät „<?= e($d['label'] ?? $d['device_id']) ?>“ wirklich entkoppeln? Es kann danach nichts mehr hochladen; bereits hochgeladene Daten bleiben erhalten."
+              data-confirm-ok="Entkoppeln">
           <?= csrf_field() ?><input type="hidden" name="action" value="delete">
           <input type="hidden" name="id" value="<?= $did ?>">
         </form>
         <?php ui_zeile([
             'text'  => (string)($d['label'] ?? '') !== '' ? (string)$d['label'] : (string)$d['device_id'],
             'klein' => $klein,
-            'plaketten' => ((int)$d['ist_neu']
-                ? ui_plakette('neu seit ' . fmt_local($d['created_at'], 'd.m.Y'), ['ton' => 'orange'])
-                : '')
-                /* GEKUERZT (S6): Die volle 36-Zeichen-Kennung hat keine
-                   Umbruchstelle und drueckte den Text daneben auf ein Wort je
-                   Zeile zusammen — bei jedem frisch gekoppelten Geraet, dessen
-                   Bezeichnung kurz ist. Begruendung und Form stehen an einer
-                   Stelle: geraet_kennung_kurz(). */
-                . ui_plakette(geraet_kennung_kurz((string)$d['device_id']), ['ton' => 'neutral']),
+            /* ZWEI PLAKETTEN, BEIDE NUR IM AUSNAHMEFALL (Mockup 10): „neu"
+               orange (sieben Tage lang) und „deaktiviert" neutral. Das Datum
+               steht nicht mehr in der Plakette — es steht seit AP6 in der
+               Kleinzeile („gekoppelt 03.09.2026") und war zweimal dasselbe.
+
+               DIE GEKUERZTE KENNUNG IST FORT. Sie stand hier seit S6, um zwei
+               gleich benannte Geraete auseinanderzuhalten; das leistet die
+               Kleinzeile mit Modell, Art und Kopplungsdatum besser, und die
+               Zeile hat vier Angaben statt fuenf. */
+            'plaketten' => ((int)$d['ist_neu'] ? ui_plakette('neu', ['ton' => 'orange']) : '')
+                . ($aktiv ? '' : ui_plakette('deaktiviert', ['ton' => 'neutral'])),
             'aktionen' => ui_zeilenaktionen([
                 'titel' => (string)($d['label'] ?? $d['device_id']),
+                /* ALLE HANDLUNGEN IM PUNKTE-MENUE, auch am Schreibtisch
+                   (Mockup 10). Als Knopfreihe stand „Entkoppeln" in Rot
+                   unmittelbar neben „Deaktivieren", und zwar in jeder Zeile. */
+                'blatt_immer' => true,
                 'eintraege' => [
-                    ['text' => 'Bearbeiten', 'symbol' => 'stift',
+                    ['text' => 'Bezeichnung ändern', 'symbol' => 'stift',
                      'href' => 'einstellungen.php?t=geraete&ed=' . $did],
                     ['text' => $aktiv ? 'Deaktivieren' : 'Aktivieren',
                      'symbol' => $aktiv ? 'schloss' : 'schloss-offen',
                      'art' => 'leise', 'form' => 'f-dev-' . $did],
-                    ['text' => 'Löschen', 'symbol' => 'korb',
+                    /* ENTKOPPELN STATT LOESCHEN (B-S8-21). Dasselbe Wort wie
+                       auf der Kontoseite und dasselbe, was tatsaechlich
+                       geschieht: Der Schluessel wird ungueltig, die
+                       hochgeladenen Daten bleiben. „Loeschen" las sich, als
+                       gingen sie mit. Die Handlung dahinter ist unveraendert. */
+                    ['text' => 'Entkoppeln', 'symbol' => 'geraet-entkoppeln',
                      'art' => 'gefahr', 'form' => 'f-devdel-' . $did],
                 ],
             ]),
         ]); ?>
       <?php endforeach; ?>
 
-      <div class="listen-form">
-        <h3 class="listen-form-titel"><?= $editDev ? 'Bezeichnung ändern' : 'Gerät von Hand anlegen' ?></h3>
-        <?php if (!$editDev): ?>
-          <p class="feld-hinweis">Die Alternative zum Koppeln: Geräte-ID und
-             Schlüssel werden angezeigt und in der App des Geräts eingetragen.</p>
-        <?php endif; ?>
+      <?php /* NUR NOCH DAS UMBENENNEN STEHT IN DIESER KARTE (S8/AP6). Das
+               Anlegen von Hand ist die Ausnahme und hat seit AP6 eine eigene,
+               zugeklappte Karte am Ende der Seite — die Reihenfolge der Seite
+               folgt der Haeufigkeit: koppeln, ansehen, App holen, Ausnahme.
+               Das Umbenennen dagegen gehoert zur Zeile, auf deren Punkte-Menue man
+               gerade geklickt hat, und bleibt hier. */ ?>
+      <?php if ($editDev): ?>
+        <div class="listen-form">
+          <h3 class="listen-form-titel">Bezeichnung ändern</h3>
+          <form method="post" action="einstellungen.php?t=geraete">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="rename">
+            <input type="hidden" name="id" value="<?= (int)$editDev['id'] ?>">
+            <div class="listen-form-felder">
+              <?php ui_feld(['label' => 'Bezeichnung', 'name' => 'label', 'id' => 'devlabel',
+                             'platzhalter' => 'z. B. Dienstuhr',
+                             'wert' => (string)($editDev['label'] ?? ''),
+                             'attr' => ' maxlength="120"']); ?>
+            </div>
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Bezeichnung speichern', 'art' => 'neutral']) ?>
+              <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
+                            'href' => 'einstellungen.php?t=geraete']) ?>
+            </div>
+          </form>
+        </div>
+      <?php else: ?>
+        <p class="feld-klein">Im Menü der Zeile: Bezeichnung ändern ·
+           Deaktivieren / Aktivieren · Entkoppeln.</p>
+      <?php endif; ?>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* ---- App installieren (S8/AP6, Mockup 10, E-S8-11) -------------
+             ZWEI WEGE, EIN RUECKFALL. Die Uhr-App kommt aus dem
+             Connect-IQ-Store, die Handy- und Wear-OS-App aus dem Play Store;
+             das APK auf diesem Server ist der Weg fuer den Fall, dass der
+             Store nicht geht.
+
+             DIE ADRESSEN STEHEN IN ZWEI KONSTANTEN, und beide sind LEER.
+             Weder der Beitrittslink des internen Play-Tests noch die Adresse
+             der Uhr-App im Connect-IQ-Store liegen vor (Rahmenplan
+             Abschnitt 6, Stand 06.09.2026). Solange eine leer ist, steht ihre
+             Zeile ohne Knopf da — mit dem Weg als Text, denn „im Store nach
+             NAdoku suchen" ist auch ohne Link eine Anleitung. Ein Knopf ins
+             Leere waere schlechter als keiner. Nachzutragen ist danach je
+             eine Zeile in `db.php`.
+
+             DIE KARTE STEHT IMMER, auch ohne APK auf dem Server: Sie
+             beantwortet die Frage „wie bekomme ich die App", und die stellt
+             sich auf jeder Installation. Frueher hiess sie „NAdoku fuer
+             Android" und erschien nur, wenn ein APK dalag — die Uhr kam
+             darin gar nicht vor. */ ?>
+    <?php ui_karte_start(['titel' => 'App installieren', 'id' => 'k-app']); ?>
+      <?php
+      ui_zeile([
+          'text'  => 'Garmin-Uhr',
+          'klein' => CONNECT_IQ_URL !== ''
+              ? 'Im Connect-IQ-Store auf die Uhr laden. Danach auf der Sync-Seite '
+                . '„Gerät koppeln" starten.'
+              : 'Im Connect-IQ-Store auf dem Handy nach „NAdoku" suchen und auf die Uhr '
+                . 'laden. Danach auf der Sync-Seite „Gerät koppeln" starten.',
+          'aktionen' => CONNECT_IQ_URL !== ''
+              ? ui_knopf(['text' => 'Connect IQ', 'art' => 'neutral',
+                          'href' => CONNECT_IQ_URL, 'attr' => ' target="_blank" rel="noopener"'])
+              : '',
+      ]);
+      ui_zeile([
+          'text'  => 'Android-Handy oder Wear-OS-Uhr',
+          'klein' => PLAY_TEST_URL !== ''
+              ? 'Über den Play Store — im internen Test bis zur Freigabe. Mit dem Link '
+                . 'trittst du dem Test bei und installierst wie jede andere App.'
+              : 'Über den Play Store, sobald der interne Test offen ist. Bis dahin führt '
+                . 'der Weg über das APK weiter unten.',
+          'aktionen' => PLAY_TEST_URL !== ''
+              ? ui_knopf(['text' => 'Play Store', 'art' => 'neutral',
+                          'href' => PLAY_TEST_URL, 'attr' => ' target="_blank" rel="noopener"'])
+              : '',
+      ]);
+      ?>
+
+      <?php /* DAS APK KLAPPT AUF (Mockup 10). Es ist der Rueckfall, nicht der
+               Weg — zugeklappt sagt die Zeile, dass es ihn gibt, ohne ihn
+               anzubieten. Die Karte zeigt, was auf dem Server LIEGT: Name,
+               Groesse, Datum und der gerechnete SHA-256; von Hand gepflegt
+               wird nichts.
+
+               DER DOWNLOAD IST EINE LEISE HANDLUNG (Mockup 10; vorher
+               neutral): Die eine Haupthandlung dieses Reiters bleibt „Weiter"
+               am Feld „Code vom Geraet" (S5, B-S5-07), und der Store steht
+               darueber mit einem neutralen Knopf. */ ?>
+      <?php $apks = apk_liste(); if ($apks): ?>
+        <details class="apk-fach">
+          <summary class="akkordeon-zeile">
+            <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
+            <span class="akkordeon-text">Ohne Play Store: APK von Hand</span>
+          </summary>
+          <?php foreach ($apks as $apk): ?>
+            <?php ui_zeile([
+                'text'  => 'NAdoku' . ($apk['version'] !== null ? ' ' . $apk['version'] : ''),
+                'klein' => 'APK · ' . apk_groesse($apk['groesse'])
+                         . ' · Stand ' . fmt_local(gmdate('Y-m-d H:i:s', $apk['stand']), 'd.m.Y'),
+                'aktionen' => ui_knopf(['text' => 'Herunterladen', 'art' => 'leise',
+                    'href' => 'apk.php?d=' . rawurlencode($apk['datei'])]),
+            ]); ?>
+            <?php /* DIE PRUEFSUMME STEHT IM WERTEKASTEN, nicht in der
+                     Kleinzeile. Mockup 10 zeigt sie dort gekuerzt
+                     (nur Anfang und Ende) — gekuerzt taugt sie aber fuer nichts:
+                     Wer nachrechnet, braucht alle 64 Zeichen, und wer nicht
+                     nachrechnet, braucht sie gar nicht. Im Wertekasten steht
+                     sie vollstaendig und mit einem Knopf, der sie in die
+                     Zwischenablage legt — genau das, was jemand tut, der sie
+                     mit `sha256sum` vergleichen will. */ ?>
+            <?= ui_codeblock_lang(apk_sha_lesbar($apk['sha256']), 'SHA-256') ?>
+          <?php endforeach; ?>
+          <p class="feld-klein">Nur, wenn der Play Store nicht geht — Updates
+             kommen dann nicht von selbst. Beim ersten Öffnen fragt Android
+             nach, ob Installationen aus dieser Quelle erlaubt sind; das ist
+             bei einer Verteilung ohne App-Store der vorgesehene Weg. Wer der
+             Seite nicht traut, rechnet die Prüfsumme der heruntergeladenen
+             Datei nach.</p>
+        </details>
+      <?php endif; ?>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* ---- Gerät ohne Code anlegen (S8/AP6, Mockup 10) ----------------
+             DIE AUSNAHME STEHT ZUGEKLAPPT AM ENDE. Sie war bis Web 15.4.0 ein
+             Formular MITTEN in der Geräteliste, unter den Zeilen — an der
+             Stelle also, an der man nach dem Umbenennen sucht. Der Weg dahin
+             ist das Koppeln; von Hand angelegt wird nur, was keinen Code
+             zeigen kann.
+
+             NEUTRAL, NICHT PRIMÄR (B-S5-09): Die eine Haupthandlung dieses
+             Reiters ist „Weiter" an der Kopplungskarte. */ ?>
+    <?php if (!$editDev): ?>
+      <?php ui_karte_start(['titel' => 'Gerät ohne Code anlegen', 'id' => 'k-ohne-code',
+                            'zu' => true, 'vorschau' => 'Ausnahme · Zugangsdaten von Hand']); ?>
+        <p class="feld-hinweis">Für Geräte, die keinen Code anzeigen können. Du
+           bekommst Geräte-ID und API-Schlüssel und trägst sie in der App
+           ein — bei Garmin in Garmin Connect unter den App-Einstellungen.</p>
         <form method="post" action="einstellungen.php?t=geraete">
           <?= csrf_field() ?>
-          <input type="hidden" name="action" value="<?= $editDev ? 'rename' : 'add' ?>">
-          <?php if ($editDev): ?>
-            <input type="hidden" name="id" value="<?= (int)$editDev['id'] ?>">
-          <?php endif; ?>
+          <input type="hidden" name="action" value="add">
           <div class="listen-form-felder">
             <?php ui_feld(['label' => 'Bezeichnung', 'name' => 'label', 'id' => 'devlabel',
-                           'platzhalter' => 'z. B. Dienstuhr',
-                           'wert' => (string)($editDev['label'] ?? ''),
+                           'platzhalter' => 'z. B. Ersatzuhr',
                            'attr' => ' maxlength="120"']); ?>
           </div>
           <div class="listen-form-fuss">
-            <?php /* NEUTRAL, NICHT PRIMÄR (B-S5-09, S5 Paket B).
-                     Hier standen zwei primäre Knöpfe auf einer Seite — dieser
-                     und der der Kopplungskarte darüber. Design.md 9.16 nennt
-                     genau das als Anti-Muster („Keiner ist mehr die
-                     Haupthandlung"), und 9.0 verlangt „die EINE Haupthandlung".
-                     Welche das auf diesem Reiter ist, sagt die Anwendung selbst
-                     an zwei Stellen: Der Text nebenan nennt die Handanlage „die
-                     Alternative zum Koppeln", und E-R49-7 führt sie als
-                     Rückfall. Der Fund ist älter als S5 — er fällt hier auf,
-                     weil die Karte darüber neu gebaut wurde. */ ?>
-            <?= ui_knopf(['text' => $editDev ? 'Bezeichnung speichern' : 'Gerät anlegen',
-                          'art' => 'neutral']) ?>
-            <?php if ($editDev): ?>
-              <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
-                            'href' => 'einstellungen.php?t=geraete']) ?>
-            <?php endif; ?>
+            <?= ui_knopf(['text' => 'Gerät anlegen', 'art' => 'neutral']) ?>
           </div>
         </form>
-      </div>
-    <?php ui_karte_ende(); ?>
-
-    <?php /* ---- NAdoku für Android (S4/A1, E-S4-16) ---------------------
-             Die App wird hier verteilt und nicht über einen App-Store. Die
-             Karte zeigt, was auf dem Server LIEGT — Name, Größe, Datum und
-             der gerechnete SHA-256; von Hand gepflegt wird nichts. Liegt
-             nichts, erscheint die Karte gar nicht: Ein Leerzustand „noch
-             keine App" wäre auf jeder Installation zu sehen, die keine
-             Android-App verteilt, und sagte dort etwas Falsches.
-
-             DER DOWNLOAD IST EINE NEUTRALE HANDLUNG, kein Primärknopf
-             (Mockup A0, freigegeben): Die eine Haupthandlung dieses Reiters
-             bleibt „Weiter" am Feld „Code vom Gerät" (S5, B-S5-07). */ ?>
-    <?php $apks = apk_liste(); if ($apks): ?>
-      <?php ui_karte_start(['titel' => 'NAdoku für Android', 'id' => 'k-android']); ?>
-        <p class="feld-hinweis">Die Handy-App zeichnet die Spur des Dienstes
-           auf und dokumentiert die Einsatzphasen — am Handy oder an einer
-           verbundenen Wear-OS-Uhr. Sie wird hier verteilt, nicht über einen
-           App-Store.</p>
-        <?php foreach ($apks as $apk): ?>
-          <?php ui_zeile([
-              'text'  => $apk['datei'],
-              'klein' => apk_groesse($apk['groesse'])
-                       . ($apk['version'] !== null ? ' · Fassung ' . $apk['version'] : '')
-                       . ' · Stand ' . fmt_local(gmdate('Y-m-d H:i:s', $apk['stand']), 'd.m.Y'),
-              'aktionen' => '<div class="zeile-knoepfe">'
-                  . '<a class="knopf knopf-neutral" href="apk.php?d='
-                  . e(rawurlencode($apk['datei'])) . '"><span>Herunterladen</span></a>'
-                  . '</div>',
-          ]); ?>
-          <p class="feld-klein">SHA-256:
-             <code><?= e(apk_sha_lesbar($apk['sha256'])) ?></code> — wer der
-             Seite nicht traut, rechnet die Prüfsumme der heruntergeladenen
-             Datei nach.</p>
-        <?php endforeach; ?>
-        <p class="feld-klein">Beim ersten Öffnen fragt Android nach, ob
-           Installationen aus dieser Quelle erlaubt sind — das ist bei einer
-           Verteilung ohne App-Store der vorgesehene Weg.</p>
-      <?php ui_karte_ende(); ?>
+      <?php ui_karte_ende(true); ?>
     <?php endif; ?>
 
     <?php if ($newKey): ?>
@@ -3397,12 +3491,13 @@ ui_seite_start(['titel' => 'Einstellungen']);
         <p class="feld-hinweis">Beide Werte in den Einstellungen der App
            eintragen; als Server genügt die Domain.</p>
         <p class="feld-klein">Bei Garmin stehen diese Einstellungen in Garmin Connect.</p>
-        <div class="codeblock">
-          <p class="codeblock-titel">Geräte-ID</p>
-          <p class="codeblock-wert"><?= e($newKey['device_id']) ?></p>
-          <p class="codeblock-titel">API-Schlüssel</p>
-          <p class="codeblock-wert"><?= e($newKey['api_key']) ?></p>
-        </div>
+        <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Die
+                 grosse Stufe ist fuer sechs Zeichen gemacht; Geraete-ID und
+                 API-Schluessel sind 36 beziehungsweise 64 Zeichen lang und
+                 standen darin in Plakatgroesse ueber drei Zeilen — und ohne
+                 Knopf, obwohl sie zum Abtippen gedacht sind. */ ?>
+        <?= ui_codeblock_lang((string)$newKey['device_id'], 'Geräte-ID') ?>
+        <?= ui_codeblock_lang((string)$newKey['api_key'], 'API-Schlüssel') ?>
       <?php ui_karte_ende(); ?>
     <?php endif; ?>
   <?php endif; ?>
@@ -3462,4 +3557,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
   </script>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(); ?>
+<?php /* `assets/kopieren.js` gehört zum Wertekasten der kleinen Stufe
+         (`ui_codeblock_lang()`, Geräte-Reiter): Er blendet den Knopf ein und
+         kopiert. Ohne das Skript bleibt der Wert lesbar und der Knopf
+         verborgen — ein Knopf, der nichts tut, wäre schlechter als keiner. */ ?>
+<?php ui_seite_ende(['skripte' => ['assets/kopieren.js']]); ?>

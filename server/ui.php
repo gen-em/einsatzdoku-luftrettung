@@ -1801,12 +1801,28 @@ function ui_zeilenaktionen(array $o): string
     static $lfd = 0;
     $id = (string)($o['id'] ?? ('za-' . (++$lfd)));
 
-    /* Desktop: die Knöpfe. Mobil: das „⋯" und dasselbe wieder im Blatt. */
-    $m  = '<div class="zeile-knoepfe nur-ab-720">';
-    foreach ($eintraege as $e) { $m .= $knopf($e, 'knopf'); }
-    $m .= '</div>';
+    /* Desktop: die Knöpfe. Mobil: das „⋯" und dasselbe wieder im Blatt.
+     *
+     * `blatt_immer` LÄSST DIE KNOPFREIHE WEG (S8/AP6, Mockup 10, freigegeben):
+     * Dann steht der Punkte-Knopf in jeder Breite, und ab 1024 px klappt
+     * daran das Aufklappmenü auf — dasselbe Markup, das Stylesheet entscheidet.
+     *
+     * WOFÜR. Die Geräteliste trägt drei Handlungen, von denen eine
+     * unumkehrbar ist. Als Knopfreihe stünde „Entkoppeln" in Rot unmittelbar
+     * neben „Deaktivieren", und zwar in jeder Zeile — drei Knöpfe mal drei
+     * Geräte sind neun Ziele für drei Wege. Im Menü liegt die gefährliche
+     * Handlung eine Ebene tiefer, abgesetzt und rot.
+     *
+     * Es bleibt die Ausnahme: Wo die Handlungen harmlos und häufig sind
+     * (Stammdaten, Papierkorb), ist die Knopfreihe der schnellere Weg. */
+    $m = '';
+    if (empty($o['blatt_immer'])) {
+        $m .= '<div class="zeile-knoepfe nur-ab-720">';
+        foreach ($eintraege as $e) { $m .= $knopf($e, 'knopf'); }
+        $m .= '</div>';
+    }
 
-    $m .= '<div class="aktionen nur-unter-720">';
+    $m .= '<div class="aktionen' . (empty($o['blatt_immer']) ? ' nur-unter-720' : '') . '">';
     $m .= '<button type="button" class="knopf knopf-symbol" data-blatt="' . $id . '"'
         . ' aria-expanded="false" aria-controls="' . $id . '"'
         . ' title="Weitere Handlungen">' . ui_symbol('punkte', '', 'Weitere Handlungen') . '</button>';

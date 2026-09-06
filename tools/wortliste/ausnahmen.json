@@ -132,6 +132,14 @@
       "begruendung": "Der Tastenweg der Kopplung als ausdruecklicher Zusatz mit genannter Plattform (E-P2-02). Er steht getrennt vom geraetefreien Ablauf darueber, weil er nur fuer Fenix und Forerunner gilt; die Venu 3s hat weder START noch DOWN. Die Tabelle je Uhr steht im Handbuch, Abschnitt 2.0."
     },
     {
+      "id": "app-installieren-plattformen",
+      "datei": "server/einstellungen.php",
+      "von": "ui_karte_start\\(\\['titel' => 'App installieren'",
+      "bis": "ui_karte_ende\\(\\); \\?>",
+      "klasse": "G",
+      "begruendung": "Die Karte „App installieren\" auf dem Geraete-Reiter (S8/AP6, Mockup 10) nennt die Plattformen, WEIL der Weg zur App je Plattform ein anderer ist: Die Uhr-App kommt aus dem Connect-IQ-Store, die Handy- und Wear-OS-App aus dem Play Store, und das APK ist der Rueckfall fuer den zweiten Fall. Ein geraetefreies „Store\" waere hier keine Neutralitaet, sondern eine Anleitung, der niemand folgen kann. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02) und `statistik-hersteller-garmin`: genannt wird die Plattform dort, wo sie die Sache IST."
+    },
+    {
       "id": "statistik-hersteller-garmin",
       "datei": "server/betrieb_statistik.php",
       "klasse": "G",
