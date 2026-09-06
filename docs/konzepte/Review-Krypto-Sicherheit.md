@@ -6,7 +6,9 @@ kommen?"* — **Auftrag:** Lesen und bewerten, nichts ändern. Dieses Dokument
 ändert keinen Code. Es ist ein Eingang für das Bedrohungsmodell des
 R17-Reviews (Rahmenplan R69, Stück 1) und kann dort aufgehen; die Befunde
 sind **nicht** in den Backlog eingetragen — das ist nach R69 die
-Freigaberunde des Auftraggebers (Abschnitt 6 macht Vorschläge).
+Freigaberunde des Auftraggebers (Abschnitt 6 macht Vorschläge). **Die
+ausgearbeiteten Vorschläge mit Optionen, Preisen und offenen Entscheidungen
+stehen seit dem 06.09.2026 in `Vorbereitung-Sicherheitspaket.md`.**
 
 **Stand:** Zweig `claude/crypto-security-review-eee2et` auf `main` vom
 05.09.2026 (Commit `0e9429e`): Web 14.2.2, Uhr 3.0.2, Android 0.13.0.
