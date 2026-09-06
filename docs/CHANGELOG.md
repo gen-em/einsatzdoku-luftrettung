@@ -139,6 +139,26 @@ Was das alles **nicht** ist: ein Beleg, dass das Symbol auf dem S24 zurück
 ist. Das sagt nur der nächste Blick auf das Gerät (Backlog Nr. 117); die
 Prüfliste dafür steht im Prüfdokument S4.
 
+**Geprüft:** Baulauf grün (5 min 19 s), Lint 0 Fehler / 14 Warnungen (Handy,
+unverändert) und 0/0 (Uhr); 249 + 71 Prüffälle ohne Fehlschlag, 14
+übersprungen (der Rundlauf); Bilderlauf 78 Bilder, alle paarweise
+verschieden, Bedienhöhe 48,0 dp an 75 von 78; `ZweierwahlBildTest` Rahmen
+48,0 dp, Hellblau 46,0 dp, Trennstrich 2 px, Schriftversatz 0,00 dp;
+`SymbolBildTest` 72,5 % bei 40 dp und 72,2 % bei 108 dp, beides im sicheren
+Kreis; Wortliste 0/0/0 über fünf Bereiche; Kontraste 24 Paare, 0 unter dem
+Ziel; Farbabgleich 0 Abweichungen. **Stufe II am Emulator** (AOSP 34, ein
+Gast-Kern, Boot 509 s): Kopplung gegen die örtliche Installation, die
+Zweierwahl in beiden Stellungen, die Zurück-Taste aus den Einstellungen, der
+Hinweis bei abgelehnten Benachrichtigungen samt Weg in die Systemeinstellung
+und sein Verschwinden nach dem Einschalten, der Punkt in der Leiste und die
+Dauermeldung mit Symbol, das Startsymbol in Startbild, Startprogramm und
+Systemseite ohne Beschnitt — neun Bilder in `docs/bilder/android-0.13.1/`.
+**Nicht belegt:** die Einblendung des Systems nach „Code kopieren" (der
+Abzug traf sie nicht) und alles, was One UI anders macht als AOSP. Der
+Emulatorlauf selbst hat vier Befunde am Werkzeug ergeben (ein Gast-Kern
+statt vier, Fehlerdialoge aus, Abzug über die Konsole, Kaltstart mit
+`-wipe-data`); sie stehen in `emulator.sh` und `android/LIESMICH.md` 7.
+
 ## [Uhr 3.0.2] — 2026-09-05
 
 ### Uhr — nach einem Blick auf die Sync-Seite ließ sich kein Dienst mehr beginnen

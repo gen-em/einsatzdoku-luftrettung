@@ -764,39 +764,68 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
     (`tail /tmp/php-server.log` → `[200]: GET /datenschutz.php`), nicht am
     Bild.
 
-  **Vierter Lauf am 05.09.2026 (0.13.1): die vier Befunde vom S24.** Boot
-  **569 s** (Kaltstart, `handy34`), Handy-APK **61 s**. Der Weg wie beim
-  dritten Lauf: örtliche Installation (`lokal_einrichten.sh`, dafür MariaDB
-  und socat nachinstalliert — beides fehlt im Container), Prüf-APK gegen
-  `http://127.0.0.1:8080/`, `adb reverse`, Kopplung über
+  **Vierter Lauf am 05./06.09.2026 (0.13.1): die vier Befunde vom S24.**
+  Drei Anläufe, und der dritte trug: Boot **509 s** (Kaltstart mit
+  `-wipe-data`, `handy34`, **ein** Gast-Kern), Handy-APK **65 s**. Der Weg
+  wie beim dritten Lauf: örtliche Installation (`lokal_einrichten.sh`, dafür
+  MariaDB und socat nachinstalliert — beides fehlt im Container), Prüf-APK
+  gegen `http://127.0.0.1:8080/`, `adb reverse`, Kopplung über
   `UPDATE pair_sessions SET user_id = 1` (der Weg der `Kopplungshilfe`).
+  Bedient und mit Bildern belegt (`docs/bilder/android-0.13.1/`):
 
-  **Was diesmal Zeit gekostet hat — und was dagegen hilft:**
+  | Bild | Was es zeigt |
+  |---|---|
+  | `02-startbild-symbol` | das adaptive Symbol auf dem Startbild von Android 12+, Marke mittig mit Luft |
+  | `03-kopplung-frage` | Kopplung gegen die örtliche Installation, `devices` mit `handy` und Modell |
+  | `04-dienst-hinweise-zweierwahl` | die Zweierwahl füllt ihre Zeile (Blau bis zur Rahmenlinie, Trennstrich, Schrift mittig); dazu der neue Hinweis „Benachrichtigungen ausgeschaltet" neben der Ortungssperre |
+  | `05-zweierwahl-rechts` | dieselbe Zeile nach dem Tipp auf „Nur aufzeichnen" |
+  | `06-meldungseinstellung-system` | wohin der Knopf führt: die Benachrichtigungsseite der App im System — und das App-Symbol dort, in Kachelgröße, ohne Beschnitt (Backlog 81) |
+  | `07-dienst-laeuft-meldungen-aus` | Dienst läuft, Freigabe abgelehnt: kein Symbol in der Leiste, und die App sagt es |
+  | `08-dienst-mit-leistensymbol` | nach dem Einschalten: der Hinweis ist fort, der Punkt steht links oben in der Leiste |
+  | `09-benachrichtigung` | die Dauermeldung aufgeklappt, mit Symbol |
+  | `10-startprogramm-symbol` | das Symbol im Startprogramm, ohne Beschnitt |
 
+  Dazu ohne Bild: die Zurück-Taste aus den Einstellungen führt zur
+  Dienstansicht (Fokus bleibt `HauptActivity`; vorher wäre die App zu),
+  „Code kopieren" ist auf dem Code-Bildschirm zu sehen (`t03` im Lauf), der
+  Dienst endet mit `[200] POST /ingest.php` und einem geschlossenen
+  Diensttag, die Trennung mit `[200] POST /pair.php` und 0 Geräten am Konto.
+  **Nicht belegt:** die Einblendung des Systems nach „Code kopieren" — der
+  Abzug traf zweimal einen ANR-Dialog und einmal den Bildschirm ohne
+  Einblendung; der Code selbst stand danach nicht nachweisbar in der Ablage,
+  weil `dumpsys clipboard` auf diesem Abbild nichts ausgibt. Der Weg ist
+  eine Zeile `ClipboardManager.setPrimaryClip`; am Gerät steht er auf der
+  Prüfliste.
+
+  **Was diesmal Zeit gekostet hat — und was seither im Werkzeug steht:**
+
+  - **`-cores 1` statt 4.** TCG rechnet einkernig; vier Gast-Prozessoren auf
+    einem Faden bekommen je ein Viertel der Zeit, und die Wachhunde des
+    Systems messen Wanduhr. Mit vier Kernen liefen `systemui` und `phone` in
+    eine **Dauerschleife aus ANRs**, in der der Eingabeverteiler keine
+    Berührung mehr zustellte (`InputDispatcher: no touchable window`) —
+    `system_server` bei 150 %, und jeder Tipp auf „Wait" stellte den
+    nächsten Dialog, weil der Dialog selbst ein Systemfenster im selben Stau
+    ist. Mit einem Kern: `system_server` bei 20 %, keine Schleife.
   - **Nie einen Gradle-Lauf neben dem Emulator.** Der neue Prüffall lief
-    zweimal parallel zur Stufe II, und jedes Mal stellte das System
-    „Process system isn't responding" — und zwar **dauerhaft**: Der Dialog
-    ist selbst ein Systemfenster, seine Eingabe läuft in denselben Stau, und
-    jeder Tipp auf „Wait" erzeugte den nächsten Dialog. `system_server` stand
-    danach bei 150 % und kam nicht mehr herunter; die Kopplungssitzung lief
-    währenddessen ab (zehn Minuten sind unter TCG schnell um).
-  - **Fehlerdialoge abschalten, bevor es losgeht:**
-    `adb shell settings put global hide_error_dialogs 1` — dazu die drei
-    Animationsmaßstäbe auf 0. Beides überlebt einen Neustart des Rahmenwerks.
-  - **`adb shell stop` / `adb shell start` hilft NICHT.** Das Rahmenwerk kam
-    nach 210 s zurück, die Dialoge waren fort — aber die Anzeige blieb
-    **schwarz**: `screencap` lieferte 15 197 Bytes reines Schwarz, bei
-    `mWakefulness=Awake`, auch nach Schlafen/Wecken und `dismiss-keyguard`.
-    SwiftShader hängt nach dem Neustart des Rahmenwerks nicht mehr am
-    Bildschirm. Der Weg, der trägt, ist der Kaltstart: QEMU beenden (`kill`
-    auf die PID, **nicht** `adb emu kill`, das den kaputten Zustand als
-    Abzug sichern würde) und `emulator.sh start` erneut. APK und
-    Einstellungen (auch `hide_error_dialogs`) liegen auf `/data` und bleiben.
+    zweimal parallel zur Stufe II; beide Male begann die Schleife genau dann.
+  - **Fehlerdialoge aus, Bildschirm an, bevor die App läuft:**
+    `hide_error_dialogs 1`, die drei Animationsmaßstäbe auf 0,
+    `svc power stayon true` — `emulator.sh start` setzt das jetzt selbst.
+  - **`screencap` liefert nach einigen Minuten nur noch Schwarz** (15 197
+    Bytes, bei `mWakefulness=Awake`, auch nach Schlafen/Wecken). Die
+    Emulator-Konsole (`adb emu screenrecord screenshot`) liest den
+    Bildspeicher selbst und zeigt das richtige Bild; `emulator.sh bild`
+    nimmt seither diesen Weg.
+  - **`adb shell stop` / `start` hilft nicht** (Rahmenwerk nach 210 s zurück,
+    Anzeige schwarz), und ein harter `kill` hinterlässt ein `/data`, das beim
+    nächsten Start in einer Schleife hängt (`netd` findet
+    `libnetd_resolv.so` nicht, Zygote startet endlos neu). Der Weg, der
+    trägt: `kill` auf die QEMU-PID und Neustart mit **`-wipe-data`** — APK
+    und Einstellungen sind danach fort und in zwei Minuten wieder da.
   - `mCurrentFocus` steht zweimal in `dumpsys window` (ein Eintrag je
-    Anzeige); `emulator.sh bild` liest die erste Zeile und verweigert den
-    Abzug, obwohl die App den Fokus hat. Für diesen Lauf ein eigener Abzug
-    mit Wiederholung; das Skript bleibt, wie es ist — der Befund gehört hier
-    hinein, nicht in eine dritte Fassung des Werkzeugs.
+    Anzeige); `emulator.sh bild` las nur die erste Zeile und verweigerte den
+    Abzug, obwohl die App den Fokus hatte. Es prüft jetzt beide.
 
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf

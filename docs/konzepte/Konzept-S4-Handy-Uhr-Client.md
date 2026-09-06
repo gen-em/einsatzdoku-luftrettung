@@ -216,10 +216,18 @@ denselben Anteil nach. Die Gegenprobe am S24 bleibt.
 
 Belegt: Baulauf grün, Lint 0/0 Fehler, 249 + 71 Prüffälle ohne Fehlschlag
 (14 übersprungen, der Rundlauf), Bilderlauf 78 Bilder paarweise verschieden,
-Wortliste über alle fünf Bereiche, Kontraste unverändert — und Stufe II am
-Emulator, siehe Prüfstand in `android/LIESMICH.md` 7. **Nicht belegt**, und
-das steht zuerst: dass das Symbol auf dem S24 zurück ist. Die Prüfliste dafür
-steht im Prüfdokument, Abschnitt 4.
+Wortliste über alle fünf Bereiche, Kontraste unverändert — und **Stufe II am
+Emulator** (neun Bilder, `docs/bilder/android-0.13.1/`): Kopplung gegen die
+örtliche Installation, die Zweierwahl in beiden Stellungen, die Zurück-Taste
+aus den Einstellungen, der Hinweis bei abgelehnten Benachrichtigungen samt
+Weg in die Systemeinstellung und seinem Verschwinden danach, der Punkt in
+der Leiste, die Dauermeldung mit Symbol, das Startsymbol ohne Beschnitt in
+Startbild, Startprogramm und Systemseite. Der Lauf hat vier Befunde am
+Werkzeug ergeben — ein Gast-Kern statt vier, Fehlerdialoge aus, Abzug über
+die Konsole, Kaltstart mit `-wipe-data` —, alle in `emulator.sh` und
+`android/LIESMICH.md` 7 eingearbeitet. **Nicht belegt**, und das steht
+zuerst: dass das Symbol auf dem S24 zurück ist. Die Prüfliste dafür steht im
+Prüfdokument, Abschnitt 4.
 
 ---
 

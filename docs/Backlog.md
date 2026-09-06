@@ -1294,9 +1294,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Tracking nun nichts mehr angezeigt links oben. Zuvor war nur das Logo
     nicht passend, jetzt ist nichts mehr da."*
     **Nicht nachstellbar** im Container: Der Emulator führt AOSP und zeigt
-    den Punkt; das S24 führt One UI. Am Code hat sich das Meldungssymbol seit
-    0.3.0 nicht geändert, und keine Fassung seit 0.7.7 hat am Weg der
-    Dauermeldung etwas verändert.
+    den Punkt (belegt am 06.09.2026,
+    `docs/bilder/android-0.13.1/08-dienst-mit-leistensymbol.png`); das S24
+    führt One UI. Am Code hat sich das Meldungssymbol seit 0.3.0 nicht
+    geändert, und keine Fassung seit 0.7.7 hat am Weg der Dauermeldung etwas
+    verändert.
     **Getan mit Android 0.13.1:** das Themenattribut
     `?android:attr/colorControlNormal` am Meldungssymbol ausgetragen — es
     wird von der Systemoberfläche in deren Prozess aufgelöst und leistete

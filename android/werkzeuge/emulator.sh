@@ -91,9 +91,15 @@ start() {
   # -gpu swiftshader_indirect: die Grafik rechnet ebenfalls die CPU.
   # KEIN -no-snapshot: Der Erstboot kostet unter TCG Minuten, der zweite Start
   # aus dem Abzug Sekunden. `aus` (adb emu kill) legt den Abzug an.
+  # -cores 1, NICHT 4 (05.09.2026, vierter Lauf). TCG rechnet einkernig; vier
+  # Gast-Prozessoren auf einem Faden bekommen je ein Viertel der Zeit, und
+  # die Wachhunde des Systems messen Wanduhr: systemui und phone liefen in
+  # eine Dauerschleife aus ANRs, in der der Eingabeverteiler keine Beruehrung
+  # mehr zustellte ("no touchable window"). Mit einem Kern: Boot 509 s,
+  # system_server bei 20 %, keine ANR-Schleife.
   nohup "$EMU" -avd "$avd" -no-window -no-audio -no-boot-anim \
       -accel off -gpu swiftshader_indirect -memory 6144 -partition-size 4096 \
-      -cores 4 \
+      -cores 1 \
       >"${TMPDIR:-/tmp}/emu-$avd.log" 2>&1 &
   sag "gestartet: $avd (Protokoll ${TMPDIR:-/tmp}/emu-$avd.log)"
   "$ADB" start-server >/dev/null 2>&1 || true
@@ -101,6 +107,14 @@ start() {
     sleep 15
   done
   sag "Boot fertig nach $(( $(date +%s) - beginn )) s"
+  # Fehlerdialoge aus und Bildschirm an, BEVOR die App laeuft: Ein
+  # ANR-Dialog ist selbst ein Systemfenster, seine Eingabe steht im selben
+  # Stau, und jeder Tipp auf "Wait" stellte den naechsten (05.09.2026).
+  "$ADB" shell settings put global hide_error_dialogs 1 >/dev/null
+  "$ADB" shell settings put global window_animation_scale 0 >/dev/null
+  "$ADB" shell settings put global transition_animation_scale 0 >/dev/null
+  "$ADB" shell settings put global animator_duration_scale 0 >/dev/null
+  "$ADB" shell svc power stayon true >/dev/null
 }
 
 legen() {
@@ -125,13 +139,20 @@ PAKET="${PAKET:-org.genem.nadoku.pruef}"
 bild() {
   mkdir -p "$ZIEL"
   local fokus
-  fokus=$("$ADB" shell 'dumpsys window windows 2>/dev/null | grep mCurrentFocus' | tr -d '\r')
+  # `mCurrentFocus` steht ZWEIMAL in der Ausgabe (ein Eintrag je Anzeige);
+  # beide Zeilen zusammen pruefen, sonst verweigert der Abzug, obwohl die App
+  # den Fokus hat (05.09.2026).
+  fokus=$("$ADB" shell 'dumpsys window windows 2>/dev/null | grep mCurrentFocus' | tr -d '\r' | tr '\n' ' ')
   case "$fokus" in
     *"$PAKET"*) : ;;
     *) sag "KEIN ABZUG fuer '$1' -- im Vordergrund steht:${fokus#*mCurrentFocus=}"
        return 1 ;;
   esac
-  "$ADB" exec-out screencap -p > "$ZIEL/$1.png"
+  # UEBER DIE EMULATOR-KONSOLE, nicht ueber screencap (05.09.2026): Nach
+  # einigen Minuten lieferte `screencap` (SurfaceFlinger) nur noch reines
+  # Schwarz -- 15 197 Bytes bei mWakefulness=Awake --, waehrend die Konsole
+  # den Bildspeicher selbst liest und das richtige Bild zeigt.
+  "$ADB" emu screenrecord screenshot "$ZIEL/$1.png" >/dev/null
   sag "abgezogen: $ZIEL/$1.png ($(stat -c%s "$ZIEL/$1.png") Bytes)"
 }
 

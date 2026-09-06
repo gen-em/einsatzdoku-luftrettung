@@ -305,8 +305,9 @@ Scheiterns-Merkmal je Punkt. Die Reihenfolge, die ich empfehle:
 6. Zwölf Stunden Dauerlauf.
 
 **Nachtrag 05.09.2026 — Android 0.13.1, die vier Befunde vom S24.** Alle
-vier sind am Code behoben oder beantwortet und am Emulator (AOSP) belegt;
-was zählt, ist der zweite Blick auf das Gerät. Je Punkt: Bedienweg,
+vier sind am Code behoben oder beantwortet und am Emulator (AOSP 34) belegt
+— Bilder in `docs/bilder/android-0.13.1/`, Zahlen in `android/LIESMICH.md`
+7; was zählt, ist der zweite Blick auf das Gerät. Je Punkt: Bedienweg,
 Erwartung, woran ein Scheitern zu erkennen ist.
 
 - [ ] **Zweierwahl.** Dienstansicht vor dem Dienst, „Nur aufzeichnen"
