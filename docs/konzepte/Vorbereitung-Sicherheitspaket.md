@@ -6,8 +6,10 @@ Preisen und den offenen Entscheidungen, aus der nach dem Go des
 Auftraggebers ein Konzept nach K1 entsteht. **Anlass:** Frage vom
 06.09.2026 zu `Review-Krypto-Sicherheit.md`: *„Kann man diese Punkte
 angehen? Oder sind sie schon adressiert? Was sind deine Vorschläge?"*
-**Status:** Vorschläge, nichts umgesetzt, nichts im Backlog. **Stand:**
-06.09.2026, Web 14.2.2, Uhr 3.0.2, Android 0.13.0.
+**Status:** Vorschläge, nichts umgesetzt, nichts im Backlog. **Vier
+Entscheidungen sind am 06.09.2026 gefallen (Abschnitt 6a), sechs stehen
+offen (Abschnitt 6b).** **Stand:** 06.09.2026, Web 14.2.2, Uhr 3.0.2,
+Android 0.13.0.
 
 **Bezeichner:** Die Vorschläge heißen **SP-1 bis SP-14**, die offenen
 Entscheidungen **F-SP-1 bis F-SP-10**. Befundnummern (K-1 …, AN-1 …) sind
@@ -146,6 +148,64 @@ gedruckt). Schützt auch gegen B, kostet aber jede NutzerIn auf jedem neuen
 Gerät ein Abtippen und macht den Schlüsselverlust noch wahrscheinlicher —
 R37.11 nennt ihn schon heute Support-Thema Nr. 1.
 
+#### Archivierung des Server-Anteils — Antwort auf die Rückfrage zu F-SP-2
+
+Die Rückfrage vom 06.09.2026: *Kann die BetreiberIn den Schlüssel
+sicherheitshalber archivieren, damit ein Problem mit `config.php` nicht
+gleichbedeutend ist mit „alle müssen das Passwort zurücksetzen"?* — **Ja,
+und das ist nicht Kür, sondern Teil des Entwurfs.** Der Serverschlüssel
+hat das Muster schon: `serverkrypto_lib.php:30-35` verlangt ein
+**Wiederanlaufpaket** aus `config.php`, Serverschlüssel und Zugang zum
+Backup-Ziel, getrennt aufbewahrt; das Runbook in `Technik.md` sagt es
+noch einmal. Der Server-Anteil kommt in dasselbe Paket. Vier Stücke machen
+daraus etwas, das im Ernstfall wirklich trägt:
+
+1. **Das Schlüsselblatt.** Die Wartungsseite druckt auf Knopfdruck ein
+   Blatt mit Serverschlüssel und Server-Anteil (64 Hexzeichen in
+   Vierergruppen — abtippbar, kein QR-Fremdbestandteil nötig), je mit
+   **Kennung** (die ersten acht Zeichen von SHA-256 des Werts) und Datum.
+   Zwei Ausdrucke, zwei Orte — Betriebsakte (R72 sieht sie ausdrücklich
+   außerhalb des Repositoriums vor) und ein Passwortmanager der
+   Betreiberin. Das Blatt ist das Archiv; es entsteht einmal bei der
+   Einrichtung und noch einmal nach jeder Rotation.
+2. **Die Kennung im Betrieb.** Beim ersten Gebrauch legt der Server die
+   Kennung des Server-Anteils in `app_state` ab. Jede angemeldete Seite
+   vergleicht sie mit dem, was in `config.php` steht. Weicht sie ab, gibt
+   `ui_krypto_bootstrap()` den Wert **nicht** heraus, und die Seite sagt
+   „Der Server-Anteil der Verschlüsselung fehlt oder ist nicht der, mit dem
+   die Hüllen gebaut wurden (Kennung `ab12cd34` erwartet) — Administration
+   verständigen" statt „Passwort falsch". Die Wartungsseite meldet dasselbe
+   mit der erwarteten Kennung, sodass die Betreiberin am Schlüsselblatt
+   sofort sieht, welches der richtige Wert ist. Dasselbe Muster wie
+   `sk_oeffnen()` → `null` → „mit einem anderen Serverschlüssel
+   gespeichert".
+3. **Der Nachtragen-Weg.** Adminbereich → „Serverschlüssel nachtragen"
+   (`Technik.md` Runbook, `serverkrypto_lib.php:245`, schreibt
+   `config.neu.php`) bekommt ein zweites Feld. Einfügen vom Blatt, Kennung
+   wird geprüft, erst dann geschrieben. Ein falsch abgetippter Wert kommt
+   nie in `config.php`.
+4. **Rotation, von Anfang an vorgesehen.** Ist `config.php` **bekannt
+   geworden** (nicht verloren), wird der Anteil gewechselt: neuer Wert als
+   `kdf_pepper`, alter als `kdf_pepper_alt`; die stille Umstellung hüllt
+   jedes Konto beim nächsten Anmelden um (der Browser bekommt beide
+   Werte, öffnet mit dem alten, hüllt mit dem neuen — derselbe Weg wie bei
+   der Rundenanhebung); die Wartungsseite zählt, wer noch auf dem alten
+   steht; danach fällt `kdf_pepper_alt` weg. Der Wiederherstellungs-
+   schlüssel ist von alledem unberührt.
+
+**Was bleibt, wenn alles schiefgeht** — `config.php` weg **und** beide
+Blätter weg: Kein Datenverlust. `pat_wrap_rc` hängt nicht am Server-Anteil;
+jede NutzerIn setzt über den Wiederherstellungsschlüssel ein neues Passwort,
+und die neue Hülle entsteht unter einem neuen Anteil. Das ist der Fall, den
+die Rückfrage meint, und er ist mit dem Schlüsselblatt ein Fehler zweiter
+Ordnung: Er braucht drei verlorene Dinge an drei Orten.
+
+**Was nicht ins Archiv gehört:** Der Anteil steht **nicht** in der
+Datenbank und **nicht** im Komplettbackup (das ist mit dem Serverschlüssel
+aus derselben `config.php` versiegelt — ein Backup, das den Schlüssel zu
+sich selbst enthält, wäre keines; dieselbe Regel gilt heute schon für den
+Serverschlüssel, `serverkrypto_lib.php:23-29`).
+
 ### SP-3b — Argon2id (P6-Frage)
 
 WebCrypto kennt Argon2 nicht. Es bräuchte eine vendorierte WASM-Bibliothek
@@ -172,6 +232,13 @@ Entscheidung nach SP-3.
    bekommt `environment: produktion`, und jeder Lauf wartet auf ein Ja.
 4. FTP-Zugangsdaten beim Hoster rotieren, sobald das steht, damit kein
    älterer Ort sie noch kennt.
+
+**Das Repositorium ist öffentlich** (`gen-em/einsatzdoku-luftrettung`,
+geprüft am 06.09.2026): Branch-Schutz, Regelsätze und Umgebungs-Freigaben
+stehen damit ohne bezahlten Plan zur Verfügung — Punkt 1 bis 3 sind
+Häkchen, keine Beschaffung. Und weil der Code öffentlich ist, kennt ein
+Angreifer jede Zeile; die kleinen Befunde K-8 bis K-11 sind damit nicht
+theoretisch, sondern nachlesbar.
 
 **Preis:** eine halbe Stunde, kein Deploy. **Wirkung:** Angreifer C
 braucht ab dann zwei Konten oder den Hoster.
@@ -432,7 +499,7 @@ Eine Android-Versionsstufe Neben; Emulator-Lauf mit Bildern nach
 | 0 | SP-4 GitHub-Zuarbeit; SP-12 (a) Datenschutztext | Zuarbeit, kein Code | — |
 | 1 | **Sofortpaket Web:** SP-1, SP-2, SP-8, SP-12 (a) Hinweis und Schalter, SP-13 | Kleinauslieferung, Muster R42, Prüfdokument | Web Neben |
 | 2 | **Sofortpaket Android:** SP-14 | Kleinauslieferung | Android Neben |
-| 3 | **Zwischenpaket „Sicherheit":** SP-3 Pepper, SP-10 Adminpakete, SP-6 Integritätswache | Konzept nach K1 (Fable), Umsetzung Opus, Prüfdokument | Web Haupt |
+| 3 | **Zwischenpaket „Sicherheit":** SP-3 Server-Anteil samt Schlüsselblatt und Kennung, SP-10 Adminpakete; SP-6 Integritätswache je nach F-SP-9 schon in Schritt 1 | Konzept nach K1 (Fable), Umsetzung Opus, Prüfdokument | Web Haupt |
 | 4 | **P5** nimmt SP-5 (CSP-Bauplan) und SP-11 (Zweitfaktor für alle) als Präzisierung von Backlog 8 und R38 auf | im P5-Konzept | — |
 | 5 | **P6-Bedrohungsmodell** entscheidet SP-3b, SP-7, Passkeys/PRF, F-SP-7 | Review R17 Stück 1 | — |
 | 6 | **Weg B** (SP-9) als eigene Phase | Konzept nach K1 (Fable) | Web, Uhr, Android Haupt |
@@ -442,22 +509,25 @@ Hauptversionssprung und gehört **nicht** in die Backlog-Runde.
 
 ---
 
-## 6. Offene Entscheidungen — vor dem Go zu klären
+## 6a. Entschieden (06.09.2026)
 
-| Nr. | Frage | Vorschlag |
+| Nr. | Frage | Entscheidung |
 |---|---|---|
-| F-SP-1 | Sofortpaket Web (Schritt 1) freigeben — als Ganzes oder einzelne Punkte streichen? | als Ganzes; jeder Punkt ist ein eigener Commit und einzeln rücknehmbar |
-| F-SP-2 | **SP-3 Pepper: ja oder nein?** Der Preis ist die neue Rolle von `config.php` — Verlust heißt Passwort-Reset für alle über den Wiederherstellungsschlüssel | ja; er ist die eine Maßnahme, die den Datenbankabzug allein entwertet |
-| F-SP-3 | Zweitfaktor für alle Konten oder nur für Admins (R38)? | für alle anbieten, Admins Pflicht |
-| F-SP-4 | Photon: Schalter und Hinweis jetzt, Selbstbetrieb mit der Hosting-Frage in S9 — oder Adresssuche ganz abschaffen? | Schalter jetzt, Entscheidung in S9 |
-| F-SP-5 | Weg B: eigene Phase nach P6 (wie Konzept-V1) oder vorgezogen? | nach P6 — P6 braucht das Bedrohungsmodell, Weg B braucht P6 nicht |
-| F-SP-6 | Weg B: Bestand umschlüsseln (im Browser, je Konto einmal) oder Stichtag („ab hier verschlüsselt")? | Umschlüsselung anbieten, nicht erzwingen — die Spuren von gestern sind dieselbe Auskunft wie die von morgen |
-| F-SP-7 | Weg B: Reanimationsereignisse und Zielklinik mit in den Umschlag — und damit ohne serverseitige Statistik? | Reanimation ja (Behandlungsdatum), Zielklinik ja mit Zählung im Browser |
-| F-SP-8 | Darf ein Gerät Phasen eines **abgeschlossenen** Einsatzes noch ersetzen (K-14)? Heute ja — das ist auch der Nachlieferungsweg | nein für Einsätze, die im Web bearbeitet wurden (`updated_by = web` o. ä.); sonst ja |
-| F-SP-9 | Integritätswache (SP-6) — jetzt bauen oder in R67 aufgehen lassen? | jetzt; sie kostet einen Nachmittag und R67 ersetzt sie nicht |
-| F-SP-10 | Deploy-Secrets sofort in eine Umgebung mit Freigabe (SP-4.3) — auch wenn damit heute jeder Push auf `main` auf ein Ja wartet? | ja; der Autodeploy ohne Tor ist der Zustand, den R40 (2) ohnehin beenden will |
+| F-SP-1 | Sofortpaket Web und Android (Schritt 1 und 2) | **Ja, als Ganzes.** Jeder Punkt ein Commit, einzeln rücknehmbar |
+| F-SP-2 | SP-3 Server-Anteil am Datenschlüssel | **Ja**, mit der Rückfrage nach dem Archiv — beantwortet in SP-3 (Schlüsselblatt, Kennung, Nachtragen-Weg, Rotation); Verlust von `config.php` ist damit kein Reset für alle mehr, sondern ein Griff in die Betriebsakte |
+| F-SP-3 | Zweitfaktor | **Wie vorgeschlagen:** für alle Konten angeboten, für Admins Pflicht (SP-11, in P5 als Erweiterung von R38) |
+| F-SP-5 | Weg B: Zeitpunkt | **Nach P6, als eigene Phase** (Ermessen an den Bearbeiter übertragen; Begründung: P6 braucht das Bedrohungsmodell, Weg B braucht P6 nicht — und Weg C aus dem Sofortpaket nimmt dem Riss vorher den Widerspruch). Die Design-Skizze SP-9 geht in P6 Stück 1 ein |
 
----
+## 6b. Offen — vor dem Konzept zu klären
+
+| Nr. | Frage | Optionen | Vorschlag und Folge |
+|---|---|---|---|
+| F-SP-4 | **Photon:** Wie weit jetzt? | (a) Hinweis am Feld, Datenschutztext, Schalter je Installation; Vorgabe **an** — (b) wie (a), Vorgabe **aus** — (c) Adresssuche ganz abschaffen, nur Koordinaten und Karte | **(a).** Vorgabe „an" ändert für niemanden etwas und macht den Abfluss sichtbar; „aus" überraschte jede NutzerIn beim nächsten Einsatz. Selbstbetrieb bleibt die Frage von S9 PS-1 mit der Hosting-Entscheidung |
+| F-SP-6 | **Weg B, Bestand:** alte Spuren umschlüsseln oder Stichtag? | (a) Umschlüsselung im Browser anbieten, je Konto einmal, nicht erzwungen — (b) Stichtag „ab hier verschlüsselt", Altbestand bleibt Klartext — (c) Umschlüsselung erzwingen beim ersten Anmelden nach dem Update | **(a).** Die Spur von gestern ist dieselbe Auskunft wie die von morgen; erzwingen (c) hieße bei 5 000 Einsätzen Minuten Wartezeit beim Anmelden. Folge: Zwei Formate leben dauerhaft nebeneinander, beide nur über `spur_lib.php` |
+| F-SP-7 | **Weg B, Umfang:** Reanimationsereignisse und Zielklinik mit in den Umschlag? | (a) nur Spur und Phasenkoordinaten — (b) dazu Reanimation — (c) dazu Reanimation **und** Zielklinik | **(c).** Reanimation ist ein Behandlungsdatum; die Zielklinik ohne die Phasenkoordinate „Ankunft Klinik" zu lassen wäre Symbolik (Konzept-V1 5). Folge: „Reanimationen je Jahr" und „Fahrten je Klinik" zählt der Browser; der Klinik-Pin erscheint erst nach dem Entsperren — das kehrt die Entscheidung aus `mission_fields.php:354` um und muss dort begründet werden |
+| F-SP-8 | **Verlorene Uhr:** Darf ein Gerät Phasen eines Einsatzes ersetzen, der im Web bearbeitet wurde? Heute ja — `ingest.php:361` löscht und schreibt neu, das ist zugleich der Nachlieferungsweg | (a) wie heute — (b) nein, sobald `missions.edited = 1` (die Spalte gibt es, `schema.sql`; `einsatz_form.php:477` setzt sie) — (c) nie nach `final = 1` | **(b).** Die Spalte existiert, der Nachlieferungsweg bleibt für unbearbeitete Einsätze offen; (c) bräche die Nachlieferung nach Funkloch. Folge: `ingest.php` antwortet für bearbeitete Einsätze mit `ok` ohne Ersetzen (idempotent, kein Fehler auf der Uhr), `JSON-Vertrag.md` und Handbuch 12 nennen es |
+| F-SP-9 | **Integritätswache (SP-6):** jetzt oder in R67 aufgehen lassen? | (a) jetzt, als Action im selben Zweig wie das Sofortpaket — (b) mit R67 — (c) gar nicht | **(a).** Ein Nachmittag, kein Serverzugriff, und R67 ersetzt sie nicht: R67 sichert den Weg **auf** den Server, die Wache sieht, was **danach** mit ihm geschieht. Folge: eine Mail an die Betreiberin bei Abweichung; die Adresse ist Zuarbeit |
+| F-SP-10 | **Deploy-Tor jetzt (SP-4.3):** Secrets in eine Umgebung „produktion" mit Freigabe, sodass jeder Push auf `main` auf ein Ja wartet? | (a) ja, sofort — (b) erst mit dem Staging-Aufbau (R40 (2), P5-Beginn) — (c) Zwischenweg: Deploy nur noch per Handauslösung (`workflow_dispatch`), ohne Umgebung | **(a).** Das Repositorium ist öffentlich, Umgebungs-Freigaben kosten nichts; der Autodeploy ohne Tor ist der Zustand, den R40 (2) ohnehin beenden will. Folge: Der Bearbeiter pusht, die Betreiberin klickt „Freigeben" — für den heutigen Ein-Personen-Betrieb ein Klick mehr je Deploy, dafür kann ein fremdes Push-Recht nie mehr allein deployen |
 
 ## 7. Was dieses Dokument nicht ist
 
