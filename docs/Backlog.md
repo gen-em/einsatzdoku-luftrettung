@@ -1718,7 +1718,7 @@ zutreffen.
     bleibt"). Dazu das Prüfmittel, das der Punkt verlangt hat:
     **`tools/linkprobe/`** hält jede Adresse `<seite>.php?<name>=` unter
     `server/` gegen die Parameter, die die Zielseite liest — 99 Zielseiten,
-    131 Verweise, 0 unbekannte Abweichungen; gegen den Stand vor der
+    132 Verweise, 0 unbekannte Abweichungen; gegen den Stand vor der
     Behebung gefahren meldet es die eine Zeile mit Datei und Zeilennummer.
     Es hat dabei einen zweiten Fall gleicher Art gefunden, der **nicht**
     mitbehoben ist: Nr. 151.

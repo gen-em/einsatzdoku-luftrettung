@@ -95,5 +95,5 @@ Wortliste.
 Bei jeder Änderung, die einen Verweis anfasst oder einen Parameter einer Seite
 umbenennt — und im Prüflauf am Ende eines Arbeitspakets, zusammen mit
 Wortliste, Vollständigkeit und Bilderlauf (`CLAUDE.md` 6). Sie ist billig:
-ein Lauf über 99 Zielseiten und 131 Verweise dauert den Bruchteil einer
+ein Lauf über 99 Zielseiten und 132 Verweise dauert den Bruchteil einer
 Sekunde.

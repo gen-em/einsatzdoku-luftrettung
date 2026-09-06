@@ -56,7 +56,7 @@ Jede Zahl nennt, **was** sie gemessen hat (`CLAUDE.md` 6).
 | Mittel | Was es gemessen hat | Zahl |
 |---|---|---|
 | `php -l` | die vier geänderten PHP-Dateien: `server/index.php`, `server/migration_lib.php`, `server/betrieb_updates.php`, `tools/wartungsprobe/probe.php` | **0 Syntaxfehler** |
-| `tools/linkprobe/probe.py` (neu) | jede Adresse `<seite>.php?<name>=` unter `server/` — PHP **und** JavaScript, **alle** Parameter je Adresse, nicht nur der erste — gegen die `$_GET`/`$_REQUEST`/`filter_input`-Zugriffe der Zielseite | **99 Zielseiten, 131 Verweise, 0 unbekannte Abweichungen**, 10 dynamisch gelesen, 1 bekannte Abweichung mit Nummer (Nr. 151), 0 tote Zeilen |
+| `tools/linkprobe/probe.py` (neu) | jede Adresse `<seite>.php?<name>=` unter `server/` — PHP **und** JavaScript, **alle** Parameter je Adresse, nicht nur der erste — gegen die `$_GET`/`$_REQUEST`/`filter_input`-Zugriffe der Zielseite | **99 Zielseiten, 132 Verweise, 0 unbekannte Abweichungen**, 10 dynamisch gelesen, 1 bekannte Abweichung mit Nummer (Nr. 151), 0 tote Zeilen |
 | dieselbe, **Gegenprobe** gegen den Stand vor der Behebung | ob das Prüfmittel den Fehler findet, den es finden soll | **1 Abweichung**: `server/index.php:181 diensttag_zusammenfuehren.php?ziel= [FEHLT] die Seite liest: d, q` |
 | `tools/wartungsprobe/probe.php` | den Wartungsmodus wie bisher **und** neu in Teil 6 die Zählweise der Migrationen (Nr. 149) | **50 Erwartungen, 0 nicht erfüllt** (vorher 43) |
 | dieselbe, **Gegenprobe** gegen den Stand vor der Behebung | ob Teil 6 den Fehler findet | **50 Erwartungen, 4 nicht erfüllt** — 24 (Karte nennt „1 Update"), 25 (Plakette), 26 (Knopf), 27 (Meldung nach dem Klick) |
@@ -145,7 +145,7 @@ Plakette **„nicht nötig"**, der Knopf, und „Ausgeführt 42" neben
 
 ---
 
-## 2. Zwei Funde an den Prüfmitteln selbst
+## 2. Drei Funde an den Prüfmitteln selbst
 
 Beide sind erst durch die **Gegenprobe** sichtbar geworden, nicht durch den
 grünen Lauf. Sie stehen hier, weil sie die Art Fehler sind, die eine grüne
@@ -154,8 +154,20 @@ Zahl wertlos macht (`CLAUDE.md` 6).
 **Die Linkprobe las nur den ersten Parameter je Adresse.** `?t=rettungsmittel&ev=`
 sind zwei; der erste Entwurf sah nur `t`. Acht Verweise fielen so durch, und
 gemeldet worden wäre trotzdem eine runde Zahl. Behoben, bevor sie eingecheckt
-wurde — die Zahl stieg von 120 auf **131** Verweise und von 4 auf **10**
+wurde — die Zahl stieg von 120 auf 131 Verweise und von 4 auf **10**
 dynamisch gelesene.
+
+**Und sie übersah `&amp;` als Trenner.** Im Markup steht der Trenner
+maskiert: `ui.php:644` baut `zeitraum.php?y=…&amp;m=…`. Die Probe fand dort
+`y` und nicht `m` — sie hätte also einen falschen Namen an dieser Stelle nie
+gemeldet. Es ist genau eine Adresse in diesem Bestand, und `zeitraum.php`
+liest `m` tatsächlich; der Fund ist keine Abweichung, sondern eine **blinde
+Stelle des Prüfmittels**. Behoben, die Zahl stieg von 131 auf **132**.
+
+Beide Male dasselbe Muster, und es ist das Muster, vor dem `CLAUDE.md` 6
+warnt: Das Werkzeug meldete eine grüne Zahl, ohne zu sagen, worüber sie
+gerechnet war. Erst die Frage „**was** hast du gemessen?" hat die Lücken
+gezeigt.
 
 **Die Erwartung „der Knopf ist da" war grün, obwohl kein Knopf da war.** Sie
 suchte den Wortlaut „Ausstehende ausführen" — und der steht auf derselben

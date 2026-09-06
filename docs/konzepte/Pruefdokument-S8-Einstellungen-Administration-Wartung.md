@@ -86,7 +86,7 @@ schon gezeigt hat.
 **Behoben mit Web 15.5.2**, und die Lücke ist mit einem Prüfmittel
 geschlossen: **`tools/linkprobe/`** hält jede Adresse `<seite>.php?<name>=`
 unter `server/` gegen die Parameter, die die Zielseite tatsächlich liest —
-99 Zielseiten, 131 Verweise, 0 unbekannte Abweichungen. Es hat an seinem
+99 Zielseiten, 132 Verweise, 0 unbekannte Abweichungen. Es hat an seinem
 ersten Tag einen zweiten Fall gleicher Art gefunden (Backlog Nr. 151).
 
 ---

@@ -358,7 +358,7 @@ Daten erst nach Server-Bestätigung.
 │   ├── linkprobe/         hält jede Adresse `<seite>.php?<name>=` unter
 │   │                      `server/` (PHP und JavaScript) gegen die Parameter,
 │   │                      die die Zielseite tatsächlich liest — 99 Zielseiten,
-│   │                      131 Verweise. Entstanden aus Backlog Nr. 148: Der
+│   │                      132 Verweise. Entstanden aus Backlog Nr. 148: Der
 │   │                      Bilderlauf fotografiert Warnungen und klickt keine
 │   │                      Knöpfe. Bekannte, noch nicht behobene Abweichungen
 │   │                      stehen mit Backlog-Nummer in `ausnahmen.md`; eine

@@ -13,12 +13,13 @@ Genau so ist Backlog Nr. 148 entstanden: Die Ueberschneidungswarnung der
 Startseite verwies auf `diensttag_zusammenfuehren.php?ziel=`, die Seite liest
 `$_GET['d']`. Ergebnis war eine 404-Seite — und zwar in genau dem Fall, fuer
 den die Warnung gebaut ist. Zwei andere Verweise auf dieselbe Seite, keine
-zwanzig Zeilen entfernt, benutzten `?d=` richtig.
+vierzig Zeilen entfernt, benutzten `?d=` richtig.
 
-WAS SIE MISST. Alle Zeichenketten der Form `<seite>.php?<name>=` in `server/`
+WAS SIE MISST. Alle Zeichenketten der Form `<seite>.php?…` in `server/`
 (PHP und JavaScript, auch in zusammengesetzten Adressen), gehalten gegen die
 Parameter, die die Zielseite tatsaechlich liest: `$_GET[…]`, `$_REQUEST[…]`,
-`filter_input(INPUT_GET, …)`. Drei Ergebnisse je Fund:
+`filter_input(INPUT_GET, …)`. JEDER Parameter der Adresse, nicht nur der
+erste, und `&amp;` gilt als Trenner wie `&`. Drei Ergebnisse je Fund:
 
   FEHLT      die Zielseite liest diesen Namen nicht — ein Befund
   ZIEL WEG   die Zieldatei gibt es nicht — ein Befund
@@ -28,10 +29,11 @@ Parameter, die die Zielseite tatsaechlich liest: `$_GET[…]`, `$_REQUEST[…]`,
 
 WAS SIE NICHT KANN, und warum das kein Mangel ist:
 
-  - Ein Parametername, der zur Laufzeit entsteht (`'?' . $feld . '='`), taucht
-    hier nicht auf. Solche Adressen gibt es in diesem Bestand nicht; kaeme
-    eine dazu, faende die Probe sie nicht, und das waere zu sagen statt zu
-    verschweigen.
+  - Ein Verweis, dessen ZIEL erst zur Laufzeit entsteht, taucht hier nicht
+    auf. Es gibt einen: `admin_stammdaten.php:571` baut
+    `$seite . '&ev=' . $vid`. Von Hand nachgesehen und richtig — aber die
+    Probe koennte es nicht sagen, und das steht hier statt in einer
+    Ausnahmeliste, die es verschwinden liesse.
   - Sie prueft NAMEN, nicht WERTE. Ein `?d=<Kalendertag>` an einer Seite, die
     unter `d` eine Kennung erwartet, ist fuer sie in Ordnung — er ist es
     nicht. Das ist die Grenze eines statischen Abgleichs und steht so in
@@ -66,9 +68,12 @@ FREMD = ('vendor', 'fonts', 'demo')
 # Der erste Entwurf las nur den ERSTEN Parameter und uebersah damit jedes
 # `&name=` — in diesem Bestand allein acht Stueck. Ein Pruefmittel, das die
 # Haelfte misst und die ganze Zahl meldet, ist schlimmer als keines.
-VERWEIS = re.compile(r"""(['"])([A-Za-z0-9_./-]+\.php)\?([^'"]*)\1?""")
-# Ein Parametername steht am Anfang des Abfrageteils oder hinter einem `&`.
-PARAMETER = re.compile(r"""(?:^|&)([A-Za-z0-9_]+)=""")
+VERWEIS = re.compile(r"""['"]([A-Za-z0-9_./-]+\.php)\?([^'"]*)""")
+# Ein Parametername steht am Anfang des Abfrageteils oder hinter einem
+# Trenner. `&amp;` gehoert dazu: Im Markup steht der Trenner maskiert
+# (`zeitraum.php?y=…&amp;m=…`, ui.php), und ohne diesen Zweig fiele jeder
+# zweite Parameter einer solchen Adresse still durch.
+PARAMETER = re.compile(r"""(?:^|&amp;|&)([A-Za-z0-9_]+)=""")
 
 # Was eine Seite liest. Vier Formen, damit keine still durchrutscht.
 LIEST = (
@@ -156,9 +161,9 @@ def pruefen(ausfuehrlich=False):
             if gestutzt.startswith(('*', '//', '#')):
                 continue
             for treffer in VERWEIS.finditer(zeile):
-                ziel = treffer.group(2)
+                ziel = treffer.group(1)
                 rel  = ziel.lstrip('./')
-                for name in PARAMETER.findall(treffer.group(3)):
+                for name in PARAMETER.findall(treffer.group(2)):
                     gezaehlt += 1
                     schluessel = rel + '?' + name + '='
                     if schluessel in aus:

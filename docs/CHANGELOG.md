@@ -39,10 +39,19 @@ vierzig Zeilen entfernt, benutzten `?d=` richtig. Behoben mit einer Zeile.
 **Neu dazu: `tools/linkprobe/`.** Es hält jede Zeichenkette
 `<seite>.php?<name>=` unter `server/` — in PHP und JavaScript — gegen die
 Parameter, die die Zielseite tatsächlich liest. Gemessen: **99 Zielseiten,
-131 Verweise, 0 unbekannte Abweichungen**, dazu 10 Verweise auf Seiten, die
+132 Verweise, 0 unbekannte Abweichungen**, dazu 10 Verweise auf Seiten, die
 ihre Parameter über eine Variable lesen und damit statisch nicht entscheidbar
 sind. Gegen den Stand vor der Behebung gefahren, meldet es die eine Zeile mit
 Datei und Zeilennummer.
+
+Es hat dabei **zwei blinde Stellen bei sich selbst** gefunden, und zwar nicht
+im grünen Lauf, sondern erst auf die Frage, worüber die Zahl gerechnet war:
+Der erste Entwurf las nur den **ersten** Parameter je Adresse
+(`?t=rettungsmittel&ev=` sind zwei) und übersah `&amp;` als Trenner
+(`zeitraum.php?y=…&amp;m=…` im Markup). Beides behoben, bevor das Werkzeug
+eingecheckt wurde; die Zahl stieg dabei von 120 über 131 auf 132 Verweise.
+Ein Prüfmittel, das die Hälfte misst und die ganze Zahl meldet, ist
+schlimmer als keines.
 
 Zwei Dinge daran sind absichtlich so: Das Werkzeug prüft **Namen, nicht
 Werte** — ein `?d=<Datum>` an einer Seite, die dort eine Kennung erwartet,
