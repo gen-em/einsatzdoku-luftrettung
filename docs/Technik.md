@@ -349,7 +349,7 @@ Daten erst nach Server-Bestätigung.
 │   ├── wartungsprobe/     prüft den Wartungsmodus über ECHTES HTTP (S5 Paket
 │   │                      W): was gesperrt wird, was offen bleibt, Schalten
 │   │                      per POST, kaputte Schalterdatei, Antwortzeit —
-│   │                      40 Erwartungen. **Legt den Schalter selbst um** und
+│   │                      43 Erwartungen. **Legt den Schalter selbst um** und
 │   │                      räumt ihn im finally ab; nicht auf einer
 │   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
 │   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
@@ -508,7 +508,7 @@ Daten erst nach Server-Bestätigung.
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
@@ -2494,7 +2494,7 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 
 | Job | täglich? | was er tut |
 |---|---|---|
-| `aufraeumen` | ja, höchstens 1×/Kalendertag | verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Papierkorb, Passwort-Tokens, Erinnerung an die Administration |
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | verfallene Kopplungssitzungen, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung |
 | `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
 | `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
@@ -5110,6 +5110,16 @@ und liefert nach. Die sieben Schritte:
    Fassung in der Fußzeile ist die neue.
 7. Uhr und Handy synchronisieren beim nächsten Kontakt von selbst. Nichts
    ist verloren gegangen; die Geräte haben gepuffert.
+8. **Betrieb → Status aufrufen** (`betrieb_status.php`) — die Prüfstelle nach
+   jedem Deploy (S8/AP4). Vier Karten, je Sache eine Zeile mit Plakette;
+   erwartet wird die Meldung **„Alles läuft"**. Was hier auffällt und
+   anderswo nicht: ein Job, der seit dem Update scheitert, eine
+   Schlüsselableitung, mit der sich Konten nicht mehr anmelden können, ein
+   Serverschlüssel, den der Deploy nicht mitgebracht hat, eine Ablage, die
+   nicht beschreibbar ist. Die Seite **ändert nichts** — jede Zeile führt
+   dorthin, wo sich etwas ändern lässt. Blau heißt in Ordnung, orange
+   „arbeitet, braucht Aufmerksamkeit", rot „arbeitet nicht". Steht dort eine
+   Zahl, ist der Deploy noch nicht fertig.
 
 **Was währenddessen erreichbar bleibt** (E-S5W-04): die fünf Betriebsseiten
 `betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`,
@@ -5129,11 +5139,18 @@ entsperrtem Inhaltsschlüssel herumliegen, und keine Anmeldung soll
 
 **Der Wartungsmodus lässt sich nicht vergessen — theoretisch.** Es gibt kein
 automatisches Ausschalten und keine Zeitsteuerung (E-S5W-05). Auffallen kann
-ein stehengebliebener Wartungsmodus nur auf `betrieb_updates.php` und
-`login.php`; auf
-beiden steht dann oben ein oranger Balken mit Zeitpunkt und Konto. Alles
-andere antwortet mit 503, und ein 503 sagt nicht, dass es seit drei Tagen
-kommt.
+ein stehengebliebener Wartungsmodus nur dort, wo `wartung_balken()` steht: auf
+den **fünf Betriebsseiten** und auf `login.php`. Dort steht dann oben ein
+oranger Balken mit Zeitpunkt und Konto. Alles andere antwortet mit 503, und
+ein 503 sagt nicht, dass es seit drei Tagen kommt.
+
+> **Bis Web 15.5.1 fehlte der Balken auf `betrieb_statistik.php`** — der
+> einzigen der fünf Ausnahmeseiten ohne ihn, und ausgerechnet der, auf der
+> man am längsten liest. Gefunden beim Nachrechnen für das Handbuch (S8/AP8),
+> nicht von einem Prüfmittel. Die Regel lautet seither ohne Ausnahme: **Wer
+> in `WARTUNG_AUSNAHMEN` steht, zeigt den Balken.** Gemessen bei
+> eingeschaltetem Wartungsmodus: fünf Seiten mit 200 und Balken, neun weitere
+> Seiten mit 503.
 
 **Der Schalter ist eine Datei.** `server/wartung.lock`, JSON mit `seit` und
 `von`. Wer keinen Browserzugang mehr hat, legt sie per SSH an oder löscht
@@ -5159,7 +5176,7 @@ für das sie da ist.
 (neben `db.php`)? (2) Ist die aufgerufene Seite eine der elf Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/wartungsprobe/probe.php` (40 Erwartungen).
+`php tools/wartungsprobe/probe.php` (43 Erwartungen).
 
 **Demo-Konto einrichten (einmalig):** Fixture erzeugen —
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der
@@ -5460,7 +5477,7 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
    Anwendungsverzeichnis; deren Kennung eintragen, *Auspacken und prüfen*,
    dann *Einspielen* — so oft, bis 100 % erreicht sind. Jeder Durchgang macht
    dort weiter, wo der vorige aufhörte.
-6. **Anmelden** — mit dem Administrationskonto aus dem Backup; die
+6. **Anmelden** — mit einem verwaltenden Konto aus dem Backup; die
    Passwörter sind dieselben wie vorher.
 7. **Betrieb → Updates aufrufen** und den Migrationslauf ausführen.
    Nicht optional, wenn das Backup aus einer älteren Fassung stammt — die
@@ -5663,7 +5680,7 @@ sie durchnummeriert; Verweise aus Code und Dokumentation nennen die Nummer
 
 ## Konto-Backups (A8, seit Web 5.9.0; Name seit Web 15.2.0, E-S8-06)
 
-**Zweck.** Administration soll Konten sichern und wiederherstellen können, ohne
+**Zweck.** Die Verwaltung soll Konten sichern und wiederherstellen können, ohne
 Einblick in die Daten zu bekommen. Der Serverteil war im Kern vorhanden:
 `edbak_build()` liefert das vollständige Datenpaket und behält `pat_blob` als
 Chiffretext, `edbak_restore()` übernimmt ihn unverändert.
@@ -5936,7 +5953,7 @@ Klick der älteste — die Reihenfolge sorgt selbst dafür, dass wiederholtes
 Klicken konvergiert. Gemessen: 222 ms je Konto mit 82 Einsätzen, 7 ms für ein
 leeres.
 
-### Die wöchentliche Erinnerung an die Administration (seit Web 9.10.0)
+### Die wöchentliche Erinnerung an die Verwaltung (seit Web 9.10.0)
 
 **Es gibt keinen Cron.** Einziger Zeitgeber ist `run_cleanup_if_due()`
 (`db.php`), der huckepack auf der ersten Anfrage des Tages läuft — aus

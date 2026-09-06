@@ -37,7 +37,7 @@ Seit S8/AP2 liegt der Schalter auf **Betrieb → Updates**, nicht mehr auf
 ist seit S8/AP3 eine **302** auf Betrieb → Updates; Fall 7 prüft, dass die
 alte Adresse im Wartungsmodus weiterleitet statt 503 zu antworten.
 
-## Was sie prüft — 42 Erwartungen in sechs Teilen
+## Was sie prüft — 43 Erwartungen in sechs Teilen
 
 | Teil | Fälle (Nummern aus Konzept 6.1) |
 |---|---|
@@ -48,7 +48,7 @@ alte Adresse im Wartungsmodus weiterleitet statt 503 zu antworten.
 | 4 Kommandozeile und Regeln | `php update.php` läuft im Wartungsmodus (16, Notausgang) · die Ausnahmeliste ist **genau** die aus E-S5W-04 plus die fünf Betriebsseiten aus S8/AP2 und AP4 — elf Einträge (17) · `login.php` liest `role`, prüft es seit S8/AP1 über `rolle_darf_verwalten()` und verwirft im Wartungsmodus die Sitzung ohne Verwaltungsrecht, und zwar **erst nach** `rate_erfolg` (18, E-S5W-09) |
 | 5 die Seite | Stylesheet verlinkt, **kein Skript**, beide Sätze da (19) · das Logo wirft in 20 Aufrufen beide Standardlogos (20) |
 
-**Die Zahl, die zählt, steht in der letzten Zeile:** `-> 42 Erwartungen, 0
+**Die Zahl, die zählt, steht in der letzten Zeile:** `-> 43 Erwartungen, 0
 nicht erfuellt`.
 
 **Das verwaltende Konto der Probe trägt seit S8/AP2 die Rolle `betreiberin`**,

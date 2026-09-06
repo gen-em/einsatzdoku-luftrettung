@@ -280,6 +280,15 @@ ui_seite_start(['titel' => 'Statistik']);
                . '<strong>ohne Demo-Konto</strong> · rein lesend',
   ]); ?>
 
+  <?php /* DER WARTUNGSBALKEN GEHOERT AUF JEDE SEITE, DIE IM WARTUNGSMODUS
+           NOCH ANTWORTET (S8/AP8). Diese Seite steht in
+           `WARTUNG_AUSNAHMEN`, trug den Balken aber als einzige der fuenf
+           nicht — eine BetreiberIn konnte hier arbeiten, waehrend die Anlage
+           fuer alle anderen geschlossen war, ohne es zu sehen. Der Balken ist
+           die einzige Stelle, an der ein stehengebliebener Wartungsmodus
+           auffaellt (E-S5W-05); eine Luecke darin ist keine Kleinigkeit. */ ?>
+  <?= wartung_balken() ?>
+
   <div class="kennzahl-raster kennzahl-raster-4">
     <?= ui_kennzahl(['wert' => stat_zahl($kontenZahl), 'label' => 'Konten',
                      'href' => 'admin_users.php']) ?>

@@ -563,7 +563,7 @@ ui_kopf(['menue' => false]);
         ?>
         <p class="feld-hinweis"><strong>Jetzt in dieser Reihenfolge:</strong></p>
         <p class="feld-hinweis">1. <a href="index.php">Anmelden</a> — mit dem
-        Administrationskonto aus dem Backup; die Passwörter sind dieselben wie
+        verwaltenden Konto aus dem Backup; die Passwörter sind dieselben wie
         vorher.<br>
         2. <a href="betrieb_updates.php">Betrieb → Updates</a> aufrufen und den
         Migrationslauf ausführen.

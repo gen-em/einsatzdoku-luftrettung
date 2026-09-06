@@ -8,11 +8,11 @@ mit Fable nach R14 · Ablage `docs/konzepte/` (R62), Mockups in
 >
 > | | |
 > |---|---|
-> | Stand | 06.09.2026 — **AP1 bis AP7 erledigt** (Web 15.0.0 bis 15.5.0). Umsetzung auf `claude/umsetzung-buuvfq` |
-> | Paket in Arbeit | **AP8 — Abschluss: Doku, Rahmenplan, Backlog** |
-> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4); **AP4** (Betrieb Teil 2, Abschnitt 11.5); **AP5** (Menü und Leiste, Abschnitt 11.6); **AP6** (Geräte, Wertekasten, Filterreihe, Abschnitt 11.7); **AP7** (Bedienhöhe, Abschnitt 11.8) |
+> | Stand | 06.09.2026 — **alle acht Arbeitspakete erledigt** (Web 15.0.0 bis 15.5.1). Umsetzung auf `claude/umsetzung-buuvfq` |
+> | Paket in Arbeit | **keines.** Offen ist der **Abschluss** nach K10: Rahmenplan Abschnitt 8, 6, 5 und 10, dann Löschen dieses Konzepts — beides erst nach ausdrücklicher Freigabe |
+> | Erledigt | Schritte 1–5 des Konzeptablaufs; **AP1** (Rolle „BetreiberIn", Abschnitt 11.2); **AP2** (Betrieb Teil 1, Abschnitt 11.3); **AP3** (Verwaltung, Abschnitt 11.4); **AP4** (Betrieb Teil 2, Abschnitt 11.5); **AP5** (Menü und Leiste, Abschnitt 11.6); **AP6** (Geräte, Wertekasten, Filterreihe, Abschnitt 11.7); **AP7** (Bedienhöhe, Abschnitt 11.8); **AP8** (Abschluss, Abschnitt 11.9 mit 11.9a Vollständigkeit und 11.9b Soll-Ist) |
 > | Abweichung vom Konzept | **AP5 (2), Vorgabe des Akkordeons:** Das Konzept sah „ab 1024 px alle Blöcke offen" vor. Gemessen löst das den Grund für das Akkordeon nicht — bei 1280 × 900 ist die Liste dann 896 px hoch und die Leiste 783 px, es bleibt beim Rollen. **Entschieden am 05.09.2026 auf Nachfrage:** dieselbe Vorgabe in jeder Breite — „Einstellungen" plus der Block der aktiven Seite. Damit passt die Liste bei 1280 × 900 und 1920 × 1080 ohne Rollen; bei 720 px Fensterhöhe bleibt eine Betriebsseite 117 px zu lang, und wer will, klappt „Einstellungen" zu (wird für die Sitzung gemerkt) |
-> | Wo es hakt | nichts Blockierendes. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). **Z-01 und Z-02 sind in AP4 beantwortet** (Abschnitt 11.5) |
+> | Wo es hakt | nichts Blockierendes; die Umsetzung steht. **Zuarbeit für AP6 fehlt** (bestätigt 05.09.2026): weder Play-Store-Beitrittslink noch Connect-IQ-Adresse liegen vor — die Karte „App installieren" entsteht im Rückfall ohne Knöpfe, die Adressen sind später an je einer Stelle nachzutragen (Z-03). **Z-01 und Z-02 sind in AP4 beantwortet** (Abschnitt 11.5) |
 > | Umsetzungsumgebung | lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (MariaDB 10.11.14, PHP 8.4.19, Chromium); `00-ist-*`-Bilder vor AP1 aufgenommen |
 > | Fable-Schritt | **das Konzept selbst** (R14, Rahmenplan Schritt 7); die Umsetzung läuft nach K2 mit Opus. Mockup-Freigabe je Darstellung durch den Auftraggeber (`CLAUDE.md` 5) |
 > | Erhoben an | `main` vom 04.09.2026, 21:14 UTC: **Web 14.2.2, Uhr 3.0.0, Android 0.13.0** (PR #33, Schritt 6 gemergt), Rahmenplan Fassung 27 |
@@ -1967,7 +1967,161 @@ und die Leserichtung bleibt Beschriftung → Schalter. Gemessen an vier
 Schaltern: 832 beziehungsweise 1072 px Abstand vorher, 12 px nachher; die
 Trefferfläche bleibt die ganze Zeile.
 
----
+
+### 11.9 AP8 — Abschluss: Doku, Rahmenplan, Backlog (06.09.2026, Web 15.5.1)
+
+**Version:** Web **15.5.1** — Korrekturnummer. Das Paket ist Dokumentation;
+zwei Zeilen Code sind dabei, weil das Umschreiben des Handbuchs einen echten
+Fehler zutage gefördert hat (unten). **Keine Migration.**
+
+**Gebaut und geschrieben:**
+
+| Was | Wo |
+|---|---|
+| Handbuch neu gegliedert: Kapitel 11 „Verwaltung (Admin)", neues Kapitel 12 „Betrieb (BetreiberIn)", Uhr-Kurzanleitung auf 13 | `docs/Handbuch.md` |
+| Kapitel 6 bekommt die drei Backup-Begriffe mit ihren Orten; 6.2 und 6.3 ziehen als 12.7 und 12.6 in den Betrieb | `docs/Handbuch.md` |
+| „Administration" als Wort abgelöst (6 Stellen), „Wartung" als Seitenname getilgt | `docs/Handbuch.md` |
+| 9.4: der Weg zu „Stammdaten systemweit" — die Seite gehört zu keinem Menüblock | `docs/Handbuch.md` |
+| Runbook: **Schritt 8, Status als Prüfstelle nach dem Deploy** | `docs/Technik.md` 7 |
+| Wartungsbalken auf **allen fünf** Ausnahmeseiten | `server/betrieb_statistik.php`, `server/wartung_lib.php` (Kopf) |
+| Die Wartungsprobe misst den Balken je Seite (42 → 43 Erwartungen) | `tools/wartungsprobe/probe.php`, `LIESMICH.md` |
+| Sechs neue Zeilen in „Wenn du X willst, nimm Y" | `docs/Design.md` 9.0 |
+
+**Der Fund des Pakets: eine Ausnahmeseite ohne Balken.** Für Handbuch 12.3 war
+nachzurechnen, welche Seiten der Wartungsmodus durchlässt. Gemessen mit
+eingeschaltetem Schalter: **fünf Seiten mit 200, neun weitere mit 503**. Dabei
+fiel auf, dass `betrieb_statistik.php` als **einzige** der fünf den orangen
+Balken nicht trug — ausgerechnet die Seite, auf der man am längsten liest,
+ohne etwas zu ändern. Der Balken ist die einzige Stelle, an der ein
+stehengebliebener Wartungsmodus auffällt (E-S5W-05).
+
+Zwei Dinge daran sind bemerkenswert: Gefunden hat es **das Handbuch**, kein
+Prüfmittel. Und die Wartungsprobe hätte es finden können — sie zählte, **dass**
+die fünf Seiten antworten, nicht **was** sie antworten. Sie prüft den Balken
+jetzt auf allen fünf einzeln.
+
+**Zwei falsche Sätze berichtigt**, beide über denselben Sachverhalt: Das
+Handbuch riet, das **Komplett-Backup während** des Wartungsmodus zu machen —
+die Seite dafür ist dann selbst gesperrt (gemessen: HTTP 503). Richtig ist:
+vorher anstoßen; ein bereits **laufendes** Komplett-Backup arbeitet über den
+Job-Abruf weiter, und dann ist sein Stand sogar am saubersten. Der zweite Satz
+stand im Kopf von `wartung_lib.php` und führte `update.php` als Trägerin des
+Balkens — die ist seit Web 15.2.0 im Web nur noch eine Weiterleitung.
+
+**Und eine dritte Ungenauigkeit:** Das Handbuch beschrieb einen Weg zurück,
+den es so nicht gibt. „Melde dich an, dann bist du wieder auf der
+Wartungsseite" — das stimmt, nur führt von dort **kein Knopf** weiter; die
+Wartungsseite entsteht ohne Datenbank und kennt die Rolle nicht. Der Weg ist
+die Adresse `betrieb_updates.php`, und genau das steht jetzt da. Ein Knopf für
+das verwaltende Konto ist als Backlog-Punkt vermerkt, nicht nebenbei gebaut:
+Die Wartungsseite ist das, was **jeder** Besucher sieht.
+
+**Die Gliederung folgt dem Menü, nicht der Historie.** Kapitel 11 hat vier
+Abschnitte für die vier Punkte des Blocks Verwaltung, Kapitel 12 sieben für
+die sieben des Blocks Betrieb, jeweils in der Reihenfolge des Menüs und mit
+einer Tabelle am Kapitelanfang, die beides verbindet. Das ist die Vorlage für
+P7 (R72): Wer eine Seite sucht, findet ihren Abschnitt, indem er im Menü
+abzählt.
+
+**Was dabei aufgeräumt wurde:** Am Ende des alten Abschnitts „Installation"
+hingen 29 Zeilen über die alte Seite `update.php` — zweistufiger Ablauf,
+Schlüsselableitung, blockierte Migrationen —, die AP2 bis AP4 längst an anderer
+Stelle beschrieben hatten, und ein letzter Absatz („Diese Daten lassen sich
+nicht automatisch in den verschlüsselten Block überführen …"), der seinen
+Bezug verloren hatte. Zwei Aussagen daraus fehlten in Kapitel 12 und sind
+dorthin übernommen: **wann** man Betrieb → Updates aufrufen muss, und dass die
+Karte „Ausgeführt" **auf dem Kopf** steht.
+
+#### 11.9a Vollständigkeit: wo jeder Eintrag aus 2.3 gelandet ist (P-40)
+
+**94 Kennungen, 94 verortet.** Davon **89 unverändert oder umgezogen**,
+**zwei ausdrücklich entfallen**, **drei umbenannt**. Die Tabelle ist der
+Nachweis zu P-40; sie liest sich von links nach rechts als „das war es, das
+ist es".
+
+| Kennungen | Herkunft (2.3) | Ziel im Zielbild | Änderung |
+|---|---|---|---|
+| P-01 … P-04 | Profil | Einstellungen → **Profil** | unverändert; **neu** dazu die eigene Rolle als Anzeige (AP1) |
+| SD-01 … SD-10 | Standorte, Rettungsmittel | Einstellungen → **Standorte** / **Rettungsmittel** | unverändert |
+| G-01 | Geräte, Kopplung | Einstellungen → **Geräte** | unverändert; steht seit AP6 **oben** auf der Seite |
+| G-02, G-03 | Bezeichnung, Deaktivieren | Einstellungen → **Geräte** | seit AP6 im Punkte-Menü der Zeile statt als Knopfreihe |
+| G-04 | „Gerät löschen" | Einstellungen → **Geräte** | **umbenannt** in „Entkoppeln" (AP6) — gelöscht wird nichts |
+| G-05 | Gerät ohne Code | Einstellungen → **Geräte** | Werte im Wertekasten, kleine Stufe (AP6) |
+| G-06 | Hinweis „neu" | Einstellungen → **Geräte** | seit AP6 Plakette an der Zeile statt Meldung darüber |
+| G-07 | „NAdoku für Android" | Einstellungen → **Geräte** | **umbenannt** in „App installieren", drei Plattformen (AP6); Store-Adressen fehlen noch (Z-03) |
+| B-01 … B-04 | Backup | Einstellungen → **Backup** | unverändert; Handbuch 6 bekommt die Begriffstabelle |
+| IE-01, IE-02 | Import / Export | Einstellungen → **Import / Export** | unverändert |
+| NL-01 … NL-06 | NutzerInnen | Verwaltung → **NutzerInnen** | unverändert; Filterreihe einzeilig ab 1280 px (AP6) |
+| KS-01 … KS-08, KS-10 | Kontoseite | Verwaltung → NutzerInnen → **Kontoseite** | unverändert; Setz-Link und Einladungslink im Wertekasten (AP6) |
+| KS-09 | „Abonnement · ab P5" | — | **entfallen** (AP3): ein reservierter Platz, der auf jeder Kontoseite eine Zusage ohne Termin wiederholte |
+| SW-01, SW-02 | Stammdaten systemweit | eigene Seite `admin_stammdaten.php` | **kein Menüpunkt mehr** (E-S8-14, AP5). Zwei Wege hin: Adresse und der Verweis auf Backup-Ziele; **Handbuch 9.4** nennt beide |
+| AB-01 … AB-04, AB-07, AB-09 | Backups (Regeln) | Verwaltung → **Konto-Backups** | unverändert; Untertitel sagt seit AP3, welches der drei Backups gemeint ist |
+| AB-05, AB-06 | Speichergrenze, Warnschwellen | Betrieb → **Servereinstellungen** | umgezogen (AP2) — sie gelten für **alle** Backups, nicht nur für die je Konto |
+| AB-08 | Ablage: Pfad, Zustand, Reste | Betrieb → **Servereinstellungen** | umgezogen (AP2) |
+| BZ-01 … BZ-09 | Backup-Ziele | Betrieb → **Backup-Ziele** | unverändert; Serverschlüssel-Zeile im Wertekasten (AP6); Handbuch 12.7 |
+| KB-01 … KB-08 | Komplett-Backup | Betrieb → **Komplett-Backup** | unverändert; Handbuch 12.6 |
+| RT-01, RT-02 | Rechtstexte | Verwaltung → **Installation** | **umbenannt** (AP3); das Logo der Installation (W-04) steht seither dabei |
+| DK-01 … DK-06 | Demo-Konto | Verwaltung → **Demo-Konto** | unverändert; zwei Erklärkarten zu einer zusammengelegt (AP5) |
+| W-01 | Wartungsbalken | **alle fünf Betriebsseiten** und `login.php` | erweitert (AP8) — er stand auf vieren |
+| W-02 | Wartungsmodus | Betrieb → **Updates** | umgezogen (AP2), Karte oben |
+| W-03 | Schlüsselableitung | Betrieb → **Status** | umgezogen (AP4), Karte „Server" |
+| W-04 | Logo der Installation | Verwaltung → **Installation** | umgezogen (AP3) |
+| W-05 | Umgebung (PHP, Zeitzone, Mail) | Betrieb → **Status** | umgezogen (AP4) |
+| W-06, W-07 | Hintergrundjobs, Auslöser | Betrieb → **Hintergrundjobs** | umgezogen (AP2); Cron-Zeile und Token-Adresse im Wertekasten |
+| W-08 | Einsätze ohne Diensttag | — | **entfallen** (E-S8-17, AP2): Jede NutzerIn sieht ihre eigenen als „Zuordnung offen" in der Diensttage-Leiste und ordnet sie selbst zu |
+| W-09 | Datenbank-Update | Betrieb → **Updates** | umgezogen (AP2); zeigt seither nur, was aussteht |
+| X-01 … X-06 | außerhalb der Oberfläche | unverändert | `config.php`, Konstanten, `install.php`, `wiederherstellen.php`, CLI, `app_state` — S8 fasst keine davon an |
+
+**Zwei Kennungen sind neu hinzugekommen**, die es in 2.3 nicht gab, weil es
+die Seiten nicht gab: **Betrieb → Status** (AP4, die Ampel) und **Betrieb →
+Statistik** (AP4). Beide sind im Zielbild 5.2 beschrieben und im Handbuch als
+12.1 und 12.2 dokumentiert.
+
+#### 11.9b Soll-Ist gegen die Mockups (P-41)
+
+**Dreizehn Mockups, elf mit einem Seitengegenstück.** Verglichen wurde
+maschinell der **Kartenbestand** (Titel und Reihenfolge) bei 1440 px, Mockup
+gegen laufende Seite; die acht Breiten trägt der Bilderlauf (0 Überlauf,
+0 Konsolenfehler, 0 falsche Höhen in beiden Eingabearten). Jedes Mockup führt
+eine eigene Karte „Was das Mockup zeigt — und was nicht"; sie ist Gerüst und
+zählt nicht mit.
+
+| Mockup | Seite | Ergebnis |
+|---|---|---|
+| 01 Menü in drei Blöcken | `einstellungen.php` | **deckungsgleich** — Einstellungen · Verwaltung · Betrieb |
+| 02 Serverbetrieb | — | **überholt, mit Beschluss.** Es zeigte die alte Sammelseite (Einsätze ohne Diensttag, Serverbetrieb, Hintergrundjobs, Auslöser, Speicher, Umgebung). Die Durchsicht am 05.09.2026 hat Betrieb daraufhin **neu geschnitten** (E-S8-05); an seine Stelle treten 03, 05, 06 und 07. Kein Abgleich, sondern ein ersetzter Entwurf |
+| 03 Status | `betrieb_status.php` | **vier Karten deckungsgleich, zwei Abweichungen, beide gewollt** (unten) |
+| 04 Statistik | `betrieb_statistik.php` | **deckungsgleich** — Konten · Einsätze · Geräte · Gerätemodelle |
+| 05 Updates | `betrieb_updates.php` | **deckungsgleich** — Wartungsmodus · Ausstehende Updates · Ausgeführt · Fassung |
+| 06 Hintergrundjobs | `betrieb_jobs.php` | **deckungsgleich** — Zustand · Auslöser · Was hier gilt |
+| 07 Servereinstellungen | `betrieb_server.php` | **deckungsgleich** — Speicher · Was hier gilt |
+| 08 Konto-Backups | `admin_sicherungen.php` | **deckungsgleich** — Regeln · Backups ohne Konto · Was hier gilt. Das Mockup zeigt daneben die Kontoseite (Konto · Geräte · Konto-Backups · Konto löschen); die steht so |
+| 09 Installation | `admin_installation.php` | **eine Abweichung:** Das Mockup nennt die Karte „Datenschutz", die Seite „**Datenschutzerklärung**". Die Seite behält den langen Namen — er ist der rechtlich genaue, und die Karte hat Platz dafür |
+| 10 Geräte | `einstellungen.php?t=geraete` | **deckungsgleich** — Gerät koppeln · Geräte · App installieren · Gerät ohne Code anlegen |
+| 11 Filterreihe | `admin_users.php` | **Regelblatt ohne Karten.** Gemessen wurde stattdessen die Reihe selbst (P-34, AP6): einzeilig ab 1280 px |
+| 12 Bedienhöhe | — | Regelblatt. Gemessen in P-35 |
+| 13 Symbole | — | Regelblatt. Umgesetzt in AP5 (fünf neue Zeichen, `docs/Lizenzen.md` 49 Zeichen) |
+
+**Die beiden Abweichungen bei 03 (Status), begründet:**
+
+1. **Die Seite hat eine Karte mehr — „Was hier gilt".** Sie erklärt die vier
+   Plakettentöne (Design 9.23) und steht so auch auf Hintergrundjobs,
+   Servereinstellungen, Backup-Zielen und Komplett-Backup. Eine Statusseite
+   ohne Legende wäre die einzige Ampel des Projekts, die ihre Farben nicht
+   erklärt.
+2. **Die Reihenfolge im Markup unterscheidet sich, das Bild nicht.** Das
+   Mockup führt Server · Hintergrundjobs · E-Mail · Backups, die Seite
+   Server · E-Mail · Hintergrundjobs · Backups. Gemessen bei 1440 px: linke
+   Spalte (x = 276) Server bei y = 231 und E-Mail bei y = 744, rechte Spalte
+   (x = 858) Hintergrundjobs bei y = 231 und Backups bei y = 901. **Gelesen
+   von links nach rechts und oben nach unten ergibt das genau die Reihenfolge
+   des Mockups.** Der Unterschied kommt daher, dass die Seite zwei
+   ausdrückliche Spalten benutzt (`.form-spalte`, Design 9.26) und nicht ein
+   zeilenweise gefülltes Raster — das ist der freigegebene Baustein, und er
+   verlangt die Karten spaltenweise im Markup. Bei 1024 px stehen alle fünf
+   untereinander in der Reihenfolge der Spalten.
+
+**Keine unbegründete Abweichung.** Damit ist P-41 erfüllt.
 
 ---
 
@@ -1975,6 +2129,8 @@ Trefferfläche bleibt die ganze Zeile.
 
 | Datum | Was |
 |---|---|
+| 06.09.2026 | **AP8 erledigt — Umsetzung abgeschlossen** (Web 15.5.1): Handbuch neu gegliedert (Kapitel 11 „Verwaltung (Admin)", neues Kapitel 12 „Betrieb (BetreiberIn)" nach der Reihenfolge des Menüs, Uhr-Kurzanleitung 13; Kapitel 6 mit den drei Backup-Begriffen, 6.2 und 6.3 als 12.7 und 12.6 in den Betrieb). „Administration" als Wort abgelöst (11 sichtbare Stellen in Code und Doku, 6 im Handbuch), „Wartung" als Seitenname getilgt, 9.4 mit dem Weg zu „Stammdaten systemweit". Runbook um **Schritt 8 (Status als Prüfstelle)** ergänzt. **Ein Fehlerfund** (F-S8-P-15: `betrieb_statistik.php` ohne Wartungsbalken — vom Handbuch gefunden, nicht von einem Prüfmittel), behoben und in die Wartungsprobe aufgenommen (43 Erwartungen). **11.9a**: 94 von 94 Kennungen aus Tabelle 2.3 verortet. **11.9b**: elf Mockups gegen die Seiten, acht deckungsgleich, drei Abweichungen begründet. Backlog Nr. 126 angelegt |
+| 06.09.2026 | **AP7 erledigt** (Web 15.5.0): zwei Bedienhöhen (44 px Finger, 36 px Zeiger ab 1024 px), Schalter neben der Beschriftung (Nr. 123), gesperrte Felder sichtbar (Rest aus AP1). Fünf Funde an den Prüfmitteln (F-S8-P-13, F-S8-P-14). Der Stilvergleich ist zum ersten Mal seit P3 wieder gelaufen |
 | 05.09.2026 | **AP4 erledigt** (Web 15.3.0): Betrieb → Status mit Ampel (vier Karten, zählende Meldung) und Betrieb → Statistik (ohne Demo-Konto, mit CSV). **Z-01 und Z-02 beantwortet** — eine Mailzustellung wurde nicht aufgezeichnet (jetzt schon), und eine Wear-OS-Uhr koppelt bauartbedingt nie. Ein Fund (F-S8-P-09), Umsetzungsentscheidungen U-AP4-01 bis -08 |
 | 05.09.2026 | **AP3 erledigt** (Web 15.2.0): „Rechtstexte" wird „Installation" (mit dem Logo), „Backups" werden „Konto-Backups", die Freigabe bekommt eine Zustandszeile, „Abonnement" entfällt. Zwei Bausteine (Logo-Vorschau, Kopfaktion als Absendeknopf), zwei Funde (F-S8-P-07 Kachel wog den ganzen Baum, F-S8-P-08 „Wartung" an neun Stellen), Umsetzungsentscheidungen U-AP3-01 bis -10. Bestandsaufnahme mit einem Workflow gefahren |
 | 05.09.2026 | **AP2 erledigt** (Web 15.1.0): die Wartungsseite aufgelöst — `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`; Migrationskatalog nach `migration_lib.php`; Speichermessung im Aufräumjob (`speicher_lib.php`); zwei Bausteine (`codeblock-lang`, `speicher-balken`). Drei Funde (F-S8-P-04 bis -06), alle behoben — darunter ein Wartungsmodus, der sich selbst aussperrte. Umsetzungsentscheidungen U-AP2-01 bis -07 |

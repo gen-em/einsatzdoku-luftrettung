@@ -2823,4 +2823,17 @@ declare(strict_types=1);
  *          nicht nur ihr Aussehen: Was am Zeigergeraet 44 px hoch war, ist
  *          jetzt 36. Keine Migration.
  */
-const WEB_VERSION = '15.5.0';
+/* 15.5.1  DER WARTUNGSBALKEN AUF ALLEN FUENF AUSNAHMESEITEN (S8/AP8).
+ *          `betrieb_statistik.php` stand als einzige der fuenf Seiten, die im
+ *          Wartungsmodus noch antworten, OHNE den Balken da — ausgerechnet
+ *          die, auf der man am laengsten liest. Der Balken ist die einzige
+ *          Stelle, an der ein stehengebliebener Wartungsmodus auffaellt
+ *          (E-S5W-05); eine Luecke darin ist keine Kleinigkeit. Gefunden
+ *          beim Nachrechnen fuer das Handbuch, nicht von einem Pruefmittel —
+ *          die Wartungsprobe zaehlte, DASS die Seite antwortet, nicht WAS.
+ *          Sie misst es jetzt (43 Erwartungen).
+ *
+ *          KORREKTURNUMMER: eine fehlende Zeile und ein veralteter
+ *          Kopfkommentar. Keine Migration.
+ */
+const WEB_VERSION = '15.5.1';

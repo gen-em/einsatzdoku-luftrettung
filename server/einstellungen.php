@@ -1432,7 +1432,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                              'zahl' => count($vehListe) . ' Rettungsmittel']); ?>
         <?php if (!empty($b['zentral'])): ?>
           <p class="feld-hinweis"><?= ui_plakette('systemweit') ?> Dieser Standort wird
-             von der Administration gepflegt.</p>
+             von der Verwaltung gepflegt.</p>
         <?php endif; ?>
 
         <section class="sd-liste" id="<?= e($anker) ?>-veh">

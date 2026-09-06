@@ -301,6 +301,24 @@ pruefe($a6b['code'] === 200 && $a6c['code'] === 200
        'jobs ' . $a6b['code'] . ', server ' . $a6c['code']
        . ', status ' . $a6d['code'] . ', statistik ' . $a6e['code']);
 
+/* WER IN DER AUSNAHMELISTE STEHT, ZEIGT DEN BALKEN (S8/AP8).
+ *
+ * Der Balken ist die einzige Stelle, an der ein stehengebliebener
+ * Wartungsmodus auffaellt — es gibt kein automatisches Ausschalten
+ * (E-S5W-05). `betrieb_statistik.php` stand bis Web 15.5.1 als einzige der
+ * fuenf Ausnahmeseiten OHNE ihn da, und zwar unbemerkt: Erwartung 6 mass den
+ * Statuscode, nicht den Balken. Ein Prueffall, der nur zaehlt, dass eine
+ * Seite antwortet, sieht nicht, WAS sie antwortet. */
+$ohneBalken = [];
+foreach (['betrieb_updates.php' => $a6, 'betrieb_jobs.php' => $a6b,
+          'betrieb_server.php'  => $a6c, 'betrieb_status.php' => $a6d,
+          'betrieb_statistik.php' => $a6e] as $name => $antwort) {
+    if (!str_contains($antwort['rumpf'], 'Wartungsmodus seit')) { $ohneBalken[] = $name; }
+}
+pruefe($ohneBalken === [],
+       '6   ... und ALLE FUENF tragen den Balken „Wartungsmodus seit"',
+       'ohne Balken: ' . implode(', ', $ohneBalken));
+
 $a7 = hole('betrieb_updates.php', $sidUser);
 pruefe($a7['code'] !== 503,
        '7   betrieb_updates.php mit NUTZER-Sitzung: nicht 503 (Abweisung wie sonst)',

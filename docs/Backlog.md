@@ -1409,6 +1409,24 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Änderung an sechs Seiten außerhalb des Pakets gewesen. Zuordnung:
     Aufräumpaket P6 oder Backlog-Runde.
 
+126. **Von der Wartungsseite führt kein Weg zurück in die Verwaltung.**
+    *Aufgenommen 06.09.2026 bei S8/AP8, aus dem Umschreiben von Handbuch 12.3.*
+    Wer sich während des Wartungsmodus anmeldet, landet auf der Startseite —
+    und die zeigt die **Wartungsseite** (503). Von dort führt **kein Knopf**
+    weiter; der einzige Weg ist, `betrieb_updates.php` von Hand in die
+    Adresszeile zu tippen. Das Handbuch hat das bis AP8 anders beschrieben
+    („dann bist du wieder auf der Wartungsseite" — richtig, aber es fehlte,
+    dass es dort aufhört); jetzt steht die Adresse da.
+    **Zu bedenken, und deshalb kein Nebenbei-Bau:** Die Wartungsseite ist
+    das, was **jeder Besucher** sieht. Sie entsteht **ohne Datenbank** —
+    `wartung_tor()` steht in `db.php` vor jeder Verbindung, und
+    `wartung_seite_html()` lädt nichts. Sie kann die Rolle also nicht kennen;
+    ein Link stünde für alle da. Das ist verkraftbar (die Adresse steht im
+    Handbuch, und die Seite dahinter hat ihre eigene Schranke), aber es ist
+    eine Entscheidung, keine Selbstverständlichkeit. **Vorschlag:** eine
+    unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
+    Wartungsseite. Zuordnung: Backlog-Runde oder P6.
+
 ---
 
 ## Erledigt

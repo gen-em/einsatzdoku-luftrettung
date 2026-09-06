@@ -970,7 +970,7 @@ function migrationen_katalog(): array
     [
         'id'    => '2026_08_16_kontokennung',
         'web'   => '5.9.0',
-        'label' => 'Kontokennung für die Admin-Backups (users.account_key)',
+        'label' => 'Kontokennung für die Konto-Backups (users.account_key)',
         /* WARUM EINE EIGENE KENNUNG UND NICHT users.id ODER DIE ADRESSE (E17)
          *
          * Die Kennung ist der Ordnername des Admin-Backups. Sie muss

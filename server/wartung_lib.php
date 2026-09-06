@@ -336,8 +336,10 @@ function wartung_seite_html(): string
 }
 
 /**
- * Der Balken fuer die Ausnahmeseiten (`betrieb_updates.php`, die beiden
- * uebrigen Betriebsseiten, `update.php`, `login.php`).
+ * Der Balken fuer die Ausnahmeseiten: die FUENF Betriebsseiten
+ * (`betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`,
+ * `betrieb_jobs.php`, `betrieb_server.php`) und `login.php`. NICHT
+ * `update.php` — die ist im Web seit S8/AP3 nur noch eine Weiterleitung.
  *
  * Er ist die einzige Stelle, an der ein stehengebliebener Wartungsmodus
  * auffaellt — es gibt kein automatisches Ausschalten (E-S5W-05). Deshalb

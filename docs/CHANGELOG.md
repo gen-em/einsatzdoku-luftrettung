@@ -14,6 +14,48 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.5.1] — 2026-09-06
+
+### Web — der Wartungsbalken auf allen fünf Ausnahmeseiten (S8/AP8)
+
+**Eine Seite fehlte, und es war die falsche.** Fünf Seiten antworten im
+Wartungsmodus noch: Status, Statistik, Updates, Hintergrundjobs,
+Servereinstellungen. Vier davon trugen oben den orangen Balken „Wartungsmodus
+seit …", die **Statistik** nicht — ausgerechnet die Seite, auf der man am
+längsten liest, ohne etwas zu ändern. Der Balken ist die **einzige** Stelle,
+an der ein stehengebliebener Wartungsmodus auffällt: Es gibt kein
+automatisches Ausschalten und keine Zeitsteuerung, und ein 503 sagt nicht,
+dass es seit drei Tagen kommt.
+
+**Gefunden hat es das Handbuch, kein Prüfmittel.** Beim Umschreiben von
+Kapitel 12 war nachzurechnen, welche Seiten der Wartungsmodus durchlässt —
+gemessen mit eingeschaltetem Schalter: fünf Seiten mit 200, neun weitere mit
+503. Dabei fiel auf, dass die Wartungsprobe zwar zählte, **dass** die fünf
+antworten, aber nicht, **was** sie antworten. Sie prüft den Balken jetzt auf
+allen fünf einzeln (43 statt 42 Erwartungen); ein Prüffall, der nur den
+Statuscode misst, hätte diese Lücke nie gesehen.
+
+**Ein Wort weniger: „Administration" heißt jetzt überall „Verwaltung".** Das
+Menü sagt seit Web 15.4.0 „Verwaltung", die Rollen heißen „Admin" und
+„BetreiberIn" — „die Administration" war ein drittes Wort für dieselbe Sache.
+Es stand an **fünf sichtbaren Stellen** im Code (Standort-Hinweis,
+Aufräumjob-Beschriftung und -Schritt, Rechtstext-Hinweis, Wiederherstellung)
+und an **fünf** in der Technik-Doku; dazu trug eine Migrationsbeschriftung
+noch „Admin-Backups". Alle elf sind ausgetragen. Im Handbuch waren es sechs
+weitere. Was bleibt, sind zwei ausdrücklich historische Sätze („bis Web 15.1.0
+hieß das Konto-Backup Admin-Backup") und vier Code-Kommentare, die den
+Werdegang erzählen — die sollen bleiben.
+
+Nebenher zwei falsche Sätze berichtigt, beide über denselben Sachverhalt: Das
+Handbuch riet, das **Komplett-Backup während** des Wartungsmodus zu machen —
+die Seite dafür ist dann selbst gesperrt (gemessen: HTTP 503). Richtig ist:
+vorher anstoßen. Ein bereits **laufendes** Komplett-Backup arbeitet über den
+Job-Abruf weiter, und dann ist sein Stand sogar am saubersten. Und der
+Kopfkommentar von `wartung_lib.php` führte noch „`update.php`" als Trägerin
+des Balkens — die ist seit Web 15.2.0 im Web nur noch eine Weiterleitung.
+
+Keine Migration.
+
 ## [Web 15.5.0] — 2026-09-06
 
 ### Web — zwei Bedienhöhen, und der Schalter rückt an seine Beschriftung (S8/AP7)
