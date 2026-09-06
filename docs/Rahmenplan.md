@@ -626,7 +626,8 @@ S4-Zweig reserviert (dort heute 59–63); 68–79 sind mit Fassung 16, 80–83 m
 Fassung 21 und 84–88 mit Fassung 22 angelegt; **89–92 kamen aus S7 und S5/C,
 93–97 mit Fassung 25 aus S5** (Pakete A, W und der Vorbereitung); **98–113
 mit Fassung 26** (98–100 aus der Planung v1.0, 101–113 die Problemsammlung
-für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt).
+für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt);
+**117–118 mit Android 0.13.1** (06.09.2026, die vier Befunde vom S24).
 
 > Die drei aus Paket E standen dort zunächst als 90–92 und mussten beim
 > Zusammenführen mit Fassung 26 weichen: 89–92 waren schon an S7 und S5/C
@@ -709,6 +710,8 @@ für S9); **114–116 aus S5 Paket E** (auf dessen Zweig, noch nicht gemergt).
 | 111 | Neue Rettungsmittel-Arten mit eigenem Icon, ohne Rollen-Vorlagen (PS-10.1) | S9 | F16; Migration |
 | 112 | Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung (PS-10.2) | S9 | gilt nur für den Tag (F17); Suche und Filter müssen greifen |
 | 113 | Rollen unmittelbar nach Auswahl bearbeitbar, Vorlagen nachladen (PS-10.3) | S9 | entfällt für Arten ohne Vorlagen (F19) |
+| 117 | Kein Symbol in der Statusleiste während der Aufzeichnung (S24) | Gerätetest, Schritt 6 | mit Android 0.13.1 getan, was am Code dafür in Frage kommt; Prüfweg am Gerät im Punkt selbst, zusammen mit Nr. 81 |
+| 118 | Wear-Uhr sagt „Handy verbunden" nach leerer Nachlieferung | S4-Rest, vor dem Uhr-Gerätetest | eine Zeile in `Uhrfunk.nachliefern()` plus Prüffall; am Rand von Android 0.13.1 gefunden |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -717,6 +720,7 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 
 | Was | Wofür | Wann |
 |---|---|---|
+| **Zweiter Blick auf das S24 mit Android 0.13.1** — die sechs Punkte im Nachtrag zu Abschnitt 4 des Prüfdokuments S4: Zweierwahl, Zurück-Geste, Code kopieren, Symbol in der Leiste (Nr. 117), Kopf der Benachrichtigung (Nr. 81), Startbildschirm-Symbol auf Handy und Uhr. Erst dieser Blick schließt 81 und 117 | Schritt 6 | mit der nächsten Installation auf dem Gerät |
 | **`update.php` aufrufen — VIER Migrationen** (drei aus S4/S6, dazu `2026_09_03_kopplungssitzungen` aus S5). Die letzte legt `pair_sessions` an und **löscht `pair_codes`**; bis dahin antwortet jeder Kopplungsversuch einer Uhr mit **500**. Der Deploy ist am 03.09.2026 um 18:59:58 UTC gelaufen | Schritt 5, Prüfliste S5 Punkt 1 | **sofort** |
 | **Prüfliste S5 (12 Punkte)**, darunter: die Bestandsuhr **einmal neu koppeln** (E-S5-42, vorher den Sync leerlaufen lassen), beide Kopplungsmails im Postfach sichten, Antwortgleichheit auf Produktiv nachmessen, die Geräteseite **ohne JavaScript**, drei Punkte nur am Gerät (Verbindungsabriss, Tastensperre, Oberfläche auf zwei Geräteklassen), **ein Update mit Wartungsmodus** und **eine Kopplung mit dem Handbuch in der Hand** (P2-Punkt 4.1) | S5-Abnahme | nach `update.php` |
 | **Freigabe des S5-Abschlusses** — danach löscht R62 die beiden Konzepte (`Konzept-S5-Kopplung-umgekehrt.md`, `…-Zusatz-Wartungsmodus.md`); das Prüfdokument bleibt bis zur abgehakten Prüfliste | Schritt 5 | — |

@@ -1315,6 +1315,22 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `adb shell dumpsys notification --noredact | grep -A5 nadoku`, und das
     Ergebnis hierher. Zuordnung: **Gerätetest, Schritt 6** (mit Nr. 81).
 
+118. **Die Wear-OS-Uhr sagt „Handy verbunden", ohne je ein Handy erreicht zu
+    haben.**
+    *Aufgenommen 06.09.2026 beim Emulatorlauf zu Android 0.13.1, am Rand.*
+    Auf dem Uhr-Emulator ohne Telefon stand nach dem Start in Blau „Handy
+    verbunden" (`docs/bilder/android-0.13.1/11-uhr-app.png`). B-S4-09 hatte
+    genau das abgestellt: Beim Start weiß die Uhr über das Handy nichts, und
+    dafür gibt es den dritten Fall „noch nichts gesendet". Die Ursache steht
+    in `Uhrfunk.nachliefern()`: Sie setzt `handyErreichbar = true`, sobald
+    die Schleife über die wartenden Nachrichten durch ist — **auch bei
+    leerem Puffer**, wenn also nichts gesendet wurde. Der Aufruf kommt beim
+    Start über `Uhrsteuerung`; die Uhr meldet damit eine Zustellung, die es
+    nicht gab. Nicht in 0.13.1 behoben, weil der Lauf ein anderes Ziel hatte
+    und die Behebung einen Prüffall in `UhrfunkTest` mitbringt: `true` nur,
+    wenn `zugestellt > 0`, sonst den Wert stehen lassen. Zuordnung:
+    **S4-Rest**, vor dem Gerätetest mit der Uhr.
+
 ---
 
 ## Erledigt

@@ -28,7 +28,7 @@ Sinn:
 
 | Teil | Inhalt | Stand |
 |---|---|---|
-| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Pakete 1–5 erledigt** (Android 0.11.0–0.13.1, Web 13.3.0). Offen Backlog **81** und **117** (beide: Gegenprobe am S24) und **95** |
+| **A** | Kopplungsmodul auf Vertrag 1a, feste Adresse (Nr. 84), App-Name (85), Insets (86); danach R57, Backlog 81/82/98 | **Pakete 1–5 erledigt** (Android 0.11.0–0.13.1, Web 13.3.0). Offen Backlog **81** und **117** (beide: Gegenprobe am S24), **118** (Uhr: „Handy verbunden" ohne Zustellung, am Rand von Paket 5 gefunden) und **95** |
 | **B** | R64 — Herkunft und Gerät je Einsatz | **in Arbeit**: Konzept `Konzept-R64-Herkunft-Geraet.md` geliefert, **AP1, AP3, AP2 erledigt** (Web 14.0.0–14.2.0); offen **AP4** (Referenz) und **AP5** (Abschluss). Statusblock dort |
 | **C** | Play Console, Signaturweg, Track-Release, Gerätetest | **vorbereitet, soweit es ohne Schlüssel geht** (`Vorbereitung-Play-Console.md`, Android 0.13.0). Blockiert bleibt, was D-U-N-S und Signaturschlüssel braucht |
 

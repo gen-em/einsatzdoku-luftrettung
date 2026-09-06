@@ -827,6 +827,19 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
     Anzeige); `emulator.sh bild` las nur die erste Zeile und verweigerte den
     Abzug, obwohl die App den Fokus hatte. Es prüft jetzt beide.
 
+  **Die Uhr im selben Lauf** (`uhr30`, ein Kern, Boot 296 s): Das Uhr-APK
+  brauchte drei Anläufe — der erste brach nach 194 s mit `Broken pipe` ab
+  und riss das Rahmenwerk der Uhr mit (`Can't find service: package`, danach
+  ein Neustart von `system_server`), der dritte lief in **443 s** durch. Die
+  App startet (`11-uhr-app.png`). **Das Uhr-Symbol steht nicht im Bild:**
+  Die App-Liste der Uhr war am Emulator nicht zu erreichen — die Stem-Taste
+  (`KEYCODE_STEM_PRIMARY`, auch als Code 264) tat nichts, eine startbare
+  Listen-Activity gibt es auf dem Abbild nicht, und die App-Info-Seite der
+  Uhr zeigt kein Symbol. Belegt ist das Symbol damit nur über die Handy-Seite
+  (dieselbe Datei) und `SymbolBildTest`; auf der Uhr bleibt es Prüfliste.
+  **Am Rand gefunden:** Ohne Telefon stand auf der Uhr „Handy verbunden" —
+  Backlog **118**.
+
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf
   Hardware.

@@ -154,10 +154,15 @@ und sein Verschwinden nach dem Einschalten, der Punkt in der Leiste und die
 Dauermeldung mit Symbol, das Startsymbol in Startbild, Startprogramm und
 Systemseite ohne Beschnitt — neun Bilder in `docs/bilder/android-0.13.1/`.
 **Nicht belegt:** die Einblendung des Systems nach „Code kopieren" (der
-Abzug traf sie nicht) und alles, was One UI anders macht als AOSP. Der
-Emulatorlauf selbst hat vier Befunde am Werkzeug ergeben (ein Gast-Kern
-statt vier, Fehlerdialoge aus, Abzug über die Konsole, Kaltstart mit
-`-wipe-data`); sie stehen in `emulator.sh` und `android/LIESMICH.md` 7.
+Abzug traf sie nicht), das Symbol auf der Uhr (die App-Liste der Wear-Uhr
+war am Emulator nicht zu erreichen; die App selbst läuft dort, und die
+Ressource ist dieselbe Datei wie am Handy) und alles, was One UI anders
+macht als AOSP. Der Emulatorlauf selbst hat vier Befunde am Werkzeug ergeben
+(ein Gast-Kern statt vier, Fehlerdialoge aus, Abzug über die Konsole,
+Kaltstart mit `-wipe-data`); sie stehen in `emulator.sh` und
+`android/LIESMICH.md` 7. Und einen am Rand: Die Uhr sagt ohne Telefon „Handy
+verbunden", weil eine leere Nachlieferung als Zustellung zählt — Backlog
+Nr. 118, nicht in dieser Fassung behoben.
 
 ## [Uhr 3.0.2] — 2026-09-05
 
