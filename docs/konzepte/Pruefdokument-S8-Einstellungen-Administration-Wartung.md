@@ -1,15 +1,20 @@
 # Prüfdokument S8 — Einstellungen, Administration und Wartung
 
-**Zum Konzept** `Konzept-S8-Einstellungen-Administration-Wartung.md`,
-Abschnitt 8 (Prüfprotokoll-Soll). Geführt nach K9: Was ist geprüft, wie, mit
-welchem Ergebnis; was ist noch offen, und wie wird es geprüft. Wird nach jedem
-Arbeitspaket fortgeschrieben und mit dem Konzept gepusht (K7).
+**Das Konzept gibt es nicht mehr.**
+`Konzept-S8-Einstellungen-Administration-Wartung.md` ist mit dem Abschluss der
+Phase nach R62 gelöscht worden; es steht in der Git-Historie, zuletzt unter
+Commit `fc470b0`, und seine Erledigt-Zeile in `Rahmenplan.md` Abschnitt 8.
+Dieses Dokument **bleibt**, bis seine Prüfliste (Abschnitt 3) abgehakt ist.
+
+Geführt nach K9: Was ist geprüft, wie, mit welchem Ergebnis; was ist noch
+offen, und wie wird es geprüft. Die Verweise auf Konzeptabschnitte (5.x
+Zielbild, 11.x Umsetzungsprotokoll) zeigen auf den Stand unter jenem Commit.
 
 > **Statusblock**
 >
 > | | |
 > |---|---|
-> | Stand | 06.09.2026 — **AP1 bis AP8 geprüft** (Web 15.0.0 bis 15.5.1) · **Phase umgesetzt** |
+> | Stand | 06.09.2026 — **AP1 bis AP8 geprüft** (Web 15.0.0 bis 15.5.1) · **Phase abgeschlossen**, Erledigt-Zeile in `Rahmenplan.md` Abschnitt 8, Fassung 31 |
 > | Geprüft | P-02 bis P-30 vollständig · P-01 **teilweise** (Zwischenstand nach AP1; die Endfassung ist mit AP5 fällig geworden, weil das Menü jetzt steht) · P-09 **halb** (zweiter Browser fehlt) · P-24 **am Referenzbestand**, nicht an Produktivdaten · P-30 für die berührten Seiten (AP1: 4, AP2: 5, AP3: 9, AP4: 2, AP5: alle 46 einmal vollständig, AP7: alle 46 in **beiden** Eingabearten) · **Z-01 und Z-02 geklärt** |
 > | Offen | P-01 (Endfassung — jetzt fällig) · **P-34 gemessen NICHT erfüllt** (789 statt 780 px, siehe AP6) · P-02, P-09, P-10, P-21, P-24 in den Grenzen aus Abschnitt 0 |
 > | Fehlerfunde | **fünfzehn, alle behoben:** F-S8-P-01 bis -15 (Abschnitt 2) |

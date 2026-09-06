@@ -59,6 +59,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 ## Offen
 
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
+    *Ergänzung 06.09.2026 (Krypto-Review, R74):* Die Bestandsaufnahme
+    macht sie enger möglich als hier angenommen — **null**
+    Inline-Ereignisbehandler, **ein** `style`-Attribut, alle Skriptblöcke
+    über `ui_seite_start()`. Der Bauplan (Nonce je Anfrage, Report-Only
+    zuerst, Quellenliste für Kacheln und Photon) steht in
+    `docs/konzepte/Vorbereitung-Sicherheitspaket.md`, SP-5. Warum es
+    zählt: Daten- und Inhaltsschlüssel liegen als Hex im `sessionStorage`;
+    jede XSS-Lücke, auch eine in Leaflet oder SheetJS, liest sie aus.
    Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
    (Nr. 12), die Regel muss also nichts von außen erlauben.
 17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
@@ -370,6 +378,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfprotokoll, statt die Zahl schönzurechnen.
 
 43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt.**
+    *Entschieden 06.09.2026 (R74):* **Weg C sofort** (Sofortpaket, nur
+    Dokumente: die Zusage in `CLAUDE.md` 4, `Technik.md`, README, Handbuch
+    und im Datenschutztext auf das eingrenzen, was sie hält), **Weg B als
+    eigene Phase S11 nach P6, vor der Öffnung** — mit einem
+    Konto-Schlüsselpaar (Nr. 53), Umfang Spur, Phasenkoordinaten,
+    Reanimationsereignisse und Zielklinik, Altbestand per Einmalwerkzeug im
+    Browser. Die Uhr kann es: ECDH P-256, AES-256-CBC, HMAC-SHA256 ab
+    Connect IQ 3.0.0 (geprüft). Skizze in
+    `docs/konzepte/Vorbereitung-Sicherheitspaket.md`, SP-9.
     *Aufgenommen 30.08.2026 aus der ersten Rückmeldungsrunde.* Der Einsatzort
     ist mit Adresse und Koordinaten Ende-zu-Ende verschlüsselt — die Spur, die
     dorthin führt, und die Koordinate jeder Phase liegen im Klartext. Der Ort
@@ -559,6 +576,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Festlegung und kein Handgriff.
 
 53. **Konto-Schlüsselpaar für versiegelte Serversicherungen.**
+    *Ergänzung 06.09.2026 (R74):* Dasselbe Schlüsselpaar ist der Schlüssel
+    auf der Uhr für Weg B (Nr. 43): privater Teil unter dem
+    Inhaltsschlüssel gehüllt, öffentlicher Teil im Klartext ans Gerät. Die
+    offenen Fragen von hier (wo der private Teil lebt, Passwortwechsel)
+    sind damit beantwortet — er lebt wie `pat_wrap_rc`, und ein
+    Passwortwechsel berührt ihn nicht. Zuordnung damit **S11**, nicht mehr
+    „nach v1.0".
     Aus E-S2-19. Nächtliche Backups je Konto ohne Browser sind abgelehnt
     worden, weil der Server den Inhaltsschlüssel nicht hat und ihn nicht
     bekommen soll. Ein **öffentlicher** Schlüssel je Konto würde die Lücke
@@ -1255,6 +1279,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
 
 114. **Abgewiesene Pakete sichtbar machen und ausräumen.**
+    *Ergänzung 06.09.2026 (Krypto-Review AN-2):* Die Pakete bleiben samt
+    GPS-Spur **dauerhaft** liegen — sie überleben Trennen und Neukopplung,
+    und `dienst`-Zeilen werden nie gelöscht (`puffer/Puffer.kt:449-514`).
+    Das Sofortpaket Android räumt nach 30 Tagen und beim Trennen; der
+    Bedienweg von hier bleibt offen.
     *Aufgenommen 03.09.2026 aus S5 Paket E (B-S5Z-06).* Antwortet der Server
     auf ein Paket mit **400**, wird es im Puffer als `fehlerhaft = 1` markiert
     und damit aus der Warteschlange **und** aus der Anzeige genommen: Die App
@@ -1296,8 +1325,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     der Liste fehlen. Das Zweite ist deutlich billiger und fängt denselben
     Fehler. Dieselbe Frage stellt sich für
     `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
-
----
 
 117. **Niemand weiß, ob eine NutzerIn je ein Backup gezogen hat.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-07).* Die Kennzahlen
@@ -1426,6 +1453,207 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     eine Entscheidung, keine Selbstverständlichkeit. **Vorschlag:** eine
     unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
     Wartungsseite. Zuordnung: Backlog-Runde oder P6.
+
+127. **Anmeldeformular ohne CSRF-Token.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-8).* `login.php:246`
+    trägt kein Token; eine fremde Seite kann einen abgemeldeten Browser per
+    Top-Level-POST in ein Angreiferkonto anmelden. Patientenfelder sind
+    nicht betroffen (kein `edk`, fremde Hülle öffnet nicht), aber Eingaben
+    landen im fremden Konto. Die Sitzung besteht beim GET schon
+    (`login.php:13`), das Token ist also da. Zuordnung: Sofortpaket
+    Sicherheit (R74).
+
+128. **E-Mail-Wechsel im Profil ohne Passwortnachweis.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-7).* `einstellungen.php:92-106`
+    schreibt die Adresse allein mit CSRF-Token um — kein `old_token`, kein
+    `session_epoch`, keine Mail an die alte Adresse; die Verwaltung kann
+    sie ebenfalls ändern (`admin_user.php:127-133`). Die Kette endet im
+    Reset-Modus, der den Wiederherstellungsschlüssel braucht — keine
+    Offenlegung, aber Kontoübernahme für Klartextfelder und Aussperren.
+    Sofortpaket: Nachweis per `old_token` wie beim Passwortwechsel, Hinweismail
+    an die alte Adresse bei beiden Wegen; Bestätigung der neuen Adresse
+    kommt mit R37.6 in P5. Zuordnung: Sofortpaket Sicherheit (R74), Rest P5.
+
+129. **`apk/` und `demo/` liegen ungesperrt im Webroot.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-9).* `apk.php` verlangt
+    die Anmeldung, der Ordner selbst nicht (`apk_lib.php:22`, Dateinamen
+    vorhersagbar); `demo/fixture.json.gz` trägt das Schlüsselmaterial des
+    Demo-Kontos (öffentliches Passwort, also harmlos, aber unnötig). Anders
+    als `sicherungen/` legt kein Code eine Sperre an, und eine Datei in
+    `apk/` käme wegen der Deploy-Ausnahmeliste nie an. Zwei
+    `RewriteRule`-Zeilen in `.htaccess`. Zuordnung: Sofortpaket Sicherheit.
+
+130. **DOCTYPE-Sperre im GPX-Import umgehbar.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-10).* `gpx_lib.php:332`
+    prüft `/<!DOCTYPE/i` auf dem Rohtext; ein UTF-16-kodiertes GPX passiert
+    die Regex, libxml versteht es. Folge: interne Entitäten trotz Sperre
+    (Billion Laughs), XXE nicht (kein `NOENT`, `NONET`). Nur angemeldet,
+    12 MB Grenze. Vor der Regex: gültiges UTF-8 und kein Nullbyte —
+    GPX aus Geräten ist UTF-8. Zuordnung: Sofortpaket Sicherheit.
+
+131. **`wiederherstellen.php` gibt unangemeldet Auskunft.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-11).* Zeile 530 zeigt
+    den Datenbank-Fehlertext (Rechnername, Nutzer möglich), Zeile 538 die
+    Kontenzahl jedem Besucher. Fehlerkennung statt Text, „in Betrieb" ohne
+    Zahl. Zuordnung: Sofortpaket Sicherheit.
+
+132. **Klartext-Freitextfelder ohne Hinweis.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-12).* `notes` trägt den
+    Placeholder „Freitext (keine Patientendaten!)", `bw_info` („Namen /
+    Infos"), die Besatzungs-Freitexte und `days.notes` nicht
+    (`mission_fields.php:395,426,459`). Bedienfehler tragen Patientendaten
+    in den Klartext. Ein Schlüssel `hinweis` im Feldkatalog, ein Text für
+    alle; das Symbol dazu bringt Nr. 108. Zuordnung: Sofortpaket Sicherheit.
+
+133. **Klartext-Reste auf dem Server.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-13).* Während des
+    Komplettbackup-Baus liegt `dump.sql.gz` unversiegelt in
+    `sicherungen/komplett/.bau-*/`, Reste bis zum nächsten Lauf
+    (`komplett_lib.php:53-55,454,471`); Reset-Token bis zur Einlösung in der
+    PHP-Sitzungsdatei und im Zugriffslog des ersten GET (M1-06 kennt es);
+    bei Mailfehler zeigt die Verwaltung den Setz-Link. Sofortpaket: Bauordner
+    nach Fehlschlag räumen; der Rest wird in `Technik.md` benannt und
+    bleibt. Zuordnung: Sofortpaket Sicherheit.
+
+134. **Verlorene Uhr kann Phasen alter Einsätze ersetzen.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-14).* Der Geräteschlüssel
+    liegt auf der Garmin-Uhr im Klartext (`watch/source/Pair.mc:853`; die
+    Plattform hat nichts Besseres). Lesen kann ein Finder nichts —
+    `ingest.php` ist POST-only —, aber er kann Einsätze hochladen und
+    Phasen bestehender Einsätze ersetzen (`ingest.php:361`), bis das Gerät
+    im Web getrennt ist. Was schon geschützt ist: Einsätze mit
+    `manual = 1` überspringt `ingest.php` ganz (Z. 251), und Phasen werden
+    nur ersetzt, wenn der Upload mindestens so viele bringt (Z. 359).
+    **Entschieden (R74):** ein **Zeitfenster ab Einsatzbeginn**, innerhalb
+    dessen ein Gerät ersetzen darf; danach `ok` ohne Ersetzen (idempotent,
+    kein Fehler auf der Uhr); Neuanlage immer. **Entschieden: 72 h**
+    (damit ein Freitagsdienst am Montag noch nachkommt) — Konstante in `db.php`,
+    `JSON-Vertrag.md` und Handbuch 12 („Uhr verloren: sofort trennen").
+    Zuordnung: Sofortpaket Sicherheit.
+
+135. **Kleinigkeiten an Kopfzeilen und Maskierung.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-15).* `json_encode` in
+    Inline-Skripten ohne `JSON_HEX_TAG` (Seitenbruch möglich, keine
+    Ausführung, weil `\/` maskiert wird — `ui.php:1928-1940` und drei
+    weitere Stellen); `csrf_check()` ohne `(string)`-Cast (`csrf[]=x` →
+    500, `auth_guard.php:175`); HSTS ohne `includeSubDomains`, keine
+    `Permissions-Policy`; `querySelector` mit Wert aus dem URL-Fragment in
+    `suche.php:535` (Bruch, kein XSS). Sofortpaket: die `JSON_HEX`-Vorgabe
+    und der Cast; die Kopfzeilen mit der CSP (Nr. 8). Zuordnung:
+    Sofortpaket Sicherheit / P5.
+
+136. **Rundenzahl und Passwortregeln.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-3).* Gegen den
+    Datenbankabzug ist das Passwort die einzige Schranke, und der Server
+    kann seine Qualität nach Bauart nicht prüfen. 320 000 Runden liegen
+    unter der Empfehlung von 600 000 (OWASP 2023, Bitwarden); gemessen
+    165 → 285 ms je Ableitung auf einem CPU-Kern, für den Angreifer die
+    halbe Rate. `KDF_ITER_ZIEL = 600000`, Altwert in der Liste, stille
+    Anhebung wie M2-01; `pwquality.js` auf Mindestlänge 12 mit
+    Passphrasen-Empfehlung, Sperrliste um naheliegende Muster; der Satz
+    zur Bauform ins Handbuch 3.1 und aufs Notfallblatt (R37.11).
+    Zuordnung: Sofortpaket Sicherheit.
+
+137. **Photon und Kachelserver bekommen den Einsatzort im Klartext.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-6).* Beim Tippen der
+    Adresse geht der Text ab drei Zeichen an `photon.komoot.io`
+    (`ortsfeld.js:82,360`), die Umkehrsuche schickt die Koordinate
+    (`ortswahl.js:34`), die Kachelserver sehen den Ausschnitt. Nicht der
+    eigene Server, aber ein Dritter ohne Vertrag — der Wortlaut „keine
+    fremde Quelle zur Laufzeit" (`CLAUDE.md` 4) deckt es nicht. Sofortpaket:
+    Hinweis am Feld, Nennung im Datenschutztext, Schalter je Installation
+    (die Komponente hat `adresssuche` schon, `ortsfeld.js:118`);
+    **Entschieden (F-SP-4): Schalter je Installation, Vorgabe „an".** Selbstbetrieb ist
+    die Frage von Nr. 101 (S9 PS-1) mit der Hosting-Entscheidung.
+    Zuordnung: Sofortpaket Sicherheit, Rest S9.
+
+138. **Weg C: die Zusage auf das eingrenzen, was sie hält.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-1), entschieden R74.*
+    Nur Dokumente, keine Versionsstufe: `CLAUDE.md` 4, `Technik.md` 4.98,
+    README, Handbuch 5 und der Entwurf des Datenschutztextes sagen, dass
+    Spur, Phasenkoordinaten, Zielklinik, Zeiten und Reanimationsereignisse
+    im Klartext liegen und der Einsatzort daraus rekonstruierbar ist (Nr. 43,
+    `Konzept-V1-Ortsdaten.md` Weg C). Zuordnung: Sofortpaket Sicherheit.
+
+139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
+    Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
+    mit allen Klartextfeldern, E-Mail, Name und `pat_wrap_rc`; der Versand
+    lässt reines `ftp` zu (`schema.sql:512`) und prüft bei FTPS kein
+    Zertifikat (`sicherungsziel_lib.php:31-33`). Die Begründung in
+    `Backup-Format.md` 5 („kein Schlüssel, ohne ihn zu speichern") ist seit
+    dem Serverschlüssel (Web 12.1.0) überholt. Versiegeln mit
+    `sk_versiegeln()` wie das Komplettbackup, `ftp` aus der Auswahl,
+    bestehende `ftp`-Ziele mit rotem Hinweis. Zuordnung: **S10** (R74).
+
+140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-16).* Die
+    FTPS-Action deployt jeden Push mit Klartext-Zugangsdaten in Secrets;
+    jedes Konto mit Push-Recht kann `crypto.js` ändern und Passwörter beim
+    nächsten Anmelden abgreifen — der eine Angriff, gegen den keine
+    Browser-Verschlüsselung hilft. Das Repositorium ist öffentlich;
+    Branch-Schutz, 2FA-Zwang und Umgebungs-Freigaben kosten nichts.
+    **Entschieden (R74):** Branch-Schutz und 2FA sofort (Zuarbeit), das
+    Deploy-Tor erst mit dem Staging-Aufbau (R40 (2)); die
+    **Integritätswache** (tägliche Action vergleicht die ausgelieferten
+    Skripte mit dem Release) kommt sofort mit dem Sofortpaket (F-SP-9).
+    Zuordnung: Zuarbeit sofort, Sofortpaket Sicherheit (Wache), S10
+    (Deploy-Tor mit R40 (2)).
+
+141. **Zweitfaktor für alle Konten.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
+    Anmeldung **und** Datenschlüssel; Phishing genügt für alles. R38 sieht
+    TOTP nur für Admin-Konten vor. **Entschieden (R74):** für alle Konten
+    angeboten, für Admins Pflicht; Geheimnis serverseitig versiegelt
+    (`sk_versiegeln()`), `otpauth://`-Text statt QR-Fremdbestandteil, acht
+    Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
+    nicht den Offline-Angriff (dafür S10). Zuordnung: **P5** (erweitert
+    R38).
+
+142. **Android: HTTP-Ausnahme gilt auch im Release-Build.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-1).*
+    `Serveradresse.kt:108,119` lässt `localhost` und IPv4-Adressen mit
+    `http` durch und stuft ein ausdrückliches `https://127.0.0.1/` herab
+    (Test `oertlicheAdressenBehaltenHttp`); keine
+    Release-`network_security_config`. Auf Android 8.0/8.1 ginge
+    `X-Api-Key` bei einer Selbsthoster-Adresse per IP im Klartext; der
+    Standardbau ist nicht betroffen. Ausnahme an `BuildConfig.DEBUG`,
+    Klartextverbot im Release. Zuordnung: Sofortpaket Android (R74).
+
+143. **Android: Verzicht auf Certificate Pinning ist nicht festgehalten.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-3).* Vertretbar bei
+    fester Domain mit rotierendem Zertifikat, aber nirgends entschieden
+    (`docs/` und `android/`: kein Treffer). Eine Zeile in
+    `android/LIESMICH.md`. Zuordnung: Sofortpaket Android.
+
+144. **Android: Data-Layer-Empfang ohne Absender- und Plausibilitätsprüfung.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-4).*
+    `HandyHorcher.kt:30-32` und `Uhrannahme.kt:63-92` prüfen keinen
+    `sourceNodeId` und keine Zeitstempel; jede `uhr`-Kennung wird als neue
+    Uhr geführt. Kein Abflussweg, nur Störung — das Vertrauen ruht auf der
+    proprietären Bibliothek (gleiches Paket, gleiche Signatur). Absender
+    gegen die verbundenen Knoten, Zeiten gegen Dienstfenster;
+    Robolectric-Prüffall mit Attrappe. Zuordnung: Sofortpaket Android.
+
+145. **Android: Gradle-Wrapper ohne Prüfsumme.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-5).*
+    `gradle-wrapper.properties:3-5` ohne `distributionSha256Sum` (begründet
+    mit dem gesperrten `downloads.gradle.org` — die Summe wird aber nur
+    beim Herunterladen geprüft und stört den Container nicht);
+    `gradle-wrapper.jar` im Repositorium unvalidiert. R8 bleibt aus,
+    Begründung steht. Zuordnung: Sofortpaket Android.
+
+146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.**
+    *Aufgenommen 06.09.2026 (R74).* Drei Fragen, keine Fehler: **Argon2id
+    statt PBKDF2** (WASM-Fremdbestandteil gegen GPU-Resistenz; nach S10
+    klein, weil der Abzug allein dann nichts mehr nützt) · **Inhaltsschlüssel
+    als nicht-extrahierbarer `CryptoKey`** statt Hex im `sessionStorage`
+    (ein XSS könnte dann entschlüsseln, den Schlüssel aber nicht mitnehmen;
+    anderes Lebensdauermodell, „ein Tab, ein Schlüssel") · **Passkeys** als
+    Zweitfaktor (WebAuthn-Serverbibliothek) und **Passkeys mit PRF** als
+    Ersatz der Passwortableitung (Bitwarden seit 2024). Dazu die
+    Design-Skizze für Weg B (Nr. 43, SP-9) zur Prüfung. Zuordnung: P6,
+    R17 Stück 1.
 
 ---
 
