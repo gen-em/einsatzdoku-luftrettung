@@ -1376,9 +1376,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nur ersetzt, wenn der Upload mindestens so viele bringt (Z. 359).
     **Entschieden (R74):** ein **Zeitfenster ab Einsatzbeginn**, innerhalb
     dessen ein Gerät ersetzen darf; danach `ok` ohne Ersetzen (idempotent,
-    kein Fehler auf der Uhr); Neuanlage immer. **Die Zahl ist offen**
-    (48 h vorgeschlagen vom Auftraggeber, 72 h vom Review, damit ein
-    Freitagsdienst am Montag noch nachkommt) — Konstante in `db.php`,
+    kein Fehler auf der Uhr); Neuanlage immer. **Entschieden: 72 h**
+    (damit ein Freitagsdienst am Montag noch nachkommt) — Konstante in `db.php`,
     `JSON-Vertrag.md` und Handbuch 12 („Uhr verloren: sofort trennen").
     Zuordnung: Sofortpaket Sicherheit.
 
@@ -1414,7 +1413,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     fremde Quelle zur Laufzeit" (`CLAUDE.md` 4) deckt es nicht. Sofortpaket:
     Hinweis am Feld, Nennung im Datenschutztext, Schalter je Installation
     (die Komponente hat `adresssuche` schon, `ortsfeld.js:118`);
-    **Umfang und Vorgabe des Schalters offen (F-SP-4)**. Selbstbetrieb ist
+    **Entschieden (F-SP-4): Schalter je Installation, Vorgabe „an".** Selbstbetrieb ist
     die Frage von Nr. 101 (S9 PS-1) mit der Hosting-Entscheidung.
     Zuordnung: Sofortpaket Sicherheit, Rest S9.
 
@@ -1447,8 +1446,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Entschieden (R74):** Branch-Schutz und 2FA sofort (Zuarbeit), das
     Deploy-Tor erst mit dem Staging-Aufbau (R40 (2)); die
     **Integritätswache** (tägliche Action vergleicht die ausgelieferten
-    Skripte mit dem Release) ist offen (F-SP-9). Zuordnung: Zuarbeit
-    sofort, S10.
+    Skripte mit dem Release) kommt sofort mit dem Sofortpaket (F-SP-9).
+    Zuordnung: Zuarbeit sofort, Sofortpaket Sicherheit (Wache), S10
+    (Deploy-Tor mit R40 (2)).
 
 131. **Zweitfaktor für alle Konten.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist

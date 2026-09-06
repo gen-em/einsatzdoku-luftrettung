@@ -6,9 +6,10 @@ Preisen und den offenen Entscheidungen, aus der nach dem Go des
 Auftraggebers ein Konzept nach K1 entsteht. **Anlass:** Frage vom
 06.09.2026 zu `Review-Krypto-Sicherheit.md`: *„Kann man diese Punkte
 angehen? Oder sind sie schon adressiert? Was sind deine Vorschläge?"*
-**Status:** Vorschläge, nichts umgesetzt. **Sieben Entscheidungen sind am
-06.09.2026 gefallen (Abschnitt 6a), drei stehen offen (Abschnitt 6b).**
-Rahmenplan Fassung 28 (R74) und Backlog 117–136 tragen den Stand.
+**Status:** Vorschläge, nichts umgesetzt. **Alle zehn Entscheidungen sind
+am 06.09.2026 gefallen (Abschnitt 6a); Abschnitt 6b hält die Erklärungen
+zu den drei zuletzt entschiedenen fest.** Rahmenplan Fassung 28 (R74) und
+Backlog 117–136 tragen den Stand. **Das Sofortpaket kann beginnen.**
 **Stand:** 06.09.2026, Web 14.2.2, Uhr 3.0.2, Android 0.13.0.
 
 **Bezeichner:** Die Vorschläge heißen **SP-1 bis SP-14**, die offenen
@@ -478,7 +479,7 @@ Punkt, kein Konzept nach K1, Prüfdokument mit Zahlen), **Rang Neben**:
 | K-11 | Auskunft in `wiederherstellen.php` | Fehlerkennung statt Fehlertext (`fehler_kennung()` existiert), „in Betrieb" ohne Kontenzahl |
 | K-12 | Freitext ohne Hinweis | Schlüssel `hinweis` im Feldkatalog für `bw_info`, `notes` und die Besatzungs-Freitexte; `days.notes` im Diensttagformular; Text „Klartext — keine Patientendaten" (Backlog 108 bringt später das Symbol) |
 | K-13 | Klartext-Reste | Bauordner `sicherungen/komplett/.bau-*` nach Fehlschlag sofort räumen; Rest bleibt und wird in `Technik.md` benannt |
-| K-14 | Verlorene Uhr | Handbuch 12: „Uhr verloren → sofort trennen"; **Zeitfenster ab Einsatzbeginn** für das Ersetzen von Phasen und das Anhängen von Punkten an bestehende Einsätze, danach `ok` ohne Ersetzen; Neuanlage immer; die Zahl ist **F-SP-8** |
+| K-14 | Verlorene Uhr | Handbuch 12: „Uhr verloren → sofort trennen"; **Zeitfenster ab Einsatzbeginn** für das Ersetzen von Phasen und das Anhängen von Punkten an bestehende Einsätze, danach `ok` ohne Ersetzen; Neuanlage immer; **72 h** (F-SP-8) |
 | K-15 | Header und Escaping | `JSON_HEX_TAG\|JSON_HEX_AMP\|JSON_HEX_APOS\|JSON_HEX_QUOT` als Vorgabe in `ui_krypto_bootstrap()` und den anderen Inline-`json_encode`-Stellen; `csrf_check()` mit `(string)`-Cast; HSTS-Erweiterung mit SP-5 |
 | K-6a | Photon-Hinweis und Schalter | SP-12 (a) |
 | K-1c | Weg C | SP-8 (nur Dokumente, kein Versionssprung) |
@@ -507,9 +508,9 @@ Eine Android-Versionsstufe Neben; Emulator-Lauf mit Bildern nach
 | Schritt | Inhalt | Form | Rang |
 |---|---|---|---|
 | 0 | SP-4 GitHub-Zuarbeit; SP-12 (a) Datenschutztext | Zuarbeit, kein Code | — |
-| 1 | **Sofortpaket Web:** SP-1, SP-2, SP-8, SP-12 (a) Hinweis und Schalter, SP-13 — Rahmenplan Schritt 9a, Backlog 117–128 | Kleinauslieferung, Muster R42, Prüfdokument | Web Neben |
+| 1 | **Sofortpaket Web:** SP-1, SP-2, SP-8, SP-12 (a) Hinweis und Schalter, SP-13, SP-6 Integritätswache — Rahmenplan Schritt 9a, Backlog 117–128 und 130 | Kleinauslieferung, Muster R42, Prüfdokument | Web Neben |
 | 2 | **Sofortpaket Android:** SP-14 — Rahmenplan Schritt 9a, Backlog 132–135 und 114 | Kleinauslieferung | Android Neben |
-| 3 | **Zwischenpaket „Sicherheit":** SP-3 Server-Anteil samt Schlüsselblatt und Kennung, SP-10 Adminpakete; SP-6 Integritätswache je nach F-SP-9 schon in Schritt 1 — Rahmenplan Schritt 9b, **S10**, vor P5 | Konzept nach K1 (Fable), Umsetzung Opus, Prüfdokument | Web Haupt |
+| 3 | **Zwischenpaket „Sicherheit":** SP-3 Server-Anteil samt Schlüsselblatt und Kennung, SP-10 Adminpakete — Rahmenplan Schritt 9b, **S10**, vor P5 | Konzept nach K1 (Fable), Umsetzung Opus, Prüfdokument | Web Haupt |
 | 4 | **P5** nimmt SP-5 (CSP-Bauplan) und SP-11 (Zweitfaktor für alle) als Präzisierung von Backlog 8 und R38 auf | im P5-Konzept | — |
 | 5 | **P6-Bedrohungsmodell** entscheidet SP-3b, SP-7, Passkeys/PRF, F-SP-7 | Review R17 Stück 1 | — |
 | 6 | **Weg B** (SP-9) als eigene Phase — Rahmenplan Schritt 12a, S11, vor der Öffnung | Konzept nach K1 (Fable) | Web, Uhr, Android Haupt |
@@ -530,8 +531,11 @@ Hauptversionssprung und gehört **nicht** in die Backlog-Runde.
 | F-SP-6 | Weg B: Altbestand | **Einmalwerkzeug.** Es gibt nur ein Konto; die alten Spuren werden einmal umgeschlüsselt — im Browser, weil nur dort der Schlüssel liegt — über eine eigene Datei, die danach verworfen wird. Kein dauerhafter Produktweg, keine Umschlüsselung „auf Vorrat" |
 | F-SP-7 | Weg B: Umfang | **(c)** — Spur, Phasenkoordinaten, Reanimationsereignisse **und** Zielklinik. Folge: beide Statistiken zählt der Browser, der Klinik-Pin erscheint erst nach dem Entsperren; die Klartext-Entscheidung in `mission_fields.php:354` wird dort umgekehrt und begründet |
 | F-SP-10 | Deploy-Tor | **(b)** — erst mit dem Staging-Aufbau (R40 (2), P5-Beginn). Bis dahin: Branch-Schutz und 2FA (SP-4.1, 4.2) sofort; der Autodeploy bleibt |
+| F-SP-4 | Photon | **(a)** — Hinweis am Feld, Nennung im Datenschutztext, Schalter je Installation mit Vorgabe „an" (Backlog 127). Selbstbetrieb bleibt bei S9 PS-1 |
+| F-SP-8 | Ersetzfenster der Uhr | **72 h ab Einsatzbeginn** (Backlog 124); Konstante in `db.php`, genannt in `JSON-Vertrag.md` und Handbuch 12 |
+| F-SP-9 | Integritätswache | **(a)** — sofort, im Zweig des Sofortpakets (Backlog 130); keine eigene Mailadresse |
 
-## 6b. Offen — drei Fragen, ausführlicher erklärt
+## 6b. Die drei zuletzt entschiedenen Fragen — Erklärung und Entscheidung
 
 ### F-SP-4 — Photon: was ist das Problem, was die Absicht
 
@@ -570,7 +574,7 @@ beantwortet.
 | (b) wie (a), Vorgabe **aus** | Adressvorschläge und Umkehrsuche sind aus, bis die Administration sie einschaltet; Koordinaten, Plus-Codes und Kartenwahl bleiben | Jede NutzerIn verliert die Vorschläge, bis jemand den Schalter findet |
 | (c) Adresssuche abschaffen | Nur Koordinaten, Plus-Codes und Karte; die Karte selbst braucht weiter Kacheln | Der Abfluss der Adresse endet, der der Kacheln nicht; Bedienung im Einsatz wird spürbar schlechter |
 
-**Vorschlag: (a).**
+**Entschieden am 06.09.2026: (a).**
 
 ### F-SP-8 — Ersetzfenster der Uhr: was schon geschützt ist, und die Zahl
 
@@ -601,7 +605,7 @@ angenommen; sie sind sichtbar und löschbar.
 | **72 h** (Review) | deckt das Wochenende | ein Tag mehr Fenster |
 | 7 Tage | deckt Urlaub mit Uhr im Koffer | für einen Finder eine ganze Woche |
 
-**Vorschlag: 72 h**, als Konstante in `db.php` neben `PAIR_TTL_MIN`; die
+**Entschieden am 06.09.2026: 72 h**, als Konstante in `db.php` neben `PAIR_TTL_MIN`; die
 Zahl steht im Handbuch 12 bei „Uhr verloren: sofort trennen" und im
 `JSON-Vertrag.md`.
 
@@ -633,7 +637,7 @@ Nachmittag, keine Versionsstufe.
 | (b) mit R67 | erst mit der Auslieferungskette in P5/P8; bis dahin merkt niemand eine Manipulation |
 | (c) gar nicht | Erkennung bleibt dem Zufall überlassen |
 
-**Vorschlag: (a).**
+**Entschieden am 06.09.2026: (a).**
 
 ## 7. Was dieses Dokument nicht ist
 
