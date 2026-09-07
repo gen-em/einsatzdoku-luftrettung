@@ -17,7 +17,7 @@ Mockups in `konzept-s9/mockups/`.
 > | Stand | 07.09.2026 — **Konzept freigegeben.** E-S9-01 bis -17 am 06.09.2026 bestätigt, E-S9-18 und -19 am 07.09.2026; alle sieben Mockups freigegeben (Abschnitt 6). PS-12 (Standortseiten, Backlog 152) am 07.09.2026 aufgenommen. Rahmenplan Fassung 34 trägt die Einschübe aus Abschnitt 7 |
 > | Entschieden | E-S9-01 bis E-S9-19 (Abschnitt 2) |
 > | Offen | nichts. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
-> | Umsetzung | **AP1 und AP2 erledigt** (07.09.2026, Web 15.6.0 / 15.6.1 / **15.7.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. **AP3 wartet auf das Wort des Auftraggebers.** Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
+> | Umsetzung | **AP1 und AP2 erledigt** (07.09.2026, Web 15.6.0 / 15.6.1 / **15.7.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. **AP3 ist beauftragt** (07.09.2026). Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
 > | Fable-Schritte der Umsetzung | **keine** — der einzige Fable-Vorbehalt der Vorbereitung (PS-8.2) ist im Konzept aufgelöst (Abschnitt 1.8) |
 
 > **Stand der Umsetzung**
@@ -54,13 +54,13 @@ Mockups in `konzept-s9/mockups/`.
 > verwirft. Die beiden gesammelten Funde aus AP1 (F-S9-P-05, -06) sind
 > abgeräumt.
 >
-> **Zwei Fragen aus AP2** (Prüfdokument, Abschnitt 4): **Frage 4** — Pfeile
-> auf der Spur im Kartendialog? Konzepttext E-S9-06 (b) sagt „keine Pfeile",
-> Anmerkung 3 des Mockups M-S9-04 sagt „Pfeile wie in der Einsatzansicht", und
-> das Bild zeichnet einen. Gebaut ist **ohne**; eine Gegenentscheidung kostet
-> vier Zeilen. **Frage 5** — der Kopf des Kartendialogs ist jetzt eine
-> Überschrift wie in jedem anderen Dialog (bisher nackter Text); das Mockup
-> zeigt es so, das Konzept schweigt.
+> **Die zwei Fragen aus AP2 sind entschieden** (Auftraggeber, 07.09.2026):
+> **Frage 4** — Pfeile auf der Spur im Kartendialog: **nein**. Der
+> Konzepttext E-S9-06 (b) geht vor, Anmerkung 3 des Mockups M-S9-04 ist an
+> dieser Stelle überholt; der gebaute Stand bleibt, die Sollzahl der
+> Klickprobe (0 Pfeile) gilt weiter. **Frage 5** — die Überschrift im Kopf
+> des Kartendialogs: **lassen**. Von den fünf Fragen der Umsetzung sind damit
+> vier entschieden; offen ist allein Frage 2 aus AP1.
 
 ---
 

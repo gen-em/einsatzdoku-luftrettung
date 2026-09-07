@@ -17,7 +17,8 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 > | Stand | 07.09.2026 — **AP1 und AP2 gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, **15.7.0**). AP3 bis AP8 offen |
 > | Geprüft | P-01 bis P-07 und P-32 vollständig · P-23 für die **zehn berührten** Seiten, nicht für alle 30 · P-12, P-25 als Gesamtlauf |
 > | Offen | P-08 bis P-11, P-13 bis P-22, P-24, P-26, P-28 bis P-31, P-33 (AP3 bis AP8) |
-> | Fehlerfunde | **acht, alle behoben** — F-S9-P-01 bis F-S9-P-04, F-S9-P-07 bis **F-S9-P-10** (Abschnitt 2); die beiden gesammelten Funde F-S9-P-05 und -06 sind mit AP2 **abgeräumt**. Von den **drei Fragen** aus AP1 sind zwei entschieden; AP2 stellt **zwei neue** (Abschnitt 4) |
+> | Fragen | **fünf gestellt, vier entschieden** (07.09.2026): Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen**. Offen bleibt allein Frage 2 aus AP1, und der gebaute Stand dazu läuft grün |
+> | Fehlerfunde | **acht, alle behoben** — F-S9-P-01 bis F-S9-P-04, F-S9-P-07 bis **F-S9-P-10** (Abschnitt 2); die beiden gesammelten Funde F-S9-P-05 und -06 sind mit AP2 **abgeräumt** |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` — 88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto, 8 Zielkliniken, 8 weitere Rettungsmittel, 15 Besatzungs-Vorbelegungen an zwei Standorten |
 
 ---
@@ -431,6 +432,12 @@ Gegenentscheidung steht dabei.
 ### Neu aus AP2
 
 **Frage 4 — Pfeile auf der Spur im Kartendialog: ja oder nein?**
+**Entschieden vom Auftraggeber am 07.09.2026: nein.** Der gebaute Stand
+bleibt, es ändert sich keine Zeile; die Sollzahl der Klickprobe (**0 Pfeile**)
+gilt weiter. Damit steht auch fest, wie der Widerspruch zu lesen ist: Der
+Konzepttext geht vor, die Anmerkung 3 des Mockups ist an dieser Stelle
+überholt.
+
 *Zwei Stellen der freigegebenen Unterlage sagen Verschiedenes.* Der
 Konzepttext ist eindeutig: E-S9-06 (b) verlangt „Linie in der ersten
 Spurfarbe, Ringpunkte für Start und Ende (`EdGeo.markerRing`), **keine
@@ -452,6 +459,9 @@ Im Auswahldialog wird ein Punkt gewählt, keine Fahrt gelesen; die Pfeile
 liegen auf der Linie und damit genau dort, wo das Fadenkreuz hin soll.
 
 **Frage 5 — Der Kopf des Kartendialogs ist jetzt eine Überschrift.**
+**Entschieden vom Auftraggeber am 07.09.2026: lassen.** Der gebaute Stand
+bleibt.
+
 *Das Konzept schweigt, das Mockup zeigt es so.* Der Dialog trug seinen Titel
 seit Web 9.4.0 als **nackten Text** (`<div class="dialog-kopf">Auf der Karte
 wählen</div>`) — als einziger Dialog der Anwendung; alle übrigen schreiben
@@ -525,8 +535,8 @@ Wo Mockup und Umsetzung auseinandergehen, steht es hier (Konzept, Abschnitt 6:
 | Dichte Stufe | `.dicht .vorschlag{padding-top:2px;padding-bottom:2px}` | keine eigene Regel | `2px` ist kein Token, und die Skala ist geschlossen (`Design.md` 5). Gemessen ändert die Regel nichts am Ergebnis: Eine zweizeilige Zeile ist mit **und** ohne sie höher als beide Bedienhöhen (51 px), eine einzeilige folgt `--knopf` von selbst (44/36, gemessen). Die Regel hätte eine Zahl eingeführt, die nichts bewirkt |
 | Leerer Zustand | `.vorschlaege-leer` („keine Treffer") | nicht gebaut | Der Baustein versteckt die Liste, wenn sie leer ist — so verhielten sich beide Vorgänger, und das Konzept verlangt nichts anderes. Eine Zeile „keine Treffer" wäre eine neue Darstellung ohne Freigabe |
 | **M-S9-04:** Legende als `<div>` statt `<p>` | `<div class="legende">` | `<div class="legende">` | Keine Abweichung — hier nur festgehalten, weil der erste Entwurf ein `<p>` benutzte: `.dialog-inhalt p` trägt eigene Ränder, und die Legende ist keine Aussage in Sätzen, sondern eine Zeichenerklärung |
-| **M-S9-04:** Pfeile auf der Spur | Anmerkung 3: „Pfeile wie in der Einsatzansicht"; Zustand D zeichnet einen | **keine Pfeile** | Der **Konzepttext** E-S9-06 (b) verlangt ausdrücklich „keine Pfeile, keine Luftlinie", und er ist die normative Stelle; die Zeile „Zur Freigabe" des Mockups nennt die Pfeile nicht mit. **Frage 4 in Abschnitt 4** |
-| **M-S9-04:** Kopf des Dialogs | `<h2>` im Kopf | `<h2>` im Kopf | Umgestellt vom bisherigen nackten Text. Sichtbare Folge: Kopfschrift, `--groesse-6` statt Fließtextgröße. **Frage 5 in Abschnitt 4** |
+| **M-S9-04:** Pfeile auf der Spur | Anmerkung 3: „Pfeile wie in der Einsatzansicht"; Zustand D zeichnet einen | **keine Pfeile** | Der **Konzepttext** E-S9-06 (b) verlangt ausdrücklich „keine Pfeile, keine Luftlinie", und er ist die normative Stelle; die Zeile „Zur Freigabe" des Mockups nennt die Pfeile nicht mit. **Vom Auftraggeber bestätigt am 07.09.2026** (Frage 4) |
+| **M-S9-04:** Kopf des Dialogs | `<h2>` im Kopf | `<h2>` im Kopf | Umgestellt vom bisherigen nackten Text. Sichtbare Folge: Kopfschrift, `--groesse-6` statt Fließtextgröße. **Vom Auftraggeber bestätigt am 07.09.2026** (Frage 5) |
 | **M-S9-04:** Suchfeld im Kopf, Innenabstand | Zustand A–C: `.dialog-suche` im Kopf, `.dialog-inhalt` mit `padding-top:0` (inline) | dasselbe, als Regel `.dialog-karte .dialog-inhalt{padding-top:0}` | Ein Inline-Stil im Mockup ist eine Notiz, keine Regel; im Stylesheet steht sie auf den Kartendialog begrenzt. Kein neues Token |
 | **E-S9-05:** Absatz im Datenschutztext | Konzept: „Vorlage in `rechtstexte_lib.php`, Abschnitt zur Adresssuche mit Dienstadresse als Platzhalter" | **Textbaustein zum Kopieren** auf Verwaltung → Installation | `rechtstexte_lib.php` hat **keine** Vorlagen und kann keine haben: Die Anwendung liefert grundsätzlich keinen Rechtstext mit (`admin_installation.php`, Handbuch 11.5) — ein eingesetzter Absatz wäre eine Rechtsauskunft, die dieses Projekt nicht gibt. Sie kann ihn nur **bereitlegen**: fertiger Abschnitt mit der eingetragenen Dienstadresse, Kopieren-Knopf, sichtbar nur solange die Suche an ist |
 | Behälter des Besatzungsfeldes | `<div class="loc-widget">` mit Label daneben | `<label class="feld-vorschlag">` wie bisher | Das Mockup benutzt `.loc-widget` nur, um `position:relative` zu bekommen; `.loc-widget` trägt daneben die Abstände des Ortsfelds. Die Feldstruktur des Formulars bleibt damit unberührt — eine Umstellung auf `ui_feld()` wäre eine Änderung ohne Auftrag |
