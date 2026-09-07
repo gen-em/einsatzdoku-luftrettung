@@ -2453,9 +2453,9 @@ Gerät wieder frei.
 >
 > Bis dahin gilt seit Web 15.6.0 eine Grenze: Ein Gerät darf einen
 > **bestehenden** Einsatz oder eine bestehende Ruhezeit nur noch **72 Stunden**
-> lang verändern, gerechnet ab dessen Beginn — so, wie der Server ihn kennt:
-> Geht die Uhr des Geräts falsch, zählt der Augenblick, in dem das erste Paket
-> ankam. Danach nimmt der Server das
+> lang verändern, gerechnet ab dem Augenblick, in dem das erste Paket dazu
+> beim Server ankam — nicht ab der Uhr des Geräts, die nach- oder vorgehen
+> kann. Danach nimmt der Server das
 > Paket zwar an — die Uhr soll nicht in eine Fehlerschleife laufen —, ändert
 > aber nichts mehr daran. Die 72 Stunden decken das Wochenende ab: Ein
 > Freitagsdienst, der erst am Montag synchronisiert, kommt noch nach.

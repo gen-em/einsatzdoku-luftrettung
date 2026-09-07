@@ -699,10 +699,11 @@ Zusätzlich können auftreten:
 | `cut_points` | Punkte, die in einen **herausgeschnittenen** Zeitraum fallen (S4, E-S4-53). Aus dieser Spur ist ein Einsatz geschnitten worden; die Punkte stehen dort bereits. Sie sind quittiert, die Uhr darf sie löschen. Wie `dropped_points` kein Datenfehler — und bewusst ein eigenes Feld: Ausdünnung und Schnitt sind verschiedene Vorgänge, und in der Fehlersuche will man sie unterscheiden |
 
 > **Das Ersetzfenster** (seit Web 15.6.0, Backlog Nr. 134). Ein **bestehender**
-> Datensatz lässt sich nur **72 Stunden** ab seinem Beginn, **wie der Server
-> ihn kennt**, von seinem Gerät verändern: ab dem Späteren aus dem
-> gespeicherten `started_at` und dem serverseitigen `created_at` — ein
-> `started_at` in der Zukunft zählt nicht. Danach antwortet `ingest.php`
+> Datensatz lässt sich nur **72 Stunden** ab dem Augenblick, in dem der
+> Server ihn **zum ersten Mal gesehen** hat (`created_at`), von seinem Gerät
+> verändern — nicht ab `started_at`, weder dem gesendeten noch dem
+> gespeicherten; das stammt vom Gerät, und eine Geräteuhr kann nach- wie
+> vorgehen. Danach antwortet `ingest.php`
 > weiterhin mit `ok` — ein Fehler ließe die Uhr endlos wiederholen —,
 > übernimmt aber weder Metadaten noch Phasen, Reanimation oder Punkte, rührt
 > den Diensttag nicht an und sagt das über die `kept_*`-Felder (`kept_meta`

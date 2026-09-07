@@ -207,22 +207,36 @@ try {
     /* ---- Ersetzfenster (Backlog Nr. 134, K-14, F-SP-8) -------------------
      *
      * Ein BESTEHENDER Datensatz laesst sich nur INGEST_ERSETZFENSTER_H Stunden
-     * lang von seinem Geraet veraendern -- gerechnet ab dem Einsatzbeginn,
-     * WIE DER SERVER IHN KENNT: dem Spaeteren aus dem gespeicherten
-     * `started_at` und dem serverseitigen `created_at`, und nie spaeter als
-     * jetzt. Nicht ab dem gesendeten `started_at`: Den bestimmt der Absender,
-     * und genau der ist hier der Unsichere.
+     * lang von seinem Geraet veraendern -- gerechnet ab dem Augenblick, in
+     * dem der Server ihn ZUM ERSTEN MAL GESEHEN hat (`created_at`). Nicht ab
+     * dem gesendeten `started_at`: Den bestimmt der Absender, und genau der
+     * ist hier der Unsichere.
      *
-     * WARUM NICHT `started_at` ALLEIN (Nachbesserung 07.09.2026, Gegenpruefung
-     * des Web-Teils, Funde 2 und 5): Auch das gespeicherte `started_at`
-     * stammt beim Anlegen vom Geraet. Eine Uhr mit falsch gestellter Zeit
-     * (Reset ohne Zeitabgleich) legte ihren Einsatz mit einem Datum von vor
-     * Jahren an -- das Fenster war im selben Augenblick zu, der LAUFENDE
-     * Einsatz verlor Punkte und Phasen, und weil `next_seq` weiterwanderte,
-     * loeschte die Uhr sie als quittiert. Umgekehrt haette ein `started_at`
-     * in der Zukunft das Fenster nie geschlossen. `created_at` kennt keine
-     * dieser Uhren; es ist die Zeit, zu der der Server den Datensatz zum
-     * ersten Mal gesehen hat.
+     * WARUM NICHT `started_at` (Nachbesserung 07.09.2026, Gegenpruefung des
+     * Web-Teils, Funde 2 und 5): Auch das gespeicherte `started_at` stammt
+     * beim Anlegen vom Geraet. Eine Uhr mit falsch gestellter Zeit (Reset
+     * ohne Zeitabgleich) legte ihren Einsatz mit einem Datum von vor Jahren
+     * an -- das Fenster war im selben Augenblick zu, der LAUFENDE Einsatz
+     * verlor Punkte und Phasen, und weil `next_seq` weiterwanderte, loeschte
+     * die Uhr sie als quittiert. Umgekehrt haette ein `started_at` in der
+     * Zukunft das Fenster nie geschlossen.
+     *
+     * UND WARUM NICHT DAS SPAETERE AUS BEIDEN (zweite Gegenpruefung, auf die
+     * Nachbesserung selbst): So stand es einen Nachmittag lang hier --
+     * `max(started_at, created_at)`, ein `started_at` in der Zukunft zaehlt
+     * nicht. Aber "in der Zukunft" wurde bei jedem Paket neu gegen jetzt
+     * gerechnet: Ein `started_at`, das beim Anlegen 99 Stunden vorn lag,
+     * zaehlte nicht, solange es vorn lag -- und wurde zum Anker, sobald die
+     * Zeit es eingeholt hatte. Das laengst geschlossene Fenster ging dann
+     * noch einmal fuer 72 Stunden auf, und zwar zu einem Zeitpunkt, den das
+     * Geraet bestimmt hatte. Wendet man "Zukunft zaehlt nicht" dagegen auf
+     * den Augenblick des Anlegens an, ist ein `started_at` spaeter als
+     * `created_at` immer Zukunft, und das Spaetere aus beiden ist immer
+     * `created_at`. Also steht es hier so: `created_at` ist der Anker. Es
+     * kennt keine Geraeteuhr, weder eine nach- noch eine vorgehende.
+     * `started_at` dient nur als Rueckfall, solange die Migration
+     * `2026_09_07_rest_segments_created_at` nicht gelaufen ist -- und auch
+     * dann nie spaeter als jetzt.
      *
      * Innerhalb des Fensters bleibt alles wie bisher, damit eine Nachlieferung
      * nach einem Funkloch ankommt. Danach: `ok` ohne Ersetzen, ohne Anhaengen,
@@ -239,13 +253,16 @@ try {
             $t = $wert !== null ? strtotime($wert . ' UTC') : false;
             return $t === false ? null : $t;
         };
-        $begonnen = $lies($existing['started_at'] ?? null);
-        $erstellt = $lies($existing['created_at'] ?? null);
-        /* Ein `started_at` in der Zukunft zaehlt nicht -- es ist keine Zeit,
-         * sondern ein Fehler oder eine Absicht, und beides darf das Fenster
-         * nicht offenhalten. Dann gilt allein die Zeit des Servers. */
-        if ($begonnen !== null && $begonnen > time()) { $begonnen = null; }
-        $anker = max($begonnen ?? 0, $erstellt ?? 0);
+        $anker = $lies($existing['created_at'] ?? null)
+              ?? $lies($existing['started_at'] ?? null)
+              ?? 0;
+        /* Nie spaeter als jetzt: `created_at` ist Serverzeit und liegt nie
+         * vorn -- ausser eine Zeile hat es aus der Migration von einem
+         * `started_at` geerbt, das vorn lag (die Migration kappt das, aber
+         * der Boden steht auch hier). Und der Rueckfall `started_at` ist
+         * Geraetezeit. Ein Anker in der Zukunft hielte das Fenster offen,
+         * bis die Zukunft vorbei ist; gekappt schliesst es in 72 h. */
+        if ($anker > time()) { $anker = time(); }
         $fensterZu = $anker > 0 && (time() - $anker) > INGEST_ERSETZFENSTER_H * 3600;
     }
 

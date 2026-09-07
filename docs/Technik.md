@@ -4417,18 +4417,34 @@ Upload mindestens so viele bringt wie gespeichert sind. Offen blieb der
 **unbearbeitete** Einsatz von vor drei Wochen.
 
 **Die Regel.** Ein **bestehender** Datensatz lässt sich nur
-`INGEST_ERSETZFENSTER_H` = **72 Stunden** ab seinem Beginn, **wie der Server
-ihn kennt**, von seinem Gerät verändern: ab dem Späteren aus dem gespeicherten
-`started_at` und dem serverseitigen `created_at`; ein `started_at` in der
-Zukunft zählt nicht. Nicht ab dem gesendeten `started_at` — den bestimmt der
-Absender —, und seit der Nachbesserung vom 07.09.2026 auch nicht mehr ab dem
-gespeicherten allein: Das stammt beim Anlegen ebenfalls vom Gerät, und eine
-Uhr mit falsch gestellter Zeit legte ihren Einsatz mit einem Datum von vor
-Jahren an — das Fenster war im selben Augenblick zu, der **laufende** Einsatz
-verlor Punkte und Phasen, und weil `next_seq` weiterwanderte, löschte die Uhr
-sie als quittiert (Gegenprüfung des Web-Teils, Funde 2 und 5). `rest_segments`
-trägt `created_at` dafür seit der Migration `2026_09_07_rest_segments_created_at`;
-die vorhandenen Zeilen bekommen ihr `started_at`, nicht die Migrationszeit.
+`INGEST_ERSETZFENSTER_H` = **72 Stunden** ab dem Augenblick, in dem der
+Server ihn **zum ersten Mal gesehen** hat — `created_at` —, von seinem Gerät
+verändern. Nicht ab dem gesendeten `started_at` — den bestimmt der Absender —,
+und seit der Nachbesserung vom 07.09.2026 auch nicht mehr ab dem gespeicherten:
+Das stammt beim Anlegen ebenfalls vom Gerät, und eine Uhr mit falsch
+gestellter Zeit legte ihren Einsatz mit einem Datum von vor Jahren an — das
+Fenster war im selben Augenblick zu, der **laufende** Einsatz verlor Punkte
+und Phasen, und weil `next_seq` weiterwanderte, löschte die Uhr sie als
+quittiert (Gegenprüfung des Web-Teils, Funde 2 und 5). Die Nachbesserung
+rechnete zunächst das Spätere aus `started_at` und `created_at`, „Zukunft
+zählt nicht" — und die zweite Gegenprüfung zeigte, dass „Zukunft" je Paket
+gegen jetzt gerechnet wurde: Ein `started_at`, das beim Anlegen 99 Stunden
+vorn lag, wurde zum Anker, sobald die Zeit es eingeholt hatte, und das längst
+geschlossene Fenster ging zu einem gerätebestimmten Zeitpunkt noch einmal
+72 Stunden auf. Auf den Augenblick des Anlegens angewendet ist ein
+`started_at` später als `created_at` immer Zukunft, und das Spätere aus beiden
+ist immer `created_at` — also steht es so im Code. `started_at` dient nur als
+Rückfall, solange die Migration `2026_09_07_rest_segments_created_at` nicht
+gelaufen ist, und ein Anker wird nie später als jetzt angesetzt. `rest_segments`
+trägt `created_at` seit dieser Migration; die vorhandenen Zeilen bekommen ihr
+`started_at`, nicht die Migrationszeit — gekappt auf den Bereich der Spalte
+(TIMESTAMP, ab 1970-01-01 00:00:01) und auf höchstens die Migrationszeit, denn
+`started_at` ist DATETIME und nimmt jedes Jahr an. Die Migration läuft in drei
+für sich wiederholbaren Schritten (Spalte NULL anlegen, füllen wo NULL, dann
+NOT NULL) und gilt erst als erledigt, wenn alle drei stehen: Die erste Fassung
+scheiterte an einem einzigen Segment mit `started_at` 1970-01-01 00:00:00
+nach dem ALTER, und der nächste Klick hätte sie als „nicht nötig" verbucht —
+mit der Migrationszeit als Anker an jedem alten Segment.
 
 Danach: `ok` **ohne** Metadaten-Upsert, ohne Phasen- und Reanimationsersatz,
 **ohne Anhängen von Punkten** und **ohne Fortschreiben des Diensttags**

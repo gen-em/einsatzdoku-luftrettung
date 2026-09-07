@@ -644,7 +644,14 @@ pruefe(($f4['daten']['stored_points'] ?? -1) === 1 && (int)($f4['daten']['id'] ?
  * Anlegens (2); ein Abschlusspaket ausserhalb wurde still uebergangen (3);
  * ein Diensttag im Papierkorb bekam einen leeren Nachfolger (4); ein
  * `started_at` in der Zukunft schloss das Fenster nie (5); und das
- * Ruhesegment nannte nur die Punkte, nie das Ende (6). */
+ * Ruhesegment nannte nur die Punkte, nie das Ende (6).
+ *
+ * Dazu einer aus der ZWEITEN Gegenpruefung, auf die Nachbesserung selbst (7):
+ * Der Anker war das Spaetere aus `started_at` und `created_at`, Zukunft
+ * ausgenommen -- aber "Zukunft" wurde je Paket gegen jetzt gerechnet. Ein
+ * `started_at`, das beim Anlegen vorn lag, wurde zum Anker, sobald die Zeit
+ * es eingeholt hatte, und das laengst geschlossene Fenster ging noch einmal
+ * auf. Der Anker ist jetzt `created_at` allein. */
 
 // (1) Der Zeitraum des Diensttags bleibt, wenn das Fenster zu ist.
 $liesTag = static function (PDO $pdo, int $missionId): string {
@@ -716,6 +723,24 @@ $z2 = senden(['kind' => 'mission', 'client_ref' => $zRef, 'day' => substr($zukun
 pruefe($zId > 0 && ($z2['daten']['kept_points'] ?? -1) === 1,
        'started_at in der Zukunft: das Fenster schliesst 72 h nach dem Anlegen, nicht nie (Gegenpruefung 5)',
        'kept_points ' . ($z2['daten']['kept_points'] ?? 'fehlt') . ' (erwartet 1)');
+
+// (7) Vorgehende Uhr: `started_at` lag beim Anlegen vorn, ist jetzt eingeholt --
+//     der Anker bleibt `created_at`, das Fenster geht nicht noch einmal auf.
+$vRef = 'probe-fenster-vorgehend';
+$vStart = gmdate('Y-m-d\TH:i:s\Z', time() - 3600);        // vor einer Stunde: schon eingeholt
+$v1 = senden(['kind' => 'mission', 'client_ref' => $vRef, 'day' => substr($vStart, 0, 10),
+              'started_at' => $vStart, 'ended_at' => null, 'final' => false,
+              'track' => ['seq_from' => 0, 'points' => [[47.5, 11.5, 700.0, 1750000000]]]]);
+$vId = (int)($v1['daten']['id'] ?? 0);
+// Das Anlegen lag 100 h zurueck -- damals war `started_at` 99 h Zukunft.
+$pdo->prepare('UPDATE missions SET created_at = ? WHERE id = ?')
+    ->execute([gmdate('Y-m-d H:i:s', time() - 100 * 3600), $vId]);
+$v2 = senden(['kind' => 'mission', 'client_ref' => $vRef, 'day' => substr($vStart, 0, 10),
+              'started_at' => $vStart, 'ended_at' => null, 'final' => false,
+              'track' => ['seq_from' => 1, 'points' => [[47.5001, 11.5, 700.0, 1750000010]]]]);
+pruefe($vId > 0 && ($v2['daten']['kept_points'] ?? -1) === 1,
+       'Vorgehende Uhr: ein eingeholtes started_at oeffnet das Fenster nicht noch einmal (zweite Gegenpruefung)',
+       'kept_points ' . ($v2['daten']['kept_points'] ?? 'fehlt') . ' (erwartet 1) — der Anker ist created_at allein');
 
 // (4) Diensttag im Papierkorb: ausserhalb entsteht KEIN leerer neuer Tag.
 $dq = $pdo->prepare('SELECT day_id FROM missions WHERE id = ?'); $dq->execute([$fId]);
