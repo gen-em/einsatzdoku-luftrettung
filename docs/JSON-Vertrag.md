@@ -694,15 +694,19 @@ Zusätzlich können auftreten:
 | `kept_phases` | die gesendete Phasenliste wurde übergangen (leer oder kürzer als der vorhandene Stand, **oder das Ersetzfenster ist zu**); der Wert nennt die **Anzahl der behaltenen** Einträge |
 | `kept_resus` | dasselbe für die Reanimationssitzungen |
 | `kept_points` | die gesendeten Punkte wurden **nicht angehängt**, weil das Ersetzfenster zu ist; der Wert nennt ihre Anzahl. Sie sind quittiert (`next_seq` wandert weiter), die Uhr darf sie löschen |
+| `kept_meta` | die gesendeten **Metadaten** (`ended_at`, `final`, `distance_m`, `ascent_m` — beim Ruhesegment `ended_at` und `final`) wurden übergangen, weil das Ersetzfenster zu ist; Wert immer `1`. Ein spätes Abschlusspaket ist damit von einem Erfolg unterscheidbar — der Datensatz bleibt, wie er war, auch wenn er noch „läuft" |
 | `dropped_points` | Punkte, die der Server nach der **Ausdünnung** der Spur nicht mehr annimmt (S2, E-S2-08). Sie sind quittiert; die Uhr darf sie löschen. Erscheint nur, wenn tatsächlich verworfen wurde, und ist **kein** Datenfehler — deshalb steht es nicht in `rejected` |
 | `cut_points` | Punkte, die in einen **herausgeschnittenen** Zeitraum fallen (S4, E-S4-53). Aus dieser Spur ist ein Einsatz geschnitten worden; die Punkte stehen dort bereits. Sie sind quittiert, die Uhr darf sie löschen. Wie `dropped_points` kein Datenfehler — und bewusst ein eigenes Feld: Ausdünnung und Schnitt sind verschiedene Vorgänge, und in der Fehlersuche will man sie unterscheiden |
 
 > **Das Ersetzfenster** (seit Web 15.6.0, Backlog Nr. 134). Ein **bestehender**
-> Datensatz lässt sich nur **72 Stunden** ab seinem gespeicherten `started_at`
-> von seinem Gerät verändern. Danach antwortet `ingest.php` weiterhin mit
-> `ok` — ein Fehler ließe die Uhr endlos wiederholen —, übernimmt aber weder
-> Metadaten noch Phasen, Reanimation oder Punkte und sagt das über die
-> `kept_*`-Felder. **Neue** Datensätze sind nicht betroffen: Sie werden immer
+> Datensatz lässt sich nur **72 Stunden** ab seinem Beginn, **wie der Server
+> ihn kennt**, von seinem Gerät verändern: ab dem Späteren aus dem
+> gespeicherten `started_at` und dem serverseitigen `created_at` — ein
+> `started_at` in der Zukunft zählt nicht. Danach antwortet `ingest.php`
+> weiterhin mit `ok` — ein Fehler ließe die Uhr endlos wiederholen —,
+> übernimmt aber weder Metadaten noch Phasen, Reanimation oder Punkte, rührt
+> den Diensttag nicht an und sagt das über die `kept_*`-Felder (`kept_meta`
+> eingeschlossen). **Neue** Datensätze sind nicht betroffen: Sie werden immer
 > angenommen. Der Grund steht in `docs/Technik.md` 4.99a2; für die Uhr ändert
 > sich nichts, was sie tun müsste.
 

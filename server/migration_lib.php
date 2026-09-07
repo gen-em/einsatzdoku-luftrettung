@@ -2197,6 +2197,32 @@ function migrationen_katalog(): array
             "UPDATE users SET role = 'betreiberin' WHERE role = 'admin'",
         ],
     ],
+    [
+        'id'    => '2026_09_07_rest_segments_created_at',
+        'web'   => '15.6.0',
+        'label' => 'rest_segments.created_at — der serverseitige Anker des Ersetzfensters (Nr. 134)',
+        'skip'  => function (PDO $pdo): bool {
+            return _hat_spalte($pdo, 'rest_segments', 'created_at');
+        },
+        'sql'   => [
+            /* DER ANKER DES ERSETZFENSTERS (Nr. 134, Nachbesserung 07.09.2026)
+             * ist der Einsatzbeginn, wie der Server ihn kennt: das Spaetere aus
+             * `started_at` und `created_at`. missions traegt `created_at` seit
+             * jeher; rest_segments nicht -- ohne die Spalte hinge das Fenster
+             * dort an der Uhr des Geraets, und eine falsch gestellte Uhr
+             * schloesse es im Augenblick des Anlegens.
+             *
+             * DIE VORHANDENEN ZEILEN BEKOMMEN IHR started_at, nicht "jetzt":
+             * Mit dem Vorgabewert CURRENT_TIMESTAMP stuende an jedem alten
+             * Segment die Migrationszeit, und jedes waere danach drei Tage
+             * lang wieder veraenderbar -- genau die Luecke, die das Fenster
+             * schliesst. Neue Zeilen bekommen den Vorgabewert, und der ist
+             * dann richtig. */
+            "ALTER TABLE rest_segments
+               ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER deleted_with_day",
+            "UPDATE rest_segments SET created_at = started_at",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

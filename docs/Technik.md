@@ -4400,13 +4400,29 @@ Upload mindestens so viele bringt wie gespeichert sind. Offen blieb der
 **unbearbeitete** Einsatz von vor drei Wochen.
 
 **Die Regel.** Ein **bestehender** Datensatz lässt sich nur
-`INGEST_ERSETZFENSTER_H` = **72 Stunden** ab seinem **gespeicherten**
-`started_at` von seinem Gerät verändern — nicht ab dem gesendeten, den bestimmt
-der Absender. Danach: `ok` **ohne** Metadaten-Upsert, ohne Phasen- und
-Reanimationsersatz und **ohne Anhängen von Punkten**, benannt über
-`kept_phases`, `kept_resus` und `kept_points` (JSON-Vertrag 5). Kein Fehler —
-die Uhr wiederholte sonst endlos —, und `next_seq` wandert weiter, damit sie
-aufhört zu senden.
+`INGEST_ERSETZFENSTER_H` = **72 Stunden** ab seinem Beginn, **wie der Server
+ihn kennt**, von seinem Gerät verändern: ab dem Späteren aus dem gespeicherten
+`started_at` und dem serverseitigen `created_at`; ein `started_at` in der
+Zukunft zählt nicht. Nicht ab dem gesendeten `started_at` — den bestimmt der
+Absender —, und seit der Nachbesserung vom 07.09.2026 auch nicht mehr ab dem
+gespeicherten allein: Das stammt beim Anlegen ebenfalls vom Gerät, und eine
+Uhr mit falsch gestellter Zeit legte ihren Einsatz mit einem Datum von vor
+Jahren an — das Fenster war im selben Augenblick zu, der **laufende** Einsatz
+verlor Punkte und Phasen, und weil `next_seq` weiterwanderte, löschte die Uhr
+sie als quittiert (Gegenprüfung des Web-Teils, Funde 2 und 5). `rest_segments`
+trägt `created_at` dafür seit der Migration `2026_09_07_rest_segments_created_at`;
+die vorhandenen Zeilen bekommen ihr `started_at`, nicht die Migrationszeit.
+
+Danach: `ok` **ohne** Metadaten-Upsert, ohne Phasen- und Reanimationsersatz,
+**ohne Anhängen von Punkten** und **ohne Fortschreiben des Diensttags**
+(bis zur Nachbesserung schrieb ein Paket mit `started_at` 2001 und `ended_at`
+2097 Beginn und Ende des Diensttags um — der Einsatz selbst blieb, Fund 1), und
+ohne dass ein Diensttag im Papierkorb einen leeren Nachfolger bekommt (Fund 4).
+Benannt wird alles über `kept_phases`, `kept_resus`, `kept_points` und —
+für Ende, `final`, Strecke und Anstieg — `kept_meta` (JSON-Vertrag 5; ohne
+das Feld sah ein spätes Abschlusspaket wie ein Erfolg aus, und der Einsatz
+blieb für immer „läuft noch", Fund 3). Kein Fehler — die Uhr wiederholte sonst
+endlos —, und `next_seq` wandert weiter, damit sie aufhört zu senden.
 
 **Warum die Punkte anders behandelt werden als bei `manual`.** Dort wird
 weiter angehängt: Der Inhalt ist bearbeitet, die Spur nicht, und Anhängen ist
@@ -4424,7 +4440,11 @@ des Geräts (Handbuch 10); das Fenster begrenzt nur, was bis dahin geschehen
 kann.
 
 Nachweis: `tools/ingestprobe/` Teil 9 — **1 Paket angenommen, 1 abgewiesen**,
-dazu die Gegenprobe, dass ein neuer Einsatz weiterhin entsteht. Dieselbe Stufe
+dazu die Gegenprobe, dass ein neuer Einsatz weiterhin entsteht, und seit der
+Nachbesserung **sechs Erwartungen der Gegenprüfung** (Diensttag bleibt,
+Abschlusspaket genannt, falsch gestellte Uhr nimmt weiter an, Zukunft
+schließt, kein leerer Tag, Ruhesegment nennt beides): **53 Erwartungen,
+0 nicht erfüllt** — am Stand davor dieselben sechs rot. Dieselbe Stufe
 hat die Zeitstempel der ganzen Probe auf `time()` umgestellt: Sie standen auf
 festen März-Daten, und damit prüfte die halbe Probe zweite Pakete an
 Datensätzen, die das Fenster längst verlassen hatten — zehn Erwartungen
