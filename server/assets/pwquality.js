@@ -84,9 +84,10 @@ const EdPwQuality = (() => {
        Die Liste hat keinen Eintrag unter vier Zeichen; wer einen aufnimmt,
        misst vorher nach.
        "wache", "koeln", "sonne" und "blume" fehlen aus einem aelteren
-       Grund: Fuenfstellige Eintraege konnten bis zur Nachbesserung nie
-       greifen. Das gilt nicht mehr — ob sie aufgenommen werden, ist eine
-       offene Entscheidung, keine dieser Datei.
+       Grund: Fuenfstellige Eintraege griffen bis zur Nachbesserung nur als
+       GANZES Wort (nach Abzug angehaengter Ziffern — "Hallo2026!!!" wurde
+       abgewiesen), nie als Teilstring. Das gilt nicht mehr — ob sie
+       aufgenommen werden, ist eine offene Entscheidung, keine dieser Datei.
 
        KEIN "nadoku". Der kuenftige Produktname war vorgesehen, ist aber
        wieder herausgenommen: Der Vergleich ist ein Teilstring-Vergleich, und
@@ -262,14 +263,29 @@ const EdPwQuality = (() => {
         }
       }
     }
-    const ziffern = (k.match(/\d+$/) || [''])[0];
-    k = k.replace(/\d+$/, '');
+    /* ANGEHAENGTE ZIFFERN SIND DIE AM ENDE DER EINGABE, nicht die am Ende
+       des normalisierten Textes (Wiederaufnahme der zweiten Gegenpruefung):
+       `normal()` wirft die Sonderzeichen weg, und in einem Passwort aus
+       Ziffern und Sonderzeichen ("#7!3@9$1%4&6") standen danach ALLE Ziffern
+       am Ende -- "angehaengt", Rest leer, abgewiesen; ein Passwortverwalter,
+       auf Ziffern und Symbole gestellt, lieferte zu 46 bis 91 % solche.
+       Angehaengt ist, was in der Eingabe hinter dem letzten Buchstaben oder
+       Sonderzeichen steht -- Trenner dahinter zaehlen nicht. */
+    const rohEnde = (String(pw).match(/(\d+)[\-_. ]*$/) || ['', ''])[1];
+    const ziffern = (rohEnde !== '' && k.endsWith(rohEnde)) ? rohEnde : '';
+    if (ziffern !== '') { k = k.slice(0, k.length - ziffern.length); }
     const streng = woerter.length > 0;
     let [rest, reihen] = ohneReihen(k, streng);
     /* Ein Rest, der als Ganzes ein Muster ist („aa"), ist eine Reihe, die
        `ohneReihen()` zu kurz war — er zählt wie eine. */
     if (rest !== '' && istMuster(rest)) { reihen.push(rest); rest = ''; }
-    const sonderAlle = schriftzeichen(pw).slice(0, MAX_ANALYSE).filter(z => SONDERZEICHEN.test(z));
+    /* Ein Zeichen, das `normal()` zu einem Buchstaben faltet (Kelvin-K
+       U+212A, I mit Punkt U+0130, grosses Eszett U+1E9E), steckt schon im
+       gestrichenen Listenwort und zaehlt nicht noch einmal als Sonderzeichen
+       (Wiederaufnahme der zweiten Gegenpruefung: "Kennwort2026xyz" mit
+       Kelvin-K ging als "brauchbar" durch). */
+    const buchstabenhaft = z => /^[a-z0-9äöüß]+$/.test(z.toLowerCase().normalize('NFKC').replace(/\p{M}/gu, ''));
+    const sonderAlle = schriftzeichen(pw).slice(0, MAX_ANALYSE).filter(z => SONDERZEICHEN.test(z) && !buchstabenhaft(z));
     const sonderErgebnis = ohneReihenEinheiten(sonderAlle, streng);
     return { woerter, ziffern, reihen, rest,
              sonder: sonderErgebnis.bleibt.length,
@@ -494,9 +510,14 @@ const EdPwQuality = (() => {
     for (const n of z.sonderReihen) { gestrichen.push('eine Reihe aus ' + n + ' Sonderzeichen'); }
     let m;
     if (gestrichen.length === 0) {
-      /* Nichts gestrichen und nichts übrig: Das Passwort besteht aus den
-         vier Trennern, die nicht zählen. */
-      m = 'Bindestrich, Punkt, Unterstrich und Leerzeichen zählen nicht — es bleibt nichts übrig.';
+      /* Nichts gestrichen: Das Passwort besteht aus Trennern, die nicht
+         zählen — und vielleicht aus ein paar Sonderzeichen, die die acht
+         nicht füllen. Die erste Fassung sagte auch dann „nichts übrig"
+         (Wiederaufnahme der zweiten Gegenpruefung). */
+      m = 'Bindestrich, Punkt, Unterstrich und Leerzeichen zählen nicht — '
+        + (uebrig === 0 ? 'es bleibt nichts übrig.'
+           : (uebrig === 1 ? 'es bleibt nur 1 Sonderzeichen' : 'es bleiben nur ' + uebrig + ' Sonderzeichen')
+             + '; mindestens ' + MIN_REST + ' Zeichen müssen es sein.');
     } else if (uebrig === 0) {
       m = 'Ohne ' + gestrichen.join(', ') + ' bleibt nichts übrig.';
     } else if (z.rest === '') {
