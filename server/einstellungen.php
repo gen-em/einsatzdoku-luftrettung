@@ -1822,7 +1822,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
      * am Einsatz — mit getrennter Suche, weil das Namensfeld hier den NAMEN
      * trägt und nicht die Adresse. Ohne Vorschlagsliste: Was hier entsteht,
      * IST die Vorschlagsliste. */
-    <?= 'const ORTSFELDER = ' . json_encode($ORTSFELDER) . ';' ?>
+    <?= 'const ORTSFELDER = ' . json_js($ORTSFELDER) . ';' ?>
     ORTSFELDER.forEach(p => EdOrtsfeld.init({ praefix: p, getrennteSuche: true }));
     </script>
 
@@ -2021,12 +2021,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>
     <script>
     // Eigenes Konto — nur fuer den Vergleich mit der Herkunft der Datei (M5-13).
-    const KONTO_MAIL = <?= json_encode($userEmail) ?>;
-    const KONTO_NAME = <?= json_encode($userName) ?>;
+    const KONTO_MAIL = <?= json_js($userEmail) ?>;
+    const KONTO_NAME = <?= json_js($userName) ?>;
     /* Die Fassung der Anwendung wandert ins Manifest des Backups: Wer eine
        Datei in zwei Jahren wiederfindet, soll ihr ansehen, womit sie
        entstanden ist. */
-    const WEB_VERSION = <?= json_encode(WEB_VERSION) ?>;
+    const WEB_VERSION = <?= json_js(WEB_VERSION) ?>;
 
     /* EINE WACHE, wie sie import_ui.js seit je hat: Ein vergessener
        Skriptverweis ergibt sonst „zip is not defined" genau in dem Augenblick,

@@ -354,7 +354,7 @@ ui_seite_start(['titel' => 'Suche']);
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Artsymbole für die Spalte „Art" der Einsatztabelle — dieselben wie in
          der Tagesleiste, aus dt_art_symbole() (Befund P9). */ ?>
-<script>const ART_SYMBOLE = <?= json_encode(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
+<script>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <?php /* Boolesche Freitextsuche (Baustein B10, Web 7.0.0). Eigene Datei, weil
@@ -388,7 +388,7 @@ const ART_OPTIONEN = <?php
         $artOpt[] = ['wert' => $code === '' ? 'neutral' : $code,
                      'text' => $sym['text']];
     }
-    echo json_encode($artOpt, JSON_UNESCAPED_UNICODE);
+    echo json_js($artOpt, JSON_UNESCAPED_UNICODE);
 ?>;
 /* WELCHE FELDER DER KATALOG KENNT UND WELCHER ART SIE SIND (S3/AP9,
    E-S3-08). Erzeugt aus mission_fields.php, samt Unterfeldern — keine
@@ -406,20 +406,20 @@ const KATALOG_ART = <?php
         }
     };
     $sammle($FELDER);
-    echo json_encode($arten, JSON_UNESCAPED_UNICODE);
+    echo json_js($arten, JSON_UNESCAPED_UNICODE);
 ?>;
 const TRANSPORT_OPTIONEN = <?php
     $taOpt = [];
     foreach (mf_optionen($FELDER['transport_mode']['options']) as $wert => $text) {
         $taOpt[] = ['wert' => (string)$wert, 'text' => (string)$text];
     }
-    echo json_encode($taOpt, JSON_UNESCAPED_UNICODE);
+    echo json_js($taOpt, JSON_UNESCAPED_UNICODE);
 ?>;
 
 /* Rollenkatalog und die Kurznamen ihrer Filter im URL-Fragment. Beides kommt
    aus CREW_ROLES (db.php, E4); die Kurznamen der fuenf Flugrollen sind
    historisch (c1…c5) und bleiben, weil sie in verschickten Links stehen. */
-const CREW_ROLLEN = <?= json_encode(array_keys(CREW_ROLES)) ?>;
+const CREW_ROLLEN = <?= json_js(array_keys(CREW_ROLES)) ?>;
 const CREW_FILTER = <?php
     /* Bis Web 5.10.0 standen die fuenf Filter einzeln im Katalog. Die
      * Zuordnung Rolle -> Kurzname steht jetzt hier, an EINER Stelle: Die
@@ -437,7 +437,7 @@ const CREW_FILTER = <?php
                      * Rollenkatalog, nicht abgeschrieben. */
                     'titel'  => CREW_ROLES[$rc]['label']];
     }
-    echo json_encode($liste);
+    echo json_js($liste);
 ?>;
 
 const $ = id => document.getElementById(id);

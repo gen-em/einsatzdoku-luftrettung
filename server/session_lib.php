@@ -120,7 +120,7 @@ function session_beenden(string $grund = 'abgemeldet'): never
 // Beide Schluessel raeumen: Daten- UND Inhaltsschluessel. Faengt das Skript
 // nicht, bleibt die Seite ueber den Verweis oben bedienbar.
 try { EdCrypto.clearSession(); } catch (e) { /* Skript blockiert */ }
-location.replace(<?= json_encode($ziel) ?>);
+location.replace(<?= json_js($ziel) ?>);
 </script>
 <?php
     ui_seite_ende();

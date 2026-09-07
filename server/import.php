@@ -256,21 +256,21 @@ ui_seite_start(['titel' => 'Import / Export']);
              Die Quelle ist CREW_ROLES in server/db.php — nicht eine zweite
              Liste im Browser, die damit auseinanderlaufen könnte. */ ?>
     <script>
-      const CREW_ROLLEN = <?= json_encode(array_keys(CREW_ROLES)) ?>;
-      const CREW_LABELS = <?= json_encode(array_map(
+      const CREW_ROLLEN = <?= json_js(array_keys(CREW_ROLES)) ?>;
+      const CREW_LABELS = <?= json_js(array_map(
               static fn(array $r): string => $r['label'], CREW_ROLES),
               JSON_UNESCAPED_UNICODE) ?>;
     </script>
     <script src="<?= asset('assets/import_profiles.js') ?>"></script>
     <script src="<?= asset('assets/import.js') ?>"></script>
     <script>
-      const APP_TZ = <?= json_encode($CFG['app']['timezone']) ?>;
-      const WEB_VERSION = <?= json_encode(WEB_VERSION) ?>;
+      const APP_TZ = <?= json_js($CFG['app']['timezone']) ?>;
+      const WEB_VERSION = <?= json_js(WEB_VERSION) ?>;
       // Kennung des Kontos fuer den Exportdateinamen (export.js). Beide Werte
       // stammen aus auth_guard.php; die Bereinigung zu einem
       // dateisystemsicheren Segment passiert im Browser.
-      const KONTO_NAME = <?= json_encode($userName ?? '') ?>;
-      const KONTO_MAIL = <?= json_encode($userEmail ?? '') ?>;
+      const KONTO_NAME = <?= json_js($userName ?? '') ?>;
+      const KONTO_MAIL = <?= json_js($userEmail ?? '') ?>;
     </script>
     <script src="<?= asset('assets/import_ui.js') ?>"></script>
     <script src="<?= asset('assets/export.js') ?>"></script>

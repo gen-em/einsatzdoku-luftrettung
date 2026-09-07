@@ -740,9 +740,9 @@ ui_seite_start(['titel' => 'NutzerInnen']);
 
 <?php ui_geruest_ende(); ?>
 <script>
-  document.body.dataset.konto = <?= json_encode((string)$userId) ?>;
+  document.body.dataset.konto = <?= json_js((string)$userId) ?>;
 <?php if ($auswahlVerbraucht): ?>
-  document.body.dataset.auswahlRest = <?= json_encode($auswahlRest) ?>;
+  document.body.dataset.auswahlRest = <?= json_js($auswahlRest) ?>;
 <?php endif; ?>
 </script>
 <script>

@@ -367,10 +367,10 @@ ui_seite_start([
 <script src="<?= asset('assets/pwquality.js') ?>"></script>
 <script>
 const ERSTVERGABE = <?= $erstvergabe ? 'true' : 'false' ?>;
-const WRAP_RC = <?= json_encode($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
+const WRAP_RC = <?= json_js($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
 // Zielwert der Rundenzahl (M2-01). Diese Seite baut die Ableitung immer neu
 // auf und nimmt deshalb nie einen Altwert.
-const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
+const KDF_ITER_ZIEL = <?= json_js(KDF_ITER_ZIEL) ?>;
 const state = document.getElementById('state');
 const form  = document.getElementById('pwform');
 

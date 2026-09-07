@@ -513,6 +513,39 @@ const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
  */
 const INGEST_ERSETZFENSTER_H = 72;
 
+/* ---- JSON in einem <script>-Block (Backlog Nr. 135, K-15) ----------------
+ *
+ * WAS DAS PROBLEM IST. `json_encode()` maskiert `<` und `>` NICHT. Steht in
+ * einem Wert die Zeichenfolge `</script>` -- ein Standortname, ein
+ * Fahrzeugkurzname, ein Dateiname aus einem Backup --, endet der Skriptblock
+ * mitten in einer Zuweisung, und der Rest der Seite ist kaputt. Ausfuehren
+ * laesst sich damit nichts (`/` wird als `\/` maskiert, also entsteht kein
+ * schliessendes Tag aus dem Wert selbst), aber eine Seite, die an einem
+ * Stammdatennamen zerbricht, ist ein Fehler, und der naechste Baustein waere
+ * vielleicht nicht so glimpflich.
+ *
+ * VIER FLAGGEN, NICHT EINE. `JSON_HEX_TAG` fasst `<` und `>`, `JSON_HEX_AMP`
+ * das `&` (Entitaeten in HTML-Kontexten), `JSON_HEX_APOS` und
+ * `JSON_HEX_QUOT` die Anfuehrungszeichen -- damit ist dieselbe Zeichenkette
+ * auch in einem Attribut sicher, und die Regel muss nicht je Stelle neu
+ * bedacht werden.
+ *
+ * `JSON_UNESCAPED_UNICODE` steht dabei, weil Umlaute in einem UTF-8-Dokument
+ * nichts zu maskieren haben; ein Teil der Aufrufer hatte es schon, ein Teil
+ * nicht -- jetzt haben es alle.
+ *
+ * WO ES NICHT HINGEHOERT: in API-Antworten, Dateiformate, Zwischenspeicher
+ * und Protokolle. Dort aendern die Flaggen die BYTES, und an Bytes haengen
+ * Pruefsummen (`komplett_lib.php` bindet den Dateikopf ueber SHA-256) und
+ * Formatvergleiche. Gezaehlt am 07.09.2026: 79 Aufrufe von `json_encode()`
+ * unter `server/`, davon 44 in einem `<script>`-Block und 35 ausserhalb.
+ */
+function json_js($wert, int $mehr = 0): string
+{
+    return (string)json_encode($wert, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS
+                                    | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | $mehr);
+}
+
 /* ---- Obergrenze offener Kopplungssitzungen (S5, E-S5-14, E-S5-34) --------
  *
  * Seit Web 13.0.0 legt jedes Geraet mit `start` OHNE Anmeldung eine Sitzung

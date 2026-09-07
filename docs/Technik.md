@@ -1938,6 +1938,37 @@ vor der Kette sieht das nicht.
 
 **Hintergrundjobs:** siehe Abschnitt 4.97a.
 
+**JSON in einem `<script>`-Block läuft über `json_js()`** (`db.php`, seit
+Web 15.6.0, Backlog Nr. 135, K-15) — nicht über `json_encode()`. Der Baustein
+setzt `JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT |
+JSON_UNESCAPED_UNICODE`.
+
+**Warum es nicht reicht, dass `/` ohnehin maskiert wird.** Ein `</script>` im
+Wert kann tatsächlich nicht entstehen — `json_encode()` schreibt `<\/script>`.
+Der Seitenbruch kommt von der anderen Seite: `<!--<script>` in einem Wert
+schiebt den HTML-Parser in den *double-escaped*-Zustand, und das nächste
+**echte** `</script>` schließt den Block dann **nicht**. Gemessen mit einem
+Profilnamen `<!--<script>` auf `import.php`: Vorher fehlten `KONTO_NAME`,
+`APP_TZ` **und** `WEB_VERSION` im Browser — der ganze Block war verschluckt,
+ohne Fehlermeldung. Nachher stehen alle drei, und der Name kommt Zeichen für
+Zeichen an.
+
+**Wo der Baustein nicht hingehört:** in API-Antworten, Dateiformate,
+Zwischenspeicher und Protokolle. Dort ändern die Flaggen die **Bytes**, und an
+Bytes hängen Prüfsummen (`komplett_lib.php` bindet den Dateikopf über SHA-256)
+und Formatvergleiche. Gezählt am 07.09.2026: **79** Aufrufe von `json_encode()`
+unter `server/`, davon **44 in einem `<script>`-Block** (alle umgestellt) und
+**35 außerhalb** (unverändert).
+
+**Was von K-15 offen bleibt:** `Strict-Transport-Security` ohne
+`includeSubDomains` und die fehlende `Permissions-Policy` gehen mit der CSP
+(Backlog Nr. 8, P5) — Kopfzeilen gehören in einen Zug. Der `querySelector` mit
+einem Wert aus dem URL-Fragment in `suche.php` bleibt ebenfalls offen; er
+bricht die Auswahl, ist aber kein XSS. Beides steht weiter unter Nr. 135
+beziehungsweise Nr. 8. Der fehlende `(string)`-Cast in `csrf_check()` ist
+dagegen mit Nr. 127 erledigt: Die Prüfung läuft jetzt über `csrf_ok()`, und
+die castet.
+
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
 HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) — **seit
 Web 15.6.0 auch am Anmeldeformular** (Backlog Nr. 127) — und für

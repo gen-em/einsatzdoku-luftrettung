@@ -2179,17 +2179,17 @@ function ui_krypto_bootstrap(array $o = []): void
     }
     $zeilen[] = '<script>';
     if (($o['wrap'] ?? true) !== false) {
-        $zeilen[] = 'const PAT_WRAP = ' . json_encode($patWrapPw) . ';';
+        $zeilen[] = 'const PAT_WRAP = ' . json_js($patWrapPw) . ';';
     }
     if (!empty($o['keycheck'])) {
-        $zeilen[] = 'const PAT_KEY_CHECK = ' . json_encode($patKeyCheck) . ';';
+        $zeilen[] = 'const PAT_KEY_CHECK = ' . json_js($patKeyCheck) . ';';
     }
-    $zeilen[] = 'const KDF_SALT = ' . json_encode($kdfSalt) . ';';
+    $zeilen[] = 'const KDF_SALT = ' . json_js($kdfSalt) . ';';
     /* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
        gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
        bekommt einen anderen Schluessel. */
-    $zeilen[] = 'const KDF_ITER      = ' . json_encode($kdfIter) . ';';
-    $zeilen[] = 'const KDF_ITER_ZIEL = ' . json_encode(KDF_ITER_ZIEL) . ';';
+    $zeilen[] = 'const KDF_ITER      = ' . json_js($kdfIter) . ';';
+    $zeilen[] = 'const KDF_ITER_ZIEL = ' . json_js(KDF_ITER_ZIEL) . ';';
     /* CSRF IMMER, NICHT AUF ANFRAGE (Backlog Nr. 136, Fund F-9a-01).
      *
      * Bis zum Sofortpaket Sicherheit war das ein Schalter, und drei von sieben
@@ -2209,7 +2209,7 @@ function ui_krypto_bootstrap(array $o = []): void
      * Zeile Markup. Das Feld `csrf` wird weiterhin angenommen und ignoriert;
      * die Aufrufer nennen es teils noch.
      */
-    $zeilen[] = 'const CSRF = ' . json_encode(csrf_token()) . ';';
+    $zeilen[] = 'const CSRF = ' . json_js(csrf_token()) . ';';
     $zeilen[] = '</script>';
 
     echo $ein, implode("\n" . $ein, $zeilen), "\n";
