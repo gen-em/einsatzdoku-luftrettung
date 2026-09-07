@@ -1019,6 +1019,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   'praefix'     => $praefix,
                   'vorschlaege' => $sugg,
                   'label'       => (string)($f['label'] ?? $col),
+                  'ortswahl'    => !empty($f['ortswahl']),
               ];
               ui_ortsfeld([
                   'praefix'     => $praefix,
@@ -1038,6 +1039,9 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   'versteckt'   => $hide,
                   'lat'         => isset($ort['lat']) ? ortWert($col, 'lat', $ort['lat']) : '',
                   'lon'         => isset($ort['lon']) ? ortWert($col, 'lon', $ort['lon']) : '',
+                  /* Der Katalog entscheidet, ob das Feld einen Pin-Knopf
+                   * bekommt (E-S9-06 d) — nicht diese Datei. */
+                  'ortswahl'    => !empty($f['ortswahl']),
               ]);
               if (!empty($f['children'])) { ?>
                 <div class="childfields">
@@ -1404,9 +1408,15 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
          nicht der Zufall (E-S9-07). */ ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
+<?php /* geocoder.js VOR ortsfeld.js und ortswahl.js: Beide fragen beim
+         Aufbau, ob die Adresssuche an ist (S9/AP2, E-S9-05). */ ?>
+<script src="<?= asset('assets/geocoder.js') ?>"></script>
 <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
+<?php /* geo.js liefert die Ringpunkte und die Spurfarbe fuer die
+         aufgezeichnete Spur im Kartendialog (S9/AP2, E-S9-06 b). */ ?>
+<script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/ortswahl.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
@@ -1614,9 +1624,42 @@ const ortStart = EdOrtsfeld.init({
   bezeichnungPlatzhalter: 'Bezeichnung des Abfahrtortes'
 });
 
+/* ---- Die aufgezeichnete Spur fuer den Kartendialog (S9/AP2, E-S9-06 b) ----
+ *
+ * WER DEN EINSATZORT NACHTRAEGT, HAT DIE SPUR — und der Ort liegt fast immer
+ * auf ihr. Der Dialog zeichnet sie deshalb, und bei leerem Feld oeffnet die
+ * Karte gleich darauf (Backlog Nr. 147, PS-11).
+ *
+ * GEHOLT WIRD UEBER `api/mission.php`, NICHT EINGEBETTET. Das ist die Vorgabe
+ * aus E-S9-06 b, und der Grund liegt in S11: Wenn die Spur eines Tages
+ * verschluesselt reist, aendert sich nur der Abholweg — die Seite bliebe, wie
+ * sie ist. Eine in das Formular eingebettete Spur waere dagegen eine zweite
+ * Stelle, an der Ortsdaten im Klartext stehen.
+ *
+ * ERST BEIM OEFFNEN, UND NUR EINMAL. Das Konzept sagt „holt sie beim Laden";
+ * gebaut ist es als Funktion, die beim ERSTEN Oeffnen des Dialogs abruft und
+ * das Versprechen behaelt. Der Unterschied ist eine Abwaegung und keine
+ * Abweichung in der Sache: Die allermeisten Formularaufrufe oeffnen den Dialog
+ * nie, und `api/mission.php` liefert die ganze Einsatzzeile samt Phasen und
+ * einigen hundert Spurpunkten. Der Dialog steht sofort; die Spur kommt nach
+ * und passt die Karte dann ein — wer bis dahin selbst geschoben hat, behaelt
+ * seinen Ausschnitt. */
+const SPUR_EINSATZ = <?= $editing ? json_encode((string)$id) : 'null' ?>;
+let spurVersprechen = null;
+function spurHolen() {
+  if (SPUR_EINSATZ === null) { return Promise.resolve(null); }
+  if (!spurVersprechen) {
+    spurVersprechen = fetch('api/mission.php?id=' + encodeURIComponent(SPUR_EINSATZ))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => (d && Array.isArray(d.track) && d.track.length > 1) ? d.track : null)
+      .catch(() => null);
+  }
+  return spurVersprechen;
+}
+
 // Pin-Blatt (Geolocation, Kartendialog) an beide Felder haengen (E-P3-34).
-EdOrtswahl.registriere('loc', ortEinsatz);
-EdOrtswahl.registriere('start', ortStart);
+EdOrtswahl.registriere('loc', ortEinsatz, { spur: spurHolen });
+EdOrtswahl.registriere('start', ortStart, { spur: spurHolen });
 
 /* Ortsfelder aus dem Feldkatalog (derzeit die Zielklinik). Sie tragen einen
  * NAMEN und daneben eine Koordinate, deshalb getrennte Suche: „Klinikum
@@ -1684,12 +1727,19 @@ Object.keys(SUGGEST_FELDER).forEach(spalte => {
     })) }], feld.value.trim());
   });
 });
-const ORTSFELDER = LOC_FELDER.map(lf => EdOrtsfeld.init({
-  praefix: lf.praefix,
-  getrennteSuche: true,
-  vorschlaege: lf.vorschlaege,
-  bezeichnungPlatzhalter: 'Bezeichnung'
-})).filter(Boolean);
+const ORTSFELDER = LOC_FELDER.map(lf => {
+  const steuer = EdOrtsfeld.init({
+    praefix: lf.praefix,
+    getrennteSuche: true,
+    vorschlaege: lf.vorschlaege,
+    bezeichnungPlatzhalter: 'Bezeichnung'
+  });
+  /* Der Pin-Knopf haengt am Katalogfeld (E-S9-06 d) — heute ist das genau
+   * das Transportziel. Dieselbe Spur wie am Einsatzort: Es ist derselbe
+   * Einsatz, und das Ziel liegt an ihrem Ende. */
+  if (steuer && lf.ortswahl) { EdOrtswahl.registriere(lf.praefix, steuer, { spur: spurHolen }); }
+  return steuer;
+}).filter(Boolean);
 
 /* ---- Abfahrtort: Regel waehlen, manuelles Feld ein-/ausblenden (E34) ------
  *

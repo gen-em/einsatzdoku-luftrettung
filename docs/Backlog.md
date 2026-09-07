@@ -788,15 +788,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nebenklapp. Zuordnung: Backlog-Runde.
     *Konzept S9 (07.09.2026): E-S9-09 (`vehicles.kurz`, `days.vehicle_kurz`, Nutzlast 10; AP4).*
 
-70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
-    *Zulieferung aus P3; bis Fassung 16 ohne Nummer.* Die Position eines
-    Standorts wird über die Ortssuche oder von Hand als Koordinate erfasst;
-    das Ortsfeld der Einsätze kann seit P3 die Position auch auf der Karte
-    wählen. Dieselbe Kartenwahl fehlt in den Stammdaten der Standorte.
-    **Zu tun:** den vorhandenen Baustein des Ortsfelds dort einbinden, kein
-    neuer Baustein. Zuordnung: Backlog-Runde.
-    *Konzept S9 (07.09.2026): E-S9-06 c (Pin-Knopf in der Nur-Lage-Fassung, Standortkarte der Standortseite; AP2/AP5).*
-
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**
     *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
     mit Rahmenplan Fassung 16, wie R39 es vorsah.* Das Alternativmodell zu
@@ -1137,19 +1128,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     E-S4-16 dann um den Unterschied App-Signaturschlüssel / Upload-Schlüssel
     ergänzen. **Nach v1.0**, wenn die Releases häufiger werden.
 
-101. **Adresssuche im Kartendialog.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-1), Rahmenplan
-    Schritt 8 (S9), R73.*
-    Im aufploppenden Kartendialog (Transportziel, Einsatzort usw.) kann kein
-    Ort per Adresse gesucht werden. Soll: Adress- und Ortssuche im Dialog;
-    ein Klick auf einen Treffer **setzt den Pin**, die Übernahme bleibt ein
-    eigener, bestätigender Schritt (F1). Zuerst zu prüfen: die
-    Geocoding-Quelle — dieselbe wie die heutigen Adressvorschläge oder keine
-    (`CLAUDE.md` 4, Datenschutz). Vorbereitung
-    `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
-    *Konzept S9 (07.09.2026): E-S9-05, E-S9-06 (Geocoder-Modul, Suchfeld im Dialog; AP2).*
-
-
 103. **Kompaktere Buttons Einsatzort, Standort, Zielklinik.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-3), Schritt 8 (S9).*
     Die drei Buttons sollen kleiner werden; Prüfidee: die farbige Umrandung
@@ -1175,15 +1153,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     S9-Konzept (Fable-Schritt, F8), nicht vorab.
     *Konzept S9 (07.09.2026): E-S9-13, M-S9-02 — Hubschrauber bleibt Tabler „helicopter"; erledigt sich mit „Ist".*
 
-
-107. **Zielklinik per Koordinaten und Karte.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-7), Schritt 8 (S9).*
-    An beiden Stellen (Vorbelegung bei den Rettungsmitteln,
-    Einsatzbearbeitung) zusätzlich Koordinateneingabe und Auswahl über den
-    standardisierten Kartendialog (Nr. 101). Koordinaten einheitlich wie in
-    den übrigen Feldern (F11); so gewählte Zielkliniken sind Ad-hoc-Einträge
-    je Einsatz, kein Stammdateneintrag (F12). Migration; Vertrag prüfen.
-    *Konzept S9 (07.09.2026): E-S9-06 (Pin-Knopf am Katalogfeld, Ad-hoc-Wert; AP2).*
 
 108. **Schloss-Icon und Legende für verschlüsselte Felder.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.1), Schritt 8
@@ -1503,20 +1472,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zur Bauform ins Handbuch 3.1 und aufs Notfallblatt (R37.11).
     Zuordnung: Sofortpaket Sicherheit.
 
-137. **Photon und Kachelserver bekommen den Einsatzort im Klartext.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-6).* Beim Tippen der
-    Adresse geht der Text ab drei Zeichen an `photon.komoot.io`
-    (`ortsfeld.js:82,360`), die Umkehrsuche schickt die Koordinate
-    (`ortswahl.js:34`), die Kachelserver sehen den Ausschnitt. Nicht der
-    eigene Server, aber ein Dritter ohne Vertrag — der Wortlaut „keine
-    fremde Quelle zur Laufzeit" (`CLAUDE.md` 4) deckt es nicht. Sofortpaket:
-    Hinweis am Feld, Nennung im Datenschutztext, Schalter je Installation
-    (die Komponente hat `adresssuche` schon, `ortsfeld.js:118`);
-    **Entschieden (F-SP-4): Schalter je Installation, Vorgabe „an".** Selbstbetrieb ist
-    die Frage von Nr. 101 (S9 PS-1) mit der Hosting-Entscheidung.
-    Zuordnung: Sofortpaket Sicherheit, Rest S9.
-    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-05, AP2) — Hinweis am Feld, Datenschutztext, Installationsschalter (Karte „Adresssuche" auf Betrieb → Servereinstellungen, `app_state` `adresssuche`), Kontoschalter (Profil → Datenschutz), Dienstadresse. Zuordnung jetzt: S9.*
-
 138. **Weg C: die Zusage auf das eingrenzen, was sie hält.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-1), entschieden R78.*
     Nur Dokumente, keine Versionsstufe: `CLAUDE.md` 4, `Technik.md` 4.98,
@@ -1605,30 +1560,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Design-Skizze für Weg B (Nr. 43, SP-9) zur Prüfung. Zuordnung: P6,
     R17 Stück 1.
 
-147. **Die aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung zeigen.**
-    *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Wer im
-    Einsatzformular „Auf der Karte wählen" öffnet (`ortswahl.js`, Fadenkreuz),
-    sieht eine leere Karte — obwohl der Einsatz eine GPS-Aufzeichnung hat und
-    `api/mission.php` sie längst liefert. Der Ort, der gesucht wird, liegt fast
-    immer **auf** der Spur; ohne sie sucht man ihn auf der Karte neu.
-    **Soll:** Liegt eine Aufzeichnung vor (`$hatTrack`, dieselbe Schwelle wie
-    das Formular: mehr als ein Punkt), zeichnet der Dialog sie in der ersten
-    Spurfarbe; ist das Feld noch leer, öffnet die Karte auf der Spur
-    (`fitBounds`), sonst wie heute auf der Koordinate. **Nur die Spur, keine
-    Luftlinie** — `luftlinie.js` bleibt außen vor; eine gedachte Verbindung
-    hilft beim Suchen nicht und wäre im Auswahldialog eine Falschaussage. Gilt
-    für **jeden** Kartendialog des Einsatzformulars: heute den Einsatzort,
-    mit PS-7 (Nr. 107) auch die Zielklinik — der manuelle Abfahrtort erscheint
-    ohne Spur ohnehin nicht. An Photon geht weiterhin nur die Koordinate
-    (Umkehrsuche), nie ein Spurpunkt. **Ort nach R74:** der vorhandene
-    Pin-Knopf am Feld — kein neuer Menüpunkt, keine neue Darstellung, der
-    Dialog bekommt eine Ebene mehr. Verträglich mit S11 (Weg B): Der Dialog
-    läuft im Browser, wo die Spur nach S11 entschlüsselt vorliegt.
-    Zuordnung: **S9**, als PS-11 der Vorbereitung und Ergänzung zu PS-1
-    (Nr. 101, gemeinsamer Kartendialog) — der Dialog entsteht dort ohnehin
-    neu.
-    *Konzept S9 (07.09.2026): E-S9-06 b (Spur im Dialog, fitBounds bei leerem Feld; AP2).*
-
 150. **Der Cron-Befehl für den Job-Einstieg steht mit dem Repositoriumspfad in der Dokumentation.**
     *Aufgenommen 06.09.2026 vom Auftraggeber, geprüft gegen `main`.* Der
     Deploy legt den **Inhalt** von `server/` nach `./httpdocs/`
@@ -1709,6 +1640,142 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
+    *Zulieferung aus P3; bis Fassung 16 ohne Nummer.* Die Position eines
+    Standorts wird über die Ortssuche oder von Hand als Koordinate erfasst;
+    das Ortsfeld der Einsätze kann seit P3 die Position auch auf der Karte
+    wählen. Dieselbe Kartenwahl fehlt in den Stammdaten der Standorte.
+    **Zu tun:** den vorhandenen Baustein des Ortsfelds dort einbinden, kein
+    neuer Baustein. Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-06 c (Pin-Knopf in der Nur-Lage-Fassung, Standortkarte der Standortseite; AP2/AP5).*
+
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP2, E-S9-06 c).** Kein neuer
+    Baustein, wie der Punkt es verlangte: Der Pin-Knopf samt Blatt („Meine
+    Position übernehmen" / „Auf der Karte wählen") stand in `ui_ortsfeld()`
+    schon — nur im falschen Zweig. Die Funktion hat zwei Formen, und die
+    Nur-Lage-Fassung (`feld => false`), die Standorte und Zielkliniken
+    benutzen, gab ihn nicht aus. Der Block steht jetzt einmal da und wird
+    zweimal ausgegeben. Gemessen mit `tools/klickprobe/` (Weg
+    `ap2-dialog-fuenf-einbauorte`): Der Dialog öffnet aus **5 von 5**
+    Einbauorten mit Karte darin — Einsatzort, manueller Abfahrtort,
+    Transportziel, Standort im Konto (`einstellungen.php`) und Standort
+    systemweit (`admin_stammdaten.php`). Ohne Spur, denn zu einem Standort
+    gehört kein Einsatz.
+
+101. **Adresssuche im Kartendialog.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-1), Rahmenplan
+    Schritt 8 (S9), R73.*
+    Im aufploppenden Kartendialog (Transportziel, Einsatzort usw.) kann kein
+    Ort per Adresse gesucht werden. Soll: Adress- und Ortssuche im Dialog;
+    ein Klick auf einen Treffer **setzt den Pin**, die Übernahme bleibt ein
+    eigener, bestätigender Schritt (F1). Zuerst zu prüfen: die
+    Geocoding-Quelle — dieselbe wie die heutigen Adressvorschläge oder keine
+    (`CLAUDE.md` 4, Datenschutz). Vorbereitung
+    `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
+    *Konzept S9 (07.09.2026): E-S9-05, E-S9-06 (Geocoder-Modul, Suchfeld im Dialog; AP2).*
+
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP2, E-S9-05, E-S9-06 a).**
+    Die zuerst zu klärende Frage — welche Geocoding-Quelle — ist so
+    beantwortet: dieselbe wie bisher (Photon), aber **einstellbar und
+    abschaltbar**. `assets/geocoder.js` ist der eine Weg nach draußen; die
+    Anschrift steht nicht mehr im ausgelieferten Browserstand
+    (`grep -rn "komoot" server/assets/` = **0**), sondern in `app_state` und
+    ist unter Betrieb → Servereinstellungen zu ändern. Zwei Schalter davor
+    (Installation und Konto) können sie ganz abstellen; nachgemessen am
+    Netzwerkprotokoll: eingeschaltet **2** Anfragen auf demselben Weg,
+    ausgeschaltet **0**. Das Suchfeld sitzt im Dialogkopf; ein Treffer setzt
+    das Kreuz und übernimmt nichts (F1) — gemessen: Feld nach dem Treffer
+    leer, 0 Chips, nach „Übernehmen" 1 Chip.
+
+107. **Zielklinik per Koordinaten und Karte.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-7), Schritt 8 (S9).*
+    An beiden Stellen (Vorbelegung bei den Rettungsmitteln,
+    Einsatzbearbeitung) zusätzlich Koordinateneingabe und Auswahl über den
+    standardisierten Kartendialog (Nr. 101). Koordinaten einheitlich wie in
+    den übrigen Feldern (F11); so gewählte Zielkliniken sind Ad-hoc-Einträge
+    je Einsatz, kein Stammdateneintrag (F12). Migration; Vertrag prüfen.
+    *Konzept S9 (07.09.2026): E-S9-06 (Pin-Knopf am Katalogfeld, Ad-hoc-Wert; AP2).*
+
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP2, E-S9-06 d).** Kein
+    Sonderfall im Formular, sondern ein Schlüssel im Feldkatalog:
+    `'ortswahl' => true` an `transport_dest` in `mission_fields.php`, und
+    Pin-Knopf, Blatt und Kartendialog kommen von selbst — die Regel
+    „Feldkatalog statt Sonderfall" (`CLAUDE.md` 4). Die Koordinateneingabe war
+    schon da (F11); ein per Karte gewähltes Ziel bleibt ein **Ad-hoc-Wert des
+    Einsatzes** und wird kein Stammdatensatz (F12). Migration und Vertrag
+    blieben unberührt: Die Koordinate liegt weiter in `dest_lat/lon` im
+    Klartext (bis S11), der JSON-Vertrag ist unverändert (R12).
+
+137. **Photon und Kachelserver bekommen den Einsatzort im Klartext.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-6).* Beim Tippen der
+    Adresse geht der Text ab drei Zeichen an `photon.komoot.io`
+    (`ortsfeld.js:82,360`), die Umkehrsuche schickt die Koordinate
+    (`ortswahl.js:34`), die Kachelserver sehen den Ausschnitt. Nicht der
+    eigene Server, aber ein Dritter ohne Vertrag — der Wortlaut „keine
+    fremde Quelle zur Laufzeit" (`CLAUDE.md` 4) deckt es nicht. Sofortpaket:
+    Hinweis am Feld, Nennung im Datenschutztext, Schalter je Installation
+    (die Komponente hat `adresssuche` schon, `ortsfeld.js:118`);
+    **Entschieden (F-SP-4): Schalter je Installation, Vorgabe „an".** Selbstbetrieb ist
+    die Frage von Nr. 101 (S9 PS-1) mit der Hosting-Entscheidung.
+    Zuordnung: Sofortpaket Sicherheit, Rest S9.
+    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-05, AP2) — Hinweis am Feld, Datenschutztext, Installationsschalter (Karte „Adresssuche" auf Betrieb → Servereinstellungen, `app_state` `adresssuche`), Kontoschalter (Profil → Datenschutz), Dienstadresse. Zuordnung jetzt: S9.*
+
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP2, E-S9-05).** Alle vier
+    Teile des Sofortpakets stehen, und der Schalter ist zwei geworden:
+    **(1)** Kleinzeile unter dem Ortsfeld, die den Dienst beim Namen nennt —
+    einmal je Seite, nicht je Feld, und nur bei eingeschalteter Suche.
+    **(2)** Textbaustein zum Kopieren unter Verwaltung → Installation, mit der
+    tatsächlich eingetragenen Dienstadresse. Der ursprünglich vorgesehene Weg
+    (Vorlage in `rechtstexte_lib.php`) ging nicht: Die Anwendung liefert
+    **keinen** Rechtstext mit und kann deshalb keinen Absatz einsetzen; sie
+    kann ihn nur bereitlegen. **(3)** Installationsschalter, Karte
+    „Adresssuche" auf Betrieb → Servereinstellungen, `app_state` `adresssuche`,
+    Vorgabe „an" (F-SP-4). **(4)** Kontoschalter, Profil → Karte
+    „Datenschutz", `users.adresssuche`. Dazu der Selbstbetrieb aus Nr. 101:
+    Das Feld „Dienst" nimmt die Adresse eines eigenen Photon auf — ohne
+    Codeänderung und ohne neue Auslieferung.
+
+    **Die Kachelserver bleiben.** Sie sind die Karte selbst und lassen sich
+    nicht abschalten, ohne die Karte abzuschaffen; was sie sehen, steht in
+    `docs/Lizenzen.md` 6.1. Damit ist der Adressdienst der einzige
+    Laufzeitdienst des Projekts, den man ausschalten kann.
+
+147. **Die aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung zeigen.**
+    *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Wer im
+    Einsatzformular „Auf der Karte wählen" öffnet (`ortswahl.js`, Fadenkreuz),
+    sieht eine leere Karte — obwohl der Einsatz eine GPS-Aufzeichnung hat und
+    `api/mission.php` sie längst liefert. Der Ort, der gesucht wird, liegt fast
+    immer **auf** der Spur; ohne sie sucht man ihn auf der Karte neu.
+    **Soll:** Liegt eine Aufzeichnung vor (`$hatTrack`, dieselbe Schwelle wie
+    das Formular: mehr als ein Punkt), zeichnet der Dialog sie in der ersten
+    Spurfarbe; ist das Feld noch leer, öffnet die Karte auf der Spur
+    (`fitBounds`), sonst wie heute auf der Koordinate. **Nur die Spur, keine
+    Luftlinie** — `luftlinie.js` bleibt außen vor; eine gedachte Verbindung
+    hilft beim Suchen nicht und wäre im Auswahldialog eine Falschaussage. Gilt
+    für **jeden** Kartendialog des Einsatzformulars: heute den Einsatzort,
+    mit PS-7 (Nr. 107) auch die Zielklinik — der manuelle Abfahrtort erscheint
+    ohne Spur ohnehin nicht. An Photon geht weiterhin nur die Koordinate
+    (Umkehrsuche), nie ein Spurpunkt. **Ort nach R74:** der vorhandene
+    Pin-Knopf am Feld — kein neuer Menüpunkt, keine neue Darstellung, der
+    Dialog bekommt eine Ebene mehr. Verträglich mit S11 (Weg B): Der Dialog
+    läuft im Browser, wo die Spur nach S11 entschlüsselt vorliegt.
+    Zuordnung: **S9**, als PS-11 der Vorbereitung und Ergänzung zu PS-1
+    (Nr. 101, gemeinsamer Kartendialog) — der Dialog entsteht dort ohnehin
+    neu.
+    *Konzept S9 (07.09.2026): E-S9-06 b (Spur im Dialog, fitBounds bei leerem Feld; AP2).*
+
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP2, E-S9-06 b).** Der Dialog
+    zeichnet die aufgezeichnete Spur in der ersten Spurfarbe, mit Ringpunkt
+    an Anfang und Ende und einer Legende darunter; **keine Luftlinie**, wie
+    verlangt. Er wartet nicht auf sie: Der Dialog steht sofort, die Spur kommt
+    über `api/mission.php` nach. Ist das Ortsfeld leer, passt sich die Karte
+    beim Eintreffen auf die Spur ein (`fitBounds`, 24 px Rand) — aber nur,
+    wenn niemand inzwischen selbst geschoben oder gezoomt hat; sonst risse es
+    die Karte unter dem Kreuz weg. Steht schon eine Koordinate, bleibt sie der
+    Mittelpunkt. Gemessen mit `tools/klickprobe/` (Weg `ap2-spur-im-dialog`)
+    an einem Einsatz mit 309 Punkten: **1 Linie, 4 Ringpunkte** (2 auf der
+    Karte, 2 in der Legende), Legende sichtbar, **0 Pfeile**.
 
 68. **Vorschlagsfelder über `<datalist>` zeigen auf dem Handy nichts an.**
     *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers

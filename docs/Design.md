@@ -1321,15 +1321,29 @@ Platzhalter bekommt, gilt die Regel aus 9.7: erfundener Ort, kein echter
 
 **Es sucht beim Tippen** (seit Web 12.3.3, E-S3-06) — in **beiden**
 Bedienformen, also auch bei Standort und Zielklinik, wo bis dahin nur die
-Lupe suchte. Drei Grenzen fassen das ein und stehen als Konstanten oben in
-`assets/ortsfeld.js`: **400 ms** Ruhe nach dem letzten Tastendruck, **ab drei
-Zeichen**, **höchstens eine offene Anfrage** (eine laufende wird abgebrochen).
-Die Lupe umgeht die Entprellung, nicht die Mindestlänge.
+Lupe suchte. Drei Grenzen fassen das ein und stehen seit Web 15.7.0 in
+`assets/geocoder.js` (vorher in `ortsfeld.js`): **400 ms** Ruhe nach dem
+letzten Tastendruck, **ab drei Zeichen**, **höchstens eine offene Anfrage**
+(eine laufende wird abgebrochen). Die Lupe umgeht die Entprellung, nicht die
+Mindestlänge.
 
 > **Das ist eine Auskunft an Dritte, und sie steht in `docs/Lizenzen.md` 6.2.**
-> Die Adresssuche geht an Photon; jede Anfrage trägt die eingetippten
-> Buchstaben dorthin. Stehen bereits Koordinaten, ruht die Suche ganz — die
-> Formaterkennung läuft lokal und hat Vorrang.
+> Die Adresssuche geht an einen Photon-Dienst; jede Anfrage trägt die
+> eingetippten Buchstaben dorthin. Stehen bereits Koordinaten, ruht die Suche
+> ganz — die Formaterkennung läuft lokal und hat Vorrang.
+
+**Die Kleinzeile darunter nennt den Dienst — einmal je Seite** (Web 15.7.0,
+`ui_geocoder_hinweis()`, `.loc-datenschutz`). Nicht je Feld: Auf der
+Standortseite steht ein Ortsfeld je Standort **und** je Zielklinik, das wären
+zehn gleiche Sätze und mehr. Zehnmal derselbe Datenschutzhinweis ist keine
+Auskunft mehr, sondern Tapete. Sie steht am **ersten** Ortsfeld der Seite und
+ist auf die Seite bezogen formuliert; ist die Adresssuche aus, fehlt sie ganz
+— sie sagt aus, dass etwas hinausgeht, und dann geht nichts hinaus.
+
+**Der Pin-Knopf steht in beiden Formen** (Web 15.7.0). Bis dahin rendete ihn
+nur `feld => true`; die Nur-Lage-Fassung hatte deshalb keine Karte, und
+Backlog Nr. 70 („Karte für Standorte") war genau das. Der Block steht jetzt
+einmal in `ui_ortsfeld()` und wird zweimal ausgegeben.
 
 **Stammdaten stehen sofort da, Adressen entprellt.** Die Stammdaten liegen im
 Browser; auf sie zu warten wäre eine Wartezeit ohne Grund, und sie erscheinen
@@ -1850,6 +1864,72 @@ Handlung.
 > `position:relative`; ohne einen positionierten Vorfahren hängt die Liste am
 > Seitenanfang.
 
+### 9.29 Kartendialog (`.dialog-karte`)
+
+*Suchfeld, Spur und Legende neu mit Web 15.7.0 (S9/AP2, E-S9-06). Mockup
+`docs/konzepte/konzept-s9/mockups/M-S9-04-kartendialog.html`, freigegeben am
+07.09.2026. Der Dialog selbst gibt es seit Web 9.4.0.* Gebaut wird er in
+`assets/ortswahl.js`, nicht in `ui.php` — er entsteht auf Knopfdruck im
+Browser und wird beim Schließen wieder entfernt; in der erzeugten
+Bausteintabelle steht er deshalb nicht.
+
+**Zweck:** Einen Punkt auf der Karte wählen. **Ein** Dialog für fünf
+Einbauorte: Einsatzort, manueller Abfahrtort, Transportziel und die
+Lagefelder der Standorte in Konto- und Systemverwaltung.
+
+```html
+<dialog class="dialog dialog-karte">
+  <div class="dialog-kopf"><h2>Auf der Karte wählen</h2>
+    <div class="dialog-suche">           <!-- nur bei EdGeocoder.an() -->
+      <div class="ortsfeld-zeile">…Feld + Lupe…</div>
+      <ul class="vorschlaege" data-liste hidden></ul>
+    </div>
+  </div>
+  <div class="dialog-inhalt">
+    <div class="ortswahl-karte"><div class="geo" data-karte></div>
+      <span class="ortswahl-kreuz" aria-hidden="true"></span></div>
+    <p class="feld-hinweis">Karte verschieben, bis das Kreuz auf dem Ort steht.</p>
+    <div class="legende" data-legende hidden>
+      <span><span class="legende-linie"></span> Aufzeichnung</span>
+      <span><span class="geo-ringpunkt"></span> Start</span>
+      <span><span class="geo-ringpunkt geo-ringpunkt-ende"></span> Ende</span>
+    </div>
+  </div>
+  <div class="dialog-fuss">…Abbrechen · Übernehmen…</div>
+</dialog>
+```
+
+**Das Suchfeld steht im Kopf, nicht im Inhalt.** Das ist keine Formsache: Im
+Inhalt schöbe die aufklappende Trefferliste die Karte nach unten, und das
+Kreuz wanderte unter dem Finger weg. Im Kopf legt sich die Liste **über** die
+Karte (`.vorschlaege` schwebt, 9.28), und die Karte steht still. Dazu fällt
+der obere Innenabstand des Inhalts weg (`.dialog-karte .dialog-inhalt`) —
+sonst stünde zwischen Feld und Karte zweimal Luft.
+
+**Ein Treffer setzt das Kreuz, mehr nicht** (F1). Die Karte fährt hin
+(`setView`, Zoom 15), der Name wandert ins **Suchfeld**, damit man sieht,
+wonach sie steht — ins Formular geschrieben wird nichts. Erst „Übernehmen"
+übernimmt. So lässt sich ein Treffer noch von Hand nachjustieren, statt eine
+ungefähre Adresse als Tatsache zu speichern.
+
+**Die Zeichnung ist die aufgezeichnete Spur, sonst nichts.** Linie in
+`EdGeo.spurFarbe(0)`, Ringpunkte an Anfang und Ende (`EdGeo.markerRing`) —
+**keine Luftlinie, keine Schilder für Standort und Klinik**: Sie gehören
+nicht in einen Auswahldialog, sie würden das Kreuz verdecken. Die Legende
+erscheint mit der Spur und nicht vorher; ohne Aufzeichnung (Stammdaten haben
+keinen Einsatz) bleibt sie versteckt.
+
+> **`fitBounds` nur bei leerem Feld — und nur, solange niemand geschoben
+> hat.** Steht schon eine Koordinate, ist sie die Aussage und bleibt der
+> Mittelpunkt; die Spur ist dann Zusatz. Und weil die Spur nachgeladen wird,
+> könnte sie einer NutzerIn, die inzwischen selbst gezielt hat, die Karte
+> unter dem Kreuz wegreißen — `dragstart`/`zoomstart` setzen deshalb ein
+> Merkzeichen, das den Einpassvorgang abbestellt.
+
+**Kein neues Token.** `.legende-linie` ist 22 × 4 px in `--spur-1`, die
+Ringpunkte sind die aus M-S9-01, die Schrift ist `--groesse-2` in
+`--gedaempft`.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Fünf Typen
@@ -1988,6 +2068,8 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 15.7.0 (S9/AP2)** | Neues Kapitel **9.29 Kartendialog** — Suchfeld im Kopf (und warum nicht im Inhalt), Spur mit Ringpunkten und Legende, `fitBounds` nur bei leerem Feld. Kapitel 9.13 nachgezogen: Die drei Grenzen der Adressabfrage stehen jetzt in `assets/geocoder.js`, die Kleinzeile `.loc-datenschutz` steht **einmal je Seite**, und den Pin-Knopf rendern seither **beide** Formen von `ui_ortsfeld()` (Backlog Nr. 70). Kein neues Token. |
+| **Web 15.6.0/15.6.1 (S9/AP1)** | Neues Kapitel **9.28 Vorschlagsliste** — ein Baustein für vier abgelöste Fassungen, Übernahme auf `mousedown` (Backlog Nr. 102), Gruppenzeile nach Entscheidung des Aufrufers, `z-index: 35` zwischen Speichern-Leiste und Kopfleiste. Kapitel 9.13: Der Schlüssel `datalist` ist ersatzlos entfallen. |
 | **Web 15.5.0 (S8/AP7)** | Kapitel 6: **zwei Höhen für Bedienelemente** — 44 px am Finger, 36 px am Zeiger ab 1024 px, an drei Medienmerkmalen zugleich (`hover`, `pointer`, `min-width`). Kapitel 9.4 nachgezogen. Kapitel 9.7: neue Regel `.feld-eingabe:disabled` (F-S8-P-03) und der Zusammenhang mit `.feldsatz-gesperrt`. Die erzeugten Tabellen zählen seither **ohne Kommentare**: Die Schwellentabelle hatte eine zusammengesetzte Abfrage verschluckt (20 → 21 Medienblöcke), die Bausteintabelle zählte Klassennamen aus Kommentaren als Unterklassen mit — elf Zeilen korrigiert, `ui_feld()` von „+24" auf **+18**. |
 | **Web 12.4.2 (S3/AP11)** | Kapitel 2.3: Logotabelle auf die tatsächlichen Dateinamen gebracht (sie führte noch die Namen von vor dem NEF-Platzhalter-Ersatz) und um die Rahmenmaße ergänzt. Neue Zusage: **Rahmen = Zeichnung** — das Bodenlogo war auf ein Quadrat gepolstert, ein Zehntel seiner Höhe war leer. Dazu zwei Warnungen für den nächsten, der eine SVG anfasst (`getBBox()` prüfen; XML verbietet `--` im Kommentar). |
 | **Web 12.4.1 (S3/AP10)** | Kapitel 9.7: neue Regel `.feldsatz-gesperrt` — ein `<fieldset>`, das nur gruppiert, für das `disabled`-Attribut. Die Elementregeln für `fieldset` sind mit O11 gefallen; ohne diese Rücknahme bringt der Browser Rahmen und Polsterung mit. |

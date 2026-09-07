@@ -4,6 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/speicher_lib.php';
 require_once __DIR__ . '/wartung_lib.php';
+require_once __DIR__ . '/geocoder_lib.php';
 
 /**
  * BETRIEB → SERVEREINSTELLUNGEN (S8/AP2, E-S8-05, E-S8-18; Mockup 07 Fassung 2).
@@ -89,6 +90,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
     }
 
     if ($error === null) {
+        $notice = $teile ? implode(', ', $teile) . ' gespeichert.'
+                         : 'Es gab nichts zu ändern.';
+    }
+}
+
+/* ---- Adresssuche (S9/AP2, E-S9-05, R79; Backlog Nr. 137) ------------------
+ *
+ * EIGENE HANDLUNG, EIGENES FORMULAR. Sie hat mit dem Speicher nichts zu tun,
+ * und ein gemeinsames „Speichern" ueber zwei Karten hinweg hiesse, dass ein
+ * Tippfehler in der Speichergrenze die Dienstadresse mit abweist.
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geocoder') {
+    csrf_check();
+    $adresse = geocoder_adresse_pruefen((string)($_POST['dienst'] ?? ''));
+    if ($adresse === null) {
+        $error = 'Die Dienstadresse muss mit „https://" beginnen und einen '
+               . 'Rechnernamen nennen — ohne Abfrageteil, höchstens 180 Zeichen '
+               . '(z. B. „https://photon.komoot.io").';
+    } else {
+        $teile = geocoder_installation_setzen(!empty($_POST['adresssuche']), $adresse);
         $notice = $teile ? implode(', ', $teile) . ' gespeichert.'
                          : 'Es gab nichts zu ändern.';
     }
@@ -271,8 +292,44 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     ?>
   <?php ui_karte_ende(); ?>
 
+  <?php /* ---- Adresssuche (S9/AP2, E-S9-05, R79) ------------------------
+           Sie steht im Betrieb und nicht in den Kontoeinstellungen, weil sie
+           die Installation betrifft: Wer sie hier abschaltet, schaltet sie
+           fuer alle ab (R74 (1) — BetreiberIn, trifft alle). Der Kontoschalter
+           daneben steht im Profil und kann nur noch einschraenken. */ ?>
+  <?php ui_karte_start(['titel' => 'Adresssuche', 'id' => 'k-adresssuche',
+      'plakette' => geocoder_installation_an()
+          ? ui_plakette('an', ['ton' => 'ok'])
+          : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
+    <p class="feld-hinweis">Beim Tippen in einem Ortsfeld und nach jeder Wahl auf
+       der Karte fragt die Anwendung einen <strong>Adressdienst</strong> —
+       vorwärts nach Vorschlägen zum getippten Text, rückwärts nach der Adresse
+       zu einer Koordinate. Der getippte Text und die Koordinate verlassen dabei
+       das Gerät. Alles Übrige bleibt hier: Koordinaten, Plus Codes, „Meine
+       Position" und die Karte selbst brauchen den Dienst nicht.</p>
+
+    <form method="post" action="betrieb_server.php">
+      <?= csrf_field() ?><input type="hidden" name="action" value="geocoder">
+      <?php ui_schalter(['name' => 'adresssuche', 'label' => 'Adresssuche im Internet',
+          'an' => geocoder_installation_an(),
+          'klein' => 'Aus heißt: keine Vorschläge, keine Umkehrsuche, kein '
+                   . 'Suchfeld im Kartendialog — für alle Konten dieser '
+                   . 'Installation.']); ?>
+      <?php ui_feld(['name' => 'dienst', 'label' => 'Dienst',
+          'wert' => geocoder_dienst(),
+          'attr' => ' maxlength="180" inputmode="url"',
+          'klein' => 'Adresse eines Photon-Dienstes, mit „https://". Vorgabe ist '
+                   . 'der frei betriebene Gemeinschaftsdienst ' . e(GEOCODER_VORGABE)
+                   . '. Wer einen eigenen betreibt, trägt ihn hier ein — dann '
+                   . 'verlassen die Anfragen das eigene Haus nicht.']); ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+  <?php ui_karte_ende(); ?>
+
   <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
-                        'vorschau' => 'Grenze · Schwellen · Webspace']); ?>
+                        'vorschau' => 'Grenze · Schwellen · Webspace · Adresssuche']); ?>
     <p class="feld-hinweis"><strong>Die Grenze gilt nur für Backups.</strong> Die
        Datenbank wächst mit jedem Einsatz und wird nie angehalten — eine Grenze
        darauf hieße, die Anwendung anzuhalten. Ist die Grenze erreicht, wird
@@ -290,6 +347,12 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
        Aufräumjob. Der Stand steht im Kartenkopf. Die Backups werden dagegen bei
        jedem Aufruf gewogen — ihr Verzeichnis ist klein genug dafür, und ihre
        Zahl entscheidet, ob noch gesichert werden darf.</p>
+    <p class="feld-hinweis"><strong>Die Adresssuche ist zweimal abschaltbar</strong>
+       — hier für die Installation und im Profil je Konto. Diese Einstellung ist
+       die Obergrenze: Ist sie aus, ist der Kontoschalter ausgegraut und die
+       Suche für alle aus. Der Datenschutztext nennt den eingetragenen Dienst;
+       wer ihn wechselt, sollte den Text gegenlesen (Verwaltung →
+       Rechtstexte).</p>
   <?php ui_karte_ende(true); ?>
 
 <?php ui_geruest_ende(); ?>

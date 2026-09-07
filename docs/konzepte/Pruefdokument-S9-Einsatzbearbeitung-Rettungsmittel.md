@@ -14,10 +14,10 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 >
 > | | |
 > |---|---|
-> | Stand | 07.09.2026 — **AP1 gebaut und geprüft** (Web 15.6.0, Korrekturstufe **15.6.1**). AP2 bis AP8 offen |
-> | Geprüft | P-01, P-02, P-03 vollständig · P-23 für die **sieben berührten** Seiten, nicht für alle 30 · P-12, P-25 als Gesamtlauf |
-> | Offen | P-04 bis P-11, P-13 bis P-22, P-24, P-26 bis P-33 (AP2 bis AP8) |
-> | Fehlerfunde | **fünf, alle behoben** — F-S9-P-01 bis F-S9-P-04 und **F-S9-P-07** (Abschnitt 2), dazu zwei gesammelte für AP2 (F-S9-P-05, -06); von den **drei Fragen** an den Auftraggeber (Abschnitt 4) sind zwei entschieden |
+> | Stand | 07.09.2026 — **AP1 und AP2 gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, **15.7.0**). AP3 bis AP8 offen |
+> | Geprüft | P-01 bis P-07 und P-32 vollständig · P-23 für die **zehn berührten** Seiten, nicht für alle 30 · P-12, P-25 als Gesamtlauf |
+> | Offen | P-08 bis P-11, P-13 bis P-22, P-24, P-26, P-28 bis P-31, P-33 (AP3 bis AP8) |
+> | Fehlerfunde | **acht, alle behoben** — F-S9-P-01 bis F-S9-P-04, F-S9-P-07 bis **F-S9-P-10** (Abschnitt 2); die beiden gesammelten Funde F-S9-P-05 und -06 sind mit AP2 **abgeräumt**. Von den **drei Fragen** aus AP1 sind zwei entschieden; AP2 stellt **zwei neue** (Abschnitt 4) |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` — 88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto, 8 Zielkliniken, 8 weitere Rettungsmittel, 15 Besatzungs-Vorbelegungen an zwei Standorten |
 
 ---
@@ -48,6 +48,19 @@ als Chromium. **Prüfliste Punkt 2.**
 Sie kann die Bedienhöhe **messen** (und tut es, siehe P-03), aber nicht, ob
 eine Zeile mit Handschuh zu treffen ist. **Prüfliste Punkt 1.**
 
+**Das Fenster zwischen Deploy und `update.php`** (neu mit AP2). Beide Leser
+der Kontospalte fangen eine fehlende Spalte ab und liefern die Vorgabe „an" —
+belegt ist das nur durch **Lesen des Codes**, nicht durch Messen: Der
+Prüfstand hat die Migration angewendet, und einen Bestand ohne die Spalte
+wieder herzustellen hieße, die Migration zurückzunehmen. **Was das kostet:**
+Ob eine Seite mit Ortsfeld in diesem Fenster wirklich fehlerfrei antwortet,
+ist nicht gemessen. **Prüfliste Punkt 8.**
+
+**Ein eigener Photon-Dienst.** Das Feld „Dienst" nimmt jede `https://`-Adresse
+mit Rechnernamen an; ob ein selbst betriebener Photon dieselben Felder liefert
+und die Herkunft der Anwendung erlaubt (CORS), ist hier nicht prüfbar — es gibt
+keinen. **Prüfliste Punkt 9.**
+
 **Ein Handgriff am Prüfstand, der genannt sein will.** Die Mengenbremse des
 Demo-Kontos (20 Anmeldungen je Fenster, E-P1-20) ist während der Prüfläufe
 angeschlagen und einmal per `DELETE FROM rate_limits` geleert worden — am
@@ -67,10 +80,10 @@ gemessen hat, ist keine Zahl.
 | P-01 | PS-2 mit gehaltener Maus | Klickprobe, 300 ms | 3/3 (vorher 0/3) | **vorher 0 von 3, nachher 3 von 3** — dieselbe Fassung der Probe gegen beide Stände, je drei Übernahmen (eine Vorbelegung des Standorts, zwei freie Eingaben); über zwei Breiten und beide Bedienhöhen **4 × 3 von 3** | 07.09.2026 |
 | P-02 | keine `<datalist>` mehr | grep | 0 | **0** außerhalb von Kommentaren (`grep -rn datalist server/`; vorher 12 Treffer in sechs Dateien, davon 8 `<datalist>`-Elemente im gerenderten Markup einer Einsatzseite). Verbleibende 10 Nennungen sind sämtlich Kommentare, die die Ablösung erklären | 07.09.2026 |
 | P-03 | eine Vorschlagsliste, Gruppenzeile, ≤ 2 Stammdaten, richtige Ebene | Bild, Klickprobe | 2 Breiten × 2 Höhen | **erfüllt.** Tipp „Klin" am Transportziel: **1 sichtbare Liste · 2 Gruppenzeilen · 2 Stammdatentreffer · 4 Adresstreffer · 0 `<datalist>`** (vorher: 1 Liste, 0 Gruppen, 0 erkennbare Herkunft, **8 `<datalist>`**). Bedienhöhe an der **einzeiligen** Zeile gemessen: 390 px → **44 px**, 1280 px Zeiger → **36 px**, 1280 px Finger → **44 px**. **16 Bilder** unter `tools/klickprobe/ausgabe/bild/`, Breite und Eingabeart im Dateinamen. **Ebene** (nach F-S9-P-07): in der Schnittfläche mit der klebenden Speichern-Leiste liegt **die Liste** oben — `z-index` Liste **35** · Leiste **30** · Kopfleiste **40**, gemessen mit `elementFromPoint` bei 61 bis 69 px Überlappung in allen vier Kombinationen | 07.09.2026 |
-| P-04 | Geocoder nur im Bootstrap | grep | 1 | offen — AP2 |
-| P-05 | Dialog aus fünf Einbauorten | Klickprobe | 5/5 | offen — AP2 |
-| P-06 | Kontoschalter aus → keine Anfrage | Netzwerkprotokoll | 0 | offen — AP2 |
-| P-07 | Spur im Dialog, Karte auf der Spur | Bild | 1 mit, 1 ohne | offen — AP2 |
+| P-04 | Geocoder nur im Bootstrap | grep | 1 | **erfüllt.** `grep -rn "komoot" server/assets/` = **0** (vorher 2: `ortsfeld.js` für die Suche, `ortswahl.js` für die Umkehrsuche). Die Vorgabe steht **einmal**, in `server/geocoder_lib.php` (`GEOCODER_VORGABE`); `assets/geocoder.js` trägt **keine** Rückfalladresse — fehlt der Bootstrap, ist `an()` falsch und es geht nichts hinaus | 07.09.2026 |
+| P-05 | Dialog aus fünf Einbauorten | Klickprobe | 5/5 | **5 von 5** mit Leaflet-Karte darin — Einsatzort, manueller Abfahrtort (Einsatz **ohne** Aufzeichnung, sonst gibt es das Feld nicht), Transportziel, Standort im Konto, Standort systemweit (Rolle `admin`). Dazu: Ein Treffer im Suchfeld lässt das Formular unberührt — **Feld leer, 0 Chips**, der Name steht im **Suchfeld**; erst „Übernehmen" schreibt: **1 Chip** (F1). Über zwei Breiten und beide Bedienhöhen **4 × 5 von 5** | 07.09.2026 |
+| P-06 | Kontoschalter aus → keine Anfrage | Netzwerkprotokoll | 0 | **0 Anfragen** an `photon.komoot.io` bei Tippen, Kartenwahl und „Übernehmen" — dazu **0 Adressvorschläge, 0 Suchfelder im Dialog, 0 Hinweiszeilen**. **Mit Gegenprobe:** derselbe Weg bei eingeschaltetem Schalter ergibt **2 Anfragen** (Vorwärtssuche und Umkehrsuche) und 1 Suchfeld — ohne diese Gegenprobe wäre die Null der Beleg dafür, dass die Probe nicht hinsieht. Geschaltet wird über die **Formulare**, nicht per SQL | 07.09.2026 |
+| P-07 | Spur im Dialog, Karte auf der Spur | Bild | 1 mit, 1 ohne | **erfüllt.** Einsatz mit Aufzeichnung (309 Punkte): **1 Linie, 4 Ringpunkte** (2 auf der Karte, 2 in der Legende), **Legende sichtbar, 0 Pfeile**; bei leerem Ortsfeld steht die Karte auf der Spur (Bild `ap2-spur-im-dialog`). Ohne Aufzeichnung — die Standort-Stammdaten — bleibt die Legende versteckt und die Karte auf dem Rückfallpunkt; belegt im Weg `ap2-dialog-fuenf-einbauorte`, der beide Standortseiten fährt | 07.09.2026 |
 | P-08 | Schildmaße | Browser-Messung | Doppelring ≤ 40 px | offen — AP3 |
 | P-09 | Kontrast der Ringe | `kontrast.py` | ≥ AA je Paar | offen — AP3 (der Gesamtlauf steht: **21 Paare, 0 verfehlt**; die neuen Ringpaare kommen mit AP3) |
 | P-10 | Pfeile in Spurrichtung | Winkel je Pfeil | 6/6 | offen — AP3 |
@@ -86,16 +99,16 @@ gemessen hat, ist keine Zahl.
 | P-20 | Anhebung der Notizen | Vergleichsskript | n / 0 / n | offen — AP7 |
 | P-21 | Suche findet Notiz nur entsperrt | Klickprobe | 1/1 und 0/1 | offen — AP7 |
 | P-22 | Export mit/ohne `pers` | Exportdatei | Spalte da / leer | offen — AP7 |
-| P-23 | Bilderlauf | 8 Breiten × 2 Höhen | 0/0/0/0 | **für die sieben berührten Seiten erfüllt** (10-tagesuebersicht, 11-…-schublade, 13-einsatzformular, 31-einstellungen-standorte, 32-einstellungen-rettungsmittel, 42-stammdaten-systemweit, 42a-stammdaten-rettungsmittel): je Lauf **56 Einzelbilder, 7 Kontaktbögen, 8 Breiten**; **Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0** — einmal als Zeigergerät (44/36) und einmal als Fingergerät (44). Gegenprobe auf gleiche Bilder: 56 Dateien, **52 verschiedene Prüfsummen**; die vier Doppelten sind die Tagesübersicht mit und ohne Schublade bei 1024, 1280, 1440 und 1920 px, wo die Schublade bauartbedingt nichts tut (`tools/screenshots/LIESMICH.md`). **Der volle Lauf über alle 30 Seiten steht mit AP8 aus.** | 07.09.2026 |
+| P-23 | Bilderlauf | 8 Breiten × 2 Höhen | 0/0/0/0 | **für die zehn berührten Seiten erfüllt.** *AP1 (sieben Seiten):* 10-tagesuebersicht, 11-…-schublade, 13-einsatzformular, 31-einstellungen-standorte, 32-einstellungen-rettungsmittel, 42-stammdaten-systemweit, 42a-stammdaten-rettungsmittel. *AP2 (drei dazu):* 30-einstellungen-profil (Karte „Datenschutz"), 43a-installation (Textbaustein), 48-betrieb-server (Karte „Adresssuche"). Nach der letzten Codeänderung neu gefahren: **acht Seiten × 8 Breiten = 64 Einzelbilder, 8 Kontaktbögen** und **zwei Seiten × 8 Breiten = 16 Einzelbilder, 2 Kontaktbögen** — je Lauf **Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0**, einmal als Zeigergerät (44/36) und einmal als Fingergerät (44). Gegenprobe auf gleiche Bilder im Achterlauf: 64 Dateien, **64 verschiedene Prüfsummen**. **Der volle Lauf über alle 30 Seiten steht mit AP8 aus.** | 07.09.2026 |
 | P-24 | Stilvergleich | `stilvergleich` | Abweichungen erklärt | offen — AP8 (er ruht bis P4; siehe Abschnitt 4, Frage 3 des Konzepts dazu ist nicht offen — `CLAUDE.md` 6 lässt ihn ab P4 wieder wachen, und S9 liegt davor) |
-| P-25 | Vollständigkeit | `vollstaendigkeit` | Zahl erklärt | **300 → 298 Befunde.** Der Unterschied ist vollständig erklärt: `loc-suggest`, `rmlist`, `rmopt` verlieren ihre Regel und stehen auf der Streichliste (45 → 42 mit Regel, 121 → 125 gestrichen); `rmneu` wandert von „ohne Gegenstück" (54 → 53) ebenfalls dorthin und fällt aus `ohne-regel.md` (6 → 5 als `[offen]` vermerkt). Alle übrigen Zahlen unverändert; 0 Klassen im Markup ohne eingetragenen Grund, 0 ungenutzte Einträge in den Hilfslisten | 07.09.2026 |
+| P-25 | Vollständigkeit | `vollstaendigkeit` | Zahl erklärt | **300 → 298 → 304 Befunde**, jede Bewegung erklärt. *AP1 (300 → 298):* `loc-suggest`, `rmlist`, `rmopt` verlieren ihre Regel und stehen auf der Streichliste (45 → 42 mit Regel, 121 → 125 gestrichen); `rmneu` wandert von „ohne Gegenstück" (54 → 53) ebenfalls dorthin und fällt aus `ohne-regel.md` (6 → 5 als `[offen]`). *AP2 (298 → 304):* **+6 Unicode-Pfeile** (227 → 233) — durchweg das `→` in deutschen Sätzen, die einen Menüweg nennen („Betrieb → Servereinstellungen", „Einstellungen → Profil"), dieselbe Redeweise wie die 227 vorhandenen. **+1 dann 0** Klassen ohne eingetragenen Grund: `loc-datenschutz` ist ein **Anker ohne Gestaltung** (die Kleinzeile trägt `.feld-klein`) und steht mit Begründung in `ohne-regel.md` als `[bleibt]`. Alle übrigen Zahlen unverändert — 0 Hexfarben außerhalb `:root`, 0 Schriftgrößen außerhalb der Skala, 0 Pixelmaße außerhalb der Token, 0 Knopfhöhen ohne `--knopf`, 0 ungenutzte Einträge in den Hilfslisten | 07.09.2026 |
 | P-26 | Wartungsprobe | `wartungsprobe` | 44/0 | offen — AP8 |
 | P-27 | Was am Gerät bleibt | Prüfliste | — | **Abschnitt 3** |
 | P-28 | Anlegen → Landung auf der neuen Zeile | Klickprobe | 3/3 | offen — AP5 |
 | P-29 | Filterfeld | Klickprobe | Zeilenzahl vor/nach | offen — AP5 |
 | P-30 | Menü ohne „Rettungsmittel" | Vollständigkeit, Bild | 0 / 4 | offen — AP5 |
 | P-31 | Handbuch 6 gegen die Menüstruktur | grep | 0 | offen — AP5 |
-| P-32 | Hinweis am Ortsfeld, Datenschutztext | Bild, grep | 2 Bilder; 1 Treffer | offen — AP2 |
+| P-32 | Hinweis am Ortsfeld, Datenschutztext | Bild, grep | 2 Bilder; 1 Treffer | **erfüllt.** Hinweis bei „an": **1 Zeile bei 3 Ortsfeldern** einer Einsatzseite, Text nennt `photon.komoot.io` (Bild `ap2-hinweis-am-ortsfeld`); bei „aus": **0 Zeilen** (Bild `ap2-kontoschalter-aus`). Installationsschalter aus → Kontoschalter **gesperrt**, Grund genannt, Plakette „Adresssuche aus" (Bild `ap2-installation-graut-konto-aus`). Datenschutztext: `grep -n geocoder_host server/admin_installation.php` = **2 Treffer** (Fließtext und Textbaustein) — **Abweichung vom Konzept**, siehe Abschnitt 5 | 07.09.2026 |
 | P-33 | Klartext-Hinweis an vier Feldern | Vollständigkeit | 4 + 1, 0 | offen — AP7 |
 
 ### Was AP1 zusätzlich gemessen hat
@@ -109,6 +122,33 @@ gemessen hat, ist keine Zahl.
 | Neue Symboldateien | **0.** Alle fünf benutzten Zeichen liegen im Vorrat: `klinik` (Zielklinik), `standort` (Tabler „map-pin", Adresse), `profil` (Besatzungsvorlage), `fahrzeug` (Vorbelegung Rettungsmittel), `plus` (freie Eingabe) |
 | PHP-Syntax | `php -l` über alle berührten Dateien: **0 Fehler**; `node --check` über alle berührten Skripte: **0 Fehler** |
 | Linkprobe (läuft mit) | **132 Verweise, 0 unbekannte Abweichungen**, 1 bekannt mit Nummer (Nr. 151), 0 tote Zeilen |
+
+### Was AP2 zusätzlich gemessen hat
+
+| Was | Zahl |
+|---|---|
+| Wege der Klickprobe, gefahren | **40** (10 Wege × 2 Breiten × 2 Eingabearten, AP1 und AP2 zusammen), **40 erfüllt, 0 verfehlt** |
+| Bilder der Klickprobe | **36**, Breite und Eingabeart im Dateinamen |
+| Der Dienstname im ausgelieferten Browserstand | `grep -rn "komoot" server/assets/` = **0** (vorher **2**). `grep -rn "GEOCODER_VORGABE" server/` = **3** — Definition, Formularhinweis und Prüffunktion, alle in PHP |
+| Der Schlüssel `'such'`, den `ui_ortsfeld()` nie las | `grep -rn "'such'" server/` = **0** (vorher 4, F-S9-P-06) |
+| Migration | `2026_09_07_adresssuche_konto` auf dem Prüfstand angewendet: **„Erfolgreich angewendet"**, Register **44 = 44** (Katalog gegen `schema_migrations`). Der Sprungpunkt für `schema.sql` steht als `('2026_09_07_adresssuche_konto', 'skipped')` |
+| Beide Leser ohne die Spalte | `geocoder_konto_an()` und `geocoder_state()` fangen `Throwable` und liefern die Vorgabe. **Nicht am laufenden System gemessen** — der Prüfstand hat die Spalte; belegt ist nur der Codepfad durch Lesen. Prüfliste Punkt 8 |
+| Kontraste der Token | **21 Paare gerechnet, 0 verfehlt** (unverändert — AP2 führt kein neues Farbpaar ein; `.legende-linie` benutzt `--spur-1`, die Ringpunkte die Farben aus M-S9-01) |
+| Neue Token | **0.** Legende, Suchfeld und der ausgegraute Schalter kommen mit der bestehenden Skala aus |
+| Neue Symboldateien | **0.** Das Suchfeld im Dialog benutzt `lupe`, dieselbe Zeichnung wie am Ortsfeld |
+| PHP-Syntax | `php -l` über alle berührten Dateien: **0 Fehler**; `node --check` über alle berührten Skripte: **0 Fehler** |
+| Linkprobe (läuft mit) | **134 Verweise, 0 unbekannte Abweichungen**, 1 bekannt mit Nummer (Nr. 151), 0 tote Zeilen. Die zwei neuen sind die Formularziele der beiden Schalter |
+| Wortliste | fünf Bereiche, **99 + 34 + 8 + 2 + 35 = 178 Dateien**, **0 Treffer außerhalb der Ausnahmen in 0 Zeilen**, 86 Ausnahmen mit **0 ungenutzten**, **0** durchgerutschte Teilstring-Fallen. Die beiden neuen Dateien (`geocoder_lib.php`, `assets/geocoder.js`) sind in den Bereichen a und b mitgezählt |
+
+**Gegenprobe zur Null bei P-06.** Eine Zahl, die auch dann null wäre, wenn die
+Probe gar nicht hinsähe, belegt nichts. Der Weg
+`ap2-kontoschalter-aus-keine-anfrage` fährt deshalb **denselben** Weg zweimal
+— erst mit eingeschaltetem Schalter (**2 Anfragen**, 2 Vorschläge, 1
+Suchfeld), dann mit ausgeschaltetem (**0 / 0 / 0**) — und stellt den Schalter
+im `finally` zurück. Gezählt wird gegen den Rechnernamen aus
+`window.GEO_DIENST`, nicht gegen ein Wortmuster: Ein `/geocod/`-Muster zählte
+die eigene Datei `assets/geocoder.js` mit und meldete „1 Anfrage" für etwas
+aus dem eigenen Haus.
 
 **Gegenproben an den Wegen, die AP1 umgebaut, aber nicht geändert hat** — sie
 belegen, dass der Umbau nichts mitgenommen hat (Browserlauf, 07.09.2026, je
@@ -191,13 +231,66 @@ verdeckt den Weg aus der Seite heraus. Die Klickprobe hat dafür den Weg
 er ist gegen den alten Stand gefahren worden und meldete dort „oben liegt:
 speichern-innen".
 
-### Funde, die stehen bleiben (K4 — gesammelt, nicht behoben)
+**F-S9-P-08 — Der Bootstrap schrieb `const`, das Modul las `window`.**
+*Gefunden mit der Klickprobe, 07.09.2026 — im Browser war nichts zu sehen.*
+`ui_geocoder_bootstrap()` gab die beiden Werte als `const GEO_AN` /
+`const GEO_DIENST` aus, nach dem Vorbild von `ui_krypto_bootstrap()`. Dort
+geht das gut, weil seine Leser **Inline-Skripte derselben Seite** sind: Ein
+`const` auf oberster Ebene liegt im globalen **lexikalischen** Bereich, den
+jedes Skript sieht — aber es wird **keine Eigenschaft von `window`**.
+`assets/geocoder.js` ist eine eigene Datei und liest `global.GEO_DIENST`;
+die stand damit auf `undefined`, `EdGeocoder.an()` lieferte `false`, und der
+Kartendialog kam **ohne Suchfeld** — auf einer Seite, deren Hinweiszeile
+daneben sagte, die Suche sei an.
+
+**Warum es keine Konsolenprüfung findet:** Wer in der Konsole `GEO_DIENST`
+eintippt, bekommt den lexikalischen Wert und damit genau die Antwort, die er
+erwartet. Der erste Browserlauf dieses Pakets hat das so bestätigt — und
+nichts gemessen. Erst der Weg `ap2-treffer-setzt-nur-das-kreuz` fiel darüber,
+weil er ein Element **suchte**, das es nicht gab. *Behoben:*
+`window.GEO_AN` / `window.GEO_DIENST`; die Begründung steht im Kopf der
+Funktion, damit der nächste Bootstrap nicht denselben Weg geht.
+
+**F-S9-P-09 — Nach dem Speichern zeigte die Seite den alten Schalterstand.**
+*Gefunden mit der Klickprobe, 07.09.2026.* Betrieb → Servereinstellungen
+meldete „Adresssuche ausgeschaltet gespeichert." — und ließ den Schalter auf
+**an** stehen, samt Plakette „an". Erst ein Neuladen zeigte die Wahrheit; in
+der Datenbank stand der neue Wert von Anfang an. Ursache:
+`geocoder_state()` hält einen Zwischenspeicher je Anfrage, und
+`geocoder_installation_setzen()` **liest vor dem Schreiben** (um zu wissen, ob
+sich etwas ändert) — damit war der Speicher gefüllt, und die Ausgabe
+derselben Anfrage las ihn wieder aus. Der Kommentar an
+`geocoder_state_setzen()` hatte das sogar beschrieben und mit „ein Neuladen
+der Seite folgt ohnehin" abgetan; es folgt keines. *Behoben:* Der Setzer
+zieht den Speicher nach (`geocoder_state($k, true)`), und das Schreiben des
+Kontoschalters ist als `geocoder_konto_setzen()` in dasselbe Modul gewandert,
+damit keine Seite daran vorbei schreibt.
+
+**F-S9-P-10 — Das Demo-Konto konnte seine Adresssuche nicht abschalten.**
+*Gefunden mit der Klickprobe, 07.09.2026.* Der Schalter stand in der Karte
+„Datenschutz" **im Formular des Profils**, und der Demo-Wächter
+(`einstellungen.php`, `demo_ist_demo()`) verwirft `action=profile` ganz —
+damit die öffentliche Anmelde-Adresse und das Passwort des Demo-Kontos stehen
+bleiben. Gemessen: Häkchen entfernt, „Profil speichern" gedrückt, Spalte
+`users.adresssuche` unverändert **1**, dazu die Fehlermeldung des Wächters.
+Ausgerechnet das Konto, an dem alle die Anwendung ausprobieren, hätte seine
+eigene Adresssuche nicht abschalten können — und der Satz des Wächters
+(„Alles andere darfst du gern ausprobieren") hätte nicht mehr gestimmt.
+*Behoben:* eigene Handlung, eigenes Formular (`action=datenschutz`), eigener
+Speichern-Knopf in der Karte — dieselbe Trennung wie in `betrieb_server.php`.
+Ein Tippfehler in der E-Mail-Adresse weist damit auch den Schalter nicht mehr
+mit ab.
+
+### Funde, die AP2 abgeräumt hat
 
 **F-S9-P-05 — Die Beschriftung eines Adresstreffers steht zweimal im Code.**
 `photonLabel()` in `assets/ortsfeld.js` und `label()` in `assets/ortswahl.js`
 sind wortgleich. **Gehört in AP2**, wo beide Photon-Aufrufe in
 `assets/geocoder.js` zusammenlaufen (E-S9-05) — dort ist es eine Zeile, hier
 wäre es eine dritte Fassung.
+**Erledigt mit AP2:** `EdGeocoder` beschriftet einmal; `grep -n "function
+label\|photonLabel" server/assets/*.js` findet die Funktion nur noch als
+Erwähnung im Kopfkommentar von `geocoder.js`.
 
 **F-S9-P-06 — Der Schlüssel `such` wird von `ui_ortsfeld()` nicht gelesen.**
 Vier Aufrufe setzen `'such' => true` (`admin_stammdaten.php:504, 724`;
@@ -207,6 +300,8 @@ Element `<p>such`, das nirgends gesucht wird, und den tatsächlich gesuchten
 Lupen-Knopf nicht. **Kein Schaden, aber eine Lüge in der Dokumentation.**
 AP2 fasst dieselben Aufrufe an (zweite Einbauform, E-S9-06 c) und räumt es
 dort mit.
+**Erledigt mit AP2:** `grep -rn "'such'" server/` = **0**; an der Stelle steht
+jetzt `'ortswahl' => true`, das die Funktion tatsächlich liest.
 
 ---
 
@@ -277,13 +372,102 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   irgendwo ein `list=`-Attribut oder ein `<datalist>` zurückgekommen
   (`grep -rn datalist server/` muss 0 außerhalb von Kommentaren melden).
 
+- [ ] **7 — Der echte Adressdienst im Kartendialog.**
+  *Weg:* Einsatz öffnen → Pin am Einsatzort → „Auf der Karte wählen" → im
+  Suchfeld einen realen Ort tippen → einen Treffer wählen → **das Kreuz von
+  Hand ein Stück verschieben** → „Übernehmen".
+  *Erwartet:* Die Karte springt auf den Treffer, sein Name steht im
+  **Suchfeld**; das Formular bleibt bis „Übernehmen" unverändert. Nach
+  „Übernehmen" steht die Koordinate des **Kreuzes** im Chip — nicht die des
+  Treffers —, und das Bezeichnungsfeld füllt sich mit der Adresse aus der
+  Umkehrsuche, sofern es leer war.
+  *Scheitern erkennbar an:* Der Treffer schreibt schon etwas ins Formular
+  (dann greift F1 nicht), oder die Koordinate im Chip ist die des Treffers
+  statt die des verschobenen Kreuzes.
+
+- [ ] **8 — Der Weg nach dem Deploy: erst hochladen, dann `update.php`.**
+  *Weg:* Nach dem Merge auf `main` **vor** dem Aufruf von `update.php` eine
+  Seite mit Ortsfeld öffnen (z. B. ein Einsatzformular), dann `update.php`
+  aufrufen und dieselbe Seite erneut.
+  *Erwartet:* **Beide Male keine Fehlermeldung.** Vor der Migration fehlt die
+  Spalte `users.adresssuche`; beide Leser fangen das ab und liefern die
+  Vorgabe „an". Nach `update.php` steht in Betrieb → Updates die Migration
+  `2026_09_07_adresssuche_konto` als angewendet.
+  *Scheitern erkennbar an:* Eine weiße Seite oder eine Datenbankmeldung beim
+  ersten Aufruf. **Das ist der einzige Punkt dieses Pakets, der auf dem
+  Prüfstand nicht messbar war** — dort ist die Spalte da.
+
+- [ ] **9 — Ein eigener Photon-Dienst (nur falls einer betrieben wird).**
+  *Weg:* Betrieb → Servereinstellungen → Karte „Adresssuche" → im Feld
+  „Dienst" die eigene Adresse eintragen, speichern; danach in einem Ortsfeld
+  tippen.
+  *Erwartet:* Die Vorschläge kommen; der Hinweis unter dem Ortsfeld, die
+  Karte „Datenschutz" im Profil und der Textbaustein auf der
+  Installationsseite nennen ab sofort **den neuen Rechnernamen**.
+  *Scheitern erkennbar an:* Die Vorschläge bleiben aus (dann antwortet der
+  Dienst nicht im Photon-Format oder verweigert die Herkunft — die
+  Browserkonsole nennt CORS), oder irgendwo steht noch der alte Name.
+
+- [ ] **10 — Der Datenschutztext.**
+  *Weg:* Verwaltung → Installation → unter dem Feld für die
+  Datenschutzerklärung den Textbaustein **kopieren**, in die Erklärung
+  einfügen, speichern, „Ansehen".
+  *Erwartet:* Der Abschnitt „Adresssuche" steht auf der öffentlichen Seite
+  und nennt die eingetragene Dienstadresse.
+  *Scheitern erkennbar an:* Der Kopieren-Knopf tut nichts (dann fehlt
+  `assets/kopieren.js`), oder der eingefügte Text erscheint als eine
+  einzige Zeile (dann sind die Absatzumbrüche beim Einfügen verlorengegangen
+  — der eingeschränkte Markdown braucht Leerzeilen zwischen Absätzen,
+  Handbuch 11.5).
+
 ---
 
 ## 4. Fragen an den Auftraggeber
 
-Drei Stellen, an denen Konzept und Auftrag einander widersprechen oder das
-Konzept schweigt. Alle drei sind für AP1 entschieden **und** revidierbar; sie
-kosten nichts, wenn sie anders entschieden werden.
+Stellen, an denen Konzept und Auftrag einander widersprechen oder das Konzept
+schweigt. Jede ist vorläufig entschieden **und** revidierbar; der Preis einer
+Gegenentscheidung steht dabei.
+
+### Neu aus AP2
+
+**Frage 4 — Pfeile auf der Spur im Kartendialog: ja oder nein?**
+*Zwei Stellen der freigegebenen Unterlage sagen Verschiedenes.* Der
+Konzepttext ist eindeutig: E-S9-06 (b) verlangt „Linie in der ersten
+Spurfarbe, Ringpunkte für Start und Ende (`EdGeo.markerRing`), **keine
+Pfeile, keine Luftlinie**". Die Anmerkung 3 des Mockups M-S9-04 sagt das
+Gegenteil: „Spur: … erste Spurfarbe, **Pfeile wie in der Einsatzansicht**
+(nach Nr. 72 gedreht), Ringpunkt blau = Start, rot = Ende", und das Bild des
+Zustands D zeichnet tatsächlich einen Pfeil.
+
+*Gebaut ist:* **ohne Pfeile** — dem Konzepttext gefolgt, weil er die
+normative Stelle ist; die Zeile „Zur Freigabe" des Mockups nennt die Pfeile
+nicht mit. Die Klickprobe misst es (`ap2-spur-im-dialog`: **0 Pfeile**), das
+heißt eine Gegenentscheidung ändert auch diese Erwartung.
+
+*Preis der Gegenentscheidung:* klein — `EdGeo.pfeile(karte, gruppe, spur)`
+existiert und wird in der Einsatzansicht so aufgerufen; es wären zwei Zeilen
+in `ortswahl.js`, eine Zeile in der Legende, eine geänderte Sollzahl im Weg
+und ein Satz in `Design.md` 9.29. *Meine Empfehlung:* **ohne Pfeile lassen.**
+Im Auswahldialog wird ein Punkt gewählt, keine Fahrt gelesen; die Pfeile
+liegen auf der Linie und damit genau dort, wo das Fadenkreuz hin soll.
+
+**Frage 5 — Der Kopf des Kartendialogs ist jetzt eine Überschrift.**
+*Das Konzept schweigt, das Mockup zeigt es so.* Der Dialog trug seinen Titel
+seit Web 9.4.0 als **nackten Text** (`<div class="dialog-kopf">Auf der Karte
+wählen</div>`) — als einziger Dialog der Anwendung; alle übrigen schreiben
+`<div class="dialog-kopf"><h2>…</h2></div>`. Das Mockup M-S9-04 zeigt eine
+Überschrift, und weil das Suchfeld ohnehin in denselben Kopf einzieht, ist
+der Titel mit umgestellt worden.
+
+*Was sich sichtbar ändert:* Der Titel steht jetzt in der Kopfschrift und in
+`--groesse-6` statt in der Fließtextgröße — wie in jedem anderen Dialog. Das
+Mockup setzt lokal `--groesse-5`; das ist eine Näherung im Mockup und nicht
+die Regel des Stylesheets, deshalb ist ihr nicht gefolgt worden.
+*Preis der Gegenentscheidung:* eine Zeile zurück. **Meine Empfehlung:**
+so lassen — ein Dialog, der als einziger keine Überschrift hat, ist ein
+Ausreißer, kein Entwurf.
+
+### Aus AP1
 
 **Frage 1 — Die Besatzungsfelder des Diensttags: AP1 oder AP6?**
 **Entschieden vom Auftraggeber am 07.09.2026: AP1.** Der gebaute Stand bleibt,
@@ -335,9 +519,14 @@ Eintrag. **Fällig erst in AP8** — bis dahin ist nichts zu tun.
 Wo Mockup und Umsetzung auseinandergehen, steht es hier (Konzept, Abschnitt 6:
 „die Abweichung wird im Prüfdokument genannt").
 
-| Stelle | Mockup M-S9-03 | Umsetzung | Grund |
+| Stelle | Mockup / Konzept | Umsetzung | Grund |
 |---|---|---|---|
 | Hervorhebung des getippten Teils | `<b>` im Bild; die Anmerkung nennt daneben `EdSuchtext.hervor` als „dieselbe Hervorhebung" | `<b>` | Die beiden Angaben des Mockups widersprechen einander: `EdSuchtext.hervor` erzeugt `<mark class="treffer">` mit oranger Fläche. Die Fläche trägt in der **Suche** eine Aussage („hier steht dein Wort in einem langen Text"); in einer Vorschlagsliste steht das Wort am Anfang, und die Fläche käme unter die Zeilenmarkierung zu liegen. Gefolgt ist dem **Bild**, das freigegeben wurde |
 | Dichte Stufe | `.dicht .vorschlag{padding-top:2px;padding-bottom:2px}` | keine eigene Regel | `2px` ist kein Token, und die Skala ist geschlossen (`Design.md` 5). Gemessen ändert die Regel nichts am Ergebnis: Eine zweizeilige Zeile ist mit **und** ohne sie höher als beide Bedienhöhen (51 px), eine einzeilige folgt `--knopf` von selbst (44/36, gemessen). Die Regel hätte eine Zahl eingeführt, die nichts bewirkt |
 | Leerer Zustand | `.vorschlaege-leer` („keine Treffer") | nicht gebaut | Der Baustein versteckt die Liste, wenn sie leer ist — so verhielten sich beide Vorgänger, und das Konzept verlangt nichts anderes. Eine Zeile „keine Treffer" wäre eine neue Darstellung ohne Freigabe |
+| **M-S9-04:** Legende als `<div>` statt `<p>` | `<div class="legende">` | `<div class="legende">` | Keine Abweichung — hier nur festgehalten, weil der erste Entwurf ein `<p>` benutzte: `.dialog-inhalt p` trägt eigene Ränder, und die Legende ist keine Aussage in Sätzen, sondern eine Zeichenerklärung |
+| **M-S9-04:** Pfeile auf der Spur | Anmerkung 3: „Pfeile wie in der Einsatzansicht"; Zustand D zeichnet einen | **keine Pfeile** | Der **Konzepttext** E-S9-06 (b) verlangt ausdrücklich „keine Pfeile, keine Luftlinie", und er ist die normative Stelle; die Zeile „Zur Freigabe" des Mockups nennt die Pfeile nicht mit. **Frage 4 in Abschnitt 4** |
+| **M-S9-04:** Kopf des Dialogs | `<h2>` im Kopf | `<h2>` im Kopf | Umgestellt vom bisherigen nackten Text. Sichtbare Folge: Kopfschrift, `--groesse-6` statt Fließtextgröße. **Frage 5 in Abschnitt 4** |
+| **M-S9-04:** Suchfeld im Kopf, Innenabstand | Zustand A–C: `.dialog-suche` im Kopf, `.dialog-inhalt` mit `padding-top:0` (inline) | dasselbe, als Regel `.dialog-karte .dialog-inhalt{padding-top:0}` | Ein Inline-Stil im Mockup ist eine Notiz, keine Regel; im Stylesheet steht sie auf den Kartendialog begrenzt. Kein neues Token |
+| **E-S9-05:** Absatz im Datenschutztext | Konzept: „Vorlage in `rechtstexte_lib.php`, Abschnitt zur Adresssuche mit Dienstadresse als Platzhalter" | **Textbaustein zum Kopieren** auf Verwaltung → Installation | `rechtstexte_lib.php` hat **keine** Vorlagen und kann keine haben: Die Anwendung liefert grundsätzlich keinen Rechtstext mit (`admin_installation.php`, Handbuch 11.5) — ein eingesetzter Absatz wäre eine Rechtsauskunft, die dieses Projekt nicht gibt. Sie kann ihn nur **bereitlegen**: fertiger Abschnitt mit der eingetragenen Dienstadresse, Kopieren-Knopf, sichtbar nur solange die Suche an ist |
 | Behälter des Besatzungsfeldes | `<div class="loc-widget">` mit Label daneben | `<label class="feld-vorschlag">` wie bisher | Das Mockup benutzt `.loc-widget` nur, um `position:relative` zu bekommen; `.loc-widget` trägt daneben die Abstände des Ortsfelds. Die Feldstruktur des Formulars bleibt damit unberührt — eine Umstellung auf `ui_feld()` wäre eine Änderung ohne Auftrag |

@@ -2197,6 +2197,49 @@ function migrationen_katalog(): array
             "UPDATE users SET role = 'betreiberin' WHERE role = 'admin'",
         ],
     ],
+    [
+        'id'    => '2026_09_07_adresssuche_konto',
+        'web'   => '15.7.0',
+        'label' => 'Schalter „Adressvorschläge aus dem Internet" je Konto (E-S9-05, R79)',
+        'skip'  => function (PDO $pdo): bool {
+            /* Gibt es die Spalte schon, ist die Migration gelaufen — oder die
+             * Datenbank ist frisch aus schema.sql entstanden. Beide Faelle
+             * brauchen nichts und sind vom zweiten Lauf nicht zu
+             * unterscheiden. Genau das ist die Zusage: idempotent. */
+            $q = $pdo->prepare("SELECT COUNT(*) FROM information_schema.columns
+                                WHERE table_schema = DATABASE()
+                                  AND table_name = 'users' AND column_name = 'adresssuche'");
+            $q->execute();
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* DER ZWEITE VON ZWEI SCHALTERN (E-S9-05, R79)
+             *
+             * Der erste steht in `app_state` und gilt fuer die Installation;
+             * dieser hier gilt je Konto. Die Installation ist die Obergrenze —
+             * ist sie aus, hilft dieser Schalter nicht, und die Karte
+             * „Datenschutz" zeigt ihn dann ausgegraut mit dem Satz, wer ihn
+             * abgeschaltet hat.
+             *
+             * VORGABE 1, ALSO AN. Das ist F-SP-4, und es ist keine
+             * Bequemlichkeit: Die Adresssuche ist der bequemste Weg, einen
+             * Einsatzort zu setzen, und ein Bestand, der sie ueber Nacht
+             * verliert, weil eine Migration lief, waere ein Rueckschritt, den
+             * niemand bestellt hat. Wer sie nicht will, schaltet sie ab — und
+             * findet den Schalter, weil der Hinweis unter dem Ortsfeld auf ihn
+             * zeigt.
+             *
+             * WARUM EINE SPALTE UND KEIN app_state-SCHLUESSEL je Konto: Sie
+             * gehoert zum Konto wie `logo_wahl`, sie wird bei jedem
+             * Seitenaufbau mit einem Ortsfeld gelesen, und sie soll mit dem
+             * Konto geloescht werden. Ein Schluessel `adresssuche:<id>` haette
+             * alle drei Eigenschaften nicht.
+             *
+             * KEIN `zerstoert`, KEIN `inhalt`: Es faellt nichts weg. */
+            "ALTER TABLE users
+               ADD COLUMN adresssuche TINYINT(1) NOT NULL DEFAULT 1 AFTER logo_wahl",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

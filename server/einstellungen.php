@@ -13,6 +13,7 @@ require_once __DIR__ . '/apk_lib.php';    // APK-Karte des Geraete-Reiters (S4/A
 require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste (S6)
 require_once __DIR__ . '/kopplung_lib.php';  // Kopplungssitzungen: Code suchen, beanspruchen (S5)
 require_once __DIR__ . '/ratelimit_lib.php'; // Topf `pair_code` an der Code-Eingabe (S5, E-S5-16)
+require_once __DIR__ . '/geocoder_lib.php'; // Adresssuche: beide Schalter (S9/AP2, E-S9-05)
 
 /* OHNE `t` DIE ÜBERSICHT (E-P3-11, P3/O2).
  *
@@ -86,6 +87,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                . 'gern ausprobieren; spätestens nach 30 Minuten ist ohnehin '
                . 'wieder der Ausgangszustand hergestellt.';
         $action = '';
+    }
+
+    /* ---- Datenschutz: der Kontoschalter der Adresssuche ----------------
+     *
+     * EIGENE HANDLUNG, EIGENES FORMULAR — und das ist keine Formfrage,
+     * sondern eine Notwendigkeit: Der Wächter darüber sperrt das Profil des
+     * Demo-Kontos, weil dessen E-Mail-Adresse und Passwort öffentlich bleiben
+     * müssen. Stünde der Schalter in demselben Formular, könnte ausgerechnet
+     * das Konto, an dem alle die Anwendung ausprobieren, seine eigene
+     * Adresssuche nicht abschalten — gemessen am 07.09.2026 mit der
+     * Klickprobe: Häkchen gesetzt, „Profil speichern" gedrückt, Spalte
+     * unverändert 1, dazu die Fehlermeldung des Demo-Wächters. Der Satz
+     * „Alles andere darfst du gern ausprobieren" hätte dann nicht mehr
+     * gestimmt.
+     *
+     * Dieselbe Trennung wie in `betrieb_server.php` (Karte „Adresssuche"):
+     * Ein Tippfehler in der E-Mail-Adresse soll den Schalter nicht mit
+     * abweisen, und umgekehrt.
+     *
+     * DIE MARKE `adresssuche_da` BLEIBT. Ein ausgegrautes Kästchen sendet
+     * nichts, und „nichts gesendet" heißt bei einer Checkbox „aus" — ohne die
+     * Marke schaltete ein Klick auf „Speichern" bei abgeschalteter
+     * Installation den Kontowert still ab, der beim nächsten Einschalten dann
+     * aus gewesen wäre. Sie steht nur dort im Markup, wo der Schalter auch
+     * bedienbar ist. */
+    if ($action === 'datenschutz') {
+        if (!empty($_POST['adresssuche_da'])) {
+            $notice = geocoder_konto_setzen($userId, !empty($_POST['adresssuche']))
+                ? 'Datenschutz gespeichert.'
+                : 'Der Schalter konnte nicht gespeichert werden — die Spalte '
+                . 'fehlt noch. Eine Administratorin muss update.php aufrufen.';
+        } else {
+            $notice = 'Es gab nichts zu ändern.';
+        }
     }
 
     /* ---- Profil: Name & E-Mail ---------------------------------------- */
@@ -849,7 +884,12 @@ if ($tab === 'geraete') {
         if ((int)$d['ist_neu']) { $devNeu++; }
     }
 }
-ui_seite_start(['titel' => 'Einstellungen']);
+/* Das Leaflet-Stylesheet nur, wo eine Karte entstehen kann: Die
+   Stammdatenreiter tragen seit S9/AP2 den Pin-Knopf am Ortsfeld und damit den
+   Kartendialog (E-S9-06 c). Auf den uebrigen Reitern waere es eine Datei fuer
+   nichts. */
+ui_seite_start(['titel' => 'Einstellungen',
+                'karte' => in_array($tab, ['standorte', 'rettungsmittel'], true)]);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => $tab]); ?>
@@ -910,10 +950,64 @@ ui_seite_start(['titel' => 'Einstellungen']);
         ]); ?>
       <?php ui_karte_ende(); ?>
 
+      <?php ui_karte_ende(); ?>
+
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Profil speichern', 'art' => 'primaer']) ?>
       </div>
     </form>
+
+      <?php /* DATENSCHUTZ: die Adresssuche je Konto (S9/AP2, E-S9-05, R79).
+               Sie steht im Profil und nicht bei den Standorten, weil sie eine
+               Entscheidung UEBER MICH ist und nicht ueber Daten: Was mein
+               Browser einen Dritten fragt, entscheide ich (R74 (1) —
+               NutzerIn). Die Installation ist die Obergrenze; ist sie aus,
+               steht der Schalter ausgegraut da und sagt, warum.
+
+               EIGENES FORMULAR, NICHT DAS DES PROFILS: Der Demo-Waechter
+               oben sperrt `action=profile` ganz — mit dem Schalter darin
+               koennte ausgerechnet das Konto, an dem alle die Anwendung
+               ausprobieren, seine Adresssuche nicht abschalten. Dieselbe
+               Trennung wie in `betrieb_server.php`. */ ?>
+      <?php $geoInst = geocoder_installation_an();
+            $geoKonto = geocoder_konto_an($userId); ?>
+      <?php ui_karte_start(['titel' => 'Datenschutz', 'id' => 'k-datenschutz',
+          'plakette' => ($geoInst && $geoKonto)
+              ? ui_plakette('Adresssuche an', ['ton' => 'ok'])
+              : ui_plakette('Adresssuche aus', ['ton' => 'neutral'])]); ?>
+        <p class="feld-hinweis">Beim Tippen in einem Ortsfeld schickt der Browser
+          den getippten Text an <strong><?= e(geocoder_host()) ?></strong> und
+          bekommt Adressvorschläge zurück; nach einer Wahl auf der Karte geht die
+          Koordinate denselben Weg, um die Adresse dazu zu holen. <strong>Nichts
+          anderes verlässt dabei das Gerät</strong> — kein Name, keine Diagnose,
+          keine Einsatznummer. Ohne die Suche bleiben Koordinaten, Plus Codes,
+          „Meine Position" und die Karte selbst; nur die Vorschläge und die
+          Umkehrsuche entfallen.</p>
+        <?php if ($geoInst): ?>
+          <form method="post" action="einstellungen.php?t=profil#k-datenschutz">
+            <?= csrf_field() ?><input type="hidden" name="action" value="datenschutz">
+            <input type="hidden" name="adresssuche_da" value="1">
+            <?php ui_schalter(['name' => 'adresssuche',
+                'label' => 'Adressvorschläge aus dem Internet',
+                'an' => $geoKonto,
+                'klein' => 'Gilt für dieses Konto, auf jedem Gerät.']); ?>
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken',
+                            'art' => 'primaer']) ?>
+            </div>
+          </form>
+        <?php else: ?>
+          <?php ui_schalter(['name' => 'adresssuche_gesperrt',
+              'label' => 'Adressvorschläge aus dem Internet',
+              'an' => false, 'attr' => ' disabled',
+              'klein' => 'Für diese Installation abgeschaltet.']); ?>
+          <p class="feld-hinweis">Die <strong>Installation</strong> hat die
+            Adresssuche abgeschaltet (Betrieb → Servereinstellungen, Karte
+            „Adresssuche"). Solange das so ist, ändert dieser Schalter nichts —
+            deshalb steht er ausgegraut. Wer ihn braucht, wendet sich an die
+            BetreiberIn.</p>
+        <?php endif; ?>
+      <?php ui_karte_ende(); ?>
 
     <form method="post" id="pwform">
       <?= csrf_field() ?><input type="hidden" name="action" value="password">
@@ -1301,7 +1395,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                      Namensfeld schriebe den Namen weg. */
                   $ORTSFELDER[] = 'sdbase'; ?>
             <?php ui_ortsfeld([
-                    'praefix' => 'sdbase', 'feld' => false, 'such' => true,
+                    'praefix' => 'sdbase', 'feld' => false, 'ortswahl' => true,
                     'klasse' => 'loc-inline',
                     'such_hinweis' => 'Lage (optional)',
                     'lat_name' => 'lat', 'lon_name' => 'lon',
@@ -1632,7 +1726,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                                'wert' => (string)($etHier['name'] ?? ''),
                                'attr' => ' maxlength="190"']); ?>
                 <?php ui_ortsfeld([
-                        'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
+                        'praefix' => $tdPraefix, 'feld' => false, 'ortswahl' => true,
                         'klasse' => 'loc-inline',
                         'such_hinweis' => 'Lage (optional)',
                         'lat_name' => 'lat', 'lon_name' => 'lon',
@@ -1735,14 +1829,30 @@ ui_seite_start(['titel' => 'Einstellungen']);
              die Reiterstruktur aendert, prueft beide Stellen. */ ?>
     <script src="<?= asset('assets/html.js') ?>"></script>
     <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
+    <script src="<?= asset('assets/geocoder.js') ?>"></script>
     <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
+    <?php /* DIE KARTE KOMMT MIT S9/AP2 HIERHER (E-S9-06 c, Backlog Nr. 70).
+             Bis Web 15.6.1 hatte die Nur-Lage-Fassung des Ortsfelds keinen
+             Pin-Knopf — die Lage eines Standorts liess sich suchen oder
+             tippen, aber nicht auf der Karte zeigen. Dafuer braucht diese
+             Seite jetzt dieselben vier Bausteine wie das Einsatzformular. */ ?>
+    <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
+    <script src="<?= asset('assets/map_layers.js') ?>"></script>
+    <script src="<?= asset('assets/geo.js') ?>"></script>
+    <script src="<?= asset('assets/ortswahl.js') ?>"></script>
     <script>
     /* Ortsfelder der Stammdatenpflege beleben (E37). Dieselbe Komponente wie
      * am Einsatz — mit getrennter Suche, weil das Namensfeld hier den NAMEN
      * trägt und nicht die Adresse. Ohne Vorschlagsliste: Was hier entsteht,
-     * IST die Vorschlagsliste. */
+     * IST die Vorschlagsliste.
+     *
+     * OHNE SPUR: Hier gibt es keinen Einsatz, also nichts aufzuzeichnen
+     * (M-S9-04, Anmerkung 6). Sonst ist es derselbe Dialog. */
     <?= 'const ORTSFELDER = ' . json_encode($ORTSFELDER) . ';' ?>
-    ORTSFELDER.forEach(p => EdOrtsfeld.init({ praefix: p, getrennteSuche: true }));
+    ORTSFELDER.forEach(p => {
+      const steuer = EdOrtsfeld.init({ praefix: p, getrennteSuche: true });
+      if (steuer) { EdOrtswahl.registriere(p, steuer); }
+    });
     </script>
 
     <script>

@@ -1398,6 +1398,17 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
 .schalter-box:focus-visible + .schalter-label .schalter-griff{
   outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark);
 }
+/* AUSGEGRAUT — ein Schalter, den eine Einstellung darueber gesperrt hat
+ * (S9/AP2, E-S9-05: die Installation ist die Obergrenze des Kontoschalters).
+ * Dieselbe Sprache wie beim gesperrten Eingabefeld (`.feld-eingabe:disabled`):
+ * gedaempfte Schrift, Rauch als Flaeche, `not-allowed` am Zeiger. Ein
+ * ZWEITES Aussehen fuer denselben Zustand waere zwei Aussagen fuer eine
+ * Sache. Warum er gesperrt ist, sagt der Absatz daneben — die Farbe kann das
+ * nicht, und sie soll es nicht versuchen. */
+.schalter-box:disabled + .schalter-label{cursor:not-allowed}
+.schalter-box:disabled + .schalter-label .schalter-text{color:var(--gedaempft)}
+.schalter-box:disabled + .schalter-label .schalter-griff{background:var(--rauch)}
+.schalter-box:disabled + .schalter-label .schalter-griff::after{background:var(--sand)}
 /* Abhängige Felder klappen darunter auf, eingerückt mit orangem Randstrich. */
 .schalter-abhaengig{
   margin:var(--abstand-2) 0 var(--abstand-4) var(--abstand-3);
@@ -2635,6 +2646,37 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   transform:translateX(-50%)}
 .ortswahl-kreuz::after{top:50%;left:0;right:0;height:var(--strich-stark);
   transform:translateY(-50%)}
+
+/* ---- Suchfeld im Dialogkopf (S9/AP2, E-S9-06; Mockup M-S9-04) ------------
+ *
+ * Der Behaelter traegt `position:relative`, weil die Trefferliste
+ * (`.vorschlaege`, 9.28) darin schwebt — dieselbe Anforderung wie bei
+ * `.loc-widget` und `.rmbox`. Die Zeile selbst ist die des Ortsfelds
+ * (`.ortsfeld-zeile`, Feld plus Lupe): Dasselbe Bedienelement soll nicht
+ * zweimal aussehen. */
+.dialog-suche{position:relative;margin-bottom:var(--abstand-3)}
+/* Das Suchfeld steht im KOPF (M-S9-04). Damit die Karte unmittelbar darunter
+ * beginnt, faellt der obere Innenabstand des Inhalts weg — sonst stuende
+ * zwischen Feld und Karte zweimal Luft: der Abstand des Feldes und der des
+ * Inhalts. Auf den Kartendialog begrenzt; jeder andere Dialog behaelt seinen. */
+.dialog-karte .dialog-inhalt{padding-top:0}
+
+/* ---- Legende unter der Karte (S9/AP2) ------------------------------------
+ *
+ * Eine Zeile, gedaempft: „Aufzeichnung · Start · Ende". Sie erscheint nur,
+ * wenn eine Spur gezeichnet wurde — eine Legende ohne Gegenstueck erklaert
+ * nichts. Die Ringpunkte sind dieselben wie auf der Karte (`.geo-ringpunkt`,
+ * blau = Start, `.geo-ringpunkt-ende` rot = Ende) und brauchen hier keine
+ * eigene Regel — sie tragen ihre Groesse selbst. */
+.legende{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
+.legende > span{display:inline-flex;align-items:center;gap:var(--abstand-1)}
+.legende-linie{
+  display:inline-block;width:var(--abstand-5);height:var(--abstand-1);
+  background:var(--spur-1);border-radius:var(--radius-klein);
+}
 
 /* Blatt-Zeilen gibt es seit O5 auch als <button> (Ortswahl) — dieselbe
  * Gestalt wie die Verweise, ohne Knopf-Grundform. */

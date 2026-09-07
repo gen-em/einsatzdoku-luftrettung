@@ -404,7 +404,9 @@ $rollenAmStandort = function (int $bid) use ($vehNach, $vehRollen, $crewNach): a
     return array_values(array_filter(array_keys(CREW_ROLES),
         static fn(string $rc): bool => isset($rollen[$rc])));
 };
-ui_seite_start(['titel' => 'Stammdaten systemweit']);
+/* Leaflet-Stylesheet: Beide Reiter tragen seit S9/AP2 den Pin-Knopf am
+   Ortsfeld und damit den Kartendialog (E-S9-06 c). */
+ui_seite_start(['titel' => 'Stammdaten systemweit', 'karte' => true]);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
@@ -501,7 +503,7 @@ ui_seite_start(['titel' => 'Stammdaten systemweit']);
                    gehört dem LAGE-Suchfeld, nicht dem Namen (F-P3-AI). */
                 $ORTSFELDER[] = 'adbase'; ?>
           <?php ui_ortsfeld([
-                  'praefix' => 'adbase', 'feld' => false, 'such' => true,
+                  'praefix' => 'adbase', 'feld' => false, 'ortswahl' => true,
                   'klasse' => 'loc-inline',
                   'such_hinweis' => 'Lage (optional)',
                   'lat_name' => 'lat', 'lon_name' => 'lon',
@@ -721,7 +723,7 @@ ui_seite_start(['titel' => 'Stammdaten systemweit']);
                              'wert' => (string)($etHier['name'] ?? ''),
                              'attr' => ' maxlength="120"']); ?>
               <?php ui_ortsfeld([
-                      'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
+                      'praefix' => $tdPraefix, 'feld' => false, 'ortswahl' => true,
                       'klasse' => 'loc-inline',
                       'such_hinweis' => 'Lage (optional)',
                       'lat_name' => 'lat', 'lon_name' => 'lon',
@@ -824,13 +826,23 @@ ui_seite_start(['titel' => 'Stammdaten systemweit']);
          Baustein ist (S9/AP1, E-S9-07). Reihenfolge = Abhaengigkeit. */ ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
+<script src="<?= asset('assets/geocoder.js') ?>"></script>
 <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
+<?php /* Die Karte kommt mit S9/AP2 auch hierher (E-S9-06 c, Backlog Nr. 70) —
+         dieselben vier Bausteine wie im Einsatzformular. */ ?>
+<script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
+<script src="<?= asset('assets/map_layers.js') ?>"></script>
+<script src="<?= asset('assets/geo.js') ?>"></script>
+<script src="<?= asset('assets/ortswahl.js') ?>"></script>
 <script>
 /* Ortsfelder der systemweiten Stammdatenpflege (E37/E38). Dieselbe Komponente
  * wie in der Kontoansicht — systemweit gepflegte Koordinaten gelten fuer alle,
- * die den Eintrag sehen. */
+ * die den Eintrag sehen. Ohne Spur: Hier gibt es keinen Einsatz. */
 <?= 'const ORTSFELDER = ' . json_encode($ORTSFELDER) . ';' ?>
-ORTSFELDER.forEach(p => EdOrtsfeld.init({ praefix: p, getrennteSuche: true }));
+ORTSFELDER.forEach(p => {
+  const steuer = EdOrtsfeld.init({ praefix: p, getrennteSuche: true });
+  if (steuer) { EdOrtswahl.registriere(p, steuer); }
+});
 </script>
 <script>
 /* Die Reiterwahl schickt das Formular ab, sobald sie sich aendert — sonst

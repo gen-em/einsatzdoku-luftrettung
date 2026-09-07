@@ -21,6 +21,7 @@ CREATE TABLE users (
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich (E17)
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
+  adresssuche   TINYINT(1) NOT NULL DEFAULT 1,       -- Adressvorschlaege aus dem Internet; die Installation ist die Obergrenze (app_state.adresssuche, E-S9-05/R79)
   last_login    DATETIME NULL,                       -- UTC, letzte erfolgreiche Anmeldung; NULL = noch nie (Kontoseite, NutzerInnen-Liste)
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -720,4 +721,5 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- Das Nachziehen des Bestands (alle Admins werden BetreiberInnen) hat auf
   -- einer frischen Installation nichts zu tun: Sie hat keinen Bestand, und
   -- ihr erstes Konto legt install.php gleich als BetreiberIn an.
-  ('2026_09_05_rolle_betreiberin', 'skipped');
+  ('2026_09_05_rolle_betreiberin', 'skipped'),
+  ('2026_09_07_adresssuche_konto', 'skipped');

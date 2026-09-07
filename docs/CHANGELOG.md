@@ -14,6 +14,88 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.7.0] — 2026-09-07
+
+### Web — eine Adresse statt zweier, und zwei Schalter davor (S9/AP2)
+
+**Die Anschrift des Adressdienstes stand zweimal fest im ausgelieferten
+Code** — einmal in `assets/ortsfeld.js` für die Vorschläge beim Tippen, einmal
+in `assets/ortswahl.js` für die Umkehrsuche nach einer Wahl auf der Karte. Wer
+sie ändern wollte, musste den Code ändern; wer den Dienst gar nicht wollte,
+konnte nichts tun. Beides ist vorbei.
+
+Neu ist `assets/geocoder.js`: **ein** Weg nach draußen, mit `suche()`,
+`umkehr()` und `an()`. Die drei Aufrufer — Ortsfeld, Kartendialog,
+Umkehrsuche — kennen nur noch dieses Modul. Die Einstellungen dazu stehen in
+`server/geocoder_lib.php`, ebenfalls an einer Stelle, und kommen über einen
+kleinen Bootstrap ins Dokument, den `ui_ortsfeld()` selbst ausgibt: Wo ein
+Ortsfeld steht, stehen seine Einstellungen, und keine Seite kann sie
+vergessen. Im ausgelieferten Browserstand kommt der Name des Dienstes seither
+**kein einziges Mal** vor (`grep -rn "komoot" server/assets/` = 0); die
+Vorgabe steht einmal in PHP.
+
+**Zwei Schalter, weil es zwei Entscheidungen sind.** Die BetreiberIn
+entscheidet für die Installation: Betrieb → Servereinstellungen, Karte
+**„Adresssuche"**, dazu das Feld „Dienst". Wer einen eigenen Photon betreibt,
+trägt ihn dort ein — dann verlassen die Anfragen mit dem Einsatzort das eigene
+Haus nicht mehr, ohne eine Zeile Code und ohne eine neue Auslieferung. Die
+NutzerIn entscheidet für ihr Konto: Einstellungen → Profil, Karte
+**„Datenschutz"** (Spalte `users.adresssuche`). Die Installation ist die
+Obergrenze; ist sie aus, steht der Kontoschalter ausgegraut da und sagt, wer
+ihn abgeschaltet hat.
+
+**Aus heißt wirklich aus**, und das ist nachgemessen statt behauptet: Die
+Klickprobe fährt denselben Weg zweimal und liest das Netzwerkprotokoll mit —
+eingeschaltet **2 Anfragen** an den Dienst (Vorwärtssuche beim Tippen,
+Umkehrsuche nach „Übernehmen"), ausgeschaltet **0**, dazu kein Suchfeld im
+Dialog und keine Hinweiszeile am Feld. Die Gegenprobe mit eingeschaltetem
+Schalter gehört dazu: Eine Null, die auch dann käme, wenn die Probe gar nicht
+hinsähe, belegt nichts.
+
+Die Karte „Datenschutz" hat ein **eigenes** Formular bekommen, nicht das des
+Profils. Der Grund ist unfreiwillig gefunden: Der Wächter des Demo-Kontos
+sperrt `action=profile` ganz, damit dessen öffentliche Zugangsdaten stehen
+bleiben — mit dem Schalter darin hätte ausgerechnet das Konto, an dem alle die
+Anwendung ausprobieren, seine eigene Adresssuche nicht abschalten können.
+Dieselbe Trennung gilt auf der Betriebsseite: Ein Tippfehler in der
+Speichergrenze soll die Dienstadresse nicht mit abweisen.
+
+**Der Kartendialog ist jetzt überall derselbe und kann mehr.** Im Kopf steht
+ein Suchfeld; ein Treffer **setzt das Kreuz** und übernimmt nichts — erst
+„Übernehmen" schreibt die Koordinate ins Formular. Darunter liegt die
+aufgezeichnete Spur des Einsatzes als Linie mit Start- und Endpunkt, mit
+Legende; ist das Ortsfeld leer, fährt die Karte auf diese Spur, und wer vorher
+selbst geschoben hat, dem wird sie nicht mehr weggezogen. Den Pin-Knopf tragen
+jetzt **fünf** Felder statt zweier: Einsatzort, manueller Abfahrtort,
+Transportziel und die Lagefelder der Standorte in Konto- und
+Systemverwaltung. Backlog Nr. 70 („Karte für Standorte") war genau das
+fehlende Drittel — die Nur-Lage-Fassung von `ui_ortsfeld()` gab den Knopf bis
+hierher gar nicht aus.
+
+Unter dem ersten Ortsfeld einer Seite steht eine Kleinzeile, die den Dienst
+beim Namen nennt und sagt, was ihn erreicht. **Einmal je Seite**, nicht je
+Feld: Auf der Standortseite wären es zehn und mehr, und zehnmal derselbe
+Datenschutzhinweis ist keine Auskunft mehr, sondern Tapete. Die vollständige
+Erklärung steht in der Karte „Datenschutz"; für den Datenschutztext der
+Installation liegt auf Verwaltung → Installation ein Textbaustein zum
+Kopieren, der die eingetragene Dienstadresse einsetzt.
+
+Zwei Fehler sind dabei aufgefallen und behoben, beide von der Klickprobe:
+Die Betriebsseite zeigte nach dem Speichern noch den **alten** Stand des
+Schalters — sie meldete „Adresssuche ausgeschaltet gespeichert." und ließ ihn
+auf „an" stehen, weil der Zwischenspeicher der laufenden Anfrage vor dem
+Schreiben gefüllt und danach nicht nachgezogen wurde. Und der Bootstrap gab
+seine Werte als `const` aus; das liegt im globalen lexikalischen Bereich, wird
+aber **keine** Eigenschaft von `window` — `assets/geocoder.js` las sie von
+dort und fand nichts, der Dialog kam ohne Suchfeld. In der Konsole war es
+nicht zu sehen: Wer dort `GEO_DIENST` eintippt, bekommt den lexikalischen Wert
+und damit die Antwort, die er erwartet.
+
+**Migration `2026_09_07_adresssuche_konto`** (Spalte `users.adresssuche`).
+Nach dem Deploy muss eine Administratorin **`update.php`** aufrufen. Bis dahin
+gilt für jedes Konto die Vorgabe „an", und die Anwendung läuft weiter — beide
+Leser vertragen die fehlende Spalte.
+
 ## [Web 15.6.1] — 2026-09-07
 
 ### Web — die Vorschlagsliste lag hinter der Speichern-Leiste (S9/AP1)

@@ -1998,6 +1998,8 @@ function ui_abbruch(int $code, string $text, array $o = []): never
  *   name        POST-Name des Bezeichnungsfeldes; null = keiner (der Wert
  *               wandert dann verschluesselt in den pat_blob)
  *   lat_name / lon_name, lat / lon                   Koordinatenfelder
+ *   ortswahl    Pin-Knopf mit dem Blatt „Meine Position / Auf der Karte" —
+ *               seit Web 15.7.0 in BEIDEN Fassungen (E-S9-06 c)
  *   klasse      zusaetzliche Klasse am Rahmen (z. B. 'loc-inline')
  *
  * KEINE `<datalist>` MEHR (S9/AP1, E-S9-07). Bis Web 15.5.2 nahm der
@@ -2008,6 +2010,79 @@ function ui_abbruch(int $code, string $text, array $o = []): never
  * Stammdaten kommen jetzt als GRUPPE in die eine Liste; uebergeben werden sie
  * dem Skript (`EdOrtsfeld.init({vorschlaege: […]})`), nicht dem Markup.
  */
+/**
+ * Die Einstellungen der Adresssuche fuer den Browser (S9/AP2, E-S9-05).
+ *
+ * WARUM NICHT IM KRYPTO-BOOTSTRAP, wie das Konzept es vorsah. Dort stehen
+ * schon Konstanten fuer den Browser, und der Gedanke war richtig — nur ruft
+ * `admin_stammdaten.php` `ui_krypto_bootstrap()` gar nicht auf: Die
+ * systemweite Stammdatenpflege braucht keine Verschluesselung, aber sie
+ * traegt zwei der fuenf Ortsfelder. Die Adresssuche haette dort ohne
+ * Einstellung dagestanden und waere auf den Ruecklfall gefallen. Also ein
+ * eigener, kleiner Bootstrap — und er wird nicht von den Seiten gerufen,
+ * sondern von `ui_ortsfeld()` selbst: Wo ein Ortsfeld steht, stehen seine
+ * Einstellungen, und keine Seite kann sie vergessen.
+ *
+ * EINMAL JE SEITENAUFBAU. Merkzettel wie beim Krypto-Bootstrap: Sieben
+ * Ortsfelder auf einer Seite sind der Regelfall, nicht die Ausnahme, und
+ * siebenmal dasselbe Skript ist siebenmal Ballast.
+ *
+ * `window.` UND NICHT `const` — daran ist AP2 einmal vorbeigelaufen. Der
+ * Krypto-Bootstrap schreibt `const PAT_WRAP = …`, und das geht dort gut, weil
+ * seine Leser INLINE-Skripte derselben Seite sind: Ein `const` auf oberster
+ * Ebene liegt im globalen LEXIKALISCHEN Bereich, den ein Skript sieht — aber
+ * es wird KEINE Eigenschaft von `window`. `assets/geocoder.js` ist eine
+ * eigene Datei und liest `global.GEO_DIENST`; die stand damit auf
+ * `undefined`, `EdGeocoder.an()` lieferte `false`, und der Kartendialog kam
+ * ohne Suchfeld — auf einer Seite, deren Hinweiszeile daneben sagte, die
+ * Suche sei an. In der Konsole war nichts zu sehen: Wer dort `GEO_DIENST`
+ * eintippt, bekommt den lexikalischen Wert und damit die Antwort, die er
+ * erwartet. Gefunden hat es die Klickprobe (F-S9-P-08). Eine Zuweisung an
+ * `window` ist ausserdem beim zweiten Mal harmlos — der Merkzettel bleibt
+ * trotzdem, denn zweimal dasselbe auszugeben ist auch dann falsch.
+ */
+function ui_geocoder_bootstrap(): void
+{
+    static $schon = false;
+    if ($schon) { return; }
+    $schon = true;
+
+    require_once __DIR__ . '/geocoder_lib.php';
+    echo '<script>window.GEO_AN = ' . json_encode(geocoder_an())
+       . '; window.GEO_DIENST = ' . json_encode(geocoder_dienst(),
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
+       . ";</script>\n";
+}
+
+/**
+ * Der Hinweis unter dem Ortsfeld — EINMAL je Seite (S9/AP2, E-S9-05, Nr. 137).
+ *
+ * WARUM NUR EINMAL. „Ein Hinweis am Ortsfeld" heisst es im Auftrag, und beim
+ * Einsatzformular waeren das drei gleiche Saetze auf einer Seite. Auf
+ * `einstellungen.php?t=standorte` waeren es zehn und mehr: Dort steht ein
+ * Ortsfeld je Standort UND je Zielklinik. Zehnmal derselbe Datenschutzhinweis
+ * ist keine Auskunft mehr, sondern Tapete — und Tapete liest niemand.
+ *
+ * Er steht deshalb am ERSTEN Ortsfeld der Seite, und sein Satz ist auf die
+ * Seite bezogen formuliert, nicht auf das Feld. Die vollstaendige Erklaerung
+ * mit dem Schalter steht in der Karte „Datenschutz" im Profil, der Absatz mit
+ * der Dienstadresse im Datenschutztext.
+ *
+ * Ist die Suche aus, erscheint er GAR NICHT: Er sagt aus, dass etwas das
+ * Geraet verlaesst — und dann verlaesst nichts das Geraet.
+ */
+function ui_geocoder_hinweis(): void
+{
+    static $schon = false;
+    if ($schon) { return; }
+    require_once __DIR__ . '/geocoder_lib.php';
+    if (!geocoder_an()) { return; }
+    $schon = true;
+    echo '<p class="feld-klein loc-datenschutz">Vorschläge und Umkehrsuche kommen von '
+       . ui_e(geocoder_host()) . '; getippter Text verlässt das Gerät. '
+       . 'Abschalten: Einstellungen → Profil, Karte „Datenschutz".</p>' . "\n";
+}
+
 function ui_ortsfeld(array $o): void
 {
     $p = (string)$o['praefix'];
@@ -2022,6 +2097,41 @@ function ui_ortsfeld(array $o): void
      * dem Blatt „Meine Position uebernehmen / Auf der Karte waehlen"
      * (assets/ortswahl.js). */
     $mitWahl = !empty($o['ortswahl']);
+
+    /* DIE EINSTELLUNGEN DER ADRESSSUCHE gehen mit dem ersten Ortsfeld der
+     * Seite in den Browser — nicht die Seite bestellt sie, sondern das Feld
+     * bringt sie mit (S9/AP2). */
+    ui_geocoder_bootstrap();
+
+    /* DER PIN-KNOPF STEHT IN BEIDEN FASSUNGEN (E-S9-06 c). Bis Web 15.6.1
+     * rendete ihn nur der `feld = true`-Zweig; die Nur-Lage-Fassung der
+     * Stammdaten hatte deshalb keine Karte — und Backlog Nr. 70 („Karte fuer
+     * Standorte") war genau das. Der Block steht jetzt einmal hier und wird
+     * zweimal ausgegeben. */
+    $pinKnopf = static function () use ($o, $p): void {
+        ?>
+            <span class="aktionen ortsfeld-aktionen">
+              <button type="button" class="knopf knopf-symbol" title="Ort setzen"
+                      aria-expanded="false" aria-controls="<?= e($p) ?>ortsblatt"
+                      data-blatt="<?= e($p) ?>ortsblatt"><?= ui_symbol('position', 'symbol-gross') ?><span
+                      class="nur-vorlesen">Ort setzen</span></button>
+              <div class="blatt" id="<?= e($p) ?>ortsblatt" hidden>
+                <div class="blatt-griff" aria-hidden="true"></div>
+                <h2 class="blatt-titel"><?= e((string)($o['label'] ?? $o['such_hinweis'] ?? 'Ort')) ?> setzen</h2>
+                <div class="blatt-liste">
+                  <button type="button" class="blatt-zeile"
+                          data-ortswahl="position" data-praefix="<?= e($p) ?>">
+                    <?= ui_symbol('position') ?><span>Meine Position übernehmen</span></button>
+                  <button type="button" class="blatt-zeile"
+                          data-ortswahl="karte" data-praefix="<?= e($p) ?>">
+                    <?= ui_symbol('karte') ?><span>Auf der Karte wählen</span></button>
+                </div>
+                <button type="button" class="knopf knopf-leise blatt-abbrechen"
+                        data-blatt-zu>Abbrechen</button>
+              </div>
+            </span>
+        <?php
+    };
 
     if ($mitFeld): ?>
       <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
@@ -2039,28 +2149,7 @@ function ui_ortsfeld(array $o): void
           <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
                   title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
                   class="nur-vorlesen">Suchen</span></button>
-          <?php if ($mitWahl): ?>
-            <span class="aktionen ortsfeld-aktionen">
-              <button type="button" class="knopf knopf-symbol" title="Ort setzen"
-                      aria-expanded="false" aria-controls="<?= e($p) ?>ortsblatt"
-                      data-blatt="<?= e($p) ?>ortsblatt"><?= ui_symbol('position', 'symbol-gross') ?><span
-                      class="nur-vorlesen">Ort setzen</span></button>
-              <div class="blatt" id="<?= e($p) ?>ortsblatt" hidden>
-                <div class="blatt-griff" aria-hidden="true"></div>
-                <h2 class="blatt-titel"><?= e((string)($o['label'] ?? 'Ort')) ?> setzen</h2>
-                <div class="blatt-liste">
-                  <button type="button" class="blatt-zeile"
-                          data-ortswahl="position" data-praefix="<?= e($p) ?>">
-                    <?= ui_symbol('position') ?><span>Meine Position übernehmen</span></button>
-                  <button type="button" class="blatt-zeile"
-                          data-ortswahl="karte" data-praefix="<?= e($p) ?>">
-                    <?= ui_symbol('karte') ?><span>Auf der Karte wählen</span></button>
-                </div>
-                <button type="button" class="knopf knopf-leise blatt-abbrechen"
-                        data-blatt-zu>Abbrechen</button>
-              </div>
-            </span>
-          <?php endif; ?>
+          <?php if ($mitWahl) { $pinKnopf(); } ?>
         </div>
     <?php else: ?>
       <?php /* NUR-LAGE-FASSUNG (feld = false): ein Suchfeld ohne Namensfeld.
@@ -2088,6 +2177,7 @@ function ui_ortsfeld(array $o): void
           <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
                   title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
                   class="nur-vorlesen">Suchen</span></button>
+          <?php if ($mitWahl) { $pinKnopf(); } ?>
         </div>
     <?php endif; ?>
 
@@ -2103,6 +2193,7 @@ function ui_ortsfeld(array $o): void
       <?php /* Bestätigte Koordinaten stehen als Chip UNTER dem Textfeld, nicht
                darin — sonst vernichtet die erste getippte Bezeichnung sie. */ ?>
       <div class="rmchips" id="<?= e($p) ?>chips"></div>
+      <?php ui_geocoder_hinweis(); ?>
       <input type="hidden" id="<?= e($p) ?>lat"
              <?= isset($o['lat_name']) ? 'name="' . e((string)$o['lat_name']) . '"' : '' ?>
              value="<?= e((string)($o['lat'] ?? '')) ?>">

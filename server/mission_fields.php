@@ -367,6 +367,13 @@ return [
                 'placeholder' => 'z. B. Klinikum Westried',
                 'suggest_src' => 'transport_dests',
                 'lat_col' => 'dest_lat', 'lon_col' => 'dest_lon',
+                /* PIN-KNOPF UND KARTE (S9/AP2, E-S9-06 d; PS-7). Ein per
+                 * Karte gewaehltes Ziel ist ein AD-HOC-WERT DIESES EINSATZES
+                 * und kein Stammdatensatz — die Koordinate wird am Einsatz
+                 * eingefroren (`dest_lat`/`dest_lon`), die Zielklinik-Liste
+                 * bleibt unberuehrt. Genau deshalb steht der Schluessel hier
+                 * im Katalog und nicht als Sonderfall im Formular. */
+                'ortswahl' => true,
                 /* Beschriftung des Suchfeldes daneben. Es hiess „Koordinaten
                  * (optional)" — was es einsammelt, sind aber laengst keine
                  * Zahlen mehr, sondern eine Adresse, ein Plus Code oder ein

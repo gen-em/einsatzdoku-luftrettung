@@ -63,34 +63,25 @@
  *   aus dem Baustein, und sie zeigt Stammdaten und Adressen in GRUPPEN. Was
  *   davon erscheint, entscheidet weiterhin diese Datei — der Baustein weiss
  *   nicht, woher ein Eintrag stammt.
+ *
+ *   assets/geocoder.js (EdGeocoder) ist PFLICHT (S9/AP2, E-S9-05). Die
+ *   Dienstadresse stand bis Web 15.6.1 als Konstante `PHOTON` hier — fest
+ *   eingetragen und von keinem Schalter zu erreichen, obwohl diese Komponente
+ *   die Option `adresssuche` seit Web 6.1.0 kannte und kein Aufrufer sie je
+ *   setzte. Jetzt entscheidet der Dienst selbst, ob er antwortet: Zwei
+ *   Schalter (Installation und Konto) und die Adresse stehen in den
+ *   Einstellungen, und mit ihnen die drei Grenzen der Abfrage (400 ms, drei
+ *   Zeichen, eine offene Anfrage). Diese Datei stellt nur noch die Frage.
  */
 (function (global) {
     'use strict';
 
-    /* ENTPRELLUNG UND EINE OFFENE ANFRAGE (E-S3-06).
-     *
-     * Photon ist ein frei betriebener Gemeinschaftsdienst. Eine Anfrage je
-     * Tastendruck waere Missbrauch seiner Gutmuetigkeit — und jede Anfrage
-     * traegt die eingetippten Buchstaben zu einem Dritten. Deshalb drei
-     * Grenzen, und alle drei stehen hier und nicht verstreut:
-     *
-     *   ENTPRELL_MS      Ruhe nach dem letzten Tastendruck, bevor gesucht
-     *                    wird. E-S3-06 gibt 400 ms vor und erlaubt 300–600;
-     *                    400 ist geblieben — bei fluessigem Tippen eines
-     *                    Ortsnamens entsteht damit genau EINE Anfrage.
-     *   MINDESTZEICHEN   Unter drei Zeichen sucht niemand ernsthaft.
-     *   AbortController  Eine laufende Anfrage wird abgebrochen, bevor die
-     *                    naechste startet. Ohne das ueberholen sich zwei
-     *                    Antworten, und die Liste zeigt die zum vorletzten
-     *                    Stand — der Fehler faellt nur im langsamen Netz auf.
-     *
-     * Die Lupe umgeht die Entprellung (sofort), nicht die Mindestlaenge. */
-    var ENTPRELL_MS = 400;
-    var MINDESTZEICHEN = 3;
-
-    /* Photon (OSM-Daten, kostenlos, kein Schluessel). Dieselbe Adresse wie
-     * bisher im Einsatzformular. */
-    var PHOTON = 'https://photon.komoot.io/api/?lang=de&limit=6&q=';
+    /* DIE DREI GRENZEN DER ABFRAGE (E-S3-06) stehen seit S9/AP2 in
+     * assets/geocoder.js: 400 ms Entprellung, drei Zeichen Mindestlaenge,
+     * hoechstens eine offene Anfrage. Sie gehoeren zum Dienst, nicht zum
+     * Feld — und ein zweites Feld haette sie sonst ein zweites Mal gebraucht.
+     * Die Lupe umgeht die Entprellung mit {sofort: true}, nicht die
+     * Mindestlaenge. */
 
     /* HOECHSTENS ZWEI STAMMDATENTREFFER ueber den Adressen (F10, E-S9-07).
      * Die Zahl ist eine Entscheidung, keine Schaetzung: Die Stammdatengruppe
@@ -119,35 +110,12 @@
 
     function el(id) { return document.getElementById(id); }
 
-    /** Beschriftung eines Photon-Treffers: Name, Strasse, PLZ/Ort. Das ist
-     *  der WERT, der ins Feld wandert — eine Zeile, wie bisher. */
-    function photonLabel(p) {
-        var teile = [];
-        if (p.name) { teile.push(p.name); }
-        var strasse = [p.street, p.housenumber].filter(Boolean).join(' ');
-        if (strasse && strasse !== p.name) { teile.push(strasse); }
-        var ort = [p.postcode, p.city].filter(Boolean).join(' ');
-        if (ort) { teile.push(ort); }
-        return teile.join(', ');
-    }
+    /* DIE BESCHRIFTUNG EINES TREFFERS steht seit S9/AP2 in
+     * assets/geocoder.js — sie stand hier UND wortgleich in ortswahl.js
+     * (`label()`), zwei Fassungen derselben zehn Zeilen. Der Dienst liefert
+     * jetzt fertig: `haupt` fuer die erste Zeile, `neben` fuer die gedaempfte
+     * darunter, `voll` fuer das, was ins Feld wandert (F-S9-P-05). */
 
-    /* ZWEI ZEILEN IN DER LISTE, EINE IM FELD (M-S9-03). Die Postleitzahl mit
-     * Ort steht gedaempft darunter statt hinten in derselben Zeile: Auf einem
-     * 390-px-Schirm schnitt die einzeilige Fassung genau dort ab, wo die
-     * Unterscheidung zweier gleichnamiger Treffer beginnt. Uebernommen wird
-     * trotzdem die eine Zeile aus photonLabel() — im Feld steht die Adresse,
-     * nicht ein Absatz. */
-    function photonHaupt(p) {
-        var teile = [];
-        if (p.name) { teile.push(p.name); }
-        var strasse = [p.street, p.housenumber].filter(Boolean).join(' ');
-        if (strasse && strasse !== p.name) { teile.push(strasse); }
-        return teile.length ? teile.join(', ') : photonLabel(p);
-    }
-
-    function photonNeben(p) {
-        return [p.postcode, p.city].filter(Boolean).join(' ');
-    }
 
     /**
      * Eine Verwendung aufbauen.
@@ -189,7 +157,14 @@
         var suchF = feld;
         var nurKoordinaten = !!opt.getrennteSuche;
 
-        var adresssuche = opt.adresssuche !== false;
+        /* ZWEI GRUENDE, WARUM DIE SUCHE RUHT: Der Aufrufer will sie nicht
+         * (`adresssuche: false`, heute niemand), oder die Einstellung sagt
+         * nein — Installation oder Konto (E-S9-05). Beides fuehrt zum selben
+         * Verhalten, und beides gehoert in EINE Variable: Der Zustandstext
+         * unten liest sie, und ein Feld, das den einen Fall anders erklaert
+         * als den anderen, erklaert nichts. */
+        var adresssuche = opt.adresssuche !== false
+            && (typeof EdGeocoder === 'undefined' || EdGeocoder.an());
         var formate = opt.formate !== false;
         var vorschlaege = opt.vorschlaege || [];
         var beiAenderung = typeof opt.beiAenderung === 'function' ? opt.beiAenderung : null;
@@ -197,8 +172,6 @@
         var platzhalterFrei = feld.getAttribute('placeholder') || '';
         var platzhalterBez = opt.bezeichnungPlatzhalter || platzhalterFrei;
 
-        var timer = null;
-        var laufend = null;          // AbortController der offenen Anfrage
         var erkennung = { typ: null };
         /* Zuletzt aus der Vorschlagsliste uebernommener Name. Er verhindert,
          * dass eine VON HAND gesetzte Koordinate beim erneuten Tippen desselben
@@ -370,12 +343,10 @@
             }
             if (adressTreffer.length) {
                 gruppen.push({ titel: mitTiteln ? GRUPPE_ADRESSEN : null,
-                               eintraege: adressTreffer.map(function (ft) {
+                               eintraege: adressTreffer.map(function (t) {
                     return {
-                        haupt: photonHaupt(ft.properties),
-                        neben: photonNeben(ft.properties),
-                        symbol: 'standort', art: 'adresse', wert: ft,
-                        voll: photonLabel(ft.properties)
+                        haupt: t.haupt, neben: t.neben,
+                        symbol: 'standort', art: 'adresse', wert: t, voll: t.voll
                     };
                 }) });
             }
@@ -416,14 +387,14 @@
             /* Adresse. Getrennte Suche: NUR die Koordinaten. Das Namensfeld
              * gehoert der Nutzerin — es wird hoechstens gefuellt, wenn es
              * leer ist. */
-            var ft = e.wert;
+            var t = e.wert;
             if (nurKoordinaten) {
                 if (feld.value.trim() === '') { feld.value = e.voll; }
             } else {
                 feld.value = e.voll;
             }
             letzterTreffer = feld.value.trim().toLowerCase();
-            setzeKoordinaten(ft.geometry.coordinates[1], ft.geometry.coordinates[0]);
+            setzeKoordinaten(t.lat, t.lon);
         }
 
         /* Trifft die Eingabe genau einen Stammdatensatz, dessen Koordinaten
@@ -464,7 +435,6 @@
         /* ---- Suche (beim Tippen bzw. per Lupe) ---------------------------- */
         function sucheJetzt() { sucheTippen(true); }
         function sucheTippen(sofort) {
-            clearTimeout(timer);
             letzteAnfrage = suchF.value.trim();
 
             /* Stehen bereits Koordinaten, ist hier Schluss. Weder
@@ -516,37 +486,22 @@
              * nur eine gab. */
             if (!adresssuche) { return; }
 
-            var q = letzteAnfrage;
-            if (q.length < MINDESTZEICHEN) { return; }
-            timer = setTimeout(function () {
-                /* HOECHSTENS EINE OFFENE ANFRAGE. Eine noch laufende wird
-                 * abgebrochen, bevor die naechste startet — sonst ueberholen
-                 * sich zwei Antworten und die Liste zeigt die zum vorletzten
-                 * Stand. */
-                if (laufend) { laufend.abort(); }
-                laufend = (typeof AbortController === 'function')
-                    ? new AbortController() : null;
-                var dieser = laufend;
-                fetch(PHOTON + encodeURIComponent(q),
-                      laufend ? { signal: laufend.signal } : undefined).then(function (r) {
-                    return r.json();
-                }).then(function (d) {
-                    if (dieser !== laufend) { return; }   // ueberholt
-                    laufend = null;
-                    adressTreffer = d.features || [];
-                    zeichneListe();
-                }).catch(function (e) {
-                    /* Ein ABBRUCH ist kein Fehlschlag: Er heisst, dass gerade
-                     * eine neuere Anfrage laeuft. Die Liste zu leeren liesse
-                     * sie beim fluessigen Tippen flackern. */
-                    if (e && e.name === 'AbortError') { return; }
-                    /* Scheitert die Abfrage, bleibt die STAMMDATENGRUPPE
-                     * stehen: Sie hat mit dem Dienst nichts zu tun, und eine
-                     * leere Liste waere die falsche Auskunft. */
-                    adressTreffer = [];
+            /* Entprellung, Mindestlaenge und die eine offene Anfrage liegen im
+             * Modul. `null` heisst „ueberholt": Eine neuere Anfrage laeuft und
+             * zeichnet gleich selbst — hier ist dann nichts zu tun, und die
+             * Liste zu leeren liesse sie beim fluessigen Tippen flackern. */
+            var fuerDiese = letzteAnfrage;
+            EdGeocoder.suche(letzteAnfrage, { sofort: !!sofort })
+                .then(function (treffer) {
+                    if (treffer === null) { return; }
+                    /* Und noch eine Wache: Zwischen Absenden und Antwort kann
+                     * die Nutzerin weitergetippt und die Koordinate gesetzt
+                     * haben. Dann gehoert die Antwort zu einem Feldinhalt, den
+                     * es nicht mehr gibt. */
+                    if (fuerDiese !== letzteAnfrage || hatKoordinaten()) { return; }
+                    adressTreffer = treffer;
                     zeichneListe();
                 });
-            }, sofort ? 0 : ENTPRELL_MS);   // Lupe: sofort, Tippen: entprellt
         }
 
         /* Der Lupen-Knopf (ui_ortsfeld) stoesst die Suche ausdruecklich an —
@@ -554,7 +509,6 @@
          * neben dem Tippen. */
         if (lupe) {
             lupe.addEventListener('click', function () {
-                clearTimeout(timer);
                 sucheJetzt();
                 feld.focus();
             });

@@ -291,6 +291,84 @@ async function kasten(rolle, weg, breite) {
       await e.type(text, { delay: 40 });
     },
 
+    /**
+     * Werkzeugkasten fuer eine ANDERE Rolle, bei derselben Breite.
+     *
+     * AP2 braucht das, weil DERSELBE Kartendialog an fuenf Stellen sitzt und
+     * die fuenfte — die systemweiten Standorte — nur der Verwaltung
+     * offensteht. Ein Weg, der nur die vier des Demo-Kontos faehrt, meldet
+     * „4 von 4" und hat den fuenften nie gesehen. Die Rolle wird faul geholt
+     * wie sonst auch: Wer sie nie verlangt, meldet sie nie an und zieht
+     * nichts aus der Mengenbremse.
+     */
+    async rolle(name) { return kasten(name, weg, breite); },
+
+    /**
+     * Den KONTOSCHALTER der Adresssuche stellen (Profil → Datenschutz).
+     *
+     * UEBER DAS FORMULAR, NICHT PER SQL. Was hier zu pruefen ist, ist die
+     * Wirkung des Schalters — ein `UPDATE users SET adresssuche = 0` haette
+     * genau den Weg uebersprungen, der die Frage beantwortet, und „0 Anfragen"
+     * waere der Beleg fuer eine Spalte statt fuer einen Schalter.
+     *
+     * Geklickt wird das LABEL: `.schalter-box` ist ein Ankreuzfeld mit
+     * `opacity:0;width:0;height:0` (Stylesheet Z. 1360) — Playwright fasst es
+     * nicht an, eine NutzerIn auch nicht.
+     *
+     * NACHGELESEN WIRD IMMER. Ein Formular, das still nicht gespeichert hat,
+     * liefe sonst als gruene Zahl durch.
+     */
+    async schalterKonto(an) {
+      const s = r.seite;
+      await s.goto(`${BASIS}/einstellungen.php?t=profil`, { waitUntil: 'domcontentloaded' });
+      const box = s.locator('#k-datenschutz .schalter-box').first();
+      if (!(await box.count())) { throw new Error('Karte „Datenschutz" fehlt im Profil'); }
+      if (await box.isDisabled()) {
+        throw new Error('Der Kontoschalter ist gesperrt — steht der Schalter der '
+          + 'Installation aus? (Betrieb → Servereinstellungen → Adresssuche)');
+      }
+      if ((await box.isChecked()) !== an) {
+        await s.locator('#k-datenschutz .schalter-label').first().click();
+      }
+      await Promise.all([
+        s.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 20000 }),
+        s.locator('#k-datenschutz form button[type="submit"]').first().click(),
+      ]);
+      const jetzt = await s.locator('#k-datenschutz .schalter-box').first()
+        .isChecked().catch(() => null);
+      if (jetzt !== an) {
+        throw new Error(`Kontoschalter steht nach dem Speichern auf ${jetzt}, `
+          + `verlangt war ${an}`);
+      }
+    },
+
+    /**
+     * Den INSTALLATIONSSCHALTER stellen (Betrieb → Servereinstellungen →
+     * Adresssuche). Er gehoert der Verwaltung, also holt sich diese
+     * Handreichung die Rolle `admin` selbst — ein Weg im Demo-Konto soll
+     * nicht wissen muessen, wer wofuer zustaendig ist.
+     */
+    async schalterInstallation(an) {
+      const a = await rolleHolen('admin');
+      const s = a.seite;
+      await s.goto(`${BASIS}/betrieb_server.php`, { waitUntil: 'domcontentloaded' });
+      const box = s.locator('#k-adresssuche .schalter-box').first();
+      if (!(await box.count())) { throw new Error('Karte „Adresssuche" fehlt im Betrieb'); }
+      if ((await box.isChecked()) !== an) {
+        await s.locator('#k-adresssuche .schalter-label').first().click();
+      }
+      await Promise.all([
+        s.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 20000 }),
+        s.locator('#k-adresssuche form button[type="submit"]').first().click(),
+      ]);
+      const jetzt = await s.locator('#k-adresssuche .schalter-box').first()
+        .isChecked().catch(() => null);
+      if (jetzt !== an) {
+        throw new Error(`Installationsschalter steht nach dem Speichern auf ${jetzt}, `
+          + `verlangt war ${an}`);
+      }
+    },
+
     /** Breite und Bedienhoehe stehen IM DATEINAMEN — ein Bild ohne beides
      *  belegt nichts (die Abnahme lautet „zwei Breiten, beide Bedienhoehen"). */
     breite,

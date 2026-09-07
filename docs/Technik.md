@@ -209,6 +209,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       · apk.php liefert die Datei aus
 │   │                       · apk/ die Dateien selbst (entstehen nur auf dem
 │   │                         Server, im Deploy ausgenommen)
+│   ├── geocoder_lib.php   Adresssuche: die beiden Schalter (Installation und
+│   │                       Konto) und die Dienstadresse — die EINZIGE Quelle
+│   │                       dieser drei Werte (S9/AP2). Der Browser bekommt sie
+│   │                       ueber ui_geocoder_bootstrap() aus ui_ortsfeld()
 │   ├── install.php        Serverinstallation
 │   ├── migration_lib.php  Migrationskatalog und Lauf (S8/AP2): Katalog,
 │   │                       Register, Lauf, Stand, Inhaltszählung. Die EINZIGE
@@ -248,6 +252,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      schneiden.js (Karte „Ruhesegmente" und Schneide-Bereich
 │   │                       der Tagesansicht, S4/A2b — siehe 4.97e),
 │   │                      geo.js (EdGeo: Marker-Satz und Spurfarben der Karten, s. u.),
+│   │                      geocoder.js (EdGeocoder: der EINE Weg zum Adressdienst —
+│   │                       suche(), umkehr(), an(); keine Adresse im Code, s. u.),
 │   │                      ortswahl.js (Geolocation + Kartendialog am Ortsfeld, s. u.),
 │   │                      blatt.js (Aktions- und Sortierblätter) + schublade.js (mobile Leiste),
 │   │                      dialog.js (öffnet Dialoge, die im Markup stehen, und füllt sie
@@ -3717,16 +3723,70 @@ Photon-Grenze **sechs** in der Abfrageadresse. Stammdaten erscheinen ab dem
 ersten Zeichen bei Teilübereinstimmung und **ohne** die 400-ms-Entprellung —
 sie liegen im Browser; die Adressabfrage bleibt bei ihren drei Grenzen.
 
+**Der Adressdienst hat seit Web 15.7.0 genau einen Zugang**
+(`assets/geocoder.js`, `EdGeocoder`, S9/AP2, E-S9-05). Vorher stand die
+Anschrift zweimal fest im ausgelieferten Code — in `ortsfeld.js` für die
+Vorwärtssuche, in `ortswahl.js` für die Umkehrsuche. Das Modul hat vier
+Mitglieder: `an()` (darf gefragt werden?), `dienst()`/`host()` (wen?),
+`suche(q, {sofort})` und `umkehr(lat, lon)`. Bei ihm liegen auch die drei
+Grenzen der Abfrage — **400 ms** Entprellung, **drei** Zeichen Mindestlänge,
+**sechs** Treffer — und der `AbortController`, der eine überholte Anfrage
+abbricht; `suche()` liefert dann `null` statt eines veralteten Ergebnisses.
+**Es gibt keine Rückfalladresse:** Fehlt der Bootstrap, ist `an()` falsch und
+es geht nichts hinaus. `grep -rn "komoot" server/assets/` = 0 ist damit eine
+Eigenschaft und keine Momentaufnahme.
+
+Die Einstellungen dazu stehen in `server/geocoder_lib.php`:
+`geocoder_installation_an()` (`app_state`-Schlüssel `adresssuche`),
+`geocoder_konto_an($userId)` (Spalte `users.adresssuche`, Migration
+`2026_09_07_adresssuche_konto`), `geocoder_dienst()`/`geocoder_host()`
+(`app_state`-Schlüssel `geocoder_url`, Vorgabe `GEOCODER_VORGABE`) und
+`geocoder_an()`, das **beide** Schalter verundet — die Frage, die ein
+Aufrufer stellen sollte. Geschrieben wird über `geocoder_installation_setzen()`
+und `geocoder_konto_setzen()`; beide ziehen den Zwischenspeicher der laufenden
+Anfrage nach, weil die Seite sich nach dem Speichern selbst ausgibt. Beide
+Leser vertragen eine **fehlende** Spalte bzw. Tabelle — das Fenster zwischen
+Deploy und `update.php`.
+
+In den Browser kommen die Werte über **`ui_geocoder_bootstrap()`**, und zwar
+aus `ui_ortsfeld()` selbst: Wo ein Ortsfeld steht, stehen seine Einstellungen,
+und keine Seite kann sie vergessen (`admin_stammdaten.php` ruft
+`ui_krypto_bootstrap()` nie auf und hätte sie sonst nicht). Ausgegeben wird
+**`window.GEO_AN`/`window.GEO_DIENST`**, nicht `const`: Ein `const` auf
+oberster Ebene liegt im globalen lexikalischen Bereich, wird aber keine
+Eigenschaft von `window` — eine eigene Datei, die `global.GEO_DIENST` liest,
+findet dann nichts (F-S9-P-08). `ui_geocoder_hinweis()` gibt die Kleinzeile
+unter dem **ersten** Ortsfeld der Seite aus, und nur bei eingeschalteter
+Suche.
+
 **Die Ortswahl** (`assets/ortswahl.js`, Web 9.4.0, E-P3-34): Der Pin-Knopf
-am Ortsfeld (`ui_ortsfeld` mit `'ortswahl' => true` — Einsatzort und
-manueller Abfahrtort) öffnet ein Blatt mit „Meine Position übernehmen"
-(`navigator.geolocation`, nur über HTTPS) und „Auf der Karte wählen"
-(Leaflet-Dialog mit **Fadenkreuz** in der Kartenmitte statt Klick-Marker —
-auf dem Handy verdeckt der eigene Finger sonst genau die Stelle). Zur
-Koordinate holt die **Photon-Umkehrsuche** eine Adresse; sie füllt das Feld
-nur, wenn es leer ist (`EdOrtsfeld`-Steuerobjekt, `uebernehmen()`), und die
-Anfrage trägt ausschließlich die Koordinate. Die Verwendungen registrieren
-sich mit `EdOrtswahl.registriere(praefix, steuerobjekt)`.
+am Ortsfeld (`ui_ortsfeld` mit `'ortswahl' => true`) öffnet ein Blatt mit
+„Meine Position übernehmen" (`navigator.geolocation`, nur über HTTPS) und
+„Auf der Karte wählen" (Leaflet-Dialog mit **Fadenkreuz** in der Kartenmitte
+statt Klick-Marker — auf dem Handy verdeckt der eigene Finger sonst genau die
+Stelle). Zur Koordinate holt `EdGeocoder.umkehr()` eine Adresse; sie füllt
+das Feld nur, wenn es leer ist (`EdOrtsfeld`-Steuerobjekt, `uebernehmen()`),
+und die Anfrage trägt ausschließlich die Koordinate.
+
+Seit Web 15.7.0 tragen **fünf** Felder den Knopf statt zweier: Einsatzort,
+manueller Abfahrtort, Transportziel (über den Feldkatalog, `'ortswahl' =>
+true` an `transport_dest`) und die Lagefelder der Standorte in
+`einstellungen.php` und `admin_stammdaten.php`. Der Block dafür steht in
+`ui_ortsfeld()` **einmal** und wird in beiden Zweigen ausgegeben — bis Web
+15.6.1 rendete ihn nur der `feld = true`-Zweig, und die Nur-Lage-Fassung der
+Stammdaten hatte deshalb keine Karte (Backlog Nr. 70).
+
+Der Dialog selbst kann seit Web 15.7.0 zweierlei mehr. Erstens ein
+**Suchfeld** im Kopf (nur bei `EdGeocoder.an()`): Ein Treffer ruft
+`karte.setView()` und schreibt den Namen ins Suchfeld — **ins Formular
+schreibt er nichts**; erst „Übernehmen" übernimmt (F1). Zweitens die
+**aufgezeichnete Spur**: Der Aufrufer übergibt sie als Feld oder als
+Funktion, `EdOrtswahl.registriere(praefix, steuerobjekt, {spur})`; der Dialog
+wartet nicht auf sie, sondern zeichnet nach — Linie in `EdGeo.spurFarbe(0)`,
+`EdGeo.markerRing()` an Anfang und Ende, Legende sichtbar. `fitBounds` läuft
+**nur** bei leerem Ortsfeld und **nur**, solange niemand selbst geschoben oder
+gezoomt hat (`dragstart`/`zoomstart` setzen ein Merkzeichen). Pfeile trägt der
+Dialog nicht: Hier wird ein Punkt gewählt, keine Fahrt gelesen.
 
 **Die Luftlinie** (`assets/luftlinie.js`) zeichnet, was ohne GPS-Aufzeichnung
 über den Weg bekannt ist: **Abfahrtort → Einsatzort → Zielklinik**, immer

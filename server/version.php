@@ -2909,4 +2909,42 @@ declare(strict_types=1);
  *          KORREKTURNUMMER: ein Zahlenwert, kein neues Verhalten. Keine
  *          Migration.
  */
-const WEB_VERSION = '15.6.1';
+/* 15.7.0  EINE ADRESSE STATT ZWEIER, UND ZWEI SCHALTER DAVOR (S9/AP2).
+ *          Die Anschrift des Adressdienstes stand zweimal fest im
+ *          Auslieferungsstand — `assets/ortsfeld.js` fuer die Suche,
+ *          `assets/ortswahl.js` fuer die Umkehrsuche. Wer sie aendern wollte,
+ *          musste den Code aendern; wer sie gar nicht wollte, konnte nichts
+ *          tun. Beides ist vorbei: `assets/geocoder.js` ist der eine Weg nach
+ *          draussen (`suche`, `umkehr`, `an`), `server/geocoder_lib.php` die
+ *          eine Quelle der Einstellungen, und im Auslieferungsstand der
+ *          Browserdateien steht der Name des Dienstes nun kein einziges Mal
+ *          (`grep -rn komoot server/assets/` = 0).
+ *
+ *          ZWEI SCHALTER, WEIL ES ZWEI ENTSCHEIDUNGEN SIND. Die BetreiberIn
+ *          entscheidet fuer die Installation (Betrieb -> Servereinstellungen,
+ *          Karte „Adresssuche", dazu das Feld „Dienst" — wer einen eigenen
+ *          Photon betreibt, traegt ihn dort ein, und die Anfragen mit dem
+ *          Einsatzort verlassen das eigene Haus nicht mehr). Die NutzerIn
+ *          entscheidet fuer ihr Konto (Einstellungen -> Profil, Karte
+ *          „Datenschutz"). Die Installation ist die Obergrenze: Ist sie aus,
+ *          steht der Kontoschalter ausgegraut da und sagt, wer ihn
+ *          abgeschaltet hat. Aus heisst wirklich aus — gemessen mit der
+ *          Klickprobe am Netzwerkprotokoll: an 2 Anfragen an den Dienst,
+ *          aus 0, bei Tippen, Kartenwahl und Uebernehmen.
+ *
+ *          DER KARTENDIALOG IST JETZT UEBERALL DERSELBE und kann mehr: ein
+ *          Suchfeld im Kopf (ein Treffer setzt das Kreuz und uebernimmt
+ *          nichts), die aufgezeichnete Spur des Einsatzes als Linie mit
+ *          Start- und Endpunkt, und bei leerem Ortsfeld faehrt die Karte auf
+ *          diese Spur. Den Pin-Knopf tragen jetzt fuenf Felder statt zweier:
+ *          Einsatzort, manueller Abfahrtort, Transportziel und die
+ *          Lagefelder der Standorte in Konto- und Systemverwaltung — Backlog
+ *          Nr. 70 („Karte fuer Standorte") war genau das fehlende Drittel.
+ *
+ *          NEBENNUMMER MIT MIGRATION: `users.adresssuche` kommt hinzu
+ *          (`2026_09_07_adresssuche_konto`). Nach dem Deploy muss eine
+ *          Administratorin `update.php` aufrufen; bis dahin gilt fuer jedes
+ *          Konto die Vorgabe „an", und die Anwendung laeuft weiter — beide
+ *          Leser vertragen die fehlende Spalte.
+ */
+const WEB_VERSION = '15.7.0';

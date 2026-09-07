@@ -27,6 +27,7 @@ gegen die sie schützt.
 
 | Klasse | Grund |
 |---|---|
+| `loc-datenschutz` | [bleibt] Anker, keine Gestaltung. Die Kleinzeile unter dem Ortsfeld (`ui_geocoder_hinweis()`, S9/AP2) trägt ihr Aussehen von `.feld-klein`; diese zweite Klasse steht nur da, damit die Klickprobe sie zählen kann (`ap2-kontoschalter-aus-keine-anfrage`: 0 Hinweiszeilen bei ausgeschalteter Suche). Eine eigene Regel gäbe ihr ein Aussehen, das sie nicht haben soll. |
 | `art` | [bleibt] Kein Klassenname, sondern eine **Variable**: `geo.js:81` baut `'geo-ringpunkt-' + art`. Das Werkzeug liest Zeichenketten, nicht ausgeführten Code, und nimmt das Bruchstück vor dem `+` für einen Namen. |
 | `k` | [bleibt] Dasselbe: `geo.js:49` und `missiontable.js:160` bauen `'<span class="' + k + '">'`. |
 | `klasse` | [bleibt] Dasselbe: `import_ui.js:359` und `:459` setzen `class="' + klasse + '"`. |

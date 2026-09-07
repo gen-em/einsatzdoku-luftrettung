@@ -432,6 +432,28 @@ Den **Standard der Installation** setzt die Verwaltung unter
 angemeldete Konten — aber nur bei denen, die hier „Standard der Installation"
 stehen haben. Eine getroffene eigene Wahl bleibt unberührt.
 
+**Karte „Datenschutz": die Adresssuche.** Seit Web 15.7.0 steht im Profil
+darunter der Schalter **„Adressvorschläge aus dem Internet"**. Er entscheidet
+für **dein Konto**, auf jedem Gerät: Ist er an, schickt dein Browser beim
+Tippen in einem Ortsfeld den getippten Text an einen Adressdienst und bekommt
+Vorschläge zurück; nach einer Wahl auf der Karte geht die Koordinate denselben
+Weg, um die Adresse dazu zu holen. Welcher Dienst das ist, steht in der Karte
+namentlich — die BetreiberIn trägt ihn ein (12.5), und es kann ein selbst
+betriebener sein.
+
+**Nichts anderes verlässt dabei das Gerät** — kein Name, keine Diagnose,
+keine Einsatznummer. Was ohne die Suche bleibt: Koordinaten, Plus Codes,
+„Meine Position", der Kartendialog und die Karte selbst. Was entfällt: die
+Adressvorschläge beim Tippen, die Umkehrsuche (also die Adresse zu einer
+Koordinate) und das Suchfeld im Kartendialog. Der Hinweis unter dem Ortsfeld
+verschwindet dann ebenfalls — er sagt aus, dass etwas hinausgeht, und dann
+geht nichts hinaus.
+
+Die Karte hat einen **eigenen** Speichern-Knopf; sie hängt nicht am Knopf
+darüber. Hat die **Installation** die Adresssuche abgeschaltet, steht der
+Schalter ausgegraut da und sagt es — dann ändert er nichts, und wer ihn
+braucht, wendet sich an die BetreiberIn.
+
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
 Es gibt ein Konto, in dem sich alles gefahrlos ausprobieren lässt:
@@ -939,7 +961,11 @@ auch eine zweistellige Jahreszahl (z. B. „23.04.33") — die Anwendung ergänz
 automatisch das plausible Jahrhundert. Der Einsatzort sucht beim Tippen: Ab
 drei Buchstaben erscheinen Adressvorschläge (OpenStreetMap); die Auswahl
 eines Vorschlags speichert die Koordinaten und setzt den Pin auf den Karten.
-Freitext ohne Vorschlag geht auch — dann ohne Pin.
+Freitext ohne Vorschlag geht auch — dann ohne Pin. **Unter dem ersten
+Ortsfeld einer Seite** steht eine Kleinzeile, die den Adressdienst beim Namen
+nennt und sagt, was ihn erreicht; sie fehlt, wenn die Adresssuche
+abgeschaltet ist (Abschnitt 3.1a). Sie steht nur einmal je Seite — auf der
+Standortseite wären es sonst zehn gleiche Sätze.
 
 **So wird eine Vorschlagsliste bedient** (seit Web 15.6.0 überall dieselbe —
 Einsatzort, Abfahrtort, Transportziel, Besatzung, weitere Rettungsmittel).
@@ -959,11 +985,31 @@ Suche ausdrücklich an — sie ersetzt das frühere zweite Suchfeld
 überschreibt. Der
 **Pin** öffnet ein Blatt mit zwei Wegen: **„Meine Position übernehmen"**
 (Standort des Geräts; der Browser fragt nach der Freigabe) und **„Auf der
-Karte wählen"** — eine Karte mit Fadenkreuz in der Mitte; verschieben, bis
-das Kreuz auf dem Ort steht, dann „Übernehmen". In beiden Fällen holt die
-Anwendung zur Koordinate eine Adresse (Photon/OpenStreetMap-Umkehrsuche);
-sie füllt das Feld nur, wenn es leer ist. Die Anfrage trägt ausschließlich
-die Koordinate — nie Namen, Diagnose oder andere Inhalte.
+Karte wählen"** — der Kartendialog. In beiden Fällen holt die Anwendung zur
+Koordinate eine Adresse (Umkehrsuche beim Adressdienst, Abschnitt 3.1a); sie
+füllt das Feld nur, wenn es leer ist. Die Anfrage trägt ausschließlich die
+Koordinate — nie Namen, Diagnose oder andere Inhalte.
+
+**Der Kartendialog** (seit Web 15.7.0 an fünf Stellen derselbe: Einsatzort,
+manueller Abfahrtort, Transportziel sowie die Lage von Standorten und
+Zielkliniken in den Stammdaten) zeigt eine Karte mit **Fadenkreuz in der
+Mitte**: verschieben, bis das Kreuz auf dem Ort steht, dann **„Übernehmen"**.
+Drei Dinge helfen beim Zielen:
+
+- Im Kopf steht ein **Suchfeld**. Ein Treffer daraus **setzt nur das Kreuz** —
+  die Karte fährt hin, ins Formular geschrieben wird nichts. Erst
+  „Übernehmen" übernimmt. So lässt sich ein Ort suchen und anschließend von
+  Hand genauer treffen, ohne dass eine ungenaue Adresse schon im Einsatz
+  steht. Ist die Adresssuche abgeschaltet (Abschnitt 3.1a), fehlt das Feld.
+- Ist für den Einsatz eine **GPS-Aufzeichnung** vorhanden, liegt sie als Linie
+  auf der Karte, mit Ring am Start und am Ende; eine Legende darunter sagt,
+  was was ist. Der Einsatzort liegt fast immer an dieser Linie — und mit ihr
+  vor Augen findet man ihn auch dann, wenn man die Gegend nicht kennt.
+- Ist das Ortsfeld noch **leer**, stellt sich die Karte beim Öffnen von selbst
+  auf diese Aufzeichnung ein. Steht schon eine Koordinate, bleibt sie der
+  Mittelpunkt — sie ist die Aussage, die Spur nur Zusatz. Und wer selbst
+  geschoben oder gezoomt hat, dem wird die Karte nicht mehr weggezogen, auch
+  wenn die Spur erst danach fertig geladen ist.
 
 **Gespeicherte Koordinaten stehen unter dem Feld.** Sobald Koordinaten gesetzt
 sind — egal ob über einen Adressvorschlag oder über eine der unten genannten
@@ -2224,7 +2270,11 @@ die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie im
 Feld **„Lage (optional)"** unter dem Namen: Adresse suchen, Koordinatenpaar
 oder Plus Code eintippen, der Vorschlag darunter übernimmt sie. Der **Name**
 bleibt dabei unberührt — „Standort Kempten" ist keine Adresse, und die Suche
-schreibt nur die Koordinaten.
+schreibt nur die Koordinaten. Seit Web 15.7.0 steht neben dem Feld auch der
+**Pin-Knopf** mit „Meine Position übernehmen" und dem Kartendialog (4.3) —
+bis dahin gab es ihn nur im Einsatzformular, und eine Lage ließ sich hier nur
+tippen, nicht zeigen. Eine Aufzeichnung liegt im Dialog nicht: Zu einem
+Standort gehört kein Einsatz, also gibt es nichts aufzuzeichnen.
 
 **Die Zeilenaktionen** stehen am Schreibtisch als Knöpfe rechts in der Zeile:
 „Als Vorbelegung" (setzt den Stern), „Bearbeiten" (füllt das Formular
@@ -2323,8 +2373,10 @@ und lässt den eingetragenen Namen stehen. Bis Web 15.5.2 waren das zwei
 getrennte Listen übereinander, und auf dem Handy blieben die Stammdaten
 unsichtbar.
 
-Zu jeder Zielklinik lassen sich **Koordinaten** hinterlegen, auf denselben drei
-Wegen wie beim Einsatzort (Adresssuche, Koordinatenpaar, Plus Code) und auf drei
+Zu jeder Zielklinik lassen sich **Koordinaten** hinterlegen, auf denselben
+Wegen wie beim Einsatzort — Adresssuche, Koordinatenpaar, Plus Code und seit
+Web 15.7.0 auch über den **Pin-Knopf** mit „Meine Position übernehmen" und dem
+Kartendialog (4.3) — und auf drei
 Ebenen: zentral durch die Verwaltung, hier im eigenen Konto und einmalig am
 einzelnen Einsatz. Wird ein Vorschlag mit hinterlegten Koordinaten übernommen,
 sind sie vorbelegt und lassen sich am Einsatz überschreiben.
@@ -2992,6 +3044,18 @@ Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
 Getippte. Sie entsteht auf dem Server, mit demselben Renderer wie die
 öffentliche Seite.
 
+**Textbaustein „Adresssuche"** (seit Web 15.7.0). Weil die Anwendung keinen
+Rechtstext mitliefert, kann sie den Absatz zur Adresssuche nicht selbst
+einsetzen — sie legt ihn aber bereit: Unter dem Feld für die
+Datenschutzerklärung steht ein fertiger Abschnitt zum **Kopieren**, in dem
+die tatsächlich eingetragene Dienstadresse (12.5) schon eingesetzt ist. Er
+nennt, was übertragen wird — der getippte Text und die Koordinate — und was
+nicht. Einfügen und an die eigene Erklärung anpassen musst du ihn selbst.
+
+Der Baustein erscheint nur, solange die Adresssuche eingeschaltet ist. Wer sie
+abschaltet, braucht den Absatz nicht — und ein Absatz über eine Übertragung,
+die nicht stattfindet, wäre falsch.
+
 ### 11.6 Demo-Konto
 
 Unter **Verwaltung → Demo-Konto** wird das Demo-Konto **angelegt**,
@@ -3314,6 +3378,29 @@ nur die Zusammensetzung, ohne Füllstand.
 
 Gemessen wird **einmal täglich** im Aufräumjob; der Stand steht im Kartenkopf.
 Darunter Speichergrenze, Warnschwellen, Ablage und Reste abgebrochener Läufe.
+
+**Karte „Adresssuche"** (seit Web 15.7.0). Beim Tippen in einem Ortsfeld und
+nach jeder Wahl auf der Karte fragt die Anwendung einen **Adressdienst** —
+vorwärts nach Vorschlägen zum getippten Text, rückwärts nach der Adresse zu
+einer Koordinate. Der getippte Text und die Koordinate verlassen dabei das
+Gerät; alles Übrige bleibt hier. Zwei Einstellungen:
+
+- **Adresssuche im Internet** — der Schalter für die **ganze Installation**.
+  Aus heißt: keine Vorschläge, keine Umkehrsuche, kein Suchfeld im
+  Kartendialog, kein Hinweis unter dem Ortsfeld — für alle Konten. Der
+  Schalter im Profil (3.1a) kann danach nur noch einschränken, nicht
+  wieder öffnen; er steht dann ausgegraut da und nennt den Grund.
+- **Dienst** — die Adresse eines Photon-Dienstes, mit `https://`. Vorgabe ist
+  der frei betriebene Gemeinschaftsdienst `https://photon.komoot.io`. **Wer
+  einen eigenen betreibt, trägt ihn hier ein** — dann verlassen die Anfragen
+  mit dem Einsatzort das eigene Haus nicht. Das braucht keine neue
+  Auslieferung und keine Änderung am Code.
+
+Die Karte hat ihr eigenes „Speichern": Ein Tippfehler in der Speichergrenze
+soll die Dienstadresse nicht mit abweisen und umgekehrt. Welcher Dienst
+eingetragen ist, erscheint anschließend im Hinweis unter dem Ortsfeld, in der
+Karte „Datenschutz" jedes Profils und im Textbaustein für die
+Datenschutzerklärung (11.5).
 
 ### 12.6 Komplett-Backup
 

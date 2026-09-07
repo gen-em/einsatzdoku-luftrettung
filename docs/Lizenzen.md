@@ -198,10 +198,30 @@ einen eigenen Kachelserver und trägt ihn in `map_layers.js` ein.
 
 ### 6.2 Adresssuche und Rückwärtssuche
 
-**Photon** (`photon.komoot.io`), betrieben von komoot, Daten aus
-OpenStreetMap unter **ODbL**. Angesprochen von `server/assets/ortsfeld.js`
-(Suche nach einer Adresse) und `server/assets/ortswahl.js` (Koordinaten →
-Adresse).
+**Photon**, Daten aus OpenStreetMap unter **ODbL**. Angesprochen von
+`server/assets/geocoder.js` — seit Web 15.7.0 die **einzige** Stelle, die
+nach draußen fragt; `ortsfeld.js` (Suche nach einer Adresse), `ortswahl.js`
+(Koordinaten → Adresse) und das Suchfeld des Kartendialogs rufen nur noch
+dieses Modul.
+
+**Welcher Photon-Dienst gefragt wird, entscheidet die Installation.** Die
+Vorgabe ist `https://photon.komoot.io`, betrieben von komoot; sie steht
+**einmal** in `server/geocoder_lib.php` (`GEOCODER_VORGABE`) und in keiner
+ausgelieferten Browserdatei — `grep -rn "komoot" server/assets/` = 0. Unter
+Betrieb → Servereinstellungen, Karte „Adresssuche", trägt die BetreiberIn eine
+andere Adresse ein; wer einen eigenen Photon betreibt, hält die Anfragen damit
+im eigenen Haus, ohne eine Zeile Code und ohne neue Auslieferung.
+
+**Zwei Schalter davor** (ebenfalls seit Web 15.7.0): einer für die
+Installation (`app_state`-Schlüssel `adresssuche`, Betrieb →
+Servereinstellungen), einer je Konto (`users.adresssuche`, Einstellungen →
+Profil, Karte „Datenschutz"). Beide stehen auf „an"; ist einer aus, unterbleibt
+**jede** Anfrage an den Dienst — Vorwärtssuche, Umkehrsuche und das Suchfeld im
+Kartendialog. Nachgemessen am Netzwerkprotokoll (`tools/klickprobe/`, Weg
+`ap2-kontoschalter-aus-keine-anfrage`): eingeschaltet 2 Anfragen auf demselben
+Weg, ausgeschaltet 0. Damit ist dies der einzige Laufzeitdienst des Projekts,
+der sich **abschalten** lässt; die Kartenkacheln (6.1) sind die Karte selbst
+und können es nicht.
 
 **Was dabei übertragen wird:** die eingetippten Buchstaben bzw. die gewählten
 Koordinaten.
@@ -210,8 +230,8 @@ Koordinaten.
 Vorher stand hier, die Suche laufe nur auf ausdrückliches Auslösen; für die
 Felder Standort und Zielklinik stimmt das nicht mehr. Sie suchen jetzt beim
 Tippen, weil ein Klick auf die Lupe für einen Weg, den man zwanzigmal am Tag
-geht, eine Handlung zu viel ist. Drei Grenzen fassen das ein
-(`server/assets/ortsfeld.js`):
+geht, eine Handlung zu viel ist. Drei Grenzen fassen das ein — seit Web
+15.7.0 in `server/assets/geocoder.js`, vorher in `ortsfeld.js`:
 
 | Grenze | Wert | wozu |
 |---|---|---|
@@ -231,6 +251,12 @@ Koordinaten, ruht die Adresssuche ganz.
 **Die Ende-zu-Ende-Verschlüsselung ist davon nicht berührt.** Gesucht wird,
 **bevor** aus der Eingabe ein gespeicherter — und damit verschlüsselter —
 Wert wird. Das war beim Klick auf die Lupe so und ist es beim Tippen.
+
+**Wer den Dienst nennen muss, bekommt den Satz dazu.** Die Anwendung liefert
+keinen Rechtstext mit (Handbuch 11.5); für den Datenschutztext liegt unter
+Verwaltung → Installation ein Textbaustein zum Kopieren bereit, in dem die
+tatsächlich eingetragene Dienstadresse schon steht. Dieselbe Adresse nennen
+die Kleinzeile unter dem Ortsfeld und die Karte „Datenschutz" im Profil.
 
 ---
 
@@ -417,6 +443,7 @@ Laufzeit wird nichts nachgeladen, die Zusage aus Abschnitt 2 bleibt unberührt.
 
 | Fassung | Was |
 |---|---|
+| Web 15.7.0 (S9/AP2) | Abschnitt 6.2 neu gefasst: Der Adressdienst ist **einstellbar** und **abschaltbar** geworden. Die Vorgabe `https://photon.komoot.io` steht nur noch in `server/geocoder_lib.php`; in den ausgelieferten Browserdateien kommt der Name nicht mehr vor. Zwei Schalter (Installation, Konto) können den Dienst ganz ausschalten — nachgemessen am Netzwerkprotokoll, nicht behauptet. |
 | Web 12.9.0 (S6) | Abschnitt 7a: die erzeugte Modelltabelle `server/geraetemodelle.php`. Sie liegt im ausgelieferten Verzeichnis und stammt aus Garmins Connect-IQ-Gerätedateien — übernommen sind Teilenummern und Produktnamen als Sachangaben, nicht die Dateien selbst. |
 | S4/D2 | `androidx.test:runner` 1.7.0 in Abschnitt 6a — der Läufer für die instrumentierten Prüffälle (Keystore, Wearable-Erreichbarkeit). Test-only, Apache-2.0, nicht im App-APK. |
 | Android 0.11.0 (S4-Rest) | Abschnitt 6a: **CameraX und ZXing ausgetragen** (R63, Backlog Nr. 84). Der Adress-QR entfällt, damit ihr einziger Verbraucher; die `CAMERA`-Berechtigung geht mit. Vier Fremdbestandteile werden zwei, das APK wird um 1,81 MB kleiner. |
