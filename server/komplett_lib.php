@@ -876,7 +876,7 @@ function komp_aad(string $bindung, int $i, bool $letzte): string
 /**
  * Der Schluessel aus einer Passphrase.
  *
- * DIESELBEN 320 000 RUNDEN WIE IM BROWSER (`KDF_ITER_ZIEL`). Eine zweite
+ * DIESELBEN 600 000 RUNDEN WIE IM BROWSER (`KDF_ITER_ZIEL`). Eine zweite
  * Zahl waere eine zweite Aussage darueber, was dieses Projekt fuer sicher
  * haelt — und die eine, die irgendwann nicht mehr nachgezogen wird.
  */
@@ -1394,7 +1394,7 @@ function komp_rueckstand_aus(array $z): ?int
  */
 function komp_kdf_runden(): int
 {
-    return defined('KDF_ITER_ZIEL') ? KDF_ITER_ZIEL : 320000;
+    return defined('KDF_ITER_ZIEL') ? KDF_ITER_ZIEL : 600000;
 }
 
 /**

@@ -778,11 +778,39 @@ function geraet_schluessel_gueltig(string $schluessel, string $hash): bool
  *
  * 310000 ist am 14.08.2026 entfallen, nachdem die Abfrage 0 ergab.
  *
+ * 600000 IST DER ZIELWERT SEIT DEM 07.09.2026 (Backlog Nr. 136, SP-1). 320000
+ * lag unter der Empfehlung (OWASP 2023, Bitwarden); gemessen kostet der Sprung
+ * je Ableitung rund das Doppelte und halbiert die Rate des Angreifers. 320000
+ * bleibt in der Liste, bis die Abfrage oben 0 ergibt — bis dahin rechnet jede
+ * Anmeldung zweimal ab, und die Wartungsseite zeigt, wer noch darauf steht.
+ *
  * REIHENFOLGE: Der Zielwert steht VORNE. Der Browser probiert nicht der Reihe
  * nach (er schickt alle Token), aber die Reihenfolge ist die Lesart.
  */
-const KDF_ITER_ZIEL  = 320000;
-const KDF_ITER_LISTE = [320000];
+const KDF_ITER_ZIEL  = 600000;
+const KDF_ITER_LISTE = [600000, 320000];
+
+/* ---- Mindestlaenge des Passworts ----------------------------------------
+ *
+ * DIE ZAHL, DIE DER SERVER NICHT DURCHSETZEN KANN. Er sieht das Passwort nie
+ * (er bekommt nur das abgeleitete Token), also ist sie hier eine ANGABE fuer
+ * die Formulare — `minlength` und die Zeile unter dem Feld — und nicht die
+ * Pruefung. Die Pruefung steht in `assets/pwquality.js` (`MIN_LAENGE`), und
+ * beide Zahlen muessen dieselbe sein.
+ *
+ * ZWEI STELLEN, WEIL PWQUALITY.JS EINE STATISCHE DATEI IST. Sie wird ueber
+ * `<script src>` geladen, bevor ui_krypto_bootstrap() seine Konstanten
+ * ausgibt — sie kann diese Zahl also nicht von hier lesen. Gegen das
+ * Auseinanderlaufen steht deshalb `EdPwQuality.beobachte()`: Es setzt
+ * `minLength` des Feldes beim Anhaengen auf seinen eigenen Wert. Wer hier
+ * etwas anderes hinschreibt als dort, bekommt eine falsche BESCHRIFTUNG,
+ * aber keine schwaechere Pruefung.
+ *
+ * 12 statt 10 seit dem Sofortpaket Sicherheit (Backlog Nr. 136, SP-2): Gegen
+ * einen Datenbankabzug ist das Passwort die einzige Schranke, und zwei
+ * Zeichen mehr sind dort mehr wert als jede Zeichenartenregel.
+ */
+const PW_MIN_LAENGE = 12;
 
 /* ---- Geraete je Konto: Obergrenze und Hinweisfenster ---------------------
  *

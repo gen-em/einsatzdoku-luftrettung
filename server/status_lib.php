@@ -104,6 +104,24 @@ function status_erhebung(): array
     $kdfVerwaist = $stk->fetchAll();
     $kdfSumme    = array_sum(array_column($kdfVerwaist, 'n'));
 
+    /* Konten, die noch auf einem ALTWERT der Liste stehen (Backlog Nr. 136,
+     * Fund F-9a-02). Die Zeile darunter meldete bisher nur verwaiste Werte —
+     * also den Fall, dass jemand einen Eintrag ZU FRUEH aus KDF_ITER_LISTE
+     * gestrichen hat. Die Frage davor beantwortete sie nicht: WANN darf er
+     * gestrichen werden? db.php nennt dafuer eine SQL-Abfrage von Hand, und
+     * SP-1 nimmt an, die Wartungsseite sage es. Sie sagte es nicht.
+     *
+     * Solange hier eine Zahl > 0 steht, rechnet JEDE Anmeldung zweimal ab
+     * (Uebergangszustand, db.php) — die Zahl ist damit auch die Auskunft
+     * darueber, was der Uebergang gerade kostet. */
+    $kdfAlt = 0;
+    if (count($kdfListe) > 1) {
+        $sta = $pdo->prepare('SELECT COUNT(*) FROM users
+                              WHERE password_hash IS NOT NULL AND kdf_iter <> ?');
+        $sta->execute([KDF_ITER_ZIEL]);
+        $kdfAlt = (int)$sta->fetchColumn();
+    }
+
     $sp          = speicher_uebersicht();
     $jobs        = jobs_zustand();
     $jobPause    = jobs_pause_bis();
@@ -153,15 +171,23 @@ function status_erhebung(): array
         $schluessel ? 'vorhanden' : 'fehlt',
         $schluessel ? null : 'admin_sicherungsziele.php');
 
-    $server[] = status_z('Schlüsselableitung',
-        $kdfVerwaist === []
-            ? 'Alle Konten rechnen mit einer Rundenzahl, die diese Fassung anbietet ('
-              . implode(', ', array_map('strval', $kdfListe)) . ')'
-            : $kdfSumme . ' Konto/Konten tragen eine Rundenzahl, die diese Fassung '
-              . 'nicht anbietet — sie können sich nicht anmelden. Behebung: den '
-              . 'fehlenden Wert in KDF_ITER_LISTE (server/db.php) wieder aufnehmen',
+    $kdfText = $kdfVerwaist === []
+        ? 'Alle Konten rechnen mit einer Rundenzahl, die diese Fassung anbietet ('
+          . implode(', ', array_map('strval', $kdfListe)) . ')'
+        : $kdfSumme . ' Konto/Konten tragen eine Rundenzahl, die diese Fassung '
+          . 'nicht anbietet — sie können sich nicht anmelden. Behebung: den '
+          . 'fehlenden Wert in KDF_ITER_LISTE (server/db.php) wieder aufnehmen';
+    if ($kdfAlt > 0) {
+        $kdfText .= '. ' . $kdfAlt . ' Konto/Konten stehen noch unter dem Zielwert '
+                  . KDF_ITER_ZIEL . ' — sie ziehen still nach, sobald sie sich das '
+                  . 'nächste Mal anmelden. Bis dahin rechnet jede Anmeldung zweimal '
+                  . 'ab; erst wenn hier keine Zahl mehr steht, darf der Altwert aus '
+                  . 'KDF_ITER_LISTE (server/db.php)';
+    }
+    $server[] = status_z('Schlüsselableitung', $kdfText,
         $kdfVerwaist === [] ? 'blau' : 'rot',
-        $kdfVerwaist === [] ? 'in Ordnung' : 'Anmeldung blockiert');
+        $kdfVerwaist !== [] ? 'Anmeldung blockiert'
+            : ($kdfAlt > 0 ? 'Übergang läuft' : 'in Ordnung'));
 
     /* Dass diese Seite überhaupt antwortet, beweist die Erreichbarkeit — die
        Zeile sagt deshalb die GRÖSSE. „Nicht erreichbar" käme nie zur Anzeige;

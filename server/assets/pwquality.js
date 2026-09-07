@@ -29,8 +29,22 @@ const EdPwQuality = (() => {
 
   /** Mindestlänge — für das Kontopasswort UND das Passwort einer
    *  Backup-Datei. Beide Stellen schützen dieselben Angaben; zwei
-   *  verschiedene Mindestlängen (10 und 8) waren nur historisch begründet. */
-  const MIN_LAENGE = 10;
+   *  verschiedene Mindestlängen (10 und 8) waren nur historisch begründet.
+   *
+   *  12 STATT 10 seit dem Sofortpaket Sicherheit (Backlog Nr. 136, SP-2).
+   *  Gegen einen Datenbankabzug ist das Passwort die einzige Schranke — der
+   *  Server sieht es nie und kann seine Güte nach Bauart nicht prüfen. Zwei
+   *  Zeichen mehr sind dort mehr wert als jede Regel über Zeichenarten.
+   *
+   *  DIE ZWEITE STELLE IST `PW_MIN_LAENGE` in `db.php`; von dort kommen
+   *  `minlength` und die Zeile unter dem Feld. Beide Zahlen müssen gleich
+   *  sein. Damit ein Auseinanderlaufen keine SCHWÄCHERE Prüfung ergibt,
+   *  setzt `beobachte()` unten `minLength` des Feldes auf diesen Wert. */
+  const MIN_LAENGE = 12;
+
+  /** Wie viel vom Passwort übrig bleiben muss, wenn man die geläufigen Wörter
+   *  und alle Ziffern herausstreicht — siehe `istHaeufig()`. */
+  const MIN_REST = 8;
 
   /* Kompakte Liste besonders häufiger Passwörter und Muster.
    *
@@ -53,12 +67,15 @@ const EdPwQuality = (() => {
        nur die luftgebundenen Woerter — an einem NEF-Standort fehlte damit
        genau das, was dort naheliegt.
 
-       KEINE Kuerzel wie "nef", "rth", "naw": Der Vergleich unten ist
-       `k === h || (h.length >= 6 && k.includes(h))`. Woerter unter sechs
-       Zeichen treffen also nur, wenn das GANZE normalisierte Passwort genau
-       so lautet — und ein dreibuchstabiges Passwort scheitert schon an der
-       Mindestlaenge. Ein Kuerzel in der Liste braeuchte einen Teilstring-
-       Vergleich, und der traefe massenhaft brauchbare Passwoerter.
+       KEINE Kuerzel wie "nef", "rth", "naw": Gestrichen wird unten nur, was
+       MINDESTENS SECHS ZEICHEN hat; kuerzere Woerter treffen nur, wenn das
+       GANZE normalisierte Passwort genau so lautet — und ein
+       dreibuchstabiges Passwort scheitert schon an der Mindestlaenge. Ein
+       Kuerzel als Teilstring traefe massenhaft brauchbare Passwoerter.
+       Aus demselben Grund stehen "wache", "koeln", "sonne" und "blume"
+       NICHT in der Erweiterung unten: Sie haben fuenf Zeichen und koennten
+       neben der Mindestlaenge nie greifen — ein Eintrag, der nie trifft,
+       sieht aus wie Schutz und ist keiner.
 
        KEIN "nadoku". Der kuenftige Produktname war vorgesehen, ist aber
        wieder herausgenommen: Der Vergleich ist ein Teilstring-Vergleich, und
@@ -80,6 +97,28 @@ const EdPwQuality = (() => {
        schon vorher da. */
     'notarztwagen', 'rettungswagen', 'notfallsanitaeter', 'rettungsdienst',
     'einsatzdoku',
+    /* Erweiterung Sofortpaket Sicherheit (Backlog Nr. 136, SP-2). Zwei
+       Gruppen, beide aus der Umgebung dieser Anwendung:
+
+       DIENSTLICHE WOERTER, die auf einer Rettungswache naheliegen und in der
+       Liste fehlten. "notarzt" und "rettung" standen schon da; was danebenlag,
+       stand nicht.
+
+       ORTE UND LAENDER. Die Liste nannte fuenf; die groesseren deutschen
+       Staedte und die Nachbarlaender kommen dazu. WAS SIE NICHT KANN: den
+       ORTSNAMEN DES EIGENEN STANDORTS. Der steht in den Stammdaten und
+       waere nur ueber eine Ausgabe der Standortnamen an die Passwortseite
+       zu haben -- auch an die UNANGEMELDETE (pw_handling.php im
+       Reset-Modus). Das waere eine neue Auskunft an jeden Besucher fuer
+       einen Gewinn, den die Mindestlaenge besser holt. Der Satz gehoert
+       stattdessen ins Handbuch 3.1: der eigene Standort ist ein schlechtes
+       Passwort, und niemand kann das hier nachpruefen. */
+    'feuerwehr', 'malteser', 'johanniter', 'sanitaet', 'notfall', 'leitstelle',
+    'ambulanz', 'intensiv', 'schockraum', 'dienst', 'station',
+    'frankfurt', 'stuttgart', 'duesseldorf', 'dortmund', 'leipzig',
+    'dresden', 'hannover', 'nuernberg', 'bremen', 'augsburg', 'regensburg',
+    'wuerzburg', 'oesterreich', 'schweiz', 'allgaeu',
+    'geburtstag', 'familie', 'urlaub', 'fussball',
   ];
 
   /** Kleinschreibung, Umlaute aufgelöst, Satzzeichen entfernt. */
@@ -94,6 +133,37 @@ const EdPwQuality = (() => {
   function kern(pw) { return normal(pw).replace(/\d+$/, ''); }
 
   /**
+   * Was vom Passwort übrig bleibt, wenn man jedes geläufige Wort und die
+   * angehängten Ziffern herausstreicht.
+   *
+   * WARUM ES DIESE FUNKTION GIBT (Sofortpaket Sicherheit, Backlog Nr. 136).
+   * Bis dahin wies die Prüfung JEDES Passwort ab, in dem irgendwo eines der
+   * Wörter vorkam. Das war mit der Empfehlung, die dieselbe Stufe aufstellt,
+   * nicht vereinbar: „Vier zufällige Wörter" ist der beste Rat, den man zur
+   * Passwortwahl geben kann — und „Anker-Winter-Regen-Glas" scheiterte
+   * daran, dass „winter" in der Liste steht. Eine Empfehlung, die die eigene
+   * Prüfung abweist, ist schlimmer als keine.
+   *
+   * Gemessen wird deshalb nicht mehr das VORKOMMEN, sondern der ANTEIL: Was
+   * bleibt übrig, wenn man die geläufigen Teile wegnimmt? Bleiben weniger als
+   * MIN_REST Zeichen, war das Passwort im Wesentlichen ein Listenwort mit
+   * Beiwerk. „Winterurlaub2026" behält „urlaub" (6) und wird abgewiesen,
+   * „Anker-Winter-Regen-Glas" behält „ankerregenglas" (14) und geht durch.
+   *
+   * ZIFFERN MITTENDRIN ZÄHLEN MIT, angehängte nicht. „xy7qw2zt4$" ist nicht
+   * schlechter als „xyqwzt" — würde man alle Ziffern streichen, fiele
+   * ausgerechnet ein gut gewürfeltes Passwort durch. Angehängte Ziffern sind
+   * die Jahreszahl hinter dem Wort und deshalb kein Beitrag.
+   */
+  function restwort(pw) {
+    let k = normal(pw);
+    for (const h of HAEUFIG) {
+      if (h.length >= 6 && k.includes(h)) { k = k.split(h).join(''); }
+    }
+    return k.replace(/\d+$/, '');
+  }
+
+  /**
    * Enthält das Passwort ein bekanntes Allerweltswort?
    *
    * Geprüft werden BEIDE Normalisierungen. Nur die gekürzte zu prüfen wäre ein
@@ -102,12 +172,12 @@ const EdPwQuality = (() => {
    */
   function istHaeufig(pw) {
     for (const k of [normal(pw), kern(pw)]) {
-      if (k === '') { continue; }
-      if (HAEUFIG.some(h => k === h || (h.length >= 6 && k.includes(h)))) { return true; }
+      if (k !== '' && HAEUFIG.some(h => k === h)) { return true; }
     }
     // Reine Ziffernfolge: unter 16 Stellen zu wenig, um von Hand gewählt
     // ausreichend zu sein — der Suchraum ist dort schlicht zu klein.
-    return /^\d+$/.test(String(pw)) && String(pw).length < 16;
+    if (/^\d+$/.test(String(pw)) && String(pw).length < 16) { return true; }
+    return restwort(pw).length < MIN_REST;
   }
 
   /** Nur eine Zeichenart in Folge, z. B. „aaaaaaaaaa" oder „1234567890". */
@@ -155,6 +225,15 @@ const EdPwQuality = (() => {
 
   const STUFEN = ['zu schwach', 'schwach', 'brauchbar', 'gut', 'stark'];
 
+  /* Der eine Rat, der wirklich hilft (SP-2, Backlog Nr. 136). Er steht in
+     JEDER Meldung, die etwas auszusetzen hat, statt nur im Handbuch: Wer hier
+     abgewiesen wird, hängt sonst ein Ausrufezeichen an und probiert es
+     nochmal. Länge schlägt Zeichenvielfalt — das ist die Rechnung eines
+     Rateangriffs und der Grund, warum `staerke()` unten die Länge dreimal
+     zählt und die Zeichenarten einmal. */
+  const RAT_PASSPHRASE = 'Am besten vier zufällige Wörter, die nichts '
+                       + 'miteinander zu tun haben.';
+
   /**
    * Vollständige Prüfung.
    * @returns {{erlaubt:boolean, staerke:number, stufe:string, meldung:string}}
@@ -163,12 +242,13 @@ const EdPwQuality = (() => {
     const s = String(pw == null ? '' : pw);
     if (s.length < MIN_LAENGE) {
       return { erlaubt: false, staerke: 0, stufe: STUFEN[0],
-               meldung: `Mindestens ${MIN_LAENGE} Zeichen.` };
+               meldung: `Mindestens ${MIN_LAENGE} Zeichen. ` + RAT_PASSPHRASE };
     }
     if (istHaeufig(s)) {
       return { erlaubt: false, staerke: 0, stufe: STUFEN[0],
-               meldung: 'Dieses Passwort ist zu geläufig — es steht in jeder Liste, '
-                      + 'die beim Durchprobieren zuerst versucht wird.' };
+               meldung: 'Dieses Passwort besteht im Wesentlichen aus geläufigen '
+                      + 'Wörtern — genau die werden beim Durchprobieren zuerst '
+                      + 'versucht. ' + RAT_PASSPHRASE };
     }
     if (istMuster(s)) {
       return { erlaubt: false, staerke: 0, stufe: STUFEN[0],
@@ -178,7 +258,7 @@ const EdPwQuality = (() => {
     return { erlaubt: true, staerke: st, stufe: STUFEN[st],
              meldung: st <= 1
                ? 'Das geht — länger wäre deutlich besser. Die Stärke des Passworts '
-                 + 'ist unmittelbar die Stärke der Verschlüsselung.'
+                 + 'ist unmittelbar die Stärke der Verschlüsselung. ' + RAT_PASSPHRASE
                : '' };
   }
 
@@ -223,6 +303,11 @@ const EdPwQuality = (() => {
    * aktuellen Prüfstand abfragt — zum Aufruf beim Absenden.
    */
   function beobachte(feld, anzeigeEl) {
+    /* Das HTML-Attribut auf denselben Wert ziehen. `minlength` kommt aus
+       PW_MIN_LAENGE (db.php) und ist damit die zweite Stelle, an der diese
+       Zahl steht; laufen die beiden auseinander, soll wenigstens die
+       STRENGERE gelten und nicht die, die zufällig im Markup stand. */
+    if (feld && typeof feld.minLength === 'number') { feld.minLength = MIN_LAENGE; }
     let letzte = pruefe('');
     const lauf = () => {
       letzte = pruefe(feld.value);
@@ -236,5 +321,5 @@ const EdPwQuality = (() => {
     return () => letzte;
   }
 
-  return { MIN_LAENGE, pruefe, staerke, anzeige, beobachte };
+  return { MIN_LAENGE, MIN_REST, pruefe, staerke, anzeige, beobachte };
 })();

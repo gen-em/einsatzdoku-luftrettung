@@ -932,9 +932,9 @@ ui_seite_start(['titel' => 'Einstellungen']);
                        'attr' => ' autocomplete="current-password"']); ?>
         <?php ui_feld(['label' => 'Neues Passwort', 'name' => 'new1', 'id' => 'pw_new1',
                        'art' => 'password', 'pflicht' => true,
-                       'klein' => 'Mindestens 10 Zeichen. Die Stärke des Passworts ist '
+                       'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen. Die Stärke des Passworts ist '
                                 . 'unmittelbar die Stärke der Verschlüsselung.',
-                       'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                       'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
         <span class="pwstaerke" id="pw_guete"></span>
         <?php ui_feld(['label' => 'Neues Passwort wiederholen', 'name' => 'new2', 'id' => 'pw_new2',
                        'art' => 'password', 'pflicht' => true,
@@ -1819,8 +1819,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
       <?php ui_feld(['label' => 'Passwort für das Backup', 'id' => 'bpw1',
                      'name' => 'password',
                      'art' => 'password', 'klasse' => 'bpw1-feld',
-                     'klein' => 'Mindestens 10 Zeichen.',
-                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                     'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen.',
+                     'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <span class="pwstaerke" id="bpwguete"></span>
       <div id="bpw2label">
         <?php ui_feld(['label' => 'Passwort wiederholen', 'id' => 'bpw2',

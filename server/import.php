@@ -216,8 +216,8 @@ ui_seite_start(['titel' => 'Import / Export']);
          bewusste Entscheidung sollte es bleiben.</p>
       <div id="exp_pw_fields" hidden>
         <?php ui_feld(['label' => 'Passwort', 'id' => 'exp_pw1', 'art' => 'password',
-                       'klein' => 'Mindestens 10 Zeichen.',
-                       'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                       'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen.',
+                       'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
         <span class="pwstaerke" id="exp_pw_guete"></span>
         <?php ui_feld(['label' => 'Passwort wiederholen', 'id' => 'exp_pw2',
                        'art' => 'password', 'attr' => ' autocomplete="new-password"']); ?>

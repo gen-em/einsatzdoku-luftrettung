@@ -307,12 +307,12 @@ ui_seite_start([
       <input type="hidden" name="wrap_rc"   id="wrap_rc">
       <input type="hidden" name="key_check" id="key_check">
       <?php ui_feld(['id' => 'pw1', 'label' => 'Passwort', 'art' => 'password',
-                     'pflicht' => true, 'klein' => 'Mindestens 10 Zeichen.',
-                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                     'pflicht' => true, 'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen.',
+                     'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <span class="pwstaerke" id="pwq"></span>
       <?php ui_feld(['id' => 'pw2', 'label' => 'Wiederholen', 'art' => 'password',
                      'pflicht' => true,
-                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                     'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Passwort festlegen', 'art' => 'primaer',
                       'breit' => true, 'attr' => ' id="gobtn"']) ?>
@@ -343,12 +343,12 @@ ui_seite_start([
                eingegeben ist und der Knopf gedrueckt wurde. */ ?>
       <p class="zustandszeile" id="rcstate"></p>
       <?php ui_feld(['id' => 'pw1', 'label' => 'Neues Passwort', 'art' => 'password',
-                     'pflicht' => true, 'klein' => 'Mindestens 10 Zeichen.',
-                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                     'pflicht' => true, 'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen.',
+                     'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <span class="pwstaerke" id="pwq"></span>
       <?php ui_feld(['id' => 'pw2', 'label' => 'Wiederholen', 'art' => 'password',
                      'pflicht' => true,
-                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                     'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Passwort speichern', 'art' => 'primaer', 'breit' => true]) ?>
       </div>

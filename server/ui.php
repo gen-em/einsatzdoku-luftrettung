@@ -2151,7 +2151,9 @@ function ui_ortsfeld(array $o): void
  *              die Huelle aus der API-Antwort bezieht (m.pat_wrap).
  *     keycheck true  -> zusaetzlich PAT_KEY_CHECK (Herkunftsabgleich beim
  *              Einspielen eines Backups)
- *     csrf     true  -> zusaetzlich CSRF
+ *     csrf     ohne Wirkung seit Backlog Nr. 136 — CSRF steht immer (siehe
+ *              unten). Das Feld wird noch angenommen, damit die Aufrufer
+ *              nicht angefasst werden muessen.
  *     einzug   Einrueckung der ausgegebenen Zeilen
  */
 function ui_krypto_bootstrap(array $o = []): void
@@ -2188,9 +2190,26 @@ function ui_krypto_bootstrap(array $o = []): void
        bekommt einen anderen Schluessel. */
     $zeilen[] = 'const KDF_ITER      = ' . json_encode($kdfIter) . ';';
     $zeilen[] = 'const KDF_ITER_ZIEL = ' . json_encode(KDF_ITER_ZIEL) . ';';
-    if (!empty($o['csrf'])) {
-        $zeilen[] = 'const CSRF = ' . json_encode($_SESSION['csrf'] ?? '') . ';';
-    }
+    /* CSRF IMMER, NICHT AUF ANFRAGE (Backlog Nr. 136, Fund F-9a-01).
+     *
+     * Bis zum Sofortpaket Sicherheit war das ein Schalter, und drei von sieben
+     * Seiten stellten ihn. Das war folgenlos, solange KDF_ITER_LISTE nur einen
+     * Eintrag hatte — mit dem Sprung auf 600 000 wurde daraus ein Fehler:
+     *
+     * Die stille Anhebung (unlock.js, loeseVormerkung) verlangt CSRF, weil sie
+     * `api/kdf_upgrade.php` ruft. Fehlt die Konstante, laeuft sie nicht — und
+     * schlimmer: `loeseVormerkung()` VERWIRFT danach das Vormerkfach. Die erste
+     * Seite nach dem Anmelden, die den Inhaltsschluessel braucht und kein CSRF
+     * traegt (`suche.php`, `zeitraum.php`, `einsatz.php`, `einsatz_form.php`),
+     * nimmt der Anhebung damit dauerhaft die Grundlage. Gemessen am
+     * Referenzbestand: Konto auf 320 000, Anmeldung, `suche.php` — Vormerkfach
+     * weg, Rundenzahl unveraendert, und beim naechsten Anmelden dasselbe.
+     *
+     * Der Schalter kostete also eine Sicherheitsmassnahme und sparte eine
+     * Zeile Markup. Das Feld `csrf` wird weiterhin angenommen und ignoriert;
+     * die Aufrufer nennen es teils noch.
+     */
+    $zeilen[] = 'const CSRF = ' . json_encode($_SESSION['csrf'] ?? '') . ';';
     $zeilen[] = '</script>';
 
     echo $ein, implode("\n" . $ein, $zeilen), "\n";

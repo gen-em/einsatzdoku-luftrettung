@@ -604,6 +604,26 @@ auf der ersten angemeldeten Seite ist es umgekehrt.
    den zugehörigen Datenschlüssel aus dem Fach, packt den Inhaltsschlüssel um
    und schickt ihn mit beiden Token an `api/kdf_upgrade.php`.
 
+**Warum `ui_krypto_bootstrap()` seit Web 15.6.0 immer `CSRF` ausgibt.** Schritt 3
+ruft einen API-Endpunkt und braucht dafür das Token. Bis dahin war das ein
+Schalter, und drei von sieben Seiten stellten ihn (`index.php`, `import.php`,
+der Sicherungsblock in `einstellungen.php`) — `suche.php`, `zeitraum.php`,
+`einsatz.php` und `einsatz_form.php` nicht. Wer nach dem Anmelden zuerst dorthin
+ging, bekam keine Anhebung; schlimmer, `loeseVormerkung()` **verwirft** das
+Vormerkfach auch dann, und damit war sie für diese Sitzung verloren. Folgenlos
+blieb das nur, solange `KDF_ITER_LISTE` einen einzigen Eintrag hatte. Mit der
+Anhebung auf 600 000 wurde daraus ein Fehler, gemessen am Referenzbestand: Konto
+auf 320 000, Anmeldung, `suche.php` — Fach weg, Rundenzahl unverändert, und beim
+nächsten Anmelden dasselbe. Der Schalter ist deshalb wirkungslos gestellt; das
+Feld `csrf` wird noch angenommen und ignoriert.
+
+**Wann der Altwert aus `KDF_ITER_LISTE` verschwinden darf**, sagt die
+Wartungsseite (Betrieb → Status, Zeile „Schlüsselableitung"): Sie nennt seit
+Web 15.6.0 nicht nur verwaiste Rundenzahlen, sondern auch, **wie viele Konten
+noch unter dem Zielwert stehen**. Solange dort eine Zahl steht, rechnet jede
+Anmeldung zweimal ab — 298 ms plus 551 ms statt 551 ms, gemessen auf einem Kern
+des Prüfcontainers. Steht keine mehr, darf der Altwert gestrichen werden.
+
 Der Endpunkt verlangt das **alte** Token als Nachweis (er setzt den Hash, gegen
 den sich das Konto anmeldet — ohne Nachweis wäre er ein Weg, aus einer
 übernommenen Sitzung ein beliebiges Passwort zu setzen), akzeptiert nur Werte
@@ -3127,8 +3147,9 @@ jeden Block unlesbar.
 
 Der Schlüssel ist entweder der **Serverschlüssel** aus `config.php`
 (Regelfall, `kdf: null`) oder aus einer **Passphrase** abgeleitet (PBKDF2,
-`KDF_ITER_ZIEL` = 320 000 Runden, dieselbe Zahl wie im Browser). Was gilt,
-steht im Kopf; raten muss das niemand.
+`KDF_ITER_ZIEL` = 600 000 Runden, dieselbe Zahl wie im Browser). Was gilt,
+steht im Kopf; raten muss das niemand — und deshalb bleibt eine ältere Datei
+mit 320 000 im Kopf auch nach der Anhebung lesbar.
 
 #### Zwei Wege heraus
 

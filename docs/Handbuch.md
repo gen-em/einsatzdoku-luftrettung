@@ -342,12 +342,38 @@ verschlüsselten Daten vorliegen.
 wird der vorherige damit ungültig. Nimm also die neueste E-Mail — eine ältere
 führt zu „Link ungültig oder abgelaufen".
 
+**Mindestens zwölf Zeichen** (bis Web 15.5.2 waren es zehn). **Am besten vier
+zufällige Wörter, die nichts miteinander zu tun haben** — „Anker Winter Regen
+Glas" ist leichter zu merken und schwerer zu raten als „Kl!n1k2026". Länge
+zählt hier mehr als Sonderzeichen, und das ist keine Geschmacksfrage, sondern
+die Rechnung eines Rateangriffs.
+
+**Warum das mehr wiegt als sonst.** Wer die Datenbank stiehlt, kann dein
+Passwort ausprobieren, so oft er will — auf seinem eigenen Rechner, ohne
+Sperre nach Fehlversuchen und ohne dass es jemand merkt. Der einzige Schutz
+dagegen ist ein Passwort, das sich nicht raten lässt. Der Server kann dabei
+nicht helfen: Er sieht das Passwort nie (Abschnitt 5), also kann er seine Güte
+auch nicht prüfen. Was die Seite prüft, prüft dein Browser.
+
+**Was die Seite abweist:** geläufige Wörter und Muster — auch dienstliche wie
+„Notarzt" oder „Rettung", auch mit angehängter Jahreszahl. Gemessen wird nicht
+das Vorkommen, sondern der Anteil: „Winterurlaub2026" ist im Kern ein
+Listenwort, „Anker-Winter-Regen-Glas" nicht. **Was sie nicht kennen kann, ist
+der Name deines eigenen Standorts** — er steht in den Stammdaten und nicht in
+der Liste im Browser. Er ist trotzdem ein schlechtes Passwort.
+
 **Die Passwortstärke** zeigt sich beim Tippen als Balken aus vier Segmenten:
 je mehr gefüllt, desto besser. Rot heißt zu kurz oder zu leicht zu raten,
 Orange geht, Dunkelblau ist gut. Die Stärke des Passworts ist unmittelbar die
 Stärke der Verschlüsselung — es schützt nicht nur den Zugang, sondern leitet
 den Schlüssel ab, mit dem Diagnose, Alter und Einsatzort verschlüsselt werden
 (Abschnitt 5).
+
+**Die erste Anmeldung nach dem Update dauert länger.** Seit Web 15.6.0 rechnet
+der Browser mit 600 000 statt 320 000 Runden; solange ein Konto noch auf der
+alten Zahl steht, rechnet die Anmeldung beides durch und braucht dafür etwa die
+doppelte Zeit. Das hört von selbst auf: Beim ersten Anmelden wird das Konto
+still nachgezogen, danach ist es wieder eine Rechnung. Zu tun ist nichts.
 
 **Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
 Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
@@ -1623,7 +1649,7 @@ Datei und kann nicht auseinanderlaufen.
 
 Unter **Einstellungen → „Backup"** (Zahnrad in der Kopfleiste) lädst du alle
 deine Daten als **eine** verschlüsselte Datei (`.edbak`) herunter — Passwort
-frei wählbar, mindestens 10 Zeichen, wird nirgends gespeichert. In dieser
+frei wählbar, mindestens 12 Zeichen, wird nirgends gespeichert. In dieser
 Datei stehen **alle geschützten Angaben im Klartext**; zwischen ihnen und
 jedem, der die Datei in die Hand bekommt, steht nur dieses Passwort.
 
@@ -1700,7 +1726,7 @@ wissen: Die nimmt die Datei zwar an, kennt den Papierkorb darin aber nicht und
 legt seine Einträge als aktive Einsätze und Diensttage an. Dort also
 anschließend nachsehen.
 
-**Das Backup-Passwort.** Mindestens zehn Zeichen, und die Seite sagt während
+**Das Backup-Passwort.** Mindestens zwölf Zeichen, und die Seite sagt während
 der Eingabe, wie stark das Gewählte ist. Wer mag, setzt stattdessen das Häkchen
 **„Mein Kontopasswort verwenden“** und tippt sein Anmeldepasswort ein — dann
 gibt es ein Passwort weniger zu verwahren, und die Datei ist genauso geschützt
@@ -1976,7 +2002,7 @@ Excel-Formate brauchen das nicht — dort entstehen echte Textzellen.
 **Mit Passwort schützen** ist seit Web 5.7.0 **vorbelegt** — der Schutz ist der
 Normalfall, nicht die Ausnahme. Abwählen bleibt jederzeit möglich; nur muss man
 es jetzt bewusst tun statt es zu vergessen. Verschlüsselt wird mit AES-256,
-mindestens zehn Zeichen, dieselbe Prüfung wie beim Anmeldepasswort. Anders als
+mindestens zwölf Zeichen, dieselbe Prüfung wie beim Anmeldepasswort. Anders als
 beim Backup wird hier **nicht** angeboten, das Kontopasswort zu verwenden: Eine
 Exportdatei ist zum Weitergeben gedacht.
 
