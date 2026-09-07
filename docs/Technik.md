@@ -589,6 +589,29 @@ Web 2.7.0 ersatzlos. Passwort-Ändern re-wrappt clientseitig **und atomar**:
 Lässt sich der Inhaltsschlüssel nicht umpacken, wird auch das Passwort nicht
 geändert. Eine Admin-Passwortvergabe existiert bewusst nicht.
 
+**Der Wechsel der Anmeldeadresse verlangt seit Web 15.6.0 einen
+Passwortnachweis** (Backlog Nr. 128, K-7). Bis dahin schrieb
+`einstellungen.php` sie allein mit dem CSRF-Token um: Wer eine offene Sitzung
+übernahm, konnte die Adresse auf seine eigene setzen, sich den Setz-Link
+schicken lassen und das Konto übernehmen. Die geschützten Angaben blieben zu —
+der Reset-Weg verlangt den Wiederherstellungsschlüssel —, aber die
+Klartextfelder nicht, und die rechtmäßige Besitzerin war ausgesperrt.
+
+Der Nachweis ist derselbe wie beim Passwortwechsel: `old_token`, im Browser
+aus dem aktuellen Passwort abgeleitet (`EdCrypto.deriveKeys(pw, KDF_SALT,
+KDF_ITER)`). Er wird **nur beim tatsächlichen Wechsel** verlangt — Name und
+Logo bleiben frei —, und `session_epoch` bleibt unverändert: Es hat sich kein
+Passwort geändert.
+
+Auf beiden Wegen — Profil und Verwaltung (`admin_user.php`) — geht danach eine
+**Hinweismail an die ALTE Adresse** (`profil_adresswechsel_melden()` in
+`email_lib.php`). Sie ist die einzige Stelle, an der die Besitzerin von einem
+unterschobenen Wechsel erfährt, und geht deshalb an die alte und nicht an die
+neue: Die neue gehört im Missbrauchsfall dem anderen. Scheitert der Versand,
+steht das im Fehlerprotokoll und der Wechsel bleibt bestehen — ihn
+zurückzurollen, weil ein Mailserver klemmt, wäre die schlechtere Wahl. Die
+**Bestätigung der neuen** Adresse (Double-Opt-In) kommt mit R37.6 in P5.
+
 **Das Anmeldeformular trägt seit Web 15.6.0 ein Formular-Token** (Backlog
 Nr. 127, K-8). Bis dahin war es das einzige Formular ohne: Eine fremde Seite
 konnte einen abgemeldeten Browser per Top-Level-POST in ein **Angreiferkonto**

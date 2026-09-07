@@ -426,6 +426,20 @@ Unter dem Zahnrad → **Profil** stehen dein Anzeigename (er erscheint in der
 Kopfleiste neben der Marke), deine Anmelde-Adresse und seit Web 9.7.0 die
 **Logo-Wahl**.
 
+**Die E-Mail-Adresse zu ändern verlangt seit Web 15.6.0 dein aktuelles
+Passwort.** Sie ist die Anmeldung zu diesem Konto: Wer sie ändert, ändert, wer
+hereinkommt — und wer sich anschließend den Link „Passwort vergessen" schicken
+lässt, ändert, wem das Konto gehört. Deshalb steht unter der Adresse ein Feld
+für das Passwort. Für **Name und Logo** brauchst du es nicht; leer lassen
+genügt, solange die Adresse stehen bleibt.
+
+**An die alte Adresse geht eine Nachricht.** Sie sagt, welche Adresse jetzt
+gilt und dass du dich melden sollst, falls du es nicht warst. Sie geht bewusst
+an die **alte** Adresse — sie ist die einzige, die im Missbrauchsfall noch dir
+gehört. Dasselbe gilt, wenn die Verwaltung die Adresse eines Kontos ändert
+(11.1). Eine **Bestätigung der neuen** Adresse gibt es noch nicht; die neue
+gilt sofort.
+
 Seit Web 15.0.0 steht dort auch deine **Rolle** — NutzerIn, Admin oder
 BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter dem
 Zahnrad verschieden viel sehen; geändert wird sie in der Verwaltung
@@ -2677,7 +2691,7 @@ Darunter:
 
 | Karte | Was dort steht |
 |---|---|
-| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. |
+| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
