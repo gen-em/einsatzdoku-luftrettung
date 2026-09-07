@@ -693,7 +693,7 @@ Zahlen: Schildmaße **7 von 7** getroffen; Pfeile **12 von 12** und **2 von 2**
 auf der Spur; Windenkacheln **2 / 2 mit „0" / 0**; Artzeichen **6 von 6**;
 Wortliste **0/0/0** bei 96 Regeln mit neuer Regel `spur`; `grep -c "Spur"
 docs/Handbuch.md` **41 → 0**; Klickprobe **6 von 6** Wegen; Vollständigkeit
-**304 = 304**; Kontraste **21/0**; Linkprobe **134/0**.
+**304 = 304**; Kontraste **21/0**; Linkprobe **134/0**; Bilderlauf zehn berührte Seiten **80 Bilder, 0/0/0** in beiden Bedienhöhen.
 
 **Zwei Fragen offen** (Prüfdokument Abschnitt 4): die Lesbarkeit von
 `veranstaltung.svg` bei 18 px — beide Mockups zeichnen mit Strich 1,8, die
