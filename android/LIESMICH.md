@@ -393,6 +393,48 @@ Emulator ist er über `10.0.2.2` also nicht zu erreichen. Der erste Versuch
 dieses Pakets endete deshalb dreimal bei „Keine Verbindung", und die Ursache
 lag nicht dort, wo man sie suchte.
 
+### Warum kein Certificate Pinning (Backlog Nr. 143, Krypto-Review AN-3)
+
+Die App prüft das Serverzertifikat so, wie Android es tut: gegen die
+Wurzelzertifikate des Systems. Sie pinnt weder das Zertifikat noch den
+öffentlichen Schlüssel des Servers. Das ist eine **Entscheidung**, keine
+Lücke — festgehalten am 07.09.2026, nachdem der Review sie nirgends fand.
+
+**Warum nicht.** Die Serveradresse ist fest (R63), ihr Zertifikat ist es
+nicht: Jedes öffentlich beglaubigte Zertifikat rotiert — bei Let's Encrypt
+alle 90 Tage —, und der Betreiber wechselt Aussteller und Kette, wann er
+will. Ein Pin auf das Zertifikat wäre nach spätestens 90 Tagen ungültig;
+jede Installation im Feld verlöre dann die Verbindung, und die einzige
+Abhilfe wäre ein neues APK über den Store — das genau die Geräte nicht
+erreicht, die gerade nicht senden können. Ein Pin auf den Schlüssel des
+Ausstellers hält länger, bricht aber ebenso ohne Vorwarnung, wenn der
+Aussteller seine Zwischenzertifikate tauscht (Let's Encrypt hat das 2024
+getan). Ein Pin mit vorgehaltenem Ersatzschlüssel verlangte, dass jemand die
+Schlüsselpaare führt, sicher verwahrt und rechtzeitig wechselt — dieses
+Projekt hat dafür keine Stelle, und ein Pin, den niemand pflegt, ist ein
+Ausfall mit Verzögerung.
+
+**Was ein Pin gebracht hätte:** Schutz gegen eine Wurzel, die dem Gerät
+untergeschoben wurde — eine Firmen-CA, ein Abhörproxy mit installiertem
+Zertifikat. Den größeren Teil davon leistet Android seit Fassung 7 von
+selbst: Apps trauen benutzerinstallierten Wurzeln nicht, sofern sie es nicht
+ausdrücklich erlauben, und diese App erlaubt es nicht (die
+Netzsicherheitsregel des Release-Baus setzt keine `<trust-anchors>`). Was
+bleibt, ist eine Wurzel im Systemspeicher — also ein Gerät, das nicht mehr
+seiner Nutzerin gehört. Gegen das hilft kein Pin, weil derselbe Angreifer
+auch das APK austauschen kann.
+
+**Wo die Sicherheitsaussage stattdessen liegt:** beim Geräteschlüssel. Er
+reist nur über HTTPS (E-S4-14, Nr. 142), folgt keiner Umleitung (Android
+0.13.0), und der Server kennt ihn nur als SHA-256 (E-S5-42). Wer die
+Verbindung trotz allem mitliest, hat ein Gerät in der Hand — und dann trennt
+die Kontoinhaberin es im Web (Handbuch 10), was den Schlüssel ungültig macht.
+
+**Wann das neu zu entscheiden wäre:** wenn die App mit Installationen
+spricht, deren Betreiber die App nicht selbst bauen, oder wenn der Betreiber
+eine eigene Zertifikatskette mit vorgehaltenen Ersatzschlüsseln führt. Beides
+steht nicht an.
+
 ### Der Versionscode: zwei Zahlen, eine Fassung
 
 Seit Android 0.11.1 (Backlog Nr. 98) tragen die beiden Module **verschiedene**
