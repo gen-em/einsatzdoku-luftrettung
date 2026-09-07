@@ -486,6 +486,33 @@ const PAIR_LEN     = 6;
 const PAIR_TTL_MIN = 10;
 const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
 
+/* ---- Ersetzfenster der Geraete (Backlog Nr. 134, K-14, F-SP-8) ------------
+ *
+ * WOGEGEN. Der Geraeteschluessel liegt auf der Garmin-Uhr im Klartext
+ * (`watch/source/Pair.mc`; die Plattform hat nichts Besseres). Lesen kann ein
+ * Finder nichts -- `ingest.php` ist POST-only --, aber er kann Einsaetze
+ * hochladen und die Phasen BESTEHENDER Einsaetze ersetzen, bis das Geraet im
+ * Web getrennt ist.
+ *
+ * WAS SCHON GESCHUETZT WAR: Einsaetze mit `manual = 1` uebergeht `ingest.php`
+ * ganz (jemand hat sie im Web bearbeitet), und Phasen werden nur ersetzt, wenn
+ * der Upload mindestens so viele bringt wie gespeichert sind. Offen blieb der
+ * UNBEARBEITETE Einsatz von vor drei Wochen.
+ *
+ * DIE ZAHL. 72 Stunden ab dem gespeicherten `started_at` des Datensatzes --
+ * nicht ab dem gesendeten, den bestimmt der Absender. 48 h waeren knapper,
+ * aber ein Freitagsdienst, der erst am Montag synchronisiert, kaeme nicht mehr
+ * nach; 7 Tage deckten Urlaub mit Uhr im Koffer und gaeben einem Finder eine
+ * ganze Woche. Entschieden am 06.09.2026 (F-SP-8).
+ *
+ * WAS DANACH GESCHIEHT: `ok` OHNE zu ersetzen. Kein Fehler auf der Uhr -- sie
+ * wuerde sonst endlos wiederholen --, aber in der Antwort benannt
+ * (`kept_phases`, `kept_resus`, `kept_points`; JSON-Vertrag 5). NEUE Einsaetze
+ * werden immer angenommen: Sie sind sichtbar und loeschbar, und sie
+ * ueberschreiben nichts.
+ */
+const INGEST_ERSETZFENSTER_H = 72;
+
 /* ---- Obergrenze offener Kopplungssitzungen (S5, E-S5-14, E-S5-34) --------
  *
  * Seit Web 13.0.0 legt jedes Geraet mit `start` OHNE Anmeldung eine Sitzung

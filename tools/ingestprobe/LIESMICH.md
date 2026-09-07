@@ -32,6 +32,26 @@ Geprüft wird ein **Endpunkt**: Kopfzeilen, Authentifizierung, JSON-Antwort. Ein
 Funktionsaufruf umginge die Hälfte davon. Die Probe spricht deshalb mit
 `ingest.php` so, wie die Uhr es tut.
 
+## Die Zeitstempel liegen in der Gegenwart (seit Web 15.6.0)
+
+Bis dahin standen in der Probe **feste März-Daten**. Mit dem **Ersetzfenster**
+(Backlog Nr. 134) ist das kein Detail mehr: Ein zweites Paket an einen
+Datensatz, dessen `started_at` älter als 72 Stunden ist, wird nicht mehr
+übernommen — und die halbe Probe prüft genau solche zweiten Pakete. Zehn
+Erwartungen kippten daran, **keine davon zu Recht**: Gemessen wurde ein Fall,
+den es im Betrieb nicht gibt, denn eine Uhr lädt hoch, während der Dienst
+läuft.
+
+Die Zeitpunkte hängen deshalb an `time()` (`$zeitpunkt(tageZurück, 'HH:MM')`)
+und liegen höchstens 66 Stunden zurück. Das Fenster selbst prüft **Teil 9** mit
+einem eigenen Datensatz, dessen `started_at` nach dem ersten Paket per SQL
+zurückdatiert wird — ausnahmsweise per SQL, weil ein Uhr-Paket `started_at`
+eines bestehenden Datensatzes gar nicht mehr ändern kann. Genau das ist der
+Punkt.
+
+Gemessen: **1 Paket angenommen, 1 abgewiesen**, dazu die Gegenprobe, dass ein
+**neuer** Einsatz weiterhin entsteht.
+
 ## Was sie am Bestand ändert
 
 Sie legt ihr **eigenes Konto** (`ingestprobe@gen-em.org`) samt Gerät an und

@@ -691,10 +691,20 @@ Zusätzlich können auftreten:
 | Feld | Bedeutung |
 |---|---|
 | `rejected` | verworfene Einzelwerte, nach Ursache gezählt (z. B. `phases.phase: ausserhalb von 2…9` → 2) |
-| `kept_phases` | die gesendete Phasenliste wurde übergangen (leer oder kürzer als der vorhandene Stand); der Wert nennt die **Anzahl der behaltenen** Einträge |
+| `kept_phases` | die gesendete Phasenliste wurde übergangen (leer oder kürzer als der vorhandene Stand, **oder das Ersetzfenster ist zu**); der Wert nennt die **Anzahl der behaltenen** Einträge |
 | `kept_resus` | dasselbe für die Reanimationssitzungen |
+| `kept_points` | die gesendeten Punkte wurden **nicht angehängt**, weil das Ersetzfenster zu ist; der Wert nennt ihre Anzahl. Sie sind quittiert (`next_seq` wandert weiter), die Uhr darf sie löschen |
 | `dropped_points` | Punkte, die der Server nach der **Ausdünnung** der Spur nicht mehr annimmt (S2, E-S2-08). Sie sind quittiert; die Uhr darf sie löschen. Erscheint nur, wenn tatsächlich verworfen wurde, und ist **kein** Datenfehler — deshalb steht es nicht in `rejected` |
 | `cut_points` | Punkte, die in einen **herausgeschnittenen** Zeitraum fallen (S4, E-S4-53). Aus dieser Spur ist ein Einsatz geschnitten worden; die Punkte stehen dort bereits. Sie sind quittiert, die Uhr darf sie löschen. Wie `dropped_points` kein Datenfehler — und bewusst ein eigenes Feld: Ausdünnung und Schnitt sind verschiedene Vorgänge, und in der Fehlersuche will man sie unterscheiden |
+
+> **Das Ersetzfenster** (seit Web 15.6.0, Backlog Nr. 134). Ein **bestehender**
+> Datensatz lässt sich nur **72 Stunden** ab seinem gespeicherten `started_at`
+> von seinem Gerät verändern. Danach antwortet `ingest.php` weiterhin mit
+> `ok` — ein Fehler ließe die Uhr endlos wiederholen —, übernimmt aber weder
+> Metadaten noch Phasen, Reanimation oder Punkte und sagt das über die
+> `kept_*`-Felder. **Neue** Datensätze sind nicht betroffen: Sie werden immer
+> angenommen. Der Grund steht in `docs/Technik.md` 4.99a2; für die Uhr ändert
+> sich nichts, was sie tun müsste.
 
 Ein `ok: true` mit gefülltem `rejected` oder einem `kept_*` bedeutet: Der
 Upload ist angekommen, aber **nicht vollständig übernommen**. Die Uhr sollte

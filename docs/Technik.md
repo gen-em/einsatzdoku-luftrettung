@@ -4322,6 +4322,51 @@ Lokale Variablen lassen sich übrigens **nicht** annotieren
 („Local variable types are inferred"); die Zusicherung gehört dann an die
 Zuweisung.
 
+### 4.99a2 Das Ersetzfenster der Geräte (ab Web 15.6.0, Backlog Nr. 134)
+
+**Wogegen.** Der Geräteschlüssel liegt auf der Garmin-Uhr im Klartext
+(`watch/source/Pair.mc`; die Plattform hat nichts Besseres — die Wear-OS-Uhr
+kennt gar keine Zugangsdaten, dort sendet das Handy). Lesen kann ein Finder
+nichts, `ingest.php` ist POST-only. Er kann aber **hochladen**, und damit bis
+Web 15.5.2 die Phasen bestehender Einsätze ersetzen — so lange, bis das Gerät
+im Web getrennt ist.
+
+**Was schon geschützt war:** Ein Einsatz mit `manual = 1` — jemand hat ihn im
+Web bearbeitet — wird ganz übergangen, und Phasen werden nur ersetzt, wenn der
+Upload mindestens so viele bringt wie gespeichert sind. Offen blieb der
+**unbearbeitete** Einsatz von vor drei Wochen.
+
+**Die Regel.** Ein **bestehender** Datensatz lässt sich nur
+`INGEST_ERSETZFENSTER_H` = **72 Stunden** ab seinem **gespeicherten**
+`started_at` von seinem Gerät verändern — nicht ab dem gesendeten, den bestimmt
+der Absender. Danach: `ok` **ohne** Metadaten-Upsert, ohne Phasen- und
+Reanimationsersatz und **ohne Anhängen von Punkten**, benannt über
+`kept_phases`, `kept_resus` und `kept_points` (JSON-Vertrag 5). Kein Fehler —
+die Uhr wiederholte sonst endlos —, und `next_seq` wandert weiter, damit sie
+aufhört zu senden.
+
+**Warum die Punkte anders behandelt werden als bei `manual`.** Dort wird
+weiter angehängt: Der Inhalt ist bearbeitet, die Spur nicht, und Anhängen ist
+unkritisch. Hier ist der **Absender** der Unsichere — ein Finder schriebe
+sonst seine eigene Fahrt in die Spur eines drei Wochen alten Einsatzes.
+
+**Warum 72 und nicht 48 oder 7 Tage** (F-SP-8, 06.09.2026): 48 h wären knapper,
+aber ein Freitagsdienst, der erst am Montag synchronisiert, käme nicht mehr
+nach. 7 Tage deckten Urlaub mit Uhr im Koffer — und gäben einem Finder eine
+ganze Woche.
+
+**Neue Datensätze werden immer angenommen.** Sie sind sichtbar und löschbar und
+überschreiben nichts. Der Weg gegen eine verlorene Uhr bleibt das **Trennen**
+des Geräts (Handbuch 12); das Fenster begrenzt nur, was bis dahin geschehen
+kann.
+
+Nachweis: `tools/ingestprobe/` Teil 9 — **1 Paket angenommen, 1 abgewiesen**,
+dazu die Gegenprobe, dass ein neuer Einsatz weiterhin entsteht. Dieselbe Stufe
+hat die Zeitstempel der ganzen Probe auf `time()` umgestellt: Sie standen auf
+festen März-Daten, und damit prüfte die halbe Probe zweite Pakete an
+Datensätzen, die das Fenster längst verlassen hatten — zehn Erwartungen
+kippten, keine davon zu Recht.
+
 ### 4.99b Bedrohungsmodell der Kopplung (ab Web 13.0.0, S5)
 
 Die Kopplung ist die eine Stelle, an der ein fremdes Gerät in ein fremdes

@@ -129,18 +129,46 @@ function senden(array $koerper, ?string $dev = null, ?string $key = null): array
     return ['code' => $code, 'daten' => is_array($d) ? $d : ['roh' => $roh]];
 }
 
+/* ---- DIE ZEITSTEMPEL LIEGEN IM ERSETZFENSTER (Backlog Nr. 134) ------------
+ *
+ * Bis Web 15.5.2 standen hier feste Maerz-Daten. Seit dem Ersetzfenster ist
+ * das kein Detail mehr: Ein zweites Paket an einen Datensatz, dessen
+ * `started_at` aelter als INGEST_ERSETZFENSTER_H ist, wird nicht mehr
+ * uebernommen -- und die halbe Probe pruefte genau solche zweiten Pakete.
+ * Zehn Erwartungen kippten, keine davon zu Recht: Gemessen wurde ein Fall, den
+ * es im Betrieb nicht gibt, denn eine Uhr laedt hoch, waehrend der Dienst
+ * laeuft.
+ *
+ * Die Zeitpunkte haengen deshalb an `time()`. Vier Bloecke, zwei Kalendertage
+ * -- die Bloecke unterscheiden sich ueber `client_ref`, nicht ueber den Tag.
+ * Das Fenster selbst prueft Teil "Ersetzfenster" weiter unten mit einem
+ * eigenen, absichtlich alten Datensatz. */
+$zeitpunkt = static function (int $tageZurueck, string $uhrzeit): string {
+    return gmdate('Y-m-d', time() - $tageZurueck * 86400) . 'T' . $uhrzeit . ':00Z';
+};
+$tagVon = static fn(string $ts): string => substr($ts, 0, 10);
+
+/* Vier Zeitachsen, alle innerhalb des Fensters (hoechstens 66 h alt). */
+$tsA = $zeitpunkt(2, '06:00');   $tsAe = $zeitpunkt(2, '08:00');
+$tsB = $zeitpunkt(2, '14:00');   $tsBe = $zeitpunkt(2, '15:00');
+$tsC = $zeitpunkt(1, '06:00');   $tsCe = $zeitpunkt(1, '08:00');
+$tsCk = $zeitpunkt(1, '09:30');
+$tsD = $zeitpunkt(1, '12:00');   $tsDe = $zeitpunkt(1, '13:00');
+$tsE = $zeitpunkt(1, '16:00');   $tsEe = $zeitpunkt(1, '17:00');
+
 /** Ein Paket mit n Punkten ab seq_from. */
 function paket(string $ref, int $seqFrom, int $n, bool $final = false,
                int $tsBasis = 1750000000): array {
+    global $tsA, $tsAe, $tagVon;
     $punkte = [];
     for ($i = 0; $i < $n; $i++) {
         $s = $seqFrom + $i;
         $punkte[] = [47.0 + $s * 0.0002, 11.0 + $s * 0.0002, 700.0 + $s * 0.5,
                      $tsBasis + $s * 10];
     }
-    return ['kind' => 'mission', 'client_ref' => $ref, 'day' => '2026-03-01',
-            'started_at' => '2026-03-01T06:00:00Z',
-            'ended_at' => $final ? '2026-03-01T08:00:00Z' : null,
+    return ['kind' => 'mission', 'client_ref' => $ref, 'day' => $tagVon($tsA),
+            'started_at' => $tsA,
+            'ended_at' => $final ? $tsAe : null,
             'final' => $final,
             'track' => ['seq_from' => $seqFrom, 'points' => $punkte]];
 }
@@ -280,8 +308,8 @@ pruefe(($g['daten']['dropped_points'] ?? -1) === 6
 /* ---- Teil 5 — Die Untergrenze von next_seq (E-S2-25) --------------------- */
 
 echo "\n  Teil 5 — next_seq quittiert auch, was die Wertepruefung verwirft\n";
-$h = ['kind' => 'mission', 'client_ref' => 'probe-2', 'day' => '2026-03-02',
-      'started_at' => '2026-03-02T06:00:00Z', 'ended_at' => '2026-03-02T07:00:00Z',
+$h = ['kind' => 'mission', 'client_ref' => 'probe-2', 'day' => $tagVon($tsB),
+      'started_at' => $tsB, 'ended_at' => $tsBe,
       'final' => true,
       'track' => ['seq_from' => 0, 'points' => [
           [47.0, 11.0, 700.0, 1750000000],
@@ -360,23 +388,24 @@ function meta(PDO $pdo, string $tabelle, string $ref): array {
     return $q->fetch(PDO::FETCH_ASSOC) ?: [];
 }
 
-$voll = ['kind' => 'mission', 'client_ref' => 'probe-spaet', 'day' => '2026-03-05',
-         'started_at' => '2026-03-05T06:00:00Z', 'ended_at' => '2026-03-05T08:00:00Z',
+$voll = ['kind' => 'mission', 'client_ref' => 'probe-spaet', 'day' => $tagVon($tsC),
+         'started_at' => $tsC, 'ended_at' => $tsCe,
          'final' => true, 'distance_m' => 12345, 'ascent_m' => 678,
          'track' => ['seq_from' => 50, 'points' => []]];
-$laufend = ['kind' => 'mission', 'client_ref' => 'probe-spaet', 'day' => '2026-03-05',
-          'started_at' => '2026-03-05T06:00:00Z', 'ended_at' => null, 'final' => false,
+$laufend = ['kind' => 'mission', 'client_ref' => 'probe-spaet', 'day' => $tagVon($tsC),
+          'started_at' => $tsC, 'ended_at' => null, 'final' => false,
           'track' => ['seq_from' => 0, 'points' => []]];
 senden($laufend);
 senden($voll);
 $mMeta = meta($pdo, 'missions', 'probe-spaet');
-pruefe(($mMeta['ended_at'] ?? null) === '2026-03-05 08:00:00' && (int)($mMeta['distance_m'] ?? 0) === 12345
+$alsDb = static fn(string $ts): string => str_replace(['T', 'Z'], [' ', ''], $ts);
+pruefe(($mMeta['ended_at'] ?? null) === $alsDb($tsCe) && (int)($mMeta['distance_m'] ?? 0) === 12345
        && (int)($mMeta['ascent_m'] ?? 0) === 678 && (int)($mMeta['final'] ?? 0) === 1,
        'Nach dem finalen Paket stehen Ende, Strecke, Anstieg', json_encode($mMeta));
 
 senden($laufend);   // das spaete, nicht-finale Paket — es traegt drei NULL-Werte
 $mMeta = meta($pdo, 'missions', 'probe-spaet');
-pruefe(($mMeta['ended_at'] ?? null) === '2026-03-05 08:00:00',
+pruefe(($mMeta['ended_at'] ?? null) === $alsDb($tsCe),
        'Ein spaeteres nicht-finales Paket loescht das ENDE nicht',
        'ended_at ' . var_export($mMeta['ended_at'] ?? null, true)
        . ' — sonst bliebe ein abgeschlossener Einsatz ohne Ende zurueck');
@@ -389,16 +418,16 @@ pruefe((int)($mMeta['final'] ?? 0) === 1, '... und final bleibt 1 (GREATEST, unv
 // GEGENPROBE: Eine BERICHTIGUNG muss weiterhin durchgehen — COALESCE haelt
 // nur NULL zurueck, nicht einen anderen Wert.
 $korrektur = $voll;
-$korrektur['ended_at']   = '2026-03-05T09:30:00Z';
+$korrektur['ended_at']   = $tsCk;
 $korrektur['distance_m'] = 999;
 senden($korrektur);
 $mMeta = meta($pdo, 'missions', 'probe-spaet');
-pruefe(($mMeta['ended_at'] ?? null) === '2026-03-05 09:30:00' && (int)($mMeta['distance_m'] ?? 0) === 999,
+pruefe(($mMeta['ended_at'] ?? null) === $alsDb($tsCk) && (int)($mMeta['distance_m'] ?? 0) === 999,
        'GEGENPROBE: eine Berichtigung mit anderen Werten gilt weiterhin',
        json_encode($mMeta) . ' — sonst waere aus dem Schutz eine Sperre geworden');
 
-$rVoll = ['kind' => 'rest_segment', 'client_ref' => 'probe-spaet-r', 'day' => '2026-03-05',
-          'started_at' => '2026-03-05T12:00:00Z', 'ended_at' => '2026-03-05T13:00:00Z',
+$rVoll = ['kind' => 'rest_segment', 'client_ref' => 'probe-spaet-r', 'day' => $tagVon($tsD),
+          'started_at' => $tsD, 'ended_at' => $tsDe,
           'final' => true, 'track' => ['seq_from' => 0, 'points' => []]];
 $rOffen = $rVoll;
 $rOffen['ended_at'] = null;
@@ -406,7 +435,7 @@ $rOffen['final'] = false;
 senden($rVoll);
 senden($rOffen);
 $rMeta = meta($pdo, 'rest_segments', 'probe-spaet-r');
-pruefe(($rMeta['ended_at'] ?? null) === '2026-03-05 13:00:00' && (int)($rMeta['final'] ?? 0) === 1,
+pruefe(($rMeta['ended_at'] ?? null) === $alsDb($tsDe) && (int)($rMeta['final'] ?? 0) === 1,
        'Dasselbe am Ruhe-Segment: Ende bleibt, final bleibt', json_encode($rMeta));
 
 /* ---- Teil 8 — Herkunft und Momentaufnahme (R64, Web 14.0.0) -------------- */
@@ -431,8 +460,9 @@ function herkunft(PDO $pdo, string $tabelle, string $ref): array {
 
 /** Ein leeres Segment-Paket (die Punkte spielen hier keine Rolle). */
 function segment(string $ref): array {
-    return ['kind' => 'rest_segment', 'client_ref' => $ref, 'day' => '2026-03-08',
-            'started_at' => '2026-03-08T12:00:00Z', 'ended_at' => '2026-03-08T13:00:00Z',
+    global $tsE, $tsEe, $tagVon;
+    return ['kind' => 'rest_segment', 'client_ref' => $ref, 'day' => $tagVon($tsE),
+            'started_at' => $tsE, 'ended_at' => $tsEe,
             'final' => true, 'track' => ['seq_from' => 0, 'points' => []]];
 }
 
@@ -504,6 +534,107 @@ $h = herkunft($pdo, 'missions', 'm-r64-2');
 pruefe(($h['geraet_modell'] ?? '') === 'Nachtraeglich anders aufgeloest',
        'GEGENPROBE: ein NEUER Einsatz bekommt den neuen Wert', json_encode($h));
 
+
+/* ---- Teil 9 — Das Ersetzfenster (Backlog Nr. 134, K-14, F-SP-8) ----------
+ *
+ * WOGEGEN. Der Geraeteschluessel liegt auf der Uhr im Klartext. Wer sie
+ * findet, kann Einsaetze hochladen und die Phasen BESTEHENDER Einsaetze
+ * ersetzen, bis das Geraet im Web getrennt ist. Dagegen steht das Fenster:
+ * INGEST_ERSETZFENSTER_H Stunden ab dem GESPEICHERTEN `started_at`.
+ *
+ * ZWEI PAKETE AN DEMSELBEN DATENSATZ, einmal innerhalb und einmal ausserhalb.
+ * Das Alter entsteht dabei nicht durch Warten, sondern indem `started_at`
+ * nach dem ersten Paket per SQL zurueckdatiert wird -- der Wert, den der
+ * Server liest, ist derselbe, den ein drei Wochen alter Einsatz haette.
+ * (Ausnahmsweise per SQL: Ein Uhr-Paket kann `started_at` bei einem
+ * bestehenden Datensatz gar nicht mehr veraendern -- das ist der Punkt.) */
+
+echo "\n  Teil 9 — Das Ersetzfenster: 72 h ab Einsatzbeginn (Nr. 134)\n";
+
+$fRef = 'probe-fenster';
+$fPaket = static function (array $phasen, int $seqFrom, int $punkte) use ($tsC, $tsCe, $tagVon, $fRef): array {
+    $pts = [];
+    for ($i = 0; $i < $punkte; $i++) {
+        $pts[] = [47.5 + ($seqFrom + $i) * 0.0001, 11.5, 700.0, 1750000000 + ($seqFrom + $i) * 10];
+    }
+    return ['kind' => 'mission', 'client_ref' => $fRef, 'day' => $tagVon($tsC),
+            'started_at' => $tsC, 'ended_at' => $tsCe, 'final' => true,
+            'phases' => $phasen,
+            'track' => ['seq_from' => $seqFrom, 'points' => $pts]];
+};
+/* Phasen sind NUMMERN von PHASE_MIN bis PHASE_MAX (2..9), keine Namen. */
+$phasenA = [['phase' => 2, 'at' => $tsC, 'lat' => 47.5, 'lon' => 11.5],
+            ['phase' => 3, 'at' => $tsCe, 'lat' => 47.6, 'lon' => 11.6]];
+$phasenB = [['phase' => 2, 'at' => $tsC, 'lat' => 40.0, 'lon' => 5.0],
+            ['phase' => 3, 'at' => $tsCe, 'lat' => 40.1, 'lon' => 5.1]];
+
+$zaehlPhasen = static function (PDO $pdo, string $ref): array {
+    $q = $pdo->prepare('SELECT p.lat FROM mission_phases p
+                        JOIN missions m ON m.id = p.mission_id
+                        WHERE m.client_ref = ? AND p.phase = 2 LIMIT 1');
+    $q->execute([$ref]);
+    $lat = $q->fetchColumn();
+    $z = $pdo->prepare('SELECT COUNT(*) FROM mission_phases p
+                        JOIN missions m ON m.id = p.mission_id WHERE m.client_ref = ?');
+    $z->execute([$ref]);
+    return ['n' => (int)$z->fetchColumn(), 'lat' => $lat === false ? null : (float)$lat];
+};
+
+// INNERHALB: der Datensatz entsteht und wird danach veraendert.
+$f1 = senden($fPaket($phasenA, 0, 5));
+pruefe(($f1['daten']['ok'] ?? false) === true, 'Innerhalb: der Einsatz entsteht',
+       'HTTP ' . $f1['code'] . ', stored ' . ($f1['daten']['stored_points'] ?? '?'));
+$fId = (int)($f1['daten']['id'] ?? 0);
+
+$f2 = senden($fPaket($phasenB, 5, 5));
+$nach = $zaehlPhasen($pdo, $fRef);
+pruefe(($f2['daten']['stored_points'] ?? -1) === 5
+       && !isset($f2['daten']['kept_phases']) && !isset($f2['daten']['kept_points'])
+       && $nach['lat'] !== null && abs($nach['lat'] - 40.0) < 0.001,
+       'Innerhalb: ein zweites Paket ersetzt die Phasen und haengt Punkte an',
+       'stored ' . ($f2['daten']['stored_points'] ?? '?') . ', Phasen-lat '
+       . ($nach['lat'] ?? 'null') . ' (erwartet 40.0), keine kept_*-Felder');
+
+// AUSSERHALB: `started_at` zurueckdatieren, dann dasselbe noch einmal.
+$alt = gmdate('Y-m-d H:i:s', time() - (INGEST_ERSETZFENSTER_H + 1) * 3600);
+$pdo->prepare('UPDATE missions SET started_at = ? WHERE id = ?')->execute([$alt, $fId]);
+$phasenC = [['phase' => 2, 'at' => $tsC, 'lat' => 10.0, 'lon' => 5.0],
+            ['phase' => 3, 'at' => $tsCe, 'lat' => 10.1, 'lon' => 5.1]];
+$vorher = zeilen($pdo, $fId);
+$f3 = senden($fPaket($phasenC, 10, 5));
+$nach3 = $zaehlPhasen($pdo, $fRef);
+$nachher = zeilen($pdo, $fId);
+
+pruefe(($f3['code'] === 200) && (($f3['daten']['ok'] ?? false) === true),
+       'Ausserhalb: die Antwort ist ok und kein Fehler',
+       'HTTP ' . $f3['code'] . ' — ein Fehler liesse die Uhr endlos wiederholen');
+pruefe(($f3['daten']['kept_phases'] ?? -1) === 2,
+       'Ausserhalb: die vorhandenen Phasen bleiben und werden GENANNT',
+       'kept_phases ' . ($f3['daten']['kept_phases'] ?? 'fehlt') . ' (erwartet 2)');
+pruefe($nach3['lat'] !== null && abs($nach3['lat'] - 40.0) < 0.001,
+       'Ausserhalb: die Phasen sind unveraendert die alten',
+       'Phasen-lat ' . ($nach3['lat'] ?? 'null') . ' (erwartet 40.0, gesendet 10.0)');
+pruefe(($f3['daten']['kept_points'] ?? -1) === 5 && $nachher === $vorher,
+       'Ausserhalb: es wird kein Punkt angehaengt, und auch das wird GENANNT',
+       'kept_points ' . ($f3['daten']['kept_points'] ?? 'fehlt') . ', Zeilen '
+       . $vorher . ' vorher / ' . $nachher . ' nachher');
+pruefe(($f3['daten']['next_seq'] ?? 0) >= 15,
+       'Ausserhalb: next_seq wandert trotzdem weiter',
+       'next_seq ' . ($f3['daten']['next_seq'] ?? '?') . ' — sonst sendet die Uhr ewig');
+
+// NEUANLAGE bleibt immer moeglich: ein anderer client_ref, derselbe Tag.
+$neuRef = 'probe-fenster-neu';
+$fNeu = ['kind' => 'mission', 'client_ref' => $neuRef, 'day' => $tagVon($tsC),
+         'started_at' => $tsC, 'ended_at' => $tsCe, 'final' => true,
+         'phases' => $phasenA,
+         'track' => ['seq_from' => 0, 'points' => [[47.9, 11.9, 700.0, 1750000000]]]];
+$f4 = senden($fNeu);
+pruefe(($f4['daten']['stored_points'] ?? -1) === 1 && (int)($f4['daten']['id'] ?? 0) > 0,
+       'Ein NEUER Einsatz wird immer angenommen — er ueberschreibt nichts',
+       'stored ' . ($f4['daten']['stored_points'] ?? '?') . ', id ' . ($f4['daten']['id'] ?? '?'));
+
+printf("  Ergebnis des Fensters: 1 Paket angenommen, 1 abgewiesen (%d h Grenze)\n",
+       INGEST_ERSETZFENSTER_H);
 
 } finally {
     jobs_pause(0);

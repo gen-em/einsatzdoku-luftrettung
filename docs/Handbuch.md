@@ -2426,6 +2426,28 @@ drei Punkten am rechten Rand der Zeile, in jeder Bildschirmbreite. Darin:
 bereits hochgeladenen Daten bleiben erhalten, und Aktivieren schaltet dasselbe
 Gerät wieder frei.
 
+> **Uhr verloren? Sofort trennen.** Auf der Garmin-Uhr liegt der
+> Zugangsschlüssel im Klartext — die Plattform bietet nichts Besseres. Lesen
+> kann ein Finder damit nichts: Er kommt an keinen einzigen Datensatz. Er kann
+> aber **hochladen**, solange das Gerät gekoppelt ist. **Deaktivieren** oder
+> **Entkoppeln** beendet das augenblicklich; die hochgeladenen Daten bleiben
+> in beiden Fällen erhalten.
+>
+> Bis dahin gilt seit Web 15.6.0 eine Grenze: Ein Gerät darf einen
+> **bestehenden** Einsatz oder eine bestehende Ruhezeit nur noch **72 Stunden**
+> lang verändern, gerechnet ab dessen Beginn. Danach nimmt der Server das
+> Paket zwar an — die Uhr soll nicht in eine Fehlerschleife laufen —, ändert
+> aber nichts mehr daran. Die 72 Stunden decken das Wochenende ab: Ein
+> Freitagsdienst, der erst am Montag synchronisiert, kommt noch nach.
+>
+> **Neue** Einsätze legt ein Gerät weiterhin jederzeit an. Sie sind sichtbar
+> und löschbar und überschreiben nichts — aber sie stehen dann in deinem
+> Bestand. Auch deshalb: trennen, nicht abwarten.
+>
+> Die **Wear-OS-Uhr** ist von alledem nicht betroffen. Sie kennt weder
+> Serveradresse noch Schlüssel; sie schickt ihre Ereignisse ans Handy, und das
+> Handy sendet.
+
 **„Entkoppeln" hieß bis Web 15.4.1 „Löschen".** Der neue Name sagt, was
 geschieht: Der Zugangsschlüssel wird ungültig, das Gerät kann nichts mehr
 hochladen — und die **Daten bleiben**. „Löschen" las sich, als gingen sie mit.

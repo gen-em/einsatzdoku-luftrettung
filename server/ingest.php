@@ -193,7 +193,7 @@ try {
     // geloeschter Datensatz durch Nachlieferungen wieder wachsen. Erst das
     // endgueltige Loeschen traegt ihn in die Sperrliste ein.
     $tabelle = $kind === 'mission' ? 'missions' : 'rest_segments';
-    $chk = $pdo->prepare("SELECT id, day_id, deleted_at" . ($kind === 'mission' ? ', manual' : '')
+    $chk = $pdo->prepare("SELECT id, day_id, deleted_at, started_at" . ($kind === 'mission' ? ', manual' : '')
                        . " FROM `$tabelle` WHERE device_id = ? AND client_ref = ?");
     $chk->execute([$dev['id'], $clientRef]);
     $existing = $chk->fetch();
@@ -202,6 +202,30 @@ try {
         $pdo->commit();
         json_out(['ok' => true, 'id' => 0, 'stored_points' => 0,
                   'next_seq' => $seqFrom + count($points)]);
+    }
+
+    /* ---- Ersetzfenster (Backlog Nr. 134, K-14, F-SP-8) -------------------
+     *
+     * Ein BESTEHENDER Datensatz laesst sich nur INGEST_ERSETZFENSTER_H Stunden
+     * lang von seinem Geraet veraendern -- gerechnet ab dem GESPEICHERTEN
+     * `started_at`, nicht ab dem gesendeten: Den bestimmt der Absender, und
+     * genau der ist hier der Unsichere.
+     *
+     * Innerhalb des Fensters bleibt alles wie bisher, damit eine Nachlieferung
+     * nach einem Funkloch ankommt. Danach: `ok` ohne Ersetzen, ohne Anhaengen,
+     * ohne Fehler -- die Uhr wiederholte sonst endlos. Was uebergangen wurde,
+     * steht in der Antwort (`kept_*`).
+     *
+     * NEUE Datensaetze sind nicht betroffen: `$existing` ist dann null. Eine
+     * verlorene Uhr kann also weiterhin Einsaetze ANLEGEN -- die sind sichtbar
+     * und loeschbar und ueberschreiben nichts. Der Weg dagegen ist das Trennen
+     * des Geraets (Handbuch 12). */
+    $fensterZu = false;
+    if ($existing && ($existing['started_at'] ?? null) !== null) {
+        $begonnen = strtotime((string)$existing['started_at'] . ' UTC');
+        if ($begonnen !== false) {
+            $fensterZu = (time() - $begonnen) > INGEST_ERSETZFENSTER_H * 3600;
+        }
     }
 
     /* ---- Diensttag bestimmen (JSON-Vertrag 4.4) ---------------------------
@@ -248,9 +272,31 @@ try {
         // Manuell bearbeitete Einsaetze schuetzen: Uhr-Uploads duerfen
         // Metadaten/Phasen/Rea nicht mehr ueberschreiben; Trackpunkte werden
         // weiterhin ergaenzt (Append-only, unkritisch).
-        if ($existing && (int)$existing['manual'] === 1) {
+        if ($existing && ((int)$existing['manual'] === 1 || $fensterZu)) {
+            /* Zwei Gruende, derselbe Weg: Der Einsatz ist im Web bearbeitet
+               worden (`manual`), oder das Ersetzfenster ist zu (Nr. 134). In
+               beiden Faellen bleiben Metadaten, Phasen und Reanimation stehen.
+               Der Unterschied steht weiter unten: Bei `manual` werden Punkte
+               weiterhin ANGEHAENGT (append-only, unkritisch), bei
+               geschlossenem Fenster nicht -- dort ist der Absender der
+               Unsichere, nicht der Inhalt. */
             $ownerId = (int)$existing['id'];
             $ownerType = 'mission';
+            /* Was uebergangen wurde, NENNEN (Nr. 134, JSON-Vertrag 5). Der
+               Zweig ueberspringt Metadaten, Phasen und Reanimation in einem;
+               ohne diese Zahlen saehe der Upload wie ein Erfolg aus, und die
+               ersetzten Phasen fehlten stillschweigend. Gezaehlt wird der
+               VORHANDENE Stand -- das ist die Zahl, die stehen bleibt. */
+            if (isset($b['phases']) && is_array($b['phases'])) {
+                $zp = $pdo->prepare('SELECT COUNT(*) FROM mission_phases WHERE mission_id = ?');
+                $zp->execute([$ownerId]);
+                $behalten['kept_phases'] = (int)$zp->fetchColumn();
+            }
+            if (isset($b['resus_sessions']) || isset($b['resus'])) {
+                $zr = $pdo->prepare('SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ?');
+                $zr->execute([$ownerId]);
+                $behalten['kept_resus'] = (int)$zr->fetchColumn();
+            }
         } else {
         /* Upsert des Einsatzes (idempotent ueber device_id+client_ref)
          *
@@ -357,7 +403,7 @@ try {
             $zaehl->execute([$ownerId]);
             $vorhandenePhasen = (int)$zaehl->fetchColumn();
 
-            if (count($neuePhasen) >= $vorhandenePhasen) {
+            if (!$fensterZu && count($neuePhasen) >= $vorhandenePhasen) {
                 $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$ownerId]);
                 $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon) VALUES (?,?,?,?,?)');
                 foreach ($neuePhasen as $np) {
@@ -366,6 +412,8 @@ try {
             } else {
                 // Behalten und NENNEN — sonst waere der uebergangene Upload von
                 // einem uebernommenen nicht zu unterscheiden (JSON-Vertrag 5).
+                // Zwei Gruende koennen dahinterstehen: weniger Phasen als
+                // gespeichert, oder ein geschlossenes Ersetzfenster (Nr. 134).
                 $behalten['kept_phases'] = $vorhandenePhasen;
             }
         }
@@ -407,7 +455,7 @@ try {
             $zaehl->execute([$ownerId]);
             $vorhandeneSitzungen = (int)$zaehl->fetchColumn();
 
-            if (count($neueSitzungen) >= $vorhandeneSitzungen) {
+            if (!$fensterZu && count($neueSitzungen) >= $vorhandeneSitzungen) {
                 $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$ownerId]);
                 $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
                 $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
@@ -439,15 +487,20 @@ try {
          * (E-R64-04): Gezaehlt werden Einsaetze, und woher ein Segment kommt,
          * sagt sein Praefix (`r-` gegen `ar-`). Eine Spalte, die niemand
          * abfragt, waere geschrieben und nie gelesen. */
-        $pdo->prepare('INSERT INTO rest_segments (user_id, device_id, client_ref, day_id, started_at, ended_at, final, geraet_art, geraet_modell)
-                       VALUES (?,?,?,?,?,?,?,?,?)
-                       ON DUPLICATE KEY UPDATE
-                         ended_at = COALESCE(VALUES(ended_at), ended_at),
-                         final = GREATEST(final, VALUES(final)),
-                         id = LAST_INSERT_ID(id)')
-            ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt, $final,
-                       $dev['geraet_art'], $dev['geraet_modell']]);
-        $ownerId = (int)$pdo->lastInsertId();
+        if ($existing && $fensterZu) {
+            /* Ersetzfenster zu (Nr. 134): Der Stand bleibt, wie er ist. */
+            $ownerId = (int)$existing['id'];
+        } else {
+            $pdo->prepare('INSERT INTO rest_segments (user_id, device_id, client_ref, day_id, started_at, ended_at, final, geraet_art, geraet_modell)
+                           VALUES (?,?,?,?,?,?,?,?,?)
+                           ON DUPLICATE KEY UPDATE
+                             ended_at = COALESCE(VALUES(ended_at), ended_at),
+                             final = GREATEST(final, VALUES(final)),
+                             id = LAST_INSERT_ID(id)')
+                ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt, $final,
+                           $dev['geraet_art'], $dev['geraet_modell']]);
+            $ownerId = (int)$pdo->lastInsertId();
+        }
         $ownerType = 'rest';
     }
 
@@ -509,7 +562,21 @@ try {
     $stored = 0;
     $verworfen = 0;
     $gesperrt = 0;
-    if ($points) {
+    /* ---- Ersetzfenster: auch keine Punkte mehr (Backlog Nr. 134) ---------
+     *
+     * ANDERS ALS BEI `manual`. Dort werden Punkte weiter angehaengt, weil das
+     * Anhaengen unkritisch ist -- der Inhalt ist bearbeitet, die Spur nicht.
+     * Hier ist der ABSENDER der Unsichere: Ein Finder mit der Uhr in der Hand
+     * schriebe sonst seine eigene Fahrt in die Spur eines drei Wochen alten
+     * Einsatzes. Angehaengt wird deshalb nichts mehr.
+     *
+     * `next_seq` wandert trotzdem weiter (unten): Die Uhr soll aufhoeren zu
+     * senden, nicht in einer Schleife haengen bleiben. Was uebergangen wurde,
+     * steht als `kept_points` in der Antwort -- ein stiller Verlust waere
+     * genau der Fehler, gegen den die uebrigen `kept_*`-Felder gebaut sind. */
+    if ($points && $fensterZu) {
+        $behalten['kept_points'] = count($points);
+    } elseif ($points) {
         $ins = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
                               VALUES (?,?,?,?,?,?,?)');
         foreach ($points as $i => $pt) {
