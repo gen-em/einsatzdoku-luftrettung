@@ -1,8 +1,11 @@
 package org.genem.nadoku.handy.kopplung
 
+import org.genem.nadoku.BuildConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeFalse
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 /**
@@ -77,7 +80,7 @@ class ServeradresseTest {
 
     /**
      * DIE ÖRTLICHE INSTALLATION BEHÄLT IHR `http` — die eine benannte
-     * Ausnahme von E-S4-14.
+     * Ausnahme von E-S4-14 — **nur im Prüf-APK** (Backlog Nr. 142, AN-1).
      *
      * Sie ist keine Aufweichung: `127.0.0.1` und `localhost` taugen ohnehin
      * nicht als Adresse einer ausgelieferten App (ein Gerät im Feld erreichte
@@ -85,11 +88,29 @@ class ServeradresseTest {
      * TLS-Port, den der Prüfserver nicht hat — und die App bekäme etwas
      * beigebracht, was sie im Feld nie tun darf: einem selbstsignierten
      * Zertifikat zu trauen.
+     *
+     * Der Fall läuft nur im Debug-Buildtyp: `./gradlew build` prüft beide
+     * Bauarten, und im Release gilt das Gegenteil (nächster Fall). Je Bauart
+     * ist genau einer der beiden übersprungen — sichtbar, nicht still.
      */
     @Test fun oertlicheAdressenBehaltenHttp() {
+        assumeTrue("nur im Prüf-APK", BuildConfig.DEBUG)
         assertEquals("http://127.0.0.1:8080/", Serveradresse.normalisiere("127.0.0.1:8080"))
         assertEquals("http://localhost:8080/", Serveradresse.normalisiere("localhost:8080"))
         assertEquals("http://127.0.0.1/", Serveradresse.normalisiere("https://127.0.0.1/"))
+    }
+
+    /**
+     * Und im **Release** gibt es die Ausnahme nicht (Backlog Nr. 142, AN-1):
+     * Dort wird auch eine IP-Adresse zu `https`. Bis 0.13.0 galt die
+     * Ausnahme in beiden Bauarten — ein mit IP-Adresse gebautes APK hätte den
+     * Geräteschlüssel auf Android 8 im Klartext verschickt.
+     */
+    @Test fun imReleaseGiltHttpsAuchFuerOertlicheAdressen() {
+        assumeFalse("nur im Release", BuildConfig.DEBUG)
+        assertEquals("https://127.0.0.1:8080/", Serveradresse.normalisiere("127.0.0.1:8080"))
+        assertEquals("https://localhost:8080/", Serveradresse.normalisiere("http://localhost:8080"))
+        assertEquals("https://127.0.0.1/", Serveradresse.normalisiere("https://127.0.0.1/"))
     }
 
     /**
