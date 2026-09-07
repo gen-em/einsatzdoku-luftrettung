@@ -691,7 +691,15 @@ Wartungsseite (Betrieb → Status, Zeile „Schlüsselableitung"): Sie nennt sei
 Web 15.6.0 nicht nur verwaiste Rundenzahlen, sondern auch, **wie viele Konten
 noch unter dem Zielwert stehen**. Solange dort eine Zahl steht, rechnet jede
 Anmeldung zweimal ab — 298 ms plus 551 ms statt 551 ms, gemessen auf einem Kern
-des Prüfcontainers. Steht keine mehr, darf der Altwert gestrichen werden.
+des Prüfcontainers. Steht keine mehr, darf der Altwert gestrichen werden —
+**mit einer Ausnahme, die die Zeile selbst nennt:** Das Demo-Konto zählt dort
+nicht mit. Es steht auf der Rundenzahl seiner Fixture, die stille Anhebung
+überspringt es (`api/kdf_upgrade.php`, E-P1-19), und der Reset spielt die
+Fixture alle 30 Minuten neu ein; solange die Fixture den Altwert trägt
+(heute 320 000, Backlog Nr. 155), bleibt er in `KDF_ITER_LISTE`, sonst
+könnte sich das Demo-Konto nicht mehr anmelden. Der Demo-Satz erscheint nur,
+solange dieser Wert in der Liste steht; fehlt er, ist das Demo-Konto eines
+der blockierten Konten der roten Zeile.
 
 Der Endpunkt verlangt das **alte** Token als Nachweis (er setzt den Hash, gegen
 den sich das Konto anmeldet — ohne Nachweis wäre er ein Weg, aus einer

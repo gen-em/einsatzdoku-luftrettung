@@ -1653,8 +1653,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 155. **Die Fixture des Referenzbestands trägt die alte Rundenzahl.**
     *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 136).*
     `demo/fixture.json.gz` führt das Demo-Konto mit 320 000 Runden; der
-    Demo-Reset spielt es alle 30 Minuten so ein, und die stille Anhebung beim
-    Anmelden überlebt das nicht. Folge: Der Altwert kann nie aus
+    Demo-Reset spielt es alle 30 Minuten so ein, und die stille Anhebung
+    überspringt das Demo-Konto ohnehin (`api/kdf_upgrade.php`, E-P1-19 —
+    ein Upgrade passte bis zum nächsten Reset nicht mehr zu den
+    öffentlichen Zugangsdaten). Folge: Der Altwert kann nie aus
     `KDF_ITER_LISTE` gestrichen werden, und die Statuszeile
     „Schlüsselableitung" sagt das seit der Nachbesserung ausdrücklich (das
     Demo-Konto zählt dort nicht mehr als „Übergang läuft"). Behebung: den

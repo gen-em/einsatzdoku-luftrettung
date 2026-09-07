@@ -120,20 +120,34 @@ function status_erhebung(): array
         /* OHNE DAS DEMO-KONTO (Nachbesserung 07.09.2026, Gegenpruefung Fund
          * 11). Es wird alle 30 Minuten aus der Fixture eingespielt -- mit der
          * Rundenzahl, die die Fixture traegt --, und die stille Anhebung
-         * beim Anmelden ueberlebt den naechsten Reset nicht. Gezaehlt stuende
-         * hier also fuer immer "1 Konto unter dem Zielwert", und die Zeile
-         * verloere den einen Zweck, den sie hat: zu sagen, wann der Altwert
-         * weg darf. Das Demo-Konto bekommt deshalb seinen eigenen Satz. */
+         * ueberspringt es ausdruecklich (api/kdf_upgrade.php, E-P1-19: ein
+         * Upgrade passte bis zum naechsten Reset nicht mehr zu seinen
+         * oeffentlichen Zugangsdaten). Es zieht also nie nach, aus zwei
+         * Gruenden, nicht aus einem -- die erste Fassung dieses Kommentars
+         * nannte nur den Reset (zweite Gegenpruefung, Wiederaufnahme).
+         * Gezaehlt stuende hier fuer immer "1 Konto unter dem Zielwert",
+         * und die Zeile verloere den einen Zweck, den sie hat: zu sagen,
+         * wann der Altwert weg darf. Das Demo-Konto bekommt deshalb seinen
+         * eigenen Satz -- aber nur, solange sein Wert in der Liste STEHT.
+         * Steht er nicht mehr darin, ist das Demo-Konto eines der
+         * blockierten Konten aus der roten Zeile darueber, und ein Satz,
+         * der behauptet, der Altwert bleibe in der Liste, waere falsch. */
         require_once __DIR__ . '/demo_lib.php';
         $demoId = demo_id();
-        $sta = $pdo->prepare('SELECT COUNT(*) FROM users
-                              WHERE password_hash IS NOT NULL AND kdf_iter <> ? AND id <> ?');
-        $sta->execute([KDF_ITER_ZIEL, $demoId ?? 0]);
+        /* NUR WERTE AUS DER LISTE: Ein Konto auf einem verwaisten Wert steht
+         * schon in der roten Zahl darueber und zieht NICHT still nach -- es
+         * kann sich gar nicht anmelden. Bis zur Wiederaufnahme der zweiten
+         * Gegenpruefung zaehlte es hier trotzdem mit. */
+        $sta = $pdo->prepare("SELECT COUNT(*) FROM users
+                              WHERE password_hash IS NOT NULL AND kdf_iter <> ? AND id <> ?
+                                AND kdf_iter IN ($platz)");
+        $sta->execute(array_merge([KDF_ITER_ZIEL, $demoId ?? 0], $kdfListe));
         $kdfAlt = (int)$sta->fetchColumn();
         if ($demoId !== null) {
             $std = $pdo->prepare('SELECT kdf_iter FROM users WHERE id = ?');
             $std->execute([$demoId]);
-            $kdfDemoAlt = (int)$std->fetchColumn() !== KDF_ITER_ZIEL;
+            $demoIter = (int)$std->fetchColumn();
+            $kdfDemoAlt = $demoIter !== KDF_ITER_ZIEL && in_array($demoIter, $kdfListe, true);
         }
     }
 
@@ -204,9 +218,9 @@ function status_erhebung(): array
          * sind: Solange die Fixture den Altwert traegt, darf er nicht aus
          * der Liste -- das Demo-Konto koennte sich sonst nicht mehr anmelden. */
         $kdfText .= '. Das Demo-Konto steht auf der Rundenzahl seiner Fixture und '
-                  . 'zieht nicht nach (der Reset stellt sie alle 30 Minuten wieder her) '
-                  . '— der Altwert bleibt in der Liste, bis der Referenzbestand neu '
-                  . 'gebaut ist (Backlog Nr. 155)';
+                  . 'zieht nicht nach (die stille Anhebung überspringt es, und der Reset '
+                  . 'spielt die Fixture alle 30 Minuten neu ein) — der Altwert bleibt in '
+                  . 'der Liste, bis der Referenzbestand neu gebaut ist (Backlog Nr. 155)';
     }
     $server[] = status_z('Schlüsselableitung', $kdfText,
         $kdfVerwaist === [] ? 'blau' : 'rot',
