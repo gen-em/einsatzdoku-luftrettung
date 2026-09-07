@@ -79,9 +79,19 @@ keine Testumgebung.
 Diese Eigenschaften sind das Versprechen des Projekts. Eine Änderung, die eine
 davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
 
-- **Ende-zu-Ende-Verschlüsselung.** Diagnose, Alter und Einsatzort werden im
-  Browser ver- und entschlüsselt. Klartext dieser Felder geht nie an den Server,
-  in ein Log oder in eine API-Antwort.
+- **Ende-zu-Ende-Verschlüsselung — und zwar genau dieser Felder.** Name,
+  Geburtsdatum, Alter, Diagnose, Einsatznummer, Adresse und Koordinate des
+  Einsatzorts und dessen Beschreibung werden im Browser ver- und entschlüsselt
+  (der Katalog steht in `docs/Technik.md` 4.98). Klartext dieser Felder geht nie
+  an den Server, in ein Log oder in eine API-Antwort.
+  **Im Klartext liegen dagegen:** die GPS-Spur, die Koordinate **jeder Phase**
+  (Phase 4 und 5 sind der Einsatzort), `site_ele_m`, das Transportziel samt
+  Koordinate, Zeiten, Reanimationsverlauf und Besatzungsnamen. Aus Spur und
+  Phasenkoordinaten **lässt sich der Einsatzort rekonstruieren** — die
+  Verschlüsselung der Adresse verbirgt ihn nicht. Wer das aufweichen oder
+  ausweiten will, findet den Weg in `docs/konzepte/Konzept-V1-Ortsdaten.md`
+  (Weg B) und Backlog Nr. 43; wer die Zusage zitiert, zitiert diesen Absatz
+  vollständig oder gar nicht.
 - **Keine fremde Quelle zur Laufzeit.** Kein CDN, keine Google Fonts, kein
   externes Skript. Schriften und Bibliotheken liegen unter
   `server/assets/fonts/` bzw. `server/assets/vendor/`, mit Herkunft und

@@ -1586,6 +1586,16 @@ es nicht mehr.
 - Verschlüsselte Felder sind serverseitig nicht durchsuchbar; der Schutz wirkt
   gegen Datenbank-Diebstahl und Mitleser, prinzipbedingt nicht gegen einen
   vollständig übernommenen Server.
+- **Verschlüsselt sind nicht alle Daten, sondern diese:** Name, Geburtsdatum,
+  Alter, Diagnose, Einsatznummer sowie Adresse, Koordinate und Beschreibung des
+  Einsatzorts. **Im Klartext liegen dagegen:** die GPS-Spur, die Koordinate
+  jeder Einsatzphase, das Transportziel, alle Zeiten, der Verlauf einer
+  Reanimation und die Namen der Besatzung — sie werden für Auswertung und
+  Statistik gebraucht, die der Server rechnet.
+  **Der Einsatzort lässt sich damit aus der Spur ableiten**, auch wenn die
+  Adresse verschlüsselt ist. Das ist keine Lücke, sondern die Grenze dieser
+  Bauform, und sie steht hier, damit niemand mehr erwartet, als sie hält. Wer
+  eine Installation betreibt, behandelt den Datenbankzugang entsprechend.
 - Zeigt eine Seite „gesperrt“, lässt sich das direkt dort beheben — siehe
   **„Gesperrt: entsperren statt neu anmelden“** weiter unten.
 
@@ -3008,6 +3018,35 @@ Speichern-Leiste, und die nennt, **was** ungespeichert ist.
 > kann. Solange nichts hinterlegt ist, zeigen die Seiten: „Der Betreiber dieser
 > Installation hat noch kein Impressum hinterlegt." Als Verwaltung siehst du
 > dort zusätzlich den Weg hierher.
+
+> **Ein Absatz, der in keiner Datenschutzerklärung dieser Anwendung fehlen
+> darf** (Backlog Nr. 138). Die Anwendung liefert weiterhin keinen Text mit —
+> dieser eine Absatz ist keine Rechtsauskunft, sondern eine **technische
+> Tatsache über diese Software**, die nur wir kennen können. Zum Übernehmen:
+>
+> ```
+> ## Welche Daten verschlüsselt gespeichert werden — und welche nicht
+>
+> Name, Geburtsdatum, Alter, Diagnose, Einsatznummer sowie Adresse,
+> Koordinate und Beschreibung des Einsatzorts werden bereits im Browser
+> verschlüsselt. Der Server speichert sie ausschließlich verschlüsselt und
+> kann sie nicht lesen; der Schlüssel wird aus dem Passwort des Kontos
+> abgeleitet.
+>
+> Nicht verschlüsselt gespeichert werden: die aufgezeichnete GPS-Spur, die
+> Koordinaten der einzelnen Einsatzphasen, das Transportziel, alle Zeiten,
+> der Verlauf einer Reanimation und die Namen der Besatzung. Diese Angaben
+> werden für Auswertungen und Statistiken benötigt, die der Server selbst
+> berechnet.
+>
+> Daraus folgt: Der Einsatzort lässt sich aus Spur und Phasenkoordinaten
+> ableiten, auch wenn die Adresse verschlüsselt ist. In Verbindung mit
+> Zeitpunkt und Ort können die unverschlüsselten Angaben Rückschlüsse auf
+> einzelne Personen erlauben.
+> ```
+>
+> Wer die Zeilen ändert, sollte den letzten Absatz stehen lassen: Er ist der
+> Grund, warum die anderen beiden dastehen.
 
 **Geschrieben wird in eingeschränktem Markdown.** Erlaubt sind vier Dinge:
 

@@ -3809,14 +3809,33 @@ Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
 > wird an acht Stellen gelesen und geschrieben. Es zu entfernen zerstörte
 > stillschweigend vorhandene Patientendaten.
 
-**Im Klartext in der Datenbank** stehen dagegen: Zeiten und Phasen, Track,
-Distanz und Steigung, Reanimationsereignisse, Besatzung, Einsatzmittel,
-Diensttag- und Standortdaten. Das ist eine bewusste Entscheidung — diese Angaben
-sind für Auswertung, Sortierung und Statistik nötig, die der Server leisten
-muss. Sie sind für sich genommen nicht personenbeziehbar; **in Verbindung mit
-Ort und Zeitpunkt eines Einsatzes können sie es aber werden.** Wer eine
-Installation betreibt, sollte das wissen und den Datenbankzugang entsprechend
-behandeln.
+**Im Klartext in der Datenbank** stehen dagegen: Zeiten und Phasen — samt
+**Koordinate jeder Phase**, und Phase 4 und 5 sind der Einsatzort —, Track,
+Distanz und Steigung, `site_ele_m`, Transportziel mit `dest_lat`/`dest_lon`,
+Schockraum, Reanimationsereignisse, Besatzung, Einsatzmittel, Diensttag- und
+Standortdaten. Das ist eine bewusste Entscheidung — diese Angaben sind für
+Auswertung, Sortierung und Statistik nötig, die der Server leisten muss. Sie
+sind für sich genommen nicht personenbeziehbar; **in Verbindung mit Ort und
+Zeitpunkt eines Einsatzes können sie es aber werden.** Wer eine Installation
+betreibt, sollte das wissen und den Datenbankzugang entsprechend behandeln.
+
+> **Dieser Abschnitt ist seit Web 15.6.0 die Zusage, nicht mehr nur eine
+> Einräumung** (Backlog Nr. 138, Weg C aus `docs/konzepte/Konzept-V1-Ortsdaten.md`,
+> K-1). Der Satz, um den es geht, ist der unbequeme: **Aus Spur und
+> Phasenkoordinaten lässt sich der Einsatzort rekonstruieren** — die
+> Verschlüsselung der Adresse verbirgt ihn nicht. Ein Datenbankabzug ergibt Ort,
+> Zeit, Klinik und Behandlung; ohne Name und Diagnose, aber mit Zusatzwissen
+> re-identifizierend.
+>
+> Deshalb sagen `CLAUDE.md` 4, `README.md`, `Handbuch.md` 5 und der Textbaustein
+> für die Datenschutzerklärung (Handbuch 11.5) jetzt **dasselbe** und zählen
+> beide Seiten auf. Vorher versprachen sie „Diagnose, Alter und Einsatzort sind
+> Ende-zu-Ende-verschlüsselt" — richtig für das Feld, irreführend für die Sache.
+>
+> **Das macht nichts sicherer.** Es macht das Projekt ehrlich, und es ist die
+> Voraussetzung dafür, dass die Frage nach **Weg B** (Schlüssel auf die Uhr,
+> Rahmenplan S11) nicht als Widerspruch im Raum steht, sondern als offener
+> Punkt: Backlog Nr. 43.
 
 Die Zuordnung Datensatz ↔ Person entsteht ausschließlich über den
 verschlüsselten Block.
