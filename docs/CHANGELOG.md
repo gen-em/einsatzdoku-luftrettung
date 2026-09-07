@@ -184,6 +184,33 @@ und lag der Diensttag im Papierkorb, entstand ein **leerer neuer Tag**. Die
 Ingestprobe hat dafür sechs Erwartungen mehr (47 → 53), und am alten Stand
 sind genau diese sechs rot.
 
+**Und die Nachbesserung selbst hatte zwei Löcher** — gefunden von der zweiten
+Gegenprüfung, die nur für diesen Punkt gelaufen ist (die übrigen Angreifer
+brachen an der Sitzungsgrenze des API-Kontingents ab; das steht so im
+Prüfdokument). Erstens: „Ein `started_at` in der Zukunft zählt nicht" wurde bei
+jedem Paket neu gegen jetzt gerechnet. Ein `started_at`, das beim Anlegen 99
+Stunden vorn lag, zählte nicht, solange es vorn lag — und wurde zum Anker,
+sobald die Zeit es eingeholt hatte. Das längst geschlossene Fenster ging dann
+zu einem gerätebestimmten Zeitpunkt noch einmal 72 Stunden auf. Wendet man
+„Zukunft zählt nicht" auf den Augenblick des Anlegens an, ist ein `started_at`
+später als `created_at` immer Zukunft, und das Spätere aus beiden ist immer
+`created_at` — also ist **`created_at` allein der Anker**: der Augenblick, in
+dem der Server den Datensatz zum ersten Mal sah, den keine Geräteuhr bestimmt,
+weder eine nach- noch eine vorgehende. `started_at` dient nur als Rückfall,
+solange die Migration nicht gelaufen ist, und nie später als jetzt.
+Zweitens: Die Migration bestand aus einem ALTER und einem `UPDATE created_at
+= started_at`. `started_at` ist DATETIME und nimmt jedes Jahr, `created_at`
+ist TIMESTAMP und reicht von 1970-01-01 00:00:01 bis 2038 — ein einziges
+Segment mit `started_at` 1970-01-01 00:00:00 (der Wert einer Uhr ohne
+Zeitabgleich, und `ingest.php` nimmt ihn an) ließ das UPDATE scheitern,
+nachdem das ALTER schon durch war; der nächste Klick hätte die Migration als
+„nicht nötig" verbucht, weil die Spalte ja da war, und jedes alte Segment hätte
+die Migrationszeit als Anker getragen. Sie läuft jetzt in drei für sich
+wiederholbaren Schritten (Spalte NULL anlegen, füllen wo NULL — gekappt auf den
+Bereich der Spalte und auf höchstens „jetzt" —, dann NOT NULL) und gilt erst
+als erledigt, wenn alle drei stehen. Ingestprobe 53 → 54 (Fall 7, vorgehende
+Uhr; am alten Stand rot), Wegwerf-Datenbank mit fünf Randwerten (1970-01-01 00:00:00 und 0001-01-01 werden 1970-01-01 00:00:01; 2050 und 9999 werden die Migrationszeit; ein nachgestellter Teillauf wird beim zweiten Lauf zu Ende geführt, und erst dann sagt `skip` „erledigt").
+
 **Die DOCTYPE-Sperre (Nr. 130) war mit UTF-7 zu umgehen.** UTF-7 ist reines
 ASCII — gültiges UTF-8, kein Nullbyte, `<!DOCTYPE` steht darin als
 `+ADwAIQ-DOCTYPE` —, und libxml las es trotzdem als DOCTYPE mit Entitäten,

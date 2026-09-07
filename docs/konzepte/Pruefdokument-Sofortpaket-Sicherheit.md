@@ -27,6 +27,7 @@ Das steht am Anfang, nicht in einer Fußnote.
 | **Der Räumlauf nach 30 Tagen im Feld** (Nr. 114) | Die Frist ist nur im Prüfstand stellbar (`jetzt`); im Emulator vergehen keine 30 Tage | — (Robolectric belegt die Regel; am Gerät bleibt das Trennen, das dieselbe Funktion ohne Frist ruft) |
 | **Das Uhr-Modul im Wear-Emulator** | Die einzige Änderung am Uhr-Modul ist die neue Methode in der gemeinsamen Datei `WearNachrichtenweg.kt`, die die Uhr nicht ruft; das Uhr-APK ist byteweise gleich groß geblieben. Ein zweiter TCG-Boot (nach vier Fehlversuchen und 715 s beim Handy) stand dazu in keinem Verhältnis | — bei der nächsten Änderung am Uhr-Modul mit |
 | **Ein signiertes Release-APK** | Kein Signaturschlüssel im Container (E-S4-16); geprüft ist das unsignierte Release-APK aus `./gradlew build` | Auftraggeber beim Release |
+| **Die Nachbesserungen zu Nr. 130, 136 und 140 durch einen zweiten adversarischen Lauf** | Der Lauf brach an der Sitzungsgrenze des API-Kontingents ab (8 von 10 Angreifern, 15 von 15 Skeptikern, HTTP 429); gegengeprüft ist nur Nr. 134 — mit zwei Löchern, beide behoben (Abschnitt 4a). Ersatz: die eigenen Messungen in Abschnitt 1 | nächste Sitzung mit freiem Kontingent: Workflow wieder aufnehmen; sonst Prüfliste P-2 (Passwortregel) und P-9 (Wache) |
 
 **Eine Bemerkung zur Umgebung, weil sie für jede Zahl hier gilt:** Der
 Container brachte weder Datenbank noch Android-SDK mit. Beides holt
@@ -84,7 +85,7 @@ diesen Umweg hätte der Punkt keine Zahl.
 | `tools/vollstaendigkeit/` | **300 → 301 Befunde** | Der eine neue ist eine **Ellipse in einem PHP-Kommentar** (`gpx_lib.php:328`) — dieselbe Rauschklasse wie die 227 vorhandenen „Unicode-Zeichen als Symbol im Markup". Gegen den Abzweigpunkt `4b442de` gemessen, nicht gegen den lokalen `main` (der stand auf PR #27) |
 | `tools/linkprobe/` | **99 Zielseiten, 132 Verweise, 0 unbekannte Abweichungen, 1 bekannt mit Nummer (151), 0 tote Zeilen** | unverändert gegenüber Web 15.5.2; nach den Nachbesserungen erneut, dieselben Zahlen |
 | `tools/gpxprobe/` | **91 Erwartungen, 2 nicht erfüllt** | vorher 88; Teil 8 mit neuntem Fall (UTF-7) und drei Positivfällen. Die 2 sind vorbestehend: Der Referenzexport im Repositorium ist älter als die frisch eingespielte Datenbank. **Gegengeprüft am Stand vor der Änderung: 77 Erwartungen, dieselben 2** |
-| `tools/ingestprobe/` | **53 Erwartungen, 0 nicht erfüllt** | vorher 39, dann 47; Teil 9 neu, Zeitstempel auf `time()` umgestellt; sechs Erwartungen zur Nachbesserung Nr. 134 |
+| `tools/ingestprobe/` | **54 Erwartungen, 0 nicht erfüllt** | vorher 39, 47, 53; Teil 9 neu, Zeitstempel auf `time()` umgestellt; sechs Erwartungen zur Nachbesserung Nr. 134 und eine zur zweiten Runde (vorgehende Uhr) |
 | `tools/wartungsprobe/` | **51 Erwartungen, 0 nicht erfüllt** | vorher 50; 12a neu |
 | `tools/integritaetswache/` | **28 Erwartungen Selbstprobe, 0 nicht erfüllt** · Lauf **112/112**, 0 zusätzliche Stellen in sechs Klassen · 27 Angriffsvarianten, **1 grün** (Stylesheet, gewollt) | neu; erste Fassung 7 Erwartungen, dann 12, 20, 28 (zwei Nachbesserungen, Abschnitt 1) |
 | `tools/screenshots/` (Zeiger) | **112 Einzelbilder, 14 Kontaktbögen, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe** | 14 berührte Seiten × 8 Breiten |
@@ -161,7 +162,7 @@ Spalte:
 | Punkt | Fund | Schwere | Stand |
 |---|---|---|---|
 | 134 | Bei geschlossenem Fenster schreibt `dt_zeitraum_fortschreiben()` weiterhin Beginn/Ende des Diensttags um | hoch | **behoben** `839d317` — nur innerhalb |
-| 134 | Der Anker ist das vom Gerät gesendete `started_at`: eine falsch gestellte Uhr schließt das Fenster sofort, verliert Punkte und Phasen, `next_seq` wandert trotzdem (die Uhr löscht als quittiert) | hoch | **behoben** `839d317` — Anker `max(started_at, created_at)`, Zukunft zählt nicht; Migration für `rest_segments.created_at` (**`update.php` nach dem Deploy**) |
+| 134 | Der Anker ist das vom Gerät gesendete `started_at`: eine falsch gestellte Uhr schließt das Fenster sofort, verliert Punkte und Phasen, `next_seq` wandert trotzdem (die Uhr löscht als quittiert) | hoch | **behoben** `839d317` — Anker `max(started_at, created_at)`, Zukunft zählt nicht; Migration für `rest_segments.created_at` (**`update.php` nach dem Deploy**). **Zweite Runde `15b9881`:** Anker ist `created_at` allein, Migration dreischrittig mit Kappung — siehe die Tabelle zur zweiten Gegenprüfung unten |
 | 134 | Abschlusspaket außerhalb des Fensters: Metadaten still verworfen, kein `kept_*`; Diensttag im Papierkorb → leerer neuer Tag; `started_at` in der Zukunft → Fenster schließt nie; zweite Fensterprüfung unerreichbar | mittel / niedrig | **behoben** `839d317` — `kept_meta` (JSON-Vertrag 5), kein Diensttag bei zu, toter Zweig gestrichen |
 | 130 | **UTF-7** über die Kodierungsdeklaration umgeht die DOCTYPE-Sperre; die Probe Teil 8 prüft die Deklaration nicht; der Kommentar zur Latin-1-Abweisung gilt nur für den JSON-Direktweg | hoch / mittel / niedrig | **behoben** `a395455` — Deklaration nur UTF-8/ASCII, neunter Probenfall, Kommentar und Handbuch 4.1c berichtigt |
 | 136 | Sonderzeichen zählen nicht zum Rest: Zufallspasswörter mit Sonderzeichen werden abgewiesen (12 Zeichen: 2–15 %; vorher 0 %), mit der Begründung „geläufige Wörter"; Listenwörter der Reihe nach statt längste zuerst, kurze gar nicht, Wiederentstehen nach dem Streichen | hoch / mittel | **behoben** `6699b58` — Sonderzeichen zählen eins zu eins (nie zitiert, nur gezählt), Liste längste zuerst und nach jedem Treffer von vorn, Anteilsregel nur bei gestrichenem Listenwort, Rat nur bei zu wenig Substanz; Zahlen in Abschnitt 1 („136 Nachbesserung, Passwortregel"); `adminlokal2026` fällt jetzt durch → **Backlog Nr. 156** |
@@ -176,7 +177,26 @@ zu beauftragen.
 die Nachbesserungen als erledigt gelten, hat ein zweiter Workflow die fünf
 Code-Commits angegriffen — je Commit zwei Angreifer (Umgehung; Regression und
 Widerspruch), jeder Fund von drei Skeptikern zu widerlegen versucht, Mehrheit
-entscheidet. **Sie läuft noch** (Workflow `wf_8e9ce911-02b`); ihr Ergebnis — Zahl der Funde, Zahl der bestätigten, was daraus behoben wurde — wird hier nachgetragen, **bevor** der Merge freigegeben wird. Bis dahin gilt: Die Nachbesserungen sind gebaut und mit den Prüfmitteln belegt, aber nicht gegengeprüft.
+entscheidet. **Er ist nur zu einem Fünftel gelaufen** (Workflow
+`wf_8e9ce911-02b`): Von zehn Angreifern kamen zwei durch, beide zu Nr. 134;
+die übrigen acht und alle fünfzehn Skeptiker brachen an der Sitzungsgrenze des
+API-Kontingents ab (HTTP 429, „session limit"). Die beiden Angreifer fanden
+unabhängig voneinander dieselben Löcher, jedes mit Reproduktion an einer
+Wegwerf-Datenbank:
+
+| Fund | Schwere | Was | Stand |
+|---|---|---|---|
+| Migration scheitert und gilt danach als erledigt | mittel (zweimal gefunden) | `UPDATE rest_segments SET created_at = started_at` scheitert unter `STRICT_TRANS_TABLES` an einem einzigen Segment mit `started_at` außerhalb des TIMESTAMP-Bereichs (1970-01-01 00:00:00 — die Uhr ohne Zeitabgleich — oder nach 2038; `ingest.php` nimmt beides mit HTTP 200 an), **nach** dem ALTER. Der nächste Klick verbucht die Migration über `_hat_spalte()` als „nicht nötig", und jedes alte Segment trägt die Migrationszeit als Anker: 72 h wieder veränderbar | **behoben** `15b9881` — drei für sich wiederholbare Schritte (Spalte NULL anlegen, füllen wo NULL mit Kappung auf den Spaltenbereich und höchstens „jetzt", dann NOT NULL); `skip` erst wahr, wenn alle drei stehen. Wegwerf-Datenbank mit fünf Randwerten: `started_at` 30 Tage alt → `created_at` = `started_at`; 1970-01-01 00:00:00 → 1970-01-01 00:00:01; 0001-01-01 → 1970-01-01 00:00:01; 2050-06-01 und 9999-12-31 → Migrationszeit; `skip` vorher **false**, nachher **true**; Teillauf nachgestellt (Spalte wieder NULL, eine Zeile NULL) → `skip` **false**, zweiter Lauf füllt nur die eine Zeile und setzt NOT NULL; Spalte danach `NO` / `current_timestamp()`; neue Zeile bekommt „jetzt" |
+| Ein eingeholtes Zukunfts-`started_at` öffnet das Fenster erneut | mittel / niedrig (zweimal gefunden) | „Zukunft zählt nicht" wurde je Paket gegen jetzt gerechnet: Ein `started_at`, das beim Anlegen 99 h vorn lag, wurde zum Anker, sobald die Zeit es eingeholt hatte — das längst geschlossene Fenster ging zu einem gerätebestimmten Zeitpunkt noch einmal 72 h auf | **behoben** `15b9881` — Anker ist `created_at` allein (auf den Augenblick des Anlegens angewendet ist ein späteres `started_at` immer Zukunft, und das Spätere aus beiden immer `created_at`); `started_at` nur als Rückfall vor der Migration, nie später als jetzt. Ingestprobe Fall 7 (vorgehende Uhr): **54/0**, mit dem alten `ingest.php` **54/1** — genau dieser Fall rot („kept_points fehlt") |
+| Migration übernimmt ein Zukunfts-`started_at` | niedrig | `created_at = started_at` kopierte 2030-06-01 unverändert; `ingest.php` prüfte nur `started_at` gegen die Zukunft | **behoben** `15b9881` — Kappung in der Migration und am Anker |
+
+Ohne Skeptiker sind die Funde nicht widerlegt worden; sie sind am Code
+nachvollzogen und mit eigener Zahl behoben. **Nicht gegengeprüft sind damit
+die Nachbesserungen zu Nr. 130, 136 und 140** — Abschnitt 0 nennt sie; Ersatz
+sind die eigenen Messungen in Abschnitt 1 (drei Fassungen der Passwortregel
+nebeneinander, 27 Angriffsvarianten gegen die Wache). Der Workflow lässt sich
+mit freiem Kontingent wieder aufnehmen (`resumeFromRunId`); die beiden fertigen
+Angreifer kommen dann aus dem Zwischenspeicher.
 
 ## 5. Entscheidungen, die beim Bauen gefallen sind
 

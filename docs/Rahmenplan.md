@@ -673,8 +673,14 @@ serverseitig, `kept_meta`, Migration `rest_segments.created_at`; `839d317`),
 **140** (`<base>`, `formaction`, Selbstprobe ohne Ankerwort; `72a4268`) — und
 beim Nachprüfen der Wache **17 von 27 Angriffsvarianten noch grün**, geschlossen
 in einem zweiten Commit (`4e30b26`). Danach eine zweite Gegenprüfung auf die
-Nachbesserungen selbst: **läuft noch**, Ergebnis wird nachgetragen. Prüfzahlen danach: ingestprobe
-**53/0**, gpxprobe **91/2** (vorbestehend), wartungsprobe **51/0**, Wache
+Nachbesserungen selbst — **nur zu Nr. 134 gelaufen** (2 von 10 Angreifern,
+keine Skeptiker; Sitzungsgrenze des API-Kontingents): zwei Löcher, beide
+behoben (`15b9881`) — die Migration scheiterte an Randdaten und galt danach
+als erledigt, ein eingeholtes Zukunfts-`started_at` öffnete das Fenster
+erneut; Anker ist jetzt `created_at` allein, die Migration läuft
+dreischrittig mit Kappung. 130/136/140 stehen aus (Prüfdokument Abschnitt
+0). Prüfzahlen danach: ingestprobe
+**54/0**, gpxprobe **91/2** (vorbestehend), wartungsprobe **51/0**, Wache
 **28/0** und 112/112, Passwortregel 0 % Zufallsabweisung, Wortliste
 **0/0/0**, linkprobe 132/0/1/0, `php -l` 463/0. **Backlog 154–156 neu**
 (Handy liest `kept_meta` nicht; Fixture mit alter Rundenzahl;
@@ -1559,10 +1565,12 @@ Deploy-Tor in S10), 114 (Bedienweg), 153 neu; Prüfliste P-1 bis P-12 beim
 Auftraggeber. *Gegenprüfung (07.09.2026):* 93 Agenten, 29 Funde, 22 hielten
 — alle behoben, je Punkt ein Commit (`bf5a506`, `839d317`, `a395455`,
 `fd29866`, `6699b58`, `72a4268`, `4e30b26`); zweite Gegenprüfung auf die
-Nachbesserungen: **läuft noch**, Ergebnis wird nachgetragen. Danach ingestprobe 53/0, gpxprobe
+Nachbesserungen nur zu Nr. 134 gelaufen (Kontingent), zwei Löcher, behoben
+(`15b9881`: Anker `created_at` allein, Migration dreischrittig); 130/136/140
+stehen aus. Danach ingestprobe 54/0, gpxprobe
 91/2, Wache 28/0 und 112/112, Passwortregel 0 % Zufallsabweisung;
 Backlog 154–156 neu. **Der Merge braucht `update.php`** (Migration
-`rest_segments.created_at`). *Letzter Commit:* `4e30b26` (Nr. 140, zweite Nachbesserung) plus der Buchführungs-Commit dieser Fassung. Merge auf `main`
+`rest_segments.created_at`). *Letzter Commit:* `c3949b8` (Android 0.14.1) plus der Buchführungs-Commit dieser Fassung. Merge auf `main`
 nach Freigabe.
 
 ## 9. Pflege dieses Dokuments
