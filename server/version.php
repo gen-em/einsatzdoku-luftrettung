@@ -2888,4 +2888,25 @@ declare(strict_types=1);
  *          durch die Anwendung ein anderer wird und keine Spalte sich regt.
  *          Keine Migration.
  */
-const WEB_VERSION = '15.6.0';
+/* 15.6.1  DIE VORSCHLAGSLISTE LAG HINTER DER SPEICHERN-LEISTE (S9/AP1).
+ *          Gemeldet vom Auftraggeber am Bild, nicht von einem Pruefmittel.
+ *          Die Liste stand auf `z-index:20` — dem Wert der alten `.rmlist`,
+ *          die als einzige der drei Vorgaengerinnen ueberhaupt schwebte. Die
+ *          klebende Speichern-Leiste liegt auf 30 und deckte damit genau die
+ *          untersten Trefferzeilen zu: gemessen 61 px Ueberlappung, und
+ *          `elementFromPoint` traf in der Schnittflaeche die Leiste.
+ *
+ *          Betroffen ist die Zeile, zu der man scrollt — je weiter unten das
+ *          Feld steht, desto mehr Liste liegt darunter. Ein Bild zeigt das
+ *          nur, wenn die Scrollposition zufaellig passt; deshalb misst die
+ *          Klickprobe es jetzt in beide Richtungen (`elementFromPoint` in der
+ *          Schnittflaeche, und die Kopfleiste muss ueber der Liste bleiben).
+ *
+ *          Ebene jetzt 35: ueber der Speichern-Leiste (30), unter der
+ *          Kopfleiste (40) — eine Vorschlagsliste, die ueber die Kopfleiste
+ *          malt, verdeckt den Weg aus der Seite heraus.
+ *
+ *          KORREKTURNUMMER: ein Zahlenwert, kein neues Verhalten. Keine
+ *          Migration.
+ */
+const WEB_VERSION = '15.6.1';

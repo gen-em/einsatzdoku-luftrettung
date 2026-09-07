@@ -2446,11 +2446,25 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
  * traegt dafuer `position:relative`: `.loc-widget`, `.rmbox`,
  * `.feld-vorschlag`.
  *
+ * IHRE EBENE IST 35, UND DAS IST EINE ENTSCHEIDUNG. Sie stand zuerst auf 20 —
+ * dem Wert der alten `.rmlist`, die als einzige schwebte. Damit lag sie UNTER
+ * der klebenden Speichern-Leiste (30), und die deckte beim Tippen genau die
+ * untersten Trefferzeilen zu: gemessen 61 px Ueberlappung, und
+ * `elementFromPoint` traf in der Schnittflaeche die Leiste. Gefunden hat es
+ * der Auftraggeber am Bild, kein Pruefmittel — ein Bild zeigt die Ueberdeckung
+ * nur, wenn die Scrollposition zufaellig passt. Die Klickprobe misst sie
+ * jetzt (`ap1-liste-ueber-speichern-leiste`).
+ *
+ * NACH OBEN IST SIE EBENSO BEGRENZT: Die Kopfleiste liegt auf 40 und bleibt
+ * darueber — eine Vorschlagsliste, die ueber die Kopfleiste malt, verdeckt
+ * den Weg aus der Seite heraus. 35 ist der Platz dazwischen, und er ist der
+ * einzige.
+ *
  * KEIN EIGENES HOEHENTOKEN. Die Zeile ist `--knopf` hoch und folgt damit
  * beiden Bedienhoehen von selbst (44 px am Finger, 36 px am Zeigergeraet ab
  * 1024 px, R76). */
 .vorschlaege{
-  position:absolute;left:0;right:0;z-index:20;
+  position:absolute;left:0;right:0;z-index:35;
   margin:var(--abstand-1) 0 0;padding:0;list-style:none;
   background:var(--schnee);
   border:var(--strich) solid var(--linie-stark);

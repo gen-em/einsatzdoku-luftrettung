@@ -14,6 +14,34 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.6.1] — 2026-09-07
+
+### Web — die Vorschlagsliste lag hinter der Speichern-Leiste (S9/AP1)
+
+**Gefunden hat es der Auftraggeber am Bild, kein Prüfmittel** — und das ist
+bemerkenswert, weil dieselbe Stufe eben erst ein Prüfmittel eingeführt hat,
+das Elemente bedient. Die neue Liste stand auf `z-index: 20`, dem Wert der
+alten `.rmlist`, die als einzige der drei Vorgängerinnen überhaupt schwebte.
+Die klebende Speichern-Leiste liegt auf 30 und deckte damit genau die
+untersten Trefferzeilen zu. Gemessen: **61 px Überlappung**, und
+`elementFromPoint` traf in der Schnittfläche die Leiste, nicht die Liste.
+
+Betroffen ist die Zeile, zu der man scrollt — je weiter unten das Feld steht,
+desto mehr Liste liegt darunter. **Ein Bild zeigt das nur, wenn die
+Scrollposition zufällig passt**, und genau deshalb ist es durch den
+Bilderlauf gelaufen: Der fotografiert die Seite, nicht die geöffnete Liste an
+der ungünstigen Stelle.
+
+Die Ebene ist jetzt **35** — über der Speichern-Leiste (30), unter der
+Kopfleiste (40). Nach oben ist sie ebenso begrenzt und aus demselben Grund:
+Eine Vorschlagsliste, die über die Kopfleiste malt, verdeckt den Weg aus der
+Seite heraus. Die Klickprobe misst seither **beide** Richtungen — wer oben
+liegt, wird nicht behauptet, sondern mit `elementFromPoint` in der
+Schnittfläche nachgesehen (Weg `ap1-liste-ueber-speichern-leiste`, vorher
+verfehlt, nachher erfüllt).
+
+Keine Migration.
+
 ## [Web 15.6.0] — 2026-09-07
 
 ### Web — eine Vorschlagsliste statt dreier und einer vierten vom Browser (S9/AP1)

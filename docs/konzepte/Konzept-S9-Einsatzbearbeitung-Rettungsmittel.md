@@ -24,15 +24,22 @@ Mockups in `konzept-s9/mockups/`.
 >
 > | Paket | Stand | Stufe | Abnahmezahlen |
 > |---|---|---|---|
-> | **AP1** Vorschlagsliste und Klickprobe | **erledigt** 07.09.2026 | Web **15.6.0** | Klickprobe PS-2 mit 300 ms gehaltener Maus **0 von 3 → 3 von 3** (dieselbe Fassung der Probe gegen beide Stände); `grep -rn datalist server/` **0** außerhalb von Kommentaren (vorher 12 in sechs Dateien, 8 davon im Markup einer Einsatzseite); Transportziel „Klin" **1 Liste · 2 Gruppen · 2 Stammdaten · 4 Adressen · 0 `<datalist>`** (vorher 1 Liste · 0 Gruppen · 8 `<datalist>`); Bedienhöhe an der einzeiligen Zeile gemessen **390 px → 44 px, 1280 px Zeiger → 36 px, 1280 px Finger → 44 px**; **12 von 12** Wegen erfüllt über zwei Breiten × zwei Bedienhöhen, 12 Bilder; Bilderlauf 7 Seiten, 56 Bilder je Lauf, **0/0/0** in beiden Bedienhöhen; Wortliste **0/0/0** in fünf Bereichen; Vollständigkeit **300 → 298 Befunde**; Kontraste **21 Paare, 0 verfehlt** |
+> | **AP1** Vorschlagsliste und Klickprobe | **erledigt** 07.09.2026 | Web **15.6.0**, Korrektur **15.6.1** | Klickprobe PS-2 mit 300 ms gehaltener Maus **0 von 3 → 3 von 3** (dieselbe Fassung der Probe gegen beide Stände); `grep -rn datalist server/` **0** außerhalb von Kommentaren (vorher 12 in sechs Dateien, 8 davon im Markup einer Einsatzseite); Transportziel „Klin" **1 Liste · 2 Gruppen · 2 Stammdaten · 4 Adressen · 0 `<datalist>`** (vorher 1 Liste · 0 Gruppen · 8 `<datalist>`); Bedienhöhe an der einzeiligen Zeile gemessen **390 px → 44 px, 1280 px Zeiger → 36 px, 1280 px Finger → 44 px**; **16 von 16** Wegen erfüllt über zwei Breiten × zwei Bedienhöhen, 16 Bilder; Ebene der Liste **35** über der Speichern-Leiste (30) und unter der Kopfleiste (40), mit `elementFromPoint` in der Schnittfläche gemessen (F-S9-P-07, Web 15.6.1); Bilderlauf 7 Seiten, 56 Bilder je Lauf, **0/0/0** in beiden Bedienhöhen; Wortliste **0/0/0** in fünf Bereichen; Vollständigkeit **300 → 298 Befunde**; Kontraste **21 Paare, 0 verfehlt** |
 > | AP2 bis AP8 | offen | — | — |
 >
-> **Offene Fragen an den Auftraggeber aus AP1:** drei, alle im Prüfdokument
-> unter „Fragen" mit Vorschlag und Preis — der Widerspruch zwischen der
-> AP1-Abnahme („`datalist` = 0") und der Zuordnung der Diensttags-Besatzung
-> nach AP6, die Zeile „`<datalist>` in der Streichliste" (dort stehen
-> Klassen, kein HTML-Element), und die Zahl der Backlog-Punkte im Abschluss
-> (achtzehn im Konzept, zwanzig im Auftrag).
+> **Fragen aus AP1** (Prüfdokument, Abschnitt 4): **zwei entschieden am
+> 07.09.2026** — die Besatzungsfelder des Diensttags gehören zu **AP1** (so
+> gebaut), und im Abschluss wandern **zwanzig** Backlog-Punkte nach
+> *Erledigt*, also **auch Nr. 132 und Nr. 137** (siehe AP8 unten). Offen ist
+> die dritte: die Zeile „`<datalist>` in der Streichliste" — dort stehen
+> Klassen des alten Stylesheets, `datalist` ist ein HTML-Element; eingetragen
+> sind statt dessen die vier Klassen, die tatsächlich verschwinden.
+>
+> **Ein Fund nach der Abgabe von AP1**, vom Auftraggeber am Bild gemeldet und
+> behoben mit Web 15.6.1: Die Liste lag mit `z-index: 20` **hinter** der
+> klebenden Speichern-Leiste (30) und verdeckte deren unterste Trefferzeilen
+> (61 bis 69 px). Ebene jetzt 35; die Klickprobe misst sie in beide
+> Richtungen (F-S9-P-07).
 
 ---
 
@@ -916,7 +923,10 @@ Katalogfeldern und am Diensttag-Notizfeld, **nicht** an `notes`
 Handbuch gegengelesen (alle berührten Kapitel), `Technik.md` (Datenmodell,
 Verzeichnisstruktur, neue Endpunkte, Runbook), `Export-Format.md`,
 `Backup-Format.md`, `Design.md` (Token, Bausteine, Symbole, Streichliste),
-`Lizenzen.md` (neue SVG), Backlog (achtzehn Punkte nach *Erledigt*),
+`Lizenzen.md` (neue SVG), Backlog (**zwanzig** Punkte nach *Erledigt* —
+Beschluss des Auftraggebers vom 07.09.2026; die achtzehn dieses Konzepts
+**und** Nr. 132 und Nr. 137, je mit dem Vermerk „aus dem Sofortpaket
+übernommen"),
 Prüfdokument nach K9, Erledigt-Zeile Rahmenplan Abschnitt 8. Prüfmittel
 zuletzt: Bilderlauf acht Breiten beide Bedienhöhen, Stilvergleich,
 Vollständigkeit, Wortliste, Wartungsprobe, Klickprobe, Kreisläufe.
@@ -1051,5 +1061,9 @@ E-S9-01.
 
 **Nr. 152** (PS-12 Standortseiten, aufgenommen 07.09.2026, S9). 101–113,
 147, 44, 68, 69, 70, 72: Vermerk „Konzept S9 liegt vor, E-S9-nn" am
-Eintrag; nach der Umsetzung alle achtzehn nach *Erledigt*. 132 und 137:
-Vermerk zur Ergänzung durch S9.
+Eintrag; nach der Umsetzung alle achtzehn nach *Erledigt*.
+
+**Berichtigt am 07.09.2026 (Beschluss des Auftraggebers):** Auch **132 und
+137** wandern nach der Umsetzung nach *Erledigt* — S9 erledigt sie
+inhaltlich (E-S9-02 in AP7, E-S9-05 in AP2), nicht nur ergänzend. Damit sind
+es **zwanzig** Punkte, je mit dem Vermerk „aus dem Sofortpaket übernommen".

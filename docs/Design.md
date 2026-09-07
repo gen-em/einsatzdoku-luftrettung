@@ -1816,7 +1816,7 @@ Handlung.
 
 | | |
 |---|---|
-| `.vorschlaege` | schwebt (`position:absolute`, `z-index:20`); der Behälter trägt `position:relative` |
+| `.vorschlaege` | schwebt (`position:absolute`, **`z-index:35`**); der Behälter trägt `position:relative` |
 | `.vorschlaege-gruppe` | Herkunftszeile auf Rauch, `--groesse-1`, versal — keine Bedienhöhe, sie ist nicht anzufassen |
 | `.vorschlag` | `min-height: var(--knopf)` — folgt beiden Bedienhöhen von selbst (44/36, R76) |
 | `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` Orange links — **eine** Markierung für Zeiger und Pfeiltaste |
@@ -1832,6 +1832,16 @@ Handlung.
 > **einzeilige** Zeile folgt der Umschaltung sichtbar (gemessen 44 px bei
 > 390 px, 36 px bei 1280 px am Zeiger). Wer die Bedienhöhe belegen will,
 > misst deshalb ein Besatzungsfeld und kein Transportziel.
+
+> **Ebene 35 — zwischen Speichern-Leiste und Kopfleiste.** Sie stand zuerst
+> auf 20, dem Wert der alten `.rmlist`. Die klebende Speichern-Leiste liegt
+> auf **30** und deckte damit genau die untersten Trefferzeilen zu: gemessen
+> **61 px Überlappung**, und `elementFromPoint` traf in der Schnittfläche die
+> Leiste. Nach oben ist sie ebenso begrenzt — die Kopfleiste liegt auf **40**
+> und bleibt darüber, denn eine Vorschlagsliste, die über sie malt, verdeckt
+> den Weg aus der Seite heraus. 35 ist der Platz dazwischen, und er ist der
+> einzige. Gefunden hat es der Auftraggeber am Bild; die Klickprobe misst es
+> seither in beide Richtungen.
 
 > **Sie schiebt nicht, sie schwebt.** Die alte `.loc-suggest` stand im Fluss
 > und drückte beim Tippen alles darunter nach unten — auf einem 390-px-Schirm

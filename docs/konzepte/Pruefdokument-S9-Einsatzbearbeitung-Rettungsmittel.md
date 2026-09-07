@@ -14,10 +14,10 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 >
 > | | |
 > |---|---|
-> | Stand | 07.09.2026 — **AP1 gebaut und geprüft** (Web 15.6.0). AP2 bis AP8 offen |
+> | Stand | 07.09.2026 — **AP1 gebaut und geprüft** (Web 15.6.0, Korrekturstufe **15.6.1**). AP2 bis AP8 offen |
 > | Geprüft | P-01, P-02, P-03 vollständig · P-23 für die **sieben berührten** Seiten, nicht für alle 30 · P-12, P-25 als Gesamtlauf |
 > | Offen | P-04 bis P-11, P-13 bis P-22, P-24, P-26 bis P-33 (AP2 bis AP8) |
-> | Fehlerfunde | **vier, alle behoben** — F-S9-P-01 bis F-S9-P-04 (Abschnitt 2); dazu **drei Fragen** an den Auftraggeber (Abschnitt 4) |
+> | Fehlerfunde | **fünf, alle behoben** — F-S9-P-01 bis F-S9-P-04 und **F-S9-P-07** (Abschnitt 2), dazu zwei gesammelte für AP2 (F-S9-P-05, -06); von den **drei Fragen** an den Auftraggeber (Abschnitt 4) sind zwei entschieden |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` — 88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto, 8 Zielkliniken, 8 weitere Rettungsmittel, 15 Besatzungs-Vorbelegungen an zwei Standorten |
 
 ---
@@ -66,7 +66,7 @@ gemessen hat, ist keine Zahl.
 |---|---|---|---|---|---|
 | P-01 | PS-2 mit gehaltener Maus | Klickprobe, 300 ms | 3/3 (vorher 0/3) | **vorher 0 von 3, nachher 3 von 3** — dieselbe Fassung der Probe gegen beide Stände, je drei Übernahmen (eine Vorbelegung des Standorts, zwei freie Eingaben); über zwei Breiten und beide Bedienhöhen **4 × 3 von 3** | 07.09.2026 |
 | P-02 | keine `<datalist>` mehr | grep | 0 | **0** außerhalb von Kommentaren (`grep -rn datalist server/`; vorher 12 Treffer in sechs Dateien, davon 8 `<datalist>`-Elemente im gerenderten Markup einer Einsatzseite). Verbleibende 10 Nennungen sind sämtlich Kommentare, die die Ablösung erklären | 07.09.2026 |
-| P-03 | eine Vorschlagsliste, Gruppenzeile, ≤ 2 Stammdaten | Bild, Klickprobe | 2 Breiten × 2 Höhen | **erfüllt.** Tipp „Klin" am Transportziel: **1 sichtbare Liste · 2 Gruppenzeilen · 2 Stammdatentreffer · 4 Adresstreffer · 0 `<datalist>`** (vorher: 1 Liste, 0 Gruppen, 0 erkennbare Herkunft, **8 `<datalist>`**). Bedienhöhe an der **einzeiligen** Zeile gemessen: 390 px → **44 px**, 1280 px Zeiger → **36 px**, 1280 px Finger → **44 px**. **12 Bilder** unter `tools/klickprobe/ausgabe/bild/`, Breite und Eingabeart im Dateinamen | 07.09.2026 |
+| P-03 | eine Vorschlagsliste, Gruppenzeile, ≤ 2 Stammdaten, richtige Ebene | Bild, Klickprobe | 2 Breiten × 2 Höhen | **erfüllt.** Tipp „Klin" am Transportziel: **1 sichtbare Liste · 2 Gruppenzeilen · 2 Stammdatentreffer · 4 Adresstreffer · 0 `<datalist>`** (vorher: 1 Liste, 0 Gruppen, 0 erkennbare Herkunft, **8 `<datalist>`**). Bedienhöhe an der **einzeiligen** Zeile gemessen: 390 px → **44 px**, 1280 px Zeiger → **36 px**, 1280 px Finger → **44 px**. **16 Bilder** unter `tools/klickprobe/ausgabe/bild/`, Breite und Eingabeart im Dateinamen. **Ebene** (nach F-S9-P-07): in der Schnittfläche mit der klebenden Speichern-Leiste liegt **die Liste** oben — `z-index` Liste **35** · Leiste **30** · Kopfleiste **40**, gemessen mit `elementFromPoint` bei 61 bis 69 px Überlappung in allen vier Kombinationen | 07.09.2026 |
 | P-04 | Geocoder nur im Bootstrap | grep | 1 | offen — AP2 |
 | P-05 | Dialog aus fünf Einbauorten | Klickprobe | 5/5 | offen — AP2 |
 | P-06 | Kontoschalter aus → keine Anfrage | Netzwerkprotokoll | 0 | offen — AP2 |
@@ -102,8 +102,8 @@ gemessen hat, ist keine Zahl.
 
 | Was | Zahl |
 |---|---|
-| Wege der Klickprobe, gefahren | **12** (3 Wege × 2 Breiten × 2 Eingabearten), **12 erfüllt, 0 verfehlt** |
-| Bilder der Klickprobe | 12, Breite und Eingabeart im Dateinamen |
+| Wege der Klickprobe, gefahren | **16** (4 Wege × 2 Breiten × 2 Eingabearten), **16 erfüllt, 0 verfehlt** |
+| Bilder der Klickprobe | 16, Breite und Eingabeart im Dateinamen |
 | Kontraste der Token | **21 Paare gerechnet, 0 verfehlt** (unverändert — AP1 führt kein neues Farbpaar ein) |
 | Neue Token | **0.** Der Baustein kommt mit der bestehenden Skala aus; die Zeilenhöhe ist `--knopf` |
 | Neue Symboldateien | **0.** Alle fünf benutzten Zeichen liegen im Vorrat: `klinik` (Zielklinik), `standort` (Tabler „map-pin", Adresse), `profil` (Besatzungsvorlage), `fahrzeug` (Vorbelegung Rettungsmittel), `plus` (freie Eingabe) |
@@ -164,6 +164,32 @@ und keiner war. *Behoben:* Die Probe meldet eine Rolle erst an, wenn ein Weg
 sie verlangt (AP1 braucht nur `demo`), und fährt **mehrere Breiten in einem
 Prozess** — zwischen ihnen ändert sich nur die Fenstergröße, wie im
 Bilderlauf. Der Fehlertext nennt die Bremse jetzt beim Namen.
+
+**F-S9-P-07 — Die Vorschlagsliste lag hinter der Speichern-Leiste.**
+*Gemeldet vom Auftraggeber am Bild, 07.09.2026 — nach der Abgabe von AP1 und
+von keinem Prüfmittel gefunden.* Die Liste stand auf `z-index: 20`, dem Wert
+der alten `.rmlist`, die als einzige der drei Vorgängerinnen überhaupt
+schwebte; die klebende Speichern-Leiste liegt auf **30**. Gemessen:
+**61 px Überlappung** bei 1280 px und **69 px** bei 390 px, und
+`elementFromPoint` traf in der Schnittfläche `.speichern-innen` statt der
+Liste — die untersten Trefferzeilen waren also nicht nur verdeckt, sondern
+auch nicht anzutippen.
+
+**Warum es durch alles durchgelaufen ist**, und das ist der eigentliche
+Befund: Der Bilderlauf fotografiert die **Seite**, nicht die geöffnete Liste
+an der ungünstigen Scrollposition; die Klickprobe fuhr die Übernahme, aber
+sie fuhr sie dort, wo das Feld gerade stand. Beide meldeten Null, und beide
+hatten recht — sie haben etwas anderes gemessen. Ein `z-index`, den man aus
+dem Vorgänger übernimmt, ohne den Nachbarn zu prüfen, ist genau die Sorte
+Fehler, die kein Werkzeug findet, das nicht danach sucht.
+
+*Behoben mit Web 15.6.1:* Ebene **35** — über der Speichern-Leiste (30),
+unter der Kopfleiste (40). Nach oben ist sie ebenso begrenzt und aus
+demselben Grund: Eine Vorschlagsliste, die über die Kopfleiste malt,
+verdeckt den Weg aus der Seite heraus. Die Klickprobe hat dafür den Weg
+`ap1-liste-ueber-speichern-leiste` bekommen, der **beide** Richtungen misst;
+er ist gegen den alten Stand gefahren worden und meldete dort „oben liegt:
+speichern-innen".
 
 ### Funde, die stehen bleiben (K4 — gesammelt, nicht behoben)
 
@@ -260,6 +286,9 @@ Konzept schweigt. Alle drei sind für AP1 entschieden **und** revidierbar; sie
 kosten nichts, wenn sie anders entschieden werden.
 
 **Frage 1 — Die Besatzungsfelder des Diensttags: AP1 oder AP6?**
+**Entschieden vom Auftraggeber am 07.09.2026: AP1.** Der gebaute Stand bleibt,
+es ändert sich keine Zeile.
+
 Das Konzept sagt in AP1 beides: „die des Diensttags folgen in AP6" (Aufzählung)
 und „`grep -c datalist server/` = **0**" (Abnahme). Beides zugleich geht
 nicht — die Liste des Diensttags war eine der acht `<datalist>`.
@@ -272,6 +301,10 @@ AP6 stehen, meldete P-02 nach AP1 nicht 0, sondern 1 — und die Abnahme des
 Pakets wäre nicht erfüllt.
 
 **Frage 2 — „`<datalist>` in der Streichliste" (Konzept, AP1).**
+**Erläuterung nachgereicht 07.09.2026; Rückmeldung steht aus.** Der gebaute
+Stand ist der unten beschriebene und läuft grün; eine Gegenentscheidung wäre
+eine Zeile in einer Hilfsliste.
+
 Die Streichliste (`tools/vollstaendigkeit/streichliste.md`) führt **Klassen
 des alten Stylesheets**; `datalist` ist ein HTML-Element, stand nie in
 `vorher-klassen.txt` und ist nie eine Klasse gewesen. Ein Eintrag dort wäre
@@ -283,6 +316,11 @@ mit Grund und Paket; `rmneu` fällt zugleich aus `ohne-regel.md`, wo es als
 in `Design.md` 9.0 („nimm X, nicht Y") und im Baustein 9.28 festgehalten.
 
 **Frage 3 — Achtzehn oder zwanzig Backlog-Punkte im Abschluss?**
+**Entschieden vom Auftraggeber am 07.09.2026: zwanzig.** In AP8 wandern damit
+auch **Nr. 132 und Nr. 137** nach *Erledigt*, je mit dem Vermerk „aus dem
+Sofortpaket übernommen (E-S9-02 bzw. E-S9-05)". Das Konzept sagt in AP8 und
+Abschnitt 8 „achtzehn"; diese Entscheidung geht vor.
+
 Das Konzept sagt in AP8 und Abschnitt 8 „achtzehn Punkte nach *Erledigt*, 132
 und 137 nur mit Vermerk"; der Auftrag sagt „alle zwanzig Punkte nach
 *Erledigt*". Da 132 und 137 seit dem 07.09.2026 **inhaltlich** von S9 erledigt

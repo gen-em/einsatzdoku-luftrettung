@@ -56,6 +56,19 @@ async function koordinatenWeg(seite, praefix) {
   }
 }
 
+/* Das Feld so weit nach unten scrollen, dass die Liste die klebende
+ * Speichern-Leiste erreicht — sonst begegnen sie einander gar nicht, und die
+ * Probe misst eine Ueberlappung, die es an dieser Scrollposition nicht gibt. */
+async function feldTiefLegen(seite, auswahl, abstand = 320) {
+  await seite.evaluate(([sel, a]) => {
+    const f = document.querySelector(sel);
+    if (!f) { return; }
+    const r = f.getBoundingClientRect();
+    window.scrollBy(0, r.top - (window.innerHeight - a));
+  }, [auswahl, abstand]);
+  await seite.waitForTimeout(250);
+}
+
 /* Die Besatzungsfelder des Einsatzes stehen hinter dem Haken „abweichende
  * Besatzung" (Katalog `crew_override`): Ohne ihn gilt die Tagesbesatzung, und
  * die Felder sind verborgen. */
@@ -163,6 +176,82 @@ export const wege = [
         ok,
         bemerkung: (zahlen.eintraege === 0 ? 'gar keine Trefferzeile; ' : '')
                  + (hoeheOk ? '' : `Zeilenhöhe unter der Bedienhöhe ${k.bedienhoehe} px`),
+      };
+    },
+  },
+
+  {
+    name: 'ap1-liste-ueber-speichern-leiste',
+    paket: 'AP1', punkt: 'P-03', rolle: 'demo',
+    was: 'Die Vorschlagsliste liegt VOR der klebenden Speichern-Leiste, nicht dahinter',
+    soll: 'Liste über der Leiste, Kopfleiste über der Liste',
+    async fahren(k) {
+      /* WARUM DIESER WEG EXISTIERT: Der Auftraggeber hat es am Bild gesehen,
+       * kein Prüfmittel. Die Liste stand auf `z-index:20`, die Speichern-
+       * Leiste auf 30 — sie ist damit über die Trefferzeilen gelaufen, und
+       * genau die untersten sind die, zu denen man scrollt. Ein Bild allein
+       * hätte das auch weiter nicht gemeldet: Es zeigt eine Überdeckung nur
+       * dann, wenn die Scrollposition zufällig passt. Gemessen wird deshalb
+       * mit `elementFromPoint` in der Schnittfläche. */
+      await k.gehZu(k.kennung.formular);
+      await transportzielAuf(k.seite);
+      await k.seite.waitForSelector('#f_transport_dest_addr', { timeout: 15000 });
+      await koordinatenWeg(k.seite, 'f_transport_dest_');
+
+      /* Die Leiste erscheint erst, wenn das Formular schmutzig ist. Das
+       * Entfernen der Koordinate hat sie geweckt; ist sie es nicht, weckt
+       * das Tippen sie gleich. */
+      await feldTiefLegen(k.seite, '#f_transport_dest_addr');
+      await k.tippe('#f_transport_dest_addr', 'Klin');
+      await k.seite.waitForTimeout(900);
+      await feldTiefLegen(k.seite, '#f_transport_dest_addr');
+
+      const b = await k.seite.evaluate(() => {
+        const leiste = document.querySelector('.speichern');
+        const liste  = document.querySelector('.vorschlaege:not([hidden])');
+        if (!liste) { return { grund: 'keine offene Liste' }; }
+        if (!leiste || leiste.getBoundingClientRect().height === 0) {
+          return { grund: 'keine sichtbare Speichern-Leiste' };
+        }
+        const lb = leiste.getBoundingClientRect();
+        const sb = liste.getBoundingClientRect();
+        const zListe  = getComputedStyle(liste).zIndex;
+        const zLeiste = getComputedStyle(leiste).zIndex;
+        if (sb.bottom <= lb.top || sb.top >= lb.bottom) {
+          return { grund: 'keine Überlappung an dieser Scrollposition',
+                   zListe, zLeiste };
+        }
+        /* In der Schnittfläche nachsehen, WER oben liegt. */
+        const y = (Math.max(sb.top, lb.top) + Math.min(sb.bottom, lb.bottom)) / 2;
+        const x = sb.left + sb.width / 2;
+        const el = document.elementFromPoint(x, y);
+        const inListe = !!(el && el.closest('.vorschlaege'));
+
+        /* GEGENPROBE NACH OBEN: Die Kopfleiste muss über der Liste bleiben.
+         * Eine Vorschlagsliste, die über sie malt, verdeckt den Weg aus der
+         * Seite heraus — der Fehler wäre derselbe, nur andersherum. */
+        const kopf = document.querySelector('.kopf');
+        const zKopf = kopf ? getComputedStyle(kopf).zIndex : null;
+        const kopfUeber = zKopf !== null && zKopf !== 'auto'
+                       && parseInt(zKopf, 10) > parseInt(zListe, 10);
+
+        return { ueberlappung: Math.round(Math.min(sb.bottom, lb.bottom)
+                                        - Math.max(sb.top, lb.top)),
+                 oben: inListe ? 'Liste' : (el ? (el.className || el.tagName) : '—'),
+                 inListe, zListe, zLeiste, zKopf, kopfUeber };
+      });
+      await k.bild('ap1-liste-ueber-speichern-leiste');
+
+      if (b.grund) {
+        return { ist: b.grund, ok: false,
+                 bemerkung: `z-index Liste ${b.zListe ?? '?'}, Leiste ${b.zLeiste ?? '?'}` };
+      }
+      return {
+        ist: `${b.ueberlappung} px Überlappung, oben liegt: ${b.oben} `
+           + `(z-index Liste ${b.zListe} · Leiste ${b.zLeiste} · Kopf ${b.zKopf})`,
+        ok: b.inListe && b.kopfUeber,
+        bemerkung: (b.inListe ? '' : 'die Speichern-Leiste verdeckt die Trefferzeilen; ')
+                 + (b.kopfUeber ? '' : 'die Liste läge über der Kopfleiste'),
       };
     },
   },
