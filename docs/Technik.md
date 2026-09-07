@@ -360,7 +360,11 @@ Daten erst nach Server-Bestätigung.
 │   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit der des
 │   │                      Repositoriums: jede Datei unter `server/assets/`
 │   │                      über SHA-256, und auf `login.php` die GANZE Menge
-│   │                      der Skripte und Formulare — nichts darf fehlen,
+│   │                      dessen, was den Weg des Passworts bestimmt —
+│   │                      Skripte (zitiert oder nicht), Inline-Blöcke,
+│   │                      Formulare, `<base>`, Umlenk- und Ereignis-
+│   │                      attribute, `<meta http-equiv>`, Einbettungen,
+│   │                      `javascript:`-Adressen; nichts darf fehlen,
 │   │                      verändert sein oder dazukommen. Ohne eingecheckte
 │   │                      Prüfsummen — der Deploy synchronisiert byteweise,
 │   │                      also rechnet sie beide Seiten frisch. Läuft täglich

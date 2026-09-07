@@ -58,6 +58,12 @@ diesen Umweg hätte der Punkt keine Zahl.
 | **135** | maschinelle Einteilung + Browserlauf | Stellen vorher/nachher | **79** `json_encode()`-Aufrufe unter `server/`, davon **44 in einem `<script>`** (alle umgestellt) und **35 außerhalb** (unverändert). Gegenprobe: 0 verbliebene in einem Skriptblock, 44 `json_js()`. Wirkung mit Profilnamen `<!--<script>` auf `import.php`: vorher fehlten `KONTO_NAME`, `APP_TZ` **und** `WEB_VERSION`; nachher stehen alle drei |
 | **138** | Lesen | vier Dokumente sagen dasselbe | `CLAUDE.md` 4, `README.md`, `Technik.md` 4.98, `Handbuch.md` 5 — dazu der Textbaustein in Handbuch 11.5. Keine Codeänderung, keine Versionsstufe für sich |
 | **140** | Werkzeuglauf + zwei Manipulationen am laufenden System | Wartungsprobe um eine Erwartung (Abweichung erkannt) | Selbstprobe **12 Erwartungen, 0 nicht erfüllt**, davon fünfmal ausdrücklich „Abweichung erkannt" (veränderte Datei, veränderter Block, zusätzliches `<script src>`, zusätzlicher Inline-Block, fremdes `action`). Lauf gegen die Installation: **112 Dateien, 112 gleich; 1 Inline-Block, 1 externes Skript, 1 Formular gleich, nichts zu viel** → „Kein Unterschied". Gegenprobe 1, **eine** veränderte Kennung in `crypto.js`: **111 gleich, 1 abweichend**. Gegenprobe 2, Fremd-Skript über `ui_seite_ende()` eingeschleust: **1 zusätzliches Skript** gemeldet. Je Rückgabewert 1. `tools/wartungsprobe/` **12a** neu → **51 statt 50 Erwartungen, 0 nicht erfüllt** |
+| **134** Nachbesserung | `tools/ingestprobe/` Teil 9, sechs neue Erwartungen; Gegenprobe am alten Stand | Anker serverseitig, Diensttag bleibt, `kept_meta`, kein leerer Tag | **53 Erwartungen, 0 nicht erfüllt** (vorher 47); mit dem alten `ingest.php` **dieselben sechs rot** (Diensttag 2026 → 2001/2097 umgeschrieben; Abschlusspaket ohne `kept_meta`; Uhr auf 2020: `stored 0`, `kept_points 2`; Zukunft: kein `kept_points`; Diensttage 4 → 5; Segment ohne `kept_meta`). Migration `2026_09_07_rest_segments_created_at` lokal gelaufen: 100 Segmente, 100 mit `created_at = started_at`. Wartungsprobe **51/0** |
+| **130** Nachbesserung | `tools/gpxprobe/` Teil 8, neunter Fall; `php -r` unmittelbar | UTF-7 abgewiesen, saubere Dateien weiter durch | **91 Erwartungen, 2 nicht erfüllt** (die zwei vorbestehenden); Teil 8 **9 Proben, 0 durch**, drei saubere Fälle durch (UTF-8, utf-8, ohne Deklaration). Mit der alten `gpx_lib.php`: **9 Proben, 1 durch** — UTF-7 mit DOCTYPE und Entität lieferte Punkte. Unmittelbar: „Die Datei nennt die Kodierung „UTF-7"" |
+| **136** Nachbesserung, Statuszeile | Browser (`betrieb_status.php` als Admin), Wegwerfkonto auf 320 000 Runden | Demo-Konto zählt nicht als Übergang, eigener Satz, Satz vollständig | Mit dem Wegwerfkonto: „1 Konto/Konten stehen noch unter dem Zielwert … gestrichen werden", Plakette **„Übergang läuft"**, dahinter der Demo-Satz; ohne es: nur der Demo-Satz, Plakette **„in Ordnung"**. Wartungsprobe **51/0** |
+| **136** Nachbesserung, Passwortregel | Messgeschirr in Node (`vm`-Kontext), drei Fassungen nebeneinander: `main` (`4b442de`), Zweig vor der Nachbesserung, danach | Zufallspasswörter 0 % abgewiesen; nichts, was `main` abwies, geht neu durch; Meldungen ohne `<`, `>`, `&` | 3 × 20 000 Zufallspasswörter à 12 Zeichen (62 / 70 / 80 Zeichen Vorrat): **0 / 0 / 0 abgewiesen** (Zweig davor 8 / 446 / 3036). Alle Zwei- und Dreiwortkombinationen der Liste in sechs Schreibweisen (48 935 + 4 521 426 Passwörter): **0, die `main` abwies und die neue Regel durchlässt**; 7 143 + 257 250 neu abgewiesen (reine Kurzwort-Kombinationen wie „Admin-Root2026"). Generator 1689 Passwörter in elf Klassen: gegen `main` **108 neu durchgelassen** (73 Passphrasen mit einem Listenwort, 35 Listenwort + acht Zufallszeichen), 332 neu abgewiesen, **0 Füllwörter durchgelassen**. 16 feindliche Eingaben: **0 Meldungen mit `<`, `>` oder `&`**. 20 000 `pruefe()` in 288 ms (vorher 248). Prüfstand-Passwörter: `adminlokal2026` **abgewiesen** (Rest „lokal", 5), `nadokudemo0815` und `umlaufpruefung2026` gültig — Nr. 156 |
+| **140** Nachbesserung | Selbstprobe; Lauf gegen `127.0.0.1:8080`; **27 Angriffsvarianten** als Skript gegen `seite_vergleichen()`; sieben Gegenproben an einer Kopie mit `php -S` (Opcache aus) | Selbstprobe 0 nicht erfüllt; Lauf 112/112; jede Variante, die den Weg des Passworts ändert, ist eine Abweichung | Selbstprobe **12 → 20 → 28 Erwartungen, 0 nicht erfüllt**; Lauf **112/112, 1/1/1 gleich, 0 `<base>`, 0 Umlenk-, 0 Ereignisattribute, 0 Kopfanweisungen, 0 Einbettungen, 0 `javascript:`**; Gegenproben `<base href>`, `formaction`, `data-src`, Dateiname mit Leerzeichen/Umlaut: alt „Kein Unterschied" bzw. Abbruch, neu Rückgabewert 1 bzw. „nicht erreichbar". Von den 27 Varianten gingen am Stand `72a4268` **17 grün durch**, nach `4e30b26` **1** (`<link rel="stylesheet">` — Grenze mit Begründung) |
+| **136** Nachbesserung Statuszeile | Browserlauf `betrieb_status.php` als Admin | Demo-Konto zählt nicht als Übergang, Satz endet | Mit einem Wegwerfkonto auf 320 000: „1 Konto/Konten … gestrichen werden", Plakette **Übergang läuft**, dahinter der Demo-Satz; ohne: nur der Demo-Satz, **in Ordnung** |
 | **142** | Prüffälle in beiden Bauarten, zusammengeführte Manifestdatei | Ausnahme nur im Debug, Release verbietet Klartext | `ServeradresseTest` **11 Fälle je Bauart, 0 Fehlschläge, 1 übersprungen** — im Debug der Release-Fall, im Release der Debug-Fall. `build/intermediates/merged_manifest/release/…/AndroidManifest.xml` trägt `networkSecurityConfig="@xml/netzsicherheit"`, das Debug-Manifest weiterhin `netzwerk_pruefstand` |
 | **114** Räumteil | Robolectric gegen echtes SQLite | nach 30 Tagen und beim Trennen weg, `dienst`-Zeilen mit | `AbgewieseneTest` **5 → 10 Fälle** (alt geräumt, jung bleibt — samt Punkt und Phase; ohne Frist alles Abgewiesene, der Rückstand nicht; laufendes bleibt; Dienstzeilen 4 → 2, die laufende bleibt; die Frist schont eine junge leere Dienstzeile), `SenderTest` **16 → 17** (36 Tage weg, 26 Tage bleibt, `geraeumt = 1`, keine Anfrage an den Server), `KopplungTest` **25** mit Zähler am Räumen: Getrennt 1, NurLokal 1, Rückstand 0 |
 | **143** | Lesen | eine Zeile, die es dann gibt | Abschnitt „Warum kein Certificate Pinning" in `android/LIESMICH.md`, Verweis im Kopf von `HttpNetzweg`; keine Codeänderung |
@@ -72,15 +78,15 @@ diesen Umweg hätte der Punkt keine Zahl.
 
 | Mittel | Zahl | Bemerkung |
 |---|---|---|
-| `php -l` | **114 Dateien, 0 Syntaxfehler** | `server/`, `server/api/`, `tools/*/` |
+| `php -l` | **463 Dateien, 0 Syntaxfehler** | `server/` und `tools/`, rekursiv; nach den Nachbesserungen erneut (vorher 114 im engeren Umfang `server/`, `server/api/`, `tools/*/`) |
 | `node --check` | **32 Dateien, 0 Syntaxfehler** | `server/assets/*.js` |
 | `tools/wortliste/` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** | 87 Regeln (eine kam dazu, siehe F-SP-P-01) |
 | `tools/vollstaendigkeit/` | **300 → 301 Befunde** | Der eine neue ist eine **Ellipse in einem PHP-Kommentar** (`gpx_lib.php:328`) — dieselbe Rauschklasse wie die 227 vorhandenen „Unicode-Zeichen als Symbol im Markup". Gegen den Abzweigpunkt `4b442de` gemessen, nicht gegen den lokalen `main` (der stand auf PR #27) |
-| `tools/linkprobe/` | **99 Zielseiten, 132 Verweise, 0 unbekannte Abweichungen, 1 bekannt mit Nummer (151), 0 tote Zeilen** | unverändert gegenüber Web 15.5.2 |
-| `tools/gpxprobe/` | **88 Erwartungen, 2 nicht erfüllt** | Beide vorbestehend: Der Referenzexport im Repositorium ist älter als die frisch eingespielte Datenbank. **Gegengeprüft am Stand vor der Änderung: 77 Erwartungen, dieselben 2** |
-| `tools/ingestprobe/` | **47 Erwartungen, 0 nicht erfüllt** | vorher 39; Teil 9 neu, Zeitstempel auf `time()` umgestellt |
+| `tools/linkprobe/` | **99 Zielseiten, 132 Verweise, 0 unbekannte Abweichungen, 1 bekannt mit Nummer (151), 0 tote Zeilen** | unverändert gegenüber Web 15.5.2; nach den Nachbesserungen erneut, dieselben Zahlen |
+| `tools/gpxprobe/` | **91 Erwartungen, 2 nicht erfüllt** | vorher 88; Teil 8 mit neuntem Fall (UTF-7) und drei Positivfällen. Die 2 sind vorbestehend: Der Referenzexport im Repositorium ist älter als die frisch eingespielte Datenbank. **Gegengeprüft am Stand vor der Änderung: 77 Erwartungen, dieselben 2** |
+| `tools/ingestprobe/` | **53 Erwartungen, 0 nicht erfüllt** | vorher 39, dann 47; Teil 9 neu, Zeitstempel auf `time()` umgestellt; sechs Erwartungen zur Nachbesserung Nr. 134 |
 | `tools/wartungsprobe/` | **51 Erwartungen, 0 nicht erfüllt** | vorher 50; 12a neu |
-| `tools/integritaetswache/` | **7 Erwartungen Selbstprobe, 0 nicht erfüllt** · Lauf **112/112**, Gegenprobe **1 abweichend** | neu |
+| `tools/integritaetswache/` | **28 Erwartungen Selbstprobe, 0 nicht erfüllt** · Lauf **112/112**, 0 zusätzliche Stellen in sechs Klassen · 27 Angriffsvarianten, **1 grün** (Stylesheet, gewollt) | neu; erste Fassung 7 Erwartungen, dann 12, 20, 28 (zwei Nachbesserungen, Abschnitt 1) |
 | `tools/screenshots/` (Zeiger) | **112 Einzelbilder, 14 Kontaktbögen, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe** | 14 berührte Seiten × 8 Breiten |
 | `tools/screenshots/ --finger` | **dieselben Zahlen bei 44 px** | beide Bedienhöhen |
 | Gegenprobe des Bilderlaufs | **112 Bilder, 112 verschiedene Prüfsummen, 0 Doppelte** | Die Falle aus F-P3-AQ (176 Bilder zeigten die Anmeldeseite) ist damit ausgeschlossen |
@@ -88,6 +94,7 @@ diesen Umweg hätte der Punkt keine Zahl.
 | `./gradlew build` (Android) | `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor | beide Module, beide Bauarten, Lint mit `abortOnError` |
 | `android/werkzeuge/emulator.sh` | **erreicht, im fünften Anlauf** (Emulator 37.1.11, `android-34;default;x86_64`, `-accel off`): adbd nach 120 s, `ro.hw_timeout_multiplier=10` als Root gesetzt und Framework neu gestartet, Boot **715 s**, Prüf-APK gegen die lokale Installation **128 s**; acht Bilder — Kopplungsansicht, Code `S4Y ZPF`, im Web als Demo-Konto eingetragen und bestätigt, „Zu diesem Konto koppeln? de***@gen-em.org", „Ja, koppeln" → Dienstansicht „Gekoppelt · 127.0.0.1:8080", `devices`-Zeile 79 am Server; per `sqlite3` ein abgewiesenes Paket samt Punkt, Phase und beendeter Dienstzeile eingespielt → rote Zeile „1 Paket vom Server abgewiesen"; Einstellungen; „Gerät trennen" mit Rückfrage; „Getrennt". **Der Räumlauf am echten Android-SQLite:** nach dem Trennen `paket 0, fehlerhaft 0, punkt 0, phase 0, dienst 0` (vorher je 1), Gerät am Server gelöscht (`POST /pair.php` 200), kein Absturz im `logcat`. Davor **vier Anläufe ohne Boot** (14, 38, 22 und 12 min) — Ursache der Android-Watchdog unter TCG, Gegenmittel jetzt in `emulator.sh start` (F-SP-P-07); der Wear-Emulator für das Uhr-Modul wurde nicht gefahren (Abschnitt 0) | ohne KVM, `-accel off` |
 | `tools/wortliste/` nach dem Android-Teil | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** (87 Regeln, alle fünf Bereiche einschließlich d = Android) | Bereich d (Android) eingeschlossen |
+| `tools/wortliste/` nach den Nachbesserungen | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** (87 Regeln, 87 gegriffen) | Handbuch 3.1 und 4.1c, Technik, JSON-Vertrag, LIESMICH der Wache geändert |
 
 **Was der Bilderlauf gemessen hat**, damit die Zahl etwas bedeutet: die 14
 Seiten `01-anmeldung`, `06-wiederherstellen`, `10-tagesuebersicht`,
@@ -147,22 +154,29 @@ angegriffen (29 Funde) und jeden Fund von drei unabhängigen Agenten widerlegen
 lassen; fünf weitere Agenten haben die Ergebnisse gegen den heutigen Stand
 reproduziert. **22 Funde halten, 7 sind widerlegt.** Die sechs zur Dokumentation
 sind behoben (`bf5a506`, siehe Abschnitt 1 zu Nr. 129 und P-3). Die sechzehn
-zum Code stehen **offen** — Entscheidung des Auftraggebers, ob sie vor dem Merge
-als Nachbesserung je Punkt behoben werden oder als Backlog-Nummern eingetragen:
+zum Code sind auf Anweisung des Auftraggebers („go", 07.09.2026) **vor dem
+Merge als Nachbesserung je Punkt** behoben — Stand je Zeile in der letzten
+Spalte:
 
-| Punkt | Fund | Schwere |
-|---|---|---|
-| 134 | Bei geschlossenem Fenster schreibt `dt_zeitraum_fortschreiben()` weiterhin Beginn/Ende des Diensttags um | hoch |
-| 134 | Der Anker ist das vom Gerät gesendete `started_at`: eine falsch gestellte Uhr schließt das Fenster sofort, verliert Punkte und Phasen, `next_seq` wandert trotzdem (die Uhr löscht als quittiert) | hoch |
-| 134 | Abschlusspaket außerhalb des Fensters: Metadaten still verworfen, kein `kept_*`; Diensttag im Papierkorb → leerer neuer Tag; `started_at` in der Zukunft → Fenster schließt nie; zweite Fensterprüfung unerreichbar | mittel / niedrig |
-| 130 | **UTF-7** über die Kodierungsdeklaration umgeht die DOCTYPE-Sperre; die Probe Teil 8 prüft die Deklaration nicht; der Kommentar zur Latin-1-Abweisung gilt nur für den JSON-Direktweg | hoch / mittel / niedrig |
-| 136 | Sonderzeichen zählen nicht zum Rest: Zufallspasswörter mit Sonderzeichen werden abgewiesen (12 Zeichen: 2–15 %; vorher 0 %), mit der Begründung „geläufige Wörter"; Listenwörter der Reihe nach statt längste zuerst, kurze gar nicht, Wiederentstehen nach dem Streichen | hoch / mittel |
-| 136 | Statuszeile: Das Demo-Konto (alle 30 min mit 320 000 Runden eingespielt) hält „Übergang läuft" für immer; ein Satz bricht ab | mittel / niedrig |
-| 140 | Wache: Selbstprobe hängt an Code-Literalen; Dateiname mit Leerzeichen bricht den Lauf ab; `<base href>`/`formaction` unbeobachtet; `data-src`; Zusatzdatei auf dem Server unsichtbar (Grenze benennen) | mittel / niedrig |
+| Punkt | Fund | Schwere | Stand |
+|---|---|---|---|
+| 134 | Bei geschlossenem Fenster schreibt `dt_zeitraum_fortschreiben()` weiterhin Beginn/Ende des Diensttags um | hoch | **behoben** `839d317` — nur innerhalb |
+| 134 | Der Anker ist das vom Gerät gesendete `started_at`: eine falsch gestellte Uhr schließt das Fenster sofort, verliert Punkte und Phasen, `next_seq` wandert trotzdem (die Uhr löscht als quittiert) | hoch | **behoben** `839d317` — Anker `max(started_at, created_at)`, Zukunft zählt nicht; Migration für `rest_segments.created_at` (**`update.php` nach dem Deploy**) |
+| 134 | Abschlusspaket außerhalb des Fensters: Metadaten still verworfen, kein `kept_*`; Diensttag im Papierkorb → leerer neuer Tag; `started_at` in der Zukunft → Fenster schließt nie; zweite Fensterprüfung unerreichbar | mittel / niedrig | **behoben** `839d317` — `kept_meta` (JSON-Vertrag 5), kein Diensttag bei zu, toter Zweig gestrichen |
+| 130 | **UTF-7** über die Kodierungsdeklaration umgeht die DOCTYPE-Sperre; die Probe Teil 8 prüft die Deklaration nicht; der Kommentar zur Latin-1-Abweisung gilt nur für den JSON-Direktweg | hoch / mittel / niedrig | **behoben** `a395455` — Deklaration nur UTF-8/ASCII, neunter Probenfall, Kommentar und Handbuch 4.1c berichtigt |
+| 136 | Sonderzeichen zählen nicht zum Rest: Zufallspasswörter mit Sonderzeichen werden abgewiesen (12 Zeichen: 2–15 %; vorher 0 %), mit der Begründung „geläufige Wörter"; Listenwörter der Reihe nach statt längste zuerst, kurze gar nicht, Wiederentstehen nach dem Streichen | hoch / mittel | **behoben** `6699b58` — Sonderzeichen zählen eins zu eins (nie zitiert, nur gezählt), Liste längste zuerst und nach jedem Treffer von vorn, Anteilsregel nur bei gestrichenem Listenwort, Rat nur bei zu wenig Substanz; Zahlen in Abschnitt 1 („136 Nachbesserung, Passwortregel"); `adminlokal2026` fällt jetzt durch → **Backlog Nr. 156** |
+| 136 | Statuszeile: Das Demo-Konto (alle 30 min mit 320 000 Runden eingespielt) hält „Übergang läuft" für immer; ein Satz bricht ab | mittel / niedrig | **behoben** `fd29866` — Demo-Konto mit eigenem Satz, Backlog Nr. 155 |
+| 140 | Wache: Selbstprobe hängt an Code-Literalen; Dateiname mit Leerzeichen bricht den Lauf ab; `<base href>`/`formaction` unbeobachtet; `data-src`; Zusatzdatei auf dem Server unsichtbar (Grenze benennen) | mittel / niedrig | **behoben** `72a4268` — `<base>` und vier Umlenk-Attribute in der Menge, Selbstprobe ohne Ankerwort (12 → 20), Pfade prozentkodiert, Holfehler eine Zeile, `data-src`/`<?` berichtigt, Zusatzdatei als Grenze. **Beim Nachprüfen 27 Angriffsvarianten gefahren: 17 gingen noch grün durch** — unzitiertes `src=`, Ereignisattribute, `meta http-equiv`, Einbettungen, `javascript:` (auch als Entität und mit Tabulator) —, geschlossen in `4e30b26`, Selbstprobe 20 → 28; grün bleibt allein das externe Stylesheet, mit Begründung in der LIESMICH |
 
 Die vollständigen Belege (Reproduktionsskripte, Zahlen) liegen im Protokoll des
 Workflows, nicht im Repositorium; die Kurzfassung oben genügt, um die Behebung
 zu beauftragen.
+
+**Zweite Gegenprüfung, auf die Nachbesserungen selbst** (07.09.2026): Bevor
+die Nachbesserungen als erledigt gelten, hat ein zweiter Workflow die fünf
+Code-Commits angegriffen — je Commit zwei Angreifer (Umgehung; Regression und
+Widerspruch), jeder Fund von drei Skeptikern zu widerlegen versucht, Mehrheit
+entscheidet. **Sie läuft noch** (Workflow `wf_8e9ce911-02b`); ihr Ergebnis — Zahl der Funde, Zahl der bestätigten, was daraus behoben wurde — wird hier nachgetragen, **bevor** der Merge freigegeben wird. Bis dahin gilt: Die Nachbesserungen sind gebaut und mit den Prüfmitteln belegt, aber nicht gegengeprüft.
 
 ## 5. Entscheidungen, die beim Bauen gefallen sind
 
@@ -231,8 +245,12 @@ stehen (dann greift die stille Anhebung nicht).
 
 ### P-2 · Passwortregel im Alltag (Nr. 136)
 Ein neues Passwort setzen (Profil → Passwort ändern) und dabei **eine
-Passphrase aus vier Wörtern** probieren.
-**Erwartet:** Sie wird angenommen, der Balken zeigt „gut" oder „stark".
+Passphrase aus vier Wörtern** probieren — und danach **ein gewürfeltes
+Passwort aus dem Passwortverwalter** mit Sonderzeichen (zwölf Zeichen oder
+mehr).
+**Erwartet:** Beides wird angenommen; die Passphrase zeigt „gut" oder
+„stark", das gewürfelte mindestens „brauchbar". Keine Meldung über
+„geläufige Wörter" bei dem gewürfelten.
 **Scheitern:** Die Seite weist eine vernünftige Passphrase ab — dann ist die
 Anteilsrechnung zu streng, und Entscheidung 1 aus Abschnitt 5 gehört
 zurückgenommen. **Bitte auch dann melden, wenn es funktioniert** — die Regel
@@ -287,12 +305,19 @@ Hinweismail` sehen — steht sie dort, klemmt der Mailweg, nicht der Code); oder
 die Mail geht an die **neue** Adresse (das wäre ein Fehler und gehört
 gemeldet).
 
-### P-8 · Nach dem Deploy: die Wartungsseite (alle Punkte)
-**Betrieb → Status** durchsehen.
-**Erwartet:** keine rote Zeile. „Schlüsselableitung" darf „Übergang läuft"
-zeigen, solange Konten unter dem Zielwert stehen.
+### P-8 · Nach dem Deploy: Migration und Statusseite (alle Punkte) — **sofort nach dem Merge**
+1. **Betrieb → Updates** öffnen und die ausstehende Migration
+   `2026_09_07_rest_segments_created_at` ausführen. **Bis dahin antwortet
+   `ingest.php` für Ruhesegmente mit 500** — Uhren und Handys, die gerade
+   senden, holen später nach, verlieren aber nichts.
+2. **Betrieb → Status** durchsehen.
+
+**Erwartet:** „Updates: Alles aktuell"; keine rote Zeile. „Schlüsselableitung"
+darf „Übergang läuft" zeigen, solange Konten unter dem Zielwert stehen, und
+nennt das Demo-Konto in einem eigenen Satz (Backlog Nr. 155).
 **Scheitern:** „Anmeldung blockiert" in der Zeile Schlüsselableitung — dann
-sofort melden.
+sofort melden; oder die Migration bleibt „steht aus" — dann bricht der Upload
+der Ruhesegmente, bis sie gelaufen ist.
 
 ### P-9 · Die Integritätswache im Postfach (Nr. 140)
 1. Nach dem Merge auf `main` im **Actions**-Tab den Lauf „Integritätswache"
@@ -304,7 +329,10 @@ sofort melden.
    variables → Actions → Variables).
 
 **Erwartet:** grüner Lauf mit „Kein Unterschied" und der Zeile
-„112 Dateien … 112 gleich".
+„112 Dateien … 112 gleich"; davor die Selbstprobe mit „28
+Erwartungen, 0 nicht erfüllt", und in Teil 2 „0 `<base>`-Tag(s), 0
+Umlenk-Attribut(e), 0 Kopfanweisung(en), 0 Einbettung(en), 0
+Ereignisattribut(e) und 0 javascript:-Adresse(n)".
 **Scheitern:** rot. Dann **zuerst** prüfen, ob gerade deployt wurde und ob
 `main` weiter ist als die Auslieferung — die Reihenfolge steht in
 `tools/integritaetswache/LIESMICH.md`. Erst wenn beides nicht passt, ist es

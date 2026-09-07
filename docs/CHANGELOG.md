@@ -112,6 +112,103 @@ Zwei Dinge sind dabei aufgefallen, die nicht im Review standen. Beide haben
 denselben Grund: Eine Sicherheitsmaßnahme, die nie ausgelöst hat, ist nicht
 geprüft. Sie stehen unten bei Nr. 136.
 
+#### Nachbesserung nach der Gegenprüfung (07.09.2026)
+
+Ein Workflow aus 93 Agenten hat den fertigen Web-Teil aus sechs Blickwinkeln
+angegriffen, jeden Fund dreimal zu widerlegen versucht und die Ergebnisse gegen
+den heutigen Stand reproduziert: 22 von 29 Funden hielten. Sie sind behoben,
+je Punkt ein Commit — und sie stehen hier, weil ein Changelog, das nur die
+erste Fassung erzählt, die falsche Geschichte erzählt.
+
+**Das Ersetzfenster (Nr. 134) hatte den falschen Anker.** Es rechnete ab dem
+gespeicherten `started_at` — und das stammt beim Anlegen vom Gerät. Eine Uhr
+mit falsch gestellter Zeit legte ihren Einsatz mit einem Datum von vor Jahren
+an; das Fenster war im selben Augenblick zu, der **laufende** Einsatz verlor
+Punkte und Phasen, und weil `next_seq` weiterwanderte, löschte die Uhr sie als
+quittiert. Umgekehrt hätte ein `started_at` in der Zukunft das Fenster nie
+geschlossen. Der Anker ist jetzt der Beginn, wie der Server ihn kennt: das
+Spätere aus `started_at` und `created_at`, Zukunft zählt nicht. `rest_segments`
+bekommt `created_at` dafür per Migration — **nach dem Deploy `update.php`
+aufrufen**; vorhandene Segmente bekommen ihr `started_at`, nicht die
+Migrationszeit. Drei weitere Lücken am selben Ort: Bei geschlossenem Fenster
+schrieb das Paket weiterhin **Beginn und Ende des Diensttags** um (der Einsatz
+blieb, der Tag nicht — und über `ingest.php` ist das nicht rückholbar); ein
+**Abschlusspaket** außerhalb wurde still übergangen, der Einsatz blieb für
+immer „läuft noch" — jetzt sagt `kept_meta` es (neues Feld im JSON-Vertrag);
+und lag der Diensttag im Papierkorb, entstand ein **leerer neuer Tag**. Die
+Ingestprobe hat dafür sechs Erwartungen mehr (47 → 53), und am alten Stand
+sind genau diese sechs rot.
+
+**Die DOCTYPE-Sperre (Nr. 130) war mit UTF-7 zu umgehen.** UTF-7 ist reines
+ASCII — gültiges UTF-8, kein Nullbyte, `<!DOCTYPE` steht darin als
+`+ADwAIQ-DOCTYPE` —, und libxml las es trotzdem als DOCTYPE mit Entitäten,
+weil `encoding="UTF-7"` in der XML-Deklaration steht. Die Deklaration darf
+jetzt nur UTF-8 oder ASCII nennen; von 935 Kodierungen aus `iconv -l` waren
+genau UTF-7 und UTF7 durchgekommen. Die Probe hatte die Deklaration nie
+angesehen und „8 Proben, 0 durch" gemeldet — der neunte Fall ging am alten
+Stand durch, jetzt „9 Proben, 0 durch". Und die Zusage, eine Latin-1-Datei
+werde abgewiesen, galt nur für den API-Weg: Über den Dateidialog wandelt der
+Browser jede Datei nach UTF-8, bevor sie ankommt. Handbuch und Technik sagen
+das jetzt so.
+
+**Die Statuszeile „Schlüsselableitung" (Nr. 136) hätte „Übergang läuft" nie
+wieder verloren:** Das Demo-Konto wird alle 30 Minuten aus der Fixture mit
+320 000 Runden eingespielt, und die stille Anhebung überlebt den Reset nicht.
+Es zählt jetzt nicht mit und bekommt seinen eigenen Satz — der Altwert bleibt,
+bis der Referenzbestand neu gebaut ist (Backlog Nr. 155). Der Satz, der
+mitten im Satz abbrach, endet jetzt auf „gestrichen werden".
+
+**Die Anteilsregel der Passwortprüfung (Nr. 136) maß am falschen Rest.**
+`normal()` wirft Sonderzeichen weg, und der Rest wurde erst danach gezählt —
+ein gewürfeltes Zwölfsteller-Passwort mit fünf Sonderzeichen fiel damit unter
+die acht und bekam gesagt, es bestehe aus geläufigen Wörtern, mit dem Rat,
+lieber Wörter zu nehmen. Je nach Zeichenvorrat traf das **2 bis 15 % aller
+zufälligen Zwölfsteller**, vorher keinen. Dazu drei Löcher mit einer Ursache:
+Die Liste wurde einmal der Reihe nach durchlaufen und nur ab sechs Zeichen —
+„rettung" vor „rettungswagen" ließ „swagen" als Rest stehen, „admin" und
+„root" wurden dem Rest **gutgeschrieben** („password-admin-admin" ging mit
+Rest „adminadmin" durch), und was das Streichen aus den Bruchstücken neu
+zusammensetzte, sah niemand mehr an. Jetzt zählen Sonderzeichen eins zu eins
+zum Rest — sie werden nie zitiert, nur gezählt; Bindestrich, Punkt,
+Unterstrich und Leerzeichen zählen nicht, „Winter-Urlaub-2026" ist kein
+besseres Passwort als „Winterurlaub2026" —, die Liste wird längste zuerst
+gestrichen, jeder Eintrag, und nach jedem Treffer von vorn, bis nichts mehr
+trifft. Die Anteilsregel greift nur, wenn ein Listenwort gestrichen wurde;
+ohne Listenwort bleibt allein die Reihen-Prüfung, und der Passphrasen-Rat
+steht nur da, wo er etwas erklärt. Gemessen über drei Fassungen nebeneinander:
+3 × 20 000 Zufallspasswörter **0 / 0 / 0 abgewiesen**; alle Zwei- und
+Dreiwortkombinationen der Liste in sechs Schreibweisen (rund 4,6 Millionen)
+**keine, die die alte Regel abwies und die neue durchlässt**; 1689 erzeugte
+Passwörter: 108 neu durchgelassen — Passphrasen mit einem Listenwort und
+Listenwort plus acht Zufallszeichen —, 0 Füllwörter. Eine Nebenwirkung mit
+Ansage: Das Passwort des lokalen Prüfstands, `adminlokal2026`, fällt jetzt
+durch (Backlog Nr. 156); die Regel wird dafür nicht gelockert.
+
+**Die Integritätswache (Nr. 140) sah nur die halbe Anmeldeseite.** Ein
+`<base href="https://boese.example/">` im Kopf löst jeden relativen Verweis
+dorthin auf — `src="assets/crypto.js"` bleibt byteidentisch und lädt fremden
+Code; ein `formaction=` am Absendeknopf überstimmt das `action` des Formulars,
+ohne dass das `<form>`-Tag sich ändert. Beides ging grün durch. Ihre
+Selbstprobe hing an Bezeichnern (`replace('const EdCrypto', …)`): Eine
+Umbenennung hätte den täglichen Lauf rot gemacht, ohne dass an der Auslieferung
+etwas wäre — bei einer Wache, deren einziger Kanal die Actions-Benachrichtigung
+ist, der schnellste Weg dahin, dass niemand mehr hinsieht. Ein Dateiname mit
+Leerzeichen riss den Lauf mit Rückgabewert 2 ab, Rest ungeprüft. Und `\bsrc`
+traf `data-src`, `<?` allein galt als PHP. **Beim Nachprüfen dieser vier
+Behebungen mit 27 Angriffsvarianten gingen noch 17 grün durch**, alle von
+derselben Art — Wege des Passworts ohne `<script>`-Tag und ohne
+`<form>`-Änderung: ein Skriptverweis **ohne Anführungszeichen**,
+Ereignisattribute (`onload=`, `onkeyup=`), `<meta http-equiv="refresh">`,
+Einbettungen (`<iframe srcdoc>`, `<object>`, `<embed>`) und
+`javascript:`-Adressen, auch als Entität und mit Tabulator im Schema, wie der
+Browser sie liest. Alle gehören jetzt zur verglichenen Menge; die Selbstprobe
+kippt ein Bit, hängt einen Kommentar an und setzt ein Attribut, statt ein Wort
+der Quelle zu suchen, und hat 28 statt 12 Erwartungen. Grün bleibt von
+den 27 Varianten eine, das externe Stylesheet — mit Absicht und Begründung: Ein
+Stylesheet liest kein Passwortfeld. Lauf gegen die lokale Installation
+weiterhin 112 von 112 Dateien gleich, in Teil 2 jetzt sechs Klassen mit der
+Zahl 0 statt Schweigen.
+
 #### Rundenzahl 600 000 und Passwortregeln (Nr. 136, SP-1/SP-2)
 
 Gegen einen Datenbankabzug ist das Passwort die einzige Schranke — der Server
