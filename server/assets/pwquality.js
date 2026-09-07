@@ -150,6 +150,10 @@ const EdPwQuality = (() => {
    * Beiwerk. „Winterurlaub2026" behält „urlaub" (6) und wird abgewiesen,
    * „Anker-Winter-Regen-Glas" behält „ankerregenglas" (14) und geht durch.
    *
+   * ZWEI SCHRITTE: erst die Listenwörter, dann Reihen und Wiederholungen
+   * (`ohneReihen()` weiter unten) — sonst füllte „abcdefgh" die geforderten
+   * acht Zeichen, ohne einen Gedanken zu kosten.
+   *
    * ZIFFERN MITTENDRIN ZÄHLEN MIT, angehängte nicht. „xy7qw2zt4$" ist nicht
    * schlechter als „xyqwzt" — würde man alle Ziffern streichen, fiele
    * ausgerechnet ein gut gewürfeltes Passwort durch. Angehängte Ziffern sind
@@ -160,7 +164,47 @@ const EdPwQuality = (() => {
     for (const h of HAEUFIG) {
       if (h.length >= 6 && k.includes(h)) { k = k.split(h).join(''); }
     }
-    return k.replace(/\d+$/, '');
+    return ohneReihen(k.replace(/\d+$/, ''));
+  }
+
+  /**
+   * Streicht Reihen und Wiederholungen aus einer Zeichenkette.
+   *
+   * WARUM DAS DAZUGEHÖRT (gemessen beim Bauen). Ohne diesen Schritt füllt
+   * „abcdefgh" oder „aaaaaaaa" die geforderten acht Zeichen, ohne einen
+   * Gedanken zu kosten: „Passwortabcdefgh" und „passwort2026aaaaaaaa" gingen
+   * durch, obwohl der alte Vorkommensvergleich sie abgewiesen hatte. Die neue
+   * Regel darf an KEINER Stelle schwächer sein als die alte — sie soll nur an
+   * einer Stelle großzügiger sein, nämlich bei Passphrasen.
+   *
+   * `istMuster()` reicht dafür nicht: Es prüft die GANZE Zeichenkette, und
+   * „2026aaaaaaaa" ist als Ganzes keine Reihe.
+   *
+   * Gestrichen wird eine Folge, in der der Abstand zwischen aufeinander
+   * folgenden Zeichen gleich bleibt und 0, +1 oder −1 beträgt: dreimal
+   * dasselbe Zeichen, oder vier aufsteigende bzw. absteigende. Was
+   * dazwischenliegt, bleibt stehen — „ankerregenglas" verliert nichts.
+   */
+  function ohneReihen(k) {
+    const bleibt = [];
+    let i = 0;
+    while (i < k.length) {
+      let j = i + 1;
+      let d = null;
+      if (j < k.length) {
+        const dd = k.charCodeAt(j) - k.charCodeAt(i);
+        if (dd === 0 || dd === 1 || dd === -1) {
+          d = dd;
+          while (j + 1 < k.length && k.charCodeAt(j + 1) - k.charCodeAt(j) === d) { j++; }
+          j++;
+        }
+      }
+      const laenge = j - i;
+      const reihe = (d === 0 && laenge >= 3) || ((d === 1 || d === -1) && laenge >= 4);
+      if (!reihe) { bleibt.push(k.slice(i, j)); }
+      i = j;
+    }
+    return bleibt.join('');
   }
 
   /**
@@ -177,7 +221,16 @@ const EdPwQuality = (() => {
     // Reine Ziffernfolge: unter 16 Stellen zu wenig, um von Hand gewählt
     // ausreichend zu sein — der Suchraum ist dort schlicht zu klein.
     if (/^\d+$/.test(String(pw)) && String(pw).length < 16) { return true; }
-    return restwort(pw).length < MIN_REST;
+    const rest = restwort(pw);
+    /* DAS MUSTER GILT AUCH FÜR DEN REST — sonst wäre die neue Regel an einer
+     * Stelle SCHWÄCHER als die alte, und das darf sie nirgends sein.
+     * Gemessen beim Bauen: „Passwortabcdefgh", „Rettungabcdefgh" und
+     * „Winterabcdefgh" wurden vom Vorkommensvergleich abgewiesen und vom
+     * Anteil durchgelassen — ein Listenwort plus Tastaturreihe füllt die acht
+     * Zeichen, ohne einen Gedanken zu kosten. Der Rest muss also nicht nur
+     * lang genug sein, sondern auch etwas anderes als eine Reihe. */
+    if (rest !== '' && istMuster(rest)) { return true; }
+    return rest.length < MIN_REST;
   }
 
   /** Nur eine Zeichenart in Folge, z. B. „aaaaaaaaaa" oder „1234567890". */

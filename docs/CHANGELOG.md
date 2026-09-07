@@ -76,6 +76,21 @@ angenommen (Rest „ankerregenglas"). Ziffern **mittendrin** zählen mit — son
 fiele ein gut gewürfeltes Passwort durch. Die Passwörter aller Prüfmittel
 bleiben gültig.
 
+**Der Rest verliert außerdem Reihen und Wiederholungen**, und das ist keine
+Feinheit, sondern die Bedingung dafür, dass die neue Regel nirgends schwächer
+ist als die alte. Beim breiten Vergleich beider Fassungen über **1552 erzeugte
+Passwörter** fiel auf: „Passwortabcdefgh" und „passwort2026aaaaaaaa" wurden
+vom Vorkommensvergleich abgewiesen und vom Anteil durchgelassen — ein
+Listenwort plus Tastaturreihe füllt die geforderten acht Zeichen, ohne einen
+Gedanken zu kosten. `istMuster()` half nicht, denn es prüft die **ganze**
+Zeichenkette, und „2026aaaaaaaa" ist als Ganzes keine Reihe. Gestrichen wird
+jetzt jede Folge mit gleichbleibendem Abstand 0, +1 oder −1 (dreimal dasselbe
+Zeichen, vier auf- oder absteigende). Danach gemessen, wieder über dieselben
+1552 Passwörter: **454 neu durchgelassen, davon 0 mit einem Füllwort wie
+„abcdefgh", „aaaaaaaa" oder „12345678" — und 0, die die alte Regel angenommen
+hatte und die neue abweist.** Genau das war die Absicht: großzügiger nur bei
+Passphrasen, strenger nirgends weniger.
+
 Was die Liste **nicht** kann, steht im Code und im Handbuch: den Ortsnamen des
 eigenen Standorts. Ihn dorthin zu bekommen hieße, die Standortnamen an die
 unangemeldete Passwortseite auszugeben — eine neue Auskunft an jeden Besucher
