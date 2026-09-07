@@ -3656,20 +3656,28 @@ erfahren, dass ihr die Zeitstempel fehlen.
 > UTF-16-Dokument damit von Hand; eine Dateiauswahl im Browser braucht es
 > nicht.
 >
-> **Was das kostet — und wo es gar nicht greift:** Auf dem JSON-Direktweg
-> wird eine GPX-Datei in Latin-1 mit Umlauten abgewiesen, und die Meldung sagt,
-> was zu tun ist. Über den Dateidialog kommt so eine Datei nie an: Der Browser
-> liest sie mit `readAsText()`, dekodiert nach UTF-8 und ersetzt ungültige
-> Bytes durch U+FFFD — am Server ist das gültiges UTF-8 (Gegenprüfung vom
-> 07.09.2026, Fund 9; kein Datenfehler, der Name wird nicht gespeichert).
-> Die Prüfung ist eine für die API, nicht für den Dateidialog.
+> **Was das kostet — und was über den Dateidialog davon ankommt:** Auf dem
+> JSON-Direktweg wird eine GPX-Datei in Latin-1 mit Umlauten abgewiesen, und
+> die Meldung sagt, was zu tun ist. Über den Dateidialog kommen ihre Bytes
+> nie an: Der Browser liest sie mit `readAsText()`, dekodiert nach UTF-8 und
+> ersetzt ungültige Bytes durch U+FFFD — am Server ist das gültiges UTF-8
+> (Gegenprüfung vom 07.09.2026, Fund 9; kein Datenfehler, der Name wird nicht
+> gespeichert). Ihre **Kodierungsdeklaration** kommt aber unverändert an,
+> und deshalb greift die Deklarationsprüfung des nächsten Absatzes auf
+> beiden Wegen — die erste Fassung dieser Prüfung wies die Latin-1-Datei aus
+> dem Dateidialog ab, die bis dahin importierte (zweite Gegenprüfung).
 >
 > **Und die Kodierungsdeklaration** (Nachbesserung 07.09.2026, Fund 7): UTF-7
 > ist reines ASCII — gültiges UTF-8, kein Nullbyte, `<!DOCTYPE` steht darin
 > als `+ADwAIQ-DOCTYPE` — und libxml liest es trotzdem als DOCTYPE, weil
 > `encoding="UTF-7"` in der XML-Deklaration steht. Gemessen: DOCTYPE und
 > interne Entität kamen durch, zwei Punkte, Name „LACHER". Die Deklaration
-> darf deshalb nur UTF-8 oder ASCII nennen; von 935 Kodierungen aus `iconv -l`
+> darf deshalb nur eine Kodierung nennen, in der jedes ASCII-Zeichen sein
+> eigenes Byte ist — UTF-8, ASCII und die Ein-Byte-Familien ISO-8859,
+> Windows-125x, Latin, KOI8, Mac Roman; UTF-7, UTF-16/32 und EBCDIC werden
+> abgewiesen. Nennt sie etwas anderes als UTF-8, wird die Deklaration auf
+> UTF-8 umgeschrieben, denn die Bytes **sind** UTF-8 (geprüft) und libxml
+> würde sie sonst nach der Deklaration lesen; von 935 Kodierungen aus `iconv -l`
 > waren genau UTF-7 und UTF7 durchgekommen, die Liste schließt alle.
 > `tools/gpxprobe/` Teil 8 hält neun Umgehungsversuche dagegen — **9 Proben,
 > 0 durch** (am Stand davor: 9 Proben, 1 durch) —, und drei saubere Dateien

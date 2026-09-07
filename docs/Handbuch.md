@@ -753,8 +753,10 @@ UTF-8 um — die Punkte kommen dann an, Umlaute aus einer Latin-1-Datei aber
 als Ersatzzeichen; sie stehen nur im Namen der Spur, und den speichert der
 Import nicht. Wer den Import unmittelbar über die Schnittstelle anspricht,
 muss UTF-8 liefern: Dort werden eine andere Kodierung, ein Nullbyte oder eine
-Kodierungsangabe wie UTF-7 abgelehnt (seit Web 15.6.0), und die Meldung sagt,
-was zu tun ist: als UTF-8 speichern und erneut versuchen.
+Kodierungsangabe wie UTF-7 oder UTF-16 abgelehnt (seit Web 15.6.0), und die
+Meldung sagt, was zu tun ist: als UTF-8 speichern und erneut versuchen. Eine
+Kodierungsangabe wie ISO-8859-1 in einer Datei, deren Inhalt UTF-8 ist — so
+kommt die Latin-1-Datei aus dem Dateidialog an —, ist dagegen erlaubt.
 
 **Was toleriert wird:** GPX 1.0 ebenso wie 1.1, und Dateien ohne
 Namensraumangabe. Mehrere Abschnitte in einer Datei werden zu **einer** Spur

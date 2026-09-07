@@ -996,6 +996,13 @@ $eingang = [
     'UTF-7 ueber die Kodierungsdeklaration'
         => '<?xml version="1.0" encoding="UTF-7"?>'
            . iconv('UTF-8', 'UTF-7', preg_replace('/^<\?xml[^>]*\?>/', '', $mitDoctype)),
+    /* Zwei aus der Wiederaufnahme der zweiten Gegenpruefung: Namen, die
+     * kein ASCII-Zeichen als eigenes Byte fuehren, bleiben draussen -- auch
+     * wenn die Bytes selbst UTF-8 sind. */
+    'EBCDIC (IBM037) ueber die Kodierungsdeklaration, Bytes UTF-8'
+        => str_replace('encoding="UTF-8"', 'encoding="IBM037"', $mitDoctype),
+    'UTF-16 ueber die Kodierungsdeklaration, Bytes UTF-8'
+        => str_replace('encoding="UTF-8"', 'encoding="UTF-16"', $mitDoctype),
 ];
 $durch = 0;
 foreach ($eingang as $name => $xml) {
@@ -1012,6 +1019,27 @@ pruefe($ok, 'Eine saubere UTF-8-Datei ohne DOCTYPE geht weiterhin durch', $meldu
 pruefe($ok, 'Auch mit kleingeschriebenem utf-8 in einfachen Anfuehrungszeichen', $meldung);
 [$ok, $meldung] = $einlesen(preg_replace('/^<\?xml[^>]*\?>/', '', $gpxRein));
 pruefe($ok, 'Und ganz ohne XML-Deklaration (libxml nimmt dann UTF-8 an)', $meldung);
+
+/* DER DATEIDIALOG (zweite Gegenpruefung, Wiederaufnahme): Eine Latin-1-Datei
+ * kommt ueber `readAsText()` als UTF-8 mit Ersatzzeichen an -- ihre
+ * Deklaration `encoding="ISO-8859-1"` aber unveraendert. Die erste Fassung der
+ * Deklarationspruefung wies genau das ab, obwohl es bis dahin importierte.
+ * Jetzt: ASCII-vertraegliche Namen sind erlaubt, die Deklaration wird auf
+ * UTF-8 umgeschrieben, und der Name mit Ersatzzeichen kommt so an, wie der
+ * Browser ihn gesendet hat. */
+$browserweg = str_replace(['encoding="UTF-8"', 'Probe'], ['encoding="ISO-8859-1"', "Gr\u{FFFD}nwald-Ost"], $gpxRein);
+$latinOk = false; $latinName = ''; $latinPunkte = 0;
+try {
+    $g = gpx_lesen($browserweg);
+    $latinOk = true;
+    $latinPunkte = count($g['points'] ?? $g['punkte'] ?? []);
+    $latinName = (string)($g['name'] ?? '');
+} catch (Throwable $e) { $latinName = substr($e->getMessage(), 0, 60); }
+pruefe($latinOk && $latinPunkte === 2 && str_contains($latinName, "\u{FFFD}"),
+       'Latin-1-Deklaration mit UTF-8-Bytes (Dateidialog): geht durch, 2 Punkte, Name mit Ersatzzeichen',
+       ($latinOk ? 'durchgelassen, ' . $latinPunkte . ' Punkte, Name ' . $latinName : $latinName));
+[$ok, $meldung] = $einlesen(str_replace('encoding="UTF-8"', "encoding='windows-1252'", $gpxRein));
+pruefe($ok, 'Auch windows-1252 als Deklaration (ASCII-vertraeglich, Bytes UTF-8)', $meldung);
 
 } finally {
     $aufraeumen();
