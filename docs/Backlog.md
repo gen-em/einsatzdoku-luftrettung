@@ -1635,6 +1635,30 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mit Web 15.6.0 nach *Erledigt* gewandert ist und dieser Teil sonst
     unsichtbar würde. Zuordnung: Backlog-Runde.
 
+154. **Handy-App liest `kept_points` und `kept_meta` nicht.**
+    *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 134).*
+    `Sendeantwort.kt` nimmt aus der Antwort von `ingest.php` nur
+    `kept_phases` und `kept_resus` in den Sendebericht; ein Paket, dessen
+    Punkte oder Metadaten der Server wegen des Ersetzfensters übergangen
+    hat (`kept_points`, `kept_meta` — JSON-Vertrag 5), sieht am Handy wie
+    ein Erfolg aus. Der Server sagt es; die App hört es nicht. Beide Felder
+    in `Sendeantwort` aufnehmen und in der Ergebniszeile nennen; Prüffall in
+    `SendeantwortTest`. Zuordnung: nächste Android-Stufe.
+
+155. **Die Fixture des Referenzbestands trägt die alte Rundenzahl.**
+    *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 136).*
+    `demo/fixture.json.gz` führt das Demo-Konto mit 320 000 Runden; der
+    Demo-Reset spielt es alle 30 Minuten so ein, und die stille Anhebung beim
+    Anmelden überlebt das nicht. Folge: Der Altwert kann nie aus
+    `KDF_ITER_LISTE` gestrichen werden, und die Statuszeile
+    „Schlüsselableitung" sagt das seit der Nachbesserung ausdrücklich (das
+    Demo-Konto zählt dort nicht mehr als „Übergang läuft"). Behebung: den
+    Referenzbestand mit `KDF_ITER_ZIEL` neu bauen
+    (`tools/referenzdatensatz/`), und `erzeugen.php` soll abbrechen, wenn
+    das Demo-Konto nicht auf dem Zielwert steht — damit die Zusage in
+    `api/kdf_upgrade.php` eine geprüfte ist. Zuordnung: Backlog-Runde, vor
+    dem Streichen des Altwerts.
+
 
 ## Erledigt
 

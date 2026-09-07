@@ -115,11 +115,26 @@ function status_erhebung(): array
      * (Uebergangszustand, db.php) — die Zahl ist damit auch die Auskunft
      * darueber, was der Uebergang gerade kostet. */
     $kdfAlt = 0;
+    $kdfDemoAlt = false;
     if (count($kdfListe) > 1) {
+        /* OHNE DAS DEMO-KONTO (Nachbesserung 07.09.2026, Gegenpruefung Fund
+         * 11). Es wird alle 30 Minuten aus der Fixture eingespielt -- mit der
+         * Rundenzahl, die die Fixture traegt --, und die stille Anhebung
+         * beim Anmelden ueberlebt den naechsten Reset nicht. Gezaehlt stuende
+         * hier also fuer immer "1 Konto unter dem Zielwert", und die Zeile
+         * verloere den einen Zweck, den sie hat: zu sagen, wann der Altwert
+         * weg darf. Das Demo-Konto bekommt deshalb seinen eigenen Satz. */
+        require_once __DIR__ . '/demo_lib.php';
+        $demoId = demo_id();
         $sta = $pdo->prepare('SELECT COUNT(*) FROM users
-                              WHERE password_hash IS NOT NULL AND kdf_iter <> ?');
-        $sta->execute([KDF_ITER_ZIEL]);
+                              WHERE password_hash IS NOT NULL AND kdf_iter <> ? AND id <> ?');
+        $sta->execute([KDF_ITER_ZIEL, $demoId ?? 0]);
         $kdfAlt = (int)$sta->fetchColumn();
+        if ($demoId !== null) {
+            $std = $pdo->prepare('SELECT kdf_iter FROM users WHERE id = ?');
+            $std->execute([$demoId]);
+            $kdfDemoAlt = (int)$std->fetchColumn() !== KDF_ITER_ZIEL;
+        }
     }
 
     $sp          = speicher_uebersicht();
@@ -182,7 +197,16 @@ function status_erhebung(): array
                   . KDF_ITER_ZIEL . ' — sie ziehen still nach, sobald sie sich das '
                   . 'nächste Mal anmelden. Bis dahin rechnet jede Anmeldung zweimal '
                   . 'ab; erst wenn hier keine Zahl mehr steht, darf der Altwert aus '
-                  . 'KDF_ITER_LISTE (server/db.php)';
+                  . 'KDF_ITER_LISTE (server/db.php) gestrichen werden';
+    }
+    if ($kdfDemoAlt) {
+        /* Der Satz steht auch dann, wenn alle anderen Konten nachgezogen
+         * sind: Solange die Fixture den Altwert traegt, darf er nicht aus
+         * der Liste -- das Demo-Konto koennte sich sonst nicht mehr anmelden. */
+        $kdfText .= '. Das Demo-Konto steht auf der Rundenzahl seiner Fixture und '
+                  . 'zieht nicht nach (der Reset stellt sie alle 30 Minuten wieder her) '
+                  . '— der Altwert bleibt in der Liste, bis der Referenzbestand neu '
+                  . 'gebaut ist (Backlog Nr. 155)';
     }
     $server[] = status_z('Schlüsselableitung', $kdfText,
         $kdfVerwaist === [] ? 'blau' : 'rot',
