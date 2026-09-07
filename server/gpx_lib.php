@@ -322,6 +322,41 @@ function gpx_lesen(string $xml, ?Pruefliste $pruef = null): array
         throw new InvalidArgumentException('Die Datei ist leer.');
     }
 
+    /* ---- ERST DIE KODIERUNG, DANN DIE REGEX (Backlog Nr. 130, K-10) -----
+     *
+     * Die DOCTYPE-Sperre unten sucht die BYTEFOLGE `<!DOCTYPE`. In einem
+     * UTF-16-Dokument steht dort `<\0!\0D\0O\0…` — die Regex findet nichts,
+     * libxml erkennt die Kodierung an der Bytefolgemarke und liest die Datei
+     * anstandslos, Dokumenttyp-Deklaration und interne Entitaeten inbegriffen.
+     * Gemessen am Stand vor dieser Aenderung: ein UTF-16LE-GPX mit DOCTYPE und
+     * interner Entitaet ging durch und lieferte zwei Punkte.
+     *
+     * Der Weg dorthin fuehrt nicht ueber eine Datei-Auswahl im Browser --
+     * `api/gpx_import.php` nimmt den Inhalt als Zeichenkette im JSON-Koerper,
+     * und JSON kann ueber `\u0000`-Folgen jedes Byte unter 0x80 tragen. Ein
+     * angemeldeter Aufrufer baut das Dokument damit von Hand.
+     *
+     * ZWEI PRUEFUNGEN, WEIL SIE VERSCHIEDENES FANGEN. Ein Nullbyte kommt in
+     * keinem Text vor, den ein Geraet schreibt, und ist das Kennzeichen jeder
+     * Breitkodierung (UTF-16, UTF-32); gueltiges UTF-8 zu verlangen fasst
+     * denselben Fall allgemeiner und schliesst nebenbei jede Kodierung aus,
+     * die die Regex anders lesen wuerde als der Parser.
+     *
+     * WAS DAS KOSTET: Eine GPX-Datei in Latin-1 mit Umlauten wird jetzt
+     * abgewiesen. GPX 1.1 schreibt UTF-8 vor, und Geraete halten sich daran;
+     * die Meldung sagt, was zu tun ist, statt die Datei stumm halb zu lesen. */
+    if (strpos($xml, "\0") !== false) {
+        throw new InvalidArgumentException(
+            'Die Datei enthält ein Nullbyte und ist damit kein Text. Das deutet '
+            . 'auf eine Kodierung wie UTF-16 hin — bitte als UTF-8 speichern und '
+            . 'erneut versuchen.');
+    }
+    if (!mb_check_encoding($xml, 'UTF-8')) {
+        throw new InvalidArgumentException(
+            'Die Datei ist nicht in UTF-8 kodiert. GPX schreibt UTF-8 vor — bitte '
+            . 'so speichern und erneut versuchen.');
+    }
+
     /* KEINE DOKUMENTTYP-DEKLARATION. Das ist die Abwehr gegen XXE, und sie
      * steht VOR dem Parser, nicht darin: `libxml_disable_entity_loader()`
      * gibt es seit PHP 8 nicht mehr, externe Entitaeten laedt libxml seither

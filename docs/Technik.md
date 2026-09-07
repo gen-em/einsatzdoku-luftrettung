@@ -3556,6 +3556,8 @@ eine Zeichenkette genauso trägt. Der Browser liest mit `FileReader`.
 
 | Fall | Antwort |
 |---|---|
+| **Nullbyte in der Datei** | 422 („kein Text — deutet auf UTF-16 hin") — siehe unten |
+| **nicht UTF-8** | 422 („GPX schreibt UTF-8 vor") — siehe unten |
 | kein gültiges XML | 422, mit der Fehlerstelle des Parsers |
 | Wurzelelement ≠ `<gpx>` | 422, mit dem tatsächlichen Namen |
 | **`<!DOCTYPE>` vorhanden** | 422 — siehe unten |
@@ -3577,6 +3579,26 @@ erfahren, dass ihr die Zeitstempel fehlen.
 > mitschickt, bekommt eine Absage statt einer Auslegung. Dazu `LIBXML_NONET`:
 > kein Netzzugriff, unter keinen Umständen (CLAUDE.md 4 gilt auch für einen
 > Parser).
+
+> **Erst die Kodierung, dann die Regex** (ab Web 15.6.0, Backlog Nr. 130,
+> K-10). Die DOCTYPE-Sperre sucht die **Bytefolge** `<!DOCTYPE`. In einem
+> UTF-16-Dokument steht dort `<\0!\0D\0O\0…`; die Regex fand nichts, libxml
+> erkannte die Bytefolgemarke und las die Datei samt Dokumenttyp-Deklaration
+> und interner Entität. Gemessen am Stand vor der Behebung: **ging durch, zwei
+> Punkte**. Deshalb stehen jetzt zwei Prüfungen davor — kein Nullbyte, gültiges
+> UTF-8.
+>
+> **Der Weg dorthin ist nicht theoretisch:** Der Endpunkt nimmt den
+> Dateiinhalt als Zeichenkette im JSON-Körper, und JSON trägt über
+> `\u0000`-Folgen jedes Byte unter 0x80. Ein angemeldeter Aufrufer baut ein
+> UTF-16-Dokument damit von Hand; eine Dateiauswahl im Browser braucht es
+> nicht.
+>
+> **Was das kostet:** Eine GPX-Datei in Latin-1 mit Umlauten wird jetzt
+> abgewiesen. GPX 1.1 schreibt UTF-8 vor, und Geräte halten sich daran; die
+> Meldung sagt, was zu tun ist, statt die Datei stumm halb zu lesen.
+> `tools/gpxprobe/` Teil 8 hält acht Umgehungsversuche dagegen — **8 Proben,
+> 0 durch**, und eine saubere Datei geht weiterhin durch.
 
 #### Toleranz, wo sie richtig ist
 

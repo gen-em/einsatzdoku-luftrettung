@@ -934,6 +934,73 @@ pruefe(str_contains($seite['leib'], 'id="f-gpxwahl"')
 pruefe(str_contains($seite['leib'], 'name="tag" value="' . $dayId . '"'),
        'Das Formular traegt den Diensttag', 'tag=' . $dayId);
 
+/* ---- Teil 8 — Der EINGANG: was gpx_lesen() abweisen muss ------------------
+ *
+ * Die Teile 0 bis 7 pruefen den ABRUF. Der Eingang blieb bis Web 15.6.0 ohne
+ * Probe, und genau dort sass Backlog Nr. 130 (K-10): Die DOCTYPE-Sperre suchte
+ * die Bytefolge `<!DOCTYPE` und fand sie in einem UTF-16-Dokument nicht --
+ * libxml erkannte die Bytefolgemarke, las die Datei samt Dokumenttyp-
+ * Deklaration und expandierte die internen Entitaeten. Gemessen am Stand vor
+ * der Behebung: ging durch, zwei Punkte.
+ *
+ * GEPRUEFT WIRD `gpx_lesen()` UNMITTELBAR und nicht ueber HTTP, und das ist
+ * hier kein Abkuerzen: Die Funktion IST die Abwehr, und sie hat genau einen
+ * Aufrufer (`api/gpx_import.php:115`). Ein HTTP-Lauf brauchte zusaetzlich
+ * einen Diensttag und pruefte die Sperre selbst um keinen Deut besser.
+ *
+ * DER WEG DORTHIN, damit niemand ihn fuer theoretisch haelt: Der Endpunkt
+ * nimmt den Dateiinhalt als Zeichenkette im JSON-Koerper, und JSON traegt
+ * ueber `\u0000`-Folgen jedes Byte unter 0x80. Ein angemeldeter Aufrufer baut
+ * ein UTF-16-Dokument damit von Hand; eine Dateiauswahl im Browser braucht es
+ * nicht.
+ */
+echo "\n  Teil 8 — Der Eingang: gpx_lesen() gegen Umgehungen der DOCTYPE-Sperre\n";
+
+$gpxRein = '<?xml version="1.0" encoding="UTF-8"?>'
+         . '<gpx version="1.1" creator="gpxprobe" xmlns="http://www.topografix.com/GPX/1/1">'
+         . '<trk><name>Probe</name><trkseg>'
+         . '<trkpt lat="48.1" lon="11.5"><ele>500</ele><time>2026-03-01T10:00:00Z</time></trkpt>'
+         . '<trkpt lat="48.2" lon="11.6"><ele>510</ele><time>2026-03-01T10:01:00Z</time></trkpt>'
+         . '</trkseg></trk></gpx>';
+$mitDoctype = str_replace('<gpx version', '<!DOCTYPE gpx [<!ENTITY a "AAAAAAAAAA">]><gpx version', $gpxRein);
+
+/** @return array{0:bool,1:string} [durchgelassen, Meldung] */
+$einlesen = static function (string $xml): array {
+    try { gpx_lesen($xml); return [true, 'durchgelassen']; }
+    catch (Throwable $e) { return [false, substr($e->getMessage(), 0, 60)]; }
+};
+
+$eingang = [
+    'UTF-16LE mit BOM, DOCTYPE und interner Entitaet'
+        => "\xFF\xFE" . mb_convert_encoding($mitDoctype, 'UTF-16LE', 'UTF-8'),
+    'UTF-16BE mit BOM, DOCTYPE und interner Entitaet'
+        => "\xFE\xFF" . mb_convert_encoding($mitDoctype, 'UTF-16BE', 'UTF-8'),
+    'UTF-16LE ohne BOM, mit XML-Deklaration'
+        => mb_convert_encoding(str_replace('UTF-8', 'UTF-16', $mitDoctype), 'UTF-16LE', 'UTF-8'),
+    'UTF-8 mit DOCTYPE (die Sperre, die es schon gab)'
+        => $mitDoctype,
+    'UTF-8 mit DOCTYPE in Kleinschreibung'
+        => str_replace('<!DOCTYPE', '<!doctype', $mitDoctype),
+    'UTF-8 mit Bytefolgemarke und DOCTYPE'
+        => "\xEF\xBB\xBF" . $mitDoctype,
+    'Nullbyte in einer sonst gueltigen Datei'
+        => str_replace('<trk>', "<trk>\0", $gpxRein),
+    'Latin-1 mit Umlaut (keine gueltige UTF-8-Folge)'
+        => mb_convert_encoding(str_replace('Probe', 'Gruenwald-Ost', $gpxRein), 'ISO-8859-1', 'UTF-8')
+           . "\xE4",
+];
+$durch = 0;
+foreach ($eingang as $name => $xml) {
+    [$ok, $meldung] = $einlesen($xml);
+    if ($ok) { $durch++; }
+    pruefe(!$ok, 'Abgewiesen: ' . $name, $meldung);
+}
+pruefe($durch === 0, 'Keine der Proben kommt durch',
+       count($eingang) . ' Proben, ' . $durch . ' durch');
+
+[$ok, $meldung] = $einlesen($gpxRein);
+pruefe($ok, 'Eine saubere UTF-8-Datei ohne DOCTYPE geht weiterhin durch', $meldung);
+
 } finally {
     $aufraeumen();
     echo "\n  Konto, Spuren und Sitzung der Probe wieder entfernt.\n";
