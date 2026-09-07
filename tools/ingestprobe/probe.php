@@ -540,7 +540,9 @@ pruefe(($h['geraet_modell'] ?? '') === 'Nachtraeglich anders aufgeloest',
  * WOGEGEN. Der Geraeteschluessel liegt auf der Uhr im Klartext. Wer sie
  * findet, kann Einsaetze hochladen und die Phasen BESTEHENDER Einsaetze
  * ersetzen, bis das Geraet im Web getrennt ist. Dagegen steht das Fenster:
- * INGEST_ERSETZFENSTER_H Stunden ab dem GESPEICHERTEN `started_at`.
+ * INGEST_ERSETZFENSTER_H Stunden ab dem Augenblick, in dem der Server den
+ * Datensatz zum ersten Mal sah (`created_at`; `started_at` nur als
+ * Rueckfall, solange die Migration nicht gelaufen ist).
  *
  * ZWEI PAKETE AN DEMSELBEN DATENSATZ, einmal innerhalb und einmal ausserhalb.
  * Das Alter entsteht dabei nicht durch Warten, sondern indem `started_at`
@@ -549,7 +551,7 @@ pruefe(($h['geraet_modell'] ?? '') === 'Nachtraeglich anders aufgeloest',
  * (Ausnahmsweise per SQL: Ein Uhr-Paket kann `started_at` bei einem
  * bestehenden Datensatz gar nicht mehr veraendern -- das ist der Punkt.) */
 
-echo "\n  Teil 9 — Das Ersetzfenster: 72 h ab Einsatzbeginn (Nr. 134)\n";
+echo "\n  Teil 9 — Das Ersetzfenster: 72 h ab dem Anlegen (Nr. 134)\n";
 
 $fRef = 'probe-fenster';
 $fPaket = static function (array $phasen, int $seqFrom, int $punkte) use ($tsC, $tsCe, $tagVon, $fRef): array {
@@ -596,9 +598,10 @@ pruefe(($f2['daten']['stored_points'] ?? -1) === 5
        . ($nach['lat'] ?? 'null') . ' (erwartet 40.0), keine kept_*-Felder');
 
 // AUSSERHALB: `started_at` UND `created_at` zurueckdatieren, dann dasselbe
-// noch einmal. Beide, weil der Anker seit der Nachbesserung vom 07.09.2026 das
-// Spaetere aus beiden ist -- ein Einsatz, den der Server vor 73 h zum ersten
-// Mal gesehen hat, traegt genau diese beiden Werte.
+// noch einmal. Der Anker ist `created_at` (zweite Nachbesserung); `started_at`
+// wird mitgesetzt, weil ein Einsatz, den der Server vor 73 h zum ersten Mal
+// gesehen hat, genau diese beiden Werte traegt -- und weil die Probe so auch
+// den Rueckfall vor der Migration abbildet.
 $alt = gmdate('Y-m-d H:i:s', time() - (INGEST_ERSETZFENSTER_H + 1) * 3600);
 $pdo->prepare('UPDATE missions SET started_at = ?, created_at = ? WHERE id = ?')->execute([$alt, $alt, $fId]);
 $phasenC = [['phase' => 2, 'at' => $tsC, 'lat' => 10.0, 'lon' => 5.0],
@@ -741,6 +744,50 @@ $v2 = senden(['kind' => 'mission', 'client_ref' => $vRef, 'day' => substr($vStar
 pruefe($vId > 0 && ($v2['daten']['kept_points'] ?? -1) === 1,
        'Vorgehende Uhr: ein eingeholtes started_at oeffnet das Fenster nicht noch einmal (zweite Gegenpruefung)',
        'kept_points ' . ($v2['daten']['kept_points'] ?? 'fehlt') . ' (erwartet 1) — der Anker ist created_at allein');
+
+// (8) Wiederaufnahme der zweiten Gegenpruefung: Ein NEUER client_ref an einem
+//     alten Diensttag schreibt dessen Zeitraum nicht mehr um. Der Tag von
+//     $fId liegt ausserhalb (started_at/created_at vor 73 h); der Zeitraum des
+//     Tages selbst wird hier auf denselben Stand gebracht, und dann kommt ein
+//     neuer Einsatz mit 2001/2097 an demselben Datum.
+$tq = $pdo->prepare('SELECT day_id FROM missions WHERE id = ?'); $tq->execute([$fId]);
+$fTagAlt = (int)$tq->fetchColumn();
+$pdo->prepare('UPDATE days SET started_at = ?, ended_at = ? WHERE id = ?')
+    ->execute([$alt, $alt, $fTagAlt]);
+$tagVor8 = $liesTag($pdo, $fId);
+$n8 = senden(['kind' => 'mission', 'client_ref' => 'probe-fenster-neu-alt', 'day' => $tagVon($tsC),
+              'started_at' => '2001-01-01T00:00:00Z', 'ended_at' => '2097-12-31T23:00:00Z', 'final' => true,
+              'track' => ['seq_from' => 0, 'points' => []]]);
+$tagNach8 = $liesTag($pdo, $fId);
+$nq = $pdo->prepare('SELECT day_id FROM missions WHERE id = ?'); $nq->execute([(int)($n8['daten']['id'] ?? 0)]);
+pruefe(($n8['daten']['ok'] ?? false) === true && (int)($n8['daten']['id'] ?? 0) > 0
+       && $tagVor8 === $tagNach8 && (int)$nq->fetchColumn() === $fTagAlt,
+       'Neuer client_ref an einem alten Diensttag: der Einsatz entsteht, der ZEITRAUM DES TAGES bleibt (Wiederaufnahme)',
+       'Tag vorher ' . $tagVor8 . ', nachher ' . $tagNach8);
+
+// (9) Wiederaufnahme: Tag im Papierkorb INNERHALB des Fensters -- der Einsatz
+//     wandert auf den neu bestimmten Tag, statt dass ein leerer Tag entsteht
+//     und der Einsatz am geloeschten haengen bleibt.
+$pRef = 'probe-fenster-papierkorb-innen';
+$p1 = senden(['kind' => 'mission', 'client_ref' => $pRef, 'day' => $tagVon($tsC),
+              'started_at' => $tsC, 'ended_at' => null, 'final' => false,
+              'track' => ['seq_from' => 0, 'points' => [[47.5, 11.5, 700.0, 1750000000]]]]);
+$pId = (int)($p1['daten']['id'] ?? 0);
+$pq = $pdo->prepare('SELECT day_id FROM missions WHERE id = ?'); $pq->execute([$pId]);
+$pTagAlt = (int)$pq->fetchColumn();
+$pdo->prepare('UPDATE days SET deleted_at = UTC_TIMESTAMP() WHERE id = ?')->execute([$pTagAlt]);
+$p2 = senden(['kind' => 'mission', 'client_ref' => $pRef, 'day' => $tagVon($tsC),
+              'started_at' => $tsC, 'ended_at' => $tsCe, 'final' => true,
+              'track' => ['seq_from' => 1, 'points' => [[47.5001, 11.5, 700.0, 1750000010]]]]);
+$pq->execute([$pId]); $pTagNeu = (int)$pq->fetchColumn();
+$lq = $pdo->prepare('SELECT COUNT(*) FROM days WHERE user_id = ? AND deleted_at IS NULL
+                       AND id NOT IN (SELECT day_id FROM missions WHERE day_id IS NOT NULL)
+                       AND id NOT IN (SELECT day_id FROM rest_segments WHERE day_id IS NOT NULL)');
+$lq->execute([$uid]); $leereTage = (int)$lq->fetchColumn();
+$pdo->prepare('UPDATE days SET deleted_at = NULL WHERE id = ?')->execute([$pTagAlt]);
+pruefe(($p2['daten']['ok'] ?? false) === true && $pTagNeu > 0 && $pTagNeu !== $pTagAlt && $leereTage === 0,
+       'Tag im Papierkorb, Fenster offen: der Einsatz WANDERT auf den neuen Tag, kein leerer Tag (Wiederaufnahme)',
+       'Tag vorher ' . $pTagAlt . ', nachher ' . $pTagNeu . ', leere Tage ' . $leereTage);
 
 // (4) Diensttag im Papierkorb: ausserhalb entsteht KEIN leerer neuer Tag.
 $dq = $pdo->prepare('SELECT day_id FROM missions WHERE id = ?'); $dq->execute([$fId]);

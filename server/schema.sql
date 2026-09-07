@@ -423,9 +423,11 @@ CREATE TABLE rest_segments (
   letzter_punkt_am DATETIME NULL,          -- siehe missions (S2/AP3)
   deleted_at       DATETIME NULL,
   deleted_with_day TINYINT(1) NOT NULL DEFAULT 0,
-  -- Serverseitiger Anker des Ersetzfensters (Nr. 134): das Spaetere aus
-  -- started_at und created_at, siehe ingest.php. missions traegt die Spalte
-  -- seit jeher; hier seit Web 15.6.0 (Migration 2026_09_07).
+  -- Serverseitiger Anker des Ersetzfensters (Nr. 134): der Augenblick, in
+  -- dem der Server das Segment zum ersten Mal sah -- created_at allein,
+  -- started_at nur als Rueckfall bis zur Migration, siehe ingest.php.
+  -- missions traegt die Spalte seit jeher; hier seit Web 15.6.0
+  -- (Migration 2026_09_07, dreischrittig mit Kappung).
   created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_dev_ref (device_id, client_ref),
   INDEX idx_user_started (user_id, started_at),

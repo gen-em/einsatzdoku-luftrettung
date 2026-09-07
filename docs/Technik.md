@@ -4468,13 +4468,23 @@ nach. 7 Tage deckten Urlaub mit Uhr im Koffer — und gäben einem Finder eine
 ganze Woche.
 
 **Neue Datensätze werden immer angenommen.** Sie sind sichtbar und löschbar und
-überschreiben nichts. Der Weg gegen eine verlorene Uhr bleibt das **Trennen**
-des Geräts (Handbuch 10); das Fenster begrenzt nur, was bis dahin geschehen
-kann.
+überschreiben nichts — **auch nicht den Zeitraum eines älteren Diensttags**:
+Ein Paket mit neuem `client_ref` hat kein Fenster, wird aber über `day` oder
+`day_ref` auf den alten Tag aufgelöst und schrieb dessen Beginn und Ende
+genauso um wie Fund 1 (zweite Gegenprüfung, Wiederaufnahme). Der Zeitraum
+eines Diensttags wird deshalb nur fortgeschrieben, wenn der Tag selbst noch
+im Fenster liegt: Anker ist das Spätere aus seinem gespeicherten Beginn und
+Ende, nie später als jetzt; ein Tag ohne Zeiten ist offen. Und ein
+**bestehender** Datensatz, dessen Tag inzwischen im Papierkorb liegt, wandert
+innerhalb des Fensters auf den neu bestimmten Tag (bis dahin entstand ein
+leerer Tag, und der Datensatz blieb am gelöschten hängen — Backlog Nr. 33
+im offenen Fenster; außerhalb wird gar kein Tag bestimmt). Der Weg gegen
+eine verlorene Uhr bleibt das **Trennen** des Geräts (Handbuch 10); das
+Fenster begrenzt nur, was bis dahin geschehen kann.
 
 Nachweis: `tools/ingestprobe/` Teil 9 — **1 Paket angenommen, 1 abgewiesen**,
-dazu die Gegenprobe, dass ein neuer Einsatz weiterhin entsteht, und seit der
-Nachbesserung **sechs Erwartungen der Gegenprüfung** (Diensttag bleibt,
+dazu die Gegenprobe, dass ein neuer Einsatz weiterhin entsteht, und seit den
+Nachbesserungen **neun Erwartungen der Gegenprüfungen** (Diensttag bleibt,
 Abschlusspaket genannt, falsch gestellte Uhr nimmt weiter an, Zukunft
 schließt, kein leerer Tag, Ruhesegment nennt beides): **53 Erwartungen,
 0 nicht erfüllt** — am Stand davor dieselben sechs rot. Dieselbe Stufe

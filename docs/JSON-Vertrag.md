@@ -708,8 +708,11 @@ Zusätzlich können auftreten:
 > übernimmt aber weder Metadaten noch Phasen, Reanimation oder Punkte, rührt
 > den Diensttag nicht an und sagt das über die `kept_*`-Felder (`kept_meta`
 > eingeschlossen). **Neue** Datensätze sind nicht betroffen: Sie werden immer
-> angenommen. Der Grund steht in `docs/Technik.md` 4.99a2; für die Uhr ändert
-> sich nichts, was sie tun müsste.
+> angenommen — nur der Zeitraum eines Diensttags, der selbst länger als
+> 72 Stunden zurückliegt (Anker: das Spätere aus seinem gespeicherten Beginn
+> und Ende), wird von ihnen nicht mehr fortgeschrieben (4.4). Der Grund steht
+> in `docs/Technik.md` 4.99a2; für die Uhr ändert sich nichts, was sie tun
+> müsste.
 
 Ein `ok: true` mit gefülltem `rejected` oder einem `kept_*` bedeutet: Der
 Upload ist angekommen, aber **nicht vollständig übernommen**. Die Uhr sollte
