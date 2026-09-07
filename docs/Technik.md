@@ -43,8 +43,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       Einstieg der Wartung huckepack (run_cleanup_if_due)
 │   ├── ui.php             Seitenhülle (ui_seite_start/-_ende), Kopf-/Seitenleisten,
 │   │                       Fußzeile, Meldungszeile, Abbruchseite, Krypto-Rüstzeug
-│   ├── auth_guard.php     Session/CSRF/Rollen (Rolle+Existenz je Anfrage aus der DB,
-│   │                       Sitzungszähler, ist_admin())
+│   ├── auth_guard.php     Session/Rollen (Rolle+Existenz je Anfrage aus der DB,
+│   │                       Sitzungszähler, ist_admin(), csrf_check())
 │   ├── auth_salt.php      KDF-Salt (mit Pseudo-Salt gegen User-Enumeration)
 │   ├── login/logout/reset_request.php   Auth-Flows
 │   ├── pw_handling.php    Passwortvergabe über Einmal-Link: Erstvergabe (erzeugt
@@ -588,6 +588,35 @@ die früher in `auth_guard.php` erzwungene Ersteinrichtung entfällt seit
 Web 2.7.0 ersatzlos. Passwort-Ändern re-wrappt clientseitig **und atomar**:
 Lässt sich der Inhaltsschlüssel nicht umpacken, wird auch das Passwort nicht
 geändert. Eine Admin-Passwortvergabe existiert bewusst nicht.
+
+**Das Anmeldeformular trägt seit Web 15.6.0 ein Formular-Token** (Backlog
+Nr. 127, K-8). Bis dahin war es das einzige Formular ohne: Eine fremde Seite
+konnte einen abgemeldeten Browser per Top-Level-POST in ein **Angreiferkonto**
+anmelden — Adresse und Token des Angreifers im Formular, abgeschickt per
+Skript. Die geschützten Angaben sind davon nicht betroffen (ohne `edk` öffnet
+sich keine fremde Hülle), aber was danach eingegeben wird, landet im fremden
+Konto und ist dort lesbar.
+
+`csrf_token()`, `csrf_field()` und `csrf_ok()` stehen deshalb in
+`session_lib.php` und nicht mehr in `auth_guard.php`: Die eine Seite, die den
+Schutz am nötigsten braucht, lädt `auth_guard.php` nicht. In `auth_guard.php`
+bleibt `csrf_check()`, der Abbruchweg der angemeldeten Seiten. Das Token
+entsteht **faul** — `session_lib.php` wird eingebunden, bevor
+`session_start()` gelaufen ist.
+
+Zwei Eigenschaften der Prüfung am Anmeldeformular: Sie steht **vor** allen
+Zählern, damit ein abgelaufenes Formular keine Ratenstrafe auslöst (es ist
+kein Fehlversuch), und sie antwortet mit der Anmeldeseite und der Meldung
+„Das Formular ist abgelaufen. Bitte versuche es erneut." statt mit einer
+403-Seite. Nach erfolgreicher Anmeldung wird das Token **neu gezogen**, wie
+die Sitzungskennung: Ein vom Angreifer vorgesetztes Token überlebte den
+Wechsel sonst.
+
+Zwei Prüfmittel melden sich ohne Browser an und schicken das Feld seither
+selbst: `tools/referenzdatensatz/einspielen/sitzung.py` (holt zuerst
+`login.php`) und `tools/gpxprobe/probe.php` (tat den GET schon, las das Feld
+aber nicht). Alle übrigen fahren einen echten Browser und schicken es von
+selbst mit.
 
 **Stille Anhebung der Rundenzahl (seit Web 5.0.0, M2-01 Schritt 4).** Steht ein
 Konto noch auf einer niedrigeren Rundenzahl als `KDF_ITER_ZIEL`, wird sie beim
@@ -1887,7 +1916,8 @@ vor der Kette sieht das nicht.
 **Hintergrundjobs:** siehe Abschnitt 4.97a.
 
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
-HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) und
+HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) — **seit
+Web 15.6.0 auch am Anmeldeformular** (Backlog Nr. 127) — und für
 JSON-POSTs (Header `X-CSRF`), PDO Prepared Statements durchgängig,
 Passwörter/Schlüssel nur als Hash, Ratenschutz an **allen** ohne Anmeldung
 erreichbaren Endpunkten — Anmeldung, Salz-Abfrage, Zurücksetzen-Anforderung,

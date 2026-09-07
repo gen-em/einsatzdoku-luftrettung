@@ -294,3 +294,50 @@ function logo_stamm(): string
      * spart eine Migration gespeicherter Werte. */
     return $auf === 'fahrzeug' ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter';
 }
+
+/* ---- Formular-Token (CSRF) ------------------------------------------------
+ *
+ * WARUM DAS HIER STEHT UND NICHT MEHR IN `auth_guard.php`. Bis Web 15.6.0
+ * lagen Erzeugung und Pruefung dort — also hinter der Anmeldung. Damit war die
+ * eine Seite, die den Schutz am noetigsten braucht, die einzige ohne ihn: das
+ * ANMELDEFORMULAR (Backlog Nr. 127, K-8). Eine fremde Seite konnte einen
+ * abgemeldeten Browser per Top-Level-POST in ein Angreiferkonto anmelden; was
+ * danach eingegeben wurde, landete dort. `session_lib.php` laedt `login.php`
+ * ohnehin, `auth_guard.php` ebenfalls — die Funktionen stehen damit an EINER
+ * Stelle und stehen ueberall.
+ *
+ * FAUL ERZEUGT, nicht beim Laden: Diese Datei wird eingebunden, BEVOR
+ * `session_start()` gelaufen ist (login.php Zeile 5 gegen Zeile 13). Ein
+ * Schreibzugriff auf $_SESSION zu diesem Zeitpunkt ginge ins Leere.
+ */
+
+/** Das Token dieser Sitzung; legt es beim ersten Zugriff an. */
+function csrf_token(): string
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) { return ''; }
+    if (empty($_SESSION['csrf'])) { $_SESSION['csrf'] = bin2hex(random_bytes(32)); }
+    return (string)$_SESSION['csrf'];
+}
+
+/** Das versteckte Formularfeld. */
+function csrf_field(): string
+{
+    return '<input type="hidden" name="csrf" value="' . e(csrf_token()) . '">';
+}
+
+/**
+ * Stimmt das mitgeschickte Token?
+ *
+ * DER CAST IST KEINE FORMSACHE. `csrf[]=x` macht aus $_POST['csrf'] ein Feld,
+ * und `hash_equals()` verlangt zwei Zeichenketten — ohne Cast endet die
+ * Anfrage in einem TypeError und damit in einer 500 (K-15). Ein Angreifer
+ * gewinnt dadurch nichts ausser einer haesslichen Fehlerseite, aber eine
+ * Pruefung, die sich selbst zum Absturz bringen laesst, ist keine.
+ */
+function csrf_ok(): bool
+{
+    $mit = $_POST['csrf'] ?? '';
+    if (!is_string($mit)) { return false; }
+    $soll = (string)($_SESSION['csrf'] ?? '');
+    return $soll !== '' && hash_equals($soll, $mit);
+}

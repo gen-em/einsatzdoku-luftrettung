@@ -2209,7 +2209,7 @@ function ui_krypto_bootstrap(array $o = []): void
      * Zeile Markup. Das Feld `csrf` wird weiterhin angenommen und ignoriert;
      * die Aufrufer nennen es teils noch.
      */
-    $zeilen[] = 'const CSRF = ' . json_encode($_SESSION['csrf'] ?? '') . ';';
+    $zeilen[] = 'const CSRF = ' . json_encode(csrf_token()) . ';';
     $zeilen[] = '</script>';
 
     echo $ein, implode("\n" . $ein, $zeilen), "\n";

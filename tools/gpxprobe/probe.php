@@ -334,8 +334,15 @@ pruefe($a['code'] !== 200,
        'Unangemeldet liefert der Abruf keine Datei',
        'HTTP ' . $a['code']);
 
-ruf('login.php');                             // Sitzung und CSRF holen
-$an = ruf('login.php', ['email' => $email, 'token' => $token]);
+/* Sitzung UND Formular-Token holen. Seit Web 15.6.0 traegt auch das
+ * Anmeldeformular ein CSRF-Token (Backlog Nr. 127); ohne das Feld antwortet
+ * login.php mit "Das Formular ist abgelaufen" -- und das saehe hier aus wie
+ * ein Passwortfehler. */
+$anmeldeseite = ruf('login.php');
+preg_match('/name="csrf"\s+value="([0-9a-f]+)"/', $anmeldeseite['leib'], $mm);
+pruefe(!empty($mm[1]), 'Das Anmeldeformular traegt ein CSRF-Token',
+       !empty($mm[1]) ? substr($mm[1], 0, 16) . '…' : 'kein Feld gefunden');
+$an = ruf('login.php', ['csrf' => $mm[1] ?? '', 'email' => $email, 'token' => $token]);
 pruefe($an['code'] === 302 || $an['code'] === 200,
        'Anmeldung geht durch', 'HTTP ' . $an['code']);
 
