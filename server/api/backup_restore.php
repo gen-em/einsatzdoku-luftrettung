@@ -89,8 +89,16 @@ if ($nutzlast < 6) {
  * jedem aelteren Stand ABGEWIESEN statt halb eingelesen. Wer die Zahl hier
  * hochsetzt, ohne den Rueckweg auf die neuen Felder vorzubereiten, hebelt
  * genau das aus. Die Schranke nach UNTEN bleibt bei 6; alle Felder ab
- * Fassung 7 sind optional, und was fehlt, wird NULL. */
-const NUTZLAST_HOECHSTENS = 9;
+ * Fassung 7 sind optional, und was fehlt, wird NULL.
+ *
+ * FASSUNG 10 (Web 16.0.0, E-S9-09): Typ und Kurzname am Rettungsmittel. Der
+ * Rueckweg ist darauf vorbereitet — `edbak_restore()` schickt beide durch
+ * `pruef_rettungsmittel()`, ein fehlender Typ wird 'standard'. Und hier
+ * arbeitet die Schranke besonders deutlich: Ohne sie legte ein aelterer Stand
+ * ein Bergwacht-Rettungsmittel als STANDARD-Rettungsmittel an — mit
+ * Standortpflicht und Rollenvorlagen, und ohne dass man dem Datensatz den
+ * Verlust ansaehe. */
+const NUTZLAST_HOECHSTENS = 10;
 if ($nutzlast > NUTZLAST_HOECHSTENS) {
     json_out(['error' => 'version_neu',
               'meldung' => 'Dieses Backup hat das Format ' . $nutzlast

@@ -875,7 +875,24 @@
         }))
         .concat([
         { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'days.notes', pers: true, get: function (c) { return orEmpty(c.d.notes); } },
-        { feld: 'anzahl_einsaetze', typ: 'int', einheit: '', beschreibung: 'Anzahl Einsätze an diesem Diensttag im Export', get: function (c) { return c.count; } }
+        { feld: 'anzahl_einsaetze', typ: 'int', einheit: '', beschreibung: 'Anzahl Einsätze an diesem Diensttag im Export', get: function (c) { return c.count; } },
+        /* TYP UND KURZNAME (E-S9-09, Web 16.0.0) — GANZ AM ENDE und nicht neben
+           'rettungsmittel'. Derselbe Grund wie bei der Geräte-Momentaufnahme
+           weiter oben: Wer schon Auswertungen auf diese Datei gebaut hat, zählt
+           Spalten von links. Eine Spalte in der Mitte einzusetzen verschiebt
+           alle folgenden.
+
+           WARUM DER TYP ÜBERHAUPT EINE EIGENE SPALTE BRAUCHT: Bei
+           'veranstaltung' ist die Betriebsart fest 'ground', die Zeile trägt
+           also `art = boden` — genau wie ein NEF-Dienst. Ohne diese Spalte
+           ließen sich die beiden in der Datei nicht auseinanderhalten.
+
+           DER KURZNAME STEHT NEBEN DER BEZEICHNUNG, NICHT AN IHRER STELLE.
+           `rettungsmittel` bleibt der volle Name (E-S9-09): Wer die Datei
+           auswertet, kennt die Abkürzung des Hauses nicht. Die Spalte macht den
+           Export vollständig, sie ersetzt nichts. */
+        { feld: 'typ', typ: 'text', einheit: '', beschreibung: 'Typ des Rettungsmittels, eingefroren beim Anlegen (E8): standard | bergwacht | veranstaltung | sonstiges; leer = ohne Rettungsmittel', get: function (c) { return orEmpty(c.d.vehicle_typ); } },
+        { feld: 'rettungsmittel_kurz', typ: 'text', einheit: '', beschreibung: 'Kurzname des Rettungsmittels, eingefroren beim Anlegen (E8); leer = keiner gesetzt. Die volle Bezeichnung steht in `rettungsmittel`', get: function (c) { return orEmpty(c.d.vehicle_kurz); } }
     ]);
 
     var FIELD_DEFS_RUHEZEITEN = [

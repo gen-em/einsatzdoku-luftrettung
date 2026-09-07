@@ -436,6 +436,50 @@ const VEHICLE_CAPABILITIES = [
 ];
 
 /**
+ * Typen eines Rettungsmittels (E-S9-09, Web 16.0.0).
+ *
+ * ZWEI ACHSEN, NICHT EINE. `kind` ist die BETRIEBSART — Luft oder Boden — und
+ * steuert weiter, was sie immer steuerte: Rollenkatalog, Faehigkeiten,
+ * Kachelsatz, Hoehe. `typ` ist die ART DES DIENSTES. Die beiden sind
+ * unabhaengig voneinander: Eine Bergwacht fliegt oder faehrt, und beides ist
+ * ein Bergwacht-Dienst. Wer statt dessen `kind` um 'bergwacht' erweitert
+ * haette, muesste an jeder Stelle, die heute air/ground unterscheidet, raten,
+ * welche Betriebsart dahintersteckt.
+ *
+ * DIESE TABELLE IST DIE EINE QUELLE. Aus ihr ziehen die Pruefschicht
+ * (`pruef_rettungsmittel()`), die Formulare, die Sicherung und die Zeichen
+ * (`dt_typ_symbole()`). Ein fuenfter Typ wird hier eingetragen und kostet
+ * zusaetzlich eine Migration — das ENUM in `vehicles.typ` und `days.vehicle_typ`
+ * ist bewusst geschlossen (dieselbe Abwaegung wie bei `users.role`).
+ *
+ * Die Spalten:
+ *   label        Beschriftung in Formular, Liste und Plakette
+ *   betriebsart  null = frei waehlbar; sonst der eine erlaubte Wert
+ *   rollen       duerfen Rollen-Vorlagen (`vehicle_roles`) hinterlegt werden?
+ *   standort     ist `base_id` Pflicht?
+ *
+ * FAEHIGKEITEN STEHEN NICHT ALS SPALTE DARIN, obwohl E-S9-09 sie nennt: Sie
+ * kommen ausschliesslich an luftgebundenen Rettungsmitteln vor (E29), und
+ * 'veranstaltung' ist auf Boden festgelegt — „Veranstaltung hat keine
+ * Faehigkeiten" folgt damit aus den beiden Angaben, die schon dastehen. Eine
+ * eigene Spalte waere eine zweite Fassung derselben Aussage, und zwei
+ * Fassungen koennen auseinanderlaufen.
+ *
+ * Die Reihenfolge im Array ist die Anzeigereihenfolge; 'standard' steht
+ * zuerst, weil es die Vorgabe ist.
+ */
+const VEHICLE_TYPEN = [
+    'standard'      => ['label' => 'Standard',      'betriebsart' => null,
+                        'rollen' => true,  'standort' => true],
+    'bergwacht'     => ['label' => 'Bergwacht',     'betriebsart' => null,
+                        'rollen' => false, 'standort' => false],
+    'veranstaltung' => ['label' => 'Veranstaltung', 'betriebsart' => 'ground',
+                        'rollen' => false, 'standort' => false],
+    'sonstiges'     => ['label' => 'Sonstiges',     'betriebsart' => null,
+                        'rollen' => false, 'standort' => false],
+];
+
+/**
  * Rollen, die zu einer Einsatzart gehoeren, in Katalogreihenfolge.
  *
  * $kind === null (neutraler Diensttag) liefert bewusst eine LEERE Liste: Ein

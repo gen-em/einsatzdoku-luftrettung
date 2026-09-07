@@ -130,7 +130,12 @@ try {
          * Uhrzeit, Art, Rettungsmittel —, kommt mit. */
         $tage = dt_liste($userId, 120);
         $liste = array_map(static function (array $t): array {
-            $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind']);
+            /* Das Zeichen kommt aus dem TYP, wo einer steht — eine Funktion,
+               alle Stellen (E-S9-13). Ohne den zweiten Wert zeichnete diese
+               Liste die Betriebsart, waehrend die Leiste daneben den Typ
+               zeichnet: zwei Zeichen fuer denselben Tag. */
+            $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind'],
+                                 $t['vehicle_typ'] === null ? null : (string)$t['vehicle_typ']);
             return [
                 'id'           => (int)$t['id'],
                 'day'          => (string)$t['day'],
@@ -139,6 +144,13 @@ try {
                 'art_symbol'   => $sym['symbol'],
                 'art_text'     => $sym['text'],
                 'vehicle_name' => $t['vehicle_name'] !== null ? (string)$t['vehicle_name'] : null,
+                /* KEIN `vehicle_kurz` UND KEIN `vehicle_typ` IN DER ANTWORT.
+                   Der Typ steckt bereits im gerechneten `art_symbol`/`art_text`
+                   darueber; den Kurznamen liest im Browser niemand — die
+                   Leiste, die ihn zeigt, wird auf dem Server gerendert
+                   (ui.php). Ein Feld, das niemand liest, sieht beim naechsten
+                   Lesen nach einer Zusage aus, die es nicht gibt. Wer es in
+                   AP5 oder AP6 braucht, traegt es dann ein. */
                 'base_name'    => $t['base_name'] !== null ? (string)$t['base_name'] : null,
                 'mehrfach'     => (bool)$t['mehrfach'],
             ];
@@ -161,7 +173,8 @@ try {
      * und aendern sich nicht mehr, wenn das Rettungsmittel umbenannt oder
      * geloescht wird (A4). Die Kennungen kommen daneben mit, weil das Formular
      * seine Auswahlfelder darauf stellt — angezeigt werden sie nie. */
-    $sym = dt_art_symbol($tag['kind'] === null ? null : (string)$tag['kind']);
+    $sym = dt_art_symbol($tag['kind'] === null ? null : (string)$tag['kind'],
+                         $tag['vehicle_typ'] === null ? null : (string)$tag['vehicle_typ']);
     $meta = [
         'vehicle_id'   => $tag['vehicle_id'] !== null ? (int)$tag['vehicle_id'] : null,
         'base_id'      => $tag['base_id']    !== null ? (int)$tag['base_id']    : null,

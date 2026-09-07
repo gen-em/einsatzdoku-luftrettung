@@ -787,6 +787,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Import und Backup ziehen nach — deshalb ein eigener Punkt und kein
     Nebenklapp. Zuordnung: Backlog-Runde.
     *Konzept S9 (07.09.2026): E-S9-09 (`vehicles.kurz`, `days.vehicle_kurz`, Nutzlast 10; AP4).*
+    *Umgesetzt mit Web 16.0.0 (S9/AP4, 07.09.2026): `vehicles.kurz` und
+    `days.vehicle_kurz`, bis 16 Zeichen, freiwillig. Die Leiste zeigt ihn,
+    Tooltip und Formulare den vollen Namen; Sicherung (Nutzlast 10) und
+    Export (`diensttage.csv`, Spalte am Ende) führen ihn NEBEN der
+    Bezeichnung mit, die Suche findet beides. **Kacheln und Plaketten
+    zeigen ihn noch nicht** — sie zeigen heute gar keinen
+    Rettungsmittelnamen (`EdMissionTable.kachel()`), es gibt dort nichts
+    zu ersetzen; das wäre eine neue Darstellung und braucht ein Mockup.
+    Der Punkt bleibt deshalb offen und wandert erst mit AP8 nach
+    Erledigt — oder wird dort auf diesen Rest zurückgeschnitten.*
 
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**
     *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben

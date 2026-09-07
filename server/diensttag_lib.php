@@ -164,12 +164,14 @@ function dt_art_symbol(?string $kind, ?string $typ = null): array
      * sieht, sucht das Erste. Die Betriebsart geht dabei nicht verloren, sie
      * wandert in den Text: „Bergwacht, luftgebunden".
      *
-     * `$typ` IST IN AP3 IMMER NULL, und das ist kein Versehen. Das Datenmodell
-     * kennt den Diensttag-Typ noch nicht — er kommt mit AP4 (E-S9-09) samt
-     * Migration. Die Funktion nimmt ihn schon entgegen, damit AP4 nur noch
-     * fuellen muss, was hier bereits steht, statt fuenfzehn Aufrufer erneut
-     * anzufassen. Bis dahin liefert sie unveraendert das Zeichen der
-     * Betriebsart. */
+     * `$typ` WAR IN AP3 IMMER NULL — seit AP4 (Web 16.0.0) ist er es nicht
+     * mehr. Das Datenmodell kennt den Diensttag-Typ jetzt (`days.vehicle_typ`,
+     * Migration `2026_09_07_rettungsmittel_typ`), und die Aufrufer geben ihn
+     * mit: Leiste, Papierkorb, Loeschen, Zusammenfuehren, Nachbearbeitung,
+     * `api/day.php`, `api/mission.php` und, ueber `TYP_SYMBOLE`, die
+     * Einsatztabelle im Browser. NULL bleibt der Regelfall fuer Bestandstage
+     * ohne Rettungsmittel; dann liefert die Funktion unveraendert das Zeichen
+     * der Betriebsart. */
     if ($typ === null || $typ === '' || $typ === 'standard') { return $art; }
 
     $typen = dt_typ_symbole();
@@ -194,15 +196,61 @@ function dt_art_symbol(?string $kind, ?string $typ = null): array
  * 24-px-Raster wie der uebrige Vorrat — Herkunft im Dateikopf und in
  * `docs/Design.md` 8.
  *
+ * DIE BESCHRIFTUNG KOMMT AUS `VEHICLE_TYPEN` (db.php, Web 16.0.0), nicht aus
+ * dieser Datei. Hier steht nur, WELCHE ZEICHNUNG zu welchem Typ gehoert — die
+ * Zuordnung Datei zu Bedeutung, die db.php nichts angeht. Stuenden die
+ * Beschriftungen doppelt, hiesse ein Typ eines Tages im Formular anders als
+ * in der Leiste.
+ *
  * @return array<string,array{symbol:string,text:string}>
  */
 function dt_typ_symbole(): array
 {
-    return [
-        'bergwacht'     => ['symbol' => 'bergwacht',     'text' => 'Bergwacht'],
-        'veranstaltung' => ['symbol' => 'veranstaltung', 'text' => 'Veranstaltung'],
-        'sonstiges'     => ['symbol' => 'sonstiges',     'text' => 'Sonstiges'],
+    /* 'standard' steht bewusst NICHT in dieser Liste — sein Zeichen ist das
+     * der Betriebsart, und ein vierter Eintrag, der auf zwei andere verweist,
+     * waere eine Falle fuer den naechsten Leser. */
+    $zeichnung = [
+        'bergwacht'     => 'bergwacht',
+        'veranstaltung' => 'veranstaltung',
+        'sonstiges'     => 'sonstiges',
     ];
+    $out = [];
+    foreach ($zeichnung as $typ => $symbol) {
+        $out[$typ] = ['symbol' => $symbol, 'text' => VEHICLE_TYPEN[$typ]['label']];
+    }
+    return $out;
+}
+
+/**
+ * Die Bezeichnung, unter der ein Diensttag SEIN Rettungsmittel zeigt (Nr. 69).
+ *
+ * Der Kurzname, wenn einer gesetzt ist, sonst die volle Bezeichnung. Beides
+ * steht eingefroren am Diensttag (E8) — diese Funktion sieht NICHT in den
+ * Stammdaten nach, und das ist der ganze Punkt: Ein Rettungsmittel, das
+ * gestern „Christoph 1" hiess und heute „C1" heisst, aendert keinen einzigen
+ * Diensttag von gestern.
+ *
+ * WO SIE GILT UND WO NICHT (E-S9-09). Kurzname STATT der Bezeichnung: die
+ * Diensttage-Leiste, die Kacheln und die Plaketten — also ueberall dort, wo der
+ * Platz knapp ist und die Person ihren eigenen Dienst wiedererkennen soll.
+ * Volle Bezeichnung: Formulare, Export, Sicherung, Suche und alles, was jemand
+ * ausserhalb dieser Installation liest. Wer den Kurznamen an einer der zweiten
+ * Stellen EINSETZT, macht aus einer Abkuerzung fuer den Hausgebrauch eine
+ * Angabe im Dokument.
+ *
+ * DAVON UNBERUEHRT: Sicherung und Export FUEHREN den Kurznamen als eigenes
+ * Feld mit (Nutzlast 10, Spalte `rettungsmittel_kurz`). Das ist kein
+ * Widerspruch, sondern die Unterscheidung, um die es geht — sie ersetzen die
+ * Bezeichnung nicht, sie stellen die Abkuerzung DANEBEN. Ohne das ueberlebte
+ * der Kurzname keinen Rueckweg.
+ *
+ * @param array $tag Zeile aus `days` mit vehicle_kurz und vehicle_name
+ */
+function dt_rm_kurz(array $tag): string
+{
+    $kurz = trim((string)($tag['vehicle_kurz'] ?? ''));
+    if ($kurz !== '') { return $kurz; }
+    return trim((string)($tag['vehicle_name'] ?? ''));
 }
 
 /**
@@ -214,7 +262,8 @@ function dt_typ_symbole(): array
  */
 function dt_liste(int $userId, int $limit = 500): array
 {
-    $q = db()->prepare('SELECT id, day, started_at, ended_at, kind, vehicle_name, base_name
+    $q = db()->prepare('SELECT id, day, started_at, ended_at, kind, vehicle_name,
+                                vehicle_typ, vehicle_kurz, base_name
                           FROM days
                          WHERE user_id = ? AND deleted_at IS NULL
                          ORDER BY day DESC, started_at DESC, id DESC
@@ -280,13 +329,30 @@ function dt_base_erlaubt(PDO $pdo, int $userId, ?int $baseId): ?int
     return $q->fetchColumn() !== false ? $baseId : null;
 }
 
-/** Wie dt_base_erlaubt(), fuer Rettungsmittel; prueft den Standort mit. */
+/**
+ * Wie dt_base_erlaubt(), fuer Rettungsmittel; prueft den Standort mit.
+ *
+ * EIN ZENTRALES RETTUNGSMITTEL OHNE STANDORT GILT ALS VERFUEGBAR (Web 16.0.0).
+ * Der Zweig `v.base_id IS NULL` steht hier, weil `dt_vehicles()` ihn schon
+ * immer hatte — und die beiden Fassungen mussten uebereinstimmen. Solange
+ * `vehicles.base_id` NOT NULL trug, war die Abweichung folgenlos; mit E-S9-09
+ * waere sie zum STILLEN DATENVERLUST geworden: Das Rettungsmittel stuende im
+ * Auswahlfeld des Diensttags, und `dt_zuordnen()` setzte es beim Speichern
+ * wortlos auf NULL zurueck — der Tag saehe danach neutral aus, ohne dass
+ * irgendwo eine Meldung stuende.
+ *
+ * Die Auswahlbedingung fuer zentrale Eintraege bleibt sonst dieselbe (E16):
+ * Wer den Standort nicht ausgewaehlt hat, sieht dessen Rettungsmittel nicht.
+ * Ein zentrales Rettungsmittel OHNE Standort hat diese Huerde nicht — es
+ * haengt an keinem Standort, den man auswaehlen koennte.
+ */
 function dt_vehicle_erlaubt(PDO $pdo, int $userId, ?int $vehicleId): ?int
 {
     if ($vehicleId === null || $vehicleId <= 0) { return null; }
     $q = $pdo->prepare('SELECT v.id FROM vehicles v
                          LEFT JOIN user_bases ub ON ub.base_id = v.base_id AND ub.user_id = ?
-                        WHERE v.id = ? AND (v.user_id = ? OR (v.user_id IS NULL AND ub.base_id IS NOT NULL))');
+                        WHERE v.id = ? AND (v.user_id = ?
+                              OR (v.user_id IS NULL AND (ub.base_id IS NOT NULL OR v.base_id IS NULL)))');
     $q->execute([$userId, $vehicleId, $userId]);
     return $q->fetchColumn() !== false ? $vehicleId : null;
 }
@@ -310,15 +376,20 @@ function dt_bases(int $userId): array
 }
 
 /**
- * Rettungsmittel der verfuegbaren Standorte, mit Art und Standortnamen.
+ * Rettungsmittel der verfuegbaren Standorte, mit Betriebsart, Typ, Kurznamen
+ * und Standortnamen.
  *
- * Ein Rettungsmittel OHNE Standort (Bestandsdaten vor der Nachbearbeitung,
- * Problem P6) erscheint bewusst mit: Sonst verschwaende es aus jeder Auswahl,
- * bevor die Nachbearbeitung ueberhaupt aufgerufen wurde.
+ * Ein Rettungsmittel OHNE Standort erscheint bewusst mit. Bis Web 15.8.0 galt
+ * das den Bestandsdaten vor der Nachbearbeitung (Problem P6): Sonst
+ * verschwaenden sie aus jeder Auswahl, bevor die Nachbearbeitung ueberhaupt
+ * aufgerufen wurde. Seit E-S9-09 ist es der REGELFALL — Bergwacht,
+ * Veranstaltung und Sonstiges brauchen keinen Standort. Die Zeile gilt damit
+ * unveraendert weiter, nur aus einem staerkeren Grund.
  */
 function dt_vehicles(int $userId): array
 {
-    $q = db()->prepare('SELECT v.id, v.name, v.kind, v.base_id, b.name AS base_name
+    $q = db()->prepare('SELECT v.id, v.name, v.kurz, v.kind, v.typ, v.base_id,
+                                b.name AS base_name
                           FROM vehicles v
                           LEFT JOIN bases b ON b.id = v.base_id
                           LEFT JOIN user_bases ub ON ub.base_id = v.base_id AND ub.user_id = ?
@@ -386,8 +457,9 @@ function dt_anlegen(PDO $pdo, int $userId, string $day, ?string $startedAt = nul
  * EINFRIEREN (E8).
  *
  * Geschrieben werden: `vehicle_id`, `base_id` (Filter und Auswertung), die
- * Snapshot-Spalten `kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`
- * sowie die Zeilen in `day_crew` und `day_capabilities`.
+ * Snapshot-Spalten `kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`,
+ * `vehicle_typ`, `vehicle_kurz` sowie die Zeilen in `day_crew` und
+ * `day_capabilities`.
  *
  * WARUM AUCH BEIM SPAETEREN NACHTRAGEN NEU EINGEFROREN WIRD. Der Zeitpunkt des
  * Einfrierens ist der Zeitpunkt der ZUORDNUNG, nicht der des Anlegens. Ein von
@@ -407,13 +479,20 @@ function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $b
     $vehicleId = dt_vehicle_erlaubt($pdo, $userId, $vehicleId);
     $baseId    = dt_base_erlaubt($pdo, $userId, $baseId);
 
-    $kind = null; $vehicleName = null;
+    $kind = null; $vehicleName = null; $vehicleTyp = null; $vehicleKurz = null;
     if ($vehicleId !== null) {
-        $q = $pdo->prepare('SELECT name, kind FROM vehicles WHERE id = ?');
+        /* TYP UND KURZNAME GEHOEREN IN DIESELBE MOMENTAUFNAHME (E8, E-S9-09,
+         * Web 16.0.0). Sie werden aus denselben Gruenden eingefroren wie
+         * Bezeichnung und Betriebsart: Ein Rettungsmittel wird umbenannt,
+         * umgestellt oder geloescht, und ein Diensttag von vor drei Monaten
+         * darf davon nichts merken. */
+        $q = $pdo->prepare('SELECT name, kurz, kind, typ FROM vehicles WHERE id = ?');
         $q->execute([$vehicleId]);
         if ($v = $q->fetch()) {
             $kind        = (string)$v['kind'];
             $vehicleName = (string)$v['name'];
+            $vehicleTyp  = (string)$v['typ'];
+            $vehicleKurz = $v['kurz'] !== null ? (string)$v['kurz'] : null;
         }
     }
     $baseName = null; $baseLat = null; $baseLon = null;
@@ -428,10 +507,11 @@ function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $b
     }
 
     $pdo->prepare('UPDATE days SET vehicle_id = ?, base_id = ?, kind = ?,
-                     base_name = ?, base_lat = ?, base_lon = ?, vehicle_name = ?
+                     base_name = ?, base_lat = ?, base_lon = ?, vehicle_name = ?,
+                     vehicle_typ = ?, vehicle_kurz = ?
                    WHERE id = ? AND user_id = ?')
         ->execute([$vehicleId, $baseId, $kind, $baseName, $baseLat, $baseLon,
-                   $vehicleName, $dayId, $userId]);
+                   $vehicleName, $vehicleTyp, $vehicleKurz, $dayId, $userId]);
 
     /* ---- Rollensatz einfrieren ---------------------------------------- */
     $soll = $vehicleId !== null ? dt_vehicle_rollen($pdo, $vehicleId) : [];
@@ -1160,14 +1240,22 @@ function dt_zusammenfuehren(PDO $pdo, int $userId, int $zielId, int $quellId,
     elseif ($nq !== '')           { $notes = $nq; }
     if ($notes !== null) { $notes = mb_substr($notes, 0, 2000); }
 
+    /* TYP UND KURZNAME FOLGEN DEM GEWINNENDEN RETTUNGSMITTEL, wie Bezeichnung
+     * und Kennung daneben (Web 16.0.0). Sie hier zu vergessen waere kein
+     * Fehler, den man saehe: Der Zieltag traege den NAMEN des einen und den
+     * TYP des anderen Rettungsmittels — eine Zeile, die in sich stimmig
+     * aussieht und es nicht ist. Deshalb stehen sie in derselben Klammer wie
+     * `vehicle_name` und kommen aus derselben Zeile `$vGewinner`. */
     $pdo->prepare('UPDATE days
                       SET day = ?, started_at = ?, ended_at = ?, kind = ?,
                           vehicle_id = ?, vehicle_name = ?,
+                          vehicle_typ = ?, vehicle_kurz = ?,
                           base_id = ?, base_name = ?, base_lat = ?, base_lon = ?,
                           notes = ?
                     WHERE id = ? AND user_id = ?')
         ->execute([$vor['day'], $vor['started_at'], $vor['ended_at'], $kind,
                    $vGewinner['vehicle_id'], $vGewinner['vehicle_name'],
+                   $vGewinner['vehicle_typ'], $vGewinner['vehicle_kurz'],
                    $bGewinner['base_id'], $bGewinner['base_name'],
                    $bGewinner['base_lat'], $bGewinner['base_lon'],
                    $notes, $zielId, $userId]);

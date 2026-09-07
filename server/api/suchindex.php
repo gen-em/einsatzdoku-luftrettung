@@ -81,7 +81,7 @@ try {
      * ersatzlos entfallen.
      */
     $dq = db()->prepare(
-        'SELECT id, day, kind, vehicle_name, base_name
+        'SELECT id, day, kind, vehicle_name, vehicle_typ, vehicle_kurz, base_name
            FROM days WHERE user_id = ? AND deleted_at IS NULL'
     );
     $dq->execute([$userId]);
@@ -200,6 +200,15 @@ try {
             'base'        => $d !== null && $d['base_name'] !== null ? (string)$d['base_name'] : null,
             'vehicle'     => $d !== null && $d['vehicle_name'] !== null ? (string)$d['vehicle_name'] : null,
             'kind'        => $d !== null && $d['kind'] !== null ? (string)$d['kind'] : null,
+            /* Der Diensttag-TYP steuert allein das Zeichen (E-S9-13); der
+               Filterwert bleibt `kind`. Ohne ihn zeichnete die Einsatztabelle
+               die Betriebsart, waehrend die Leiste den Typ zeichnet. */
+            'day_typ'     => $d !== null && $d['vehicle_typ'] !== null ? (string)$d['vehicle_typ'] : null,
+            /* Der Kurzname geht in den HEUHAUFEN, nicht in die Anzeige (E-S9-09,
+               Web 16.0.0). Die Leiste zeigt „BW Hoch", also tippt jemand
+               „BW Hoch" ins Suchfeld — und faende nichts, wenn nur die volle
+               Bezeichnung durchsucht wuerde. Angezeigt wird weiter `vehicle`. */
+            'vehicle_kurz' => $d !== null && $d['vehicle_kurz'] !== null ? (string)$d['vehicle_kurz'] : null,
             'crew'        => (object)$crew,
             'resources'   => $mittel[$id] ?? [],
             'pat_blob'    => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,

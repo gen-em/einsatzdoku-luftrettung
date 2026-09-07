@@ -2240,6 +2240,127 @@ function migrationen_katalog(): array
                ADD COLUMN adresssuche TINYINT(1) NOT NULL DEFAULT 1 AFTER logo_wahl",
         ],
     ],
+    [
+        'id'    => '2026_09_07_rettungsmittel_typ',
+        'web'   => '16.0.0',
+        'label' => 'Rettungsmittel bekommen Typ und Kurznamen, der Standort wird '
+                 . 'freiwillig; der Diensttag friert beides ein (E-S9-09)',
+        'skip'  => function (PDO $pdo): bool {
+            /* Gibt es die Spalte schon, ist die Migration gelaufen — oder die
+             * Datenbank ist frisch aus schema.sql entstanden. Beide Faelle
+             * brauchen nichts und sind vom zweiten Lauf nicht zu
+             * unterscheiden. Genau das ist die Zusage: idempotent. */
+            return _hat_spalte($pdo, 'vehicles', 'typ');
+        },
+        'sql'   => [
+            /* VIER TYPEN STATT ZWEI BETRIEBSARTEN (E-S9-09, Backlog Nr. 69)
+             *
+             * WAS `kind` BISHER ALLEIN TRUG. Ein Rettungsmittel hatte genau
+             * eine Eigenschaft: luftgebunden oder bodengebunden. Daran hingen
+             * vier Dinge zugleich — die Rollen-Vorlagen, die Faehigkeiten, der
+             * Kachelsatz der Tagesuebersicht und das Zeichen in der Leiste.
+             * Solange es nur Rettungshubschrauber und Notarzteinsatzfahrzeuge
+             * gab, war das richtig; ein Bergwacht-Dienst, ein Sanitaetsdienst
+             * auf einer Veranstaltung und „sonst etwas" passen aber in keine
+             * der beiden Schubladen, ohne dass sie eine Aussage mitschleppen,
+             * die niemand gemeint hat.
+             *
+             * DESHALB EINE ZWEITE ACHSE UND NICHT ZWEI WEITERE `kind`-WERTE.
+             * `kind` bleibt die BETRIEBSART und steuert weiter, was es heute
+             * steuert; `typ` ist die ART DES DIENSTES. Die beiden sind
+             * unabhaengig: Eine Bergwacht fliegt oder faehrt, und beides ist
+             * ein Bergwacht-Dienst. Haette man statt dessen `kind` um
+             * 'bergwacht' erweitert, muesste jede Stelle, die heute
+             * air/ground unterscheidet, kuenftig raten, welche Betriebsart
+             * dahintersteckt — und die Phasenbeschriftungen sind seit
+             * Web 6.0.0 gerade deswegen neutral (E20/E21), damit die Uhr die
+             * Art nicht kennen muss.
+             *
+             * ENUM UND NICHT VARCHAR — anders als bei `origin`
+             * (2026_09_04_herkunft_geraet), wo der Wertevorrat offen ist,
+             * weil jede neue Client-App einen Wert hinzufuegt. Die Typen sind
+             * das Gegenteil: vier, bewusst gewaehlt, und die Datenbank soll
+             * ausschliessen, was der Code nicht kennt. Ein fuenfter Typ kostet
+             * dann eine Migration, und das ist richtig so — dieselbe
+             * Abwaegung wie bei `users.role` (2026_09_05_rolle_betreiberin).
+             *
+             * DEFAULT 'standard' FUELLT DEN BESTAND VON SELBST. Jedes heute
+             * vorhandene Rettungsmittel ist ein Standard-Rettungsmittel; ein
+             * eigenes UPDATE dafuer waere ein zweiter Weg zur selben Aussage.
+             *
+             * KURZNAME: 16 ZEICHEN, FREIWILLIG (Nr. 69). Die Leiste, die
+             * Kacheln und die Plaketten zeigen ihn, wenn er gesetzt ist —
+             * Formulare und Export zeigen weiter den vollen Namen. NULL heisst
+             * „keiner", nicht „leer": Ein NOT NULL DEFAULT '' machte aus dem
+             * Fehlen eine Angabe und zwaenge jede Anzeige, zwischen leerem
+             * String und fehlendem Wert zu unterscheiden.
+             *
+             * KEIN `zerstoert`, KEIN `inhalt`: Es faellt nichts weg. */
+            "ALTER TABLE vehicles
+               ADD COLUMN typ  ENUM('standard','bergwacht','veranstaltung','sonstiges')
+                          NOT NULL DEFAULT 'standard' AFTER kind,
+               ADD COLUMN kurz VARCHAR(16) NULL AFTER name",
+
+            /* DER STANDORT WIRD FREIWILLIG (E-S9-09)
+             *
+             * Bis hier war `base_id` NOT NULL: Ohne Standort gab es kein
+             * Rettungsmittel. Fuer ein Standard-Rettungsmittel bleibt das so —
+             * die Vorschlagslisten (E15) haengen am Standort, und ohne ihn
+             * waere die Tagesuebersicht leer. Die drei neuen Typen haben oft
+             * keinen: Eine Bergwacht-Bereitschaft hat ein Einsatzgebiet, keine
+             * Wache; ein Sanitaetsdienst hat einen Veranstaltungsort, der jedes
+             * Mal woanders liegt.
+             *
+             * DIE PFLICHT WANDERT IN DIE PRUEFSCHICHT, NICHT AUS DER
+             * ANWENDUNG. `validate_lib.php` verlangt den Standort weiterhin —
+             * aber nur bei `typ = 'standard'`. Die Datenbank kann diese Regel
+             * nicht ausdruecken (eine CHECK-Bedingung ueber zwei Spalten waere
+             * in MariaDB moeglich, liefe aber an der Pruefschicht vorbei und
+             * meldete sich als SQL-Fehler statt als Feldfehler im Formular).
+             *
+             * DER FREMDSCHLUESSEL BLEIBT ON DELETE CASCADE. Das ist bewusst
+             * KEINE Aenderung: Wer heute einen Standort loescht, loescht seine
+             * Rettungsmittel mit, die Oberflaeche nennt vorher die Zahl und
+             * laesst bestaetigen (E15), und die Diensttage bleiben unberuehrt,
+             * weil sie ihre Angaben eingefroren haben (E8). ON DELETE SET NULL
+             * klaenge freundlicher, waere aber falsch: Es machte aus jedem
+             * Standard-Rettungsmittel eines ohne Standort — also einen
+             * Datensatz, den die Pruefschicht nie angelegt haette — und zwar
+             * still, ohne dass jemand danach gefragt wurde. Ein Rettungsmittel
+             * ohne Standort entsteht dadurch, dass man es so anlegt, nicht
+             * dadurch, dass anderswo etwas geloescht wurde. */
+            "ALTER TABLE vehicles MODIFY base_id INT UNSIGNED NULL",
+
+            /* DER DIENSTTAG FRIERT AUCH DAS EIN (E8)
+             *
+             * `days` haelt seit jeher eine Momentaufnahme des Rettungsmittels —
+             * Bezeichnung, Betriebsart, Standort samt Koordinate. Der Grund ist
+             * derselbe wie bei der Geraete-Momentaufnahme (R64): Der Verweis
+             * haelt nicht. Ein Rettungsmittel wird umbenannt, umgestellt oder
+             * geloescht; ein Diensttag von vor drei Monaten darf davon nichts
+             * merken. Typ und Kurzname sind Angaben derselben Art und gehoeren
+             * deshalb in dieselbe Momentaufnahme.
+             *
+             * BEIDE NULL-FAEHIG, wie `kind` und `vehicle_name` daneben: Ein
+             * Diensttag ohne Rettungsmittel hat keinen Typ, und die meisten
+             * Rettungsmittel haben keinen Kurznamen. Wo `vehicle_typ` NULL ist,
+             * faellt die Anzeige auf die Betriebsart zurueck — das kann
+             * `dt_art_symbol()` seit Web 15.8.0 von selbst. */
+            "ALTER TABLE days
+               ADD COLUMN vehicle_typ  ENUM('standard','bergwacht','veranstaltung','sonstiges')
+                          NULL AFTER vehicle_name,
+               ADD COLUMN vehicle_kurz VARCHAR(16) NULL AFTER vehicle_typ",
+
+            /* NACHFUELLEN, SOLANGE DER VERWEIS NOCH STEHT — dieselbe Stelle im
+             * Ablauf und dieselbe Begruendung wie bei den Geraetespalten
+             * (2026_09_04_herkunft_geraet). Wo `vehicle_id` schon NULL ist
+             * (von Hand angelegter Tag, geloeschtes Rettungsmittel), bleibt die
+             * Momentaufnahme NULL; es gibt keine zweite Quelle. Der Bestand
+             * bekommt damit durchweg 'standard' — was er auch ist. */
+            "UPDATE days d JOIN vehicles v ON v.id = d.vehicle_id
+                SET d.vehicle_typ = v.typ, d.vehicle_kurz = v.kurz",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

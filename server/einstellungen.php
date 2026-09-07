@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/stammdaten_ui.php';   // sd_zeile(), sd_form()
 require_once __DIR__ . '/demo_lib.php';
-require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
+require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung, pruef_rettungsmittel()
 require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), Rollenkatalog
 /* TRASH_DAYS fuer die Rueckmeldung der Wiederherstellung (E-S1-08). Kommt
  * ueber demo_lib.php ohnehin mit — aber eine Frist, die auf der Seite steht,
@@ -558,62 +558,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . 'Diensttage bleiben unverändert.';
     }
     if ($action === 'veh_save') {
-        $n     = mb_substr(trim($_POST['name'] ?? ''), 0, 64);
-        $vid   = (int)($_POST['id'] ?? 0);
-        $bid   = $sdBase();
-        /* DIE ART IST PFLICHT (Web 7.0.0). Bis Web 6.3.0 stand hier ein
-         * stillschweigendes „im Zweifel luftgebunden", und das Formular hatte
-         * den Knopf entsprechend vorbelegt. An einem Standort mit NEF war das
-         * die falsche Vorgabe — und weil sie nie eine Entscheidung verlangte,
-         * fiel sie erst auf, wenn im Einsatzformular Windenfelder erschienen.
-         * Ohne Angabe wird jetzt nicht gespeichert. */
-        $kindRoh = (string)($_POST['kind'] ?? '');
-        $kind = in_array($kindRoh, ['air', 'ground'], true) ? $kindRoh : null;
-        if ($n === '') {
-            $error = 'Bitte eine Bezeichnung für das Rettungsmittel eintragen.';
-        } elseif ($kind === null) {
-            $error = 'Bitte die Art wählen: luftgebunden oder bodengebunden. '
-                   . 'Sie entscheidet über Besatzungsrollen und die im '
-                   . 'Einsatzformular sichtbaren Felder.';
-        } elseif ($bid === null) {
-            $error = 'Bitte einen Standort wählen. Jedes Rettungsmittel gehört zu '
-                   . 'genau einem Standort.';
-        } elseif (stammdaten_dup_global('vehicles', 'name', $n)) {
-            $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
+        $vid = (int)($_POST['id'] ?? 0);
+        /* ALLE REGELN STEHEN IN DER PRUEFSCHICHT (Web 16.0.0, E-S9-09).
+         * Bis Web 15.8.0 standen sie hier ausgeschrieben — und ein zweites Mal
+         * in admin_stammdaten.php, ein drittes Mal (kuerzer) beim Einspielen
+         * einer Sicherung. Mit dem Typ waeren daraus drei Fassungen von sieben
+         * Regeln geworden. `pruef_rettungsmittel()` liefert den fertigen
+         * Datensatz oder je Feld eine Meldung; die Dublettenpruefung bleibt
+         * hier, weil sie den Bestand fragt und nicht die Eingabe.
+         *
+         * DIE ART IST WEITER PFLICHT (Web 7.0.0) — die Begruendung steht jetzt
+         * an der Meldung in validate_lib.php: Bis Web 6.3.0 galt ein
+         * stillschweigendes „im Zweifel luftgebunden", das an einem Standort
+         * mit NEF erst auffiel, wenn im Einsatzformular Windenfelder erschienen. */
+        $geprueft = pruef_rettungsmittel([
+            'name'    => $_POST['name'] ?? null,
+            'kurz'    => $_POST['kurz'] ?? null,
+            'typ'     => $_POST['typ']  ?? null,
+            'kind'    => $_POST['kind'] ?? null,
+            /* Der Haken „Ohne Standort" schlägt die verborgene Kennung der
+             * Standortkarte, in der das Formular steht. Ob er zulässig ist,
+             * entscheidet nicht dieses Formular, sondern der Typ — und das
+             * prüft `pruef_rettungsmittel()`. */
+            'base_id' => empty($_POST['ohne_standort']) ? $sdBase() : null,
+            'roles'   => $_POST['roles'] ?? [],
+            'caps'    => $_POST['caps']  ?? [],
+        ]);
+        $rm = $geprueft['daten'];
+        if ($rm === null) {
+            $error = reset($geprueft['fehler']) ?: 'Das Rettungsmittel konnte nicht gespeichert werden.';
+        } elseif (stammdaten_dup_global('vehicles', 'name', $rm['name'])) {
+            $error = '„' . $rm['name'] . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
         } else {
-            /* Rollen aus dem Katalog, gefiltert auf die Art (E5/E6): Ein
-             * bodengebundenes Rettungsmittel kann keinen Flugretter fuehren.
-             * Die Filterung geschieht hier und nicht nur im Formular — ein
-             * Haken, den die Oberflaeche nicht anbietet, darf auch ueber eine
-             * gesendete Anfrage nicht hereinkommen. */
-            $erlaubteRollen = array_keys(crew_roles_fuer_art($kind));
-            $rollen = [];
-            foreach ((array)($_POST['roles'] ?? []) as $rc) {
-                if (in_array((string)$rc, $erlaubteRollen, true)) { $rollen[] = (string)$rc; }
-            }
-            /* Faehigkeiten kommen AUSSCHLIESSLICH an luftgebundenen
-             * Rettungsmitteln vor (E29). Bei einem bodengebundenen werden
-             * vorhandene Zeilen entfernt — so steht es im Schema, und ein
-             * Zustand, den die Oberflaeche nicht herstellen kann, soll auch
-             * nicht in der Datenbank stehen. */
-            $caps = [];
-            if ($kind === 'air') {
-                foreach ((array)($_POST['caps'] ?? []) as $c) {
-                    if (array_key_exists((string)$c, VEHICLE_CAPABILITIES)) { $caps[] = (string)$c; }
-                }
-            }
+            $rollen = $rm['roles'];
+            $caps   = $rm['caps'];
 
             $pdo = db();
             $pdo->beginTransaction();
             try {
                 if ($vid > 0) {
-                    $pdo->prepare('UPDATE vehicles SET name = ?, kind = ?, base_id = ?
+                    $pdo->prepare('UPDATE vehicles SET name = ?, kurz = ?, kind = ?, typ = ?, base_id = ?
                                    WHERE id = ? AND user_id = ?')
-                        ->execute([$n, $kind, $bid, $vid, $userId]);
+                        ->execute([$rm['name'], $rm['kurz'], $rm['kind'], $rm['typ'], $rm['base_id'], $vid, $userId]);
                 } else {
-                    $pdo->prepare('INSERT INTO vehicles (user_id, base_id, name, kind)
-                                   VALUES (?,?,?,?)')
-                        ->execute([$userId, $bid, $n, $kind]);
+                    $pdo->prepare('INSERT INTO vehicles (user_id, base_id, name, kurz, kind, typ)
+                                   VALUES (?,?,?,?,?,?)')
+                        ->execute([$userId, $rm['base_id'], $rm['name'], $rm['kurz'], $rm['kind'], $rm['typ']]);
                     $vid = (int)$pdo->lastInsertId();
                 }
                 /* Rollen und Faehigkeiten vollstaendig ersetzen. Auf BEREITS
@@ -1204,7 +1194,20 @@ ui_seite_start(['titel' => 'Einstellungen',
           }
           return $nach;
       };
-      $sdVeh  = $sdLade('vehicles', 'id, name, kind');
+      $sdVeh  = $sdLade('vehicles', 'id, name, kurz, kind, typ');
+      /* RETTUNGSMITTEL OHNE STANDORT — GEBUENDELT AM ENDE (E-S9-09, Web 16.0.0).
+       * `$sdLade()` fragt `base_id IN (...)`, und daran faellt ein Rettungsmittel
+       * ohne Standort heraus: Es stuende in der Auswahlliste eines Diensttags,
+       * waere auf dieser Seite aber weder zu aendern noch zu loeschen. Die
+       * eigene Karte am Ende ist die kleinste Fassung dessen, was E-S9-18 als
+       * letzten Eintrag der Standortliste vorsieht; ihre Form bekommt sie in AP5. */
+      $sdVehOhne = [];
+      foreach (db()->query('SELECT id, name, kurz, kind, typ, base_id, user_id
+                              FROM vehicles
+                             WHERE base_id IS NULL AND (user_id = ' . (int)$userId
+                          . ' OR user_id IS NULL) ORDER BY name') as $z) {
+          $sdVehOhne[] = $z;
+      }
       $sdCrew = $sdLade('crew_presets', 'id, name, role_code');
       $sdTd   = $sdLade('transport_dests', 'id, name, lat, lon');
       $sdRes  = $sdLade('resources', 'id, name');
@@ -1213,6 +1216,7 @@ ui_seite_start(['titel' => 'Einstellungen',
       // Rollen und Faehigkeiten je Rettungsmittel, ebenfalls gebuendelt.
       $vehIds = [];
       foreach ($sdVeh as $liste) { foreach ($liste as $v) { $vehIds[] = (int)$v['id']; } }
+      foreach ($sdVehOhne as $v) { $vehIds[] = (int)$v['id']; }
       $vehRollen = $vehCaps = [];
       if ($vehIds) {
           foreach (sql_in_bloecken(db(),
@@ -1244,7 +1248,12 @@ ui_seite_start(['titel' => 'Einstellungen',
           }
           return null;
       };
-      $editVeh  = $pickIn($sdVeh, 'ev');
+      /* Auch die standortlosen durchsuchen — sonst laesst sich ein
+       * Rettungsmittel ohne Standort anlegen und loeschen, aber nie aendern
+       * (Fund der Gegenprobe zu AP4). `$sdVeh` ist nach Standort gebuendelt,
+       * `$sdVehOhne` eine flache Liste; `$pickIn()` erwartet die Buendelform,
+       * also wird sie in eine Buendelung mit einem einzigen Fach gegeben. */
+      $editVeh  = $pickIn($sdVeh, 'ev') ?? $pickIn(['ohne' => $sdVehOhne], 'ev');
       $editCrew = $pickIn($sdCrew, 'ec');
       $editTd   = $pickIn($sdTd, 'et');
       $editRes  = $pickIn($sdRes, 'er');
@@ -1561,7 +1570,18 @@ ui_seite_start(['titel' => 'Einstellungen',
                                        . '#' . $anker . '-veh',
                 ]);
           endforeach; ?>
-          <?php $evHier = ($editVeh && (int)$editVeh['base_id'] === $bid) ? $editVeh : null;
+          <?php /* EIN RETTUNGSMITTEL OHNE STANDORT WIRD IM ERSTEN BLOCK
+                   BEARBEITET. Das Formular steht je Standortkarte einmal und
+                   traegt deren Kennung verborgen mit; ein Datensatz mit
+                   `base_id = null` gehoert zu keiner davon. Ohne diese Zeile
+                   waere „Bearbeiten" ein Verweis, der nichts oeffnet. Der
+                   Haken „Ohne Standort" ist im Formular gesetzt, die verborgene
+                   Kennung also folgenlos. AP5 loest das auf, indem die
+                   Standortseite die Liste fuehrt (E-S9-18). */
+                $evOhne = $editVeh && $editVeh['base_id'] === null
+                       && $sdBases && (int)$sdBases[0]['id'] === $bid;
+                $evHier = ($editVeh && ((int)$editVeh['base_id'] === $bid || $evOhne))
+                        ? $editVeh : null;
                 $evRollen = $evHier ? ($vehRollen[(int)$evHier['id']] ?? []) : [];
                 $evCaps   = $evHier ? ($vehCaps[(int)$evHier['id']] ?? []) : []; ?>
           <?php /* ---- EINGABE (Web 7.0.0 neu gefasst) -----------------------
@@ -1590,6 +1610,36 @@ ui_seite_start(['titel' => 'Einstellungen',
                                'platzhalter' => 'z. B. Alpenfalke 1 oder NEF Talwang 76/1',
                                'wert' => (string)($evHier['name'] ?? ''),
                                'attr' => ' maxlength="64"']); ?>
+                <?php /* TYP UND KURZNAME — VORLÄUFIGE FORM (AP4, E-S9-09).
+                         Das Konzept sieht für AP4 ausdrücklich die kleinstmögliche
+                         Aufnahme vor: Die Felder müssen da sein, damit Anlegen,
+                         Sichern und Einspielen einen vollständigen Kreislauf
+                         ergeben. Ihre Anordnung — Typ VOR der Art, Art bei
+                         „Veranstaltung" ausgegraut — kommt mit den neuen Dialogen
+                         in AP5 (E-S9-19). Bis dahin stehen sie hier in der
+                         vorhandenen Feldreihe, ohne eigene Gestaltung.
+                         Der Haken „Ohne Standort" ist der einzige Weg, ein
+                         Rettungsmittel der drei neuen Typen ohne Standort
+                         anzulegen: Dieses Formular steht je Standortkarte einmal
+                         und trägt dessen Kennung verborgen mit. AP5 löst das
+                         auf, indem die Standortseite die Liste führt. */ ?>
+                <?php $typOptionen = [];
+                      foreach (VEHICLE_TYPEN as $tk => $tr) { $typOptionen[$tk] = $tr['label']; }
+                      ui_feld(['label' => 'Typ', 'name' => 'typ', 'art' => 'select',
+                               'id' => 'vehtyp-' . $bid, 'optionen' => $typOptionen,
+                               'wert' => (string)($evHier['typ'] ?? 'standard')]); ?>
+                <?php ui_feld(['label' => 'Kurzname', 'name' => 'kurz',
+                               'label_zusatz' => '(optional)',
+                               'id' => 'vehkurz-' . $bid,
+                               'platzhalter' => 'z. B. AF 1',
+                               'wert' => (string)($evHier['kurz'] ?? ''),
+                               'attr' => ' maxlength="' . RM_KURZ_MAX . '"']); ?>
+                <div class="feld">
+                  <span class="feld-label">Standort</span>
+                  <label><input type="checkbox" name="ohne_standort" value="1"
+                         <?= ($evHier && $evHier['base_id'] === null) ? 'checked' : '' ?>>
+                    Ohne Standort (nur für Bergwacht, Veranstaltung, Sonstiges)</label>
+                </div>
                 <?php /* DIE ART IST NICHT VORBELEGT (Web 7.0.0): „luftgebunden"
                          stand von selbst da, und an einem NEF-Standort war das
                          die falsche Vorgabe, die niemand bemerkt. Ohne Auswahl
@@ -1812,6 +1862,50 @@ ui_seite_start(['titel' => 'Einstellungen',
         <?php endif; ?>
       <?php ui_karte_ende(true); ?>
     <?php endforeach; ?>
+
+    <?php /* OHNE STANDORT — vorlaeufige Karte (AP4, E-S9-09/E-S9-18).
+             Sie erscheint nur, wenn es solche Rettungsmittel gibt, und traegt
+             kein Anlegen-Formular: Angelegt wird ueber den Haken in der Karte
+             eines Standorts. Das ist die kleinste Fassung, die verhindert, dass
+             ein Datensatz entsteht, den niemand mehr sieht; die Standortseite
+             aus E-S9-18 loest sie in AP5 ab. */ ?>
+    <?php if ($sdVehOhne): ?>
+      <?php ui_karte_start(['titel' => 'Ohne Standort', 'id' => 'sd-ohne', 'zu' => true,
+                            'zahl' => count($sdVehOhne) . ' Rettungsmittel']); ?>
+        <p class="feld-hinweis">Bergwacht, Veranstaltung und Sonstiges brauchen keinen
+           Standort. Sie haben dafür keine Vorschlagslisten — die hängen am Standort.</p>
+        <section class="sd-liste" id="sd-ohne-veh">
+          <?php foreach ($sdVehOhne as $v):
+                $vid = (int)$v['id'];
+                $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
+                                     $vehCaps[$vid] ?? []);
+                $klein = VEHICLE_TYPEN[(string)$v['typ']]['label'] ?? (string)$v['typ'];
+                if ((string)($v['kurz'] ?? '') !== '') { $klein .= ' · ' . (string)$v['kurz']; }
+                if ($capsTxt) { $klein .= ' · ' . implode(', ', $capsTxt); }
+                sd_zeile([
+                    'name' => (string)$v['name'], 'klein' => $klein,
+                    'anker' => 'sd-ohne-veh', 'praefix' => 'veh', 'id' => $vid,
+                    'base_id' => 0, 'zentral' => $istZentral($v),
+                    'seite' => 'einstellungen.php?t=rettungsmittel',
+                    'plaketten' => ui_artzeichen((string)$v['kind'], '', (string)$v['typ']),
+                    /* DAS BEARBEITEN GEHOERT DAZU. `sd_zeile()` legt den Eintrag
+                       nur an, wenn dieser Schluessel da ist (stammdaten_ui.php);
+                       ohne ihn liesse sich ein Rettungsmittel ohne Standort
+                       anlegen und loeschen, aber nie aendern — und ein Tippfehler
+                       im Namen waere nur durch Loeschen und Neuanlegen zu
+                       beheben. Das Formular oeffnet sich in der Karte des
+                       ERSTEN Standorts (es steht dort), und der Haken „Ohne
+                       Standort" ist darin gesetzt; die Form raeumt AP5 auf. */
+                    'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&ev=' . $vid
+                                       . '#sd-ohne-veh',
+                    'del_action' => 'veh_del',
+                    'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ löschen? '
+                                 . 'Bereits dokumentierte Diensttage bleiben unverändert.',
+                ]);
+          endforeach; ?>
+        </section>
+      <?php ui_karte_ende(true); ?>
+    <?php endif; ?>
   <?php endif; ?>
 
     <script src="<?= asset('assets/openlocationcode.js') ?>"></script>

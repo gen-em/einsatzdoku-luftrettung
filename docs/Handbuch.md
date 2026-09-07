@@ -521,7 +521,18 @@ vorausgewählt. Liegen mehrere Diensttage auf einem Kalendertag, steht bei jedem
 zusätzlich die Uhrzeit des Dienstbeginns — sonst ließen sie sich nicht
 unterscheiden. Vor dem Datum steht ein Zeichen für die Art: ein Hubschrauber
 für luftgebunden, ein Rettungswagen für bodengebunden, ein gestrichelter Kreis
-für „noch ohne Zuordnung". Der Name des Rettungsmittels steht rechts daneben.
+für „noch ohne Zuordnung". Trägt der Diensttag ein Rettungsmittel mit einem
+eigenen **Typ**, steht dessen Zeichen davor — ein Berg für Bergwacht, eine
+Eintrittskarte für Veranstaltung, ein Kreis mit drei Punkten für Sonstiges
+(seit Web 16.0.0). Der Typ geht der Art vor: Ein Bergwacht-Dienst trägt den
+Berg, ob er nun geflogen oder gefahren wird; wo du mit der Maus darüber
+stehenbleibst, nennt der Hinweis beides („Bergwacht, luftgebunden").
+
+Rechts daneben steht der Name des Rettungsmittels — und zwar sein
+**Kurzname**, wenn einer hinterlegt ist („BW Hoch" statt „Bergwacht
+Hochkreuth"). Die Leiste ist die schmalste Stelle der Anwendung; der volle
+Name steht im Hinweis, sobald du darüber stehenbleibst, und überall sonst
+ohnehin.
 (Bis Web 8.0.1 waren das Emoji — sie sahen auf jedem Betriebssystem anders
 aus; seit Web 9.0.0 sind es gezeichnete Symbole, die sich mitfärben.)
 
@@ -2277,12 +2288,48 @@ der du getippt hast, und die Seite springt dorthin.
 
 ### 9.1 Standorte, Rettungsmittel, Besatzung, Bergwacht
 
-**Der Standort ist der Anker.** An ihm hängen Rettungsmittel, Zielkliniken,
-weitere Rettungsmittel, Bergwacht-Bereitschaften und Besatzungs-Vorbelegungen —
-jeder Eintrag gehört genau **einem** Standort. Eine Zielklinik, die von zwei
-Standorten angefahren wird, ist deshalb zweimal anzulegen. Das ist der Preis
-dafür, dass in den Auswahllisten genau die Einträge des Standorts stehen, der
-am Diensttag hinterlegt ist, und sonst nichts.
+**Der Standort ist der Anker — mit einer Ausnahme seit Web 16.0.0.** An ihm
+hängen Rettungsmittel, Zielkliniken, weitere Rettungsmittel,
+Bergwacht-Bereitschaften und Besatzungs-Vorbelegungen — jeder Eintrag gehört
+genau **einem** Standort. Eine Zielklinik, die von zwei Standorten angefahren
+wird, ist deshalb zweimal anzulegen. Das ist der Preis dafür, dass in den
+Auswahllisten genau die Einträge des Standorts stehen, der am Diensttag
+hinterlegt ist, und sonst nichts. **Rettungsmittel** dürfen seit Web 16.0.0
+ohne Standort bestehen, wenn ihr Typ es zulässt — siehe unten.
+
+### 9.1a Vier Typen von Rettungsmitteln
+
+Seit Web 16.0.0 hat ein Rettungsmittel **zwei** Angaben, nicht eine:
+
+- die **Art** (luftgebunden oder bodengebunden) — sie entscheidet wie bisher
+  über Besatzungsrollen, Fähigkeiten und die Felder im Einsatzformular;
+- den **Typ** — worum es bei diesem Dienst geht.
+
+| Typ | Art | Rollen-Vorlagen | Fähigkeiten | Standort |
+|---|---|---|---|---|
+| **Standard** | wählbar | ja | nach Art | **Pflicht** |
+| **Bergwacht** | wählbar | keine | nach Art | freiwillig |
+| **Veranstaltung** | fest bodengebunden | keine | keine | freiwillig |
+| **Sonstiges** | wählbar | keine | nach Art | freiwillig |
+
+Die beiden Angaben sind **unabhängig**: Eine Bergwacht fliegt oder fährt, und
+beides ist ein Bergwacht-Dienst. Wählst du „Veranstaltung", setzt die Anwendung
+die Art auf bodengebunden — auch wenn im Formular etwas anderes stand.
+
+**„Keine Rollen-Vorlagen"** heißt: Ein Diensttag mit einem solchen
+Rettungsmittel bekommt keine Besatzungsfelder angeboten. Das ist keine
+Einschränkung der Dokumentation, sondern der Vorlage.
+
+**Ohne Standort** hat ein Rettungsmittel keine Vorschlagslisten — die hängen am
+Standort. Es steht am Ende der Seite in einer eigenen Karte **„Ohne Standort"**
+und lässt sich dort bearbeiten und löschen. Angelegt wird es über den Haken
+„Ohne Standort" im Formular eines beliebigen Standorts.
+
+**Der Kurzname** (bis 16 Zeichen, freiwillig) steht dort, wo der Platz knapp
+ist: in der Diensttage-Leiste, in den Kacheln und auf den Plaketten. Formulare,
+Export und Backup zeigen weiter die volle Bezeichnung — wer eine Exportdatei
+auswertet, kennt eure Abkürzungen nicht. Suchen kannst du nach beidem.
+
 
 Zu einem **Standort** lassen sich Koordinaten hinterlegen — freiwillig. Sie sind
 die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie im

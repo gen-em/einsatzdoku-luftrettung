@@ -627,3 +627,161 @@ function ist_liste($wert): bool
 {
     return is_array($wert) && ($wert === [] || array_is_list($wert));
 }
+
+/* ---------------------------------------------------------------------------
+ * Stammdaten: Rettungsmittel (E-S9-09, Web 16.0.0)
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Groesste Laenge des Kurznamens (Nr. 69). Steht hier und nicht nur im Schema,
+ * weil das Formular sie als `maxlength` braucht und die Sicherung sie beim
+ * Einlesen kappt — dieselbe Zahl, eine Quelle.
+ */
+const RM_KURZ_MAX = 16;
+
+/** Groesste Laenge der Bezeichnung, wie `vehicles.name` sie traegt. */
+const RM_NAME_MAX = 64;
+
+/**
+ * Ein Rettungsmittel pruefen — die eine Stelle fuer alle Schreibwege.
+ *
+ * WARUM DIESE FUNKTION IN DIESER DATEI STEHT. Bis Web 15.8.0 prueften die
+ * Rettungsmittel drei Wege getrennt und ungleich:
+ *
+ *   einstellungen.php    veh_save        Konto        drei Regeln, mit Meldung
+ *   admin_stammdaten.php veh_save        Verwaltung   dieselben drei, kopiert
+ *   backup_lib.php       Einspielen      Datei        zwei, still uebergangen
+ *
+ * Mit dem Typ kaemen an jeder der drei Stellen vier weitere Regeln dazu, und
+ * die dritte Kopie waere dann die, die als erste veraltet. Der Kopf dieser
+ * Datei nennt Einsatzdaten als ihren Gegenstand; die Rettungsmittel sind der
+ * erste STAMMDATENSATZ, der hier einzieht — aus demselben Grund, aus dem die
+ * Einsatzdaten hier stehen: vier Wege, ein Massstab.
+ *
+ * WAS SIE NICHT PRUEFT: ob der Standort existiert und wem er gehoert. Das
+ * haengt am Aufrufer (Konto oder systemweit) und steht dort; hier kommt eine
+ * bereits aufgeloeste ID an oder null. Ebenso wenig prueft sie die Dublette —
+ * die braucht die Datenbank.
+ *
+ * ZWEI ARTEN VON RUECKMELDUNG, weil es zwei Arten von Aufrufern gibt. Die
+ * Formulare zeigen einer Person einen Satz; sie lesen `fehler`, das je Feld
+ * eine ausformulierte Meldung traegt (AP5 stellt sie in die Dialoge). Die
+ * Sicherung zaehlt und meldet nicht; sie uebergibt eine `Pruefliste` und
+ * liest hinterher `nachUrsache()`. Beide bekommen dieselben Regeln.
+ *
+ * @param  array $roh  name, kurz, typ, kind, base_id, roles[], caps[]
+ * @return array{daten: ?array, fehler: array<string,string>}
+ */
+function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
+{
+    $fehler = [];
+
+    /* BEZEICHNUNG — Pflicht. Zuschneiden statt ablehnen (wie pruef_text): Ein
+     * zu langer Name ist eine zu lange Eingabe, keine falsche. */
+    $name = pruef_text($roh['name'] ?? null, RM_NAME_MAX, 'Bezeichnung', $p);
+    if ($name === null) {
+        $fehler['name'] = 'Bitte eine Bezeichnung für das Rettungsmittel eintragen.';
+    }
+
+    /* KURZNAME — freiwillig, bis 16 Zeichen (Nr. 69). NULL heisst „keiner",
+     * nicht „leer": Die Anzeige entscheidet daran, ob sie ihn statt der
+     * Bezeichnung zeigt. */
+    $kurz = pruef_text($roh['kurz'] ?? null, RM_KURZ_MAX, 'Kurzname', $p);
+
+    /* TYP — Vorgabe 'standard'. Ein UNBEKANNTER Wert wird nicht stillschweigend
+     * zu 'standard': Das machte aus einem Bergwacht-Rettungsmittel einer
+     * neueren Fassung ein Standard-Rettungsmittel, ohne dass es jemand merkt.
+     * Er wird abgelehnt und gemeldet. */
+    $typRoh = trim((string)($roh['typ'] ?? ''));
+    if ($typRoh === '') {
+        $typ = 'standard';
+    } elseif (array_key_exists($typRoh, VEHICLE_TYPEN)) {
+        $typ = $typRoh;
+    } else {
+        $typ = null;
+        $p?->melde('Typ', 'unbekannter Wert');
+        $fehler['typ'] = 'Dieser Typ ist nicht bekannt. Bitte einen der vier '
+                       . 'Typen wählen: Standard, Bergwacht, Veranstaltung, Sonstiges.';
+    }
+    $regeln = $typ !== null ? VEHICLE_TYPEN[$typ] : null;
+
+    /* BETRIEBSART — Pflicht seit Web 7.0.0, und bei einem Typ mit fester
+     * Betriebsart nicht wahlfrei. „Fest" heisst hier: Der Wert wird gesetzt,
+     * nicht abgelehnt. Das Formular zeigt das Feld ausgegraut, also kann ein
+     * abweichender Wert nur aus einer gebauten Anfrage oder einer aelteren
+     * Sicherung kommen — beides soll den Datensatz nicht kosten, aber auch
+     * nicht unbemerkt bleiben. */
+    $kindRoh = (string)($roh['kind'] ?? '');
+    $kind = in_array($kindRoh, ['air', 'ground'], true) ? $kindRoh : null;
+    if ($regeln !== null && $regeln['betriebsart'] !== null) {
+        if ($kind !== null && $kind !== $regeln['betriebsart']) {
+            $p?->melde('Betriebsart', 'bei Typ „' . $regeln['label'] . '" festgelegt — überschrieben');
+        }
+        $kind = $regeln['betriebsart'];
+    } elseif ($kind === null) {
+        $fehler['kind'] = 'Bitte die Art wählen: luftgebunden oder bodengebunden. '
+                        . 'Sie entscheidet über Besatzungsrollen und die im '
+                        . 'Einsatzformular sichtbaren Felder.';
+    }
+
+    /* STANDORT — Pflicht nur noch bei 'standard' (E-S9-09). Die Vorschlagslisten
+     * haengen am Standort (E15); ein Standard-Rettungsmittel ohne ihn hinterliesse
+     * eine leere Tagesuebersicht. Die drei anderen Typen haben oft keinen:
+     * Eine Bergwacht-Bereitschaft hat ein Einsatzgebiet, ein Sanitaetsdienst
+     * einen Ort, der jedes Mal woanders liegt. */
+    $baseRoh = $roh['base_id'] ?? null;
+    $baseId  = ($baseRoh === null || $baseRoh === '' || (int)$baseRoh <= 0) ? null : (int)$baseRoh;
+    if ($regeln !== null && $regeln['standort'] && $baseId === null) {
+        $p?->melde('Standort', 'fehlt bei Typ „' . $regeln['label'] . '"');
+        $fehler['base_id'] = 'Bitte einen Standort wählen. Ein Rettungsmittel des Typs '
+                           . '„Standard" gehört zu genau einem Standort.';
+    }
+
+    /* ROLLEN-VORLAGEN — nur bei 'standard', und dort gefiltert auf die
+     * Betriebsart (E5/E6): Ein bodengebundenes Rettungsmittel kann keinen
+     * Flugretter fuehren. Die Filterung geschieht hier und nicht nur im
+     * Formular — ein Haken, den die Oberflaeche nicht anbietet, darf auch ueber
+     * eine gesendete Anfrage nicht hereinkommen.
+     *
+     * Bei den drei anderen Typen bleibt `vehicle_roles` leer (E-S9-09). Das ist
+     * keine Einschraenkung der Dokumentation, sondern der VORLAGE: Der
+     * Diensttag bekommt dann keinen Rollensatz angeboten (F19). */
+    $rollen = [];
+    if ($regeln !== null && $regeln['rollen'] && $kind !== null) {
+        $erlaubt = array_keys(crew_roles_fuer_art($kind));
+        foreach ((array)($roh['roles'] ?? []) as $rc) {
+            if (in_array((string)$rc, $erlaubt, true)) { $rollen[] = (string)$rc; }
+        }
+    } elseif ($roh['roles'] ?? []) {
+        $p?->melde('Rollen', 'bei diesem Typ nicht vorgesehen — verworfen');
+    }
+
+    /* FAEHIGKEITEN — ausschliesslich an luftgebundenen Rettungsmitteln (E29).
+     * Fuer 'veranstaltung' folgt daraus von selbst „keine": Der Typ ist auf
+     * Boden festgelegt. Deshalb steht hier keine zweite Bedingung auf den Typ. */
+    $caps = [];
+    if ($kind === 'air') {
+        foreach ((array)($roh['caps'] ?? []) as $c) {
+            if (array_key_exists((string)$c, VEHICLE_CAPABILITIES)) { $caps[] = (string)$c; }
+        }
+    } elseif ($roh['caps'] ?? []) {
+        $p?->melde('Fähigkeiten', 'nur an luftgebundenen Rettungsmitteln — verworfen');
+    }
+
+    if ($fehler !== [] || $name === null || $typ === null || $kind === null) {
+        return ['daten' => null, 'fehler' => $fehler];
+    }
+
+    return [
+        'daten' => [
+            'name'    => $name,
+            'kurz'    => $kurz,
+            'typ'     => $typ,
+            'kind'    => $kind,
+            'base_id' => $baseId,
+            'roles'   => array_values(array_unique($rollen)),
+            'caps'    => array_values(array_unique($caps)),
+        ],
+        'fehler' => [],
+    ];
+}

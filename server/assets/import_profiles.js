@@ -240,6 +240,14 @@
            'hubschrauber' ist die Kopfzeile bis Web 5.10.0. */
         'hubschrauber': { target: null },
         'rettungsmittel': { target: null },
+        /* KURZNAME UND TYP STEHEN HIER NICHT (E-S9-09, Web 16.0.0), obwohl
+           der Export sie seit dieser Fassung führt. Sie stehen in
+           `diensttage.csv`, und dieses Profil liest `einsaetze.csv` — nur
+           diese eine Datei. `expectedHeaders` leitet sich aus den Schlüsseln
+           dieser Liste ab; zwei Überschriften einzutragen, die in der
+           gelesenen Datei nie vorkommen, hieße Spalten zu erwarten, die es
+           dort nicht gibt. (Ein erster Anlauf in AP4 hatte sie eingetragen —
+           die Gegenprobe hat es gefunden.) */
         'art': { target: null },
         'standort': { target: null },
 

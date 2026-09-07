@@ -2995,5 +2995,62 @@ declare(strict_types=1);
  *          NEBENNUMMER: neue Funktionen, ein neuer Antwortschluessel, neue
  *          Zeichen, geaenderte Texte — aber kein Weg durch die Anwendung wird
  *          ein anderer und keine Spalte regt sich. Keine Migration.
+ *
+ * 16.0.0 GIBT DEM RETTUNGSMITTEL EINE ZWEITE ACHSE (S9/AP4, E-S9-09).
+ *
+ * Bis hierher hatte ein Rettungsmittel genau eine Eigenschaft: `kind`, Luft
+ * oder Boden. Daran hingen vier Dinge zugleich — Rollen-Vorlagen,
+ * Faehigkeiten, Kachelsatz und Zeichen. Solange es Rettungshubschrauber und
+ * Notarzteinsatzfahrzeuge gab, war das richtig. Ein Bergwacht-Dienst, ein
+ * Sanitaetsdienst auf einer Veranstaltung und „sonst etwas" passen in keine
+ * der beiden Schubladen, ohne eine Aussage mitzuschleppen, die niemand
+ * gemeint hat.
+ *
+ * ZWEI ACHSEN STATT EINER ERWEITERTEN. `kind` bleibt die BETRIEBSART und
+ * steuert weiter, was sie steuerte; `typ` ist die ART DES DIENSTES —
+ * standard, bergwacht, veranstaltung, sonstiges. Die beiden sind unabhaengig:
+ * Eine Bergwacht fliegt oder faehrt, und beides ist ein Bergwacht-Dienst.
+ * Haette man `kind` um 'bergwacht' erweitert, muesste jede Stelle, die heute
+ * air/ground unterscheidet, kuenftig raten, welche Betriebsart dahintersteckt
+ * — und die Phasenbeschriftungen sind seit Web 6.0.0 gerade deshalb neutral
+ * (E20/E21), damit die Uhr die Art nicht kennen muss.
+ *
+ * HAUPTNUMMER AUS DREI GRUENDEN, von denen jeder einzelne reicht: Das
+ * Datenmodell aendert sich mit einer Migration (`vehicles.typ`,
+ * `vehicles.kurz`, `days.vehicle_typ`, `days.vehicle_kurz`), das Dateiformat
+ * der Sicherung wechselt (Nutzlast 9 -> 10, wie 11.0.0), und eine feste
+ * Zusage wird eingeschraenkt: „Jedes Rettungsmittel gehoert zu genau einem
+ * Standort" (E15) gilt nur noch fuer den Typ 'standard'. `vehicles.base_id`
+ * ist wieder NULL-faehig — diesmal dauerhaft und mit Absicht.
+ *
+ * DER KURZNAME (Backlog Nr. 69) ist die kleinere Haelfte und die
+ * sichtbarere: bis 16 Zeichen, freiwillig. Leiste, Kacheln und Plaketten
+ * zeigen ihn STATT der Bezeichnung, wo der Platz knapp ist; Formulare,
+ * Export und Sicherung zeigen weiter den vollen Namen — und fuehren den
+ * Kurznamen DANEBEN, damit er den Rueckweg uebersteht.
+ *
+ * WAS DABEI BEINAHE STILL KAPUTTGEGANGEN WAERE, und deshalb steht es hier:
+ * `nb_moeglich()` (nachbearbeitung_lib.php) entschied ALLEIN an der
+ * Nullbarkeit von `vehicles.base_id`, ob die einmalige Nachbearbeitung aus
+ * A12 ueberhaupt existiert. Mit dieser Migration waere sie in JEDER
+ * Installation wiederauferstanden, haette die rechtmaessig standortlosen
+ * Rettungsmittel als offene Punkte gemeldet — und ihr Knopf haette die
+ * Migration mit einem `ALTER TABLE ... NOT NULL` zurueckgenommen. Gemessen
+ * am 07.09.2026: nb_moeglich() false -> true, zwei falsche offene Punkte.
+ * Die zweite Stufe kennt jetzt vier Tabellen statt fuenf; `vehicles` gehoert
+ * nicht mehr dazu.
+ *
+ * ZWEI WEITERE STILLE STELLEN sind mitgegangen: `dt_vehicle_erlaubt()` liess
+ * ein zentrales Rettungsmittel ohne Standort nicht durch, waehrend
+ * `dt_vehicles()` es anbot — die Auswahl waere beim Speichern wortlos auf
+ * NULL zurueckgefallen. Und beide Stammdatenseiten laden mit
+ * `base_id IN (...)`; ein Rettungsmittel ohne Standort waere dort unsichtbar
+ * und damit weder zu aendern noch zu loeschen gewesen. Es bekommt bis AP5
+ * eine eigene Karte „Ohne Standort".
+ *
+ * DAS ZEICHEN FUER VERANSTALTUNG IST GETAUSCHT: Tabler „ticket" statt
+ * „building-stadium". Gemessen: „ticket" haelt seine Binnenflaeche von 96 px
+ * bis 16 px unveraendert, „building-stadium" verliert bei 18 px zwei seiner
+ * vier auf einen einzelnen Pixel. Der Vorrat bleibt bei 52 Dateien.
  */
-const WEB_VERSION = '15.8.0';
+const WEB_VERSION = '16.0.0';

@@ -206,7 +206,8 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
                         'plakette' => ui_plakette('verschwindet danach', ['ton' => 'rot'])]); ?>
 
     <p class="feld-hinweis">
-      <?= ui_artzeichen($quelle['kind'] === null ? null : (string)$quelle['kind']) ?>
+      <?= ui_artzeichen($quelle['kind'] === null ? null : (string)$quelle['kind'], '',
+                        $quelle['vehicle_typ'] === null ? null : (string)$quelle['vehicle_typ']) ?>
       <?= e($wer($quelle)) ?> · <?= e($quellSym['text']) ?>
     </p>
 

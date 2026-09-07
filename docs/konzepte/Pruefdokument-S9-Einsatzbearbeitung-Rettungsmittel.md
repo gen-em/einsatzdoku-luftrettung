@@ -27,6 +27,26 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 
 Das steht hier oben und nicht in einer Fußnote.
 
+**Ein Produktivbestand mit gewachsener Historie (AP4).** Die Migration
+`2026_09_07_rettungsmittel_typ` ist gegen den Referenzbestand gefahren — 16
+Diensttage, 6 Rettungsmittel, 2 Standorte, ein Konto. Eine Installation mit
+mehreren Konten, Hunderten Diensttagen und Rettungsmitteln, die zwischendurch
+gelöscht wurden, hat sie nicht gesehen. Zwei Stellen sind dort anders:
+`UPDATE days d JOIN vehicles v …` läuft über alle Zeilen (auf dem Prüfstand
+16), und `nb_moeglich()` fragt vier Tabellen ab, deren Nullbarkeit auf einer
+Installation stehen kann, die A12 nie zu Ende gebracht hat.
+**Prüfliste Punkt 11 und 12.**
+
+**Eine Installation, die A12 nie abgeschlossen hat.** Auf dem Prüfstand
+trugen alle vier Tabellen der zweiten Stufe schon NOT NULL — der Zweig „die
+Nachbearbeitung existiert noch" ist damit **nicht** gefahren worden, nur der
+Zweig „sie ist erledigt". Gemessen ist, dass `nb_moeglich()` nach der
+Migration wieder `false` liefert (vorher: `true`, mit zwei falschen offenen
+Punkten) und dass ein Standard-Rettungsmittel ohne Standort weiterhin gefunden
+wird (0 → 1 → 0 mit Gegenprobe). Nicht gemessen ist, wie sich die Seite auf
+einer Installation verhält, die noch offene Einträge in den anderen vier
+Tabellen führt. **Prüfliste Punkt 12.**
+
 **Der echte Adressdienst.** Der Prüfstand hat keinen Netzzugang zu
 `photon.komoot.io` — die Egress-Sperre setzt Chromiums TLS-Handschlag zurück
 (derselbe Befund wie bei den Kartenkacheln, F-P3-AC). Die Klickprobe arbeitet
@@ -195,6 +215,38 @@ belegen, dass der Umbau nichts mitgenommen hat (Browserlauf, 07.09.2026, je
 | Nur-Lage-Ortsfeld der Stammdaten (Einstellungen → Standorte, `sdbase`) | Tipp „Tal": **1 Liste, 0 Gruppenzeilen** (nur Adressen — richtig nach F9), 2 Einträge; Übernahme mit gehaltener Maus setzt **nur den Koordinatenchip** und lässt das Namensfeld unangetastet (getrennte Suche) |
 
 ---
+
+### AP4 — Rettungsmittel: Typ, Kurzname, Standort optional
+
+| Soll (Konzept, AP4) | Ist | Mittel |
+|---|---|---|
+| Migration mit Nachfüllen; `schema.sql` und Register gegengezählt | Register **45 = 45**; frische Installation aus `schema.sql` und migrierte Datenbank in `vehicles` und `days` **strukturgleich** (`SHOW CREATE TABLE`, Unterschied nur das entfernte `AUTO_INCREMENT`); Nachfüllung **16 von 16** Diensttagen | `php update.php`, `mysql`, eigenes Zählskript |
+| `validate_lib.php`: Typ, Betriebsart nach Typ, Kurzname (16), Standort optional | **8 von 8** Fällen wie festgelegt: Rollen bei Standard gefiltert (`driver` bei Luft verworfen), Rollen bei Bergwacht **ganz** verworfen, Betriebsart bei Veranstaltung von `air` auf `ground` gezwungen (mit Meldung in der Prüfliste), Winde damit weggefallen, Kurzname 20 → 16 Zeichen gekappt, Standard ohne Standort abgelehnt, unbekannter Typ abgelehnt, fehlender Name abgelehnt | eigenes Prüfskript gegen `pruef_rettungsmittel()` |
+| Alle drei Schreibwege über die eine Prüfung | Konto (`einstellungen.php`), Verwaltung (`admin_stammdaten.php`) und Sicherung (`backup_lib.php`) rufen `pruef_rettungsmittel()`; `grep` auf `INSERT INTO vehicles`/`UPDATE vehicles`/`INSERT IGNORE INTO vehicles` findet **keinen vierten** außerhalb von `migration_lib.php` | `grep`, Lesen |
+| `dt_zuordnen()` friert Typ und Kurznamen ein | Tag #1 nach der Zuordnung: `vehicle_typ='bergwacht'`, `vehicle_kurz='BW Hoch'`, `base_id=NULL` — und die Leiste zeigt „BW Hoch" mit Tooltip „Bergwacht Hochkreuth — Bergwacht, luftgebunden" | eigenes Skript, Klickprobe `ap4-zuordnen-friert-ein` |
+| Backup Nutzlast 10, Export, Import, Kreisläufe **0 unerklärt** | **edbak 287 771 · csv 9 118 · edbak-alt 287 781 Einzelvergleiche, je 0 unerklärt** (16 / 1 021 / 653 erwartet, **0 ungenutzte Regeln**) | `vergleich/kreislauf.py --frisch`, dreimal |
+| Aufwärtskompatibilität | Eine Nutzlast-9-Datei (Felder entfernt) spielt **4 von 6** Rettungsmitteln als `typ='standard'` ein und überspringt **2** — die beiden ohne Standort, die es in einer echten 9er-Datei nicht geben konnte | eigenes Prüfskript gegen `edbak_restore()` |
+| Referenzbestand mit je einem Rettungsmittel je Typ, einem Kurznamen, einem ohne Standort | **3 → 6 Rettungsmittel**, alle über das Formular angelegt: Bergwacht (Luft, Standort, „BW Hoch", 0 Rollen, 2 Fähigkeiten), Veranstaltung (auf Boden gezwungen, ohne Standort, 0 Fähigkeiten), Sonstiges (Boden, ohne Standort, „Reserve") | `einspielen.py --stufen stammdaten` |
+| Demo-Fixture neu | Neu erzeugt, **55 861 Spurpunkte** unverändert, `web_version` 16.0.0; Demo-Zurücksetzen **42 Stammdaten, 0 übersprungen** (vorher wären die zwei ohne Standort übersprungen worden) | `fixture/erzeugen.php`, `demo_zuruecksetzen()` |
+| Leiste zeigt den Kurznamen (Bild) | **15 Einträge, 15 mit Nebentext, 0** bei denen der Nebentext länger ist als der Tooltip; Bild `ap4-kurzname-in-der-leiste` | Klickprobe |
+| Klickprobe | **6 von 6** Wegen erfüllt, **0 Rückstände** im Bestand nach dem Lauf | `tools/klickprobe/` |
+| Wortliste | **0 Treffer, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 96 Regeln, 96 gegriffen — über fünf Bereiche mit 99 + 34 + 8 + 2 + 35 Dateien | `tools/wortliste/` |
+| Vollständigkeit | **304 = 304.** Ein Zwischenstand stand auf 305; der eine Mehrbefund war ein Auslassungszeichen, das ich selbst in einen Kommentar von `version.php` gesetzt hatte — gegen den Stand von AP3 im eigenen Arbeitsbaum verglichen und ersetzt | `tools/vollstaendigkeit/`, `git worktree` |
+| Kontraste | **21 Paare gerechnet, 0 verfehlt** | `tools/screenshots/kontrast.py` |
+| Linkprobe | **140 Verweise, 0 unbekannte Abweichungen**, 1 bekannte mit Nummer (Nr. 151) — vorher 134 Verweise | `tools/linkprobe/` |
+| Bilderlauf | **11 berührte Seiten, 88 Einzelbilder je Lauf, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** — je einmal als Zeigergerät (44/36 px) und als Fingergerät (44 px) | `tools/screenshots/aufnehmen.mjs` |
+
+**Zwei Zahlen, die dieser Lauf NICHT belegt** — und das steht hier, weil eine
+grüne Zahl sagen muss, was sie gemessen hat:
+
+- Am **Diensttag** belegen die Kreisläufe nur `vehicle_typ = 'standard'`
+  (16 von 16) und `vehicle_kurz = NULL` (16 von 16): Alle 16 Dienste des
+  Referenzbestands fahren ein Standard-Rettungsmittel ohne Kurznamen. Dass ein
+  Bergwacht-Tag mit Kurznamen den Weg ebenfalls übersteht, belegt der
+  Klickprobe-Weg `ap4-zuordnen-friert-ein` — nicht der Kreislauf.
+- Der **Bilderlauf** hat 11 der 46 Seiten fotografiert, nämlich die berührten.
+  Die übrigen 35 sind unverändert geblieben und nicht neu aufgenommen worden.
+
 
 ## 2. Fehlerfunde
 
@@ -549,6 +601,89 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   — der eingeschränkte Markdown braucht Leerzeilen zwischen Absätzen,
   Handbuch 11.5).
 
+- [ ] **15 — Ein Rettungsmittel je Typ anlegen und wiederfinden (AP4).**
+  *Weg:* Einstellungen → Rettungsmittel → in einem Standortblock nacheinander
+  drei Rettungsmittel anlegen: Typ **Bergwacht** mit Kurznamen und Standort,
+  Typ **Veranstaltung** mit Haken „Ohne Standort" und Art *luftgebunden*,
+  Typ **Sonstiges** mit Haken „Ohne Standort".
+  *Erwartet:* Alle drei erscheinen; die beiden mit Haken stehen am Ende der
+  Seite in der Karte **„Ohne Standort"**; das Zeichen des
+  Veranstaltungs-Eintrags sagt „Veranstaltung, **bodengebunden**", obwohl
+  luftgebunden gewählt war; bei allen dreien steht in der Kleinzeile „keine
+  Rollen".
+  *Scheitern erkennbar an:* Ein Eintrag fehlt ganz (dann greift die
+  Ladebedingung `base_id IN (…)` noch), oder die Veranstaltung steht als
+  luftgebunden da (dann erzwingt die Prüfschicht die Betriebsart nicht).
+
+- [ ] **16 — Ein Rettungsmittel ohne Standort ändern (AP4).**
+  *Weg:* In der Karte „Ohne Standort" bei einem Eintrag **„Bearbeiten"**
+  wählen, den Kurznamen ändern, speichern.
+  *Erwartet:* Das Formular öffnet sich im **ersten** Standortblock, der Haken
+  „Ohne Standort" ist gesetzt, nach dem Speichern steht der neue Kurzname in
+  der Karte — und der Eintrag ist **nicht** in den Standortblock gewandert.
+  *Scheitern erkennbar an:* „Bearbeiten" fehlt oder öffnet nichts (dann ist
+  der Verweis ins Leere gebaut), oder das Rettungsmittel hat nach dem
+  Speichern plötzlich einen Standort (dann geht der verborgene
+  Standortschlüssel des Formulars vor dem Haken).
+
+- [ ] **17 — Einen Diensttag einem Rettungsmittel ohne Standort zuordnen (AP4).**
+  *Weg:* Tagesübersicht → Diensttag-Daten → „Bearbeiten" → als Rettungsmittel
+  eines **ohne Standort** wählen → speichern.
+  *Erwartet:* Das Standortfeld **leert sich sichtbar**, sobald das
+  Rettungsmittel gewählt ist; der gespeicherte Tag zeigt keinen Standort.
+  *Scheitern erkennbar an:* Im Standortfeld bleibt die Vorbelegung stehen und
+  wird mitgespeichert — dann friert der Diensttag einen Standort ein, den sein
+  Rettungsmittel gar nicht hat, und niemand hat ihn gewählt.
+
+- [ ] **18 — Der Kurzname in der Leiste, am Handy und am Schreibtisch (AP4).**
+  *Weg:* Einen Diensttag einem Rettungsmittel **mit** Kurznamen zuordnen, dann
+  die Diensttage-Leiste bei **1280 px** und bei **390 px** ansehen.
+  *Erwartet:* Bei 1280 px steht der Kurzname rechts in der Zeile, der Tooltip
+  nennt die volle Bezeichnung. Bei 390 px steht **kein** Nebentext — er ist
+  unter 1200 px ausgeblendet.
+  *Scheitern erkennbar an:* Bei 1280 px steht die volle Bezeichnung (dann
+  greift `dt_rm_kurz()` nicht). **Der zweite Teil ist kein Fehler, sondern
+  eine offene Frage:** Der Kurzname ist als Antwort auf enge Breiten gedacht
+  und hilft dort heute nicht. Ob er auch schmal sichtbar werden soll, ist eine
+  Gestaltungsentscheidung — sie steht in Abschnitt 4.
+
+- [ ] **19 — Nach dem Kurznamen suchen (AP4).**
+  *Weg:* Suche öffnen, den **Kurznamen** eines Rettungsmittels eintippen, das
+  an mindestens einem Diensttag hängt.
+  *Erwartet:* Die Einsätze dieses Diensttags erscheinen.
+  *Scheitern erkennbar an:* Kein Treffer, obwohl die volle Bezeichnung
+  trifft — dann fehlt `vehicle_kurz` im Suchindex.
+
+- [ ] **20 — `update.php` nach dem Deploy (AP4).**
+  *Weg:* Nach dem Ausrollen als BetreiberIn Verwaltung → Updates öffnen und
+  die Migration `2026_09_07_rettungsmittel_typ` ausführen.
+  *Erwartet:* „Erfolgreich angewendet"; danach zeigt die Rettungsmittel-Seite
+  bei jedem Eintrag das Feld **Typ** mit „Standard".
+  *Scheitern erkennbar an:* Die Seite meldet einen Datenbankfehler, oder das
+  Feld „Typ" fehlt — dann ist die Migration nicht gelaufen, und die Anwendung
+  schreibt in Spalten, die es nicht gibt. **Ohne diesen Aufruf läuft die
+  Anwendung ins Leere.**
+
+- [ ] **21 — Ein Backup aus Web 15.8.0 einspielen (AP4).**
+  *Weg:* Eine `.edbak`-Datei aus einem Stand **vor** 16.0.0 in ein frisches
+  Konto einspielen.
+  *Erwartet:* Alle Rettungsmittel kommen an und tragen Typ **Standard**;
+  der Bericht nennt keine übersprungenen Stammdaten.
+  *Scheitern erkennbar an:* Rettungsmittel fehlen (dann greift die
+  Standortprüfung zu streng), oder der Import bricht ab.
+
+- [ ] **22 — Die Nachbearbeitung auf einer Installation, die A12 nie
+  abgeschlossen hat (AP4).**
+  *Weg:* Nur wenn es eine solche Installation gibt: „Zuordnung offen" in der
+  Seitenleiste öffnen.
+  *Erwartet:* Der Abschnitt „Eigene Einträge ohne Standort" zeigt weiterhin
+  offene Zielkliniken, Besatzungs-Vorbelegungen, weitere Rettungsmittel und
+  Bergwacht-Bereitschaften — Rettungsmittel nur noch, wenn ihr Typ
+  „Standard" ist. Die Rückfrage vor dem Knopf nennt **vier** Tabellen.
+  *Scheitern erkennbar an:* Die Rückfrage nennt fünf Tabellen, oder ein
+  Bergwacht-Rettungsmittel ohne Standort steht als offener Punkt — beides
+  hieße, die Entkopplung ist unvollständig.
+
 ---
 
 ## 4. Fragen an den Auftraggeber
@@ -683,6 +818,45 @@ und 137 nur mit Vermerk"; der Auftrag sagt „alle zwanzig Punkte nach
 werden (E-S9-02 und E-S9-05, Pakete AP7 und AP2), spricht mehr für zwanzig.
 *Vorschlag:* zwanzig, mit dem Vermerk „aus dem Sofortpaket übernommen" am
 Eintrag. **Fällig erst in AP8** — bis dahin ist nichts zu tun.
+
+### Aus AP4 (07.09.2026)
+
+**Frage 3 — „Kacheln und Plaketten zeigen den Kurznamen" hat keine Stelle.**
+E-S9-09 nennt drei Orte für den Kurznamen: Leiste, Kacheln, Plaketten.
+Umgesetzt ist die **Leiste**. Die beiden anderen gibt es nicht: Die
+Einsatzkachel (`EdMissionTable.kachel()`) zeigt Zeit, Artzeichen, Ort,
+Diagnose, Dauer, Alter und Plaketten — **nie** einen Rettungsmittelnamen; und
+es gibt keine Plakette, die ein Rettungsmittel benennt. Dort etwas einzufügen
+wäre eine **neue Darstellung** und braucht nach `Design.md` ein Mockup.
+*Zur Entscheidung:* (a) so lassen — der Kurzname gilt für die Leiste; (b) in
+AP5 ein Mockup für eine Rettungsmittel-Angabe an der Kachel; (c) Backlog
+Nr. 69 auf den Rest zurückschneiden.
+
+**Frage 4 — Der Kurzname hilft erst ab 1200 px.** Seine Begründung ist der
+knappe Platz; `.eintrag-neben` ist aber unter 1200 px ausgeblendet
+(`style.css`, mit eigener Begründung dort). Am Handy — wo der Platz am
+knappsten ist — steht er also gar nicht. *Zur Entscheidung:* (a) so lassen,
+der Kurzname ist eine Schreibtisch-Hilfe; (b) den Nebentext schmal sichtbar
+machen, wenn ein Kurzname da ist (Gestaltungsänderung, Mockup nötig).
+
+**Frage 5 — Sollen Diensttage verschiedenen Typs zusammenführbar sein?**
+`dt_merge_pruefen()` prüft heute nur die **Betriebsart**. Zwei Tage, von denen
+einer Bergwacht und einer Standard ist, lassen sich zusammenführen; der
+Zieltag bekommt den Typ des Gewinners. Das ist nicht falsch, aber es ist auch
+nicht entschieden. *Zur Entscheidung:* (a) so lassen; (b) den Typ wie die
+Betriebsart prüfen und bei Abweichung ablehnen; (c) ihn in die
+Widerspruchsliste des Vergleichsdialogs aufnehmen, damit die NutzerIn wählt.
+
+**Frage 6 — Der Fremdschlüssel auf den Standort.** AP4 hat
+`ON DELETE CASCADE` bewusst **unverändert** gelassen: Wer einen Standort
+löscht, löscht seine Rettungsmittel weiterhin mit — auch die vom Typ
+Bergwacht, die ohne Standort bestehen dürften. `ON DELETE SET NULL` würde sie
+stattdessen standortlos machen, aber ebenso jedes Standard-Rettungsmittel —
+also einen Zustand herstellen, den die Prüfschicht nie anlegen würde.
+*Zur Entscheidung:* (a) so lassen (Fassung von AP4); (b) beim Löschen eines
+Standorts die Rettungsmittel ohne Standortpflicht behalten und nur die
+übrigen mitnehmen — das braucht Anwendungslogik statt eines Fremdschlüssels
+und gehört dann in AP5 zur Standortseite.
 
 ---
 

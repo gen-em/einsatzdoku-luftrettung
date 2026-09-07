@@ -68,6 +68,6 @@ CSS-Drehung. Gefüllter Stern: per CSS `fill:currentColor`.
 | `fahrzeug.svg` | ambulance | Art bodengebunden |
 | `ohne-zuordnung.svg` | circle-dashed | Diensttag ohne Rettungsmittel |
 | `bergwacht.svg` | mountain | Diensttag-Typ Bergwacht (S9/AP3) |
-| `veranstaltung.svg` | building-stadium | Diensttag-Typ Veranstaltung (S9/AP3) |
+| `veranstaltung.svg` | ticket | Diensttag-Typ Veranstaltung (S9/AP3, Zeichnung getauscht in S9/AP4) |
 | `sonstiges.svg` | dots-circle-horizontal | Diensttag-Typ Sonstiges (S9/AP3) |
 | `luftlinie.svg` | — (eigen) | Luftlinie |

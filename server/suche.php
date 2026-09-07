@@ -354,7 +354,11 @@ ui_seite_start(['titel' => 'Suche']);
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Artsymbole für die Spalte „Art" der Einsatztabelle — dieselben wie in
          der Tagesleiste, aus dt_art_symbole() (Befund P9). */ ?>
-<script>const ART_SYMBOLE = <?= json_encode(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
+<script>const ART_SYMBOLE = <?= json_encode(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+        /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
+           zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
+           zeichnet. Dieselbe Quelle wie auf der Serverseite. */
+        const TYP_SYMBOLE = <?= json_encode(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <?php /* Boolesche Freitextsuche (Baustein B10, Web 7.0.0). Eigene Datei, weil
@@ -687,7 +691,7 @@ function inBereich(wert, von, bis) {
 function baueHeuhaufen(m) {
   const teile = [
     m.transport_dest, m.bw_unit, m.bw_info, m.other_ema, m.notes,
-    m.base, m.vehicle
+    m.base, m.vehicle, m.vehicle_kurz
   ].concat(CREW_ROLLEN.map(r => m.crew[r])).concat(m.resources);
 
   if (m._pat) {

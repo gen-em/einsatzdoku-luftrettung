@@ -1056,7 +1056,17 @@ function vehicleBaseSync(){
   const base = document.getElementById('basesel');
   const opt = veh.options[veh.selectedIndex];
   const bid = (opt && opt.dataset.base) ? parseInt(opt.dataset.base, 10) : 0;
-  if (bid > 0) { base.value = String(bid); }
+  if (bid > 0) { base.value = String(bid); return; }
+  /* EIN RETTUNGSMITTEL OHNE STANDORT LEERT DAS STANDORTFELD (Web 16.0.0,
+     E-S9-09). Bis dahin hatte jedes Rettungsmittel einen, und `bid > 0` traf
+     immer zu; die Zeile darunter gab es deshalb nicht. Jetzt gibt es
+     Bergwacht, Veranstaltung und Sonstiges ohne Standort — und ohne dieses
+     Leeren bliebe stehen, was vorher im Feld stand: bei einem frischen Tag
+     die VORBELEGUNG (DEF_BASE). Der Diensttag friere dann einen Standort ein,
+     den sein Rettungsmittel gar nicht hat, und niemand hätte ihn gewählt.
+     Wer trotzdem einen will, wählt ihn — sichtbar. Das eigene Standortfeld
+     des Tages kommt mit AP6 (E-S9-10). */
+  if (veh.value !== '') { base.value = ''; }
 }
 
 /* Lesezustand der Diensttag-Daten (E-P3-31): Standort, Rettungsmittel,

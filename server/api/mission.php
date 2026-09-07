@@ -202,7 +202,12 @@ try {
      * Bezeichnungen, damit die Seite den Dienst benennen kann, ohne die
      * Stammdaten zu befragen. */
     $tag = $dayId > 0 ? dt_laden($userId, $dayId) : null;
-    $sym = dt_art_symbol($tag !== null && $tag['kind'] !== null ? (string)$tag['kind'] : null);
+    /* Zeichen aus dem Typ, wo einer steht (E-S9-13, eine Funktion, alle
+     * Stellen). Ohne den zweiten Wert truege die Einsatzansicht den
+     * Hubschrauber, waehrend die Leiste daneben den Berg zeigt. */
+    $sym = dt_art_symbol($tag !== null && $tag['kind'] !== null ? (string)$tag['kind'] : null,
+                         $tag !== null && $tag['vehicle_typ'] !== null
+                             ? (string)$tag['vehicle_typ'] : null);
 
     /* ---- Abfahrtort aufloesen (E34, Konzept 4.6.1) ------------------------
      *

@@ -14,6 +14,103 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 16.0.0] — 2026-09-07
+
+### Web — ein Rettungsmittel ist nicht mehr zwangsläufig ein Standard-Rettungsmittel (S9/AP4)
+
+**Das Problem war eine Schublade mit zwei Fächern.** Ein Rettungsmittel hatte
+genau eine Eigenschaft — luftgebunden oder bodengebunden —, und daran hingen
+vier Dinge zugleich: welche Besatzungsrollen es anbietet, welche Fähigkeiten
+(Winde, Bergwacht) es haben kann, welcher Kachelsatz in der Tagesübersicht
+erscheint und welches Zeichen in der Leiste steht. Solange es
+Rettungshubschrauber und Notarzteinsatzfahrzeuge gab, war das genau richtig.
+Eine Bergwacht-Bereitschaft, ein Sanitätsdienst auf einem Volksfest und
+„sonst etwas" passen in keines der beiden Fächer, ohne eine Aussage
+mitzuschleppen, die niemand gemeint hat.
+
+**Deshalb eine zweite Achse und nicht ein drittes Fach.** `kind` bleibt die
+**Betriebsart** und steuert weiter, was sie steuerte. Daneben steht der
+**Typ**: Standard, Bergwacht, Veranstaltung, Sonstiges. Die beiden sind
+unabhängig — eine Bergwacht fliegt oder fährt, und beides ist ein
+Bergwacht-Dienst. Hätte man statt dessen die Betriebsart um „Bergwacht"
+erweitert, müsste jede Stelle, die heute Luft und Boden unterscheidet,
+künftig raten, welche Betriebsart dahintersteckt; und die
+Phasenbeschriftungen sind seit Web 6.0.0 gerade deshalb neutral, damit die
+Uhr die Art gar nicht kennen muss.
+
+**Je Typ gelten eigene Regeln, und sie stehen an einer Stelle.** Bei
+Bergwacht, Veranstaltung und Sonstiges gibt es **keine Rollen-Vorlagen** — der
+Diensttag bekommt dann keinen Rollensatz angeboten. Bei „Veranstaltung" ist
+die Betriebsart **fest bodengebunden**; wer trotzdem luftgebunden schickt,
+bekommt den Datensatz nicht abgelehnt, sondern korrigiert, und die Prüfliste
+sagt es. Und der **Standort ist nur bei „Standard" Pflicht**: Eine
+Bergwacht-Bereitschaft hat ein Einsatzgebiet, keine Wache; ein Sanitätsdienst
+einen Ort, der jedes Mal woanders liegt.
+
+**Der Kurzname** (bis 16 Zeichen, freiwillig) ist die kleinere Hälfte und die
+sichtbarere. Die Diensttage-Leiste zeigt ihn **statt** der Bezeichnung — sie
+ist die schmalste Stelle der Anwendung, und „BW Hoch" statt „Bergwacht
+Hochkreuth" ist genau dafür gedacht. Der Tooltip nennt weiter den vollen
+Namen, ebenso Formulare, Export und Sicherung: Wer die Exportdatei auswertet,
+kennt die Abkürzung des Hauses nicht. Sicherung und Export **führen** den
+Kurznamen trotzdem mit, als eigenes Feld neben der Bezeichnung — sonst
+überlebte er keinen Rückweg.
+
+**Der Diensttag friert beides ein**, wie er Bezeichnung und Betriebsart schon
+einfriert. Der Grund ist derselbe: Ein Rettungsmittel wird umbenannt,
+umgestellt oder gelöscht, und ein Diensttag von vor drei Monaten darf davon
+nichts merken.
+
+**Was bewusst stehenbleibt.** Der Fremdschlüssel auf den Standort bleibt
+`ON DELETE CASCADE` — wer einen Standort löscht, löscht seine Rettungsmittel
+weiterhin mit, und die Oberfläche nennt vorher die Zahl. `ON DELETE SET NULL`
+klänge freundlicher, wäre aber falsch: Es machte aus jedem
+Standard-Rettungsmittel eines ohne Standort, also einen Datensatz, den die
+Prüfschicht nie angelegt hätte — und zwar still. Ein Rettungsmittel ohne
+Standort entsteht dadurch, dass man es so anlegt, nicht dadurch, dass anderswo
+etwas gelöscht wurde. Ebenso bleibt der Vergleich, der über den Spurweg der
+Sicherung entscheidet, auf „Nutzlast ≥ 8": Eine Anhebung würfe jede
+vorhandene 8er- und 9er-Datei in den Punktlisten-Zweig und verlöre still alle
+Spuren.
+
+**Ein Beinahe-Schaden ist dabei gefunden und behoben worden.** Die einmalige
+Nachbearbeitung aus der Umstellung auf Diensttage (A12) entschied **allein**
+an der Nullbarkeit von `vehicles.base_id`, ob es sie überhaupt noch gibt. Mit
+dieser Änderung wäre sie in **jeder** Installation wiederauferstanden, hätte
+die rechtmäßig standortlosen Rettungsmittel als offene Punkte gemeldet — und
+ihr Knopf hätte die Änderung mit einem `ALTER TABLE … NOT NULL` gleich wieder
+zurückgenommen. Gemessen an der laufenden Installation: die Auskunft sprang
+von „abgeschlossen" auf „offen", zwei falsche offene Punkte. Die zweite Stufe
+kennt jetzt vier Tabellen statt fünf; das Finden eines
+Standard-Rettungsmittels ohne Standort bleibt.
+
+**Zwei weitere stille Stellen sind mitgegangen.** Die Prüfung, ob ein
+Rettungsmittel zugeordnet werden darf, ließ ein systemweites ohne Standort
+nicht durch, während die Auswahlliste es anbot — die Auswahl wäre beim
+Speichern wortlos verschwunden. Und beide Stammdatenseiten laden ihre
+Rettungsmittel über den Standort; eines ohne wäre dort unsichtbar und damit
+weder zu ändern noch zu löschen gewesen. Es bekommt bis zur neuen
+Standortseite eine eigene Karte „Ohne Standort".
+
+**Formate.** Die Sicherung steigt auf **Nutzlast 10**: `typ` und `kurz` am
+Rettungsmittel, `vehicle_typ` und `vehicle_kurz` am Diensttag. Eine 9er-Datei
+bleibt vollständig einspielbar — ein fehlender Typ wird „standard". Die
+`diensttage.csv` des Exports bekommt zwei Spalten, **am Ende**: Wer schon
+Auswertungen auf diese Datei gebaut hat, zählt Spalten von links. Der Typ
+braucht dort eine eigene Spalte, weil eine Veranstaltung sonst nicht von einem
+NEF-Dienst zu unterscheiden wäre — beide stehen als „boden".
+
+**Das Zeichen für Veranstaltung ist getauscht**: Tabler „ticket" statt
+„building-stadium". Gemessen: „ticket" hält seine Binnenfläche von 96 px bis
+herunter auf 16 px unverändert, „building-stadium" verliert bei 18 px zwei
+seiner vier Binnenflächen auf einen einzelnen Pixel und schließt bei 16 px
+zwei ganz. Der Vorrat bleibt bei 52 Dateien.
+
+**Nach dem Einspielen muss eine Administratorin `update.php` aufrufen** — die
+Migration `2026_09_07_rettungsmittel_typ` legt die vier Spalten an, macht
+`vehicles.base_id` NULL-fähig und füllt den Bestand nach. Ohne sie läuft die
+Anwendung ins Leere.
+
 ## [Web 15.8.0] — 2026-09-07
 
 ### Web — die Karte wird leiser, und die Pfeile zeigen wieder hin (S9/AP3)

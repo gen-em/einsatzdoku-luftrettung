@@ -318,11 +318,13 @@ function ui_logo_masse(int $hoehe): array
 function ui_artzeichen(?string $kind, string $klassen = '', ?string $typ = null): string
 {
     require_once __DIR__ . '/diensttag_lib.php';
-    /* DER TYP STEHT AN DRITTER STELLE, nicht an zweiter. Alle sechs Aufrufer
-     * uebergeben heute nur `$kind`, aber `$klassen` ist die dokumentierte
-     * zweite Stelle (`docs/Design.md` 9.15) — wer den Typ dorthin schoebe,
-     * braeche jeden kuenftigen Aufruf mit Klassen, ohne dass etwas meldet.
-     * In AP3 ist `$typ` immer null; er kommt mit AP4. */
+    /* DER TYP STEHT AN DRITTER STELLE, nicht an zweiter. `$klassen` ist die
+     * dokumentierte zweite Stelle (`docs/Design.md` 9.15) — wer den Typ dorthin
+     * schoebe, braeche jeden kuenftigen Aufruf mit Klassen, ohne dass etwas
+     * meldet. Seit AP4 (Web 16.0.0) uebergeben ihn alle sechs Aufrufer:
+     * Leiste, Papierkorb, Diensttag loeschen, Zusammenfuehren, Nachbearbeitung
+     * und die Stammdatenliste. NULL bleibt zulaessig und bedeutet „kein Typ
+     * bekannt" — dann zeichnet die Betriebsart. */
     $sym = dt_art_symbol($kind, $typ);
     /* OHNE DIE KLASSE `artzeichen` (P3/O11). Sie stammt aus der Zeit, als das
      * Artzeichen ein EMOJI war, und war dessen Korsett:
@@ -654,14 +656,21 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
               <div class="akkordeon-inhalt">
               <?php foreach ($monatsTage as $t):
                   $kind = $t['kind'] === null ? null : (string)$t['kind'];
-                  $sym  = dt_art_symbol($kind);
-                  $name = (string)($t['vehicle_name'] ?? '');
-                  $titel = $name !== '' ? $name . ' — ' . $sym['text'] : $sym['text'];
+                  $typ  = $t['vehicle_typ'] === null ? null : (string)$t['vehicle_typ'];
+                  $sym  = dt_art_symbol($kind, $typ);
+                  /* DIE LEISTE ZEIGT DEN KURZNAMEN (Nr. 69, E-S9-09): Sie ist
+                     die schmalste Stelle der Anwendung, und „C1" statt
+                     „Christoph 1" ist genau dafuer gedacht. Der TITEL nennt
+                     weiterhin die volle Bezeichnung — wer den Kurznamen nicht
+                     zuordnen kann, findet sie im Tooltip. */
+                  $name = dt_rm_kurz($t);
+                  $voll = trim((string)($t['vehicle_name'] ?? ''));
+                  $titel = $voll !== '' ? $voll . ' — ' . $sym['text'] : $sym['text'];
                   $ist = (int)$t['id'] === $currentDayId; ?>
                 <a class="eintrag<?= $ist ? ' aktiv' : '' ?>"
                    href="index.php?d=<?= (int)$t['id'] ?>"
                    <?= $ist ? 'aria-current="page"' : '' ?> title="<?= ui_e($titel) ?>">
-                  <?= ui_artzeichen($kind) ?>
+                  <?= ui_artzeichen($kind, '', $typ) ?>
                   <span class="eintrag-text"><?= ui_e(dt_lesbar($t, (bool)$t['mehrfach'])) ?></span>
                   <?php if ($name !== ''): ?>
                     <span class="eintrag-neben"><?= ui_e($name) ?></span>

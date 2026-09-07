@@ -370,7 +370,42 @@ einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
 
-**Nutzlastversion 9 (seit Web 14.2.0).** Wie 8 — keine Punktlisten, Spuren als
+**Nutzlastversion 10 (seit Web 16.0.0).** Wie 9 — keine Punktlisten, Spuren
+als Verweise —, dazu **vier Felder mehr**, alle zum Rettungsmittel:
+
+| Was | Wo |
+|---|---|
+| `typ` | je Rettungsmittel: `standard` \| `bergwacht` \| `veranstaltung` \| `sonstiges` (E-S9-09). Der Wertevorrat steht in `VEHICLE_TYPEN` (`server/db.php`) |
+| `kurz` | je Rettungsmittel: der Kurzname, bis 16 Zeichen; `null` = keiner gesetzt |
+| `vehicle_typ` | je Diensttag: der eingefrorene Typ (E8); `null` = kein Rettungsmittel |
+| `vehicle_kurz` | je Diensttag: der eingefrorene Kurzname; `null` = keiner |
+
+**Alle vier sind optional.** Eine 9er-Datei ist gültig; ein fehlender `typ`
+wird beim Einspielen zu `standard` — was die richtige Aussage ist, denn jedes
+Rettungsmittel aus der Zeit davor **war** ein Standard-Rettungsmittel. Ein
+fehlender Kurzname bleibt `null`. Ein **unbekannter** `typ` dagegen wird
+abgelehnt und gezählt, nicht stillschweigend zu `standard` gemacht: Das machte
+aus einem Bergwacht-Rettungsmittel einer neueren Fassung ein
+Standard-Rettungsmittel, ohne dass es jemand merkt.
+
+**`base_ref` darf jetzt `null` sein.** Bis Nutzlast 9 wurde ein
+Rettungsmittel ohne auflösbaren Standort übersprungen — `vehicles.base_id`
+trug NOT NULL. Seit E-S9-09 ist der Standort nur beim Typ `standard` Pflicht;
+die drei anderen dürfen ohne bestehen. Ein **Standard**-Rettungsmittel ohne
+auflösbaren Standort wird weiterhin übersprungen und gezählt.
+
+**Warum die Nummer dann überhaupt steigt:** derselbe Grund wie bei der 9 —
+sie sagt einem Leser, was in der Datei stehen **kann**, und sie lässt die
+Schranke nach oben arbeiten. Hier besonders deutlich: Ohne sie legte eine
+Installation vor Web 16.0.0 ein Bergwacht-Rettungsmittel als
+**Standard**-Rettungsmittel an, mit Standortpflicht und Rollenvorlagen — und
+man sähe dem Datensatz den Verlust nicht an.
+
+**Der Vergleich, der über den Spurweg entscheidet, bleibt bei `>= 8`.** Eine
+Anhebung auf 9 oder 10 würfe jede vorhandene 8er- und 9er-Datei in den
+Punktlisten-Zweig: Die Einsätze kämen an, die Spuren nicht — ohne Meldung.
+
+**Nutzlastversion 9 (Web 14.2.0 bis 15.8.0).** Wie 8 — keine Punktlisten, Spuren als
 Verweise —, dazu **drei Dinge mehr**:
 
 | Was | Wo |
@@ -452,7 +487,7 @@ seit Web 4.1.2 auch:
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 9,                         // 8/9 = Verweise, 6/7 = Punktlisten
+  "version": 10,                        // 8/9/10 = Verweise, 6/7 = Punktlisten
   "app": "einsatzdoku-notarzt",         // Kennung der Anwendung
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
@@ -477,14 +512,30 @@ seit Web 4.1.2 auch:
     // Die Liste kommt SORTIERT aus der Datenbank — `ORDER BY role_code`, also
     // alphabetisch, nicht in der Reihenfolge des Katalogs. Sie bedeutet
     // nichts; wer sie ausliest, sortiert selbst.
-    "vehicles":     [ { "name": "Christoph 17", "kind": "air",
+    // `typ` und `kurz` seit Nutzlast 10 (E-S9-09). `kind` ist die
+    // BETRIEBSART, `typ` die ART DES DIENSTES — zwei Achsen, unabhängig
+    // voneinander. `kurz` ist der Kurzname (bis 16 Zeichen) und NULL, wenn
+    // keiner gesetzt ist; ein Leerstring wäre eine Angabe, wo keine ist.
+    // `base_ref` darf bei jedem Typ AUSSER `standard` null sein: Diese
+    // Rettungsmittel brauchen keinen Standort. Der dritte Eintrag unten zeigt
+    // den Fall — ohne Standort, ohne Rollen-Vorlagen, ohne Fähigkeiten.
+    "vehicles":     [ { "name": "Christoph 17", "kurz": null,
+                        "typ": "standard", "kind": "air",
                         "base_ref": "Kempten",
                         "roles": ["fr", "hems", "other", "p1", "p2"],
                         "capabilities": ["winch", "bergwacht"],
                         "is_default": 1 },
-                      { "name": "NEF Kempten 1", "kind": "ground",
+                      { "name": "NEF Kempten 1", "kurz": null,
+                        "typ": "standard", "kind": "ground",
                         "base_ref": "Kempten",
                         "roles": ["driver", "other", "trainee"],
+                        "capabilities": [],
+                        "is_default": 0 },
+                      { "name": "Sanitätsdienst Allgäuer Festwoche",
+                        "kurz": "SanD Fest",
+                        "typ": "veranstaltung", "kind": "ground",
+                        "base_ref": null,
+                        "roles": [],
                         "capabilities": [],
                         "is_default": 0 } ],
 
@@ -517,6 +568,14 @@ seit Web 4.1.2 auch:
     "ended_at":   "2026-07-19 17:30:00",
     "kind": "air",                        // null = neutral, noch nicht zugeordnet
     "vehicle_name": "Christoph 17",       // eingefroren
+    // Typ und Kurzname gehören zur SELBEN Momentaufnahme (E8) und stehen seit
+    // Nutzlast 10 hier. Beide null, wenn der Tag kein Rettungsmittel führt;
+    // `vehicle_kurz` auch dann, wenn das Rettungsmittel keinen Kurznamen hat.
+    // Sie werden beim Einspielen AUS DER DATEI genommen, nicht aus den
+    // heutigen Stammdaten nachgeschlagen — das wäre der Durchgriff, den das
+    // Einfrieren gerade ausschließt.
+    "vehicle_typ": "standard",            // eingefroren, null = kein Rettungsmittel
+    "vehicle_kurz": null,                 // eingefroren, null = kein Kurzname
     "base_name": "Kempten",               // eingefroren
     "base_lat": 47.72, "base_lon": 10.31, // eingefroren
     "vehicle_ref": "Christoph 17", "base_ref": "Kempten",   // Stammdaten-Verweis

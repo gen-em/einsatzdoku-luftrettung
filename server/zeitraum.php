@@ -133,7 +133,11 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
          der Tagesleiste. Gleiches Muster wie CREW_ROLLEN in import.php
          (Befund P9); assets/missiontable.js führt einen Rückfall, falls die
          Vorgabe fehlt. */ ?>
-<script>const ART_SYMBOLE = <?= json_encode(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
+<script>const ART_SYMBOLE = <?= json_encode(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+        /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
+           zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
+           zeichnet. Dieselbe Quelle wie auf der Serverseite. */
+        const TYP_SYMBOLE = <?= json_encode(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>

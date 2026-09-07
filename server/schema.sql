@@ -99,9 +99,21 @@ CREATE TABLE user_bases (
 CREATE TABLE vehicles (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
-  base_id INT UNSIGNED NOT NULL,                   -- jedes Rettungsmittel gehoert einem Standort
+  -- Seit Web 16.0.0 NULL-faehig: Die Typen ausser 'standard' brauchen keinen
+  -- Standort (E-S9-09). Die Pflicht bei 'standard' steht in validate_lib.php,
+  -- nicht hier — die Datenbank kann sie nicht auf eine zweite Spalte beziehen,
+  -- ohne den Fehler an der Pruefschicht vorbei als SQL-Fehler zu melden.
+  -- ON DELETE CASCADE bleibt: Loeschen eines Standorts nimmt seine
+  -- Rettungsmittel mit (E15), es macht sie nicht standortlos.
+  base_id INT UNSIGNED NULL,
   name VARCHAR(64) NOT NULL,                       -- bis Web 5.10.0: `registration`
+  kurz VARCHAR(16) NULL,                           -- Kurzname fuer Leiste, Kacheln, Plaketten (Nr. 69)
+  -- `kind` ist die BETRIEBSART (Luft/Boden) und steuert Rollen, Faehigkeiten,
+  -- Kachelsatz und Hoehe. `typ` ist die ART DES DIENSTES und davon unabhaengig:
+  -- Eine Bergwacht fliegt oder faehrt, und beides ist ein Bergwacht-Dienst
+  -- (E-S9-09). ENUM und nicht VARCHAR, weil der Wertevorrat geschlossen ist.
   kind ENUM('air','ground') NOT NULL,
+  typ ENUM('standard','bergwacht','veranstaltung','sonstiges') NOT NULL DEFAULT 'standard',
   UNIQUE KEY uq_user_name (user_id, name),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (base_id) REFERENCES bases(id) ON DELETE CASCADE
@@ -228,6 +240,11 @@ CREATE TABLE days (
   base_lat     DECIMAL(9,6) NULL,          -- eingefrorene Standortkoordinate
   base_lon     DECIMAL(9,6) NULL,
   vehicle_name VARCHAR(64) NULL,           -- eingefrorene Rettungsmittelbezeichnung
+  -- Typ und Kurzname gehoeren in dieselbe Momentaufnahme wie Bezeichnung
+  -- und Betriebsart (E8, Web 16.0.0). NULL bei einem Tag ohne
+  -- Rettungsmittel; die Anzeige faellt dann auf die Betriebsart zurueck.
+  vehicle_typ  ENUM('standard','bergwacht','veranstaltung','sonstiges') NULL,
+  vehicle_kurz VARCHAR(16) NULL,           -- eingefrorener Kurzname (Nr. 69)
   notes    TEXT NULL,
   deleted_at DATETIME NULL,
   INDEX idx_user_day (user_id, day),
@@ -722,4 +739,9 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- einer frischen Installation nichts zu tun: Sie hat keinen Bestand, und
   -- ihr erstes Konto legt install.php gleich als BetreiberIn an.
   ('2026_09_05_rolle_betreiberin', 'skipped'),
-  ('2026_09_07_adresssuche_konto', 'skipped');
+  ('2026_09_07_adresssuche_konto', 'skipped'),
+  -- `typ`, `kurz` und das NULL-faehige `base_id` stehen oben schon an
+  -- vehicles, `vehicle_typ` und `vehicle_kurz` an days (Web 16.0.0,
+  -- S9/AP4). Das Nachfuellen des Bestands hat auf einer frischen
+  -- Installation nichts zu tun: Sie hat keine Diensttage.
+  ('2026_09_07_rettungsmittel_typ', 'skipped');

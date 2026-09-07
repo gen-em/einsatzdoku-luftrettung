@@ -695,12 +695,40 @@ Wortliste **0/0/0** bei 96 Regeln mit neuer Regel `spur`; `grep -c "Spur"
 docs/Handbuch.md` **41 → 0**; Klickprobe **6 von 6** Wegen; Vollständigkeit
 **304 = 304**; Kontraste **21/0**; Linkprobe **134/0**; Bilderlauf zehn berührte Seiten **80 Bilder, 0/0/0** in beiden Bedienhöhen.
 
-**Zwei Fragen offen** (Prüfdokument Abschnitt 4): die Lesbarkeit von
-`veranstaltung.svg` bei 18 px — beide Mockups zeichnen mit Strich 1,8, die
-Anwendung mit 2, und M-S9-02 nennt „building-stadium" bei 20 px selbst „einen
-Klumpen"; sowie die alte Frage 2 aus AP1.
+**Eine Frage aus AP3 ist entschieden, eine bleibt.** Die Lesbarkeit von
+`veranstaltung.svg` bei 18 px hat der Auftraggeber am 07.09.2026 mit dem
+Tausch auf Tabler „ticket" beantwortet (Messung: „ticket" hält seine
+Binnenfläche von 96 px bis 16 px, „building-stadium" verliert bei 18 px zwei
+seiner vier auf einen einzelnen Pixel). Offen bleibt die alte Frage 2 aus AP1.
 
-**AP4 bis AP8 — offen.** AP4 beginnt nach dem Wort des Auftraggebers (K7).
+**AP4 — Rettungsmittel: Typ, Kurzname, Standort optional** (07.09.2026,
+Web **16.0.0**, Migration `2026_09_07_rettungsmittel_typ`, Nutzlast 9 → 10).
+Zwei Achsen statt einer: `kind` bleibt die Betriebsart, `typ` ist die Art des
+Dienstes (Standard, Bergwacht, Veranstaltung, Sonstiges). Kurzname bis 16
+Zeichen; `vehicles.base_id` wieder NULL-fähig, Pflicht nur bei „Standard";
+`days` friert Typ und Kurznamen ein. Alle drei Schreibwege laufen jetzt über
+eine gemeinsame `pruef_rettungsmittel()` — vorher prüften Konto, Verwaltung
+und Sicherung dieselbe Sache dreimal ungleich, das Einspielen am
+schwächsten. **Hauptnummer**, weil Datenmodell, Dateiformat und eine feste
+Zusage (E15) zugleich betroffen sind. **Drei stille Stellen gefunden und
+behoben:** `nb_moeglich()` hätte die abgeschlossene Nachbearbeitung in jeder
+Installation wiederbelebt und ihr Knopf die Migration zurückgenommen;
+`dt_vehicle_erlaubt()` hätte ein zentrales Rettungsmittel ohne Standort beim
+Speichern wortlos verworfen; beide Stammdatenseiten hätten es unsichtbar
+gemacht. **Zahlen:** Kreisläufe **edbak 287 771 / csv 9 118 / edbak-alt
+287 781 Einzelvergleiche, je 0 unerklärt** (16 / 1 021 / 653 erwartet);
+Klickprobe **6 von 6** neuen Wegen; Register **45 = 45**; frische Installation
+und migrierte Datenbank strukturgleich; Referenzbestand **3 → 6
+Rettungsmittel** (je einer der vier Typen, zwei ohne Standort, zwei mit
+Kurznamen), Demo-Fixture neu, 55 861 Spurpunkte unverändert; Wortliste
+**0/0/0** bei 96 Regeln über fünf Bereiche (178 Dateien); Vollständigkeit
+**304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise,
+0 unbekannte Abweichungen**; Bilderlauf **11 berührte Seiten, 88 Einzelbilder
+je Lauf, 0/0/0 in beiden Bedienhöhen**. `veranstaltung.svg` trägt jetzt Tabler
+„ticket" (Entscheidung des Auftraggebers vom 07.09.2026, mit Messung
+begründet).
+
+**AP5 bis AP8 — offen.** AP5 beginnt nach dem Wort des Auftraggebers (K7).
 
 ### Schritt 9 — Backlog-Runde
 

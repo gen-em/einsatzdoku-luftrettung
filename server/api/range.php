@@ -55,7 +55,8 @@ try {
      * Sie war die einzige Verwenderin von `p9_at` hier -- und eine
      * korrelierte Unterabfrage je Zeile fuer einen Wert, der als Spalte
      * danebensteht. */
-    $st = db()->prepare('SELECT m.id, m.day_id, d.day, d.kind, m.started_at, m.ended_at,
+    $st = db()->prepare('SELECT m.id, m.day_id, d.day, d.kind, d.vehicle_typ,
+                               m.started_at, m.ended_at,
                            m.distance_m,
                            m.winch, m.bergwacht, m.secondary, m.winch_cycles,
                            m.false_alarm, m.site_ele_m, m.pat_blob
@@ -86,6 +87,10 @@ try {
              * im Browser den Tab, die Kacheln und die Karte — ohne sie muesste
              * die Uebersicht je Tab nachladen. */
             'kind'       => $m['kind'] !== null ? (string)$m['kind'] : null,
+            /* Der Diensttag-TYP — nur fuers Zeichen (E-S9-13). Tab, Kachelsatz
+             * und Karte haengen weiter an der Betriebsart; sie sagt, WOMIT
+             * gefahren wurde, und genau das steuert die Felder. */
+            'day_typ'    => $m['vehicle_typ'] !== null ? (string)$m['vehicle_typ'] : null,
             'start_hhmm' => fmt_local($m['started_at']),
             'duration_s' => $dur,
             'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,

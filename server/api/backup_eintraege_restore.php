@@ -49,10 +49,12 @@ if (!is_array($b) || !isset($b['eintraege']) || !is_array($b['eintraege'])) {
 }
 
 $eintraege = $b['eintraege'];
-/* Die Fassung steht im Kopf der Datei und wird hier mitgeschickt: Der
- * Eintragsweg gibt es nur fuer Nutzlast 8, und das soll dastehen statt sich
- * daraus zu ergeben, dass niemand anders ihn ruft. */
-$eintraege['version'] = 9;
+/* Die Fassung steht im Kopf der Datei und wird hier mitgeschickt: Den
+ * Eintragsweg gibt es erst ab Nutzlast 8, und das soll dastehen statt sich
+ * daraus zu ergeben, dass niemand anders ihn ruft. Die Zahl folgt der jeweils
+ * geschriebenen Nutzlast (seit Web 16.0.0: 10) — unbedenklich, weil alle
+ * Fassungen ab 8 denselben Weg nehmen und die spaeteren Felder optional sind. */
+$eintraege['version'] = 10;
 
 try {
     $stats = edbak_restore($userId, $eintraege,

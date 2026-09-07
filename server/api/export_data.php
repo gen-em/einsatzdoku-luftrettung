@@ -216,7 +216,7 @@ function export_meta(array $b, int $userId): never
      * Aus der Datenbank kommen die Werte trotzdem nicht (SELECT NULL). */
     $st = $pdo->prepare(
         "SELECT d.id, d.day, d.started_at, d.ended_at, d.kind,
-                d.vehicle_name, d.base_name" . ($pers ? ', d.notes' : ', NULL AS notes') . "
+                d.vehicle_name, d.vehicle_typ, d.vehicle_kurz, d.base_name" . ($pers ? ', d.notes' : ', NULL AS notes') . "
          FROM days d
          WHERE d.user_id = ?$whereTag
          ORDER BY d.day, d.started_at, d.id");
@@ -252,7 +252,13 @@ function export_meta(array $b, int $userId): never
             'started_at'   => export_iso_utc($r['started_at']),
             'ended_at'     => export_iso_utc($r['ended_at']),
             'kind'         => $r['kind'] !== null ? (string)$r['kind'] : null,
+            /* DER EXPORT ZEIGT DIE VOLLE BEZEICHNUNG (E-S9-09) — der Kurzname
+               steht daneben als eigene Spalte, nicht an ihrer Stelle: Er ist
+               eine Abkuerzung fuer den Hausgebrauch, und wer die Datei
+               auswertet, kennt sie nicht. */
             'vehicle'      => $r['vehicle_name'] !== null ? (string)$r['vehicle_name'] : null,
+            'vehicle_kurz' => $r['vehicle_kurz'] !== null ? (string)$r['vehicle_kurz'] : null,
+            'vehicle_typ'  => $r['vehicle_typ']  !== null ? (string)$r['vehicle_typ']  : null,
             'base'         => $r['base_name'] !== null ? (string)$r['base_name'] : null,
             'crew'         => (object)($crewByDay[$id] ?? []),
             'capabilities' => $capsByDay[$id] ?? [],

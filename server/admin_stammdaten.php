@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/diensttag_lib.php';   // Rollenkatalog, Artsymbole
-require_once __DIR__ . '/validate_lib.php';   // pruef_ortspaar()
+require_once __DIR__ . '/validate_lib.php';   // pruef_ortspaar(), pruef_rettungsmittel()
 /* Zeile und Formular der Stammdatenpflege — dieselben Bausteine wie in der
  * Kontoansicht (einstellungen.php). Bis Web 9.9.0 stand dieses Markup in
  * beiden Dateien; seit O9c steht es einmal (stammdaten_ui.php). */
@@ -24,11 +24,17 @@ require_once __DIR__ . '/stammdaten_ui.php';
  * Block „zentrale Standorte auswaehlen": Die Auswahl ist Sache der NutzerIn,
  * nicht der Administration.
  *
- * DER STANDORTBEZUG IST VERBINDLICH (E15): Jedes Rettungsmittel, jede
- * Zielklinik, jede Besatzungs-Vorbelegung, jedes weitere Rettungsmittel und
- * jede Bergwacht-Bereitschaft gehoert genau einem Standort. Ohne Standort wird
- * nichts angelegt — die Spalte traegt nach der Nachbearbeitung NOT NULL (A12),
- * und ein Eintrag ohne Standort erschiene in keiner Auswahlliste.
+ * DER STANDORTBEZUG IST VERBINDLICH (E15) — MIT EINER AUSNAHME SEIT WEB 16.0.0.
+ * Jede Zielklinik, jede Besatzungs-Vorbelegung und jede Bergwacht-Bereitschaft
+ * gehoert genau einem Standort; ohne ihn erschiene der Eintrag in keiner
+ * Auswahlliste. Bei den RETTUNGSMITTELN gilt das nur noch fuer den Typ
+ * „Standard": `vehicles.base_id` ist NULL-faehig, und die drei anderen Typen
+ * (Bergwacht, Veranstaltung, Sonstiges) duerfen ohne Standort bestehen
+ * (E-S9-09). Sie haben dann keine Vorschlagslisten — die haengen am Standort —
+ * und stehen in der Standortliste unter „Ohne Standort". Die Regel steht in
+ * `pruef_rettungsmittel()` (validate_lib.php), nicht im Schema: Die Datenbank
+ * kann eine Pflicht nicht von einer zweiten Spalte abhaengig machen, ohne den
+ * Fehler an der Pruefschicht vorbei zu melden.
  */
 
 /* ZWEI REITER wie in der Kontoansicht (Web 7.0.0): „Standorte systemweit" und
@@ -89,46 +95,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'veh_save') {
-        $n    = mb_substr(trim($_POST['name'] ?? ''), 0, 64);
-        $vid  = (int)($_POST['id'] ?? 0);
-        /* Die Art ist Pflicht (Web 7.0.0) — dieselbe Aenderung wie in der
-         * Kontoansicht und aus demselben Grund: „im Zweifel luftgebunden" war
-         * eine Entscheidung, die niemand traf und niemand bemerkte. */
-        $kindRoh = (string)($_POST['kind'] ?? '');
-        $kind = in_array($kindRoh, ['air', 'ground'], true) ? $kindRoh : null;
-        if ($n === '') {
-            $error = 'Bitte eine Bezeichnung eintragen.';
-        } elseif ($kind === null) {
-            $error = 'Bitte die Art wählen: luftgebunden oder bodengebunden.';
-        } elseif ($postBase === null) {
-            $error = 'Bitte einen zentralen Standort wählen.';
-        } elseif (stammdaten_dup_global('vehicles', 'name', $n, null, null, $vid)) {
-            $error = '„' . $n . '“ ist bereits zentral hinterlegt.';
+        $vid = (int)($_POST['id'] ?? 0);
+        /* DIESELBE PRUEFUNG WIE IM KONTO (Web 16.0.0, E-S9-09). Bis Web 15.8.0
+         * standen die Regeln hier als Kopie der Kontoansicht — dieselben Saetze,
+         * nur kuerzer formuliert, was allein schon ein Fehler war: Zwei
+         * Meldungen fuer dieselbe Lage. Mit `pruef_rettungsmittel()` gibt es
+         * eine Fassung; abweichend bleibt nur die Dublettenpruefung, denn
+         * „zentral hinterlegt" heisst hier etwas anderes als im Konto. */
+        $geprueft = pruef_rettungsmittel([
+            'name'    => $_POST['name'] ?? null,
+            'kurz'    => $_POST['kurz'] ?? null,
+            'typ'     => $_POST['typ']  ?? null,
+            'kind'    => $_POST['kind'] ?? null,
+            /* Der Haken schlaegt die verborgene Kennung der Standortkarte;
+             * ob er zulaessig ist, entscheidet der Typ in der Pruefschicht. */
+            'base_id' => empty($_POST['ohne_standort']) ? $postBase : null,
+            'roles'   => $_POST['roles'] ?? [],
+            'caps'    => $_POST['caps']  ?? [],
+        ]);
+        $rm = $geprueft['daten'];
+        if ($rm === null) {
+            $error = reset($geprueft['fehler']) ?: 'Das Rettungsmittel konnte nicht gespeichert werden.';
+        } elseif (stammdaten_dup_global('vehicles', 'name', $rm['name'], null, null, $vid)) {
+            $error = '„' . $rm['name'] . '“ ist bereits zentral hinterlegt.';
         } else {
-            // Rollen auf die Art filtern (E5/E6) — serverseitig, unabhaengig
-            // davon, was das Formular angeboten hat.
-            $erlaubt = array_keys(crew_roles_fuer_art($kind));
-            $rollen = [];
-            foreach ((array)($_POST['roles'] ?? []) as $rc) {
-                if (in_array((string)$rc, $erlaubt, true)) { $rollen[] = (string)$rc; }
-            }
-            // Faehigkeiten kommen nur luftgebunden vor (E29).
-            $caps = [];
-            if ($kind === 'air') {
-                foreach ((array)($_POST['caps'] ?? []) as $c) {
-                    if (array_key_exists((string)$c, VEHICLE_CAPABILITIES)) { $caps[] = (string)$c; }
-                }
-            }
+            $rollen = $rm['roles'];
+            $caps   = $rm['caps'];
             $pdo = db();
             $pdo->beginTransaction();
             try {
                 if ($vid > 0) {
-                    $pdo->prepare('UPDATE vehicles SET name = ?, kind = ?, base_id = ?
+                    $pdo->prepare('UPDATE vehicles SET name = ?, kurz = ?, kind = ?, typ = ?, base_id = ?
                                    WHERE id = ? AND user_id IS NULL')
-                        ->execute([$n, $kind, $postBase, $vid]);
+                        ->execute([$rm['name'], $rm['kurz'], $rm['kind'], $rm['typ'], $rm['base_id'], $vid]);
                 } else {
-                    $pdo->prepare('INSERT INTO vehicles (user_id, base_id, name, kind)
-                                   VALUES (NULL,?,?,?)')->execute([$postBase, $n, $kind]);
+                    $pdo->prepare('INSERT INTO vehicles (user_id, base_id, name, kurz, kind, typ)
+                                   VALUES (NULL,?,?,?,?,?)')
+                        ->execute([$rm['base_id'], $rm['name'], $rm['kurz'], $rm['kind'], $rm['typ']]);
                     $vid = (int)$pdo->lastInsertId();
                 }
                 /* Vollstaendig ersetzen. Auf bereits dokumentierte Diensttage
@@ -328,7 +331,15 @@ $ladeNachBase = function (string $tabelle, string $spalten) use ($baseIds): arra
     }
     return $nach;
 };
-$vehNach  = $ladeNachBase('vehicles', 'id, name, kind');
+$vehNach  = $ladeNachBase('vehicles', 'id, name, kurz, kind, typ');
+/* Zentrale Rettungsmittel OHNE Standort — dieselbe Luecke wie in der
+ * Kontoansicht: `base_id IN (...)` laesst sie heraus, und sie waeren dann
+ * nirgends zu aendern (E-S9-09, Web 16.0.0). */
+$vehOhne = [];
+foreach (db()->query('SELECT id, name, kurz, kind, typ, base_id, user_id FROM vehicles
+                       WHERE base_id IS NULL AND user_id IS NULL ORDER BY name') as $z) {
+    $vehOhne[] = $z;
+}
 $crewNach = $ladeNachBase('crew_presets', 'id, name, role_code');
 $tdNach   = $ladeNachBase('transport_dests', 'id, name, lat, lon');
 $resNach  = $ladeNachBase('resources', 'id, name');
@@ -374,7 +385,7 @@ $pickNach = function (array $nachBase, string $param) {
     return null;
 };
 $editBase = $pick($bases, 'eb');
-$editVeh  = $pickNach($vehNach, 'ev');
+$editVeh  = $pickNach($vehNach, 'ev') ?? $pickNach(['ohne' => $vehOhne], 'ev');
 $editCrew = $pickNach($crewNach, 'ec');
 $editTd   = $pickNach($tdNach, 'et');
 $editRes  = $pickNach($resNach, 'er');
@@ -571,11 +582,17 @@ ui_seite_start(['titel' => 'Stammdaten systemweit', 'karte' => true]);
               'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ systemweit löschen? '
                            . 'Dokumentierte Diensttage bleiben unverändert.',
               'bearbeiten_href' => $seite . '&ev=' . $vid . '#' . $anker . '-veh',
-              'plaketten' => ui_artzeichen((string)$v['kind'])
+              'plaketten' => ui_artzeichen((string)$v['kind'], '', (string)$v['typ'])
                            . ($dupP > 0 ? ui_plakette('Namensdublette', ['ton' => 'orange']) : ''),
           ]);
         endforeach; ?>
-        <?php $evHier = ($editVeh && (int)$editVeh['base_id'] === $bid) ? $editVeh : null;
+        <?php /* Ein zentrales Rettungsmittel ohne Standort wird im ersten
+                 Block bearbeitet — dieselbe Ueberlegung wie in der
+                 Kontoansicht. */
+              $evOhne = $editVeh && $editVeh['base_id'] === null
+                     && $bases && (int)$bases[0]['id'] === $bid;
+              $evHier = ($editVeh && ((int)$editVeh['base_id'] === $bid || $evOhne))
+                      ? $editVeh : null;
               $evRollen = $evHier ? ($vehRollen[(int)$evHier['id']] ?? []) : [];
               $evCaps   = $evHier ? ($vehCaps[(int)$evHier['id']] ?? []) : []; ?>
         <div class="listen-form">
@@ -590,6 +607,26 @@ ui_seite_start(['titel' => 'Stammdaten systemweit', 'karte' => true]);
                              'platzhalter' => 'z. B. Alpenfalke 1 oder NEF Talwang 76/1',
                              'wert' => (string)($evHier['name'] ?? ''),
                              'attr' => ' maxlength="64"']); ?>
+              <?php /* Typ und Kurzname — vorlaeufige Form wie in der
+                       Kontoansicht (AP4, E-S9-09); die Anordnung nach E-S9-19
+                       kommt mit den Dialogen in AP5. */ ?>
+              <?php $typOptionen = [];
+                    foreach (VEHICLE_TYPEN as $tk => $tr) { $typOptionen[$tk] = $tr['label']; }
+                    ui_feld(['label' => 'Typ', 'name' => 'typ', 'art' => 'select',
+                             'id' => 'advehtyp-' . $bid, 'optionen' => $typOptionen,
+                             'wert' => (string)($evHier['typ'] ?? 'standard')]); ?>
+              <?php ui_feld(['label' => 'Kurzname', 'name' => 'kurz',
+                             'label_zusatz' => '(optional)',
+                             'id' => 'advehkurz-' . $bid,
+                             'platzhalter' => 'z. B. AF 1',
+                             'wert' => (string)($evHier['kurz'] ?? ''),
+                             'attr' => ' maxlength="' . RM_KURZ_MAX . '"']); ?>
+              <div class="feld">
+                <span class="feld-label">Standort</span>
+                <label><input type="checkbox" name="ohne_standort" value="1"
+                       <?= ($evHier && $evHier['base_id'] === null) ? 'checked' : '' ?>>
+                  Ohne Standort (nur für Bergwacht, Veranstaltung, Sonstiges)</label>
+              </div>
               <?php /* DIE ART IST NICHT VORBELEGT (Web 7.0.0): „luftgebunden"
                        stand von selbst da, und an einem NEF-Standort war das
                        die falsche Vorgabe, die niemand bemerkt. */ ?>
@@ -813,6 +850,40 @@ ui_seite_start(['titel' => 'Stammdaten systemweit', 'karte' => true]);
       <?php endif; ?>
     <?php ui_karte_ende(true); ?>
   <?php endforeach; ?>
+
+  <?php /* OHNE STANDORT — vorlaeufige Karte, wie in der Kontoansicht
+           (AP4, E-S9-09/E-S9-18). Ohne sie waere ein zentrales Rettungsmittel
+           ohne Standort hier unsichtbar und damit weder zu aendern noch zu
+           loeschen; angelegt wird es ueber den Haken in der Karte eines
+           Standorts. Die Standortseite aus E-S9-18 loest sie in AP5 ab. */ ?>
+  <?php if ($vehOhne): ?>
+    <?php ui_karte_start(['titel' => 'Ohne Standort', 'id' => 'adsd-ohne', 'zu' => true,
+                          'zahl' => count($vehOhne) . ' Rettungsmittel']); ?>
+      <p class="feld-hinweis">Bergwacht, Veranstaltung und Sonstiges brauchen keinen
+         Standort. Sie haben dafür keine Vorschlagslisten — die hängen am Standort.</p>
+      <section class="sd-liste" id="adsd-ohne-veh">
+        <?php foreach ($vehOhne as $v):
+              $vid = (int)$v['id'];
+              $klein = VEHICLE_TYPEN[(string)$v['typ']]['label'] ?? (string)$v['typ'];
+              if ((string)($v['kurz'] ?? '') !== '') { $klein .= ' · ' . (string)$v['kurz']; }
+              sd_zeile([
+                  'seite' => 'admin_stammdaten.php?t=rettungsmittel',
+                  'name'  => (string)$v['name'], 'klein' => $klein,
+                  'anker' => 'adsd-ohne-veh', 'praefix' => 'veh', 'id' => $vid,
+                  'base_id' => 0,
+                  /* Ohne diesen Schluessel gaebe es kein „Bearbeiten" —
+                     dieselbe Luecke wie in der Kontoansicht. */
+                  'bearbeiten_href' => 'admin_stammdaten.php?t=rettungsmittel&ev=' . $vid
+                                     . '#adsd-ohne-veh',
+                  'del_action' => 'veh_del',
+                  'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ systemweit löschen? '
+                               . 'Dokumentierte Diensttage bleiben unverändert.',
+                  'plaketten' => ui_artzeichen((string)$v['kind'], '', (string)$v['typ']),
+              ]);
+        endforeach; ?>
+      </section>
+    <?php ui_karte_ende(true); ?>
+  <?php endif; ?>
 
 <?php endif; ?>
 
