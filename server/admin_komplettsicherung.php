@@ -160,7 +160,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                         'menue' => 'admin_komplettsicherung']); ?>
 
   <form method="post" id="f-sichern" hidden
-        data-confirm="Jetzt ein Komplett-Backup der ganzen Installation erzeugen? Es umfasst alle Konten, Stammdaten und Spuren; das dauert und belegt Platz. Was in einem Durchgang nicht fertig wird, läuft mit dem Aufräumjob weiter."
+        data-confirm="Jetzt ein Komplett-Backup der ganzen Installation erzeugen? Es umfasst alle Konten, Stammdaten und GPS-Daten; das dauert und belegt Platz. Was in einem Durchgang nicht fertig wird, läuft mit dem Aufräumjob weiter."
         data-confirm-ok="Sichern" data-confirm-tone="normal">
     <?= csrf_field() ?><input type="hidden" name="action" value="jetzt_sichern">
   </form>
@@ -176,7 +176,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
   <?php ui_titelzeile([
       'titel' => 'Komplett-Backup',
       'unter' => 'Die ganze Installation als versiegelter SQL-Dump: alle Konten, '
-               . 'Stammdaten, Geräte, Schlüsselhüllen und Spuren. Nicht enthalten '
+               . 'Stammdaten, Geräte, Schlüsselhüllen und GPS-Daten. Nicht enthalten '
                . 'ist <code>config.php</code> — sie gehört ins Wiederanlaufpaket.',
       'aktionen' => $schluesselDa
           ? ($laeuft

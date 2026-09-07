@@ -14,6 +14,111 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.8.0] — 2026-09-07
+
+### Web — die Karte wird leiser, und die Pfeile zeigen wieder hin (S9/AP3)
+
+**Ein Standort-Schild mit Doppelring maß 60 px.** Auf der Handykarte, die
+160 px hoch ist, deckte es mehr als ein Drittel der Höhe — und darunter lag
+der Ort, den man sehen wollte. Der Grund war die Bauart: Der Farbring lag als
+zweiter und dritter Rahmen **außerhalb** des dunkelblauen Randes, also kamen
+Randstrich, Schnee, Farbe, Schnee und Farbe übereinander.
+
+Jetzt **ersetzt** der Farbrand den dunkelblauen (Mockup M-S9-01, Variante V1,
+freigegeben am 06.09.2026). Nachgemessen im Browser: **32 px** ohne
+Aufzeichnung, 32 mit Start oder Ende, **38** mit beidem — vorher 36, 48 und
+60. Der Einsatzort-Kreis geht von 32 auf **28**, der Ringpunkt von 16 auf
+**14**. Außen liegt am Schild immer **1 px Schnee**, damit Blau nicht auf
+Kartengrün und Rot nicht auf Braun stößt; der Einsatzort-Kreis bekommt ihn
+nicht — Orange kommt auf der Karte nicht vor.
+
+Nebenbei zwei Dinge, die dabei auffielen und mit repariert sind: Ein
+**beringtes Schild hatte keinen Schlagschatten** (die Ringregeln
+überschrieben `box-shadow` vollständig), und die Bedeutung des Tokens
+`--geo-ring` hat sich von „Schrittweite eines Schattens" zu „Randstärke"
+gewandelt — der Kommentar sagt das jetzt.
+
+**Die Richtungspfeile haben sich nie gedreht** (Backlog Nr. 72). `geo.js`
+rechnet die Laufrichtung aus zwei Bildschirmpunkten und setzt sie als
+`transform: rotate(…)` auf ein `<span>` — und an einem Inline-Element wirkt
+`transform` nicht. Alle Pfeile zeigten nach Norden. Auf einem
+Nord-Süd-Abschnitt sah das richtig aus, und deshalb ist es lange
+stehengeblieben.
+
+**Die Winkelrechnung war die ganze Zeit korrekt** — sie kam nur nie an. Das
+ist gemessen, nicht vermutet: Ein 20-px-Kasten mit `rotate(45deg)` misst
+28,3 px, wenn die Drehung greift, und 20 px, wenn nicht; gemessen waren 20.
+Die Bildschirmmatrix des SVG lautete `a=0,833 b=0 c=0 d=0,833` bei
+behaupteten 90 Grad — reine Skalierung, kein Drehanteil. Nachher zeigen
+**12 von 12 Pfeilen** in 30-Grad-Schritten auf **0,1 Grad genau** in ihre
+Richtung.
+
+Der Pfeil bekommt dafür einen ausdrücklichen Kasten (`display:flex` mit
+`--symbol`), nicht `inline-block`: Bei einem Inline-Block hinge der Drehpunkt
+an der Zeilenhöhe der Karte, und der Pfeil kreiste um einen Punkt, der sich
+bei der nächsten Schriftänderung verschiebt.
+
+**Derselbe Fehler steckte drei Zeilen darüber**, und den hatte niemand
+gemeldet: Der kleine Punkt des manuellen Abfahrtorts (`.geo-punkt`) hatte
+`width` und `height` ohne `display`. Gemessen in der Tagesübersicht:
+**4 × 18 px statt 12 × 12**, und die Spurfarbe des Einsatzes lag in einem
+0 px breiten Inhaltskasten — sichtbar blieb ein weißer Strich. Aufgenommen
+als **Backlog Nr. 153** und im selben Zug behoben.
+
+**Die Windenkacheln folgen jetzt der Fähigkeit, nicht der Zählung**
+(Nr. 104). Bisher erschienen sie nur, wenn im Zeitraum tatsächlich eine
+Winde geflogen wurde. Damit ließ sich „null Windeneinsätze" nicht von „Winde
+nicht eingerichtet" unterscheiden — und das ist ein Unterschied: Das eine ist
+eine Aussage über den Dienst, das andere eine über die Stammdaten.
+`api/range.php` liefert dafür `faehigkeiten`, und die Kacheln stehen, sobald
+ein **Luft**-Diensttag des Zeitraums die Winde trägt, auch mit dem Wert 0.
+
+Die Einschränkung auf Luft ist kein Beiwerk: Die Migration
+`2026_08_17_notarzt_erweiterung` hat seinerzeit **jedem** bestehenden
+Diensttag beide Fähigkeiten gegeben, ohne nach der Art zu fragen. Auf einem
+gewachsenen Bestand trägt deshalb auch ein NEF-Tag von 2025 die Winde — ohne
+diese Bedingung stünden die Kacheln überall, und die Änderung sähe richtig
+aus, während sie nur die Altlast zeigte.
+
+**„Spur" heißt für die NutzerIn „GPS-Daten"** (Nr. 110). Sie weiß, was ein
+GPS ist; „Spur" liest sich wie eine Fährte. Umbenannt sind **72 sichtbare
+Zeichenketten in 18 Dateien** und **41 Zeilen im Handbuch** — die Plakette
+der Einsatzansicht, das Aktionsmenü, die ganze Seite „GPS-Daten des
+Diensttages", die Jobnamen im Betrieb, der Sicherungs- und Importweg.
+
+Fachbegriff bleibt er, wo er einer ist: im Code (`spur_lib.php`), in
+`docs/Technik.md`, im JSON-Vertrag und im Sicherungsformat — dort heißt die
+Datei im Archiv „Spurteil", und eine Meldung, die sie anders nennt, hilft
+beim Suchen nicht. Auch der GPX-Fachbegriff bleibt: Eine GPX-Datei enthält
+Spuren, und der Satz, der das erklärt, sagt es weiter so. Die Wortliste hat
+dafür eine **neue Regel** und sechs begründete Ausnahmen bekommen; sie steht
+auf 0/0/0.
+
+**Die Plakette nennt keine Zahl mehr.** Sie hieß „Spur · 852 Punkte" bzw.
+„Spur ausgedünnt · 113 von 443 Punkten"; jetzt heißt sie „GPS-Daten" und
+„GPS-Daten ausgedünnt". Wie viele Messpunkte eine Aufzeichnung hat, sagt
+nichts über den Einsatz — es sagt etwas über das Speicherverfahren. Wer die
+Zahl braucht, findet sie auf der Seite „GPS-Daten des Diensttages", wo sie
+zur Sache gehört.
+
+**Drei neue Zeichen** (Mockup M-S9-02, freigegeben 06.09.2026): Bergwacht
+(Tabler „mountain"), Veranstaltung („building-stadium"), Sonstiges
+(„dots-circle-horizontal"). Der Vorrat wächst von 49 auf **52**.
+`dt_art_symbol()` nimmt den Diensttag-**Typ** schon entgegen und stellt ihn
+vor die Betriebsart — ein Bergwacht-Dienst trägt den Berg, gleich ob er
+fliegt oder fährt, und der Tooltip nennt beides („Bergwacht,
+luftgebunden"). Im Datenmodell gibt es den Typ noch nicht; er kommt mit AP4.
+Bis dahin ist der Parameter immer `null`, und die Funktion antwortet
+unverändert.
+
+**Die Android-App bleibt außen vor.** Fünf ihrer sichtbaren Texte sagen noch
+„Spur". Sie zählt getrennt, braucht einen eigenen APK-Bau und einen
+Emulatorlauf; Schritt 9a arbeitet ohnehin an ihr und nimmt sie dort mit
+(Entscheidung des Auftraggebers, 07.09.2026). Die Wortliste führt das als
+**befristete** Ausnahme, Klasse D — sie wird mit 9a gelöscht.
+
+Keine Migration.
+
 ## [Web 15.7.0] — 2026-09-07
 
 ### Web — eine Adresse statt zweier, und zwei Schalter davor (S9/AP2)

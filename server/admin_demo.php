@@ -292,7 +292,7 @@ ui_seite_start(['titel' => 'Demo-Konto']);
       <p class="feld-hinweis"><strong>Was der Reset umfasst.</strong></p>
       <div class="text">
       <ul>
-        <li>Diensttage, Einsätze, Ruhesegmente, Spuren, Stammdaten — vollständig
+        <li>Diensttage, Einsätze, Ruhesegmente, GPS-Daten, Stammdaten — vollständig
             ersetzt.</li>
         <li>Geräte, offene Kopplungssitzungen, Papierkorb und Sperrliste — auch
             das, was Besucher angelegt haben.</li>

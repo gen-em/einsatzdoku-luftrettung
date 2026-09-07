@@ -489,7 +489,7 @@ function export_track(array $b, int $userId): never
      * diese Pruefung ist die zweite Schranke, nicht die erste. */
     if (empty($b['patient'])) {
         json_out(['error'   => 'personenbezogen',
-                  'meldung' => 'GPX-Spuren enden am Einsatzort und sind deshalb an '
+                  'meldung' => 'Die GPS-Daten im GPX enden am Einsatzort und sind deshalb an '
                              . 'die personenbezogenen Angaben gebunden.'], 403);
     }
 

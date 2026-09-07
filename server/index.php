@@ -122,7 +122,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
             zweiten</strong>.
             Das entsteht, wenn zwei Geräte denselben Dienst aufzeichnen: Beide
             legen einen eigenen Diensttag an, und dann steht alles doppelt —
-            derselbe Einsatz zweimal, dieselbe Spur zweimal.
+            derselbe Einsatz zweimal, dieselben GPS-Daten zweimal.
           <?php else: ?>
             Dieser Diensttag überschneidet sich zeitlich mit
             <strong><?= count($ueberlappungen) ?> weiteren</strong>. Das
@@ -214,7 +214,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
              * Symbol `karte` kommt aus dem vorhandenen Vorrat — fuer
              * „herunterladen" gibt es keines, und ein neues Zeichen braucht
              * dieselbe Freigabe wie ein neuer Baustein. */
-            ['text' => 'Spuren als GPX', 'symbol' => 'karte',
+            ['text' => 'GPS-Daten als GPX', 'symbol' => 'karte',
              'href' => 'tag_spuren.php?d=' . (int)$selDay, 'attr' => 'id="dayspurenlink"'],
             /* GPX HEREIN (S4/A3, E-S4-18). Es steht neben „Spuren als GPX" —
              * hinaus und herein sind dieselbe Sache in zwei Richtungen, und

@@ -76,7 +76,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
                * — eine Spur endet am Einsatzort und tut damit dasselbe. Ohne
                * die Rueckfrage haette dieselbe Anwendung zwei Tueren mit zwei
                * verschiedenen Massstaeben. */
-              $eintraege[] = ['text' => 'Spur als GPX',
+              $eintraege[] = ['text' => 'GPS-Daten als GPX',
                               'href' => 'gpx.php?art=mission&id=' . $mid,
                               'attr' => 'data-confirm="Die Datei zeigt den '
                                       . 'gefahrenen oder geflogenen Weg — also '
@@ -599,8 +599,8 @@ async function init(){
   const spurPlakette = SPUR.hat
     ? ' ' + plakette(SPUR.stufe === 3 ? 'orange' : 'neutral',
         SPUR.stufe === 3
-          ? `Spur ausgedünnt · ${SPUR.n} von ${SPUR.n0} Punkten`
-          : `Spur · ${SPUR.n} Punkte`)
+          ? 'GPS-Daten ausgedünnt'
+          : 'GPS-Daten')
     : '';
   const kennzeichen = plakette('neutral', ORIGIN_LABEL[m.origin] || m.origin || 'Uhr')
     + (m.edited ? ' ' + plakette('neutral', 'editiert') : '')

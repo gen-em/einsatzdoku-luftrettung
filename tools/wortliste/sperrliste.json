@@ -142,6 +142,13 @@
       "gross": true,
       "ersatz": "wie taste-start",
       "grund": "Wie taste-start."
+    },
+    {
+      "id": "spur",
+      "regex": "\\bSpur(?:en|punkte?|daten|teile?n?)?\\b",
+      "ersatz": "GPS-Daten — in der Mehrzahl und ohne Zahl; „Aufzeichnung“, wo eine einzelne gemeint ist",
+      "grund": "Aufgestellt in S9/AP3 (E-S9-03, PS-9, Backlog Nr. 110). „Spur“ ist der Fachbegriff des Projekts und bleibt, wo er Fachbegriff ist: im Code (spur_lib.php, spur_*), in docs/Technik.md, im JSON-Vertrag und im Sicherungsformat — CLAUDE.md 4 nennt ihn dort namentlich. Was eine NutzerIn LIEST, heisst „GPS-Daten“: Sie weiss, was ein GPS ist, und „Spur“ liest sich wie eine Faehrte.\nGROSSGESCHRIEBEN, und das ist der Kern des Musters: Es soll das deutsche Substantiv im Fliesstext treffen, nicht den Bezeichner. `$spuren`, `spur_lesen()`, `SPUR.n` und `spurteile.length` sind Code und keine Anzeige; klein- und grossgeschrieben zugleich zu suchen ergab beim ersten Versuch 472 Treffer, von denen keine zwanzig eine Anzeige waren.",
+      "gross": true
     }
   ],
   "fallen": [

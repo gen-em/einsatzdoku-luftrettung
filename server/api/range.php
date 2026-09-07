@@ -131,6 +131,44 @@ try {
         $jeArt[$art === 'air' || $art === 'ground' ? $art : 'neutral'] += $n;
     }
 
+    /* ---- Was der Zeitraum KONNTE, nicht was er getan hat (E-S9-04) --------
+     *
+     * Bis Web 15.7.0 entschied die Zeitraumuebersicht ueber die beiden
+     * Windenkacheln aus der Einsatzliste: keine Winde geflogen, keine Kachel.
+     * Damit liess sich „null Windeneinsaetze" nicht von „Winde nicht
+     * eingerichtet" unterscheiden — und das erste ist eine Aussage ueber den
+     * Dienst, das zweite eine ueber die Stammdaten. Der Auftraggeber will die
+     * Aussage (PS-4). Also liefert die Antwort, welche Faehigkeiten die
+     * Diensttage des Zeitraums TRAGEN.
+     *
+     * NUR LUFT. `day_capabilities` fuehrt weder Konto noch Papierkorb, der
+     * Join auf `days` ist deshalb Pflicht — und die Einschraenkung auf
+     * `kind = 'air'` ist es auch: Die Migration `2026_08_17_notarzt_erweiterung`
+     * hat 2026 JEDEM damals bestehenden Diensttag beide Faehigkeiten
+     * gegeben, ohne nach der Art zu fragen (migration_lib.php). Auf einem
+     * gewachsenen Bestand traegt deshalb auch ein NEF-Tag von 2025 die Winde.
+     * Ohne diese Zeile stuenden die Kacheln in jedem Zeitraum, der einen
+     * Alttag enthaelt — und die Aenderung saehe richtig aus, waehrend sie nur
+     * die Altlast zeigt. `db.php` sagt es ohnehin: Faehigkeiten kommen
+     * ausschliesslich an luftgebundenen Rettungsmitteln vor.
+     *
+     * BERGWACHT FAEHRT MIT, obwohl heute keine Kachel daran haengt. Der
+     * Schluessel spannt sich ueber VEHICLE_CAPABILITIES auf und waechst mit
+     * dem Katalog; eine Antwort, die nur die Haelfte des Katalogs nennt,
+     * muesste beim naechsten Verbraucher erweitert werden. */
+    $faehig = array_fill_keys(array_keys(VEHICLE_CAPABILITIES), false);
+    $fq = db()->prepare('SELECT c.capability
+                           FROM day_capabilities c
+                           JOIN days d ON d.id = c.day_id
+                          WHERE d.user_id = ? AND d.day BETWEEN ? AND ?
+                            AND d.deleted_at IS NULL AND d.kind = ?
+                          GROUP BY c.capability');
+    $fq->execute([$userId, $von, $bis, 'air']);
+    foreach ($fq->fetchAll() as $z) {
+        $k = (string)$z['capability'];
+        if (array_key_exists($k, $faehig)) { $faehig[$k] = true; }
+    }
+
     /* Ueber json_out() wie die uebrigen neun Endpunkte. Diese Datei schrieb
        ihre Antworten selbst und ging damit auch am `Cache-Control: no-store`
        vorbei, das json_out() setzt — obwohl der Kommentar dort „Zeitraum"
@@ -183,6 +221,10 @@ try {
         'bis'      => $bis,
         'tage'     => $gesamt,
         'tage_art' => $jeArt,
+        /* Kennungen und Wahrheitswerte, keine Beschriftungen: Die stehen in
+           zeitraum.php an der Kachel, und die Antwort geht ohne
+           JSON_UNESCAPED_UNICODE hinaus (siehe unten). */
+        'faehigkeiten' => $faehig,
         'bases'    => $bases,
         'missions' => $missions,
     ]);

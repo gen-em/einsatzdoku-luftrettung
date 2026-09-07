@@ -800,27 +800,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     entfallen (R39). Wieder aufzunehmen, falls Wachen oder Verbände als
     organisierte Träger auftreten. Zuordnung: nach v1.0.
 
-72. **Die Richtungspfeile auf der Spur zeigen teilweise in die falsche
-    Richtung.**
-    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers mit
-    Bildschirmfoto (Rahmenplan Fassung 16).* Auf einer Spur, die von Nordwest
-    nach Südost läuft, zeigt der Pfeil senkrecht nach oben. **Wahrscheinliche
-    Ursache, am Code gelesen und nicht im Browser nachgestellt:**
-    `pfeilIcon()` in `assets/geo.js` dreht den Pfeil mit
-    `style="transform:rotate(…deg)"` auf einem `<span class="geo-pfeil">`;
-    die Regel `.geo-pfeil` in `style.css` setzt nur die Farbe, keine
-    Anzeigeart, und die SVG darin ist ebenfalls inline. `transform` wirkt
-    nach CSS-Regel **nicht** auf nicht ersetzte Inline-Elemente — die
-    Drehung wird verworfen, jeder Pfeil steht ungedreht und zeigt nach
-    Norden. „Teilweise falsch" passt dazu: Auf Abschnitten Richtung Norden
-    stimmt der Pfeil zufällig. Die Winkelrechnung selbst
-    (`atan2` plus 90 Grad) ist richtig. **Zu tun:** `.geo-pfeil` auf
-    `display:inline-block` (oder `block`) setzen, dann im Browser über
-    mehrere Zoomstufen und Laufrichtungen prüfen; falls der Pfeil danach
-    immer noch abweicht, die Rechnung gegen die Projektion nachmessen.
-    Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
-    Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
-
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
     hat.**
     *Aufgenommen 02.09.2026 als Frage des Auftraggebers (Rahmenplan Fassung
@@ -1128,32 +1107,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     E-S4-16 dann um den Unterschied App-Signaturschlüssel / Upload-Schlüssel
     ergänzen. **Nach v1.0**, wenn die Releases häufiger werden.
 
-103. **Kompaktere Buttons Einsatzort, Standort, Zielklinik.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-3), Schritt 8 (S9).*
-    Die drei Buttons sollen kleiner werden; Prüfidee: die farbige Umrandung
-    der Icons von Standort und Zielklinik als Anzeige Einsatzbeginn/-ende
-    nutzen und die separate Anzeige sparen — ob das gestalterisch trägt, ist
-    offen; Icon-Größe separat justierbar. Liefergegenstand sind Mockups
-    mehrerer Optionen **im S9-Konzept** (Fable-Schritt, F8). Hängt an der
-    Bedienhöhe am Schreibtisch (Nr. 74, S8). Offen: F3–F6 (Rahmenplan
-    Abschnitt 6).
-    *Konzept S9 (07.09.2026): E-S9-12, M-S9-01 V1 (Farbring statt Rand, 30/28/3 px; AP3).*
-
-104. **Windenkacheln fehlen bei Nullwert.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-4), Schritt 8 (S9).*
-    In Monats- und Jahresansicht fehlen die Windenkacheln, wenn im Zeitraum
-    keine Windeneinsätze geflogen wurden. Soll: Sobald ein Hubschrauber mit
-    Winde als Einsatzmittel ausgewählt war, erscheinen die Kacheln — auch
-    mit „0" (F7).
-    *Konzept S9 (07.09.2026): E-S9-04 (Fähigkeit statt Zählung, `api/range.php` liefert `faehigkeiten`; AP3).*
-
-105. **Hubschrauber-Icon in der linken Leiste.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-5), Schritt 8 (S9).*
-    Das Icon neben den Tagesdaten überzeugt nicht; Varianten entstehen im
-    S9-Konzept (Fable-Schritt, F8), nicht vorab.
-    *Konzept S9 (07.09.2026): E-S9-13, M-S9-02 — Hubschrauber bleibt Tabler „helicopter"; erledigt sich mit „Ist".*
-
-
 108. **Schloss-Icon und Legende für verschlüsselte Felder.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.1), Schritt 8
     (S9).*
@@ -1173,13 +1126,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Verschlüsselung (Migration); die Antwort geht in das Bedrohungsmodell
     des R17-Reviews ein (Nr. 43, R69). Fable-Schritt.
     *Konzept S9 (07.09.2026): E-S9-01 (Notizen im pat_blob, Katalogschlüssel `store => pat`, stille Anhebung; AP7).*
-
-110. **Kachel „Spur" heißt „GPS-Daten".**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-9), Schritt 8 (S9).*
-    Die Kachel neben „editiert" zeigt z. B. „Spur · 852 Punkte"; „Spur" ist
-    schwer verständlich. Soll: „GPS-Daten", die Punktzahl entfällt (F15);
-    Wortliste nachziehen.
-    *Konzept S9 (07.09.2026): E-S9-03 („GPS-Daten" überall in der NutzerInnen-Sicht; AP3).*
 
 111. **Neue Rettungsmittel-Arten.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.1), Schritt 8
@@ -1640,6 +1586,193 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+153. **Der kleine Punkt des Abfahrtorts hat keinen Kasten und zeigt seine Farbe nie.**
+    *Aufgenommen 07.09.2026 in S9/AP3, gefunden bei der Aufklärung zu Nr. 72.*
+    `.geo-punkt` (`assets/geo.js`, `markerPunkt()`) setzt `width` und
+    `height` an einem `<span>` — und an einem nicht ersetzten Inline-Element
+    wirken beide **nicht**. Gemessen in der Tagesübersicht am 07.09.2026:
+    **4 × 18 px statt 12 × 12**; übrig blieben die beiden 2-px-Ränder als
+    weißer Strich, und die Spurfarbe des Einsatzes (`background`, aus
+    `EdGeo.spurFarbe()`) lag in einem 0 px breiten Inhaltskasten und war nie
+    zu sehen. Betroffen: `index.php` und `einsatz.php`, je der manuelle
+    Abfahrtort der Luftlinie. **Derselbe Fehler wie Nr. 72**, drei Zeilen
+    darüber im Stylesheet, und in keinem Backlog-Punkt.
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3).** Eine Zeile:
+    `display:block`. Gemessen nachher **12 × 12 px**, Fläche
+    `rgb(31, 78, 156)` — die Spurfarbe steht. Der Weg
+    `ap3-geo-punkt-sichtbar` der Klickprobe misst es.
+
+72. **Die Richtungspfeile auf der Spur zeigen teilweise in die falsche
+    Richtung.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers mit
+    Bildschirmfoto (Rahmenplan Fassung 16).* Auf einer Spur, die von Nordwest
+    nach Südost läuft, zeigt der Pfeil senkrecht nach oben. **Wahrscheinliche
+    Ursache, am Code gelesen und nicht im Browser nachgestellt:**
+    `pfeilIcon()` in `assets/geo.js` dreht den Pfeil mit
+    `style="transform:rotate(…deg)"` auf einem `<span class="geo-pfeil">`;
+    die Regel `.geo-pfeil` in `style.css` setzt nur die Farbe, keine
+    Anzeigeart, und die SVG darin ist ebenfalls inline. `transform` wirkt
+    nach CSS-Regel **nicht** auf nicht ersetzte Inline-Elemente — die
+    Drehung wird verworfen, jeder Pfeil steht ungedreht und zeigt nach
+    Norden. „Teilweise falsch" passt dazu: Auf Abschnitten Richtung Norden
+    stimmt der Pfeil zufällig. Die Winkelrechnung selbst
+    (`atan2` plus 90 Grad) ist richtig. **Zu tun:** `.geo-pfeil` auf
+    `display:inline-block` (oder `block`) setzen, dann im Browser über
+    mehrere Zoomstufen und Laufrichtungen prüfen; falls der Pfeil danach
+    immer noch abweicht, die Rechnung gegen die Projektion nachmessen.
+    Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
+    Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3, E-S9-12).** Der Verdacht
+    im Punkt stimmte, und er war die ganze Ursache: `.geo-pfeil` ist ein
+    `<span>`, das Stylesheet setzte daran nur die Farbe — und `transform`
+    wirkt an einem nicht ersetzten Inline-Element **nicht**. Die
+    Winkelrechnung in `geo.js` war die ganze Zeit richtig; sie kam nur nie an.
+
+    **Gemessen, nicht geschlossen.** Eine Kontrollprobe zeigt es: Ein
+    20-px-Kasten mit `rotate(45deg)` misst **28,3 px** (= 20·√2), wenn die
+    Drehung greift, und **20 px**, wenn nicht — gemessen waren 20. Die
+    Bildschirmmatrix des SVG lautete `a=0,833 b=0 c=0 d=0,833` bei
+    behaupteten 90 Grad, also reine Skalierung ohne Drehanteil. Nachher
+    treffen **12 von 12 Pfeilen** in 30-Grad-Schritten ihren Sollwinkel auf
+    **0,1 Grad** genau, und auf der Spur des Referenzeinsatzes **2 von 2**.
+
+    **Der berechnete Stil verrät den Fehler nicht** — `getComputedStyle`
+    meldet die Drehmatrix auch am Inline-Element. Wer ihn in den
+    Entwicklerwerkzeugen prüft, bekommt „sieht richtig aus" zurück; nachweisbar
+    ist er nur an der Geometrie. Der Weg `ap3-pfeile-drehen` der Klickprobe
+    misst seither die Bildschirmmatrix.
+
+    *Der Weg:* `.geo-pfeil` bekommt einen ausdrücklichen Kasten
+    (`display:flex` mit `--symbol`), nicht `inline-block` — bei einem
+    Inline-Block hinge der Drehpunkt an der Zeilenhöhe der Karte und
+    verschöbe sich bei der nächsten Schriftänderung. Die zweite im Konzept
+    zugelassene Möglichkeit („die Drehung wandert in das SVG") ist verworfen:
+    `pfeil-hoch.svg` ist zugleich die Sortierrichtung von sieben
+    Tabellenköpfen, sechs davon über `.symbol-oben` gedreht — ein
+    Winkelparameter an `edSymbol()` stellte eine zweite Drehmechanik neben
+    die vorhandene.
+
+103. **Kompaktere Buttons Einsatzort, Standort, Zielklinik.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-3), Schritt 8 (S9).*
+    Die drei Buttons sollen kleiner werden; Prüfidee: die farbige Umrandung
+    der Icons von Standort und Zielklinik als Anzeige Einsatzbeginn/-ende
+    nutzen und die separate Anzeige sparen — ob das gestalterisch trägt, ist
+    offen; Icon-Größe separat justierbar. Liefergegenstand sind Mockups
+    mehrerer Optionen **im S9-Konzept** (Fable-Schritt, F8). Hängt an der
+    Bedienhöhe am Schreibtisch (Nr. 74, S8). Offen: F3–F6 (Rahmenplan
+    Abschnitt 6).
+    *Konzept S9 (07.09.2026): E-S9-12, M-S9-01 V1 (Farbring statt Rand, 30/28/3 px; AP3).*
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3, E-S9-12).** Variante V1
+    des Mockups M-S9-01, freigegeben am 06.09.2026: **Der Farbring ist jetzt
+    der Rand** und liegt nicht mehr darum herum. Nachgemessen im Browser
+    (Klickprobe `ap3-schildmasse`): **32 px** ohne Aufzeichnung, 32 mit Start
+    oder Ende, **38** mit beidem — vorher 36, 48 und 60. Einsatzort-Kreis
+    32 → **28**, Ringpunkt 16 → **14**, mit beidem 28 → **20**. Symbol im
+    Schild 20 → **18**, im Kreis 20 → **16**.
+
+    Außen liegt am Schild immer **1 px Schnee** als Trennlinie zur Karte (F6);
+    der Einsatzort-Kreis bekommt sie nicht, weil Orange auf keiner der drei
+    Kartenebenen vorkommt und die freigegebene Maßleiste 28 px nennt.
+
+    Zwei Dinge fielen dabei auf und sind mit behoben: Ein **beringtes Schild
+    hatte keinen Schlagschatten** (die Ringregeln überschrieben `box-shadow`
+    vollständig), und der **Ringpunkt ist antippbar** — er öffnet ein Popup.
+    E-S9-12 nennt im selben Absatz 24 px als Untergrenze am Finger
+    (WCAG 2.5.8), setzt ihn aber auf 14. Beides zugleich geht nur so: Die
+    Zeichnung bleibt 14 px und sitzt in einer durchsichtigen 24-px-Fläche.
+    Vorher waren es 16 px, also ebenfalls darunter — der Fehler ist älter als
+    dieses Paket.
+
+104. **Windenkacheln fehlen bei Nullwert.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-4), Schritt 8 (S9).*
+    In Monats- und Jahresansicht fehlen die Windenkacheln, wenn im Zeitraum
+    keine Windeneinsätze geflogen wurden. Soll: Sobald ein Hubschrauber mit
+    Winde als Einsatzmittel ausgewählt war, erscheinen die Kacheln — auch
+    mit „0" (F7).
+    *Konzept S9 (07.09.2026): E-S9-04 (Fähigkeit statt Zählung, `api/range.php` liefert `faehigkeiten`; AP3).*
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3, E-S9-04).** Kehrt
+    E30/A13d ausdrücklich um. `api/range.php` liefert jetzt `faehigkeiten`,
+    und die beiden Windenkacheln stehen, sobald ein **Luft**-Diensttag des
+    Zeitraums die Winde trägt — auch mit dem Wert 0. Gemessen mit der
+    Klickprobe (`ap3-windenkacheln-nach-faehigkeit`), alle drei Fälle über die
+    Oberfläche hergestellt und danach zurückgestellt: Januar mit Windeneinsatz
+    **2 Kacheln**; Januar **ohne** Windeneinsatz, Fähigkeit steht: **2
+    Kacheln mit „0 Winden-Cycles" und „0,0 Ø Winden-Cycles / Flugtag"**;
+    November ohne Fähigkeit: **0 Kacheln**.
+
+    **Die Einschränkung auf Luft ist kein Beiwerk.** Die Migration
+    `2026_08_17_notarzt_erweiterung` hat seinerzeit jedem bestehenden
+    Diensttag beide Fähigkeiten gegeben, ohne nach der Art zu fragen. Auf
+    einem gewachsenen Bestand trägt deshalb auch ein NEF-Tag von 2025 die
+    Winde — ohne diese Bedingung stünden die Kacheln überall, und die
+    Änderung sähe richtig aus, während sie nur die Altlast zeigte.
+    Boden und Gemischt sind unberührt, wie das Konzept es verlangt.
+
+105. **Hubschrauber-Icon in der linken Leiste.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-5), Schritt 8 (S9).*
+    Das Icon neben den Tagesdaten überzeugt nicht; Varianten entstehen im
+    S9-Konzept (Fable-Schritt, F8), nicht vorab.
+    *Konzept S9 (07.09.2026): E-S9-13, M-S9-02 — Hubschrauber bleibt Tabler „helicopter"; erledigt sich mit „Ist".*
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3, E-S9-13).** Mockup
+    M-S9-02, freigegeben am 06.09.2026: **Der Hubschrauber bleibt.** Die
+    eigene Strichzeichnung (Variante B) und die Bildmarken (C, C2) sind
+    gesehen und verworfen; Tabler „helicopter" und „ambulance" bleiben, wie
+    sie sind. Der Punkt ist damit mit „Ist" beantwortet — was er verlangte,
+    war die Prüfung, nicht der Wechsel.
+
+    Neu sind statt dessen die **Zeichen der Diensttag-Typen**:
+    `bergwacht.svg` (Tabler „mountain"), `veranstaltung.svg`
+    („building-stadium"), `sonstiges.svg` („dots-circle-horizontal").
+    Symbolvorrat **49 → 52**. `dt_art_symbol()` nimmt den Typ schon entgegen
+    und stellt ihn **vor** die Betriebsart — ein Bergwacht-Dienst trägt den
+    Berg, gleich ob er fliegt oder fährt; der Tooltip nennt beides
+    („Bergwacht, luftgebunden"). Im Datenmodell gibt es den Typ noch nicht,
+    er kommt mit AP4; bis dahin ist der Parameter immer `null` und die
+    Funktion antwortet unverändert.
+
+110. **Kachel „Spur" heißt „GPS-Daten".**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-9), Schritt 8 (S9).*
+    Die Kachel neben „editiert" zeigt z. B. „Spur · 852 Punkte"; „Spur" ist
+    schwer verständlich. Soll: „GPS-Daten", die Punktzahl entfällt (F15);
+    Wortliste nachziehen.
+    *Konzept S9 (07.09.2026): E-S9-03 („GPS-Daten" überall in der NutzerInnen-Sicht; AP3).*
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3, E-S9-03).** Umbenannt
+    sind **72 sichtbare Zeichenketten in 18 Dateien** und **41 Zeilen im
+    Handbuch** — die Plakette der Einsatzansicht, das Aktionsmenü, die ganze
+    Seite „GPS-Daten des Diensttages", die Jobnamen im Betrieb, der
+    Sicherungs- und Importweg. `grep -c "Spur" docs/Handbuch.md` ist von
+    **41 auf 0** gegangen (bis auf ein Zitat des alten Wortlauts mit
+    Versionsangabe).
+
+    **Fachbegriff bleibt er, wo er einer ist:** im Code (`spur_lib.php`), in
+    `docs/Technik.md`, im JSON-Vertrag und im Sicherungsformat — dort heißt
+    die Datei im Archiv „Spurteil", und eine Meldung, die sie anders nennt,
+    hilft beim Suchen nicht. Auch der GPX-Fachbegriff bleibt: Eine GPX-Datei
+    enthält Spuren, und der Satz, der das erklärt, sagt es weiter so.
+
+    Die **Plakette nennt keine Zahl mehr**: „GPS-Daten" statt
+    „Spur · 852 Punkte", „GPS-Daten ausgedünnt" statt „Spur ausgedünnt · 113
+    von 443 Punkten". Wie viele Messpunkte eine Aufzeichnung hat, sagt nichts
+    über den Einsatz; wer die Zahl braucht, findet sie auf der Seite
+    „GPS-Daten des Diensttages".
+
+    Die **Wortliste** hat dafür eine neue Regel bekommen (`spur`,
+    großgeschrieben, damit sie das Substantiv trifft und nicht den
+    Bezeichner) und sechs begründete Ausnahmen; sie steht auf **0/0/0** bei
+    96 Regeln, alle gegriffen.
+
+    **Die Android-App bleibt außen vor.** Fünf ihrer sichtbaren Texte sagen
+    noch „Spur". Sie zählt getrennt, braucht einen eigenen APK-Bau und einen
+    Emulatorlauf; Schritt 9a arbeitet ohnehin an ihr und nimmt sie dort mit
+    (Entscheidung des Auftraggebers, 07.09.2026). Die Wortliste führt das als
+    **befristete** Ausnahme in Klasse D — sie wird mit 9a gelöscht.
 
 70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
     *Zulieferung aus P3; bis Fassung 16 ohne Nummer.* Die Position eines

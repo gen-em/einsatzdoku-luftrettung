@@ -270,7 +270,7 @@ Daten erst nach Server-Bestätigung.
 │   │       │                favicon.png + favicon-fahrzeug.png (erzeugt aus den
 │   │       │                Logodateien, s. tools/logos/); das Fahrzeug-Logo ist bis
 │   │       │                zur Zulieferung ein PLATZHALTER (gestrichelter Rahmen)
-│   │       └── symbole/    49 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
+│   │       └── symbole/    52 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
 │   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
 │   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und
 │   │                       LIESMICH.md mit der Zuordnung Datei -> Tabler-Name ->
@@ -817,17 +817,38 @@ halbe Karte. Browser ohne `ResizeObserver` behalten das alte Verhalten.
 
 **Marker-Satz und Spurfarben (`assets/geo.js`, ab Web 9.2.0):** Das
 `EdGeo`-Modul liefert alles, was auf einer Einsatzkarte steht, aus einer
-Hand: `markerStandort()`/`markerZiel()` (weiße Schilder mit Haus- bzw.
-Klinik-Symbol; `ring: 'start' | 'ende' | 'beide'` legt Farbringe für
-Dienstbeginn und -ende darum), `markerEinsatzort()` (oranger Kreis mit
-Einsatzort-Symbol), `markerPunkt()` (kleiner Farbpunkt, z. B. Abfahrt) und
-`pfeile()` (Richtungspfeile alle 140 Bildschirm-Pixel auf einer Spur, neu
-verteilt bei jedem Zoom; der `remove`-Handler der Ebene räumt den Zuhörer
-ab). Alle Marker sind `divIcon`s mit CSS-Klassen (`.geo-schild`,
-`.geo-kreis`, `.geo-ring-*`, `.geo-pfeil`) — Form und Farbe stehen im
-Stylesheet, nicht im Skript. Die **Spurfarben** kommen als Token aus
-`:root` (`--spur-1 … --spur-8`, `--spur-ruhe`); `EdGeo.spurFarbe(i)` liest
-sie per `getComputedStyle`, JS enthält keinen Farbwert.
+Hand — **acht Exporte**, hier vollständig:
+
+| Export | Was | Klasse | Maß |
+|---|---|---|---|
+| `markerStandort()` / `markerZiel()` | weißes Schild mit Haus- bzw. Klinik-Symbol; `ring: 'start' \| 'ende' \| 'beide'` färbt seinen **Rand** | `.geo-schild-kasten`, `.geo-ring-*` | 32 px, mit beidem 38 |
+| `markerEinsatzort()` | oranger Kreis mit Einsatzort-Symbol | `.geo-kreis` | 28 px |
+| `markerRing()` | Ring **ohne** Schild — Anfang oder Ende der Aufzeichnung abseits von Standort und Ziel | `.geo-ringpunkt` in `.geo-ringpunkt-feld` | Zeichnung 14 px, Antippfläche 24 |
+| `markerPunkt()` | kleiner Farbpunkt in der Spurfarbe, für den manuellen Abfahrtort | `.geo-punkt` | 12 px |
+| `pfeile()` | Richtungspfeile alle 140 Bildschirm-Pixel auf einer Spur, neu verteilt bei jedem Zoom (der `remove`-Handler der Ebene räumt den Zuhörer ab) | `.geo-pfeil` | 20 px |
+| `spurFarbe(i)` / `ruheFarbe()` | die Farbe, nicht die Zeichnung | — | — |
+
+Alle Marker sind `divIcon`s; **Form und Farbe stehen im Stylesheet, nicht im
+Skript** (`docs/Design.md` 9.30 beschreibt sie). Die **Spurfarben** kommen als
+Token aus `:root` (`--spur-1 … --spur-8`, `--spur-ruhe`); `EdGeo.spurFarbe(i)`
+liest sie per `getComputedStyle`, JS enthält keinen Farbwert.
+
+> **Die Maße stehen zweimal** — als Token im Stylesheet und als Zahl in
+> `geo.js`, weil Leaflet sie für `iconSize` und `iconAnchor` braucht. Wer
+> eines ändert, ändert beides; sonst wandert der Anker, und es meldet sich
+> nichts. Betroffen sind `--geo-schild`/`SCHILD_PX`, `--geo-kreis`/`KREIS_PX`
+> und `--geo-ringpunkt`/`RINGPUNKT_PX`.
+
+**Zwei Zeichen brauchten seit jeher einen Kasten und hatten keinen** (behoben
+mit Web 15.8.0): `.geo-pfeil` trug seine Drehung und `.geo-punkt` seine Größe
+an einem `<span>` ohne `display` — und an einem nicht ersetzten
+Inline-Element wirken weder `transform` noch `width`. Die Pfeile zeigten
+dadurch ausnahmslos nach Norden (Backlog Nr. 72), der Abfahrtort maß
+4 × 18 px statt 12 × 12 und zeigte seine Farbe nie (Nr. 153). Nachweisbar war
+beides nur an der **Geometrie**: `getComputedStyle` meldet die Drehmatrix
+auch dort, wo sie nichts bewirkt. Gemessen wird deshalb die Bildschirmmatrix
+des SVG (`getScreenCTM`), und dafür gibt es seit AP3 einen Weg der Klickprobe
+(`ap3-pfeile-drehen`).
 
 Der Phasenmarker-Toggle in `einsatz.php` ist als eigenes `L.Control`
 (Position `topleft`, unterhalb des Vollbild-Controls) umgesetzt statt als
@@ -1256,6 +1277,31 @@ Seit Web 6.2.0 kommen dazu: die **Art des Diensttags** (`kind`) und
 Kachelsatz und Divisor, ohne je Tab nachzuladen — `tage_art` wird in SQL
 gerechnet und nicht aus der Einsatzliste, weil ein Diensttag ohne Einsatz dort
 nicht auftaucht, aber mitzählt.
+
+**Seit Web 15.8.0 kommt `faehigkeiten` dazu** (S9/AP3, E-S9-04) — ein flaches
+Objekt über `VEHICLE_CAPABILITIES`, heute `{winch, bergwacht}`, mit
+Wahrheitswerten. Es sagt, welche Fähigkeiten die **Luft**-Diensttage des
+Zeitraums tragen, gerechnet als `GROUP BY` über `day_capabilities` mit Join
+auf `days`. Die Zeitraumübersicht entscheidet daran über die beiden
+Windenkacheln, statt sie aus der Einsatzliste zu erschließen: „null
+Windeneinsätze" ist eine Aussage über den Dienst, „Winde nicht eingerichtet"
+eine über die Stammdaten, und bis dahin waren beide nicht zu unterscheiden.
+
+Drei Bedingungen der Abfrage sind nicht verhandelbar. `day_capabilities`
+führt **weder `user_id` noch `deleted_at`** — der Join auf `days` trägt
+Kontobezug und Papierkorb, sonst zählte die Antwort fremde und gelöschte
+Diensttage mit. Und `d.kind = 'air'`: Die Migration
+`2026_08_17_notarzt_erweiterung` hat seinerzeit **jedem** bestehenden
+Diensttag beide Fähigkeiten gegeben, ohne nach der Art zu fragen (das
+Gegenstück für `vehicle_capabilities` filtert dagegen auf `air`). Auf einem
+gewachsenen Bestand trägt deshalb auch ein NEF-Tag von 2025 die Winde — ohne
+diese Bedingung stünden die Kacheln in jedem Zeitraum, der einen Alttag
+enthält, und die Anzeige sähe richtig aus, während sie nur die Altlast
+zeigte.
+
+`bergwacht` fährt mit, obwohl heute keine Kachel daran hängt: Der Schlüssel
+spannt sich über den Katalog auf und wächst mit ihm; eine Antwort, die nur
+die Hälfte nennt, müsste beim nächsten Verbraucher erweitert werden.
 
 **Fehlerbehandlung der Lese-/Schreib-APIs:** `api/range.php`, `api/day.php`,
 `api/mission.php`, `api/suchindex.php` und `api/backup_data.php` kapseln ihre Datenbankzugriffe in

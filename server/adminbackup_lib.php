@@ -2136,7 +2136,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
             if ($t === null) {
                 $zip->close();
                 return [false, 'Das Spurteil ' . $name . ' liess sich nicht lesen. '
-                             . 'Der Bestand ist eingespielt, es fehlen aber Spuren.', null];
+                             . 'Der Bestand ist eingespielt, es fehlen aber GPS-Daten.', null];
             }
             $liste = [];
             foreach ((array)($t['spuren'] ?? []) as $e) {

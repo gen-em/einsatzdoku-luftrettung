@@ -530,7 +530,7 @@ als Überschrift, darunter Rettungsmittel, Standort und Dienstbeginn in
 einer Zeile. Rechts daneben öffnet der Knopf **„···"** das Aktionsblatt des
 Tages mit **„Einsatz nachtragen"**, **„Diensttag-Daten bearbeiten"**,
 **„Datum ändern"** (Abschnitt 4.2a), **„Anderen Diensttag aufnehmen"**
-(Abschnitt 4.5a), **„Spuren als GPX"** (Abschnitt 4.1a) und **„Tag löschen"**
+(Abschnitt 4.5a), **„GPS-Daten als GPX"** (Abschnitt 4.1a) und **„Tag löschen"**
 (Abschnitt 8). Auf dem Handy fährt
 das Blatt von unten herein, am Desktop steht es als Menü am Knopf; Escape
 schließt es, die Tastatur bedient es vollständig.
@@ -552,12 +552,15 @@ Pro Tag:
   Rettungsmittel nach, dann erscheinen sie.
 - **Karte** mit allen Einsätzen des Tages (jeder in eigener Farbe, beginnend
   mit Orange/Blau/Rot) und dem Ruhe-Track in gedämpftem Graublau. Kleine
-  **Richtungspfeile** auf den Spuren zeigen die Bewegungsrichtung.
+  **Richtungspfeile** auf den Aufzeichnungen zeigen die Bewegungsrichtung.
   Der **Standort** steht als Haus-Schild auf der Karte, der **Einsatzort**
-  als oranger Kreis; Dienstbeginn und -ende tragen Ringe am Standort-Schild.
+  als oranger Kreis. Anfang und Ende der Aufzeichnung sind hier **nicht**
+  gekennzeichnet — die Tagesübersicht zeigt den ganzen Tag, und was ihn
+  einrahmt, steht am einzelnen Einsatz (Abschnitt 4.2). Bis Web 15.8.0
+  behauptete dieser Absatz das Gegenteil.
   **Transportziele zeigt diese Karte nicht** (seit Web 12.3.2): Sie
   beantwortet, wo das Rettungsmittel an diesem Tag unterwegs war, und acht
-  Klinik-Schilder zwischen acht Spuren beantworten eine andere Frage. Das
+  Klinik-Schilder zwischen acht Aufzeichnungen beantworten eine andere Frage. Das
   Transportziel steht in der Einsatzansicht, wo es zu **einem** Einsatz
   gehört.
   Einsätze ohne aufgezeichneten Track verbindet eine **gestrichelte
@@ -605,28 +608,28 @@ Pro Tag:
   steht vollständig in der Einsatzansicht unter **Besatzung** — mit „(abw.)"
   an der betroffenen Rolle (Abschnitt 5). Das Feld selbst ist unverändert.
 
-### 4.1a Spuren des Diensttages
+### 4.1a GPS-Daten des Diensttages
 
-Erreichbar über **„···" → „Spuren als GPX"**. Die Seite zeigt oben die Karte
-des Tages und darunter **jede aufgezeichnete Spur als eigene Zeile**, in der
+Erreichbar über **„···" → „GPS-Daten als GPX"**. Die Seite zeigt oben die Karte
+des Tages und darunter **jede Aufzeichnung als eigene Zeile**, in der
 Reihenfolge, in der der Tag verlaufen ist: Ruhezeit, Einsatz, Ruhezeit,
 Einsatz. Einsätze tragen ihre Nummer. Je Zeile stehen Zeitraum, Punktzahl und,
 wo zutreffend, die Plakette **„ausgedünnt"**.
 
 Wer auf eine Zeile zeigt, sieht auf der Karte, welche Linie gemeint ist; ein
-Klick zoomt auf sie. **GPX** lädt genau diese Spur herunter.
+Klick zoomt auf sie. **GPX** lädt genau diese Aufzeichnung herunter.
 
 **Mehrere auf einmal.** Links in jeder Zeile steht ein Kästchen. Sobald eines
-angekreuzt ist, erscheint unten eine Leiste — sie sagt, wie viele Spuren
+angekreuzt ist, erscheint unten eine Leiste — sie sagt, wie viele Aufzeichnungen
 ausgewählt sind, und **„Auswahl als GPX"** lädt sie als *eine* Datei herunter.
 Die Karte zeigt dabei mit: Was ausgewählt ist, bleibt kräftig, der Rest tritt
 zurück.
 
-In der Datei bleibt jede Spur ein eigener Track — Kartenprogramme zeigen sie
+In der Datei bleibt jede Aufzeichnung ein eigener Track — Kartenprogramme zeigen sie
 getrennt an und ziehen keine Verbindungslinie vom Ende der einen zum Anfang
 der nächsten. Der Dateiname nennt Tag und Anzahl,
 z. B. `diensttag_2026-05-10_4-spuren_original.gpx`; sind Original- und
-ausgedünnte Spuren gemischt, heißt er `…_gemischt.gpx`, und jede Spur trägt
+ausgedünnte Aufzeichnungen gemischt, heißt er `…_gemischt.gpx`, und jede trägt
 ihre Kennzeichnung in der Datei bei sich.
 
 Ein Eintrag ohne Aufzeichnung steht in der Liste, hat aber ein abgeschaltetes
@@ -636,7 +639,7 @@ Diese Seite ist die einzige Stelle, an der auch die **Ruhezeiten** einzeln
 greifbar sind — auf der Tagesübersicht sind sie nur eine schwarze Linie auf
 der Karte.
 
-> **Eine Spur zeigt den Weg, also auch den Einsatzort.** Die Datei ist damit
+> **GPS-Daten zeigen den Weg, also auch den Einsatzort.** Die Datei ist damit
 > so zu behandeln wie die geschützten Angaben selbst, obwohl sie ohne
 > Schlüssel lesbar ist. Der Hinweis steht auf der Seite über der Liste.
 
@@ -648,7 +651,7 @@ der Karte.
 auf der Uhr einen Knopf gedrückt. Er fehlt also in der Liste — aber der
 **Weg** ist aufgezeichnet: Das Gerät hat durchgezeichnet und alles als
 Ruhezeit gebucht. Wer den Einsatz einfach nachträgt, bekommt einen Einsatz
-ohne Spur, und die Fahrt bleibt als Ruhezeit stehen.
+ohne GPS-Daten, und die Fahrt bleibt als Ruhezeit stehen.
 
 Unter der Einsatzliste steht deshalb die Karte **„Ruhesegmente"**: jede
 Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
@@ -673,7 +676,7 @@ zeigte die Ruhezeit später eine Fahrt über 40 km.
 
 **Was danach noch fehlt:** Einsatzort, Alter und Diagnose. Die sind
 verschlüsselt und können nur im Browser entstehen — der geschnittene Einsatz
-ist zunächst ein Einsatz mit Zeiten, Phasen und Spur. Öffne ihn und trag den
+ist zunächst ein Einsatz mit Zeiten, Phasen und GPS-Daten. Öffne ihn und trag den
 Rest wie gewohnt nach (Abschnitt 4.3).
 
 **Rückgängig** steht an derselben Segmentzeile, neben einer Plakette mit dem
@@ -688,7 +691,7 @@ geschnittenen Zeitraum. Es holt die Punkte zurück und löscht den Einsatz.
 > **Ein Zeitraum, in dem kein Punkt liegt, lässt sich nicht schneiden.** Die
 > Anwendung sagt es und legt nichts an. Das passiert, wenn du denselben
 > Bereich ein zweites Mal schneidest oder wenn das Gerät dort nicht
-> aufgezeichnet hat. Für einen Einsatz ohne Spur ist **„Nachtragen"** der
+> aufgezeichnet hat. Für einen Einsatz ohne GPS-Daten ist **„Nachtragen"** der
 > richtige Weg.
 
 **Und wenn das Gerät den Zeitraum später noch nachliefert?** Es kommt nicht
@@ -706,7 +709,7 @@ weg.
 Eine Aufzeichnung, die woanders entstanden ist — auf einer Wanderuhr, als
 Export aus einer anderen Software, aus einem eigenen Backup —, lässt sich
 einem Diensttag hinzufügen. Über **„···" → „GPX importieren"**; der Eintrag
-steht direkt neben **„Spuren als GPX"**, denn es ist derselbe Weg in die
+steht direkt neben **„GPS-Daten als GPX"**, denn es ist derselbe Weg in die
 andere Richtung.
 
 **Zwei Möglichkeiten, und die Wahl ist wichtig:**
@@ -726,14 +729,14 @@ und Dateien über **12 MB**. In jedem Fall steht der Grund im Dialog, und es
 entsteht nichts.
 
 **Was toleriert wird:** GPX 1.0 ebenso wie 1.1, und Dateien ohne
-Namensraumangabe. Mehrere Abschnitte in einer Datei werden zu **einer** Spur
+Namensraumangabe. Mehrere Abschnitte in einer Datei werden zu **einer** Aufzeichnung
 zusammengeführt und nach Zeit sortiert. Einzelne unbrauchbare Punkte — eine
 Koordinate außerhalb des Erlaubten, eine unlesbare Zeit — fallen heraus, ohne
 die Datei zu verwerfen; wie viele es waren, steht in der Rückmeldung.
 
 Nach dem Import steht das neue Segment beziehungsweise der Einsatz an seiner
 Stelle in der Tagesansicht, und die Rückmeldung nennt Punktzahl und Zeitraum.
-Der Diensttag verlängert sich, wenn die Spur über seinen bisherigen Zeitraum
+Der Diensttag verlängert sich, wenn die Aufzeichnung über seinen bisherigen Zeitraum
 hinausreicht.
 
 ### 4.2 Einsatzansicht
@@ -742,10 +745,10 @@ hinausreicht.
 Tagesübersicht. Der Titel heißt „Einsatz N · Uhrzeit" (N = Nummer des Tages
 nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
 **„Bearbeiten"** als oranger Hauptknopf und das Aktionsblatt mit
-**Verschieben**, **Spur als GPX** und **Löschen** (mobil „···", am Desktop
+**Verschieben**, **GPS-Daten als GPX** und **Löschen** (mobil „···", am Desktop
 „Aktionen"; Escape schließt, die Tastatur bedient es vollständig — seit
-Web 9.3.0 dasselbe Blatt wie auf der Startseite). **Spur als GPX** erscheint
-nur, wenn der Einsatz überhaupt eine Spur hat, und lädt sie als GPX-Datei
+Web 9.3.0 dasselbe Blatt wie auf der Startseite). **GPS-Daten als GPX** erscheint
+nur, wenn der Einsatz überhaupt GPS-Daten hat, und lädt sie als GPX-Datei
 herunter — lesbar von jedem Kartenprogramm. In der Unterzeile stehen Zeitspanne — bei einem
 Einsatz ohne Ende „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
 Rettungsmittel und Standort:
@@ -770,11 +773,19 @@ hat keinen eigenen Zugang zum Server, sie reicht ihre Ereignisse ans Handy
 weiter, und das sendet. Der Unterschied sagt, **wo du getippt hast**, nicht
 welches Gerät hochgeladen hat.
 
-Trägt der Einsatz eine Spur, steht dort außerdem, wie viele Punkte sie hat —
-und ob sie noch die **Originalspur** ist oder bereits **ausgedünnt** (das
-geschieht sechs Monate nach dem Einsatz, siehe Abschnitt 9). Bei einer
-ausgedünnten Spur nennt die Plakette beide Zahlen: „Spur ausgedünnt · 113 von
-443 Punkten".
+Trägt der Einsatz GPS-Daten, steht dort außerdem die Plakette
+**„GPS-Daten"** — und ob die Aufzeichnung noch vollständig ist oder bereits
+**ausgedünnt** (das geschieht sechs Monate nach dem Einsatz, siehe
+Abschnitt 9). Dann heißt die Plakette **„GPS-Daten ausgedünnt"** und ist
+orange.
+
+**Seit Web 15.8.0 steht keine Zahl mehr darin.** Bis dahin hieß sie
+„Spur · 852 Punkte" bzw. „Spur ausgedünnt · 113 von 443 Punkten". Die Zahlen
+sind gegangen, weil sie eine Frage beantworteten, die niemand stellt: Wie
+viele Messpunkte eine Aufzeichnung hat, sagt nichts über den Einsatz — es
+sagt etwas über das Speicherverfahren. Wer die Punktzahl doch braucht,
+findet sie auf der Seite **„GPS-Daten des Diensttages"** (4.1a), wo sie zur
+Sache gehört.
 
 Wurde der Einsatz nach dem Anlegen verändert, erscheint zusätzlich das
 Bearbeitungskennzeichen **„editiert"** — unabhängig von der Herkunft. Ein von
@@ -823,9 +834,17 @@ Phasen, ab 1200 px rechts oben und beim Rollen klebend) zeigt den Track mit
 Klinik-Schild und den Einsatzort als orangen Kreis. **Die Schilder tragen
 keinen Namen** (seit Web 12.3.2) — nur das Symbol; der Name erscheint als
 Kurzinfo, wenn der Mauszeiger darauf steht. **Start und Ende der
-Aufzeichnung** tragen einen blauen bzw. roten Ring — am Schild des Ortes,
-an dem die Spur beginnt oder endet, sonst als eigener Ringpunkt; beides am
-selben Ort ergibt einen Doppelring. Einsätze ohne Track zeigt die
+Aufzeichnung** färben den **Rand** des Schildes blau bzw. rot — am Schild des
+Ortes, an dem die Aufzeichnung beginnt oder endet, sonst als eigener kleiner
+Ring daneben; beides am selben Ort ergibt einen doppelten Rand, außen rot und
+innen blau.
+
+Seit **Web 15.8.0** ist der Farbrand wirklich der Rand und liegt nicht mehr
+darum herum: Ein Standort mit beidem maß vorher 60 px und deckte auf dem Handy
+mehr als ein Drittel der Kartenhöhe — jetzt sind es 38 px. Die Zeichen sind
+insgesamt kleiner geworden (Schild 36 → 30, Einsatzort-Kreis 32 → 28 px), und
+die **Richtungspfeile zeigen erstmals wirklich in Fahrtrichtung**; bis dahin
+zeigten sie ausnahmslos nach Norden. Einsätze ohne Track zeigt die
 gestrichelte Luftlinie. Auf dem Track sitzen an den GPS-Positionen der
 Zeitstempel **Phasen-Nummern**, die standardmäßig **ausgeblendet** sind —
 ein Control auf der Karte („Einsatzphasen anzeigen") blendet sie ein,
@@ -868,7 +887,7 @@ Einsätze.
 ganze Tag steht am falschen Datum. In der Tagesübersicht: **Aktionen → „Datum
 ändern"**.
 Hier **wandern alle Zeitstempel mit** — Einsätze, Ruhesegmente, Phasenzeiten,
-Reanimationsprotokolle und die GPS-Spur. Die abgelesenen Uhrzeiten bleiben
+Reanimationsprotokolle und die GPS-Daten. Die abgelesenen Uhrzeiten bleiben
 dabei stehen; verschoben wird nur das Datum, auch über eine Zeitumstellung
 hinweg.
 
@@ -1007,9 +1026,9 @@ Drei Dinge helfen beim Zielen:
   vor Augen findet man ihn auch dann, wenn man die Gegend nicht kennt.
 - Ist das Ortsfeld noch **leer**, stellt sich die Karte beim Öffnen von selbst
   auf diese Aufzeichnung ein. Steht schon eine Koordinate, bleibt sie der
-  Mittelpunkt — sie ist die Aussage, die Spur nur Zusatz. Und wer selbst
+  Mittelpunkt — sie ist die Aussage, die Aufzeichnung nur Zusatz. Und wer selbst
   geschoben oder gezoomt hat, dem wird die Karte nicht mehr weggezogen, auch
-  wenn die Spur erst danach fertig geladen ist.
+  wenn die Aufzeichnung erst danach fertig geladen ist.
 
 **Gespeicherte Koordinaten stehen unter dem Feld.** Sobald Koordinaten gesetzt
 sind — egal ob über einen Adressvorschlag oder über eine der unten genannten
@@ -1356,7 +1375,7 @@ Handgelenk und das Handy in der Tasche —, legt **jedes einen eigenen
 Diensttag** an. Die Geräte wissen nichts voneinander; jedes bekommt seine
 eigene Dienstkennung, und der Server ordnet danach zu. Es geht dabei nichts
 verloren und nichts wird überschrieben: **Es steht alles doppelt.** Derselbe
-Einsatz zweimal, dieselbe Spur zweimal — und in der Jahresübersicht zählt der
+Einsatz zweimal, dieselben GPS-Daten zweimal — und in der Jahresübersicht zählt der
 Dienst doppelt.
 
 Der häufigste Fall ist die Uhr, die im Spind noch mitläuft, während du längst
@@ -1391,7 +1410,7 @@ ein Klick auf eine Zeile öffnet den Einsatz. Die Zeile hebt sich dabei hervor,
 sobald der Zeiger darüber steht. Ohne Maus geht es auch: Mit der Tabulatortaste
 springst du von Zeile zu Zeile, Enter oder Leertaste öffnen den Einsatz. Ganz
 links trägt jede Zeile einen **Farbstreifen** — es ist die Farbe, in der die
-Spur dieses Einsatzes auf der Karte seines Diensttags gezeichnet ist.
+Aufzeichnung dieses Einsatzes auf der Karte seines Diensttags gezeichnet ist.
 
 **Auf schmalen Geräten** (unter 720 px) wird aus jeder Zeile eine **Kachel**,
 wie auf der Tagesübersicht: oben Artzeichen und Datum, darunter Ort und
@@ -1675,7 +1694,7 @@ Datei und kann nicht auseinanderlaufen.
 > |---|---|---|---|
 > | **Backup** | du selbst | **deine** Einsätze, Diensttage, Stammdaten | Einstellungen → **Backup** (dieses Kapitel) |
 > | **Konto-Backup** | die Verwaltung, je Konto | die Daten **einer** NutzerIn, verschlüsselt mit deren Schlüssel | Verwaltung → **Konto-Backups** (Regeln, 11.4) und die **Kontoseite** (Pakete, 11.1); was es für dich bedeutet: 6.1 |
-> | **Komplett-Backup** | die BetreiberIn, einmal für alles | **alle** Konten, Stammdaten, Geräte, Spuren — jede Tabelle | Betrieb → **Komplett-Backup** (12.6) |
+> | **Komplett-Backup** | die BetreiberIn, einmal für alles | **alle** Konten, Stammdaten, Geräte, GPS-Daten — jede Tabelle | Betrieb → **Komplett-Backup** (12.6) |
 >
 > Dazu kommen die **Backup-Ziele** (12.7): eine Gegenstelle, auf die die
 > Konto-Backups zusätzlich geschoben werden. Sie sind kein viertes Backup,
@@ -1689,16 +1708,16 @@ jedem, der die Datei in die Hand bekommt, steht nur dieses Passwort.
 
 **Seit Web 11.0.0 ist die Datei innen mehrteilig.** An der Bedienung ändert
 das nichts — eine Datei, ein Passwort, ein Knopf. Innen liegen jetzt aber ein
-Verzeichnis, ein Kopf, die Einträge in Fenstern und die Spuren in eigenen,
+Verzeichnis, ein Kopf, die Einträge in Fenstern und die GPS-Daten in eigenen,
 einzeln verschlüsselten Teilen. Der Grund ist die Menge: Bei ein paar tausend
-Einsätzen sind die Spurpunkte der weitaus größte Teil, und in einem Stück
+Einsätzen sind die GPS-Punkte der weitaus größte Teil, und in einem Stück
 brachten sie ältere Telefone an ihre Grenze. Sie sind jetzt außerdem gepackt
 statt ausgeschrieben — gemessen am Beispielbestand **218 KB statt 739 KB**,
 also 70 % weniger.
 
 Was du davon merkst: Die Statuszeile zählt beim Sichern und beim Einspielen
 die Teile mit („Einträge werden übertragen (Teil 2 von 5) …"), und die
-Abschlussmeldung nennt Einträge, Spuren und Punkte.
+Abschlussmeldung nennt Einträge, Aufzeichnungen und Punkte.
 
 **Die Abschlussmeldung nennt außerdem den Dateinamen** (seit Web 12.2.1) —
 etwa `einsatzdoku-backup-2026-09-01.edbak`. Das Herunterladen läuft ohne
@@ -2561,7 +2580,7 @@ Im Dienst steht neben dem roten Aufnahmepunkt eine Zeile, und sie sagt
 
 | Zeile | Bedeutung |
 |---|---|
-| „Aufzeichnung läuft seit 07:02 · GPS empfängt" | Es kommen brauchbare Positionen. Nur hier entsteht eine Spur. |
+| „Aufzeichnung läuft seit 07:02 · GPS empfängt" | Es kommen brauchbare Positionen. Nur hier entstehen GPS-Daten. |
 | „Dienst läuft seit 07:02 · GPS sucht …" | Der Empfänger fängt sich noch ein. Nach einem Kaltstart im Freien dauert das eine halbe bis eine Minute. |
 | „Dienst läuft seit 07:02 · kein GPS-Signal seit 3 min · keine Aufzeichnung" | Es kommt nichts an — Tiefgarage, Metallkoffer, Handy tief in der Tasche. |
 | „Dienst läuft seit 07:02 · GPS zu ungenau · keine Aufzeichnung" | Es kommen Positionen, aber mit über 100 m Streuung. Das ist kein GPS mehr, sondern aus Funkzelle oder WLAN geschätzt. |
@@ -2570,7 +2589,7 @@ Im Dienst steht neben dem roten Aufnahmepunkt eine Zeile, und sie sagt
 
 **„Aufzeichnung läuft" steht nur in der ersten Zeile.** In allen anderen heißt
 es „Dienst läuft", weil das wahr ist und das andere nicht — der Dienst läuft,
-die Zeiten und Phasen werden dokumentiert, aber es entsteht keine Spur. Der
+die Zeiten und Phasen werden dokumentiert, aber es entstehen keine GPS-Daten. Der
 rote Punkt bleibt trotzdem stehen: Er zeigt den Dienst, nicht das Signal.
 
 **Das Telefon vibriert, wenn nichts aufgezeichnet wird**, und wiederholt es
@@ -3324,20 +3343,20 @@ hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
 **„scheitert"**, wird unter anderem der Papierkorb nicht mehr geleert; die
 Ursache steht in derselben Karte im Klartext.
 
-Was dort **liegenbleibt**, steht mit Kennung darunter — nicht nur „3 Spuren",
+Was dort **liegenbleibt**, steht mit Kennung darunter — nicht nur „3 Aufzeichnungen",
 sondern welche. Vier Gründe kommen vor: eine **Lücke in der Nummernfolge**
-(eine Uhr hat ein Teilstück nie nachgeliefert; die Spur bleibt dann so stehen,
-wie sie ist), **zu viele Punkte** (über 50 000 in einer Spur), **Punkte auf
-einer ausgedünnten Spur** (hier sollte immer null stehen) und eine **nicht
+(eine Uhr hat ein Teilstück nie nachgeliefert; die Aufzeichnung bleibt dann so stehen,
+wie sie ist), **zu viele Punkte** (über 50 000 in einer Aufzeichnung), **Punkte auf
+ausgedünnten GPS-Daten** (hier sollte immer null stehen) und eine **nicht
 bestandene Prüfung** (dabei wurde nichts gelöscht und nichts ersetzt). Ein
 Rückstand ohne solche Listen ist normal: Er zählt auch mit, was einfach noch zu
 frisch ist.
 
-**Was mit alten Spuren geschieht.** Die Anwendung legt GPS-Punkte in drei
+**Was mit alten GPS-Daten geschieht.** Die Anwendung legt GPS-Punkte in drei
 Stufen ab. Frisch von der Uhr kommen sie als einzelne Punkte; sobald ein
 Einsatz abgeschlossen ist und zwei Wochen nichts mehr nachgekommen ist, werden
 sie zu einem kompakten Paket zusammengefasst — daran ändert sich nichts, was
-man sieht. **Sechs Monate nach dem Einsatz** wird die Spur ausgedünnt: Es
+man sieht. **Sechs Monate nach dem Einsatz** werden die GPS-Daten ausgedünnt: Es
 bleiben die Punkte, die den Weg beschreiben, und die zu den Einsatzphasen
 gehören; dazwischenliegende, die auf der Linie liegen, fallen weg. Auf der
 Karte sieht der Weg danach genauso aus. **Die Punktzahl in Export und GPX ist
@@ -3409,7 +3428,7 @@ zweiten, grösseren Knopf. Der Unterschied zu allem darüber ist der Zweck:
 
 | | Backup eines Kontos | Komplett-Backup |
 |---|---|---|
-| enthält | die Daten **einer** NutzerIn | **alle** Konten, Stammdaten, Geräte, Spuren — jede Tabelle |
+| enthält | die Daten **einer** NutzerIn | **alle** Konten, Stammdaten, Geräte, GPS-Daten — jede Tabelle |
 | hilft gegen | „jemand hat sich vertan" | „der Server ist weg" |
 | wo | Verwaltung → **Konto-Backups** (Regeln) und die Kontoseite (Pakete) | Betrieb → **Komplett-Backup** |
 | wer | Admin und BetreiberIn | nur BetreiberIn |

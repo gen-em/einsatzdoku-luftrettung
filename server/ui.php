@@ -315,10 +315,15 @@ function ui_logo_masse(int $hoehe): array
  * WO KEIN SVG HINEINPASST — in einem <option> etwa —, nimmt man nicht dieses
  * Markup, sondern das WORT aus dt_art_symbol()['text'].
  */
-function ui_artzeichen(?string $kind, string $klassen = ''): string
+function ui_artzeichen(?string $kind, string $klassen = '', ?string $typ = null): string
 {
     require_once __DIR__ . '/diensttag_lib.php';
-    $sym = dt_art_symbol($kind);
+    /* DER TYP STEHT AN DRITTER STELLE, nicht an zweiter. Alle sechs Aufrufer
+     * uebergeben heute nur `$kind`, aber `$klassen` ist die dokumentierte
+     * zweite Stelle (`docs/Design.md` 9.15) — wer den Typ dorthin schoebe,
+     * braeche jeden kuenftigen Aufruf mit Klassen, ohne dass etwas meldet.
+     * In AP3 ist `$typ` immer null; er kommt mit AP4. */
+    $sym = dt_art_symbol($kind, $typ);
     /* OHNE DIE KLASSE `artzeichen` (P3/O11). Sie stammt aus der Zeit, als das
      * Artzeichen ein EMOJI war, und war dessen Korsett:
      * `width:1.4em;text-align:center;font-size:1.05em;cursor:help`. Seit O2

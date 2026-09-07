@@ -2947,4 +2947,53 @@ declare(strict_types=1);
  *          Konto die Vorgabe „an", und die Anwendung laeuft weiter — beide
  *          Leser vertragen die fehlende Spalte.
  */
-const WEB_VERSION = '15.7.0';
+/* 15.8.0  DIE KARTE WIRD LEISER, DIE PFEILE ZEIGEN WIEDER HIN (S9/AP3).
+ *          Vier Dinge auf einmal, alle an derselben Karte und denselben
+ *          Woertern.
+ *
+ *          KLEINERE ZEICHEN (E-S9-12, Mockup M-S9-01 V1). Der Farbring war
+ *          bisher ein zweiter und dritter Rahmen AUSSERHALB des dunkelblauen
+ *          Randes; ein Standort mit Doppelring mass dadurch 60 px und deckte
+ *          auf der Handykarte mehr als ein Drittel der Hoehe. Jetzt ERSETZT
+ *          der Farbrand den dunkelblauen: nachgemessen 32 px ohne
+ *          Aufzeichnung, 32 mit Start oder Ende, 38 mit beidem, Einsatzort
+ *          28, Ringpunkt 14 und 20. Aussen liegt am Schild immer 1 px Schnee,
+ *          damit Blau nicht auf Gruen stoesst. Token `--geo-schild` 36 -> 30,
+ *          `--geo-kreis` 32 -> 28; `geo.js` zieht seine Zahlen nach, wie sein
+ *          Kopfkommentar es seit je verlangt.
+ *
+ *          DIE RICHTUNGSPFEILE DREHTEN SICH NIE (Backlog Nr. 72). `geo.js`
+ *          setzte die Laufrichtung als `transform:rotate()` auf ein
+ *          Inline-<span> — und dort wirkt `transform` nicht. Alle Pfeile
+ *          zeigten nach Norden, und auf Nord-Sued-Abschnitten sah das richtig
+ *          aus. Die Winkelrechnung war die ganze Zeit korrekt. Gemessen an
+ *          der Bildschirmmatrix des SVG: vorher a=0,833 b=0 c=0 d=0,833 bei
+ *          behaupteten 90 Grad, nachher 12 von 12 Pfeilen in 30-Grad-
+ *          Schritten auf 0,1 Grad genau. Derselbe Fehler steckte drei Zeilen
+ *          darueber im Punkt des Abfahrtorts (Nr. 153, neu aufgenommen): Er
+ *          mass 4 x 18 px statt 12 x 12, und die Spurfarbe des Einsatzes lag
+ *          in einem 0 px breiten Inhaltskasten.
+ *
+ *          WINDENKACHELN NACH FAEHIGKEIT (E-S9-04, Nr. 104). Sie erschienen
+ *          nur, wenn im Zeitraum tatsaechlich eine Winde geflogen wurde —
+ *          damit war „null Windeneinsaetze" von „Winde nicht eingerichtet"
+ *          nicht zu unterscheiden. Das eine ist eine Aussage ueber den
+ *          Dienst, das andere eine ueber die Stammdaten. `api/range.php`
+ *          liefert jetzt `faehigkeiten`, und die Kacheln stehen, sobald ein
+ *          Luft-Diensttag die Winde traegt — auch mit dem Wert 0.
+ *
+ *          „SPUR" HEISST FUER DIE NUTZERIN „GPS-DATEN" (E-S9-03, Nr. 110).
+ *          72 sichtbare Zeichenketten in 18 Dateien und 41 Zeilen im
+ *          Handbuch. Fachbegriff bleibt er, wo er einer ist: im Code, in
+ *          Technik.md, im JSON-Vertrag und im Sicherungsformat. Die Wortliste
+ *          bekommt dafuer eine Regel und sechs begruendete Ausnahmen.
+ *
+ *          DREI NEUE ZEICHEN (E-S9-13): Bergwacht, Veranstaltung, Sonstiges;
+ *          Vorrat 49 -> 52. `dt_art_symbol()` nimmt den Diensttag-Typ schon
+ *          entgegen — im Datenmodell steht er erst mit AP4.
+ *
+ *          NEBENNUMMER: neue Funktionen, ein neuer Antwortschluessel, neue
+ *          Zeichen, geaenderte Texte — aber kein Weg durch die Anwendung wird
+ *          ein anderer und keine Spalte regt sich. Keine Migration.
+ */
+const WEB_VERSION = '15.8.0';

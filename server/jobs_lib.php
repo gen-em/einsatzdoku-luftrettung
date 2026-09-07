@@ -206,16 +206,16 @@ function jobs_katalog(): array
             'lauf'         => 'job_aufraeumen',
         ],
         'verdichtung' => [
-            'titel'        => 'Spuren verdichten',
-            'beschreibung' => 'Abgeschlossene Spuren von Zeilen in den '
-                            . 'verlustfreien Blob — eine Transaktion je Spur, '
+            'titel'        => 'GPS-Daten verdichten',
+            'beschreibung' => 'Abgeschlossene GPS-Daten von Zeilen in den '
+                            . 'verlustfreien Blob — eine Transaktion je Aufzeichnung, '
                             . 'Rundlaufprüfung vor dem Löschen',
             'taeglich'     => false,
             'rueckstand'   => 'job_verdichtung_rueckstand',
             'lauf'         => 'job_verdichtung',
         ],
         'ausduennen' => [
-            'titel'        => 'Spuren ausdünnen',
+            'titel'        => 'GPS-Daten ausdünnen',
             'beschreibung' => 'Sechs Monate nach Einsatzende: Douglas-Peucker '
                             . '2 m waagerecht / 3 m senkrecht, Phasenpunkte '
                             . 'bleiben erhalten',
@@ -275,8 +275,8 @@ function jobs_katalog(): array
             'lauf'         => 'job_komplett',
         ],
         'waisen' => [
-            'titel'        => 'Verwaiste Spuren',
-            'beschreibung' => 'Spurpunkte und Blobs ohne Eigentümer entfernen '
+            'titel'        => 'Verwaiste GPS-Daten',
+            'beschreibung' => 'GPS-Punkte und Blobs ohne Eigentümer entfernen '
                             . '— bereichsweise über den Primärschlüssel',
             'taeglich'     => false,
             'rueckstand'   => 'job_waisen_rueckstand',

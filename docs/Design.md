@@ -325,15 +325,15 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-95 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+97 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--schnee` | `#FFFCFA` | 33 |  |
-| `--rauch` | `#F7F5ED` | 26 |  |
-| `--sand` | `#D4C7AD` | 11 |  |
+| `--schnee` | `#FFFCFA` | 32 |  |
+| `--rauch` | `#F7F5ED` | 27 |  |
+| `--sand` | `#D4C7AD` | 12 |  |
 
 **Schrift**
 
@@ -341,7 +341,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 20 |  |
 | `--dunkelblau` | `#1A2E4D` | 51 |  |
-| `--gedaempft` | `#6E6459` | 52 |  |
+| `--gedaempft` | `#6E6459` | 54 |  |
 | `--auf-dunkel` | `#FFFFFF` | 7 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
@@ -387,7 +387,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--groesse-1` | `12px` | 7 |  |
-| `--groesse-2` | `13px` | 39 |  |
+| `--groesse-2` | `13px` | 40 |  |
 | `--groesse-3` | `15px` | 11 |  |
 | `--groesse-4` | `16px` | 10 |  |
 | `--groesse-5` | `19px` | 6 |  |
@@ -401,17 +401,17 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 58 |  |
+| `--abstand-1` | `4px` | 60 |  |
 | `--abstand-2` | `8px` | 84 |  |
-| `--abstand-3` | `12px` | 110 |  |
-| `--abstand-4` | `16px` | 53 |  |
-| `--abstand-5` | `24px` | 21 |  |
+| `--abstand-3` | `12px` | 112 |  |
+| `--abstand-4` | `16px` | 51 |  |
+| `--abstand-5` | `24px` | 22 |  |
 
 **Radien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--radius-klein` | `6px` | 18 | Plakette, Kästchen, Eingabefeld |
+| `--radius-klein` | `6px` | 19 | Plakette, Kästchen, Eingabefeld |
 | `--radius` | `10px` | 17 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 6 | Karte, Blatt, Dialog |
 
@@ -433,18 +433,20 @@ auseinanderlaufen kann.
 | `--listensuche-breit` | `36rem` | 1 | Höchstbreite des Suchfelds einer Liste |
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
-| `--symbol-klein` | `16px` | 2 | Zusatzzeichen an einer Beschriftung |
-| `--symbol` | `20px` | 10 | Symbolgröße in der Zeile |
+| `--symbol-klein` | `16px` | 4 | Zusatzzeichen an einer Beschriftung |
+| `--symbol` | `20px` | 12 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 9 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 38 | Haarlinie |
+| `--strich` | `1px` | 42 | Haarlinie |
 | `--strich-stark` | `2px` | 28 | Aktivstrich, Randstrich, Fokus |
 | `--radius-rund` | `999px` | 16 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
 | `--schalter-punkt` | `20px` | 4 | 44-px-Zeile passt und greifbar bleibt |
-| `--geo-kreis` | `32px` | 2 | Einsatzort-Kreis auf der Karte |
-| `--geo-schild` | `36px` | 2 | Kästchen für Standort und Zielklinik |
-| `--geo-ring` | `3px` | 10 | Ringstärke Start/Ende am Schild |
+| `--geo-kreis` | `28px` | 2 | Einsatzort-Kreis auf der Karte |
+| `--geo-schild` | `30px` | 2 | Kästchen für Standort und Zielklinik |
+| `--geo-ring` | `3px` | 6 | Randstärke des Farbrands Start/Ende |
+| `--geo-ringpunkt` | `calc(var(--abstand-4) - var(--strich-stark))` | 2 | Ring ohne Schild (14 px) |
+| `--geo-symbol` | `calc(var(--symbol) - var(--strich-stark))` | 2 | Symbol im Kartenschild (18 px) |
 | `--balken` | `8px` | 1 | Höhe des Speicherbalkens |
 | `--logo-kachel` | `var(--kopf)` | 2 | Vorschau-Kachel der Installation … |
 | `--balken-punkt` | `10px` | 2 | Farbpunkt in seiner Legende |
@@ -466,7 +468,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--spur-1` | `var(--orange)` | 0 |  |
+| `--spur-1` | `var(--orange)` | 1 |  |
 | `--spur-2` | `var(--blau)` | 0 |  |
 | `--spur-3` | `var(--rot)` | 0 |  |
 | `--spur-4` | `var(--dunkelblau)` | 0 |  |
@@ -491,13 +493,13 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--dauer` | `.18s` | 7 |  |
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
-| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 6 |  |
+| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 7 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
 | `--auf-dunkel-leise` | `rgba(255,255,255,.55)` | 1 |  |
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 2 |  |
 | `--auf-dunkel-strich` | `rgba(255,255,255,.35)` | 1 |  |
 
-**Ungenutzt:** `--spur-1`, `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
+**Ungenutzt:** `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
 
 ## 5. Schriftskala
 
@@ -766,22 +768,23 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
 | `aktualisieren.svg` | Tabler Icons „refresh" (MIT) | 1 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 3 |
+| `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 23 |
 | `datenbank.svg` | Tabler Icons „database" (MIT) | 10 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 23 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 25 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 19 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
-| `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
+| `karte.svg` | Tabler Icons „map-2" (MIT) | 16 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
 | `korb.svg` | Tabler Icons „trash" (MIT) | 21 |
 | `luftlinie.svg` | — | 0 |
-| `lupe.svg` | Tabler Icons „search" (MIT) | 8 |
+| `lupe.svg` | Tabler Icons „search" (MIT) | 11 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
@@ -797,14 +800,16 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 9 |
 | `server.svg` | Tabler Icons „server" (MIT) | 6 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 10 |
+| `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 75 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
-| `standort.svg` | Tabler Icons „map-pin" (MIT) | 5 |
+| `standort.svg` | Tabler Icons „map-pin" (MIT) | 6 |
 | `status.svg` | Tabler Icons „activity" (MIT) | 27 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 9 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 7 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 11 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
+| `veranstaltung.svg` | Tabler Icons „building-stadium" (MIT) | 3 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 27 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
@@ -813,7 +818,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 27 |
 
-49 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
+52 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
 
 ## 9. Bausteine
@@ -871,38 +876,40 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 141 |
 | `ui_symbol()` | `.symbol` | ja (+6 Unterklassen) | 194 |
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 297 |
-| `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 352 |
-| `ui_geruest_start()` | `.inhalt` | ja | 427 |
-| `ui_leiste_ende()` | `.leiste` | ja (+11 Unterklassen) | 498 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 522 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 562 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 763 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 886 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 957 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1041 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1084 |
-| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1151 |
-| `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1197 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1250 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1276 |
-| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1312 |
-| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1370 |
-| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1386 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1428 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1470 |
-| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1539 |
-| `ui_schalter()` | `.schalter` | ja (+16 Unterklassen) | 1604 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1648 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1701 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1745 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1844 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 1906 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 1947 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2011 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2160 |
+| `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 357 |
+| `ui_geruest_start()` | `.inhalt` | ja | 432 |
+| `ui_leiste_ende()` | `.leiste` | ja (+11 Unterklassen) | 503 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 527 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 567 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 768 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 891 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 962 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1046 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1089 |
+| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1156 |
+| `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1202 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1255 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1281 |
+| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1317 |
+| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1375 |
+| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1391 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1433 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1475 |
+| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1544 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1609 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1653 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1706 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1750 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1849 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 1911 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 1952 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2049 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2079 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2091 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2256 |
 
-34 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
-**Ohne Regel im Stylesheet:** `ui_logo_masse()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
+36 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
 
@@ -1926,9 +1933,84 @@ keinen Einsatz) bleibt sie versteckt.
 > unter dem Kreuz wegreißen — `dragstart`/`zoomstart` setzen deshalb ein
 > Merkzeichen, das den Einpassvorgang abbestellt.
 
-**Kein neues Token.** `.legende-linie` ist 22 × 4 px in `--spur-1`, die
-Ringpunkte sind die aus M-S9-01, die Schrift ist `--groesse-2` in
-`--gedaempft`.
+**Kein neues Token für den Dialog selbst.** `.legende-linie` ist
+`--abstand-5` × `--abstand-1`, also **24 × 4 px** in `--spur-1`; die
+Ringpunkte sind die aus M-S9-01 und tragen ihre Größe selbst (9.30), die
+Schrift ist `--groesse-2` in `--gedaempft`.
+
+> **Die Legende erbt die Ringpunkte, also auch ihre Änderungen.** Mit Web
+> 15.8.0 sind sie von 16 auf 14 px gegangen und ihr Rand von 3 auf 2 px
+> (M-S9-01 V1) — die Legende im Dialog ist damit mitgeschrumpft, ohne dass
+> hier eine Zeile stand. Wer die Zeichen ändert, sehe sie neben dem 13-px-Text
+> dieser Zeile an.
+
+### 9.30 Kartenzeichen (`.geo-*`)
+
+*Maße neu gefasst mit Web 15.8.0 (S9/AP3, E-S9-12). Mockup
+`docs/konzepte/konzept-s9/mockups/M-S9-01-kartenschilder.html`, Variante V1,
+freigegeben am 06.09.2026.* Gebaut werden sie in `assets/geo.js` als
+Leaflet-`divIcon`; das Stylesheet zeichnet, das Modul setzt nur die Maße, die
+Leaflet als Zahl braucht.
+
+**Zweck:** Standort, Zielklinik, Einsatzort, Anfang und Ende der Aufzeichnung
+und ihre Richtung auf einer Karte kenntlich machen — auf 160 px Kartenhöhe am
+Handy genauso wie auf 600 px am Schreibtisch.
+
+| Zeichen | Klasse | Außenmaß | woraus |
+|---|---|---|---|
+| Schild ohne Aufzeichnung | `.geo-schild-kasten` | **32 px** | `--geo-schild` 30 + 2 × 1 px Schnee |
+| Schild mit Start **oder** Ende | `+ .geo-ring-start` / `-ende` | **32 px** | Farbrand liegt **innen** (`border-box`) |
+| Schild mit beidem | `+ .geo-ring-beide` | **38 px** | 30 + 2 × (1 Schnee + 2 Rot + 1 Schnee) |
+| Einsatzort | `.geo-kreis` | **28 px** | `--geo-kreis`, kein Rand |
+| Ring ohne Schild | `.geo-ringpunkt` | **14 px** | `--geo-ringpunkt`, Rand `--strich-stark` |
+| Ring ohne Schild, beides | `+ .geo-ringpunkt-beide` | **20 px** | 14 + 2 × (1 Schnee + 2 Rot) |
+| Abfahrtort | `.geo-punkt` | **12 px** | `--abstand-3` |
+| Richtungspfeil | `.geo-pfeil` | **20 px** | `--symbol` |
+
+**Der Farbring IST der Rand, er liegt nicht darum herum.** Bis Web 15.7.0 lag
+er als zweiter und dritter `box-shadow` außerhalb des dunkelblauen Randes —
+ein Standort mit Doppelring maß dadurch **60 px** und deckte auf der
+Handykarte mehr als ein Drittel der Höhe. Jetzt ersetzt der Farbrand den
+dunkelblauen. Ohne Aufzeichnung bleibt der Rand dunkelblau: Er sagt dann
+nichts über die Spur, er trennt nur.
+
+**Außen liegt am Schild immer 1 px Schnee** (F6) — die Trennlinie, damit Blau
+nicht auf Kartengrün und Rot nicht auf Braun stößt. Der Einsatzort-Kreis
+bekommt sie **nicht**: Er ist orange, und Orange kommt auf keiner der drei
+Kartenebenen vor; die freigegebene Maßleiste nennt für ihn 28 px, mit
+Trennlinie wären es 30.
+
+> **R76 gilt hier nicht** (S3/AP7): Ein Kartenzeichen ist eine Zeichnung, kein
+> Bedienelement, und die 44/36-px-Regel gilt für das, was man **drückt**.
+> Untergrenze am Finger ist statt dessen **24 px** (WCAG 2.5.8) — und die
+> gilt für alles, was ein Popup öffnet. Der Ringpunkt ist 14 px groß und
+> öffnet eines: Er sitzt deshalb in einer durchsichtigen 24-px-Fläche
+> (`.geo-ringpunkt-feld`). Die Zeichnung bleibt klein, der Finger trifft
+> trotzdem.
+
+**Die Maße stehen zweimal, und das ist Absicht.** Leaflet braucht sie als
+Zahl (`iconSize`, `iconAnchor`), das Stylesheet als Token. Wer eines ändert,
+ändert beides — sonst wandert der Anker, und zwar ohne Fehlermeldung.
+Betroffen: `--geo-schild` / `SCHILD_PX`, `--geo-kreis` / `KREIS_PX`,
+`--geo-ringpunkt` / `RINGPUNKT_PX`.
+
+> **Ein `<span>` ohne `display` ist kein Kasten.** `.geo-pfeil` trug seine
+> Drehung als `transform:rotate()` und `.geo-punkt` seine Größe als
+> `width`/`height` — beides wirkt an einem nicht ersetzten Inline-Element
+> **nicht**. Die Pfeile zeigten dadurch bis Web 15.7.0 ausnahmslos nach Norden
+> (Backlog Nr. 72), der Abfahrtort maß 4 × 18 px statt 12 × 12 und zeigte
+> seine Farbe nie (Nr. 153). Beide haben jetzt einen ausdrücklichen Kasten.
+> **Der berechnete Stil verrät das nicht:** `getComputedStyle` meldet die
+> Drehmatrix auch dort, wo sie nichts tut. Nachweisbar ist es nur an der
+> Geometrie — ein 20-px-Kasten mit `rotate(45deg)` misst 28,3 px, wenn die
+> Drehung greift, und 20 px, wenn nicht.
+
+**Kein neues Token außer zwei abgeleiteten.** `--geo-ringpunkt` ist
+`--abstand-4` minus `--strich-stark`, `--geo-symbol` ist `--symbol` minus
+`--strich-stark` — die Rechnung steht im Stylesheet und **ist** ihre
+Herkunft. 14 px und 18 px stehen auf keiner Skala des Projekts, und die Skala
+ist geschlossen; eine begründete Ableitung ist der Weg, den Kapitel 6 dafür
+vorsieht.
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
@@ -2068,6 +2150,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 15.8.0 (S9/AP3)** | Neues Kapitel **9.30 Kartenzeichen** — der Farbring ist jetzt der Rand, alle acht Außenmaße als Tabelle, die 24-px-Untergrenze am antippbaren Ringpunkt und die Warnung, dass ein `<span>` ohne `display` kein Kasten ist (Backlog Nr. 72 und Nr. 153). Zwei **abgeleitete** Token (`--geo-ringpunkt`, `--geo-symbol`); `--geo-ring` bedeutet nun Randstärke statt Schattenschrittweite. Kapitel 8: Symbolvorrat **49 → 52** (Bergwacht, Veranstaltung, Sonstiges). Kapitel 9.29 berichtigt: `.legende-linie` misst **24 × 4 px**, nicht 22 × 4. |
 | **Web 15.7.0 (S9/AP2)** | Neues Kapitel **9.29 Kartendialog** — Suchfeld im Kopf (und warum nicht im Inhalt), Spur mit Ringpunkten und Legende, `fitBounds` nur bei leerem Feld. Kapitel 9.13 nachgezogen: Die drei Grenzen der Adressabfrage stehen jetzt in `assets/geocoder.js`, die Kleinzeile `.loc-datenschutz` steht **einmal je Seite**, und den Pin-Knopf rendern seither **beide** Formen von `ui_ortsfeld()` (Backlog Nr. 70). Kein neues Token. |
 | **Web 15.6.0/15.6.1 (S9/AP1)** | Neues Kapitel **9.28 Vorschlagsliste** — ein Baustein für vier abgelöste Fassungen, Übernahme auf `mousedown` (Backlog Nr. 102), Gruppenzeile nach Entscheidung des Aufrufers, `z-index: 35` zwischen Speichern-Leiste und Kopfleiste. Kapitel 9.13: Der Schlüssel `datalist` ist ersatzlos entfallen. |
 | **Web 15.5.0 (S8/AP7)** | Kapitel 6: **zwei Höhen für Bedienelemente** — 44 px am Finger, 36 px am Zeiger ab 1024 px, an drei Medienmerkmalen zugleich (`hover`, `pointer`, `min-width`). Kapitel 9.4 nachgezogen. Kapitel 9.7: neue Regel `.feld-eingabe:disabled` (F-S8-P-03) und der Zusammenhang mit `.feldsatz-gesperrt`. Die erzeugten Tabellen zählen seither **ohne Kommentare**: Die Schwellentabelle hatte eine zusammengesetzte Abfrage verschluckt (20 → 21 Medienblöcke), die Bausteintabelle zählte Klassennamen aus Kommentaren als Unterklassen mit — elf Zeilen korrigiert, `ui_feld()` von „+24" auf **+18**. |

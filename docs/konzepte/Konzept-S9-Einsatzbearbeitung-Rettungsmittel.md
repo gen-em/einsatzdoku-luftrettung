@@ -17,7 +17,7 @@ Mockups in `konzept-s9/mockups/`.
 > | Stand | 07.09.2026 — **Konzept freigegeben.** E-S9-01 bis -17 am 06.09.2026 bestätigt, E-S9-18 und -19 am 07.09.2026; alle sieben Mockups freigegeben (Abschnitt 6). PS-12 (Standortseiten, Backlog 152) am 07.09.2026 aufgenommen. Rahmenplan Fassung 34 trägt die Einschübe aus Abschnitt 7 |
 > | Entschieden | E-S9-01 bis E-S9-19 (Abschnitt 2) |
 > | Offen | nichts. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
-> | Umsetzung | **AP1 und AP2 erledigt** (07.09.2026, Web 15.6.0 / 15.6.1 / **15.7.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. **AP3 ist beauftragt** (07.09.2026). Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
+> | Umsetzung | **AP1 bis AP3 erledigt** (07.09.2026, Web 15.6.0 / 15.6.1 / 15.7.0 / **15.8.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. **AP4 wartet auf das Wort des Auftraggebers.** Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
 > | Fable-Schritte der Umsetzung | **keine** — der einzige Fable-Vorbehalt der Vorbereitung (PS-8.2) ist im Konzept aufgelöst (Abschnitt 1.8) |
 
 > **Stand der Umsetzung**
@@ -26,7 +26,8 @@ Mockups in `konzept-s9/mockups/`.
 > |---|---|---|---|
 > | **AP1** Vorschlagsliste und Klickprobe | **erledigt** 07.09.2026 | Web **15.6.0**, Korrektur **15.6.1** | Klickprobe PS-2 mit 300 ms gehaltener Maus **0 von 3 → 3 von 3** (dieselbe Fassung der Probe gegen beide Stände); `grep -rn datalist server/` **0** außerhalb von Kommentaren (vorher 12 in sechs Dateien, 8 davon im Markup einer Einsatzseite); Transportziel „Klin" **1 Liste · 2 Gruppen · 2 Stammdaten · 4 Adressen · 0 `<datalist>`** (vorher 1 Liste · 0 Gruppen · 8 `<datalist>`); Bedienhöhe an der einzeiligen Zeile gemessen **390 px → 44 px, 1280 px Zeiger → 36 px, 1280 px Finger → 44 px**; **16 von 16** Wegen erfüllt über zwei Breiten × zwei Bedienhöhen, 16 Bilder; Ebene der Liste **35** über der Speichern-Leiste (30) und unter der Kopfleiste (40), mit `elementFromPoint` in der Schnittfläche gemessen (F-S9-P-07, Web 15.6.1); Bilderlauf 7 Seiten, 56 Bilder je Lauf, **0/0/0** in beiden Bedienhöhen; Wortliste **0/0/0** in fünf Bereichen; Vollständigkeit **300 → 298 Befunde**; Kontraste **21 Paare, 0 verfehlt** |
 > | **AP2** Geocoder und Kartendialog | **erledigt** 07.09.2026 | Web **15.7.0**, Migration `2026_09_07_adresssuche_konto` | `grep -rn "komoot" server/assets/` **0** (vorher 2); Kartendialog aus **5 von 5** Einbauorten mit Karte darin (Einsatzort, manueller Abfahrtort, Transportziel, Standort im Konto, Standort systemweit); Treffer im Suchfeld lässt das Formular unberührt — **Feld leer, 0 Chips**, nach „Übernehmen" **1 Chip** (F1); Spur im Dialog bei 309 Punkten **1 Linie · 4 Ringpunkte (2 Karte + 2 Legende) · Legende sichtbar · 0 Pfeile**, Karte auf der Spur bei leerem Feld (Bild); Kontoschalter **aus → 0 Anfragen** an `photon.komoot.io` bei Tippen, Kartenwahl und Übernehmen, **mit Gegenprobe „an → 2 Anfragen"**, dazu 0 Suchfelder und 0 Hinweiszeilen; Installationsschalter aus → Kontoschalter **gesperrt** mit Grund (Bild); Hinweis am Ortsfeld **1 bei 3 Ortsfeldern**, nennt den Dienst (Bild); Datenschutztext-Baustein nennt `geocoder_host()` (**2 grep-Treffer**); Klickprobe **40 von 40** Wegen über zwei Breiten × zwei Bedienhöhen, 36 Bilder; Bilderlauf **zehn berührte Seiten**, 64 + 16 Einzelbilder je Lauf, **0/0/0** in beiden Bedienhöhen; Wortliste **0/0/0** in fünf Bereichen (178 Dateien); Vollständigkeit **298 → 304**, der Unterschied vollständig erklärt (+6 Menüpfeile „→" in Fließtext, `loc-datenschutz` als Anker eingetragen); Kontraste **21 Paare, 0 verfehlt**; Linkprobe **134 Verweise, 0 unbekannte Abweichungen**; Register **44 = 44** |
-> | AP3 bis AP8 | offen | — | — |
+> | **AP3** Karte und Zeichen | **erledigt** 07.09.2026 | Web **15.8.0** | Schildmaße nachgemessen im Browser: **ohne 32 · Start 32 · Ende 32 · beide 38 · Einsatzort 28 · Ringpunkt 14 · Ring beide 20 px** (vorher 36/48/48/60/32/16/28), Symbol im Schild **18**, im Kreis **16** px, Antippfläche des Ringpunkts **24 px** (WCAG 2.5.8); Pfeile **12 von 12** in 30-Grad-Schritten auf 0,1 Grad genau, dazu **2 von 2** auf der Spur des Referenzeinsatzes (vorher: Bildschirmmatrix a=0,833 b=0 c=0 d=0,833 bei behaupteten 90 Grad, also kein Drehanteil); `.geo-punkt` **12 × 12 px** mit sichtbarer Spurfarbe (vorher 4 × 18, Farbe unsichtbar — Backlog Nr. 153, neu); Windenkacheln **2 / 2 mit „0" / 0** in den drei Fällen, alle über die Oberfläche hergestellt und zurückgestellt; Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen, mit neuer Regel `spur`; `grep -c "Spur" docs/Handbuch.md` **41 → 0**; **72 sichtbare Zeichenketten in 18 Dateien** umbenannt; Symbolvorrat **49 → 52**, Artzeichen **6 von 6** mit Anker und Herkunft; Klickprobe **6 von 6** Wegen; Vollständigkeit **304 = 304** (Hinweis „Symboldatei ohne Verweis" 25 → 28, zählt nicht mit); Kontraste **21 Paare, 0 verfehlt**; Linkprobe **134 Verweise, 0 Abweichungen** |
+> | AP4 bis AP8 | offen | — | — |
 >
 > **Fragen aus AP1** (Prüfdokument, Abschnitt 4): **zwei entschieden am
 > 07.09.2026** — die Besatzungsfelder des Diensttags gehören zu **AP1** (so
@@ -53,6 +54,25 @@ Mockups in `konzept-s9/mockups/`.
 > der Schalter im Profilformular stand und der Demo-Wächter dieses ganz
 > verwirft. Die beiden gesammelten Funde aus AP1 (F-S9-P-05, -06) sind
 > abgeräumt.
+>
+> **Vier Funde in AP3**, alle behoben — zwei davon standen in keinem
+> Backlog-Punkt. **Nr. 72** (Pfeile) und **Nr. 153** (Abfahrtort-Punkt) sind
+> derselbe Fehler drei Zeilen auseinander: ein `<span>` ohne `display`, an
+> dem weder `transform` noch `width` wirken. **Der beringte Schild hatte
+> keinen Schlagschatten** — die Ringregeln überschrieben `box-shadow`
+> vollständig. Und der **Ringpunkt ist antippbar** (Popup) und ging von 16
+> auf 14 px, während E-S9-12 im selben Absatz 24 px als Untergrenze am Finger
+> nennt; die Zeichnung bleibt 14 px und sitzt jetzt in einer durchsichtigen
+> 24-px-Fläche.
+>
+> **Zwei Fragen aus AP3** (Prüfdokument, Abschnitt 4): **Frage 6** — die
+> Lesbarkeit von `veranstaltung.svg` bei 18 px mit Strich 2. Beide Mockups
+> zeichnen mit Strich **1,8**, die Anwendung liefert **2**, und M-S9-02 nennt
+> „building-stadium" bei 20 px selbst „einen Klumpen"; bei 18 px mit dem
+> dickeren Strich ist es das schwächste der sechs Zeichen. **Frage 7** — der
+> Umfang von E-S9-03 war größer als die Aufzählung des Konzepts (72 statt der
+> fünf genannten Stellen); der Auftraggeber hat am 07.09.2026 „alles
+> Sichtbare" entschieden und die Android-Texte an Schritt 9a gegeben.
 >
 > **Die zwei Fragen aus AP2 sind entschieden** (Auftraggeber, 07.09.2026):
 > **Frage 4** — Pfeile auf der Spur im Kartendialog: **nein**. Der

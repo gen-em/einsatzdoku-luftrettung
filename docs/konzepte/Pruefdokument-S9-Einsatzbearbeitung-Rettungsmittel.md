@@ -14,11 +14,11 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 >
 > | | |
 > |---|---|
-> | Stand | 07.09.2026 — **AP1 und AP2 gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, **15.7.0**). AP3 bis AP8 offen |
-> | Geprüft | P-01 bis P-07 und P-32 vollständig · P-23 für die **zehn berührten** Seiten, nicht für alle 30 · P-12, P-25 als Gesamtlauf |
-> | Offen | P-08 bis P-11, P-13 bis P-22, P-24, P-26, P-28 bis P-31, P-33 (AP3 bis AP8) |
-> | Fragen | **fünf gestellt, vier entschieden** (07.09.2026): Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen**. Offen bleibt allein Frage 2 aus AP1, und der gebaute Stand dazu läuft grün |
-> | Fehlerfunde | **acht, alle behoben** — F-S9-P-01 bis F-S9-P-04, F-S9-P-07 bis **F-S9-P-10** (Abschnitt 2); die beiden gesammelten Funde F-S9-P-05 und -06 sind mit AP2 **abgeräumt** |
+> | Stand | 07.09.2026 — **AP1 bis AP3 gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, 15.7.0, **15.8.0**). AP4 bis AP8 offen |
+> | Geprüft | P-01 bis P-12 und P-32 vollständig · P-23 für die **sechzehn berührten** Seiten, nicht für alle 30 · P-25 als Gesamtlauf. Dazu **E-S9-13**, das im Konzept keine Abnahme hatte — siehe F-S9-P-12 |
+> | Offen | P-13 bis P-22, P-24, P-26, P-28 bis P-31, P-33 (AP4 bis AP8) |
+> | Fragen | **sieben gestellt, fünf entschieden** (07.09.2026): Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen**. Frage 7 (Umfang von E-S9-03) ist mit „alles Sichtbare" entschieden, die Android-Texte gehen an Schritt 9a. Offen bleiben **Frage 2** aus AP1 und **Frage 6** aus AP3 (Lesbarkeit von `veranstaltung.svg`); beide gebauten Stände laufen grün |
+> | Fehlerfunde | **zwölf, alle behoben** — F-S9-P-01 bis -04, -07 bis **-14** (Abschnitt 2); die gesammelten Funde F-S9-P-05 und -06 sind mit AP2 abgeräumt. Zwei der vier neuen (Nr. 72, Nr. 153) sind derselbe Fehler drei Zeilen auseinander |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` — 88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto, 8 Zielkliniken, 8 weitere Rettungsmittel, 15 Besatzungs-Vorbelegungen an zwei Standorten |
 
 ---
@@ -62,6 +62,15 @@ mit Rechnernamen an; ob ein selbst betriebener Photon dieselben Felder liefert
 und die Herkunft der Anwendung erlaubt (CORS), ist hier nicht prüfbar — es gibt
 keinen. **Prüfliste Punkt 9.**
 
+**Die Kartenzeichen gegen die echte Karte.** `kontrast.py` rechnet Token
+gegen Token — gegen Kartengrün, Waldbraun oder ein Luftbild kann es nichts
+messen, und genau dort steht der Ring. Dafür ist die 1-px-Schneelinie da, und
+die ist mit AP3 von 3 auf 1 px **dünner** geworden. **Prüfliste Punkt 11.**
+
+**Ein Finger auf einem 14-px-Ring.** Die Antippfläche ist auf 24 px gebracht
+und gemessen; ob das am Handschuh reicht, sagt keine Zahl. **Prüfliste
+Punkt 12.**
+
 **Ein Handgriff am Prüfstand, der genannt sein will.** Die Mengenbremse des
 Demo-Kontos (20 Anmeldungen je Fenster, E-P1-20) ist während der Prüfläufe
 angeschlagen und einmal per `DELETE FROM rate_limits` geleert worden — am
@@ -85,11 +94,11 @@ gemessen hat, ist keine Zahl.
 | P-05 | Dialog aus fünf Einbauorten | Klickprobe | 5/5 | **5 von 5** mit Leaflet-Karte darin — Einsatzort, manueller Abfahrtort (Einsatz **ohne** Aufzeichnung, sonst gibt es das Feld nicht), Transportziel, Standort im Konto, Standort systemweit (Rolle `admin`). Dazu: Ein Treffer im Suchfeld lässt das Formular unberührt — **Feld leer, 0 Chips**, der Name steht im **Suchfeld**; erst „Übernehmen" schreibt: **1 Chip** (F1). Über zwei Breiten und beide Bedienhöhen **4 × 5 von 5** | 07.09.2026 |
 | P-06 | Kontoschalter aus → keine Anfrage | Netzwerkprotokoll | 0 | **0 Anfragen** an `photon.komoot.io` bei Tippen, Kartenwahl und „Übernehmen" — dazu **0 Adressvorschläge, 0 Suchfelder im Dialog, 0 Hinweiszeilen**. **Mit Gegenprobe:** derselbe Weg bei eingeschaltetem Schalter ergibt **2 Anfragen** (Vorwärtssuche und Umkehrsuche) und 1 Suchfeld — ohne diese Gegenprobe wäre die Null der Beleg dafür, dass die Probe nicht hinsieht. Geschaltet wird über die **Formulare**, nicht per SQL | 07.09.2026 |
 | P-07 | Spur im Dialog, Karte auf der Spur | Bild | 1 mit, 1 ohne | **erfüllt.** Einsatz mit Aufzeichnung (309 Punkte): **1 Linie, 4 Ringpunkte** (2 auf der Karte, 2 in der Legende), **Legende sichtbar, 0 Pfeile**; bei leerem Ortsfeld steht die Karte auf der Spur (Bild `ap2-spur-im-dialog`). Ohne Aufzeichnung — die Standort-Stammdaten — bleibt die Legende versteckt und die Karte auf dem Rückfallpunkt; belegt im Weg `ap2-dialog-fuenf-einbauorte`, der beide Standortseiten fährt | 07.09.2026 |
-| P-08 | Schildmaße | Browser-Messung | Doppelring ≤ 40 px | offen — AP3 |
-| P-09 | Kontrast der Ringe | `kontrast.py` | ≥ AA je Paar | offen — AP3 (der Gesamtlauf steht: **21 Paare, 0 verfehlt**; die neuen Ringpaare kommen mit AP3) |
-| P-10 | Pfeile in Spurrichtung | Winkel je Pfeil | 6/6 | offen — AP3 |
-| P-11 | Windenkacheln nach Fähigkeit | Klickprobe | 2 Zeiträume | offen — AP3 |
-| P-12 | Wording „GPS-Daten" | Wortliste | 0/0/0 | **Gesamtlauf erfüllt** (die Regel selbst kommt mit AP3): fünf Bereiche, 98 + 33 + 8 + 2 + 35 Dateien, **493 Treffer, 493 durch Ausnahmen erklärt, 0 außerhalb**, 86 Ausnahmen mit 0 ungenutzten, 0 durchgerutschte Teilstring-Fallen | 07.09.2026 |
+| P-08 | Schildmaße | Browser-Messung | Doppelring ≤ 40 px | **erfüllt, alle sieben Maße getroffen.** Nachgemessen im Browser (Klickprobe `ap3-schildmasse`, Außenmaß **einschließlich** der Schattenringe): **ohne 32 · Start 32 · Ende 32 · beide 38 · Einsatzort 28 · Ringpunkt 14 · Ring beide 20 px** — vorher 36/48/48/60/32/16/28. Der Doppelring liegt damit bei **38 px** statt 60, die Forderung war ≤ 40. Symbol im Schild **18**, im Kreis **16** px. Dazu die **Antippfläche des Ringpunkts: 24 px** — siehe F-S9-P-13 | 07.09.2026 |
+| P-09 | Kontrast der Ringe | `kontrast.py` | ≥ AA je Paar | **erfüllt — mit einer Berichtigung der Schwelle.** Gesamtlauf **21 Paare, 0 verfehlt**; die Ringfarben sind unverändert (`--blau` auf `--schnee` **3,77:1**, `--rot` auf `--schnee` **4,68:1**). Anmerkung 8 des Mockups verlangt „≥ 4,5:1“ — das ist die Schwelle für **Text**. Für ein grafisches Zeichen gilt WCAG 1.4.11 mit **3:1**, und beide bestehen sie. Wer 4,5 als Kriterium abhakt, meldet einen Fehlschlag, den es nicht gibt. **Gegen die Karte** kann `kontrast.py` nichts rechnen — dafür ist die 1-px-Trennlinie da, und die ist von 3 auf 1 px dünner geworden. **Prüfliste Punkt 11** | 07.09.2026 |
+| P-10 | Pfeile in Spurrichtung | Winkel je Pfeil | 6/6 | **erfüllt, gemessen an der Bildschirmmatrix.** **12 von 12** Pfeilen in 30-Grad-Schritten treffen ihren Sollwinkel auf **0,1 Grad** genau (0/30/60/…/330), dazu **2 von 2** auf der Spur des Referenzeinsatzes. **Vorher:** Matrix `a=0,833 b=0 c=0 d=0,833` bei behaupteten 90 und 135 Grad — reine Skalierung, kein Drehanteil. **Die Sollzahl „6“ ist nicht reproduzierbar** und deshalb durch 12 ersetzt: Die Pfeilzahl folgt `floor(Spurlänge_px / 140)` und hängt damit an der Fensterbreite; bei 1280 × 900 sind es 2. Siehe F-S9-P-14 | 07.09.2026 |
+| P-11 | Windenkacheln nach Fähigkeit | Klickprobe | 2 Zeiträume | **erfüllt, drei Fälle statt zwei.** Januar 2026 mit Windeneinsatz: **2 Kacheln**. Januar **ohne** Windeneinsatz, Fähigkeit steht: **2 Kacheln mit „0 Winden-Cycles“ und „0,0 Ø Winden-Cycles / Flugtag“** — genau der Fall, den PS-4 verlangt. November 2026 ohne Fähigkeit: **0 Kacheln**. Der mittlere Fall ist **über die Oberfläche hergestellt** (Windenhaken am Einsatz herausgenommen, im `finally` zurückgesetzt — nachgezählt: 1 Windeneinsatz im Januar, wie vorher), nicht per SQL und nicht im Referenzbestand. `faehigkeiten` aus der API: `{"winch":true,"bergwacht":true}` | 07.09.2026 |
+| P-12 | Wording „GPS-Daten" | Wortliste | 0/0/0 | **erfüllt, jetzt mit der Regel.** Die Sperrliste trägt seit AP3 das Muster `spur` (**großgeschrieben** — es soll das deutsche Substantiv treffen, nicht den Bezeichner; kleingeschrieben ergab beim ersten Versuch **472** Treffer, von denen keine zwanzig eine Anzeige waren). Dazu **sechs begründete Ausnahmen**: `spur_lib.php`, „Spurteil“ (Name im Sicherungsarchiv), die Beschriftungen vergangener Migrationen, der GPX-Fachbegriff, die fünf Fachdokumente und — **befristet, Klasse D** — die fünf Android-Texte, die Schritt 9a übernimmt. Ergebnis: **0 Treffer außerhalb der Ausnahmen, 96 Regeln, 96 gegriffen, 0 ungenutzt, 0 durchgerutschte Fallen**. Umbenannt: **72 sichtbare Zeichenketten in 18 Dateien**; `grep -c "Spur" docs/Handbuch.md` **41 → 0**. Der frühere Gesamtlauf: fünf Bereiche, 98 + 33 + 8 + 2 + 35 Dateien, **493 Treffer, 493 durch Ausnahmen erklärt, 0 außerhalb**, 86 Ausnahmen mit 0 ungenutzten, 0 durchgerutschte Teilstring-Fallen | 07.09.2026 |
 | P-13 | Migration Typ/Kurzname | SQL vorher/nachher | n = n | offen — AP4 |
 | P-14 | Kreisläufe csv und edbak | `kreislauf.py` | 0 unerklärt | offen — AP4 (AP1 fasst weder Datenmodell noch Format an) |
 | P-15 | Register | Zählung | n = n | offen — AP4 |
@@ -100,7 +109,7 @@ gemessen hat, ist keine Zahl.
 | P-20 | Anhebung der Notizen | Vergleichsskript | n / 0 / n | offen — AP7 |
 | P-21 | Suche findet Notiz nur entsperrt | Klickprobe | 1/1 und 0/1 | offen — AP7 |
 | P-22 | Export mit/ohne `pers` | Exportdatei | Spalte da / leer | offen — AP7 |
-| P-23 | Bilderlauf | 8 Breiten × 2 Höhen | 0/0/0/0 | **für die zehn berührten Seiten erfüllt.** *AP1 (sieben Seiten):* 10-tagesuebersicht, 11-…-schublade, 13-einsatzformular, 31-einstellungen-standorte, 32-einstellungen-rettungsmittel, 42-stammdaten-systemweit, 42a-stammdaten-rettungsmittel. *AP2 (drei dazu):* 30-einstellungen-profil (Karte „Datenschutz"), 43a-installation (Textbaustein), 48-betrieb-server (Karte „Adresssuche"). Nach der letzten Codeänderung neu gefahren: **acht Seiten × 8 Breiten = 64 Einzelbilder, 8 Kontaktbögen** und **zwei Seiten × 8 Breiten = 16 Einzelbilder, 2 Kontaktbögen** — je Lauf **Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0**, einmal als Zeigergerät (44/36) und einmal als Fingergerät (44). Gegenprobe auf gleiche Bilder im Achterlauf: 64 Dateien, **64 verschiedene Prüfsummen**. **Der volle Lauf über alle 30 Seiten steht mit AP8 aus.** | 07.09.2026 |
+| P-23 | Bilderlauf | 8 Breiten × 2 Höhen | 0/0/0/0 | **für die sechzehn berührten Seiten erfüllt.** *AP1 (sieben):* 10, 11, 13, 31, 32, 42, 42a. *AP2 (drei dazu):* 30, 43a, 48. *AP3 (sechs dazu):* 12-einsatzansicht, 14-zeitraum, 14a-zeitraum-monat, 21a-tag-spuren, 35-import-export, 44-demo-konto, 47-betrieb-jobs — dazu erneut 10 und 11, weil die Kartenzeichen dort stehen. AP3-Lauf über **zehn Seiten × 8 Breiten = 80 Einzelbilder, 10 Kontaktbögen**, je Lauf **Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0**, einmal als Zeigergerät (44/36) und einmal als Fingergerät (44). **Der volle Lauf über alle 30 Seiten steht mit AP8 aus.** | 07.09.2026 |
 | P-24 | Stilvergleich | `stilvergleich` | Abweichungen erklärt | offen — AP8 (er ruht bis P4; siehe Abschnitt 4, Frage 3 des Konzepts dazu ist nicht offen — `CLAUDE.md` 6 lässt ihn ab P4 wieder wachen, und S9 liegt davor) |
 | P-25 | Vollständigkeit | `vollstaendigkeit` | Zahl erklärt | **300 → 298 → 304 Befunde**, jede Bewegung erklärt. *AP1 (300 → 298):* `loc-suggest`, `rmlist`, `rmopt` verlieren ihre Regel und stehen auf der Streichliste (45 → 42 mit Regel, 121 → 125 gestrichen); `rmneu` wandert von „ohne Gegenstück" (54 → 53) ebenfalls dorthin und fällt aus `ohne-regel.md` (6 → 5 als `[offen]`). *AP2 (298 → 304):* **+6 Unicode-Pfeile** (227 → 233) — durchweg das `→` in deutschen Sätzen, die einen Menüweg nennen („Betrieb → Servereinstellungen", „Einstellungen → Profil"), dieselbe Redeweise wie die 227 vorhandenen. **+1 dann 0** Klassen ohne eingetragenen Grund: `loc-datenschutz` ist ein **Anker ohne Gestaltung** (die Kleinzeile trägt `.feld-klein`) und steht mit Begründung in `ohne-regel.md` als `[bleibt]`. Alle übrigen Zahlen unverändert — 0 Hexfarben außerhalb `:root`, 0 Schriftgrößen außerhalb der Skala, 0 Pixelmaße außerhalb der Token, 0 Knopfhöhen ohne `--knopf`, 0 ungenutzte Einträge in den Hilfslisten | 07.09.2026 |
 | P-26 | Wartungsprobe | `wartungsprobe` | 44/0 | offen — AP8 |
@@ -140,6 +149,30 @@ gemessen hat, ist keine Zahl.
 | PHP-Syntax | `php -l` über alle berührten Dateien: **0 Fehler**; `node --check` über alle berührten Skripte: **0 Fehler** |
 | Linkprobe (läuft mit) | **134 Verweise, 0 unbekannte Abweichungen**, 1 bekannt mit Nummer (Nr. 151), 0 tote Zeilen. Die zwei neuen sind die Formularziele der beiden Schalter |
 | Wortliste | fünf Bereiche, **99 + 34 + 8 + 2 + 35 = 178 Dateien**, **0 Treffer außerhalb der Ausnahmen in 0 Zeilen**, 86 Ausnahmen mit **0 ungenutzten**, **0** durchgerutschte Teilstring-Fallen. Die beiden neuen Dateien (`geocoder_lib.php`, `assets/geocoder.js`) sind in den Bereichen a und b mitgezählt |
+
+### Was AP3 zusätzlich gemessen hat
+
+| Was | Zahl |
+|---|---|
+| Wege der Klickprobe, gefahren | **6 von 6** erfüllt (AP3 allein); mit AP1 und AP2 zusammen **16 Wege** |
+| Sichtbare Zeichenketten umbenannt | **72** in **18 Dateien**; `grep -c "Spur" docs/Handbuch.md` **41 → 0** |
+| Nicht umbenannt, mit Begründung | **18 Zeilen** in vier Gruppen: `spur_lib.php` (10, Code), „Spurteil" (4, Name im Sicherungsarchiv), Migrationsbeschriftungen (2, Geschichte), der GPX-Fachbegriff (1) — dazu ein Zitat des alten Wortlauts im Handbuch |
+| Wortliste | **0 Treffer außerhalb der Ausnahmen** in fünf Bereichen, **96 Regeln, 96 gegriffen, 0 ungenutzt, 0 durchgerutschte Fallen**. Das Muster ist **großgeschrieben**; kleingeschrieben ergab **472** Treffer, davon keine zwanzig eine Anzeige |
+| Symbolvorrat | **49 → 52 Dateien**; „davon im Code verwendet" bleibt **24**, der Hinweis „Symboldatei ohne Verweis" steigt **25 → 28**. Das ist **kein Rückschritt**: Die Artzeichen kommen als Variable (`$sym['symbol']`) durch, und die Prüfung erkennt nur wörtliche Namen — `hubschrauber`, `fahrzeug` und `ohne-zuordnung` stehen aus demselben Grund schon vorher darin. Hinweise zählen nicht in `BEFUNDE` |
+| Vollständigkeit | **304 = 304**, unverändert trotz drei neuer Dateien und zweier neuer Token. Keine neue Klasse ohne Regel, keine Pixelzahl außerhalb der Token |
+| Neue Token | **zwei, beide abgeleitet:** `--geo-ringpunkt` = `--abstand-4` − `--strich-stark` (14 px), `--geo-symbol` = `--symbol` − `--strich-stark` (18 px). Die Rechnung steht im Stylesheet und **ist** die Herkunft; 14 und 18 stehen auf keiner Skala des Projekts, und die Skala ist geschlossen |
+| Erzeugte Tabellen in `docs/Design.md` | alle vier neu erzeugt (`tools/design/tabellen.py`), nicht nachgetippt: Token **177 Zeilen**, Schwellen 12, Symbole 59, Bausteine 43 |
+| Kontraste | **21 Paare, 0 verfehlt** — unverändert, AP3 führt kein neues Farbpaar ein |
+| Linkprobe | **134 Verweise, 0 unbekannte Abweichungen**, 1 bekannt mit Nummer, 0 tote Zeilen |
+| PHP- und JS-Syntax | `php -l` über alle berührten Dateien **0 Fehler**; `node --check` über alle berührten Skripte **0 Fehler** |
+
+**Was der CSS-Weg für Nr. 72 nebenbei vermieden hat.** Das Konzept lässt zwei
+Wege zu: `display` am `<span>` **oder** die Drehung in das SVG. Der zweite
+hätte `edSymbol()` einen Winkelparameter gegeben — und `pfeil-hoch.svg` ist
+zugleich die **Sortierrichtung von sieben Tabellenköpfen**, sechs davon über
+`.symbol-oben` gedreht. Das wäre eine zweite Drehmechanik neben der
+vorhandenen Klassendrehung gewesen, an genau dem Erzeuger, der beide baut.
+Der CSS-Weg lässt sie unberührt.
 
 **Gegenprobe zur Null bei P-06.** Eine Zahl, die auch dann null wäre, wenn die
 Probe gar nicht hinsähe, belegt nichts. Der Weg
@@ -282,6 +315,60 @@ Speichern-Knopf in der Karte — dieselbe Trennung wie in `betrieb_server.php`.
 Ein Tippfehler in der E-Mail-Adresse weist damit auch den Schalter nicht mehr
 mit ab.
 
+**F-S9-P-11 — Zwei Zeichen ohne Kasten, drei Zeilen auseinander.**
+*Gefunden bei der Aufklärung zu Backlog Nr. 72, 07.09.2026.* `.geo-pfeil`
+trug seine Drehung, `.geo-punkt` seine Größe — beide an einem `<span>`, und
+an einem nicht ersetzten Inline-Element wirkt weder `transform` noch `width`.
+Die Pfeile zeigten deshalb ausnahmslos nach Norden (Nr. 72, gemeldet), der
+Abfahrtort maß **4 × 18 px statt 12 × 12** und zeigte seine Spurfarbe nie
+(**Nr. 153, in keinem Backlog-Punkt**).
+
+**Nachweisbar nur an der Geometrie.** `getComputedStyle` meldet die
+Drehmatrix auch dort, wo sie nichts bewirkt — wer den Fehler in den
+Entwicklerwerkzeugen prüft, bekommt „sieht richtig aus" zurück. Die
+Kontrollprobe: Ein 20-px-Kasten mit `rotate(45deg)` misst **28,3 px**
+(= 20·√2), wenn die Drehung greift, und **20 px**, wenn nicht; gemessen
+waren 20. Die Bildschirmmatrix des SVG lautete `a=0,833 b=0 c=0 d=0,833` bei
+behaupteten 90 Grad. *Behoben:* beide bekommen einen ausdrücklichen Kasten;
+nachher 12 von 12 Pfeilen auf 0,1 Grad genau und der Punkt bei 12 × 12 px mit
+sichtbarer Farbe.
+
+**F-S9-P-12 — E-S9-13 hatte keine Abnahme.** *Gefunden von der Gegenprobe der
+Aufklärung.* Die Abnahme von AP3 nennt sechs Kriterien — Schildmaße,
+Kontrast, Pfeile, Windenkacheln, Wortliste, `grep`. **Keines betrifft die
+Artzeichen.** Drei neue Dateien, eine geänderte Signatur, Vorrat 49 → 52, ein
+Tooltip: nichts davon war abzuhaken, und das Prüfdokument hatte dafür keinen
+P-Punkt (`grep -ci "artzeichen\|dt_art_symbol"` = 0). Wer AP3 nach der Liste
+abgeschlossen hätte, hätte es mit drei ungeprüften Dateien abgeschlossen.
+*Behoben:* Der Weg `ap3-artzeichen-sechs` prüft alle sechs Zeichen auf
+Ladbarkeit, Anker `id="i"`, Pfade und Herkunftsangabe im Kopf — **6 von 6**.
+Ein fehlender Anker ist der einzige stille Fehler dieses Wegs: Der Browser
+malt dann nichts und sagt nichts.
+
+**F-S9-P-13 — Der Ringpunkt ist antippbar und wurde kleiner als die
+Untergrenze, die derselbe Beschluss nennt.** *Gefunden von der Gegenprobe.*
+E-S9-12 sagt in einem Atemzug: „Bedienhöhe R76 gilt nicht (Schilder sind
+Zeichnungen), **als Untergrenze am Finger gilt 24 px (WCAG 2.5.8)**" — und
+setzt den Ringpunkt von 16 auf **14 px**. Er ist kein reines Bild: `geo.js`
+hängt ihm ein Popup an, und `einsatz.php` gibt ihm einen Titel („Start und
+Ende der Aufzeichnung"). Beide Werte liegen unter 24; der Fehler ist also
+älter als dieses Paket, wird von ihm aber verstärkt. *Behoben, ohne die
+Freigabe anzutasten:* Die **Zeichnung** bleibt 14 px, wie das Mockup sie
+abgenommen hat, und sitzt in einer durchsichtigen **24-px-Fläche**
+(`.geo-ringpunkt-feld`). Gemessen: Zeichnung 14, Antippfläche 24.
+
+**F-S9-P-14 — Die Abnahmezahl „sechs Pfeile" ist nicht reproduzierbar.**
+*Gefunden bei der Aufklärung.* Die Pfeilzahl folgt
+`floor(Spurlänge_in_Bildschirmpixeln / 140)` und hängt damit an der
+Fensterbreite und an der Zoomstufe, die `fitBounds` wählt. „Sechs Pfeile"
+heißt: 840 px ≤ Spurlänge < 980 px — bei 1280 × 900 sind es auf dem
+Referenzeinsatz **2**. Eine Abnahme, die eine Zahl festschreibt, ohne die
+Fensterbreite mitzuschreiben, ist bei einem anderen Bildschirm falsch.
+*Ersetzt durch:* **12 von 12** Pfeilen in 30-Grad-Schritten in einer
+Aufstellung fester Winkel (reproduzierbar, unabhängig von der Karte)
+**plus** „jeder Pfeil auf der Spur trifft seinen Sollwinkel" (2 von 2 bei
+1280 px). Die zweite Zahl bleibt fensterabhängig, die erste nicht.
+
 ### Funde, die AP2 abgeräumt hat
 
 **F-S9-P-05 — Die Beschriftung eines Adresstreffers steht zweimal im Code.**
@@ -409,6 +496,47 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   Dienst nicht im Photon-Format oder verweigert die Herkunft — die
   Browserkonsole nennt CORS), oder irgendwo steht noch der alte Name.
 
+- [ ] **11 — Die Kartenzeichen gegen die echte Karte, nicht gegen Schnee.**
+  *Weg:* Einen Einsatz mit Aufzeichnung öffnen, die Karte auf **alle drei
+  Ebenen** stellen (Standard, Topografisch, Luftbild) und in jeder auf Start-
+  und Endring sehen — am Handy und am Schreibtisch.
+  *Erwartet:* Blau und Rot heben sich ab; die 1-px-Schneelinie trennt Farbe
+  und Karte.
+  *Scheitern erkennbar an:* Der blaue Ring verschwimmt auf dem Luftbild oder
+  im Wald. **Das kann kein Werkzeug messen:** `kontrast.py` rechnet Token
+  gegen Token, nicht gegen Kartenkacheln, und die Trennlinie ist von 3 auf
+  1 px dünner geworden. Blau liegt bei 3,77:1 gegen Schnee — über der Schwelle
+  für grafische Zeichen (3:1), aber unter der für Text.
+
+- [ ] **12 — Den Ringpunkt mit dem Finger treffen.**
+  *Weg:* Am Handy einen Einsatz öffnen, dessen Aufzeichnung abseits von
+  Standort und Zielklinik beginnt oder endet, und den kleinen Ring antippen.
+  *Erwartet:* Das Popup „Start der Aufzeichnung" öffnet sich beim ersten
+  Tipp. Die Zeichnung ist 14 px, die Antippfläche 24 px — beides gemessen.
+  *Scheitern erkennbar an:* Man trifft daneben oder muss zoomen. Dann ist
+  24 px zu wenig, und die Fläche muss über die Zeichnung hinauswachsen (sie
+  ist durchsichtig, das kostet nichts als eine Zahl).
+
+- [ ] **13 — Die Richtungspfeile auf einer Ost-West-Strecke.**
+  *Weg:* Einen Einsatz mit Aufzeichnung öffnen, deren Weg deutlich nach Osten
+  oder Westen führt — und **zwei Zoomstufen** durchgehen.
+  *Erwartet:* Die Pfeile zeigen in Fahrtrichtung, auch nach dem Zoomen (sie
+  werden bei jedem `zoomend` neu verteilt, an anderen Stellen und mit anderen
+  Winkeln).
+  *Scheitern erkennbar an:* Pfeile, die nach Norden zeigen. **Auf einer
+  Nord-Süd-Strecke sieht ein kaputter Pfeil richtig aus** — genau daran ist
+  Nr. 72 so lange vorbeigelaufen.
+
+- [ ] **14 — „GPS-Daten" im Betrieb und im Sicherungsweg.**
+  *Weg:* Betrieb → Hintergrundjobs ansehen; einen Export mit GPS-Daten
+  starten und einen Import mit einer `.edbak`-Datei.
+  *Erwartet:* Die Jobnamen heißen „GPS-Daten verdichten", „GPS-Daten
+  ausdünnen", „Verwaiste GPS-Daten"; die Fortschrittsmeldungen sagen
+  „GPS-Daten werden übertragen".
+  *Scheitern erkennbar an:* Eine Meldung sagt noch „Spur" — dann ist eine
+  Zeichenkette übersehen worden. Der Weg `ap3-wording-gps-daten` der
+  Klickprobe sieht nur vier Seiten an, nicht den ganzen Sicherungsweg.
+
 - [ ] **10 — Der Datenschutztext.**
   *Weg:* Verwaltung → Installation → unter dem Feld für die
   Datenschutzerklärung den Textbaustein **kopieren**, in die Erklärung
@@ -429,7 +557,41 @@ Stellen, an denen Konzept und Auftrag einander widersprechen oder das Konzept
 schweigt. Jede ist vorläufig entschieden **und** revidierbar; der Preis einer
 Gegenentscheidung steht dabei.
 
-### Neu aus AP2
+### Neu aus AP3
+
+**Frage 6 — `veranstaltung.svg` bei 18 px mit Strich 2: lesbar genug?**
+*Beide Mockups zeichnen mit einem dünneren Strich als die Anwendung.*
+`M-S9-01` und `M-S9-02` setzen `stroke-width:1.8`; die Anwendung liefert **2**
+(`style.css`, und jede der 52 SVG-Dateien). Die freigegebenen Bilder sind
+damit rund **11 % dünner gestrichen** als das, was ausgeliefert wird — und
+zwar genau auf den Symbolen, die AP3 von 20 auf **18 px** verkleinert.
+
+Das trifft die eine Stelle, an der das Mockup seiner eigenen Freigabe
+widerspricht: Anmerkung 4 von M-S9-02 empfiehlt für „Veranstaltung" das
+Zeichen **„ticket"** und nennt „building-stadium" bei 20 px „einen Klumpen";
+die Freigabe hat trotzdem building-stadium gewählt.
+
+*Gebaut ist:* **building-stadium**, wie freigegeben. Angesehen bei 18 und
+20 px mit Strich 2 (Bild im Bericht): Fünf der sechs Zeichen tragen klar;
+`veranstaltung` ist das schwächste — die vier Pfade (Oval, zwei Türme,
+Körper) laufen bei 18 px ineinander. Erkennbar bleibt es als eigene Form,
+aber es ist nicht so ruhig wie die anderen fünf.
+*Preis einer Gegenentscheidung:* eine Datei tauschen (Tabler „ticket"), eine
+Zeile in `dt_typ_symbole()`, drei Zeilen Dokumentation. **Fällig erst mit
+AP4** — vorher erreicht kein Bedienweg das Zeichen.
+
+**Frage 7 — Der Umfang von E-S9-03 war größer als seine Aufzählung.**
+**Entschieden vom Auftraggeber am 07.09.2026: alles Sichtbare.** Das Konzept
+sagt „Überall, wo die NutzerIn liest" und zählt dann fünf Stellen auf;
+gemessen waren es **72 sichtbare Zeichenketten in 18 Dateien** — dazu Betrieb
+→ Hintergrundjobs, der Sicherungs- und Importweg, Komplettsicherung,
+Admin-Demo und mehrere Fehlermeldungen. Alle sind umbenannt.
+
+Für die **Android-App** (fünf sichtbare Texte) hat der Auftraggeber
+entschieden: **Schritt 9a nimmt sie mit**, weil er ohnehin an der App
+arbeitet. Der Handzettel dafür steht in Abschnitt 6.
+
+### Aus AP2
 
 **Frage 4 — Pfeile auf der Spur im Kartendialog: ja oder nein?**
 **Entschieden vom Auftraggeber am 07.09.2026: nein.** Der gebaute Stand
@@ -540,3 +702,40 @@ Wo Mockup und Umsetzung auseinandergehen, steht es hier (Konzept, Abschnitt 6:
 | **M-S9-04:** Suchfeld im Kopf, Innenabstand | Zustand A–C: `.dialog-suche` im Kopf, `.dialog-inhalt` mit `padding-top:0` (inline) | dasselbe, als Regel `.dialog-karte .dialog-inhalt{padding-top:0}` | Ein Inline-Stil im Mockup ist eine Notiz, keine Regel; im Stylesheet steht sie auf den Kartendialog begrenzt. Kein neues Token |
 | **E-S9-05:** Absatz im Datenschutztext | Konzept: „Vorlage in `rechtstexte_lib.php`, Abschnitt zur Adresssuche mit Dienstadresse als Platzhalter" | **Textbaustein zum Kopieren** auf Verwaltung → Installation | `rechtstexte_lib.php` hat **keine** Vorlagen und kann keine haben: Die Anwendung liefert grundsätzlich keinen Rechtstext mit (`admin_installation.php`, Handbuch 11.5) — ein eingesetzter Absatz wäre eine Rechtsauskunft, die dieses Projekt nicht gibt. Sie kann ihn nur **bereitlegen**: fertiger Abschnitt mit der eingetragenen Dienstadresse, Kopieren-Knopf, sichtbar nur solange die Suche an ist |
 | Behälter des Besatzungsfeldes | `<div class="loc-widget">` mit Label daneben | `<label class="feld-vorschlag">` wie bisher | Das Mockup benutzt `.loc-widget` nur, um `position:relative` zu bekommen; `.loc-widget` trägt daneben die Abstände des Ortsfelds. Die Feldstruktur des Formulars bleibt damit unberührt — eine Umstellung auf `ui_feld()` wäre eine Änderung ohne Auftrag |
+
+---
+
+## 6. Handzettel für Schritt 9a — die fünf Android-Texte
+
+Der Auftraggeber hat am 07.09.2026 entschieden, dass die Android-App die
+Umbenennung nicht in S9/AP3 bekommt, sondern in **Schritt 9a**, der ohnehin
+an ihr arbeitet. Dies ist der Zettel dafür; er kann als Ganzes an die
+9a-Instanz gegeben werden.
+
+> **Auftrag.** In `android/handy/src/main/res/values/strings.xml` heißt die
+> Aufzeichnung an fünf Stellen noch „Spur". Die Weboberfläche sagt seit
+> Web 15.8.0 **„GPS-Daten"** (Entscheidung E-S9-03 des Konzepts S9,
+> Backlog Nr. 110); dieselbe Person liest beides.
+>
+> | Schlüssel | heute | Vorschlag |
+> |---|---|---|
+> | `warnung_akku_niedrig` | „…dann bricht die Spur ab, ohne dass es jemand merkt." | „…dann brechen die GPS-Daten ab, ohne dass es jemand merkt." |
+> | `dienst_kanal_zweck` | „Zeigt an, dass die Spur des laufenden Dienstes aufgezeichnet wird." | „Zeigt an, dass die GPS-Daten des laufenden Dienstes aufgezeichnet werden." |
+> | `modus_nur_aufzeichnen_hinweis` | „Die ganze Spur wird aufgezeichnet." | „Es werden durchgehend GPS-Daten aufgezeichnet." |
+> | `ortung_fehlt_hinweis` | „Ohne Ortungsfreigabe zeichnet die App keine Spur auf." | „Ohne Ortungsfreigabe zeichnet die App keine GPS-Daten auf." |
+> | `warnung_standort_aus` | „…sonst bleibt die Spur dieses Dienstes leer." | „…sonst bleiben die GPS-Daten dieses Dienstes leer." |
+>
+> In `android/uhr/…/strings.xml` steht „Spur" nur in einem **Kommentar**
+> (Zeile 37) — er bleibt; die Wortliste liest Kommentare ohnehin nicht.
+>
+> **Was mitläuft:** `android/version.properties` hochstufen,
+> `./gradlew build` (0 Lint-Fehler, 0 Fehlschläge), **Emulatorlauf mit
+> Bildern** (CLAUDE.md 6 — Pflicht bei jeder Änderung an einem der beiden
+> Module), `docs/CHANGELOG.md` mit Präfix `Android`, `android/LIESMICH.md`.
+>
+> **Und diese Zeile hier löschen:** In `tools/wortliste/ausnahmen.json` steht
+> die Ausnahme **`spur-android-wartet-auf-9a`** (Bereich `d`, Klasse D). Sie
+> ist befristet und hält die Wortliste nur so lange grün, bis 9a die fünf
+> Texte umgestellt hat. Wer sie stehen lässt, hat eine Ausnahme, die nichts
+> mehr erklärt — und die Wortliste meldet sie beim nächsten Lauf als
+> **ungenutzt**, was ein Fehlschlag ist.

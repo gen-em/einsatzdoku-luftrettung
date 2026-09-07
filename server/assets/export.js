@@ -950,7 +950,7 @@
             '  - Freitext: notizen bei Einsatz und Diensttag',
             '  - Ortsangaben: die Koordinaten der Phasen (Phase 4 = Ankunft',
             '    Einsatzort, Phase 5 = Ankunft PatientIn), hoehe_einsatzort_m',
-            '    und, falls gewählt, die GPX-Spuren unter tracks/'
+            '    und, falls gewählt, die GPS-Daten als GPX unter tracks/'
         ] : [
             'Diese Datei enthält KEINE der nachstehenden Gruppen — die Spalten sind',
             'vorhanden und leer:',
@@ -959,7 +959,7 @@
             '  - bw_info (Bergwacht: Namen / Infos) und other_ema (anderer Notarzt)',
             '  - notizen bei Einsatz und Diensttag',
             '  - Koordinaten der Phasen und hoehe_einsatzort_m',
-            '  - GPX-Spuren (der Ordner tracks/ fehlt vollständig)',
+            '  - GPS-Daten als GPX (der Ordner tracks/ fehlt vollständig)',
             '',
             'Enthalten bleiben dagegen: transport_dest (Zielklinik) und bw_unit',
             '(Bergwacht-Einheit) — beides Einrichtungen, keine Personen —,',

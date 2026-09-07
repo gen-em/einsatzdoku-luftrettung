@@ -148,12 +148,61 @@ function dt_art_symbole(): array
  * Die Textalternative ist Pflicht, nicht Zierde: Ohne sie haengt die Auskunft
  * allein an der Grafik.
  *
+ * @param  ?string $kind 'air' | 'ground' | null (neutral)
+ * @param  ?string $typ  null | 'standard' | 'bergwacht' | 'veranstaltung' | 'sonstiges'
  * @return array{symbol:string,text:string}
  */
-function dt_art_symbol(?string $kind): array
+function dt_art_symbol(?string $kind, ?string $typ = null): array
 {
     $alle = dt_art_symbole();
-    return $alle[(string)$kind] ?? $alle[''];
+    $art  = $alle[(string)$kind] ?? $alle[''];
+
+    /* DER TYP GEHT VOR DER BETRIEBSART (E-S9-13, M-S9-02, freigegeben
+     * 06.09.2026). Ein Bergwacht-Dienst traegt den Berg, gleich ob er in der
+     * Luft oder am Boden gefahren wird: Das Typzeichen sagt, WORUM es geht,
+     * die Betriebsart sagt, WOMIT — und wer auf eine Leiste voller Zeichen
+     * sieht, sucht das Erste. Die Betriebsart geht dabei nicht verloren, sie
+     * wandert in den Text: „Bergwacht, luftgebunden".
+     *
+     * `$typ` IST IN AP3 IMMER NULL, und das ist kein Versehen. Das Datenmodell
+     * kennt den Diensttag-Typ noch nicht — er kommt mit AP4 (E-S9-09) samt
+     * Migration. Die Funktion nimmt ihn schon entgegen, damit AP4 nur noch
+     * fuellen muss, was hier bereits steht, statt fuenfzehn Aufrufer erneut
+     * anzufassen. Bis dahin liefert sie unveraendert das Zeichen der
+     * Betriebsart. */
+    if ($typ === null || $typ === '' || $typ === 'standard') { return $art; }
+
+    $typen = dt_typ_symbole();
+    if (!isset($typen[$typ])) { return $art; }
+
+    return [
+        'symbol' => $typen[$typ]['symbol'],
+        'text'   => $typen[$typ]['text'] . ', ' . $art['text'],
+    ];
+}
+
+/**
+ * Die Zeichen der Diensttag-TYPEN (E-S9-13, Mockup M-S9-02).
+ *
+ * Getrennt von `dt_art_symbole()`, weil es zwei Dimensionen sind: Die
+ * Betriebsart ist Luft oder Boden, der Typ ist Standard, Bergwacht,
+ * Veranstaltung oder Sonstiges. `standard` steht bewusst NICHT in dieser
+ * Liste — sein Zeichen ist das der Betriebsart, und ein vierter Eintrag, der
+ * auf zwei andere verweist, waere eine Falle fuer den naechsten Leser.
+ *
+ * Alle drei Zeichnungen sind Tabler Icons (MIT), Outline, Strich 2 im
+ * 24-px-Raster wie der uebrige Vorrat — Herkunft im Dateikopf und in
+ * `docs/Design.md` 8.
+ *
+ * @return array<string,array{symbol:string,text:string}>
+ */
+function dt_typ_symbole(): array
+{
+    return [
+        'bergwacht'     => ['symbol' => 'bergwacht',     'text' => 'Bergwacht'],
+        'veranstaltung' => ['symbol' => 'veranstaltung', 'text' => 'Veranstaltung'],
+        'sonstiges'     => ['symbol' => 'sonstiges',     'text' => 'Sonstiges'],
+    ];
 }
 
 /**

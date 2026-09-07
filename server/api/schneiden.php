@@ -211,7 +211,7 @@ function schnitt_ausfuehren(array $b, int $userId): never
                                  . 'Punkt — entweder ist er schon geschnitten, '
                                  . 'oder das Gerät hat dort nicht aufgezeichnet. '
                                  . 'Es ist nichts entstanden. Für einen Einsatz '
-                                 . 'ohne Spur ist „Nachtragen" der richtige Weg.'], 409);
+                                 . 'ohne GPS-Daten ist „Nachtragen" der richtige Weg.'], 409);
         }
         schnitt_vermerken($pdo, $userId, 'rest', (int)$seg['id'], $misId,
                           $vonTs, $bisTs, $erg['genommen']);

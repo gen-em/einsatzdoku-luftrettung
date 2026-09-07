@@ -114,7 +114,7 @@ $mitSpur = array_values(array_filter($spuren, fn($s) => $s['n'] > 0));
  * daneben. */
 $auswahlAn = count($mitSpur) >= 2;
 
-ui_seite_start(['titel' => 'Spuren des Diensttages', 'karte' => true]);
+ui_seite_start(['titel' => 'GPS-Daten des Diensttages', 'karte' => true]);
 /* DAS GERUEST HAT HIER GEFEHLT (Rueckmeldung vom 01.09.2026). Diese Seite
  * rief `ui_seite_start()` und schrieb ihren Inhalt danach unmittelbar in den
  * <body> — ohne `ui_geruest_start()`. Damit fehlte ihr nicht nur die
@@ -138,11 +138,11 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
     </a>
     <div class="titelzeile-haupt">
       <div class="titelzeile-text">
-        <h1>Spuren des Diensttages</h1>
+        <h1>GPS-Daten des Diensttages</h1>
       </div>
     </div>
     <p class="titelzeile-unter">
-      <?= count($mitSpur) ?> von <?= count($spuren) ?> Einträgen tragen eine Spur ·
+      <?= count($mitSpur) ?> von <?= count($spuren) ?> Einträgen tragen GPS-Daten ·
       <?= array_sum(array_column($spuren, 'n')) ?> Punkte insgesamt
     </p>
   </div>
@@ -154,14 +154,14 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
 
   <div class="geo-spalte"><div id="map" class="geo"></div></div>
 
-  <?php ui_karte_start(['titel' => 'Spuren', 'zahl' => (string)count($spuren)]); ?>
+  <?php ui_karte_start(['titel' => 'GPS-Daten', 'zahl' => (string)count($spuren)]); ?>
     <?php /* WARUM EIN HINWEIS UEBER DER LISTE: Eine GPX-Datei traegt den Weg
              bis zum Einsatzort — und der ist sonst das am strengsten
              geschuetzte Feld dieser Anwendung. Der Export bindet GPX-Spuren
              aus genau diesem Grund an die personenbezogenen Angaben
              (`api/export_data.php`). Hier gibt es keine anonyme Fassung, also
              gehoert der Satz an die Stelle, an der jemand herunterlaedt. */ ?>
-    <?= ui_meldung_markup('schutz', 'Eine Spur zeigt den gefahrenen oder '
+    <?= ui_meldung_markup('schutz', 'GPS-Daten zeigen den gefahrenen oder '
         . 'geflogenen Weg mit Zeitstempeln — bei einem Einsatz also auch den '
         . 'Einsatzort, bei einer Ruhezeit den Aufenthalt der Besatzung '
         . 'zwischen den Einsätzen. Die Dateien sind damit so zu behandeln wie '
@@ -170,8 +170,8 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
     <p class="feld-hinweis">Auf eine Zeile zeigen hebt die zugehörige Linie auf
        der Karte hervor; ein Klick zoomt auf sie. <strong>GPX</strong> lädt sie
        einzeln herunter.<?php if ($auswahlAn): ?> Mehrere Kästchen ankreuzen
-       lädt die ausgewählten Spuren als <em>eine</em> Datei — jede bleibt darin
-       eine eigene Spur.<?php endif; ?></p>
+       lädt die ausgewählten GPS-Daten als <em>eine</em> Datei — jede
+       Aufzeichnung bleibt darin eine eigene Spur.<?php endif; ?></p>
 
     <?php foreach ($spuren as $i => $s): ?>
       <?php
@@ -184,7 +184,7 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
 
         $plaketten = '';
         if ($s['n'] === 0) {
-            $plaketten = ui_plakette('keine Spur', ['ton' => 'neutral']);
+            $plaketten = ui_plakette('keine GPS-Daten', ['ton' => 'neutral']);
         } elseif ($s['stufe'] === SPUR_STUFE_DUENN) {
             $plaketten = ui_plakette('ausgedünnt · ' . $s['n'] . ' von '
                 . $s['n_original'] . ' Punkten', ['ton' => 'orange']);
@@ -213,7 +213,7 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
                   . ' data-spurwahl value="' . e($s['art']) . '-' . (int)$s['id'] . '"'
                   . ($s['n'] > 0 ? '' : ' disabled')
                   . ' aria-label="' . e($titel . ' · ' . $zeit
-                      . ($s['n'] > 0 ? ' auswählen' : ' — keine Spur')) . '">';
+                      . ($s['n'] > 0 ? ' auswählen' : ' — keine GPS-Daten')) . '">';
         }
       ?>
       <?php ui_zeile([
@@ -344,8 +344,8 @@ function malen() {
 
   if (leiste) {
     if (zahlEl) {
-      zahlEl.textContent = gewaehlt === 1 ? '1 Spur ausgewählt'
-                                          : gewaehlt + ' Spuren als eine Datei';
+      zahlEl.textContent = gewaehlt === 1 ? '1 Aufzeichnung ausgewählt'
+                                          : gewaehlt + ' Aufzeichnungen als eine Datei';
     }
     leiste.hidden = gewaehlt === 0;
   }

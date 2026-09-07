@@ -67,7 +67,7 @@
    * ring: '' | 'start' | 'ende' | 'beide' — Ringe der Spur (E-P3-33). Sie
    * liegen als box-shadow AUSSERHALB des Kastens und aendern seine Groesse
    * nicht; der Anker bleibt richtig. */
-  var SCHILD_PX = 36;
+  var SCHILD_PX = 30;
 
   function schild(symbol, ring) {
     var k = 'geo-schild' + (ring ? ' geo-ring-' + ring : '');
@@ -98,8 +98,12 @@
    * DIE MASSE STEHEN HIER UND IM STYLESHEET, und das ist bewusst: Leaflet
    * braucht sie als Zahl, das Stylesheet als Token. Wer eines aendert,
    * aendert beides — sonst wandert der Anker. Token: --geo-kreis,
-   * --geo-schild. */
-  var KREIS_PX = 32;
+   * --geo-schild, --geo-ringpunkt.
+   *
+   * S9/AP3 hat alle drei verkleinert (M-S9-01 V1, E-S9-12): Schild 36 -> 30,
+   * Kreis 32 -> 28, Ringpunkt 16 -> 14. Die Anker rechnen sich daraus und
+   * ziehen von selbst nach. */
+  var KREIS_PX = 28;
 
   function markerEinsatzort(latlng, titel) {
     var icon = L.divIcon({ className: '',
@@ -111,12 +115,37 @@
   }
 
   /* ---- Ring ohne Schild (Start/Ende der Spur abseits von Standort und
-   * Ziel) — derselbe Farbcode wie die Ringe am Schild: blau = Start,
-   * rot = Ende, Doppelring = beides. */
+   * Ziel) — derselbe Farbcode wie die Raender am Schild: blau = Start,
+   * rot = Ende, Doppelrand = beides.
+   *
+   * AUCH HIER STEHT DAS MASS ZWEIMAL, und bis S9/AP3 stand es hier als
+   * nackte 16 ohne den Hinweis darueber: Das Gegenstueck im Stylesheet ist
+   * `--geo-ringpunkt`. Wer eines aendert, aendert beides — sonst sitzt der
+   * Ring um eine halbe Randstaerke neben dem Spuranfang, und das faellt
+   * niemandem auf, weil es keine Fehlermeldung gibt.
+   *
+   * DIE ZEICHNUNG IST 14 px, DIE ANTIPPFLAECHE 24 (S9/AP3). Das Mockup
+   * M-S9-01 V1 setzt den Ring auf 14 px und ist so freigegeben — derselbe
+   * Beschluss (E-S9-12) nennt aber im selben Absatz 24 px als Untergrenze am
+   * Finger (WCAG 2.5.8), und dieser Ring IST antippbar: `einsatz.php` gibt
+   * ihm einen Titel, also ein Popup. Beides zugleich geht nur so: Das
+   * `divIcon` ist 24 px gross und traegt die 14-px-Zeichnung in seiner Mitte
+   * (`.geo-ringpunkt-feld`, Stylesheet). Sichtbar aendert sich nichts, der
+   * Finger trifft trotzdem. Der Anker bleibt die Mitte, also 12/12 — und
+   * damit weiter genau auf dem Spuranfang.
+   *
+   * Bis Web 15.7.0 war die Flaeche 16 px und lag damit ebenfalls unter der
+   * Grenze; der Fehler ist also aelter als dieses Paket und wird hier
+   * mitbehoben. */
+  var RINGPUNKT_PX = 14;
+  var RINGFELD_PX  = 24;
+
   function markerRing(latlng, art, titel) {
     var icon = L.divIcon({ className: '',
-      html: '<span class="geo-ringpunkt geo-ringpunkt-' + art + '"></span>',
-      iconSize: [16, 16], iconAnchor: [8, 8] });
+      html: '<span class="geo-ringpunkt-feld">'
+          + '<span class="geo-ringpunkt geo-ringpunkt-' + art + '"></span></span>',
+      iconSize: [RINGFELD_PX, RINGFELD_PX],
+      iconAnchor: [RINGFELD_PX / 2, RINGFELD_PX / 2] });
     var m = L.marker(latlng, { icon: icon, keyboard: false, zIndexOffset: 350 });
     if (titel) { m.bindPopup(titel); }
     return m;

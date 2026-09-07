@@ -317,9 +317,21 @@
   --schalter-breit:46px;               /* der Schalter aus E-P3-28 … */
   --schalter-hoch:26px;                /* … 26 hoch, damit er in eine */
   --schalter-punkt:20px;               /* 44-px-Zeile passt und greifbar bleibt */
-  --geo-kreis:32px;                    /* Einsatzort-Kreis auf der Karte */
-  --geo-schild:36px;                   /* Kästchen für Standort und Zielklinik */
-  --geo-ring:3px;                      /* Ringstärke Start/Ende am Schild */
+  --geo-kreis:28px;                    /* Einsatzort-Kreis auf der Karte */
+  --geo-schild:30px;                   /* Kästchen für Standort und Zielklinik */
+  --geo-ring:3px;                      /* Randstärke des Farbrands Start/Ende */
+  /* Zwei abgeleitete Maße aus M-S9-01 V1 (S9/AP3). Die Skala ist geschlossen
+   * (`CLAUDE.md` 5), deshalb stehen sie nicht als neue Stufen da, sondern als
+   * Rechnung — und die Rechnung IST ihre Herkunft:
+   *   Ringpunkt 14 px = --abstand-4 (16) minus --strich-stark (2). Er ist der
+   *     Ring ohne Schild und soll um genau eine Randstärke kleiner sein als
+   *     das Rasterfeld, in dem er bisher saß.
+   *   Symbol im Schild 18 px = --symbol (20) minus --strich-stark (2). Der
+   *     Kasten schrumpft um 6 px; das Symbol gibt eine Randstärke ab, damit
+   *     der Weißraum um es herum nicht auf null fällt.
+   * Das Symbol IM KREIS bekommt kein eigenes Maß — es ist --symbol-klein. */
+  --geo-ringpunkt:calc(var(--abstand-4) - var(--strich-stark)); /* Ring ohne Schild (14 px) */
+  --geo-symbol:calc(var(--symbol) - var(--strich-stark)); /* Symbol im Kartenschild (18 px) */
   /* Speicherbalken (E-S8-18, Web 15.1.0). Zwei Maße, beide abgeleitet:
    * 8 px ist --abstand-2, also eine Stufe des Vierer-Rasters — ein Balken,
    * der eine Zeile Grafik ist und keine Fläche; 10 px ist --radius, die
@@ -2128,51 +2140,68 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 /* == 21. KARTENMARKER (O3, E-P3-40, Mockup 26) =============================
  *
  * Der Marker-Satz gilt für alle drei Kartenseiten und entsteht in
- * assets/geo.js. Die Zeichnung: Schilder (Haus, Klinik) als weiße, dunkel-
- * blau umrandete Kästchen mit Namensschild darunter; der Einsatzort als
- * oranger Kreis mit Pin; Start und Ende als blauer bzw. roter Ring UM das
- * Schild des Ortes, an dem die Spur beginnt oder endet — beides am selben
- * Ort als Doppelring. Richtungspfeile erscheinen erst ab einer Zoomstufe,
- * bei der sie nicht gedrängt stehen.
+ * assets/geo.js. Die Zeichnung: Schilder (Haus, Klinik) als weiße Kästchen;
+ * der Einsatzort als oranger Kreis mit Pin; Start und Ende als blauer bzw.
+ * roter Rand am Schild des Ortes, an dem die Spur beginnt oder endet —
+ * beides am selben Ort als Doppelrand. Richtungspfeile erscheinen erst ab
+ * einer Zoomstufe, bei der sie nicht gedrängt stehen.
+ *
+ * DER FARBRING IST SEIT S9/AP3 DER RAND (M-S9-01 V1, E-S9-12). Bis Web
+ * 15.7.0 lag er als zweiter und dritter `box-shadow` AUSSERHALB des
+ * dunkelblauen Randes; ein Standort mit Doppelring maß dadurch 60 px und
+ * deckte auf der Handykarte mehr als ein Drittel der Höhe. Jetzt ersetzt der
+ * Farbrand den dunkelblauen: 38 px beim Doppelrand, 32 px sonst. Ohne
+ * Aufzeichnung bleibt der Rand dunkelblau — er sagt dann nichts über die
+ * Spur, sondern trennt nur.
+ *
+ * AUSSEN LIEGT IMMER 1 px SCHNEE (F6), am Schild und nur dort. Er trennt die
+ * Farbe von der Karte, damit Blau nicht auf Grün und Rot nicht auf Braun
+ * stößt. Der Einsatzort-Kreis bekommt ihn NICHT: Er ist orange auf einer
+ * Karte, die kein Orange trägt, und die freigegebene Maßleiste des Mockups
+ * nennt für ihn 28 px — mit Trennlinie wären es 30.
+ *
+ * DIE SCHATTENANGABEN TRAGEN DEN SCHLAGSCHATTEN MIT. Bis Web 15.7.0
+ * überschrieben die drei Ringregeln `box-shadow` vollständig; ein beringtes
+ * Schild hatte deshalb keinen Schatten, ein unberingtes schon. Das war
+ * niemandem aufgefallen, weil beide Zustände selten nebeneinander stehen.
  */
 /* KEIN NAMENSSCHILD MEHR (S3/AP7). Die Spalte traegt seit S3 genau ein Kind;
  * `gap` und `flex-direction` bleiben trotzdem stehen, weil die Ringklassen
  * darauf aufsetzen und ein Marker mit zwei Kindern jederzeit wiederkommen
  * kann — dann aber mit ausdruecklichem `iconSize` (siehe geo.js). */
 .geo-schild{display:flex;flex-direction:column;align-items:center;gap:var(--abstand-1)}
-/* ENGER (S3/AP7): 36 statt 44 px. Die 44 kamen von `--knopf` — der Kasten
- * ist aber kein Bedienelement, sondern eine Zeichnung, und die 44-px-Regel
- * gilt fuer das, was man DRUECKT. Das Symbol darin bleibt bei 20 px; was
- * verschwindet, ist Weissraum zwischen Symbol und Rand (12 px ringsum
- * vorher, 8 px jetzt). */
+/* ENGER, ZWEITE STUFE (S9/AP3): 30 statt 36 px, davor 44. Die 44 kamen von
+ * `--knopf` — der Kasten ist aber kein Bedienelement, sondern eine Zeichnung,
+ * und die 44-px-Regel gilt fuer das, was man DRUECKT (R76 gilt hier nicht,
+ * S3/AP7). Untergrenze am Finger ist WCAG 2.5.8 mit 24 px; 30 px liegen
+ * darueber. Das Symbol gibt eine Randstaerke ab (--geo-symbol, 18 px), damit
+ * der Weissraum ringsum nicht auf null faellt. */
 .geo-schild-kasten{
   display:flex;align-items:center;justify-content:center;
   width:var(--geo-schild);height:var(--geo-schild);
   background:var(--schnee);color:var(--dunkelblau);
   border:var(--strich-stark) solid var(--dunkelblau);
   border-radius:var(--radius);
-  box-shadow:var(--schatten);
+  box-shadow:0 0 0 var(--strich) var(--schnee),var(--schatten);
 }
-/* Ringe liegen als zusätzliche Rahmen um das Kästchen. Der Doppelring ist
- * außen rot (Ende) und innen blau (Start) — wie im Mockup. */
-.geo-ring-start .geo-schild-kasten{
-  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
-             0 0 0 calc(var(--geo-ring) * 2) var(--blau);
-}
-.geo-ring-ende .geo-schild-kasten{
-  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
-             0 0 0 calc(var(--geo-ring) * 2) var(--rot);
-}
+.geo-schild-kasten .symbol{width:var(--geo-symbol);height:var(--geo-symbol)}
+/* DER FARBRAND ERSETZT DEN DUNKELBLAUEN, er liegt nicht darum herum. Der
+ * Doppelrand ist innen blau (Start) und aussen rot (Ende): blauer Rand, 1 px
+ * Schnee, 2 px Rot, 1 px Schnee — 38 px statt frueher 60. Die Schnee-Angabe
+ * VOR der roten liegt oben und laesst von deren 3 px Spread 2 px stehen. */
+.geo-ring-start .geo-schild-kasten{border-color:var(--blau);border-width:var(--geo-ring)}
+.geo-ring-ende  .geo-schild-kasten{border-color:var(--rot);border-width:var(--geo-ring)}
 .geo-ring-beide .geo-schild-kasten{
-  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
-             0 0 0 calc(var(--geo-ring) * 2) var(--blau),
-             0 0 0 calc(var(--geo-ring) * 3) var(--schnee),
-             0 0 0 calc(var(--geo-ring) * 4) var(--rot);
+  border-color:var(--blau);border-width:var(--geo-ring);
+  box-shadow:0 0 0 var(--strich) var(--schnee),
+             0 0 0 var(--geo-ring) var(--rot),
+             0 0 0 calc(var(--geo-ring) + var(--strich)) var(--schnee),
+             var(--schatten);
 }
-/* OHNE WEISSE UMRANDUNG UND ETWAS KLEINER (S3/AP7). Der weisse Rand war ein
+/* OHNE WEISSE UMRANDUNG UND KLEINER (S3/AP7, S9/AP3). Der weisse Rand war ein
  * Rest aus der Zeit vor dem Schatten: Er sollte den Kreis von der Karte
  * abheben. Das tut der Schatten, und der Rand machte den Kreis zusaetzlich
- * um 4 px breiter, als er aussah. 32 statt 36 px. */
+ * um 4 px breiter, als er aussah. 28 px, davor 32, davor 36. */
 .geo-kreis{
   display:flex;align-items:center;justify-content:center;
   width:var(--geo-kreis);height:var(--geo-kreis);
@@ -2180,12 +2209,45 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   border-radius:var(--radius-rund);
   box-shadow:var(--schatten);
 }
+.geo-kreis .symbol{width:var(--symbol-klein);height:var(--symbol-klein)}
+/* DER PUNKT BRAUCHT EINEN KASTEN, sonst hat er keinen (Backlog Nr. 153,
+ * S9/AP3). Er ist ein <span> (geo.js, markerPunkt), und an einem nicht
+ * ersetzten Inline-Element wirken `width` und `height` NICHT: Gemessen in
+ * der Tagesuebersicht am 07.09.2026 stand er auf 4 x 18 px statt 16 x 16 —
+ * uebrig blieben die beiden 2-px-Raender als weisser Strich, und die
+ * Spurfarbe im `background` lag in einem 0 px breiten Inhaltskasten und war
+ * nie zu sehen. Derselbe Fehler wie beim Pfeil eine Regel weiter unten. */
 .geo-punkt{
+  display:block;
   width:var(--abstand-3);height:var(--abstand-3);
   border-radius:var(--radius-rund);
   border:var(--strich-stark) solid var(--schnee);
 }
-.geo-pfeil{color:var(--dunkelblau)}
+/* DER PFEIL BRAUCHT EINEN KASTEN, DAMIT ER SICH DREHEN KANN (Backlog Nr. 72,
+ * S9/AP3). `geo.js` setzt die Laufrichtung als `transform:rotate(Ndeg)` auf
+ * diesen <span>; `transform` wirkt aber nicht auf ein nicht ersetztes
+ * Inline-Element, und die Regel hier setzte bis Web 15.7.0 nur die Farbe.
+ * Jeder Pfeil zeigte deshalb nach Norden, und auf Nord-Sued-Abschnitten sah
+ * das richtig aus.
+ *
+ * DER BERECHNETE WERT LUEGT DABEI: `getComputedStyle` meldet die
+ * Drehmatrix auch am Inline-Element. Nachweisbar ist der Fehler nur an der
+ * Geometrie — ein 20-px-Kasten mit `rotate(45deg)` misst 28,3 px, wenn die
+ * Drehung greift, und 20 px, wenn nicht. Gemessen am 07.09.2026: 20 px,
+ * Bildschirmmatrix des SVG a=0,833 b=0 c=0 d=0,833 bei behauptetem 90-Grad.
+ *
+ * `display:flex` MIT AUSDRUECKLICHER GROESSE, nicht `inline-block`: Der
+ * Drehpunkt muss auf `iconAnchor: [10, 10]` aus geo.js treffen. Bei einem
+ * Inline-Block haengt die Kastenhoehe an der Zeilenhoehe der Karte
+ * (leaflet.css setzt 12px/1.5) und an `vertical-align` des Symbols — der
+ * Pfeil drehte sich dann um einen Punkt, der bei der naechsten
+ * Schriftaenderung woanders liegt. `--symbol` ist dieselbe Zahl, die
+ * geo.js als `iconSize` uebergibt. */
+.geo-pfeil{
+  display:flex;align-items:center;justify-content:center;
+  width:var(--symbol);height:var(--symbol);
+  color:var(--dunkelblau);
+}
 .geo-pfeil .symbol{
   filter:drop-shadow(0 0 var(--strich) var(--schnee))
          drop-shadow(0 0 var(--strich) var(--schnee));
@@ -2322,20 +2384,36 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 body.map-fs-lock{overflow:hidden}
 .geo:fullscreen{margin:0;border-radius:0}
 
-/* ---- Ring ohne Schild: Start/Ende der Spur abseits von Standort/Ziel ----- */
+/* ---- Ring ohne Schild: Start/Ende der Spur abseits von Standort/Ziel -----
+ *
+ * ER STEHT HIER UND NICHT IN ABSCHNITT 21, wo der uebrige Marker-Satz liegt —
+ * eine alte Einordnung, die stehenbleibt: Ihn zu verschieben waere eine
+ * Reihenfolgeaenderung im Stylesheet und damit ein Fall fuer den
+ * Stilvergleich, der waehrend P3 ausgesetzt ist. Wer Abschnitt 21 aendert,
+ * aendert hier mit (S9/AP3: 16 -> 14 px, Rand 3 -> 2 px nach M-S9-01 V1).
+ * Seine Groesse steht auch in geo.js (`iconSize`), und die Legende des
+ * Kartendialogs benutzt dieselben Klassen — siehe dort. */
+/* DIE ANTIPPFLAECHE UM DEN RING (S9/AP3, geo.js `RINGFELD_PX`). Sie ist
+ * durchsichtig und 24 px gross — die Untergrenze aus WCAG 2.5.8, die E-S9-12
+ * im selben Absatz nennt, in dem es den Ring auf 14 px setzt. Die Zeichnung
+ * bleibt 14 px; nur der Finger bekommt mehr. */
+.geo-ringpunkt-feld{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;
+}
 .geo-ringpunkt{
   display:block;
-  width:var(--abstand-4);height:var(--abstand-4);
+  width:var(--geo-ringpunkt);height:var(--geo-ringpunkt);
   border-radius:var(--radius-rund);
   background:var(--schnee);
-  border:var(--geo-ring) solid var(--blau);
+  border:var(--strich-stark) solid var(--blau);
   box-shadow:var(--schatten);
 }
 .geo-ringpunkt-ende{border-color:var(--rot)}
 .geo-ringpunkt-beide{
   border-color:var(--blau);
-  box-shadow:0 0 0 var(--strich-stark) var(--schnee),
-             0 0 0 calc(var(--geo-ring) * 2) var(--rot);
+  box-shadow:0 0 0 var(--strich) var(--schnee),
+             0 0 0 var(--geo-ring) var(--rot);
 }
 
 

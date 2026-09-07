@@ -228,7 +228,7 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
         }
         if ($min !== null && $min + $delta <= 0) {
             return ['ok' => false,
-                    'meldung' => 'Die Verschiebung würde Spurpunkte vor den 1.1.1970 '
+                    'meldung' => 'Die Verschiebung würde GPS-Punkte vor den 1.1.1970 '
                                . 'zurückdatieren. Das deutet auf fehlerhafte Zeitstempel '
                                . 'im Bestand hin. Es wurde nichts geändert.'];
         }

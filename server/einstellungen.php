@@ -2374,7 +2374,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         let punkteGesamt = 0, spurenGesamt = 0;
 
         for (const [i, teil] of teileplan.entries()) {
-          expState.textContent = `Spuren werden geholt (Teil ${i + 1} von ${teileplan.length})…`;
+          expState.textContent = `GPS-Daten werden geholt (Teil ${i + 1} von ${teileplan.length})…`;
           const eintraege = [];
           for (const art of ['mission', 'rest']) {
             const dieser = teil.filter(e => e.art === art);
@@ -2394,7 +2394,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 if (!a.ok) {
                   let grund = 'HTTP ' + a.status;
                   try { const j = await a.json(); grund = j.meldung || j.error || grund; } catch (e2) {}
-                  throw new Error('Die Spuren konnten nicht geladen werden (' + grund
+                  throw new Error('Die GPS-Daten konnten nicht geladen werden (' + grund
                                 + '). Es wurde KEINE Datei erzeugt.');
                 }
                 const spuren = (await a.json()).spuren || {};
@@ -2414,7 +2414,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 rest = nochOffen;
               }
               if (rest.length) {
-                throw new Error('Der Server kam mit ' + rest.length + ' Spuren auch nach '
+                throw new Error('Der Server kam mit ' + rest.length + ' Aufzeichnungen auch nach '
                               + 'zehn Anläufen nicht durch. Es wurde KEINE Datei erzeugt.');
               }
             }
@@ -2470,7 +2470,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         melde(expState, `Fertig: ${kopf.eintraege_gesamt} Einträge `
           + `(davon ${n} mit geschützten Angaben), `
           + `${(kopf.days || []).length} Diensttage, `
-          + `${spurenGesamt} Spuren mit ${punkteGesamt.toLocaleString('de-DE')} Punkten `
+          + `${spurenGesamt} Aufzeichnungen mit ${punkteGesamt.toLocaleString('de-DE')} Punkten `
           + `in ${gesamt} ${gesamt === 1 ? 'Teil' : 'Teilen'} `
           + `— ${mb} MB.`
           /* DASS DIE DATEI DA IST, MUSS DASTEHEN (Rückmeldung nach P3).
@@ -2502,7 +2502,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                  fiele sonst erst beim Einspielen auf — und da ist die Quelle
                  vielleicht schon weg. */
               ? ` ACHTUNG: ${fehlerhaft.length} `
-                + `${fehlerhaft.length === 1 ? 'Spur konnte' : 'Spuren konnten'} nicht `
+                + `${fehlerhaft.length === 1 ? 'Aufzeichnung konnte' : 'Aufzeichnungen konnten'} nicht `
                 + 'mitgesichert werden: ' + fehlerhaft.slice(0, 3).join(' · ')
                 + (fehlerhaft.length > 3 ? ' · …' : '')
               : ''),
@@ -2920,7 +2920,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           const HAPPEN = 800 * 1024;      // unter nginx' Vorgabe von 1 MB
           const HAPPEN_ZAHL = 500;
           for (const [i, teilIndex] of fassung4.spurteile.entries()) {
-            impState.textContent = `Spuren werden übertragen `
+            impState.textContent = `GPS-Daten werden übertragen `
               + `(Teil ${i + 1} von ${fassung4.spurteile.length})…`;
             const teil = await fassung4.teilOeffnen(teilIndex);
             let happen = [], groesse = 0;
@@ -2933,7 +2933,7 @@ ui_seite_start(['titel' => 'Einstellungen',
               });
               const o = await a.json();
               if (!o.ok) {
-                throw new Error('Die Spuren konnten nicht übertragen werden ('
+                throw new Error('Die GPS-Daten konnten nicht übertragen werden ('
                   + (o.meldung || o.hinweis || o.error || 'HTTP ' + a.status) + '). '
                   + 'Der übrige Bestand ist bereits eingespielt.');
               }
@@ -2961,11 +2961,11 @@ ui_seite_start(['titel' => 'Einstellungen',
         if (fassung4) { await fassung4.schliessen(); }
 
         const spurText = fassung4
-          ? ` ${spurenGeschrieben} Spuren übernommen`
+          ? ` ${spurenGeschrieben} Aufzeichnungen übernommen`
             + (spurenUebersprungen ? `, ${spurenUebersprungen} waren schon da` : '')
             + (ohneZiel ? `, ${ohneZiel} ohne zugehörigen Einsatz (übersprungen)` : '')
             + (spurenAbgelehnt.length
-                ? `. ACHTUNG: ${spurenAbgelehnt.length} Spuren abgelehnt: `
+                ? `. ACHTUNG: ${spurenAbgelehnt.length} Aufzeichnungen abgelehnt: `
                   + spurenAbgelehnt.slice(0, 3).join(' · ')
                   + (spurenAbgelehnt.length > 3 ? ' · …' : '')
                 : '.')
@@ -3171,7 +3171,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           let spurenGeschrieben = 0, ohneZiel = 0;
           const nS = Number(fgPaket.spurteile || 0);
           for (let i = 1; i <= nS; i++) {
-            fgState.textContent = `Spuren werden übertragen (Teil ${i} von ${nS})…`;
+            fgState.textContent = `GPS-Daten werden übertragen (Teil ${i} von ${nS})…`;
             const name = 'spuren/' + String(i).padStart(4, '0') + '.json';
             const teil = await holeTeil(name);
             let happen = [], groesse = 0;
@@ -3218,7 +3218,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           body: JSON.stringify({ eingeloest: true })
         });
         const zusatz = (s.spuren_uebernommen !== undefined
-                          ? ` ${s.spuren_uebernommen} Spuren übernommen.` : '')
+                          ? ` ${s.spuren_uebernommen} Aufzeichnungen übernommen.` : '')
                      + (unlesbar
                           ? ` ACHTUNG: ${unlesbar} Einsätze liessen sich mit diesem `
                           + `Schlüssel nicht öffnen; ihre geschützten Angaben bleiben `
