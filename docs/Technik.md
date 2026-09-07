@@ -3304,6 +3304,20 @@ Anmeldung, die es ohne Konten nicht geben kann). Drei Schranken:
 3. **Die Datei kommt aus `sicherungen/eingang/`**, nicht aus einem Formular.
    Es gibt hier bewusst kein Hochladen.
 
+**Sie gibt seit Web 15.6.0 unangemeldet keine Auskunft mehr** (Backlog
+Nr. 131, K-11). Diese Seite **muss** ohne Anmeldung erreichbar sein — sie
+arbeitet auf einer Installation, in der es noch kein Konto gibt. Zwei Stellen
+nutzten das aus, ohne es zu wollen:
+
+- Der **Datenbank-Fehlertext** stand wörtlich auf der Seite. Gemessen am Stand
+  davor: `SQLSTATE[HY000] [1044] Access denied for user 'nadoku'@'localhost'
+  to database 'gibtesnicht'` — Datenbanknutzer und -name für jeden Besucher.
+  Jetzt steht dort eine **Fehlerkennung** (`fehler_kennung()`), unter der der
+  volle Text im Fehlerprotokoll des Webspace liegt; die Seite sagt das auch.
+- Die Karte „Diese Installation ist in Betrieb" nannte die **Kontenzahl**,
+  fett. Gemessen: `2`. Für ihre Aussage — hier passiert nichts mehr — braucht
+  sie die Zahl nicht; sie ist jetzt fort.
+
 Der Ablauf hat zwei Gänge: **A** entsiegelt und entpackt nach
 `eingang/.arbeit/dump.sql`, **B** spielt zeilenweise ein und merkt sich den
 **Byteversatz im Klartext**. Genau dafür gibt es Gang A: In einer gepackten
