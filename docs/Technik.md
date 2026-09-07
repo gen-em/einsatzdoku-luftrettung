@@ -1945,7 +1945,8 @@ JSON-POSTs (Header `X-CSRF`), PDO Prepared Statements durchgängig,
 Passwörter/Schlüssel nur als Hash, Ratenschutz an **allen** ohne Anmeldung
 erreichbaren Endpunkten — Anmeldung, Salz-Abfrage, Zurücksetzen-Anforderung,
 Kopplung (s. 4.99 und 4.99b) —, Ingest mit Größen- (512 KB) und Wertevalidierung,
-sensible Dateien per .htaccess gesperrt, Referrer-Policy
+sensible Dateien und die Ordner `apk/` und `demo/` per .htaccess gesperrt
+(Nr. 129), Referrer-Policy
 `strict-origin-when-cross-origin` (OSM-Kacheln).
 
 ### Die Antwortzeit als Auskunft
@@ -3649,6 +3650,34 @@ Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
 Datei- und Verzeichnismuster getrennt.
 
 Hochgeladen wird per FTPS durch die Betreiberin.
+
+#### Der Ordner selbst ist seit Web 15.6.0 gesperrt
+
+`apk.php` verlangt eine Anmeldung — der **Ordner** tat das nicht, und die
+Dateinamen sind vorhersagbar (`nadoku-0.13.0.apk`). Bis dahin stand hier „nur
+angemeldet"; das galt für die Seite, nicht für das Verzeichnis (Backlog
+Nr. 129, K-9). Dasselbe für `server/demo/`, wo `fixture.json.gz` das
+Schlüsselmaterial des Demo-Kontos trägt — harmlos, weil sein Passwort im
+Handbuch steht, aber unnötig.
+
+Zwei Zeilen in `server/.htaccess`, hinter dem HTTPS-Zwang:
+
+```
+RewriteRule ^(apk|demo)(/|$) - [F,L]
+```
+
+mod_rewrite läuft dort schon, und beide Ordner werden ausschließlich vom
+PHP-Code gelesen (`readfile()` in `apk.php`, `file_get_contents()` in
+`demo_lib.php`) — die Sperre kostet die Anwendung nichts. Gemessen unter einem
+Apache mit dieser `.htaccess`: `apk/`, `apk/<datei>.apk`, `demo/` und
+`demo/fixture.json.gz` je **403**, `login.php` und `assets/style.css`
+unverändert **200**.
+
+**Keine Laufzeitsperre wie bei `sicherungen/`.** Der Ordner entsteht durch
+FTPS-Upload, nicht durch Code; es gibt keine Stelle, an der eine `.htaccess`
+angelegt würde, ohne dafür eine zu erfinden. Wer die Anwendung auf einen
+Webserver ohne `.htaccess`-Auswertung stellt (nginx), muss die Sperre dort
+selbst setzen — das gilt für die Regeln darüber genauso.
 
 #### Der Name wird nicht geprüft, sondern gesucht
 
