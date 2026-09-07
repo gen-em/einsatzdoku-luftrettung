@@ -3652,11 +3652,24 @@ erfahren, dass ihr die Zeitstempel fehlen.
 > UTF-16-Dokument damit von Hand; eine Dateiauswahl im Browser braucht es
 > nicht.
 >
-> **Was das kostet:** Eine GPX-Datei in Latin-1 mit Umlauten wird jetzt
-> abgewiesen. GPX 1.1 schreibt UTF-8 vor, und Geräte halten sich daran; die
-> Meldung sagt, was zu tun ist, statt die Datei stumm halb zu lesen.
-> `tools/gpxprobe/` Teil 8 hält acht Umgehungsversuche dagegen — **8 Proben,
-> 0 durch**, und eine saubere Datei geht weiterhin durch.
+> **Was das kostet — und wo es gar nicht greift:** Auf dem JSON-Direktweg
+> wird eine GPX-Datei in Latin-1 mit Umlauten abgewiesen, und die Meldung sagt,
+> was zu tun ist. Über den Dateidialog kommt so eine Datei nie an: Der Browser
+> liest sie mit `readAsText()`, dekodiert nach UTF-8 und ersetzt ungültige
+> Bytes durch U+FFFD — am Server ist das gültiges UTF-8 (Gegenprüfung vom
+> 07.09.2026, Fund 9; kein Datenfehler, der Name wird nicht gespeichert).
+> Die Prüfung ist eine für die API, nicht für den Dateidialog.
+>
+> **Und die Kodierungsdeklaration** (Nachbesserung 07.09.2026, Fund 7): UTF-7
+> ist reines ASCII — gültiges UTF-8, kein Nullbyte, `<!DOCTYPE` steht darin
+> als `+ADwAIQ-DOCTYPE` — und libxml liest es trotzdem als DOCTYPE, weil
+> `encoding="UTF-7"` in der XML-Deklaration steht. Gemessen: DOCTYPE und
+> interne Entität kamen durch, zwei Punkte, Name „LACHER". Die Deklaration
+> darf deshalb nur UTF-8 oder ASCII nennen; von 935 Kodierungen aus `iconv -l`
+> waren genau UTF-7 und UTF7 durchgekommen, die Liste schließt alle.
+> `tools/gpxprobe/` Teil 8 hält neun Umgehungsversuche dagegen — **9 Proben,
+> 0 durch** (am Stand davor: 9 Proben, 1 durch) —, und drei saubere Dateien
+> gehen weiterhin durch (UTF-8, utf-8, ohne Deklaration).
 
 #### Toleranz, wo sie richtig ist
 

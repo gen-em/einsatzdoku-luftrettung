@@ -744,10 +744,14 @@ als **50 000 Punkte** (das sind knapp 14 Stunden bei einem Punkt je Sekunde)
 und Dateien über **12 MB**. In jedem Fall steht der Grund im Dialog, und es
 entsteht nichts.
 
-**Die Datei muss UTF-8 sein** (seit Web 15.6.0). GPX schreibt das vor, und
-Geräte halten sich daran. Eine Datei in einer anderen Kodierung — UTF-16, oder
-Latin-1 mit Umlauten — wird abgelehnt, und die Meldung sagt, was zu tun ist:
-als UTF-8 speichern und erneut versuchen. Fast jeder Texteditor kann das.
+**Die Datei sollte UTF-8 sein.** GPX schreibt das vor, und Geräte halten sich
+daran. Wählst du die Datei im Browser aus, wandelt er sie beim Lesen nach
+UTF-8 um — die Punkte kommen dann an, Umlaute aus einer Latin-1-Datei aber
+als Ersatzzeichen; sie stehen nur im Namen der Spur, und den speichert der
+Import nicht. Wer den Import unmittelbar über die Schnittstelle anspricht,
+muss UTF-8 liefern: Dort werden eine andere Kodierung, ein Nullbyte oder eine
+Kodierungsangabe wie UTF-7 abgelehnt (seit Web 15.6.0), und die Meldung sagt,
+was zu tun ist: als UTF-8 speichern und erneut versuchen.
 
 **Was toleriert wird:** GPX 1.0 ebenso wie 1.1, und Dateien ohne
 Namensraumangabe. Mehrere Abschnitte in einer Datei werden zu **einer** Spur

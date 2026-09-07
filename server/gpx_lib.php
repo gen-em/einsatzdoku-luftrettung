@@ -342,9 +342,15 @@ function gpx_lesen(string $xml, ?Pruefliste $pruef = null): array
      * denselben Fall allgemeiner und schliesst nebenbei jede Kodierung aus,
      * die die Regex anders lesen wuerde als der Parser.
      *
-     * WAS DAS KOSTET: Eine GPX-Datei in Latin-1 mit Umlauten wird jetzt
-     * abgewiesen. GPX 1.1 schreibt UTF-8 vor, und Geraete halten sich daran;
-     * die Meldung sagt, was zu tun ist, statt die Datei stumm halb zu lesen. */
+     * WAS DAS KOSTET -- und wo es gar nicht greift: Eine GPX-Datei in Latin-1
+     * mit Umlauten wird auf dem JSON-Direktweg abgewiesen; die Meldung sagt,
+     * was zu tun ist. Ueber den Dateidialog der Oberflaeche kommt so eine
+     * Datei hier NIE an: `schneiden.js` liest sie mit `readAsText()`, und der
+     * Browser dekodiert nach UTF-8 und ersetzt jedes ungueltige Byte durch
+     * U+FFFD -- am Server ist das dann gueltiges UTF-8 mit Ersatzzeichen im
+     * Namen (Gegenpruefung, Fund 9). Das ist kein Datenfehler, weil der Name
+     * nicht gespeichert wird; aber die Pruefung ist eine fuer den API-Weg,
+     * nicht fuer den Dateidialog, und so soll sie auch verstanden werden. */
     if (strpos($xml, "\0") !== false) {
         throw new InvalidArgumentException(
             'Die Datei enthält ein Nullbyte und ist damit kein Text. Das deutet '
@@ -355,6 +361,32 @@ function gpx_lesen(string $xml, ?Pruefliste $pruef = null): array
         throw new InvalidArgumentException(
             'Die Datei ist nicht in UTF-8 kodiert. GPX schreibt UTF-8 vor — bitte '
             . 'so speichern und erneut versuchen.');
+    }
+
+    /* DIE KODIERUNGSDEKLARATION (Nachbesserung 07.09.2026, Gegenpruefung
+     * Fund 7). Die beiden Pruefungen oben fangen jede BREITE Kodierung --
+     * nicht aber eine, die reines ASCII ist und trotzdem etwas anderes
+     * bedeutet. UTF-7 ist so eine: gueltiges UTF-8, kein Nullbyte, und die
+     * Bytefolge `<!DOCTYPE` steht darin als `+ADwAIQ-DOCTYPE`, die Regex unten
+     * findet nichts. libxml aber liest `encoding="UTF-7"` aus der
+     * XML-Deklaration, dekodiert ueber iconv und expandiert die Entitaeten.
+     * Gemessen: ein UTF-7-Dokument mit DOCTYPE und interner Entitaet ging
+     * durch und lieferte zwei Punkte -- genau die Klasse, die der Absatz
+     * ueber "jede Kodierung, die die Regex anders lesen wuerde als der
+     * Parser" fuer geschlossen erklaert hatte.
+     *
+     * Deshalb darf die Deklaration nur UTF-8 (oder ASCII, seine Teilmenge)
+     * nennen. Von 935 Kodierungen aus `iconv -l` kamen genau UTF-7 und UTF7
+     * durch; eine Liste erlaubter Namen schliesst alle, auch die, die niemand
+     * ausprobiert hat. Ohne Deklaration nimmt libxml UTF-8 an, und dann
+     * bleibt `+ADw-` ein Text. Die Bytefolgemarke davor ist erlaubt -- sie
+     * sagt selbst schon UTF-8. */
+    if (preg_match('/^(?:\xEF\xBB\xBF)?\s*<\?xml\b[^>]*\bencoding\s*=\s*["\']([^"\']*)["\']/i', $xml, $kod)
+        && !in_array(strtolower(trim($kod[1])), ['utf-8', 'utf8', 'us-ascii', 'ascii'], true)) {
+        $genannt = substr(preg_replace('/[^A-Za-z0-9._-]/', '', $kod[1]), 0, 20);
+        throw new InvalidArgumentException(
+            'Die Datei nennt die Kodierung „' . $genannt . '". GPX schreibt UTF-8 vor — '
+            . 'bitte so speichern und erneut versuchen.');
     }
 
     /* KEINE DOKUMENTTYP-DEKLARATION. Das ist die Abwehr gegen XXE, und sie

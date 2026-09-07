@@ -36,7 +36,7 @@ Ende der einen Spur zum Anfang der nächsten.
 | 5 | Die Kennzeichnung ist **auf der Seite** sichtbar, und ohne Spur gibt es den Menüeintrag nicht |
 | 6 | Die Spurenseite des Diensttages — auch **Ruhesegmente** haben dort einen Abruf |
 | 7 | Die **Mehrfachauswahl**: mehrere `<trk>` statt einer zusammengeklebten Spur, Punkt für Punkt gegen die Einzelabrufe, Reihenfolge, Grenzfälle, Speicherspitze |
-| 8 | Der **Eingang** (`gpx_lesen()`): acht Umgehungsversuche der DOCTYPE-Sperre — UTF-16 in drei Spielarten, Kleinschreibung, Bytefolgemarke, Nullbyte, Latin-1 — und eine saubere Datei, die durchgehen muss |
+| 8 | Der **Eingang** (`gpx_lesen()`): neun Umgehungsversuche der DOCTYPE-Sperre — UTF-16 in drei Spielarten, Kleinschreibung, Bytefolgemarke, Nullbyte, Latin-1 und **UTF-7 über die Kodierungsdeklaration** (der neunte, seit der Gegenprüfung vom 07.09.2026; er ging am Stand davor durch) — und drei saubere Dateien, die durchgehen müssen (UTF-8 groß, utf-8 klein, ohne Deklaration) |
 
 > **Teil 8 kam mit Web 15.6.0 dazu** (Backlog Nr. 130). Die Teile 0 bis 7
 > prüfen den **Abruf**; der **Eingang** war bis dahin ohne Probe, und genau

@@ -988,6 +988,14 @@ $eingang = [
     'Latin-1 mit Umlaut (keine gueltige UTF-8-Folge)'
         => mb_convert_encoding(str_replace('Probe', 'Gruenwald-Ost', $gpxRein), 'ISO-8859-1', 'UTF-8')
            . "\xE4",
+    /* DER NEUNTE FALL (Gegenpruefung 07.09.2026, Fund 7): UTF-7 ist reines
+     * ASCII -- gueltiges UTF-8, kein Nullbyte, kein `<!DOCTYPE` als
+     * Bytefolge -- und libxml liest es trotzdem als DOCTYPE, weil die
+     * XML-Deklaration es so nennt. Die acht Faelle oben haben die
+     * Deklaration nie angesehen; dieser ging am Stand davor durch. */
+    'UTF-7 ueber die Kodierungsdeklaration'
+        => '<?xml version="1.0" encoding="UTF-7"?>'
+           . iconv('UTF-8', 'UTF-7', preg_replace('/^<\?xml[^>]*\?>/', '', $mitDoctype)),
 ];
 $durch = 0;
 foreach ($eingang as $name => $xml) {
@@ -1000,6 +1008,10 @@ pruefe($durch === 0, 'Keine der Proben kommt durch',
 
 [$ok, $meldung] = $einlesen($gpxRein);
 pruefe($ok, 'Eine saubere UTF-8-Datei ohne DOCTYPE geht weiterhin durch', $meldung);
+[$ok, $meldung] = $einlesen(str_replace('encoding="UTF-8"', "encoding='utf-8'", $gpxRein));
+pruefe($ok, 'Auch mit kleingeschriebenem utf-8 in einfachen Anfuehrungszeichen', $meldung);
+[$ok, $meldung] = $einlesen(preg_replace('/^<\?xml[^>]*\?>/', '', $gpxRein));
+pruefe($ok, 'Und ganz ohne XML-Deklaration (libxml nimmt dann UTF-8 an)', $meldung);
 
 } finally {
     $aufraeumen();
