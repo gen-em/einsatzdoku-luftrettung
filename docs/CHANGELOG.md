@@ -14,6 +14,51 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.14.1] — 2026-09-07
+
+### Android — „GPS-Daten" statt „Spur" in fünf Texten (E-S9-03, Backlog Nr. 110)
+
+Die Weboberfläche sagt seit Web 15.8.0 „GPS-Daten", wo sie „Spur" sagte —
+Entscheidung E-S9-03 des Konzepts S9, Backlog Nr. 110: Was der Browser zeigt,
+soll so heißen, wie es die Person versteht, die es liest, und die versteht
+unter „Spur" eine Fährte, unter „GPS-Daten" das, was ihr Handy aufzeichnet.
+Dieselbe Person liest beides — die Tagesansicht im Browser und die Meldung auf
+dem Handy. Ein Handy, das „Spur" sagt, während der Browser „GPS-Daten" sagt,
+lässt sie raten, ob das zwei Dinge sind. Es sind dieselben.
+
+Fünf sichtbare Texte des Handy-Moduls (`strings.xml`) sind deshalb umgestellt:
+die Akkuwarnung („… dann brechen die GPS-Daten ab, ohne dass es jemand
+merkt"), der Zweck des Benachrichtigungskanals („Zeigt an, dass die GPS-Daten
+des laufenden Dienstes aufgezeichnet werden"), der Hinweis im Modus „nur
+aufzeichnen" („Es werden durchgehend GPS-Daten aufgezeichnet"), der
+Ortungshinweis („Ohne Ortungsfreigabe zeichnet die App keine GPS-Daten auf")
+und die Standortwarnung („… sonst bleiben die GPS-Daten dieses Dienstes
+leer"). Die Uhr sagt „Spur" nur in einem Kommentar der `strings.xml`; der
+bleibt, denn er ist kein sichtbarer Text. Im Code bleibt „Spur" Fachbegriff
+(`spur_lib.php`, `track_*`, Sicherungsformat) — CLAUDE.md 4 nennt ihn dort
+namentlich.
+
+Warum eine eigene Fassung und nicht ein Satz im S9-Paket: Die Android-Apps
+zählen getrennt (`android/version.properties`), brauchen einen eigenen
+APK-Bau und nach CLAUDE.md 6 einen Emulatorlauf mit Bildern. **Was die
+Wortliste angeht:** Der S9-Zweig führt für genau diese fünf Texte eine
+befristete Ausnahme `spur-android-wartet-auf-9a` (Bereich d, Klasse D). Auf
+dem Zweig des Sofortpakets gibt es weder die Sperrregel „Spur" noch die
+Ausnahme; **wer von 9a und S9 zweiter mergt, streicht die Ausnahme** — sonst
+meldet die Wortliste sie beim nächsten Lauf als ungenutzt, und das ist ein
+Fehlschlag (K7).
+
+*Prüfzahlen:* `./gradlew build` grün — Handy **261 Prüffälle je Bauart**, 0
+Fehlschläge, 15 übersprungen (wie 0.14.0); Uhr **71**, 0 übersprungen; Lint
+**0 Fehler** (Handy 13 Warnungen, unverändert; Uhr 0); Release-APK Handy
+**7 867 430 B** (+36 B, die längeren Sätze), Uhr **19 574 402 B** (−4 B, die
+Versionszeichenkette). Wortliste **0/0/0** (87 Regeln, 87 gegriffen — auf
+diesem Zweig ohne die Sperrregel „Spur"). Emulator (Stufe II): Boot 502 s, Prüf-APK 119 s, fünf Bilder — eines je
+Text —, Kopplung gegen die lokale Installation, Dienst im Modus „nur
+aufzeichnen", Standort- und Akkuwarnung ausgelöst, Kanalseite der
+Systemeinstellungen; die Stolpersteine des Laufs stehen in
+`android/LIESMICH.md`.
+
 ## [Android 0.14.0] — 2026-09-07
 
 ### Android — Sofortpaket Sicherheit, fünf Punkte aus dem Krypto-Review (Rahmenplan 9a, R78)

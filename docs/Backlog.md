@@ -1248,6 +1248,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     schwer verständlich. Soll: „GPS-Daten", die Punktzahl entfällt (F15);
     Wortliste nachziehen.
     *Konzept S9 (07.09.2026): E-S9-03 („GPS-Daten" überall in der NutzerInnen-Sicht; AP3).*
+    *Android-Teil erledigt 07.09.2026 (Android 0.14.1, Zweig des Sofortpakets):
+    die fünf sichtbaren Texte der Handy-App sagen „GPS-Daten". Die befristete
+    Wortlisten-Ausnahme `spur-android-wartet-auf-9a` liegt auf dem S9-Zweig;
+    wer von 9a und S9 zweiter mergt, streicht sie (K7) — sonst meldet die
+    Wortliste sie als ungenutzt.*
 
 111. **Neue Rettungsmittel-Arten.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.1), Schritt 8
@@ -1675,6 +1680,23 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `einspielen/LIESMICH.md` und `lokal_einrichten.sh` (Kopfkommentar)
     eintragen; **nicht** die Regel für den Prüfstand lockern. Zuordnung:
     Backlog-Runde, vor dem nächsten Neuaufbau eines Prüfstands.
+
+157. **Handy-App: Sackgasse zwischen „Schlüssel abgewiesen" und „Gerät trennen".**
+    *Aufgenommen 07.09.2026 aus dem Emulatorlauf zu Android 0.14.1.* Wird
+    das Gerät serverseitig gelöscht, während ein Paket noch aussteht (hier:
+    der Demo-Reset nahm das Gerät mit, das Dienstende-Paket bekam `401`),
+    zeigt die App „Rückstand 1 Paket" und „Schlüssel abgewiesen · Gerät neu
+    koppeln" — und **verweigert das Trennen**, weil `trennen()` bei
+    Rückstand abbricht (`Trennergebnis.Rueckstand`, Hinweis „Sie gehören dem
+    bisherigen Konto"). Das Paket kann aber nie mehr gehen: Der Schlüssel
+    ist weg. Senden geht nicht, Trennen geht nicht, Neukoppeln setzt Trennen
+    voraus; der einzige Ausweg ist das Löschen der App-Daten. Behebung:
+    Bei `Abweisung.SITZUNG_UNGUELTIG` (401 `auth`) das Trennen trotz
+    Rückstand zulassen — mit dem Hinweis, dass die ausstehenden Pakete mit
+    dem alten Schlüssel nicht mehr zustellbar sind und verworfen werden —
+    oder den Rückstand beim 401 als „abgewiesen" führen, damit der Räumteil
+    aus Nr. 114 ihn beim Trennen mitnimmt. Prüffall in `KopplungTest`.
+    Zuordnung: nächste Android-Stufe.
 
 
 ## Erledigt

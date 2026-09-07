@@ -185,6 +185,19 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.14.1 („GPS-Daten" statt „Spur", E-S9-03), `./gradlew
+build` im Container, 07.09.2026** — fünf Texte in `strings.xml`, sonst
+nichts; die Zahlen sind die von 0.14.0, das APK des Handys ist um 36 B
+gewachsen (die längeren Sätze), das der Uhr um 4 B geschrumpft (die
+Versionszeichenkette):
+
+| | `handy` | `uhr` |
+|---|---|---|
+| Lint-Fehler | **0** | **0** |
+| Lint-Warnungen | **13** | **0** |
+| Prüffälle je Bauart | **261**, davon 15 übersprungen | **71**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **7 867 430 B** | **19 574 402 B** |
+
 **Stand Sofortpaket Sicherheit (Android 0.14.0), `./gradlew build` im
 Container, 07.09.2026:**
 
@@ -864,6 +877,42 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
   0 Phasen, 0 Dienstzeilen — vorher je 1 —, Gerät am Server gelöscht, kein
   Absturz. Der Wear-Emulator ist für 0.14.0 nicht gefahren worden: Das
   Uhr-Modul hat keine Änderung, die es ausführt.
+
+  **Fünfter Lauf am 07.09.2026 (0.14.1, „GPS-Daten" statt „Spur"):** fünf
+  Bilder in `emulator-bilder/0141-*.png`, eines je geändertem Text —
+  Dienstansicht ohne Ortungsfreigabe (`ortung_fehlt_hinweis`), laufender
+  Dienst im Modus „nur aufzeichnen" (`modus_nur_aufzeichnen_hinweis`),
+  Warnung „Keine Aufzeichnung" bei ausgeschaltetem Standort
+  (`warnung_standort_aus`), Warnung „Akku unter 15 %"
+  (`warnung_akku_niedrig`) und die Kanalseite der Systemeinstellungen mit
+  dem Zweck des Kanals „Aufzeichnung" (`dienst_kanal_zweck`). Kopplung gegen
+  die lokale Installation als Demo-Konto (Code `DNF W3E`, im Web bestätigt,
+  „Ja, koppeln"), Dienst 21:07 bis 21:41, 32 Punkte nach zwei Minuten.
+  Zahlen: Boot **502 s** (adbd nach 181 s, Watchdog-Faktor gesetzt), Prüf-APK
+  **119 s**. Fünf Stolpersteine, die der Lauf gekostet hat, damit der nächste
+  sie nicht zahlt:
+
+  | Stolperstein | Was zu tun ist |
+  |---|---|
+  | Der erste Emulator war nach dem Boot weg — ohne OOM (15 GB frei), ohne Meldung, kurz nachdem die Hintergrund-Shell, die `start` gerufen hatte, geendet war | `start` aus einer Shell rufen, die bleibt (hier: ein Monitor); der zweite Emulator überlebte auch das Ende dieser Shell — die Ursache ist nicht geklärt, die Regel lautet trotzdem: Startshell offen halten |
+  | „Keine Verbindung" beim Koppeln | Das APK aus `./gradlew build` zeigt auf `https://nadoku.gen-em.org/`; das Prüf-APK braucht `:handy:assembleDebug -Pnadoku.serverBasis=http://127.0.0.1:8080/` **und** `adb reverse tcp:8080 tcp:8080`. Der Baulauf oben prüft die App, nicht ihre Erreichbarkeit |
+  | Ein Abzug ist schwarz, ein Tipp tut nichts | Unter TCG braucht die App **9 bis 30 s je Bild** (`EGL_emulation: app_time_stats`). Vor dem ersten Bild ist `screencap` schwarz (16 KB statt 100–200 KB), und `uiautomator dump` zeigt den Baum, der noch nicht gezeichnet ist — nach jedem Tipp 60–90 s warten und die Dateigröße des Abzugs lesen |
+  | Der Akkufall löst nicht aus | `dumpsys battery unplug` allein lässt `EXTRA_STATUS` auf „lädt"; dazu `dumpsys battery set status 3` (entlädt), und der Akkutakt misst nur **alle zwei Minuten** — mindestens 150 s warten. Danach `dumpsys battery reset` |
+  | `bild` verweigert die Benachrichtigungsleiste | `bild` prüft, ob die App im Vordergrund steht, und die Leiste ist `NotificationShade`; für ein Bild der Meldung `cmd statusbar expand-notifications`, dann `adb exec-out screencap -p` unmittelbar, danach `cmd statusbar collapse` |
+
+  Und eine Beobachtung, die kein Fehler der App ist, aber eine Falle des
+  Prüfstands: Das Demo-Konto wird alle 30 Minuten aus der Fixture neu
+  eingespielt, und das nimmt seine Geräte mit. Ein Gerät, das um 21:03 an
+  das Demo-Konto gekoppelt wurde, war um 21:37 am Server weg — das Paket vom
+  Dienstende bekam `401`, die App sagte „Schlüssel abgewiesen · Gerät neu
+  koppeln", und ein Paket mitten im Reset bekam `500` (Fremdschlüssel 1452,
+  der Diensttag war gerade gelöscht). Wer länger als eine halbe Stunde
+  prüft, koppelt an ein anderes Konto. Und die Beobachtung führt zu einem
+  Fund an der App: „Gerät trennen" **blieb verweigert** — „Rückstand
+  1 Paket", und das Paket kann mit dem abgewiesenen Schlüssel nie mehr
+  gehen. Senden geht nicht, Trennen geht nicht, Neukoppeln setzt Trennen
+  voraus: **Backlog Nr. 157**. Der Lauf endete deshalb mit `pm clear`
+  statt mit „Getrennt".
 
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf
