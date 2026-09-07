@@ -359,9 +359,12 @@ auch nicht prüfen. Was die Seite prüft, prüft dein Browser.
 „Notarzt" oder „Rettung", auch mit angehängter Jahreszahl. Gemessen wird nicht
 das Vorkommen, sondern was **übrig bleibt**, wenn man die geläufigen Teile
 wegnimmt: „Winterurlaub2026" ist im Kern ein Listenwort,
-„Anker-Winter-Regen-Glas" nicht. Die Meldung unter dem Feld sagt, **was**
-gestrichen wurde und wie viel übrig blieb — damit du nicht raten musst, woran
-es lag.
+„Anker-Winter-Regen-Glas" nicht. Sonderzeichen zählen dabei mit,
+Bindestrich, Punkt, Unterstrich und Leerzeichen nicht — „Winter-Urlaub-2026"
+ist kein besseres Passwort als „Winterurlaub2026". Die Meldung unter dem
+Feld sagt, **was** gestrichen wurde und wie viel übrig blieb — damit du nicht
+raten musst, woran es lag. Ein gewürfeltes Passwort aus dem Passwortverwalter
+wird an dieser Regel nicht gemessen; es enthält kein Listenwort.
 
 **Die Passwortstärke** zeigt sich beim Tippen als Balken aus vier Segmenten:
 je mehr gefüllt, desto besser. Rot heißt zu kurz oder zu leicht zu raten,

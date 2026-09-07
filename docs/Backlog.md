@@ -1659,6 +1659,23 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `api/kdf_upgrade.php` eine geprüfte ist. Zuordnung: Backlog-Runde, vor
     dem Streichen des Altwerts.
 
+156. **Das Prüfstand-Passwort `adminlokal2026` fällt durch die Passwortregel.**
+    *Aufgenommen 07.09.2026 aus der Nachbesserung zu Nr. 136.* Seit die
+    Sperrliste jeden Eintrag streicht, auch „admin" mit fünf Zeichen, bleibt
+    von `adminlokal2026` nur „lokal" (5) — abgewiesen. Betroffen ist allein
+    der lokale Prüfstand: `tools/referenzdatensatz/einspielen/lokal_einrichten.sh`
+    setzt das Passwort über `passwort_setzen.mjs` durch das Browserformular
+    und bricht dort ab; `einspielen.py` (`--admin-passwort`), `kreislauf.py`,
+    `demo_bremse.mjs`, `demo_pruefen.mjs`, `komplettprobe/klickweg.mjs`,
+    `screenshots/aufnehmen.mjs` und `messstand/messen.py` melden sich damit
+    an. `nadokudemo0815` und `umlaufpruefung2026` bleiben gültig. Eine
+    bereits eingerichtete Installation ist nicht betroffen — geprüft wird
+    beim Setzen, nicht beim Anmelden. Behebung: ein neues Prüfstand-Passwort
+    ohne Listenwort wählen und an allen genannten Stellen samt
+    `einspielen/LIESMICH.md` und `lokal_einrichten.sh` (Kopfkommentar)
+    eintragen; **nicht** die Regel für den Prüfstand lockern. Zuordnung:
+    Backlog-Runde, vor dem nächsten Neuaufbau eines Prüfstands.
+
 
 ## Erledigt
 

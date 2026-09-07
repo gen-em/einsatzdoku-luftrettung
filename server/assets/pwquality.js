@@ -42,8 +42,12 @@ const EdPwQuality = (() => {
    *  setzt `beobachte()` unten `minLength` des Feldes auf diesen Wert. */
   const MIN_LAENGE = 12;
 
-  /** Wie viel vom Passwort übrig bleiben muss, wenn man die geläufigen Wörter
-   *  und alle Ziffern herausstreicht — siehe `istHaeufig()`. */
+  /** Wie viel vom Passwort übrig bleiben muss, wenn man die geläufigen Wörter,
+   *  die angehängten Ziffern und die Reihen herausstreicht — siehe `zerlege()`
+   *  und `warumHaeufig()`. Sonderzeichen zählen dabei mit. Die Schranke gilt,
+   *  wenn ein Listenwort gestrichen wurde — und ohne Listenwort nur dann,
+   *  wenn Buchstaben und Ziffern restlos in Reihen und angehängten Ziffern
+   *  aufgegangen sind. Ein Zufallspasswort wird nie am Rest gemessen. */
   const MIN_REST = 8;
 
   /* Kompakte Liste besonders häufiger Passwörter und Muster.
@@ -67,15 +71,22 @@ const EdPwQuality = (() => {
        nur die luftgebundenen Woerter — an einem NEF-Standort fehlte damit
        genau das, was dort naheliegt.
 
-       KEINE Kuerzel wie "nef", "rth", "naw": Gestrichen wird unten nur, was
-       MINDESTENS SECHS ZEICHEN hat; kuerzere Woerter treffen nur, wenn das
-       GANZE normalisierte Passwort genau so lautet — und ein
-       dreibuchstabiges Passwort scheitert schon an der Mindestlaenge. Ein
-       Kuerzel als Teilstring traefe massenhaft brauchbare Passwoerter.
-       Aus demselben Grund stehen "wache", "koeln", "sonne" und "blume"
-       NICHT in der Erweiterung unten: Sie haben fuenf Zeichen und koennten
-       neben der Mindestlaenge nie greifen — ein Eintrag, der nie trifft,
-       sieht aus wie Schutz und ist keiner.
+       KEINE Kuerzel wie "nef", "rth", "naw". Seit der Nachbesserung zu SP-2
+       (Backlog Nr. 136) wird JEDER Eintrag gestrichen, auch "root" und
+       "test" mit vier Zeichen — die fruehere Schranke von sechs Zeichen ist
+       gefallen, weil unter der Anteilsregel ein NICHT gestrichenes kurzes
+       Wort dem Passwort gutgeschrieben wurde: "password-admin-admin" ging
+       mit Rest "adminadmin" durch, "Passwort-Admin-Login!" mit Rest
+       "adminlogin" als "stark". Ein Kuerzel mit drei Zeichen gehoert
+       trotzdem nicht hierher: "rth" steckt in "Arthur" und "Fuerth", und
+       jeder Treffer zerlegt den Rest in Bruchstuecke, die sich beim
+       Zusammenfuegen zu neuen Reihen oder Listenwoertern verbinden koennen.
+       Die Liste hat keinen Eintrag unter vier Zeichen; wer einen aufnimmt,
+       misst vorher nach.
+       "wache", "koeln", "sonne" und "blume" fehlen aus einem aelteren
+       Grund: Fuenfstellige Eintraege konnten bis zur Nachbesserung nie
+       greifen. Das gilt nicht mehr — ob sie aufgenommen werden, ist eine
+       offene Entscheidung, keine dieser Datei.
 
        KEIN "nadoku". Der kuenftige Produktname war vorgesehen, ist aber
        wieder herausgenommen: Der Vergleich ist ein Teilstring-Vergleich, und
@@ -88,13 +99,15 @@ const EdPwQuality = (() => {
        in saemtlichen Pruefmitteln. Wenn der Produktname kommt (P6), gehoert
        "nadoku" hierher — zusammen mit einem neuen Demo-Passwort.
 
-       Mehrere Eintraege sind durch den Teilstring-Vergleich bereits von
-       kuerzeren abgedeckt: "rettungswagen" und "rettungsdienst" von
-       "rettung", "notarztwagen" von "notarzt", "notfallsanitaeter" von
-       "sanitaeter", "einsatzdoku" von "einsatz". Sie stehen trotzdem hier:
-       Die Liste ist auch die Stelle, an der man nachsieht, WELCHE Woerter
-       gemeint sind. Sicherheitsgewinn bringt keiner von ihnen — der stand
-       schon vorher da. */
+       "rettungswagen", "rettungsdienst", "notarztwagen",
+       "notfallsanitaeter" und "einsatzdoku" enthalten kuerzere Eintraege
+       ("rettung", "notarzt", "sanitaeter", "einsatz"). Unter dem alten
+       Vorkommensvergleich waren sie deshalb wirkungslos; unter der
+       Anteilsregel sind sie es NICHT. `zerlege()` streicht laengste zuerst,
+       und nur so verschwindet "rettungswagen" ganz — striche man erst
+       "rettung", bliebe "swagen" stehen und zaehlte als Rest. Gemessen vor
+       der Nachbesserung: "Rettungswagen-Notarztwagen" ging mit Rest
+       "swagenwagen" durch, Stufe "stark". */
     'notarztwagen', 'rettungswagen', 'notfallsanitaeter', 'rettungsdienst',
     'einsatzdoku',
     /* Erweiterung Sofortpaket Sicherheit (Backlog Nr. 136, SP-2). Zwei
@@ -121,6 +134,14 @@ const EdPwQuality = (() => {
     'geburtstag', 'familie', 'urlaub', 'fussball',
   ];
 
+  /** Dieselbe Liste, laengste Eintraege zuerst — die Reihenfolge, in der
+   *  `zerlege()` streicht. Gleich lange behalten ihre Listenreihenfolge. */
+  const HAEUFIG_LAENGSTE_ZUERST = HAEUFIG.slice().sort((a, b) => b.length - a.length);
+
+  /** Was als Sonderzeichen zaehlt: alles ausser Buchstaben, Ziffern, Umlauten
+   *  und den vier Trennern Bindestrich, Unterstrich, Punkt, Leerzeichen. */
+  const SONDERZEICHEN = /[^A-Za-z0-9äöüÄÖÜß\-_. ]/g;
+
   /** Kleinschreibung, Umlaute aufgelöst, Satzzeichen entfernt. */
   function normal(pw) {
     return String(pw).toLowerCase()
@@ -133,8 +154,9 @@ const EdPwQuality = (() => {
   function kern(pw) { return normal(pw).replace(/\d+$/, ''); }
 
   /**
-   * Was vom Passwort übrig bleibt, wenn man jedes geläufige Wort und die
-   * angehängten Ziffern herausstreicht.
+   * Was vom Passwort übrig bleibt, wenn man jedes geläufige Wort, die
+   * angehängten Ziffern und die Reihen herausstreicht — und wie viele
+   * Sonderzeichen es außerdem trägt.
    *
    * WARUM ES DIESE FUNKTION GIBT (Sofortpaket Sicherheit, Backlog Nr. 136).
    * Bis dahin wies die Prüfung JEDES Passwort ab, in dem irgendwo eines der
@@ -147,31 +169,80 @@ const EdPwQuality = (() => {
    * Gemessen wird deshalb nicht mehr das VORKOMMEN, sondern der ANTEIL: Was
    * bleibt übrig, wenn man die geläufigen Teile wegnimmt? Bleiben weniger als
    * MIN_REST Zeichen, war das Passwort im Wesentlichen ein Listenwort mit
-   * Beiwerk. „Winterurlaub2026" behält „urlaub" (6) und wird abgewiesen,
-   * „Anker-Winter-Regen-Glas" behält „ankerregenglas" (14) und geht durch.
+   * Beiwerk. „Winterurlaub2026" behält nichts (auch „urlaub" steht in der
+   * Liste) und wird abgewiesen, „Anker-Winter-Regen-Glas" behält
+   * „ankerregenglas" (14) und geht durch.
    *
-   * ZWEI SCHRITTE: erst die Listenwörter, dann Reihen und Wiederholungen
-   * (`ohneReihen()` weiter unten) — sonst füllte „abcdefgh" die geforderten
-   * acht Zeichen, ohne einen Gedanken zu kosten.
+   * DREI SCHRITTE: erst die Listenwörter, dann die angehängten Ziffern, dann
+   * Reihen und Wiederholungen (`ohneReihen()` weiter unten) — sonst füllte
+   * „abcdefgh" die geforderten acht Zeichen, ohne einen Gedanken zu kosten.
+   *
+   * LÄNGSTE ZUERST, UND NACH JEDEM TREFFER VON VORN. Die erste Fassung lief
+   * die Liste einmal in ihrer Reihenfolge durch und strich nur Einträge ab
+   * sechs Zeichen. Die Gegenprüfung fand darin drei Löcher mit einer
+   * Ursache: „rettung" stand vor „rettungswagen" und ließ „swagen" als Rest
+   * stehen; Wörter unter sechs Zeichen wurden nicht gestrichen und dem Rest
+   * GUTGESCHRIEBEN („password-admin-admin" → Rest „adminadmin"); und was das
+   * Streichen aus den Bruchstücken neu zusammensetzte, sah niemand mehr an
+   * („adminiadministratorstrator" → Rest „administrator"). Deshalb: die
+   * Liste nach Länge absteigend, jeder Eintrag, und nach jedem Treffer wieder
+   * beim längsten beginnen, bis keiner mehr trifft. Der Neustart nach JEDEM
+   * Treffer ist nötig, nicht erst am Listenende — gemessen: mit Neustart am
+   * Ende blieb von „adminiadministratorstrator" noch „istrator" (8) stehen.
    *
    * ZIFFERN MITTENDRIN ZÄHLEN MIT, angehängte nicht. „xy7qw2zt4$" ist nicht
    * schlechter als „xyqwzt" — würde man alle Ziffern streichen, fiele
    * ausgerechnet ein gut gewürfeltes Passwort durch. Angehängte Ziffern sind
    * die Jahreszahl hinter dem Wort und deshalb kein Beitrag.
+   *
+   * SONDERZEICHEN ZÄHLEN MIT, EINS ZU EINS. `normal()` wirft sie weg, und die
+   * erste Fassung maß den Rest erst danach: Ein Passwort aus dem
+   * Passwortverwalter mit fünf Sonderzeichen auf zwölf Stellen fiel unter
+   * MIN_REST — gemessen je nach Zeichenvorrat 2 bis 25 % aller zufälligen
+   * Zwölfsteller, vorher keiner — und bekam dazu gesagt, es bestehe aus
+   * geläufigen Wörtern. Für
+   * den Rateangriff ist ein Sonderzeichen so viel wert wie ein Buchstabe,
+   * also zählt es wie einer. Trenner — Bindestrich, Unterstrich, Punkt,
+   * Leerzeichen — zählen NICHT: „Winter-Urlaub-2026" ist kein besseres
+   * Passwort als „Winterurlaub2026". Und was sich unter den Sonderzeichen
+   * wiederholt oder aufreiht („!!!!!!!!"), ist eine Reihe wie „aaaaaaaa"
+   * und fällt wie sie heraus — sonst wäre „Passwort!!!!!!!!xy" ein
+   * Passwort mit zehn Zeichen Rest.
+   * Die Reihe wird über die Sonderzeichen in ihrer Reihenfolge gesucht,
+   * gleich was dazwischen steht — genauso, wie `normal()` für die
+   * Buchstaben alles Übrige entfernt.
+   *
+   * DIE SONDERZEICHEN SELBST STEHEN NICHT IM ERGEBNIS, nur ihre Zahl. `rest`
+   * bleibt [a-z0-9] und darf deshalb in der Meldung zitiert werden;
+   * `warumHaeufig()` und `anzeige()` verlassen sich darauf.
    */
   function zerlege(pw) {
     let k = normal(pw);
     const woerter = [];
-    for (const h of HAEUFIG) {
-      if (h.length >= 6 && k.includes(h)) { woerter.push(h); k = k.split(h).join(''); }
+    let getroffen = true;
+    while (getroffen) {
+      getroffen = false;
+      for (const h of HAEUFIG_LAENGSTE_ZUERST) {
+        if (k.includes(h)) {
+          if (!woerter.includes(h)) { woerter.push(h); }
+          k = k.split(h).join('');
+          getroffen = true;
+          break;
+        }
+      }
     }
     const ziffern = (k.match(/\d+$/) || [''])[0];
     k = k.replace(/\d+$/, '');
-    const [rest, reihen] = ohneReihen(k);
-    return { woerter, ziffern, reihen, rest };
+    let [rest, reihen] = ohneReihen(k);
+    /* Ein Rest, der als Ganzes ein Muster ist („aa"), ist eine Reihe, die
+       `ohneReihen()` zu kurz war — er zählt wie eine. */
+    if (rest !== '' && istMuster(rest)) { reihen.push(rest); rest = ''; }
+    const sonderAlle = (String(pw).match(SONDERZEICHEN) || []).join('');
+    const [sonderBleibt, sonderReihen] = ohneReihen(sonderAlle);
+    return { woerter, ziffern, reihen, rest,
+             sonder: sonderBleibt.length,
+             sonderReihen: sonderReihen.map(r => r.length) };
   }
-
-  function restwort(pw) { return zerlege(pw).rest; }
 
   /**
    * Streicht Reihen und Wiederholungen aus einer Zeichenkette.
@@ -215,65 +286,80 @@ const EdPwQuality = (() => {
   }
 
   /**
-   * Enthält das Passwort ein bekanntes Allerweltswort?
-   *
-   * Geprüft werden BEIDE Normalisierungen. Nur die gekürzte zu prüfen wäre ein
-   * Loch: Aus „1234567890" bliebe eine leere Zeichenkette, und ausgerechnet
-   * die Zahlenreihen — die in jeder Liste ganz oben stehen — kämen durch.
-   */
-  /**
    * Warum das Passwort „im Wesentlichen geläufig" ist — oder null, wenn nicht.
+   * Liefert `{ text, rat }`: die Erklärung und ob der Passphrasen-Rat dazu
+   * passt.
+   *
+   * Geprüft werden zuerst BEIDE Normalisierungen auf ein ganzes Listenwort.
+   * Nur die gekürzte zu prüfen wäre ein Loch: Aus „1234567890" bliebe eine
+   * leere Zeichenkette, und ausgerechnet die Zahlenreihen — die in jeder
+   * Liste ganz oben stehen — kämen durch.
    *
    * DIE MELDUNG SAGT, WAS GESTRICHEN WURDE UND WAS BLIEB. Eine Ablehnung, die
    * nur „zu geläufig" sagt, lässt jemanden dreimal dasselbe Passwort mit einem
    * anderen Ausrufezeichen probieren. Hier steht stattdessen: welches Wort,
    * welche Jahreszahl, welche Reihe — und wie viele Zeichen übrig sind.
    *
+   * DIE ANTEILSREGEL GILT, WENN EIN LISTENWORT GESTRICHEN WURDE. Die erste
+   * Fassung maß jeden Rest gegen MIN_REST — und wies damit ein gewürfeltes
+   * „#7!qX@2%mZ$4" ab, mit der Begründung, es bestehe aus geläufigen
+   * Wörtern, und dem Rat, lieber Wörter zu nehmen. Beides war falsch. Ohne
+   * Listenwort gibt es keinen Anteil zu messen; was dann noch greift, ist
+   * allein die Reihen-Prüfung: Sind Buchstaben und Ziffern RESTLOS in Reihen
+   * und angehängten Ziffern aufgegangen („aaaaaaaaaaa1", „abcdefgh2026!@#$",
+   * „Aaaaaaaaaaaa1!") und füllen die Sonderzeichen allein die acht nicht,
+   * ist das Passwort eine Zeichenfolge mit Beiwerk und wird als solche
+   * benannt — ohne den Passphrasen-Rat, der hier nichts erklärt. Ein
+   * Zufallspasswort erfüllt diese Bedingung nie: Dazu müssten ALLE seine
+   * Buchstaben und Ziffern Reihen sein. Bleibt auch nur ein Buchstabe
+   * stehen, wird ohne Listenwort nichts gemessen — „XAAAhkCvim18" mit der
+   * zufälligen Dreiergruppe ist ein Zufallspasswort und kein Muster.
+   *
    * WAS IN DER MELDUNG STEHT, IST SICHER FÜR innerHTML, und zwar nach Bauart:
    * Die Wörter kommen aus HAEUFIG (fest in dieser Datei), die Ziffern aus
    * `\d+`, Reihen und Rest aus dem normalisierten Text, der nur [a-z0-9]
-   * enthält. Kein Zeichen der Eingabe kommt ungefiltert durch — `anzeige()`
-   * verlässt sich darauf.
+   * enthält; Sonderzeichen werden gezählt und nie zitiert. Kein Zeichen der
+   * Eingabe kommt ungefiltert durch — `anzeige()` verlässt sich darauf.
    */
   function warumHaeufig(pw) {
     const s = String(pw);
     for (const k of [normal(s), kern(s)]) {
       if (k !== '' && HAEUFIG.some(h => k === h)) {
-        return '„' + k + '" steht in jeder Liste, die beim Durchprobieren zuerst versucht wird.';
+        return { text: '„' + k + '" steht in jeder Liste, die beim Durchprobieren zuerst versucht wird.',
+                 rat: true };
       }
     }
     // Reine Ziffernfolge: unter 16 Stellen zu wenig, um von Hand gewählt
     // ausreichend zu sein — der Suchraum ist dort schlicht zu klein.
     if (/^\d+$/.test(s) && s.length < 16) {
-      return 'Nur Ziffern — unter 16 Stellen ist der Suchraum zu klein.';
+      return { text: 'Nur Ziffern — unter 16 Stellen ist der Suchraum zu klein.', rat: true };
     }
     const z = zerlege(s);
-    /* DAS MUSTER GILT AUCH FÜR DEN REST — sonst wäre die neue Regel an einer
-     * Stelle SCHWÄCHER als die alte, und das darf sie nirgends sein.
-     * Gemessen beim Bauen: „Passwortabcdefgh", „Rettungabcdefgh" und
-     * „Winterabcdefgh" wurden vom Vorkommensvergleich abgewiesen und vom
-     * Anteil durchgelassen — ein Listenwort plus Tastaturreihe füllt die acht
-     * Zeichen, ohne einen Gedanken zu kosten. Der Rest muss also nicht nur
-     * lang genug sein, sondern auch etwas anderes als eine Reihe. */
-    const restIstReihe = z.rest !== '' && istMuster(z.rest);
-    if (!restIstReihe && z.rest.length >= MIN_REST) { return null; }
+    const uebrig = z.rest.length + z.sonder;
+    const gelaeufig = z.woerter.length > 0;
+    if (uebrig >= MIN_REST || (!gelaeufig && z.rest !== '')) { return null; }
 
     const gestrichen = [];
     for (const w of z.woerter) { gestrichen.push('„' + w + '" (geläufig)'); }
     if (z.ziffern !== '') { gestrichen.push('„' + z.ziffern + '" (angehängte Ziffern)'); }
     for (const r of z.reihen) { gestrichen.push('„' + r + '" (Reihe)'); }
-    let m = gestrichen.length
-      ? 'Ohne ' + gestrichen.join(', ') + ' '
-      : '';
-    if (z.rest === '') {
-      m += (gestrichen.length ? 'bleibt nichts übrig' : 'Es bleibt nichts übrig') + '.';
-    } else if (restIstReihe) {
-      m += (gestrichen.length ? 'bleibt' : 'Es bleibt') + ' „' + z.rest + '" — und das ist selbst eine Reihe.';
+    for (const n of z.sonderReihen) { gestrichen.push('eine Reihe aus ' + n + ' Sonderzeichen'); }
+    let m;
+    if (gestrichen.length === 0) {
+      /* Nichts gestrichen und nichts übrig: Das Passwort besteht aus den
+         vier Trennern, die nicht zählen. */
+      m = 'Bindestrich, Punkt, Unterstrich und Leerzeichen zählen nicht — es bleibt nichts übrig.';
+    } else if (uebrig === 0) {
+      m = 'Ohne ' + gestrichen.join(', ') + ' bleibt nichts übrig.';
+    } else if (z.rest === '') {
+      m = 'Ohne ' + gestrichen.join(', ') + (z.sonder === 1 ? ' bleibt nur 1 Sonderzeichen' : ' bleiben nur ' + z.sonder + ' Sonderzeichen')
+        + '; mindestens ' + MIN_REST + ' Zeichen müssen es sein.';
     } else {
-      m += (gestrichen.length ? 'bleiben' : 'Es bleiben') + ' nur ' + z.rest.length
-         + ' Zeichen („' + z.rest + '"); mindestens ' + MIN_REST + ' müssen es sein.';
+      const was = '„' + z.rest + '"' + (z.sonder > 0 ? ' und ' + z.sonder + ' Sonderzeichen' : '');
+      m = 'Ohne ' + gestrichen.join(', ') + (uebrig === 1 ? ' bleibt nur 1 Zeichen' : ' bleiben nur ' + uebrig + ' Zeichen')
+        + ' (' + was + '); mindestens ' + MIN_REST + ' müssen es sein.';
     }
-    return m;
+    return { text: m, rat: gelaeufig };
   }
 
   function istHaeufig(pw) { return warumHaeufig(pw) !== null; }
@@ -324,11 +410,14 @@ const EdPwQuality = (() => {
   const STUFEN = ['zu schwach', 'schwach', 'brauchbar', 'gut', 'stark'];
 
   /* Der eine Rat, der wirklich hilft (SP-2, Backlog Nr. 136). Er steht in
-     JEDER Meldung, die etwas auszusetzen hat, statt nur im Handbuch: Wer hier
-     abgewiesen wird, hängt sonst ein Ausrufezeichen an und probiert es
-     nochmal. Länge schlägt Zeichenvielfalt — das ist die Rechnung eines
-     Rateangriffs und der Grund, warum `staerke()` unten die Länge dreimal
-     zählt und die Zeichenarten einmal. */
+     jeder Meldung, die zu wenig Substanz bemängelt — zu kurz, ein
+     Listenwort, nur Ziffern —, statt nur im Handbuch: Wer hier abgewiesen
+     wird, hängt sonst ein Ausrufezeichen an und probiert es nochmal. Länge
+     schlägt Zeichenvielfalt — das ist die Rechnung eines Rateangriffs und
+     der Grund, warum `staerke()` unten die Länge dreimal zählt und die
+     Zeichenarten einmal. NICHT steht er bei einer Reihe: Wer „aaaaaaaaaaa1"
+     tippt, braucht keinen Rat zu Wörtern, sondern die Auskunft, dass das
+     eine Reihe ist (`warumHaeufig()` entscheidet das über `rat`). */
   const RAT_PASSPHRASE = 'Am besten vier zufällige Wörter, die nichts '
                        + 'miteinander zu tun haben.';
 
@@ -345,7 +434,7 @@ const EdPwQuality = (() => {
     const warum = warumHaeufig(s);
     if (warum !== null) {
       return { erlaubt: false, staerke: 0, stufe: STUFEN[0],
-               meldung: warum + ' ' + RAT_PASSPHRASE };
+               meldung: warum.text + (warum.rat ? ' ' + RAT_PASSPHRASE : '') };
     }
     if (istMuster(s)) {
       return { erlaubt: false, staerke: 0, stufe: STUFEN[0],
@@ -390,7 +479,8 @@ const EdPwQuality = (() => {
     /* Stufe und Hinweis als Text — EdHtml.escape ist hier nicht nötig, weil
        beide aus STUFEN und festen Zeichenketten dieser Datei stammen. Was
        `warumHaeufig()` aus der Eingabe zitiert, ist vorher auf [a-z0-9]
-       normalisiert (siehe dort); das Passwort selbst steht nie darin. */
+       normalisiert (siehe dort); Sonderzeichen erscheinen nur als Zahl, das
+       Passwort selbst steht nie darin. */
     el.innerHTML = balken
       + '<span class="pwstaerke-text">' + ergebnis.stufe + '</span>'
       + (ergebnis.meldung ? '<span class="pwstaerke-hinweis">' + ergebnis.meldung + '</span>' : '');
