@@ -145,7 +145,11 @@ HANDLER_RE = re.compile(r'(?<![\w-])on[a-z]+\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>]*
 # auf dem rohen Text nicht da. `jsadressen()` liest deshalb jedes Attribut
 # aus jedem Tag, dekodiert und bereinigt es so wie der Browser und prueft
 # dann erst das Schema.
-TAG_RE     = re.compile(r'<[a-z][^>]*>', re.I | re.S)
+# Ein Tag endet am ersten `>` AUSSERHALB eines Attributwerts -- `<a
+# href="javascript:x('>')">` ist ein Tag, und die erste Fassung schnitt es am
+# `>` im Wert ab, sodass die Adresse nie gesehen wurde (Wiederaufnahme der
+# zweiten Gegenpruefung).
+TAG_RE     = re.compile(r'<[a-z](?:[^>"\']|"[^"]*"|\'[^\']*\')*>', re.I | re.S)
 ATTR_RE    = re.compile(r'([^\s"\'=<>/]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.S)
 ASSET_RE  = re.compile(r"asset\(\s*'([^']+)'\s*\)")
 # PHP beginnt mit `<?php` oder `<?=` -- nur diese beiden Oeffner benutzt die
@@ -197,7 +201,13 @@ def jsadressen(text: str) -> list[str]:
     for t in TAG_RE.finditer(text):
         for a in ATTR_RE.finditer(t.group(0)):
             wert = next(g for g in a.groups()[1:] if g is not None)
-            schema = html.unescape(wert).lstrip(' \t\n\r\x00-\x1f')
+            # Wie der Browser: fuehrende (und abschliessende) Steuerzeichen und
+            # Leerzeichen weg -- ALLE C0-Zeichen, per Regex-Bereich; die erste
+            # Fassung schrieb `lstrip('\x00-\x1f')`, und das ist in Python
+            # die Menge {NUL, '-', US}, kein Bereich (Wiederaufnahme der
+            # zweiten Gegenpruefung). Dann Tabulator, Zeilenumbruch und
+            # Wagenruecklauf ueberall heraus, dann das Schema.
+            schema = re.sub(r'^[\x00-\x20]+|[\x00-\x20]+$', '', html.unescape(wert))
             schema = re.sub(r'[\t\n\r]', '', schema)[:11].lower()
             if schema == 'javascript:':
                 raus.append(f'{a.group(1).lower()}={wert[:60]}')
@@ -634,7 +644,9 @@ def selbstprobe() -> int:
             ('ein <iframe srcdoc> faellt auf', '<iframe srcdoc="&lt;script&gt;x()&lt;/script&gt;"></iframe>', 'Einbettung'),
             ('eine javascript:-Adresse faellt auf', '<a href="javascript:x()">Passwort vergessen</a>', 'javascript:'),
             ('eine javascript:-Adresse mit Tabulator im Schema faellt auf', '<a href="java\tscript:x()">x</a>', 'javascript:'),
-            ('eine javascript:-Adresse als Entitaet (&#106;avascript:) faellt auf', '<a href="&#106;avascript:x()">x</a>', 'javascript:')):
+            ('eine javascript:-Adresse als Entitaet (&#106;avascript:) faellt auf', '<a href="&#106;avascript:x()">x</a>', 'javascript:'),
+            ('eine javascript:-Adresse mit > im Wert faellt auf', '<a href="javascript:x(\'>\')">x</a>', 'javascript:'),
+            ('eine javascript:-Adresse hinter Steuerzeichen (\\x01) faellt auf', '<a href="\x01\x0bjavascript:x()">x</a>', 'javascript:')):
         abx, _ = seite_vergleichen('login.php', quelle, anhaengen(sim, stueck))
         pruefe(any('ZUSAETZLICH' in a and wort in a for a in abx),
                'ABWEICHUNG ERKANNT: ' + was, '; '.join(abx)[:90])

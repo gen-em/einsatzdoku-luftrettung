@@ -47,7 +47,7 @@ statt ihn stillschweigend zu übergehen.
 
 | Teil | Frage |
 |---|---|
-| Selbstprobe | Erkennt sie eine Abweichung überhaupt? 28 Erwartungen, ohne Netz — darunter sechzehn ausdrücklich „Abweichung erkannt" |
+| Selbstprobe | Erkennt sie eine Abweichung überhaupt? 30 Erwartungen, ohne Netz — darunter achtzehn ausdrücklich „Abweichung erkannt" |
 | 1 | Jede Datei unter `server/assets/` (ohne `.md`) — SHA-256 der Auslieferung gegen die des Repositoriums |
 | 2 | Die **ganze Menge** dessen, was auf der Anmeldeseite (`login.php`) den Weg des Passworts bestimmt: jeder `<script src>` (zitiert oder nicht), jeder Inline-Block, jedes `<form>`-Tag, jedes `<base>`-Tag, jedes Umlenk-Attribut (`formaction`, `formmethod`, `formtarget`, `formenctype`), jede Kopfanweisung (`<meta http-equiv>`), jede Einbettung (`<iframe>`, `<frame>`, `<object>`, `<embed>`), jedes Ereignisattribut (`on…=`) und jede `javascript:`-Adresse — nichts darf fehlen, verändert sein **oder dazukommen** |
 
@@ -138,8 +138,20 @@ eine Grenze und steht unten unter *Grenzen*:
 
 Nachgemessen mit **27 Angriffsvarianten** gegen `seite_vergleichen()` (Skript
 im Prüfprotokoll, nicht im Repositorium): Am Stand nach den ersten vier
-Behebungen gingen **17 grün durch**, jetzt **eine** — das externe
-Stylesheet, siehe *Grenzen*. Die Attributmuster laufen über den Text **ohne
+Behebungen gingen **17 grün durch**, danach **eine** — das externe
+Stylesheet, siehe *Grenzen*.
+
+**Und die Wiederaufnahme der Gegenprüfung fand an `jsadressen()` zwei
+weitere** (07.09.2026, spät): Ein Tag endete für `TAG_RE` am ersten `>`, auch
+wenn es in einem Attributwert stand — `<a href="javascript:(()=>fetch(…))()">`
+war damit nach `(()=` zu Ende, und die Adresse wurde nie gesehen. Und die
+führenden Steuerzeichen, die der Browser vor dem Schema wirft, wurden mit
+`lstrip('\x00-\x1f')` abgestreift — das ist in Python die Menge aus NUL,
+Bindestrich und US, kein Bereich; `\x0c` oder `&#12;` vor `javascript:` ging
+grün durch. Jetzt endet ein Tag am ersten `>` außerhalb eines zitierten
+Werts, und abgestreift wird der ganze Bereich `\x00`–`\x20`, vorn und hinten.
+Selbstprobe 28 → **30**; **30 Angriffsvarianten**, wieder nur das Stylesheet
+grün. Die Attributmuster laufen über den Text **ohne
 Skriptinhalte**: `x.onclick = …` in einem Skript ist Code, kein Attribut,
 und der Skriptinhalt wird ohnehin als Block verglichen; die Selbstprobe
 belegt das mit einer Gegenprobe.
