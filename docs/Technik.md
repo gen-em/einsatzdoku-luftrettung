@@ -4502,8 +4502,11 @@ Nachweis: `tools/ingestprobe/` Teil 9 — **1 Paket angenommen, 1 abgewiesen**,
 dazu die Gegenprobe, dass ein neuer Einsatz weiterhin entsteht, und seit den
 Nachbesserungen **neun Erwartungen der Gegenprüfungen** (Diensttag bleibt,
 Abschlusspaket genannt, falsch gestellte Uhr nimmt weiter an, Zukunft
-schließt, kein leerer Tag, Ruhesegment nennt beides): **53 Erwartungen,
-0 nicht erfüllt** — am Stand davor dieselben sechs rot. Dieselbe Stufe
+schließt, kein leerer Tag, Ruhesegment nennt beides; vorgehende Uhr öffnet
+nicht erneut; neuer `client_ref` lässt den Tageszeitraum stehen; Papierkorb
+im offenen Fenster): **56 Erwartungen, 0 nicht erfüllt** — am Stand vor der
+ersten Nachbesserung sind sieben davon rot, am Stand vor der Wiederaufnahme
+zwei. Dieselbe Stufe
 hat die Zeitstempel der ganzen Probe auf `time()` umgestellt: Sie standen auf
 festen März-Daten, und damit prüfte die halbe Probe zweite Pakete an
 Datensätzen, die das Fenster längst verlassen hatten — zehn Erwartungen

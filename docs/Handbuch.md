@@ -2463,7 +2463,8 @@ Gerät wieder frei.
 > Freitagsdienst, der erst am Montag synchronisiert, kommt noch nach.
 >
 > **Neue** Einsätze legt ein Gerät weiterhin jederzeit an. Sie sind sichtbar
-> und löschbar und überschreiben nichts — aber sie stehen dann in deinem
+> und löschbar und überschreiben nichts — auch Beginn und Ende eines älteren
+> Diensttags nicht — aber sie stehen dann in deinem
 > Bestand. Auch deshalb: trennen, nicht abwarten.
 >
 > Die **Wear-OS-Uhr** ist von alledem nicht betroffen. Sie kennt weder
@@ -3157,7 +3158,6 @@ oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
 | **rot** | Es arbeitet nicht — oder es geht dabei etwas verloren. |
 | grau | Nicht eingerichtet, oder eine reine Zahl ohne Wertung. |
 
-**Die Seite ändert nichts.** Jede Zeile führt auf die Seite, auf der sich
 **Die Zeile „Schlüsselableitung"** sagt, ob alle Konten mit einer Rundenzahl
 rechnen, die diese Fassung anbietet, und wie viele noch unter dem Zielwert
 stehen („Übergang läuft" — die ziehen beim nächsten Anmelden still nach;
@@ -3165,6 +3165,7 @@ solange, rechnet jede Anmeldung zweimal). Das Demo-Konto zählt dort nicht
 mit: Es bleibt auf der Rundenzahl seiner Fixture, und der Altwert bleibt
 deshalb in der Liste, bis der Referenzbestand neu gebaut ist.
 
+**Die Seite ändert nichts.** Jede Zeile führt auf die Seite, auf der sich
 etwas ändern lässt. Die einzige Ausnahme ist der fehlende **Serverschlüssel** —
 ohne ihn gibt es weder Komplett-Backup noch Versand auf ein Backup-Ziel, und
 der Weg dorthin ist ein Knopf.
