@@ -1,7 +1,8 @@
 # Prüfdokument — Sofortpaket Sicherheit (Rahmenplan Schritt 9a, R78)
 
-**Stand:** 07.09.2026 · **Web 15.6.0** · Zweig
-`claude/sofortpaket-sicherheit-1t70p1` · Android-Teil **offen**.
+**Stand:** 07.09.2026 · **Web 15.6.0** und **Android 0.14.0** · Zweig
+`claude/sofortpaket-sicherheit-1t70p1` · beide Teile gebaut und geprüft,
+Merge auf `main` **offen**.
 
 Dieses Dokument beantwortet die Frage „**was muss ich noch tun?**" — nicht die
 Frage „ist es belegt?"; die beantworten die Commit-Nachrichten und der
@@ -21,7 +22,11 @@ Das steht am Anfang, nicht in einer Fußnote.
 | **Ein GPX aus einem echten Gerät** (Nr. 130) | Im Container liegt kein Gerätemitschnitt. Geprüft ist gegen erzeugte Dateien und den Referenzexport | Auftraggeber, P-4 |
 | **Die Uhr selbst** am Ersetzfenster (Nr. 134) | Kein Gerät. Geprüft ist `ingest.php` über echtes HTTP, nicht das Verhalten der Uhr auf `kept_points` | Auftraggeber, P-6 |
 | **`/apk/` und `/demo/` auf dem Produktivserver** (Nr. 129) | Gemessen unter einem **im Container aufgesetzten Apache** mit derselben `.htaccess`. Ob der Produktiv-Webspace `AllowOverride` erlaubt und mod_rewrite lädt, sagt nur der Produktivserver | Auftraggeber, P-3 |
-| **Der Android-Teil** (Nr. 142–145, Räumteil 114) | Noch nicht gebaut — er ist Teil 2 dieses Schritts | — |
+| **Die Absenderprüfung mit einer echten Uhr** (Nr. 144) | Kein Data Layer mit Telefonseite im Container (`android/LIESMICH.md` 7). Geprüft ist die Entscheidung in `Uhrannahme` gegen echtes SQLite mit einer Attrappe der Knotenliste — nicht, was `connectedNodes` auf Hardware liefert | Auftraggeber, P-11 — **vor** der Verteilung der 0.14.0 an eine Uhr im Dienst |
+| **Das Klartextverbot auf Android 8.0/8.1** (Nr. 142) | Kein Gerät mit API 26/27; der Emulator läuft mit API 34, wo Android Klartext ohnehin verbietet. Belegt sind die zusammengeführte Release-Manifestdatei und der Prüffall im Release-Buildtyp | Auftraggeber, P-12 — nur, falls ein altes Gerät greifbar ist |
+| **Der Räumlauf nach 30 Tagen im Feld** (Nr. 114) | Die Frist ist nur im Prüfstand stellbar (`jetzt`); im Emulator vergehen keine 30 Tage | — (Robolectric belegt die Regel; am Gerät bleibt das Trennen, das dieselbe Funktion ohne Frist ruft) |
+| **Stufe II — die Änderung im Emulator angesehen und bedient** (alle Android-Punkte) | Der Emulator kam in drei Anläufen nicht bis `sys.boot_completed` (Zahlen in Abschnitt 1, Zeile „alle Android / Emulator"). Was er belegt hätte: Kopplung, Einstellungen und Trennen laufen nach dem Umbau — und das Trennen **ist** der Räumlauf | Auftraggeber oder nächste Instanz, P-13 — **vor dem Merge des Android-Teils**, wenn es der Zeitplan erlaubt |
+| **Ein signiertes Release-APK** | Kein Signaturschlüssel im Container (E-S4-16); geprüft ist das unsignierte Release-APK aus `./gradlew build` | Auftraggeber beim Release |
 
 **Eine Bemerkung zur Umgebung, weil sie für jede Zahl hier gilt:** Der
 Container brachte weder Datenbank noch Android-SDK mit. Beides holt
@@ -53,6 +58,13 @@ diesen Umweg hätte der Punkt keine Zahl.
 | **135** | maschinelle Einteilung + Browserlauf | Stellen vorher/nachher | **79** `json_encode()`-Aufrufe unter `server/`, davon **44 in einem `<script>`** (alle umgestellt) und **35 außerhalb** (unverändert). Gegenprobe: 0 verbliebene in einem Skriptblock, 44 `json_js()`. Wirkung mit Profilnamen `<!--<script>` auf `import.php`: vorher fehlten `KONTO_NAME`, `APP_TZ` **und** `WEB_VERSION`; nachher stehen alle drei |
 | **138** | Lesen | vier Dokumente sagen dasselbe | `CLAUDE.md` 4, `README.md`, `Technik.md` 4.98, `Handbuch.md` 5 — dazu der Textbaustein in Handbuch 11.5. Keine Codeänderung, keine Versionsstufe für sich |
 | **140** | Werkzeuglauf + zwei Manipulationen am laufenden System | Wartungsprobe um eine Erwartung (Abweichung erkannt) | Selbstprobe **12 Erwartungen, 0 nicht erfüllt**, davon fünfmal ausdrücklich „Abweichung erkannt" (veränderte Datei, veränderter Block, zusätzliches `<script src>`, zusätzlicher Inline-Block, fremdes `action`). Lauf gegen die Installation: **112 Dateien, 112 gleich; 1 Inline-Block, 1 externes Skript, 1 Formular gleich, nichts zu viel** → „Kein Unterschied". Gegenprobe 1, **eine** veränderte Kennung in `crypto.js`: **111 gleich, 1 abweichend**. Gegenprobe 2, Fremd-Skript über `ui_seite_ende()` eingeschleust: **1 zusätzliches Skript** gemeldet. Je Rückgabewert 1. `tools/wartungsprobe/` **12a** neu → **51 statt 50 Erwartungen, 0 nicht erfüllt** |
+| **142** | Prüffälle in beiden Bauarten, zusammengeführte Manifestdatei | Ausnahme nur im Debug, Release verbietet Klartext | `ServeradresseTest` **11 Fälle je Bauart, 0 Fehlschläge, 1 übersprungen** — im Debug der Release-Fall, im Release der Debug-Fall. `build/intermediates/merged_manifest/release/…/AndroidManifest.xml` trägt `networkSecurityConfig="@xml/netzsicherheit"`, das Debug-Manifest weiterhin `netzwerk_pruefstand` |
+| **114** Räumteil | Robolectric gegen echtes SQLite | nach 30 Tagen und beim Trennen weg, `dienst`-Zeilen mit | `AbgewieseneTest` **5 → 10 Fälle** (alt geräumt, jung bleibt — samt Punkt und Phase; ohne Frist alles Abgewiesene, der Rückstand nicht; laufendes bleibt; Dienstzeilen 4 → 2, die laufende bleibt; die Frist schont eine junge leere Dienstzeile), `SenderTest` **16 → 17** (36 Tage weg, 26 Tage bleibt, `geraeumt = 1`, keine Anfrage an den Server), `KopplungTest` **25** mit Zähler am Räumen: Getrennt 1, NurLokal 1, Rückstand 0 |
+| **143** | Lesen | eine Zeile, die es dann gibt | Abschnitt „Warum kein Certificate Pinning" in `android/LIESMICH.md`, Verweis im Kopf von `HttpNetzweg`; keine Codeänderung |
+| **144** | Robolectric gegen echtes SQLite, Attrappe der Knotenliste | Absender gegen Knoten, Zeit plausibel | `UhrannahmeTest` **12 → 19 Fälle**: bekannter Knoten ja, fremder nein, Liste `null` nein; 6 min Zukunft quittiert und nicht gewirkt, 4:59 min gewirkt; Phase 10 min vor Dienstbeginn quittiert, kein Einsatz; Dienstende vor dem Beginn beendet nichts. Dazu `:uhr:compileDebugKotlin` mit der ergänzten Klasse |
+| **145** | zwei Quellen, Wrapper-Lauf | Prüfsumme eingetragen, Wrapper läuft weiter | `…bin.zip.sha256` von `services.gradle.org` = `sha256sum` des frisch geladenen Archivs (137 393 837 B) = `bd711022…f3531`; `./gradlew --version` mit der Zeile: Gradle 8.14.3 |
+| **alle Android** | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge | `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor |
+| **alle Android** | Emulator (Stufe II) | Änderung angesehen und bedient, mit Bildern | **nicht erreicht** — Stufe II steht für 0.14.0 aus. Drei Startversuche mit `-accel off`, `-memory 6144`, Abbild `android-34;default;x86_64`, Emulator 37.1.11: Der erste stand nach 14 min bei `adb devices` = `device`, noch ohne `sys.boot_completed`, und wurde mit dem Abbruch der wartenden Shell mitgerissen; der zweite lief 38 min bei 102 % eines Kerns (die ersten 10 min parallel zum vollen Baulauf, Last 8 auf 4 Kernen) und blieb bei `device offline`; der dritte läuft seit 16:07 Uhr auf leerer Maschine. Befund mit Zahl statt stillschweigend übersprungener Punkt (CLAUDE.md 6); nachholen nach Prüfliste P-13 |
 
 ---
 
@@ -73,6 +85,9 @@ diesen Umweg hätte der Punkt keine Zahl.
 | `tools/screenshots/ --finger` | **dieselben Zahlen bei 44 px** | beide Bedienhöhen |
 | Gegenprobe des Bilderlaufs | **112 Bilder, 112 verschiedene Prüfsummen, 0 Doppelte** | Die Falle aus F-P3-AQ (176 Bilder zeigten die Anmeldeseite) ist damit ausgeschlossen |
 | `tools/screenshots/kontrast.py` | **21 Paare, 0 verfehlt** | `style.css` unverändert |
+| `./gradlew build` (Android) | `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor | beide Module, beide Bauarten, Lint mit `abortOnError` |
+| `android/werkzeuge/emulator.sh` | **nicht erreicht** — Stufe II steht für 0.14.0 aus. Drei Startversuche mit `-accel off`, `-memory 6144`, Abbild `android-34;default;x86_64`, Emulator 37.1.11: Der erste stand nach 14 min bei `adb devices` = `device`, noch ohne `sys.boot_completed`, und wurde mit dem Abbruch der wartenden Shell mitgerissen; der zweite lief 38 min bei 102 % eines Kerns (die ersten 10 min parallel zum vollen Baulauf, Last 8 auf 4 Kernen) und blieb bei `device offline`; der dritte läuft seit 16:07 Uhr auf leerer Maschine. Befund mit Zahl statt stillschweigend übersprungener Punkt (CLAUDE.md 6); nachholen nach Prüfliste P-13 | ohne KVM, `-accel off` |
+| `tools/wortliste/` nach dem Android-Teil | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** (87 Regeln, alle fünf Bereiche einschließlich d = Android) | Bereich d (Android) eingeschlossen |
 
 **Was der Bilderlauf gemessen hat**, damit die Zahl etwas bedeutet: die 14
 Seiten `01-anmeldung`, `06-wiederherstellen`, `10-tagesuebersicht`,
@@ -143,6 +158,28 @@ PHP-Anfragen durchgereicht), angemeldet als Admin und als Demo-Konto:
    Gerätekapitel ist seit S8 Abschnitt 10; 12 ist der Betrieb.
 6. **Nr. 153 neu**, damit der `querySelector`-Teil von Nr. 135 nicht
    unsichtbar wird.
+7. **Die Knotenliste `null` gilt als fremd** (Nr. 144). Fail closed: Ohne
+   Quittung liefert die Uhr nach; das kostet Zeit, keine Daten. Andersherum
+   wäre die Prüfung genau dann außer Kraft, wenn etwas nicht stimmt.
+8. **Unplausible Zeit: quittiert, nicht gewirkt** (Nr. 144) — dieselbe Regel
+   wie für eine Phase ohne Dienst. Die Alternative (keine Quittung) hieße
+   ewige Nachlieferung eines Ereignisses, das immer unplausibel bliebe.
+9. **Fünf Minuten Spiel und 30 Tage Frist sind gewählt, nicht gemessen**
+   (Nr. 144, 114); die Begründung steht an beiden Konstanten.
+10. **`Nachrichtenweg` bleibt, wie es ist.** Die Knotenliste steht als
+    Methode an `WearNachrichtenweg`, nicht in der Schnittstelle: Ihr einziger
+    Aufrufer ist `HandyHorcher`, der als `WearableListenerService` den Data
+    Layer ohnehin kennt. Eine Erweiterung der Schnittstelle hätte alle
+    Attrappen berührt — für eine Methode, die oberhalb niemand braucht.
+11. **Geräumt wird nur Abgeschlossenes** (`final = 1`, Nr. 114): Ein
+    laufendes Paket, dessen Teil-Upload eine 400 bekam, wird noch
+    beschrieben.
+12. **Der Räumlauf hängt am Sendelauf**, nicht an einem eigenen Zeitgeber:
+    Jeder Lauf ist der Augenblick, in dem die App auf den Puffer sieht, und
+    es gibt mindestens einen je Dienst (den Takt).
+13. **Die Release-Netzregel liegt in `src/release/`**, spiegelbildlich zur
+    Debug-Regel in `src/debug/`, statt im Hauptmanifest: Je Bauart gilt genau
+    eine Datei, und keine wird aus zwei zusammengeführt (Nr. 142).
 
 ---
 
@@ -253,6 +290,49 @@ Beides steht seit R78 aus und ist der Teil von Nr. 140, den die Wache
 ausdrücklich **nicht** ersetzt: Sie erkennt einen Angreifer mit Push-Recht
 nicht.
 
+### P-11 · Uhr-Kopplung nach dem Android-Release (Nr. 144) — **am Gerät, vor dem Dienst**
+1. Handy-App und Uhr-App 0.14.0 aufspielen (beide aus einem Baulauf,
+   gleiche Signatur).
+2. An der Uhr „Dienst beginnen". Am Handy muss der Dienst laufen, und die
+   Uhr muss „Dienst läuft" zeigen — das ist die angekommene Quittung.
+3. Eine Phase an der Uhr setzen; im Web erscheint der Einsatz mit dieser
+   Zeit. Dienst an der Uhr beenden.
+
+**Erwartet:** wie bisher — die Prüfung ist unsichtbar, wenn sie durchlässt.
+**Scheitern:** Die Uhr bleibt bei „wartet aufs Handy" oder liefert dasselbe
+Ereignis immer wieder nach; `adb logcat -s NAdoku` zeigt „Ereignis von
+unbekanntem Knoten … verworfen". Dann nennt `connectedNodes` auf dem Gerät
+nicht den Knoten, den der Data Layer als Absender nennt — sofort melden, mit
+der Protokollzeile; bis dahin 0.13.0 auf dem Handy lassen.
+
+### P-13 · Stufe II nachholen: Emulatorlauf 0.14.0 (alle Android-Punkte) — **vor dem Merge, wenn möglich**
+1. `android/werkzeuge/emulator.sh start` auf einer Maschine mit KVM oder mit
+   Geduld (Boot unter TCG 3–20 min; drei Anläufe im Prüfcontainer kamen
+   nicht durch, Zahlen in Abschnitt 1).
+2. Lokale Installation starten (`tools/referenzdatensatz/einspielen/lokal_starten.sh`),
+   Prüf-APK gegen sie bauen:
+   `./gradlew :handy:assembleDebug -Pnadoku.serverBasis=http://127.0.0.1:8080/`,
+   `adb reverse tcp:8080 tcp:8080`, `emulator.sh legen handy/build/outputs/apk/debug/handy-debug.apk`,
+   `adb shell pm clear org.genem.nadoku.pruef`.
+3. In der App „Kopplung starten"; den Code im Web unter Einstellungen →
+   Geräte eintragen und bestätigen; am Gerät „Ja, koppeln". Bild.
+4. Einstellungen öffnen (Bild), „Gerät trennen" (Bild) — das ist der
+   Räumlauf ohne Frist. `adb logcat -s NAdoku` mitlesen.
+
+**Erwartet:** Kopplung kommt zustande, Trennen meldet „getrennt", kein
+Absturz, keine Zeile „unbekanntem Knoten" (im Emulator kommt kein
+Uhr-Ereignis an, die Zeile darf also gar nicht auftauchen).
+**Scheitern:** ein Absturz beim Trennen (`Puffer.abgewieseneRaeumen` läuft
+dort zum ersten Mal auf einem echten Android-SQLite) — dann melden, mit
+`adb logcat`.
+
+### P-12 · Klartextverbot auf einem alten Gerät (Nr. 142) — nur bei Gelegenheit
+Auf einem Android-8-Gerät (API 26/27) ein Release-APK mit
+`-Pnadoku.serverBasis=http://<IP-Adresse>/` bauen und die Kopplung starten.
+**Erwartet:** „Keine Verbindung" — die App spricht `https`, und das System
+verböte Klartext ohnehin. **Scheitern:** Eine Kopplungssitzung kommt
+zustande.
+
 ---
 
 ## 7. Grenzen der benutzten Prüfmittel
@@ -275,11 +355,19 @@ nicht.
   Sendeplan ist `tools/referenzdatensatz/einspielen/`.
 - **Kein Nebenläufigkeitsprüfstand.** Ein Upload genau während eines
   Verdichtungslaufs lässt sich hier nicht herstellen.
+- **Der Emulator zeigt die Handy-App, nicht den Data Layer.** Im Abbild
+  ohne Telefonseite liefert `connectedNodes` eine leere Liste; die
+  Absenderprüfung (Nr. 144) ist dort nur als Code lesbar, nicht als
+  Verhalten. Was der Emulator belegt, ist, dass Kopplung, Einstellungen und
+  Trennen nach dem Umbau laufen — und das Trennen **ist** der Räumlauf.
+- **Robolectric misst die Regel, nicht die Uhr des Geräts.** Die 30 Tage und
+  die fünf Minuten sind mit gestellter Zeit geprüft.
 
 ---
 
 ## 8. Wenn die Prüfliste abgehakt ist
 
-Dieses Dokument wird gelöscht (CLAUDE.md 7). Vorher gehört in
-`docs/Rahmenplan.md` Abschnitt 8 die Erledigt-Zeile für Schritt 9a — sie steht
-noch aus, weil der **Android-Teil** offen ist.
+Dieses Dokument wird gelöscht (CLAUDE.md 7). Die Erledigt-Zeile für Schritt
+9a steht seit Fassung 36 in `docs/Rahmenplan.md` Abschnitt 8; was dort noch
+fehlt, ist der Merge auf `main` — der deployt den Web-Teil sofort und
+verlangt danach P-8.

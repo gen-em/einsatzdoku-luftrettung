@@ -1280,8 +1280,12 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Ergänzung 06.09.2026 (Krypto-Review AN-2):* Die Pakete bleiben samt
     GPS-Spur **dauerhaft** liegen — sie überleben Trennen und Neukopplung,
     und `dienst`-Zeilen werden nie gelöscht (`puffer/Puffer.kt:449-514`).
-    Das Sofortpaket Android räumt nach 30 Tagen und beim Trennen; der
-    Bedienweg von hier bleibt offen.
+    **Räumteil erledigt mit Android 0.14.0 am 07.09.2026:**
+    `Puffer.abgewieseneRaeumen()` löscht abgeschlossene abgewiesene Pakete
+    samt Punkten und Phasen nach 30 Tagen (jeder Sendelauf räumt vorher)
+    und beim Trennen ohne Frist; beendete `dienst`-Zeilen ohne Pakete gehen
+    mit, die laufende nie (`AbgewieseneTest` 5 → 10 Fälle). **Der
+    Bedienweg von hier bleibt offen.**
     *Aufgenommen 03.09.2026 aus S5 Paket E (B-S5Z-06).* Antwortet der Server
     auf ein Paket mit **400**, wird es im Puffer als `fehlerhaft = 1` markiert
     und damit aus der Warteschlange **und** aus der Anzeige genommen: Die App
@@ -1508,39 +1512,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
     nicht den Offline-Angriff (dafür S10). Zuordnung: **P5** (erweitert
     R38).
-
-142. **Android: HTTP-Ausnahme gilt auch im Release-Build.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-1).*
-    `Serveradresse.kt:108,119` lässt `localhost` und IPv4-Adressen mit
-    `http` durch und stuft ein ausdrückliches `https://127.0.0.1/` herab
-    (Test `oertlicheAdressenBehaltenHttp`); keine
-    Release-`network_security_config`. Auf Android 8.0/8.1 ginge
-    `X-Api-Key` bei einer Selbsthoster-Adresse per IP im Klartext; der
-    Standardbau ist nicht betroffen. Ausnahme an `BuildConfig.DEBUG`,
-    Klartextverbot im Release. Zuordnung: Sofortpaket Android (R78).
-
-143. **Android: Verzicht auf Certificate Pinning ist nicht festgehalten.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-3).* Vertretbar bei
-    fester Domain mit rotierendem Zertifikat, aber nirgends entschieden
-    (`docs/` und `android/`: kein Treffer). Eine Zeile in
-    `android/LIESMICH.md`. Zuordnung: Sofortpaket Android.
-
-144. **Android: Data-Layer-Empfang ohne Absender- und Plausibilitätsprüfung.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-4).*
-    `HandyHorcher.kt:30-32` und `Uhrannahme.kt:63-92` prüfen keinen
-    `sourceNodeId` und keine Zeitstempel; jede `uhr`-Kennung wird als neue
-    Uhr geführt. Kein Abflussweg, nur Störung — das Vertrauen ruht auf der
-    proprietären Bibliothek (gleiches Paket, gleiche Signatur). Absender
-    gegen die verbundenen Knoten, Zeiten gegen Dienstfenster;
-    Robolectric-Prüffall mit Attrappe. Zuordnung: Sofortpaket Android.
-
-145. **Android: Gradle-Wrapper ohne Prüfsumme.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-5).*
-    `gradle-wrapper.properties:3-5` ohne `distributionSha256Sum` (begründet
-    mit dem gesperrten `downloads.gradle.org` — die Summe wird aber nur
-    beim Herunterladen geprüft und stört den Container nicht);
-    `gradle-wrapper.jar` im Repositorium unvalidiert. R8 bleibt aus,
-    Begründung steht. Zuordnung: Sofortpaket Android.
 
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.**
     *Aufgenommen 06.09.2026 (R78).* Drei Fragen, keine Fehler: **Argon2id
@@ -1859,6 +1830,70 @@ zutreffen.
     keinen Rechtstext mit, aber die technische Tatsache dahinter kann nur sie
     kennen.
 
+
+142. **Android: HTTP-Ausnahme gilt auch im Release-Build.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-1).*
+    `Serveradresse.kt:108,119` lässt `localhost` und IPv4-Adressen mit
+    `http` durch und stuft ein ausdrückliches `https://127.0.0.1/` herab
+    (Test `oertlicheAdressenBehaltenHttp`); keine
+    Release-`network_security_config`. Auf Android 8.0/8.1 ginge
+    `X-Api-Key` bei einer Selbsthoster-Adresse per IP im Klartext; der
+    Standardbau ist nicht betroffen. Ausnahme an `BuildConfig.DEBUG`,
+    Klartextverbot im Release. Zuordnung: Sofortpaket Android (R78).
+
+    **Erledigt mit Android 0.14.0 am 07.09.2026.** Die Ausnahme in
+    `Serveradresse` hängt an `BuildConfig.DEBUG`; `handy/src/release/` bringt
+    eine Netzsicherheitsregel mit `cleartextTrafficPermitted="false"` — zwei
+    Böden. Der Prüffall `oertlicheAdressenBehaltenHttp` läuft nur im
+    Debug-Buildtyp, sein Gegenstück nur im Release (je Bauart 11 Fälle,
+    1 übersprungen). Belegt an der zusammengeführten Release-Manifestdatei:
+    `networkSecurityConfig="@xml/netzsicherheit"`.
+
+143. **Android: Verzicht auf Certificate Pinning ist nicht festgehalten.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-3).* Vertretbar bei
+    fester Domain mit rotierendem Zertifikat, aber nirgends entschieden
+    (`docs/` und `android/`: kein Treffer). Eine Zeile in
+    `android/LIESMICH.md`. Zuordnung: Sofortpaket Android.
+
+    **Erledigt mit Android 0.14.0 am 07.09.2026.** Abschnitt „Warum kein
+    Certificate Pinning" in `android/LIESMICH.md` — feste Domain,
+    rotierendes Zertifikat, niemand, der Ersatzschlüssel pflegte; Android
+    traut benutzerinstallierten Wurzeln seit Fassung 7 ohnehin nicht — und
+    ein Verweis im Kopf von `HttpNetzweg`.
+
+144. **Android: Data-Layer-Empfang ohne Absender- und Plausibilitätsprüfung.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-4).*
+    `HandyHorcher.kt:30-32` und `Uhrannahme.kt:63-92` prüfen keinen
+    `sourceNodeId` und keine Zeitstempel; jede `uhr`-Kennung wird als neue
+    Uhr geführt. Kein Abflussweg, nur Störung — das Vertrauen ruht auf der
+    proprietären Bibliothek (gleiches Paket, gleiche Signatur). Absender
+    gegen die verbundenen Knoten, Zeiten gegen Dienstfenster;
+    Robolectric-Prüffall mit Attrappe. Zuordnung: Sofortpaket Android.
+
+    **Erledigt mit Android 0.14.0 am 07.09.2026.**
+    `WearNachrichtenweg.verbundeneKnoten()` liefert die Knotenliste (`null`
+    = nicht lesbar), `Uhrannahme.absenderBekannt()` verlangt `sourceNodeId`
+    darunter — sonst weder Wirkung noch Quittung; die Zeit der Uhr darf
+    höchstens fünf Minuten in der Zukunft und höchstens fünf Minuten vor dem
+    laufenden Dienst liegen, sonst quittiert, nicht gewirkt.
+    `UhrannahmeTest` 12 → 19 Fälle (Robolectric, echtes SQLite). Die
+    Schnittstelle `Nachrichtenweg` ist unverändert; die neue Methode steht
+    nur an der Umsetzung, weil ihr einziger Aufrufer (`HandyHorcher`) den
+    Data Layer ohnehin kennt.
+
+145. **Android: Gradle-Wrapper ohne Prüfsumme.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-5).*
+    `gradle-wrapper.properties:3-5` ohne `distributionSha256Sum` (begründet
+    mit dem gesperrten `downloads.gradle.org` — die Summe wird aber nur
+    beim Herunterladen geprüft und stört den Container nicht);
+    `gradle-wrapper.jar` im Repositorium unvalidiert. R8 bleibt aus,
+    Begründung steht. Zuordnung: Sofortpaket Android.
+
+    **Erledigt mit Android 0.14.0 am 07.09.2026.**
+    `distributionSha256Sum=bd711022…f3531` in `gradle-wrapper.properties`;
+    die Zahl aus `services.gradle.org` und am frisch geladenen Archiv
+    nachgerechnet (137 393 837 Bytes). LIESMICH 2.1 erzählt die Sperre als
+    Vergangenheit; R8 bleibt aus, mit Begründung.
 
 148. **Der Knopf „Diensttage zusammenführen" in der Überschneidungswarnung führt auf 404.**
     *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Laufen

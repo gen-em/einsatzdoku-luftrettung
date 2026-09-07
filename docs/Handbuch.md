@@ -2690,7 +2690,7 @@ unberührt weiter.
 |---|---|
 | „Alles gesendet" | Der Server hat alles. |
 | „Rückstand 2 Pakete" | Zwei abgeschlossene Pakete sind noch nicht bestätigt. Darunter steht der Knopf **„Jetzt senden"**, falls es schneller gehen soll. |
-| „1 Paket vom Server abgewiesen" *(rot)* | Der Server hat den Inhalt abgelehnt. **Das geht nicht von selbst weg** und wird auch nicht wiederholt — bitte melden; die Daten liegen weiter auf dem Telefon. |
+| „1 Paket vom Server abgewiesen" *(rot)* | Der Server hat den Inhalt abgelehnt. **Es wird nicht wiederholt** — bitte melden, solange die Zeile steht: Die Daten liegen noch **30 Tage** auf dem Telefon, danach räumt die App sie weg (seit Android 0.14.0); auch das Trennen des Geräts löscht sie. Einen Weg, sie von Hand nachzureichen, gibt es noch nicht. |
 
 Nach jedem Sendeversuch steht darunter kurz das Ergebnis: „Gesendet · 12:41",
 „Keine Verbindung · wird nachgeholt" oder „Schlüssel abgewiesen · Gerät neu

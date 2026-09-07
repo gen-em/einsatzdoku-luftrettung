@@ -14,6 +14,88 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.14.0] — 2026-09-07
+
+### Android — Sofortpaket Sicherheit, fünf Punkte aus dem Krypto-Review (Rahmenplan 9a, R78)
+
+Der Review vom 06.09.2026 fand an den Android-Apps fünf kleine Befunde (AN-1
+bis AN-5) — keinen mit Abflussweg, alle von der Art, die man einzeln als
+vertretbar durchgehen ließe. Hier sind sie abgearbeitet, je einer ein Commit,
+einzeln zurücknehmbar. Was sie gemeinsam haben: Jeder war ein Vertrauen, das
+auf etwas anderem ruhte als auf der App selbst — auf der Bauart, auf der
+Bibliothek, auf dem Container.
+
+#### Die HTTP-Ausnahme gilt nur noch im Prüf-APK (Nr. 142, AN-1)
+
+`Serveradresse` ließ `localhost` und IPv4-Adressen in **jeder** Bauart mit
+`http` durch — gedacht für den Prüfstand, der ohne TLS gegen `127.0.0.1:8080`
+spricht. Im Standardbau mit fester Domain war das folgenlos; wer aber ein
+eigenes APK mit einer IP-Adresse als `SERVER_BASIS` baute, hätte den
+Geräteschlüssel auf Android 8.0/8.1 im Klartext verschickt, denn Androids
+eigenes Klartextverbot gilt erst ab API 28 und `minSdk` ist 26. Die Ausnahme
+hängt jetzt an `BuildConfig.DEBUG`, und das Release bringt eine eigene
+Netzsicherheitsregel mit `cleartextTrafficPermitted="false"` — zwei Böden,
+damit ein späterer Umbau der Adressregel allein nicht reicht. Der Prüffall
+`oertlicheAdressenBehaltenHttp` läuft nur im Debug-Buildtyp, sein Gegenstück
+nur im Release; je Bauart ist genau einer übersprungen, sichtbar statt still.
+
+#### Abgewiesene Pakete gehen nach 30 Tagen und beim Trennen (Nr. 114, Räumteil, AN-2)
+
+Ein vom Server mit 400 abgewiesenes Paket blieb samt GPS-Spur **für immer** im
+Puffer — es überlebte Trennen und Neukopplung, und `dienst`-Zeilen wurden nie
+gelöscht. Der Satz an der Stelle („gelöscht wird sie nicht, weil dann niemand
+mehr sähe, dass etwas nicht angekommen ist") bleibt richtig, aber für Tage,
+nicht für Jahre: Eine Spur, die niemand mehr nachreichen wird, ist kein Beleg
+mehr, sondern ein Ortsdatensatz auf einem Gerät, das verlorengehen kann.
+Jeder Sendelauf räumt jetzt vorher, was älter ist als **30 Tage**, und das
+Trennen räumt ohne Frist, weil die Pakete dem zurückgegebenen Konto gehören.
+Beendete Dienstzeilen ohne Pakete gehen mit; die laufende bleibt in jedem
+Fall, ebenso ein abgewiesenes Paket, das noch beschrieben wird. Die 30 sind
+gewählt, nicht gemessen — lang genug, um ein Paket nach einem Serverfehler von
+Hand nachzureichen, kurz genug, dass ein verlorenes Handy nicht die Spuren
+eines Jahres trägt. **Der Bedienweg** (ansehen, ausleiten, verwerfen) ist
+damit nicht gebaut; er bleibt Nr. 114 in der Backlog-Runde.
+
+#### Kein Certificate Pinning — und warum, steht jetzt da (Nr. 143, AN-3)
+
+Keine Codeänderung. `android/LIESMICH.md` hält die Entscheidung fest: feste
+Domain, rotierendes Zertifikat, keine Stelle, die Ersatzschlüssel pflegte;
+Android traut benutzerinstallierten Wurzeln seit Fassung 7 ohnehin nicht, und
+gegen eine Wurzel im Systemspeicher hilft kein Pin, weil derselbe Angreifer
+auch das APK tauschen kann. `HttpNetzweg` verweist darauf.
+
+#### Der Data-Layer-Empfang prüft Absender und Zeit (Nr. 144, AN-4)
+
+`HandyHorcher` nahm jedes Ereignis an, das der Data Layer zustellte — das
+Vertrauen ruhte ganz auf der Bibliothek (gleiches Paket, gleiche Signatur).
+Das bleibt der erste Boden; jetzt gibt es einen zweiten: Der Absender
+(`sourceNodeId`) muss unter den **verbundenen Knoten** stehen, sonst gibt es
+weder Wirkung noch Quittung — eine echte Uhr liefert nach, sobald sie
+verbunden ist. Ist die Knotenliste nicht lesbar, gilt der Absender als fremd;
+das kostet Zeit, keine Daten, und andersherum wäre die Prüfung genau dann
+außer Kraft, wenn etwas nicht stimmt. Dazu die **Zeit der Uhr**: höchstens
+fünf Minuten in der Zukunft, höchstens fünf Minuten vor dem laufenden Dienst;
+ein Ereignis außerhalb wird quittiert, aber nicht gewirkt — dieselbe Regel wie
+für eine Phase ohne Dienst, denn es bliebe immer unplausibel. Die fünf Minuten
+sind gewählt, nicht gemessen. Die Knotenliste liefert `WearNachrichtenweg` —
+die eine Datei, die den Data Layer kennt; die Schnittstelle `Nachrichtenweg`
+bleibt unverändert —, entschieden wird in `Uhrannahme`, und dort sind es
+sieben neue Robolectric-Fälle gegen echtes SQLite.
+
+#### Die Gradle-Verteilung hat eine Prüfsumme (Nr. 145, AN-5)
+
+`distributionSha256Sum` steht in `gradle-wrapper.properties`. Die Zahl kommt
+von `services.gradle.org` und ist am frisch geladenen Archiv nachgerechnet
+(137 393 837 Bytes) — zwei Wege, dieselbe Summe. Bis zum 07.09.2026 war die
+Adresse der Prüfsummen-Datei im Container gesperrt, und eine Summe aus der
+Datei selbst wäre eine Tautologie gewesen; das stand so in der LIESMICH und
+ist jetzt Vergangenheit. R8 bleibt aus, mit Begründung an der Stelle, an der
+die Ausnahmen stünden — und mit dem Satz, dass Verschleierung hier kein
+Sicherheitsmerkmal wäre: Der Geräteschlüssel liegt im Keystore, nicht im Code.
+
+**Was der Prüfstand sagt:** `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor. Emulator (Stufe II):
+**nicht erreicht** — Stufe II steht für 0.14.0 aus. Drei Startversuche mit `-accel off`, `-memory 6144`, Abbild `android-34;default;x86_64`, Emulator 37.1.11: Der erste stand nach 14 min bei `adb devices` = `device`, noch ohne `sys.boot_completed`, und wurde mit dem Abbruch der wartenden Shell mitgerissen; der zweite lief 38 min bei 102 % eines Kerns (die ersten 10 min parallel zum vollen Baulauf, Last 8 auf 4 Kernen) und blieb bei `device offline`; der dritte läuft seit 16:07 Uhr auf leerer Maschine. Befund mit Zahl statt stillschweigend übersprungener Punkt (CLAUDE.md 6); nachholen nach Prüfliste P-13.
+
 ## [Web 15.6.0] — 2026-09-07
 
 ### Web — Sofortpaket Sicherheit, elf Punkte aus dem Krypto-Review (Rahmenplan 9a, R78)

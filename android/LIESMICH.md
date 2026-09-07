@@ -185,6 +185,33 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Sofortpaket Sicherheit (Android 0.14.0), `./gradlew build` im
+Container, 07.09.2026:**
+
+| | `handy` | `uhr` |
+|---|---|---|
+| Lint-Fehler | **0** | **0** |
+| Lint-Warnungen | **13** | **0** |
+| Prüffälle je Bauart | **261**, davon 15 übersprungen | **71**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **7 867 394 B** | **19 574 406 B** |
+
+**261 statt 247** (0.13.0): `ServeradresseTest` +1 (der Release-Fall),
+`AbgewieseneTest` +5 (Räumteil), `SenderTest` +1 (Räumlauf vor dem Senden),
+`UhrannahmeTest` +7 (Absender und Zeit). **15 statt 14 übersprungen**, und
+das ist Absicht: Die 14 Rundlauffälle (`KopplungRundlaufTest` 8,
+`MissionRundlaufTest` 3, `SendeRundlaufTest` 3) brauchen die örtliche
+Installation — und seit Nr. 142 überspringt sich je Bauart genau ein Fall
+von `ServeradresseTest`, weil er das Gegenteil des anderen prüft
+(`assumeTrue(BuildConfig.DEBUG)` gegen `assumeFalse`). Beide
+Bauarten laufen in `./gradlew build`; **0 Fehlschläge** in allen vier
+Läufen. Das Handy-APK ist um 332 B gewachsen (die Netzsicherheitsregel und
+die Absenderprüfung), das Uhr-APK ist byteweise gleich groß geblieben — die
+neue Methode in `WearNachrichtenweg` wird dort nicht gerufen und wiegt
+nichts. Die 13 Warnungen sind die aus Abschnitt 4 (AGP 9 / Kotlin 2.4);
+keine ist stummgeschaltet.
+
+*Zur Einordnung — der Stand davor:*
+
 Stand E3 (Android 0.10.1), `./gradlew build` im Container, 03.09.2026:
 
 | | `handy` | `uhr` |
@@ -384,8 +411,18 @@ adb reverse tcp:8080 tcp:8080          # 127.0.0.1 im Gerät -> Host
 ```
 
 Die Klartext-Ausnahme liegt in `handy/src/debug/` und geht damit **nur** in
-das Prüf-APK ein (`org.genem.nadoku.pruef`). Das Release-APK kennt sie nicht;
-dort fiele ein `http://` durch, selbst wenn jemand es einbaute.
+das Prüf-APK ein (`org.genem.nadoku.pruef`). Das Release-APK kennt sie nicht
+— und seit Android 0.14.0 sagt es das auch selbst (Backlog Nr. 142,
+Krypto-Review AN-1): `handy/src/release/res/xml/netzsicherheit.xml` verbietet
+Klartext für jede Adresse, und `Serveradresse` bildet im Release auch für
+`localhost` und IP-Adressen `https`. Bis 0.13.0 galt die Adress-Ausnahme in
+**beiden** Bauarten; ein mit IP-Adresse gebautes APK hätte den
+Geräteschlüssel auf Android 8.0/8.1 im Klartext verschickt — dort fehlt
+Androids eigenes Verbot, es gilt erst ab API 28. Der Standardbau mit fester
+Domain war nie betroffen. Der Prüffall `oertlicheAdressenBehaltenHttp` läuft
+deshalb nur im Debug-Buildtyp, sein Gegenstück nur im Release — je Bauart ist
+genau einer übersprungen. Der Rundlauf gegen die örtliche Installation ist
+damit ausdrücklich ein Debug-Lauf (`:handy:testDebugUnitTest`, wie oben).
 
 **Ohne die Rückleitung sieht man nichts:** Der PHP-Server der
 Prüfinstallation hört auf `127.0.0.1:8080`, nicht auf `0.0.0.0` — aus dem
@@ -670,6 +707,15 @@ ein echtes `ingest.php` und prüft am Server nach, dass Segment und Diensttag
 geschlossen sind. Er sagt nichts über Zeitpunkte und nichts über
 Prozesstode — aber alles über die Nachricht selbst.
 
+Und was das **Sofortpaket Sicherheit** (Android 0.14.0, Nr. 142–145 und der
+Räumteil von 114) dazugelegt hat:
+
+| Nicht prüfbar | Warum | Wo es geprüft wird |
+|---|---|---|
+| **Ob eine echte Uhr nach der Absenderprüfung noch ankommt** (Nr. 144) | Kein Data Layer mit Telefonseite im Container. Geprüft ist die Entscheidung (`Uhrannahme`, 19 Fälle gegen echtes SQLite), nicht, was `connectedNodes` auf Hardware liefert | Gerätetest mit Uhr: Dienst an der Uhr beginnen, die Quittung muss kommen; `adb logcat -s NAdoku` darf kein „unbekanntem Knoten" zeigen |
+| **Das Klartextverbot auf Android 8.0/8.1** (Nr. 142) | Kein Gerät mit API 26/27; der Emulator läuft mit API 34, wo Android Klartext ohnehin verbietet | Gerätetest, falls ein altes Gerät greifbar ist; ersatzweise die Manifest-Zusammenführung (`build/intermediates/merged_manifest/release/`, Eintrag `networkSecurityConfig`) |
+| **Der Räumlauf nach 30 Tagen im Feld** (Nr. 114) | Die Frist lässt sich nur im Prüfstand stellen (`jetzt`) | Robolectric: `AbgewieseneTest` und `SenderTest`; am Gerät nur über das Trennen |
+
 ### Der Emulator — er läuft, und er ist ab 03.09.2026 Pflicht
 
 **Die Regel zuerst** (CLAUDE.md 6, angewiesen am 03.09.2026): Bei jeder
@@ -782,6 +828,23 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
     emulierten Kern. Dass die Seite ankam, misst man deshalb **am Server**
     (`tail /tmp/php-server.log` → `[200]: GET /datenschutz.php`), nicht am
     Bild.
+  **Vierter Lauf am 07.09.2026 (0.14.0): kein Boot.** Derselbe Aufbau
+  (`aufbauen` frisch, Emulator 37.1.11, `android-34;default;x86_64`,
+  `-accel off -memory 6144`), drei Anläufe: Der erste stand nach **14 min**
+  bei `adb devices` = `device`, noch ohne `sys.boot_completed`, und wurde
+  mit dem Abbruch der wartenden Shell mitgerissen — **Stolperstein Nr. 3:
+  den Emulator nie als Kind einer Shell starten, die jemand abbrechen
+  könnte** (`setsid nohup … & disown`, nicht bloß `nohup … &`). Der zweite
+  lief **38 min** bei 102 % eines Kerns, die ersten zehn davon neben dem
+  vollen `./gradlew build` (Last 8 auf 4 Kernen), und blieb bei `device
+  offline`. Der dritte lief auf leerer Maschine an; sein Ergebnis steht,
+  wenn es eines gibt, im Prüfdokument des Sofortpakets (P-13). Die Zahlen
+  von 0.13.0 (Boot 621 s) waren also kein Ausreißer nach oben, sondern
+  ein guter Tag: Ein Boot unter TCG ist **eine Viertelstunde bis eine
+  halbe**, und jede parallele Last verlängert ihn spürbar. Die Regel
+  bleibt — Stufe II ist Pflicht, der Versuch zählt, der Befund steht mit
+  Zahl.
+
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf
   Hardware.

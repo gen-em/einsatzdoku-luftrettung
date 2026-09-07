@@ -5111,6 +5111,17 @@ deshalb `instanceFollowRedirects = false`; eine Umleitung gilt seither als
 eingebauten Adresse spricht (R63). Der Sendeweg war nie betroffen: Er
 behandelt alles außer 200/400/401/413 als „später erneut".
 
+**Klartext ist im Release seit Android 0.14.0 doppelt verboten** (Backlog
+Nr. 142, Krypto-Review AN-1). `Serveradresse` bildet im ausgelieferten Stand
+für jede Adresse `https` — die Ausnahme für `localhost` und IPv4-Adressen,
+die der Prüfstand braucht, hängt an `BuildConfig.DEBUG` —, und
+`handy/src/release/res/xml/netzsicherheit.xml` verbietet Klartext auf
+Systemebene. Das zweite braucht es wegen `minSdk` 26: Androids eigenes
+Verbot gilt erst ab API 28. Betroffen war nur ein Selbsthoster, der sein APK
+mit einer IP-Adresse baut; der Standardbau mit fester Domain nie. **Kein
+Certificate Pinning**, mit Begründung (Nr. 143): `android/LIESMICH.md`,
+Abschnitt „Warum kein Certificate Pinning".
+
 **Die App führt seit Android 0.13.0 zu den Rechtstexten.** Unter den
 Einstellungen stehen zwei Verweise auf `datenschutz.php` und `impressum.php`
 derselben Serveradresse; beide Seiten sind ohne Anmeldung erreichbar. Sie
@@ -5149,6 +5160,19 @@ eine Attrappe. Zur Lizenzlage der proprietären Bibliothek:
 
 Ohne Quittung wird dieselbe Nachricht **mit derselben Nummer** erneut
 gesendet. Der Puffer der Uhr überlebt ihren Neustart.
+
+**Und zwei Böden gegen einen fremden Absender** (seit Android 0.14.0,
+Backlog Nr. 144, Krypto-Review AN-4). Der erste ist die Bibliothek: Der Data
+Layer stellt nur zwischen Apps gleichen Pakets und gleicher Signatur zu. Der
+zweite ist die App selbst: `HandyHorcher` fragt die verbundenen Knoten ab
+(`WearNachrichtenweg.verbundeneKnoten()`, dieselbe eine Datei), und
+`Uhrannahme.absenderBekannt()` verlangt, dass `sourceNodeId` darunter steht
+— sonst weder Wirkung noch Quittung; eine echte Uhr liefert nach, sobald sie
+verbunden ist. Ist die Liste nicht lesbar, gilt der Absender als fremd (das
+kostet Zeit, keine Daten). Dazu die **Zeit der Uhr**: höchstens fünf Minuten
+in der Zukunft und höchstens fünf Minuten vor dem laufenden Dienst; außerhalb
+wird quittiert, aber nicht gewirkt — dieselbe Regel wie für eine Phase ohne
+Dienst. Die fünf Minuten sind gewählt, nicht gemessen.
 
 ### Ortungswächter und Nachsenden
 
@@ -5291,6 +5315,14 @@ die zählt:** Damit ist auch die Reihenfolge beim Nachsenden gesichert — ein
 Knopf „Jetzt senden" bei Rückstand und eine Ergebniszeile aus dem letzten
 Lauf. Die 400-Zeile schliesst die Lücke, durch die ein Paket bisher aus
 Warteschlange **und** Anzeige fiel.
+
+**Abgewiesene Pakete bleiben nicht mehr für immer** (seit Android 0.14.0,
+Backlog Nr. 114 Räumteil, Krypto-Review AN-2): Jeder Sendelauf räumt vorher,
+was älter ist als 30 Tage (`Raeumung.FRIST_TAGE`), und das Trennen räumt ohne
+Frist — die Pakete gehören dem zurückgegebenen Konto. Gelöscht wird nur
+Abgeschlossenes, samt Punkten und Phasen in einer Transaktion; beendete
+`dienst`-Zeilen ohne Pakete gehen mit, die laufende nie. Der Bedienweg zum
+Ansehen und Ausleiten bleibt Nr. 114.
 
 ### Der Uhr-Spiegel
 
