@@ -56,6 +56,13 @@ hat zwölf Verweise „R74" auf den Krypto-Review zu **R78** berichtigt (der
 Beschluss ist mit Fassung 31 umnummeriert worden, diese Datei nicht) und
 Nr. 115 in Nr. 95 aufgehen lassen — beide beschrieben denselben Fund.
 
+**Zu Nr. 152 und den Vermerken „Konzept S9" (Rahmenplan Fassung 34, 07.09.2026).**
+Das Konzept S9 liegt vor (`docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`,
+E-S9-01 bis -19). Die Einträge 101–113, 147, 44, 68, 69, 70 und 72 tragen
+jetzt den Beschluss, der sie erledigt; 152 ist der einzige neue Punkt — die
+Standortseiten, aufgekommen bei der Mockup-Freigabe. 132 und 137 (9a) tragen
+den Vermerk, dass S9 sie ergänzt.
+
 **Zu den Nummern 150 und 151 (06.09.2026, Korrekturstufe Web 15.5.2).** 150
 kommt vom Auftraggeber (der Cron-Befehl mit dem Repositoriumspfad), 151 vom
 neuen `tools/linkprobe/`, das in derselben Stufe entstanden ist — es hat den
@@ -429,6 +436,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Mockup liegt: `docs/mockups/N1-sprungliste.html` mit Bildern für 900 und
     390 px. **Wartet auf Freigabe** — es wäre eine neue Darstellung, und die
     braucht nach `docs/Design.md` 1 eine ausdrückliche Zustimmung.
+    *Konzept S9 (07.09.2026): E-S9-14, M-S9-05 (Pille mit Artzeichen, ab sechs; in der Standortseite, AP5).*
 
 45. **Dritte Kartengröße zwischen klein und Vollbild.**
     *Aufgenommen 30.08.2026, zurückgestellt.* Die Karte des Diensttags ist im
@@ -785,6 +793,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     das Muster; ob es selbst noch ein `<datalist>` benutzt, ist Teil der
     Erhebung. Ein neuer Baustein braucht Mockup und Freigabe (`Design.md` 1).
     Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-07 (kein `<datalist>` mehr, Baustein Vorschlagsliste; AP1, Besatzung AP6).*
 
 69. **Kurzname je Rettungsmittel als Stammdatenfeld.**
     *Zulieferung aus P3; bis Fassung 16 ohne Nummer im Rahmenplan-Abschnitt
@@ -795,6 +804,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     bleibt in Formularen und Exporten. Schemaänderung, Feldkatalog, Export,
     Import und Backup ziehen nach — deshalb ein eigener Punkt und kein
     Nebenklapp. Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-09 (`vehicles.kurz`, `days.vehicle_kurz`, Nutzlast 10; AP4).*
 
 70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
     *Zulieferung aus P3; bis Fassung 16 ohne Nummer.* Die Position eines
@@ -803,6 +813,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wählen. Dieselbe Kartenwahl fehlt in den Stammdaten der Standorte.
     **Zu tun:** den vorhandenen Baustein des Ortsfelds dort einbinden, kein
     neuer Baustein. Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-06 c (Pin-Knopf in der Nur-Lage-Fassung, Standortkarte der Standortseite; AP2/AP5).*
 
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**
     *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
@@ -1154,12 +1165,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Geocoding-Quelle — dieselbe wie die heutigen Adressvorschläge oder keine
     (`CLAUDE.md` 4, Datenschutz). Vorbereitung
     `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
+    *Konzept S9 (07.09.2026): E-S9-05, E-S9-06 (Geocoder-Modul, Suchfeld im Dialog; AP2).*
 
 102. **Weitere Rettungsmittel: die Auswahl wird nicht übernommen.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-2), Schritt 8 (S9).*
     Die Suche im hinterlegten Stand liefert Treffer; ein Klick schließt den
     Dialog, das Rettungsmittel wird aber nicht in den Einsatz übernommen.
     Bug, nur Desktop/Web (F2).
+    *Konzept S9 (07.09.2026): E-S9-08 (mousedown statt click, Ursache Blur-Verzögerung; AP1).*
 
 103. **Kompaktere Buttons Einsatzort, Standort, Zielklinik.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-3), Schritt 8 (S9).*
@@ -1170,6 +1183,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mehrerer Optionen **im S9-Konzept** (Fable-Schritt, F8). Hängt an der
     Bedienhöhe am Schreibtisch (Nr. 74, S8). Offen: F3–F6 (Rahmenplan
     Abschnitt 6).
+    *Konzept S9 (07.09.2026): E-S9-12, M-S9-01 V1 (Farbring statt Rand, 30/28/3 px; AP3).*
 
 104. **Windenkacheln fehlen bei Nullwert.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-4), Schritt 8 (S9).*
@@ -1177,17 +1191,20 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     keine Windeneinsätze geflogen wurden. Soll: Sobald ein Hubschrauber mit
     Winde als Einsatzmittel ausgewählt war, erscheinen die Kacheln — auch
     mit „0" (F7).
+    *Konzept S9 (07.09.2026): E-S9-04 (Fähigkeit statt Zählung, `api/range.php` liefert `faehigkeiten`; AP3).*
 
 105. **Hubschrauber-Icon in der linken Leiste.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-5), Schritt 8 (S9).*
     Das Icon neben den Tagesdaten überzeugt nicht; Varianten entstehen im
     S9-Konzept (Fable-Schritt, F8), nicht vorab.
+    *Konzept S9 (07.09.2026): E-S9-13, M-S9-02 — Hubschrauber bleibt Tabler „helicopter"; erledigt sich mit „Ist".*
 
 106. **Klinik- und Adressvorschläge überlagern sich.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-6), Schritt 8 (S9).*
     Beide Vorschlagsarten in **einer** Liste: Kliniken oben, visuell
     abgesetzt, darunter die Adressen. Klinikvorschläge nur im
     Zielklinik-Kontext (F9), höchstens zwei (F10).
+    *Konzept S9 (07.09.2026): E-S9-07, M-S9-03 (eine Vorschlagsliste mit Gruppen; AP1).*
 
 107. **Zielklinik per Koordinaten und Karte.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-7), Schritt 8 (S9).*
@@ -1196,12 +1213,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     standardisierten Kartendialog (Nr. 101). Koordinaten einheitlich wie in
     den übrigen Feldern (F11); so gewählte Zielkliniken sind Ad-hoc-Einträge
     je Einsatz, kein Stammdateneintrag (F12). Migration; Vertrag prüfen.
+    *Konzept S9 (07.09.2026): E-S9-06 (Pin-Knopf am Katalogfeld, Ad-hoc-Wert; AP2).*
 
 108. **Schloss-Icon und Legende für verschlüsselte Felder.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.1), Schritt 8
     (S9).*
     Es ist nicht ersichtlich, welche Felder verschlüsselt gespeichert werden.
     Soll: Schloss-Icon am Feld plus Legende (F13). Getrennt von Nr. 109.
+    *Konzept S9 (07.09.2026): E-S9-02 (Schloss am Label, Karte „Was hier gilt"; AP7).*
 
 109. **Notizfeld verschlüsseln, Suche bleibt.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.2), Schritt 8
@@ -1214,12 +1233,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nachteilen, bevor entschieden wird. Betrifft Datenmodell und
     Verschlüsselung (Migration); die Antwort geht in das Bedrohungsmodell
     des R17-Reviews ein (Nr. 43, R69). Fable-Schritt.
+    *Konzept S9 (07.09.2026): E-S9-01 (Notizen im pat_blob, Katalogschlüssel `store => pat`, stille Anhebung; AP7).*
 
 110. **Kachel „Spur" heißt „GPS-Daten".**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-9), Schritt 8 (S9).*
     Die Kachel neben „editiert" zeigt z. B. „Spur · 852 Punkte"; „Spur" ist
     schwer verständlich. Soll: „GPS-Daten", die Punktzahl entfällt (F15);
     Wortliste nachziehen.
+    *Konzept S9 (07.09.2026): E-S9-03 („GPS-Daten" überall in der NutzerInnen-Sicht; AP3).*
 
 111. **Neue Rettungsmittel-Arten.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.1), Schritt 8
@@ -1227,6 +1248,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bergwachtnotarzt, Veranstaltungsnotarzt, Sonstiges — mit eigenem Icon,
     ohne Rollen-Vorlagen, ein Standort kann eingegeben werden (F16).
     Migration.
+    *Konzept S9 (07.09.2026): E-S9-09, E-S9-13 (`vehicles.typ`, Betriebsart bleibt `kind`; AP4).*
 
 112. **Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.2), Schritt 8
@@ -1235,6 +1257,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     es gilt nur für den Tag, die dauerhafte Aufnahme in den Stamm bleibt
     manuell über die Einstellungen (F17). Bedingung: Suche und Filter müssen
     für solche Einträge greifen.
+    *Konzept S9 (07.09.2026): E-S9-10 („Anderes Rettungsmittel …" im Zuordnungsformular; AP6).*
 
 113. **Rollen unmittelbar nach der Auswahl bearbeitbar.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.3), Schritt 8
@@ -1244,6 +1267,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     das Rettungsmittel vordefiniert, werden sie nach der Auswahl automatisch
     nachgeladen. Für manuell definierte Rettungsmittel (Nr. 112) und Arten
     ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
+    *Konzept S9 (07.09.2026): E-S9-11 (`api/day.php?vorschau=`; AP6).*
 
 114. **Abgewiesene Pakete sichtbar machen und ausräumen.**
     *Ergänzung 06.09.2026 (Krypto-Review AN-2):* Die Pakete bleiben samt
@@ -1458,6 +1482,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (`mission_fields.php:395,426,459`). Bedienfehler tragen Patientendaten
     in den Klartext. Ein Schlüssel `hinweis` im Feldkatalog, ein Text für
     alle; das Symbol dazu bringt Nr. 108. Zuordnung: Sofortpaket Sicherheit.
+    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-02, AP7) — `hinweis` an `bw_info`, `other_ema`, `crew_*` und `days.notes`; nicht an `notes`, das wird verschlüsselt (E-S9-01). Zuordnung jetzt: S9.*
 
 133. **Klartext-Reste auf dem Server.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-13).* Während des
@@ -1520,6 +1545,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Entschieden (F-SP-4): Schalter je Installation, Vorgabe „an".** Selbstbetrieb ist
     die Frage von Nr. 101 (S9 PS-1) mit der Hosting-Entscheidung.
     Zuordnung: Sofortpaket Sicherheit, Rest S9.
+    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-05, AP2) — Hinweis am Feld, Datenschutztext, Installationsschalter (Karte „Adresssuche" auf Betrieb → Servereinstellungen, `app_state` `adresssuche`), Kontoschalter (Profil → Datenschutz), Dienstadresse. Zuordnung jetzt: S9.*
 
 138. **Weg C: die Zusage auf das eingrenzen, was sie hält.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-1), entschieden R78.*
@@ -1631,7 +1657,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zuordnung: **S9**, als PS-11 der Vorbereitung und Ergänzung zu PS-1
     (Nr. 101, gemeinsamer Kartendialog) — der Dialog entsteht dort ohnehin
     neu.
-
+    *Konzept S9 (07.09.2026): E-S9-06 b (Spur im Dialog, fitBounds bei leerem Feld; AP2).*
 
 150. **Der Cron-Befehl für den Job-Einstieg steht mit dem Repositoriumspfad in der Dokumentation.**
     *Aufgenommen 06.09.2026 vom Auftraggeber, geprüft gegen `main`.* Der
@@ -1684,6 +1710,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Korrekturstufe zu Nr. 148/149 mitbehoben, weil die Behebung die
     Import-Schnittstelle berührt und damit mehr ist als ein Name (K4).
     Zuordnung: **Backlog-Runde**.
+
+152. **Standortseiten: Standort zuerst, ein Menüpunkt, Kennzahlen, Dialoge, Landung auf der neuen Zeile.**
+    *Aufgenommen 07.09.2026 vom Auftraggeber bei der Freigabe der S9-Mockups
+    (Rahmenplan Fassung 34).* Zwei Menüpunkte für eine Sache: „Standorte"
+    (Name, Lage) und „Rettungsmittel" (je Standort eine zugeklappte Karte
+    mit drei Listen — Rettungsmittel, Besatzungsvorlagen, Zielkliniken; alle
+    drei hängen am Standort, `crew_presets.base_id`,
+    `transport_dests.base_id`, E15). Der Name des zweiten ist falsch, die
+    zugeklappten Karten sind leicht zu übersehen, lange Listen zwingen zum
+    Scrollen, und die Eingabe (`sd_form()`) klebt unter jeder Liste.
+    **Soll:** „Rettungsmittel" entfällt; **„Standorte"** ist Liste (eine
+    Zeile je Standort mit drei Zahlen, „Ohne Standort" als letzter Eintrag)
+    und **Seite je Standort** mit vier Karten (Standort, Rettungsmittel,
+    Besatzung, Zielkliniken), **Kennzahlen** als Inhaltsverzeichnis
+    (`Design.md` 9.10), „Zum Anfang" je Karte, Sprungliste (Nr. 44) in den
+    Rettungsmitteln, **Filterfeld** in Besatzung und Zielkliniken; Anlegen
+    und Bearbeiten im **Dialog** (9.11); nach dem Anlegen Redirect mit
+    `#veh-<id>` und `:target`-Hervorhebung der neuen Zeile, keine
+    zusätzliche Meldung. Verwaltung → Stammdaten ebenso. Datenmodell und
+    Formate unberührt; Handbuch 6 neu. Konzept: **E-S9-18, E-S9-19**, Mockups
+    M-S9-06, M-S9-07. Zuordnung: **S9**, AP5.
 
 ---
 
