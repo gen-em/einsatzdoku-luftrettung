@@ -359,8 +359,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
 │   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit der des
 │   │                      Repositoriums: jede Datei unter `server/assets/`
-│   │                      und die PHP-freien Inline-Skriptblöcke von
-│   │                      `login.php`, je über SHA-256. Ohne eingecheckte
+│   │                      über SHA-256, und auf `login.php` die GANZE Menge
+│   │                      der Skripte und Formulare — nichts darf fehlen,
+│   │                      verändert sein oder dazukommen. Ohne eingecheckte
 │   │                      Prüfsummen — der Deploy synchronisiert byteweise,
 │   │                      also rechnet sie beide Seiten frisch. Läuft täglich
 │   │                      und nach jedem Deploy als GitHub-Action

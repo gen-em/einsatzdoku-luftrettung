@@ -232,6 +232,23 @@ nichts gefunden hat. Gemessen: 112 Dateien, 112 gleich, 1 Inline-Block gleich
 `crypto.js`: 111 gleich, **1 abweichend**, Rückgabewert 1, mit Dateiname und
 beiden Summen.
 
+**Nachgebessert am selben Tag, weil die erste Fassung eine Lücke hatte.** Sie
+prüfte auf der Anmeldeseite nur, ob der bekannte Inline-Block *vorhanden* ist
+— nicht, ob ein **zusätzliches** Skript oder ein Formular mit fremdem `action`
+dazugekommen war. Beides kostet den Angreifer eine Zeile (`ui.php`, eine
+`.htaccess` mit `auto_prepend_file`) und schickt das Passwort beim nächsten
+Anmelden mit. Auf der Anmeldeseite zählt der **Weg des Passworts**, und der
+hat zwei Enden: die Skripte, die es lesen, und das Formular, das es abschickt.
+Die Wache vergleicht jetzt die **ganze Menge** — jeden `<script src>`, jeden
+Inline-Block, jedes `<form>`-Tag — und meldet, was in der Auslieferung steht
+und in der Quelle nicht. Belegt am laufenden System: ein Fremd-Skript über
+`ui_seite_ende()` eingeschleust — vorher „Kein Unterschied", jetzt
+„ZUSÄTZLICHES Skript in der Auslieferung: https://boese.example/x.js". Die
+Selbstprobe zählt dafür **12 statt 7** Erwartungen und hat beim Bauen gleich
+den nächsten Fehler gefunden: Das `src`-Muster brach am Anführungszeichen
+innerhalb von `asset('…')` ab und hätte jeden Ersatz für `crypto.js`
+durchgelassen.
+
 Die Action läuft täglich um 04:17 UTC, nach jedem Deploy und von Hand. **Keine
 eigene Mailadresse** — ein roter Lauf löst die gewöhnliche
 GitHub-Benachrichtigung aus. Die `tools/wartungsprobe/` bekommt dafür eine
