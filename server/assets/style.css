@@ -2389,23 +2389,15 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 .loc-widget > label{margin-bottom:var(--abstand-1)}
 /* Und der Block als Ganzes braucht den Abstand nach unten, den ein `label`
  * mitbraechte — sonst klebte „Beschreibung Einsatzort" am Koordinaten-Chip. */
-.loc-widget{margin-bottom:var(--abstand-3)}
+/* `position:relative`, seit die Trefferliste ueber dem folgenden Inhalt
+ * schwebt statt ihn zu verschieben (S9/AP1): Ohne einen positionierten
+ * Vorfahren haengte sie am Seitenanfang. */
+.loc-widget{margin-bottom:var(--abstand-3);position:relative}
 .ortsfeld-zeile{display:flex;gap:var(--abstand-2);align-items:stretch}
 .ortsfeld-zeile input{flex:1 1 auto;min-width:0}
 .ortsfeld-zeile .knopf-symbol{flex:0 0 auto}
 .ortsfeld-aktionen{position:relative;display:inline-flex}
 
-/* Vorschlagsliste unter dem Feld (Photon, Stammdaten, Koordinaten). */
-.loc-suggest{
-  margin:var(--abstand-1) 0 0;
-  background:var(--schnee);
-  border:var(--strich) solid var(--linie-stark);
-  border-radius:var(--radius-klein);
-  box-shadow:var(--schatten);
-  overflow:hidden;
-}
-.loc-suggest li{padding:var(--abstand-2) var(--abstand-3);cursor:pointer}
-.loc-suggest li:hover{background:var(--rauch)}
 .locstate{color:var(--gedaempft);font-size:var(--groesse-2);margin:var(--abstand-1) 0 0}
 .locstate:empty{display:none}
 .locstate-fehler{color:var(--rot-tief)}
@@ -2438,20 +2430,68 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   flex:1 1 8rem;min-width:0;border:0;min-height:0;
   padding:var(--abstand-1);background:none;
 }
-.rmlist{
+
+/* ---- Vorschlagsliste: EIN Baustein unter jedem Feld (S9/AP1, E-S9-07) ----
+ *
+ * Sie ersetzt drei Fassungen auf einmal: `.loc-suggest` (Photon-Liste des
+ * Ortsfelds), `.rmlist`/`.rmopt` (weitere Rettungsmittel) und jede native
+ * `<datalist>`. Rahmen, Schatten und Radius sind die der alten
+ * `.loc-suggest`; neu sind die Gruppenzeile, das Symbol je Eintrag, die
+ * gedaempfte Nebenzeile und die Markierung, die Zeiger und Pfeiltaste teilen.
+ * Mockup M-S9-03, freigegeben 07.09.2026.
+ *
+ * SIE SCHWEBT (`position:absolute`), sie schiebt nicht. Die alte
+ * `.loc-suggest` stand im Fluss und drueckte beim Tippen alles darunter nach
+ * unten — auf einem 390-px-Schirm sprang das halbe Formular. Der Behaelter
+ * traegt dafuer `position:relative`: `.loc-widget`, `.rmbox`,
+ * `.feld-vorschlag`.
+ *
+ * KEIN EIGENES HOEHENTOKEN. Die Zeile ist `--knopf` hoch und folgt damit
+ * beiden Bedienhoehen von selbst (44 px am Finger, 36 px am Zeigergeraet ab
+ * 1024 px, R76). */
+.vorschlaege{
   position:absolute;left:0;right:0;z-index:20;
+  margin:var(--abstand-1) 0 0;padding:0;list-style:none;
   background:var(--schnee);
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
   box-shadow:var(--schatten);
   overflow:hidden;
 }
-.rmlist .rmopt{
-  display:block;width:100%;text-align:left;
-  background:none;border:0;border-radius:0;min-height:var(--knopf);
-  padding:var(--abstand-2) var(--abstand-3);cursor:pointer;
+/* Die Gruppenzeile sagt, WOHER die Eintraege darunter kommen. Sie ist keine
+ * Zeile zum Anfassen und traegt deshalb keine Bedienhoehe. */
+.vorschlaege-gruppe{
+  padding:var(--abstand-1) var(--abstand-3);
+  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-1);
+  letter-spacing:.06em;text-transform:uppercase;color:var(--gedaempft);
+  background:var(--rauch);border-top:var(--strich) solid var(--linie);
 }
-.rmlist .rmopt:hover{background:var(--rauch)}
+.vorschlaege-gruppe:first-child{border-top:0}
+.vorschlag{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);padding:var(--abstand-1) var(--abstand-3);
+  border-left:var(--abstand-1) solid transparent;cursor:pointer;
+}
+.vorschlag .symbol{color:var(--gedaempft)}
+.vorschlag-text{flex:1 1 auto;min-width:0}
+/* Eine Zeile je Zeile: Ein umbrechender Ortsname schoebe die naechste
+ * Zeile aus der Bedienhoehe. */
+.vorschlag-haupt{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vorschlag-neben{
+  display:block;color:var(--gedaempft);font-size:var(--groesse-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Zeiger und Pfeiltaste teilen sich EINE Markierung — sonst haette die
+ * Tastaturbedienung ein zweites Aussehen fuer dieselbe Aussage. */
+.vorschlag:hover,.vorschlag.aktiv{background:var(--rauch);border-left-color:var(--orange)}
+/* Die freie Eingabe ist eine HANDLUNG, kein Datensatz. */
+.vorschlag-neu .vorschlag-haupt{
+  color:var(--orange-tief);font-family:var(--schrift-kopf);font-weight:600;
+}
+.vorschlag-neu .symbol{color:var(--orange-tief)}
+/* Behaelter eines Textfeldes mit Vorschlagsliste (Besatzungsfelder). Das
+ * Ortsfeld und die Rettungsmittelbox bringen ihren eigenen mit. */
+.feld-vorschlag{position:relative}
 
 /* ---- Phasen- und Reanimationszeilen (Mockup 22/25) ----------------------- */
 .phasen-eingabe{

@@ -1722,6 +1722,19 @@ ui_seite_start(['titel' => 'Einstellungen']);
 
     <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
     <script src="<?= asset('assets/locparse.js') ?>"></script>
+    <?php /* html.js (EdHtml.escape) und vorschlagsliste.js (EdVorschlaege)
+             gehoeren zur Ortsfeld-Komponente, seit die Trefferliste ein
+             eigener Baustein ist (S9/AP1, E-S9-07). Reihenfolge = Abhaengigkeit.
+
+             html.js STEHT IN DIESER DATEI ZWEIMAL — hier und im Reiter
+             „Backup". Das geht, weil die Reiter einander ausschliessen
+             (`elseif`), und es geht NUR deshalb: Die Datei deklariert auf
+             oberster Ebene ein `const`, und eine zweite Deklaration im selben
+             Dokument ist ein SyntaxError, der das ganze zweite Skript
+             verwirft. Genau diese Falle hat F-12 schon einmal gekostet. Wer
+             die Reiterstruktur aendert, prueft beide Stellen. */ ?>
+    <script src="<?= asset('assets/html.js') ?>"></script>
+    <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
     <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
     <script>
     /* Ortsfelder der Stammdatenpflege beleben (E37). Dieselbe Komponente wie

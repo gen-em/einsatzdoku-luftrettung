@@ -941,10 +941,22 @@ drei Buchstaben erscheinen Adressvorschläge (OpenStreetMap); die Auswahl
 eines Vorschlags speichert die Koordinaten und setzt den Pin auf den Karten.
 Freitext ohne Vorschlag geht auch — dann ohne Pin.
 
+**So wird eine Vorschlagsliste bedient** (seit Web 15.6.0 überall dieselbe —
+Einsatzort, Abfahrtort, Transportziel, Besatzung, weitere Rettungsmittel).
+Sie öffnet unter dem Feld und legt sich über den Inhalt darunter; der
+getippte Teil steht in jedem Treffer **fett**. Mit **Pfeil auf** und
+**Pfeil ab** wanderst du durch die Einträge, **Enter** übernimmt den
+markierten (ohne Markierung den ersten), **Esc** schließt die Liste; mit der
+Maus oder dem Finger genügt ein Antippen. Kommen die Treffer aus
+verschiedenen Quellen, stehen sie in **Gruppen** untereinander, jede mit
+einer kleinen Überschrift; ein Symbol und eine feine Zeile unter dem Treffer
+sagen zusätzlich, woher er stammt.
+
 Neben dem Feld stehen seit Web 9.4.0 zwei Knöpfe: Die **Lupe** stößt die
 Suche ausdrücklich an — sie ersetzt das frühere zweite Suchfeld
-(„Lokalisation …") auch am Transportziel, wo ein Treffer weiterhin **nur die
-Koordinaten** übernimmt und den eingetragenen Namen nie überschreibt. Der
+(„Lokalisation …") auch am Transportziel, wo ein Adresstreffer weiterhin
+**nur die Koordinaten** übernimmt und den eingetragenen Namen nie
+überschreibt. Der
 **Pin** öffnet ein Blatt mit zwei Wegen: **„Meine Position übernehmen"**
 (Standort des Geräts; der Browser fragt nach der Freigabe) und **„Auf der
 Karte wählen"** — eine Karte mit Fadenkreuz in der Mitte; verschieben, bis
@@ -970,8 +982,9 @@ Alternativ zur Adresse erkennt das Feld beim Tippen auch vier weitere
 Formate — die Umwandlung erfolgt lokal im Browser, es wird dabei keine
 Anfrage an einen externen Server gestellt. Wie bei einer Adresse erscheint
 dann ein Eintrag in der Vorschlagsliste (z. B. „Koordinaten übernehmen
-(Dezimalgrad): 47.72610, 10.31700"); erst mit dessen Auswahl werden
-Koordinaten und Pin übernommen. **Das Textfeld wird dabei geleert** — es
+(Dezimalgrad): 47.72610, 10.31700") — und zwar **allein**: Wer Zahlen tippt,
+sucht keine Adresse. Erst mit seiner Auswahl werden Koordinaten und Pin
+übernommen. **Das Textfeld wird dabei geleert** — es
 gehört ab dann der Bezeichnung, die du selbst einträgst (z. B. „Talstation
 Nebelhorn", „Wanderweg 401, Ostrachtal"). Ohne diese Bezeichnung lässt sich
 der Einsatz nicht speichern; in den Listen stünde sonst nur eine Zahlenreihe
@@ -1048,10 +1061,11 @@ Anlegen eingefroren.
 des Diensttags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
 wiederholt werden. Wechselt jedoch während des Dienstes jemand (typisch: ein
 Pilotenwechsel oder Fahrerwechsel am Nachmittag), setzt du am betroffenen
-Einsatz den Haken **„Abweichende Besatzung"**. Darunter erscheint je Rolle des Diensttags ein
-Textfeld mit Vorschlagsliste: Sobald du hineinklickst oder zu tippen beginnst, schlägt das
-Feld deine Besatzungs-Vorbelegungen und die zentralen Stammdaten der jeweiligen
-Rolle vor (Abschnitt 9.1 bzw. 9.4).
+Einsatz den Haken **„Abweichende Besatzung"**. Darunter erscheint je Rolle des
+Diensttags ein Textfeld mit Vorschlagsliste: Sobald du zu tippen beginnst,
+schlägt das Feld unter der Überschrift „Vorlagen des Standorts" deine
+Besatzungs-Vorbelegungen und die zentralen Stammdaten der jeweiligen Rolle vor
+(Abschnitt 9.1 bzw. 9.4) — bedient wie oben in Abschnitt 4.3 beschrieben.
 
 **Seit Web 5.5.0 ist jeder Name eintragbar**, auch einer, der nicht in den
 Stammdaten steht. Das ist der eigentliche Anlass für dieses Feld: Wer aushilft,
@@ -2281,11 +2295,13 @@ steht, kann auch keine Vorbelegung sein.)
 
 Hier legst du weitere Rettungsmittel als Vorbelegung an (RTW, NEF, RTH …). Im
 Einsatzformular tippst du im Feld **Weitere Rettungsmittel** mindestens zwei
-Zeichen — dann erscheinen die passenden Einträge zum Anklicken. Jeder
-übernommene Eintrag steht als eigenes Element mit kleinem Kreuz zum Entfernen;
-mehrere sind möglich, doppelte werden abgewiesen. Steht etwas nicht in der
-Vorbelegung, lässt es sich trotzdem übernehmen — es gilt dann nur für diesen
-Einsatz.
+Zeichen — dann erscheint die Vorschlagsliste mit den passenden Einträgen
+(Bedienung wie in Abschnitt 4.3). Jeder übernommene Eintrag steht als eigenes
+Element mit kleinem Kreuz zum Entfernen; mehrere sind möglich, doppelte werden
+abgewiesen. Steht etwas nicht in der Vorbelegung, lässt es sich trotzdem
+übernehmen — die letzte Zeile der Liste bietet den getippten Text in Orange
+an („… übernehmen"); es gilt dann nur für diesen Einsatz. Die **Rücktaste im
+leeren Feld** nimmt den zuletzt übernommenen Eintrag wieder zurück.
 
 Löschst du später ein Rettungsmittel aus der Vorbelegung, behalten bereits
 dokumentierte Einsätze ihren Eintrag: Die Zuordnung wird je Einsatz gespeichert
@@ -2293,10 +2309,19 @@ und hängt nicht an der Liste.
 
 ### 9.3 Transportziele (Zielkliniken)
 
-Vorbelegung für das Feld **Zielklinik** im Einsatz. Anders als bei den
-Rettungsmitteln bleibt das Feld dort ein einfaches Textfeld mit Vorschlagsliste
-(Tastatur-Pfeiltasten bzw. Antippen) — Freitext ist weiterhin uneingeschränkt
-möglich.
+Vorbelegung für das Feld **Transportziel** im Einsatz. Anders als bei den
+Rettungsmitteln bleibt das Feld dort ein einfaches Textfeld mit
+Vorschlagsliste (Bedienung wie in Abschnitt 4.3) — Freitext ist weiterhin
+uneingeschränkt möglich.
+
+**Zwei Gruppen in einer Liste** (seit Web 15.6.0): Ganz oben stehen unter
+„Zielkliniken" **höchstens zwei** Treffer aus deinen Stammdaten — sie
+erscheinen, sobald der getippte Text irgendwo im Namen vorkommt, und ein
+Treffer setzt **Name und Koordinate**. Darunter stehen unter „Adressen" die
+Vorschläge der Adresssuche; ein Treffer von dort setzt **nur die Koordinate**
+und lässt den eingetragenen Namen stehen. Bis Web 15.5.2 waren das zwei
+getrennte Listen übereinander, und auf dem Handy blieben die Stammdaten
+unsichtbar.
 
 Zu jeder Zielklinik lassen sich **Koordinaten** hinterlegen, auf denselben drei
 Wegen wie beim Einsatzort (Adresssuche, Koordinatenpaar, Plus Code) und auf drei

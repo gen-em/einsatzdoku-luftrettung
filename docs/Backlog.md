@@ -776,24 +776,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
     vorher wieder nach — die Zählung von heute ist morgen genauso alt.
 
-68. **Vorschlagsfelder über `<datalist>` zeigen auf dem Handy nichts an.**
-    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers
-    (Rahmenplan Fassung 16).* Die Besatzungsfelder des Diensttags
-    (`index.php`, `renderCrewFields()`) bieten die hinterlegten
-    Crewmitglieder über ein `<datalist>` an, und dasselbe Muster tragen
-    weitere Felder — beobachtet ist der Ausfall an den Crew-Feldern **und**
-    an der Zielklinik. Mobile Browser zeigen `<datalist>`-Vorschläge nicht
-    oder nur nach Tippen und ohne brauchbare Filterung; die Suche in den
-    Stammdaten fällt dort stillschweigend aus, ohne Fehler und ohne Hinweis.
-    **Zu tun:** zuerst **alle** Vorschlagsfelder erheben (`grep -l datalist
-    server/` nennt `index.php`, `einsatz_form.php`, `mission_fields.php`,
-    `ui.php`, `assets/ortsfeld.js`), jedes einzeln am Handy prüfen (Chromium
-    mobil und WebKit), dann auf einen Baustein umstellen, der mobil trägt.
-    Das Ortsfeld sucht seit S3 beim Tippen mit eigener Trefferliste und ist
-    das Muster; ob es selbst noch ein `<datalist>` benutzt, ist Teil der
-    Erhebung. Ein neuer Baustein braucht Mockup und Freigabe (`Design.md` 1).
-    Zuordnung: Backlog-Runde.
-    *Konzept S9 (07.09.2026): E-S9-07 (kein `<datalist>` mehr, Baustein Vorschlagsliste; AP1, Besatzung AP6).*
 
 69. **Kurzname je Rettungsmittel als Stammdatenfeld.**
     *Zulieferung aus P3; bis Fassung 16 ohne Nummer im Rahmenplan-Abschnitt
@@ -1167,12 +1149,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
     *Konzept S9 (07.09.2026): E-S9-05, E-S9-06 (Geocoder-Modul, Suchfeld im Dialog; AP2).*
 
-102. **Weitere Rettungsmittel: die Auswahl wird nicht übernommen.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-2), Schritt 8 (S9).*
-    Die Suche im hinterlegten Stand liefert Treffer; ein Klick schließt den
-    Dialog, das Rettungsmittel wird aber nicht in den Einsatz übernommen.
-    Bug, nur Desktop/Web (F2).
-    *Konzept S9 (07.09.2026): E-S9-08 (mousedown statt click, Ursache Blur-Verzögerung; AP1).*
 
 103. **Kompaktere Buttons Einsatzort, Standort, Zielklinik.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-3), Schritt 8 (S9).*
@@ -1199,12 +1175,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     S9-Konzept (Fable-Schritt, F8), nicht vorab.
     *Konzept S9 (07.09.2026): E-S9-13, M-S9-02 — Hubschrauber bleibt Tabler „helicopter"; erledigt sich mit „Ist".*
 
-106. **Klinik- und Adressvorschläge überlagern sich.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-6), Schritt 8 (S9).*
-    Beide Vorschlagsarten in **einer** Liste: Kliniken oben, visuell
-    abgesetzt, darunter die Adressen. Klinikvorschläge nur im
-    Zielklinik-Kontext (F9), höchstens zwei (F10).
-    *Konzept S9 (07.09.2026): E-S9-07, M-S9-03 (eine Vorschlagsliste mit Gruppen; AP1).*
 
 107. **Zielklinik per Koordinaten und Karte.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-7), Schritt 8 (S9).*
@@ -1739,6 +1709,87 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+68. **Vorschlagsfelder über `<datalist>` zeigen auf dem Handy nichts an.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers
+    (Rahmenplan Fassung 16).* Die Besatzungsfelder des Diensttags
+    (`index.php`, `renderCrewFields()`) bieten die hinterlegten
+    Crewmitglieder über ein `<datalist>` an, und dasselbe Muster tragen
+    weitere Felder — beobachtet ist der Ausfall an den Crew-Feldern **und**
+    an der Zielklinik. Mobile Browser zeigen `<datalist>`-Vorschläge nicht
+    oder nur nach Tippen und ohne brauchbare Filterung; die Suche in den
+    Stammdaten fällt dort stillschweigend aus, ohne Fehler und ohne Hinweis.
+    **Zu tun:** zuerst **alle** Vorschlagsfelder erheben (`grep -l datalist
+    server/` nennt `index.php`, `einsatz_form.php`, `mission_fields.php`,
+    `ui.php`, `assets/ortsfeld.js`), jedes einzeln am Handy prüfen (Chromium
+    mobil und WebKit), dann auf einen Baustein umstellen, der mobil trägt.
+    Das Ortsfeld sucht seit S3 beim Tippen mit eigener Trefferliste und ist
+    das Muster; ob es selbst noch ein `<datalist>` benutzt, ist Teil der
+    Erhebung. Ein neuer Baustein braucht Mockup und Freigabe (`Design.md` 1).
+    Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-07 (kein `<datalist>` mehr, Baustein Vorschlagsliste; AP1, Besatzung AP6).*
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026 (S9/AP1, E-S9-07).** Die Erhebung
+    hat fünf Dateien genannt — `ui.php` (Ortsfeld), `einsatz_form.php`
+    (Transportziel und Besatzung des Einsatzes), `index.php`
+    (`renderCrewFields()`), `mission_fields.php` und `assets/ortsfeld.js`, die
+    beiden letzten nur im Kommentar. Alle sind umgestellt: `grep -rn datalist
+    server/` findet **0** Treffer außerhalb von Kommentaren (vorher 12 in
+    sechs Dateien, davon 8 im gerenderten Markup einer Einsatzseite). An die
+    Stelle tritt `assets/vorschlagsliste.js` — ein Baustein mit Gruppen,
+    Symbolen, Herkunftszeile, Pfeiltasten, Enter und Escape (`Design.md`
+    9.28, Mockup M-S9-03, freigegeben 07.09.2026). Gemessen mit
+    `tools/klickprobe/` am Besatzungsfeld eines Einsatzes: vorher **keine
+    eigene Liste und 8 `<datalist>`**, nachher der Wert im Feld und **0
+    `<datalist>`**. Der Punkt verlangte, jedes Feld einzeln am Handy zu
+    prüfen (Chromium mobil und WebKit) — das steht als Punkt auf der
+    Prüfliste des Auftraggebers; der Prüfstand hat weder WebKit noch einen
+    Finger.
+
+102. **Weitere Rettungsmittel: die Auswahl wird nicht übernommen.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-2), Schritt 8 (S9).*
+    Die Suche im hinterlegten Stand liefert Treffer; ein Klick schließt den
+    Dialog, das Rettungsmittel wird aber nicht in den Einsatz übernommen.
+    Bug, nur Desktop/Web (F2).
+    *Konzept S9 (07.09.2026): E-S9-08 (mousedown statt click, Ursache Blur-Verzögerung; AP1).*
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026 (S9/AP1, E-S9-08).** Die Ursache
+    steht im Konzept mit Zeilenangabe: Die Trefferliste übernahm auf `click`
+    (`einsatz_form.php:1921`), das Eingabefeld versteckte sie 150 ms nach
+    `blur` (`:1957`). Ein Mausklick ist `mousedown` → `blur` → `mouseup` →
+    `click`; dauert er länger als 150 ms, ist der Knopf beim `mouseup` schon
+    `hidden`, und der Browser feuert kein `click`. Ein Fingertipp ist
+    schneller — deshalb war der Fehler auf Desktop beschränkt (F2). Die Liste
+    ist jetzt eine Verwendung des gemeinsamen Bausteins und übernimmt auf
+    `mousedown` mit `preventDefault()`. Gemessen mit `tools/klickprobe/` bei
+    **300 ms gehaltener Maus, dieselbe Fassung der Probe gegen beide
+    Stände**: vorher **0 von 3** Übernahmen, nachher **3 von 3**. Nebenbefund
+    aus dem Vorher-Lauf: Es blieb nicht beim Nichtstun — im ersten Durchgang
+    verschwand ein bereits gewähltes Rettungsmittel, weil nach dem Verstecken
+    der Liste das Kreuz eines Chips unter dem Zeiger lag und den Klick bekam.
+    Dass `locator.click()` von Playwright den Fehler **nicht** findet (es
+    hält die Taste rund 10 ms), ist der Grund, warum die Probe
+    `mouse.down()`, warten und `mouse.up()` von Hand fährt.
+
+106. **Klinik- und Adressvorschläge überlagern sich.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-6), Schritt 8 (S9).*
+    Beide Vorschlagsarten in **einer** Liste: Kliniken oben, visuell
+    abgesetzt, darunter die Adressen. Klinikvorschläge nur im
+    Zielklinik-Kontext (F9), höchstens zwei (F10).
+    *Konzept S9 (07.09.2026): E-S9-07, M-S9-03 (eine Vorschlagsliste mit Gruppen; AP1).*
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026 (S9/AP1, E-S9-07).** Es gibt jetzt
+    **eine** Liste. Oben unter „Zielkliniken" höchstens zwei Stammdatentreffer
+    (F10) — sie erscheinen bei **Teilübereinstimmung**, nicht mehr erst bei
+    genauer Namensgleichheit (F-S9-K-01) —, darunter unter „Adressen" die
+    Vorschläge der Adresssuche. Ein Stammdatentreffer setzt Name und
+    Koordinate, ein Adresstreffer nur die Koordinate. Stammdaten stehen
+    **nur im Zielklinik-Kontext** (F9): Einsatzort und Abfahrtort zeigen
+    allein Adressen, und dort entfällt die Gruppenzeile. Gemessen mit
+    `tools/klickprobe/`, Tipp „Klin" am Transportziel: vorher **1 eigene
+    Liste ohne Gruppen neben 8 `<datalist>`**, nachher **1 Liste mit 2
+    Gruppen, 2 Stammdaten- und 4 Adresstreffern und 0 `<datalist>`** (die
+    Adressen aus der Attrappe des Prüfstands, `limit=6` wie im Betrieb).
 
 148. **Der Knopf „Diensttage zusammenführen" in der Überschneidungswarnung führt auf 404.**
     *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Laufen

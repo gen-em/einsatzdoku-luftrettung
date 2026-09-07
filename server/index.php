@@ -472,6 +472,11 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
 <?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(['csrf' => true]); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
+<?php /* Die eine Vorschlagsliste (E-S9-07). Sie loest an den
+         Besatzungsfeldern des Diensttags die native <datalist> ab, die auf dem
+         Handy oft gar nichts zeigte (Backlog 68). Sie braucht EdHtml.escape
+         und steht deshalb nach html.js. */ ?>
+<script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* missiontable.js liefert die gemeinsamen Bausteine der drei
          Einsatztabellen. Muss NACH html.js stehen: Die Datei liest EdHtml
@@ -963,6 +968,14 @@ async function entschluesselePat(){
  * wie beim Einsatzformular (Web 5.5.0, E8): Wer aushilft, steht oft nicht in
  * den Stammdaten. Die Vorbelegungen des Standorts bleiben als Vorschlag.
  *
+ * DIE LISTE IST SEIT S9/AP1 DER BAUSTEIN (assets/vorschlagsliste.js,
+ * E-S9-07). Bis Web 15.5.2 stand hier eine native <datalist> je Rolle — der
+ * Browser zeichnete sie ueber dem Feld, und auf dem Handy zeigte sie oft
+ * nichts (Backlog 68). Damit war das einzige Vorschlagsangebot des
+ * Zuordnungsformulars genau dort blind, wo es gebraucht wird. Jetzt ist es
+ * dieselbe Liste wie im Einsatzformular: unter dem Feld, mit Gruppenzeile,
+ * Tastatur und Uebernahme auf `mousedown`.
+ *
  * Ein neutraler Diensttag hat keine Rollen (E26). Dann steht dort ein Satz, der
  * sagt, WARUM nichts zu sehen ist, und verlinkt die Zuordnung — eine leere
  * Fläche wäre nicht von einem Fehler zu unterscheiden.
@@ -996,20 +1009,40 @@ function renderCrewFields(meta){
     inp.maxLength = 120;
     inp.autocomplete = 'off';
     inp.value = c.name || '';
-    const liste = presets[c.role] || [];
-    if (liste.length) {
-      const dl = document.createElement('datalist');
-      dl.id = 'dl_crew_' + c.role;
-      liste.forEach(n => {
-        const o = document.createElement('option');
-        o.value = n;
-        dl.appendChild(o);
-      });
-      lab.appendChild(dl);
-      inp.setAttribute('list', dl.id);
-    }
     lab.appendChild(inp);
     box.appendChild(lab);
+
+    const vorlagen = presets[c.role] || [];
+    if (!vorlagen.length) { return; }
+    /* Der Behaelter traegt `position:relative`, sonst haengt die Liste am
+       Seitenanfang statt unter dem Feld. */
+    lab.classList.add('feld-vorschlag');
+    const steuer = EdVorschlaege.init({
+      feld: inp, behaelter: lab,
+      /* `input` von Hand feuern: Ein programmatisch gesetzter Wert loest
+         kein Ereignis aus, und ohne eines merkt die Aenderungsverfolgung
+         (assets/forms.js) nichts — die Speichern-Leiste bliebe aus. */
+      beiWahl: e => {
+        inp.value = e.wert;
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        inp.focus();
+      }
+    });
+    if (!steuer) { return; }
+    inp.addEventListener('input', () => {
+      const q = inp.value.trim().toLowerCase();
+      if (q === '') { steuer.verstecke(); return; }
+      const treffer = vorlagen
+        .filter(n => String(n).toLowerCase().includes(q))
+        .filter(n => String(n).toLowerCase() !== q)
+        .slice(0, 6);
+      /* MIT GRUPPENZEILE, auch als einzige Gruppe: Sie sagt, woher die Namen
+         kommen — und damit, dass ein Name daneben erlaubt ist. Ohne sie saehe
+         die Liste wie eine Auswahl aus, und genau das ist sie nicht (E8). */
+      steuer.zeige([{ titel: 'Vorlagen des Standorts', eintraege: treffer.map(n => ({
+        haupt: n, symbol: 'profil', art: 'vorlage', wert: n
+      })) }], inp.value.trim());
+    });
   });
 }
 

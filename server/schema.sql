@@ -171,7 +171,7 @@ CREATE TABLE transport_dests (
   name VARCHAR(190) NOT NULL,
   -- Optionale Koordinaten (E37). Werden AM EINSATZ eingefroren
   -- (missions.dest_lat/dest_lon), nicht ueber den Namen aufgeloest: das Feld
-  -- ist Freitext mit <datalist>, eine Aufloesung ueber Namensgleichheit waere
+  -- ist Freitext mit Vorschlagsliste, eine Aufloesung ueber Namensgleichheit waere
   -- bruechig — ein umbenannter Eintrag verloere seine Koordinate.
   lat DECIMAL(9,6) NULL,
   lon DECIMAL(9,6) NULL,

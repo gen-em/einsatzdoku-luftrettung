@@ -1991,21 +1991,27 @@ function ui_abbruch(int $code, string $text, array $o = []): never
  *
  * Schluessel:
  *   praefix     Pflicht. Bildet `<p>addr`, `<p>such`, `<p>lat`, `<p>lon`,
- *               `<p>suggest`, `<p>state`, `<p>chips`, `<p>dl`.
+ *               `<p>suggest`, `<p>state`, `<p>chips`.
  *   such        eigenes Suchfeld erzeugen (getrennte Suche, siehe ortsfeld.js)
  *   such_hinweis / such_platzhalter
  *   label, hinweis, platzhalter, max, wert           (nur bei feld = true)
  *   name        POST-Name des Bezeichnungsfeldes; null = keiner (der Wert
  *               wandert dann verschluesselt in den pat_blob)
  *   lat_name / lon_name, lat / lon                   Koordinatenfelder
- *   datalist    Liste von Namen fuer eine <datalist> (Stammdaten-Vorschlaege)
  *   klasse      zusaetzliche Klasse am Rahmen (z. B. 'loc-inline')
+ *
+ * KEINE `<datalist>` MEHR (S9/AP1, E-S9-07). Bis Web 15.5.2 nahm der
+ * Schluessel 'datalist' eine Namensliste entgegen und haengte sie als native
+ * Vorschlagsliste an das Feld. Am Transportziel standen damit ZWEI Listen
+ * uebereinander — die native, vom Browser ueber dem Feld gezeichnet, und die
+ * eigene darunter (PS-6); mobil zeigte die native nichts (Backlog 68). Die
+ * Stammdaten kommen jetzt als GRUPPE in die eine Liste; uebergeben werden sie
+ * dem Skript (`EdOrtsfeld.init({vorschlaege: […]})`), nicht dem Markup.
  */
 function ui_ortsfeld(array $o): void
 {
     $p = (string)$o['praefix'];
     $mitFeld = ($o['feld'] ?? true) !== false;
-    $dl = $o['datalist'] ?? null;
 
     $versteckt = !empty($o['versteckt']) ? ' hidden' : '';
 
@@ -2028,7 +2034,6 @@ function ui_ortsfeld(array $o): void
           <input type="text" id="<?= e($p) ?>addr" autocomplete="off"
                  <?= isset($o['name']) && $o['name'] !== null ? 'name="' . e((string)$o['name']) . '"' : '' ?>
                  <?= isset($o['max']) ? 'maxlength="' . (int)$o['max'] . '"' : '' ?>
-                 <?= $dl !== null ? 'list="' . e($p) . 'dl"' : '' ?>
                  placeholder="<?= e((string)($o['platzhalter'] ?? '')) ?>"
                  value="<?= e((string)($o['wert'] ?? '')) ?>">
           <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
@@ -2086,7 +2091,10 @@ function ui_ortsfeld(array $o): void
         </div>
     <?php endif; ?>
 
-      <ul id="<?= e($p) ?>suggest" class="loc-suggest" hidden></ul>
+      <?php /* Die Trefferliste — EIN Baustein fuer Stammdaten, Adressen und
+               erkannte Koordinaten (assets/vorschlagsliste.js, E-S9-07). Das
+               Markup ist leer; gefuellt wird es beim Tippen. */ ?>
+      <ul id="<?= e($p) ?>suggest" class="vorschlaege" hidden></ul>
       <?php /* Meldungszeile unmittelbar unter dem Feld: Sie sagt etwas über
                DIESES Eingabefeld aus („Koordinaten gesetzt — dieses Feld ist
                die Bezeichnung", „Bezeichnung fehlt"), nicht über den Chip
@@ -2101,11 +2109,6 @@ function ui_ortsfeld(array $o): void
       <input type="hidden" id="<?= e($p) ?>lon"
              <?= isset($o['lon_name']) ? 'name="' . e((string)$o['lon_name']) . '"' : '' ?>
              value="<?= e((string)($o['lon'] ?? '')) ?>">
-      <?php if ($dl !== null): ?>
-        <datalist id="<?= e($p) ?>dl">
-          <?php foreach ((array)$dl as $s): ?><option value="<?= e((string)$s) ?>"><?php endforeach; ?>
-        </datalist>
-      <?php endif; ?>
       </div>
 <?php }
 

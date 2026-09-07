@@ -142,3 +142,8 @@ im selben Paket hier ein, nicht später.
 | `warnzeile` | Hervorhebung einer blockierten Migrationszeile. Ersatzlos: Der Status steht als Plakette in der Zeile (`blockiert`, Ton rot), und die Zeile ist keine Tabellenzeile mehr. | O11 |
 | `loeschhinweis` | „Löscht Daten:" an einer Migrationszeile → Teil der Kleinzeile der `.zeile`. | O11 |
 | `sep` | Waagerechte Trennlinie zwischen den Abschnitten der Wartungsseite. Ersatzlos: Die Abschnitte sind Karten, und Karten trennen sich selbst. Damit fällt auch die Elementregel für `hr` — es gibt in der ganzen Anwendung keines mehr. | O11 |
+| `loc-suggest` | Trefferliste unter dem Ortsfeld → `.vorschlaege` (`Design.md` 9.28, Baustein `assets/vorschlagsliste.js`). Sie stand im Fluss und schob beim Tippen alles darunter weg; die neue schwebt. Ihre Zeilen hatten keine Bedienhöhe — die neue ist `--knopf` hoch. | S9/AP1 |
+| `rmlist` | Trefferliste der weiteren Rettungsmittel → `.vorschlaege`, derselbe Baustein. Sie übernahm auf `click` gegen einen 150-ms-Blur-Aufschub und verlor damit jeden Klick, der länger dauerte (Backlog Nr. 102); der Baustein übernimmt auf `mousedown`. | S9/AP1 |
+| `rmopt` | Eine Zeile dieser Liste → `.vorschlag`. | S9/AP1 |
+| `rmneu` | Die freie Eingabe am Ende dieser Liste („… übernehmen") → `.vorschlag-neu`. Damit ist zugleich die offene Frage aus `ohne-regel.md` beantwortet: Ja, sie hebt sich ab — sie ist eine Handlung, kein Datensatz, und trägt Orange und Kopfschrift. | S9/AP1 |
+

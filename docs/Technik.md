@@ -355,6 +355,18 @@ Daten erst nach Server-Bestätigung.
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer
 │   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
+│   ├── klickprobe/        fährt Bedienwege im Browser und BEDIENT dabei
+│   │                      Elemente (S9, E-S9-16): Playwright wie der
+│   │                      Bilderlauf, aber `mouse.down()` — **300 ms halten** —
+│   │                      `mouse.up()` statt `locator.click()`, das die Taste
+│   │                      nur rund 10 ms hält und Backlog Nr. 102 deshalb
+│   │                      nicht findet. Je Weg eine Zahl. Jedes Arbeitspaket
+│   │                      legt seine Wege als eigene Datei unter `wege/` dazu;
+│   │                      der Läufer kennt keinen einzelnen. Die Adressabfrage
+│   │                      läuft gegen `attrappe.mjs` — der Prüfstand hat
+│   │                      dorthin keinen Netzzugang, und ohne feste
+│   │                      Trefferzahl wäre jeder Sollwert geraten. Braucht
+│   │                      die lokale Installation (s. LIESMICH.md)
 │   ├── linkprobe/         hält jede Adresse `<seite>.php?<name>=` unter
 │   │                      `server/` (PHP und JavaScript) gegen die Parameter,
 │   │                      die die Zielseite tatsächlich liest — 99 Zielseiten,
@@ -3664,7 +3676,7 @@ Die Komponente besteht aus zwei Hälften, die dasselbe Präfix teilen:
 
 | Hälfte | Datei | Aufgabe |
 |---|---|---|
-| Markup | `ui_ortsfeld()` in `ui.php` | erzeugt `<p>addr`, `<p>such`, `<p>lat`, `<p>lon`, `<p>suggest`, `<p>state`, `<p>chips`, `<p>dl` |
+| Markup | `ui_ortsfeld()` in `ui.php` | erzeugt `<p>addr`, `<p>lat`, `<p>lon`, `<p>suggest`, `<p>state`, `<p>chips` |
 | Verhalten | `assets/ortsfeld.js` | `EdOrtsfeld.init({praefix, …})` |
 
 Eine Verwendung ist damit ein PHP-Aufruf und ein `init()`. Die sechs:
@@ -3673,7 +3685,7 @@ Eine Verwendung ist damit ein PHP-Aufruf und ein `init()`. Die sechs:
 |---|---|---|
 | Einsatzort | `loc` | Textfeld = Suchfeld (die Adresse **ist** die Bezeichnung) |
 | Manueller Abfahrtort | `start` | wie Einsatzort, eigener Blob-Schlüssel `start` |
-| Zielklinik am Einsatz | `f_transport_dest_` | getrennte Suche, `<datalist>` aus den Stammdaten **mit Koordinaten** |
+| Zielklinik am Einsatz | `f_transport_dest_` | getrennte Suche, Stammdaten **mit Koordinaten** als eigene Gruppe der Vorschlagsliste |
 | Standort im Konto / zentral | `sdbase` / `adbase` | getrennte Suche, nur Zubehör (`feld => false`) |
 | Zielklinik im Konto / zentral | `sdtd<id>` / `adtd<id>` | dito, Präfix trägt die Standortkennung — das Formular steht einmal je Standort auf der Seite |
 
@@ -3687,6 +3699,23 @@ dasselbe: Chip statt Zahlen im Textfeld, lokale Formaterkennung vor jeder
 Netzanfrage, Bestätigung statt sofortiger Übernahme, ruhende Suche bei
 gesetzten Koordinaten, und die Prüfung „Koordinaten ohne Bezeichnung" beim
 Absenden.
+
+**Die Trefferliste ist seit Web 15.6.0 ein eigener Baustein**
+(`assets/vorschlagsliste.js`, `EdVorschlaege`, S9/AP1, E-S9-07). Sie ersetzt
+drei Fassungen und eine vierte, die der Browser beisteuerte: die Photon-Liste
+des Ortsfelds, die Liste der weiteren Rettungsmittel und jede native
+`<datalist>` (Backlog Nr. 68, 102, 106). Das Ortsfeld sagt ihr, **was**
+darin steht — erkannte Koordinate, Stammdaten, Adressen —, und **ob** eine
+Gruppenzeile erscheint; **wie** es dasteht, entscheidet der Baustein. Er
+übernimmt auf `mousedown` mit `preventDefault()`, kennt Pfeiltasten, Enter
+und Escape und braucht `EdHtml.escape` (`assets/html.js`) sowie `edSymbol`
+(`assets/symbol.js`). Gestaltung und Zustände: `docs/Design.md` 9.28.
+
+Zwei Zahlen des Bausteins stehen als Konstanten in `ortsfeld.js`:
+**höchstens zwei** Stammdatentreffer über den Adressen (F10) und die
+Photon-Grenze **sechs** in der Abfrageadresse. Stammdaten erscheinen ab dem
+ersten Zeichen bei Teilübereinstimmung und **ohne** die 400-ms-Entprellung —
+sie liegen im Browser; die Adressabfrage bleibt bei ihren drei Grenzen.
 
 **Die Ortswahl** (`assets/ortswahl.js`, Web 9.4.0, E-P3-34): Der Pin-Knopf
 am Ortsfeld (`ui_ortsfeld` mit `'ortswahl' => true` — Einsatzort und

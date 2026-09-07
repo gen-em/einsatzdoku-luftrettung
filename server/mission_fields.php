@@ -185,8 +185,11 @@ declare(strict_types=1);
  *                                   unmaskiert ausgegeben und darf deshalb
  *                                   Auszeichnung enthalten (`&shy;`, `<br>`)
  *   'placeholder'
- *   'suggest_src'                   nur bei 'text': Quelle der <datalist>-
+ *   'suggest_src'                   nur bei 'text' und 'loc': Quelle der
  *                                   Vorschlaege; Freitext bleibt moeglich.
+ *                                   Seit S9/AP1 (E-S9-07) zeichnet sie
+ *                                   assets/vorschlagsliste.js unter dem Feld,
+ *                                   nicht mehr eine native <datalist>.
  *                                     'transport_dests'  Stammdaten-Tabelle
  *                                     'crew:<rolle>'     Besatzungs-Vorbelegungen
  *                                                        der Rolle (CREW_ROLES)

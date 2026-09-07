@@ -331,7 +331,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--schnee` | `#FFFCFA` | 34 |  |
+| `--schnee` | `#FFFCFA` | 33 |  |
 | `--rauch` | `#F7F5ED` | 26 |  |
 | `--sand` | `#D4C7AD` | 11 |  |
 
@@ -341,22 +341,22 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 20 |  |
 | `--dunkelblau` | `#1A2E4D` | 51 |  |
-| `--gedaempft` | `#6E6459` | 49 |  |
+| `--gedaempft` | `#6E6459` | 52 |  |
 | `--auf-dunkel` | `#FFFFFF` | 7 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 29 |  |
-| `--linie-stark` | `var(--gedaempft)` | 11 |  |
+| `--linie` | `#E3DAC6` | 30 |  |
+| `--linie-stark` | `var(--gedaempft)` | 10 |  |
 
 **Orange — Handeln**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--orange` | `#FF8F1F` | 28 |  |
-| `--orange-tief` | `#C25A00` | 13 |  |
+| `--orange` | `#FF8F1F` | 29 |  |
+| `--orange-tief` | `#C25A00` | 15 |  |
 | `--orange-hell` | `#FFEBD6` | 18 |  |
 
 **Blau — Auswählen und Erklären**
@@ -386,8 +386,8 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-1` | `12px` | 6 |  |
-| `--groesse-2` | `13px` | 38 |  |
+| `--groesse-1` | `12px` | 7 |  |
+| `--groesse-2` | `13px` | 39 |  |
 | `--groesse-3` | `15px` | 11 |  |
 | `--groesse-4` | `16px` | 10 |  |
 | `--groesse-5` | `19px` | 6 |  |
@@ -401,8 +401,8 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 55 |  |
-| `--abstand-2` | `8px` | 85 |  |
+| `--abstand-1` | `4px` | 58 |  |
+| `--abstand-2` | `8px` | 84 |  |
 | `--abstand-3` | `12px` | 110 |  |
 | `--abstand-4` | `16px` | 53 |  |
 | `--abstand-5` | `24px` | 21 |  |
@@ -411,7 +411,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--radius-klein` | `6px` | 19 | Plakette, Kästchen, Eingabefeld |
+| `--radius-klein` | `6px` | 18 | Plakette, Kästchen, Eingabefeld |
 | `--radius` | `10px` | 17 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 6 | Karte, Blatt, Dialog |
 
@@ -491,7 +491,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--dauer` | `.18s` | 7 |  |
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
-| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 7 |  |
+| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 6 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
 | `--auf-dunkel-leise` | `rgba(255,255,255,.55)` | 1 |  |
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 2 |  |
@@ -768,7 +768,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 3 |
 | `datenbank.svg` | Tabler Icons „database" (MIT) | 10 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
-| `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 20 |
+| `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 23 |
@@ -777,7 +777,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
-| `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 2 |
+| `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
 | `korb.svg` | Tabler Icons „trash" (MIT) | 21 |
 | `luftlinie.svg` | — | 0 |
@@ -786,9 +786,9 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 8 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 16 |
-| `position.svg` | Tabler Icons „current-location" (MIT) | 4 |
-| `profil.svg` | Tabler Icons „user" (MIT) | 12 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 17 |
+| `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
+| `profil.svg` | Tabler Icons „user" (MIT) | 14 |
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 25 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
@@ -798,7 +798,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `server.svg` | Tabler Icons „server" (MIT) | 6 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 10 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
-| `standort.svg` | Tabler Icons „map-pin" (MIT) | 4 |
+| `standort.svg` | Tabler Icons „map-pin" (MIT) | 5 |
 | `status.svg` | Tabler Icons „activity" (MIT) | 27 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 9 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 7 |
@@ -846,6 +846,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | eine aus **wenigen kurzen** Möglichkeiten | `ui_segment()` | ein `<select>` |
 | eine aus mehreren **mit Erklärung** | `ui_wahlliste()` | Radios von Hand |
 | eine Adresse mit Koordinaten | `ui_ortsfeld()` | ein Textfeld |
+| **Vorschläge zu einem Textfeld** | `EdVorschlaege.init()` (9.28) | eine `<datalist>` — der Browser zeichnet sie über dem Feld, mobil oft gar nicht |
 | einen Seitenkopf mit Rückweg | `ui_titelzeile()` | ein `<h1>` |
 | „gibt es nicht" / „kein Zugriff" | `ui_abbruch($code, $text)` | `exit('… nicht gefunden.')` |
 | ein Zeichen | `ui_symbol('name')` / `edSymbol('name')` | ein Emoji, ein Unicode-Zeichen, ein Inline-Pfad |
@@ -889,7 +890,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1386 |
 | `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1428 |
 | `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1470 |
-| `ui_feld()` | `.feld` | ja (+18 Unterklassen) | 1539 |
+| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1539 |
 | `ui_schalter()` | `.schalter` | ja (+16 Unterklassen) | 1604 |
 | `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1648 |
 | `ui_wahlliste()` | `.wahlliste` | ja | 1701 |
@@ -897,8 +898,8 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1844 |
 | `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 1906 |
 | `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 1947 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2004 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2157 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2011 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2160 |
 
 34 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -1289,6 +1290,12 @@ Vorschlagsliste und Kartenwahl. Gegenstück zu `assets/ortsfeld.js`: Die
 Funktion erzeugt die Elemente, das Skript belebt sie — **beide bilden ihre
 Kennungen aus demselben Präfix.**
 
+**Die Trefferliste ist seit Web 15.6.0 ein eigener Baustein** (9.28): Das
+Ortsfeld sagt, *was* darin steht (erkannte Koordinate, Stammdaten, Adressen);
+*wie* es dasteht, entscheidet die Liste. Der Schlüssel `datalist` ist damit
+ersatzlos entfallen — Stammdaten gehen als `vorschlaege` an
+`EdOrtsfeld.init()`, nicht als Markup in die Seite.
+
 ```php
 ui_ortsfeld([
   'praefix' => 'site', 'label' => 'Einsatzort',
@@ -1323,6 +1330,12 @@ Die Lupe umgeht die Entprellung, nicht die Mindestlänge.
 > Die Adresssuche geht an Photon; jede Anfrage trägt die eingetippten
 > Buchstaben dorthin. Stehen bereits Koordinaten, ruht die Suche ganz — die
 > Formaterkennung läuft lokal und hat Vorrang.
+
+**Stammdaten stehen sofort da, Adressen entprellt.** Die Stammdaten liegen im
+Browser; auf sie zu warten wäre eine Wartezeit ohne Grund, und sie erscheinen
+ab dem ersten Zeichen. Ist die Adresssuche aus, bleibt die Stammdatengruppe
+stehen — sie kommt aus dem eigenen Bestand und hat mit dem Dienst nichts zu
+tun.
 
 ### 9.14 Abbruchseite
 
@@ -1738,6 +1751,95 @@ Seitenüberschrift „Einstellungen"; in drei Spalten benennt sie die Spalte,
 und ohne sie stünde eine namenlose neben zwei benannten. Im Markup steht sie
 immer, damit ein Vorleseprogramm alle Blöcke gleich benennt.
 
+### 9.28 Vorschlagsliste (`.vorschlaege`)
+
+*Neu mit Web 15.6.0 (S9/AP1, E-S9-07). Mockup
+`docs/konzepte/konzept-s9/mockups/M-S9-03-vorschlagsliste.html`, freigegeben
+am 07.09.2026.* Gebaut wird sie in `assets/vorschlagsliste.js`, nicht in
+`ui.php`: Sie entsteht beim Tippen im Browser, es gibt keine PHP-Seite, die
+sie ausgeben könnte — nur das leere `<ul class="vorschlaege" hidden>`. In der
+erzeugten Bausteintabelle (Kapitel 9, Anfang) steht sie deshalb nicht; sie
+liest `ui.php`.
+
+**Zweck:** Treffer unter einem Eingabefeld anbieten — aus mehreren Quellen,
+in Gruppen, mit Tastatur.
+
+```html
+<div class="loc-widget">            <!-- oder .rmbox, .feld-vorschlag -->
+  <input type="text" autocomplete="off">
+  <ul class="vorschlaege" hidden>
+    <li class="vorschlaege-gruppe">Zielkliniken</li>
+    <li class="vorschlag aktiv" data-art="stamm">
+      <svg class="symbol">…</svg>
+      <span class="vorschlag-text">
+        <span class="vorschlag-haupt"><b>Klin</b>ik Talwang</span>
+        <span class="vorschlag-neben">Stammdaten · mit Koordinate</span>
+      </span>
+    </li>
+  </ul>
+</div>
+```
+
+```js
+const steuer = EdVorschlaege.init({ feld, behaelter, liste, beiWahl });
+steuer.zeige([{ titel: 'Zielkliniken', eintraege: [
+  { haupt: 'Klinik Talwang', neben: 'Stammdaten · mit Koordinate',
+    symbol: 'klinik', art: 'stamm', wert: satz }
+] }], 'Klin');
+```
+
+**Sie ersetzt vier Dinge auf einmal:** die Photon-Liste des Ortsfelds
+(`.loc-suggest`), die Liste der weiteren Rettungsmittel (`.rmlist`/`.rmopt`),
+die freie Eingabe darin (`.rmneu`) und **jede** native `<datalist>`. Der Grund
+für den letzten Punkt steht in Backlog Nr. 68: Der Browser zeichnet sie über
+dem Feld, am Transportziel also über der eigenen Liste, und auf dem Handy oft
+gar nicht.
+
+**Übernommen wird auf `mousedown` mit `preventDefault()`, nie auf `click`.**
+Das ist die eine Regel, die dieser Baustein nicht zur Wahl stellt, und sie hat
+eine Nummer: Backlog Nr. 102. Ein Mausklick ist `mousedown` → `blur` →
+`mouseup` → `click`; wer die Taste länger hält als der Blur-Aufschub (150 ms),
+findet den Eintrag beim `mouseup` schon versteckt, und `click` fällt nie.
+Gemessen bei 300 ms gehaltener Maus: vorher 0 von 3 Übernahmen, nachher 3 von
+3 (`tools/klickprobe/`).
+
+**Ob eine Gruppenzeile erscheint, entscheidet der Aufrufer** — er setzt
+`titel` oder lässt ihn weg. Die Regel ist nicht mechanisch: Das Besatzungsfeld
+trägt „Vorlagen des Standorts" auch als einzige Gruppe, weil die Zeile sagt,
+woher die Namen kommen und damit, dass ein Name daneben erlaubt ist. Der
+Einsatzort zeigt allein Adressen und trägt keine Zeile — eine Überschrift ohne
+Gegenstück ist keine Gliederung. Die weiteren Rettungsmittel tragen keine,
+weil die freie Eingabe darunter keine zweite Gruppe ist, sondern eine
+Handlung.
+
+**Zustände und Maße:**
+
+| | |
+|---|---|
+| `.vorschlaege` | schwebt (`position:absolute`, `z-index:20`); der Behälter trägt `position:relative` |
+| `.vorschlaege-gruppe` | Herkunftszeile auf Rauch, `--groesse-1`, versal — keine Bedienhöhe, sie ist nicht anzufassen |
+| `.vorschlag` | `min-height: var(--knopf)` — folgt beiden Bedienhöhen von selbst (44/36, R76) |
+| `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` Orange links — **eine** Markierung für Zeiger und Pfeiltaste |
+| `.vorschlag-haupt` | eine Zeile, mit Ellipse; der getippte Teil in `<b>` |
+| `.vorschlag-neben` | die Herkunft, gedämpft, `--groesse-2` |
+| `.vorschlag-neu` | die freie Eingabe: `--orange-tief`, Kopfschrift — sie ist eine Handlung, kein Datensatz |
+
+**Kein neues Token.** Alle Werte kommen aus der Skala; die Höhe ist `--knopf`.
+
+> **`--knopf` ist die Untergrenze, nicht das Sollmaß.** Eine Zeile mit
+> Haupt- **und** Herkunftszeile misst gemessen rund **51 px** — in beiden
+> Bedienstufen dieselbe, weil der Text höher ist als der Knopf. Nur eine
+> **einzeilige** Zeile folgt der Umschaltung sichtbar (gemessen 44 px bei
+> 390 px, 36 px bei 1280 px am Zeiger). Wer die Bedienhöhe belegen will,
+> misst deshalb ein Besatzungsfeld und kein Transportziel.
+
+> **Sie schiebt nicht, sie schwebt.** Die alte `.loc-suggest` stand im Fluss
+> und drückte beim Tippen alles darunter nach unten — auf einem 390-px-Schirm
+> sprang das halbe Formular, und der Eintrag, auf den man zielte, war beim
+> Loslassen woanders. Wer einen neuen Behälter baut, gibt ihm
+> `position:relative`; ohne einen positionierten Vorfahren hängt die Liste am
+> Seitenanfang.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Fünf Typen
@@ -1812,6 +1914,7 @@ lief, misst einen Stand, den es nicht mehr gibt.
 | `tools/design/tabellen.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen. |
 | `tools/wortliste/wortliste.py` | Sprechen Oberfläche und Dokumentation neutral von Land und Luft? |
 | `tools/stilvergleich/` | Hat sich am Erscheinungsbild etwas geändert, das nicht geplant war? |
+| `tools/klickprobe/probe.mjs` | Tut ein Bedienelement, was es soll — wenn man es **bedient**? Je Weg eine Zahl. |
 
 **Der Stilvergleich hat während P3 geruht** und ist in O12 neu geeicht: Die
 Frage „hat sich etwas geändert?" ist in einer Phase, in der sich alles ändert,
@@ -1820,6 +1923,15 @@ wacht er wieder — und dann gilt: **Bei einer beabsichtigten
 Gestaltungsänderung ist das Ergebnis keine Null, sondern eine Liste.** Sie
 wird gegen die Liste der geplanten Änderungen gehalten; jede Abweichung
 darüber hinaus ist unbeabsichtigt und wird geklärt, bevor committet wird.
+
+**Und bis S9 hat kein Prüfmittel je ein Element bedient.** Der Bilderlauf
+fotografiert, die Vollständigkeit liest das Stylesheet, die Linkprobe folgt
+Adressen. Zwei gemeldete Fehler sind genau dort hindurchgelaufen — ein Knopf,
+der auf 404 führte (Nr. 148), und eine Trefferliste, die jeden Klick verlor,
+der länger als 150 ms dauerte (Nr. 102). Die **Klickprobe** (S9, E-S9-16)
+schließt diese Lücke, und ihr erster Befund ist ein Satz über Werkzeuge:
+`locator.click()` hält die Taste rund 10 ms und findet Nr. 102 deshalb
+**nicht**. Ein Prüfmittel misst, was es tut, nicht was es meint.
 
 **Und kein Prüfmittel sieht, wie es aussieht.** Die vierzehn Punkte der ersten
 Rückmeldungsrunde nach P3 (Web 9.14.0) sind allesamt durch jedes Werkzeug

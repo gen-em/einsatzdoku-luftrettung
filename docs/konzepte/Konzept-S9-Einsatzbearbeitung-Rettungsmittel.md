@@ -17,8 +17,22 @@ Mockups in `konzept-s9/mockups/`.
 > | Stand | 07.09.2026 — **Konzept freigegeben.** E-S9-01 bis -17 am 06.09.2026 bestätigt, E-S9-18 und -19 am 07.09.2026; alle sieben Mockups freigegeben (Abschnitt 6). PS-12 (Standortseiten, Backlog 152) am 07.09.2026 aufgenommen. Rahmenplan Fassung 34 trägt die Einschübe aus Abschnitt 7 |
 > | Entschieden | E-S9-01 bis E-S9-19 (Abschnitt 2) |
 > | Offen | nichts. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
-> | Umsetzung | beauftragt 07.09.2026. Acht Arbeitspakete (Abschnitt 3); keine Voraussetzung mehr — parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
+> | Umsetzung | **AP1 erledigt** (07.09.2026, Web 15.6.0, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. **AP2 wartet auf das Wort des Auftraggebers.** Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
 > | Fable-Schritte der Umsetzung | **keine** — der einzige Fable-Vorbehalt der Vorbereitung (PS-8.2) ist im Konzept aufgelöst (Abschnitt 1.8) |
+
+> **Stand der Umsetzung**
+>
+> | Paket | Stand | Stufe | Abnahmezahlen |
+> |---|---|---|---|
+> | **AP1** Vorschlagsliste und Klickprobe | **erledigt** 07.09.2026 | Web **15.6.0** | Klickprobe PS-2 mit 300 ms gehaltener Maus **0 von 3 → 3 von 3** (dieselbe Fassung der Probe gegen beide Stände); `grep -rn datalist server/` **0** außerhalb von Kommentaren (vorher 12 in sechs Dateien, 8 davon im Markup einer Einsatzseite); Transportziel „Klin" **1 Liste · 2 Gruppen · 2 Stammdaten · 4 Adressen · 0 `<datalist>`** (vorher 1 Liste · 0 Gruppen · 8 `<datalist>`); Bedienhöhe an der einzeiligen Zeile gemessen **390 px → 44 px, 1280 px Zeiger → 36 px, 1280 px Finger → 44 px**; **12 von 12** Wegen erfüllt über zwei Breiten × zwei Bedienhöhen, 12 Bilder; Bilderlauf 7 Seiten, 56 Bilder je Lauf, **0/0/0** in beiden Bedienhöhen; Wortliste **0/0/0** in fünf Bereichen; Vollständigkeit **300 → 298 Befunde**; Kontraste **21 Paare, 0 verfehlt** |
+> | AP2 bis AP8 | offen | — | — |
+>
+> **Offene Fragen an den Auftraggeber aus AP1:** drei, alle im Prüfdokument
+> unter „Fragen" mit Vorschlag und Preis — der Widerspruch zwischen der
+> AP1-Abnahme („`datalist` = 0") und der Zuordnung der Diensttags-Besatzung
+> nach AP6, die Zeile „`<datalist>` in der Streichliste" (dort stehen
+> Klassen, kein HTML-Element), und die Zahl der Backlog-Punkte im Abschluss
+> (achtzehn im Konzept, zwanzig im Auftrag).
 
 ---
 

@@ -14,6 +14,87 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.6.0] — 2026-09-07
+
+### Web — eine Vorschlagsliste statt dreier und einer vierten vom Browser (S9/AP1)
+
+**Unter einem Feld, das Vorschläge macht, lagen bisher drei verschiedene
+Listen — und am Transportziel zwei davon übereinander.** Das Ortsfeld hatte
+seit Web 6.1.0 seine eigene (`.loc-suggest`), die weiteren Rettungsmittel seit
+Web 7.0.0 eine zweite (`.rmlist`), und an Transportziel und Besatzungsfeldern
+hing zusätzlich die native `<datalist>` des Browsers. Die zeichnet der Browser
+**über** dem Feld, die eigene erscheint darunter: Wer am Transportziel tippte,
+sah zwei Listen, und die native verdeckte die eigene. Auf dem Handy zeigte sie
+oft gar nichts — an den Besatzungsfeldern war sie die einzige Quelle und damit
+dort blind (Backlog Nr. 68, gemeldet vom Auftraggeber; Nr. 106 aus der
+Problemsammlung).
+
+Jetzt gibt es **eine** Liste: `assets/vorschlagsliste.js`. Sie zeigt Treffer in
+Gruppen — am Transportziel oben höchstens zwei Zielkliniken aus den
+Stammdaten, darunter bis zu sechs Adressen —, jede Zeile mit Symbol und einer
+gedämpften Zeile darunter, die die Herkunft nennt („Stammdaten · mit
+Koordinate" gegen die Postleitzahl). Sie kennt Pfeiltasten, Enter und Escape,
+und der getippte Teil steht fett. Am Einsatzort und am Abfahrtort entfällt die
+Gruppenzeile, weil es dort nur Adressen gibt: Eine Überschrift ohne
+Gegenstück ist keine Gliederung. Die Zeilen sind `--knopf` hoch und folgen
+damit beiden Bedienhöhen von selbst (44 px am Finger, 36 px am Zeigergerät,
+R76); die alte `.loc-suggest`-Zeile war nur so hoch wie ihre Polsterung.
+
+**Die Stammdaten erscheinen jetzt schon bei Teilübereinstimmung.** Bis Web
+15.5.2 verglich das Ortsfeld auf genaue Namensgleichheit und überließ die
+Suche der `<datalist>` — wer „Klin" tippte, war auf den Browser angewiesen.
+Der Abgleich auf den vollen Namen bleibt daneben bestehen: Wer den Namen
+abtippt oder einfügt, bekommt die Koordinaten weiterhin ohne Klick (E38).
+
+#### Der Klick, der zu lange dauerte (Backlog Nr. 102)
+
+Die Liste der weiteren Rettungsmittel übernahm auf `click`; das Eingabefeld
+versteckte sie 150 ms nach `blur`. Ein Mausklick ist `mousedown` → `blur` →
+`mouseup` → `click`. Dauert er länger als 150 ms — am Schreibtisch mit Maus
+oder Touchpad keine Seltenheit —, ist der Knopf beim `mouseup` schon `hidden`,
+und der Browser feuert **kein** `click`. Ergebnis: Liste zu, nichts
+übernommen. Ein Fingertipp ist schneller als 150 ms, deshalb war der Fehler
+auf Desktop beschränkt. Das Ortsfeld machte es von Anfang an richtig
+(`mousedown` mit `preventDefault`, vor `blur`) — nur eben an einer anderen
+Stelle. Der Baustein macht es jetzt überall so.
+
+#### Ein Prüfmittel, das bedient (`tools/klickprobe/`)
+
+Vier Prüfmittel im Browser hatte das Projekt, und **keines hat je ein Element
+bedient**: Der Bilderlauf fotografiert, die Vollständigkeit liest das
+Stylesheet, die Linkprobe folgt Adressen, die Wartungsprobe zählt Erwartungen.
+Nr. 102 und Nr. 148 sind beide genau dort hindurchgelaufen. Die Klickprobe
+fährt Bedienwege und nennt je Weg eine Zahl; jedes weitere Arbeitspaket legt
+seine Wege als eigene Datei unter `wege/` dazu.
+
+Gemessen mit derselben Fassung der Probe, einmal gegen Web 15.5.2 und einmal
+gegen diesen Stand: Übernahme bei **300 ms gehaltener Maus vorher 0 von 3,
+nachher 3 von 3**; Transportziel mit „Klin" vorher eine eigene Liste ohne
+Gruppen neben **8 `<datalist>`**, nachher eine Liste mit **2 Gruppen, 2
+Stammdaten- und 4 Adresstreffern und 0 `<datalist>`**; Besatzungsfeld vorher
+gar keine eigene Liste, nachher der Wert im Feld. Dass
+`locator.click()` von Playwright den Fehler **nicht** findet, ist dabei die
+eigentliche Lehre: Es hält die Taste rund 10 ms. Die Probe fährt
+`mouse.down()`, wartet und lässt los.
+
+Die Adressabfrage läuft im Prüfstand gegen eine Attrappe — dorthin gibt es
+keinen Netzzugang, und ohne feste Trefferzahl wäre jeder Sollwert geraten. Der
+echte Dienst bleibt auf der Prüfliste des Auftraggebers, ebenso WebKit und ein
+Handy mit Handschuhen.
+
+#### Was bewusst stehen bleibt
+
+Die Photon-Abfrage steht weiterhin in `assets/ortsfeld.js` und die Umkehrsuche
+in `assets/ortswahl.js`; beide wandern mit AP2 in ein eigenes Modul und
+bekommen dort ihre Schalter (E-S9-05). Die Beschriftung eines Treffers ist
+dadurch immer noch **zweimal** im Code — hier und in `ortswahl.js`; das
+Zusammenlegen gehört in dasselbe Paket. Und das Zuordnungsformular der
+Tagesübersicht zeichnet seine Besatzungsfelder weiterhin erst nach dem
+Speichern: Die Liste darin ist jetzt die neue, der Weg dorthin bleibt bis AP6,
+wie er ist (E-S9-11).
+
+Keine Migration.
+
 ## [Web 15.5.2] — 2026-09-06
 
 ### Web — zwei Wege, die es gab und die nicht ankamen (Backlog Nr. 148, 149)

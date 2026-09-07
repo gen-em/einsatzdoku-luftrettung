@@ -784,8 +784,14 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           return $f['options'] ?? [];
       };
       // Vorschlagslisten fuer Text-Felder mit suggest_src (Konzept Abschnitt 6.4):
-      // persoenlich + zentral, dedupliziert, alphabetisch — natives <datalist>,
-      // Freitext bleibt uneingeschraenkt moeglich.
+      // persoenlich + zentral, dedupliziert, alphabetisch; Freitext bleibt
+      // uneingeschraenkt moeglich.
+      //
+      // SEIT S9/AP1 (E-S9-07) GEHT DIE LISTE NICHT MEHR ALS <datalist> IN DAS
+      // MARKUP, sondern als Daten an assets/vorschlagsliste.js. Die native
+      // Fassung zeichnete der Browser UEBER dem Feld — am Transportziel damit
+      // ueber der eigenen Liste (PS-6) —, und auf dem Handy zeigte sie oft
+      // gar nichts (Backlog 68). Der Inhalt ist derselbe geblieben.
       //
       // Seit Web 5.5.0 auch 'crew:<rolle>' (E8). Die Abfrage ist dieselbe wie
       // in $optSrc; der Unterschied liegt nicht in den Daten, sondern darin,
@@ -802,6 +808,11 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       // Ortsfeld sie beim Uebernehmen eines Vorschlags nachladen. Rollen liefern
       // keine — dort bleiben beide Werte null, statt zwei Formen derselben
       // Liste zu haben.
+      /* Was das Skript unten fuer die Vorschlagslisten braucht: je Spalte die
+       * Eintraege, die der Katalog dort vorschlaegt. Dasselbe Verfahren wie bei
+       * $LOC_FELDER — die Daten reisen als JSON in die Seite, das Markup bleibt
+       * leer (E-S9-07). */
+      $SUGGEST_FELDER = [];
       $suggestCache = [];
       $suggestSrc = function (array $f) use ($userId, $dayBaseId, &$suggestCache): array {
           $src = (string)($f['suggest_src'] ?? '');
@@ -884,7 +895,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               : e($label);
       };
 
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER, $labelSichtbar): void {
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER, &$SUGGEST_FELDER, $labelSichtbar): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
           /* FILTER: verstecken, aber immer rendern (siehe mission_fields.php).
@@ -918,7 +929,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   <input type="text" id="rminput" class="rmeingabe" autocomplete="off"
                          placeholder="Tippen zum Suchen, Enter zum Übernehmen">
                 </div>
-                <div class="rmlist" id="rmlist" hidden></div>
+                <ul class="vorschlaege" id="rmlist" hidden></ul>
               </div>
             </label>
           <?php return; }
@@ -1027,7 +1038,6 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   'versteckt'   => $hide,
                   'lat'         => isset($ort['lat']) ? ortWert($col, 'lat', $ort['lat']) : '',
                   'lon'         => isset($ort['lon']) ? ortWert($col, 'lon', $ort['lon']) : '',
-                  'datalist'    => array_map(static fn(array $s): string => $s['name'], $sugg),
               ]);
               if (!empty($f['children'])) { ?>
                 <div class="childfields">
@@ -1046,16 +1056,19 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                 placeholder="<?= e($f['placeholder'] ?? '') ?>"><?= e($val) ?></textarea>
             </label>
           <?php return; } ?>
-            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
+            <?php /* MIT VORSCHLAGSLISTE: der Behaelter traegt `position:relative`
+                     (`feld-vorschlag`), damit die Liste unter dem Feld haengt und
+                     nicht am Seitenanfang. Gefuellt wird sie im Skript unten aus
+                     SUGGEST_FELDER — hier steht nur das leere <ul> (E-S9-07). */ ?>
+            <?php if (isset($f['suggest_src'])) { $SUGGEST_FELDER[$col] = $suggestSrc($f); } ?>
+            <label class="<?= trim(($depth ? 'fld-sub ' : '')
+                                 . (isset($f['suggest_src']) ? 'feld-vorschlag' : '')) ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
               <input type="<?= $type === 'number' ? 'number' : 'text' ?>"
-                name="f_<?= e($col) ?>" value="<?= e($val) ?>"
+                name="f_<?= e($col) ?>" value="<?= e($val) ?>" autocomplete="off"
                 <?= isset($f['max']) ? 'maxlength="' . (int)$f['max'] . '"' : '' ?>
-                <?= isset($f['suggest_src']) ? 'list="dl_' . e($col) . '"' : '' ?>
                 placeholder="<?= e($f['placeholder'] ?? '') ?>" step="any">
-              <?php if (isset($f['suggest_src'])): $sugg = $suggestSrc($f); ?>
-                <datalist id="dl_<?= e($col) ?>">
-                  <?php foreach ($sugg as $s): ?><option value="<?= e($s['name']) ?>"><?php endforeach; ?>
-                </datalist>
+              <?php if (isset($f['suggest_src'])): ?>
+                <ul id="vl_<?= e($col) ?>" class="vorschlaege" hidden></ul>
               <?php endif; ?>
             </label>
             <?php if (!empty($f['children'])): ?>
@@ -1385,6 +1398,12 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
 <script src="<?= asset('assets/locparse.js') ?>"></script>
+<?php /* html.js (EdHtml.escape) und vorschlagsliste.js (EdVorschlaege) VOR
+         ortsfeld.js: Die Komponente baut ihre Trefferliste beim Aufbau, und
+         der Baustein muss dann stehen. Die Reihenfolge ist die Abhaengigkeit,
+         nicht der Zufall (E-S9-07). */ ?>
+<script src="<?= asset('assets/html.js') ?>"></script>
+<script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
 <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
@@ -1605,6 +1624,66 @@ EdOrtswahl.registriere('start', ortStart);
  * Namen weg. Trifft die Eingabe einen Stammdatensatz, kommen dessen Koordinaten
  * mit und bleiben ueberschreibbar (A13l). */
 const LOC_FELDER = <?= json_encode($LOC_FELDER, JSON_UNESCAPED_UNICODE) ?>;
+
+/* ---- Textfelder mit Vorschlagsliste (Katalog `suggest_src`) ---------------
+ *
+ * Bis Web 15.5.2 hingen hier native `<datalist>`-Listen am Feld — an den
+ * Besatzungsfeldern die einzige Vorschlagsquelle, und auf dem Handy zeigte
+ * der Browser sie oft gar nicht (Backlog 68). Jetzt zeichnet derselbe
+ * Baustein, der auch am Ortsfeld haengt (E-S9-07): eine Liste unter dem Feld,
+ * mit Gruppenzeile, Tastatur und Uebernahme auf `mousedown`.
+ *
+ * DIE GRUPPENZEILE STEHT AUCH BEI EINER EINZIGEN GRUPPE — anders als am
+ * Einsatzort. Sie sagt, woher die Namen kommen („Vorlagen des Standorts") und
+ * damit zugleich, dass ein Name daneben erlaubt ist: Wer aushilft, steht oft
+ * nicht in den Stammdaten (E8). Ohne die Zeile saehe die Liste wie eine
+ * Auswahl aus, und genau das ist sie nicht. */
+const SUGGEST_FELDER = <?= json_encode($SUGGEST_FELDER, JSON_UNESCAPED_UNICODE) ?>;
+
+/* Bis zu sechs Vorschlaege — dieselbe Zahl wie bei der Adresssuche
+ * (`limit=6`), damit keine Liste laenger wird als die andere. */
+const SUGGEST_MAX = 6;
+
+Object.keys(SUGGEST_FELDER).forEach(spalte => {
+  const feld = document.querySelector('input[name="f_' + spalte + '"]');
+  const liste = document.getElementById('vl_' + spalte);
+  if (!feld || !liste) { return; }
+  const eintraege = SUGGEST_FELDER[spalte] || [];
+  const istBesatzung = spalte.startsWith('crew_');
+  const titel = istBesatzung ? 'Vorlagen des Standorts' : 'Vorschläge';
+  /* Kein Zeichen fuer eine Herkunft, die es noch nicht gibt: Heute traegt nur
+   * `crew:<rolle>` diesen Weg (das Transportziel ist ein Ortsfeld und hat
+   * seinen eigenen). Ein hierher geratenes neues Katalogfeld bekommt seine
+   * Zeile lieber ohne Zeichen als mit einem beliebigen. */
+  const zeichen = istBesatzung ? 'profil' : '';
+
+  const steuer = EdVorschlaege.init({
+    feld, behaelter: liste.parentNode, liste,
+    /* `input` von Hand feuern: Ein programmatisch gesetzter Wert loest kein
+       Ereignis aus, und ohne eines merkt die Aenderungsverfolgung
+       (assets/forms.js) nichts — die Speichern-Leiste bliebe aus. */
+    beiWahl: e => {
+      feld.value = e.wert.name;
+      feld.dispatchEvent(new Event('input', { bubbles: true }));
+      feld.focus();
+    }
+  });
+  if (!steuer) { return; }
+
+  feld.addEventListener('input', () => {
+    const q = feld.value.trim().toLowerCase();
+    if (q === '') { steuer.verstecke(); return; }
+    const treffer = eintraege
+      .filter(v => String(v.name).toLowerCase().includes(q))
+      /* Ein Eintrag, der WORTGLEICH im Feld steht, ist kein Vorschlag mehr —
+       * ihn anzubieten hiesse, das Getippte noch einmal anzubieten. */
+      .filter(v => String(v.name).toLowerCase() !== q)
+      .slice(0, SUGGEST_MAX);
+    steuer.zeige([{ titel, eintraege: treffer.map(v => ({
+      haupt: v.name, symbol: zeichen, art: 'vorlage', wert: v
+    })) }], feld.value.trim());
+  });
+});
 const ORTSFELDER = LOC_FELDER.map(lf => EdOrtsfeld.init({
   praefix: lf.praefix,
   getrennteSuche: true,
@@ -1902,46 +1981,65 @@ document.getElementById('addrea').addEventListener('click', ev => {
     input.focus();
   }
 
+  /* ---- DIE TREFFERLISTE IST DER BAUSTEIN (S9/AP1, E-S9-08) ---------------
+   *
+   * PS-2, und warum es ihn gab: Hier stand bis Web 15.5.2 eine eigene Liste
+   * aus Knoepfen (gestrichene Klasse `rmopt`), die auf `click` uebernahm —
+   * und daneben ein `blur`-Aufschub von 150 ms, der die Liste versteckte.
+   * Ein Mausklick ist
+   * `mousedown` -> `blur` -> `mouseup` -> `click`; wer die Taste laenger als
+   * 150 ms haelt, findet den Knopf beim `mouseup` schon `hidden`, und der
+   * Browser feuert kein `click`. Die Liste schloss, uebernommen wurde nichts.
+   * Am Finger fiel es nicht auf (ein Tipp ist kuerzer), an der Maus staendig.
+   *
+   * Gemessen vor der Behebung mit tools/klickprobe/ (300 ms gehaltene Maus):
+   * 0 von 3 Uebernahmen — und im ersten Durchgang verschwand sogar ein
+   * bereits gewaehltes Rettungsmittel, weil unter dem Zeiger nach dem
+   * Verstecken der Liste das Kreuz eines Chips lag und DAS den Klick bekam.
+   *
+   * Der Baustein uebernimmt auf `mousedown` mit `preventDefault` — vor dem
+   * `blur` und ohne ihn auszuloesen. Pfeiltasten, Enter und Escape kommen
+   * mit; die Ruecktaste im leeren Feld bleibt hier, sie gehoert zu den Chips
+   * und nicht zur Liste. */
+  const steuer = EdVorschlaege.init({
+    feld: input, behaelter: box.closest('.rmbox') || input.parentNode, liste,
+    beiWahl: e => hinzu(e.wert)
+  });
+
   function suche(){
     const q = input.value.trim();
-    liste.innerHTML = '';
-    if (q.length < 2) { liste.hidden = true; return; }      // erst ab zwei Zeichen
+    if (q.length < 2) { steuer.verstecke(); return; }        // erst ab zwei Zeichen
 
     const ql = q.toLowerCase();
     const treffer = vorlagen.filter(v =>
       v.toLowerCase().includes(ql) &&
       !gewaehlt.some(g => g.toLowerCase() === v.toLowerCase()));
 
-    treffer.slice(0, 8).forEach(v => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'rmopt'; b.textContent = v;
-      b.addEventListener('click', () => hinzu(v));
-      liste.appendChild(b);
-    });
+    const zeilen = treffer.slice(0, 8).map(v => ({
+      haupt: v, neben: 'Vorbelegung des Standorts',
+      symbol: 'fahrzeug', art: 'vorbelegung', wert: v
+    }));
 
     // Freie Eingabe immer anbieten, wenn sie nicht exakt schon dabei ist
     const exakt = treffer.some(v => v.toLowerCase() === ql)
                || gewaehlt.some(g => g.toLowerCase() === ql);
     if (!exakt) {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'rmopt rmneu';
-      b.textContent = '\u201e' + q + '\u201c \u00fcbernehmen';
-      b.addEventListener('click', () => hinzu(q));
-      liste.appendChild(b);
+      zeilen.push({
+        haupt: '\u201e' + q + '\u201c \u00fcbernehmen',
+        neben: 'freie Eingabe', symbol: 'plus',
+        art: 'frei', neu: true, wert: q
+      });
     }
-    liste.hidden = liste.children.length === 0;
+    /* OHNE GRUPPENZEILE: Es gibt nur eine Sorte Vorbelegung, und die freie
+       Eingabe darunter ist keine zweite Gruppe, sondern eine Handlung
+       (M-S9-03, Anmerkung 5). */
+    steuer.zeige([{ titel: null, eintraege: zeilen }], q);
   }
 
   input.addEventListener('input', suche);
   input.addEventListener('keydown', ev => {
-    if (ev.key === 'Enter') {
-      ev.preventDefault();
-      const erster = liste.querySelector('.rmopt');
-      if (erster) { erster.click(); }
-    } else if (ev.key === 'Escape') {
-      liste.hidden = true;
-    } else if ((ev.key === 'Backspace' || ev.key === 'Delete')
-               && input.value === '' && gewaehlt.length) {
+    if ((ev.key === 'Backspace' || ev.key === 'Delete')
+        && input.value === '' && gewaehlt.length) {
       /* Rücktaste im LEEREN Feld nimmt den letzten Eintrag zurück — dasselbe
          Verhalten wie bei Empfängerfeldern im Mailprogramm. Ohne diese Zeile
          wäre der einzige Weg zurück das kleine ✕ mit der Maus, und die
@@ -1952,8 +2050,10 @@ document.getElementById('addrea').addEventListener('click', ev => {
       zeichneChips();
       suche();
     }
+    /* Pfeiltasten, Enter und Escape hoert der Baustein selbst ab; er steht
+       als erster am Feld und nimmt Enter das Absenden ab, solange die Liste
+       offen ist. */
   });
-  input.addEventListener('blur', () => setTimeout(() => { liste.hidden = true; }, 150));
   input.addEventListener('focus', suche);
 
   zeichneChips();

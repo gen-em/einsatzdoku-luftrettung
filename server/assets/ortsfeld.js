@@ -49,9 +49,20 @@
  *   - Koordinaten ohne Bezeichnung werden beim Absenden abgewiesen, eine
  *     Bezeichnung ohne Koordinaten ist zulaessig (E39).
  *
- * KEINE Abhaengigkeit ausser assets/locparse.js (EdLoc) — und selbst die ist
- * optional: Fehlt sie, entfaellt die Formaterkennung, das Feld bleibt
- * bedienbar.
+ * ZWEI ABHAENGIGKEITEN, und nur zwei:
+ *
+ *   assets/locparse.js (EdLoc) ist OPTIONAL — fehlt sie, entfaellt die
+ *   Formaterkennung, das Feld bleibt bedienbar.
+ *
+ *   assets/vorschlagsliste.js (EdVorschlaege) ist PFLICHT (S9/AP1, E-S9-07).
+ *   Die Trefferliste war bis Web 15.5.2 hier eingebaut — dreissig Zeilen, die
+ *   `mousedown` richtig machten und Pfeiltasten gar nicht kannten; daneben
+ *   stand am Transportziel zusaetzlich eine native `<datalist>` mit den
+ *   Stammdaten, die der Browser UEBER dem Feld zeichnete und mobil oft gar
+ *   nicht (PS-6, Backlog 68). Beide sind fort: Es gibt EINE Liste, sie kommt
+ *   aus dem Baustein, und sie zeigt Stammdaten und Adressen in GRUPPEN. Was
+ *   davon erscheint, entscheidet weiterhin diese Datei — der Baustein weiss
+ *   nicht, woher ein Eintrag stammt.
  */
 (function (global) {
     'use strict';
@@ -81,6 +92,18 @@
      * bisher im Einsatzformular. */
     var PHOTON = 'https://photon.komoot.io/api/?lang=de&limit=6&q=';
 
+    /* HOECHSTENS ZWEI STAMMDATENTREFFER ueber den Adressen (F10, E-S9-07).
+     * Die Zahl ist eine Entscheidung, keine Schaetzung: Die Stammdatengruppe
+     * steht OBEN und schiebt die Adressen nach unten; drei Zielkliniken auf
+     * einem 390-px-Schirm liessen von den Adressen nichts mehr uebrig. Wer
+     * mehr sehen will, tippt weiter — der Filter wird schaerfer. */
+    var STAMM_MAX = 2;
+
+    /* Beschriftungen der beiden Gruppen. Sie stehen hier und nicht im
+     * Baustein: Der weiss nicht, dass es Zielkliniken sind. */
+    var GRUPPE_STAMM = 'Zielkliniken';
+    var GRUPPE_ADRESSEN = 'Adressen';
+
     var MELDUNGEN = {
         'plus-kurz': 'Plus-Code-Kurzform erkannt — bitte Vollcode eingeben ' +
             '(in der Karten-App ohne Ortsangabe kopieren).',
@@ -96,7 +119,8 @@
 
     function el(id) { return document.getElementById(id); }
 
-    /** Beschriftung eines Photon-Treffers: Name, Strasse, PLZ/Ort. */
+    /** Beschriftung eines Photon-Treffers: Name, Strasse, PLZ/Ort. Das ist
+     *  der WERT, der ins Feld wandert — eine Zeile, wie bisher. */
     function photonLabel(p) {
         var teile = [];
         if (p.name) { teile.push(p.name); }
@@ -105,6 +129,24 @@
         var ort = [p.postcode, p.city].filter(Boolean).join(' ');
         if (ort) { teile.push(ort); }
         return teile.join(', ');
+    }
+
+    /* ZWEI ZEILEN IN DER LISTE, EINE IM FELD (M-S9-03). Die Postleitzahl mit
+     * Ort steht gedaempft darunter statt hinten in derselben Zeile: Auf einem
+     * 390-px-Schirm schnitt die einzeilige Fassung genau dort ab, wo die
+     * Unterscheidung zweier gleichnamiger Treffer beginnt. Uebernommen wird
+     * trotzdem die eine Zeile aus photonLabel() — im Feld steht die Adresse,
+     * nicht ein Absatz. */
+    function photonHaupt(p) {
+        var teile = [];
+        if (p.name) { teile.push(p.name); }
+        var strasse = [p.street, p.housenumber].filter(Boolean).join(' ');
+        if (strasse && strasse !== p.name) { teile.push(strasse); }
+        return teile.length ? teile.join(', ') : photonLabel(p);
+    }
+
+    function photonNeben(p) {
+        return [p.postcode, p.city].filter(Boolean).join(' ');
     }
 
     /**
@@ -118,12 +160,14 @@
      *   adresssuche            Photon-Abfrage zulassen (Vorgabe: true)
      *   formate                Koordinaten-/Plus-Code-Erkennung (Vorgabe: true)
      *   bezeichnungPlatzhalter Platzhalter, sobald Koordinaten stehen
-     *   vorschlaege            [{name, lat, lon}, …] — Stammdaten hinter einer
-     *                          <datalist>. Trifft die Eingabe einen Namen
-     *                          GENAU, werden dessen Koordinaten uebernommen
-     *                          (E38: „Wird eine Zielklinik aus der
-     *                          Vorschlagsliste übernommen, füllen sich ihre
-     *                          Koordinaten mit").
+     *   vorschlaege            [{name, lat, lon}, …] — Stammdaten. Sie
+     *                          erscheinen als eigene GRUPPE oben in der
+     *                          Trefferliste, hoechstens zwei, schon bei
+     *                          Teiluebereinstimmung (E-S9-07/F10); ein
+     *                          Treffer setzt Name und Koordinaten (E38).
+     *                          Zusaetzlich fuellt eine GENAUE Namensgleichheit
+     *                          die Koordinaten weiterhin ohne Klick — wer den
+     *                          Namen abtippt oder einfuegt, bekommt sie mit.
      *   beiAenderung           Rueckruf nach jeder Wertaenderung
      * @returns {object} Steuerobjekt (siehe unten)
      */
@@ -246,21 +290,140 @@
             if (beiAenderung) { beiAenderung(); }
         }
 
+        /* ---- Die Trefferliste (assets/vorschlagsliste.js) ------------------
+         *
+         * Drei Sorten Eintrag, und nur diese Datei weiss, was ein Klick auf
+         * welche tut:
+         *
+         *   'koordinate'  eine lokal erkannte Koordinate oder ein Plus Code
+         *                 (EdLoc). Sie hat Vorrang vor allem anderen und
+         *                 steht dann ALLEIN in der Liste — wer Zahlen tippt,
+         *                 sucht keine Adresse.
+         *   'stamm'       ein Stammdatensatz (nur da, wo `vorschlaege`
+         *                 uebergeben werden — heute allein am Transportziel,
+         *                 F9). Ein Treffer setzt NAME UND KOORDINATE (E38).
+         *   'adresse'     ein Treffer der Adresssuche. Er setzt die
+         *                 Koordinate, und den Namen nur, wenn das Feld die
+         *                 Adresse selbst als Bezeichnung fuehrt.
+         */
+        var adressTreffer = [];        // letzte Antwort der Adresssuche
+        var koordTreffer = null;       // lokal erkannte Koordinate
+        var letzteAnfrage = '';        // getippter Text (fuer die Hervorhebung)
+
+        var vorschlagsListe = liste ? EdVorschlaege.init({
+            feld: feld,
+            behaelter: liste.parentNode,
+            liste: liste,
+            beiWahl: uebernimm
+        }) : null;
+
         function versteckeListe() {
-            if (!liste) { return; }
-            liste.innerHTML = '';
-            liste.hidden = true;
+            if (vorschlagsListe) { vorschlagsListe.verstecke(); }
         }
 
-        function zeigeEintrag(text, uebernehmen) {
-            if (!liste) { return; }
-            var li = document.createElement('li');
-            li.textContent = text;
-            li.addEventListener('mousedown', function (ev) {   // mousedown: vor blur
-                ev.preventDefault();
-                uebernehmen();
-            });
-            liste.appendChild(li);
+        /* Stammdatentreffer bei TEILUEBEREINSTIMMUNG, nicht erst bei
+         * Namensgleichheit (F-S9-K-01). Bis Web 15.5.2 kamen die Stammdaten
+         * ueber eine native `<datalist>` in die Seite, und die Komponente
+         * verglich daneben auf genaue Gleichheit — wer „Klin" tippte, sah die
+         * Vorschlaege nur, solange der Browser sie zeichnete, und mobil gar
+         * nicht. Jetzt filtert diese Funktion, und die Liste zeigt das
+         * Ergebnis. */
+        function stammTreffer(q) {
+            var raus = [];
+            if (!vorschlaege.length) { return raus; }
+            var s = String(q || '').trim().toLowerCase();
+            if (s === '') { return raus; }
+            for (var i = 0; i < vorschlaege.length && raus.length < STAMM_MAX; i++) {
+                if (String(vorschlaege[i].name).toLowerCase().indexOf(s) !== -1) {
+                    raus.push(vorschlaege[i]);
+                }
+            }
+            return raus;
+        }
+
+        function zeichneListe() {
+            if (!vorschlagsListe) { return; }
+            if (koordTreffer) {
+                vorschlagsListe.zeige([{ titel: null, eintraege: [{
+                    haupt: UEBERNAHME[koordTreffer.typ] + ': ' + koordTreffer.anzeige,
+                    symbol: 'position', art: 'koordinate', wert: koordTreffer
+                }] }], '');
+                return;
+            }
+            var gruppen = [];
+            var stamm = stammTreffer(letzteAnfrage);
+            /* EINE GRUPPE IST KEINE GRUPPE (M-S9-03, Anmerkung 4). Am
+             * Einsatzort und am Abfahrtort gibt es keine Stammdaten; dort
+             * stuende „Adressen" als Ueberschrift ueber allem, was da ist.
+             * Die Zeilen tragen ihre Herkunft ohnehin im Symbol. */
+            var mitTiteln = stamm.length > 0;
+            if (stamm.length) {
+                gruppen.push({ titel: GRUPPE_STAMM, eintraege: stamm.map(function (v) {
+                    var hatOrt = v.lat !== null && v.lat !== undefined
+                              && v.lon !== null && v.lon !== undefined;
+                    return {
+                        haupt: v.name,
+                        neben: 'Stammdaten · ' + (hatOrt ? 'mit Koordinate' : 'ohne Koordinate'),
+                        symbol: 'klinik', art: 'stamm', wert: v
+                    };
+                }) });
+            }
+            if (adressTreffer.length) {
+                gruppen.push({ titel: mitTiteln ? GRUPPE_ADRESSEN : null,
+                               eintraege: adressTreffer.map(function (ft) {
+                    return {
+                        haupt: photonHaupt(ft.properties),
+                        neben: photonNeben(ft.properties),
+                        symbol: 'standort', art: 'adresse', wert: ft,
+                        voll: photonLabel(ft.properties)
+                    };
+                }) });
+            }
+            vorschlagsListe.zeige(gruppen, letzteAnfrage);
+        }
+
+        function uebernimm(e) {
+            if (e.art === 'koordinate') {
+                var erg = e.wert;
+                /* Die Zahlendarstellung raeumen — das Feld gehoert ab hier
+                 * der Bezeichnung; die Koordinaten stehen im Chip. Bei
+                 * getrennter Suche steht im Feld womoeglich schon ein NAME
+                 * (und die Koordinate kam per Lupe daneben): Ein Name wird
+                 * nie geleert — geleert wird nur, was die Erkennung selbst
+                 * gerade als Koordinate gelesen hat. */
+                if (!nurKoordinaten || erg.anzeige === feld.value.trim()) { feld.value = ''; }
+                koordTreffer = null;
+                erkennung = { typ: null };
+                setzeKoordinaten(erg.lat, erg.lon);
+                feld.focus();
+                return;
+            }
+            if (e.art === 'stamm') {
+                var v = e.wert;
+                /* AUCH IN DER GETRENNTEN SUCHE der Name: Ein Stammdatensatz
+                 * IST die Bezeichnung („Klinik Talwang"), nicht eine Adresse,
+                 * die sie ueberschriebe. Ein Satz OHNE Koordinate leert sie —
+                 * wer die Zielklinik wechselt, soll nicht die Koordinate der
+                 * vorherigen behalten (A13l). */
+                feld.value = v.name;
+                letzterTreffer = feld.value.trim().toLowerCase();
+                setzeKoordinaten(
+                    v.lat === null || v.lat === undefined ? '' : v.lat,
+                    v.lon === null || v.lon === undefined ? '' : v.lon);
+                feld.focus();
+                return;
+            }
+            /* Adresse. Getrennte Suche: NUR die Koordinaten. Das Namensfeld
+             * gehoert der Nutzerin — es wird hoechstens gefuellt, wenn es
+             * leer ist. */
+            var ft = e.wert;
+            if (nurKoordinaten) {
+                if (feld.value.trim() === '') { feld.value = e.voll; }
+            } else {
+                feld.value = e.voll;
+            }
+            letzterTreffer = feld.value.trim().toLowerCase();
+            setzeKoordinaten(ft.geometry.coordinates[1], ft.geometry.coordinates[0]);
         }
 
         /* Trifft die Eingabe genau einen Stammdatensatz, dessen Koordinaten
@@ -302,6 +465,7 @@
         function sucheJetzt() { sucheTippen(true); }
         function sucheTippen(sofort) {
             clearTimeout(timer);
+            letzteAnfrage = suchF.value.trim();
 
             /* Stehen bereits Koordinaten, ist hier Schluss. Weder
              * Formaterkennung noch Adresssuche laufen weiter — beide wuerden
@@ -309,6 +473,8 @@
              * ueberschreiben. */
             if (hatKoordinaten()) {
                 erkennung = { typ: null };
+                koordTreffer = null;
+                adressTreffer = [];
                 versteckeListe();
                 zustand();
                 return;
@@ -318,36 +484,40 @@
                 ? EdLoc.erkenneEinsatzort(suchF.value) : { typ: null };
 
             if (UEBERNAHME[erkennung.typ]) {
-                var erg = erkennung;
-                if (liste) { liste.innerHTML = ''; }
-                zeigeEintrag(UEBERNAHME[erg.typ] + ': ' + erg.anzeige, function () {
-                    /* Die Zahlendarstellung raeumen — das Feld gehoert ab hier
-                     * der Bezeichnung; die Koordinaten stehen im Chip. Bei
-                     * getrennter Suche steht im Feld womoeglich schon ein NAME
-                     * (und die Koordinate kam per Lupe daneben): Ein Name wird
-                     * nie geleert — geleert wird nur, was die Erkennung selbst
-                     * gerade als Koordinate gelesen hat. */
-                    if (!nurKoordinaten || erg.anzeige === feld.value.trim()) { feld.value = ''; }
-                    versteckeListe();
-                    erkennung = { typ: null };
-                    setzeKoordinaten(erg.lat, erg.lon);
-                    feld.focus();
-                });
-                if (liste) { liste.hidden = false; }
+                koordTreffer = erkennung;
+                adressTreffer = [];
+                zeichneListe();
                 zustand();
                 return;
             }
+            koordTreffer = null;
             if (erkennung.typ === 'plus-kurz' || erkennung.typ === 'ungueltig') {
+                adressTreffer = [];
                 versteckeListe();
                 zustand();
                 return;
             }
 
             zustand();
-            if (!adresssuche) { versteckeListe(); return; }
 
-            var q = suchF.value.trim();
-            if (q.length < MINDESTZEICHEN) { versteckeListe(); return; }
+            /* STAMMDATEN SOFORT, ADRESSEN ENTPRELLT. Die Stammdaten liegen im
+             * Browser — auf sie zu warten waere eine Wartezeit ohne Grund; sie
+             * erscheinen ab dem ersten Zeichen. Die Adresssuche geht an einen
+             * Dritten und bleibt bei ihren drei Grenzen (400 ms, drei Zeichen,
+             * eine offene Anfrage). Die Liste wird deshalb zweimal gezeichnet:
+             * jetzt mit dem, was da ist, und noch einmal, wenn die Antwort
+             * kommt. */
+            adressTreffer = [];
+            zeichneListe();
+
+            /* IST DIE ADRESSSUCHE AUS, bleibt die Stammdatengruppe stehen —
+             * sie kommt aus dem eigenen Bestand und hat mit dem Dienst nichts
+             * zu tun. Bis Web 15.5.2 verschwand hier die ganze Liste, weil es
+             * nur eine gab. */
+            if (!adresssuche) { return; }
+
+            var q = letzteAnfrage;
+            if (q.length < MINDESTZEICHEN) { return; }
             timer = setTimeout(function () {
                 /* HOECHSTENS EINE OFFENE ANFRAGE. Eine noch laufende wird
                  * abgebrochen, bevor die naechste startet — sonst ueberholen
@@ -363,32 +533,18 @@
                 }).then(function (d) {
                     if (dieser !== laufend) { return; }   // ueberholt
                     laufend = null;
-                    if (!liste) { return; }
-                    liste.innerHTML = '';
-                    (d.features || []).forEach(function (ft) {
-                        var text = photonLabel(ft.properties);
-                        zeigeEintrag(text, function () {
-                            /* Getrennte Suche: NUR die Koordinaten. Das
-                             * Namensfeld gehoert der Nutzerin — es wird
-                             * hoechstens gefuellt, wenn es leer ist. */
-                            if (nurKoordinaten) {
-                                if (feld.value.trim() === '') { feld.value = text; }
-                            } else {
-                                feld.value = text;
-                            }
-                            versteckeListe();
-                            letzterTreffer = feld.value.trim().toLowerCase();
-                            setzeKoordinaten(ft.geometry.coordinates[1],
-                                             ft.geometry.coordinates[0]);
-                        });
-                    });
-                    liste.hidden = liste.children.length === 0;
+                    adressTreffer = d.features || [];
+                    zeichneListe();
                 }).catch(function (e) {
                     /* Ein ABBRUCH ist kein Fehlschlag: Er heisst, dass gerade
                      * eine neuere Anfrage laeuft. Die Liste zu leeren liesse
                      * sie beim fluessigen Tippen flackern. */
                     if (e && e.name === 'AbortError') { return; }
-                    versteckeListe();
+                    /* Scheitert die Abfrage, bleibt die STAMMDATENGRUPPE
+                     * stehen: Sie hat mit dem Dienst nichts zu tun, und eine
+                     * leere Liste waere die falsche Auskunft. */
+                    adressTreffer = [];
+                    zeichneListe();
                 });
             }, sofort ? 0 : ENTPRELL_MS);   // Lupe: sofort, Tippen: entprellt
         }
@@ -403,24 +559,11 @@
                 feld.focus();
             });
         }
-        /* Der Aufschub gibt dem `mousedown` eines Vorschlags Zeit, noch
-         * durchzukommen — sonst waere die Liste weg, bevor der Klick sie
-         * erreicht.
-         *
-         * ER DARF ABER NICHT ZUSCHLAGEN, WENN DER FOKUS ZURUECKKEHRT. Der
-         * Lupen-Knopf nimmt dem Feld den Fokus (`blur` faellt), sucht und
-         * gibt ihn zurueck (`feld.focus()`). Kam die Antwort schneller als
-         * 150 ms, loeschte dieser Aufschub die eben gefuellte Liste wieder —
-         * gemessen: bei sofortiger Antwort stand sie nach 80 ms mit einem
-         * Eintrag da und nach 160 ms leer; bei 250 ms Antwortzeit blieb sie.
-         * Gegen den echten Photon-Dienst faellt es deshalb nie auf, hinter
-         * einem Zwischenspeicher oder im schnellen Netz schon (F-P3-AJ). */
-        feld.addEventListener('blur', function () {
-            setTimeout(function () {
-                if (document.activeElement === feld) { return; }
-                versteckeListe();
-            }, 150);
-        });
+        /* DER BLUR-AUFSCHUB STEHT JETZT IM BAUSTEIN (assets/vorschlagsliste.js,
+         * S9/AP1). Dort ist auch der Fund aufgeschrieben, der ihn eingefasst
+         * hat: Er darf nicht zuschlagen, wenn der Lupen-Knopf den Fokus nimmt
+         * und gleich zurueckgibt (F-P3-AJ). Eine zweite Fassung hier haette
+         * die Liste doppelt versteckt. */
 
         zeichne();
         zustand();

@@ -2863,4 +2863,29 @@ declare(strict_types=1);
  *          die Anwendung. Keine Migration — und das ist hier die Pointe: Was
  *          fehlt, ist eine ZEILE IM REGISTER, und die holt der Knopf nach.
  */
-const WEB_VERSION = '15.5.2';
+/* 15.6.0  EINE VORSCHLAGSLISTE STATT DREIER UND EINER VIERTEN VOM BROWSER
+ *          (S9/AP1, E-S9-07 und E-S9-08; Backlog Nr. 68, 102, 106).
+ *
+ *          Unter einem Feld, das Vorschlaege macht, lag bisher eine von drei
+ *          Fassungen — und am Transportziel zwei davon uebereinander: die
+ *          eigene Liste des Ortsfelds und die native `<datalist>` des
+ *          Browsers, die dieser UEBER dem Feld zeichnet. Auf dem Handy zeigte
+ *          die native oft gar nichts; an den Besatzungsfeldern war sie die
+ *          einzige Quelle und damit dort blind. Jetzt gibt es
+ *          `assets/vorschlagsliste.js` — eine Liste, mit Gruppen
+ *          („Zielkliniken" ueber „Adressen"), Symbol und Herkunftszeile je
+ *          Eintrag, Pfeiltasten, Enter und Escape.
+ *
+ *          UND SIE UEBERNIMMT AUF `mousedown`. Das ist Nr. 102: Die alte
+ *          Liste der weiteren Rettungsmittel wartete auf `click`, das Feld
+ *          versteckte sie 150 ms nach `blur` — wer die Maus laenger haelt,
+ *          bekommt kein `click`. Gemessen mit dem neuen `tools/klickprobe/`
+ *          bei 300 ms gehaltener Maus: vorher 0 von 3 Uebernahmen, nachher
+ *          3 von 3.
+ *
+ *          NEBENNUMMER, weil sich das VERHALTEN sichtbar aendert — eine neue
+ *          Liste, eine neue Bedienung, ein neues Pruefmittel —, aber kein Weg
+ *          durch die Anwendung ein anderer wird und keine Spalte sich regt.
+ *          Keine Migration.
+ */
+const WEB_VERSION = '15.6.0';

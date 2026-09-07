@@ -819,6 +819,11 @@ ui_seite_start(['titel' => 'Stammdaten systemweit']);
          haette den Rueckfragedialog doppelt geoeffnet. */ ?>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
 <script src="<?= asset('assets/locparse.js') ?>"></script>
+<?php /* html.js (EdHtml.escape) und vorschlagsliste.js (EdVorschlaege)
+         gehoeren zur Ortsfeld-Komponente, seit die Trefferliste ein eigener
+         Baustein ist (S9/AP1, E-S9-07). Reihenfolge = Abhaengigkeit. */ ?>
+<script src="<?= asset('assets/html.js') ?>"></script>
+<script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
 <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
 <script>
 /* Ortsfelder der systemweiten Stammdatenpflege (E37/E38). Dieselbe Komponente
