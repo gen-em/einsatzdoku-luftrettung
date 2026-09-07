@@ -16,8 +16,9 @@ import java.util.concurrent.TimeUnit
  * Play-Dienste und eine Bluetooth-Strecke. Es gibt weder Uhr (E-R45-7) noch
  * Emulator (E-R45-8).
  *
- * DESHALB IST SIE SO KLEIN WIE MÖGLICH: Knoten holen, senden, Erfolg melden.
- * Keine Entscheidung, keine Zustandsführung, kein Zwischenspeicher — sonst
+ * DESHALB IST SIE SO KLEIN WIE MÖGLICH: Knoten holen, senden, Erfolg melden —
+ * und seit 0.14.0 die Knotenliste nennen ([verbundeneKnoten], Backlog
+ * Nr. 144). Keine Entscheidung, keine Zustandsführung, kein Zwischenspeicher — sonst
  * läge ungeprüfte Logik in einer Klasse, die niemand ausführen kann. Was hier
  * schiefgeht, geht **sichtbar** schief: `false` heißt „nicht zugestellt", und
  * die Schicht darüber liefert nach.
@@ -61,6 +62,25 @@ class WearNachrichtenweg(
          * Gemeldet wird „nicht zugestellt"; die Nachricht bleibt gepuffert. */
         Log.i(MARKE, "Data Layer nicht erreichbar: ${e.javaClass.simpleName}")
         false
+    }
+
+    /**
+     * Die zurzeit verbundenen Knoten — für die Absenderprüfung am Handy
+     * (Backlog Nr. 144, Krypto-Review AN-4).
+     *
+     * `null`, wenn die Liste nicht zu lesen war (keine Play-Dienste, Zeit
+     * abgelaufen): Das ist etwas anderes als „keine Knoten", und die Schicht
+     * darüber entscheidet, was daraus folgt — sie verwirft dann, und die Uhr
+     * liefert nach. Wie [sende] blockiert der Aufruf bis zu [wartezeitS]
+     * Sekunden und gehört nicht auf den Hauptfaden.
+     */
+    fun verbundeneKnoten(): Set<String>? = try {
+        Tasks.await(
+            Wearable.getNodeClient(kontext).connectedNodes, wartezeitS, TimeUnit.SECONDS,
+        ).map { it.id }.toSet()
+    } catch (e: Exception) {
+        Log.i(MARKE, "Knotenliste nicht lesbar: ${e.javaClass.simpleName}")
+        null
     }
 
     private companion object {
