@@ -139,8 +139,38 @@ const EdPwQuality = (() => {
   const HAEUFIG_LAENGSTE_ZUERST = HAEUFIG.slice().sort((a, b) => b.length - a.length);
 
   /** Was als Sonderzeichen zaehlt: alles ausser Buchstaben, Ziffern, Umlauten
-   *  und den vier Trennern Bindestrich, Unterstrich, Punkt, Leerzeichen. */
-  const SONDERZEICHEN = /[^A-Za-z0-9äöüÄÖÜß\-_. ]/g;
+   *  und den vier Trennern Bindestrich, Unterstrich, Punkt, Leerzeichen.
+   *  Geprueft je SCHRIFTZEICHEN, nicht je UTF-16-Einheit (Wiederaufnahme der
+   *  zweiten Gegenpruefung): Ein Emoji ist ein Surrogatpaar, und die erste
+   *  Fassung zaehlte es doppelt und sah in „😀😀😀😀" keine Wiederholung,
+   *  sondern acht verschiedene Zeichen — „Passwort😀😀😀😀x" ging als „gut"
+   *  durch. `schriftzeichen()` zerlegt deshalb in Grapheme. */
+  const SONDERZEICHEN = /^[^A-Za-z0-9äöüÄÖÜß\-_. ]/u;
+
+  /** Wie viele Zeichen `zerlege()` hoechstens ansieht. Die Streichschleife
+   *  beginnt nach jedem Treffer von vorn; eine Eingabe, in der jeder Treffer
+   *  genau den naechsten freilegt, macht daraus n² — 100 kB davon hielten
+   *  den Browser 23 s je Tastendruck an (Wiederaufnahme der zweiten
+   *  Gegenpruefung). Jenseits von 256 Zeichen ist nichts mehr zu messen. */
+  const MAX_ANALYSE = 256;
+
+  /** Tastaturwege, die kein Gedanke sind: die Reihen beider Belegungen, die
+   *  Ziffernreihe, die Spalten, die Umschaltreihen. Vorwaerts wie rueckwaerts;
+   *  ab vier Zeichen — bei den dreistelligen Spalten ab drei. */
+  const TASTATUR = ['qwertzuiop', 'qwertyuiop', 'asdfghjkl', 'yxcvbnm', 'zxcvbnm', '1234567890',
+                    'qay', 'qaz', 'wsx', 'edc', 'rfv', 'tgb', 'zhn', 'yhn', 'ujm', 'ik,', 'ol.',
+                    '!"§$%&/()=', '!@#$%^&*()'];
+  const TASTATUR_ALLE = TASTATUR.concat(TASTATUR.map(r => Array.from(r).reverse().join('')));
+
+  /** Zerlegt in Schriftzeichen (Grapheme), wo der Browser das kann, sonst
+   *  in Codepunkte — nie in UTF-16-Einheiten. */
+  function schriftzeichen(s) {
+    const t = String(s).normalize('NFC');
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+      return Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(t), x => x.segment);
+    }
+    return Array.from(t);
+  }
 
   /** Kleinschreibung, Umlaute aufgelöst, Satzzeichen entfernt. */
   function normal(pw) {
@@ -198,8 +228,9 @@ const EdPwQuality = (() => {
    * SONDERZEICHEN ZÄHLEN MIT, EINS ZU EINS. `normal()` wirft sie weg, und die
    * erste Fassung maß den Rest erst danach: Ein Passwort aus dem
    * Passwortverwalter mit fünf Sonderzeichen auf zwölf Stellen fiel unter
-   * MIN_REST — gemessen je nach Zeichenvorrat 2 bis 25 % aller zufälligen
-   * Zwölfsteller, vorher keiner — und bekam dazu gesagt, es bestehe aus
+   * MIN_REST — gemessen je nach Zeichenvorrat 0,04 bis 15 % aller zufälligen
+   * Zwölfsteller (62, 70 und 80 Zeichen Vorrat), vorher keiner — und bekam
+   * dazu gesagt, es bestehe aus
    * geläufigen Wörtern. Für
    * den Rateangriff ist ein Sonderzeichen so viel wert wie ein Buchstabe,
    * also zählt es wie einer. Trenner — Bindestrich, Unterstrich, Punkt,
@@ -217,7 +248,7 @@ const EdPwQuality = (() => {
    * `warumHaeufig()` und `anzeige()` verlassen sich darauf.
    */
   function zerlege(pw) {
-    let k = normal(pw);
+    let k = normal(pw).slice(0, MAX_ANALYSE);
     const woerter = [];
     let getroffen = true;
     while (getroffen) {
@@ -233,15 +264,16 @@ const EdPwQuality = (() => {
     }
     const ziffern = (k.match(/\d+$/) || [''])[0];
     k = k.replace(/\d+$/, '');
-    let [rest, reihen] = ohneReihen(k);
+    const streng = woerter.length > 0;
+    let [rest, reihen] = ohneReihen(k, streng);
     /* Ein Rest, der als Ganzes ein Muster ist („aa"), ist eine Reihe, die
        `ohneReihen()` zu kurz war — er zählt wie eine. */
     if (rest !== '' && istMuster(rest)) { reihen.push(rest); rest = ''; }
-    const sonderAlle = (String(pw).match(SONDERZEICHEN) || []).join('');
-    const [sonderBleibt, sonderReihen] = ohneReihen(sonderAlle);
+    const sonderAlle = schriftzeichen(pw).slice(0, MAX_ANALYSE).filter(z => SONDERZEICHEN.test(z));
+    const sonderErgebnis = ohneReihenEinheiten(sonderAlle, streng);
     return { woerter, ziffern, reihen, rest,
-             sonder: sonderBleibt.length,
-             sonderReihen: sonderReihen.map(r => r.length) };
+             sonder: sonderErgebnis.bleibt.length,
+             sonderReihen: sonderErgebnis.weg.map(r => r.length) };
   }
 
   /**
@@ -257,32 +289,148 @@ const EdPwQuality = (() => {
    * `istMuster()` reicht dafür nicht: Es prüft die GANZE Zeichenkette, und
    * „2026aaaaaaaa" ist als Ganzes keine Reihe.
    *
-   * Gestrichen wird eine Folge, in der der Abstand zwischen aufeinander
-   * folgenden Zeichen gleich bleibt und 0, +1 oder −1 beträgt: dreimal
-   * dasselbe Zeichen, oder vier aufsteigende bzw. absteigende. Was
+   * Gestrichen wird, was kein Gedanke ist. Die erste Fassung kannte eine
+   * Form: eine Folge mit gleichbleibendem Abstand 0, +1 oder −1 — dreimal
+   * dasselbe Zeichen, oder vier auf- bzw. absteigende. Die Wiederaufnahme
+   * der zweiten Gegenpruefung fuellte die acht Zeichen mit allem, was NICHT
+   * so gebaut ist: „abababab", „aabbccdd", „1q2w3e4r", „qazwsxed",
+   * „!@#$%^&*", „20242024" — 8064 von 8832 gefuzzten Listenwort-plus-Muster-
+   * Faellen gingen durch, die die alte Regel abgewiesen hatte. Deshalb jetzt
+   * fuenf Formen, je Stelle die laengste:
+   *
+   *   1. gleiches Zeichen ab drei, Abstand ±1 ab vier (wie bisher);
+   *   2. ein Tastaturweg ab vier Zeichen (Reihen, Ziffernreihe,
+   *      Umschaltreihen; die dreistelligen Spalten ab drei), vor- oder
+   *      rueckwaerts — mit Listenwort ab drei („qweasdzx" ist „qwe",
+   *      „asd", „zx"), und dann auch der Abstand ±2 ab vier („13579",
+   *      „2468");
+   *   3. ein wiederholter Block von zwei bis vier Zeichen, mindestens
+   *      zweimal, zusammen mindestens sechs („ababab", „abcabc",
+   *      „20242024");
+   *   4. Laeufe gleicher Laenge, deren Koepfe eine Reihe bilden
+   *      („aabbccdd" ist „abcd", zweimal);
+   *   5. zwei verschraenkte Reihen, jede ab drei Zeichen („1q2w3e4r"
+   *      ist „1234" und „qwer").
+   *
+   * Die Menge der Muster ist offen; diese fuenf sind die, die ein
+   * Angreifer zuerst probiert und ein Mensch zuerst tippt. Was
    * dazwischenliegt, bleibt stehen — „ankerregenglas" verliert nichts.
+   * Gerechnet wird ueber EINHEITEN (Schriftzeichen), nicht ueber
+   * UTF-16-Werte, damit ein Emoji ein Zeichen ist.
+   *
+   * DIE FORMEN 3 BIS 5 GELTEN NUR, WENN EIN LISTENWORT GESTRICHEN WURDE
+   * (`streng`). Ohne Listenwort misst die Regel keinen Anteil, sondern
+   * fragt nur, ob Buchstaben und Ziffern RESTLOS Reihe sind — und dafuer
+   * reichen die Formen 1 und 2. Mit allen fuenf traefe sie ein gewuerfeltes
+   * „gK;=@v**GkV:" (Block „gkv" zweimal, sechs Sonderzeichen): 1 von 20 000
+   * Zufallspasswoertern, gemessen. Ein Zufallspasswort wird nie am Rest
+   * gemessen — das ist die Zusage, und sie haelt so.
    */
-  function ohneReihen(k) {
+  function ohneReihen(k, streng) {
+    const r = ohneReihenEinheiten(Array.from(k), streng);
+    return [r.bleibt.join(''), r.weg.map(a => a.join(''))];
+  }
+
+  /** Codepunkt einer Einheit, wenn sie genau einer ist — sonst null. */
+  function codepunkt(u) {
+    const c = u.codePointAt(0);
+    return (c !== undefined && String.fromCodePoint(c) === u) ? c : null;
+  }
+
+  /** Laenge des laengsten Praefixes von `e`, das EINE Reihe ist:
+   *  gleiche Einheiten, Abstand ±1 oder ein Tastaturweg. Liefert 1, wenn
+   *  keine. `mind` ist die Mindestlaenge fuer ±1 und Tastatur. */
+  function folgePraefix(e, mind, streng) {
+    let best = 1;
+    let j = 1;
+    while (j < e.length && e[j] === e[0]) { j++; }
+    if (j >= 3) { best = Math.max(best, j); }
+    const c0 = codepunkt(e[0]);
+    if (c0 !== null) {
+      for (const d of (streng ? [1, -1, 2, -2] : [1, -1])) {
+        let k = 0;
+        while (k + 1 < e.length) {
+          const a = codepunkt(e[k]); const b = codepunkt(e[k + 1]);
+          if (a === null || b === null || b - a !== d) { break; }
+          k++;
+        }
+        if (k + 1 >= mind) { best = Math.max(best, k + 1); }
+      }
+    }
+    for (const reihe of TASTATUR_ALLE) {
+      const pos = reihe.indexOf(e[0]);
+      if (pos < 0 || e[0].length !== 1) { continue; }
+      let l = 0;
+      while (l < e.length && pos + l < reihe.length && e[l] === reihe[pos + l]) { l++; }
+      if (l >= Math.min(streng ? 3 : mind, reihe.length)) { best = Math.max(best, l); }
+    }
+    return best;
+  }
+
+  /** Laenge der Reihe, die an Stelle `i` beginnt — 0, wenn dort keine.
+   *  Ohne `streng` nur die Formen 1 und 2 (siehe `ohneReihen()`). */
+  function reihenLaenge(e, i, streng) {
+    const n = e.length;
+    const t = e.slice(i);
+    let best = 0;
+    // 1 + 2: gleiche Zeichen, Abstand ±1, Tastaturweg
+    const f = folgePraefix(t, 4, streng);
+    if (f >= 3) { best = f; }
+    if (!streng) { return best; }
+    // 3: wiederholter Block von zwei bis vier Einheiten
+    for (let p = 2; p <= 4; p++) {
+      if (i + 2 * p > n) { break; }
+      let r = 1;
+      while (i + (r + 1) * p <= n) {
+        let gleich = true;
+        for (let q = 0; q < p; q++) { if (e[i + r * p + q] !== e[i + q]) { gleich = false; break; } }
+        if (!gleich) { break; }
+        r++;
+      }
+      if (r >= 2 && r * p >= 6) { best = Math.max(best, r * p); }
+    }
+    // 4: Laeufe gleicher Laenge, deren Koepfe eine Reihe bilden
+    {
+      const koepfe = []; const laengen = []; let j = i;
+      while (j < n) {
+        let k = j + 1;
+        while (k < n && e[k] === e[j]) { k++; }
+        if (k - j < 2) { break; }
+        koepfe.push(e[j]); laengen.push(k - j); j = k;
+        if (koepfe.length >= 2 && laengen[laengen.length - 1] !== laengen[0]) { koepfe.pop(); laengen.pop(); break; }
+      }
+      if (koepfe.length >= 3) {
+        const fk = folgePraefix(koepfe, 3, true);
+        if (fk >= 3) { best = Math.max(best, fk * laengen[0]); }
+      }
+    }
+    // 5: zwei verschraenkte Reihen
+    {
+      const gerade = []; const ungerade = [];
+      for (let j = i; j < n && j < i + 40; j++) { ((j - i) % 2 === 0 ? gerade : ungerade).push(e[j]); }
+      const fg = gerade.length >= 3 ? folgePraefix(gerade, 3, true) : 0;
+      const fu = ungerade.length >= 3 ? folgePraefix(ungerade, 3, true) : 0;
+      const paare = Math.min(fg, fu);
+      if (paare >= 3) { best = Math.max(best, 2 * paare); }
+    }
+    return best;
+  }
+
+  /**
+   * Streicht Reihen aus einer Folge von Einheiten. Liefert `{bleibt, weg}`:
+   * die verbliebenen Einheiten und die gestrichenen Reihen (je eine Liste
+   * von Einheiten). Gierig: an jeder Stelle die laengste Reihe.
+   */
+  function ohneReihenEinheiten(e, streng) {
     const bleibt = [];
     const weg = [];
     let i = 0;
-    while (i < k.length) {
-      let j = i + 1;
-      let d = null;
-      if (j < k.length) {
-        const dd = k.charCodeAt(j) - k.charCodeAt(i);
-        if (dd === 0 || dd === 1 || dd === -1) {
-          d = dd;
-          while (j + 1 < k.length && k.charCodeAt(j + 1) - k.charCodeAt(j) === d) { j++; }
-          j++;
-        }
-      }
-      const laenge = j - i;
-      const reihe = (d === 0 && laenge >= 3) || ((d === 1 || d === -1) && laenge >= 4);
-      (reihe ? weg : bleibt).push(k.slice(i, j));
-      i = j;
+    while (i < e.length) {
+      const l = reihenLaenge(e, i, streng);
+      if (l > 0) { weg.push(e.slice(i, i + l)); i += l; }
+      else { bleibt.push(e[i]); i++; }
     }
-    return [bleibt.join(''), weg];
+    return { bleibt, weg };
   }
 
   /**
