@@ -100,10 +100,13 @@ Sicherheitsmerkmal wäre: Der Geräteschlüssel liegt im Keystore, nicht im Code
 
 ### Web — Sofortpaket Sicherheit, elf Punkte aus dem Krypto-Review (Rahmenplan 9a, R78)
 
-**Der Review vom 06.09.2026 fand keinen kritischen und keinen hohen Befund am
-Web-Teil** — er fand fünfzehn kleine, und die haben die Eigenschaft, dass sie
-einzeln jeder für sich vertretbar sind und zusammen eine Haltung ergeben. Elf
-davon sind hier abgearbeitet, je einer ein Commit, einzeln zurücknehmbar.
+**Der Review vom 06.09.2026 fand am Web-Teil keinen kritischen Befund und
+einen hohen** — K-1, die Klartext-Ortsdaten, bekannt als Backlog 43; ihre
+Lösung ist Weg B (S11), hier wird sie nur als Weg C berührt (Nr. 138) —, dazu
+fünfzehn kleine, und die haben die Eigenschaft, dass sie einzeln jeder für sich
+vertretbar sind und zusammen eine Haltung ergeben. Elf davon sind hier
+abgearbeitet, je einer ein Commit und einzeln zurücknehmbar; drei bekamen eine
+Nachbesserung als eigenen Commit.
 
 Zwei Dinge sind dabei aufgefallen, die nicht im Review standen. Beide haben
 denselben Grund: Eine Sicherheitsmaßnahme, die nie ausgelöst hat, ist nicht
@@ -203,7 +206,8 @@ die im Missbrauchsfall noch der Besitzerin gehört. Gemessen: 4 von 4.
 
 **Nr. 129:** `apk/` und `demo/` liegen ungesperrt im Webroot — `apk.php`
 verlangt eine Anmeldung, der Ordner nicht, und die Dateinamen sind
-vorhersagbar. Zwei `RewriteRule`-Zeilen. Gemessen unter einem echten Apache
+vorhersagbar. Eine `RewriteRule`-Zeile für beide Ordner (der Auftrag sprach
+von zweien; ein Muster genügt). Gemessen unter einem echten Apache
 (die lokale Installation läuft auf PHPs eingebautem Server und liest keine
 `.htaccess` — ohne diesen Umweg hätte der Punkt keine Zahl): **vier Aufrufe →
 403**, `login.php` und `assets/style.css` unverändert 200.

@@ -4420,7 +4420,7 @@ ganze Woche.
 
 **Neue Datensätze werden immer angenommen.** Sie sind sichtbar und löschbar und
 überschreiben nichts. Der Weg gegen eine verlorene Uhr bleibt das **Trennen**
-des Geräts (Handbuch 12); das Fenster begrenzt nur, was bis dahin geschehen
+des Geräts (Handbuch 10); das Fenster begrenzt nur, was bis dahin geschehen
 kann.
 
 Nachweis: `tools/ingestprobe/` Teil 9 — **1 Paket angenommen, 1 abgewiesen**,

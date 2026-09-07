@@ -14,7 +14,7 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 #   demo/   `fixture.json.gz` mit dem Schluesselmaterial des Demo-Kontos.
 #           Harmlos -- das Passwort steht im Handbuch --, aber unnoetig.
 #
-# ZWEI ZEILEN STATT EINER LAUFZEITSPERRE: mod_rewrite laeuft hier schon
+# EINE ZEILE STATT EINER LAUFZEITSPERRE: mod_rewrite laeuft hier schon
 # (HTTPS-Zwang darueber), und beide Ordner werden ausschliesslich vom
 # PHP-Code gelesen (`readfile()` in apk.php, `file_get_contents()` in
 # demo_lib.php). Die Sperre kostet die Anwendung also nichts.

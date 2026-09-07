@@ -1689,7 +1689,7 @@ zutreffen.
     `apk/` käme wegen der Deploy-Ausnahmeliste nie an. Zwei
     `RewriteRule`-Zeilen in `.htaccess`. Zuordnung: Sofortpaket Sicherheit.
 
-    **Erledigt mit Web 15.6.0 am 07.09.2026.** Zwei `RewriteRule`-Zeilen hinter
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** Eine `RewriteRule`-Zeile für beide Ordner hinter
     dem HTTPS-Zwang. Beide Ordner werden ausschließlich vom PHP-Code gelesen —
     die Sperre kostet die Anwendung nichts. Gemessen unter einem echten Apache
     (die lokale Installation läuft auf PHPs eingebautem Server und liest keine

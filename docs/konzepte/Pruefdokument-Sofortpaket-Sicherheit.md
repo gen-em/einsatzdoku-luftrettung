@@ -50,7 +50,7 @@ diesen Umweg hätte der Punkt keine Zahl.
 | **136** Fund F-9a-02 | Browserlauf auf `betrieb_status.php` | Wartungsseite sagt, wann der Altwert weg darf | Zeile „Schlüsselableitung" nennt jetzt „**1 Konto/Konten stehen noch unter dem Zielwert 600000**", Plakette „Übergang läuft" |
 | **127** | Browserlauf **und** HTTP | ohne Token abgewiesen, mit Token angemeldet (2 von 2) | **2 von 2**: mit Token → `/index.php`; Feld aus dem Formular entfernt → abgewiesen mit „Das Formular ist abgelaufen." Dazu HTTP: ohne Feld und mit falschem Feld je 200 + dieselbe Meldung, mit richtigem Feld der gewohnte Fehlerzweig. Token vor der Anmeldung `69018804ce9d…`, danach `bf304fc953d5…` — **gewechselt** |
 | **128** | Browserlauf | falsches Passwort → abgewiesen (1 von 1) | **4 von 4**: nur Name ändern, Feld leer → gespeichert · Adresse mit falschem Passwort → abgewiesen, Adresse unverändert · Adresse ohne Passwort → Seite hält an · Adresse mit richtigem Passwort → gespeichert, Mailversuch im Protokoll |
-| **129** | Apache mit der echten `.htaccess` | zwei Aufrufe → 403 | **vier Aufrufe → 403** (`apk/`, `apk/<datei>.apk`, `demo/`, `demo/fixture.json.gz`); `login.php` 200, `assets/style.css` 200, `index.php` 302. Mitgemessen: `config.php`, `db.php`, `auth_guard.php`, `schema.sql` je **403** |
+| **129** | Apache mit der echten `.htaccess` | zwei Aufrufe → 403 | **vier Aufrufe → 403** (`apk/`, `apk/<datei>.apk`, `demo/`, `demo/fixture.json.gz`); `login.php` 200, `assets/style.css` 200, `index.php` 302. Mitgemessen: `schema.sql` **403** (`FilesMatch`); `config.php` und `db.php` antworten im Rig **200**, weil dessen `ProxyPassMatch` jede `.php`-Anfrage am `FilesMatch` vorbei an den PHP-Server reicht — ein Rig-Artefakt, kein Befund an der `.htaccess`; auf dem Produktivserver mit P-3 mitprüfen (berichtigt nach Review-Fund 25 — hier stand vorher „je 403", das war für die beiden PHP-Dateien nicht gemessen, sondern angenommen) |
 | **130** | `tools/gpxprobe/` Teil 8 | n Proben, 0 durch | **8 Proben, 0 durch**, saubere Datei geht durch. Am Stand davor: UTF-16LE mit DOCTYPE **ging durch, 2 Punkte**. Probe insgesamt **88 Erwartungen, 2 nicht erfüllt** (beide vorbestehend, siehe Abschnitt 2) |
 | **131** | HTTP, unangemeldet, mit absichtlich falschem DB-Namen | keine Zahl, kein Fehlertext | Vorher: `Access denied for user 'nadoku'@'localhost' to database 'gibtesnicht'` und „stehen **2** Konten". Nachher: Kennung `798FF2B9`, **keiner** der Begriffe `nadoku`, `SQLSTATE`, `gibtesnicht`, `127.0.0.1`, `Unknown database` in der Antwort; volle Zeile im Protokoll |
 | **133** | PHP-Probe gegen die Installation | Bauordner nach Fehlschlag weg | **1 auf 0** in beiden Fällen: Aufräumlauf ohne Fälligkeit, und ein Lauf, der wirft (Zustand `abgebrochen`, `geraeumt=true`, Protokollzeile) |
@@ -214,7 +214,10 @@ steht unter Ihrer Bestätigung.
 ### P-3 · `/apk/` und `/demo/` auf `nadoku.gen-em.org` (Nr. 129)
 Im Browser aufrufen: `https://nadoku.gen-em.org/apk/` und
 `https://nadoku.gen-em.org/demo/fixture.json.gz`.
-**Erwartet:** beide **403 Forbidden**. Danach **Einstellungen → Geräte**
+Dazu `https://nadoku.gen-em.org/config.php` und `…/db.php` — die schützt die
+`FilesMatch`-Regel derselben `.htaccess`, und im Prüfcontainer war sie nicht
+messbar (Rig-Artefakt, Abschnitt 1).
+**Erwartet:** alle **403 Forbidden**. Danach **Einstellungen → Geräte**
 öffnen und eine APK herunterladen — sie muss weiterhin kommen.
 **Scheitern:** 200 mit Inhalt oder Verzeichnisliste (dann wertet der Webspace
 die `.htaccess` nicht aus — melden, die Sperre muss dann anders gesetzt
