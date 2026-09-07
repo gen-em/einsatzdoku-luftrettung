@@ -3790,6 +3790,29 @@ behandeln.
 Die Zuordnung Datensatz ↔ Person entsteht ausschließlich über den
 verschlüsselten Block.
 
+#### Klartext-Reste außerhalb der Datenbank (Backlog Nr. 133, K-13)
+
+Drei Stellen, an denen geschützte oder halbgeschützte Angaben **vorübergehend
+im Klartext** liegen. Sie sind hier benannt, weil zwei davon bleiben — eine
+Aufzählung ist die einzige Form von Schutz, die man ihnen geben kann.
+
+| Was | Wo | seit Web 15.6.0 |
+|---|---|---|
+| `dump.sql.gz` — eine **unverschlüsselte Abschrift jeder Tabelle** während des Komplettbackup-Baus | `sicherungen/komplett/.bau-<8 Hex>/` | **wird geräumt**: bei einem Fehlschlag sofort (`komp_schub()` fängt, räumt, setzt den Zustand auf `abgebrochen`), und bei einem Absturz ohne `catch` spätestens im nächsten Aufräumlauf — auch dem, bei dem nichts fällig ist |
+| **Reset-Token** bis zur Einlösung | PHP-Sitzungsdatei und Zugriffslog des ersten GET | bleibt (in M1-06 anerkannt): Der Token steht eine Stunde und wird beim ersten Gebrauch entwertet; ihn aus dem Zugriffslog zu halten hieße, den Link nicht mehr per Adresszeile anzunehmen |
+| **Setz-Link**, wenn die Mail nicht wegging | auf der Kontoseite der Verwaltung | bleibt (`admin_user.php`): Ein gültiger Token in der Datenbank, von dem niemand weiß, ist die schlechtere Lage |
+
+**Was das Räumen kostet:** „Fortsetzen" nimmt einen **gescheiterten** Lauf
+nicht mehr auf — der Dump ist weg, der nächste fängt von vorn an. Das ist
+Rechenzeit, keine Daten; die Vorlage ist die Datenbank selbst. Ein Häppchen,
+das nur seine Zeit aufgebraucht hat, ist **kein** Fehlschlag: Es wirft nicht,
+und der Lauf geht unverändert weiter. Gemessen: ein Bauordner mit Klartext, ein
+Aufräumlauf ohne Fälligkeit → **1 auf 0**; ein Lauf, der wirft → **1 auf 0**,
+Zustand `abgebrochen`, dazu eine Zeile im Fehlerprotokoll.
+
+Bis Web 15.5.2 wurde der Bauordner erst geräumt, wenn das **nächste Backup
+fällig** war — bei einem wöchentlichen Plan also bis zu sieben Tage später.
+
 ### 4.98a Ortsfeld und Luftlinie (ab Web 6.1.0)
 
 **Das Ortsfeld war keine Komponente.** Bis Web 6.0.0 stand das Einsatzort-Widget
