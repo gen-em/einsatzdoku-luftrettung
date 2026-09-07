@@ -47,9 +47,9 @@ statt ihn stillschweigend zu übergehen.
 
 | Teil | Frage |
 |---|---|
-| Selbstprobe | Erkennt sie eine Abweichung überhaupt? Zwanzig Erwartungen, ohne Netz — darunter neun ausdrücklich „Abweichung erkannt" |
+| Selbstprobe | Erkennt sie eine Abweichung überhaupt? 28 Erwartungen, ohne Netz — darunter sechzehn ausdrücklich „Abweichung erkannt" |
 | 1 | Jede Datei unter `server/assets/` (ohne `.md`) — SHA-256 der Auslieferung gegen die des Repositoriums |
-| 2 | Die **ganze Menge** dessen, was auf der Anmeldeseite (`login.php`) den Weg des Passworts bestimmt: jeder `<script src>`, jeder Inline-Block, jedes `<form>`-Tag, jedes `<base>`-Tag und jedes Umlenk-Attribut (`formaction`, `formmethod`, `formtarget`, `formenctype`) — nichts darf fehlen, verändert sein **oder dazukommen** |
+| 2 | Die **ganze Menge** dessen, was auf der Anmeldeseite (`login.php`) den Weg des Passworts bestimmt: jeder `<script src>` (zitiert oder nicht), jeder Inline-Block, jedes `<form>`-Tag, jedes `<base>`-Tag, jedes Umlenk-Attribut (`formaction`, `formmethod`, `formtarget`, `formenctype`), jede Kopfanweisung (`<meta http-equiv>`), jede Einbettung (`<iframe>`, `<frame>`, `<object>`, `<embed>`), jedes Ereignisattribut (`on…=`) und jede `javascript:`-Adresse — nichts darf fehlen, verändert sein **oder dazukommen** |
 
 **Warum Teil 2 die ganze Menge vergleicht und nicht nur das Bekannte.** Auf
 der Anmeldeseite zählt der **Weg des Passworts**, und der hat genau zwei
@@ -114,6 +114,36 @@ eine Grenze und steht unten unter *Grenzen*:
   Attributname beginnt nicht nach einem Bindestrich, und PHP beginnt mit
   `<?php` oder `<?=` — die einzigen Öffner, die die Anwendung benutzt.
 
+**Beim Nachprüfen dieser vier Behebungen fielen fünf weitere Stellen auf**
+(zweite Gegenprüfung, 07.09.2026), und sie sind von derselben Art wie Fund
+17 — Wege des Passworts, die weder ein `<script>`-Tag noch das `<form>`-Tag
+ändern:
+
+- **Ein Skriptverweis ohne Anführungszeichen** (`<script src=https://…>`):
+  HTML erlaubt das, das Muster verlangte Anführungszeichen — der Verweis war
+  weder Fremdskript noch Inline-Block, er war unsichtbar. Dieselbe Klasse wie
+  `data-src` (Fund 22), nur in der anderen Richtung.
+- **Ereignisattribute** (`<body onload="…">`, `<input name="password"
+  onkeyup="…">`): JavaScript ohne `<script>`-Tag. Die Anmeldeseite hat heute
+  keines; jedes in der Auslieferung ist zu viel.
+- **`<meta http-equiv="refresh">`** lenkt die ganze Seite um, ohne eine Zeile
+  Skript.
+- **Einbettungen** (`<iframe>`, `<object>`, `<embed>`, `<frame>`) holen fremden
+  Inhalt in die Seite — `srcdoc` sogar mit demselben Ursprung, also mit
+  Zugriff auf das Passwortfeld.
+- **`javascript:`-Adressen** in einem Attribut — und zwar so, wie der Browser
+  sie liest: Entitäten dekodiert (`&#106;avascript:`), Tabulator und
+  Zeilenumbruch aus dem Schema geworfen (`java&#9;script:`). Ein Muster über
+  den rohen Text sah beides nicht.
+
+Nachgemessen mit **27 Angriffsvarianten** gegen `seite_vergleichen()` (Skript
+im Prüfprotokoll, nicht im Repositorium): Am Stand nach den ersten vier
+Behebungen gingen **17 grün durch**, jetzt **eine** — das externe
+Stylesheet, siehe *Grenzen*. Die Attributmuster laufen über den Text **ohne
+Skriptinhalte**: `x.onclick = …` in einem Skript ist Code, kein Attribut,
+und der Skriptinhalt wird ohnehin als Block verglichen; die Selbstprobe
+belegt das mit einer Gegenprobe.
+
 **Die Selbstprobe läuft in der Action zuerst**, und das ist kein Formalismus:
 Ein grüner Lauf einer Wache, die *immer* grün meldet, sieht genauso aus wie
 einer, der nichts gefunden hat.
@@ -125,8 +155,9 @@ Opcache sieht der eingebaute Server eine geänderte PHP-Datei erst nach
 misst die alte Datei; deshalb prüft jede Gegenprobe zuerst, dass ihre
 Veränderung in der Auslieferung steht): **112 Dateien, 112 gleich; 1
 Inline-Block, 1 externes Skript, 1 Formular gleich, 0 `<base>`-Tags, 0
-Umlenk-Attribute, nichts zu viel**, Rückgabewert 0. Die Gegenproben, jede
-einzeln gegen die alte und die jetzige Fassung:
+Umlenk-Attribute, 0 Kopfanweisungen, 0 Einbettungen, 0 Ereignisattribute,
+0 `javascript:`-Adressen, nichts zu viel**, Rückgabewert 0. Die Gegenproben,
+jede einzeln gegen die alte und die jetzige Fassung:
 
 | Veränderung an der Kopie | Fassung vor der Gegenprüfung | jetzige Fassung |
 |---|---|---|
@@ -137,6 +168,11 @@ einzeln gegen die alte und die jetzige Fassung:
 | `<script data-src="x">boese()</script>` angehängt | zusätzliches Skript „x", Inhalt ungeprüft, Rückgabewert 1 | 1 zusätzlicher Inline-Block, Rückgabewert 1 |
 | `assets/mit leer.css` und `assets/übung.css` in Repositorium **und** Kopie | **Abbruch, Rückgabewert 2** (`InvalidURL`), Rest ungeprüft | 114 Dateien, 114 gleich, Rückgabewert 0 |
 | dieselben zwei Dateien nur im Repositorium | **Abbruch, Rückgabewert 2** | 112 gleich, 2 nicht erreichbar, Rückgabewert 1 |
+| `<script src=https://boese.example/x.js>` ohne Anführungszeichen (nachgestellte Auslieferung) | **„Kein Unterschied"** | 1 zusätzliches Skript |
+| `<body onload="fetch(…)">`, `<input onkeyup="…">`, `<img src=x onerror=x()>` | **„Kein Unterschied"** | je 1 zusätzliches Ereignisattribut |
+| `<meta http-equiv="refresh" content="0;url=https://boese.example/">` | **„Kein Unterschied"** | 1 zusätzliche Kopfanweisung |
+| `<iframe srcdoc="…">`, `<iframe src>`, `<object data>`, `<embed src>` | **„Kein Unterschied"** | je 1 zusätzliche Einbettung |
+| `<a href="javascript:x()">`, mit Tabulator im Schema, als `&#106;avascript:` | **„Kein Unterschied"** | je 1 zusätzliche `javascript:`-Adresse |
 
 ## Wann sie läuft
 
@@ -174,7 +210,8 @@ und fasst die Workflow-Datei nicht an.
   erheblich aufwendigerer Angriff als der, gegen den sie gebaut ist.
 - **Sie sieht keinen PHP-Code.** Was der Server rechnet, bleibt unsichtbar —
   außer dem, was davon auf der Anmeldeseite ankommt: Skripte, Formulare,
-  `<base>`-Tags und Umlenk-Attribute.
+  `<base>`-Tags, Umlenk- und Ereignisattribute, Kopfanweisungen,
+  Einbettungen und `javascript:`-Adressen.
 - **Sie vergleicht die Anmeldeseite, nicht jede Seite.** Ein Skript, das
   `ui.php` in jede Seite einschleust, fällt dort auf; eines, das nur auf einer
   angemeldeten Seite erscheint, nicht. Dort liegt der Inhaltsschlüssel schon
@@ -184,8 +221,14 @@ und fasst die Workflow-Datei nicht an.
   Die Datei `assets/style.css` selbst ist über Teil 1 geprüft; ob die Seite
   ein *zusätzliches* Stylesheet lädt oder ihr Markup sonst geändert ist, sieht
   sie nicht. Verglichen wird, was den Weg des Passworts bestimmt: Skripte,
-  Formulare, `<base>` und die Umlenk-Attribute der Absende-Elemente. Ein
-  Stylesheet liest kein Eingabefeld und schickt nichts ab.
+  Formulare, `<base>`, die Umlenk-Attribute der Absende-Elemente,
+  Ereignisattribute, Kopfanweisungen, Einbettungen und `javascript:`-Adressen.
+  Ein Stylesheet liest kein Eingabefeld und schickt nichts ab: Der Wert eines
+  `<input>` steht in keinem Attribut, das ein CSS-Selektor sehen könnte, und
+  eine Regel, die das Formular versteckt, ersetzt es nicht — das Ersatzformular
+  wäre ein `<form>`-Tag zu viel. Von den 27 Angriffsvarianten der zweiten
+  Gegenprüfung ist das externe Stylesheet die eine, die grün bleibt, und sie
+  bleibt es mit Absicht.
 - **Sie sieht nicht, ob der Deploy vollständig war.** Eine Datei, die es im
   Repositorium gibt und auf dem Server nicht, meldet sie als „nicht
   erreichbar" — das ist derselbe rote Lauf, aber die andere Ursache.

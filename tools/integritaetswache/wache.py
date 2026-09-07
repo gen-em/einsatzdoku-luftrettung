@@ -63,10 +63,25 @@ Anmeldeseite kommt aus `ui_knopf()` in `ui.php`, nicht aus der Quelle
 `login.php` -- ein Tagvergleich braeuchte eine Nachbildung von `ui_knopf()`,
 und jede Nachbildung ist eine zweite Stelle, die veraltet. Das Attribut ist
 die Stelle, an der der Angriff steht; das Attribut wird verglichen.
+
+UND VIER WEITERE (zweite Gegenpruefung, 07.09.2026): Ein Skriptverweis OHNE
+Anfuehrungszeichen (`<script src=https://boese.example/x.js>`) war fuer die
+Wache weder Inline-Block noch Fremdskript -- das Muster verlangte
+Anfuehrungszeichen, und HTML tut das nicht. Ein Ereignisattribut
+(`<input name="password" onkeyup="…">`, `<body onload="…">`) ist JavaScript
+ohne <script>-Tag. Ein `<meta http-equiv="refresh">` lenkt die ganze Seite
+ohne Skript um, und ein <iframe>, <object> oder <embed> holt fremden Inhalt
+in die Seite -- `srcdoc` sogar mit demselben Ursprung, also mit Zugriff auf
+das Passwortfeld. Dazu `javascript:`-Adressen in einem Attribut. Alle fuenf
+gingen gruen durch; alle fuenf gehoeren jetzt zur Menge. Was NICHT dazu
+gehoert und warum, steht in der LIESMICH unter Grenzen: Ein Stylesheet liest
+kein Passwortfeld -- der Wert eines <input> steht in keinem Attribut, das
+ein CSS-Selektor sehen koennte.
 """
 from __future__ import annotations
 
 import hashlib
+import html
 import http.client
 import os
 import re
@@ -101,7 +116,10 @@ SKRIPT_RE = re.compile(r'<script\b(?![^>]*(?<![\w-])src\s*=)[^>]*>(.*?)</script\
 # ersten inneren Anfuehrungszeichen abbricht, hielte dieses Skript fuer
 # unbestimmbar -- und liesse dann JEDEN Ersatz dafuer durch. So war die erste
 # Fassung, und die Selbstprobe hat es gefunden.
-SRC_RE    = re.compile(r'<script\b[^>]*?(?<![\w-])src\s*=\s*(?:"([^"]*)"|\'([^\']*)\')', re.I | re.S)
+# Und der Wert darf OHNE Anfuehrungszeichen stehen (`src=x.js`): HTML erlaubt
+# das, und die zweite Gegenpruefung fand, dass ein solcher Verweis weder als
+# Fremdskript noch als Inline-Block zaehlte -- er war unsichtbar.
+SRC_RE    = re.compile(r'<script\b[^>]*?(?<![\w-])src\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.I | re.S)
 FORM_RE   = re.compile(r'<form\b[^>]*>', re.I)
 # <base> lenkt jeden relativen Verweis der Seite um, die vier form*-Attribute
 # den Absendeweg des Formulars -- siehe Kopf der Datei. Das Umlenk-Attribut
@@ -109,6 +127,26 @@ FORM_RE   = re.compile(r'<form\b[^>]*>', re.I)
 BASE_RE   = re.compile(r'<base\b[^>]*>', re.I)
 UMLENK_RE = re.compile(r'(?<![\w-])form(?:action|method|target|enctype)\s*=\s*'
                        r'(?:"[^"]*"|\'[^\']*\'|[^\s>]*)', re.I)
+# Vier weitere Stellen, die den Weg des Passworts bestimmen, ohne <script>-Tag
+# und ohne <form>-Aenderung (zweite Gegenpruefung, 07.09.2026; Kopf der
+# Datei): Kopfanweisungen (`<meta http-equiv>`, etwa `refresh`), Einbettungen
+# (<iframe>, <frame>, <object>, <embed>), Ereignisattribute (`onload=`,
+# `onkeyup=` -- JavaScript ohne <script>) und `javascript:`-Adressen in einem
+# Attribut. Die Attributmuster laufen ueber den Text OHNE Skriptinhalte
+# (`ohne_skriptinhalt()`): `x.onclick = …` in einem Skript ist Code, kein
+# Attribut, und der Skriptinhalt wird ohnehin als Block verglichen.
+META_RE    = re.compile(r'<meta\b[^>]*(?<![\w-])http-equiv\s*=[^>]*>', re.I)
+EINBETT_RE = re.compile(r'<(?:iframe|frame|object|embed)\b[^>]*>', re.I)
+HANDLER_RE = re.compile(r'(?<![\w-])on[a-z]+\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>]*)', re.I)
+# Fuer javascript:-Adressen reicht kein Muster ueber den rohen Text: Der
+# Browser dekodiert Entitaeten im Attributwert (`&#106;avascript:`) und
+# wirft Tabulator, Zeilenumbruch und fuehrende Steuerzeichen aus dem Schema
+# (`java\tscript:`) -- beides fuehrt Skript aus und stand fuer ein Muster
+# auf dem rohen Text nicht da. `jsadressen()` liest deshalb jedes Attribut
+# aus jedem Tag, dekodiert und bereinigt es so wie der Browser und prueft
+# dann erst das Schema.
+TAG_RE     = re.compile(r'<[a-z][^>]*>', re.I | re.S)
+ATTR_RE    = re.compile(r'([^\s"\'=<>/]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.S)
 ASSET_RE  = re.compile(r"asset\(\s*'([^']+)'\s*\)")
 # PHP beginnt mit `<?php` oder `<?=` -- nur diese beiden Oeffner benutzt die
 # Anwendung. Ein blosses `<?` ist auch JavaScript (`if (a<?0)`) und machte
@@ -139,6 +177,33 @@ def url_fuer(basis: str, rel: str) -> str:
     return basis.rstrip('/') + '/' + urllib.parse.quote(rel, safe='/')
 
 
+def src_wert(m: re.Match) -> str:
+    """Der Wert eines SRC_RE-Treffers, gleich ob doppelt, einfach oder gar
+    nicht in Anfuehrungszeichen."""
+    return next(g for g in m.groups() if g is not None)
+
+
+def ohne_skriptinhalt(text: str) -> str:
+    """Der Text ohne die Inhalte der Inline-Bloecke -- fuer die Attributmuster,
+    damit `x.onclick = …` im Skript nicht als Ereignisattribut zaehlt."""
+    return SKRIPT_RE.sub(lambda m: m.group(0)[:m.start(1) - m.start(0)] + m.group(0)[m.end(1) - m.start(0):], text)
+
+
+def jsadressen(text: str) -> list[str]:
+    """Jedes Attribut, dessen Wert -- dekodiert und bereinigt wie im Browser --
+    mit `javascript:` beginnt, als `name=wert`. Der Text kommt ohne
+    Skriptinhalte (`ohne_skriptinhalt()`)."""
+    raus = []
+    for t in TAG_RE.finditer(text):
+        for a in ATTR_RE.finditer(t.group(0)):
+            wert = next(g for g in a.groups()[1:] if g is not None)
+            schema = html.unescape(wert).lstrip(' \t\n\r\x00-\x1f')
+            schema = re.sub(r'[\t\n\r]', '', schema)[:11].lower()
+            if schema == 'javascript:':
+                raus.append(f'{a.group(1).lower()}={wert[:60]}')
+    return raus
+
+
 def normalisiere_src(src: str) -> str:
     """Pfad ohne Abfrageteil und ohne fuehrendes ./ oder / -- `asset()` haengt
     den Zeitstempel der Datei an, und der unterscheidet sich je Ablage."""
@@ -153,7 +218,7 @@ def quell_srcs(quelle: str) -> tuple[list[str], int]:
     aufgeloest; ein anderer PHP-Ausdruck ist nicht bestimmbar und wird gezaehlt."""
     raus, unbestimmt = [], 0
     for m in SRC_RE.finditer(quelle):
-        roh = m.group(1) if m.group(1) is not None else m.group(2)
+        roh = src_wert(m)
         if ist_php(roh):
             a = ASSET_RE.search(roh)
             if a:
@@ -200,13 +265,14 @@ def seite_vergleichen(seite: str, quelle: str, geliefert: str) -> tuple[list[str
     """Vergleicht die Auslieferung einer Seite mit ihrer Quelle.
 
     Liefert die Abweichungen und die Zahlen, die dazu gehoeren. Verglichen
-    wird die GANZE Menge der Skripte, Formulare, <base>-Tags und
-    Umlenk-Attribute, nicht nur das Vorhandensein des Bekannten -- siehe Kopf
-    der Datei.
+    wird die GANZE Menge der Skripte, Formulare, <base>-Tags, Umlenk- und
+    Ereignisattribute, Kopfanweisungen, Einbettungen und javascript:-Adressen,
+    nicht nur das Vorhandensein des Bekannten -- siehe Kopf der Datei.
     """
     ab: list[str] = []
     z = {'inline_gleich': 0, 'inline_php': 0, 'src_gleich': 0, 'src_unbestimmt': 0,
-         'form_gleich': 0, 'base_ist': 0, 'umlenk_ist': 0}
+         'form_gleich': 0, 'base_ist': 0, 'umlenk_ist': 0, 'meta_ist': 0,
+         'einbett_ist': 0, 'handler_ist': 0, 'jsurl_ist': 0}
 
     # -- Inline-Bloecke: die PHP-freien der Quelle muessen da sein, und es
     #    duerfen nicht MEHR sein als die Quelle hat.
@@ -232,8 +298,7 @@ def seite_vergleichen(seite: str, quelle: str, geliefert: str) -> tuple[list[str
 
     # -- Externe Skripte: dieselbe Menge, kein Verweis mehr und keiner weniger.
     soll_src, z['src_unbestimmt'] = quell_srcs(quelle)
-    ist_src = [normalisiere_src(m.group(1) if m.group(1) is not None else m.group(2))
-               for m in SRC_RE.finditer(geliefert)]
+    ist_src = [normalisiere_src(src_wert(m)) for m in SRC_RE.finditer(geliefert)]
     for src in soll_src:
         if src in ist_src:
             z['src_gleich'] += 1
@@ -259,9 +324,24 @@ def seite_vergleichen(seite: str, quelle: str, geliefert: str) -> tuple[list[str
     z['base_ist'] = len(ist_base)
     a, _, _ = menge_vergleichen(seite, '<base>-Tag', tags(BASE_RE, quelle), ist_base)
     ab.extend(a)
-    ist_umlenk = tags(UMLENK_RE, geliefert)
+    q_ohne, g_ohne = ohne_skriptinhalt(quelle), ohne_skriptinhalt(geliefert)
+    ist_umlenk = tags(UMLENK_RE, g_ohne)
     z['umlenk_ist'] = len(ist_umlenk)
-    a, _, _ = menge_vergleichen(seite, 'Umlenk-Attribut', tags(UMLENK_RE, quelle), ist_umlenk)
+    a, _, _ = menge_vergleichen(seite, 'Umlenk-Attribut', tags(UMLENK_RE, q_ohne), ist_umlenk)
+    ab.extend(a)
+
+    # -- Kopfanweisungen, Einbettungen, Ereignisattribute, javascript:-Adressen
+    #    (zweite Gegenpruefung): dieselbe Rechnung, dieselbe Ausgabe.
+    for was, muster, schluessel in (('Kopfanweisung (http-equiv)', META_RE, 'meta_ist'),
+                                    ('Einbettung (iframe/object/embed)', EINBETT_RE, 'einbett_ist'),
+                                    ('Ereignisattribut (on…=)', HANDLER_RE, 'handler_ist')):
+        ist = tags(muster, g_ohne)
+        z[schluessel] = len(ist)
+        a, _, _ = menge_vergleichen(seite, was, tags(muster, q_ohne), ist)
+        ab.extend(a)
+    ist_js = jsadressen(g_ohne)
+    z['jsurl_ist'] = len(ist_js)
+    a, _, _ = menge_vergleichen(seite, 'javascript:-Adresse', jsadressen(q_ohne), ist_js)
     ab.extend(a)
     return ab, z
 
@@ -320,7 +400,8 @@ def lauf(basis: str, unsicher: bool) -> int:
 
     # ---- Teil 2: die Seiten, auf denen das Passwort getippt wird ----------
     summe = {'inline_gleich': 0, 'inline_php': 0, 'src_gleich': 0,
-             'src_unbestimmt': 0, 'form_gleich': 0, 'base_ist': 0, 'umlenk_ist': 0}
+             'src_unbestimmt': 0, 'form_gleich': 0, 'base_ist': 0, 'umlenk_ist': 0,
+             'meta_ist': 0, 'einbett_ist': 0, 'handler_ist': 0, 'jsurl_ist': 0}
     for seite in SEITEN:
         quelle = (SERVER / seite)
         if not quelle.is_file():
@@ -341,9 +422,11 @@ def lauf(basis: str, unsicher: bool) -> int:
           f"({summe['inline_php']} nicht vergleichbar, PHP darin), "
           f"{summe['src_gleich']} externe Skripte gleich "
           f"({summe['src_unbestimmt']} unbestimmt), {summe['form_gleich']} Formulare gleich, "
-          f"{summe['base_ist']} <base>-Tag(s) und {summe['umlenk_ist']} Umlenk-Attribut(e) "
+          f"{summe['base_ist']} <base>-Tag(s), {summe['umlenk_ist']} Umlenk-Attribut(e), "
+          f"{summe['meta_ist']} Kopfanweisung(en), {summe['einbett_ist']} Einbettung(en), "
+          f"{summe['handler_ist']} Ereignisattribut(e) und {summe['jsurl_ist']} javascript:-Adresse(n) "
           f"in der Auslieferung; "
-          + ('kein Skript, Formular, <base> oder Umlenk-Attribut zu viel' if zuviel == 0
+          + ('nichts davon zu viel' if zuviel == 0
              else f'{zuviel} ZU VIEL oder veraendert'))
 
     if unerreichbar:
@@ -537,6 +620,29 @@ def selbstprobe() -> int:
            and any('Inline-Block der Quelle steht nicht so' in a for a in ab7),
            'ABWEICHUNG ERKANNT: ein veraenderter Block mit `<?` als JavaScript faellt auf',
            f"{z7['inline_php']} als PHP eingestuft; " + '; '.join(ab7)[:60])
+
+    # 8. Die fuenf Stellen der zweiten Gegenpruefung -- und eine Gegenprobe,
+    #    dass die Attributmuster nicht auf Skriptinhalt anschlagen.
+    ab8, _ = seite_vergleichen('login.php', quelle,
+                               anhaengen(sim, '<script src=https://boese.example/x.js></script>'))
+    pruefe(any('ZUSAETZLICHES Skript' in a for a in ab8),
+           'ABWEICHUNG ERKANNT: ein <script src=…> OHNE Anfuehrungszeichen faellt auf',
+           '; '.join(ab8)[:90])
+    for was, stueck, wort in (
+            ('ein Ereignisattribut (onload=) faellt auf', '<body onload="fetch(\'https://boese.example/\')">', 'Ereignisattribut'),
+            ('ein <meta http-equiv="refresh"> faellt auf', '<meta http-equiv="refresh" content="0;url=https://boese.example/">', 'Kopfanweisung'),
+            ('ein <iframe srcdoc> faellt auf', '<iframe srcdoc="&lt;script&gt;x()&lt;/script&gt;"></iframe>', 'Einbettung'),
+            ('eine javascript:-Adresse faellt auf', '<a href="javascript:x()">Passwort vergessen</a>', 'javascript:'),
+            ('eine javascript:-Adresse mit Tabulator im Schema faellt auf', '<a href="java\tscript:x()">x</a>', 'javascript:'),
+            ('eine javascript:-Adresse als Entitaet (&#106;avascript:) faellt auf', '<a href="&#106;avascript:x()">x</a>', 'javascript:')):
+        abx, _ = seite_vergleichen('login.php', quelle, anhaengen(sim, stueck))
+        pruefe(any('ZUSAETZLICH' in a and wort in a for a in abx),
+               'ABWEICHUNG ERKANNT: ' + was, '; '.join(abx)[:90])
+    q8 = '<script>el.onclick = function () { location.href = "javascript:void(0)"; };</script>'
+    ab9, z9 = seite_vergleichen('probe', q8, q8)
+    pruefe(not ab9 and z9['handler_ist'] == 0 and z9['jsurl_ist'] == 0 and z9['inline_gleich'] == 1,
+           'Skriptinhalt zaehlt nicht als Ereignisattribut oder javascript:-Adresse',
+           f"{z9['handler_ist']} Attribute, {z9['jsurl_ist']} Adressen, Block verglichen")
 
     print(f'\n  -> {erwartungen} Erwartungen, {offen} nicht erfuellt')
     return 0 if offen == 0 else 1
