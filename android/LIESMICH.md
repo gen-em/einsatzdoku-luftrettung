@@ -494,29 +494,36 @@ Gradle-Wrapper lädt seine Verteilung von `services.gradle.org`, und diese
 Adresse leitet auf **`github.com`** weiter (Freigabe
 `gradle/gradle-distributions`). Ohne die Weiterleitung gibt es keinen
 Wrapper-Lauf. Eine siebte, `downloads.gradle.org`, trägt nur die
-Prüfsummen-Datei und ist gesperrt — siehe 2.1.
+Prüfsummen-Datei; sie war bis zum 07.09.2026 gesperrt und ist seither
+freigegeben — siehe 2.1.
 
-### 2.1 Warum keine Prüfsumme der Gradle-Verteilung eingetragen ist
+### 2.1 Die Prüfsumme der Gradle-Verteilung (seit Android 0.14.0, Backlog Nr. 145)
 
-`gradle-wrapper.properties` führt üblicherweise ein
-`distributionSha256Sum`. Hier steht keines, und das ist eine bewusste Lücke
-mit Begründung:
+`gradle-wrapper.properties` führt jetzt ein `distributionSha256Sum`:
 
-Die offizielle Prüfsumme liegt unter
-`services.gradle.org/distributions/gradle-8.14.3-bin.zip.sha256`. Diese
-Adresse leitet auf `downloads.gradle.org` weiter, und die ist im Container
-**gesperrt** (403 der Egress-Regel). Die Prüfsumme aus der Datei zu rechnen,
-die man gerade geladen hat, ist keine Prüfung, sondern eine Tautologie — sie
-bestätigte jede Datei, auch eine falsche.
+```
+SHA-256  bd71102213493060956ec229d946beee57158dbd89d0e62b91bca0fa2c5f3531
+         gradle-8.14.3-bin.zip   (137 393 837 Bytes)
+```
 
-Stattdessen wurde **gegenseitig belegt**: Die vom Wrapper geladene
-Verteilung und das im Container vorinstallierte Gradle 8.14.3 stammen aus
-zwei verschiedenen Quellen. Ein Vergleich ihrer Programmbibliotheken ergab
-**188 von 188 JAR bitgleich, 0 Abweichungen**. Zwei unabhängige Wege zur
-selben Datei sind der Beleg, den die Prüfsummen-Datei geliefert hätte.
+Der Wrapper prüft die Summe **beim Herunterladen** der Verteilung — einmal je
+Rechner, danach liegt sie unter `~/.gradle/wrapper/dists/`. Ein Container,
+der die Verteilung schon hat, merkt von der Zeile nichts; ein frischer lädt
+sie, rechnet nach und bricht ab, wenn die Datei nicht die ist, die sie sein
+soll (Krypto-Review AN-5: `gradle-wrapper.properties` ohne Prüfsumme).
 
-Wer an einem Arbeitsplatz **ohne** diese Sperre sitzt, trägt die Prüfsumme
-von <https://gradle.org/release-checksums/> nach — sie gehört dorthin.
+**Woher die Zahl stammt, und warum sie erst jetzt dasteht.** Bis zum
+07.09.2026 war `downloads.gradle.org` — die Adresse, auf die die offizielle
+Prüfsummen-Datei weiterleitet — in der Netzfreigabe des Containers gesperrt
+(403), und eine Summe, die man aus der gerade geladenen Datei selbst rechnet,
+ist keine Prüfung, sondern eine Tautologie. Ersatzweise war **gegenseitig
+belegt**: Die vom Wrapper geladene Verteilung und das im Container
+vorinstallierte Gradle 8.14.3 stammten aus zwei Quellen, und der Vergleich
+ihrer Programmbibliotheken ergab 188 von 188 JAR bitgleich. Seit dem
+07.09.2026 ist die Adresse freigegeben. Die Zahl oben ist die aus
+`https://services.gradle.org/distributions/gradle-8.14.3-bin.zip.sha256`
+**und** zusätzlich am eigens frisch geladenen Archiv nachgerechnet
+(`sha256sum`, 137 393 837 Bytes) — zwei Wege, dieselbe Summe.
 
 Die Wrapper-JAR selbst liegt im Repositorium (das ist bei Gradle so
 vorgesehen). Ihre Prüfsumme, für den Fall, dass jemand sie nachrechnen will:
@@ -525,6 +532,16 @@ vorgesehen). Ihre Prüfsumme, für den Fall, dass jemand sie nachrechnen will:
 SHA-256  7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172
          gradle/wrapper/gradle-wrapper.jar   (aus Gradle 8.14.3)
 ```
+
+**R8 bleibt aus** (`isMinifyEnabled = false` in beiden Modulen; AN-5 nennt
+es mit). Die Begründung steht dort, wo die Ausnahmen hingehörten, wenn es je
+welche gäbe: `handy/proguard-rules.pro` und `uhr/proguard-rules.pro`. Kurz:
+Die App hat rund zwei Dutzend Klassen, das Ersparte fiele neben den
+Compose-Bibliotheken nicht ins Gewicht, und ein verschleierter Stapelauszug
+nähme dem Gerätetest (E-R45-7) den einzigen Fehlerbericht, den er hat.
+Verschleierung ist auch kein Sicherheitsmerkmal: Der Geräteschlüssel liegt im
+Keystore, nicht im Code, und im APK steht nichts, was ein Leser nicht auch im
+öffentlichen Repositorium fände.
 
 ## 3. Warum es zwei Module gibt und trotzdem gemeinsamen Quelltext
 
