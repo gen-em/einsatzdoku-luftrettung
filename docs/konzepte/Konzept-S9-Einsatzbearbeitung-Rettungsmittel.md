@@ -18,7 +18,7 @@ Mockups in `konzept-s9/mockups/`.
 > | Entschieden | E-S9-01 bis E-S9-19 (Abschnitt 2) |
 > | Offen | nichts. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
 > | Umsetzung | **AP1 bis AP4 erledigt** (07.09.2026, Web 15.6.0 / 15.6.1 / 15.7.0 / 15.8.0 / **16.0.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. **AP5 wartet auf das Wort des Auftraggebers.** Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
-> | Fable-Schritte der Umsetzung | **keine** — der einzige Fable-Vorbehalt der Vorbereitung (PS-8.2) ist im Konzept aufgelöst (Abschnitt 1.8) |
+> | Fable-Schritte der Umsetzung | **drei, aus AP4** (07.09.2026): die Mockups **M-S9-08 bis M-S9-10** zu den Fragen 3 bis 6 des Prüfdokuments (Kurzname in Kachel, Plakettenzeile und schmaler Leiste · Zusammenführen bei verschiedenem Typ · Standort löschen mit Rettungsmitteln ohne Standortpflicht) — **liegen vor, Freigabe einzeln offen** (Abschnitt 6). Der Fable-Vorbehalt der Vorbereitung (PS-8.2) war im Konzept aufgelöst (Abschnitt 1.8) |
 
 > **Stand der Umsetzung**
 >
@@ -70,18 +70,32 @@ Mockups in `konzept-s9/mockups/`.
 > Lesbarkeit von `veranstaltung.svg` bei 18 px mit Strich 2. Beide Mockups
 > zeichnen mit Strich **1,8**, die Anwendung liefert **2**, und M-S9-02 nennt
 > „building-stadium" bei 20 px selbst „einen Klumpen"; bei 18 px mit dem
-> dickeren Strich ist es das schwächste der sechs Zeichen. **Frage 7** — der
+> dickeren Strich ist es das schwächste der sechs Zeichen; **entschieden am
+> 07.09.2026: Tabler „ticket"**, getauscht mit AP4 (Web 16.0.0). **Frage 7** — der
 > Umfang von E-S9-03 war größer als die Aufzählung des Konzepts (72 statt der
 > fünf genannten Stellen); der Auftraggeber hat am 07.09.2026 „alles
 > Sichtbare" entschieden und die Android-Texte an Schritt 9a gegeben.
+>
+> **Vier Fragen aus AP4** (Prüfdokument, Abschnitt 4, Fragen 3 bis 6):
+> Kurzname an Kachel und Plakettenzeile, Kurzname in der Leiste unter
+> 1200 px, Zusammenführen bei verschiedenem Typ, Standort löschen mit
+> Rettungsmitteln ohne Standortpflicht. Zu allen vier liegen seit dem
+> 07.09.2026 die Mockups **M-S9-08 bis M-S9-10** vor (Fable, Abschnitt 6),
+> mit gemessenen Zahlen und je einer Empfehlung: Kachel offen (A, B oder
+> Ist), Plakettenzeile **nein**, Leiste **Variante 2** (Kurzname sichtbar,
+> Akkordeon 8 px eingerückt — Variante 1 scheitert gemessen an vier Pixeln),
+> Zusammenführen **(c)** Typ zeigen und wählen lassen, Standort löschen
+> **(b)** Rettungsmittel ohne Standortpflicht bleiben (Umsetzung in AP5).
+> **Keine davon ist entschieden.**
 >
 > **Die zwei Fragen aus AP2 sind entschieden** (Auftraggeber, 07.09.2026):
 > **Frage 4** — Pfeile auf der Spur im Kartendialog: **nein**. Der
 > Konzepttext E-S9-06 (b) geht vor, Anmerkung 3 des Mockups M-S9-04 ist an
 > dieser Stelle überholt; der gebaute Stand bleibt, die Sollzahl der
 > Klickprobe (0 Pfeile) gilt weiter. **Frage 5** — die Überschrift im Kopf
-> des Kartendialogs: **lassen**. Von den fünf Fragen der Umsetzung sind damit
-> vier entschieden; offen ist allein Frage 2 aus AP1.
+> des Kartendialogs: **lassen**. Von den elf Fragen der Umsetzung (AP1 bis
+> AP4) sind sechs entschieden; offen sind Frage 2 aus AP1 (Buchführung, kein
+> Mockup) und die vier aus AP4, zu denen die Mockups vorliegen.
 
 ---
 
@@ -640,7 +654,10 @@ wie bisher. **Entschieden mit M-S9-02 (06.09.2026):** Der Hubschrauber
 **bleibt Tabler „helicopter"**, das Fahrzeug Tabler „ambulance" — PS-5 ist
 damit mit „Ist" beantwortet; die eigene Strichzeichnung (B) und die
 Bildmarken (C, C2) sind gesehen und verworfen. Neu: `bergwacht.svg` =
-Tabler „mountain", `veranstaltung.svg` = Tabler „building-stadium",
+Tabler „mountain", `veranstaltung.svg` = Tabler „building-stadium" —
+**seit AP4 Tabler „ticket"** (Entscheidung des Auftraggebers vom 07.09.2026
+zu Frage 6 des Prüfdokuments: building-stadium verliert bei 18 px mit
+Strich 2 zwei seiner vier Binnenflächen, ticket hält seine bis 16 px) —,
 `sonstiges.svg` = Tabler „dots-circle-horizontal" — alle Outline, MIT,
 Strich 2 im 24-px-Raster wie der übrige Vorrat; `ohne-zuordnung.svg`
 bleibt der neutrale Tag. Herkunft in `Design.md` 8 und `Lizenzen.md`;
@@ -1096,6 +1113,11 @@ Auftraggeber vorliegen:
   Begründung des Kurznamens — „die schmalste Stelle" — trägt damit nur am
   Schreibtisch. Ihn schmaler sichtbar zu machen ist eine Gestaltungsänderung.
 
+Zu beiden Widersprüchen — und zu den Fragen 5 und 6 des Prüfdokuments —
+liegen seit dem 07.09.2026 die Mockups **M-S9-08 bis M-S9-10** vor
+(Abschnitt 6, Fable-Schritte). Die Widersprüche bleiben, bis der
+Auftraggeber entschieden hat.
+
 
 ---
 
@@ -1108,14 +1130,19 @@ Sammelabschluss (Regel seit S8).
 | Nr. | Was | Für | Stand |
 |---|---|---|---|
 | M-S9-01 | Kartenschilder: Standort/Zielklinik mit Start, Ende, beidem, ohne; Einsatzort; Ringpunkt — **drei Varianten** (V1 Rand wird Ring, V2 zweigeteilt, V3 Doppelrand schmal) gegen den Ist-Stand, je in Handy- und Desktop-Karte, mit Maßleiste | E-S9-12 | **liegt vor** (`konzept-s9/mockups/M-S9-01-kartenschilder.html`, dazu `-handy`); nachgemessen Ist 36/48/60, V1 32/32/38, V2 32/32/32, V3 28/34/40 px (ohne/Start/beide); **V1 freigegeben 06.09.2026** — Token: `--geo-schild` 30 px, `--geo-kreis` 28 px, `--geo-ring` 3 px (= Randstärke), Symbol 18/16 px, 1 px Schnee außen; „beide" = blauer Rand + 1 px Schnee + 2 px Rot (38 px) |
-| M-S9-02 | Artzeichen: Ist, B (eigene Strichzeichnung), C (Bildmarken einfarbig), C2 (Bildmarken und gefüllte Typzeichen); Bergwacht „mountain", Veranstaltung „ticket", Sonstiges „…"-Kreis, neutral bleibt — Leiste 260 px und Schublade 320 px, Zeichensatz bei 48/20 px | E-S9-13 | **freigegeben 06.09.2026:** Luft und Boden bleiben Ist (Tabler „helicopter", „ambulance"); Bergwacht „mountain", Veranstaltung „building-stadium", Sonstiges „dots-circle-horizontal" |
+| M-S9-02 | Artzeichen: Ist, B (eigene Strichzeichnung), C (Bildmarken einfarbig), C2 (Bildmarken und gefüllte Typzeichen); Bergwacht „mountain", Veranstaltung „ticket", Sonstiges „…"-Kreis, neutral bleibt — Leiste 260 px und Schublade 320 px, Zeichensatz bei 48/20 px | E-S9-13 | **freigegeben 06.09.2026:** Luft und Boden bleiben Ist (Tabler „helicopter", „ambulance"); Bergwacht „mountain", Veranstaltung „building-stadium", Sonstiges „dots-circle-horizontal"; **Veranstaltung am 07.09.2026 auf „ticket" getauscht** (AP4, Frage 6 aus AP3 — Messung im Changelog zu Web 16.0.0) |
 | M-S9-03 | Vorschlagsliste mit Gruppenzeile: Transportziel (zwei Zielkliniken, vier Adressen), Besatzungsfeld (drei Vorlagen), weitere Rettungsmittel (zwei Vorbelegungen, freie Eingabe), Einsatzort (nur Adressen, ohne Gruppenzeile) — 44 px am Finger, 36 px am Zeiger | E-S9-07, E-S9-08 | **liegt vor** (`konzept-s9/mockups/M-S9-03-vorschlagsliste.html`, dazu `-handy`); **freigegeben 07.09.2026** — Darstellung, höchstens zwei Stammdaten oben, bis sechs Adressen darunter |
 | M-S9-04 | Kartendialog in vier Zuständen: Spur mit Ringpunkten bei leerem Feld (auf die Spur eingepasst), Suche mit Treffern über der Karte, Koordinate gesetzt (Zoom 14), Adresssuche aus (kein Suchfeld) — Desktop 560 px, Handy 358 px; Legende „Aufzeichnung · Start · Ende" | E-S9-06 | **liegt vor** (`konzept-s9/mockups/M-S9-04-kartendialog.html`, dazu `-handy`); **freigegeben 07.09.2026** — Darstellung; Regeln: Treffer setzt nur das Kreuz (F1), Karte auf der Spur nur bei leerem Feld |
 | M-S9-06 | Standort zuerst (PS-12): Standortliste und Standortseite „Kempten" — Inhaltsverzeichnis mit Zahlen, vier Abschnitte, Sprungliste, Filterfeld, „Zum Anfang"; Handy und Desktop mit Leiste und S8-Unterpunkten | E-S9-18 | **freigegeben 07.09.2026** (`konzept-s9/mockups/M-S9-06-standortseiten.html`, dazu `-handy`) — Aufteilung, „Zum Anfang", Filterfeld; das Inhaltsverzeichnis gilt in der Form aus M-S9-07 (Kennzahlen statt Pillen) |
 | M-S9-07 | Nachträge zu PS-12: Inhaltsverzeichnis als drei Kennzahlen; die drei Anlegen-Dialoge (Rettungsmittel Standard/Luft und Typ Veranstaltung, Besatzungsmitglied, Zielklinik); Landung auf der neuen Zeile nach dem Anlegen | E-S9-18, E-S9-19 | **freigegeben 07.09.2026** (`konzept-s9/mockups/M-S9-07-anlegen-dialoge.html`, dazu `-handy`) — Kennzahlen als Verzeichnis, Dialog statt Formular, Feldfolge, Landung per `:target` ohne Meldung |
 | M-S9-05 | Sprungliste unter „Rettungsmittel" eines Standorts mit zehn Einträgen (Pille mit Artzeichen, ab sechs, Hervorhebung nach dem Sprung), Standort mit drei Einträgen ohne — Neu-Rendering von N1, 44/36 px | E-S9-14 | **liegt vor** (`konzept-s9/mockups/M-S9-05-sprungliste.html`, dazu `-handy`); **freigegeben 07.09.2026** — Pille mit Artzeichen, Schwelle sechs, Hervorhebung nach dem Sprung, Artzeichen in der Zeile (F-S9-K-04); gilt innerhalb der Standortseite (PS-12, M-S9-06) |
+| M-S9-08 | Der Kurzname an drei Stellen: Einsatzkachel bei 390 px (Ist, **A** Plakette im Fuß, **B** zweite Zeile der Zeitspalte), Plakettenzeile der Einsatzansicht (Ist/Variante bei 700 und 358 px), Leiste (260 Ist, 220 Ist, 220 **Variante 1** nur der Kurzname, 220 **Variante 2** dazu Akkordeon 8 px eingerückt, Schublade 320) | E-S9-09, Nr. 69; Fragen 3 und 4 aus AP4 | **liegt vor** (`konzept-s9/mockups/M-S9-08-kurzname.html`, dazu `-handy`; Fable 07.09.2026), **Freigabe offen.** Gemessen am Render: Kachel **Ist 92 · A 124 · B 92 px**; „BW Hoch" braucht **55 px**, frei sind bei 260 px 55, bei 220 px Variante 1 **51** (Ellipse), Variante 2 **55** (passt), Schublade 55. Empfehlung: 3 a offen (A, B oder Ist — je mit der Regel „nur wo `artDatum`"), 3 b **nein**, 4 **Variante 2** |
+| M-S9-09 | Zusammenführen bei verschiedenem Typ, 390 px: Schritt 1 Ist gegen **(b)** ablehnen („Nicht wählbar", rote Plakette „Bergwacht"), Schritt 2 Ist gegen **(c)** Zeile „Typ" in „Der Diensttag danach" und Typ samt Kurzname als Zusatz der Wahlzeilen | E-S9-09; Frage 5 aus AP4 | **liegt vor** (`konzept-s9/mockups/M-S9-09-zusammenfuehren-typ.html`, dazu `-handy`; Fable 07.09.2026), **Freigabe offen.** Kein neuer Baustein; unter 480 px rutscht der Zusatz unter den Text (Regel aus `style.css`, Handy-Fassung **0 Elemente über dem Rand** bei 400 px). Empfehlung: **(c)** |
+| M-S9-10 | Standort löschen mit Rettungsmitteln ohne Standortpflicht: Rückfragedialog bei 512 und 358 px, Ist („6 … werden mitgelöscht") gegen **(b)** („5 … werden mitgelöscht. 1 Rettungsmittel ohne Standortpflicht — Bergwacht Hochkreuth — bleibt bestehen und steht danach unter „Ohne Standort""); danach die Karte „Ohne Standort" mit 2 gegen 3 Einträgen, der neue mit `:target` | E-S9-09, E-S9-18; Frage 6 aus AP4 | **liegt vor** (`konzept-s9/mockups/M-S9-10-standort-loeschen.html`, dazu `-handy`; Fable 07.09.2026), **Freigabe offen.** Fremdschlüssel bleibt `CASCADE`; (b) ist Anwendungslogik vor dem `DELETE` (`UPDATE vehicles SET base_id = NULL WHERE base_id = ? AND typ <> 'standard'`), eine Funktion, zwei Aufrufer. Empfehlung: **(b)**, Umsetzung in **AP5** |
 
-Alle sieben freigegeben (06./07.09.2026). Die HTML-Dateien sind die
+Die ersten sieben sind freigegeben (06./07.09.2026); **M-S9-08 bis -10** sind
+die Mockups zu den offenen Fragen aus AP4 und liegen seit dem 07.09.2026
+zur Freigabe vor — einzeln, wie die anderen. Die HTML-Dateien sind die
 Vorlage für die Umsetzung: Token, Klassen und Maße stehen in ihrem
 `<style>`; wo Mockup und Konzepttext abweichen, gilt der Konzepttext
 (Abschnitt 2), und die Abweichung wird im Prüfdokument genannt.

@@ -14,12 +14,12 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 >
 > | | |
 > |---|---|
-> | Stand | 07.09.2026 — **AP1 bis AP3 gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, 15.7.0, **15.8.0**). AP4 bis AP8 offen |
-> | Geprüft | P-01 bis P-12 und P-32 vollständig · P-23 für die **sechzehn berührten** Seiten, nicht für alle 30 · P-25 als Gesamtlauf. Dazu **E-S9-13**, das im Konzept keine Abnahme hatte — siehe F-S9-P-12 |
-> | Offen | P-13 bis P-22, P-24, P-26, P-28 bis P-31, P-33 (AP4 bis AP8) |
-> | Fragen | **sieben gestellt, fünf entschieden** (07.09.2026): Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen**. Frage 7 (Umfang von E-S9-03) ist mit „alles Sichtbare" entschieden, die Android-Texte gehen an Schritt 9a. Offen bleiben **Frage 2** aus AP1 und **Frage 6** aus AP3 (Lesbarkeit von `veranstaltung.svg`); beide gebauten Stände laufen grün |
-> | Fehlerfunde | **zwölf, alle behoben** — F-S9-P-01 bis -04, -07 bis **-14** (Abschnitt 2); die gesammelten Funde F-S9-P-05 und -06 sind mit AP2 abgeräumt. Zwei der vier neuen (Nr. 72, Nr. 153) sind derselbe Fehler drei Zeilen auseinander |
-> | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` — 88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto, 8 Zielkliniken, 8 weitere Rettungsmittel, 15 Besatzungs-Vorbelegungen an zwei Standorten |
+> | Stand | 07.09.2026 — **AP1 bis AP4 gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, 15.7.0, 15.8.0, **16.0.0**). AP5 bis AP8 offen; **AP5 wartet auf das Wort des Auftraggebers.** Dazu seit dem 07.09.2026 die Mockups **M-S9-08 bis -10** zu den vier Fragen aus AP4 (Abschnitt 4) |
+> | Geprüft | P-01 bis P-15 und P-32 vollständig · P-23 je Paket für die berührten Seiten (AP1 sieben, AP2 drei dazu, AP3 sechs dazu, AP4 elf), nie als Gesamtlauf über alle · P-25 als Gesamtlauf. Dazu **E-S9-13**, das im Konzept keine Abnahme hatte — siehe F-S9-P-12 |
+> | Offen | P-16 bis P-22, P-24, P-26, P-28 bis P-31, P-33 (AP5 bis AP8) |
+> | Fragen | **elf gestellt, sechs entschieden** (07.09.2026): Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen** · Umfang von E-S9-03 → „alles Sichtbare", Android-Texte an Schritt 9a · `veranstaltung.svg` → **Tabler „ticket"** (getauscht mit AP4). Offen: **Frage 2** aus AP1 (Buchführung, kein Mockup) und die **vier Fragen aus AP4** (Kurzname an Kachel und Plakette, Kurzname unter 1200 px, Zusammenführen bei verschiedenem Typ, Standort löschen) — zu ihnen liegen die Mockups **M-S9-08 bis -10** vor, Empfehlungen in Abschnitt 4. Der gebaute Stand (Web 16.0.0) läuft grün |
+> | Fehlerfunde | **zwanzig, alle behoben** — F-S9-P-01 bis -04, -07 bis -14 (Abschnitt 2; -05 und -06 mit AP2 abgeräumt) und **F-S9-U-01 bis -08 aus AP4** (Konzept, Abschnitt 5) — darunter F-S9-U-01, ein Beinahe-Produktionsfehler: `nb_moeglich()` hätte die Migration zurückgenommen (gemessen false → true, zwei falsche offene Punkte; Gegenprobe 0 → 1 → 0). Zwei der vier Funde aus AP3 (Nr. 72, Nr. 153) sind derselbe Fehler drei Zeilen auseinander |
+> | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` — 88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto, 6 Rettungsmittel in vier Typen (seit AP4; vorher 3), 8 Zielkliniken, 8 weitere Rettungsmittel, 15 Besatzungs-Vorbelegungen an zwei Standorten |
 
 ---
 
@@ -119,9 +119,9 @@ gemessen hat, ist keine Zahl.
 | P-10 | Pfeile in Spurrichtung | Winkel je Pfeil | 6/6 | **erfüllt, gemessen an der Bildschirmmatrix.** **12 von 12** Pfeilen in 30-Grad-Schritten treffen ihren Sollwinkel auf **0,1 Grad** genau (0/30/60/…/330), dazu **2 von 2** auf der Spur des Referenzeinsatzes. **Vorher:** Matrix `a=0,833 b=0 c=0 d=0,833` bei behaupteten 90 und 135 Grad — reine Skalierung, kein Drehanteil. **Die Sollzahl „6“ ist nicht reproduzierbar** und deshalb durch 12 ersetzt: Die Pfeilzahl folgt `floor(Spurlänge_px / 140)` und hängt damit an der Fensterbreite; bei 1280 × 900 sind es 2. Siehe F-S9-P-14 | 07.09.2026 |
 | P-11 | Windenkacheln nach Fähigkeit | Klickprobe | 2 Zeiträume | **erfüllt, drei Fälle statt zwei.** Januar 2026 mit Windeneinsatz: **2 Kacheln**. Januar **ohne** Windeneinsatz, Fähigkeit steht: **2 Kacheln mit „0 Winden-Cycles“ und „0,0 Ø Winden-Cycles / Flugtag“** — genau der Fall, den PS-4 verlangt. November 2026 ohne Fähigkeit: **0 Kacheln**. Der mittlere Fall ist **über die Oberfläche hergestellt** (Windenhaken am Einsatz herausgenommen, im `finally` zurückgesetzt — nachgezählt: 1 Windeneinsatz im Januar, wie vorher), nicht per SQL und nicht im Referenzbestand. `faehigkeiten` aus der API: `{"winch":true,"bergwacht":true}` | 07.09.2026 |
 | P-12 | Wording „GPS-Daten" | Wortliste | 0/0/0 | **erfüllt, jetzt mit der Regel.** Die Sperrliste trägt seit AP3 das Muster `spur` (**großgeschrieben** — es soll das deutsche Substantiv treffen, nicht den Bezeichner; kleingeschrieben ergab beim ersten Versuch **472** Treffer, von denen keine zwanzig eine Anzeige waren). Dazu **sechs begründete Ausnahmen**: `spur_lib.php`, „Spurteil“ (Name im Sicherungsarchiv), die Beschriftungen vergangener Migrationen, der GPX-Fachbegriff, die fünf Fachdokumente und — **befristet, Klasse D** — die fünf Android-Texte, die Schritt 9a übernimmt. Ergebnis: **0 Treffer außerhalb der Ausnahmen, 96 Regeln, 96 gegriffen, 0 ungenutzt, 0 durchgerutschte Fallen**. Umbenannt: **72 sichtbare Zeichenketten in 18 Dateien**; `grep -c "Spur" docs/Handbuch.md` **41 → 0**. Der frühere Gesamtlauf: fünf Bereiche, 98 + 33 + 8 + 2 + 35 Dateien, **493 Treffer, 493 durch Ausnahmen erklärt, 0 außerhalb**, 86 Ausnahmen mit 0 ungenutzten, 0 durchgerutschte Teilstring-Fallen | 07.09.2026 |
-| P-13 | Migration Typ/Kurzname | SQL vorher/nachher | n = n | offen — AP4 |
-| P-14 | Kreisläufe csv und edbak | `kreislauf.py` | 0 unerklärt | offen — AP4 (AP1 fasst weder Datenmodell noch Format an) |
-| P-15 | Register | Zählung | n = n | offen — AP4 |
+| P-13 | Migration Typ/Kurzname | SQL vorher/nachher | n = n | **erfüllt.** Frische Installation aus `schema.sql` und migrierte Datenbank in `vehicles` und `days` **strukturgleich** (`SHOW CREATE TABLE`, Unterschied nur das entfernte `AUTO_INCREMENT`); Nachfüllung **16 von 16** Diensttagen mit `vehicle_typ` — alle `standard`, `vehicle_kurz` **16 × NULL**, weil kein Dienst des Referenzbestands ein Rettungsmittel mit Kurznamen fährt; den Bergwacht-Fall mit Kurznamen belegt der Klickprobe-Weg `ap4-zuordnen-friert-ein` | 07.09.2026 |
+| P-14 | Kreisläufe csv und edbak | `kreislauf.py` | 0 unerklärt | **erfüllt — edbak 287 771 · csv 9 118 · edbak-alt 287 781 Einzelvergleiche, je 0 unerklärt** (16 / 1 021 / 653 erwartet, 0 ungenutzte Regeln; `--frisch`, dreimal). Dazu Aufwärtskompatibilität: Eine Nutzlast-9-Datei spielt **4 von 6** Rettungsmitteln als `standard` ein und überspringt die **2** ohne Standort, die es in einer echten 9er-Datei nicht geben konnte | 07.09.2026 |
+| P-15 | Register | Zählung | n = n | **45 = 45** — Katalog in `migration_lib.php` gegen die `skipped`-Einträge am Ende von `schema.sql` | 07.09.2026 |
 | P-16 | Sprungliste ab sechs | Bild | 5 → nein, 6 → ja | offen — AP5 |
 | P-17 | Rollen sofort | Klickprobe | Felder = Rollen | offen — AP6 |
 | P-18 | Anderes Rettungsmittel such- und filterbar | Klickprobe | Name in Filterliste | offen — AP6 |
@@ -645,7 +645,8 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   greift `dt_rm_kurz()` nicht). **Der zweite Teil ist kein Fehler, sondern
   eine offene Frage:** Der Kurzname ist als Antwort auf enge Breiten gedacht
   und hilft dort heute nicht. Ob er auch schmal sichtbar werden soll, ist eine
-  Gestaltungsentscheidung — sie steht in Abschnitt 4.
+  Gestaltungsentscheidung — sie steht in Abschnitt 4 (Frage 4, Mockup
+  M-S9-08, Empfehlung Variante 2).
 
 - [ ] **19 — Nach dem Kurznamen suchen (AP4).**
   *Weg:* Suche öffnen, den **Kurznamen** eines Rettungsmittels eintippen, das
@@ -714,6 +715,16 @@ aber es ist nicht so ruhig wie die anderen fünf.
 *Preis einer Gegenentscheidung:* eine Datei tauschen (Tabler „ticket"), eine
 Zeile in `dt_typ_symbole()`, drei Zeilen Dokumentation. **Fällig erst mit
 AP4** — vorher erreicht kein Bedienweg das Zeichen.
+
+**Entschieden vom Auftraggeber am 07.09.2026: Tabler „ticket".** Getauscht
+mit AP4 (Web 16.0.0): eine Datei (`veranstaltung.svg`, vier Zeilen), der
+Dateiname und damit der Aufruf unverändert; Herkunft in `Design.md` 8 und
+`Lizenzen.md` nachgezogen. Messung dazu im Changelog: „ticket" hält seine
+Binnenfläche von 96 px bis 16 px unverändert, „building-stadium" verliert
+bei 18 px zwei seiner vier Binnenflächen auf einen einzelnen Pixel und
+schließt bei 16 px zwei ganz. Damit weicht die Umsetzung an dieser Stelle
+von der Freigabe von M-S9-02 ab — bewusst, mit Zahl, und im Konzept
+(E-S9-13, Abschnitt 6) vermerkt.
 
 **Frage 7 — Der Umfang von E-S9-03 war größer als seine Aufzählung.**
 **Entschieden vom Auftraggeber am 07.09.2026: alles Sichtbare.** Das Konzept
@@ -832,12 +843,46 @@ wäre eine **neue Darstellung** und braucht nach `Design.md` ein Mockup.
 AP5 ein Mockup für eine Rettungsmittel-Angabe an der Kachel; (c) Backlog
 Nr. 69 auf den Rest zurückschneiden.
 
+*Mockup M-S9-08 (Fable, 07.09.2026), Rahmen „Frage 3 a" und „Frage 3 b":*
+Die Einsatzkachel bei 390 px im Ist und in zwei Varianten — **A** Kurzname
+als neutrale Plakette am Anfang des Fußes (ohne Kurznamen die volle
+Bezeichnung), **B** Kurzname als zweite Zeile der Zeitspalte (12 px,
+gedämpft, `max-width: 9em`; ohne Kurznamen bleibt die Zeile leer). Gemessen
+am Render: Kachel **Ist 92 · A 124 · B 92 px** — A wächst um ein Drittel,
+weil der Fuß schon bei „BW Hoch" umbricht (20 → 53 px); B bleibt in der
+Höhe, die Ort und Diagnose ohnehin vorgeben. Regel in beiden Varianten: nur
+wo `artDatum` steht (Suche, Zeitraum), nie auf der Tagesübersicht, die ein
+Rettungsmittel in der Titelzeile nennt. Dazu **3 b**, die Plakettenzeile der
+Einsatzansicht bei 700 und 358 px — die einzige Stelle, an der ein
+Rettungsmittel heute in einer Plakettenzeile steht: Der Kurzname spart bei
+358 px eine Zeile (drei → zwei), bei 700 px nichts.
+*Empfehlung:* 3 a **offen** — A, B oder Ist, jeweils mit der Regel „nur wo
+`artDatum`"; 3 b **nein**, die Einsatzansicht ist ein Lesezustand ohne
+Platzdruck, dort gehört die volle Bezeichnung hin. Zu (c): Nr. 69 wird mit
+der Antwort auf 3 a zurückgeschnitten oder nicht — vorher nicht.
+
 **Frage 4 — Der Kurzname hilft erst ab 1200 px.** Seine Begründung ist der
 knappe Platz; `.eintrag-neben` ist aber unter 1200 px ausgeblendet
 (`style.css`, mit eigener Begründung dort). Am Handy — wo der Platz am
 knappsten ist — steht er also gar nicht. *Zur Entscheidung:* (a) so lassen,
 der Kurzname ist eine Schreibtisch-Hilfe; (b) den Nebentext schmal sichtbar
 machen, wenn ein Kurzname da ist (Gestaltungsänderung, Mockup nötig).
+
+*Mockup M-S9-08, Rahmen „Frage 4":* Dieselbe Leiste (Januar 2026, fünf
+Diensttage, der erste fährt „Bergwacht Hochkreuth" mit Kurzname „BW Hoch")
+in fünf Rahmen: 260 px Ist, 220 px Ist, 220 px **Variante 1** (nur
+`.eintrag-neben.kurz` bleibt sichtbar), 220 px **Variante 2** (dazu das
+Akkordeon unter 1200 px je Ebene 8 statt 12 px eingerückt), Schublade
+320 px. Gemessen am Render, 13 px Open Sans: „BW Hoch" braucht **55 px**;
+frei neben dem Datum sind bei 260 px **55**, bei 220 px in Variante 1 **51**
+(→ „BW Ho…"), in Variante 2 **55** (passt), in der Schublade **55** px. Ein
+16-Zeichen-Kurzname („Sanitätsdienst S", 95 px) ellipsiert in jeder der
+Leisten — auch bei 260 px, also auch heute. Preis von Variante 1 und 2: die
+Regel in `style.css` („Bei 220 px Leistenbreite bliebe von ihm ohnehin nur
+eine Ellipse") wird für Kurznamen eingelöst statt widerlegt — sie gilt
+weiter für volle Namen; wer keinen Kurznamen vergibt, sieht die Leiste wie
+heute.
+*Empfehlung:* **Variante 2** — Variante 1 scheitert gemessen an vier Pixeln.
 
 **Frage 5 — Sollen Diensttage verschiedenen Typs zusammenführbar sein?**
 `dt_merge_pruefen()` prüft heute nur die **Betriebsart**. Zwei Tage, von denen
@@ -846,6 +891,29 @@ Zieltag bekommt den Typ des Gewinners. Das ist nicht falsch, aber es ist auch
 nicht entschieden. *Zur Entscheidung:* (a) so lassen; (b) den Typ wie die
 Betriebsart prüfen und bei Abweichung ablehnen; (c) ihn in die
 Widerspruchsliste des Vergleichsdialogs aufnehmen, damit die NutzerIn wählt.
+
+*Mockup M-S9-09 (Fable, 07.09.2026):* Beide Schritte des Zusammenführens bei
+390 px, je Ist gegen Variante. **Schritt 1** (Kandidaten): Ist — der
+Bergwacht-Tag steht wählbar da, ohne dass sein Typ genannt wird; **(b)** —
+er wandert nach „Nicht wählbar", mit demselben Satzbau und derselben roten
+Plakette, die heute die Betriebsart benutzt. **Schritt 2** (Vorschau): Ist —
+„Der Diensttag danach" nennt die Art, nicht den Typ, und der Widerspruch
+„Rettungsmittel" steht schon heute da, sobald zwei Rettungsmittel
+aufeinandertreffen — der Typ folgt still dem Gewinner; **(c)** — eine Zeile
+„Typ" in der Vorschau (Plakette blau wie „Art", Kleinzeile „folgt dem
+gewählten Rettungsmittel") und Typ samt Kurzname als `wahl-zusatz` in den
+beiden Wahlzeilen. Kein neuer Baustein, kein neuer Schritt; unter 480 px
+rutscht der Zusatz unter den Text (Regel aus `style.css`, in der
+Handy-Fassung nachgestellt: bei 400 px **0 Elemente über dem Rand**, vor
+Übernahme der Regel 1 mit 46 px). Was (b) kostet: den Fall, für den das
+Zusammenführen gebaut ist — zwei angelegte Tage, wo einer gemeint war —,
+für Dienste zu verbieten, die morgens Alpenfalke 1 und nachmittags die
+Bergwacht-Bereitschaft gefahren haben; die Begründung der Betriebsart
+(andere Rollen, andere Felder) trägt hier nicht, denn Rollensatz und
+Fähigkeiten hängen am Diensttag, und die Wahl regelt sie bereits.
+*Empfehlung:* **(c)** — der Typ ist eine Eigenschaft des Rettungsmittels, die
+Wahl des Rettungsmittels gibt es schon, und die Auskunft kostet eine Zeile
+und einen Zusatz.
 
 **Frage 6 — Der Fremdschlüssel auf den Standort.** AP4 hat
 `ON DELETE CASCADE` bewusst **unverändert** gelassen: Wer einen Standort
@@ -857,6 +925,29 @@ also einen Zustand herstellen, den die Prüfschicht nie anlegen würde.
 Standorts die Rettungsmittel ohne Standortpflicht behalten und nur die
 übrigen mitnehmen — das braucht Anwendungslogik statt eines Fremdschlüssels
 und gehört dann in AP5 zur Standortseite.
+
+*Mockup M-S9-10 (Fable, 07.09.2026):* Der Rückfragedialog (`confirm.js`,
+`role="alertdialog"`) bei 512 und 358 px, Ist gegen **(b)** — derselbe
+Baustein, dieselben Knöpfe, ein Satz und eine Zahl anders: „6 eigene
+Stammdatensätze … werden mitgelöscht" wird zu „5 … werden mitgelöscht.
+1 Rettungsmittel ohne Standortpflicht — Bergwacht Hochkreuth — bleibt
+bestehen und steht danach unter „Ohne Standort"." Danach die Karte „Ohne
+Standort" mit 2 (a) gegen 3 Einträgen (b), der neue trägt `:target` wie
+nach dem Anlegen (M-S9-07). Technisch ist (b) keine Fremdschlüssel-Frage:
+`vehicles.base_id → bases` bleibt `ON DELETE CASCADE`; vor dem `DELETE FROM
+bases` läuft in derselben Transaktion `UPDATE vehicles SET base_id = NULL
+WHERE base_id = ? AND typ <> 'standard'` — genau die Rettungsmittel, für
+die `VEHICLE_TYPEN[typ]['standort']` falsch ist —, als eine Funktion neben
+`pruef_rettungsmittel()`, gerufen von beiden Stellen (Konto, Verwaltung).
+Das Rettungsmittel behält Kurznamen, Betriebsart, Fähigkeiten und seine
+Diensttage; es verliert die Vorschlagslisten, die es über den Standort
+hatte, und die Vorbelegung (`user_defaults`) geht mit dem Standort — wie
+heute. Preis: Ein Rettungsmittel überlebt das Löschen seines Standorts
+anders als seine Nachbarn; deshalb sagt die Rückfrage es vorher, mit Namen.
+*Empfehlung:* **(b)**, Umsetzung in **AP5** mit der Standortseite, wo das
+Löschen ohnehin neu verdrahtet wird (E-S9-18, Aktionsmenü). Wer (a) wählt,
+lässt AP4 stehen; dann sollte die Rückfrage wenigstens sagen, dass auch die
+Rettungsmittel ohne Standortpflicht mitgehen.
 
 ---
 

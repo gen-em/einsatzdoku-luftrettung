@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>S9 · Mockup M-S9-10 — Standort löschen mit Rettungsmitteln ohne Standortpflicht</title><style>
+@font-face{font-family:'Open Sans';font-weight:400;src:url(../../../../server/assets/fonts/open-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Open Sans';font-weight:600;src:url(../../../../server/assets/fonts/open-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;--asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;
+  --linie:#E3DAC6;--linie-stark:var(--gedaempft);--orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;--rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;--schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --knopf:44px;--symbol:20px;--symbol-klein:16px;--strich:1px;--strich-stark:2px;
+  --schatten-hoch:0 8px 28px rgba(26,5,0,.22);--schleier:rgba(26,46,77,.55);
+}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.55;width:1280px}
+.mock-kopf{padding:20px 24px 4px}.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p,.unter{margin:0 24px 10px;color:var(--gedaempft);font-size:var(--groesse-2)}.mock-kopf p{margin:0}
+h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:18px 24px 2px;color:var(--dunkelblau)}
+.frames{display:flex;margin:0 24px;align-items:flex-start;flex-wrap:wrap}.frames > div{flex:0 0 auto;margin:0 18px 14px 0}
+.rahmen-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.frame{background:var(--rauch);border:1px solid #CFC7B5;border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(26,46,77,.10);box-sizing:border-box}
+.buehne{background:var(--schleier);padding:24px 16px;border-radius:14px;box-sizing:border-box;display:flex;justify-content:center}
+.notiz{padding:10px 24px 26px;max-width:1180px}.notiz ol{margin:0;padding-left:20px}.notiz li{margin-bottom:6px}
+.empf{background:var(--schnee);border-left:4px solid var(--orange);padding:6px 10px;margin:8px 0}
+.neu{outline:2px dashed var(--orange);outline-offset:2px;border-radius:4px}
+code{font-family:ui-monospace,monospace;font-size:.92em;background:var(--rauch);padding:0 3px;border-radius:3px}
+/* ---- Anwendung ------------------------------------------------------------ */
+.symbol{width:var(--symbol);height:var(--symbol);flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.dialog{border:0;padding:0;background:var(--schnee);border-radius:var(--radius-gross);box-shadow:var(--schatten-hoch);max-width:min(92vw,32rem);width:100%;color:var(--asphalt);box-sizing:border-box}
+.dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0}
+.dialog-kopf h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);color:var(--dunkelblau);margin:0}
+.dialog-inhalt{padding:var(--abstand-4)}.dialog-inhalt p{margin:0 0 var(--abstand-3)}.dialog-inhalt p:last-child{margin-bottom:0}
+.dialog-fuss{display:flex;gap:var(--abstand-3);justify-content:flex-end;padding:0 var(--abstand-4) var(--abstand-4)}
+.dialog-fuss .knopf{flex:1 1 auto}
+.knopf{display:inline-flex;align-items:center;justify-content:center;gap:var(--abstand-2);height:var(--knopf);padding:0 var(--abstand-4);border-radius:var(--radius);border:var(--strich-stark) solid transparent;font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-3);box-sizing:border-box;color:var(--dunkelblau)}
+.knopf-gefahr{background:var(--schnee);color:var(--rot-tief);border-color:var(--rot)}
+.knopf-leise{background:none;color:var(--gedaempft);padding:0 var(--abstand-2)}
+.karte{background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius-gross)}
+.karte-kopf{display:flex;align-items:center;gap:var(--abstand-2);padding:var(--abstand-3) var(--abstand-4);border-bottom:var(--strich) solid var(--linie)}
+.karte-titel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);color:var(--dunkelblau);margin:0;flex:1 1 auto}
+.karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2)}
+.karte-inhalt{padding:var(--abstand-4)}
+.akkordeon-winkel{color:var(--sand)}
+.feld-hinweis{color:var(--gedaempft);font-size:var(--groesse-2);margin:0 0 var(--abstand-3)}
+.zeile{display:flex;align-items:center;padding:var(--abstand-3) 0;border-bottom:var(--strich) solid var(--linie)}
+.zeile:last-child{border-bottom:0;padding-bottom:0}
+.zeile-vorn{flex:0 0 auto;display:flex;align-items:center;color:var(--dunkelblau);margin-right:var(--abstand-3)}
+.zeile-text{flex:1 1 auto;min-width:0}
+.zeile-haupt{font-weight:600;color:var(--asphalt)}
+.zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+.zeile-aktionen{flex:0 0 auto;margin-left:var(--abstand-2);display:flex;gap:var(--abstand-1)}
+.knopf-symbol{width:var(--knopf);height:var(--knopf);padding:0;background:none;border-color:transparent;color:var(--dunkelblau)}
+.zeile.ziel{background:var(--orange-hell);margin:0 calc(var(--abstand-3) * -1);padding-left:var(--abstand-3);padding-right:var(--abstand-3);border-radius:var(--radius-klein)}
+</style></head><body>
+<div class="mock-kopf"><h1>S9 · M-S9-10 — Standort löschen, wenn Rettungsmittel ohne Standortpflicht daran hängen (Frage 6 aus AP4)</h1>
+<p>Die „Luftrettungsstation Hochkreuth" des Referenzbestands trägt sechs eigene Stammdatensätze: Alpenfalke 1 und 2 (Standard), Bergwacht Hochkreuth (Typ Bergwacht, Kurzname „BW Hoch"), eine Zielklinik, eine Besatzungs-Vorbelegung und eine Bergwacht-Bereitschaft. Wer den Standort löscht, bekommt heute die Rückfrage links; der Fremdschlüssel steht auf <code>ON DELETE CASCADE</code>, alle sechs gehen mit — auch die Bergwacht, die seit E-S9-09 ohne Standort bestehen dürfte. AP4 hat das bewusst nicht angefasst (Fassung a). Rechts die Fassung <b>b</b>: Rettungsmittel ohne Standortpflicht bleiben und wandern nach „Ohne Standort".</p></div>
+
+<h2>Die Rückfrage · Dialog 512 px (Desktop, <code>max-width:32rem</code>)</h2>
+<p class="unter">Derselbe Rückfragedialog (<code>confirm.js</code>, <code>role="alertdialog"</code>), zwei Texte. Der Unterschied ist <em>ein Satz</em> und eine Zahl: Sechs werden fünf, und ein Rettungsmittel wird beim Namen genannt.</p>
+<div class="frames">
+<div><p class="rahmen-titel">Ist · (a) alles geht mit</p><div class="buehne" style="width:600px"><div class="dialog" style="max-width:512px">
+<div class="dialog-kopf"><h2>Standort löschen</h2></div>
+<div class="dialog-inhalt"><p>Standort „Luftrettungsstation Hochkreuth“ löschen? 6 eigene Stammdatensätze dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht. Bereits dokumentierte Diensttage bleiben unverändert.</p></div>
+<div class="dialog-fuss"><button class="knopf knopf-leise">Abbrechen</button><button class="knopf knopf-gefahr">Löschen</button></div>
+</div></div></div>
+
+<div><p class="rahmen-titel">Variante b · Rettungsmittel ohne Standortpflicht bleiben</p><div class="buehne" style="width:600px"><div class="dialog" style="max-width:512px">
+<div class="dialog-kopf"><h2>Standort löschen</h2></div>
+<div class="dialog-inhalt"><p>Standort „Luftrettungsstation Hochkreuth“ löschen? 5 eigene Stammdatensätze dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht. <span class="neu">1 Rettungsmittel ohne Standortpflicht — Bergwacht Hochkreuth — bleibt bestehen und steht danach unter „Ohne Standort“.</span> Bereits dokumentierte Diensttage bleiben unverändert.</p></div>
+<div class="dialog-fuss"><button class="knopf knopf-leise">Abbrechen</button><button class="knopf knopf-gefahr">Löschen</button></div>
+</div></div></div>
+</div>
+
+<h2>Dieselbe Rückfrage am Handy · 358 px</h2>
+<div class="frames">
+<div><p class="rahmen-titel">Ist · (a)</p><div class="buehne" style="width:390px"><div class="dialog">
+<div class="dialog-kopf"><h2>Standort löschen</h2></div>
+<div class="dialog-inhalt"><p>Standort „Luftrettungsstation Hochkreuth“ löschen? 6 eigene Stammdatensätze dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht. Bereits dokumentierte Diensttage bleiben unverändert.</p></div>
+<div class="dialog-fuss"><button class="knopf knopf-leise">Abbrechen</button><button class="knopf knopf-gefahr">Löschen</button></div>
+</div></div></div>
+<div><p class="rahmen-titel">Variante b</p><div class="buehne" style="width:390px"><div class="dialog">
+<div class="dialog-kopf"><h2>Standort löschen</h2></div>
+<div class="dialog-inhalt"><p>Standort „Luftrettungsstation Hochkreuth“ löschen? 5 eigene Stammdatensätze dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht. <span class="neu">1 Rettungsmittel ohne Standortpflicht — Bergwacht Hochkreuth — bleibt bestehen und steht danach unter „Ohne Standort“.</span> Bereits dokumentierte Diensttage bleiben unverändert.</p></div>
+<div class="dialog-fuss"><button class="knopf knopf-leise">Abbrechen</button><button class="knopf knopf-gefahr">Löschen</button></div>
+</div></div></div>
+</div>
+
+<h2>Danach: die Karte „Ohne Standort" · 390 px</h2>
+<p class="unter">Links nach Fassung a — die Karte ist, wie sie war: zwei Einträge, Bergwacht Hochkreuth ist fort, mit ihr der Kurzname und die zwei Fähigkeiten. Rechts nach Fassung b — drei Einträge, der neue trägt <code>:target</code> (dieselbe Landung wie nach dem Anlegen, M-S9-07).</p>
+<div class="frames">
+<div><p class="rahmen-titel">Nach (a)</p><div class="frame" style="width:390px"><div class="karte">
+<div class="karte-kopf"><svg class="symbol akkordeon-winkel" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></svg><h3 class="karte-titel">Ohne Standort</h3><span class="karte-zahl">2 Rettungsmittel</span></div>
+<div class="karte-inhalt"><p class="feld-hinweis">Bergwacht, Veranstaltung und Sonstiges brauchen keinen Standort. Sie haben dafür keine Vorschlagslisten — die hängen am Standort.</p>
+<div class="zeile"><span class="zeile-vorn"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M8 12l0 .01"/><path d="M12 12l0 .01"/><path d="M16 12l0 .01"/></svg></span><span class="zeile-text"><span class="zeile-haupt">Reserve Talwang</span><span class="zeile-klein">Sonstiges · Reserve</span></span><span class="zeile-aktionen"><span class="knopf knopf-symbol"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg></span><span class="knopf knopf-symbol"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg></span></span></div>
+<div class="zeile"><span class="zeile-vorn"><svg class="symbol" viewBox="0 0 24 24"><path d="M15 5l0 2"/><path d="M15 11l0 2"/><path d="M15 17l0 2"/><path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-3a2 2 0 0 0 0 -4v-3a2 2 0 0 1 2 -2"/></svg></span><span class="zeile-text"><span class="zeile-haupt">Sanitätsdienst Seefest</span><span class="zeile-klein">Veranstaltung</span></span><span class="zeile-aktionen"><span class="knopf knopf-symbol"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg></span><span class="knopf knopf-symbol"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg></span></span></div>
+</div></div></div></div>
+
+<div><p class="rahmen-titel">Nach (b)</p><div class="frame" style="width:390px"><div class="karte">
+<div class="karte-kopf"><svg class="symbol akkordeon-winkel" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></svg><h3 class="karte-titel">Ohne Standort</h3><span class="karte-zahl">3 Rettungsmittel</span></div>
+<div class="karte-inhalt"><p class="feld-hinweis">Bergwacht, Veranstaltung und Sonstiges brauchen keinen Standort. Sie haben dafür keine Vorschlagslisten — die hängen am Standort.</p>
+<div class="zeile ziel"><span class="zeile-vorn"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 20h18l-6.921 -14.612a2.3 2.3 0 0 0 -4.158 0l-6.921 14.612"/><path d="M7.5 11l2 2.5l2.5 -2.5l2 3l2.5 -2"/></svg></span><span class="zeile-text"><span class="zeile-haupt">Bergwacht Hochkreuth</span><span class="zeile-klein">Bergwacht · BW Hoch · Winde, Bergwacht</span></span><span class="zeile-aktionen"><span class="knopf knopf-symbol"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg></span><span class="knopf knopf-symbol"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg></span></span></div>
+<div class="zeile"><span class="zeile-vorn"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M8 12l0 .01"/><path d="M12 12l0 .01"/><path d="M16 12l0 .01"/></svg></span><span class="zeile-text"><span class="zeile-haupt">Reserve Talwang</span><span class="zeile-klein">Sonstiges · Reserve</span></span><span class="zeile-aktionen"><span class="knopf knopf-symbol"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg></span><span class="knopf knopf-symbol"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg></span></span></div>
+<div class="zeile"><span class="zeile-vorn"><svg class="symbol" viewBox="0 0 24 24"><path d="M15 5l0 2"/><path d="M15 11l0 2"/><path d="M15 17l0 2"/><path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-3a2 2 0 0 0 0 -4v-3a2 2 0 0 1 2 -2"/></svg></span><span class="zeile-text"><span class="zeile-haupt">Sanitätsdienst Seefest</span><span class="zeile-klein">Veranstaltung</span></span><span class="zeile-aktionen"><span class="knopf knopf-symbol"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg></span><span class="knopf knopf-symbol"><svg class="symbol" viewBox="0 0 24 24"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg></span></span></div>
+</div></div></div></div>
+</div>
+
+<div class="notiz">
+<h2 style="margin-left:0">Anmerkungen</h2>
+<ol>
+<li><b>Ist (a).</b> <code>vehicles_ibfk_2</code> steht auf <code>ON DELETE CASCADE</code>; die Rückfrage zählt über <code>$sdAnzahl()</code> alle eigenen Stammdatensätze des Standorts und nennt die fünf Arten. Das ist E15 wörtlich — und seit E-S9-09 nimmt es ein Rettungsmittel mit, das ohne diesen Standort bestehen dürfte. AP4 hat das stehen lassen und begründet: <code>ON DELETE SET NULL</code> wäre falsch, weil es <em>jedes</em> Standard-Rettungsmittel standortlos machte, also einen Datensatz, den die Prüfschicht nie anlegen würde.</li>
+<li><b>Variante b ist keine Fremdschlüssel-Frage.</b> Der Fremdschlüssel bleibt <code>CASCADE</code>. Vor dem <code>DELETE FROM bases</code> läuft in derselben Transaktion <code>UPDATE vehicles SET base_id = NULL WHERE base_id = ? AND typ &lt;&gt; 'standard'</code> — genau die Rettungsmittel, für die <code>VEHICLE_TYPEN[typ]['standort']</code> falsch ist. Der Rest geht mit wie heute. Zwei Stellen (Konto <code>einstellungen.php</code>, Verwaltung <code>admin_stammdaten.php</code>), dieselbe Regel; sie gehört als Funktion neben <code>pruef_rettungsmittel()</code>, damit sie nicht zweimal steht.</li>
+<li><b>Die Rückfrage trennt die Zahl.</b> Aus „6 werden mitgelöscht" wird „5 werden mitgelöscht, 1 bleibt" — mit Namen, weil ein Rettungsmittel, das einen Standort <em>verlässt</em>, eine Nachricht ist und keine Statistik. Bei mehreren: „2 Rettungsmittel ohne Standortpflicht (Bergwacht Hochkreuth, Reserve Talwang) bleiben …". Der Text steht in <code>data-confirm</code>, wie heute; Baustein und Knöpfe unverändert.</li>
+<li><b>Was danach steht.</b> Das Rettungsmittel behält Kurznamen, Betriebsart, Fähigkeiten und seine Diensttage (die hängen ohnehin an <code>vehicle_id</code> mit <code>SET NULL</code> und an der Momentaufnahme). Es verliert die Vorschlagslisten des Standorts — die hatte es über den Standort, nicht selbst. In der Karte „Ohne Standort" landet es mit <code>:target</code>, damit man es wiederfindet (M-S9-07).</li>
+<li><b>Preis von b.</b> Ein Rettungsmittel „überlebt" das Löschen seines Standorts stillschweigend anders als seine Nachbarn — die Rückfrage sagt es vorher, aber wer sie schnell wegklickt, findet es später unter „Ohne Standort" und fragt sich, woher es kommt. Und die Vorbelegung (<code>user_defaults</code>, Stern) bleibt an ihm hängen, wenn es die Vorbelegung war — heute geht sie mit dem Standort. Das ist eher richtig als falsch, sollte aber gesagt sein.</li>
+<li><b>Nicht gezeichnet:</b> ein Dialog mit <em>Liste</em> („geht mit: … / bleibt: …"). Das wäre eine Darstellung mehr im Rückfragedialog, der bisher nur Text trägt; der eine Satz reicht für den Regelfall (ein bis zwei solche Rettungsmittel je Standort).</li>
+</ol>
+<div class="empf"><b>Zur Freigabe:</b> (a) so lassen oder (b) Rettungsmittel ohne Standortpflicht behalten und nach „Ohne Standort" setzen. <b>Empfehlung: b</b> — E-S9-09 sagt, diese Rettungsmittel brauchen keinen Standort; dann darf das Löschen eines Standorts sie auch nicht kosten. Umsetzung in <b>AP5</b> mit der Standortseite, wo das Löschen ohnehin neu verdrahtet wird (E-S9-18, Aktionsmenü).</div>
+</div>
+</body></html>

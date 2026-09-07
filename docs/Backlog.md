@@ -797,6 +797,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zu ersetzen; das wäre eine neue Darstellung und braucht ein Mockup.
     Der Punkt bleibt deshalb offen und wandert erst mit AP8 nach
     Erledigt — oder wird dort auf diesen Rest zurückgeschnitten.*
+    *Mockup dazu (07.09.2026): M-S9-08 — Kachel in zwei Varianten,
+    Plakettenzeile, Leiste unter 1200 px; Freigabe offen.*
 
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**
     *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
