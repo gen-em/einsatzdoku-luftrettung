@@ -1,0 +1,56 @@
+name: Integritaetswache
+
+# Laeuft die ausgelieferte Fassung noch der aus dem Repositorium?
+#
+# WOGEGEN (SP-6, F-SP-9, Backlog Nr. 140). Der eine Angriff, gegen den keine
+# Verschluesselung im Browser hilft, ist ein Server, der VERAENDERTEN CODE
+# ausliefert: eine Zeile in `crypto.js`, und das naechste Passwort geht mit.
+# Verhindern laesst sich das nur durch Zugangsschutz; ERKENNEN hier.
+#
+# WARUM ES KEINE EIGENE MAILADRESSE BRAUCHT: Ein fehlgeschlagener Lauf loest
+# die gewoehnliche GitHub-Benachrichtigung aus (Einstellung "Actions" in den
+# Benachrichtigungen). Eine eigene Adresse braeuchte es nur, wenn die Meldung
+# woanders ankommen soll.
+#
+# KEIN SERVERZUGRIFF, NUR HTTPS -- die Wache holt oeffentliche Dateien und die
+# Anmeldeseite. Sie hat keine Zugangsdaten und soll keine bekommen.
+
+on:
+  schedule:
+    # Taeglich um 04:17 UTC. Krumme Minute mit Absicht: Zur vollen Stunde
+    # stehen bei GitHub Millionen Jobs an, und der Lauf verschoebe sich
+    # unvorhersehbar.
+    - cron: '17 4 * * *'
+  # Nach jedem Deploy: Genau dann aendert sich die Auslieferung, und genau
+  # dann will man wissen, ob sie so ankam, wie sie losgeschickt wurde.
+  workflow_run:
+    workflows: ["Server per FTP hochladen"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Selbstprobe — erkennt die Wache eine Abweichung ueberhaupt?
+        # ZUERST, und das ist kein Formalismus: Ein gruener Lauf einer Wache,
+        # die immer gruen meldet, sieht genauso aus wie einer, der nichts
+        # gefunden hat. Die Selbstprobe rechnet ohne Netz und braucht eine
+        # Sekunde.
+        run: python3 tools/integritaetswache/wache.py --selbstprobe
+
+      - name: Auslieferung gegen das Repositorium
+        env:
+          # Ueber eine Repository-Variable umstellbar, damit ein Selbsthoster
+          # die Datei nicht anfassen muss.
+          WACHE_BASIS: ${{ vars.WACHE_BASIS }}
+        run: |
+          BASIS="${WACHE_BASIS:-https://nadoku.gen-em.org}"
+          echo "Basisadresse: $BASIS"
+          python3 tools/integritaetswache/wache.py "$BASIS"

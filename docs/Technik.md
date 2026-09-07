@@ -350,11 +350,23 @@ Daten erst nach Server-Bestätigung.
 │   │                      W): was gesperrt wird, was offen bleibt, Schalten
 │   │                      per POST, kaputte Schalterdatei, Antwortzeit — und
 │   │                      seit Web 15.5.2 die Zählweise der Migrationen
-│   │                      (Teil 6, Backlog Nr. 149) — 50 Erwartungen.
+│   │                      (Teil 6, Backlog Nr. 149) und seit 15.6.0, dass die
+│   │                      Integritätswache im Wartungsmodus nicht rot wird
+│   │                      (12a, Nr. 140) — 51 Erwartungen.
 │   │                      **Legt den Schalter selbst um** und nimmt für
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer
 │   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
+│   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit der des
+│   │                      Repositoriums: jede Datei unter `server/assets/`
+│   │                      und die PHP-freien Inline-Skriptblöcke von
+│   │                      `login.php`, je über SHA-256. Ohne eingecheckte
+│   │                      Prüfsummen — der Deploy synchronisiert byteweise,
+│   │                      also rechnet sie beide Seiten frisch. Läuft täglich
+│   │                      und nach jedem Deploy als GitHub-Action
+│   │                      (`integritaet.yml`); `--selbstprobe` beantwortet
+│   │                      zuerst, ob sie eine Abweichung überhaupt erkennt
+│   │                      (Backlog Nr. 140, SP-6)
 │   ├── linkprobe/         hält jede Adresse `<seite>.php?<name>=` unter
 │   │                      `server/` (PHP und JavaScript) gegen die Parameter,
 │   │                      die die Zielseite tatsächlich liest — 99 Zielseiten,
@@ -5470,8 +5482,19 @@ für das sie da ist.
 (neben `db.php`)? (2) Ist die aufgerufene Seite eine der elf Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/wartungsprobe/probe.php` (50 Erwartungen; seit Web 15.5.2 misst
-ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149).
+`php tools/wartungsprobe/probe.php` (51 Erwartungen; seit Web 15.5.2 misst
+ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, und
+seit 15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot
+wird, Nr. 140).
+
+**Die Integritaetswache ist rot:** `tools/integritaetswache/LIESMICH.md`,
+Abschnitt „Wenn sie rot wird" — in dieser Reihenfolge: Wurde gerade deployt?
+Steht `main` weiter als die Auslieferung? Erst wenn beides nicht passt, ist es
+eine Manipulation, und dann gilt: **nichts ueberschreiben**, bevor die
+abweichende Datei per FTPS heruntergeladen und beiseitegelegt ist — sie ist
+der Beleg. Danach FTPS-Zugangsdaten wechseln, Deploy neu ausloesen, und jedes
+Passwort, das seit der Abweichung eingegeben wurde, als moeglicherweise
+mitgelesen behandeln.
 
 **Demo-Konto einrichten (einmalig):** Fixture erzeugen —
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der
