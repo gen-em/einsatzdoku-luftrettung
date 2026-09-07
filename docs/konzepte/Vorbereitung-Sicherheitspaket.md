@@ -9,7 +9,7 @@ angehen? Oder sind sie schon adressiert? Was sind deine Vorschläge?"*
 **Status:** Vorschläge, nichts umgesetzt. **Alle zehn Entscheidungen sind
 am 06.09.2026 gefallen (Abschnitt 6a); Abschnitt 6b hält die Erklärungen
 zu den drei zuletzt entschiedenen fest.** Rahmenplan Fassung 28 (R78) und
-Backlog 127–146 tragen den Stand. **Das Sofortpaket kann beginnen.**
+Backlog 127–146 tragen den Stand. **Das Sofortpaket kann beginnen.** **Vermerk 07.09.2026 (Rahmenplan Fassung 34):** SP-12 (a) und K-12 — Backlog 137 und 132 — sind **ganz nach S9** gewandert (Konzept S9, E-S9-05 und E-S9-02); das Sofortpaket fasst `ortsfeld.js`, `ortswahl.js`, `mission_fields.php` und `betrieb_server.php` nicht an und läuft parallel zu S9.
 **Stand:** 06.09.2026, Web 14.2.2, Uhr 3.0.2, Android 0.13.0.
 
 **Bezeichner:** Die Vorschläge heißen **SP-1 bis SP-14**, die offenen

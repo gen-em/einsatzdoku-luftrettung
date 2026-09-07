@@ -1,0 +1,213 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>S9 · Mockup M-S9-03 — Vorschlagsliste</title><style>
+
+@font-face{font-family:'Open Sans';font-weight:400;src:url(../../../../server/assets/fonts/open-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Open Sans';font-weight:600;src:url(../../../../server/assets/fonts/open-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:500;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-500-normal.woff2) format('woff2')}
+/* ---- Token aus server/assets/style.css (Auszug, unverändert) ---------- */
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;--asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;
+  --linie:#E3DAC6;--linie-stark:var(--gedaempft);
+  --orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;--blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;--rot-tief:#9E2226;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;--schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --knopf:44px;--symbol:20px;--symbol-klein:16px;--symbol-gross:24px;--strich:1px;--strich-stark:2px;
+  --schatten:0 2px 8px rgba(26,5,0,.10);
+  --knopf-primaer-flaeche:var(--orange);--knopf-primaer-schrift:var(--dunkelblau);
+}
+/* ---- Mockup-Rahmen ------------------------------------------------------ */
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5;width:1280px}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p,.unter{margin:0 24px 10px;color:var(--gedaempft);font-size:var(--groesse-2)}
+.mock-kopf p{margin:0}
+h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:14px 24px 2px;color:var(--dunkelblau)}
+.frames{display:-webkit-box;display:flex;margin:0 24px;align-items:flex-start}
+.frames > div{flex:0 0 auto;margin-right:18px}
+.rahmen-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.frame{background:var(--rauch);border:1px solid #CFC7B5;border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(26,46,77,.10)}
+.notiz{padding:10px 24px 26px;max-width:1180px}
+.notiz ol{margin:0;padding-left:20px}.notiz li{margin-bottom:5px}
+.empf{background:var(--schnee);border-left:4px solid var(--orange);padding:6px 10px;margin:8px 0}
+.notiz table{border-collapse:collapse;font-size:var(--groesse-2);margin:8px 0}
+.notiz th,.notiz td{border:1px solid var(--linie);padding:3px 8px;text-align:left}
+
+/* ---- Anwendung (style.css) ------------------------------------------------ */
+.symbol{width:var(--symbol);height:var(--symbol);flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
+.symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
+.symbol-klein{width:var(--symbol-klein);height:var(--symbol-klein)}
+.karte{background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);margin-bottom:0}
+.karte-kopf{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;padding:var(--abstand-3) var(--abstand-4);border-bottom:var(--strich) solid var(--linie)}
+.karte-titel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);color:var(--dunkelblau);margin:0;margin-right:var(--abstand-2)}
+.karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2)}
+.karte-inhalt{padding:var(--abstand-4)}
+label{display:block;margin-bottom:var(--abstand-3);font-family:var(--schrift-kopf);font-weight:600;color:var(--dunkelblau)}
+.feld-klein-inline{color:var(--gedaempft);font-size:var(--groesse-2);font-family:var(--schrift-text);font-weight:400}
+input,select{max-width:100%;padding:var(--abstand-2) var(--abstand-3);min-height:var(--knopf);background:var(--schnee);color:var(--asphalt);border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein);font:inherit;font-family:var(--schrift-text);font-weight:400;box-sizing:border-box}
+label > input,label > select{display:block;width:100%;margin-top:var(--abstand-1)}
+.knopf{display:-webkit-inline-box;display:inline-flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;height:var(--knopf);padding:0 var(--abstand-4);border-radius:var(--radius);border:var(--strich-stark) solid transparent;font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-3);box-sizing:border-box}
+.knopf-symbol{width:var(--knopf);padding:0}
+.knopf-neutral{background:var(--schnee);color:var(--dunkelblau);border-color:var(--linie-stark)}
+.loc-widget > label{margin-bottom:var(--abstand-1)}
+.loc-widget{margin-bottom:var(--abstand-3);position:relative}
+.ortsfeld-zeile{display:-webkit-box;display:flex;-webkit-box-align:stretch;align-items:stretch}
+.ortsfeld-zeile input{flex:1 1 auto;min-width:0;margin-right:var(--abstand-2)}
+.ortsfeld-zeile .knopf-symbol{flex:0 0 auto;margin-right:var(--abstand-2)}
+.ortsfeld-zeile .knopf-symbol:last-child{margin-right:0}
+.rmbox{position:relative}
+.rmfeld{display:-webkit-box;display:flex;flex-wrap:wrap;-webkit-box-align:center;align-items:center;background:var(--schnee);border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein);padding:var(--abstand-1) var(--abstand-2);min-height:var(--knopf);box-sizing:border-box}
+.rmchip{display:-webkit-inline-box;display:inline-flex;-webkit-box-align:center;align-items:center;background:var(--blau-hell);color:var(--dunkelblau);border-radius:var(--radius-rund);padding:var(--abstand-1) var(--abstand-2);font-size:var(--groesse-2);font-weight:600;margin-right:var(--abstand-1)}
+.rmx{border:0;background:none;color:inherit;padding:0 var(--abstand-1);font-size:var(--groesse-3);line-height:1;margin-left:2px}
+.rmeingabe{flex:1 1 8rem;min-width:0;border:0;min-height:0;padding:var(--abstand-1);background:none;font-family:var(--schrift-text);font-weight:400}
+.tag-form label{margin-bottom:var(--abstand-3)}
+
+/* == NEU: Vorschlagsliste — EIN Baustein (E-S9-07) ==========================
+ * Ersetzt .loc-suggest (Ortsfeld), .rmlist (Rettungsmittel) und jede
+ * <datalist>. Rahmen und Schatten wie .loc-suggest heute; neu sind die
+ * Gruppenzeile, das Symbol je Eintrag, die Nebenzeile und die Tastaturmarke. */
+.vorschlaege{
+  position:absolute;left:0;right:0;z-index:20;margin-top:var(--abstand-1);
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+  box-shadow:var(--schatten);
+  overflow:hidden;list-style:none;padding:0;
+}
+.vorschlaege-gruppe{
+  padding:var(--abstand-1) var(--abstand-3);
+  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-1);
+  letter-spacing:.06em;text-transform:uppercase;color:var(--gedaempft);
+  background:var(--rauch);border-top:var(--strich) solid var(--linie);
+}
+.vorschlaege-gruppe:first-child{border-top:0}
+.vorschlag{
+  display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;
+  min-height:var(--knopf);padding:var(--abstand-1) var(--abstand-3);
+  border-left:var(--abstand-1) solid transparent;cursor:pointer;
+}
+.vorschlag .symbol{color:var(--gedaempft);margin-right:var(--abstand-2)}
+.vorschlag-text{flex:1 1 auto;min-width:0}
+.vorschlag-haupt{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vorschlag-neben{display:block;color:var(--gedaempft);font-size:var(--groesse-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vorschlag:hover,.vorschlag.aktiv{background:var(--rauch);border-left-color:var(--orange)}
+.vorschlag-neu .vorschlag-haupt{color:var(--orange-tief);font-family:var(--schrift-kopf);font-weight:600}
+.vorschlag-neu .symbol{color:var(--orange-tief)}
+.vorschlaege-leer{padding:var(--abstand-2) var(--abstand-3);color:var(--gedaempft);font-size:var(--groesse-2)}
+/* Dichte Stufe am Zeigergerät (R76): 36 px statt 44 */
+.dicht{--knopf:36px}
+.dicht .vorschlag{padding-top:2px;padding-bottom:2px}
+
+</style></head><body>
+<div class="mock-kopf"><h1>S9 · M-S9-03 — Die Vorschlagsliste: ein Baustein mit Gruppen</h1>
+<p>Ersetzt <code>&lt;datalist&gt;</code> (Nr. 68), die Photon-Liste des Ortsfelds (<code>.loc-suggest</code>) und die Liste der weiteren Rettungsmittel (<code>.rmlist</code>). Vier Verwendungen: Transportziel (Stammdaten oben, höchstens zwei, dann Adressen — PS-6, F9/F10), Besatzungsfeld (Vorlagen), weitere Rettungsmittel (Vorbelegungen plus freie Eingabe, PS-2), Einsatzort (nur Adressen, F9). Oben am Finger (44 px, 358 px Formularbreite), unten am Zeiger (36 px, R76, 560 px Spalte). Der orange Strich links markiert den Eintrag, den Pfeiltaste oder Zeiger gerade hält.</p></div>
+<h2>Am Finger · 44 px · Handy 390</h2><p class="unter">Getippt: „Klin", „Ma", „RTW". Die Liste öffnet unter dem Feld, über dem übrigen Inhalt.</p>
+<div class="frames">
+<div><p class="rahmen-titel">Transportziel — Stammdaten und Adressen</p><div class="frame" style="width:358px;box-sizing:border-box"><div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Transport</h3></div><div class="karte-inhalt">
+  <label>Transportart <select><option>Luft</option></select></label>
+  <div class="loc-widget">
+  <label>Transportziel <span class="feld-klein-inline">Lokalisation Transportziel (optional)</span></label>
+  <div class="ortsfeld-zeile">
+    <input type="text" value="Klin">
+    <button type="button" class="knopf knopf-symbol knopf-neutral"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg></button>
+    <button type="button" class="knopf knopf-symbol knopf-neutral"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M4 12a8 8 0 1 0 16 0a8 8 0 1 0 -16 0" /><path d="M12 2l0 2" /><path d="M12 20l0 2" /><path d="M20 12l2 0" /><path d="M2 12l2 0" /></svg></button>
+  </div>
+  <ul class="vorschlaege">
+<li class="vorschlaege-gruppe">Zielkliniken</li>
+<li class="vorschlag aktiv"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0" /><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16" /><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4" /><path d="M10 9l4 0" /><path d="M12 7l0 4" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ikum Kempten</span><span class="vorschlag-neben">Stammdaten · mit Koordinate</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0" /><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16" /><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4" /><path d="M10 9l4 0" /><path d="M12 7l0 4" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ik Immenstadt</span><span class="vorschlag-neben">Stammdaten · mit Koordinate</span></span></li>
+<li class="vorschlaege-gruppe">Adressen</li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ikum Kempten, Robert-Weixler-Straße 50</span><span class="vorschlag-neben">87439 Kempten (Allgäu)</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ikum Oberallgäu, Im Stillen 2</span><span class="vorschlag-neben">87509 Immenstadt</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ik Bad Grönenbach, Sebastian-Kneipp-Allee 3</span><span class="vorschlag-neben">87730 Bad Grönenbach</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ikverbund Allgäu, Kaufbeurer Straße 11</span><span class="vorschlag-neben">87437 Kempten (Allgäu)</span></span></li>
+</ul>
+</div>
+  <div style="height:330px"></div>
+</div></div></div></div>
+<div><p class="rahmen-titel">Besatzungsfeld — Vorlagen</p><div class="frame" style="width:358px;box-sizing:border-box"><div class="karte tag-form"><div class="karte-kopf"><h3 class="karte-titel">Diensttag-Daten bearbeiten</h3></div><div class="karte-inhalt">
+  <label>Rettungsmittel <select><option>Christoph 17 · Kempten</option></select></label>
+  <div class="loc-widget"><label>Pilot 1</label>
+    <input type="text" value="Ma" style="width:100%">
+    <ul class="vorschlaege">
+<li class="vorschlaege-gruppe">Vorlagen des Standorts</li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Ma</b>x Mustermann</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Ma</b>rkus Ott</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Ma</b>nuel Berg</span></span></li>
+</ul>
+  </div>
+  <div style="height:190px"></div>
+  <label>Pilot 2 <input type="text" value=""></label>
+</div></div></div></div>
+<div><p class="rahmen-titel">Weitere Rettungsmittel — mit freier Eingabe</p><div class="frame" style="width:358px;box-sizing:border-box"><div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Weitere Rettungsmittel</h3></div><div class="karte-inhalt">
+  <label>Weitere Rettungsmittel</label>
+  <div class="rmbox">
+    <div class="rmfeld"><span class="rmchip">NEF Kempten 1<span class="rmx">×</span></span><input class="rmeingabe" value="RTW"></div>
+    <ul class="vorschlaege">
+<li class="vorschlag aktiv"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M15 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5" /><path d="M6 10h4m-2 -2v4" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>RTW</b> Kempten 1</span><span class="vorschlag-neben">Vorbelegung des Standorts</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M15 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5" /><path d="M6 10h4m-2 -2v4" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>RTW</b> Kempten 2</span><span class="vorschlag-neben">Vorbelegung des Standorts</span></span></li>
+<li class="vorschlag vorschlag-neu"><svg class="symbol" viewBox="0 0 24 24"><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt">„RTW Sonthofen" übernehmen</span><span class="vorschlag-neben">freie Eingabe</span></span></li>
+</ul>
+  </div>
+  <div style="height:190px"></div>
+  <label>Weiterer Notarzt <input type="text" value=""></label>
+</div></div></div></div>
+</div>
+<h2>Am Zeiger · 36 px · Desktop 1280</h2><p class="unter">Dieselben Regeln, dichte Stufe (R76): Zeilen 36 px, Gruppenzeilen unverändert klein.</p>
+<div class="frames">
+<div><p class="rahmen-titel">Transportziel</p><div class="frame" style="width:560px;box-sizing:border-box"><div class="karte dicht"><div class="karte-kopf"><h3 class="karte-titel">Transport</h3></div><div class="karte-inhalt">
+  <label>Transportart <select><option>Luft</option></select></label>
+  <div class="loc-widget">
+  <label>Transportziel <span class="feld-klein-inline">Lokalisation Transportziel (optional)</span></label>
+  <div class="ortsfeld-zeile">
+    <input type="text" value="Klin">
+    <button type="button" class="knopf knopf-symbol knopf-neutral"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg></button>
+    <button type="button" class="knopf knopf-symbol knopf-neutral"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M4 12a8 8 0 1 0 16 0a8 8 0 1 0 -16 0" /><path d="M12 2l0 2" /><path d="M12 20l0 2" /><path d="M20 12l2 0" /><path d="M2 12l2 0" /></svg></button>
+  </div>
+  <ul class="vorschlaege">
+<li class="vorschlaege-gruppe">Zielkliniken</li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0" /><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16" /><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4" /><path d="M10 9l4 0" /><path d="M12 7l0 4" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ikum Kempten</span><span class="vorschlag-neben">Stammdaten · mit Koordinate</span></span></li>
+<li class="vorschlag aktiv"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0" /><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16" /><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4" /><path d="M10 9l4 0" /><path d="M12 7l0 4" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ik Immenstadt</span><span class="vorschlag-neben">Stammdaten · mit Koordinate</span></span></li>
+<li class="vorschlaege-gruppe">Adressen</li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ikum Kempten, Robert-Weixler-Straße 50</span><span class="vorschlag-neben">87439 Kempten (Allgäu)</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ikum Oberallgäu, Im Stillen 2</span><span class="vorschlag-neben">87509 Immenstadt</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ik Bad Grönenbach, Sebastian-Kneipp-Allee 3</span><span class="vorschlag-neben">87730 Bad Grönenbach</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Klin</b>ikverbund Allgäu, Kaufbeurer Straße 11</span><span class="vorschlag-neben">87437 Kempten (Allgäu)</span></span></li>
+</ul>
+</div>
+  <div style="height:270px"></div>
+</div></div></div></div>
+<div><p class="rahmen-titel">Einsatzort — keine Stammdaten (F9)</p><div class="frame" style="width:560px;box-sizing:border-box"><div class="karte dicht"><div class="karte-kopf"><h3 class="karte-titel">Einsatz</h3></div><div class="karte-inhalt">
+  <div class="loc-widget">
+  <label>Einsatzort <span class="feld-klein-inline">Adresse, Koordinaten oder Plus Code</span></label>
+  <div class="ortsfeld-zeile">
+    <input type="text" value="Ober">
+    <button type="button" class="knopf knopf-symbol knopf-neutral"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg></button>
+    <button type="button" class="knopf knopf-symbol knopf-neutral"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M4 12a8 8 0 1 0 16 0a8 8 0 1 0 -16 0" /><path d="M12 2l0 2" /><path d="M12 20l0 2" /><path d="M20 12l2 0" /><path d="M2 12l2 0" /></svg></button>
+  </div>
+  <ul class="vorschlaege">
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Ober</b>stdorfer Straße 12</span><span class="vorschlag-neben">87527 Sonthofen</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Ober</b>joch, Bad Hindelang</span><span class="vorschlag-neben">87541 Bad Hindelang</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Ober</b>zollhaus, Betzigau</span><span class="vorschlag-neben">87488 Betzigau</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Ober</b>stdorf, Nebelhornbahn</span><span class="vorschlag-neben">87561 Oberstdorf</span></span></li>
+</ul>
+</div>
+  <div style="height:230px"></div>
+</div></div></div></div>
+</div>
+
+<div class="notiz">
+<h2 style="margin-left:0">Anmerkungen</h2>
+<ol>
+<li><b>Ist.</b> Das Transportziel trägt heute zwei Listen: die native <code>&lt;datalist&gt;</code> mit den Stammdaten (vom Browser über dem Feld gezeichnet, mobil oft gar nicht) und die Photon-Liste der Komponente darunter. Beim Tippen öffnen beide; die native verdeckt die eigene (PS-6). Die Besatzungsfelder haben nur die <code>&lt;datalist&gt;</code> — mobil also nichts (Nr. 68).</li>
+<li><b>Ein Baustein, drei Regeln.</b> (1) <b>Gruppen</b> mit Zeile: „Zielkliniken" oben, höchstens zwei (F10), „Adressen" darunter (Photon, bis sechs); im Besatzungsfeld „Vorlagen des Standorts"; bei den Rettungsmitteln ohne Gruppenzeile — es gibt nur eine Sorte plus die freie Eingabe. (2) <b>Symbol und Nebenzeile</b> sagen, woher der Eintrag kommt: Klinik-Symbol und „Stammdaten des Standorts · mit Koordinate" gegen Pin und Ort. Ein Stammdatentreffer setzt Name <em>und</em> Koordinate (E38); ein Adresstreffer beim Transportziel nur die Koordinate, wenn schon ein Name steht (getrennte Suche, unverändert). (3) <b>Tastatur und Zeiger:</b> Pfeiltasten wandern, Enter übernimmt, Escape schließt; übernommen wird auf <code>mousedown</code>, nie auf <code>click</code> — das behebt PS-2 an allen Listen zugleich.</li>
+<li><b>Treffer statt Namensgleichheit.</b> Stammdaten erscheinen ab dem ersten Zeichen bei Teilübereinstimmung (heute erst bei genauem Namen, <code>pruefeVorschlag()</code>); der getippte Teil ist fett (wie „Klin" oben) — dieselbe Hervorhebung wie die Suchtreffer (E-P3-36, <code>EdSuchtext.hervor</code>).</li>
+<li><b>Nur im Zielklinik-Kontext</b> (F9): Einsatzort, Abfahrtort und Standort zeigen allein die Gruppe „Adressen" — dann ohne Gruppenzeile, weil eine Gruppe keine Gruppe ist.</li>
+<li><b>Freie Eingabe</b> bleibt bei den Rettungsmitteln die letzte Zeile in Orange („… übernehmen", Plus-Symbol) — wie heute, nur im selben Baustein. Im Besatzungsfeld braucht es sie nicht: Der getippte Text steht im Feld und bleibt dort.</li>
+<li><b>Maße:</b> Zeilen <code>--knopf</code> (44, am Zeiger 36), Gruppenzeile <code>--groesse-1</code> auf Rauch, Rahmen und Schatten wie <code>.loc-suggest</code> heute, Markierung Rauch mit <code>--abstand-1</code> Orange links — derselbe Baustein wie der aktive Eintrag der Leiste. Kein neues Token.</li>
+<li><b>Was verschwindet:</b> <code>.loc-suggest</code>, <code>.rmlist</code>, <code>.rmopt</code>, <code>.rmneu</code> (Streichliste, Nr. 40 mitziehen), alle <code>list=</code>-Attribute und <code>&lt;datalist&gt;</code>; die Photon-Abfrage wandert nach <code>geocoder.js</code> (E-S9-05), die Liste nach <code>vorschlagsliste.js</code>.</li>
+</ol>
+<div class="empf"><b>Zur Freigabe:</b> die Darstellung (Gruppenzeile, Symbol + Nebenzeile, Markierung) — und zwei Zahlen: <b>höchstens zwei Stammdaten</b> oben (F10) und <b>bis sechs Adressen</b> darunter (Photon-Limit heute). Beides lässt sich im Baustein je Verwendung setzen.</div>
+</div>
+</body></html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=1280">
+<title>S9 · Mockup M-S9-01 — Kartenschilder</title><style>
+
+@font-face{font-family:'Open Sans';font-weight:400;src:url(../../../../server/assets/fonts/open-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Open Sans';font-weight:600;src:url(../../../../server/assets/fonts/open-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:500;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-500-normal.woff2) format('woff2')}
+/* ---- Token aus server/assets/style.css (Auszug, unverändert) ---------- */
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;
+  --asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;
+  --linie:#E3DAC6;
+  --orange:#FF8F1F;--blau:#4280E5;--rot:#D63338;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;
+  --schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-5:19px;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-rund:999px;
+  --symbol:20px;--strich:1px;--strich-stark:2px;
+  --schatten:0 2px 8px rgba(26,5,0,.10);
+  --spur-1:var(--orange);
+  /* Karte (heute) */
+  --geo-kreis:32px;--geo-schild:36px;--geo-ring:3px;
+}
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) --------------------------- */
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5;width:1280px}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.reihe{padding:14px 24px 6px}
+.reihe h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0 0 2px;color:var(--dunkelblau)}
+.reihe .unter{margin:0 0 10px;color:var(--gedaempft);font-size:var(--groesse-2)}
+.reihe .frames{display:-webkit-box;display:flex;gap:20px;align-items:flex-start}
+.frame{position:relative;overflow:hidden;border-radius:var(--radius);background-size:cover;box-shadow:0 8px 24px rgba(26,46,77,.10);flex:0 0 auto}
+.frame .spur{position:absolute;left:0;top:0}
+.marker{position:absolute;width:0;height:0}
+.marker > *{position:absolute;left:0;top:0}
+.attr{position:absolute;right:0;bottom:0;background:rgba(255,255,255,.8);font-size:10px;padding:1px 5px;color:#333}
+.mass{display:-webkit-box;display:flex;gap:6px;margin:0 0 10px;background:var(--rauch);border:1px solid var(--linie);border-radius:var(--radius);padding:8px 10px;align-items:flex-start}
+.mass-zelle{width:118px;text-align:center}
+.mass-feld{height:72px;position:relative;background:#DCE9C8}
+.mass-feld > *{position:absolute;left:50%;top:50%}
+.mass-text{font-size:11px;line-height:1.35;color:var(--gedaempft);margin-top:4px}
+.mass-text b{color:var(--asphalt);font-weight:600}
+.notiz{padding:6px 24px 26px;max-width:1180px}
+.notiz h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);color:var(--dunkelblau);margin:0 0 6px}
+.notiz ol{margin:0;padding-left:20px}
+.notiz li{margin-bottom:5px}
+.notiz table{border-collapse:collapse;font-size:var(--groesse-2);margin:8px 0}
+.notiz th,.notiz td{border:1px solid var(--linie);padding:3px 8px;text-align:left}
+.empf{background:var(--schnee);border-left:4px solid var(--orange);padding:6px 10px;margin:8px 0}
+
+/* ---- Anwendung: Regeln aus style.css, Abschnitt 21 KARTENMARKER ----------- */
+.symbol{width:var(--symbol);height:var(--symbol);stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
+.geo-schild{display:block}
+.geo-schild-kasten{
+  display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;
+  width:var(--geo-schild);height:var(--geo-schild);box-sizing:border-box;
+  background:var(--schnee);color:var(--dunkelblau);
+  border:var(--strich-stark) solid var(--dunkelblau);
+  border-radius:var(--radius);box-shadow:var(--schatten);
+  /* Anker: Mitte */
+  margin-left:calc(var(--geo-schild) / -2);margin-top:calc(var(--geo-schild) / -2);
+}
+.geo-kreis{
+  display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;
+  width:var(--geo-kreis);height:var(--geo-kreis);box-sizing:border-box;
+  background:var(--orange);color:var(--dunkelblau);border-radius:var(--radius-rund);box-shadow:var(--schatten);
+  margin-left:calc(var(--geo-kreis) / -2);margin-top:calc(var(--geo-kreis) / -2);
+}
+.geo-ringpunkt{display:block;width:16px;height:16px;box-sizing:border-box;border-radius:var(--radius-rund);background:var(--schnee);border:var(--geo-ring) solid var(--blau);margin-left:-8px;margin-top:-8px}
+.geo-ringpunkt-beide{box-shadow:0 0 0 var(--geo-ring) var(--schnee),0 0 0 calc(var(--geo-ring) * 2) var(--rot)}
+.geo-pfeil{color:var(--dunkelblau)}
+.geo-pfeil .pfeil-pfad{stroke:var(--dunkelblau);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.geo-pfeil .pfeil-pfad path{stroke:inherit}
+
+/* == IST (Web 15.5.1) — style.css 2131–2175 ============================== */
+.v-ist .geo-ring-start .geo-schild-kasten{box-shadow:0 0 0 var(--geo-ring) var(--schnee),0 0 0 calc(var(--geo-ring) * 2) var(--blau)}
+.v-ist .geo-ring-ende  .geo-schild-kasten{box-shadow:0 0 0 var(--geo-ring) var(--schnee),0 0 0 calc(var(--geo-ring) * 2) var(--rot)}
+.v-ist .geo-ring-beide .geo-schild-kasten{box-shadow:0 0 0 var(--geo-ring) var(--schnee),0 0 0 calc(var(--geo-ring) * 2) var(--blau),0 0 0 calc(var(--geo-ring) * 3) var(--schnee),0 0 0 calc(var(--geo-ring) * 4) var(--rot)}
+
+/* == V1 „Rand wird Ring" ==================================================
+ * Token: --geo-schild 30, --geo-kreis 28, --geo-ring 3 (= Randstärke), --symbol 18/16.
+ * Der Farbring ERSETZT den dunkelblauen Rand; außen immer 1 px Schnee als
+ * Trennlinie zur Karte (F6). „beide": blauer Rand + 1 px Schnee + 2 px Rot. */
+.v-1{--geo-schild:30px;--geo-kreis:28px;--geo-ring:3px}
+.v-1 .geo-schild-kasten .symbol{width:18px;height:18px}
+.v-1 .geo-kreis .symbol{width:16px;height:16px}
+.v-1 .geo-schild-kasten{box-shadow:0 0 0 1px var(--schnee),var(--schatten)}
+.v-1 .geo-ring-start .geo-schild-kasten{border:var(--geo-ring) solid var(--blau)}
+.v-1 .geo-ring-ende  .geo-schild-kasten{border:var(--geo-ring) solid var(--rot)}
+.v-1 .geo-ring-beide .geo-schild-kasten{border:var(--geo-ring) solid var(--blau);box-shadow:0 0 0 1px var(--schnee),0 0 0 3px var(--rot),0 0 0 4px var(--schnee),var(--schatten)}
+.v-1 .geo-ringpunkt{width:14px;height:14px;margin-left:-7px;margin-top:-7px;border-width:2px}
+.v-1 .geo-ringpunkt-beide{box-shadow:0 0 0 1px var(--schnee),0 0 0 3px var(--rot)}
+
+/* == V2 „zweigeteilt" =====================================================
+ * Wie V1; „beide" ist EIN Rand: links Start (Blau), rechts Ende (Rot),
+ * dazwischen 1 px Schnee. Technik: zwei Hintergründe, border-box/padding-box. */
+.v-2{--geo-schild:30px;--geo-kreis:28px;--geo-ring:3px}
+.v-2 .geo-schild-kasten .symbol{width:18px;height:18px}
+.v-2 .geo-kreis .symbol{width:16px;height:16px}
+.v-2 .geo-schild-kasten{box-shadow:0 0 0 1px var(--schnee),var(--schatten)}
+.v-2 .geo-ring-start .geo-schild-kasten{border:var(--geo-ring) solid var(--blau)}
+.v-2 .geo-ring-ende  .geo-schild-kasten{border:var(--geo-ring) solid var(--rot)}
+.v-2 .geo-ring-beide .geo-schild-kasten{
+  border:var(--geo-ring) solid transparent;
+  background:-webkit-linear-gradient(top,var(--schnee),var(--schnee)) padding-box,
+             -webkit-linear-gradient(left,var(--blau) 0,var(--blau) 48.5%,var(--schnee) 48.5%,var(--schnee) 51.5%,var(--rot) 51.5%,var(--rot) 100%) border-box;
+  background:linear-gradient(var(--schnee),var(--schnee)) padding-box,
+             linear-gradient(90deg,var(--blau) 0,var(--blau) 48.5%,var(--schnee) 48.5%,var(--schnee) 51.5%,var(--rot) 51.5%,var(--rot) 100%) border-box;
+  -webkit-background-clip:padding-box,border-box}
+.v-2 .geo-ringpunkt{width:14px;height:14px;margin-left:-7px;margin-top:-7px;border-width:2px}
+.v-2 .geo-ringpunkt-beide{box-shadow:none;border-color:transparent;
+  background:-webkit-linear-gradient(top,var(--schnee),var(--schnee)) padding-box,-webkit-linear-gradient(left,var(--blau) 0,var(--blau) 46%,var(--schnee) 46%,var(--schnee) 54%,var(--rot) 54%) border-box;
+  background:linear-gradient(var(--schnee),var(--schnee)) padding-box,linear-gradient(90deg,var(--blau) 0,var(--blau) 46%,var(--schnee) 46%,var(--schnee) 54%,var(--rot) 54%) border-box;
+  -webkit-background-clip:padding-box,border-box}
+
+/* == V3 „Doppelrand schmal" ==============================================
+ * Der dunkelblaue Rand bleibt (2 px), die Ringe werden schmal: 1 px Schnee,
+ * 2 px Farbe. Token: --geo-schild 28, --geo-kreis 28, --geo-ring 2, Symbol 16. */
+.v-3{--geo-schild:28px;--geo-kreis:28px;--geo-ring:2px}
+.v-3 .geo-schild-kasten .symbol{width:16px;height:16px}
+.v-3 .geo-kreis .symbol{width:16px;height:16px}
+.v-3 .geo-ring-start .geo-schild-kasten{box-shadow:0 0 0 1px var(--schnee),0 0 0 3px var(--blau),var(--schatten)}
+.v-3 .geo-ring-ende  .geo-schild-kasten{box-shadow:0 0 0 1px var(--schnee),0 0 0 3px var(--rot),var(--schatten)}
+.v-3 .geo-ring-beide .geo-schild-kasten{box-shadow:0 0 0 1px var(--schnee),0 0 0 3px var(--blau),0 0 0 4px var(--schnee),0 0 0 6px var(--rot),var(--schatten)}
+.v-3 .geo-ringpunkt{width:14px;height:14px;margin-left:-7px;margin-top:-7px;border-width:2px}
+.v-3 .geo-ringpunkt-beide{box-shadow:0 0 0 1px var(--schnee),0 0 0 3px var(--rot)}
+
+</style></head><body>
+<div class="mock-kopf"><h1>S9 · M-S9-01 — Kartenschilder auf der Karte der Einsatzansicht</h1>
+<p>Drei Varianten gegen den Ist-Stand, je in der Handy-Karte (358 × 160, <code>--karte-mobil</code>) und der Desktop-Karte (800 × 520). Szenario wie im Zuarbeits-Screenshot: Standort mit Start <em>und</em> Ende der Aufzeichnung, Zielklinik ohne Ring, Einsatzort, Spur mit Richtungspfeilen. Alle Maße aus den Token von <code>style.css</code>; die Maßleiste zeigt jeden Zustand einzeln mit Gesamtbreite (Kasten + Rand + Ringe).</p></div>
+<div class="reihe v-ist"><h2>Ist — Web 15.5.1</h2><p class="unter">Kasten 36 px + 2 px Rand, Ringe 3 px mit 3 px Schnee dazwischen; Kreis 32 px; Pfeile stehen alle senkrecht (Nr. 72).</p>
+<div class="mass v-ist">
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div><div class="mass-text"><b>ohne</b><br>36 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-start"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div><div class="mass-text"><b>Start</b><br>48 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-ende"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div><div class="mass-text"><b>Ende</b><br>48 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div><div class="mass-text"><b>beide</b><br>60 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div><div class="mass-text"><b>Einsatzort</b><br>32 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-ringpunkt geo-ringpunkt-beide"></span></div><div class="mass-text"><b>Ringpunkt</b><br>16 / 28 px</div></div>
+</div>
+<div class="frames">
+<div class="frame frame-mobil v-ist" style="width:358px;height:160px;background-image:url(M-S9-01-bg-mobil.png)">
+<svg class="spur" width="358" height="160" viewBox="0 0 358 160">
+<polyline points="167.3,130.9 170.2,139.3 173.2,147.5 176.4,155.4 179.8,162.8 183.6,169.7 187.8,176.0 192.4,181.7 197.3,186.7 202.6,191.1 208.2,195.2 213.9,198.9 219.8,202.4 219.8,202.4 212.2,193.7 204.7,184.9 197.4,175.8 190.5,166.4 183.9,156.6 177.9,146.3 172.3,135.4 167.3,124.0 162.8,112.0 158.7,99.6 155.1,86.7 151.8,73.5 148.8,60.0 145.8,46.4 145.8,46.4 145.2,58.8 145.2,70.9 146.0,82.5 148.0,93.5 151.4,103.6 155.9,113.2 161.4,122.2 167.3,130.9" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(176.4,155.4) rotate(0)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(208.2,195.2) rotate(0)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(190.5,166.4) rotate(0)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(155.1,86.7) rotate(0)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(146.0,82.5) rotate(0)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:167.3px;top:130.9px;z-index:500"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div>
+<div class="marker" style="left:145.8px;top:46.4px;z-index:500"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div>
+<div class="marker" style="left:219.8px;top:202.4px;z-index:400"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div>
+<span class="attr">Leaflet | © OpenStreetMap</span>
+</div>
+<div class="frame frame-desktop v-ist" style="width:800px;height:520px;background-image:url(M-S9-01-bg-desktop.png)">
+<svg class="spur" width="800" height="520" viewBox="0 0 800 520">
+<polyline points="415.0,297.0 420.8,313.8 426.7,330.2 433.1,346.0 440.0,360.9 447.6,374.7 455.9,387.2 465.1,398.5 475.0,408.5 485.6,417.5 496.7,425.5 508.3,432.9 520.0,440.0 520.0,440.0 504.8,422.6 489.7,405.0 475.2,386.9 461.3,368.1 448.2,348.4 436.1,327.8 425.0,306.0 415.0,283.2 405.9,259.3 397.9,234.4 390.6,208.6 384.0,182.1 377.9,155.2 372.0,128.0 372.0,128.0 370.8,152.8 370.7,177.0 372.4,200.2 376.4,222.1 383.1,242.5 392.2,261.5 403.1,279.5 415.0,297.0" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(433.1,346.0) rotate(0)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(496.7,425.5) rotate(0)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(461.3,368.1) rotate(0)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(390.6,208.6) rotate(0)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(372.4,200.2) rotate(0)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:415.0px;top:297.0px;z-index:500"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div>
+<div class="marker" style="left:372.0px;top:128.0px;z-index:500"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div>
+<div class="marker" style="left:520.0px;top:440.0px;z-index:400"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div>
+<span class="attr">Leaflet | © OpenStreetMap</span>
+</div>
+</div></div>
+<div class="reihe v-1"><h2>Variante 1 — „Rand wird Ring"</h2><p class="unter">Der Farbring ersetzt den dunkelblauen Rand (3 px). Außen 1 px Schnee als Trennlinie zur Karte. „beide": Rand blau, 1 px Schnee, 2 px Rot. Kasten 30 px, Kreis 28 px.</p>
+<div class="mass v-1">
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div><div class="mass-text"><b>ohne</b><br>32 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-start"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div><div class="mass-text"><b>Start</b><br>32 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-ende"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div><div class="mass-text"><b>Ende</b><br>32 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div><div class="mass-text"><b>beide</b><br>38 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div><div class="mass-text"><b>Einsatzort</b><br>28 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-ringpunkt geo-ringpunkt-beide"></span></div><div class="mass-text"><b>Ringpunkt</b><br>14 / 20 px</div></div>
+</div>
+<div class="frames">
+<div class="frame frame-mobil v-1" style="width:358px;height:160px;background-image:url(M-S9-01-bg-mobil.png)">
+<svg class="spur" width="358" height="160" viewBox="0 0 358 160">
+<polyline points="167.3,130.9 170.2,139.3 173.2,147.5 176.4,155.4 179.8,162.8 183.6,169.7 187.8,176.0 192.4,181.7 197.3,186.7 202.6,191.1 208.2,195.2 213.9,198.9 219.8,202.4 219.8,202.4 212.2,193.7 204.7,184.9 197.4,175.8 190.5,166.4 183.9,156.6 177.9,146.3 172.3,135.4 167.3,124.0 162.8,112.0 158.7,99.6 155.1,86.7 151.8,73.5 148.8,60.0 145.8,46.4 145.8,46.4 145.2,58.8 145.2,70.9 146.0,82.5 148.0,93.5 151.4,103.6 155.9,113.2 161.4,122.2 167.3,130.9" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(176.4,155.4) rotate(157)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(208.2,195.2) rotate(124)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(190.5,166.4) rotate(-35)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(155.1,86.7) rotate(-15)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(146.0,82.5) rotate(173)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:167.3px;top:130.9px;z-index:500"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div>
+<div class="marker" style="left:145.8px;top:46.4px;z-index:500"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div>
+<div class="marker" style="left:219.8px;top:202.4px;z-index:400"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div>
+<span class="attr">Leaflet | © OpenStreetMap</span>
+</div>
+<div class="frame frame-desktop v-1" style="width:800px;height:520px;background-image:url(M-S9-01-bg-desktop.png)">
+<svg class="spur" width="800" height="520" viewBox="0 0 800 520">
+<polyline points="415.0,297.0 420.8,313.8 426.7,330.2 433.1,346.0 440.0,360.9 447.6,374.7 455.9,387.2 465.1,398.5 475.0,408.5 485.6,417.5 496.7,425.5 508.3,432.9 520.0,440.0 520.0,440.0 504.8,422.6 489.7,405.0 475.2,386.9 461.3,368.1 448.2,348.4 436.1,327.8 425.0,306.0 415.0,283.2 405.9,259.3 397.9,234.4 390.6,208.6 384.0,182.1 377.9,155.2 372.0,128.0 372.0,128.0 370.8,152.8 370.7,177.0 372.4,200.2 376.4,222.1 383.1,242.5 392.2,261.5 403.1,279.5 415.0,297.0" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(433.1,346.0) rotate(157)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(496.7,425.5) rotate(124)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(461.3,368.1) rotate(-35)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(390.6,208.6) rotate(-15)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(372.4,200.2) rotate(173)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:415.0px;top:297.0px;z-index:500"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div>
+<div class="marker" style="left:372.0px;top:128.0px;z-index:500"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div>
+<div class="marker" style="left:520.0px;top:440.0px;z-index:400"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div>
+<span class="attr">Leaflet | © OpenStreetMap</span>
+</div>
+</div></div>
+<div class="reihe v-2"><h2>Variante 2 — „zweigeteilt"</h2><p class="unter">Wie V1, aber „beide" ist ein einziger Rand: links Start (Blau), rechts Ende (Rot), 1 px Schnee dazwischen. Kompakteste Form — die Richtung Anfang → Ende liest sich links → rechts.</p>
+<div class="mass v-2">
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div><div class="mass-text"><b>ohne</b><br>32 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-start"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div><div class="mass-text"><b>Start</b><br>32 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-ende"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div><div class="mass-text"><b>Ende</b><br>32 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div><div class="mass-text"><b>beide</b><br>32 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div><div class="mass-text"><b>Einsatzort</b><br>28 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-ringpunkt geo-ringpunkt-beide"></span></div><div class="mass-text"><b>Ringpunkt</b><br>14 px</div></div>
+</div>
+<div class="frames">
+<div class="frame frame-mobil v-2" style="width:358px;height:160px;background-image:url(M-S9-01-bg-mobil.png)">
+<svg class="spur" width="358" height="160" viewBox="0 0 358 160">
+<polyline points="167.3,130.9 170.2,139.3 173.2,147.5 176.4,155.4 179.8,162.8 183.6,169.7 187.8,176.0 192.4,181.7 197.3,186.7 202.6,191.1 208.2,195.2 213.9,198.9 219.8,202.4 219.8,202.4 212.2,193.7 204.7,184.9 197.4,175.8 190.5,166.4 183.9,156.6 177.9,146.3 172.3,135.4 167.3,124.0 162.8,112.0 158.7,99.6 155.1,86.7 151.8,73.5 148.8,60.0 145.8,46.4 145.8,46.4 145.2,58.8 145.2,70.9 146.0,82.5 148.0,93.5 151.4,103.6 155.9,113.2 161.4,122.2 167.3,130.9" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(176.4,155.4) rotate(157)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(208.2,195.2) rotate(124)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(190.5,166.4) rotate(-35)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(155.1,86.7) rotate(-15)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(146.0,82.5) rotate(173)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:167.3px;top:130.9px;z-index:500"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div>
+<div class="marker" style="left:145.8px;top:46.4px;z-index:500"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div>
+<div class="marker" style="left:219.8px;top:202.4px;z-index:400"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div>
+<span class="attr">Leaflet | © OpenStreetMap</span>
+</div>
+<div class="frame frame-desktop v-2" style="width:800px;height:520px;background-image:url(M-S9-01-bg-desktop.png)">
+<svg class="spur" width="800" height="520" viewBox="0 0 800 520">
+<polyline points="415.0,297.0 420.8,313.8 426.7,330.2 433.1,346.0 440.0,360.9 447.6,374.7 455.9,387.2 465.1,398.5 475.0,408.5 485.6,417.5 496.7,425.5 508.3,432.9 520.0,440.0 520.0,440.0 504.8,422.6 489.7,405.0 475.2,386.9 461.3,368.1 448.2,348.4 436.1,327.8 425.0,306.0 415.0,283.2 405.9,259.3 397.9,234.4 390.6,208.6 384.0,182.1 377.9,155.2 372.0,128.0 372.0,128.0 370.8,152.8 370.7,177.0 372.4,200.2 376.4,222.1 383.1,242.5 392.2,261.5 403.1,279.5 415.0,297.0" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(433.1,346.0) rotate(157)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(496.7,425.5) rotate(124)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(461.3,368.1) rotate(-35)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(390.6,208.6) rotate(-15)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(372.4,200.2) rotate(173)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:415.0px;top:297.0px;z-index:500"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div>
+<div class="marker" style="left:372.0px;top:128.0px;z-index:500"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div>
+<div class="marker" style="left:520.0px;top:440.0px;z-index:400"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div>
+<span class="attr">Leaflet | © OpenStreetMap</span>
+</div>
+</div></div>
+<div class="reihe v-3"><h2>Variante 3 — „Doppelrand schmal"</h2><p class="unter">Der dunkelblaue Rand bleibt; Ringe außen 2 px Farbe mit 1 px Schnee. Kasten 28 px, Kreis 28 px. Konservativ: dieselbe Logik wie heute, nur schmaler.</p>
+<div class="mass v-3">
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div><div class="mass-text"><b>ohne</b><br>28 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-start"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div><div class="mass-text"><b>Start</b><br>34 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-ende"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div><div class="mass-text"><b>Ende</b><br>34 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div><div class="mass-text"><b>beide</b><br>40 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div><div class="mass-text"><b>Einsatzort</b><br>28 px</div></div>
+<div class="mass-zelle"><div class="mass-feld"><span class="geo-ringpunkt geo-ringpunkt-beide"></span></div><div class="mass-text"><b>Ringpunkt</b><br>14 / 20 px</div></div>
+</div>
+<div class="frames">
+<div class="frame frame-mobil v-3" style="width:358px;height:160px;background-image:url(M-S9-01-bg-mobil.png)">
+<svg class="spur" width="358" height="160" viewBox="0 0 358 160">
+<polyline points="167.3,130.9 170.2,139.3 173.2,147.5 176.4,155.4 179.8,162.8 183.6,169.7 187.8,176.0 192.4,181.7 197.3,186.7 202.6,191.1 208.2,195.2 213.9,198.9 219.8,202.4 219.8,202.4 212.2,193.7 204.7,184.9 197.4,175.8 190.5,166.4 183.9,156.6 177.9,146.3 172.3,135.4 167.3,124.0 162.8,112.0 158.7,99.6 155.1,86.7 151.8,73.5 148.8,60.0 145.8,46.4 145.8,46.4 145.2,58.8 145.2,70.9 146.0,82.5 148.0,93.5 151.4,103.6 155.9,113.2 161.4,122.2 167.3,130.9" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(176.4,155.4) rotate(157)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(208.2,195.2) rotate(124)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(190.5,166.4) rotate(-35)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(155.1,86.7) rotate(-15)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(146.0,82.5) rotate(173)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:167.3px;top:130.9px;z-index:500"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div>
+<div class="marker" style="left:145.8px;top:46.4px;z-index:500"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div>
+<div class="marker" style="left:219.8px;top:202.4px;z-index:400"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div>
+<span class="attr">Leaflet | © OpenStreetMap</span>
+</div>
+<div class="frame frame-desktop v-3" style="width:800px;height:520px;background-image:url(M-S9-01-bg-desktop.png)">
+<svg class="spur" width="800" height="520" viewBox="0 0 800 520">
+<polyline points="415.0,297.0 420.8,313.8 426.7,330.2 433.1,346.0 440.0,360.9 447.6,374.7 455.9,387.2 465.1,398.5 475.0,408.5 485.6,417.5 496.7,425.5 508.3,432.9 520.0,440.0 520.0,440.0 504.8,422.6 489.7,405.0 475.2,386.9 461.3,368.1 448.2,348.4 436.1,327.8 425.0,306.0 415.0,283.2 405.9,259.3 397.9,234.4 390.6,208.6 384.0,182.1 377.9,155.2 372.0,128.0 372.0,128.0 370.8,152.8 370.7,177.0 372.4,200.2 376.4,222.1 383.1,242.5 392.2,261.5 403.1,279.5 415.0,297.0" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(433.1,346.0) rotate(157)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(496.7,425.5) rotate(124)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(461.3,368.1) rotate(-35)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(390.6,208.6) rotate(-15)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(372.4,200.2) rotate(173)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:415.0px;top:297.0px;z-index:500"><span class="geo-schild geo-ring-beide"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span></span></div>
+<div class="marker" style="left:372.0px;top:128.0px;z-index:500"><span class="geo-schild"><span class="geo-schild-kasten"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 21l18 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"/><path d="M10 9l4 0"/><path d="M12 7l0 4"/></svg></span></span></div>
+<div class="marker" style="left:520.0px;top:440.0px;z-index:400"><span class="geo-kreis"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M12.794 21.322a2 2 0 0 1 -2.207 -.422l-4.244 -4.243a8 8 0 1 1 13.59 -4.616"/><path d="M16 19h6"/><path d="M19 16v6"/></svg></span></div>
+<span class="attr">Leaflet | © OpenStreetMap</span>
+</div>
+</div></div>
+
+<div class="notiz">
+<h2>Anmerkungen</h2>
+<ol>
+<li><b>Was gemessen ist.</b> Heute: Standort mit Doppelring <b>60 px</b>, Einsatzort 32 px, Klinik 36 px — drei Ränder übereinander (Randstrich 2 px, Schnee 3 px, Farbe 3 px, Schnee 3 px, Farbe 3 px). Auf der Handy-Karte (160 px hoch) deckt das Standort-Schild mehr als ein Drittel der Höhe.</li>
+<li><b>Was allen drei Varianten gemeinsam ist.</b> Kasten 28–30 px statt 36, Kreis 28 statt 32, Symbol 16–18 statt 20; die Trennlinie zwischen Farbe und Karte ist <b>1 px Schnee</b> statt 3 (F6: schmale Trennlinie, kein zweites Merkmal); die Pfeile sind gedreht (Nr. 72, AP3). Die Token <code>--geo-schild</code>, <code>--geo-kreis</code>, <code>--geo-ring</code> bleiben die drei Stellschrauben; <code>geo.js</code> zieht seine Zahlen nach.</li>
+<li><b>V1 „Rand wird Ring"</b> setzt die Prüfidee aus PS-3 wörtlich um: Der Farbring <em>ist</em> der Rand. Start = blauer Rand, Ende = roter Rand, beides = blauer Rand mit schmalem rotem Außenring. Ohne Aufzeichnung bleibt der dunkelblaue Rand — die Karte zeigt damit auf einen Blick, welches Schild an der Spur hängt.</li>
+<li><b>V2 „zweigeteilt"</b> ist die kompakteste: „beide" bleibt 32 px. Der Preis ist eine Konvention (links Start, rechts Ende), die man einmal lernen muss; die Legende im Handbuch trägt sie. Technisch ein Rand mit zwei Hintergründen — läuft in Leaflets <code>divIcon</code> ohne Zusatz.</li>
+<li><b>V3 „Doppelrand schmal"</b> ändert die Logik nicht, nur die Maße: 40 statt 60 px für „beide". Sicherste Wahl, aber immer noch drei Ränder um ein Symbol.</li>
+<li><b>Ringpunkt ohne Schild</b> (Start/Ende abseits von Standort und Ziel) folgt derselben Regel je Variante: 14 px, 2 px Rand.</li>
+<li><b>Bedienhöhe:</b> Schilder sind Zeichnungen (S3/AP7), R76 gilt nicht; 28 px liegt über der Untergrenze 24 px (WCAG 2.5.8) für ein antippbares Schild mit Popup.</li>
+<li><b>Kontrast</b> (zu prüfen mit <code>kontrast.py</code> in AP3): Blau/Rot gegen Schnee ≥ 4,5:1; die 1-px-Trennlinie sorgt dafür, dass Ring und Kartengrün sich nicht berühren.</li>
+</ol>
+<div class="empf"><b>Empfehlung: V1.</b> Sie erfüllt die Prüfidee („Umrandung zeigt Beginn/Ende"), spart gegenüber heute 22 px am Doppelring und 4 px an jedem Schild, braucht keine neue Konvention und bleibt mit einem Blick lesbar — auch im Sonnenlicht, weil Rot und Blau nie aneinanderstoßen. V2, falls dir 38 px für „beide" noch zu viel sind; V3, falls der dunkelblaue Rand als Wiedererkennung bleiben soll.</div>
+<p style="font-size:12px;color:var(--gedaempft)">Erzeugt am 06.09.2026 für Konzept S9, E-S9-12. Kartenkacheln © OpenStreetMap-Mitwirkende, nur für dieses Mockup; die Anwendung lädt sie zur Laufzeit wie bisher.</p>
+</div>
+</body></html>

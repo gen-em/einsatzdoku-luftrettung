@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>S9 · Mockup M-S9-04 — Kartendialog</title><style>
+
+@font-face{font-family:'Open Sans';font-weight:400;src:url(../../../../server/assets/fonts/open-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Open Sans';font-weight:600;src:url(../../../../server/assets/fonts/open-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:500;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-500-normal.woff2) format('woff2')}
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;--asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;
+  --linie:#E3DAC6;--linie-stark:var(--gedaempft);--orange:#FF8F1F;--orange-tief:#C25A00;--blau:#4280E5;--rot:#D63338;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;--schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-5:19px;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --knopf:44px;--symbol:20px;--symbol-gross:24px;--strich:1px;--strich-stark:2px;
+  --schatten:0 2px 8px rgba(26,5,0,.10);--schatten-hoch:0 8px 28px rgba(26,5,0,.22);--schleier:rgba(26,46,77,.55);
+  --karte-desktop:300px;--spur-1:var(--orange);--geo-ring:3px;
+}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5;width:1280px}
+.mock-kopf{padding:20px 24px 4px}.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p,.unter{margin:0 24px 10px;color:var(--gedaempft);font-size:var(--groesse-2)}.mock-kopf p{margin:0}
+h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:14px 24px 2px;color:var(--dunkelblau)}
+.frames{display:-webkit-box;display:flex;margin:0 24px;align-items:flex-start}.frames > div{flex:0 0 auto;margin-right:18px}
+.rahmen-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.schleier{background:var(--schleier);padding:24px;border-radius:14px}
+.notiz{padding:10px 24px 26px;max-width:1180px}.notiz ol{margin:0;padding-left:20px}.notiz li{margin-bottom:5px}
+.empf{background:var(--schnee);border-left:4px solid var(--orange);padding:6px 10px;margin:8px 0}
+/* ---- Anwendung ------------------------------------------------------------ */
+.symbol{width:var(--symbol);height:var(--symbol);flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
+.symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
+.dialog{border:0;padding:0;background:var(--schnee);border-radius:var(--radius-gross);box-shadow:var(--schatten-hoch);color:var(--asphalt);margin:0 auto;box-sizing:border-box}
+.dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0}
+.dialog-kopf h2{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);color:var(--dunkelblau);margin:0 0 var(--abstand-3)}
+.dialog-inhalt{padding:var(--abstand-4)}
+.dialog-inhalt p{margin:0 0 var(--abstand-3)}.dialog-inhalt p:last-child{margin-bottom:0}
+.dialog-fuss{display:-webkit-box;display:flex;-webkit-box-pack:end;justify-content:flex-end;padding:0 var(--abstand-4) var(--abstand-4)}
+.dialog-fuss .knopf{flex:1 1 auto}.dialog-fuss .knopf + .knopf{margin-left:var(--abstand-3)}
+.feld-hinweis{color:var(--gedaempft);font-size:var(--groesse-2)}
+input{max-width:100%;padding:var(--abstand-2) var(--abstand-3);min-height:var(--knopf);background:var(--schnee);color:var(--asphalt);border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein);font:inherit;font-family:var(--schrift-text);box-sizing:border-box}
+.knopf{display:-webkit-inline-box;display:inline-flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;height:var(--knopf);padding:0 var(--abstand-4);border-radius:var(--radius);border:var(--strich-stark) solid transparent;font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-3);box-sizing:border-box}
+.knopf-primaer{background:var(--orange);color:var(--dunkelblau);border-color:var(--orange)}
+.knopf-leise{background:none;color:var(--gedaempft);padding:0 var(--abstand-2)}
+.knopf-neutral{background:var(--schnee);color:var(--dunkelblau);border-color:var(--linie-stark)}
+.knopf-symbol{width:var(--knopf);padding:0}
+.ortsfeld-zeile{display:-webkit-box;display:flex;-webkit-box-align:stretch;align-items:stretch}
+.ortsfeld-zeile input{flex:1 1 auto;min-width:0;margin-right:var(--abstand-2)}
+/* Kartendialog (style.css 2567 ff.) */
+.ortswahl-karte{position:relative}
+.ortswahl-karte .geo{height:var(--karte-desktop);margin-bottom:0;position:relative;overflow:hidden;border-radius:var(--radius-klein);background-size:cover}
+.ortswahl-kreuz{position:absolute;left:50%;top:50%;width:var(--symbol-gross);height:var(--symbol-gross);margin-left:-12px;margin-top:-12px;pointer-events:none;z-index:5}
+.ortswahl-kreuz:before,.ortswahl-kreuz:after{content:"";position:absolute;background:var(--dunkelblau);box-shadow:0 0 0 var(--strich) var(--schnee)}
+.ortswahl-kreuz:before{left:11px;top:0;bottom:0;width:var(--strich-stark)}
+.ortswahl-kreuz:after{top:11px;left:0;right:0;height:var(--strich-stark)}
+.leaflet-ctl{position:absolute;left:10px;top:10px;background:var(--schnee);border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.3);width:30px;font:bold 18px/30px sans-serif;text-align:center;color:#333;z-index:4}
+.leaflet-ctl span{display:block;border-bottom:1px solid #ccc}.leaflet-ctl span:last-child{border-bottom:0}
+.attr{position:absolute;right:0;bottom:0;background:rgba(255,255,255,.8);font-size:10px;padding:1px 5px;color:#333;z-index:4}
+.spur{position:absolute;left:0;top:0;z-index:2}
+.marker{position:absolute;width:0;height:0;z-index:3}.marker > *{position:absolute;left:0;top:0}
+/* Ringpunkte nach M-S9-01/V1: 14 px, 2 px Rand, 1 px Schnee aussen */
+.geo-ringpunkt{display:block;width:14px;height:14px;box-sizing:border-box;border-radius:var(--radius-rund);background:var(--schnee);border:2px solid var(--blau);margin-left:-7px;margin-top:-7px;box-shadow:0 0 0 1px var(--schnee)}
+.geo-ringpunkt-ende{border-color:var(--rot)}
+.geo-pfeil .pfeil-pfad{stroke:var(--dunkelblau);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+/* == NEU: Suchfeld im Dialogkopf (E-S9-06) ================================== */
+.dialog-suche{position:relative;margin-bottom:var(--abstand-3)}
+/* Vorschlagsliste — der Baustein aus M-S9-03 */
+.vorschlaege{position:absolute;left:0;right:0;z-index:20;margin-top:var(--abstand-1);background:var(--schnee);border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein);box-shadow:var(--schatten);overflow:hidden;list-style:none;padding:0}
+.vorschlag{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;min-height:var(--knopf);padding:var(--abstand-1) var(--abstand-3);border-left:var(--abstand-1) solid transparent}
+.vorschlag .symbol{color:var(--gedaempft);margin-right:var(--abstand-2)}
+.vorschlag-text{flex:1 1 auto;min-width:0}
+.vorschlag-haupt{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vorschlag-neben{display:block;color:var(--gedaempft);font-size:var(--groesse-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vorschlag.aktiv{background:var(--rauch);border-left-color:var(--orange)}
+/* Legende unter der Karte */
+.legende{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;color:var(--gedaempft);font-size:var(--groesse-2)}
+.legende > *{margin-right:var(--abstand-3)}
+.legende-linie{display:inline-block;width:22px;height:4px;background:var(--spur-1);border-radius:2px;vertical-align:middle}
+.legende .geo-ringpunkt{position:static;display:inline-block;margin:0;vertical-align:middle}
+
+</style></head><body>
+<div class="mock-kopf"><h1>S9 · M-S9-04 — Der gemeinsame Kartendialog: Suchfeld, Kreuz, Spur</h1>
+<p>Der Dialog „Auf der Karte wählen" (<code>ortswahl.js</code>, 560 px am Desktop, 92 vw am Handy) in vier Zuständen. Neu: das Suchfeld im Kopf (E-S9-06 a), die aufgezeichnete Spur mit Start- und Endpunkt (E-S9-06 b, PS-11) und der Zustand ohne Adresssuche (E-S9-05). Unverändert: Fadenkreuz, Hinweis, Abbrechen / Übernehmen. Ringpunkte nach M-S9-01 (V1).</p></div>
+<h2>Desktop · 560 px</h2><p class="unter">Links: geöffnet vom leeren Einsatzort eines Einsatzes mit Aufzeichnung — die Karte ist auf die Spur eingepasst, das Kreuz steht in der Mitte. Rechts: „Sulz" getippt — die Treffer als Vorschlagsliste über der Karte; ein Klick setzt das Kreuz auf den Treffer, übernommen wird erst mit dem Knopf (F1).</p>
+<div class="frames">
+<div><p class="rahmen-titel">A — Spur, Feld leer, Suchfeld</p><div class="schleier"><div class="dialog" style="width:560px">
+<div class="dialog-kopf"><h2>Auf der Karte wählen</h2><div class="dialog-suche"><div class="ortsfeld-zeile">
+<input type="text" value="" placeholder="Adresse oder Ort suchen">
+<button type="button" class="knopf knopf-symbol knopf-neutral"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg></button></div>
+</div></div>
+<div class="dialog-inhalt" style="padding-top:0">
+<div class="ortswahl-karte"><div class="geo" style="background-image:url(M-S9-04-bg-dlg-desktop.png)">
+<div class="leaflet-ctl"><span>+</span><span>−</span></div>
+<svg class="spur" width="528" height="300" viewBox="0 0 528 300"><polyline points="248.5,156.5 251.4,164.9 254.4,173.1 257.5,181.0 261.0,188.4 264.8,195.3 269.0,201.6 273.5,207.2 278.5,212.2 283.8,216.7 289.4,220.7 295.1,224.4 301.0,228.0 301.0,228.0 293.4,219.3 285.9,210.5 278.6,201.4 271.6,192.0 265.1,182.2 259.0,171.9 253.5,161.0 248.5,149.6 244.0,137.6 239.9,125.2 236.3,112.3 233.0,99.0 229.9,85.6 227.0,72.0" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(261.0,188.4) rotate(153)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(301.0,228.0) rotate(121)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(253.5,161.0) rotate(-25)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:248.5px;top:156.5px"><span class="geo-ringpunkt"></span></div>
+<div class="marker" style="left:227.0px;top:72.0px"><span class="geo-ringpunkt geo-ringpunkt-ende"></span></div>
+<span class="ortswahl-kreuz"></span>
+<span class="attr">Leaflet | © OpenStreetMap</span></div></div>
+<p class="feld-hinweis" style="margin-top:8px">Karte verschieben, bis das Kreuz auf dem Ort steht.</p>
+<div class="legende"><span><span class="legende-linie"></span> Aufzeichnung</span><span><span class="geo-ringpunkt"></span> Start</span><span><span class="geo-ringpunkt geo-ringpunkt-ende"></span> Ende</span></div>
+</div><div class="dialog-fuss"><button class="knopf knopf-leise">Abbrechen</button><button class="knopf knopf-primaer">Übernehmen</button></div></div></div></div>
+<div><p class="rahmen-titel">B — Suche mit Treffern</p><div class="schleier"><div class="dialog" style="width:560px">
+<div class="dialog-kopf"><h2>Auf der Karte wählen</h2><div class="dialog-suche"><div class="ortsfeld-zeile">
+<input type="text" value="Sulz" placeholder="Adresse oder Ort suchen">
+<button type="button" class="knopf knopf-symbol knopf-neutral"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg></button></div>
+<ul class="vorschlaege">
+<li class="vorschlag aktiv"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Sulz</b>berg, Kirchplatz</span><span class="vorschlag-neben">87477 Sulzberg</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Sulz</b>berger Straße 4</span><span class="vorschlag-neben">87437 Kempten (Allgäu)</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Sulz</b>schneid, Marktoberdorf</span><span class="vorschlag-neben">87616 Marktoberdorf</span></span></li>
+<li class="vorschlag"><svg class="symbol" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></svg><span class="vorschlag-text"><span class="vorschlag-haupt"><b>Sulz</b>berg, Sportplatz</span><span class="vorschlag-neben">87477 Sulzberg</span></span></li>
+</ul>
+</div></div>
+<div class="dialog-inhalt" style="padding-top:0">
+<div class="ortswahl-karte"><div class="geo" style="background-image:url(M-S9-04-bg-dlg-desktop.png)">
+<div class="leaflet-ctl"><span>+</span><span>−</span></div>
+<svg class="spur" width="528" height="300" viewBox="0 0 528 300"><polyline points="248.5,156.5 251.4,164.9 254.4,173.1 257.5,181.0 261.0,188.4 264.8,195.3 269.0,201.6 273.5,207.2 278.5,212.2 283.8,216.7 289.4,220.7 295.1,224.4 301.0,228.0 301.0,228.0 293.4,219.3 285.9,210.5 278.6,201.4 271.6,192.0 265.1,182.2 259.0,171.9 253.5,161.0 248.5,149.6 244.0,137.6 239.9,125.2 236.3,112.3 233.0,99.0 229.9,85.6 227.0,72.0" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(261.0,188.4) rotate(153)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(301.0,228.0) rotate(121)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(253.5,161.0) rotate(-25)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:248.5px;top:156.5px"><span class="geo-ringpunkt"></span></div>
+<div class="marker" style="left:227.0px;top:72.0px"><span class="geo-ringpunkt geo-ringpunkt-ende"></span></div>
+<span class="ortswahl-kreuz"></span>
+<span class="attr">Leaflet | © OpenStreetMap</span></div></div>
+<p class="feld-hinweis" style="margin-top:8px">Karte verschieben, bis das Kreuz auf dem Ort steht.</p>
+<div class="legende"><span><span class="legende-linie"></span> Aufzeichnung</span><span><span class="geo-ringpunkt"></span> Start</span><span><span class="geo-ringpunkt geo-ringpunkt-ende"></span> Ende</span></div>
+</div><div class="dialog-fuss"><button class="knopf knopf-leise">Abbrechen</button><button class="knopf knopf-primaer">Übernehmen</button></div></div></div></div>
+</div>
+<h2>Handy · 390 px (Dialog 358 px)</h2><p class="unter">Links: das Feld hatte schon eine Koordinate — die Karte öffnet dort bei Zoom 14, das Kreuz steht auf ihr, die Spur läuft durchs Bild. Rechts: Adresssuche abgeschaltet (Installation oder Konto) — kein Suchfeld, sonst nichts anders; Koordinaten und Karte bleiben.</p>
+<div class="frames">
+<div><p class="rahmen-titel">C — Koordinate gesetzt, Zoom 14</p><div class="schleier"><div class="dialog" style="width:358px">
+<div class="dialog-kopf"><h2>Auf der Karte wählen</h2><div class="dialog-suche"><div class="ortsfeld-zeile">
+<input type="text" value="" placeholder="Adresse oder Ort suchen">
+<button type="button" class="knopf knopf-symbol knopf-neutral"><svg class="symbol symbol-gross" viewBox="0 0 24 24"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg></button></div>
+</div></div>
+<div class="dialog-inhalt" style="padding-top:0">
+<div class="ortswahl-karte"><div class="geo" style="background-image:url(M-S9-04-bg-dlg-handy14.png)">
+<div class="leaflet-ctl"><span>+</span><span>−</span></div>
+<svg class="spur" width="326" height="300" viewBox="0 0 326 300"><polyline points="-257.0,-422.0 -234.0,-354.9 -210.1,-289.2 -184.7,-226.0 -157.0,-166.5 -126.6,-111.3 -93.2,-61.1 -56.6,-16.0 -17.0,24.2 25.3,60.0 69.9,92.1 116.0,121.7 163.0,150.0 163.0,150.0 102.0,80.5 42.0,10.0 -16.2,-62.5 -71.8,-137.7 -124.1,-216.3 -172.6,-298.9 -217.0,-385.8 -257.2,-477.2 -293.3,-572.8 -325.5,-672.5 -354.5,-775.6 -380.9,-881.4 -405.4,-989.2 -429.0,-1098.0" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(-157.0,-166.5) rotate(153)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(163.0,150.0) rotate(121)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(-217.0,-385.8) rotate(-25)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:-257.0px;top:-422.0px"><span class="geo-ringpunkt"></span></div>
+<div class="marker" style="left:-429.0px;top:-1098.0px"><span class="geo-ringpunkt geo-ringpunkt-ende"></span></div>
+<span class="ortswahl-kreuz"></span>
+<span class="attr">Leaflet | © OpenStreetMap</span></div></div>
+<p class="feld-hinweis" style="margin-top:8px">Karte verschieben, bis das Kreuz auf dem Ort steht.</p>
+<div class="legende"><span><span class="legende-linie"></span> Aufzeichnung</span><span><span class="geo-ringpunkt"></span> Start</span><span><span class="geo-ringpunkt geo-ringpunkt-ende"></span> Ende</span></div>
+</div><div class="dialog-fuss"><button class="knopf knopf-leise">Abbrechen</button><button class="knopf knopf-primaer">Übernehmen</button></div></div></div></div>
+<div><p class="rahmen-titel">D — Adresssuche aus</p><div class="schleier"><div class="dialog" style="width:358px">
+<div class="dialog-kopf"><h2>Auf der Karte wählen</h2></div>
+<div class="dialog-inhalt" style="padding-top:0">
+<div class="ortswahl-karte"><div class="geo" style="background-image:url(M-S9-04-bg-dlg-handy.png)">
+<div class="leaflet-ctl"><span>+</span><span>−</span></div>
+<svg class="spur" width="326" height="300" viewBox="0 0 326 300"><polyline points="147.5,156.5 150.4,164.9 153.4,173.1 156.5,181.0 160.0,188.4 163.8,195.3 168.0,201.6 172.5,207.2 177.5,212.2 182.8,216.7 188.4,220.7 194.1,224.4 200.0,228.0 200.0,228.0 192.4,219.3 184.9,210.5 177.6,201.4 170.6,192.0 164.1,182.2 158.0,171.9 152.5,161.0 147.5,149.6 143.0,137.6 138.9,125.2 135.3,112.3 132.0,99.0 128.9,85.6 126.0,72.0" fill="none" stroke="var(--spur-1)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<g class="geo-pfeil" transform="translate(160.0,188.4) rotate(153)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(200.0,228.0) rotate(121)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+<g class="geo-pfeil" transform="translate(152.5,161.0) rotate(-25)"><g class="pfeil-pfad" transform="translate(-10,-10) scale(0.8333)"><path d="M12 5l0 14"/><path d="M18 11l-6 -6"/><path d="M6 11l6 -6"/></g></g>
+</svg>
+<div class="marker" style="left:147.5px;top:156.5px"><span class="geo-ringpunkt"></span></div>
+<div class="marker" style="left:126.0px;top:72.0px"><span class="geo-ringpunkt geo-ringpunkt-ende"></span></div>
+<span class="ortswahl-kreuz"></span>
+<span class="attr">Leaflet | © OpenStreetMap</span></div></div>
+<p class="feld-hinweis" style="margin-top:8px">Karte verschieben, bis das Kreuz auf dem Ort steht.</p>
+<div class="legende"><span><span class="legende-linie"></span> Aufzeichnung</span><span><span class="geo-ringpunkt"></span> Start</span><span><span class="geo-ringpunkt geo-ringpunkt-ende"></span> Ende</span></div>
+</div><div class="dialog-fuss"><button class="knopf knopf-leise">Abbrechen</button><button class="knopf knopf-primaer">Übernehmen</button></div></div></div></div>
+</div>
+
+<div class="notiz">
+<h2 style="margin-left:0">Anmerkungen</h2>
+<ol>
+<li><b>Was neu ist, was bleibt.</b> Neu sind das Suchfeld im Kopf und die Spur mit zwei Ringpunkten; die Legende darunter ist eine Zeile („Aufzeichnung · Start · Ende"). Fadenkreuz, Hinweis, Fuß und Breite bleiben wie seit O5 (<code>style.css</code> 2567 ff.). Kein neues Token; die Ringpunkte sind die aus M-S9-01.</li>
+<li><b>Suchfeld = Ortsfeld-Zeile</b> (Feld + Lupe, <code>.ortsfeld-zeile</code>), die Treffer sind der Baustein aus M-S9-03 — hier nur die Gruppe „Adressen" ohne Gruppenzeile; wird der Dialog vom Transportziel geöffnet, erscheint darüber „Zielkliniken" (F9). Ein Treffer <b>setzt das Kreuz</b> (<code>map.setView</code>, Zoom 15) und trägt seinen Namen ins Suchfeld; übernommen wird erst mit „Übernehmen" (F1) — das Kreuz kann nach dem Treffer noch verschoben werden.</li>
+<li><b>Spur:</b> nur die aufgezeichnete (<code>track</code> aus <code>api/mission.php</code>, Schwelle wie <code>$hatTrack</code>), erste Spurfarbe, Pfeile wie in der Einsatzansicht (nach Nr. 72 gedreht), Ringpunkt blau = Start, rot = Ende — <b>keine Luftlinie, keine Schilder</b>: Standort und Klinik gehören nicht in den Auswahldialog, sie würden das Kreuz verdecken. Ist das Feld leer, <code>fitBounds</code> mit 24 px Rand; sonst Koordinate bei Zoom 14 wie heute.</li>
+<li><b>Ohne Adresssuche</b> (Installations- oder Kontoschalter aus, E-S9-05) fehlt das Suchfeld, und nach „Übernehmen" bleibt das Bezeichnungsfeld leer statt mit Adresse gefüllt — die Umkehrsuche folgt demselben Schalter. Alles Übrige ist gleich; der Dialog sagt nicht, warum das Feld fehlt (das sagt die Karte „Datenschutz" im Profil).</li>
+<li><b>Maße:</b> Karte 300 px hoch (<code>--karte-desktop</code>, auch am Handy — so ist es heute); Dialog 560 px am Desktop, 92 vw am Handy; Suchfeld 44 px; Trefferliste über der Karte (z-index über dem Kreuz).</li>
+<li><b>Fünf Einbauorte, ein Dialog</b> (E-S9-06 c/d): Einsatzort, manueller Abfahrtort, Transportziel, Zielklinik-Stammdaten, Standort-Stammdaten — die Stammdaten ohne Spur (es gibt keinen Einsatz), sonst identisch.</li>
+</ol>
+<div class="empf"><b>Zur Freigabe:</b> die Darstellung (Suchfeld im Kopf, Spur mit Ringpunkten, Legende in einer Zeile) und zwei Verhaltensregeln: Treffer setzt nur das Kreuz (F1), Karte auf der Spur nur bei leerem Feld.</div>
+</div>
+</body></html>
