@@ -159,13 +159,19 @@ const EdPwQuality = (() => {
    * ausgerechnet ein gut gewürfeltes Passwort durch. Angehängte Ziffern sind
    * die Jahreszahl hinter dem Wort und deshalb kein Beitrag.
    */
-  function restwort(pw) {
+  function zerlege(pw) {
     let k = normal(pw);
+    const woerter = [];
     for (const h of HAEUFIG) {
-      if (h.length >= 6 && k.includes(h)) { k = k.split(h).join(''); }
+      if (h.length >= 6 && k.includes(h)) { woerter.push(h); k = k.split(h).join(''); }
     }
-    return ohneReihen(k.replace(/\d+$/, ''));
+    const ziffern = (k.match(/\d+$/) || [''])[0];
+    k = k.replace(/\d+$/, '');
+    const [rest, reihen] = ohneReihen(k);
+    return { woerter, ziffern, reihen, rest };
   }
+
+  function restwort(pw) { return zerlege(pw).rest; }
 
   /**
    * Streicht Reihen und Wiederholungen aus einer Zeichenkette.
@@ -187,6 +193,7 @@ const EdPwQuality = (() => {
    */
   function ohneReihen(k) {
     const bleibt = [];
+    const weg = [];
     let i = 0;
     while (i < k.length) {
       let j = i + 1;
@@ -201,10 +208,10 @@ const EdPwQuality = (() => {
       }
       const laenge = j - i;
       const reihe = (d === 0 && laenge >= 3) || ((d === 1 || d === -1) && laenge >= 4);
-      if (!reihe) { bleibt.push(k.slice(i, j)); }
+      (reihe ? weg : bleibt).push(k.slice(i, j));
       i = j;
     }
-    return bleibt.join('');
+    return [bleibt.join(''), weg];
   }
 
   /**
@@ -214,14 +221,33 @@ const EdPwQuality = (() => {
    * Loch: Aus „1234567890" bliebe eine leere Zeichenkette, und ausgerechnet
    * die Zahlenreihen — die in jeder Liste ganz oben stehen — kämen durch.
    */
-  function istHaeufig(pw) {
-    for (const k of [normal(pw), kern(pw)]) {
-      if (k !== '' && HAEUFIG.some(h => k === h)) { return true; }
+  /**
+   * Warum das Passwort „im Wesentlichen geläufig" ist — oder null, wenn nicht.
+   *
+   * DIE MELDUNG SAGT, WAS GESTRICHEN WURDE UND WAS BLIEB. Eine Ablehnung, die
+   * nur „zu geläufig" sagt, lässt jemanden dreimal dasselbe Passwort mit einem
+   * anderen Ausrufezeichen probieren. Hier steht stattdessen: welches Wort,
+   * welche Jahreszahl, welche Reihe — und wie viele Zeichen übrig sind.
+   *
+   * WAS IN DER MELDUNG STEHT, IST SICHER FÜR innerHTML, und zwar nach Bauart:
+   * Die Wörter kommen aus HAEUFIG (fest in dieser Datei), die Ziffern aus
+   * `\d+`, Reihen und Rest aus dem normalisierten Text, der nur [a-z0-9]
+   * enthält. Kein Zeichen der Eingabe kommt ungefiltert durch — `anzeige()`
+   * verlässt sich darauf.
+   */
+  function warumHaeufig(pw) {
+    const s = String(pw);
+    for (const k of [normal(s), kern(s)]) {
+      if (k !== '' && HAEUFIG.some(h => k === h)) {
+        return '„' + k + '" steht in jeder Liste, die beim Durchprobieren zuerst versucht wird.';
+      }
     }
     // Reine Ziffernfolge: unter 16 Stellen zu wenig, um von Hand gewählt
     // ausreichend zu sein — der Suchraum ist dort schlicht zu klein.
-    if (/^\d+$/.test(String(pw)) && String(pw).length < 16) { return true; }
-    const rest = restwort(pw);
+    if (/^\d+$/.test(s) && s.length < 16) {
+      return 'Nur Ziffern — unter 16 Stellen ist der Suchraum zu klein.';
+    }
+    const z = zerlege(s);
     /* DAS MUSTER GILT AUCH FÜR DEN REST — sonst wäre die neue Regel an einer
      * Stelle SCHWÄCHER als die alte, und das darf sie nirgends sein.
      * Gemessen beim Bauen: „Passwortabcdefgh", „Rettungabcdefgh" und
@@ -229,9 +255,28 @@ const EdPwQuality = (() => {
      * Anteil durchgelassen — ein Listenwort plus Tastaturreihe füllt die acht
      * Zeichen, ohne einen Gedanken zu kosten. Der Rest muss also nicht nur
      * lang genug sein, sondern auch etwas anderes als eine Reihe. */
-    if (rest !== '' && istMuster(rest)) { return true; }
-    return rest.length < MIN_REST;
+    const restIstReihe = z.rest !== '' && istMuster(z.rest);
+    if (!restIstReihe && z.rest.length >= MIN_REST) { return null; }
+
+    const gestrichen = [];
+    for (const w of z.woerter) { gestrichen.push('„' + w + '" (geläufig)'); }
+    if (z.ziffern !== '') { gestrichen.push('„' + z.ziffern + '" (angehängte Ziffern)'); }
+    for (const r of z.reihen) { gestrichen.push('„' + r + '" (Reihe)'); }
+    let m = gestrichen.length
+      ? 'Ohne ' + gestrichen.join(', ') + ' '
+      : '';
+    if (z.rest === '') {
+      m += (gestrichen.length ? 'bleibt nichts übrig' : 'Es bleibt nichts übrig') + '.';
+    } else if (restIstReihe) {
+      m += (gestrichen.length ? 'bleibt' : 'Es bleibt') + ' „' + z.rest + '" — und das ist selbst eine Reihe.';
+    } else {
+      m += (gestrichen.length ? 'bleiben' : 'Es bleiben') + ' nur ' + z.rest.length
+         + ' Zeichen („' + z.rest + '"); mindestens ' + MIN_REST + ' müssen es sein.';
+    }
+    return m;
   }
+
+  function istHaeufig(pw) { return warumHaeufig(pw) !== null; }
 
   /** Nur eine Zeichenart in Folge, z. B. „aaaaaaaaaa" oder „1234567890". */
   function istMuster(pw) {
@@ -297,11 +342,10 @@ const EdPwQuality = (() => {
       return { erlaubt: false, staerke: 0, stufe: STUFEN[0],
                meldung: `Mindestens ${MIN_LAENGE} Zeichen. ` + RAT_PASSPHRASE };
     }
-    if (istHaeufig(s)) {
+    const warum = warumHaeufig(s);
+    if (warum !== null) {
       return { erlaubt: false, staerke: 0, stufe: STUFEN[0],
-               meldung: 'Dieses Passwort besteht im Wesentlichen aus geläufigen '
-                      + 'Wörtern — genau die werden beim Durchprobieren zuerst '
-                      + 'versucht. ' + RAT_PASSPHRASE };
+               meldung: warum + ' ' + RAT_PASSPHRASE };
     }
     if (istMuster(s)) {
       return { erlaubt: false, staerke: 0, stufe: STUFEN[0],
@@ -344,8 +388,9 @@ const EdPwQuality = (() => {
     }
     balken += '</span>';
     /* Stufe und Hinweis als Text — EdHtml.escape ist hier nicht nötig, weil
-       beide aus STUFEN und festen Zeichenketten dieser Datei stammen; ein
-       Passwort steht nie darin. */
+       beide aus STUFEN und festen Zeichenketten dieser Datei stammen. Was
+       `warumHaeufig()` aus der Eingabe zitiert, ist vorher auf [a-z0-9]
+       normalisiert (siehe dort); das Passwort selbst steht nie darin. */
     el.innerHTML = balken
       + '<span class="pwstaerke-text">' + ergebnis.stufe + '</span>'
       + (ergebnis.meldung ? '<span class="pwstaerke-hinweis">' + ergebnis.meldung + '</span>' : '');

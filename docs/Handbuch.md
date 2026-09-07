@@ -357,10 +357,11 @@ auch nicht prüfen. Was die Seite prüft, prüft dein Browser.
 
 **Was die Seite abweist:** geläufige Wörter und Muster — auch dienstliche wie
 „Notarzt" oder „Rettung", auch mit angehängter Jahreszahl. Gemessen wird nicht
-das Vorkommen, sondern der Anteil: „Winterurlaub2026" ist im Kern ein
-Listenwort, „Anker-Winter-Regen-Glas" nicht. **Was sie nicht kennen kann, ist
-der Name deines eigenen Standorts** — er steht in den Stammdaten und nicht in
-der Liste im Browser. Er ist trotzdem ein schlechtes Passwort.
+das Vorkommen, sondern was **übrig bleibt**, wenn man die geläufigen Teile
+wegnimmt: „Winterurlaub2026" ist im Kern ein Listenwort,
+„Anker-Winter-Regen-Glas" nicht. Die Meldung unter dem Feld sagt, **was**
+gestrichen wurde und wie viel übrig blieb — damit du nicht raten musst, woran
+es lag.
 
 **Die Passwortstärke** zeigt sich beim Tippen als Balken aus vier Segmenten:
 je mehr gefüllt, desto besser. Rot heißt zu kurz oder zu leicht zu raten,
