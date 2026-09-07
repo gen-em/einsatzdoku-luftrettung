@@ -828,22 +828,42 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
     emulierten Kern. Dass die Seite ankam, misst man deshalb **am Server**
     (`tail /tmp/php-server.log` → `[200]: GET /datenschutz.php`), nicht am
     Bild.
-  **Vierter Lauf am 07.09.2026 (0.14.0): kein Boot.** Derselbe Aufbau
-  (`aufbauen` frisch, Emulator 37.1.11, `android-34;default;x86_64`,
-  `-accel off -memory 6144`), drei Anläufe: Der erste stand nach **14 min**
-  bei `adb devices` = `device`, noch ohne `sys.boot_completed`, und wurde
-  mit dem Abbruch der wartenden Shell mitgerissen — **Stolperstein Nr. 3:
-  den Emulator nie als Kind einer Shell starten, die jemand abbrechen
-  könnte** (`setsid nohup … & disown`, nicht bloß `nohup … &`). Der zweite
-  lief **38 min** bei 102 % eines Kerns, die ersten zehn davon neben dem
-  vollen `./gradlew build` (Last 8 auf 4 Kernen), und blieb bei `device
-  offline`. Der dritte lief auf leerer Maschine an; sein Ergebnis steht,
-  wenn es eines gibt, im Prüfdokument des Sofortpakets (P-13). Die Zahlen
-  von 0.13.0 (Boot 621 s) waren also kein Ausreißer nach oben, sondern
-  ein guter Tag: Ein Boot unter TCG ist **eine Viertelstunde bis eine
-  halbe**, und jede parallele Last verlängert ihn spürbar. Die Regel
-  bleibt — Stufe II ist Pflicht, der Versuch zählt, der Befund steht mit
-  Zahl.
+  **Vierter Lauf am 07.09.2026 (0.14.0): erst kein Boot, dann der Grund.**
+  Derselbe Aufbau (`aufbauen` frisch, Emulator 37.1.11,
+  `android-34;default;x86_64`, `-accel off -memory 6144`), vier Anläufe ohne
+  `sys.boot_completed` — 14, 38, 22 und 12 Minuten —, obwohl `adb devices`
+  ab der dritten Minute `device` sagte. Der `logcat` nannte die Ursache: Der
+  Android-**Watchdog** erschießt den `system_server` nach 60 s Blockade in
+  `ActivityManagerService.systemReady` („`Watchdog: *** GOODBYE!`", SIG 9);
+  Zygote beendet sich, alles startet neu, und unter TCG ist das eine
+  Schleife. Die Läufe von 0.7.2 bis 0.13.0 haben diese Klippe offenbar
+  knapp umschifft — 621 s Boot war kein schlechter Tag, sondern Glück.
+
+  **Gegenmittel, jetzt in `emulator.sh start`:** `ro.hw_timeout_multiplier=10`
+  streckt jede Watchdog-Frist (Cuttlefish nutzt dieselbe Eigenschaft für
+  langsame Geräte). `-prop` kann sie nicht setzen (nur `qemu.*`) — aber das
+  Abbild ist `userdebug`: Sobald `adbd` da ist (120 s), `adb root`, `setprop`
+  (eine `ro`-Eigenschaft nimmt den ersten Wert an), dann `stop; start`, damit
+  der nächste `system_server` sie liest. Danach: Boot **553 s** ab Neustart,
+  **715 s** gesamt, Prüf-APK **128 s**. Vier Stolpersteine mehr:
+
+  | Stolperstein | Was zu tun ist |
+  |---|---|
+  | Boot bleibt bei `device` stehen, `boot_completed` kommt nie | `adb logcat -d \| grep -a GOODBYE`; Watchdog-Faktor wie oben (`start` tut es) |
+  | Der Emulator stirbt, wenn die aufrufende Shell abgebrochen wird | `setsid nohup … < /dev/null &` — nie als Kind einer Shell, die jemand stoppen könnte |
+  | `bild` sagt immer „KEIN ABZUG" | `dumpsys window windows` druckt auf API 34 kein `mCurrentFocus`; `bild` fragt jetzt `dumpsys window` |
+  | „System UI isn't responding" liegt über der App | `settings put global hide_error_dialogs 1` (`start` setzt es); der ANR ist eine Eigenschaft der Emulation, nicht der App |
+
+  **Was der Lauf zeigte** (acht Bilder in `emulator-bilder/`, nicht im
+  Repositorium): Kopplung gegen die lokale Installation — Code `S4Y ZPF`, im
+  Web als Demo-Konto bestätigt, „Ja, koppeln", `devices`-Zeile am Server —,
+  die rote Zeile „1 Paket vom Server abgewiesen" (per `sqlite3` als Root
+  eingespielt: Paket, Punkt, Phase, beendete Dienstzeile), Einstellungen,
+  „Gerät trennen" mit Rückfrage, „Getrennt". Und der **Räumlauf am echten
+  Android-SQLite**: nach dem Trennen 0 Pakete, 0 abgewiesen, 0 Punkte,
+  0 Phasen, 0 Dienstzeilen — vorher je 1 —, Gerät am Server gelöscht, kein
+  Absturz. Der Wear-Emulator ist für 0.14.0 nicht gefahren worden: Das
+  Uhr-Modul hat keine Änderung, die es ausführt.
 
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf

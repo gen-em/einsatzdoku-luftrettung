@@ -25,7 +25,7 @@ Das steht am Anfang, nicht in einer Fußnote.
 | **Die Absenderprüfung mit einer echten Uhr** (Nr. 144) | Kein Data Layer mit Telefonseite im Container (`android/LIESMICH.md` 7). Geprüft ist die Entscheidung in `Uhrannahme` gegen echtes SQLite mit einer Attrappe der Knotenliste — nicht, was `connectedNodes` auf Hardware liefert | Auftraggeber, P-11 — **vor** der Verteilung der 0.14.0 an eine Uhr im Dienst |
 | **Das Klartextverbot auf Android 8.0/8.1** (Nr. 142) | Kein Gerät mit API 26/27; der Emulator läuft mit API 34, wo Android Klartext ohnehin verbietet. Belegt sind die zusammengeführte Release-Manifestdatei und der Prüffall im Release-Buildtyp | Auftraggeber, P-12 — nur, falls ein altes Gerät greifbar ist |
 | **Der Räumlauf nach 30 Tagen im Feld** (Nr. 114) | Die Frist ist nur im Prüfstand stellbar (`jetzt`); im Emulator vergehen keine 30 Tage | — (Robolectric belegt die Regel; am Gerät bleibt das Trennen, das dieselbe Funktion ohne Frist ruft) |
-| **Stufe II — die Änderung im Emulator angesehen und bedient** (alle Android-Punkte) | Der Emulator kam in drei Anläufen nicht bis `sys.boot_completed` (Zahlen in Abschnitt 1, Zeile „alle Android / Emulator"). Was er belegt hätte: Kopplung, Einstellungen und Trennen laufen nach dem Umbau — und das Trennen **ist** der Räumlauf | Auftraggeber oder nächste Instanz, P-13 — **vor dem Merge des Android-Teils**, wenn es der Zeitplan erlaubt |
+| **Das Uhr-Modul im Wear-Emulator** | Die einzige Änderung am Uhr-Modul ist die neue Methode in der gemeinsamen Datei `WearNachrichtenweg.kt`, die die Uhr nicht ruft; das Uhr-APK ist byteweise gleich groß geblieben. Ein zweiter TCG-Boot (nach vier Fehlversuchen und 715 s beim Handy) stand dazu in keinem Verhältnis | — bei der nächsten Änderung am Uhr-Modul mit |
 | **Ein signiertes Release-APK** | Kein Signaturschlüssel im Container (E-S4-16); geprüft ist das unsignierte Release-APK aus `./gradlew build` | Auftraggeber beim Release |
 
 **Eine Bemerkung zur Umgebung, weil sie für jede Zahl hier gilt:** Der
@@ -64,7 +64,7 @@ diesen Umweg hätte der Punkt keine Zahl.
 | **144** | Robolectric gegen echtes SQLite, Attrappe der Knotenliste | Absender gegen Knoten, Zeit plausibel | `UhrannahmeTest` **12 → 19 Fälle**: bekannter Knoten ja, fremder nein, Liste `null` nein; 6 min Zukunft quittiert und nicht gewirkt, 4:59 min gewirkt; Phase 10 min vor Dienstbeginn quittiert, kein Einsatz; Dienstende vor dem Beginn beendet nichts. Dazu `:uhr:compileDebugKotlin` mit der ergänzten Klasse |
 | **145** | zwei Quellen, Wrapper-Lauf | Prüfsumme eingetragen, Wrapper läuft weiter | `…bin.zip.sha256` von `services.gradle.org` = `sha256sum` des frisch geladenen Archivs (137 393 837 B) = `bd711022…f3531`; `./gradlew --version` mit der Zeile: Gradle 8.14.3 |
 | **alle Android** | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge | `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor |
-| **alle Android** | Emulator (Stufe II) | Änderung angesehen und bedient, mit Bildern | **nicht erreicht** — Stufe II steht für 0.14.0 aus. Drei Startversuche mit `-accel off`, `-memory 6144`, Abbild `android-34;default;x86_64`, Emulator 37.1.11: Der erste stand nach 14 min bei `adb devices` = `device`, noch ohne `sys.boot_completed`, und wurde mit dem Abbruch der wartenden Shell mitgerissen; der zweite lief 38 min bei 102 % eines Kerns (die ersten 10 min parallel zum vollen Baulauf, Last 8 auf 4 Kernen) und blieb bei `device offline`; der dritte läuft seit 16:07 Uhr auf leerer Maschine. Befund mit Zahl statt stillschweigend übersprungener Punkt (CLAUDE.md 6); nachholen nach Prüfliste P-13 |
+| **alle Android** | Emulator (Stufe II) | Änderung angesehen und bedient, mit Bildern | **erreicht, im fünften Anlauf** (Emulator 37.1.11, `android-34;default;x86_64`, `-accel off`): adbd nach 120 s, `ro.hw_timeout_multiplier=10` als Root gesetzt und Framework neu gestartet, Boot **715 s**, Prüf-APK gegen die lokale Installation **128 s**; acht Bilder — Kopplungsansicht, Code `S4Y ZPF`, im Web als Demo-Konto eingetragen und bestätigt, „Zu diesem Konto koppeln? de***@gen-em.org", „Ja, koppeln" → Dienstansicht „Gekoppelt · 127.0.0.1:8080", `devices`-Zeile 79 am Server; per `sqlite3` ein abgewiesenes Paket samt Punkt, Phase und beendeter Dienstzeile eingespielt → rote Zeile „1 Paket vom Server abgewiesen"; Einstellungen; „Gerät trennen" mit Rückfrage; „Getrennt". **Der Räumlauf am echten Android-SQLite:** nach dem Trennen `paket 0, fehlerhaft 0, punkt 0, phase 0, dienst 0` (vorher je 1), Gerät am Server gelöscht (`POST /pair.php` 200), kein Absturz im `logcat`. Davor **vier Anläufe ohne Boot** (14, 38, 22 und 12 min) — Ursache der Android-Watchdog unter TCG, Gegenmittel jetzt in `emulator.sh start` (F-SP-P-07); der Wear-Emulator für das Uhr-Modul wurde nicht gefahren (Abschnitt 0) |
 
 ---
 
@@ -86,7 +86,7 @@ diesen Umweg hätte der Punkt keine Zahl.
 | Gegenprobe des Bilderlaufs | **112 Bilder, 112 verschiedene Prüfsummen, 0 Doppelte** | Die Falle aus F-P3-AQ (176 Bilder zeigten die Anmeldeseite) ist damit ausgeschlossen |
 | `tools/screenshots/kontrast.py` | **21 Paare, 0 verfehlt** | `style.css` unverändert |
 | `./gradlew build` (Android) | `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor | beide Module, beide Bauarten, Lint mit `abortOnError` |
-| `android/werkzeuge/emulator.sh` | **nicht erreicht** — Stufe II steht für 0.14.0 aus. Drei Startversuche mit `-accel off`, `-memory 6144`, Abbild `android-34;default;x86_64`, Emulator 37.1.11: Der erste stand nach 14 min bei `adb devices` = `device`, noch ohne `sys.boot_completed`, und wurde mit dem Abbruch der wartenden Shell mitgerissen; der zweite lief 38 min bei 102 % eines Kerns (die ersten 10 min parallel zum vollen Baulauf, Last 8 auf 4 Kernen) und blieb bei `device offline`; der dritte läuft seit 16:07 Uhr auf leerer Maschine. Befund mit Zahl statt stillschweigend übersprungener Punkt (CLAUDE.md 6); nachholen nach Prüfliste P-13 | ohne KVM, `-accel off` |
+| `android/werkzeuge/emulator.sh` | **erreicht, im fünften Anlauf** (Emulator 37.1.11, `android-34;default;x86_64`, `-accel off`): adbd nach 120 s, `ro.hw_timeout_multiplier=10` als Root gesetzt und Framework neu gestartet, Boot **715 s**, Prüf-APK gegen die lokale Installation **128 s**; acht Bilder — Kopplungsansicht, Code `S4Y ZPF`, im Web als Demo-Konto eingetragen und bestätigt, „Zu diesem Konto koppeln? de***@gen-em.org", „Ja, koppeln" → Dienstansicht „Gekoppelt · 127.0.0.1:8080", `devices`-Zeile 79 am Server; per `sqlite3` ein abgewiesenes Paket samt Punkt, Phase und beendeter Dienstzeile eingespielt → rote Zeile „1 Paket vom Server abgewiesen"; Einstellungen; „Gerät trennen" mit Rückfrage; „Getrennt". **Der Räumlauf am echten Android-SQLite:** nach dem Trennen `paket 0, fehlerhaft 0, punkt 0, phase 0, dienst 0` (vorher je 1), Gerät am Server gelöscht (`POST /pair.php` 200), kein Absturz im `logcat`. Davor **vier Anläufe ohne Boot** (14, 38, 22 und 12 min) — Ursache der Android-Watchdog unter TCG, Gegenmittel jetzt in `emulator.sh start` (F-SP-P-07); der Wear-Emulator für das Uhr-Modul wurde nicht gefahren (Abschnitt 0) | ohne KVM, `-accel off` |
 | `tools/wortliste/` nach dem Android-Teil | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** (87 Regeln, alle fünf Bereiche einschließlich d = Android) | Bereich d (Android) eingeschlossen |
 
 **Was der Bilderlauf gemessen hat**, damit die Zahl etwas bedeutet: die 14
@@ -133,9 +133,36 @@ PHP-Anfragen durchgereicht), angemeldet als Admin und als Demo-Konto:
 | **F-SP-P-05** | Die erste Fassung der Integritätswache prüfte auf der Anmeldeseite nur, ob der bekannte Inline-Block **vorhanden** ist — ein **zusätzliches** Skript oder ein Formular mit fremdem `action` fiel ihr nicht auf. Gefunden beim Nachprüfen der Frage des Auftraggebers, welche Lücke „Wartungsprobe … Abweichung erkannt" schließen sollte; am laufenden System belegt (Fremd-Skript über `ui.php`: „Kein Unterschied") | ja: die ganze Menge der Skripte und Formulare wird verglichen; Selbstprobe 7 → 12 |
 | **F-SP-P-06** | Das `src`-Muster der Wache brach am Anführungszeichen innerhalb von `asset('…')` ab und hielt das eine externe Skript der Quelle für unbestimmbar — jeder Ersatz für `crypto.js` wäre durchgegangen. Gefunden von der **Selbstprobe**, bevor es eingecheckt war | ja |
 | **F-SP-P-04** | Die neue Anteilsregel der Passwortprüfung war an einer Stelle **schwächer** als die alte: Ein Listenwort plus Tastaturreihe („Passwortabcdefgh", „passwort2026aaaaaaaa") füllte die geforderten acht Zeichen. Gefunden beim breiten Vergleich über 1552 erzeugte Passwörter, **nicht** in den 22 handverlesenen Fällen davor | ja: `ohneReihen()` streicht Folgen mit gleichbleibendem Abstand; danach 0 solcher Fälle |
+| **F-SP-P-07** | **Der Emulator bootete nicht — vier Anläufe, 14/38/22/12 min.** `adb devices` sagte `device`, `sys.boot_completed` kam nie. Ursache (`logcat`): Der Android-**Watchdog** erschießt den `system_server` nach 60 s Blockade in `systemReady` („*** GOODBYE!", SIG 9), Zygote geht mit, alles startet neu — unter TCG eine Schleife. Gegenmittel: `ro.hw_timeout_multiplier=10` als Root setzen, sobald `adbd` da ist (das Abbild ist `userdebug`; `-prop` kann nur `qemu.*`), und das Framework neu starten. Danach Boot in 715 s | ja: `emulator.sh start` tut das jetzt selbst; LIESMICH Abschnitt 7 |
+| **F-SP-P-08** | `emulator.sh bild` prüfte den Fokus mit `dumpsys window windows` — auf API 34 druckt das kein `mCurrentFocus`, also **jeder** Abzug „KEIN ABZUG" | ja: `dumpsys window` |
+| **F-SP-P-09** | Ein Emulator, der als Kind einer Shell läuft, stirbt mit ihr — ein gestoppter Hintergrundauftrag riss den ersten 14-Minuten-Boot mit | ja: `setsid nohup … < /dev/null &` in `emulator.sh start` |
 | **F-SP-P-03** | Der Seitenbruch aus K-15 entsteht **nicht** über `</script>` — `json_encode()` schreibt `<\/script>`, ein schließendes Tag kann aus einem Wert gar nicht entstehen. Der Weg ist `<!--<script>` | in Nr. 135 gemessen und behoben |
 
 ---
+
+### 4a. Die adversarische Gegenprüfung des Web-Teils (07.09.2026)
+
+Ein Workflow aus 93 Agenten hat den fertigen Web-Diff aus sechs Blickwinkeln
+angegriffen (29 Funde) und jeden Fund von drei unabhängigen Agenten widerlegen
+lassen; fünf weitere Agenten haben die Ergebnisse gegen den heutigen Stand
+reproduziert. **22 Funde halten, 7 sind widerlegt.** Die sechs zur Dokumentation
+sind behoben (`bf5a506`, siehe Abschnitt 1 zu Nr. 129 und P-3). Die sechzehn
+zum Code stehen **offen** — Entscheidung des Auftraggebers, ob sie vor dem Merge
+als Nachbesserung je Punkt behoben werden oder als Backlog-Nummern eingetragen:
+
+| Punkt | Fund | Schwere |
+|---|---|---|
+| 134 | Bei geschlossenem Fenster schreibt `dt_zeitraum_fortschreiben()` weiterhin Beginn/Ende des Diensttags um | hoch |
+| 134 | Der Anker ist das vom Gerät gesendete `started_at`: eine falsch gestellte Uhr schließt das Fenster sofort, verliert Punkte und Phasen, `next_seq` wandert trotzdem (die Uhr löscht als quittiert) | hoch |
+| 134 | Abschlusspaket außerhalb des Fensters: Metadaten still verworfen, kein `kept_*`; Diensttag im Papierkorb → leerer neuer Tag; `started_at` in der Zukunft → Fenster schließt nie; zweite Fensterprüfung unerreichbar | mittel / niedrig |
+| 130 | **UTF-7** über die Kodierungsdeklaration umgeht die DOCTYPE-Sperre; die Probe Teil 8 prüft die Deklaration nicht; der Kommentar zur Latin-1-Abweisung gilt nur für den JSON-Direktweg | hoch / mittel / niedrig |
+| 136 | Sonderzeichen zählen nicht zum Rest: Zufallspasswörter mit Sonderzeichen werden abgewiesen (12 Zeichen: 2–15 %; vorher 0 %), mit der Begründung „geläufige Wörter"; Listenwörter der Reihe nach statt längste zuerst, kurze gar nicht, Wiederentstehen nach dem Streichen | hoch / mittel |
+| 136 | Statuszeile: Das Demo-Konto (alle 30 min mit 320 000 Runden eingespielt) hält „Übergang läuft" für immer; ein Satz bricht ab | mittel / niedrig |
+| 140 | Wache: Selbstprobe hängt an Code-Literalen; Dateiname mit Leerzeichen bricht den Lauf ab; `<base href>`/`formaction` unbeobachtet; `data-src`; Zusatzdatei auf dem Server unsichtbar (Grenze benennen) | mittel / niedrig |
+
+Die vollständigen Belege (Reproduktionsskripte, Zahlen) liegen im Protokoll des
+Workflows, nicht im Repositorium; die Kurzfassung oben genügt, um die Behebung
+zu beauftragen.
 
 ## 5. Entscheidungen, die beim Bauen gefallen sind
 
@@ -307,27 +334,6 @@ Ereignis immer wieder nach; `adb logcat -s NAdoku` zeigt „Ereignis von
 unbekanntem Knoten … verworfen". Dann nennt `connectedNodes` auf dem Gerät
 nicht den Knoten, den der Data Layer als Absender nennt — sofort melden, mit
 der Protokollzeile; bis dahin 0.13.0 auf dem Handy lassen.
-
-### P-13 · Stufe II nachholen: Emulatorlauf 0.14.0 (alle Android-Punkte) — **vor dem Merge, wenn möglich**
-1. `android/werkzeuge/emulator.sh start` auf einer Maschine mit KVM oder mit
-   Geduld (Boot unter TCG 3–20 min; drei Anläufe im Prüfcontainer kamen
-   nicht durch, Zahlen in Abschnitt 1).
-2. Lokale Installation starten (`tools/referenzdatensatz/einspielen/lokal_starten.sh`),
-   Prüf-APK gegen sie bauen:
-   `./gradlew :handy:assembleDebug -Pnadoku.serverBasis=http://127.0.0.1:8080/`,
-   `adb reverse tcp:8080 tcp:8080`, `emulator.sh legen handy/build/outputs/apk/debug/handy-debug.apk`,
-   `adb shell pm clear org.genem.nadoku.pruef`.
-3. In der App „Kopplung starten"; den Code im Web unter Einstellungen →
-   Geräte eintragen und bestätigen; am Gerät „Ja, koppeln". Bild.
-4. Einstellungen öffnen (Bild), „Gerät trennen" (Bild) — das ist der
-   Räumlauf ohne Frist. `adb logcat -s NAdoku` mitlesen.
-
-**Erwartet:** Kopplung kommt zustande, Trennen meldet „getrennt", kein
-Absturz, keine Zeile „unbekanntem Knoten" (im Emulator kommt kein
-Uhr-Ereignis an, die Zeile darf also gar nicht auftauchen).
-**Scheitern:** ein Absturz beim Trennen (`Puffer.abgewieseneRaeumen` läuft
-dort zum ersten Mal auf einem echten Android-SQLite) — dann melden, mit
-`adb logcat`.
 
 ### P-12 · Klartextverbot auf einem alten Gerät (Nr. 142) — nur bei Gelegenheit
 Auf einem Android-8-Gerät (API 26/27) ein Release-APK mit

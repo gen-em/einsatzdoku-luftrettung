@@ -26,6 +26,15 @@
 # haengenden Boot sieht, misst zuerst `adb shell top -n 1 -b | head -4` --
 # untaetige CPU bei vollem Speicher heisst: mehr -memory, nicht mehr Geduld.
 #
+# UND DIE DRITTE ZAHL: 60 Sekunden. So lange darf der system_server unter
+# Android in systemReady haengen, bevor der Watchdog ihn erschiesst -- und
+# unter TCG haengt er laenger. Ohne `ro.hw_timeout_multiplier` (siehe start)
+# bootet das Abbild NIE, und zwar ohne jede Meldung ausser einem "GOODBYE!"
+# im logcat. Am 07.09.2026 vier Anlaeufe lang (14, 38, 22 und 12 Minuten)
+# nicht erkannt, weil `adb devices` "device" sagte und nur boot_completed
+# fehlte. Wer einen Boot sieht, der bei "device" stehen bleibt, liest zuerst
+# `adb logcat -d | grep -a GOODBYE`.
+#
 # BERICHTIGUNG EINER FRUEHEREN MESSUNG. android/LIESMICH.md sagte bis 03.09.
 # "x86_64-Abbild braucht KVM". Das stimmt fuer den Standardaufruf, aber nicht
 # fuer `-accel off`: damit uebersetzt QEMU die x86_64-Befehle selbst und
@@ -91,16 +100,40 @@ start() {
   # -gpu swiftshader_indirect: die Grafik rechnet ebenfalls die CPU.
   # KEIN -no-snapshot: Der Erstboot kostet unter TCG Minuten, der zweite Start
   # aus dem Abzug Sekunden. `aus` (adb emu kill) legt den Abzug an.
-  nohup "$EMU" -avd "$avd" -no-window -no-audio -no-boot-anim \
+  # setsid: Der Emulator darf KEIN KIND DER AUFRUFENDEN SHELL sein. Wird die
+  # abgebrochen (Strg-C, ein gestoppter Hintergrundauftrag), stirbt er sonst
+  # mit -- am 07.09.2026 kostete das einen Boot von 14 Minuten (0.14.0).
+  setsid nohup "$EMU" -avd "$avd" -no-window -no-audio -no-boot-anim \
       -accel off -gpu swiftshader_indirect -memory 6144 -partition-size 4096 \
       -cores 4 \
-      >"${TMPDIR:-/tmp}/emu-$avd.log" 2>&1 &
+      >"${TMPDIR:-/tmp}/emu-$avd.log" 2>&1 < /dev/null &
   sag "gestartet: $avd (Protokoll ${TMPDIR:-/tmp}/emu-$avd.log)"
   "$ADB" start-server >/dev/null 2>&1 || true
+
+  # DER WATCHDOG (gefunden am 07.09.2026, nach vier Anlaeufen ohne Boot).
+  # Unter TCG erschiesst der Android-Watchdog den system_server nach 60 s
+  # Blockade in systemReady ("*** GOODBYE!", SIG 9 -- `adb logcat -d | grep
+  # GOODBYE`); Zygote geht mit, alles startet neu, sys.boot_completed kommt
+  # NIE. Die Frist skaliert mit `ro.hw_timeout_multiplier` (Cuttlefish setzt
+  # sie fuer langsame Geraete). `-prop` kann das nicht (nur qemu.*) -- aber
+  # das Abbild ist userdebug: Sobald adbd da ist, als Root setzen (eine
+  # ro-Eigenschaft laesst sich setzen, solange sie noch nicht gesetzt ist)
+  # und das Framework neu starten, damit der naechste system_server sie
+  # liest. Gemessen: adbd nach 120 s, Boot 553 s danach, 715 s gesamt.
+  until [ "$("$ADB" get-state 2>/dev/null | tr -d '\r')" = "device" ]; do sleep 10; done
+  sag "adbd da nach $(( $(date +%s) - beginn )) s -- Watchdog-Faktor setzen, Framework neu starten"
+  "$ADB" root >/dev/null 2>&1 || true; sleep 5
+  "$ADB" shell setprop ro.hw_timeout_multiplier 10 >/dev/null 2>&1 || true
+  "$ADB" shell "stop; sleep 3; start" >/dev/null 2>&1 || true
   until [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
     sleep 15
   done
-  sag "Boot fertig nach $(( $(date +%s) - beginn )) s"
+  # ANR-Dialoge ("System UI isn't responding") legen sich unter TCG
+  # zuverlaessig ueber die App und nehmen ihr den Fokus -- `bild` verweigert
+  # dann zu Recht den Abzug. Ausblenden ist ehrlicher, als vor jedem Abzug
+  # "Wait" zu tippen: Der ANR ist eine Eigenschaft der Emulation, nicht der App.
+  "$ADB" shell settings put global hide_error_dialogs 1 >/dev/null 2>&1 || true
+  sag "Boot fertig nach $(( $(date +%s) - beginn )) s (Watchdog-Faktor $("$ADB" shell getprop ro.hw_timeout_multiplier 2>/dev/null | tr -d '\r'))"
 }
 
 legen() {
@@ -125,7 +158,7 @@ PAKET="${PAKET:-org.genem.nadoku.pruef}"
 bild() {
   mkdir -p "$ZIEL"
   local fokus
-  fokus=$("$ADB" shell 'dumpsys window windows 2>/dev/null | grep mCurrentFocus' | tr -d '\r')
+  fokus=$("$ADB" shell 'dumpsys window 2>/dev/null | grep mCurrentFocus' | tr -d '\r')
   case "$fokus" in
     *"$PAKET"*) : ;;
     *) sag "KEIN ABZUG fuer '$1' -- im Vordergrund steht:${fokus#*mCurrentFocus=}"
