@@ -151,6 +151,12 @@ class Kopplungsdienst(
      * etwas anderes, damit die Sperre trotzdem belegt ist.
      */
     private val rueckstand: () -> Int = { 0 },
+    /**
+     * Was beim Trennen mit der Kopplung geht (Backlog Nr. 114, Räumteil):
+     * die abgewiesenen Pakete. Als Funktion, weil dieser Dienst den Puffer
+     * nicht kennt — und der Prüfstand zählt damit, ob geräumt wurde.
+     */
+    private val raeumen: () -> Unit = {},
 ) {
 
     /**
@@ -329,8 +335,12 @@ class Kopplungsdienst(
         )
 
         // LOKAL WIRD IMMER GETRENNT — vor der Auswertung, damit kein Zweig
-        // daran vorbeikommt.
+        // daran vorbeikommt. Und mit der Kopplung gehen die abgewiesenen
+        // Pakete (Backlog Nr. 114, Räumteil): Sie gehören dem Konto, das
+        // hier zurückgegeben wird, und bis 0.13.0 überlebten sie jede
+        // Neukopplung.
         tresor.loeschen()
+        raeumen()
 
         return when (antwort) {
             is Netzantwort.KeineVerbindung ->

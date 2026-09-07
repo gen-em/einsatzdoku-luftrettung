@@ -73,6 +73,7 @@ class SenderTest {
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
         basis = server.basis,
         phasenLeser = { puffer.phasen(it) },
+        jetzt = { uhrzeit },
     )
 
     /* EIN Zähler für den ganzen Prüffall, nicht einer je Klammer.
@@ -453,6 +454,39 @@ class SenderTest {
      * Was an seine Stelle tritt, steht in ServeradresseTest: Eine unbrauchbare
      * `SERVER_BASIS` lässt den ERSTEN Zugriff werfen -- beim Bauen, nicht beim
      * Senden. */
+
+    // ---- Der Räumteil vor dem Senden (Backlog Nr. 114, AN-2) ---------------
+
+    /**
+     * Jeder Sendelauf räumt zuerst: Ein abgewiesenes Paket, das älter ist als
+     * die Frist ([org.genem.nadoku.handy.puffer.Raeumung.FRIST_TAGE]), ist
+     * danach weg und steht im Bericht; ein jüngeres bleibt. Die Zeit stellt
+     * der Prüfstand — 36 und 26 Tage vor „jetzt".
+     */
+    @Test fun einSendelaufRaeumtAbgewieseneNachDerFrist() {
+        antworteVollstaendig()
+        uhrzeit = Instant.parse("2026-07-16T05:00:00Z")
+        val alt = abgewiesen("ab-alt", "2026-06-10T19:00:00Z")
+        val jung = abgewiesen("ab-jung", "2026-06-20T19:00:00Z")
+
+        val bericht = sender().sendeAlles()
+
+        assertEquals(1, bericht.geraeumt)
+        assertNull("36 Tage: weg", puffer.paket(alt))
+        assertNotNull("26 Tage: bleibt", puffer.paket(jung))
+        assertEquals(1, puffer.abgewiesen())
+        assertTrue("Abgewiesenes wird nach wie vor nicht gesendet", server.anfragen.isEmpty())
+    }
+
+    private fun abgewiesen(ref: String, beendet: String): Long {
+        val id = puffer.paketAnlegen(
+            clientRef = ref, art = Paketzeile.ART_RUHESEGMENT, tag = beendet.substring(0, 10),
+            dienstRef = null, begonnenAt = beendet,
+        )
+        puffer.paketSchliessen(id, beendet, null, null)
+        puffer.alsFehlerhaftMerken(id)
+        return id
+    }
 
     private companion object {
         const val DATENBANK = "sendepruefung.db"
