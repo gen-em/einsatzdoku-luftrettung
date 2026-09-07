@@ -14,6 +14,240 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 15.6.0] — 2026-09-07
+
+### Web — Sofortpaket Sicherheit, elf Punkte aus dem Krypto-Review (Rahmenplan 9a, R78)
+
+**Der Review vom 06.09.2026 fand keinen kritischen und keinen hohen Befund am
+Web-Teil** — er fand fünfzehn kleine, und die haben die Eigenschaft, dass sie
+einzeln jeder für sich vertretbar sind und zusammen eine Haltung ergeben. Elf
+davon sind hier abgearbeitet, je einer ein Commit, einzeln zurücknehmbar.
+
+Zwei Dinge sind dabei aufgefallen, die nicht im Review standen. Beide haben
+denselben Grund: Eine Sicherheitsmaßnahme, die nie ausgelöst hat, ist nicht
+geprüft. Sie stehen unten bei Nr. 136.
+
+#### Rundenzahl 600 000 und Passwortregeln (Nr. 136, SP-1/SP-2)
+
+Gegen einen Datenbankabzug ist das Passwort die einzige Schranke — der Server
+sieht es nie und kann seine Güte nach Bauart nicht prüfen. `KDF_ITER_ZIEL`
+steht deshalb auf **600 000** statt 320 000 (OWASP 2023, Bitwarden); der
+Altwert bleibt in `KDF_ITER_LISTE`, bis kein Konto ihn mehr trägt. Gemessen im
+Prüfcontainer auf einem Kern: **298 ms je Ableitung vorher, 551 ms nachher**,
+im Übergang 849 ms, weil dann beides gerechnet wird. Für den Angreifer
+halbiert sich die Rate. Sicherungen älterer Stände bleiben lesbar — die
+Rundenzahl steht im Dateikopf und wird von dort gelesen.
+
+**Die stille Anhebung lief nicht.** Sie ruft `api/kdf_upgrade.php` und braucht
+dafür `CSRF` — das gab `ui_krypto_bootstrap()` aber nur auf Anfrage aus, und
+drei von sieben Seiten fragten. Wer nach dem Anmelden zuerst auf `suche.php`,
+`zeitraum.php`, `einsatz.php` oder `einsatz_form.php` ging, bekam keine
+Anhebung, und `loeseVormerkung()` verwarf das Vormerkfach trotzdem — damit war
+sie für diese Sitzung verloren, und beim nächsten Anmelden dasselbe. Folgenlos
+blieb das nur, solange die Liste einen einzigen Eintrag hatte; mit dem Sprung
+wurde daraus ein Fehler. Gemessen am Referenzbestand: Konto auf 320 000,
+Anmeldung, `suche.php` — Rundenzahl unverändert. **CSRF steht jetzt immer.**
+Danach: `{"ok":true,"iter":600000}`, Konto auf 600 000, Inhaltsschlüssel
+weiterhin entpackbar.
+
+**Und die Wartungsseite meldete die falsche Zahl.** Sie nannte nur *verwaiste*
+Rundenzahlen — also den Fall, dass jemand den Altwert **zu früh** gestrichen
+hat. Die Frage davor, wann er gestrichen werden **darf**, beantwortete sie
+nicht; SP-1 nimmt an, sie täte es. Die Zeile „Schlüsselableitung" nennt jetzt
+auch, wie viele Konten noch unter dem Zielwert stehen, mit der Plakette
+„Übergang läuft".
+
+**Die Mindestlänge steigt von 10 auf 12** und steht als `PW_MIN_LAENGE` an
+einer Stelle statt an sieben. `EdPwQuality.beobachte()` zieht `minLength` des
+Feldes auf den eigenen Wert nach — läuft die Zahl je auseinander, gilt
+wenigstens die strengere Regel.
+
+**Die Sperrliste hat eine neue Rechnung, und das ist die eigentliche
+Entscheidung dieser Stufe.** SP-2 empfiehlt Passphrasen („vier zufällige
+Wörter") und will zugleich die Liste erweitern. Beides zusammen ging nicht:
+Der Vergleich wies jedes Passwort ab, in dem irgendwo ein Listenwort vorkam —
+**„Anker-Winter-Regen-Glas" scheiterte an „winter"**. Eine Empfehlung, die die
+eigene Prüfung abweist, ist schlimmer als keine. Gemessen wird deshalb der
+**Anteil** statt des Vorkommens: Was bleibt übrig, wenn man Listenwörter und
+angehängte Ziffern streicht? Unter acht Zeichen war das Passwort im Kern ein
+Listenwort. Gemessen: „Winterurlaub2026" abgewiesen (Rest „urlaub"),
+„Rettung2026Notarzt" abgewiesen (Rest leer), „Anker-Winter-Regen-Glas"
+angenommen (Rest „ankerregenglas"). Ziffern **mittendrin** zählen mit — sonst
+fiele ein gut gewürfeltes Passwort durch. Die Passwörter aller Prüfmittel
+bleiben gültig.
+
+Was die Liste **nicht** kann, steht im Code und im Handbuch: den Ortsnamen des
+eigenen Standorts. Ihn dorthin zu bekommen hieße, die Standortnamen an die
+unangemeldete Passwortseite auszugeben — eine neue Auskunft an jeden Besucher
+für einen Gewinn, den die Mindestlänge besser holt.
+
+#### Login-CSRF (Nr. 127) und E-Mail-Wechsel mit Nachweis (Nr. 128)
+
+Das **Anmeldeformular** war das einzige ohne Token. Eine fremde Seite konnte
+einen abgemeldeten Browser per Top-Level-POST in ein *Angreiferkonto*
+anmelden; was danach eingegeben wurde, landete dort. Die Ursache war der Ort:
+`csrf_field()` lag in `auth_guard.php`, also **hinter** der Anmeldung.
+`csrf_token()`, `csrf_field()` und `csrf_ok()` stehen jetzt in
+`session_lib.php`. Die Prüfung steht **vor** allen Zählern — ein abgelaufenes
+Formular ist kein Fehlversuch —, antwortet mit der Anmeldeseite statt einer
+403, und nach erfolgreicher Anmeldung wird das Token neu gezogen wie die
+Sitzungskennung. Gemessen: 2 von 2 im Browser, dazu drei HTTP-Fälle.
+
+Der **E-Mail-Wechsel im Profil** schrieb die Anmeldeadresse allein mit dem
+CSRF-Token um. Wer eine offene Sitzung übernahm, konnte sie auf seine eigene
+setzen, sich den Setz-Link schicken lassen und das Konto übernehmen — die
+geschützten Angaben blieben zu, die Klartextfelder nicht. Jetzt derselbe
+Nachweis wie beim Passwortwechsel (`old_token`), und **nur beim tatsächlichen
+Wechsel**: Name und Logo gehen ohne. Auf beiden Wegen — Profil und Verwaltung
+— geht danach eine **Hinweismail an die alte Adresse**; sie ist die einzige,
+die im Missbrauchsfall noch der Besitzerin gehört. Gemessen: 4 von 4.
+
+#### Vier kleine, die zusammen die Angriffsfläche verkleinern
+
+**Nr. 129:** `apk/` und `demo/` liegen ungesperrt im Webroot — `apk.php`
+verlangt eine Anmeldung, der Ordner nicht, und die Dateinamen sind
+vorhersagbar. Zwei `RewriteRule`-Zeilen. Gemessen unter einem echten Apache
+(die lokale Installation läuft auf PHPs eingebautem Server und liest keine
+`.htaccess` — ohne diesen Umweg hätte der Punkt keine Zahl): **vier Aufrufe →
+403**, `login.php` und `assets/style.css` unverändert 200.
+
+**Nr. 130:** Die DOCTYPE-Sperre des GPX-Imports sucht die **Bytefolge**
+`<!DOCTYPE`. In einem UTF-16-Dokument stehen dort Nullbytes dazwischen — die
+Regex fand nichts, libxml las die Datei samt Deklaration und interner Entität.
+Am Stand davor gemessen: **ging durch, zwei Punkte**. Der Weg dorthin ist
+nicht theoretisch: Der Endpunkt nimmt den Inhalt als Zeichenkette im
+JSON-Körper, und JSON trägt über Escape-Folgen jedes Byte unter 0x80. Jetzt
+zwei Prüfungen davor — kein Nullbyte, gültiges UTF-8. Der Preis: Eine
+GPX-Datei in Latin-1 mit Umlauten wird abgewiesen, mit einem Satz, der sagt,
+was zu tun ist. `tools/gpxprobe/` bekommt dafür **Teil 8**: acht
+Umgehungsversuche, **0 durch**.
+
+**Nr. 131:** `wiederherstellen.php` muss unangemeldet erreichbar sein — sie
+arbeitet auf einer Installation ohne Konto. Sie nannte dabei den
+Datenbank-Fehlertext (gemessen: `Access denied for user 'nadoku'@'localhost'
+to database …`) und die Kontenzahl (gemessen: `2`). Jetzt eine Fehlerkennung
+und kein Zahlwert; der volle Text steht unter der Kennung im Fehlerprotokoll.
+
+**Nr. 133:** Im Bauordner des Komplettbackups liegt `dump.sql.gz`, eine
+**unverschlüsselte Abschrift jeder Tabelle**. Nach einem Fehlschlag blieb er
+bis zum nächsten *fälligen* Lauf stehen — bei wöchentlichem Plan bis zu sieben
+Tage. Jetzt räumt ihn der Fehlerpfad sofort, und weil ein Absturz kein `catch`
+sieht, räumt ihn zusätzlich jeder Aufräumlauf, auch der ohne Fälligkeit. Der
+Preis: „Fortsetzen" nimmt einen **gescheiterten** Lauf nicht mehr auf. Das ist
+Rechenzeit, keine Daten. Was bleibt — Reset-Token in Sitzungsdatei und
+Zugriffslog, der angezeigte Setz-Link bei Mailfehler —, steht jetzt in
+`Technik.md` 4.98 in einer Tabelle statt in keinem Dokument.
+
+#### Ersetzfenster der Geräte: 72 Stunden (Nr. 134, F-SP-8)
+
+Der Geräteschlüssel liegt auf der Garmin-Uhr im Klartext; die Plattform bietet
+nichts Besseres. Lesen kann ein Finder nichts, aber **hochladen** — und damit
+die Phasen bestehender Einsätze ersetzen, bis das Gerät getrennt ist. Ein
+Einsatz mit `manual = 1` war schon geschützt; offen blieb der *unbearbeitete*
+von vor drei Wochen.
+
+Ein bestehender Datensatz lässt sich jetzt nur **72 Stunden ab seinem
+gespeicherten `started_at`** verändern — nicht ab dem gesendeten, den bestimmt
+der Absender. Danach `ok` ohne Ersetzen, ohne Anhängen, ohne Fehler (die Uhr
+wiederholte sonst endlos), benannt über `kept_phases`, `kept_resus` und neu
+`kept_points`. **Neue** Einsätze werden immer angenommen; der Weg gegen eine
+verlorene Uhr bleibt das Trennen, und Handbuch 10 sagt das jetzt.
+
+**Die Ingestprobe stand auf festen März-Daten**, und damit prüften zehn ihrer
+Erwartungen zweite Pakete an Datensätzen, die das Fenster längst verlassen
+hatten — ein Fall, den es im Betrieb nicht gibt, denn eine Uhr lädt hoch,
+während der Dienst läuft. Die Zeitpunkte hängen jetzt an `time()`. Dazu
+**Teil 9** für das Fenster selbst: **1 Paket angenommen, 1 abgewiesen**, und
+ein neuer Einsatz entsteht weiterhin. 47 Erwartungen, 0 nicht erfüllt.
+
+#### `json_js()` statt `json_encode()` in Skriptblöcken (Nr. 135)
+
+`json_encode()` maskiert `<` und `>` nicht. Der Seitenbruch kommt dabei
+**nicht** über `</script>` — das kann aus einem Wert gar nicht entstehen, weil
+`/` als `\/` geschrieben wird. Der Weg ist `<!--<script>`: Das schiebt den
+HTML-Parser in einen Zustand, in dem das nächste **echte** `</script>` den
+Block nicht schließt. Gemessen mit einem Profilnamen `<!--<script>` auf
+`import.php`: **`KONTO_NAME`, `APP_TZ` und `WEB_VERSION` fehlten alle drei** im
+Browser — der ganze Block war verschluckt, HTTP 200, kein Konsolenfehler,
+kein Hinweis. Nachher stehen alle drei.
+
+Die Einteilung ist maschinell gemacht und nachgezählt: **79 Aufrufe von
+`json_encode()` unter `server/`, davon 44 in einem `<script>`-Block — alle
+umgestellt — und 35 außerhalb, alle unverändert.** Dort ändern die Flaggen die
+**Bytes**, und an Bytes hängen Prüfsummen (`komplett_lib.php` bindet den
+Dateikopf über SHA-256) und Formatvergleiche. Der fehlende `(string)`-Cast in
+`csrf_check()` ist mit Nr. 127 miterledigt; HSTS und `Permissions-Policy`
+gehen mit der CSP (Nr. 8), der `querySelector` in `suche.php` steht als
+**Nr. 153** neu im Backlog.
+
+#### Weg C: die Zusage auf das eingrenzen, was sie hält (Nr. 138)
+
+Nur Dokumente, keine Zeile Code. Vier Stellen versprachen „Diagnose, Alter und
+Einsatzort sind Ende-zu-Ende-verschlüsselt" — richtig für das Feld,
+irreführend für die Sache: **Aus Spur und Phasenkoordinaten lässt sich der
+Einsatzort rekonstruieren.** `CLAUDE.md` 4, `README.md`, `Technik.md` 4.98 und
+`Handbuch.md` 5 zählen jetzt beide Seiten auf. Dazu ein übernehmbarer
+Textbaustein für die Datenschutzerklärung (Handbuch 11.5) — die Anwendung
+liefert weiterhin keinen Rechtstext mit, aber die technische Tatsache dahinter
+kann nur sie kennen.
+
+Das macht nichts sicherer. Es macht das Projekt ehrlich, und es ist die
+Voraussetzung dafür, dass die Frage nach Weg B nicht als Widerspruch im Raum
+steht, sondern als offener Punkt: Nr. 43.
+
+#### Neu: `tools/integritaetswache/` (Nr. 140, SP-6)
+
+Der eine Angriff, gegen den **keine** Verschlüsselung im Browser hilft, ist
+ein Server, der veränderten Code ausliefert: eine Zeile in `crypto.js`, und
+das nächste Passwort geht mit. Verhindern lässt sich das nur durch
+Zugangsschutz; **erkennen** hier.
+
+Die offene Frage beim Bauen war, was überhaupt byte-stabil vergleichbar ist —
+und die Antwort bestimmt den ganzen Aufbau. Der Deploy synchronisiert
+`server/` **byteweise** per FTPS, also ist jede Datei unter `assets/` auf dem
+Server dieselbe wie im Repositorium. Und der Inline-Skriptblock von
+`login.php` enthält **keine einzige PHP-Einsetzung** — nachgezählt: 0. Beide
+Seiten lassen sich frisch rechnen; es braucht **keine eingecheckten
+Prüfsummen**, die nach der dritten Änderung nicht mehr stimmen.
+
+**Die Selbstprobe läuft zuerst**, und das ist kein Formalismus: Ein grüner
+Lauf einer Wache, die *immer* grün meldet, sieht genauso aus wie einer, der
+nichts gefunden hat. Gemessen: 112 Dateien, 112 gleich, 1 Inline-Block gleich
+→ „Kein Unterschied". Gegenprobe mit **einer** veränderten Kennung in
+`crypto.js`: 111 gleich, **1 abweichend**, Rückgabewert 1, mit Dateiname und
+beiden Summen.
+
+Die Action läuft täglich um 04:17 UTC, nach jedem Deploy und von Hand. **Keine
+eigene Mailadresse** — ein roter Lauf löst die gewöhnliche
+GitHub-Benachrichtigung aus. Die `tools/wartungsprobe/` bekommt dafür eine
+Erwartung (12a): Würde der Wartungsmodus den Inline-Block verändern, ginge die
+Wache bei jedem Update rot, und eine Wache, die regelmäßig aus einem harmlosen
+Grund rot wird, ist nach dem dritten Mal abgeschaltet.
+
+#### Gemessen
+
+`php -l` über 114 Dateien und `node --check` über 32 — 0 Syntaxfehler.
+Wortliste **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0
+durchgerutschte Fallen** (eine Ausnahme kam dazu: „Garmin" im neuen Kasten zum
+Geräteverlust — dort ist die Plattform die Sache, denn für die Wear-OS-Uhr
+gilt der Satz gerade nicht). Vollständigkeit **300 → 301 Befunde**; der eine
+neue ist eine Ellipse in einem PHP-**Kommentar**, dieselbe Rauschklasse wie
+die 227 vorhandenen. `tools/linkprobe/` **132 Verweise, 0 Abweichungen**.
+Bilderlauf über die 14 berührten Seiten in acht Breiten, **beide
+Bedienhöhen**: je 112 Einzelbilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe
+falscher Höhe**; Gegenprobe 112 Bilder / 112 verschiedene Prüfsummen, also
+keine Seite doppelt fotografiert. Kontraste **21 Paare, 0 verfehlt**
+(`style.css` unverändert). `tools/gpxprobe/` **88 Erwartungen**,
+`tools/ingestprobe/` **47**, `tools/wartungsprobe/` **51** — je 0 nicht
+erfüllt bis auf die zwei bekannten der Gpxprobe, die daran hängen, dass der
+Referenzexport im Repositorium älter ist als die frisch eingespielte
+Datenbank; gegengeprüft am Stand davor.
+
+**Was nicht geprüft werden konnte**, steht im Prüfdokument
+`docs/konzepte/Pruefdokument-Sofortpaket-Sicherheit.md`, und zwar an dessen
+Anfang: kein Produktivmailer (der Wortlaut der Hinweismail aus Nr. 128), kein
+echtes Gerät, keine Produktivinstallation für die Integritätswache.
+
 ## [Web 15.5.2] — 2026-09-06
 
 ### Web — zwei Wege, die es gab und die nicht ankamen (Backlog Nr. 148, 149)

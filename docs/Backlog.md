@@ -63,6 +63,13 @@ jetzt den Beschluss, der sie erledigt; 152 ist der einzige neue Punkt — die
 Standortseiten, aufgekommen bei der Mockup-Freigabe. 132 und 137 (9a) tragen
 den Vermerk, dass S9 sie ergänzt.
 
+**Zu Nr. 153 (07.09.2026, Sofortpaket Sicherheit, Web 15.6.0).** Sie ist kein
+neuer Fund, sondern ein herausgelöster: Nr. 135 (K-15) bündelte vier
+Kleinigkeiten, drei davon sind mit dem Sofortpaket erledigt und die vierte
+nicht. Wäre sie mit Nr. 135 nach *Erledigt* gewandert, wäre sie unsichtbar
+geworden. Die Kopfzeilen aus demselben Befund gehen mit der CSP (Nr. 8) und
+brauchen deshalb keine eigene Nummer.
+
 **Zu den Nummern 150 und 151 (06.09.2026, Korrekturstufe Web 15.5.2).** 150
 kommt vom Auftraggeber (der Cron-Befehl mit dem Repositoriumspfad), 151 vom
 neuen `tools/linkprobe/`, das in derselben Stufe entstanden ist — es hat den
@@ -1432,49 +1439,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
     Wartungsseite. Zuordnung: Backlog-Runde oder P6.
 
-127. **Anmeldeformular ohne CSRF-Token.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-8).* `login.php:246`
-    trägt kein Token; eine fremde Seite kann einen abgemeldeten Browser per
-    Top-Level-POST in ein Angreiferkonto anmelden. Patientenfelder sind
-    nicht betroffen (kein `edk`, fremde Hülle öffnet nicht), aber Eingaben
-    landen im fremden Konto. Die Sitzung besteht beim GET schon
-    (`login.php:13`), das Token ist also da. Zuordnung: Sofortpaket
-    Sicherheit (R78).
-
-128. **E-Mail-Wechsel im Profil ohne Passwortnachweis.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-7).* `einstellungen.php:92-106`
-    schreibt die Adresse allein mit CSRF-Token um — kein `old_token`, kein
-    `session_epoch`, keine Mail an die alte Adresse; die Verwaltung kann
-    sie ebenfalls ändern (`admin_user.php:127-133`). Die Kette endet im
-    Reset-Modus, der den Wiederherstellungsschlüssel braucht — keine
-    Offenlegung, aber Kontoübernahme für Klartextfelder und Aussperren.
-    Sofortpaket: Nachweis per `old_token` wie beim Passwortwechsel, Hinweismail
-    an die alte Adresse bei beiden Wegen; Bestätigung der neuen Adresse
-    kommt mit R37.6 in P5. Zuordnung: Sofortpaket Sicherheit (R78), Rest P5.
-
-129. **`apk/` und `demo/` liegen ungesperrt im Webroot.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-9).* `apk.php` verlangt
-    die Anmeldung, der Ordner selbst nicht (`apk_lib.php:22`, Dateinamen
-    vorhersagbar); `demo/fixture.json.gz` trägt das Schlüsselmaterial des
-    Demo-Kontos (öffentliches Passwort, also harmlos, aber unnötig). Anders
-    als `sicherungen/` legt kein Code eine Sperre an, und eine Datei in
-    `apk/` käme wegen der Deploy-Ausnahmeliste nie an. Zwei
-    `RewriteRule`-Zeilen in `.htaccess`. Zuordnung: Sofortpaket Sicherheit.
-
-130. **DOCTYPE-Sperre im GPX-Import umgehbar.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-10).* `gpx_lib.php:332`
-    prüft `/<!DOCTYPE/i` auf dem Rohtext; ein UTF-16-kodiertes GPX passiert
-    die Regex, libxml versteht es. Folge: interne Entitäten trotz Sperre
-    (Billion Laughs), XXE nicht (kein `NOENT`, `NONET`). Nur angemeldet,
-    12 MB Grenze. Vor der Regex: gültiges UTF-8 und kein Nullbyte —
-    GPX aus Geräten ist UTF-8. Zuordnung: Sofortpaket Sicherheit.
-
-131. **`wiederherstellen.php` gibt unangemeldet Auskunft.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-11).* Zeile 530 zeigt
-    den Datenbank-Fehlertext (Rechnername, Nutzer möglich), Zeile 538 die
-    Kontenzahl jedem Besucher. Fehlerkennung statt Text, „in Betrieb" ohne
-    Zahl. Zuordnung: Sofortpaket Sicherheit.
-
 132. **Klartext-Freitextfelder ohne Hinweis.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-12).* `notes` trägt den
     Placeholder „Freitext (keine Patientendaten!)", `bw_info` („Namen /
@@ -1483,55 +1447,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     in den Klartext. Ein Schlüssel `hinweis` im Feldkatalog, ein Text für
     alle; das Symbol dazu bringt Nr. 108. Zuordnung: Sofortpaket Sicherheit.
     *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-02, AP7) — `hinweis` an `bw_info`, `other_ema`, `crew_*` und `days.notes`; nicht an `notes`, das wird verschlüsselt (E-S9-01). Zuordnung jetzt: S9.*
-
-133. **Klartext-Reste auf dem Server.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-13).* Während des
-    Komplettbackup-Baus liegt `dump.sql.gz` unversiegelt in
-    `sicherungen/komplett/.bau-*/`, Reste bis zum nächsten Lauf
-    (`komplett_lib.php:53-55,454,471`); Reset-Token bis zur Einlösung in der
-    PHP-Sitzungsdatei und im Zugriffslog des ersten GET (M1-06 kennt es);
-    bei Mailfehler zeigt die Verwaltung den Setz-Link. Sofortpaket: Bauordner
-    nach Fehlschlag räumen; der Rest wird in `Technik.md` benannt und
-    bleibt. Zuordnung: Sofortpaket Sicherheit.
-
-134. **Verlorene Uhr kann Phasen alter Einsätze ersetzen.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-14).* Der Geräteschlüssel
-    liegt auf der Garmin-Uhr im Klartext (`watch/source/Pair.mc:853`; die
-    Plattform hat nichts Besseres). Lesen kann ein Finder nichts —
-    `ingest.php` ist POST-only —, aber er kann Einsätze hochladen und
-    Phasen bestehender Einsätze ersetzen (`ingest.php:361`), bis das Gerät
-    im Web getrennt ist. Was schon geschützt ist: Einsätze mit
-    `manual = 1` überspringt `ingest.php` ganz (Z. 251), und Phasen werden
-    nur ersetzt, wenn der Upload mindestens so viele bringt (Z. 359).
-    **Entschieden (R78):** ein **Zeitfenster ab Einsatzbeginn**, innerhalb
-    dessen ein Gerät ersetzen darf; danach `ok` ohne Ersetzen (idempotent,
-    kein Fehler auf der Uhr); Neuanlage immer. **Entschieden: 72 h**
-    (damit ein Freitagsdienst am Montag noch nachkommt) — Konstante in `db.php`,
-    `JSON-Vertrag.md` und Handbuch 12 („Uhr verloren: sofort trennen").
-    Zuordnung: Sofortpaket Sicherheit.
-
-135. **Kleinigkeiten an Kopfzeilen und Maskierung.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-15).* `json_encode` in
-    Inline-Skripten ohne `JSON_HEX_TAG` (Seitenbruch möglich, keine
-    Ausführung, weil `\/` maskiert wird — `ui.php:1928-1940` und drei
-    weitere Stellen); `csrf_check()` ohne `(string)`-Cast (`csrf[]=x` →
-    500, `auth_guard.php:175`); HSTS ohne `includeSubDomains`, keine
-    `Permissions-Policy`; `querySelector` mit Wert aus dem URL-Fragment in
-    `suche.php:535` (Bruch, kein XSS). Sofortpaket: die `JSON_HEX`-Vorgabe
-    und der Cast; die Kopfzeilen mit der CSP (Nr. 8). Zuordnung:
-    Sofortpaket Sicherheit / P5.
-
-136. **Rundenzahl und Passwortregeln.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-3).* Gegen den
-    Datenbankabzug ist das Passwort die einzige Schranke, und der Server
-    kann seine Qualität nach Bauart nicht prüfen. 320 000 Runden liegen
-    unter der Empfehlung von 600 000 (OWASP 2023, Bitwarden); gemessen
-    165 → 285 ms je Ableitung auf einem CPU-Kern, für den Angreifer die
-    halbe Rate. `KDF_ITER_ZIEL = 600000`, Altwert in der Liste, stille
-    Anhebung wie M2-01; `pwquality.js` auf Mindestlänge 12 mit
-    Passphrasen-Empfehlung, Sperrliste um naheliegende Muster; der Satz
-    zur Bauform ins Handbuch 3.1 und aufs Notfallblatt (R37.11).
-    Zuordnung: Sofortpaket Sicherheit.
 
 137. **Photon und Kachelserver bekommen den Einsatzort im Klartext.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-6).* Beim Tippen der
@@ -1546,14 +1461,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die Frage von Nr. 101 (S9 PS-1) mit der Hosting-Entscheidung.
     Zuordnung: Sofortpaket Sicherheit, Rest S9.
     *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-05, AP2) — Hinweis am Feld, Datenschutztext, Installationsschalter (Karte „Adresssuche" auf Betrieb → Servereinstellungen, `app_state` `adresssuche`), Kontoschalter (Profil → Datenschutz), Dienstadresse. Zuordnung jetzt: S9.*
-
-138. **Weg C: die Zusage auf das eingrenzen, was sie hält.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-1), entschieden R78.*
-    Nur Dokumente, keine Versionsstufe: `CLAUDE.md` 4, `Technik.md` 4.98,
-    README, Handbuch 5 und der Entwurf des Datenschutztextes sagen, dass
-    Spur, Phasenkoordinaten, Zielklinik, Zeiten und Reanimationsereignisse
-    im Klartext liegen und der Einsatzort daraus rekonstruierbar ist (Nr. 43,
-    `Konzept-V1-Ortsdaten.md` Weg C). Zuordnung: Sofortpaket Sicherheit.
 
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
@@ -1579,6 +1486,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Skripte mit dem Release) kommt sofort mit dem Sofortpaket (F-SP-9).
     Zuordnung: Zuarbeit sofort, Sofortpaket Sicherheit (Wache), S10
     (Deploy-Tor mit R40 (2)).
+    *Web 15.6.0, 07.09.2026: **Die Wache steht** — `tools/integritaetswache/`
+    und `.github/workflows/integritaet.yml`, täglich um 04:17 UTC, nach jedem
+    Deploy und von Hand. Sie braucht **keine eingecheckten Prüfsummen**: Der
+    Deploy synchronisiert byteweise, und der Inline-Skriptblock von `login.php`
+    enthält keine einzige PHP-Einsetzung — beide Seiten lassen sich frisch
+    rechnen. Gemessen: 112 Dateien, 112 gleich, 1 Inline-Block gleich;
+    Gegenprobe mit einer veränderten Kennung in `crypto.js` → 1 abweichend,
+    Rückgabewert 1. Selbstprobe 7 Erwartungen, 0 nicht erfüllt;
+    `tools/wartungsprobe/` bekam Erwartung 12a, damit die Wache im
+    Wartungsmodus nicht rot wird. **Offen bleibt:** Branch-Schutz und
+    2FA-Zwang (Zuarbeit, nicht im Repositorium machbar) und das Deploy-Tor
+    (S10 mit R40 (2)).*
 
 141. **Zweitfaktor für alle Konten.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
@@ -1734,11 +1653,212 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ---
 
+153. **`querySelector` mit einem Wert aus dem URL-Fragment.**
+    *Aufgenommen 07.09.2026 aus Nr. 135 (Krypto-Review K-15), beim Abschluss
+    des Sofortpakets herausgelöst.* `suche.php` setzt einen Wert aus dem
+    URL-Fragment unmaskiert in einen `querySelector` ein. Kein XSS — der Wert
+    landet nicht im Markup —, aber ein Zeichen wie `"` oder `]` bricht die
+    Auswahl, und die Seite verhält sich dann anders, als der geteilte Link
+    verspricht. Behebung: über `CSS.escape()` oder den Wert vor der Auswahl
+    gegen eine Positivliste halten. Die Nummer steht getrennt, weil Nr. 135
+    mit Web 15.6.0 nach *Erledigt* gewandert ist und dieser Teil sonst
+    unsichtbar würde. Zuordnung: Backlog-Runde.
+
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+127. **Anmeldeformular ohne CSRF-Token.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-8).* `login.php:246`
+    trägt kein Token; eine fremde Seite kann einen abgemeldeten Browser per
+    Top-Level-POST in ein Angreiferkonto anmelden. Patientenfelder sind
+    nicht betroffen (kein `edk`, fremde Hülle öffnet nicht), aber Eingaben
+    landen im fremden Konto. Die Sitzung besteht beim GET schon
+    (`login.php:13`), das Token ist also da. Zuordnung: Sofortpaket
+    Sicherheit (R78).
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** `csrf_token()`, `csrf_field()`
+    und das neue `csrf_ok()` stehen jetzt in `session_lib.php` statt in
+    `auth_guard.php` — die eine Seite, die den Schutz am nötigsten braucht, lädt
+    `auth_guard.php` nicht. Die Prüfung steht **vor** allen Zählern (ein
+    abgelaufenes Formular ist kein Fehlversuch), antwortet mit der Anmeldeseite
+    statt einer 403, und nach erfolgreicher Anmeldung wird das Token neu gezogen
+    wie die Sitzungskennung. Gemessen: **2 von 2** im Browser, dazu drei
+    HTTP-Fälle. Zwei Prüfmittel melden sich ohne Browser an und schicken das
+    Feld seither selbst (`sitzung.py`, `tools/gpxprobe/`).
+
+128. **E-Mail-Wechsel im Profil ohne Passwortnachweis.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-7).* `einstellungen.php:92-106`
+    schreibt die Adresse allein mit CSRF-Token um — kein `old_token`, kein
+    `session_epoch`, keine Mail an die alte Adresse; die Verwaltung kann
+    sie ebenfalls ändern (`admin_user.php:127-133`). Die Kette endet im
+    Reset-Modus, der den Wiederherstellungsschlüssel braucht — keine
+    Offenlegung, aber Kontoübernahme für Klartextfelder und Aussperren.
+    Sofortpaket: Nachweis per `old_token` wie beim Passwortwechsel, Hinweismail
+    an die alte Adresse bei beiden Wegen; Bestätigung der neuen Adresse
+    kommt mit R37.6 in P5. Zuordnung: Sofortpaket Sicherheit (R78), Rest P5.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** `old_token` wie beim
+    Passwortwechsel, **nur beim tatsächlichen Wechsel** — Name und Logo gehen
+    ohne. Die Hinweismail an die **alte** Adresse geht auf beiden Wegen (Profil
+    und Verwaltung); sie ist die einzige, die im Missbrauchsfall noch der
+    Besitzerin gehört. `session_epoch` bleibt unverändert. Gemessen: **4 von 4**
+    im Browser. Die Bestätigung der **neuen** Adresse (Double-Opt-In) bleibt
+    R37.6 in P5.
+
+129. **`apk/` und `demo/` liegen ungesperrt im Webroot.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-9).* `apk.php` verlangt
+    die Anmeldung, der Ordner selbst nicht (`apk_lib.php:22`, Dateinamen
+    vorhersagbar); `demo/fixture.json.gz` trägt das Schlüsselmaterial des
+    Demo-Kontos (öffentliches Passwort, also harmlos, aber unnötig). Anders
+    als `sicherungen/` legt kein Code eine Sperre an, und eine Datei in
+    `apk/` käme wegen der Deploy-Ausnahmeliste nie an. Zwei
+    `RewriteRule`-Zeilen in `.htaccess`. Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** Zwei `RewriteRule`-Zeilen hinter
+    dem HTTPS-Zwang. Beide Ordner werden ausschließlich vom PHP-Code gelesen —
+    die Sperre kostet die Anwendung nichts. Gemessen unter einem echten Apache
+    (die lokale Installation läuft auf PHPs eingebautem Server und liest keine
+    `.htaccess`): **vier Aufrufe → 403**, `login.php` und `assets/style.css`
+    unverändert 200.
+
+130. **DOCTYPE-Sperre im GPX-Import umgehbar.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-10).* `gpx_lib.php:332`
+    prüft `/<!DOCTYPE/i` auf dem Rohtext; ein UTF-16-kodiertes GPX passiert
+    die Regex, libxml versteht es. Folge: interne Entitäten trotz Sperre
+    (Billion Laughs), XXE nicht (kein `NOENT`, `NONET`). Nur angemeldet,
+    12 MB Grenze. Vor der Regex: gültiges UTF-8 und kein Nullbyte —
+    GPX aus Geräten ist UTF-8. Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** Vor der Regex stehen jetzt zwei
+    Prüfungen: kein Nullbyte, gültiges UTF-8. Am Stand davor gemessen: das
+    UTF-16-Dokument **ging durch**, zwei Punkte, Entität expandiert. Der Preis:
+    Eine GPX-Datei in Latin-1 mit Umlauten wird abgewiesen, mit einem Satz, der
+    sagt, was zu tun ist. `tools/gpxprobe/` bekam **Teil 8** — acht
+    Umgehungsversuche, **0 durch**, und eine saubere Datei geht weiterhin durch.
+
+131. **`wiederherstellen.php` gibt unangemeldet Auskunft.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-11).* Zeile 530 zeigt
+    den Datenbank-Fehlertext (Rechnername, Nutzer möglich), Zeile 538 die
+    Kontenzahl jedem Besucher. Fehlerkennung statt Text, „in Betrieb" ohne
+    Zahl. Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** Fehlerkennung statt Fehlertext
+    (`fehler_kennung()`), „in Betrieb“ ohne Zahl. Gemessen: vorher
+    `Access denied for user 'nadoku'@'localhost' to database …` und „stehen 2
+    Konten“, nachher die Kennung und kein Zahlwert; der volle Text steht unter
+    der Kennung im Fehlerprotokoll des Webspace.
+
+133. **Klartext-Reste auf dem Server.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-13).* Während des
+    Komplettbackup-Baus liegt `dump.sql.gz` unversiegelt in
+    `sicherungen/komplett/.bau-*/`, Reste bis zum nächsten Lauf
+    (`komplett_lib.php:53-55,454,471`); Reset-Token bis zur Einlösung in der
+    PHP-Sitzungsdatei und im Zugriffslog des ersten GET (M1-06 kennt es);
+    bei Mailfehler zeigt die Verwaltung den Setz-Link. Sofortpaket: Bauordner
+    nach Fehlschlag räumen; der Rest wird in `Technik.md` benannt und
+    bleibt. Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026 — der Bauordner.** `komp_schub()`
+    fängt jetzt, räumt und setzt den Zustand auf `abgebrochen`; weil ein Absturz
+    kein `catch` sieht, räumt zusätzlich **jeder** Aufräumlauf die Reste, auch
+    der ohne Fälligkeit. Gemessen: **1 auf 0** in beiden Fällen. Der Preis:
+    „Fortsetzen“ nimmt einen gescheiterten Lauf nicht mehr auf — Rechenzeit,
+    keine Daten. **Der Rest bleibt und steht jetzt in `Technik.md` 4.98 in einer
+    Tabelle**: Reset-Token in Sitzungsdatei und Zugriffslog, angezeigter
+    Setz-Link bei Mailfehler.
+
+134. **Verlorene Uhr kann Phasen alter Einsätze ersetzen.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-14).* Der Geräteschlüssel
+    liegt auf der Garmin-Uhr im Klartext (`watch/source/Pair.mc:853`; die
+    Plattform hat nichts Besseres). Lesen kann ein Finder nichts —
+    `ingest.php` ist POST-only —, aber er kann Einsätze hochladen und
+    Phasen bestehender Einsätze ersetzen (`ingest.php:361`), bis das Gerät
+    im Web getrennt ist. Was schon geschützt ist: Einsätze mit
+    `manual = 1` überspringt `ingest.php` ganz (Z. 251), und Phasen werden
+    nur ersetzt, wenn der Upload mindestens so viele bringt (Z. 359).
+    **Entschieden (R78):** ein **Zeitfenster ab Einsatzbeginn**, innerhalb
+    dessen ein Gerät ersetzen darf; danach `ok` ohne Ersetzen (idempotent,
+    kein Fehler auf der Uhr); Neuanlage immer. **Entschieden: 72 h**
+    (damit ein Freitagsdienst am Montag noch nachkommt) — Konstante in `db.php`,
+    `JSON-Vertrag.md` und Handbuch 12 („Uhr verloren: sofort trennen").
+    Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** `INGEST_ERSETZFENSTER_H = 72` in
+    `db.php`, gerechnet ab dem **gespeicherten** `started_at` — nicht ab dem
+    gesendeten, den bestimmt der Absender. Danach `ok` ohne Ersetzen, ohne
+    Anhängen, ohne Fehler, benannt über `kept_phases`, `kept_resus` und neu
+    `kept_points`. Neuanlage bleibt immer möglich; der Weg gegen eine verlorene
+    Uhr bleibt das Trennen (Handbuch 10). `tools/ingestprobe/` bekam **Teil 9**
+    (**1 angenommen, 1 abgewiesen**) und stellte dabei ihre Zeitstempel von
+    festen März-Daten auf `time()` um — zehn ihrer Erwartungen prüften sonst
+    einen Fall, den es im Betrieb nicht gibt.
+
+135. **Kleinigkeiten an Kopfzeilen und Maskierung.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-15).* `json_encode` in
+    Inline-Skripten ohne `JSON_HEX_TAG` (Seitenbruch möglich, keine
+    Ausführung, weil `\/` maskiert wird — `ui.php:1928-1940` und drei
+    weitere Stellen); `csrf_check()` ohne `(string)`-Cast (`csrf[]=x` →
+    500, `auth_guard.php:175`); HSTS ohne `includeSubDomains`, keine
+    `Permissions-Policy`; `querySelector` mit Wert aus dem URL-Fragment in
+    `suche.php:535` (Bruch, kein XSS). Sofortpaket: die `JSON_HEX`-Vorgabe
+    und der Cast; die Kopfzeilen mit der CSP (Nr. 8). Zuordnung:
+    Sofortpaket Sicherheit / P5.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026 — die JSON_HEX-Vorgabe und der
+    Cast.** `json_js()` in `db.php` steht an allen **44** Stellen, die in einen
+    `<script>`-Block schreiben; die **35** außerhalb bleiben unverändert, weil
+    dort Bytes an Prüfsummen hängen (maschinell eingeteilt, nachgezählt: 79
+    Aufrufe gesamt). Der `(string)`-Cast kam mit Nr. 127 über `csrf_ok()`.
+    Gemessen mit einem Profilnamen `<!--<script>` auf `import.php`: vorher
+    fehlten `KONTO_NAME`, `APP_TZ` **und** `WEB_VERSION` — der ganze Block war
+    verschluckt; nachher stehen alle drei. **Nicht mitbehoben:** HSTS und
+    `Permissions-Policy` gehen mit der CSP (Nr. 8), der `querySelector` mit
+    einem Wert aus dem URL-Fragment steht als **Nr. 153** neu im Backlog.
+
+136. **Rundenzahl und Passwortregeln.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-3).* Gegen den
+    Datenbankabzug ist das Passwort die einzige Schranke, und der Server
+    kann seine Qualität nach Bauart nicht prüfen. 320 000 Runden liegen
+    unter der Empfehlung von 600 000 (OWASP 2023, Bitwarden); gemessen
+    165 → 285 ms je Ableitung auf einem CPU-Kern, für den Angreifer die
+    halbe Rate. `KDF_ITER_ZIEL = 600000`, Altwert in der Liste, stille
+    Anhebung wie M2-01; `pwquality.js` auf Mindestlänge 12 mit
+    Passphrasen-Empfehlung, Sperrliste um naheliegende Muster; der Satz
+    zur Bauform ins Handbuch 3.1 und aufs Notfallblatt (R37.11).
+    Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** `KDF_ITER_ZIEL = 600000`,
+    `KDF_ITER_LISTE = [600000, 320000]`; gemessen 298 → 551 ms je Ableitung, im
+    Übergang 849 ms. Mindestlänge 12 als `PW_MIN_LAENGE` an einer Stelle.
+    **Zwei Funde, die erst der Sprung sichtbar gemacht hat:** Die stille
+    Anhebung lief nicht beim nächsten Anmelden — sie braucht `CSRF`, und das gab
+    `ui_krypto_bootstrap()` nur auf Anfrage aus; die erste Seite ohne CSRF
+    verwarf das Vormerkfach und damit die Anhebung für die ganze Sitzung. Und
+    die Wartungsseite meldete nur *verwaiste* Rundenzahlen, nicht, wer noch auf
+    dem Altwert steht — also nicht die Zahl, die sagt, wann der Altwert weg
+    darf. Beides behoben. **Die Sperrliste rechnet jetzt den Anteil statt des
+    Vorkommens**, sonst widerspräche die Passphrasen-Empfehlung der eigenen
+    Prüfung („Anker-Winter-Regen-Glas“ scheiterte an „winter“).
+
+138. **Weg C: die Zusage auf das eingrenzen, was sie hält.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-1), entschieden R78.*
+    Nur Dokumente, keine Versionsstufe: `CLAUDE.md` 4, `Technik.md` 4.98,
+    README, Handbuch 5 und der Entwurf des Datenschutztextes sagen, dass
+    Spur, Phasenkoordinaten, Zielklinik, Zeiten und Reanimationsereignisse
+    im Klartext liegen und der Einsatzort daraus rekonstruierbar ist (Nr. 43,
+    `Konzept-V1-Ortsdaten.md` Weg C). Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** Nur Dokumente, keine Zeile Code.
+    `CLAUDE.md` 4, `README.md`, `Technik.md` 4.98 und `Handbuch.md` 5 zählen
+    jetzt **beide** Seiten auf; dazu ein übernehmbarer Textbaustein für die
+    Datenschutzerklärung in Handbuch 11.5 — die Anwendung liefert weiterhin
+    keinen Rechtstext mit, aber die technische Tatsache dahinter kann nur sie
+    kennen.
+
 
 148. **Der Knopf „Diensttage zusammenführen" in der Überschneidungswarnung führt auf 404.**
     *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Laufen

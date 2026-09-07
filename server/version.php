@@ -2863,4 +2863,59 @@ declare(strict_types=1);
  *          die Anwendung. Keine Migration — und das ist hier die Pointe: Was
  *          fehlt, ist eine ZEILE IM REGISTER, und die holt der Knopf nach.
  */
-const WEB_VERSION = '15.5.2';
+/* 15.6.0  SOFORTPAKET SICHERHEIT, WEB-TEIL (Rahmenplan Schritt 9a, R78).
+ *          Elf Punkte aus dem Krypto-Review, je einer ein Commit, einzeln
+ *          ruecknehmbar. NEBENNUMMER, weil neue Regeln und ein neues
+ *          Pruefmittel dazukommen -- keine Migration, kein veraenderter Weg
+ *          durch die Anwendung.
+ *
+ *          NR. 136 RUNDENZAHL UND PASSWORTREGELN. KDF_ITER_ZIEL von 320 000
+ *          auf 600 000; gemessen 298 -> 551 ms je Ableitung, im Uebergang
+ *          849 ms. Mindestlaenge 10 -> 12, als PW_MIN_LAENGE an einer Stelle.
+ *          Dabei zwei Funde, die erst der Sprung sichtbar gemacht hat: Die
+ *          stille Anhebung lief NICHT beim naechsten Anmelden -- sie braucht
+ *          `CSRF`, und das gab ui_krypto_bootstrap() nur auf Anfrage aus;
+ *          die erste Seite ohne CSRF verwarf das Vormerkfach und damit die
+ *          Anhebung fuer die ganze Sitzung. Und die Wartungsseite meldete nur
+ *          VERWAISTE Rundenzahlen, nicht, wer noch auf dem Altwert steht --
+ *          also nicht die Zahl, die sagt, wann der Altwert weg darf.
+ *
+ *          DIE PASSWORTREGEL HAT EINE NEUE RECHNUNG. SP-2 empfiehlt
+ *          Passphrasen und will zugleich die Sperrliste erweitern; beides
+ *          zusammen ging nicht, weil jedes Passwort abgewiesen wurde, in dem
+ *          irgendwo ein Listenwort vorkam -- "Anker-Winter-Regen-Glas"
+ *          scheiterte an "winter". Gemessen wird jetzt der ANTEIL: Was bleibt
+ *          uebrig, wenn man Listenwoerter und angehaengte Ziffern streicht?
+ *
+ *          NR. 127 LOGIN-CSRF. Das Anmeldeformular war das einzige ohne
+ *          Token; `csrf_token()`, `csrf_field()` und `csrf_ok()` stehen
+ *          deshalb jetzt in `session_lib.php` statt hinter der Anmeldung.
+ *          NR. 128 E-MAIL-WECHSEL mit Passwortnachweis, dazu die Hinweismail
+ *          an die ALTE Adresse -- auf beiden Wegen, Profil und Verwaltung.
+ *          NR. 129 `apk/` und `demo/` per .htaccess gesperrt.
+ *          NR. 130 DOCTYPE-SPERRE IM GPX-IMPORT: Ein UTF-16-Dokument ging
+ *          durch, weil die Regex Bytes sucht und dort Nullbytes dazwischen
+ *          stehen. NR. 131 `wiederherstellen.php` nennt unangemeldet weder
+ *          Datenbank-Fehlertext noch Kontenzahl. NR. 133 Der Bauordner des
+ *          Komplettbackups mit dem UNVERSCHLUESSELTEN Dump wird nach jedem
+ *          Fehlschlag geraeumt, nicht erst beim naechsten faelligen Lauf.
+ *
+ *          NR. 134 ERSETZFENSTER 72 h ab Einsatzbeginn: Eine gefundene Uhr
+ *          kann bestehende Einsaetze danach nicht mehr veraendern -- weder
+ *          Phasen ersetzen noch Punkte anhaengen. Neue Einsaetze legt sie
+ *          weiter an; der Weg dagegen bleibt das Trennen.
+ *          NR. 135 `json_js()` fuer die 44 Stellen, die in einen
+ *          `<script>`-Block schreiben; die 35 ausserhalb bleiben unberuehrt,
+ *          weil dort Bytes an Pruefsummen haengen.
+ *          NR. 138 WEG C, nur Dokumente: Die Zusage nennt jetzt beide
+ *          Seiten -- was verschluesselt ist UND dass sich der Einsatzort aus
+ *          Spur und Phasenkoordinaten rekonstruieren laesst.
+ *          NR. 140 INTEGRITAETSWACHE als taegliche GitHub-Action. Sie
+ *          braucht keine eingecheckten Pruefsummen: Der Deploy synchronisiert
+ *          byteweise, und der Inline-Block der Anmeldeseite enthaelt keine
+ *          einzige PHP-Einsetzung -- beide Seiten lassen sich frisch rechnen.
+ *
+ *          KEINE MIGRATION. Was Konten betrifft, zieht sich still nach: Die
+ *          Rundenzahl beim naechsten Anmelden, alles andere gilt sofort.
+ */
+const WEB_VERSION = '15.6.0';

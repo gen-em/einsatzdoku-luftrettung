@@ -589,6 +589,14 @@
       "zeile": "\\*\\*Das Logo\\*\\* links wählt zwischen",
       "klasse": "Homonym",
       "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz benennt, WELCHES BILD zur Wahl steht — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Begruendung wie `logowahl-installation` fuer den Code (server/admin_installation.php); der Handbuch-Abschnitt „Installation“ (11.3) ist mit S8/AP3 entstanden und beschreibt dieselbe Bedienung."
+    },
+    {
+      "id": "handbuch-geraete-verlust-garmin",
+      "datei": "docs/Handbuch.md",
+      "von": "\\*\\*Uhr verloren\\? Sofort trennen\\.\\*\\*",
+      "bis": "^\\*\\*„Entkoppeln\\\" hiess",
+      "klasse": "G",
+      "begruendung": "Der Kasten zum Geraeteverlust (Abschnitt 10, Backlog Nr. 134) sagt, dass der Zugangsschluessel auf der GARMIN-Uhr im Klartext liegt. Das ist keine Plattformnennung aus Bequemlichkeit, sondern die Sache selbst: Genau dieser Satz gilt fuer die Garmin-Uhr und NICHT fuer die Wear-OS-Uhr, die weder Serveradresse noch Schluessel kennt (E-S4-11) -- der Kasten sagt das im letzten Absatz ausdruecklich. Ein geraetefreies „Uhr“ waere hier keine Neutralitaet, sondern eine falsche Warnung an alle, die eine Wear-OS-Uhr tragen. Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
     }
   ]
 }
