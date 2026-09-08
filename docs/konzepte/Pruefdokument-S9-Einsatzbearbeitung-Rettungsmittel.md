@@ -732,13 +732,13 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   und das **Einstellungsmenü** rücken bei 1100 px enger zusammen als bei
   1280 px — dann ist die Abstandsregel nicht mit `:not(.leiste-gruppe)`
   eingegrenzt und trifft Zeilen, die kein Platzproblem haben.
-  *Was noch offen ist:* **Weg 3** aus dem Mockup M-S9-11 — im schmalen Band
-  das **Jahr** aus dem Datum nehmen, das ohnehin als Akkordeon-Überschrift
-  darübersteht. Er bringt rund 30 px und trüge auch den längsten erlaubten
-  Kurznamen, ändert aber, was in einer Zeile *steht*, abhängig von der
-  Fensterbreite; er gehört in die Standortseiten-Phase. Sein Preis steht als
-  eigener Rahmen im Mockup: Nach einem Sprung aus der Suche ist die
-  Jahreszeile weggerollt.
+  *Nichts mehr offen.* **Weg 3** aus dem Mockup M-S9-11 — im schmalen Band das
+  **Jahr** aus dem Datum nehmen — ist am **08.09.2026 verworfen**. Er hätte
+  rund 30 px gebracht und auch den längsten erlaubten Kurznamen getragen,
+  ändert aber, was in einer Zeile *steht*, abhängig von der Fensterbreite;
+  sein Preis steht als eigener Rahmen im Mockup (nach einem Sprung aus der
+  Suche ist die Jahreszeile weggerollt, und dann fehlt das Jahr ganz). Das
+  Datum behält sein Jahr in jeder Breite.
 
   *Die drei Wege im Mockup, gemessen am laufenden Programm:*
   **Weg 1** — das Akkordeon im Band noch einmal 4 px zurück (`--abstand-1`,
@@ -748,7 +748,7 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   **Weg 3** — das Jahr aus dem Datum (spart rund 30 px): 12 von 12 **und der
   16-Zeichen-Kurzname dazu**.
   **Entschieden vom Auftraggeber am 08.09.2026: Weg 2**, gebaut mit Web
-  16.1.1. Die zweite Messung hat dabei eine Aussage von mir berichtigt: „Weg 2
+  16.1.1; **Weg 3 verworfen**. Die zweite Messung hat dabei eine Aussage von mir berichtigt: „Weg 2
   bringt keinen einzigen Kurznamen mehr als Weg 1" galt nur für den geprüften
   Bestand, der allein 7- und 16-Zeichen-Namen kannte. Über die verfügbare
   Breite gemessen bringt Weg 2 **8 px an jedem Datum** (64–79 statt 56–71)

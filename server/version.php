@@ -3130,11 +3130,12 @@ declare(strict_types=1);
  * Einrueckung und 8 px Abstand, Leistenfuss 8 px — in jeder Breite
  * unveraendert.
  *
- * WEG 3 IST NICHT VOM TISCH, nur nicht hier: Im schmalen Band das JAHR aus
- * dem Datum zu nehmen — es steht als Akkordeon-Ueberschrift darueber —
- * braechte rund 30 px und truege auch den laengsten erlaubten Kurznamen. Das
+ * WEG 3 IST VERWORFEN (08.09.2026): Im schmalen Band das JAHR aus dem Datum
+ * zu nehmen — es steht als Akkordeon-Ueberschrift darueber — haette rund
+ * 30 px gebracht und auch den laengsten erlaubten Kurznamen getragen. Es
  * aendert aber, was in einer Zeile STEHT, und zwar abhaengig von der
- * Fensterbreite; es gehoert in die Standortseiten-Phase, wo die Leiste
- * ohnehin angefasst wird (Pruefliste Punkt 26).
+ * Fensterbreite; und nach einem Sprung aus der Suche ist die Jahreszeile
+ * weggerollt, dann fehlt das Jahr ganz. Das Datum behaelt es in jeder
+ * Breite.
  */
 const WEB_VERSION = '16.1.1';

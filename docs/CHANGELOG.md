@@ -41,12 +41,14 @@ spezifischere Regel das Menü schon ab. Nachgemessen bei 1100 und 1280 px: Menü
 0 px Einrückung und 8 px Abstand, Leistenfuß 8 px — in jeder Breite
 unverändert.
 
-**Was bewusst offenbleibt:** Der dritte Weg — im schmalen Band das **Jahr** aus
-dem Datum nehmen, das ohnehin als Überschrift darübersteht — bringt rund 30 px
-und trüge auch den längsten erlaubten Kurznamen. Er ändert aber, was in einer
-Zeile *steht*, abhängig von der Fensterbreite, und gehört damit in die
-Standortseiten-Phase, wo die Leiste ohnehin angefasst wird. Keine Migration,
-keine Spalte; `update.php` muss nach dem Einspielen **nicht** laufen.
+**Was bewusst nicht kommt:** Der dritte Weg — im schmalen Band das **Jahr** aus
+dem Datum nehmen, das ohnehin als Überschrift darübersteht — hätte rund 30 px
+gebracht und auch den längsten erlaubten Kurznamen getragen. Er ist
+**verworfen**: Er ändert, was in einer Zeile *steht*, abhängig von der
+Fensterbreite, und nach einem Sprung aus der Suche ist die Jahreszeile
+weggerollt — dann fehlt das Jahr ganz. Das Datum behält es in jeder Breite.
+Keine Migration, keine Spalte; `update.php` muss nach dem Einspielen **nicht**
+laufen.
 
 ## [Web 16.1.0] — 2026-09-08
 

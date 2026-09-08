@@ -752,7 +752,7 @@ Weg 2 — im Band je Ebene 4 px Einrückung und 4 px Abstand in der Zeile.
 Danach stehen dem Nebentext **64 bis 79 px** statt 48 bis 63 zur Verfügung,
 und von dreizehn Kurznamen trägt **keiner** mehr ein Auslassungszeichen
 (vorher zehn). Weg 3 — das Jahr im schmalen Band aus dem Datum nehmen —
-bleibt für die Standortseiten-Phase offen. Die Gewinnerregel
+ist verworfen; das Datum behält sein Jahr in jeder Breite. Die Gewinnerregel
 des Zusammenführens steht seither an **einer** Stelle statt an zweien
 (`dt_merge_rm_gewinner()`).
 
