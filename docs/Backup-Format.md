@@ -405,7 +405,7 @@ man sähe dem Datensatz den Verlust nicht an.
 Anhebung auf 9 oder 10 würfe jede vorhandene 8er- und 9er-Datei in den
 Punktlisten-Zweig: Die Einsätze kämen an, die Spuren nicht — ohne Meldung.
 
-**Nutzlastversion 9 (Web 14.2.0 bis 15.8.0).** Wie 8 — keine Punktlisten, Spuren als
+**Nutzlastversion 9 (Web 14.2.0 bis 15.9.0).** Wie 8 — keine Punktlisten, Spuren als
 Verweise —, dazu **drei Dinge mehr**:
 
 | Was | Wo |

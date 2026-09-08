@@ -2199,7 +2199,7 @@ function migrationen_katalog(): array
     ],
     [
         'id'    => '2026_09_07_adresssuche_konto',
-        'web'   => '15.7.0',
+        'web'   => '15.8.0',
         'label' => 'Schalter „Adressvorschläge aus dem Internet" je Konto (E-S9-05, R79)',
         'skip'  => function (PDO $pdo): bool {
             /* Gibt es die Spalte schon, ist die Migration gelaufen — oder die
@@ -2345,7 +2345,7 @@ function migrationen_katalog(): array
              * Diensttag ohne Rettungsmittel hat keinen Typ, und die meisten
              * Rettungsmittel haben keinen Kurznamen. Wo `vehicle_typ` NULL ist,
              * faellt die Anzeige auf die Betriebsart zurueck — das kann
-             * `dt_art_symbol()` seit Web 15.8.0 von selbst. */
+             * `dt_art_symbol()` seit Web 15.9.0 von selbst. */
             "ALTER TABLE days
                ADD COLUMN vehicle_typ  ENUM('standard','bergwacht','veranstaltung','sonstiges')
                           NULL AFTER vehicle_name,

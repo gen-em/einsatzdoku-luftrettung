@@ -203,7 +203,7 @@ export const wege = [
       return {
         ist: m.b + ' × ' + m.h + ' px · display ' + m.display + ' · Fläche ' + m.farbe,
         ok,
-        bemerkung: ok ? '' : 'vor Web 15.8.0: 4 × 18 px, display inline, Farbe unsichtbar',
+        bemerkung: ok ? '' : 'vor Web 15.9.0: 4 × 18 px, display inline, Farbe unsichtbar',
       };
     },
   },
@@ -335,7 +335,7 @@ export const wege = [
            + 'faehigkeiten aus der API: ' + JSON.stringify(jan.faehig),
         ok,
         bemerkung: ok ? ''
-          : 'vor Web 15.8.0 verschwanden die Kacheln, sobald kein Einsatz die Winde trug',
+          : 'vor Web 15.9.0 verschwanden die Kacheln, sobald kein Einsatz die Winde trug',
       };
     },
   },

@@ -65,7 +65,7 @@
  *   nicht, woher ein Eintrag stammt.
  *
  *   assets/geocoder.js (EdGeocoder) ist PFLICHT (S9/AP2, E-S9-05). Die
- *   Dienstadresse stand bis Web 15.6.1 als Konstante `PHOTON` hier — fest
+ *   Dienstadresse stand bis Web 15.7.1 als Konstante `PHOTON` hier — fest
  *   eingetragen und von keinem Schalter zu erreichen, obwohl diese Komponente
  *   die Option `adresssuche` seit Web 6.1.0 kannte und kein Aufrufer sie je
  *   setzte. Jetzt entscheidet der Dienst selbst, ob er antwortet: Zwei

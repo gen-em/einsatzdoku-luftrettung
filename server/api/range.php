@@ -138,7 +138,7 @@ try {
 
     /* ---- Was der Zeitraum KONNTE, nicht was er getan hat (E-S9-04) --------
      *
-     * Bis Web 15.7.0 entschied die Zeitraumuebersicht ueber die beiden
+     * Bis Web 15.8.0 entschied die Zeitraumuebersicht ueber die beiden
      * Windenkacheln aus der Einsatzliste: keine Winde geflogen, keine Kachel.
      * Damit liess sich „null Windeneinsaetze" nicht von „Winde nicht
      * eingerichtet" unterscheiden — und das erste ist eine Aussage ueber den

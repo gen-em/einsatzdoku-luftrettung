@@ -357,7 +357,7 @@ Migration `2026_09_07_rettungsmittel_typ` legt die vier Spalten an, macht
 `vehicles.base_id` NULL-fähig und füllt den Bestand nach. Ohne sie läuft die
 Anwendung ins Leere.
 
-## [Web 15.8.0] — 2026-09-07
+## [Web 15.9.0] — 2026-09-07
 
 ### Web — die Karte wird leiser, und die Pfeile zeigen wieder hin (S9/AP3)
 
@@ -462,7 +462,7 @@ Emulatorlauf; Schritt 9a arbeitet ohnehin an ihr und nimmt sie dort mit
 
 Keine Migration.
 
-## [Web 15.7.0] — 2026-09-07
+## [Web 15.8.0] — 2026-09-07
 
 ### Web — eine Adresse statt zweier, und zwei Schalter davor (S9/AP2)
 
@@ -544,7 +544,7 @@ Nach dem Deploy muss eine Administratorin **`update.php`** aufrufen. Bis dahin
 gilt für jedes Konto die Vorgabe „an", und die Anwendung läuft weiter — beide
 Leser vertragen die fehlende Spalte.
 
-## [Web 15.6.1] — 2026-09-07
+## [Web 15.7.1] — 2026-09-07
 
 ### Web — die Vorschlagsliste lag hinter der Speichern-Leiste (S9/AP1)
 
@@ -572,7 +572,7 @@ verfehlt, nachher erfüllt).
 
 Keine Migration.
 
-## [Web 15.6.0] — 2026-09-07
+## [Web 15.7.0] — 2026-09-07
 
 ### Web — eine Vorschlagsliste statt dreier und einer vierten vom Browser (S9/AP1)
 

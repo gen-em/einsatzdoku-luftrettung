@@ -584,7 +584,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'veh_save') {
         $vid = (int)($_POST['id'] ?? 0);
         /* ALLE REGELN STEHEN IN DER PRUEFSCHICHT (Web 16.0.0, E-S9-09).
-         * Bis Web 15.8.0 standen sie hier ausgeschrieben — und ein zweites Mal
+         * Bis Web 15.9.0 standen sie hier ausgeschrieben — und ein zweites Mal
          * in admin_stammdaten.php, ein drittes Mal (kuerzer) beim Einspielen
          * einer Sicherung. Mit dem Typ waeren daraus drei Fassungen von sieben
          * Regeln geworden. `pruef_rettungsmittel()` liefert den fertigen
@@ -2188,7 +2188,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     <script src="<?= asset('assets/geocoder.js') ?>"></script>
     <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
     <?php /* DIE KARTE KOMMT MIT S9/AP2 HIERHER (E-S9-06 c, Backlog Nr. 70).
-             Bis Web 15.6.1 hatte die Nur-Lage-Fassung des Ortsfelds keinen
+             Bis Web 15.7.1 hatte die Nur-Lage-Fassung des Ortsfelds keinen
              Pin-Knopf — die Lage eines Standorts liess sich suchen oder
              tippen, aber nicht auf der Karte zeigen. Dafuer braucht diese
              Seite jetzt dieselben vier Bausteine wie das Einsatzformular. */ ?>

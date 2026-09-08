@@ -14,7 +14,7 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 >
 > | | |
 > |---|---|
-> | Stand | 08.09.2026 — **AP1 bis AP4a gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, 15.7.0, 15.8.0, 16.0.0, 16.1.0, 16.1.1), **AP5 in Arbeit**: Teil 1 (Menü und Standortliste, Web 16.2.0/16.2.1), Teil 2 (die Standortseite, 16.2.2) und Teil 3 (die neuen Bausteine, **16.3.0**) stehen, Teile 4 bis 6 offen. AP6 bis AP8 offen. Die Mockups M-S9-08 bis -10 sind am 08.09.2026 freigegeben, ihre Umsetzung steckt in AP4a — bis auf Frage 6 (Standort löschen), die in AP5 Teil 5 gehört |
+> | Stand | 08.09.2026 — **AP1 bis AP4a gebaut und geprüft** (Web 15.7.0, Korrekturstufe 15.7.1, 15.8.0, 15.9.0, 16.0.0, 16.1.0, 16.1.1), **AP5 in Arbeit**: Teil 1 (Menü und Standortliste, Web 16.2.0/16.2.1), Teil 2 (die Standortseite, 16.2.2) und Teil 3 (die neuen Bausteine, **16.3.0**) stehen, Teile 4 bis 6 offen. AP6 bis AP8 offen. Die Mockups M-S9-08 bis -10 sind am 08.09.2026 freigegeben, ihre Umsetzung steckt in AP4a — bis auf Frage 6 (Standort löschen), die in AP5 Teil 5 gehört |
 > | Geprüft | P-01 bis P-15 und P-32 vollständig · P-23 je Paket für die berührten Seiten (AP1 sieben, AP2 drei dazu, AP3 sechs dazu, AP4 elf), nie als Gesamtlauf über alle · P-25 als Gesamtlauf. Dazu **E-S9-13**, das im Konzept keine Abnahme hatte — siehe F-S9-P-12 |
 > | Offen | P-17 bis P-22, P-26, P-28 bis P-31, P-33 (AP5 Teile 4 bis 6, AP6 bis AP8). **P-16 (Sprungliste ab sechs) ist mit Teil 3 erfüllt** — nicht als Bild, wie das Konzept es verlangte, sondern als Klickprobe, die den Fall herstellt und zurückstellt; die Begründung steht in Abschnitt 1. **P-24 (Stilvergleich) ist für AP4a und für AP5 Teile 1+2 und 3 erfüllt** — jedes Mal gegen den Stand vor dem Paket |
 > | Fragen | **zwölf gestellt, zwölf entschieden — keine offen.** Am 07.09.2026: Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen** · Umfang von E-S9-03 → „alles Sichtbare“ · `veranstaltung.svg` → **Tabler „ticket“**. Am **08.09.2026** nach den Mockups M-S9-08 bis -10: Kachel → **Ist lassen** · Plakettenzeile → **nein** · Leiste unter 1200 px → **Variante 2** · Zusammenführen → **(c)** · Standort löschen → **(b)**; dazu **Frage 2** aus AP1 (die Streichliste bleibt, wie AP1 sie gebaut hat) und **Frage 7** aus AP5 Teil 2: Die Standortseite behält ihre **sechs** Karten (fünf ohne luftgebundenes Rettungsmittel), und die Abnahmezahl „Unterpunkte der Leiste = vier“ ist auf sechs bzw. fünf **berichtigt** — in Konzept AP5, in der Abnahme und in Backlog Nr. 152 |
@@ -408,7 +408,7 @@ hatten recht — sie haben etwas anderes gemessen. Ein `z-index`, den man aus
 dem Vorgänger übernimmt, ohne den Nachbarn zu prüfen, ist genau die Sorte
 Fehler, die kein Werkzeug findet, das nicht danach sucht.
 
-*Behoben mit Web 15.6.1:* Ebene **35** — über der Speichern-Leiste (30),
+*Behoben mit Web 15.7.1:* Ebene **35** — über der Speichern-Leiste (30),
 unter der Kopfleiste (40). Nach oben ist sie ebenso begrenzt und aus
 demselben Grund: Eine Vorschlagsliste, die über die Kopfleiste malt,
 verdeckt den Weg aus der Seite heraus. Die Klickprobe hat dafür den Weg
@@ -898,7 +898,7 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   schreibt in Spalten, die es nicht gibt. **Ohne diesen Aufruf läuft die
   Anwendung ins Leere.**
 
-- [ ] **21 — Ein Backup aus Web 15.8.0 einspielen (AP4).**
+- [ ] **21 — Ein Backup aus Web 15.9.0 einspielen (AP4).**
   *Weg:* Eine `.edbak`-Datei aus einem Stand **vor** 16.0.0 in ein frisches
   Konto einspielen.
   *Erwartet:* Alle Rettungsmittel kommen an und tragen Typ **Standard**;
@@ -1309,7 +1309,7 @@ an ihr arbeitet. Dies ist der Zettel dafür; er kann als Ganzes an die
 
 > **Auftrag.** In `android/handy/src/main/res/values/strings.xml` heißt die
 > Aufzeichnung an fünf Stellen noch „Spur". Die Weboberfläche sagt seit
-> Web 15.8.0 **„GPS-Daten"** (Entscheidung E-S9-03 des Konzepts S9,
+> Web 15.9.0 **„GPS-Daten"** (Entscheidung E-S9-03 des Konzepts S9,
 > Backlog Nr. 110); dieselbe Person liest beides.
 >
 > | Schlüssel | heute | Vorschlag |

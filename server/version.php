@@ -2863,7 +2863,7 @@ declare(strict_types=1);
  *          die Anwendung. Keine Migration — und das ist hier die Pointe: Was
  *          fehlt, ist eine ZEILE IM REGISTER, und die holt der Knopf nach.
  */
-/* 15.6.0  EINE VORSCHLAGSLISTE STATT DREIER UND EINER VIERTEN VOM BROWSER
+/* 15.7.0  EINE VORSCHLAGSLISTE STATT DREIER UND EINER VIERTEN VOM BROWSER
  *          (S9/AP1, E-S9-07 und E-S9-08; Backlog Nr. 68, 102, 106).
  *
  *          Unter einem Feld, das Vorschlaege macht, lag bisher eine von drei
@@ -2888,7 +2888,7 @@ declare(strict_types=1);
  *          durch die Anwendung ein anderer wird und keine Spalte sich regt.
  *          Keine Migration.
  */
-/* 15.6.1  DIE VORSCHLAGSLISTE LAG HINTER DER SPEICHERN-LEISTE (S9/AP1).
+/* 15.7.1  DIE VORSCHLAGSLISTE LAG HINTER DER SPEICHERN-LEISTE (S9/AP1).
  *          Gemeldet vom Auftraggeber am Bild, nicht von einem Pruefmittel.
  *          Die Liste stand auf `z-index:20` — dem Wert der alten `.rmlist`,
  *          die als einzige der drei Vorgaengerinnen ueberhaupt schwebte. Die
@@ -2909,7 +2909,7 @@ declare(strict_types=1);
  *          KORREKTURNUMMER: ein Zahlenwert, kein neues Verhalten. Keine
  *          Migration.
  */
-/* 15.7.0  EINE ADRESSE STATT ZWEIER, UND ZWEI SCHALTER DAVOR (S9/AP2).
+/* 15.8.0  EINE ADRESSE STATT ZWEIER, UND ZWEI SCHALTER DAVOR (S9/AP2).
  *          Die Anschrift des Adressdienstes stand zweimal fest im
  *          Auslieferungsstand — `assets/ortsfeld.js` fuer die Suche,
  *          `assets/ortswahl.js` fuer die Umkehrsuche. Wer sie aendern wollte,
@@ -2947,7 +2947,7 @@ declare(strict_types=1);
  *          Konto die Vorgabe „an", und die Anwendung laeuft weiter — beide
  *          Leser vertragen die fehlende Spalte.
  */
-/* 15.8.0  DIE KARTE WIRD LEISER, DIE PFEILE ZEIGEN WIEDER HIN (S9/AP3).
+/* 15.9.0  DIE KARTE WIRD LEISER, DIE PFEILE ZEIGEN WIEDER HIN (S9/AP3).
  *          Vier Dinge auf einmal, alle an derselben Karte und denselben
  *          Woertern.
  *

@@ -2223,7 +2223,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  * einer Zoomstufe, bei der sie nicht gedrängt stehen.
  *
  * DER FARBRING IST SEIT S9/AP3 DER RAND (M-S9-01 V1, E-S9-12). Bis Web
- * 15.7.0 lag er als zweiter und dritter `box-shadow` AUSSERHALB des
+ * 15.8.0 lag er als zweiter und dritter `box-shadow` AUSSERHALB des
  * dunkelblauen Randes; ein Standort mit Doppelring maß dadurch 60 px und
  * deckte auf der Handykarte mehr als ein Drittel der Höhe. Jetzt ersetzt der
  * Farbrand den dunkelblauen: 38 px beim Doppelrand, 32 px sonst. Ohne
@@ -2236,7 +2236,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  * Karte, die kein Orange trägt, und die freigegebene Maßleiste des Mockups
  * nennt für ihn 28 px — mit Trennlinie wären es 30.
  *
- * DIE SCHATTENANGABEN TRAGEN DEN SCHLAGSCHATTEN MIT. Bis Web 15.7.0
+ * DIE SCHATTENANGABEN TRAGEN DEN SCHLAGSCHATTEN MIT. Bis Web 15.8.0
  * überschrieben die drei Ringregeln `box-shadow` vollständig; ein beringtes
  * Schild hatte deshalb keinen Schatten, ein unberingtes schon. Das war
  * niemandem aufgefallen, weil beide Zustände selten nebeneinander stehen.
@@ -2302,7 +2302,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 /* DER PFEIL BRAUCHT EINEN KASTEN, DAMIT ER SICH DREHEN KANN (Backlog Nr. 72,
  * S9/AP3). `geo.js` setzt die Laufrichtung als `transform:rotate(Ndeg)` auf
  * diesen <span>; `transform` wirkt aber nicht auf ein nicht ersetztes
- * Inline-Element, und die Regel hier setzte bis Web 15.7.0 nur die Farbe.
+ * Inline-Element, und die Regel hier setzte bis Web 15.8.0 nur die Farbe.
  * Jeder Pfeil zeigte deshalb nach Norden, und auf Nord-Sued-Abschnitten sah
  * das richtig aus.
  *

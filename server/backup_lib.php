@@ -1076,7 +1076,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
          * weniger Pruefung.
          *
          * OHNE STANDORT WIRD JETZT ANGELEGT, WENN DER TYP ES ERLAUBT. Bis
-         * Web 15.8.0 trug `vehicles.base_id` NOT NULL, und ein Rettungsmittel
+         * Web 15.9.0 trug `vehicles.base_id` NOT NULL, und ein Rettungsmittel
          * ohne Standort war nach E15 kein gueltiger Zustand; seit E-S9-09 ist
          * er es fuer die drei Typen ausser 'standard'. Ein Standard-Rettungs-
          * mittel ohne aufloesbaren Standort wird weiterhin uebersprungen — die

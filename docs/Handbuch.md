@@ -432,7 +432,7 @@ Den **Standard der Installation** setzt die Verwaltung unter
 angemeldete Konten — aber nur bei denen, die hier „Standard der Installation"
 stehen haben. Eine getroffene eigene Wahl bleibt unberührt.
 
-**Karte „Datenschutz": die Adresssuche.** Seit Web 15.7.0 steht im Profil
+**Karte „Datenschutz": die Adresssuche.** Seit Web 15.8.0 steht im Profil
 darunter der Schalter **„Adressvorschläge aus dem Internet"**. Er entscheidet
 für **dein Konto**, auf jedem Gerät: Ist er an, schickt dein Browser beim
 Tippen in einem Ortsfeld den getippten Text an einen Adressdienst und bekommt
@@ -567,7 +567,7 @@ Pro Tag:
   Der **Standort** steht als Haus-Schild auf der Karte, der **Einsatzort**
   als oranger Kreis. Anfang und Ende der Aufzeichnung sind hier **nicht**
   gekennzeichnet — die Tagesübersicht zeigt den ganzen Tag, und was ihn
-  einrahmt, steht am einzelnen Einsatz (Abschnitt 4.2). Bis Web 15.8.0
+  einrahmt, steht am einzelnen Einsatz (Abschnitt 4.2). Bis Web 15.9.0
   behauptete dieser Absatz das Gegenteil.
   **Transportziele zeigt diese Karte nicht** (seit Web 12.3.2): Sie
   beantwortet, wo das Rettungsmittel an diesem Tag unterwegs war, und acht
@@ -790,7 +790,7 @@ Trägt der Einsatz GPS-Daten, steht dort außerdem die Plakette
 Abschnitt 9). Dann heißt die Plakette **„GPS-Daten ausgedünnt"** und ist
 orange.
 
-**Seit Web 15.8.0 steht keine Zahl mehr darin.** Bis dahin hieß sie
+**Seit Web 15.9.0 steht keine Zahl mehr darin.** Bis dahin hieß sie
 „Spur · 852 Punkte" bzw. „Spur ausgedünnt · 113 von 443 Punkten". Die Zahlen
 sind gegangen, weil sie eine Frage beantworteten, die niemand stellt: Wie
 viele Messpunkte eine Aufzeichnung hat, sagt nichts über den Einsatz — es
@@ -850,7 +850,7 @@ Ortes, an dem die Aufzeichnung beginnt oder endet, sonst als eigener kleiner
 Ring daneben; beides am selben Ort ergibt einen doppelten Rand, außen rot und
 innen blau.
 
-Seit **Web 15.8.0** ist der Farbrand wirklich der Rand und liegt nicht mehr
+Seit **Web 15.9.0** ist der Farbrand wirklich der Rand und liegt nicht mehr
 darum herum: Ein Standort mit beidem maß vorher 60 px und deckte auf dem Handy
 mehr als ein Drittel der Kartenhöhe — jetzt sind es 38 px. Die Zeichen sind
 insgesamt kleiner geworden (Schild 36 → 30, Einsatzort-Kreis 32 → 28 px), und
@@ -997,7 +997,7 @@ nennt und sagt, was ihn erreicht; sie fehlt, wenn die Adresssuche
 abgeschaltet ist (Abschnitt 3.1a). Sie steht nur einmal je Seite — auf der
 Standortseite wären es sonst zehn gleiche Sätze.
 
-**So wird eine Vorschlagsliste bedient** (seit Web 15.6.0 überall dieselbe —
+**So wird eine Vorschlagsliste bedient** (seit Web 15.7.0 überall dieselbe —
 Einsatzort, Abfahrtort, Transportziel, Besatzung, weitere Rettungsmittel).
 Sie öffnet unter dem Feld und legt sich über den Inhalt darunter; der
 getippte Teil steht in jedem Treffer **fett**. Mit **Pfeil auf** und
@@ -1020,7 +1020,7 @@ Koordinate eine Adresse (Umkehrsuche beim Adressdienst, Abschnitt 3.1a); sie
 füllt das Feld nur, wenn es leer ist. Die Anfrage trägt ausschließlich die
 Koordinate — nie Namen, Diagnose oder andere Inhalte.
 
-**Der Kartendialog** (seit Web 15.7.0 an fünf Stellen derselbe: Einsatzort,
+**Der Kartendialog** (seit Web 15.8.0 an fünf Stellen derselbe: Einsatzort,
 manueller Abfahrtort, Transportziel sowie die Lage von Standorten und
 Zielkliniken in den Stammdaten) zeigt eine Karte mit **Fadenkreuz in der
 Mitte**: verschieben, bis das Kreuz auf dem Ort steht, dann **„Übernehmen"**.
@@ -2385,7 +2385,7 @@ die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie im
 Feld **„Lage (optional)"** unter dem Namen: Adresse suchen, Koordinatenpaar
 oder Plus Code eintippen, der Vorschlag darunter übernimmt sie. Der **Name**
 bleibt dabei unberührt — „Standort Kempten" ist keine Adresse, und die Suche
-schreibt nur die Koordinaten. Seit Web 15.7.0 steht neben dem Feld auch der
+schreibt nur die Koordinaten. Seit Web 15.8.0 steht neben dem Feld auch der
 **Pin-Knopf** mit „Meine Position übernehmen" und dem Kartendialog (4.3) —
 bis dahin gab es ihn nur im Einsatzformular, und eine Lage ließ sich hier nur
 tippen, nicht zeigen. Eine Aufzeichnung liegt im Dialog nicht: Zu einem
@@ -2479,7 +2479,7 @@ Rettungsmitteln bleibt das Feld dort ein einfaches Textfeld mit
 Vorschlagsliste (Bedienung wie in Abschnitt 4.3) — Freitext ist weiterhin
 uneingeschränkt möglich.
 
-**Zwei Gruppen in einer Liste** (seit Web 15.6.0): Ganz oben stehen unter
+**Zwei Gruppen in einer Liste** (seit Web 15.7.0): Ganz oben stehen unter
 „Zielkliniken" **höchstens zwei** Treffer aus deinen Stammdaten — sie
 erscheinen, sobald der getippte Text irgendwo im Namen vorkommt, und ein
 Treffer setzt **Name und Koordinate**. Darunter stehen unter „Adressen" die
@@ -2490,7 +2490,7 @@ unsichtbar.
 
 Zu jeder Zielklinik lassen sich **Koordinaten** hinterlegen, auf denselben
 Wegen wie beim Einsatzort — Adresssuche, Koordinatenpaar, Plus Code und seit
-Web 15.7.0 auch über den **Pin-Knopf** mit „Meine Position übernehmen" und dem
+Web 15.8.0 auch über den **Pin-Knopf** mit „Meine Position übernehmen" und dem
 Kartendialog (4.3) — und auf drei
 Ebenen: zentral durch die Verwaltung, hier im eigenen Konto und einmalig am
 einzelnen Einsatz. Wird ein Vorschlag mit hinterlegten Koordinaten übernommen,
@@ -3159,7 +3159,7 @@ Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
 Getippte. Sie entsteht auf dem Server, mit demselben Renderer wie die
 öffentliche Seite.
 
-**Textbaustein „Adresssuche"** (seit Web 15.7.0). Weil die Anwendung keinen
+**Textbaustein „Adresssuche"** (seit Web 15.8.0). Weil die Anwendung keinen
 Rechtstext mitliefert, kann sie den Absatz zur Adresssuche nicht selbst
 einsetzen — sie legt ihn aber bereit: Unter dem Feld für die
 Datenschutzerklärung steht ein fertiger Abschnitt zum **Kopieren**, in dem
@@ -3494,7 +3494,7 @@ nur die Zusammensetzung, ohne Füllstand.
 Gemessen wird **einmal täglich** im Aufräumjob; der Stand steht im Kartenkopf.
 Darunter Speichergrenze, Warnschwellen, Ablage und Reste abgebrochener Läufe.
 
-**Karte „Adresssuche"** (seit Web 15.7.0). Beim Tippen in einem Ortsfeld und
+**Karte „Adresssuche"** (seit Web 15.8.0). Beim Tippen in einem Ortsfeld und
 nach jeder Wahl auf der Karte fragt die Anwendung einen **Adressdienst** —
 vorwärts nach Vorschlägen zum getippten Text, rückwärts nach der Adresse zu
 einer Koordinate. Der getippte Text und die Koordinate verlassen dabei das

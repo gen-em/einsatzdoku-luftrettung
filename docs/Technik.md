@@ -846,7 +846,7 @@ liest sie per `getComputedStyle`, JS enthält keinen Farbwert.
 > und `--geo-ringpunkt`/`RINGPUNKT_PX`.
 
 **Zwei Zeichen brauchten seit jeher einen Kasten und hatten keinen** (behoben
-mit Web 15.8.0): `.geo-pfeil` trug seine Drehung und `.geo-punkt` seine Größe
+mit Web 15.9.0): `.geo-pfeil` trug seine Drehung und `.geo-punkt` seine Größe
 an einem `<span>` ohne `display` — und an einem nicht ersetzten
 Inline-Element wirken weder `transform` noch `width`. Die Pfeile zeigten
 dadurch ausnahmslos nach Norden (Backlog Nr. 72), der Abfahrtort maß
@@ -1284,7 +1284,7 @@ Kachelsatz und Divisor, ohne je Tab nachzuladen — `tage_art` wird in SQL
 gerechnet und nicht aus der Einsatzliste, weil ein Diensttag ohne Einsatz dort
 nicht auftaucht, aber mitzählt.
 
-**Seit Web 15.8.0 kommt `faehigkeiten` dazu** (S9/AP3, E-S9-04) — ein flaches
+**Seit Web 15.9.0 kommt `faehigkeiten` dazu** (S9/AP3, E-S9-04) — ein flaches
 Objekt über `VEHICLE_CAPABILITIES`, heute `{winch, bergwacht}`, mit
 Wahrheitswerten. Es sagt, welche Fähigkeiten die **Luft**-Diensttage des
 Zeitraums tragen, gerechnet als `GROUP BY` über `day_capabilities` mit Join
@@ -3758,7 +3758,7 @@ Netzanfrage, Bestätigung statt sofortiger Übernahme, ruhende Suche bei
 gesetzten Koordinaten, und die Prüfung „Koordinaten ohne Bezeichnung" beim
 Absenden.
 
-**Die Trefferliste ist seit Web 15.6.0 ein eigener Baustein**
+**Die Trefferliste ist seit Web 15.7.0 ein eigener Baustein**
 (`assets/vorschlagsliste.js`, `EdVorschlaege`, S9/AP1, E-S9-07). Sie ersetzt
 drei Fassungen und eine vierte, die der Browser beisteuerte: die Photon-Liste
 des Ortsfelds, die Liste der weiteren Rettungsmittel und jede native
@@ -3775,7 +3775,7 @@ Photon-Grenze **sechs** in der Abfrageadresse. Stammdaten erscheinen ab dem
 ersten Zeichen bei Teilübereinstimmung und **ohne** die 400-ms-Entprellung —
 sie liegen im Browser; die Adressabfrage bleibt bei ihren drei Grenzen.
 
-**Der Adressdienst hat seit Web 15.7.0 genau einen Zugang**
+**Der Adressdienst hat seit Web 15.8.0 genau einen Zugang**
 (`assets/geocoder.js`, `EdGeocoder`, S9/AP2, E-S9-05). Vorher stand die
 Anschrift zweimal fest im ausgelieferten Code — in `ortsfeld.js` für die
 Vorwärtssuche, in `ortswahl.js` für die Umkehrsuche. Das Modul hat vier
@@ -3820,15 +3820,15 @@ Stelle). Zur Koordinate holt `EdGeocoder.umkehr()` eine Adresse; sie füllt
 das Feld nur, wenn es leer ist (`EdOrtsfeld`-Steuerobjekt, `uebernehmen()`),
 und die Anfrage trägt ausschließlich die Koordinate.
 
-Seit Web 15.7.0 tragen **fünf** Felder den Knopf statt zweier: Einsatzort,
+Seit Web 15.8.0 tragen **fünf** Felder den Knopf statt zweier: Einsatzort,
 manueller Abfahrtort, Transportziel (über den Feldkatalog, `'ortswahl' =>
 true` an `transport_dest`) und die Lagefelder der Standorte in
 `einstellungen.php` und `admin_stammdaten.php`. Der Block dafür steht in
 `ui_ortsfeld()` **einmal** und wird in beiden Zweigen ausgegeben — bis Web
-15.6.1 rendete ihn nur der `feld = true`-Zweig, und die Nur-Lage-Fassung der
+15.7.1 rendete ihn nur der `feld = true`-Zweig, und die Nur-Lage-Fassung der
 Stammdaten hatte deshalb keine Karte (Backlog Nr. 70).
 
-Der Dialog selbst kann seit Web 15.7.0 zweierlei mehr. Erstens ein
+Der Dialog selbst kann seit Web 15.8.0 zweierlei mehr. Erstens ein
 **Suchfeld** im Kopf (nur bei `EdGeocoder.an()`): Ein Treffer ruft
 `karte.setView()` und schreibt den Namen ins Suchfeld — **ins Formular
 schreibt er nichts**; erst „Übernehmen" übernimmt (F1). Zweitens die

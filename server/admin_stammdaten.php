@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'veh_save') {
         $vid = (int)($_POST['id'] ?? 0);
-        /* DIESELBE PRUEFUNG WIE IM KONTO (Web 16.0.0, E-S9-09). Bis Web 15.8.0
+        /* DIESELBE PRUEFUNG WIE IM KONTO (Web 16.0.0, E-S9-09). Bis Web 15.9.0
          * standen die Regeln hier als Kopie der Kontoansicht — dieselben Saetze,
          * nur kuerzer formuliert, was allein schon ein Fehler war: Zwei
          * Meldungen fuer dieselbe Lage. Mit `pruef_rettungsmittel()` gibt es

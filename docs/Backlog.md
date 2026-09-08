@@ -1629,7 +1629,7 @@ zutreffen.
     Abfahrtort der Luftlinie. **Derselbe Fehler wie Nr. 72**, drei Zeilen
     darüber im Stylesheet, und in keinem Backlog-Punkt.
 
-    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3).** Eine Zeile:
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3).** Eine Zeile:
     `display:block`. Gemessen nachher **12 × 12 px**, Fläche
     `rgb(31, 78, 156)` — die Spurfarbe steht. Der Weg
     `ap3-geo-punkt-sichtbar` der Klickprobe misst es.
@@ -1655,7 +1655,7 @@ zutreffen.
     Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
     Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
 
-    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3, E-S9-12).** Der Verdacht
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3, E-S9-12).** Der Verdacht
     im Punkt stimmte, und er war die ganze Ursache: `.geo-pfeil` ist ein
     `<span>`, das Stylesheet setzte daran nur die Farbe — und `transform`
     wirkt an einem nicht ersetzten Inline-Element **nicht**. Die
@@ -1696,7 +1696,7 @@ zutreffen.
     Abschnitt 6).
     *Konzept S9 (07.09.2026): E-S9-12, M-S9-01 V1 (Farbring statt Rand, 30/28/3 px; AP3).*
 
-    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3, E-S9-12).** Variante V1
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3, E-S9-12).** Variante V1
     des Mockups M-S9-01, freigegeben am 06.09.2026: **Der Farbring ist jetzt
     der Rand** und liegt nicht mehr darum herum. Nachgemessen im Browser
     (Klickprobe `ap3-schildmasse`): **32 px** ohne Aufzeichnung, 32 mit Start
@@ -1725,7 +1725,7 @@ zutreffen.
     mit „0" (F7).
     *Konzept S9 (07.09.2026): E-S9-04 (Fähigkeit statt Zählung, `api/range.php` liefert `faehigkeiten`; AP3).*
 
-    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3, E-S9-04).** Kehrt
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3, E-S9-04).** Kehrt
     E30/A13d ausdrücklich um. `api/range.php` liefert jetzt `faehigkeiten`,
     und die beiden Windenkacheln stehen, sobald ein **Luft**-Diensttag des
     Zeitraums die Winde trägt — auch mit dem Wert 0. Gemessen mit der
@@ -1749,7 +1749,7 @@ zutreffen.
     S9-Konzept (Fable-Schritt, F8), nicht vorab.
     *Konzept S9 (07.09.2026): E-S9-13, M-S9-02 — Hubschrauber bleibt Tabler „helicopter"; erledigt sich mit „Ist".*
 
-    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3, E-S9-13).** Mockup
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3, E-S9-13).** Mockup
     M-S9-02, freigegeben am 06.09.2026: **Der Hubschrauber bleibt.** Die
     eigene Strichzeichnung (Variante B) und die Bildmarken (C, C2) sind
     gesehen und verworfen; Tabler „helicopter" und „ambulance" bleiben, wie
@@ -1773,7 +1773,7 @@ zutreffen.
     Wortliste nachziehen.
     *Konzept S9 (07.09.2026): E-S9-03 („GPS-Daten" überall in der NutzerInnen-Sicht; AP3).*
 
-    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP3, E-S9-03).** Umbenannt
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3, E-S9-03).** Umbenannt
     sind **72 sichtbare Zeichenketten in 18 Dateien** und **41 Zeilen im
     Handbuch** — die Plakette der Einsatzansicht, das Aktionsmenü, die ganze
     Seite „GPS-Daten des Diensttages", die Jobnamen im Betrieb, der
@@ -1813,7 +1813,7 @@ zutreffen.
     neuer Baustein. Zuordnung: Backlog-Runde.
     *Konzept S9 (07.09.2026): E-S9-06 c (Pin-Knopf in der Nur-Lage-Fassung, Standortkarte der Standortseite; AP2/AP5).*
 
-    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP2, E-S9-06 c).** Kein neuer
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP2, E-S9-06 c).** Kein neuer
     Baustein, wie der Punkt es verlangte: Der Pin-Knopf samt Blatt („Meine
     Position übernehmen" / „Auf der Karte wählen") stand in `ui_ortsfeld()`
     schon — nur im falschen Zweig. Die Funktion hat zwei Formen, und die
@@ -1838,7 +1838,7 @@ zutreffen.
     `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
     *Konzept S9 (07.09.2026): E-S9-05, E-S9-06 (Geocoder-Modul, Suchfeld im Dialog; AP2).*
 
-    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP2, E-S9-05, E-S9-06 a).**
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP2, E-S9-05, E-S9-06 a).**
     Die zuerst zu klärende Frage — welche Geocoding-Quelle — ist so
     beantwortet: dieselbe wie bisher (Photon), aber **einstellbar und
     abschaltbar**. `assets/geocoder.js` ist der eine Weg nach draußen; die
@@ -1860,7 +1860,7 @@ zutreffen.
     je Einsatz, kein Stammdateneintrag (F12). Migration; Vertrag prüfen.
     *Konzept S9 (07.09.2026): E-S9-06 (Pin-Knopf am Katalogfeld, Ad-hoc-Wert; AP2).*
 
-    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP2, E-S9-06 d).** Kein
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP2, E-S9-06 d).** Kein
     Sonderfall im Formular, sondern ein Schlüssel im Feldkatalog:
     `'ortswahl' => true` an `transport_dest` in `mission_fields.php`, und
     Pin-Knopf, Blatt und Kartendialog kommen von selbst — die Regel
@@ -1884,7 +1884,7 @@ zutreffen.
     Zuordnung: Sofortpaket Sicherheit, Rest S9.
     *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-05, AP2) — Hinweis am Feld, Datenschutztext, Installationsschalter (Karte „Adresssuche" auf Betrieb → Servereinstellungen, `app_state` `adresssuche`), Kontoschalter (Profil → Datenschutz), Dienstadresse. Zuordnung jetzt: S9.*
 
-    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP2, E-S9-05).** Alle vier
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP2, E-S9-05).** Alle vier
     Teile des Sofortpakets stehen, und der Schalter ist zwei geworden:
     **(1)** Kleinzeile unter dem Ortsfeld, die den Dienst beim Namen nennt —
     einmal je Seite, nicht je Feld, und nur bei eingeschalteter Suche.
@@ -1928,7 +1928,7 @@ zutreffen.
     neu.
     *Konzept S9 (07.09.2026): E-S9-06 b (Spur im Dialog, fitBounds bei leerem Feld; AP2).*
 
-    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP2, E-S9-06 b).** Der Dialog
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP2, E-S9-06 b).** Der Dialog
     zeichnet die aufgezeichnete Spur in der ersten Spurfarbe, mit Ringpunkt
     an Anfang und Ende und einer Legende darunter; **keine Luftlinie**, wie
     verlangt. Er wartet nicht auf sie: Der Dialog steht sofort, die Spur kommt
@@ -1959,7 +1959,7 @@ zutreffen.
     Zuordnung: Backlog-Runde.
     *Konzept S9 (07.09.2026): E-S9-07 (kein `<datalist>` mehr, Baustein Vorschlagsliste; AP1, Besatzung AP6).*
 
-    **Erledigt mit Web 15.6.0 am 07.09.2026 (S9/AP1, E-S9-07).** Die Erhebung
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP1, E-S9-07).** Die Erhebung
     hat fünf Dateien genannt — `ui.php` (Ortsfeld), `einsatz_form.php`
     (Transportziel und Besatzung des Einsatzes), `index.php`
     (`renderCrewFields()`), `mission_fields.php` und `assets/ortsfeld.js`, die
@@ -1983,7 +1983,7 @@ zutreffen.
     Bug, nur Desktop/Web (F2).
     *Konzept S9 (07.09.2026): E-S9-08 (mousedown statt click, Ursache Blur-Verzögerung; AP1).*
 
-    **Erledigt mit Web 15.6.0 am 07.09.2026 (S9/AP1, E-S9-08).** Die Ursache
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP1, E-S9-08).** Die Ursache
     steht im Konzept mit Zeilenangabe: Die Trefferliste übernahm auf `click`
     (`einsatz_form.php:1921`), das Eingabefeld versteckte sie 150 ms nach
     `blur` (`:1957`). Ein Mausklick ist `mousedown` → `blur` → `mouseup` →
@@ -2008,7 +2008,7 @@ zutreffen.
     Zielklinik-Kontext (F9), höchstens zwei (F10).
     *Konzept S9 (07.09.2026): E-S9-07, M-S9-03 (eine Vorschlagsliste mit Gruppen; AP1).*
 
-    **Erledigt mit Web 15.6.0 am 07.09.2026 (S9/AP1, E-S9-07).** Es gibt jetzt
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP1, E-S9-07).** Es gibt jetzt
     **eine** Liste. Oben unter „Zielkliniken" höchstens zwei Stammdatentreffer
     (F10) — sie erscheinen bei **Teilübereinstimmung**, nicht mehr erst bei
     genauer Namensgleichheit (F-S9-K-01) —, darunter unter „Adressen" die

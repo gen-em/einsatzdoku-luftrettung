@@ -2,7 +2,7 @@
  * (S9/AP2, E-S9-05).
  * ===========================================================================
  *
- * WARUM ES DIESE DATEI GIBT. Bis Web 15.6.1 stand die Dienstadresse zweimal
+ * WARUM ES DIESE DATEI GIBT. Bis Web 15.7.1 stand die Dienstadresse zweimal
  * fest im Code, und keine der beiden Stellen war abschaltbar:
  *
  *   assets/ortsfeld.js   die Vorwaertssuche beim Tippen (`…/api/?q=`). Die

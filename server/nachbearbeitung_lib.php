@@ -181,7 +181,7 @@ function nb_offen_gesamt(int $userId): int
  * Faellen gibt es nichts zu tun, und die Abfragen oben brauchen gar nicht zu
  * laufen.
  *
- * GEFRAGT WIRD `NB_NOTNULL`, NICHT `vehicles` (Web 16.0.0). Bis Web 15.8.0
+ * GEFRAGT WIRD `NB_NOTNULL`, NICHT `vehicles` (Web 16.0.0). Bis Web 15.9.0
  * hing die ganze Auskunft an der Nullbarkeit von `vehicles.base_id` — was
  * richtig war, solange diese Spalte nur waehrend der Nachbearbeitung nullbar
  * sein konnte. Seit E-S9-09 ist sie es dauerhaft, und die Frage haette

@@ -429,7 +429,7 @@ function dt_bases(int $userId): array
  * Rettungsmittel der verfuegbaren Standorte, mit Betriebsart, Typ, Kurznamen
  * und Standortnamen.
  *
- * Ein Rettungsmittel OHNE Standort erscheint bewusst mit. Bis Web 15.8.0 galt
+ * Ein Rettungsmittel OHNE Standort erscheint bewusst mit. Bis Web 15.9.0 galt
  * das den Bestandsdaten vor der Nachbearbeitung (Problem P6): Sonst
  * verschwaenden sie aus jeder Auswahl, bevor die Nachbearbeitung ueberhaupt
  * aufgerufen wurde. Seit E-S9-09 ist es der REGELFALL — Bergwacht,

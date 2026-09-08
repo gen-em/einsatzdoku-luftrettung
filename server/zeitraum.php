@@ -317,7 +317,7 @@ const KACHELN_LUFT = [
     wert: k => k.maxHoehe.wert != null ? wertGanz(k.maxHoehe.wert) : '–',
     einheit: k => k.maxHoehe.wert != null ? 'm' : '' },
   /* NACH FAEHIGKEIT, NICHT NACH ZAEHLUNG (E-S9-04, PS-4, Backlog Nr. 104).
-     Kehrt E30/A13d ausdruecklich um. Bis Web 15.7.0 stand hier
+     Kehrt E30/A13d ausdruecklich um. Bis Web 15.8.0 stand hier
      `liste.some(m => m.winch)`: keine Winde geflogen, keine Kachel — und
      damit war „null Windeneinsätze" von „Winde nicht eingerichtet" nicht zu
      unterscheiden. Das eine ist eine Aussage über den Dienst, das andere
@@ -394,7 +394,7 @@ function zeichneStatistik(liste, tage){
 
   /* MOBIL VIER (E-P3-37). Welche vier, sagt die Kachel selbst (`mobil`).
      Fällt eine davon am Bestand weg — die Winden-Cycles in einem Zeitraum,
-     dessen Luft-Diensttage die Winde gar nicht tragen (seit Web 15.8.0 der
+     dessen Luft-Diensttage die Winde gar nicht tragen (seit Web 15.9.0 der
      Auslöser, vorher: kein Windeneinsatz) —, rückt die nächste des Satzes
      nach: Vier Kacheln füllen zwei Reihen zu zweit, drei ließen eine halbe
      Reihe leer. Das steht so nicht im Konzept; dort ist der Fall

@@ -1323,7 +1323,7 @@ Vorschlagsliste und Kartenwahl. Gegenstück zu `assets/ortsfeld.js`: Die
 Funktion erzeugt die Elemente, das Skript belebt sie — **beide bilden ihre
 Kennungen aus demselben Präfix.**
 
-**Die Trefferliste ist seit Web 15.6.0 ein eigener Baustein** (9.28): Das
+**Die Trefferliste ist seit Web 15.7.0 ein eigener Baustein** (9.28): Das
 Ortsfeld sagt, *was* darin steht (erkannte Koordinate, Stammdaten, Adressen);
 *wie* es dasteht, entscheidet die Liste. Der Schlüssel `datalist` ist damit
 ersatzlos entfallen — Stammdaten gehen als `vorschlaege` an
@@ -1354,7 +1354,7 @@ Platzhalter bekommt, gilt die Regel aus 9.7: erfundener Ort, kein echter
 
 **Es sucht beim Tippen** (seit Web 12.3.3, E-S3-06) — in **beiden**
 Bedienformen, also auch bei Standort und Zielklinik, wo bis dahin nur die
-Lupe suchte. Drei Grenzen fassen das ein und stehen seit Web 15.7.0 in
+Lupe suchte. Drei Grenzen fassen das ein und stehen seit Web 15.8.0 in
 `assets/geocoder.js` (vorher in `ortsfeld.js`): **400 ms** Ruhe nach dem
 letzten Tastendruck, **ab drei Zeichen**, **höchstens eine offene Anfrage**
 (eine laufende wird abgebrochen). Die Lupe umgeht die Entprellung, nicht die
@@ -1365,7 +1365,7 @@ Mindestlänge.
 > eingetippten Buchstaben dorthin. Stehen bereits Koordinaten, ruht die Suche
 > ganz — die Formaterkennung läuft lokal und hat Vorrang.
 
-**Die Kleinzeile darunter nennt den Dienst — einmal je Seite** (Web 15.7.0,
+**Die Kleinzeile darunter nennt den Dienst — einmal je Seite** (Web 15.8.0,
 `ui_geocoder_hinweis()`, `.loc-datenschutz`). Nicht je Feld: Auf der
 Standortseite steht ein Ortsfeld je Standort **und** je Zielklinik, das wären
 zehn gleiche Sätze und mehr. Zehnmal derselbe Datenschutzhinweis ist keine
@@ -1373,7 +1373,7 @@ Auskunft mehr, sondern Tapete. Sie steht am **ersten** Ortsfeld der Seite und
 ist auf die Seite bezogen formuliert; ist die Adresssuche aus, fehlt sie ganz
 — sie sagt aus, dass etwas hinausgeht, und dann geht nichts hinaus.
 
-**Der Pin-Knopf steht in beiden Formen** (Web 15.7.0). Bis dahin rendete ihn
+**Der Pin-Knopf steht in beiden Formen** (Web 15.8.0). Bis dahin rendete ihn
 nur `feld => true`; die Nur-Lage-Fassung hatte deshalb keine Karte, und
 Backlog Nr. 70 („Karte für Standorte") war genau das. Der Block steht jetzt
 einmal in `ui_ortsfeld()` und wird zweimal ausgegeben.
@@ -1811,7 +1811,7 @@ immer, damit ein Vorleseprogramm alle Blöcke gleich benennt.
 
 ### 9.28 Vorschlagsliste (`.vorschlaege`)
 
-*Neu mit Web 15.6.0 (S9/AP1, E-S9-07). Mockup
+*Neu mit Web 15.7.0 (S9/AP1, E-S9-07). Mockup
 `docs/konzepte/konzept-s9/mockups/M-S9-03-vorschlagsliste.html`, freigegeben
 am 07.09.2026.* Gebaut wird sie in `assets/vorschlagsliste.js`, nicht in
 `ui.php`: Sie entsteht beim Tippen im Browser, es gibt keine PHP-Seite, die
@@ -1910,7 +1910,7 @@ Handlung.
 
 ### 9.29 Kartendialog (`.dialog-karte`)
 
-*Suchfeld, Spur und Legende neu mit Web 15.7.0 (S9/AP2, E-S9-06). Mockup
+*Suchfeld, Spur und Legende neu mit Web 15.8.0 (S9/AP2, E-S9-06). Mockup
 `docs/konzepte/konzept-s9/mockups/M-S9-04-kartendialog.html`, freigegeben am
 07.09.2026. Der Dialog selbst gibt es seit Web 9.4.0.* Gebaut wird er in
 `assets/ortswahl.js`, nicht in `ui.php` — er entsteht auf Knopfdruck im
@@ -1976,14 +1976,14 @@ Ringpunkte sind die aus M-S9-01 und tragen ihre Größe selbst (9.30), die
 Schrift ist `--groesse-2` in `--gedaempft`.
 
 > **Die Legende erbt die Ringpunkte, also auch ihre Änderungen.** Mit Web
-> 15.8.0 sind sie von 16 auf 14 px gegangen und ihr Rand von 3 auf 2 px
+> 15.9.0 sind sie von 16 auf 14 px gegangen und ihr Rand von 3 auf 2 px
 > (M-S9-01 V1) — die Legende im Dialog ist damit mitgeschrumpft, ohne dass
 > hier eine Zeile stand. Wer die Zeichen ändert, sehe sie neben dem 13-px-Text
 > dieser Zeile an.
 
 ### 9.30 Kartenzeichen (`.geo-*`)
 
-*Maße neu gefasst mit Web 15.8.0 (S9/AP3, E-S9-12). Mockup
+*Maße neu gefasst mit Web 15.9.0 (S9/AP3, E-S9-12). Mockup
 `docs/konzepte/konzept-s9/mockups/M-S9-01-kartenschilder.html`, Variante V1,
 freigegeben am 06.09.2026.* Gebaut werden sie in `assets/geo.js` als
 Leaflet-`divIcon`; das Stylesheet zeichnet, das Modul setzt nur die Maße, die
@@ -2004,7 +2004,7 @@ Handy genauso wie auf 600 px am Schreibtisch.
 | Abfahrtort | `.geo-punkt` | **12 px** | `--abstand-3` |
 | Richtungspfeil | `.geo-pfeil` | **20 px** | `--symbol` |
 
-**Der Farbring IST der Rand, er liegt nicht darum herum.** Bis Web 15.7.0 lag
+**Der Farbring IST der Rand, er liegt nicht darum herum.** Bis Web 15.8.0 lag
 er als zweiter und dritter `box-shadow` außerhalb des dunkelblauen Randes —
 ein Standort mit Doppelring maß dadurch **60 px** und deckte auf der
 Handykarte mehr als ein Drittel der Höhe. Jetzt ersetzt der Farbrand den
@@ -2034,7 +2034,7 @@ Betroffen: `--geo-schild` / `SCHILD_PX`, `--geo-kreis` / `KREIS_PX`,
 > **Ein `<span>` ohne `display` ist kein Kasten.** `.geo-pfeil` trug seine
 > Drehung als `transform:rotate()` und `.geo-punkt` seine Größe als
 > `width`/`height` — beides wirkt an einem nicht ersetzten Inline-Element
-> **nicht**. Die Pfeile zeigten dadurch bis Web 15.7.0 ausnahmslos nach Norden
+> **nicht**. Die Pfeile zeigten dadurch bis Web 15.8.0 ausnahmslos nach Norden
 > (Backlog Nr. 72), der Abfahrtort maß 4 × 18 px statt 12 × 12 und zeigte
 > seine Farbe nie (Nr. 153). Beide haben jetzt einen ausdrücklichen Kasten.
 > **Der berechnete Stil verrät das nicht:** `getComputedStyle` meldet die
@@ -2322,9 +2322,9 @@ genau das, wogegen sie schützt.
 | **Web 16.1.1 (S9)** | Kapitel 7: Im Band 1024–1199 px rückt das Akkordeon je Ebene **4 statt 8 px** ein, und der Abstand der Diensttagszeile geht von 8 auf **4 px** (Freigabe M-S9-11, Weg 2). Gemessen: dem Nebentext stehen dort **64–79 px** statt 48–63 zur Verfügung — dreizehn Kurznamen, **keiner** mehr mit Auslassungszeichen (vorher zehn). Der Abstand ist mit `:not(.leiste-gruppe)` eingegrenzt, weil die Zeilenklasse auch Leistenfuß, Schubladen-Hauptpunkte und Einstellungsmenü trägt; nachgemessen bleiben die bei 8 px. **Keine neue Schwelle, kein neues Token** — 4 px ist `--abstand-1`. |
 | **Web 16.3.0 (S9/AP5-3)** | **Drei neue Kapitel: 9.31 Sprungliste** (Pille mit Artzeichen, ab sechs Einträgen, Zielzustand `.aktiv` statt `.ziel`, angesprungene Zeile über `:target`), **9.32 Kartenfilter** (Feld mit Lupe, filtert im Browser; heißt nicht `.filterfeld` wegen `.filterfelder`, und ist 44/36 hoch statt 48 wie `.suchfeld`) und **9.33 „Zum Anfang"** (nachgetragen — der Baustein steht seit Web 16.2.0 in der erzeugten Tabelle und hatte keinen Prosa-Eintrag). Kapitel 9.0 um **vier** Zeilen ergänzt: Die eine Zeile „Sprungmarken → Unterpunkte der Leiste, **nicht** von Hand" beschrieb allein die Seitenebene und verbot dem Wortlaut nach, was AP5 mit Mockup gebaut hat. Kapitel 7 und 9.10: die Ausnahme `.kennzahl-raster-3` — drei Spalten in **jeder** Breite. Kapitel 4: neues Kontrastpaar „Dunkelblau auf Orange hell" (21 → **22** gerechnete Paare); die Kombination steht seit O6 an `.kennzahl.aktiv` und `.listenfilter.aktiv` in der Anwendung und war nie gerechnet. **Kein neues Token, kein neues Symbol.** Zwei Berichtigungen beim Gegenlesen: Der Absatz „Kein Symbol am Knopf" stand in 9.18a und gehört zu 9.18; `--radius` (10 px) ist nicht „die kleinste Rundung der Skala" — das ist `--radius-klein` (6 px). |
 | **Web 16.1.0 (S9/AP4a)** | Kapitel 7 (Schwellen und Verhalten je Baustein): Der Nebentext der Leiste hat **drei** Zustände statt zweier — unter 1024 px jeder Name, im Band 1024–1199 px nur ein Kurzname (`.eintrag-neben.kurz`), ab 1200 px wieder jeder; im Band rückt das Akkordeon je Ebene 8 statt 12 px ein. Gemessen: Der Datumstext ist dort **76 bis 83 px** breit (Bricolage Grotesque setzt Ziffern **proportional** — `tabular-nums` nennt `.zahl,td,th,time,output`, nicht `.eintrag-text`), dem Nebentext bleiben **48 bis 55 px**, und „BW Hoch" braucht 55: **4 von 13** Datumsangaben tragen ihn ganz, 9 mit Auslassungszeichen; ohne die Einrückung keine einzige. **Keine neue Schwelle** — beide Regeln liegen in vorhandenen Medienblöcken —, **kein neues Token**: 8 px ist `--abstand-2`. Kapitel 9.7 unberührt: Die Wahlliste trägt den neuen Zusatz mit ihrem vorhandenen `zusatz`-Schlüssel. |
-| **Web 15.8.0 (S9/AP3)** | Neues Kapitel **9.30 Kartenzeichen** — der Farbring ist jetzt der Rand, alle acht Außenmaße als Tabelle, die 24-px-Untergrenze am antippbaren Ringpunkt und die Warnung, dass ein `<span>` ohne `display` kein Kasten ist (Backlog Nr. 72 und Nr. 153). Zwei **abgeleitete** Token (`--geo-ringpunkt`, `--geo-symbol`); `--geo-ring` bedeutet nun Randstärke statt Schattenschrittweite. Kapitel 8: Symbolvorrat **49 → 52** (Bergwacht, Veranstaltung, Sonstiges). Kapitel 9.29 berichtigt: `.legende-linie` misst **24 × 4 px**, nicht 22 × 4. |
-| **Web 15.7.0 (S9/AP2)** | Neues Kapitel **9.29 Kartendialog** — Suchfeld im Kopf (und warum nicht im Inhalt), Spur mit Ringpunkten und Legende, `fitBounds` nur bei leerem Feld. Kapitel 9.13 nachgezogen: Die drei Grenzen der Adressabfrage stehen jetzt in `assets/geocoder.js`, die Kleinzeile `.loc-datenschutz` steht **einmal je Seite**, und den Pin-Knopf rendern seither **beide** Formen von `ui_ortsfeld()` (Backlog Nr. 70). Kein neues Token. |
-| **Web 15.6.0/15.6.1 (S9/AP1)** | Neues Kapitel **9.28 Vorschlagsliste** — ein Baustein für vier abgelöste Fassungen, Übernahme auf `mousedown` (Backlog Nr. 102), Gruppenzeile nach Entscheidung des Aufrufers, `z-index: 35` zwischen Speichern-Leiste und Kopfleiste. Kapitel 9.13: Der Schlüssel `datalist` ist ersatzlos entfallen. |
+| **Web 15.9.0 (S9/AP3)** | Neues Kapitel **9.30 Kartenzeichen** — der Farbring ist jetzt der Rand, alle acht Außenmaße als Tabelle, die 24-px-Untergrenze am antippbaren Ringpunkt und die Warnung, dass ein `<span>` ohne `display` kein Kasten ist (Backlog Nr. 72 und Nr. 153). Zwei **abgeleitete** Token (`--geo-ringpunkt`, `--geo-symbol`); `--geo-ring` bedeutet nun Randstärke statt Schattenschrittweite. Kapitel 8: Symbolvorrat **49 → 52** (Bergwacht, Veranstaltung, Sonstiges). Kapitel 9.29 berichtigt: `.legende-linie` misst **24 × 4 px**, nicht 22 × 4. |
+| **Web 15.8.0 (S9/AP2)** | Neues Kapitel **9.29 Kartendialog** — Suchfeld im Kopf (und warum nicht im Inhalt), Spur mit Ringpunkten und Legende, `fitBounds` nur bei leerem Feld. Kapitel 9.13 nachgezogen: Die drei Grenzen der Adressabfrage stehen jetzt in `assets/geocoder.js`, die Kleinzeile `.loc-datenschutz` steht **einmal je Seite**, und den Pin-Knopf rendern seither **beide** Formen von `ui_ortsfeld()` (Backlog Nr. 70). Kein neues Token. |
+| **Web 15.7.0/15.7.1 (S9/AP1)** | Neues Kapitel **9.28 Vorschlagsliste** — ein Baustein für vier abgelöste Fassungen, Übernahme auf `mousedown` (Backlog Nr. 102), Gruppenzeile nach Entscheidung des Aufrufers, `z-index: 35` zwischen Speichern-Leiste und Kopfleiste. Kapitel 9.13: Der Schlüssel `datalist` ist ersatzlos entfallen. |
 | **Web 15.5.0 (S8/AP7)** | Kapitel 6: **zwei Höhen für Bedienelemente** — 44 px am Finger, 36 px am Zeiger ab 1024 px, an drei Medienmerkmalen zugleich (`hover`, `pointer`, `min-width`). Kapitel 9.4 nachgezogen. Kapitel 9.7: neue Regel `.feld-eingabe:disabled` (F-S8-P-03) und der Zusammenhang mit `.feldsatz-gesperrt`. Die erzeugten Tabellen zählen seither **ohne Kommentare**: Die Schwellentabelle hatte eine zusammengesetzte Abfrage verschluckt (20 → 21 Medienblöcke), die Bausteintabelle zählte Klassennamen aus Kommentaren als Unterklassen mit — elf Zeilen korrigiert, `ui_feld()` von „+24" auf **+18**. |
 | **Web 12.4.2 (S3/AP11)** | Kapitel 2.3: Logotabelle auf die tatsächlichen Dateinamen gebracht (sie führte noch die Namen von vor dem NEF-Platzhalter-Ersatz) und um die Rahmenmaße ergänzt. Neue Zusage: **Rahmen = Zeichnung** — das Bodenlogo war auf ein Quadrat gepolstert, ein Zehntel seiner Höhe war leer. Dazu zwei Warnungen für den nächsten, der eine SVG anfasst (`getBBox()` prüfen; XML verbietet `--` im Kommentar). |
 | **Web 12.4.1 (S3/AP10)** | Kapitel 9.7: neue Regel `.feldsatz-gesperrt` — ein `<fieldset>`, das nur gruppiert, für das `disabled`-Attribut. Die Elementregeln für `fieldset` sind mit O11 gefallen; ohne diese Rücknahme bringt der Browser Rahmen und Polsterung mit. |

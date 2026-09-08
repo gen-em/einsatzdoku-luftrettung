@@ -134,7 +134,7 @@
    * Finger trifft trotzdem. Der Anker bleibt die Mitte, also 12/12 — und
    * damit weiter genau auf dem Spuranfang.
    *
-   * Bis Web 15.7.0 war die Flaeche 16 px und lag damit ebenfalls unter der
+   * Bis Web 15.8.0 war die Flaeche 16 px und lag damit ebenfalls unter der
    * Grenze; der Fehler ist also aelter als dieses Paket und wird hier
    * mitbehoben. */
   var RINGPUNKT_PX = 14;

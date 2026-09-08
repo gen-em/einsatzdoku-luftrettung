@@ -199,7 +199,7 @@ einen eigenen Kachelserver und trägt ihn in `map_layers.js` ein.
 ### 6.2 Adresssuche und Rückwärtssuche
 
 **Photon**, Daten aus OpenStreetMap unter **ODbL**. Angesprochen von
-`server/assets/geocoder.js` — seit Web 15.7.0 die **einzige** Stelle, die
+`server/assets/geocoder.js` — seit Web 15.8.0 die **einzige** Stelle, die
 nach draußen fragt; `ortsfeld.js` (Suche nach einer Adresse), `ortswahl.js`
 (Koordinaten → Adresse) und das Suchfeld des Kartendialogs rufen nur noch
 dieses Modul.
@@ -212,7 +212,7 @@ Betrieb → Servereinstellungen, Karte „Adresssuche", trägt die BetreiberIn e
 andere Adresse ein; wer einen eigenen Photon betreibt, hält die Anfragen damit
 im eigenen Haus, ohne eine Zeile Code und ohne neue Auslieferung.
 
-**Zwei Schalter davor** (ebenfalls seit Web 15.7.0): einer für die
+**Zwei Schalter davor** (ebenfalls seit Web 15.8.0): einer für die
 Installation (`app_state`-Schlüssel `adresssuche`, Betrieb →
 Servereinstellungen), einer je Konto (`users.adresssuche`, Einstellungen →
 Profil, Karte „Datenschutz"). Beide stehen auf „an"; ist einer aus, unterbleibt
@@ -231,7 +231,7 @@ Vorher stand hier, die Suche laufe nur auf ausdrückliches Auslösen; für die
 Felder Standort und Zielklinik stimmt das nicht mehr. Sie suchen jetzt beim
 Tippen, weil ein Klick auf die Lupe für einen Weg, den man zwanzigmal am Tag
 geht, eine Handlung zu viel ist. Drei Grenzen fassen das ein — seit Web
-15.7.0 in `server/assets/geocoder.js`, vorher in `ortsfeld.js`:
+15.8.0 in `server/assets/geocoder.js`, vorher in `ortsfeld.js`:
 
 | Grenze | Wert | wozu |
 |---|---|---|
@@ -444,8 +444,8 @@ Laufzeit wird nichts nachgeladen, die Zusage aus Abschnitt 2 bleibt unberührt.
 | Fassung | Was |
 |---|---|
 | Web 16.0.0 (S9/AP4) | Abschnitt 5: `veranstaltung.svg` trägt jetzt Tabler Icons **„ticket“** statt „building-stadium“ — dieselbe Quelle, dieselbe Lizenz, eine andere Zeichnung. Grund ist die Lesbarkeit im Kartenschild: Gemessen am 07.09.2026 hält „ticket“ seine eine Binnenfläche von 96 px bis herunter auf 16 px unverändert, während „building-stadium“ bei 18 px zwei seiner vier Binnenflächen auf einen einzelnen Pixel verliert und bei 16 px zwei ganz schließt; der Deckungsgrad liegt bei 33 statt 26 Prozent. M-S9-02 hatte „ticket“ selbst empfohlen und „building-stadium“ bei 20 px „einen Klumpen“ genannt. **Die Zahl der Dateien bleibt 52.** |
-| Web 15.8.0 (S9/AP3) | Abschnitt 5: **drei neue Zeichen**, alle Tabler Icons (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `bergwacht.svg` („mountain“), `veranstaltung.svg` („building-stadium“), `sonstiges.svg` („dots-circle-horizontal“). Sie stehen für die Diensttag-Typen aus M-S9-02. **49 → 52 Dateien.** Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: Es ist derselbe Satz, aus dem die 49 kommen. |
-| Web 15.7.0 (S9/AP2) | Abschnitt 6.2 neu gefasst: Der Adressdienst ist **einstellbar** und **abschaltbar** geworden. Die Vorgabe `https://photon.komoot.io` steht nur noch in `server/geocoder_lib.php`; in den ausgelieferten Browserdateien kommt der Name nicht mehr vor. Zwei Schalter (Installation, Konto) können den Dienst ganz ausschalten — nachgemessen am Netzwerkprotokoll, nicht behauptet. |
+| Web 15.9.0 (S9/AP3) | Abschnitt 5: **drei neue Zeichen**, alle Tabler Icons (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `bergwacht.svg` („mountain“), `veranstaltung.svg` („building-stadium“), `sonstiges.svg` („dots-circle-horizontal“). Sie stehen für die Diensttag-Typen aus M-S9-02. **49 → 52 Dateien.** Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: Es ist derselbe Satz, aus dem die 49 kommen. |
+| Web 15.8.0 (S9/AP2) | Abschnitt 6.2 neu gefasst: Der Adressdienst ist **einstellbar** und **abschaltbar** geworden. Die Vorgabe `https://photon.komoot.io` steht nur noch in `server/geocoder_lib.php`; in den ausgelieferten Browserdateien kommt der Name nicht mehr vor. Zwei Schalter (Installation, Konto) können den Dienst ganz ausschalten — nachgemessen am Netzwerkprotokoll, nicht behauptet. |
 | Web 12.9.0 (S6) | Abschnitt 7a: die erzeugte Modelltabelle `server/geraetemodelle.php`. Sie liegt im ausgelieferten Verzeichnis und stammt aus Garmins Connect-IQ-Gerätedateien — übernommen sind Teilenummern und Produktnamen als Sachangaben, nicht die Dateien selbst. |
 | S4/D2 | `androidx.test:runner` 1.7.0 in Abschnitt 6a — der Läufer für die instrumentierten Prüffälle (Keystore, Wearable-Erreichbarkeit). Test-only, Apache-2.0, nicht im App-APK. |
 | Android 0.11.0 (S4-Rest) | Abschnitt 6a: **CameraX und ZXing ausgetragen** (R63, Backlog Nr. 84). Der Adress-QR entfällt, damit ihr einziger Verbraucher; die `CAMERA`-Berechtigung geht mit. Vier Fremdbestandteile werden zwei, das APK wird um 1,81 MB kleiner. |

@@ -2209,7 +2209,7 @@ function ui_abbruch(int $code, string $text, array $o = []): never
  *               wandert dann verschluesselt in den pat_blob)
  *   lat_name / lon_name, lat / lon                   Koordinatenfelder
  *   ortswahl    Pin-Knopf mit dem Blatt „Meine Position / Auf der Karte" —
- *               seit Web 15.7.0 in BEIDEN Fassungen (E-S9-06 c)
+ *               seit Web 15.8.0 in BEIDEN Fassungen (E-S9-06 c)
  *   klasse      zusaetzliche Klasse am Rahmen (z. B. 'loc-inline')
  *
  * KEINE `<datalist>` MEHR (S9/AP1, E-S9-07). Bis Web 15.5.2 nahm der
@@ -2313,7 +2313,7 @@ function ui_ortsfeld(array $o): void
      * bringt sie mit (S9/AP2). */
     ui_geocoder_bootstrap();
 
-    /* DER PIN-KNOPF STEHT IN BEIDEN FASSUNGEN (E-S9-06 c). Bis Web 15.6.1
+    /* DER PIN-KNOPF STEHT IN BEIDEN FASSUNGEN (E-S9-06 c). Bis Web 15.7.1
      * rendete ihn nur der `feld = true`-Zweig; die Nur-Lage-Fassung der
      * Stammdaten hatte deshalb keine Karte — und Backlog Nr. 70 („Karte fuer
      * Standorte") war genau das. Der Block steht jetzt einmal hier und wird

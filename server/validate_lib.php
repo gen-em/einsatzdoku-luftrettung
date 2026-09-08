@@ -645,7 +645,7 @@ const RM_NAME_MAX = 64;
 /**
  * Ein Rettungsmittel pruefen — die eine Stelle fuer alle Schreibwege.
  *
- * WARUM DIESE FUNKTION IN DIESER DATEI STEHT. Bis Web 15.8.0 prueften die
+ * WARUM DIESE FUNKTION IN DIESER DATEI STEHT. Bis Web 15.9.0 prueften die
  * Rettungsmittel drei Wege getrennt und ungleich:
  *
  *   einstellungen.php    veh_save        Konto        drei Regeln, mit Meldung
