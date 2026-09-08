@@ -3180,5 +3180,38 @@ declare(strict_types=1);
  *     gebraucht wird. Jetzt meldet die Seite „standorte" als aktiv.
  * Die Lehre steht hier, weil sie wiederkommt: Wer einen Reiter umbenennt,
  * greppt nach seinem Namen — er steht nicht nur in der Weissliste.
+ *
+ * 16.2.2 GIBT DER STANDORTSEITE IHRE GLIEDERUNG UND DREI WEGE ZURUECK
+ * (S9/AP5-2). Sechs Karten mit Kennung, drei Kennzahlen als
+ * Inhaltsverzeichnis und „Zum Anfang" am Ende jeder Karte standen mit 16.2.0
+ * schon da; was fehlte, waren die Wege dazwischen. Drei davon fuehrten ins
+ * Leere, und keiner hat sich beschwert:
+ *
+ *   - `ui_nach_oben()` sprang auf `#seitenanfang`. Diese Kennung gibt es in
+ *     der ganzen Anwendung nicht; ein Verweis auf ein fehlendes Ziel erzeugt
+ *     weder Fehler noch Meldung, er tut nur nichts. Ziel ist jetzt `#inhalt`
+ *     — die Kennung, die das Geruest ohnehin an das `<main>` haengt.
+ *   - Nach jedem Speichern und jedem Loeschen ging die Umleitung auf
+ *     `t=rettungsmittel`. Diesen Reiter gibt es seit 16.2.0 nicht mehr; die
+ *     Weiche am Seitenkopf warf damit JEDE Aenderung an einem
+ *     Rettungsmittel, einer Rolle, einer Zielklinik oder einer Bereitschaft
+ *     auf die Standortliste — mit einem Anker, der dort nichts findet. Wer
+ *     zehn Zielkliniken eintraegt, klickte zehnmal zurueck. Das Ziel ist
+ *     jetzt die Seite des Standorts, an dem die Sache haengt, und es steht
+ *     als ganze Adresse (`sd_seite()`) statt als Reitername.
+ *   - Dieselbe tote Adresse stand als Vorgabewert in `sd_zeile()` und
+ *     `sd_form()` und in acht Aufrufen, die sie nicht ueberschrieben.
+ *
+ * UND „OHNE STANDORT" STEHT JETZT AUF DER LISTE. Bergwacht, Veranstaltung
+ * und Sonstiges brauchen keinen Standort (16.0.0); ihre Karte hing bis
+ * hierher unter der letzten Standortkarte und erschien damit auf JEDER
+ * Standortseite — sichtbar als siebter Unterpunkt in der Leiste, wo die
+ * Seite sechs Karten hat. Sie gehoert dorthin, wo die Standorte stehen und
+ * keiner von ihnen gemeint ist. Bearbeitet wird ein solcher Eintrag
+ * weiterhin im Formular des ersten Standorts; das loest erst der Dialog aus
+ * AP5-4 auf.
+ *
+ * KORREKTURSTUFE UND KEINE NEBENNUMMER: Es kommt keine Funktion hinzu. Es
+ * geht nur das, was 16.2.0 halb fertig hinterlassen hat.
  */
-const WEB_VERSION = '16.2.1';
+const WEB_VERSION = '16.2.2';

@@ -14,6 +14,60 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 16.2.2] — 2026-09-08
+
+### Web — die Standortseite bekommt ihre Wege (S9/AP5, Teil 2)
+
+**Drei Wege führten ins Leere, und keiner hat sich beschwert.** Das ist der
+Kern dieses Stands: Teil 1 hat die Seite gebaut, aber an drei Stellen zeigte
+sie auf Adressen, die es nicht mehr gibt — und ein Verweis auf ein fehlendes
+Ziel erzeugt weder Fehler noch Meldung, er tut nur nichts.
+
+Der Knopf **„Zum Anfang"** sprang auf `#seitenanfang`, eine Kennung, die in
+der ganzen Anwendung nirgends steht. Ziel ist jetzt `#inhalt` — die Kennung,
+die das Gerüst ohnehin an den Inhaltsbereich hängt. Eine zweite anzulegen
+hieße, dieselbe Stelle zweimal zu benennen.
+
+Schwerer wog die **Umleitung nach dem Speichern**. Sie ging auf
+`t=rettungsmittel`, und den Reiter gibt es seit 16.2.0 nicht mehr; die Weiche
+am Seitenkopf warf damit jede Änderung an einem Rettungsmittel, einer Rolle,
+einer Zielklinik oder einer Bereitschaft auf die Standortliste — mit einem
+Anker, der dort nichts findet. Wer zehn Zielkliniken einträgt, klickte
+zehnmal zurück. Das Ziel ist jetzt die Seite des Standorts, an dem die Sache
+hängt, und es steht als ganze Adresse statt als Reitername. Dieselbe tote
+Adresse stand als Vorgabewert in den beiden Stammdaten-Bausteinen und in acht
+Aufrufen, die sie nicht überschrieben.
+
+**„Ohne Standort" steht jetzt auf der Liste.** Bergwacht, Veranstaltung und
+Sonstiges brauchen keinen Standort (Web 16.0.0); ihre Karte hing bis hierher
+unter der letzten Standortkarte und erschien damit auf **jeder** Standortseite
+— sichtbar als siebter Unterpunkt in der Leiste, wo die Seite sechs Karten
+hat. Sie gehört dorthin, wo die Standorte stehen und keiner von ihnen gemeint
+ist. Bearbeitet wird ein solcher Eintrag weiterhin im Formular des ersten
+Standorts; das löst erst der Dialog aus Teil 4 auf.
+
+**Was noch nicht dran ist:** Sprungliste, Filterfelder, die drei Dialoge und
+die Verwaltungsseite. Die Verwaltung wird bewusst erst zusammen mit den
+Dialogen umgestellt — sie benutzt dieselben Bausteine, und wer sie jetzt
+umbaut, baut sie zweimal. Keine Migration, keine Spalte; `update.php` muss
+**nicht** laufen.
+
+## [Web 16.2.1] — 2026-09-08
+
+### Web — zwei Stellen, die der Reiterumbau übersehen hat
+
+Beide gefunden beim Gegenlesen des Codes, nicht im Browser — weil beide **ohne
+Fehlermeldung** ausfallen. Das Leaflet-Stylesheet hing an einer Reiterliste,
+in der noch „rettungsmittel" stand und „standort" fehlte: Der Pin am Ortsfeld
+der neuen Standortseite hätte eine unformatierte Karte gezeigt. Und das Gerüst
+bekam den Reiternamen als Menüschlüssel gereicht — „standort" ist keiner, die
+Leiste hätte **keinen** aktiven Eintrag gehabt, und die Unterpunkte einer
+Seite hängen genau daran.
+
+Die Lehre steht in `server/version.php`, weil sie wiederkommt: Wer einen
+Reiter umbenennt, sucht nach seinem Namen im ganzen Bestand — er steht nicht
+nur in der Weißliste, die ihn erlaubt.
+
 ## [Web 16.2.0] — 2026-09-08
 
 ### Web — aus zwei Reitern werden eine Liste und viele Seiten (S9/AP5, Teil 1)

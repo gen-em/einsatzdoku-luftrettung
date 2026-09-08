@@ -156,10 +156,10 @@
       "pfad": "einstellungen.php?t=standorte"
     },
     {
-      "name": "32-einstellungen-rettungsmittel",
+      "name": "32-standortseite",
       "gruppe": "Einstellungen",
       "rolle": "demo",
-      "pfad": "einstellungen.php?t=rettungsmittel"
+      "pfad": "__STANDORT__"
     },
     {
       "name": "33-einstellungen-geraete",

@@ -61,9 +61,15 @@ Daten erst nach Server-Bestätigung.
 │   │                        mf_show_if() + mf_gates_erfuellt() = Sichtbarkeit)
 │   ├── tageszuordnung_lib.php  Einsatz verschieben · Datum eines Tages ändern
 │   ├── einsatz_verschieben.php  die zugehörige Seite
-│   ├── einstellungen.php  Profil/Standorte/Rettungsmittel/Backup/Geräte
-│   │                       (Reiter `?t=`; `t=stammdaten` ist die Weiche auf
-│   │                        den alten, geteilten Punkt „Standortdaten")
+│   ├── einstellungen.php  Profil/Standorte/Backup/Geräte (Reiter `?t=`)
+│   │                       Seit Web 16.2.0 führt `t=standorte` auf die LISTE
+│   │                       der Standorte und `t=standort&s=<id>` auf die
+│   │                       Seite EINES Standorts mit allem, was daran hängt;
+│   │                       die Karte „Ohne Standort" steht seit Web 16.2.2
+│   │                       auf der Liste. Zwei Weichen: `t=stammdaten` (der
+│   │                       alte, geteilte Punkt „Standortdaten") und
+│   │                       `t=rettungsmittel` (der bis Web 16.1.1 eigene
+│   │                       Reiter) führen beide auf die Liste
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
 │   ├── admin_users.php + admin_user.php  NutzerInnen (Liste · Kontoseite)

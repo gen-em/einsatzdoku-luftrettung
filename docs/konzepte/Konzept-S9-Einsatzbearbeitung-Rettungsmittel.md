@@ -16,8 +16,9 @@ Mockups in `konzept-s9/mockups/`.
 > |---|---|
 > | Stand | 07.09.2026 — **Konzept freigegeben.** E-S9-01 bis -17 am 06.09.2026 bestätigt, E-S9-18 und -19 am 07.09.2026; alle sieben Mockups freigegeben (Abschnitt 6). PS-12 (Standortseiten, Backlog 152) am 07.09.2026 aufgenommen. Rahmenplan Fassung 34 trägt die Einschübe aus Abschnitt 7 |
 > | Entschieden | E-S9-01 bis E-S9-19 (Abschnitt 2) |
-> | Offen | nichts. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
-> | Umsetzung | **AP1 bis AP4a erledigt** (07./08.09.2026, Web 15.6.0 / 15.6.1 / 15.7.0 / 15.8.0 / 16.0.0 / 16.1.0 / **16.1.1**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. **AP5 wartet auf das Wort des Auftraggebers.** Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
+> | Offen | **eine Frage aus AP5 Teil 2** (Prüfdokument, Abschnitt 4, Frage 7): Konzept und Backlog Nr. 152 nennen **vier** Karten auf der Standortseite, am Standort hängen aber **sechs** Stammdatenlisten; gebaut sind sechs (fünf ohne luftgebundenes Rettungsmittel), und die Abnahmezahl „Unterpunkte der Leiste = vier“ wäre damit falsch. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
+> | Umsetzung | **AP1 bis AP4a erledigt**, **AP5 in Arbeit** (07./08.09.2026, Web 15.6.0 / 15.6.1 / 15.7.0 / 15.8.0 / 16.0.0 / 16.1.0 / 16.1.1 / 16.2.0 / 16.2.1 / **16.2.2**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
+> | AP5 in sechs Teilen | **1** Menü und Standortliste (erledigt, 16.2.0/16.2.1) · **2** die Standortseite (erledigt, 16.2.2) · **3** die neuen Bausteine — Sprungziel, Filterfeld, `Design.md` 9, Streichliste · **4** die drei Dialoge **und die Verwaltungsseite** · **5** Standort löschen, Variante b · **6** Buchführung und Prüflauf. **Die Verwaltung (`admin_stammdaten.php`) ist bewusst in Teil 4 gerückt** und nicht in Teil 2: Sie benutzt `sd_form()` an acht Stellen, und Teil 4 ersetzt genau das durch Dialoge — wer sie jetzt umbaut, baut sie zweimal |
 > | Fable-Schritte der Umsetzung | **vier**: die Mockups **M-S9-08 bis M-S9-10** zu den Fragen 3 bis 6 des Prüfdokuments (07.09.2026, **alle drei am 08.09.2026 freigegeben**) und **M-S9-11** zum Datum in der schmalen Leiste (08.09.2026, **Weg 2 freigegeben**) — dieses auf ausdrückliches Einverständnis des Auftraggebers **von Opus** gebaut statt von Fable (Abschnitt 6). Der Fable-Vorbehalt der Vorbereitung (PS-8.2) war im Konzept aufgelöst (Abschnitt 1.8) |
 
 > **Stand der Umsetzung**
@@ -29,7 +30,8 @@ Mockups in `konzept-s9/mockups/`.
 > | **AP3** Karte und Zeichen | **erledigt** 07.09.2026 | Web **15.8.0** | Schildmaße nachgemessen im Browser: **ohne 32 · Start 32 · Ende 32 · beide 38 · Einsatzort 28 · Ringpunkt 14 · Ring beide 20 px** (vorher 36/48/48/60/32/16/28), Symbol im Schild **18**, im Kreis **16** px, Antippfläche des Ringpunkts **24 px** (WCAG 2.5.8); Pfeile **12 von 12** in 30-Grad-Schritten auf 0,1 Grad genau, dazu **2 von 2** auf der Spur des Referenzeinsatzes (vorher: Bildschirmmatrix a=0,833 b=0 c=0 d=0,833 bei behaupteten 90 Grad, also kein Drehanteil); `.geo-punkt` **12 × 12 px** mit sichtbarer Spurfarbe (vorher 4 × 18, Farbe unsichtbar — Backlog Nr. 153, neu); Windenkacheln **2 / 2 mit „0" / 0** in den drei Fällen, alle über die Oberfläche hergestellt und zurückgestellt; Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen, mit neuer Regel `spur`; `grep -c "Spur" docs/Handbuch.md` **41 → 0**; **72 sichtbare Zeichenketten in 18 Dateien** umbenannt; Symbolvorrat **49 → 52**, Artzeichen **6 von 6** mit Anker und Herkunft; Klickprobe **6 von 6** Wegen; Vollständigkeit **304 = 304** (Hinweis „Symboldatei ohne Verweis" 25 → 28, zählt nicht mit); Kontraste **21 Paare, 0 verfehlt**; Linkprobe **134 Verweise, 0 Abweichungen**; Bilderlauf **zehn berührte Seiten, 80 Einzelbilder je Lauf, 0/0/0 in beiden Bedienhöhen** |
 > | **AP4** Rettungsmittel: Typ, Kurzname, Standort optional | **erledigt** 07.09.2026 | Web **16.0.0**, Migration `2026_09_07_rettungsmittel_typ`, Nutzlast 9 → 10 | Register **45 = 45**, frische Installation und migrierte Datenbank strukturgleich (Vergleich `SHOW CREATE TABLE`); Nachfüllung **16 von 16** Diensttagen mit `vehicle_typ`; Prüfschicht **8 von 8** Fällen wie festgelegt (Rollen bei Bergwacht verworfen, Betriebsart bei Veranstaltung erzwungen, Kurzname bei 20 Zeichen auf 16 gekappt, Standard ohne Standort abgelehnt, unbekannter Typ abgelehnt); Kreisläufe **edbak 287 771 · csv 9 118 · edbak-alt 287 781 Einzelvergleiche, je 0 unerklärt** (16 / 1 021 / 653 erwartet, 0 ungenutzte Regeln); Aufwärtskompatibilität belegt: eine Nutzlast-9-Datei spielt **4 von 6** Rettungsmitteln als `standard` ein und überspringt die zwei, die es dort nicht geben konnte; Referenzbestand **3 → 6 Rettungsmittel** (je einer der vier Typen, zwei ohne Standort, zwei mit Kurznamen), über das Formular angelegt; Demo-Zurücksetzen **42 Stammdaten, 0 übersprungen**; Demo-Fixture neu, **55 861 Spurpunkte** unverändert; Klickprobe **6 von 6** Wegen, 0 Rückstände; Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen, über fünf Bereiche (178 Dateien); Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise, 0 unbekannte Abweichungen**; Bilderlauf **11 berührte Seiten, 88 Einzelbilder je Lauf, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** in beiden Bedienhöhen |
 > | **AP4a** Nachträge aus den Freigaben | **erledigt** 08.09.2026 | Web **16.1.0**, Korrekturstufe **16.1.1**, keine Migration | Klickprobe **10 von 10** Wegen (zwei Wege × fünf Breiten 390/1024/1100/1199/1280 px), je als Zeiger- und als Fingergerät, **0 Rückstände** im Bestand; Leiste an der laufenden Anwendung über neun Breiten gemessen — unter 1024 px **15 von 15** Nebentexten sichtbar (12 px Einrückung), im Band 1024–1199 px **1 von 15** (nur der Kurzname, 8 px), ab 1200 px wieder 15 von 15 (12 px); dem Kurznamen stehen im Band **64 bis 79 px** zur Verfügung — „BW Hoch" (55 px) und „NEF 76/1" (53) stehen an **jedem** Datum ganz, gemessen **13 Kurznamen, 0 Ellipsen**; mit der ersten Fassung (Einrückung 8 px) waren es 48 bis 63 px und 10 Ellipsen, ohne jede Regel keine sichtbare Zeile; Einstellungsmenü in jeder Breite **0 px** eingerückt; Vergleichsdialog Zeile „Typ" = „Standard oder Bergwacht" mit Kleinzeile, 4 Wahlzeilen davon **1** mit Typ und **1** mit Kurznamen, **0 Überlauf** bei 1280/700/390 px; Stilvergleich Kaskade 712 → 715 Regeln — **0 entfallen, 3 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **47 710 Elementmessungen, 40 Abweichungen**, sämtlich bei 1024 und 1100 px und sämtlich auf die zwei neuen Regeln zurückführbar (Pseudoprobe 19 253 Messungen, 30 Abweichungen desselben Musters); Bilderlauf **16 berührte Seiten, 128 Einzelbilder + 16 Kontaktbögen je Lauf, 0/0/0** in beiden Bedienhöhen (Gegenprobe 144 Dateien, 140 verschiedene Prüfsummen — die vier Doppelten sind Seite 10 gegen Seite 11 ab 1024 px, wo es die Schublade nicht gibt); Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen; Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise, 0 unbekannte Abweichungen**; `Design.md` neu erzeugt — **21 Medienblöcke über 5 Breiten unverändert**, also keine neue Schwelle |
-> | AP5 bis AP8 | offen | — | — |
+> | **AP5** Standortseiten — **Teil 1** (Menü und Liste) und **Teil 2** (die Seite) | **in Arbeit**, Teile 1 und 2 erledigt 08.09.2026 | Web **16.2.0**, Korrekturstufe **16.2.1**, **16.2.2**, keine Migration | Standortseite **6 Karten mit `id` / 6 Unterpunkte** in der Leiste (`standort`, `rettungsmittel`, `besatzung`, `zielkliniken`, `weitere`, `bergwacht`), Liste **3 / 3** (`standorte`, `zentrale`, `sd-ohne`) — vorher stand `sd-ohne` auf jeder Standortseite und machte daraus sieben (F-S9-U-19); „Zum Anfang" **6 von 6** mit einem Ziel, das auf der Seite steht (vorher 0 von 6, `#seitenanfang` gibt es nicht — F-S9-U-17); Umleitung nach dem Speichern **4 von 4** Rundläufen auf der Standortseite statt auf der Liste (Zielklinik anlegen → `t=standort&s=29#sd-29-td`, Besatzung → `#sd-29-crew`, Löschen beider ebenso), Bestand danach sauber (F-S9-U-18); Klickprobe **6 von 6** Wegen aus AP4 gegen den umgebauten Bestand, **0 Rückstände** (21 Rettungsmittel, 61 Tage, 346 Einsätze wie vorher) — die Wege lesen jetzt **alle** Standortseiten und die Liste, weil „6 insgesamt" sonst 5 wäre; dieselbe Wartefalle wie F-S9-U-15 an ihrer **dritten** Stelle behoben; Linkprobe **128 Verweise, 0 unbekannte Abweichungen** — die zwölf ausgeschriebenen Adressen sind zu `sd_seite()` geworden, und die Adresse steht darin **als ganze Zeichenkette**, sonst fiele sie aus der Messung (140 → 126 → 128); Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen; Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; `Design.md` neu erzeugt — Bausteinvorrat **36 → 37** (`ui_nach_oben()` fehlte), `.zeile` 12 → **15** Unterklassen, acht Token- und Symbolzahlen berichtigt (F-S9-U-20) |
+> | AP5 Teil 3 bis 6, AP6 bis AP8 | offen | — | — |
 >
 > **Fragen aus AP1** (Prüfdokument, Abschnitt 4): **alle drei entschieden.**
 > Am 07.09.2026 — die Besatzungsfelder des Diensttags gehören zu **AP1** (so
@@ -1222,6 +1224,45 @@ adversarischen Gegenprobe, nicht beim Schreiben; alle behoben:
   (`bergwacht.svg` 28 statt 29, `veranstaltung.svg` 8 statt 9). Die Tabelle
   war vor den letzten Codeänderungen von AP4 erzeugt und danach nicht mehr.
   Nachgezählt: Keine der in AP4a geänderten Dateien bewegt die Zahlen.
+- F-S9-U-20 — **Die Buchführung von AP5-1 war an drei Stellen stehen
+  geblieben.** Web **16.2.1** hatte keinen Changelog-Eintrag (nur die
+  Erzählung in `version.php`); `docs/Handbuch.md` 9 beschrieb weiter die
+  **zwei** Menüpunkte „Standorte" und „Rettungsmittel" samt der Tabelle
+  dazu; und drei der vier erzeugten Tabellen in `docs/Design.md` waren vor
+  den Codeänderungen von AP5-1 erzeugt worden — `ui_nach_oben()` fehlte im
+  Bausteinvorrat (36 statt 37 Funktionen), `.zeile` stand mit 12 statt 15
+  Unterklassen, und acht Token- und Symbolzahlen waren um eins bis sieben zu
+  niedrig. Alles nachgezogen; die Tabellen mit `tools/design/tabellen.py`
+  neu erzeugt. *Die Lehre ist dieselbe wie in O9c: Ein Werkzeug, das vor der
+  letzten Änderung lief, misst einen Stand, den es nicht mehr gibt.*
+- F-S9-U-19 — **„Ohne Standort" erschien auf jeder Standortseite.** Die
+  Karte stand hinter der Schleife über die Standorte — auf der Liste war das
+  richtig, auf der Seite EINES Standorts nicht: Sie zeigt Rettungsmittel,
+  die zu keinem Standort gehören, und hing damit unter jedem einzelnen. In
+  der Leiste war es sichtbar, nur nicht als Fehler: **sieben** Unterpunkte
+  bei sechs Karten. Behoben: Die Karte steht auf der Liste, dort, wo die
+  Standorte stehen und keiner von ihnen gemeint ist. Gemessen nachher —
+  Liste **3 Karten / 3 Unterpunkte** (`standorte`, `zentrale`, `sd-ohne`),
+  Standortseite **6 Karten / 6 Unterpunkte**.
+- F-S9-U-18 — **Nach jedem Speichern landete man auf der Liste.** Die
+  Umleitung setzte `t=rettungsmittel` zusammen — den Reiter, den AP5-1
+  abgeschafft hatte. Die Weiche am Seitenkopf machte daraus die
+  Standortliste, mit einem Anker (`#sd-29-td`), den es dort nicht gibt. Wer
+  zehn Zielkliniken einträgt, klickte zehnmal zurück. **Ohne Fehlermeldung**,
+  weil die Weiche genau dafür gebaut ist. Dieselbe tote Adresse stand als
+  Vorgabewert in `sd_zeile()` und `sd_form()` und in acht Aufrufen, die sie
+  nicht überschrieben — und in zwei „Abbrechen"-Knöpfen. Behoben: Das Ziel
+  ist die Seite des Standorts, an dem die Sache hängt, gebaut mit
+  `sd_seite()`. Gemessen: Anlegen einer Zielklinik → `t=standort&s=29#sd-29-td`,
+  einer Besatzung → `…#sd-29-crew`, Löschen beider ebenso; **4 von 4**
+  Rundläufen auf der Standortseite, Bestand danach wieder sauber.
+- F-S9-U-17 — **„Zum Anfang" sprang nach nirgendwo.** `ui_nach_oben()` hatte
+  `#seitenanfang` als Ziel — eine Kennung, die es in der ganzen Anwendung
+  nicht gibt. Ein Verweis auf ein fehlendes Ziel erzeugt weder Fehler noch
+  Meldung, er tut nur nichts; im Bild ist das nicht zu sehen, und der
+  Bilderlauf klickt nicht. Ziel ist jetzt `#inhalt`, die Kennung, die
+  `ui_leiste_ende()` ohnehin an das `<main>` hängt. Gemessen: **6 von 6**
+  Knöpfen der Standortseite zeigen auf ein Ziel, das auf der Seite steht.
 - F-S9-U-08 — **Zwei Exportspalten standen an der falschen Stelle**, mitten
   in `diensttage.csv`. `export.js` sagt es selbst: Wer Auswertungen auf diese
   Datei gebaut hat, zählt Spalten von links. Ans Ende verschoben. Und die

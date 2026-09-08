@@ -17,22 +17,31 @@
  * wieder ab — dasselbe Muster wie bei den Windenkacheln in AP3.
  */
 
-const STAMM = k => `${k.basis}/einstellungen.php?t=rettungsmittel`;
+/* ZWEI ADRESSEN STATT EINER (S9/AP5). Bis Web 16.1.1 stand alles auf dem
+ * Reiter `t=rettungsmittel`; den gibt es nicht mehr. Was an einem Standort
+ * haengt, steht auf SEINER Seite, und was an keinem haengt, auf der LISTE
+ * (Karte „Ohne Standort", seit Web 16.2.2). Die Wege legen beides an —
+ * deshalb liest `liste()` beide Seiten und `loeschen()` sucht auf beiden.
+ * Eine Probe, die nur die eine kennt, meldet „0 angelegt" fuer einen
+ * Datensatz, der sehr wohl entstanden ist, und laesst ihn stehen. */
+const LISTE = k => `${k.basis}/einstellungen.php?t=standorte`;
+const SEITE = (k, bid) => `${k.basis}/einstellungen.php?t=standort&s=${bid}`;
 
-/** Verborgene Kennung des Standortblocks, in dem das Anlegen-Formular steht. */
+/** Kennung des ersten Standorts — gelesen aus der Liste, nicht geraten. */
 async function ersterStandort(k) {
-  await k.gehZu(STAMM(k));
+  await k.gehZu(LISTE(k));
   const bid = await k.seite.evaluate(() => {
-    const f = document.querySelector('form.ac-form input[name="base_id"]');
-    return f ? Number(f.value) : null;
+    const a = document.querySelector('a.zeile[href*="t=standort&s="]');
+    if (!a) { return null; }
+    return Number(new URL(a.href, location.href).searchParams.get('s'));
   });
-  if (!bid) { throw new Error('Kein Standortblock mit Rettungsmittel-Formular gefunden'); }
+  if (!bid) { throw new Error('Kein Standort in der Liste'); }
   return bid;
 }
 
 /** Ein Rettungsmittel über das Formular anlegen. Gibt seine Kennung zurück. */
 async function anlegen(k, bid, { name, kurz, typ, kind, ohneStandort }) {
-  await k.gehZu(STAMM(k));
+  await k.gehZu(SEITE(k, bid));
   /* Der Standortblock ist zugeklappt (`<details>`); ohne Öffnen sind die
      Felder zwar im Markup, aber nicht bedienbar — und die Probe soll den
      Weg gehen, den eine Person geht. */
@@ -97,11 +106,32 @@ const ZEILEN_LESEN = () => {
   return raus;
 };
 
-/** Alle Rettungsmittel der Stammdatenseite mit ihren sichtbaren Angaben. */
+/**
+ * ALLE Rettungsmittel mit ihren sichtbaren Angaben — ueber ALLE Seiten.
+ *
+ * Bis Web 16.1.1 stand der ganze Bestand auf einer Seite, und „6 insgesamt"
+ * war eine Abfrage. Jetzt traegt jede Standortseite die Rettungsmittel IHRES
+ * Standorts und die Liste die Karte „Ohne Standort" — wer nur die erste
+ * Seite liest, zaehlt 5 statt 6 und haelt den Referenzbestand fuer
+ * verkleinert. Gelesen wird deshalb jede Standortseite der Liste und die
+ * Liste selbst; die Karte, in der eine Zeile steht, kommt mit (`karte`), und
+ * genau daran unterscheiden die Wege „am Standort" von „ohne Standort".
+ */
 async function liste(k) {
-  await k.gehZu(STAMM(k));
-  await k.seite.evaluate(() => document.querySelectorAll('details').forEach(e => { e.open = true; }));
-  return k.seite.evaluate(ZEILEN_LESEN);
+  const auf = () => k.seite.evaluate(
+    () => document.querySelectorAll('details').forEach(e => { e.open = true; }));
+  await k.gehZu(LISTE(k));
+  const bids = await k.seite.evaluate(() => Array.from(
+    document.querySelectorAll('a.zeile[href*="t=standort&s="]'))
+      .map(a => Number(new URL(a.href, location.href).searchParams.get('s'))));
+  await auf();
+  let raus = await k.seite.evaluate(ZEILEN_LESEN);   // Karte „Ohne Standort"
+  for (const b of bids) {
+    await k.gehZu(SEITE(k, b));
+    await auf();
+    raus = raus.concat(await k.seite.evaluate(ZEILEN_LESEN));
+  }
+  return raus;
 }
 
 /**
@@ -111,19 +141,30 @@ async function liste(k) {
  * der Rückfrage geht. Gibt zurück, ob etwas zu löschen war; ein Weg, der sein
  * Aufräumen nicht belegen kann, hat nicht aufgeräumt.
  */
-async function loeschen(k, name) {
-  await k.gehZu(STAMM(k));
-  await k.seite.evaluate(() => document.querySelectorAll('details').forEach(e => { e.open = true; }));
-  const traf = await k.seite.evaluate(([lesen, n]) => {
-    // eslint-disable-next-line no-new-func
-    const zeilen = new Function('return (' + lesen + ')()')();
-    const z = zeilen.find(x => x.text.includes(n));
-    if (!z) { return false; }
-    document.getElementById(z.formular).submit();
-    return true;
-  }, [ZEILEN_LESEN.toString(), name]);
-  if (traf) { await k.seite.waitForTimeout(400); }
-  return traf;
+async function loeschen(k, name, bid) {
+  const versuch = async (adresse) => {
+    await k.gehZu(adresse);
+    await k.seite.evaluate(
+      () => document.querySelectorAll('details').forEach(e => { e.open = true; }));
+    const traf = await k.seite.evaluate(([lesen, n]) => {
+      // eslint-disable-next-line no-new-func
+      const zeilen = new Function('return (' + lesen + ')()')();
+      const z = zeilen.find(x => x.text.includes(n));
+      if (!z) { return false; }
+      document.getElementById(z.formular).submit();
+      return true;
+    }, [ZEILEN_LESEN.toString(), name]);
+    if (traf) { await k.seite.waitForTimeout(400); }
+    return traf;
+  };
+  /* BEIDE SEITEN, IN DIESER REIHENFOLGE. Ein Rettungsmittel ohne Standort
+     steht auf der Liste, eines mit Standort auf dessen Seite — und welcher
+     Fall vorliegt, weiss der aufraeumende `finally`-Block nicht. Wer nur
+     eine Seite absucht, laesst die Haelfte im Bestand stehen und meldet
+     dabei „aufgeraeumt". */
+  const b = bid || await ersterStandort(k);
+  if (await versuch(SEITE(k, b))) { return true; }
+  return versuch(LISTE(k));
 }
 
 export const wege = [
@@ -282,11 +323,22 @@ export const wege = [
       if (!tag) { throw new Error('Kein Diensttag im Bestand'); }
       const seiteAuf = async () => {
         await k.gehZu(`${k.basis}/index.php?d=${tag}`);
-        /* Das Zuordnungsformular ist zunächst `hidden` und wird von
-           `api/day.php` gefüllt — vorher steht in `#vehsel` nichts. */
+        /* GEWARTET WIRD AUF `currentDayId`, NICHT AUF DIE OPTIONEN — die
+           dritte Stelle desselben Fehlers (F-S9-U-15, die ersten beiden in
+           `ap4a.mjs` und `probe.mjs`, behoben am 08.09.2026; diese hier ist
+           am 08.09.2026 in AP5-2 nachgezogen worden).
+           Die Optionen von `#vehsel` rendert `index.php` SERVERSEITIG aus
+           `$SD_VEHICLES` — `options.length > 1` ist schon beim Parsen wahr
+           und wartet auf gar nichts. Den WERT setzt erst `loadDay()` nach
+           seiner Antwort. Wer auf die Optionen wartet, liest unter Last ein
+           leeres `#vehsel`, haelt das fuer „kein Rettungsmittel" und stellt
+           am Ende genau das wieder her: Der Diensttag verliert seine
+           Zuordnung, und niemand sieht es. Genau dieser Weg hat ein
+           `finally`, das `vorher.veh` zurueckschreibt. */
         await k.seite.waitForFunction(
-          () => { const s = document.getElementById('vehsel');
-                  return s && s.options.length > 1; }, null, { timeout: 20000 });
+          (id) => typeof currentDayId !== 'undefined' && currentDayId !== null
+                  && Number(currentDayId) === Number(id),
+          tag, { timeout: 20000 });
         /* UND ES IST ZUGEKLAPPT (E-P3-31): Die Karte zeigt den Lesezustand,
            „Bearbeiten" klappt das Formular auf. Ohne diesen Klick sind die
            Felder im Markup, aber nicht bedienbar — Playwright wartet dann

@@ -1417,6 +1417,44 @@ function ui_karte_ende(bool $klappbar = false): void
 
 
 /* ---------------------------------------------------------------------------
+ * ZUM ANFANG  (.nach-oben)                                    S9/AP5, M-S9-06
+ *
+ * Der Rueckweg am Ende eines langen Abschnitts. Eine Standortseite mit zehn
+ * Rettungsmitteln und drei Dutzend Zielkliniken ist mehrere Bildschirme lang;
+ * wer unten ankommt, will nicht dorthin zurueckwischen, wo das
+ * Inhaltsverzeichnis steht.
+ *
+ * EIGENE FUNKTION UND KEINE OPTION AN `ui_karte_ende()`: Die hat als einziger
+ * Baustein kein `array $o`, dafuer 115 Aufrufstellen — eine Signaturaenderung
+ * kostete 115 Zeilen fuer eine Zeile Gewinn. Und so steht sie in der
+ * erzeugten Bausteintabelle.
+ *
+ * `.knopf knopf-leise` GIBT ES SCHON, und die Klasse ist hier kein Zierrat:
+ * Der Bilderlauf misst Bedienhoehen an `.knopf`. Ein eigener Klassenname
+ * waere aus seiner Messung gefallen — genau so ist der Export-Knopf vier
+ * Monate ungestaltet geblieben (F-P3-BA).
+ *
+ * KEIN `scroll-margin-top`: `html` traegt bereits `scroll-padding-top`; die
+ * zweite Angabe war schon einmal gebaut und wieder ausgebaut, weil sie sich
+ * addierte (gemessen 140 statt 72 px).
+ *
+ * DAS ZIEL IST `#inhalt` — die Kennung, die `ui_leiste_ende()` ohnehin an das
+ * `<main>` haengt. Zuerst stand hier `#seitenanfang`, eine Kennung, die es in
+ * dieser Anwendung nirgends gibt: Der Knopf sprang nach nirgendwo, und weil
+ * ein Verweis auf ein fehlendes Ziel weder Fehler noch Meldung erzeugt, waere
+ * das erst jemandem aufgefallen, der ihn drueckt. Eine zweite Kennung
+ * anzulegen hiesse, dieselbe Stelle zweimal zu benennen.
+ * ------------------------------------------------------------------------ */
+function ui_nach_oben(string $ziel = '#inhalt'): void
+{
+    echo '  <p class="nach-oben">'
+       . ui_knopf(['text' => 'Zum Anfang', 'symbol' => 'pfeil-hoch',
+                   'art' => 'leise', 'href' => $ziel])
+       . "</p>\n";
+}
+
+
+/* ---------------------------------------------------------------------------
  * ZEILE  (.zeile)
  *
  * Text links (fett plus Kleinzeile), Plaketten, Aktionen rechts. Am Desktop

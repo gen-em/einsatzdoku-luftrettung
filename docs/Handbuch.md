@@ -2279,22 +2279,34 @@ offen ist. Danach verschwindet die Seite von selbst.
 
 ## 9. Stammdaten (Standorte und Rettungsmittel)
 
-Deine Vorbelegungen liegen seit Web 7.0.0 hinter **zwei** Menüpunkten. Der
-Schnitt folgt der Tätigkeit:
+Deine Vorbelegungen liegen seit Web 16.2.0 hinter **einem** Menüpunkt:
+**Einstellungen → Standorte**. Von Web 7.0.0 bis 16.1.1 waren es zwei
+(„Standorte" und „Rettungsmittel"), geschnitten nach Tätigkeit — anlegen dort,
+ausstatten hier. Der Schnitt hat sich nicht bewährt: Beide zeigten denselben
+Bestand, und wer einen Standort einrichtete, ging zwischen ihnen hin und her.
 
-| Menüpunkt | Inhalt |
+| Wo | Was |
 |---|---|
-| **Einstellungen → Standorte** | Eigene Standorte anlegen und bearbeiten, **vordefinierte** Standorte auswählen. Und sonst nichts. |
-| **Einstellungen → Rettungsmittel** | Was an den ausgewählten Standorten hängt: Rettungsmittel samt Rollen und Fähigkeiten, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel, Bergwacht-Bereitschaften. |
+| **Einstellungen → Standorte** (die Liste) | Eigene Standorte anlegen und bearbeiten, **vordefinierte** Standorte auswählen — und die Karte **„Ohne Standort"** für Rettungsmittel, die keinen brauchen. |
+| **Die Seite eines Standorts** (ein Klick auf seine Zeile) | Alles, was an diesem Standort hängt: Lage, Rettungsmittel samt Rollen und Fähigkeiten, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel, Bergwacht-Bereitschaften. |
 
 Bis Web 6.3.0 hieß beides zusammen „Standortdaten" — der Name passte auf keinen
-der beiden Teile. Ein alter Link (`?t=stammdaten`) führt weiterhin zu
-„Standorte".
+der beiden Teile. Zwei alte Links führen weiterhin auf die Liste:
+`?t=stammdaten` (der Name bis Web 6.3.0) und `?t=rettungsmittel` (der Reiter
+bis Web 16.1.1).
 
-Unter „Rettungsmittel" steht **je Standort ein Block**, darin je Datenart ein
-eigener aufklappbarer Abschnitt mit der Zahl der Einträge im Kopf. Alles startet
-zugeklappt. Nach dem Speichern öffnet sich der Weg bis zu der Stelle wieder, an
-der du getippt hast, und die Seite springt dorthin.
+**Die ganze Zeile der Liste ist der Verweis** — nicht der Name darin. Sie nennt
+in der Kleinzeile drei Zahlen: Rettungsmittel, Besatzung, Zielkliniken. Löschen
+und „Als Vorbelegung" stehen nicht mehr hier, sondern im Aktionsmenü der
+Standortseite: Wer einen Standort löscht, sieht vorher, was daran hängt.
+
+**Auf der Standortseite** steht je Datenart eine eigene Karte — Standort,
+Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel und (nur bei
+einem luftgebundenen Rettungsmittel) Bergwacht. Drei Kennzahlen am Kopf
+springen in die drei größten; am Ende jeder Karte führt **„Zum Anfang"**
+zurück. Am Schreibtisch stehen dieselben Karten als Unterpunkte in der Leiste
+links. Nach dem Speichern kehrt die Seite an die Stelle zurück, an der du
+getippt hast.
 
 ### 9.1 Standorte, Rettungsmittel, Besatzung, Bergwacht
 
@@ -2331,9 +2343,13 @@ Rettungsmittel bekommt keine Besatzungsfelder angeboten. Das ist keine
 Einschränkung der Dokumentation, sondern der Vorlage.
 
 **Ohne Standort** hat ein Rettungsmittel keine Vorschlagslisten — die hängen am
-Standort. Es steht am Ende der Seite in einer eigenen Karte **„Ohne Standort"**
-und lässt sich dort bearbeiten und löschen. Angelegt wird es über den Haken
-„Ohne Standort" im Formular eines beliebigen Standorts.
+Standort. Es steht seit Web 16.2.2 auf der **Standortliste** in einer eigenen,
+zugeklappten Karte **„Ohne Standort"** — dort, wo die Standorte stehen und
+keiner von ihnen gemeint ist; auf der Seite eines Standorts hat es nichts zu
+suchen. Löschen kannst du es in dieser Karte, „Bearbeiten" öffnet das Formular
+auf der Seite des ersten Standorts (mit gesetztem Haken). Angelegt wird es über
+denselben Haken „Ohne Standort" im Rettungsmittel-Formular eines beliebigen
+Standorts.
 
 **Der Kurzname** (bis 16 Zeichen, freiwillig) steht dort, wo der Platz knapp
 ist: in der **Diensttage-Leiste**, und dort in jeder Bildschirmbreite — auch

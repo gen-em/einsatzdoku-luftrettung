@@ -24,7 +24,8 @@ declare(strict_types=1);
  *               (heisst NICHT `basis`: In dieser Anwendung ist eine Basis
  *                ein Standort, und der Schluessel meint eine URL — die
  *                Wortliste haette das Homonym zu Recht gemeldet)
- *               (`einstellungen.php?t=rettungsmittel` bzw.
+ *               (im Konto seit S9/AP5 die Seite EINES Standorts,
+ *                `sd_seite($bid)`; in der Verwaltung
  *                `admin_stammdaten.php?t=rettungsmittel`)
  *   `zentral`   ein systemweiter Eintrag in der KONTOANSICHT ist
  *               unveraenderlich — in der ADMINANSICHT ist er der Gegenstand
@@ -56,6 +57,20 @@ declare(strict_types=1);
  */
 function sd_seite(int $baseId, string $basis = 'einstellungen.php'): string
 {
+    /* DIE ADRESSE STEHT ALS GANZE IN EINER ZEICHENKETTE und nicht als
+       `$basis . '?t=…'`. Die Linkprobe erkennt einen Verweis am Muster
+       `seite.php?…` INNERHALB einer Zeichenkette; zusammengesetzt sieht sie
+       ihn gar nicht. Die zwoelf ausgeschriebenen Adressen, die diese
+       Funktion abloest, hat sie geprueft — nach dem Umbau waren es null,
+       und die Gesamtzahl fiel von 140 auf 126 geprueften Verweisen, ohne
+       dass jemand etwas gemeldet haette. Mit dem ausgeschriebenen Zweig
+       prueft sie wieder, dass `einstellungen.php` `t` UND `s` liest.
+       Der zweite Zweig gehoert der Verwaltung; ihre Standortseite entsteht
+       erst mit AP5-4, und eine Adresse auf eine Seite, die den Parameter
+       noch nicht liest, waere ein Fehlalarm. */
+    if ($basis === 'einstellungen.php') {
+        return 'einstellungen.php?t=standort&s=' . $baseId;
+    }
     return $basis . '?t=standort&s=' . $baseId;
 }
 
@@ -63,7 +78,13 @@ function sd_zeile(array $o): void
 {
     $id   = (int)$o['id'];
     $pre  = (string)$o['praefix'] . '-' . $id;
-    $seite = (string)($o['seite'] ?? 'einstellungen.php?t=rettungsmittel');
+    /* Der Vorgabewert ist die STANDORTLISTE und nicht mehr der Reiter
+       `t=rettungsmittel`: Den gibt es seit S9/AP5 nicht mehr, und die Weiche
+       am Kopf von `einstellungen.php` haette jedes Formular, das den
+       Schluessel vergisst, still auf die Liste geworfen — ohne Fehler, ohne
+       Meldung, nur mit einem Anker, der dort nichts findet. Alle Aufrufe
+       reichen ihn heute mit; der Wert steht als Netz, nicht als Weg. */
+    $seite = (string)($o['seite'] ?? 'einstellungen.php?t=standorte');
     $ziel = $seite . '#' . (string)$o['anker'];
     $zentral = !empty($o['zentral']);
 
@@ -125,7 +146,13 @@ function sd_zeile(array $o): void
 function sd_form(array $o): void
 {
     $bearb = $o['bearbeitet'] ?? null;
-    $seite = (string)($o['seite'] ?? 'einstellungen.php?t=rettungsmittel');
+    /* Der Vorgabewert ist die STANDORTLISTE und nicht mehr der Reiter
+       `t=rettungsmittel`: Den gibt es seit S9/AP5 nicht mehr, und die Weiche
+       am Kopf von `einstellungen.php` haette jedes Formular, das den
+       Schluessel vergisst, still auf die Liste geworfen — ohne Fehler, ohne
+       Meldung, nur mit einem Anker, der dort nichts findet. Alle Aufrufe
+       reichen ihn heute mit; der Wert steht als Netz, nicht als Weg. */
+    $seite = (string)($o['seite'] ?? 'einstellungen.php?t=standorte');
     echo '<div class="listen-form">' . "\n";
     echo '  <h3 class="listen-form-titel">'
        . ui_e($bearb ? (string)$o['titel_bearbeiten'] : (string)$o['titel_neu']) . "</h3>\n";

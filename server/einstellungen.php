@@ -787,10 +787,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * STANDORTBEZOGEN: `sd-<Standortkennung>` oeffnet den Block dieses
      * Standorts. Nur die Standortliste selbst und die Auswahl der zentralen
      * Standorte haben feste Anker. */
-    /* ZWEI REITER, ZWEI ZIELE (Web 7.0.0). Die Standortaktionen fuehren in den
-     * Reiter „Standorte" zurueck, alles Uebrige in „Rettungsmittel". */
-    $zurueckTab = in_array($action, ['base_save', 'base_del', 'base_default', 'ub_toggle'], true)
-        ? 'standorte' : 'rettungsmittel';
+    /* ZWEI ZIELE (Web 7.0.0, neu gefasst S9/AP5). Die Standortaktionen fuehren
+     * auf die LISTE zurueck, alles Uebrige auf die SEITE DES STANDORTS, an dem
+     * es haengt.
+     *
+     * Bis Web 16.2.1 stand hier `t=rettungsmittel` — der Reiter, der alles auf
+     * einmal zeigte. Den gibt es nicht mehr; die Weiche am Seitenkopf haette
+     * jede Aenderung an einem Rettungsmittel, einer Rolle, einer Zielklinik
+     * oder einer Bereitschaft auf die Liste geworfen. Der Anker haette dort
+     * nichts gefunden, und wer zehn Zielkliniken nacheinander eintraegt, waere
+     * zehnmal zurueckgeklickt. Das Ziel steht deshalb unten, wo auch der
+     * Standort feststeht — als ganze Adresse und nicht als Reitername. */
     $abschnitt = [
         'base_save'  => 'standorte', 'base_del' => 'standorte',
         'base_default' => 'standorte', 'ub_toggle' => 'zentrale',
@@ -817,16 +824,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'res_save' => 'res', 'res_del' => 'res',
         'bw_save'  => 'bw',  'bw_del'  => 'bw',
     ][$action] ?? null;
+    $zurueckZiel = 'einstellungen.php?t=standorte';
     if ($abschnitt === null && $unterblock !== null) {
         $zurueckBase = (int)($_POST['base_id'] ?? 0);
+        /* OHNE STANDORT GIBT ES KEINE SEITE, auf die man zurueckkehren
+           koennte: Ein Rettungsmittel mit `base_id = null` haengt an keinem
+           Standort, und seine Karte steht auf der Liste (S9/AP5). Dorthin
+           also, und in ihren Abschnitt. */
         $abschnitt = $zurueckBase > 0
             ? ('sd-' . $zurueckBase . '-' . $unterblock)
-            : 'standorte';
+            : 'sd-ohne-veh';
+        if ($zurueckBase > 0) { $zurueckZiel = sd_seite($zurueckBase); }
     }
     if ($abschnitt !== null && ($notice !== null || $error !== null)) {
         if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
         if ($error !== null) { $_SESSION['flash_error'] = $error; }
-        header('Location: einstellungen.php?t=' . $zurueckTab . '#' . $abschnitt);
+        header('Location: ' . $zurueckZiel . '#' . $abschnitt);
         exit;
     }
 }
@@ -1527,6 +1540,60 @@ ui_seite_start(['titel' => 'Einstellungen',
           . 'keine Zielkliniken.') ?>
     <?php endif; ?>
 
+    <?php /* OHNE STANDORT (E-S9-09/E-S9-18).
+             Bergwacht, Veranstaltung und Sonstiges brauchen keinen Standort
+             (AP4). Diese Rettungsmittel haengen an keinem — also stehen sie
+             auf der LISTE und nicht auf der Seite eines Standorts, an dem sie
+             nichts zu suchen haben. Bis Web 16.2.1 standen sie unter der
+             letzten Standortkarte und erschienen damit auf JEDER
+             Standortseite; die Leiste zaehlte sie als siebten Unterpunkt mit.
+             Ein Anlegen-Formular traegt die Karte nicht: Angelegt wird ueber
+             den Haken „Ohne Standort" im Rettungsmittel-Formular eines
+             Standorts. */ ?>
+    <?php if ($sdVehOhne): ?>
+      <?php
+      /* WO WIRD SO EIN EINTRAG BEARBEITET? Das Formular steht je Standort
+         einmal; ein Datensatz ohne Standort gehoert zu keinem davon. Es
+         oeffnet sich deshalb auf der Seite des ERSTEN Standorts — der Haken
+         ist darin gesetzt, die verborgene Standortkennung also folgenlos
+         (`$evOhne` in der Rettungsmittel-Karte).
+         Ohne einen einzigen Standort gaebe es diese Seite nicht. Dann
+         entfaellt der Verweis, statt ins Leere zu zeigen — anlegen laesst
+         sich ohne Standort ohnehin nichts, die Karte kann in diesem Fall also
+         nur Altbestand zeigen. AP5-4 loest das auf: Der Dialog braucht keine
+         fremde Seite. */
+      $ohneErster = $sdBases ? (int)$sdBases[0]['id'] : 0;
+      ?>
+      <?php ui_karte_start(['titel' => 'Ohne Standort', 'id' => 'sd-ohne', 'zu' => true,
+                            'zahl' => count($sdVehOhne) . ' Rettungsmittel']); ?>
+        <p class="feld-hinweis">Bergwacht, Veranstaltung und Sonstiges brauchen keinen
+           Standort. Sie haben dafür keine Vorschlagslisten — die hängen am Standort.</p>
+        <section class="sd-liste" id="sd-ohne-veh">
+          <?php foreach ($sdVehOhne as $v):
+                $vid = (int)$v['id'];
+                $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
+                                     $vehCaps[$vid] ?? []);
+                $klein = VEHICLE_TYPEN[(string)$v['typ']]['label'] ?? (string)$v['typ'];
+                if ((string)($v['kurz'] ?? '') !== '') { $klein .= ' · ' . (string)$v['kurz']; }
+                if ($capsTxt) { $klein .= ' · ' . implode(', ', $capsTxt); }
+                sd_zeile([
+                    'name' => (string)$v['name'], 'klein' => $klein,
+                    'anker' => 'sd-ohne-veh', 'praefix' => 'veh', 'id' => $vid,
+                    'base_id' => 0, 'zentral' => $istZentral($v),
+                    'seite' => 'einstellungen.php?t=standorte',
+                    'plaketten' => ui_artzeichen((string)$v['kind'], '', (string)$v['typ']),
+                    'bearbeiten_href' => $ohneErster > 0
+                        ? sd_seite($ohneErster) . '&ev=' . $vid . '#sd-' . $ohneErster . '-veh'
+                        : '',
+                    'del_action' => 'veh_del',
+                    'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ löschen? '
+                                 . 'Bereits dokumentierte Diensttage bleiben unverändert.',
+                ]);
+          endforeach; ?>
+        </section>
+      <?php ui_karte_ende(true); ?>
+    <?php endif; ?>
+
   <?php else: ?>
     <?php /* ---- Reiter „Rettungsmittel" ------------------------------------
              Alles, was an einem ausgewählten Standort hängt. Ein Block je
@@ -1630,17 +1697,46 @@ ui_seite_start(['titel' => 'Einstellungen',
         $anker = 'sd-' . $bid;
         $rollenHier = $rollenAmStandort($bid);
       ?>
-      <?php /* Ein Standort ist eine zugeklappte Karte; die Listen darin sind
-               Abschnitte mit Überschrift. Verschachtelte Karten wären zwei
-               Rahmen um dieselbe Sache — die zweite Ebene trägt hier keine
-               eigene Bedeutung, sie ordnet nur. */
-             ui_karte_start(['titel' => (string)$b['name'], 'id' => $anker, 'zu' => true,
-                             'zahl' => count($vehListe) . ' Rettungsmittel']); ?>
+      <?php /* DAS INHALTSVERZEICHNIS ALS KENNZAHLEN (M-S9-07, das M-S9-06 an
+               dieser Stelle ueberholt: dort waren es Pillen mit Zahl, und die
+               Anmerkung 1 von M-S9-07 zieht diese Variante ausdruecklich
+               zurueck). Drei Kacheln, keine fuer „Standort" — der steht
+               darueber im Titel. Sie sind Verweise auf die Kartenkennungen;
+               dieselben Kennungen holt sich `menue.js` fuer die Unterpunkte
+               der Leiste. */ ?>
+      <div class="kennzahl-raster kennzahl-raster-3">
+        <?= ui_kennzahl(['wert' => (string)count($vehListe), 'label' => 'Rettungsmittel',
+                         'href' => '#rettungsmittel']) ?>
+        <?= ui_kennzahl(['wert' => (string)count($sdCrew[$bid] ?? []), 'label' => 'Besatzung',
+                         'href' => '#besatzung']) ?>
+        <?= ui_kennzahl(['wert' => (string)count($sdTd[$bid] ?? []), 'label' => 'Zielkliniken',
+                         'href' => '#zielkliniken']) ?>
+      </div>
+
+      <?php /* EINE KARTE JE ABSCHNITT, MIT KENNUNG (PS-12). Bis Web 16.2.1
+               war der ganze Standort EINE zugeklappte Karte, darin fuenf
+               Abschnitte. Jetzt traegt die Seite genau einen Standort, es
+               gibt nichts mehr, wovon man ihn unterscheiden muesste — und
+               jede Karte bekommt eine Kennung, an der die Kennzahlen und die
+               Unterpunkte der Leiste haengen. */
+             ui_karte_start(['titel' => 'Standort', 'id' => 'standort']); ?>
         <?php if (!empty($b['zentral'])): ?>
           <p class="feld-hinweis"><?= ui_plakette('systemweit') ?> Dieser Standort wird
              von der Verwaltung gepflegt.</p>
         <?php endif; ?>
+        <?php ui_zeile([
+            'text'  => (string)$b['name'],
+            'klein' => ($b['lat'] !== null && $b['lon'] !== null)
+                     ? $b['lat'] . ', ' . $b['lon'] . ' — Abfahrtsort neuer Diensttage'
+                     : 'ohne Lage — ohne sie gibt es keinen Abfahrtsort',
+            'aktionen' => empty($b['zentral']) ? ui_knopf([
+                'text' => 'Bearbeiten', 'symbol' => 'stift', 'art' => 'leise',
+                'href' => 'einstellungen.php?t=standorte&eb=' . $bid . '#standorte']) : '',
+        ]); ?>
+      <?php ui_nach_oben(); ui_karte_ende(); ?>
 
+      <?php ui_karte_start(['titel' => 'Rettungsmittel', 'id' => 'rettungsmittel',
+                            'zahl' => count($vehListe)]); ?>
         <section class="sd-liste" id="<?= e($anker) ?>-veh">
           <h3 class="sd-titel">Rettungsmittel <span class="sd-zahl"><?= count($vehListe) ?></span></h3>
           <p class="feld-hinweis">Die Art entscheidet über Besatzungsrollen und die
@@ -1663,6 +1759,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                        . ($capsTxt ? ' · ' . implode(', ', $capsTxt) : '');
                 sd_zeile([
                     'name' => (string)$v['name'], 'klein' => $klein,
+                    'seite' => sd_seite($bid),
                     'anker' => $anker . '-veh', 'praefix' => 'veh', 'id' => $vid,
                     'base_id' => $bid, 'zentral' => $istZentral($v),
                     'stern' => $vid === $DEF_VEH_ID,
@@ -1673,14 +1770,17 @@ ui_seite_start(['titel' => 'Einstellungen',
                                        . '#' . $anker . '-veh',
                 ]);
           endforeach; ?>
-          <?php /* EIN RETTUNGSMITTEL OHNE STANDORT WIRD IM ERSTEN BLOCK
-                   BEARBEITET. Das Formular steht je Standortkarte einmal und
-                   traegt deren Kennung verborgen mit; ein Datensatz mit
-                   `base_id = null` gehoert zu keiner davon. Ohne diese Zeile
-                   waere „Bearbeiten" ein Verweis, der nichts oeffnet. Der
-                   Haken „Ohne Standort" ist im Formular gesetzt, die verborgene
-                   Kennung also folgenlos. AP5 loest das auf, indem die
-                   Standortseite die Liste fuehrt (E-S9-18). */
+          <?php /* EIN RETTUNGSMITTEL OHNE STANDORT WIRD AUF DIESER SEITE
+                   BEARBEITET. Das Formular steht je Standort einmal und traegt
+                   dessen Kennung verborgen mit; ein Datensatz mit
+                   `base_id = null` gehoert zu keinem davon. Ohne diese Zeile
+                   waere „Bearbeiten" in der Karte „Ohne Standort" ein Verweis,
+                   der nichts oeffnet. Der Haken „Ohne Standort" ist im
+                   Formular gesetzt, die verborgene Kennung also folgenlos.
+                   `$sdBases` ist auf dieser Seite genau EIN Standort — die
+                   Bedingung ist damit auf jeder Standortseite wahr, und die
+                   Karte auf der Liste kann auf die erste verweisen. AP5-4
+                   loest das auf: Ein Dialog braucht keine fremde Seite. */
                 $evOhne = $editVeh && $editVeh['base_id'] === null
                        && $sdBases && (int)$sdBases[0]['id'] === $bid;
                 $evHier = ($editVeh && ((int)$editVeh['base_id'] === $bid || $evOhne))
@@ -1785,7 +1885,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 <?= ui_knopf(['text' => $evHier ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer']) ?>
                 <?php if ($evHier): ?>
                   <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
-                                'href' => 'einstellungen.php?t=standorte']) ?>
+                                'href' => sd_seite($bid)]) ?>
                 <?php endif; ?>
               </div>
             </form>
@@ -1793,6 +1893,10 @@ ui_seite_start(['titel' => 'Einstellungen',
         </section>
 
         <?php /* BESATZUNG — nur die Rollen, die es an diesem Standort gibt. */ ?>
+      <?php ui_nach_oben(); ui_karte_ende(); ?>
+
+      <?php ui_karte_start(['titel' => 'Besatzung', 'id' => 'besatzung',
+                            'zahl' => count($sdCrew[$bid] ?? [])]); ?>
         <section class="sd-liste" id="<?= e($anker) ?>-crew">
           <h3 class="sd-titel">Besatzung <span class="sd-zahl"><?= count($sdCrew[$bid] ?? []) ?></span></h3>
           <p class="feld-hinweis">Vorschläge für die Besatzungsfelder, je Rolle.
@@ -1813,6 +1917,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                       sd_zeile([
                           'name' => (string)$c['name'],
                           'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
+                          'seite' => sd_seite($bid),
                           'anker' => $anker . '-crew', 'praefix' => 'crew', 'id' => (int)$c['id'],
                           'base_id' => $bid, 'zentral' => $cz,
                           'del_action' => 'crew_del',
@@ -1827,6 +1932,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             <?php $ecHier = ($editCrew && (int)$editCrew['base_id'] === $bid
                              && $editCrew['role_code'] === $rk) ? $editCrew : null; ?>
             <?php sd_form([
+                'seite' => sd_seite($bid),
                 'anker' => $anker . '-crew', 'action' => 'crew_save', 'base_id' => $bid,
                 'bearbeitet' => $ecHier, 'label' => 'Name',
                 'platzhalter' => 'Name der Person',
@@ -1837,6 +1943,10 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?php endforeach; ?>
         </section>
 
+      <?php ui_nach_oben(); ui_karte_ende(); ?>
+
+      <?php ui_karte_start(['titel' => 'Zielkliniken', 'id' => 'zielkliniken',
+                            'zahl' => count($sdTd[$bid] ?? [])]); ?>
         <section class="sd-liste" id="<?= e($anker) ?>-td">
           <h3 class="sd-titel">Zielkliniken <span class="sd-zahl"><?= count($sdTd[$bid] ?? []) ?></span></h3>
           <p class="feld-hinweis">Vorschläge für das Feld „Transportziel" im
@@ -1853,6 +1963,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 if ($dup) { $klein .= ' · identisch mit einem systemweiten Eintrag'; }
                 sd_zeile([
                     'name' => (string)$t['name'], 'klein' => $klein,
+                    'seite' => sd_seite($bid),
                     'anker' => $anker . '-td', 'praefix' => 'td', 'id' => (int)$t['id'],
                     'base_id' => $bid, 'zentral' => $tz,
                     'del_action' => 'td_del',
@@ -1891,13 +2002,17 @@ ui_seite_start(['titel' => 'Einstellungen',
                 <?= ui_knopf(['text' => $etHier ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer']) ?>
                 <?php if ($etHier): ?>
                   <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
-                                'href' => 'einstellungen.php?t=standorte']) ?>
+                                'href' => sd_seite($bid)]) ?>
                 <?php endif; ?>
               </div>
             </form>
           </div>
         </section>
 
+      <?php ui_nach_oben(); ui_karte_ende(); ?>
+
+      <?php ui_karte_start(['titel' => 'Weitere Rettungsmittel', 'id' => 'weitere',
+                            'zahl' => count($sdRes[$bid] ?? [])]); ?>
         <section class="sd-liste" id="<?= e($anker) ?>-res">
           <h3 class="sd-titel">Weitere Rettungsmittel <span class="sd-zahl"><?= count($sdRes[$bid] ?? []) ?></span></h3>
           <p class="feld-hinweis">Vorschläge für das Feld „Weitere Rettungsmittel"
@@ -1911,6 +2026,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 sd_zeile([
                     'name' => (string)$r['name'],
                     'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
+                    'seite' => sd_seite($bid),
                     'anker' => $anker . '-res', 'praefix' => 'res', 'id' => (int)$r['id'],
                     'base_id' => $bid, 'zentral' => $rz,
                     'del_action' => 'res_del',
@@ -1921,6 +2037,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           endforeach; ?>
           <?php $erHier = ($editRes && (int)$editRes['base_id'] === $bid) ? $editRes : null;
                 sd_form([
+                    'seite' => sd_seite($bid),
                     'anker' => $anker . '-res', 'action' => 'res_save', 'base_id' => $bid,
                     'bearbeitet' => $erHier, 'label' => 'Bezeichnung',
                     'platzhalter' => 'z. B. RTW Talwang 76/85',
@@ -1929,7 +2046,15 @@ ui_seite_start(['titel' => 'Einstellungen',
                 ]); ?>
         </section>
 
+      <?php ui_nach_oben(); ui_karte_ende(); ?>
+
+      <?php /* DIE BERGWACHT-KARTE ERSCHEINT NUR MIT EINEM LUFTGEBUNDENEN
+               RETTUNGSMITTEL (E29). Die Karte davor schliesst deshalb VOR der
+               Bedingung — sonst bliebe sie an einem reinen NEF-Standort offen,
+               und das Markup zerfiele ab dort. */ ?>
         <?php if ($hatLuft): ?>
+      <?php ui_karte_start(['titel' => 'Bergwacht', 'id' => 'bergwacht',
+                            'zahl' => count($sdBw[$bid] ?? [])]); ?>
           <section class="sd-liste" id="<?= e($anker) ?>-bw">
             <h3 class="sd-titel">Bergwacht <span class="sd-zahl"><?= count($sdBw[$bid] ?? []) ?></span></h3>
             <p class="feld-hinweis">Bereitschaften für das Feld „Bergwacht" im
@@ -1945,6 +2070,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                   sd_zeile([
                       'name' => (string)$w['name'],
                       'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
+                      'seite' => sd_seite($bid),
                       'anker' => $anker . '-bw', 'praefix' => 'bw', 'id' => (int)$w['id'],
                       'base_id' => $bid, 'zentral' => $wz,
                       'del_action' => 'bw_del',
@@ -1955,6 +2081,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             endforeach; ?>
             <?php $ewHier = ($editBw && (int)$editBw['base_id'] === $bid) ? $editBw : null;
                   sd_form([
+                      'seite' => sd_seite($bid),
                       'anker' => $anker . '-bw', 'action' => 'bw_save', 'base_id' => $bid,
                       'bearbeitet' => $ewHier, 'label' => 'Bereitschaft',
                       'platzhalter' => 'z. B. Bergwacht Sonnenau',
@@ -1962,53 +2089,10 @@ ui_seite_start(['titel' => 'Einstellungen',
                       'titel_bearbeiten' => 'Bereitschaft bearbeiten',
                   ]); ?>
           </section>
+      <?php ui_nach_oben(); ui_karte_ende(); ?>
         <?php endif; ?>
-      <?php ui_karte_ende(true); ?>
     <?php endforeach; ?>
 
-    <?php /* OHNE STANDORT — vorlaeufige Karte (AP4, E-S9-09/E-S9-18).
-             Sie erscheint nur, wenn es solche Rettungsmittel gibt, und traegt
-             kein Anlegen-Formular: Angelegt wird ueber den Haken in der Karte
-             eines Standorts. Das ist die kleinste Fassung, die verhindert, dass
-             ein Datensatz entsteht, den niemand mehr sieht; die Standortseite
-             aus E-S9-18 loest sie in AP5 ab. */ ?>
-    <?php if ($sdVehOhne): ?>
-      <?php ui_karte_start(['titel' => 'Ohne Standort', 'id' => 'sd-ohne', 'zu' => true,
-                            'zahl' => count($sdVehOhne) . ' Rettungsmittel']); ?>
-        <p class="feld-hinweis">Bergwacht, Veranstaltung und Sonstiges brauchen keinen
-           Standort. Sie haben dafür keine Vorschlagslisten — die hängen am Standort.</p>
-        <section class="sd-liste" id="sd-ohne-veh">
-          <?php foreach ($sdVehOhne as $v):
-                $vid = (int)$v['id'];
-                $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
-                                     $vehCaps[$vid] ?? []);
-                $klein = VEHICLE_TYPEN[(string)$v['typ']]['label'] ?? (string)$v['typ'];
-                if ((string)($v['kurz'] ?? '') !== '') { $klein .= ' · ' . (string)$v['kurz']; }
-                if ($capsTxt) { $klein .= ' · ' . implode(', ', $capsTxt); }
-                sd_zeile([
-                    'name' => (string)$v['name'], 'klein' => $klein,
-                    'anker' => 'sd-ohne-veh', 'praefix' => 'veh', 'id' => $vid,
-                    'base_id' => 0, 'zentral' => $istZentral($v),
-                    'seite' => 'einstellungen.php?t=standorte',
-                    'plaketten' => ui_artzeichen((string)$v['kind'], '', (string)$v['typ']),
-                    /* DAS BEARBEITEN GEHOERT DAZU. `sd_zeile()` legt den Eintrag
-                       nur an, wenn dieser Schluessel da ist (stammdaten_ui.php);
-                       ohne ihn liesse sich ein Rettungsmittel ohne Standort
-                       anlegen und loeschen, aber nie aendern — und ein Tippfehler
-                       im Namen waere nur durch Loeschen und Neuanlegen zu
-                       beheben. Das Formular oeffnet sich in der Karte des
-                       ERSTEN Standorts (es steht dort), und der Haken „Ohne
-                       Standort" ist darin gesetzt; die Form raeumt AP5 auf. */
-                    'bearbeiten_href' => 'einstellungen.php?t=standorte&ev=' . $vid
-                                       . '#sd-ohne-veh',
-                    'del_action' => 'veh_del',
-                    'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ löschen? '
-                                 . 'Bereits dokumentierte Diensttage bleiben unverändert.',
-                ]);
-          endforeach; ?>
-        </section>
-      <?php ui_karte_ende(true); ?>
-    <?php endif; ?>
   <?php endif; ?>
 
     <script src="<?= asset('assets/openlocationcode.js') ?>"></script>

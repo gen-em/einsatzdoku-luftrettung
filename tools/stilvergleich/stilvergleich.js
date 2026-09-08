@@ -15,6 +15,18 @@ const SP  = process.argv[2];          // Ordner mit fixtures/
 const ALT = process.argv[3];
 const NEU = process.argv[4];
 const PROBEN = (process.env.PROBEN || 'seiten.html,katalog.html').split(',');
+/* WIE VIELE ABWEICHENDE ELEMENTE AUSGESCHRIEBEN WERDEN (Vorgabe 8).
+ *
+ * Die Zahl stand fest verdrahtet, und das ist einmal teuer geworden: Ein Lauf
+ * meldete „22 von 1502 Elementen weichen ab" und schrieb acht davon aus — die
+ * acht, die sich aus der Hoehe des Dokuments erklaerten. Die vierzehn
+ * uebrigen waren die eigentliche Aenderung (`a.zeile:hover` und Nachbarn) und
+ * blieben ungesehen; wer nur die Ausgabe liest, haelt die Liste fuer
+ * vollstaendig, weil nichts sagt, dass sie es nicht ist. Die Kopfzeile nennt
+ * die richtige Zahl — die Beispielliste tut es seither auch:
+ *   BEISPIELE=99 node stilvergleich.js …
+ * (S9/AP5-2, 08.09.2026) */
+const BEISPIELE = parseInt(process.env.BEISPIELE || '8', 10);
 /* DREIZEHN BREITEN, NEU GEEICHT IN P3/O12.
  *
  * Die alten neun (1400, 1100, 1000, 900, 720, 700, 560, 520, 500) stammen aus
@@ -85,7 +97,7 @@ function eigenschaften(css) {
       for (let i = 0; i < a.length; i++) {
         if (a[i] !== n[i]) {
           diff++; if (grp[i]) gruppen.add(grp[i]);
-          if (beispiele.length < 8) {
+          if (beispiele.length < BEISPIELE) {
             const va = a[i].split(SEP), vn = n[i].split(SEP);
             const wo = [];
             for (let k = 0; k < props.length; k++) {

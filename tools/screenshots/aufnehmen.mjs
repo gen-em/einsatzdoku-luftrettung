@@ -318,6 +318,20 @@ async function platzhalter() {
     '__TAG_SPUREN__':   tag ? `tag_spuren.php?d=${tag}`               : null,
   };
 
+  /* DIE STANDORTSEITE BRAUCHT IHREN STANDORT (S9/AP5). Sie ersetzt den
+     Reiter „Rettungsmittel", und dessen Adresse gibt es nicht mehr. Die
+     Kennung kommt aus der Liste — ueber denselben Weg, den eine NutzerIn
+     geht —, und ein nicht aufgeloester Platzhalter ist `null` und fuehrt
+     dazu, dass die Seite NICHT fotografiert wird. Ein Ruecklauf auf die
+     Liste ergaebe zwei Namen fuer dasselbe Bild; genau davor warnt der
+     Kommentar darueber. */
+  const d = rollen.demo.seite;
+  await gehZu(rollen.demo, `${BASIS}/einstellungen.php?t=standorte`,
+              'einstellungen.php?t=standorte');
+  const sHref = await d.locator('a.zeile[href*="t=standort&s="]').first()
+                       .getAttribute('href').catch(() => null);
+  p['__STANDORT__'] = sHref || null;
+
   const a = rollen.admin.seite;
   await gehZu(rollen.admin, `${BASIS}/admin_users.php`, 'admin_users.php');
   const href = await a.locator('a[href*="admin_user.php?id="]').first()

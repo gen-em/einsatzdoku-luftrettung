@@ -1076,6 +1076,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * Zeile — der Unterschied ist der Winkel rechts und die Flaeche, die sich
  * anfassen laesst. Keine Unterstreichung: Die ganze Zeile ist der Link, und
  * ein unterstrichener Name daerinnen sagte, nur er sei es. */
+/* „ZUM ANFANG" (S9/AP5): rechtsbuendig am Ende eines Abschnitts, mit Luft
+ * darueber. Der Knopf selbst ist `.knopf knopf-leise` — die Klasse traegt
+ * die Bedienhoehe und wird vom Bilderlauf gemessen. */
+.nach-oben{margin:var(--abstand-4) 0 0;text-align:right}
 a.zeile{text-decoration:none;color:inherit}
 a.zeile:hover{background:var(--rauch);text-decoration:none}
 a.zeile:hover .zeile-haupt{color:var(--blau-tief)}
@@ -2950,6 +2954,16 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
  * Die Kachel selbst ist der Baustein aus O1 (`.kennzahl`, ui_kennzahl) — hier
  * stehen nur Raster, mobile Kappung und die Segmentwahl in der Titelzeile.
  * ======================================================================== */
+
+/* DREI SPALTEN, IN JEDER BREITE (S9/AP5, M-S9-07): das Inhaltsverzeichnis
+ * der Standortseite. Die Regel steht mit Absicht OHNE Medienabfrage und
+ * NACH der Vierspalten-Regel des 1024er Bandes — nur so gewinnt sie in jeder
+ * Breite. Im 720er Block darunter waere sie am Handy wirkungslos, und dort
+ * stuenden zwei Kacheln nebeneinander und eine allein; das freigegebene
+ * Mockup zeigt die drei auch bei 376 px in einer Reihe. Drei Kacheln zu je
+ * rund 110 px sind schmal — sie tragen eine Zahl und ein Wort, und mehr
+ * sollen sie nicht. */
+.kennzahl-raster-3{grid-template-columns:repeat(3,minmax(0,1fr))}
 
 /* Spaltenzahl folgt dem Satz: vier Kacheln in vier Spalten, acht in zwei
  * Reihen zu vier, zehn in zwei Reihen zu fünf — so bleibt keine Reihe halb
