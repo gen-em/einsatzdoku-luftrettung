@@ -1716,6 +1716,39 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dafür, die Regel in einem Satz erklären zu können. Zuordnung:
     Backlog-Runde.
 
+159. **Die Uhr behandelt `400` nicht vertragsgemäß — sie wiederholt endlos.**
+    *Aufgenommen 08.09.2026 aus der Gegenprüfung der Zeitregel (Nr. 134).*
+    `docs/JSON-Vertrag.md` sagt für `400 {"error":"payload"}`: „nicht
+    wiederholen, lokal als fehlerhaft markieren". `watch/source/Uploader.mc`
+    tut das Gegenteil: Bei jedem Code außer Erfolg setzt es nur `lastError`
+    und `_busy = false` — „später erneut (nächster syncAll-Auslöser)". Ein
+    Paket, das der Server dauerhaft ablehnt, blockiert damit die
+    Warteschlange, und zwar ohne Ende. Heute fällt das nicht auf, weil
+    `ingest.php` fast nie `400` antwortet; genau deshalb ist in dieser Runde
+    die Zeitprüfung auch **nicht** als Abweisung gebaut worden, sondern als
+    Verwerfen des Werts. Die Handy-App macht es richtig
+    (`Sendeantwort.kt`), räumt abgewiesene Pakete aber nach 30 Tagen weg —
+    ohne Bedienweg zum Nachreichen (Nr. 114). Behebung: In `Uploader.mc`
+    `400` von den übrigen Fehlern trennen, das Paket lokal als fehlerhaft
+    kennzeichnen und aus der Warteschlange nehmen; die Uhr zeigt es an.
+    Zuordnung: nächste Uhr-Stufe. **Vor jeder künftigen Änderung, die
+    `ingest.php` einen neuen `400`-Fall gibt, zuerst dieser Punkt.**
+
+160. **Ein fortgesetzter Dienst führt das Handy tagelang unter dem alten
+    Datum — und die Anzeige verrät es nicht.** *Aufgenommen 08.09.2026 aus
+    derselben Gegenprüfung.* `Dienstklammer.beginnen()` gibt bei laufendem
+    Dienst den vorhandenen zurück (E-R45-13, gewollt). Wer den Dienst am
+    Freitag nicht beendet und am Montag „Dienst beginnen" drückt, arbeitet
+    im Freitagsdienst weiter; jedes Paket trägt weiter `day` = Freitag.
+    Die Anzeige sagt „Dienst läuft seit 07:00" — **ohne Datum**, also nicht
+    von heute Morgen zu unterscheiden. Für den Server ist das seit dieser
+    Runde unschädlich (`day` ist Anzeigedatum, und Zeiten außerhalb des
+    Fensters schreiben den Diensttag nur nicht fort), für die Dokumentation
+    des Dienstes ist es falsch. Behebung: Läuft der Dienst länger als einen
+    Kalendertag, das Datum in der Anzeige mitführen und beim zweiten
+    „Dienst beginnen" ausdrücklich fragen, ob fortgesetzt oder neu begonnen
+    wird. Zuordnung: nächste Android-Stufe.
+
 
 ## Erledigt
 

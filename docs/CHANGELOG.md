@@ -277,6 +277,19 @@ mit vertauschten Zeiten wurde angenommen, und der Diensttag wurde daraufhin in
 beide Richtungen aufgezogen. Auch dieser Wert zählt jetzt nicht mehr für den
 Tag.
 
+Beim selben Nachlesen kam heraus, dass der **JSON-Vertrag an dieser Stelle
+falsch war**: Er sagte, die Uhr bestimme `day` einmal je Dienst — das
+beschreibt einen Uhr-Code, den es seit `52f0191` nicht mehr gibt. Heute nimmt
+die Uhr den Tag des jeweiligen Datensatzes, die Handy-App den des
+Dienstbeginns. Beides ist erlaubt, weil `day` seit Vertrag 1.3 nur noch
+Anzeigedatum ist; der Vertrag sagt das jetzt und nennt ausdrücklich, dass der
+Abstand zu den Zeitstempeln nach oben nicht begrenzt ist. Zwei weitere Funde
+stehen als Backlog Nr. 159 und 160: Die Uhr wiederholt ein `400` endlos,
+statt das Paket als fehlerhaft zu kennzeichnen — auch deshalb ist die neue
+Prüfung keine Abweisung geworden —, und ein in der Handy-App fortgesetzter
+Dienst läuft tagelang unter dem Datum seines ersten Tages, ohne dass die
+Anzeige es zeigt.
+
 Ingestprobe 56 → **62, 0 nicht erfüllt**; am Stand vor der Neufassung sind
 vier davon rot, gegen den Stand vor allen vier Nachbesserungen dieser Runde
 fünf. Ein eigenes Messgeschirr mit zwölf Erwartungen an vier Fällen
