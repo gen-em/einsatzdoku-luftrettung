@@ -18,6 +18,13 @@ Abbrechen — beides steht in der Tabelle. Was **entfallen** ist, ist der
 `WatchUi.TextPicker`: die einzige Texteingabe der App und der einzige Weg, der
 auf der Venu 3s eine Bildschirmtastatur brauchte.
 
+**Seit Uhr 3.1.0 ist der KURZE Auswahl-Druck auf der Sync-Seite belegt:** Er
+verwirft die Pakete, die der Server dauerhaft abgelehnt hat (Backlog Nr. 159),
+und fragt vorher nach. Er war dort bis dahin frei — die Seite kannte nur den
+langen Druck für die Kopplung. Stehen keine abgewiesenen Pakete an, tut er
+nichts. Auf der Venu 3s liegt er auf derselben Taste wie `SELECT_LONG`
+(Action, oben), das kurze und das lange Drücken sind dort unterscheidbar.
+
 Die Abschnitte 1 bis 6 gelten der **Garmin-Uhr** (Connect IQ, Monkey C).
 Abschnitt 7 kam mit S4 dazu und gilt der **Wear-OS-App** — dort ist die Lage
 grundlegend anders, und der Abschnitt beginnt damit.

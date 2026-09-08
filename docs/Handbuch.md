@@ -97,6 +97,20 @@ Zurück zum Startbildschirm geht es mit **kurz UP** oder mit **BACK**; beide
 tun dasselbe. Weiter nach unten führt von hier nichts: Die Oberflächen aus
 Abschnitt 2.2 gibt es erst im laufenden Dienst.
 
+> **Steht dort etwas in Rot?** Zwei Meldungen sind seit Uhr 3.1.0 möglich, und
+> beide sagen dir, was zu tun ist.
+>
+> „**Gerät nicht mehr angemeldet**" heißt: Der Server kennt diese Uhr nicht
+> mehr — sie wurde in den Einstellungen gelöscht oder abgeschaltet. Die Uhr
+> hört dann auf zu senden und **behält alles**; nichts geht verloren. Der Weg
+> zurück ist eine neue Kopplung (*lang START*).
+>
+> „**1 abgewiesen**" heißt: Der Server hat dieses eine Paket dauerhaft
+> zurückgewiesen, es kommt nie an. Alles andere wird weiter gesendet. Mit
+> **kurz START** kannst du es verwerfen; die Uhr fragt vorher nach, denn die
+> Aufzeichnung ist danach fort. Solange du es stehen lässt, belegt es Platz
+> im Speicher der Uhr — beim Trennen der Kopplung wird es ohnehin verworfen.
+
 ### 2.2 Die Oberflächen
 
 Mit **kurz UP/DOWN** blätterst du im Kreis durch: **Uhr → Tempo → Statistik →

@@ -194,6 +194,11 @@
     <string name="dienst_laeuft_freigabe_fehlt">Dienst läuft seit %1$s · Ortung nicht freigegeben · keine Aufzeichnung</string>
 
     <string name="dienst_keiner">Kein Dienst</string>
+    <!-- Erinnerung an einen sehr langen Dienst (Backlog Nr. 160). Die Schwelle
+         und ihre Begruendung stehen an AufzeichnungsDienst.DIENSTDAUER_ERINNERUNG_H. -->
+    <string name="warnung_dienstdauer_titel">Dienst läuft seit %1$d Stunden</string>
+    <string name="warnung_dienstdauer_text">Begonnen am %1$s. Wenn der Dienst zu Ende ist, beende ihn — sonst zeichnet das Handy weiter auf, auch auf dem Weg nach Hause.</string>
+
     <string name="dienst_beginnen">Dienst beginnen</string>
     <string name="dienst_beenden">Dienst beenden</string>
     <string name="dienst_beenden_frage">Dienst beenden?</string>

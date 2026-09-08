@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.Instant
 import java.time.ZoneId
+import java.util.Locale
 
 /** Die Zeitformate des Vertrags (JSON-Vertrag 2). */
 class ZeitTest {
@@ -42,5 +43,46 @@ class ZeitTest {
     @Test fun anzeigezeitIstLokal() {
         assertEquals("10:31", Zeit.hhmm(augenblick, ZoneId.of("Europe/Berlin")))
         assertEquals("08:31", Zeit.hhmm(augenblick, ZoneId.of("UTC")))
+    }
+
+    /**
+     * Der Dienstbeginn traegt das Datum nur, wenn er nicht von heute ist
+     * (Backlog Nr. 160).
+     *
+     * Der Fall dahinter: Wer den Dienst am Freitag nicht beendet, sieht am
+     * Montag weiter "laeuft seit 07:00" -- von einem Dienst, der vor zwoelf
+     * Minuten begann, nicht zu unterscheiden.
+     */
+    @Test fun derDienstbeginnTraegtDasDatumNurWennErNichtVonHeuteIst() {
+        val berlin = ZoneId.of("Europe/Berlin")
+        val freitag = Instant.parse("2026-09-04T05:00:00Z")     // Fr 07:00 Ortszeit
+
+        assertEquals(
+            "Am selben Tag bleibt die Zeile so kurz wie bisher",
+            "07:00",
+            Zeit.seit(freitag, Instant.parse("2026-09-04T05:12:00Z"), berlin, Locale.GERMAN),
+        )
+        assertEquals(
+            "Am Montag sagt sie, dass der Dienst vom Freitag ist",
+            "Fr. 04.09., 07:00",
+            Zeit.seit(freitag, Instant.parse("2026-09-07T05:12:00Z"), berlin, Locale.GERMAN),
+        )
+    }
+
+    /**
+     * Entschieden wird nach dem ORTSDATUM, nicht nach UTC.
+     *
+     * Ein Nachtdienst, der um 00:30 Ortszeit beginnt, laeuft um 01:00 noch
+     * am selben Tag -- in UTC waeren es zwei verschiedene. Wer nach UTC
+     * ginge, haengte jeder Nachtschicht ab Mitternacht ein Datum an.
+     */
+    @Test fun fuerDenTageswechselZaehltDieOrtszeit() {
+        val berlin = ZoneId.of("Europe/Berlin")
+        val kurzNachMitternacht = Instant.parse("2026-09-04T22:30:00Z")   // 00:30 Ortszeit am 5.
+        val halbeStundeSpaeter  = Instant.parse("2026-09-04T23:00:00Z")   // 01:00 Ortszeit am 5.
+        assertEquals(
+            "00:30",
+            Zeit.seit(kurzNachMitternacht, halbeStundeSpaeter, berlin, Locale.GERMAN),
+        )
     }
 }

@@ -185,6 +185,25 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.15.0 (Datum im Dienst und Erinnerung, Backlog Nr. 160),
+`./gradlew build` im Container, 08.09.2026:**
+
+| | `handy` | `uhr` |
+|---|---|---|
+| Lint-Fehler | **0** | **0** |
+| Lint-Warnungen | **14** | **0** |
+| Prüffälle je Bauart | **263**, davon 15 übersprungen | **71**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **7 868 394 B** | **19 574 402 B** |
+
+**263 statt 261:** zwei Fälle in `ZeitTest` — der Dienstbeginn trägt das Datum
+nur, wenn er nicht von heute ist, und für den Tageswechsel zählt die Ortszeit,
+nicht UTC. **14 statt 13 Warnungen:** eine weitere `PluralsCandidate`, für
+„%1$d Stunden" im Titel der neuen Erinnerung. Sie steht in derselben Reihe wie
+die zwei vorhandenen („Minuten", „Sekunden") und wird wie diese nicht
+stummgeschaltet; die Erinnerung kommt frühestens nach 26 Stunden, der Plural
+ist dort immer richtig. Das Handy-APK ist um 964 B gewachsen (zwei Texte, eine
+Meldung, das Datumsformat), das der Uhr unverändert.
+
 **Stand Android 0.14.1 („GPS-Daten" statt „Spur", E-S9-03), `./gradlew
 build` im Container, 07.09.2026** — fünf Texte in `strings.xml`, sonst
 nichts; die Zahlen sind die von 0.14.0, das APK des Handys ist um 36 B

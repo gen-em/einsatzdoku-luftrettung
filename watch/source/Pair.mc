@@ -262,7 +262,26 @@ module Pair {
             return;
         }
 
-        WatchUi.pushView(new WatchUi.Confirmation("Kopplung trennen und neu koppeln?"),
+        /* GEPARKTE PAKETE SPERREN DAS TRENNEN NICHT (Backlog Nr. 159).
+         *
+         * Sie zaehlen seit Uhr 3.1.0 nicht mehr im Rueckstand, und das ist
+         * der Ausweg aus einer Sackgasse: Bis dahin verweigerte diese Stelle
+         * das Trennen, solange irgendetwas offen stand -- auch dann, wenn der
+         * Server es dauerhaft ablehnte oder das Geraet abgemeldet hatte.
+         * Senden ging nicht, Trennen ging nicht, Neukoppeln setzt Trennen
+         * voraus: Es blieb nur, die App zu loeschen, und das nahm alles
+         * Uebrige mit.
+         *
+         * Verworfen werden sie beim Trennen trotzdem -- sie gehoeren dem
+         * bisherigen Konto. Die Rueckfrage sagt es, statt es zu tun und zu
+         * schweigen. */
+        var geparkt = Uploader.geparkteZahl();
+        var frage = geparkt > 0
+            ? (geparkt == 1
+                ? "Trennen? 1 abgewiesenes Paket geht dabei verloren"
+                : "Trennen? " + geparkt.toString() + " abgewiesene Pakete gehen dabei verloren")
+            : "Kopplung trennen und neu koppeln?";
+        WatchUi.pushView(new WatchUi.Confirmation(frage),
                          new TrennenDelegate(), WatchUi.SLIDE_LEFT);
     }
 
@@ -299,6 +318,15 @@ module Pair {
     /* Zugangsdaten auf der Uhr loeschen — beide Wege: die aus der Kopplung
      * (Storage) und die von Hand eingetragenen (Properties, Alt-Weg). */
     function lokalTrennen() as Void {
+        /* GEPARKTE PAKETE GEHEN MIT (Backlog Nr. 159).
+         *
+         * Sie gehoeren dem bisherigen Konto und koennen dorthin nie mehr
+         * gelangen -- der Server hat sie abgelehnt oder kennt das Geraet
+         * nicht mehr. Sie stehen zu lassen hiesse, ihre Spuren dauerhaft im
+         * Speicher zu halten, ohne dass irgendetwas sie je abholt. Die
+         * Rueckfrage vor dem Trennen sagt, wie viele es sind. */
+        Uploader.alleGeparktenVerwerfen();
+        Uploader.abgemeldet = false;
         Storage.deleteValue("cred");
         try {
             Properties.setValue("deviceId", "");

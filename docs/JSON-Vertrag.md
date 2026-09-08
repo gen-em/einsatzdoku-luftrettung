@@ -53,7 +53,9 @@ schon durchsetzt und welche noch nicht.
 | Block `geraet` wird gespeichert (1a) | durchgesetzt seit Web 12.9.0; davor stillschweigend verworfen |
 | Kopplung in drei Anliegen (1a) | durchgesetzt seit Web 13.0.0 — der alte Weg (Code aus dem Web, Uhr tippt ihn ein) ist ersatzlos entfallen |
 | 503 `{"error":"maintenance"}` während der Wartung (5) | durchgesetzt seit Web 13.2.0. **Für die Clients keine neue Regel** — es ist ein 5xx und wird als solches behandelt; der Zusatz `Retry-After` ist ein Hinweis, kein Auftrag |
-| 413 „Uhr halbiert die Chunk-Größe und wiederholt" (5) | **beschrieben, nicht umgesetzt** — `Uploader.mc` setzt bei jedem Fehlercode nur `lastError`, und `UPLOAD_CHUNK_POINTS` ist eine Konstante. Gefunden in S2/AP3; die Anwendung lehnt heute keine Chunk-Größe ab, die die Uhr sendet, deshalb tritt der Fall nicht auf |
+| `400` „nicht wiederholen, lokal als fehlerhaft markieren" (5) | durchgesetzt seit Uhr 3.1.0 — **nur mit erkennbarer Antwort des Servers** (`{"error":…}`). Ein blankes `400` kann von einem Zwischenstück kommen; ohne Kennzeichen wiederholt die Uhr weiter, statt ein gesundes Paket zu parken |
+| `401`/`403` halten den Upload an (5) | durchgesetzt seit Uhr 3.1.0. Sie sagen nichts über das Paket, sondern über das **Gerät**: gelöscht, Schlüssel ungültig, oder auf inaktiv gestellt. Die Uhr hört auf zu senden, behält alles und nennt den Grund; das Trennen ist dann **nicht** mehr gesperrt (Backlog Nr. 159) |
+| 413 „Uhr halbiert die Chunk-Größe und wiederholt" (5) | **beschrieben, nicht umgesetzt** — `UPLOAD_CHUNK_POINTS` ist eine Konstante. Gefunden in S2/AP3; die Anwendung lehnt heute keine Chunk-Größe ab, die die Uhr sendet, deshalb tritt der Fall nicht auf |
 
 Bis auf eine Zeile lauten alle „durchgesetzt" — die Tabelle beschreibt damit
 im Wesentlichen den Stand und keinen Zielzustand mehr. Sie bleibt trotzdem stehen, solange der

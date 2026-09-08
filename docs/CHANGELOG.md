@@ -14,6 +14,92 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 3.1.0] — 2026-09-08
+
+### Uhr — eine Störung ist keine dauerhafte Ablehnung (Backlog Nr. 159)
+
+Bis hierher lief jede Antwort außer Erfolg in denselben Zweig: `lastError`
+setzen, später erneut versuchen. Das ist für einen Netzfehler richtig und für
+eine Ablehnung falsch, und der Unterschied kostete mehr, als es zunächst
+aussieht. Ein Paket, das der Server nie annimmt, stand vorn in der
+Warteschlange und blieb dort — also kam auch nichts dahinter an. Weil ein
+Rückstand zugleich das Trennen der Kopplung sperrt („Erst 7 Pakete senden"),
+war die Uhr danach nur noch durch Löschen der App zu retten, und das nahm die
+sechs unschuldigen Pakete mit. Dieselbe Sackgasse, die beim Handy als Nr. 157
+notiert ist.
+
+**Der Fund lag nicht dort, wo der Backlog ihn vermutete.** Er nannte `400`
+„Nachricht fehlerhaft", und den kann die Uhr praktisch nicht auslösen. Die
+Fälle, die im Betrieb vorkommen, löst jemand selbst aus: Wer sein Gerät in der
+Weboberfläche löscht, bekommt `401`, wer es auf inaktiv stellt, `403`. Beide
+sagen nichts über das Paket, sondern über das **Gerät** — und deshalb wird
+dort auch nichts geparkt: Mit den Paketen ist nichts verkehrt, sie werden
+gebraucht, sobald jemand neu koppelt. Die Uhr hört auf zu senden, behält
+alles und schreibt „Gerät nicht mehr angemeldet · Neu koppeln: START halten"
+statt „Upload 401". Das Trennen ist dann nicht mehr gesperrt.
+
+Ein `400` parkt dagegen genau das eine Paket, und die Schlange läuft weiter —
+**aber nur mit erkennbarer Antwort des Servers** (`{"error":"payload"}`). Ein
+blankes `400` kann von jedem Zwischenstück kommen, einem Reverse Proxy, einer
+Firewall, einer vertippten Adresse in den Einstellungen; ein gesundes Paket
+dafür zu parken wäre schlimmer als ein Versuch zuviel.
+
+Die Anzeige sagt jetzt, was los ist: Sind nur abgewiesene Pakete übrig, steht
+die Zahl **rot** und darunter „Paket abgewiesen" — kein grünes „Sync
+vollständig" mit Haken mehr, während beim Server ein Einsatz fehlt. Genau
+diesen Fehler hatte die Handy-App schon einmal (B-S5Z-06). Anders als
+`lastError` überlebt die Meldung den nächsten erfolgreichen Upload; sonst
+verschwände sie, sobald die übersprungenen Pakete durchgelaufen sind.
+
+Der Weg heraus liegt auf dem **kurzen** Auswahl-Druck, der auf dieser Seite
+frei war: Er verwirft die abgewiesenen Pakete, nach einer Rückfrage, die die
+Zahl nennt und sagt, dass die Aufzeichnung danach fort ist. Beim Trennen der
+Kopplung gehen sie ohnehin mit — sie gehören dem bisherigen Konto —, und auch
+das steht jetzt in der Rückfrage, statt stillschweigend zu geschehen.
+
+Zwei Fallen, die das Bauen aufgedeckt hat und die im Code stehen: Ein
+geparktes Paket darf **nicht** über `hasWork()` aus der Schlange fallen, weil
+`Model.backlogCount()` Einträge ohne Arbeit selbst entsorgt — die Spur bliebe
+als Waise im Speicher, rund 100 kB, die nichts mehr freigibt. Und
+`allSynced()` muss geparkte ausnehmen, sonst käme die Rückfrage „Sync
+unvollständig, trotzdem beenden?" bei jedem Dienstende wieder, für immer.
+
+## [Android 0.15.0] — 2026-09-08
+
+### Android — der Dienst sagt, seit wann er läuft (Backlog Nr. 160)
+
+Ein zweiter „Dienst beginnen" setzt bei laufendem Dienst den alten fort
+(E-R45-13, und das ist gewollt). Wer den Freitagsdienst nicht beendet und am
+Montag die App öffnet, findet deshalb keinen Startknopf, sondern „Dienst
+beenden" — und die Zeile darüber sagte „Dienst läuft seit 07:00". Das ist von
+einem Dienst, der vor zwölf Minuten begann, nicht zu unterscheiden. Bis dahin
+sind drei Tage aufgezeichnet, das Wochenende eingeschlossen, und diese
+GPS-Daten liegen im Klartext.
+
+Die Anzeige führt jetzt das Datum, sobald der Dienst an einem anderen
+Kalendertag begann: „Dienst läuft seit Fr. 05.09., 07:00". An einem
+gewöhnlichen Tag bleibt die Zeile so kurz wie bisher — bei 360 dp ist sie im
+Zustand „kein GPS-Signal seit 43 min · keine Aufzeichnung" schon ohne acht
+weitere Zeichen knapp. Entschieden wird nach dem **Ortsdatum**: Ein
+Nachtdienst, der um 00:30 beginnt, läuft um 01:00 noch am selben Tag, und wer
+nach UTC ginge, hängte jeder Nachtschicht ab Mitternacht ein Datum an.
+Dieselbe Regel gilt in der Dauermeldung, die auch dann sichtbar ist, wenn die
+App geschlossen ist.
+
+**Nach 26 Stunden erinnert die App einmal daran, den Dienst zu beenden**, mit
+dem Knopf „Dienst beenden" im vorhandenen Warnkanal. Die Zahl ist gewählt und
+nicht gemessen, deshalb steht ihre Begründung am Code: Ein Dienst dauert
+regulär bis zu 24 Stunden (Auskunft des Auftraggebers, 08.09.2026), die zwei
+Stunden darüber sind die Luft für einen späten Schichtwechsel oder einen
+Einsatz, der über das Dienstende läuft. Wer regulär arbeitet, sieht die
+Erinnerung nie. Was sie verhindern soll, ist nicht der lange Dienst, sondern
+der vergessene.
+
+Was sie **nicht** kann: das schon Hochgeladene wieder loswerden. Heute geht
+nur alles oder nichts — der Diensttag wandert in den Papierkorb und nimmt
+seine Ruhezeiten mit, samt dem Freitagsdienst, den man behalten will. Das
+steht als Backlog Nr. 161.
+
 ## [Android 0.14.1] — 2026-09-07
 
 ### Android — „GPS-Daten" statt „Spur" in fünf Texten (E-S9-03, Backlog Nr. 110)

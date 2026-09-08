@@ -94,6 +94,17 @@ class AufzeichnungsDienst : LifecycleService() {
      */
     private var taktLaeuft = false
 
+    /**
+     * Steht die Erinnerung an einen sehr langen Dienst schon? (Backlog Nr. 160)
+     *
+     * Der Merker liegt im Speicher und nicht im Puffer: Er soll EINEN Lauf
+     * des Aufzeichnungsdienstes ueberdauern, nicht den Dienst selbst. Wird
+     * der Aufzeichnungsdienst neu gestartet -- was das System bei Bedarf tut
+     * --, kommt die Erinnerung noch einmal. Das ist gewollt: Sie erinnert
+     * dann an einen Dienst, der immer noch laeuft, und genau darum geht es.
+     */
+    private var dauererinnerungSteht = false
+
     /** Der Ortungswächter des laufenden Dienstes; `null` = keiner läuft. */
     private var waechter: Ortungswaechter? = null
 
@@ -543,6 +554,71 @@ class AufzeichnungsDienst : LifecycleService() {
     }
 
     /**
+     * Laeuft dieser Dienst ungewoehnlich lange? (Backlog Nr. 160)
+     *
+     * Sie haengt am Waechtertakt, weil der sicher laeuft, solange
+     * aufgezeichnet wird. Der Vergleich kostet nichts, und der Merker sorgt
+     * dafuer, dass die Meldung genau einmal je Lauf entsteht -- eine
+     * Erinnerung alle zehn Sekunden waere keine, sondern eine Belaestigung,
+     * und die erste Handbewegung waere das Wegwischen.
+     */
+    private fun dienstdauerPruefen() {
+        if (dauererinnerungSteht) return
+        val dienst = app.klammer.laufenderDienst() ?: return
+        val beginn = try {
+            java.time.Instant.parse(dienst.begonnenAt)
+        } catch (e: java.time.format.DateTimeParseException) {
+            Log.w(MARKE, "Dienstbeginn unlesbar: ${dienst.begonnenAt}")
+            return
+        }
+        val stunden = java.time.Duration.between(beginn, java.time.Instant.now()).toHours()
+        if (stunden < DIENSTDAUER_ERINNERUNG_H) return
+        dauererinnerungSteht = true
+        dauererinnerungStellen(beginn, stunden)
+    }
+
+    private fun dauererinnerungStellen(beginn: java.time.Instant, stunden: Long) {
+        val text = getString(
+            R.string.warnung_dienstdauer_text,
+            org.genem.nadoku.handy.dienst.Zeit.seit(beginn, java.time.Instant.now()),
+        )
+        val bau = NotificationCompat.Builder(this, KANAL_WARNUNG)
+            .setSmallIcon(R.drawable.symbol_meldung)
+            .setContentTitle(getString(R.string.warnung_dienstdauer_titel, stunden))
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    this, 3,
+                    Intent(this, HauptActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                    PendingIntent.FLAG_IMMUTABLE,
+                )
+            )
+            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .addAction(
+                0,
+                getString(R.string.dienst_beenden),
+                PendingIntent.getService(
+                    this, 3,
+                    Intent(this, AufzeichnungsDienst::class.java).setAction(BEENDEN),
+                    PendingIntent.FLAG_IMMUTABLE,
+                ),
+            )
+        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .notify(DAUERWARNUNG_ID, bau.build())
+        Log.w(MARKE, "Dienst laeuft seit $stunden h — erinnert.")
+    }
+
+    private fun dauererinnerungLoeschen() {
+        dauererinnerungSteht = false
+        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .cancel(DAUERWARNUNG_ID)
+    }
+
+    /**
      * Der Wächtertakt (Z-S5Z-03, 10 s) — **mit eigenem Token** (E-S5Z-23).
      *
      * Er misst die Stille: Ohne ihn fiele ein Signalverlust erst auf, wenn
@@ -553,6 +629,7 @@ class AufzeichnungsDienst : LifecycleService() {
         spaeter(TOKEN_WAECHTER, Ortungswaechter.TAKT_MS, object : Runnable {
             override fun run() {
                 waechter?.let { waechterFolge(it.tick(jetztMs())) }
+                dienstdauerPruefen()
                 spaeter(TOKEN_WAECHTER, Ortungswaechter.TAKT_MS, this)
             }
         })
@@ -634,6 +711,7 @@ class AufzeichnungsDienst : LifecycleService() {
         akkuwaechter = null
         warnungLoeschen()
         akkuwarnungLoeschen()
+        dauererinnerungLoeschen()
         app.ortung = null
     }
 
@@ -786,8 +864,8 @@ class AufzeichnungsDienst : LifecycleService() {
      */
     private fun meldungstext(): String {
         val dienst = app.klammer.laufenderDienst() ?: return getString(R.string.dienst_meldung_ohne)
-        val seit = org.genem.nadoku.handy.dienst.Zeit.hhmm(
-            java.time.Instant.parse(dienst.begonnenAt)
+        val seit = org.genem.nadoku.handy.dienst.Zeit.seit(
+            java.time.Instant.parse(dienst.begonnenAt), java.time.Instant.now()
         )
         val lage = app.ortung
         return when (lage?.stand) {
@@ -912,6 +990,27 @@ class AufzeichnungsDienst : LifecycleService() {
 
         /** 4 Akkuwarnung (Backlog Nr. 82). */
         const val AKKUWARNUNG_ID = 4
+
+        /** 5 Erinnerung an einen sehr langen Dienst (Backlog Nr. 160). */
+        const val DAUERWARNUNG_ID = 5
+
+        /**
+         * Ab wann ein laufender Dienst an sich erinnert — 26 Stunden.
+         *
+         * GEWAEHLT, NICHT GEMESSEN, und deshalb steht die Begruendung hier:
+         * Ein Dienst dauert regulaer bis zu 24 Stunden (Auskunft des
+         * Auftraggebers, 08.09.2026). Die zwei Stunden darueber sind die Luft
+         * fuer einen spaeten Schichtwechsel, eine verzoegerte Uebergabe, einen
+         * Einsatz, der ueber das Dienstende laeuft. Wer regulaer arbeitet,
+         * sieht die Erinnerung nie.
+         *
+         * Was sie verhindern soll, ist nicht der lange Dienst, sondern der
+         * VERGESSENE: Ein zweiter "Dienst beginnen" setzt den alten fort
+         * (E-R45-13), die Anzeige nennt nur die Uhrzeit, und das Handy
+         * zeichnet weiter auf -- auch am Wochenende, auch auf dem Weg nach
+         * Hause. Die Aufzeichnung liegt im Klartext.
+         */
+        const val DIENSTDAUER_ERINNERUNG_H = 26L
 
         const val BEENDEN = "org.genem.nadoku.BEENDEN"
 

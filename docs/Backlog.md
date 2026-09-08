@@ -1734,6 +1734,16 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zuordnung: nächste Uhr-Stufe. **Vor jeder künftigen Änderung, die
     `ingest.php` einen neuen `400`-Fall gibt, zuerst dieser Punkt.**
 
+    **Erledigt am 08.09.2026** mit **Uhr 3.1.0** — und mit anderem Zuschnitt,
+    als hier stand. `400` war der falsche Fokus: Die Uhr kann ihn kaum
+    auslösen. Bedienbar erreichbar sind `401` und `403` (Gerät im Web
+    gelöscht oder abgeschaltet), und sie sagen nichts über das Paket,
+    sondern über das Gerät — dort wird deshalb nichts geparkt, sondern das
+    Senden angehalten. Der schwerere Teil des Fundes war ohnehin ein
+    anderer: Weil ein Rückstand das Trennen sperrte, war die Uhr nach einer
+    dauerhaften Ablehnung nur noch durch Löschen der App zu retten. Das ist
+    behoben; geparkte Pakete zählen nicht mehr im Rückstand.
+
 160. **Ein fortgesetzter Dienst führt das Handy tagelang unter dem alten
     Datum — und die Anzeige verrät es nicht.** *Aufgenommen 08.09.2026 aus
     derselben Gegenprüfung.* `Dienstklammer.beginnen()` gibt bei laufendem
@@ -1748,6 +1758,30 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Kalendertag, das Datum in der Anzeige mitführen und beim zweiten
     „Dienst beginnen" ausdrücklich fragen, ob fortgesetzt oder neu begonnen
     wird. Zuordnung: nächste Android-Stufe.
+
+    **Erledigt am 08.09.2026** mit **Android 0.15.0** — allerdings anders als
+    hier vorgeschlagen. Die Anzeige führt das Datum, sobald der Dienst an
+    einem anderen Kalendertag begann, und nach 26 Stunden erinnert die App
+    einmal daran, ihn zu beenden. Die Rückfrage beim zweiten „Dienst
+    beginnen" ist **nicht** gebaut: Den Startknopf gibt es bei laufendem
+    Dienst gar nicht, die Frage müsste an die Uhr, und wer am Montag einfach
+    weiterarbeitet, drückt ohnehin nichts. Was offen bleibt, ist das
+    Löschen der schon hochgeladenen Aufzeichnung — Nr. 161.
+
+161. **Aus einer Aufzeichnung ein Stück löschen können.** *Aufgenommen
+    08.09.2026 beim Bauen von Nr. 160.* Ein vergessener Dienst zeichnet
+    weiter auf — auch das Wochenende, auch den Weg nach Hause. Was dabei
+    hochgeladen wurde, lässt sich heute nur **ganz oder gar nicht**
+    loswerden: `trash_delete_day()` legt den Diensttag in den Papierkorb und
+    nimmt seine Ruhezeiten mit (`deleted_with_day = 1`), also auch den
+    echten Dienst, den man behalten will. Das Schneidewerkzeug
+    (`api/schneiden.php`) macht aus einem Stück Spur einen **Einsatz**; es
+    löscht keines. Für GPS-Daten, die im Klartext liegen und den Wohnort
+    zeigen, ist das zu grob. Behebung: In der Ansicht der Ruhezeiten einen
+    Zeitraum wählen und dessen Punkte löschen können — über `spur_lib.php`,
+    nie unmittelbar per SQL (CLAUDE.md 4), mit Rückfrage und einer Zeile im
+    Protokoll. Zuordnung: Backlog-Runde, gemeinsam mit Nr. 43 (Ortsdaten)
+    zu betrachten.
 
 
 ## Erledigt

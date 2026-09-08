@@ -4370,14 +4370,14 @@ und genau dann wäre er nötig.
 | `Model.mc` | Dienst-Klammer, Phasenlogik, Einsatz-/Segment-Lebenszyklus, Rea-Sitzungen, Persistenz (`state`) |
 | `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
 | `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert |
-| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()` |
+| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.1c |
 | `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1) |
 | `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
 | `Ui.mc` | Geometrie relativ zur Displayhöhe (`s()` liefert bei 260 exakt den Ausgangswert), Markenfarben, Rea-Marker |
 | `Nav.mc` | Pager: Uhr → Tempo → Statistik → Sync → Rea |
 | `StartView.mc` | Startbildschirm „Dienst beginnen"; Hinweise zu Server-Adresse und Kopplung |
 | `ClockView/SpeedView/StatsView/SyncView/CprView.mc` | Oberflächen + Delegates; erben von `ActionDelegate` und beschreiben nur noch die Aktionen |
-| `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete), App-Version, Kopplung per START-Halten |
+| `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete, **ohne geparkte**), App-Version, Kopplung per START-Halten, **Verwerfen abgewiesener Pakete per kurzem START** |
 | `Pair.mc` | Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher** |
 | `PairView.mc` | Die Kopplungsansicht: zeigt den Code groß, dazu Restzeit und Verbindungshinweis; BACK bricht ab. Eigene Ansicht, weil der Code Buchstaben trägt (keine Ziffernschrift), eine Restzeit läuft und BACK hier anders wirkt als auf der Sync-Seite |
 | `Const.mc` / `Util.mc` | `APP_VERSION`, Labels, Tuning-Werte; ISO-UTC, lokale Anzeige, Vibration |
@@ -4816,6 +4816,39 @@ Zuordnung an der Symbolgröße hing. Begründung der Stufenzahl:
 
 Bilder erzeugen: `tools/uhr-bilder/erzeugen.sh`. Die passenden Jungle-Zeilen:
 `tools/uhr-pruefstand/geraeteklassen.py --bloecke`.
+
+### 5.1c Was die Uhr mit einer Absage anfängt (ab Uhr 3.1.0, Backlog Nr. 159)
+
+Bis Uhr 3.0.2 kannte `Uploader.onResponse()` zwei Fälle: Erfolg, und alles
+andere. „Alles andere" hieß `lastError` setzen und beim nächsten Anlass erneut
+versuchen — für einen Netzfehler richtig, für eine Absage falsch. Ein Paket,
+das der Server nie annimmt, stand vorn in `_findJob()` und blieb dort; alles
+dahinter kam nicht mehr an. Und weil `Pair.start()` das Trennen verweigert,
+solange `Model.backlogCount() > 0`, ließ sich die Uhr danach auch nicht mehr
+neu koppeln. Es blieb das Löschen der App, mit allem, was sie trug.
+
+Seither unterscheidet die Antwortbehandlung drei Fälle:
+
+| Antwort | Bedeutung | Was die Uhr tut |
+|---|---|---|
+| `401`, `403` | Das **Gerät** ist abgemeldet: gelöscht, Schlüssel ungültig, oder auf inaktiv gestellt | `Uploader.abgemeldet` wird gesetzt, `syncAll()` kehrt sofort zurück. **Kein Paket wird geparkt** — mit ihnen ist nichts verkehrt, sie werden nach einer neuen Kopplung gebraucht. Die Sync-Seite nennt den Grund und den Weg zurück |
+| `400` **mit** `{"error":…}` | **Dieses** Paket ist unbrauchbar | Marke `bad_<ref>` im Storage, `_next()` arbeitet weiter. Ein blankes `400` ohne Kennzeichen zählt nicht: Es kann von jedem Zwischenstück kommen, und ein gesundes Paket dafür zu parken wäre teurer als ein Versuch zuviel |
+| alles Übrige | Störung | unverändert: `lastError`, später erneut |
+
+**Ein geparktes Paket wird übersprungen, nicht entfernt.** Das ist der Punkt,
+an dem die naheliegende Lösung Daten verliert: `Model.backlogCount()` entsorgt
+Einträge, für die `Uploader.hasWork()` falsch liefert — wer ein geparktes
+Paket darüber aus der Schlange nähme, ließe seine Spur als Waise im Speicher
+zurück, rund 100 kB, die nichts mehr freigibt. `hasWork()` bleibt deshalb
+wahr; `_findJob()`, `backlogCount()` und `allSynced()` fragen zusätzlich
+`istGeparkt()`. Entfernt wird nur über `Uploader.verwerfen()`, und das räumt
+`Track.purge()` und alle drei Marken mit.
+
+Dass geparkte Pakete **nicht** im Rückstand zählen, ist kein Schönheitsfehler,
+sondern der Ausweg: Sonst bliebe die Zahl für immer über null, `Pair.start()`
+verweigerte das Trennen weiter, und die Sackgasse wäre dieselbe wie vorher.
+Beim Trennen werden sie verworfen — sie gehören dem bisherigen Konto —, und
+die Rückfrage sagt es vorher.
 
 ### 5.2 Neue Zielgeräte prüfen — `tools/eingabe-probe`
 

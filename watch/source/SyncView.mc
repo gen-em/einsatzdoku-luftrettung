@@ -118,6 +118,7 @@ class SyncView extends WatchUi.View {
          * Hinweis darunter. Ein Widerspruch entsteht dabei nicht — es sind
          * Pakete offen, und daneben steht, warum. */
         var einrichten = (schritt != null && open == 0);
+        var geparkt = Uploader.geparkteZahl();
 
         // --- Unterer Block zuerst -------------------------------------------
         // Meldungen und Version stehen unten. Ihre Zeilenzahl schwankt, deshalb
@@ -148,6 +149,23 @@ class SyncView extends WatchUi.View {
                 lines.add([Pair.statusHint as Lang.String, Graphics.COLOR_LT_GRAY]);
             }
         }
+        /* ABGEMELDET UND ABGEWIESEN (Backlog Nr. 159).
+         *
+         * Beides steht unten, weil beides einen Weg heraus hat und der
+         * gehoert neben die Ursache. Und beides ueberlebt den naechsten
+         * erfolgreichen Upload -- anders als `lastError`, das bei jeder
+         * angenommenen Anfrage auf null geht: Die alte Fassung zeigte
+         * "Upload 400" nur so lange, bis die uebersprungenen Pakete
+         * durchgelaufen waren, und danach wieder ein gruenes
+         * "Sync vollstaendig". */
+        if (Uploader.abgemeldet) {
+            lines.add(["Gerät nicht mehr angemeldet", Ui.ROT]);
+            lines.add(["Neu koppeln: " + Input.lSelectHold(), Graphics.COLOR_LT_GRAY]);
+        } else if (geparkt > 0) {
+            lines.add([geparkt == 1 ? "1 abgewiesen"
+                                    : geparkt.toString() + " abgewiesen", Ui.ROT]);
+            lines.add([Input.lSelect() + ": verwerfen", Graphics.COLOR_LT_GRAY]);
+        }
         if (Cpr.active) {
             lines.add([Cpr.paused ? "REA pausiert" : "REA läuft",
                        Cpr.paused ? Ui.BLAU : Ui.ROT]);
@@ -170,7 +188,7 @@ class SyncView extends WatchUi.View {
         var blockH;
         if (einrichten) {
             blockH = hKlein + gGps + hZust + gZust + hKlein;
-        } else if (open == 0) {
+        } else if (open == 0 && geparkt == 0) {
             blockH = hKlein + gGps + hGross + hHaken;
         } else {
             blockH = hKlein + gGps + hZahl + hMitte;
@@ -244,7 +262,7 @@ class SyncView extends WatchUi.View {
             dc.drawText(cx, sy,
                 Ui.fitFont(dc, tS, sy, hKlein, [fKlein, Graphics.FONT_XTINY]),
                 tS, Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (open == 0) {
+        } else if (open == 0 && geparkt == 0) {
             dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, y, Graphics.FONT_LARGE, "Sync vollständig",
                 Graphics.TEXT_JUSTIFY_CENTER);
@@ -254,7 +272,22 @@ class SyncView extends WatchUi.View {
             dc.drawLine(cx - Ui.s(dc, 14), hy, cx - Ui.s(dc, 4), hy + Ui.s(dc, 10));
             dc.drawLine(cx - Ui.s(dc, 4), hy + Ui.s(dc, 10), cx + Ui.s(dc, 15), hy - Ui.s(dc, 11));
             dc.setPenWidth(1);
+        } else if (open == 0) {
+            /* NUR ABGEWIESENE: rot statt gruen, und die Zahl sagt, worum es
+             * geht. Ein Haken waere hier eine Unwahrheit -- beim Server fehlt
+             * ein Einsatz. */
+            dc.setColor(Ui.ROT, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, y, Graphics.FONT_NUMBER_MILD, geparkt.toString(),
+                Graphics.TEXT_JUSTIFY_CENTER);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, y + hZahl, Graphics.FONT_SMALL,
+                geparkt == 1 ? "Paket abgewiesen" : "Pakete abgewiesen",
+                Graphics.TEXT_JUSTIFY_CENTER);
         } else {
+            /* RUECKSTAND UND ABGEWIESENE ZUGLEICH: Der Rueckstand bleibt die
+             * Hauptaussage, denn er loest sich von selbst. Das Abgewiesene
+             * steht unten und verschwindet nicht mehr, sobald der Rest
+             * durchgelaufen ist. */
             dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, y, Graphics.FONT_NUMBER_MILD, open.toString(),
                 Graphics.TEXT_JUSTIFY_CENTER);
@@ -276,6 +309,18 @@ class SyncView extends WatchUi.View {
     }
 }
 
+/* Die Rueckfrage vor dem Verwerfen (Backlog Nr. 159). */
+class VerwerfenDelegate extends WatchUi.ConfirmationDelegate {
+    function initialize() { ConfirmationDelegate.initialize(); }
+    function onResponse(response) as Lang.Boolean {
+        if (response == WatchUi.CONFIRM_YES) {
+            Uploader.alleGeparktenVerwerfen();
+            WatchUi.requestUpdate();
+        }
+        return true;
+    }
+}
+
 class SyncDelegate extends ActionDelegate {
 
     var _fromStart as Lang.Boolean;
@@ -283,6 +328,29 @@ class SyncDelegate extends ActionDelegate {
     function initialize(fromStart as Lang.Boolean) {
         ActionDelegate.initialize(false);
         _fromStart = fromStart;
+    }
+
+    /* KURZER START: die geparkten Pakete verwerfen (Backlog Nr. 159).
+     *
+     * Diese Taste war auf dieser Seite unbelegt, und sie ist der einzige
+     * Weg heraus, den die Uhr selbst anbieten kann: Ein abgewiesenes Paket
+     * kommt nie mehr an, und solange es liegt, haelt es seine Spur im
+     * Speicher.
+     *
+     * MIT RUECKFRAGE, und die nennt die Zahl: Verwerfen ist endgueltig, die
+     * Aufzeichnung ist danach fort. Die Seite blaettert man im Dienst durch
+     * -- ein versehentlicher Druck darf nichts vernichten. Steht nichts
+     * Geparktes an, tut die Taste nichts, statt eine Rueckfrage ohne
+     * Gegenstand zu oeffnen. */
+    function actSelectShort() as Lang.Boolean {
+        var n = Uploader.geparkteZahl();
+        if (n == 0) { return true; }
+        var frage = n == 1
+            ? "1 abgewiesenes Paket verwerfen? Die Aufzeichnung ist dann weg"
+            : n.toString() + " abgewiesene Pakete verwerfen? Die Aufzeichnungen sind dann weg";
+        WatchUi.pushView(new WatchUi.Confirmation(frage),
+                         new VerwerfenDelegate(), WatchUi.SLIDE_LEFT);
+        return true;
     }
 
     // Geraete-Kopplung (START halten bzw. Action halten). NICHT direkt in die

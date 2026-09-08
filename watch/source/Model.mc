@@ -46,11 +46,20 @@ module Model {
         // Fertig uebertragene Eintraege, die nur noch in der Liste stehen,
         // werden dabei gleich entsorgt (Selbstheilung) — sonst zeigte die
         // Sync-Seite dauerhaft "1 Paket offen", obwohl alles angekommen ist.
+        /* GEPARKTE ZAEHLEN NICHT ALS RUECKSTAND (Backlog Nr. 159): An ihnen ist
+         * nichts mehr zu senden, und sie mitzuzaehlen hiesse, dass die Zahl
+         * nie wieder auf null geht -- und dass Pair.start() das Trennen
+         * dauerhaft verweigert. Entsorgt werden sie hier aber AUCH NICHT: Sie
+         * haben noch Arbeit im Sinne von hasWork(), und ein stilles Entfernen
+         * liesse ihre Spur als Waise im Speicher zurueck. Sie verschwinden
+         * nur ueber Uploader.verwerfen(), und das raeumt die Spur mit. */
         var n = 0;
         var changed = false;
         for (var i = pendingMissions.size() - 1; i >= 0; i--) {
             var m = pendingMissions[i];
-            if (!Uploader.hasWork(m["ref"] as Lang.String)) {
+            var mref = m["ref"] as Lang.String;
+            if (Uploader.istGeparkt(mref)) { continue; }
+            if (!Uploader.hasWork(mref)) {
                 if (m["final"] == true) { pendingMissions.remove(m); changed = true; }
             } else if (m["final"] == true) {
                 n += 1;
@@ -58,7 +67,9 @@ module Model {
         }
         for (var j = pendingRest.size() - 1; j >= 0; j--) {
             var r = pendingRest[j];
-            if (!Uploader.hasWork(r["ref"] as Lang.String)) {
+            var rref = r["ref"] as Lang.String;
+            if (Uploader.istGeparkt(rref)) { continue; }
+            if (!Uploader.hasWork(rref)) {
                 if (r["final"] == true) { pendingRest.remove(r); changed = true; }
             } else if (r["final"] == true) {
                 n += 1;

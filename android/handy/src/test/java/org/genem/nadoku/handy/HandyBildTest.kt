@@ -178,7 +178,7 @@ class HandyBildTest {
         DienstAnsicht(
             stand = Dienststand(
                 laeuft = laeuft,
-                begonnenHhmm = if (laeuft) "07:02" else null,
+                begonnenSeit = if (laeuft) "07:02" else null,
                 modus = modus,
                 punkte = if (laeuft) 1483 else 0,
                 streckeKm = if (laeuft) "126,4" else "0,0",
