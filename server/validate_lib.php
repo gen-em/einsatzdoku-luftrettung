@@ -439,6 +439,17 @@ function pruef_utc_oder_sql($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = 
  * der Zeitraum eines Diensttags, an dem seit 72 Stunden niemand mehr etwas
  * angelegt hat, wird ohnehin nicht mehr fortgeschrieben.
  *
+ * VERWORFENE ALTERNATIVE: gegen die GEGENWART pruefen statt gegen `day`
+ * (etwa "nicht aelter als ein Jahr, nicht mehr als einen Tag in der
+ * Zukunft"). Das braeuchte keine Grenze fuer lange Dienste und faengt 2001
+ * wie 2097. Es bricht aber die NACHLIEFERUNG: Eine Uhr, die ein Jahr im
+ * Schrank lag, meldet einen Dienst, dessen Zeiten stimmig zu seinem `day`
+ * sind -- und sein Diensttag bekaeme keinen Zeitraum. Genau dieser Fehler,
+ * die Gegenwart als Massstab fuer Vergangenes, ist in dieser Runde schon
+ * zweimal gemacht worden. `day` und die Zeiten stammen aus demselben Paket;
+ * ob sie ZUEINANDER passen, ist die Frage, die ohne Wissen ueber die
+ * Aussenwelt zu beantworten ist.
+ *
  * Ein leerer Zeitpunkt ist in Ordnung — `ended_at` fehlt, solange der Einsatz
  * laeuft.
  */
