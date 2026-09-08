@@ -272,11 +272,17 @@ function dt_merge_rm_gewinner(array $ziel, array $quelle, string $wahl = 'ziel')
  * Diensttag von gestern.
  *
  * WO SIE GILT UND WO NICHT (E-S9-09, berichtigt am 08.09.2026). Kurzname
- * STATT der Bezeichnung: die DIENSTTAGE-LEISTE, und dort in jeder Breite —
- * sie ist die schmalste Stelle, und dort soll die Person ihren eigenen Dienst
- * wiedererkennen. Der Konzepttext nannte daneben Kacheln und Plaketten; das
- * ist zurueckgenommen, weil beide gar kein Rettungsmittel nennen und es dort
- * nichts zu ersetzen gab (Mockup M-S9-08, Fragen 3a und 3b).
+ * STATT der Bezeichnung an ZWEI Stellen, und nur dort:
+ *   - die DIENSTTAGE-LEISTE, in jeder Breite — sie ist die schmalste Stelle,
+ *     und dort soll die Person ihren eigenen Dienst wiedererkennen;
+ *   - die Kleinzeile des PAPIERKORBS (`papierkorb.php`), die drei Angaben
+ *     nebeneinander traegt und denselben Platzdruck hat.
+ * Der Konzepttext nannte daneben Kacheln und Plaketten; das ist
+ * zurueckgenommen, weil beide gar kein Rettungsmittel nennen und es dort
+ * nichts zu ersetzen gab (Mockup M-S9-08, Fragen 3a und 3b). Wer eine dritte
+ * Stelle aufmacht, traegt sie HIER ein — sonst steht die Regel bald neben
+ * dem, was der Code tut, und das ist bei dieser Funktion schon einmal
+ * passiert (F-S9-U-14, gefunden von der Gegenprobe am 08.09.2026).
  * Volle Bezeichnung: Formulare, Export, Sicherung, Suche und alles, was jemand
  * ausserhalb dieser Installation liest. Wer den Kurznamen an einer der zweiten
  * Stellen EINSETZT, macht aus einer Abkuerzung fuer den Hausgebrauch eine

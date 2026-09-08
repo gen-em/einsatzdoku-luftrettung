@@ -42,11 +42,19 @@
 /** Die Tagesübersicht öffnen und ihr Zuordnungsformular aufklappen. */
 async function tagAuf(k, tag) {
   await k.gehZu(`${k.basis}/index.php?d=${tag}`);
-  /* Das Formular ist zunächst `hidden` und wird von `api/day.php` gefüllt —
-     vorher steht in `#vehsel` nichts (Fund aus AP4). */
+  /* GEWARTET WIRD AUF `currentDayId`, NICHT AUF DIE OPTIONEN.
+     Die Optionen von `#vehsel` rendert `index.php` serverseitig aus
+     `$SD_VEHICLES` (Z. 278–288) — `options.length > 1` ist schon beim Parsen
+     wahr und wartet auf gar nichts. Den WERT setzt erst `loadDay()` nach
+     seinem `await` (Z. 739, 783 ff.). Wer auf die Optionen wartet, liest
+     unter Last ein leeres `#vehsel`, hält das für „kein Rettungsmittel" und
+     stellt am Ende genau das wieder her: Der Diensttag verliert seine
+     Zuordnung, und niemand sieht es (F-S9-U-15, Gegenprobe 08.09.2026).
+     `currentDayId` setzt `loadDay()` erst, wenn die Antwort da ist. */
   await k.seite.waitForFunction(
-    () => { const s = document.getElementById('vehsel');
-            return s && s.options.length > 1; }, null, { timeout: 20000 });
+    (id) => typeof currentDayId !== 'undefined' && currentDayId !== null
+            && Number(currentDayId) === Number(id),
+    tag, { timeout: 20000 });
   if (await k.seite.evaluate(() => document.getElementById('dayform').hidden)) {
     await k.seite.locator('#tagdatenknopf').click();
     await k.seite.waitForSelector('#vehsel', { state: 'visible', timeout: 10000 });
@@ -62,18 +70,39 @@ async function zuordnungLesen(k, tag) {
   }));
 }
 
-/** Zuordnen und auf die Rückmeldung warten — gespeichert wird per fetch. */
+/**
+ * Zuordnen, auf die Rückmeldung warten — und NACHLESEN.
+ *
+ * Gespeichert wird per fetch (`index.php` fängt den Submit ab), die Antwort
+ * steht in `#savestate`. Die Zeitgrenze darf hier NICHT verschluckt werden:
+ * Diese Funktion stellt im `finally` den Bestand zurück, und ein
+ * stillschweigend gescheitertes Zurückstellen hinterlässt einen Diensttag mit
+ * fremder Zuordnung, während der Weg „erfüllt" meldet (F-S9-U-16, Gegenprobe
+ * 08.09.2026). Deshalb: kein `catch` an der Grenze, und danach wird gelesen,
+ * was wirklich dasteht. Stimmt es nicht, fliegt der Weg — auch aus dem
+ * `finally` heraus, und das ist die Absicht.
+ */
 async function zuordnen(k, tag, vehWert, baseWert) {
   await tagAuf(k, tag);
   await k.seite.selectOption('#vehsel', vehWert);
+  /* Der Standort darf fehlschlagen: `vehicleBaseSync()` setzt ihn beim
+     Wechsel des Rettungsmittels selbst, und dann gibt es den alten Wert als
+     Option nicht mehr. Geprüft wird deshalb unten nur das Rettungsmittel. */
   await k.seite.selectOption('#basesel', baseWert).catch(() => {});
   await k.seite.evaluate(() => { document.getElementById('savestate').textContent = ''; });
   await k.seite.locator('#dayform button[type="submit"]').first().click();
   await k.seite.waitForFunction(
     () => /gespeichert|Gespeichert/.test(
       document.getElementById('savestate').textContent || ''),
-    null, { timeout: 15000 }).catch(() => {});
+    null, { timeout: 15000 });
   await k.seite.waitForTimeout(300);
+
+  await tagAuf(k, tag);
+  const ist = await k.seite.evaluate(() => document.getElementById('vehsel').value);
+  if (String(ist) !== String(vehWert)) {
+    throw new Error(`Zuordnung kam nicht an: Soll „${vehWert}", Ist „${ist}" `
+                  + `(Diensttag ${tag}) — der Bestand steht nicht, wie er soll.`);
+  }
 }
 
 /** Der Auswahlwert des Bergwacht-Rettungsmittels (es trägt den Kurznamen). */

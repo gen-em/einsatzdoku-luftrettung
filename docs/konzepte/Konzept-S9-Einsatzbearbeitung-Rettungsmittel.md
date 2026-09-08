@@ -1183,6 +1183,29 @@ adversarischen Gegenprobe, nicht beim Schreiben; alle behoben:
   „Folgt dem gewählten Rettungsmittel" versprach. Wer das andere wählte,
   bekam einen anderen Typ als angekündigt. Behoben: Solange zwei
   Rettungsmittel zur Wahl stehen, nennt die Zeile beide.
+- F-S9-U-16 — **Ein gescheitertes Zurückstellen wäre unsichtbar geblieben.**
+  Der neue Klickprobe-Weg verschluckte die Zeitgrenze beim Speichern
+  (`.catch(() => {})`) und las danach nie nach. Ein Lauf, dessen
+  Zurückstellung scheitert, hätte „erfüllt" gemeldet und einen Diensttag mit
+  fremder Zuordnung hinterlassen — im Bestand, der zugleich der
+  Vergleichsstand der Kreisläufe ist. Behoben: keine verschluckte Grenze
+  mehr, und nach jedem Zuordnen wird gelesen, was wirklich dasteht; stimmt es
+  nicht, fliegt der Weg.
+- F-S9-U-15 — **Zwei Wartebedingungen warteten auf nichts.** Weg und
+  Klickprobe-Rahmen warteten darauf, dass `#vehsel` Optionen hat — die
+  rendert `index.php` aber serverseitig, die Bedingung ist beim Parsen schon
+  wahr. Den WERT setzt `loadDay()` erst nach seiner Antwort. Folge im Weg:
+  ein leer gelesenes Feld, das beim Zurückstellen die Zuordnung des Tages
+  gelöscht hätte. Folge im Rahmen: `k.kennung.tag` blieb `null` und JEDER Weg
+  meldete „Kein Diensttag im Bestand" — zweimal an einem Nachmittag gesehen
+  und beide Male für eine Störung gehalten. Beide warten jetzt auf
+  `currentDayId`. Gegenprobe: AP4 **12 von 12**, AP4a **10 von 10**.
+- F-S9-U-14 — **Der Papierkorb wendet die Kurznamenregel an und stand nicht
+  darin.** Der am 08.09.2026 berichtigte Regeltext in `dt_rm_kurz()` nannte
+  nur noch die Leiste; `papierkorb.php` setzt den Kurznamen in seiner
+  Kleinzeile aber ebenso ein, und `trash_list_days()` liefert die Spalte
+  eigens dafür. Nachgetragen in Kommentar und Handbuch, mit dem Hinweis, dass
+  eine dritte Stelle dort einzutragen ist.
 - F-S9-U-13 — **Die Abnahmezahl des Kurznamens war an einem einzigen Datum
   genommen.** „57 px frei, „BW Hoch" braucht 55" stimmte für „27.12.2026" und
   für sonst wenig: `.eintrag-text` schrumpft nicht, und seine Breite schwankt,

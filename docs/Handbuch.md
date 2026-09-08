@@ -2337,7 +2337,8 @@ und lässt sich dort bearbeiten und löschen. Angelegt wird es über den Haken
 
 **Der Kurzname** (bis 16 Zeichen, freiwillig) steht dort, wo der Platz knapp
 ist: in der **Diensttage-Leiste**, und dort in jeder Bildschirmbreite — auch
-in der schmalen, in der ein voller Name entfällt. Formulare, Export und Backup
+in der schmalen, in der ein voller Name entfällt —, und in der Kleinzeile des
+**Papierkorbs**. Formulare, Export und Backup
 zeigen weiter die volle Bezeichnung — wer eine Exportdatei auswertet, kennt
 eure Abkürzungen nicht. Suchen kannst du nach beidem.
 

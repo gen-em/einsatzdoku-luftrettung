@@ -212,7 +212,15 @@ async function kennungen() {
   const s = rollen.demo.seite;
   await s.goto(`${BASIS}/index.php`, { waitUntil: 'domcontentloaded' });
   await s.waitForSelector('#missions tbody tr, .kachel', { timeout: 30000 }).catch(() => {});
-  await s.waitForTimeout(300);
+  /* GEWARTET WIRD AUF `currentDayId`, NICHT AUF EINE FESTE ZEIT.
+   * `loadDay()` setzt die Kennung erst, wenn die Antwort von `api/day.php`
+   * da ist (index.php 739); die 300 ms davor waren geraten. Unter Last kam
+   * die Antwort spaeter, `k.kennung.tag` blieb `null`, und JEDER Weg meldete
+   * „Kein Diensttag im Bestand" — zweimal an einem Nachmittag gesehen und
+   * beide Male fuer eine Stoerung gehalten (F-S9-U-15, 08.09.2026). */
+  await s.waitForFunction(
+    () => typeof currentDayId !== 'undefined' && currentDayId !== null,
+    null, { timeout: 30000 }).catch(() => {});
   const k = await s.evaluate(() => ({
     tag: (typeof currentDayId !== 'undefined' && currentDayId) || null,
     einsatz: (typeof dayMissions !== 'undefined' && dayMissions[0]) ? dayMissions[0].id : null,
