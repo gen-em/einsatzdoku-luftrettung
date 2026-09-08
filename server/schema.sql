@@ -441,6 +441,12 @@ CREATE TABLE rest_segments (
   letzter_punkt_am DATETIME NULL,          -- siehe missions (S2/AP3)
   deleted_at       DATETIME NULL,
   deleted_with_day TINYINT(1) NOT NULL DEFAULT 0,
+  -- Serverseitiger Anker des Ersetzfensters (Nr. 134): der Augenblick, in
+  -- dem der Server das Segment zum ersten Mal sah -- created_at allein,
+  -- started_at nur als Rueckfall bis zur Migration, siehe ingest.php.
+  -- missions traegt die Spalte seit jeher; hier seit Web 15.6.0
+  -- (Migration 2026_09_07, dreischrittig mit Kappung).
+  created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_dev_ref (device_id, client_ref),
   INDEX idx_user_started (user_id, started_at),
   INDEX idx_day (day_id),
@@ -744,4 +750,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- vehicles, `vehicle_typ` und `vehicle_kurz` an days (Web 16.0.0,
   -- S9/AP4). Das Nachfuellen des Bestands hat auf einer frischen
   -- Installation nichts zu tun: Sie hat keine Diensttage.
-  ('2026_09_07_rettungsmittel_typ', 'skipped');
+  ('2026_09_07_rettungsmittel_typ', 'skipped'),
+  -- rest_segments.created_at steht oben schon im Schema (Web 15.6.0).
+  ('2026_09_07_rest_segments_created_at', 'skipped');

@@ -405,6 +405,100 @@ function pruef_utc_oder_sql($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = 
 }
 
 /**
+ * Passt ein Zeitpunkt zum Kalendertag, unter dem er gemeldet wird?
+ *
+ * Die Uhr schickt zu jedem Datensatz einen `day` (Ortsdatum) UND Zeitpunkte
+ * (UTC). Beide kommen aus derselben Quelle, und bis zur zweiten Gegenpruefung
+ * hat niemand nachgesehen, ob sie zueinander passen: Ein Paket mit
+ * `day` 2026-08-09 und `started_at` 2001-01-01 wurde angenommen, der Einsatz
+ * mit 96 Jahren Dauer gespeichert und der Zeitraum des Diensttags darauf
+ * gezogen (Nr. 134). Dagegen hilft keine Fensterregel, sondern nur die Frage,
+ * ob die Angaben desselben Pakets einander widersprechen.
+ *
+ * DAS FENSTER IST BEWUSST SEHR WEIT: von Mitternacht des Vortags bis zum Ende
+ * des 31. Tages danach. Das ist keine Feinpruefung, und sie soll auch keine
+ * sein — sie weist das Unmoegliche ab und laesst alles durch, was ein Geraet
+ * im Betrieb je meldet. Vier Dinge zwingen zu dieser Weite:
+ *
+ *  - Der Zeitzonenversatz: `day` ist ein ORTSDATUM (Uhr: Util.localDay();
+ *    Handy: Zeit.tag() ueber ZoneId.systemDefault()), die Zeitpunkte sind UTC.
+ *    Zwischen UTC-12 und UTC+14 liegt ein voller Tag Versatz in beide
+ *    Richtungen.
+ *  - Ein Dienst ueber Mitternacht und ein 24-Stunden-Dienst.
+ *  - Vor allem aber: In der Handy-App traegt JEDES Paket eines Dienstes den
+ *    Tag des DIENSTBEGINNS, nicht seinen eigenen (Dienstklammer.kt: das
+ *    Ruhesegment bekommt `dienst.tag`). Ein Ruhesegment, das am dritten Tag
+ *    eines Dienstes beginnt, meldet also den Tag 1 als `day`.
+ *  - Und ein Dienst hat KEINE Hoechstdauer, weder in der App noch auf dem
+ *    Server. Wer das Beenden vergisst, hat einen Dienst, der Tage laeuft --
+ *    ein Datenfehler, aber ein echter, und seine Pakete duerfen nicht auch
+ *    noch abgewiesen werden.
+ *
+ * 31 Tage decken das ab und wehren ab, worum es geht: Jahre und Jahrzehnte.
+ * Den feinen Schutz leistet nicht diese Pruefung, sondern das Ersetzfenster --
+ * der Zeitraum eines Diensttags, an dem seit 72 Stunden niemand mehr etwas
+ * angelegt hat, wird ohnehin nicht mehr fortgeschrieben.
+ *
+ * VERWORFENE ALTERNATIVE: gegen die GEGENWART pruefen statt gegen `day`
+ * (etwa "nicht aelter als ein Jahr, nicht mehr als einen Tag in der
+ * Zukunft"). Das braeuchte keine Grenze fuer lange Dienste und faengt 2001
+ * wie 2097. Es bricht aber die NACHLIEFERUNG: Eine Uhr, die ein Jahr im
+ * Schrank lag, meldet einen Dienst, dessen Zeiten stimmig zu seinem `day`
+ * sind -- und sein Diensttag bekaeme keinen Zeitraum. Genau dieser Fehler,
+ * die Gegenwart als Massstab fuer Vergangenes, ist in dieser Runde schon
+ * zweimal gemacht worden. `day` und die Zeiten stammen aus demselben Paket;
+ * ob sie ZUEINANDER passen, ist die Frage, die ohne Wissen ueber die
+ * Aussenwelt zu beantworten ist.
+ *
+ * Ein leerer Zeitpunkt ist in Ordnung — `ended_at` fehlt, solange der Einsatz
+ * laeuft.
+ */
+function pruef_zeit_zum_tag(?string $zeit, ?string $tag, string $feld = 'Zeitpunkt',
+                            ?Pruefliste $p = null): bool
+{
+    if ($zeit === null || $zeit === '' || $tag === null || $tag === '') { return true; }
+    $t = strtotime($zeit . ' UTC');
+    $tagBeginn = strtotime($tag . ' 00:00:00 UTC');
+    if ($t === false || $tagBeginn === false) {
+        $p?->melde($feld, 'kein vergleichbarer Zeitpunkt');
+        return false;
+    }
+    $von = $tagBeginn - 86400;           // Mitternacht des Vortags
+    $bis = $tagBeginn + 32 * 86400;      // Ende des 31. Tages danach
+    if ($t < $von || $t >= $bis) {
+        $p?->melde($feld, 'passt nicht zum Tag ' . $tag);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Liegt das Ende vor dem Beginn?
+ *
+ * Bis zur Wiederaufnahme der zweiten Gegenpruefung hat das niemand gefragt.
+ * Ein Paket mit vertauschten Zeiten wurde angenommen, und
+ * dt_zeitraum_fortschreiben() zog daraufhin den Beginn des Diensttags auf das
+ * ENDE nach vorn und sein Ende auf den BEGINN nach hinten -- der Tag wurde in
+ * beide Richtungen aufgezogen, mit Werten, die es so nie gab.
+ *
+ * Gleichstand ist erlaubt: Ein Einsatz von null Sekunden ist selten, aber
+ * nicht unmoeglich, und ihn abzuweisen hiesse, ueber eine Sekunde zu streiten.
+ */
+function pruef_ende_nach_beginn(?string $beginn, ?string $ende, string $feld = 'ended_at',
+                                ?Pruefliste $p = null): bool
+{
+    if ($beginn === null || $beginn === '' || $ende === null || $ende === '') { return true; }
+    $b = strtotime($beginn . ' UTC');
+    $e = strtotime($ende . ' UTC');
+    if ($b === false || $e === false) { return true; }   // Format hat schon geprueft
+    if ($e < $b) {
+        $p?->melde($feld, 'liegt vor dem Beginn');
+        return false;
+    }
+    return true;
+}
+
+/**
  * Ortszeit (App-Zeitzone) -> UTC, mit Kalendertagspruefung.
  *
  * Gegenstueck zu local_to_utc() in db.php, um B2 erweitert. Die dortige

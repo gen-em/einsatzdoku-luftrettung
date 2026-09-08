@@ -12,7 +12,9 @@ import org.genem.nadoku.handy.aufzeichnung.AufzeichnungsDienst
  * Was von der Uhr hereinkommt (E-S4-10) — **die dünne Hülle am Handy**.
  *
  * Sie liest, reicht an [Uhrannahme] weiter und antwortet zweimal: mit der
- * Quittung und mit dem Anzeigestand. Entschieden wird hier nichts.
+ * Quittung und mit dem Anzeigestand. Entschieden wird hier nichts — auch
+ * nicht, ob der Absender die eigene Uhr ist (seit 0.14.0, Nr. 144): Die
+ * Knotenliste kommt vom Data Layer, die Entscheidung aus [Uhrannahme].
  *
  * DIE QUITTUNG GEHT AUCH BEI EINER DOPPELZUSTELLUNG ZURÜCK. Genau dann ist
  * sie am wichtigsten: Die Uhr liefert nach, weil die erste Quittung verloren
@@ -39,12 +41,26 @@ class HandyHorcher : WearableListenerService() {
             ortung = { app.ortung?.stand?.code },
         )
 
+        val weg = WearNachrichtenweg(this)
+
+        /* WER SCHICKT DAS? (Backlog Nr. 144, Krypto-Review AN-4.) Der Data
+         * Layer stellt nur zwischen Apps gleichen Pakets und gleicher
+         * Signatur zu — das ist der erste Boden. Der zweite: Der Absender
+         * muss unter den verbundenen Knoten stehen. Steht er dort nicht,
+         * gibt es weder Wirkung noch Quittung; eine echte Uhr liefert nach,
+         * sobald sie verbunden ist. Entschieden wird das in `Uhrannahme`,
+         * hier wird nur gelesen und gefragt. */
+        val absender = Absender(ereignis.sourceNodeId, weg.verbundeneKnoten())
+        if (!annahme.absenderBekannt(absender)) {
+            Log.w(MARKE, "Ereignis von unbekanntem Knoten ${ereignis.sourceNodeId} verworfen")
+            return
+        }
+
         /* VOR dem Wirken gelesen — danach ist es zu spät (E-S5Z-08). */
         val liefVorher = app.klammer.laeuft()
         val quittung = annahme.uebernimm(meldung)
         val laeuftNachher = app.klammer.laeuft()
 
-        val weg = WearNachrichtenweg(this)
         weg.sende(Nachrichtenformat.PFAD_QUITTUNG, Nachrichtenformat.schreibe(quittung))
         weg.sende(Nachrichtenformat.PFAD_STAND, Nachrichtenformat.schreibe(annahme.stand()))
 

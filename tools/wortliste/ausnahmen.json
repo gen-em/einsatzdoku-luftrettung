@@ -612,14 +612,7 @@
       "zeile": "eine eigene Spur",
       "begruendung": "Hier ist „Spur“ der Fachbegriff des GPX-FORMATS: Eine GPX-Datei enthaelt Tracks, und der Satz erklaert genau das — „jede Aufzeichnung bleibt darin eine eigene Spur“. Ein Kartenprogramm nennt sie so; die Anwendung waere die einzige, die es anders schriebe."
     },
-    {
-      "id": "spur-android-wartet-auf-9a",
-      "bereich": "d",
-      "muster": "spur",
-      "klasse": "D",
-      "begruendung": "Fuenf sichtbare Texte der Handy-App sagen noch „Spur“ (Akkuwarnung, Benachrichtigungskanal, Modushinweis, Ortungshinweis, Standortwarnung). Sie gehoeren NICHT in S9/AP3: Die Android-Apps zaehlen getrennt (android/version.properties), brauchen einen eigenen APK-Bau und nach CLAUDE.md 6 einen Emulatorlauf mit Bildern. Entschieden vom Auftraggeber am 07.09.2026: Schritt 9a arbeitet ohnehin an der App und nimmt sie dort mit. DIESE AUSNAHME IST BEFRISTET und wird mit 9a geloescht — sie steht in Klasse D, nicht in F."
-    },
-    {
+        {
       "id": "spur-fachdokument-technik",
       "bereich": "c",
       "datei": "docs/Technik.md",
@@ -667,6 +660,14 @@
       "klasse": "C",
       "zeile": "Bis dahin hie|„Spur · 852 Punkte",
       "begruendung": "Ein ZITAT des alten Wortlauts, mit Versionsangabe: „Seit Web 15.9.0 steht keine Zahl mehr darin. Bis dahin hiess sie „Spur · 852 Punkte“ bzw. „Spur ausgeduennt · 113 von 443 Punkten“.“ Dieselbe Klasse wie bei `abflug` („Saetze mit Versionsangabe bleiben“): Wer nachliest, warum die Plakette heute anders heisst, braucht den alten Namen — sonst findet er die Stelle nicht wieder. Ohne dieses eine Zitat ist das Handbuch frei von „Spur“."
+    },
+    {
+      "id": "handbuch-geraete-verlust-garmin",
+      "datei": "docs/Handbuch.md",
+      "von": "\\*\\*Uhr verloren\\? Sofort trennen\\.\\*\\*",
+      "bis": "^\\*\\*„Entkoppeln\\\" hiess",
+      "klasse": "G",
+      "begruendung": "Der Kasten zum Geraeteverlust (Abschnitt 10, Backlog Nr. 134) sagt, dass der Zugangsschluessel auf der GARMIN-Uhr im Klartext liegt. Das ist keine Plattformnennung aus Bequemlichkeit, sondern die Sache selbst: Genau dieser Satz gilt fuer die Garmin-Uhr und NICHT fuer die Wear-OS-Uhr, die weder Serveradresse noch Schluessel kennt (E-S4-11) -- der Kasten sagt das im letzten Absatz ausdruecklich. Ein geraetefreies „Uhr“ waere hier keine Neutralitaet, sondern eine falsche Warnung an alle, die eine Wear-OS-Uhr tragen. Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
     }
   ]
 }

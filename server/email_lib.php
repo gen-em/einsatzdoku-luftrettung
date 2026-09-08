@@ -96,3 +96,58 @@ function ist_dublettenfehler(PDOException $ex): bool
     return $ex->getCode() === '23000'
         && isset($ex->errorInfo[1]) && (int)$ex->errorInfo[1] === 1062;
 }
+
+/**
+ * Hinweismail an die ALTE Adresse, wenn die Anmeldeadresse eines Kontos
+ * gewechselt ist (Backlog Nr. 128, K-7).
+ *
+ * WOZU. Der Wechsel selbst ist jetzt nachweispflichtig (Profil: aktuelles
+ * Passwort; Verwaltung: eine Adminsitzung). Beides kann uebernommen sein --
+ * und dann ist die Mail an die alte Adresse die EINZIGE Stelle, an der die
+ * rechtmaessige Besitzerin davon erfaehrt. Sie geht deshalb an die alte
+ * Adresse und nicht an die neue: Die neue gehoert im Missbrauchsfall dem
+ * anderen.
+ *
+ * WAS SIE NICHT IST. Keine Bestaetigung der neuen Adresse -- der
+ * Double-Opt-In kommt mit R37.6 in P5. Bis dahin gilt die neue Adresse
+ * sofort; die Mail ist die Warnung, nicht das Tor.
+ *
+ * SCHEITERT SIE, PASSIERT NICHTS WEITER. Der Wechsel ist zu diesem Zeitpunkt
+ * geschrieben, und ihn zurueckzurollen, weil ein Mailserver klemmt, waere die
+ * schlechtere Wahl: Dann steht ein Konto mit einer Adresse da, die die
+ * Besitzerin gerade berichtigt hat. Der Fehlschlag geht ins Fehlerprotokoll.
+ *
+ * @param string $alt  bisherige Adresse (Empfaengerin)
+ * @param string $neu  neue Adresse
+ * @param string $wer  'profil' oder 'verwaltung'
+ */
+function profil_adresswechsel_melden(string $alt, string $neu,
+                                     string $wer = 'profil'): bool
+{
+    require_once __DIR__ . '/smtp.php';
+    if ($alt === '' || $alt === $neu) { return false; }
+
+    $durch = $wer === 'verwaltung'
+        ? "Die Änderung wurde in der Verwaltung vorgenommen."
+        : "Die Änderung wurde im Profil dieses Kontos vorgenommen, nach Eingabe\n"
+          . "des Passworts.";
+
+    $ok = smtp_send($alt,
+        'Anmeldeadresse geändert — Gen-EM Einsatzdokumentation Notarzt',
+        "Hallo,\n\n"
+        . "die Anmeldeadresse deines Zugangs zur Gen-EM Einsatzdokumentation Notarzt\n"
+        . "wurde geändert:\n\n"
+        . "  bisher: " . $alt . "\n"
+        . "  jetzt:  " . $neu . "\n\n"
+        . $durch . "\n\n"
+        . "WARST DU DAS NICHT, handle bitte sofort: Melde dich mit deinem Passwort an\n"
+        . "und setze die Adresse zurück, oder wende dich an die Verwaltung deiner\n"
+        . "Installation. Diese Nachricht geht bewusst an die ALTE Adresse -- sie ist die\n"
+        . "einzige, die im Missbrauchsfall noch dir gehört.\n\n"
+        . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
+        . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n");
+    if (!$ok) {
+        error_log('Adresswechsel: Hinweismail an die alte Adresse ging nicht weg');
+    }
+    return $ok;
+}

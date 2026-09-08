@@ -530,6 +530,66 @@ const PAIR_LEN     = 6;
 const PAIR_TTL_MIN = 10;
 const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
 
+/* ---- Ersetzfenster der Geraete (Backlog Nr. 134, K-14, F-SP-8) ------------
+ *
+ * WOGEGEN. Der Geraeteschluessel liegt auf der Garmin-Uhr im Klartext
+ * (`watch/source/Pair.mc`; die Plattform hat nichts Besseres). Lesen kann ein
+ * Finder nichts -- `ingest.php` ist POST-only --, aber er kann Einsaetze
+ * hochladen und die Phasen BESTEHENDER Einsaetze ersetzen, bis das Geraet im
+ * Web getrennt ist.
+ *
+ * WAS SCHON GESCHUETZT WAR: Einsaetze mit `manual = 1` uebergeht `ingest.php`
+ * ganz (jemand hat sie im Web bearbeitet), und Phasen werden nur ersetzt, wenn
+ * der Upload mindestens so viele bringt wie gespeichert sind. Offen blieb der
+ * UNBEARBEITETE Einsatz von vor drei Wochen.
+ *
+ * DIE ZAHL. 72 Stunden ab dem gespeicherten `started_at` des Datensatzes --
+ * nicht ab dem gesendeten, den bestimmt der Absender. 48 h waeren knapper,
+ * aber ein Freitagsdienst, der erst am Montag synchronisiert, kaeme nicht mehr
+ * nach; 7 Tage deckten Urlaub mit Uhr im Koffer und gaeben einem Finder eine
+ * ganze Woche. Entschieden am 06.09.2026 (F-SP-8).
+ *
+ * WAS DANACH GESCHIEHT: `ok` OHNE zu ersetzen. Kein Fehler auf der Uhr -- sie
+ * wuerde sonst endlos wiederholen --, aber in der Antwort benannt
+ * (`kept_phases`, `kept_resus`, `kept_points`; JSON-Vertrag 5). NEUE Einsaetze
+ * werden immer angenommen: Sie sind sichtbar und loeschbar, und sie
+ * ueberschreiben nichts.
+ */
+const INGEST_ERSETZFENSTER_H = 72;
+
+/* ---- JSON in einem <script>-Block (Backlog Nr. 135, K-15) ----------------
+ *
+ * WAS DAS PROBLEM IST. `json_encode()` maskiert `<` und `>` NICHT. Steht in
+ * einem Wert die Zeichenfolge `</script>` -- ein Standortname, ein
+ * Fahrzeugkurzname, ein Dateiname aus einem Backup --, endet der Skriptblock
+ * mitten in einer Zuweisung, und der Rest der Seite ist kaputt. Ausfuehren
+ * laesst sich damit nichts (`/` wird als `\/` maskiert, also entsteht kein
+ * schliessendes Tag aus dem Wert selbst), aber eine Seite, die an einem
+ * Stammdatennamen zerbricht, ist ein Fehler, und der naechste Baustein waere
+ * vielleicht nicht so glimpflich.
+ *
+ * VIER FLAGGEN, NICHT EINE. `JSON_HEX_TAG` fasst `<` und `>`, `JSON_HEX_AMP`
+ * das `&` (Entitaeten in HTML-Kontexten), `JSON_HEX_APOS` und
+ * `JSON_HEX_QUOT` die Anfuehrungszeichen -- damit ist dieselbe Zeichenkette
+ * auch in einem Attribut sicher, und die Regel muss nicht je Stelle neu
+ * bedacht werden.
+ *
+ * `JSON_UNESCAPED_UNICODE` steht dabei, weil Umlaute in einem UTF-8-Dokument
+ * nichts zu maskieren haben; ein Teil der Aufrufer hatte es schon, ein Teil
+ * nicht -- jetzt haben es alle.
+ *
+ * WO ES NICHT HINGEHOERT: in API-Antworten, Dateiformate, Zwischenspeicher
+ * und Protokolle. Dort aendern die Flaggen die BYTES, und an Bytes haengen
+ * Pruefsummen (`komplett_lib.php` bindet den Dateikopf ueber SHA-256) und
+ * Formatvergleiche. Gezaehlt am 07.09.2026: 79 Aufrufe von `json_encode()`
+ * unter `server/`, davon 44 in einem `<script>`-Block und 35 ausserhalb.
+ */
+function json_js($wert, int $mehr = 0): string
+{
+    return (string)json_encode($wert, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS
+                                    | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | $mehr);
+}
+
 /* ---- Obergrenze offener Kopplungssitzungen (S5, E-S5-14, E-S5-34) --------
  *
  * Seit Web 13.0.0 legt jedes Geraet mit `start` OHNE Anmeldung eine Sitzung
@@ -822,11 +882,39 @@ function geraet_schluessel_gueltig(string $schluessel, string $hash): bool
  *
  * 310000 ist am 14.08.2026 entfallen, nachdem die Abfrage 0 ergab.
  *
+ * 600000 IST DER ZIELWERT SEIT DEM 07.09.2026 (Backlog Nr. 136, SP-1). 320000
+ * lag unter der Empfehlung (OWASP 2023, Bitwarden); gemessen kostet der Sprung
+ * je Ableitung rund das Doppelte und halbiert die Rate des Angreifers. 320000
+ * bleibt in der Liste, bis die Abfrage oben 0 ergibt — bis dahin rechnet jede
+ * Anmeldung zweimal ab, und die Wartungsseite zeigt, wer noch darauf steht.
+ *
  * REIHENFOLGE: Der Zielwert steht VORNE. Der Browser probiert nicht der Reihe
  * nach (er schickt alle Token), aber die Reihenfolge ist die Lesart.
  */
-const KDF_ITER_ZIEL  = 320000;
-const KDF_ITER_LISTE = [320000];
+const KDF_ITER_ZIEL  = 600000;
+const KDF_ITER_LISTE = [600000, 320000];
+
+/* ---- Mindestlaenge des Passworts ----------------------------------------
+ *
+ * DIE ZAHL, DIE DER SERVER NICHT DURCHSETZEN KANN. Er sieht das Passwort nie
+ * (er bekommt nur das abgeleitete Token), also ist sie hier eine ANGABE fuer
+ * die Formulare — `minlength` und die Zeile unter dem Feld — und nicht die
+ * Pruefung. Die Pruefung steht in `assets/pwquality.js` (`MIN_LAENGE`), und
+ * beide Zahlen muessen dieselbe sein.
+ *
+ * ZWEI STELLEN, WEIL PWQUALITY.JS EINE STATISCHE DATEI IST. Sie wird ueber
+ * `<script src>` geladen, bevor ui_krypto_bootstrap() seine Konstanten
+ * ausgibt — sie kann diese Zahl also nicht von hier lesen. Gegen das
+ * Auseinanderlaufen steht deshalb `EdPwQuality.beobachte()`: Es setzt
+ * `minLength` des Feldes beim Anhaengen auf seinen eigenen Wert. Wer hier
+ * etwas anderes hinschreibt als dort, bekommt eine falsche BESCHRIFTUNG,
+ * aber keine schwaechere Pruefung.
+ *
+ * 12 statt 10 seit dem Sofortpaket Sicherheit (Backlog Nr. 136, SP-2): Gegen
+ * einen Datenbankabzug ist das Passwort die einzige Schranke, und zwei
+ * Zeichen mehr sind dort mehr wert als jede Zeichenartenregel.
+ */
+const PW_MIN_LAENGE = 12;
 
 /* ---- Geraete je Konto: Obergrenze und Hinweisfenster ---------------------
  *

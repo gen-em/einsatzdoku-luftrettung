@@ -155,7 +155,14 @@ try {
     $konten = $hat > 0 ? (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn() : 0;
     $leer = $konten === 0;
 } catch (Throwable $ex) {
-    $dbFehler = $ex->getMessage();
+    /* NUR DIE KENNUNG, NICHT DER TEXT (Backlog Nr. 131, K-11). Diese Seite ist
+     * unangemeldet erreichbar -- sie MUSS es sein, denn sie arbeitet auf einer
+     * Installation, in der es noch kein Konto gibt. Der Fehlertext einer
+     * PDO-Ausnahme nennt Rechnernamen, oft den Datenbanknutzer und manchmal den
+     * Pfad; das ist eine Auskunft an jeden Besucher ueber eine Installation, die
+     * gerade nicht laeuft. Die Kennung steht dafuer im Fehlerprotokoll des
+     * Webspace -- dieselbe Bauart wie ueberall sonst (Handbuch 3.1). */
+    $dbFehler = fehler_kennung($ex, 'wiederherstellen');
 }
 
 /* ---- Schranke 2: der Nachweis ------------------------------------------- *
@@ -527,7 +534,10 @@ ui_kopf(['menue' => false]);
   <?php if ($dbFehler !== null): ?>
     <?php ui_karte_start(['titel' => 'Die Datenbank antwortet nicht']); ?>
       <p class="feld-hinweis">Die Verbindung nach <code>config.php</code> kam nicht
-      zustande: <code><?= ui_e($dbFehler) ?></code></p>
+      zustande. Kennung: <code><?= ui_e($dbFehler) ?></code> — unter dieser Kennung
+      steht der vollständige Fehlertext im Fehlerprotokoll des Webspace. Auf dem
+      Bildschirm steht er bewusst nicht: Er nennt Rechnernamen und Datenbanknutzer,
+      und diese Seite ist ohne Anmeldung erreichbar.</p>
       <p class="feld-hinweis">Zu prüfen: Stimmen Rechnername, Datenbankname, Nutzer und
       Passwort in <code>config.php</code>? Existiert die Datenbank überhaupt? Sie muss
       angelegt sein — leer, aber vorhanden.</p>
@@ -535,9 +545,13 @@ ui_kopf(['menue' => false]);
 
   <?php elseif (!$darfArbeiten): ?>
     <?php ui_karte_start(['titel' => 'Diese Installation ist in Betrieb']); ?>
-      <p class="feld-hinweis">In der Datenbank stehen <strong><?= (int)$konten ?></strong>
-      Konten. Eine Wiederherstellung würde sie überschreiben, und deshalb passiert
-      hier nichts mehr.</p>
+      <?php /* OHNE KONTENZAHL (Backlog Nr. 131, K-11). Sie stand hier fett und
+               war die Antwort auf eine Frage, die niemand stellen darf, der nicht
+               angemeldet ist: wie gross ist diese Installation. Fuer die Aussage
+               dieser Karte -- "hier passiert nichts mehr" -- braucht es sie nicht. */ ?>
+      <p class="feld-hinweis">In der Datenbank stehen bereits Konten. Eine
+      Wiederherstellung würde sie überschreiben, und deshalb passiert hier nichts
+      mehr.</p>
       <p class="feld-hinweis">Wer einen einzelnen Stand zurückholen will, tut das
       angemeldet unter <a href="admin_sicherungen.php">Konto-Backups</a>. Wer wirklich
       die ganze Installation ersetzen will, leert die Datenbank vorher mit dem

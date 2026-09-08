@@ -529,6 +529,65 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             "SELECT COUNT(*) FROM paket WHERE fehlerhaft = 1", null,
         ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
 
+    /**
+     * Abgewiesene Pakete **räumen** (Backlog Nr. 114, Räumteil; Krypto-Review
+     * AN-2).
+     *
+     * WAS BIS 0.13.0 GALT: Ein mit 400 abgewiesenes Paket blieb samt Spur
+     * **für immer** liegen — es überlebte Trennen und Neukopplung, und die
+     * `dienst`-Zeilen wurden nie gelöscht. [alsFehlerhaftMerken] sagt dazu:
+     * „gelöscht wird sie nicht, weil dann niemand mehr sähe, dass etwas nicht
+     * angekommen ist." Das bleibt richtig — für Tage, nicht für Jahre. Eine
+     * Spur, die niemand mehr nachreichen wird, ist kein Beleg mehr, sondern
+     * ein Ortsdatensatz auf einem Gerät, das jederzeit verlorengehen kann.
+     *
+     * ZWEI ANLÄSSE, EINE REGEL:
+     *  - **nach der Frist** ([Raeumung.FRIST_TAGE], gemessen am Ende des
+     *    Pakets) — jeder Sendelauf räumt, bevor er sendet;
+     *  - **beim Trennen** ohne Frist (`vor = null`): Die Pakete gehören dem
+     *    bisherigen Konto, und wer die Kopplung zurückgibt, gibt auch das ab.
+     *
+     * NUR ABGESCHLOSSENE (`final = 1`): Ein laufendes Paket, dessen
+     * Teil-Upload eine 400 zurückbekam, wird noch beschrieben. Es fällt unter
+     * die Regel, sobald das Dienstende es schließt.
+     *
+     * `dienst`-ZEILEN GEHEN MIT: Jede **beendete** Dienstzeile, an der kein
+     * Paket mehr hängt und deren Ende vor dem Stichtag liegt, wird ebenfalls
+     * gelöscht — nach dem Upload liest sie niemand mehr ([laufenderDienst]
+     * fragt nur nach der offenen). Die laufende bleibt in jedem Fall.
+     *
+     * DER BEDIENWEG (ansehen, ausleiten, verwerfen) ist damit **nicht**
+     * gebaut — er bleibt Nr. 114 in der Backlog-Runde.
+     *
+     * @param vor Zeitstempel im Format von `Zeit.iso` (UTC); geräumt wird,
+     *   was vor ihm endete. `null` räumt ohne Frist.
+     * @return was gelöscht wurde — für das Protokoll und den Prüfstand
+     */
+    fun abgewieseneRaeumen(vor: String?): Raeumung = writableDatabase.transaction {
+        val frist = if (vor != null) arrayOf(vor) else null
+        val ids = rawQuery(
+            "SELECT id FROM paket WHERE fehlerhaft = 1 AND final = 1" +
+                (if (vor != null) " AND COALESCE(beendet_at, begonnen_at) < ?" else ""),
+            frist,
+        ).use { c -> buildList { while (c.moveToNext()) add(c.getLong(0)) } }
+        /* Dieselben drei Löschungen wie in `paketEntsorgen`, in derselben
+         * Transaktion: kein Paket ohne Punkte, keine Punkte ohne Paket. */
+        for (id in ids) {
+            val a = arrayOf(id.toString())
+            delete("punkt", "paket_id = ?", a)
+            delete("phase", "paket_id = ?", a)
+            delete("paket", "id = ?", a)
+        }
+        val dienste = delete(
+            "dienst",
+            "beendet_at IS NOT NULL" +
+                (if (vor != null) " AND beendet_at < ?" else "") +
+                " AND dienst_ref NOT IN (SELECT dienst_ref FROM paket WHERE dienst_ref IS NOT NULL)",
+            frist,
+        )
+        Raeumung(pakete = ids.size, dienste = dienste)
+    }
+
     /** Hat dieses Paket noch etwas zu senden? */
     fun hatArbeit(p: Paketzeile): Boolean =
         !p.metadatenBestaetigt || p.bestaetigtSeq < punktzahl(p.id)
@@ -645,6 +704,21 @@ data class Dienstzeile(
     val begonnenAt: String,
     val modus: String,
 )
+
+/** Was ein Räumlauf gelöscht hat (Backlog Nr. 114, Räumteil). */
+data class Raeumung(val pakete: Int, val dienste: Int) {
+    companion object {
+        /**
+         * Nach so vielen Tagen ist ein abgewiesenes Paket kein Beleg mehr,
+         * sondern ein liegengebliebener Ortsdatensatz (SP-14, AN-2). Die Zahl
+         * ist **gewählt**, nicht gemessen: lang genug, dass ein Fehler am
+         * Server behoben und das Paket von Hand nachgereicht werden kann —
+         * der Bedienweg dafür fehlt noch (Nr. 114) —, und kurz genug, dass
+         * ein verlorenes Handy nicht die Spuren eines ganzen Jahres trägt.
+         */
+        const val FRIST_TAGE = 30L
+    }
+}
 
 data class Paketzeile(
     val id: Long,

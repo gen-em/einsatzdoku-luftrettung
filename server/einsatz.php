@@ -243,7 +243,7 @@ const MID = <?= $mid ?>;
 /* Der Spurzustand kommt vom Server (S2/AP4) und nicht aus der API-Antwort:
    Dasselbe Ergebnis entscheidet oben ueber den Menueeintrag; zwei Quellen
    koennten auseinanderlaufen. */
-const SPUR = <?= json_encode(['hat' => $hatSpur, 'stufe' => (int)$spurStand['stufe'],
+const SPUR = <?= json_js(['hat' => $hatSpur, 'stufe' => (int)$spurStand['stufe'],
                               'n' => (int)$spurPunkte,
                               'n0' => (int)$spurStand['n_original']]) ?>;
 

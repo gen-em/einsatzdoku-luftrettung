@@ -2455,7 +2455,9 @@ function ui_ortsfeld(array $o): void
  *              die Huelle aus der API-Antwort bezieht (m.pat_wrap).
  *     keycheck true  -> zusaetzlich PAT_KEY_CHECK (Herkunftsabgleich beim
  *              Einspielen eines Backups)
- *     csrf     true  -> zusaetzlich CSRF
+ *     csrf     ohne Wirkung seit Backlog Nr. 136 — CSRF steht immer (siehe
+ *              unten). Das Feld wird noch angenommen, damit die Aufrufer
+ *              nicht angefasst werden muessen.
  *     einzug   Einrueckung der ausgegebenen Zeilen
  */
 function ui_krypto_bootstrap(array $o = []): void
@@ -2481,20 +2483,37 @@ function ui_krypto_bootstrap(array $o = []): void
     }
     $zeilen[] = '<script>';
     if (($o['wrap'] ?? true) !== false) {
-        $zeilen[] = 'const PAT_WRAP = ' . json_encode($patWrapPw) . ';';
+        $zeilen[] = 'const PAT_WRAP = ' . json_js($patWrapPw) . ';';
     }
     if (!empty($o['keycheck'])) {
-        $zeilen[] = 'const PAT_KEY_CHECK = ' . json_encode($patKeyCheck) . ';';
+        $zeilen[] = 'const PAT_KEY_CHECK = ' . json_js($patKeyCheck) . ';';
     }
-    $zeilen[] = 'const KDF_SALT = ' . json_encode($kdfSalt) . ';';
+    $zeilen[] = 'const KDF_SALT = ' . json_js($kdfSalt) . ';';
     /* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
        gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
        bekommt einen anderen Schluessel. */
-    $zeilen[] = 'const KDF_ITER      = ' . json_encode($kdfIter) . ';';
-    $zeilen[] = 'const KDF_ITER_ZIEL = ' . json_encode(KDF_ITER_ZIEL) . ';';
-    if (!empty($o['csrf'])) {
-        $zeilen[] = 'const CSRF = ' . json_encode($_SESSION['csrf'] ?? '') . ';';
-    }
+    $zeilen[] = 'const KDF_ITER      = ' . json_js($kdfIter) . ';';
+    $zeilen[] = 'const KDF_ITER_ZIEL = ' . json_js(KDF_ITER_ZIEL) . ';';
+    /* CSRF IMMER, NICHT AUF ANFRAGE (Backlog Nr. 136, Fund F-9a-01).
+     *
+     * Bis zum Sofortpaket Sicherheit war das ein Schalter, und drei von sieben
+     * Seiten stellten ihn. Das war folgenlos, solange KDF_ITER_LISTE nur einen
+     * Eintrag hatte — mit dem Sprung auf 600 000 wurde daraus ein Fehler:
+     *
+     * Die stille Anhebung (unlock.js, loeseVormerkung) verlangt CSRF, weil sie
+     * `api/kdf_upgrade.php` ruft. Fehlt die Konstante, laeuft sie nicht — und
+     * schlimmer: `loeseVormerkung()` VERWIRFT danach das Vormerkfach. Die erste
+     * Seite nach dem Anmelden, die den Inhaltsschluessel braucht und kein CSRF
+     * traegt (`suche.php`, `zeitraum.php`, `einsatz.php`, `einsatz_form.php`),
+     * nimmt der Anhebung damit dauerhaft die Grundlage. Gemessen am
+     * Referenzbestand: Konto auf 320 000, Anmeldung, `suche.php` — Vormerkfach
+     * weg, Rundenzahl unveraendert, und beim naechsten Anmelden dasselbe.
+     *
+     * Der Schalter kostete also eine Sicherheitsmassnahme und sparte eine
+     * Zeile Markup. Das Feld `csrf` wird weiterhin angenommen und ignoriert;
+     * die Aufrufer nennen es teils noch.
+     */
+    $zeilen[] = 'const CSRF = ' . json_js(csrf_token()) . ';';
     $zeilen[] = '</script>';
 
     echo $ein, implode("\n" . $ein, $zeilen), "\n";

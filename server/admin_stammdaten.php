@@ -909,7 +909,7 @@ ui_seite_start(['titel' => 'Stammdaten systemweit', 'karte' => true]);
 /* Ortsfelder der systemweiten Stammdatenpflege (E37/E38). Dieselbe Komponente
  * wie in der Kontoansicht — systemweit gepflegte Koordinaten gelten fuer alle,
  * die den Eintrag sehen. Ohne Spur: Hier gibt es keinen Einsatz. */
-<?= 'const ORTSFELDER = ' . json_encode($ORTSFELDER) . ';' ?>
+<?= 'const ORTSFELDER = ' . json_js($ORTSFELDER) . ';' ?>
 ORTSFELDER.forEach(p => {
   const steuer = EdOrtsfeld.init({ praefix: p, getrennteSuche: true });
   if (steuer) { EdOrtswahl.registriere(p, steuer); }

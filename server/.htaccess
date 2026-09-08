@@ -3,6 +3,27 @@ RewriteEngine On
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
+# Zwei Ordner, die es im Webroot gibt und die niemand ueber HTTP braucht
+# (Backlog Nr. 129, K-9).
+#
+#   apk/    die signierten Android-Pakete. `apk.php` liefert sie aus und
+#           verlangt dafuer eine Anmeldung -- der ORDNER tat das nicht, und
+#           die Dateinamen sind vorhersagbar (`nadoku-0.13.0.apk`).
+#           `Technik.md` 4.97g sagte "nur angemeldet"; das galt fuer die
+#           Seite, nicht fuer den Ordner.
+#   demo/   `fixture.json.gz` mit dem Schluesselmaterial des Demo-Kontos.
+#           Harmlos -- das Passwort steht im Handbuch --, aber unnoetig.
+#
+# EINE ZEILE STATT EINER LAUFZEITSPERRE: mod_rewrite laeuft hier schon
+# (HTTPS-Zwang darueber), und beide Ordner werden ausschliesslich vom
+# PHP-Code gelesen (`readfile()` in apk.php, `file_get_contents()` in
+# demo_lib.php). Die Sperre kostet die Anwendung also nichts.
+#
+# NACH dem HTTPS-Zwang, nicht davor: Ein Aufruf ueber HTTP soll zuerst auf
+# HTTPS umgeleitet werden und dort die 403 bekommen -- sonst antwortet der
+# unverschluesselte Kanal mit einer Auskunft.
+RewriteRule ^(apk|demo)(/|$) - [F,L]
+
 # Sensible Dateien niemals ausliefern
 <FilesMatch "^(config\.php|config\.example\.php|schema\.sql|db\.php|smtp\.php|auth_guard\.php|install\.lock)$">
   Require all denied

@@ -164,6 +164,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 db()->prepare('UPDATE users SET email = ? WHERE id = ?')->execute([$email, $uid]);
                 $teile[] = 'E-Mail-Adresse';
+                /* Hinweismail an die ALTE Adresse (Backlog Nr. 128, K-7). Die
+                   Verwaltung darf die Anmeldeadresse eines fremden Kontos
+                   aendern -- und danach den Setz-Link an die neue schicken.
+                   Das ist ein legitimer Weg (jemand hat die Firma gewechselt)
+                   und zugleich der kuerzeste Weg zur Kontouebernahme, wenn eine
+                   Adminsitzung uebernommen wurde. Die Mail an die alte Adresse
+                   ist die einzige Stelle, an der die Besitzerin davon erfaehrt;
+                   sie geht deshalb dorthin und nicht an die neue. */
+                profil_adresswechsel_melden((string)$u['email'], $email, 'verwaltung');
             } catch (PDOException $ex) {
                 /* NUR der Schluesselkonflikt heisst "bereits verwendet" (M1-16).
                  * Vorher wurde JEDER Datenbankfehler so gemeldet — eine volle

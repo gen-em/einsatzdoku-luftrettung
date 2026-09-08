@@ -157,15 +157,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            Auflösung dieselbe Quelle haben (E-P3-20). */
         $logo = (string)($_POST['logo_wahl'] ?? '');
         if (!in_array($logo, LOGO_WAHLEN, true)) { $logo = ''; }
+        /* ---- Adresswechsel nur mit Passwortnachweis (Backlog Nr. 128, K-7)
+         *
+         * Bis Web 15.5.2 schrieb dieses Formular die Anmeldeadresse allein mit
+         * dem CSRF-Token um. Wer eine offene Sitzung uebernahm — geliehener
+         * Rechner, gestohlenes Cookie —, konnte die Adresse auf seine eigene
+         * setzen, sich den Setz-Link schicken lassen und das Konto uebernehmen.
+         * Die geschuetzten Angaben blieben zwar zu (der Reset-Weg verlangt den
+         * Wiederherstellungsschluessel), aber die Klartextfelder nicht, und die
+         * rechtmaessige Besitzerin war ausgesperrt.
+         *
+         * Derselbe Nachweis wie beim Passwortwechsel: das aus dem aktuellen
+         * Passwort abgeleitete Token. Der Server sieht das Passwort auch hier
+         * nicht.
+         *
+         * NUR BEIM WECHSEL. Name und Logo sind harmlos; wer sie aendert, soll
+         * dafuer nicht sein Passwort tippen. Der Vergleich laeuft gegen die
+         * normalisierte Adresse, damit "Max@..." gegen "max@..." kein Wechsel
+         * ist (email_pruefen normalisiert bereits).
+         *
+         * `session_epoch` bleibt UNVERAENDERT: Es hat sich kein Passwort
+         * geaendert, und wer seine Adresse berichtigt, will nicht ueberall
+         * abgemeldet werden. */
+        $adressWechsel = ($email !== null && $email !== email_normalisieren($userEmail));
+        $nachweisOk = true;
+        if ($adressWechsel) {
+            $stp = db()->prepare('SELECT password_hash FROM users WHERE id = ?');
+            $stp->execute([$userId]);
+            $hash = (string)($stp->fetchColumn() ?: '');
+            $nachweisOk = $hash !== ''
+                && password_verify((string)($_POST['old_token'] ?? ''), $hash);
+        }
+
         if ($email === null) {
             $error = 'Bitte eine gültige E-Mail-Adresse angeben (höchstens 190 Zeichen).';
+        } elseif (!$nachweisOk) {
+            $error = 'Zum Ändern der E-Mail-Adresse ist das aktuelle Passwort nötig — '
+                   . 'es war leer oder falsch. Es wurde nichts geändert.';
         } else {
+            $altAdresse = (string)$userEmail;
             try {
                 db()->prepare('UPDATE users SET name = ?, email = ?, logo_wahl = ? WHERE id = ?')
                     ->execute([$name !== '' ? $name : null, $email, $logo, $userId]);
                 $userName = $name !== '' ? $name : null;
                 $userEmail = $email;
                 $logoWahl  = $logo;
+                if ($adressWechsel) { profil_adresswechsel_melden($altAdresse, $email); }
                 /* Sofort wirksam, ohne Neuanmeldung: Wer die Wahl ändert,
                    soll das Ergebnis auf derselben Seite sehen. Bei
                    „wechselnd" fällt hier ein neuer Würfel — das ist richtig,
@@ -949,15 +986,28 @@ ui_seite_start(['titel' => 'Einstellungen',
     ?>
     <?php ui_titelzeile(['titel' => 'Profil']); ?>
 
-    <form method="post">
+    <form method="post" id="pfform">
       <?= csrf_field() ?><input type="hidden" name="action" value="profile">
+      <input type="hidden" name="old_token" id="pf_oldtok">
 
       <?php ui_karte_start(['titel' => 'Angaben', 'id' => 'k-angaben']); ?>
         <?php ui_feld(['label' => 'Name', 'name' => 'name', 'wert' => (string)($userName ?? ''),
                        'platzhalter' => 'wird in der Kopfleiste angezeigt',
                        'attr' => ' maxlength="120"']); ?>
         <?php ui_feld(['label' => 'E-Mail-Adresse (Anmeldung)', 'name' => 'email',
+                       'id' => 'pf_email',
                        'art' => 'email', 'wert' => $userEmail, 'pflicht' => true]); ?>
+        <?php /* NACHWEIS FUER DEN ADRESSWECHSEL (Backlog Nr. 128, K-7).
+                 Immer sichtbar und nie Pflicht: Ein Feld, das erst beim Tippen
+                 erscheint, wird uebersehen, und wer nur den Namen aendert, soll
+                 sein Passwort nicht suchen muessen. Der Hinweis sagt, wann es
+                 gebraucht wird; der Server verlangt es genau dann. */ ?>
+        <?php ui_feld(['label' => 'Aktuelles Passwort', 'name' => 'old', 'id' => 'pf_old',
+                       'art' => 'password',
+                       'klein' => 'Nur nötig, wenn du die E-Mail-Adresse änderst — sie '
+                                . 'ist die Anmeldung zu diesem Konto. Name und Logo '
+                                . 'gehen ohne.',
+                       'attr' => ' autocomplete="current-password"']); ?>
         <?php /* DIE EIGENE ROLLE, NUR ZU LESEN (R75, Web 15.0.0).
                  Sie steht hier, weil sie erklaert, warum zwei Konten
                  verschiedene Menues sehen — und weil es der einzige Ort ist,
@@ -1065,9 +1115,9 @@ ui_seite_start(['titel' => 'Einstellungen',
                        'attr' => ' autocomplete="current-password"']); ?>
         <?php ui_feld(['label' => 'Neues Passwort', 'name' => 'new1', 'id' => 'pw_new1',
                        'art' => 'password', 'pflicht' => true,
-                       'klein' => 'Mindestens 10 Zeichen. Die Stärke des Passworts ist '
+                       'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen. Die Stärke des Passworts ist '
                                 . 'unmittelbar die Stärke der Verschlüsselung.',
-                       'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                       'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
         <span class="pwstaerke" id="pw_guete"></span>
         <?php ui_feld(['label' => 'Neues Passwort wiederholen', 'name' => 'new2', 'id' => 'pw_new2',
                        'art' => 'password', 'pflicht' => true,
@@ -1098,6 +1148,50 @@ ui_seite_start(['titel' => 'Einstellungen',
       }
       // Sonst: nichts tun. Der Wechsel ist nicht zustande gekommen, der alte
       // Schluessel im Tab passt weiterhin zur gespeicherten Huelle.
+    })();
+
+    /* ---- Adresswechsel: Nachweis ableiten (Backlog Nr. 128, K-7) --------
+     *
+     * Derselbe Weg wie beim Passwortwechsel eine Karte tiefer: Aus dem
+     * eingegebenen Passwort entsteht im Browser das Anmeldetoken; nur das geht
+     * an den Server. Abgeleitet wird NUR, wenn die Adresse sich tatsaechlich
+     * geaendert hat und etwas im Feld steht -- sonst ist es ein Namenswechsel,
+     * und der kostet keine halbe Sekunde Rechnung.
+     *
+     * Die Meldung bei leerem Feld kommt hier und nicht erst vom Server: Ein
+     * Formular, das man abschickt und unveraendert zurueckbekommt, sieht aus,
+     * als sei nichts passiert. */
+    (() => {
+      const f = document.getElementById('pfform');
+      if (!f) { return; }
+      const feldMail = document.getElementById('pf_email');
+      const feldPw   = document.getElementById('pf_old');
+      const startMail = (feldMail.value || '').trim().toLowerCase();
+      f.addEventListener('submit', async ev => {
+        if (f.dataset.ready === '1') { return; }
+        const jetzt = (feldMail.value || '').trim().toLowerCase();
+        if (jetzt === startMail) { return; }          // kein Wechsel, kein Nachweis
+        ev.preventDefault();
+        if (!feldPw.value) {
+          feldPw.setCustomValidity('Zum Ändern der E-Mail-Adresse ist das aktuelle '
+                                 + 'Passwort nötig.');
+          feldPw.reportValidity();
+          return;
+        }
+        feldPw.setCustomValidity('');
+        try {
+          const k = await EdCrypto.deriveKeys(feldPw.value, KDF_SALT, KDF_ITER);
+          document.getElementById('pf_oldtok').value = k.authToken;
+          feldPw.value = '';                          // verlaesst den Browser nie
+          f.dataset.ready = '1';
+          f.submit();
+        } catch (e) {
+          feldPw.setCustomValidity('Dieser Browser unterstützt die nötige '
+                                 + 'Verschlüsselung nicht.');
+          feldPw.reportValidity();
+        }
+      });
+      feldPw.addEventListener('input', () => feldPw.setCustomValidity(''));
     })();
 
     EdPwQuality.beobachte(document.getElementById('pw_new1'),
@@ -2210,7 +2304,7 @@ ui_seite_start(['titel' => 'Einstellungen',
      *
      * OHNE SPUR: Hier gibt es keinen Einsatz, also nichts aufzuzeichnen
      * (M-S9-04, Anmerkung 6). Sonst ist es derselbe Dialog. */
-    <?= 'const ORTSFELDER = ' . json_encode($ORTSFELDER) . ';' ?>
+    <?= 'const ORTSFELDER = ' . json_js($ORTSFELDER) . ';' ?>
     ORTSFELDER.forEach(p => {
       const steuer = EdOrtsfeld.init({ praefix: p, getrennteSuche: true });
       if (steuer) { EdOrtswahl.registriere(p, steuer); }
@@ -2304,8 +2398,8 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?php ui_feld(['label' => 'Passwort für das Backup', 'id' => 'bpw1',
                      'name' => 'password',
                      'art' => 'password', 'klasse' => 'bpw1-feld',
-                     'klein' => 'Mindestens 10 Zeichen.',
-                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                     'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen.',
+                     'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <span class="pwstaerke" id="bpwguete"></span>
       <div id="bpw2label">
         <?php ui_feld(['label' => 'Passwort wiederholen', 'id' => 'bpw2',
@@ -2412,12 +2506,12 @@ ui_seite_start(['titel' => 'Einstellungen',
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>
     <script>
     // Eigenes Konto — nur fuer den Vergleich mit der Herkunft der Datei (M5-13).
-    const KONTO_MAIL = <?= json_encode($userEmail) ?>;
-    const KONTO_NAME = <?= json_encode($userName) ?>;
+    const KONTO_MAIL = <?= json_js($userEmail) ?>;
+    const KONTO_NAME = <?= json_js($userName) ?>;
     /* Die Fassung der Anwendung wandert ins Manifest des Backups: Wer eine
        Datei in zwei Jahren wiederfindet, soll ihr ansehen, womit sie
        entstanden ist. */
-    const WEB_VERSION = <?= json_encode(WEB_VERSION) ?>;
+    const WEB_VERSION = <?= json_js(WEB_VERSION) ?>;
 
     /* EINE WACHE, wie sie import_ui.js seit je hat: Ein vergessener
        Skriptverweis ergibt sonst „zip is not defined" genau in dem Augenblick,

@@ -361,6 +361,35 @@ $a12 = hole('assets/style.css');
 pruefe($a12['code'] === 200, '12  assets/style.css -> 200 (statisch, ungetort)',
        'HTTP ' . $a12['code']);
 
+/* 12a  DIE INTEGRITAETSWACHE LAEUFT AUCH IM WARTUNGSMODUS DURCH
+ *      (Backlog Nr. 140, SP-6).
+ *
+ * WARUM DAS HIERHER GEHOERT. Die Wache laeuft taeglich und vergleicht die
+ * ausgelieferten Dateien und den Inline-Block der Anmeldeseite mit dem
+ * Repositorium. Wuerde der Wartungsmodus eines von beidem veraendern -- ein
+ * getortes `assets/`, ein Balken IM Skriptblock statt darueber --, ginge der
+ * Lauf jedes Mal rot, wenn jemand ein Update fuehrt. Eine Wache, die
+ * regelmaessig aus einem harmlosen Grund rot wird, ist nach dem dritten Mal
+ * abgeschaltet.
+ *
+ * Gemessen wird beides an derselben Stelle: Das Stylesheet kommt (12), und der
+ * Inline-Block der Anmeldeseite ist derselbe wie in der Quelldatei -- der
+ * Wartungsbalken steht im Markup, nicht im Skript. */
+$blockRe = '/<script(?![^>]*\bsrc=)[^>]*>(.*?)<\/script>/s';
+preg_match_all($blockRe, (string)file_get_contents(dirname(__DIR__, 2) . '/server/login.php'), $mQ);
+preg_match_all($blockRe, (string)$a10['rumpf'], $mA);
+$quellBloecke = array_values(array_filter($mQ[1] ?? [], static fn($b) => !str_contains($b, '<?')));
+$istSummen    = array_map(static fn($b) => hash('sha256', $b), $mA[1] ?? []);
+$gefunden = 0;
+foreach ($quellBloecke as $b) {
+    if (in_array(hash('sha256', $b), $istSummen, true)) { $gefunden++; }
+}
+pruefe($quellBloecke !== [] && $gefunden === count($quellBloecke),
+       '12a Der Inline-Block der Anmeldeseite ist im Wartungsmodus unveraendert',
+       $gefunden . ' von ' . count($quellBloecke) . ' PHP-freien Bloecken der Quelle '
+       . 'stehen so in der Auslieferung — sonst ginge die Integritaetswache '
+       . 'bei jedem Update rot (Nr. 140)');
+
 /* ======================================================================
  * Teil 3 — Schalten, kaputter Inhalt, Antwortzeit
  * ====================================================================== */

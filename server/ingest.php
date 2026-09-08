@@ -6,6 +6,76 @@ require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/geraete_lib.php';  // herkunft_ableiten() (R64)
 
+/** Gibt es die Spalte? Eine Abfrage am Informationsschema -- ingest.php
+ *  laedt migration_lib.php nicht, deshalb steht die Frage hier noch einmal. */
+function ingest_hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool
+{
+    $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.columns
+                        WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?');
+    $q->execute([$tabelle, $spalte]);
+    return (int)$q->fetchColumn() > 0;
+}
+
+/**
+ * Wird an diesem Diensttag noch gearbeitet?
+ *
+ * Anker ist das juengste `created_at` der ANDEREN Datensaetze des Tages --
+ * der eigene, gerade angelegte zaehlt nicht mit, sonst waere jeder Tag offen,
+ * an dem eben ein Paket ankam, und genau das war der Angriff. Hat der Tag
+ * keine anderen Datensaetze, ist er frisch und offen.
+ *
+ * NICHT die Zeiten des Tages: Die kommen vom Absender. Die erste Fassung
+ * dieser Funktion hat sie benutzt und damit den nachgelieferten Dienst
+ * bestraft -- ein Dienst, der mehr als INGEST_ERSETZFENSTER_H Stunden nach
+ * seinem Datum ankam, bekam nie ein `ended_at`. Serverzeit gegen Serverzeit,
+ * wie beim Ersetzfenster der Datensaetze selbst.
+ *
+ * `rest_segments.created_at` gibt es erst nach der Migration; bis dahin
+ * zaehlen nur die Einsaetze. Ein Tag, der nur Ruhesegmente traegt, gilt in
+ * diesem Zwischenzustand als offen -- die Zeitpruefung gegen `day` deckt den
+ * Schaden ab, den das offen laesst.
+ */
+function ingest_tag_offen(PDO $pdo, int $dayId, string $eigeneTabelle, int $eigeneId): bool
+{
+    if ($dayId <= 0) { return false; }
+    $juengste = null;
+    foreach (['missions', 'rest_segments'] as $tab) {
+        if ($tab === 'rest_segments'
+            && !ingest_hat_spalte($pdo, 'rest_segments', 'created_at')) { continue; }
+        $sql  = "SELECT MAX(created_at) FROM `$tab` WHERE day_id = ?";
+        $args = [$dayId];
+        if ($tab === $eigeneTabelle && $eigeneId > 0) { $sql .= ' AND id <> ?'; $args[] = $eigeneId; }
+        $q = $pdo->prepare($sql);
+        $q->execute($args);
+        $wert = $q->fetchColumn();
+        if ($wert === false || $wert === null) { continue; }
+        $t = strtotime($wert . ' UTC');
+        if ($t !== false) { $juengste = max($juengste ?? 1, $t); }
+    }
+    if ($juengste === null) { return true; }
+    $juengste = max(1, min($juengste, time()));
+    return (time() - $juengste) <= INGEST_ERSETZFENSTER_H * 3600;
+}
+
+/**
+ * Der Datensatz wandert auf den neu bestimmten Diensttag, wenn sein
+ * bisheriger im Papierkorb liegt (Backlog Nr. 33; zweite Gegenpruefung,
+ * Wiederaufnahme). Der Upsert traegt `day_id` nur im INSERT -- mit Absicht,
+ * damit eine Nachlieferung einen im Web umgehaengten Einsatz nicht
+ * zurueckzieht. Fuer den Papierkorbfall hiess das bis hierher: Es entstand
+ * ein neuer, leerer Tag, und der Einsatz blieb am geloeschten haengen --
+ * halb sichtbar, genau der Zustand, den Nr. 33 beschreibt. Jetzt zieht
+ * er nach, und zwar nur in diesem einen Fall: bestehender Datensatz, sein
+ * Tag geloescht (`$vorhandenerDayId` ist dann null), ein anderer bestimmt.
+ */
+function ingest_tag_nachziehen(PDO $pdo, string $tabelle, int $id, $existing, ?int $vorhandenerDayId, int $dayId): void
+{
+    // `$existing` ist das Ergebnis von fetch(): ein Array oder false.
+    if (!is_array($existing) || $existing['day_id'] === null || $vorhandenerDayId !== null) { return; }
+    if ($dayId <= 0 || (int)$existing['day_id'] === $dayId) { return; }
+    $pdo->prepare("UPDATE `$tabelle` SET day_id = ? WHERE id = ?")->execute([$dayId, $id]);
+}
+
 /**
  * Aufnahme der Uhr-Daten.
  *
@@ -138,6 +208,36 @@ if (!is_array($b) || $clientRef === null || $startedAt === null || $day === null
 }
 
 $endedAt = pruef_utc($b['ended_at'] ?? null, 'ended_at', $pruef);
+
+/* PASSEN DIE ZEITEN ZUM TAG? (zweite Gegenpruefung, Wiederaufnahme.)
+ *
+ * `day` und die Zeitpunkte kommen aus derselben Quelle, und bis hierher hat
+ * niemand nachgesehen, ob sie einander widersprechen. Ein Paket mit
+ * `day` 2026-08-09 und `started_at` 2001-01-01 lief durch, und der Zeitraum
+ * des Diensttags wurde darauf gezogen -- ueber ingest.php nicht rueckholbar.
+ *
+ * DAS PAKET WIRD TROTZDEM ANGENOMMEN. Die erste Fassung dieser Pruefung hat
+ * es mit 400 abgewiesen, und das war falsch: Es haette die falsch gestellte
+ * Uhr ausgesperrt -- genau die, die Fund 2 der ersten Gegenpruefung wieder
+ * hereingeholt hat. Ein Geraet, dessen Kalender nach einer Tiefentladung auf
+ * 1970 steht, muss seine Daten loswerden koennen; sein Einsatz ist sichtbar
+ * und loeschbar, und das ist die Zusage. Verworfen wird deshalb nicht der
+ * Upload, sondern der WERT -- und zwar nur fuer das eine, wofuer er nicht
+ * taugt: das Fortschreiben des Diensttags.
+ *
+ * Zwei Fragen entscheiden darueber. Passt der Zeitpunkt zu dem Kalendertag,
+ * unter dem er gemeldet wird (pruef_zeit_zum_tag, Fenster sehr weit -- die
+ * vier Gruende stehen dort)? Und liegt das Ende nach dem Beginn
+ * (pruef_ende_nach_beginn)? Was durchfaellt, steht als `rejected` in der
+ * Antwort: Der Upload war erfolgreich, aber nicht alles daran wurde
+ * verwendet. */
+$tagStart = pruef_zeit_zum_tag($startedAt, $day, 'started_at', $pruef) ? $startedAt : null;
+$tagEnde  = $endedAt;
+if (!pruef_zeit_zum_tag($tagEnde, $day, 'ended_at', $pruef)) { $tagEnde = null; }
+if ($tagEnde !== null && !pruef_ende_nach_beginn($startedAt, $tagEnde, 'ended_at', $pruef)) {
+    $tagEnde = null;
+}
+
 $final   = pruef_flag($b['final'] ?? null);
 
 // Strecke und Steigung: bei Unsinn NULL statt 0 — eine 0 taeuschte eine
@@ -193,7 +293,18 @@ try {
     // geloeschter Datensatz durch Nachlieferungen wieder wachsen. Erst das
     // endgueltige Loeschen traegt ihn in die Sperrliste ein.
     $tabelle = $kind === 'mission' ? 'missions' : 'rest_segments';
-    $chk = $pdo->prepare("SELECT id, day_id, deleted_at" . ($kind === 'mission' ? ', manual' : '')
+    /* `created_at` gibt es bei rest_segments erst seit der Migration
+     * 2026_09_07_rest_segments_created_at (Nr. 134). Zwischen Deploy und
+     * update.php fehlt die Spalte -- und ein SELECT, der sie nennt, wirft
+     * 1054 und antwortet 500, fuer JEDES Ruhesegment-Paket, auch ein neues
+     * (zweite Gegenpruefung, Wiederaufnahme). Deshalb wird sie nur genannt,
+     * wenn sie da ist; fehlt sie, faellt der Anker unten auf `started_at`
+     * zurueck, wie der Kommentar dort verspricht. Eine Abfrage je Paket am
+     * Informationsschema, nur fuer Ruhesegmente -- der Preis fuer einen
+     * Deploy, der kein Paket verliert. */
+    $hatCreated = $kind === 'mission' || ingest_hat_spalte($pdo, 'rest_segments', 'created_at');
+    $chk = $pdo->prepare("SELECT id, day_id, deleted_at, started_at" . ($hatCreated ? ', created_at' : '')
+                       . ($kind === 'mission' ? ', manual' : '')
                        . " FROM `$tabelle` WHERE device_id = ? AND client_ref = ?");
     $chk->execute([$dev['id'], $clientRef]);
     $existing = $chk->fetch();
@@ -202,6 +313,74 @@ try {
         $pdo->commit();
         json_out(['ok' => true, 'id' => 0, 'stored_points' => 0,
                   'next_seq' => $seqFrom + count($points)]);
+    }
+
+    /* ---- Ersetzfenster (Backlog Nr. 134, K-14, F-SP-8) -------------------
+     *
+     * Ein BESTEHENDER Datensatz laesst sich nur INGEST_ERSETZFENSTER_H Stunden
+     * lang von seinem Geraet veraendern -- gerechnet ab dem Augenblick, in
+     * dem der Server ihn ZUM ERSTEN MAL GESEHEN hat (`created_at`). Nicht ab
+     * dem gesendeten `started_at`: Den bestimmt der Absender, und genau der
+     * ist hier der Unsichere.
+     *
+     * WARUM NICHT `started_at` (Nachbesserung 07.09.2026, Gegenpruefung des
+     * Web-Teils, Funde 2 und 5): Auch das gespeicherte `started_at` stammt
+     * beim Anlegen vom Geraet. Eine Uhr mit falsch gestellter Zeit (Reset
+     * ohne Zeitabgleich) legte ihren Einsatz mit einem Datum von vor Jahren
+     * an -- das Fenster war im selben Augenblick zu, der LAUFENDE Einsatz
+     * verlor Punkte und Phasen, und weil `next_seq` weiterwanderte, loeschte
+     * die Uhr sie als quittiert. Umgekehrt haette ein `started_at` in der
+     * Zukunft das Fenster nie geschlossen.
+     *
+     * UND WARUM NICHT DAS SPAETERE AUS BEIDEN (zweite Gegenpruefung, auf die
+     * Nachbesserung selbst): So stand es einen Nachmittag lang hier --
+     * `max(started_at, created_at)`, ein `started_at` in der Zukunft zaehlt
+     * nicht. Aber "in der Zukunft" wurde bei jedem Paket neu gegen jetzt
+     * gerechnet: Ein `started_at`, das beim Anlegen 99 Stunden vorn lag,
+     * zaehlte nicht, solange es vorn lag -- und wurde zum Anker, sobald die
+     * Zeit es eingeholt hatte. Das laengst geschlossene Fenster ging dann
+     * noch einmal fuer 72 Stunden auf, und zwar zu einem Zeitpunkt, den das
+     * Geraet bestimmt hatte. Wendet man "Zukunft zaehlt nicht" dagegen auf
+     * den Augenblick des Anlegens an, ist ein `started_at` spaeter als
+     * `created_at` immer Zukunft, und das Spaetere aus beiden ist immer
+     * `created_at`. Also steht es hier so: `created_at` ist der Anker. Es
+     * kennt keine Geraeteuhr, weder eine nach- noch eine vorgehende.
+     * `started_at` dient nur als Rueckfall, solange die Migration
+     * `2026_09_07_rest_segments_created_at` nicht gelaufen ist -- und auch
+     * dann nie spaeter als jetzt.
+     *
+     * Innerhalb des Fensters bleibt alles wie bisher, damit eine Nachlieferung
+     * nach einem Funkloch ankommt. Danach: `ok` ohne Ersetzen, ohne Anhaengen,
+     * ohne Fehler -- die Uhr wiederholte sonst endlos. Was uebergangen wurde,
+     * steht in der Antwort (`kept_*`).
+     *
+     * NEUE Datensaetze sind nicht betroffen: `$existing` ist dann null. Eine
+     * verlorene Uhr kann also weiterhin Einsaetze ANLEGEN -- die sind sichtbar
+     * und loeschbar und ueberschreiben nichts. Der Weg dagegen ist das Trennen
+     * des Geraets (Handbuch 12). */
+    $fensterZu = false;
+    if ($existing) {
+        $lies = static function (?string $wert): ?int {
+            $t = $wert !== null ? strtotime($wert . ' UTC') : false;
+            return $t === false ? null : $t;
+        };
+        $anker = $lies($existing['created_at'] ?? null)
+              ?? $lies($existing['started_at'] ?? null);
+        /* Nie spaeter als jetzt: `created_at` ist Serverzeit und liegt nie
+         * vorn -- ausser eine Zeile hat es aus der Migration von einem
+         * `started_at` geerbt, das vorn lag (die Migration kappt das, aber
+         * der Boden steht auch hier). Und der Rueckfall `started_at` ist
+         * Geraetezeit. Ein Anker in der Zukunft hielte das Fenster offen,
+         * bis die Zukunft vorbei ist; gekappt schliesst es in 72 h.
+         *
+         * UND NIE FRUEHER ALS SEKUNDE 1 DER EPOCHE (zweite Gegenpruefung,
+         * Wiederaufnahme): strtotime('1970-01-01 00:00:00') ist 0, und 0 sah
+         * in der Fassung davor wie "kein Anker" aus -- ein Segment mit
+         * genau diesem Wert, dem einer Uhr ohne Zeitabgleich, hielt sein
+         * Fenster im Rueckfall fuer immer offen, waehrend eines mit 00:00:01
+         * nach 72 h zu war. "Kein Anker" ist jetzt null, nicht 0. */
+        if ($anker !== null) { $anker = max(1, min($anker, time())); }
+        $fensterZu = $anker !== null && (time() - $anker) > INGEST_ERSETZFENSTER_H * 3600;
     }
 
     /* ---- Diensttag bestimmen (JSON-Vertrag 4.4) ---------------------------
@@ -236,7 +415,15 @@ try {
         if ($vq->fetchColumn() === false) { $vorhandenerDayId = null; }
     }
 
-    if ($dayRef !== null) {
+    if ($fensterZu) {
+        /* FENSTER ZU: Es wird nichts umgehaengt, also wird auch kein Diensttag
+         * bestimmt. Sonst legte dt_rueckfall() einen neuen, LEEREN Tag an,
+         * sobald der bisherige im Papierkorb liegt -- und der Datensatz
+         * bliebe trotzdem am alten haengen (Gegenpruefung, Fund 4). Der Wert
+         * wird unten nicht mehr gebraucht; er steht nur, damit kein Zweig
+         * auf eine undefinierte Variable trifft. */
+        $dayId = (int)($existing['day_id'] ?? 0);
+    } elseif ($dayRef !== null) {
         $dayId = dt_zu_dayref($pdo, (int)$dev['user_id'], (int)$dev['id'], $dayRef,
                               $day, $startedAt, $vorhandenerDayId);
     } else {
@@ -248,9 +435,41 @@ try {
         // Manuell bearbeitete Einsaetze schuetzen: Uhr-Uploads duerfen
         // Metadaten/Phasen/Rea nicht mehr ueberschreiben; Trackpunkte werden
         // weiterhin ergaenzt (Append-only, unkritisch).
-        if ($existing && (int)$existing['manual'] === 1) {
+        if ($existing && ((int)$existing['manual'] === 1 || $fensterZu)) {
+            /* Zwei Gruende, derselbe Weg: Der Einsatz ist im Web bearbeitet
+               worden (`manual`), oder das Ersetzfenster ist zu (Nr. 134). In
+               beiden Faellen bleiben Metadaten, Phasen und Reanimation stehen.
+               Der Unterschied steht weiter unten: Bei `manual` werden Punkte
+               weiterhin ANGEHAENGT (append-only, unkritisch), bei
+               geschlossenem Fenster nicht -- dort ist der Absender der
+               Unsichere, nicht der Inhalt. */
             $ownerId = (int)$existing['id'];
             $ownerType = 'mission';
+            /* Was uebergangen wurde, NENNEN (Nr. 134, JSON-Vertrag 5). Der
+               Zweig ueberspringt Metadaten, Phasen und Reanimation in einem;
+               ohne diese Zahlen saehe der Upload wie ein Erfolg aus, und die
+               ersetzten Phasen fehlten stillschweigend. Gezaehlt wird der
+               VORHANDENE Stand -- das ist die Zahl, die stehen bleibt. */
+            if (isset($b['phases']) && is_array($b['phases'])) {
+                $zp = $pdo->prepare('SELECT COUNT(*) FROM mission_phases WHERE mission_id = ?');
+                $zp->execute([$ownerId]);
+                $behalten['kept_phases'] = (int)$zp->fetchColumn();
+            }
+            if (isset($b['resus_sessions']) || isset($b['resus'])) {
+                $zr = $pdo->prepare('SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ?');
+                $zr->execute([$ownerId]);
+                $behalten['kept_resus'] = (int)$zr->fetchColumn();
+            }
+            /* AUCH DIE METADATEN WERDEN GENANNT (Gegenpruefung, Fund 3). Ein
+             * echtes Abschlusspaket traegt weder Phasen noch Punkte, sondern
+             * Ende, `final`, Strecke und Anstieg -- ohne dieses Feld saehe es
+             * bei geschlossenem Fenster wie ein Erfolg aus, und der Einsatz
+             * bliebe fuer immer "laeuft noch", ohne dass jemand es erfuehre.
+             * `manual` nennt es nicht: Dort ist der Inhalt bewusst im Web
+             * gesetzt, und das Geraet soll ihn nicht fuer verloren halten. */
+            if ($fensterZu && ($endedAt !== null || $final || $distanceM !== null || $ascentM !== null)) {
+                $behalten['kept_meta'] = 1;
+            }
         } else {
         /* Upsert des Einsatzes (idempotent ueber device_id+client_ref)
          *
@@ -310,6 +529,7 @@ try {
                        $dev['geraet_art'], $dev['geraet_modell']]);
         $ownerId = (int)$pdo->lastInsertId();
         $ownerType = 'mission';
+        ingest_tag_nachziehen($pdo, 'missions', $ownerId, $existing, $vorhandenerDayId, $dayId);
 
         /* ---- Phasenliste ersetzen — aber nur, wenn dabei nichts verlorengeht
          *      (M4-02, JSON-Vertrag 3.1) ------------------------------------
@@ -366,6 +586,9 @@ try {
             } else {
                 // Behalten und NENNEN — sonst waere der uebergangene Upload von
                 // einem uebernommenen nicht zu unterscheiden (JSON-Vertrag 5).
+                // Der Grund hier ist immer derselbe: weniger Phasen als
+                // gespeichert. Das geschlossene Ersetzfenster (Nr. 134) kommt
+                // gar nicht bis hierher -- es faengt oben ab, VOR dem Upsert.
                 $behalten['kept_phases'] = $vorhandenePhasen;
             }
         }
@@ -439,15 +662,25 @@ try {
          * (E-R64-04): Gezaehlt werden Einsaetze, und woher ein Segment kommt,
          * sagt sein Praefix (`r-` gegen `ar-`). Eine Spalte, die niemand
          * abfragt, waere geschrieben und nie gelesen. */
-        $pdo->prepare('INSERT INTO rest_segments (user_id, device_id, client_ref, day_id, started_at, ended_at, final, geraet_art, geraet_modell)
-                       VALUES (?,?,?,?,?,?,?,?,?)
-                       ON DUPLICATE KEY UPDATE
-                         ended_at = COALESCE(VALUES(ended_at), ended_at),
-                         final = GREATEST(final, VALUES(final)),
-                         id = LAST_INSERT_ID(id)')
-            ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt, $final,
-                       $dev['geraet_art'], $dev['geraet_modell']]);
-        $ownerId = (int)$pdo->lastInsertId();
+        if ($existing && $fensterZu) {
+            /* Ersetzfenster zu (Nr. 134): Der Stand bleibt, wie er ist -- und
+             * ein Ende, das das Paket bringt, wird GENANNT, damit ein spaetes
+             * Abschlusspaket nicht wie ein Erfolg aussieht (Gegenpruefung,
+             * Fund 3; das Segment bliebe sonst still fuer immer offen). */
+            $ownerId = (int)$existing['id'];
+            if ($endedAt !== null || $final) { $behalten['kept_meta'] = 1; }
+        } else {
+            $pdo->prepare('INSERT INTO rest_segments (user_id, device_id, client_ref, day_id, started_at, ended_at, final, geraet_art, geraet_modell)
+                           VALUES (?,?,?,?,?,?,?,?,?)
+                           ON DUPLICATE KEY UPDATE
+                             ended_at = COALESCE(VALUES(ended_at), ended_at),
+                             final = GREATEST(final, VALUES(final)),
+                             id = LAST_INSERT_ID(id)')
+                ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt, $final,
+                           $dev['geraet_art'], $dev['geraet_modell']]);
+            $ownerId = (int)$pdo->lastInsertId();
+            ingest_tag_nachziehen($pdo, 'rest_segments', $ownerId, $existing, $vorhandenerDayId, $dayId);
+        }
         $ownerType = 'rest';
     }
 
@@ -509,7 +742,21 @@ try {
     $stored = 0;
     $verworfen = 0;
     $gesperrt = 0;
-    if ($points) {
+    /* ---- Ersetzfenster: auch keine Punkte mehr (Backlog Nr. 134) ---------
+     *
+     * ANDERS ALS BEI `manual`. Dort werden Punkte weiter angehaengt, weil das
+     * Anhaengen unkritisch ist -- der Inhalt ist bearbeitet, die Spur nicht.
+     * Hier ist der ABSENDER der Unsichere: Ein Finder mit der Uhr in der Hand
+     * schriebe sonst seine eigene Fahrt in die Spur eines drei Wochen alten
+     * Einsatzes. Angehaengt wird deshalb nichts mehr.
+     *
+     * `next_seq` wandert trotzdem weiter (unten): Die Uhr soll aufhoeren zu
+     * senden, nicht in einer Schleife haengen bleiben. Was uebergangen wurde,
+     * steht als `kept_points` in der Antwort -- ein stiller Verlust waere
+     * genau der Fehler, gegen den die uebrigen `kept_*`-Felder gebaut sind. */
+    if ($points && $fensterZu) {
+        $behalten['kept_points'] = count($points);
+    } elseif ($points) {
         $ins = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
                               VALUES (?,?,?,?,?,?,?)');
         foreach ($points as $i => $pt) {
@@ -617,8 +864,38 @@ try {
      * Das gilt AUCH fuer einen Diensttag, dessen Zeitraum die Migration
      * gesetzt hat, und auch fuer einen von Hand angelegten: Ein Einsatz, der
      * um 00:40 des Folgetags endet, verlaengert den Dienst bis dahin — genau
-     * der Fall, den der Testbestand als "Dienst ueber Mitternacht" fuehrt. */
-    dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
+     * der Fall, den der Testbestand als "Dienst ueber Mitternacht" fuehrt.
+     *
+     * NICHT BEI GESCHLOSSENEM FENSTER (Gegenpruefung, Fund 1): Die Zeiten
+     * kommen vom Absender, und der ist dann der Unsichere. Bis zur
+     * Nachbesserung lief diese Zeile unbedingt -- ein Paket mit
+     * started_at 2001 und ended_at 2097 liess den Einsatz stehen, schrieb
+     * aber den Diensttag um, und ueber ingest.php ist das nicht rueckholbar
+     * (started_at wandert nur nach vorn, ended_at nur nach hinten).
+     *
+     * UND NICHT AN EINEM DIENSTTAG, AN DEM NICHT MEHR GEARBEITET WIRD
+     * (zweite Gegenpruefung, Wiederaufnahme): Das Fenster oben gilt nur fuer
+     * einen BESTEHENDEN Datensatz. Ein Paket mit NEUEM client_ref hat keinen,
+     * wird ueber `day` oder `day_ref` auf den alten Tag aufgeloest -- und
+     * schrieb dessen Zeitraum genauso um, derselbe Schaden auf dem anderen
+     * Weg. Deshalb fragt ingest_tag_offen(), wann die uebrigen Datensaetze
+     * des Tages ANGELEGT wurden: Serverzeit, nicht die Zeiten des Absenders.
+     * Ein frischer Tag und ein Tag, an dem gerade nachgetragen wird, sind
+     * offen; ein Tag, dessen Datensaetze alle aelter als das Fenster sind,
+     * nicht. Der neue Datensatz wird trotzdem angelegt -- sichtbar,
+     * loeschbar, und er ueberschreibt nichts.
+     *
+     * Die erste Fassung fragte den Tag nach SEINEN Zeiten, und die kommen
+     * vom Absender: Ein Dienst, der spaeter als das Fenster nach seinem
+     * Datum hochgeladen wurde (Uhr lange ohne Netz), bekam damit nie ein
+     * `ended_at`. Gemessen an der eigenen Probe, nicht vermutet -- und der
+     * Grund, warum der Anker jetzt am Anlegen haengt. Was absurde Zeiten
+     * angeht, sitzt der Schutz ohnehin frueher: pruef_zeit_zum_tag() weist
+     * ein Paket ab, dessen Zeiten nicht zu seinem `day` passen. */
+    $eigeneTabelle = $ownerType === 'mission' ? 'missions' : 'rest_segments';
+    if (!$fensterZu && ingest_tag_offen($pdo, $dayId, $eigeneTabelle, (int)$ownerId)) {
+        dt_zeitraum_fortschreiben($pdo, $dayId, $tagStart, $tagEnde);
+    }
 
     /* DIE FORTSETZUNGSMARKE UEBER spur_lib.php (S2/AP1).
      *

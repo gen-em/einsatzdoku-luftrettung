@@ -104,6 +104,53 @@ function status_erhebung(): array
     $kdfVerwaist = $stk->fetchAll();
     $kdfSumme    = array_sum(array_column($kdfVerwaist, 'n'));
 
+    /* Konten, die noch auf einem ALTWERT der Liste stehen (Backlog Nr. 136,
+     * Fund F-9a-02). Die Zeile darunter meldete bisher nur verwaiste Werte —
+     * also den Fall, dass jemand einen Eintrag ZU FRUEH aus KDF_ITER_LISTE
+     * gestrichen hat. Die Frage davor beantwortete sie nicht: WANN darf er
+     * gestrichen werden? db.php nennt dafuer eine SQL-Abfrage von Hand, und
+     * SP-1 nimmt an, die Wartungsseite sage es. Sie sagte es nicht.
+     *
+     * Solange hier eine Zahl > 0 steht, rechnet JEDE Anmeldung zweimal ab
+     * (Uebergangszustand, db.php) — die Zahl ist damit auch die Auskunft
+     * darueber, was der Uebergang gerade kostet. */
+    $kdfAlt = 0;
+    $kdfDemoAlt = false;
+    if (count($kdfListe) > 1) {
+        /* OHNE DAS DEMO-KONTO (Nachbesserung 07.09.2026, Gegenpruefung Fund
+         * 11). Es wird alle 30 Minuten aus der Fixture eingespielt -- mit der
+         * Rundenzahl, die die Fixture traegt --, und die stille Anhebung
+         * ueberspringt es ausdruecklich (api/kdf_upgrade.php, E-P1-19: ein
+         * Upgrade passte bis zum naechsten Reset nicht mehr zu seinen
+         * oeffentlichen Zugangsdaten). Es zieht also nie nach, aus zwei
+         * Gruenden, nicht aus einem -- die erste Fassung dieses Kommentars
+         * nannte nur den Reset (zweite Gegenpruefung, Wiederaufnahme).
+         * Gezaehlt stuende hier fuer immer "1 Konto unter dem Zielwert",
+         * und die Zeile verloere den einen Zweck, den sie hat: zu sagen,
+         * wann der Altwert weg darf. Das Demo-Konto bekommt deshalb seinen
+         * eigenen Satz -- aber nur, solange sein Wert in der Liste STEHT.
+         * Steht er nicht mehr darin, ist das Demo-Konto eines der
+         * blockierten Konten aus der roten Zeile darueber, und ein Satz,
+         * der behauptet, der Altwert bleibe in der Liste, waere falsch. */
+        require_once __DIR__ . '/demo_lib.php';
+        $demoId = demo_id();
+        /* NUR WERTE AUS DER LISTE: Ein Konto auf einem verwaisten Wert steht
+         * schon in der roten Zahl darueber und zieht NICHT still nach -- es
+         * kann sich gar nicht anmelden. Bis zur Wiederaufnahme der zweiten
+         * Gegenpruefung zaehlte es hier trotzdem mit. */
+        $sta = $pdo->prepare("SELECT COUNT(*) FROM users
+                              WHERE password_hash IS NOT NULL AND kdf_iter <> ? AND id <> ?
+                                AND kdf_iter IN ($platz)");
+        $sta->execute(array_merge([KDF_ITER_ZIEL, $demoId ?? 0], $kdfListe));
+        $kdfAlt = (int)$sta->fetchColumn();
+        if ($demoId !== null) {
+            $std = $pdo->prepare('SELECT kdf_iter FROM users WHERE id = ?');
+            $std->execute([$demoId]);
+            $demoIter = (int)$std->fetchColumn();
+            $kdfDemoAlt = $demoIter !== KDF_ITER_ZIEL && in_array($demoIter, $kdfListe, true);
+        }
+    }
+
     $sp          = speicher_uebersicht();
     $jobs        = jobs_zustand();
     $jobPause    = jobs_pause_bis();
@@ -153,15 +200,32 @@ function status_erhebung(): array
         $schluessel ? 'vorhanden' : 'fehlt',
         $schluessel ? null : 'admin_sicherungsziele.php');
 
-    $server[] = status_z('Schlüsselableitung',
-        $kdfVerwaist === []
-            ? 'Alle Konten rechnen mit einer Rundenzahl, die diese Fassung anbietet ('
-              . implode(', ', array_map('strval', $kdfListe)) . ')'
-            : $kdfSumme . ' Konto/Konten tragen eine Rundenzahl, die diese Fassung '
-              . 'nicht anbietet — sie können sich nicht anmelden. Behebung: den '
-              . 'fehlenden Wert in KDF_ITER_LISTE (server/db.php) wieder aufnehmen',
+    $kdfText = $kdfVerwaist === []
+        ? 'Alle Konten rechnen mit einer Rundenzahl, die diese Fassung anbietet ('
+          . implode(', ', array_map('strval', $kdfListe)) . ')'
+        : $kdfSumme . ' Konto/Konten tragen eine Rundenzahl, die diese Fassung '
+          . 'nicht anbietet — sie können sich nicht anmelden. Behebung: den '
+          . 'fehlenden Wert in KDF_ITER_LISTE (server/db.php) wieder aufnehmen';
+    if ($kdfAlt > 0) {
+        $kdfText .= '. ' . $kdfAlt . ' Konto/Konten stehen noch unter dem Zielwert '
+                  . KDF_ITER_ZIEL . ' — sie ziehen still nach, sobald sie sich das '
+                  . 'nächste Mal anmelden. Bis dahin rechnet jede Anmeldung zweimal '
+                  . 'ab; erst wenn hier keine Zahl mehr steht, darf der Altwert aus '
+                  . 'KDF_ITER_LISTE (server/db.php) gestrichen werden';
+    }
+    if ($kdfDemoAlt) {
+        /* Der Satz steht auch dann, wenn alle anderen Konten nachgezogen
+         * sind: Solange die Fixture den Altwert traegt, darf er nicht aus
+         * der Liste -- das Demo-Konto koennte sich sonst nicht mehr anmelden. */
+        $kdfText .= '. Das Demo-Konto steht auf der Rundenzahl seiner Fixture und '
+                  . 'zieht nicht nach (die stille Anhebung überspringt es, und der Reset '
+                  . 'spielt die Fixture alle 30 Minuten neu ein) — der Altwert bleibt in '
+                  . 'der Liste, bis der Referenzbestand neu gebaut ist (Backlog Nr. 155)';
+    }
+    $server[] = status_z('Schlüsselableitung', $kdfText,
         $kdfVerwaist === [] ? 'blau' : 'rot',
-        $kdfVerwaist === [] ? 'in Ordnung' : 'Anmeldung blockiert');
+        $kdfVerwaist !== [] ? 'Anmeldung blockiert'
+            : ($kdfAlt > 0 ? 'Übergang läuft' : 'in Ordnung'));
 
     /* Dass diese Seite überhaupt antwortet, beweist die Erreichbarkeit — die
        Zeile sagt deshalb die GRÖSSE. „Nicht erreichbar" käme nie zur Anzeige;

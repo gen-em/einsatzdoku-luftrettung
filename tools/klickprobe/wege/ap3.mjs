@@ -181,7 +181,7 @@ export const wege = [
 
   {
     name: 'ap3-geo-punkt-sichtbar',
-    paket: 'AP3', punkt: 'Nr. 153', rolle: 'demo',
+    paket: 'AP3', punkt: 'Nr. 162', rolle: 'demo',
     was: 'Der Abfahrtort-Punkt hat einen Kasten und zeigt seine Spurfarbe',
     soll: '12 × 12 px, Farbe sichtbar',
     async fahren(k) {

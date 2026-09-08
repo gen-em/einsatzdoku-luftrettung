@@ -119,9 +119,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                             . 'gleich hier mit „Fortsetzen".';
                 }
             } catch (Throwable $ex) {
-                komp_zustand_setzen($z);
+                /* KEIN komp_zustand_setzen() MEHR, und kein "Fortsetzen"
+                 * (Backlog Nr. 133): `komp_schub()` hat den Bauordner samt
+                 * Klartext-Dump geraeumt und den Zustand selbst auf
+                 * "abgebrochen" geschrieben. Ein "Fortsetzen" haette danach
+                 * nichts mehr, woran es ansetzen koennte. */
                 $error = 'Der Lauf ist gescheitert: ' . $ex->getMessage()
-                       . ' Der Stand bleibt stehen; „Fortsetzen" nimmt ihn wieder auf.';
+                       . ' Der halbe Stand ist entfernt — im Bauordner lag der '
+                       . 'unverschlüsselte Dump, und der bleibt nicht liegen. '
+                       . 'Ein neuer Lauf fängt von vorn an.';
             }
         }
     } elseif ($aktion === 'abbrechen') {

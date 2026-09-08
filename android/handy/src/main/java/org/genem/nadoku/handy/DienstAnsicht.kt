@@ -60,7 +60,7 @@ data class Sendeergebnis(val ausgang: Sendeausgang, val hhmm: String, val anzahl
 /** Was die Dienstansicht anzeigen soll — alles, was sie braucht, in einem Stück. */
 data class Dienststand(
     val laeuft: Boolean,
-    val begonnenHhmm: String?,
+    val begonnenSeit: String?,
     val modus: Modus,
     val punkte: Long,
     val streckeKm: String,
@@ -395,7 +395,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.LaufenderDienst(
  */
 @Composable
 private fun ortungstext(stand: Dienststand): String {
-    val seit = stand.begonnenHhmm.orEmpty()
+    val seit = stand.begonnenSeit.orEmpty()
     return when (stand.ortung) {
         Ortungsstand.OK -> stringResource(R.string.dienst_laeuft_ok, seit)
         Ortungsstand.KEIN_SIGNAL ->

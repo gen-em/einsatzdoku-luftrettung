@@ -57,8 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405
  * Das KDF-Upgrade tauscht Token-Hash, Rundenzahl und Schluesselhuelle — also
  * genau das Material, das die Fixture mitbringt. Liefe es durch, passte das
  * Konto bis zum naechsten Reset nicht mehr zu seinen oeffentlichen
- * Zugangsdaten. Die Fixture wird stattdessen mit der Zielrundenzahl erzeugt;
- * ein Upgrade hat hier also auch nichts zu tun.
+ * Zugangsdaten. Die Rundenzahl des Demo-Kontos ist damit die der Fixture,
+ * und die traegt heute den Altwert 320 000 (Backlog Nr. 155) — nicht die
+ * Zielrundenzahl, wie es hier bis zur zweiten Gegenpruefung stand. Solange
+ * das so ist, bleibt der Altwert in KDF_ITER_LISTE; die Statuszeile
+ * "Schluesselableitung" sagt es.
  *
  * Stiller Erfolg statt Fehler: Der Browser ruft diesen Endpunkt von sich aus
  * nach der Anmeldung auf, ohne dass jemand etwas angefordert haette. Ein

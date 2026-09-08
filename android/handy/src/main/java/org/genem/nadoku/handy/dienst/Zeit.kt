@@ -4,6 +4,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * Zeitangaben, wie der Vertrag sie verlangt (JSON-Vertrag 2).
@@ -52,4 +53,40 @@ object Zeit {
     /** Lokale Uhrzeit „HH:MM" für die Anzeige — nie für den Vertrag. */
     fun hhmm(augenblick: Instant, zone: ZoneId = ZoneId.systemDefault()): String =
         DateTimeFormatter.ofPattern("HH:mm").withZone(zone).format(augenblick)
+
+    /**
+     * Dienstbeginn für die Anzeige: „07:00" am selben Tag, sonst mit Datum.
+     *
+     * WARUM DAS DATUM NICHT IMMER STEHT: Die Zeile trägt es nur, wenn es
+     * etwas sagt. Im gewöhnlichen Dienst ist der Beginn heute, und
+     * „Dienst läuft seit 07:00 · kein GPS-Signal seit 43 min · keine
+     * Aufzeichnung" ist bei 360 dp schon ohne acht weitere Zeichen knapp.
+     *
+     * WARUM ES ÜBERHAUPT STEHT: Ein Dienst, den niemand beendet hat, läuft
+     * weiter. Wer am Montag die App öffnet, findet keinen Startknopf,
+     * sondern „Dienst beenden" — und die Zeile sagte bis hierher
+     * „läuft seit 07:00" und meinte Freitag. Das ist nicht bloß ungenau: Es
+     * ist von einem Dienst, der vor zwölf Minuten begann, nicht zu
+     * unterscheiden (Backlog Nr. 160).
+     *
+     * Der Wochentag steht vor dem Datum, weil er die Frage beantwortet, die
+     * sich hier wirklich stellt — „war das vor dem Wochenende?" —, und weil
+     * er vier Zeichen kostet. Er trägt seinen eigenen Punkt („Fr."), deshalb
+     * folgt dahinter kein Komma; das Komma steht erst vor der Uhrzeit.
+     *
+     * DIE SPRACHE IST FEST DEUTSCH, nicht die des Geräts. Im Emulatorlauf zu
+     * 0.15.0 stand dort „Aufzeichnung läuft seit **Tue** 08.09., 20:53" — das
+     * Gerät war auf Englisch gestellt, und `Locale.getDefault()` folgte ihm
+     * mitten in einen deutschen Satz hinein. Die App hat nur deutsche Texte
+     * (kein `values-en`); ein englischer Wochentag darin ist kein
+     * Entgegenkommen, sondern ein Bruch. Der Parameter bleibt, damit ein
+     * Prüffall die Sprache setzen kann.
+     */
+    fun seit(beginn: Instant, jetzt: Instant,
+             zone: ZoneId = ZoneId.systemDefault(),
+             sprache: Locale = Locale.GERMAN): String {
+        val b = beginn.atZone(zone)
+        if (b.toLocalDate() == jetzt.atZone(zone).toLocalDate()) { return hhmm(beginn, zone) }
+        return DateTimeFormatter.ofPattern("EE dd.MM., HH:mm", sprache).withZone(zone).format(beginn)
+    }
 }

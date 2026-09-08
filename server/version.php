@@ -2863,6 +2863,77 @@ declare(strict_types=1);
  *          die Anwendung. Keine Migration — und das ist hier die Pointe: Was
  *          fehlt, ist eine ZEILE IM REGISTER, und die holt der Knopf nach.
  */
+/* HIER TREFFEN ZWEI ZWEIGE AUFEINANDER (08.09.2026).
+ *
+ * Schritt 9a (Sofortpaket Sicherheit) und Schritt 8 (S9) sind nach Web 15.5.2
+ * PARALLEL gelaufen — der Beschluss vom 07.09.2026 hat sie ausdruecklich
+ * nebeneinander gestellt, weil sie sich in keiner Datei beruehren. Beide
+ * haben danach weitergezaehlt, und beide haben 15.6.0 vergeben.
+ *
+ * 9a ist zuerst auf `main` und damit ausgeliefert; S9 hat deshalb
+ * umnummeriert. Was in aelteren Dokumenten dieses Zweiges als 15.6.0, 15.6.1,
+ * 15.7.0 oder 15.8.0 stand, heisst jetzt 15.7.0, 15.7.1, 15.8.0 und 15.9.0.
+ * Die Erzaehlung darunter steht in der Reihenfolge der Nummern, nicht in der
+ * Reihenfolge, in der sie geschrieben wurde.
+ *
+ * DIE LEHRE, falls wieder zwei Schritte parallel laufen: Eine Nummer ist
+ * nicht frei, weil sie im eigenen Zweig frei ist.
+ */
+/* 15.6.0  SOFORTPAKET SICHERHEIT, WEB-TEIL (Rahmenplan Schritt 9a, R78).
+ *          Elf Punkte aus dem Krypto-Review, je einer ein Commit, einzeln
+ *          ruecknehmbar. NEBENNUMMER, weil neue Regeln und ein neues
+ *          Pruefmittel dazukommen -- keine Migration, kein veraenderter Weg
+ *          durch die Anwendung.
+ *
+ *          NR. 136 RUNDENZAHL UND PASSWORTREGELN. KDF_ITER_ZIEL von 320 000
+ *          auf 600 000; gemessen 298 -> 551 ms je Ableitung, im Uebergang
+ *          849 ms. Mindestlaenge 10 -> 12, als PW_MIN_LAENGE an einer Stelle.
+ *          Dabei zwei Funde, die erst der Sprung sichtbar gemacht hat: Die
+ *          stille Anhebung lief NICHT beim naechsten Anmelden -- sie braucht
+ *          `CSRF`, und das gab ui_krypto_bootstrap() nur auf Anfrage aus;
+ *          die erste Seite ohne CSRF verwarf das Vormerkfach und damit die
+ *          Anhebung fuer die ganze Sitzung. Und die Wartungsseite meldete nur
+ *          VERWAISTE Rundenzahlen, nicht, wer noch auf dem Altwert steht --
+ *          also nicht die Zahl, die sagt, wann der Altwert weg darf.
+ *
+ *          DIE PASSWORTREGEL HAT EINE NEUE RECHNUNG. SP-2 empfiehlt
+ *          Passphrasen und will zugleich die Sperrliste erweitern; beides
+ *          zusammen ging nicht, weil jedes Passwort abgewiesen wurde, in dem
+ *          irgendwo ein Listenwort vorkam -- "Anker-Winter-Regen-Glas"
+ *          scheiterte an "winter". Gemessen wird jetzt der ANTEIL: Was bleibt
+ *          uebrig, wenn man Listenwoerter und angehaengte Ziffern streicht?
+ *
+ *          NR. 127 LOGIN-CSRF. Das Anmeldeformular war das einzige ohne
+ *          Token; `csrf_token()`, `csrf_field()` und `csrf_ok()` stehen
+ *          deshalb jetzt in `session_lib.php` statt hinter der Anmeldung.
+ *          NR. 128 E-MAIL-WECHSEL mit Passwortnachweis, dazu die Hinweismail
+ *          an die ALTE Adresse -- auf beiden Wegen, Profil und Verwaltung.
+ *          NR. 129 `apk/` und `demo/` per .htaccess gesperrt.
+ *          NR. 130 DOCTYPE-SPERRE IM GPX-IMPORT: Ein UTF-16-Dokument ging
+ *          durch, weil die Regex Bytes sucht und dort Nullbytes dazwischen
+ *          stehen. NR. 131 `wiederherstellen.php` nennt unangemeldet weder
+ *          Datenbank-Fehlertext noch Kontenzahl. NR. 133 Der Bauordner des
+ *          Komplettbackups mit dem UNVERSCHLUESSELTEN Dump wird nach jedem
+ *          Fehlschlag geraeumt, nicht erst beim naechsten faelligen Lauf.
+ *
+ *          NR. 134 ERSETZFENSTER 72 h ab Einsatzbeginn: Eine gefundene Uhr
+ *          kann bestehende Einsaetze danach nicht mehr veraendern -- weder
+ *          Phasen ersetzen noch Punkte anhaengen. Neue Einsaetze legt sie
+ *          weiter an; der Weg dagegen bleibt das Trennen.
+ *          NR. 135 `json_js()` fuer die 44 Stellen, die in einen
+ *          `<script>`-Block schreiben; die 35 ausserhalb bleiben unberuehrt,
+ *          weil dort Bytes an Pruefsummen haengen.
+ *          NR. 138 WEG C, nur Dokumente: Die Zusage nennt jetzt beide
+ *          Seiten -- was verschluesselt ist UND dass sich der Einsatzort aus
+ *          Spur und Phasenkoordinaten rekonstruieren laesst.
+ *          NR. 140 INTEGRITAETSWACHE als taegliche GitHub-Action. Sie
+ *          braucht keine eingecheckten Pruefsummen: Der Deploy synchronisiert
+ *          byteweise, und der Inline-Block der Anmeldeseite enthaelt keine
+ *          einzige PHP-Einsetzung -- beide Seiten lassen sich frisch rechnen.
+ *
+ *          KEINE MIGRATION. Was Konten betrifft, zieht sich still nach: Die
+ *          Rundenzahl beim naechsten Anmelden, alles andere gilt sofort.
+ */
 /* 15.7.0  EINE VORSCHLAGSLISTE STATT DREIER UND EINER VIERTEN VOM BROWSER
  *          (S9/AP1, E-S9-07 und E-S9-08; Backlog Nr. 68, 102, 106).
  *
@@ -2970,7 +3041,7 @@ declare(strict_types=1);
  *          der Bildschirmmatrix des SVG: vorher a=0,833 b=0 c=0 d=0,833 bei
  *          behaupteten 90 Grad, nachher 12 von 12 Pfeilen in 30-Grad-
  *          Schritten auf 0,1 Grad genau. Derselbe Fehler steckte drei Zeilen
- *          darueber im Punkt des Abfahrtorts (Nr. 153, neu aufgenommen): Er
+ *          darueber im Punkt des Abfahrtorts (Nr. 162, neu aufgenommen): Er
  *          mass 4 x 18 px statt 12 x 12, und die Spurfarbe des Einsatzes lag
  *          in einem 0 px breiten Inhaltskasten.
  *

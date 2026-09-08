@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Die Netzsicherheitsregel des ausgelieferten Standes: KEIN KLARTEXT, fuer
+    keine Adresse (Backlog Nr. 142, Krypto-Review AN-1).
+
+    WARUM SIE AUSDRUECKLICH DASTEHT, obwohl Android Klartext "seit Fassung 9"
+    ohnehin verbietet: Diese Vorgabe gilt erst ab API 28. `minSdk` ist 26 —
+    auf Android 8.0 und 8.1 laesst das System Klartext zu, solange niemand es
+    verbietet. Bis Android 0.13.0 verbot es niemand, und `Serveradresse`
+    liess `localhost` und IPv4-Adressen in JEDER Bauart mit `http` durch: Ein
+    Selbsthoster, der sein APK mit einer IP-Adresse als `SERVER_BASIS` baute,
+    haette den Geraeteschluessel (`X-Api-Key`) auf einem Android-8-Geraet im
+    Klartext verschickt. Der Standardbau mit fester Domain war nie betroffen,
+    ein Rechnername bekam immer `https`.
+
+    ZWEI BOEDEN: `Serveradresse` bildet im Release fuer jede Adresse `https`
+    (Kotlin, `BuildConfig.DEBUG`), und diese Datei verbietet Klartext auf
+    Systemebene (Android). Faellt einer aus — ein spaeterer Umbau der
+    Adressregel etwa —, haelt der andere.
+
+    Das Pruef-APK traegt stattdessen `src/debug/res/xml/netzwerk_pruefstand.xml`
+    mit drei erlaubten oertlichen Adressen. Je Bauart gilt genau eine der
+    beiden Dateien; sie werden nicht zusammengefuehrt.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

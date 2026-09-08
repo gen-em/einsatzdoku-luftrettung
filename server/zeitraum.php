@@ -133,11 +133,11 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
          der Tagesleiste. Gleiches Muster wie CREW_ROLLEN in import.php
          (Befund P9); assets/missiontable.js führt einen Rückfall, falls die
          Vorgabe fehlt. */ ?>
-<script>const ART_SYMBOLE = <?= json_encode(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+<script>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
         /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
            zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
            zeichnet. Dieselbe Quelle wie auf der Serverseite. */
-        const TYP_SYMBOLE = <?= json_encode(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
+        const TYP_SYMBOLE = <?= json_js(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
@@ -146,8 +146,8 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
          Token — dieselbe Quelle wie auf Tages- und Einsatzkarte. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script>
-const JAHR  = <?= json_encode($jahr) ?>;
-const MONAT = <?= json_encode($monat) ?>;
+const JAHR  = <?= json_js($jahr) ?>;
+const MONAT = <?= json_js($monat) ?>;
 
 // Karte bleibt ausgeblendet (CSS [hidden]), bis feststeht, dass mindestens
 // ein Pin gezeichnet wird — preferCanvas fuer performantes Rendering bei

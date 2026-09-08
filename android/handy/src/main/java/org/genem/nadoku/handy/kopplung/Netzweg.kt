@@ -39,6 +39,11 @@ interface Netzweg {
  * ZEITLIMITS SIND PFLICHT, nicht Feinschliff: Ohne sie wartet die App im
  * Funkloch, bis Android sie abräumt. Die Werte sind großzügig, weil die
  * Gegenseite ein Mobilfunknetz ist.
+ *
+ * KEIN CERTIFICATE PINNING — entschieden, nicht vergessen (Backlog Nr. 143,
+ * Krypto-Review AN-3): feste Domain, rotierendes Zertifikat, und niemand,
+ * der Ersatzschlüssel pflegte. Die Begründung steht in `android/LIESMICH.md`,
+ * Abschnitt „Warum kein Certificate Pinning".
  */
 class HttpNetzweg(
     private val verbindungslimitMs: Int = 15_000,

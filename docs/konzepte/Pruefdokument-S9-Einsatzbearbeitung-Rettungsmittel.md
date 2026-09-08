@@ -472,7 +472,7 @@ trug seine Drehung, `.geo-punkt` seine Größe — beide an einem `<span>`, und
 an einem nicht ersetzten Inline-Element wirkt weder `transform` noch `width`.
 Die Pfeile zeigten deshalb ausnahmslos nach Norden (Nr. 72, gemeldet), der
 Abfahrtort maß **4 × 18 px statt 12 × 12** und zeigte seine Spurfarbe nie
-(**Nr. 153, in keinem Backlog-Punkt**).
+(**Nr. 162, in keinem Backlog-Punkt**).
 
 **Nachweisbar nur an der Geometrie.** `getComputedStyle` meldet die
 Drehmatrix auch dort, wo sie nichts bewirkt — wer den Fehler in den

@@ -2198,6 +2198,68 @@ function migrationen_katalog(): array
         ],
     ],
     [
+        'id'    => '2026_09_07_rest_segments_created_at',
+        'web'   => '15.6.0',
+        'label' => 'rest_segments.created_at — der serverseitige Anker des Ersetzfensters (Nr. 134)',
+        /* ERLEDIGT IST SIE ERST, WENN ALLE DREI SCHRITTE DURCH SIND (zweite
+         * Gegenpruefung, 07.09.2026): Spalte da, keine Zeile mehr NULL, Spalte
+         * NOT NULL. Die erste Fassung fragte nur, ob die Spalte existiert --
+         * und die existiert schon nach dem ersten Schritt. Scheiterte der
+         * zweite (das UPDATE), verbuchte der naechste Klick die Migration als
+         * "nicht noetig", und jedes alte Segment trug die Migrationszeit als
+         * Anker: drei Tage lang wieder veraenderbar, genau die Luecke, die
+         * das Fenster schliesst. */
+        'skip'  => function (PDO $pdo): bool {
+            if (!_hat_spalte($pdo, 'rest_segments', 'created_at')) { return false; }
+            $q = $pdo->prepare("SELECT is_nullable FROM information_schema.columns
+                                WHERE table_schema = DATABASE()
+                                  AND table_name = 'rest_segments' AND column_name = 'created_at'");
+            $q->execute();
+            if (strtoupper((string)$q->fetchColumn()) !== 'NO') { return false; }
+            return (int)$pdo->query('SELECT COUNT(*) FROM rest_segments WHERE created_at IS NULL')->fetchColumn() === 0;
+        },
+        'run'   => function (PDO $pdo): void {
+            /* DER ANKER DES ERSETZFENSTERS (Nr. 134, Nachbesserung 07.09.2026)
+             * ist der Augenblick, in dem der Server den Datensatz zum ersten
+             * Mal gesehen hat: `created_at`. missions traegt die Spalte seit
+             * jeher; rest_segments nicht -- ohne sie hinge das Fenster dort an
+             * der Uhr des Geraets, und eine falsch gestellte Uhr schloesse es
+             * im Augenblick des Anlegens.
+             *
+             * DIE VORHANDENEN ZEILEN BEKOMMEN IHR started_at, nicht "jetzt":
+             * Mit dem Vorgabewert CURRENT_TIMESTAMP stuende an jedem alten
+             * Segment die Migrationszeit, und jedes waere danach drei Tage
+             * lang wieder veraenderbar. Neue Zeilen bekommen den Vorgabewert,
+             * und der ist dann richtig.
+             *
+             * DREI SCHRITTE, JEDER FUER SICH WIEDERHOLBAR (zweite Gegenpruefung):
+             * Die erste Fassung war ein ALTER mit NOT NULL DEFAULT und ein
+             * UPDATE `created_at = started_at`. `started_at` ist DATETIME und
+             * nimmt jedes Jahr von 0000 bis 9999; `created_at` ist TIMESTAMP
+             * und reicht von 1970-01-01 00:00:01 bis 2038-01-19. Ein einziges
+             * Segment mit `started_at` 1970-01-01 00:00:00 -- der Wert einer
+             * Uhr ohne Zeitabgleich, und ingest.php nimmt ihn an -- liess das
+             * UPDATE unter STRICT_TRANS_TABLES mit Fehler 1292 scheitern,
+             * nachdem das ALTER schon durch war. Deshalb: (1) Spalte NULL
+             * anlegen, nur wenn sie fehlt; (2) fuellen, nur wo NULL, und dabei
+             * in den Bereich der Spalte und auf hoechstens "jetzt" kappen --
+             * ein `started_at` in der Zukunft darf nicht zum Anker werden;
+             * (3) erst dann NOT NULL mit Vorgabewert. Bleibt der Lauf
+             * zwischen zwei Schritten stehen, macht der naechste dort weiter,
+             * und `skip` sagt erst "erledigt", wenn alle drei stehen. */
+            if (!_hat_spalte($pdo, 'rest_segments', 'created_at')) {
+                $pdo->exec("ALTER TABLE rest_segments
+                              ADD COLUMN created_at TIMESTAMP NULL DEFAULT NULL AFTER deleted_with_day");
+            }
+            $pdo->exec("UPDATE rest_segments
+                           SET created_at = GREATEST('1970-01-01 00:00:01',
+                                                     LEAST(COALESCE(started_at, UTC_TIMESTAMP()), UTC_TIMESTAMP()))
+                         WHERE created_at IS NULL");
+            $pdo->exec("ALTER TABLE rest_segments
+                          MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP");
+        },
+    ],
+    [
         'id'    => '2026_09_07_adresssuche_konto',
         'web'   => '15.8.0',
         'label' => 'Schalter „Adressvorschläge aus dem Internet" je Konto (E-S9-05, R79)',

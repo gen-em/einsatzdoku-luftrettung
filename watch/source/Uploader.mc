@@ -21,6 +21,20 @@ module Uploader {
 
     var _busy as Lang.Boolean = false;
     var lastError as Lang.String or Null = null;
+
+    /* IST DAS GERAET BEIM SERVER ABGEMELDET? (Backlog Nr. 159.)
+     *
+     * 401 und 403 sagen nichts ueber das Paket, sondern ueber das GERAET: Es
+     * wurde im Web geloescht, sein Schluessel passt nicht mehr, oder es steht
+     * auf inaktiv. Dann kommt KEIN Paket mehr durch, gleich welches -- und
+     * Pakete einzeln zu parken waere falsch, weil mit ihnen nichts verkehrt
+     * ist. Stattdessen haelt das Senden an, bis jemand neu koppelt.
+     *
+     * Der Zustand liegt im Speicher und nicht im Storage: Nach einem Neustart
+     * darf die Uhr es ruhig noch einmal versuchen. Sie erfaehrt binnen einer
+     * Anfrage wieder, woran sie ist, und ein falsch stehen gebliebenes
+     * "abgemeldet" waere teurer als ein Versuch zuviel. */
+    var abgemeldet as Lang.Boolean = false;
     var _cb as UploaderCb or Null = null;
     var _inflight as Lang.Dictionary or Null = null;  // Kontext der laufenden Anfrage
 
@@ -28,11 +42,49 @@ module Uploader {
     // Alles beim Server bestaetigt? (Nach Dienstende liegt alles Unbestaetigte
     // in den Pending-Listen; vollstaendig bestaetigte Eintraege werden entfernt.)
     function allSynced() as Lang.Boolean {
-        return Model.pendingMissions.size() == 0 && Model.pendingRest.size() == 0;
+        return _offeneOhneGeparkte(Model.pendingMissions)
+            && _offeneOhneGeparkte(Model.pendingRest);
+    }
+
+    /* GEPARKTE ZAEHLEN HIER NICHT MIT -- sonst kaeme die Rueckfrage
+     * "Sync unvollstaendig, trotzdem beenden?" nach einem abgewiesenen Paket
+     * bei JEDEM Dienstende wieder, fuer immer, ohne dass irgendetwas daran
+     * noch zu tun waere. */
+    function _offeneOhneGeparkte(liste as Lang.Array<Lang.Dictionary>) as Lang.Boolean {
+        for (var i = 0; i < liste.size(); i++) {
+            if (!istGeparkt(liste[i]["ref"] as Lang.String)) { return false; }
+        }
+        return true;
+    }
+
+    /* IST DIESES PAKET DAUERHAFT ABGEWIESEN? (Backlog Nr. 159.)
+     *
+     * Die Marke haelt im Storage, weil ein Neustart die Lage nicht aendert:
+     * Was der Server als unbrauchbar zurueckgewiesen hat, bleibt unbrauchbar.
+     * Sie wird nur beim Verwerfen des Pakets geloescht -- und dann mit der
+     * Spur zusammen, nie fuer sich. */
+    function istGeparkt(ref as Lang.String) as Lang.Boolean {
+        return true.equals(Storage.getValue("bad_" + ref));
+    }
+
+    /* WIE VIELE PAKETE STEHEN GEPARKT? Fuer die Anzeige (SyncView). */
+    function geparkteZahl() as Lang.Number {
+        var n = 0;
+        for (var i = 0; i < Model.pendingMissions.size(); i++) {
+            if (istGeparkt(Model.pendingMissions[i]["ref"] as Lang.String)) { n += 1; }
+        }
+        for (var j = 0; j < Model.pendingRest.size(); j++) {
+            if (istGeparkt(Model.pendingRest[j]["ref"] as Lang.String)) { n += 1; }
+        }
+        return n;
     }
 
     function syncAll() as Void {
         if (_busy) { return; }
+        /* ABGEMELDET HEISST: gar nicht erst versuchen. Jede Anfrage kostet
+         * Funk und Akku und bekommt dieselbe Antwort, bis jemand neu koppelt
+         * (Backlog Nr. 159). */
+        if (abgemeldet) { return; }
         _next();
     }
 
@@ -52,9 +104,17 @@ module Uploader {
     }
 
     function _findJob() as Lang.Dictionary or Null {
+        /* GEPARKTE WERDEN UEBERSPRUNGEN, NICHT ENTFERNT (Backlog Nr. 159).
+         *
+         * Bis hierher stand ein dauerhaft abgewiesenes Paket vorn in der
+         * Schlange und blieb dort: Es wurde endlos wiederholt, und alles
+         * dahinter kam nie an. Ueberspringen loest die Blockade, ohne etwas
+         * wegzuwerfen -- die Spur bleibt, bis jemand sie ausdruecklich
+         * verwirft. */
         for (var i = 0; i < Model.pendingMissions.size(); i++) {
             var m = Model.pendingMissions[i];
             var mref = m["ref"] as Lang.String;
+            if (istGeparkt(mref)) { continue; }
             if (_openPoints(mref) > 0 || !_isAcked(mref)) {
                 return { "kind" => "mission", "data" => m, "pendingIdx" => i };
             }
@@ -62,6 +122,7 @@ module Uploader {
         for (var i = 0; i < Model.pendingRest.size(); i++) {
             var r = Model.pendingRest[i];
             var rref = r["ref"] as Lang.String;
+            if (istGeparkt(rref)) { continue; }
             if (_openPoints(rref) > 0 || !_isAcked(rref)) {
                 return { "kind" => "rest_segment", "data" => r, "pendingIdx" => i };
             }
@@ -238,6 +299,7 @@ module Uploader {
         var ref = ctx["ref"] as Lang.String;
         if (code == 200 && data instanceof Lang.Dictionary && data["ok"] == true) {
             lastError = null;
+            abgemeldet = false;        // eine angenommene Anfrage widerlegt es
             var nextSeq = data["next_seq"] as Lang.Number;
             _setAcked(ref, nextSeq, true);
 
@@ -254,10 +316,96 @@ module Uploader {
                 }
             }
             _next();   // weitere offene Chunks/Jobs
+        } else if (code == 401 || code == 403) {
+            /* DAS GERAET IST ABGEMELDET, NICHT DAS PAKET ABGEWIESEN.
+             *
+             * 401: im Web geloescht oder der Schluessel passt nicht mehr.
+             * 403: dort auf inaktiv gestellt. In beiden Faellen kommt kein
+             * Paket mehr durch -- deshalb wird auch keines geparkt: Mit den
+             * Paketen ist nichts verkehrt, und sie werden gebraucht, sobald
+             * jemand neu koppelt.
+             *
+             * Bis Uhr 3.0.2 fiel das in denselben Zweig wie eine Stoerung und
+             * wurde endlos wiederholt. Weil ein Rueckstand zugleich das
+             * Trennen sperrte (Pair.start), war die Uhr danach nur noch durch
+             * Loeschen der App zu retten -- mit allem, was sie trug. Das ist
+             * der eigentliche Fund hinter Backlog Nr. 159. */
+            abgemeldet = true;
+            lastError = null;
+            _busy = false;
+        } else if (code == 400 && _dauerhaftAbgewiesen(data)) {
+            /* DIESES EINE PAKET IST UNBRAUCHBAR (Vertrag: "nicht wiederholen,
+             * lokal als fehlerhaft markieren").
+             *
+             * NUR MIT ERKENNBARER ANTWORT DES SERVERS: Ein blankes 400 ohne
+             * Fehlerschluessel kann von jedem Zwischenstueck kommen -- einem
+             * Reverse Proxy, einer Firewall, einer vertippten Adresse in den
+             * Einstellungen. Ein gesundes Paket dafuer zu parken waere
+             * schlimmer als ein Versuch zuviel; ohne Kennzeichen wird deshalb
+             * weiter wiederholt, wie bisher. */
+            Storage.setValue("bad_" + ref, true);
+            lastError = null;
+            _busy = false;
+            _next();          // die Schlange laeuft weiter
         } else {
             lastError = "Upload " + code.toString();
             _busy = false;   // spaeter erneut (naechster syncAll-Ausloeser)
         }
+    }
+
+    /* Traegt die Antwort den Fehlerschluessel des Servers? (JSON-Vertrag 5.)
+     *
+     * `ingest.php` antwortet auf eine unbrauchbare Nachricht mit
+     * `{"error":"payload", ...}`. Ob Connect IQ den Rumpf einer
+     * 400-Antwort ueberhaupt durchreicht, ist geraeteabhaengig und im
+     * Simulator gemessen; kommt nichts an, bleibt es beim Wiederholen. */
+    function _dauerhaftAbgewiesen(data as Null or Lang.Dictionary or Lang.String
+                                          or Toybox.PersistedContent.Iterator) as Lang.Boolean {
+        if (!(data instanceof Lang.Dictionary)) { return false; }
+        var kennung = data["error"];
+        if (!(kennung instanceof Lang.String)) { return false; }
+        return "payload".equals(kennung as Lang.String);
+    }
+
+    /* EIN GEPARKTES PAKET ENDGUELTIG VERWERFEN (Backlog Nr. 159).
+     *
+     * Die Reihenfolge ist wesentlich: erst die Spur, dann die Marken, dann
+     * der Eintrag aus der Liste. Wer die Marke `bad_` vorher loeschte, haette
+     * ein Paket, das sofort wieder gesendet wird; wer den Eintrag vorher
+     * entfernte, liesse die Spur als Waise im Speicher zurueck -- rund
+     * 100 kB, die nichts mehr freigibt. */
+    function verwerfen(ref as Lang.String) as Void {
+        Track.purge(ref);
+        Storage.deleteValue("ack_" + ref);
+        Storage.deleteValue("meta_" + ref);
+        Storage.deleteValue("bad_" + ref);
+        for (var i = Model.pendingMissions.size() - 1; i >= 0; i--) {
+            if (ref.equals(Model.pendingMissions[i]["ref"] as Lang.String)) {
+                Model.pendingMissions.remove(Model.pendingMissions[i]);
+            }
+        }
+        for (var j = Model.pendingRest.size() - 1; j >= 0; j--) {
+            if (ref.equals(Model.pendingRest[j]["ref"] as Lang.String)) {
+                Model.pendingRest.remove(Model.pendingRest[j]);
+            }
+        }
+        Model.save();
+    }
+
+    /* Alle geparkten Pakete verwerfen -- der Weg von der Sync-Seite und vom
+     * Trennen der Kopplung aus. Gibt zurueck, wie viele es waren. */
+    function alleGeparktenVerwerfen() as Lang.Number {
+        var refs = [] as Lang.Array<Lang.String>;
+        for (var i = 0; i < Model.pendingMissions.size(); i++) {
+            var mr = Model.pendingMissions[i]["ref"] as Lang.String;
+            if (istGeparkt(mr)) { refs.add(mr); }
+        }
+        for (var j = 0; j < Model.pendingRest.size(); j++) {
+            var rr = Model.pendingRest[j]["ref"] as Lang.String;
+            if (istGeparkt(rr)) { refs.add(rr); }
+        }
+        for (var k = 0; k < refs.size(); k++) { verwerfen(refs[k]); }
+        return refs.size();
     }
 
     // ---- Upload-Marken pro Track --------------------------------------------
