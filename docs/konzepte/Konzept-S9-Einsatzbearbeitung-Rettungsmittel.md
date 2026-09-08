@@ -16,7 +16,7 @@ Mockups in `konzept-s9/mockups/`.
 > |---|---|
 > | Stand | 07.09.2026 — **Konzept freigegeben.** E-S9-01 bis -17 am 06.09.2026 bestätigt, E-S9-18 und -19 am 07.09.2026; alle sieben Mockups freigegeben (Abschnitt 6). PS-12 (Standortseiten, Backlog 152) am 07.09.2026 aufgenommen. Rahmenplan Fassung 34 trägt die Einschübe aus Abschnitt 7 |
 > | Entschieden | E-S9-01 bis E-S9-19 (Abschnitt 2) |
-> | Offen | **eine Frage aus AP5 Teil 2** (Prüfdokument, Abschnitt 4, Frage 7): Konzept und Backlog Nr. 152 nennen **vier** Karten auf der Standortseite, am Standort hängen aber **sechs** Stammdatenlisten; gebaut sind sechs (fünf ohne luftgebundenes Rettungsmittel), und die Abnahmezahl „Unterpunkte der Leiste = vier“ wäre damit falsch. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
+> | Offen | nichts. **Frage 7 aus AP5 Teil 2 ist am 08.09.2026 entschieden:** Die Standortseite behält ihre **sechs** Karten (fünf ohne luftgebundenes Rettungsmittel); die Abnahmezahl „Unterpunkte der Leiste = vier“ ist auf sechs bzw. fünf berichtigt. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
 > | Umsetzung | **AP1 bis AP4a erledigt**, **AP5 in Arbeit** (07./08.09.2026, Web 15.6.0 / 15.6.1 / 15.7.0 / 15.8.0 / 16.0.0 / 16.1.0 / 16.1.1 / 16.2.0 / 16.2.1 / **16.2.2**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
 > | AP5 in sechs Teilen | **1** Menü und Standortliste (erledigt, 16.2.0/16.2.1) · **2** die Standortseite (erledigt, 16.2.2) · **3** die neuen Bausteine — Sprungziel, Filterfeld, `Design.md` 9, Streichliste · **4** die drei Dialoge **und die Verwaltungsseite** · **5** Standort löschen, Variante b · **6** Buchführung und Prüflauf. **Die Verwaltung (`admin_stammdaten.php`) ist bewusst in Teil 4 gerückt** und nicht in Teil 2: Sie benutzt `sd_form()` an acht Stellen, und Teil 4 ersetzt genau das durch Dialoge — wer sie jetzt umbaut, baut sie zweimal |
 > | Fable-Schritte der Umsetzung | **vier**: die Mockups **M-S9-08 bis M-S9-10** zu den Fragen 3 bis 6 des Prüfdokuments (07.09.2026, **alle drei am 08.09.2026 freigegeben**) und **M-S9-11** zum Datum in der schmalen Leiste (08.09.2026, **Weg 2 freigegeben**) — dieses auf ausdrückliches Einverständnis des Auftraggebers **von Opus** gebaut statt von Fable (Abschnitt 6). Der Fable-Vorbehalt der Vorbereitung (PS-8.2) war im Konzept aufgelöst (Abschnitt 1.8) |
@@ -709,10 +709,20 @@ Rettungsmittel · Besatzung · Zielkliniken, Stern für die Vorbelegung,
 Rettungsmittel der Typen ohne Standort (E-S9-09). Nichts ist zugeklappt.
 Die **Standortseite** (`einstellungen.php?t=standort&s=<id>`) trägt den
 Rückweg „‹ Standorte", den Namen als Titel, ein Aktionsmenü (Löschen, Als
-Vorbelegung) und vier Karten mit `id`: **Standort** (Bezeichnung, Lage als
+Vorbelegung) und **sechs** Karten mit `id`: **Standort** (Bezeichnung, Lage als
 Nur-Lage-Ortsfeld mit Pin — Nr. 70 —, Koordinaten-Chip, Speichern),
 **Rettungsmittel** (Sprungliste ab sechs, E-S9-14), **Besatzung** (Filterfeld,
-Rollen als Zwischentitel), **Zielkliniken** (Filterfeld). Oben ein
+Rollen als Zwischentitel), **Zielkliniken** (Filterfeld), **Weitere
+Rettungsmittel** und **Bergwacht**.
+
+> **Berichtigt am 08.09.2026 (Entscheidung des Auftraggebers, Frage 7 des
+> Prüfdokuments).** Diese Aufzählung nannte bis dahin **vier** Karten. Am
+> Standort hängen aber **sechs** Stammdatenlisten — die zwei übrigen tragen
+> Daten (`other_ems`, `bw_units`), hängen an `base_id`, und ohne Karte wären
+> sie von der Seite aus nicht mehr erreichbar. Die vier waren die, an denen
+> sich etwas ändert; die zwei anderen wurden übergangen, nicht gestrichen.
+> **Bergwacht erscheint nur an einem Standort mit luftgebundenem
+> Rettungsmittel** (E29) — dort sind es sechs Karten, sonst fünf. Oben ein
 **Inhaltsverzeichnis aus drei Kennzahlen** (`ui_kennzahl()` mit `href`,
 `Design.md` 9.10 — Wert in Bricolage, Beschriftung darunter; Raster mit
 drei Spalten, eine Stylesheet-Zeile; die Kachel des Sprungziels wird
@@ -721,7 +731,7 @@ zwei Bausteine für zwei Aufgaben (Rückmeldung 07.09.2026, M-S9-07). Die
 Karte „Standort" braucht keine Kachel, sie steht direkt darunter. Am Ende
 jeder Karte **„Zum Anfang"** (gedämpft, 44 px, springt auf die
 Kennzahlen). Am Desktop
-liefern die vier Karten-IDs die Unterpunkte in der Leiste von selbst
+liefern die sechs Karten-IDs die Unterpunkte in der Leiste von selbst
 (`menue.js`, S8). Das **Filterfeld** (Feld mit Lupe innen, filtert im Browser)
 ist ein neuer Baustein neben „Zum Anfang"; die Pille bekommt die
 Zahl-Variante. **Verwaltung → Stammdaten** (Admin) bekommt dieselbe Liste
@@ -981,12 +991,14 @@ unter „Ohne Standort" mit `:target`. Der Fremdschlüssel bleibt
   „Standort anlegen" in der Titelzeile.
 - Standortseite: Rückweg, Titel, Aktionsmenü (Löschen, Als Vorbelegung);
   **Kennzahlen** als Inhaltsverzeichnis (Raster mit drei Spalten — eine
-  Stylesheet-Zeile; `.aktiv` beim Sprung); vier Karten mit `id`
+  Stylesheet-Zeile; `.aktiv` beim Sprung); **sechs** Karten mit `id`
   (Standort mit Nur-Lage-Ortsfeld und Pin — E-S9-06 c, Nr. 70 —,
   Rettungsmittel mit Sprungliste ab sechs, Besatzung mit Filterfeld und
-  Rollen als Zwischentitel, Zielkliniken mit Filterfeld); „Zum Anfang" am
-  Ende jeder Karte; Unterpunkte in der Leiste entstehen aus den IDs
-  (`menue.js`, unverändert).
+  Rollen als Zwischentitel, Zielkliniken mit Filterfeld, dazu Weitere
+  Rettungsmittel und Bergwacht — letztere nur mit luftgebundenem
+  Rettungsmittel, E29, sonst fünf; berichtigt am 08.09.2026, Frage 7);
+  „Zum Anfang" am Ende jeder Karte; Unterpunkte in der Leiste entstehen aus
+  den IDs (`menue.js`, unverändert).
 - Drei Dialoge (Anlegen und Bearbeiten, `sd_form()` entfällt): Feldfolge
   nach E-S9-19; Fehler im Dialog; Erfolg → Redirect mit `#veh-`/`#crew-`/
   `#dest-<id>`, Zeile mit `id`, `:target` Orange-hell (Regel aus M-S9-05),
@@ -1007,7 +1019,9 @@ einmal angelegt → nach dem Reload steht die neue Zeile unter der Kopfleiste
 (**3 von 3**); Filterfeld „Klin" → Zeilenzahl sinkt auf die Treffer (Zahl);
 Sprungliste ab sechs sichtbar, bei fünf nicht (Bild); Menü ohne
 „Rettungsmittel" (Vollständigkeit: Menüpunkte = Seiten); Unterpunkte der
-Leiste = vier (Bild bei 1280); Bilderlauf beider Seiten in acht Breiten
+Leiste = **sechs** an einem Standort mit luftgebundenem Rettungsmittel und
+**fünf** ohne, und **drei** auf der Liste (Bild bei 1280; die Zahl lautete
+bis zum 08.09.2026 „vier" und war falsch — Frage 7); Bilderlauf beider Seiten in acht Breiten
 und beiden Bedienhöhen; Stilvergleich gegen M-S9-05, -06, -07.
 
 ### AP6 — Tageszuordnung (E-S9-10, E-S9-11; PS-10.2, PS-10.3)

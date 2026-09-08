@@ -1594,8 +1594,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Scrollen, und die Eingabe (`sd_form()`) klebt unter jeder Liste.
     **Soll:** „Rettungsmittel" entfällt; **„Standorte"** ist Liste (eine
     Zeile je Standort mit drei Zahlen, „Ohne Standort" als letzter Eintrag)
-    und **Seite je Standort** mit vier Karten (Standort, Rettungsmittel,
-    Besatzung, Zielkliniken), **Kennzahlen** als Inhaltsverzeichnis
+    und **Seite je Standort** mit **sechs** Karten (Standort, Rettungsmittel,
+    Besatzung, Zielkliniken, Weitere Rettungsmittel, Bergwacht — letztere nur
+    mit luftgebundenem Rettungsmittel, E29, sonst fünf; hier stand bis zum
+    08.09.2026 „vier", und das war falsch: Am Standort hängen sechs
+    Stammdatenlisten, und die zwei übergangenen wären ohne Karte von der
+    Seite aus nicht erreichbar — Entscheidung des Auftraggebers, Frage 7 des
+    Prüfdokuments), **Kennzahlen** als Inhaltsverzeichnis
     (`Design.md` 9.10), „Zum Anfang" je Karte, Sprungliste (Nr. 44) in den
     Rettungsmitteln, **Filterfeld** in Besatzung und Zielkliniken; Anlegen
     und Bearbeiten im **Dialog** (9.11); nach dem Anlegen Redirect mit
