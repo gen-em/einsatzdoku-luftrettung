@@ -2467,6 +2467,12 @@ Gerät wieder frei.
 > Diensttags nicht — aber sie stehen dann in deinem
 > Bestand. Auch deshalb: trennen, nicht abwarten.
 >
+> Was der Server gar nicht erst annimmt, sind Pakete, deren Zeiten nicht zu
+> ihrem Tag gehören: ein Einsatz, der als Tag den 9. August meldet und als
+> Beginn das Jahr 2001. Ein Dienst, der **verspätet** hochgeladen wird — die
+> Uhr war eine Woche ohne Netz —, kommt dagegen vollständig an und bekommt
+> seinen Diensttag mit Beginn und Ende wie immer.
+>
 > Die **Wear-OS-Uhr** ist von alledem nicht betroffen. Sie kennt weder
 > Serveradresse noch Schlüssel; sie schickt ihre Ereignisse ans Handy, und das
 > Handy sendet.

@@ -669,9 +669,12 @@ $fZeit['started_at'] = '2001-01-01T00:00:00Z';
 $fZeit['ended_at']   = '2097-12-31T23:00:00Z';
 $f5 = senden($fZeit);
 $tagNachher = $liesTag($pdo, $fId);
-pruefe(($f5['daten']['ok'] ?? false) === true && $tagVorher === $tagNachher,
-       'Ausserhalb: der ZEITRAUM DES DIENSTTAGS bleibt (Gegenpruefung 1)',
-       'Tag vorher ' . $tagVorher . ', nachher ' . $tagNachher);
+/* Seit der Wiederaufnahme sitzt der Schutz frueher: Zeiten, die nicht zum
+ * `day` des Pakets passen, kommen gar nicht erst an (pruef_zeit_zum_tag).
+ * Der Zeitraum des Tages bleibt damit erst recht -- geprueft wird beides. */
+pruefe($f5['code'] === 400 && $tagVorher === $tagNachher,
+       'Zeiten, die nicht zum Tag passen, werden ABGEWIESEN; der Zeitraum des Diensttags bleibt (Gegenpruefung 1)',
+       'HTTP ' . $f5['code'] . ' (erwartet 400), Tag vorher ' . $tagVorher . ', nachher ' . $tagNachher);
 
 // (3) Ein Abschlusspaket ausserhalb: uebergangen UND GENANNT (kept_meta).
 $oRef = 'probe-fenster-offen';
@@ -745,11 +748,14 @@ pruefe($vId > 0 && ($v2['daten']['kept_points'] ?? -1) === 1,
        'Vorgehende Uhr: ein eingeholtes started_at oeffnet das Fenster nicht noch einmal (zweite Gegenpruefung)',
        'kept_points ' . ($v2['daten']['kept_points'] ?? 'fehlt') . ' (erwartet 1) — der Anker ist created_at allein');
 
-// (8) Wiederaufnahme der zweiten Gegenpruefung: Ein NEUER client_ref an einem
-//     alten Diensttag schreibt dessen Zeitraum nicht mehr um. Der Tag von
-//     $fId liegt ausserhalb (started_at/created_at vor 73 h); der Zeitraum des
-//     Tages selbst wird hier auf denselben Stand gebracht, und dann kommt ein
-//     neuer Einsatz mit 2001/2097 an demselben Datum.
+/* (8) Wiederaufnahme der zweiten Gegenpruefung: Ein NEUER client_ref an einem
+ *     alten Diensttag schreibt dessen Zeitraum nicht mehr um. Das Fenster
+ *     oben gilt nur fuer einen BESTEHENDEN Datensatz; ein neuer hat keinen.
+ *
+ *     Zwei Erwartungen, weil zwei Schutzstufen greifen: absurde Zeiten
+ *     kommen gar nicht an (8a), und plausible schreiben den Zeitraum eines
+ *     Tages nicht fort, an dem seit dem Fenster niemand mehr etwas angelegt
+ *     hat (8b). Der Tag von $fId liegt ausserhalb (created_at vor 73 h). */
 $tq = $pdo->prepare('SELECT day_id FROM missions WHERE id = ?'); $tq->execute([$fId]);
 $fTagAlt = (int)$tq->fetchColumn();
 $pdo->prepare('UPDATE days SET started_at = ?, ended_at = ? WHERE id = ?')
@@ -759,11 +765,36 @@ $n8 = senden(['kind' => 'mission', 'client_ref' => 'probe-fenster-neu-alt', 'day
               'started_at' => '2001-01-01T00:00:00Z', 'ended_at' => '2097-12-31T23:00:00Z', 'final' => true,
               'track' => ['seq_from' => 0, 'points' => []]]);
 $tagNach8 = $liesTag($pdo, $fId);
-$nq = $pdo->prepare('SELECT day_id FROM missions WHERE id = ?'); $nq->execute([(int)($n8['daten']['id'] ?? 0)]);
-pruefe(($n8['daten']['ok'] ?? false) === true && (int)($n8['daten']['id'] ?? 0) > 0
-       && $tagVor8 === $tagNach8 && (int)$nq->fetchColumn() === $fTagAlt,
-       'Neuer client_ref an einem alten Diensttag: der Einsatz entsteht, der ZEITRAUM DES TAGES bleibt (Wiederaufnahme)',
-       'Tag vorher ' . $tagVor8 . ', nachher ' . $tagNach8);
+$zq = $pdo->prepare('SELECT COUNT(*) FROM missions WHERE client_ref = ?');
+$zq->execute(['probe-fenster-neu-alt']);
+pruefe($n8['code'] === 400 && (int)$zq->fetchColumn() === 0 && $tagVor8 === $tagNach8,
+       '8a) Neuer client_ref mit Zeiten, die nicht zum Tag passen: abgewiesen, kein Datensatz, Tag bleibt (Wiederaufnahme)',
+       'HTTP ' . $n8['code'] . ' (erwartet 400), Tag vorher ' . $tagVor8 . ', nachher ' . $tagNach8);
+
+/* 8b) Dasselbe mit PLAUSIBLEN Zeiten -- der Einsatz entsteht, der Zeitraum
+ *     des alten Tages bleibt. Hier arbeitet die Bremse: Sie fragt, wann die
+ *     uebrigen Datensaetze des Tages ANGELEGT wurden (Serverzeit), nicht,
+ *     welche Zeiten der Absender schickt. */
+/* Der Tag traegt inzwischen mehrere Datensaetze dieser Probe, und einer davon
+ * ist eben erst entstanden ("Ein NEUER Einsatz wird immer angenommen"). Damit
+ * ist er nach der Regel zu Recht offen. Fuer diesen Fall wird deshalb der
+ * ganze Tag zurueckdatiert: Er soll einen Diensttag abbilden, an dem seit dem
+ * Fenster niemand mehr etwas angelegt hat. */
+$pdo->prepare('UPDATE missions SET created_at = ? WHERE day_id = ?')->execute([$alt, $fTagAlt]);
+$pdo->prepare('UPDATE rest_segments SET created_at = ? WHERE day_id = ?')->execute([$alt, $fTagAlt]);
+$tagVor8b = $liesTag($pdo, $fId);
+$n8b = senden(['kind' => 'mission', 'client_ref' => 'probe-fenster-neu-alt-plausibel',
+               'day' => $tagVon($tsC),
+               'started_at' => substr($tsC, 0, 11) . '00:30:00Z',
+               'ended_at'   => substr($tsC, 0, 11) . '23:30:00Z', 'final' => true,
+               'track' => ['seq_from' => 0, 'points' => []]]);
+$tagNach8b = $liesTag($pdo, $fId);
+$nq = $pdo->prepare('SELECT day_id FROM missions WHERE id = ?');
+$nq->execute([(int)($n8b['daten']['id'] ?? 0)]);
+pruefe(($n8b['daten']['ok'] ?? false) === true && (int)($n8b['daten']['id'] ?? 0) > 0
+       && $tagVor8b === $tagNach8b && (int)$nq->fetchColumn() === $fTagAlt,
+       '8b) Neuer client_ref mit plausiblen Zeiten am alten Tag: der Einsatz entsteht, der ZEITRAUM DES TAGES bleibt (Wiederaufnahme)',
+       'Tag vorher ' . $tagVor8b . ', nachher ' . $tagNach8b);
 
 // (9) Wiederaufnahme: Tag im Papierkorb INNERHALB des Fensters -- der Einsatz
 //     wandert auf den neu bestimmten Tag, statt dass ein leerer Tag entsteht
@@ -799,7 +830,13 @@ $zaehlTage = static function (PDO $pdo, int $uid): int {
 };
 $tageVor = $zaehlTage($pdo, $uid);
 $fTagPaket = $fPaket($phasenC, 16, 1);
-$fTagPaket['day'] = '2026-07-29';
+/* Ein ganz anderes Datum, an dem kein Diensttag steht -- mit Zeiten, die dazu
+ * passen: Seit der Wiederaufnahme weist ingest.php ein Paket ab, dessen
+ * Zeiten nicht zu seinem `day` gehoeren, und dieser Fall will das Fenster
+ * pruefen, nicht die Zeitpruefung. */
+$fTagPaket['day']        = '2026-07-29';
+$fTagPaket['started_at'] = '2026-07-29T08:00:00Z';
+$fTagPaket['ended_at']   = '2026-07-29T09:00:00Z';
 $f6 = senden($fTagPaket);
 $tageNach = $zaehlTage($pdo, $uid);
 $pdo->prepare('UPDATE days SET deleted_at = NULL WHERE id = ?')->execute([$fTag]);
@@ -824,6 +861,48 @@ pruefe($sId > 0 && ($s2['daten']['kept_points'] ?? -1) === 1 && ($s2['daten']['k
        'Ruhesegment ausserhalb: Punkte UND Ende uebergangen, beides GENANNT (Gegenpruefung 6)',
        'kept_points ' . ($s2['daten']['kept_points'] ?? 'fehlt') . ', kept_meta '
        . ($s2['daten']['kept_meta'] ?? 'fehlt') . ', ended_at ' . ($sZeile['ended_at'] ?? 'null'));
+
+/* (10) DER NACHGELIEFERTE DIENST -- der Fall, der in dieser Probe gefehlt hat
+ *      und den die erste Fassung der Bremse gebrochen hatte.
+ *
+ *      Die Uhr war lange ohne Netz; ein Dienst von vor 30 Tagen kommt jetzt
+ *      erst an. Er ist NEU: kein Fenster, nichts wird ersetzt. Sein Diensttag
+ *      entsteht in diesem Augenblick und muss Beginn UND Ende bekommen --
+ *      und ein zweites Paket desselben Dienstes muss das Ende weiterschieben
+ *      koennen. Die erste Fassung fragte den Tag nach SEINEN Zeiten; die
+ *      lagen 30 Tage zurueck, das Fenster galt als zu, und der Tag blieb
+ *      ohne Ende. Gemessen, nicht vermutet. */
+$vor30   = time() - 30 * 86400;
+$nlTag   = gmdate('Y-m-d', $vor30);
+$nlStart = gmdate('Y-m-d\TH:i:s\Z', $vor30);
+$nlEnde  = gmdate('Y-m-d\TH:i:s\Z', $vor30 + 3600);
+$nl1 = senden(['kind' => 'mission', 'client_ref' => 'probe-nachlieferung-1',
+               'day' => $nlTag, 'day_ref' => 'probe-nachlieferung-dienst',
+               'started_at' => $nlStart, 'ended_at' => $nlEnde, 'final' => true,
+               'track' => ['seq_from' => 0, 'points' => [[47.5, 11.5, 700.0, 1750000000]]]]);
+$nlq = $pdo->prepare('SELECT d.id, d.started_at, d.ended_at FROM days d
+                      JOIN missions m ON m.day_id = d.id WHERE m.id = ?');
+$nlq->execute([(int)($nl1['daten']['id'] ?? 0)]);
+$nlZeile = $nlq->fetch(PDO::FETCH_ASSOC) ?: [];
+pruefe(($nl1['daten']['ok'] ?? false) === true
+       && ($nlZeile['started_at'] ?? null) === gmdate('Y-m-d H:i:s', $vor30)
+       && ($nlZeile['ended_at'] ?? null) === gmdate('Y-m-d H:i:s', $vor30 + 3600),
+       'Nachgelieferter Dienst: der neue Diensttag bekommt Beginn UND Ende (Wiederaufnahme)',
+       'Tag ' . json_encode($nlZeile) . ' — erwartet ' . gmdate('Y-m-d H:i:s', $vor30)
+       . ' bis ' . gmdate('Y-m-d H:i:s', $vor30 + 3600));
+
+$nl2 = senden(['kind' => 'mission', 'client_ref' => 'probe-nachlieferung-2',
+               'day' => $nlTag, 'day_ref' => 'probe-nachlieferung-dienst',
+               'started_at' => gmdate('Y-m-d\TH:i:s\Z', $vor30 + 7200),
+               'ended_at'   => gmdate('Y-m-d\TH:i:s\Z', $vor30 + 10800), 'final' => true,
+               'track' => ['seq_from' => 0, 'points' => []]]);
+$nlq2 = $pdo->prepare('SELECT started_at, ended_at FROM days WHERE id = ?');
+$nlq2->execute([(int)($nlZeile['id'] ?? 0)]);
+$nlZeile2 = $nlq2->fetch(PDO::FETCH_ASSOC) ?: [];
+pruefe(($nl2['daten']['ok'] ?? false) === true
+       && ($nlZeile2['ended_at'] ?? null) === gmdate('Y-m-d H:i:s', $vor30 + 10800),
+       'Nachgelieferter Dienst: ein zweiter Einsatz schiebt das Ende weiter (Wiederaufnahme)',
+       'Tag ' . json_encode($nlZeile2) . ' — erwartet Ende ' . gmdate('Y-m-d H:i:s', $vor30 + 10800));
 
 printf("  Ergebnis des Fensters: innerhalb angenommen, ausserhalb abgewiesen und genannt (%d h ab dem Anlegen)\n",
        INGEST_ERSETZFENSTER_H);

@@ -17,26 +17,44 @@ function ingest_hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool
 }
 
 /**
- * Liegt der Diensttag selbst noch im Ersetzfenster? Anker ist das Spaetere
- * aus gespeichertem Beginn und Ende, nie spaeter als jetzt und nie frueher
- * als Sekunde 1 der Epoche; ein Tag ohne Zeiten ist offen. Siehe den
- * Kommentar am Fortschreiben des Zeitraums (unten).
+ * Wird an diesem Diensttag noch gearbeitet?
+ *
+ * Anker ist das juengste `created_at` der ANDEREN Datensaetze des Tages --
+ * der eigene, gerade angelegte zaehlt nicht mit, sonst waere jeder Tag offen,
+ * an dem eben ein Paket ankam, und genau das war der Angriff. Hat der Tag
+ * keine anderen Datensaetze, ist er frisch und offen.
+ *
+ * NICHT die Zeiten des Tages: Die kommen vom Absender. Die erste Fassung
+ * dieser Funktion hat sie benutzt und damit den nachgelieferten Dienst
+ * bestraft -- ein Dienst, der mehr als INGEST_ERSETZFENSTER_H Stunden nach
+ * seinem Datum ankam, bekam nie ein `ended_at`. Serverzeit gegen Serverzeit,
+ * wie beim Ersetzfenster der Datensaetze selbst.
+ *
+ * `rest_segments.created_at` gibt es erst nach der Migration; bis dahin
+ * zaehlen nur die Einsaetze. Ein Tag, der nur Ruhesegmente traegt, gilt in
+ * diesem Zwischenzustand als offen -- die Zeitpruefung gegen `day` deckt den
+ * Schaden ab, den das offen laesst.
  */
-function ingest_tag_offen(PDO $pdo, int $dayId): bool
+function ingest_tag_offen(PDO $pdo, int $dayId, string $eigeneTabelle, int $eigeneId): bool
 {
     if ($dayId <= 0) { return false; }
-    $q = $pdo->prepare('SELECT started_at, ended_at FROM days WHERE id = ?');
-    $q->execute([$dayId]);
-    $z = $q->fetch();
-    if (!$z) { return false; }
-    $anker = null;
-    foreach ([$z['started_at'], $z['ended_at']] as $wert) {
-        $t = $wert !== null ? strtotime($wert . ' UTC') : false;
-        if ($t !== false) { $anker = max($anker ?? 1, $t); }
+    $juengste = null;
+    foreach (['missions', 'rest_segments'] as $tab) {
+        if ($tab === 'rest_segments'
+            && !ingest_hat_spalte($pdo, 'rest_segments', 'created_at')) { continue; }
+        $sql  = "SELECT MAX(created_at) FROM `$tab` WHERE day_id = ?";
+        $args = [$dayId];
+        if ($tab === $eigeneTabelle && $eigeneId > 0) { $sql .= ' AND id <> ?'; $args[] = $eigeneId; }
+        $q = $pdo->prepare($sql);
+        $q->execute($args);
+        $wert = $q->fetchColumn();
+        if ($wert === false || $wert === null) { continue; }
+        $t = strtotime($wert . ' UTC');
+        if ($t !== false) { $juengste = max($juengste ?? 1, $t); }
     }
-    if ($anker === null) { return true; }
-    $anker = max(1, min($anker, time()));
-    return (time() - $anker) <= INGEST_ERSETZFENSTER_H * 3600;
+    if ($juengste === null) { return true; }
+    $juengste = max(1, min($juengste, time()));
+    return (time() - $juengste) <= INGEST_ERSETZFENSTER_H * 3600;
 }
 
 /**
@@ -190,6 +208,33 @@ if (!is_array($b) || $clientRef === null || $startedAt === null || $day === null
 }
 
 $endedAt = pruef_utc($b['ended_at'] ?? null, 'ended_at', $pruef);
+
+/* PASSEN DIE ZEITEN ZUM TAG? (zweite Gegenpruefung, Wiederaufnahme.)
+ *
+ * `day` und die Zeitpunkte kommen aus derselben Quelle, und bis hierher hat
+ * niemand nachgesehen, ob sie einander widersprechen. Ein Paket mit
+ * `day` 2026-08-09 und `started_at` 2001-01-01 lief durch: Der Einsatz stand
+ * anschliessend mit 96 Jahren Dauer in der Datenbank, und der Zeitraum des
+ * Diensttags war darauf gezogen -- ueber ingest.php nicht rueckholbar.
+ *
+ * Die erste Fassung der Nachbesserung hat nur den Diensttag geschuetzt und
+ * dafuer den Tag selbst nach den Zeiten des Absenders beurteilt. Das war
+ * derselbe Fehler eine Ebene hoeher: Ein Dienst, der mehr als
+ * INGEST_ERSETZFENSTER_H Stunden nach seinem Datum hochgeladen wurde (Uhr
+ * lange ohne Netz), bekam gar kein `ended_at` mehr. Gemessen, nicht vermutet.
+ *
+ * Deshalb hier, an der Wurzel und in der gemeinsamen Pruefschicht: Ein
+ * Zeitpunkt muss zu dem Kalendertag passen, unter dem er gemeldet wird. Das
+ * Fenster ist weit (pruef_zeit_zum_tag) -- es weist das Unmoegliche ab, nicht
+ * das Ungewoehnliche. Abgewiesen wird das ganze Paket: Widersprechen sich
+ * seine Angaben, ist auch alles andere darin unsicher, und ein 400 sagt dem
+ * Geraet, dass es den Datensatz nicht als gesendet abhaken darf. */
+$zeitPasst = pruef_zeit_zum_tag($startedAt, $day, 'started_at', $pruef);
+if (!pruef_zeit_zum_tag($endedAt, $day, 'ended_at', $pruef)) { $zeitPasst = false; }
+if (!$zeitPasst) {
+    json_out(['error' => 'payload', 'grund' => $pruef->text()], 400);
+}
+
 $final   = pruef_flag($b['final'] ?? null);
 
 // Strecke und Steigung: bei Unsinn NULL statt 0 — eine 0 taeuschte eine
@@ -825,19 +870,27 @@ try {
      * aber den Diensttag um, und ueber ingest.php ist das nicht rueckholbar
      * (started_at wandert nur nach vorn, ended_at nur nach hinten).
      *
-     * UND NICHT FUER EINEN DIENSTTAG, DER SELBST AUSSERHALB DES FENSTERS
-     * LIEGT (zweite Gegenpruefung, Wiederaufnahme): Das Fenster oben gilt
-     * nur fuer einen BESTEHENDEN Datensatz. Ein Paket mit NEUEM client_ref
-     * hat keinen, wird ueber `day` oder `day_ref` auf den alten Tag
-     * aufgeloest -- und schrieb dessen Zeitraum genauso um, 2001 bis 2097,
-     * derselbe Schaden auf dem anderen Weg. Deshalb entscheidet hier der
-     * Tag selbst: Sein Anker ist das Spaetere aus dem gespeicherten
-     * Beginn und Ende, nie spaeter als jetzt; liegt er mehr als
-     * INGEST_ERSETZFENSTER_H Stunden zurueck, bleibt der Zeitraum, wie er
-     * ist. Der neue Datensatz wird trotzdem angelegt -- sichtbar,
-     * loeschbar, und er ueberschreibt nichts. Ein Tag ohne Zeiten (frisch
-     * angelegt, oder von Hand) ist offen. */
-    if (!$fensterZu && ingest_tag_offen($pdo, $dayId)) {
+     * UND NICHT AN EINEM DIENSTTAG, AN DEM NICHT MEHR GEARBEITET WIRD
+     * (zweite Gegenpruefung, Wiederaufnahme): Das Fenster oben gilt nur fuer
+     * einen BESTEHENDEN Datensatz. Ein Paket mit NEUEM client_ref hat keinen,
+     * wird ueber `day` oder `day_ref` auf den alten Tag aufgeloest -- und
+     * schrieb dessen Zeitraum genauso um, derselbe Schaden auf dem anderen
+     * Weg. Deshalb fragt ingest_tag_offen(), wann die uebrigen Datensaetze
+     * des Tages ANGELEGT wurden: Serverzeit, nicht die Zeiten des Absenders.
+     * Ein frischer Tag und ein Tag, an dem gerade nachgetragen wird, sind
+     * offen; ein Tag, dessen Datensaetze alle aelter als das Fenster sind,
+     * nicht. Der neue Datensatz wird trotzdem angelegt -- sichtbar,
+     * loeschbar, und er ueberschreibt nichts.
+     *
+     * Die erste Fassung fragte den Tag nach SEINEN Zeiten, und die kommen
+     * vom Absender: Ein Dienst, der spaeter als das Fenster nach seinem
+     * Datum hochgeladen wurde (Uhr lange ohne Netz), bekam damit nie ein
+     * `ended_at`. Gemessen an der eigenen Probe, nicht vermutet -- und der
+     * Grund, warum der Anker jetzt am Anlegen haengt. Was absurde Zeiten
+     * angeht, sitzt der Schutz ohnehin frueher: pruef_zeit_zum_tag() weist
+     * ein Paket ab, dessen Zeiten nicht zu seinem `day` passen. */
+    $eigeneTabelle = $ownerType === 'mission' ? 'missions' : 'rest_segments';
+    if (!$fensterZu && ingest_tag_offen($pdo, $dayId, $eigeneTabelle, (int)$ownerId)) {
         dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
     }
 

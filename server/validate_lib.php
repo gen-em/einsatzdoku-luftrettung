@@ -405,6 +405,47 @@ function pruef_utc_oder_sql($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = 
 }
 
 /**
+ * Passt ein Zeitpunkt zum Kalendertag, unter dem er gemeldet wird?
+ *
+ * Die Uhr schickt zu jedem Datensatz einen `day` (Ortsdatum) UND Zeitpunkte
+ * (UTC). Beide kommen aus derselben Quelle, und bis zur zweiten Gegenpruefung
+ * hat niemand nachgesehen, ob sie zueinander passen: Ein Paket mit
+ * `day` 2026-08-09 und `started_at` 2001-01-01 wurde angenommen, der Einsatz
+ * mit 96 Jahren Dauer gespeichert und der Zeitraum des Diensttags darauf
+ * gezogen (Nr. 134). Dagegen hilft keine Fensterregel, sondern nur die Frage,
+ * ob die Angaben desselben Pakets einander widersprechen.
+ *
+ * DAS FENSTER IST BEWUSST WEIT: von Mitternacht des Vortags bis zum Ende des
+ * uebernaechsten Tages, also vier Kalendertage fuer einen gemeldeten. Es muss
+ * drei Dinge zugleich vertragen — den Zeitzonenversatz zwischen Ortsdatum und
+ * UTC (bis zu 14 Stunden in beide Richtungen), einen Dienst ueber Mitternacht
+ * und einen 24-Stunden-Dienst, dessen Ende auf den Folgetag faellt. Es ist
+ * keine Feinpruefung; es weist das Unmoegliche ab und laesst alles durch, was
+ * ein Geraet im Betrieb je meldet.
+ *
+ * Ein leerer Zeitpunkt ist in Ordnung — `ended_at` fehlt, solange der Einsatz
+ * laeuft.
+ */
+function pruef_zeit_zum_tag(?string $zeit, ?string $tag, string $feld = 'Zeitpunkt',
+                            ?Pruefliste $p = null): bool
+{
+    if ($zeit === null || $zeit === '' || $tag === null || $tag === '') { return true; }
+    $t = strtotime($zeit . ' UTC');
+    $tagBeginn = strtotime($tag . ' 00:00:00 UTC');
+    if ($t === false || $tagBeginn === false) {
+        $p?->melde($feld, 'kein vergleichbarer Zeitpunkt');
+        return false;
+    }
+    $von = $tagBeginn - 86400;          // Mitternacht des Vortags
+    $bis = $tagBeginn + 3 * 86400;      // Ende des uebernaechsten Tages
+    if ($t < $von || $t >= $bis) {
+        $p?->melde($feld, 'passt nicht zum Tag ' . $tag);
+        return false;
+    }
+    return true;
+}
+
+/**
  * Ortszeit (App-Zeitzone) -> UTC, mit Kalendertagspruefung.
  *
  * Gegenstueck zu local_to_utc() in db.php, um B2 erweitert. Die dortige

@@ -4483,14 +4483,40 @@ aber ein Freitagsdienst, der erst am Montag synchronisiert, käme nicht mehr
 nach. 7 Tage deckten Urlaub mit Uhr im Koffer — und gäben einem Finder eine
 ganze Woche.
 
+**Die Zeiten eines Pakets müssen zu seinem `day` passen.** Beides kommt aus
+derselben Quelle, und bis zur Wiederaufnahme der zweiten Gegenprüfung hat
+niemand nachgesehen, ob sie einander widersprechen: Ein Paket mit `day`
+2026-08-09 und `started_at` 2001-01-01 lief durch, der Einsatz stand mit
+96 Jahren Dauer in der Datenbank, und der Zeitraum des Diensttags war darauf
+gezogen. `pruef_zeit_zum_tag()` (in `validate_lib.php`, also auf dem
+gemeinsamen Weg) weist ein solches Paket jetzt mit `400` ab. Das Fenster ist
+bewusst weit — von Mitternacht des Vortags bis zum Ende des übernächsten
+Tages, vier Kalendertage für einen gemeldeten. Es muss den Zeitzonenversatz
+zwischen Ortsdatum und UTC vertragen, einen Dienst über Mitternacht und einen
+24-Stunden-Dienst; es weist das Unmögliche ab, nicht das Ungewöhnliche.
+
 **Neue Datensätze werden immer angenommen.** Sie sind sichtbar und löschbar und
 überschreiben nichts — **auch nicht den Zeitraum eines älteren Diensttags**:
 Ein Paket mit neuem `client_ref` hat kein Fenster, wird aber über `day` oder
 `day_ref` auf den alten Tag aufgelöst und schrieb dessen Beginn und Ende
 genauso um wie Fund 1 (zweite Gegenprüfung, Wiederaufnahme). Der Zeitraum
-eines Diensttags wird deshalb nur fortgeschrieben, wenn der Tag selbst noch
-im Fenster liegt: Anker ist das Spätere aus seinem gespeicherten Beginn und
-Ende, nie später als jetzt; ein Tag ohne Zeiten ist offen. Und ein
+eines Diensttags wird deshalb nur fortgeschrieben, solange an ihm noch
+gearbeitet wird: Anker ist das **jüngste `created_at` der übrigen Datensätze
+des Tages** — Serverzeit, wie beim Fenster selbst. Der gerade angelegte zählt
+nicht mit, sonst wäre jeder Tag offen, an dem eben ein Paket ankam. Ein Tag
+ohne andere Datensätze ist frisch und offen.
+
+> **Die erste Fassung dieser Regel fragte den Tag nach *seinen* Zeiten** — und
+> die kommen vom Absender. Ein Dienst, der später als 72 Stunden nach seinem
+> Datum hochgeladen wurde (Uhr lange ohne Netz), bekam damit nie ein
+> `ended_at`: Sein Diensttag entstand in diesem Augenblick, galt aber nach
+> seinem Datum als längst geschlossen. Das war derselbe Fehler eine Ebene
+> höher als Fund 2 — gemessen an der eigenen Probe, nicht vermutet, und der
+> Grund, warum der Anker jetzt am Anlegen hängt. `days` trägt kein
+> `created_at`; die Datensätze des Tages sind der nächste ehrliche Ersatz
+> (Backlog Nr. 158).
+
+Und ein
 **bestehender** Datensatz, dessen Tag inzwischen im Papierkorb liegt, wandert
 innerhalb des Fensters auf den neu bestimmten Tag (bis dahin entstand ein
 leerer Tag, und der Datensatz blieb am gelöschten hängen — Backlog Nr. 33
@@ -4504,9 +4530,12 @@ Nachbesserungen **neun Erwartungen der Gegenprüfungen** (Diensttag bleibt,
 Abschlusspaket genannt, falsch gestellte Uhr nimmt weiter an, Zukunft
 schließt, kein leerer Tag, Ruhesegment nennt beides; vorgehende Uhr öffnet
 nicht erneut; neuer `client_ref` lässt den Tageszeitraum stehen; Papierkorb
-im offenen Fenster): **56 Erwartungen, 0 nicht erfüllt** — am Stand vor der
-ersten Nachbesserung sind sieben davon rot, am Stand vor der Wiederaufnahme
-zwei. Dieselbe Stufe
+im offenen Fenster; Zeiten passen nicht zum Tag; nachgelieferter Dienst
+bekommt Beginn und Ende): **59 Erwartungen, 0 nicht erfüllt** — am Stand vor
+der ersten Nachbesserung sind sieben davon rot, am Stand vor der
+Wiederaufnahme zwei, am Stand vor der Neufassung der Tagesregel vier
+(zweimal der abgewiesene Widerspruch, zweimal der nachgelieferte Dienst ohne
+Ende). Dieselbe Stufe
 hat die Zeitstempel der ganzen Probe auf `time()` umgestellt: Sie standen auf
 festen März-Daten, und damit prüfte die halbe Probe zweite Pakete an
 Datensätzen, die das Fenster längst verlassen hatten — zehn Erwartungen
