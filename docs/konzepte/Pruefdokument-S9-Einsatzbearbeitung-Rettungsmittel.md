@@ -725,13 +725,18 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   *Erwartet:* Der Kurzname steht überall — an manchen Tagen vollständig, an
   anderen abgeschnitten („BW Ho…"). Gemessen: 4 von 13 ganz, 9 mit
   Auslassungszeichen; das Datum ist je nach Ziffern 76 bis 83 px breit.
-  *Zu entscheiden:* Ob das genügt. Drei Wege, wenn nicht: das Akkordeon im
-  Band noch einmal 4 px zurücknehmen (`--abstand-1`, bringt 8 px); den
-  Abstand zwischen Zeichen, Datum und Name im Band von 8 auf 4 px (weitere
-  8 px); oder — der eigentliche Grund — im schmalen Band das **Jahr aus dem
-  Datum** nehmen, das ohnehin schon als Akkordeon-Überschrift darübersteht
-  (spart rund 30 px). Der dritte Weg ist eine neue Darstellung und bräuchte
-  ein Mockup.
+  *Zu entscheiden:* Ob das genügt. **Mockup M-S9-11 liegt seit dem 08.09.2026
+  vor** und zeigt die drei Wege am laufenden Programm, mit Zahlen:
+  **Weg 1** — das Akkordeon im Band noch einmal 4 px zurück (`--abstand-1`,
+  bringt 8 px): **12 von 12** „BW Hoch" stehen ganz. **Weg 2** — dazu die
+  Abstände der Zeile von 8 auf 4 px (weitere 8 px): ebenfalls 12 von 12, also
+  **kein einziger mehr als Weg 1**, bei zusätzlicher Gestaltungsänderung.
+  **Weg 3** — im schmalen Band das **Jahr aus dem Datum** nehmen, das ohnehin
+  als Akkordeon-Überschrift darübersteht (spart rund 30 px): 12 von 12 **und
+  der 16-Zeichen-Kurzname dazu**. Weg 3 ist als einziger eine neue
+  Darstellung; sein Preis steht als eigener Rahmen im Mockup — nach einem
+  Sprung aus der Suche ist die Jahreszeile weggerollt, und dann steht dort ein
+  Datum ohne Jahr.
   *Scheitern erkennbar an:* nichts — hier ist nichts kaputt, hier ist etwas
   zu entscheiden.
 

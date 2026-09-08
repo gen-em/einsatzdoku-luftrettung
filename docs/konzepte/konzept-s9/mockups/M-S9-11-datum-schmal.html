@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>S9 · Mockup M-S9-11 — Das Datum in der schmalen Leiste</title><style>
+@font-face{font-family:'Open Sans';font-weight:400;src:url(../../../../server/assets/fonts/open-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Open Sans';font-weight:600;src:url(../../../../server/assets/fonts/open-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;--asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;
+  --linie:#E3DAC6;--linie-stark:var(--gedaempft);--orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;--rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;--schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --knopf:44px;--symbol:20px;--symbol-klein:16px;--strich:1px;--strich-stark:2px;
+}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.55;width:1280px}
+.mock-kopf{padding:20px 24px 4px}.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p,.unter{margin:0 24px 10px;color:var(--gedaempft);font-size:var(--groesse-2)}.mock-kopf p{margin:0}
+h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:18px 24px 2px;color:var(--dunkelblau)}
+.frames{display:flex;margin:0 24px;align-items:flex-start;flex-wrap:wrap}.frames > div{flex:0 0 auto;margin:0 18px 14px 0}
+.rahmen-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.frame{background:var(--rauch);border:1px solid #CFC7B5;border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(26,46,77,.10);box-sizing:border-box}
+.notiz{padding:10px 24px 26px;max-width:1180px}.notiz ol{margin:0;padding-left:20px}.notiz li{margin-bottom:6px}
+
+.frames > div{max-width:260px}
+.frame img{display:block;width:220px;height:auto;border-radius:8px}
+.frame{padding:10px;width:auto}
+.rahmen-unter{margin:6px 0 0;font-size:var(--groesse-1);color:var(--gedaempft);line-height:1.4}
+table.mess{border-collapse:collapse;margin:8px 24px 12px;font-size:var(--groesse-2);background:var(--schnee)}
+table.mess th,table.mess td{border:1px solid var(--linie);padding:5px 9px;text-align:left}
+table.mess th{font-family:var(--schrift-kopf);color:var(--dunkelblau);background:var(--rauch)}
+td.gut{color:var(--blau-tief)} td.schlecht{color:var(--rot-tief)}
+</style></head><body>
+<div class="mock-kopf"><h1>S9 · M-S9-11 — Das Datum in der schmalen Leiste (Prüfliste Punkt 26)</h1>
+<p>Zwischen 1024 und 1199 px ist die Diensttage-Leiste 220 px breit. Seit Web 16.1.0 steht
+dort ein gesetzter Kurzname — aber meist nur als „BW Ho…", weil der Datumstext daneben nicht
+schrumpft und je nach Ziffern 74 bis 83 px braucht (Bricolage Grotesque setzt Ziffern
+proportional; die Regel <code>tabular-nums</code> nennt <code>.eintrag-text</code> nicht).
+Drei Wege, das zu ändern — und der Ist-Stand daneben.</p></div>
+
+<p class="unter"><b>Diese Rahmen sind keine Nachbauten.</b> Sie sind Aufnahmen der laufenden
+Anwendung mit eingespeister Regel; nur für Weg 3, den CSS nicht kann, ist der Datumstext im
+Browser umgeschrieben. Der Grund steht in der Prüfgeschichte dieses Pakets: Die erste
+Abnahmezahl („57 px frei, es passt") war an nachgebautem Markup und an einem einzigen,
+zufällig schmalen Datum genommen und hat neun von zwölf Ellipsen übersehen (F-S9-U-13).</p>
+
+<h2>Die vier Fassungen bei 1024 px</h2>
+<div class="frames">
+<div><p class="rahmen-titel">Ist · Web 16.1.0</p><div class="frame"><img src="M-S9-11-ist.png" alt="Ist · Web 16.1.0"></div><p class="rahmen-unter">Akkordeon 8 px, Abstände 8 px, Datum mit Jahr. Neun von zwölf „BW Hoch" enden als „BW Ho…".</p></div>
+<div><p class="rahmen-titel">Weg 1 · Akkordeon 4 px</p><div class="frame"><img src="M-S9-11-w1.png" alt="Weg 1 · Akkordeon 4 px"></div><p class="rahmen-unter">Die Einrückung wirkt zweimal (Jahr und Monat): 8 px mehr. Alle „BW Hoch" stehen ganz.</p></div>
+<div><p class="rahmen-titel">Weg 2 · dazu Abstände 4 px</p><div class="frame"><img src="M-S9-11-w2.png" alt="Weg 2 · dazu Abstände 4 px"></div><p class="rahmen-unter">Weitere 8 px aus den beiden Abständen der Zeile — und kein einziger Kurzname mehr als in Weg 1.</p></div>
+<div><p class="rahmen-titel">Weg 3 · Datum ohne Jahr</p><div class="frame"><img src="M-S9-11-w3.png" alt="Weg 3 · Datum ohne Jahr"></div><p class="rahmen-unter">Das Jahr steht als Überschrift darüber. Rund 30 px frei; auch der 16-Zeichen-Name passt.</p></div>
+</div>
+
+<table class="mess">
+<tr><th>Fassung</th><th>Datum</th><th>frei für den Nebentext</th><th>„BW Hoch" (55 px)</th><th>„Sanitätsdienst S" (95 px)</th></tr>
+<tr><td><b>Ist</b> (Web 16.1.0)</td><td>74–83 px</td><td>48–57 px</td><td class="schlecht">3 von 12 ganz, <b>9 mit Ellipse</b></td><td class="schlecht">Ellipse</td></tr>
+<tr><td><b>Weg 1</b> — Akkordeon 4 px</td><td>74–84 px</td><td>55–65 px</td><td class="gut"><b>12 von 12 ganz</b></td><td class="schlecht">Ellipse</td></tr>
+<tr><td><b>Weg 2</b> — dazu Abstände 4 px</td><td>74–92 px</td><td>55–73 px</td><td class="gut"><b>12 von 12 ganz</b></td><td class="schlecht">Ellipse</td></tr>
+<tr><td><b>Weg 3</b> — Datum ohne Jahr</td><td>36–76 px</td><td>55–95 px</td><td class="gut"><b>12 von 12 ganz</b></td><td class="gut"><b>ganz</b></td></tr>
+</table>
+<p class="unter">Gemessen an der laufenden Anwendung (Demo-Konto, dreizehn Diensttage mit
+Kurznamen) bei <b>1024 und bei 1199 px</b> — beide Breiten liefern dieselben Zahlen, die
+Leiste ist im ganzen Band 220 px breit. Zwölf Tage tragen „BW Hoch", einer den
+längstmöglichen Kurznamen mit 16 Zeichen; zwei weitere teilen sich ein Datum und zeigen
+seit Web 16.1.0 gar keinen Nebentext.</p>
+
+<h2>Was Weg 3 kostet</h2>
+<p class="unter">Das Jahr steht in der Überschrift — solange man sie sieht. Wer aus der Suche
+oder einem Zeitraum auf einen Diensttag springt, landet weiter unten in der Liste, und beim
+Rollen wandert die Jahreszeile aus dem Bild. Dann steht dort ein Datum ohne Jahr in einer
+Anwendung, die Diensttage über Jahre führt.</p>
+<div class="frames">
+<div><p class="rahmen-titel">Weg 3 · Jahreszeile weggerollt</p>
+<div class="frame"><img src="M-S9-11-w3-gerollt.png" alt="Weg 3, Jahreszeile aus dem Bild gerollt"></div>
+<p class="rahmen-unter">Derselbe Zustand nach einem Sprung aus der Suche: „27.12." ohne Jahr,
+die Monate darunter ebenso. Die Kurznamen stehen dafür alle ganz — auch der mit 16 Zeichen.</p></div>
+</div>
+
+<div class="notiz">
+<h2 style="margin-left:0">Anmerkungen</h2>
+<ol>
+<li><b>Warum es überhaupt klemmt.</b> <code>.eintrag-text</code> trägt <code>flex:1 0 auto</code>
+— das Datum schrumpft nicht, der Nebentext bekommt nur den Rest. Im Band bleiben für beide
+zusammen rund 131 px. Das Datum schwankt um 9 px, weil die Ziffern proportional gesetzt sind:
+„21.11.2026" misst 74 px, „08.02.2026" misst 83. Genau in dieser Spanne liegt die
+Entscheidung, denn „BW Hoch" braucht 55 px.</li>
+
+<li><b>Weg 1 löst den Fall, um den es geht.</b> 4 statt 8 px Einrückung, zweimal wirksam:
+8 px mehr für den Eintrag. Damit stehen <b>alle zwölf</b> „BW Hoch" ganz. Preis: Die
+Verschachtelung Jahr → Monat → Tag wird flacher; in der Aufnahme sieht man, dass die Tage
+fast unter der Monatszeile stehen. Ein Token bleibt es (<code>--abstand-1</code>), kein neuer
+Wert.</li>
+
+<li><b>Weg 2 kostet mehr und bringt nichts.</b> Die zusätzlichen 8 px aus den Abständen der
+Zeile heben die freie Breite auf 73 px — der 16-Zeichen-Name braucht 95, „BW Hoch" war schon
+mit Weg 1 versorgt. <b>Gemessen: kein einziger Kurzname mehr als in Weg 1.</b> Die Zeile wird
+dafür gedrängter (Zeichen, Datum und Name rücken zusammen). Dieser Weg ist der einzige, den
+die Messung ausdrücklich <em>nicht</em> stützt.</li>
+
+<li><b>Weg 3 ist der einzige, der auch lange Kurznamen trägt.</b> Ohne Jahr misst das Datum
+36 bis 46 px statt 74 bis 83 — rund 30 px frei. Damit passt selbst
+„Sanitätsdienst S" (95 px), also der längste Kurzname, den
+<code>RM_KURZ_MAX = 16</code> überhaupt zulässt. Die beiden anderen Wege dimensionieren gegen
+ein sieben Zeichen langes Beispiel; dieser gegen die Regel.</li>
+
+<li><b>Und Weg 3 ist der einzige, der eine neue Darstellung ist.</b> Weg 1 und 2 ändern
+Token-Werte in einem vorhandenen Medienblock — dafür braucht es streng genommen kein Mockup.
+Weg 3 ändert, was in der Zeile <em>steht</em>, und zwar nur in einer Breite: Dieselbe Liste
+sagt bei 1199 px „27.12." und bei 1200 px „27.12.2026". Das ist zu entscheiden, nicht
+nebenbei zu bauen.</li>
+
+<li><b>Der mehrfache Tag bleibt außen vor.</b> Teilen sich zwei Diensttage ein Datum, trägt
+die Zeile auch die Uhrzeit („28.03.2026 20:00"), und der Nebentext bleibt seit Web 16.1.0
+ganz aus. Weg 3 änderte daran wenig: „28.03. 20:00" misst immer noch 76 px, es blieben 55 —
+für „BW Hoch" genau ausreichend, für mehr nicht. In den Aufnahmen sind es die beiden Zeilen
+im März ohne Nebentext.</li>
+
+<li><b>Was in keinem Rahmen steht.</b> Unter 1024 px (Schublade, 320 px) und ab 1200 px
+(Leiste 260 px) ändert sich durch keinen der drei Wege etwas — sie greifen nur im Band. Bei
+1199 px sind alle Zahlen identisch mit 1024 px, deshalb gibt es dafür keinen eigenen Rahmen.</li>
+</ol>
+<div class="empf"><b>Zur Freigabe:</b> Ist lassen, <b>Weg 1</b>, <b>Weg 2</b> oder
+<b>Weg 3</b>. <b>Empfehlung: Weg 1 jetzt, Weg 3 als eigene Frage.</b> Weg 1 kostet einen
+Token-Wert, löst den Fall, für den der Kurzname gedacht ist, und ist in einer Stunde gebaut
+und geprüft. Weg 2 ist nach dieser Messung erledigt — er kostet Gestaltung und bringt
+niemanden zusätzlich unter. Weg 3 ist der bessere Gedanke, aber er ändert den Inhalt einer
+Zeile abhängig von der Fensterbreite; das gehört nicht in einen Nachtrag, sondern in die
+Standortseiten-Phase, wo die Leiste ohnehin angefasst wird.</div>
+</div>
+</body></html>

@@ -26,6 +26,9 @@ Je Darstellung eine HTML-Datei mit den Token aus `server/assets/style.css`
 | `M-S9-09-zusammenfuehren-typ-handy.html` / `.png` | dieselben vier Rahmen untereinander, 400 px; der Zusatz rutscht unter den Text (Regel aus `style.css` unter 480 px, ins Mockup übernommen) | 07.09.2026 |
 | `M-S9-10-standort-loeschen.html` / `.png` | Standort löschen mit Rettungsmitteln ohne Standortpflicht (Frage 6 aus AP4): Rückfragedialog bei 512 und 358 px, Ist (6 mitgelöscht) gegen (b) (5 mitgelöscht, 1 bleibt und wird genannt); Karte „Ohne Standort" danach mit 2 gegen 3 Einträgen | 07.09.2026, **freigegeben 08.09.2026: Variante b** — Rettungsmittel ohne Standortpflicht bleiben; Umsetzung in AP5 |
 | `M-S9-10-standort-loeschen-handy.html` / `.png` | Dialog 358 px und Karte untereinander, 400 px, ohne den 512-px-Rahmen | 07.09.2026 |
+| `M-S9-11-datum-schmal.html` / `.png` | Das Datum in der schmalen Leiste (Prüfliste Punkt 26): Ist gegen drei Wege — Akkordeon 4 px · dazu Abstände 4 px · Datum ohne Jahr —, dazu ein Rahmen „Weg 3, Jahreszeile weggerollt". **Die Rahmen sind Aufnahmen der laufenden Anwendung**, keine Nachbauten; nur für Weg 3 ist der Datumstext im Browser umgeschrieben, weil CSS das nicht kann. Messtabelle über dreizehn Datumsangaben | 08.09.2026, **Freigabe offen** — Empfehlung: Weg 1 jetzt, Weg 3 als eigene Frage |
+| `M-S9-11-datum-schmal-handy.html` / `.png` | dieselben Rahmen untereinander, 400 px; die Messtabelle rollt in ihrem eigenen Kasten | 08.09.2026 |
+| `M-S9-11-ist.png`, `-w1`, `-w2`, `-w3`, `-w3-gerollt` | die fünf Aufnahmen der Leiste bei 1024 px, aus denen das Mockup besteht (220 px breit, Demo-Konto mit dreizehn Kurznamen) | 08.09.2026 |
 | `M-S9-04-bg-dlg-*.png` | Kartenhintergründe der Dialoge (528 × 300 und 326 × 300 bei Zoom 11; 326 × 300 bei Zoom 14, Sulzberg) | — |
 | `M-S9-01-bg-desktop.png`, `M-S9-01-bg-mobil.png` | Kartenhintergründe der beiden Rahmen (800 × 520 bei Zoom 12, 358 × 160 bei Zoom 11, Kempten) | — |
 
@@ -52,6 +55,16 @@ dem Datum, Textbreite „BW Hoch") stammen aus `getBoundingClientRect()`
 desselben Renders. Die Handy-Fassungen lassen die Rahmen weg, die breiter
 als 376 px sind (700-px-Plakettenzeile, 512-px-Dialog), und die
 Anmerkungen.
+
+**M-S9-11 geht einen anderen Weg als die zehn davor**, und zwar mit Absicht:
+Seine Rahmen sind **Aufnahmen der laufenden Anwendung** mit eingespeister
+Regel, kein mit Token nachgebautes Markup. Der Grund steht in der
+Prüfgeschichte von AP4a: Die Abnahmezahl von M-S9-08 („57 px frei, es passt")
+war an nachgebautem Markup und an einer einzigen, zufällig schmalen
+Datumsangabe genommen und hat neun von zwölf Ellipsen übersehen (F-S9-U-13).
+Wo eine Frage auf wenige Pixel hinausläuft, wird sie am laufenden Programm
+gemessen. Für Weg 3 ist zusätzlich der Datumstext im Browser umgeschrieben —
+das Jahr wegzulassen kann CSS nicht.
 
 **Zeichen in M-S9-02:** Tabler Icons (MIT) aus dem Outline- und dem Filled-Satz
 (`mountain`, `ticket`, `tent`, `building-stadium`, `confetti`,
