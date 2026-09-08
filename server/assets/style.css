@@ -1110,6 +1110,27 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  * (`:focus-visible` weiter oben), und der greift auch hier. */
 .spur-zeile{cursor:pointer}
 
+/* DIE ANGESPRUNGENE ZEILE (S9/AP5, M-S9-05 und M-S9-07).
+ *
+ * Wer aus der Sprungliste kommt oder gerade etwas angelegt hat, landet auf
+ * einer Zeile unter zwoelf gleich aussehenden. `:target` faerbt genau die,
+ * deren Kennung in der Adresse steht — OHNE SKRIPT, und es ueberlebt den
+ * Ruecksprung aus dem Verlauf. `.zeile-hervor` (weiter oben) sagt dasselbe,
+ * wird aber von Hand gesetzt und ist nach einem Neuladen weg; sie bleibt der
+ * Weg fuer eine Auswahl, die das Skript trifft (Spurliste), `:target` der
+ * fuer eine, die in der Adresse steht.
+ *
+ * DER RAND DER FLAECHE: Die Zeile liegt in `.karte-inhalt`, und das hat
+ * `--abstand-4` Innenabstand. Damit die Flaeche bis an den Kartenrand
+ * reicht, ist der negative Aussenabstand GENAU dieser Wert — die Mockups
+ * schreiben `--abstand-3` und lassen so je Seite 4 px Weiss stehen. */
+.zeile:target{
+  background:var(--orange-hell);
+  margin:0 calc(var(--abstand-4) * -1);
+  padding-left:var(--abstand-4);
+  padding-right:var(--abstand-4);
+}
+
 /* ---- Titelzeile ---------------------------------------------------------- */
 .titelzeile{margin-bottom:var(--abstand-4)}
 .rueckweg{
@@ -3563,3 +3584,88 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* Die Erklärung nimmt den Rest der Zeile — ohne das bliebe sie bei kurzem
  * Text schmal neben der Kachel stehen und bräche mitten im Satz. */
 .logo-vorschau > .feld-hinweis{flex:1 1 12rem;margin:0}
+
+/* ---- Sprungliste und Kartenfilter (S9/AP5, M-S9-05 und M-S9-06) ----------
+ *
+ * Zwei Hilfsmittel für eine LANGE Liste in einer Karte, beide ab sechs
+ * Einträgen (`SD_HILFE_AB`, stammdaten_ui.php): die Sprungliste führt zu
+ * einem bestimmten Eintrag, der Filter blendet die übrigen aus. Sie stehen
+ * nebeneinander in derselben Datei, weil sie dieselbe Frage beantworten —
+ * „wie finde ich hier etwas?" — und weil die Wahl zwischen ihnen davon
+ * abhängt, ob die Einträge ein Zeichen haben, an dem man sie erkennt.
+ *
+ * KEIN NEUES TOKEN. Alles kommt aus der Skala: --knopf für die Höhe (44 px
+ * am Finger, 36 px am Zeiger ab 1024 px), --symbol-klein für das Artzeichen,
+ * --radius-rund für die Pille, --groesse-2 für ihre Schrift. */
+
+/* DIE PILLE IST EIN VERWEIS UND SIEHT AUS WIE EIN ZIEL, nicht wie ein Wert:
+ * Schnee auf --linie-stark, nicht Blau. Der Koordinaten-Chip (.rmchip) macht
+ * es umgekehrt, und das ist der Unterschied — er TRÄGT etwas, sie FÜHRT
+ * irgendwohin. Voll rund, damit sie sich von der eckigen Plakette daneben
+ * unterscheidet.
+ *
+ * DIE HÖHE IST --knopf, und der Bilderlauf misst sie: `.sprungziel` steht
+ * seit S9/AP5 in seiner Auswahl (aufnehmen.mjs). Ohne das wäre die 44/36
+ * hier eine Zusage ohne Prüfmittel — genau der Fall, der `.listenfilter`
+ * vier Monate lang ungemessen gelassen hat. */
+.sprungliste{display:flex;flex-wrap:wrap;gap:var(--abstand-1);
+  margin:0 0 var(--abstand-3)}
+.sprungziel{
+  display:inline-flex;align-items:center;
+  height:var(--knopf);padding:0 var(--abstand-3) 0 var(--abstand-2);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-rund);
+  background:var(--schnee);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-2);
+  text-decoration:none;white-space:nowrap;
+}
+/* Ohne Artzeichen steht der Text sonst zu weit links an der Rundung. */
+.sprungziel > .sprungziel-text:first-child{padding-left:var(--abstand-1)}
+.sprungziel .symbol{
+  width:var(--symbol-klein);height:var(--symbol-klein);
+  margin-right:var(--abstand-1);color:var(--gedaempft);flex:0 0 auto;
+}
+.sprungziel:hover{background:var(--rauch);text-decoration:none}
+/* `.aktiv` und nicht `.ziel` — ein Name für „hier stehst du", derselbe wie an
+ * Kennzahl, Listenfilter, Leisteneintrag und Seitenknopf. */
+.sprungziel.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+.sprungziel.aktiv .symbol{color:var(--orange-tief)}
+
+/* DER FILTER HEISST `.kartenfilter` UND NICHT `.filterfeld`: `.filterfelder`
+ * (Mehrzahl) ist seit P3 der Innenabstand einer aufgeklappten Filtergruppe
+ * der Suchseite. Zwei Klassen, die sich um ein „r" unterscheiden und
+ * Verschiedenes meinen, sind derselbe Fehler, den `.listenfilter-zahl` weiter
+ * oben ausdrücklich umgangen hat.
+ *
+ * ER IST 44/36 HOCH UND NICHT 48. Die 48 (--suchfeld) gehören dem großen
+ * Suchfeld, das die Haupthandlung SEINER Seite ist; ein Filter in einer von
+ * sechs Karten ist das nicht. Hier gilt die Regel, nicht die Ausnahme.
+ *
+ * DIE LUPE HAT KEIN `top`. Der Behälter zentriert senkrecht
+ * (`align-items:center`), und damit sitzt sie in BEIDEN Bedienhöhen mittig.
+ * Das Mockup schreibt `top:12px`; das stimmt bei 44 px und sitzt bei 36 px
+ * 4 px zu tief. Dieselbe Lösung wie bei `.suchfeld-lupe`. */
+.kartenfilter{position:relative;display:flex;align-items:center;
+  margin:0 0 var(--abstand-3)}
+.kartenfilter input{
+  width:100%;min-height:var(--knopf);
+  padding-left:calc(var(--abstand-3) + var(--symbol) + var(--abstand-2));
+  padding-right:calc(var(--abstand-2) + var(--knopf));
+}
+/* Das browsereigene Kreuz von `type="search"` abstellen: Es sitzt je nach
+ * Browser woanders, und daneben stünde unseres. */
+.kartenfilter input::-webkit-search-cancel-button{display:none}
+.kartenfilter-lupe{
+  position:absolute;left:var(--abstand-3);
+  color:var(--gedaempft);pointer-events:none;
+}
+.kartenfilter-x{
+  position:absolute;right:0;
+  display:flex;align-items:center;justify-content:center;
+  width:var(--knopf);height:var(--knopf);
+  border:0;background:none;color:var(--gedaempft);cursor:pointer;
+}
+.kartenfilter-x:hover{color:var(--asphalt)}
+/* Der Leerzustand ist ein gewöhnlicher Hinweis; er braucht nur den Abstand,
+ * den die weggefilterten Zeilen hinterlassen. */
+.kartenfilter-leer{margin:var(--abstand-3) 0 0}

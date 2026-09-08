@@ -701,7 +701,13 @@ for (const eintrag of liste) {
          `display:none` ist, und die Eintraege in einem geschlossenen
          Aktionsblatt. Ein Knopf, den es gerade nicht gibt, ist nicht zu hoch
          und nicht zu niedrig — er ist nicht da. */
-      knoepfe: Array.from(document.querySelectorAll('.knopf'))
+      /* `.sprungziel` MISST MIT (S9/AP5). Die Pille der Sprungliste ist
+         `height:var(--knopf)` hoch, also 44/36 — aber sie traegt nicht
+         `.knopf`, und eine Auswahl, die nur `.knopf` kennt, haette diese
+         Zusage nie gemessen. Genau so ist `.listenfilter` seit O6 ungemessen
+         geblieben und der Export-Knopf vier Monate ungestaltet (F-P3-BA).
+         Wer ein neues Bedienelement baut, traegt es hier ein. */
+      knoepfe: Array.from(document.querySelectorAll('.knopf, .sprungziel'))
         .filter(el => el.offsetParent !== null || el.getClientRects().length > 0)
         .map(el => ({
           text: (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 24)

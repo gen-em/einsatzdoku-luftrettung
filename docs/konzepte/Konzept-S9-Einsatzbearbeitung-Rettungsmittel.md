@@ -17,8 +17,8 @@ Mockups in `konzept-s9/mockups/`.
 > | Stand | 07.09.2026 — **Konzept freigegeben.** E-S9-01 bis -17 am 06.09.2026 bestätigt, E-S9-18 und -19 am 07.09.2026; alle sieben Mockups freigegeben (Abschnitt 6). PS-12 (Standortseiten, Backlog 152) am 07.09.2026 aufgenommen. Rahmenplan Fassung 34 trägt die Einschübe aus Abschnitt 7 |
 > | Entschieden | E-S9-01 bis E-S9-19 (Abschnitt 2) |
 > | Offen | nichts. **Frage 7 aus AP5 Teil 2 ist am 08.09.2026 entschieden:** Die Standortseite behält ihre **sechs** Karten (fünf ohne luftgebundenes Rettungsmittel); die Abnahmezahl „Unterpunkte der Leiste = vier“ ist auf sechs bzw. fünf berichtigt. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
-> | Umsetzung | **AP1 bis AP4a erledigt**, **AP5 in Arbeit** (07./08.09.2026, Web 15.6.0 / 15.6.1 / 15.7.0 / 15.8.0 / 16.0.0 / 16.1.0 / 16.1.1 / 16.2.0 / 16.2.1 / **16.2.2**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
-> | AP5 in sechs Teilen | **1** Menü und Standortliste (erledigt, 16.2.0/16.2.1) · **2** die Standortseite (erledigt, 16.2.2) · **3** die neuen Bausteine — Sprungziel, Filterfeld, `Design.md` 9, Streichliste · **4** die drei Dialoge **und die Verwaltungsseite** · **5** Standort löschen, Variante b · **6** Buchführung und Prüflauf. **Die Verwaltung (`admin_stammdaten.php`) ist bewusst in Teil 4 gerückt** und nicht in Teil 2: Sie benutzt `sd_form()` an acht Stellen, und Teil 4 ersetzt genau das durch Dialoge — wer sie jetzt umbaut, baut sie zweimal |
+> | Umsetzung | **AP1 bis AP4a erledigt**, **AP5 in Arbeit** (07./08.09.2026, Web 15.6.0 / 15.6.1 / 15.7.0 / 15.8.0 / 16.0.0 / 16.1.0 / 16.1.1 / 16.2.0 / 16.2.1 / 16.2.2 / **16.3.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
+> | AP5 in sechs Teilen | **1** Menü und Standortliste (erledigt, 16.2.0/16.2.1) · **2** die Standortseite (erledigt, 16.2.2) · **3** die neuen Bausteine — Sprungliste, Kartenfilter, „Zum Anfang“, `Design.md` 9 (erledigt, **16.3.0**) · **4** die drei Dialoge **und die Verwaltungsseite** · **5** Standort löschen, Variante b · **6** Buchführung und Prüflauf. **Die Verwaltung (`admin_stammdaten.php`) ist bewusst in Teil 4 gerückt** und nicht in Teil 2: Sie benutzt `sd_form()` an acht Stellen, und Teil 4 ersetzt genau das durch Dialoge — wer sie jetzt umbaut, baut sie zweimal |
 > | Fable-Schritte der Umsetzung | **vier**: die Mockups **M-S9-08 bis M-S9-10** zu den Fragen 3 bis 6 des Prüfdokuments (07.09.2026, **alle drei am 08.09.2026 freigegeben**) und **M-S9-11** zum Datum in der schmalen Leiste (08.09.2026, **Weg 2 freigegeben**) — dieses auf ausdrückliches Einverständnis des Auftraggebers **von Opus** gebaut statt von Fable (Abschnitt 6). Der Fable-Vorbehalt der Vorbereitung (PS-8.2) war im Konzept aufgelöst (Abschnitt 1.8) |
 
 > **Stand der Umsetzung**
@@ -30,8 +30,8 @@ Mockups in `konzept-s9/mockups/`.
 > | **AP3** Karte und Zeichen | **erledigt** 07.09.2026 | Web **15.8.0** | Schildmaße nachgemessen im Browser: **ohne 32 · Start 32 · Ende 32 · beide 38 · Einsatzort 28 · Ringpunkt 14 · Ring beide 20 px** (vorher 36/48/48/60/32/16/28), Symbol im Schild **18**, im Kreis **16** px, Antippfläche des Ringpunkts **24 px** (WCAG 2.5.8); Pfeile **12 von 12** in 30-Grad-Schritten auf 0,1 Grad genau, dazu **2 von 2** auf der Spur des Referenzeinsatzes (vorher: Bildschirmmatrix a=0,833 b=0 c=0 d=0,833 bei behaupteten 90 Grad, also kein Drehanteil); `.geo-punkt` **12 × 12 px** mit sichtbarer Spurfarbe (vorher 4 × 18, Farbe unsichtbar — Backlog Nr. 153, neu); Windenkacheln **2 / 2 mit „0" / 0** in den drei Fällen, alle über die Oberfläche hergestellt und zurückgestellt; Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen, mit neuer Regel `spur`; `grep -c "Spur" docs/Handbuch.md` **41 → 0**; **72 sichtbare Zeichenketten in 18 Dateien** umbenannt; Symbolvorrat **49 → 52**, Artzeichen **6 von 6** mit Anker und Herkunft; Klickprobe **6 von 6** Wegen; Vollständigkeit **304 = 304** (Hinweis „Symboldatei ohne Verweis" 25 → 28, zählt nicht mit); Kontraste **21 Paare, 0 verfehlt**; Linkprobe **134 Verweise, 0 Abweichungen**; Bilderlauf **zehn berührte Seiten, 80 Einzelbilder je Lauf, 0/0/0 in beiden Bedienhöhen** |
 > | **AP4** Rettungsmittel: Typ, Kurzname, Standort optional | **erledigt** 07.09.2026 | Web **16.0.0**, Migration `2026_09_07_rettungsmittel_typ`, Nutzlast 9 → 10 | Register **45 = 45**, frische Installation und migrierte Datenbank strukturgleich (Vergleich `SHOW CREATE TABLE`); Nachfüllung **16 von 16** Diensttagen mit `vehicle_typ`; Prüfschicht **8 von 8** Fällen wie festgelegt (Rollen bei Bergwacht verworfen, Betriebsart bei Veranstaltung erzwungen, Kurzname bei 20 Zeichen auf 16 gekappt, Standard ohne Standort abgelehnt, unbekannter Typ abgelehnt); Kreisläufe **edbak 287 771 · csv 9 118 · edbak-alt 287 781 Einzelvergleiche, je 0 unerklärt** (16 / 1 021 / 653 erwartet, 0 ungenutzte Regeln); Aufwärtskompatibilität belegt: eine Nutzlast-9-Datei spielt **4 von 6** Rettungsmitteln als `standard` ein und überspringt die zwei, die es dort nicht geben konnte; Referenzbestand **3 → 6 Rettungsmittel** (je einer der vier Typen, zwei ohne Standort, zwei mit Kurznamen), über das Formular angelegt; Demo-Zurücksetzen **42 Stammdaten, 0 übersprungen**; Demo-Fixture neu, **55 861 Spurpunkte** unverändert; Klickprobe **6 von 6** Wegen, 0 Rückstände; Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen, über fünf Bereiche (178 Dateien); Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise, 0 unbekannte Abweichungen**; Bilderlauf **11 berührte Seiten, 88 Einzelbilder je Lauf, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** in beiden Bedienhöhen |
 > | **AP4a** Nachträge aus den Freigaben | **erledigt** 08.09.2026 | Web **16.1.0**, Korrekturstufe **16.1.1**, keine Migration | Klickprobe **10 von 10** Wegen (zwei Wege × fünf Breiten 390/1024/1100/1199/1280 px), je als Zeiger- und als Fingergerät, **0 Rückstände** im Bestand; Leiste an der laufenden Anwendung über neun Breiten gemessen — unter 1024 px **15 von 15** Nebentexten sichtbar (12 px Einrückung), im Band 1024–1199 px **1 von 15** (nur der Kurzname, 8 px), ab 1200 px wieder 15 von 15 (12 px); dem Kurznamen stehen im Band **64 bis 79 px** zur Verfügung — „BW Hoch" (55 px) und „NEF 76/1" (53) stehen an **jedem** Datum ganz, gemessen **13 Kurznamen, 0 Ellipsen**; mit der ersten Fassung (Einrückung 8 px) waren es 48 bis 63 px und 10 Ellipsen, ohne jede Regel keine sichtbare Zeile; Einstellungsmenü in jeder Breite **0 px** eingerückt; Vergleichsdialog Zeile „Typ" = „Standard oder Bergwacht" mit Kleinzeile, 4 Wahlzeilen davon **1** mit Typ und **1** mit Kurznamen, **0 Überlauf** bei 1280/700/390 px; Stilvergleich Kaskade 712 → 715 Regeln — **0 entfallen, 3 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **47 710 Elementmessungen, 40 Abweichungen**, sämtlich bei 1024 und 1100 px und sämtlich auf die zwei neuen Regeln zurückführbar (Pseudoprobe 19 253 Messungen, 30 Abweichungen desselben Musters); Bilderlauf **16 berührte Seiten, 128 Einzelbilder + 16 Kontaktbögen je Lauf, 0/0/0** in beiden Bedienhöhen (Gegenprobe 144 Dateien, 140 verschiedene Prüfsummen — die vier Doppelten sind Seite 10 gegen Seite 11 ab 1024 px, wo es die Schublade nicht gibt); Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen; Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise, 0 unbekannte Abweichungen**; `Design.md` neu erzeugt — **21 Medienblöcke über 5 Breiten unverändert**, also keine neue Schwelle |
-> | **AP5** Standortseiten — **Teil 1** (Menü und Liste) und **Teil 2** (die Seite) | **in Arbeit**, Teile 1 und 2 erledigt 08.09.2026 | Web **16.2.0**, Korrekturstufe **16.2.1**, **16.2.2**, keine Migration | Standortseite **6 Karten mit `id` / 6 Unterpunkte** in der Leiste (`standort`, `rettungsmittel`, `besatzung`, `zielkliniken`, `weitere`, `bergwacht`), Liste **3 / 3** (`standorte`, `zentrale`, `sd-ohne`) — vorher stand `sd-ohne` auf jeder Standortseite und machte daraus sieben (F-S9-U-19); „Zum Anfang" **6 von 6** mit einem Ziel, das auf der Seite steht (vorher 0 von 6, `#seitenanfang` gibt es nicht — F-S9-U-17); Umleitung nach dem Speichern **4 von 4** Rundläufen auf der Standortseite statt auf der Liste (Zielklinik anlegen → `t=standort&s=29#sd-29-td`, Besatzung → `#sd-29-crew`, Löschen beider ebenso), Bestand danach sauber (F-S9-U-18); Klickprobe **6 von 6** Wegen aus AP4 gegen den umgebauten Bestand, **0 Rückstände** (21 Rettungsmittel, 61 Tage, 346 Einsätze wie vorher) — die Wege lesen jetzt **alle** Standortseiten und die Liste, weil „6 insgesamt" sonst 5 wäre; dieselbe Wartefalle wie F-S9-U-15 an ihrer **dritten** Stelle behoben; Linkprobe **128 Verweise, 0 unbekannte Abweichungen** — die zwölf ausgeschriebenen Adressen sind zu `sd_seite()` geworden, und die Adresse steht darin **als ganze Zeichenkette**, sonst fiele sie aus der Messung (140 → 126 → 128); Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen; Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; `Design.md` neu erzeugt — Bausteinvorrat **36 → 37** (`ui_nach_oben()` fehlte), `.zeile` 12 → **15** Unterklassen, acht Token- und Symbolzahlen berichtigt (F-S9-U-20) |
-> | AP5 Teil 3 bis 6, AP6 bis AP8 | offen | — | — |
+> | **AP5** Standortseiten — **Teil 1** (Menü und Liste), **Teil 2** (die Seite), **Teil 3** (die neuen Bausteine) | **in Arbeit**, Teile 1 bis 3 erledigt 08.09.2026 | Web **16.2.0**, Korrekturstufe 16.2.1, **16.2.2**, **16.3.0**, keine Migration | **Teile 1+2:** Standortseite 6 Karten mit `id` / 6 Unterpunkte, Liste 3 / 3 (vorher stand `sd-ohne` auf jeder Standortseite und machte daraus sieben — F-S9-U-19); „Zum Anfang" 6 von 6 mit einem Ziel, das auf der Seite steht (vorher 0 von 6 — F-S9-U-17); Umleitung nach dem Speichern 4 von 4 Rundläufen auf der Standortseite statt auf der Liste (F-S9-U-18). **Teil 3:** Klickprobe **4 von 4** neuen Wegen — Sprungliste bei **5 Rettungsmitteln keine Liste, bei 6 eine mit 6 Pillen, 6 Artzeichen, 6 gültigen Zielen, Pillenhöhe 36 px** (der Fall über das Formular hergestellt und zurückgestellt, weil der Referenzbestand nur 3 Rettungsmittel je Standort hat); angesprungene Zeile `#veh-108` mit Fläche **rgb(255, 235, 214)** und Oberkante **72 px** bei 56 px Kopfleiste (also ohne eigenes `scroll-margin-top`); Filter der Besatzung **11 Zeilen / 5 Rollen / 5 Formulare → „kro" 1 / 1 / 0 → „zzzz" 0 / 0 / Leerzustand → Escape 11 / 5 / 5**; Artzeichen **3 von 3** Zeilen, jedes mit Textalternative. Gegenprobe: die **24 vorhandenen** Wege laufen weiter 24 von 24, **0 Rückstände** (21 Rettungsmittel, 61 Tage, 346 Einsätze). Stilvergleich gegen 16.2.2: Kaskade **725 → 740 Regeln, 0 entfallen, 58 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **48 360 Elementmessungen, 650 Abweichungen** (seiten.html 10 Elemente je Breite, katalog.html 40, js_markup.html 0), Pseudoprobe **19 981 / 520** (40 je Breite) — darin `.sprungziel.pchover` und `.kartenfilter-x.pchover`, die Bedienzustände der neuen Bausteine; alle Abweichungen entweder eine der 15 neuen Regeln oder eine Höhenfolge im langen Katalogdokument. Bilderlauf **3 Seiten, 24 Einzelbilder je Lauf, 0/0/0** in beiden Bedienhöhen. Wortliste **0/0/0** bei 96 Regeln (ein Treffer im ersten Lauf — „Hubschrauber" in einem neuen Handbuchsatz, den die Liste zu Recht meldete); Vollständigkeit **304 = 304**; Kontraste **21 → 22 Paare, 0 verfehlt** (neu „Dunkelblau auf Orange hell"); Linkprobe **128 Verweise, 0 unbekannte Abweichungen**; `Design.md` neu erzeugt, Bausteinvorrat **37 → 39 Funktionen** |
+> | AP5 Teil 4 bis 6, AP6 bis AP8 | offen | — | — |
 >
 > **Fragen aus AP1** (Prüfdokument, Abschnitt 4): **alle drei entschieden.**
 > Am 07.09.2026 — die Besatzungsfelder des Diensttags gehören zu **AP1** (so
@@ -41,7 +41,13 @@ Mockups in `konzept-s9/mockups/`.
 > bleibt **so, wie AP1 sie gebaut hat**. Die Streichliste führt Klassen des
 > alten Stylesheets und wird gegen `vorher-klassen.txt` gegengezählt;
 > `datalist` ist ein HTML-Element, steht dort nicht und wäre als Eintrag
-> eine tote Zeile, die die Prüfung meldet. Eingetragen sind die vier
+> eine tote Zeile. *(Berichtigt am 08.09.2026, F-S9-U-23: Hier stand „eine
+> tote Zeile, **die die Prüfung meldet**". Das stimmt nicht —
+> `tools/vollstaendigkeit/pruefen.py` hat einen Ungenutzt-Test nur für
+> `ohne-regel.md`, nicht für die Streichliste; zehn der 135 Einträge stehen
+> heute schon nicht in `vorher-klassen.txt` und werden nicht gemeldet. Eine
+> tote Streichlistenzeile ist **still**. Der Schluss bleibt derselbe, der
+> Grund ist ein anderer — und ein schlechterer.)* Eingetragen sind die vier
 > Klassen, die tatsächlich verschwinden (`loc-suggest`, `rmlist`, `rmopt`,
 > `rmneu`); der Wegfall der `<datalist>` steht in `Design.md` 9.0 und im
 > Baustein 9.28 und wird von der Abnahmezahl `grep -c datalist server/` = 0
@@ -1001,13 +1007,22 @@ unter „Ohne Standort" mit `:target`. Der Fremdschlüssel bleibt
   den IDs (`menue.js`, unverändert).
 - Drei Dialoge (Anlegen und Bearbeiten, `sd_form()` entfällt): Feldfolge
   nach E-S9-19; Fehler im Dialog; Erfolg → Redirect mit `#veh-`/`#crew-`/
-  `#dest-<id>`, Zeile mit `id`, `:target` Orange-hell (Regel aus M-S9-05),
+  **`#td-<id>`** — hier stand `#dest-`, und den Vorsatz gibt es in dieser
+  Anwendung nirgends: Die fünf Listen heißen `veh`, `crew`, `td`, `res`,
+  `bw`, und die verborgenen Formulare tragen dieselben Namen (`f-td-3-del`).
+  Berichtigt am 08.09.2026 in Teil 3, der die Kennungen gebaut hat —, Zeile
+  mit `id`, `:target` Orange-hell (Regel aus M-S9-05),
   keine zusätzliche Erfolgsmeldung; „Standort anlegen" landet auf der neuen
   Seite.
-- Neue Bausteine in `Design.md` 9: Sprungziel (Pille mit Artzeichen),
-  Filterfeld (Lupe im Feld, filtert im Browser), „Zum Anfang";
-  Kennzahl-Raster mit drei Spalten als Variante von 9.10. Streichliste:
-  `sd_form()`-Markup, zugeklappte Standortkarten.
+- Neue Bausteine in `Design.md` 9: **9.31 Sprungliste** (Pille mit
+  Artzeichen), **9.32 Kartenfilter** (Lupe im Feld, filtert im Browser),
+  **9.33 „Zum Anfang"**; Kennzahl-Raster mit drei Spalten als Variante von
+  9.10. **Keine Streichlisten-Einträge** — hier stand „Streichliste:
+  `sd_form()`-Markup, zugeklappte Standortkarten", und dafür gibt es keinen
+  Gegenstand: Keine der betroffenen Klassen steht in `vorher-klassen.txt`,
+  keine verschwindet, und `sd_form()` entfällt ohnehin erst in Teil 4. Was
+  stattdessen zu tun war, steht in `Design.md` **9.0** — dort fehlte für
+  „eine lange Liste durchsuchen" jede Zeile (F-S9-U-23).
 - Artzeichen in der Rettungsmittel-Zeile (F-S9-K-04).
 - Handbuch 6 (Stammdaten) neu geschrieben; Kapitel, die „Einstellungen →
   Rettungsmittel" nennen, nachgezogen (`grep -n "Rettungsmittel" docs/Handbuch.md`
@@ -1238,6 +1253,63 @@ adversarischen Gegenprobe, nicht beim Schreiben; alle behoben:
   (`bergwacht.svg` 28 statt 29, `veranstaltung.svg` 8 statt 9). Die Tabelle
   war vor den letzten Codeänderungen von AP4 erzeugt und danach nicht mehr.
   Nachgezählt: Keine der in AP4a geänderten Dateien bewegt die Zahlen.
+- F-S9-U-26 — **Zwei Fehler in `Design.md`, gefunden beim Gegenlesen für die
+  neuen Kapitel.** Der Absatz „Kein Symbol am Knopf" stand am Ende von 9.18a
+  (Kopf einer langen Liste) und handelt vom Kopieren-Knopf aus 9.18;
+  zurückgeschoben. Und 9.19 nannte `--radius` (10 px) „die kleinste Rundung
+  der Skala" — das ist `--radius-klein` (6 px), wie die erzeugte Tokentabelle
+  im selben Dokument zeigt. Beide berichtigt.
+- F-S9-U-25 — **Die Sprungziel-Pille wäre aus der Bedienhöhenmessung
+  gefallen.** Der Bilderlauf misst Bedienhöhen an `.knopf`; `.sprungziel` ist
+  `--knopf` hoch, trägt die Klasse aber nicht. In `Design.md` hätte damit
+  eine 44/36-Zusage gestanden, die kein Prüfmittel deckt — genau der Weg, auf
+  dem der Export-Knopf vier Monate ungestaltet blieb (F-P3-BA) und auf dem
+  `.listenfilter` bis heute ungemessen ist. Behoben: Die Auswahl des
+  Bilderlaufs lautet jetzt `.knopf, .sprungziel`; gemessen **36 px** bei
+  1280 px am Zeigergerät.
+- F-S9-U-24 — **Jede Karte der Standortseite trug ihren Titel zweimal.** Im
+  Kartenkopf „Rettungsmittel 3", unmittelbar darunter noch einmal als
+  `h3.sd-titel` „Rettungsmittel 3". Auf dem Abnahmebild von Web 16.2.2 steht
+  es sechsmal untereinander; die Mockups kennen die zweite Überschrift nicht.
+  Entfernt — und die Rollenüberschriften der Besatzung von `h4` auf `h3`
+  gerückt, sonst klaffte zwischen dem `h2` der Karte und ihnen eine Ebene.
+  In der VERWALTUNG bleibt beides, wie es ist: Sie benutzt dieselben Klassen
+  und wird mit Teil 4 umgestellt.
+- F-S9-U-23 — **Der Auftrag „Streichliste: `sd_form()`-Markup, zugeklappte
+  Standortkarten" hat keinen Gegenstand — und seine Begründung im Konzept ist
+  falsch.** `sd_form()` gibt vier Klassen aus (`listen-form`,
+  `listen-form-titel`, `-felder`, `-fuss`); keine steht in
+  `vorher-klassen.txt`, alle vier haben Regeln, und `listen-form-fuss` steht
+  in **26** Serverdateien. Die zugeklappte Karte benutzt nur allgemeine
+  Kartenklassen, und `'zu' => true` steht weiterhin an **acht** Stellen in
+  fünf Dateien. Es verschwindet also keine Klasse, und ein Eintrag wäre eine
+  tote Zeile. So weit deckt sich das mit dem Beschluss vom 08.09.2026 zur
+  `<datalist>`. **Die Begründung dort stimmt aber nicht:**
+  `tools/vollstaendigkeit/pruefen.py` hat einen Ungenutzt-Test **nur** für
+  `ohne-regel.md`, nicht für die Streichliste — nachgezählt stehen **zehn**
+  der 135 Streichlisteneinträge nicht in `vorher-klassen.txt`, und der Lauf
+  meldet unverändert 304 Befunde. Eine tote Streichlistenzeile ist **still**,
+  nicht gemeldet, und damit schlimmer als angenommen. Beide Sätze berichtigt;
+  der fehlende Test ist eine eigene Entscheidung und gehört nicht nebenbei in
+  dieses Paket.
+- F-S9-U-22 — **`Design.md` 9.0 verbot dem Wortlaut nach, was AP5 mit Mockup
+  baut.** Die Zeile „**Sprungmarken** innerhalb einer langen Seite → die
+  Unterpunkte der Einstellungsleiste … **nicht:** ein Inhaltsverzeichnis von
+  Hand" beschrieb allein die SEITENebene. AP5 hat seit Teil 2 ein
+  handgeschriebenes Inhaltsverzeichnis aus drei Kennzahlen und seit Teil 3
+  eine Sprungliste in der Karte — beides mit Mockup freigegeben. Die
+  Einleitung desselben Kapitels sagt: „Steht dein Fall nicht darin, ist das
+  der Moment für eine Rückfrage." Aufgelöst: Aus der einen Zeile sind
+  **vier** geworden (Karte zu Karte, Inhaltsverzeichnis am Seitenkopf, in
+  eine lange Liste springen, eine lange Liste durchsuchen), dazu eine fünfte
+  für „Zum Anfang". Für „durchsuchen" gab es vorher **gar keine** Zeile.
+- F-S9-U-21 — **Der Stilvergleich zeigte acht von zweiundzwanzig abweichenden
+  Elementen.** *Aus Teil 2, hier nachgetragen.* Die Kopfzeile nannte „22 von
+  1502 Elementen weichen ab", die Beispielliste schrieb acht aus — fest
+  verdrahtet — und nichts sagte, dass sie unvollständig ist. Die acht
+  gezeigten erklärten sich aus der Dokumenthöhe; die vierzehn übrigen waren
+  die eigentliche Änderung (`a.zeile:hover` und Nachbarn). Behoben: Die
+  Grenze ist über `BEISPIELE=` einstellbar, Vorgabe weiter 8.
 - F-S9-U-20 — **Die Buchführung von AP5-1 war an drei Stellen stehen
   geblieben.** Web **16.2.1** hatte keinen Changelog-Eintrag (nur die
   Erzählung in `version.php`); `docs/Handbuch.md` 9 beschrieb weiter die

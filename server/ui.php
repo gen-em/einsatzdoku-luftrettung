@@ -1455,6 +1455,116 @@ function ui_nach_oben(string $ziel = '#inhalt'): void
 
 
 /* ---------------------------------------------------------------------------
+ * SPRUNGLISTE  (.sprungliste / .sprungziel)                  S9/AP5, M-S9-05
+ *
+ * Eine umbrechende Zeile runder Marken ueber einer langen Liste: Artzeichen
+ * plus Name, ein Klick springt zur Zeile. Sie ersetzt kein Inhaltsverzeichnis
+ * der SEITE (das sind die Kennzahlen am Kopf und die Unterpunkte der Leiste),
+ * sondern fuehrt INNERHALB einer Liste — deshalb steht sie in der Karte und
+ * nicht darueber.
+ *
+ * AB SECHS EINTRAEGEN (`SD_HILFE_AB`, stammdaten_ui.php). Darunter sieht man
+ * die ganze Liste ohne zu rollen, und eine Sprungliste waere eine zweite
+ * Aufzaehlung derselben Namen.
+ *
+ * SIE IST EIN `<nav>` MIT `<a>`, KEIN KNOPF. Ein Sprungziel ist Navigation:
+ * Es aendert nichts, es steht im Verlauf, und der Rueckwaertsknopf bringt
+ * einen zurueck. Dieselbe Ueberlegung traegt `.listenfilter` auf der
+ * Suchseite, die ebenfalls als `<a>` gebaut ist.
+ *
+ * DIE PILLE HEISST IM ZIELZUSTAND `.aktiv` UND NICHT `.ziel`. Das Mockup
+ * schreibt `.ziel`, aber `.aktiv` ist in dieser Anwendung seit Langem das
+ * Wort fuer „hier stehst du" — Kopfleiste, Leiste, Kennzahl, Listenfilter,
+ * Blattzeile und Seitenknopf tragen es, und `.kennzahl.aktiv` ist Zeichen
+ * fuer Zeichen dieselbe Deklaration. Ein zweiter Name fuer denselben Zustand
+ * ist eine zweite Sprache.
+ *
+ * KEIN `scroll-margin-top` AN DEN ZIELEN: `html` traegt
+ * `scroll-padding-top` (style.css), und das gilt fuer jedes Sprungziel der
+ * Seite. Die zweite Angabe war einmal gebaut und addierte sich (gemessen
+ * 140 statt 72 px).
+ *
+ * $o: eintraege [ ['text', 'href', 'vorn' (fertiges Markup, meist ein
+ *     Artzeichen)] ], label (Beschriftung fuer die Vorlesesoftware)
+ * ------------------------------------------------------------------------ */
+function ui_sprungliste(array $o): void
+{
+    $eintraege = (array)($o['eintraege'] ?? []);
+    if (!$eintraege) { return; }
+    echo '  <nav class="sprungliste" aria-label="'
+       . ui_e((string)($o['label'] ?? 'Zu einem Eintrag springen')) . '">' . "\n";
+    foreach ($eintraege as $e) {
+        echo '    <a class="sprungziel" href="' . ui_e((string)$e['href']) . '">'
+           . (string)($e['vorn'] ?? '')
+           . '<span class="sprungziel-text">' . ui_e((string)$e['text']) . '</span>'
+           . "</a>\n";
+    }
+    echo "  </nav>\n";
+}
+
+
+/* ---------------------------------------------------------------------------
+ * KARTENFILTER  (.kartenfilter)                              S9/AP5, M-S9-06
+ *
+ * Ein Feld mit Lupe ueber einer langen Liste in einer Karte: Tippen blendet
+ * aus, was nicht passt — im Browser, ohne Anfrage. Erst ab `SD_HILFE_AB`
+ * Eintraegen; darunter ist die Liste kuerzer als das Feld darueber.
+ *
+ * ER HEISST NICHT `.filterfeld`. Das Stylesheet fuehrt seit P3
+ * `.filterfelder` (Mehrzahl) als Innenabstand einer aufgeklappten
+ * Filtergruppe der Suchseite. Zwei Klassen, die sich um ein `r`
+ * unterscheiden und Verschiedenes meinen, sind derselbe Fehler, den
+ * `.listenfilter-zahl` einmal ausdruecklich umgangen hat („SIE HEISST NICHT
+ * `.filterzahl`. Diese Klasse ist seit O6 vergeben", style.css). `.kartenfilter`
+ * sagt zugleich, wo er steht — in einer Karte, nicht am Seitenkopf.
+ *
+ * ER IST NICHT DAS GROSSE SUCHFELD. `.suchfeld` ist 48 px hoch
+ * (`--suchfeld`), und das ist die eine benannte Ausnahme von der
+ * 44/36-Regel: Es ist die Haupthandlung SEINER Seite. Ein Filter in einer
+ * von sechs Karten ist das nicht — hier gilt die Regel, nicht die Ausnahme.
+ * Uebernommen ist von dort, was dort schon richtig ist: die Lupe absolut
+ * links mit `pointer-events:none` in einem `align-items:center`-Behaelter
+ * (also OHNE `top`, das sich in der zweiten Bedienhoehe verrechnete), das
+ * Loeschkreuz rechts und die Beschriftung fuer die Vorlesesoftware.
+ *
+ * DER LEERZUSTAND STEHT IM MARKUP, nicht im Skript. Weder Mockup noch
+ * Konzept sagen, was in der Karte steht, wenn nichts uebrig bleibt; ohne
+ * Antwort sieht eine gefilterte Liste ohne Treffer aus wie eine leere Liste.
+ * Der Absatz steht deshalb hier, verborgen, und das Skript blendet ihn ein.
+ *
+ * $o: id (Kennung des Eingabefelds), ziel (Kennung des Listenbehaelters),
+ *     label (Beschriftung fuer die Vorlesesoftware), platzhalter
+ * ------------------------------------------------------------------------ */
+function ui_kartenfilter(array $o): void
+{
+    $id   = (string)$o['id'];
+    $ziel = (string)$o['ziel'];
+    echo '  <div class="kartenfilter" data-kartenfilter="' . ui_e($ziel) . '">' . "\n";
+    echo '    ' . ui_symbol('lupe', 'kartenfilter-lupe') . "\n";
+    echo '    <label class="nur-vorlesen" for="' . ui_e($id) . '">'
+       . ui_e((string)($o['label'] ?? 'Liste filtern')) . "</label>\n";
+    /* `type="search"` und NICHT `type="text"`: Die Tastatur des Handys zeigt
+       dann eine Suchtaste statt einer Zeilenschaltung, und Vorlesesoftware
+       nennt das Feld ein Suchfeld. Das browsereigene Kreuz stellt `style.css`
+       ab — es sitzt je nach Browser woanders, und daneben stuende unseres. */
+    echo '    <input type="search" id="' . ui_e($id) . '" autocomplete="off"'
+       . ' spellcheck="false" placeholder="'
+       . ui_e((string)($o['platzhalter'] ?? 'Filtern')) . '">' . "\n";
+    echo '    <button type="button" class="kartenfilter-x" hidden title="Filter leeren">'
+       . ui_symbol('schliessen', '', 'Filter leeren') . "</button>\n";
+    echo "  </div>\n";
+    /* Der zweite Satz ist kein Zierrat: Solange gefiltert wird, sind die
+       Anlegen-Formulare verborgen (sonst stuenden in der Besatzungskarte
+       unter einem Treffer vier verwaiste Formulare, eines je Rolle). Ohne
+       diesen Satz waere „nichts gefunden, und anlegen kann ich auch nicht"
+       eine Sackgasse ohne Ausgang. */
+    echo '  <p class="kartenfilter-leer feld-hinweis" data-leer-fuer="' . ui_e($ziel)
+       . '" hidden>Kein Eintrag passt dazu. Leere den Filter, um etwas'
+       . ' anzulegen.</p>' . "\n";
+}
+
+
+/* ---------------------------------------------------------------------------
  * ZEILE  (.zeile)
  *
  * Text links (fett plus Kleinzeile), Plaketten, Aktionen rechts. Am Desktop

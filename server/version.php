@@ -3213,5 +3213,65 @@ declare(strict_types=1);
  *
  * KORREKTURSTUFE UND KEINE NEBENNUMMER: Es kommt keine Funktion hinzu. Es
  * geht nur das, was 16.2.0 halb fertig hinterlassen hat.
+ *
+ * 16.3.0 GIBT DEN LANGEN LISTEN ZWEI HILFSMITTEL (S9/AP5-3, M-S9-05/-06).
+ *
+ * Eine Standortseite mit zwoelf Rettungsmitteln, zwei Dutzend
+ * Besatzungseintraegen und drei Dutzend Zielkliniken ist mehrere Bildschirme
+ * lang, und bis hierher half dagegen nichts. Jetzt bekommt jede Liste ab
+ * SECHS Eintraegen ein Hilfsmittel — eine Zahl, eine Regel, keine
+ * Sonderfaelle je Karte (`SD_HILFE_AB`, stammdaten_ui.php):
+ *
+ *   - Die RETTUNGSMITTEL bekommen die SPRUNGLISTE: eine umbrechende Zeile
+ *     runder Pillen, jede mit dem Artzeichen ihres Rettungsmittels. Sie
+ *     bekommen sie als einzige, weil ihre Eintraege ein Zeichen tragen, an
+ *     dem man sie in einer Pillenreihe wiedererkennt. Eine Reihe aus zwoelf
+ *     Namen ohne Zeichen waere keine Orientierung, sondern dieselbe Liste
+ *     ein zweites Mal.
+ *   - ALLE UEBRIGEN bekommen den KARTENFILTER: ein Feld mit Lupe, das im
+ *     Browser ausblendet, was nicht passt. Konzept und Mockup nennen nur
+ *     Besatzung und Zielkliniken; „Weitere Rettungsmittel" und „Bergwacht"
+ *     sind dieselbe Listenform mit demselben Problem, und zwei Sorten Liste
+ *     auf einer Seite waeren schwerer zu erklaeren als eine Regel.
+ *
+ * DIE ANGESPRUNGENE ZEILE FAERBT SICH — ueber `:target`, ohne Skript. Das
+ * ist der erste `:target` dieser Anwendung; er ueberlebt den Ruecksprung aus
+ * dem Verlauf, was die von Hand gesetzte `.zeile-hervor` nicht tut. Dafuer
+ * tragen die Zeilen der fuenf Listen jetzt Kennungen (`veh-7`, `crew-12`,
+ * `td-3`, `res-9`, `bw-2`) — dieselben Vorsaetze, die ihre verborgenen
+ * Formulare seit jeher tragen. Das Konzept schrieb `#dest-<id>` fuer die
+ * Zielkliniken; die heissen an jeder anderen Stelle `td`, und ein zweiter
+ * Name fuer dieselbe Sache im selben Modul ist kein Gewinn — berichtigt ist
+ * das Konzept.
+ *
+ * DAS ARTZEICHEN STEHT JETZT WIRKLICH IN DER ZEILE (F-S9-K-04). Der
+ * Kommentar daneben behauptete es seit Web 7.0.0 („Das Symbol vor dem Namen
+ * sagt die Art"), und `dt_art_symbol()` wurde dafuer sogar berechnet —
+ * benutzt hat das Ergebnis niemand. Die Zeile zeigte Namen und Rollen und
+ * sonst nichts. Jetzt steht es links, mit TYP: sonst zeigte eine Bergwacht
+ * dasselbe Zeichen wie ein NEF.
+ *
+ * DREI DINGE, DIE DABEI GERADEGEZOGEN WURDEN:
+ *
+ *   - DER DOPPELTE TITEL IST WEG. Jede Karte trug ihren Namen und ihre Zahl
+ *     zweimal — einmal im Kartenkopf, einmal als `h3.sd-titel` unmittelbar
+ *     darunter. Auf dem Bild von 16.2.2 steht „Rettungsmittel 3" zweimal
+ *     untereinander. Die Rollen der Besatzung sind dafuer von `h4` auf `h3`
+ *     gerueckt, sonst klaffte zwischen dem `h2` der Karte und ihnen eine
+ *     Ebene. In der VERWALTUNG bleibt beides, wie es ist — sie wird mit
+ *     AP5-4 umgestellt.
+ *   - DIE KARTEN TRAGEN DEN VORSATZ `k-`. `Design.md` 9.25 schreibt ihn fuer
+ *     jede Karte vor, die Sprungziel sein soll, und der uebrige Bestand
+ *     haelt sich an dreissig Stellen daran. Die Mockups zeichnen
+ *     `#standort`; ein Bild ist aber keine Namensregel, und eine Regel, die
+ *     man fuer die sechs neuesten Karten aufweicht, ist ab dann keine.
+ *   - DER BILDERLAUF MISST DIE PILLE MIT. `.sprungziel` ist `--knopf` hoch,
+ *     traegt aber nicht `.knopf` — und die Auswahl des Bilderlaufs kannte
+ *     nur `.knopf`. Ohne diese Zeile stuende in `Design.md` eine
+ *     44/36-Zusage, die kein Pruefmittel deckt. Genau so ist `.listenfilter`
+ *     seit O6 ungemessen geblieben.
+ *
+ * NEBENNUMMER: Es kommen Funktionen hinzu, kein Datenmodell und keine
+ * Migration. `update.php` muss NICHT laufen.
  */
-const WEB_VERSION = '16.2.2';
+const WEB_VERSION = '16.3.0';

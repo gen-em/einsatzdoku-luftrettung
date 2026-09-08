@@ -43,8 +43,24 @@ declare(strict_types=1);
  * $o: seite, name, klein, anker, praefix (eindeutig je Liste), id, base_id,
  *     zentral (bool), stern (bool), del_action, del_frage,
  *     def_action (optional — nur wo es eine Vorbelegung gibt),
- *     bearbeiten_href, plaketten (zusätzliches Markup)
+ *     bearbeiten_href, plaketten (zusätzliches Markup),
+ *     vorn (Markup VOR dem Text — das Artzeichen, S9/AP5),
+ *     zeilen_id (bool: die Zeile bekommt `id="<praefix>-<id>"` als Sprungziel)
  */
+/**
+ * AB WIE VIELEN EINTRAEGEN eine Liste ihr Hilfsmittel bekommt (S9/AP5).
+ *
+ * Sechs — die Zahl steht im Konzept (E-S9-14, Backlog Nr. 44) und im Mockup
+ * M-S9-05. Darunter sieht man die ganze Liste, ohne zu rollen, und eine
+ * Sprungliste waere eine zweite Aufzaehlung derselben Namen.
+ *
+ * SIE STEHT AN EINER STELLE, weil sie an sechs gebraucht wird: einmal je
+ * Listenkarte der Standortseite. Welches Hilfsmittel eine Liste bekommt,
+ * haengt daran, woran man ihre Eintraege erkennt: Die Rettungsmittel tragen
+ * ein Artzeichen und bekommen die SPRUNGLISTE, alles Uebrige den FILTER.
+ */
+const SD_HILFE_AB = 6;
+
 /**
  * Die Adresse der Seite EINES Standorts (S9/AP5, PS-12).
  *
@@ -123,7 +139,17 @@ function sd_zeile(array $o): void
         $plaketten .= ui_symbol('stern', 'zeile-stern', 'Vorbelegung neuer Diensttage');
     }
 
+    /* DIE ZEILE ALS SPRUNGZIEL (S9/AP5). `<praefix>-<id>` — dieselben
+       Praefixe, die die verborgenen Formulare schon tragen (`f-veh-7-del`).
+       Das Konzept schrieb `#dest-<id>` fuer die Zielkliniken; die heissen in
+       dieser Anwendung an jeder anderen Stelle `td`, und ein zweiter Name
+       fuer dieselbe Sache im selben Modul ist kein Gewinn — berichtigt ist
+       das Konzept, nicht der Code. Gesetzt wird die Kennung nur, wo sie
+       gebraucht wird: Eine `id` an jeder Zeile jeder Liste waere Ballast,
+       und `:target` faerbte dann auch Zeilen, die niemand angesprungen hat. */
     ui_zeile([
+        'vorn'      => (string)($o['vorn'] ?? ''),
+        'attr'      => !empty($o['zeilen_id']) ? ' id="' . $pre . '"' : '',
         'text'      => (string)$o['name'],
         'klein'     => (string)($o['klein'] ?? ''),
         'plaketten' => $plaketten,

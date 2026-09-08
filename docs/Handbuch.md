@@ -2308,6 +2308,27 @@ zurück. Am Schreibtisch stehen dieselben Karten als Unterpunkte in der Leiste
 links. Nach dem Speichern kehrt die Seite an die Stelle zurück, an der du
 getippt hast.
 
+**Wird eine Liste lang, bekommt sie ab sechs Einträgen ein Hilfsmittel**
+(seit Web 16.3.0):
+
+- Über den **Rettungsmitteln** steht dann eine Reihe runder Marken, je eine
+  mit dem Zeichen und dem Namen. Ein Tipp darauf springt zu der Zeile, und
+  die Zeile ist kurz orange hinterlegt, damit du sie unter den anderen
+  wiederfindest.
+- Über den **übrigen Listen** steht ein **Filterfeld** mit einer Lupe. Tippe
+  ein paar Buchstaben, und es bleibt stehen, was dazu passt — sofort, ohne
+  Warten. Die Rollenüberschriften der Besatzung verschwinden mit, solange
+  darunter niemand mehr steht. **Solange gefiltert wird, sind die
+  Anlegen-Formulare ausgeblendet**: Du kannst also nicht gleichzeitig filtern
+  und eintragen; leere das Feld (Kreuz rechts oder Esc), dann sind sie
+  wieder da. Der Filter verschwindet beim Neuladen — er steht nicht in der
+  Adresse und lässt sich nicht weitergeben.
+
+Ein Rettungsmittel zeigt in seiner Zeile **sein Artzeichen** links vom Namen
+— es sagt Art und Typ zugleich, dasselbe Zeichen wie in der Diensttage-Leiste
+(Abschnitt 3). Fahre mit der Maus darüber oder lass es dir vorlesen: Die
+Textalternative nennt beides ausgeschrieben.
+
 ### 9.1 Standorte, Rettungsmittel, Besatzung, Bergwacht
 
 **Der Standort ist der Anker — mit einer Ausnahme seit Web 16.0.0.** An ihm

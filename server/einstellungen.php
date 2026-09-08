@@ -1703,14 +1703,22 @@ ui_seite_start(['titel' => 'Einstellungen',
                zurueck). Drei Kacheln, keine fuer „Standort" — der steht
                darueber im Titel. Sie sind Verweise auf die Kartenkennungen;
                dieselben Kennungen holt sich `menue.js` fuer die Unterpunkte
-               der Leiste. */ ?>
+               der Leiste.
+
+               DER VORSATZ `k-` IST HAUSREGEL, nicht Geschmack: `Design.md`
+               9.25 schreibt ihn fuer jede Karte vor, die Sprungziel sein
+               soll, und der uebrige Bestand haelt sich an dreissig Stellen
+               daran (`k-zustand`, `k-konten`, `k-angaben`, `k-app`). Die
+               Mockups zeichnen `#standort`, `#rettungsmittel` — ein Bild ist
+               aber keine Namensregel, und eine Regel, die man fuer die
+               sechs neuesten Karten aufweicht, ist ab dann keine. */ ?>
       <div class="kennzahl-raster kennzahl-raster-3">
         <?= ui_kennzahl(['wert' => (string)count($vehListe), 'label' => 'Rettungsmittel',
-                         'href' => '#rettungsmittel']) ?>
+                         'href' => '#k-rettungsmittel']) ?>
         <?= ui_kennzahl(['wert' => (string)count($sdCrew[$bid] ?? []), 'label' => 'Besatzung',
-                         'href' => '#besatzung']) ?>
+                         'href' => '#k-besatzung']) ?>
         <?= ui_kennzahl(['wert' => (string)count($sdTd[$bid] ?? []), 'label' => 'Zielkliniken',
-                         'href' => '#zielkliniken']) ?>
+                         'href' => '#k-zielkliniken']) ?>
       </div>
 
       <?php /* EINE KARTE JE ABSCHNITT, MIT KENNUNG (PS-12). Bis Web 16.2.1
@@ -1719,7 +1727,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                gibt nichts mehr, wovon man ihn unterscheiden muesste — und
                jede Karte bekommt eine Kennung, an der die Kennzahlen und die
                Unterpunkte der Leiste haengen. */
-             ui_karte_start(['titel' => 'Standort', 'id' => 'standort']); ?>
+             ui_karte_start(['titel' => 'Standort', 'id' => 'k-standort']); ?>
         <?php if (!empty($b['zentral'])): ?>
           <p class="feld-hinweis"><?= ui_plakette('systemweit') ?> Dieser Standort wird
              von der Verwaltung gepflegt.</p>
@@ -1735,19 +1743,34 @@ ui_seite_start(['titel' => 'Einstellungen',
         ]); ?>
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
-      <?php ui_karte_start(['titel' => 'Rettungsmittel', 'id' => 'rettungsmittel',
+      <?php ui_karte_start(['titel' => 'Rettungsmittel', 'id' => 'k-rettungsmittel',
                             'zahl' => count($vehListe)]); ?>
         <section class="sd-liste" id="<?= e($anker) ?>-veh">
-          <h3 class="sd-titel">Rettungsmittel <span class="sd-zahl"><?= count($vehListe) ?></span></h3>
           <p class="feld-hinweis">Die Art entscheidet über Besatzungsrollen und die
              im Einsatzformular sichtbaren Felder. Fähigkeiten (Winde, Bergwacht)
              gibt es nur luftgebunden.</p>
           <?php if (!$vehListe): ?>
             <p class="feld-hinweis">Noch keine Rettungsmittel an diesem Standort.</p>
           <?php endif; ?>
+          <?php /* DIE SPRUNGLISTE AB SECHS (E-S9-14, Nr. 44, M-S9-05). Sie
+                   bekommen die Rettungsmittel und keine der anderen Listen:
+                   Ihre Eintraege tragen ein Artzeichen, an dem man sie in
+                   einer Pillenreihe wiedererkennt — ein Name allein taete das
+                   nicht, und dann waere die Sprungliste dieselbe Liste ein
+                   zweites Mal. Die uebrigen Karten bekommen den Filter. */ ?>
+          <?php if (count($vehListe) >= SD_HILFE_AB):
+                ui_sprungliste([
+                    'label' => 'Zu einem Rettungsmittel springen',
+                    'eintraege' => array_map(static fn(array $v): array => [
+                        'text' => (string)$v['name'],
+                        'href' => '#veh-' . (int)$v['id'],
+                        'vorn' => ui_artzeichen((string)$v['kind'], '',
+                                                (string)($v['typ'] ?? null)),
+                    ], $vehListe),
+                ]);
+          endif; ?>
           <?php foreach ($vehListe as $v):
                 $vid = (int)$v['id'];
-                $sym = dt_art_symbol((string)$v['kind']);
                 $rollenTxt = array_map('crew_role_label', $vehRollen[$vid] ?? []);
                 $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
                                      $vehCaps[$vid] ?? []);
@@ -1759,6 +1782,16 @@ ui_seite_start(['titel' => 'Einstellungen',
                        . ($capsTxt ? ' · ' . implode(', ', $capsTxt) : '');
                 sd_zeile([
                     'name' => (string)$v['name'], 'klein' => $klein,
+                    /* DAS ARTZEICHEN STEHT JETZT WIRKLICH DA (F-S9-K-04).
+                       Der Kommentar darueber behauptete es seit Web 7.0.0,
+                       und `$sym = dt_art_symbol(...)` wurde dafuer sogar
+                       berechnet — benutzt hat es niemand, die Zeile zeigte
+                       nur Namen und Rollen. Jetzt steht es links wie in den
+                       Mockups, MIT Typ: `ui_artzeichen()` zeigt sonst fuer
+                       eine Bergwacht dasselbe Zeichen wie fuer ein NEF. */
+                    'vorn' => ui_artzeichen((string)$v['kind'], '',
+                                            (string)($v['typ'] ?? null)),
+                    'zeilen_id' => true,
                     'seite' => sd_seite($bid),
                     'anker' => $anker . '-veh', 'praefix' => 'veh', 'id' => $vid,
                     'base_id' => $bid, 'zentral' => $istZentral($v),
@@ -1895,20 +1928,36 @@ ui_seite_start(['titel' => 'Einstellungen',
         <?php /* BESATZUNG — nur die Rollen, die es an diesem Standort gibt. */ ?>
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
-      <?php ui_karte_start(['titel' => 'Besatzung', 'id' => 'besatzung',
+      <?php ui_karte_start(['titel' => 'Besatzung', 'id' => 'k-besatzung',
                             'zahl' => count($sdCrew[$bid] ?? [])]); ?>
+        <p class="feld-hinweis">Vorschläge für die Besatzungsfelder, je Rolle.
+           Freitext bleibt überall möglich — wer aushilft, muss nicht erst hier
+           eingetragen werden.</p>
+        <?php /* DER FILTER STEHT VOR DER SEKTION, nicht darin: Das Skript
+                 filtert die KINDER des Listenbehälters, und das Feld selbst
+                 gehört nicht dazu. Der Hinweis darüber ist mit demselben
+                 Schnitt aus der Sektion gerückt — er beschreibt die Karte,
+                 nicht die Liste. */
+               if (count($sdCrew[$bid] ?? []) >= SD_HILFE_AB) {
+                   ui_kartenfilter(['id' => 'filt-crew-' . $bid,
+                                    'ziel' => $anker . '-crew',
+                                    'label' => 'Besatzung filtern',
+                                    'platzhalter' => 'Namen filtern']);
+               } ?>
         <section class="sd-liste" id="<?= e($anker) ?>-crew">
-          <h3 class="sd-titel">Besatzung <span class="sd-zahl"><?= count($sdCrew[$bid] ?? []) ?></span></h3>
-          <p class="feld-hinweis">Vorschläge für die Besatzungsfelder, je Rolle.
-             Freitext bleibt überall möglich — wer aushilft, muss nicht erst hier
-             eingetragen werden.</p>
           <?php if (!$rollenHier): ?>
             <p class="feld-hinweis">Noch keine Rolle an diesem Standort. Rollen
                entstehen am Rettungsmittel: Trage oben eines ein und hake an,
                welche Rollen es führt.</p>
           <?php endif; ?>
           <?php foreach ($rollenHier as $rk): $rr = CREW_ROLES[$rk]; ?>
-            <h4 class="sd-rolle"><?= e($rr['label']) ?></h4>
+            <?php /* h3 UND NICHT h4 (S9/AP5): Der doppelte Titel `h3.sd-titel`
+                     ist mit diesem Paket entfallen — er wiederholte Kartentitel
+                     und Kartenzahl aus dem Kartenkopf Wort fuer Wort, und die
+                     Mockups kennen ihn nicht. Bliebe die Rolle ein h4, klaffte
+                     zwischen dem h2 der Karte und ihr eine Ebene. Die Regel in
+                     `style.css` haengt an der KLASSE, nicht am Element. */ ?>
+            <h3 class="sd-rolle"><?= e($rr['label']) ?></h3>
             <?php $any = false;
                   foreach (($sdCrew[$bid] ?? []) as $c):
                       if ($c['role_code'] !== $rk) { continue; }
@@ -1918,7 +1967,8 @@ ui_seite_start(['titel' => 'Einstellungen',
                           'name' => (string)$c['name'],
                           'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
                           'seite' => sd_seite($bid),
-                          'anker' => $anker . '-crew', 'praefix' => 'crew', 'id' => (int)$c['id'],
+                          'zeilen_id' => true,
+                    'anker' => $anker . '-crew', 'praefix' => 'crew', 'id' => (int)$c['id'],
                           'base_id' => $bid, 'zentral' => $cz,
                           'del_action' => 'crew_del',
                           'del_frage' => 'Eintrag „' . $c['name'] . '“ löschen?',
@@ -1945,13 +1995,18 @@ ui_seite_start(['titel' => 'Einstellungen',
 
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
-      <?php ui_karte_start(['titel' => 'Zielkliniken', 'id' => 'zielkliniken',
+      <?php ui_karte_start(['titel' => 'Zielkliniken', 'id' => 'k-zielkliniken',
                             'zahl' => count($sdTd[$bid] ?? [])]); ?>
+        <p class="feld-hinweis">Vorschläge für das Feld „Transportziel" im
+           Einsatz. Koordinaten sind freiwillig; ohne sie entsteht lediglich
+           kein Pin auf der Karte.</p>
+        <?php if (count($sdTd[$bid] ?? []) >= SD_HILFE_AB) {
+                   ui_kartenfilter(['id' => 'filt-td-' . $bid,
+                                    'ziel' => $anker . '-td',
+                                    'label' => 'Zielkliniken filtern',
+                                    'platzhalter' => 'Zielklinik filtern']);
+               } ?>
         <section class="sd-liste" id="<?= e($anker) ?>-td">
-          <h3 class="sd-titel">Zielkliniken <span class="sd-zahl"><?= count($sdTd[$bid] ?? []) ?></span></h3>
-          <p class="feld-hinweis">Vorschläge für das Feld „Transportziel" im
-             Einsatz. Koordinaten sind freiwillig; ohne sie entsteht lediglich
-             kein Pin auf der Karte.</p>
           <?php if (!($sdTd[$bid] ?? [])): ?>
             <p class="feld-hinweis">Noch keine Zielkliniken.</p>
           <?php endif; ?>
@@ -1964,6 +2019,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 sd_zeile([
                     'name' => (string)$t['name'], 'klein' => $klein,
                     'seite' => sd_seite($bid),
+                    'zeilen_id' => true,
                     'anker' => $anker . '-td', 'praefix' => 'td', 'id' => (int)$t['id'],
                     'base_id' => $bid, 'zentral' => $tz,
                     'del_action' => 'td_del',
@@ -2011,12 +2067,24 @@ ui_seite_start(['titel' => 'Einstellungen',
 
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
-      <?php ui_karte_start(['titel' => 'Weitere Rettungsmittel', 'id' => 'weitere',
+      <?php ui_karte_start(['titel' => 'Weitere Rettungsmittel', 'id' => 'k-weitere',
                             'zahl' => count($sdRes[$bid] ?? [])]); ?>
+        <p class="feld-hinweis">Vorschläge für das Feld „Weitere Rettungsmittel"
+           im Einsatz (RTW, NEF, RTH …).</p>
+        <?php /* AUCH HIER DER FILTER, obwohl Konzept und Mockup nur Besatzung
+                 und Zielkliniken nennen: Es ist dieselbe Listenform mit
+                 demselben Problem, und zwei Sorten Liste auf einer Seite —
+                 die eine filterbar, die andere nicht — wären schwerer zu
+                 erklären als eine Regel. Die Regel lautet: ab
+                 `SD_HILFE_AB` Einträgen bekommt jede Liste ihr Hilfsmittel;
+                 die Rettungsmittel die Sprungliste, alle übrigen den Filter. */
+               if (count($sdRes[$bid] ?? []) >= SD_HILFE_AB) {
+                   ui_kartenfilter(['id' => 'filt-res-' . $bid,
+                                    'ziel' => $anker . '-res',
+                                    'label' => 'Weitere Rettungsmittel filtern',
+                                    'platzhalter' => 'Bezeichnung filtern']);
+               } ?>
         <section class="sd-liste" id="<?= e($anker) ?>-res">
-          <h3 class="sd-titel">Weitere Rettungsmittel <span class="sd-zahl"><?= count($sdRes[$bid] ?? []) ?></span></h3>
-          <p class="feld-hinweis">Vorschläge für das Feld „Weitere Rettungsmittel"
-             im Einsatz (RTW, NEF, RTH …).</p>
           <?php if (!($sdRes[$bid] ?? [])): ?>
             <p class="feld-hinweis">Noch keine Einträge.</p>
           <?php endif; ?>
@@ -2027,6 +2095,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'name' => (string)$r['name'],
                     'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
                     'seite' => sd_seite($bid),
+                    'zeilen_id' => true,
                     'anker' => $anker . '-res', 'praefix' => 'res', 'id' => (int)$r['id'],
                     'base_id' => $bid, 'zentral' => $rz,
                     'del_action' => 'res_del',
@@ -2053,14 +2122,19 @@ ui_seite_start(['titel' => 'Einstellungen',
                Bedingung — sonst bliebe sie an einem reinen NEF-Standort offen,
                und das Markup zerfiele ab dort. */ ?>
         <?php if ($hatLuft): ?>
-      <?php ui_karte_start(['titel' => 'Bergwacht', 'id' => 'bergwacht',
+      <?php ui_karte_start(['titel' => 'Bergwacht', 'id' => 'k-bergwacht',
                             'zahl' => count($sdBw[$bid] ?? [])]); ?>
+          <p class="feld-hinweis">Bereitschaften für das Feld „Bergwacht" im
+             Einsatz. Der Abschnitt erscheint, weil an diesem Standort ein
+             luftgebundenes Rettungsmittel steht — die Fähigkeit kommt nur
+             dort vor.</p>
+          <?php if (count($sdBw[$bid] ?? []) >= SD_HILFE_AB) {
+                     ui_kartenfilter(['id' => 'filt-bw-' . $bid,
+                                      'ziel' => $anker . '-bw',
+                                      'label' => 'Bereitschaften filtern',
+                                      'platzhalter' => 'Bereitschaft filtern']);
+                 } ?>
           <section class="sd-liste" id="<?= e($anker) ?>-bw">
-            <h3 class="sd-titel">Bergwacht <span class="sd-zahl"><?= count($sdBw[$bid] ?? []) ?></span></h3>
-            <p class="feld-hinweis">Bereitschaften für das Feld „Bergwacht" im
-               Einsatz. Der Abschnitt erscheint, weil an diesem Standort ein
-               luftgebundenes Rettungsmittel steht — die Fähigkeit kommt nur
-               dort vor.</p>
             <?php if (!($sdBw[$bid] ?? [])): ?>
               <p class="feld-hinweis">Noch keine Bereitschaften.</p>
             <?php endif; ?>
@@ -2071,7 +2145,8 @@ ui_seite_start(['titel' => 'Einstellungen',
                       'name' => (string)$w['name'],
                       'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
                       'seite' => sd_seite($bid),
-                      'anker' => $anker . '-bw', 'praefix' => 'bw', 'id' => (int)$w['id'],
+                      'zeilen_id' => true,
+                    'anker' => $anker . '-bw', 'praefix' => 'bw', 'id' => (int)$w['id'],
                       'base_id' => $bid, 'zentral' => $wz,
                       'del_action' => 'bw_del',
                       'del_frage' => 'Bereitschaft „' . $w['name'] . '“ löschen?',
@@ -2121,6 +2196,12 @@ ui_seite_start(['titel' => 'Einstellungen',
     <script src="<?= asset('assets/map_layers.js') ?>"></script>
     <script src="<?= asset('assets/geo.js') ?>"></script>
     <script src="<?= asset('assets/ortswahl.js') ?>"></script>
+    <?php /* DER KARTENFILTER (S9/AP5). Er steht bei den Skripten dieses
+             Zweiges und nicht im Geruest: Ihn gibt es bisher nur auf der
+             Standortseite, und ein Skript, das auf jeder Seite laedt und auf
+             fuenf von sechs nichts findet, ist Ballast. Er braucht keine
+             Reihenfolge — er haengt an nichts. */ ?>
+    <script src="<?= asset('assets/kartenfilter.js') ?>"></script>
     <script>
     /* Ortsfelder der Stammdatenpflege beleben (E37). Dieselbe Komponente wie
      * am Einsatz — mit getrennter Suche, weil das Namensfeld hier den NAMEN

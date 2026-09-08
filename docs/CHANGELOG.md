@@ -14,6 +14,59 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 16.3.0] — 2026-09-08
+
+### Web — die langen Listen bekommen zwei Hilfsmittel (S9/AP5, Teil 3)
+
+**Eine Standortseite kann sehr lang werden**, und bis hierher half dagegen
+nichts: zwölf Rettungsmittel, zwei Dutzend Besatzungseinträge, drei Dutzend
+Zielkliniken — alles untereinander. Jetzt bekommt jede Liste **ab sechs
+Einträgen** ein Hilfsmittel. Eine Zahl, eine Regel, kein Sonderfall je Karte:
+
+- Die **Rettungsmittel** bekommen die **Sprungliste** — eine umbrechende Zeile
+  runder Pillen, jede mit dem Artzeichen ihres Rettungsmittels. Ein Klick
+  führt zur Zeile, und die Zeile färbt sich orange. Sie bekommen sie als
+  einzige, und das hat einen Grund: Ihre Einträge tragen ein Zeichen, an dem
+  man sie in einer Pillenreihe wiedererkennt. Eine Reihe aus zwölf Namen ohne
+  Zeichen wäre keine Orientierung, sondern dieselbe Liste ein zweites Mal.
+- **Alle übrigen** bekommen den **Kartenfilter** — ein Feld mit Lupe, das beim
+  Tippen ausblendet, was nicht passt. Im Browser, ohne Anfrage, ohne
+  Neuladen. Konzept und Mockup nennen dafür nur Besatzung und Zielkliniken;
+  „Weitere Rettungsmittel" und „Bergwacht" sind dieselbe Listenform mit
+  demselben Problem, und zwei Sorten Liste auf einer Seite wären schwerer zu
+  erklären als eine Regel.
+
+**Der Filter blendet mehr aus als Zeilen**, und das ist der eigentliche
+Aufwand daran. Ein Zwischentitel („Pilot 1"), unter dem nichts mehr steht,
+ließe die Karte leer statt gefiltert aussehen — er geht mit seiner Gruppe. Die
+Anlegen-Formulare sind verborgen, solange gefiltert wird: In der
+Besatzungskarte steht eines **je Rolle**, und unter einem einzigen Treffer
+stünden sonst vier verwaiste Formulare. Bleibt gar nichts übrig, sagt die
+Karte es und sagt auch, wie man wieder zum Anlegen kommt. Die verborgenen
+Löschformulare dagegen bleiben unangetastet — sie stehen *neben* den Zeilen,
+und wer sie mitversteckt, macht die Knöpfe der sichtbaren Zeilen wirkungslos.
+
+**Das Artzeichen steht jetzt wirklich in der Zeile.** Der Kommentar daneben
+behauptet seit Web 7.0.0, das Symbol vor dem Namen sage die Art des
+Rettungsmittels — und die Art wurde dafür sogar berechnet. Benutzt hat das
+Ergebnis niemand: Die Zeile zeigte Namen und Rollen und sonst nichts. Jetzt
+steht es links, und es nennt den **Typ** mit: Sonst sähe eine Bergwacht aus
+wie ein NEF.
+
+**Drei Dinge, die dabei geradegezogen wurden.** Jede Karte trug ihren Namen
+und ihre Zahl **zweimal** — einmal im Kopf, einmal als Überschrift unmittelbar
+darunter; die zweite ist weg, und die Rollenüberschriften der Besatzung sind
+eine Ebene aufgerückt, damit keine Lücke entsteht. Die Karten tragen jetzt den
+Vorsatz `k-` in ihrer Kennung, wie die Gestaltungsrichtlinie es für jede
+Sprungziel-Karte vorschreibt und wie der übrige Bestand es an dreißig Stellen
+tut. Und der Bilderlauf misst die neue Pille mit: Sie ist so hoch wie ein
+Knopf, trägt aber nicht dessen Klasse — ohne diese Zeile stünde in der
+Richtlinie eine Zusage, die kein Prüfmittel deckt.
+
+**Was noch nicht dran ist:** die drei Dialoge, die Verwaltungsseite und das
+Löschen eines Standorts mit Rettungsmitteln ohne Standortpflicht. Keine
+Migration, keine Spalte; `update.php` muss **nicht** laufen.
+
 ## [Web 16.2.2] — 2026-09-08
 
 ### Web — die Standortseite bekommt ihre Wege (S9/AP5, Teil 2)
