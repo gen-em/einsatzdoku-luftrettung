@@ -224,13 +224,15 @@ $endedAt = pruef_utc($b['ended_at'] ?? null, 'ended_at', $pruef);
  * lange ohne Netz), bekam gar kein `ended_at` mehr. Gemessen, nicht vermutet.
  *
  * Deshalb hier, an der Wurzel und in der gemeinsamen Pruefschicht: Ein
- * Zeitpunkt muss zu dem Kalendertag passen, unter dem er gemeldet wird. Das
- * Fenster ist weit (pruef_zeit_zum_tag) -- es weist das Unmoegliche ab, nicht
- * das Ungewoehnliche. Abgewiesen wird das ganze Paket: Widersprechen sich
- * seine Angaben, ist auch alles andere darin unsicher, und ein 400 sagt dem
- * Geraet, dass es den Datensatz nicht als gesendet abhaken darf. */
+ * Zeitpunkt muss zu dem Kalendertag passen, unter dem er gemeldet wird, und
+ * das Ende darf nicht vor dem Beginn liegen. Das Fenster ist sehr weit
+ * (pruef_zeit_zum_tag nennt die vier Gruende) -- es weist das Unmoegliche ab,
+ * nicht das Ungewoehnliche. Abgewiesen wird das ganze Paket: Widersprechen
+ * sich seine Angaben, ist auch alles andere darin unsicher, und ein 400 sagt
+ * dem Geraet, dass es den Datensatz nicht als gesendet abhaken darf. */
 $zeitPasst = pruef_zeit_zum_tag($startedAt, $day, 'started_at', $pruef);
 if (!pruef_zeit_zum_tag($endedAt, $day, 'ended_at', $pruef)) { $zeitPasst = false; }
+if (!pruef_ende_nach_beginn($startedAt, $endedAt, 'ended_at', $pruef)) { $zeitPasst = false; }
 if (!$zeitPasst) {
     json_out(['error' => 'payload', 'grund' => $pruef->text()], 400);
 }

@@ -904,6 +904,49 @@ pruefe(($nl2['daten']['ok'] ?? false) === true
        'Nachgelieferter Dienst: ein zweiter Einsatz schiebt das Ende weiter (Wiederaufnahme)',
        'Tag ' . json_encode($nlZeile2) . ' — erwartet Ende ' . gmdate('Y-m-d H:i:s', $vor30 + 10800));
 
+/* (11) DER VERGESSENE DIENST -- die Weite des Zeitfensters, mit Absicht.
+ *
+ *      In der Handy-App traegt JEDES Paket eines Dienstes den Tag des
+ *      DIENSTBEGINNS, nicht seinen eigenen, und ein Dienst hat keine
+ *      Hoechstdauer. Wer das Beenden vergisst, hat Pakete, deren Zeiten Tage
+ *      nach ihrem `day` liegen. Sie muessen ankommen: Der Datenfehler ist der
+ *      vergessene Dienst, nicht das Paket. */
+$vgTag = gmdate('Y-m-d', time() - 5 * 86400);
+$vg = senden(['kind' => 'rest_segment', 'client_ref' => 'probe-vergessener-dienst',
+              'day' => $vgTag, 'day_ref' => 'probe-vergessener-dienst-ref',
+              'started_at' => gmdate('Y-m-d\TH:i:s\Z', time() - 5 * 86400 + 3600),
+              'ended_at'   => gmdate('Y-m-d\TH:i:s\Z', time() - 3600), 'final' => true,
+              'track' => ['seq_from' => 0, 'points' => []]]);
+pruefe(($vg['daten']['ok'] ?? false) === true && (int)($vg['daten']['id'] ?? 0) > 0,
+       'Vergessener Dienst: ein Paket, dessen Ende fuenf Tage nach seinem `day` liegt, kommt an (Wiederaufnahme)',
+       'HTTP ' . $vg['code'] . ', id ' . ($vg['daten']['id'] ?? '?'));
+
+/* (12) Jenseits des Fensters ist Schluss: 40 Tage nach dem `day`. */
+$wTag = gmdate('Y-m-d', time() - 60 * 86400);
+$w = senden(['kind' => 'mission', 'client_ref' => 'probe-fenster-weit',
+             'day' => $wTag,
+             'started_at' => gmdate('Y-m-d\TH:i:s\Z', time() - 60 * 86400 + 3600),
+             'ended_at'   => gmdate('Y-m-d\TH:i:s\Z', time() - 20 * 86400), 'final' => true,
+             'track' => ['seq_from' => 0, 'points' => []]]);
+pruefe($w['code'] === 400,
+       'Vierzig Tage nach dem `day` ist das Fenster zu Ende (Wiederaufnahme)',
+       'HTTP ' . $w['code'] . ' (erwartet 400)');
+
+/* (13) Das Ende darf nicht vor dem Beginn liegen. Bis zur Wiederaufnahme hat
+ *      das niemand gefragt: dt_zeitraum_fortschreiben() zog den Diensttag
+ *      daraufhin in beide Richtungen auf, mit vertauschten Werten. */
+$vTag = gmdate('Y-m-d', time() - 86400);
+$vt = senden(['kind' => 'mission', 'client_ref' => 'probe-zeit-vertauscht',
+              'day' => $vTag,
+              'started_at' => gmdate('Y-m-d\TH:i:s\Z', time() - 86400 + 36000),
+              'ended_at'   => gmdate('Y-m-d\TH:i:s\Z', time() - 86400 + 3600), 'final' => true,
+              'track' => ['seq_from' => 0, 'points' => []]]);
+$vtq = $pdo->prepare('SELECT COUNT(*) FROM missions WHERE client_ref = ?');
+$vtq->execute(['probe-zeit-vertauscht']);
+pruefe($vt['code'] === 400 && (int)$vtq->fetchColumn() === 0,
+       'Ein Ende vor dem Beginn wird abgewiesen, und es entsteht kein Datensatz (Wiederaufnahme)',
+       'HTTP ' . $vt['code'] . ' (erwartet 400)');
+
 printf("  Ergebnis des Fensters: innerhalb angenommen, ausserhalb abgewiesen und genannt (%d h ab dem Anlegen)\n",
        INGEST_ERSETZFENSTER_H);
 

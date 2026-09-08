@@ -4489,11 +4489,23 @@ niemand nachgesehen, ob sie einander widersprechen: Ein Paket mit `day`
 2026-08-09 und `started_at` 2001-01-01 lief durch, der Einsatz stand mit
 96 Jahren Dauer in der Datenbank, und der Zeitraum des Diensttags war darauf
 gezogen. `pruef_zeit_zum_tag()` (in `validate_lib.php`, also auf dem
-gemeinsamen Weg) weist ein solches Paket jetzt mit `400` ab. Das Fenster ist
-bewusst weit — von Mitternacht des Vortags bis zum Ende des übernächsten
-Tages, vier Kalendertage für einen gemeldeten. Es muss den Zeitzonenversatz
-zwischen Ortsdatum und UTC vertragen, einen Dienst über Mitternacht und einen
-24-Stunden-Dienst; es weist das Unmögliche ab, nicht das Ungewöhnliche.
+gemeinsamen Weg) weist ein solches Paket jetzt mit `400` ab. Ebenso eines,
+dessen **Ende vor seinem Beginn** liegt (`pruef_ende_nach_beginn()`): Auch das
+hatte niemand gefragt, und `dt_zeitraum_fortschreiben()` zog den Diensttag
+daraufhin in beide Richtungen auf, mit vertauschten Werten.
+
+Das Fenster ist **sehr** weit — von Mitternacht des Vortags bis zum Ende des
+31. Tages danach —, und das mit Absicht. Vier Dinge zwingen dazu: der
+Zeitzonenversatz zwischen Ortsdatum und UTC (ein voller Tag in beide
+Richtungen zwischen UTC−12 und UTC+14); ein Dienst über Mitternacht; vor allem
+aber, dass in der **Handy-App jedes Paket eines Dienstes den Tag des
+Dienstbeginns trägt**, nicht seinen eigenen (`Dienstklammer.kt`: das
+Ruhesegment bekommt `dienst.tag`); und dass ein Dienst **keine Höchstdauer**
+hat, weder in der App noch auf dem Server — wer das Beenden vergisst, hat
+Pakete, deren Zeiten Tage nach ihrem `day` liegen. Sie müssen ankommen: Der
+Datenfehler ist der vergessene Dienst, nicht das Paket. Die Prüfung wehrt ab,
+worum es geht — Jahre und Jahrzehnte —, und den feinen Schutz leistet nicht
+sie, sondern das Ersetzfenster.
 
 **Neue Datensätze werden immer angenommen.** Sie sind sichtbar und löschbar und
 überschreiben nichts — **auch nicht den Zeitraum eines älteren Diensttags**:
@@ -4531,11 +4543,13 @@ Abschlusspaket genannt, falsch gestellte Uhr nimmt weiter an, Zukunft
 schließt, kein leerer Tag, Ruhesegment nennt beides; vorgehende Uhr öffnet
 nicht erneut; neuer `client_ref` lässt den Tageszeitraum stehen; Papierkorb
 im offenen Fenster; Zeiten passen nicht zum Tag; nachgelieferter Dienst
-bekommt Beginn und Ende): **59 Erwartungen, 0 nicht erfüllt** — am Stand vor
-der ersten Nachbesserung sind sieben davon rot, am Stand vor der
+bekommt Beginn und Ende; vergessener Dienst kommt an; 40 Tage danach nicht
+mehr; Ende vor Beginn abgewiesen): **62 Erwartungen, 0 nicht erfüllt** — am
+Stand vor der ersten Nachbesserung sind sieben davon rot, am Stand vor der
 Wiederaufnahme zwei, am Stand vor der Neufassung der Tagesregel vier
 (zweimal der abgewiesene Widerspruch, zweimal der nachgelieferte Dienst ohne
-Ende). Dieselbe Stufe
+Ende); gegen den Stand `448ce9f`, also vor allen vier Nachbesserungen dieser
+Runde, sind es fünf. Dieselbe Stufe
 hat die Zeitstempel der ganzen Probe auf `time()` umgestellt: Sie standen auf
 festen März-Daten, und damit prüfte die halbe Probe zweite Pakete an
 Datensätzen, die das Fenster längst verlassen hatten — zehn Erwartungen

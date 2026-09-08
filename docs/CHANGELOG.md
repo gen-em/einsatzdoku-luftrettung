@@ -261,13 +261,28 @@ dem eben ein Paket ankam). Ein frischer Tag und ein Tag, an dem gerade
 nachgetragen wird, sind offen; ein Tag, dessen Datensätze alle älter als das
 Fenster sind, nicht.
 
-Ingestprobe 56 → **59, 0 nicht erfüllt**; am Stand vor dieser Neufassung sind
-vier davon rot — zweimal der Widerspruch, der jetzt abgewiesen wird, zweimal
-der nachgelieferte Dienst ohne Ende. Ein eigenes Messgeschirr mit zwölf
-Erwartungen an vier Fällen (Nachlieferung, Angriff, neuer Datensatz am alten
-Tag, zweites Paket) sagt dasselbe: 12/0 gegen 12/8 am Stand davor. Dass
-`days` kein `created_at` trägt und die Frage deshalb über zwei Tabellen
-beantwortet werden muss, steht als Backlog Nr. 158.
+**Wie weit das Zeitfenster sein muss**, hat erst das Nachlesen in den Clients
+gezeigt — und es ist weiter, als der erste Ansatz annahm. `day` ist in beiden
+Clients ein **Ortsdatum**, die Zeiten sind UTC: schon das ist ein voller Tag
+Versatz. Vor allem aber trägt in der Handy-App **jedes Paket eines Dienstes
+den Tag des Dienstbeginns**, nicht seinen eigenen — ein Ruhesegment am dritten
+Tag meldet weiterhin Tag 1 —, und ein Dienst hat **keine Höchstdauer**, weder
+in der App noch auf dem Server. Wer das Beenden vergisst, hat Pakete, deren
+Zeiten Tage nach ihrem `day` liegen; sie müssen ankommen, denn der Datenfehler
+ist der vergessene Dienst, nicht das Paket. Das Fenster reicht deshalb bis zum
+**31. Tag** nach `day`. Es wehrt ab, worum es geht — Jahre und Jahrzehnte —,
+und den feinen Schutz leistet ohnehin das Ersetzfenster. Beim selben Nachlesen
+fiel auf, dass **niemand prüft, ob das Ende nach dem Beginn liegt**: Ein Paket
+mit vertauschten Zeiten wurde angenommen, und der Diensttag wurde daraufhin in
+beide Richtungen aufgezogen. Auch das wird jetzt abgewiesen.
+
+Ingestprobe 56 → **62, 0 nicht erfüllt**; am Stand vor der Neufassung sind
+vier davon rot, gegen den Stand vor allen vier Nachbesserungen dieser Runde
+fünf. Ein eigenes Messgeschirr mit zwölf Erwartungen an vier Fällen
+(Nachlieferung, Angriff, neuer Datensatz am alten Tag, zweites Paket) sagt
+dasselbe: 12/0 gegen 12/8 am Stand davor. Dass `days` kein `created_at` trägt
+und die Frage deshalb über zwei Tabellen beantwortet werden muss, steht als
+Backlog Nr. 158.
 
 **Die Skeptiker-Runde ist vollständig.** Zu jedem der 30 Funde hat ein eigener
 Agent versucht, ihn zu widerlegen, und dafür gegen den unveränderten Stand

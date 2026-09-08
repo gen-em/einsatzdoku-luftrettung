@@ -713,17 +713,23 @@ Zusätzlich können auftreten:
 > fortgeschrieben (4.4). Der Grund steht in `docs/Technik.md` 4.99a2; für die
 > Uhr ändert sich nichts, was sie tun müsste.
 
-> **Die Zeiten müssen zum `day` passen** (seit der Wiederaufnahme der zweiten
-> Gegenprüfung). `started_at` und `ended_at` eines Pakets müssen in das
-> Fenster von Mitternacht des Vortags bis zum Ende des übernächsten Tages um
-> `day` fallen. Ein Paket, dessen Angaben einander widersprechen — `day`
-> 2026-08-09 und `started_at` 2001-01-01 —, wird mit `400 {"error":"payload"}`
-> abgewiesen; der Grund steht wie bei jedem Prüffehler in `grund`. Das ist
-> **keine neue Antwortform**: Der Fall verhält sich wie jede andere
-> fehlerhafte Nachricht (Tabelle unten) — nicht wiederholen, lokal als
-> fehlerhaft markieren. Das Fenster ist weit genug für Zeitzonenversatz,
-> Dienste über Mitternacht und 24-Stunden-Dienste; eine Uhr, die im Betrieb
-> plausible Zeiten meldet, merkt nichts davon.
+> **Die Zeiten müssen zum `day` passen, und das Ende darf nicht vor dem
+> Beginn liegen** (seit der Wiederaufnahme der zweiten Gegenprüfung).
+> `started_at` und `ended_at` müssen in das Fenster von Mitternacht des
+> Vortags bis zum Ende des **31. Tages** nach `day` fallen. Ein Paket, dessen
+> Angaben einander widersprechen — `day` 2026-08-09 und `started_at`
+> 2001-01-01, oder ein Ende vor dem Beginn —, wird mit
+> `400 {"error":"payload"}` abgewiesen; der Grund steht wie bei jedem
+> Prüffehler in `grund`. Das ist **keine neue Antwortform**: Der Fall verhält
+> sich wie jede andere fehlerhafte Nachricht (Tabelle unten) — nicht
+> wiederholen, lokal als fehlerhaft markieren.
+>
+> Das Fenster ist bewusst sehr weit, weil `day` in beiden Clients ein
+> **Ortsdatum** ist und weil ein Paket den Tag seines **Dienstbeginns** tragen
+> darf, nicht nur seinen eigenen: Ein Ruhesegment am dritten Tag eines
+> Dienstes meldet weiterhin Tag 1. Ein Dienst, dessen Beenden jemand vergisst,
+> kommt damit vollständig an. Ein Client, der plausible Zeiten meldet, merkt
+> von der Prüfung nichts.
 
 Ein `ok: true` mit gefülltem `rejected` oder einem `kept_*` bedeutet: Der
 Upload ist angekommen, aber **nicht vollständig übernommen**. Die Uhr sollte
