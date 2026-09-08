@@ -5387,6 +5387,26 @@ denselben Zustand laufen auseinander), eine **Warnung auf eigenem Kanal**
 (ID 3, `warnungen`, Vibration ohne Ton, Erinnerung alle 10 min) und den
 Kurzcode in der Standmeldung an die Uhr.
 
+**Seit 0.15.0 sagt die Anzeige, seit wann der Dienst läuft — mit Datum, wenn
+er nicht von heute ist** (Backlog Nr. 160). `Zeit.seit()` liefert „07:00",
+solange Beginn und Gegenwart auf denselben **Ortstag** fallen, sonst
+„Fr. 05.09., 07:00"; denselben Wert benutzen die Dienstansicht und die
+Dauermeldung. Der Anlass ist der fortgesetzte Dienst: Ein zweiter „Dienst
+beginnen" gibt bei laufendem Dienst den vorhandenen zurück (E-R45-13), und
+die Zeile „läuft seit 07:00" war von einem Dienst, der eben erst begann,
+nicht zu unterscheiden. **Die Sprache des Datums ist fest deutsch**, nicht die
+des Geräts — im Emulatorlauf stand dort sonst „Tue 08.09." mitten im
+deutschen Satz.
+
+Dazu eine **Erinnerung auf dem Warnkanal** (ID 5), einmal je Lauf des
+Aufzeichnungsdienstes, sobald er `DIENSTDAUER_ERINNERUNG_H` = **26 Stunden**
+überschreitet: Titel „Dienst läuft seit N Stunden", Text mit dem Beginn und
+dem Knopf „Dienst beenden". Die Schwelle ist gewählt, nicht gemessen, und die
+Begründung steht an der Konstante — regulär bis 24 Stunden, zwei Stunden Luft
+für einen späten Schichtwechsel. Geprüft wird sie im **Wächtertakt** (10 s);
+der Vergleich kostet nichts, und ein Merker sorgt dafür, dass die Meldung
+einmal entsteht statt alle zehn Sekunden.
+
 **Ein zweiter Benachrichtigungskanal, weil Android die Einstellungen eines
 Kanals nach dem Anlegen der Nutzerin überlässt.** Der Kanal „Aufzeichnung"
 ist bewusst `LOW` und stumm; eine Warnung, die spürbar sein muss, kann nicht

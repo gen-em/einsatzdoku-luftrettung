@@ -27,6 +27,7 @@ Das steht am Anfang, nicht in einer Fußnote.
 | **Der Räumlauf nach 30 Tagen im Feld** (Nr. 114) | Die Frist ist nur im Prüfstand stellbar (`jetzt`); im Emulator vergehen keine 30 Tage | — (Robolectric belegt die Regel; am Gerät bleibt das Trennen, das dieselbe Funktion ohne Frist ruft) |
 | **Das Uhr-Modul im Wear-Emulator** | Die einzige Änderung am Uhr-Modul ist die neue Methode in der gemeinsamen Datei `WearNachrichtenweg.kt`, die die Uhr nicht ruft; das Uhr-APK ist byteweise gleich groß geblieben. Ein zweiter TCG-Boot (nach vier Fehlversuchen und 715 s beim Handy) stand dazu in keinem Verhältnis | — bei der nächsten Änderung am Uhr-Modul mit |
 | **Ein signiertes Release-APK** | Kein Signaturschlüssel im Container (E-S4-16); geprüft ist das unsignierte Release-APK aus `./gradlew build` | Auftraggeber beim Release |
+| **Die Sync-Seite der Uhr im Simulator** (Nr. 159) | Stufe II ist erreicht — die App startet (fenix6pro, 65,9 kB) —, aber **weder Tastendruck noch Mausklick erreichten den Simulator** im virtuellen Bildschirm; die Seite ließ sich nicht ansteuern. Die neue Anzeige ist damit aus dem Code und dem Mockup belegt, nicht am laufenden Programm. Übersetzt ist sie für **99 von 99 Geräten, 0 Fehler, 0 Warnungen** | Prüfliste P-14, am echten Gerät |
 | **Nichts mehr aus dem zweiten adversarischen Lauf** | Der erste Anlauf brach an der Sitzungsgrenze des API-Kontingents ab (HTTP 429), die Wiederaufnahme an derselben Grenze noch einmal — nach dem Wechsel auf ein anderes Modell sind alle 30 Urteile gefällt: 24 hielten, 6 widerlegt (Abschnitt 4a). Die ersten 22 Urteile stammen vom Modell Fable 5.1, die letzten 8 von Opus 5; beide reproduzierten gegen denselben Stand `448ce9f` | — (erledigt) |
 
 **Eine Bemerkung zur Umgebung, weil sie für jede Zahl hier gilt:** Der
@@ -65,6 +66,8 @@ diesen Umweg hätte der Punkt keine Zahl.
 | **136** Nachbesserung, Passwortregel | Messgeschirr in Node (`vm`-Kontext), drei Fassungen nebeneinander: `main` (`4b442de`), Zweig vor der Nachbesserung, danach | Zufallspasswörter 0 % abgewiesen; nichts, was `main` abwies, geht neu durch; Meldungen ohne `<`, `>`, `&` | 3 × 20 000 Zufallspasswörter à 12 Zeichen (62 / 70 / 80 Zeichen Vorrat): **0 / 0 / 0 abgewiesen** (Zweig davor 8 / 446 / 3036). Alle Zwei- und Dreiwortkombinationen der Liste in sechs Schreibweisen (48 935 + 4 521 426 Passwörter): **0, die `main` abwies und die neue Regel durchlässt**; 7 143 + 257 250 neu abgewiesen (reine Kurzwort-Kombinationen wie „Admin-Root2026"). Generator 1689 Passwörter in elf Klassen: gegen `main` **108 neu durchgelassen** (73 Passphrasen mit einem Listenwort, 35 Listenwort + acht Zufallszeichen), 332 neu abgewiesen, **0 Füllwörter durchgelassen**. 16 feindliche Eingaben: **0 Meldungen mit `<`, `>` oder `&`**. 20 000 `pruefe()` in 288 ms (vorher 248). Prüfstand-Passwörter: `adminlokal2026` **abgewiesen** (Rest „lokal", 5), `nadokudemo0815` und `umlaufpruefung2026` gültig — Nr. 156 |
 | **140** Nachbesserung | Selbstprobe; Lauf gegen `127.0.0.1:8080`; **27 Angriffsvarianten** als Skript gegen `seite_vergleichen()`; sieben Gegenproben an einer Kopie mit `php -S` (Opcache aus) | Selbstprobe 0 nicht erfüllt; Lauf 112/112; jede Variante, die den Weg des Passworts ändert, ist eine Abweichung | Selbstprobe **12 → 20 → 28 → 30 Erwartungen, 0 nicht erfüllt** (Wiederaufnahme: `>` im Wert, Steuerzeichen vor dem Schema; 30 Varianten, 1 grün); Lauf **112/112, 1/1/1 gleich, 0 `<base>`, 0 Umlenk-, 0 Ereignisattribute, 0 Kopfanweisungen, 0 Einbettungen, 0 `javascript:`**; Gegenproben `<base href>`, `formaction`, `data-src`, Dateiname mit Leerzeichen/Umlaut: alt „Kein Unterschied" bzw. Abbruch, neu Rückgabewert 1 bzw. „nicht erreichbar". Von den 27 Varianten gingen am Stand `72a4268` **17 grün durch**, nach `4e30b26` **1** (`<link rel="stylesheet">` — Grenze mit Begründung) |
 | **134** Wiederaufnahme | `tools/ingestprobe/` Teil 9, Fälle 8 und 9; Wegwerf-Datenbank vor der Migration, im Teilzustand und mit Randwerten (Skript der Gegenprüfung, umgebogen) | neuer `client_ref` lässt den Tageszeitraum stehen; Papierkorb im offenen Fenster: Datensatz wandert; Ruhesegment ohne Spalte `200`; Anker 1970-01-01 00:00:00 schließt | **56 Erwartungen, 0 nicht erfüllt**; mit dem `ingest.php` von `448ce9f` **56/2** (genau die zwei neuen). Vor der Migration: Ruhesegment **HTTP 200** (vorher 500), Einsatz 200. Teilzustand (Spalte NULL): Segment mit `started_at` 1970-01-01 00:00:00 → zweites Paket **`kept_meta` 1, `kept_points` 1** (vorher offen), 00:00:01 ebenso. Migration mit sieben Randwerten (1970-01-01 00:00:00, 0001-01-01, 1969-12-31, 2050, 9999, 2038-01-19 03:14:08, −30 d): alle gefüllt, `skip` vorher false / nachher true; Teillauf B2 und Wettlauf B3 zu Ende geführt. Papierkorb im offenen Fenster: Einsatz auf dem neuen Tag (`day_id` 18 → 19), alter Tag 0 Datensätze, neuer 1 |
+| **159** Uhr | Uhr-Prüfstand Stufe I und II; Wortliste; Lesen gegen `Pair.start()` und `Model.backlogCount()` | dauerhafte Ablehnung blockiert die Warteschlange nicht mehr, das Trennen ist frei | **Stufe I 99 von 99 Geräten, 0 Fehler, 0 Warnungen**; Stufe II erreicht (App startet, 65,9 kB), Sync-Seite dort **nicht ansteuerbar** (Abschnitt 0). Die strenge Typprüfung wies **drei** ungecastete Wörterbuchwerte zurück, die Wortliste **einen** fest geschriebenen Tastennamen (Venu 3s: „Action") |
+| **160** Android | `./gradlew build`; Emulatorlauf mit Bildern; drei Prüffälle in `ZeitTest` | Datum in Anzeige und Dauermeldung, Erinnerung nach 26 h | **264 Prüffälle je Bauart, 0 Fehlschläge** (261 + 3), Lint 0 Fehler / 14 Warnungen; **fünf Emulatorbilder** (`android/emulator-bilder/0150-*.png`) mit beiden Änderungen im laufenden Programm. Der Emulator fand dabei den **englischen Wochentag** („Tue 08.09."), den kein anderes Mittel sah — die Sprache ist jetzt fest deutsch |
 | **134** Neufassung (vierte) | `tools/ingestprobe/` Teil 9, Fälle 1, 4, 8a, 8b und 10; eigenes Messgeschirr an vier Fällen; Gegenprobe gegen den Stand davor auf eigenem Port | Zeiten, die nicht zum Tag passen, schreiben den Diensttag nicht fort (der Upload bleibt unberührt); ein **nachgelieferter** Dienst bekommt Beginn und Ende | **62 Erwartungen, 0 nicht erfüllt** (vorher 56); am Stand vor der Neufassung **62/4**, gegen `448ce9f` **62/5** — Fall 1 und 8a antworten dort `200` statt `400`, und der nachgelieferte Dienst bekommt `ended_at` `null` statt der gesendeten Zeit (beide Erwartungen von Fall 10). Messgeschirr `np_regel.php` an vier Fällen (Nachlieferung, Angriff, neuer Datensatz am alten Tag, zweites Paket): **12 Erwartungen, 0 nicht erfüllt**; am Stand davor **12/8** |
 | **130** Wiederaufnahme | 13 Fälle unmittelbar an `gpx_lesen()` (Skript im Scratchpad); Gpxprobe Teil 8 um zwei Umgehungs- und zwei Positivfälle erweitert | Latin-1-Deklaration mit UTF-8-Bytes geht durch (Dateidialog), UTF-7/UTF-16/EBCDIC/Shift_JIS-Namen nicht, rohe Latin-1-Bytes nicht | **13 Fälle, 0 Fehlschläge**; mit der `gpx_lib.php` von `448ce9f` **5 Fehlschläge** (ISO-8859-1, windows-1252, latin1, ISO-8859-15, BOM+Latin-1 abgewiesen). Gpxprobe: **95 Erwartungen, 2 nicht erfüllt** (die zwei vorbestehenden), Teil 8 **11 Proben, 0 durch**, gegen die Referenzdatenbank gefahren |
 | **136** Wiederaufnahme, Statuszeile | Wegwerf-Datenbank mit Demo-Konto (`app_state.demo_user_id`), Harness ruft `status_erhebung()` | Demo-Satz nur mit Listenwert; verwaiste Konten zählen nicht als „unter dem Zielwert"; richtige Ursache im Satz | A (Demo 320 000, Rest Ziel): **„in Ordnung"**, Demo-Satz, keine Zahl. B (+1 Konto 320 000): **„Übergang läuft", 1**. C (Demo verwaist 310 000): **rot, „Anmeldung blockiert", kein Demo-Satz**. E (anderes Konto verwaist, Demo 320 000): rot, Demo-Satz, „unter dem Zielwert" **0** (vorher 1) |
@@ -426,6 +429,36 @@ Auf einem Android-8-Gerät (API 26/27) ein Release-APK mit
 **Erwartet:** „Keine Verbindung" — die App spricht `https`, und das System
 verböte Klartext ohnehin. **Scheitern:** Eine Kopplungssitzung kommt
 zustande.
+
+### P-13 · Der vergessene Dienst am eigenen Handy (Nr. 160) — **braucht einen Tageswechsel**
+
+Einen Dienst beginnen und **über Nacht laufen lassen**, ohne ihn zu beenden.
+Am nächsten Morgen die App öffnen. **Erwartet:** Die Zeile nennt das Datum —
+„Dienst läuft seit Fr. 05.09., 07:00" —, und dieselbe Angabe steht in der
+Dauermeldung im Benachrichtigungsbereich. **Scheitern:** Dort steht weiter nur
+eine Uhrzeit, oder der Wochentag ist englisch („Fri" statt „Fr.").
+
+Wer es nicht abwarten will, stellt das Datum des Geräts vor; so ist es hier
+geprüft worden. **Zwei Stunden später** — also nach 26 Stunden Dienstdauer —
+kommt einmal die Erinnerung „Dienst läuft seit 26 Stunden" mit dem Knopf
+„Dienst beenden". **Scheitern:** Sie kommt gar nicht, oder sie kommt wiederholt.
+
+### P-14 · Die abgewiesene Sendung auf der Uhr (Nr. 159) — **am Gerät, nach dem Deploy**
+
+Der Fall, um den es geht, lässt sich herbeiführen: Bei gekoppelter Uhr mit
+offenem Rückstand das **Gerät in der Weboberfläche löschen** (Einstellungen →
+Geräte). Dann auf der Uhr die Sync-Seite öffnen. **Erwartet:** rot „Gerät
+nicht mehr angemeldet" und darunter der Weg zurück; die Zahl der offenen
+Pakete bleibt stehen, **nichts wird verworfen**, und die Kopplung lässt sich
+neu starten (Auswahltaste halten). **Scheitern:** Die Uhr zeigt weiter nur
+„Upload 401", oder sie verweigert das Trennen mit „Erst N Pakete senden" —
+dann wäre die Sackgasse zurück.
+
+Der zweite Zustand („1 abgewiesen", kurzer Druck verwirft nach Rückfrage) ist
+**nur aus dem Code belegt**, nicht am laufenden Gerät: Er verlangt eine
+Antwort `400` mit Fehlerschlüssel, und die erzeugt `ingest.php` bei einem
+Paket der Uhr praktisch nicht. Im Simulator ließ sich die Sync-Seite nicht
+ansteuern (Abschnitt 0).
 
 ---
 
