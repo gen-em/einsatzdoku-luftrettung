@@ -18,7 +18,7 @@ Mockups in `konzept-s9/mockups/`.
 > | Entschieden | E-S9-01 bis E-S9-19 (Abschnitt 2) |
 > | Offen | nichts. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
 > | Umsetzung | **AP1 bis AP4 erledigt** (07.09.2026, Web 15.6.0 / 15.6.1 / 15.7.0 / 15.8.0 / **16.0.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. **AP5 wartet auf das Wort des Auftraggebers.** Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
-> | Fable-Schritte der Umsetzung | **drei, aus AP4** (07.09.2026): die Mockups **M-S9-08 bis M-S9-10** zu den Fragen 3 bis 6 des Prüfdokuments (Kurzname in Kachel, Plakettenzeile und schmaler Leiste · Zusammenführen bei verschiedenem Typ · Standort löschen mit Rettungsmitteln ohne Standortpflicht) — **liegen vor, Freigabe einzeln offen** (Abschnitt 6). Der Fable-Vorbehalt der Vorbereitung (PS-8.2) war im Konzept aufgelöst (Abschnitt 1.8) |
+> | Fable-Schritte der Umsetzung | **drei, aus AP4** (07.09.2026): die Mockups **M-S9-08 bis M-S9-10** zu den Fragen 3 bis 6 des Prüfdokuments — **alle drei am 08.09.2026 freigegeben** (Abschnitt 6). Der Fable-Vorbehalt der Vorbereitung (PS-8.2) war im Konzept aufgelöst (Abschnitt 1.8) |
 
 > **Stand der Umsetzung**
 >
@@ -28,6 +28,7 @@ Mockups in `konzept-s9/mockups/`.
 > | **AP2** Geocoder und Kartendialog | **erledigt** 07.09.2026 | Web **15.7.0**, Migration `2026_09_07_adresssuche_konto` | `grep -rn "komoot" server/assets/` **0** (vorher 2); Kartendialog aus **5 von 5** Einbauorten mit Karte darin (Einsatzort, manueller Abfahrtort, Transportziel, Standort im Konto, Standort systemweit); Treffer im Suchfeld lässt das Formular unberührt — **Feld leer, 0 Chips**, nach „Übernehmen" **1 Chip** (F1); Spur im Dialog bei 309 Punkten **1 Linie · 4 Ringpunkte (2 Karte + 2 Legende) · Legende sichtbar · 0 Pfeile**, Karte auf der Spur bei leerem Feld (Bild); Kontoschalter **aus → 0 Anfragen** an `photon.komoot.io` bei Tippen, Kartenwahl und Übernehmen, **mit Gegenprobe „an → 2 Anfragen"**, dazu 0 Suchfelder und 0 Hinweiszeilen; Installationsschalter aus → Kontoschalter **gesperrt** mit Grund (Bild); Hinweis am Ortsfeld **1 bei 3 Ortsfeldern**, nennt den Dienst (Bild); Datenschutztext-Baustein nennt `geocoder_host()` (**2 grep-Treffer**); Klickprobe **40 von 40** Wegen über zwei Breiten × zwei Bedienhöhen, 36 Bilder; Bilderlauf **zehn berührte Seiten**, 64 + 16 Einzelbilder je Lauf, **0/0/0** in beiden Bedienhöhen; Wortliste **0/0/0** in fünf Bereichen (178 Dateien); Vollständigkeit **298 → 304**, der Unterschied vollständig erklärt (+6 Menüpfeile „→" in Fließtext, `loc-datenschutz` als Anker eingetragen); Kontraste **21 Paare, 0 verfehlt**; Linkprobe **134 Verweise, 0 unbekannte Abweichungen**; Register **44 = 44** |
 > | **AP3** Karte und Zeichen | **erledigt** 07.09.2026 | Web **15.8.0** | Schildmaße nachgemessen im Browser: **ohne 32 · Start 32 · Ende 32 · beide 38 · Einsatzort 28 · Ringpunkt 14 · Ring beide 20 px** (vorher 36/48/48/60/32/16/28), Symbol im Schild **18**, im Kreis **16** px, Antippfläche des Ringpunkts **24 px** (WCAG 2.5.8); Pfeile **12 von 12** in 30-Grad-Schritten auf 0,1 Grad genau, dazu **2 von 2** auf der Spur des Referenzeinsatzes (vorher: Bildschirmmatrix a=0,833 b=0 c=0 d=0,833 bei behaupteten 90 Grad, also kein Drehanteil); `.geo-punkt` **12 × 12 px** mit sichtbarer Spurfarbe (vorher 4 × 18, Farbe unsichtbar — Backlog Nr. 153, neu); Windenkacheln **2 / 2 mit „0" / 0** in den drei Fällen, alle über die Oberfläche hergestellt und zurückgestellt; Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen, mit neuer Regel `spur`; `grep -c "Spur" docs/Handbuch.md` **41 → 0**; **72 sichtbare Zeichenketten in 18 Dateien** umbenannt; Symbolvorrat **49 → 52**, Artzeichen **6 von 6** mit Anker und Herkunft; Klickprobe **6 von 6** Wegen; Vollständigkeit **304 = 304** (Hinweis „Symboldatei ohne Verweis" 25 → 28, zählt nicht mit); Kontraste **21 Paare, 0 verfehlt**; Linkprobe **134 Verweise, 0 Abweichungen**; Bilderlauf **zehn berührte Seiten, 80 Einzelbilder je Lauf, 0/0/0 in beiden Bedienhöhen** |
 > | **AP4** Rettungsmittel: Typ, Kurzname, Standort optional | **erledigt** 07.09.2026 | Web **16.0.0**, Migration `2026_09_07_rettungsmittel_typ`, Nutzlast 9 → 10 | Register **45 = 45**, frische Installation und migrierte Datenbank strukturgleich (Vergleich `SHOW CREATE TABLE`); Nachfüllung **16 von 16** Diensttagen mit `vehicle_typ`; Prüfschicht **8 von 8** Fällen wie festgelegt (Rollen bei Bergwacht verworfen, Betriebsart bei Veranstaltung erzwungen, Kurzname bei 20 Zeichen auf 16 gekappt, Standard ohne Standort abgelehnt, unbekannter Typ abgelehnt); Kreisläufe **edbak 287 771 · csv 9 118 · edbak-alt 287 781 Einzelvergleiche, je 0 unerklärt** (16 / 1 021 / 653 erwartet, 0 ungenutzte Regeln); Aufwärtskompatibilität belegt: eine Nutzlast-9-Datei spielt **4 von 6** Rettungsmitteln als `standard` ein und überspringt die zwei, die es dort nicht geben konnte; Referenzbestand **3 → 6 Rettungsmittel** (je einer der vier Typen, zwei ohne Standort, zwei mit Kurznamen), über das Formular angelegt; Demo-Zurücksetzen **42 Stammdaten, 0 übersprungen**; Demo-Fixture neu, **55 861 Spurpunkte** unverändert; Klickprobe **6 von 6** Wegen, 0 Rückstände; Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen, über fünf Bereiche (178 Dateien); Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise, 0 unbekannte Abweichungen**; Bilderlauf **11 berührte Seiten, 88 Einzelbilder je Lauf, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** in beiden Bedienhöhen |
+> | **AP4a** Nachträge aus den Freigaben (Vorschlag, siehe Abschnitt 3) | offen | — | — |
 > | AP5 bis AP8 | offen | — | — |
 >
 > **Fragen aus AP1** (Prüfdokument, Abschnitt 4): **zwei entschieden am
@@ -76,17 +77,20 @@ Mockups in `konzept-s9/mockups/`.
 > fünf genannten Stellen); der Auftraggeber hat am 07.09.2026 „alles
 > Sichtbare" entschieden und die Android-Texte an Schritt 9a gegeben.
 >
-> **Vier Fragen aus AP4** (Prüfdokument, Abschnitt 4, Fragen 3 bis 6):
-> Kurzname an Kachel und Plakettenzeile, Kurzname in der Leiste unter
-> 1200 px, Zusammenführen bei verschiedenem Typ, Standort löschen mit
-> Rettungsmitteln ohne Standortpflicht. Zu allen vier liegen seit dem
-> 07.09.2026 die Mockups **M-S9-08 bis M-S9-10** vor (Fable, Abschnitt 6),
-> mit gemessenen Zahlen und je einer Empfehlung: Kachel offen (A, B oder
-> Ist), Plakettenzeile **nein**, Leiste **Variante 2** (Kurzname sichtbar,
-> Akkordeon 8 px eingerückt — Variante 1 scheitert gemessen an vier Pixeln),
-> Zusammenführen **(c)** Typ zeigen und wählen lassen, Standort löschen
-> **(b)** Rettungsmittel ohne Standortpflicht bleiben (Umsetzung in AP5).
-> **Keine davon ist entschieden.**
+> **Die vier Fragen aus AP4 sind entschieden** (Auftraggeber, 08.09.2026,
+> nach den Mockups M-S9-08 bis M-S9-10):
+> **Frage 3 a** Einsatzkachel — **Ist lassen**, kein Rettungsmittelname an
+> der Kachel; **Frage 3 b** Plakettenzeile der Einsatzansicht — **nein**,
+> volle Bezeichnung bleibt; **Frage 4** Leiste unter 1200 px —
+> **Variante 2**, der Kurzname bleibt sichtbar und das Akkordeon rückt dort
+> je Ebene 8 statt 12 px ein; **Frage 5** Zusammenführen bei verschiedenem
+> Typ — **(c)**, der Typ steht in der Vorschau und in den Wahlzeilen, die
+> NutzerIn entscheidet; **Frage 6** Standort löschen — **(b)**,
+> Rettungsmittel ohne Standortpflicht bleiben bestehen und werden in der
+> Rückfrage genannt. E-S9-09 ist entsprechend berichtigt (Kacheln und
+> Plaketten sind ausgetragen, die Leiste gilt in jeder Breite). Gebaut ist
+> davon noch **nichts** — Frage 4 und 5 sind Nachträge zu AP4, Frage 6
+> gehört nach AP5.
 >
 > **Die zwei Fragen aus AP2 sind entschieden** (Auftraggeber, 07.09.2026):
 > **Frage 4** — Pfeile auf der Spur im Kartendialog: **nein**. Der
@@ -94,8 +98,8 @@ Mockups in `konzept-s9/mockups/`.
 > dieser Stelle überholt; der gebaute Stand bleibt, die Sollzahl der
 > Klickprobe (0 Pfeile) gilt weiter. **Frage 5** — die Überschrift im Kopf
 > des Kartendialogs: **lassen**. Von den elf Fragen der Umsetzung (AP1 bis
-> AP4) sind sechs entschieden; offen sind Frage 2 aus AP1 (Buchführung, kein
-> Mockup) und die vier aus AP4, zu denen die Mockups vorliegen.
+> AP4) sind seit dem 08.09.2026 **zehn** entschieden; offen ist allein
+> **Frage 2 aus AP1** — reine Buchführung, kein Mockup, kein Code.
 
 ---
 
@@ -589,8 +593,22 @@ Besatzungsfelder (F19) — mit dem bestehenden Hinweistext, angepasst.
 Rettungsmittel ohne Standort hat keine Vorschlagslisten (E15 — die hängen
 am Standort) und steht in der Standortliste unter dem letzten Eintrag
 „Ohne Standort" (E-S9-18). **Kurzname** (Nr. 69): bis 16 Zeichen, freiwillig; die
-Diensttage-Leiste, die Kacheln und die Plaketten zeigen ihn, wenn er
-gesetzt ist, sonst den Namen; Formulare und Export zeigen den vollen Namen.
+**Diensttage-Leiste** zeigt ihn, wenn er gesetzt ist, sonst den Namen —
+und zwar **in jeder Breite** (Entscheidung des Auftraggebers vom
+08.09.2026 zu M-S9-08, Variante 2: `.eintrag-neben.kurz` bleibt auch
+unter 1200 px sichtbar, dafür rückt das Akkordeon dort je Ebene 8 statt
+12 px ein — gemessen bleiben so 55 px frei, genau die Breite von
+„BW Hoch"; die Regel für **volle** Namen bleibt unberührt, wer keinen
+Kurznamen vergibt, sieht die Leiste wie heute). Formulare und Export
+zeigen den vollen Namen. **Kacheln und Plaketten zeigen ihn nicht** —
+ebenfalls am 08.09.2026 entschieden, gegen den ersten Wortlaut dieses
+Absatzes: Beide nennen heute überhaupt kein Rettungsmittel, es gibt dort
+nichts zu ersetzen, und die beiden Mockup-Varianten (M-S9-08) kosten mehr,
+als sie einbringen — die Einsatzkachel wüchse von 92 auf 124 px (Variante A,
+weil der Fuß schon bei „BW Hoch" umbricht), Variante B bräuchte eine neue
+Darstellung für eine Auskunft, die auf der Tagesübersicht in der Titelzeile
+steht; die Plakettenzeile der Einsatzansicht ist ein Lesezustand ohne
+Platzdruck und behält die volle Bezeichnung.
 **Der Diensttag friert beides ein:** `days.vehicle_typ`, `days.vehicle_kurz`
 (E8). **Backup-Format Nutzlast 10, Export, Import, Kreisläufe (R24),
 Referenzbestand** ziehen in einem Paket nach — eine Formatänderung (wie
@@ -886,9 +904,10 @@ nur noch Verweise auf Technik.
   Register gegengezählt.
 - `validate_lib.php`: Typ, Betriebsart nach Typ, Kurzname (16), Standort
   optional; die Prüfregeln, die AP5 in den Dialogen zeigt.
-- `dt_zuordnen()` friert Typ und Kurznamen ein; Leiste, Kacheln, Plaketten
-  zeigen den Kurznamen; `dt_art_symbol(kind, typ)` (AP3) liefert das
-  Zeichen je Typ.
+- `dt_zuordnen()` friert Typ und Kurznamen ein; die Leiste zeigt den
+  Kurznamen (Kacheln und Plaketten nicht — am 08.09.2026 entschieden,
+  siehe E-S9-09); `dt_art_symbol(kind, typ)` (AP3) liefert das Zeichen
+  je Typ.
 - Backup Nutzlast 10, Export-Format, Import-Profile; Referenzbestand mit
   je einem Rettungsmittel je Typ, einem Kurznamen und einem ohne Standort;
   **beide Kreisläufe (R24) auf 0 unerklärt**; Demo-Fixture neu.
@@ -900,7 +919,40 @@ Register n = n; ein Rettungsmittel je Typ angelegt, zugeordnet, gesichert,
 eingespielt — Typ, Kurzname und „ohne Standort" überleben den Rückweg
 (Klickprobe); Leiste zeigt den Kurznamen (Bild).
 
+### AP4a — Nachträge aus den Freigaben vom 08.09.2026 (E-S9-09; Nr. 69)
+
+*Vorschlag der Umsetzung, noch nicht bestätigt.* Zwei Entscheidungen des
+08.09.2026 gehören sachlich zu AP4, das aber abgeschlossen und mit
+Web 16.0.0 ausgeliefert ist. Sie zusammen nachzuziehen kostet **eine**
+Versionsstufe statt zweier und hält AP5 frei von Fremdstoff:
+
+- **Leiste, Variante 2** (M-S9-08, Frage 4): `.eintrag-neben.kurz` bleibt
+  unter 1200 px sichtbar, sobald ein Kurzname gesetzt ist; das Akkordeon
+  rückt dort je Ebene 8 statt 12 px ein. Zwei Regeln in `style.css`, eine
+  Klasse in `ui.php`, die Begründung im Stylesheet nachgezogen. Gilt für
+  die Leiste bei 220 px **und** die Schublade bei 320 px.
+- **Typ beim Zusammenführen, Variante c** (M-S9-09, Frage 5): eine Zeile
+  „Typ" in „Der Diensttag danach" und der Typ samt Kurzname als
+  `wahl-zusatz` in den beiden Wahlzeilen des Widerspruchs
+  „Rettungsmittel". `dt_merge_pruefen()` bleibt, wie es ist — verschiedene
+  Typen bleiben zusammenführbar.
+
+**Abnahme:** Bilderlauf der Leiste bei 1024, 1199 und 390 px — Kurzname
+sichtbar, **0 Ellipsen** bei „BW Hoch", 0 Überlauf; Stilvergleich für die
+zwei neuen Regeln (nur die beabsichtigten Abweichungen); Zusammenführen
+zweier Tage verschiedenen Typs im Browser, Typ in Vorschau und Wahlzeile
+sichtbar, Ergebnis wie gewählt (Klickprobe).
+
 ### AP5 — Standortseiten (E-S9-14, E-S9-18, E-S9-19; PS-12, Nr. 44, Nr. 152)
+
+*Dazu seit dem 08.09.2026:* **Standort löschen, Variante b** (M-S9-10,
+Frage 6) — vor dem `DELETE FROM bases` behalten die Rettungsmittel ohne
+Standortpflicht ihr Dasein (`UPDATE vehicles SET base_id = NULL WHERE
+base_id = ? AND typ <> 'standard'`, in derselben Transaktion, als eine
+Funktion neben `pruef_rettungsmittel()`), die Rückfrage nennt sie mit Namen
+und die Zahl der mitgelöschten Sätze sinkt entsprechend; danach stehen sie
+unter „Ohne Standort" mit `:target`. Der Fremdschlüssel bleibt
+`ON DELETE CASCADE`.
 
 - Menü: „Rettungsmittel" entfällt (`ui_einstellungen_punkte()`, Konto);
   „Standorte" wird die Liste (`t=standorte`), neue Seite `t=standort&s=`;
@@ -1099,8 +1151,9 @@ adversarischen Gegenprobe, nicht beim Schreiben; alle behoben:
   zugehörigen Einträge in `import_profiles.js` waren falsch — das Profil
   liest `einsaetze.csv`, wo es die Spalten nicht gibt; zurückgenommen.
 
-**Zwei Widersprüche zum Konzept, die AP4 nicht auflösen konnte** und die dem
-Auftraggeber vorliegen:
+**Zwei Widersprüche zum Konzept, die AP4 nicht auflösen konnte** — dem
+Auftraggeber vorgelegt und am **08.09.2026 entschieden**; E-S9-09 trägt die
+Berichtigung:
 
 - **„Kacheln und Plaketten zeigen den Kurznamen" (E-S9-09) hat keine Stelle.**
   `EdMissionTable.kachel()` zeigt Zeit, Artzeichen, Ort, Diagnose, Dauer,
@@ -1108,15 +1161,24 @@ Auftraggeber vorliegen:
   Plakette, die ein Rettungsmittel benennt. Dort etwas einzufügen wäre eine
   neue Darstellung und braucht ein Mockup. AP4 hat den Kurznamen deshalb in
   der Leiste umgesetzt und nirgends sonst.
+  **Entschieden 08.09.2026: so bleibt es** — die Aufzählung in E-S9-09 ist
+  auf die Leiste zurückgeschnitten, beide Varianten aus M-S9-08 sind
+  abgelehnt. Am gebauten Stand ändert sich keine Zeile.
 - **Der Kurzname hilft in der Leiste erst ab 1200 px.** `.eintrag-neben` ist
   darunter ausgeblendet (`style.css`, Begründung dort und in `ui.php`). Die
   Begründung des Kurznamens — „die schmalste Stelle" — trägt damit nur am
   Schreibtisch. Ihn schmaler sichtbar zu machen ist eine Gestaltungsänderung.
 
-Zu beiden Widersprüchen — und zu den Fragen 5 und 6 des Prüfdokuments —
-liegen seit dem 07.09.2026 die Mockups **M-S9-08 bis M-S9-10** vor
-(Abschnitt 6, Fable-Schritte). Die Widersprüche bleiben, bis der
-Auftraggeber entschieden hat.
+  **Entschieden 08.09.2026: Variante 2 aus M-S9-08** — der Kurzname bleibt
+  unter 1200 px sichtbar, das Akkordeon rückt dort je Ebene 8 statt 12 px
+  ein. Das ist eine Gestaltungsänderung an `style.css` und gehört in den
+  Nachtrag AP4a (Abschnitt 3); der Satz in `style.css` („Bei 220 px
+  Leistenbreite bliebe von ihm ohnehin nur eine Ellipse") gilt weiter für
+  **volle** Namen und wird um den Kurznamen ergänzt.
+
+Beide Entscheidungen fielen nach den Mockups M-S9-08 bis M-S9-10 (Abschnitt 6,
+Fable-Schritte). Damit ist von den elf Fragen der Umsetzung allein Frage 2 aus
+AP1 offen.
 
 
 ---
@@ -1136,13 +1198,12 @@ Sammelabschluss (Regel seit S8).
 | M-S9-06 | Standort zuerst (PS-12): Standortliste und Standortseite „Kempten" — Inhaltsverzeichnis mit Zahlen, vier Abschnitte, Sprungliste, Filterfeld, „Zum Anfang"; Handy und Desktop mit Leiste und S8-Unterpunkten | E-S9-18 | **freigegeben 07.09.2026** (`konzept-s9/mockups/M-S9-06-standortseiten.html`, dazu `-handy`) — Aufteilung, „Zum Anfang", Filterfeld; das Inhaltsverzeichnis gilt in der Form aus M-S9-07 (Kennzahlen statt Pillen) |
 | M-S9-07 | Nachträge zu PS-12: Inhaltsverzeichnis als drei Kennzahlen; die drei Anlegen-Dialoge (Rettungsmittel Standard/Luft und Typ Veranstaltung, Besatzungsmitglied, Zielklinik); Landung auf der neuen Zeile nach dem Anlegen | E-S9-18, E-S9-19 | **freigegeben 07.09.2026** (`konzept-s9/mockups/M-S9-07-anlegen-dialoge.html`, dazu `-handy`) — Kennzahlen als Verzeichnis, Dialog statt Formular, Feldfolge, Landung per `:target` ohne Meldung |
 | M-S9-05 | Sprungliste unter „Rettungsmittel" eines Standorts mit zehn Einträgen (Pille mit Artzeichen, ab sechs, Hervorhebung nach dem Sprung), Standort mit drei Einträgen ohne — Neu-Rendering von N1, 44/36 px | E-S9-14 | **liegt vor** (`konzept-s9/mockups/M-S9-05-sprungliste.html`, dazu `-handy`); **freigegeben 07.09.2026** — Pille mit Artzeichen, Schwelle sechs, Hervorhebung nach dem Sprung, Artzeichen in der Zeile (F-S9-K-04); gilt innerhalb der Standortseite (PS-12, M-S9-06) |
-| M-S9-08 | Der Kurzname an drei Stellen: Einsatzkachel bei 390 px (Ist, **A** Plakette im Fuß, **B** zweite Zeile der Zeitspalte), Plakettenzeile der Einsatzansicht (Ist/Variante bei 700 und 358 px), Leiste (260 Ist, 220 Ist, 220 **Variante 1** nur der Kurzname, 220 **Variante 2** dazu Akkordeon 8 px eingerückt, Schublade 320) | E-S9-09, Nr. 69; Fragen 3 und 4 aus AP4 | **liegt vor** (`konzept-s9/mockups/M-S9-08-kurzname.html`, dazu `-handy`; Fable 07.09.2026), **Freigabe offen.** Gemessen am Render: Kachel **Ist 92 · A 124 · B 92 px**; „BW Hoch" braucht **55 px**, frei sind bei 260 px 55, bei 220 px Variante 1 **51** (Ellipse), Variante 2 **55** (passt), Schublade 55. Empfehlung: 3 a offen (A, B oder Ist — je mit der Regel „nur wo `artDatum`"), 3 b **nein**, 4 **Variante 2** |
-| M-S9-09 | Zusammenführen bei verschiedenem Typ, 390 px: Schritt 1 Ist gegen **(b)** ablehnen („Nicht wählbar", rote Plakette „Bergwacht"), Schritt 2 Ist gegen **(c)** Zeile „Typ" in „Der Diensttag danach" und Typ samt Kurzname als Zusatz der Wahlzeilen | E-S9-09; Frage 5 aus AP4 | **liegt vor** (`konzept-s9/mockups/M-S9-09-zusammenfuehren-typ.html`, dazu `-handy`; Fable 07.09.2026), **Freigabe offen.** Kein neuer Baustein; unter 480 px rutscht der Zusatz unter den Text (Regel aus `style.css`, Handy-Fassung **0 Elemente über dem Rand** bei 400 px). Empfehlung: **(c)** |
-| M-S9-10 | Standort löschen mit Rettungsmitteln ohne Standortpflicht: Rückfragedialog bei 512 und 358 px, Ist („6 … werden mitgelöscht") gegen **(b)** („5 … werden mitgelöscht. 1 Rettungsmittel ohne Standortpflicht — Bergwacht Hochkreuth — bleibt bestehen und steht danach unter „Ohne Standort""); danach die Karte „Ohne Standort" mit 2 gegen 3 Einträgen, der neue mit `:target` | E-S9-09, E-S9-18; Frage 6 aus AP4 | **liegt vor** (`konzept-s9/mockups/M-S9-10-standort-loeschen.html`, dazu `-handy`; Fable 07.09.2026), **Freigabe offen.** Fremdschlüssel bleibt `CASCADE`; (b) ist Anwendungslogik vor dem `DELETE` (`UPDATE vehicles SET base_id = NULL WHERE base_id = ? AND typ <> 'standard'`), eine Funktion, zwei Aufrufer. Empfehlung: **(b)**, Umsetzung in **AP5** |
+| M-S9-08 | Der Kurzname an drei Stellen: Einsatzkachel bei 390 px (Ist, **A** Plakette im Fuß, **B** zweite Zeile der Zeitspalte), Plakettenzeile der Einsatzansicht (Ist/Variante bei 700 und 358 px), Leiste (260 Ist, 220 Ist, 220 **Variante 1** nur der Kurzname, 220 **Variante 2** dazu Akkordeon 8 px eingerückt, Schublade 320) | E-S9-09, Nr. 69; Fragen 3 und 4 aus AP4 | **freigegeben 08.09.2026** (`konzept-s9/mockups/M-S9-08-kurzname.html`, dazu `-handy`): Kachel **Ist** (keine der beiden Varianten — A wüchse von 92 auf 124 px, B wäre eine neue Darstellung), Plakettenzeile **nein**, Leiste **Variante 2** — `.eintrag-neben.kurz` bleibt unter 1200 px sichtbar, das Akkordeon rückt dort je Ebene 8 statt 12 px ein (gemessen 55 px frei gegen 55 px für „BW Hoch"; Variante 1 hatte 51 und ellipsierte). Gilt für Leiste **und** Schublade |
+| M-S9-09 | Zusammenführen bei verschiedenem Typ, 390 px: Schritt 1 Ist gegen **(b)** ablehnen („Nicht wählbar", rote Plakette „Bergwacht"), Schritt 2 Ist gegen **(c)** Zeile „Typ" in „Der Diensttag danach" und Typ samt Kurzname als Zusatz der Wahlzeilen | E-S9-09; Frage 5 aus AP4 | **freigegeben 08.09.2026** (`konzept-s9/mockups/M-S9-09-zusammenfuehren-typ.html`, dazu `-handy`): **Variante c** — Zeile „Typ" in „Der Diensttag danach" (Plakette blau wie „Art", Kleinzeile „folgt dem gewählten Rettungsmittel") und Typ samt Kurzname als `wahl-zusatz` in den Wahlzeilen des Widerspruchs „Rettungsmittel". Kein neuer Baustein, kein neuer Schritt; unter 480 px rutscht der Zusatz unter den Text (Regel aus `style.css`). Zusammenführen bleibt bei verschiedenem Typ **erlaubt** |
+| M-S9-10 | Standort löschen mit Rettungsmitteln ohne Standortpflicht: Rückfragedialog bei 512 und 358 px, Ist („6 … werden mitgelöscht") gegen **(b)** („5 … werden mitgelöscht. 1 Rettungsmittel ohne Standortpflicht — Bergwacht Hochkreuth — bleibt bestehen und steht danach unter „Ohne Standort""); danach die Karte „Ohne Standort" mit 2 gegen 3 Einträgen, der neue mit `:target` | E-S9-09, E-S9-18; Frage 6 aus AP4 | **freigegeben 08.09.2026** (`konzept-s9/mockups/M-S9-10-standort-loeschen.html`, dazu `-handy`): **Variante b** — Rettungsmittel ohne Standortpflicht überleben das Löschen ihres Standorts und werden in der Rückfrage mit Namen genannt; danach stehen sie unter „Ohne Standort", der neue Eintrag mit `:target`. Fremdschlüssel bleibt `ON DELETE CASCADE`; die Ausnahme ist Anwendungslogik vor dem `DELETE`. **Umsetzung in AP5** |
 
-Die ersten sieben sind freigegeben (06./07.09.2026); **M-S9-08 bis -10** sind
-die Mockups zu den offenen Fragen aus AP4 und liegen seit dem 07.09.2026
-zur Freigabe vor — einzeln, wie die anderen. Die HTML-Dateien sind die
+**Alle zehn sind freigegeben** — die ersten sieben am 06./07.09.2026,
+M-S9-08 bis -10 am 08.09.2026, einzeln wie die anderen. Die HTML-Dateien sind die
 Vorlage für die Umsetzung: Token, Klassen und Maße stehen in ihrem
 `<style>`; wo Mockup und Konzepttext abweichen, gilt der Konzepttext
 (Abschnitt 2), und die Abweichung wird im Prüfdokument genannt.

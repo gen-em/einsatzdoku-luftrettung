@@ -797,8 +797,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zu ersetzen; das wäre eine neue Darstellung und braucht ein Mockup.
     Der Punkt bleibt deshalb offen und wandert erst mit AP8 nach
     Erledigt — oder wird dort auf diesen Rest zurückgeschnitten.*
-    *Mockup dazu (07.09.2026): M-S9-08 — Kachel in zwei Varianten,
-    Plakettenzeile, Leiste unter 1200 px; Freigabe offen.*
+    *Entschieden am 08.09.2026 nach Mockup M-S9-08: **zurückgeschnitten.**
+    Kacheln und Plaketten bekommen den Kurznamen **nicht** — beide nennen
+    heute gar kein Rettungsmittel, und die zwei gezeigten Varianten kosten
+    mehr, als sie einbringen (Kachel 92 → 124 px, oder eine neue
+    Darstellung). Dafür zeigt die Leiste ihn künftig in **jeder** Breite
+    (Variante 2: Kurzname sichtbar, Akkordeon 8 px eingerückt) — Nachtrag
+    AP4a. Mit dessen Auslieferung ist der Punkt erledigt und wandert im
+    Abschluss (AP8) hinüber.*
 
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**
     *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben

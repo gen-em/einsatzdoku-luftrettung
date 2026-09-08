@@ -17,7 +17,7 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 > | Stand | 07.09.2026 — **AP1 bis AP4 gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, 15.7.0, 15.8.0, **16.0.0**). AP5 bis AP8 offen; **AP5 wartet auf das Wort des Auftraggebers.** Dazu seit dem 07.09.2026 die Mockups **M-S9-08 bis -10** zu den vier Fragen aus AP4 (Abschnitt 4) |
 > | Geprüft | P-01 bis P-15 und P-32 vollständig · P-23 je Paket für die berührten Seiten (AP1 sieben, AP2 drei dazu, AP3 sechs dazu, AP4 elf), nie als Gesamtlauf über alle · P-25 als Gesamtlauf. Dazu **E-S9-13**, das im Konzept keine Abnahme hatte — siehe F-S9-P-12 |
 > | Offen | P-16 bis P-22, P-24, P-26, P-28 bis P-31, P-33 (AP5 bis AP8) |
-> | Fragen | **elf gestellt, sechs entschieden** (07.09.2026): Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen** · Umfang von E-S9-03 → „alles Sichtbare", Android-Texte an Schritt 9a · `veranstaltung.svg` → **Tabler „ticket"** (getauscht mit AP4). Offen: **Frage 2** aus AP1 (Buchführung, kein Mockup) und die **vier Fragen aus AP4** (Kurzname an Kachel und Plakette, Kurzname unter 1200 px, Zusammenführen bei verschiedenem Typ, Standort löschen) — zu ihnen liegen die Mockups **M-S9-08 bis -10** vor, Empfehlungen in Abschnitt 4. Der gebaute Stand (Web 16.0.0) läuft grün |
+> | Fragen | **elf gestellt, zehn entschieden.** Am 07.09.2026: Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen** · Umfang von E-S9-03 → „alles Sichtbare" · `veranstaltung.svg` → **Tabler „ticket"**. Am **08.09.2026** nach den Mockups M-S9-08 bis -10: Kachel → **Ist lassen** · Plakettenzeile → **nein** · Leiste unter 1200 px → **Variante 2** · Zusammenführen → **(c)** · Standort löschen → **(b)**. Offen ist allein **Frage 2** aus AP1 (Buchführung, kein Code) |
 > | Fehlerfunde | **zwanzig, alle behoben** — F-S9-P-01 bis -04, -07 bis -14 (Abschnitt 2; -05 und -06 mit AP2 abgeräumt) und **F-S9-U-01 bis -08 aus AP4** (Konzept, Abschnitt 5) — darunter F-S9-U-01, ein Beinahe-Produktionsfehler: `nb_moeglich()` hätte die Migration zurückgenommen (gemessen false → true, zwei falsche offene Punkte; Gegenprobe 0 → 1 → 0). Zwei der vier Funde aus AP3 (Nr. 72, Nr. 153) sind derselbe Fehler drei Zeilen auseinander |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` — 88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto, 6 Rettungsmittel in vier Typen (seit AP4; vorher 3), 8 Zielkliniken, 8 weitere Rettungsmittel, 15 Besatzungs-Vorbelegungen an zwei Standorten |
 
@@ -645,8 +645,10 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   greift `dt_rm_kurz()` nicht). **Der zweite Teil ist kein Fehler, sondern
   eine offene Frage:** Der Kurzname ist als Antwort auf enge Breiten gedacht
   und hilft dort heute nicht. Ob er auch schmal sichtbar werden soll, ist eine
-  Gestaltungsentscheidung — sie steht in Abschnitt 4 (Frage 4, Mockup
-  M-S9-08, Empfehlung Variante 2).
+  Gestaltungsentscheidung, und sie ist am **08.09.2026 gefallen:
+  Variante 2** (Abschnitt 4, Frage 4) — gebaut wird sie im Nachtrag AP4a.
+  Solange der nicht ausgeliefert ist, ist „kein Nebentext bei 390 px" das
+  **erwartete** Verhalten; danach ist es ein Fehler.
 
 - [ ] **19 — Nach dem Kurznamen suchen (AP4).**
   *Weg:* Suche öffnen, den **Kurznamen** eines Rettungsmittels eintippen, das
@@ -843,6 +845,18 @@ wäre eine **neue Darstellung** und braucht nach `Design.md` ein Mockup.
 AP5 ein Mockup für eine Rettungsmittel-Angabe an der Kachel; (c) Backlog
 Nr. 69 auf den Rest zurückschneiden.
 
+**Entschieden vom Auftraggeber am 08.09.2026: (a) so lassen** — für 3 a
+**und** 3 b. Die Einsatzkachel bekommt keinen Rettungsmittelnamen (weder
+als Plakette im Fuß noch als zweite Zeile der Zeitspalte), die
+Plakettenzeile der Einsatzansicht behält die volle Bezeichnung. Am
+gebauten Stand (Web 16.0.0) ändert sich **keine Zeile**. Folge für die
+Buchführung: E-S9-09 ist auf die Leiste zurückgeschnitten (Konzept), und
+Backlog Nr. 69 wandert im Abschluss mit diesem Rest nach *Erledigt* — der
+Teil „Kacheln und Plaketten" ist nicht offen, sondern abgelehnt.
+*Preis:* Wer die Suche nach einem Rettungsmittel filtert, sieht am
+Trefferbild weiterhin nicht, welches gefahren wurde; die Auskunft steht
+einen Klick weiter in der Einsatzansicht.
+
 *Mockup M-S9-08 (Fable, 07.09.2026), Rahmen „Frage 3 a" und „Frage 3 b":*
 Die Einsatzkachel bei 390 px im Ist und in zwei Varianten — **A** Kurzname
 als neutrale Plakette am Anfang des Fußes (ohne Kurznamen die volle
@@ -884,6 +898,13 @@ weiter für volle Namen; wer keinen Kurznamen vergibt, sieht die Leiste wie
 heute.
 *Empfehlung:* **Variante 2** — Variante 1 scheitert gemessen an vier Pixeln.
 
+**Entschieden vom Auftraggeber am 08.09.2026: Variante 2.** Der Kurzname
+bleibt unter 1200 px sichtbar, das Akkordeon rückt dort je Ebene 8 statt
+12 px ein. Das ist eine Gestaltungsänderung an `style.css` und **noch nicht
+gebaut** — sie gehört in den Nachtrag AP4a (Konzept, Abschnitt 3). Bis
+dahin gilt für Prüflistenpunkt 18 weiter der Stand von Web 16.0.0: bei
+390 px steht kein Nebentext.
+
 **Frage 5 — Sollen Diensttage verschiedenen Typs zusammenführbar sein?**
 `dt_merge_pruefen()` prüft heute nur die **Betriebsart**. Zwei Tage, von denen
 einer Bergwacht und einer Standard ist, lassen sich zusammenführen; der
@@ -914,6 +935,12 @@ Fähigkeiten hängen am Diensttag, und die Wahl regelt sie bereits.
 *Empfehlung:* **(c)** — der Typ ist eine Eigenschaft des Rettungsmittels, die
 Wahl des Rettungsmittels gibt es schon, und die Auskunft kostet eine Zeile
 und einen Zusatz.
+
+**Entschieden vom Auftraggeber am 08.09.2026: (c).** Diensttage
+verschiedenen Typs bleiben zusammenführbar; `dt_merge_pruefen()` bleibt
+unverändert. Neu sind die Zeile „Typ" in der Vorschau und der Typ samt
+Kurzname als Zusatz der beiden Wahlzeilen. **Noch nicht gebaut** —
+Nachtrag AP4a.
 
 **Frage 6 — Der Fremdschlüssel auf den Standort.** AP4 hat
 `ON DELETE CASCADE` bewusst **unverändert** gelassen: Wer einen Standort
@@ -948,6 +975,15 @@ anders als seine Nachbarn; deshalb sagt die Rückfrage es vorher, mit Namen.
 Löschen ohnehin neu verdrahtet wird (E-S9-18, Aktionsmenü). Wer (a) wählt,
 lässt AP4 stehen; dann sollte die Rückfrage wenigstens sagen, dass auch die
 Rettungsmittel ohne Standortpflicht mitgehen.
+
+**Entschieden vom Auftraggeber am 08.09.2026: (b).** Rettungsmittel ohne
+Standortpflicht überleben das Löschen ihres Standorts und werden in der
+Rückfrage mit Namen genannt. Der Fremdschlüssel bleibt `ON DELETE CASCADE`;
+die Ausnahme ist Anwendungslogik vor dem `DELETE`, in derselben
+Transaktion, an **beiden** Löschwegen (Konto und Verwaltung). **Noch nicht
+gebaut** — Umsetzung in AP5 mit der Standortseite. Bis dahin gilt der Stand
+von Web 16.0.0: Wer einen Standort löscht, verliert auch seine
+Bergwacht-Rettungsmittel.
 
 ---
 
