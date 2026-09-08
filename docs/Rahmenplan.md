@@ -695,10 +695,13 @@ gegen den eigenen Stand heraus** (`d4eb0a3`): Die dritte hatte den
 nachgelieferten Dienst gebrochen — ein Dienst, der später als 72 h nach
 seinem Datum hochgeladen wird, bekam keinen Tageszeitraum mehr —, und die
 eigentliche Ursache stand noch offen: Der Einsatz selbst wurde mit 96 Jahren
-Dauer gespeichert. Jetzt weist `pruef_zeit_zum_tag()` in der gemeinsamen
-Prüfschicht ein Paket ab, dessen Zeiten nicht zu seinem `day` gehören, und
-die Bremse fragt nach dem jüngsten `created_at` der übrigen Datensätze des
-Tages. Skeptiker: je Fund ein Skeptiker, der ihn zu **widerlegen** versuchte und dafür gegen den unveränderten Stand `448ce9f` reproduzierte — **24 von 30 hielten**, sechs wurden widerlegt (Vorbestand oder Randfall ohne beobachtbare Folge: der Diensttag im Papierkorb bei offenem Fenster; drei Zählfälle der Statuszeile, die nur über einen von Hand gesetzten Rundenwert entstehen; die Sonderzeichen-Tastaturreihe, die als Entscheidung dokumentiert ist; die quadratische Laufzeit, die keine Zusage verletzt). **Behoben sind alle dreißig** — auch die sechs, weil jede Behebung für sich mit einer Zahl belegt ist. Prüfzahlen danach: ingestprobe
+Dauer gespeichert. Jetzt prüfen `pruef_zeit_zum_tag()` und
+`pruef_ende_nach_beginn()` in der gemeinsamen Prüfschicht, ob die Zeiten zu
+ihrem `day` gehören und ob das Ende nach dem Beginn liegt — **verworfen wird
+dabei der Wert, nicht der Upload** (`b978b7d`, berichtigt in `c158a6e`: eine
+erste Fassung wies mit `400` ab und hätte damit die falsch gestellte Uhr
+ausgesperrt). Die Bremse fragt nach dem jüngsten `created_at` der übrigen
+Datensätze des Tages. Skeptiker: je Fund ein Skeptiker, der ihn zu **widerlegen** versuchte und dafür gegen den unveränderten Stand `448ce9f` reproduzierte — **24 von 30 hielten**, sechs wurden widerlegt (Vorbestand oder Randfall ohne beobachtbare Folge: der Diensttag im Papierkorb bei offenem Fenster; drei Zählfälle der Statuszeile, die nur über einen von Hand gesetzten Rundenwert entstehen; die Sonderzeichen-Tastaturreihe, die als Entscheidung dokumentiert ist; die quadratische Laufzeit, die keine Zusage verletzt). **Behoben sind alle dreißig** — auch die sechs, weil jede Behebung für sich mit einer Zahl belegt ist. Prüfzahlen danach: ingestprobe
 **62/0**, gpxprobe **95/2** (vorbestehend), wartungsprobe **51/0**, Wache
 **30/0** und 112/112, Passwortregel 0 % Zufallsabweisung, Wortliste
 **0/0/0**, linkprobe 132/0/1/0, `php -l` 463/0. **Backlog 154–158 neu**
