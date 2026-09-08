@@ -3105,5 +3105,36 @@ declare(strict_types=1);
  * eine Fassung, die beide befragen — genau die Falle, vor der der Kommentar
  * ueber dem UPDATE warnt: Der Zieltag truege sonst den NAMEN des einen und
  * den TYP des anderen Rettungsmittels.
+ *
+ * 16.1.1 GIBT DEM KURZNAMEN DEN PLATZ, DEN ER BRAUCHT (S9, Freigabe M-S9-11).
+ *
+ * Die Frage aus 16.1.0 ist beantwortet. Das Mockup M-S9-11 hat drei Wege an
+ * der laufenden Anwendung gemessen, und der Auftraggeber hat den zweiten
+ * gewaehlt: Im Band 1024-1199 px rueckt das Akkordeon je Ebene 4 statt 12 px
+ * ein, und der Abstand in der Zeile geht von 8 auf 4 px. Beides wirkt
+ * zweimal — zwei Akkordeonebenen, zwei Zwischenraeume —, macht also 16 px.
+ *
+ * GEMESSEN AN DEN DREIZEHN DATUMSANGABEN DES PRUEFBESTANDS: Dem Nebentext
+ * standen 48 bis 63 px zur Verfuegung, jetzt 64 bis 79. „BW Hoch" braucht 55
+ * und „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz statt an dreien
+ * von zwoelf; „RTH Murnau" (76 px) an den meisten. Vorher: 13 Kurznamen,
+ * 10 mit Auslassungszeichen. Nachher: 13 Kurznamen, KEINES.
+ *
+ * DER ABSTAND IST GESCOPED, DIE EINRUECKUNG NICHT. `.eintrag` tragen auch
+ * der Leistenfuss, die Hauptpunkte der Schublade und jede Zeile des
+ * Einstellungsmenues; sie haben keinen Nebentext und damit kein
+ * Platzproblem. Eine ungescopte `gap`-Regel haette sie ohne Not
+ * zusammengerueckt — deshalb `.akkordeon:not(.leiste-gruppe) .eintrag`. Die
+ * Einrueckung braucht das nicht: Dort schirmt eine vorhandene, spezifischere
+ * Regel das Menue schon ab. Nachgemessen bei 1100 und 1280 px: Menue 0 px
+ * Einrueckung und 8 px Abstand, Leistenfuss 8 px — in jeder Breite
+ * unveraendert.
+ *
+ * WEG 3 IST NICHT VOM TISCH, nur nicht hier: Im schmalen Band das JAHR aus
+ * dem Datum zu nehmen — es steht als Akkordeon-Ueberschrift darueber —
+ * braechte rund 30 px und truege auch den laengsten erlaubten Kurznamen. Das
+ * aendert aber, was in einer Zeile STEHT, und zwar abhaengig von der
+ * Fensterbreite; es gehoert in die Standortseiten-Phase, wo die Leiste
+ * ohnehin angefasst wird (Pruefliste Punkt 26).
  */
-const WEB_VERSION = '16.1.0';
+const WEB_VERSION = '16.1.1';

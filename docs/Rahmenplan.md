@@ -746,8 +746,13 @@ Diese Zahl ist die **Berichtigung** einer ersten Messung, die 57 px meldete
 und dabei zufällig das schmalste Datum getroffen hatte — gefunden von der
 adversarischen Gegenprobe, zusammen mit zwei weiteren Fehlern (der Kurzname
 verschwand am mehrfachen Tag auf 3 px; die Zeile „Typ" behauptete einen
-Wert, den die Wahl ändert). Ob „BW Ho…" genügt, ist eine Gestaltungsfrage
-und liegt beim Auftraggeber. Die Gewinnerregel
+Wert, den die Wahl ändert). Mit **Web 16.1.1** ist die Frage beantwortet: Das Mockup
+**M-S9-11** hat drei Wege an der laufenden Anwendung gemessen, gewählt ist
+Weg 2 — im Band je Ebene 4 px Einrückung und 4 px Abstand in der Zeile.
+Danach stehen dem Nebentext **64 bis 79 px** statt 48 bis 63 zur Verfügung,
+und von dreizehn Kurznamen trägt **keiner** mehr ein Auslassungszeichen
+(vorher zehn). Weg 3 — das Jahr im schmalen Band aus dem Datum nehmen —
+bleibt für die Standortseiten-Phase offen. Die Gewinnerregel
 des Zusammenführens steht seither an **einer** Stelle statt an zweien
 (`dt_merge_rm_gewinner()`).
 

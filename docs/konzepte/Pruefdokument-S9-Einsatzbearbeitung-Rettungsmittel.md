@@ -14,7 +14,7 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 >
 > | | |
 > |---|---|
-> | Stand | 08.09.2026 — **AP1 bis AP4a gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, 15.7.0, 15.8.0, 16.0.0, **16.1.0**). AP5 bis AP8 offen; **AP5 wartet auf das Wort des Auftraggebers.** Die Mockups M-S9-08 bis -10 sind am 08.09.2026 freigegeben, ihre Umsetzung steckt in AP4a — bis auf Frage 6 (Standort löschen), die zu AP5 gehört |
+> | Stand | 08.09.2026 — **AP1 bis AP4a gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, 15.7.0, 15.8.0, 16.0.0, 16.1.0, **16.1.1**). AP5 bis AP8 offen; **AP5 wartet auf das Wort des Auftraggebers.** Die Mockups M-S9-08 bis -10 sind am 08.09.2026 freigegeben, ihre Umsetzung steckt in AP4a — bis auf Frage 6 (Standort löschen), die zu AP5 gehört |
 > | Geprüft | P-01 bis P-15 und P-32 vollständig · P-23 je Paket für die berührten Seiten (AP1 sieben, AP2 drei dazu, AP3 sechs dazu, AP4 elf), nie als Gesamtlauf über alle · P-25 als Gesamtlauf. Dazu **E-S9-13**, das im Konzept keine Abnahme hatte — siehe F-S9-P-12 |
 > | Offen | P-16 bis P-22, P-26, P-28 bis P-31, P-33 (AP5 bis AP8). **P-24 (Stilvergleich) ist für AP4a erfüllt** — er lief gegen den Stand vor dem Paket |
 > | Fragen | **elf gestellt, zehn entschieden.** Am 07.09.2026: Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen** · Umfang von E-S9-03 → „alles Sichtbare" · `veranstaltung.svg` → **Tabler „ticket"**. Am **08.09.2026** nach den Mockups M-S9-08 bis -10: Kachel → **Ist lassen** · Plakettenzeile → **nein** · Leiste unter 1200 px → **Variante 2** · Zusammenführen → **(c)** · Standort löschen → **(b)**. **Auch Frage 2** aus AP1 ist am 08.09.2026 entschieden (die Streichliste bleibt, wie AP1 sie gebaut hat) — **keine Frage mehr offen** |
@@ -253,13 +253,13 @@ grüne Zahl sagen muss, was sie gemessen hat:
 | Soll (Konzept, AP4a) | Ist | Mittel |
 |---|---|---|
 | `.eintrag-neben.kurz` bleibt unter 1200 px sichtbar, sobald ein Kurzname gesetzt ist | **Erfüllt für das Band 1024–1199 px** — und nur dort ist etwas zu tun: Unter 1024 px stand der Nebentext schon immer (F-S9-U-09). Gemessen über neun Breiten mit einem gesetzten Kurznamen: 390/800/1023 px **15 von 15** sichtbar · 1024/1100/1199 px **1 von 15**, nämlich der Kurzname · 1200/1280/1920 px 15 von 15 | eigenes Messskript gegen die laufende Anwendung |
-| Das Akkordeon rückt dort je Ebene 8 statt 12 px ein | **8 px im Band, 12 px darunter und darüber**, an `.leiste-liste .akkordeon-inhalt` gemessen. Dem Nebentext bleiben dadurch **48 bis 55 px** statt 40 bis 47. „BW Hoch" braucht **55**: **4 von 13** Datumsangaben des Prüfbestands tragen ihn ganz, **9 mit Auslassungszeichen**; ohne die Einrückung wäre es keine einzige. Die Schwankung kommt vom Datum daneben — es ist **76 bis 83 px** breit, weil Bricolage Grotesque Ziffern **proportional** setzt und `.eintrag-text` nicht unter der `tabular-nums`-Regel steht; und es schrumpft nicht (`flex:1 0 auto`). **Eine erste Messung meldete 57 px und war an einer einzigen, zufällig schmalen Datumsangabe genommen** — gefunden von der adversarischen Gegenprobe (F-S9-U-13). Das Einstellungsmenü bleibt in **jeder** Breite bei **0 px** — `.leiste-gruppe > .akkordeon-inhalt` ist spezifischer | eigenes Messskript, Klickprobe |
+| Das Akkordeon rückt dort je Ebene 8 statt 12 px ein | **8 px im Band, 12 px darunter und darüber**, an `.leiste-liste .akkordeon-inhalt` gemessen. Seit Web **16.1.1** rückt das Akkordeon je Ebene **4 px** ein, dazu **4 px** Abstand in der Zeile (Freigabe M-S9-11, Weg 2). Dem Nebentext stehen dadurch **64 bis 79 px** zur Verfügung — mit der ersten Fassung (Einrückung 8 px) waren es 48 bis 63, ohne jede Regel stand er gar nicht. „BW Hoch" braucht **55**, „NEF 76/1" **53**: beide stehen an **jedem** Datum ganz. Gemessen **13 Kurznamen, 0 Ellipsen** (vorher 10). Leistenfuß, Schubladen-Hauptpunkte und Einstellungsmenü bleiben bei 8 px — der Abstand ist mit `:not(.leiste-gruppe)` eingegrenzt, nachgemessen bei 1100 und 1280 px. Die Schwankung kommt vom Datum daneben — es ist **76 bis 83 px** breit, weil Bricolage Grotesque Ziffern **proportional** setzt und `.eintrag-text` nicht unter der `tabular-nums`-Regel steht; und es schrumpft nicht (`flex:1 0 auto`). **Eine erste Messung meldete 57 px und war an einer einzigen, zufällig schmalen Datumsangabe genommen** — gefunden von der adversarischen Gegenprobe (F-S9-U-13). Das Einstellungsmenü bleibt in **jeder** Breite bei **0 px** — `.leiste-gruppe > .akkordeon-inhalt` ist spezifischer | eigenes Messskript, Klickprobe |
 | Zeile „Typ" in „Der Diensttag danach" | **Vorhanden**, Plakette blau wie „Art". Sie nennt **beide** Typen („Standard oder Bergwacht") samt Kleinzeile, solange zwei Rettungsmittel zur Wahl stehen — die einzelne Plakette des Mockups wäre falsch, sobald jemand das andere wählt (F-S9-U-11) | Klickprobe `ap4a-typ-beim-zusammenfuehren`, Bild |
 | Typ und Kurzname als Zusatz der Wahlzeilen | **4 Wahlzeilen**, davon **1** mit Typ und **1** mit Kurznamen („Bergwacht · BW Hoch · 28.03.2026 20:00, wird aufgenommen"). **0 Überlauf** bei 1280, 700 und 390 px; Zeilenhöhen 39 / 44 / 71–92 px | Klickprobe, eigenes Messskript |
 | `dt_merge_pruefen()` bleibt unverändert | **Unverändert** — `git diff` zeigt an der Funktion keine Zeile; zwei Diensttage verschiedenen Typs sind im Browser zusammenführbar (der Weg fährt genau diesen Fall) | `git diff`, Klickprobe |
-| Klickprobe | **10 von 10** Wegen erfüllt — zwei Wege × fünf Breiten (390, **1024, 1100, 1199**, 1280), je als Zeiger- und als Fingergerät. **0 Rückstände**: 16 Diensttage, 88 Einsätze, 6 Rettungsmittel wie vorher, **0** Tage mit Bergwacht-Typ, Kurznamen oder ohne Rettungsmittel. Der Weg liest seit F-S9-U-16 nach jedem Zuordnen nach und scheitert, wenn der Bestand nicht steht; Gegenprobe des gehärteten Rahmens: die zwölf Wege aus **AP4 laufen weiter 12 von 12** | `tools/klickprobe/`, neue Datei `wege/ap4a.mjs` |
-| Stilvergleich | Kaskade **0 entfallen, 3 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **47 710 Elementmessungen, 40 Abweichungen**, alle bei 1024 und 1100 px und alle erklärt | `tools/stilvergleich/` |
-| Bilderlauf | **16 berührte Seiten, 128 Einzelbilder + 16 Kontaktbögen je Lauf, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** — je einmal als Zeiger- (44/36 px) und als Fingergerät (44 px) | `tools/screenshots/aufnehmen.mjs` |
+| Klickprobe | **10 von 10** Wegen erfüllt — zwei Wege × fünf Breiten (390, **1024, 1100, 1199**, 1280), je als Zeiger- und als Fingergerät; der Sollwert der Einrückung im Band steht seit Web 16.1.1 auf **4 px**. **0 Rückstände**: 16 Diensttage, 88 Einsätze, 6 Rettungsmittel wie vorher, **0** Tage mit Bergwacht-Typ, Kurznamen oder ohne Rettungsmittel. Der Weg liest seit F-S9-U-16 nach jedem Zuordnen nach und scheitert, wenn der Bestand nicht steht; Gegenprobe des gehärteten Rahmens: die zwölf Wege aus **AP4 laufen weiter 12 von 12** | `tools/klickprobe/`, neue Datei `wege/ap4a.mjs` |
+| Stilvergleich | **Zwei Läufe.** AP4a gegen Web 16.0.0: Kaskade **0 entfallen, 3 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**, berechnete Stile **47 710 Elementmessungen, 40 Abweichungen**. Web 16.1.1 gegen 16.1.0: Kaskade **0 entfallen, 2 neu, 1 anderer Endwert** (die Einrückung von 8 auf 4 px), **0 Reihenfolgeumkehrungen**; berechnete Stile **47 749 Elementmessungen, 14 Abweichungen**. Beide Male liegen **alle** Abweichungen bei 1024 und 1100 px — den einzigen gemessenen Breiten im Band — und lassen sich auf die genannten Regeln zurückführen. Im Katalog ändert **genau ein** `.eintrag` seinen Abstand, nämlich der im Akkordeon: die Eingrenzung `:not(.leiste-gruppe)` greift | `tools/stilvergleich/` |
+| Bilderlauf | **18 berührte Seiten** (die sechzehn mit Leiste, dazu zwei Einstellungsseiten wegen der Abstandsregel), **144 Einzelbilder + 18 Kontaktbögen je Lauf, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** — je einmal als Zeiger- (44/36 px) und als Fingergerät (44 px). Gegenprobe: **162 Dateien, 158 verschiedene Prüfsummen**; die vier Doppelten sind Seite 10 gegen Seite 11 ab 1024 px, wo es die Schublade nicht gibt | `tools/screenshots/aufnehmen.mjs` |
 | Wortliste | **0 Treffer, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 96 Regeln, 96 gegriffen, über fünf Bereiche | `tools/wortliste/` |
 | Vollständigkeit | **304 = 304** — die neue Klasse `kurz` erzeugt keinen Befund, weil sie eine Regel hat; 8 px ist `--abstand-2`, also kein Literal außerhalb `:root` | `tools/vollstaendigkeit/` |
 | Kontraste, Linkprobe | **21 Paare, 0 verfehlt** · **140 Verweise, 0 unbekannte Abweichungen** | `kontrast.py`, `tools/linkprobe/` |
@@ -719,24 +719,40 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   schrumpfen zu lassen — dann ellipsiert das Datum statt des Namens. Wenn es
   stören soll, gehört ein Backlog-Punkt dafür angelegt.
 
-- [ ] **26 — Genügt „BW Ho…"? (AP4a, Entscheidung offen).**
+- [ ] **26 — Der Kurzname im schmalen Band, nach der Freigabe (Web 16.1.1).**
   *Weg:* Mehreren Diensttagen mit **verschiedenen Datumsangaben** dasselbe
   Rettungsmittel mit Kurznamen zuordnen, Leiste bei **1100 px**.
-  *Erwartet:* Der Kurzname steht überall — an manchen Tagen vollständig, an
-  anderen abgeschnitten („BW Ho…"). Gemessen: 4 von 13 ganz, 9 mit
-  Auslassungszeichen; das Datum ist je nach Ziffern 76 bis 83 px breit.
-  *Zu entscheiden:* Ob das genügt. **Mockup M-S9-11 liegt seit dem 08.09.2026
-  vor** und zeigt die drei Wege am laufenden Programm, mit Zahlen:
+  *Erwartet:* Der Kurzname steht überall **vollständig** — gemessen 13 von 13
+  ohne Auslassungszeichen. Das Datum ist je nach Ziffern 74 bis 83 px breit,
+  dem Namen bleiben 64 bis 79 px. Ein Name über rund 64 px („RTH Murnau"
+  misst 76) steht an den schmalen Datumsangaben ganz und an den breiten mit
+  Auslassungszeichen; das ist erwartet.
+  *Scheitern erkennbar an:* „BW Ho…" bei 1100 px — dann fehlt eine der beiden
+  4-px-Regeln. Oder: Der **Leistenfuß** („Diensttag anlegen", „Papierkorb")
+  und das **Einstellungsmenü** rücken bei 1100 px enger zusammen als bei
+  1280 px — dann ist die Abstandsregel nicht mit `:not(.leiste-gruppe)`
+  eingegrenzt und trifft Zeilen, die kein Platzproblem haben.
+  *Was noch offen ist:* **Weg 3** aus dem Mockup M-S9-11 — im schmalen Band
+  das **Jahr** aus dem Datum nehmen, das ohnehin als Akkordeon-Überschrift
+  darübersteht. Er bringt rund 30 px und trüge auch den längsten erlaubten
+  Kurznamen, ändert aber, was in einer Zeile *steht*, abhängig von der
+  Fensterbreite; er gehört in die Standortseiten-Phase. Sein Preis steht als
+  eigener Rahmen im Mockup: Nach einem Sprung aus der Suche ist die
+  Jahreszeile weggerollt.
+
+  *Die drei Wege im Mockup, gemessen am laufenden Programm:*
   **Weg 1** — das Akkordeon im Band noch einmal 4 px zurück (`--abstand-1`,
   bringt 8 px): **12 von 12** „BW Hoch" stehen ganz. **Weg 2** — dazu die
   Abstände der Zeile von 8 auf 4 px (weitere 8 px): ebenfalls 12 von 12, also
   **kein einziger mehr als Weg 1**, bei zusätzlicher Gestaltungsänderung.
-  **Weg 3** — im schmalen Band das **Jahr aus dem Datum** nehmen, das ohnehin
-  als Akkordeon-Überschrift darübersteht (spart rund 30 px): 12 von 12 **und
-  der 16-Zeichen-Kurzname dazu**. Weg 3 ist als einziger eine neue
-  Darstellung; sein Preis steht als eigener Rahmen im Mockup — nach einem
-  Sprung aus der Suche ist die Jahreszeile weggerollt, und dann steht dort ein
-  Datum ohne Jahr.
+  **Weg 3** — das Jahr aus dem Datum (spart rund 30 px): 12 von 12 **und der
+  16-Zeichen-Kurzname dazu**.
+  **Entschieden vom Auftraggeber am 08.09.2026: Weg 2**, gebaut mit Web
+  16.1.1. Die zweite Messung hat dabei eine Aussage von mir berichtigt: „Weg 2
+  bringt keinen einzigen Kurznamen mehr als Weg 1" galt nur für den geprüften
+  Bestand, der allein 7- und 16-Zeichen-Namen kannte. Über die verfügbare
+  Breite gemessen bringt Weg 2 **8 px an jedem Datum** (64–79 statt 56–71)
+  und damit rund ein Zeichen mehr, das überall sicher steht.
   *Scheitern erkennbar an:* nichts — hier ist nichts kaputt, hier ist etwas
   zu entscheiden.
 

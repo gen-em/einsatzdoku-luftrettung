@@ -14,6 +14,40 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 16.1.1] — 2026-09-08
+
+### Web — der Kurzname bekommt den Platz, den er braucht (S9, Mockup M-S9-11)
+
+**Die offene Frage aus 16.1.0 ist beantwortet.** Dort stand der Kurzname im
+schmalen Band zwar, aber meist nur als „BW Ho…". Das Mockup M-S9-11 hat drei
+Wege an der laufenden Anwendung gemessen; gewählt ist der zweite: Im Band
+1024–1199 px rückt das Akkordeon je Ebene **4 statt 12 px** ein, und der
+Abstand in der Zeile geht von **8 auf 4 px**. Beides wirkt zweimal — zwei
+Akkordeonebenen, zwei Zwischenräume —, macht also 16 px.
+
+**Gemessen an den dreizehn Datumsangaben des Prüfbestands:** Dem Nebentext
+standen **48 bis 63 px** zur Verfügung, jetzt **64 bis 79**. „BW Hoch" braucht
+55 px und „NEF 76/1" 53 — die stehen damit an **jedem** Datum ganz statt an
+dreien von zwölf; „RTH Murnau" (76 px) an den meisten. Vorher: dreizehn
+Kurznamen, **zehn** mit Auslassungszeichen. Nachher: dreizehn Kurznamen,
+**keines**.
+
+**Der Abstand ist eingegrenzt, die Einrückung nicht** — und beides mit Grund.
+Die Zeilenklasse tragen auch der Leistenfuß, die Hauptpunkte der Schublade und
+jede Zeile des Einstellungsmenüs; die haben keinen Nebentext und damit kein
+Platzproblem, eine allgemeine Regel hätte sie ohne Not zusammengerückt. Die
+Einrückung braucht diese Eingrenzung nicht, dort schirmt eine vorhandene,
+spezifischere Regel das Menü schon ab. Nachgemessen bei 1100 und 1280 px: Menü
+0 px Einrückung und 8 px Abstand, Leistenfuß 8 px — in jeder Breite
+unverändert.
+
+**Was bewusst offenbleibt:** Der dritte Weg — im schmalen Band das **Jahr** aus
+dem Datum nehmen, das ohnehin als Überschrift darübersteht — bringt rund 30 px
+und trüge auch den längsten erlaubten Kurznamen. Er ändert aber, was in einer
+Zeile *steht*, abhängig von der Fensterbreite, und gehört damit in die
+Standortseiten-Phase, wo die Leiste ohnehin angefasst wird. Keine Migration,
+keine Spalte; `update.php` muss nach dem Einspielen **nicht** laufen.
+
 ## [Web 16.1.0] — 2026-09-08
 
 ### Web — der Kurzname steht endlich dort, wofür er gedacht war; der Vergleichsdialog nennt den Typ (S9/AP4a)

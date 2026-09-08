@@ -1848,29 +1848,40 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   /* IN DIESEM BAND IST DIE LEISTE 220 PX SCHMAL. Der volle
      Rettungsmittelname bliebe hier ohnehin nur eine Ellipse — er entfällt,
      das Artzeichen bleibt (E-P3-09). Ein gesetzter KURZNAME steht dagegen
-     (S9/AP4a, Freigabe M-S9-08 Variante 2).
+     (S9/AP4a, Freigabe M-S9-08 Variante 2; Platz nach M-S9-11 Weg 2).
      WIE VIEL VON IHM, HÄNGT AM DATUM DANEBEN. `.eintrag-text` schrumpft
      nicht (`flex:1 0 auto`), und seine Breite schwankt: Bricolage Grotesque
      setzt Ziffern PROPORTIONAL — die Regel `tabular-nums` (Abschnitt 3)
      nennt `.zahl,td,th,time,output`, nicht diesen `<span>`. Gemessen an den
-     dreizehn Datumsangaben des Prüfbestands bei 1024 und bei 1199 px:
-     Datum 76 bis 83 px, für den Nebentext bleiben 48 bis 55 px. „BW Hoch"
-     braucht 55 — vier Datumsangaben tragen ihn ganz, neun mit Ellipse.
-     Ohne die Einrückung darunter wären es 40 bis 47 px, also keine einzige.
-     Ein Auslassungszeichen ist hier gewollt: Der Tooltip nennt die volle
-     Bezeichnung, und „BW Ho…" sagt mehr als der leere Platz von vorher.
+     dreizehn Datumsangaben des Prüfbestands bei 1024 und bei 1199 px steht
+     dem Nebentext zur Verfügung: ohne die beiden Regeln darunter 48–63 px,
+     mit der Einrückung allein 56–71, mit beiden 64–79. „BW Hoch" braucht 55,
+     „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz, „RTH Murnau" (76)
+     an den meisten. Ein Auslassungszeichen bleibt möglich und ist kein
+     Fehler: Der Tooltip nennt die volle Bezeichnung.
      Der Zustand darunter — Schublade, 320 px — bleibt unberührt: Dort greift
      dieser Block nicht, und der volle Name steht dort weiterhin. */
   .eintrag-neben{display:none}
   .eintrag-neben.kurz{display:block}
 
-  /* DIE EINRÜCKUNG WIRKT ZWEIMAL, einmal je Akkordeonebene (Jahr, Monat) —
-     12 → 8 px bringt dem Eintrag also 8 px, nicht 4. Sie gilt bewusst
-     ungescoped: `.leiste-gruppe > .akkordeon-inhalt{padding-left:0}` weiter
-     oben ist spezifischer (0-2-0 gegen 0-1-0) und hält das
-     Einstellungsmenü heraus. Wer hier `.leiste .akkordeon-inhalt` schriebe,
-     überholte diese Ausnahme und rückte das Menü von 0 auf 8 px ein. */
-  .akkordeon-inhalt{padding-left:var(--abstand-2)}
+  /* ZWEIMAL VIER PIXEL, ZWEIMAL WIRKSAM (Freigabe M-S9-11, Weg 2).
+     Die Einrückung wirkt je Akkordeonebene (Jahr, Monat), der Abstand je
+     Zwischenraum der Zeile (Zeichen–Datum, Datum–Name): 12 → 4 px und
+     8 → 4 px bringen dem Nebentext zusammen 16 px.
+
+     DIE EINRÜCKUNG GILT UNGESCOPED, DER ABSTAND NICHT — und beides mit
+     Grund. `.leiste-gruppe > .akkordeon-inhalt{padding-left:0}` weiter oben
+     ist spezifischer (0-2-0 gegen 0-1-0) und hält das Einstellungsmenü von
+     der Einrückung heraus; wer hier `.leiste .akkordeon-inhalt` schriebe,
+     überholte diese Ausnahme und rückte das Menü von 0 auf 4 px ein.
+     Für den Abstand gibt es keine solche Ausnahme: `.eintrag` tragen auch
+     der Leistenfuß, die Hauptpunkte der Schublade und jede Zeile des
+     Einstellungsmenüs. Sie haben keinen Nebentext und damit kein
+     Platzproblem — eine ungescopte `gap`-Regel rückte sie ohne Not
+     zusammen. Deshalb `:not(.leiste-gruppe)`: Es trifft die Diensttage,
+     nicht das Menü. */
+  .akkordeon-inhalt{padding-left:var(--abstand-1)}
+  .akkordeon:not(.leiste-gruppe) .eintrag{gap:var(--abstand-1)}
 
   /* Das Aktionsmenü wird ein Aufklappmenü statt eines Blattes. */
   .blatt{
@@ -1889,9 +1900,11 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .leiste{width:var(--leiste)}
   .leiste-filter{width:var(--leiste-filter)}
   .eintrag-neben{display:block}
-  /* Ab hier ist die Leiste 260 px — die Einrückung geht auf ihr normales Maß
-     zurück (Gegenstück zur 8-px-Regel im 1024er Block). */
+  /* Ab hier ist die Leiste 260 px — Einrückung und Abstand gehen auf ihr
+     normales Maß zurück (Gegenstück zu den beiden 4-px-Regeln im 1024er
+     Block). */
   .akkordeon-inhalt{padding-left:var(--abstand-3)}
+  .akkordeon:not(.leiste-gruppe) .eintrag{gap:var(--abstand-2)}
   .geo{height:var(--karte-desktop)}
   .zweispalter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-4);align-items:start}
 

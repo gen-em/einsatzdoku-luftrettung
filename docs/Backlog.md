@@ -808,11 +808,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Gebaut mit Web 16.1.0 (S9/AP4a, 08.09.2026): Der Nebentext der Leiste
     bleibt im Band 1024–1199 px stehen, wenn ein Kurzname eingefroren ist
     (`.eintrag-neben.kurz`); das Akkordeon rückt dort je Ebene 8 statt 12 px
-    ein. Gemessen an der laufenden Anwendung: dem Kurznamen bleiben im Band je nach Datum **48 bis 55 px** — „BW Hoch" braucht 55, also tragen ihn **4 von 13** Datumsangaben ganz und **9 mit Auslassungszeichen**; ohne die Einrückung wäre es **keine einzige** (40 bis 47 px) — die
-    Datumsbreite schwankt zwischen 76 und 83 px, weil Bricolage Grotesque
-    Ziffern proportional setzt. Der Kurzname steht damit im Band, aber nicht
-    überall vollständig; ob das genügt, ist offen. Der Punkt ist sachlich
-    erledigt; er wandert
+    ein — seit Web 16.1.1 je Ebene 4 px, dazu 4 px Abstand in der Zeile
+    (Freigabe M-S9-11, Weg 2). Gemessen an der laufenden Anwendung: dem Kurznamen stehen im Band **64 bis 79 px** zur Verfügung (vorher 48 bis 63) — „BW Hoch" (55 px) und „NEF 76/1" (53) stehen damit an **jedem** Datum ganz; gemessen **13 Kurznamen, 0 Ellipsen** (vorher 10).
+    Der Punkt ist sachlich erledigt; er wandert
     mit AP8 nach* Erledigt.
 
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**

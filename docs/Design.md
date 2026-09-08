@@ -401,7 +401,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 60 |  |
+| `--abstand-1` | `4px` | 62 |  |
 | `--abstand-2` | `8px` | 85 |  |
 | `--abstand-3` | `12px` | 113 |  |
 | `--abstand-4` | `16px` | 51 |  |
@@ -678,8 +678,8 @@ zusätzlich als `--s-*` in `:root`, damit man sie nachlesen kann.
 | Schwelle | was sich ändert |
 |---|---|
 | **720** | Handy → Tablet hoch: Einsatzkachel wird Tabelle, Zeilenaktionen werden Knopfreihe statt Blatt, Karte 220 px |
-| **1024** | Schublade → feste Leiste; die Hauptpunkte wandern in die Kopfleiste; das Aktionsblatt wird ein Aufklappmenü; im Band bis 1199 px zeigt der Nebentext der Leiste **nur noch einen Kurznamen** (`.eintrag-neben.kurz`), und das Akkordeon rückt je Ebene 8 statt 12 px ein |
-| **1200** | Leiste 260 px (Filterleiste 280), Zweispalter: Einsatzansicht, Formularkarten, Kontoseite; der Nebentext der Leiste steht wieder für **jeden** Namen, die Akkordeon-Einrückung geht auf 12 px zurück |
+| **1024** | Schublade → feste Leiste; die Hauptpunkte wandern in die Kopfleiste; das Aktionsblatt wird ein Aufklappmenü; im Band bis 1199 px zeigt der Nebentext der Leiste **nur noch einen Kurznamen** (`.eintrag-neben.kurz`), das Akkordeon rückt je Ebene **4 statt 12 px** ein und der Abstand in der Diensttagszeile geht von 8 auf 4 px |
+| **1200** | Leiste 260 px (Filterleiste 280), Zweispalter: Einsatzansicht, Formularkarten, Kontoseite; der Nebentext der Leiste steht wieder für **jeden** Namen, Akkordeon-Einrückung und Zeilenabstand gehen auf 12 bzw. 8 px zurück |
 | **1600** | Die Karte steht neben Diensttag-Daten und Tabelle |
 
 Dazu **eine** Ausnahme nach unten: `@media (max-width:479px)` lässt in der
@@ -706,7 +706,8 @@ Zusammen 21 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px,
 | Kopfleiste | Menüknopf, Logo, Zahnrad | wie < 720 | Hauptpunkte sichtbar | wie 1024 | wie 1024 |
 | Leiste / Schublade | Schublade | Schublade | Leiste 220 | Leiste 260 | Leiste 260 |
 | Nebentext der Leiste | jeder Name | jeder Name | **nur Kurznamen** | jeder Name | jeder Name |
-| Akkordeon-Einrückung je Ebene | 12 px | 12 px | **8 px** | 12 px | 12 px |
+| Akkordeon-Einrückung je Ebene | 12 px | 12 px | **4 px** | 12 px | 12 px |
+| Abstand in der Diensttagszeile | 8 px | 8 px | **4 px** | 8 px | 8 px |
 | Filterleiste (Suche) | Schublade + Knopf | Schublade + Knopf | 240 | 280 | 280 |
 | Einsätze | Kachel | Tabelle | Tabelle | Tabelle | Tabelle |
 | Zeilenaktionen | „⋯" + Blatt von unten | Knopfreihe | Knopfreihe, Blatt wird Aufklappmenü | wie 1024 | wie 1024 |
@@ -880,7 +881,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 297 |
 | `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 359 |
 | `ui_geruest_start()` | `.inhalt` | ja | 434 |
-| `ui_leiste_ende()` | `.leiste` | ja (+11 Unterklassen) | 505 |
+| `ui_leiste_ende()` | `.leiste` | ja (+13 Unterklassen) | 505 |
 | `ui_geruest_ende()` | `.inhalt` | ja | 529 |
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 574 |
 | `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 799 |
@@ -2152,6 +2153,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 16.1.1 (S9)** | Kapitel 7: Im Band 1024–1199 px rückt das Akkordeon je Ebene **4 statt 8 px** ein, und der Abstand der Diensttagszeile geht von 8 auf **4 px** (Freigabe M-S9-11, Weg 2). Gemessen: dem Nebentext stehen dort **64–79 px** statt 48–63 zur Verfügung — dreizehn Kurznamen, **keiner** mehr mit Auslassungszeichen (vorher zehn). Der Abstand ist mit `:not(.leiste-gruppe)` eingegrenzt, weil die Zeilenklasse auch Leistenfuß, Schubladen-Hauptpunkte und Einstellungsmenü trägt; nachgemessen bleiben die bei 8 px. **Keine neue Schwelle, kein neues Token** — 4 px ist `--abstand-1`. |
 | **Web 16.1.0 (S9/AP4a)** | Kapitel 7 (Schwellen und Verhalten je Baustein): Der Nebentext der Leiste hat **drei** Zustände statt zweier — unter 1024 px jeder Name, im Band 1024–1199 px nur ein Kurzname (`.eintrag-neben.kurz`), ab 1200 px wieder jeder; im Band rückt das Akkordeon je Ebene 8 statt 12 px ein. Gemessen: Der Datumstext ist dort **76 bis 83 px** breit (Bricolage Grotesque setzt Ziffern **proportional** — `tabular-nums` nennt `.zahl,td,th,time,output`, nicht `.eintrag-text`), dem Nebentext bleiben **48 bis 55 px**, und „BW Hoch" braucht 55: **4 von 13** Datumsangaben tragen ihn ganz, 9 mit Auslassungszeichen; ohne die Einrückung keine einzige. **Keine neue Schwelle** — beide Regeln liegen in vorhandenen Medienblöcken —, **kein neues Token**: 8 px ist `--abstand-2`. Kapitel 9.7 unberührt: Die Wahlliste trägt den neuen Zusatz mit ihrem vorhandenen `zusatz`-Schlüssel. |
 | **Web 15.8.0 (S9/AP3)** | Neues Kapitel **9.30 Kartenzeichen** — der Farbring ist jetzt der Rand, alle acht Außenmaße als Tabelle, die 24-px-Untergrenze am antippbaren Ringpunkt und die Warnung, dass ein `<span>` ohne `display` kein Kasten ist (Backlog Nr. 72 und Nr. 153). Zwei **abgeleitete** Token (`--geo-ringpunkt`, `--geo-symbol`); `--geo-ring` bedeutet nun Randstärke statt Schattenschrittweite. Kapitel 8: Symbolvorrat **49 → 52** (Bergwacht, Veranstaltung, Sonstiges). Kapitel 9.29 berichtigt: `.legende-linie` misst **24 × 4 px**, nicht 22 × 4. |
 | **Web 15.7.0 (S9/AP2)** | Neues Kapitel **9.29 Kartendialog** — Suchfeld im Kopf (und warum nicht im Inhalt), Spur mit Ringpunkten und Legende, `fitBounds` nur bei leerem Feld. Kapitel 9.13 nachgezogen: Die drei Grenzen der Adressabfrage stehen jetzt in `assets/geocoder.js`, die Kleinzeile `.loc-datenschutz` steht **einmal je Seite**, und den Pin-Knopf rendern seither **beide** Formen von `ui_ortsfeld()` (Backlog Nr. 70). Kein neues Token. |

@@ -120,7 +120,7 @@ export const wege = [
     name: 'ap4a-kurzname-im-band',
     paket: 'AP4a', punkt: 'M-S9-08 V2', rolle: 'demo',
     was: 'Der Kurzname bleibt im Band 1024–1199 px sichtbar, der volle Name nicht',
-    soll: 'je Breite: <1024 alle · 1024–1199 nur der Kurzname (8 px) · ≥1200 alle (12 px); die freie Breite wird gemeldet, nicht verlangt',
+    soll: 'je Breite: <1024 alle · 1024–1199 nur der Kurzname (4 px) · ≥1200 alle (12 px); die freie Breite wird gemeldet, nicht verlangt',
     async fahren(k) {
       const tag = k.kennung.tag;
       if (!tag) { throw new Error('Kein Diensttag im Bestand'); }
@@ -173,7 +173,7 @@ export const wege = [
         });
         await k.bild('ap4a-kurzname-im-band');
         const band = breite >= 1024 && breite < 1200;
-        const sollEin = band ? '8px' : '12px';
+        const sollEin = band ? '4px' : '12px';   // Freigabe M-S9-11, Weg 2
         const sollSicht = band ? m.mitKurz : m.gesamt;
         const ok = m.gesamt > 0 && m.mitKurz === 1 && m.text === 'BW Hoch'
                 && m.sichtbar === sollSicht && m.sichtbarKurz === 1
