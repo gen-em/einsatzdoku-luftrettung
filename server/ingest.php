@@ -213,28 +213,29 @@ $endedAt = pruef_utc($b['ended_at'] ?? null, 'ended_at', $pruef);
  *
  * `day` und die Zeitpunkte kommen aus derselben Quelle, und bis hierher hat
  * niemand nachgesehen, ob sie einander widersprechen. Ein Paket mit
- * `day` 2026-08-09 und `started_at` 2001-01-01 lief durch: Der Einsatz stand
- * anschliessend mit 96 Jahren Dauer in der Datenbank, und der Zeitraum des
- * Diensttags war darauf gezogen -- ueber ingest.php nicht rueckholbar.
+ * `day` 2026-08-09 und `started_at` 2001-01-01 lief durch, und der Zeitraum
+ * des Diensttags wurde darauf gezogen -- ueber ingest.php nicht rueckholbar.
  *
- * Die erste Fassung der Nachbesserung hat nur den Diensttag geschuetzt und
- * dafuer den Tag selbst nach den Zeiten des Absenders beurteilt. Das war
- * derselbe Fehler eine Ebene hoeher: Ein Dienst, der mehr als
- * INGEST_ERSETZFENSTER_H Stunden nach seinem Datum hochgeladen wurde (Uhr
- * lange ohne Netz), bekam gar kein `ended_at` mehr. Gemessen, nicht vermutet.
+ * DAS PAKET WIRD TROTZDEM ANGENOMMEN. Die erste Fassung dieser Pruefung hat
+ * es mit 400 abgewiesen, und das war falsch: Es haette die falsch gestellte
+ * Uhr ausgesperrt -- genau die, die Fund 2 der ersten Gegenpruefung wieder
+ * hereingeholt hat. Ein Geraet, dessen Kalender nach einer Tiefentladung auf
+ * 1970 steht, muss seine Daten loswerden koennen; sein Einsatz ist sichtbar
+ * und loeschbar, und das ist die Zusage. Verworfen wird deshalb nicht der
+ * Upload, sondern der WERT -- und zwar nur fuer das eine, wofuer er nicht
+ * taugt: das Fortschreiben des Diensttags.
  *
- * Deshalb hier, an der Wurzel und in der gemeinsamen Pruefschicht: Ein
- * Zeitpunkt muss zu dem Kalendertag passen, unter dem er gemeldet wird, und
- * das Ende darf nicht vor dem Beginn liegen. Das Fenster ist sehr weit
- * (pruef_zeit_zum_tag nennt die vier Gruende) -- es weist das Unmoegliche ab,
- * nicht das Ungewoehnliche. Abgewiesen wird das ganze Paket: Widersprechen
- * sich seine Angaben, ist auch alles andere darin unsicher, und ein 400 sagt
- * dem Geraet, dass es den Datensatz nicht als gesendet abhaken darf. */
-$zeitPasst = pruef_zeit_zum_tag($startedAt, $day, 'started_at', $pruef);
-if (!pruef_zeit_zum_tag($endedAt, $day, 'ended_at', $pruef)) { $zeitPasst = false; }
-if (!pruef_ende_nach_beginn($startedAt, $endedAt, 'ended_at', $pruef)) { $zeitPasst = false; }
-if (!$zeitPasst) {
-    json_out(['error' => 'payload', 'grund' => $pruef->text()], 400);
+ * Zwei Fragen entscheiden darueber. Passt der Zeitpunkt zu dem Kalendertag,
+ * unter dem er gemeldet wird (pruef_zeit_zum_tag, Fenster sehr weit -- die
+ * vier Gruende stehen dort)? Und liegt das Ende nach dem Beginn
+ * (pruef_ende_nach_beginn)? Was durchfaellt, steht als `rejected` in der
+ * Antwort: Der Upload war erfolgreich, aber nicht alles daran wurde
+ * verwendet. */
+$tagStart = pruef_zeit_zum_tag($startedAt, $day, 'started_at', $pruef) ? $startedAt : null;
+$tagEnde  = $endedAt;
+if (!pruef_zeit_zum_tag($tagEnde, $day, 'ended_at', $pruef)) { $tagEnde = null; }
+if ($tagEnde !== null && !pruef_ende_nach_beginn($startedAt, $tagEnde, 'ended_at', $pruef)) {
+    $tagEnde = null;
 }
 
 $final   = pruef_flag($b['final'] ?? null);
@@ -893,7 +894,7 @@ try {
      * ein Paket ab, dessen Zeiten nicht zu seinem `day` passen. */
     $eigeneTabelle = $ownerType === 'mission' ? 'missions' : 'rest_segments';
     if (!$fensterZu && ingest_tag_offen($pdo, $dayId, $eigeneTabelle, (int)$ownerId)) {
-        dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
+        dt_zeitraum_fortschreiben($pdo, $dayId, $tagStart, $tagEnde);
     }
 
     /* DIE FORTSETZUNGSMARKE UEBER spur_lib.php (S2/AP1).

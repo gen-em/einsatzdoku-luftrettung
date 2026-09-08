@@ -713,16 +713,17 @@ Zusätzlich können auftreten:
 > fortgeschrieben (4.4). Der Grund steht in `docs/Technik.md` 4.99a2; für die
 > Uhr ändert sich nichts, was sie tun müsste.
 
-> **Die Zeiten müssen zum `day` passen, und das Ende darf nicht vor dem
-> Beginn liegen** (seit der Wiederaufnahme der zweiten Gegenprüfung).
-> `started_at` und `ended_at` müssen in das Fenster von Mitternacht des
-> Vortags bis zum Ende des **31. Tages** nach `day` fallen. Ein Paket, dessen
-> Angaben einander widersprechen — `day` 2026-08-09 und `started_at`
-> 2001-01-01, oder ein Ende vor dem Beginn —, wird mit
-> `400 {"error":"payload"}` abgewiesen; der Grund steht wie bei jedem
-> Prüffehler in `grund`. Das ist **keine neue Antwortform**: Der Fall verhält
-> sich wie jede andere fehlerhafte Nachricht (Tabelle unten) — nicht
-> wiederholen, lokal als fehlerhaft markieren.
+> **Zeiten, die nicht zum `day` passen, schreiben den Diensttag nicht fort**
+> (seit der Wiederaufnahme der zweiten Gegenprüfung). Geprüft wird zweierlei:
+> ob `started_at` und `ended_at` in das Fenster von Mitternacht des Vortags
+> bis zum Ende des **31. Tages** nach `day` fallen, und ob das Ende nach dem
+> Beginn liegt. **Der Upload bleibt davon unberührt** — das Paket wird
+> angenommen, der Datensatz entsteht mit den gesendeten Zeiten, er ist
+> sichtbar und löschbar. Nur für Beginn und Ende des **Diensttags** wird ein
+> Wert, der durchfällt, nicht verwendet, und er erscheint in `rejected`. Für
+> die Uhr ändert sich damit nichts, was sie tun müsste: Ein `ok: true` mit
+> `rejected` bedeutet wie immer „angekommen, aber nicht alles übernommen".
+> Eine falsch gestellte Geräteuhr wird **nicht** ausgesperrt.
 >
 > Das Fenster ist bewusst sehr weit, weil `day` in beiden Clients ein
 > **Ortsdatum** ist und weil ein Paket den Tag seines **Dienstbeginns** tragen

@@ -246,15 +246,15 @@ behoben hatte — die Zeiten des Absenders als Maßstab —, nur eine Ebene höh
 
 Zwei Änderungen, jede an ihrer richtigen Stelle. **Erstens** sitzt der Schutz
 gegen absurde Zeiten jetzt dort, wo er hingehört: in der gemeinsamen
-Prüfschicht. `pruef_zeit_zum_tag()` weist ein Paket ab, dessen `started_at`
-oder `ended_at` nicht zu seinem `day` gehört — `day` 2026-08-09 mit `started_at`
-2001-01-01 bekommt `400`, und zwar bevor irgendetwas gespeichert wird. Das
-schließt eine Lücke, die die erste Fassung offengelassen hatte: Sie schützte
-den Diensttag, aber der **Einsatz selbst** stand hinterher mit 96 Jahren
-Dauer in der Datenbank. Das Fenster ist weit — vom Vortag bis zum Ende des
-übernächsten Tages —, weil es Zeitzonenversatz, Mitternacht und
-24-Stunden-Dienste vertragen muss; es weist das Unmögliche ab, nicht das
-Ungewöhnliche. **Zweitens** fragt die Bremse für den Tageszeitraum jetzt nach
+Prüfschicht. `pruef_zeit_zum_tag()` und `pruef_ende_nach_beginn()` fragen, ob
+`started_at` und `ended_at` zu ihrem `day` gehören und ob das Ende nach dem
+Beginn liegt. **Verworfen wird dabei der Wert, nicht der Upload** — der
+Einsatz entsteht mit den gesendeten Zeiten, ist sichtbar und löschbar, und nur
+Beginn und Ende des **Diensttags** werden nicht daraus gerechnet; was
+durchfällt, steht in `rejected`. Eine erste Fassung hat das Paket mit `400`
+abgewiesen, und das war falsch: Sie hätte die falsch gestellte Uhr
+ausgesperrt, also genau das Gerät, das Fund 2 der ersten Gegenprüfung wieder
+hereingeholt hatte. **Zweitens** fragt die Bremse für den Tageszeitraum jetzt nach
 Serverzeit: Anker ist das jüngste `created_at` der **übrigen** Datensätze des
 Tages (der gerade angelegte zählt nicht mit, sonst wäre jeder Tag offen, an
 dem eben ein Paket ankam). Ein frischer Tag und ein Tag, an dem gerade
@@ -274,7 +274,8 @@ ist der vergessene Dienst, nicht das Paket. Das Fenster reicht deshalb bis zum
 und den feinen Schutz leistet ohnehin das Ersetzfenster. Beim selben Nachlesen
 fiel auf, dass **niemand prüft, ob das Ende nach dem Beginn liegt**: Ein Paket
 mit vertauschten Zeiten wurde angenommen, und der Diensttag wurde daraufhin in
-beide Richtungen aufgezogen. Auch das wird jetzt abgewiesen.
+beide Richtungen aufgezogen. Auch dieser Wert zählt jetzt nicht mehr für den
+Tag.
 
 Ingestprobe 56 → **62, 0 nicht erfüllt**; am Stand vor der Neufassung sind
 vier davon rot, gegen den Stand vor allen vier Nachbesserungen dieser Runde

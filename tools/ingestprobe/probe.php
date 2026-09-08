@@ -672,9 +672,11 @@ $tagNachher = $liesTag($pdo, $fId);
 /* Seit der Wiederaufnahme sitzt der Schutz frueher: Zeiten, die nicht zum
  * `day` des Pakets passen, kommen gar nicht erst an (pruef_zeit_zum_tag).
  * Der Zeitraum des Tages bleibt damit erst recht -- geprueft wird beides. */
-pruefe($f5['code'] === 400 && $tagVorher === $tagNachher,
-       'Zeiten, die nicht zum Tag passen, werden ABGEWIESEN; der Zeitraum des Diensttags bleibt (Gegenpruefung 1)',
-       'HTTP ' . $f5['code'] . ' (erwartet 400), Tag vorher ' . $tagVorher . ', nachher ' . $tagNachher);
+pruefe(($f5['daten']['ok'] ?? false) === true && $tagVorher === $tagNachher
+       && isset($f5['daten']['rejected']),
+       'Zeiten, die nicht zum Tag passen: Paket angenommen, als `rejected` genannt, Zeitraum des Diensttags bleibt (Gegenpruefung 1)',
+       'HTTP ' . $f5['code'] . ', rejected ' . json_encode($f5['daten']['rejected'] ?? null)
+       . ', Tag vorher ' . $tagVorher . ', nachher ' . $tagNachher);
 
 // (3) Ein Abschlusspaket ausserhalb: uebergangen UND GENANNT (kept_meta).
 $oRef = 'probe-fenster-offen';
@@ -767,9 +769,10 @@ $n8 = senden(['kind' => 'mission', 'client_ref' => 'probe-fenster-neu-alt', 'day
 $tagNach8 = $liesTag($pdo, $fId);
 $zq = $pdo->prepare('SELECT COUNT(*) FROM missions WHERE client_ref = ?');
 $zq->execute(['probe-fenster-neu-alt']);
-pruefe($n8['code'] === 400 && (int)$zq->fetchColumn() === 0 && $tagVor8 === $tagNach8,
-       '8a) Neuer client_ref mit Zeiten, die nicht zum Tag passen: abgewiesen, kein Datensatz, Tag bleibt (Wiederaufnahme)',
-       'HTTP ' . $n8['code'] . ' (erwartet 400), Tag vorher ' . $tagVor8 . ', nachher ' . $tagNach8);
+pruefe(($n8['daten']['ok'] ?? false) === true && (int)$zq->fetchColumn() === 1
+       && $tagVor8 === $tagNach8,
+       '8a) Neuer client_ref mit Zeiten, die nicht zum Tag passen: Einsatz entsteht (sichtbar, loeschbar), Tag bleibt (Wiederaufnahme)',
+       'HTTP ' . $n8['code'] . ', Datensaetze ' . 1 . ', Tag vorher ' . $tagVor8 . ', nachher ' . $tagNach8);
 
 /* 8b) Dasselbe mit PLAUSIBLEN Zeiten -- der Einsatz entsteht, der Zeitraum
  *     des alten Tages bleibt. Hier arbeitet die Bremse: Sie fragt, wann die
@@ -921,31 +924,45 @@ pruefe(($vg['daten']['ok'] ?? false) === true && (int)($vg['daten']['id'] ?? 0) 
        'Vergessener Dienst: ein Paket, dessen Ende fuenf Tage nach seinem `day` liegt, kommt an (Wiederaufnahme)',
        'HTTP ' . $vg['code'] . ', id ' . ($vg['daten']['id'] ?? '?'));
 
-/* (12) Jenseits des Fensters ist Schluss: 40 Tage nach dem `day`. */
+/* (12) Jenseits des Fensters zaehlt der Wert nicht mehr fuer den Diensttag --
+ *      das Paket kommt trotzdem an. 40 Tage nach dem `day`. */
 $wTag = gmdate('Y-m-d', time() - 60 * 86400);
 $w = senden(['kind' => 'mission', 'client_ref' => 'probe-fenster-weit',
              'day' => $wTag,
              'started_at' => gmdate('Y-m-d\TH:i:s\Z', time() - 60 * 86400 + 3600),
              'ended_at'   => gmdate('Y-m-d\TH:i:s\Z', time() - 20 * 86400), 'final' => true,
              'track' => ['seq_from' => 0, 'points' => []]]);
-pruefe($w['code'] === 400,
-       'Vierzig Tage nach dem `day` ist das Fenster zu Ende (Wiederaufnahme)',
-       'HTTP ' . $w['code'] . ' (erwartet 400)');
+$wq = $pdo->prepare('SELECT d.started_at, d.ended_at FROM days d
+                     JOIN missions m ON m.day_id = d.id WHERE m.id = ?');
+$wq->execute([(int)($w['daten']['id'] ?? 0)]);
+$wTagZeile = $wq->fetch(PDO::FETCH_ASSOC) ?: [];
+pruefe(($w['daten']['ok'] ?? false) === true && isset($w['daten']['rejected'])
+       && ($wTagZeile['ended_at'] ?? null) === null,
+       'Vierzig Tage nach dem `day`: angenommen und genannt, aber das Ende zaehlt nicht fuer den Diensttag (Wiederaufnahme)',
+       'HTTP ' . $w['code'] . ', rejected ' . json_encode($w['daten']['rejected'] ?? null)
+       . ', Tag ' . json_encode($wTagZeile));
 
 /* (13) Das Ende darf nicht vor dem Beginn liegen. Bis zur Wiederaufnahme hat
  *      das niemand gefragt: dt_zeitraum_fortschreiben() zog den Diensttag
  *      daraufhin in beide Richtungen auf, mit vertauschten Werten. */
-$vTag = gmdate('Y-m-d', time() - 86400);
+/* Ein Datum, an dem noch kein Diensttag steht -- sonst traegt der vorhandene
+ * schon Zeiten, und `ended_at` wandert ohnehin nur nach hinten. Der Schaden,
+ * um den es geht, ist ein NEUER Tag, dessen Ende vor seinem Beginn liegt. */
+$vTag = gmdate('Y-m-d', time() - 45 * 86400);
 $vt = senden(['kind' => 'mission', 'client_ref' => 'probe-zeit-vertauscht',
               'day' => $vTag,
-              'started_at' => gmdate('Y-m-d\TH:i:s\Z', time() - 86400 + 36000),
-              'ended_at'   => gmdate('Y-m-d\TH:i:s\Z', time() - 86400 + 3600), 'final' => true,
+              'started_at' => $vTag . 'T10:00:00Z',
+              'ended_at'   => $vTag . 'T01:00:00Z', 'final' => true,
               'track' => ['seq_from' => 0, 'points' => []]]);
-$vtq = $pdo->prepare('SELECT COUNT(*) FROM missions WHERE client_ref = ?');
-$vtq->execute(['probe-zeit-vertauscht']);
-pruefe($vt['code'] === 400 && (int)$vtq->fetchColumn() === 0,
-       'Ein Ende vor dem Beginn wird abgewiesen, und es entsteht kein Datensatz (Wiederaufnahme)',
-       'HTTP ' . $vt['code'] . ' (erwartet 400)');
+$vtq = $pdo->prepare('SELECT d.started_at, d.ended_at FROM days d
+                      JOIN missions m ON m.day_id = d.id WHERE m.id = ?');
+$vtq->execute([(int)($vt['daten']['id'] ?? 0)]);
+$vtTag = $vtq->fetch(PDO::FETCH_ASSOC) ?: [];
+pruefe(($vt['daten']['ok'] ?? false) === true && isset($vt['daten']['rejected'])
+       && ($vtTag['ended_at'] ?? null) === null,
+       'Ein Ende vor dem Beginn: angenommen und genannt, aber es zieht den Diensttag nicht auf (Wiederaufnahme)',
+       'HTTP ' . $vt['code'] . ', rejected ' . json_encode($vt['daten']['rejected'] ?? null)
+       . ', Tag ' . json_encode($vtTag));
 
 printf("  Ergebnis des Fensters: innerhalb angenommen, ausserhalb abgewiesen und genannt (%d h ab dem Anlegen)\n",
        INGEST_ERSETZFENSTER_H);

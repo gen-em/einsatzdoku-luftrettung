@@ -4488,11 +4488,19 @@ derselben Quelle, und bis zur Wiederaufnahme der zweiten Gegenprüfung hat
 niemand nachgesehen, ob sie einander widersprechen: Ein Paket mit `day`
 2026-08-09 und `started_at` 2001-01-01 lief durch, der Einsatz stand mit
 96 Jahren Dauer in der Datenbank, und der Zeitraum des Diensttags war darauf
-gezogen. `pruef_zeit_zum_tag()` (in `validate_lib.php`, also auf dem
-gemeinsamen Weg) weist ein solches Paket jetzt mit `400` ab. Ebenso eines,
-dessen **Ende vor seinem Beginn** liegt (`pruef_ende_nach_beginn()`): Auch das
-hatte niemand gefragt, und `dt_zeitraum_fortschreiben()` zog den Diensttag
-daraufhin in beide Richtungen auf, mit vertauschten Werten.
+gezogen. `pruef_zeit_zum_tag()` und `pruef_ende_nach_beginn()` (beide in
+`validate_lib.php`, also auf dem gemeinsamen Weg) prüfen das jetzt.
+
+**Verworfen wird der Wert, nicht der Upload.** Das Paket kommt an, der Einsatz
+entsteht, er ist sichtbar und löschbar — nur für das **Fortschreiben des
+Diensttags** wird ein Zeitpunkt, der die Prüfung nicht besteht, nicht
+verwendet; er steht als `rejected` in der Antwort. Eine erste Fassung hat das
+Paket mit `400` abgewiesen, und das war falsch: Sie hätte die falsch gestellte
+Uhr ausgesperrt — genau die, die Fund 2 der ersten Gegenprüfung wieder
+hereingeholt hat. Ein Gerät, dessen Kalender nach einer Tiefentladung auf 1970
+steht, muss seine Daten loswerden können. Dass ein **Ende vor dem Beginn**
+liegt, hatte ebenfalls niemand gefragt: `dt_zeitraum_fortschreiben()` zog den
+Diensttag daraufhin in beide Richtungen auf, mit Werten, die es nie gab.
 
 Das Fenster ist **sehr** weit — von Mitternacht des Vortags bis zum Ende des
 31. Tages danach —, und das mit Absicht. Vier Dinge zwingen dazu: der
