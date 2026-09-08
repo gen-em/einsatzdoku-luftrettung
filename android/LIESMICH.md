@@ -185,6 +185,90 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.15.0 (Datum im Dienst und Erinnerung, Backlog Nr. 160),
+`./gradlew build` im Container, 08.09.2026:**
+
+| | `handy` | `uhr` |
+|---|---|---|
+| Lint-Fehler | **0** | **0** |
+| Lint-Warnungen | **14** | **0** |
+| Prüffälle je Bauart | **264**, davon 15 übersprungen | **71**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **7 868 398 B** | **19 574 402 B** |
+
+**Sechster Emulatorlauf am 08.09.2026 (0.15.0, Datum und Erinnerung):** fünf
+Bilder unter `android/emulator-bilder/0150-*.png` — Kopplungsseite, Kopplung
+gegen den lokalen Server, laufender Dienst am selben Tag („seit 20:53", ohne
+Datum), derselbe Dienst nach einem Tageswechsel („seit **Di. 08.09.**,
+20:53") und die Erinnerung nach 27 Stunden samt Knopf „Dienst beenden". Der
+Tageswechsel wurde mit `adb shell date` gestellt, nicht abgewartet.
+
+**Und er hat einen Fehler gefunden, den kein anderes Prüfmittel sah:** Dort
+stand zuerst „Aufzeichnung läuft seit **Tue** 08.09., 20:53". Das Abbild ist
+englisch gestellt, und `Locale.getDefault()` folgte ihm mitten in einen
+deutschen Satz. Die App hat nur deutsche Texte; die Sprache des Datums ist
+seither fest `Locale.GERMAN`, mit einem Prüffall, der die Systemsprache auf
+Englisch setzt. Genau dafür läuft der Emulator: Der Bilderlauf zeichnet das
+gerechnete Bild und hätte dieselbe Locale wie die JVM benutzt.
+
+**Zwei Stolpersteine dieses Laufs**, beide schon bekannt und beide wieder
+aufgetreten: Nach `emulator.sh legen` ist der Vordergrunddienst **weg** — die
+Anzeige sagt weiter „Dienst läuft", aber `dumpsys activity services` findet
+ihn nicht mehr; wer die Dauermeldung prüfen will, beendet den Dienst und
+beginnt ihn neu. Und die Kopplung braucht **beides**: das APK mit
+`-Pnadoku.serverBasis=http://127.0.0.1:8080/` **und** einen laufenden
+MariaDB — ohne ihn antwortet `pair.php` mit „Der Server hat einen Fehler
+gemeldet", was auf dem Gerät wie ein Netzproblem aussieht.
+
+**264 statt 261:** drei Fälle in `ZeitTest` — der Dienstbeginn trägt das Datum
+nur, wenn er nicht von heute ist, für den Tageswechsel zählt die Ortszeit statt
+UTC, und der Wochentag bleibt deutsch, auch auf einem englisch gestellten
+Gerät. **14 statt 13 Warnungen:** eine weitere `PluralsCandidate`, für
+„%1$d Stunden" im Titel der neuen Erinnerung. Sie steht in derselben Reihe wie
+die zwei vorhandenen („Minuten", „Sekunden") und wird wie diese nicht
+stummgeschaltet; die Erinnerung kommt frühestens nach 26 Stunden, der Plural
+ist dort immer richtig. Das Handy-APK ist um 968 B gewachsen (zwei Texte, eine
+Meldung, das Datumsformat), das der Uhr unverändert.
+
+**Stand Android 0.14.1 („GPS-Daten" statt „Spur", E-S9-03), `./gradlew
+build` im Container, 07.09.2026** — fünf Texte in `strings.xml`, sonst
+nichts; die Zahlen sind die von 0.14.0, das APK des Handys ist um 36 B
+gewachsen (die längeren Sätze), das der Uhr um 4 B geschrumpft (die
+Versionszeichenkette):
+
+| | `handy` | `uhr` |
+|---|---|---|
+| Lint-Fehler | **0** | **0** |
+| Lint-Warnungen | **13** | **0** |
+| Prüffälle je Bauart | **261**, davon 15 übersprungen | **71**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **7 867 430 B** | **19 574 402 B** |
+
+**Stand Sofortpaket Sicherheit (Android 0.14.0), `./gradlew build` im
+Container, 07.09.2026:**
+
+| | `handy` | `uhr` |
+|---|---|---|
+| Lint-Fehler | **0** | **0** |
+| Lint-Warnungen | **13** | **0** |
+| Prüffälle je Bauart | **261**, davon 15 übersprungen | **71**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **7 867 394 B** | **19 574 406 B** |
+
+**261 statt 247** (0.13.0): `ServeradresseTest` +1 (der Release-Fall),
+`AbgewieseneTest` +5 (Räumteil), `SenderTest` +1 (Räumlauf vor dem Senden),
+`UhrannahmeTest` +7 (Absender und Zeit). **15 statt 14 übersprungen**, und
+das ist Absicht: Die 14 Rundlauffälle (`KopplungRundlaufTest` 8,
+`MissionRundlaufTest` 3, `SendeRundlaufTest` 3) brauchen die örtliche
+Installation — und seit Nr. 142 überspringt sich je Bauart genau ein Fall
+von `ServeradresseTest`, weil er das Gegenteil des anderen prüft
+(`assumeTrue(BuildConfig.DEBUG)` gegen `assumeFalse`). Beide
+Bauarten laufen in `./gradlew build`; **0 Fehlschläge** in allen vier
+Läufen. Das Handy-APK ist um 332 B gewachsen (die Netzsicherheitsregel und
+die Absenderprüfung), das Uhr-APK ist byteweise gleich groß geblieben — die
+neue Methode in `WearNachrichtenweg` wird dort nicht gerufen und wiegt
+nichts. Die 13 Warnungen sind die aus Abschnitt 4 (AGP 9 / Kotlin 2.4);
+keine ist stummgeschaltet.
+
+*Zur Einordnung — der Stand davor:*
+
 Stand E3 (Android 0.10.1), `./gradlew build` im Container, 03.09.2026:
 
 | | `handy` | `uhr` |
@@ -384,14 +468,66 @@ adb reverse tcp:8080 tcp:8080          # 127.0.0.1 im Gerät -> Host
 ```
 
 Die Klartext-Ausnahme liegt in `handy/src/debug/` und geht damit **nur** in
-das Prüf-APK ein (`org.genem.nadoku.pruef`). Das Release-APK kennt sie nicht;
-dort fiele ein `http://` durch, selbst wenn jemand es einbaute.
+das Prüf-APK ein (`org.genem.nadoku.pruef`). Das Release-APK kennt sie nicht
+— und seit Android 0.14.0 sagt es das auch selbst (Backlog Nr. 142,
+Krypto-Review AN-1): `handy/src/release/res/xml/netzsicherheit.xml` verbietet
+Klartext für jede Adresse, und `Serveradresse` bildet im Release auch für
+`localhost` und IP-Adressen `https`. Bis 0.13.0 galt die Adress-Ausnahme in
+**beiden** Bauarten; ein mit IP-Adresse gebautes APK hätte den
+Geräteschlüssel auf Android 8.0/8.1 im Klartext verschickt — dort fehlt
+Androids eigenes Verbot, es gilt erst ab API 28. Der Standardbau mit fester
+Domain war nie betroffen. Der Prüffall `oertlicheAdressenBehaltenHttp` läuft
+deshalb nur im Debug-Buildtyp, sein Gegenstück nur im Release — je Bauart ist
+genau einer übersprungen. Der Rundlauf gegen die örtliche Installation ist
+damit ausdrücklich ein Debug-Lauf (`:handy:testDebugUnitTest`, wie oben).
 
 **Ohne die Rückleitung sieht man nichts:** Der PHP-Server der
 Prüfinstallation hört auf `127.0.0.1:8080`, nicht auf `0.0.0.0` — aus dem
 Emulator ist er über `10.0.2.2` also nicht zu erreichen. Der erste Versuch
 dieses Pakets endete deshalb dreimal bei „Keine Verbindung", und die Ursache
 lag nicht dort, wo man sie suchte.
+
+### Warum kein Certificate Pinning (Backlog Nr. 143, Krypto-Review AN-3)
+
+Die App prüft das Serverzertifikat so, wie Android es tut: gegen die
+Wurzelzertifikate des Systems. Sie pinnt weder das Zertifikat noch den
+öffentlichen Schlüssel des Servers. Das ist eine **Entscheidung**, keine
+Lücke — festgehalten am 07.09.2026, nachdem der Review sie nirgends fand.
+
+**Warum nicht.** Die Serveradresse ist fest (R63), ihr Zertifikat ist es
+nicht: Jedes öffentlich beglaubigte Zertifikat rotiert — bei Let's Encrypt
+alle 90 Tage —, und der Betreiber wechselt Aussteller und Kette, wann er
+will. Ein Pin auf das Zertifikat wäre nach spätestens 90 Tagen ungültig;
+jede Installation im Feld verlöre dann die Verbindung, und die einzige
+Abhilfe wäre ein neues APK über den Store — das genau die Geräte nicht
+erreicht, die gerade nicht senden können. Ein Pin auf den Schlüssel des
+Ausstellers hält länger, bricht aber ebenso ohne Vorwarnung, wenn der
+Aussteller seine Zwischenzertifikate tauscht (Let's Encrypt hat das 2024
+getan). Ein Pin mit vorgehaltenem Ersatzschlüssel verlangte, dass jemand die
+Schlüsselpaare führt, sicher verwahrt und rechtzeitig wechselt — dieses
+Projekt hat dafür keine Stelle, und ein Pin, den niemand pflegt, ist ein
+Ausfall mit Verzögerung.
+
+**Was ein Pin gebracht hätte:** Schutz gegen eine Wurzel, die dem Gerät
+untergeschoben wurde — eine Firmen-CA, ein Abhörproxy mit installiertem
+Zertifikat. Den größeren Teil davon leistet Android seit Fassung 7 von
+selbst: Apps trauen benutzerinstallierten Wurzeln nicht, sofern sie es nicht
+ausdrücklich erlauben, und diese App erlaubt es nicht (die
+Netzsicherheitsregel des Release-Baus setzt keine `<trust-anchors>`). Was
+bleibt, ist eine Wurzel im Systemspeicher — also ein Gerät, das nicht mehr
+seiner Nutzerin gehört. Gegen das hilft kein Pin, weil derselbe Angreifer
+auch das APK austauschen kann.
+
+**Wo die Sicherheitsaussage stattdessen liegt:** beim Geräteschlüssel. Er
+reist nur über HTTPS (E-S4-14, Nr. 142), folgt keiner Umleitung (Android
+0.13.0), und der Server kennt ihn nur als SHA-256 (E-S5-42). Wer die
+Verbindung trotz allem mitliest, hat ein Gerät in der Hand — und dann trennt
+die Kontoinhaberin es im Web (Handbuch 10), was den Schlüssel ungültig macht.
+
+**Wann das neu zu entscheiden wäre:** wenn die App mit Installationen
+spricht, deren Betreiber die App nicht selbst bauen, oder wenn der Betreiber
+eine eigene Zertifikatskette mit vorgehaltenen Ersatzschlüsseln führt. Beides
+steht nicht an.
 
 ### Der Versionscode: zwei Zahlen, eine Fassung
 
@@ -452,29 +588,36 @@ Gradle-Wrapper lädt seine Verteilung von `services.gradle.org`, und diese
 Adresse leitet auf **`github.com`** weiter (Freigabe
 `gradle/gradle-distributions`). Ohne die Weiterleitung gibt es keinen
 Wrapper-Lauf. Eine siebte, `downloads.gradle.org`, trägt nur die
-Prüfsummen-Datei und ist gesperrt — siehe 2.1.
+Prüfsummen-Datei; sie war bis zum 07.09.2026 gesperrt und ist seither
+freigegeben — siehe 2.1.
 
-### 2.1 Warum keine Prüfsumme der Gradle-Verteilung eingetragen ist
+### 2.1 Die Prüfsumme der Gradle-Verteilung (seit Android 0.14.0, Backlog Nr. 145)
 
-`gradle-wrapper.properties` führt üblicherweise ein
-`distributionSha256Sum`. Hier steht keines, und das ist eine bewusste Lücke
-mit Begründung:
+`gradle-wrapper.properties` führt jetzt ein `distributionSha256Sum`:
 
-Die offizielle Prüfsumme liegt unter
-`services.gradle.org/distributions/gradle-8.14.3-bin.zip.sha256`. Diese
-Adresse leitet auf `downloads.gradle.org` weiter, und die ist im Container
-**gesperrt** (403 der Egress-Regel). Die Prüfsumme aus der Datei zu rechnen,
-die man gerade geladen hat, ist keine Prüfung, sondern eine Tautologie — sie
-bestätigte jede Datei, auch eine falsche.
+```
+SHA-256  bd71102213493060956ec229d946beee57158dbd89d0e62b91bca0fa2c5f3531
+         gradle-8.14.3-bin.zip   (137 393 837 Bytes)
+```
 
-Stattdessen wurde **gegenseitig belegt**: Die vom Wrapper geladene
-Verteilung und das im Container vorinstallierte Gradle 8.14.3 stammen aus
-zwei verschiedenen Quellen. Ein Vergleich ihrer Programmbibliotheken ergab
-**188 von 188 JAR bitgleich, 0 Abweichungen**. Zwei unabhängige Wege zur
-selben Datei sind der Beleg, den die Prüfsummen-Datei geliefert hätte.
+Der Wrapper prüft die Summe **beim Herunterladen** der Verteilung — einmal je
+Rechner, danach liegt sie unter `~/.gradle/wrapper/dists/`. Ein Container,
+der die Verteilung schon hat, merkt von der Zeile nichts; ein frischer lädt
+sie, rechnet nach und bricht ab, wenn die Datei nicht die ist, die sie sein
+soll (Krypto-Review AN-5: `gradle-wrapper.properties` ohne Prüfsumme).
 
-Wer an einem Arbeitsplatz **ohne** diese Sperre sitzt, trägt die Prüfsumme
-von <https://gradle.org/release-checksums/> nach — sie gehört dorthin.
+**Woher die Zahl stammt, und warum sie erst jetzt dasteht.** Bis zum
+07.09.2026 war `downloads.gradle.org` — die Adresse, auf die die offizielle
+Prüfsummen-Datei weiterleitet — in der Netzfreigabe des Containers gesperrt
+(403), und eine Summe, die man aus der gerade geladenen Datei selbst rechnet,
+ist keine Prüfung, sondern eine Tautologie. Ersatzweise war **gegenseitig
+belegt**: Die vom Wrapper geladene Verteilung und das im Container
+vorinstallierte Gradle 8.14.3 stammten aus zwei Quellen, und der Vergleich
+ihrer Programmbibliotheken ergab 188 von 188 JAR bitgleich. Seit dem
+07.09.2026 ist die Adresse freigegeben. Die Zahl oben ist die aus
+`https://services.gradle.org/distributions/gradle-8.14.3-bin.zip.sha256`
+**und** zusätzlich am eigens frisch geladenen Archiv nachgerechnet
+(`sha256sum`, 137 393 837 Bytes) — zwei Wege, dieselbe Summe.
 
 Die Wrapper-JAR selbst liegt im Repositorium (das ist bei Gradle so
 vorgesehen). Ihre Prüfsumme, für den Fall, dass jemand sie nachrechnen will:
@@ -483,6 +626,16 @@ vorgesehen). Ihre Prüfsumme, für den Fall, dass jemand sie nachrechnen will:
 SHA-256  7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172
          gradle/wrapper/gradle-wrapper.jar   (aus Gradle 8.14.3)
 ```
+
+**R8 bleibt aus** (`isMinifyEnabled = false` in beiden Modulen; AN-5 nennt
+es mit). Die Begründung steht dort, wo die Ausnahmen hingehörten, wenn es je
+welche gäbe: `handy/proguard-rules.pro` und `uhr/proguard-rules.pro`. Kurz:
+Die App hat rund zwei Dutzend Klassen, das Ersparte fiele neben den
+Compose-Bibliotheken nicht ins Gewicht, und ein verschleierter Stapelauszug
+nähme dem Gerätetest (E-R45-7) den einzigen Fehlerbericht, den er hat.
+Verschleierung ist auch kein Sicherheitsmerkmal: Der Geräteschlüssel liegt im
+Keystore, nicht im Code, und im APK steht nichts, was ein Leser nicht auch im
+öffentlichen Repositorium fände.
 
 ## 3. Warum es zwei Module gibt und trotzdem gemeinsamen Quelltext
 
@@ -611,6 +764,15 @@ ein echtes `ingest.php` und prüft am Server nach, dass Segment und Diensttag
 geschlossen sind. Er sagt nichts über Zeitpunkte und nichts über
 Prozesstode — aber alles über die Nachricht selbst.
 
+Und was das **Sofortpaket Sicherheit** (Android 0.14.0, Nr. 142–145 und der
+Räumteil von 114) dazugelegt hat:
+
+| Nicht prüfbar | Warum | Wo es geprüft wird |
+|---|---|---|
+| **Ob eine echte Uhr nach der Absenderprüfung noch ankommt** (Nr. 144) | Kein Data Layer mit Telefonseite im Container. Geprüft ist die Entscheidung (`Uhrannahme`, 19 Fälle gegen echtes SQLite), nicht, was `connectedNodes` auf Hardware liefert | Gerätetest mit Uhr: Dienst an der Uhr beginnen, die Quittung muss kommen; `adb logcat -s NAdoku` darf kein „unbekanntem Knoten" zeigen |
+| **Das Klartextverbot auf Android 8.0/8.1** (Nr. 142) | Kein Gerät mit API 26/27; der Emulator läuft mit API 34, wo Android Klartext ohnehin verbietet | Gerätetest, falls ein altes Gerät greifbar ist; ersatzweise die Manifest-Zusammenführung (`build/intermediates/merged_manifest/release/`, Eintrag `networkSecurityConfig`) |
+| **Der Räumlauf nach 30 Tagen im Feld** (Nr. 114) | Die Frist lässt sich nur im Prüfstand stellen (`jetzt`) | Robolectric: `AbgewieseneTest` und `SenderTest`; am Gerät nur über das Trennen |
+
 ### Der Emulator — er läuft, und er ist ab 03.09.2026 Pflicht
 
 **Die Regel zuerst** (CLAUDE.md 6, angewiesen am 03.09.2026): Bei jeder
@@ -723,6 +885,79 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
     emulierten Kern. Dass die Seite ankam, misst man deshalb **am Server**
     (`tail /tmp/php-server.log` → `[200]: GET /datenschutz.php`), nicht am
     Bild.
+  **Vierter Lauf am 07.09.2026 (0.14.0): erst kein Boot, dann der Grund.**
+  Derselbe Aufbau (`aufbauen` frisch, Emulator 37.1.11,
+  `android-34;default;x86_64`, `-accel off -memory 6144`), vier Anläufe ohne
+  `sys.boot_completed` — 14, 38, 22 und 12 Minuten —, obwohl `adb devices`
+  ab der dritten Minute `device` sagte. Der `logcat` nannte die Ursache: Der
+  Android-**Watchdog** erschießt den `system_server` nach 60 s Blockade in
+  `ActivityManagerService.systemReady` („`Watchdog: *** GOODBYE!`", SIG 9);
+  Zygote beendet sich, alles startet neu, und unter TCG ist das eine
+  Schleife. Die Läufe von 0.7.2 bis 0.13.0 haben diese Klippe offenbar
+  knapp umschifft — 621 s Boot war kein schlechter Tag, sondern Glück.
+
+  **Gegenmittel, jetzt in `emulator.sh start`:** `ro.hw_timeout_multiplier=10`
+  streckt jede Watchdog-Frist (Cuttlefish nutzt dieselbe Eigenschaft für
+  langsame Geräte). `-prop` kann sie nicht setzen (nur `qemu.*`) — aber das
+  Abbild ist `userdebug`: Sobald `adbd` da ist (120 s), `adb root`, `setprop`
+  (eine `ro`-Eigenschaft nimmt den ersten Wert an), dann `stop; start`, damit
+  der nächste `system_server` sie liest. Danach: Boot **553 s** ab Neustart,
+  **715 s** gesamt, Prüf-APK **128 s**. Vier Stolpersteine mehr:
+
+  | Stolperstein | Was zu tun ist |
+  |---|---|
+  | Boot bleibt bei `device` stehen, `boot_completed` kommt nie | `adb logcat -d \| grep -a GOODBYE`; Watchdog-Faktor wie oben (`start` tut es) |
+  | Der Emulator stirbt, wenn die aufrufende Shell abgebrochen wird | `setsid nohup … < /dev/null &` — nie als Kind einer Shell, die jemand stoppen könnte |
+  | `bild` sagt immer „KEIN ABZUG" | `dumpsys window windows` druckt auf API 34 kein `mCurrentFocus`; `bild` fragt jetzt `dumpsys window` |
+  | „System UI isn't responding" liegt über der App | `settings put global hide_error_dialogs 1` (`start` setzt es); der ANR ist eine Eigenschaft der Emulation, nicht der App |
+
+  **Was der Lauf zeigte** (acht Bilder in `emulator-bilder/`, nicht im
+  Repositorium): Kopplung gegen die lokale Installation — Code `S4Y ZPF`, im
+  Web als Demo-Konto bestätigt, „Ja, koppeln", `devices`-Zeile am Server —,
+  die rote Zeile „1 Paket vom Server abgewiesen" (per `sqlite3` als Root
+  eingespielt: Paket, Punkt, Phase, beendete Dienstzeile), Einstellungen,
+  „Gerät trennen" mit Rückfrage, „Getrennt". Und der **Räumlauf am echten
+  Android-SQLite**: nach dem Trennen 0 Pakete, 0 abgewiesen, 0 Punkte,
+  0 Phasen, 0 Dienstzeilen — vorher je 1 —, Gerät am Server gelöscht, kein
+  Absturz. Der Wear-Emulator ist für 0.14.0 nicht gefahren worden: Das
+  Uhr-Modul hat keine Änderung, die es ausführt.
+
+  **Fünfter Lauf am 07.09.2026 (0.14.1, „GPS-Daten" statt „Spur"):** fünf
+  Bilder in `emulator-bilder/0141-*.png`, eines je geändertem Text —
+  Dienstansicht ohne Ortungsfreigabe (`ortung_fehlt_hinweis`), laufender
+  Dienst im Modus „nur aufzeichnen" (`modus_nur_aufzeichnen_hinweis`),
+  Warnung „Keine Aufzeichnung" bei ausgeschaltetem Standort
+  (`warnung_standort_aus`), Warnung „Akku unter 15 %"
+  (`warnung_akku_niedrig`) und die Kanalseite der Systemeinstellungen mit
+  dem Zweck des Kanals „Aufzeichnung" (`dienst_kanal_zweck`). Kopplung gegen
+  die lokale Installation als Demo-Konto (Code `DNF W3E`, im Web bestätigt,
+  „Ja, koppeln"), Dienst 21:07 bis 21:41, 32 Punkte nach zwei Minuten.
+  Zahlen: Boot **502 s** (adbd nach 181 s, Watchdog-Faktor gesetzt), Prüf-APK
+  **119 s**. Fünf Stolpersteine, die der Lauf gekostet hat, damit der nächste
+  sie nicht zahlt:
+
+  | Stolperstein | Was zu tun ist |
+  |---|---|
+  | Der erste Emulator war nach dem Boot weg — ohne OOM (15 GB frei), ohne Meldung, kurz nachdem die Hintergrund-Shell, die `start` gerufen hatte, geendet war | `start` aus einer Shell rufen, die bleibt (hier: ein Monitor); der zweite Emulator überlebte auch das Ende dieser Shell — die Ursache ist nicht geklärt, die Regel lautet trotzdem: Startshell offen halten |
+  | „Keine Verbindung" beim Koppeln | Das APK aus `./gradlew build` zeigt auf `https://nadoku.gen-em.org/`; das Prüf-APK braucht `:handy:assembleDebug -Pnadoku.serverBasis=http://127.0.0.1:8080/` **und** `adb reverse tcp:8080 tcp:8080`. Der Baulauf oben prüft die App, nicht ihre Erreichbarkeit |
+  | Ein Abzug ist schwarz, ein Tipp tut nichts | Unter TCG braucht die App **9 bis 30 s je Bild** (`EGL_emulation: app_time_stats`). Vor dem ersten Bild ist `screencap` schwarz (16 KB statt 100–200 KB), und `uiautomator dump` zeigt den Baum, der noch nicht gezeichnet ist — nach jedem Tipp 60–90 s warten und die Dateigröße des Abzugs lesen |
+  | Der Akkufall löst nicht aus | `dumpsys battery unplug` allein lässt `EXTRA_STATUS` auf „lädt"; dazu `dumpsys battery set status 3` (entlädt), und der Akkutakt misst nur **alle zwei Minuten** — mindestens 150 s warten. Danach `dumpsys battery reset` |
+  | `bild` verweigert die Benachrichtigungsleiste | `bild` prüft, ob die App im Vordergrund steht, und die Leiste ist `NotificationShade`; für ein Bild der Meldung `cmd statusbar expand-notifications`, dann `adb exec-out screencap -p` unmittelbar, danach `cmd statusbar collapse` |
+
+  Und eine Beobachtung, die kein Fehler der App ist, aber eine Falle des
+  Prüfstands: Das Demo-Konto wird alle 30 Minuten aus der Fixture neu
+  eingespielt, und das nimmt seine Geräte mit. Ein Gerät, das um 21:03 an
+  das Demo-Konto gekoppelt wurde, war um 21:37 am Server weg — das Paket vom
+  Dienstende bekam `401`, die App sagte „Schlüssel abgewiesen · Gerät neu
+  koppeln", und ein Paket mitten im Reset bekam `500` (Fremdschlüssel 1452,
+  der Diensttag war gerade gelöscht). Wer länger als eine halbe Stunde
+  prüft, koppelt an ein anderes Konto. Und die Beobachtung führt zu einem
+  Fund an der App: „Gerät trennen" **blieb verweigert** — „Rückstand
+  1 Paket", und das Paket kann mit dem abgewiesenen Schlüssel nie mehr
+  gehen. Senden geht nicht, Trennen geht nicht, Neukoppeln setzt Trennen
+  voraus: **Backlog Nr. 157**. Der Lauf endete deshalb mit `pm clear`
+  statt mit „Getrennt".
+
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf
   Hardware.

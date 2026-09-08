@@ -307,12 +307,12 @@ ui_seite_start([
       <input type="hidden" name="wrap_rc"   id="wrap_rc">
       <input type="hidden" name="key_check" id="key_check">
       <?php ui_feld(['id' => 'pw1', 'label' => 'Passwort', 'art' => 'password',
-                     'pflicht' => true, 'klein' => 'Mindestens 10 Zeichen.',
-                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                     'pflicht' => true, 'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen.',
+                     'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <span class="pwstaerke" id="pwq"></span>
       <?php ui_feld(['id' => 'pw2', 'label' => 'Wiederholen', 'art' => 'password',
                      'pflicht' => true,
-                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                     'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Passwort festlegen', 'art' => 'primaer',
                       'breit' => true, 'attr' => ' id="gobtn"']) ?>
@@ -343,12 +343,12 @@ ui_seite_start([
                eingegeben ist und der Knopf gedrueckt wurde. */ ?>
       <p class="zustandszeile" id="rcstate"></p>
       <?php ui_feld(['id' => 'pw1', 'label' => 'Neues Passwort', 'art' => 'password',
-                     'pflicht' => true, 'klein' => 'Mindestens 10 Zeichen.',
-                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                     'pflicht' => true, 'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen.',
+                     'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <span class="pwstaerke" id="pwq"></span>
       <?php ui_feld(['id' => 'pw2', 'label' => 'Wiederholen', 'art' => 'password',
                      'pflicht' => true,
-                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+                     'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Passwort speichern', 'art' => 'primaer', 'breit' => true]) ?>
       </div>
@@ -367,10 +367,10 @@ ui_seite_start([
 <script src="<?= asset('assets/pwquality.js') ?>"></script>
 <script>
 const ERSTVERGABE = <?= $erstvergabe ? 'true' : 'false' ?>;
-const WRAP_RC = <?= json_encode($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
+const WRAP_RC = <?= json_js($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
 // Zielwert der Rundenzahl (M2-01). Diese Seite baut die Ableitung immer neu
 // auf und nimmt deshalb nie einen Altwert.
-const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
+const KDF_ITER_ZIEL = <?= json_js(KDF_ITER_ZIEL) ?>;
 const state = document.getElementById('state');
 const form  = document.getElementById('pwform');
 

@@ -91,6 +91,16 @@ class Sitzung:
 
     # ---- Anmelden -------------------------------------------------------
     def anmelden(self, email: str, passwort: str) -> "Sitzung":
+        # Das Anmeldeformular traegt seit Web 15.6.0 ein CSRF-Token
+        # (Backlog Nr. 127). Ohne einen GET auf login.php gibt es weder Sitzung
+        # noch Token, und der POST endet mit "Das Formular ist abgelaufen" --
+        # eine Meldung, die wie ein Passwortfehler aussieht und keiner ist.
+        seite = self.get("login.php").text
+        m = re.search(r'name="csrf"\s+value="([0-9a-f]+)"', seite)
+        if not m:
+            raise RuntimeError("login.php nennt kein Formular-Token")
+        formular_token = m.group(1)
+
         salz = self.post("auth_salt.php", json={"email": email},
                          headers={"Content-Type": "application/json"}).json()
         if "salt" not in salz:
@@ -113,6 +123,7 @@ class Sitzung:
             self.ableitungen[r] = dk
 
         antwort = self.post("login.php", {
+            "csrf": formular_token,
             "email": email,
             "tokens": json.dumps(token_nach),
         }, allow_redirects=True)

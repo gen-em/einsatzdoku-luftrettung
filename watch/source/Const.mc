@@ -22,8 +22,16 @@ module Const {
      *        erzeugten Code voraus, und den gibt es nicht mehr (E-R49-7).
      *        Bestehende Kopplungen sind davon nicht beruehrt: ingest.php und
      *        Vertragsabschnitt 1 aendern sich nicht.
+     *   3.1  die Uhr unterscheidet eine STOERUNG von einer dauerhaften
+     *        Ablehnung (Backlog Nr. 159). Bis dahin lief jede Antwort ausser
+     *        Erfolg in denselben Zweig und wurde endlos wiederholt -- ein
+     *        Paket, das der Server nie annimmt, blockierte damit die ganze
+     *        Warteschlange, und weil ein Rueckstand zugleich das Trennen
+     *        sperrte, war die Uhr danach nur noch durch Loeschen der App zu
+     *        retten. Neben-, nicht Hauptnummer: Der Weg durch die Anwendung
+     *        bleibt derselbe, es kommen eine Anzeige und eine Taste dazu.
      */
-    const APP_VERSION = "3.0.2";
+    const APP_VERSION = "3.1.0";
 
     /* Wie oft die Kopplungsansicht nachfragt, ob jemand den Code eingetragen
      * hat (E-S5-32, Vertrag 1a.2: "hoechstens alle fuenf Sekunden").

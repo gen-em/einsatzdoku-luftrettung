@@ -265,7 +265,7 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
          derselben Datei. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script>
-const SPUREN = <?= json_encode($spuren, JSON_UNESCAPED_UNICODE) ?>;
+const SPUREN = <?= json_js($spuren, JSON_UNESCAPED_UNICODE) ?>;
 
 const map = L.map('map');
 map.setView([47.7, 10.3], 9);

@@ -27,11 +27,18 @@ import org.genem.nadoku.BuildConfig
  * nicht bei der Kopplung — [BASIS] wirft, wenn nichts Brauchbares dasteht.
  *
  * NUR HTTPS (E-S4-14). Ein eingetragenes `http://` wird zu `https://`, und es
- * gibt keinen Ausnahmeschalter — mit einer benannten Ausnahme: `localhost` und
- * IPv4-Adressen behalten ihr `http`, weil der Prüfstand ohne TLS gegen
+ * gibt keinen Ausnahmeschalter — mit einer benannten Ausnahme, die **nur das
+ * Prüf-APK** kennt (seit 0.14.0, Backlog Nr. 142): Im Debug-Bau behalten
+ * `localhost` und IPv4-Adressen ihr `http`, weil der Prüfstand ohne TLS gegen
  * `127.0.0.1:8080` spricht und eine Zwangsumleitung ihn ins Leere laufen
- * ließe. Für jeden echten Rechnernamen gilt HTTPS ohne Ausnahme; ein
- * Geräteschlüssel im Klartext wäre die Kopplung nicht wert.
+ * ließe. Im Release gilt HTTPS für **jede** Adresse, auch für eine IP: Bis
+ * 0.13.0 galt die Ausnahme in beiden Bauarten, und wer sein APK mit einer
+ * IP-Adresse als `SERVER_BASIS` baute, schickte den Geräteschlüssel auf
+ * Android 8 im Klartext (Krypto-Review AN-1) — der Standardbau mit fester
+ * Domain war nie betroffen. Dazu verbietet die Netzsicherheitsregel des
+ * Release-Baus (`src/release/res/xml/netzsicherheit.xml`) Klartext auf
+ * Systemebene: zwei Böden, damit ein Fehler in dieser Datei allein nicht
+ * reicht. Ein Geräteschlüssel im Klartext wäre die Kopplung nicht wert.
  *
  * GESPEICHERT WIRD NICHTS MEHR. Die Basis ist eine Konstante des Baulaufs;
  * `Einstellungen.serverBasis` ist mit dieser Fassung entfallen.
@@ -100,12 +107,16 @@ object Serveradresse {
         if (!pfad.endsWith("/")) pfad = "$pfad/"
 
         // 5. Das Schema entsteht aus dem Rechnernamen, nicht aus der Eingabe.
-        //    HTTPS ist die Regel (E-S4-14). Die Ausnahme ist der Prüfstand:
+        //    HTTPS ist die Regel (E-S4-14). Die Ausnahme ist der Prüfstand,
+        //    und sie gilt NUR IM PRÜF-APK (`BuildConfig.DEBUG`, Nr. 142):
         //    `localhost` und eine IPv4-Adresse behalten `http`, weil der
-        //    örtliche PHP-Server ohne TLS antwortet. Sie taugen ohnehin nicht
-        //    als Adresse einer ausgelieferten App — ein Gerät im Feld erreicht
-        //    unter 127.0.0.1 sich selbst und keinen Server.
-        val schema = if (OERTLICH.matches(rechner)) "http" else "https"
+        //    örtliche PHP-Server ohne TLS antwortet. Im Release fällt auch
+        //    eine IP-Adresse unter HTTPS — sie taugt ohnehin nicht als
+        //    Adresse einer ausgelieferten App (ein Gerät im Feld erreicht
+        //    unter 127.0.0.1 sich selbst), aber ein Selbsthoster, der sie
+        //    trotzdem einträgt, soll den Geräteschlüssel nicht im Klartext
+        //    verschicken.
+        val schema = if (BuildConfig.DEBUG && OERTLICH.matches(rechner)) "http" else "https"
 
         return "$schema://$rechner$pfad"
     }
@@ -114,7 +125,7 @@ object Serveradresse {
      * Ein Rechnername ohne Namensauflösung: `localhost` oder eine
      * IPv4-Adresse, je mit oder ohne Port. Der Port gehört mit ins Muster —
      * `rechner` trägt ihn, und `localhost:8080` ist genau die Form, mit der
-     * der Prüfstand spricht.
+     * der Prüfstand spricht. Wirkt nur im Prüf-APK (Schritt 5).
      */
     private val OERTLICH = Regex("^(localhost|(\\d{1,3}\\.){3}\\d{1,3})(:\\d{1,5})?$")
 

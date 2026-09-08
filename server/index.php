@@ -491,13 +491,13 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
 <script src="<?= asset('assets/schneiden.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
-const SEL_DAY_ID = <?= json_encode($selDay) ?>;
+const SEL_DAY_ID = <?= json_js($selDay) ?>;
 const DEF_VEHICLE = <?= (int)($SD_DEFAULTS['vehicle_id'] ?? 0) ?>;
 const DEF_BASE = <?= (int)($SD_DEFAULTS['base_id'] ?? 0) ?>;
 /* Spalten der Tagestabelle — dieselbe Liste, aus der oben der Tabellenkopf
    entstanden ist. Der Titel fehlt hier bewusst: Er steht bereits im <thead>,
    und das Skript baut nur noch Zellen. */
-const DAY_COLS = <?= json_encode(array_map(
+const DAY_COLS = <?= json_js(array_map(
         static fn(array $dc): array => ['col' => $dc['col'], 'art' => $dc['art'],
                                         'klasse' => $dc['klasse']],
         $TAGESSPALTEN), JSON_UNESCAPED_UNICODE) ?>;

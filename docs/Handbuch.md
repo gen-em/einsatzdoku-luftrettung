@@ -97,6 +97,20 @@ Zurück zum Startbildschirm geht es mit **kurz UP** oder mit **BACK**; beide
 tun dasselbe. Weiter nach unten führt von hier nichts: Die Oberflächen aus
 Abschnitt 2.2 gibt es erst im laufenden Dienst.
 
+> **Steht dort etwas in Rot?** Zwei Meldungen sind seit Uhr 3.1.0 möglich, und
+> beide sagen dir, was zu tun ist.
+>
+> „**Gerät nicht mehr angemeldet**" heißt: Der Server kennt diese Uhr nicht
+> mehr — sie wurde in den Einstellungen gelöscht oder abgeschaltet. Die Uhr
+> hört dann auf zu senden und **behält alles**; nichts geht verloren. Der Weg
+> zurück ist eine neue Kopplung (*lang START*).
+>
+> „**1 abgewiesen**" heißt: Der Server hat dieses eine Paket dauerhaft
+> zurückgewiesen, es kommt nie an. Alles andere wird weiter gesendet. Mit
+> **kurz START** kannst du es verwerfen; die Uhr fragt vorher nach, denn die
+> Aufzeichnung ist danach fort. Solange du es stehen lässt, belegt es Platz
+> im Speicher der Uhr — beim Trennen der Kopplung wird es ohnehin verworfen.
+
 ### 2.2 Die Oberflächen
 
 Mit **kurz UP/DOWN** blätterst du im Kreis durch: **Uhr → Tempo → Statistik →
@@ -342,12 +356,42 @@ verschlüsselten Daten vorliegen.
 wird der vorherige damit ungültig. Nimm also die neueste E-Mail — eine ältere
 führt zu „Link ungültig oder abgelaufen".
 
+**Mindestens zwölf Zeichen** (bis Web 15.5.2 waren es zehn). **Am besten vier
+zufällige Wörter, die nichts miteinander zu tun haben** — „Anker Winter Regen
+Glas" ist leichter zu merken und schwerer zu raten als „Kl!n1k2026". Länge
+zählt hier mehr als Sonderzeichen, und das ist keine Geschmacksfrage, sondern
+die Rechnung eines Rateangriffs.
+
+**Warum das mehr wiegt als sonst.** Wer die Datenbank stiehlt, kann dein
+Passwort ausprobieren, so oft er will — auf seinem eigenen Rechner, ohne
+Sperre nach Fehlversuchen und ohne dass es jemand merkt. Der einzige Schutz
+dagegen ist ein Passwort, das sich nicht raten lässt. Der Server kann dabei
+nicht helfen: Er sieht das Passwort nie (Abschnitt 5), also kann er seine Güte
+auch nicht prüfen. Was die Seite prüft, prüft dein Browser.
+
+**Was die Seite abweist:** geläufige Wörter und Muster — auch dienstliche wie
+„Notarzt" oder „Rettung", auch mit angehängter Jahreszahl. Gemessen wird nicht
+das Vorkommen, sondern was **übrig bleibt**, wenn man die geläufigen Teile
+wegnimmt: „Winterurlaub2026" ist im Kern ein Listenwort,
+„Anker-Winter-Regen-Glas" nicht. Sonderzeichen zählen dabei mit,
+Bindestrich, Punkt, Unterstrich und Leerzeichen nicht — „Winter-Urlaub-2026"
+ist kein besseres Passwort als „Winterurlaub2026". Die Meldung unter dem
+Feld sagt, **was** gestrichen wurde und wie viel übrig blieb — damit du nicht
+raten musst, woran es lag. Ein gewürfeltes Passwort aus dem Passwortverwalter
+wird an dieser Regel nicht gemessen; es enthält kein Listenwort.
+
 **Die Passwortstärke** zeigt sich beim Tippen als Balken aus vier Segmenten:
 je mehr gefüllt, desto besser. Rot heißt zu kurz oder zu leicht zu raten,
 Orange geht, Dunkelblau ist gut. Die Stärke des Passworts ist unmittelbar die
 Stärke der Verschlüsselung — es schützt nicht nur den Zugang, sondern leitet
 den Schlüssel ab, mit dem Diagnose, Alter und Einsatzort verschlüsselt werden
 (Abschnitt 5).
+
+**Die erste Anmeldung nach dem Update dauert länger.** Seit Web 15.6.0 rechnet
+der Browser mit 600 000 statt 320 000 Runden; solange ein Konto noch auf der
+alten Zahl steht, rechnet die Anmeldung beides durch und braucht dafür etwa die
+doppelte Zeit. Das hört von selbst auf: Beim ersten Anmelden wird das Konto
+still nachgezogen, danach ist es wieder eine Rechnung. Zu tun ist nichts.
 
 **Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
 Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
@@ -399,6 +443,20 @@ genommen, gilt das ab dem nächsten Klick; ein Ab- und Anmelden ist nicht nötig
 Unter dem Zahnrad → **Profil** stehen dein Anzeigename (er erscheint in der
 Kopfleiste neben der Marke), deine Anmelde-Adresse und seit Web 9.7.0 die
 **Logo-Wahl**.
+
+**Die E-Mail-Adresse zu ändern verlangt seit Web 15.6.0 dein aktuelles
+Passwort.** Sie ist die Anmeldung zu diesem Konto: Wer sie ändert, ändert, wer
+hereinkommt — und wer sich anschließend den Link „Passwort vergessen" schicken
+lässt, ändert, wem das Konto gehört. Deshalb steht unter der Adresse ein Feld
+für das Passwort. Für **Name und Logo** brauchst du es nicht; leer lassen
+genügt, solange die Adresse stehen bleibt.
+
+**An die alte Adresse geht eine Nachricht.** Sie sagt, welche Adresse jetzt
+gilt und dass du dich melden sollst, falls du es nicht warst. Sie geht bewusst
+an die **alte** Adresse — sie ist die einzige, die im Missbrauchsfall noch dir
+gehört. Dasselbe gilt, wenn die Verwaltung die Adresse eines Kontos ändert
+(11.1). Eine **Bestätigung der neuen** Adresse gibt es noch nicht; die neue
+gilt sofort.
 
 Seit Web 15.0.0 steht dort auch deine **Rolle** — NutzerIn, Admin oder
 BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter dem
@@ -702,6 +760,17 @@ werden kaputte Dateien, Dateien ohne Track (nur Wegpunkte oder Routen), mehr
 als **50 000 Punkte** (das sind knapp 14 Stunden bei einem Punkt je Sekunde)
 und Dateien über **12 MB**. In jedem Fall steht der Grund im Dialog, und es
 entsteht nichts.
+
+**Die Datei sollte UTF-8 sein.** GPX schreibt das vor, und Geräte halten sich
+daran. Wählst du die Datei im Browser aus, wandelt er sie beim Lesen nach
+UTF-8 um — die Punkte kommen dann an, Umlaute aus einer Latin-1-Datei aber
+als Ersatzzeichen; sie stehen nur im Namen der Spur, und den speichert der
+Import nicht. Wer den Import unmittelbar über die Schnittstelle anspricht,
+muss UTF-8 liefern: Dort werden eine andere Kodierung, ein Nullbyte oder eine
+Kodierungsangabe wie UTF-7 oder UTF-16 abgelehnt (seit Web 15.6.0), und die
+Meldung sagt, was zu tun ist: als UTF-8 speichern und erneut versuchen. Eine
+Kodierungsangabe wie ISO-8859-1 in einer Datei, deren Inhalt UTF-8 ist — so
+kommt die Latin-1-Datei aus dem Dateidialog an —, ist dagegen erlaubt.
 
 **Was toleriert wird:** GPX 1.0 ebenso wie 1.1, und Dateien ohne
 Namensraumangabe. Mehrere Abschnitte in einer Datei werden zu **einer** Spur
@@ -1541,6 +1610,16 @@ es nicht mehr.
 - Verschlüsselte Felder sind serverseitig nicht durchsuchbar; der Schutz wirkt
   gegen Datenbank-Diebstahl und Mitleser, prinzipbedingt nicht gegen einen
   vollständig übernommenen Server.
+- **Verschlüsselt sind nicht alle Daten, sondern diese:** Name, Geburtsdatum,
+  Alter, Diagnose, Einsatznummer sowie Adresse, Koordinate und Beschreibung des
+  Einsatzorts. **Im Klartext liegen dagegen:** die GPS-Spur, die Koordinate
+  jeder Einsatzphase, das Transportziel, alle Zeiten, der Verlauf einer
+  Reanimation und die Namen der Besatzung — sie werden für Auswertung und
+  Statistik gebraucht, die der Server rechnet.
+  **Der Einsatzort lässt sich damit aus der Spur ableiten**, auch wenn die
+  Adresse verschlüsselt ist. Das ist keine Lücke, sondern die Grenze dieser
+  Bauform, und sie steht hier, damit niemand mehr erwartet, als sie hält. Wer
+  eine Installation betreibt, behandelt den Datenbankzugang entsprechend.
 - Zeigt eine Seite „gesperrt“, lässt sich das direkt dort beheben — siehe
   **„Gesperrt: entsperren statt neu anmelden“** weiter unten.
 
@@ -1623,7 +1702,7 @@ Datei und kann nicht auseinanderlaufen.
 
 Unter **Einstellungen → „Backup"** (Zahnrad in der Kopfleiste) lädst du alle
 deine Daten als **eine** verschlüsselte Datei (`.edbak`) herunter — Passwort
-frei wählbar, mindestens 10 Zeichen, wird nirgends gespeichert. In dieser
+frei wählbar, mindestens 12 Zeichen, wird nirgends gespeichert. In dieser
 Datei stehen **alle geschützten Angaben im Klartext**; zwischen ihnen und
 jedem, der die Datei in die Hand bekommt, steht nur dieses Passwort.
 
@@ -1700,7 +1779,7 @@ wissen: Die nimmt die Datei zwar an, kennt den Papierkorb darin aber nicht und
 legt seine Einträge als aktive Einsätze und Diensttage an. Dort also
 anschließend nachsehen.
 
-**Das Backup-Passwort.** Mindestens zehn Zeichen, und die Seite sagt während
+**Das Backup-Passwort.** Mindestens zwölf Zeichen, und die Seite sagt während
 der Eingabe, wie stark das Gewählte ist. Wer mag, setzt stattdessen das Häkchen
 **„Mein Kontopasswort verwenden“** und tippt sein Anmeldepasswort ein — dann
 gibt es ein Passwort weniger zu verwahren, und die Datei ist genauso geschützt
@@ -1976,7 +2055,7 @@ Excel-Formate brauchen das nicht — dort entstehen echte Textzellen.
 **Mit Passwort schützen** ist seit Web 5.7.0 **vorbelegt** — der Schutz ist der
 Normalfall, nicht die Ausnahme. Abwählen bleibt jederzeit möglich; nur muss man
 es jetzt bewusst tun statt es zu vergessen. Verschlüsselt wird mit AES-256,
-mindestens zehn Zeichen, dieselbe Prüfung wie beim Anmeldepasswort. Anders als
+mindestens zwölf Zeichen, dieselbe Prüfung wie beim Anmeldepasswort. Anders als
 beim Backup wird hier **nicht** angeboten, das Kontopasswort zu verwenden: Eine
 Exportdatei ist zum Weitergeben gedacht.
 
@@ -2381,6 +2460,39 @@ drei Punkten am rechten Rand der Zeile, in jeder Bildschirmbreite. Darin:
 bereits hochgeladenen Daten bleiben erhalten, und Aktivieren schaltet dasselbe
 Gerät wieder frei.
 
+> **Uhr verloren? Sofort trennen.** Auf der Garmin-Uhr liegt der
+> Zugangsschlüssel im Klartext — die Plattform bietet nichts Besseres. Lesen
+> kann ein Finder damit nichts: Er kommt an keinen einzigen Datensatz. Er kann
+> aber **hochladen**, solange das Gerät gekoppelt ist. **Deaktivieren** oder
+> **Entkoppeln** beendet das augenblicklich; die hochgeladenen Daten bleiben
+> in beiden Fällen erhalten.
+>
+> Bis dahin gilt seit Web 15.6.0 eine Grenze: Ein Gerät darf einen
+> **bestehenden** Einsatz oder eine bestehende Ruhezeit nur noch **72 Stunden**
+> lang verändern, gerechnet ab dem Augenblick, in dem das erste Paket dazu
+> beim Server ankam — nicht ab der Uhr des Geräts, die nach- oder vorgehen
+> kann. Danach nimmt der Server das
+> Paket zwar an — die Uhr soll nicht in eine Fehlerschleife laufen —, ändert
+> aber nichts mehr daran. Die 72 Stunden decken das Wochenende ab: Ein
+> Freitagsdienst, der erst am Montag synchronisiert, kommt noch nach.
+>
+> **Neue** Einsätze legt ein Gerät weiterhin jederzeit an. Sie sind sichtbar
+> und löschbar und überschreiben nichts — auch Beginn und Ende eines älteren
+> Diensttags nicht — aber sie stehen dann in deinem
+> Bestand. Auch deshalb: trennen, nicht abwarten.
+>
+> Meldet ein Gerät Zeiten, die nicht zu ihrem Tag gehören — ein Einsatz, der
+> als Tag den 9. August nennt und als Beginn das Jahr 2001 —, kommt der
+> Einsatz trotzdem an und ist sichtbar und löschbar; **nur Beginn und Ende
+> deines Dienstes** werden daraus nicht berechnet. Eine Uhr mit falsch
+> gestellter Zeit sperrt sich damit nicht selbst aus. Ein Dienst, der
+> **verspätet** hochgeladen wird — die Uhr war eine Woche ohne Netz —, kommt
+> vollständig an und bekommt seinen Diensttag mit Beginn und Ende wie immer.
+>
+> Die **Wear-OS-Uhr** ist von alledem nicht betroffen. Sie kennt weder
+> Serveradresse noch Schlüssel; sie schickt ihre Ereignisse ans Handy, und das
+> Handy sendet.
+
 **„Entkoppeln" hieß bis Web 15.4.1 „Löschen".** Der neue Name sagt, was
 geschieht: Der Zugangsschlüssel wird ungültig, das Gerät kann nichts mehr
 hochladen — und die **Daten bleiben**. „Löschen" las sich, als gingen sie mit.
@@ -2612,7 +2724,7 @@ unberührt weiter.
 |---|---|
 | „Alles gesendet" | Der Server hat alles. |
 | „Rückstand 2 Pakete" | Zwei abgeschlossene Pakete sind noch nicht bestätigt. Darunter steht der Knopf **„Jetzt senden"**, falls es schneller gehen soll. |
-| „1 Paket vom Server abgewiesen" *(rot)* | Der Server hat den Inhalt abgelehnt. **Das geht nicht von selbst weg** und wird auch nicht wiederholt — bitte melden; die Daten liegen weiter auf dem Telefon. |
+| „1 Paket vom Server abgewiesen" *(rot)* | Der Server hat den Inhalt abgelehnt. **Es wird nicht wiederholt** — bitte melden, solange die Zeile steht: Die Daten liegen noch **30 Tage** auf dem Telefon, danach räumt die App sie weg (seit Android 0.14.0); auch das Trennen des Geräts löscht sie. Einen Weg, sie von Hand nachzureichen, gibt es noch nicht. |
 
 Nach jedem Sendeversuch steht darunter kurz das Ergebnis: „Gesendet · 12:41",
 „Keine Verbindung · wird nachgeholt" oder „Schlüssel abgewiesen · Gerät neu
@@ -2651,7 +2763,7 @@ Darunter:
 
 | Karte | Was dort steht |
 |---|---|
-| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. |
+| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. Wird die **Adresse** geändert, geht seit Web 15.6.0 eine Nachricht an die **alte** — sie ist die einzige, die im Missbrauchsfall noch der Besitzerin gehört (3.1a). |
 | **Geräte** | Die gekoppelten Geräte — Uhren wie Handys — mit Kennung, Art und Modell (seit Web 12.9.0), Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
@@ -2942,6 +3054,35 @@ Speichern-Leiste, und die nennt, **was** ungespeichert ist.
 > Installation hat noch kein Impressum hinterlegt." Als Verwaltung siehst du
 > dort zusätzlich den Weg hierher.
 
+> **Ein Absatz, der in keiner Datenschutzerklärung dieser Anwendung fehlen
+> darf** (Backlog Nr. 138). Die Anwendung liefert weiterhin keinen Text mit —
+> dieser eine Absatz ist keine Rechtsauskunft, sondern eine **technische
+> Tatsache über diese Software**, die nur wir kennen können. Zum Übernehmen:
+>
+> ```
+> ## Welche Daten verschlüsselt gespeichert werden — und welche nicht
+>
+> Name, Geburtsdatum, Alter, Diagnose, Einsatznummer sowie Adresse,
+> Koordinate und Beschreibung des Einsatzorts werden bereits im Browser
+> verschlüsselt. Der Server speichert sie ausschließlich verschlüsselt und
+> kann sie nicht lesen; der Schlüssel wird aus dem Passwort des Kontos
+> abgeleitet.
+>
+> Nicht verschlüsselt gespeichert werden: die aufgezeichnete GPS-Spur, die
+> Koordinaten der einzelnen Einsatzphasen, das Transportziel, alle Zeiten,
+> der Verlauf einer Reanimation und die Namen der Besatzung. Diese Angaben
+> werden für Auswertungen und Statistiken benötigt, die der Server selbst
+> berechnet.
+>
+> Daraus folgt: Der Einsatzort lässt sich aus Spur und Phasenkoordinaten
+> ableiten, auch wenn die Adresse verschlüsselt ist. In Verbindung mit
+> Zeitpunkt und Ort können die unverschlüsselten Angaben Rückschlüsse auf
+> einzelne Personen erlauben.
+> ```
+>
+> Wer die Zeilen ändert, sollte den letzten Absatz stehen lassen: Er ist der
+> Grund, warum die anderen beiden dastehen.
+
 **Geschrieben wird in eingeschränktem Markdown.** Erlaubt sind vier Dinge:
 
 | Schreibweise | Ergebnis |
@@ -3038,6 +3179,13 @@ oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
 | **orange** | Es braucht Aufmerksamkeit, arbeitet aber. |
 | **rot** | Es arbeitet nicht — oder es geht dabei etwas verloren. |
 | grau | Nicht eingerichtet, oder eine reine Zahl ohne Wertung. |
+
+**Die Zeile „Schlüsselableitung"** sagt, ob alle Konten mit einer Rundenzahl
+rechnen, die diese Fassung anbietet, und wie viele noch unter dem Zielwert
+stehen („Übergang läuft" — die ziehen beim nächsten Anmelden still nach;
+solange, rechnet jede Anmeldung zweimal). Das Demo-Konto zählt dort nicht
+mit: Es bleibt auf der Rundenzahl seiner Fixture, und der Altwert bleibt
+deshalb in der Liste, bis der Referenzbestand neu gebaut ist.
 
 **Die Seite ändert nichts.** Jede Zeile führt auf die Seite, auf der sich
 etwas ändern lässt. Die einzige Ausnahme ist der fehlende **Serverschlüssel** —

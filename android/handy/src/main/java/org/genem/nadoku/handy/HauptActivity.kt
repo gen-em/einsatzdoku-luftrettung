@@ -118,6 +118,10 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
              * neue. Das wäre kein Datenverlust, sondern schlimmer — fremde
              * Einsätze in einem fremden Konto. */
             rueckstand = { app.puffer.rueckstand() },
+            /* BEIM TRENNEN GEHEN DIE ABGEWIESENEN PAKETE MIT (Backlog Nr. 114,
+             * Räumteil): ohne Frist, weil sie dem Konto gehören, das hier
+             * zurückgegeben wird. */
+            raeumen = { app.puffer.abgewieseneRaeumen(null) },
         )
     }
     val geraet = remember {
@@ -329,7 +333,7 @@ private fun GekoppelteOberflaeche(
         val phasen = einsatz?.let { app.puffer.phasen(it.id) }.orEmpty()
         Dienststand(
             laeuft = laufend != null,
-            begonnenHhmm = laufend?.let { Zeit.hhmm(Instant.parse(it.begonnenAt)) },
+            begonnenSeit = laufend?.let { Zeit.seit(Instant.parse(it.begonnenAt), Instant.now()) },
             modus = if (laufend != null) app.klammer.modus() else modus,
             punkte = offenesPaket?.let { app.puffer.punktzahl(it.id) } ?: 0L,
             streckeKm = "%.1f".format(app.klammer.streckeM() / 1000.0),

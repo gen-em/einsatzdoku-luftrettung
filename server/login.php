@@ -47,7 +47,28 @@ if ($hinweis === '' && isset($_GET['timeout'])) { $hinweis = session_ende_text('
  * Durchprobieren einer einzelnen Adresse voellig ungebremst.
  */
 $error = null;
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
+    /* ---- Login-CSRF (Backlog Nr. 127, K-8) ------------------------------
+     *
+     * DAS ANMELDEFORMULAR WAR DAS EINZIGE OHNE TOKEN. Eine fremde Seite konnte
+     * einen abgemeldeten Browser per Top-Level-POST in ein ANGREIFERKONTO
+     * anmelden — Adresse und Token des Angreifers im Formular, Absenden per
+     * Skript. Die Patientenfelder sind davon nicht betroffen (ohne `edk` oeffnet
+     * sich keine fremde Huelle), aber was danach eingegeben wird, landet im
+     * fremden Konto und ist dort lesbar.
+     *
+     * Die Sitzung besteht schon beim GET (Zeile 13), das Token liegt also vor.
+     *
+     * KEINE RATENSTRAFE. Der Zaehler (`rate_erlaubt`) bleibt unberuehrt: Ein
+     * abgelaufenes Formular ist kein Fehlversuch, und wer sich nach einer
+     * Mittagspause anmeldet, darf dafuer nicht gesperrt werden. Aus demselben
+     * Grund steht diese Pruefung VOR allen Zaehlern.
+     *
+     * KEINE 403-SEITE, sondern die Anmeldeseite mit einer Meldung — auf einer
+     * Seite, die man gerade ausgefuellt hat, ist eine Fehlerseite die falsche
+     * Antwort. Ein neues Token liefert dieselbe Seite gleich mit. */
+    $error = 'Das Formular ist abgelaufen. Bitte versuche es erneut.';
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* Eine Schreibweise fuer alle Stellen (M1-13, email_lib.php). Hier stand
      * bisher nur trim(): Dass die Anmeldung trotzdem funktionierte, lag allein
      * an der Sortierregel der Datenbank. Nebenbei behoben: rate_erfolg('salt',
@@ -183,6 +204,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             session_regenerate_id(true);
+            /* Auch das Formular-Token wird neu gezogen (Backlog Nr. 127). Die
+               Sitzungskennung wechselt eine Zeile darueber gegen die
+               Sitzungsuebernahme; ein Token, das der Angreifer vor der
+               Anmeldung gesetzt hat, ueberlebte diesen Wechsel sonst. */
+            unset($_SESSION['csrf']);
             $_SESSION['user_id'] = (int)$u['id'];
             /* Stand des Sitzungszaehlers mitfuehren (M1-09). Jede Anfrage
              * vergleicht ihn in auth_guard.php gegen die Zeile; ein
@@ -247,6 +273,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
     <?php /* Ein Token je Rundenzahl (M2-01). Das alte Feld 'token' entfaellt —
              der Server nimmt es weiterhin an, aber diese Seite fuellt es nicht
              mehr, weil sie nicht weiss, welche Rundenzahl fuer das Konto gilt. */ ?>
+    <?= csrf_field() ?>
     <input type="hidden" name="tokens" id="toks">
     <label>E-Mail
       <input type="email" name="email" required autofocus autocomplete="username">

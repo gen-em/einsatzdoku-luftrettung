@@ -322,6 +322,101 @@ function gpx_lesen(string $xml, ?Pruefliste $pruef = null): array
         throw new InvalidArgumentException('Die Datei ist leer.');
     }
 
+    /* ---- ERST DIE KODIERUNG, DANN DIE REGEX (Backlog Nr. 130, K-10) -----
+     *
+     * Die DOCTYPE-Sperre unten sucht die BYTEFOLGE `<!DOCTYPE`. In einem
+     * UTF-16-Dokument steht dort `<\0!\0D\0O\0…` — die Regex findet nichts,
+     * libxml erkennt die Kodierung an der Bytefolgemarke und liest die Datei
+     * anstandslos, Dokumenttyp-Deklaration und interne Entitaeten inbegriffen.
+     * Gemessen am Stand vor dieser Aenderung: ein UTF-16LE-GPX mit DOCTYPE und
+     * interner Entitaet ging durch und lieferte zwei Punkte.
+     *
+     * Der Weg dorthin fuehrt nicht ueber eine Datei-Auswahl im Browser --
+     * `api/gpx_import.php` nimmt den Inhalt als Zeichenkette im JSON-Koerper,
+     * und JSON kann ueber `\u0000`-Folgen jedes Byte unter 0x80 tragen. Ein
+     * angemeldeter Aufrufer baut das Dokument damit von Hand.
+     *
+     * ZWEI PRUEFUNGEN, WEIL SIE VERSCHIEDENES FANGEN. Ein Nullbyte kommt in
+     * keinem Text vor, den ein Geraet schreibt, und ist das Kennzeichen jeder
+     * Breitkodierung (UTF-16, UTF-32); gueltiges UTF-8 zu verlangen fasst
+     * denselben Fall allgemeiner und schliesst nebenbei jede Kodierung aus,
+     * die die Regex anders lesen wuerde als der Parser.
+     *
+     * WAS DAS KOSTET -- und was ueber den Dateidialog davon ankommt: Eine
+     * GPX-Datei in Latin-1 mit Umlauten wird auf dem JSON-Direktweg
+     * abgewiesen; die Meldung sagt, was zu tun ist. Ueber den Dateidialog
+     * der Oberflaeche kommen ihre BYTES nie an: `schneiden.js` liest sie mit
+     * `readAsText()`, der Browser dekodiert nach UTF-8 und ersetzt jedes
+     * ungueltige Byte durch U+FFFD -- am Server ist das gueltiges UTF-8 mit
+     * Ersatzzeichen im Namen (Gegenpruefung, Fund 9), kein Datenfehler,
+     * weil der Name nicht gespeichert wird. Was ueber den Dateidialog SEHR
+     * WOHL ankommt, ist die Kodierungsdeklaration der Datei als Text --
+     * `encoding="ISO-8859-1"` steht nach dem Dekodieren unveraendert da.
+     * Die Pruefung darunter muss sie deshalb durchlassen, sonst weist sie
+     * genau die Datei ab, um die es hier geht (zweite Gegenpruefung). */
+    if (strpos($xml, "\0") !== false) {
+        throw new InvalidArgumentException(
+            'Die Datei enthält ein Nullbyte und ist damit kein Text. Das deutet '
+            . 'auf eine Kodierung wie UTF-16 hin — bitte als UTF-8 speichern und '
+            . 'erneut versuchen.');
+    }
+    if (!mb_check_encoding($xml, 'UTF-8')) {
+        throw new InvalidArgumentException(
+            'Die Datei ist nicht in UTF-8 kodiert. GPX schreibt UTF-8 vor — bitte '
+            . 'so speichern und erneut versuchen.');
+    }
+
+    /* DIE KODIERUNGSDEKLARATION (Nachbesserung 07.09.2026, Gegenpruefung
+     * Fund 7). Die beiden Pruefungen oben fangen jede BREITE Kodierung --
+     * nicht aber eine, die reines ASCII ist und trotzdem etwas anderes
+     * bedeutet. UTF-7 ist so eine: gueltiges UTF-8, kein Nullbyte, und die
+     * Bytefolge `<!DOCTYPE` steht darin als `+ADwAIQ-DOCTYPE`, die Regex unten
+     * findet nichts. libxml aber liest `encoding="UTF-7"` aus der
+     * XML-Deklaration, dekodiert ueber iconv und expandiert die Entitaeten.
+     * Gemessen: ein UTF-7-Dokument mit DOCTYPE und interner Entitaet ging
+     * durch und lieferte zwei Punkte -- genau die Klasse, die der Absatz
+     * ueber "jede Kodierung, die die Regex anders lesen wuerde als der
+     * Parser" fuer geschlossen erklaert hatte.
+     *
+     * Deshalb darf die Deklaration nur eine Kodierung nennen, in der jedes
+     * ASCII-Zeichen sein eigenes Byte ist -- UTF-8 und ASCII, dazu die
+     * Ein-Byte-Familien ISO-8859, Windows-125x, Latin, KOI8, Mac Roman:
+     * Dort steht `<!DOCTYPE` als `<!DOCTYPE`, und die Regex unten sieht,
+     * was der Parser saehe. UTF-7, UTF-16/32 und EBCDIC koennen das nicht
+     * und werden abgewiesen. Von 935 Kodierungen aus `iconv -l` kamen
+     * genau UTF-7 und UTF7 durch; eine Liste erlaubter Namen schliesst
+     * alle, auch die, die niemand ausprobiert hat. Ohne Deklaration nimmt
+     * libxml UTF-8 an, und dann bleibt `+ADw-` ein Text. Die
+     * Bytefolgemarke davor ist erlaubt -- sie sagt selbst schon UTF-8.
+     *
+     * UND DIE DEKLARATION WIRD AUF UTF-8 UMGESCHRIEBEN, wenn sie etwas
+     * anderes nennt (zweite Gegenpruefung, Wiederaufnahme). Die erste
+     * Fassung dieser Pruefung liess nur UTF-8 und ASCII durch -- und wies
+     * damit die Latin-1-Datei aus dem Dateidialog ab, die bis dahin
+     * importierte (der Browser hatte ihre Bytes nach UTF-8 gewandelt, der
+     * Deklarationstext blieb): am Stand davor zwei Punkte, danach
+     * "nennt die Kodierung ISO-8859-1". Die Bytes SIND hier nachweislich
+     * UTF-8 (mb_check_encoding oben); liesse man libxml sie nach der
+     * Deklaration als Latin-1 lesen, wuerde jeder Umlaut zu zwei Zeichen.
+     * Also sagt die Deklaration, was die Bytes sind. */
+    if (preg_match('/^(?:\xEF\xBB\xBF)?\s*<\?xml\b[^>]*\bencoding\s*=\s*["\']([^"\']*)["\']/i', $xml, $kod)) {
+        $name = strtolower(trim($kod[1]));
+        $asciiVertraeglich = (bool)preg_match(
+            '/^(?:utf-?8|us-?ascii|ascii|iso[-_]?8859[-_]?(?:[1-9]|1[0-6])|latin-?(?:[1-9]|10)|l[1-9]'
+            . '|windows-?125[0-8]|cp-?125[0-8]|macintosh|mac-?roman|koi8-?[ru])$/', $name);
+        if (!$asciiVertraeglich) {
+            $genannt = substr(preg_replace('/[^A-Za-z0-9._-]/', '', $kod[1]), 0, 20);
+            throw new InvalidArgumentException(
+                'Die Datei nennt die Kodierung „' . $genannt . '". GPX schreibt UTF-8 vor — '
+                . 'bitte so speichern und erneut versuchen.');
+        }
+        if (!in_array($name, ['utf-8', 'utf8'], true)) {
+            $xml = preg_replace(
+                '/^((?:\xEF\xBB\xBF)?\s*<\?xml\b[^>]*\bencoding\s*=\s*)(["\'])[^"\']*\2/i',
+                '$1$2UTF-8$2', $xml, 1);
+        }
+    }
+
     /* KEINE DOKUMENTTYP-DEKLARATION. Das ist die Abwehr gegen XXE, und sie
      * steht VOR dem Parser, nicht darin: `libxml_disable_entity_loader()`
      * gibt es seit PHP 8 nicht mehr, externe Entitaeten laedt libxml seither

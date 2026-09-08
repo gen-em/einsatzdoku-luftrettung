@@ -876,7 +876,7 @@ function komp_aad(string $bindung, int $i, bool $letzte): string
 /**
  * Der Schluessel aus einer Passphrase.
  *
- * DIESELBEN 320 000 RUNDEN WIE IM BROWSER (`KDF_ITER_ZIEL`). Eine zweite
+ * DIESELBEN 600 000 RUNDEN WIE IM BROWSER (`KDF_ITER_ZIEL`). Eine zweite
  * Zahl waere eine zweite Aussage darueber, was dieses Projekt fuer sicher
  * haelt — und die eine, die irgendwann nicht mehr nachgezogen wird.
  */
@@ -1258,10 +1258,56 @@ function komp_auftrag_abbrechen(): array
  */
 function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = KOMP_RESERVE_S): array
 {
+    try {
+        return komp_schub_lauf($pdo, $z, $zeitLinks, $reserve);
+    } catch (Throwable $ex) {
+        /* ---- KLARTEXT NICHT LIEGEN LASSEN (Backlog Nr. 133, K-13) --------
+         *
+         * Im Bauordner liegt `dump.sql.gz` -- eine UNVERSCHLUESSELTE Abschrift
+         * jeder Tabelle, also genau das, wogegen die Versiegelung gebaut ist.
+         * Bis Web 15.5.2 blieb er nach einem Fehlschlag stehen, und zwar bis
+         * zum naechsten FAELLIGEN Lauf: Nur wer einen neuen Auftrag anlegt,
+         * raeumte die Reste (`komp_baureste_aufraeumen($bau)`). Bei einem
+         * woechentlichen Plan sind das bis zu sieben Tage Klartext.
+         *
+         * WAS DAS KOSTET, gehoert dazu: "Fortsetzen" nimmt einen gescheiterten
+         * Lauf nicht mehr auf -- der Dump ist weg, der naechste faengt von vorn
+         * an. Das ist Rechenzeit, keine Daten; die Vorlage ist die Datenbank
+         * selbst. Ein Haeppchen, das nur seine Zeit aufgebraucht hat, ist KEIN
+         * Fehlschlag und laeuft unveraendert weiter -- es wirft nicht.
+         *
+         * Der Zustand wird hier auch gleich geschrieben und nicht dem Aufrufer
+         * ueberlassen: Ein Zustand "dump" ohne Bauordner waere ein
+         * "Fortsetzen", das nur scheitern kann. */
+        $bau = (string)($z['bau'] ?? '');
+        $geraeumt = $bau !== '' && komp_bau_weg($bau);
+        $z = [
+            'stand'    => 'abgebrochen',
+            'zeit'     => gmdate('Y-m-d\TH:i:s\Z'),
+            'grund'    => $ex->getMessage(),
+            'geraeumt' => $geraeumt,
+        ];
+        komp_zustand_setzen($z);
+        error_log('komplett: Lauf gescheitert (' . $ex->getMessage() . '); Bauordner '
+                  . ($bau === '' ? 'gab es nicht' : ($geraeumt ? 'geraeumt' : 'NICHT geraeumt: ' . $bau)));
+        throw $ex;
+    }
+}
+
+/** Der eigentliche Lauf; `komp_schub()` raeumt darum herum auf. */
+function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserve): array
+{
     $stand = (string)($z['stand'] ?? '');
 
     /* Kein Auftrag: Faelligkeit pruefen und gegebenenfalls einen anlegen. */
     if (!in_array($stand, ['dump', 'siegel'], true)) {
+        /* ZUERST DIE RESTE, DANN DIE FAELLIGKEIT (Backlog Nr. 133). Steht kein
+         * Auftrag, ist jeder Bauordner ein Rest -- aus einem Absturz mitten im
+         * Lauf, den kein `catch` sieht (PHP-Fatal, abgeschossener Prozess,
+         * Zeitgrenze des Webspace). Bis Web 15.5.2 wurde er erst geraeumt, wenn
+         * das naechste Backup FAELLIG war; jetzt raeumt ihn jeder Aufraeumlauf,
+         * auch der, bei dem nichts ansteht. */
+        komp_baureste_aufraeumen();
         if (!komp_faellig() || !serverschluessel_da()) {
             return ['erledigt' => 0, 'fertig' => true];
         }
@@ -1394,7 +1440,7 @@ function komp_rueckstand_aus(array $z): ?int
  */
 function komp_kdf_runden(): int
 {
-    return defined('KDF_ITER_ZIEL') ? KDF_ITER_ZIEL : 320000;
+    return defined('KDF_ITER_ZIEL') ? KDF_ITER_ZIEL : 600000;
 }
 
 /**

@@ -334,8 +334,15 @@ pruefe($a['code'] !== 200,
        'Unangemeldet liefert der Abruf keine Datei',
        'HTTP ' . $a['code']);
 
-ruf('login.php');                             // Sitzung und CSRF holen
-$an = ruf('login.php', ['email' => $email, 'token' => $token]);
+/* Sitzung UND Formular-Token holen. Seit Web 15.6.0 traegt auch das
+ * Anmeldeformular ein CSRF-Token (Backlog Nr. 127); ohne das Feld antwortet
+ * login.php mit "Das Formular ist abgelaufen" -- und das saehe hier aus wie
+ * ein Passwortfehler. */
+$anmeldeseite = ruf('login.php');
+preg_match('/name="csrf"\s+value="([0-9a-f]+)"/', $anmeldeseite['leib'], $mm);
+pruefe(!empty($mm[1]), 'Das Anmeldeformular traegt ein CSRF-Token',
+       !empty($mm[1]) ? substr($mm[1], 0, 16) . '…' : 'kein Feld gefunden');
+$an = ruf('login.php', ['csrf' => $mm[1] ?? '', 'email' => $email, 'token' => $token]);
 pruefe($an['code'] === 302 || $an['code'] === 200,
        'Anmeldung geht durch', 'HTTP ' . $an['code']);
 
@@ -926,6 +933,113 @@ pruefe(str_contains($seite['leib'], 'id="f-gpxwahl"')
        'Formular und Leiste gefunden');
 pruefe(str_contains($seite['leib'], 'name="tag" value="' . $dayId . '"'),
        'Das Formular traegt den Diensttag', 'tag=' . $dayId);
+
+/* ---- Teil 8 — Der EINGANG: was gpx_lesen() abweisen muss ------------------
+ *
+ * Die Teile 0 bis 7 pruefen den ABRUF. Der Eingang blieb bis Web 15.6.0 ohne
+ * Probe, und genau dort sass Backlog Nr. 130 (K-10): Die DOCTYPE-Sperre suchte
+ * die Bytefolge `<!DOCTYPE` und fand sie in einem UTF-16-Dokument nicht --
+ * libxml erkannte die Bytefolgemarke, las die Datei samt Dokumenttyp-
+ * Deklaration und expandierte die internen Entitaeten. Gemessen am Stand vor
+ * der Behebung: ging durch, zwei Punkte.
+ *
+ * GEPRUEFT WIRD `gpx_lesen()` UNMITTELBAR und nicht ueber HTTP, und das ist
+ * hier kein Abkuerzen: Die Funktion IST die Abwehr, und sie hat genau einen
+ * Aufrufer (`api/gpx_import.php:115`). Ein HTTP-Lauf brauchte zusaetzlich
+ * einen Diensttag und pruefte die Sperre selbst um keinen Deut besser.
+ *
+ * DER WEG DORTHIN, damit niemand ihn fuer theoretisch haelt: Der Endpunkt
+ * nimmt den Dateiinhalt als Zeichenkette im JSON-Koerper, und JSON traegt
+ * ueber `\u0000`-Folgen jedes Byte unter 0x80. Ein angemeldeter Aufrufer baut
+ * ein UTF-16-Dokument damit von Hand; eine Dateiauswahl im Browser braucht es
+ * nicht.
+ */
+echo "\n  Teil 8 — Der Eingang: gpx_lesen() gegen Umgehungen der DOCTYPE-Sperre\n";
+
+$gpxRein = '<?xml version="1.0" encoding="UTF-8"?>'
+         . '<gpx version="1.1" creator="gpxprobe" xmlns="http://www.topografix.com/GPX/1/1">'
+         . '<trk><name>Probe</name><trkseg>'
+         . '<trkpt lat="48.1" lon="11.5"><ele>500</ele><time>2026-03-01T10:00:00Z</time></trkpt>'
+         . '<trkpt lat="48.2" lon="11.6"><ele>510</ele><time>2026-03-01T10:01:00Z</time></trkpt>'
+         . '</trkseg></trk></gpx>';
+$mitDoctype = str_replace('<gpx version', '<!DOCTYPE gpx [<!ENTITY a "AAAAAAAAAA">]><gpx version', $gpxRein);
+
+/** @return array{0:bool,1:string} [durchgelassen, Meldung] */
+$einlesen = static function (string $xml): array {
+    try { gpx_lesen($xml); return [true, 'durchgelassen']; }
+    catch (Throwable $e) { return [false, substr($e->getMessage(), 0, 60)]; }
+};
+
+$eingang = [
+    'UTF-16LE mit BOM, DOCTYPE und interner Entitaet'
+        => "\xFF\xFE" . mb_convert_encoding($mitDoctype, 'UTF-16LE', 'UTF-8'),
+    'UTF-16BE mit BOM, DOCTYPE und interner Entitaet'
+        => "\xFE\xFF" . mb_convert_encoding($mitDoctype, 'UTF-16BE', 'UTF-8'),
+    'UTF-16LE ohne BOM, mit XML-Deklaration'
+        => mb_convert_encoding(str_replace('UTF-8', 'UTF-16', $mitDoctype), 'UTF-16LE', 'UTF-8'),
+    'UTF-8 mit DOCTYPE (die Sperre, die es schon gab)'
+        => $mitDoctype,
+    'UTF-8 mit DOCTYPE in Kleinschreibung'
+        => str_replace('<!DOCTYPE', '<!doctype', $mitDoctype),
+    'UTF-8 mit Bytefolgemarke und DOCTYPE'
+        => "\xEF\xBB\xBF" . $mitDoctype,
+    'Nullbyte in einer sonst gueltigen Datei'
+        => str_replace('<trk>', "<trk>\0", $gpxRein),
+    'Latin-1 mit Umlaut (keine gueltige UTF-8-Folge)'
+        => mb_convert_encoding(str_replace('Probe', 'Gruenwald-Ost', $gpxRein), 'ISO-8859-1', 'UTF-8')
+           . "\xE4",
+    /* DER NEUNTE FALL (Gegenpruefung 07.09.2026, Fund 7): UTF-7 ist reines
+     * ASCII -- gueltiges UTF-8, kein Nullbyte, kein `<!DOCTYPE` als
+     * Bytefolge -- und libxml liest es trotzdem als DOCTYPE, weil die
+     * XML-Deklaration es so nennt. Die acht Faelle oben haben die
+     * Deklaration nie angesehen; dieser ging am Stand davor durch. */
+    'UTF-7 ueber die Kodierungsdeklaration'
+        => '<?xml version="1.0" encoding="UTF-7"?>'
+           . iconv('UTF-8', 'UTF-7', preg_replace('/^<\?xml[^>]*\?>/', '', $mitDoctype)),
+    /* Zwei aus der Wiederaufnahme der zweiten Gegenpruefung: Namen, die
+     * kein ASCII-Zeichen als eigenes Byte fuehren, bleiben draussen -- auch
+     * wenn die Bytes selbst UTF-8 sind. */
+    'EBCDIC (IBM037) ueber die Kodierungsdeklaration, Bytes UTF-8'
+        => str_replace('encoding="UTF-8"', 'encoding="IBM037"', $mitDoctype),
+    'UTF-16 ueber die Kodierungsdeklaration, Bytes UTF-8'
+        => str_replace('encoding="UTF-8"', 'encoding="UTF-16"', $mitDoctype),
+];
+$durch = 0;
+foreach ($eingang as $name => $xml) {
+    [$ok, $meldung] = $einlesen($xml);
+    if ($ok) { $durch++; }
+    pruefe(!$ok, 'Abgewiesen: ' . $name, $meldung);
+}
+pruefe($durch === 0, 'Keine der Proben kommt durch',
+       count($eingang) . ' Proben, ' . $durch . ' durch');
+
+[$ok, $meldung] = $einlesen($gpxRein);
+pruefe($ok, 'Eine saubere UTF-8-Datei ohne DOCTYPE geht weiterhin durch', $meldung);
+[$ok, $meldung] = $einlesen(str_replace('encoding="UTF-8"', "encoding='utf-8'", $gpxRein));
+pruefe($ok, 'Auch mit kleingeschriebenem utf-8 in einfachen Anfuehrungszeichen', $meldung);
+[$ok, $meldung] = $einlesen(preg_replace('/^<\?xml[^>]*\?>/', '', $gpxRein));
+pruefe($ok, 'Und ganz ohne XML-Deklaration (libxml nimmt dann UTF-8 an)', $meldung);
+
+/* DER DATEIDIALOG (zweite Gegenpruefung, Wiederaufnahme): Eine Latin-1-Datei
+ * kommt ueber `readAsText()` als UTF-8 mit Ersatzzeichen an -- ihre
+ * Deklaration `encoding="ISO-8859-1"` aber unveraendert. Die erste Fassung der
+ * Deklarationspruefung wies genau das ab, obwohl es bis dahin importierte.
+ * Jetzt: ASCII-vertraegliche Namen sind erlaubt, die Deklaration wird auf
+ * UTF-8 umgeschrieben, und der Name mit Ersatzzeichen kommt so an, wie der
+ * Browser ihn gesendet hat. */
+$browserweg = str_replace(['encoding="UTF-8"', 'Probe'], ['encoding="ISO-8859-1"', "Gr\u{FFFD}nwald-Ost"], $gpxRein);
+$latinOk = false; $latinName = ''; $latinPunkte = 0;
+try {
+    $g = gpx_lesen($browserweg);
+    $latinOk = true;
+    $latinPunkte = count($g['points'] ?? $g['punkte'] ?? []);
+    $latinName = (string)($g['name'] ?? '');
+} catch (Throwable $e) { $latinName = substr($e->getMessage(), 0, 60); }
+pruefe($latinOk && $latinPunkte === 2 && str_contains($latinName, "\u{FFFD}"),
+       'Latin-1-Deklaration mit UTF-8-Bytes (Dateidialog): geht durch, 2 Punkte, Name mit Ersatzzeichen',
+       ($latinOk ? 'durchgelassen, ' . $latinPunkte . ' Punkte, Name ' . $latinName : $latinName));
+[$ok, $meldung] = $einlesen(str_replace('encoding="UTF-8"', "encoding='windows-1252'", $gpxRein));
+pruefe($ok, 'Auch windows-1252 als Deklaration (ASCII-vertraeglich, Bytes UTF-8)', $meldung);
 
 } finally {
     $aufraeumen();

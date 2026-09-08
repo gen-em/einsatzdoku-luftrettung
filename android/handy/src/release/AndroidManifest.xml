@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Nur fuer das Release-APK (`org.genem.nadoku`).
+
+    Es haengt die Netzsicherheitsregel des ausgelieferten Standes ein:
+    Klartext-HTTP ist fuer JEDE Adresse verboten, auch fuer eine IP-Adresse
+    (Backlog Nr. 142, Krypto-Review AN-1). Begruendung und Grenzen:
+    `res/xml/netzsicherheit.xml`.
+
+    Das Gegenstueck fuer das Pruef-APK liegt unter `src/debug/`. Die beiden
+    Manifeste ueberschneiden sich nicht, weil das Hauptmanifest die
+    Eigenschaft nicht setzt — je Bauart gilt genau eine Regel, und keine
+    wird aus zwei Dateien zusammengefuehrt.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:networkSecurityConfig="@xml/netzsicherheit" />
+</manifest>

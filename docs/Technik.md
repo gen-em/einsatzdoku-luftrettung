@@ -43,8 +43,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       Einstieg der Wartung huckepack (run_cleanup_if_due)
 │   ├── ui.php             Seitenhülle (ui_seite_start/-_ende), Kopf-/Seitenleisten,
 │   │                       Fußzeile, Meldungszeile, Abbruchseite, Krypto-Rüstzeug
-│   ├── auth_guard.php     Session/CSRF/Rollen (Rolle+Existenz je Anfrage aus der DB,
-│   │                       Sitzungszähler, ist_admin())
+│   ├── auth_guard.php     Session/Rollen (Rolle+Existenz je Anfrage aus der DB,
+│   │                       Sitzungszähler, ist_admin(), csrf_check())
 │   ├── auth_salt.php      KDF-Salt (mit Pseudo-Salt gegen User-Enumeration)
 │   ├── login/logout/reset_request.php   Auth-Flows
 │   ├── pw_handling.php    Passwortvergabe über Einmal-Link: Erstvergabe (erzeugt
@@ -350,11 +350,28 @@ Daten erst nach Server-Bestätigung.
 │   │                      W): was gesperrt wird, was offen bleibt, Schalten
 │   │                      per POST, kaputte Schalterdatei, Antwortzeit — und
 │   │                      seit Web 15.5.2 die Zählweise der Migrationen
-│   │                      (Teil 6, Backlog Nr. 149) — 50 Erwartungen.
+│   │                      (Teil 6, Backlog Nr. 149) und seit 15.6.0, dass die
+│   │                      Integritätswache im Wartungsmodus nicht rot wird
+│   │                      (12a, Nr. 140) — 51 Erwartungen.
 │   │                      **Legt den Schalter selbst um** und nimmt für
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer
 │   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
+│   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit der des
+│   │                      Repositoriums: jede Datei unter `server/assets/`
+│   │                      über SHA-256, und auf `login.php` die GANZE Menge
+│   │                      dessen, was den Weg des Passworts bestimmt —
+│   │                      Skripte (zitiert oder nicht), Inline-Blöcke,
+│   │                      Formulare, `<base>`, Umlenk- und Ereignis-
+│   │                      attribute, `<meta http-equiv>`, Einbettungen,
+│   │                      `javascript:`-Adressen; nichts darf fehlen,
+│   │                      verändert sein oder dazukommen. Ohne eingecheckte
+│   │                      Prüfsummen — der Deploy synchronisiert byteweise,
+│   │                      also rechnet sie beide Seiten frisch. Läuft täglich
+│   │                      und nach jedem Deploy als GitHub-Action
+│   │                      (`integritaet.yml`); `--selbstprobe` beantwortet
+│   │                      zuerst, ob sie eine Abweichung überhaupt erkennt
+│   │                      (Backlog Nr. 140, SP-6)
 │   ├── linkprobe/         hält jede Adresse `<seite>.php?<name>=` unter
 │   │                      `server/` (PHP und JavaScript) gegen die Parameter,
 │   │                      die die Zielseite tatsächlich liest — 99 Zielseiten,
@@ -589,6 +606,58 @@ Web 2.7.0 ersatzlos. Passwort-Ändern re-wrappt clientseitig **und atomar**:
 Lässt sich der Inhaltsschlüssel nicht umpacken, wird auch das Passwort nicht
 geändert. Eine Admin-Passwortvergabe existiert bewusst nicht.
 
+**Der Wechsel der Anmeldeadresse verlangt seit Web 15.6.0 einen
+Passwortnachweis** (Backlog Nr. 128, K-7). Bis dahin schrieb
+`einstellungen.php` sie allein mit dem CSRF-Token um: Wer eine offene Sitzung
+übernahm, konnte die Adresse auf seine eigene setzen, sich den Setz-Link
+schicken lassen und das Konto übernehmen. Die geschützten Angaben blieben zu —
+der Reset-Weg verlangt den Wiederherstellungsschlüssel —, aber die
+Klartextfelder nicht, und die rechtmäßige Besitzerin war ausgesperrt.
+
+Der Nachweis ist derselbe wie beim Passwortwechsel: `old_token`, im Browser
+aus dem aktuellen Passwort abgeleitet (`EdCrypto.deriveKeys(pw, KDF_SALT,
+KDF_ITER)`). Er wird **nur beim tatsächlichen Wechsel** verlangt — Name und
+Logo bleiben frei —, und `session_epoch` bleibt unverändert: Es hat sich kein
+Passwort geändert.
+
+Auf beiden Wegen — Profil und Verwaltung (`admin_user.php`) — geht danach eine
+**Hinweismail an die ALTE Adresse** (`profil_adresswechsel_melden()` in
+`email_lib.php`). Sie ist die einzige Stelle, an der die Besitzerin von einem
+unterschobenen Wechsel erfährt, und geht deshalb an die alte und nicht an die
+neue: Die neue gehört im Missbrauchsfall dem anderen. Scheitert der Versand,
+steht das im Fehlerprotokoll und der Wechsel bleibt bestehen — ihn
+zurückzurollen, weil ein Mailserver klemmt, wäre die schlechtere Wahl. Die
+**Bestätigung der neuen** Adresse (Double-Opt-In) kommt mit R37.6 in P5.
+
+**Das Anmeldeformular trägt seit Web 15.6.0 ein Formular-Token** (Backlog
+Nr. 127, K-8). Bis dahin war es das einzige Formular ohne: Eine fremde Seite
+konnte einen abgemeldeten Browser per Top-Level-POST in ein **Angreiferkonto**
+anmelden — Adresse und Token des Angreifers im Formular, abgeschickt per
+Skript. Die geschützten Angaben sind davon nicht betroffen (ohne `edk` öffnet
+sich keine fremde Hülle), aber was danach eingegeben wird, landet im fremden
+Konto und ist dort lesbar.
+
+`csrf_token()`, `csrf_field()` und `csrf_ok()` stehen deshalb in
+`session_lib.php` und nicht mehr in `auth_guard.php`: Die eine Seite, die den
+Schutz am nötigsten braucht, lädt `auth_guard.php` nicht. In `auth_guard.php`
+bleibt `csrf_check()`, der Abbruchweg der angemeldeten Seiten. Das Token
+entsteht **faul** — `session_lib.php` wird eingebunden, bevor
+`session_start()` gelaufen ist.
+
+Zwei Eigenschaften der Prüfung am Anmeldeformular: Sie steht **vor** allen
+Zählern, damit ein abgelaufenes Formular keine Ratenstrafe auslöst (es ist
+kein Fehlversuch), und sie antwortet mit der Anmeldeseite und der Meldung
+„Das Formular ist abgelaufen. Bitte versuche es erneut." statt mit einer
+403-Seite. Nach erfolgreicher Anmeldung wird das Token **neu gezogen**, wie
+die Sitzungskennung: Ein vom Angreifer vorgesetztes Token überlebte den
+Wechsel sonst.
+
+Zwei Prüfmittel melden sich ohne Browser an und schicken das Feld seither
+selbst: `tools/referenzdatensatz/einspielen/sitzung.py` (holt zuerst
+`login.php`) und `tools/gpxprobe/probe.php` (tat den GET schon, las das Feld
+aber nicht). Alle übrigen fahren einen echten Browser und schicken es von
+selbst mit.
+
 **Stille Anhebung der Rundenzahl (seit Web 5.0.0, M2-01 Schritt 4).** Steht ein
 Konto noch auf einer niedrigeren Rundenzahl als `KDF_ITER_ZIEL`, wird sie beim
 nächsten Anmelden im Hintergrund angehoben. Der Weg führt über ein Vormerkfach
@@ -603,6 +672,34 @@ auf der ersten angemeldeten Seite ist es umgekehrt.
 3. Die erste Seite, die den Inhaltsschlüssel braucht, kennt `KDF_ITER`, nimmt
    den zugehörigen Datenschlüssel aus dem Fach, packt den Inhaltsschlüssel um
    und schickt ihn mit beiden Token an `api/kdf_upgrade.php`.
+
+**Warum `ui_krypto_bootstrap()` seit Web 15.6.0 immer `CSRF` ausgibt.** Schritt 3
+ruft einen API-Endpunkt und braucht dafür das Token. Bis dahin war das ein
+Schalter, und drei von sieben Seiten stellten ihn (`index.php`, `import.php`,
+der Sicherungsblock in `einstellungen.php`) — `suche.php`, `zeitraum.php`,
+`einsatz.php` und `einsatz_form.php` nicht. Wer nach dem Anmelden zuerst dorthin
+ging, bekam keine Anhebung; schlimmer, `loeseVormerkung()` **verwirft** das
+Vormerkfach auch dann, und damit war sie für diese Sitzung verloren. Folgenlos
+blieb das nur, solange `KDF_ITER_LISTE` einen einzigen Eintrag hatte. Mit der
+Anhebung auf 600 000 wurde daraus ein Fehler, gemessen am Referenzbestand: Konto
+auf 320 000, Anmeldung, `suche.php` — Fach weg, Rundenzahl unverändert, und beim
+nächsten Anmelden dasselbe. Der Schalter ist deshalb wirkungslos gestellt; das
+Feld `csrf` wird noch angenommen und ignoriert.
+
+**Wann der Altwert aus `KDF_ITER_LISTE` verschwinden darf**, sagt die
+Wartungsseite (Betrieb → Status, Zeile „Schlüsselableitung"): Sie nennt seit
+Web 15.6.0 nicht nur verwaiste Rundenzahlen, sondern auch, **wie viele Konten
+noch unter dem Zielwert stehen**. Solange dort eine Zahl steht, rechnet jede
+Anmeldung zweimal ab — 298 ms plus 551 ms statt 551 ms, gemessen auf einem Kern
+des Prüfcontainers. Steht keine mehr, darf der Altwert gestrichen werden —
+**mit einer Ausnahme, die die Zeile selbst nennt:** Das Demo-Konto zählt dort
+nicht mit. Es steht auf der Rundenzahl seiner Fixture, die stille Anhebung
+überspringt es (`api/kdf_upgrade.php`, E-P1-19), und der Reset spielt die
+Fixture alle 30 Minuten neu ein; solange die Fixture den Altwert trägt
+(heute 320 000, Backlog Nr. 155), bleibt er in `KDF_ITER_LISTE`, sonst
+könnte sich das Demo-Konto nicht mehr anmelden. Der Demo-Satz erscheint nur,
+solange dieser Wert in der Liste steht; fehlt er, ist das Demo-Konto eines
+der blockierten Konten der roten Zeile.
 
 Der Endpunkt verlangt das **alte** Token als Nachweis (er setzt den Hash, gegen
 den sich das Konto anmeldet — ohne Nachweis wäre er ein Weg, aus einer
@@ -1866,13 +1963,46 @@ vor der Kette sieht das nicht.
 
 **Hintergrundjobs:** siehe Abschnitt 4.97a.
 
+**JSON in einem `<script>`-Block läuft über `json_js()`** (`db.php`, seit
+Web 15.6.0, Backlog Nr. 135, K-15) — nicht über `json_encode()`. Der Baustein
+setzt `JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT |
+JSON_UNESCAPED_UNICODE`.
+
+**Warum es nicht reicht, dass `/` ohnehin maskiert wird.** Ein `</script>` im
+Wert kann tatsächlich nicht entstehen — `json_encode()` schreibt `<\/script>`.
+Der Seitenbruch kommt von der anderen Seite: `<!--<script>` in einem Wert
+schiebt den HTML-Parser in den *double-escaped*-Zustand, und das nächste
+**echte** `</script>` schließt den Block dann **nicht**. Gemessen mit einem
+Profilnamen `<!--<script>` auf `import.php`: Vorher fehlten `KONTO_NAME`,
+`APP_TZ` **und** `WEB_VERSION` im Browser — der ganze Block war verschluckt,
+ohne Fehlermeldung. Nachher stehen alle drei, und der Name kommt Zeichen für
+Zeichen an.
+
+**Wo der Baustein nicht hingehört:** in API-Antworten, Dateiformate,
+Zwischenspeicher und Protokolle. Dort ändern die Flaggen die **Bytes**, und an
+Bytes hängen Prüfsummen (`komplett_lib.php` bindet den Dateikopf über SHA-256)
+und Formatvergleiche. Gezählt am 07.09.2026: **79** Aufrufe von `json_encode()`
+unter `server/`, davon **44 in einem `<script>`-Block** (alle umgestellt) und
+**35 außerhalb** (unverändert).
+
+**Was von K-15 offen bleibt:** `Strict-Transport-Security` ohne
+`includeSubDomains` und die fehlende `Permissions-Policy` gehen mit der CSP
+(Backlog Nr. 8, P5) — Kopfzeilen gehören in einen Zug. Der `querySelector` mit
+einem Wert aus dem URL-Fragment in `suche.php` bleibt ebenfalls offen; er
+bricht die Auswahl, ist aber kein XSS. Beides steht weiter unter Nr. 135
+beziehungsweise Nr. 8. Der fehlende `(string)`-Cast in `csrf_check()` ist
+dagegen mit Nr. 127 erledigt: Die Prüfung läuft jetzt über `csrf_ok()`, und
+die castet.
+
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
-HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) und
+HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) — **seit
+Web 15.6.0 auch am Anmeldeformular** (Backlog Nr. 127) — und für
 JSON-POSTs (Header `X-CSRF`), PDO Prepared Statements durchgängig,
 Passwörter/Schlüssel nur als Hash, Ratenschutz an **allen** ohne Anmeldung
 erreichbaren Endpunkten — Anmeldung, Salz-Abfrage, Zurücksetzen-Anforderung,
 Kopplung (s. 4.99 und 4.99b) —, Ingest mit Größen- (512 KB) und Wertevalidierung,
-sensible Dateien per .htaccess gesperrt, Referrer-Policy
+sensible Dateien und die Ordner `apk/` und `demo/` per .htaccess gesperrt
+(Nr. 129), Referrer-Policy
 `strict-origin-when-cross-origin` (OSM-Kacheln).
 
 ### Die Antwortzeit als Auskunft
@@ -3127,8 +3257,9 @@ jeden Block unlesbar.
 
 Der Schlüssel ist entweder der **Serverschlüssel** aus `config.php`
 (Regelfall, `kdf: null`) oder aus einer **Passphrase** abgeleitet (PBKDF2,
-`KDF_ITER_ZIEL` = 320 000 Runden, dieselbe Zahl wie im Browser). Was gilt,
-steht im Kopf; raten muss das niemand.
+`KDF_ITER_ZIEL` = 600 000 Runden, dieselbe Zahl wie im Browser). Was gilt,
+steht im Kopf; raten muss das niemand — und deshalb bleibt eine ältere Datei
+mit 320 000 im Kopf auch nach der Anhebung lesbar.
 
 #### Zwei Wege heraus
 
@@ -3228,6 +3359,20 @@ Anmeldung, die es ohne Konten nicht geben kann). Drei Schranken:
    Namen im Anwendungsverzeichnis, deren Kennung einzutragen ist.
 3. **Die Datei kommt aus `sicherungen/eingang/`**, nicht aus einem Formular.
    Es gibt hier bewusst kein Hochladen.
+
+**Sie gibt seit Web 15.6.0 unangemeldet keine Auskunft mehr** (Backlog
+Nr. 131, K-11). Diese Seite **muss** ohne Anmeldung erreichbar sein — sie
+arbeitet auf einer Installation, in der es noch kein Konto gibt. Zwei Stellen
+nutzten das aus, ohne es zu wollen:
+
+- Der **Datenbank-Fehlertext** stand wörtlich auf der Seite. Gemessen am Stand
+  davor: `SQLSTATE[HY000] [1044] Access denied for user 'nadoku'@'localhost'
+  to database 'gibtesnicht'` — Datenbanknutzer und -name für jeden Besucher.
+  Jetzt steht dort eine **Fehlerkennung** (`fehler_kennung()`), unter der der
+  volle Text im Fehlerprotokoll des Webspace liegt; die Seite sagt das auch.
+- Die Karte „Diese Installation ist in Betrieb" nannte die **Kontenzahl**,
+  fett. Gemessen: `2`. Für ihre Aussage — hier passiert nichts mehr — braucht
+  sie die Zahl nicht; sie ist jetzt fort.
 
 Der Ablauf hat zwei Gänge: **A** entsiegelt und entpackt nach
 `eingang/.arbeit/dump.sql`, **B** spielt zeilenweise ein und merkt sich den
@@ -3481,6 +3626,8 @@ eine Zeichenkette genauso trägt. Der Browser liest mit `FileReader`.
 
 | Fall | Antwort |
 |---|---|
+| **Nullbyte in der Datei** | 422 („kein Text — deutet auf UTF-16 hin") — siehe unten |
+| **nicht UTF-8** | 422 („GPX schreibt UTF-8 vor") — siehe unten |
 | kein gültiges XML | 422, mit der Fehlerstelle des Parsers |
 | Wurzelelement ≠ `<gpx>` | 422, mit dem tatsächlichen Namen |
 | **`<!DOCTYPE>` vorhanden** | 422 — siehe unten |
@@ -3502,6 +3649,47 @@ erfahren, dass ihr die Zeitstempel fehlen.
 > mitschickt, bekommt eine Absage statt einer Auslegung. Dazu `LIBXML_NONET`:
 > kein Netzzugriff, unter keinen Umständen (CLAUDE.md 4 gilt auch für einen
 > Parser).
+
+> **Erst die Kodierung, dann die Regex** (ab Web 15.6.0, Backlog Nr. 130,
+> K-10). Die DOCTYPE-Sperre sucht die **Bytefolge** `<!DOCTYPE`. In einem
+> UTF-16-Dokument steht dort `<\0!\0D\0O\0…`; die Regex fand nichts, libxml
+> erkannte die Bytefolgemarke und las die Datei samt Dokumenttyp-Deklaration
+> und interner Entität. Gemessen am Stand vor der Behebung: **ging durch, zwei
+> Punkte**. Deshalb stehen jetzt zwei Prüfungen davor — kein Nullbyte, gültiges
+> UTF-8.
+>
+> **Der Weg dorthin ist nicht theoretisch:** Der Endpunkt nimmt den
+> Dateiinhalt als Zeichenkette im JSON-Körper, und JSON trägt über
+> `\u0000`-Folgen jedes Byte unter 0x80. Ein angemeldeter Aufrufer baut ein
+> UTF-16-Dokument damit von Hand; eine Dateiauswahl im Browser braucht es
+> nicht.
+>
+> **Was das kostet — und was über den Dateidialog davon ankommt:** Auf dem
+> JSON-Direktweg wird eine GPX-Datei in Latin-1 mit Umlauten abgewiesen, und
+> die Meldung sagt, was zu tun ist. Über den Dateidialog kommen ihre Bytes
+> nie an: Der Browser liest sie mit `readAsText()`, dekodiert nach UTF-8 und
+> ersetzt ungültige Bytes durch U+FFFD — am Server ist das gültiges UTF-8
+> (Gegenprüfung vom 07.09.2026, Fund 9; kein Datenfehler, der Name wird nicht
+> gespeichert). Ihre **Kodierungsdeklaration** kommt aber unverändert an,
+> und deshalb greift die Deklarationsprüfung des nächsten Absatzes auf
+> beiden Wegen — die erste Fassung dieser Prüfung wies die Latin-1-Datei aus
+> dem Dateidialog ab, die bis dahin importierte (zweite Gegenprüfung).
+>
+> **Und die Kodierungsdeklaration** (Nachbesserung 07.09.2026, Fund 7): UTF-7
+> ist reines ASCII — gültiges UTF-8, kein Nullbyte, `<!DOCTYPE` steht darin
+> als `+ADwAIQ-DOCTYPE` — und libxml liest es trotzdem als DOCTYPE, weil
+> `encoding="UTF-7"` in der XML-Deklaration steht. Gemessen: DOCTYPE und
+> interne Entität kamen durch, zwei Punkte, Name „LACHER". Die Deklaration
+> darf deshalb nur eine Kodierung nennen, in der jedes ASCII-Zeichen sein
+> eigenes Byte ist — UTF-8, ASCII und die Ein-Byte-Familien ISO-8859,
+> Windows-125x, Latin, KOI8, Mac Roman; UTF-7, UTF-16/32 und EBCDIC werden
+> abgewiesen. Nennt sie etwas anderes als UTF-8, wird die Deklaration auf
+> UTF-8 umgeschrieben, denn die Bytes **sind** UTF-8 (geprüft) und libxml
+> würde sie sonst nach der Deklaration lesen; von 935 Kodierungen aus `iconv -l`
+> waren genau UTF-7 und UTF7 durchgekommen, die Liste schließt alle.
+> `tools/gpxprobe/` Teil 8 hält neun Umgehungsversuche dagegen — **9 Proben,
+> 0 durch** (am Stand davor: 9 Proben, 1 durch) —, und drei saubere Dateien
+> gehen weiterhin durch (UTF-8, utf-8, ohne Deklaration).
 
 #### Toleranz, wo sie richtig ist
 
@@ -3576,6 +3764,34 @@ Datei- und Verzeichnismuster getrennt.
 
 Hochgeladen wird per FTPS durch die Betreiberin.
 
+#### Der Ordner selbst ist seit Web 15.6.0 gesperrt
+
+`apk.php` verlangt eine Anmeldung — der **Ordner** tat das nicht, und die
+Dateinamen sind vorhersagbar (`nadoku-0.13.0.apk`). Bis dahin stand hier „nur
+angemeldet"; das galt für die Seite, nicht für das Verzeichnis (Backlog
+Nr. 129, K-9). Dasselbe für `server/demo/`, wo `fixture.json.gz` das
+Schlüsselmaterial des Demo-Kontos trägt — harmlos, weil sein Passwort im
+Handbuch steht, aber unnötig.
+
+Zwei Zeilen in `server/.htaccess`, hinter dem HTTPS-Zwang:
+
+```
+RewriteRule ^(apk|demo)(/|$) - [F,L]
+```
+
+mod_rewrite läuft dort schon, und beide Ordner werden ausschließlich vom
+PHP-Code gelesen (`readfile()` in `apk.php`, `file_get_contents()` in
+`demo_lib.php`) — die Sperre kostet die Anwendung nichts. Gemessen unter einem
+Apache mit dieser `.htaccess`: `apk/`, `apk/<datei>.apk`, `demo/` und
+`demo/fixture.json.gz` je **403**, `login.php` und `assets/style.css`
+unverändert **200**.
+
+**Keine Laufzeitsperre wie bei `sicherungen/`.** Der Ordner entsteht durch
+FTPS-Upload, nicht durch Code; es gibt keine Stelle, an der eine `.htaccess`
+angelegt würde, ohne dafür eine zu erfinden. Wer die Anwendung auf einen
+Webserver ohne `.htaccess`-Auswertung stellt (nginx), muss die Sperre dort
+selbst setzen — das gilt für die Regeln darüber genauso.
+
 #### Der Name wird nicht geprüft, sondern gesucht
 
 `apk.php` liest den Ordner (`apk_liste()`) und wählt aus dem **Gelesenen**
@@ -3639,17 +3855,59 @@ Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
 > wird an acht Stellen gelesen und geschrieben. Es zu entfernen zerstörte
 > stillschweigend vorhandene Patientendaten.
 
-**Im Klartext in der Datenbank** stehen dagegen: Zeiten und Phasen, Track,
-Distanz und Steigung, Reanimationsereignisse, Besatzung, Einsatzmittel,
-Diensttag- und Standortdaten. Das ist eine bewusste Entscheidung — diese Angaben
-sind für Auswertung, Sortierung und Statistik nötig, die der Server leisten
-muss. Sie sind für sich genommen nicht personenbeziehbar; **in Verbindung mit
-Ort und Zeitpunkt eines Einsatzes können sie es aber werden.** Wer eine
-Installation betreibt, sollte das wissen und den Datenbankzugang entsprechend
-behandeln.
+**Im Klartext in der Datenbank** stehen dagegen: Zeiten und Phasen — samt
+**Koordinate jeder Phase**, und Phase 4 und 5 sind der Einsatzort —, Track,
+Distanz und Steigung, `site_ele_m`, Transportziel mit `dest_lat`/`dest_lon`,
+Schockraum, Reanimationsereignisse, Besatzung, Einsatzmittel, Diensttag- und
+Standortdaten. Das ist eine bewusste Entscheidung — diese Angaben sind für
+Auswertung, Sortierung und Statistik nötig, die der Server leisten muss. Sie
+sind für sich genommen nicht personenbeziehbar; **in Verbindung mit Ort und
+Zeitpunkt eines Einsatzes können sie es aber werden.** Wer eine Installation
+betreibt, sollte das wissen und den Datenbankzugang entsprechend behandeln.
+
+> **Dieser Abschnitt ist seit Web 15.6.0 die Zusage, nicht mehr nur eine
+> Einräumung** (Backlog Nr. 138, Weg C aus `docs/konzepte/Konzept-V1-Ortsdaten.md`,
+> K-1). Der Satz, um den es geht, ist der unbequeme: **Aus Spur und
+> Phasenkoordinaten lässt sich der Einsatzort rekonstruieren** — die
+> Verschlüsselung der Adresse verbirgt ihn nicht. Ein Datenbankabzug ergibt Ort,
+> Zeit, Klinik und Behandlung; ohne Name und Diagnose, aber mit Zusatzwissen
+> re-identifizierend.
+>
+> Deshalb sagen `CLAUDE.md` 4, `README.md`, `Handbuch.md` 5 und der Textbaustein
+> für die Datenschutzerklärung (Handbuch 11.5) jetzt **dasselbe** und zählen
+> beide Seiten auf. Vorher versprachen sie „Diagnose, Alter und Einsatzort sind
+> Ende-zu-Ende-verschlüsselt" — richtig für das Feld, irreführend für die Sache.
+>
+> **Das macht nichts sicherer.** Es macht das Projekt ehrlich, und es ist die
+> Voraussetzung dafür, dass die Frage nach **Weg B** (Schlüssel auf die Uhr,
+> Rahmenplan S11) nicht als Widerspruch im Raum steht, sondern als offener
+> Punkt: Backlog Nr. 43.
 
 Die Zuordnung Datensatz ↔ Person entsteht ausschließlich über den
 verschlüsselten Block.
+
+#### Klartext-Reste außerhalb der Datenbank (Backlog Nr. 133, K-13)
+
+Drei Stellen, an denen geschützte oder halbgeschützte Angaben **vorübergehend
+im Klartext** liegen. Sie sind hier benannt, weil zwei davon bleiben — eine
+Aufzählung ist die einzige Form von Schutz, die man ihnen geben kann.
+
+| Was | Wo | seit Web 15.6.0 |
+|---|---|---|
+| `dump.sql.gz` — eine **unverschlüsselte Abschrift jeder Tabelle** während des Komplettbackup-Baus | `sicherungen/komplett/.bau-<8 Hex>/` | **wird geräumt**: bei einem Fehlschlag sofort (`komp_schub()` fängt, räumt, setzt den Zustand auf `abgebrochen`), und bei einem Absturz ohne `catch` spätestens im nächsten Aufräumlauf — auch dem, bei dem nichts fällig ist |
+| **Reset-Token** bis zur Einlösung | PHP-Sitzungsdatei und Zugriffslog des ersten GET | bleibt (in M1-06 anerkannt): Der Token steht eine Stunde und wird beim ersten Gebrauch entwertet; ihn aus dem Zugriffslog zu halten hieße, den Link nicht mehr per Adresszeile anzunehmen |
+| **Setz-Link**, wenn die Mail nicht wegging | auf der Kontoseite der Verwaltung | bleibt (`admin_user.php`): Ein gültiger Token in der Datenbank, von dem niemand weiß, ist die schlechtere Lage |
+
+**Was das Räumen kostet:** „Fortsetzen" nimmt einen **gescheiterten** Lauf
+nicht mehr auf — der Dump ist weg, der nächste fängt von vorn an. Das ist
+Rechenzeit, keine Daten; die Vorlage ist die Datenbank selbst. Ein Häppchen,
+das nur seine Zeit aufgebraucht hat, ist **kein** Fehlschlag: Es wirft nicht,
+und der Lauf geht unverändert weiter. Gemessen: ein Bauordner mit Klartext, ein
+Aufräumlauf ohne Fälligkeit → **1 auf 0**; ein Lauf, der wirft → **1 auf 0**,
+Zustand `abgebrochen`, dazu eine Zeile im Fehlerprotokoll.
+
+Bis Web 15.5.2 wurde der Bauordner erst geräumt, wenn das **nächste Backup
+fällig** war — bei einem wöchentlichen Plan also bis zu sieben Tage später.
 
 ### 4.98a Ortsfeld und Luftlinie (ab Web 6.1.0)
 
@@ -4112,14 +4370,14 @@ und genau dann wäre er nötig.
 | `Model.mc` | Dienst-Klammer, Phasenlogik, Einsatz-/Segment-Lebenszyklus, Rea-Sitzungen, Persistenz (`state`) |
 | `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
 | `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert |
-| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()` |
+| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.1c |
 | `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1) |
 | `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
 | `Ui.mc` | Geometrie relativ zur Displayhöhe (`s()` liefert bei 260 exakt den Ausgangswert), Markenfarben, Rea-Marker |
 | `Nav.mc` | Pager: Uhr → Tempo → Statistik → Sync → Rea |
 | `StartView.mc` | Startbildschirm „Dienst beginnen"; Hinweise zu Server-Adresse und Kopplung |
 | `ClockView/SpeedView/StatsView/SyncView/CprView.mc` | Oberflächen + Delegates; erben von `ActionDelegate` und beschreiben nur noch die Aktionen |
-| `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete), App-Version, Kopplung per START-Halten |
+| `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete, **ohne geparkte**), App-Version, Kopplung per START-Halten, **Verwerfen abgewiesener Pakete per kurzem START** |
 | `Pair.mc` | Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher** |
 | `PairView.mc` | Die Kopplungsansicht: zeigt den Code groß, dazu Restzeit und Verbindungshinweis; BACK bricht ab. Eigene Ansicht, weil der Code Buchstaben trägt (keine Ziffernschrift), eine Restzeit läuft und BACK hier anders wirkt als auf der Sync-Seite |
 | `Const.mc` / `Util.mc` | `APP_VERSION`, Labels, Tuning-Werte; ISO-UTC, lokale Anzeige, Vibration |
@@ -4159,6 +4417,151 @@ bequem und unwahr; richtig ist `Lang.Array<Lang.Numeric or Null>`.
 Lokale Variablen lassen sich übrigens **nicht** annotieren
 („Local variable types are inferred"); die Zusicherung gehört dann an die
 Zuweisung.
+
+### 4.99a2 Das Ersetzfenster der Geräte (ab Web 15.6.0, Backlog Nr. 134)
+
+**Wogegen.** Der Geräteschlüssel liegt auf der Garmin-Uhr im Klartext
+(`watch/source/Pair.mc`; die Plattform hat nichts Besseres — die Wear-OS-Uhr
+kennt gar keine Zugangsdaten, dort sendet das Handy). Lesen kann ein Finder
+nichts, `ingest.php` ist POST-only. Er kann aber **hochladen**, und damit bis
+Web 15.5.2 die Phasen bestehender Einsätze ersetzen — so lange, bis das Gerät
+im Web getrennt ist.
+
+**Was schon geschützt war:** Ein Einsatz mit `manual = 1` — jemand hat ihn im
+Web bearbeitet — wird ganz übergangen, und Phasen werden nur ersetzt, wenn der
+Upload mindestens so viele bringt wie gespeichert sind. Offen blieb der
+**unbearbeitete** Einsatz von vor drei Wochen.
+
+**Die Regel.** Ein **bestehender** Datensatz lässt sich nur
+`INGEST_ERSETZFENSTER_H` = **72 Stunden** ab dem Augenblick, in dem der
+Server ihn **zum ersten Mal gesehen** hat — `created_at` —, von seinem Gerät
+verändern. Nicht ab dem gesendeten `started_at` — den bestimmt der Absender —,
+und seit der Nachbesserung vom 07.09.2026 auch nicht mehr ab dem gespeicherten:
+Das stammt beim Anlegen ebenfalls vom Gerät, und eine Uhr mit falsch
+gestellter Zeit legte ihren Einsatz mit einem Datum von vor Jahren an — das
+Fenster war im selben Augenblick zu, der **laufende** Einsatz verlor Punkte
+und Phasen, und weil `next_seq` weiterwanderte, löschte die Uhr sie als
+quittiert (Gegenprüfung des Web-Teils, Funde 2 und 5). Die Nachbesserung
+rechnete zunächst das Spätere aus `started_at` und `created_at`, „Zukunft
+zählt nicht" — und die zweite Gegenprüfung zeigte, dass „Zukunft" je Paket
+gegen jetzt gerechnet wurde: Ein `started_at`, das beim Anlegen 99 Stunden
+vorn lag, wurde zum Anker, sobald die Zeit es eingeholt hatte, und das längst
+geschlossene Fenster ging zu einem gerätebestimmten Zeitpunkt noch einmal
+72 Stunden auf. Auf den Augenblick des Anlegens angewendet ist ein
+`started_at` später als `created_at` immer Zukunft, und das Spätere aus beiden
+ist immer `created_at` — also steht es so im Code. `started_at` dient nur als
+Rückfall, solange die Migration `2026_09_07_rest_segments_created_at` nicht
+gelaufen ist, und ein Anker wird nie später als jetzt angesetzt. `rest_segments`
+trägt `created_at` seit dieser Migration; die vorhandenen Zeilen bekommen ihr
+`started_at`, nicht die Migrationszeit — gekappt auf den Bereich der Spalte
+(TIMESTAMP, ab 1970-01-01 00:00:01) und auf höchstens die Migrationszeit, denn
+`started_at` ist DATETIME und nimmt jedes Jahr an. Die Migration läuft in drei
+für sich wiederholbaren Schritten (Spalte NULL anlegen, füllen wo NULL, dann
+NOT NULL) und gilt erst als erledigt, wenn alle drei stehen: Die erste Fassung
+scheiterte an einem einzigen Segment mit `started_at` 1970-01-01 00:00:00
+nach dem ALTER, und der nächste Klick hätte sie als „nicht nötig" verbucht —
+mit der Migrationszeit als Anker an jedem alten Segment.
+
+Danach: `ok` **ohne** Metadaten-Upsert, ohne Phasen- und Reanimationsersatz,
+**ohne Anhängen von Punkten** und **ohne Fortschreiben des Diensttags**
+(bis zur Nachbesserung schrieb ein Paket mit `started_at` 2001 und `ended_at`
+2097 Beginn und Ende des Diensttags um — der Einsatz selbst blieb, Fund 1), und
+ohne dass ein Diensttag im Papierkorb einen leeren Nachfolger bekommt (Fund 4).
+Benannt wird alles über `kept_phases`, `kept_resus`, `kept_points` und —
+für Ende, `final`, Strecke und Anstieg — `kept_meta` (JSON-Vertrag 5; ohne
+das Feld sah ein spätes Abschlusspaket wie ein Erfolg aus, und der Einsatz
+blieb für immer „läuft noch", Fund 3). Kein Fehler — die Uhr wiederholte sonst
+endlos —, und `next_seq` wandert weiter, damit sie aufhört zu senden.
+
+**Warum die Punkte anders behandelt werden als bei `manual`.** Dort wird
+weiter angehängt: Der Inhalt ist bearbeitet, die Spur nicht, und Anhängen ist
+unkritisch. Hier ist der **Absender** der Unsichere — ein Finder schriebe
+sonst seine eigene Fahrt in die Spur eines drei Wochen alten Einsatzes.
+
+**Warum 72 und nicht 48 oder 7 Tage** (F-SP-8, 06.09.2026): 48 h wären knapper,
+aber ein Freitagsdienst, der erst am Montag synchronisiert, käme nicht mehr
+nach. 7 Tage deckten Urlaub mit Uhr im Koffer — und gäben einem Finder eine
+ganze Woche.
+
+**Die Zeiten eines Pakets müssen zu seinem `day` passen.** Beides kommt aus
+derselben Quelle, und bis zur Wiederaufnahme der zweiten Gegenprüfung hat
+niemand nachgesehen, ob sie einander widersprechen: Ein Paket mit `day`
+2026-08-09 und `started_at` 2001-01-01 lief durch, der Einsatz stand mit
+96 Jahren Dauer in der Datenbank, und der Zeitraum des Diensttags war darauf
+gezogen. `pruef_zeit_zum_tag()` und `pruef_ende_nach_beginn()` (beide in
+`validate_lib.php`, also auf dem gemeinsamen Weg) prüfen das jetzt.
+
+**Verworfen wird der Wert, nicht der Upload.** Das Paket kommt an, der Einsatz
+entsteht, er ist sichtbar und löschbar — nur für das **Fortschreiben des
+Diensttags** wird ein Zeitpunkt, der die Prüfung nicht besteht, nicht
+verwendet; er steht als `rejected` in der Antwort. Eine erste Fassung hat das
+Paket mit `400` abgewiesen, und das war falsch: Sie hätte die falsch gestellte
+Uhr ausgesperrt — genau die, die Fund 2 der ersten Gegenprüfung wieder
+hereingeholt hat. Ein Gerät, dessen Kalender nach einer Tiefentladung auf 1970
+steht, muss seine Daten loswerden können. Dass ein **Ende vor dem Beginn**
+liegt, hatte ebenfalls niemand gefragt: `dt_zeitraum_fortschreiben()` zog den
+Diensttag daraufhin in beide Richtungen auf, mit Werten, die es nie gab.
+
+Das Fenster ist **sehr** weit — von Mitternacht des Vortags bis zum Ende des
+31. Tages danach —, und das mit Absicht. Vier Dinge zwingen dazu: der
+Zeitzonenversatz zwischen Ortsdatum und UTC (ein voller Tag in beide
+Richtungen zwischen UTC−12 und UTC+14); ein Dienst über Mitternacht; vor allem
+aber, dass in der **Handy-App jedes Paket eines Dienstes den Tag des
+Dienstbeginns trägt**, nicht seinen eigenen (`Dienstklammer.kt`: das
+Ruhesegment bekommt `dienst.tag`); und dass ein Dienst **keine Höchstdauer**
+hat, weder in der App noch auf dem Server — wer das Beenden vergisst, hat
+Pakete, deren Zeiten Tage nach ihrem `day` liegen. Sie müssen ankommen: Der
+Datenfehler ist der vergessene Dienst, nicht das Paket. Die Prüfung wehrt ab,
+worum es geht — Jahre und Jahrzehnte —, und den feinen Schutz leistet nicht
+sie, sondern das Ersetzfenster.
+
+**Neue Datensätze werden immer angenommen.** Sie sind sichtbar und löschbar und
+überschreiben nichts — **auch nicht den Zeitraum eines älteren Diensttags**:
+Ein Paket mit neuem `client_ref` hat kein Fenster, wird aber über `day` oder
+`day_ref` auf den alten Tag aufgelöst und schrieb dessen Beginn und Ende
+genauso um wie Fund 1 (zweite Gegenprüfung, Wiederaufnahme). Der Zeitraum
+eines Diensttags wird deshalb nur fortgeschrieben, solange an ihm noch
+gearbeitet wird: Anker ist das **jüngste `created_at` der übrigen Datensätze
+des Tages** — Serverzeit, wie beim Fenster selbst. Der gerade angelegte zählt
+nicht mit, sonst wäre jeder Tag offen, an dem eben ein Paket ankam. Ein Tag
+ohne andere Datensätze ist frisch und offen.
+
+> **Die erste Fassung dieser Regel fragte den Tag nach *seinen* Zeiten** — und
+> die kommen vom Absender. Ein Dienst, der später als 72 Stunden nach seinem
+> Datum hochgeladen wurde (Uhr lange ohne Netz), bekam damit nie ein
+> `ended_at`: Sein Diensttag entstand in diesem Augenblick, galt aber nach
+> seinem Datum als längst geschlossen. Das war derselbe Fehler eine Ebene
+> höher als Fund 2 — gemessen an der eigenen Probe, nicht vermutet, und der
+> Grund, warum der Anker jetzt am Anlegen hängt. `days` trägt kein
+> `created_at`; die Datensätze des Tages sind der nächste ehrliche Ersatz
+> (Backlog Nr. 158).
+
+Und ein
+**bestehender** Datensatz, dessen Tag inzwischen im Papierkorb liegt, wandert
+innerhalb des Fensters auf den neu bestimmten Tag (bis dahin entstand ein
+leerer Tag, und der Datensatz blieb am gelöschten hängen — Backlog Nr. 33
+im offenen Fenster; außerhalb wird gar kein Tag bestimmt). Der Weg gegen
+eine verlorene Uhr bleibt das **Trennen** des Geräts (Handbuch 10); das
+Fenster begrenzt nur, was bis dahin geschehen kann.
+
+Nachweis: `tools/ingestprobe/` Teil 9 — **1 Paket angenommen, 1 abgewiesen**,
+dazu die Gegenprobe, dass ein neuer Einsatz weiterhin entsteht, und seit den
+Nachbesserungen **neun Erwartungen der Gegenprüfungen** (Diensttag bleibt,
+Abschlusspaket genannt, falsch gestellte Uhr nimmt weiter an, Zukunft
+schließt, kein leerer Tag, Ruhesegment nennt beides; vorgehende Uhr öffnet
+nicht erneut; neuer `client_ref` lässt den Tageszeitraum stehen; Papierkorb
+im offenen Fenster; Zeiten passen nicht zum Tag; nachgelieferter Dienst
+bekommt Beginn und Ende; vergessener Dienst kommt an; 40 Tage danach nicht
+mehr; Ende vor Beginn abgewiesen): **62 Erwartungen, 0 nicht erfüllt** — am
+Stand vor der ersten Nachbesserung sind sieben davon rot, am Stand vor der
+Wiederaufnahme zwei, am Stand vor der Neufassung der Tagesregel vier
+(zweimal der abgewiesene Widerspruch, zweimal der nachgelieferte Dienst ohne
+Ende); gegen den Stand `448ce9f`, also vor allen vier Nachbesserungen dieser
+Runde, sind es fünf. Dieselbe Stufe
+hat die Zeitstempel der ganzen Probe auf `time()` umgestellt: Sie standen auf
+festen März-Daten, und damit prüfte die halbe Probe zweite Pakete an
+Datensätzen, die das Fenster längst verlassen hatten — zehn Erwartungen
+kippten, keine davon zu Recht.
 
 ### 4.99b Bedrohungsmodell der Kopplung (ab Web 13.0.0, S5)
 
@@ -4413,6 +4816,39 @@ Zuordnung an der Symbolgröße hing. Begründung der Stufenzahl:
 
 Bilder erzeugen: `tools/uhr-bilder/erzeugen.sh`. Die passenden Jungle-Zeilen:
 `tools/uhr-pruefstand/geraeteklassen.py --bloecke`.
+
+### 5.1c Was die Uhr mit einer Absage anfängt (ab Uhr 3.1.0, Backlog Nr. 159)
+
+Bis Uhr 3.0.2 kannte `Uploader.onResponse()` zwei Fälle: Erfolg, und alles
+andere. „Alles andere" hieß `lastError` setzen und beim nächsten Anlass erneut
+versuchen — für einen Netzfehler richtig, für eine Absage falsch. Ein Paket,
+das der Server nie annimmt, stand vorn in `_findJob()` und blieb dort; alles
+dahinter kam nicht mehr an. Und weil `Pair.start()` das Trennen verweigert,
+solange `Model.backlogCount() > 0`, ließ sich die Uhr danach auch nicht mehr
+neu koppeln. Es blieb das Löschen der App, mit allem, was sie trug.
+
+Seither unterscheidet die Antwortbehandlung drei Fälle:
+
+| Antwort | Bedeutung | Was die Uhr tut |
+|---|---|---|
+| `401`, `403` | Das **Gerät** ist abgemeldet: gelöscht, Schlüssel ungültig, oder auf inaktiv gestellt | `Uploader.abgemeldet` wird gesetzt, `syncAll()` kehrt sofort zurück. **Kein Paket wird geparkt** — mit ihnen ist nichts verkehrt, sie werden nach einer neuen Kopplung gebraucht. Die Sync-Seite nennt den Grund und den Weg zurück |
+| `400` **mit** `{"error":…}` | **Dieses** Paket ist unbrauchbar | Marke `bad_<ref>` im Storage, `_next()` arbeitet weiter. Ein blankes `400` ohne Kennzeichen zählt nicht: Es kann von jedem Zwischenstück kommen, und ein gesundes Paket dafür zu parken wäre teurer als ein Versuch zuviel |
+| alles Übrige | Störung | unverändert: `lastError`, später erneut |
+
+**Ein geparktes Paket wird übersprungen, nicht entfernt.** Das ist der Punkt,
+an dem die naheliegende Lösung Daten verliert: `Model.backlogCount()` entsorgt
+Einträge, für die `Uploader.hasWork()` falsch liefert — wer ein geparktes
+Paket darüber aus der Schlange nähme, ließe seine Spur als Waise im Speicher
+zurück, rund 100 kB, die nichts mehr freigibt. `hasWork()` bleibt deshalb
+wahr; `_findJob()`, `backlogCount()` und `allSynced()` fragen zusätzlich
+`istGeparkt()`. Entfernt wird nur über `Uploader.verwerfen()`, und das räumt
+`Track.purge()` und alle drei Marken mit.
+
+Dass geparkte Pakete **nicht** im Rückstand zählen, ist kein Schönheitsfehler,
+sondern der Ausweg: Sonst bliebe die Zahl für immer über null, `Pair.start()`
+verweigerte das Trennen weiter, und die Sackgasse wäre dieselbe wie vorher.
+Beim Trennen werden sie verworfen — sie gehören dem bisherigen Konto —, und
+die Rückfrage sagt es vorher.
 
 ### 5.2 Neue Zielgeräte prüfen — `tools/eingabe-probe`
 
@@ -4841,6 +5277,17 @@ deshalb `instanceFollowRedirects = false`; eine Umleitung gilt seither als
 eingebauten Adresse spricht (R63). Der Sendeweg war nie betroffen: Er
 behandelt alles außer 200/400/401/413 als „später erneut".
 
+**Klartext ist im Release seit Android 0.14.0 doppelt verboten** (Backlog
+Nr. 142, Krypto-Review AN-1). `Serveradresse` bildet im ausgelieferten Stand
+für jede Adresse `https` — die Ausnahme für `localhost` und IPv4-Adressen,
+die der Prüfstand braucht, hängt an `BuildConfig.DEBUG` —, und
+`handy/src/release/res/xml/netzsicherheit.xml` verbietet Klartext auf
+Systemebene. Das zweite braucht es wegen `minSdk` 26: Androids eigenes
+Verbot gilt erst ab API 28. Betroffen war nur ein Selbsthoster, der sein APK
+mit einer IP-Adresse baut; der Standardbau mit fester Domain nie. **Kein
+Certificate Pinning**, mit Begründung (Nr. 143): `android/LIESMICH.md`,
+Abschnitt „Warum kein Certificate Pinning".
+
 **Die App führt seit Android 0.13.0 zu den Rechtstexten.** Unter den
 Einstellungen stehen zwei Verweise auf `datenschutz.php` und `impressum.php`
 derselben Serveradresse; beide Seiten sind ohne Anmeldung erreichbar. Sie
@@ -4879,6 +5326,19 @@ eine Attrappe. Zur Lizenzlage der proprietären Bibliothek:
 
 Ohne Quittung wird dieselbe Nachricht **mit derselben Nummer** erneut
 gesendet. Der Puffer der Uhr überlebt ihren Neustart.
+
+**Und zwei Böden gegen einen fremden Absender** (seit Android 0.14.0,
+Backlog Nr. 144, Krypto-Review AN-4). Der erste ist die Bibliothek: Der Data
+Layer stellt nur zwischen Apps gleichen Pakets und gleicher Signatur zu. Der
+zweite ist die App selbst: `HandyHorcher` fragt die verbundenen Knoten ab
+(`WearNachrichtenweg.verbundeneKnoten()`, dieselbe eine Datei), und
+`Uhrannahme.absenderBekannt()` verlangt, dass `sourceNodeId` darunter steht
+— sonst weder Wirkung noch Quittung; eine echte Uhr liefert nach, sobald sie
+verbunden ist. Ist die Liste nicht lesbar, gilt der Absender als fremd (das
+kostet Zeit, keine Daten). Dazu die **Zeit der Uhr**: höchstens fünf Minuten
+in der Zukunft und höchstens fünf Minuten vor dem laufenden Dienst; außerhalb
+wird quittiert, aber nicht gewirkt — dieselbe Regel wie für eine Phase ohne
+Dienst. Die fünf Minuten sind gewählt, nicht gemessen.
 
 ### Ortungswächter und Nachsenden
 
@@ -4926,6 +5386,26 @@ Farbstufen — Asphalt bei `OK`, gedämpft bei `SUCHT`, `rotTief` bei den vier
 denselben Zustand laufen auseinander), eine **Warnung auf eigenem Kanal**
 (ID 3, `warnungen`, Vibration ohne Ton, Erinnerung alle 10 min) und den
 Kurzcode in der Standmeldung an die Uhr.
+
+**Seit 0.15.0 sagt die Anzeige, seit wann der Dienst läuft — mit Datum, wenn
+er nicht von heute ist** (Backlog Nr. 160). `Zeit.seit()` liefert „07:00",
+solange Beginn und Gegenwart auf denselben **Ortstag** fallen, sonst
+„Fr. 05.09., 07:00"; denselben Wert benutzen die Dienstansicht und die
+Dauermeldung. Der Anlass ist der fortgesetzte Dienst: Ein zweiter „Dienst
+beginnen" gibt bei laufendem Dienst den vorhandenen zurück (E-R45-13), und
+die Zeile „läuft seit 07:00" war von einem Dienst, der eben erst begann,
+nicht zu unterscheiden. **Die Sprache des Datums ist fest deutsch**, nicht die
+des Geräts — im Emulatorlauf stand dort sonst „Tue 08.09." mitten im
+deutschen Satz.
+
+Dazu eine **Erinnerung auf dem Warnkanal** (ID 5), einmal je Lauf des
+Aufzeichnungsdienstes, sobald er `DIENSTDAUER_ERINNERUNG_H` = **26 Stunden**
+überschreitet: Titel „Dienst läuft seit N Stunden", Text mit dem Beginn und
+dem Knopf „Dienst beenden". Die Schwelle ist gewählt, nicht gemessen, und die
+Begründung steht an der Konstante — regulär bis 24 Stunden, zwei Stunden Luft
+für einen späten Schichtwechsel. Geprüft wird sie im **Wächtertakt** (10 s);
+der Vergleich kostet nichts, und ein Merker sorgt dafür, dass die Meldung
+einmal entsteht statt alle zehn Sekunden.
 
 **Ein zweiter Benachrichtigungskanal, weil Android die Einstellungen eines
 Kanals nach dem Anlegen der Nutzerin überlässt.** Der Kanal „Aufzeichnung"
@@ -5021,6 +5501,14 @@ die zählt:** Damit ist auch die Reihenfolge beim Nachsenden gesichert — ein
 Knopf „Jetzt senden" bei Rückstand und eine Ergebniszeile aus dem letzten
 Lauf. Die 400-Zeile schliesst die Lücke, durch die ein Paket bisher aus
 Warteschlange **und** Anzeige fiel.
+
+**Abgewiesene Pakete bleiben nicht mehr für immer** (seit Android 0.14.0,
+Backlog Nr. 114 Räumteil, Krypto-Review AN-2): Jeder Sendelauf räumt vorher,
+was älter ist als 30 Tage (`Raeumung.FRIST_TAGE`), und das Trennen räumt ohne
+Frist — die Pakete gehören dem zurückgegebenen Konto. Gelöscht wird nur
+Abgeschlossenes, samt Punkten und Phasen in einer Transaktion; beendete
+`dienst`-Zeilen ohne Pakete gehen mit, die laufende nie. Der Bedienweg zum
+Ansehen und Ausleiten bleibt Nr. 114.
 
 ### Der Uhr-Spiegel
 
@@ -5213,8 +5701,19 @@ für das sie da ist.
 (neben `db.php`)? (2) Ist die aufgerufene Seite eine der elf Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/wartungsprobe/probe.php` (50 Erwartungen; seit Web 15.5.2 misst
-ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149).
+`php tools/wartungsprobe/probe.php` (51 Erwartungen; seit Web 15.5.2 misst
+ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, und
+seit 15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot
+wird, Nr. 140).
+
+**Die Integritaetswache ist rot:** `tools/integritaetswache/LIESMICH.md`,
+Abschnitt „Wenn sie rot wird" — in dieser Reihenfolge: Wurde gerade deployt?
+Steht `main` weiter als die Auslieferung? Erst wenn beides nicht passt, ist es
+eine Manipulation, und dann gilt: **nichts ueberschreiben**, bevor die
+abweichende Datei per FTPS heruntergeladen und beiseitegelegt ist — sie ist
+der Beleg. Danach FTPS-Zugangsdaten wechseln, Deploy neu ausloesen, und jedes
+Passwort, das seit der Abweichung eingegeben wurde, als moeglicherweise
+mitgelesen behandeln.
 
 **Demo-Konto einrichten (einmalig):** Fixture erzeugen —
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der

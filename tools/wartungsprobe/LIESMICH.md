@@ -54,19 +54,20 @@ Seit S8/AP2 liegt der Schalter auf **Betrieb → Updates**, nicht mehr auf
 ist seit S8/AP3 eine **302** auf Betrieb → Updates; Fall 7 prüft, dass die
 alte Adresse im Wartungsmodus weiterleitet statt 503 zu antworten.
 
-## Was sie prüft — 50 Erwartungen in sieben Teilen
+## Was sie prüft — 51 Erwartungen in sieben Teilen
 
 | Teil | Fälle (Nummern aus Konzept 6.1) |
 |---|---|
 | 0 Vergleichsmaß | ohne `wartung.lock` antwortet `index.php` normal; `ingest.php` ohne Zugangsdaten gibt 401 wie immer — und die Dauer dieser Antwort ist der Vergleichswert für Fall 15 |
 | 1 gesperrt | `index.php` ohne Sitzung → 503 mit `Retry-After: 300`, `Cache-Control: no-store`, **ohne `Set-Cookie`** (1) · `einsatz.php` mit Nutzer-Sitzung → 503 HTML (2) · `ingest.php` mit **gültigem** Geräteschlüssel → 503 `maintenance` **und keine Zeile in `missions`** (3) · `pair.php` `start` → 503 JSON (4) · `api/kopplung_stand.php` mit Sitzung → 503 mit `meldung` (5, E-S5W-10) |
 | 2 offen | `betrieb_updates.php` mit BetreiberIn-Sitzung → 200 mit Balken und Ausschalt-Knopf, die vier übrigen Betriebsseiten ebenso → 200 (6) · `betrieb_updates.php` mit Nutzer-Sitzung → 403 wie sonst, **nicht** 503, und `update.php` → 302 statt 503 (7) · `jobs.php` mit gültigem Token → 200, die Jobs laufen (8, E-S5W-11) · mit falschem Token → 403 `token` (9) · `login.php` → 200 mit Balken **und** Formular (10) · `wiederherstellen.php` mit Admin-Sitzung → nicht 503 (11) · `assets/style.css` → 200 (12) |
+| 2 offen (Zusatz) | **12a** der Inline-Skriptblock der Anmeldeseite ist im Wartungsmodus **unverändert** — der Balken steht im Markup, nicht im Skript. Sonst ginge die **Integritätswache** (Backlog Nr. 140) bei jedem Update rot, und eine Wache, die regelmäßig aus einem harmlosen Grund rot wird, ist nach dem dritten Mal abgeschaltet |
 | 3 Schalten | Ausschalten über `betrieb_updates.php` (POST, CSRF) → Datei weg, Startseite antwortet wieder; Einschalten → Datei da, mit Zeitpunkt und Konto (13) · `wartung.lock` mit kaputtem Inhalt → **trotzdem 503**, Balken „seit unbekannt" (14) · das 503 kommt schneller als die Antwort ohne Wartung — das Tor greift vor Datenbank und Ratenschutz (15) |
 | 4 Kommandozeile und Regeln | `php update.php` läuft im Wartungsmodus (16, Notausgang) · die Ausnahmeliste ist **genau** die aus E-S5W-04 plus die fünf Betriebsseiten aus S8/AP2 und AP4 — elf Einträge (17) · `login.php` liest `role`, prüft es seit S8/AP1 über `rolle_darf_verwalten()` und verwirft im Wartungsmodus die Sitzung ohne Verwaltungsrecht, und zwar **erst nach** `rate_erfolg` (18, E-S5W-09) |
 | 5 die Seite | Stylesheet verlinkt, **kein Skript**, beide Sätze da (19) · das Logo wirft in 20 Aufrufen beide Standardlogos (20) |
 | 6 eine Zählweise | Register ohne die jüngste Kennung, Schema aktuell: Vorbedingung (21) · Status nennt „1 Migration steht aus" (22) · Menüzähler an „Updates" nennt dieselbe 1 (23) · die Karte nennt „1 Update" und nicht „Alles aktuell" (24) · die Zeile trägt die neutrale Plakette „nicht nötig" (25) · der Knopf „Ausstehende ausführen" ist da (26) · nach dem Klick 0 offen, Register `skipped`, und die Meldung sagt es (27) — **Backlog Nr. 149** |
 
-**Die Zahl, die zählt, steht in der letzten Zeile:** `-> 50 Erwartungen, 0
+**Die Zahl, die zählt, steht in der letzten Zeile:** `-> 51 Erwartungen, 0
 nicht erfuellt`.
 
 **Das verwaltende Konto der Probe trägt seit S8/AP2 die Rolle `betreiberin`**,

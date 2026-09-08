@@ -53,7 +53,9 @@ schon durchsetzt und welche noch nicht.
 | Block `geraet` wird gespeichert (1a) | durchgesetzt seit Web 12.9.0; davor stillschweigend verworfen |
 | Kopplung in drei Anliegen (1a) | durchgesetzt seit Web 13.0.0 — der alte Weg (Code aus dem Web, Uhr tippt ihn ein) ist ersatzlos entfallen |
 | 503 `{"error":"maintenance"}` während der Wartung (5) | durchgesetzt seit Web 13.2.0. **Für die Clients keine neue Regel** — es ist ein 5xx und wird als solches behandelt; der Zusatz `Retry-After` ist ein Hinweis, kein Auftrag |
-| 413 „Uhr halbiert die Chunk-Größe und wiederholt" (5) | **beschrieben, nicht umgesetzt** — `Uploader.mc` setzt bei jedem Fehlercode nur `lastError`, und `UPLOAD_CHUNK_POINTS` ist eine Konstante. Gefunden in S2/AP3; die Anwendung lehnt heute keine Chunk-Größe ab, die die Uhr sendet, deshalb tritt der Fall nicht auf |
+| `400` „nicht wiederholen, lokal als fehlerhaft markieren" (5) | durchgesetzt seit Uhr 3.1.0 — **nur mit erkennbarer Antwort des Servers** (`{"error":…}`). Ein blankes `400` kann von einem Zwischenstück kommen; ohne Kennzeichen wiederholt die Uhr weiter, statt ein gesundes Paket zu parken |
+| `401`/`403` halten den Upload an (5) | durchgesetzt seit Uhr 3.1.0. Sie sagen nichts über das Paket, sondern über das **Gerät**: gelöscht, Schlüssel ungültig, oder auf inaktiv gestellt. Die Uhr hört auf zu senden, behält alles und nennt den Grund; das Trennen ist dann **nicht** mehr gesperrt (Backlog Nr. 159) |
+| 413 „Uhr halbiert die Chunk-Größe und wiederholt" (5) | **beschrieben, nicht umgesetzt** — `UPLOAD_CHUNK_POINTS` ist eine Konstante. Gefunden in S2/AP3; die Anwendung lehnt heute keine Chunk-Größe ab, die die Uhr sendet, deshalb tritt der Fall nicht auf |
 
 Bis auf eine Zeile lauten alle „durchgesetzt" — die Tabelle beschreibt damit
 im Wesentlichen den Stand und keinen Zielzustand mehr. Sie bleibt trotzdem stehen, solange der
@@ -453,7 +455,7 @@ sie an das neue. Die Uhr verweigert das Trennen deshalb, solange
 - **Zeitstempel:** ISO 8601 in UTC mit `Z`-Suffix, Sekundenauflösung (`2026-07-16T08:31:05Z`). Track-Punkte nutzen kompakte Unix-Epochen (Sekunden, UTC).
 - **Idempotenz:** Jeder Einsatz und jedes Ruhe-Segment trägt eine von der Uhr erzeugte `client_ref` (eindeutig pro Gerät). Wiederholtes Senden derselben Daten ist unschädlich — **auch in der falschen Reihenfolge** (seit Web 13.0.1): Ein Feld, das ein Paket nicht trägt (`ended_at`, `distance_m` und `ascent_m` sind `null`, solange der Einsatz läuft), löscht auf dem Server nichts. Ein Wert überschreibt, ein `null` lässt stehen. Eine Berichtigung bleibt damit möglich; ein einmal gesetztes Ende verschwindet nicht mehr, so wenig wie `final` zurückgeht.
 - **Inkrementeller Track:** Track-Punkte werden mit fortlaufender Sequenznummer gesendet. Die Uhr sendet ab `seq_from`; der Server ignoriert bereits bekannte Sequenzen und antwortet mit `next_seq`, ab dem die Uhr weitersenden soll. Nach bestätigtem Empfang darf die Uhr ihren lokalen Puffer bis `next_seq` leeren.
-- **Diensttag:** Feld `day` = Datum des Dienstbeginns (Format `YYYY-MM-DD`); die Uhr bestimmt es einmal bei „Einsatztag starten" und verwendet es für alle Uploads dieses Dienstes. Seit Vertrag 1.3 ist es **nicht mehr der Zuordnungsschlüssel**, sondern nur noch Sortier- und Anzeigedatum — die Zuordnung leistet `day_ref` (Abschnitt 2.1).
+- **Diensttag:** Feld `day` (Format `YYYY-MM-DD`), ein **Ortsdatum**. Seit Vertrag 1.3 ist es **nicht mehr der Zuordnungsschlüssel**, sondern nur noch Sortier- und Anzeigedatum — die Zuordnung leistet `day_ref` (Abschnitt 2.1). **Die beiden Clients bilden es verschieden, und das ist erlaubt:** Die Uhr nimmt den Tag des jeweiligen Datensatzes (`Util.localDay()` beim Einsatz- bzw. Segmentbeginn), die Handy-App den Tag des **Dienstbeginns** für alle Pakete des Dienstes (`Dienstklammer.kt`). Bis zur Wiederaufnahme der zweiten Gegenprüfung stand hier die zweite Variante als einzige — sie beschrieb einen Uhr-Code, den es seit `52f0191` nicht mehr gibt. Wer eine Regel daraus ableiten will, muss wissen: **Der Abstand zwischen `day` und den Zeitstempeln eines Pakets ist nach oben nicht begrenzt.** Ein Dienst hat keine Höchstdauer, und ein zweiter Dienstbeginn bei laufendem Dienst setzt in der Handy-App den alten fort (E-R45-13). Der Server verlässt sich deshalb nirgends darauf (`docs/Technik.md` 4.99a2).
 - **Nachzügler:** Bei fehlender Verbindung puffert die Uhr und sendet später identisch nach — keine Sonderfelder nötig.
 - **Die Ablage auf dem Server geht die Uhr nichts an** (Nachtrag S2, ohne
   Vertragsänderung). Seit Web 10.0.0 liegen Spurpunkte je nach Alter als
@@ -691,10 +693,46 @@ Zusätzlich können auftreten:
 | Feld | Bedeutung |
 |---|---|
 | `rejected` | verworfene Einzelwerte, nach Ursache gezählt (z. B. `phases.phase: ausserhalb von 2…9` → 2) |
-| `kept_phases` | die gesendete Phasenliste wurde übergangen (leer oder kürzer als der vorhandene Stand); der Wert nennt die **Anzahl der behaltenen** Einträge |
+| `kept_phases` | die gesendete Phasenliste wurde übergangen (leer oder kürzer als der vorhandene Stand, **oder das Ersetzfenster ist zu**); der Wert nennt die **Anzahl der behaltenen** Einträge |
 | `kept_resus` | dasselbe für die Reanimationssitzungen |
+| `kept_points` | die gesendeten Punkte wurden **nicht angehängt**, weil das Ersetzfenster zu ist; der Wert nennt ihre Anzahl. Sie sind quittiert (`next_seq` wandert weiter), die Uhr darf sie löschen |
+| `kept_meta` | die gesendeten **Metadaten** (`ended_at`, `final`, `distance_m`, `ascent_m` — beim Ruhesegment `ended_at` und `final`) wurden übergangen, weil das Ersetzfenster zu ist; Wert immer `1`. Ein spätes Abschlusspaket ist damit von einem Erfolg unterscheidbar — der Datensatz bleibt, wie er war, auch wenn er noch „läuft" |
 | `dropped_points` | Punkte, die der Server nach der **Ausdünnung** der Spur nicht mehr annimmt (S2, E-S2-08). Sie sind quittiert; die Uhr darf sie löschen. Erscheint nur, wenn tatsächlich verworfen wurde, und ist **kein** Datenfehler — deshalb steht es nicht in `rejected` |
 | `cut_points` | Punkte, die in einen **herausgeschnittenen** Zeitraum fallen (S4, E-S4-53). Aus dieser Spur ist ein Einsatz geschnitten worden; die Punkte stehen dort bereits. Sie sind quittiert, die Uhr darf sie löschen. Wie `dropped_points` kein Datenfehler — und bewusst ein eigenes Feld: Ausdünnung und Schnitt sind verschiedene Vorgänge, und in der Fehlersuche will man sie unterscheiden |
+
+> **Das Ersetzfenster** (seit Web 15.6.0, Backlog Nr. 134). Ein **bestehender**
+> Datensatz lässt sich nur **72 Stunden** ab dem Augenblick, in dem der
+> Server ihn **zum ersten Mal gesehen** hat (`created_at`), von seinem Gerät
+> verändern — nicht ab `started_at`, weder dem gesendeten noch dem
+> gespeicherten; das stammt vom Gerät, und eine Geräteuhr kann nach- wie
+> vorgehen. Danach antwortet `ingest.php`
+> weiterhin mit `ok` — ein Fehler ließe die Uhr endlos wiederholen —,
+> übernimmt aber weder Metadaten noch Phasen, Reanimation oder Punkte, rührt
+> den Diensttag nicht an und sagt das über die `kept_*`-Felder (`kept_meta`
+> eingeschlossen). **Neue** Datensätze sind nicht betroffen: Sie werden immer
+> angenommen — nur der Zeitraum eines Diensttags, an dem seit mehr als
+> 72 Stunden kein Datensatz mehr angelegt wurde, wird von ihnen nicht mehr
+> fortgeschrieben (4.4). Der Grund steht in `docs/Technik.md` 4.99a2; für die
+> Uhr ändert sich nichts, was sie tun müsste.
+
+> **Zeiten, die nicht zum `day` passen, schreiben den Diensttag nicht fort**
+> (seit der Wiederaufnahme der zweiten Gegenprüfung). Geprüft wird zweierlei:
+> ob `started_at` und `ended_at` in das Fenster von Mitternacht des Vortags
+> bis zum Ende des **31. Tages** nach `day` fallen, und ob das Ende nach dem
+> Beginn liegt. **Der Upload bleibt davon unberührt** — das Paket wird
+> angenommen, der Datensatz entsteht mit den gesendeten Zeiten, er ist
+> sichtbar und löschbar. Nur für Beginn und Ende des **Diensttags** wird ein
+> Wert, der durchfällt, nicht verwendet, und er erscheint in `rejected`. Für
+> die Uhr ändert sich damit nichts, was sie tun müsste: Ein `ok: true` mit
+> `rejected` bedeutet wie immer „angekommen, aber nicht alles übernommen".
+> Eine falsch gestellte Geräteuhr wird **nicht** ausgesperrt.
+>
+> Das Fenster ist bewusst sehr weit, weil `day` in beiden Clients ein
+> **Ortsdatum** ist und weil ein Paket den Tag seines **Dienstbeginns** tragen
+> darf, nicht nur seinen eigenen: Ein Ruhesegment am dritten Tag eines
+> Dienstes meldet weiterhin Tag 1. Ein Dienst, dessen Beenden jemand vergisst,
+> kommt damit vollständig an. Ein Client, der plausible Zeiten meldet, merkt
+> von der Prüfung nichts.
 
 Ein `ok: true` mit gefülltem `rejected` oder einem `kept_*` bedeutet: Der
 Upload ist angekommen, aber **nicht vollständig übernommen**. Die Uhr sollte

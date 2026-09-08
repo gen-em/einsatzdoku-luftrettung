@@ -1391,16 +1391,16 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 <script src="<?= asset('assets/ortswahl.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
-const PHASE_LABELS = <?= json_encode(PHASE_LABELS) ?>;
-const START_ROWS = <?= json_encode($prefillRows) ?>;
+const PHASE_LABELS = <?= json_js(PHASE_LABELS) ?>;
+const START_ROWS = <?= json_js($prefillRows) ?>;
 /* Dienstbeginn in Minuten — Anker der Mitternachtsregel beim Sortieren
    (Zeiten davor gehoeren zum Folgetag, wie in local_to_utc()). */
 const DIENSTBEGINN_MIN = <?= !empty($tag['started_at'])
     ? (int)substr(fmt_local((string)$tag['started_at']), 0, 2) * 60
       + (int)substr(fmt_local((string)$tag['started_at']), 3, 2)
     : 'null' ?>;
-const REA_ARTEN = <?= json_encode($REA_ARTEN, JSON_UNESCAPED_UNICODE) ?>;
-const REA_START = <?= json_encode($reaPrefill, JSON_UNESCAPED_UNICODE) ?>;
+const REA_ARTEN = <?= json_js($REA_ARTEN, JSON_UNESCAPED_UNICODE) ?>;
+const REA_START = <?= json_js($reaPrefill, JSON_UNESCAPED_UNICODE) ?>;
 
 /* Entfernen-Knopf einer Zeile (Phasen wie Reanimation): 44-px-Symbolknopf in
  * Gefahr-Rot. Entfernen ist eine Aenderung — die Speichern-Leiste muss
@@ -1564,11 +1564,11 @@ function reaSitzung(daten) {
 }
 
 // ---- PatientInnendaten & Einsatzort: lokale Ver-/Entschluesselung ------
-const PAT_PREV = <?= json_encode($mission['pat_blob'] ?? null) ?>;
+const PAT_PREV = <?= json_js($mission['pat_blob'] ?? null) ?>;
 /* Bezugstag fuer die Altersberechnung: das ECHTE Einsatzdatum, nicht heute und
    nicht das Datum des Diensttags. Bei einem Dienst ueber Mitternacht sind das
    zwei verschiedene Tage, und gefragt ist der, an dem der Einsatz lief. */
-const MISSION_DAY = <?= json_encode($day) ?>;
+const MISSION_DAY = <?= json_js($day) ?>;
 let PAT_CK = null;
 
 /* ---- ORTSFELDER (assets/ortsfeld.js) -------------------------------------
@@ -1604,7 +1604,7 @@ EdOrtswahl.registriere('start', ortStart);
  * Talwang" ist keine Adresse, und eine Adresssuche im selben Feld schriebe den
  * Namen weg. Trifft die Eingabe einen Stammdatensatz, kommen dessen Koordinaten
  * mit und bleiben ueberschreibbar (A13l). */
-const LOC_FELDER = <?= json_encode($LOC_FELDER, JSON_UNESCAPED_UNICODE) ?>;
+const LOC_FELDER = <?= json_js($LOC_FELDER, JSON_UNESCAPED_UNICODE) ?>;
 const ORTSFELDER = LOC_FELDER.map(lf => EdOrtsfeld.init({
   praefix: lf.praefix,
   getrennteSuche: true,
@@ -1869,8 +1869,8 @@ document.getElementById('addrea').addEventListener('click', ev => {
   const liste = document.getElementById('rmlist');
   if (!box || !input) { return; }
 
-  const vorlagen = <?= json_encode($rmVorlagen, JSON_UNESCAPED_UNICODE) ?>;
-  let gewaehlt   = <?= json_encode($rmGewaehlt, JSON_UNESCAPED_UNICODE) ?>;
+  const vorlagen = <?= json_js($rmVorlagen, JSON_UNESCAPED_UNICODE) ?>;
+  let gewaehlt   = <?= json_js($rmGewaehlt, JSON_UNESCAPED_UNICODE) ?>;
 
   function zeichneChips(){
     box.innerHTML = '';

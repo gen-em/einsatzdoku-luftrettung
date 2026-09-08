@@ -56,6 +56,20 @@ hat zwölf Verweise „R74" auf den Krypto-Review zu **R78** berichtigt (der
 Beschluss ist mit Fassung 31 umnummeriert worden, diese Datei nicht) und
 Nr. 115 in Nr. 95 aufgehen lassen — beide beschrieben denselben Fund.
 
+**Zu Nr. 152 und den Vermerken „Konzept S9" (Rahmenplan Fassung 34, 07.09.2026).**
+Das Konzept S9 liegt vor (`docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`,
+E-S9-01 bis -19). Die Einträge 101–113, 147, 44, 68, 69, 70 und 72 tragen
+jetzt den Beschluss, der sie erledigt; 152 ist der einzige neue Punkt — die
+Standortseiten, aufgekommen bei der Mockup-Freigabe. 132 und 137 (9a) tragen
+den Vermerk, dass S9 sie ergänzt.
+
+**Zu Nr. 153 (07.09.2026, Sofortpaket Sicherheit, Web 15.6.0).** Sie ist kein
+neuer Fund, sondern ein herausgelöster: Nr. 135 (K-15) bündelte vier
+Kleinigkeiten, drei davon sind mit dem Sofortpaket erledigt und die vierte
+nicht. Wäre sie mit Nr. 135 nach *Erledigt* gewandert, wäre sie unsichtbar
+geworden. Die Kopfzeilen aus demselben Befund gehen mit der CSP (Nr. 8) und
+brauchen deshalb keine eigene Nummer.
+
 **Zu den Nummern 150 und 151 (06.09.2026, Korrekturstufe Web 15.5.2).** 150
 kommt vom Auftraggeber (der Cron-Befehl mit dem Repositoriumspfad), 151 vom
 neuen `tools/linkprobe/`, das in derselben Stufe entstanden ist — es hat den
@@ -429,6 +443,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Mockup liegt: `docs/mockups/N1-sprungliste.html` mit Bildern für 900 und
     390 px. **Wartet auf Freigabe** — es wäre eine neue Darstellung, und die
     braucht nach `docs/Design.md` 1 eine ausdrückliche Zustimmung.
+    *Konzept S9 (07.09.2026): E-S9-14, M-S9-05 (Pille mit Artzeichen, ab sechs; in der Standortseite, AP5).*
 
 45. **Dritte Kartengröße zwischen klein und Vollbild.**
     *Aufgenommen 30.08.2026, zurückgestellt.* Die Karte des Diensttags ist im
@@ -785,6 +800,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     das Muster; ob es selbst noch ein `<datalist>` benutzt, ist Teil der
     Erhebung. Ein neuer Baustein braucht Mockup und Freigabe (`Design.md` 1).
     Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-07 (kein `<datalist>` mehr, Baustein Vorschlagsliste; AP1, Besatzung AP6).*
 
 69. **Kurzname je Rettungsmittel als Stammdatenfeld.**
     *Zulieferung aus P3; bis Fassung 16 ohne Nummer im Rahmenplan-Abschnitt
@@ -795,6 +811,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     bleibt in Formularen und Exporten. Schemaänderung, Feldkatalog, Export,
     Import und Backup ziehen nach — deshalb ein eigener Punkt und kein
     Nebenklapp. Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-09 (`vehicles.kurz`, `days.vehicle_kurz`, Nutzlast 10; AP4).*
 
 70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
     *Zulieferung aus P3; bis Fassung 16 ohne Nummer.* Die Position eines
@@ -803,6 +820,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wählen. Dieselbe Kartenwahl fehlt in den Stammdaten der Standorte.
     **Zu tun:** den vorhandenen Baustein des Ortsfelds dort einbinden, kein
     neuer Baustein. Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-06 c (Pin-Knopf in der Nur-Lage-Fassung, Standortkarte der Standortseite; AP2/AP5).*
 
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**
     *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
@@ -1154,12 +1172,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Geocoding-Quelle — dieselbe wie die heutigen Adressvorschläge oder keine
     (`CLAUDE.md` 4, Datenschutz). Vorbereitung
     `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
+    *Konzept S9 (07.09.2026): E-S9-05, E-S9-06 (Geocoder-Modul, Suchfeld im Dialog; AP2).*
 
 102. **Weitere Rettungsmittel: die Auswahl wird nicht übernommen.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-2), Schritt 8 (S9).*
     Die Suche im hinterlegten Stand liefert Treffer; ein Klick schließt den
     Dialog, das Rettungsmittel wird aber nicht in den Einsatz übernommen.
     Bug, nur Desktop/Web (F2).
+    *Konzept S9 (07.09.2026): E-S9-08 (mousedown statt click, Ursache Blur-Verzögerung; AP1).*
 
 103. **Kompaktere Buttons Einsatzort, Standort, Zielklinik.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-3), Schritt 8 (S9).*
@@ -1170,6 +1190,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     mehrerer Optionen **im S9-Konzept** (Fable-Schritt, F8). Hängt an der
     Bedienhöhe am Schreibtisch (Nr. 74, S8). Offen: F3–F6 (Rahmenplan
     Abschnitt 6).
+    *Konzept S9 (07.09.2026): E-S9-12, M-S9-01 V1 (Farbring statt Rand, 30/28/3 px; AP3).*
 
 104. **Windenkacheln fehlen bei Nullwert.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-4), Schritt 8 (S9).*
@@ -1177,17 +1198,20 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     keine Windeneinsätze geflogen wurden. Soll: Sobald ein Hubschrauber mit
     Winde als Einsatzmittel ausgewählt war, erscheinen die Kacheln — auch
     mit „0" (F7).
+    *Konzept S9 (07.09.2026): E-S9-04 (Fähigkeit statt Zählung, `api/range.php` liefert `faehigkeiten`; AP3).*
 
 105. **Hubschrauber-Icon in der linken Leiste.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-5), Schritt 8 (S9).*
     Das Icon neben den Tagesdaten überzeugt nicht; Varianten entstehen im
     S9-Konzept (Fable-Schritt, F8), nicht vorab.
+    *Konzept S9 (07.09.2026): E-S9-13, M-S9-02 — Hubschrauber bleibt Tabler „helicopter"; erledigt sich mit „Ist".*
 
 106. **Klinik- und Adressvorschläge überlagern sich.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-6), Schritt 8 (S9).*
     Beide Vorschlagsarten in **einer** Liste: Kliniken oben, visuell
     abgesetzt, darunter die Adressen. Klinikvorschläge nur im
     Zielklinik-Kontext (F9), höchstens zwei (F10).
+    *Konzept S9 (07.09.2026): E-S9-07, M-S9-03 (eine Vorschlagsliste mit Gruppen; AP1).*
 
 107. **Zielklinik per Koordinaten und Karte.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-7), Schritt 8 (S9).*
@@ -1196,12 +1220,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     standardisierten Kartendialog (Nr. 101). Koordinaten einheitlich wie in
     den übrigen Feldern (F11); so gewählte Zielkliniken sind Ad-hoc-Einträge
     je Einsatz, kein Stammdateneintrag (F12). Migration; Vertrag prüfen.
+    *Konzept S9 (07.09.2026): E-S9-06 (Pin-Knopf am Katalogfeld, Ad-hoc-Wert; AP2).*
 
 108. **Schloss-Icon und Legende für verschlüsselte Felder.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.1), Schritt 8
     (S9).*
     Es ist nicht ersichtlich, welche Felder verschlüsselt gespeichert werden.
     Soll: Schloss-Icon am Feld plus Legende (F13). Getrennt von Nr. 109.
+    *Konzept S9 (07.09.2026): E-S9-02 (Schloss am Label, Karte „Was hier gilt"; AP7).*
 
 109. **Notizfeld verschlüsseln, Suche bleibt.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.2), Schritt 8
@@ -1214,12 +1240,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nachteilen, bevor entschieden wird. Betrifft Datenmodell und
     Verschlüsselung (Migration); die Antwort geht in das Bedrohungsmodell
     des R17-Reviews ein (Nr. 43, R69). Fable-Schritt.
+    *Konzept S9 (07.09.2026): E-S9-01 (Notizen im pat_blob, Katalogschlüssel `store => pat`, stille Anhebung; AP7).*
 
 110. **Kachel „Spur" heißt „GPS-Daten".**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-9), Schritt 8 (S9).*
     Die Kachel neben „editiert" zeigt z. B. „Spur · 852 Punkte"; „Spur" ist
     schwer verständlich. Soll: „GPS-Daten", die Punktzahl entfällt (F15);
     Wortliste nachziehen.
+    *Konzept S9 (07.09.2026): E-S9-03 („GPS-Daten" überall in der NutzerInnen-Sicht; AP3).*
+    *Android-Teil erledigt 07.09.2026 (Android 0.14.1, Zweig des Sofortpakets):
+    die fünf sichtbaren Texte der Handy-App sagen „GPS-Daten". Die befristete
+    Wortlisten-Ausnahme `spur-android-wartet-auf-9a` liegt auf dem S9-Zweig;
+    wer von 9a und S9 zweiter mergt, streicht sie (K7) — sonst meldet die
+    Wortliste sie als ungenutzt.*
 
 111. **Neue Rettungsmittel-Arten.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.1), Schritt 8
@@ -1227,6 +1260,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Bergwachtnotarzt, Veranstaltungsnotarzt, Sonstiges — mit eigenem Icon,
     ohne Rollen-Vorlagen, ein Standort kann eingegeben werden (F16).
     Migration.
+    *Konzept S9 (07.09.2026): E-S9-09, E-S9-13 (`vehicles.typ`, Betriebsart bleibt `kind`; AP4).*
 
 112. **Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.2), Schritt 8
@@ -1235,6 +1269,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     es gilt nur für den Tag, die dauerhafte Aufnahme in den Stamm bleibt
     manuell über die Einstellungen (F17). Bedingung: Suche und Filter müssen
     für solche Einträge greifen.
+    *Konzept S9 (07.09.2026): E-S9-10 („Anderes Rettungsmittel …" im Zuordnungsformular; AP6).*
 
 113. **Rollen unmittelbar nach der Auswahl bearbeitbar.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.3), Schritt 8
@@ -1244,13 +1279,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     das Rettungsmittel vordefiniert, werden sie nach der Auswahl automatisch
     nachgeladen. Für manuell definierte Rettungsmittel (Nr. 112) und Arten
     ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
+    *Konzept S9 (07.09.2026): E-S9-11 (`api/day.php?vorschau=`; AP6).*
 
 114. **Abgewiesene Pakete sichtbar machen und ausräumen.**
     *Ergänzung 06.09.2026 (Krypto-Review AN-2):* Die Pakete bleiben samt
     GPS-Spur **dauerhaft** liegen — sie überleben Trennen und Neukopplung,
     und `dienst`-Zeilen werden nie gelöscht (`puffer/Puffer.kt:449-514`).
-    Das Sofortpaket Android räumt nach 30 Tagen und beim Trennen; der
-    Bedienweg von hier bleibt offen.
+    **Räumteil erledigt mit Android 0.14.0 am 07.09.2026:**
+    `Puffer.abgewieseneRaeumen()` löscht abgeschlossene abgewiesene Pakete
+    samt Punkten und Phasen nach 30 Tagen (jeder Sendelauf räumt vorher)
+    und beim Trennen ohne Frist; beendete `dienst`-Zeilen ohne Pakete gehen
+    mit, die laufende nie (`AbgewieseneTest` 5 → 10 Fälle). **Der
+    Bedienweg von hier bleibt offen.**
     *Aufgenommen 03.09.2026 aus S5 Paket E (B-S5Z-06).* Antwortet der Server
     auf ein Paket mit **400**, wird es im Puffer als `fehlerhaft = 1` markiert
     und damit aus der Warteschlange **und** aus der Anzeige genommen: Die App
@@ -1408,49 +1448,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
     Wartungsseite. Zuordnung: Backlog-Runde oder P6.
 
-127. **Anmeldeformular ohne CSRF-Token.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-8).* `login.php:246`
-    trägt kein Token; eine fremde Seite kann einen abgemeldeten Browser per
-    Top-Level-POST in ein Angreiferkonto anmelden. Patientenfelder sind
-    nicht betroffen (kein `edk`, fremde Hülle öffnet nicht), aber Eingaben
-    landen im fremden Konto. Die Sitzung besteht beim GET schon
-    (`login.php:13`), das Token ist also da. Zuordnung: Sofortpaket
-    Sicherheit (R78).
-
-128. **E-Mail-Wechsel im Profil ohne Passwortnachweis.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-7).* `einstellungen.php:92-106`
-    schreibt die Adresse allein mit CSRF-Token um — kein `old_token`, kein
-    `session_epoch`, keine Mail an die alte Adresse; die Verwaltung kann
-    sie ebenfalls ändern (`admin_user.php:127-133`). Die Kette endet im
-    Reset-Modus, der den Wiederherstellungsschlüssel braucht — keine
-    Offenlegung, aber Kontoübernahme für Klartextfelder und Aussperren.
-    Sofortpaket: Nachweis per `old_token` wie beim Passwortwechsel, Hinweismail
-    an die alte Adresse bei beiden Wegen; Bestätigung der neuen Adresse
-    kommt mit R37.6 in P5. Zuordnung: Sofortpaket Sicherheit (R78), Rest P5.
-
-129. **`apk/` und `demo/` liegen ungesperrt im Webroot.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-9).* `apk.php` verlangt
-    die Anmeldung, der Ordner selbst nicht (`apk_lib.php:22`, Dateinamen
-    vorhersagbar); `demo/fixture.json.gz` trägt das Schlüsselmaterial des
-    Demo-Kontos (öffentliches Passwort, also harmlos, aber unnötig). Anders
-    als `sicherungen/` legt kein Code eine Sperre an, und eine Datei in
-    `apk/` käme wegen der Deploy-Ausnahmeliste nie an. Zwei
-    `RewriteRule`-Zeilen in `.htaccess`. Zuordnung: Sofortpaket Sicherheit.
-
-130. **DOCTYPE-Sperre im GPX-Import umgehbar.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-10).* `gpx_lib.php:332`
-    prüft `/<!DOCTYPE/i` auf dem Rohtext; ein UTF-16-kodiertes GPX passiert
-    die Regex, libxml versteht es. Folge: interne Entitäten trotz Sperre
-    (Billion Laughs), XXE nicht (kein `NOENT`, `NONET`). Nur angemeldet,
-    12 MB Grenze. Vor der Regex: gültiges UTF-8 und kein Nullbyte —
-    GPX aus Geräten ist UTF-8. Zuordnung: Sofortpaket Sicherheit.
-
-131. **`wiederherstellen.php` gibt unangemeldet Auskunft.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-11).* Zeile 530 zeigt
-    den Datenbank-Fehlertext (Rechnername, Nutzer möglich), Zeile 538 die
-    Kontenzahl jedem Besucher. Fehlerkennung statt Text, „in Betrieb" ohne
-    Zahl. Zuordnung: Sofortpaket Sicherheit.
-
 132. **Klartext-Freitextfelder ohne Hinweis.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-12).* `notes` trägt den
     Placeholder „Freitext (keine Patientendaten!)", `bw_info` („Namen /
@@ -1458,55 +1455,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (`mission_fields.php:395,426,459`). Bedienfehler tragen Patientendaten
     in den Klartext. Ein Schlüssel `hinweis` im Feldkatalog, ein Text für
     alle; das Symbol dazu bringt Nr. 108. Zuordnung: Sofortpaket Sicherheit.
-
-133. **Klartext-Reste auf dem Server.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-13).* Während des
-    Komplettbackup-Baus liegt `dump.sql.gz` unversiegelt in
-    `sicherungen/komplett/.bau-*/`, Reste bis zum nächsten Lauf
-    (`komplett_lib.php:53-55,454,471`); Reset-Token bis zur Einlösung in der
-    PHP-Sitzungsdatei und im Zugriffslog des ersten GET (M1-06 kennt es);
-    bei Mailfehler zeigt die Verwaltung den Setz-Link. Sofortpaket: Bauordner
-    nach Fehlschlag räumen; der Rest wird in `Technik.md` benannt und
-    bleibt. Zuordnung: Sofortpaket Sicherheit.
-
-134. **Verlorene Uhr kann Phasen alter Einsätze ersetzen.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-14).* Der Geräteschlüssel
-    liegt auf der Garmin-Uhr im Klartext (`watch/source/Pair.mc:853`; die
-    Plattform hat nichts Besseres). Lesen kann ein Finder nichts —
-    `ingest.php` ist POST-only —, aber er kann Einsätze hochladen und
-    Phasen bestehender Einsätze ersetzen (`ingest.php:361`), bis das Gerät
-    im Web getrennt ist. Was schon geschützt ist: Einsätze mit
-    `manual = 1` überspringt `ingest.php` ganz (Z. 251), und Phasen werden
-    nur ersetzt, wenn der Upload mindestens so viele bringt (Z. 359).
-    **Entschieden (R78):** ein **Zeitfenster ab Einsatzbeginn**, innerhalb
-    dessen ein Gerät ersetzen darf; danach `ok` ohne Ersetzen (idempotent,
-    kein Fehler auf der Uhr); Neuanlage immer. **Entschieden: 72 h**
-    (damit ein Freitagsdienst am Montag noch nachkommt) — Konstante in `db.php`,
-    `JSON-Vertrag.md` und Handbuch 12 („Uhr verloren: sofort trennen").
-    Zuordnung: Sofortpaket Sicherheit.
-
-135. **Kleinigkeiten an Kopfzeilen und Maskierung.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-15).* `json_encode` in
-    Inline-Skripten ohne `JSON_HEX_TAG` (Seitenbruch möglich, keine
-    Ausführung, weil `\/` maskiert wird — `ui.php:1928-1940` und drei
-    weitere Stellen); `csrf_check()` ohne `(string)`-Cast (`csrf[]=x` →
-    500, `auth_guard.php:175`); HSTS ohne `includeSubDomains`, keine
-    `Permissions-Policy`; `querySelector` mit Wert aus dem URL-Fragment in
-    `suche.php:535` (Bruch, kein XSS). Sofortpaket: die `JSON_HEX`-Vorgabe
-    und der Cast; die Kopfzeilen mit der CSP (Nr. 8). Zuordnung:
-    Sofortpaket Sicherheit / P5.
-
-136. **Rundenzahl und Passwortregeln.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-3).* Gegen den
-    Datenbankabzug ist das Passwort die einzige Schranke, und der Server
-    kann seine Qualität nach Bauart nicht prüfen. 320 000 Runden liegen
-    unter der Empfehlung von 600 000 (OWASP 2023, Bitwarden); gemessen
-    165 → 285 ms je Ableitung auf einem CPU-Kern, für den Angreifer die
-    halbe Rate. `KDF_ITER_ZIEL = 600000`, Altwert in der Liste, stille
-    Anhebung wie M2-01; `pwquality.js` auf Mindestlänge 12 mit
-    Passphrasen-Empfehlung, Sperrliste um naheliegende Muster; der Satz
-    zur Bauform ins Handbuch 3.1 und aufs Notfallblatt (R37.11).
-    Zuordnung: Sofortpaket Sicherheit.
+    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-02, AP7) — `hinweis` an `bw_info`, `other_ema`, `crew_*` und `days.notes`; nicht an `notes`, das wird verschlüsselt (E-S9-01). Zuordnung jetzt: S9.*
 
 137. **Photon und Kachelserver bekommen den Einsatzort im Klartext.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-6).* Beim Tippen der
@@ -1520,14 +1469,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Entschieden (F-SP-4): Schalter je Installation, Vorgabe „an".** Selbstbetrieb ist
     die Frage von Nr. 101 (S9 PS-1) mit der Hosting-Entscheidung.
     Zuordnung: Sofortpaket Sicherheit, Rest S9.
-
-138. **Weg C: die Zusage auf das eingrenzen, was sie hält.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-1), entschieden R78.*
-    Nur Dokumente, keine Versionsstufe: `CLAUDE.md` 4, `Technik.md` 4.98,
-    README, Handbuch 5 und der Entwurf des Datenschutztextes sagen, dass
-    Spur, Phasenkoordinaten, Zielklinik, Zeiten und Reanimationsereignisse
-    im Klartext liegen und der Einsatzort daraus rekonstruierbar ist (Nr. 43,
-    `Konzept-V1-Ortsdaten.md` Weg C). Zuordnung: Sofortpaket Sicherheit.
+    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-05, AP2) — Hinweis am Feld, Datenschutztext, Installationsschalter (Karte „Adresssuche" auf Betrieb → Servereinstellungen, `app_state` `adresssuche`), Kontoschalter (Profil → Datenschutz), Dienstadresse. Zuordnung jetzt: S9.*
 
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
@@ -1553,6 +1495,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Skripte mit dem Release) kommt sofort mit dem Sofortpaket (F-SP-9).
     Zuordnung: Zuarbeit sofort, Sofortpaket Sicherheit (Wache), S10
     (Deploy-Tor mit R40 (2)).
+    *Web 15.6.0, 07.09.2026: **Die Wache steht** — `tools/integritaetswache/`
+    und `.github/workflows/integritaet.yml`, täglich um 04:17 UTC, nach jedem
+    Deploy und von Hand. Sie braucht **keine eingecheckten Prüfsummen**: Der
+    Deploy synchronisiert byteweise, und der Inline-Skriptblock von `login.php`
+    enthält keine einzige PHP-Einsetzung — beide Seiten lassen sich frisch
+    rechnen. Gemessen: 112 Dateien, 112 gleich, 1 Inline-Block gleich;
+    Gegenprobe mit einer veränderten Kennung in `crypto.js` → 1 abweichend,
+    Rückgabewert 1. Selbstprobe 7 Erwartungen, 0 nicht erfüllt;
+    `tools/wartungsprobe/` bekam Erwartung 12a, damit die Wache im
+    Wartungsmodus nicht rot wird. **Offen bleibt:** Branch-Schutz und
+    2FA-Zwang (Zuarbeit, nicht im Repositorium machbar) und das Deploy-Tor
+    (S10 mit R40 (2)).*
 
 141. **Zweitfaktor für alle Konten.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
@@ -1563,39 +1517,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Ersatzcodes gehasht, „Gerät 30 Tage merken". Schützt die Anmeldung,
     nicht den Offline-Angriff (dafür S10). Zuordnung: **P5** (erweitert
     R38).
-
-142. **Android: HTTP-Ausnahme gilt auch im Release-Build.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-1).*
-    `Serveradresse.kt:108,119` lässt `localhost` und IPv4-Adressen mit
-    `http` durch und stuft ein ausdrückliches `https://127.0.0.1/` herab
-    (Test `oertlicheAdressenBehaltenHttp`); keine
-    Release-`network_security_config`. Auf Android 8.0/8.1 ginge
-    `X-Api-Key` bei einer Selbsthoster-Adresse per IP im Klartext; der
-    Standardbau ist nicht betroffen. Ausnahme an `BuildConfig.DEBUG`,
-    Klartextverbot im Release. Zuordnung: Sofortpaket Android (R78).
-
-143. **Android: Verzicht auf Certificate Pinning ist nicht festgehalten.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-3).* Vertretbar bei
-    fester Domain mit rotierendem Zertifikat, aber nirgends entschieden
-    (`docs/` und `android/`: kein Treffer). Eine Zeile in
-    `android/LIESMICH.md`. Zuordnung: Sofortpaket Android.
-
-144. **Android: Data-Layer-Empfang ohne Absender- und Plausibilitätsprüfung.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-4).*
-    `HandyHorcher.kt:30-32` und `Uhrannahme.kt:63-92` prüfen keinen
-    `sourceNodeId` und keine Zeitstempel; jede `uhr`-Kennung wird als neue
-    Uhr geführt. Kein Abflussweg, nur Störung — das Vertrauen ruht auf der
-    proprietären Bibliothek (gleiches Paket, gleiche Signatur). Absender
-    gegen die verbundenen Knoten, Zeiten gegen Dienstfenster;
-    Robolectric-Prüffall mit Attrappe. Zuordnung: Sofortpaket Android.
-
-145. **Android: Gradle-Wrapper ohne Prüfsumme.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-5).*
-    `gradle-wrapper.properties:3-5` ohne `distributionSha256Sum` (begründet
-    mit dem gesperrten `downloads.gradle.org` — die Summe wird aber nur
-    beim Herunterladen geprüft und stört den Container nicht);
-    `gradle-wrapper.jar` im Repositorium unvalidiert. R8 bleibt aus,
-    Begründung steht. Zuordnung: Sofortpaket Android.
 
 146. **Fragen an das Bedrohungsmodell P6 aus dem Krypto-Review.**
     *Aufgenommen 06.09.2026 (R78).* Drei Fragen, keine Fehler: **Argon2id
@@ -1631,7 +1552,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zuordnung: **S9**, als PS-11 der Vorbereitung und Ergänzung zu PS-1
     (Nr. 101, gemeinsamer Kartendialog) — der Dialog entsteht dort ohnehin
     neu.
-
+    *Konzept S9 (07.09.2026): E-S9-06 b (Spur im Dialog, fitBounds bei leerem Feld; AP2).*
 
 150. **Der Cron-Befehl für den Job-Einstieg steht mit dem Repositoriumspfad in der Dokumentation.**
     *Aufgenommen 06.09.2026 vom Auftraggeber, geprüft gegen `main`.* Der
@@ -1685,13 +1606,442 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Import-Schnittstelle berührt und damit mehr ist als ein Name (K4).
     Zuordnung: **Backlog-Runde**.
 
+152. **Standortseiten: Standort zuerst, ein Menüpunkt, Kennzahlen, Dialoge, Landung auf der neuen Zeile.**
+    *Aufgenommen 07.09.2026 vom Auftraggeber bei der Freigabe der S9-Mockups
+    (Rahmenplan Fassung 34).* Zwei Menüpunkte für eine Sache: „Standorte"
+    (Name, Lage) und „Rettungsmittel" (je Standort eine zugeklappte Karte
+    mit drei Listen — Rettungsmittel, Besatzungsvorlagen, Zielkliniken; alle
+    drei hängen am Standort, `crew_presets.base_id`,
+    `transport_dests.base_id`, E15). Der Name des zweiten ist falsch, die
+    zugeklappten Karten sind leicht zu übersehen, lange Listen zwingen zum
+    Scrollen, und die Eingabe (`sd_form()`) klebt unter jeder Liste.
+    **Soll:** „Rettungsmittel" entfällt; **„Standorte"** ist Liste (eine
+    Zeile je Standort mit drei Zahlen, „Ohne Standort" als letzter Eintrag)
+    und **Seite je Standort** mit vier Karten (Standort, Rettungsmittel,
+    Besatzung, Zielkliniken), **Kennzahlen** als Inhaltsverzeichnis
+    (`Design.md` 9.10), „Zum Anfang" je Karte, Sprungliste (Nr. 44) in den
+    Rettungsmitteln, **Filterfeld** in Besatzung und Zielkliniken; Anlegen
+    und Bearbeiten im **Dialog** (9.11); nach dem Anlegen Redirect mit
+    `#veh-<id>` und `:target`-Hervorhebung der neuen Zeile, keine
+    zusätzliche Meldung. Verwaltung → Stammdaten ebenso. Datenmodell und
+    Formate unberührt; Handbuch 6 neu. Konzept: **E-S9-18, E-S9-19**, Mockups
+    M-S9-06, M-S9-07. Zuordnung: **S9**, AP5.
+
 ---
+
+153. **`querySelector` mit einem Wert aus dem URL-Fragment.**
+    *Aufgenommen 07.09.2026 aus Nr. 135 (Krypto-Review K-15), beim Abschluss
+    des Sofortpakets herausgelöst.* `suche.php` setzt einen Wert aus dem
+    URL-Fragment unmaskiert in einen `querySelector` ein. Kein XSS — der Wert
+    landet nicht im Markup —, aber ein Zeichen wie `"` oder `]` bricht die
+    Auswahl, und die Seite verhält sich dann anders, als der geteilte Link
+    verspricht. Behebung: über `CSS.escape()` oder den Wert vor der Auswahl
+    gegen eine Positivliste halten. Die Nummer steht getrennt, weil Nr. 135
+    mit Web 15.6.0 nach *Erledigt* gewandert ist und dieser Teil sonst
+    unsichtbar würde. Zuordnung: Backlog-Runde.
+
+154. **Handy-App liest `kept_points` und `kept_meta` nicht.**
+    *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 134).*
+    `Sendeantwort.kt` nimmt aus der Antwort von `ingest.php` nur
+    `kept_phases` und `kept_resus` in den Sendebericht; ein Paket, dessen
+    Punkte oder Metadaten der Server wegen des Ersetzfensters übergangen
+    hat (`kept_points`, `kept_meta` — JSON-Vertrag 5), sieht am Handy wie
+    ein Erfolg aus. Der Server sagt es; die App hört es nicht. Beide Felder
+    in `Sendeantwort` aufnehmen und in der Ergebniszeile nennen; Prüffall in
+    `SendeantwortTest`. Zuordnung: nächste Android-Stufe.
+
+155. **Die Fixture des Referenzbestands trägt die alte Rundenzahl.**
+    *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 136).*
+    `demo/fixture.json.gz` führt das Demo-Konto mit 320 000 Runden; der
+    Demo-Reset spielt es alle 30 Minuten so ein, und die stille Anhebung
+    überspringt das Demo-Konto ohnehin (`api/kdf_upgrade.php`, E-P1-19 —
+    ein Upgrade passte bis zum nächsten Reset nicht mehr zu den
+    öffentlichen Zugangsdaten). Folge: Der Altwert kann nie aus
+    `KDF_ITER_LISTE` gestrichen werden, und die Statuszeile
+    „Schlüsselableitung" sagt das seit der Nachbesserung ausdrücklich (das
+    Demo-Konto zählt dort nicht mehr als „Übergang läuft"). Behebung: den
+    Referenzbestand mit `KDF_ITER_ZIEL` neu bauen
+    (`tools/referenzdatensatz/`), und `erzeugen.php` soll abbrechen, wenn
+    das Demo-Konto nicht auf dem Zielwert steht — damit die Zusage in
+    `api/kdf_upgrade.php` eine geprüfte ist. Zuordnung: Backlog-Runde, vor
+    dem Streichen des Altwerts.
+
+156. **Das Prüfstand-Passwort `adminlokal2026` fällt durch die Passwortregel.**
+    *Aufgenommen 07.09.2026 aus der Nachbesserung zu Nr. 136.* Seit die
+    Sperrliste jeden Eintrag streicht, auch „admin" mit fünf Zeichen, bleibt
+    von `adminlokal2026` nur „lokal" (5) — abgewiesen. Betroffen ist allein
+    der lokale Prüfstand: `tools/referenzdatensatz/einspielen/lokal_einrichten.sh`
+    setzt das Passwort über `passwort_setzen.mjs` durch das Browserformular
+    und bricht dort ab; `einspielen.py` (`--admin-passwort`), `kreislauf.py`,
+    `demo_bremse.mjs`, `demo_pruefen.mjs`, `komplettprobe/klickweg.mjs`,
+    `screenshots/aufnehmen.mjs` und `messstand/messen.py` melden sich damit
+    an. `nadokudemo0815` und `umlaufpruefung2026` bleiben gültig. Eine
+    bereits eingerichtete Installation ist nicht betroffen — geprüft wird
+    beim Setzen, nicht beim Anmelden. Behebung: ein neues Prüfstand-Passwort
+    ohne Listenwort wählen und an allen genannten Stellen samt
+    `einspielen/LIESMICH.md` und `lokal_einrichten.sh` (Kopfkommentar)
+    eintragen; **nicht** die Regel für den Prüfstand lockern. Zuordnung:
+    Backlog-Runde, vor dem nächsten Neuaufbau eines Prüfstands.
+
+157. **Handy-App: Sackgasse zwischen „Schlüssel abgewiesen" und „Gerät trennen".**
+    *Aufgenommen 07.09.2026 aus dem Emulatorlauf zu Android 0.14.1.* Wird
+    das Gerät serverseitig gelöscht, während ein Paket noch aussteht (hier:
+    der Demo-Reset nahm das Gerät mit, das Dienstende-Paket bekam `401`),
+    zeigt die App „Rückstand 1 Paket" und „Schlüssel abgewiesen · Gerät neu
+    koppeln" — und **verweigert das Trennen**, weil `trennen()` bei
+    Rückstand abbricht (`Trennergebnis.Rueckstand`, Hinweis „Sie gehören dem
+    bisherigen Konto"). Das Paket kann aber nie mehr gehen: Der Schlüssel
+    ist weg. Senden geht nicht, Trennen geht nicht, Neukoppeln setzt Trennen
+    voraus; der einzige Ausweg ist das Löschen der App-Daten. Behebung:
+    Bei `Abweisung.SITZUNG_UNGUELTIG` (401 `auth`) das Trennen trotz
+    Rückstand zulassen — mit dem Hinweis, dass die ausstehenden Pakete mit
+    dem alten Schlüssel nicht mehr zustellbar sind und verworfen werden —
+    oder den Rückstand beim 401 als „abgewiesen" führen, damit der Räumteil
+    aus Nr. 114 ihn beim Trennen mitnimmt. Prüffall in `KopplungTest`.
+    Zuordnung: nächste Android-Stufe.
+
+158. **`days` trägt kein `created_at`.** *Aufgenommen 08.09.2026 bei der
+    Neufassung der Tagesregel (Nr. 134).* Für Einsätze und Ruhesegmente ist
+    der Anker des Ersetzfensters die Serverzeit des Anlegens — genau deshalb
+    kann eine falsch gestellte Geräteuhr das Fenster nicht steuern. Für den
+    **Diensttag** gibt es diese Spalte nicht. Die Frage „wird an diesem Tag
+    noch gearbeitet?" wird deshalb über das jüngste `created_at` seiner
+    Datensätze beantwortet (`ingest_tag_offen()` in `ingest.php`). Das ist
+    ein ehrlicher Ersatz und in der Sache meist dasselbe, aber es ist eine
+    Abfrage über zwei Tabellen statt eines Spaltenwerts, und ein Tag, dessen
+    Datensätze alle gelöscht wurden, hat gar keinen Anker mehr. Behebung:
+    `days.created_at` mit Migration (Rückfall auf `started_at`, gekappt wie
+    bei `rest_segments`), danach `ingest_tag_offen()` auf einen Wert
+    zurückführen. Kein Fehler, eine Vereinfachung — und die Voraussetzung
+    dafür, die Regel in einem Satz erklären zu können. Zuordnung:
+    Backlog-Runde.
+
+159. **Die Uhr behandelt `400` nicht vertragsgemäß — sie wiederholt endlos.**
+    *Aufgenommen 08.09.2026 aus der Gegenprüfung der Zeitregel (Nr. 134).*
+    `docs/JSON-Vertrag.md` sagt für `400 {"error":"payload"}`: „nicht
+    wiederholen, lokal als fehlerhaft markieren". `watch/source/Uploader.mc`
+    tut das Gegenteil: Bei jedem Code außer Erfolg setzt es nur `lastError`
+    und `_busy = false` — „später erneut (nächster syncAll-Auslöser)". Ein
+    Paket, das der Server dauerhaft ablehnt, blockiert damit die
+    Warteschlange, und zwar ohne Ende. Heute fällt das nicht auf, weil
+    `ingest.php` fast nie `400` antwortet; genau deshalb ist in dieser Runde
+    die Zeitprüfung auch **nicht** als Abweisung gebaut worden, sondern als
+    Verwerfen des Werts. Die Handy-App macht es richtig
+    (`Sendeantwort.kt`), räumt abgewiesene Pakete aber nach 30 Tagen weg —
+    ohne Bedienweg zum Nachreichen (Nr. 114). Behebung: In `Uploader.mc`
+    `400` von den übrigen Fehlern trennen, das Paket lokal als fehlerhaft
+    kennzeichnen und aus der Warteschlange nehmen; die Uhr zeigt es an.
+    Zuordnung: nächste Uhr-Stufe. **Vor jeder künftigen Änderung, die
+    `ingest.php` einen neuen `400`-Fall gibt, zuerst dieser Punkt.**
+
+    **Erledigt am 08.09.2026** mit **Uhr 3.1.0** — und mit anderem Zuschnitt,
+    als hier stand. `400` war der falsche Fokus: Die Uhr kann ihn kaum
+    auslösen. Bedienbar erreichbar sind `401` und `403` (Gerät im Web
+    gelöscht oder abgeschaltet), und sie sagen nichts über das Paket,
+    sondern über das Gerät — dort wird deshalb nichts geparkt, sondern das
+    Senden angehalten. Der schwerere Teil des Fundes war ohnehin ein
+    anderer: Weil ein Rückstand das Trennen sperrte, war die Uhr nach einer
+    dauerhaften Ablehnung nur noch durch Löschen der App zu retten. Das ist
+    behoben; geparkte Pakete zählen nicht mehr im Rückstand.
+
+160. **Ein fortgesetzter Dienst führt das Handy tagelang unter dem alten
+    Datum — und die Anzeige verrät es nicht.** *Aufgenommen 08.09.2026 aus
+    derselben Gegenprüfung.* `Dienstklammer.beginnen()` gibt bei laufendem
+    Dienst den vorhandenen zurück (E-R45-13, gewollt). Wer den Dienst am
+    Freitag nicht beendet und am Montag „Dienst beginnen" drückt, arbeitet
+    im Freitagsdienst weiter; jedes Paket trägt weiter `day` = Freitag.
+    Die Anzeige sagt „Dienst läuft seit 07:00" — **ohne Datum**, also nicht
+    von heute Morgen zu unterscheiden. Für den Server ist das seit dieser
+    Runde unschädlich (`day` ist Anzeigedatum, und Zeiten außerhalb des
+    Fensters schreiben den Diensttag nur nicht fort), für die Dokumentation
+    des Dienstes ist es falsch. Behebung: Läuft der Dienst länger als einen
+    Kalendertag, das Datum in der Anzeige mitführen und beim zweiten
+    „Dienst beginnen" ausdrücklich fragen, ob fortgesetzt oder neu begonnen
+    wird. Zuordnung: nächste Android-Stufe.
+
+    **Erledigt am 08.09.2026** mit **Android 0.15.0** — allerdings anders als
+    hier vorgeschlagen. Die Anzeige führt das Datum, sobald der Dienst an
+    einem anderen Kalendertag begann, und nach 26 Stunden erinnert die App
+    einmal daran, ihn zu beenden. Die Rückfrage beim zweiten „Dienst
+    beginnen" ist **nicht** gebaut: Den Startknopf gibt es bei laufendem
+    Dienst gar nicht, die Frage müsste an die Uhr, und wer am Montag einfach
+    weiterarbeitet, drückt ohnehin nichts. Was offen bleibt, ist das
+    Löschen der schon hochgeladenen Aufzeichnung — Nr. 161.
+
+161. **Aus einer Aufzeichnung ein Stück löschen können.** *Aufgenommen
+    08.09.2026 beim Bauen von Nr. 160.* Ein vergessener Dienst zeichnet
+    weiter auf — auch das Wochenende, auch den Weg nach Hause. Was dabei
+    hochgeladen wurde, lässt sich heute nur **ganz oder gar nicht**
+    loswerden: `trash_delete_day()` legt den Diensttag in den Papierkorb und
+    nimmt seine Ruhezeiten mit (`deleted_with_day = 1`), also auch den
+    echten Dienst, den man behalten will. Das Schneidewerkzeug
+    (`api/schneiden.php`) macht aus einem Stück Spur einen **Einsatz**; es
+    löscht keines. Für GPS-Daten, die im Klartext liegen und den Wohnort
+    zeigen, ist das zu grob. Behebung: In der Ansicht der Ruhezeiten einen
+    Zeitraum wählen und dessen Punkte löschen können — über `spur_lib.php`,
+    nie unmittelbar per SQL (CLAUDE.md 4), mit Rückfrage und einer Zeile im
+    Protokoll. Zuordnung: Backlog-Runde, gemeinsam mit Nr. 43 (Ortsdaten)
+    zu betrachten.
+
 
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+127. **Anmeldeformular ohne CSRF-Token.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-8).* `login.php:246`
+    trägt kein Token; eine fremde Seite kann einen abgemeldeten Browser per
+    Top-Level-POST in ein Angreiferkonto anmelden. Patientenfelder sind
+    nicht betroffen (kein `edk`, fremde Hülle öffnet nicht), aber Eingaben
+    landen im fremden Konto. Die Sitzung besteht beim GET schon
+    (`login.php:13`), das Token ist also da. Zuordnung: Sofortpaket
+    Sicherheit (R78).
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** `csrf_token()`, `csrf_field()`
+    und das neue `csrf_ok()` stehen jetzt in `session_lib.php` statt in
+    `auth_guard.php` — die eine Seite, die den Schutz am nötigsten braucht, lädt
+    `auth_guard.php` nicht. Die Prüfung steht **vor** allen Zählern (ein
+    abgelaufenes Formular ist kein Fehlversuch), antwortet mit der Anmeldeseite
+    statt einer 403, und nach erfolgreicher Anmeldung wird das Token neu gezogen
+    wie die Sitzungskennung. Gemessen: **2 von 2** im Browser, dazu drei
+    HTTP-Fälle. Zwei Prüfmittel melden sich ohne Browser an und schicken das
+    Feld seither selbst (`sitzung.py`, `tools/gpxprobe/`).
+
+128. **E-Mail-Wechsel im Profil ohne Passwortnachweis.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-7).* `einstellungen.php:92-106`
+    schreibt die Adresse allein mit CSRF-Token um — kein `old_token`, kein
+    `session_epoch`, keine Mail an die alte Adresse; die Verwaltung kann
+    sie ebenfalls ändern (`admin_user.php:127-133`). Die Kette endet im
+    Reset-Modus, der den Wiederherstellungsschlüssel braucht — keine
+    Offenlegung, aber Kontoübernahme für Klartextfelder und Aussperren.
+    Sofortpaket: Nachweis per `old_token` wie beim Passwortwechsel, Hinweismail
+    an die alte Adresse bei beiden Wegen; Bestätigung der neuen Adresse
+    kommt mit R37.6 in P5. Zuordnung: Sofortpaket Sicherheit (R78), Rest P5.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** `old_token` wie beim
+    Passwortwechsel, **nur beim tatsächlichen Wechsel** — Name und Logo gehen
+    ohne. Die Hinweismail an die **alte** Adresse geht auf beiden Wegen (Profil
+    und Verwaltung); sie ist die einzige, die im Missbrauchsfall noch der
+    Besitzerin gehört. `session_epoch` bleibt unverändert. Gemessen: **4 von 4**
+    im Browser. Die Bestätigung der **neuen** Adresse (Double-Opt-In) bleibt
+    R37.6 in P5.
+
+129. **`apk/` und `demo/` liegen ungesperrt im Webroot.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-9).* `apk.php` verlangt
+    die Anmeldung, der Ordner selbst nicht (`apk_lib.php:22`, Dateinamen
+    vorhersagbar); `demo/fixture.json.gz` trägt das Schlüsselmaterial des
+    Demo-Kontos (öffentliches Passwort, also harmlos, aber unnötig). Anders
+    als `sicherungen/` legt kein Code eine Sperre an, und eine Datei in
+    `apk/` käme wegen der Deploy-Ausnahmeliste nie an. Zwei
+    `RewriteRule`-Zeilen in `.htaccess`. Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** Eine `RewriteRule`-Zeile für beide Ordner hinter
+    dem HTTPS-Zwang. Beide Ordner werden ausschließlich vom PHP-Code gelesen —
+    die Sperre kostet die Anwendung nichts. Gemessen unter einem echten Apache
+    (die lokale Installation läuft auf PHPs eingebautem Server und liest keine
+    `.htaccess`): **vier Aufrufe → 403**, `login.php` und `assets/style.css`
+    unverändert 200.
+
+130. **DOCTYPE-Sperre im GPX-Import umgehbar.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-10).* `gpx_lib.php:332`
+    prüft `/<!DOCTYPE/i` auf dem Rohtext; ein UTF-16-kodiertes GPX passiert
+    die Regex, libxml versteht es. Folge: interne Entitäten trotz Sperre
+    (Billion Laughs), XXE nicht (kein `NOENT`, `NONET`). Nur angemeldet,
+    12 MB Grenze. Vor der Regex: gültiges UTF-8 und kein Nullbyte —
+    GPX aus Geräten ist UTF-8. Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** Vor der Regex stehen jetzt zwei
+    Prüfungen: kein Nullbyte, gültiges UTF-8. Am Stand davor gemessen: das
+    UTF-16-Dokument **ging durch**, zwei Punkte, Entität expandiert. Der Preis:
+    Eine GPX-Datei in Latin-1 mit Umlauten wird abgewiesen, mit einem Satz, der
+    sagt, was zu tun ist. `tools/gpxprobe/` bekam **Teil 8** — acht
+    Umgehungsversuche, **0 durch**, und eine saubere Datei geht weiterhin durch.
+
+131. **`wiederherstellen.php` gibt unangemeldet Auskunft.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-11).* Zeile 530 zeigt
+    den Datenbank-Fehlertext (Rechnername, Nutzer möglich), Zeile 538 die
+    Kontenzahl jedem Besucher. Fehlerkennung statt Text, „in Betrieb" ohne
+    Zahl. Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** Fehlerkennung statt Fehlertext
+    (`fehler_kennung()`), „in Betrieb“ ohne Zahl. Gemessen: vorher
+    `Access denied for user 'nadoku'@'localhost' to database …` und „stehen 2
+    Konten“, nachher die Kennung und kein Zahlwert; der volle Text steht unter
+    der Kennung im Fehlerprotokoll des Webspace.
+
+133. **Klartext-Reste auf dem Server.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-13).* Während des
+    Komplettbackup-Baus liegt `dump.sql.gz` unversiegelt in
+    `sicherungen/komplett/.bau-*/`, Reste bis zum nächsten Lauf
+    (`komplett_lib.php:53-55,454,471`); Reset-Token bis zur Einlösung in der
+    PHP-Sitzungsdatei und im Zugriffslog des ersten GET (M1-06 kennt es);
+    bei Mailfehler zeigt die Verwaltung den Setz-Link. Sofortpaket: Bauordner
+    nach Fehlschlag räumen; der Rest wird in `Technik.md` benannt und
+    bleibt. Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026 — der Bauordner.** `komp_schub()`
+    fängt jetzt, räumt und setzt den Zustand auf `abgebrochen`; weil ein Absturz
+    kein `catch` sieht, räumt zusätzlich **jeder** Aufräumlauf die Reste, auch
+    der ohne Fälligkeit. Gemessen: **1 auf 0** in beiden Fällen. Der Preis:
+    „Fortsetzen“ nimmt einen gescheiterten Lauf nicht mehr auf — Rechenzeit,
+    keine Daten. **Der Rest bleibt und steht jetzt in `Technik.md` 4.98 in einer
+    Tabelle**: Reset-Token in Sitzungsdatei und Zugriffslog, angezeigter
+    Setz-Link bei Mailfehler.
+
+134. **Verlorene Uhr kann Phasen alter Einsätze ersetzen.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-14).* Der Geräteschlüssel
+    liegt auf der Garmin-Uhr im Klartext (`watch/source/Pair.mc:853`; die
+    Plattform hat nichts Besseres). Lesen kann ein Finder nichts —
+    `ingest.php` ist POST-only —, aber er kann Einsätze hochladen und
+    Phasen bestehender Einsätze ersetzen (`ingest.php:361`), bis das Gerät
+    im Web getrennt ist. Was schon geschützt ist: Einsätze mit
+    `manual = 1` überspringt `ingest.php` ganz (Z. 251), und Phasen werden
+    nur ersetzt, wenn der Upload mindestens so viele bringt (Z. 359).
+    **Entschieden (R78):** ein **Zeitfenster ab Einsatzbeginn**, innerhalb
+    dessen ein Gerät ersetzen darf; danach `ok` ohne Ersetzen (idempotent,
+    kein Fehler auf der Uhr); Neuanlage immer. **Entschieden: 72 h**
+    (damit ein Freitagsdienst am Montag noch nachkommt) — Konstante in `db.php`,
+    `JSON-Vertrag.md` und Handbuch 12 („Uhr verloren: sofort trennen").
+    Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** `INGEST_ERSETZFENSTER_H = 72` in
+    `db.php`, gerechnet ab dem **gespeicherten** `started_at` — nicht ab dem
+    gesendeten, den bestimmt der Absender. Danach `ok` ohne Ersetzen, ohne
+    Anhängen, ohne Fehler, benannt über `kept_phases`, `kept_resus` und neu
+    `kept_points`. Neuanlage bleibt immer möglich; der Weg gegen eine verlorene
+    Uhr bleibt das Trennen (Handbuch 10). `tools/ingestprobe/` bekam **Teil 9**
+    (**1 angenommen, 1 abgewiesen**) und stellte dabei ihre Zeitstempel von
+    festen März-Daten auf `time()` um — zehn ihrer Erwartungen prüften sonst
+    einen Fall, den es im Betrieb nicht gibt.
+
+135. **Kleinigkeiten an Kopfzeilen und Maskierung.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-15).* `json_encode` in
+    Inline-Skripten ohne `JSON_HEX_TAG` (Seitenbruch möglich, keine
+    Ausführung, weil `\/` maskiert wird — `ui.php:1928-1940` und drei
+    weitere Stellen); `csrf_check()` ohne `(string)`-Cast (`csrf[]=x` →
+    500, `auth_guard.php:175`); HSTS ohne `includeSubDomains`, keine
+    `Permissions-Policy`; `querySelector` mit Wert aus dem URL-Fragment in
+    `suche.php:535` (Bruch, kein XSS). Sofortpaket: die `JSON_HEX`-Vorgabe
+    und der Cast; die Kopfzeilen mit der CSP (Nr. 8). Zuordnung:
+    Sofortpaket Sicherheit / P5.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026 — die JSON_HEX-Vorgabe und der
+    Cast.** `json_js()` in `db.php` steht an allen **44** Stellen, die in einen
+    `<script>`-Block schreiben; die **35** außerhalb bleiben unverändert, weil
+    dort Bytes an Prüfsummen hängen (maschinell eingeteilt, nachgezählt: 79
+    Aufrufe gesamt). Der `(string)`-Cast kam mit Nr. 127 über `csrf_ok()`.
+    Gemessen mit einem Profilnamen `<!--<script>` auf `import.php`: vorher
+    fehlten `KONTO_NAME`, `APP_TZ` **und** `WEB_VERSION` — der ganze Block war
+    verschluckt; nachher stehen alle drei. **Nicht mitbehoben:** HSTS und
+    `Permissions-Policy` gehen mit der CSP (Nr. 8), der `querySelector` mit
+    einem Wert aus dem URL-Fragment steht als **Nr. 153** neu im Backlog.
+
+136. **Rundenzahl und Passwortregeln.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-3).* Gegen den
+    Datenbankabzug ist das Passwort die einzige Schranke, und der Server
+    kann seine Qualität nach Bauart nicht prüfen. 320 000 Runden liegen
+    unter der Empfehlung von 600 000 (OWASP 2023, Bitwarden); gemessen
+    165 → 285 ms je Ableitung auf einem CPU-Kern, für den Angreifer die
+    halbe Rate. `KDF_ITER_ZIEL = 600000`, Altwert in der Liste, stille
+    Anhebung wie M2-01; `pwquality.js` auf Mindestlänge 12 mit
+    Passphrasen-Empfehlung, Sperrliste um naheliegende Muster; der Satz
+    zur Bauform ins Handbuch 3.1 und aufs Notfallblatt (R37.11).
+    Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** `KDF_ITER_ZIEL = 600000`,
+    `KDF_ITER_LISTE = [600000, 320000]`; gemessen 298 → 551 ms je Ableitung, im
+    Übergang 849 ms. Mindestlänge 12 als `PW_MIN_LAENGE` an einer Stelle.
+    **Zwei Funde, die erst der Sprung sichtbar gemacht hat:** Die stille
+    Anhebung lief nicht beim nächsten Anmelden — sie braucht `CSRF`, und das gab
+    `ui_krypto_bootstrap()` nur auf Anfrage aus; die erste Seite ohne CSRF
+    verwarf das Vormerkfach und damit die Anhebung für die ganze Sitzung. Und
+    die Wartungsseite meldete nur *verwaiste* Rundenzahlen, nicht, wer noch auf
+    dem Altwert steht — also nicht die Zahl, die sagt, wann der Altwert weg
+    darf. Beides behoben. **Die Sperrliste rechnet jetzt den Anteil statt des
+    Vorkommens**, sonst widerspräche die Passphrasen-Empfehlung der eigenen
+    Prüfung („Anker-Winter-Regen-Glas“ scheiterte an „winter“).
+
+138. **Weg C: die Zusage auf das eingrenzen, was sie hält.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-1), entschieden R78.*
+    Nur Dokumente, keine Versionsstufe: `CLAUDE.md` 4, `Technik.md` 4.98,
+    README, Handbuch 5 und der Entwurf des Datenschutztextes sagen, dass
+    Spur, Phasenkoordinaten, Zielklinik, Zeiten und Reanimationsereignisse
+    im Klartext liegen und der Einsatzort daraus rekonstruierbar ist (Nr. 43,
+    `Konzept-V1-Ortsdaten.md` Weg C). Zuordnung: Sofortpaket Sicherheit.
+
+    **Erledigt mit Web 15.6.0 am 07.09.2026.** Nur Dokumente, keine Zeile Code.
+    `CLAUDE.md` 4, `README.md`, `Technik.md` 4.98 und `Handbuch.md` 5 zählen
+    jetzt **beide** Seiten auf; dazu ein übernehmbarer Textbaustein für die
+    Datenschutzerklärung in Handbuch 11.5 — die Anwendung liefert weiterhin
+    keinen Rechtstext mit, aber die technische Tatsache dahinter kann nur sie
+    kennen.
+
+
+142. **Android: HTTP-Ausnahme gilt auch im Release-Build.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-1).*
+    `Serveradresse.kt:108,119` lässt `localhost` und IPv4-Adressen mit
+    `http` durch und stuft ein ausdrückliches `https://127.0.0.1/` herab
+    (Test `oertlicheAdressenBehaltenHttp`); keine
+    Release-`network_security_config`. Auf Android 8.0/8.1 ginge
+    `X-Api-Key` bei einer Selbsthoster-Adresse per IP im Klartext; der
+    Standardbau ist nicht betroffen. Ausnahme an `BuildConfig.DEBUG`,
+    Klartextverbot im Release. Zuordnung: Sofortpaket Android (R78).
+
+    **Erledigt mit Android 0.14.0 am 07.09.2026.** Die Ausnahme in
+    `Serveradresse` hängt an `BuildConfig.DEBUG`; `handy/src/release/` bringt
+    eine Netzsicherheitsregel mit `cleartextTrafficPermitted="false"` — zwei
+    Böden. Der Prüffall `oertlicheAdressenBehaltenHttp` läuft nur im
+    Debug-Buildtyp, sein Gegenstück nur im Release (je Bauart 11 Fälle,
+    1 übersprungen). Belegt an der zusammengeführten Release-Manifestdatei:
+    `networkSecurityConfig="@xml/netzsicherheit"`.
+
+143. **Android: Verzicht auf Certificate Pinning ist nicht festgehalten.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-3).* Vertretbar bei
+    fester Domain mit rotierendem Zertifikat, aber nirgends entschieden
+    (`docs/` und `android/`: kein Treffer). Eine Zeile in
+    `android/LIESMICH.md`. Zuordnung: Sofortpaket Android.
+
+    **Erledigt mit Android 0.14.0 am 07.09.2026.** Abschnitt „Warum kein
+    Certificate Pinning" in `android/LIESMICH.md` — feste Domain,
+    rotierendes Zertifikat, niemand, der Ersatzschlüssel pflegte; Android
+    traut benutzerinstallierten Wurzeln seit Fassung 7 ohnehin nicht — und
+    ein Verweis im Kopf von `HttpNetzweg`.
+
+144. **Android: Data-Layer-Empfang ohne Absender- und Plausibilitätsprüfung.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-4).*
+    `HandyHorcher.kt:30-32` und `Uhrannahme.kt:63-92` prüfen keinen
+    `sourceNodeId` und keine Zeitstempel; jede `uhr`-Kennung wird als neue
+    Uhr geführt. Kein Abflussweg, nur Störung — das Vertrauen ruht auf der
+    proprietären Bibliothek (gleiches Paket, gleiche Signatur). Absender
+    gegen die verbundenen Knoten, Zeiten gegen Dienstfenster;
+    Robolectric-Prüffall mit Attrappe. Zuordnung: Sofortpaket Android.
+
+    **Erledigt mit Android 0.14.0 am 07.09.2026.**
+    `WearNachrichtenweg.verbundeneKnoten()` liefert die Knotenliste (`null`
+    = nicht lesbar), `Uhrannahme.absenderBekannt()` verlangt `sourceNodeId`
+    darunter — sonst weder Wirkung noch Quittung; die Zeit der Uhr darf
+    höchstens fünf Minuten in der Zukunft und höchstens fünf Minuten vor dem
+    laufenden Dienst liegen, sonst quittiert, nicht gewirkt.
+    `UhrannahmeTest` 12 → 19 Fälle (Robolectric, echtes SQLite). Die
+    Schnittstelle `Nachrichtenweg` ist unverändert; die neue Methode steht
+    nur an der Umsetzung, weil ihr einziger Aufrufer (`HandyHorcher`) den
+    Data Layer ohnehin kennt.
+
+145. **Android: Gradle-Wrapper ohne Prüfsumme.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (AN-5).*
+    `gradle-wrapper.properties:3-5` ohne `distributionSha256Sum` (begründet
+    mit dem gesperrten `downloads.gradle.org` — die Summe wird aber nur
+    beim Herunterladen geprüft und stört den Container nicht);
+    `gradle-wrapper.jar` im Repositorium unvalidiert. R8 bleibt aus,
+    Begründung steht. Zuordnung: Sofortpaket Android.
+
+    **Erledigt mit Android 0.14.0 am 07.09.2026.**
+    `distributionSha256Sum=bd711022…f3531` in `gradle-wrapper.properties`;
+    die Zahl aus `services.gradle.org` und am frisch geladenen Archiv
+    nachgerechnet (137 393 837 Bytes). LIESMICH 2.1 erzählt die Sperre als
+    Vergangenheit; R8 bleibt aus, mit Begründung.
 
 148. **Der Knopf „Diensttage zusammenführen" in der Überschneidungswarnung führt auf 404.**
     *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Laufen

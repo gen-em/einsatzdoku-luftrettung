@@ -39,6 +39,7 @@ class KopplungTest {
     private lateinit var tresor: Schluesseltresor
     private lateinit var datei: File
     private var rueckstand = 0
+    private var geraeumt = 0
 
     private val geraet = Geraeteangabe(
         art = Geraeteangabe.ART_HANDY, teil = null,
@@ -47,7 +48,11 @@ class KopplungTest {
         fw = "16", sdk = 36, app = "0.2.0",
     )
 
-    private fun dienst() = Kopplungsdienst(HttpNetzweg(), tresor, server.basis) { rueckstand }
+    private fun dienst() = Kopplungsdienst(
+        HttpNetzweg(), tresor, server.basis,
+        rueckstand = { rueckstand },
+        raeumen = { geraeumt += 1 },
+    )
 
     @Before fun aufbauen() {
         server = PruefServer()
@@ -56,6 +61,7 @@ class KopplungTest {
         datei.delete()
         tresor = Schluesseltresor(datei, PruefTresorschluessel())
         rueckstand = 0
+        geraeumt = 0
     }
 
     @After fun abbauen() {
@@ -321,6 +327,7 @@ class KopplungTest {
 
         assertTrue(dienst().trennen() is Trennergebnis.Getrennt)
         assertNull(tresor.lesen())
+        assertEquals("Mit der Kopplung gehen die abgewiesenen Pakete (Nr. 114)", 1, geraeumt)
 
         val a = server.anfragen.single()
         assertEquals("trennen", JSONObject(a.koerper).getString("aktion"))
@@ -335,6 +342,7 @@ class KopplungTest {
         val e = dienst().trennen() as Trennergebnis.NurLokal
         assertEquals(Abweisung.KEINE_VERBINDUNG, e.grund)
         assertNull(tresor.lesen())
+        assertEquals("geräumt wird auch dann (Nr. 114)", 1, geraeumt)
     }
 
     /** Die Rückstandssperre (Backlog Nr. 14): NICHTS geschieht. */
@@ -346,5 +354,6 @@ class KopplungTest {
         assertEquals(3, e.pakete)
         assertNotNull("Die Kopplung muss stehen bleiben", tresor.lesen())
         assertTrue("Es darf nichts hinausgegangen sein", server.anfragen.isEmpty())
+        assertEquals("und nichts geräumt (Nr. 114)", 0, geraeumt)
     }
 }

@@ -293,10 +293,66 @@ class UhrannahmeTest {
         assertNull(puffer.offenesPaket(Paketzeile.ART_EINSATZ))
     }
 
+    // ---- Absender und Zeit (Backlog Nr. 144, Krypto-Review AN-4) -----------
+
+    @Test fun derVerbundeneKnotenIstBekannt() {
+        assertTrue(annahme.absenderBekannt(Absender("knoten-uhr", VERBUNDEN)))
+    }
+
+    /** Ein Knoten, der nicht verbunden ist, ist nicht unsere Uhr. */
+    @Test fun einFremderKnotenWirdAbgewiesen() {
+        assertFalse(annahme.absenderBekannt(Absender("knoten-fremd", VERBUNDEN)))
+    }
+
+    /**
+     * IST DIE LISTE NICHT LESBAR, gilt der Absender als fremd. Das kostet
+     * keine Daten — ohne Quittung liefert die Uhr nach —, und andersherum
+     * wäre der Abgleich genau dann außer Kraft, wenn etwas nicht stimmt.
+     */
+    @Test fun ohneKnotenlisteGiltDerAbsenderAlsFremd() {
+        assertFalse(annahme.absenderBekannt(Absender("knoten-uhr", null)))
+    }
+
+    /** Ein Ereignis aus der Zukunft wird quittiert, aber nicht gewirkt. */
+    @Test fun einEreignisAusDerZukunftWirdNichtGewirkt() {
+        val empfangen = Instant.parse("2026-07-16T05:00:00Z")
+        val q = annahme.uebernimm(meldung(Ereignisart.DIENST_BEGINNEN, "2026-07-16T05:06:00Z"), empfangen)
+
+        assertEquals("quittiert — die Uhr soll es nicht ewig nachliefern", 1L, q.bisNr)
+        assertFalse("aber kein Dienst begonnen", klammer.laeuft())
+    }
+
+    /** Fünf Minuten Spiel: Zwei Uhren gehen nie ganz gleich. */
+    @Test fun fuenfMinutenVorausSindNochPlausibel() {
+        val empfangen = Instant.parse("2026-07-16T05:00:00Z")
+        annahme.uebernimm(meldung(Ereignisart.DIENST_BEGINNEN, "2026-07-16T05:04:59Z"), empfangen)
+        assertTrue(klammer.laeuft())
+    }
+
+    /**
+     * Ein Ereignis, das älter ist als der laufende Dienst, gehört zu keinem
+     * Dienst: quittiert, nicht gewirkt — es entsteht kein Einsatz.
+     */
+    @Test fun einEreignisVorDemDienstWirdNichtGewirkt() {
+        annahme.uebernimm(meldung(Ereignisart.DIENST_BEGINNEN, "2026-07-16T05:00:00Z"))
+        val q = annahme.uebernimm(meldung(Ereignisart.PHASE, "2026-07-16T04:50:00Z", phase = 2, einsatzRef = WM))
+
+        assertEquals(2L, q.bisNr)
+        assertTrue("kein Einsatz aus einer Zeit vor dem Dienst", einsaetze().isEmpty())
+    }
+
+    /** Und ein Dienstende vor dem Dienstbeginn beendet nichts. */
+    @Test fun einDienstendeVorDemBeginnBeendetNichts() {
+        annahme.uebernimm(meldung(Ereignisart.DIENST_BEGINNEN, "2026-07-16T05:00:00Z"))
+        annahme.uebernimm(meldung(Ereignisart.DIENST_BEENDEN, "2026-07-16T04:00:00Z"))
+        assertTrue(klammer.laeuft())
+    }
+
     private fun einsaetze(): List<Paketzeile> =
         puffer.warteschlange().filter { it.art == Paketzeile.ART_EINSATZ }
 
     private companion object {
+        val VERBUNDEN = setOf("knoten-uhr", "knoten-zweite-uhr")
         const val DATEI = "pruef_uhrannahme.db"
         const val UHR = "u-1234512345"
         const val WM = "wm-1-1234512345"

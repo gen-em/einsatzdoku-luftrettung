@@ -148,7 +148,7 @@
     -->
     <string name="warnung_akku_titel">Akku unter %1$d %%</string>
     <string name="warnung_akku_knapp">Die Aufzeichnung läuft weiter und braucht durchgehend GPS. Lade nach, wenn du kannst — im Fahrzeug oder an der Wache.</string>
-    <string name="warnung_akku_niedrig">Die Aufzeichnung läuft weiter. Ohne Nachladen reicht der Akku nicht mehr durch den Dienst — dann bricht die Spur ab, ohne dass es jemand merkt.</string>
+    <string name="warnung_akku_niedrig">Die Aufzeichnung läuft weiter. Ohne Nachladen reicht der Akku nicht mehr durch den Dienst — dann brechen die GPS-Daten ab, ohne dass es jemand merkt.</string>
     <string name="warnung_akku_kritisch">Gleich ist Schluss. Lade jetzt nach, oder beende den Dienst, solange du es noch selbst entscheidest: Ein Abschalten mitten im Dienst lässt den Diensttag ohne Ende stehen.</string>
 
     <!--
@@ -175,7 +175,7 @@
 
     <!-- ==== Dienst und Aufzeichnung (E-S4-05, E-S4-20) ================== -->
     <string name="dienst_kanal">Aufzeichnung</string>
-    <string name="dienst_kanal_zweck">Zeigt an, dass die Spur des laufenden Dienstes aufgezeichnet wird.</string>
+    <string name="dienst_kanal_zweck">Zeigt an, dass die GPS-Daten des laufenden Dienstes aufgezeichnet werden.</string>
     <string name="dienst_meldung_ohne">Kein Dienst</string>
     <string name="dienst_meldung_beendet_sendet">Dienst beendet · sende …</string>
 
@@ -194,6 +194,11 @@
     <string name="dienst_laeuft_freigabe_fehlt">Dienst läuft seit %1$s · Ortung nicht freigegeben · keine Aufzeichnung</string>
 
     <string name="dienst_keiner">Kein Dienst</string>
+    <!-- Erinnerung an einen sehr langen Dienst (Backlog Nr. 160). Die Schwelle
+         und ihre Begruendung stehen an AufzeichnungsDienst.DIENSTDAUER_ERINNERUNG_H. -->
+    <string name="warnung_dienstdauer_titel">Dienst läuft seit %1$d Stunden</string>
+    <string name="warnung_dienstdauer_text">Begonnen am %1$s. Wenn der Dienst zu Ende ist, beende ihn — sonst zeichnet das Handy weiter auf, auch auf dem Weg nach Hause.</string>
+
     <string name="dienst_beginnen">Dienst beginnen</string>
     <string name="dienst_beenden">Dienst beenden</string>
     <string name="dienst_beenden_frage">Dienst beenden?</string>
@@ -206,13 +211,13 @@
 
     <string name="modus_phasen">Mit Phasenknöpfen</string>
     <string name="modus_nur_aufzeichnen">Nur aufzeichnen</string>
-    <string name="modus_nur_aufzeichnen_hinweis">Die ganze Spur wird aufgezeichnet. Einsätze schneidest du später im Browser heraus — in der Tagesansicht am Ruhesegment.</string>
+    <string name="modus_nur_aufzeichnen_hinweis">Es werden durchgehend GPS-Daten aufgezeichnet. Einsätze schneidest du später im Browser heraus — in der Tagesansicht am Ruhesegment.</string>
     <string name="modus_doch_phasen">Doch mit Phasenknöpfen</string>
     <string name="modus_doch_nur_aufzeichnen">Doch nur aufzeichnen</string>
 
     <!-- Freigaben und Akku -->
     <string name="ortung_fehlt">Ortung nicht freigegeben</string>
-    <string name="ortung_fehlt_hinweis">Ohne Ortungsfreigabe zeichnet die App keine Spur auf. Tippe hier, um sie zu erteilen.</string>
+    <string name="ortung_fehlt_hinweis">Ohne Ortungsfreigabe zeichnet die App keine GPS-Daten auf. Tippe hier, um sie zu erteilen.</string>
     <string name="ortung_freigeben">Ortung freigeben</string>
 
     <!-- Ohne eingeschalteten Standort beginnt kein Dienst (E-S5Z-03). Muster
@@ -227,7 +232,7 @@
     <string name="warnung_kanal">Warnungen</string>
     <string name="warnung_kanal_zweck">Meldet mit Vibration, wenn während eines Dienstes nichts aufgezeichnet wird.</string>
     <string name="warnung_titel">Keine Aufzeichnung</string>
-    <string name="warnung_standort_aus">Der Standort ist ausgeschaltet. Einschalten, sonst bleibt die Spur dieses Dienstes leer.</string>
+    <string name="warnung_standort_aus">Der Standort ist ausgeschaltet. Einschalten, sonst bleiben die GPS-Daten dieses Dienstes leer.</string>
     <string name="warnung_kein_signal">Seit %1$d min kommt kein GPS-Signal. Handy aus der Tasche oder ans Fenster.</string>
     <string name="warnung_ungenau">Das GPS-Signal ist zu ungenau (über 100 m). Handy aus der Tasche oder ans Fenster.</string>
     <string name="warnung_freigabe_fehlt">Die Ortungsfreigabe fehlt. In der App erteilen.</string>

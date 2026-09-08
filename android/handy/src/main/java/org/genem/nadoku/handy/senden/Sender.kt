@@ -2,10 +2,14 @@ package org.genem.nadoku.handy.senden
 
 import org.genem.nadoku.handy.kopplung.Netzantwort
 import org.genem.nadoku.handy.kopplung.Netzweg
+import org.genem.nadoku.handy.dienst.Zeit
 import org.genem.nadoku.handy.kopplung.Serveradresse
 import org.genem.nadoku.handy.puffer.Paketzeile
 import org.genem.nadoku.handy.puffer.Puffer
+import org.genem.nadoku.handy.puffer.Raeumung
 import org.genem.nadoku.handy.tresor.Schluesseltresor
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
  * Was ein Sendelauf ergeben hat — für die Anzeige und für das Prüfprotokoll.
@@ -24,6 +28,8 @@ data class Sendebericht(
     val pausiert: Boolean = false,
     /** Kein Netz oder 5xx — später unverändert erneut. */
     val spaeterErneut: Boolean = false,
+    /** Vor dem Lauf geräumte abgewiesene Pakete (Backlog Nr. 114, Räumteil). */
+    val geraeumt: Int = 0,
 ) {
     /** Ein Lauf, an dem nichts zu beanstanden ist. */
     val sauber: Boolean
@@ -75,6 +81,8 @@ class Sender(
      */
     private val basis: String = Serveradresse.BASIS,
     private val phasenLeser: (Long) -> List<Phaseneintrag> = { emptyList() },
+    /** Die Uhr — einsetzbar, damit der Prüfstand die Räumfrist stellen kann. */
+    private val jetzt: () -> Instant = Instant::now,
 ) {
 
     /** Aktuelle Chunk-Größe; sie halbiert sich bei 413 und bleibt es. */
@@ -86,16 +94,27 @@ class Sender(
      * Fehlerpfad den Lauf beendet.
      */
     fun sendeAlles(): Sendebericht {
+        /* VOR DEM SENDEN RÄUMEN (Backlog Nr. 114, Räumteil): Abgewiesene
+         * Pakete, die älter sind als die Frist, verlassen den Puffer. Hier
+         * und nicht in einem eigenen Zeitgeber, weil jeder Sendelauf ohnehin
+         * der Augenblick ist, in dem die App auf den Puffer sieht — und weil
+         * mindestens einer je Dienst stattfindet (der Takt). Vor der Prüfung
+         * der Zugangsdaten, damit auch ein ungekoppeltes Handy nichts
+         * Altes behält. */
+        val geraeumt = puffer.abgewieseneRaeumen(
+            Zeit.iso(jetzt().minus(Raeumung.FRIST_TAGE, ChronoUnit.DAYS)),
+        ).pakete
+
         val adresse = Serveradresse.ingest(basis)
         val zugang = tresor.lesen()
-            ?: return Sendebericht(spaeterErneut = true)
+            ?: return Sendebericht(spaeterErneut = true, geraeumt = geraeumt)
 
         val kopfzeilen = mapOf(
             "X-Device-Id" to zugang.geraeteKennung,
             "X-Api-Key" to zugang.schluessel,
         )
 
-        var bericht = Sendebericht()
+        var bericht = Sendebericht(geraeumt = geraeumt)
         /* Eine Obergrenze für die Anfragen eines Laufs. Sie ist kein Zaun
          * gegen den Normalfall — ein 12-h-Dienst braucht rund zwanzig —,
          * sondern gegen den Fall, in dem der Server dauerhaft `next_seq: 0`
@@ -178,6 +197,7 @@ class Sender(
         fehlerhaft = a.fehlerhaft + b.fehlerhaft,
         pausiert = a.pausiert || b.pausiert,
         spaeterErneut = a.spaeterErneut || b.spaeterErneut,
+        geraeumt = a.geraeumt + b.geraeumt,
     )
 
     private fun zaehleZusammen(a: Map<String, Int>, b: Map<String, Int>): Map<String, Int> =

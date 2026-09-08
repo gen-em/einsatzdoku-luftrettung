@@ -17,9 +17,11 @@ if (empty($_SESSION['user_id'])) {
 }
 $userId = (int)$_SESSION['user_id'];
 
-if (empty($_SESSION['csrf'])) {
-    $_SESSION['csrf'] = bin2hex(random_bytes(32));
-}
+/* Formular-Token bereitstellen. Die Erzeugung steht seit Web 15.6.0 in
+   `session_lib.php`, damit auch die Anmeldeseite sie hat (Backlog Nr. 127);
+   hier wird sie einmal je angemeldeter Anfrage angestossen, damit
+   `ui_krypto_bootstrap()` und die Formulare ein Token vorfinden. */
+csrf_token();
 
 /**
  * Ist der Aufruf ein Datenabruf des Browser-Skripts (server/api/...)?
@@ -218,12 +220,12 @@ function rollen_auswahl(): array
     return $o;
 }
 
-function csrf_field(): string {
-    return '<input type="hidden" name="csrf" value="' . e($_SESSION['csrf']) . '">';
-}
-
+/* csrf_token(), csrf_field() und csrf_ok() stehen seit Web 15.6.0 in
+ * `session_lib.php` — die Anmeldeseite braucht sie und laedt diese Datei
+ * nicht (Backlog Nr. 127). Hier bleibt nur der Abbruchweg, den es nur fuer
+ * angemeldete Seiten gibt. */
 function csrf_check(): void {
-    if (!hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf'] ?? '')) {
+    if (!csrf_ok()) {
         ui_abbruch(403, 'Ungültiges Formular-Token.');
     }
 }

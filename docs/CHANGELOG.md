@@ -14,6 +14,783 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 3.1.0] — 2026-09-08
+
+### Uhr — eine Störung ist keine dauerhafte Ablehnung (Backlog Nr. 159)
+
+Bis hierher lief jede Antwort außer Erfolg in denselben Zweig: `lastError`
+setzen, später erneut versuchen. Das ist für einen Netzfehler richtig und für
+eine Ablehnung falsch, und der Unterschied kostete mehr, als es zunächst
+aussieht. Ein Paket, das der Server nie annimmt, stand vorn in der
+Warteschlange und blieb dort — also kam auch nichts dahinter an. Weil ein
+Rückstand zugleich das Trennen der Kopplung sperrt („Erst 7 Pakete senden"),
+war die Uhr danach nur noch durch Löschen der App zu retten, und das nahm die
+sechs unschuldigen Pakete mit. Dieselbe Sackgasse, die beim Handy als Nr. 157
+notiert ist.
+
+**Der Fund lag nicht dort, wo der Backlog ihn vermutete.** Er nannte `400`
+„Nachricht fehlerhaft", und den kann die Uhr praktisch nicht auslösen. Die
+Fälle, die im Betrieb vorkommen, löst jemand selbst aus: Wer sein Gerät in der
+Weboberfläche löscht, bekommt `401`, wer es auf inaktiv stellt, `403`. Beide
+sagen nichts über das Paket, sondern über das **Gerät** — und deshalb wird
+dort auch nichts geparkt: Mit den Paketen ist nichts verkehrt, sie werden
+gebraucht, sobald jemand neu koppelt. Die Uhr hört auf zu senden, behält
+alles und schreibt „Gerät nicht mehr angemeldet · Neu koppeln: START halten"
+statt „Upload 401". Das Trennen ist dann nicht mehr gesperrt.
+
+Ein `400` parkt dagegen genau das eine Paket, und die Schlange läuft weiter —
+**aber nur mit erkennbarer Antwort des Servers** (`{"error":"payload"}`). Ein
+blankes `400` kann von jedem Zwischenstück kommen, einem Reverse Proxy, einer
+Firewall, einer vertippten Adresse in den Einstellungen; ein gesundes Paket
+dafür zu parken wäre schlimmer als ein Versuch zuviel.
+
+Die Anzeige sagt jetzt, was los ist: Sind nur abgewiesene Pakete übrig, steht
+die Zahl **rot** und darunter „Paket abgewiesen" — kein grünes „Sync
+vollständig" mit Haken mehr, während beim Server ein Einsatz fehlt. Genau
+diesen Fehler hatte die Handy-App schon einmal (B-S5Z-06). Anders als
+`lastError` überlebt die Meldung den nächsten erfolgreichen Upload; sonst
+verschwände sie, sobald die übersprungenen Pakete durchgelaufen sind.
+
+Der Weg heraus liegt auf dem **kurzen** Auswahl-Druck, der auf dieser Seite
+frei war: Er verwirft die abgewiesenen Pakete, nach einer Rückfrage, die die
+Zahl nennt und sagt, dass die Aufzeichnung danach fort ist. Beim Trennen der
+Kopplung gehen sie ohnehin mit — sie gehören dem bisherigen Konto —, und auch
+das steht jetzt in der Rückfrage, statt stillschweigend zu geschehen.
+
+Zwei Fallen, die das Bauen aufgedeckt hat und die im Code stehen: Ein
+geparktes Paket darf **nicht** über `hasWork()` aus der Schlange fallen, weil
+`Model.backlogCount()` Einträge ohne Arbeit selbst entsorgt — die Spur bliebe
+als Waise im Speicher, rund 100 kB, die nichts mehr freigibt. Und
+`allSynced()` muss geparkte ausnehmen, sonst käme die Rückfrage „Sync
+unvollständig, trotzdem beenden?" bei jedem Dienstende wieder, für immer.
+
+## [Android 0.15.0] — 2026-09-08
+
+### Android — der Dienst sagt, seit wann er läuft (Backlog Nr. 160)
+
+Ein zweiter „Dienst beginnen" setzt bei laufendem Dienst den alten fort
+(E-R45-13, und das ist gewollt). Wer den Freitagsdienst nicht beendet und am
+Montag die App öffnet, findet deshalb keinen Startknopf, sondern „Dienst
+beenden" — und die Zeile darüber sagte „Dienst läuft seit 07:00". Das ist von
+einem Dienst, der vor zwölf Minuten begann, nicht zu unterscheiden. Bis dahin
+sind drei Tage aufgezeichnet, das Wochenende eingeschlossen, und diese
+GPS-Daten liegen im Klartext.
+
+Die Anzeige führt jetzt das Datum, sobald der Dienst an einem anderen
+Kalendertag begann: „Dienst läuft seit Fr. 05.09., 07:00". An einem
+gewöhnlichen Tag bleibt die Zeile so kurz wie bisher — bei 360 dp ist sie im
+Zustand „kein GPS-Signal seit 43 min · keine Aufzeichnung" schon ohne acht
+weitere Zeichen knapp. Entschieden wird nach dem **Ortsdatum**: Ein
+Nachtdienst, der um 00:30 beginnt, läuft um 01:00 noch am selben Tag, und wer
+nach UTC ginge, hängte jeder Nachtschicht ab Mitternacht ein Datum an.
+Dieselbe Regel gilt in der Dauermeldung, die auch dann sichtbar ist, wenn die
+App geschlossen ist.
+
+**Nach 26 Stunden erinnert die App einmal daran, den Dienst zu beenden**, mit
+dem Knopf „Dienst beenden" im vorhandenen Warnkanal. Die Zahl ist gewählt und
+nicht gemessen, deshalb steht ihre Begründung am Code: Ein Dienst dauert
+regulär bis zu 24 Stunden (Auskunft des Auftraggebers, 08.09.2026), die zwei
+Stunden darüber sind die Luft für einen späten Schichtwechsel oder einen
+Einsatz, der über das Dienstende läuft. Wer regulär arbeitet, sieht die
+Erinnerung nie. Was sie verhindern soll, ist nicht der lange Dienst, sondern
+der vergessene.
+
+**Der Emulatorlauf hat dabei einen Fehler gefunden, den kein anderes
+Prüfmittel sah.** Dort stand zuerst „Aufzeichnung läuft seit **Tue** 08.09.,
+20:53": Das Abbild ist englisch gestellt, und die Standardsprache des Systems
+schlug mitten in einen deutschen Satz durch. Die App hat nur deutsche Texte;
+die Sprache des Datums ist seither fest deutsch, mit einem Prüffall, der die
+Systemsprache auf Englisch setzt. Der Bilderlauf hätte das nie gezeigt — er
+rechnet mit derselben Sprache wie die JVM.
+
+Was sie **nicht** kann: das schon Hochgeladene wieder loswerden. Heute geht
+nur alles oder nichts — der Diensttag wandert in den Papierkorb und nimmt
+seine Ruhezeiten mit, samt dem Freitagsdienst, den man behalten will. Das
+steht als Backlog Nr. 161.
+
+## [Android 0.14.1] — 2026-09-07
+
+### Android — „GPS-Daten" statt „Spur" in fünf Texten (E-S9-03, Backlog Nr. 110)
+
+Die Weboberfläche sagt seit Web 15.8.0 „GPS-Daten", wo sie „Spur" sagte —
+Entscheidung E-S9-03 des Konzepts S9, Backlog Nr. 110: Was der Browser zeigt,
+soll so heißen, wie es die Person versteht, die es liest, und die versteht
+unter „Spur" eine Fährte, unter „GPS-Daten" das, was ihr Handy aufzeichnet.
+Dieselbe Person liest beides — die Tagesansicht im Browser und die Meldung auf
+dem Handy. Ein Handy, das „Spur" sagt, während der Browser „GPS-Daten" sagt,
+lässt sie raten, ob das zwei Dinge sind. Es sind dieselben.
+
+Fünf sichtbare Texte des Handy-Moduls (`strings.xml`) sind deshalb umgestellt:
+die Akkuwarnung („… dann brechen die GPS-Daten ab, ohne dass es jemand
+merkt"), der Zweck des Benachrichtigungskanals („Zeigt an, dass die GPS-Daten
+des laufenden Dienstes aufgezeichnet werden"), der Hinweis im Modus „nur
+aufzeichnen" („Es werden durchgehend GPS-Daten aufgezeichnet"), der
+Ortungshinweis („Ohne Ortungsfreigabe zeichnet die App keine GPS-Daten auf")
+und die Standortwarnung („… sonst bleiben die GPS-Daten dieses Dienstes
+leer"). Die Uhr sagt „Spur" nur in einem Kommentar der `strings.xml`; der
+bleibt, denn er ist kein sichtbarer Text. Im Code bleibt „Spur" Fachbegriff
+(`spur_lib.php`, `track_*`, Sicherungsformat) — CLAUDE.md 4 nennt ihn dort
+namentlich.
+
+Warum eine eigene Fassung und nicht ein Satz im S9-Paket: Die Android-Apps
+zählen getrennt (`android/version.properties`), brauchen einen eigenen
+APK-Bau und nach CLAUDE.md 6 einen Emulatorlauf mit Bildern. **Was die
+Wortliste angeht:** Der S9-Zweig führt für genau diese fünf Texte eine
+befristete Ausnahme `spur-android-wartet-auf-9a` (Bereich d, Klasse D). Auf
+dem Zweig des Sofortpakets gibt es weder die Sperrregel „Spur" noch die
+Ausnahme; **wer von 9a und S9 zweiter mergt, streicht die Ausnahme** — sonst
+meldet die Wortliste sie beim nächsten Lauf als ungenutzt, und das ist ein
+Fehlschlag (K7).
+
+*Prüfzahlen:* `./gradlew build` grün — Handy **261 Prüffälle je Bauart**, 0
+Fehlschläge, 15 übersprungen (wie 0.14.0); Uhr **71**, 0 übersprungen; Lint
+**0 Fehler** (Handy 13 Warnungen, unverändert; Uhr 0); Release-APK Handy
+**7 867 430 B** (+36 B, die längeren Sätze), Uhr **19 574 402 B** (−4 B, die
+Versionszeichenkette). Wortliste **0/0/0** (87 Regeln, 87 gegriffen — auf
+diesem Zweig ohne die Sperrregel „Spur"). Emulator (Stufe II): Boot 502 s, Prüf-APK 119 s, fünf Bilder — eines je
+Text —, Kopplung gegen die lokale Installation, Dienst im Modus „nur
+aufzeichnen", Standort- und Akkuwarnung ausgelöst, Kanalseite der
+Systemeinstellungen; die Stolpersteine des Laufs stehen in
+`android/LIESMICH.md`.
+
+## [Android 0.14.0] — 2026-09-07
+
+### Android — Sofortpaket Sicherheit, fünf Punkte aus dem Krypto-Review (Rahmenplan 9a, R78)
+
+Der Review vom 06.09.2026 fand an den Android-Apps fünf kleine Befunde (AN-1
+bis AN-5) — keinen mit Abflussweg, alle von der Art, die man einzeln als
+vertretbar durchgehen ließe. Hier sind sie abgearbeitet, je einer ein Commit,
+einzeln zurücknehmbar. Was sie gemeinsam haben: Jeder war ein Vertrauen, das
+auf etwas anderem ruhte als auf der App selbst — auf der Bauart, auf der
+Bibliothek, auf dem Container.
+
+#### Die HTTP-Ausnahme gilt nur noch im Prüf-APK (Nr. 142, AN-1)
+
+`Serveradresse` ließ `localhost` und IPv4-Adressen in **jeder** Bauart mit
+`http` durch — gedacht für den Prüfstand, der ohne TLS gegen `127.0.0.1:8080`
+spricht. Im Standardbau mit fester Domain war das folgenlos; wer aber ein
+eigenes APK mit einer IP-Adresse als `SERVER_BASIS` baute, hätte den
+Geräteschlüssel auf Android 8.0/8.1 im Klartext verschickt, denn Androids
+eigenes Klartextverbot gilt erst ab API 28 und `minSdk` ist 26. Die Ausnahme
+hängt jetzt an `BuildConfig.DEBUG`, und das Release bringt eine eigene
+Netzsicherheitsregel mit `cleartextTrafficPermitted="false"` — zwei Böden,
+damit ein späterer Umbau der Adressregel allein nicht reicht. Der Prüffall
+`oertlicheAdressenBehaltenHttp` läuft nur im Debug-Buildtyp, sein Gegenstück
+nur im Release; je Bauart ist genau einer übersprungen, sichtbar statt still.
+
+#### Abgewiesene Pakete gehen nach 30 Tagen und beim Trennen (Nr. 114, Räumteil, AN-2)
+
+Ein vom Server mit 400 abgewiesenes Paket blieb samt GPS-Spur **für immer** im
+Puffer — es überlebte Trennen und Neukopplung, und `dienst`-Zeilen wurden nie
+gelöscht. Der Satz an der Stelle („gelöscht wird sie nicht, weil dann niemand
+mehr sähe, dass etwas nicht angekommen ist") bleibt richtig, aber für Tage,
+nicht für Jahre: Eine Spur, die niemand mehr nachreichen wird, ist kein Beleg
+mehr, sondern ein Ortsdatensatz auf einem Gerät, das verlorengehen kann.
+Jeder Sendelauf räumt jetzt vorher, was älter ist als **30 Tage**, und das
+Trennen räumt ohne Frist, weil die Pakete dem zurückgegebenen Konto gehören.
+Beendete Dienstzeilen ohne Pakete gehen mit; die laufende bleibt in jedem
+Fall, ebenso ein abgewiesenes Paket, das noch beschrieben wird. Die 30 sind
+gewählt, nicht gemessen — lang genug, um ein Paket nach einem Serverfehler von
+Hand nachzureichen, kurz genug, dass ein verlorenes Handy nicht die Spuren
+eines Jahres trägt. **Der Bedienweg** (ansehen, ausleiten, verwerfen) ist
+damit nicht gebaut; er bleibt Nr. 114 in der Backlog-Runde.
+
+#### Kein Certificate Pinning — und warum, steht jetzt da (Nr. 143, AN-3)
+
+Keine Codeänderung. `android/LIESMICH.md` hält die Entscheidung fest: feste
+Domain, rotierendes Zertifikat, keine Stelle, die Ersatzschlüssel pflegte;
+Android traut benutzerinstallierten Wurzeln seit Fassung 7 ohnehin nicht, und
+gegen eine Wurzel im Systemspeicher hilft kein Pin, weil derselbe Angreifer
+auch das APK tauschen kann. `HttpNetzweg` verweist darauf.
+
+#### Der Data-Layer-Empfang prüft Absender und Zeit (Nr. 144, AN-4)
+
+`HandyHorcher` nahm jedes Ereignis an, das der Data Layer zustellte — das
+Vertrauen ruhte ganz auf der Bibliothek (gleiches Paket, gleiche Signatur).
+Das bleibt der erste Boden; jetzt gibt es einen zweiten: Der Absender
+(`sourceNodeId`) muss unter den **verbundenen Knoten** stehen, sonst gibt es
+weder Wirkung noch Quittung — eine echte Uhr liefert nach, sobald sie
+verbunden ist. Ist die Knotenliste nicht lesbar, gilt der Absender als fremd;
+das kostet Zeit, keine Daten, und andersherum wäre die Prüfung genau dann
+außer Kraft, wenn etwas nicht stimmt. Dazu die **Zeit der Uhr**: höchstens
+fünf Minuten in der Zukunft, höchstens fünf Minuten vor dem laufenden Dienst;
+ein Ereignis außerhalb wird quittiert, aber nicht gewirkt — dieselbe Regel wie
+für eine Phase ohne Dienst, denn es bliebe immer unplausibel. Die fünf Minuten
+sind gewählt, nicht gemessen. Die Knotenliste liefert `WearNachrichtenweg` —
+die eine Datei, die den Data Layer kennt; die Schnittstelle `Nachrichtenweg`
+bleibt unverändert —, entschieden wird in `Uhrannahme`, und dort sind es
+sieben neue Robolectric-Fälle gegen echtes SQLite.
+
+#### Die Gradle-Verteilung hat eine Prüfsumme (Nr. 145, AN-5)
+
+`distributionSha256Sum` steht in `gradle-wrapper.properties`. Die Zahl kommt
+von `services.gradle.org` und ist am frisch geladenen Archiv nachgerechnet
+(137 393 837 Bytes) — zwei Wege, dieselbe Summe. Bis zum 07.09.2026 war die
+Adresse der Prüfsummen-Datei im Container gesperrt, und eine Summe aus der
+Datei selbst wäre eine Tautologie gewesen; das stand so in der LIESMICH und
+ist jetzt Vergangenheit. R8 bleibt aus, mit Begründung an der Stelle, an der
+die Ausnahmen stünden — und mit dem Satz, dass Verschleierung hier kein
+Sicherheitsmerkmal wäre: Der Geräteschlüssel liegt im Keystore, nicht im Code.
+
+**Was der Prüfstand sagt:** `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor. Emulator (Stufe II):
+**erreicht, im fünften Anlauf** (Emulator 37.1.11, `android-34;default;x86_64`, `-accel off`): adbd nach 120 s, `ro.hw_timeout_multiplier=10` als Root gesetzt und Framework neu gestartet, Boot **715 s**, Prüf-APK gegen die lokale Installation **128 s**; acht Bilder — Kopplungsansicht, Code `S4Y ZPF`, im Web als Demo-Konto eingetragen und bestätigt, „Zu diesem Konto koppeln? de***@gen-em.org", „Ja, koppeln" → Dienstansicht „Gekoppelt · 127.0.0.1:8080", `devices`-Zeile 79 am Server; per `sqlite3` ein abgewiesenes Paket samt Punkt, Phase und beendeter Dienstzeile eingespielt → rote Zeile „1 Paket vom Server abgewiesen"; Einstellungen; „Gerät trennen" mit Rückfrage; „Getrennt". **Der Räumlauf am echten Android-SQLite:** nach dem Trennen `paket 0, fehlerhaft 0, punkt 0, phase 0, dienst 0` (vorher je 1), Gerät am Server gelöscht (`POST /pair.php` 200), kein Absturz im `logcat`. Davor **vier Anläufe ohne Boot** (14, 38, 22 und 12 min) — Ursache der Android-Watchdog unter TCG, Gegenmittel jetzt in `emulator.sh start` (F-SP-P-07); der Wear-Emulator für das Uhr-Modul wurde nicht gefahren (Abschnitt 0).
+
+## [Web 15.6.0] — 2026-09-07
+
+### Web — Sofortpaket Sicherheit, elf Punkte aus dem Krypto-Review (Rahmenplan 9a, R78)
+
+**Der Review vom 06.09.2026 fand am Web-Teil keinen kritischen Befund und
+einen hohen** — K-1, die Klartext-Ortsdaten, bekannt als Backlog 43; ihre
+Lösung ist Weg B (S11), hier wird sie nur als Weg C berührt (Nr. 138) —, dazu
+fünfzehn kleine, und die haben die Eigenschaft, dass sie einzeln jeder für sich
+vertretbar sind und zusammen eine Haltung ergeben. Elf davon sind hier
+abgearbeitet, je einer ein Commit und einzeln zurücknehmbar; drei bekamen eine
+Nachbesserung als eigenen Commit.
+
+Zwei Dinge sind dabei aufgefallen, die nicht im Review standen. Beide haben
+denselben Grund: Eine Sicherheitsmaßnahme, die nie ausgelöst hat, ist nicht
+geprüft. Sie stehen unten bei Nr. 136.
+
+#### Nachbesserung nach der Gegenprüfung (07.09.2026)
+
+Ein Workflow aus 93 Agenten hat den fertigen Web-Teil aus sechs Blickwinkeln
+angegriffen, jeden Fund dreimal zu widerlegen versucht und die Ergebnisse gegen
+den heutigen Stand reproduziert: 22 von 29 Funden hielten. Sie sind behoben,
+je Punkt ein Commit — und sie stehen hier, weil ein Changelog, das nur die
+erste Fassung erzählt, die falsche Geschichte erzählt.
+
+**Das Ersetzfenster (Nr. 134) hatte den falschen Anker.** Es rechnete ab dem
+gespeicherten `started_at` — und das stammt beim Anlegen vom Gerät. Eine Uhr
+mit falsch gestellter Zeit legte ihren Einsatz mit einem Datum von vor Jahren
+an; das Fenster war im selben Augenblick zu, der **laufende** Einsatz verlor
+Punkte und Phasen, und weil `next_seq` weiterwanderte, löschte die Uhr sie als
+quittiert. Umgekehrt hätte ein `started_at` in der Zukunft das Fenster nie
+geschlossen. Der Anker ist jetzt der Beginn, wie der Server ihn kennt: das
+Spätere aus `started_at` und `created_at`, Zukunft zählt nicht. `rest_segments`
+bekommt `created_at` dafür per Migration — **nach dem Deploy `update.php`
+aufrufen**; vorhandene Segmente bekommen ihr `started_at`, nicht die
+Migrationszeit. Drei weitere Lücken am selben Ort: Bei geschlossenem Fenster
+schrieb das Paket weiterhin **Beginn und Ende des Diensttags** um (der Einsatz
+blieb, der Tag nicht — und über `ingest.php` ist das nicht rückholbar); ein
+**Abschlusspaket** außerhalb wurde still übergangen, der Einsatz blieb für
+immer „läuft noch" — jetzt sagt `kept_meta` es (neues Feld im JSON-Vertrag);
+und lag der Diensttag im Papierkorb, entstand ein **leerer neuer Tag**. Die
+Ingestprobe hat dafür sechs Erwartungen mehr (47 → 53), und am alten Stand
+sind genau diese sechs rot.
+
+**Und die Nachbesserung selbst hatte zwei Löcher** — gefunden von der zweiten
+Gegenprüfung, die nur für diesen Punkt gelaufen ist (die übrigen Angreifer
+brachen an der Sitzungsgrenze des API-Kontingents ab; das steht so im
+Prüfdokument). Erstens: „Ein `started_at` in der Zukunft zählt nicht" wurde bei
+jedem Paket neu gegen jetzt gerechnet. Ein `started_at`, das beim Anlegen 99
+Stunden vorn lag, zählte nicht, solange es vorn lag — und wurde zum Anker,
+sobald die Zeit es eingeholt hatte. Das längst geschlossene Fenster ging dann
+zu einem gerätebestimmten Zeitpunkt noch einmal 72 Stunden auf. Wendet man
+„Zukunft zählt nicht" auf den Augenblick des Anlegens an, ist ein `started_at`
+später als `created_at` immer Zukunft, und das Spätere aus beiden ist immer
+`created_at` — also ist **`created_at` allein der Anker**: der Augenblick, in
+dem der Server den Datensatz zum ersten Mal sah, den keine Geräteuhr bestimmt,
+weder eine nach- noch eine vorgehende. `started_at` dient nur als Rückfall,
+solange die Migration nicht gelaufen ist, und nie später als jetzt.
+Zweitens: Die Migration bestand aus einem ALTER und einem `UPDATE created_at
+= started_at`. `started_at` ist DATETIME und nimmt jedes Jahr, `created_at`
+ist TIMESTAMP und reicht von 1970-01-01 00:00:01 bis 2038 — ein einziges
+Segment mit `started_at` 1970-01-01 00:00:00 (der Wert einer Uhr ohne
+Zeitabgleich, und `ingest.php` nimmt ihn an) ließ das UPDATE scheitern,
+nachdem das ALTER schon durch war; der nächste Klick hätte die Migration als
+„nicht nötig" verbucht, weil die Spalte ja da war, und jedes alte Segment hätte
+die Migrationszeit als Anker getragen. Sie läuft jetzt in drei für sich
+wiederholbaren Schritten (Spalte NULL anlegen, füllen wo NULL — gekappt auf den
+Bereich der Spalte und auf höchstens „jetzt" —, dann NOT NULL) und gilt erst
+als erledigt, wenn alle drei stehen. Ingestprobe 53 → 54 (Fall 7, vorgehende
+Uhr; am alten Stand rot), Wegwerf-Datenbank mit fünf Randwerten (1970-01-01 00:00:00 und 0001-01-01 werden 1970-01-01 00:00:01; 2050 und 9999 werden die Migrationszeit; ein nachgestellter Teillauf wird beim zweiten Lauf zu Ende geführt, und erst dann sagt `skip` „erledigt").
+
+**Die Wiederaufnahme der zweiten Gegenprüfung** — nach freiem Kontingent,
+alle zehn Angreifer — fand an den Nachbesserungen selbst noch einmal, und zwar
+an drei Punkten. **Nr. 134:** Ein Paket mit **neuem** `client_ref` hat kein
+Fenster, wird aber über `day` oder `day_ref` auf einen alten Diensttag
+aufgelöst und schrieb dessen Beginn und Ende genauso um wie der erste Fund —
+2001 bis 2097, nicht rückholbar, „neue Datensätze überschreiben nichts" stand
+gegen den Code. Jetzt entscheidet der Tag selbst — wie, dazu der übernächste
+Absatz; die erste Fassung dieser Regel war falsch angesetzt. Dazu drei
+kleinere: Der versprochene Rückfall auf
+`started_at` vor der Migration griff nie, weil der SELECT die Spalte nannte
+und mit 1054 in ein 500 lief — jedes Ruhesegment-Paket zwischen Deploy und
+`update.php` (jetzt wird die Spalte nur genannt, wenn sie da ist); im
+Rückfall galt ein `started_at` von 1970-01-01 00:00:00 als „kein Anker", weil
+`strtotime` 0 liefert (jetzt ist „kein Anker" null, und ein Anker nie kleiner
+als Sekunde 1); und ein bestehender Einsatz, dessen Diensttag inzwischen im
+Papierkorb lag, blieb innerhalb des Fensters am gelöschten Tag hängen,
+während ein leerer neuer entstand — Backlog Nr. 33 im offenen Fenster, seit
+jeher so; jetzt wandert er mit. Ingestprobe 54 → 56, am Stand davor genau die
+zwei neuen rot; Rückfall vor der Migration und Teilzustand an einer
+Wegwerf-Datenbank nachgestellt: Ruhesegment ohne Spalte `200` statt `500`,
+Segment mit `started_at` 1970-01-01 00:00:00 nach 72 h zu.
+
+**Nr. 134, die Regel noch einmal — und diesmal an der Wurzel.** Beim
+Nachfahren des Skeptiker-Skripts gegen den eigenen Stand fiel auf, dass die
+Behebung von oben einen gesunden Weg zerschlagen hatte: Ein Dienst, der
+später als 72 Stunden nach seinem Datum hochgeladen wird — die Uhr war ohne
+Netz —, bekam **keinen Tageszeitraum mehr**. Sein Diensttag entsteht in
+diesem Augenblick, aber er trägt das alte Datum, und die neue Bremse fragte
+ihn nach *seinen* Zeiten. Damit galt er als längst geschlossen: Beginn
+gesetzt, Ende für immer leer, und auch das zweite Paket desselben Dienstes
+konnte nichts mehr ergänzen. Das war derselbe Fehler wie der, den Fund 2
+behoben hatte — die Zeiten des Absenders als Maßstab —, nur eine Ebene höher.
+
+Zwei Änderungen, jede an ihrer richtigen Stelle. **Erstens** sitzt der Schutz
+gegen absurde Zeiten jetzt dort, wo er hingehört: in der gemeinsamen
+Prüfschicht. `pruef_zeit_zum_tag()` und `pruef_ende_nach_beginn()` fragen, ob
+`started_at` und `ended_at` zu ihrem `day` gehören und ob das Ende nach dem
+Beginn liegt. **Verworfen wird dabei der Wert, nicht der Upload** — der
+Einsatz entsteht mit den gesendeten Zeiten, ist sichtbar und löschbar, und nur
+Beginn und Ende des **Diensttags** werden nicht daraus gerechnet; was
+durchfällt, steht in `rejected`. Eine erste Fassung hat das Paket mit `400`
+abgewiesen, und das war falsch: Sie hätte die falsch gestellte Uhr
+ausgesperrt, also genau das Gerät, das Fund 2 der ersten Gegenprüfung wieder
+hereingeholt hatte. **Zweitens** fragt die Bremse für den Tageszeitraum jetzt nach
+Serverzeit: Anker ist das jüngste `created_at` der **übrigen** Datensätze des
+Tages (der gerade angelegte zählt nicht mit, sonst wäre jeder Tag offen, an
+dem eben ein Paket ankam). Ein frischer Tag und ein Tag, an dem gerade
+nachgetragen wird, sind offen; ein Tag, dessen Datensätze alle älter als das
+Fenster sind, nicht.
+
+**Wie weit das Zeitfenster sein muss**, hat erst das Nachlesen in den Clients
+gezeigt — und es ist weiter, als der erste Ansatz annahm. `day` ist in beiden
+Clients ein **Ortsdatum**, die Zeiten sind UTC: schon das ist ein voller Tag
+Versatz. Vor allem aber trägt in der Handy-App **jedes Paket eines Dienstes
+den Tag des Dienstbeginns**, nicht seinen eigenen — ein Ruhesegment am dritten
+Tag meldet weiterhin Tag 1 —, und ein Dienst hat **keine Höchstdauer**, weder
+in der App noch auf dem Server. Wer das Beenden vergisst, hat Pakete, deren
+Zeiten Tage nach ihrem `day` liegen; sie müssen ankommen, denn der Datenfehler
+ist der vergessene Dienst, nicht das Paket. Das Fenster reicht deshalb bis zum
+**31. Tag** nach `day`. Es wehrt ab, worum es geht — Jahre und Jahrzehnte —,
+und den feinen Schutz leistet ohnehin das Ersetzfenster. Beim selben Nachlesen
+fiel auf, dass **niemand prüft, ob das Ende nach dem Beginn liegt**: Ein Paket
+mit vertauschten Zeiten wurde angenommen, und der Diensttag wurde daraufhin in
+beide Richtungen aufgezogen. Auch dieser Wert zählt jetzt nicht mehr für den
+Tag.
+
+Beim selben Nachlesen kam heraus, dass der **JSON-Vertrag an dieser Stelle
+falsch war**: Er sagte, die Uhr bestimme `day` einmal je Dienst — das
+beschreibt einen Uhr-Code, den es seit `52f0191` nicht mehr gibt. Heute nimmt
+die Uhr den Tag des jeweiligen Datensatzes, die Handy-App den des
+Dienstbeginns. Beides ist erlaubt, weil `day` seit Vertrag 1.3 nur noch
+Anzeigedatum ist; der Vertrag sagt das jetzt und nennt ausdrücklich, dass der
+Abstand zu den Zeitstempeln nach oben nicht begrenzt ist. Zwei weitere Funde
+stehen als Backlog Nr. 159 und 160: Die Uhr wiederholt ein `400` endlos,
+statt das Paket als fehlerhaft zu kennzeichnen — auch deshalb ist die neue
+Prüfung keine Abweisung geworden —, und ein in der Handy-App fortgesetzter
+Dienst läuft tagelang unter dem Datum seines ersten Tages, ohne dass die
+Anzeige es zeigt.
+
+Ingestprobe 56 → **62, 0 nicht erfüllt**; am Stand vor der Neufassung sind
+vier davon rot, gegen den Stand vor allen vier Nachbesserungen dieser Runde
+fünf. Ein eigenes Messgeschirr mit zwölf Erwartungen an vier Fällen
+(Nachlieferung, Angriff, neuer Datensatz am alten Tag, zweites Paket) sagt
+dasselbe: 12/0 gegen 12/8 am Stand davor. Dass `days` kein `created_at` trägt
+und die Frage deshalb über zwei Tabellen beantwortet werden muss, steht als
+Backlog Nr. 158.
+
+**Die Skeptiker-Runde ist vollständig.** Zu jedem der 30 Funde hat ein eigener
+Agent versucht, ihn zu widerlegen, und dafür gegen den unveränderten Stand
+reproduziert: **24 hielten, sechs wurden widerlegt.** Widerlegt heißt nicht
+„falsch gemessen" — alle sechs sind reproduzierbar —, sondern „trifft die
+Nachbesserung nicht": Vorbestand oder Randfall ohne beobachtbare Folge (der
+Diensttag im Papierkorb bei offenem Fenster, drei Zählfälle der Statuszeile,
+die nur über einen von Hand gesetzten Rundenwert entstehen, die
+Sonderzeichen-Tastaturreihe, die quadratische Laufzeit). Behoben bleiben alle
+dreißig: Jede Behebung ist für sich mit einer Zahl belegt, und keine hat
+etwas verschlechtert.
+
+**Nr. 130:** Die Deklarationsprüfung wies die Latin-1-Datei aus dem
+Dateidialog ab, die bis dahin importierte — der Browser wandelt ihre Bytes
+nach UTF-8, ihre Deklaration `encoding="ISO-8859-1"` bleibt aber als Text
+stehen, und die erste Fassung ließ nur UTF-8 und ASCII durch. Handbuch und
+Technik behaupteten das Gegenteil. Erlaubt ist jetzt jede Kodierung, in der
+jedes ASCII-Zeichen sein eigenes Byte ist (ISO-8859, Windows-125x, Latin,
+KOI8, Mac Roman), und die Deklaration wird auf UTF-8 umgeschrieben, weil die
+Bytes nachweislich UTF-8 sind; UTF-7, UTF-16/32 und EBCDIC bleiben draußen.
+13 Fälle unmittelbar an `gpx_lesen()`: 0 Fehlschläge, am Stand davor 5;
+die Gpxprobe hat zwei Umgehungs- und zwei Positivfälle mehr.
+
+**Nr. 136, Statuszeile:** Der Satz zum Demo-Konto nannte den falschen
+Grund — nicht der Reset nimmt die stille Anhebung zurück, `kdf_upgrade.php`
+überspringt das Demo-Konto von vornherein (E-P1-19), und der Kommentar dort
+behauptete, die Fixture werde mit der Zielrundenzahl erzeugt (sie trägt
+320 000, Backlog Nr. 155). Dazu zwei Zählfehler: Der Demo-Satz stand auch,
+wenn der Demo-Wert gar nicht mehr in der Liste war, und widersprach dann der
+roten Zeile darüber; und ein Konto auf einem verwaisten Wert zählte zusätzlich
+als „steht noch unter dem Zielwert, zieht still nach" — es kann sich gar nicht
+anmelden. Vier Szenarien an einer Wegwerf-Datenbank nachgestellt: Demo auf
+320 000 und sonst alles auf dem Ziel → „in Ordnung" mit Demo-Satz, keine
+Zahl; ein weiteres Konto auf 320 000 → „Übergang läuft", 1 Konto; Demo auf
+einem verwaisten 310 000 → rot, „Anmeldung blockiert", **kein** Demo-Satz;
+ein anderes Konto verwaist, Demo auf 320 000 → rot, Demo-Satz, und die Zahl
+„unter dem Zielwert" ist 0 statt 1. Technik nennt jetzt die Ausnahme („keine
+Zahl mehr" heißt nicht „Altwert weg", solange die Fixture ihn trägt), das
+Handbuch beschreibt die Zeile in 12.1.
+
+**Nr. 136, Passwortregel:** Vier Löcher, drei davon in dem, was als „Reihe"
+gilt. Ein Emoji ist in JavaScript ein Surrogatpaar; die Sonderzeichen wurden
+je UTF-16-Einheit gezählt, vier gleiche Emoji waren damit acht verschiedene
+Zeichen, keine Wiederholung — „Passwort😀😀😀😀x" ging als „gut" durch.
+Sonderzeichen werden jetzt je **Schriftzeichen** gezählt (`Intl.Segmenter`,
+sonst Codepunkte). Und die Reihen-Prüfung kannte nur eine Form — gleiches
+Zeichen dreimal, Abstand ±1 viermal —, sodass „abababab", „aabbccdd",
+„1q2w3e4r", „qazwsxed", „!@#$%^&*" und „20242024" die acht Zeichen Rest
+füllten: **8064 von 8832** gefuzzten Listenwort-plus-Muster-Fällen gingen
+durch, die die alte Regel abgewiesen hatte. Jetzt fünf Formen — Tastaturwege
+beider Belegungen samt Spalten und Umschaltreihen, wiederholte Blöcke,
+Läufe gleicher Länge, zwei verschränkte Reihen, mit Listenwort auch der
+Abstand ±2 —, und dieselben 8832 Fälle ergeben **0**. Die Formen jenseits
+der ersten gelten nur, wenn ein Listenwort gestrichen wurde: Ohne Listenwort
+misst die Regel keinen Anteil, und mit allen Formen träfe sie ein
+gewürfeltes „gK;=@v**GkV:" — 1 von 20 000. So bleibt es bei **0 von je
+20 000** Zufallspasswörtern in drei Zeichenvorräten. Der Preis: Eine
+Passphrase mit einem Listenwort **und** einem verdoppelten Wort
+(„Kerze-Berg-Berg-Schweiz") fällt jetzt durch — 4 von 120 im Generator,
+alle mit Doppelwort; neutrale Passphrasen 0 von 120. Drittens war die
+Streichschleife quadratisch — 100 kB verschachteltes Listenwort hielten den
+Browser 23 s je Tastendruck an —, sie sieht jetzt höchstens 256 Zeichen an
+(16 kB: 577 → 21 ms). Und der Kommentar nannte „2 bis 25 %", gemessen
+waren 0,04 bis 15 %. Der zweite Angreifer fand vier weitere: „Angehängte
+Ziffern" wurden am normalisierten Text bestimmt — in einem Passwort aus
+Ziffern und Sonderzeichen standen nach `normal()` alle Ziffern am Ende, und
+„#7!3@9$1%4&6" galt als Ziffern mit Beiwerk; ein Passwortverwalter auf
+Ziffern und Symbole gestellt lieferte zu 46 bis 91 % Abgewiesene. Angehängt
+ist jetzt, was in der Eingabe am Ende steht: 0,9 bzw. 0,4 % von je 20 000,
+nämlich die, deren Ziffern zufällig eine Reihe bilden. Ein Zeichen, das
+`toLowerCase()` zu einem Buchstaben faltet (Kelvin-K, İ, ẞ), steckte im
+gestrichenen Listenwort **und** zählte als Sonderzeichen; die Meldung
+„zählen nicht — es bleibt nichts übrig" stand auch bei sieben übrigen
+Sonderzeichen; und ein Kommentar erzählte, fünfstellige Einträge hätten
+nie greifen können (sie griffen als ganzes Wort).
+
+**Die DOCTYPE-Sperre (Nr. 130) war mit UTF-7 zu umgehen.** UTF-7 ist reines
+ASCII — gültiges UTF-8, kein Nullbyte, `<!DOCTYPE` steht darin als
+`+ADwAIQ-DOCTYPE` —, und libxml las es trotzdem als DOCTYPE mit Entitäten,
+weil `encoding="UTF-7"` in der XML-Deklaration steht. Die Deklaration darf
+jetzt nur UTF-8 oder ASCII nennen; von 935 Kodierungen aus `iconv -l` waren
+genau UTF-7 und UTF7 durchgekommen. Die Probe hatte die Deklaration nie
+angesehen und „8 Proben, 0 durch" gemeldet — der neunte Fall ging am alten
+Stand durch, jetzt „9 Proben, 0 durch". Und die Zusage, eine Latin-1-Datei
+werde abgewiesen, galt nur für den API-Weg: Über den Dateidialog wandelt der
+Browser jede Datei nach UTF-8, bevor sie ankommt. Handbuch und Technik sagen
+das jetzt so.
+
+**Die Statuszeile „Schlüsselableitung" (Nr. 136) hätte „Übergang läuft" nie
+wieder verloren:** Das Demo-Konto wird alle 30 Minuten aus der Fixture mit
+320 000 Runden eingespielt, und die stille Anhebung überlebt den Reset nicht.
+Es zählt jetzt nicht mit und bekommt seinen eigenen Satz — der Altwert bleibt,
+bis der Referenzbestand neu gebaut ist (Backlog Nr. 155). Der Satz, der
+mitten im Satz abbrach, endet jetzt auf „gestrichen werden".
+
+**Die Anteilsregel der Passwortprüfung (Nr. 136) maß am falschen Rest.**
+`normal()` wirft Sonderzeichen weg, und der Rest wurde erst danach gezählt —
+ein gewürfeltes Zwölfsteller-Passwort mit fünf Sonderzeichen fiel damit unter
+die acht und bekam gesagt, es bestehe aus geläufigen Wörtern, mit dem Rat,
+lieber Wörter zu nehmen. Je nach Zeichenvorrat traf das **2 bis 15 % aller
+zufälligen Zwölfsteller**, vorher keinen. Dazu drei Löcher mit einer Ursache:
+Die Liste wurde einmal der Reihe nach durchlaufen und nur ab sechs Zeichen —
+„rettung" vor „rettungswagen" ließ „swagen" als Rest stehen, „admin" und
+„root" wurden dem Rest **gutgeschrieben** („password-admin-admin" ging mit
+Rest „adminadmin" durch), und was das Streichen aus den Bruchstücken neu
+zusammensetzte, sah niemand mehr an. Jetzt zählen Sonderzeichen eins zu eins
+zum Rest — sie werden nie zitiert, nur gezählt; Bindestrich, Punkt,
+Unterstrich und Leerzeichen zählen nicht, „Winter-Urlaub-2026" ist kein
+besseres Passwort als „Winterurlaub2026" —, die Liste wird längste zuerst
+gestrichen, jeder Eintrag, und nach jedem Treffer von vorn, bis nichts mehr
+trifft. Die Anteilsregel greift nur, wenn ein Listenwort gestrichen wurde;
+ohne Listenwort bleibt allein die Reihen-Prüfung, und der Passphrasen-Rat
+steht nur da, wo er etwas erklärt. Gemessen über drei Fassungen nebeneinander:
+3 × 20 000 Zufallspasswörter **0 / 0 / 0 abgewiesen**; alle Zwei- und
+Dreiwortkombinationen der Liste in sechs Schreibweisen (rund 4,6 Millionen)
+**keine, die die alte Regel abwies und die neue durchlässt**; 1689 erzeugte
+Passwörter: 108 neu durchgelassen — Passphrasen mit einem Listenwort und
+Listenwort plus acht Zufallszeichen —, 0 Füllwörter. Eine Nebenwirkung mit
+Ansage: Das Passwort des lokalen Prüfstands, `adminlokal2026`, fällt jetzt
+durch (Backlog Nr. 156); die Regel wird dafür nicht gelockert.
+
+**Die Integritätswache (Nr. 140) sah nur die halbe Anmeldeseite.** Ein
+`<base href="https://boese.example/">` im Kopf löst jeden relativen Verweis
+dorthin auf — `src="assets/crypto.js"` bleibt byteidentisch und lädt fremden
+Code; ein `formaction=` am Absendeknopf überstimmt das `action` des Formulars,
+ohne dass das `<form>`-Tag sich ändert. Beides ging grün durch. Ihre
+Selbstprobe hing an Bezeichnern (`replace('const EdCrypto', …)`): Eine
+Umbenennung hätte den täglichen Lauf rot gemacht, ohne dass an der Auslieferung
+etwas wäre — bei einer Wache, deren einziger Kanal die Actions-Benachrichtigung
+ist, der schnellste Weg dahin, dass niemand mehr hinsieht. Ein Dateiname mit
+Leerzeichen riss den Lauf mit Rückgabewert 2 ab, Rest ungeprüft. Und `\bsrc`
+traf `data-src`, `<?` allein galt als PHP. **Beim Nachprüfen dieser vier
+Behebungen mit 27 Angriffsvarianten gingen noch 17 grün durch**, alle von
+derselben Art — Wege des Passworts ohne `<script>`-Tag und ohne
+`<form>`-Änderung: ein Skriptverweis **ohne Anführungszeichen**,
+Ereignisattribute (`onload=`, `onkeyup=`), `<meta http-equiv="refresh">`,
+Einbettungen (`<iframe srcdoc>`, `<object>`, `<embed>`) und
+`javascript:`-Adressen, auch als Entität und mit Tabulator im Schema, wie der
+Browser sie liest. Alle gehören jetzt zur verglichenen Menge; die Selbstprobe
+kippt ein Bit, hängt einen Kommentar an und setzt ein Attribut, statt ein Wort
+der Quelle zu suchen, und hat 28 statt 12 Erwartungen. Grün bleibt von
+den 27 Varianten eine, das externe Stylesheet — mit Absicht und Begründung: Ein
+Stylesheet liest kein Passwortfeld. Lauf gegen die lokale Installation
+weiterhin 112 von 112 Dateien gleich, in Teil 2 jetzt sechs Klassen mit der
+Zahl 0 statt Schweigen.
+
+#### Rundenzahl 600 000 und Passwortregeln (Nr. 136, SP-1/SP-2)
+
+Gegen einen Datenbankabzug ist das Passwort die einzige Schranke — der Server
+sieht es nie und kann seine Güte nach Bauart nicht prüfen. `KDF_ITER_ZIEL`
+steht deshalb auf **600 000** statt 320 000 (OWASP 2023, Bitwarden); der
+Altwert bleibt in `KDF_ITER_LISTE`, bis kein Konto ihn mehr trägt. Gemessen im
+Prüfcontainer auf einem Kern: **298 ms je Ableitung vorher, 551 ms nachher**,
+im Übergang 849 ms, weil dann beides gerechnet wird. Für den Angreifer
+halbiert sich die Rate. Sicherungen älterer Stände bleiben lesbar — die
+Rundenzahl steht im Dateikopf und wird von dort gelesen.
+
+**Die stille Anhebung lief nicht.** Sie ruft `api/kdf_upgrade.php` und braucht
+dafür `CSRF` — das gab `ui_krypto_bootstrap()` aber nur auf Anfrage aus, und
+drei von sieben Seiten fragten. Wer nach dem Anmelden zuerst auf `suche.php`,
+`zeitraum.php`, `einsatz.php` oder `einsatz_form.php` ging, bekam keine
+Anhebung, und `loeseVormerkung()` verwarf das Vormerkfach trotzdem — damit war
+sie für diese Sitzung verloren, und beim nächsten Anmelden dasselbe. Folgenlos
+blieb das nur, solange die Liste einen einzigen Eintrag hatte; mit dem Sprung
+wurde daraus ein Fehler. Gemessen am Referenzbestand: Konto auf 320 000,
+Anmeldung, `suche.php` — Rundenzahl unverändert. **CSRF steht jetzt immer.**
+Danach: `{"ok":true,"iter":600000}`, Konto auf 600 000, Inhaltsschlüssel
+weiterhin entpackbar.
+
+**Und die Wartungsseite meldete die falsche Zahl.** Sie nannte nur *verwaiste*
+Rundenzahlen — also den Fall, dass jemand den Altwert **zu früh** gestrichen
+hat. Die Frage davor, wann er gestrichen werden **darf**, beantwortete sie
+nicht; SP-1 nimmt an, sie täte es. Die Zeile „Schlüsselableitung" nennt jetzt
+auch, wie viele Konten noch unter dem Zielwert stehen, mit der Plakette
+„Übergang läuft".
+
+**Die Mindestlänge steigt von 10 auf 12** und steht als `PW_MIN_LAENGE` an
+einer Stelle statt an sieben. `EdPwQuality.beobachte()` zieht `minLength` des
+Feldes auf den eigenen Wert nach — läuft die Zahl je auseinander, gilt
+wenigstens die strengere Regel.
+
+**Die Sperrliste hat eine neue Rechnung, und das ist die eigentliche
+Entscheidung dieser Stufe.** SP-2 empfiehlt Passphrasen („vier zufällige
+Wörter") und will zugleich die Liste erweitern. Beides zusammen ging nicht:
+Der Vergleich wies jedes Passwort ab, in dem irgendwo ein Listenwort vorkam —
+**„Anker-Winter-Regen-Glas" scheiterte an „winter"**. Eine Empfehlung, die die
+eigene Prüfung abweist, ist schlimmer als keine. Gemessen wird deshalb der
+**Anteil** statt des Vorkommens: Was bleibt übrig, wenn man Listenwörter und
+angehängte Ziffern streicht? Unter acht Zeichen war das Passwort im Kern ein
+Listenwort. Gemessen: „Winterurlaub2026" abgewiesen (Rest „urlaub"),
+„Rettung2026Notarzt" abgewiesen (Rest leer), „Anker-Winter-Regen-Glas"
+angenommen (Rest „ankerregenglas"). Ziffern **mittendrin** zählen mit — sonst
+fiele ein gut gewürfeltes Passwort durch. Die Passwörter aller Prüfmittel
+bleiben gültig.
+
+**Der Rest verliert außerdem Reihen und Wiederholungen**, und das ist keine
+Feinheit, sondern die Bedingung dafür, dass die neue Regel nirgends schwächer
+ist als die alte. Beim breiten Vergleich beider Fassungen über **1552 erzeugte
+Passwörter** fiel auf: „Passwortabcdefgh" und „passwort2026aaaaaaaa" wurden
+vom Vorkommensvergleich abgewiesen und vom Anteil durchgelassen — ein
+Listenwort plus Tastaturreihe füllt die geforderten acht Zeichen, ohne einen
+Gedanken zu kosten. `istMuster()` half nicht, denn es prüft die **ganze**
+Zeichenkette, und „2026aaaaaaaa" ist als Ganzes keine Reihe. Gestrichen wird
+jetzt jede Folge mit gleichbleibendem Abstand 0, +1 oder −1 (dreimal dasselbe
+Zeichen, vier auf- oder absteigende). Danach gemessen, wieder über dieselben
+1552 Passwörter: **454 neu durchgelassen, davon 0 mit einem Füllwort wie
+„abcdefgh", „aaaaaaaa" oder „12345678" — und 0, die die alte Regel angenommen
+hatte und die neue abweist.** Genau das war die Absicht: großzügiger nur bei
+Passphrasen, strenger nirgends weniger.
+
+Was die Liste **nicht** kann, steht im Code und im Handbuch: den Ortsnamen des
+eigenen Standorts. Ihn dorthin zu bekommen hieße, die Standortnamen an die
+unangemeldete Passwortseite auszugeben — eine neue Auskunft an jeden Besucher
+für einen Gewinn, den die Mindestlänge besser holt.
+
+#### Login-CSRF (Nr. 127) und E-Mail-Wechsel mit Nachweis (Nr. 128)
+
+Das **Anmeldeformular** war das einzige ohne Token. Eine fremde Seite konnte
+einen abgemeldeten Browser per Top-Level-POST in ein *Angreiferkonto*
+anmelden; was danach eingegeben wurde, landete dort. Die Ursache war der Ort:
+`csrf_field()` lag in `auth_guard.php`, also **hinter** der Anmeldung.
+`csrf_token()`, `csrf_field()` und `csrf_ok()` stehen jetzt in
+`session_lib.php`. Die Prüfung steht **vor** allen Zählern — ein abgelaufenes
+Formular ist kein Fehlversuch —, antwortet mit der Anmeldeseite statt einer
+403, und nach erfolgreicher Anmeldung wird das Token neu gezogen wie die
+Sitzungskennung. Gemessen: 2 von 2 im Browser, dazu drei HTTP-Fälle.
+
+Der **E-Mail-Wechsel im Profil** schrieb die Anmeldeadresse allein mit dem
+CSRF-Token um. Wer eine offene Sitzung übernahm, konnte sie auf seine eigene
+setzen, sich den Setz-Link schicken lassen und das Konto übernehmen — die
+geschützten Angaben blieben zu, die Klartextfelder nicht. Jetzt derselbe
+Nachweis wie beim Passwortwechsel (`old_token`), und **nur beim tatsächlichen
+Wechsel**: Name und Logo gehen ohne. Auf beiden Wegen — Profil und Verwaltung
+— geht danach eine **Hinweismail an die alte Adresse**; sie ist die einzige,
+die im Missbrauchsfall noch der Besitzerin gehört. Gemessen: 4 von 4.
+
+#### Vier kleine, die zusammen die Angriffsfläche verkleinern
+
+**Nr. 129:** `apk/` und `demo/` liegen ungesperrt im Webroot — `apk.php`
+verlangt eine Anmeldung, der Ordner nicht, und die Dateinamen sind
+vorhersagbar. Eine `RewriteRule`-Zeile für beide Ordner (der Auftrag sprach
+von zweien; ein Muster genügt). Gemessen unter einem echten Apache
+(die lokale Installation läuft auf PHPs eingebautem Server und liest keine
+`.htaccess` — ohne diesen Umweg hätte der Punkt keine Zahl): **vier Aufrufe →
+403**, `login.php` und `assets/style.css` unverändert 200.
+
+**Nr. 130:** Die DOCTYPE-Sperre des GPX-Imports sucht die **Bytefolge**
+`<!DOCTYPE`. In einem UTF-16-Dokument stehen dort Nullbytes dazwischen — die
+Regex fand nichts, libxml las die Datei samt Deklaration und interner Entität.
+Am Stand davor gemessen: **ging durch, zwei Punkte**. Der Weg dorthin ist
+nicht theoretisch: Der Endpunkt nimmt den Inhalt als Zeichenkette im
+JSON-Körper, und JSON trägt über Escape-Folgen jedes Byte unter 0x80. Jetzt
+zwei Prüfungen davor — kein Nullbyte, gültiges UTF-8. Der Preis: Eine
+GPX-Datei in Latin-1 mit Umlauten wird abgewiesen, mit einem Satz, der sagt,
+was zu tun ist. `tools/gpxprobe/` bekommt dafür **Teil 8**: acht
+Umgehungsversuche, **0 durch**.
+
+**Nr. 131:** `wiederherstellen.php` muss unangemeldet erreichbar sein — sie
+arbeitet auf einer Installation ohne Konto. Sie nannte dabei den
+Datenbank-Fehlertext (gemessen: `Access denied for user 'nadoku'@'localhost'
+to database …`) und die Kontenzahl (gemessen: `2`). Jetzt eine Fehlerkennung
+und kein Zahlwert; der volle Text steht unter der Kennung im Fehlerprotokoll.
+
+**Nr. 133:** Im Bauordner des Komplettbackups liegt `dump.sql.gz`, eine
+**unverschlüsselte Abschrift jeder Tabelle**. Nach einem Fehlschlag blieb er
+bis zum nächsten *fälligen* Lauf stehen — bei wöchentlichem Plan bis zu sieben
+Tage. Jetzt räumt ihn der Fehlerpfad sofort, und weil ein Absturz kein `catch`
+sieht, räumt ihn zusätzlich jeder Aufräumlauf, auch der ohne Fälligkeit. Der
+Preis: „Fortsetzen" nimmt einen **gescheiterten** Lauf nicht mehr auf. Das ist
+Rechenzeit, keine Daten. Was bleibt — Reset-Token in Sitzungsdatei und
+Zugriffslog, der angezeigte Setz-Link bei Mailfehler —, steht jetzt in
+`Technik.md` 4.98 in einer Tabelle statt in keinem Dokument.
+
+#### Ersetzfenster der Geräte: 72 Stunden (Nr. 134, F-SP-8)
+
+Der Geräteschlüssel liegt auf der Garmin-Uhr im Klartext; die Plattform bietet
+nichts Besseres. Lesen kann ein Finder nichts, aber **hochladen** — und damit
+die Phasen bestehender Einsätze ersetzen, bis das Gerät getrennt ist. Ein
+Einsatz mit `manual = 1` war schon geschützt; offen blieb der *unbearbeitete*
+von vor drei Wochen.
+
+Ein bestehender Datensatz lässt sich jetzt nur **72 Stunden ab seinem
+gespeicherten `started_at`** verändern — nicht ab dem gesendeten, den bestimmt
+der Absender. Danach `ok` ohne Ersetzen, ohne Anhängen, ohne Fehler (die Uhr
+wiederholte sonst endlos), benannt über `kept_phases`, `kept_resus` und neu
+`kept_points`. **Neue** Einsätze werden immer angenommen; der Weg gegen eine
+verlorene Uhr bleibt das Trennen, und Handbuch 10 sagt das jetzt.
+
+**Die Ingestprobe stand auf festen März-Daten**, und damit prüften zehn ihrer
+Erwartungen zweite Pakete an Datensätzen, die das Fenster längst verlassen
+hatten — ein Fall, den es im Betrieb nicht gibt, denn eine Uhr lädt hoch,
+während der Dienst läuft. Die Zeitpunkte hängen jetzt an `time()`. Dazu
+**Teil 9** für das Fenster selbst: **1 Paket angenommen, 1 abgewiesen**, und
+ein neuer Einsatz entsteht weiterhin. 47 Erwartungen, 0 nicht erfüllt.
+
+#### `json_js()` statt `json_encode()` in Skriptblöcken (Nr. 135)
+
+`json_encode()` maskiert `<` und `>` nicht. Der Seitenbruch kommt dabei
+**nicht** über `</script>` — das kann aus einem Wert gar nicht entstehen, weil
+`/` als `\/` geschrieben wird. Der Weg ist `<!--<script>`: Das schiebt den
+HTML-Parser in einen Zustand, in dem das nächste **echte** `</script>` den
+Block nicht schließt. Gemessen mit einem Profilnamen `<!--<script>` auf
+`import.php`: **`KONTO_NAME`, `APP_TZ` und `WEB_VERSION` fehlten alle drei** im
+Browser — der ganze Block war verschluckt, HTTP 200, kein Konsolenfehler,
+kein Hinweis. Nachher stehen alle drei.
+
+Die Einteilung ist maschinell gemacht und nachgezählt: **79 Aufrufe von
+`json_encode()` unter `server/`, davon 44 in einem `<script>`-Block — alle
+umgestellt — und 35 außerhalb, alle unverändert.** Dort ändern die Flaggen die
+**Bytes**, und an Bytes hängen Prüfsummen (`komplett_lib.php` bindet den
+Dateikopf über SHA-256) und Formatvergleiche. Der fehlende `(string)`-Cast in
+`csrf_check()` ist mit Nr. 127 miterledigt; HSTS und `Permissions-Policy`
+gehen mit der CSP (Nr. 8), der `querySelector` in `suche.php` steht als
+**Nr. 153** neu im Backlog.
+
+#### Weg C: die Zusage auf das eingrenzen, was sie hält (Nr. 138)
+
+Nur Dokumente, keine Zeile Code. Vier Stellen versprachen „Diagnose, Alter und
+Einsatzort sind Ende-zu-Ende-verschlüsselt" — richtig für das Feld,
+irreführend für die Sache: **Aus Spur und Phasenkoordinaten lässt sich der
+Einsatzort rekonstruieren.** `CLAUDE.md` 4, `README.md`, `Technik.md` 4.98 und
+`Handbuch.md` 5 zählen jetzt beide Seiten auf. Dazu ein übernehmbarer
+Textbaustein für die Datenschutzerklärung (Handbuch 11.5) — die Anwendung
+liefert weiterhin keinen Rechtstext mit, aber die technische Tatsache dahinter
+kann nur sie kennen.
+
+Das macht nichts sicherer. Es macht das Projekt ehrlich, und es ist die
+Voraussetzung dafür, dass die Frage nach Weg B nicht als Widerspruch im Raum
+steht, sondern als offener Punkt: Nr. 43.
+
+#### Neu: `tools/integritaetswache/` (Nr. 140, SP-6)
+
+Der eine Angriff, gegen den **keine** Verschlüsselung im Browser hilft, ist
+ein Server, der veränderten Code ausliefert: eine Zeile in `crypto.js`, und
+das nächste Passwort geht mit. Verhindern lässt sich das nur durch
+Zugangsschutz; **erkennen** hier.
+
+Die offene Frage beim Bauen war, was überhaupt byte-stabil vergleichbar ist —
+und die Antwort bestimmt den ganzen Aufbau. Der Deploy synchronisiert
+`server/` **byteweise** per FTPS, also ist jede Datei unter `assets/` auf dem
+Server dieselbe wie im Repositorium. Und der Inline-Skriptblock von
+`login.php` enthält **keine einzige PHP-Einsetzung** — nachgezählt: 0. Beide
+Seiten lassen sich frisch rechnen; es braucht **keine eingecheckten
+Prüfsummen**, die nach der dritten Änderung nicht mehr stimmen.
+
+**Die Selbstprobe läuft zuerst**, und das ist kein Formalismus: Ein grüner
+Lauf einer Wache, die *immer* grün meldet, sieht genauso aus wie einer, der
+nichts gefunden hat. Gemessen: 112 Dateien, 112 gleich, 1 Inline-Block gleich
+→ „Kein Unterschied". Gegenprobe mit **einer** veränderten Kennung in
+`crypto.js`: 111 gleich, **1 abweichend**, Rückgabewert 1, mit Dateiname und
+beiden Summen.
+
+**Nachgebessert am selben Tag, weil die erste Fassung eine Lücke hatte.** Sie
+prüfte auf der Anmeldeseite nur, ob der bekannte Inline-Block *vorhanden* ist
+— nicht, ob ein **zusätzliches** Skript oder ein Formular mit fremdem `action`
+dazugekommen war. Beides kostet den Angreifer eine Zeile (`ui.php`, eine
+`.htaccess` mit `auto_prepend_file`) und schickt das Passwort beim nächsten
+Anmelden mit. Auf der Anmeldeseite zählt der **Weg des Passworts**, und der
+hat zwei Enden: die Skripte, die es lesen, und das Formular, das es abschickt.
+Die Wache vergleicht jetzt die **ganze Menge** — jeden `<script src>`, jeden
+Inline-Block, jedes `<form>`-Tag — und meldet, was in der Auslieferung steht
+und in der Quelle nicht. Belegt am laufenden System: ein Fremd-Skript über
+`ui_seite_ende()` eingeschleust — vorher „Kein Unterschied", jetzt
+„ZUSÄTZLICHES Skript in der Auslieferung: https://boese.example/x.js". Die
+Selbstprobe zählt dafür **12 statt 7** Erwartungen und hat beim Bauen gleich
+den nächsten Fehler gefunden: Das `src`-Muster brach am Anführungszeichen
+innerhalb von `asset('…')` ab und hätte jeden Ersatz für `crypto.js`
+durchgelassen.
+
+Die Action läuft täglich um 04:17 UTC, nach jedem Deploy und von Hand. **Keine
+eigene Mailadresse** — ein roter Lauf löst die gewöhnliche
+GitHub-Benachrichtigung aus. Die `tools/wartungsprobe/` bekommt dafür eine
+Erwartung (12a): Würde der Wartungsmodus den Inline-Block verändern, ginge die
+Wache bei jedem Update rot, und eine Wache, die regelmäßig aus einem harmlosen
+Grund rot wird, ist nach dem dritten Mal abgeschaltet.
+
+#### Gemessen
+
+`php -l` über 114 Dateien und `node --check` über 32 — 0 Syntaxfehler.
+Wortliste **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0
+durchgerutschte Fallen** (eine Ausnahme kam dazu: „Garmin" im neuen Kasten zum
+Geräteverlust — dort ist die Plattform die Sache, denn für die Wear-OS-Uhr
+gilt der Satz gerade nicht). Vollständigkeit **300 → 301 Befunde**; der eine
+neue ist eine Ellipse in einem PHP-**Kommentar**, dieselbe Rauschklasse wie
+die 227 vorhandenen. `tools/linkprobe/` **132 Verweise, 0 Abweichungen**.
+Bilderlauf über die 14 berührten Seiten in acht Breiten, **beide
+Bedienhöhen**: je 112 Einzelbilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe
+falscher Höhe**; Gegenprobe 112 Bilder / 112 verschiedene Prüfsummen, also
+keine Seite doppelt fotografiert. Kontraste **21 Paare, 0 verfehlt**
+(`style.css` unverändert). `tools/gpxprobe/` **88 Erwartungen**,
+`tools/ingestprobe/` **47**, `tools/wartungsprobe/` **51** — je 0 nicht
+erfüllt bis auf die zwei bekannten der Gpxprobe, die daran hängen, dass der
+Referenzexport im Repositorium älter ist als die frisch eingespielte
+Datenbank; gegengeprüft am Stand davor.
+
+**Was nicht geprüft werden konnte**, steht im Prüfdokument
+`docs/konzepte/Pruefdokument-Sofortpaket-Sicherheit.md`, und zwar an dessen
+Anfang: kein Produktivmailer (der Wortlaut der Hinweismail aus Nr. 128), kein
+echtes Gerät, keine Produktivinstallation für die Integritätswache.
+
 ## [Web 15.5.2] — 2026-09-06
 
 ### Web — zwei Wege, die es gab und die nicht ankamen (Backlog Nr. 148, 149)
