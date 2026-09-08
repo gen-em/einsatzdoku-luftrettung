@@ -805,6 +805,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (Variante 2: Kurzname sichtbar, Akkordeon 8 px eingerückt) — Nachtrag
     AP4a. Mit dessen Auslieferung ist der Punkt erledigt und wandert im
     Abschluss (AP8) hinüber.*
+    *Gebaut mit Web 16.1.0 (S9/AP4a, 08.09.2026): Der Nebentext der Leiste
+    bleibt im Band 1024–1199 px stehen, wenn ein Kurzname eingefroren ist
+    (`.eintrag-neben.kurz`); das Akkordeon rückt dort je Ebene 8 statt 12 px
+    ein. Gemessen an der laufenden Anwendung: dem Kurznamen bleiben im Band je nach Datum **48 bis 55 px** — „BW Hoch" braucht 55, also tragen ihn **4 von 13** Datumsangaben ganz und **9 mit Auslassungszeichen**; ohne die Einrückung wäre es **keine einzige** (40 bis 47 px) — die
+    Datumsbreite schwankt zwischen 76 und 83 px, weil Bricolage Grotesque
+    Ziffern proportional setzt. Der Kurzname steht damit im Band, aber nicht
+    überall vollständig; ob das genügt, ist offen. Der Punkt ist sachlich
+    erledigt; er wandert
+    mit AP8 nach* Erledigt.
 
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**
     *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben

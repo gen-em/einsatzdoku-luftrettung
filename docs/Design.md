@@ -402,8 +402,8 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--abstand-1` | `4px` | 60 |  |
-| `--abstand-2` | `8px` | 84 |  |
-| `--abstand-3` | `12px` | 112 |  |
+| `--abstand-2` | `8px` | 85 |  |
+| `--abstand-3` | `12px` | 113 |  |
 | `--abstand-4` | `16px` | 51 |  |
 | `--abstand-5` | `24px` | 22 |  |
 
@@ -678,8 +678,8 @@ zusätzlich als `--s-*` in `:root`, damit man sie nachlesen kann.
 | Schwelle | was sich ändert |
 |---|---|
 | **720** | Handy → Tablet hoch: Einsatzkachel wird Tabelle, Zeilenaktionen werden Knopfreihe statt Blatt, Karte 220 px |
-| **1024** | Schublade → feste Leiste; die Hauptpunkte wandern in die Kopfleiste; das Aktionsblatt wird ein Aufklappmenü |
-| **1200** | Leiste 260 px (Filterleiste 280), Zweispalter: Einsatzansicht, Formularkarten, Kontoseite |
+| **1024** | Schublade → feste Leiste; die Hauptpunkte wandern in die Kopfleiste; das Aktionsblatt wird ein Aufklappmenü; im Band bis 1199 px zeigt der Nebentext der Leiste **nur noch einen Kurznamen** (`.eintrag-neben.kurz`), und das Akkordeon rückt je Ebene 8 statt 12 px ein |
+| **1200** | Leiste 260 px (Filterleiste 280), Zweispalter: Einsatzansicht, Formularkarten, Kontoseite; der Nebentext der Leiste steht wieder für **jeden** Namen, die Akkordeon-Einrückung geht auf 12 px zurück |
 | **1600** | Die Karte steht neben Diensttag-Daten und Tabelle |
 
 Dazu **eine** Ausnahme nach unten: `@media (max-width:479px)` lässt in der
@@ -705,6 +705,8 @@ Zusammen 21 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px,
 |---|---|---|---|---|---|
 | Kopfleiste | Menüknopf, Logo, Zahnrad | wie < 720 | Hauptpunkte sichtbar | wie 1024 | wie 1024 |
 | Leiste / Schublade | Schublade | Schublade | Leiste 220 | Leiste 260 | Leiste 260 |
+| Nebentext der Leiste | jeder Name | jeder Name | **nur Kurznamen** | jeder Name | jeder Name |
+| Akkordeon-Einrückung je Ebene | 12 px | 12 px | **8 px** | 12 px | 12 px |
 | Filterleiste (Suche) | Schublade + Knopf | Schublade + Knopf | 240 | 280 | 280 |
 | Einsätze | Kachel | Tabelle | Tabelle | Tabelle | Tabelle |
 | Zeilenaktionen | „⋯" + Blatt von unten | Knopfreihe | Knopfreihe, Blatt wird Aufklappmenü | wie 1024 | wie 1024 |
@@ -768,7 +770,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
 | `aktualisieren.svg` | Tabler Icons „refresh" (MIT) | 1 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 3 |
-| `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 28 |
+| `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 29 |
 | `datenbank.svg` | Tabler Icons „database" (MIT) | 10 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
@@ -809,7 +811,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 11 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
-| `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 8 |
+| `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 9 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 27 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
@@ -876,37 +878,37 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 141 |
 | `ui_symbol()` | `.symbol` | ja (+6 Unterklassen) | 194 |
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 297 |
-| `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 357 |
-| `ui_geruest_start()` | `.inhalt` | ja | 432 |
-| `ui_leiste_ende()` | `.leiste` | ja (+11 Unterklassen) | 503 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 527 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 567 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 768 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 891 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 962 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1046 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1089 |
-| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1156 |
-| `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1202 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1255 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1281 |
-| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1317 |
-| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1375 |
-| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1391 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1433 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1475 |
-| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1544 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1609 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1653 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1706 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1750 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1849 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 1911 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 1952 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2049 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2079 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2091 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2256 |
+| `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 359 |
+| `ui_geruest_start()` | `.inhalt` | ja | 434 |
+| `ui_leiste_ende()` | `.leiste` | ja (+11 Unterklassen) | 505 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 529 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 574 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 799 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 922 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 993 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1077 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1120 |
+| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1187 |
+| `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1233 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1286 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1312 |
+| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1348 |
+| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1406 |
+| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1422 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1464 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1506 |
+| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1575 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1640 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1684 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1737 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1781 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1880 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 1942 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 1983 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2080 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2110 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2122 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2287 |
 
 36 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -2150,6 +2152,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 16.1.0 (S9/AP4a)** | Kapitel 7 (Schwellen und Verhalten je Baustein): Der Nebentext der Leiste hat **drei** Zustände statt zweier — unter 1024 px jeder Name, im Band 1024–1199 px nur ein Kurzname (`.eintrag-neben.kurz`), ab 1200 px wieder jeder; im Band rückt das Akkordeon je Ebene 8 statt 12 px ein. Gemessen: Der Datumstext ist dort **76 bis 83 px** breit (Bricolage Grotesque setzt Ziffern **proportional** — `tabular-nums` nennt `.zahl,td,th,time,output`, nicht `.eintrag-text`), dem Nebentext bleiben **48 bis 55 px**, und „BW Hoch" braucht 55: **4 von 13** Datumsangaben tragen ihn ganz, 9 mit Auslassungszeichen; ohne die Einrückung keine einzige. **Keine neue Schwelle** — beide Regeln liegen in vorhandenen Medienblöcken —, **kein neues Token**: 8 px ist `--abstand-2`. Kapitel 9.7 unberührt: Die Wahlliste trägt den neuen Zusatz mit ihrem vorhandenen `zusatz`-Schlüssel. |
 | **Web 15.8.0 (S9/AP3)** | Neues Kapitel **9.30 Kartenzeichen** — der Farbring ist jetzt der Rand, alle acht Außenmaße als Tabelle, die 24-px-Untergrenze am antippbaren Ringpunkt und die Warnung, dass ein `<span>` ohne `display` kein Kasten ist (Backlog Nr. 72 und Nr. 153). Zwei **abgeleitete** Token (`--geo-ringpunkt`, `--geo-symbol`); `--geo-ring` bedeutet nun Randstärke statt Schattenschrittweite. Kapitel 8: Symbolvorrat **49 → 52** (Bergwacht, Veranstaltung, Sonstiges). Kapitel 9.29 berichtigt: `.legende-linie` misst **24 × 4 px**, nicht 22 × 4. |
 | **Web 15.7.0 (S9/AP2)** | Neues Kapitel **9.29 Kartendialog** — Suchfeld im Kopf (und warum nicht im Inhalt), Spur mit Ringpunkten und Legende, `fitBounds` nur bei leerem Feld. Kapitel 9.13 nachgezogen: Die drei Grenzen der Adressabfrage stehen jetzt in `assets/geocoder.js`, die Kleinzeile `.loc-datenschutz` steht **einmal je Seite**, und den Pin-Knopf rendern seither **beide** Formen von `ui_ortsfeld()` (Backlog Nr. 70). Kein neues Token. |
 | **Web 15.6.0/15.6.1 (S9/AP1)** | Neues Kapitel **9.28 Vorschlagsliste** — ein Baustein für vier abgelöste Fassungen, Übernahme auf `mousedown` (Backlog Nr. 102), Gruppenzeile nach Entscheidung des Aufrufers, `z-index: 35` zwischen Speichern-Leiste und Kopfleiste. Kapitel 9.13: Der Schlüssel `datalist` ist ersatzlos entfallen. |

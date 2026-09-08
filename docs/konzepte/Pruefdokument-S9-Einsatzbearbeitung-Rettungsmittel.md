@@ -14,11 +14,11 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 >
 > | | |
 > |---|---|
-> | Stand | 07.09.2026 — **AP1 bis AP4 gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, 15.7.0, 15.8.0, **16.0.0**). AP5 bis AP8 offen; **AP5 wartet auf das Wort des Auftraggebers.** Dazu seit dem 07.09.2026 die Mockups **M-S9-08 bis -10** zu den vier Fragen aus AP4 (Abschnitt 4) |
+> | Stand | 08.09.2026 — **AP1 bis AP4a gebaut und geprüft** (Web 15.6.0, Korrekturstufe 15.6.1, 15.7.0, 15.8.0, 16.0.0, **16.1.0**). AP5 bis AP8 offen; **AP5 wartet auf das Wort des Auftraggebers.** Die Mockups M-S9-08 bis -10 sind am 08.09.2026 freigegeben, ihre Umsetzung steckt in AP4a — bis auf Frage 6 (Standort löschen), die zu AP5 gehört |
 > | Geprüft | P-01 bis P-15 und P-32 vollständig · P-23 je Paket für die berührten Seiten (AP1 sieben, AP2 drei dazu, AP3 sechs dazu, AP4 elf), nie als Gesamtlauf über alle · P-25 als Gesamtlauf. Dazu **E-S9-13**, das im Konzept keine Abnahme hatte — siehe F-S9-P-12 |
-> | Offen | P-16 bis P-22, P-24, P-26, P-28 bis P-31, P-33 (AP5 bis AP8) |
-> | Fragen | **elf gestellt, zehn entschieden.** Am 07.09.2026: Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen** · Umfang von E-S9-03 → „alles Sichtbare" · `veranstaltung.svg` → **Tabler „ticket"**. Am **08.09.2026** nach den Mockups M-S9-08 bis -10: Kachel → **Ist lassen** · Plakettenzeile → **nein** · Leiste unter 1200 px → **Variante 2** · Zusammenführen → **(c)** · Standort löschen → **(b)**. Offen ist allein **Frage 2** aus AP1 (Buchführung, kein Code) |
-> | Fehlerfunde | **zwanzig, alle behoben** — F-S9-P-01 bis -04, -07 bis -14 (Abschnitt 2; -05 und -06 mit AP2 abgeräumt) und **F-S9-U-01 bis -08 aus AP4** (Konzept, Abschnitt 5) — darunter F-S9-U-01, ein Beinahe-Produktionsfehler: `nb_moeglich()` hätte die Migration zurückgenommen (gemessen false → true, zwei falsche offene Punkte; Gegenprobe 0 → 1 → 0). Zwei der vier Funde aus AP3 (Nr. 72, Nr. 153) sind derselbe Fehler drei Zeilen auseinander |
+> | Offen | P-16 bis P-22, P-26, P-28 bis P-31, P-33 (AP5 bis AP8). **P-24 (Stilvergleich) ist für AP4a erfüllt** — er lief gegen den Stand vor dem Paket |
+> | Fragen | **elf gestellt, zehn entschieden.** Am 07.09.2026: Diensttags-Besatzung → AP1 · zwanzig Backlog-Punkte im Abschluss · Pfeile im Kartendialog → **nein** · Überschrift im Dialogkopf → **lassen** · Umfang von E-S9-03 → „alles Sichtbare" · `veranstaltung.svg` → **Tabler „ticket"**. Am **08.09.2026** nach den Mockups M-S9-08 bis -10: Kachel → **Ist lassen** · Plakettenzeile → **nein** · Leiste unter 1200 px → **Variante 2** · Zusammenführen → **(c)** · Standort löschen → **(b)**. **Auch Frage 2** aus AP1 ist am 08.09.2026 entschieden (die Streichliste bleibt, wie AP1 sie gebaut hat) — **keine Frage mehr offen** |
+> | Fehlerfunde | **vierundzwanzig, alle behoben** — F-S9-P-01 bis -04, -07 bis -14 (Abschnitt 2; -05 und -06 mit AP2 abgeräumt) und **F-S9-U-01 bis -12** (Konzept, Abschnitt 5). Vier davon aus AP4a, alle von der adversarischen Gegenprobe: der Satz „unter 1200 px entfällt der Name ganz" stand an drei Stellen falsch (U-09), der Kurzname verschwand am mehrfachen Tag auf 3 px von 55 (U-10), die neue Zeile „Typ" behauptete einen Wert, den die Wahl ändert (U-11), und zwei Zahlen in `Design.md` waren seit AP4 veraltet (U-12) |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19 (CLI), MariaDB 10.11.14, Chromium über Playwright; lokale Installation aus `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` — 88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto, 6 Rettungsmittel in vier Typen (seit AP4; vorher 3), 8 Zielkliniken, 8 weitere Rettungsmittel, 15 Besatzungs-Vorbelegungen an zwei Standorten |
 
 ---
@@ -130,7 +130,7 @@ gemessen hat, ist keine Zahl.
 | P-21 | Suche findet Notiz nur entsperrt | Klickprobe | 1/1 und 0/1 | offen — AP7 |
 | P-22 | Export mit/ohne `pers` | Exportdatei | Spalte da / leer | offen — AP7 |
 | P-23 | Bilderlauf | 8 Breiten × 2 Höhen | 0/0/0/0 | **für die sechzehn berührten Seiten erfüllt.** *AP1 (sieben):* 10, 11, 13, 31, 32, 42, 42a. *AP2 (drei dazu):* 30, 43a, 48. *AP3 (sechs dazu):* 12-einsatzansicht, 14-zeitraum, 14a-zeitraum-monat, 21a-tag-spuren, 35-import-export, 44-demo-konto, 47-betrieb-jobs — dazu erneut 10 und 11, weil die Kartenzeichen dort stehen. AP3-Lauf über **zehn Seiten × 8 Breiten = 80 Einzelbilder, 10 Kontaktbögen**, **beide Läufe gefahren und beide 0/0/0**: Zeigergerät (44/36 px) und Fingergerät (44 px), je **Überlauf 0 · Konsolenfehler 0 · Knöpfe falscher Höhe 0**. Im Zeigerlauf ist die Sitzung einmal neu aufgebaut worden (Demo-Reset alle 30 Minuten, das Werkzeug fängt ihn ab und meldet ihn — kein Fehlschlag). **Der volle Lauf über alle 30 Seiten steht mit AP8 aus.** | 07.09.2026 |
-| P-24 | Stilvergleich | `stilvergleich` | Abweichungen erklärt | offen — AP8 (er ruht bis P4; siehe Abschnitt 4, Frage 3 des Konzepts dazu ist nicht offen — `CLAUDE.md` 6 lässt ihn ab P4 wieder wachen, und S9 liegt davor) |
+| P-24 | Stilvergleich | `stilvergleich` | Abweichungen erklärt | **für AP4a erfüllt.** Kaskade **712 → 715 Regeln: 0 entfallen, 3 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **47 710 Elementmessungen** (drei Proben × dreizehn Breiten), **40 Abweichungen** — alle bei **1024 und 1100 px**, also den einzigen gemessenen Breiten im geänderten Band, und alle auf die zwei neuen Regeln zurückführbar (Einrückung 12 → 8 px und `.eintrag-neben.kurz` von `none` auf `block`, dazu die Folgemaße). Die Pseudoprobe gegen die umgeschriebenen Stylesheets zeigt dasselbe Muster (19 253 Messungen, 30 Abweichungen). Für AP1 bis AP4 steht er weiter aus — dort wurde er mit dem Hinweis übersprungen, er „ruhe bis P4". Das trägt nicht: `CLAUDE.md` 6 lässt ihn ab P4 wieder wachen, und P3 ist abgeschlossen; AP1 bis AP3 haben `style.css` allerdings nur ergänzt, nicht umgebaut, weshalb der Nachlauf in AP8 gehört und nicht eilt | 08.09.2026 |
 | P-25 | Vollständigkeit | `vollstaendigkeit` | Zahl erklärt | **300 → 298 → 304 Befunde**, jede Bewegung erklärt. *AP1 (300 → 298):* `loc-suggest`, `rmlist`, `rmopt` verlieren ihre Regel und stehen auf der Streichliste (45 → 42 mit Regel, 121 → 125 gestrichen); `rmneu` wandert von „ohne Gegenstück" (54 → 53) ebenfalls dorthin und fällt aus `ohne-regel.md` (6 → 5 als `[offen]`). *AP2 (298 → 304):* **+6 Unicode-Pfeile** (227 → 233) — durchweg das `→` in deutschen Sätzen, die einen Menüweg nennen („Betrieb → Servereinstellungen", „Einstellungen → Profil"), dieselbe Redeweise wie die 227 vorhandenen. **+1 dann 0** Klassen ohne eingetragenen Grund: `loc-datenschutz` ist ein **Anker ohne Gestaltung** (die Kleinzeile trägt `.feld-klein`) und steht mit Begründung in `ohne-regel.md` als `[bleibt]`. Alle übrigen Zahlen unverändert — 0 Hexfarben außerhalb `:root`, 0 Schriftgrößen außerhalb der Skala, 0 Pixelmaße außerhalb der Token, 0 Knopfhöhen ohne `--knopf`, 0 ungenutzte Einträge in den Hilfslisten | 07.09.2026 |
 | P-26 | Wartungsprobe | `wartungsprobe` | 44/0 | offen — AP8 |
 | P-27 | Was am Gerät bleibt | Prüfliste | — | **Abschnitt 3** |
@@ -247,6 +247,44 @@ grüne Zahl sagen muss, was sie gemessen hat:
 - Der **Bilderlauf** hat 11 der 46 Seiten fotografiert, nämlich die berührten.
   Die übrigen 35 sind unverändert geblieben und nicht neu aufgenommen worden.
 
+
+### AP4a — Kurzname im schmalen Band, Typ beim Zusammenführen
+
+| Soll (Konzept, AP4a) | Ist | Mittel |
+|---|---|---|
+| `.eintrag-neben.kurz` bleibt unter 1200 px sichtbar, sobald ein Kurzname gesetzt ist | **Erfüllt für das Band 1024–1199 px** — und nur dort ist etwas zu tun: Unter 1024 px stand der Nebentext schon immer (F-S9-U-09). Gemessen über neun Breiten mit einem gesetzten Kurznamen: 390/800/1023 px **15 von 15** sichtbar · 1024/1100/1199 px **1 von 15**, nämlich der Kurzname · 1200/1280/1920 px 15 von 15 | eigenes Messskript gegen die laufende Anwendung |
+| Das Akkordeon rückt dort je Ebene 8 statt 12 px ein | **8 px im Band, 12 px darunter und darüber**, an `.leiste-liste .akkordeon-inhalt` gemessen. Dem Nebentext bleiben dadurch **48 bis 55 px** statt 40 bis 47. „BW Hoch" braucht **55**: **4 von 13** Datumsangaben des Prüfbestands tragen ihn ganz, **9 mit Auslassungszeichen**; ohne die Einrückung wäre es keine einzige. Die Schwankung kommt vom Datum daneben — es ist **76 bis 83 px** breit, weil Bricolage Grotesque Ziffern **proportional** setzt und `.eintrag-text` nicht unter der `tabular-nums`-Regel steht; und es schrumpft nicht (`flex:1 0 auto`). **Eine erste Messung meldete 57 px und war an einer einzigen, zufällig schmalen Datumsangabe genommen** — gefunden von der adversarischen Gegenprobe (F-S9-U-13). Das Einstellungsmenü bleibt in **jeder** Breite bei **0 px** — `.leiste-gruppe > .akkordeon-inhalt` ist spezifischer | eigenes Messskript, Klickprobe |
+| Zeile „Typ" in „Der Diensttag danach" | **Vorhanden**, Plakette blau wie „Art". Sie nennt **beide** Typen („Standard oder Bergwacht") samt Kleinzeile, solange zwei Rettungsmittel zur Wahl stehen — die einzelne Plakette des Mockups wäre falsch, sobald jemand das andere wählt (F-S9-U-11) | Klickprobe `ap4a-typ-beim-zusammenfuehren`, Bild |
+| Typ und Kurzname als Zusatz der Wahlzeilen | **4 Wahlzeilen**, davon **1** mit Typ und **1** mit Kurznamen („Bergwacht · BW Hoch · 28.03.2026 20:00, wird aufgenommen"). **0 Überlauf** bei 1280, 700 und 390 px; Zeilenhöhen 39 / 44 / 71–92 px | Klickprobe, eigenes Messskript |
+| `dt_merge_pruefen()` bleibt unverändert | **Unverändert** — `git diff` zeigt an der Funktion keine Zeile; zwei Diensttage verschiedenen Typs sind im Browser zusammenführbar (der Weg fährt genau diesen Fall) | `git diff`, Klickprobe |
+| Klickprobe | **10 von 10** Wegen erfüllt — zwei Wege × fünf Breiten (390, **1024, 1100, 1199**, 1280), je als Zeiger- und als Fingergerät. **0 Rückstände**: 16 Diensttage, 88 Einsätze, 6 Rettungsmittel wie vorher, **0** Tage mit Bergwacht-Typ oder Kurznamen | `tools/klickprobe/`, neue Datei `wege/ap4a.mjs` |
+| Stilvergleich | Kaskade **0 entfallen, 3 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **47 710 Elementmessungen, 40 Abweichungen**, alle bei 1024 und 1100 px und alle erklärt | `tools/stilvergleich/` |
+| Bilderlauf | **16 berührte Seiten, 128 Einzelbilder + 16 Kontaktbögen je Lauf, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** — je einmal als Zeiger- (44/36 px) und als Fingergerät (44 px) | `tools/screenshots/aufnehmen.mjs` |
+| Wortliste | **0 Treffer, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 96 Regeln, 96 gegriffen, über fünf Bereiche | `tools/wortliste/` |
+| Vollständigkeit | **304 = 304** — die neue Klasse `kurz` erzeugt keinen Befund, weil sie eine Regel hat; 8 px ist `--abstand-2`, also kein Literal außerhalb `:root` | `tools/vollstaendigkeit/` |
+| Kontraste, Linkprobe | **21 Paare, 0 verfehlt** · **140 Verweise, 0 unbekannte Abweichungen** | `kontrast.py`, `tools/linkprobe/` |
+| `Design.md` erzeugt | Neu erzeugt; **21 Medienblöcke über 5 Breiten unverändert** — beide Regeln liegen in vorhandenen Blöcken, es gibt **keine fünfte Schwelle** | `tools/design/tabellen.py alle` |
+
+**Was dieser Lauf NICHT belegt** — und das steht hier, weil eine grüne Zahl
+sagen muss, was sie gemessen hat:
+
+- **Der Bilderlauf sagt zum Kurznamen nichts.** Seine einzige Breite im
+  geänderten Band ist **1024 px**, und kein Diensttag des Demo-Bestands trägt
+  einen Kurznamen. „0 Überlauf" heißt dort: Die Leiste läuft nicht über —
+  nicht, dass ein Kurzname sichtbar wäre. Das belegt allein die Klickprobe,
+  die sich den Zustand selbst herstellt.
+- **1199 px steht in keinem Prüfmittel außer der Klickprobe.** Der Bilderlauf
+  kennt 1024 und 1280, der Stilvergleich 1024 und 1100. Die obere Kante des
+  Bandes ist deshalb eigens in den Klickprobe-Lauf aufgenommen worden.
+- **Ein Kurzname mit 16 Zeichen ellipsiert weiterhin**, im Band wie am
+  Schreibtisch: „Sanitätsdienst S" braucht 95 px, verfügbar sind 55 (Band)
+  bzw. 89 (260-px-Leiste). Das ist unverändertes Verhalten und keine Folge
+  dieses Pakets.
+- **Am mehrfachen Tag bleibt der Kurzname auch ab 1200 px eine Ellipse**
+  (gemessen 35 px von 55). Das ist Bestandsverhalten seit Web 16.0.0 und
+  wurde hier nur gemessen, nicht behoben — es zu beheben hieße
+  `.eintrag-text` schrumpfen zu lassen, und dann ellipsierte das Datum.
+  **Prüfliste Punkt 25.**
 
 ## 2. Fehlerfunde
 
@@ -635,20 +673,67 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   wird mitgespeichert — dann friert der Diensttag einen Standort ein, den sein
   Rettungsmittel gar nicht hat, und niemand hat ihn gewählt.
 
-- [ ] **18 — Der Kurzname in der Leiste, am Handy und am Schreibtisch (AP4).**
-  *Weg:* Einen Diensttag einem Rettungsmittel **mit** Kurznamen zuordnen, dann
-  die Diensttage-Leiste bei **1280 px** und bei **390 px** ansehen.
-  *Erwartet:* Bei 1280 px steht der Kurzname rechts in der Zeile, der Tooltip
-  nennt die volle Bezeichnung. Bei 390 px steht **kein** Nebentext — er ist
-  unter 1200 px ausgeblendet.
-  *Scheitern erkennbar an:* Bei 1280 px steht die volle Bezeichnung (dann
-  greift `dt_rm_kurz()` nicht). **Der zweite Teil ist kein Fehler, sondern
-  eine offene Frage:** Der Kurzname ist als Antwort auf enge Breiten gedacht
-  und hilft dort heute nicht. Ob er auch schmal sichtbar werden soll, ist eine
-  Gestaltungsentscheidung, und sie ist am **08.09.2026 gefallen:
-  Variante 2** (Abschnitt 4, Frage 4) — gebaut wird sie im Nachtrag AP4a.
-  Solange der nicht ausgeliefert ist, ist „kein Nebentext bei 390 px" das
-  **erwartete** Verhalten; danach ist es ein Fehler.
+- [ ] **18 — Der Kurzname in der Leiste über die Breiten (AP4, AP4a).**
+  *Weg:* Einen Diensttag einem Rettungsmittel **mit** Kurznamen zuordnen —
+  einen, der **allein** auf seinem Datum liegt. Dann die Diensttage-Leiste bei
+  **390 px**, bei **1100 px** und bei **1280 px** ansehen.
+  *Erwartet:* Bei **390 px** (Schublade) steht der Kurzname; bei **1100 px**
+  steht er ebenfalls, und bei den übrigen Tagen steht **gar kein** Nebentext;
+  bei **1280 px** stehen alle Namen. Der Tooltip nennt überall die volle
+  Bezeichnung.
+  *Scheitern erkennbar an:* Bei 1100 px steht der Kurzname als „BW Ho…"
+  (dann fehlt die 8-px-Einrückung des Akkordeons) oder gar nicht (dann greift
+  die Klasse `kurz` nicht). Steht bei 1100 px auch ein **voller** Name, ist
+  die Regel zu weit gefasst.
+
+- [ ] **23 — Der Kurzname am Tag, der sein Datum teilt (AP4a).**
+  *Weg:* Zwei Diensttage auf **denselben Kalendertag** legen und einem davon
+  ein Rettungsmittel **mit** Kurznamen zuordnen. Leiste bei **1100 px**.
+  *Erwartet:* Dieser Tag zeigt **keinen** Nebentext — seine Zeile trägt Datum
+  *und* Uhrzeit, und dafür ist die 220 px schmale Leiste zu eng (gemessen
+  3 px für einen Namen, der 55 braucht).
+  *Scheitern erkennbar an:* Rechts steht ein einzelnes Auslassungszeichen
+  oder ein abgeschnittener Buchstabe. Dann greift die Bedingung `!$mehrfach`
+  nicht.
+
+- [ ] **24 — Der Typ im Vergleichsdialog (AP4a).**
+  *Weg:* Zwei Diensttage derselben **Betriebsart**, aber mit Rettungsmitteln
+  **verschiedenen Typs** (etwa Standard und Bergwacht) zusammenführen wollen —
+  bis zur Vorschau gehen, **nicht** bestätigen.
+  *Erwartet:* „Der Diensttag danach" hat eine Zeile **Typ**, die beide nennt
+  („Standard oder Bergwacht") und darunter „Folgt dem Rettungsmittel, das du
+  unten wählst." Im Widerspruch „Rettungsmittel" trägt jede der beiden Zeilen
+  ihren Typ und, wo vorhanden, den Kurznamen.
+  *Scheitern erkennbar an:* Die Zeile nennt nur **einen** Typ. Dann behauptet
+  sie etwas, das die Wahl darunter ändert — die Seite lädt beim Klick nicht
+  neu. Und: Lassen sich die beiden Tage gar nicht erst zusammenführen, ist
+  versehentlich eine Typ-Bedingung in `dt_merge_pruefen()` gelandet.
+
+- [ ] **25 — Bekannter Rest: Kurzname am mehrfachen Tag ab 1200 px (AP4a).**
+  *Weg:* Denselben Bestand wie in Punkt 23, aber bei **1280 px** ansehen.
+  *Erwartet (heute):* Der Kurzname steht da, aber abgeschnitten — gemessen
+  35 px für 55. Das ist **kein Fehler dieses Pakets**, sondern Verhalten seit
+  Web 16.0.0: `.eintrag-text` schrumpft nicht, und Datum plus Uhrzeit
+  brauchen 128 px statt 76.
+  *Zu entscheiden:* ob das so bleibt. Es zu ändern hieße, den Datumstext
+  schrumpfen zu lassen — dann ellipsiert das Datum statt des Namens. Wenn es
+  stören soll, gehört ein Backlog-Punkt dafür angelegt.
+
+- [ ] **26 — Genügt „BW Ho…"? (AP4a, Entscheidung offen).**
+  *Weg:* Mehreren Diensttagen mit **verschiedenen Datumsangaben** dasselbe
+  Rettungsmittel mit Kurznamen zuordnen, Leiste bei **1100 px**.
+  *Erwartet:* Der Kurzname steht überall — an manchen Tagen vollständig, an
+  anderen abgeschnitten („BW Ho…"). Gemessen: 4 von 13 ganz, 9 mit
+  Auslassungszeichen; das Datum ist je nach Ziffern 76 bis 83 px breit.
+  *Zu entscheiden:* Ob das genügt. Drei Wege, wenn nicht: das Akkordeon im
+  Band noch einmal 4 px zurücknehmen (`--abstand-1`, bringt 8 px); den
+  Abstand zwischen Zeichen, Datum und Name im Band von 8 auf 4 px (weitere
+  8 px); oder — der eigentliche Grund — im schmalen Band das **Jahr aus dem
+  Datum** nehmen, das ohnehin schon als Akkordeon-Überschrift darübersteht
+  (spart rund 30 px). Der dritte Weg ist eine neue Darstellung und bräuchte
+  ein Mockup.
+  *Scheitern erkennbar an:* nichts — hier ist nichts kaputt, hier ist etwas
+  zu entscheiden.
 
 - [ ] **19 — Nach dem Kurznamen suchen (AP4).**
   *Weg:* Suche öffnen, den **Kurznamen** eines Rettungsmittels eintippen, das
@@ -805,9 +890,8 @@ AP6 stehen, meldete P-02 nach AP1 nicht 0, sondern 1 — und die Abnahme des
 Pakets wäre nicht erfüllt.
 
 **Frage 2 — „`<datalist>` in der Streichliste" (Konzept, AP1).**
-**Erläuterung nachgereicht 07.09.2026; Rückmeldung steht aus.** Der gebaute
-Stand ist der unten beschriebene und läuft grün; eine Gegenentscheidung wäre
-eine Zeile in einer Hilfsliste.
+**Entschieden vom Auftraggeber am 08.09.2026: so lassen, wie AP1 gebaut
+hat.** Es ändert sich keine Zeile — weder im Code noch in den Hilfslisten.
 
 Die Streichliste (`tools/vollstaendigkeit/streichliste.md`) führt **Klassen
 des alten Stylesheets**; `datalist` ist ein HTML-Element, stand nie in
@@ -817,7 +901,16 @@ eine tote Zeile, und die Prüfung meldet tote Zeilen.
 tatsächlich verschwinden — `loc-suggest`, `rmlist`, `rmopt`, `rmneu` —, jede
 mit Grund und Paket; `rmneu` fällt zugleich aus `ohne-regel.md`, wo es als
 `[offen]` stand. Der Ausbau der `<datalist>` ist statt dessen mit einer Zeile
-in `Design.md` 9.0 („nimm X, nicht Y") und im Baustein 9.28 festgehalten.
+in `Design.md` 9.0 („nimm X, nicht Y") und im Baustein 9.28 festgehalten,
+der ausdrücklich sagt, er ersetze auch **jede** native `<datalist>` — mit
+dem Grund aus Backlog Nr. 68. Gemessen wird der Ausbau unabhängig davon
+durch die Abnahmezahl von AP1: `grep -c datalist server/` = **0** außerhalb
+von Kommentaren, vorher **12** Treffer in sechs Dateien.
+*Verworfen wurden dabei:* eine Zeile „datalist" trotzdem eintragen (dann
+meldet die Vollständigkeit eine tote Zeile und braucht eine Ausnahme, die
+nichts prüft), und ein zweiter Abschnitt „Nicht-Klassen" in der
+Streichliste, der nicht gegengezählt wird (ehrlich, kostet aber eine
+Änderung am Prüfskript für einen einzigen Eintrag).
 
 **Frage 3 — Achtzehn oder zwanzig Backlog-Punkte im Abschluss?**
 **Entschieden vom Auftraggeber am 07.09.2026: zwanzig.** In AP8 wandern damit
@@ -900,10 +993,12 @@ heute.
 
 **Entschieden vom Auftraggeber am 08.09.2026: Variante 2.** Der Kurzname
 bleibt unter 1200 px sichtbar, das Akkordeon rückt dort je Ebene 8 statt
-12 px ein. Das ist eine Gestaltungsänderung an `style.css` und **noch nicht
-gebaut** — sie gehört in den Nachtrag AP4a (Konzept, Abschnitt 3). Bis
-dahin gilt für Prüflistenpunkt 18 weiter der Stand von Web 16.0.0: bei
-390 px steht kein Nebentext.
+12 px ein. **Gebaut mit Web 16.1.0** (S9/AP4a) — mit zwei Berichtigungen:
+Der Nebentext war nur im Band **1024–1199 px** ausgeblendet, nicht „unter
+1200 px" (F-S9-U-09); und an einem Diensttag, der sich sein Datum teilt,
+bleibt er auch weiterhin aus, weil dort Datum und Uhrzeit stehen und dem
+Kurznamen 3 px von 55 blieben (F-S9-U-10). Prüflistenpunkt 18 ist
+entsprechend umgestellt.
 
 **Frage 5 — Sollen Diensttage verschiedenen Typs zusammenführbar sein?**
 `dt_merge_pruefen()` prüft heute nur die **Betriebsart**. Zwei Tage, von denen
@@ -939,8 +1034,9 @@ und einen Zusatz.
 **Entschieden vom Auftraggeber am 08.09.2026: (c).** Diensttage
 verschiedenen Typs bleiben zusammenführbar; `dt_merge_pruefen()` bleibt
 unverändert. Neu sind die Zeile „Typ" in der Vorschau und der Typ samt
-Kurzname als Zusatz der beiden Wahlzeilen. **Noch nicht gebaut** —
-Nachtrag AP4a.
+Kurzname als Zusatz der beiden Wahlzeilen. **Gebaut mit Web 16.1.0**
+(S9/AP4a) — die Zeile nennt allerdings **beide** Typen, solange zwei
+Rettungsmittel zur Wahl stehen (F-S9-U-11).
 
 **Frage 6 — Der Fremdschlüssel auf den Standort.** AP4 hat
 `ON DELETE CASCADE` bewusst **unverändert** gelassen: Wer einen Standort
@@ -994,6 +1090,10 @@ Wo Mockup und Umsetzung auseinandergehen, steht es hier (Konzept, Abschnitt 6:
 
 | Stelle | Mockup / Konzept | Umsetzung | Grund |
 |---|---|---|---|
+| **M-S9-09:** Zusatz der Wahlzeilen | „Standard · bleibt" — der Typ **ersetzt** den Diensttag | „Standard · 28.03.2026 06:30, bleibt" — der Typ steht **vor** dem Diensttag | Der Diensttag sagt, WOHER die Angabe kommt, und die beiden anderen Widersprüche (Standort, Besatzung) nennen ihn ebenfalls. Ihn nur beim Rettungsmittel zu streichen, machte die drei Listen uneinheitlich. Gemessen: **0 Überlauf** bei 1280, 700 und 390 px |
+| **M-S9-09:** Zeile „Typ" | eine Plakette („Standard") mit der Kleinzeile „folgt dem gewählten Rettungsmittel" | **beide** Typen („Standard oder Bergwacht"), solange zwei Rettungsmittel zur Wahl stehen | Ein Mockup ist ein Standbild. Die Seite lädt beim Klick auf ein Radio **nicht** neu (`$wahl` kommt aus dem POST, Schritt 2 wird per GET gerendert) — eine einzelne Plakette zeigte also weiter den Typ des Zieltags, während `dt_zusammenfuehren()` den des Quelltags schreibt. **F-S9-U-11** |
+| **M-S9-08:** Rahmen „Schublade 320 px" | als **Variante** beschriftet: nur der Kurzname sichtbar | **unverändert gelassen** — unter 1024 px stehen weiter alle Namen | Der Rahmen zeigte den Ist-Stand als Variante: `.eintrag-neben` war nie unter 1024 px ausgeblendet, sondern nur im Band 1024–1199 px (**F-S9-U-09**). Der Schublade die vollen Namen zu nehmen, wäre ein Verlust gewesen, den niemand beschlossen hat |
+| **M-S9-08:** Kurzname im Band | jeder Kurzname bleibt sichtbar | **außer** an einem Diensttag, der sich sein Datum teilt | Dort trägt die Zeile Datum und Uhrzeit; gemessen blieben dem Kurznamen **3 px von 55** — eine Ellipse ohne Buchstaben. **F-S9-U-10** |
 | Hervorhebung des getippten Teils | `<b>` im Bild; die Anmerkung nennt daneben `EdSuchtext.hervor` als „dieselbe Hervorhebung" | `<b>` | Die beiden Angaben des Mockups widersprechen einander: `EdSuchtext.hervor` erzeugt `<mark class="treffer">` mit oranger Fläche. Die Fläche trägt in der **Suche** eine Aussage („hier steht dein Wort in einem langen Text"); in einer Vorschlagsliste steht das Wort am Anfang, und die Fläche käme unter die Zeilenmarkierung zu liegen. Gefolgt ist dem **Bild**, das freigegeben wurde |
 | Dichte Stufe | `.dicht .vorschlag{padding-top:2px;padding-bottom:2px}` | keine eigene Regel | `2px` ist kein Token, und die Skala ist geschlossen (`Design.md` 5). Gemessen ändert die Regel nichts am Ergebnis: Eine zweizeilige Zeile ist mit **und** ohne sie höher als beide Bedienhöhen (51 px), eine einzeilige folgt `--knopf` von selbst (44/36, gemessen). Die Regel hätte eine Zahl eingeführt, die nichts bewirkt |
 | Leerer Zustand | `.vorschlaege-leer` („keine Treffer") | nicht gebaut | Der Baustein versteckt die Liste, wenn sie leer ist — so verhielten sich beide Vorgänger, und das Konzept verlangt nichts anderes. Eine Zeile „keine Treffer" wäre eine neue Darstellung ohne Freigabe |

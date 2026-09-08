@@ -970,8 +970,11 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   font-family:var(--schrift-kopf);font-weight:400;
 }
 /* Lange Rettungsmittelnamen werden abgeschnitten („NEF Neubran…"); der volle
- * Name steht im Tooltip und im Seitentitel. Unter 1200 px entfällt der Name
- * ganz — das Artzeichen bleibt (E-P3-09). */
+ * Name steht im Tooltip und im Seitentitel. Drei Zustände über die Breiten,
+ * nicht zwei: In der Schublade (unter 1024 px, 320 px breit) steht der Name
+ * seit jeher; im Band 1024–1199 px ist die Leiste 220 px schmal und zeigt
+ * nur einen gesetzten Kurznamen (`.kurz`, S9/AP4a); ab 1200 px steht wieder
+ * jeder Name. Das Artzeichen bleibt überall (E-P3-09). */
 .eintrag-neben{
   flex:0 1 auto;min-width:0;
   color:var(--gedaempft);font-size:var(--groesse-2);
@@ -1842,10 +1845,32 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
      ungenutzt in :root (F-P3-BC). */
   .leiste-filter{width:var(--leiste-filter-schmal)}
 
-  /* Unter 1200 px entfällt der Rettungsmittelname in der Leiste; das
-     Artzeichen bleibt (E-P3-09). Bei 220 px Leistenbreite bliebe von ihm
-     ohnehin nur eine Ellipse. */
+  /* IN DIESEM BAND IST DIE LEISTE 220 PX SCHMAL. Der volle
+     Rettungsmittelname bliebe hier ohnehin nur eine Ellipse — er entfällt,
+     das Artzeichen bleibt (E-P3-09). Ein gesetzter KURZNAME steht dagegen
+     (S9/AP4a, Freigabe M-S9-08 Variante 2).
+     WIE VIEL VON IHM, HÄNGT AM DATUM DANEBEN. `.eintrag-text` schrumpft
+     nicht (`flex:1 0 auto`), und seine Breite schwankt: Bricolage Grotesque
+     setzt Ziffern PROPORTIONAL — die Regel `tabular-nums` (Abschnitt 3)
+     nennt `.zahl,td,th,time,output`, nicht diesen `<span>`. Gemessen an den
+     dreizehn Datumsangaben des Prüfbestands bei 1024 und bei 1199 px:
+     Datum 76 bis 83 px, für den Nebentext bleiben 48 bis 55 px. „BW Hoch"
+     braucht 55 — vier Datumsangaben tragen ihn ganz, neun mit Ellipse.
+     Ohne die Einrückung darunter wären es 40 bis 47 px, also keine einzige.
+     Ein Auslassungszeichen ist hier gewollt: Der Tooltip nennt die volle
+     Bezeichnung, und „BW Ho…" sagt mehr als der leere Platz von vorher.
+     Der Zustand darunter — Schublade, 320 px — bleibt unberührt: Dort greift
+     dieser Block nicht, und der volle Name steht dort weiterhin. */
   .eintrag-neben{display:none}
+  .eintrag-neben.kurz{display:block}
+
+  /* DIE EINRÜCKUNG WIRKT ZWEIMAL, einmal je Akkordeonebene (Jahr, Monat) —
+     12 → 8 px bringt dem Eintrag also 8 px, nicht 4. Sie gilt bewusst
+     ungescoped: `.leiste-gruppe > .akkordeon-inhalt{padding-left:0}` weiter
+     oben ist spezifischer (0-2-0 gegen 0-1-0) und hält das
+     Einstellungsmenü heraus. Wer hier `.leiste .akkordeon-inhalt` schriebe,
+     überholte diese Ausnahme und rückte das Menü von 0 auf 8 px ein. */
+  .akkordeon-inhalt{padding-left:var(--abstand-2)}
 
   /* Das Aktionsmenü wird ein Aufklappmenü statt eines Blattes. */
   .blatt{
@@ -1864,6 +1889,9 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .leiste{width:var(--leiste)}
   .leiste-filter{width:var(--leiste-filter)}
   .eintrag-neben{display:block}
+  /* Ab hier ist die Leiste 260 px — die Einrückung geht auf ihr normales Maß
+     zurück (Gegenstück zur 8-px-Regel im 1024er Block). */
+  .akkordeon-inhalt{padding-left:var(--abstand-3)}
   .geo{height:var(--karte-desktop)}
   .zweispalter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-4);align-items:start}
 

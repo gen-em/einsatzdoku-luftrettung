@@ -728,6 +728,29 @@ je Lauf, 0/0/0 in beiden Bedienhöhen**. `veranstaltung.svg` trägt jetzt Tabler
 „ticket" (Entscheidung des Auftraggebers vom 07.09.2026, mit Messung
 begründet).
 
+**AP4a — die Nachträge aus den Freigaben vom 08.09.2026** (Web **16.1.0**,
+keine Migration). Die vier Fragen aus AP4 sind entschieden: Kachel und
+Plakettenzeile bleiben, wie sie sind (der Kurzname gilt allein für die
+Leiste, E-S9-09 ist entsprechend zurückgeschnitten); die Leiste zeigt ihn
+dafür auch im Band 1024–1199 px, in dem sie 220 px schmal ist; der
+Vergleichsdialog des Zusammenführens nennt den Typ; und Rettungsmittel ohne
+Standortpflicht sollen das Löschen ihres Standorts überleben — das gehört zu
+AP5. Gebaut sind die ersten drei Punkte, also zwei Änderungen: zwei Regeln in
+`style.css` samt einer Klasse in `ui.php`, und eine Zeile plus zwei Zusätze
+im Vergleichsdialog. Dabei zeigte sich, dass die Begründung „unter 1200 px
+entfällt der Rettungsmittelname" an drei Stellen falsch stand — sie gilt nur
+im Band 1024–1199 px, in der Schublade stand der Name immer; berichtigt.
+Prüfzahlen: Klickprobe **10 von 10** Wegen über fünf Breiten (390, 1024,
+1100, 1199, 1280 px) in beiden Bedienhöhen, 0 Rückstände; dem Kurznamen bleiben im Band je nach Datum **48 bis 55 px** — „BW Hoch" braucht 55, also tragen ihn **4 von 13** Datumsangaben ganz und **9 mit Auslassungszeichen**; ohne die Einrückung wäre es **keine einzige** (40 bis 47 px).
+Diese Zahl ist die **Berichtigung** einer ersten Messung, die 57 px meldete
+und dabei zufällig das schmalste Datum getroffen hatte — gefunden von der
+adversarischen Gegenprobe, zusammen mit zwei weiteren Fehlern (der Kurzname
+verschwand am mehrfachen Tag auf 3 px; die Zeile „Typ" behauptete einen
+Wert, den die Wahl ändert). Ob „BW Ho…" genügt, ist eine Gestaltungsfrage
+und liegt beim Auftraggeber. Die Gewinnerregel
+des Zusammenführens steht seither an **einer** Stelle statt an zweien
+(`dt_merge_rm_gewinner()`).
+
 **AP5 bis AP8 — offen.** AP5 beginnt nach dem Wort des Auftraggebers (K7).
 
 ### Schritt 9 — Backlog-Runde
@@ -1070,7 +1093,7 @@ Nr. 115 ist in Nr. 95 aufgegangen.
 | 65 | 14 Fassungshinweise, AGP 9 | Backlog-Runde | eigene Runde nach dem S4-Rest, nur `android/` |
 | 67 | `csrf_check()` ohne API-Zweig | P5 | CSRF-Umfeld (R21) |
 | 68 | Vorschlagsfelder über `<datalist>` zeigen mobil nichts (Crew-Felder, Zielklinik, alle weiteren) | **S9** (AP1, AP6) | E-S9-07: ein Baustein Vorschlagsliste, kein `<datalist>` mehr |
-| 69 | Kurzname je Rettungsmittel | **S9** (AP4) | E-S9-09: `vehicles.kurz`, Diensttag-Schnappschuss, Nutzlast 10 |
+| 69 | Kurzname je Rettungsmittel | **S9** (AP4/AP4a) | E-S9-09: `vehicles.kurz`, Diensttag-Schnappschuss, Nutzlast 10; sichtbar in der Leiste in jeder Breite (AP4a) — Kacheln und Plaketten sind am 08.09.2026 ausgetragen |
 | 70 | „Auf der Karte setzen" für Standorte | **S9** (AP2/AP5) | E-S9-06 c: Pin-Knopf in der Nur-Lage-Fassung |
 | 71 | Regionen mit Unteradmins | nach v1.0 | verworfen, festgehalten (R39) |
 | 72 | Richtungspfeile auf der Spur zeigen teils falsch | **S9** (AP3) | belegt (Zuarbeits-Screenshot 06.09.2026); E-S9-12 |

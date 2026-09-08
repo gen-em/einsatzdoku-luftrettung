@@ -559,8 +559,13 @@ function ui_geruest_ende(array $o = []): void
  *     rechts (Balken).
  *  2  Der Winkel steht in Sand: Er ist Mechanik, keine Botschaft.
  *  3  Lange Rettungsmittelnamen werden mit Ellipse abgeschnitten; der volle
- *     Name steht im Tooltip und im Seitentitel. Unter 1200 px entfällt der
- *     Name ganz, das Artzeichen bleibt.
+ *     Name steht im Tooltip und im Seitentitel. Im Band 1024 bis 1199 px ist
+ *     die Leiste 220 px schmal: Dort steht nur noch, was auch hineinpasst —
+ *     ein gesetzter KURZNAME (Klasse `kurz`), sonst nichts. Unterhalb von
+ *     1024 px liegt die Leiste als Schublade und ist mit 320 px wieder breit
+ *     genug für den vollen Namen; sie zeigt ihn seit jeher und behält ihn
+ *     (S9/AP4a, Freigabe M-S9-08 Variante 2). Das Artzeichen bleibt in jeder
+ *     Breite.
  *
  * Das Artzeichen kommt aus dem Symbolvorrat statt als Emoji (E-P3-18) — es
  * lässt sich damit färben und auf Kontrast prüfen, und es sieht auf jedem
@@ -665,15 +670,32 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
                      zuordnen kann, findet sie im Tooltip. */
                   $name = dt_rm_kurz($t);
                   $voll = trim((string)($t['vehicle_name'] ?? ''));
+                  /* NUR EIN ECHTER KURZNAME TRAEGT DIE KLASSE. `dt_rm_kurz()`
+                     faellt auf die volle Bezeichnung zurueck, sein Ergebnis
+                     sagt also nicht, ob ein Kurzname gesetzt ist — dafuer die
+                     Spalte selbst lesen. Sonst stuende im schmalen Band genau
+                     das wieder da, was die Regel dort ausblendet: ein voller
+                     Name als Ellipse.
+                     UND NICHT AM MEHRFACHEN TAG. Teilen sich zwei Diensttage
+                     ein Datum, traegt die Zeile Datum UND Uhrzeit
+                     („28.03.2026 06:30" statt „28.03.2026"); `.eintrag-text`
+                     schrumpft nicht (`flex:1 0 auto`), also geht der Platz
+                     vom Nebentext ab. Gemessen bei 1024, 1100 und 1199 px:
+                     3 px fuer einen Kurznamen, der 55 braucht — eine Ellipse
+                     ohne Buchstaben. Die ist schlechter als kein Nebentext,
+                     also bleibt er dort aus, wie vor S9/AP4a. */
+                  $mehrfach = (bool)$t['mehrfach'];
+                  $hatKurz = !$mehrfach
+                          && trim((string)($t['vehicle_kurz'] ?? '')) !== '';
                   $titel = $voll !== '' ? $voll . ' — ' . $sym['text'] : $sym['text'];
                   $ist = (int)$t['id'] === $currentDayId; ?>
                 <a class="eintrag<?= $ist ? ' aktiv' : '' ?>"
                    href="index.php?d=<?= (int)$t['id'] ?>"
                    <?= $ist ? 'aria-current="page"' : '' ?> title="<?= ui_e($titel) ?>">
                   <?= ui_artzeichen($kind, '', $typ) ?>
-                  <span class="eintrag-text"><?= ui_e(dt_lesbar($t, (bool)$t['mehrfach'])) ?></span>
+                  <span class="eintrag-text"><?= ui_e(dt_lesbar($t, $mehrfach)) ?></span>
                   <?php if ($name !== ''): ?>
-                    <span class="eintrag-neben"><?= ui_e($name) ?></span>
+                    <span class="eintrag-neben<?= $hatKurz ? ' kurz' : '' ?>"><?= ui_e($name) ?></span>
                   <?php else: ?>
                     <span class="eintrag-neben">—</span>
                   <?php endif; ?>

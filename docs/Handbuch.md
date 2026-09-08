@@ -1217,9 +1217,15 @@ auseinanderzuhalten.
 Jeder Tag trägt vorn ein Zeichen für seine Art — Hubschrauber für
 luftgebunden, Rettungswagen für bodengebunden, ein gestrichelter Kreis für
 einen Diensttag ohne Rettungsmittel. Rechts daneben steht der Name des
-Rettungsmittels; ist er zu lang, wird er abgekürzt, und der volle Name
-erscheint, wenn der Mauszeiger darauf steht. Auf schmaleren Bildschirmen
-entfällt er ganz.
+Rettungsmittels — sein **Kurzname**, wenn einer hinterlegt ist; ist er zu
+lang, wird er abgekürzt, und der volle Name erscheint, wenn der Mauszeiger
+darauf steht.
+
+Auf mittelbreiten Bildschirmen wird die Leiste schmal, und dort steht nur
+noch, was auch hineinpasst: ein **Kurzname bleibt sichtbar**, ein voller Name
+entfällt — von ihm bliebe ohnehin nur eine Abkürzung mit Auslassungspunkten.
+Auf dem Handy liegt die Leiste als Schublade über der Seite und ist wieder
+breit genug; dort steht der Name wie am großen Bildschirm.
 
 Ein Klick auf das **Balkensymbol** neben Jahreszahl oder Monatsname öffnet eine
 Übersicht dieses Zeitraums. Unter dem Titel steht, wie viele Diensttage er hat
@@ -1347,10 +1353,14 @@ Danach in zwei Schritten:
    Uhr-Kennungen — daran lassen sich zwei Bruchstücke desselben Dienstes
    auseinanderhalten. Liegt der gesuchte Tag weiter entfernt, korrigiere zuerst
    sein Datum (Abschnitt 4.2a).
-2. **Vorschau bestätigen.** Sie zeigt den entstehenden Zeitraum, die Art und
-   was alles wandert. Widersprechen sich die beiden Tage bei Rettungsmittel,
-   Standort oder Besatzung, wählst du hier, was gelten soll; vorbelegt ist
-   immer der Tag, der bleibt.
+2. **Vorschau bestätigen.** Sie zeigt den entstehenden Zeitraum, die Art, den
+   **Typ** des Rettungsmittels und was alles wandert. Widersprechen sich die
+   beiden Tage bei Rettungsmittel, Standort oder Besatzung, wählst du hier,
+   was gelten soll; vorbelegt ist immer der Tag, der bleibt. Bei den beiden
+   Rettungsmitteln stehen Typ und Kurzname mit dabei — der Typ des
+   zusammengeführten Tages folgt dem, das du wählst. Zwei Tage mit
+   **verschiedenem Typ** lassen sich zusammenführen; nur verschiedene *Arten*
+   (luft- und bodengebunden) gehen nicht.
 
 Danach hängen Einsätze, Ruhesegmente und Uhr-Kennungen am Zieltag, sein Zeitraum
 umschließt beide, und Notizen sind aneinandergehängt — nichts wird
@@ -2326,9 +2336,10 @@ und lässt sich dort bearbeiten und löschen. Angelegt wird es über den Haken
 „Ohne Standort" im Formular eines beliebigen Standorts.
 
 **Der Kurzname** (bis 16 Zeichen, freiwillig) steht dort, wo der Platz knapp
-ist: in der Diensttage-Leiste, in den Kacheln und auf den Plaketten. Formulare,
-Export und Backup zeigen weiter die volle Bezeichnung — wer eine Exportdatei
-auswertet, kennt eure Abkürzungen nicht. Suchen kannst du nach beidem.
+ist: in der **Diensttage-Leiste**, und dort in jeder Bildschirmbreite — auch
+in der schmalen, in der ein voller Name entfällt. Formulare, Export und Backup
+zeigen weiter die volle Bezeichnung — wer eine Exportdatei auswertet, kennt
+eure Abkürzungen nicht. Suchen kannst du nach beidem.
 
 
 Zu einem **Standort** lassen sich Koordinaten hinterlegen — freiwillig. Sie sind

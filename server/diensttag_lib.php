@@ -222,6 +222,47 @@ function dt_typ_symbole(): array
 }
 
 /**
+ * Die Beschriftung eines Rettungsmitteltyps, wie sie der NutzerIn begegnet.
+ *
+ * `dt_typ_symbole()` daneben liefert nur die DREI Typen mit eigenem Zeichen;
+ * wer eine Beschriftung braucht, braucht auch 'Standard'. Die Woerter stehen
+ * in `VEHICLE_TYPEN` (db.php, „DIE EINE QUELLE"), nicht hier.
+ *
+ * Rueckgabe '' bei null und bei einem Typ, den der Katalog nicht kennt —
+ * beides gibt es im Bestand: Diensttage ohne Rettungsmittel und Tage, deren
+ * Rettungsmittel vor Web 16.0.0 zugeordnet wurde, tragen `vehicle_typ` NULL
+ * (Migration `2026_09_07_rettungsmittel_typ`). Die Aufrufer setzen dafuer
+ * ihren eigenen Platzhalter — ein „—" wie bei den Zeitangaben.
+ */
+function dt_typ_label(?string $typ): string
+{
+    if ($typ === null || !isset(VEHICLE_TYPEN[$typ])) { return ''; }
+    return (string)VEHICLE_TYPEN[$typ]['label'];
+}
+
+/**
+ * Welches der beiden Rettungsmittel beim Zusammenfuehren gewinnt — die EINE
+ * Fassung dieser Regel (S9/AP4a).
+ *
+ * Sie stand bis dahin nur in `dt_zusammenfuehren()`, also innerhalb der
+ * Transaktion. Seit die Vorschau den Typ des Ergebnisses nennt, braucht sie
+ * dieselbe Antwort schon vor dem Schreiben — und zwei Fassungen derselben
+ * Regel laufen beim naechsten Sonderfall auseinander. Genau davor warnt der
+ * Kommentar ueber dem UPDATE: Der Zieltag traege sonst den NAMEN des einen
+ * und den TYP des anderen Rettungsmittels.
+ *
+ * Die Regel: Fuehrt nur EINER ein Rettungsmittel, gewinnt er kampflos — die
+ * Wahl gab es dann gar nicht zu treffen. Sonst entscheidet sie.
+ */
+function dt_merge_rm_gewinner(array $ziel, array $quelle, string $wahl = 'ziel'): array
+{
+    if ($ziel['vehicle_id'] === null || $quelle['vehicle_id'] === null) {
+        return $ziel['vehicle_id'] !== null ? $ziel : $quelle;
+    }
+    return $wahl === 'quelle' ? $quelle : $ziel;
+}
+
+/**
  * Die Bezeichnung, unter der ein Diensttag SEIN Rettungsmittel zeigt (Nr. 69).
  *
  * Der Kurzname, wenn einer gesetzt ist, sonst die volle Bezeichnung. Beides
@@ -230,9 +271,12 @@ function dt_typ_symbole(): array
  * gestern „Christoph 1" hiess und heute „C1" heisst, aendert keinen einzigen
  * Diensttag von gestern.
  *
- * WO SIE GILT UND WO NICHT (E-S9-09). Kurzname STATT der Bezeichnung: die
- * Diensttage-Leiste, die Kacheln und die Plaketten — also ueberall dort, wo der
- * Platz knapp ist und die Person ihren eigenen Dienst wiedererkennen soll.
+ * WO SIE GILT UND WO NICHT (E-S9-09, berichtigt am 08.09.2026). Kurzname
+ * STATT der Bezeichnung: die DIENSTTAGE-LEISTE, und dort in jeder Breite —
+ * sie ist die schmalste Stelle, und dort soll die Person ihren eigenen Dienst
+ * wiedererkennen. Der Konzepttext nannte daneben Kacheln und Plaketten; das
+ * ist zurueckgenommen, weil beide gar kein Rettungsmittel nennen und es dort
+ * nichts zu ersetzen gab (Mockup M-S9-08, Fragen 3a und 3b).
  * Volle Bezeichnung: Formulare, Export, Sicherung, Suche und alles, was jemand
  * ausserhalb dieser Installation liest. Wer den Kurznamen an einer der zweiten
  * Stellen EINSETZT, macht aus einer Abkuerzung fuer den Hausgebrauch eine
@@ -1048,7 +1092,8 @@ function dt_merge_pruefen(int $userId, int $zielId, int $quellId): array
  * @return array Vorschau samt `wahlen`: die Widersprueche, ueber die beim
  *               Zusammenfuehren zu entscheiden ist.
  */
-function dt_merge_vorschau(int $userId, array $ziel, array $quelle): array
+function dt_merge_vorschau(int $userId, array $ziel, array $quelle,
+                           array $wahl = []): array
 {
     $zahl = static function (string $sql, array $p): int {
         $q = db()->prepare($sql); $q->execute($p); return (int)$q->fetchColumn();
@@ -1121,9 +1166,15 @@ function dt_merge_vorschau(int $userId, array $ziel, array $quelle): array
         ];
     }
 
+    /* DER TYP DES ERGEBNISSES FOLGT DEM GEWINNENDEN RETTUNGSMITTEL — und die
+     * Wahl kann ihn aendern. Deshalb nimmt die Vorschau sie entgegen; ohne
+     * sie gilt die Vorbelegung (der Zieltag), genau wie in der Seite. */
+    $vGew = dt_merge_rm_gewinner($ziel, $quelle, (string)($wahl['vehicle'] ?? 'ziel'));
+
     return [
         'ziel_id'    => $zid,
         'quell_id'   => $qid,
+        'vehicle_typ' => $vGew['vehicle_typ'] === null ? null : (string)$vGew['vehicle_typ'],
         'day'        => (string)$frueher['day'],
         'started_at' => $frueher['started_at'] !== null ? (string)$frueher['started_at'] : null,
         'ended_at'   => $enden ? max($enden) : null,
@@ -1187,7 +1238,7 @@ function dt_zusammenfuehren(PDO $pdo, int $userId, int $zielId, int $quellId,
                 'einsaetze' => 0, 'segmente' => 0, 'kennungen' => 0];
     }
     $ziel = $p['ziel']; $quelle = $p['quelle'];
-    $vor  = dt_merge_vorschau($userId, $ziel, $quelle);
+    $vor  = dt_merge_vorschau($userId, $ziel, $quelle, $wahl);
 
     $nimm = static fn(string $feld): array
         => (($wahl[$feld] ?? 'ziel') === 'quelle') ? [$quelle, $ziel] : [$ziel, $quelle];
@@ -1211,14 +1262,14 @@ function dt_zusammenfuehren(PDO $pdo, int $userId, int $zielId, int $quellId,
     $rCount = $u->rowCount();
 
     /* ---- Zeitraum, Art und die gewaehlten Angaben ----------------------- */
-    [$vGewinner] = $nimm('vehicle');
-    [$bGewinner] = $nimm('base');
+    /* Beim Rettungsmittel entscheidet `dt_merge_rm_gewinner()` — dieselbe
+     * Funktion, die auch die Vorschau befragt (S9/AP4a). Vorher stand die
+     * Regel nur hier, und die Vorschau haette sie nachbauen muessen. */
+    $vGewinner = dt_merge_rm_gewinner($ziel, $quelle, (string)($wahl['vehicle'] ?? 'ziel'));
 
-    /* Fuehrt nur EINER ein Rettungsmittel, gewinnt er — unabhaengig von der
-     * Wahl, die es dann gar nicht zu treffen gab. Dasselbe beim Standort. */
-    if ($ziel['vehicle_id'] === null || $quelle['vehicle_id'] === null) {
-        $vGewinner = $ziel['vehicle_id'] !== null ? $ziel : $quelle;
-    }
+    [$bGewinner] = $nimm('base');
+    /* Beim Standort dieselbe Uebersteuerung: Fuehrt nur EINER einen, gewinnt
+     * er — unabhaengig von der Wahl, die es dann gar nicht zu treffen gab. */
     if ($ziel['base_id'] === null || $quelle['base_id'] === null) {
         $bGewinner = $ziel['base_id'] !== null ? $ziel : $quelle;
     }

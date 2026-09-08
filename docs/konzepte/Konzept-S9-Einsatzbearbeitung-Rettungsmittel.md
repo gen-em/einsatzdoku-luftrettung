@@ -17,7 +17,7 @@ Mockups in `konzept-s9/mockups/`.
 > | Stand | 07.09.2026 — **Konzept freigegeben.** E-S9-01 bis -17 am 06.09.2026 bestätigt, E-S9-18 und -19 am 07.09.2026; alle sieben Mockups freigegeben (Abschnitt 6). PS-12 (Standortseiten, Backlog 152) am 07.09.2026 aufgenommen. Rahmenplan Fassung 34 trägt die Einschübe aus Abschnitt 7 |
 > | Entschieden | E-S9-01 bis E-S9-19 (Abschnitt 2) |
 > | Offen | nichts. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
-> | Umsetzung | **AP1 bis AP4 erledigt** (07.09.2026, Web 15.6.0 / 15.6.1 / 15.7.0 / 15.8.0 / **16.0.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. **AP5 wartet auf das Wort des Auftraggebers.** Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
+> | Umsetzung | **AP1 bis AP4a erledigt** (07./08.09.2026, Web 15.6.0 / 15.6.1 / 15.7.0 / 15.8.0 / 16.0.0 / **16.1.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. **AP5 wartet auf das Wort des Auftraggebers.** Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
 > | Fable-Schritte der Umsetzung | **drei, aus AP4** (07.09.2026): die Mockups **M-S9-08 bis M-S9-10** zu den Fragen 3 bis 6 des Prüfdokuments — **alle drei am 08.09.2026 freigegeben** (Abschnitt 6). Der Fable-Vorbehalt der Vorbereitung (PS-8.2) war im Konzept aufgelöst (Abschnitt 1.8) |
 
 > **Stand der Umsetzung**
@@ -28,16 +28,22 @@ Mockups in `konzept-s9/mockups/`.
 > | **AP2** Geocoder und Kartendialog | **erledigt** 07.09.2026 | Web **15.7.0**, Migration `2026_09_07_adresssuche_konto` | `grep -rn "komoot" server/assets/` **0** (vorher 2); Kartendialog aus **5 von 5** Einbauorten mit Karte darin (Einsatzort, manueller Abfahrtort, Transportziel, Standort im Konto, Standort systemweit); Treffer im Suchfeld lässt das Formular unberührt — **Feld leer, 0 Chips**, nach „Übernehmen" **1 Chip** (F1); Spur im Dialog bei 309 Punkten **1 Linie · 4 Ringpunkte (2 Karte + 2 Legende) · Legende sichtbar · 0 Pfeile**, Karte auf der Spur bei leerem Feld (Bild); Kontoschalter **aus → 0 Anfragen** an `photon.komoot.io` bei Tippen, Kartenwahl und Übernehmen, **mit Gegenprobe „an → 2 Anfragen"**, dazu 0 Suchfelder und 0 Hinweiszeilen; Installationsschalter aus → Kontoschalter **gesperrt** mit Grund (Bild); Hinweis am Ortsfeld **1 bei 3 Ortsfeldern**, nennt den Dienst (Bild); Datenschutztext-Baustein nennt `geocoder_host()` (**2 grep-Treffer**); Klickprobe **40 von 40** Wegen über zwei Breiten × zwei Bedienhöhen, 36 Bilder; Bilderlauf **zehn berührte Seiten**, 64 + 16 Einzelbilder je Lauf, **0/0/0** in beiden Bedienhöhen; Wortliste **0/0/0** in fünf Bereichen (178 Dateien); Vollständigkeit **298 → 304**, der Unterschied vollständig erklärt (+6 Menüpfeile „→" in Fließtext, `loc-datenschutz` als Anker eingetragen); Kontraste **21 Paare, 0 verfehlt**; Linkprobe **134 Verweise, 0 unbekannte Abweichungen**; Register **44 = 44** |
 > | **AP3** Karte und Zeichen | **erledigt** 07.09.2026 | Web **15.8.0** | Schildmaße nachgemessen im Browser: **ohne 32 · Start 32 · Ende 32 · beide 38 · Einsatzort 28 · Ringpunkt 14 · Ring beide 20 px** (vorher 36/48/48/60/32/16/28), Symbol im Schild **18**, im Kreis **16** px, Antippfläche des Ringpunkts **24 px** (WCAG 2.5.8); Pfeile **12 von 12** in 30-Grad-Schritten auf 0,1 Grad genau, dazu **2 von 2** auf der Spur des Referenzeinsatzes (vorher: Bildschirmmatrix a=0,833 b=0 c=0 d=0,833 bei behaupteten 90 Grad, also kein Drehanteil); `.geo-punkt` **12 × 12 px** mit sichtbarer Spurfarbe (vorher 4 × 18, Farbe unsichtbar — Backlog Nr. 153, neu); Windenkacheln **2 / 2 mit „0" / 0** in den drei Fällen, alle über die Oberfläche hergestellt und zurückgestellt; Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen, mit neuer Regel `spur`; `grep -c "Spur" docs/Handbuch.md` **41 → 0**; **72 sichtbare Zeichenketten in 18 Dateien** umbenannt; Symbolvorrat **49 → 52**, Artzeichen **6 von 6** mit Anker und Herkunft; Klickprobe **6 von 6** Wegen; Vollständigkeit **304 = 304** (Hinweis „Symboldatei ohne Verweis" 25 → 28, zählt nicht mit); Kontraste **21 Paare, 0 verfehlt**; Linkprobe **134 Verweise, 0 Abweichungen**; Bilderlauf **zehn berührte Seiten, 80 Einzelbilder je Lauf, 0/0/0 in beiden Bedienhöhen** |
 > | **AP4** Rettungsmittel: Typ, Kurzname, Standort optional | **erledigt** 07.09.2026 | Web **16.0.0**, Migration `2026_09_07_rettungsmittel_typ`, Nutzlast 9 → 10 | Register **45 = 45**, frische Installation und migrierte Datenbank strukturgleich (Vergleich `SHOW CREATE TABLE`); Nachfüllung **16 von 16** Diensttagen mit `vehicle_typ`; Prüfschicht **8 von 8** Fällen wie festgelegt (Rollen bei Bergwacht verworfen, Betriebsart bei Veranstaltung erzwungen, Kurzname bei 20 Zeichen auf 16 gekappt, Standard ohne Standort abgelehnt, unbekannter Typ abgelehnt); Kreisläufe **edbak 287 771 · csv 9 118 · edbak-alt 287 781 Einzelvergleiche, je 0 unerklärt** (16 / 1 021 / 653 erwartet, 0 ungenutzte Regeln); Aufwärtskompatibilität belegt: eine Nutzlast-9-Datei spielt **4 von 6** Rettungsmitteln als `standard` ein und überspringt die zwei, die es dort nicht geben konnte; Referenzbestand **3 → 6 Rettungsmittel** (je einer der vier Typen, zwei ohne Standort, zwei mit Kurznamen), über das Formular angelegt; Demo-Zurücksetzen **42 Stammdaten, 0 übersprungen**; Demo-Fixture neu, **55 861 Spurpunkte** unverändert; Klickprobe **6 von 6** Wegen, 0 Rückstände; Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen, über fünf Bereiche (178 Dateien); Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise, 0 unbekannte Abweichungen**; Bilderlauf **11 berührte Seiten, 88 Einzelbilder je Lauf, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** in beiden Bedienhöhen |
-> | **AP4a** Nachträge aus den Freigaben (Vorschlag, siehe Abschnitt 3) | offen | — | — |
+> | **AP4a** Nachträge aus den Freigaben | **erledigt** 08.09.2026 | Web **16.1.0**, keine Migration | Klickprobe **10 von 10** Wegen (zwei Wege × fünf Breiten 390/1024/1100/1199/1280 px), je als Zeiger- und als Fingergerät, **0 Rückstände** im Bestand; Leiste an der laufenden Anwendung über neun Breiten gemessen — unter 1024 px **15 von 15** Nebentexten sichtbar (12 px Einrückung), im Band 1024–1199 px **1 von 15** (nur der Kurzname, 8 px), ab 1200 px wieder 15 von 15 (12 px); dem Kurznamen bleiben im Band je nach Datum **48 bis 55 px** — „BW Hoch" braucht 55, also tragen ihn **4 von 13** Datumsangaben ganz und **9 mit Auslassungszeichen**; ohne die Einrückung wäre es **keine einzige** (40 bis 47 px); Einstellungsmenü in jeder Breite **0 px** eingerückt; Vergleichsdialog Zeile „Typ" = „Standard oder Bergwacht" mit Kleinzeile, 4 Wahlzeilen davon **1** mit Typ und **1** mit Kurznamen, **0 Überlauf** bei 1280/700/390 px; Stilvergleich Kaskade 712 → 715 Regeln — **0 entfallen, 3 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **47 710 Elementmessungen, 40 Abweichungen**, sämtlich bei 1024 und 1100 px und sämtlich auf die zwei neuen Regeln zurückführbar (Pseudoprobe 19 253 Messungen, 30 Abweichungen desselben Musters); Bilderlauf **16 berührte Seiten, 128 Einzelbilder + 16 Kontaktbögen je Lauf, 0/0/0** in beiden Bedienhöhen (Gegenprobe 144 Dateien, 140 verschiedene Prüfsummen — die vier Doppelten sind Seite 10 gegen Seite 11 ab 1024 px, wo es die Schublade nicht gibt); Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen; Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise, 0 unbekannte Abweichungen**; `Design.md` neu erzeugt — **21 Medienblöcke über 5 Breiten unverändert**, also keine neue Schwelle |
 > | AP5 bis AP8 | offen | — | — |
 >
-> **Fragen aus AP1** (Prüfdokument, Abschnitt 4): **zwei entschieden am
-> 07.09.2026** — die Besatzungsfelder des Diensttags gehören zu **AP1** (so
+> **Fragen aus AP1** (Prüfdokument, Abschnitt 4): **alle drei entschieden.**
+> Am 07.09.2026 — die Besatzungsfelder des Diensttags gehören zu **AP1** (so
 > gebaut), und im Abschluss wandern **zwanzig** Backlog-Punkte nach
-> *Erledigt*, also **auch Nr. 132 und Nr. 137** (siehe AP8 unten). Offen ist
-> die dritte: die Zeile „`<datalist>` in der Streichliste" — dort stehen
-> Klassen des alten Stylesheets, `datalist` ist ein HTML-Element; eingetragen
-> sind statt dessen die vier Klassen, die tatsächlich verschwinden.
+> *Erledigt*, also **auch Nr. 132 und Nr. 137** (siehe AP8 unten). Am
+> **08.09.2026** die dritte: die Zeile „`<datalist>` in der Streichliste"
+> bleibt **so, wie AP1 sie gebaut hat**. Die Streichliste führt Klassen des
+> alten Stylesheets und wird gegen `vorher-klassen.txt` gegengezählt;
+> `datalist` ist ein HTML-Element, steht dort nicht und wäre als Eintrag
+> eine tote Zeile, die die Prüfung meldet. Eingetragen sind die vier
+> Klassen, die tatsächlich verschwinden (`loc-suggest`, `rmlist`, `rmopt`,
+> `rmneu`); der Wegfall der `<datalist>` steht in `Design.md` 9.0 und im
+> Baustein 9.28 und wird von der Abnahmezahl `grep -c datalist server/` = 0
+> gemessen.
 >
 > **Ein Fund nach der Abgabe von AP1**, vom Auftraggeber am Bild gemeldet und
 > behoben mit Web 15.6.1: Die Liste lag mit `z-index: 20` **hinter** der
@@ -99,7 +105,8 @@ Mockups in `konzept-s9/mockups/`.
 > Klickprobe (0 Pfeile) gilt weiter. **Frage 5** — die Überschrift im Kopf
 > des Kartendialogs: **lassen**. Von den elf Fragen der Umsetzung (AP1 bis
 > AP4) sind seit dem 08.09.2026 **zehn** entschieden; offen ist allein
-> **Frage 2 aus AP1** — reine Buchführung, kein Mockup, kein Code.
+> **Frage 2 aus AP1** — am 08.09.2026 mit „so lassen" entschieden. Damit ist
+> **keine Frage der Umsetzung mehr offen.**
 
 ---
 
@@ -921,7 +928,7 @@ eingespielt — Typ, Kurzname und „ohne Standort" überleben den Rückweg
 
 ### AP4a — Nachträge aus den Freigaben vom 08.09.2026 (E-S9-09; Nr. 69)
 
-*Vorschlag der Umsetzung, noch nicht bestätigt.* Zwei Entscheidungen des
+*Vom Auftraggeber bestätigt am 08.09.2026 („ap4a erst"); **erledigt** mit Web 16.1.0.* Zwei Entscheidungen des
 08.09.2026 gehören sachlich zu AP4, das aber abgeschlossen und mit
 Web 16.0.0 ausgeliefert ist. Sie zusammen nachzuziehen kostet **eine**
 Versionsstufe statt zweier und hält AP5 frei von Fremdstoff:
@@ -937,8 +944,18 @@ Versionsstufe statt zweier und hält AP5 frei von Fremdstoff:
   „Rettungsmittel". `dt_merge_pruefen()` bleibt, wie es ist — verschiedene
   Typen bleiben zusammenführbar.
 
+*Gebaut wurde beides, mit zwei Abweichungen, die die Gegenprobe erzwungen
+hat (Prüfdokument, Abschnitt 2):* Der Kurzname bleibt an einem Diensttag,
+der sich sein Datum mit einem zweiten teilt, im Band **aus** — dort trägt
+die Zeile Datum und Uhrzeit, und ihm blieben gemessen 3 px von 55. Und die
+Zeile „Typ" nennt **beide** Typen („Standard oder Bergwacht"), solange zwei
+Rettungsmittel zur Wahl stehen: Die Seite lädt beim Klick auf ein Radio
+nicht neu, eine einzelne Plakette wäre also genau dann falsch, wenn jemand
+das andere wählt.
+
 **Abnahme:** Bilderlauf der Leiste bei 1024, 1199 und 390 px — Kurzname
-sichtbar, **0 Ellipsen** bei „BW Hoch", 0 Überlauf; Stilvergleich für die
+sichtbar, Zahl der Auslassungszeichen je Datumsbreite benannt, 0 Überlauf;
+Stilvergleich für die
 zwei neuen Regeln (nur die beabsichtigten Abweichungen); Zusammenführen
 zweier Tage verschiedenen Typs im Browser, Typ in Vorschau und Wahlzeile
 sichtbar, Ergebnis wie gewählt (Klickprobe).
@@ -1145,6 +1162,43 @@ adversarischen Gegenprobe, nicht beim Schreiben; alle behoben:
 - F-S9-U-07 — **Die Suche fand den Kurznamen nicht.** Die Leiste zeigt
   „BW Hoch", also tippt jemand „BW Hoch" — und fand nichts. Behoben:
   `vehicle_kurz` geht in den Heuhaufen, nicht in die Anzeige.
+- F-S9-U-09 — **„Unter 1200 px entfällt der Name ganz" stand an drei Stellen
+  falsch** (`style.css`, `ui.php`, `docs/Handbuch.md`). Die Regel liegt im
+  Block `@media (min-width:1024px)`, die Grundregel setzt gar kein
+  `display` — unter 1024 px, in der Schublade, stand der Name immer. Es sind
+  drei Zustände, nicht zwei. Der Satz war die Grundlage von Frage 4 und des
+  Mockups M-S9-08; beide beschrieben den Ist-Stand deshalb falsch. Gemessen
+  an der laufenden Anwendung vor der Änderung: 390/800/1023 px **15 von 15**
+  Nebentexten sichtbar, 1024/1100/1199 px **0 von 15**, 1200/1280 px 15 von
+  15 (dort mit Ellipse). Berichtigt in allen drei Texten.
+- F-S9-U-10 — **Der Kurzname verschwand am mehrfachen Tag.** Teilen sich
+  zwei Diensttage ein Datum, zeigt die Leiste Datum UND Uhrzeit (128 statt
+  76 px), und `.eintrag-text` schrumpft nicht. Gemessen im Band: **3 px** für
+  einen Kurznamen, der 55 braucht — eine Ellipse ohne Buchstaben. Behoben:
+  Die Klasse `kurz` bleibt dort aus; der Weg der Klickprobe zählt seither
+  „Kurznamen an einem mehrfachen Tag" mit und verlangt 0.
+- F-S9-U-11 — **Die Zeile „Typ" behauptete einen Wert, den die Wahl ändert.**
+  `$wahl` entsteht nur aus dem POST, Schritt 2 wird per GET gerendert — die
+  Plakette zeigte also immer den Typ des Zieltags, während die Kleinzeile
+  „Folgt dem gewählten Rettungsmittel" versprach. Wer das andere wählte,
+  bekam einen anderen Typ als angekündigt. Behoben: Solange zwei
+  Rettungsmittel zur Wahl stehen, nennt die Zeile beide.
+- F-S9-U-13 — **Die Abnahmezahl des Kurznamens war an einem einzigen Datum
+  genommen.** „57 px frei, „BW Hoch" braucht 55" stimmte für „27.12.2026" und
+  für sonst wenig: `.eintrag-text` schrumpft nicht, und seine Breite schwankt,
+  weil Bricolage Grotesque Ziffern **proportional** setzt (`tabular-nums`
+  nennt `.zahl,td,th,time,output`, nicht diesen `<span>`). Nachgemessen an
+  allen dreizehn Datumsangaben des Prüfbestands: Datum **76 bis 83 px**, frei
+  **48 bis 55 px** — **4** tragen den Kurznamen ganz, **9** mit
+  Auslassungszeichen. Die Regel bleibt, wie sie freigegeben ist; die Zahl ist
+  in allen Dokumenten berichtigt, und der Klickprobe-Weg meldet die
+  gemessene freie Breite mit, statt sie an einem Zufallsdatum grün zu
+  bekommen. **Ob „BW Ho…" genügt oder das Datum im Band kürzer werden soll,
+  liegt beim Auftraggeber** (Prüfliste Punkt 26).
+- F-S9-U-12 — **Zwei Zahlen in `Design.md` waren seit AP4 veraltet**
+  (`bergwacht.svg` 28 statt 29, `veranstaltung.svg` 8 statt 9). Die Tabelle
+  war vor den letzten Codeänderungen von AP4 erzeugt und danach nicht mehr.
+  Nachgezählt: Keine der in AP4a geänderten Dateien bewegt die Zahlen.
 - F-S9-U-08 — **Zwei Exportspalten standen an der falschen Stelle**, mitten
   in `diensttage.csv`. `export.js` sagt es selbst: Wer Auswertungen auf diese
   Datei gebaut hat, zählt Spalten von links. Ans Ende verschoben. Und die
@@ -1177,8 +1231,9 @@ Berichtigung:
   **volle** Namen und wird um den Kurznamen ergänzt.
 
 Beide Entscheidungen fielen nach den Mockups M-S9-08 bis M-S9-10 (Abschnitt 6,
-Fable-Schritte). Damit ist von den elf Fragen der Umsetzung allein Frage 2 aus
-AP1 offen.
+Fable-Schritte). Mit Frage 2 aus AP1 (entschieden am 08.09.2026: die
+Streichliste bleibt, wie AP1 sie gebaut hat) sind damit **alle elf Fragen der
+Umsetzung entschieden.**
 
 
 ---

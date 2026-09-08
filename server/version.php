@@ -3024,10 +3024,13 @@ declare(strict_types=1);
  * ist wieder NULL-faehig — diesmal dauerhaft und mit Absicht.
  *
  * DER KURZNAME (Backlog Nr. 69) ist die kleinere Haelfte und die
- * sichtbarere: bis 16 Zeichen, freiwillig. Leiste, Kacheln und Plaketten
- * zeigen ihn STATT der Bezeichnung, wo der Platz knapp ist; Formulare,
- * Export und Sicherung zeigen weiter den vollen Namen — und fuehren den
- * Kurznamen DANEBEN, damit er den Rueckweg uebersteht.
+ * sichtbarere: bis 16 Zeichen, freiwillig. Die DIENSTTAGE-LEISTE zeigt ihn
+ * STATT der Bezeichnung, wo der Platz knapp ist; Formulare, Export und
+ * Sicherung zeigen weiter den vollen Namen — und fuehren den Kurznamen
+ * DANEBEN, damit er den Rueckweg uebersteht. Der Konzepttext nannte
+ * daneben Kacheln und Plaketten; gebaut wurde das nie, weil beide gar kein
+ * Rettungsmittel nennen und es dort nichts zu ersetzen gab (entschieden am
+ * 08.09.2026, siehe 16.1.0).
  *
  * WAS DABEI BEINAHE STILL KAPUTTGEGANGEN WAERE, und deshalb steht es hier:
  * `nb_moeglich()` (nachbearbeitung_lib.php) entschied ALLEIN an der
@@ -3052,5 +3055,55 @@ declare(strict_types=1);
  * „building-stadium". Gemessen: „ticket" haelt seine Binnenflaeche von 96 px
  * bis 16 px unveraendert, „building-stadium" verliert bei 18 px zwei seiner
  * vier auf einen einzelnen Pixel. Der Vorrat bleibt bei 52 Dateien.
+ *
+ * 16.1.0 RAEUMT ZWEI FREIGABEN NACH (S9/AP4a, 08.09.2026).
+ *
+ * Zwei Fragen waren nach AP4 offen geblieben, weil ihre Antwort eine
+ * Gestaltungsentscheidung ist; die Mockups M-S9-08 und M-S9-09 haben sie
+ * gestellt, der Auftraggeber hat sie beantwortet. Nichts davon ruehrt an
+ * Datenmodell oder Format: keine Migration, keine Spalte, kein Schluessel.
+ *
+ * DER KURZNAME IM SCHMALEN BAND. Die Begruendung des Kurznamens war „die
+ * schmalste Stelle der Anwendung" — und genau dort stand er nicht: Zwischen
+ * 1024 und 1199 px ist die Leiste 220 px breit, und `.eintrag-neben` war
+ * dort ausgeblendet. Jetzt bleibt er sichtbar, wenn einer gesetzt ist; der
+ * volle Name bleibt fort. Das Akkordeon rueckt in diesem Band je Ebene 8
+ * statt 12 px ein — die Einrueckung wirkt zweimal (Jahr und Monat), macht
+ * also 8 px mehr Platz fuer den Eintrag.
+ *
+ * WIE VIEL VOM KURZNAMEN ANKOMMT, HAENGT AM DATUM DANEBEN, und das ist beim
+ * Bauen zuerst uebersehen worden. `.eintrag-text` schrumpft nicht, und seine
+ * Breite schwankt: Bricolage Grotesque setzt Ziffern PROPORTIONAL, und die
+ * Regel `tabular-nums` nennt diesen `<span>` nicht. Gemessen an den dreizehn
+ * Datumsangaben des Pruefbestands: Datum 76 bis 83 px, fuer den Nebentext
+ * bleiben 48 bis 55 px. „BW Hoch" braucht 55 — VIER Datumsangaben tragen ihn
+ * ganz, NEUN mit Auslassungszeichen. Ohne die Einrueckung waere es keine
+ * einzige (40 bis 47 px). Die erste Messung stand auf 57 px und war an einer
+ * einzigen, zufaellig schmalen Datumsangabe genommen; gefunden hat es die
+ * adversarische Gegenprobe. „BW Ho..." sagt mehr als der leere Platz von
+ * vorher, und der Tooltip nennt weiterhin alles — ob das genuegt oder das
+ * Datum im schmalen Band kuerzer werden soll, entscheidet der Auftraggeber.
+ *
+ * DABEI KAM HERAUS, DASS DIE ALTE BEGRUENDUNG AN DREI STELLEN FALSCH STAND:
+ * „Unter 1200 px entfaellt der Name ganz" (style.css, ui.php, Handbuch).
+ * Die Regel steht im Block `@media (min-width:1024px)`, die Grundregel
+ * setzt gar kein `display` — unter 1024 px, also in der Schublade, stand der
+ * Name immer, und er steht dort weiter. Es sind DREI Zustaende, nicht zwei;
+ * die Saetze sind berichtigt.
+ *
+ * DER TYP BEIM ZUSAMMENFUEHREN. Zwei Diensttage verschiedenen Typs lassen
+ * sich zusammenfuehren — das bleibt so, `dt_merge_pruefen()` ist
+ * unveraendert und prueft weiter allein die Betriebsart. Aber die Vorschau
+ * verschwieg, was danach gilt: Der Typ folgt dem gewinnenden Rettungsmittel,
+ * und wer das andere waehlt, aendert ihn. Jetzt nennt „Der Diensttag danach"
+ * ihn in einer eigenen Zeile, und die beiden Wahlzeilen tragen Typ und
+ * Kurznamen im Zusatz.
+ *
+ * DIE GEWINNERREGEL STEHT DESHALB JETZT AN EINER STELLE STATT AN ZWEIEN.
+ * Sie lag in `dt_zusammenfuehren()`, also innerhalb der Transaktion; die
+ * Vorschau haette sie nachbauen muessen. `dt_merge_rm_gewinner()` ist die
+ * eine Fassung, die beide befragen — genau die Falle, vor der der Kommentar
+ * ueber dem UPDATE warnt: Der Zieltag truege sonst den NAMEN des einen und
+ * den TYP des anderen Rettungsmittels.
  */
-const WEB_VERSION = '16.0.0';
+const WEB_VERSION = '16.1.0';

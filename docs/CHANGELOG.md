@@ -14,6 +14,78 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 16.1.0] — 2026-09-08
+
+### Web — der Kurzname steht endlich dort, wofür er gedacht war; der Vergleichsdialog nennt den Typ (S9/AP4a)
+
+**Zwei Freigaben aus AP4, nachgeräumt.** Beide Fragen waren stehengeblieben,
+weil ihre Antwort eine Gestaltungsentscheidung ist; die Mockups M-S9-08 und
+M-S9-09 haben sie gestellt, der Auftraggeber hat sie am 08.09.2026
+beantwortet. Weder Datenmodell noch Dateiformat rühren sich: **keine
+Migration**, keine Spalte, kein neuer Antwortschlüssel — `update.php` muss
+nach dem Einspielen **nicht** aufgerufen werden.
+
+**Der Kurzname war an der schmalsten Stelle unsichtbar.** Seine Begründung
+lautet „die Diensttage-Leiste ist die engste Stelle der Anwendung" — und
+zwischen 1024 und 1199 px, wo die Leiste 220 px breit ist, war der Nebentext
+ausgeblendet. Jetzt bleibt er dort stehen, **wenn ein Kurzname gesetzt ist**;
+ein voller Name entfällt weiter, von ihm bliebe ohnehin nur eine Ellipse.
+Das Akkordeon rückt dort je Ebene **8 statt 12 px** ein — die Einrückung wirkt
+zweimal, für Jahr und Monat, macht also 8 px mehr für den Eintrag.
+
+**Wie viel vom Kurznamen ankommt, hängt am Datum daneben** — und das ist beim
+Bauen zuerst übersehen worden. Der Datumstext schrumpft nicht, und seine
+Breite schwankt: Bricolage Grotesque setzt Ziffern **proportional**, und die
+Regel `tabular-nums` nennt diesen Text nicht. Gemessen an den dreizehn
+Datumsangaben des Prüfbestands: Datum **76 bis 83 px**, für den Nebentext
+bleiben **48 bis 55 px**. „BW Hoch" braucht **55** — **vier** Datumsangaben
+tragen ihn ganz, **neun** mit Auslassungszeichen. Ohne die Einrückung wäre es
+keine einzige (40 bis 47 px). Die erste Messung stand auf 57 px und war an
+einer einzigen, zufällig schmalen Datumsangabe genommen; gefunden hat es die
+adversarische Gegenprobe. „BW Ho…" sagt mehr als der leere Platz von vorher,
+und der Tooltip nennt weiterhin die volle Bezeichnung — ob das genügt oder
+das Datum im schmalen Band kürzer werden soll, ist eine Gestaltungsfrage und
+liegt beim Auftraggeber.
+
+**Dabei kam heraus, dass die alte Begründung an drei Stellen falsch stand.**
+`style.css`, `ui.php` und das Handbuch sagten übereinstimmend „unter 1200 px
+entfällt der Name ganz". Das stimmte nie: Die Regel steht im Block
+`@media (min-width:1024px)`, die Grundregel setzt gar kein `display` — unter
+1024 px, also in der Schublade, stand der Name immer und steht dort weiter.
+Es sind **drei Zustände, nicht zwei**. Die Sätze sind berichtigt, und die
+Regel bleibt für volle Namen, wie sie war.
+
+**Kacheln und Plaketten bekommen den Kurznamen nicht.** Der Konzepttext nannte
+sie mit; gebaut wurde das nie, weil beide überhaupt kein Rettungsmittel nennen
+und es dort nichts zu ersetzen gäbe. Beide gezeigten Varianten kosteten mehr,
+als sie einbringen — die Einsatzkachel wüchse von 92 auf 124 px, oder es
+entstünde eine neue Darstellung für eine Auskunft, die auf der Tagesübersicht
+ohnehin in der Titelzeile steht. Ausgetragen statt liegengelassen.
+
+**Der Vergleichsdialog verschwieg, was er ändert.** Zwei Diensttage
+verschiedenen Typs lassen sich zusammenführen — das bleibt so, geprüft wird
+weiter allein die Betriebsart. Aber der Typ des Ergebnisses folgt dem
+gewinnenden Rettungsmittel, und wer im Widerspruch das andere wählt, ändert
+ihn, ohne dass es dastand. „Der Diensttag danach" nennt ihn jetzt in einer
+eigenen Zeile mit der Kleinzeile „Folgt dem gewählten Rettungsmittel", und die
+beiden Wahlzeilen tragen Typ und Kurznamen im Zusatz („Bergwacht · BW Hoch ·
+28.03.2026 20:00, wird aufgenommen").
+
+**Die Gewinnerregel steht deshalb jetzt an einer Stelle statt an zweien.** Sie
+lag in `dt_zusammenfuehren()`, also innerhalb der Transaktion; eine Vorschau,
+die sie nachbaut, hätte zwei Fassungen derselben Regel geschaffen — genau die
+Falle, vor der der Kommentar über dem `UPDATE` warnt: Der Zieltag trüge sonst
+den Namen des einen und den Typ des anderen Rettungsmittels.
+`dt_merge_rm_gewinner()` ist die eine Fassung, die Vorschau und Schreibweg
+befragen.
+
+**Was bewusst stehenbleibt:** `dt_merge_pruefen()` ist unverändert —
+verschiedene Typen bleiben zusammenführbar. Die Wahlzeilen nennen weiterhin
+den Diensttag; das Mockup ersetzt ihn durch den Typ, aber er sagt, woher die
+Angabe kommt, und die beiden anderen Widersprüche nennen ihn auch. Und der
+Kurzname steht im Zusatz **neben** der Bezeichnung, nie statt ihrer — die
+Bezeichnung ist der Text der Wahlzeile.
+
 ## [Web 16.0.0] — 2026-09-07
 
 ### Web — ein Rettungsmittel ist nicht mehr zwangsläufig ein Standard-Rettungsmittel (S9/AP4)
