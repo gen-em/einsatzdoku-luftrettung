@@ -95,6 +95,14 @@ Einsatz, der über das Dienstende läuft. Wer regulär arbeitet, sieht die
 Erinnerung nie. Was sie verhindern soll, ist nicht der lange Dienst, sondern
 der vergessene.
 
+**Der Emulatorlauf hat dabei einen Fehler gefunden, den kein anderes
+Prüfmittel sah.** Dort stand zuerst „Aufzeichnung läuft seit **Tue** 08.09.,
+20:53": Das Abbild ist englisch gestellt, und die Standardsprache des Systems
+schlug mitten in einen deutschen Satz durch. Die App hat nur deutsche Texte;
+die Sprache des Datums ist seither fest deutsch, mit einem Prüffall, der die
+Systemsprache auf Englisch setzt. Der Bilderlauf hätte das nie gezeigt — er
+rechnet mit derselben Sprache wie die JVM.
+
 Was sie **nicht** kann: das schon Hochgeladene wieder loswerden. Heute geht
 nur alles oder nichts — der Diensttag wandert in den Papierkorb und nimmt
 seine Ruhezeiten mit, samt dem Freitagsdienst, den man behalten will. Das

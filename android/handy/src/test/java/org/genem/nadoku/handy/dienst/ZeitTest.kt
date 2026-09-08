@@ -70,6 +70,30 @@ class ZeitTest {
     }
 
     /**
+     * Der Wochentag ist deutsch, auch auf einem englisch gestellten Geraet.
+     *
+     * Im Emulatorlauf zu 0.15.0 stand dort "Tue 08.09." -- Locale.getDefault()
+     * folgte dem Geraet mitten in einen deutschen Satz hinein. Die App hat
+     * nur deutsche Texte.
+     */
+    @Test fun derWochentagIstDeutschUnabhaengigVomGeraet() {
+        val vorher = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.ENGLISH)
+            assertEquals(
+                "Fr. 04.09., 07:00",
+                Zeit.seit(
+                    Instant.parse("2026-09-04T05:00:00Z"),
+                    Instant.parse("2026-09-07T05:12:00Z"),
+                    ZoneId.of("Europe/Berlin"),
+                ),
+            )
+        } finally {
+            Locale.setDefault(vorher)
+        }
+    }
+
+    /**
      * Entschieden wird nach dem ORTSDATUM, nicht nach UTC.
      *
      * Ein Nachtdienst, der um 00:30 Ortszeit beginnt, laeuft um 01:00 noch

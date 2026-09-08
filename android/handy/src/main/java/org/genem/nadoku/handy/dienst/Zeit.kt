@@ -72,13 +72,19 @@ object Zeit {
      * Der Wochentag steht vor dem Datum, weil er die Frage beantwortet, die
      * sich hier wirklich stellt — „war das vor dem Wochenende?" —, und weil
      * er vier Zeichen kostet. Er trägt seinen eigenen Punkt („Fr."), deshalb
-     * folgt dahinter kein Komma; das Komma steht erst vor der Uhrzeit. Die
-     * Sprache kommt von der Anzeige des Geräts; der Prüffall setzt sie fest,
-     * damit er nicht davon abhängt.
+     * folgt dahinter kein Komma; das Komma steht erst vor der Uhrzeit.
+     *
+     * DIE SPRACHE IST FEST DEUTSCH, nicht die des Geräts. Im Emulatorlauf zu
+     * 0.15.0 stand dort „Aufzeichnung läuft seit **Tue** 08.09., 20:53" — das
+     * Gerät war auf Englisch gestellt, und `Locale.getDefault()` folgte ihm
+     * mitten in einen deutschen Satz hinein. Die App hat nur deutsche Texte
+     * (kein `values-en`); ein englischer Wochentag darin ist kein
+     * Entgegenkommen, sondern ein Bruch. Der Parameter bleibt, damit ein
+     * Prüffall die Sprache setzen kann.
      */
     fun seit(beginn: Instant, jetzt: Instant,
              zone: ZoneId = ZoneId.systemDefault(),
-             sprache: Locale = Locale.getDefault()): String {
+             sprache: Locale = Locale.GERMAN): String {
         val b = beginn.atZone(zone)
         if (b.toLocalDate() == jetzt.atZone(zone).toLocalDate()) { return hhmm(beginn, zone) }
         return DateTimeFormatter.ofPattern("EE dd.MM., HH:mm", sprache).withZone(zone).format(beginn)

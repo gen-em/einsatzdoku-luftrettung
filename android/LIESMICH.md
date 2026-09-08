@@ -192,16 +192,41 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **14** | **0** |
-| Prüffälle je Bauart | **263**, davon 15 übersprungen | **71**, davon 0 übersprungen |
-| APK (unsigniert, Release) | **7 868 394 B** | **19 574 402 B** |
+| Prüffälle je Bauart | **264**, davon 15 übersprungen | **71**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **7 868 398 B** | **19 574 402 B** |
 
-**263 statt 261:** zwei Fälle in `ZeitTest` — der Dienstbeginn trägt das Datum
-nur, wenn er nicht von heute ist, und für den Tageswechsel zählt die Ortszeit,
-nicht UTC. **14 statt 13 Warnungen:** eine weitere `PluralsCandidate`, für
+**Sechster Emulatorlauf am 08.09.2026 (0.15.0, Datum und Erinnerung):** fünf
+Bilder unter `android/emulator-bilder/0150-*.png` — Kopplungsseite, Kopplung
+gegen den lokalen Server, laufender Dienst am selben Tag („seit 20:53", ohne
+Datum), derselbe Dienst nach einem Tageswechsel („seit **Di. 08.09.**,
+20:53") und die Erinnerung nach 27 Stunden samt Knopf „Dienst beenden". Der
+Tageswechsel wurde mit `adb shell date` gestellt, nicht abgewartet.
+
+**Und er hat einen Fehler gefunden, den kein anderes Prüfmittel sah:** Dort
+stand zuerst „Aufzeichnung läuft seit **Tue** 08.09., 20:53". Das Abbild ist
+englisch gestellt, und `Locale.getDefault()` folgte ihm mitten in einen
+deutschen Satz. Die App hat nur deutsche Texte; die Sprache des Datums ist
+seither fest `Locale.GERMAN`, mit einem Prüffall, der die Systemsprache auf
+Englisch setzt. Genau dafür läuft der Emulator: Der Bilderlauf zeichnet das
+gerechnete Bild und hätte dieselbe Locale wie die JVM benutzt.
+
+**Zwei Stolpersteine dieses Laufs**, beide schon bekannt und beide wieder
+aufgetreten: Nach `emulator.sh legen` ist der Vordergrunddienst **weg** — die
+Anzeige sagt weiter „Dienst läuft", aber `dumpsys activity services` findet
+ihn nicht mehr; wer die Dauermeldung prüfen will, beendet den Dienst und
+beginnt ihn neu. Und die Kopplung braucht **beides**: das APK mit
+`-Pnadoku.serverBasis=http://127.0.0.1:8080/` **und** einen laufenden
+MariaDB — ohne ihn antwortet `pair.php` mit „Der Server hat einen Fehler
+gemeldet", was auf dem Gerät wie ein Netzproblem aussieht.
+
+**264 statt 261:** drei Fälle in `ZeitTest` — der Dienstbeginn trägt das Datum
+nur, wenn er nicht von heute ist, für den Tageswechsel zählt die Ortszeit statt
+UTC, und der Wochentag bleibt deutsch, auch auf einem englisch gestellten
+Gerät. **14 statt 13 Warnungen:** eine weitere `PluralsCandidate`, für
 „%1$d Stunden" im Titel der neuen Erinnerung. Sie steht in derselben Reihe wie
 die zwei vorhandenen („Minuten", „Sekunden") und wird wie diese nicht
 stummgeschaltet; die Erinnerung kommt frühestens nach 26 Stunden, der Plural
-ist dort immer richtig. Das Handy-APK ist um 964 B gewachsen (zwei Texte, eine
+ist dort immer richtig. Das Handy-APK ist um 968 B gewachsen (zwei Texte, eine
 Meldung, das Datumsformat), das der Uhr unverändert.
 
 **Stand Android 0.14.1 („GPS-Daten" statt „Spur", E-S9-03), `./gradlew
