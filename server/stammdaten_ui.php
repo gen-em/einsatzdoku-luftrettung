@@ -44,6 +44,21 @@ declare(strict_types=1);
  *     def_action (optional — nur wo es eine Vorbelegung gibt),
  *     bearbeiten_href, plaketten (zusätzliches Markup)
  */
+/**
+ * Die Adresse der Seite EINES Standorts (S9/AP5, PS-12).
+ *
+ * Sie steht an einer Stelle, weil sie an einem Dutzend gebraucht wird: in
+ * jedem Bearbeiten-Verweis, in jeder Formularadresse und in jeder Zeile der
+ * Standortliste. Vorher stand dort `einstellungen.php?t=rettungsmittel`,
+ * zwoelfmal ausgeschrieben — und der Reiter gibt es nicht mehr.
+ *
+ * Die VERWALTUNG hat ihre eigene Seite; sie reicht `$basis` mit.
+ */
+function sd_seite(int $baseId, string $basis = 'einstellungen.php'): string
+{
+    return $basis . '?t=standort&s=' . $baseId;
+}
+
 function sd_zeile(array $o): void
 {
     $id   = (int)$o['id'];

@@ -3137,5 +3137,35 @@ declare(strict_types=1);
  * Fensterbreite; und nach einem Sprung aus der Suche ist die Jahreszeile
  * weggerollt, dann fehlt das Jahr ganz. Das Datum behaelt es in jeder
  * Breite.
+ *
+ * 16.2.0 MACHT AUS ZWEI REITERN EINE LISTE UND VIELE SEITEN (S9/AP5-1, PS-12).
+ *
+ * Seit Web 7.0.0 standen „Standorte" und „Rettungsmittel" nebeneinander im
+ * Menue, geschnitten nach Taetigkeit. Der Schnitt hat sich nicht bewaehrt:
+ * Beide Reiter luden DENSELBEN Bestand, und wer einen Standort einrichtete,
+ * ging zwischen ihnen hin und her — anlegen dort, ausstatten hier. Jetzt
+ * fuehrt „Standorte" auf die Liste, und die Liste auf je EINE Seite
+ * (`t=standort&s=<id>`), die alles traegt, was an diesem Standort haengt.
+ *
+ * DIE ZEILE IST DER VERWEIS, nicht mehr der Name darin. Damit fallen die
+ * Zeilenaktionen weg — ein Knopf in einem Link ist kein gueltiges Markup —,
+ * und „Loeschen" und „Als Vorbelegung" stehen im Aktionsmenue der
+ * Standortseite. Das ist zugleich der bessere Ort: Wer einen Standort
+ * loescht, hat vorher gesehen, was daran haengt. Die Kleinzeile nennt statt
+ * der Lage die DREI ZAHLEN (Rettungsmittel, Besatzung, Zielkliniken); die
+ * Lage steht auf der Seite selbst.
+ *
+ * ZWEI WEICHEN STATT ZWEIER TOTER LINKS. `t=rettungsmittel` fuehrt auf die
+ * Liste, wie `t=stammdaten` es seit Web 7.0.0 tut — der Name steht in
+ * Lesezeichen und in aelterer Dokumentation. Und `t=standort` ohne gueltige
+ * Kennung fuehrt ebenfalls dorthin: geprueft mit `dt_base_erlaubt()` GANZ
+ * OBEN, vor der ersten Zeile Ausgabe. Weiter unten haette `header()` still
+ * versagt und die Seite stuende halb da; genau das ist beim Bauen passiert.
+ *
+ * NEBENNUMMER, NOCH KEINE HAUPTNUMMER: Der Weg durch die Anwendung aendert
+ * sich spuerbar, aber AP5 ist erst zum Teil gebaut — die Standortseite traegt
+ * bis auf Weiteres die alten Bloecke des Reiters „Rettungsmittel". Wenn sie
+ * ihre Gestalt aus M-S9-06 hat und die Verwaltung nachgezogen ist, steigt die
+ * Hauptnummer.
  */
-const WEB_VERSION = '16.1.1';
+const WEB_VERSION = '16.2.0';

@@ -1072,6 +1072,16 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   padding:var(--abstand-3) 0;
   border-bottom:var(--strich) solid var(--linie);
 }
+/* DIE ZEILE ALS VERWEIS (S9/AP5, M-S9-06). Sie sieht aus wie jede andere
+ * Zeile — der Unterschied ist der Winkel rechts und die Flaeche, die sich
+ * anfassen laesst. Keine Unterstreichung: Die ganze Zeile ist der Link, und
+ * ein unterstrichener Name daerinnen sagte, nur er sei es. */
+a.zeile{text-decoration:none;color:inherit}
+a.zeile:hover{background:var(--rauch);text-decoration:none}
+a.zeile:hover .zeile-haupt{color:var(--blau-tief)}
+a.zeile:focus-visible{outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark);border-radius:var(--radius-klein)}
+.zeile-weiter{color:var(--sand);flex:0 0 auto}
+a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .zeile:last-child{border-bottom:0;padding-bottom:0}
 .zeile:first-child{padding-top:0}
 .zeile-text{flex:1 1 auto;min-width:0}

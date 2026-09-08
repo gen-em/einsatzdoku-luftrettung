@@ -817,8 +817,15 @@ function ui_einstellungen_punkte(): array
              * erste Schritt jeder neuen NutzerIn; Standorte und
              * Rettungsmittel werden einmal gepflegt. */
             ['geraete',        'einstellungen.php?t=geraete',        'Geräte',          'uhr'],
+            /* NUR NOCH EIN PUNKT FUER DIE STAMMDATEN (S9/AP5, PS-12).
+             * „Rettungsmittel" stand hier seit Web 7.0.0 daneben; der Schnitt
+             * nach Taetigkeit hat sich nicht bewaehrt, weil beide Reiter
+             * DENSELBEN Bestand luden und man zwischen ihnen hin und her
+             * ging, um einen Standort einzurichten. Jetzt fuehrt „Standorte"
+             * auf die Liste und die Liste auf je eine Standortseite, die
+             * alles traegt, was an diesem Standort haengt. Der alte Reiter
+             * bleibt als Weiche in `einstellungen.php` erreichbar. */
             ['standorte',      'einstellungen.php?t=standorte',      'Standorte',       'standort'],
-            ['rettungsmittel', 'einstellungen.php?t=rettungsmittel', 'Rettungsmittel',  'fahrzeug'],
             ['backup',         'einstellungen.php?t=backup',         'Backup',          'sicherung'],
             ['import',         'import.php',                         'Import / Export', 'tausch'],
         ],
@@ -1416,18 +1423,34 @@ function ui_karte_ende(bool $klappbar = false): void
  * sind die Aktionen Knöpfe zu 44 px, mobil ein einziges „⋯" je Zeile, das
  * dasselbe Aktionsblatt öffnet (E-P3-26).
  *
+ * DIE GANZE ZEILE ALS VERWEIS (`href_ganz`, S9/AP5, Mockup M-S9-06). Die
+ * Standortliste fuehrt auf je eine Seite; dort ist nicht der Name der Link,
+ * sondern die Zeile, und rechts steht ein Winkel statt eines Knopfes. Zwei
+ * Dinge folgen daraus:
+ *   - Der Behaelter ist dann ein `<a>`, kein `<div>`. Ein `<a>` DARF keine
+ *     Knoepfe oder Links enthalten; `aktionen` und `href` bleiben deshalb in
+ *     dieser Form leer, und wer sie doch mitgibt, bekommt sie nicht
+ *     gerendert — lieber eine fehlende Schaltflaeche als verschachteltes
+ *     Markup, das je nach Browser anders zerfaellt.
+ *   - Der Winkel steht in `zeile-aktionen`, also am selben Platz wie sonst
+ *     die Knoepfe. Er ist Zierde und traegt keinen eigenen Namen: Was die
+ *     Zeile tut, sagt ihr Text.
+ *
  * $o: vorn (Markup), text, klein, plaketten (Markup), aktionen (Markup),
- *     href, klasse
+ *     href, href_ganz, klasse, attr
  * ------------------------------------------------------------------------ */
 function ui_zeile(array $o): void
 {
+    $ganz = trim((string)($o['href_ganz'] ?? ''));
     $k = 'zeile' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
     /* `attr` wie bei ui_knopf() und ui_aktionen(): fertige Attribute, die der
      * Aufrufer anhaengt — etwa `data-…` und `tabindex` fuer eine Zeile, die
      * mit etwas anderem auf der Seite verknuepft ist (S2/AP4, tag_spuren.php).
      * Keine neue Darstellung, nur dieselbe Zusatzoption an einem dritten
      * Baustein. */
-    echo '<div class="' . $k . '"' . (string)($o['attr'] ?? '') . '>' . "\n";
+    echo ($ganz !== ''
+        ? '<a class="' . $k . '" href="' . ui_e($ganz) . '"'
+        : '<div class="' . $k . '"') . (string)($o['attr'] ?? '') . '>' . "\n";
     /* VORN steht, was VOR dem Text gehört (O9b): in der NutzerInnen-Liste das
      * Auswahlkästchen. Es gehört nicht zu den Aktionen rechts — es wählt die
      * Zeile aus, statt an ihr zu handeln, und in der Tabellenfassung derselben
@@ -1437,7 +1460,7 @@ function ui_zeile(array $o): void
     }
     echo '  <div class="zeile-text">' . "\n";
     $t = '<span class="zeile-haupt">' . ui_e((string)($o['text'] ?? '')) . '</span>';
-    echo '    ' . (!empty($o['href'])
+    echo '    ' . (!empty($o['href']) && $ganz === ''
         ? '<a href="' . ui_e((string)$o['href']) . '">' . $t . '</a>'
         : $t) . "\n";
     if (!empty($o['klein'])) {
@@ -1447,10 +1470,13 @@ function ui_zeile(array $o): void
     if (!empty($o['plaketten'])) {
         echo '  <div class="zeile-plaketten">' . (string)$o['plaketten'] . "</div>\n";
     }
-    if (!empty($o['aktionen'])) {
+    if ($ganz !== '') {
+        echo '  <div class="zeile-aktionen">'
+           . ui_symbol('winkel', 'symbol-rechts zeile-weiter') . "</div>\n";
+    } elseif (!empty($o['aktionen'])) {
         echo '  <div class="zeile-aktionen">' . (string)$o['aktionen'] . "</div>\n";
     }
-    echo "</div>\n";
+    echo ($ganz !== '' ? "</a>\n" : "</div>\n");
 }
 
 

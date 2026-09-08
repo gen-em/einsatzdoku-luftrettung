@@ -37,8 +37,32 @@ $tab = $_GET['t'] ?? 'profil';
  * Fassungen der Dokumentation. Ein „Seite nicht gefunden" dafür wäre der
  * schlechteste Umgang mit einer Umbenennung. */
 if ($tab === 'stammdaten') { $tab = 'standorte'; }
-if (!in_array($tab, ['profil', 'geraete', 'standorte', 'rettungsmittel', 'backup'], true)) {
+/* „rettungsmittel" ist seit S9/AP5 kein eigener Reiter mehr: Was an einem
+ * Standort haengt, steht auf SEINER Seite (`t=standort&s=<id>`). Der alte
+ * Name bleibt als Weiche stehen, aus demselben Grund wie „stammdaten" darueber
+ * — er steht in Lesezeichen und in aelteren Fassungen der Dokumentation. Wer
+ * ihn aufruft, landet auf der Liste und ist einen Klick von dem entfernt, was
+ * er suchte. */
+if ($tab === 'rettungsmittel') { $tab = 'standorte'; }
+if (!in_array($tab, ['profil', 'geraete', 'standorte', 'standort', 'backup'], true)) {
     $tab = 'profil';
+}
+/* Die Standortseite braucht einen Standort. Ohne `s` — oder mit einem, den
+ * diese NutzerIn nicht sieht — waere die Seite leer; dann ist die Liste der
+ * richtige Ort, und nicht eine Fehlermeldung ueber eine Kennung.
+ *
+ * GEPRUEFT WIRD HIER OBEN, NICHT IM MARKUP. Eine Umleitung braucht Kopfzeilen,
+ * und die sind fort, sobald das Geruest die erste Zeile geschrieben hat; ein
+ * `header()` weiter unten scheiterte still, und die Seite stuende halb da.
+ * `dt_base_erlaubt()` ist dieselbe Pruefung, die auch der Diensttag benutzt —
+ * eigener Standort oder ausgewaehlter zentraler. */
+$seiteBase = 0;
+if ($tab === 'standort') {
+    $seiteBase = (int)dt_base_erlaubt(db(), $userId, (int)($_GET['s'] ?? 0));
+    if ($seiteBase === 0) {
+        header('Location: einstellungen.php?t=standorte');
+        exit;
+    }
 }
 $notice = null; $error = null; $pwGewechselt = false; $newKey = null;
 
@@ -1128,7 +1152,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     });
     </script>
 
-  <?php elseif ($tab === 'standorte' || $tab === 'rettungsmittel'): ?>
+  <?php elseif ($tab === 'standorte' || $tab === 'standort'): ?>
     <?php
       /* ---- Standorte und ihre Stammdaten — ZWEI REITER (Web 7.0.0) --------
        *
@@ -1272,6 +1296,21 @@ ui_seite_start(['titel' => 'Einstellungen',
           }
           return $n;
       };
+      /* DIE DREI ZAHLEN EINER STANDORTZEILE (M-S9-06). Sie zaehlen, was
+       * jemand an diesem Standort sucht — Rettungsmittel, Besatzung,
+       * Zielkliniken —, und zwar EIGENE UND SYSTEMWEITE zusammen: Wer die
+       * Liste liest, will wissen, wie viel dort steht, nicht wem es gehoert.
+       * `$sdAnzahl()` daneben zaehlt etwas anderes und wird weiter gebraucht:
+       * nur die EIGENEN, ueber alle fuenf Arten, fuer die Loeschrueckfrage. */
+      $sdZahlen = function (int $bid) use ($sdVeh, $sdCrew, $sdTd): string {
+          $n = static fn(array $art): int => count($art[$bid] ?? []);
+          $eins = static fn(int $z, string $ein, string $viele): string
+              => $z . ' ' . ($z === 1 ? $ein : $viele);
+          return $eins($n($sdVeh), 'Rettungsmittel', 'Rettungsmittel') . ' · '
+               . $eins($n($sdCrew), 'Besatzung', 'Besatzung') . ' · '
+               . $eins($n($sdTd), 'Zielklinik', 'Zielkliniken');
+      };
+
       // Kennzeichen einer Zeile: eigen oder systemweit?
       $istZentral = static fn(array $z): bool => $z['user_id'] === null;
 
@@ -1318,10 +1357,9 @@ ui_seite_start(['titel' => 'Einstellungen',
              Was wegfällt, steht an der Handlung selbst: Die Rückfrage beim
              Löschen beziffert, was mitgeht. */ ?>
     <p class="seiten-erklaerung">Der Standort ist der Anker aller Diensttage: Er trägt
-       die Vorbelegung, den Abfahrtsort und die
-       <a href="einstellungen.php?t=rettungsmittel">Rettungsmittel</a>. Der Stern
-       markiert die Vorbelegung neuer Diensttage. Löschen entfernt nur den
-       Listeneintrag — dokumentierte Diensttage bleiben unverändert.</p>
+       die Vorbelegung, den Abfahrtsort, die Rettungsmittel, die Besatzung und
+       die Zielkliniken. Ein Klick auf einen Standort führt auf seine Seite;
+       der Stern markiert die Vorbelegung neuer Diensttage.</p>
 
     <?php ui_karte_start(['titel' => 'Eigene Standorte', 'zahl' => count($eigene), 'id' => 'standorte']); ?>
       <?php if (!$eigene): ?>
@@ -1330,25 +1368,14 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?php foreach ($eigene as $b):
             $bid = (int)$b['id'];
             $dup = stammdaten_dup_global('bases', 'name', $b['name']);
-            $anz = $sdAnzahl($bid);
             $istDef = $bid === $DEF_BASE_ID;
             /* Die POST-Formulare stehen EINMAL und versteckt; die Knöpfe der
                Zeile und die des Aktionsblatts zeigen beide über `form` darauf
                (ui_zeilenaktionen). */ ?>
-        <form method="post" id="f-bdef-<?= $bid ?>" class="nur-vorlesen"
-              action="einstellungen.php?t=standorte#standorte">
-          <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
-          <input type="hidden" name="id" value="<?= $bid ?>">
-        </form>
-        <form method="post" id="f-bdel-<?= $bid ?>" class="nur-vorlesen"
-              action="einstellungen.php?t=standorte#standorte"
-              data-confirm="Standort „<?= e($b['name']) ?>“ löschen? <?= $anz > 0
-                  ? ($anz === 1 ? 'Ein eigener Stammdatensatz' : $anz . ' eigene Stammdatensätze')
-                    . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht.'
-                  : 'Es hängen keine eigenen Stammdaten daran.' ?> Bereits dokumentierte Diensttage bleiben unverändert.">
-          <?= csrf_field() ?><input type="hidden" name="action" value="base_del">
-          <input type="hidden" name="id" value="<?= $bid ?>">
-        </form>
+        <?php /* DIE BEIDEN FORMULARE STEHEN JETZT AUF DER STANDORTSEITE
+                 (S9/AP5). Solange die Zeile Knoepfe trug, mussten sie hier
+                 liegen; jetzt ist die Zeile selbst der Verweis, und wer
+                 loeschen will, sieht den Standort vorher an. */ ?>
         <?php
         $klein = [];
         if ($b['lat'] !== null && $b['lon'] !== null) {
@@ -1357,20 +1384,21 @@ ui_seite_start(['titel' => 'Einstellungen',
             $klein[] = 'ohne Lage';
         }
         if ($dup) { $klein[] = 'identisch mit einem systemweiten Eintrag'; }
-        $eintraege = [];
-        if (!$istDef) {
-            $eintraege[] = ['text' => 'Als Vorbelegung', 'symbol' => 'stern',
-                            'art' => 'leise-orange', 'form' => 'f-bdef-' . $bid];
-        }
-        $eintraege[] = ['text' => 'Bearbeiten', 'symbol' => 'stift',
-                        'href' => 'einstellungen.php?t=standorte&eb=' . $bid . '#standorte'];
-        $eintraege[] = ['text' => 'Löschen', 'symbol' => 'korb',
-                        'art' => 'gefahr', 'form' => 'f-bdel-' . $bid];
+        /* DIE GANZE ZEILE FUEHRT AUF DIE SEITE DES STANDORTS (M-S9-06).
+           Damit fallen die Zeilenaktionen hier weg: Sie waeren Knoepfe IN
+           einem Link, und das ist kein gueltiges Markup. Loeschen und „Als
+           Vorbelegung" stehen im Aktionsmenue der Standortseite — dort, wo
+           man den Standort ohnehin ansieht, bevor man ihn loescht.
+           Die Kleinzeile nennt die drei Zahlen statt der Lage: Wer sucht,
+           sucht ein Rettungsmittel, keine Koordinate. Die Lage steht auf der
+           Seite selbst, im ersten Abschnitt. */
         ui_zeile([
+            'href_ganz' => sd_seite($bid),
+            'vorn'  => ui_symbol('standort'),
             'text'  => (string)$b['name'],
-            'klein' => implode(' · ', $klein),
+            'klein' => $sdZahlen($bid)
+                     . ($dup ? ' · identisch mit einem systemweiten Eintrag' : ''),
             'plaketten' => $istDef ? ui_symbol('stern', 'zeile-stern', 'Vorbelegung neuer Diensttage') : '',
-            'aktionen' => ui_zeilenaktionen(['titel' => (string)$b['name'], 'eintraege' => $eintraege]),
         ]);
       endforeach; ?>
 
@@ -1491,7 +1519,70 @@ ui_seite_start(['titel' => 'Einstellungen',
     <?php /* ---- Reiter „Rettungsmittel" ------------------------------------
              Alles, was an einem ausgewählten Standort hängt. Ein Block je
              Standort, darin je Datenart ein eigener. */ ?>
-    <?php ui_titelzeile(['titel' => 'Rettungsmittel']); ?>
+    <?php
+      /* DIE SEITE EINES STANDORTS (S9/AP5, PS-12). Bis Web 16.1.1 stand hier
+         der Reiter „Rettungsmittel" und zeigte ALLE Standorte untereinander,
+         jeder als zugeklappte Karte. Jetzt fuehrt die Liste auf je eine
+         Seite, und die zeigt genau einen — aufgeklappt, weil es nichts mehr
+         gibt, wovon man ihn unterscheiden muesste.
+         Wer eine Kennung aufruft, die er nicht sieht, landet auf der Liste:
+         Eine Fehlermeldung ueber eine Zahl hilft niemandem weiter. */
+      $seiteB = null;
+      foreach ($sdBases as $b) {
+          if ((int)$b['id'] === $seiteBase) { $seiteB = $b; break; }
+      }
+      /* Die Kennung ist oben schon geprueft; findet sie sich hier trotzdem
+         nicht, hat sich der Bestand zwischen den beiden Abfragen geaendert.
+         Dann ist die Liste der richtige Ort — und ui_abbruch() kann das noch,
+         wenn header() es nicht mehr kann. */
+      if ($seiteB === null) { ui_abbruch(404, 'Diesen Standort gibt es nicht (mehr).'); }
+      $sdBases = [$seiteB];
+    ?>
+    <?php
+      /* LOESCHEN UND „ALS VORBELEGUNG" STEHEN HIER, nicht mehr in der Liste
+         (S9/AP5): Die Zeile dort ist der Verweis auf diese Seite, und ein
+         Knopf in einem Link ist kein gueltiges Markup. Zugleich ist es der
+         bessere Ort — wer einen Standort loescht, hat vorher gesehen, was
+         daran haengt. Die Formulare stehen EINMAL und versteckt, das
+         Aktionsmenue zeigt ueber `form` darauf (ui_zeilenaktionen). */
+      /* `dt_bases()` liefert `zentral`, nicht `user_id` — ein zentraler
+         Standort wird von einer Administratorin gepflegt und traegt hier
+         die Plakette „systemweit" statt eines Aktionsmenues. */
+      $sBid     = (int)$seiteB['id'];
+      $sZentral = (bool)($seiteB['zentral'] ?? false);
+      $sAnz     = $sdAnzahl($sBid);
+      $sDef   = $sBid === $DEF_BASE_ID;
+      $sAkt   = [];
+      if (!$sDef) {
+          $sAkt[] = ['text' => 'Als Vorbelegung', 'symbol' => 'stern',
+                     'art' => 'leise-orange', 'form' => 'f-bdef-' . $sBid];
+      }
+      $sAkt[] = ['text' => 'Bearbeiten', 'symbol' => 'stift',
+                 'href' => 'einstellungen.php?t=standorte&eb=' . $sBid . '#standorte'];
+      $sAkt[] = ['text' => 'Löschen', 'symbol' => 'korb', 'art' => 'gefahr',
+                 'form' => 'f-bdel-' . $sBid];
+    ?>
+    <form method="post" id="f-bdef-<?= $sBid ?>" class="nur-vorlesen"
+          action="einstellungen.php?t=standorte#standorte">
+      <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
+      <input type="hidden" name="id" value="<?= $sBid ?>">
+    </form>
+    <form method="post" id="f-bdel-<?= $sBid ?>" class="nur-vorlesen"
+          action="einstellungen.php?t=standorte#standorte"
+          data-confirm="Standort „<?= e($seiteB['name']) ?>“ löschen? <?= $sAnz > 0
+              ? ($sAnz === 1 ? 'Ein eigener Stammdatensatz' : $sAnz . ' eigene Stammdatensätze')
+                . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht.'
+              : 'Es hängen keine eigenen Stammdaten daran.' ?> Bereits dokumentierte Diensttage bleiben unverändert.">
+      <?= csrf_field() ?><input type="hidden" name="action" value="base_del">
+      <input type="hidden" name="id" value="<?= $sBid ?>">
+    </form>
+    <?php ui_titelzeile([
+        'zurueck'  => ['href' => 'einstellungen.php?t=standorte', 'text' => 'Standorte'],
+        'titel'    => (string)$seiteB['name'],
+        'unter'    => e($sdZahlen($sBid)),
+        'aktionen' => $sZentral ? ui_plakette('systemweit')
+                    : ui_zeilenaktionen(['titel' => (string)$seiteB['name'], 'eintraege' => $sAkt]),
+    ]); ?>
     <?php /* DREI ZEILEN (E-P3-35). Der Bestand hatte hier zwei Absätze zu je
              sechs Zeilen; was wegfällt, steht an der Handlung selbst — die
              Löschrückfrage sagt, dass dokumentierte Diensttage bleiben, und
@@ -1566,7 +1657,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'def_action' => 'veh_default', 'del_action' => 'veh_del',
                     'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ löschen? '
                                  . 'Bereits dokumentierte Diensttage bleiben unverändert.',
-                    'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&ev=' . $vid
+                    'bearbeiten_href' => sd_seite($bid) . '&ev=' . $vid
                                        . '#' . $anker . '-veh',
                 ]);
           endforeach; ?>
@@ -1600,7 +1691,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                    die Eingabe jetzt ab und sagt, was fehlt. */ ?>
           <div class="listen-form">
             <h3 class="listen-form-titel"><?= $evHier ? 'Rettungsmittel bearbeiten' : 'Rettungsmittel hinzufügen' ?></h3>
-            <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-veh" class="ac-form">
+            <form method="post" action="<?= e(sd_seite($bid)) ?>#<?= e($anker) ?>-veh" class="ac-form">
               <?= csrf_field() ?><input type="hidden" name="action" value="veh_save">
               <input type="hidden" name="id" value="<?= $evHier ? (int)$evHier['id'] : 0 ?>">
               <input type="hidden" name="base_id" value="<?= $bid ?>">
@@ -1682,7 +1773,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 <?= ui_knopf(['text' => $evHier ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer']) ?>
                 <?php if ($evHier): ?>
                   <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
-                                'href' => 'einstellungen.php?t=rettungsmittel']) ?>
+                                'href' => 'einstellungen.php?t=standorte']) ?>
                 <?php endif; ?>
               </div>
             </form>
@@ -1714,7 +1805,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                           'base_id' => $bid, 'zentral' => $cz,
                           'del_action' => 'crew_del',
                           'del_frage' => 'Eintrag „' . $c['name'] . '“ löschen?',
-                          'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&ec=' . (int)$c['id']
+                          'bearbeiten_href' => sd_seite($bid) . '&ec=' . (int)$c['id']
                                              . '#' . $anker . '-crew',
                       ]);
                   endforeach;
@@ -1754,14 +1845,14 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'base_id' => $bid, 'zentral' => $tz,
                     'del_action' => 'td_del',
                     'del_frage' => 'Zielklinik „' . $t['name'] . '“ löschen?',
-                    'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&et=' . (int)$t['id']
+                    'bearbeiten_href' => sd_seite($bid) . '&et=' . (int)$t['id']
                                        . '#' . $anker . '-td',
                 ]);
           endforeach; ?>
           <?php $etHier = ($editTd && (int)$editTd['base_id'] === $bid) ? $editTd : null; ?>
           <div class="listen-form">
             <h3 class="listen-form-titel"><?= $etHier ? 'Zielklinik bearbeiten' : 'Zielklinik hinzufügen' ?></h3>
-            <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-td">
+            <form method="post" action="<?= e(sd_seite($bid)) ?>#<?= e($anker) ?>-td">
               <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
               <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
               <input type="hidden" name="base_id" value="<?= $bid ?>">
@@ -1788,7 +1879,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 <?= ui_knopf(['text' => $etHier ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer']) ?>
                 <?php if ($etHier): ?>
                   <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
-                                'href' => 'einstellungen.php?t=rettungsmittel']) ?>
+                                'href' => 'einstellungen.php?t=standorte']) ?>
                 <?php endif; ?>
               </div>
             </form>
@@ -1812,7 +1903,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'base_id' => $bid, 'zentral' => $rz,
                     'del_action' => 'res_del',
                     'del_frage' => 'Eintrag „' . $r['name'] . '“ löschen?',
-                    'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&er=' . (int)$r['id']
+                    'bearbeiten_href' => sd_seite($bid) . '&er=' . (int)$r['id']
                                        . '#' . $anker . '-res',
                 ]);
           endforeach; ?>
@@ -1846,7 +1937,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                       'base_id' => $bid, 'zentral' => $wz,
                       'del_action' => 'bw_del',
                       'del_frage' => 'Bereitschaft „' . $w['name'] . '“ löschen?',
-                      'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&ew=' . (int)$w['id']
+                      'bearbeiten_href' => sd_seite($bid) . '&ew=' . (int)$w['id']
                                          . '#' . $anker . '-bw',
                   ]);
             endforeach; ?>
@@ -1886,7 +1977,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'name' => (string)$v['name'], 'klein' => $klein,
                     'anker' => 'sd-ohne-veh', 'praefix' => 'veh', 'id' => $vid,
                     'base_id' => 0, 'zentral' => $istZentral($v),
-                    'seite' => 'einstellungen.php?t=rettungsmittel',
+                    'seite' => 'einstellungen.php?t=standorte',
                     'plaketten' => ui_artzeichen((string)$v['kind'], '', (string)$v['typ']),
                     /* DAS BEARBEITEN GEHOERT DAZU. `sd_zeile()` legt den Eintrag
                        nur an, wenn dieser Schluessel da ist (stammdaten_ui.php);
@@ -1896,7 +1987,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                        beheben. Das Formular oeffnet sich in der Karte des
                        ERSTEN Standorts (es steht dort), und der Haken „Ohne
                        Standort" ist darin gesetzt; die Form raeumt AP5 auf. */
-                    'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&ev=' . $vid
+                    'bearbeiten_href' => 'einstellungen.php?t=standorte&ev=' . $vid
                                        . '#sd-ohne-veh',
                     'del_action' => 'veh_del',
                     'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ löschen? '

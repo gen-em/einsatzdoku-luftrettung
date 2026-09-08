@@ -14,6 +14,37 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 16.2.0] — 2026-09-08
+
+### Web — aus zwei Reitern werden eine Liste und viele Seiten (S9/AP5, Teil 1)
+
+**„Rettungsmittel" verschwindet aus dem Menü.** Seit Web 7.0.0 stand der Punkt
+neben „Standorte", geschnitten nach Tätigkeit. Der Schnitt hat sich nicht
+bewährt: Beide Reiter luden denselben Bestand, und wer einen Standort
+einrichtete, ging zwischen ihnen hin und her — anlegen dort, ausstatten hier.
+Jetzt führt **„Standorte" auf die Liste**, und die Liste auf **je eine Seite**,
+die alles trägt, was an diesem Standort hängt.
+
+**Die Zeile ist der Verweis**, nicht mehr der Name darin. Damit fallen die
+Knöpfe in der Zeile weg — ein Knopf in einem Link ist kein gültiges Markup —,
+und „Löschen" und „Als Vorbelegung" stehen im Aktionsmenü der Standortseite.
+Das ist zugleich der bessere Ort: Wer einen Standort löscht, hat vorher
+gesehen, was daran hängt. Die Kleinzeile nennt statt der Lage die **drei
+Zahlen** (Rettungsmittel, Besatzung, Zielkliniken); die Lage steht auf der
+Seite selbst.
+
+**Zwei Weichen statt zweier toter Links.** Der alte Reiter `t=rettungsmittel`
+führt auf die Liste, wie `t=stammdaten` es seit Web 7.0.0 tut — der Name steht
+in Lesezeichen und in älterer Dokumentation. Und eine Standortseite mit
+unbekannter Kennung führt ebenfalls dorthin, geprüft **vor** der ersten Zeile
+Ausgabe: weiter unten hätte die Umleitung still versagt und die Seite stünde
+halb da.
+
+**Was noch nicht dran ist:** Die Standortseite trägt bis auf Weiteres die
+alten Blöcke des Reiters — Kennzahlen, Sprungliste, Filterfelder und die
+Dialoge kommen mit den nächsten Teilen von AP5, ebenso die Verwaltungsseite.
+Keine Migration, keine Spalte; `update.php` muss **nicht** laufen.
+
 ## [Web 16.1.1] — 2026-09-08
 
 ### Web — der Kurzname bekommt den Platz, den er braucht (S9, Mockup M-S9-11)
