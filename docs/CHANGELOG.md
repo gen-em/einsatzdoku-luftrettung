@@ -211,6 +211,139 @@ Bereich der Spalte und auf höchstens „jetzt" —, dann NOT NULL) und gilt ers
 als erledigt, wenn alle drei stehen. Ingestprobe 53 → 54 (Fall 7, vorgehende
 Uhr; am alten Stand rot), Wegwerf-Datenbank mit fünf Randwerten (1970-01-01 00:00:00 und 0001-01-01 werden 1970-01-01 00:00:01; 2050 und 9999 werden die Migrationszeit; ein nachgestellter Teillauf wird beim zweiten Lauf zu Ende geführt, und erst dann sagt `skip` „erledigt").
 
+**Die Wiederaufnahme der zweiten Gegenprüfung** — nach freiem Kontingent,
+alle zehn Angreifer — fand an den Nachbesserungen selbst noch einmal, und zwar
+an drei Punkten. **Nr. 134:** Ein Paket mit **neuem** `client_ref` hat kein
+Fenster, wird aber über `day` oder `day_ref` auf einen alten Diensttag
+aufgelöst und schrieb dessen Beginn und Ende genauso um wie der erste Fund —
+2001 bis 2097, nicht rückholbar, „neue Datensätze überschreiben nichts" stand
+gegen den Code. Jetzt entscheidet der Tag selbst — wie, dazu der übernächste
+Absatz; die erste Fassung dieser Regel war falsch angesetzt. Dazu drei
+kleinere: Der versprochene Rückfall auf
+`started_at` vor der Migration griff nie, weil der SELECT die Spalte nannte
+und mit 1054 in ein 500 lief — jedes Ruhesegment-Paket zwischen Deploy und
+`update.php` (jetzt wird die Spalte nur genannt, wenn sie da ist); im
+Rückfall galt ein `started_at` von 1970-01-01 00:00:00 als „kein Anker", weil
+`strtotime` 0 liefert (jetzt ist „kein Anker" null, und ein Anker nie kleiner
+als Sekunde 1); und ein bestehender Einsatz, dessen Diensttag inzwischen im
+Papierkorb lag, blieb innerhalb des Fensters am gelöschten Tag hängen,
+während ein leerer neuer entstand — Backlog Nr. 33 im offenen Fenster, seit
+jeher so; jetzt wandert er mit. Ingestprobe 54 → 56, am Stand davor genau die
+zwei neuen rot; Rückfall vor der Migration und Teilzustand an einer
+Wegwerf-Datenbank nachgestellt: Ruhesegment ohne Spalte `200` statt `500`,
+Segment mit `started_at` 1970-01-01 00:00:00 nach 72 h zu.
+
+**Nr. 134, die Regel noch einmal — und diesmal an der Wurzel.** Beim
+Nachfahren des Skeptiker-Skripts gegen den eigenen Stand fiel auf, dass die
+Behebung von oben einen gesunden Weg zerschlagen hatte: Ein Dienst, der
+später als 72 Stunden nach seinem Datum hochgeladen wird — die Uhr war ohne
+Netz —, bekam **keinen Tageszeitraum mehr**. Sein Diensttag entsteht in
+diesem Augenblick, aber er trägt das alte Datum, und die neue Bremse fragte
+ihn nach *seinen* Zeiten. Damit galt er als längst geschlossen: Beginn
+gesetzt, Ende für immer leer, und auch das zweite Paket desselben Dienstes
+konnte nichts mehr ergänzen. Das war derselbe Fehler wie der, den Fund 2
+behoben hatte — die Zeiten des Absenders als Maßstab —, nur eine Ebene höher.
+
+Zwei Änderungen, jede an ihrer richtigen Stelle. **Erstens** sitzt der Schutz
+gegen absurde Zeiten jetzt dort, wo er hingehört: in der gemeinsamen
+Prüfschicht. `pruef_zeit_zum_tag()` weist ein Paket ab, dessen `started_at`
+oder `ended_at` nicht zu seinem `day` gehört — `day` 2026-08-09 mit `started_at`
+2001-01-01 bekommt `400`, und zwar bevor irgendetwas gespeichert wird. Das
+schließt eine Lücke, die die erste Fassung offengelassen hatte: Sie schützte
+den Diensttag, aber der **Einsatz selbst** stand hinterher mit 96 Jahren
+Dauer in der Datenbank. Das Fenster ist weit — vom Vortag bis zum Ende des
+übernächsten Tages —, weil es Zeitzonenversatz, Mitternacht und
+24-Stunden-Dienste vertragen muss; es weist das Unmögliche ab, nicht das
+Ungewöhnliche. **Zweitens** fragt die Bremse für den Tageszeitraum jetzt nach
+Serverzeit: Anker ist das jüngste `created_at` der **übrigen** Datensätze des
+Tages (der gerade angelegte zählt nicht mit, sonst wäre jeder Tag offen, an
+dem eben ein Paket ankam). Ein frischer Tag und ein Tag, an dem gerade
+nachgetragen wird, sind offen; ein Tag, dessen Datensätze alle älter als das
+Fenster sind, nicht.
+
+Ingestprobe 56 → **59, 0 nicht erfüllt**; am Stand vor dieser Neufassung sind
+vier davon rot — zweimal der Widerspruch, der jetzt abgewiesen wird, zweimal
+der nachgelieferte Dienst ohne Ende. Ein eigenes Messgeschirr mit zwölf
+Erwartungen an vier Fällen (Nachlieferung, Angriff, neuer Datensatz am alten
+Tag, zweites Paket) sagt dasselbe: 12/0 gegen 12/8 am Stand davor. Dass
+`days` kein `created_at` trägt und die Frage deshalb über zwei Tabellen
+beantwortet werden muss, steht als Backlog Nr. 158.
+
+**Die Skeptiker-Runde ist vollständig.** Zu jedem der 30 Funde hat ein eigener
+Agent versucht, ihn zu widerlegen, und dafür gegen den unveränderten Stand
+reproduziert: **24 hielten, sechs wurden widerlegt.** Widerlegt heißt nicht
+„falsch gemessen" — alle sechs sind reproduzierbar —, sondern „trifft die
+Nachbesserung nicht": Vorbestand oder Randfall ohne beobachtbare Folge (der
+Diensttag im Papierkorb bei offenem Fenster, drei Zählfälle der Statuszeile,
+die nur über einen von Hand gesetzten Rundenwert entstehen, die
+Sonderzeichen-Tastaturreihe, die quadratische Laufzeit). Behoben bleiben alle
+dreißig: Jede Behebung ist für sich mit einer Zahl belegt, und keine hat
+etwas verschlechtert.
+
+**Nr. 130:** Die Deklarationsprüfung wies die Latin-1-Datei aus dem
+Dateidialog ab, die bis dahin importierte — der Browser wandelt ihre Bytes
+nach UTF-8, ihre Deklaration `encoding="ISO-8859-1"` bleibt aber als Text
+stehen, und die erste Fassung ließ nur UTF-8 und ASCII durch. Handbuch und
+Technik behaupteten das Gegenteil. Erlaubt ist jetzt jede Kodierung, in der
+jedes ASCII-Zeichen sein eigenes Byte ist (ISO-8859, Windows-125x, Latin,
+KOI8, Mac Roman), und die Deklaration wird auf UTF-8 umgeschrieben, weil die
+Bytes nachweislich UTF-8 sind; UTF-7, UTF-16/32 und EBCDIC bleiben draußen.
+13 Fälle unmittelbar an `gpx_lesen()`: 0 Fehlschläge, am Stand davor 5;
+die Gpxprobe hat zwei Umgehungs- und zwei Positivfälle mehr.
+
+**Nr. 136, Statuszeile:** Der Satz zum Demo-Konto nannte den falschen
+Grund — nicht der Reset nimmt die stille Anhebung zurück, `kdf_upgrade.php`
+überspringt das Demo-Konto von vornherein (E-P1-19), und der Kommentar dort
+behauptete, die Fixture werde mit der Zielrundenzahl erzeugt (sie trägt
+320 000, Backlog Nr. 155). Dazu zwei Zählfehler: Der Demo-Satz stand auch,
+wenn der Demo-Wert gar nicht mehr in der Liste war, und widersprach dann der
+roten Zeile darüber; und ein Konto auf einem verwaisten Wert zählte zusätzlich
+als „steht noch unter dem Zielwert, zieht still nach" — es kann sich gar nicht
+anmelden. Vier Szenarien an einer Wegwerf-Datenbank nachgestellt: Demo auf
+320 000 und sonst alles auf dem Ziel → „in Ordnung" mit Demo-Satz, keine
+Zahl; ein weiteres Konto auf 320 000 → „Übergang läuft", 1 Konto; Demo auf
+einem verwaisten 310 000 → rot, „Anmeldung blockiert", **kein** Demo-Satz;
+ein anderes Konto verwaist, Demo auf 320 000 → rot, Demo-Satz, und die Zahl
+„unter dem Zielwert" ist 0 statt 1. Technik nennt jetzt die Ausnahme („keine
+Zahl mehr" heißt nicht „Altwert weg", solange die Fixture ihn trägt), das
+Handbuch beschreibt die Zeile in 12.1.
+
+**Nr. 136, Passwortregel:** Vier Löcher, drei davon in dem, was als „Reihe"
+gilt. Ein Emoji ist in JavaScript ein Surrogatpaar; die Sonderzeichen wurden
+je UTF-16-Einheit gezählt, vier gleiche Emoji waren damit acht verschiedene
+Zeichen, keine Wiederholung — „Passwort😀😀😀😀x" ging als „gut" durch.
+Sonderzeichen werden jetzt je **Schriftzeichen** gezählt (`Intl.Segmenter`,
+sonst Codepunkte). Und die Reihen-Prüfung kannte nur eine Form — gleiches
+Zeichen dreimal, Abstand ±1 viermal —, sodass „abababab", „aabbccdd",
+„1q2w3e4r", „qazwsxed", „!@#$%^&*" und „20242024" die acht Zeichen Rest
+füllten: **8064 von 8832** gefuzzten Listenwort-plus-Muster-Fällen gingen
+durch, die die alte Regel abgewiesen hatte. Jetzt fünf Formen — Tastaturwege
+beider Belegungen samt Spalten und Umschaltreihen, wiederholte Blöcke,
+Läufe gleicher Länge, zwei verschränkte Reihen, mit Listenwort auch der
+Abstand ±2 —, und dieselben 8832 Fälle ergeben **0**. Die Formen jenseits
+der ersten gelten nur, wenn ein Listenwort gestrichen wurde: Ohne Listenwort
+misst die Regel keinen Anteil, und mit allen Formen träfe sie ein
+gewürfeltes „gK;=@v**GkV:" — 1 von 20 000. So bleibt es bei **0 von je
+20 000** Zufallspasswörtern in drei Zeichenvorräten. Der Preis: Eine
+Passphrase mit einem Listenwort **und** einem verdoppelten Wort
+(„Kerze-Berg-Berg-Schweiz") fällt jetzt durch — 4 von 120 im Generator,
+alle mit Doppelwort; neutrale Passphrasen 0 von 120. Drittens war die
+Streichschleife quadratisch — 100 kB verschachteltes Listenwort hielten den
+Browser 23 s je Tastendruck an —, sie sieht jetzt höchstens 256 Zeichen an
+(16 kB: 577 → 21 ms). Und der Kommentar nannte „2 bis 25 %", gemessen
+waren 0,04 bis 15 %. Der zweite Angreifer fand vier weitere: „Angehängte
+Ziffern" wurden am normalisierten Text bestimmt — in einem Passwort aus
+Ziffern und Sonderzeichen standen nach `normal()` alle Ziffern am Ende, und
+„#7!3@9$1%4&6" galt als Ziffern mit Beiwerk; ein Passwortverwalter auf
+Ziffern und Symbole gestellt lieferte zu 46 bis 91 % Abgewiesene. Angehängt
+ist jetzt, was in der Eingabe am Ende steht: 0,9 bzw. 0,4 % von je 20 000,
+nämlich die, deren Ziffern zufällig eine Reihe bilden. Ein Zeichen, das
+`toLowerCase()` zu einem Buchstaben faltet (Kelvin-K, İ, ẞ), steckte im
+gestrichenen Listenwort **und** zählte als Sonderzeichen; die Meldung
+„zählen nicht — es bleibt nichts übrig" stand auch bei sieben übrigen
+Sonderzeichen; und ein Kommentar erzählte, fünfstellige Einträge hätten
+nie greifen können (sie griffen als ganzes Wort).
+
 **Die DOCTYPE-Sperre (Nr. 130) war mit UTF-7 zu umgehen.** UTF-7 ist reines
 ASCII — gültiges UTF-8, kein Nullbyte, `<!DOCTYPE` steht darin als
 `+ADwAIQ-DOCTYPE` —, und libxml las es trotzdem als DOCTYPE mit Entitäten,
