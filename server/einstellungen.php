@@ -902,11 +902,23 @@ if ($tab === 'geraete') {
    Stammdatenreiter tragen seit S9/AP2 den Pin-Knopf am Ortsfeld und damit den
    Kartendialog (E-S9-06 c). Auf den uebrigen Reitern waere es eine Datei fuer
    nichts. */
+/* DAS LEAFLET-STYLESHEET BRAUCHT JETZT DIE STANDORTSEITE. Bis Web 16.1.1
+ * stand hier `['standorte','rettungsmittel']`; „rettungsmittel" gibt es nicht
+ * mehr, und der Pin am Nur-Lage-Ortsfeld sitzt auf `t=standort`. Ohne diese
+ * Zeile faellt die Karte dort unformatiert zusammen — und zwar ohne
+ * Fehlermeldung, was das Aergerliche daran ist. */
 ui_seite_start(['titel' => 'Einstellungen',
-                'karte' => in_array($tab, ['standorte', 'rettungsmittel'], true)]);
+                'karte' => in_array($tab, ['standorte', 'standort'], true)]);
 ?>
 
-<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => $tab]); ?>
+<?php /* DIE STANDORTSEITE IST KEIN MENUEPUNKT, sondern eine Seite UNTER
+         einem. Sie muss deshalb „standorte" als aktiv melden und nicht ihren
+         eigenen Reiternamen: `ui_leiste_einstellungen()` vergleicht auf
+         Gleichheit, ein unbekannter Schluessel liesse jeden Eintrag blass —
+         und ohne aktiven Eintrag haengt `menue.js` seine Unterpunkte an
+         nichts. */ ?>
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
+                        'menue' => $tab === 'standort' ? 'standorte' : $tab]); ?>
   <?php ui_meldung($notice, $error, $noticeTon, '  '); ?>
 
   <?php if ($tab === 'profil'): ?>

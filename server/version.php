@@ -3167,5 +3167,18 @@ declare(strict_types=1);
  * bis auf Weiteres die alten Bloecke des Reiters „Rettungsmittel". Wenn sie
  * ihre Gestalt aus M-S9-06 hat und die Verwaltung nachgezogen ist, steigt die
  * Hauptnummer.
+ *
+ * 16.2.1 REPARIERT ZWEI STELLEN, DIE 16.2.0 UEBERSEHEN HAT — beide gefunden
+ * von der Codelesung, nicht im Browser, weil beide OHNE Fehlermeldung
+ * ausfallen:
+ *   - Das Leaflet-Stylesheet haengt an einer Reiterliste, in der noch
+ *     „rettungsmittel" stand und „standort" fehlte. Der Pin am Nur-Lage-
+ *     Ortsfeld der Standortseite haette eine unformatierte Karte gezeigt.
+ *   - Das Geruest bekam `menue => $tab`, und `standort` ist kein
+ *     Menueschluessel. Die Leiste haette KEINEN aktiven Eintrag gehabt — und
+ *     `menue.js` haengt seine Unterpunkte genau daran, was in AP5 Teil 2
+ *     gebraucht wird. Jetzt meldet die Seite „standorte" als aktiv.
+ * Die Lehre steht hier, weil sie wiederkommt: Wer einen Reiter umbenennt,
+ * greppt nach seinem Namen — er steht nicht nur in der Weissliste.
  */
-const WEB_VERSION = '16.2.0';
+const WEB_VERSION = '16.2.1';
