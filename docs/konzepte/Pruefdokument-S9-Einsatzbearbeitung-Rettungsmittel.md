@@ -581,7 +581,7 @@ jetzt, dass sich der Eintrag hier nicht mehr zuordnen lässt.
 | Kontraste | **22 Paare gerechnet, 0 verfehlt** (unverändert) |
 | `docs/Design.md` neu erzeugt | **40 Tabellenzeilen ändern sich**, keine fällt auf 0, die Fußzeilen bleiben. **Achtung, zwei Ursachen in einem Diff:** Die Tabellen waren seit AP5-4 nicht neu erzeugt, deshalb steigen einige Zählungen (z. B. `plus.svg` 17 → 22), während die Streichung andere senkt (`karte.svg` 16 → 15). Der Diff misst beides zusammen |
 | Bilderlauf | `seiten.json` **46 → 44 Seiten** (Gruppe Administration **9 → 7**), ein voller Lauf **368 → 352 Einzelbilder** |
-| Klickprobe | Wegzahl unverändert; `ap2-dialog-fuenf-einbauorte` heißt jetzt `ap2-dialog-vier-einbauorte` (Soll **4 von 4**), `ap5-verwaltung-besatzung-anlegen` heißt `ap5-besatzung-anlegen` und misst dieselbe Zusage (E-S9-19) am eigenen Bestand |
+| Klickprobe | **70 von 70 als Zeigergerät und 70 von 70 als Fingergerät** — 35 Wege über 390 und 1280 px, **0 verfehlt**. `ap2-dialog-fuenf-einbauorte` heißt jetzt `ap2-dialog-vier-einbauorte` und misst **4 von 4**; `ap5-verwaltung-besatzung-anlegen` heißt `ap5-besatzung-anlegen` und misst dieselbe Zusage (E-S9-19) am eigenen Bestand: Adresse **`#crew-333`**, Zeile gefunden, Fläche **rgb(255, 235, 214)**, **0 Fehlermeldungen**. Bestand danach unverändert: **21 Rettungsmittel, 8 Standorte, 61 Diensttage, 346 Einsätze** und **0** Probeeinträge (`name LIKE 'KP %'` in vier Tabellen) |
 
 **Warum der Klickprobenweg nicht ersatzlos entfällt.** Er prüfte Backlog
 Nr. 163 (systemweite Besatzungs-Vorbelegungen ließen sich nicht anlegen) — mit
