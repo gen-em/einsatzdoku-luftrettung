@@ -1655,30 +1655,32 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Protokoll. Zuordnung: Backlog-Runde, gemeinsam mit Nr. 43 (Ortsdaten)
     zu betrachten.
 
-166. **Der Referenzbestand kennt keinen systemweiten Standort — die
-    Verwaltungsseiten sind damit nicht zu fotografieren.** *Aufgenommen
-    09.09.2026 in S9/AP5-4.* `bases` mit `user_id IS NULL` ist im
-    Referenzbestand **leer**; der Generator legt nichts dergleichen an.
-    Folge: `admin_stammdaten.php?t=standorte` zeigt im Bilderlauf eine leere
-    Liste, und die neue Standortseite der Verwaltung
-    (`42a-stammdaten-standortseite`) lässt sich gar nicht aufrufen — der
-    Platzhalter `__ADMIN_STANDORT__` bleibt unaufgelöst, und der Lauf meldet
-    „OHNE BILD". Das war vorher nicht besser, nur leiser: Der alte Eintrag
-    `42a-stammdaten-rettungsmittel` zeigte einen leeren Reiter und lieferte
-    trotzdem acht Bilder — acht Bilder von nichts, mit der Meldung „kein
-    Überlauf". Behebung: im Generator **einen** systemweiten Standort mit
-    einem Rettungsmittel, einer Zielklinik und einer Besatzungs-Vorbelegung
-    anlegen. Das berührt Fixture, Prüfsummen und die beiden Kreisläufe
-    (`edbak`, `csv`) und gehört deshalb in ein eigenes Paket, nicht nebenbei.
-    Bis dahin deckt die Klickprobe die Seite ab: `ap5-verwaltung-besatzung-anlegen`
-    legt Standort und Rettungsmittel selbst an, misst und räumt wieder ab.
-
 
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+166. **~~Der Referenzbestand kennt keinen systemweiten Standort~~ —
+    ZURÜCKGEZOGEN am 09.09.2026, am Tag der Aufnahme.** *Aufgenommen in
+    S9/AP5-4 mit dem Vorschlag, dem Generator des Referenzbestands **einen
+    systemweiten Standort hinzuzufügen**, damit der Bilderlauf die
+    Standortseite der Verwaltung fotografieren kann.* Der Vorschlag ist
+    falsch: **Rahmenplan R39** (Beschluss vom 30.08.2026) schafft die
+    zentralen Stammdaten ab und baut sie in **P5** zurück; auf dem
+    Produktivsystem sind sie am 09.09.2026 bereits gelöscht. Einen Bestand
+    aufzubauen, damit ein Prüfmittel eine Seite fotografieren kann, die
+    zurückgebaut wird, ist Arbeit in die falsche Richtung.
+    **Was bleibt:** Die Standortseite der Verwaltung ist nicht zu
+    fotografieren, und das ist ab jetzt ein **Zustand und kein Mangel** —
+    der Bilderlauf meldet ihn mit Grund („8× Platzhalter
+    `__ADMIN_STANDORT__` nicht auflösbar"), und der Eintrag
+    `42a-stammdaten-standortseite` in `tools/screenshots/seiten.json` fällt
+    mit dem Rückbau weg. Die Klickprobe deckt die Seite bis dahin ab
+    (`ap5-verwaltung-besatzung-anlegen` stellt den Fall selbst her).
+    *Diese Nummer bleibt stehen und wird nicht gelöscht — sie ist der
+    Beleg dafür, dass der Vorschlag geprüft und verworfen wurde.*
 
 163. **Systemweite Besatzungs-Vorbelegungen ließen sich nicht anlegen.**
     *Aufgenommen und behoben 09.09.2026 in S9/AP5-4, Web 17.0.0.* Das

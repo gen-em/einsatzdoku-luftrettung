@@ -34,23 +34,33 @@ Das steht hier oben und nicht in einer Fußnote.
 > ist dort ebenfalls entfallen. Was weiterhin fehlt, steht im nächsten
 > Absatz.*
 
-**Die Standortseite der Verwaltung ist nicht fotografiert.** Der
-Referenzbestand hat **keinen einzigen systemweiten Standort** (`bases` mit
-`user_id IS NULL` ist leer), und ohne einen gibt es die Seite nicht: Der
+**Die Standortseite der Verwaltung ist nicht fotografiert — und bleibt es.**
+Der Referenzbestand hat **keinen einzigen systemweiten Standort** (`bases`
+mit `user_id IS NULL` ist leer), und ohne einen gibt es die Seite nicht: Der
 Platzhalter `__ADMIN_STANDORT__` des Bilderlaufs bleibt unauflösbar, der Lauf
-meldet für `42a-stammdaten-standortseite` ausdrücklich **„OHNE BILD"**. Das
-ist keine Verschlechterung, nur eine lautere Fassung desselben Zustands: Der
-alte Eintrag `42a-stammdaten-rettungsmittel` zeigte einen **leeren** Reiter
-und lieferte trotzdem acht Bilder mit der Meldung „kein Überlauf" — acht
-Bilder von nichts. Was die Seite deckt, ist die Klickprobe
+meldet für `42a-stammdaten-standortseite` ausdrücklich **„OHNE BILD, 8×
+Platzhalter nicht auflösbar"**. Das ist keine Verschlechterung, nur eine
+lautere Fassung desselben Zustands: Der alte Eintrag
+`42a-stammdaten-rettungsmittel` zeigte einen **leeren** Reiter und lieferte
+trotzdem acht Bilder mit der Meldung „kein Überlauf" — acht Bilder von
+nichts.
+
+> **Das wird auch nicht behoben, und das ist die richtige Entscheidung.**
+> Hier stand am 09.09.2026 zunächst „Behebung: ein systemweiter Standort im
+> Generator" (Backlog Nr. 166). Der Vorschlag ist **zurückgezogen**:
+> **Rahmenplan R39** (30.08.2026) schafft die zentralen Stammdaten ab und
+> baut sie in **P5** zurück; auf dem Produktivsystem sind sie bereits
+> gelöscht. Einen Bestand aufzubauen, damit ein Prüfmittel eine Seite
+> fotografieren kann, die zurückgebaut wird, wäre Arbeit in die falsche
+> Richtung. Der Eintrag in `tools/screenshots/seiten.json` fällt mit dem
+> Rückbau weg.
+
+Was die Seite bis dahin deckt, ist die Klickprobe
 (`ap5-verwaltung-besatzung-anlegen`): Sie legt einen systemweiten Standort
 samt Rettungsmittel an, misst sechs Karten, fünf Dialoge und die Landung auf
 `#crew-<id>`, macht ein Bild und räumt alles wieder ab. **Was fehlt, ist der
-Blick auf die volle Seite in acht Breiten.** Behebung: ein systemweiter
-Standort im Generator des Referenzbestands — das berührt Fixture, Prüfsummen
-und beide Kreisläufe und gehört in ein eigenes Paket (**Backlog Nr. 166**).
-**Prüfliste Punkt 31.**
-
+Blick auf die volle Seite in acht Breiten** — und der wird nicht mehr
+nachgeholt. **Prüfliste Punkt 31.**
 
 **Die Sprungliste ist nur mit sechs Marken gesehen worden.** Der
 Referenzbestand hat drei Rettungsmittel am größten Standort; die sechste
@@ -1020,21 +1030,20 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   wurde für den Prüflauf angelegt und wieder gelöscht); zwölf sind
   gerechnet, nicht gesehen.
 
-- [ ] **31 — Die Standortseite der Verwaltung an einem echten Bestand (AP5, Teil 4).**
-  *Weg:* Als Administratorin `admin_stammdaten.php` öffnen, einen
-  systemweiten Standort anlegen, ein luftgebundenes Rettungsmittel mit
-  Rollen, eine Zielklinik mit Lage, eine Besatzungs-Vorbelegung und eine
-  Bergwacht-Bereitschaft eintragen. Danach bei **360 px** und am
-  Schreibtisch ansehen.
-  *Erwartet:* Sechs Karten, drei Kennzahlen, „Zum Anfang" je Karte; jeder
-  Eintrag landet nach dem Speichern auf seiner eigenen, orange
-  hervorgehobenen Zeile; die Kleinzeile der Liste nennt, wie viele Konten
-  den Standort gewählt haben.
-  *Scheitern erkennbar an:* Eine Karte fehlt, ein Dialog öffnet leer, oder
-  die Seite springt nach dem Speichern auf die Liste statt auf die Zeile.
-  **Diese Seite ist nicht fotografiert** — der Referenzbestand hat keinen
-  systemweiten Standort (Abschnitt 0, Backlog Nr. 166). Gemessen ist sie
-  nur über die Klickprobe, die den Fall selbst herstellt und wieder abräumt.
+- [x] **31 — ~~Die Standortseite der Verwaltung an einem echten Bestand~~ —
+  ENTFÄLLT (09.09.2026).** *Der Punkt verlangte, als Administratorin einen
+  systemweiten Standort samt Rettungsmittel, Zielklinik,
+  Besatzungs-Vorbelegung und Bergwacht-Bereitschaft anzulegen und die Seite
+  in zwei Breiten anzusehen.* **Nicht mehr tun:** Auf dem Produktivsystem
+  sind alle systemweiten Standorte gelöscht, und **R39** (30.08.2026) baut
+  das Modell in **P5** zurück. Einen anzulegen, nur um eine Seite zu
+  prüfen, die verschwindet, wäre verlorene Zeit — und hinterließe einen
+  Eintrag, den danach jemand wieder suchen und löschen müsste.
+  **Was an seine Stelle tritt:** die Entscheidung zu Frage 10 (Abschnitt 4)
+  — wird der Rückbau vorgezogen oder bleibt er in P5? Bis dahin ist die
+  Seite durch die Klickprobe gedeckt
+  (`ap5-verwaltung-besatzung-anlegen`, **`#crew-<id>`, orange, 0
+  Fehlermeldungen**), die den Fall selbst herstellt und wieder abräumt.
 
 - [ ] **32 — Ein Dialog mit vielen Rollen am kleinen Gerät (AP5, Teil 4).**
   *Weg:* Am Handy die Standortseite öffnen, „Anlegen" in der Karte
@@ -1123,43 +1132,54 @@ Stellen, an denen Konzept und Auftrag einander widersprechen oder das Konzept
 schweigt. Jede ist vorläufig entschieden **und** revidierbar; der Preis einer
 Gegenentscheidung steht dabei.
 
-### Neu aus AP5 Teil 4 und 5 (09.09.2026)
+### Neu aus AP5 Teil 4 und 5 (09.09.2026) — **beide am selben Tag beantwortet, beide hinfällig**
 
-**Frage 8 — Geht ein fremdes Rettungsmittel mit, wenn die Verwaltung einen
-systemweiten Standort löscht?** Variante b (M-S9-10) rettet die
-Rettungsmittel ohne Standortpflicht, und zwar auf beiden Seiten: Im Konto die
-eigenen, in der Verwaltung die systemweiten. **Nicht gerettet werden die
-Rettungsmittel einzelner NutzerInnen, die an einem systemweiten Standort
-hängen** — sie gehen mit ihm, auch wenn ihr Typ keinen Standort braucht.
+> **Beide Fragen waren falsch gestellt, und die Antwort auf die zweite war
+> falsch empfohlen.** Der Auftraggeber hat am 09.09.2026 mitgeteilt: Auf dem
+> Produktivsystem sind **alle systemweiten Standorte gelöscht**, und das
+> Modell soll **ganz abgeschafft** werden. Das steht seit dem **30.08.2026**
+> im Rahmenplan als **R39** („Zentrale (systemweite) Stammdaten entfallen …
+> wird in **P5 zurückgebaut**, einschließlich Doku-Austragung") — im
+> Rahmenplan seit Fassung 14 (01.09.2026), im Archiv mit voller Begründung.
+> **Weder das S9-Konzept noch dieses Prüfdokument nennen R39 an einer
+> einzigen Stelle** (`grep -c "R39" docs/konzepte/` = **0**), und ich habe
+> den Rahmenplan vor AP5-4 nicht gelesen, obwohl `CLAUDE.md` ihn als Ort der
+> Programmentscheidungen benennt. Beides steht hier, damit die nächste
+> Instanz nicht denselben Weg geht.
 
-Das ist kein Versehen, sondern ein Zuschnitt: Die Rückfrage der Verwaltung
-zählt seit jeher **nur** den systemweiten Bestand („5 systemweite
-Stammdatensätze werden mitgelöscht") und sagt daneben, wie viele Konten den
-Standort gewählt haben. Sie könnte einen Satz über fremde Rettungsmittel
-nicht belegen, ohne vorher etwas zu zählen, was sie sonst nirgends zählt —
-und dann stünde in der Rückfrage einer Administratorin, wie viele
-Rettungsmittel fremder Konten sie gerade löscht, was eine neue Auskunft über
-fremde Bestände wäre.
+**Frage 8 — erledigt, nicht zu entscheiden.** Sie lautete: Geht ein fremdes
+Rettungsmittel mit, wenn die Verwaltung einen systemweiten Standort löscht?
+Es gibt keine systemweiten Standorte mehr, und es werden keine mehr
+angelegt. Der beschriebene Fall kann nicht mehr eintreten. Der Zuschnitt
+bleibt so, wie AP5-5 ihn gebaut hat; er verschwindet mit dem Rückbau.
 
-*Drei Wege:* **(a)** so lassen, wie es ist, und den Satz ins Handbuch
-schreiben. **(b)** Auch die fremden retten, ohne sie zu zählen — die
-Rückfrage bliebe, wie sie ist, und die Rettung geschähe still. **(c)** Auch
-die fremden retten **und** in der Rückfrage nennen („… und 3 Rettungsmittel
-in 2 Konten bleiben bestehen").
-*Empfehlung: **(b)*** — der Grund für die Rettung ist derselbe (der Typ
-braucht keinen Standort), und wer den Standort löscht, hat kein Interesse
-daran, fremde Rettungsmittel mitzunehmen. Die zusätzliche Auskunft aus (c)
-gehört nicht in eine Löschrückfrage.
-*Wenn (a):* Der Satz steht im Handbuch 9.4 und in der Löschrückfrage der
-Verwaltung — heute steht er in keiner von beiden.
+**Frage 9 — die Empfehlung war falsch.** Sie lautete: Bekommt der
+Referenzbestand einen systemweiten Standort? Empfohlen war **ja**. Richtig
+ist **nein**: Einen Bestand aufzubauen, damit ein Prüfmittel eine Seite
+fotografieren kann, die zurückgebaut wird, ist Arbeit in die falsche
+Richtung — und der Bilderlauf hätte danach acht Bilder einer Seite, die es
+bald nicht mehr gibt. **Backlog Nr. 166 ist entsprechend zurückgezogen.**
+Dass die Seite nicht fotografierbar ist, bleibt in Abschnitt 0 stehen — als
+Zustand, nicht als Mangel.
 
-**Frage 9 — Bekommt der Referenzbestand einen systemweiten Standort?** Ohne
-einen ist die Standortseite der Verwaltung nicht zu fotografieren (Abschnitt
-0, Backlog Nr. 166). *Empfehlung: ja* — einer mit einem Rettungsmittel, einer
-Zielklinik und einer Besatzungs-Vorbelegung genügt, und er deckt zugleich die
-Anzeige „systemweit" in der Kontoansicht ab, die heute an keiner Stelle
-gemessen ist. Das berührt Fixture, Prüfsummen und die beiden Kreisläufe
-(`edbak`, `csv`) und gehört deshalb in ein eigenes Paket.
+**Was stattdessen zu entscheiden ist, steht in Frage 10.**
+
+**Frage 10 — Wird der Rückbau nach R39 vorgezogen, oder bleibt er in P5?**
+Der Rahmenplan führt ihn unter Schritt 10 (P5 Dienstbetrieb); S9 ist
+Schritt 8. Nach Plan lebt die Seite also noch zwei Schritte lang — und AP5-4
+hat sie in dieser Zeit auf die Standortseiten umgebaut, weil `sd_form()`
+entfiel und sie sonst gar nicht mehr gelaufen wäre.
+
+*Drei Wege:* **(a)** wie geplant in P5 zurückbauen; bis dahin bleibt alles,
+wie es ist. **(b)** Jetzt als eigenes Arbeitspaket in S9 (AP5b oder nach
+AP8), mit eigenem Konzept — der Rückbau berührt Schema, sechs Tabellen,
+`user_bases`, die Sicherungsformate und die Dokumentation und ist kein
+Nebenbei. **(c)** Nur die Anzeige jetzt stilllegen (die Karte „Vordefinierte
+Standorte" und den Verweis auf `admin_stammdaten.php` ausblenden, solange
+kein zentraler Eintrag existiert), das Schema erst in P5 — das nimmt der
+Oberfläche sofort ein leeres Versprechen und lässt die Daten unberührt.
+*Eine Empfehlung gebe ich erst mit der Bestandsaufnahme dazu* (läuft), weil
+sie davon abhängt, was noch alles daran hängt.
 
 ### Neu aus AP5 (08.09.2026)
 
