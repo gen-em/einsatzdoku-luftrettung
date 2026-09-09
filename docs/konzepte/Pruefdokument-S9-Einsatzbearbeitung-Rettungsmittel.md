@@ -634,6 +634,31 @@ statt `"77"`.** Sichtbar war das nirgends — weder im Formular noch in der
 Leseansicht, die nur den Namen zeigt. Jetzt fällt erst das Ereignis, dann steht
 die Kennung; der Klickprobenweg misst die Kennung ausdrücklich mit.
 
+**Ein Fund am Prüfmittel selbst, und er hätte den Prüflauf verfälscht.** Der
+erste volle Klickprobenlauf über zwei Breiten meldete **64 von 76 Wegen
+erfüllt, 12 verfehlt** — mit Meldungen wie „Kein Standort in der Liste" und
+„waitForSelector timeout", die beide auf den *Bestand* zeigen. Der Bestand war
+in Ordnung (8 Standorte, 21 Rettungsmittel, 61 Diensttage, 346 Einsätze,
+unmittelbar danach nachgezählt). Die Ursache ist eine andere: **Das Demo-Konto
+setzt sich alle 30 Minuten zurück** (`DEMO_RESET_SEKUNDEN`, `demo_lib.php`) und
+erhöht dabei die Sitzungs-Epoche; `auth_guard.php` beendet daraufhin jede
+offene Sitzung dieses Kontos — auch die der Probe. Ein voller Lauf dauert
+länger als das Fenster; der Reset fiel mitten hinein (`demo_letzter_reset`
+10:49:16, Lauf noch nicht zu Ende).
+
+Der **Bilderlauf** hat gegen genau diesen Fall seit Web 9.10.1 eine
+Sitzungswache — er meldet sich einmal neu an und lädt die Seite noch einmal.
+**Die Klickprobe hatte keine.** Sie hat sie jetzt: `gehZu()` erkennt die
+Umleitung auf `login.php`, meldet sich einmal neu an und fährt die Adresse
+erneut an; gelingt auch das nicht, wirft sie — dann ist es kein Reset, sondern
+ein echter Fehlschlag. Kontext und Seite bleiben dabei stehen, damit
+Eingabeart, Attrappe und Kachelsperre erhalten bleiben.
+
+**Das ist die zweite Fehlmeldung dieser Sorte in S9** (nach F-S9-U-33, wo der
+Bilderlauf acht Ausfälle mit dem falschen Grund nannte): ein Werkzeug, das das
+Richtige misst und den falschen Grund angibt. Beide Male hätte die Zahl allein
+in die Irre geführt.
+
 **Drei Regeln stehen jetzt nur noch einmal.** `pruef_typ_betriebsart()` (Typ
 und Betriebsart, geteilt von `pruef_rettungsmittel()` und
 `pruef_tagesrettungsmittel()`), `pruef_tagesrettungsmittel()` selbst (auch

@@ -106,7 +106,27 @@ im Referenzbestand). Zwei Gründe, und beide wiegen:
 Was sie **nicht** ersetzt: den Beweis, dass der echte Dienst antwortet. Der
 steht auf der Prüfliste des Auftraggebers.
 
-## Drei Fallen, die hier schon zugeschnappt sind
+## Vier Fallen, die hier schon zugeschnappt sind
+
+**Das Demo-Konto setzt sich alle 30 Minuten zurück — mitten im Lauf.**
+`demo_zuruecksetzen()` erhöht dabei die Sitzungs-Epoche
+(`DEMO_RESET_SEKUNDEN`, `server/demo_lib.php`), und `auth_guard.php` beendet
+daraufhin jede offene Sitzung dieses Kontos, auch die der Probe. Ein voller
+Lauf über zwei Breiten dauert länger als das Fenster. Am 09.09.2026 traf der
+Reset einen Lauf in der Mitte: **64 von 76 Wegen erfüllt, 12 verfehlt** — mit
+Meldungen wie „Kein Standort in der Liste" und „waitForSelector timeout", die
+beide auf den Bestand zeigen. Der Bestand war in Ordnung.
+
+Seit S9/AP6 hat `gehZu()` deshalb dieselbe **Sitzungswache** wie der
+Bilderlauf: Landet die Seite auf `login.php`, ohne dass das gemeint war,
+meldet sie sich **einmal** neu an und fährt die Adresse erneut an; gelingt auch
+das nicht, wirft sie. Kontext und Seite bleiben stehen — Eingabeart, Attrappe
+und Kachelsperre hängen daran.
+
+Wer einen langen Lauf ganz aus dem Fenster halten will, stellt die Uhr vor dem
+Start: `UPDATE app_state SET v = UNIX_TIMESTAMP() WHERE k =
+'demo_letzter_reset';` — das verschiebt den nächsten Reset um volle 30 Minuten.
+
 
 **Das Demo-Konto hat eine Mengenbremse, und Prüfläufe füllen sie.** 20
 Anmeldungen je Fenster und Adresse, danach eine Stunde gesperrt (E-P1-20).

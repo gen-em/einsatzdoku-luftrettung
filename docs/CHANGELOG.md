@@ -68,6 +68,14 @@ wieder, weil Tippen Freitext bedeutet. Der Treffer sah aus wie ein Treffer und
 wurde als Freitext gespeichert, ohne Koordinate. Gemessen: Kennung `""` statt
 `"77"`. Jetzt fällt erst das Ereignis, dann steht die Kennung.
 
+**Ein Fund am Prüfmittel, kein Fund an der Anwendung:** Der erste volle
+Klickprobenlauf meldete 12 von 76 Wegen verfehlt — mit Meldungen, die auf den
+Bestand zeigten. Der Bestand war in Ordnung; das **Demo-Konto setzt sich alle
+30 Minuten zurück** und beendet dabei jede offene Sitzung, auch die der Probe.
+Der Bilderlauf hat gegen diesen Fall seit Web 9.10.1 eine Sitzungswache, die
+Klickprobe hatte keine. Sie hat sie jetzt: `gehZu()` erkennt die Umleitung auf
+die Anmeldung, meldet sich einmal neu an und fährt die Adresse erneut an.
+
 **Nebennummer:** neue Funktionen, kein Datenmodell, keine Migration. `update.php`
 muss **nicht** laufen.
 

@@ -237,6 +237,24 @@ const KENNUNG = await kennungen();
 /* ---- Werkzeugkasten fuer die Wege ---------------------------------------- */
 /* Ein Weg bekommt genau diese Handreichungen und sonst nichts. Was hier nicht
  * steht, gehoert in den Weg — und was drei Wege brauchen, gehoert hierher. */
+/**
+ * EINE VERLORENE SITZUNG WIEDER AUFBAUEN (S9/AP6).
+ *
+ * Nur die Anmeldung, nicht der ganze Kontext: Kontext und Seite bleiben
+ * stehen, damit Eingabeart, Attrappe und Kachelsperre erhalten bleiben — sie
+ * haengen am Kontext und waeren mit einem neuen weg.
+ */
+async function neuAnmelden(r) {
+  const konto = r.rolle === 'admin' ? ADMIN : DEMO;
+  await r.seite.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
+  await r.seite.fill('input[name="email"]', konto.email);
+  await r.seite.fill('input[name="password"]', konto.pw);
+  await Promise.all([
+    r.seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+    r.seite.click('button[type="submit"]'),
+  ]);
+}
+
 async function kasten(rolle, weg, breite) {
   const r = await rolleHolen(rolle || 'demo');
   const BEDIENHOEHE = hoeheFuer(breite);
@@ -249,10 +267,35 @@ async function kasten(rolle, weg, breite) {
     attrappe,
     konsolenfehler: () => r.fehler.slice(),
 
-    /** Seite oeffnen und auf das Stylesheet warten (sonst misst man ungestaltet). */
+    /**
+     * Seite oeffnen und auf das Stylesheet warten (sonst misst man ungestaltet).
+     *
+     * MIT SITZUNGSWACHE SEIT S9/AP6 — dieselbe, die der Bilderlauf seit
+     * Web 9.10.1 hat. Das Demo-Konto setzt sich alle 30 Minuten zurueck
+     * (`DEMO_RESET_SEKUNDEN`, demo_lib.php) und erhoeht dabei die
+     * Sitzungs-Epoche; `auth_guard.php` beendet daraufhin jede offene Sitzung
+     * dieses Kontos — auch die der Probe. Ein voller Lauf ueber zwei Breiten
+     * dauert laenger als das Fenster und traf den Reset am 09.09.2026 mitten
+     * im Lauf: **12 von 76 Wegen** verfehlt, gemeldet als „Kein Standort in
+     * der Liste" und „waitForSelector timeout". Beide Meldungen zeigen auf
+     * den Bestand und nicht auf die Ursache — genau die Sorte Fehlmeldung,
+     * die einen halben Prueflauf kostet.
+     *
+     * Die Wache meldet sich EINMAL neu an und faehrt die Adresse noch einmal
+     * an. Gelingt auch das nicht, wirft sie — dann ist es kein Reset, sondern
+     * ein echter Fehlschlag, und der gehoert gemeldet.
+     */
     async gehZu(adresse) {
       if (!adresse) { throw new Error('Adresse nicht aufgelöst (Bestand leer?)'); }
       await r.seite.goto(adresse, { waitUntil: 'domcontentloaded' });
+      if (r.seite.url().includes('login.php') && !adresse.includes('login.php')) {
+        await neuAnmelden(r);
+        await r.seite.goto(adresse, { waitUntil: 'domcontentloaded' });
+        if (r.seite.url().includes('login.php')) {
+          throw new Error('Sitzung verloren und Neuanmeldung gescheitert — '
+            + 'das Demo-Konto setzt sich alle 30 Minuten zurück (demo_lib.php)');
+        }
+      }
       await r.seite.waitForFunction(
         () => getComputedStyle(document.documentElement).getPropertyValue('--knopf').trim() !== '',
         null, { timeout: 5000 });
