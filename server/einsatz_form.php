@@ -38,8 +38,18 @@ $dayBaseId = $tag['base_id'] !== null ? (int)$tag['base_id'] : null;
 /* Rollen dieses Diensttags: der EINGEFRORENE Rollensatz aus `day_crew` (E8).
  * Er steuert, welche Besatzungsfelder sichtbar sind ('role_gate'). Ein
  * neutraler Diensttag hat keine Rollen (E26) — dann sind alle verborgen ausser
- * den bereits belegten. */
-$dayRoles = dt_crew($dayId);
+ * den bereits belegten.
+ *
+ * EIN TAG MIT RETTUNGSMITTEL NUR FUER DEN TAG FUEHRT KEINE ROLLEN (E-S9-10,
+ * F19, Frage 11). Der Rollensatz waere hier trotzdem nicht zwingend leer:
+ * `dt_rollensatz_einfrieren()` loescht beim Wechsel nur LEERE Rollen, damit
+ * ein versehentlicher Wechsel keine Eingabe kostet — benannte Zeilen bleiben
+ * stehen. Ohne diese Abfrage haetten zwei Adhoc-Tage verschiedene Rollen: ein
+ * frisch angelegter keine, ein umgestellter die des frueheren Rettungsmittels.
+ * Gefragt ist der DIENST, und der fuehrt keine. Die Namen selbst bleiben
+ * unangetastet in `day_crew` und in der Leseansicht des Tages sichtbar; was
+ * an einem Einsatz bereits eingetragen ist, bleibt es ebenfalls ($belegt). */
+$dayRoles = dt_ist_tagesrettungsmittel($tag) ? [] : dt_crew($dayId);
 /* Art und Faehigkeiten desselben Diensttags, beide EINGEFROREN (E8). Sie
  * steuern 'kind_gate' und 'cap_gate' genauso, wie `day_crew` 'role_gate'
  * steuert — gefragt wird immer der Dienst, nie das heutige Rettungsmittel.

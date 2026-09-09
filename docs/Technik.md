@@ -1330,6 +1330,18 @@ sie beim Zuordnen galten. Deklariert wird das je Feld über `role_gate` in
 `mission_fields.php`; `einsatz_form.php` lädt die Rollen einmal über
 `dt_crew()` und setzt beim Rendern nur das `hidden`-Attribut.
 
+**Ein Diensttag mit einem Rettungsmittel nur für den Tag führt keine Rollen**
+(E-S9-10, seit Web 18.1.1): `einsatz_form.php` fragt vorher
+`dt_ist_tagesrettungsmittel()` und übergibt dann einen leeren Satz. Ohne diese
+Abfrage hingen die angebotenen Rollen davon ab, was dem Tag *vorher* zugeordnet
+war — `dt_rollensatz_einfrieren()` löscht beim Wechsel nur **leere** Rollen, ein
+benannter Name überlebt und brachte seine Rolle mit. Zwei Tage derselben Art
+boten damit Verschiedenes an. Die Namen bleiben davon unberührt: Sie stehen
+weiter in `day_crew` und in der Leseansicht des Tages, unerreichbar nur für das
+Einsatzformular, bis wieder ein Rettungsmittel mit dieser Rolle zugeordnet ist.
+**Die Folge ist eine bekannte Lücke** — an einem solchen Tag lässt sich
+Besatzung überhaupt nicht erfassen (Backlog Nr. 169).
+
 Dieselbe Mechanik tragen zwei weitere Filter: **`cap_gate`** prüft die
 eingefrorenen Fähigkeiten (`day_capabilities`) und steuert damit Winde und
 Bergwacht, **`kind_gate`** die Art des Diensttags. Alle drei laufen über

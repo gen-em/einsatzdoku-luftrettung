@@ -80,6 +80,38 @@ async function tagMitBesatzung(k) {
   return null;
 }
 
+
+/** Welche Besatzungsrollen bietet das EINSATZFORMULAR dieses Tages an?
+ *
+ * GEMESSEN WIRD DAS TOR, NICHT DIE SICHTBARKEIT. Über den Rollenfeldern
+ * liegen drei Schichten, und nur die unterste ist hier gemeint:
+ *   1. Die Karte „Abweichende Besatzung vom Diensttag" ist ein zugeklapptes
+ *      `<details>`.
+ *   2. `DIV.childfields` trägt `hidden`, solange der Haken
+ *      `f_crew_override` nicht gesetzt ist (`.parentcheck`).
+ *   3. Jedes Feld, das `role_gate` nicht besteht, trägt `hidden` an seinem
+ *      EIGENEN `LABEL.fld-sub` — serverseitig gesetzt (einsatz_form.php).
+ * Ein erster Entwurf dieses Helfers zählte sichtbare Felder und bekam überall
+ * 0: Schicht 1 und 2 hatten alles verdeckt. Der Haken selbst ist zudem ein
+ * gestalteter Schalter, dessen `input` außerhalb des Sichtfensters liegt —
+ * `check()` scheitert daran. Deshalb wird nichts geklickt und nichts
+ * aufgeklappt, sondern Schicht 3 unmittelbar gelesen.
+ *
+ * Gespeichert wird nichts: Der Weg öffnet das Formular für einen NEUEN Einsatz
+ * und verlässt es wieder. Die Feldnamen tragen das Präfix `f_`.
+ */
+async function rollenImEinsatzformular(k, tagId) {
+  await k.gehZu(`${k.basis}/einsatz_form.php?d=${tagId}`);
+  await k.seite.waitForSelector('input[name="f_crew_override"]',
+                                { timeout: 20000, state: 'attached' });
+  await k.seite.waitForTimeout(400);
+  return await k.seite.evaluate(() => Array.from(
+    document.querySelectorAll('input[name^="f_crew_"]'))
+    .filter(i => i.name !== 'f_crew_override')
+    .filter(i => { const l = i.closest('label'); return l && !l.hasAttribute('hidden'); })
+    .map(i => i.name.replace(/^f_crew_/, '')));
+}
+
 export const wege = [
   {
     name: 'ap6-rollen-ohne-speichern',
@@ -298,6 +330,80 @@ export const wege = [
       } finally {
         await k.seite.selectOption('#vehsel', anfang.veh).catch(() => {});
         await k.seite.waitForTimeout(500);
+        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit())
+          .catch(() => {});
+        await k.seite.waitForTimeout(1200);
+      }
+    },
+  },
+
+  {
+    name: 'ap6-einsatzformular-ohne-rollen-am-adhoc-tag',
+    paket: 'AP6', punkt: 'Frage 11 (a) + 3b', rolle: 'demo',
+    was: 'Das Einsatzformular eines Tages mit „Anderem Rettungsmittel" bietet keine Besatzungsrollen an',
+    soll: 'Vorher die Rollen des Rettungsmittels, nachher 0 — und die Namen stehen weiter in der Leseansicht des Tages',
+    async fahren(k) {
+      /* ZWEI ADHOC-TAGE MÜSSEN GLEICH AUSSEHEN (Frage 11, entschieden am
+         09.09.2026). `dt_rollensatz_einfrieren()` löscht beim Wechsel nur
+         LEERE Rollen — benannte Zeilen bleiben in `day_crew` stehen. Ohne die
+         Abfrage in einsatz_form.php bot ein UMGESTELLTER Adhoc-Tag deshalb
+         die Rollen des früheren Rettungsmittels an, ein FRISCH ANGELEGTER
+         keine. Gefragt ist der Dienst, und der führt keine.
+
+         DIE NAMEN BLEIBEN. Entschieden wurde (a): Die Leseansicht berichtet
+         weiter, was gespeichert ist. Der Weg misst deshalb BEIDES — 0 Rollen
+         im Einsatzformular UND die Namen in der Leseansicht. Fällt eines von
+         beiden, ist die Entscheidung verletzt. */
+      const tag = await tagMitBesatzung(k);
+      if (!tag) {
+        return { ist: 'Kein Diensttag mit Besatzungsnamen im Bestand', ok: false,
+                 bemerkung: 'Der Weg braucht einen Tag mit mindestens einem Namen' };
+      }
+      const anfang = tag.stand;
+      try {
+        const vorher = await rollenImEinsatzformular(k, tag.id);
+
+        await k.gehZu(`${k.basis}/index.php?d=${tag.id}`);
+        await k.seite.waitForSelector('#tagdatenknopf', { timeout: 20000 });
+        await k.seite.waitForTimeout(600);
+        await k.seite.click('#tagdatenknopf');
+        await k.seite.waitForTimeout(400);
+        await k.seite.selectOption('#vehsel', 'adhoc');
+        await k.seite.waitForTimeout(600);
+        await k.seite.fill('#adhoc-name', 'KP Frage 11');
+        await k.seite.check('#adhocfelder .vehkind-radio[value=ground]', { force: true });
+        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit());
+        await k.seite.waitForTimeout(1400);
+
+        const nachher = await rollenImEinsatzformular(k, tag.id);
+
+        await k.gehZu(`${k.basis}/index.php?d=${tag.id}`);
+        await k.seite.waitForTimeout(700);
+        const lese = await k.seite.evaluate(() =>
+          document.getElementById('taglese').textContent.replace(/\s+/g, ' ').trim());
+        const namenDa = tag.namen.every(n => lese.includes(n));
+
+        const ok = vorher.length > 0 && nachher.length === 0 && namenDa;
+        return {
+          ist: `Einsatzformular: ${vorher.length} Rollen am Tag mit Rettungsmittel `
+             + `(${vorher.join(', ') || '—'}), ${nachher.length} am Tag mit `
+             + `„Anderem Rettungsmittel"${nachher.length ? ' (' + nachher.join(', ') + ')' : ''} · `
+             + `${tag.namen.length} Namen in der Leseansicht: ${namenDa}`,
+          ok,
+          bemerkung: ok ? ''
+            : (vorher.length === 0
+                ? 'Schon vor dem Wechsel bot das Einsatzformular keine Rolle an — der Tag taugt nicht als Probe'
+                : (nachher.length
+                    ? 'Der Adhoc-Tag bietet weiter Rollen an (Frage 11, Punkt 3b)'
+                    : 'Die Leseansicht hat die Besatzungsnamen verloren (Entscheidung a verletzt)')),
+        };
+      } finally {
+        await k.gehZu(`${k.basis}/index.php?d=${tag.id}`).catch(() => {});
+        await k.seite.waitForTimeout(600);
+        await k.seite.click('#tagdatenknopf').catch(() => {});
+        await k.seite.waitForTimeout(400);
+        await k.seite.selectOption('#vehsel', anfang.veh).catch(() => {});
+        await k.seite.waitForTimeout(600);
         await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit())
           .catch(() => {});
         await k.seite.waitForTimeout(1200);

@@ -14,6 +14,40 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 18.1.1] — 2026-09-09
+
+### Web — zwei Diensttage mit „Anderem Rettungsmittel" boten verschiedene Rollen an
+
+`dt_rollensatz_einfrieren()` löscht beim Wechsel des Rettungsmittels nur
+**leere** Rollen — ein eingetragener Name überlebt, damit ein versehentlicher
+Wechsel keine Eingabe kostet. Ein Diensttag, der von einem Rettungsmittel mit
+Rollen auf „Anderes Rettungsmittel" umgestellt wurde, behielt deshalb die
+benannten Zeilen in `day_crew`. Das **Einsatzformular** liest genau diese
+Zeilenmenge (`role_gate`) und bot dort weiter die Rollen des früheren
+Rettungsmittels an, während ein frisch angelegter Tag derselben Art keine bot.
+Gemessen an einem Diensttag: 3 Rollen mit Rettungsmittel, danach **2 statt 0**
+— nämlich die beiden, die einen Namen trugen.
+
+Gefragt ist der **Dienst**, und ein Rettungsmittel nur für den Tag führt keine
+Rollen (E-S9-10). `einsatz_form.php` fragt dafür jetzt
+`dt_ist_tagesrettungsmittel()`; die Antwort steht an einer Stelle statt als
+Vergleich vor Ort. Die **Namen bleiben unangetastet**: Sie stehen weiter in
+`day_crew`, die Leseansicht des Tages zeigt sie, und sie kehren zurück, sobald
+wieder ein Rettungsmittel mit dieser Rolle zugeordnet ist. So entschieden am
+09.09.2026 (Frage 11, Weg a) — die Leseansicht berichtet, was gespeichert ist;
+sie zu leeren wäre die schlechtere Auskunft, die Namen zu löschen der teurere
+Irrtum.
+
+**Was dabei sichtbar wurde, und es ist keine Folge dieser Änderung:** An einem
+Diensttag mit „Anderem Rettungsmittel" lässt sich Besatzung **überhaupt nicht**
+erfassen — weder am Tag (kein Rollensatz) noch am einzelnen Einsatz (dasselbe
+Tor). Der Hinweis im Tagesformular und das Handbuch verwiesen auf die
+abweichende Besatzung am Einsatz und lagen damit falsch; beide sind berichtigt
+und sagen jetzt, dass ein solches Rettungsmittel dafür anzulegen ist. Ob ein
+Tagesrettungsmittel Rollen anbieten **soll** — und welche —, ist eine
+Gestaltungsfrage und steht als Backlog Nr. 169 offen. Bis dahin bleibt die
+Lücke gleichmäßig statt zufällig.
+
 ## [Web 18.1.0] — 2026-09-09
 
 ### Web — die Tageszuordnung antwortet sofort (Rollen ohne Speichern, E-S9-11)
@@ -49,8 +83,9 @@ finden das Fahrzeug trotzdem — sie lesen genau diese Momentaufnahme und nicht
 die Stammdaten.
 
 **Kein Rollensatz, keine Fähigkeiten.** Ein Rettungsmittel nur für den Tag
-führt keine Besatzungsrollen; das Formular sagt das und verweist auf die
-abweichende Besatzung am einzelnen Einsatz. Vorhandene **Namen** in `day_crew`
+führt keine Besatzungsrollen; das Formular sagt das. (Der Satz verwies
+zunächst auf die abweichende Besatzung am einzelnen Einsatz — das war falsch,
+siehe 18.1.1.) Vorhandene **Namen** in `day_crew`
 werden dabei nicht gelöscht — dieselbe Regel wie beim Wechsel auf ein
 Rettungsmittel mit weniger Rollen: Ein eingetragener Name überlebt und steht
 wieder da, sobald die Rolle zurückkommt.

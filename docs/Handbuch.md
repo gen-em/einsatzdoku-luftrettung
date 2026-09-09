@@ -637,8 +637,18 @@ Pro Tag:
   diesem einen Diensttag und taucht in keiner Auswahlliste wieder auf; in
   Suche, Filter und Diensttage-Leiste findest du es trotzdem. Wenn du es
   öfter brauchst, leg es unter *Einstellungen → Standorte* an.
-  **Besatzungsrollen gibt es dafür nicht** — Namen kannst du am einzelnen
-  Einsatz unter „Abweichende Besatzung" eintragen (Abschnitt 4.3).
+  **Besatzungsrollen gibt es dafür nicht** — und zwar auch nicht am einzelnen
+  Einsatz: Das Einsatzformular zeigt dieselben Rollen wie der Diensttag, und
+  der führt hier keine. An einem solchen Tag lässt sich die Besatzung also
+  nicht festhalten. Wer sie braucht, legt das Rettungsmittel unter
+  *Einstellungen → Standorte* an und ordnet es zu; dann stehen seine Rollen
+  am Tag und am Einsatz zur Verfügung.
+
+  > Bis Web 18.1.0 stand hier, Namen ließen sich am einzelnen Einsatz
+  > nachtragen. Das stimmte nicht: Ein frisch angelegter Tag dieser Art bot
+  > auch dort keine Rollen an, und ein aus einer früheren Zuordnung
+  > umgestellter bot die alten an. Seit Web 18.1.1 verhalten sich beide
+  > gleich.
 - **Karte** mit allen Einsätzen des Tages (jeder in eigener Farbe, beginnend
   mit Orange/Blau/Rot) und dem Ruhe-Track in gedämpftem Graublau. Kleine
   **Richtungspfeile** auf den Aufzeichnungen zeigen die Bewegungsrichtung.

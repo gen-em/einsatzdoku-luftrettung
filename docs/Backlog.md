@@ -1741,6 +1741,37 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `edbak`, `edbak-alt` und `csv` laufen mit **0 unerklärten** Abweichungen;
     eine Sicherung im alten Format spielt weiterhin ein.
 
+169. **Ein Diensttag mit „Anderem Rettungsmittel" kann keine Besatzung
+    festhalten.** *Aufgenommen 09.09.2026 beim Beantworten von Frage 11
+    (S9/AP6, Web 18.1.1).* Ein Rettungsmittel nur für den Tag führt keine
+    Besatzungsrollen (E-S9-10, F19). Das gilt seit Web 18.1.1
+    **gleichmäßig** — vorher bot ein aus einer früheren Zuordnung
+    umgestellter Tag die alten Rollen an, ein frisch angelegter keine. Die
+    Gleichmäßigkeit legt die Lücke frei: Es gibt an einem solchen Tag
+    **keinen** Weg, einen Besatzungsnamen einzutragen, weder am Tag noch am
+    einzelnen Einsatz — beide fragen denselben Rollensatz.
+
+    *Warum das nicht nebenbei zu schließen ist:* Der Rollensatz kommt aus
+    `vehicle_roles` des Stammdatensatzes, und einen solchen gibt es hier
+    gerade nicht. Drei Wege sind denkbar, und sie unterscheiden sich in dem,
+    was sie versprechen:
+    **(a)** Der Adhoc-Dialog bekommt Rollenhaken wie das
+    Stammdatenformular — ehrlich, aber er wächst um sieben Felder und wird
+    damit zu dem Formular, das er nicht sein wollte.
+    **(b)** Der Tag bietet die Rollen an, die zu seiner **Betriebsart**
+    passen (luft/boden) — billig, aber es ist geraten, und E26 sagt
+    ausdrücklich: geraten wird nicht.
+    **(c)** So lassen und im Text sagen (heutiger Stand): Wer die Besatzung
+    braucht, legt das Rettungsmittel an. Kostet einen Stammdatensatz, den
+    F17 gerade ersparen wollte.
+
+    *Bis zur Entscheidung gilt (c).* Hinweis im Tagesformular und Handbuch
+    sagen es seit Web 18.1.1 zutreffend; vorher verwiesen beide auf die
+    abweichende Besatzung am Einsatz, wo dieselbe Sperre greift.
+    *Abnahme:* Ein Diensttag mit „Anderem Rettungsmittel" erlaubt einen
+    Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
+    tut. Kein dritter Zustand.
+
 ## Erledigt
 
 

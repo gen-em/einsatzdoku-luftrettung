@@ -46,6 +46,24 @@ function dt_laden(int $userId, int $dayId, bool $mitPapierkorb = false): ?array
 }
 
 /**
+ * Traegt dieser Diensttag ein Rettungsmittel NUR FUER DEN TAG (E-S9-10)?
+ *
+ * Kennzeichen ist das Paar: keine Kennung in `vehicle_id`, aber ein
+ * eingefrorener Name in `vehicle_name`. Ein Tag ohne jede Zuordnung hat
+ * beides nicht, ein Tag mit Stammdaten-Rettungsmittel hat beides.
+ *
+ * Die Frage wird an mehreren Stellen gestellt (Tagesformular, Einsatzformular),
+ * und sie darf nicht an zweien verschieden beantwortet werden — deshalb steht
+ * sie hier und nicht als Vergleich vor Ort.
+ */
+function dt_ist_tagesrettungsmittel(array $tag): bool
+{
+    return ($tag['vehicle_id'] ?? null) === null
+        && ($tag['vehicle_name'] ?? null) !== null
+        && trim((string)$tag['vehicle_name']) !== '';
+}
+
+/**
  * Besatzung eines Diensttags: role_code => ?name, in KATALOGREIHENFOLGE.
  *
  * Die Zeilenmenge ist der eingefrorene Rollensatz (E8): Welche Rollen ein

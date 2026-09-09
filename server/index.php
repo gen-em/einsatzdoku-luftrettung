@@ -1067,10 +1067,15 @@ function renderCrewFields(meta){
 
   if (!crew.length) {
     hint.hidden = false;
+    /* DER SATZ HAT EINMAL ZU VIEL VERSPROCHEN (Web 18.1.1). Er verwies auf
+       die abweichende Besatzung am einzelnen Einsatz — dort greift aber
+       DASSELBE Tor: Das Einsatzformular fragt den Rollensatz des Diensttags
+       (`role_gate`), und der ist an einem Tagesrettungsmittel leer. Wer dem
+       Satz folgte, fand die Felder nicht. Jetzt sagt er, was gilt. */
     hint.textContent = (meta && meta.adhoc)
-      ? 'Ein Rettungsmittel nur für diesen Tag führt keine Besatzungsrollen. '
-        + 'Namen lassen sich am einzelnen Einsatz unter „Abweichende Besatzung" '
-        + 'eintragen.'
+      ? 'Ein Rettungsmittel nur für diesen Tag führt keine Besatzungsrollen — '
+        + 'auch nicht am einzelnen Einsatz. Wer die Besatzung festhalten will, '
+        + 'legt das Rettungsmittel unter Einstellungen → Standorte an.'
       : (meta && meta.vehicle_id)
       ? 'Für dieses Rettungsmittel sind keine Besatzungsrollen angehakt — '
         + 'nachzutragen unter Einstellungen → Rettungsmittel.'

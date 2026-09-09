@@ -3634,8 +3634,9 @@ declare(strict_types=1);
  * Filter und Tagesliste finden ihn trotzdem: Sie lesen die Momentaufnahme.
  *
  * KEIN ROLLENSATZ, KEINE FAEHIGKEITEN (F19). Ein Rettungsmittel nur fuer den
- * Tag fuehrt keine Besatzungsrollen; das Formular sagt das und verweist auf
- * die abweichende Besatzung am einzelnen Einsatz. Vorhandene NAMEN in
+ * Tag fuehrt keine Besatzungsrollen; das Formular sagt das. (Der Satz verwies
+ * zunaechst auf die abweichende Besatzung am einzelnen Einsatz — das war
+ * falsch, siehe 18.1.1.) Vorhandene NAMEN in
  * `day_crew` werden dabei NICHT geloescht — dieselbe Regel wie beim Wechsel
  * auf ein Rettungsmittel mit weniger Rollen: Ein Name, den jemand eingetragen
  * hat, ueberlebt und steht wieder da, sobald die Rolle zurueckkommt.
@@ -3673,5 +3674,37 @@ declare(strict_types=1);
  *
  * NEBENNUMMER: neue Funktionen, kein Datenmodell, keine Migration.
  * `update.php` muss NICHT laufen.
+ *
+ * 18.1.1 — S9/AP6: zwei Diensttage mit „Anderem Rettungsmittel" boten
+ * verschiedene Besatzungsrollen an. Jetzt beide keine.
+ *
+ * WORAN ES LAG. `dt_rollensatz_einfrieren()` loescht beim Wechsel des
+ * Rettungsmittels nur LEERE Rollen — ein eingetragener Name ueberlebt, damit
+ * ein versehentlicher Wechsel keine Eingabe kostet. Ein Diensttag, der von
+ * einem Rettungsmittel MIT Rollen auf „Anderes Rettungsmittel" umgestellt
+ * wurde, behielt deshalb die benannten Zeilen in `day_crew`. Das
+ * Einsatzformular liest genau diese Zeilenmenge (`role_gate`) — und bot dort
+ * weiter die Rollen des frueheren Rettungsmittels an, waehrend ein FRISCH
+ * angelegter Adhoc-Tag keine bot. Gemessen: derselbe Tag, 3 Rollen mit
+ * Rettungsmittel, danach 2 (die beiden benannten) statt 0.
+ *
+ * WAS JETZT GILT. Gefragt ist der DIENST, und ein Rettungsmittel nur fuer den
+ * Tag fuehrt keine Rollen (E-S9-10, F19) — `einsatz_form.php` fragt dafuer
+ * `dt_ist_tagesrettungsmittel()`, und die Antwort steht an EINER Stelle, nicht
+ * als Vergleich vor Ort. Die NAMEN bleiben unangetastet: Sie stehen weiter in
+ * `day_crew`, die Leseansicht des Tages zeigt sie, und sie kehren zurueck,
+ * sobald wieder ein Rettungsmittel mit dieser Rolle zugeordnet ist
+ * (Auftraggeberentscheidung vom 09.09.2026, Weg a).
+ *
+ * WAS DAMIT SICHTBAR WIRD, und es ist keine Folge dieser Aenderung, sondern
+ * eine Luecke, die sie nur noch gleichmaessig macht: An einem Diensttag mit
+ * „Anderem Rettungsmittel" laesst sich BESATZUNG UEBERHAUPT NICHT ERFASSEN —
+ * weder am Tag (kein Rollensatz) noch am einzelnen Einsatz (dasselbe Tor).
+ * Der Hinweis im Tagesformular und das Handbuch behaupteten das Gegenteil;
+ * beide sind berichtigt. Ob ein solcher Tag Rollen anbieten SOLL — und
+ * welche —, ist eine Gestaltungsfrage und steht im Backlog.
+ *
+ * KORREKTURNUMMER: eine Ungleichheit beseitigt, kein neues Feld, kein
+ * Datenmodell. `update.php` muss NICHT laufen.
  */
-const WEB_VERSION = '18.1.0';
+const WEB_VERSION = '18.1.1';

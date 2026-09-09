@@ -711,6 +711,50 @@ aus `day_crew`; die Namen stehen sichtbar darin und überleben. Erst der Umweg
 `ap6-namen-ueberleben-den-umweg` meldet auf der fehlerhaften Fassung
 **3 von 4 Wegen erfüllt, 1 verfehlt**, auf der behobenen **4 von 4**.
 
+**F-S9-U-35 — zwei Diensttage derselben Art boten verschiedene
+Besatzungsrollen an, und ein sichtbarer Satz versprach etwas Unmögliches.**
+*Gefunden beim Beantworten von Frage 11 (09.09.2026), behoben in Web 18.1.1.*
+
+*Der Befund, zweiteilig:*
+
+1. **Ungleiche Tage.** Das Einsatzformular liest den Rollensatz des Diensttags
+   (`dt_crew()`, `role_gate`). `dt_rollensatz_einfrieren()` löscht beim Wechsel
+   nur **leere** Rollen — benannte überleben. Ein von einem Rettungsmittel mit
+   Rollen umgestellter Adhoc-Tag bot dort also die alten Rollen an, ein frisch
+   angelegter keine. **Gemessen an einem Diensttag: 3 Rollen mit
+   Rettungsmittel, danach 2 statt 0** — genau die beiden mit Namen; die dritte,
+   leere, war beim Wechsel entfernt worden.
+2. **Ein Satz, der ins Leere führte.** Der Hinweis im Tagesformular sagte:
+   „Namen lassen sich am einzelnen Einsatz unter ‚Abweichende Besatzung'
+   eintragen." Dort greift **dasselbe** Tor. Wer dem Satz folgte, fand die
+   Felder nicht. `docs/Handbuch.md` sagte dasselbe.
+
+*Die Behebung:* `dt_ist_tagesrettungsmittel()` (`diensttag_lib.php`) beantwortet
+„ist das ein Rettungsmittel nur für den Tag?" an **einer** Stelle;
+`einsatz_form.php` übergibt dann einen leeren Rollensatz. Hinweis und Handbuch
+sagen jetzt, was gilt: Wer die Besatzung festhalten will, legt das
+Rettungsmittel an.
+
+*Was offen bleibt und benannt ist:* An einem solchen Tag lässt sich Besatzung
+**überhaupt nicht** erfassen. Das ist keine Folge der Behebung — für einen
+frisch angelegten Tag galt es schon vorher —, sondern eine Lücke, die die
+Gleichmäßigkeit sichtbar macht. **Backlog Nr. 169**, mit drei Wegen und dem
+Preis jedes einzelnen.
+
+*Gegen beide Fassungen geprüft:* `ap6-einsatzformular-ohne-rollen-am-adhoc-tag`
+meldet auf der Fassung ohne die Behebung **39 von 40 Wegen erfüllt, 1
+verfehlt** (Ist: „3 Rollen … 2 am Tag mit Anderem Rettungsmittel (driver,
+other)"), mit der Behebung **40 von 40**.
+
+*Ein Hinweis zum Messen, weil er zwei Anläufe gekostet hat:* Über den
+Rollenfeldern des Einsatzformulars liegen **drei** Schichten — die zugeklappte
+Karte „Abweichende Besatzung vom Diensttag" (`<details>`), der Haken
+`f_crew_override` (`.parentcheck`, dessen `input` als gestalteter Schalter
+außerhalb des Sichtfensters liegt, sodass `check()` scheitert) und erst dann
+das Tor selbst. Wer Sichtbarkeit misst, bekommt **überall 0** und hält es für
+einen Beleg. Der Weg liest deshalb das `hidden` am eigenen `LABEL.fld-sub` des
+Feldes — serverseitig gesetzt, unabhängig von den beiden Schichten darüber.
+
 **Die Prüfmittel am Ende, mit Mittel und Zahl:**
 
 | Mittel | Ergebnis |
@@ -718,6 +762,7 @@ aus `day_crew`; die Namen stehen sichtbar darin und überleben. Erst der Umweg
 | Klickprobe | **76 von 76 als Zeigergerät und 76 von 76 als Fingergerät**, 0 verfehlt — je 38 Wege über 390 und 1280 px. Referenzbestand danach unverändert. **Danach ein vierter AP6-Weg dazugekommen** (`ap6-namen-ueberleben-den-umweg`, F-S9-U-34): 4 von 4 in `--nur ap6`, gegengeprobt gegen die fehlerhafte Fassung mit 3 von 4 |
 | Bilderlauf | **360 Einzelbilder und 45 Kontaktbögen je Bedienhöhe**, **0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen**, **0 ausgefallene Aufnahmen** (Zeiger 44/36 px, Finger 44 px). Die neue Seite `12-tagesuebersicht-adhoc` zeigt den aufgeklappten Zustand, wie das Konzept es statt eines Mockups verlangt |
 | Nachlauf nach der Korrektur | Die drei berührten Seiten neu aufgenommen: **32 Einzelbilder, 4 Kontaktbögen je Bedienhöhe, 0/0/0**. Nur `index.php` war betroffen; die übrigen 41 Seiten sind von der Änderung nicht berührt |
+| **Nachlauf Web 18.1.1** (Frage 11, Weg a und Punkt 3b) | **Klickprobe 80 von 80 als Zeigergerät und 80 von 80 als Fingergerät**, 0 verfehlt — je 40 Wege über 390 und 1280 px, darunter der neue fünfte AP6-Weg. Bestand danach unverändert: **21 Rettungsmittel, 58 Diensttage, 0 Tage mit Tagesrettungsmittel, 0 Probeeinträge (`KP %`), 177 Besatzungsnamen** — also nichts liegengeblieben und nichts verloren. **Bilderlauf** der vier berührten Seiten (`10-tagesuebersicht`, `11-tagesuebersicht-schublade`, `12-tagesuebersicht-adhoc`, `13-einsatzformular`) in **beiden** Bedienhöhen: je **32 Einzelbilder, 4 Kontaktbögen, 0 Überlauf / 0 Konsolenfehler / 0 Knöpfe falscher Höhe**; auf dem Bild bei 768 px steht der berichtigte Hinweissatz und die Fußzeile **v18.1.1**. **Wortliste 0 Treffer** außerhalb der Ausnahmen bei 96 Regeln, 96 gegriffen, 0 ungenutzt. **Linkprobe 116 Verweise, 0 unbekannte Abweichungen**, 1 bekannte mit Nummer. **Vollständigkeit 327 auf 328** — der eine Unterschied ist der Menüpfeil im berichtigten Hinweistext (`server/index.php` von 7 auf 8 Pfeile, der neue in Zeile 1078: „Einstellungen → Standorte"). **Kein Stilvergleich**, `style.css` unberührt |
 | Wiederherstellungsprobe | **94 Erwartungen, 0 nicht erfüllt** (P-19, Papierkorb-Mischfall eingeschlossen) |
 | Linkprobe | **99 Zielseiten, 116 Verweise, 0 unbekannte Abweichungen**, 1 bekannte mit Nummer |
 | Wortliste | **0 Treffer außerhalb der Ausnahmen** bei 96 Regeln, 96 gegriffen, 0 ungenutzt, fünf Bereiche |
@@ -1420,6 +1465,26 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   *Scheitern erkennbar an:* Rettungsmittel fehlen (dann greift die
   Standortprüfung zu streng), oder der Import bricht ab.
 
+- [ ] **30 — Ein Diensttag mit „Anderem Rettungsmittel" und die Besatzung
+  (AP6, Frage 11, Web 18.1.1).**
+  *Weg:* Einen Diensttag nehmen, an dem Besatzungsnamen stehen. Auf „Anderes
+  Rettungsmittel …" wechseln, Bezeichnung eintragen, speichern. Dann (1) die
+  Leseansicht des Tages ansehen, (2) über „Einsatz nachtragen" das
+  Einsatzformular öffnen, dort die Karte „Abweichende Besatzung vom Diensttag"
+  aufklappen und den Haken setzen, (3) zurück auf das ursprüngliche
+  Rettungsmittel wechseln und speichern.
+  *Erwartet:* (1) Die Besatzung steht weiterhin in der Leseansicht — mit
+  denselben Namen. (2) Unter dem Haken erscheint **kein einziges** Rollenfeld,
+  und der Hinweis im Tagesformular sagt, dass es an einem solchen Tag keine
+  Besatzungsrollen gibt — **ohne** auf den einzelnen Einsatz zu verweisen.
+  (3) Nach dem Rückwechsel stehen die Namen wieder in den Feldern.
+  *Scheitern erkennbar an:* Ein Rollenfeld unter dem Haken (dann greift das
+  Tor nicht — die Ungleichheit aus F-S9-U-35 ist zurück); eine leere
+  Leseansicht (dann sind die Namen gelöscht, entgegen Weg a); leere Felder nach
+  dem Rückwechsel (dann ist F-S9-U-34 zurück); oder ein Hinweistext, der auf
+  „Abweichende Besatzung" verweist (dann ist der berichtigte Satz nicht
+  ausgeliefert).
+
 - [ ] **22 — Die Nachbearbeitung auf einer Installation, die A12 nie
   abgeschlossen hat (AP4).**
   *Weg:* Nur wenn es eine solche Installation gibt: „Zuordnung offen" in der
@@ -1440,7 +1505,8 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
 ### Neu aus AP6 (09.09.2026)
 
 **Frage 11 — Ein Diensttag mit „Anderem Rettungsmittel": soll die Leseansicht
-die Besatzung weiter zeigen?**
+die Besatzung weiter zeigen?**  ·  **ENTSCHIEDEN am 09.09.2026: Weg (a), und
+Punkt 3b wird behoben** (Web 18.1.1) — siehe den Kasten am Ende dieser Frage.
 Ein Rettungsmittel nur für den Tag führt keine Besatzungsrollen (E-S9-10,
 F19) — das Formular zeigt deshalb kein Rollenfeld, sondern den Satz dazu.
 War dem Diensttag vorher ein Rettungsmittel **mit** Rollen zugeordnet und
@@ -1462,6 +1528,44 @@ werden beim Wechsel gelöscht — dann stimmt alles überein, und ein
 versehentlicher Wechsel kostet die Eingabe. *Ich habe (a) gebaut*, weil es
 als einziges nichts verbirgt und nichts wegwirft. Für (b) oder (c) spricht
 die Einheitlichkeit; beides ist eine Zeile.
+
+> **Antwort des Auftraggebers, 09.09.2026: (a) — und 3b beheben.**
+>
+> **Beim Erklären der Frage kam heraus, dass sie unvollständig gestellt war.**
+> Sichtbar wird der Bestand an **zwei** Stellen, nicht an einer:
+>
+> - **3a — Leseansicht des Tages** (`index.php`, `zeigeTagLese()`): zeigt die
+>   Besatzung aus `day_crew`. **Bleibt so** (Weg a).
+> - **3b — Einsatzformular** (`einsatz_form.php`): `dt_crew()` steuert über
+>   `role_gate`, welche Besatzungsfelder eines Einsatzes überhaupt erscheinen.
+>   Ein **umgestellter** Adhoc-Tag bot deshalb die Rollen des früheren
+>   Rettungsmittels an, ein **frisch angelegter** keine. Zwei Tage derselben
+>   Art, verschieden. **Behoben:** `dt_ist_tagesrettungsmittel()` in
+>   `diensttag_lib.php` beantwortet die Frage an einer Stelle;
+>   `einsatz_form.php` übergibt dann einen leeren Satz. Die Namen bleiben
+>   unangetastet.
+>
+> *Gemessen (Klickprobe `ap6-einsatzformular-ohne-rollen-am-adhoc-tag`,
+> 09.09.2026):* am Tag mit Rettungsmittel **3 Rollen** (driver, trainee,
+> other), nach dem Wechsel **0** — und **2 Namen** weiter in der Leseansicht.
+> *Gegenprobe gegen die Fassung ohne die Behebung:* **2 statt 0**, nämlich
+> genau die beiden Rollen, die einen Namen trugen; die dritte (leer) hatte
+> `dt_rollensatz_einfrieren()` beim Wechsel entfernt. Lauf **39 von 40**
+> gegen **40 von 40**.
+>
+> **(c) wurde nicht empfohlen und nicht gewählt:** `day_crew` hängt nicht am
+> Papierkorb — der arbeitet mit `deleted_at` auf `days` und `missions`, nicht
+> auf Rollenzeilen. Gelöscht wäre endgültig gelöscht.
+>
+> **WAS DIE ENTSCHEIDUNG FREILEGT — und es ist keine Folge von ihr:** An einem
+> Diensttag mit „Anderem Rettungsmittel" lässt sich Besatzung **überhaupt
+> nicht** erfassen, weder am Tag noch am einzelnen Einsatz; beide fragen
+> denselben Rollensatz. Für einen frisch angelegten Tag war das schon vor
+> 18.1.1 so — die Behebung macht es nur gleichmäßig statt zufällig. Der
+> Hinweis im Tagesformular und `docs/Handbuch.md` verwiesen auf die
+> abweichende Besatzung am Einsatz und **lagen damit falsch**; beide sind
+> berichtigt. Ob ein Tagesrettungsmittel Rollen anbieten **soll**, steht als
+> **Backlog Nr. 169** offen — mit drei Wegen und dem Preis jedes einzelnen.
 
 Stellen, an denen Konzept und Auftrag einander widersprechen oder das Konzept
 schweigt. Jede ist vorläufig entschieden **und** revidierbar; der Preis einer
