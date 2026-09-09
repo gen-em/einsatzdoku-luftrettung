@@ -1178,8 +1178,58 @@ Nebenbei. **(c)** Nur die Anzeige jetzt stilllegen (die Karte „Vordefinierte
 Standorte" und den Verweis auf `admin_stammdaten.php` ausblenden, solange
 kein zentraler Eintrag existiert), das Schema erst in P5 — das nimmt der
 Oberfläche sofort ein leeres Versprechen und lässt die Daten unberührt.
-*Eine Empfehlung gebe ich erst mit der Bestandsaufnahme dazu* (läuft), weil
-sie davon abhängt, was noch alles daran hängt.
+
+**Empfehlung nach der Bestandsaufnahme (09.09.2026): Weg (c).** Die
+Bestandsaufnahme liegt als `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`
+vor — **208 Befunde** auf sechs Flächen, davon **23 am Schema** und **30** an
+Sicherung, Import, Export und API. Drei Gründe:
+
+1. **Der Schemarückbau gehört nicht in S9.** Er zieht `user_id` in sechs
+   Tabellen auf `NOT NULL`, wirft `user_bases` weg und hebt die Nutzlast der
+   Kontosicherung. Das ist eine Hauptnummer mit Migration, und MySQL kennt
+   kein Zurückrollen von Schemaänderungen: Steht beim `ALTER TABLE` noch eine
+   zentrale Zeile, bleibt die Anlage auf halbem Weg stehen. R39 stellt ihn
+   nach P5, und dort gehört er hin. **Weg (b) fällt damit aus** — nicht weil
+   er falsch wäre, sondern weil er ein eigenes Konzept braucht und S9 dafür
+   der falsche Ort ist.
+2. **Weg (a) lässt eine Tür offen, die schon zugegangen ist.** In der
+   laufenden Anlage sind alle zentralen Standorte gelöscht, im
+   Referenzbestand hat es nie einen gegeben (Bestandsaufnahme 3.4: 0 von 8
+   Standorten, 0 von 21 Rettungsmitteln, 0 von 136 übrigen Stammdatensätzen
+   zentral). Trotzdem kann `admin_stammdaten.php` jederzeit neue anlegen —
+   seit AP5-4 sogar bequemer als vorher. Jede Zeile, die zwischen heute und
+   P5 so entsteht, ist Arbeit für die Migration, die dann nicht mehr
+   zurückkann.
+3. **Weg (c) ist billig und macht die Voraussetzung dauerhaft.** Er ändert
+   kein Schema, braucht **kein `update.php`** und kostet eine Nebennummer.
+   Danach ist „keine zentrale Zeile mehr" nicht ein Stand von einem Tag,
+   sondern eine Eigenschaft der Anwendung — und der P5-Rückbau wird von
+   einem Umbau zu einem Aufräumen.
+
+*Was Weg (c) umfasst (Vorschlag für ein Arbeitspaket AP5b, Umfang etwa
+AP5-5):* **(1)** `admin_stammdaten.php` verliert das **Anlegen und
+Bearbeiten** — die zwölf Öffner und die sechs Dialoge —, behält aber
+**Anzeigen und Löschen**, damit eine Anlage, die noch zentrale Stammdaten
+trägt, sie loswerden kann; dazu ein Satz, warum. **(2)** Die Karte
+„Vordefinierte Standorte" (`einstellungen.php:1774-1788`) wird nur noch
+gezeichnet, wenn es zentrale Standorte gibt; heute steht sie in jedem Konto
+und meldet „0 · 0 ausgewählt". **(3)** Der Verweis im Verwaltungsmenü
+erscheint nur bei Bestand. **(4)** Buchführung: Changelog, Handbuch 9.4,
+Technik, Backlog; bei den Prüfmitteln verliert der Klickprobenweg
+`ap5-verwaltung-besatzung-anlegen` (Nr. 163) seinen Gegenstand, und der
+Platzhalter `__ADMIN_STANDORT__` des Bilderlaufs entfällt — die acht
+ausgefallenen Aufnahmen aus F-S9-U-33 sind damit erklärt und erledigt.
+
+*Was Weg (c) NICHT tut:* Er rührt `user_id IS NULL`, `user_bases`, das Feld
+`stammdaten.user_bases` der Kontosicherung und die Migration
+`2026_07_26_zentrale_stammdaten` nicht an. Vorhandene zentrale Einträge
+bleiben lesbar, nutzbar und löschbar. Der Rückbau selbst bleibt P5.
+
+*Und offen gesagt:* Weg (c) nimmt einen Teil von AP5-4 wieder zurück. Die
+Dialoge der Verwaltungsseite sind für ein Modell gebaut worden, das
+abgeschafft wird — das war mein Fehler, R39 stand im Rahmenplan und ich habe
+ihn vor dem Bauen nicht gelesen. Die Arbeit ist nicht ganz verloren: Dieselben
+Bausteine tragen die Standortseiten der Einstellungen, und die bleiben.
 
 ### Neu aus AP5 (08.09.2026)
 

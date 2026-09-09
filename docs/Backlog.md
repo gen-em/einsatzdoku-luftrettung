@@ -1656,6 +1656,31 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zu betrachten.
 
 
+167. **Löschen eines Standorts hinterlässt verwaiste Vorbelegungen.**
+    *Aufgenommen 09.09.2026 bei der Bestandsaufnahme zu R39.*
+    `user_defaults` trägt bewusst **keinen Fremdschlüssel auf `item_id`** —
+    die Spalte zeigt je nach `kind` auf `bases.id` oder `vehicles.id`, und
+    zwei Zieltabellen lassen keinen zu (`schema.sql:196-208`). Beide
+    Löschwege räumen darum von Hand ab, was sie kennen: die Vorbelegung des
+    **Standorts** (`admin_stammdaten.php:164`, `einstellungen.php:718`) und
+    die des einzeln gelöschten **Rettungsmittels**
+    (`admin_stammdaten.php:251`, `einstellungen.php:828`). Nicht abgeräumt
+    werden die Vorbelegungen der Rettungsmittel, die mit dem Standort
+    **kaskadieren** — und das sind beim Löschen eines Standorts alle.
+    Gemessen an der lokalen Anlage in einer zurückgerollten Transaktion:
+    Rettungsmittel fort (0 Zeilen), Vorbelegung steht noch (1 Zeile).
+    Die Wirkung ist still: `dt_standardwerte()` liefert eine tote Kennung,
+    das Auswahlfeld findet dazu nichts und belegt nichts vor — es sieht aus
+    wie „keine Vorbelegung gesetzt", und niemand kann die Zeile loswerden.
+    Behebung: In beiden `base_del`-Wegen vor dem Löschen des Standorts auch
+    `DELETE FROM user_defaults WHERE kind = "vehicle" AND item_id IN
+    (SELECT id FROM vehicles WHERE base_id = ?)` — innerhalb derselben
+    Transaktion, in der der Standort fällt. Seit Web 17.1.0 löst
+    `stammdaten_standort_loesen()` die Rettungsmittel ohne Standortpflicht
+    vorher heraus; deren Vorbelegung muss **bleiben**, die Abfrage läuft
+    also nach dem Lösen. Nicht dringend, aber ein Rest, der sich mit jedem
+    gelöschten Standort vermehrt.
+
 ## Erledigt
 
 
