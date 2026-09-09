@@ -257,7 +257,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
       <div class="karte-inhalt">
         <div class="tag-lese" id="taglese"></div>
         <form id="dayform" class="tag-form" hidden data-dirty-track data-submit-on-ctrl-enter>
-        <label>Standort
+        <label id="basefeld">Standort
           <select name="base_id" id="basesel">
             <option value="">–</option>
             <?php foreach ($SD_BASES as $b): ?>
@@ -1231,6 +1231,14 @@ function adhocAnpassen(){
   const box = document.getElementById('adhocfelder');
   const an  = document.getElementById('vehsel').value === 'adhoc';
   box.hidden = !an;
+  /* DAS ÄUSSERE STANDORTFELD GEHT MIT, solange das Tagesfahrzeug gewählt ist.
+     Sonst stünden zwei Felder „Standort" untereinander: das Auswahlfeld des
+     Diensttags und das des Tagesfahrzeugs. Nur das zweite wirkt — der Weg
+     `adhoc` schickt `base_id` gar nicht mit —, und ein Feld, das man bedienen
+     kann, ohne dass etwas geschieht, ist genau das leere Versprechen, das
+     Web 18.0.0 an anderer Stelle weggenommen hat. Gefunden am Bild des
+     Bilderlaufs (S9/AP6), nicht von einer Zahl. */
+  document.getElementById('basefeld').hidden = an;
   if (!an) { return; }
 
   const regel = TYP_REGELN[document.getElementById('adhoc-typ').value] || TYP_REGELN.standard;

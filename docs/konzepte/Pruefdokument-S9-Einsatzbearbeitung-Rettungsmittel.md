@@ -662,6 +662,25 @@ Bilderlauf acht Ausfälle mit dem falschen Grund nannte): ein Werkzeug, das das
 Richtige misst und den falschen Grund angibt. Beide Male hätte die Zahl allein
 in die Irre geführt.
 
+**Ein Fund, den keine Zahl gemeldet hat — gesehen auf dem Bild.** Der
+Bilderlauf lief mit **0 Überlauf, 0 Konsolenfehlern, 0 falschen Knopfhöhen**,
+und die neue Seite `12-tagesuebersicht-adhoc` war dabei. Auf dem Abzug bei
+420 px stehen dann **zwei Felder „Standort" untereinander**: das Auswahlfeld
+des Diensttags und das des Tagesfahrzeugs. Nur das zweite wirkt — der Weg
+`adhoc` schickt `base_id` gar nicht mit —, das erste lässt sich bedienen, ohne
+dass etwas geschieht. Das ist genau das leere Versprechen, das Web 18.0.0 an
+anderer Stelle weggenommen hat.
+
+Behoben: Das äußere Standortfeld geht mit, solange das Tagesfahrzeug gewählt
+ist. **Gegengeprüft im Browser bei 420 px: 1 sichtbares Standortfeld in jedem
+der drei Zustände** (normal / Tagesfahrzeug / zurück), vorher 2 im mittleren.
+
+*Das gehört ins Protokoll, weil es zeigt, wozu das Bild da ist:* Kein Prüfmittel
+dieses Projekts hätte es gefunden. Überlauf gab es keinen, Konsolenfehler
+keinen, die Knopfhöhen stimmten, die Klickprobe fragte nach den neuen Feldern
+und fand sie. Zwei gleich beschriftete Felder sind keine Regelverletzung,
+sondern eine schlechte Seite — und die sieht nur, wer hinsieht.
+
 **Drei Regeln stehen jetzt nur noch einmal.** `pruef_typ_betriebsart()` (Typ
 und Betriebsart, geteilt von `pruef_rettungsmittel()` und
 `pruef_tagesrettungsmittel()`), `pruef_tagesrettungsmittel()` selbst (auch
