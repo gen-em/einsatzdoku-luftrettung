@@ -1553,14 +1553,16 @@ function ui_kartenfilter(array $o): void
     echo '    <button type="button" class="kartenfilter-x" hidden title="Filter leeren">'
        . ui_symbol('schliessen', '', 'Filter leeren') . "</button>\n";
     echo "  </div>\n";
-    /* Der zweite Satz ist kein Zierrat: Solange gefiltert wird, sind die
-       Anlegen-Formulare verborgen (sonst stuenden in der Besatzungskarte
-       unter einem Treffer vier verwaiste Formulare, eines je Rolle). Ohne
-       diesen Satz waere „nichts gefunden, und anlegen kann ich auch nicht"
-       eine Sackgasse ohne Ausgang. */
+    /* DER ZWEITE SATZ IST MIT WEB 17.0.0 EIN ANDERER. Er lautete „Leere den
+       Filter, um etwas anzulegen" — richtig, solange die Anlegen-Formulare in
+       der Liste standen und beim Filtern mit verschwanden. Angelegt wird
+       seither im Dialog, und dessen Oeffner steht im KARTENKOPF, also
+       ausserhalb der gefilterten Liste: „Anlegen" ist auch bei null Treffern
+       da. Der Satz sagt jetzt, was der Filter tatsaechlich verdeckt — alles
+       Uebrige — und nicht mehr eine Sackgasse, die es nicht mehr gibt. */
     echo '  <p class="kartenfilter-leer feld-hinweis" data-leer-fuer="' . ui_e($ziel)
-       . '" hidden>Kein Eintrag passt dazu. Leere den Filter, um etwas'
-       . ' anzulegen.</p>' . "\n";
+       . '" hidden>Kein Eintrag passt dazu. Leere den Filter, um wieder alle'
+       . ' zu sehen.</p>' . "\n";
 }
 
 

@@ -147,31 +147,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Bestandsverhalten und keine Entscheidung dieses Pakets; die
          * Rueckfrage hier zaehlt seit jeher nur den systemweiten Bestand.
          * Vermerkt als Frage im Pruefdokument. */
-        $bid = (int)($_POST['id'] ?? 0);
-        $bleiben = stammdaten_ohne_standortpflicht($bid, null);
-        $pdo = db();
-        $pdo->beginTransaction();
-        try {
-            $geloest = stammdaten_standort_loesen($bid, null);
-            $pdo->prepare('DELETE FROM user_defaults WHERE kind = "base" AND item_id = ?')->execute([$bid]);
-            $pdo->prepare('DELETE FROM bases WHERE id = ? AND user_id IS NULL')->execute([$bid]);
-            $pdo->commit();
-        } catch (PDOException $ex) {
-            if ($pdo->inTransaction()) { $pdo->rollBack(); }
-            $error = 'Der Standort konnte nicht gelöscht werden.';
+        /* ZUERST PRUEFEN, OB ES EIN SYSTEMWEITER STANDORT IST — dieselbe
+         * Ueberlegung wie im Konto: Das `DELETE` schuetzt sich mit
+         * `AND user_id IS NULL`, das UPDATE davor tat es nicht. */
+        $bid = (int)admin_base_id((int)($_POST['id'] ?? 0));
+        if ($bid === 0) {
+            $error = 'Diesen systemweiten Standort gibt es nicht (mehr).';
+            $bleiben = [];
             $geloest = 0;
-        }
-        if ($error === null) {
-            $notice = 'Standort samt seiner zentralen Stammdaten gelöscht. '
-                    . ($geloest > 0
-                        ? ($geloest === 1
-                            ? 'Ein Rettungsmittel ohne Standortpflicht steht jetzt unter „Ohne Standort". '
-                            : $geloest . ' Rettungsmittel ohne Standortpflicht stehen jetzt unter „Ohne Standort". ')
-                        : '')
-                    . 'Bereits dokumentierte Diensttage bleiben unverändert.';
-            /* Die Umleitung zeigt auf das, was überlebt hat (M-S9-10 b) —
-               dieselbe Landung wie im Konto. */
-            if ($bleiben !== []) { $ohneZiel = (int)$bleiben[0]['id']; }
+        } else {
+            $bleiben = stammdaten_ohne_standortpflicht($bid, null);
+            $pdo = db();
+            $pdo->beginTransaction();
+            try {
+                $geloest = stammdaten_standort_loesen($bid, null);
+                $pdo->prepare('DELETE FROM user_defaults WHERE kind = "base" AND item_id = ?')->execute([$bid]);
+                $pdo->prepare('DELETE FROM bases WHERE id = ? AND user_id IS NULL')->execute([$bid]);
+                $pdo->commit();
+            } catch (PDOException $ex) {
+                if ($pdo->inTransaction()) { $pdo->rollBack(); }
+                $error = 'Der Standort konnte nicht gelöscht werden.';
+                $geloest = 0;
+            }
+            if ($error === null) {
+                $notice = 'Standort samt seiner zentralen Stammdaten gelöscht. '
+                        . ($geloest > 0
+                            ? ($geloest === 1
+                                ? 'Ein Rettungsmittel ohne Standortpflicht steht jetzt unter „Ohne Standort". '
+                                : $geloest . ' Rettungsmittel ohne Standortpflicht stehen jetzt unter „Ohne Standort". ')
+                            : '')
+                        . 'Bereits dokumentierte Diensttage bleiben unverändert.';
+                /* Die Umleitung zeigt auf das, was überlebt hat (M-S9-10 b) —
+                   dieselbe Landung wie im Konto. */
+                if ($bleiben !== []) { $ohneZiel = (int)$bleiben[0]['id']; }
+            }
         }
     }
 

@@ -235,6 +235,52 @@ Sicherheitsmerkmal wäre: Der Geräteschlüssel liegt im Keystore, nicht im Code
 **Was der Prüfstand sagt:** `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor. Emulator (Stufe II):
 **erreicht, im fünften Anlauf** (Emulator 37.1.11, `android-34;default;x86_64`, `-accel off`): adbd nach 120 s, `ro.hw_timeout_multiplier=10` als Root gesetzt und Framework neu gestartet, Boot **715 s**, Prüf-APK gegen die lokale Installation **128 s**; acht Bilder — Kopplungsansicht, Code `S4Y ZPF`, im Web als Demo-Konto eingetragen und bestätigt, „Zu diesem Konto koppeln? de***@gen-em.org", „Ja, koppeln" → Dienstansicht „Gekoppelt · 127.0.0.1:8080", `devices`-Zeile 79 am Server; per `sqlite3` ein abgewiesenes Paket samt Punkt, Phase und beendeter Dienstzeile eingespielt → rote Zeile „1 Paket vom Server abgewiesen"; Einstellungen; „Gerät trennen" mit Rückfrage; „Getrennt". **Der Räumlauf am echten Android-SQLite:** nach dem Trennen `paket 0, fehlerhaft 0, punkt 0, phase 0, dienst 0` (vorher je 1), Gerät am Server gelöscht (`POST /pair.php` 200), kein Absturz im `logcat`. Davor **vier Anläufe ohne Boot** (14, 38, 22 und 12 min) — Ursache der Android-Watchdog unter TCG, Gegenmittel jetzt in `emulator.sh start` (F-SP-P-07); der Wear-Emulator für das Uhr-Modul wurde nicht gefahren (Abschnitt 0).
 
+## [Web 17.1.1] — 2026-09-09
+
+### Web — der Prüflauf von S9/AP5, und was er gefunden hat
+
+**Der Leerzustand des Kartenfilters sagte etwas Falsches.** „Kein Eintrag
+passt dazu. Leere den Filter, um etwas anzulegen." war richtig, solange die
+Anlegen-Formulare in der Liste standen und beim Filtern mitverschwanden. Seit
+Web 17.0.0 steht „Anlegen" im Kartenkopf, also über dem Filter — es ist auch
+bei null Treffern da. Der Satz beschrieb eine Sackgasse, die es nicht mehr
+gibt, und sagt jetzt, was der Filter tatsächlich verdeckt: alles Übrige.
+
+**Ein Fund am Code, beim Gegenlesen.** Der Schritt, der den Rettungsmitteln
+ohne Standortpflicht den Standort abnimmt (17.1.0), lief **vor** der Prüfung,
+ob der Standort überhaupt der eigene ist. Das Löschen darunter schützt sich
+selbst und tut bei einer fremden Kennung nichts — der Schritt davor tat etwas:
+Ein abgeschicktes Löschen mit der Kennung eines **vordefinierten** Standorts
+hätte den eigenen Rettungsmitteln dort den Standort abgenommen, ohne dass ein
+Standort gelöscht worden wäre. Beide Seiten prüfen jetzt zuerst und fassen
+dann an; gegengeprobt mit einer erfundenen Kennung — Meldung statt
+Datenänderung, zwei Einträge vorher und zwei nachher.
+
+### Web — zwei Prüfmittel haben dabei selbst etwas gelernt
+
+Beide Male dieselbe Sorte Fehler: ein Werkzeug, das das Richtige misst und
+den falschen Grund nennt.
+
+**Die Klickprobe lief zum ersten Mal über zwei Breiten.** Zwei Wege waren für
+den Schreibtisch geschrieben. „Bearbeiten" steht unter 720 px im
+Aktionsblatt und nicht in der Zeile — der Weg öffnet jetzt erst das „⋯" und
+klickt dann. Und die Richtungspfeile auf der Spur gibt es bei 390 px gar
+nicht: Die Karte zeichnet einen Pfeil alle 140 px und keinen, wenn die ganze
+Spur kürzer als zwei Abstände ist (so gewollt seit P3 — herausgezoomt
+verschwinden sie von selbst). Der Weg maß dort **0 von 0** und meldete das als
+Fehlschlag. Er misst jetzt die **Länge der Spur am Bildschirm** und erwartet
+Pfeile genau dann, wenn die Schwelle es sagt: gemessen 190 px im 390er
+Fenster (0 Pfeile, richtig) und 358 px bei 1280 px (2 Pfeile).
+
+**Der Bilderlauf warf zwei Gründe in einen Topf.** „OHNE BILD: 8 Aufnahmen —
+Sitzung nicht zu halten" stand da, wo in Wahrheit ein Platzhalter nicht
+auflösbar war: Die Standortseite der Verwaltung lässt sich nicht
+fotografieren, weil der Referenzbestand keinen einzigen systemweiten Standort
+hat. Jede ausgefallene Aufnahme trägt jetzt ihren Grund, und die
+Zusammenfassung zählt nach Grund („8× Platzhalter … nicht auflösbar"). Eine
+Zahl, die den falschen Grund nennt, schickt die nächste Suche in die falsche
+Richtung.
+
 ## [Web 17.1.0] — 2026-09-09
 
 ### Web — einen Standort löschen kostet nicht mehr, was ohne ihn bestehen darf (S9/AP5, Teil 5)

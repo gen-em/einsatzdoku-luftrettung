@@ -2183,11 +2183,17 @@ deshalb mitmacht (`assets/kartenfilter.js`):
    `display:none`. Gefiltert wird ausschließlich über `.zeile`.
 2. Ein **Zwischentitel** ohne sichtbare Zeile bleibt sonst stehen und lässt
    die Karte leer statt gefiltert aussehen. Er geht mit seiner Gruppe.
-3. Die **Anlegen-Formulare** sind verborgen, solange gefiltert wird: In der
-   Besatzungskarte steht eines je Rolle, und unter einem Treffer stünden sonst
-   vier verwaiste. Ein Filter ist ein Lesezustand.
+3. Die **Anlegen-Formulare** sind verborgen, solange gefiltert wird — heute
+   ein Netz, kein Weg: Bis Web 16.3.0 stand in der Besatzungskarte eines je
+   Rolle, und unter einem Treffer stünden sonst vier verwaiste. Mit Web 17.0.0
+   sind sie samt `sd_form()` entfallen; angelegt wird im Dialog, und dessen
+   Öffner steht im **Kartenkopf**, also außerhalb der gefilterten Liste. Die
+   Regel bleibt stehen, weil sie eine Absicht beschreibt (ein Filter ist ein
+   **Lesezustand**) und die nächste Liste mit einem Formular darin sie
+   geschenkt bekommt. Die Klickprobe misst seither beides: **0 Formulare**
+   und **„Anlegen" sichtbar** — auch bei null Treffern.
 4. Der **Leerzustand** steht als verborgener Absatz im Markup und sagt, wie
-   man wieder zum Anlegen kommt. Ein Text, den das Skript zusammensetzt, liefe
+   man den Filter wieder leert. Ein Text, den das Skript zusammensetzt, liefe
    an der Wortliste vorbei.
 
 **Kein Zustand in der Adresse.** Der Filter ist eine Lesehilfe, kein
@@ -2362,6 +2368,7 @@ genau das, wogegen sie schützt.
 | Fassung | Was |
 |---|---|
 | **Web 16.1.1 (S9)** | Kapitel 7: Im Band 1024–1199 px rückt das Akkordeon je Ebene **4 statt 8 px** ein, und der Abstand der Diensttagszeile geht von 8 auf **4 px** (Freigabe M-S9-11, Weg 2). Gemessen: dem Nebentext stehen dort **64–79 px** statt 48–63 zur Verfügung — dreizehn Kurznamen, **keiner** mehr mit Auslassungszeichen (vorher zehn). Der Abstand ist mit `:not(.leiste-gruppe)` eingegrenzt, weil die Zeilenklasse auch Leistenfuß, Schubladen-Hauptpunkte und Einstellungsmenü trägt; nachgemessen bleiben die bei 8 px. **Keine neue Schwelle, kein neues Token** — 4 px ist `--abstand-1`. |
+| **Web 17.1.1 (S9/AP5-6)** | **9.32 Kartenfilter**, Punkt 3 berichtigt: Die Anlegen-Formulare in der Liste gibt es seit Web 17.0.0 nicht mehr — die Regel bleibt als Netz stehen, und die Klickprobe misst seither **0 Formulare UND „Anlegen" sichtbar**, auch bei null Treffern. Punkt 4 nachgezogen: Der Leerzustand sagt jetzt „Leere den Filter, um wieder alle zu sehen" statt „…, um etwas anzulegen" — der alte Satz beschrieb eine Sackgasse, die es nicht mehr gibt. **Keine Regel im Stylesheet berührt.** |
 | **Web 17.0.0 (S9/AP5-4)** | **9.11 Dialog** um drei Absätze ergänzt: Ein Formulardialog **rollt in sich** (Kopf und Fuß fest, `.dialog-inhalt` mit `overflow-y:auto`, Höhe `100dvh` minus 24 px) — der Rettungsmittel-Dialog ist am Handy höher als das Glas, und ohne die Angabe kappte die Browservorgabe den Fuß mit „Anlegen“ ab; **`display` gehört an `.dialog[open]`** (Fund F-S9-U-27: eine Regel des Browsers verliert gegen jede Regel des Stylesheets, und `.dialog{display:flex}` machte alle fünf geschlossenen Dialoge einer Standortseite sichtbar); und **ein Dialog kann einen zweiten öffnen** (Ortsfeld → Kartendialog, zwei modale Ebenen, vom Browser getragen). Die Zahlen: Kaskade **741 → 743 Regeln, 0 entfallen, 10 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **45 500 Elementmessungen, 936 Abweichungen**, sämtlich an `dialog`, `.dialog`, `.dialog-kopf`, `.dialog-inhalt`, `.dialog-fuss` und dem `<form>` darin — also genau die zehn neuen Regeln; Pseudoprobe dieselben 936. **Kein neues Token, kein neuer Baustein, kein neues Symbol**; der Vorrat bleibt bei 39 Funktionen. |
 | **Web 16.3.0 (S9/AP5-3)** | **Drei neue Kapitel: 9.31 Sprungliste** (Pille mit Artzeichen, ab sechs Einträgen, Zielzustand `.aktiv` statt `.ziel`, angesprungene Zeile über `:target`), **9.32 Kartenfilter** (Feld mit Lupe, filtert im Browser; heißt nicht `.filterfeld` wegen `.filterfelder`, und ist 44/36 hoch statt 48 wie `.suchfeld`) und **9.33 „Zum Anfang"** (nachgetragen — der Baustein steht seit Web 16.2.0 in der erzeugten Tabelle und hatte keinen Prosa-Eintrag). Kapitel 9.0 um **vier** Zeilen ergänzt: Die eine Zeile „Sprungmarken → Unterpunkte der Leiste, **nicht** von Hand" beschrieb allein die Seitenebene und verbot dem Wortlaut nach, was AP5 mit Mockup gebaut hat. Kapitel 7 und 9.10: die Ausnahme `.kennzahl-raster-3` — drei Spalten in **jeder** Breite. Kapitel 4: neues Kontrastpaar „Dunkelblau auf Orange hell" (21 → **22** gerechnete Paare); die Kombination steht seit O6 an `.kennzahl.aktiv` und `.listenfilter.aktiv` in der Anwendung und war nie gerechnet. **Kein neues Token, kein neues Symbol.** Zwei Berichtigungen beim Gegenlesen: Der Absatz „Kein Symbol am Knopf" stand in 9.18a und gehört zu 9.18; `--radius` (10 px) ist nicht „die kleinste Rundung der Skala" — das ist `--radius-klein` (6 px). |
 | **Web 16.1.0 (S9/AP4a)** | Kapitel 7 (Schwellen und Verhalten je Baustein): Der Nebentext der Leiste hat **drei** Zustände statt zweier — unter 1024 px jeder Name, im Band 1024–1199 px nur ein Kurzname (`.eintrag-neben.kurz`), ab 1200 px wieder jeder; im Band rückt das Akkordeon je Ebene 8 statt 12 px ein. Gemessen: Der Datumstext ist dort **76 bis 83 px** breit (Bricolage Grotesque setzt Ziffern **proportional** — `tabular-nums` nennt `.zahl,td,th,time,output`, nicht `.eintrag-text`), dem Nebentext bleiben **48 bis 55 px**, und „BW Hoch" braucht 55: **4 von 13** Datumsangaben tragen ihn ganz, 9 mit Auslassungszeichen; ohne die Einrückung keine einzige. **Keine neue Schwelle** — beide Regeln liegen in vorhandenen Medienblöcken —, **kein neues Token**: 8 px ist `--abstand-2`. Kapitel 9.7 unberührt: Die Wahlliste trägt den neuen Zusatz mit ihrem vorhandenen `zusatz`-Schlüssel. |

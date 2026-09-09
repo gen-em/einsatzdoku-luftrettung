@@ -530,6 +530,16 @@ const bericht = { basis: BASIS, skala: SKALA, seiten: [], knopf: [], stand: new 
 /* Aufnahmen, bei denen die Sitzung mitten im Lauf neu aufgebaut werden
  * musste (Demo-Reset), und solche, die deshalb GAR NICHT entstanden. */
 const verlorene = [];
+/* AUSGEFALLENE AUFNAHMEN, JE MIT GRUND (S9/AP5-6). Vorher stand hier eine
+   Liste aus Zeichenketten, und der Bericht schrieb darueber pauschal „die
+   Seite leitete auch nach einer Neuanmeldung auf die Anmeldung um". Es gibt
+   aber ZWEI Gruende, und der zweite ist ein ganz anderer Befund: Ein
+   Platzhalter, der sich nicht aufloesen laesst, heisst „diese Seite gibt es
+   im Bestand nicht" — nicht „die Sitzung ging verloren". Beim Lauf zu AP5-4
+   meldete der Bericht acht verlorene Sitzungen, wo in Wahrheit acht Bilder
+   einer Seite fehlten, die es ohne systemweiten Standort gar nicht gibt.
+   Ein Pruefmittel, das den falschen Grund nennt, schickt die naechste Suche
+   in die falsche Richtung. */
 const ausgefallen = [];
 
 /* ---- Der Wartungsmodus als Zustand der Installation (S5 Paket W) ---------
@@ -574,7 +584,10 @@ for (const eintrag of liste) {
   const aufgeloest = Object.prototype.hasOwnProperty.call(PLATZ, eintrag.pfad)
     ? PLATZ[eintrag.pfad] : eintrag.pfad;
   if (aufgeloest === null) {
-    for (const { b } of BREITEN) { ausgefallen.push(`${eintrag.name} @ ${b}`); }
+    for (const { b } of BREITEN) {
+      ausgefallen.push({ was: `${eintrag.name} @ ${b}`,
+                         grund: `Platzhalter ${eintrag.pfad} nicht auflösbar` });
+    }
     console.log(`${eintrag.name.padEnd(34)} OHNE BILD — Platzhalter ${eintrag.pfad} nicht auflösbar`);
     continue;
   }
@@ -735,7 +748,8 @@ for (const eintrag of liste) {
     if (hin.abbruch) {
       /* KEIN BILD. Ein Bild der Anmeldeseite unter dem Namen einer anderen
          Seite ist schlimmer als gar keines: Es sieht wie ein Beleg aus. */
-      ausgefallen.push(`${eintrag.name} @ ${b}`);
+      ausgefallen.push({ was: `${eintrag.name} @ ${b}`,
+                         grund: 'Seite leitete auf die Anmeldung um' });
       rmSync(datei, { force: true });
     } else {
       await seite.screenshot({ path: datei, fullPage: true }).catch(() => {});
@@ -845,10 +859,11 @@ if (verlorene.length || ausgefallen.length) {
     for (const v of verlorene) md += `- ${v}\n`;
   }
   if (ausgefallen.length) {
-    md += `\n**${ausgefallen.length} Aufnahmen sind AUSGEFALLEN** — die Seite `
-       +  `leitete auch nach einer Neuanmeldung auf die Anmeldung um. Für sie `
-       +  `gibt es kein Bild; das ist Absicht.\n\n`;
-    for (const a of ausgefallen) md += `- ${a}\n`;
+    md += `\n**${ausgefallen.length} Aufnahmen sind AUSGEFALLEN.** Für sie gibt `
+       +  `es kein Bild; das ist Absicht — ein Bild der falschen Seite unter dem `
+       +  `Namen einer anderen sieht wie ein Beleg aus. Der Grund steht je `
+       +  `Zeile.\n\n`;
+    for (const a of ausgefallen) md += `- ${a.was} — ${a.grund}\n`;
   }
 }
 
@@ -859,7 +874,14 @@ console.log(`\n${bilderZahl} Einzelbilder, ${bericht.seiten.length} Kontaktböge
 console.log(`Überlauf: ${gesamtUeberlauf} · Konsolenfehler: ${gesamtKonsole}`
   + ` · Knöpfe falscher Höhe: ${bericht.knopf.length}`  + ` (${FINGER ? 'Finger, 44 px' : 'Zeiger, 44/36 px'})`);
 if (verlorene.length)   { console.log(`Sitzung neu aufgebaut: ${verlorene.length}× (Demo-Reset, normal)`); }
-if (ausgefallen.length) { console.log(`OHNE BILD: ${ausgefallen.length} Aufnahmen — Sitzung nicht zu halten`); }
+if (ausgefallen.length) {
+  /* NACH GRUND GEZAEHLT, nicht in einen Topf: „8 ohne Bild" sagt nichts, „8
+     ohne Bild, Grund: Platzhalter nicht auflösbar" sagt, wo man nachsieht. */
+  const nachGrund = {};
+  for (const a of ausgefallen) { nachGrund[a.grund] = (nachGrund[a.grund] || 0) + 1; }
+  const teile = Object.entries(nachGrund).map(([g, n]) => `${n}× ${g}`).join(' · ');
+  console.log(`OHNE BILD: ${ausgefallen.length} Aufnahmen — ${teile}`);
+}
 console.log(`Bericht: ${join(AUSGABE, 'bericht.md')}`);
 
 await browser.close();

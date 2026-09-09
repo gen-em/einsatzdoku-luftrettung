@@ -695,36 +695,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * gibt. Die Zahl der betroffenen Saetze nennt die Rueckfrage der
          * Oberflaeche (`stammdaten_loeschfrage()`), hier wird geloescht. */
         $bid = (int)($_POST['id'] ?? 0);
-        $bleiben = stammdaten_ohne_standortpflicht($bid, $userId);
-        $pdo = db();
-        $pdo->beginTransaction();
-        try {
-            $geloest = stammdaten_standort_loesen($bid, $userId);
-            $pdo->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
-                ->execute([$userId, $bid]);
-            $pdo->prepare('DELETE FROM bases WHERE id = ? AND user_id = ?')
-                ->execute([$bid, $userId]);
-            $pdo->commit();
-        } catch (PDOException $ex) {
-            if ($pdo->inTransaction()) { $pdo->rollBack(); }
-            $error = 'Der Standort konnte nicht gelöscht werden.';
+        /* ZUERST PRUEFEN, OB ES EIN EIGENER STANDORT IST — und erst dann
+         * irgendetwas anfassen (Fund beim Gegenlesen von AP5-5). Das `DELETE`
+         * unten schuetzt sich selbst mit `AND user_id = ?` und tut bei einer
+         * fremden oder zentralen Kennung nichts. Das UPDATE davor tat es
+         * nicht: Ein abgeschicktes `base_del` mit der Kennung eines
+         * ZENTRALEN Standorts haette den eigenen Rettungsmitteln dort den
+         * Standort abgenommen, ohne dass ein Standort geloescht worden waere
+         * — eine Datenaenderung ohne sichtbaren Anlass. */
+        $q = db()->prepare('SELECT id FROM bases WHERE id = ? AND user_id = ?');
+        $q->execute([$bid, $userId]);
+        if ($q->fetchColumn() === false) {
+            $error = 'Diesen Standort gibt es nicht (mehr) — oder er gehört nicht dir.';
+            $bleiben = [];
             $geloest = 0;
-        }
-        if ($error === null) {
-            $notice = 'Standort samt seiner Stammdaten gelöscht. '
-                    . ($geloest > 0
-                        ? ($geloest === 1
-                            ? 'Ein Rettungsmittel ohne Standortpflicht steht jetzt unter „Ohne Standort". '
-                            : $geloest . ' Rettungsmittel ohne Standortpflicht stehen jetzt unter „Ohne Standort". ')
-                        : '')
-                    . 'Bereits dokumentierte Diensttage bleiben unverändert.';
-            /* DIE UMLEITUNG ZEIGT AUF DAS, WAS UEBERLEBT HAT (M-S9-10 b,
-               „der neue Eintrag trägt `:target`"). Bei mehreren auf das erste:
-               Die Karte „Ohne Standort" ist zugeklappt, und das Skript am
-               Seitenende oeffnet die Vorfahren des Ankers. Ohne diese Zeile
-               landete man auf der Standortliste, und das Ueberlebende waere
-               nur eine Meldung. */
-            if ($bleiben !== []) { $ohneZiel = (int)$bleiben[0]['id']; }
+        } else {
+            $bleiben = stammdaten_ohne_standortpflicht($bid, $userId);
+            $pdo = db();
+            $pdo->beginTransaction();
+            try {
+                $geloest = stammdaten_standort_loesen($bid, $userId);
+                $pdo->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
+                    ->execute([$userId, $bid]);
+                $pdo->prepare('DELETE FROM bases WHERE id = ? AND user_id = ?')
+                    ->execute([$bid, $userId]);
+                $pdo->commit();
+            } catch (PDOException $ex) {
+                if ($pdo->inTransaction()) { $pdo->rollBack(); }
+                $error = 'Der Standort konnte nicht gelöscht werden.';
+                $geloest = 0;
+            }
+            if ($error === null) {
+                $notice = 'Standort samt seiner Stammdaten gelöscht. '
+                        . ($geloest > 0
+                            ? ($geloest === 1
+                                ? 'Ein Rettungsmittel ohne Standortpflicht steht jetzt unter „Ohne Standort". '
+                                : $geloest . ' Rettungsmittel ohne Standortpflicht stehen jetzt unter „Ohne Standort". ')
+                            : '')
+                        . 'Bereits dokumentierte Diensttage bleiben unverändert.';
+                /* DIE UMLEITUNG ZEIGT AUF DAS, WAS UEBERLEBT HAT (M-S9-10 b,
+                   „der neue Eintrag trägt `:target`"). Bei mehreren auf das erste:
+                   Die Karte „Ohne Standort" ist zugeklappt, und das Skript am
+                   Seitenende oeffnet die Vorfahren des Ankers. Ohne diese Zeile
+                   landete man auf der Standortliste, und das Ueberlebende waere
+                   nur eine Meldung. */
+                if ($bleiben !== []) { $ohneZiel = (int)$bleiben[0]['id']; }
+            }
         }
     }
 

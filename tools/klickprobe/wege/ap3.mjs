@@ -134,7 +134,8 @@ export const wege = [
     name: 'ap3-pfeile-drehen',
     paket: 'AP3', punkt: 'P-10', rolle: 'demo',
     was: 'Die Richtungspfeile drehen sich — einmal ganz herum in 30-Grad-Schritten',
-    soll: '12 von 12 auf 0,1 Grad, dazu jeder Pfeil auf der Spur',
+    soll: '12 von 12 auf 0,1 Grad, dazu jeder Pfeil auf der Spur — Pfeile erwartet, '
+        + 'sobald die Spur am Bildschirm länger als 280 px ist (geo.js, ABSTAND_PX × 2)',
     async fahren(k) {
       await karteSeite(k);
       const GRADE = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
@@ -164,17 +165,41 @@ export const wege = [
           const ist = m ? ((Math.atan2(m.b, m.a) * 180 / Math.PI) % 360 + 360) % 360 : null;
           return { soll: ((roh % 360) + 360) % 360, ist: ist === null ? null : +ist.toFixed(1) };
         }));
+      /* WIE LANG IST DIE SPUR AM BILDSCHIRM? `geo.js` zeichnet einen Pfeil
+         alle 140 px und gar keinen, wenn die ganze Spur kürzer als zwei
+         Abstände ist (E-P3-33/40, „herausgezoomt verschwinden sie von
+         selbst"). Bei 390 px Fensterbreite ist die Karte so klein, dass genau
+         das eintritt — und dann sind NULL Pfeile das richtige Ergebnis, nicht
+         ein Fehlschlag.
+         Gemerkt beim ersten Lauf über zwei Breiten (S9/AP5-6): Der Weg war
+         für 1280 px geschrieben und meldete bei 390 px „0 von 0" als
+         verfehlt. Statt einer Breitenschwelle im Weg wird die Länge GEMESSEN
+         — `getTotalLength()` am Spur-Pfad ist genau die Zahl, aus der
+         `geo.js` seine Entscheidung trifft. */
+      const spurPx = await k.seite.evaluate(() => {
+        const pfad = document.querySelector('.leaflet-overlay-pane path');
+        return pfad && pfad.getTotalLength ? Math.round(pfad.getTotalLength()) : 0;
+      });
       await k.bild('ap3-pfeile-drehen');
       const nah = (a, b) => Math.abs(((a - b + 540) % 360) - 180) < 0.1;
       const treffer = mess.filter(m => nah(m.ist, m.soll)).length;
       const echtOk = echt.filter(e => e.ist !== null && nah(e.ist, e.soll)).length;
+      const erwartet = spurPx >= 280;
       return {
         ist: treffer + ' von ' + mess.length + ' in der Aufstellung · '
-           + echtOk + ' von ' + echt.length + ' auf der Spur des Einsatzes',
-        ok: treffer === mess.length && echt.length > 0 && echtOk === echt.length,
-        bemerkung: treffer === mess.length ? ''
-          : mess.filter(m => !nah(m.ist, m.soll))
-                .map(m => m.soll + '° → ' + m.ist + '°').join(', '),
+           + echtOk + ' von ' + echt.length + ' auf der Spur des Einsatzes'
+           + ' · Spur am Bildschirm ' + spurPx + ' px'
+           + (erwartet ? '' : ' (unter 280 px — geo.js zeichnet dort keine Pfeile)'),
+        ok: treffer === mess.length && echtOk === echt.length
+            && (erwartet ? echt.length > 0 : echt.length === 0),
+        bemerkung: treffer !== mess.length
+          ? mess.filter(m => !nah(m.ist, m.soll))
+                .map(m => m.soll + '° → ' + m.ist + '°').join(', ')
+          : (erwartet && echt.length === 0
+              ? 'Die Spur ist lang genug für Pfeile, es sind aber keine da'
+              : (!erwartet && echt.length > 0
+                  ? 'Pfeile bei einer Spur unter 280 px — die Schwelle greift nicht'
+                  : '')),
       };
     },
   },

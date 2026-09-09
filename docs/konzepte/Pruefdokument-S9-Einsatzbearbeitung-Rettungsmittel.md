@@ -416,6 +416,75 @@ jeher nur den systemweiten Bestand und sagt daneben, wie viele Konten den
 Standort gewählt haben; sie könnte einen Satz über fremde Rettungsmittel
 nicht belegen, ohne vorher etwas zu zählen, was sie sonst nirgends zählt.
 
+### AP5 Teil 6 — der Prüflauf über zwei Breiten und beide Bedienhöhen (Web 17.1.1)
+
+**Das ist die Abnahme von AP5.** Die Teile 1 bis 5 haben je für sich gemessen;
+hier läuft alles noch einmal, und zwar in **beiden** Bedienhöhen — 44 px am
+Fingergerät und unter 1024 px, 36 px am Zeigergerät ab 1024 px (R76). Ein
+Prüfmittel, das nur eine Breite kennt, misst die halbe Anwendung.
+
+| Mittel | Zahl | Bemerkung |
+|---|---|---|
+| Klickprobe, Zeigergerät | **70 von 70** Wegen erfüllt, 0 verfehlt | 35 Wege × 2 Breiten (390 und 1280 px) |
+| Klickprobe, Fingergerät | **70 von 70** Wegen erfüllt, 0 verfehlt | dieselben Wege, `Emulation.setTouchEmulationEnabled` |
+| Bestand danach | **21 Rettungsmittel · 8 Standorte · 61 Diensttage · 346 Einsätze** und **0** Probeeinträge | `name LIKE 'KP %'` in `vehicles`, `bases`, `transport_dests`, `crew_presets` — je 0 |
+| Bilderlauf, beide Bedienhöhen | **48 Einzelbilder + 6 Kontaktbögen je Lauf**, **0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** | 6 von 7 berührten Seiten; die siebte siehe Abschnitt 0 |
+| Wortliste | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** | 96 Regeln, 96 gegriffen, 35 Dateien, fünf Bereiche |
+| Vollständigkeit | **316 → 318** | beide Unterschiede benannt: ein Menüpfeil „→" und ein „⋯" in Kommentaren von `version.php` — dieselbe Art wie die sechs aus AP2 |
+| Kontraste | **22 Paare, 0 verfehlt** | |
+| Linkprobe | **130 Verweise, 0 unbekannte Abweichungen**, 1 bekannte mit Nummer (Nr. 151) | |
+| Stilvergleich | **nicht erneut gefahren** — seit dem Lauf zu 17.0.0 ist `style.css` unverändert (`git diff` 0 Zeilen) | die Zahlen stehen bei Teil 4 |
+
+**Drei Funde des Prüflaufs, alle behoben.**
+
+**F-S9-U-31 — Der Leerzustand des Kartenfilters sagte einen Satz, den Teil 4
+falsch gemacht hatte.** „Kein Eintrag passt dazu. Leere den Filter, um etwas
+anzulegen." stimmte, solange die Anlegen-Formulare in der Liste standen. Seit
+Web 17.0.0 steht „Anlegen" im **Kartenkopf**, also über dem Filter — es ist
+auch bei null Treffern erreichbar, und die Klickprobe misst genau das. Der
+Satz beschrieb eine Sackgasse, die es nicht mehr gibt. *Die Lehre: Wer eine
+Bedienung umbaut, muss die Sätze mitlesen, die sie erklären — der Text stand
+zwei Dateien weiter und lief durch jede grüne Zahl hindurch.*
+
+**F-S9-U-32 — Zwei Wege der Klickprobe galten nur bei 1280 px.** Der Lauf über
+zwei Breiten war der erste; beide Wege waren nie an einem schmalen Fenster
+gefahren worden.
+*(a)* „Bearbeiten" steht unter 720 px im **Aktionsblatt** und nicht in der
+Zeile (`ui_zeilenaktionen`: Knopfreihe am Schreibtisch, „⋯" plus Blatt am
+Handy). Der Öffner ist dort im Markup, aber verborgen; ein Klick lief in die
+Zeitgrenze. Der Weg geht jetzt den Weg, den eine Person geht.
+*(b)* Die **Richtungspfeile** auf der Spur gibt es bei 390 px gar nicht:
+`geo.js` zeichnet einen alle 140 px und keinen, wenn die ganze Spur kürzer
+als zwei Abstände ist (E-P3-33/40, „herausgezoomt verschwinden sie von
+selbst"). Der Weg maß **0 von 0** und meldete das als Fehlschlag — richtig
+nach der Doktrin der Probe („ein Weg, der nichts misst, ist verfehlt"), falsch
+in der Sache. Er misst jetzt die **Länge der Spur am Bildschirm**
+(`getTotalLength()` am Spurpfad — genau die Zahl, aus der `geo.js` entscheidet)
+und erwartet Pfeile, wenn die Schwelle es sagt: gemessen **190 px** im 390er
+Fenster (0 Pfeile, richtig) und **358 px** bei 1280 px (2 Pfeile).
+
+**F-S9-U-33 — Der Bilderlauf nannte für acht fehlende Aufnahmen den falschen
+Grund.** „OHNE BILD: 8 Aufnahmen — Sitzung nicht zu halten" stand da, wo in
+Wahrheit ein Platzhalter nicht auflösbar war (die Standortseite der
+Verwaltung, Backlog Nr. 166). Zwei verschiedene Befunde liefen in eine Liste
+und bekamen den Text des zweiten. Jede ausgefallene Aufnahme trägt jetzt
+ihren Grund, und die Zusammenfassung zählt nach Grund: **„8× Platzhalter
+`__ADMIN_STANDORT__` nicht auflösbar"**. *Eine Zahl, die den falschen Grund
+nennt, schickt die nächste Suche in die falsche Richtung — das ist schlimmer
+als gar keine Zahl.*
+
+**Eine Absicherung beim Gegenlesen (kein Fund im Betrieb, aber einer im
+Code).** Das `UPDATE` aus Teil 5, das den Rettungsmitteln ohne
+Standortpflicht den Standort abnimmt, lief **vor** der Prüfung, ob der
+Standort überhaupt der eigene ist. Das `DELETE` darunter schützt sich selbst
+(`AND user_id = ?`) und tut bei einer fremden Kennung nichts — das `UPDATE`
+davor tat etwas: Ein abgeschicktes `base_del` mit der Kennung eines
+**zentralen** Standorts hätte den eigenen Rettungsmitteln dort den Standort
+abgenommen, ohne dass ein Standort gelöscht worden wäre. Beide Seiten prüfen
+jetzt zuerst. **Gegengeprobt** mit einer erfundenen Kennung über ein von Hand
+gebautes Formular: Meldung statt Datenänderung, **2 Einträge unter „Ohne
+Standort" vorher und 2 nachher**.
+
 ## 2. Fehlerfunde
 
 

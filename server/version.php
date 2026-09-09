@@ -3498,5 +3498,48 @@ declare(strict_types=1);
  *
  * NEBENNUMMER: veraendertes Verhalten beim Loeschen, kein Datenmodell, keine
  * Migration. `update.php` muss NICHT laufen.
+ *
+ * ---------------------------------------------------------------------------
+ * 17.1.1 — S9/AP5-6: der Prueflauf, und was er gefunden hat.
+ *
+ * DER LEERZUSTAND DES KARTENFILTERS SAGTE ETWAS FALSCHES. „Kein Eintrag passt
+ * dazu. Leere den Filter, um etwas anzulegen." — richtig, solange die
+ * Anlegen-Formulare in der Liste standen und beim Filtern mitverschwanden.
+ * Seit 17.0.0 steht „Anlegen" im KARTENKOPF, also ausserhalb der gefilterten
+ * Liste; es ist auch bei null Treffern da. Der Satz beschrieb eine Sackgasse,
+ * die es nicht mehr gibt, und sagt jetzt, was der Filter tatsaechlich
+ * verdeckt: alles Uebrige.
+ *
+ * ZWEI PRUEFMITTEL HABEN DABEI SELBST ETWAS GELERNT, und beide Male ist es
+ * dieselbe Sorte Fehler — ein Werkzeug, das das Richtige misst und den
+ * falschen Grund nennt:
+ *
+ *   - DIE KLICKPROBE lief zum ersten Mal ueber ZWEI Breiten. Zwei Wege waren
+ *     fuer 1280 px geschrieben: „Bearbeiten" steht unter 720 px im
+ *     Aktionsblatt und nicht in der Zeile (der Weg oeffnet jetzt erst das
+ *     „⋯"), und die Richtungspfeile auf der Spur gibt es bei 390 px gar
+ *     nicht — `geo.js` zeichnet sie erst, wenn die Spur am Bildschirm laenger
+ *     als 280 px ist (E-P3-33/40). Der Pfeilweg misst diese Laenge jetzt
+ *     (`getTotalLength()` am Spurpfad) und erwartet Pfeile genau dann, wenn
+ *     die Schwelle es sagt: gemessen 190 px bei 390er Fenster (0 Pfeile,
+ *     richtig) und 358 px bei 1280 (2 Pfeile).
+ *   - DER BILDERLAUF warf zwei Gruende in einen Topf. „OHNE BILD: 8
+ *     Aufnahmen — Sitzung nicht zu halten" stand da, wo in Wahrheit ein
+ *     Platzhalter nicht aufloesbar war (die Standortseite der Verwaltung; der
+ *     Referenzbestand hat keinen systemweiten Standort, Backlog Nr. 166).
+ *     Jede ausgefallene Aufnahme traegt jetzt ihren Grund, und die
+ *     Zusammenfassung zaehlt nach Grund.
+ *
+ * EIN FUND AM CODE, beim Gegenlesen von AP5-5: Das `UPDATE`, das den
+ * Rettungsmitteln ohne Standortpflicht den Standort abnimmt, lief VOR der
+ * Pruefung, ob der Standort ueberhaupt der eigene ist. Das `DELETE` darunter
+ * schuetzt sich selbst (`AND user_id = ?`) und tat bei einer fremden Kennung
+ * nichts — das UPDATE davor tat etwas: Ein abgeschicktes `base_del` mit der
+ * Kennung eines ZENTRALEN Standorts haette den eigenen Rettungsmitteln dort
+ * den Standort abgenommen, ohne dass ein Standort geloescht worden waere.
+ * Beide Seiten pruefen jetzt zuerst und fassen dann an.
+ *
+ * KORREKTURSTUFE: ein Text, zwei Pruefmittel, eine Absicherung. Keine
+ * Migration, kein Datenmodell.
  */
-const WEB_VERSION = '17.1.0';
+const WEB_VERSION = '17.1.1';

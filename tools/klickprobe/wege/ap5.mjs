@@ -508,8 +508,23 @@ export const wege = [
                  rollen: a.dataset.wRollen, caps: a.dataset.wCaps };
       });
       if (!soll) { return { ist: 'Kein Bearbeiten-Öffner in der Rettungsmittel-Karte', ok: false }; }
-      await k.seite.click('#k-rettungsmittel a[data-dialog="dlg-veh"]:not(.karte-aktion)');
-      await k.seite.waitForTimeout(200);
+      /* UNTER 720 PX STEHT „BEARBEITEN" IM AKTIONSBLATT, nicht in der Zeile
+         (`ui_zeilenaktionen`: Knopfreihe am Schreibtisch, „⋯" plus Blatt am
+         Handy). Der Öffner ist dort zwar im Markup, aber verborgen — ein
+         Klick darauf läuft in die Zeitgrenze. Der Weg geht deshalb den Weg,
+         den eine Person geht: erst das „⋯", dann den Eintrag. Gemerkt beim
+         ersten Lauf über zwei Breiten; bei 1280 px war der Weg grün und bei
+         390 px gar nicht gefahren. */
+      const direkt = k.seite.locator(
+        '#k-rettungsmittel a[data-dialog="dlg-veh"]:not(.karte-aktion)').first();
+      if (!(await direkt.isVisible())) {
+        await k.seite.click('#k-rettungsmittel .zeile [data-blatt]');
+        await k.seite.waitForTimeout(250);
+        await k.seite.click('.blatt:not([hidden]) [data-dialog="dlg-veh"]');
+      } else {
+        await direkt.click();
+      }
+      await k.seite.waitForTimeout(250);
       const ist = await k.seite.evaluate(() => {
         const f = document.querySelector('#dlg-veh form');
         const menge = (s) => Array.from(f.querySelectorAll(s + ':checked')).map(i => i.value).sort().join(',');
