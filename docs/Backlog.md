@@ -1681,6 +1681,47 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     also nach dem Lösen. Nicht dringend, aber ein Rest, der sich mit jedem
     gelöschten Standort vermehrt.
 
+168. **Zentrale Stammdaten vollständig zurückbauen — damit kein
+    Überbleibsel bleibt.** *Aufgenommen 09.09.2026, zugeordnet **P5**
+    (Rahmenplan R39, Beschluss vom 30.08.2026).* S9 hat nur die **Tür
+    geschlossen**: kein Anlegen zentraler Stammdaten mehr, keine leere Karte
+    in den Einstellungen — **kein Schema, keine Migration**. Der eigentliche
+    Rückbau steht aus, und ohne ihn bleibt das Modell im Schema, in den
+    Sicherungsformaten und in der Dokumentation stehen, obwohl es keine Daten
+    mehr trägt. Die Fundstellen sind aufgenommen:
+    `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`, **208
+    Befunde** auf sechs Flächen (23 Schema, 71 Code, 83 Dokumentation, 22
+    Prüfmittel, 9 Daten) — das Dokument bleibt bis P5 liegen und wird
+    danach gelöscht wie ein Konzept.
+
+    *Was der Rückbau umfasst:* **(1)** `user_id` in `bases`, `vehicles`,
+    `crew_presets`, `resources`, `bw_units` und `transport_dests` auf
+    `NOT NULL` ziehen; **(2)** `user_bases` samt Auswahlweg entfernen (E16);
+    **(3)** das Feld `stammdaten.user_bases` aus der Nutzlast der
+    Kontosicherung nehmen, Nutzlastversion heben, den Import ältere Pakete
+    still darüber hinweglesen lassen; **(4)** `admin_stammdaten.php` samt
+    Menüeintrag entfernen; **(5)** die Abfragen entschlacken, die heute
+    „eigen ODER zentral" fragen (`dt_base_erlaubt()`, `dt_bases()`,
+    `dt_vehicles()`, die Dublettenprüfung, der Einspielweg); **(6)**
+    Dokumentation austragen (`docs/Technik.md` Datenmodell,
+    `docs/Backup-Format.md`, `docs/Handbuch.md`); **(7)** die Prüfmittel
+    nachziehen (Platzhalter `__ADMIN_STANDORT__` des Bilderlaufs, der
+    Klickprobenweg zu Nr. 163, die Umlaufausnahmen des Referenzbestands).
+
+    *Vorbedingung, die vor dem `ALTER TABLE` zu messen ist:* **0 Zeilen mit
+    `user_id IS NULL`** in allen sechs Tabellen. Steht auch nur eine da,
+    bricht die Änderung ab, und MySQL kennt kein Zurückrollen von
+    Schemaänderungen — die Installation bliebe auf halbem Weg stehen. Die
+    geschlossene Tür aus S9 sorgt dafür, dass diese Null von da an hält;
+    vorhandene Einträge lassen sich über die Verwaltung noch löschen.
+
+    *Abnahme („keine Überbleibsel"):* `grep -rn "zentral" server/` nennt
+    keine Stammdatenstelle mehr; `grep -rn "user_bases" server/ docs/` ist
+    **0**; Register und `SHOW CREATE TABLE` sind zwischen frischer
+    Installation und migrierter Datenbank strukturgleich; die Kreisläufe
+    `edbak`, `edbak-alt` und `csv` laufen mit **0 unerklärten** Abweichungen;
+    eine Sicherung im alten Format spielt weiterhin ein.
+
 ## Erledigt
 
 

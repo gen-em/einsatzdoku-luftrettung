@@ -6,6 +6,12 @@ Vorarbeit für den Rückbau nach **Rahmenplan R39** und ersetzt kein Konzept:
 Sie sagt, **wo** etwas steht und **was daran hängt**, nicht, in welcher
 Reihenfolge es fällt.
 
+**Lebensdauer.** Dieses Dokument ist **kein Konzept und kein
+Prüfdokument** und fällt darum nicht unter die Löschregel von `CLAUDE.md` 7:
+Es überlebt den Abschluss von S9 und **bleibt liegen, bis der Rückbau in P5
+gelaufen ist** (Backlog **Nr. 168**, Rahmenplan R39). Erst dann wird es
+gelöscht — die Git-Historie behält es.
+
 **Anlass.** Am 09.09.2026 kam auf die Rückfrage nach dem Umgang mit
 systemweiten Standorten die Auskunft: *„es gibt keine systemweiten Standorte
 mehr, alle gelöscht"* und *„die wollten wir doch ganz abschaffen"*. Der

@@ -1165,6 +1165,18 @@ Zustand, nicht als Mangel.
 **Was stattdessen zu entscheiden ist, steht in Frage 10.**
 
 **Frage 10 — Wird der Rückbau nach R39 vorgezogen, oder bleibt er in P5?**
+**Entschieden am 09.09.2026 vom Auftraggeber: Weg (c).** Auf die Rückfrage
+„wann wird voll zurückgebaut, damit keine Überbleibsel bleiben?" ist der
+Rückbau **verankert statt vertagt**: Er steht als **Backlog Nr. 168** mit
+sieben Punkten, einer Vorbedingung (0 Zeilen `user_id IS NULL` in sechs
+Tabellen, sonst bricht das `ALTER TABLE` ab) und einer Abnahme („keine
+Überbleibsel") — zugeordnet **P5**, wo R39 ihn hinstellt. Der Rahmenplan
+nennt ihn jetzt an drei Stellen (R39 im Register, Schritt 10 im Inhalt,
+Abschnitt 5 in der Zuordnung), und die Bestandsaufnahme bleibt bis dahin
+liegen. **Reihenfolge bis dahin:** S9 (läuft) → Backlog-Runde (parallel) →
+S10 Sicherheit (9b, ausdrücklich *vor* P5) → **P5**.
+
+*Die ursprüngliche Frage und die Empfehlung, die zu ihr geführt hat:*
 Der Rahmenplan führt ihn unter Schritt 10 (P5 Dienstbetrieb); S9 ist
 Schritt 8. Nach Plan lebt die Seite also noch zwei Schritte lang — und AP5-4
 hat sie in dieser Zeit auf die Standortseiten umgebaut, weil `sd_form()`
