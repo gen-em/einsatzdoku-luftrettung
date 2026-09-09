@@ -14,6 +14,74 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 18.0.0] — 2026-09-09
+
+### Web — die zentralen Stammdaten verlieren ihre Oberfläche (Rahmenplan R39)
+
+`admin_stammdaten.php` ist gestrichen. Ersatzlos, mitsamt der Karte
+**„Vordefinierte Standorte"** in den Einstellungen jedes Kontos und dem
+Schreibweg dahinter. Damit kann niemand mehr einen zentralen (systemweiten)
+Standort, ein zentrales Rettungsmittel, eine Besatzungs-Vorbelegung,
+Zielklinik, Bergwacht-Bereitschaft oder ein weiteres Rettungsmittel anlegen,
+ändern oder löschen — die zwölf Schreibwege, die das konnten, standen
+ausnahmslos in dieser einen Datei.
+
+**Warum jetzt und warum ganz.** Der Beschluss ist älter als das Paket:
+Rahmenplan **R39** vom 30.08.2026 schafft die zentralen Stammdaten ab und
+stellt den Rückbau nach P5. Das S9-Konzept hat ihn nie aufgenommen, und
+deshalb ist die Verwaltungsseite in AP5-4 noch auf Dialoge umgebaut worden —
+für ein Modell, das abgeschafft wird. In der laufenden Anlage sind alle
+zentralen Standorte gelöscht, der Referenzbestand hat nie einen gehabt
+(gezählt: 0 von 8 Standorten, 0 von 21 Rettungsmitteln, 0 von 136 übrigen
+Stammdatensätzen). Was blieb, war eine offene Tür: Jede Zeile, die zwischen
+heute und P5 noch entstünde, wäre Arbeit für eine Migration, die sich nicht
+zurückrollen lässt. Die Tür ist jetzt zu, und die Voraussetzung des
+P5-Rückbaus — **null Zeilen mit `user_id IS NULL`** — hält damit von selbst.
+
+**Was ausgetragen wird, und zwar ausdrücklich:** Ein vordefinierter Standort
+lässt sich nicht mehr **als Vorbelegung** neuer Diensttage setzen. Das war
+seit Web 7.0.0 eine eigene Zusage — gedacht für ein Konto, das ausschließlich
+mit vordefinierten Standorten arbeitet, den Regelfall an einer Station. Ein
+Konto, das heute eine solche Vorbelegung trägt, behält sie; ändern lässt sie
+sich nur noch, indem ein **eigener** Standort zur Vorbelegung wird. Das
+Handbuch verliert dafür den ganzen Abschnitt 9.4.
+
+**Was ausdrücklich bleibt.** Das Datenmodell ist unangetastet: `user_id` ist
+in allen sechs Stammdatentabellen weiter NULL-fähig, `user_bases` steht, das
+Feld `stammdaten.user_bases` der Kontosicherung wird weiter geschrieben und
+gelesen, und die Abfragen, die zentrale Einträge in die Kontoansicht holen,
+bleiben Zeile für Zeile dieselben. **Keine Migration, kein `update.php`.** Ein
+Altbestand — falls es ihn irgendwo gibt — bleibt sichtbar und unveränderlich,
+mit der Plakette „systemweit"; ändern und löschen kann ihn niemand mehr, das
+braucht dann den Rückbau in P5 (Backlog **Nr. 168**) oder einen Eingriff in
+der Datenbank. Der Hinweis der Nachbearbeitung, der bisher zum Anlegen unter
+„Standorte systemweit" aufforderte, sagt das jetzt, statt in eine Sackgasse zu
+führen.
+
+**Eine Hauptnummer ohne Migration** — die zweite in dieser Zählung nach
+17.0.0. Nicht das Datenmodell ändert sich, sondern was die Anwendung
+verspricht: Eine ganze Verwaltungsaufgabe fällt weg. Für den Wegfall einer
+Zusage wäre eine Nebennummer die falsche Größe.
+
+**Mitgegangen, weil es sonst ins Leere zeigt:** der Verweis der Seite
+Backup-Ziele (zeigt jetzt auf „Standorte" im Konto),
+`stammdaten_dup_personal_count()` in `db.php` (sechs Aufrufer, alle in der
+gelöschten Datei), der zweite Parameter von `sd_seite()` und die Option
+`bearbeiten_href` in `stammdaten_ui.php` (beide ohne Aufrufer), der fünfte
+Einbauort des Kartendialogs in der Klickprobe (`ap2-dialog-vier-einbauorte`,
+Soll 4 von 4), zwei Seiten des Bilderlaufs und der Platzhalter
+`__ADMIN_STANDORT__`, der sich ohnehin nie auflösen ließ (F-S9-U-33). Der
+Klickprobenweg zu Backlog Nr. 163 misst dieselbe Zusage jetzt am eigenen
+Bestand (`ap5-besatzung-anlegen`), statt ersatzlos zu entfallen — das Anlegen
+einer Besatzungs-Vorbelegung war auf der Kontoseite von keinem Prüffall
+berührt.
+
+**Nach dem Deploy zu prüfen:** Der Deploy synchronisiert `server/` und löscht,
+was im Repositorium entfällt — die Datei verschwindet also vom Webspace. Das
+gilt aber nur, solange die Zustandsdatei der Aktion dort intakt ist. Deshalb
+gehört ein Aufruf mit **Statuscode** dazu: `admin_stammdaten.php` muss **404**
+antworten. Eine 200 mit Anmeldeseite sieht im Browser aus wie ein Erfolg.
+
 ## [Uhr 3.1.0] — 2026-09-08
 
 ### Uhr — eine Störung ist keine dauerhafte Ablehnung (Backlog Nr. 159)

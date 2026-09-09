@@ -78,18 +78,11 @@ function stammdaten_dup_global(string $table, string $col, string $val,
     return (bool)$st->fetchColumn();
 }
 
-/** Anzahl PERSOENLICHER Eintraege (aller NutzerInnen) mit gleichem
- *  (Vergleichs-)Namen wie der uebergebene — fuer die Duplikat-Warnung
- *  (Nutzer-Ansicht) bzw. den Admin-Hinweis "N Nutzer haben ...". */
-function stammdaten_dup_personal_count(string $table, string $col, string $val,
-                                        ?string $extraCol = null, ?string $extraVal = null): int {
-    $sql = "SELECT COUNT(*) FROM $table WHERE user_id IS NOT NULL AND LOWER($col) = LOWER(?)";
-    $params = [$val];
-    if ($extraCol !== null) { $sql .= " AND $extraCol = ?"; $params[] = $extraVal; }
-    $st = db()->prepare($sql);
-    $st->execute($params);
-    return (int)$st->fetchColumn();
-}
+/* `stammdaten_dup_personal_count()` STAND HIER BIS S9/AP5b. Sie zaehlte, wie
+ * viele Konten denselben Namen selbst fuehren, und beantwortete damit den
+ * Admin-Hinweis „N NutzerInnen haben ..." auf der systemweiten
+ * Stammdatenpflege. Ihre sechs Aufrufer standen ausnahmslos in
+ * `admin_stammdaten.php`; mit der Seite verliert die Frage ihre Stelle. */
 
 /* ---------------------------------------------------------------------------
  * EIN STANDORT WIRD GELOESCHT — WAS ES UEBERLEBT      S9/AP5-5, M-S9-10 (b)
@@ -114,18 +107,21 @@ function stammdaten_dup_personal_count(string $table, string $col, string $val,
  * naechsten Typ auseinander, und zwar still: Ein Rettungsmittel wuerde
  * geloescht, das man haette anlegen duerfen.
  *
- * ZWEI AUFRUFSTELLEN, EINE FASSUNG: `einstellungen.php` (eigene Standorte)
- * und `admin_stammdaten.php` (systemweite). `$userId === null` meint den
- * systemweiten Bestand — dieselbe Unterscheidung wie in
+ * EINE AUFRUFSTELLE SEIT S9/AP5b: `einstellungen.php` (eigene Standorte).
+ * Bis dahin waren es zwei — `admin_stammdaten.php` pflegte den systemweiten
+ * Bestand und uebergab dafuer `$userId === null`. Die Seite ist gestrichen
+ * (R39), der Zweig `$userId === null` bleibt: Er ist billig, er trifft in
+ * einer Anlage ohne zentrale Eintraege nie, und der Rueckbau in P5 (Backlog
+ * Nr. 168) will genau hier nachsehen. Dieselbe Unterscheidung fuehrt
  * `stammdaten_dup_global()` darueber.
  *
  * WARUM HIER UND NICHT IN `validate_lib.php`. Das Konzept schreibt „eine
  * Funktion neben `pruef_rettungsmittel()`" — gemeint ist: EINE Fassung fuer
  * beide Seiten. Die Datei selbst sagt in ihrem Kopf „Diese Datei aendert von
  * sich aus nichts"; ein `UPDATE` darin waere der erste Verstoss dagegen.
- * `db.php` fuehrt mit `stammdaten_dup_global()` und
- * `stammdaten_dup_personal_count()` bereits genau diese Sorte Helfer: eine
- * Abfrage ueber den Stammdatenbestand, die beide Seiten brauchen.
+ * `db.php` fuehrt mit `stammdaten_dup_global()` bereits genau diese Sorte
+ * Helfer: eine Abfrage ueber den Stammdatenbestand, die mehrere Schreibwege
+ * brauchen.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -184,14 +180,22 @@ function stammdaten_standort_loesen(int $baseId, ?int $userId): int
 /**
  * Der Satz der Rueckfrage vor dem Loeschen eines Standorts (M-S9-10 b).
  *
- * Er steht an EINER Stelle, weil er an zwei gebraucht wird und weil er drei
+ * Er stand an EINER Stelle, weil er an zwei gebraucht wurde, und er steht dort
+ * weiter, weil er drei
  * Zahlen zusammenbringt, die leicht auseinanderlaufen: die Zahl der
  * mitgeloeschten Saetze, die Zahl der ueberlebenden Rettungsmittel und deren
  * Namen. Bis Web 17.0.0 zaehlte die Rueckfrage ALLES mit — sie sagte „6
  * werden mitgeloescht", und eines davon blieb dann doch nicht.
  *
- * $zusatz haengt hinten an (die Verwaltung nennt zusaetzlich, wie viele
+ * $zusatz haengt hinten an (die Verwaltung nannte zusaetzlich, wie viele
  * Konten den Standort gewaehlt haben).
+ *
+ * SEIT S9/AP5b HAT DIESE FUNKTION EINEN AUFRUFER, NICHT ZWEI. Mit
+ * `admin_stammdaten.php` (R39) faellt der Aufrufer weg, der `$systemweit =
+ * true` und `$zusatz` uebergab: Beide sind seither unerreichbar. Sie bleiben
+ * trotzdem stehen — die vier ausgeschriebenen Beugungsformen unten sind
+ * sichtbarer Text, und den baut man nicht als Nebenwirkung eines
+ * Streichpakets um. Sie fallen mit dem Modell in P5 (Backlog Nr. 168).
  */
 function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben,
                                 bool $systemweit, string $zusatz = ''): string

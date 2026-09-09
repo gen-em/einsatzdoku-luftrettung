@@ -1662,9 +1662,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die Spalte zeigt je nach `kind` auf `bases.id` oder `vehicles.id`, und
     zwei Zieltabellen lassen keinen zu (`schema.sql:196-208`). Beide
     Löschwege räumen darum von Hand ab, was sie kennen: die Vorbelegung des
-    **Standorts** (`admin_stammdaten.php:164`, `einstellungen.php:718`) und
-    die des einzeln gelöschten **Rettungsmittels**
-    (`admin_stammdaten.php:251`, `einstellungen.php:828`). Nicht abgeräumt
+    **Standorts** (`einstellungen.php`, `base_del`) und die des einzeln
+    gelöschten **Rettungsmittels** (`einstellungen.php`, `veh_del`). Nicht
+    abgeräumt
     werden die Vorbelegungen der Rettungsmittel, die mit dem Standort
     **kaskadieren** — und das sind beim Löschen eines Standorts alle.
     Gemessen an der lokalen Anlage in einer zurückgerollten Transaktion:
@@ -1672,20 +1672,26 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Die Wirkung ist still: `dt_standardwerte()` liefert eine tote Kennung,
     das Auswahlfeld findet dazu nichts und belegt nichts vor — es sieht aus
     wie „keine Vorbelegung gesetzt", und niemand kann die Zeile loswerden.
-    Behebung: In beiden `base_del`-Wegen vor dem Löschen des Standorts auch
+    Behebung: Im `base_del`-Weg vor dem Löschen des Standorts auch
     `DELETE FROM user_defaults WHERE kind = "vehicle" AND item_id IN
     (SELECT id FROM vehicles WHERE base_id = ?)` — innerhalb derselben
     Transaktion, in der der Standort fällt. Seit Web 17.1.0 löst
     `stammdaten_standort_loesen()` die Rettungsmittel ohne Standortpflicht
     vorher heraus; deren Vorbelegung muss **bleiben**, die Abfrage läuft
     also nach dem Lösen. Nicht dringend, aber ein Rest, der sich mit jedem
-    gelöschten Standort vermehrt.
+    gelöschten Standort vermehrt. *(Nachtrag 09.09.2026, Web 18.0.0: Es gibt
+    nur noch EINEN Löschweg — `admin_stammdaten.php` ist mit S9/AP5b
+    gestrichen. Der Befund bleibt derselbe, die Behebung ist damit halb so
+    groß.)*
 
 168. **Zentrale Stammdaten vollständig zurückbauen — damit kein
     Überbleibsel bleibt.** *Aufgenommen 09.09.2026, zugeordnet **P5**
-    (Rahmenplan R39, Beschluss vom 30.08.2026).* S9 hat nur die **Tür
-    geschlossen**: kein Anlegen zentraler Stammdaten mehr, keine leere Karte
-    in den Einstellungen — **kein Schema, keine Migration**. Der eigentliche
+    (Rahmenplan R39, Beschluss vom 30.08.2026).* **Die Tür ist zu seit
+    Web 18.0.0** (S9/AP5b): `admin_stammdaten.php` ist ersatzlos gestrichen,
+    die Karte „Vordefinierte Standorte" und der Schreibweg `ub_toggle` mit
+    ihr — **kein Schema, keine Migration**. Damit kann keine neue Zeile mit
+    `user_id IS NULL` mehr entstehen, und die Vorbedingung unten hält von
+    selbst. Der eigentliche
     Rückbau steht aus, und ohne ihn bleibt das Modell im Schema, in den
     Sicherungsformaten und in der Dokumentation stehen, obwohl es keine Daten
     mehr trägt. Die Fundstellen sind aufgenommen:
@@ -1749,6 +1755,11 @@ zutreffen.
     Beleg dafür, dass der Vorschlag geprüft und verworfen wurde.*
 
 163. **Systemweite Besatzungs-Vorbelegungen ließen sich nicht anlegen.**
+    *Nachtrag 09.09.2026 (Web 18.0.0, S9/AP5b): **gegenstandslos** —
+    `admin_stammdaten.php` ist ersatzlos gestrichen (Rahmenplan R39, Nr. 168).
+    Der Punkt bleibt hier stehen, weil er behoben WAR, bevor die Seite fiel;
+    der Klickprobenweg dazu misst dieselbe Zusage jetzt an der Kontoseite
+    (`ap5-besatzung-anlegen`).*
     *Aufgenommen und behoben 09.09.2026 in S9/AP5-4, Web 17.0.0.* Das
     Formular in `admin_stammdaten.php` schickte den Schlüssel `role_code`,
     der Schreibweg `crew_save` derselben Datei las `role`. Damit war die

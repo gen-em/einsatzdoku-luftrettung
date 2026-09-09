@@ -609,8 +609,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Optionale Koordinate (E37/E39). Die Regeln — nur zusammen, ausserhalb
          * des Bereichs leer, Komma zulaessig — stehen seit Web 6.1.0 an EINER
          * Stelle (pruef_ortspaar in validate_lib.php). Vorher gab es dieselbe
-         * kleine Umrechnung dreimal: hier, in admin_stammdaten.php und, mit dem
-         * Ortsfeld am Einsatz, waere sie ein viertes Mal entstanden. */
+         * kleine Umrechnung dreimal: hier, in admin_stammdaten.php (mit S9/AP5b
+         * gestrichen) und, mit dem Ortsfeld am Einsatz, waere sie ein viertes
+         * Mal entstanden. */
         [$lat, $lon] = pruef_ortspaar($_POST['lat'] ?? null, $_POST['lon'] ?? null);
         /* EIN LEERER NAME BEKAM BIS WEB 16.3.0 KEINE ANTWORT (F-S9-U-28).
          * Die Bedingung lautete `if ($n !== '')` — ohne `else`. Wer das Feld
@@ -656,26 +657,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $notice = 'Standard-Rettungsmittel gesetzt.';
         }
     }
-    /* Zentralen Standort aus- oder abwaehlen (E16). Nur ausgewaehlte erscheinen
-     * in den Auswahllisten; EIGENE Standorte brauchen keinen Eintrag und gelten
-     * immer als ausgewaehlt. */
-    if ($action === 'ub_toggle') {
-        $bid = (int)($_POST['id'] ?? 0);
-        $chk = db()->prepare('SELECT COUNT(*) FROM bases WHERE id = ? AND user_id IS NULL');
-        $chk->execute([$bid]);
-        if ($chk->fetchColumn()) {
-            if (($_POST['an'] ?? '') === '1') {
-                db()->prepare('INSERT IGNORE INTO user_bases (user_id, base_id) VALUES (?,?)')
-                    ->execute([$userId, $bid]);
-                $notice = 'Zentraler Standort ausgewählt.';
-            } else {
-                db()->prepare('DELETE FROM user_bases WHERE user_id = ? AND base_id = ?')
-                    ->execute([$userId, $bid]);
-                $notice = 'Zentraler Standort abgewählt. Bereits dokumentierte '
-                        . 'Diensttage bleiben unverändert.';
-            }
-        }
-    }
+    /* `ub_toggle` STAND HIER BIS S9/AP5b (R39). Der Schreibweg waehlte einen
+     * zentralen Standort fuer dieses Konto aus oder ab (E16) und war die
+     * einzige Stelle, die in `user_bases` schrieb und loeschte. Zentrale
+     * Standorte kann seit der Streichung von `admin_stammdaten.php` niemand
+     * mehr anlegen; die Karte, die diesen Weg ausloeste, ist mit ihm entfallen.
+     * Die Tabelle `user_bases` selbst bleibt bis zum Rueckbau in P5 (Backlog
+     * Nr. 168) — sie ist in einer Anlage ohne zentrale Standorte leer, und
+     * `dt_bases()` wertet ihren Zweig ohnehin nur fuer `b.user_id IS NULL`
+     * aus. */
     if ($action === 'base_del') {
         /* DAS LOESCHEN NIMMT DIE STAMMDATEN DES STANDORTS MIT (E15,
          * ON DELETE CASCADE) — MIT EINER AUSNAHME SEIT WEB 17.1.0 (M-S9-10,
@@ -748,7 +738,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $vid = (int)($_POST['id'] ?? 0);
         /* ALLE REGELN STEHEN IN DER PRUEFSCHICHT (Web 16.0.0, E-S9-09).
          * Bis Web 15.9.0 standen sie hier ausgeschrieben — und ein zweites Mal
-         * in admin_stammdaten.php, ein drittes Mal (kuerzer) beim Einspielen
+         * in admin_stammdaten.php (seit S9/AP5b gestrichen), ein drittes Mal
+         * (kuerzer) beim Einspielen
          * einer Sicherung. Mit dem Typ waeren daraus drei Fassungen von sieben
          * Regeln geworden. `pruef_rettungsmittel()` liefert den fertigen
          * Datensatz oder je Feld eine Meldung; die Dublettenpruefung bleibt
@@ -986,7 +977,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Standort feststeht — als ganze Adresse und nicht als Reitername. */
     $abschnitt = [
         'base_save'  => 'standorte', 'base_del' => 'standorte',
-        'base_default' => 'standorte', 'ub_toggle' => 'zentrale',
+        'base_default' => 'standorte',
         'veh_save'   => null, 'veh_del'  => null, 'veh_default' => null,
         'crew_save'  => null, 'crew_del' => null,
         'res_save'   => null, 'res_del'  => null,
@@ -1462,9 +1453,15 @@ ui_seite_start(['titel' => 'Einstellungen',
        * Bestand — der Block hier läuft für beide, gerendert wird danach je
        * Reiter.
        *
-       * ZENTRALE EINTRÄGE bleiben sichtbar und unveränderlich: Sie werden von
-       * einer Administratorin gepflegt (admin_stammdaten.php) und tragen hier
-       * das Kennzeichen „systemweit".
+       * ZENTRALE EINTRÄGE bleiben sichtbar und unveränderlich und tragen hier
+       * das Kennzeichen „systemweit". Bis S9/AP5b pflegte sie eine
+       * Administratorin (`admin_stammdaten.php`); die Seite ist mit dem Modell
+       * gestrichen (Rahmenplan R39). **Niemand pflegt sie mehr.** Steht in
+       * einer Anlage noch ein zentraler Eintrag, dann ist er von hier aus
+       * sichtbar, aber weder änderbar noch löschbar — er braucht einen Eingriff
+       * in der Datenbank oder den Rückbau in P5 (Backlog Nr. 168). Die Abfragen
+       * darunter behalten ihren Zweig `user_id IS NULL` genau dafür; wer ihn
+       * streicht, blendet den Altbestand aus, statt ihn loszuwerden.
        */
       /* Präfixe der Ortsfelder dieses Reiters. Sie entstehen beim Rendern — je
        * Standort eines für die Zielklinik —, und die Belebung im Browser
@@ -1482,16 +1479,6 @@ ui_seite_start(['titel' => 'Einstellungen',
          Speichern durchlaesst. */
       $sdBaseNamen = [];
       foreach ($sdBases as $b) { $sdBaseNamen[(int)$b['id']] = (string)$b['name']; }
-
-      // Zentrale Standorte zum Auswaehlen (E16) samt aktuellem Zustand.
-      $zentral = db()->prepare('SELECT b.id, b.name, b.lat, b.lon,
-                                       ub.base_id IS NOT NULL AS gewaehlt
-                                  FROM bases b
-                                  LEFT JOIN user_bases ub
-                                         ON ub.base_id = b.id AND ub.user_id = ?
-                                 WHERE b.user_id IS NULL ORDER BY b.name');
-      $zentral->execute([$userId]);
-      $zentral = $zentral->fetchAll();
 
       // Eigene Standorte getrennt: nur sie sind hier bearbeitbar.
       $eigene = db()->prepare('SELECT id, name, lat, lon FROM bases
@@ -1662,10 +1649,12 @@ ui_seite_start(['titel' => 'Einstellungen',
 
   <?php
   /* Die beiden Bausteine der Stammdatenlisten stehen seit Web 9.10.0 in
-     `stammdaten_ui.php`: Dieselben Listen gibt es systemweit noch einmal
-     (`admin_stammdaten.php`), und ein Muster, das an zwei Stellen steht,
-     laeuft auseinander — genau das war der Befund, aus dem in O8b die
-     Schliessungen entstanden sind. */
+     `stammdaten_ui.php`: Dieselben Listen gab es systemweit noch einmal
+     (`admin_stammdaten.php`, mit S9/AP5b gestrichen), und ein Muster, das an
+     zwei Stellen steht, laeuft auseinander — genau das war der Befund, aus dem
+     in O8b die Schliessungen entstanden sind. Sie bleiben dort, auch mit nur
+     noch einem Aufrufer: Diese Datei hat ueber viertausend Zeilen, und die
+     Bausteine wieder hereinzuholen hiesse, den Befund umzukehren. */
   ?>
 
   <?php if ($tab === 'standorte'): ?>
@@ -1771,65 +1760,23 @@ ui_seite_start(['titel' => 'Einstellungen',
       </div>
     <?php ui_karte_ende(); ?>
 
-    <?php /* „Vordefinierte Standorte" statt „Zentrale Standorte auswählen"
-             (Web 7.0.0). „Zentral" beschrieb die Verwaltung, nicht den Nutzen.
-             ZUGEKLAPPT (E-P3-35): Wer eigene Standorte gepflegt hat, braucht
-             sie selten — und die Zahl im Kopf sagt schon, was drinsteht. */ ?>
-    <?php
-    $gewaehlt = count(array_filter($zentral, static fn($z) => !empty($z['gewaehlt'])));
-    ui_karte_start(['titel' => 'Vordefinierte Standorte', 'id' => 'zentrale', 'zu' => true,
-                    'zahl' => count($zentral) . ' · ' . $gewaehlt . ' ausgewählt']);
-    ?>
-      <p class="feld-hinweis">Vordefinierte Standorte legt eine Administratorin an.
-         Sie erscheinen erst dann in den Auswahllisten, wenn du sie hier auswählst.
-         Abwählen entfernt keine Daten.</p>
-      <?php if (!$zentral): ?>
-        <p class="feld-hinweis">Keine vordefinierten Standorte hinterlegt.</p>
-      <?php endif; ?>
-      <?php foreach ($zentral as $z):
-            $zid = (int)$z['id']; $an = !empty($z['gewaehlt']);
-            $istDef = $zid === $DEF_BASE_ID; ?>
-        <?php /* ★ AUCH FÜR SYSTEMWEITE STANDORTE (Web 7.0.0): Ein Konto, das
-                 ausschließlich mit vordefinierten Standorten arbeitet — der
-                 Regelfall an einer Station —, konnte sonst gar keine
-                 Vorbelegung setzen. Voraussetzung bleibt die Auswahl. */ ?>
-        <?php if ($an && !$istDef): ?>
-          <form method="post" id="f-zdef-<?= $zid ?>" class="nur-vorlesen"
-                action="einstellungen.php?t=standorte#zentrale">
-            <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
-            <input type="hidden" name="id" value="<?= $zid ?>">
-          </form>
-        <?php endif; ?>
-        <form method="post" id="f-zsel-<?= $zid ?>" class="nur-vorlesen"
-              action="einstellungen.php?t=standorte#zentrale">
-          <?= csrf_field() ?><input type="hidden" name="action" value="ub_toggle">
-          <input type="hidden" name="id" value="<?= $zid ?>">
-          <input type="hidden" name="an" value="<?= $an ? '0' : '1' ?>">
-        </form>
-        <?php
-        $klein = ($z['lat'] !== null && $z['lon'] !== null)
-            ? $z['lat'] . ', ' . $z['lon'] : 'ohne Lage';
-        $eintraege = [];
-        if ($an && !$istDef) {
-            $eintraege[] = ['text' => 'Als Vorbelegung', 'symbol' => 'stern',
-                            'art' => 'leise-orange', 'form' => 'f-zdef-' . $zid];
-        }
-        $eintraege[] = $an
-            ? ['text' => 'Abwählen', 'symbol' => 'schliessen', 'art' => 'leise', 'form' => 'f-zsel-' . $zid]
-            : ['text' => 'Auswählen', 'symbol' => 'plus', 'form' => 'f-zsel-' . $zid];
-        ui_zeile([
-            'text'  => (string)$z['name'],
-            'klein' => $klein,
-            'plaketten' => ui_plakette('systemweit')
-                         . ($istDef ? ui_symbol('stern', 'zeile-stern', 'Vorbelegung neuer Diensttage') : ''),
-            'aktionen' => ui_zeilenaktionen(['titel' => (string)$z['name'], 'eintraege' => $eintraege]),
-        ]);
-      endforeach; ?>
-    <?php ui_karte_ende(true); ?>
+    <?php /* DIE KARTE „VORDEFINIERTE STANDORTE" STAND HIER BIS S9/AP5b.
+             Sie zeigte die zentralen (systemweiten) Standorte und liess sie
+             fuer dieses Konto aus- und abwaehlen (E16); ein ausgewaehlter
+             liess sich auch als Vorbelegung neuer Diensttage setzen
+             (Web 7.0.0 — der Regelfall an einer Station, die ausschliesslich
+             mit vordefinierten Standorten arbeitete). Beides gibt es nicht
+             mehr: Rahmenplan R39 schafft die zentralen Stammdaten ab, die
+             Verwaltungsseite ist gestrichen, und niemand kann noch einen
+             zentralen Standort anlegen. Ohne Bestand zeigte die Karte in
+             JEDEM Konto „0 · 0 ausgewählt" und den Satz „Keine
+             vordefinierten Standorte hinterlegt." — ein leeres Versprechen
+             auf einer Seite, die sonst nichts Leeres zeigt. Der Rueckbau von
+             Tabelle und Schema folgt in P5 (Backlog Nr. 168). */ ?>
 
     <?php if (!$sdBases): ?>
       <?= ui_meldung_markup('info', 'Noch kein Standort verfügbar. Lege oben '
-          . 'einen eigenen an oder wähle einen vordefinierten aus — ohne Standort '
+          . 'einen an — ohne Standort '
           . 'gibt es keine Rettungsmittel, keine Besatzungs-Vorbelegungen und '
           . 'keine Zielkliniken.') ?>
     <?php endif; ?>

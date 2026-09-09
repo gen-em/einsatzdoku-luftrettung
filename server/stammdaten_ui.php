@@ -2,11 +2,11 @@
 declare(strict_types=1);
 
 /**
- * Die Bausteine der Stammdatenlisten — eine Fassung für zwei Seiten (P3/O9c).
+ * Die Bausteine der Stammdatenlisten (P3/O9c).
  *
  * WARUM DIESE DATEI. Sechs Listen folgen demselben Muster (Standorte,
  * Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel,
- * Bergwacht), und sie stehen ZWEIMAL: einmal als persoenlicher Bestand
+ * Bergwacht), und sie standen ZWEIMAL: einmal als persoenlicher Bestand
  * (`einstellungen.php`) und einmal systemweit (`admin_stammdaten.php`).
  *
  * Im Bestand war das Muster in jeder der beiden Dateien fuenfmal
@@ -17,21 +17,30 @@ declare(strict_types=1);
  * Schliessungen ein zweites Mal zu kopieren hiesse, denselben Fehler noch
  * einmal zu machen, nur eine Ebene hoeher.
  *
- * DER UNTERSCHIED ZWISCHEN DEN BEIDEN SEITEN steckt in genau drei Dingen,
+ * SEIT S9/AP5b GIBT ES NUR NOCH EINE SEITE. Die systemweite Stammdatenpflege
+ * ist mit dem Modell der zentralen Stammdaten gestrichen (Rahmenplan R39);
+ * `einstellungen.php` ist der einzige Aufrufer. Die Datei bleibt trotzdem:
+ * Sie traegt die sechs Listen, die fuenf Dialoge und die Sprungliste, und
+ * sie wieder in `einstellungen.php` aufzuloesen hiesse, 500 Zeilen in eine
+ * Datei zurueckzuschieben, die schon ueber viertausend hat. Was aus der
+ * Zweiseitigkeit stammt, steht unten als Option und ist als solche
+ * gekennzeichnet.
+ *
+ * DER UNTERSCHIED ZWISCHEN DEN BEIDEN SEITEN steckte in genau drei Dingen,
  * und die stehen als Optionen darin:
  *
  *   `seite`     wohin ein Formular absendet und ein Anker zeigt
  *               (heisst NICHT `basis`: In dieser Anwendung ist eine Basis
  *                ein Standort, und der Schluessel meint eine URL — die
  *                Wortliste haette das Homonym zu Recht gemeldet)
- *               (seit S9/AP5 in BEIDEN die Seite EINES Standorts:
- *                `sd_seite($bid)` bzw. `sd_seite($bid, 'admin_stammdaten.php')`
- *                — den Reiter `t=rettungsmittel` gibt es in keiner der beiden
- *                mehr)
- *   `zentral`   ein systemweiter Eintrag in der KONTOANSICHT ist
- *               unveraenderlich — in der ADMINANSICHT ist er der Gegenstand
- *   `def_action` die Vorbelegung gibt es nur im Konto: Sie ist eine
- *               Eigenschaft dieses Kontos, nicht des Bestands
+ *               (seit S9/AP5 die Seite EINES Standorts: `sd_seite($bid)`
+ *                — den Reiter `t=rettungsmittel` gibt es nicht mehr)
+ *   `zentral`   ein systemweiter Eintrag in der Kontoansicht ist
+ *               unveraenderlich. Bis S9/AP5b war er in der Adminansicht der
+ *               Gegenstand; die gibt es nicht mehr, die Option bleibt fuer
+ *               den Altbestand (R39, Backlog Nr. 168)
+ *   `def_action` die Vorbelegung ist eine Eigenschaft des Kontos, nicht des
+ *               Bestands
  */
 
 /**
@@ -44,8 +53,8 @@ declare(strict_types=1);
  * $o: seite, name, klein, anker, praefix (eindeutig je Liste), id, base_id,
  *     zentral (bool), stern (bool), del_action, del_frage,
  *     def_action (optional — nur wo es eine Vorbelegung gibt),
- *     bearbeiten_href, bearbeiten_attr (Attribute am „Bearbeiten"-Eintrag —
- *     der Dialog-Öffner, S9/AP5-4), plaketten (zusätzliches Markup),
+ *     bearbeiten_attr (Attribute am „Bearbeiten"-Eintrag — der Dialog-Öffner,
+ *     S9/AP5-4), plaketten (zusätzliches Markup),
  *     vorn (Markup VOR dem Text — das Artzeichen, S9/AP5),
  *     zeilen_id (bool: die Zeile bekommt `id="<praefix>-<id>"` als Sprungziel)
  */
@@ -71,28 +80,25 @@ const SD_HILFE_AB = 6;
  * Standortliste. Vorher stand dort `einstellungen.php?t=rettungsmittel`,
  * zwoelfmal ausgeschrieben — und der Reiter gibt es nicht mehr.
  *
- * Die VERWALTUNG hat ihre eigene Seite; sie reicht `$basis` mit.
+ * SEIT S9/AP5b OHNE ZWEITEN PARAMETER. Bis dahin nahm sie `$basis` entgegen,
+ * weil die Verwaltung ihre eigene Seite hatte (`admin_stammdaten.php`); die
+ * ist mit dem Modell der zentralen Stammdaten gestrichen (R39). Ein
+ * Vorgabewert, den nur noch ein Wert erreicht, ist keine Bequemlichkeit,
+ * sondern eine offene Tuer: `sd_seite($id, 'admin_stammdaten.php')` haette
+ * weiterhin eine Adresse geliefert, und die Linkprobe haette sie nicht
+ * gesehen.
  */
-function sd_seite(int $baseId, string $basis = 'einstellungen.php'): string
+function sd_seite(int $baseId): string
 {
-    /* DIE ADRESSE STEHT ALS GANZE IN EINER ZEICHENKETTE und nicht als
-       `$basis . '?t=…'`. Die Linkprobe erkennt einen Verweis am Muster
+    /* DIE ADRESSE STEHT ALS GANZE IN EINER ZEICHENKETTE und nicht
+       zusammengesetzt. Die Linkprobe erkennt einen Verweis am Muster
        `seite.php?…` INNERHALB einer Zeichenkette; zusammengesetzt sieht sie
        ihn gar nicht. Die zwoelf ausgeschriebenen Adressen, die diese
        Funktion abloest, hat sie geprueft — nach dem Umbau waren es null,
        und die Gesamtzahl fiel von 140 auf 126 geprueften Verweisen, ohne
-       dass jemand etwas gemeldet haette. Mit dem ausgeschriebenen Zweig
-       prueft sie wieder, dass `einstellungen.php` `t` UND `s` liest.
-       Beide Zweige stehen ausgeschrieben — seit S9/AP5-4 liest auch
-       `admin_stammdaten.php` `t` UND `s`, und die Probe prueft es dort
-       ebenso. */
-    if ($basis === 'einstellungen.php') {
-        return 'einstellungen.php?t=standort&s=' . $baseId;
-    }
-    if ($basis === 'admin_stammdaten.php') {
-        return 'admin_stammdaten.php?t=standort&s=' . $baseId;
-    }
-    return $basis . '?t=standort&s=' . $baseId;
+       dass jemand etwas gemeldet haette. Ausgeschrieben prueft sie wieder,
+       dass `einstellungen.php` `t` UND `s` liest. */
+    return 'einstellungen.php?t=standort&s=' . $baseId;
 }
 
 function sd_zeile(array $o): void
@@ -126,13 +132,16 @@ function sd_zeile(array $o): void
     if (!$zentral) {
         /* „Bearbeiten" ist seit S9/AP5-4 kein Verweis mehr, sondern ein
            Dialog-Oeffner: `attr` traegt `data-dialog` und die `data-w-`-Kette
-           (`sd_oeffner()`), `href` bleibt `#`. Der Verweis-Weg steht daneben,
-           solange die Verwaltung ihn noch benutzt — sie zieht mit AP5-4c
-           nach. */
-        if (!empty($o['bearbeiten_href']) || !empty($o['bearbeiten_attr'])) {
+           (`sd_oeffner()`). Die Option `bearbeiten_href` stand daneben,
+           solange die Verwaltung den Verweis-Weg noch benutzte; sie ist mit
+           S9/AP5b entfallen. `href` BLEIBT `#` und wird nicht weggelassen:
+           `ui_zeilenaktionen()` gibt nur bei nichtleerem `href` ein `<a>` aus
+           — ohne wuerde aus dem Oeffner ein Absendeknopf, und die Seite luede
+           neu, statt den Dialog zu oeffnen. */
+        if (!empty($o['bearbeiten_attr'])) {
             $eintraege[] = ['text' => 'Bearbeiten', 'symbol' => 'stift',
-                            'href' => (string)($o['bearbeiten_href'] ?? '#'),
-                            'attr' => (string)($o['bearbeiten_attr'] ?? '')];
+                            'href' => '#',
+                            'attr' => (string)$o['bearbeiten_attr']];
         }
         echo '<form method="post" id="f-' . $pre . '-del" class="nur-vorlesen" action="'
            . ui_e($ziel) . '" data-confirm="' . ui_e((string)$o['del_frage']) . '">' . csrf_field()

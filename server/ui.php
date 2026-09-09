@@ -761,10 +761,14 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
  * den dritten Block sieht, sieht auch die ersten beiden, und wer nur den
  * ersten sieht, soll nicht raten müssen, ob es weitere gibt.
  *
- * „STAMMDATEN SYSTEMWEIT" HAT KEINEN EINTRAG MEHR (E-S8-14). Die Seite bleibt
- * und ist über ihre Adresse erreichbar; sie wird einmal bei der Einrichtung
- * gepflegt und danach jahrelang nicht. Ein Menüpunkt, den man einmal
- * benutzt, kostet siebzehn Mal Platz. Der Weg dorthin steht im Handbuch.
+ * „STAMMDATEN SYSTEMWEIT" GIBT ES NICHT MEHR (S9/AP5b, Rahmenplan R39).
+ * Erst nahm E-S8-14 der Seite den Menüpunkt — sie wurde einmal bei der
+ * Einrichtung gepflegt und danach jahrelang nicht, und ein Menüpunkt, den man
+ * einmal benutzt, kostet siebzehn Mal Platz. Seit S9/AP5b ist die Seite
+ * ersatzlos gestrichen: Es gibt eine Installation, dort steht kein zentraler
+ * Standort mehr, und es soll keinen neuen geben können. Standorte pflegt jedes
+ * Konto selbst unter „Standorte". Wer hier einen Eintrag vermisst, sucht eine
+ * Seite, die es nicht mehr gibt — nicht einen vergessenen Menüpunkt.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -2226,14 +2230,16 @@ function ui_abbruch(int $code, string $text, array $o = []): never
  * Die Einstellungen der Adresssuche fuer den Browser (S9/AP2, E-S9-05).
  *
  * WARUM NICHT IM KRYPTO-BOOTSTRAP, wie das Konzept es vorsah. Dort stehen
- * schon Konstanten fuer den Browser, und der Gedanke war richtig — nur ruft
- * `admin_stammdaten.php` `ui_krypto_bootstrap()` gar nicht auf: Die
- * systemweite Stammdatenpflege braucht keine Verschluesselung, aber sie
- * traegt zwei der fuenf Ortsfelder. Die Adresssuche haette dort ohne
- * Einstellung dagestanden und waere auf den Ruecklfall gefallen. Also ein
- * eigener, kleiner Bootstrap — und er wird nicht von den Seiten gerufen,
- * sondern von `ui_ortsfeld()` selbst: Wo ein Ortsfeld steht, stehen seine
- * Einstellungen, und keine Seite kann sie vergessen.
+ * schon Konstanten fuer den Browser, und der Gedanke war richtig — nur haengt
+ * die Adresssuche nicht an der Verschluesselung: Eine Seite kann Ortsfelder
+ * tragen, ohne `ui_krypto_bootstrap()` zu rufen. Bis S9/AP5b war die
+ * systemweite Stammdatenpflege genau so ein Fall; sie brauchte keine
+ * Verschluesselung, trug aber zwei Ortsfelder, und die Adresssuche haette dort
+ * ohne Einstellung dagestanden und waere auf den Rueckfall gefallen. Die Seite
+ * ist gestrichen, die Moeglichkeit nicht: Der naechste Ortsfeld-Einbau kann
+ * wieder einer sein. Also ein eigener, kleiner Bootstrap — und er wird nicht
+ * von den Seiten gerufen, sondern von `ui_ortsfeld()` selbst: Wo ein Ortsfeld
+ * steht, stehen seine Einstellungen, und keine Seite kann sie vergessen.
  *
  * EINMAL JE SEITENAUFBAU. Merkzettel wie beim Krypto-Bootstrap: Sieben
  * Ortsfelder auf einer Seite sind der Regelfall, nicht die Ausnahme, und

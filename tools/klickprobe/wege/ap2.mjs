@@ -1,7 +1,7 @@
 /* Wege des Arbeitspakets AP2 — Geocoder und Kartendialog (E-S9-05, E-S9-06).
  * ===========================================================================
  *
- *   P-05  Dialog aus fuenf Einbauorten                  Soll 5 von 5
+ *   P-05  Dialog aus vier Einbauorten                   Soll 4 von 4
  *   P-05  Treffer setzt das Kreuz, uebernimmt nichts
  *   P-07  Spur im Dialog, Karte auf der Spur bei leerem Feld
  *   P-06  Kontoschalter aus -> 0 Anfragen an den Dienst
@@ -47,10 +47,17 @@ async function einsaetze(k) {
 
 const formular = (k, id) => `${k.basis}/einsatz_form.php?id=${id}`;
 
-/* ---- Die fuenf Einbauorte des EINEN Dialogs (M-S9-04, Anmerkung 6) --------
+/* ---- Die vier Einbauorte des EINEN Dialogs (M-S9-04, Anmerkung 6) ---------
  *
- * Sie stehen auf drei Seiten und in zwei Rollen, und jeder bringt seinen Weg
- * dorthin selbst mit — samt dem Griff, der ihn ueberhaupt sichtbar macht. */
+ * Sie stehen auf zwei Seiten (einsatz_form.php, einstellungen.php) in einer
+ * Rolle, und jeder bringt seinen Weg dorthin selbst mit — samt dem Griff, der
+ * ihn ueberhaupt sichtbar macht.
+ *
+ * ES WAREN FUENF, bis S9/AP5b `admin_stammdaten.php` gestrichen hat (R39);
+ * der fuenfte war der Standort in der systemweiten Stammdatenpflege und die
+ * einzige Stelle, die den Dialog in der Adminrolle zeigte. `ort.rolle` bleibt
+ * trotzdem stehen: Es kostet nichts, und der naechste Einbauort kann wieder
+ * einer in einer anderen Rolle sein. */
 const EINBAUORTE = [
   {
     name: 'Einsatzort', rolle: 'demo', praefix: 'loc',
@@ -78,10 +85,6 @@ const EINBAUORTE = [
   {
     name: 'Standort (Konto)', rolle: 'demo', praefix: 'sdbase',
     async auf(k) { await k.gehZu(k.basis + '/einstellungen.php?t=standorte'); },
-  },
-  {
-    name: 'Standort (systemweit)', rolle: 'admin', praefix: 'adbase',
-    async auf(k) { await k.gehZu(k.basis + '/admin_stammdaten.php'); },
   },
 ];
 
@@ -132,10 +135,10 @@ async function ortLeeren(k, praefix) {
 
 export const wege = [
   {
-    name: 'ap2-dialog-fuenf-einbauorte',
+    name: 'ap2-dialog-vier-einbauorte',
     paket: 'AP2', punkt: 'P-05', rolle: 'demo',
-    was: 'Der Kartendialog öffnet aus allen fünf Einbauorten, mit Karte darin',
-    soll: '5 von 5',
+    was: 'Der Kartendialog öffnet aus allen vier Einbauorten, mit Karte darin',
+    soll: '4 von 4',
     async fahren(k) {
       let auf = 0;
       const notiz = [];

@@ -289,9 +289,7 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen Geräten
 untereinander. Abmelden steht getrennt am Ende und fragt sicherheitshalber
 nach. Bis Web 6.3.0 hieß der Punkt für Standorte und Rettungsmittel zusammen
-„Standortdaten"; der alte Link führt weiterhin zu „Standorte". **Stammdaten
-systemweit** hat seit Web 15.4.0 keinen Menüpunkt mehr — die Seite bleibt und
-ist über ihre Adresse erreichbar (Abschnitt 9.4).
+„Standortdaten"; der alte Link führt weiterhin zu „Standorte".
 
 **In der Leiste klappen dieselben drei Blöcke auf und zu.** Offen sind
 „Einstellungen" und der Block, in dem die gerade geöffnete Seite steht; die
@@ -1209,8 +1207,8 @@ Pilotenwechsel oder Fahrerwechsel am Nachmittag), setzt du am betroffenen
 Einsatz den Haken **„Abweichende Besatzung"**. Darunter erscheint je Rolle des
 Diensttags ein Textfeld mit Vorschlagsliste: Sobald du zu tippen beginnst,
 schlägt das Feld unter der Überschrift „Vorlagen des Standorts" deine
-Besatzungs-Vorbelegungen und die zentralen Stammdaten der jeweiligen Rolle vor
-(Abschnitt 9.1 bzw. 9.4) — bedient wie oben in Abschnitt 4.3 beschrieben.
+Besatzungs-Vorbelegungen der jeweiligen Rolle vor
+(Abschnitt 9.1) — bedient wie oben in Abschnitt 4.3 beschrieben.
 
 **Seit Web 5.5.0 ist jeder Name eintragbar**, auch einer, der nicht in den
 Stammdaten steht. Das ist der eigentliche Anlass für dieses Feld: Wer aushilft,
@@ -2366,7 +2364,7 @@ Bestand, und wer einen Standort einrichtete, ging zwischen ihnen hin und her.
 
 | Wo | Was |
 |---|---|
-| **Einstellungen → Standorte** (die Liste) | Eigene Standorte anlegen und bearbeiten, **vordefinierte** Standorte auswählen — und die Karte **„Ohne Standort"** für Rettungsmittel, die keinen brauchen. |
+| **Einstellungen → Standorte** (die Liste) | Eigene Standorte anlegen und bearbeiten — und die Karte **„Ohne Standort"** für Rettungsmittel, die keinen brauchen. |
 | **Die Seite eines Standorts** (ein Klick auf seine Zeile) | Alles, was an diesem Standort hängt: Lage, Rettungsmittel samt Rollen und Fähigkeiten, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel, Bergwacht-Bereitschaften. |
 
 Bis Web 6.3.0 hieß beides zusammen „Standortdaten" — der Name passte auf keinen
@@ -2516,10 +2514,6 @@ Abschnitte Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel
 und Bergwacht — der letzte nur, wenn an diesem Standort ein luftgebundenes
 Rettungsmittel steht.
 
-**Vordefinierte Standorte** stehen in einer eigenen, zugeklappten Karte
-darunter; ihr Kopf nennt, wie viele es gibt und wie viele davon ausgewählt
-sind.
-
 Ein **Rettungsmittel** ist entweder **luftgebunden** oder **bodengebunden**.
 Diese Wahl entscheidet über alles Weitere:
 
@@ -2556,16 +2550,7 @@ abgeschlossener Dienstnachweis, kein Blick auf den heutigen Stammdatenbestand;
 wer eine alte Bezeichnung korrigieren will, tut das am Diensttag selbst.
 
 Das mit einem **Stern** als Vorbelegung markierte Rettungsmittel und der so
-markierte Standort werden bei neuen
-Diensttagen vorbelegt — das gilt auch für vom Admin zentral hinterlegte
-Einträge (s. 9.4). Bei **Standorten** ließ sich das bis Web 6.3.0 nur für eigene
-Einträge setzen; die Schaltfläche fehlte bei den vordefinierten, obwohl der
-Server es längst erlaubte. Ein Konto, das ausschliesslich mit vordefinierten
-Standorten arbeitet — der Regelfall überall dort, wo die Standorte zentral
-gepflegt werden —, konnte damit gar keine Vorbelegung setzen. Jetzt steht sie
-bei jedem **ausgewählten** vordefinierten
-Standort. (Nicht ausgewählte bleiben aussen vor: Was nicht in den Auswahllisten
-steht, kann auch keine Vorbelegung sein.)
+markierte Standort werden bei neuen Diensttagen vorbelegt.
 
 ### 9.2 Andere Rettungsmittel
 
@@ -2602,65 +2587,14 @@ unsichtbar.
 Zu jeder Zielklinik lassen sich **Koordinaten** hinterlegen, auf denselben
 Wegen wie beim Einsatzort — Adresssuche, Koordinatenpaar, Plus Code und seit
 Web 15.8.0 auch über den **Pin-Knopf** mit „Meine Position übernehmen" und dem
-Kartendialog (4.3) — und auf drei
-Ebenen: zentral durch die Verwaltung, hier im eigenen Konto und einmalig am
-einzelnen Einsatz. Wird ein Vorschlag mit hinterlegten Koordinaten übernommen,
+Kartendialog (4.3) — und auf zwei
+Ebenen: hier im eigenen Konto und einmalig am einzelnen Einsatz. Wird ein Vorschlag mit hinterlegten Koordinaten übernommen,
 sind sie vorbelegt und lassen sich am Einsatz überschreiben.
 
 Koordinaten sind **freiwillig**. Ohne sie bleibt die Zielklinik ein gültiger
 Eintrag; es entstehen lediglich kein Pin und keine Luftlinie. Eine spätere
 Korrektur wirkt nur auf neue Einsätze — am Einsatz ist die Koordinate
 eingefroren.
-
-### 9.4 Vordefinierte (systemweite) Stammdaten
-
-Der Admin kann alle sechs Bereiche zusätzlich **systemweit** hinterlegen — auf
-einer eigenen Seite, die zu keinem Menüblock gehört (Kasten am Ende dieses
-Abschnitts). **Vordefinierte Standorte erscheinen erst in deinen
-Auswahllisten, wenn du sie unter „Standorte → Vordefinierte Standorte" angehakt
-hast** — sonst stünden in einem gemeinsam genutzten System alle Standorte aller
-Häuser in jeder Liste. Der Block hieß bis Web 6.3.0 „Zentrale Standorte
-auswählen"; „zentral" beschrieb die Verwaltung, nicht den Nutzen.
-Abwählen entfernt keine Daten; bereits dokumentierte Diensttage bleiben
-unverändert.
-
-Solche Einträge erscheinen mit dem Kennzeichen **„zentral"**, stehen automatisch in allen Vorbelegungen zur
-Verfügung und lassen sich hier nicht bearbeiten oder löschen. Versuchst du,
-einen persönlichen Eintrag mit demselben Namen anzulegen, wird das mit einem
-Hinweis abgelehnt — der systemweite Eintrag steht dir ja bereits zur Verfügung.
-Existiert umgekehrt schon ein persönlicher Eintrag, bevor der Admin denselben
-Namen systemweit anlegt, bleibt dein Eintrag bestehen und erhält lediglich einen
-Warnhinweis („identisch mit systemweitem Eintrag") — du kannst ihn dann bei
-Bedarf löschen.
-
-**So kommt die Verwaltung dorthin.** Die Seite pflegt dieselben sechs Bereiche
-wie eine NutzerIn unter Standorte (9.1–9.3), jedoch für **alle** Konten
-gemeinsam. **Seit Web 17.0.0 ist sie genauso gebaut wie die Kontoansicht:**
-eine Liste der Standorte, ein Klick auf eine Zeile führt auf die Seite dieses
-Standorts mit denselben sechs Karten, denselben Kennzahlen und denselben
-Dialogen. Die Wahl zwischen „Standorte" und „Rettungsmittel" oben rechts ist
-damit entfallen — es gibt nur noch eine Liste. In der Kleinzeile jeder Zeile
-steht zusätzlich, **wie viele Konten** diesen Standort ausgewählt haben; das
-sagt vor dem Löschen, wen es trifft. Namensgleiche Einträge werden auch hier abgelehnt;
-existieren bereits persönliche Einträge mit demselben Namen bei einzelnen
-NutzerInnen, weist ein Hinweis darauf hin (keine Blockade). Seit Web 9.10.0
-gilt das auch für **Standorte** — dort fehlte der Hinweis als einzigem der
-sechs Bereiche, und ein systemweiter Standort, den ein Dutzend Konten bereits
-selbst angelegt hatte, entstand ohne jede Warnung.
-
-> **Bis Web 16.3.0 ließ sich hier keine Besatzungs-Vorbelegung anlegen.** Die
-> Seite meldete „Bitte Rolle und Namen angeben." — bei ausgefüllter Rolle und
-> ausgefülltem Namen. Ursache war ein Feldname, der auf der einen Seite anders
-> hieß als auf der anderen (Backlog Nr. 163); behoben mit Web 17.0.0. Die
-> übrigen fünf Bereiche waren nie betroffen.
-
-> **Die Seite hat seit Web 15.4.0 keinen Menüpunkt mehr** (E-S8-14) — und das
-> ist der Grund, warum sie hier steht und nicht in Kapitel 11 oder 12: Sie
-> gehört zu keinem der beiden Blöcke. **Zwei Wege führen hin:** die Adresse
-> `admin_stammdaten.php` (Lesezeichen) und der Verweis „Stammdaten" im Text
-> von Betrieb → Backup-Ziele. Der Grund für den Wegfall: Sie wird einmal bei
-> der Einrichtung gepflegt und danach jahrelang nicht — ein Menüpunkt, den man
-> einmal benutzt, kostet siebzehn Mal Platz.
 
 ---
 

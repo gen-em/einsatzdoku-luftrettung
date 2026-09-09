@@ -558,45 +558,27 @@ export const wege = [
   },
 
   {
-    name: 'ap5-verwaltung-besatzung-anlegen',
-    paket: 'AP5', punkt: 'Backlog Nr. 163', rolle: 'admin',
-    was: 'Eine systemweite Besatzungs-Vorbelegung lässt sich anlegen (seit Web 9.10.0 unmöglich)',
+    name: 'ap5-besatzung-anlegen',
+    paket: 'AP5', punkt: 'E-S9-19', rolle: 'demo',
+    was: 'Eine Besatzungs-Vorbelegung lässt sich mit Rolle anlegen und landet auf ihrer Zeile',
     soll: 'Landung auf #crew-<id>, Zeile orange-hell, 0 Fehlermeldungen',
     async fahren(k) {
-      /* DER FALL WIRD HERGESTELLT: Der Referenzbestand hat keinen einzigen
-         systemweiten Standort, und ohne ihn gibt es nichts anzulegen. Der
-         Weg legt Standort und Rettungsmittel an, prüft, und löscht den
-         Standort wieder — die Kaskade nimmt alles mit. */
-      const BASE = 'KP Verwaltungsstandort';
-      const LISTE = `${k.basis}/admin_stammdaten.php?t=standorte`;
-      let href = null;
+      /* DIESER WEG FUHR BIS S9/AP5b ÜBER DIE VERWALTUNG (`admin_stammdaten.php`,
+         Backlog Nr. 163: systemweite Besatzungs-Vorbelegungen ließen sich seit
+         Web 9.10.0 nicht anlegen). Die Seite ist gestrichen (R39), der Punkt
+         damit gegenstandslos — der WEG aber nicht: Das Anlegen einer
+         Besatzungs-Vorbelegung war auf der Kontoseite von keinem Prüffall
+         berührt, weil Nr. 163 sie nicht betraf. Ihn ersatzlos zu streichen
+         hieße, mit der Seite auch die Messung zu verlieren. Er misst jetzt
+         dieselbe Zusage (E-S9-19: Anlegen im Dialog landet auf der neuen
+         Zeile) am eigenen Bestand — und räumt hinterher auf. */
+      const NAME = 'KP Prüfperson';
+      const bid = await ersterStandort(k);
       try {
-        await k.gehZu(LISTE);
-        await k.seite.fill('#adbase-name', BASE);
-        await Promise.all([
-          k.seite.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}),
-          k.seite.click('.listen-form button[type="submit"]'),
-        ]);
-        await k.seite.waitForTimeout(250);
-        /* „Standort anlegen" landet auf der neuen Seite (E-S9-19). */
-        const gelandet = await k.seite.evaluate(() => location.search + location.hash);
-        href = await k.seite.evaluate(() => location.pathname.split('/').pop() + location.search);
-
-        await k.seite.click('.karte-aktion[data-dialog="dlg-veh"]');
-        await k.seite.waitForTimeout(150);
-        await k.seite.fill('#dlgveh-name', 'KP Prüffalke');
-        await k.seite.check('#dlg-veh .vehkind-radio[value="air"]', { force: true });
-        await k.seite.waitForTimeout(120);
-        await k.seite.check('#dlg-veh input[name="roles[]"][value="p1"]', { force: true });
-        await Promise.all([
-          k.seite.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}),
-          k.seite.click('#dlg-veh [data-fuell="knopf"]'),
-        ]);
-        await k.seite.waitForTimeout(250);
-
+        await k.gehZu(SEITE(k, bid));
         await k.seite.click('.karte-aktion[data-dialog="dlg-crew"]');
         await k.seite.waitForTimeout(150);
-        await k.seite.fill('#dlgcrew-name', 'KP Prüfperson');
+        await k.seite.fill('#dlgcrew-name', NAME);
         await Promise.all([
           k.seite.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}),
           k.seite.click('#dlg-crew [data-fuell="knopf"]'),
@@ -611,27 +593,18 @@ export const wege = [
             fehler: document.querySelectorAll('.meldung-fehler').length,
           };
         });
-        await k.bild('ap5-verwaltung-besatzung');
+        await k.bild('ap5-besatzung-anlegen');
         const orange = /rgb\(255,\s*235,\s*214\)/.test(mass.flaeche);
         const ok = /^#crew-\d+$/.test(mass.hash) && mass.gefunden && orange
-                && mass.text.includes('KP Prüfperson') && mass.fehler === 0
-                && /t=standort&s=\d+/.test(gelandet);
+                && mass.text.includes(NAME) && mass.fehler === 0;
         return {
-          ist: `Standort angelegt → gelandet auf „${gelandet}" · Besatzung → Adresse `
-             + `„${mass.hash}", Zeile gefunden: ${mass.gefunden}, Fläche ${mass.flaeche || '—'}, `
-             + `Fehlermeldungen ${mass.fehler}`,
+          ist: `Adresse „${mass.hash}", Zeile gefunden: ${mass.gefunden}, `
+             + `Fläche ${mass.flaeche || '—'}, Fehlermeldungen ${mass.fehler}`,
           ok,
-          bemerkung: ok ? '' : 'Die systemweite Besatzungspflege schreibt nicht (Nr. 163)',
+          bemerkung: ok ? '' : 'Das Anlegen im Dialog landet nicht auf der Zeile (E-S9-19)',
         };
       } finally {
-        if (href) {
-          await k.gehZu(`${k.basis}/${href}`);
-          await k.seite.evaluate(() => {
-            const f = document.querySelector('form[id^="f-adbdel-"]');
-            if (f) { f.submit(); }
-          });
-          await k.seite.waitForTimeout(500);
-        }
+        await loeschenAllg(k, bid, NAME, 'crew_del');
       }
     },
   },

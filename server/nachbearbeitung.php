@@ -306,9 +306,18 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
              oder bei keinem Standort —, blieb er offen.</p>
 
           <?php if (!$basen): ?>
+            <?php /* SEIT S9/AP5b OHNE ZENTRAL-ZWEIG (R39). Der Satz forderte hier
+                     auf, „zuerst unter ‚Standorte systemweit' einen anzulegen" — die
+                     Seite ist ersatzlos gestrichen, und einen zentralen Standort kann
+                     niemand mehr anlegen. Ein zentraler Eintrag ohne Standort, wenn es
+                     ihn in einer Anlage noch gibt, laesst sich hier deshalb nicht mehr
+                     aufloesen; er braucht einen Eingriff in der Datenbank. Der Zweig
+                     `$istZentral` bleibt (Zeilen darunter) — er meldet einen Zustand,
+                     der nicht mehr entstehen kann, aber bestehen koennte. Faellt mit
+                     dem Rueckbau in P5 (Backlog Nr. 168). */ ?>
             <?= ui_meldung_markup('warn', 'Es steht kein passender Standort zur '
                 . 'Verfügung' . ($istZentral
-                    ? ' — bitte zuerst unter „Standorte systemweit" einen anlegen.'
+                    ? ' — dieser Eintrag lässt sich hier nicht mehr zuordnen.'
                     : '.')) ?>
           <?php endif; ?>
 

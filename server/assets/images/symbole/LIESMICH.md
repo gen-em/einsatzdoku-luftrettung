@@ -51,7 +51,7 @@ CSS-Drehung. Gefüllter Stern: per CSS `fill:currentColor`.
 | `sicherung.svg` | archive | Backup, Sicherungen |
 | `tausch.svg` | arrows-exchange | Import/Export, Freigeben, Verschieben |
 | `gruppe.svg` | users | NutzerInnen |
-| `datenbank.svg` | database | Stammdaten systemweit; Betrieb → Komplett-Backup |
+| `datenbank.svg` | database | Betrieb → Komplett-Backup |
 | `rechtstexte.svg` | file-text | Rechtstexte (Admin) |
 | `kolben.svg` | flask | Demo-Konto, Demo-Hinweis |
 | `werkzeug.svg` | tool | (frei, seit S8/AP5 — „Wartung“ als Seite gibt es nicht mehr) |

@@ -79,17 +79,11 @@ Daten erst nach Server-Bestätigung.
 │   │                       Die Kontoseite ist seit Web 9.8.0 die Drehscheibe
 │   │                       eines Kontos: Kontodaten, Geräte, Konto-Backups
 │   │                       dieses Kontos mit Freigabe-Zustandszeile, Löschung
-│   ├── admin_stammdaten.php  Systemweite Stammdaten aller sechs Typen
-│   │                       Seit Web 17.0.0 DIESELBE Gliederung wie im Konto:
-│   │                       `?t=standorte` ist die Liste, `?t=standort&s=<id>`
-│   │                       die Seite EINES Standorts mit sechs Karten. Die
-│   │                       Segmentwahl „Standorte / Rettungsmittel" ist
-│   │                       damit entfallen; `?t=rettungsmittel` bleibt als
-│   │                       Weiche auf die Liste
-│   ├── stammdaten_ui.php  Zeile, Dialoge und Adresse der Stammdatenlisten —
-│   │                       eine Fassung fuer die Kontoansicht
-│   │                       (einstellungen.php) und die Adminansicht
-│   │                       (admin_stammdaten.php), seit Web 9.10.0.
+│   ├── stammdaten_ui.php  Zeile, Dialoge und Adresse der Stammdatenlisten
+│   │                       fuer einstellungen.php, seit Web 9.10.0. Bis
+│   │                       Web 17.1.1 diente sie ZWEI Ansichten — die
+│   │                       zweite war admin_stammdaten.php (systemweite
+│   │                       Stammdaten), mit Web 18.0.0 gestrichen (R39).
 │   │                       `sd_zeile()`, `sd_seite()`, `sd_oeffner()` und die
 │   │                       drei Dialogfunktionen; `sd_form()` ist mit
 │   │                       Web 17.0.0 entfallen — angelegt wird im Dialog
@@ -551,14 +545,14 @@ Daten erst nach Server-Bestätigung.
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
 | `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → der Job `waisen` entfernt Waisen (4.97a). **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
 | `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Job `waisen` ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
-| `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` NULL = **zentral** (vom Admin gepflegt), sonst persönlich |
+| `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` NULL = **zentral**, sonst persönlich — siehe den Hinweis unter der Tabelle |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
-| `user_bases` | Auswahl **zentraler** Standorte je NutzerIn (E16). Nur ausgewählte erscheinen in den Auswahllisten; eigene Standorte brauchen hier keine Zeile |
-| `resources` | Vorbelegung „Andere Rettungsmittel" ; `user_id` NULL = zentral, sonst persönlich |
+| `user_bases` | Auswahl **zentraler** Standorte je NutzerIn (E16). Nur ausgewählte erscheinen in den Auswahllisten; eigene Standorte brauchen hier keine Zeile. **Seit Web 18.0.0 ohne Oberfläche** — die Karte, die aus- und abwählte, ist mit den zentralen Stammdaten entfallen; geschrieben wird die Tabelle nur noch beim Einspielen einer Kontosicherung |
+| `resources` | Vorbelegung „Andere Rettungsmittel" ; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
 | `mission_resources` | Rettungsmittel-Zuordnung je Einsatz (eigene Zeilen, einzeln entfernbar) |
-| `bw_units` | Bergwacht-Bereitschaften; `user_id` NULL = zentral, sonst persönlich |
-| `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` NULL = zentral, sonst persönlich |
-| `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id`, persönlich oder zentral); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
+| `bw_units` | Bergwacht-Bereitschaften; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
+| `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
+| `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id`, persönlich oder zentral — ohne FK, weil es zwei Zieltabellen sind); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
 | `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). `kind IS NULL` = neutral, noch nicht zugeordnet (E26) |
 | `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
 | `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
@@ -573,6 +567,18 @@ Daten erst nach Server-Bestätigung.
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
 | `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTP-, FTPS- oder SFTP-Gegenstelle je Zeile. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
+
+**Zum Wert `user_id IS NULL`.** Er bezeichnet einen **zentralen
+(systemweiten)** Stammdatensatz — einen, der keinem Konto gehört und allen
+angeboten wird. Das Schema trägt ihn weiter, **aber seit Web 18.0.0 gibt es
+keine Oberfläche mehr, die solche Zeilen anlegt, ändert oder löscht**: Die
+Verwaltungsseite `admin_stammdaten.php` ist ersatzlos gestrichen (Rahmenplan
+R39). Vorhandene Zeilen bleiben sichtbar und unveränderlich — in der
+Kontoansicht mit der Plakette „systemweit" —, und die Abfragen behalten ihren
+Zweig `user_id IS NULL` genau dafür. Der Rückbau des Modells (Spalten auf
+`NOT NULL`, `user_bases` weg, Feld aus der Nutzlast der Kontosicherung) steht
+in P5 und ist als **Backlog Nr. 168** aufgenommen; die Vorarbeit dazu liegt
+in `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`.
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
 Punkte-PK tragen das auf Jahre problemlos (~1 Mio. Punkte/Jahr).
@@ -4001,15 +4007,15 @@ Die Komponente besteht aus zwei Hälften, die dasselbe Präfix teilen:
 | Markup | `ui_ortsfeld()` in `ui.php` | erzeugt `<p>addr`, `<p>lat`, `<p>lon`, `<p>suggest`, `<p>state`, `<p>chips` |
 | Verhalten | `assets/ortsfeld.js` | `EdOrtsfeld.init({praefix, …})` |
 
-Eine Verwendung ist damit ein PHP-Aufruf und ein `init()`. Die sechs:
+Eine Verwendung ist damit ein PHP-Aufruf und ein `init()`. Die fünf:
 
 | Verwendung | Präfix | Besonderheit |
 |---|---|---|
 | Einsatzort | `loc` | Textfeld = Suchfeld (die Adresse **ist** die Bezeichnung) |
 | Manueller Abfahrtort | `start` | wie Einsatzort, eigener Blob-Schlüssel `start` |
 | Zielklinik am Einsatz | `f_transport_dest_` | getrennte Suche, Stammdaten **mit Koordinaten** als eigene Gruppe der Vorschlagsliste |
-| Standort im Konto / zentral | `sdbase` / `adbase` | getrennte Suche, nur Zubehör (`feld => false`) |
-| Zielklinik im Konto / zentral | `sdtd<id>` / `adtd<id>` | dito, Präfix trägt die Standortkennung — das Formular steht einmal je Standort auf der Seite |
+| Standort im Konto | `sdbase` | getrennte Suche, nur Zubehör (`feld => false`) |
+| Zielklinik im Konto | `sdtd<id>` | dito, Präfix trägt die Standortkennung — der Dialog steht einmal je Standort auf der Seite |
 
 **Zwei Bedienformen, ein Code.** Bei `getrennteSuche: false` sucht das
 Textfeld beim Tippen; ein Adresstreffer wird zur Bezeichnung. Bei `true`
@@ -4066,8 +4072,11 @@ Deploy und `update.php`.
 
 In den Browser kommen die Werte über **`ui_geocoder_bootstrap()`**, und zwar
 aus `ui_ortsfeld()` selbst: Wo ein Ortsfeld steht, stehen seine Einstellungen,
-und keine Seite kann sie vergessen (`admin_stammdaten.php` ruft
-`ui_krypto_bootstrap()` nie auf und hätte sie sonst nicht). Ausgegeben wird
+und keine Seite kann sie vergessen. Der Beleg war bis Web 17.1.1
+`admin_stammdaten.php` — sie rief `ui_krypto_bootstrap()` nie auf und hätte
+die Einstellungen sonst nicht gehabt. Die Seite ist gestrichen (Web 18.0.0),
+die Bauform bleibt: Der nächste Ortsfeld-Einbau kann wieder auf einer Seite
+ohne Verschlüsselung stehen. Ausgegeben wird
 **`window.GEO_AN`/`window.GEO_DIENST`**, nicht `const`: Ein `const` auf
 oberster Ebene liegt im globalen lexikalischen Bereich, wird aber keine
 Eigenschaft von `window` — eine eigene Datei, die `global.GEO_DIENST` liest,
@@ -4086,8 +4095,10 @@ und die Anfrage trägt ausschließlich die Koordinate.
 
 Seit Web 15.8.0 tragen **fünf** Felder den Knopf statt zweier: Einsatzort,
 manueller Abfahrtort, Transportziel (über den Feldkatalog, `'ortswahl' =>
-true` an `transport_dest`) und die Lagefelder der Standorte in
-`einstellungen.php` und `admin_stammdaten.php`. Der Block dafür steht in
+true` an `transport_dest`), das Lagefeld des Standorts (`einstellungen.php`)
+und das der Zielklinik im Standortdialog (`stammdaten_ui.php`). Bis Web 17.1.1
+stand statt des letzten das Lagefeld der systemweiten Stammdatenpflege in
+dieser Aufzählung; die Zahl blieb dieselbe, gezählt wird jetzt das Richtige. Der Block dafür steht in
 `ui_ortsfeld()` **einmal** und wird in beiden Zweigen ausgegeben — bis Web
 15.7.1 rendete ihn nur der `feld = true`-Zweig, und die Nur-Lage-Fassung der
 Stammdaten hatte deshalb keine Karte (Backlog Nr. 70).

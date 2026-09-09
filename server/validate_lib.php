@@ -747,13 +747,16 @@ const RM_NAME_MAX = 64;
  *   backup_lib.php       Einspielen      Datei        zwei, still uebergangen
  *
  * Mit dem Typ kaemen an jeder der drei Stellen vier weitere Regeln dazu, und
- * die dritte Kopie waere dann die, die als erste veraltet. Der Kopf dieser
+ * die dritte Kopie waere dann die, die als erste veraltet. (Die mittlere Zeile
+ * ist Geschichte: `admin_stammdaten.php` ist mit S9/AP5b gestrichen, es sind
+ * jetzt zwei Schreibwege. Die Tabelle bleibt vollstaendig — sie begruendet,
+ * warum es die Pruefschicht gibt, und dafuer zaehlt der damalige Stand.) Der Kopf dieser
  * Datei nennt Einsatzdaten als ihren Gegenstand; die Rettungsmittel sind der
  * erste STAMMDATENSATZ, der hier einzieht — aus demselben Grund, aus dem die
  * Einsatzdaten hier stehen: vier Wege, ein Massstab.
  *
  * WAS SIE NICHT PRUEFT: ob der Standort existiert und wem er gehoert. Das
- * haengt am Aufrufer (Konto oder systemweit) und steht dort; hier kommt eine
+ * haengt am Aufrufer und steht dort; hier kommt eine
  * bereits aufgeloeste ID an oder null. Ebenso wenig prueft sie die Dublette —
  * die braucht die Datenbank.
  *
@@ -888,7 +891,9 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
  * Bergwacht-Bereitschaften folgen demselben Muster: ein Name, ein Standort,
  * bei der Besatzung eine Rolle dazu. Bis Web 16.3.0 stand diese Pruefung
  * ACHTMAL ausgeschrieben — viermal in `einstellungen.php`, viermal in
- * `admin_stammdaten.php` — und die acht Fassungen waren nicht gleich:
+ * `admin_stammdaten.php` — und die acht Fassungen waren nicht gleich (die
+ * Verwaltungsseite ist mit S9/AP5b gestrichen; die ACHT ist die Zahl, die
+ * diese Schicht begruendet hat, und bleibt deshalb stehen):
  *
  *   - Die Kontoansicht meldete bei LEEREM NAMEN gar nichts. Kein `notice`,
  *     kein `error`, also auch keine Umleitung: Der POST versickerte

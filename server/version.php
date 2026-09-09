@@ -3541,5 +3541,69 @@ declare(strict_types=1);
  *
  * KORREKTURSTUFE: ein Text, zwei Pruefmittel, eine Absicherung. Keine
  * Migration, kein Datenmodell.
+ *
+ * ---------------------------------------------------------------------------
+ * 18.0.0 — S9/AP5b: DIE ZENTRALEN STAMMDATEN VERLIEREN IHRE OBERFLAECHE.
+ *
+ * `admin_stammdaten.php` IST GESTRICHEN. Ersatzlos, mitsamt der Karte
+ * „Vordefinierte Standorte" in den Einstellungen jedes Kontos und dem
+ * Schreibweg `ub_toggle` dahinter. Damit kann in dieser Anwendung niemand
+ * mehr einen zentralen (systemweiten) Standort, ein zentrales Rettungsmittel,
+ * eine zentrale Besatzungs-Vorbelegung, Zielklinik, Bereitschaft oder ein
+ * weiteres Rettungsmittel anlegen, aendern oder loeschen. Die zwoelf
+ * Schreibwege, die das konnten, standen ausnahmslos in dieser einen Datei.
+ *
+ * WARUM EINE HAUPTNUMMER OHNE MIGRATION — schon zum zweiten Mal in dieser
+ * Zaehlung (17.0.0 war die erste). Das Datenmodell bleibt unangetastet:
+ * `user_id` ist in allen sechs Stammdatentabellen weiter NULL-faehig, die
+ * Tabelle `user_bases` steht, das Feld `stammdaten.user_bases` der
+ * Kontosicherung wird weiter geschrieben und gelesen, und die Abfragen, die
+ * zentrale Eintraege in die Kontoansicht holen, bleiben Zeile fuer Zeile
+ * dieselben. Was faellt, ist eine ZUSAGE der Anwendung: Sie hat bis hier
+ * angeboten, Stammdaten fuer alle Konten zentral zu pflegen. Das Handbuch
+ * verliert dafuer einen ganzen Abschnitt (9.4), die Einstellungen eine Karte,
+ * die Verwaltung eine Seite. Eine Nebennummer waere fuer den Wegfall einer
+ * Zusage die falsche Groesse.
+ *
+ * DER BESCHLUSS IST AELTER ALS DIESES PAKET. Rahmenplan R39 vom 30.08.2026
+ * schafft die zentralen Stammdaten ab und stellt den Rueckbau nach P5. Das
+ * S9-Konzept hat ihn nie aufgenommen — in AP5-4 ist die Verwaltungsseite
+ * deshalb noch auf Dialoge umgebaut worden, also fuer ein Modell, das
+ * abgeschafft wird. Am 09.09.2026 hat der Auftraggeber entschieden, die Tuer
+ * jetzt zu schliessen und die Seite gleich ganz zu streichen: Es gibt genau
+ * eine Installation, dort sind alle zentralen Standorte geloescht, und ein
+ * Weg, der sie neu anlegen kann, waere Arbeit fuer die Migration in P5.
+ *
+ * WAS IN P5 FOLGT (Backlog Nr. 168): `user_id` auf NOT NULL, `user_bases`
+ * weg, das Feld aus der Nutzlast, die Abfragen entschlacken. Die Vorbedingung
+ * dafuer — null Zeilen mit `user_id IS NULL` in sechs Tabellen — haelt ab
+ * jetzt von selbst, weil keine mehr entstehen koennen. Ein `ALTER TABLE`
+ * laesst sich in MySQL nicht zurueckrollen; deshalb ist die geschlossene Tuer
+ * die Voraussetzung und nicht der Rest.
+ *
+ * WAS DER ALTBESTAND MACHT, falls in einer Anlage doch noch eine zentrale
+ * Zeile steht: Sie bleibt sichtbar und unveraenderlich — in der
+ * Kontoansicht mit der Plakette „systemweit", in den Auswahllisten wie
+ * bisher. Aendern und loeschen kann sie niemand mehr; das braucht dann den
+ * Rueckbau in P5 oder einen Eingriff in der Datenbank. Der Hinweis der
+ * Nachbearbeitung, der bisher zum Anlegen unter „Standorte systemweit"
+ * aufforderte, sagt das jetzt statt in eine Sackgasse zu fuehren.
+ *
+ * MITGEGANGEN, weil es sonst ins Leere zeigt: der Verweis der
+ * Sicherungsziele-Seite (jetzt auf „Standorte" im Konto),
+ * `stammdaten_dup_personal_count()` in `db.php` (sechs Aufrufer, alle in der
+ * geloeschten Datei), der zweite Parameter von `sd_seite()` und die Option
+ * `bearbeiten_href` in `stammdaten_ui.php` (beide ohne Aufrufer), der fuenfte
+ * Einbauort des Kartendialogs in der Klickprobe, zwei Seiten des Bilderlaufs
+ * und der Platzhalter `__ADMIN_STANDORT__`, der sich ohnehin nie aufloesen
+ * liess.
+ *
+ * DEPLOY: Der Deploy synchronisiert `server/` und loescht, was im
+ * Repositorium entfaellt — die Datei verschwindet also vom Webspace. Das gilt
+ * aber nur, solange die Zustandsdatei der Aktion dort intakt ist; ist sie es
+ * nicht, laedt der Deploy alles neu hoch und loescht nichts. Nach dem Merge
+ * gehoert deshalb ein Aufruf mit STATUSCODE dazu: `admin_stammdaten.php` muss
+ * 404 antworten. Eine 200 mit Anmeldeseite sieht im Browser aus wie ein
+ * Erfolg. `update.php` muss NICHT laufen.
  */
-const WEB_VERSION = '17.1.1';
+const WEB_VERSION = '18.0.0';

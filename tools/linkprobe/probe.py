@@ -30,10 +30,11 @@ erste, und `&amp;` gilt als Trenner wie `&`. Drei Ergebnisse je Fund:
 WAS SIE NICHT KANN, und warum das kein Mangel ist:
 
   - Ein Verweis, dessen ZIEL erst zur Laufzeit entsteht, taucht hier nicht
-    auf. Es gibt einen: `admin_stammdaten.php:571` baut
-    `$seite . '&ev=' . $vid`. Von Hand nachgesehen und richtig — aber die
-    Probe koennte es nicht sagen, und das steht hier statt in einer
-    Ausnahmeliste, die es verschwinden liesse.
+    auf. Zurzeit gibt es keinen. Bis Web 16.x baute `admin_stammdaten.php`
+    `$seite . '&ev=' . $vid`; die Zeile ist mit dem Umbau auf Dialoge
+    (S9/AP5-4) entfallen, die Seite selbst mit S9/AP5b. Kaeme ein solcher
+    Fall neu dazu, faende die Probe ihn nicht — deshalb steht der Hinweis
+    hier statt in einer Ausnahmeliste, die ihn verschwinden liesse.
   - Sie prueft NAMEN, nicht WERTE. Ein `?d=<Kalendertag>` an einer Seite, die
     unter `d` eine Kennung erwartet, ist fuer sie in Ordnung — er ist es
     nicht. Das ist die Grenze eines statischen Abgleichs und steht so in

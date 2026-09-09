@@ -542,6 +542,10 @@ seit Web 4.1.2 auch:
     // Auswahl ZENTRALER Standorte dieser NutzerIn, als Namensliste. Zentrale
     // Standorte selbst gehören dem Konto nicht und werden nicht exportiert —
     // die Auswahl schon, sonst stünden nach dem Einspielen leere Listen da.
+    // SEIT WEB 18.0.0 IN DER REGEL LEER: Es gibt keine Oberfläche mehr, die
+    // zentrale Standorte anlegt oder auswählt (Rahmenplan R39). Das Feld
+    // bleibt im Format, damit ältere Sicherungen unverändert einspielen; es
+    // fällt mit dem Rückbau in P5 (Backlog Nr. 168).
     "user_bases":   [ "Zentrale Wache Süd" ],
 
     // Alle übrigen Stammdaten tragen ihren Standort (base_ref). Ohne ihn ließe
@@ -859,10 +863,12 @@ in Abschnitt 3.
   `aircraft`): intern seit Version 3 in einer
   nutzerbezogenen Tabelle (`user_defaults`) abgelegt, im Exportformat aber
   weiterhin als Flag je Zeile abgebildet (Abwärtskompatibilität).
-- **Zentrale (globale) Stammdaten** (vom Admin gepflegt, seit Version 3)
-  gehören nicht dem Konto und werden **nicht** exportiert. Beim Import werden
-  Einträge, die zentral bereits (case-insensitiv) vorhanden sind, still
-  übersprungen und in der Ergebnismeldung gezählt.
+- **Zentrale (globale) Stammdaten** gehören nicht dem Konto und werden
+  **nicht** exportiert. Beim Import werden Einträge, die zentral bereits
+  (case-insensitiv) vorhanden sind, still übersprungen und in der
+  Ergebnismeldung gezählt — diese Regel gilt unverändert. Gepflegt wurden sie
+  von einer Administratorin (seit Version 3); **seit Web 18.0.0 gibt es dafür
+  keine Seite mehr** (Rahmenplan R39), es kann also nur noch Altbestand sein.
 - **`origin`** (seit Version 4): Herkunft des Einsatzes, wird beim Anlegen
   einmalig gesetzt und nie wieder geändert. **Sechs Werte seit Web 14.0.0**
   (vorher drei), einer je Client-App:

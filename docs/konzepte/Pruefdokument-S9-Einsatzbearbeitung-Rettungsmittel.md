@@ -27,6 +27,27 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 
 Das steht hier oben und nicht in einer Fußnote.
 
+**Zuoberst, weil es das Ziel von AP5b entscheidet: Ob `admin_stammdaten.php`
+auf dem Produktivserver wirklich verschwindet, ist hier nicht zu belegen.**
+Der Deploy synchronisiert `server/` und löscht, was im Repositorium entfällt —
+aber nur, solange die Zustandsdatei der FTP-Aktion auf dem Server intakt ist.
+Fehlt oder verfällt sie, lädt die Aktion alles neu hoch und löscht **nichts**;
+die Datei bliebe liegen und wäre voll bedienbar, denn sie hängt an nichts, was
+dieses Paket sonst entfernt. **Lokal ist das nicht zu ersetzen:** Der
+PHP-Server der Prüfumgebung beantwortet jede unbekannte Adresse mit der
+Tagesübersicht — gemessen am 09.09.2026, `admin_stammdaten.php` und
+`gibtsnicht.php` liefern beide **200** mit dem Titel „Tagesübersicht — Gen-EM
+NAdoku". Das belegt, dass die Datei fort ist, und nichts über den 404, den ein
+Apache zeigen würde. Der Statuscode-Aufruf nach dem Deploy steht deshalb in
+der Prüfliste.
+
+**Ebenfalls nicht zu belegen: die Vorbedingung an der Produktivdatenbank.**
+Mit der Seite verschwindet der einzige Schreib- und Löschweg auf Zeilen mit
+`user_id IS NULL`. Lokal sind alle sieben Zählungen null (AP5b-Abschnitt); die
+Auskunft des Auftraggebers vom 09.09.2026 („alle zentralen Standorte
+gelöscht") betrifft `bases`. Für die übrigen fünf Tabellen und `user_bases`
+liegt keine Zahl vor. Die Abfragen stehen in der Prüfliste.
+
 > *Bis Teil 3 stand hier: „Die Verwaltungsseite ist von AP5 nicht berührt —
 > nichts daran ist umgebaut, und nichts daran ist geprüft." **Mit Teil 4
 > (Web 17.0.0) ist sie umgebaut**: dieselbe Liste, dieselbe Standortseite,
@@ -160,7 +181,7 @@ gemessen hat, ist keine Zahl.
 | P-02 | keine `<datalist>` mehr | grep | 0 | **0** außerhalb von Kommentaren (`grep -rn datalist server/`; vorher 12 Treffer in sechs Dateien, davon 8 `<datalist>`-Elemente im gerenderten Markup einer Einsatzseite). Verbleibende 10 Nennungen sind sämtlich Kommentare, die die Ablösung erklären | 07.09.2026 |
 | P-03 | eine Vorschlagsliste, Gruppenzeile, ≤ 2 Stammdaten, richtige Ebene | Bild, Klickprobe | 2 Breiten × 2 Höhen | **erfüllt.** Tipp „Klin" am Transportziel: **1 sichtbare Liste · 2 Gruppenzeilen · 2 Stammdatentreffer · 4 Adresstreffer · 0 `<datalist>`** (vorher: 1 Liste, 0 Gruppen, 0 erkennbare Herkunft, **8 `<datalist>`**). Bedienhöhe an der **einzeiligen** Zeile gemessen: 390 px → **44 px**, 1280 px Zeiger → **36 px**, 1280 px Finger → **44 px**. **16 Bilder** unter `tools/klickprobe/ausgabe/bild/`, Breite und Eingabeart im Dateinamen. **Ebene** (nach F-S9-P-07): in der Schnittfläche mit der klebenden Speichern-Leiste liegt **die Liste** oben — `z-index` Liste **35** · Leiste **30** · Kopfleiste **40**, gemessen mit `elementFromPoint` bei 61 bis 69 px Überlappung in allen vier Kombinationen | 07.09.2026 |
 | P-04 | Geocoder nur im Bootstrap | grep | 1 | **erfüllt.** `grep -rn "komoot" server/assets/` = **0** (vorher 2: `ortsfeld.js` für die Suche, `ortswahl.js` für die Umkehrsuche). Die Vorgabe steht **einmal**, in `server/geocoder_lib.php` (`GEOCODER_VORGABE`); `assets/geocoder.js` trägt **keine** Rückfalladresse — fehlt der Bootstrap, ist `an()` falsch und es geht nichts hinaus | 07.09.2026 |
-| P-05 | Dialog aus fünf Einbauorten | Klickprobe | 5/5 | **5 von 5** mit Leaflet-Karte darin — Einsatzort, manueller Abfahrtort (Einsatz **ohne** Aufzeichnung, sonst gibt es das Feld nicht), Transportziel, Standort im Konto, Standort systemweit (Rolle `admin`). Dazu: Ein Treffer im Suchfeld lässt das Formular unberührt — **Feld leer, 0 Chips**, der Name steht im **Suchfeld**; erst „Übernehmen" schreibt: **1 Chip** (F1). Über zwei Breiten und beide Bedienhöhen **4 × 5 von 5** | 07.09.2026 |
+| P-05 | Dialog aus allen Einbauorten | Klickprobe | 5/5, ab Web 18.0.0 4/4 | **5 von 5** mit Leaflet-Karte darin — Einsatzort, manueller Abfahrtort (Einsatz **ohne** Aufzeichnung, sonst gibt es das Feld nicht), Transportziel, Standort im Konto, Standort systemweit (Rolle `admin`). Dazu: Ein Treffer im Suchfeld lässt das Formular unberührt — **Feld leer, 0 Chips**, der Name steht im **Suchfeld**; erst „Übernehmen" schreibt: **1 Chip** (F1). Über zwei Breiten und beide Bedienhöhen **4 × 5 von 5** | 07.09.2026 |
 | P-06 | Kontoschalter aus → keine Anfrage | Netzwerkprotokoll | 0 | **0 Anfragen** an `photon.komoot.io` bei Tippen, Kartenwahl und „Übernehmen" — dazu **0 Adressvorschläge, 0 Suchfelder im Dialog, 0 Hinweiszeilen**. **Mit Gegenprobe:** derselbe Weg bei eingeschaltetem Schalter ergibt **2 Anfragen** (Vorwärtssuche und Umkehrsuche) und 1 Suchfeld — ohne diese Gegenprobe wäre die Null der Beleg dafür, dass die Probe nicht hinsieht. Geschaltet wird über die **Formulare**, nicht per SQL | 07.09.2026 |
 | P-07 | Spur im Dialog, Karte auf der Spur | Bild | 1 mit, 1 ohne | **erfüllt.** Einsatz mit Aufzeichnung (309 Punkte): **1 Linie, 4 Ringpunkte** (2 auf der Karte, 2 in der Legende), **Legende sichtbar, 0 Pfeile**; bei leerem Ortsfeld steht die Karte auf der Spur (Bild `ap2-spur-im-dialog`). Ohne Aufzeichnung — die Standort-Stammdaten — bleibt die Legende versteckt und die Karte auf dem Rückfallpunkt; belegt im Weg `ap2-dialog-fuenf-einbauorte`, der beide Standortseiten fährt | 07.09.2026 |
 | P-08 | Schildmaße | Browser-Messung | Doppelring ≤ 40 px | **erfüllt, alle sieben Maße getroffen.** Nachgemessen im Browser (Klickprobe `ap3-schildmasse`, Außenmaß **einschließlich** der Schattenringe): **ohne 32 · Start 32 · Ende 32 · beide 38 · Einsatzort 28 · Ringpunkt 14 · Ring beide 20 px** — vorher 36/48/48/60/32/16/28. Der Doppelring liegt damit bei **38 px** statt 60, die Forderung war ≤ 40. Symbol im Schild **18**, im Kreis **16** px. Dazu die **Antippfläche des Ringpunkts: 24 px** — siehe F-S9-P-13 | 07.09.2026 |
@@ -495,6 +516,94 @@ jetzt zuerst. **Gegengeprobt** mit einer erfundenen Kennung über ein von Hand
 gebautes Formular: Meldung statt Datenänderung, **2 Einträge unter „Ohne
 Standort" vorher und 2 nachher**.
 
+### AP5b — die Tür schließen: `admin_stammdaten.php` gestrichen (Web 18.0.0)
+
+**Entschieden am 09.09.2026** (Frage 10, Weg c) — und die Seite ganz statt
+entkernt: „streichen, gibt keine andere Installation".
+
+**Die Vorbedingung ist gemessen, nicht angenommen.** Mit der Seite verschwindet
+der einzige Schreib- **und Löschweg** auf Zeilen mit `user_id IS NULL`; was
+danach noch steht, steht für immer. Die Auskunft des Auftraggebers („alle
+zentralen Standorte gelöscht") betrifft **eine** der sechs Tabellen, deshalb
+sind alle sieben Werte gezählt worden — an der lokalen Anlage am 09.09.2026:
+
+| Tabelle | Zeilen mit `user_id IS NULL` |
+|---|---:|
+| `bases` | **0** |
+| `vehicles` | **0** |
+| `crew_presets` | **0** |
+| `resources` | **0** |
+| `bw_units` | **0** |
+| `transport_dests` | **0** |
+| `user_bases` (alle Zeilen) | **0** |
+
+**Für die Produktivanlage steht diese Zählung aus** — siehe Abschnitt 0 und
+Prüfliste. Die Abfragen dafür stehen dort.
+
+**Was gestrichen ist:** `server/admin_stammdaten.php` (1205 Zeilen), die Karte
+„Vordefinierte Standorte" samt Schreibweg `ub_toggle` und der Abfrage der
+zentralen Standorte in `einstellungen.php` (**4327 → 4265 Zeilen**),
+`stammdaten_dup_personal_count()` in `db.php` (sechs Aufrufer, alle in der
+gelöschten Datei — nachgezählt mit `grep` über `server/`, `tools/` und
+`docs/`: danach **0**), der zweite Parameter von `sd_seite()` (kein Aufrufer
+übergab ihn) und die Option `bearbeiten_href` in `stammdaten_ui.php` (**0**
+Aufrufer). `'href' => '#'` bleibt ausdrücklich stehen: `ui_zeilenaktionen()`
+gibt nur bei nichtleerem `href` ein `<a>` aus, sonst würde aus dem
+Dialog-Öffner ein Absendeknopf.
+
+**Was ausdrücklich stehen bleibt** (Grenze des Pakets, alles Weitere ist P5 /
+Backlog Nr. 168): Schema und Migrationen, `user_bases`, das Feld
+`stammdaten.user_bases` der Kontosicherung, die `user_bases`-JOINs in
+`diensttag_lib.php`, der Zentral-Zweig in `nachbearbeitung.php` und die
+Abfragen, die zentrale Einträge in die Kontoansicht holen. Auch die Signaturen
+von `stammdaten_ohne_standortpflicht()`, `stammdaten_standort_loesen()` und
+`stammdaten_loeschfrage()` bleiben, obwohl ihre Zweige `$userId === null` bzw.
+`$systemweit === true` unerreichbar geworden sind — `stammdaten_loeschfrage()`
+trägt vier ausgeschriebene Beugungsformen, also sichtbaren Text, und den baut
+man nicht als Nebenwirkung eines Streichpakets um. Vermerkt ist es an den
+Docblocks.
+
+**Ein Fund, der zum Paket gehört und ohne es unbemerkt geblieben wäre:** Der
+Hinweis der Nachbearbeitung forderte auf, „zuerst unter ‚Standorte systemweit'
+einen anzulegen" (`nachbearbeitung.php`). Nach der Streichung wäre das eine
+Sackgasse auf eine 404 gewesen — an genau der Stelle, an der eine
+Administratorin überhaupt noch auf das zentrale Modell trifft. Der Satz sagt
+jetzt, dass sich der Eintrag hier nicht mehr zuordnen lässt.
+
+**Die Prüfmittel, mit Mittel und Zahl:**
+
+| Mittel | Ergebnis |
+|---|---|
+| Sieben Zählungen der Vorbedingung | **7 von 7 Nullen** (lokal; Produktivanlage steht aus) |
+| Linkprobe | **99 Zielseiten, 116 Verweise, 0 unbekannte Abweichungen**, 1 bekannte mit Nummer (Nr. 151), **0 tote Zeilen** (vorher 100 / 130). Der Verweis der Seite Backup-Ziele zeigt jetzt auf `einstellungen.php?t=standorte` — **ein parameterloser Link auf eine gelöschte Datei wäre der Probe entgangen**, sie sieht nur `seite.php?…` |
+| Wortliste | **0 Treffer außerhalb der Ausnahmen** bei 96 Regeln, **96 gegriffen, 0 ungenutzt, 0 durchgerutschte Fallen**, über fünf Bereiche — Bereich (a) **99 → 98 Dateien**. Gefahren **nach** der letzten Textänderung (sieben sichtbare Texte wurden angefasst) |
+| Vollständigkeit | **318 → 316 Befunde**; der Unterschied ist die gelöschte Datei |
+| Kontraste | **22 Paare gerechnet, 0 verfehlt** (unverändert) |
+| `docs/Design.md` neu erzeugt | **40 Tabellenzeilen ändern sich**, keine fällt auf 0, die Fußzeilen bleiben. **Achtung, zwei Ursachen in einem Diff:** Die Tabellen waren seit AP5-4 nicht neu erzeugt, deshalb steigen einige Zählungen (z. B. `plus.svg` 17 → 22), während die Streichung andere senkt (`karte.svg` 16 → 15). Der Diff misst beides zusammen |
+| Bilderlauf | `seiten.json` **46 → 44 Seiten** (Gruppe Administration **9 → 7**), ein voller Lauf **368 → 352 Einzelbilder** |
+| Klickprobe | Wegzahl unverändert; `ap2-dialog-fuenf-einbauorte` heißt jetzt `ap2-dialog-vier-einbauorte` (Soll **4 von 4**), `ap5-verwaltung-besatzung-anlegen` heißt `ap5-besatzung-anlegen` und misst dieselbe Zusage (E-S9-19) am eigenen Bestand |
+
+**Warum der Klickprobenweg nicht ersatzlos entfällt.** Er prüfte Backlog
+Nr. 163 (systemweite Besatzungs-Vorbelegungen ließen sich nicht anlegen) — mit
+der Seite ist der Punkt gegenstandslos. Das Anlegen einer
+Besatzungs-Vorbelegung **auf der Kontoseite** war aber von keinem Prüffall
+berührt, gerade weil Nr. 163 sie nicht betraf. Ein ersatzloser Wegfall hätte
+also eine Prüflücke geschaffen, die die Streichung erst erzeugt.
+
+**Was dieses Paket NICHT belegen kann** — es steht auch in Abschnitt 0: dass
+die Seite auf dem Produktivserver wirklich verschwindet. Der Deploy
+synchronisiert `server/` und löscht Entfallenes, aber nur, solange die
+Zustandsdatei der FTP-Aktion dort intakt ist; fehlt sie, lädt er alles hoch und
+löscht nichts. Die Datei hängt an nichts, was dieses Paket sonst entfernt —
+`require_admin()` und alle zwölf Schreibwege funktionieren weiter. **Das ist
+die eine Art, auf der dieses Paket sein Ziel verfehlen kann, ohne dass etwas
+rot wird.** Deshalb steht der Statuscode-Aufruf in der Prüfliste. Lokal ist er
+nicht zu ersetzen: Der PHP-Server der Prüfumgebung beantwortet **jede**
+unbekannte Adresse mit 302 (gemessen: `gibtsnicht.php`, `gibtsnicht.txt` und
+`admin_stammdaten.php` alle **302**), er kann also gar nicht zeigen, was ein
+Apache mit 404 zeigen würde.
+
+
 ## 2. Fehlerfunde
 
 
@@ -697,6 +806,45 @@ jetzt `'ortswahl' => true`, das die Funktion tatsächlich liest.
 
 Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
 **woran ein Scheitern zu erkennen ist**.
+
+- [ ] **0a — VOR dem Merge: die sieben Zählungen an der Produktivdatenbank.**
+  Mit AP5b verschwindet der einzige Schreib- **und Löschweg** auf zentrale
+  Stammdaten. Was danach noch steht, kann niemand mehr ändern oder löschen —
+  bis zum Rückbau in P5 (Backlog Nr. 168).
+  *Weg:* In der Datenbank ausführen:
+  ```sql
+  SELECT 'bases' t, COUNT(*) n FROM bases WHERE user_id IS NULL
+  UNION ALL SELECT 'vehicles',        COUNT(*) FROM vehicles        WHERE user_id IS NULL
+  UNION ALL SELECT 'crew_presets',    COUNT(*) FROM crew_presets    WHERE user_id IS NULL
+  UNION ALL SELECT 'resources',       COUNT(*) FROM resources       WHERE user_id IS NULL
+  UNION ALL SELECT 'bw_units',        COUNT(*) FROM bw_units        WHERE user_id IS NULL
+  UNION ALL SELECT 'transport_dests', COUNT(*) FROM transport_dests WHERE user_id IS NULL
+  UNION ALL SELECT 'user_bases',      COUNT(*) FROM user_bases;
+  ```
+  *Erwartet:* **sieben Nullen.**
+  *Scheitern erkennbar an:* Jede Zahl über null. Dann **vor dem Merge**
+  melden — die betroffenen Einträge lassen sich mit der jetzigen Fassung noch
+  über die Verwaltung löschen, nach dem Merge nicht mehr.
+
+- [ ] **0b — NACH dem Merge: die Seite ist wirklich fort.**
+  *Weg:* `curl -o /dev/null -s -w '%{http_code}\n' https://<basis>/admin_stammdaten.php`
+  — mit dem **Statuscode**, nicht mit dem Augenschein.
+  *Erwartet:* **404.**
+  *Scheitern erkennbar an:* **200** heißt, die Datei liegt noch auf dem
+  Server (die Zustandsdatei des Deploys ist verfallen, er hat nichts
+  gelöscht) — im Browser sieht das wie die Anmeldeseite und damit wie ein
+  Erfolg aus. **500** heißt, sie liegt noch dort und ruft eine Funktion, die
+  es nicht mehr gibt (`stammdaten_dup_personal_count()`). In beiden Fällen ist
+  die Seite weiterhin bedienbar und legt weiterhin zentrale Stammdaten an;
+  sie muss dann von Hand per FTP gelöscht werden.
+
+- [ ] **0c — Die Einstellungen zeigen keine leere Karte mehr.**
+  *Weg:* Einstellungen → Standorte öffnen.
+  *Erwartet:* Zwei Karten — „Eigene Standorte" und „Ohne Standort". Keine
+  Karte „Vordefinierte Standorte", kein „0 · 0 ausgewählt".
+  *Scheitern erkennbar an:* Die Karte steht noch da — dann ist eine alte
+  Fassung ausgeliefert (Browser-Zwischenspeicher: `WEB_VERSION` prüfen, sie
+  muss **18.0.0** sein).
 
 - [ ] **1 — Die Liste mit Handschuhen treffen (Handy).**
   *Weg:* Einsatz öffnen → Karte „Transport" → in **Transportziel** „Klin"

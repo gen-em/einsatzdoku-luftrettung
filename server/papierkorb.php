@@ -107,7 +107,7 @@ $trashDays     = $zeigeListe ? trash_list_days($userId) : [];
 $trashMissions = $zeigeListe ? trash_list_missions($userId) : [];
 
 /* Meldung aus der Sitzung abholen — dieselbe Mechanik wie in
- * admin_stammdaten.php und einstellungen.php. Sie wird gebraucht, seit das
+ * einstellungen.php. Sie wird gebraucht, seit das
  * Zurueckholen eines Einsatzes abgelehnt werden kann (Backlog Nr. 33): Nach
  * einer Umleitung ist eine Variable weg, und eine Handlung, die nichts tut
  * und nichts sagt, ist die schlechteste von beidem. */

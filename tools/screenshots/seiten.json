@@ -210,18 +210,6 @@
       "pfad": "__KONTO__"
     },
     {
-      "name": "42-stammdaten-systemweit",
-      "gruppe": "Administration",
-      "rolle": "admin",
-      "pfad": "admin_stammdaten.php"
-    },
-    {
-      "name": "42a-stammdaten-standortseite",
-      "gruppe": "Administration",
-      "rolle": "admin",
-      "pfad": "__ADMIN_STANDORT__"
-    },
-    {
       "name": "43-sicherungen",
       "gruppe": "Administration",
       "rolle": "admin",

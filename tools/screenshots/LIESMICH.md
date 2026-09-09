@@ -8,8 +8,12 @@ Phase.
 
 Ein Redesign, das „voll mobiltauglich auf allen Seiten" verspricht, muss das
 auf allen Seiten belegen — und zwar bei jeder Breite, nicht bei der einen,
-die gerade offen war. 30 Seiten mal acht Breiten sind 240 Bilder; von Hand
-macht das niemand zweimal.
+die gerade offen war. 44 Seiten mal acht Breiten sind 352 Bilder; von Hand
+macht das niemand zweimal. (Die Zahl stand hier lange bei „30 Seiten … 240
+Bilder" und war schon vor S9/AP5b falsch — `seiten.json` führte 46 Seiten,
+ein voller Lauf machte 368 Bilder. Sie ist mit dem Streichen der beiden
+Admin-Stammdatenseiten nachgezogen worden; maßgeblich ist immer
+`seiten.json`, nicht dieser Satz.)
 
 **Eine Seite braucht ihre Parameter.** Steht in `seiten.json` ein Pfad, den
 die Anwendung ohne Abfrageteil ablehnt, fotografiert das Werkzeug die Seite,

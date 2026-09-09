@@ -341,7 +341,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 21 |  |
 | `--dunkelblau` | `#1A2E4D` | 52 |  |
-| `--gedaempft` | `#6E6459` | 57 |  |
+| `--gedaempft` | `#6E6459` | 58 |  |
 | `--auf-dunkel` | `#FFFFFF` | 7 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
@@ -387,7 +387,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--groesse-1` | `12px` | 7 |  |
-| `--groesse-2` | `13px` | 41 |  |
+| `--groesse-2` | `13px` | 42 |  |
 | `--groesse-3` | `15px` | 11 |  |
 | `--groesse-4` | `16px` | 10 |  |
 | `--groesse-5` | `19px` | 6 |  |
@@ -401,11 +401,11 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 65 |  |
+| `--abstand-1` | `4px` | 66 |  |
 | `--abstand-2` | `8px` | 88 |  |
 | `--abstand-3` | `12px` | 119 |  |
 | `--abstand-4` | `16px` | 55 |  |
-| `--abstand-5` | `24px` | 22 |  |
+| `--abstand-5` | `24px` | 23 |  |
 
 **Radien**
 
@@ -780,10 +780,10 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 25 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 19 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 24 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
-| `karte.svg` | Tabler Icons „map-2" (MIT) | 16 |
+| `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
 | `korb.svg` | Tabler Icons „trash" (MIT) | 21 |
@@ -793,22 +793,22 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 9 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 17 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 22 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
-| `profil.svg` | Tabler Icons „user" (MIT) | 14 |
+| `profil.svg` | Tabler Icons „user" (MIT) | 16 |
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 25 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
-| `schliessen.svg` | Tabler Icons „x" (MIT) | 10 |
+| `schliessen.svg` | Tabler Icons „x" (MIT) | 9 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 9 |
 | `server.svg` | Tabler Icons „server" (MIT) | 6 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 10 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
-| `standort.svg` | Tabler Icons „map-pin" (MIT) | 18 |
+| `standort.svg` | Tabler Icons „map-pin" (MIT) | 22 |
 | `status.svg` | Tabler Icons „activity" (MIT) | 27 |
-| `stern.svg` | Tabler Icons „star" (MIT) | 9 |
+| `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 11 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
@@ -889,35 +889,35 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_leiste_ende()` | `.leiste` | ja (+13 Unterklassen) | 505 |
 | `ui_geruest_ende()` | `.inhalt` | ja | 529 |
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 574 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 799 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 929 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 1000 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1084 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1127 |
-| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1194 |
-| `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1240 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1293 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1319 |
-| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1355 |
-| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1413 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1448 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1490 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1538 |
-| `ui_zeile()` | `.zeile` | ja (+15 Unterklassen) | 1590 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1638 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1680 |
-| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1749 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1814 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1858 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1911 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1955 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2054 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2116 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2157 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2254 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2284 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2296 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2461 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 803 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 933 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 1004 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1088 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1131 |
+| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1198 |
+| `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1244 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1297 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1323 |
+| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1359 |
+| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1417 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1452 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1494 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1542 |
+| `ui_zeile()` | `.zeile` | ja (+15 Unterklassen) | 1596 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1644 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1686 |
+| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1755 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1820 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1864 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1917 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1961 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2060 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2122 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2163 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2262 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2292 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2304 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2471 |
 
 39 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
