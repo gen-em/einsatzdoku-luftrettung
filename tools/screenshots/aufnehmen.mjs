@@ -332,7 +332,16 @@ async function platzhalter() {
                        .getAttribute('href').catch(() => null);
   p['__STANDORT__'] = sHref || null;
 
+  /* DIE STANDORTSEITE DER VERWALTUNG, nach demselben Muster (S9/AP5-4).
+     Auch dort ersetzt sie den Reiter „Rettungsmittel", und auch dort steht
+     die Kennung nur in der Liste. */
   const a = rollen.admin.seite;
+  await gehZu(rollen.admin, `${BASIS}/admin_stammdaten.php?t=standorte`,
+              'admin_stammdaten.php?t=standorte');
+  const aHref = await a.locator('a.zeile[href*="t=standort&s="]').first()
+                       .getAttribute('href').catch(() => null);
+  p['__ADMIN_STANDORT__'] = aHref || null;
+
   await gehZu(rollen.admin, `${BASIS}/admin_users.php`, 'admin_users.php');
   const href = await a.locator('a[href*="admin_user.php?id="]').first()
                       .getAttribute('href').catch(() => null);

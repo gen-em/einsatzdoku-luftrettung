@@ -1655,12 +1655,72 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Protokoll. Zuordnung: Backlog-Runde, gemeinsam mit Nr. 43 (Ortsdaten)
     zu betrachten.
 
+166. **Der Referenzbestand kennt keinen systemweiten Standort — die
+    Verwaltungsseiten sind damit nicht zu fotografieren.** *Aufgenommen
+    09.09.2026 in S9/AP5-4.* `bases` mit `user_id IS NULL` ist im
+    Referenzbestand **leer**; der Generator legt nichts dergleichen an.
+    Folge: `admin_stammdaten.php?t=standorte` zeigt im Bilderlauf eine leere
+    Liste, und die neue Standortseite der Verwaltung
+    (`42a-stammdaten-standortseite`) lässt sich gar nicht aufrufen — der
+    Platzhalter `__ADMIN_STANDORT__` bleibt unaufgelöst, und der Lauf meldet
+    „OHNE BILD". Das war vorher nicht besser, nur leiser: Der alte Eintrag
+    `42a-stammdaten-rettungsmittel` zeigte einen leeren Reiter und lieferte
+    trotzdem acht Bilder — acht Bilder von nichts, mit der Meldung „kein
+    Überlauf". Behebung: im Generator **einen** systemweiten Standort mit
+    einem Rettungsmittel, einer Zielklinik und einer Besatzungs-Vorbelegung
+    anlegen. Das berührt Fixture, Prüfsummen und die beiden Kreisläufe
+    (`edbak`, `csv`) und gehört deshalb in ein eigenes Paket, nicht nebenbei.
+    Bis dahin deckt die Klickprobe die Seite ab: `ap5-verwaltung-besatzung-anlegen`
+    legt Standort und Rettungsmittel selbst an, misst und räumt wieder ab.
+
 
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+163. **Systemweite Besatzungs-Vorbelegungen ließen sich nicht anlegen.**
+    *Aufgenommen und behoben 09.09.2026 in S9/AP5-4, Web 17.0.0.* Das
+    Formular in `admin_stammdaten.php` schickte den Schlüssel `role_code`,
+    der Schreibweg `crew_save` derselben Datei las `role`. Damit war die
+    geprüfte Rolle **immer leer**, die Bedingung
+    `!array_key_exists($role, CREW_ROLES)` schlug jedes Mal an, und die
+    Verwaltung meldete „Bitte Rolle und Namen angeben." — bei ausgefüllter
+    Rolle und ausgefülltem Namen. Anlegen **und** Ändern einer systemweiten
+    Vorbelegung waren damit seit **Web 9.10.0** unmöglich, also rund zwei
+    Jahre. Die Kontoansicht war nie betroffen: Sie schickt seit jeher `role`.
+    Gefunden beim Umbau auf die Dialoge, nicht von einem Prüfmittel — kein
+    Bild zeigt eine Fehlermeldung, die erst nach einem Klick erscheint, und
+    die Klickprobe fuhr diesen Weg bis dahin nicht. Behoben, indem der
+    gemeinsame Dialog `role` schickt (ein Name für eine Sache) und der
+    Schreibweg die Rolle beim Ändern **mitschreibt** — als Feld kann sie sich
+    jetzt ändern. Der Weg `ap5-verwaltung-besatzung-anlegen` misst ihn: Er
+    legt einen systemweiten Standort samt Rettungsmittel an, legt die
+    Vorbelegung an, prüft die Landung auf `#crew-<id>` und räumt alles wieder
+    ab.
+
+164. **Ein Umbenennen auf einen vorhandenen Namen endete in einer weißen Seite.**
+    *Aufgenommen und behoben 09.09.2026 in S9/AP5-4, Web 17.0.0.* Beim
+    **Anlegen** fängt `INSERT IGNORE` die Dublette ab; beim **Ändern** gibt es
+    kein Gegenstück, und der Eindeutigkeitsschlüssel
+    (`uq_user_base_role_name` und Geschwister) warf eine PDOException, die
+    niemand fing. Betroffen waren Besatzung, weitere Rettungsmittel,
+    Bergwacht und Zielkliniken der Kontoansicht — seit es diese Listen gibt.
+    Selten getroffen, solange nur der Name änderbar war; mit der Rolle als
+    Feld im Dialog wurde daraus ein wahrscheinlicher Fall. Behoben mit einer
+    gemeinsamen Schließung `$sdAendern()`, die `ist_dublettenfehler()`
+    auswertet und dieselbe Meldung gibt wie der Anlegen-Weg.
+
+165. **Ein leerer Standortname wurde wortlos verworfen.**
+    *Aufgenommen und behoben 09.09.2026 in S9/AP5-4, Web 17.0.0.*
+    `base_save` in `einstellungen.php` prüfte `if ($n !== '')` — **ohne**
+    Gegenzweig. Wer das Namensfeld leerte und absendete, sah die Seite neu
+    geladen, keinen neuen Standort und keine Meldung. Das `required` im
+    Markup fängt den Regelfall ab; es ist eine Bequemlichkeit und keine
+    Prüfung. Behoben: „Bitte einen Namen eintragen." Dieselbe Bauart von
+    Fehler wie F-S9-U-17 bis -19 aus AP5-2 — ein Weg, der nichts tut und
+    nichts sagt.
 
 162. **Der kleine Punkt des Abfahrtorts hat keinen Kasten und zeigt seine Farbe nie.**
     *Aufgenommen 07.09.2026 in S9/AP3, gefunden bei der Aufklärung zu Nr. 72.*

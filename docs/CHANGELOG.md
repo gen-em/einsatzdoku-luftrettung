@@ -235,6 +235,115 @@ Sicherheitsmerkmal wäre: Der Geräteschlüssel liegt im Keystore, nicht im Code
 **Was der Prüfstand sagt:** `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor. Emulator (Stufe II):
 **erreicht, im fünften Anlauf** (Emulator 37.1.11, `android-34;default;x86_64`, `-accel off`): adbd nach 120 s, `ro.hw_timeout_multiplier=10` als Root gesetzt und Framework neu gestartet, Boot **715 s**, Prüf-APK gegen die lokale Installation **128 s**; acht Bilder — Kopplungsansicht, Code `S4Y ZPF`, im Web als Demo-Konto eingetragen und bestätigt, „Zu diesem Konto koppeln? de***@gen-em.org", „Ja, koppeln" → Dienstansicht „Gekoppelt · 127.0.0.1:8080", `devices`-Zeile 79 am Server; per `sqlite3` ein abgewiesenes Paket samt Punkt, Phase und beendeter Dienstzeile eingespielt → rote Zeile „1 Paket vom Server abgewiesen"; Einstellungen; „Gerät trennen" mit Rückfrage; „Getrennt". **Der Räumlauf am echten Android-SQLite:** nach dem Trennen `paket 0, fehlerhaft 0, punkt 0, phase 0, dienst 0` (vorher je 1), Gerät am Server gelöscht (`POST /pair.php` 200), kein Absturz im `logcat`. Davor **vier Anläufe ohne Boot** (14, 38, 22 und 12 min) — Ursache der Android-Watchdog unter TCG, Gegenmittel jetzt in `emulator.sh start` (F-SP-P-07); der Wear-Emulator für das Uhr-Modul wurde nicht gefahren (Abschnitt 0).
 
+## [Web 17.0.0] — 2026-09-09
+
+### Web — Anlegen und Bearbeiten stehen im Dialog; die Verwaltung bekommt dieselben Standortseiten (S9/AP5, Teil 4)
+
+**Die Eingabe stand unter der Liste, und mit den Standortseiten wurde das
+langsam absurd.** Wer den zwölften Eintrag anlegen wollte, rollte an elf
+vorbei — das Formular stand am Ende der Liste, und die Liste war der Grund,
+warum man die Seite geöffnet hatte. „Bearbeiten" war ein Verweis auf dieselbe
+Seite mit `?ec=7`: Sie lud neu, sprang zum Anker, und das Formular darunter
+trug plötzlich andere Werte; auf einem Handy sah man von dem Wechsel gar
+nichts. Und in der Besatzungskarte stand dasselbe Formular je **Rolle**
+einmal — an einem Standort mit fünf Rollen fünfmal. Der Kartenfilter musste
+sie eigens verbergen, sonst standen unter einem einzigen Treffer vier
+verwaiste Eingaben.
+
+**Jetzt öffnet „Anlegen" im Kartenkopf und „Bearbeiten" im Zeilenmenü
+denselben Dialog, und die Liste bleibt, wo sie ist.** Zehn Formulare der
+Standortseite sind ersatzlos entfallen, mit ihnen der Baustein `sd_form()`
+und die fünf Adressparameter `ev`, `ec`, `et`, `er`, `ew`.
+
+**Fünf Dialoge aus drei Funktionen.** Das Konzept nennt drei Arten —
+Rettungsmittel, Besatzungsmitglied, Zielklinik — und das Mockup zeichnet sie.
+„Weitere Rettungsmittel" und „Bergwacht" zeichnet es nicht; sie haben genau
+ein Feld, dasselbe wie das Besatzungsmitglied ohne die Rolle, und bekommen
+deshalb dieselbe Funktion mit anderen Beschriftungen. Der Gegenentwurf — ein
+einziger Dialog, der seine Beschriftungen erst im Browser vom Öffner holt —
+ist erwogen und verworfen: Die Beschriftung steht im `<label>` neben dem
+Pflichtstern und würde beim Füllen mitgelöscht, und ein Text, den ein Skript
+zusammensetzt, läuft an der Wortliste vorbei.
+
+**Der Standort ist ein Feld geworden, kein Haken.** „Ohne Standort" war ein
+Kästchen, das die verborgene Kennung der Standortkarte schlug: Man sah beim
+Setzen nicht, was man überschrieb, und ein Rettungsmittel von einem Standort
+auf einen anderen zu verschieben ging überhaupt nicht. Jetzt ist es der erste
+Eintrag einer Auswahl, und die Auswahl erscheint nur bei den drei Typen ohne
+Standortpflicht; beim Typ Standard steht darunter, zu welchem Standort der
+Dialog gehört. Damit fällt auch der Kunstgriff, mit dem ein standortloses
+Rettungsmittel bisher auf der Seite des **ersten** Standorts bearbeitet wurde.
+
+**Fehler bleiben im Dialog.** Bisher ging jeder Fehler denselben Weg wie jede
+Meldung: in die Sitzung, Umleitung, Kasten am Seitenkopf. Für ein Formular
+unter der Liste war das richtig — es stand danach wieder da, mit seinen
+Werten. Ein Dialog steht nach dem Neuladen nicht wieder da: Er wäre zu, die
+Eingabe wäre weg, und oben stünde „Bezeichnung fehlt" über einer Liste, in der
+man gerade nichts eingegeben hat. Der Fehlerweg leitet deshalb nicht mehr um;
+die Seite ist die Antwort auf das Absenden, sie trägt die Eingabe und die
+Meldung, und das Seitenskript öffnet den Dialog wieder. Der Preis ist die
+Neuladen-Warnung des Browsers — sie trifft genau den Fall, in dem ohnehin
+niemand neu lädt, sondern die Eingabe berichtigt.
+
+**Der Erfolgsfall hat dafür keine Meldung mehr.** Die Umleitung führt auf die
+geschriebene Zeile, und die färbt sich orange — das ist die Bestätigung, und
+sie steht dort, wo man hinsieht. „Standort anlegen" landet auf der neuen
+Standortseite: Sie ist zugleich der Ort, an dem als Nächstes etwas zu tun ist,
+denn ein Standort ohne Rettungsmittel ist ein leeres Fach.
+
+**Verwaltung → Stammdaten hat keine zwei Reiter mehr.** „Standorte systemweit"
+und „Rettungsmittel systemweit" sind zu einer Liste und je einer Standortseite
+geworden — dieselbe Gliederung wie im Konto seit 16.2.0, dieselben sechs
+Karten, dieselben Kennzahlen, dieselben fünf Dialoge aus derselben Datei.
+Zwei Ansichten desselben Bestands, die sich verschieden bedienen lassen, sind
+genau das, was der gemeinsame Baustein seit O9c verhindern soll. Der alte
+Reiter `t=rettungsmittel` bleibt als Weiche auf die Liste stehen.
+
+### Web — fünf Funde, und keiner davon war auf einem Bild zu sehen
+
+**Eine systemweite Besatzungs-Vorbelegung ließ sich seit Web 9.10.0 weder
+anlegen noch ändern** (Backlog Nr. 163). Das Formular schickte den Schlüssel
+`role_code`, der Schreibweg las `role`; die Prüfung lief also gegen eine leere
+Zeichenkette und meldete „Bitte Rolle und Namen angeben." — bei ausgefüllter
+Rolle und ausgefülltem Namen. Zwei Jahre lang. Kein Bild zeigt eine Meldung,
+die erst nach einem Klick erscheint, und die Klickprobe fuhr diesen Weg bis
+heute nicht. Sie tut es jetzt.
+
+**Alle fünf Dialoge waren sichtbar, obwohl sie geschlossen waren.** Die neue
+Regel `.dialog{display:flex}` (für den mitrollenden Inhalt, siehe unten)
+schlug die Browservorgabe `dialog:not([open]){display:none}` — eine Regel des
+Browsers verliert gegen jede Regel des Stylesheets, ganz gleich wie spezifisch
+sie ist. Die Dialoge standen als Kästen am Seitenende, mit Feldern, die man
+ausfüllen kann, und Knöpfen, die absenden. Aufgefallen ist es an einem
+Vollseitenbild; im Fensterausschnitt standen sie unter der Falz. Dieselbe
+Falle wie bei der Knopfreihe der Zeilenaktionen, wo `display` aus demselben
+Grund nicht in der Grundregel steht.
+
+**Ein leerer Standortname wurde wortlos verworfen.** Die Bedingung lautete
+„wenn der Name nicht leer ist" — ohne Gegenzweig. Wer das Feld leerte und
+absendete, sah die Seite neu geladen, keinen neuen Standort und keine Meldung.
+
+**Ein Umbenennen auf einen vorhandenen Namen endete in einer weißen Seite.**
+Betroffen waren Besatzung, weitere Rettungsmittel, Bergwacht und Zielkliniken:
+Der Eindeutigkeitsschlüssel schlug zu, die Ausnahme fing niemand. Beim Anlegen
+war der Fall längst abgefangen; beim Ändern nicht, weil es dort kein
+stillschweigendes `INSERT IGNORE` gibt. Mit der Rolle als **Feld** wurde
+daraus ein wahrscheinlicher Fall statt eines seltenen.
+
+**Die Rolle wurde beim Ändern nicht mitgeschrieben.** Das war richtig, solange
+sie eine verborgene Kennung im Formular je Rolle war und sich gar nicht ändern
+konnte. Als Feld im Dialog hätte eine Rollenänderung wortlos nichts getan.
+
+### Web — ein Dialog, der länger ist als der Bildschirm, rollt jetzt in sich
+
+`.dialog` hatte keine Höhenangabe. Das ging so lange gut, wie jeder Dialog aus
+zwei Sätzen und zwei Knöpfen bestand; der Rettungsmittel-Dialog hat vier
+Felder, fünf Rollenhaken und zwei Fähigkeitshaken und ist am Handy höher als
+das Glas. Ohne Angabe kappt die Browservorgabe unten ab — und unten steht der
+Fuß mit „Anlegen". Kopf und Fuß stehen jetzt fest, der Inhalt rollt. Das
+trifft auch den GPX-Dialog, der dasselbe Problem hatte, ohne dass es jemand
+gemeldet hätte.
+
 ## [Web 16.3.0] — 2026-09-08
 
 ### Web — die langen Listen bekommen zwei Hilfsmittel (S9/AP5, Teil 3)

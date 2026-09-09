@@ -216,10 +216,10 @@
       "pfad": "admin_stammdaten.php"
     },
     {
-      "name": "42a-stammdaten-rettungsmittel",
+      "name": "42a-stammdaten-standortseite",
       "gruppe": "Administration",
       "rolle": "admin",
-      "pfad": "admin_stammdaten.php?t=rettungsmittel"
+      "pfad": "__ADMIN_STANDORT__"
     },
     {
       "name": "43-sicherungen",

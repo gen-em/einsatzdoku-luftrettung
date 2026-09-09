@@ -39,26 +39,55 @@ async function ersterStandort(k) {
   return bid;
 }
 
-/** Ein Rettungsmittel über das Formular anlegen. Gibt seine Kennung zurück. */
+/**
+ * Ein Rettungsmittel anlegen — SEIT S9/AP5-4 IM DIALOG.
+ *
+ * Bis Web 16.3.0 stand unter der Liste ein Formular (`form.ac-form`); die
+ * Probe füllte es und drückte den Knopf. Das Formular gibt es nicht mehr:
+ * „Anlegen" im Kartenkopf öffnet `#dlg-veh` (E-S9-19). Der Weg der Probe ist
+ * damit ein Klick länger — und misst dafür genau das, was eine Person tut.
+ *
+ * `ohneStandort` ist kein Haken mehr, sondern der erste Eintrag der
+ * Standortauswahl (Wert 0). Die Auswahl erscheint nur bei den Typen ohne
+ * Standortpflicht; bei „Standard" ist sie verborgen und trägt den Standort
+ * der Seite.
+ */
 async function anlegen(k, bid, { name, kurz, typ, kind, ohneStandort }) {
   await k.gehZu(SEITE(k, bid));
-  /* Der Standortblock ist zugeklappt (`<details>`); ohne Öffnen sind die
-     Felder zwar im Markup, aber nicht bedienbar — und die Probe soll den
-     Weg gehen, den eine Person geht. */
-  await k.seite.evaluate((id) => {
-    const d = document.getElementById('sd-' + id);
-    if (d && d.tagName === 'DETAILS') { d.open = true; }
-    document.querySelectorAll('details').forEach(e => { e.open = true; });
-  }, bid);
-  const form = k.seite.locator(`form.ac-form:has(input[name="base_id"][value="${bid}"])`).first();
-  await form.locator('input[name="name"]').fill(name);
-  await form.locator('input[name="kurz"]').fill(kurz || '');
-  await form.locator('select[name="typ"]').selectOption(typ);
-  if (kind) { await form.locator(`input[name="kind"][value="${kind}"]`).check({ force: true }); }
-  if (ohneStandort) { await form.locator('input[name="ohne_standort"]').check({ force: true }); }
+  await k.seite.click('.karte-aktion[data-dialog="dlg-veh"]');
+  await k.seite.waitForTimeout(150);
+  const dlg = k.seite.locator('#dlg-veh');
+  await dlg.locator('input[name="name"]').fill(name);
+  await dlg.locator('input[name="kurz"]').fill(kurz || '');
+  await dlg.locator('select[name="typ"]').selectOption(typ);
+  /* BETRIEBSART UND STANDORT WERDEN HIER AM BROWSER VORBEI GESETZT, und das
+     ist der Kern dieser drei Wege (S9/AP5-4).
+
+     Der Dialog sperrt bei „Veranstaltung" die Betriebsart „luftgebunden" und
+     verbirgt bei „Standard" die Standortauswahl. Das ist RICHTIG SO — aber es
+     ist Anzeige, nicht Prüfung: Was zulässig ist, entscheidet
+     `pruef_rettungsmittel()` im Schreibweg. Genau das messen diese drei Wege,
+     und sie können es nur messen, wenn der Browser nicht vorher abwehrt.
+
+     Gesetzt wird deshalb OHNE Ereignis — `anpassen()` hängt an `change` und
+     stellte den Stand sonst im selben Atemzug wieder her (erst gemessen: die
+     Sperre wurde gelöst, das Radio gesetzt, das `change` des Klicks lief, und
+     „luftgebunden" war wieder aus). Ein `disabled` Radio wird nicht
+     abgeschickt; ein verborgenes Auswahlfeld schon.
+
+     Die Sperren selbst misst `ap5-dialog-typ-steuert-die-felder`. */
+  await k.seite.evaluate(([wahl, ohne]) => {
+    const f = document.querySelector('#dlg-veh form');
+    f.querySelectorAll('.vehkind-radio').forEach((r) => {
+      r.disabled = false;
+      if (wahl) { r.checked = (r.value === wahl); }
+    });
+    if (ohne) { f.querySelector('#dlgveh-base').value = '0'; }
+  }, [kind || '', !!ohneStandort]);
+  await k.seite.waitForTimeout(100);
   await Promise.all([
     k.seite.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}),
-    form.locator('button[type="submit"]').first().click(),
+    dlg.locator('[data-fuell="knopf"]').click(),
   ]);
   await k.seite.waitForTimeout(200);
 }

@@ -1266,7 +1266,7 @@ Unterpunkte der Leiste (9.25), und beide holen sie aus denselben `id`.
 
 **Eine Karte im Schleier — in jeder Breite.**
 
-> *Hier stand bis Web 16.4.0: „Am Schreibtisch eine Karte im Schleier, mobil
+> *Hier stand bis Web 17.0.0: „Am Schreibtisch eine Karte im Schleier, mobil
 > ein Blatt von unten (E-P3-27). Dasselbe Markup, das Stylesheet
 > entscheidet." Das stimmt nicht und hat nie gestimmt: Zu `.dialog` gibt es
 > im Stylesheet **keine einzige Medienabfrage**. Das **Blatt** (`.blatt`,
@@ -1276,7 +1276,7 @@ Unterpunkte der Leiste (9.25), und beide holen sie aus denselben `id`.
 > Stammdaten-Dialoge zum ersten Mal jemanden in die Irre geführt hat.*
 
 **Der Kopf trägt Titel und, wo nötig, eine Unterzeile** (`.unterzeile`, seit
-Web 16.4.0): Sie sagt, worauf sich der Dialog bezieht — der Standort, zu dem
+Web 17.0.0): Sie sagt, worauf sich der Dialog bezieht — der Standort, zu dem
 das neue Rettungsmittel gehört. Das gehört nicht in den Titel („Rettungsmittel
 an Standort Talwang anlegen" bricht um) und nicht ins Formular (es ist kein
 Feld, es ist der Zusammenhang). Dieselbe Rolle wie `.titelzeile-unter` an
@@ -1300,6 +1300,31 @@ Kopf und sprängen mit; das Mockup bleibt hier folgenlos.
 > Reanimationen, Ruhesegmente, Trackpunkte — bekommt eine eigene **Seite**.
 > Ein Dialog, der einen halben Bildschirm Text trägt, ist keiner mehr; und
 > der Weg zu einer Seite hat eine Adresse, die man zurückgehen kann.
+
+**Ein Formulardialog rollt in sich** (seit Web 17.0.0). Kopf und Fuß stehen
+fest, `.dialog-inhalt` bekommt `overflow-y:auto`; die Höhe ist auf
+`100dvh` minus 24 px begrenzt. Ohne das kappt die Browservorgabe unten ab —
+und unten steht der Fuß mit der Hauptschaltfläche. Der Rettungsmittel-Dialog
+(vier Felder, fünf Rollenhaken, zwei Fähigkeitshaken) ist am Handy höher als
+das Glas; gemessen bei 390 × 780 px: Dialog **756 px**, Fuß bei **768 px**
+sichtbar, Rollweg **279 px**.
+
+> **`display` steht an `.dialog[open]`, nicht an `.dialog`** (Fund F-S9-U-27).
+> Der Browser versteckt einen geschlossenen Dialog mit
+> `dialog:not([open]){display:none}` — das ist eine Regel des Browsers, und
+> die verliert gegen **jede** Regel des Stylesheets, ganz gleich wie
+> spezifisch. `.dialog{display:flex}` machte damit alle fünf Dialoge einer
+> Standortseite sichtbar: als Kästen am Seitenende, mit ausfüllbaren Feldern
+> und absendenden Knöpfen. Aufgefallen an einem Vollseitenbild; im
+> Fensterausschnitt standen sie unter der Falz. Dieselbe Falle wie bei
+> `.zeile-knoepfe` gegen `.nur-ab-720`. Die Klickprobe misst es seither
+> (`ap5-dialoge-sind-zu`).
+
+**Ein Dialog kann einen zweiten öffnen.** Das Ortsfeld im Zielklinik-Dialog
+trägt den Pin-Knopf, und der öffnet den Kartendialog (9.29) — zwei modale
+Dialoge übereinander. Das trägt der Browser von sich aus: Der zweite kommt in
+die oberste Ebene, der erste bleibt darunter stehen und ist nach dem
+Schließen wieder da. Geprüft am 09.09.2026 im Browser, 1280 px.
 
 ### 9.12 Aktionsmenü der Seite
 
@@ -2337,6 +2362,7 @@ genau das, wogegen sie schützt.
 | Fassung | Was |
 |---|---|
 | **Web 16.1.1 (S9)** | Kapitel 7: Im Band 1024–1199 px rückt das Akkordeon je Ebene **4 statt 8 px** ein, und der Abstand der Diensttagszeile geht von 8 auf **4 px** (Freigabe M-S9-11, Weg 2). Gemessen: dem Nebentext stehen dort **64–79 px** statt 48–63 zur Verfügung — dreizehn Kurznamen, **keiner** mehr mit Auslassungszeichen (vorher zehn). Der Abstand ist mit `:not(.leiste-gruppe)` eingegrenzt, weil die Zeilenklasse auch Leistenfuß, Schubladen-Hauptpunkte und Einstellungsmenü trägt; nachgemessen bleiben die bei 8 px. **Keine neue Schwelle, kein neues Token** — 4 px ist `--abstand-1`. |
+| **Web 17.0.0 (S9/AP5-4)** | **9.11 Dialog** um drei Absätze ergänzt: Ein Formulardialog **rollt in sich** (Kopf und Fuß fest, `.dialog-inhalt` mit `overflow-y:auto`, Höhe `100dvh` minus 24 px) — der Rettungsmittel-Dialog ist am Handy höher als das Glas, und ohne die Angabe kappte die Browservorgabe den Fuß mit „Anlegen“ ab; **`display` gehört an `.dialog[open]`** (Fund F-S9-U-27: eine Regel des Browsers verliert gegen jede Regel des Stylesheets, und `.dialog{display:flex}` machte alle fünf geschlossenen Dialoge einer Standortseite sichtbar); und **ein Dialog kann einen zweiten öffnen** (Ortsfeld → Kartendialog, zwei modale Ebenen, vom Browser getragen). Die Zahlen: Kaskade **741 → 743 Regeln, 0 entfallen, 10 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **45 500 Elementmessungen, 936 Abweichungen**, sämtlich an `dialog`, `.dialog`, `.dialog-kopf`, `.dialog-inhalt`, `.dialog-fuss` und dem `<form>` darin — also genau die zehn neuen Regeln; Pseudoprobe dieselben 936. **Kein neues Token, kein neuer Baustein, kein neues Symbol**; der Vorrat bleibt bei 39 Funktionen. |
 | **Web 16.3.0 (S9/AP5-3)** | **Drei neue Kapitel: 9.31 Sprungliste** (Pille mit Artzeichen, ab sechs Einträgen, Zielzustand `.aktiv` statt `.ziel`, angesprungene Zeile über `:target`), **9.32 Kartenfilter** (Feld mit Lupe, filtert im Browser; heißt nicht `.filterfeld` wegen `.filterfelder`, und ist 44/36 hoch statt 48 wie `.suchfeld`) und **9.33 „Zum Anfang"** (nachgetragen — der Baustein steht seit Web 16.2.0 in der erzeugten Tabelle und hatte keinen Prosa-Eintrag). Kapitel 9.0 um **vier** Zeilen ergänzt: Die eine Zeile „Sprungmarken → Unterpunkte der Leiste, **nicht** von Hand" beschrieb allein die Seitenebene und verbot dem Wortlaut nach, was AP5 mit Mockup gebaut hat. Kapitel 7 und 9.10: die Ausnahme `.kennzahl-raster-3` — drei Spalten in **jeder** Breite. Kapitel 4: neues Kontrastpaar „Dunkelblau auf Orange hell" (21 → **22** gerechnete Paare); die Kombination steht seit O6 an `.kennzahl.aktiv` und `.listenfilter.aktiv` in der Anwendung und war nie gerechnet. **Kein neues Token, kein neues Symbol.** Zwei Berichtigungen beim Gegenlesen: Der Absatz „Kein Symbol am Knopf" stand in 9.18a und gehört zu 9.18; `--radius` (10 px) ist nicht „die kleinste Rundung der Skala" — das ist `--radius-klein` (6 px). |
 | **Web 16.1.0 (S9/AP4a)** | Kapitel 7 (Schwellen und Verhalten je Baustein): Der Nebentext der Leiste hat **drei** Zustände statt zweier — unter 1024 px jeder Name, im Band 1024–1199 px nur ein Kurzname (`.eintrag-neben.kurz`), ab 1200 px wieder jeder; im Band rückt das Akkordeon je Ebene 8 statt 12 px ein. Gemessen: Der Datumstext ist dort **76 bis 83 px** breit (Bricolage Grotesque setzt Ziffern **proportional** — `tabular-nums` nennt `.zahl,td,th,time,output`, nicht `.eintrag-text`), dem Nebentext bleiben **48 bis 55 px**, und „BW Hoch" braucht 55: **4 von 13** Datumsangaben tragen ihn ganz, 9 mit Auslassungszeichen; ohne die Einrückung keine einzige. **Keine neue Schwelle** — beide Regeln liegen in vorhandenen Medienblöcken —, **kein neues Token**: 8 px ist `--abstand-2`. Kapitel 9.7 unberührt: Die Wahlliste trägt den neuen Zusatz mit ihrem vorhandenen `zusatz`-Schlüssel. |
 | **Web 15.9.0 (S9/AP3)** | Neues Kapitel **9.30 Kartenzeichen** — der Farbring ist jetzt der Rand, alle acht Außenmaße als Tabelle, die 24-px-Untergrenze am antippbaren Ringpunkt und die Warnung, dass ein `<span>` ohne `display` kein Kasten ist (Backlog Nr. 72 und Nr. 162). Zwei **abgeleitete** Token (`--geo-ringpunkt`, `--geo-symbol`); `--geo-ring` bedeutet nun Randstärke statt Schattenschrittweite. Kapitel 8: Symbolvorrat **49 → 52** (Bergwacht, Veranstaltung, Sonstiges). Kapitel 9.29 berichtigt: `.legende-linie` misst **24 × 4 px**, nicht 22 × 4. |

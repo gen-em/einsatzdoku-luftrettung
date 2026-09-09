@@ -35,13 +35,17 @@
  *      gefiltert. Ein Zwischentitel verschwindet mit seiner Gruppe — und mit
  *      ihm alles, was zu ihr gehört.
  *
- *   3. DIE ANLEGEN-FORMULARE. In der Besatzungskarte steht je ROLLE eines
- *      (`sd_form()` in der Rollenschleife, einstellungen.php) — fünf Stück an
- *      einem Standort mit fünf Rollen. Blendet man nur Zeilen aus, stehen
- *      unter einem einzigen Treffer vier verwaiste Formulare. Solange
- *      gefiltert wird, sind sie deshalb alle verborgen: Ein Filter ist ein
- *      Lesezustand, kein Eingabezustand. Der Leerzustand sagt ausdrücklich,
- *      wie man wieder zum Anlegen kommt.
+ *   3. DIE ANLEGEN-FORMULARE — HEUTE EIN NETZ, KEIN WEG. In der
+ *      Besatzungskarte stand bis Web 16.3.0 je ROLLE eines (`sd_form()` in
+ *      der Rollenschleife) — fünf Stück an einem Standort mit fünf Rollen;
+ *      blendete man nur Zeilen aus, standen unter einem einzigen Treffer vier
+ *      verwaiste Formulare. Mit S9/AP5-4 sind sie samt `sd_form()` entfallen:
+ *      Angelegt wird im Dialog, und der Öffner steht im Kartenkopf, also
+ *      ausserhalb der gefilterten Liste. Die Regel bleibt trotzdem stehen —
+ *      sie kostet nichts, sie beschreibt eine Absicht („ein Filter ist ein
+ *      Lesezustand, kein Eingabezustand"), und die nächste Liste mit einem
+ *      Formular darin bekommt sie geschenkt statt noch einmal gefunden.
+ *      Die Zahl im Prüfbericht ist seither 0 von 0.
  *
  *   4. DIE HINWEISE IN EINER GRUPPE. „Noch keine Einträge." steht je Rolle
  *      und wäre beim Filtern gelogen. Er hängt an der Gruppe und geht mit ihr.

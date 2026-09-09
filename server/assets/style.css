@@ -1703,9 +1703,37 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   box-shadow:var(--schatten-hoch);
   max-width:min(92vw,32rem);width:100%;
   color:var(--asphalt);
+  /* EIN DIALOG, DER LÄNGER IST ALS DER BILDSCHIRM, ROLLT IN SICH (S9/AP5-4).
+   * Bis Web 16.3.0 hatte `.dialog` keine Höhenangabe. Das ging so lange gut,
+   * wie jeder Dialog aus zwei Sätzen und zwei Knöpfen bestand; der
+   * Rettungsmittel-Dialog hat vier Felder, fünf Rollenhaken und zwei
+   * Fähigkeitshaken und ist am Handy höher als das Glas. Ohne Angabe kappt
+   * die Browservorgabe (`max-height: calc(100% - 6px - 2em)`) unten ab — und
+   * unten steht der Fuß mit „Anlegen". Der Dialog war dann nicht zu
+   * bedienen, ohne dass etwas fehlerhaft ausgesehen hätte.
+   *
+   * Kopf und Fuß stehen fest, der Inhalt rollt. `dvh` statt `vh`, weil die
+   * Adressleiste mobiler Browser mitrechnet; die Seitenhülle macht es an
+   * zwei Stellen schon so. */
+  max-height:calc(100dvh - var(--abstand-5));
 }
+/* `display` GEHOERT AN `[open]` UND NICHT AN `.dialog` (Fund F-S9-U-27, beim
+ * Bau der Stammdaten-Dialoge). Die Browservorgabe versteckt einen
+ * geschlossenen Dialog mit `dialog:not([open]){display:none}` — eine
+ * UA-Regel, und die verliert gegen JEDE Autorenregel, ganz gleich wie
+ * spezifisch. `.dialog{display:flex}` machte damit alle fuenf Dialoge der
+ * Standortseite sichtbar: als Kaesten am Seitenende, mit Feldern, die man
+ * ausfuellen kann, und Knoepfen, die absenden. Aufgefallen ist es an einem
+ * Vollseitenbild — im Fensterausschnitt standen sie unter der Falz.
+ * Dieselbe Falle wie bei `.zeile-knoepfe` (Abschnitt 11, dort gegen
+ * `.nur-ab-720`): Ein `display` in der Grundregel schlaegt das, was den
+ * Baustein ein- und ausblendet. */
+.dialog[open]{display:flex;flex-direction:column}
+/* Fast jeder Dialog hat ein <form> zwischen sich und seinen drei Teilen; der
+ * GPX-Dialog hat keins. Die Kette muss deshalb über beide Formen laufen. */
+.dialog > form{display:flex;flex-direction:column;min-height:0}
 .dialog::backdrop{background:var(--schleier)}
-.dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0}
+.dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0;flex:0 0 auto}
 /* UNTERZEILE IM KOPF (S9/AP5-4, M-S9-07). Sie sagt, worauf sich der Dialog
  * bezieht — der Standort, zu dem das neue Rettungsmittel gehört. Das gehört
  * nicht in den Titel („Rettungsmittel an Standort Talwang anlegen" wäre eine
@@ -1715,7 +1743,9 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   margin:var(--abstand-1) 0 0;
   color:var(--gedaempft);font-size:var(--groesse-2);
 }
-.dialog-inhalt{padding:var(--abstand-4)}
+/* Der Inhalt ist der Teil, der rollt — `min-height:0`, weil ein Flexkind
+ * sonst nicht unter seine Inhaltshoehe schrumpft und dann gar nichts rollt. */
+.dialog-inhalt{padding:var(--abstand-4);overflow-y:auto;min-height:0}
 /* Ein erklärender Absatz vor den Feldern braucht Luft nach unten — sonst
  * klebt die erste Beschriftung an ihm (O9, Rückspieldialog). Der letzte
  * Absatz bekommt keine: Er steht ohnehin vor dem Fuß mit eigenem Abstand. */
@@ -1724,6 +1754,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .dialog-fuss{
   display:flex;gap:var(--abstand-3);justify-content:flex-end;
   padding:0 var(--abstand-4) var(--abstand-4);
+  flex:0 0 auto;
 }
 .dialog-fuss .knopf{flex:1 1 auto}
 

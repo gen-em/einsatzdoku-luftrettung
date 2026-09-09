@@ -27,15 +27,30 @@ der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste abgehakt ist
 
 Das steht hier oben und nicht in einer Fußnote.
 
-**Die Verwaltungsseite (AP5).** `admin_stammdaten.php` führt weiterhin die
-zwei Reiter „Standorte" und „Rettungsmittel" und ist von den Teilen 1 bis 3
-**nicht berührt** — nichts daran ist umgebaut, und nichts daran ist geprüft.
-Sie hat deshalb weiterhin den doppelten Kartentitel, keine Sprungliste und
-kein Filterfeld; das ist der Stand, kein Fehler.
-Das Konzept sieht dort dieselbe Liste und dieselbe Seite vor; die Umstellung
-steht bewusst in Teil 4, zusammen mit den Dialogen: Die Seite benutzt
-`sd_form()` an acht Stellen, und Teil 4 ersetzt genau das. Wer sie jetzt
-umbaut, baut sie zweimal. **Prüfliste Punkt 28.**
+> *Bis Teil 3 stand hier: „Die Verwaltungsseite ist von AP5 nicht berührt —
+> nichts daran ist umgebaut, und nichts daran ist geprüft." **Mit Teil 4
+> (Web 17.0.0) ist sie umgebaut**: dieselbe Liste, dieselbe Standortseite,
+> dieselben sechs Karten, dieselben fünf Dialoge. Der doppelte Kartentitel
+> ist dort ebenfalls entfallen. Was weiterhin fehlt, steht im nächsten
+> Absatz.*
+
+**Die Standortseite der Verwaltung ist nicht fotografiert.** Der
+Referenzbestand hat **keinen einzigen systemweiten Standort** (`bases` mit
+`user_id IS NULL` ist leer), und ohne einen gibt es die Seite nicht: Der
+Platzhalter `__ADMIN_STANDORT__` des Bilderlaufs bleibt unauflösbar, der Lauf
+meldet für `42a-stammdaten-standortseite` ausdrücklich **„OHNE BILD"**. Das
+ist keine Verschlechterung, nur eine lautere Fassung desselben Zustands: Der
+alte Eintrag `42a-stammdaten-rettungsmittel` zeigte einen **leeren** Reiter
+und lieferte trotzdem acht Bilder mit der Meldung „kein Überlauf" — acht
+Bilder von nichts. Was die Seite deckt, ist die Klickprobe
+(`ap5-verwaltung-besatzung-anlegen`): Sie legt einen systemweiten Standort
+samt Rettungsmittel an, misst sechs Karten, fünf Dialoge und die Landung auf
+`#crew-<id>`, macht ein Bild und räumt alles wieder ab. **Was fehlt, ist der
+Blick auf die volle Seite in acht Breiten.** Behebung: ein systemweiter
+Standort im Generator des Referenzbestands — das berührt Fixture, Prüfsummen
+und beide Kreisläufe und gehört in ein eigenes Paket (**Backlog Nr. 166**).
+**Prüfliste Punkt 31.**
+
 
 **Die Sprungliste ist nur mit sechs Marken gesehen worden.** Der
 Referenzbestand hat drei Rettungsmittel am größten Standort; die sechste
@@ -345,6 +360,30 @@ steht, ist der Stand nach Teil 2 — nicht die Abnahme von AP5.
 | Bilderlauf | **3 berührte Seiten, 24 Einzelbilder + 3 Kontaktbögen je Lauf, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** in beiden Bedienhöhen. **Die Auswahl ist erweitert**: Sie lautet jetzt `.knopf, .sprungziel` — die Pille ist `--knopf` hoch, trug die Klasse aber nicht und wäre aus der Messung gefallen (F-S9-U-25) | `tools/screenshots/aufnehmen.mjs` |
 | Wortliste, Vollständigkeit, Kontraste, Linkprobe | Wortliste **0/0/0** bei 96 Regeln — im **ersten** Lauf **1 Treffer**, und zwar in einem Satz, den dieses Paket neu geschrieben hatte („Hubschrauber, Fahrzeug, Berg …" im Handbuch); neutral gefasst, dann null. Vollständigkeit **304 = 304**. Kontraste **21 → 22 Paare, 0 verfehlt** — neu „Dunkelblau auf Orange hell", die Kombination steht seit O6 an `.kennzahl.aktiv` und `.listenfilter.aktiv` und war nie gerechnet. Linkprobe **128 Verweise, 0 unbekannte Abweichungen** | die vier Prüfmittel |
 | `Design.md` nachgezogen | **Drei neue Kapitel** (9.31 Sprungliste, 9.32 Kartenfilter, 9.33 „Zum Anfang"), Kapitel 9.0 von einer auf **fünf** Zeilen zum Thema Springen und Filtern, Kapitel 7 und 9.10 um die Dreispalten-Ausnahme, Änderungsverlauf. Erzeugte Tabellen neu: Bausteinvorrat **37 → 39 Funktionen**. Zwei Berichtigungen beim Gegenlesen (F-S9-U-26) | `tools/design/tabellen.py alle` |
+
+### AP5 Teil 4 — die Dialoge und die Verwaltungsseite (Web 17.0.0)
+
+| Soll (Konzept, E-S9-19) | Ist | Mittel |
+|---|---|---|
+| Die Eingabe unter der Liste entfällt; „Anlegen" im Kartenkopf, „Bearbeiten" im Zeilenmenü | **Erfüllt.** `grep -c "sd_form" server/` **0** (vorher 9 Aufrufe in zwei Dateien); die Standortseite trägt **5 Anlegen-Öffner** (`dlg-veh`, `dlg-crew`, `dlg-td`, `dlg-res`, `dlg-bw`) und je Zeile einen Bearbeiten-Öffner. Fünf GET-Parameter (`ev`, `ec`, `et`, `er`, `ew`) und die Schließung `$pickIn()` sind ersatzlos entfallen | Browser, eigenes Messskript |
+| Der Dialog gehört zur Karte und trägt den Standort in der **Unterzeile**, nicht als Feld | **Erfüllt.** Gemessen: Titel „Rettungsmittel anlegen", Unterzeile „Standort Luftrettungsstation Hochkreuth", Knopf „Anlegen". Beim Typ **Standard** steht der Standort als Satz unter den Feldern („Standort: … — der Dialog gehört zu seiner Seite"), bei den drei übrigen Typen als **Auswahl** | Klickprobe `ap5-dialog-anlegen-landet-auf-der-zeile`, `ap5-dialog-typ-steuert-die-felder` |
+| Feldfolge Rettungsmittel: Bezeichnung, Kurzname, **Typ vor Betriebsart**, Rollen und Fähigkeiten nur bei Standard, Fähigkeiten nur bei Luft | **Erfüllt und in beide Richtungen gemessen.** Standard + Luft: **5 sichtbare Rollen** (die Luftrollen plus „Sonstige"), Fähigkeiten **an**, Standortauswahl **aus**, Standortsatz **an**. Veranstaltung: „luftgebunden" **gesperrt**, „bodengebunden" **gesetzt**, Hinweis „bei Veranstaltung fest" **sichtbar**, **0 Rollen**, Fähigkeiten **aus**, Hinweis „keine Vorlagen" **an**, Standortauswahl **an** | Klickprobe `ap5-dialog-typ-steuert-die-felder`, zwei Bilder |
+| Die Regeln kommen aus **einer** Quelle, nicht aus einer abgetippten zweiten | **Erfüllt.** Das Seitenskript liest `VEHICLE_TYPEN` über `json_js()` — dieselbe Konstante, aus der `pruef_rettungsmittel()` entscheidet. Zwei Fassungen von vier Regeln gibt es nicht | Lesen (`server/einstellungen.php`, `server/admin_stammdaten.php`) |
+| Die Sperre im Browser ist **Anzeige**, nicht Prüfung — der Server entscheidet | **Erfüllt und eigens belegt.** Drei AP4-Wege setzen Betriebsart und Standort **ohne Ereignis** am Dialog vorbei und senden ab; der Server weist ab bzw. erzwingt: „Veranstaltung" gewählt luftgebunden → gespeichert **bodengebunden**; „Standard" ohne Standort → **1 Fehlermeldung**, die den Standort nennt, **0 angelegt** | Klickprobe `ap4-veranstaltung-boden`, `ap4-standard-braucht-standort`, `ap4-typen-anlegen` |
+| Fehler bleiben **im** Dialog | **Erfüllt.** Nach einer abgelehnten Zielklinik: Dialog **offen**, Meldung **im** Dialog („Diese Zielklinik gibt es an diesem Standort schon."), **0** Meldungen am Seitenkopf, und das Namensfeld trägt noch **den eingegebenen Wert**. Auch der leere Pflichtname (mit entferntem `required` abgeschickt): „Bitte eine Bezeichnung eintragen." im Dialog | Klickprobe `ap5-dialog-fehler-bleibt-im-dialog`, Bild; Browser |
+| Erfolg landet auf der neuen Zeile, **ohne** zusätzliche Erfolgsmeldung | **Erfüllt.** Zielklinik anlegen → Adresse **`#td-143`**, Zeile gefunden, Fläche **rgb(255, 235, 214)**, **0 Meldungen** am Seitenkopf. Rettungsmittel anlegen → `#veh-144`, Oberkante **72 px** bei 56 px Kopfleiste. Besatzung in der Verwaltung → `#crew-259` | Klickprobe (drei Wege), Bilder |
+| „Standort anlegen" landet auf der neuen Standortseite | **Erfüllt.** Verwaltung: nach dem Anlegen steht die Adresse auf **`?t=standort&s=37#k-standort`**. Im Konto derselbe Weg | Klickprobe `ap5-verwaltung-besatzung-anlegen` |
+| „Bearbeiten" füllt den Dialog aus dem Öffner, **ohne** die Seite neu zu laden | **Erfüllt: 7 von 7 Schlüsseln.** Kennung 146, Name „Alpenfalke 1", Kurzname leer, Typ `standard`, Betriebsart `air`, Rollen `fr,hems,other,p1,p2`, Fähigkeiten `bergwacht,winch` — und **die Adresse ist unverändert**. Titel „Rettungsmittel bearbeiten", Knopf „Änderung speichern" | Klickprobe `ap5-dialog-bearbeiten-ist-vorbelegt`, Bild |
+| Die geschlossenen Dialoge nehmen keinen Platz ein | **Erfüllt — nach einer Berichtigung (F-S9-U-27).** Gemessen: **5 Dialoge im Markup, davon sichtbar 0**, jeder mit `display:none`; nach dem Öffnen sichtbar **genau einer**. Vor der Berichtigung waren alle fünf sichtbar, als Kästen am Seitenende | Klickprobe `ap5-dialoge-sind-zu` |
+| Ein Formulardialog ist am Handy bedienbar | **Erfüllt.** 390 × 780 px: Dialog **756 px** hoch, Fuß bei **768 px** im Bild, Inhalt rollt (**Rollweg 279 px**), Knopfhöhe **44 px**. Am Zeigergerät bei 1280 × 900 px: **876 px** Höchsthöhe, Inhalt rollt bei aufgeklappten Rollen | Browser, eigenes Messskript, zwei Bilder |
+| Das Ortsfeld im Dialog funktioniert samt Kartendialog | **Erfüllt.** Pin-Knopf öffnet das Blatt **innerhalb** des Dialogs (`position:absolute`, 256 px breit, ganz im Bild); „Auf der Karte wählen" öffnet den Kartendialog als **zweite** modale Ebene — gemessen: `dialog[open]` = `dlg-td` **und** `dialog dialog-karte`. **0 `pageerror`** | Browser, eigenes Messskript, Bild |
+| Verwaltung → Stammdaten: dieselben Dialoge, dieselbe Landung | **Erfüllt.** Die Seite hat keine zwei Reiter mehr: `?t=standorte` ist die Liste, `?t=standort&s=<id>` die Seite mit **6 Karten** (`k-standort`, `k-rettungsmittel`, `k-besatzung`, `k-zielkliniken`, `k-weitere`, `k-bergwacht`), **3 Kennzahlen**, **5 „Zum Anfang"**, **5 Dialogen**. Die Bergwacht-Karte erscheint erst mit einem luftgebundenen Rettungsmittel — gemessen 5 Karten vorher, 6 nachher | Klickprobe `ap5-verwaltung-besatzung-anlegen`, Browser, Bild |
+| Backlog Nr. 163 (systemweite Besatzung ließ sich nicht anlegen) | **Behoben und gemessen.** Anlegen → `#crew-259`, Zeile hervorgehoben, **0 Fehlermeldungen**. Vorher: „Bitte Rolle und Namen angeben." bei ausgefüllter Rolle und ausgefülltem Namen — seit Web 9.10.0 | Klickprobe `ap5-verwaltung-besatzung-anlegen` |
+| Klickprobe (Gegenprobe: der Umbau bricht nichts) | **34 von 34** Wegen erfüllt, 0 verfehlt. Davon **6 neu** in AP5-4; die **24** älteren laufen weiter, **0 Rückstände** im Bestand. Drei AP4-Wege mussten umgestellt werden — ihr Bedienweg (Formular unter der Liste) gibt es nicht mehr | `tools/klickprobe/` |
+| Stilvergleich | Kaskade **741 → 743 Regeln**, **0 entfallen, 10 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen** — die zehn sind genau die Dialog-Regeln (`max-height`, `display`/`flex-direction` an `[open]` und am `<form>`, `min-height`, `overflow-y`, `flex:0 0 auto` an Kopf und Fuß). Berechnete Stile **45 500 Elementmessungen, 936 Abweichungen**, Pseudoprobe **dieselben 936** — sämtlich an `dialog`, `.dialog`, `.dialog-kopf`, `.dialog-inhalt`, `.dialog-fuss` und dem `<form>` darin. **Keine Abweichung außerhalb** | `tools/stilvergleich/` |
+| Wortliste, Vollständigkeit, Kontraste, Linkprobe | Wortliste **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei 96 Regeln, 96 gegriffen, 35 Dateien. Vollständigkeit **316 → 317**; der eine Unterschied ist **ein Menüpfeil „→"** in einem Kommentar von `version.php` („Verwaltung → Stammdaten"), dieselbe Art wie die sechs aus AP2. Kontraste **22 Paare, 0 verfehlt**. Linkprobe **130 Verweise, 0 unbekannte Abweichungen**, 1 bekannte mit Nummer | die vier Prüfmittel |
+| Bilderlauf | **6 von 7** berührten Seiten, **48 Einzelbilder + 6 Kontaktbögen, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** (Zeigergerät, 44/36 px). Die **siebte** — die Standortseite der Verwaltung — konnte **nicht** fotografiert werden, siehe Abschnitt 0 | `tools/screenshots/aufnehmen.mjs` |
+| `Design.md` nachgezogen | 9.11 um drei Absätze (Rollen des Inhalts mit Zahlen, `display` an `[open]`, Dialog über Dialog), Änderungsverlauf um eine Zeile. Erzeugte Tabellen neu — Bausteinvorrat **unverändert 39 Funktionen**, kein neues Token, kein neues Symbol | `tools/design/tabellen.py alle` |
 
 ## 2. Fehlerfunde
 
@@ -880,6 +919,47 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   Marken** (der Prüfstand hat drei Rettungsmittel je Standort, die sechste
   wurde für den Prüflauf angelegt und wieder gelöscht); zwölf sind
   gerechnet, nicht gesehen.
+
+- [ ] **31 — Die Standortseite der Verwaltung an einem echten Bestand (AP5, Teil 4).**
+  *Weg:* Als Administratorin `admin_stammdaten.php` öffnen, einen
+  systemweiten Standort anlegen, ein luftgebundenes Rettungsmittel mit
+  Rollen, eine Zielklinik mit Lage, eine Besatzungs-Vorbelegung und eine
+  Bergwacht-Bereitschaft eintragen. Danach bei **360 px** und am
+  Schreibtisch ansehen.
+  *Erwartet:* Sechs Karten, drei Kennzahlen, „Zum Anfang" je Karte; jeder
+  Eintrag landet nach dem Speichern auf seiner eigenen, orange
+  hervorgehobenen Zeile; die Kleinzeile der Liste nennt, wie viele Konten
+  den Standort gewählt haben.
+  *Scheitern erkennbar an:* Eine Karte fehlt, ein Dialog öffnet leer, oder
+  die Seite springt nach dem Speichern auf die Liste statt auf die Zeile.
+  **Diese Seite ist nicht fotografiert** — der Referenzbestand hat keinen
+  systemweiten Standort (Abschnitt 0, Backlog Nr. 166). Gemessen ist sie
+  nur über die Klickprobe, die den Fall selbst herstellt und wieder abräumt.
+
+- [ ] **32 — Ein Dialog mit vielen Rollen am kleinen Gerät (AP5, Teil 4).**
+  *Weg:* Am Handy die Standortseite öffnen, „Anlegen" in der Karte
+  Rettungsmittel, Betriebsart **luftgebunden** wählen — dann stehen fünf
+  Rollen- und zwei Fähigkeitshaken im Dialog. Bis zum Fuß rollen und
+  speichern.
+  *Erwartet:* Kopf und Fuß bleiben stehen, der Inhalt rollt, „Anlegen" ist
+  jederzeit erreichbar. Gemessen bei 390 × 780 px: Dialog 756 px, Fuß bei
+  768 px, Rollweg 279 px.
+  *Scheitern erkennbar an:* Der Fuß ist nicht zu sehen oder rollt aus dem
+  Bild; die Seite hinter dem Dialog rollt statt des Dialoginhalts.
+  **Ein echtes Gerät kann hier mehr sagen als der emulierte Ausschnitt** —
+  die Adressleiste mobiler Browser klappt beim Rollen ein und aus, und
+  `100dvh` rechnet das mit.
+
+- [ ] **33 — Ein Rettungsmittel von einem Standort auf einen anderen ziehen (AP5, Teil 4).**
+  *Weg:* Ein Rettungsmittel vom Typ **Bergwacht**, **Veranstaltung** oder
+  **Sonstiges** bearbeiten und im Feld „Standort" einen anderen Standort
+  wählen (oder „Ohne Standort").
+  *Erwartet:* Es steht danach auf der Seite des neuen Standorts — bzw. in
+  der Karte „Ohne Standort" auf der Liste —, und der Sprung führt dorthin.
+  Bereits dokumentierte Diensttage bleiben unverändert.
+  *Scheitern erkennbar an:* Es bleibt, wo es war, oder es verschwindet aus
+  beiden Listen. **Das ging bis Web 16.3.0 gar nicht** — der Haken „Ohne
+  Standort" konnte nur zwischen „dieser Standort" und „keiner" wechseln.
 
 - [ ] **19 — Nach dem Kurznamen suchen (AP4).**
   *Weg:* Suche öffnen, den **Kurznamen** eines Rettungsmittels eintippen, das

@@ -86,6 +86,26 @@ $noticeTon = 'info';
  * Beide null: die Karte zeigt ihren Regelfall, das Eingabefeld. */
 $koppelSitzung = null; $koppelWarten = null;
 
+/* EIN FEHLER AUS EINEM DIALOG WIRD NICHT UMGELEITET (E-S9-19, S9/AP5-4).
+ *
+ * Bis Web 16.3.0 ging jeder Fehler denselben Weg wie jede Meldung: in die
+ * Sitzung, Umleitung, Kasten am Seitenkopf. Fuer ein Formular unter der Liste
+ * war das richtig — es stand nach dem Neuladen wieder da, mit seinen Werten.
+ * Ein Dialog steht nach dem Neuladen NICHT wieder da: Er waere zu, die
+ * Eingabe waere weg, und oben stuende „Bezeichnung fehlt." ueber einer Liste,
+ * in der man gerade nichts eingegeben hat.
+ *
+ * Deshalb ist der Fehlerweg ein anderer: keine Umleitung, die Seite IST die
+ * Antwort auf den POST, der Dialog traegt Eingabe und Meldung, und das
+ * Seitenskript oeffnet ihn beim Laden (`window.edDialog.auf`). Der Preis ist
+ * die Neuladen-Warnung des Browsers — sie trifft genau den Fall, in dem
+ * ohnehin niemand neu laedt, sondern die Eingabe berichtigt.
+ *
+ * `$_POST` ist die Vorbelegung: die verworfenen Werte, nicht der Bestand.
+ * Ungeprueft ins Markup geht davon nichts — jeder Wert laeuft durch `ui_e()`.
+ */
+$dlgFehler = null;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $action = $_POST['action'] ?? '';
@@ -552,11 +572,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * „Eintrag gespeichert." und es war keiner gespeichert. Jetzt sagt sie,
      * dass es ihn schon gibt. */
     $zielId = null;
+    /* Die Kennung eines NEU angelegten Standorts — die Umleitung fuehrt auf
+     * seine Seite (E-S9-19), nicht auf die Liste, aus der er entstanden ist. */
+    $baseNeu = null;
     $sdNeuId = static function (string $dublettenmeldung) use (&$error): ?int {
         $id = (int)db()->lastInsertId();
         if ($id > 0) { return $id; }
         $error = $dublettenmeldung;
         return null;
+    };
+    /* DAS GEGENSTUECK ZUM ANLEGEN. Beim Anlegen faengt `INSERT IGNORE` die
+     * Dublette ab (oben); beim AENDERN gibt es kein `UPDATE IGNORE`, das
+     * etwas Vernuenftiges taete — es wuerfe die Zeile still weg. Also die
+     * Ausnahme fangen und dieselbe Meldung geben. Ohne diesen Zweig endete
+     * ein Umbenennen auf einen vorhandenen Namen in einer nicht gefangenen
+     * PDOException. */
+    $sdAendern = static function (string $tabelle, string $satz, array $werte,
+                                  int $id, string $dublettenmeldung) use (&$error, $userId): ?int {
+        try {
+            db()->prepare('UPDATE ' . $tabelle . ' SET ' . $satz . ' WHERE id = ? AND user_id = ?')
+                ->execute([...$werte, $id, $userId]);
+            return $id;
+        } catch (PDOException $ex) {
+            $error = ist_dublettenfehler($ex) ? $dublettenmeldung
+                   : 'Der Eintrag konnte nicht gespeichert werden.';
+            return null;
+        }
     };
     if ($action === 'base_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
@@ -567,18 +608,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * kleine Umrechnung dreimal: hier, in admin_stammdaten.php und, mit dem
          * Ortsfeld am Einsatz, waere sie ein viertes Mal entstanden. */
         [$lat, $lon] = pruef_ortspaar($_POST['lat'] ?? null, $_POST['lon'] ?? null);
-        if ($n !== '') {
-            if (stammdaten_dup_global('bases', 'name', $n)) {
-                $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
-            } elseif ($bid > 0) {
-                db()->prepare('UPDATE bases SET name = ?, lat = ?, lon = ? WHERE id = ? AND user_id = ?')
-                    ->execute([$n, $lat, $lon, $bid, $userId]);
-                $notice = 'Standort gespeichert. Bereits dokumentierte Diensttage bleiben unverändert.';
-            } else {
-                db()->prepare('INSERT IGNORE INTO bases (user_id, name, lat, lon) VALUES (?,?,?,?)')
-                    ->execute([$userId, $n, $lat, $lon]);
-                $notice = 'Standort gespeichert.';
-            }
+        /* EIN LEERER NAME BEKAM BIS WEB 16.3.0 KEINE ANTWORT (F-S9-U-28).
+         * Die Bedingung lautete `if ($n !== '')` — ohne `else`. Wer das Feld
+         * leer liess und absendete, sah die Seite neu geladen, keinen neuen
+         * Standort und keine Meldung. Das `required` im Markup faengt den
+         * Regelfall ab; es ist keine Pruefung, sondern eine Bequemlichkeit. */
+        if ($n === '') {
+            $error = 'Bitte einen Namen eintragen.';
+        } elseif (stammdaten_dup_global('bases', 'name', $n)) {
+            $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
+        } elseif ($bid > 0) {
+            db()->prepare('UPDATE bases SET name = ?, lat = ?, lon = ? WHERE id = ? AND user_id = ?')
+                ->execute([$n, $lat, $lon, $bid, $userId]);
+            $notice = 'Standort gespeichert. Bereits dokumentierte Diensttage bleiben unverändert.';
+        } else {
+            db()->prepare('INSERT IGNORE INTO bases (user_id, name, lat, lon) VALUES (?,?,?,?)')
+                ->execute([$userId, $n, $lat, $lon]);
+            /* „STANDORT ANLEGEN" LANDET AUF DER NEUEN SEITE (E-S9-19). Sie ist
+             * die Bestaetigung — und zugleich der Ort, an dem als Naechstes
+             * etwas zu tun ist: Ein Standort ohne Rettungsmittel ist ein leeres
+             * Fach. Eine Meldung „Standort gespeichert." ueber der Liste sagte
+             * dasselbe und liess einen dort stehen.
+             * `INSERT IGNORE` schweigt bei einer Dublette (eigener Bestand,
+             * `uq_user_base_name`); `$sdNeuId()` macht daraus eine Meldung. */
+            $baseNeu = $sdNeuId('Einen eigenen Standort dieses Namens gibt es schon.');
         }
     }
     if ($action === 'base_default') {
@@ -655,11 +708,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'kurz'    => $_POST['kurz'] ?? null,
             'typ'     => $_POST['typ']  ?? null,
             'kind'    => $_POST['kind'] ?? null,
-            /* Der Haken „Ohne Standort" schlägt die verborgene Kennung der
-             * Standortkarte, in der das Formular steht. Ob er zulässig ist,
-             * entscheidet nicht dieses Formular, sondern der Typ — und das
-             * prüft `pruef_rettungsmittel()`. */
-            'base_id' => empty($_POST['ohne_standort']) ? $sdBase() : null,
+            /* DER STANDORT IST EIN AUSWAHLFELD (S9/AP5-4, E-S9-19). Bis
+             * Web 16.3.0 stand hier ein Haken „Ohne Standort", der die
+             * verborgene Kennung der Standortkarte schlug — man sah beim
+             * Setzen nicht, WAS man damit überschrieb, und ein Rettungsmittel
+             * von einem Standort auf einen anderen zu verschieben ging gar
+             * nicht. Jetzt kommt die Kennung aus dem Feld; „Ohne Standort"
+             * ist dessen erster Eintrag mit dem Wert 0, und
+             * `dt_base_erlaubt()` macht daraus null. Ob das zum Typ passt,
+             * entscheidet weiterhin `pruef_rettungsmittel()`. */
+            'base_id' => $sdBase(),
             'roles'   => $_POST['roles'] ?? [],
             'caps'    => $_POST['caps']  ?? [],
         ]);
@@ -732,9 +790,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '„' . $g['daten']['name'] . '“ ist für diese Rolle bereits systemweit '
                    . 'hinterlegt und steht dir automatisch zur Verfügung.';
         } elseif ($cid > 0) {
-            db()->prepare('UPDATE crew_presets SET name = ? WHERE id = ? AND user_id = ?')
-                ->execute([$g['daten']['name'], $cid, $userId]);
-            $zielId = $cid;
+            /* DIE ROLLE WIRD MITGESCHRIEBEN (S9/AP5-4). Bis Web 16.3.0 stand
+             * hier nur `SET name = ?` — richtig, solange die Rolle eine
+             * verborgene Kennung im Formular je Rolle war und sich gar nicht
+             * ändern konnte. Der Dialog bietet sie als Feld an; ohne diese
+             * Spalte hätte eine Rollenänderung wortlos nichts getan.
+             *
+             * UND SIE KANN JETZT AUF EINE DUBLETTE LAUFEN: Der eindeutige
+             * Schlüssel `uq_user_base_role_name` deckt Standort, Rolle und
+             * Name; wer „Sabine Ortner" von Pilot 1 auf HEMS-TC schiebt, wo es
+             * sie schon gibt, bekam bisher eine Ausnahme bis zur weißen Seite.
+             * Dasselbe galt für res, bw und td beim Umbenennen — dort seit
+             * jeher, nur seltener getroffen. */
+            $zielId = $sdAendern('crew_presets', 'name = ?, role_code = ?',
+                [$g['daten']['name'], $g['daten']['rolle']], $cid,
+                'Diesen Eintrag gibt es an diesem Standort schon.');
         } else {
             db()->prepare('INSERT IGNORE INTO crew_presets (user_id, base_id, role_code, name)
                            VALUES (?,?,?,?)')
@@ -762,9 +832,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '„' . $g['daten']['name'] . '“ ist bereits systemweit hinterlegt und '
                    . 'steht dir automatisch zur Verfügung.';
         } elseif ($wid > 0) {
-            db()->prepare('UPDATE resources SET name = ? WHERE id = ? AND user_id = ?')
-                ->execute([$g['daten']['name'], $wid, $userId]);
-            $zielId = $wid;
+            $zielId = $sdAendern('resources', 'name = ?', [$g['daten']['name']], $wid,
+                'Dieses Rettungsmittel gibt es an diesem Standort schon.');
         } else {
             db()->prepare('INSERT IGNORE INTO resources (user_id, base_id, name) VALUES (?,?,?)')
                 ->execute([$userId, $g['daten']['base_id'], $g['daten']['name']]);
@@ -788,9 +857,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '„' . $g['daten']['name'] . '“ ist bereits systemweit hinterlegt und '
                    . 'steht dir automatisch zur Verfügung.';
         } elseif ($wid > 0) {
-            db()->prepare('UPDATE bw_units SET name = ? WHERE id = ? AND user_id = ?')
-                ->execute([$g['daten']['name'], $wid, $userId]);
-            $zielId = $wid;
+            $zielId = $sdAendern('bw_units', 'name = ?', [$g['daten']['name']], $wid,
+                'Diese Bereitschaft gibt es an diesem Standort schon.');
         } else {
             db()->prepare('INSERT IGNORE INTO bw_units (user_id, base_id, name) VALUES (?,?,?)')
                 ->execute([$userId, $g['daten']['base_id'], $g['daten']['name']]);
@@ -814,10 +882,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '„' . $g['daten']['name'] . '“ ist bereits systemweit hinterlegt und '
                    . 'steht dir automatisch zur Verfügung.';
         } elseif ($tid > 0) {
-            db()->prepare('UPDATE transport_dests SET name = ?, lat = ?, lon = ?
-                           WHERE id = ? AND user_id = ?')
-                ->execute([$g['daten']['name'], $lat, $lon, $tid, $userId]);
-            $zielId = $tid;
+            $zielId = $sdAendern('transport_dests', 'name = ?, lat = ?, lon = ?',
+                [$g['daten']['name'], $lat, $lon], $tid,
+                'Diese Zielklinik gibt es an diesem Standort schon.');
         } else {
             db()->prepare('INSERT IGNORE INTO transport_dests (user_id, base_id, name, lat, lon)
                            VALUES (?,?,?,?,?)')
@@ -829,6 +896,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         db()->prepare('DELETE FROM transport_dests WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
         $notice = 'Zielklinik gelöscht.';
+    }
+
+    /* Ein Fehler aus einem der fuenf Dialog-Schreibwege bleibt im Dialog
+     * (Begruendung am Kopf der Datei, bei `$dlgFehler`). Er verlaesst damit
+     * `$error` — sonst leitete die Weiche unten doch um. */
+    $dlgVon = [
+        'veh_save' => 'dlg-veh', 'crew_save' => 'dlg-crew', 'res_save' => 'dlg-res',
+        'bw_save'  => 'dlg-bw',  'td_save'   => 'dlg-td',
+    ][$action] ?? null;
+    if ($error !== null && $dlgVon !== null) {
+        $dlgFehler = ['dialog' => $dlgVon, 'meldung' => $error, 'werte' => $_POST];
+        $error = null;
     }
 
     /* Nach dem Speichern zurueck zum passenden Abschnitt umleiten. Das oeffnet
@@ -877,6 +956,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'bw_save'  => 'bw',  'bw_del'  => 'bw',
     ][$action] ?? null;
     $zurueckZiel = 'einstellungen.php?t=standorte';
+    /* Der neu angelegte Standort zieht die Umleitung auf seine eigene Seite
+     * (E-S9-19). `#k-standort` ist die erste Karte darauf. */
+    if ($baseNeu !== null) {
+        $zurueckZiel = sd_seite($baseNeu);
+        $abschnitt = 'k-standort';
+    }
     if ($abschnitt === null && $unterblock !== null) {
         $zurueckBase = (int)($_POST['base_id'] ?? 0);
         /* OHNE STANDORT GIBT ES KEINE SEITE, auf die man zurueckkehren
@@ -903,7 +988,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Erfolgsmeldung"), waere beides null, es wuerde nicht umgeleitet, und
      * die Anwendung bliebe auf dem POST-Ergebnis stehen — ohne Anker, ohne
      * `:target` und mit der Neuladen-Warnung des Browsers. */
-    if ($abschnitt !== null && ($zielId !== null || $notice !== null || $error !== null)) {
+    if ($abschnitt !== null
+        && ($zielId !== null || $baseNeu !== null || $notice !== null || $error !== null)) {
         if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
         if ($error !== null) { $_SESSION['flash_error'] = $error; }
         header('Location: ' . $zurueckZiel . '#' . $abschnitt);
@@ -1332,6 +1418,14 @@ ui_seite_start(['titel' => 'Einstellungen',
 
       $sdBases = dt_bases($userId);           // eigene + ausgewaehlte zentrale
       $sdBaseIds = array_map(static fn($b) => (int)$b['id'], $sdBases);
+      /* [Kennung => Name] fuer die Standortauswahl im Rettungsmittel-Dialog
+         (S9/AP5-4). Sie entsteht HIER und nicht auf der Standortseite: Dort
+         ist `$sdBases` gleich auf den einen Standort der Seite verkuerzt, und
+         eine Auswahl mit einem Eintrag waere keine. Zulaessig ist genau, was
+         `dt_bases()` liefert — dieselbe Menge, die `dt_base_erlaubt()` beim
+         Speichern durchlaesst. */
+      $sdBaseNamen = [];
+      foreach ($sdBases as $b) { $sdBaseNamen[(int)$b['id']] = (string)$b['name']; }
 
       // Zentrale Standorte zum Auswaehlen (E16) samt aktuellem Zustand.
       $zentral = db()->prepare('SELECT b.id, b.name, b.lat, b.lon,
@@ -1409,30 +1503,50 @@ ui_seite_start(['titel' => 'Einstellungen',
       $DEF_BASE_ID = (int)($SD_DEF['base_id'] ?? 0);
       $DEF_VEH_ID  = (int)($SD_DEF['vehicle_id'] ?? 0);
 
-      /* Bearbeiten ist nur fuer EIGENE Eintraege moeglich — zentrale Zeilen
-       * haben in der Nutzeransicht keine Bearbeiten-/Loeschen-Schaltflaechen. */
-      $pickIn = function (array $nachBase, string $param) use ($userId) {
-          $ges = (int)($_GET[$param] ?? 0);
-          if ($ges <= 0) { return null; }
-          foreach ($nachBase as $liste) {
-              foreach ($liste as $z) {
-                  if ((int)$z['id'] === $ges && (int)$z['user_id'] === $userId) { return $z; }
-              }
-          }
-          return null;
-      };
-      /* Auch die standortlosen durchsuchen — sonst laesst sich ein
-       * Rettungsmittel ohne Standort anlegen und loeschen, aber nie aendern
-       * (Fund der Gegenprobe zu AP4). `$sdVeh` ist nach Standort gebuendelt,
-       * `$sdVehOhne` eine flache Liste; `$pickIn()` erwartet die Buendelform,
-       * also wird sie in eine Buendelung mit einem einzigen Fach gegeben. */
-      $editVeh  = $pickIn($sdVeh, 'ev') ?? $pickIn(['ohne' => $sdVehOhne], 'ev');
-      $editCrew = $pickIn($sdCrew, 'ec');
-      $editTd   = $pickIn($sdTd, 'et');
-      $editRes  = $pickIn($sdRes, 'er');
-      $editBw   = $pickIn($sdBw, 'ew');
+      /* FUENF GET-PARAMETER SIND MIT S9/AP5-4 ENTFALLEN: `ev`, `ec`, `et`,
+       * `er`, `ew`. Sie waren der Bearbeiten-Weg — ein Verweis auf dieselbe
+       * Seite, der ein Formular unter der Liste mit anderen Werten fuellte.
+       * Diese Formulare gibt es nicht mehr; „Bearbeiten" oeffnet einen
+       * Dialog, und der bekommt seine Werte aus dem Oeffner, ohne dass die
+       * Seite neu laedt (E-S9-19). Mit ihnen ist `$pickIn()` gegangen, das
+       * nur sie bediente.
+       *
+       * `eb` BLEIBT: Der Standort wird weiterhin in einem Formular unter der
+       * Liste bearbeitet — die drei Dialoge des Konzepts sind die der
+       * LISTENKARTEN, und die Standortkarte ist keine Liste. */
       $editBase = null;
       foreach ($eigene as $b) { if ((int)$b['id'] === (int)($_GET['eb'] ?? 0)) { $editBase = $b; } }
+
+      /* DIE `data-w-`-KETTE EINES RETTUNGSMITTELS (S9/AP5-4).
+       *
+       * Sie steht an einer Stelle, weil sie an vier gebraucht wird: „Anlegen"
+       * im Kartenkopf der Standortseite, „Bearbeiten" in jeder Zeile dort,
+       * und dasselbe Paar auf der Standortliste fuer die Karte „Ohne
+       * Standort".
+       *
+       * DIE REIHENFOLGE IST TEIL DER SACHE. `dialog.js` laeuft die Attribute
+       * in Dokumentreihenfolge ab und loest je Auswahl und je Hakengruppe ein
+       * `change` aus; das Seitenskript haengt daran und richtet Betriebsart,
+       * Rollen, Faehigkeiten und Standortauswahl nach dem Typ aus. Steht
+       * `typ` vorn und `base` hinten, laeuft die Anpassung zuletzt ueber den
+       * fertigen Stand — sonst richtet sie sich nach einem halb gefuellten
+       * Formular. */
+      $vehKette = static function (?array $v, int $heimat): array {
+          if ($v === null) {
+              return ['titel' => 'Rettungsmittel anlegen', 'knopf' => 'Anlegen',
+                      'id' => '0', 'name' => '', 'kurz' => '',
+                      'typ' => 'standard', 'kind' => '',
+                      'rollen' => '', 'caps' => '', 'base' => (string)$heimat];
+          }
+          return ['titel' => 'Rettungsmittel bearbeiten', 'knopf' => 'Änderung speichern',
+                  'id' => (string)(int)$v['id'], 'name' => (string)$v['name'],
+                  'kurz' => (string)($v['kurz'] ?? ''),
+                  'typ' => (string)($v['typ'] ?? 'standard'),
+                  'kind' => (string)$v['kind'],
+                  'rollen' => implode(',', $v['rollen'] ?? []),
+                  'caps' => implode(',', $v['caps'] ?? []),
+                  'base' => (string)(int)($v['base_id'] ?? 0)];
+      };
 
       /* Zahl der Stammdatensaetze eines Standorts — fuer die Rueckfrage vor dem
        * Loeschen (Konzept 4.2): Das Loeschen nimmt sie mit. */
@@ -1671,25 +1785,20 @@ ui_seite_start(['titel' => 'Einstellungen',
              nichts zu suchen haben. Bis Web 16.2.1 standen sie unter der
              letzten Standortkarte und erschienen damit auf JEDER
              Standortseite; die Leiste zaehlte sie als siebten Unterpunkt mit.
-             Ein Anlegen-Formular traegt die Karte nicht: Angelegt wird ueber
-             den Haken „Ohne Standort" im Rettungsmittel-Formular eines
-             Standorts. */ ?>
+
+             SEIT S9/AP5-4 HAT DIE KARTE IHR EIGENES „ANLEGEN". Vorher fuehrte
+             „Bearbeiten" auf die Seite des ERSTEN Standorts, weil dort das
+             einzige Rettungsmittel-Formular stand — eine fremde Seite fuer
+             einen Datensatz, der zu keiner gehoert, mit einem Haken „Ohne
+             Standort" darin, der die verborgene Standortkennung schlug. Der
+             Dialog braucht keine fremde Seite: Er steht hier, und der
+             Standort ist ein Feld darin. */ ?>
     <?php if ($sdVehOhne): ?>
-      <?php
-      /* WO WIRD SO EIN EINTRAG BEARBEITET? Das Formular steht je Standort
-         einmal; ein Datensatz ohne Standort gehoert zu keinem davon. Es
-         oeffnet sich deshalb auf der Seite des ERSTEN Standorts — der Haken
-         ist darin gesetzt, die verborgene Standortkennung also folgenlos
-         (`$evOhne` in der Rettungsmittel-Karte).
-         Ohne einen einzigen Standort gaebe es diese Seite nicht. Dann
-         entfaellt der Verweis, statt ins Leere zu zeigen — anlegen laesst
-         sich ohne Standort ohnehin nichts, die Karte kann in diesem Fall also
-         nur Altbestand zeigen. AP5-4 loest das auf: Der Dialog braucht keine
-         fremde Seite. */
-      $ohneErster = $sdBases ? (int)$sdBases[0]['id'] : 0;
-      ?>
       <?php ui_karte_start(['titel' => 'Ohne Standort', 'id' => 'sd-ohne', 'zu' => true,
-                            'zahl' => count($sdVehOhne) . ' Rettungsmittel']); ?>
+                            'zahl' => count($sdVehOhne) . ' Rettungsmittel',
+                            'aktion' => ['text' => 'Anlegen', 'symbol' => 'plus',
+                                         'art' => 'orange', 'href' => '#',
+                                         'attr' => sd_oeffner('dlg-veh', $vehKette(null, 0))]]); ?>
         <p class="feld-hinweis">Bergwacht, Veranstaltung und Sonstiges brauchen keinen
            Standort. Sie haben dafür keine Vorschlagslisten — die hängen am Standort.</p>
         <section class="sd-liste" id="sd-ohne-veh">
@@ -1703,12 +1812,13 @@ ui_seite_start(['titel' => 'Einstellungen',
                 sd_zeile([
                     'name' => (string)$v['name'], 'klein' => $klein,
                     'anker' => 'sd-ohne-veh', 'praefix' => 'veh', 'id' => $vid,
+                    'zeilen_id' => true,
                     'base_id' => 0, 'zentral' => $istZentral($v),
                     'seite' => 'einstellungen.php?t=standorte',
                     'plaketten' => ui_artzeichen((string)$v['kind'], '', (string)$v['typ']),
-                    'bearbeiten_href' => $ohneErster > 0
-                        ? sd_seite($ohneErster) . '&ev=' . $vid . '#sd-' . $ohneErster . '-veh'
-                        : '',
+                    'bearbeiten_attr' => sd_oeffner('dlg-veh', $vehKette(
+                        $v + ['rollen' => $vehRollen[$vid] ?? [],
+                              'caps'   => $vehCaps[$vid] ?? []], 0)),
                     'del_action' => 'veh_del',
                     'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ löschen? '
                                  . 'Bereits dokumentierte Diensttage bleiben unverändert.',
@@ -1716,6 +1826,18 @@ ui_seite_start(['titel' => 'Einstellungen',
           endforeach; ?>
         </section>
       <?php ui_karte_ende(true); ?>
+      <?php /* Der Dialog steht auch hier — einmal, am Ende der Karte. Sein
+               „Heimatstandort" ist 0: Auf der Liste gibt es keinen, von dem
+               sich einer ablesen liesse, also bleibt die Standortauswahl in
+               jedem Typ sichtbar (siehe `sd_dialog_rettungsmittel()`). */
+            sd_dialog_rettungsmittel([
+                'seite' => 'einstellungen.php?t=standorte', 'base_id' => 0,
+                'unterzeile' => 'Ohne Standort', 'bases' => $sdBaseNamen,
+                'werte' => ($dlgFehler['dialog'] ?? '') === 'dlg-veh'
+                    ? (array)($dlgFehler['werte'] ?? []) : [],
+                'fehler' => ($dlgFehler['dialog'] ?? '') === 'dlg-veh'
+                    ? (string)($dlgFehler['meldung'] ?? '') : '',
+            ]); ?>
     <?php endif; ?>
 
   <?php else: ?>
@@ -1867,8 +1989,14 @@ ui_seite_start(['titel' => 'Einstellungen',
         ]); ?>
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
-      <?php ui_karte_start(['titel' => 'Rettungsmittel', 'id' => 'k-rettungsmittel',
-                            'zahl' => count($vehListe)]); ?>
+      <?php /* „ANLEGEN" STEHT IM KARTENKOPF (E-S9-19, M-S9-07) und nicht mehr
+               als Formular unter der Liste. Wer den zwoelften Eintrag anlegen
+               wollte, rollte vorher an elf vorbei. */
+            ui_karte_start(['titel' => 'Rettungsmittel', 'id' => 'k-rettungsmittel',
+                            'zahl' => count($vehListe),
+                            'aktion' => ['text' => 'Anlegen', 'symbol' => 'plus',
+                                         'art' => 'orange', 'href' => '#',
+                                         'attr' => sd_oeffner('dlg-veh', $vehKette(null, $bid))]]); ?>
         <section class="sd-liste" id="<?= e($anker) ?>-veh">
           <p class="feld-hinweis">Die Art entscheidet über Besatzungsrollen und die
              im Einsatzformular sichtbaren Felder. Fähigkeiten (Winde, Bergwacht)
@@ -1923,137 +2051,28 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'def_action' => 'veh_default', 'del_action' => 'veh_del',
                     'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ löschen? '
                                  . 'Bereits dokumentierte Diensttage bleiben unverändert.',
-                    'bearbeiten_href' => sd_seite($bid) . '&ev=' . $vid
-                                       . '#' . $anker . '-veh',
+                    'bearbeiten_attr' => sd_oeffner('dlg-veh', $vehKette(
+                        $v + ['rollen' => $vehRollen[$vid] ?? [],
+                              'caps'   => $vehCaps[$vid] ?? []], $bid)),
                 ]);
           endforeach; ?>
-          <?php /* EIN RETTUNGSMITTEL OHNE STANDORT WIRD AUF DIESER SEITE
-                   BEARBEITET. Das Formular steht je Standort einmal und traegt
-                   dessen Kennung verborgen mit; ein Datensatz mit
-                   `base_id = null` gehoert zu keinem davon. Ohne diese Zeile
-                   waere „Bearbeiten" in der Karte „Ohne Standort" ein Verweis,
-                   der nichts oeffnet. Der Haken „Ohne Standort" ist im
-                   Formular gesetzt, die verborgene Kennung also folgenlos.
-                   `$sdBases` ist auf dieser Seite genau EIN Standort — die
-                   Bedingung ist damit auf jeder Standortseite wahr, und die
-                   Karte auf der Liste kann auf die erste verweisen. AP5-4
-                   loest das auf: Ein Dialog braucht keine fremde Seite. */
-                $evOhne = $editVeh && $editVeh['base_id'] === null
-                       && $sdBases && (int)$sdBases[0]['id'] === $bid;
-                $evHier = ($editVeh && ((int)$editVeh['base_id'] === $bid || $evOhne))
-                        ? $editVeh : null;
-                $evRollen = $evHier ? ($vehRollen[(int)$evHier['id']] ?? []) : [];
-                $evCaps   = $evHier ? ($vehCaps[(int)$evHier['id']] ?? []) : []; ?>
-          <?php /* ---- EINGABE (Web 7.0.0 neu gefasst) -----------------------
-                   Vorher klebte alles am oberen Rand: Bezeichnung, Art,
-                   Rollenhaken und Fähigkeiten standen ohne Abstand unter der
-                   Tabelle, und es war nicht zu sehen, dass die Haken zur
-                   Eingabezeile darüber gehören und nicht zum letzten
-                   Tabelleneintrag.
-                   Jetzt umschliesst ein eigener Rahmen (`.neu-form`) die ganze
-                   Eingabe, mit Überschrift. Die Schaltfläche steht in der
-                   Eingabezeile — die Haken darunter sind Zubehör, nicht der
-                   Abschluss.
-                   UND DIE ART IST NICHT MEHR VORBELEGT: „luftgebunden" stand
-                   von selbst da, und an einem NEF-Standort war das die falsche
-                   Vorgabe, die niemand bemerkt. Ohne Auswahl weist der Server
-                   die Eingabe jetzt ab und sagt, was fehlt. */ ?>
-          <div class="listen-form">
-            <h3 class="listen-form-titel"><?= $evHier ? 'Rettungsmittel bearbeiten' : 'Rettungsmittel hinzufügen' ?></h3>
-            <form method="post" action="<?= e(sd_seite($bid)) ?>#<?= e($anker) ?>-veh" class="ac-form">
-              <?= csrf_field() ?><input type="hidden" name="action" value="veh_save">
-              <input type="hidden" name="id" value="<?= $evHier ? (int)$evHier['id'] : 0 ?>">
-              <input type="hidden" name="base_id" value="<?= $bid ?>">
-              <div class="listen-form-felder">
-                <?php ui_feld(['label' => 'Bezeichnung', 'name' => 'name',
-                               'id' => 'vehname-' . $bid, 'pflicht' => true,
-                               'platzhalter' => 'z. B. Alpenfalke 1 oder NEF Talwang 76/1',
-                               'wert' => (string)($evHier['name'] ?? ''),
-                               'attr' => ' maxlength="64"']); ?>
-                <?php /* TYP UND KURZNAME — VORLÄUFIGE FORM (AP4, E-S9-09).
-                         Das Konzept sieht für AP4 ausdrücklich die kleinstmögliche
-                         Aufnahme vor: Die Felder müssen da sein, damit Anlegen,
-                         Sichern und Einspielen einen vollständigen Kreislauf
-                         ergeben. Ihre Anordnung — Typ VOR der Art, Art bei
-                         „Veranstaltung" ausgegraut — kommt mit den neuen Dialogen
-                         in AP5 (E-S9-19). Bis dahin stehen sie hier in der
-                         vorhandenen Feldreihe, ohne eigene Gestaltung.
-                         Der Haken „Ohne Standort" ist der einzige Weg, ein
-                         Rettungsmittel der drei neuen Typen ohne Standort
-                         anzulegen: Dieses Formular steht je Standortkarte einmal
-                         und trägt dessen Kennung verborgen mit. AP5 löst das
-                         auf, indem die Standortseite die Liste führt. */ ?>
-                <?php $typOptionen = [];
-                      foreach (VEHICLE_TYPEN as $tk => $tr) { $typOptionen[$tk] = $tr['label']; }
-                      ui_feld(['label' => 'Typ', 'name' => 'typ', 'art' => 'select',
-                               'id' => 'vehtyp-' . $bid, 'optionen' => $typOptionen,
-                               'wert' => (string)($evHier['typ'] ?? 'standard')]); ?>
-                <?php ui_feld(['label' => 'Kurzname', 'name' => 'kurz',
-                               'label_zusatz' => '(optional)',
-                               'id' => 'vehkurz-' . $bid,
-                               'platzhalter' => 'z. B. AF 1',
-                               'wert' => (string)($evHier['kurz'] ?? ''),
-                               'attr' => ' maxlength="' . RM_KURZ_MAX . '"']); ?>
-                <div class="feld">
-                  <span class="feld-label">Standort</span>
-                  <label><input type="checkbox" name="ohne_standort" value="1"
-                         <?= ($evHier && $evHier['base_id'] === null) ? 'checked' : '' ?>>
-                    Ohne Standort (nur für Bergwacht, Veranstaltung, Sonstiges)</label>
-                </div>
-                <?php /* DIE ART IST NICHT VORBELEGT (Web 7.0.0): „luftgebunden"
-                         stand von selbst da, und an einem NEF-Standort war das
-                         die falsche Vorgabe, die niemand bemerkt. Ohne Auswahl
-                         weist der Server die Eingabe ab und sagt, was fehlt.
-                         Sie steuert zugleich, welche Rollen und Fähigkeiten
-                         angehakt werden können — im Browser sichtbar, auf dem
-                         Server noch einmal gefiltert. */ ?>
-                <div class="feld">
-                  <span class="feld-label">Art <span class="feld-pflicht" aria-hidden="true">*</span></span>
-                  <span class="vehkind">
-                    <label><input type="radio" name="kind" value="air" class="vehkind-radio"
-                           <?= ($evHier && $evHier['kind'] === 'air') ? 'checked' : '' ?>> luftgebunden</label>
-                    <label><input type="radio" name="kind" value="ground" class="vehkind-radio"
-                           <?= ($evHier && $evHier['kind'] === 'ground') ? 'checked' : '' ?>> bodengebunden</label>
-                  </span>
-                </div>
-              </div>
-              <div class="feld rollen-zeile">
-                <span class="feld-label">Besatzungsrollen <span class="feld-klein-inline">(optional)</span></span>
-                <span class="acroles">
-                  <?php foreach (CREW_ROLES as $rc => $rr): ?>
-                    <label class="rollehaken" data-kind="<?= e($rr['kind']) ?>">
-                      <input type="checkbox" name="roles[]" value="<?= e($rc) ?>"
-                             <?= in_array($rc, $evRollen, true) ? 'checked' : '' ?>>
-                      <?= e($rr['label']) ?></label>
-                  <?php endforeach; ?>
-                </span>
-              </div>
-              <div class="feld vehcaps-zeile">
-                <span class="feld-label">Fähigkeiten <span class="feld-klein-inline">(nur luftgebunden)</span></span>
-                <span class="acroles vehcaps">
-                  <?php foreach (VEHICLE_CAPABILITIES as $ck => $cl): ?>
-                    <label><input type="checkbox" name="caps[]" value="<?= e($ck) ?>"
-                           <?= in_array($ck, $evCaps, true) ? 'checked' : '' ?>>
-                      <?= e($cl) ?></label>
-                  <?php endforeach; ?>
-                </span>
-              </div>
-              <div class="listen-form-fuss">
-                <?= ui_knopf(['text' => $evHier ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer']) ?>
-                <?php if ($evHier): ?>
-                  <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
-                                'href' => sd_seite($bid)]) ?>
-                <?php endif; ?>
-              </div>
-            </form>
-          </div>
         </section>
 
         <?php /* BESATZUNG — nur die Rollen, die es an diesem Standort gibt. */ ?>
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
-      <?php ui_karte_start(['titel' => 'Besatzung', 'id' => 'k-besatzung',
-                            'zahl' => count($sdCrew[$bid] ?? [])]); ?>
+      <?php /* OHNE ROLLE KEIN „ANLEGEN". Die Rollen kommen von den
+               Rettungsmitteln des Standorts; steht dort keines, hat der Dialog
+               nichts anzubieten und wuerde eine leere Auswahl zeigen. Der
+               Hinweis in der Karte sagt stattdessen, woher Rollen kommen. */
+            ui_karte_start(['titel' => 'Besatzung', 'id' => 'k-besatzung',
+                            'zahl' => count($sdCrew[$bid] ?? []),
+                            'aktion' => $rollenHier ? ['text' => 'Anlegen', 'symbol' => 'plus',
+                                         'art' => 'orange', 'href' => '#',
+                                         'attr' => sd_oeffner('dlg-crew', [
+                                             'titel' => 'Besatzungsmitglied anlegen',
+                                             'knopf' => 'Anlegen', 'id' => '0', 'name' => '',
+                                             'rolle' => (string)$rollenHier[0]])] : null]); ?>
         <p class="feld-hinweis">Vorschläge für die Besatzungsfelder, je Rolle.
            Freitext bleibt überall möglich — wer aushilft, muss nicht erst hier
            eingetragen werden.</p>
@@ -2096,31 +2115,28 @@ ui_seite_start(['titel' => 'Einstellungen',
                           'base_id' => $bid, 'zentral' => $cz,
                           'del_action' => 'crew_del',
                           'del_frage' => 'Eintrag „' . $c['name'] . '“ löschen?',
-                          'bearbeiten_href' => sd_seite($bid) . '&ec=' . (int)$c['id']
-                                             . '#' . $anker . '-crew',
+                          'bearbeiten_attr' => sd_oeffner('dlg-crew', [
+                              'titel' => 'Besatzungsmitglied bearbeiten',
+                              'knopf' => 'Änderung speichern', 'id' => (string)(int)$c['id'],
+                              'name' => (string)$c['name'], 'rolle' => $rk]),
                       ]);
                   endforeach;
                   if (!$any): ?>
               <p class="feld-hinweis">Noch keine Einträge.</p>
             <?php endif; ?>
-            <?php $ecHier = ($editCrew && (int)$editCrew['base_id'] === $bid
-                             && $editCrew['role_code'] === $rk) ? $editCrew : null; ?>
-            <?php sd_form([
-                'seite' => sd_seite($bid),
-                'anker' => $anker . '-crew', 'action' => 'crew_save', 'base_id' => $bid,
-                'bearbeitet' => $ecHier, 'label' => 'Name',
-                'platzhalter' => 'Name der Person',
-                'titel_neu' => $rr['label'] . ' hinzufügen',
-                'titel_bearbeiten' => $rr['label'] . ' bearbeiten',
-                'felder_versteckt' => '<input type="hidden" name="role" value="' . ui_e($rk) . '">',
-            ]); ?>
           <?php endforeach; ?>
         </section>
 
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
       <?php ui_karte_start(['titel' => 'Zielkliniken', 'id' => 'k-zielkliniken',
-                            'zahl' => count($sdTd[$bid] ?? [])]); ?>
+                            'zahl' => count($sdTd[$bid] ?? []),
+                            'aktion' => ['text' => 'Anlegen', 'symbol' => 'plus',
+                                         'art' => 'orange', 'href' => '#',
+                                         'attr' => sd_oeffner('dlg-td', [
+                                             'titel' => 'Zielklinik anlegen', 'knopf' => 'Anlegen',
+                                             'id' => '0', 'name' => '',
+                                             'lat' => '', 'lon' => ''])]]); ?>
         <p class="feld-hinweis">Vorschläge für das Feld „Transportziel" im
            Einsatz. Koordinaten sind freiwillig; ohne sie entsteht lediglich
            kein Pin auf der Karte.</p>
@@ -2148,51 +2164,23 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'base_id' => $bid, 'zentral' => $tz,
                     'del_action' => 'td_del',
                     'del_frage' => 'Zielklinik „' . $t['name'] . '“ löschen?',
-                    'bearbeiten_href' => sd_seite($bid) . '&et=' . (int)$t['id']
-                                       . '#' . $anker . '-td',
+                    'bearbeiten_attr' => sd_oeffner('dlg-td', [
+                        'titel' => 'Zielklinik bearbeiten', 'knopf' => 'Änderung speichern',
+                        'id' => (string)(int)$t['id'], 'name' => (string)$t['name'],
+                        'lat' => (string)($t['lat'] ?? ''), 'lon' => (string)($t['lon'] ?? '')]),
                 ]);
           endforeach; ?>
-          <?php $etHier = ($editTd && (int)$editTd['base_id'] === $bid) ? $editTd : null; ?>
-          <div class="listen-form">
-            <h3 class="listen-form-titel"><?= $etHier ? 'Zielklinik bearbeiten' : 'Zielklinik hinzufügen' ?></h3>
-            <form method="post" action="<?= e(sd_seite($bid)) ?>#<?= e($anker) ?>-td">
-              <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
-              <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
-              <input type="hidden" name="base_id" value="<?= $bid ?>">
-              <?php /* Das Präfix trägt die Standortkennung: Dieses Formular steht
-                       EINMAL JE STANDORT auf der Seite, und zwei Ortsfelder mit
-                       denselben Element-Kennungen fänden beide dasselbe Feld. */
-                    $tdPraefix = 'sdtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
-              <div class="listen-form-felder">
-                <?php ui_feld(['label' => 'Name', 'name' => 'name',
-                               'id' => $tdPraefix . '-name', 'pflicht' => true,
-                               'platzhalter' => 'z. B. Klinikum Westried',
-                               'wert' => (string)($etHier['name'] ?? ''),
-                               'attr' => ' maxlength="190"']); ?>
-                <?php ui_ortsfeld([
-                        'praefix' => $tdPraefix, 'feld' => false, 'ortswahl' => true,
-                        'klasse' => 'loc-inline',
-                        'such_hinweis' => 'Lage (optional)',
-                        'lat_name' => 'lat', 'lon_name' => 'lon',
-                        'lat' => (string)($etHier['lat'] ?? ''),
-                        'lon' => (string)($etHier['lon'] ?? ''),
-                    ]); ?>
-              </div>
-              <div class="listen-form-fuss">
-                <?= ui_knopf(['text' => $etHier ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer']) ?>
-                <?php if ($etHier): ?>
-                  <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
-                                'href' => sd_seite($bid)]) ?>
-                <?php endif; ?>
-              </div>
-            </form>
-          </div>
         </section>
 
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
       <?php ui_karte_start(['titel' => 'Weitere Rettungsmittel', 'id' => 'k-weitere',
-                            'zahl' => count($sdRes[$bid] ?? [])]); ?>
+                            'zahl' => count($sdRes[$bid] ?? []),
+                            'aktion' => ['text' => 'Anlegen', 'symbol' => 'plus',
+                                         'art' => 'orange', 'href' => '#',
+                                         'attr' => sd_oeffner('dlg-res', [
+                                             'titel' => 'Weiteres Rettungsmittel anlegen',
+                                             'knopf' => 'Anlegen', 'id' => '0', 'name' => ''])]]); ?>
         <p class="feld-hinweis">Vorschläge für das Feld „Weitere Rettungsmittel"
            im Einsatz (RTW, NEF, RTH …).</p>
         <?php /* AUCH HIER DER FILTER, obwohl Konzept und Mockup nur Besatzung
@@ -2224,19 +2212,11 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'base_id' => $bid, 'zentral' => $rz,
                     'del_action' => 'res_del',
                     'del_frage' => 'Eintrag „' . $r['name'] . '“ löschen?',
-                    'bearbeiten_href' => sd_seite($bid) . '&er=' . (int)$r['id']
-                                       . '#' . $anker . '-res',
+                    'bearbeiten_attr' => sd_oeffner('dlg-res', [
+                        'titel' => 'Weiteres Rettungsmittel bearbeiten', 'knopf' => 'Änderung speichern',
+                        'id' => (string)(int)$r['id'], 'name' => (string)$r['name']]),
                 ]);
           endforeach; ?>
-          <?php $erHier = ($editRes && (int)$editRes['base_id'] === $bid) ? $editRes : null;
-                sd_form([
-                    'seite' => sd_seite($bid),
-                    'anker' => $anker . '-res', 'action' => 'res_save', 'base_id' => $bid,
-                    'bearbeitet' => $erHier, 'label' => 'Bezeichnung',
-                    'platzhalter' => 'z. B. RTW Talwang 76/85',
-                    'titel_neu' => 'Rettungsmittel hinzufügen',
-                    'titel_bearbeiten' => 'Eintrag bearbeiten',
-                ]); ?>
         </section>
 
       <?php ui_nach_oben(); ui_karte_ende(); ?>
@@ -2247,7 +2227,12 @@ ui_seite_start(['titel' => 'Einstellungen',
                und das Markup zerfiele ab dort. */ ?>
         <?php if ($hatLuft): ?>
       <?php ui_karte_start(['titel' => 'Bergwacht', 'id' => 'k-bergwacht',
-                            'zahl' => count($sdBw[$bid] ?? [])]); ?>
+                            'zahl' => count($sdBw[$bid] ?? []),
+                            'aktion' => ['text' => 'Anlegen', 'symbol' => 'plus',
+                                         'art' => 'orange', 'href' => '#',
+                                         'attr' => sd_oeffner('dlg-bw', [
+                                             'titel' => 'Bereitschaft anlegen',
+                                             'knopf' => 'Anlegen', 'id' => '0', 'name' => ''])]]); ?>
           <p class="feld-hinweis">Bereitschaften für das Feld „Bergwacht" im
              Einsatz. Der Abschnitt erscheint, weil an diesem Standort ein
              luftgebundenes Rettungsmittel steht — die Fähigkeit kommt nur
@@ -2274,22 +2259,77 @@ ui_seite_start(['titel' => 'Einstellungen',
                       'base_id' => $bid, 'zentral' => $wz,
                       'del_action' => 'bw_del',
                       'del_frage' => 'Bereitschaft „' . $w['name'] . '“ löschen?',
-                      'bearbeiten_href' => sd_seite($bid) . '&ew=' . (int)$w['id']
-                                         . '#' . $anker . '-bw',
+                      'bearbeiten_attr' => sd_oeffner('dlg-bw', [
+                          'titel' => 'Bereitschaft bearbeiten', 'knopf' => 'Änderung speichern',
+                          'id' => (string)(int)$w['id'], 'name' => (string)$w['name']]),
                   ]);
             endforeach; ?>
-            <?php $ewHier = ($editBw && (int)$editBw['base_id'] === $bid) ? $editBw : null;
-                  sd_form([
-                      'seite' => sd_seite($bid),
-                      'anker' => $anker . '-bw', 'action' => 'bw_save', 'base_id' => $bid,
-                      'bearbeitet' => $ewHier, 'label' => 'Bereitschaft',
-                      'platzhalter' => 'z. B. Bergwacht Sonnenau',
-                      'titel_neu' => 'Bereitschaft hinzufügen',
-                      'titel_bearbeiten' => 'Bereitschaft bearbeiten',
-                  ]); ?>
           </section>
       <?php ui_nach_oben(); ui_karte_ende(); ?>
         <?php endif; ?>
+      <?php /* ---- DIE DIALOGE DER SEITE (E-S9-19, M-S9-07) ------------------
+               Sie stehen EINMAL, am Ende, nicht je Liste und schon gar nicht
+               je Rolle: Ein Dialog ist ein Ort, kein Bestandteil einer Zeile.
+               Die Oeffner oben tragen, was den Fall ausmacht.
+
+               Sie stehen INNERHALB der Standortschleife, weil sie den Standort
+               kennen muessen — auf einer Standortseite ist das genau einer
+               (die Schleife laeuft einmal). Ausserhalb stuenden sie vor einem
+               `$bid`, das es dort nicht mehr gibt. */
+            $sdUnter = 'Standort ' . (string)$b['name'];
+            /* Vorbelegung und Meldung bekommt GENAU DER Dialog, dessen
+               Schreibweg abgelehnt hat — die uebrigen stehen leer da. */
+            $dlgWerte = fn(string $id): array => ($dlgFehler['dialog'] ?? '') === $id
+                ? (array)($dlgFehler['werte'] ?? []) : [];
+            $dlgMeldung = fn(string $id): string => ($dlgFehler['dialog'] ?? '') === $id
+                ? (string)($dlgFehler['meldung'] ?? '') : '';
+
+            sd_dialog_rettungsmittel([
+                'seite' => sd_seite($bid), 'base_id' => $bid, 'unterzeile' => $sdUnter,
+                'base_name' => (string)$b['name'], 'bases' => $sdBaseNamen,
+                'werte' => $dlgWerte('dlg-veh'), 'fehler' => $dlgMeldung('dlg-veh'),
+            ]);
+            if ($rollenHier) {
+                $rollenWahl = [];
+                foreach ($rollenHier as $rk) { $rollenWahl[$rk] = CREW_ROLES[$rk]['label']; }
+                sd_dialog_eintrag([
+                    'id' => 'dlg-crew', 'seite' => sd_seite($bid), 'base_id' => $bid,
+                    'unterzeile' => $sdUnter, 'action' => 'crew_save',
+                    'titel_neu' => 'Besatzungsmitglied anlegen',
+                    'label' => 'Name', 'platzhalter' => 'Name der Person',
+                    'max' => SD_NAME_MAX, 'rollen' => $rollenWahl,
+                    'hinweis' => 'Vorlage für Diensttage an diesem Standort; sie erscheint in '
+                               . 'der Vorschlagsliste des Rollenfeldes — im Diensttag und im Einsatz.',
+                    'werte' => $dlgWerte('dlg-crew'), 'fehler' => $dlgMeldung('dlg-crew'),
+                ]);
+            }
+            sd_dialog_zielklinik([
+                'seite' => sd_seite($bid), 'base_id' => $bid, 'unterzeile' => $sdUnter,
+                'praefix' => 'sdtd' . $bid,
+                'werte' => $dlgWerte('dlg-td'), 'fehler' => $dlgMeldung('dlg-td'),
+            ]);
+            $ORTSFELDER[] = 'sdtd' . $bid;
+            sd_dialog_eintrag([
+                'id' => 'dlg-res', 'seite' => sd_seite($bid), 'base_id' => $bid,
+                'unterzeile' => $sdUnter, 'action' => 'res_save',
+                'titel_neu' => 'Weiteres Rettungsmittel anlegen',
+                'label' => 'Bezeichnung', 'platzhalter' => 'z. B. RTW Talwang 76/85',
+                'max' => SD_NAME_MAX,
+                'hinweis' => 'Vorschlag im Feld „Weitere Rettungsmittel“ am Einsatz.',
+                'werte' => $dlgWerte('dlg-res'), 'fehler' => $dlgMeldung('dlg-res'),
+            ]);
+            if ($hatLuft) {
+                sd_dialog_eintrag([
+                    'id' => 'dlg-bw', 'seite' => sd_seite($bid), 'base_id' => $bid,
+                    'unterzeile' => $sdUnter, 'action' => 'bw_save',
+                    'titel_neu' => 'Bereitschaft anlegen',
+                    'label' => 'Bereitschaft', 'platzhalter' => 'z. B. Bergwacht Sonnenau',
+                    'max' => SD_NAME_MAX,
+                    'hinweis' => 'Vorschlag im Feld „Bergwacht“ am Einsatz.',
+                    'werte' => $dlgWerte('dlg-bw'), 'fehler' => $dlgMeldung('dlg-bw'),
+                ]);
+            }
+      ?>
     <?php endforeach; ?>
 
   <?php endif; ?>
@@ -2341,44 +2381,97 @@ ui_seite_start(['titel' => 'Einstellungen',
     });
     </script>
 
+    <script src="<?= asset('assets/dialog.js') ?>"></script>
     <script>
-    /* Rollen- und Fähigkeitshaken zur Art passend ein- und ausblenden (E3).
+    /* DER RETTUNGSMITTEL-DIALOG RICHTET SICH NACH DEM TYP (E-S9-09/E-S9-19).
      *
-     * Rein anzeigend: Was zulässig ist, entscheidet der Server in 'veh_save'.
-     * Diese Zeilen nehmen der Ablehnung nur die Überraschung — und verhindern,
-     * dass jemand einen Flugretter an einem NEF anhakt und sich danach fragt,
-     * wo der Haken geblieben ist.
+     * Rein anzeigend: Was zulässig ist, entscheidet der Server in 'veh_save'
+     * über `pruef_rettungsmittel()`. Diese Zeilen nehmen der Ablehnung nur die
+     * Überraschung — und verhindern, dass jemand einen Flugretter an einem NEF
+     * anhakt und sich danach fragt, wo der Haken geblieben ist.
      *
-     * OHNE GEWÄHLTE ART sind BEIDE Bereiche verborgen (Web 7.0.0). Die Art ist
-     * nicht mehr vorbelegt; Rollenhaken zu zeigen, bevor feststeht, welche
-     * überhaupt in Frage kommen, hiesse Auswahl anzubieten und sie gleich
-     * wieder wegzunehmen. */
-    document.querySelectorAll('form.ac-form').forEach(function (f) {
+     * DIE REGELN KOMMEN AUS `VEHICLE_TYPEN` und nicht aus einer zweiten,
+     * abgetippten Aufzählung hier: `betriebsart` (fest oder frei), `rollen`
+     * (hat der Typ Vorlagen?), `standort` (Pflicht?). Eine Kopie liefe beim
+     * nächsten Typ auseinander, und zwar still.
+     *
+     * OHNE GEWÄHLTE BETRIEBSART sind Rollen und Fähigkeiten verborgen
+     * (Web 7.0.0). Die Betriebsart ist nicht vorbelegt; Rollenhaken zu zeigen,
+     * bevor feststeht, welche überhaupt in Frage kommen, hiesse Auswahl
+     * anzubieten und sie gleich wieder wegzunehmen.
+     *
+     * DER STANDORT wird zum Feld, sobald der Typ keinen verlangt. Beim Typ
+     * Standard gehört das Rettungsmittel zu der Seite, auf der man steht —
+     * dann steht die Kennung fest und darunter der Satz, warum. Auf der
+     * STANDORTLISTE (`data-heimat="0"`) gibt es keine solche Seite: Dort
+     * bleibt die Auswahl in jedem Typ sichtbar. */
+    (function () {
+      var dlg = document.getElementById('dlg-veh');
+      if (!dlg) { return; }
+      var f = dlg.querySelector('form');
+      var TYPEN  = <?= json_js(VEHICLE_TYPEN) ?>;
+      var heimat = dlg.dataset.heimat || '0';
+      var typ    = f.querySelector('[name=typ]');
+      var base   = f.querySelector('#dlgveh-base');
+      var baseFeld = base.closest('.feld');
+
       function anpassen() {
+        var regel = TYPEN[typ.value] || TYPEN.standard;
+
+        /* 1. Betriebsart — bei Veranstaltung fest auf Boden. Die andere
+              Wahl wird gesperrt statt versteckt: Man soll sehen, dass es sie
+              gibt und warum sie hier nicht offensteht. */
+        var fest = regel.betriebsart;
+        f.querySelectorAll('.vehkind-radio').forEach(function (r) {
+          r.disabled = (fest !== null && r.value !== fest);
+          if (fest !== null) { r.checked = (r.value === fest); }
+        });
+        f.querySelector('[data-veh-fest]').hidden = (fest === null);
+
         var gewaehlt = f.querySelector('.vehkind-radio:checked');
         var kind = gewaehlt ? gewaehlt.value : null;
+
+        /* 2. Rollen — nur beim Typ Standard, und darin nur die zur
+              Betriebsart passenden. */
         f.querySelectorAll('.rollehaken').forEach(function (lab) {
           var k = lab.dataset.kind;
-          var passt = kind !== null && (k === 'both' || k === kind);
+          var passt = regel.rollen && kind !== null && (k === 'both' || k === kind);
           lab.hidden = !passt;
           if (!passt) { lab.querySelector('input').checked = false; }
         });
+        f.querySelector('.rollen-zeile').hidden = !regel.rollen || kind === null;
+
+        /* 3. Fähigkeiten — nur luftgebunden, und nur beim Typ Standard. */
         var caps = f.querySelector('.vehcaps-zeile');
-        if (caps) {
-          caps.hidden = (kind !== 'air');
-          if (kind !== 'air') {
-            caps.querySelectorAll('input').forEach(function (i) { i.checked = false; });
-          }
+        var capsAn = regel.rollen && kind === 'air';
+        caps.hidden = !capsAn;
+        if (!capsAn) {
+          caps.querySelectorAll('input').forEach(function (i) { i.checked = false; });
         }
-        var rollen = f.querySelector('.rollen-zeile');
-        if (rollen) { rollen.hidden = (kind === null); }
+        f.querySelector('[data-veh-ohne-vorlagen]').hidden = regel.rollen;
+
+        /* 4. Standort — Feld oder Satz. */
+        var wahl = !regel.standort || heimat === '0';
+        baseFeld.hidden = !wahl;
+        f.querySelector('[data-veh-heimat]').hidden = wahl;
+        if (!wahl) { base.value = heimat; }
       }
+
+      typ.addEventListener('change', anpassen);
       f.querySelectorAll('.vehkind-radio').forEach(function (r) {
         r.addEventListener('change', anpassen);
       });
       anpassen();
-    });
+    })();
     </script>
+<?php if ($dlgFehler !== null): ?>
+    <script>
+    /* NACH EINEM ABGELEHNTEN SPEICHERN GEHT DER DIALOG WIEDER AUF (E-S9-19).
+       Er trägt dann die verworfene Eingabe und die Meldung; `auf()` füllt
+       bewusst NICHTS nach — im Markup steht schon das Richtige. */
+    if (window.edDialog) { window.edDialog.auf(<?= json_js($dlgFehler['dialog']) ?>); }
+    </script>
+<?php endif; ?>
   <?php elseif ($tab === 'backup'): ?>
     <?php ui_titelzeile(['titel' => 'Backup']); ?>
     <?php /* DREI ZEILEN (E-P3-35). Was in der Datei steht und warum das

@@ -17,8 +17,8 @@ Mockups in `konzept-s9/mockups/`.
 > | Stand | 07.09.2026 — **Konzept freigegeben.** E-S9-01 bis -17 am 06.09.2026 bestätigt, E-S9-18 und -19 am 07.09.2026; alle sieben Mockups freigegeben (Abschnitt 6). PS-12 (Standortseiten, Backlog 152) am 07.09.2026 aufgenommen. Rahmenplan Fassung 34 trägt die Einschübe aus Abschnitt 7 |
 > | Entschieden | E-S9-01 bis E-S9-19 (Abschnitt 2) |
 > | Offen | nichts. **Frage 7 aus AP5 Teil 2 ist am 08.09.2026 entschieden:** Die Standortseite behält ihre **sechs** Karten (fünf ohne luftgebundenes Rettungsmittel); die Abnahmezahl „Unterpunkte der Leiste = vier“ ist auf sechs bzw. fünf berichtigt. **Stand `main` 07.09.2026:** Korrekturstufe 148/149 gemergt (Web 15.5.2, PR #36); Schritt 9a hat nicht begonnen. **Beschluss 07.09.2026:** Nr. 137 und 132 ganz nach S9 — S9 und 9a berühren sich in keiner Datei mehr und laufen parallel; **die Umsetzung kann sofort beginnen** (Auftrag: `Prompt-Umsetzung-S9.md`, außerhalb des Repositoriums) |
-> | Umsetzung | **AP1 bis AP4a erledigt**, **AP5 in Arbeit** (07./08.09.2026, Web 15.7.0 / 15.7.1 / 15.8.0 / 15.9.0 / 16.0.0 / 16.1.0 / 16.1.1 / 16.2.0 / 16.2.1 / 16.2.2 / **16.3.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
-> | AP5 in sechs Teilen | **1** Menü und Standortliste (erledigt, 16.2.0/16.2.1) · **2** die Standortseite (erledigt, 16.2.2) · **3** die neuen Bausteine — Sprungliste, Kartenfilter, „Zum Anfang“, `Design.md` 9 (erledigt, **16.3.0**) · **4** die drei Dialoge **und die Verwaltungsseite** · **5** Standort löschen, Variante b · **6** Buchführung und Prüflauf. **Die Verwaltung (`admin_stammdaten.php`) ist bewusst in Teil 4 gerückt** und nicht in Teil 2: Sie benutzt `sd_form()` an acht Stellen, und Teil 4 ersetzt genau das durch Dialoge — wer sie jetzt umbaut, baut sie zweimal |
+> | Umsetzung | **AP1 bis AP4a erledigt**, **AP5 in Arbeit** (07.–09.09.2026, Web 15.7.0 / 15.7.1 / 15.8.0 / 15.9.0 / 16.0.0 / 16.1.0 / 16.1.1 / 16.2.0 / 16.2.1 / 16.2.2 / 16.3.0 / **17.0.0**, Zweig `claude/go-bwucrx`) — siehe „Stand der Umsetzung" unten. Acht Arbeitspakete (Abschnitt 3), parallel zu 9a auf eigenem Zweig, Buchführung nach K7 |
+> | AP5 in sechs Teilen | **1** Menü und Standortliste (erledigt, 16.2.0/16.2.1) · **2** die Standortseite (erledigt, 16.2.2) · **3** die neuen Bausteine — Sprungliste, Kartenfilter, „Zum Anfang“, `Design.md` 9 (erledigt, 16.3.0) · **4** die drei Dialoge **und die Verwaltungsseite** (erledigt, **17.0.0**) · **5** Standort löschen, Variante b · **6** Buchführung und Prüflauf. **Die Verwaltung (`admin_stammdaten.php`) war bewusst in Teil 4 gerückt** und nicht in Teil 2: Sie benutzte `sd_form()` an acht Stellen, und Teil 4 ersetzt genau das durch Dialoge — wer sie früher umgebaut hätte, hätte sie zweimal gebaut |
 > | Fable-Schritte der Umsetzung | **vier**: die Mockups **M-S9-08 bis M-S9-10** zu den Fragen 3 bis 6 des Prüfdokuments (07.09.2026, **alle drei am 08.09.2026 freigegeben**) und **M-S9-11** zum Datum in der schmalen Leiste (08.09.2026, **Weg 2 freigegeben**) — dieses auf ausdrückliches Einverständnis des Auftraggebers **von Opus** gebaut statt von Fable (Abschnitt 6). Der Fable-Vorbehalt der Vorbereitung (PS-8.2) war im Konzept aufgelöst (Abschnitt 1.8) |
 
 > **Stand der Umsetzung**
@@ -31,7 +31,8 @@ Mockups in `konzept-s9/mockups/`.
 > | **AP4** Rettungsmittel: Typ, Kurzname, Standort optional | **erledigt** 07.09.2026 | Web **16.0.0**, Migration `2026_09_07_rettungsmittel_typ`, Nutzlast 9 → 10 | Register **45 = 45**, frische Installation und migrierte Datenbank strukturgleich (Vergleich `SHOW CREATE TABLE`); Nachfüllung **16 von 16** Diensttagen mit `vehicle_typ`; Prüfschicht **8 von 8** Fällen wie festgelegt (Rollen bei Bergwacht verworfen, Betriebsart bei Veranstaltung erzwungen, Kurzname bei 20 Zeichen auf 16 gekappt, Standard ohne Standort abgelehnt, unbekannter Typ abgelehnt); Kreisläufe **edbak 287 771 · csv 9 118 · edbak-alt 287 781 Einzelvergleiche, je 0 unerklärt** (16 / 1 021 / 653 erwartet, 0 ungenutzte Regeln); Aufwärtskompatibilität belegt: eine Nutzlast-9-Datei spielt **4 von 6** Rettungsmitteln als `standard` ein und überspringt die zwei, die es dort nicht geben konnte; Referenzbestand **3 → 6 Rettungsmittel** (je einer der vier Typen, zwei ohne Standort, zwei mit Kurznamen), über das Formular angelegt; Demo-Zurücksetzen **42 Stammdaten, 0 übersprungen**; Demo-Fixture neu, **55 861 Spurpunkte** unverändert; Klickprobe **6 von 6** Wegen, 0 Rückstände; Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen, über fünf Bereiche (178 Dateien); Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise, 0 unbekannte Abweichungen**; Bilderlauf **11 berührte Seiten, 88 Einzelbilder je Lauf, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** in beiden Bedienhöhen |
 > | **AP4a** Nachträge aus den Freigaben | **erledigt** 08.09.2026 | Web **16.1.0**, Korrekturstufe **16.1.1**, keine Migration | Klickprobe **10 von 10** Wegen (zwei Wege × fünf Breiten 390/1024/1100/1199/1280 px), je als Zeiger- und als Fingergerät, **0 Rückstände** im Bestand; Leiste an der laufenden Anwendung über neun Breiten gemessen — unter 1024 px **15 von 15** Nebentexten sichtbar (12 px Einrückung), im Band 1024–1199 px **1 von 15** (nur der Kurzname, 8 px), ab 1200 px wieder 15 von 15 (12 px); dem Kurznamen stehen im Band **64 bis 79 px** zur Verfügung — „BW Hoch" (55 px) und „NEF 76/1" (53) stehen an **jedem** Datum ganz, gemessen **13 Kurznamen, 0 Ellipsen**; mit der ersten Fassung (Einrückung 8 px) waren es 48 bis 63 px und 10 Ellipsen, ohne jede Regel keine sichtbare Zeile; Einstellungsmenü in jeder Breite **0 px** eingerückt; Vergleichsdialog Zeile „Typ" = „Standard oder Bergwacht" mit Kleinzeile, 4 Wahlzeilen davon **1** mit Typ und **1** mit Kurznamen, **0 Überlauf** bei 1280/700/390 px; Stilvergleich Kaskade 712 → 715 Regeln — **0 entfallen, 3 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **47 710 Elementmessungen, 40 Abweichungen**, sämtlich bei 1024 und 1100 px und sämtlich auf die zwei neuen Regeln zurückführbar (Pseudoprobe 19 253 Messungen, 30 Abweichungen desselben Musters); Bilderlauf **16 berührte Seiten, 128 Einzelbilder + 16 Kontaktbögen je Lauf, 0/0/0** in beiden Bedienhöhen (Gegenprobe 144 Dateien, 140 verschiedene Prüfsummen — die vier Doppelten sind Seite 10 gegen Seite 11 ab 1024 px, wo es die Schublade nicht gibt); Wortliste **0/0/0** bei 96 Regeln, 96 gegriffen; Vollständigkeit **304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise, 0 unbekannte Abweichungen**; `Design.md` neu erzeugt — **21 Medienblöcke über 5 Breiten unverändert**, also keine neue Schwelle |
 > | **AP5** Standortseiten — **Teil 1** (Menü und Liste), **Teil 2** (die Seite), **Teil 3** (die neuen Bausteine) | **in Arbeit**, Teile 1 bis 3 erledigt 08.09.2026 | Web **16.2.0**, Korrekturstufe 16.2.1, **16.2.2**, **16.3.0**, keine Migration | **Teile 1+2:** Standortseite 6 Karten mit `id` / 6 Unterpunkte, Liste 3 / 3 (vorher stand `sd-ohne` auf jeder Standortseite und machte daraus sieben — F-S9-U-19); „Zum Anfang" 6 von 6 mit einem Ziel, das auf der Seite steht (vorher 0 von 6 — F-S9-U-17); Umleitung nach dem Speichern 4 von 4 Rundläufen auf der Standortseite statt auf der Liste (F-S9-U-18). **Teil 3:** Klickprobe **4 von 4** neuen Wegen — Sprungliste bei **5 Rettungsmitteln keine Liste, bei 6 eine mit 6 Pillen, 6 Artzeichen, 6 gültigen Zielen, Pillenhöhe 36 px** (der Fall über das Formular hergestellt und zurückgestellt, weil der Referenzbestand nur 3 Rettungsmittel je Standort hat); angesprungene Zeile `#veh-108` mit Fläche **rgb(255, 235, 214)** und Oberkante **72 px** bei 56 px Kopfleiste (also ohne eigenes `scroll-margin-top`); Filter der Besatzung **11 Zeilen / 5 Rollen / 5 Formulare → „kro" 1 / 1 / 0 → „zzzz" 0 / 0 / Leerzustand → Escape 11 / 5 / 5**; Artzeichen **3 von 3** Zeilen, jedes mit Textalternative. Gegenprobe: die **24 vorhandenen** Wege laufen weiter 24 von 24, **0 Rückstände** (21 Rettungsmittel, 61 Tage, 346 Einsätze). Stilvergleich gegen 16.2.2: Kaskade **725 → 740 Regeln, 0 entfallen, 58 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **48 360 Elementmessungen, 650 Abweichungen** (seiten.html 10 Elemente je Breite, katalog.html 40, js_markup.html 0), Pseudoprobe **19 981 / 520** (40 je Breite) — darin `.sprungziel.pchover` und `.kartenfilter-x.pchover`, die Bedienzustände der neuen Bausteine; alle Abweichungen entweder eine der 15 neuen Regeln oder eine Höhenfolge im langen Katalogdokument. Bilderlauf **3 Seiten, 24 Einzelbilder je Lauf, 0/0/0** in beiden Bedienhöhen. Wortliste **0/0/0** bei 96 Regeln (ein Treffer im ersten Lauf — „Hubschrauber" in einem neuen Handbuchsatz, den die Liste zu Recht meldete); Vollständigkeit **304 = 304**; Kontraste **21 → 22 Paare, 0 verfehlt** (neu „Dunkelblau auf Orange hell"); Linkprobe **128 Verweise, 0 unbekannte Abweichungen**; `Design.md` neu erzeugt, Bausteinvorrat **37 → 39 Funktionen** |
-> | AP5 Teil 4 bis 6, AP6 bis AP8 | offen | — | — |
+> | **AP5** Standortseiten — **Teil 4** (die Dialoge und die Verwaltung) | **erledigt** 09.09.2026 | Web **17.0.0**, keine Migration | Klickprobe **34 von 34** Wegen erfüllt, davon **10 in AP5** und **6 davon neu**; Gegenprobe: die 24 vorhandenen laufen weiter, **0 Rückstände** im Bestand. Die neuen Zahlen: **5 Dialoge im Markup, davon sichtbar 0**, nach dem Öffnen sichtbar **genau einer** (F-S9-U-27); Anlegen im Dialog → Adresse **`#td-143`**, Zeile gefunden, Fläche **rgb(255, 235, 214)**, **0 Meldungen am Seitenkopf**; Fehlerweg → Dialog **offen**, Meldung **im** Dialog („Diese Zielklinik gibt es an diesem Standort schon."), **0** Meldungen am Seitenkopf, Feld trägt noch den eingegebenen Namen; Typwechsel → Standard+Luft **5 Rollen, Fähigkeiten an, keine Standortauswahl**, Veranstaltung **Luft gesperrt, Boden gesetzt, 0 Rollen, Fähigkeiten aus, Standortauswahl an**; „Bearbeiten" füllt **7 von 7** Schlüsseln aus dem Öffner (Kennung, Name, Kurzname, Typ, Betriebsart, 5 Rollen, 2 Fähigkeiten) **ohne Navigation** (Adresse unverändert); Verwaltung → Besatzung anlegen **`#crew-259`, Fläche rgb(255, 235, 214), 0 Fehlermeldungen** (Backlog Nr. 163, seit Web 9.10.0 unmöglich). Drei AP4-Wege sind auf den Dialog umgestellt und setzen Betriebsart und Standort **am Browser vorbei** — sonst prüften sie ab jetzt nur noch die Anzeige und nicht mehr die Prüfschicht. Stilvergleich gegen 16.3.0: Kaskade **741 → 743 Regeln, 0 entfallen, 10 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **45 500 Elementmessungen, 936 Abweichungen**, sämtlich an `dialog`, `.dialog`, `.dialog-kopf`, `.dialog-inhalt`, `.dialog-fuss` und dem `<form>` darin, Pseudoprobe dieselben 936. Wortliste **0 Treffer außerhalb der Ausnahmen** bei 96 Regeln, 96 gegriffen, 0 ungenutzt, 35 Dateien; Vollständigkeit **316 → 317**, der Unterschied vollständig erklärt (+1 Menüpfeil „→" in einem Kommentar von `version.php`, dieselbe Art wie die sechs aus AP2); Kontraste **22 Paare, 0 verfehlt**; Linkprobe **130 Verweise, 0 unbekannte Abweichungen**, 1 bekannte mit Nummer; Bilderlauf **6 von 7 berührten Seiten, 48 Einzelbilder + 6 Kontaktbögen, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen**. **Die siebte Seite konnte nicht fotografiert werden** — der Referenzbestand hat keinen systemweiten Standort, `__ADMIN_STANDORT__` bleibt unauflösbar (Backlog Nr. 166, neu); die Klickprobe deckt sie ab, indem sie den Fall selbst herstellt |
+> | AP5 Teil 5 und 6, AP6 bis AP8 | offen | — | — |
 >
 > **Fragen aus AP1** (Prüfdokument, Abschnitt 4): **alle drei entschieden.**
 > Am 07.09.2026 — die Besatzungsfelder des Diensttags gehören zu **AP1** (so
@@ -762,13 +763,31 @@ Fähigkeiten nur bei Standard, Fähigkeiten nur bei Luft, Standort als
 Auswahl nur bei den drei Typen), **Besatzungsmitglied** (Rolle, Name),
 **Zielklinik** (Bezeichnung, Nur-Lage-Ortsfeld mit Lupe und Pin,
 Koordinaten-Chip). Fehler bleiben im Dialog; Erfolg antwortet mit einem
-Redirect auf die Standortseite **mit `#veh-<id>`** (`#crew-`, `#dest-`):
+Redirect auf die Standortseite **mit `#veh-<id>`** (`#crew-`, `#td-` —
+*berichtigt 08.09.2026: hier stand `#dest-`, und den Vorsatz gibt es in
+dieser Anwendung nicht*):
 Die neue Zeile trägt die `id`, `:target` färbt sie Orange-hell (M-S9-05),
 `scroll-padding-top` setzt sie unter die Kopfleiste; die Sprungmarke trägt
 denselben Zustand. **Keine zusätzliche Erfolgsmeldung** am Seitenanfang —
 die hervorgehobene Zeile ist die Bestätigung. „Standort anlegen" landet auf
 der neuen Standortseite. Gilt für Verwaltung → Stammdaten ebenso. *Ort:*
 die Karten der Standortseite. Mockup M-S9-07.
+
+> *Berichtigt bei der Umsetzung (09.09.2026, Web 17.0.0): Es sind **drei
+> Funktionen und fünf Dialoge**. „Weitere Rettungsmittel" und „Bergwacht"
+> zeichnet M-S9-07 nicht; sie haben genau ein Feld — dasselbe wie das
+> Besatzungsmitglied ohne die Rolle — und bekommen deshalb dieselbe Funktion
+> mit anderen Beschriftungen. Ein einziger Dialog, der seine Beschriftungen
+> erst im Browser vom Öffner holt, ist erwogen und verworfen: Die
+> Beschriftung steht im `<label>` neben dem Pflichtstern und würde beim
+> Füllen mitgelöscht, und ein Text, den ein Skript zusammensetzt, läuft an
+> der Wortliste vorbei.*
+>
+> *Ebenfalls berichtigt: „Standort als Auswahl **nur** bei den drei Typen"
+> gilt auf einer Standortseite. Auf der **Standortliste** — dort bedient
+> derselbe Dialog die Karte „Ohne Standort" — bleibt die Auswahl in jedem
+> Typ sichtbar: Es gibt dort keine Seite, von der sich ein Standort ablesen
+> ließe.*
 
 **E-S9-15 — Zwei Wörter, zwei Dinge (R74 (6)).**
 **„Transportziel"** ist das Feld am Einsatz (es kann seit PS-7 ein Ort ohne
@@ -1253,6 +1272,60 @@ adversarischen Gegenprobe, nicht beim Schreiben; alle behoben:
   (`bergwacht.svg` 28 statt 29, `veranstaltung.svg` 8 statt 9). Die Tabelle
   war vor den letzten Codeänderungen von AP4 erzeugt und danach nicht mehr.
   Nachgezählt: Keine der in AP4a geänderten Dateien bewegt die Zahlen.
+- F-S9-U-30 — **`crew_save` schrieb die Rolle nicht mit.** `UPDATE
+  crew_presets SET name = ?` — richtig, solange die Rolle eine verborgene
+  Kennung im Formular je Rolle war und sich gar nicht ändern konnte. Der
+  Dialog bietet sie als Feld an; ohne die Spalte hätte eine Rollenänderung
+  wortlos nichts getan. Beide Fassungen (Konto und Verwaltung) schreiben sie
+  jetzt mit.
+- F-S9-U-29 — **Ein Umbenennen auf einen vorhandenen Namen endete in einer
+  weißen Seite** (Backlog Nr. 164). Beim Anlegen fängt `INSERT IGNORE` die
+  Dublette ab; beim Ändern gibt es kein Gegenstück, und der
+  Eindeutigkeitsschlüssel warf eine PDOException, die niemand fing.
+  Betroffen: Besatzung, weitere Rettungsmittel, Bergwacht und Zielkliniken
+  der Kontoansicht, seit es diese Listen gibt. Selten getroffen, solange nur
+  der Name änderbar war — mit der Rolle als Feld ein wahrscheinlicher Fall.
+  Behoben mit einer gemeinsamen Schließung `$sdAendern()`, die
+  `ist_dublettenfehler()` auswertet und dieselbe Meldung gibt wie der
+  Anlegen-Weg.
+- F-S9-U-28 — **Ein leerer Standortname wurde wortlos verworfen** (Backlog
+  Nr. 165). `base_save` prüfte `if ($n !== '')` — ohne Gegenzweig. Wer das
+  Feld leerte und absendete, sah die Seite neu geladen, keinen neuen
+  Standort und keine Meldung. Dieselbe Bauart wie F-S9-U-17 bis -19: ein Weg,
+  der nichts tut und nichts sagt.
+- F-S9-U-27 — **Alle fünf Dialoge waren sichtbar, obwohl sie geschlossen
+  waren.** Die neue Regel `.dialog{display:flex}` — nötig, damit Kopf und
+  Fuß stehen und der Inhalt rollt — schlug die Browservorgabe
+  `dialog:not([open]){display:none}`. Eine Regel des Browsers verliert gegen
+  **jede** Regel des Stylesheets, ganz gleich wie spezifisch sie ist. Die
+  Dialoge standen als Kästen am Seitenende, mit ausfüllbaren Feldern und
+  absendenden Knöpfen. **Aufgefallen an einem Vollseitenbild**; im
+  Fensterausschnitt standen sie unter der Falz, und jede Messung, die ich bis
+  dahin gefahren hatte, sagte „ok". `display` steht jetzt an
+  `.dialog[open]`; die Klickprobe misst es (`ap5-dialoge-sind-zu`, **5
+  Dialoge, davon sichtbar 0**). Dieselbe Falle wie bei `.zeile-knoepfe`
+  gegen `.nur-ab-720` — dort steht sie seit O11 im Stylesheet erklärt, und
+  ich bin trotzdem hineingelaufen.
+- **Backlog Nr. 163 — systemweite Besatzungs-Vorbelegungen ließen sich seit
+  Web 9.10.0 nicht anlegen.** Das Formular schickte `role_code`, der
+  Schreibweg las `role`; die Prüfung lief gegen eine leere Zeichenkette, und
+  die Verwaltung meldete „Bitte Rolle und Namen angeben." bei ausgefüllter
+  Rolle und ausgefülltem Namen. Zwei Jahre. Gefunden nicht von einem
+  Prüfmittel, sondern beim Lesen für den Umbau: Kein Bild zeigt eine
+  Meldung, die erst nach einem Klick erscheint, und die Klickprobe fuhr
+  diesen Weg nicht. Sie tut es jetzt.
+
+**Eine Entscheidung, die beim Bauen fiel** (E-S9-19 nennt drei Dialoge, es
+sind fünf geworden): Das Konzept und M-S9-07 kennen drei **Arten** —
+Rettungsmittel, Besatzungsmitglied, Zielklinik. „Weitere Rettungsmittel" und
+„Bergwacht" zeichnet das Mockup nicht; sie haben genau ein Feld, dasselbe wie
+das Besatzungsmitglied ohne die Rolle. Sie bekommen deshalb dieselbe
+**Funktion** mit anderen Beschriftungen — drei Funktionen, fünf Dialoge im
+Markup. Der Gegenentwurf, EIN Dialog mit Beschriftungen aus dem Öffner, ist
+erwogen und verworfen: Die Beschriftung steht im `<label>` neben dem
+Pflichtstern, `data-fuell` setzt `textContent` und würfe ihn weg — und ein
+Text, den ein Skript zusammensetzt, läuft an der Wortliste vorbei.
+
 - F-S9-U-26 — **Zwei Fehler in `Design.md`, gefunden beim Gegenlesen für die
   neuen Kapitel.** Der Absatz „Kein Symbol am Knopf" stand am Ende von 9.18a
   (Kopf einer langen Liste) und handelt vom Kopieren-Knopf aus 9.18;

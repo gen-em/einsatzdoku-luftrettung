@@ -2397,11 +2397,28 @@ getippt hast.
 - Über den **übrigen Listen** steht ein **Filterfeld** mit einer Lupe. Tippe
   ein paar Buchstaben, und es bleibt stehen, was dazu passt — sofort, ohne
   Warten. Die Rollenüberschriften der Besatzung verschwinden mit, solange
-  darunter niemand mehr steht. **Solange gefiltert wird, sind die
-  Anlegen-Formulare ausgeblendet**: Du kannst also nicht gleichzeitig filtern
-  und eintragen; leere das Feld (Kreuz rechts oder Esc), dann sind sie
-  wieder da. Der Filter verschwindet beim Neuladen — er steht nicht in der
-  Adresse und lässt sich nicht weitergeben.
+  darunter niemand mehr steht. „Anlegen" bleibt dabei erreichbar: Es steht im
+  Kartenkopf, also über dem Filter. Der Filter verschwindet beim Neuladen —
+  er steht nicht in der Adresse und lässt sich nicht weitergeben.
+
+**Angelegt und bearbeitet wird seit Web 17.0.0 in einem Dialog.** „Anlegen"
+steht rechts im Kartenkopf, „Bearbeiten" im Menü der Zeile; beide öffnen
+dasselbe Fenster über der Seite, und unter dem Titel steht, zu welchem
+Standort es gehört. Vorher stand unter jeder Liste ein Formular — wer den
+zwölften Eintrag anlegen wollte, rollte an elf vorbei, und „Bearbeiten" lud
+die Seite neu und änderte die Werte eines Formulars weiter unten, was auf
+einem Handy nicht zu sehen war.
+
+Zwei Dinge daran sind bewusst so:
+
+- **Geht etwas schief, bleibt der Dialog offen** — mit deiner Eingabe und
+  der Meldung darin. Du berichtigst, was zu berichtigen ist, und drückst
+  noch einmal.
+- **Geht es gut, gibt es keine Erfolgsmeldung.** Die Seite springt zu der
+  Zeile, die du gerade geschrieben hast, und die Zeile ist kurz orange
+  hinterlegt. Das ist die Bestätigung, und sie steht dort, wo du hinsiehst.
+  Ein neuer **Standort** führt aus demselben Grund gleich auf seine eigene
+  Seite: Dort ist als Nächstes etwas zu tun.
 
 Ein Rettungsmittel zeigt in seiner Zeile **sein Artzeichen** links vom Namen
 — es sagt Art und Typ zugleich, dasselbe Zeichen wie in der Diensttage-Leiste
@@ -2602,14 +2619,25 @@ Warnhinweis („identisch mit systemweitem Eintrag") — du kannst ihn dann bei
 Bedarf löschen.
 
 **So kommt die Verwaltung dorthin.** Die Seite pflegt dieselben sechs Bereiche
-wie eine NutzerIn unter Standorte und Rettungsmittel (9.1–9.3), jedoch für
-**alle** Konten gemeinsam; oben rechts steht die Wahl zwischen **Standorte**
-und **Rettungsmittel**. Namensgleiche Einträge werden auch hier abgelehnt;
+wie eine NutzerIn unter Standorte (9.1–9.3), jedoch für **alle** Konten
+gemeinsam. **Seit Web 17.0.0 ist sie genauso gebaut wie die Kontoansicht:**
+eine Liste der Standorte, ein Klick auf eine Zeile führt auf die Seite dieses
+Standorts mit denselben sechs Karten, denselben Kennzahlen und denselben
+Dialogen. Die Wahl zwischen „Standorte" und „Rettungsmittel" oben rechts ist
+damit entfallen — es gibt nur noch eine Liste. In der Kleinzeile jeder Zeile
+steht zusätzlich, **wie viele Konten** diesen Standort ausgewählt haben; das
+sagt vor dem Löschen, wen es trifft. Namensgleiche Einträge werden auch hier abgelehnt;
 existieren bereits persönliche Einträge mit demselben Namen bei einzelnen
 NutzerInnen, weist ein Hinweis darauf hin (keine Blockade). Seit Web 9.10.0
 gilt das auch für **Standorte** — dort fehlte der Hinweis als einzigem der
 sechs Bereiche, und ein systemweiter Standort, den ein Dutzend Konten bereits
 selbst angelegt hatte, entstand ohne jede Warnung.
+
+> **Bis Web 16.3.0 ließ sich hier keine Besatzungs-Vorbelegung anlegen.** Die
+> Seite meldete „Bitte Rolle und Namen angeben." — bei ausgefüllter Rolle und
+> ausgefülltem Namen. Ursache war ein Feldname, der auf der einen Seite anders
+> hieß als auf der anderen (Backlog Nr. 163); behoben mit Web 17.0.0. Die
+> übrigen fünf Bereiche waren nie betroffen.
 
 > **Die Seite hat seit Web 15.4.0 keinen Menüpunkt mehr** (E-S8-14) — und das
 > ist der Grund, warum sie hier steht und nicht in Kapitel 11 oder 12: Sie

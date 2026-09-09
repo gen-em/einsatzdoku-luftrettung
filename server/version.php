@@ -3344,5 +3344,99 @@ declare(strict_types=1);
  *
  * NEBENNUMMER: Es kommen Funktionen hinzu, kein Datenmodell und keine
  * Migration. `update.php` muss NICHT laufen.
+ *
+ * ---------------------------------------------------------------------------
+ * 17.0.0 — S9/AP5-4: Anlegen und Bearbeiten im Dialog; die Verwaltung
+ * bekommt dieselben Standortseiten (E-S9-19, M-S9-07).
+ *
+ * HAUPTNUMMER OHNE MIGRATION, wie schon bei 7.0.0 und 16.2.0: Das Datenmodell
+ * ist unangetastet — `update.php` muss NICHT laufen —, aber die Wege durch die
+ * Anwendung sind andere. Wer sie kennt, findet zwei Dinge an neuer Stelle:
+ *
+ *   1. DIE EINGABE STEHT NICHT MEHR UNTER DER LISTE. „Anlegen" ist ein Knopf
+ *      im Kartenkopf, „Bearbeiten" ein Eintrag im Zeilenmenue; beide oeffnen
+ *      denselben Dialog. Die zehn Formulare der Standortseite (eines je Liste,
+ *      und in der Besatzung eines je ROLLE) sind ersatzlos entfallen, mit
+ *      ihnen `sd_form()` und die fuenf GET-Parameter `ev`, `ec`, `et`, `er`,
+ *      `ew`.
+ *   2. VERWALTUNG → STAMMDATEN hat keine zwei Reiter mehr. „Standorte
+ *      systemweit" und „Rettungsmittel systemweit" sind zu einer Liste und je
+ *      einer Standortseite geworden — dieselbe Gliederung wie im Konto seit
+ *      16.2.0, dieselben sechs Karten, dieselben Kennzahlen, dieselben fuenf
+ *      Dialoge aus derselben Datei. `t=rettungsmittel` bleibt als Weiche.
+ *
+ * WARUM UEBERHAUPT. Drei Dinge waren am Formular unter der Liste falsch, und
+ * alle drei sind mit den Standortseiten schlimmer geworden: Wer den zwoelften
+ * Eintrag anlegen wollte, rollte an elf vorbei; „Bearbeiten" lud die Seite neu
+ * und aenderte still die Werte eines Formulars weiter unten (auf einem Handy
+ * sah man davon nichts); und in der Besatzungskarte stand dasselbe Formular
+ * fuenfmal, je Rolle einmal — der Kartenfilter musste sie eigens verbergen.
+ *
+ * FUENF DIALOGE AUS DREI FUNKTIONEN. E-S9-19 nennt drei ARTEN — Rettungsmittel,
+ * Besatzungsmitglied, Zielklinik — und M-S9-07 zeichnet sie. „Weitere
+ * Rettungsmittel" und „Bergwacht" zeichnet das Mockup nicht; sie haben genau
+ * ein Feld, dasselbe wie das Besatzungsmitglied ohne die Rolle. Deshalb wird
+ * `sd_dialog_eintrag()` dreimal aufgerufen. Der Gegenentwurf — EIN Dialog, der
+ * seine Beschriftungen vom Oeffner holt — ist erwogen und verworfen: Die
+ * Feldbeschriftung steht im `<label>` neben dem Pflichtstern, `data-fuell`
+ * setzt `textContent` und wuerfe ihn weg; und ein Text, der erst im Browser
+ * entsteht, laeuft an der Wortliste vorbei.
+ *
+ * DER STANDORT IST EIN FELD GEWORDEN, kein Haken. „Ohne Standort" war bis
+ * hierher ein Kaestchen, das die verborgene Kennung der Standortkarte schlug:
+ * Man sah beim Setzen nicht, WAS man ueberschrieb, und ein Rettungsmittel von
+ * einem Standort auf einen anderen zu verschieben ging gar nicht. Jetzt ist es
+ * der erste Eintrag einer Auswahl (Wert 0), und die Auswahl erscheint nur bei
+ * den drei Typen ohne Standortpflicht — beim Typ Standard steht darunter, zu
+ * welchem Standort der Dialog gehoert. Damit faellt auch der Kunstgriff, mit
+ * dem ein standortloses Rettungsmittel auf der Seite des ERSTEN Standorts
+ * bearbeitet wurde.
+ *
+ * FEHLER BLEIBEN IM DIALOG (E-S9-19). Bis hierher ging jeder Fehler denselben
+ * Weg wie jede Meldung: in die Sitzung, Umleitung, Kasten am Seitenkopf. Fuer
+ * ein Formular unter der Liste war das richtig — es stand danach wieder da,
+ * mit seinen Werten. Ein Dialog steht nach dem Neuladen nicht wieder da: Er
+ * waere zu, die Eingabe waere weg, und oben stuende „Bezeichnung fehlt" ueber
+ * einer Liste, in der man gerade nichts eingegeben hat. Der Fehlerweg leitet
+ * deshalb NICHT um; die Seite ist die Antwort auf den POST, und das
+ * Seitenskript oeffnet den Dialog wieder (`window.edDialog.auf`).
+ *
+ * DER ERFOLGSFALL HAT DAFUER KEINE MELDUNG MEHR. Die Umleitung fuehrt auf die
+ * geschriebene ZEILE (`#veh-7`), `:target` faerbt sie — das ist die
+ * Bestaetigung. Und „Standort anlegen" landet auf der neuen Standortseite:
+ * Sie ist zugleich der Ort, an dem als Naechstes etwas zu tun ist.
+ *
+ * FUENF FUNDE, DIE DABEI HERAUSKAMEN, und keiner davon war ein Bild wert:
+ *
+ *   - BACKLOG NR. 163: `crew_save` in der Verwaltung las `role`, das Formular
+ *     schickte `role_code`. Seit Web 9.10.0 meldete die Anwendung „Bitte Rolle
+ *     und Namen angeben." — bei ausgefuellter Rolle und ausgefuelltem Namen.
+ *     Eine systemweite Besatzungs-Vorbelegung liess sich zwei Jahre lang weder
+ *     anlegen noch aendern. Kein Bild zeigt eine Meldung, die erst nach einem
+ *     Klick erscheint; die Klickprobe fuhr diesen Weg bis heute nicht.
+ *   - F-S9-U-27: `.dialog{display:flex}` schlug die Browservorgabe
+ *     `dialog:not([open]){display:none}` — eine UA-Regel verliert gegen JEDE
+ *     Autorenregel. Alle fuenf Dialoge standen als Kaesten am Seitenende, mit
+ *     Feldern, die man ausfuellen kann, und Knoepfen, die absenden. Sichtbar
+ *     nur auf einem Vollseitenbild. `display` gehoert an `[open]`.
+ *   - F-S9-U-28: `base_save` prueft `if ($n !== '')` — ohne `else`. Ein leerer
+ *     Standortname wurde wortlos verworfen.
+ *   - Ein UPDATE auf einen vorhandenen Namen lief in eine ungefangene
+ *     PDOException (weisse Seite) — bei Besatzung, weiteren Rettungsmitteln,
+ *     Bergwacht und Zielkliniken. Mit der Rolle als Feld wurde daraus ein
+ *     wahrscheinlicher Fall statt eines seltenen.
+ *   - `crew_save` schrieb die ROLLE nicht mit. Das war richtig, solange sie
+ *     eine verborgene Kennung war; als Feld haette eine Rollenaenderung
+ *     wortlos nichts getan.
+ *
+ * DER DIALOG ROLLT JETZT IN SICH. `.dialog` hatte keine Hoehenangabe — das
+ * ging, solange jeder Dialog aus zwei Saetzen und zwei Knoepfen bestand. Der
+ * Rettungsmittel-Dialog hat vier Felder, fuenf Rollenhaken und zwei
+ * Faehigkeitshaken und ist am Handy hoeher als das Glas; die Browservorgabe
+ * kappte unten ab, und unten steht der Fuss mit „Anlegen". Kopf und Fuss
+ * stehen jetzt fest, der Inhalt rollt. Das trifft auch den GPX-Dialog, der
+ * dasselbe Problem hatte, ohne dass es jemand gemeldet haette.
+ *
+ * HAUPTNUMMER: Die Wege sind andere. `update.php` muss NICHT laufen.
  */
-const WEB_VERSION = '16.3.0';
+const WEB_VERSION = '17.0.0';

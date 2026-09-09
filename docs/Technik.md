@@ -80,13 +80,19 @@ Daten erst nach Server-Bestätigung.
 │   │                       eines Kontos: Kontodaten, Geräte, Konto-Backups
 │   │                       dieses Kontos mit Freigabe-Zustandszeile, Löschung
 │   ├── admin_stammdaten.php  Systemweite Stammdaten aller sechs Typen
-│   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`;
-│   │                        seit Web 9.10.0 EIN Menuepunkt „Stammdaten
-│   │                        systemweit" mit Segmentwahl in der Titelzeile)
-│   ├── stammdaten_ui.php  Zeile und Anlegen-Formular der Stammdatenlisten —
+│   │                       Seit Web 17.0.0 DIESELBE Gliederung wie im Konto:
+│   │                       `?t=standorte` ist die Liste, `?t=standort&s=<id>`
+│   │                       die Seite EINES Standorts mit sechs Karten. Die
+│   │                       Segmentwahl „Standorte / Rettungsmittel" ist
+│   │                       damit entfallen; `?t=rettungsmittel` bleibt als
+│   │                       Weiche auf die Liste
+│   ├── stammdaten_ui.php  Zeile, Dialoge und Adresse der Stammdatenlisten —
 │   │                       eine Fassung fuer die Kontoansicht
 │   │                       (einstellungen.php) und die Adminansicht
-│   │                       (admin_stammdaten.php), seit Web 9.10.0
+│   │                       (admin_stammdaten.php), seit Web 9.10.0.
+│   │                       `sd_zeile()`, `sd_seite()`, `sd_oeffner()` und die
+│   │                       drei Dialogfunktionen; `sd_form()` ist mit
+│   │                       Web 17.0.0 entfallen — angelegt wird im Dialog
 │   ├── diensttag_neu.php  Diensttag von Hand anlegen · diensttag_datum.php Datum ändern
 │   │                       · diensttag_zusammenfuehren.php  mehrfach gestartete Dienste
 │   │                         wieder zu einem Diensttag vereinen
