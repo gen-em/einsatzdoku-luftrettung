@@ -681,6 +681,24 @@ keinen, die Knopfhöhen stimmten, die Klickprobe fragte nach den neuen Feldern
 und fand sie. Zwei gleich beschriftete Felder sind keine Regelverletzung,
 sondern eine schlechte Seite — und die sieht nur, wer hinsieht.
 
+**Die Prüfmittel am Ende, mit Mittel und Zahl:**
+
+| Mittel | Ergebnis |
+|---|---|
+| Klickprobe | **76 von 76 als Zeigergerät und 76 von 76 als Fingergerät**, 0 verfehlt — je 38 Wege über 390 und 1280 px. Referenzbestand danach unverändert |
+| Bilderlauf | **360 Einzelbilder und 45 Kontaktbögen je Bedienhöhe**, **0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen**, **0 ausgefallene Aufnahmen** (Zeiger 44/36 px, Finger 44 px). Die neue Seite `12-tagesuebersicht-adhoc` zeigt den aufgeklappten Zustand, wie das Konzept es statt eines Mockups verlangt |
+| Nachlauf nach der Korrektur | Die drei berührten Seiten neu aufgenommen: **32 Einzelbilder, 4 Kontaktbögen je Bedienhöhe, 0/0/0**. Nur `index.php` war betroffen; die übrigen 41 Seiten sind von der Änderung nicht berührt |
+| Wiederherstellungsprobe | **94 Erwartungen, 0 nicht erfüllt** (P-19, Papierkorb-Mischfall eingeschlossen) |
+| Linkprobe | **99 Zielseiten, 116 Verweise, 0 unbekannte Abweichungen**, 1 bekannte mit Nummer |
+| Wortliste | **0 Treffer außerhalb der Ausnahmen** bei 96 Regeln, 96 gegriffen, 0 ungenutzt, fünf Bereiche |
+| Vollständigkeit | **316 → 322**, vollständig aufgeschlüsselt: vier „…" in Kommentaren von `api/day.php`, eines in `version.php` — und **eines sichtbar**, das „…" im Auswahleintrag „Anderes Rettungsmittel …", den das Konzept so vorschreibt |
+| Kontraste | **22 Paare gerechnet, 0 verfehlt** |
+
+Kein Stilvergleich: `server/assets/style.css` ist nicht angefasst. Die
+Betriebsart-Radios und der eingerückte Block benutzen vorhandene Bausteine
+(`.vehkind`, `.vehkind-radio`, `.schalter-abhaengig`, `.feld-vorschlag`) —
+E-S9-10 sieht dafür ausdrücklich kein Mockup vor.
+
 **Drei Regeln stehen jetzt nur noch einmal.** `pruef_typ_betriebsart()` (Typ
 und Betriebsart, geteilt von `pruef_rettungsmittel()` und
 `pruef_tagesrettungsmittel()`), `pruef_tagesrettungsmittel()` selbst (auch
