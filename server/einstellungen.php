@@ -540,6 +540,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         global $userId;
         return dt_base_erlaubt(db(), $userId, isset($_POST['base_id']) ? (int)$_POST['base_id'] : null);
     };
+    /* DIE KENNUNG DER GESCHRIEBENEN ZEILE (S9/AP5-4). Sie wird gebraucht,
+     * damit die Umleitung auf `#veh-7` zeigt und `:target` die neue Zeile
+     * faerbt — ohne sie gaebe es nach dem Anlegen keine Rueckmeldung ausser
+     * einem Satz am Seitenkopf, und genau den nimmt E-S9-19 weg.
+     *
+     * DER FALL `lastInsertId() === 0` IST KEIN ERFOLG. Die vier einfachen
+     * Listen schreiben mit `INSERT IGNORE`; greift der Eindeutigkeitsschluessel
+     * (`uq_user_base_role_name` und Geschwister), fuegt MySQL nichts ein und
+     * meldet trotzdem keinen Fehler. Bis Web 16.3.0 sagte die Anwendung dann
+     * „Eintrag gespeichert." und es war keiner gespeichert. Jetzt sagt sie,
+     * dass es ihn schon gibt. */
+    $zielId = null;
+    $sdNeuId = static function (string $dublettenmeldung) use (&$error): ?int {
+        $id = (int)db()->lastInsertId();
+        if ($id > 0) { return $id; }
+        $error = $dublettenmeldung;
+        return null;
+    };
     if ($action === 'base_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $bid = (int)($_POST['id'] ?? 0);
@@ -680,8 +698,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $insC = $pdo->prepare('INSERT IGNORE INTO vehicle_capabilities (vehicle_id, capability) VALUES (?,?)');
                 foreach ($caps as $c) { $insC->execute([$vid, $c]); }
                 $pdo->commit();
-                $notice = 'Rettungsmittel gespeichert. Bereits dokumentierte Diensttage '
-                        . 'behalten Art, Rollen und Fähigkeiten unverändert.';
+                $zielId = $vid;
             } catch (PDOException $ex) {
                 if ($pdo->inTransaction()) { $pdo->rollBack(); }
                 $error = ist_dublettenfehler($ex)
@@ -703,25 +720,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . 'unverändert.';
     }
     if ($action === 'crew_save') {
-        $role = (string)($_POST['role'] ?? '');
-        $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $cid = (int)($_POST['id'] ?? 0);
-        $bid = $sdBase();
-        if ($n !== '' && array_key_exists($role, CREW_ROLES)) {
-            if ($bid === null) {
-                $error = 'Bitte einen Standort wählen.';
-            } elseif (stammdaten_dup_global('crew_presets', 'name', $n, 'role_code', $role)) {
-                $error = '„' . $n . '“ ' . 'ist für diese Rolle bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
-            } elseif ($cid > 0) {
-                db()->prepare('UPDATE crew_presets SET name = ? WHERE id = ? AND user_id = ?')
-                    ->execute([$n, $cid, $userId]);
-                $notice = 'Eintrag gespeichert.';
-            } else {
-                db()->prepare('INSERT IGNORE INTO crew_presets (user_id, base_id, role_code, name)
-                               VALUES (?,?,?,?)')
-                    ->execute([$userId, $bid, $role, $n]);
-                $notice = 'Eintrag gespeichert.';
-            }
+        $g = pruef_stammdaten('crew_presets', [
+            'name' => $_POST['name'] ?? null, 'rolle' => $_POST['role'] ?? null,
+            'base_id' => $sdBase(),
+        ]);
+        if ($g['daten'] === null) {
+            $error = reset($g['fehler']);
+        } elseif (stammdaten_dup_global('crew_presets', 'name', $g['daten']['name'],
+                                        'role_code', $g['daten']['rolle'])) {
+            $error = '„' . $g['daten']['name'] . '“ ist für diese Rolle bereits systemweit '
+                   . 'hinterlegt und steht dir automatisch zur Verfügung.';
+        } elseif ($cid > 0) {
+            db()->prepare('UPDATE crew_presets SET name = ? WHERE id = ? AND user_id = ?')
+                ->execute([$g['daten']['name'], $cid, $userId]);
+            $zielId = $cid;
+        } else {
+            db()->prepare('INSERT IGNORE INTO crew_presets (user_id, base_id, role_code, name)
+                           VALUES (?,?,?,?)')
+                ->execute([$userId, $g['daten']['base_id'], $g['daten']['rolle'],
+                           $g['daten']['name']]);
+            $zielId = $sdNeuId('Diesen Eintrag gibt es an diesem Standort schon.');
         }
     }
     if ($action === 'crew_del') {
@@ -734,23 +753,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notice = 'Eintrag gelöscht.';
     }
     if ($action === 'res_save') {
-        $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $wid = (int)($_POST['id'] ?? 0);
-        $bid = $sdBase();
-        if ($n !== '') {
-            if ($bid === null) {
-                $error = 'Bitte einen Standort wählen.';
-            } elseif (stammdaten_dup_global('resources', 'name', $n)) {
-                $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
-            } elseif ($wid > 0) {
-                db()->prepare('UPDATE resources SET name = ? WHERE id = ? AND user_id = ?')
-                    ->execute([$n, $wid, $userId]);
-                $notice = 'Rettungsmittel gespeichert.';
-            } else {
-                db()->prepare('INSERT IGNORE INTO resources (user_id, base_id, name) VALUES (?,?,?)')
-                    ->execute([$userId, $bid, $n]);
-                $notice = 'Rettungsmittel gespeichert.';
-            }
+        $g = pruef_stammdaten('resources',
+                              ['name' => $_POST['name'] ?? null, 'base_id' => $sdBase()]);
+        if ($g['daten'] === null) {
+            $error = reset($g['fehler']);
+        } elseif (stammdaten_dup_global('resources', 'name', $g['daten']['name'])) {
+            $error = '„' . $g['daten']['name'] . '“ ist bereits systemweit hinterlegt und '
+                   . 'steht dir automatisch zur Verfügung.';
+        } elseif ($wid > 0) {
+            db()->prepare('UPDATE resources SET name = ? WHERE id = ? AND user_id = ?')
+                ->execute([$g['daten']['name'], $wid, $userId]);
+            $zielId = $wid;
+        } else {
+            db()->prepare('INSERT IGNORE INTO resources (user_id, base_id, name) VALUES (?,?,?)')
+                ->execute([$userId, $g['daten']['base_id'], $g['daten']['name']]);
+            $zielId = $sdNeuId('Dieses Rettungsmittel gibt es an diesem Standort schon.');
         }
     }
     if ($action === 'res_del') {
@@ -761,23 +779,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notice = 'Rettungsmittel gelöscht.';
     }
     if ($action === 'bw_save') {
-        $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $wid = (int)($_POST['id'] ?? 0);
-        $bid = $sdBase();
-        if ($n !== '') {
-            if ($bid === null) {
-                $error = 'Bitte einen Standort wählen.';
-            } elseif (stammdaten_dup_global('bw_units', 'name', $n)) {
-                $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
-            } elseif ($wid > 0) {
-                db()->prepare('UPDATE bw_units SET name = ? WHERE id = ? AND user_id = ?')
-                    ->execute([$n, $wid, $userId]);
-                $notice = 'Bereitschaft gespeichert.';
-            } else {
-                db()->prepare('INSERT IGNORE INTO bw_units (user_id, base_id, name) VALUES (?,?,?)')
-                    ->execute([$userId, $bid, $n]);
-                $notice = 'Bereitschaft gespeichert.';
-            }
+        $g = pruef_stammdaten('bw_units',
+                              ['name' => $_POST['name'] ?? null, 'base_id' => $sdBase()]);
+        if ($g['daten'] === null) {
+            $error = reset($g['fehler']);
+        } elseif (stammdaten_dup_global('bw_units', 'name', $g['daten']['name'])) {
+            $error = '„' . $g['daten']['name'] . '“ ist bereits systemweit hinterlegt und '
+                   . 'steht dir automatisch zur Verfügung.';
+        } elseif ($wid > 0) {
+            db()->prepare('UPDATE bw_units SET name = ? WHERE id = ? AND user_id = ?')
+                ->execute([$g['daten']['name'], $wid, $userId]);
+            $zielId = $wid;
+        } else {
+            db()->prepare('INSERT IGNORE INTO bw_units (user_id, base_id, name) VALUES (?,?,?)')
+                ->execute([$userId, $g['daten']['base_id'], $g['daten']['name']]);
+            $zielId = $sdNeuId('Diese Bereitschaft gibt es an diesem Standort schon.');
         }
     }
     if ($action === 'bw_del') {
@@ -787,27 +804,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'td_save') {
-        $n = mb_substr(trim($_POST['name'] ?? ''), 0, 190);
         $tid = (int)($_POST['id'] ?? 0);
-        $bid = $sdBase();
         [$lat, $lon] = pruef_ortspaar($_POST['lat'] ?? null, $_POST['lon'] ?? null);
-        if ($n !== '') {
-            if ($bid === null) {
-                $error = 'Bitte einen Standort wählen.';
-            } elseif (stammdaten_dup_global('transport_dests', 'name', $n)) {
-                $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
-            } elseif ($tid > 0) {
-                db()->prepare('UPDATE transport_dests SET name = ?, lat = ?, lon = ?
-                               WHERE id = ? AND user_id = ?')
-                    ->execute([$n, $lat, $lon, $tid, $userId]);
-                $notice = 'Zielklinik gespeichert. Bereits dokumentierte Einsätze bleiben '
-                        . 'unverändert.';
-            } else {
-                db()->prepare('INSERT IGNORE INTO transport_dests (user_id, base_id, name, lat, lon)
-                               VALUES (?,?,?,?,?)')
-                    ->execute([$userId, $bid, $n, $lat, $lon]);
-                $notice = 'Zielklinik gespeichert.';
-            }
+        $g = pruef_stammdaten('transport_dests',
+                              ['name' => $_POST['name'] ?? null, 'base_id' => $sdBase()]);
+        if ($g['daten'] === null) {
+            $error = reset($g['fehler']);
+        } elseif (stammdaten_dup_global('transport_dests', 'name', $g['daten']['name'])) {
+            $error = '„' . $g['daten']['name'] . '“ ist bereits systemweit hinterlegt und '
+                   . 'steht dir automatisch zur Verfügung.';
+        } elseif ($tid > 0) {
+            db()->prepare('UPDATE transport_dests SET name = ?, lat = ?, lon = ?
+                           WHERE id = ? AND user_id = ?')
+                ->execute([$g['daten']['name'], $lat, $lon, $tid, $userId]);
+            $zielId = $tid;
+        } else {
+            db()->prepare('INSERT IGNORE INTO transport_dests (user_id, base_id, name, lat, lon)
+                           VALUES (?,?,?,?,?)')
+                ->execute([$userId, $g['daten']['base_id'], $g['daten']['name'], $lat, $lon]);
+            $zielId = $sdNeuId('Diese Zielklinik gibt es an diesem Standort schon.');
         }
     }
     if ($action === 'td_del') {
@@ -872,8 +887,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ? ('sd-' . $zurueckBase . '-' . $unterblock)
             : 'sd-ohne-veh';
         if ($zurueckBase > 0) { $zurueckZiel = sd_seite($zurueckBase); }
+        /* AUF DIE GESCHRIEBENE ZEILE STATT AUF DEN ABSCHNITT (E-S9-19,
+           S9/AP5-4). Wer etwas angelegt hat, will es sehen — nicht den
+           Anfang der Liste, in der es irgendwo steht. `:target` faerbt sie,
+           `scroll-padding-top` setzt sie unter die Kopfleiste. Der
+           Abschnittsanker bleibt der Rueckfall fuer das Loeschen: Die Zeile,
+           auf die er zeigte, gibt es dann nicht mehr. */
+        if ($zielId !== null && $unterblock !== null) {
+            $abschnitt = $unterblock . '-' . $zielId;
+        }
     }
-    if ($abschnitt !== null && ($notice !== null || $error !== null)) {
+    /* UMGELEITET WIRD, WENN ES EIN ZIEL GIBT — nicht, wenn es eine Meldung
+     * gibt. Bis Web 16.3.0 hing die Umleitung an `notice || error`; nimmt man
+     * dem Erfolgsfall seine Meldung weg (E-S9-19: „keine zusaetzliche
+     * Erfolgsmeldung"), waere beides null, es wuerde nicht umgeleitet, und
+     * die Anwendung bliebe auf dem POST-Ergebnis stehen — ohne Anker, ohne
+     * `:target` und mit der Neuladen-Warnung des Browsers. */
+    if ($abschnitt !== null && ($zielId !== null || $notice !== null || $error !== null)) {
         if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
         if ($error !== null) { $_SESSION['flash_error'] = $error; }
         header('Location: ' . $zurueckZiel . '#' . $abschnitt);

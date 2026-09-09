@@ -40,6 +40,37 @@
  * kein Wert bereit, bleibt das Feld leer statt mit einem geratenen Eintrag
  * gefüllt.
  *
+ * HAKEN UND RADIOS (S9/AP5-4). Bis Web 16.3.0 setzte `fuellen()` an jedem
+ * Ziel `value` oder `textContent` — `checked` kam nicht vor, und je Schlüssel
+ * wurde genau EIN Element getroffen (`querySelector`). Für die Stammdaten
+ * reicht das nicht: Ein Rettungsmittel hat eine Betriebsart (zwei Radios),
+ * bis fünf Besatzungsrollen und zwei Fähigkeiten (sieben Kästchen). Jetzt
+ * gilt:
+ *
+ *   - Ein Ziel, das `checkbox` oder `radio` ist, bekommt `checked` statt
+ *     `value` — und zwar aus einer MENGE: `data-w-rollen="pilot1,hemstc"`
+ *     setzt jedes Kästchen, dessen `value` darin vorkommt, und löscht jedes
+ *     andere. Eine leere Menge löscht alle.
+ *   - Je Schlüssel werden ALLE Ziele bedient (`querySelectorAll`), nicht das
+ *     erste. Sieben Kästchen tragen denselben `data-fuell`.
+ *
+ * PROGRAMMATISCH ÖFFNEN (`window.edDialog.auf`). Bis hierher war die ganze
+ * Schnittstelle deklarativ, und eine Seite konnte keinen Dialog von sich aus
+ * öffnen. Das braucht der Fehlerweg: Schlägt das Speichern fehl, zeichnet der
+ * Server die Seite mit dem vorbelegten Dialog und dessen Meldung, und das
+ * Seitenskript öffnet ihn beim Laden. `blatt.js` hat für denselben Zweck
+ * seit Langem `window.edBlatt.zu`.
+ *
+ * BEIM ÖFFNEN AUS EINEM AKTIONSBLATT schliesst sich das Blatt (`edBlatt.zu`).
+ * `blatt.js` schliesst ausdrücklich NICHT, wenn der Klick einen Eintrag im
+ * Blatt selbst trifft — der Dialog stünde sonst vor einem offenen Blatt, und
+ * hinter dem Schleier bliebe es liegen, bis jemand daneben tippt.
+ *
+ * EIN KLICK-ÖFFNER SETZT DAS FORMULAR ZURÜCK, `auf()` NICHT. Ein zweites
+ * Öffnen zeigte sonst die Werte des vorigen Falls an jedem Feld, zu dem der
+ * neue Öffner nichts sagt. Der Fehlerweg darf das nicht — dort steht im
+ * Markup gerade das, was die NutzerIn eingegeben hat.
+ *
  * OHNE showModal() PASSIERT NICHTS. <dialog> ist seit 2022 überall da; sollte
  * es doch fehlen, öffnet sich kein Dialog, statt dass ein halb sichtbares
  * Formular ohne Schleier stehen bleibt.
@@ -62,24 +93,63 @@
     if (feld.options.length) { feld.selectedIndex = 0; }
   }
 
+  /* Ein Kaestchen oder Radio ist gesetzt, wenn sein `value` in der Menge des
+     Oeffners steht. Leere Menge heisst: alle aus. */
+  function istHaken(el) {
+    return el.tagName === 'INPUT' && (el.type === 'checkbox' || el.type === 'radio');
+  }
+
   function fuellen(dialog, oeffner) {
     var attrs = oeffner.attributes;
     for (var i = 0; i < attrs.length; i++) {
       var name = attrs[i].name;
       if (name.indexOf('data-w-') !== 0) { continue; }
       var schluessel = name.slice(7);
+      var wert = attrs[i].value;
       var liste = dialog.querySelector('[data-fuell-optionen="' + schluessel + '"]');
-      if (liste) { optionenSetzen(liste, attrs[i].value); }
-      var ziel = dialog.querySelector('[data-fuell="' + schluessel + '"]');
-      if (!ziel) { continue; }
-      if ('value' in ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'SELECT'
-          || ziel.tagName === 'TEXTAREA')) {
-        ziel.value = attrs[i].value;
-      } else {
-        ziel.textContent = attrs[i].value;
+      if (liste) { optionenSetzen(liste, wert); }
+      /* ALLE Ziele, nicht das erste: sieben Kaestchen tragen denselben
+         Schluessel. */
+      var ziele = dialog.querySelectorAll('[data-fuell="' + schluessel + '"]');
+      if (!ziele.length) { continue; }
+      var menge = String(wert).split(',');
+      for (var j = 0; j < ziele.length; j++) {
+        var ziel = ziele[j];
+        if (istHaken(ziel)) {
+          ziel.checked = menge.indexOf(ziel.value) !== -1;
+        } else if ('value' in ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'SELECT'
+            || ziel.tagName === 'TEXTAREA')) {
+          ziel.value = wert;
+        } else {
+          ziel.textContent = wert;
+        }
+      }
+      /* Ein `change` je Menge, damit eine Seite, die auf die Auswahl hoert
+         (Typ steuert Rollen und Faehigkeiten), nach dem Fuellen denselben
+         Weg geht wie nach einem Klick. Von Hand gesetzte Werte loesen kein
+         Ereignis aus. */
+      if (ziele.length && (istHaken(ziele[0]) || ziele[0].tagName === 'SELECT')) {
+        ziele[0].dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
   }
+
+  /** Einen Dialog oeffnen, ohne dass jemand geklickt hat. */
+  function oeffne(dialog, oeffner) {
+    if (!dialog || typeof dialog.showModal !== 'function') { return false; }
+    if (oeffner) { fuellen(dialog, oeffner); }
+    if (!dialog.open) { dialog.showModal(); }
+    var erstes = dialog.querySelector('input:not([type=hidden]),select,textarea');
+    if (erstes) { erstes.focus(); }
+    return true;
+  }
+
+  /* Der Namensraum. `blatt.js` hat seit Langem `window.edBlatt`; hier fehlte
+     das Gegenstueck, und ohne es kann der Fehlerweg seinen Dialog nicht
+     wieder aufmachen. */
+  window.edDialog = {
+    auf: function (id) { return oeffne(document.getElementById(id), null); }
+  };
 
   document.addEventListener('click', function (ev) {
     if (!ev.target.closest) { return; }
@@ -89,13 +159,20 @@
       var d = document.getElementById(oeffner.getAttribute('data-dialog'));
       if (!d || typeof d.showModal !== 'function') { return; }
       ev.preventDefault();
-      fuellen(d, oeffner);
-      if (!d.open) { d.showModal(); }
-      /* Der Fokus auf das erste Feld, das etwas verlangt — bei der
-         Adressbestätigung ist das genau das Feld, um dessentwillen es den
-         Dialog gibt. */
-      var erstes = d.querySelector('input:not([type=hidden]),select,textarea');
-      if (erstes) { erstes.focus(); }
+      /* DAS AKTIONSBLATT SCHLIESSEN, aus dem der Klick kam. `blatt.js`
+         schliesst nicht von selbst, wenn der Klick einen Eintrag IM Blatt
+         trifft — der Dialog stuende sonst vor einem offenen Blatt. */
+      if (window.edBlatt && typeof window.edBlatt.zu === 'function'
+          && oeffner.closest('.blatt')) {
+        window.edBlatt.zu();
+      }
+      /* ZURUECKSETZEN VOR DEM FUELLEN: Ein zweites Oeffnen zeigte sonst die
+         Werte des vorigen Falls an jedem Feld, zu dem dieser Oeffner nichts
+         sagt. `auf()` tut das mit Absicht NICHT — dort steht im Markup
+         gerade, was die NutzerIn eingegeben hat. */
+      var form = d.querySelector('form');
+      if (form && typeof form.reset === 'function') { form.reset(); }
+      oeffne(d, oeffner);
       return;
     }
 

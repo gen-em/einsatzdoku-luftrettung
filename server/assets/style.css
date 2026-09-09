@@ -1685,8 +1685,16 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* == 15. DIALOG ============================================================
  *
- * Bestätigen, Entsperren, Rückspielen, Karte wählen: am Desktop eine Karte im
- * Schleier, mobil ein Blatt von unten (E-P3-27, 5.3).
+ * Bestätigen, Entsperren, Rückspielen, Karte wählen, Stammdaten anlegen: eine
+ * Karte im Schleier — **in jeder Breite**.
+ *
+ * HIER STAND „am Desktop eine Karte im Schleier, mobil ein Blatt von unten"
+ * (E-P3-27, 5.3), und `Design.md` 9.11 sagte es nach. Es stimmt nicht und hat
+ * nie gestimmt: Zu `.dialog` gibt es in diesem Stylesheet **keine einzige
+ * Medienabfrage**. Das Blatt (`.blatt`, Abschnitt 10) ist ein eigener
+ * Baustein mit eigenem Skript und eigenem Markup — es ersetzt keinen Dialog,
+ * es steht neben ihm. Berichtigt in S9/AP5-4, als der Satz beim Bau der
+ * Stammdaten-Dialoge zum ersten Mal jemanden in die Irre geführt hat.
  */
 .dialog{
   border:0;padding:0;
@@ -1698,6 +1706,15 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 }
 .dialog::backdrop{background:var(--schleier)}
 .dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0}
+/* UNTERZEILE IM KOPF (S9/AP5-4, M-S9-07). Sie sagt, worauf sich der Dialog
+ * bezieht — der Standort, zu dem das neue Rettungsmittel gehört. Das gehört
+ * nicht in den Titel („Rettungsmittel an Standort Talwang anlegen" wäre eine
+ * Zeile, die umbricht) und nicht ins Formular (es ist kein Feld, es ist der
+ * Zusammenhang). Dieselbe Rolle wie `.titelzeile-unter` an einer Seite. */
+.dialog-kopf .unterzeile{
+  margin:var(--abstand-1) 0 0;
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
 .dialog-inhalt{padding:var(--abstand-4)}
 /* Ein erklärender Absatz vor den Feldern braucht Luft nach unten — sonst
  * klebt die erste Beschriftung an ihm (O9, Rückspieldialog). Der letzte

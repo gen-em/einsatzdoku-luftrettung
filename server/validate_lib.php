@@ -879,3 +879,96 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
         'fehler' => [],
     ];
 }
+
+
+/* ---------------------------------------------------------------------------
+ * DIE VIER EINFACHEN STAMMDATENLISTEN                          S9/AP5-4
+ *
+ * Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel und
+ * Bergwacht-Bereitschaften folgen demselben Muster: ein Name, ein Standort,
+ * bei der Besatzung eine Rolle dazu. Bis Web 16.3.0 stand diese Pruefung
+ * ACHTMAL ausgeschrieben — viermal in `einstellungen.php`, viermal in
+ * `admin_stammdaten.php` — und die acht Fassungen waren nicht gleich:
+ *
+ *   - Die Kontoansicht meldete bei LEEREM NAMEN gar nichts. Kein `notice`,
+ *     kein `error`, also auch keine Umleitung: Der POST versickerte
+ *     wortlos, und die Seite kam als POST-Ergebnis zurueck, als waere nichts
+ *     gewesen. Die Verwaltung meldete an derselben Stelle „Bitte einen Namen
+ *     eintragen." Mit einem Dialog faellt das auf, weil er zugeht.
+ *   - Die Zielklinik hiess im Konto „Name" mit 190 Zeichen, in der Verwaltung
+ *     „Bezeichnung" mit 120 im Formular und 190 im Handler.
+ *
+ * `CLAUDE.md` 4 sagt: Einsatzdaten laufen ueber die gemeinsame Pruefschicht,
+ * alle Schreibwege, ohne Ausnahme. Fuer die Stammdaten galt das bisher nur
+ * beim Rettungsmittel.
+ *
+ * DIE OBERGRENZEN STEHEN HIER UND NICHT IM FORMULAR. `maxlength` im Markup
+ * ist eine Bequemlichkeit fuer die Tippende, keine Regel — wer die Seite
+ * umgeht, umgeht auch das Attribut. Die Zahlen sind die des Schemas.
+ * ------------------------------------------------------------------------ */
+const SD_NAME_MAX = 120;   // crew_presets, resources, bw_units
+const SD_ZIEL_MAX = 190;   // transport_dests — laengere Klinikbezeichnungen
+
+/** Welche Tabelle wie heisst, wie lang sie darf und wie ihr Feld beschriftet ist. */
+const SD_LISTEN = [
+    'crew_presets'    => ['max' => SD_NAME_MAX, 'label' => 'Name',        'rolle' => true],
+    'transport_dests' => ['max' => SD_ZIEL_MAX, 'label' => 'Bezeichnung', 'rolle' => false],
+    'resources'       => ['max' => SD_NAME_MAX, 'label' => 'Bezeichnung', 'rolle' => false],
+    'bw_units'        => ['max' => SD_NAME_MAX, 'label' => 'Bezeichnung', 'rolle' => false],
+];
+
+/**
+ * Einen Eintrag einer der vier einfachen Listen pruefen.
+ *
+ * $roh: name, base_id (int|null), rolle (nur crew_presets), id (0 = neu)
+ * $tabelle: einer der vier Schluessel aus SD_LISTEN
+ *
+ * Rueckgabe wie `pruef_rettungsmittel()`: ['daten' => …|null, 'fehler' => []].
+ * `fehler` ist je FELD eine Meldung — der Dialog zeigt sie an seinem Feld,
+ * und wer nur eine Zeile hat, nimmt die erste.
+ */
+function pruef_stammdaten(string $tabelle, array $roh, ?Pruefliste $p = null): array
+{
+    if (!array_key_exists($tabelle, SD_LISTEN)) {
+        throw new InvalidArgumentException('Unbekannte Stammdatenliste: ' . $tabelle);
+    }
+    $regeln = SD_LISTEN[$tabelle];
+    $fehler = [];
+
+    $name = pruef_text($roh['name'] ?? null, $regeln['max'], $regeln['label'], $p);
+    if ($name === null) {
+        $fehler['name'] = 'Bitte eine ' . ($regeln['label'] === 'Name' ? 'Person' : 'Bezeichnung')
+                        . ' eintragen.';
+    }
+
+    /* DIE ROLLE IST PFLICHT UND MUSS IM KATALOG STEHEN. Ein unbekannter Wert
+       wird nicht stillschweigend zur ersten Rolle: Das machte aus einer
+       Pilotin eine Notaerztin, ohne dass es jemand merkt. */
+    $rolle = null;
+    if ($regeln['rolle']) {
+        $rolle = trim((string)($roh['rolle'] ?? ''));
+        if (!array_key_exists($rolle, CREW_ROLES)) {
+            $p?->melde('Rolle', 'unbekannter Wert');
+            $fehler['rolle'] = 'Bitte eine Rolle wählen.';
+            $rolle = null;
+        }
+    }
+
+    /* DER STANDORT IST HIER IMMER PFLICHT — anders als beim Rettungsmittel,
+       das seit Web 16.0.0 ohne auskommen darf. Diese vier Listen sind
+       Vorschlagslisten FUER einen Standort; ohne ihn haetten sie keinen Ort,
+       an dem sie erscheinen. Das Schema sagt dasselbe: `base_id NOT NULL`. */
+    $baseId = isset($roh['base_id']) && (int)$roh['base_id'] > 0
+        ? (int)$roh['base_id'] : null;
+    if ($baseId === null) {
+        $p?->melde('Standort', 'fehlt');
+        $fehler['base_id'] = 'Bitte einen Standort wählen.';
+    }
+
+    if ($fehler !== []) { return ['daten' => null, 'fehler' => $fehler]; }
+
+    return [
+        'daten'  => ['name' => $name, 'base_id' => $baseId, 'rolle' => $rolle],
+        'fehler' => [],
+    ];
+}

@@ -1264,8 +1264,25 @@ Unterpunkte der Leiste (9.25), und beide holen sie aus denselben `id`.
 
 ### 9.11 Dialog und Blatt
 
-**Am Schreibtisch eine Karte im Schleier, mobil ein Blatt von unten**
-(E-P3-27). Dasselbe Markup, das Stylesheet entscheidet.
+**Eine Karte im Schleier — in jeder Breite.**
+
+> *Hier stand bis Web 16.4.0: „Am Schreibtisch eine Karte im Schleier, mobil
+> ein Blatt von unten (E-P3-27). Dasselbe Markup, das Stylesheet
+> entscheidet." Das stimmt nicht und hat nie gestimmt: Zu `.dialog` gibt es
+> im Stylesheet **keine einzige Medienabfrage**. Das **Blatt** (`.blatt`,
+> Abschnitt 10 des Stylesheets) ist ein eigener Baustein mit eigenem Skript
+> und eigenem Markup — es steht neben dem Dialog, es ist nicht seine mobile
+> Form. Berichtigt in S9/AP5-4, als der Satz beim Bau der
+> Stammdaten-Dialoge zum ersten Mal jemanden in die Irre geführt hat.*
+
+**Der Kopf trägt Titel und, wo nötig, eine Unterzeile** (`.unterzeile`, seit
+Web 16.4.0): Sie sagt, worauf sich der Dialog bezieht — der Standort, zu dem
+das neue Rettungsmittel gehört. Das gehört nicht in den Titel („Rettungsmittel
+an Standort Talwang anlegen" bricht um) und nicht ins Formular (es ist kein
+Feld, es ist der Zusammenhang). Dieselbe Rolle wie `.titelzeile-unter` an
+einer Seite. **Der Titel bleibt 24 px** (`h2`, `--groesse-6`) — M-S9-07
+zeichnet 19 px, aber die zwölf vorhandenen Dialoge tragen alle ein `h2` im
+Kopf und sprängen mit; das Mockup bleibt hier folgenlos.
 
 ```html
 <dialog class="dialog" role="alertdialog">
