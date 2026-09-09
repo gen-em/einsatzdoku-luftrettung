@@ -681,11 +681,41 @@ keinen, die Knopfhöhen stimmten, die Klickprobe fragte nach den neuen Feldern
 und fand sie. Zwei gleich beschriftete Felder sind keine Regelverletzung,
 sondern eine schlechte Seite — und die sieht nur, wer hinsieht.
 
+**F-S9-U-34 — ein stiller Verlust von Besatzungsnamen, den AP6 selbst
+eingebaut hatte.** Er kam beim *Erklären* von Frage 11 heraus, nicht beim
+Prüfen: Als ich den Fall nachstellte, um die Frage zu belegen, war er da.
+
+*Der Weg:* Ein Diensttag mit Besatzungsnamen → „Anderes Rettungsmittel" →
+speichern → zurück auf das ursprüngliche Rettungsmittel → speichern.
+**Gemessen an Diensttag 399: drei Namen vorher (Pilot 1 „Marion
+Aschenbrenner", HEMS-TC „Kerstin Obermeier", Flugretter „Nele Brugger"), null
+nachher.** Ohne Fehler, ohne Meldung; die Leseansicht zeigte danach schlicht
+keine Besatzung mehr.
+
+*Die Ursache:* Die Rollenvorschau übernimmt getippte Namen aus den
+**sichtbaren** Feldern — und beim Tagesfahrzeug gibt es keine. Auf dem Rückweg
+rendert sie deshalb leere Felder für Rollen, die in `day_crew` einen Namen
+haben (`dt_zuordnen()` löscht seit jeher nur leere Zeilen), und das Speichern
+schreibt die Leere zurück.
+
+*Die Behebung:* Das Formular merkt sich die geladenen Namen aus `day_crew` und
+legt die sichtbaren Felder darüber — was im Formular steht, gilt; was dort
+nicht steht, kommt aus dem Bestand. Ein **geleertes** Feld überschreibt
+weiterhin, sonst käme ein gelöschter Name beim nächsten Wechsel zurück.
+
+*Der Prüfweg dazu ist gegen beide Fassungen geprüft* — und das war nötig:
+**Der erste Entwurf fand den Fehler nicht.** Er fuhr über ein anderes
+Rettungsmittel mit anderem Rollensatz, und dort füllt das Neuladen die Felder
+aus `day_crew`; die Namen stehen sichtbar darin und überleben. Erst der Umweg
+über den Zustand **ohne** Felder bringt die Lücke zutage. Gemessen:
+`ap6-namen-ueberleben-den-umweg` meldet auf der fehlerhaften Fassung
+**3 von 4 Wegen erfüllt, 1 verfehlt**, auf der behobenen **4 von 4**.
+
 **Die Prüfmittel am Ende, mit Mittel und Zahl:**
 
 | Mittel | Ergebnis |
 |---|---|
-| Klickprobe | **76 von 76 als Zeigergerät und 76 von 76 als Fingergerät**, 0 verfehlt — je 38 Wege über 390 und 1280 px. Referenzbestand danach unverändert |
+| Klickprobe | **76 von 76 als Zeigergerät und 76 von 76 als Fingergerät**, 0 verfehlt — je 38 Wege über 390 und 1280 px. Referenzbestand danach unverändert. **Danach ein vierter AP6-Weg dazugekommen** (`ap6-namen-ueberleben-den-umweg`, F-S9-U-34): 4 von 4 in `--nur ap6`, gegengeprobt gegen die fehlerhafte Fassung mit 3 von 4 |
 | Bilderlauf | **360 Einzelbilder und 45 Kontaktbögen je Bedienhöhe**, **0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen**, **0 ausgefallene Aufnahmen** (Zeiger 44/36 px, Finger 44 px). Die neue Seite `12-tagesuebersicht-adhoc` zeigt den aufgeklappten Zustand, wie das Konzept es statt eines Mockups verlangt |
 | Nachlauf nach der Korrektur | Die drei berührten Seiten neu aufgenommen: **32 Einzelbilder, 4 Kontaktbögen je Bedienhöhe, 0/0/0**. Nur `index.php` war betroffen; die übrigen 41 Seiten sind von der Änderung nicht berührt |
 | Wiederherstellungsprobe | **94 Erwartungen, 0 nicht erfüllt** (P-19, Papierkorb-Mischfall eingeschlossen) |

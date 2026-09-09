@@ -50,6 +50,36 @@ async function zurueck(k, veh, base) {
   await k.seite.waitForTimeout(1200);
 }
 
+
+/** Einen Diensttag mit Besatzungsnamen finden — aus der Tagesliste heraus. */
+async function tagMitBesatzung(k) {
+  await k.gehZu(SEITE(k));
+  await k.seite.waitForSelector('#tagdatenknopf', { timeout: 20000 });
+  await k.seite.waitForTimeout(600);
+  const kennungen = await k.seite.evaluate(() => Array.from(
+    document.querySelectorAll('a[href*="index.php?d="]'))
+    .map(a => new URL(a.href, location.href).searchParams.get('d'))
+    .filter(Boolean).slice(0, 12));
+  for (const id of kennungen) {
+    await k.gehZu(`${k.basis}/index.php?d=${id}`);
+    await k.seite.waitForSelector('#tagdatenknopf', { timeout: 20000 });
+    await k.seite.waitForTimeout(500);
+    await k.seite.click('#tagdatenknopf');
+    await k.seite.waitForTimeout(400);
+    const m = await k.seite.evaluate(() => ({
+      veh: document.getElementById('vehsel').value,
+      base: document.getElementById('basesel').value,
+      kind: (document.querySelector('#vehsel option:checked') || {}).dataset?.kind || null,
+      namen: Array.from(document.querySelectorAll('#crewfields input[name^="crew_"]'))
+        .map(i => i.value).filter(v => v.trim() !== ''),
+    }));
+    if (m.namen.length) {
+      return { id, kind: m.kind, namen: m.namen, stand: { veh: m.veh, base: m.base } };
+    }
+  }
+  return null;
+}
+
 export const wege = [
   {
     name: 'ap6-rollen-ohne-speichern',
@@ -202,6 +232,75 @@ export const wege = [
         };
       } finally {
         await zurueck(k, anfang.veh, anfang.base);
+      }
+    },
+  },
+
+  {
+    name: 'ap6-namen-ueberleben-den-umweg',
+    paket: 'AP6', punkt: 'F-S9-U-34', rolle: 'demo',
+    was: 'Besatzungsnamen überleben den Weg über das Tagesfahrzeug und zurück',
+    soll: 'Die Namen stehen nach dem Umweg unverändert im Formular und in der Leseansicht',
+    async fahren(k) {
+      /* DER FALL, DER EINEN STILLEN VERLUST KOSTETE (F-S9-U-34).
+         Die Rollenvorschau kennt nur, was im Formular steht. Ist dort GAR
+         NICHTS — beim Tagesfahrzeug gibt es keine Rollenfelder —, dann rendert
+         sie beim Rückweg auf ein Rettungsmittel MIT Rollen lauter LEERE
+         Felder, obwohl `day_crew` dort Namen hält: `dt_zuordnen()` löscht seit
+         jeher nur leere Zeilen, benannte überleben jeden Wechsel. Das
+         Speichern schrieb die Leere zurück, und die Namen waren fort.
+
+         DER UMWEG MUSS ÜBER DAS TAGESFAHRZEUG GEHEN. Ein erster Entwurf
+         dieses Weges fuhr über ein anderes Rettungsmittel mit anderem
+         Rollensatz — und lief auch auf der FEHLERHAFTEN Fassung durch: Dort
+         zeichnet das Formular nach dem Neuladen die Felder aus `day_crew`, die
+         Namen stehen also sichtbar darin, und der Rückweg übernimmt sie. Erst
+         der Zustand OHNE Felder bringt die Lücke zum Vorschein. Gegengeprobt
+         am 09.09.2026 gegen beide Fassungen. */
+      const tag = await tagMitBesatzung(k);
+      if (!tag) {
+        return { ist: 'Kein Diensttag mit Besatzungsnamen im Bestand', ok: false,
+                 bemerkung: 'Der Weg braucht einen Tag mit mindestens einem Namen' };
+      }
+      const anfang = tag.stand;
+      try {
+        /* Hin: das Tagesfahrzeug — es hat keine Rollen, das Formular zeigt
+           also kein einziges Besatzungsfeld. */
+        await k.seite.selectOption('#vehsel', 'adhoc');
+        await k.seite.waitForTimeout(600);
+        await k.seite.fill('#adhoc-name', 'KP Umweg');
+        await k.seite.check('#adhocfelder .vehkind-radio[value=ground]', { force: true });
+        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit());
+        await k.seite.waitForTimeout(1400);
+
+        await k.gehZu(`${k.basis}/index.php?d=${tag.id}`);
+        await k.seite.waitForSelector('#tagdatenknopf', { timeout: 20000 });
+        await k.seite.waitForTimeout(600);
+        await k.seite.click('#tagdatenknopf');
+        await k.seite.waitForTimeout(400);
+        await k.seite.selectOption('#vehsel', anfang.veh);
+        await k.seite.waitForTimeout(600);
+        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit());
+        await k.seite.waitForTimeout(1400);
+
+        await k.gehZu(`${k.basis}/index.php?d=${tag.id}`);
+        await k.seite.waitForTimeout(700);
+        const nachher = await k.seite.evaluate(() =>
+          document.getElementById('taglese').textContent.replace(/\s+/g, ' ').trim());
+        const alle = tag.namen.every(n => nachher.includes(n));
+        return {
+          ist: `${tag.namen.length} Namen vorher (${tag.namen.join(', ')}) · `
+             + `nach dem Umweg über das Tagesfahrzeug (0 Rollenfelder) `
+             + `alle wieder da: ${alle}`,
+          ok: alle,
+          bemerkung: alle ? '' : 'Der Umweg hat Besatzungsnamen gelöscht (F-S9-U-34)',
+        };
+      } finally {
+        await k.seite.selectOption('#vehsel', anfang.veh).catch(() => {});
+        await k.seite.waitForTimeout(500);
+        await k.seite.evaluate(() => document.getElementById('dayform').requestSubmit())
+          .catch(() => {});
+        await k.seite.waitForTimeout(1200);
       }
     },
   },

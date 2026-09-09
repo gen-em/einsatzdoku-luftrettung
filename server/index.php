@@ -857,6 +857,12 @@ async function loadDay(dayId){
      nicht geloescht, weil das Rettungsmittel gewechselt hat, und er steht
      wieder da, sobald die Rolle zurueckkommt. Dasselbe geschieht heute schon
      beim Wechsel auf ein Rettungsmittel mit weniger Rollen. */
+  /* Die Merkliste kommt aus DER ANTWORT, nicht aus den Feldern: Sie soll auch
+     die Rollen kennen, die das Formular gerade nicht zeichnet. */
+  GESPEICHERTE_CREW = {};
+  ((d.meta && d.meta.crew) || []).forEach(c => {
+    if (c.name) { GESPEICHERTE_CREW[c.role] = c.name; }
+  });
   renderCrewFields(istAdhoc ? Object.assign({}, d.meta, { adhoc: true, crew: [] }) : d.meta);
   zeigeTagLese(d.meta);
   document.getElementById('savestate').textContent = '';
@@ -1169,10 +1175,30 @@ function vehicleBaseSync(){
  * ergeben zwei Anfragen, und die Reihenfolge der Antworten ist nicht zugesagt.
  * Ohne den Zaehler zeichnete die langsamere die Felder der vorletzten Wahl.
  */
+/* Die zuletzt GELADENEN Namen je Rolle — die Wahrheit aus `day_crew`.
+ *
+ * WOZU EINE ZWEITE QUELLE. Die Vorschau kennt nur, was gerade im Formular
+ * steht, und das Formular zeichnet nur die Rollen des GEWAEHLTEN
+ * Rettungsmittels. `day_crew` haelt aber auch Namen von Rollen, die dieses
+ * Rettungsmittel nicht fuehrt — `dt_zuordnen()` loescht seit jeher nur LEERE
+ * Zeilen. Ohne diese Merkliste rendert die Vorschau ein LEERES Feld fuer eine
+ * Rolle, die gespeichert einen Namen hat, und das Speichern schreibt die Leere
+ * zurueck: stiller Verlust.
+ *
+ * GEMESSEN am 09.09.2026 an Diensttag 399: Alpenfalke 2 mit Pilot 1 „Marion
+ * Aschenbrenner", HEMS-TC „Kerstin Obermeier", Flugretter „Nele Brugger" →
+ * auf „Anderes Rettungsmittel" wechseln (0 Felder) → zurueck auf Alpenfalke 2
+ * → drei leere Felder → speichern → drei Namen weg. Der Weg ueber ein zweites
+ * Rettungsmittel mit anderem Rollensatz und zurueck tut dasselbe. */
+let GESPEICHERTE_CREW = {};
+
+/* ALLE gerenderten Felder, auch die LEEREN. Ein geleertes Feld ist eine
+   Eingabe: Es muss die Merkliste ueberschreiben, sonst kaeme der geloeschte
+   Name beim naechsten Wechsel zurueck. */
 function crewWerte(){
   const werte = {};
   document.querySelectorAll('#crewfields input[name^="crew_"]').forEach(i => {
-    if (i.value.trim() !== '') { werte[i.name.slice(5)] = i.value; }
+    werte[i.name.slice(5)] = i.value;
   });
   return werte;
 }
@@ -1181,7 +1207,9 @@ let vorschauLauf = 0;
 async function rollenVorschau(){
   const veh  = document.getElementById('vehsel');
   const base = document.getElementById('basesel');
-  const behalten = crewWerte();
+  /* Erst die gespeicherten Namen, dann die gerade sichtbaren daruebergelegt:
+     Was im Formular steht, gilt; was dort nicht steht, kommt aus `day_crew`. */
+  const behalten = Object.assign({}, GESPEICHERTE_CREW, crewWerte());
 
   if (veh.value === 'adhoc') {
     /* Ein Rettungsmittel nur für den Tag führt keinen Rollensatz (E-S9-10,

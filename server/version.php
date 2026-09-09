@@ -3654,6 +3654,23 @@ declare(strict_types=1);
  * Kennung „" statt „77". Jetzt faellt erst das Ereignis, dann steht die
  * Kennung.
  *
+ * ZWEI FUNDE BEIM PRUEFEN, beide vor der Auslieferung behoben:
+ *
+ *   - ZWEI FELDER „STANDORT" AUF EINER SEITE. Das Auswahlfeld des Diensttags
+ *     blieb neben dem des Tagesfahrzeugs stehen, obwohl der Weg `adhoc`
+ *     `base_id` gar nicht mitschickt: bedienbar, ohne dass etwas geschieht.
+ *     Gefunden auf dem Bild des Bilderlaufs, nicht von einer Zahl. Das
+ *     aeussere Feld geht jetzt mit.
+ *   - STILLER VERLUST VON BESATZUNGSNAMEN (F-S9-U-34). Die Rollenvorschau
+ *     uebernimmt getippte Namen aus den SICHTBAREN Feldern — und beim
+ *     Tagesfahrzeug gibt es keine. Auf dem Rueckweg auf ein Rettungsmittel
+ *     MIT Rollen rendert sie deshalb leere Felder fuer Rollen, die in
+ *     `day_crew` einen Namen haben, und das Speichern schrieb die Leere
+ *     zurueck. Gemessen an Diensttag 399: drei Namen vorher, null nachher,
+ *     ohne Fehler und ohne Meldung. Das Formular merkt sich jetzt die
+ *     geladenen Namen und legt die sichtbaren Felder darueber; ein geleertes
+ *     Feld ueberschreibt weiterhin, sonst kaeme ein geloeschter Name zurueck.
+ *
  * NEBENNUMMER: neue Funktionen, kein Datenmodell, keine Migration.
  * `update.php` muss NICHT laufen.
  */

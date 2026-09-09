@@ -68,6 +68,19 @@ wieder, weil Tippen Freitext bedeutet. Der Treffer sah aus wie ein Treffer und
 wurde als Freitext gespeichert, ohne Koordinate. Gemessen: Kennung `""` statt
 `"77"`. Jetzt fällt erst das Ereignis, dann steht die Kennung.
 
+**Ein stiller Verlust von Besatzungsnamen, beim Prüfen gefunden und behoben.**
+Die Rollenvorschau übernimmt getippte Namen aus den **sichtbaren** Feldern —
+und beim Tagesfahrzeug gibt es keine. Auf dem Rückweg auf ein Rettungsmittel
+**mit** Rollen rendert sie deshalb leere Felder für Rollen, die in `day_crew`
+sehr wohl einen Namen haben, und das Speichern schrieb die Leere zurück.
+Gemessen an einem Diensttag: **drei Namen vorher, null nachher** — ohne
+Fehler, ohne Meldung, und in der Leseansicht danach schlicht keine Besatzung
+mehr. Das Formular merkt sich jetzt die geladenen Namen aus `day_crew` und legt
+die sichtbaren Felder darüber; ein geleertes Feld überschreibt weiterhin, sonst
+käme ein gelöschter Name zurück. Ein Klickprobenweg fährt genau diesen Umweg
+und ist gegen beide Fassungen geprüft: **auf der alten 1 von 4 verfehlt, auf
+der neuen 4 von 4**.
+
 **Ein Fund am Prüfmittel, kein Fund an der Anwendung:** Der erste volle
 Klickprobenlauf meldete 12 von 76 Wegen verfehlt — mit Meldungen, die auf den
 Bestand zeigten. Der Bestand war in Ordnung; das **Demo-Konto setzt sich alle
