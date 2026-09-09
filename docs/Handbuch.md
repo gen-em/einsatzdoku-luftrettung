@@ -617,6 +617,28 @@ Pro Tag:
   bodengebunden Fahrer, Praktikant und Sonstige.
   Ein Diensttag ohne Rettungsmittel zeigt keine Rollen — trag Standort und
   Rettungsmittel nach, dann erscheinen sie.
+
+  **Seit Web 18.1.0 erscheinen sie sofort**, sobald du das Rettungsmittel
+  wechselst — vorher musstest du erst speichern, um die neuen Rollen
+  überhaupt zu sehen, und danach ein zweites Mal, um sie zu füllen. Namen,
+  die du schon eingetragen hast, bleiben stehen, solange das neue
+  Rettungsmittel dieselbe Rolle führt. Gespeichert ist damit noch nichts:
+  Erst „Speichern" schreibt die Zuordnung fest.
+
+  **„Anderes Rettungsmittel …"** steht als letzter Eintrag der Auswahl (seit
+  Web 18.1.0). Er ist für den Dienst auf einem Fahrzeug, das du sonst nie
+  fährst — die Aushilfe, das Fremdfahrzeug, der einmalige Sanitätsdienst.
+  Darunter klappen drei Felder auf: **Bezeichnung**, **Typ** (und die
+  Betriebsart, die er zulässt) und **Standort**. Das Standortfeld ist beides
+  zugleich: Tippst du und wählst einen Vorschlag, übernimmt es den Standort
+  samt Koordinate; tippst du etwas anderes, bleibt es dein Text.
+
+  **Es entsteht dabei kein Stammdatensatz.** Das Rettungsmittel steht nur an
+  diesem einen Diensttag und taucht in keiner Auswahlliste wieder auf; in
+  Suche, Filter und Diensttage-Leiste findest du es trotzdem. Wenn du es
+  öfter brauchst, leg es unter *Einstellungen → Standorte* an.
+  **Besatzungsrollen gibt es dafür nicht** — Namen kannst du am einzelnen
+  Einsatz unter „Abweichende Besatzung" eintragen (Abschnitt 4.3).
 - **Karte** mit allen Einsätzen des Tages (jeder in eigener Farbe, beginnend
   mit Orange/Blau/Rot) und dem Ruhe-Track in gedämpftem Graublau. Kleine
   **Richtungspfeile** auf den Aufzeichnungen zeigen die Bewegungsrichtung.
@@ -2406,6 +2428,13 @@ Standort es gehört. Vorher stand unter jeder Liste ein Formular — wer den
 zwölften Eintrag anlegen wollte, rollte an elf vorbei, und „Bearbeiten" lud
 die Seite neu und änderte die Werte eines Formulars weiter unten, was auf
 einem Handy nicht zu sehen war.
+
+> **Für einen einzigen Dienst brauchst du keinen Stammdatensatz.** Wer einmal
+> auf einem fremden Fahrzeug aushilft, wählt in der Tagesübersicht unter
+> *Diensttag-Daten → Rettungsmittel* den letzten Eintrag **„Anderes
+> Rettungsmittel …"** und trägt Bezeichnung, Typ und Standort dort ein
+> (Abschnitt 4.1, seit Web 18.1.0). Das bleibt an diesem Diensttag und
+> erscheint hier nicht. Erst was du öfter brauchst, gehört auf diese Seite.
 
 Zwei Dinge daran sind bewusst so:
 

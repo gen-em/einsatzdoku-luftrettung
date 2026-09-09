@@ -553,7 +553,7 @@ Daten erst nach Server-Bestätigung.
 | `bw_units` | Bergwacht-Bereitschaften; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
 | `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
 | `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id`, persönlich oder zentral — ohne FK, weil es zwei Zieltabellen sind); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
-| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). `kind IS NULL` = neutral, noch nicht zugeordnet (E26) |
+| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). `kind IS NULL` = neutral, noch nicht zugeordnet (E26) **Seit Web 18.1.0 kann die Momentaufnahme ohne Stammdatensatz bestehen** (E-S9-10): `vehicle_id IS NULL` bei gesetztem `vehicle_name` heißt „ein Rettungsmittel nur für diesen Tag“ — Bezeichnung, Typ, Betriebsart und der Standort (als Kennung oder als bloßer Name) stehen dann allein hier. Suche, Filter und Tagesliste lesen ohnehin die Momentaufnahme und finden es deshalb; `day_crew` und `day_capabilities` bekommen dafür keinen Satz |
 | `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
 | `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
@@ -1349,9 +1349,20 @@ dieses Bereichs und steht ausführlich in Abschnitt 4.98b: Ein durch `role_gate`
 nur versteckt; ein durch `show_if` **ausgeschlossenes** Unterfeld wird geleert.
 
 Das Diensttag-Formular filtert nach demselben Rollensatz, dort aber
-clientseitig (`index.php`, `updateCrewFields()` aus der Antwort von
+clientseitig (`index.php`, `renderCrewFields()` aus der Antwort von
 `api/day.php`), weil das Rettungsmittel im Formular selbst gewechselt werden
 kann. Im Einsatzformular steht es fest, daher serverseitig.
+
+**Seit Web 18.1.0 zeichnet es sie beim Wechsel sofort neu** (E-S9-11). Dafür
+gibt es `api/day.php?vorschau=<vehicle_id>[&base=<base_id>]`: einen **lesenden**
+Aufruf, der Rollensatz (`vehicle_roles`) und Vorlagen (`crew_presets` des
+Standorts) zu einer **noch nicht gespeicherten** Wahl liefert und nichts
+schreibt. Eingefroren wird weiterhin erst beim Speichern durch `dt_zuordnen()`
+(E8). Der Standort kommt mit, weil die Vorlagen an ihm hängen und Formular und
+Rettungsmittel dort auseinanderfallen können; ohne ihn fällt die Vorschau auf
+den Standort des Rettungsmittels zurück. `dt_vehicle_erlaubt()` und
+`dt_base_erlaubt()` gelten auch hier — ohne sie beantwortete der Endpunkt für
+jede Kennung, welche **Namen** an einem fremden Standort hinterlegt sind.
 
 **Einsatzort-Höhe:** `site_elevation_lib.php` (`compute_site_elevation()`) ist
 die **einzige Implementierung** — Referenzzeitpunkt Phase 5 „Ankunft

@@ -410,7 +410,7 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 }
 
 async function vorher(seite, schritte, fehlerSammler) {
-  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten'];
+  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
@@ -437,6 +437,29 @@ async function vorher(seite, schritte, fehlerSammler) {
                            seite.locator('#koppeln .knopf-primaer').click()]);
       }
       await seite.waitForLoadState('networkidle');
+      continue;
+    }
+    if (schritt === 'tagdaten-adhoc') {
+      /* DAS FORMULAR „DIENSTTAG-DATEN" MIT AUFGEKLAPPTEM „ANDEREM
+         RETTUNGSMITTEL" (S9/AP6, E-S9-10). Das Konzept verlangt fuer diesen
+         Zustand ein Bild und kein Mockup — die Felder sind vorhandene
+         Bausteine, zu sehen ist nur, wie sie zusammenstehen.
+
+         DER SCHRITT SCHREIBT NICHTS. Er oeffnet das Formular und waehlt den
+         letzten Eintrag der Auswahl; gespeichert wird erst durch „Speichern",
+         und das drueckt hier niemand. Der Diensttag bleibt also, wie er ist —
+         wichtig, weil der Bilderlauf am Referenzbestand faehrt. */
+      const knopf = seite.locator('#tagdatenknopf');
+      if (!(await knopf.count())) { continue; }
+      if ((await seite.locator('#dayform').getAttribute('hidden')) !== null) {
+        await knopf.click();
+        await seite.waitForTimeout(400);
+      }
+      const wahl = seite.locator('#vehsel');
+      if (await wahl.count()) {
+        await wahl.selectOption('adhoc');
+        await seite.waitForTimeout(450);
+      }
       continue;
     }
     if (schritt === 'schublade') {

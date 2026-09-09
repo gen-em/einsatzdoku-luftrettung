@@ -8,6 +8,12 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 
 /**
  * GET  api/day.php            -> { days: [{id, day, …}, …], latest: <id> }
+ * GET  api/day.php?vorschau=<vehicle_id>[&base=<base_id>]
+ *                             -> { vehicle_id, base_id, crew: [{role,label,
+ *                                name:null}, …], presets: {…} } — der
+ *                                Rollensatz und die Vorlagen zu einer noch
+ *                                nicht gespeicherten Wahl (E-S9-11). Schreibt
+ *                                nichts.
  * GET  api/day.php?d=<id>     -> Tagesdaten: Diensttag-Meta, Besatzung,
  *                                Einsaetze (inkl. Track, Phasenzeiten),
  *                                Ruhe-Segmente
@@ -17,7 +23,12 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  *                                mission_fields.php (siehe mf_tagesspalten()).
  * POST api/day.php            -> Diensttag-Felder speichern
  *                                JSON-Body {day_id, vehicle_id, base_id,
- *                                crew: {<rolle>: name, …}, notes},
+ *                                crew: {<rolle>: name, …}, notes}
+ *                                — oder statt `vehicle_id` ein
+ *                                `adhoc: {name, typ, kind, base_id?,
+ *                                base_name?}` fuer ein Rettungsmittel nur
+ *                                fuer diesen Tag (E-S9-10); Antwort bei
+ *                                Pruefmeldungen: 422 mit `felder`,
  *                                Header X-CSRF muss zum Session-Token passen
  *
  * DER SCHLUESSEL IST DIE KENNUNG, NICHT DAS DATUM (Web 6.0.0). Bis dahin nahm
@@ -101,9 +112,27 @@ try {
              * dt_zuordnen(); sie muss zu der Liste passen, aus der index.php
              * die Auswahlfelder baut, sonst wird ein zentraler Eintrag beim
              * Speichern stillschweigend auf NULL zurueckgesetzt. */
+            /* ZWEITER WEG: EIN RETTUNGSMITTEL NUR FUER DIESEN TAG (S9/AP6,
+             * E-S9-10). Der Body traegt dann `adhoc: {name, typ, kind,
+             * base_id?, base_name?}` statt `vehicle_id`. Die Pruefung laeuft
+             * ueber `validate_lib.php` wie jeder andere Schreibweg — die
+             * Meldungen gehen an das Formular zurueck, und nichts wird
+             * gespeichert, bevor sie leer sind. Ein Fehler ROLLT die
+             * Transaktion zurueck: Ein halb zugeordneter Tag waere schlimmer
+             * als ein abgelehnter. */
+            $adhoc = null;
+            if (isset($b['adhoc']) && is_array($b['adhoc'])) {
+                $pr = pruef_tagesrettungsmittel($b['adhoc']);
+                if ($pr['daten'] === null) {
+                    $pdo->rollBack();
+                    json_out(['error' => 'adhoc', 'felder' => $pr['fehler']], 422);
+                }
+                $adhoc = $pr['daten'];
+            }
             dt_zuordnen($pdo, $userId, $dayId,
                         isset($b['vehicle_id']) ? (int)$b['vehicle_id'] : null,
-                        isset($b['base_id'])    ? (int)$b['base_id']    : null);
+                        isset($b['base_id'])    ? (int)$b['base_id']    : null,
+                        $adhoc);
 
             // Besatzungsnamen. Nur Rollen, die der Diensttag anbietet — die
             // Zeilenmenge in `day_crew` ist der eingefrorene Rollensatz (E8),
@@ -119,6 +148,73 @@ try {
             throw $ex;
         }
         json_out(['ok' => true]);
+    }
+
+    /* ---- VORSCHAU AUF DEN ROLLENSATZ (S9/AP6, E-S9-11) ----------------
+     *
+     * GET api/day.php?vorschau=<vehicle_id>[&base=<base_id>]
+     *   -> { vehicle_id, crew: [{role,label,name:null}, …], presets: {…} }
+     *
+     * WOZU. Bis Web 18.0.0 entstanden die Besatzungsfelder AUSSCHLIESSLICH
+     * aus der Tagesantwort, also aus dem eingefrorenen `day_crew`. Wer im
+     * Formular ein anderes Rettungsmittel waehlte, sah die Felder der neuen
+     * Rollen erst NACH dem Speichern — und musste danach ein zweites Mal
+     * speichern, um sie zu fuellen. Zwei Speichervorgaenge fuer eine
+     * Handlung, und dazwischen eine Ansicht, die etwas anderes zeigt als die
+     * Auswahl darueber.
+     *
+     * SIE SCHREIBT NICHTS. Das ist der Unterschied zum POST daneben und der
+     * Grund, warum sie hier steht und nicht als eigener Endpunkt: Dieselbe
+     * Frage („welche Rollen und welche Vorlagen?"), einmal fuer einen
+     * gespeicherten Tag und einmal fuer eine noch nicht getroffene Wahl.
+     * `dt_zuordnen()` friert beim Speichern weiter selbst ein.
+     *
+     * SIE PRUEFT DIE ZUGEHOERIGKEIT. `dt_vehicle_erlaubt()` und
+     * `dt_base_erlaubt()` sind hier keine Formsache: Ohne sie beantwortete
+     * der Endpunkt fuer JEDE Kennung, welche Rollen ein fremdes
+     * Rettungsmittel fuehrt und welche NAMEN am fremden Standort hinterlegt
+     * sind — Besatzungsnamen sind personenbezogen. Eine fremde oder
+     * unbekannte Kennung liefert deshalb eine leere Antwort und keinen
+     * Fehler: Sie ist fuer diese NutzerIn schlicht kein Rettungsmittel.
+     *
+     * DER STANDORT KOMMT MIT, WENN DAS FORMULAR IHN NENNT. Die Vorlagen
+     * haengen am Standort des DIENSTTAGS (E15), nicht am Standort des
+     * Rettungsmittels — und im Formular sind das zwei Auswahlfelder, die
+     * auseinanderfallen koennen. Ohne `base` faellt die Vorschau auf den
+     * Standort des Rettungsmittels zurueck; das ist der Regelfall und
+     * zugleich das, was `dt_zuordnen()` speichern wuerde. */
+    if (isset($_GET['vorschau'])) {
+        $vid = dt_vehicle_erlaubt(db(), $userId, (int)$_GET['vorschau']);
+        $bid = isset($_GET['base']) && $_GET['base'] !== ''
+             ? dt_base_erlaubt(db(), $userId, (int)$_GET['base'])
+             : null;
+
+        $rollen = $vid !== null ? dt_vehicle_rollen(db(), $vid) : [];
+        $crew = [];
+        foreach ($rollen as $code) {
+            $crew[] = ['role' => $code, 'label' => crew_role_label($code), 'name' => null];
+        }
+
+        if ($bid === null && $vid !== null) {
+            $q = db()->prepare('SELECT base_id FROM vehicles WHERE id = ?');
+            $q->execute([$vid]);
+            $roh = $q->fetchColumn();
+            $bid = $roh !== false && $roh !== null ? (int)$roh : null;
+        }
+
+        $presets = [];
+        if ($bid !== null && $crew) {
+            $pq = db()->prepare('SELECT DISTINCT role_code, name FROM crew_presets
+                                  WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                  ORDER BY name');
+            $pq->execute([$bid, $userId]);
+            foreach ($pq->fetchAll() as $z) {
+                $presets[(string)$z['role_code']][] = (string)$z['name'];
+            }
+        }
+
+        json_out(['vehicle_id' => $vid, 'base_id' => $bid,
+                  'crew' => $crew, 'presets' => (object)$presets]);
     }
 
     $dayId = (int)($_GET['d'] ?? 0);
@@ -181,6 +277,14 @@ try {
         'vehicle_name' => $tag['vehicle_name'] !== null ? (string)$tag['vehicle_name'] : null,
         'base_name'    => $tag['base_name']    !== null ? (string)$tag['base_name']    : null,
         'kind'         => $tag['kind'] === null ? null : (string)$tag['kind'],
+        /* DER TYP KOMMT SEIT S9/AP6 MIT (E-S9-10). Bis dahin brauchte ihn im
+         * Browser niemand — die Anzeige rechnet ihn in `art_symbol`/`art_text`
+         * mit ein, und die Leiste wird auf dem Server gerendert. Jetzt gibt es
+         * einen Leser: Ein Tag mit einem Rettungsmittel NUR FUER DIESEN TAG
+         * hat keine `vehicle_id`, und das Formular muss seine drei Felder
+         * wieder fuellen koennen. Ohne den Typ stuende dort beim naechsten
+         * Oeffnen „Standard", egal was gespeichert war. */
+        'vehicle_typ'  => $tag['vehicle_typ'] !== null ? (string)$tag['vehicle_typ'] : null,
         'art_symbol'   => $sym['symbol'],
         'art_text'     => $sym['text'],
         'notes'        => $tag['notes'] !== null ? (string)$tag['notes'] : null,

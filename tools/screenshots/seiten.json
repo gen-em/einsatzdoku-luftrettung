@@ -56,6 +56,15 @@
       ]
     },
     {
+      "name": "12-tagesuebersicht-adhoc",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "index.php",
+      "vorher": [
+        "tagdaten-adhoc"
+      ]
+    },
+    {
       "name": "12-einsatzansicht",
       "gruppe": "Inhalt",
       "rolle": "demo",

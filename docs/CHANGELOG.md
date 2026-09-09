@@ -14,6 +14,63 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 18.1.0] — 2026-09-09
+
+### Web — die Tageszuordnung antwortet sofort (Rollen ohne Speichern, E-S9-11)
+
+Die Besatzungsfelder des Diensttags entstanden bisher ausschließlich aus der
+Tagesantwort, also aus dem **eingefrorenen** Rollensatz. Wer im Formular ein
+anderes Rettungsmittel wählte, sah weiter die Rollen des alten — und bekam die
+neuen erst **nach** dem Speichern zu Gesicht. Das kostete zwei Speichervorgänge
+für eine Handlung, und dazwischen zeigte das Formular etwas anderes an, als
+darüber ausgewählt war.
+
+`api/day.php?vorschau=<vehicle_id>[&base=<base_id>]` beantwortet dieselbe Frage
+für eine noch nicht getroffene Wahl und **schreibt nichts**. Eingefroren wird
+weiterhin erst beim Speichern. Getippte Namen bleiben stehen, wo die Rolle
+bleibt: Wer „Pilot 1" ausgefüllt hat und dann das Rettungsmittel wechselt,
+verliert den Namen nicht, solange das neue dieselbe Rolle führt — ohne dieses
+Übernehmen wäre jede versehentliche Auswahl ein Datenverlust. Der Standort
+zählt mit, weil die **Vorlagen** an ihm hängen und nicht am Rettungsmittel.
+
+### Web — ein Rettungsmittel nur für diesen Tag (E-S9-10)
+
+Der letzte Eintrag der Rettungsmittel-Auswahl heißt jetzt **„Anderes
+Rettungsmittel …"** und klappt drei Felder auf: Bezeichnung, Typ (mit der
+Betriebsart, die er zulässt) und einen Standort, der **Auswahl und Freitext
+zugleich** ist — ein Treffer aus der Vorschlagsliste übernimmt den Standort
+samt Koordinate, alles andere bleibt Text ohne Koordinate.
+
+**Es entsteht kein Stammdatensatz.** Wer einmal auf einem fremden Fahrzeug
+Dienst tut, soll dafür keinen Eintrag anlegen müssen, den er danach nie wieder
+braucht und der in jeder Auswahlliste stehen bleibt. Gespeichert wird
+ausschließlich in der Momentaufnahme des Tages. Suche, Filter und Tagesliste
+finden das Fahrzeug trotzdem — sie lesen genau diese Momentaufnahme und nicht
+die Stammdaten.
+
+**Kein Rollensatz, keine Fähigkeiten.** Ein Rettungsmittel nur für den Tag
+führt keine Besatzungsrollen; das Formular sagt das und verweist auf die
+abweichende Besatzung am einzelnen Einsatz. Vorhandene **Namen** in `day_crew`
+werden dabei nicht gelöscht — dieselbe Regel wie beim Wechsel auf ein
+Rettungsmittel mit weniger Rollen: Ein eingetragener Name überlebt und steht
+wieder da, sobald die Rolle zurückkommt.
+
+**Drei Regeln stehen jetzt nur noch einmal:** `pruef_typ_betriebsart()` (Typ
+und Betriebsart — Stammdatensatz und Tagesfassung teilen sie),
+`pruef_tagesrettungsmittel()` (auch dieser Schreibweg läuft über die
+Prüfschicht) und `dt_rollensatz_einfrieren()` (das Einfrieren, geteilt von
+beiden Wegen in `dt_zuordnen()`).
+
+**Ein Fund beim Bauen, der still geblieben wäre:** Die Vorschlagsliste des
+Standortfelds setzte die verborgene Kennung **vor** dem `input`-Ereignis, das
+die Speichern-Leiste weckt — und der eigene Zuhörer darunter löschte sie gleich
+wieder, weil Tippen Freitext bedeutet. Der Treffer sah aus wie ein Treffer und
+wurde als Freitext gespeichert, ohne Koordinate. Gemessen: Kennung `""` statt
+`"77"`. Jetzt fällt erst das Ereignis, dann steht die Kennung.
+
+**Nebennummer:** neue Funktionen, kein Datenmodell, keine Migration. `update.php`
+muss **nicht** laufen.
+
 ## [Web 18.0.0] — 2026-09-09
 
 ### Web — die zentralen Stammdaten verlieren ihre Oberfläche (Rahmenplan R39)

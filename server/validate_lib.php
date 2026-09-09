@@ -769,21 +769,21 @@ const RM_NAME_MAX = 64;
  * @param  array $roh  name, kurz, typ, kind, base_id, roles[], caps[]
  * @return array{daten: ?array, fehler: array<string,string>}
  */
-function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
+/**
+ * TYP UND BETRIEBSART — die Regeln, die sich zwei Schreibwege teilen.
+ *
+ * Sie stehen an EINER Stelle, seit es zwei Verwendungen gibt: den
+ * STAMMDATENSATZ (`pruef_rettungsmittel()`) und das Rettungsmittel NUR FUER
+ * EINEN TAG (`pruef_tagesrettungsmittel()`, S9/AP6, E-S9-10). Beide fragen
+ * dasselbe — welcher Typ, und welche Betriebsart laesst er zu —, und eine
+ * zweite Fassung davon liefe beim naechsten Typ auseinander. Genau dieser
+ * Fehler steht weiter unten als Begruendung der vier Stammdatenlisten.
+ *
+ * @return array{typ:?string, kind:?string, regeln:?array, fehler:array<string,string>}
+ */
+function pruef_typ_betriebsart(array $roh, ?Pruefliste $p = null): array
 {
     $fehler = [];
-
-    /* BEZEICHNUNG — Pflicht. Zuschneiden statt ablehnen (wie pruef_text): Ein
-     * zu langer Name ist eine zu lange Eingabe, keine falsche. */
-    $name = pruef_text($roh['name'] ?? null, RM_NAME_MAX, 'Bezeichnung', $p);
-    if ($name === null) {
-        $fehler['name'] = 'Bitte eine Bezeichnung für das Rettungsmittel eintragen.';
-    }
-
-    /* KURZNAME — freiwillig, bis 16 Zeichen (Nr. 69). NULL heisst „keiner",
-     * nicht „leer": Die Anzeige entscheidet daran, ob sie ihn statt der
-     * Bezeichnung zeigt. */
-    $kurz = pruef_text($roh['kurz'] ?? null, RM_KURZ_MAX, 'Kurzname', $p);
 
     /* TYP — Vorgabe 'standard'. Ein UNBEKANNTER Wert wird nicht stillschweigend
      * zu 'standard': Das machte aus einem Bergwacht-Rettungsmittel einer
@@ -820,6 +820,29 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
                         . 'Sie entscheidet über Besatzungsrollen und die im '
                         . 'Einsatzformular sichtbaren Felder.';
     }
+
+    return ['typ' => $typ, 'kind' => $kind, 'regeln' => $regeln, 'fehler' => $fehler];
+}
+
+function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
+{
+    $fehler = [];
+
+    /* BEZEICHNUNG — Pflicht. Zuschneiden statt ablehnen (wie pruef_text): Ein
+     * zu langer Name ist eine zu lange Eingabe, keine falsche. */
+    $name = pruef_text($roh['name'] ?? null, RM_NAME_MAX, 'Bezeichnung', $p);
+    if ($name === null) {
+        $fehler['name'] = 'Bitte eine Bezeichnung für das Rettungsmittel eintragen.';
+    }
+
+    /* KURZNAME — freiwillig, bis 16 Zeichen (Nr. 69). NULL heisst „keiner",
+     * nicht „leer": Die Anzeige entscheidet daran, ob sie ihn statt der
+     * Bezeichnung zeigt. */
+    $kurz = pruef_text($roh['kurz'] ?? null, RM_KURZ_MAX, 'Kurzname', $p);
+
+    ['typ' => $typ, 'kind' => $kind, 'regeln' => $regeln, 'fehler' => $tkFehler]
+        = pruef_typ_betriebsart($roh, $p);
+    $fehler += $tkFehler;
 
     /* STANDORT — Pflicht nur noch bei 'standard' (E-S9-09). Die Vorschlagslisten
      * haengen am Standort (E15); ein Standard-Rettungsmittel ohne ihn hinterliesse
@@ -911,6 +934,83 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
  * ist eine Bequemlichkeit fuer die Tippende, keine Regel — wer die Seite
  * umgeht, umgeht auch das Attribut. Die Zahlen sind die des Schemas.
  * ------------------------------------------------------------------------ */
+/**
+ * EIN RETTUNGSMITTEL NUR FUER DIESEN TAG (S9/AP6, E-S9-10).
+ *
+ * WOFUER. Ein Dienst auf einem Fahrzeug, das dieses Konto sonst nie fuehrt —
+ * die Aushilfe, das Fremdfahrzeug, der einmalige Sanitaetsdienst. Bis Web
+ * 18.1.0 blieb dafuer nur, einen Stammdatensatz anzulegen, ihn einmal zu
+ * benutzen und danach in der Auswahl stehen zu lassen. Was hier entsteht,
+ * steht AUSSCHLIESSLICH in der Momentaufnahme des Diensttags: kein
+ * Stammdatensatz, keine Zeile in `vehicles` (F17).
+ *
+ * WAS SIE MIT `pruef_rettungsmittel()` TEILT: Typ und Betriebsart, ueber
+ * `pruef_typ_betriebsart()` — dieselbe Regel, eine Fassung.
+ *
+ * WORIN SIE SICH UNTERSCHEIDET, und warum:
+ *
+ *   - KEIN KURZNAME. Er ist eine Eigenschaft des Bestands (Nr. 69) und dient
+ *     der Wiedererkennung in Listen. Was einen Tag lang existiert, wird nicht
+ *     wiedererkannt.
+ *   - KEINE ROLLEN, KEINE FAEHIGKEITEN (F19). Der Tag bekommt keinen
+ *     Rollensatz und keine Fluglisten; `day_crew` und `day_capabilities`
+ *     bleiben leer.
+ *   - DER STANDORT IST FREIWILLIG — auch beim Typ „Standard". Am
+ *     Stammdatensatz ist er dort Pflicht, weil die Vorschlagslisten an ihm
+ *     haengen (E15) und ein Standard-Rettungsmittel ohne Standort eine leere
+ *     Tagesuebersicht hinterliesse. Hier gibt es keine Vorschlagslisten, weil
+ *     es keine Rollen gibt: Die Begruendung traegt nicht, also gilt die Regel
+ *     nicht.
+ *   - DER STANDORT DARF FREITEXT SEIN. `base_id` nennt einen Standort aus der
+ *     Liste, `base_name` einen Ort, den es als Stammdatensatz nicht gibt. Wo
+ *     eine Kennung steht, holt der Aufrufer Namen UND Koordinate aus den
+ *     Stammdaten; Freitext bleibt Freitext ohne Koordinate.
+ *
+ * @return array{daten:?array{name:string,typ:string,kind:string,base_id:?int,base_name:?string},
+ *               fehler:array<string,string>}
+ */
+function pruef_tagesrettungsmittel(array $roh, ?Pruefliste $p = null): array
+{
+    $fehler = [];
+
+    $name = pruef_text($roh['name'] ?? null, RM_NAME_MAX, 'Bezeichnung', $p);
+    if ($name === null) {
+        $fehler['name'] = 'Bitte eine Bezeichnung für das Rettungsmittel eintragen.';
+    }
+
+    ['typ' => $typ, 'kind' => $kind, 'fehler' => $tkFehler]
+        = pruef_typ_betriebsart($roh, $p);
+    $fehler += $tkFehler;
+
+    /* STANDORT: KENNUNG ODER FREITEXT. Steht eine Kennung da, gewinnt sie —
+     * der Aufrufer holt Namen und Koordinate aus den Stammdaten.
+     *
+     * DER TEXT KOMMT TROTZDEM MIT, und zwar als Rueckfall. Er ist die
+     * Beschriftung desselben Feldes, also ohnehin derselbe Name. Ohne ihn
+     * verloere der Tag seinen Standort STILL, wenn die Kennung sich als
+     * fremd erweist: `dt_base_erlaubt()` macht daraus NULL, und dann stuende
+     * weder Kennung noch Name da. Was jemand tippen darf, darf auch als
+     * Rueckfall stehen bleiben. */
+    $baseRoh = $roh['base_id'] ?? null;
+    $baseId  = ($baseRoh === null || $baseRoh === '' || (int)$baseRoh <= 0) ? null : (int)$baseRoh;
+    $baseName = pruef_text($roh['base_name'] ?? null, SD_NAME_MAX, 'Standort', $p);
+
+    if ($fehler !== [] || $name === null || $typ === null || $kind === null) {
+        return ['daten' => null, 'fehler' => $fehler];
+    }
+
+    return [
+        'daten' => [
+            'name'      => $name,
+            'typ'       => $typ,
+            'kind'      => $kind,
+            'base_id'   => $baseId,
+            'base_name' => $baseName,
+        ],
+        'fehler' => [],
+    ];
+}
+
 const SD_NAME_MAX = 120;   // crew_presets, resources, bw_units
 const SD_ZIEL_MAX = 190;   // transport_dests — laengere Klinikbezeichnungen
 

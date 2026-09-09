@@ -524,8 +524,87 @@ function dt_anlegen(PDO $pdo, int $userId, string $day, ?string $startedAt = nul
  * nicht mehr an, deren Zeile aber einen Namen traegt, bleibt sie stehen —
  * dieselbe Regel wie in der Migration. Nur leere Zeilen werden entfernt.
  */
-function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $baseId): void
+/**
+ * Den Rollensatz eines Diensttags auf `$soll` bringen (S9/AP6).
+ *
+ * Sie steht an einer Stelle, seit `dt_zuordnen()` zwei Wege hat: das
+ * Rettungsmittel aus den Stammdaten und das nur fuer diesen Tag (E-S9-10).
+ * Beide frieren nach derselben Regel ein.
+ *
+ * WAS SIE NICHT TUT: eine Zeile mit NAMEN wegwerfen. Fehlende Rollen kommen
+ * dazu, ueberzaehlige gehen nur, wenn sie LEER sind. Ein Name, den jemand
+ * eingetragen hat, ueberlebt damit auch einen Wechsel des Rettungsmittels und
+ * steht wieder da, wenn die Rolle zurueckkommt — er verschwindet nur aus der
+ * Anzeige, weil das Formular nur die Rollen des aktuellen Satzes zeichnet.
+ */
+function dt_rollensatz_einfrieren(PDO $pdo, int $dayId, array $soll): void
 {
+    $q = $pdo->prepare('SELECT role_code, name FROM day_crew WHERE day_id = ?');
+    $q->execute([$dayId]);
+    $ist = [];
+    foreach ($q->fetchAll() as $z) { $ist[(string)$z['role_code']] = $z['name']; }
+
+    $ins = $pdo->prepare('INSERT INTO day_crew (day_id, role_code, name) VALUES (?,?,NULL)');
+    foreach ($soll as $code) {
+        if (!array_key_exists($code, $ist)) { $ins->execute([$dayId, $code]); }
+    }
+    $del = $pdo->prepare('DELETE FROM day_crew WHERE day_id = ? AND role_code = ?');
+    foreach ($ist as $code => $name) {
+        $leer = ($name === null || trim((string)$name) === '');
+        if ($leer && !in_array($code, $soll, true)) { $del->execute([$dayId, $code]); }
+    }
+}
+
+function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $baseId,
+                     ?array $adhoc = null): void
+{
+    /* ---- ZWEITER WEG: EIN RETTUNGSMITTEL NUR FUER DIESEN TAG -----------
+     *
+     * (S9/AP6, E-S9-10.) `$adhoc` traegt das Ergebnis von
+     * `pruef_tagesrettungsmittel()` — Bezeichnung, Typ, Betriebsart und
+     * entweder eine Standortkennung oder einen Standortnamen als Freitext.
+     * Es entsteht KEIN Stammdatensatz (F17): Was hier gespeichert wird, steht
+     * ausschliesslich in der Momentaufnahme des Tages.
+     *
+     * Der Weg ist eine Abzweigung und keine zweite Funktion, weil das
+     * Ergebnis dasselbe ist: dieselben Spalten in `days`, derselbe Umgang mit
+     * `day_crew` und `day_capabilities`. Was sich unterscheidet, ist die
+     * HERKUNFT der Werte — aus den Stammdaten oder aus dem Formular. Zwei
+     * Funktionen hiessen zwei Fassungen der Einfrierregel, und die liefen
+     * beim naechsten Feld auseinander.
+     *
+     * `$vehicleId` bleibt NULL. Damit greifen die Rollen- und
+     * Faehigkeitsbloecke unten von selbst richtig: kein Rollensatz, keine
+     * Faehigkeiten (F19). */
+    if ($adhoc !== null) {
+        /* Die Kennung gewinnt, wenn sie der NutzerIn gehoert; sonst bleibt der
+         * getippte Name stehen (Rueckfall, siehe `pruef_tagesrettungsmittel()`)
+         * — ein Tag verliert seinen Standort nicht still, nur weil eine
+         * gesendete Kennung fremd war. */
+        $bid  = dt_base_erlaubt($pdo, $userId, $adhoc['base_id'] ?? null);
+        $bName = $adhoc['base_name'] ?? null;
+        $bLat = null; $bLon = null;
+        if ($bid !== null) {
+            $q = $pdo->prepare('SELECT name, lat, lon FROM bases WHERE id = ?');
+            $q->execute([$bid]);
+            if ($b = $q->fetch()) {
+                $bName = (string)$b['name'];
+                $bLat  = $b['lat'];
+                $bLon  = $b['lon'];
+            }
+        }
+        $pdo->prepare('UPDATE days SET vehicle_id = NULL, base_id = ?, kind = ?,
+                         base_name = ?, base_lat = ?, base_lon = ?, vehicle_name = ?,
+                         vehicle_typ = ?, vehicle_kurz = NULL
+                       WHERE id = ? AND user_id = ?')
+            ->execute([$bid, $adhoc['kind'], $bName, $bLat, $bLon,
+                       $adhoc['name'], $adhoc['typ'], $dayId, $userId]);
+        $vehicleId = null;
+        dt_rollensatz_einfrieren($pdo, $dayId, []);
+        $pdo->prepare('DELETE FROM day_capabilities WHERE day_id = ?')->execute([$dayId]);
+        return;
+    }
+
     $vehicleId = dt_vehicle_erlaubt($pdo, $userId, $vehicleId);
     $baseId    = dt_base_erlaubt($pdo, $userId, $baseId);
 
@@ -564,22 +643,8 @@ function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $b
                    $vehicleName, $vehicleTyp, $vehicleKurz, $dayId, $userId]);
 
     /* ---- Rollensatz einfrieren ---------------------------------------- */
-    $soll = $vehicleId !== null ? dt_vehicle_rollen($pdo, $vehicleId) : [];
-
-    $q = $pdo->prepare('SELECT role_code, name FROM day_crew WHERE day_id = ?');
-    $q->execute([$dayId]);
-    $ist = [];
-    foreach ($q->fetchAll() as $z) { $ist[(string)$z['role_code']] = $z['name']; }
-
-    $ins = $pdo->prepare('INSERT INTO day_crew (day_id, role_code, name) VALUES (?,?,NULL)');
-    foreach ($soll as $code) {
-        if (!array_key_exists($code, $ist)) { $ins->execute([$dayId, $code]); }
-    }
-    $del = $pdo->prepare('DELETE FROM day_crew WHERE day_id = ? AND role_code = ?');
-    foreach ($ist as $code => $name) {
-        $leer = ($name === null || trim((string)$name) === '');
-        if ($leer && !in_array($code, $soll, true)) { $del->execute([$dayId, $code]); }
-    }
+    dt_rollensatz_einfrieren($pdo, $dayId,
+        $vehicleId !== null ? dt_vehicle_rollen($pdo, $vehicleId) : []);
 
     /* ---- Faehigkeitssatz einfrieren ----------------------------------- */
     $pdo->prepare('DELETE FROM day_capabilities WHERE day_id = ?')->execute([$dayId]);

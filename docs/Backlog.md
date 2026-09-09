@@ -1175,6 +1175,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     manuell über die Einstellungen (F17). Bedingung: Suche und Filter müssen
     für solche Einträge greifen.
     *Konzept S9 (07.09.2026): E-S9-10 („Anderes Rettungsmittel …" im Zuordnungsformular; AP6).*
+    *Gebaut mit Web 18.1.0 (S9/AP6, 09.09.2026): Der letzte Eintrag der Auswahl
+    klappt Bezeichnung, Typ mit Betriebsart und einen Standort auf, der Auswahl
+    und Freitext zugleich ist. Gespeichert wird nur in der Momentaufnahme des
+    Tages — `vehicle_id` bleibt NULL. **Die Bedingung ist gemessen:** Der Name
+    steht in der Tagesliste, die aus der Momentaufnahme kommt und nicht aus den
+    Stammdaten (Klickprobe `ap6-adhoc-speichern-und-finden`). Nach *Erledigt*
+    wandert der Punkt mit dem Abschluss von S9 (AP8).*
 
 113. **Rollen unmittelbar nach der Auswahl bearbeitbar.**
     *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.3), Schritt 8
@@ -1185,6 +1192,12 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nachgeladen. Für manuell definierte Rettungsmittel (Nr. 112) und Arten
     ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
     *Konzept S9 (07.09.2026): E-S9-11 (`api/day.php?vorschau=`; AP6).*
+    *Gebaut mit Web 18.1.0 (S9/AP6, 09.09.2026): `api/day.php?vorschau=` liefert
+    Rollensatz und Vorlagen zu einer noch nicht gespeicherten Wahl und schreibt
+    nichts; das Formular zeichnet die Felder bei `change` neu. Gemessen über
+    sechs Rettungsmittel: Rollenzahlen **5/3/0/3/0/0**, die Zuordnung in der
+    Datenbank danach unverändert. Getippte Namen bleiben stehen, wo die Rolle
+    bleibt. Nach *Erledigt* mit dem Abschluss von S9 (AP8).*
 
 114. **Abgewiesene Pakete sichtbar machen und ausräumen.**
     *Ergänzung 06.09.2026 (Krypto-Review AN-2):* Die Pakete bleiben samt

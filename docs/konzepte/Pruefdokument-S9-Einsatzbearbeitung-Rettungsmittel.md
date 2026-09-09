@@ -193,9 +193,9 @@ gemessen hat, ist keine Zahl.
 | P-14 | Kreisläufe csv und edbak | `kreislauf.py` | 0 unerklärt | **erfüllt — edbak 287 771 · csv 9 118 · edbak-alt 287 781 Einzelvergleiche, je 0 unerklärt** (16 / 1 021 / 653 erwartet, 0 ungenutzte Regeln; `--frisch`, dreimal). Dazu Aufwärtskompatibilität: Eine Nutzlast-9-Datei spielt **4 von 6** Rettungsmitteln als `standard` ein und überspringt die **2** ohne Standort, die es in einer echten 9er-Datei nicht geben konnte | 07.09.2026 |
 | P-15 | Register | Zählung | n = n | **45 = 45** — Katalog in `migration_lib.php` gegen die `skipped`-Einträge am Ende von `schema.sql` | 07.09.2026 |
 | P-16 | Sprungliste ab sechs | ~~Bild~~ **Klickprobe** | 5 → nein, 6 → ja | **erfüllt** (AP5-3): bei 5 keine Liste, bei 6 eine mit 6 Pillen / 6 Artzeichen / 6 gültigen Zielen, 36 px hoch. Das Mittel ist ein anderes als geplant — am Referenzbestand (3 Rettungsmittel je Standort) zeigt ein Bild die Schwelle nicht |
-| P-17 | Rollen sofort | Klickprobe | Felder = Rollen | offen — AP6 |
-| P-18 | Anderes Rettungsmittel such- und filterbar | Klickprobe | Name in Filterliste | offen — AP6 |
-| P-19 | R27-Proben | Wiederherstellung, Mischfall | 0 Abweichungen | offen — AP6 |
+| P-17 | Rollen sofort | Klickprobe | Felder = Rollen | **erfüllt.** Über sechs Rettungsmittel gefahren: Rollenzahlen **5/3/0/3/0/0**, jede gleich `vehicle_roles`; die Zuordnung in der Datenbank danach unverändert (`ap6-rollen-ohne-speichern`) |
+| P-18 | Anderes Rettungsmittel such- und filterbar | Klickprobe | Name in Filterliste | **erfüllt.** Nach dem Speichern steht „KP Aushilfe 12/1“ in der Tagesliste — sie liest die Momentaufnahme, nicht die Stammdaten (`ap6-adhoc-speichern-und-finden`) |
+| P-19 | R27-Proben | Wiederherstellung, Mischfall | 0 Abweichungen | **erfüllt.** `tools/wiederherstellungs-probe/` — **94 Erwartungen, 0 nicht erfüllt** (Papierkorb-Mischfall eingeschlossen) |
 | P-20 | Anhebung der Notizen | Vergleichsskript | n / 0 / n | offen — AP7 |
 | P-21 | Suche findet Notiz nur entsperrt | Klickprobe | 1/1 und 0/1 | offen — AP7 |
 | P-22 | Export mit/ohne `pers` | Exportdatei | Spalte da / leer | offen — AP7 |
@@ -602,6 +602,71 @@ nicht zu ersetzen: Der PHP-Server der Prüfumgebung beantwortet **jede**
 unbekannte Adresse mit 302 (gemessen: `gibtsnicht.php`, `gibtsnicht.txt` und
 `admin_stammdaten.php` alle **302**), er kann also gar nicht zeigen, was ein
 Apache mit 404 zeigen würde.
+
+
+### AP6 — Tageszuordnung: Rollen ohne Speichern, Rettungsmittel nur für den Tag (Web 18.1.0)
+
+**Drei neue Klickprobenwege, 3 von 3 erfüllt.** Alle drei ändern die Zuordnung
+eines Diensttags und stellen sie im `finally` zurück — auch wenn sie unterwegs
+scheitern. Der Referenzbestand steht danach wie vorher; nachgezählt: **0**
+Diensttage mit `vehicle_id IS NULL` bei gesetztem Namen, **0** Einträge
+`name LIKE 'KP %'`, **21 Rettungsmittel, 61 Diensttage**.
+
+| Weg | Ist |
+|---|---|
+| `ap6-rollen-ohne-speichern` | **6 Rettungsmittel** gefahren, Rollenzahlen **5/3/0/3/0/0** (vier verschiedene) — die Zahl folgt `vehicle_roles`. Nach dem Neuladen ist die Zuordnung des Diensttags **unverändert**: Der Wechsel hat gezeichnet und nicht geschrieben |
+| `ap6-adhoc-felder-und-typregel` | Felder auf, **0 Rollenfelder** mit eigenem Satz („nur für diesen Tag"); Typ *Veranstaltung* → luftgebunden **gesperrt**, bodengebunden **gesetzt**, Hinweis „bei diesem Typ fest" sichtbar |
+| `ap6-adhoc-speichern-und-finden` | Kennung aus dem Treffer **„77"**; nach dem Neuladen Auswahl **„adhoc"**, Name „KP Aushilfe 12/1", Typ `sonstiges`, Betriebsart `ground`, Standortkennung **„77"**, **0 Rollenfelder**; der Name steht in der **Tagesliste** |
+
+**Der Fehlerweg ist eigens gemessen** (von Hand, nicht als Weg): Eine leere
+Bezeichnung liefert **422** und die Sätze der Prüfschicht selbst — „Bitte eine
+Bezeichnung für das Rettungsmittel eintragen. Bitte die Art wählen: …" —, und
+der Diensttag bleibt unverändert. Ein Standort als **Freitext** ohne Treffer
+wird als Name gespeichert, die Kennung bleibt leer; nach dem Neuladen steht der
+Text wieder im Feld.
+
+**Ein Fund beim Bauen, und er wäre still geblieben.** Die Vorschlagsliste des
+Standortfelds setzte die verborgene Kennung **vor** dem `input`-Ereignis, das
+die Speichern-Leiste weckt — der eigene Zuhörer darunter löschte sie gleich
+wieder, weil Tippen Freitext bedeutet. Der Treffer sah aus wie ein Treffer und
+wurde als Freitext gespeichert, ohne Koordinate. **Gemessen: Kennung `""`
+statt `"77"`.** Sichtbar war das nirgends — weder im Formular noch in der
+Leseansicht, die nur den Namen zeigt. Jetzt fällt erst das Ereignis, dann steht
+die Kennung; der Klickprobenweg misst die Kennung ausdrücklich mit.
+
+**Drei Regeln stehen jetzt nur noch einmal.** `pruef_typ_betriebsart()` (Typ
+und Betriebsart, geteilt von `pruef_rettungsmittel()` und
+`pruef_tagesrettungsmittel()`), `pruef_tagesrettungsmittel()` selbst (auch
+dieser Schreibweg läuft über die Prüfschicht — `CLAUDE.md` 4) und
+`dt_rollensatz_einfrieren()` (das Einfrieren, geteilt von beiden Wegen in
+`dt_zuordnen()`). Ohne das Herausziehen hätte AP6 die Typregel zum zweiten Mal
+hingeschrieben — genau der Fehler, den `validate_lib.php` in ihrem eigenen
+Kopfkommentar als Grund ihrer Existenz nennt.
+
+**Wo AP6 vom Konzept abweicht, und warum:**
+
+- **Der Standort ist beim Typ „Standard" auch hier freiwillig.** Am
+  Stammdatensatz ist er Pflicht, weil die Vorschlagslisten an ihm hängen (E15)
+  und ein Standard-Rettungsmittel ohne Standort eine leere Tagesübersicht
+  hinterließe. Ein Rettungsmittel nur für den Tag hat **keine** Rollen und
+  damit keine Vorschlagslisten: Die Begründung trägt nicht, also gilt die Regel
+  nicht. Das Konzept nennt nur die Bezeichnung als Pflichtfeld.
+- **`api/day.php?vorschau=` nimmt einen zweiten Parameter `base`.** Das Konzept
+  nennt nur `vorschau=<vehicle_id>`. Die Vorlagen hängen aber am Standort des
+  **Diensttags**, und im Formular sind Rettungsmittel und Standort zwei Felder,
+  die auseinanderfallen können. Ohne `base` zeigte die Vorschau die Namen eines
+  anderen Standorts als der, den das Speichern einfriert. Ohne den Parameter
+  fällt sie auf den Standort des Rettungsmittels zurück — den Regelfall.
+- **`day_crew` wird beim Wechsel auf „Anderes Rettungsmittel" nicht geleert.**
+  Das Konzept sagt „`day_crew` und `day_capabilities` bleiben leer".
+  Wortgetreu hieße das: vorhandene **Namen** löschen. `dt_zuordnen()` tut das
+  seit jeher nicht — überzählige Rollen gehen nur, wenn sie leer sind, damit
+  ein versehentlicher Wechsel keine Eingabe kostet. AP6 hält diese Regel:
+  Angelegt wird kein Rollensatz, das Formular zeigt **keine** Rollenfelder, und
+  `day_capabilities` wird geleert; benannte Zeilen in `day_crew` bleiben stehen
+  und kommen mit der Rolle zurück. **Sichtbar bleibt davon eines:** Die
+  Leseansicht des Tages zeigt die Besatzung weiter an — sie berichtet, was
+  gespeichert ist. Das ist als **Frage 11** aufgenommen.
 
 
 ## 2. Fehlerfunde
@@ -1275,6 +1340,33 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
 ---
 
 ## 4. Fragen an den Auftraggeber
+
+
+### Neu aus AP6 (09.09.2026)
+
+**Frage 11 — Ein Diensttag mit „Anderem Rettungsmittel": soll die Leseansicht
+die Besatzung weiter zeigen?**
+Ein Rettungsmittel nur für den Tag führt keine Besatzungsrollen (E-S9-10,
+F19) — das Formular zeigt deshalb kein Rollenfeld, sondern den Satz dazu.
+War dem Diensttag vorher ein Rettungsmittel **mit** Rollen zugeordnet und
+standen dort Namen, dann bleiben diese Zeilen in `day_crew` stehen:
+`dt_zuordnen()` löscht seit jeher nur **leere** Rollen, damit ein
+versehentlicher Wechsel keine Eingabe kostet. Die **Leseansicht** des Tages
+liest `day_crew` und zeigt sie weiter an.
+
+*Das ist beides vertretbar und widerspricht sich trotzdem:* Die Leseansicht
+berichtet, was gespeichert ist — die Leute waren im Dienst, und ihre Namen
+verschwinden zu lassen wäre die schlechtere Auskunft. Zugleich steht dann
+unter einem Rettungsmittel, das „keine Besatzungsrollen" hat, eine Besatzung.
+
+*Drei Wege:* **(a)** so lassen — die Leseansicht berichtet den Bestand, das
+Formular die Bearbeitbarkeit; **(b)** die Leseansicht blendet die Besatzung
+aus, solange das Rettungsmittel ein Tagesfahrzeug ist — dann sind die Namen
+unsichtbar, aber noch da, und niemand kann sie erreichen; **(c)** die Namen
+werden beim Wechsel gelöscht — dann stimmt alles überein, und ein
+versehentlicher Wechsel kostet die Eingabe. *Ich habe (a) gebaut*, weil es
+als einziges nichts verbirgt und nichts wegwirft. Für (b) oder (c) spricht
+die Einheitlichkeit; beides ist eine Zeile.
 
 Stellen, an denen Konzept und Auftrag einander widersprechen oder das Konzept
 schweigt. Jede ist vorläufig entschieden **und** revidierbar; der Preis einer

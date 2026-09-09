@@ -3605,5 +3605,56 @@ declare(strict_types=1);
  * gehoert deshalb ein Aufruf mit STATUSCODE dazu: `admin_stammdaten.php` muss
  * 404 antworten. Eine 200 mit Anmeldeseite sieht im Browser aus wie ein
  * Erfolg. `update.php` muss NICHT laufen.
+ *
+ * ---------------------------------------------------------------------------
+ * 18.1.0 — S9/AP6: die Tageszuordnung antwortet sofort, und ein Dienst darf
+ * auf einem Fahrzeug stattfinden, das es als Stammdatensatz nicht gibt.
+ *
+ * ZWEI DINGE, EIN FORMULAR.
+ *
+ * ERSTENS: DIE ROLLEN ERSCHEINEN OHNE SPEICHERN (E-S9-11). Die
+ * Besatzungsfelder entstanden bisher ausschliesslich aus der Tagesantwort,
+ * also aus dem eingefrorenen `day_crew`. Wer ein anderes Rettungsmittel
+ * waehlte, sah weiter die Rollen des alten und bekam die neuen erst nach dem
+ * Speichern — zwei Speichervorgaenge fuer eine Handlung, und dazwischen zeigte
+ * das Formular etwas anderes an, als darueber ausgewaehlt war. Der neue
+ * lesende Aufruf `api/day.php?vorschau=<vehicle_id>[&base=<base_id>]`
+ * beantwortet dieselbe Frage fuer eine noch nicht gespeicherte Wahl und
+ * SCHREIBT NICHTS; eingefroren wird weiterhin erst beim Speichern (E8).
+ * Getippte Namen bleiben stehen, wo die Rolle bleibt — ohne das waere jede
+ * versehentliche Auswahl ein Datenverlust.
+ *
+ * ZWEITENS: „ANDERES RETTUNGSMITTEL …" (E-S9-10). Der letzte Eintrag der
+ * Auswahl klappt drei Felder auf — Bezeichnung, Typ mit Betriebsart und einen
+ * Standort, der Auswahl UND Freitext ist. Gespeichert wird nur am Tag:
+ * `vehicle_id` bleibt NULL, `vehicle_name`, `vehicle_typ`, `kind` und der
+ * Standort stehen in der Momentaufnahme. ES ENTSTEHT KEIN STAMMDATENSATZ
+ * (F17) — wer einmal auf einem fremden Fahrzeug Dienst tut, soll dafuer
+ * keinen Eintrag anlegen muessen, den er danach nie wieder braucht. Suche,
+ * Filter und Tagesliste finden ihn trotzdem: Sie lesen die Momentaufnahme.
+ *
+ * KEIN ROLLENSATZ, KEINE FAEHIGKEITEN (F19). Ein Rettungsmittel nur fuer den
+ * Tag fuehrt keine Besatzungsrollen; das Formular sagt das und verweist auf
+ * die abweichende Besatzung am einzelnen Einsatz. Vorhandene NAMEN in
+ * `day_crew` werden dabei NICHT geloescht — dieselbe Regel wie beim Wechsel
+ * auf ein Rettungsmittel mit weniger Rollen: Ein Name, den jemand eingetragen
+ * hat, ueberlebt und steht wieder da, sobald die Rolle zurueckkommt.
+ *
+ * DREI STELLEN, AN DENEN EINE REGEL JETZT NUR NOCH EINMAL STEHT:
+ * `pruef_typ_betriebsart()` (Typ und Betriebsart, geteilt von Stammdatensatz
+ * und Tagesfassung), `pruef_tagesrettungsmittel()` (die Pruefschicht auch fuer
+ * diesen Schreibweg — CLAUDE.md 4) und `dt_rollensatz_einfrieren()` (das
+ * Einfrieren, geteilt von beiden Wegen in `dt_zuordnen()`).
+ *
+ * EIN FUND BEIM BAUEN, und er waere still geblieben: Die Vorschlagsliste des
+ * Standortfelds setzte die verborgene Kennung VOR dem `input`-Ereignis, das
+ * die Speichern-Leiste weckt — und der eigene Zuhoerer darunter loeschte sie
+ * gleich wieder, weil Tippen Freitext bedeutet. Der Treffer sah aus wie ein
+ * Treffer und wurde als Freitext gespeichert, ohne Koordinate. Gemessen:
+ * Kennung „" statt „77". Jetzt faellt erst das Ereignis, dann steht die
+ * Kennung.
+ *
+ * NEBENNUMMER: neue Funktionen, kein Datenmodell, keine Migration.
+ * `update.php` muss NICHT laufen.
  */
-const WEB_VERSION = '18.0.0';
+const WEB_VERSION = '18.1.0';
