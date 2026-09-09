@@ -616,7 +616,10 @@ Diensttage mit `vehicle_id IS NULL` bei gesetztem Namen, **0** Einträge
 |---|---|
 | `ap6-rollen-ohne-speichern` | **6 Rettungsmittel** gefahren, Rollenzahlen **5/3/0/3/0/0** (vier verschiedene) — die Zahl folgt `vehicle_roles`. Nach dem Neuladen ist die Zuordnung des Diensttags **unverändert**: Der Wechsel hat gezeichnet und nicht geschrieben |
 | `ap6-adhoc-felder-und-typregel` | Felder auf, **0 Rollenfelder** mit eigenem Satz („nur für diesen Tag"); Typ *Veranstaltung* → luftgebunden **gesperrt**, bodengebunden **gesetzt**, Hinweis „bei diesem Typ fest" sichtbar |
-| `ap6-adhoc-speichern-und-finden` | Kennung aus dem Treffer **„77"**; nach dem Neuladen Auswahl **„adhoc"**, Name „KP Aushilfe 12/1", Typ `sonstiges`, Betriebsart `ground`, Standortkennung **„77"**, **0 Rollenfelder**; der Name steht in der **Tagesliste** |
+| `ap6-adhoc-speichern-und-finden` | Der Treffer aus der Vorschlagsliste setzt die verborgene Kennung (gemessen „77“ bzw. nach einem Demo-Reset „80“ — der Weg prüft, dass sie **nicht leer** ist, nicht welche Zahl dasteht); nach dem Neuladen Auswahl **„adhoc“**, Name „KP Aushilfe 12/1“, Typ `sonstiges`, Betriebsart `ground`, dieselbe Standortkennung, **0 Rollenfelder**; der Name steht in der **Tagesliste** |
+
+**Beide Bedienhöhen, beide Breiten: 76 von 76 Wegen erfüllt, 0 verfehlt** —
+je 38 Wege über 390 und 1280 px, als Zeiger- und als Fingergerät.
 
 **Der Fehlerweg ist eigens gemessen** (von Hand, nicht als Weg): Eine leere
 Bezeichnung liefert **422** und die Sätze der Prüfschicht selbst — „Bitte eine
