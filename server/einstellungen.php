@@ -575,6 +575,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* Die Kennung eines NEU angelegten Standorts — die Umleitung fuehrt auf
      * seine Seite (E-S9-19), nicht auf die Liste, aus der er entstanden ist. */
     $baseNeu = null;
+    /* Die Kennung des Rettungsmittels, das das Loeschen eines Standorts
+     * ueberlebt hat — die Umleitung fuehrt auf seine Zeile unter „Ohne
+     * Standort" (M-S9-10 b). */
+    $ohneZiel = null;
     $sdNeuId = static function (string $dublettenmeldung) use (&$error): ?int {
         $id = (int)db()->lastInsertId();
         if ($id > 0) { return $id; }
@@ -674,21 +678,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'base_del') {
         /* DAS LOESCHEN NIMMT DIE STAMMDATEN DES STANDORTS MIT (E15,
-         * ON DELETE CASCADE). Diensttage bleiben davon unberuehrt, weil sie ihre
-         * Angaben eingefroren haben (E8) — der frueher noetige Umweg, den Namen
-         * vorher in `days.base` zu retten, ist damit entfallen.
+         * ON DELETE CASCADE) — MIT EINER AUSNAHME SEIT WEB 17.1.0 (M-S9-10,
+         * Variante b). Diensttage bleiben davon unberuehrt, weil sie ihre
+         * Angaben eingefroren haben (E8).
          *
-         * Vor dem Loeschen ist die Zahl der betroffenen Stammdatensaetze
-         * anzuzeigen und bestaetigen zu lassen (Konzept 4.2). Die Zahl steht in
-         * der Rueckfrage der Oberflaeche; hier wird nur noch geloescht. */
+         * DIE AUSNAHME: Rettungsmittel der drei Typen ohne Standortpflicht
+         * duerfen seit E-S9-09 ohne Standort bestehen — dann darf das Loeschen
+         * eines Standorts sie auch nicht kosten. Sie bekommen `base_id = NULL`
+         * und stehen danach unter „Ohne Standort". Der Fremdschluessel bleibt
+         * `ON DELETE CASCADE`: `ON DELETE SET NULL` waere falsch, weil es
+         * JEDES Standard-Rettungsmittel standortlos machte — einen Datensatz,
+         * den die Pruefschicht nie anlegen wuerde.
+         *
+         * IN EINER TRANSAKTION, weil sonst bei einem Abbruch dazwischen ein
+         * Rettungsmittel ohne Standort dastuende, dessen Standort es noch
+         * gibt. Die Zahl der betroffenen Saetze nennt die Rueckfrage der
+         * Oberflaeche (`stammdaten_loeschfrage()`), hier wird geloescht. */
         $bid = (int)($_POST['id'] ?? 0);
-        db()->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
-            ->execute([$userId, $bid]);
-        db()->prepare('DELETE FROM bases WHERE id = ? AND user_id = ?')
-            ->execute([$bid, $userId]);
-        $notice = 'Standort samt seiner Stammdaten gelöscht. Bereits dokumentierte '
-                . 'Diensttage bleiben unverändert.';
+        $bleiben = stammdaten_ohne_standortpflicht($bid, $userId);
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $geloest = stammdaten_standort_loesen($bid, $userId);
+            $pdo->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
+                ->execute([$userId, $bid]);
+            $pdo->prepare('DELETE FROM bases WHERE id = ? AND user_id = ?')
+                ->execute([$bid, $userId]);
+            $pdo->commit();
+        } catch (PDOException $ex) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            $error = 'Der Standort konnte nicht gelöscht werden.';
+            $geloest = 0;
+        }
+        if ($error === null) {
+            $notice = 'Standort samt seiner Stammdaten gelöscht. '
+                    . ($geloest > 0
+                        ? ($geloest === 1
+                            ? 'Ein Rettungsmittel ohne Standortpflicht steht jetzt unter „Ohne Standort". '
+                            : $geloest . ' Rettungsmittel ohne Standortpflicht stehen jetzt unter „Ohne Standort". ')
+                        : '')
+                    . 'Bereits dokumentierte Diensttage bleiben unverändert.';
+            /* DIE UMLEITUNG ZEIGT AUF DAS, WAS UEBERLEBT HAT (M-S9-10 b,
+               „der neue Eintrag trägt `:target`"). Bei mehreren auf das erste:
+               Die Karte „Ohne Standort" ist zugeklappt, und das Skript am
+               Seitenende oeffnet die Vorfahren des Ankers. Ohne diese Zeile
+               landete man auf der Standortliste, und das Ueberlebende waere
+               nur eine Meldung. */
+            if ($bleiben !== []) { $ohneZiel = (int)$bleiben[0]['id']; }
+        }
     }
+
     if ($action === 'veh_save') {
         $vid = (int)($_POST['id'] ?? 0);
         /* ALLE REGELN STEHEN IN DER PRUEFSCHICHT (Web 16.0.0, E-S9-09).
@@ -962,6 +1001,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $zurueckZiel = sd_seite($baseNeu);
         $abschnitt = 'k-standort';
     }
+    if ($ohneZiel !== null) { $abschnitt = 'veh-' . $ohneZiel; }
     if ($abschnitt === null && $unterblock !== null) {
         $zurueckBase = (int)($_POST['base_id'] ?? 0);
         /* OHNE STANDORT GIBT ES KEINE SEITE, auf die man zurueckkehren
@@ -1892,12 +1932,17 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
       <input type="hidden" name="id" value="<?= $sBid ?>">
     </form>
+    <?php /* DIE RUECKFRAGE TRENNT DIE ZAHL (M-S9-10 b, S9/AP5-5). Bis
+             Web 17.0.0 zaehlte sie ALLES mit — „6 werden mitgelöscht" —, und
+             eines davon blieb dann doch. Jetzt sagt sie „5 werden
+             mitgelöscht, 1 bleibt", und das eine mit NAMEN: Ein
+             Rettungsmittel, das einen Standort verlässt, ist eine Nachricht
+             und keine Statistik. Der Satz steht in
+             `stammdaten_loeschfrage()`, weil ihn zwei Seiten brauchen. */
+          $sBleiben = stammdaten_ohne_standortpflicht($sBid, $userId); ?>
     <form method="post" id="f-bdel-<?= $sBid ?>" class="nur-vorlesen"
           action="einstellungen.php?t=standorte#standorte"
-          data-confirm="Standort „<?= e($seiteB['name']) ?>“ löschen? <?= $sAnz > 0
-              ? ($sAnz === 1 ? 'Ein eigener Stammdatensatz' : $sAnz . ' eigene Stammdatensätze')
-                . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht.'
-              : 'Es hängen keine eigenen Stammdaten daran.' ?> Bereits dokumentierte Diensttage bleiben unverändert.">
+          data-confirm="<?= e(stammdaten_loeschfrage((string)$seiteB['name'], $sAnz, $sBleiben, false)) ?>">
       <?= csrf_field() ?><input type="hidden" name="action" value="base_del">
       <input type="hidden" name="id" value="<?= $sBid ?>">
     </form>

@@ -235,6 +235,55 @@ Sicherheitsmerkmal wäre: Der Geräteschlüssel liegt im Keystore, nicht im Code
 **Was der Prüfstand sagt:** `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor. Emulator (Stufe II):
 **erreicht, im fünften Anlauf** (Emulator 37.1.11, `android-34;default;x86_64`, `-accel off`): adbd nach 120 s, `ro.hw_timeout_multiplier=10` als Root gesetzt und Framework neu gestartet, Boot **715 s**, Prüf-APK gegen die lokale Installation **128 s**; acht Bilder — Kopplungsansicht, Code `S4Y ZPF`, im Web als Demo-Konto eingetragen und bestätigt, „Zu diesem Konto koppeln? de***@gen-em.org", „Ja, koppeln" → Dienstansicht „Gekoppelt · 127.0.0.1:8080", `devices`-Zeile 79 am Server; per `sqlite3` ein abgewiesenes Paket samt Punkt, Phase und beendeter Dienstzeile eingespielt → rote Zeile „1 Paket vom Server abgewiesen"; Einstellungen; „Gerät trennen" mit Rückfrage; „Getrennt". **Der Räumlauf am echten Android-SQLite:** nach dem Trennen `paket 0, fehlerhaft 0, punkt 0, phase 0, dienst 0` (vorher je 1), Gerät am Server gelöscht (`POST /pair.php` 200), kein Absturz im `logcat`. Davor **vier Anläufe ohne Boot** (14, 38, 22 und 12 min) — Ursache der Android-Watchdog unter TCG, Gegenmittel jetzt in `emulator.sh start` (F-SP-P-07); der Wear-Emulator für das Uhr-Modul wurde nicht gefahren (Abschnitt 0).
 
+## [Web 17.1.0] — 2026-09-09
+
+### Web — einen Standort löschen kostet nicht mehr, was ohne ihn bestehen darf (S9/AP5, Teil 5)
+
+**Der Fremdschlüssel nahm alles mit, auch das, was nicht mitgehen musste.**
+Seit Web 16.0.0 dürfen Rettungsmittel der Typen Bergwacht, Veranstaltung und
+Sonstiges ohne Standort bestehen — sie haben dann keine Vorschlagslisten, und
+das ist der ganze Unterschied. Wer einen Standort löschte, verlor sie
+trotzdem: `ON DELETE CASCADE` fragt nicht nach dem Typ. Die Rückfrage sagte
+„6 Stammdatensätze werden mitgelöscht" und verschwieg, dass eines davon nicht
+hätte mitgehen müssen. Ein Sanitätsdienst, der nie zu einem Standort gehörte
+und nur zufällig einem zugeordnet war, verschwand mit ihm.
+
+**Jetzt behalten sie ihr Dasein und stehen danach unter „Ohne Standort".** Der
+Fremdschlüssel bleibt, wie er ist — `ON DELETE SET NULL` wäre die falsche
+Antwort, weil es jedes **Standard**-Rettungsmittel standortlos machte, also
+einen Datensatz erzeugte, den die Prüfschicht nie anlegen würde. Die Ausnahme
+ist Anwendungslogik vor dem Löschen: ein Schritt, der den drei Typen ohne
+Standortpflicht den Standort abnimmt, in derselben Transaktion. Welche Typen
+das sind, steht nicht in diesem Schritt, sondern in derselben Angabe, aus der
+auch das Anlegen entscheidet — zwei Fassungen liefen beim nächsten Typ
+auseinander, und zwar still.
+
+**Die Rückfrage trennt die Zahl und nennt das Überlebende mit Namen.** Aus
+„6 werden mitgelöscht" wird „5 werden mitgelöscht. 1 Rettungsmittel ohne
+Standortpflicht — Bergwacht Hochkreuth — bleibt bestehen und steht danach
+unter ‚Ohne Standort'." Ein Rettungsmittel, das einen Standort verlässt, ist
+eine Nachricht und keine Statistik. Ab vier Namen nennt sie drei und „und N
+weitere"; sonst wäre die Aufzählung länger als der übrige Text.
+
+**Und die Seite landet danach auf dem Überlebenden**, nicht auf der
+Standortliste: Wer die Rückfrage schnell wegklickt, findet den Eintrag sonst
+später unter „Ohne Standort" und fragt sich, woher er kommt. Die Karte ist
+zugeklappt — das Ankerskript öffnet sie und hebt die Zeile hervor, dieselbe
+Landung wie nach dem Anlegen.
+
+**Was diese Fassung nicht tut:** Ein Rettungsmittel, das einer NutzerIn
+gehört und an einem **systemweiten** Standort hängt, geht weiterhin mit, wenn
+die Verwaltung diesen Standort löscht — auch wenn sein Typ keinen Standort
+braucht. Das ist Bestandsverhalten und keine Entscheidung dieses Pakets: Die
+Rückfrage der Verwaltung zählt seit jeher nur den systemweiten Bestand und
+sagt daneben, wie viele Konten den Standort gewählt haben. Vermerkt als
+Frage im Prüfdokument.
+
+Ein Fund beim Bauen, gefunden von der Klickprobe: Der erste Entwurf leitete
+die deutsche Adjektivendung aus der Zeichenkette ab und schrieb „Ein eigenr
+Stammdatensatz". Vier Formen stehen jetzt ausgeschrieben — Endungen zu
+rechnen geht schief, sobald jemand ein zweites Wort einsetzt.
+
 ## [Web 17.0.0] — 2026-09-09
 
 ### Web — Anlegen und Bearbeiten stehen im Dialog; die Verwaltung bekommt dieselben Standortseiten (S9/AP5, Teil 4)

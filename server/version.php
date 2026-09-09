@@ -3438,5 +3438,65 @@ declare(strict_types=1);
  * dasselbe Problem hatte, ohne dass es jemand gemeldet haette.
  *
  * HAUPTNUMMER: Die Wege sind andere. `update.php` muss NICHT laufen.
+ *
+ * ---------------------------------------------------------------------------
+ * 17.1.0 — S9/AP5-5: Ein Standort loeschen kostet nicht mehr, was ohne ihn
+ * bestehen darf (M-S9-10, Variante b).
+ *
+ * `vehicles_ibfk_2` steht auf ON DELETE CASCADE, und das ist E15 woertlich:
+ * Was an einem Standort haengt, geht mit ihm. Seit E-S9-09 nahm es dabei aber
+ * auch das mit, was ohne diesen Standort bestehen DUERFTE — Bergwacht,
+ * Veranstaltung, Sonstiges. Ein Sanitaetsdienst, der nie zu einem Standort
+ * gehoerte und nur zufaellig einem zugeordnet war, verschwand mit dem
+ * Standort; die Rueckfrage sagte „6 Stammdatensaetze werden mitgeloescht" und
+ * verschwieg, dass eines davon nicht haette mitgehen muessen.
+ *
+ * AP4 hatte das bewusst stehen lassen und begruendet: `ON DELETE SET NULL`
+ * waere die falsche Antwort, weil sie JEDES Standard-Rettungsmittel
+ * standortlos machte — einen Datensatz, den die Pruefschicht nie anlegen
+ * wuerde. Die Antwort ist deshalb Anwendungslogik VOR dem `DELETE`: ein
+ * `UPDATE`, das den drei Typen ohne Standortpflicht den Standort abnimmt, in
+ * derselben Transaktion. Der Fremdschluessel bleibt, wie er ist.
+ *
+ * DREI FUNKTIONEN IN `db.php`, neben `stammdaten_dup_global()`:
+ * `stammdaten_ohne_standortpflicht()` (wer ueberlebt, mit Namen),
+ * `stammdaten_standort_loesen()` (das UPDATE) und `stammdaten_loeschfrage()`
+ * (der Satz). Zwei Aufrufstellen, eine Fassung — und die REGEL steht in
+ * keiner davon, sondern in `VEHICLE_TYPEN[...]['standort']`: derselben
+ * Angabe, aus der `pruef_rettungsmittel()` entscheidet, ob ein Typ ohne
+ * Standort angelegt werden darf. Zwei Fassungen liefen beim naechsten Typ
+ * auseinander, und zwar still.
+ *
+ * NICHT in `validate_lib.php`, obwohl das Konzept „neben
+ * `pruef_rettungsmittel()`" schreibt: Der Kopf jener Datei sagt „Diese Datei
+ * aendert von sich aus nichts", und ein `UPDATE` darin waere der erste
+ * Verstoss dagegen. Gemeint war „eine Fassung fuer beide Seiten" — und die
+ * ist es.
+ *
+ * DIE RUECKFRAGE TRENNT DIE ZAHL und nennt das Ueberlebende mit NAMEN: „5
+ * werden mitgeloescht. 1 Rettungsmittel ohne Standortpflicht — Bergwacht
+ * Hochkreuth — bleibt bestehen und steht danach unter ,Ohne Standort'." Ein
+ * Rettungsmittel, das einen Standort verlaesst, ist eine Nachricht und keine
+ * Statistik (M-S9-10, Anmerkung 3). Ab vier Namen nur noch drei und „und N
+ * weitere" — sonst waere die Aufzaehlung laenger als der uebrige Text.
+ *
+ * DIE UMLEITUNG ZEIGT AUF DAS UEBERLEBENDE, nicht auf die Standortliste: Wer
+ * die Rueckfrage schnell wegklickt, findet den Eintrag sonst spaeter unter
+ * „Ohne Standort" und fragt sich, woher er kommt. Die Karte ist zugeklappt;
+ * das Ankerskript oeffnet sie.
+ *
+ * EIN FUND BEIM BAUEN, von der Klickprobe: Der erste Entwurf leitete die
+ * deutsche Adjektivendung aus der Zeichenkette ab (`rtrim('eigene','e').'r'`)
+ * und schrieb „Ein eigenr Stammdatensatz". Vier Formen stehen jetzt
+ * ausgeschrieben.
+ *
+ * WAS DIESE FASSUNG NICHT TUT: Ein Rettungsmittel, das einer NutzerIn gehoert
+ * und an einem SYSTEMWEITEN Standort haengt, geht weiterhin mit, wenn die
+ * Verwaltung diesen Standort loescht — auch wenn sein Typ keinen Standort
+ * braucht. Das ist Bestandsverhalten; die Rueckfrage der Verwaltung zaehlt
+ * seit jeher nur den systemweiten Bestand. Vermerkt im Pruefdokument.
+ *
+ * NEBENNUMMER: veraendertes Verhalten beim Loeschen, kein Datenmodell, keine
+ * Migration. `update.php` muss NICHT laufen.
  */
-const WEB_VERSION = '17.0.0';
+const WEB_VERSION = '17.1.0';

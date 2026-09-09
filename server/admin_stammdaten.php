@@ -101,6 +101,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* Die Kennung eines NEU angelegten Standorts — die Umleitung fuehrt auf
      * seine Seite und nicht auf die Liste, aus der er entstanden ist. */
     $baseNeu = null;
+    /* Die Kennung des Rettungsmittels, das das Loeschen eines Standorts
+     * ueberlebt hat — die Umleitung fuehrt auf seine Zeile unter „Ohne
+     * Standort" (M-S9-10 b). */
+    $ohneZiel = null;
 
     if ($action === 'base_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
@@ -129,14 +133,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* DAS LOESCHEN NIMMT DIE STAMMDATEN DES STANDORTS MIT (E15,
          * ON DELETE CASCADE) — und die Auswahl der NutzerInnen (`user_bases`)
          * ebenso. Diensttage bleiben unberuehrt: Sie haben Bezeichnung,
-         * Koordinate, Art, Rollen und Faehigkeiten eingefroren (E8). Der
-         * frueher noetige Umweg, den Namen vorher nach `days.base` zu retten,
-         * ist damit entfallen. */
+         * Koordinate, Art, Rollen und Faehigkeiten eingefroren (E8).
+         *
+         * SEIT WEB 17.1.0 MIT DERSELBEN AUSNAHME WIE IM KONTO (M-S9-10,
+         * Variante b): Systemweite Rettungsmittel der drei Typen ohne
+         * Standortpflicht bekommen `base_id = NULL` und stehen danach unter
+         * „Ohne Standort", statt mitgeloescht zu werden. In derselben
+         * Transaktion, aus demselben Grund.
+         *
+         * WAS DIESE STELLE NICHT TUT: Ein Rettungsmittel, das einer NutzerIn
+         * gehoert und an einem SYSTEMWEITEN Standort haengt, geht weiterhin
+         * mit — auch wenn sein Typ keinen Standort braucht. Das ist
+         * Bestandsverhalten und keine Entscheidung dieses Pakets; die
+         * Rueckfrage hier zaehlt seit jeher nur den systemweiten Bestand.
+         * Vermerkt als Frage im Pruefdokument. */
         $bid = (int)($_POST['id'] ?? 0);
-        db()->prepare('DELETE FROM user_defaults WHERE kind = "base" AND item_id = ?')->execute([$bid]);
-        db()->prepare('DELETE FROM bases WHERE id = ? AND user_id IS NULL')->execute([$bid]);
-        $notice = 'Standort samt seiner zentralen Stammdaten gelöscht. Bereits '
-                . 'dokumentierte Diensttage bleiben unverändert.';
+        $bleiben = stammdaten_ohne_standortpflicht($bid, null);
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $geloest = stammdaten_standort_loesen($bid, null);
+            $pdo->prepare('DELETE FROM user_defaults WHERE kind = "base" AND item_id = ?')->execute([$bid]);
+            $pdo->prepare('DELETE FROM bases WHERE id = ? AND user_id IS NULL')->execute([$bid]);
+            $pdo->commit();
+        } catch (PDOException $ex) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            $error = 'Der Standort konnte nicht gelöscht werden.';
+            $geloest = 0;
+        }
+        if ($error === null) {
+            $notice = 'Standort samt seiner zentralen Stammdaten gelöscht. '
+                    . ($geloest > 0
+                        ? ($geloest === 1
+                            ? 'Ein Rettungsmittel ohne Standortpflicht steht jetzt unter „Ohne Standort". '
+                            : $geloest . ' Rettungsmittel ohne Standortpflicht stehen jetzt unter „Ohne Standort". ')
+                        : '')
+                    . 'Bereits dokumentierte Diensttage bleiben unverändert.';
+            /* Die Umleitung zeigt auf das, was überlebt hat (M-S9-10 b) —
+               dieselbe Landung wie im Konto. */
+            if ($bleiben !== []) { $ohneZiel = (int)$bleiben[0]['id']; }
+        }
     }
 
     if ($action === 'veh_save') {
@@ -363,6 +399,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($baseNeu !== null) {
         $zurueckZiel = sd_seite($baseNeu, 'admin_stammdaten.php');
         $abschnitt = 'k-standort';
+    } elseif ($ohneZiel !== null) {
+        $abschnitt = 'veh-' . $ohneZiel;
     } elseif (in_array($action, ['base_save', 'base_del'], true)) {
         $abschnitt = 'standorte';
     } elseif ($unterblock !== null) {
@@ -712,16 +750,20 @@ ui_seite_start(['titel' => 'Stammdaten systemweit', 'karte' => true]);
   <?php /* LOESCHEN STEHT HIER, nicht in der Liste: Die Zeile dort ist der
            Verweis auf diese Seite, und ein Knopf in einem Link ist kein
            gueltiges Markup. Zugleich der bessere Ort — wer einen Standort
-           loescht, hat vorher gesehen, was daran haengt. */ ?>
+           loescht, hat vorher gesehen, was daran haengt.
+           Die Rueckfrage trennt seit Web 17.1.0 die Zahl (M-S9-10 b) und
+           nennt die Rettungsmittel, die das Loeschen ueberleben, mit Namen;
+           der Satz steht in `stammdaten_loeschfrage()`, weil ihn zwei Seiten
+           brauchen. Der Zusatz gehoert nur der Verwaltung: Er sagt, wie viele
+           Konten den Standort gewaehlt haben — also, wen es trifft. */
+        $adBleiben = stammdaten_ohne_standortpflicht($bid, null);
+        $adZusatz = $ub > 0
+            ? 'Er verschwindet aus den Auswahllisten von '
+              . ($ub === 1 ? 'einem Konto' : $ub . ' Konten') . '.'
+            : ''; ?>
   <form method="post" id="f-adbdel-<?= $bid ?>" class="nur-vorlesen"
         action="admin_stammdaten.php?t=standorte#standorte"
-        data-confirm="Standort „<?= e($seiteB['name']) ?>“ systemweit löschen? <?= $anz > 0
-            ? ($anz === 1 ? 'Ein systemweiter Stammdatensatz' : $anz . ' systemweite Stammdatensätze')
-              . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht.'
-            : 'Es hängen keine systemweiten Stammdaten daran.' ?><?= $ub > 0
-            ? ' Er verschwindet aus den Auswahllisten von '
-              . ($ub === 1 ? 'einem Konto' : $ub . ' Konten') . '.'
-            : '' ?> Bereits dokumentierte Diensttage bleiben unverändert.">
+        data-confirm="<?= e(stammdaten_loeschfrage((string)$seiteB['name'], $anz, $adBleiben, true, $adZusatz)) ?>">
     <?= csrf_field() ?><input type="hidden" name="action" value="base_del">
     <input type="hidden" name="id" value="<?= $bid ?>">
   </form>

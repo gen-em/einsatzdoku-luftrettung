@@ -620,4 +620,125 @@ export const wege = [
       }
     },
   },
+
+  /* ---- Standort löschen, Variante b (S9/AP5-5, M-S9-10) -----------------
+   *
+   * DER FALL WIRD HERGESTELLT UND WIEDER ABGERÄUMT. Ihn am Referenzbestand
+   * zu messen hieße, einen der beiden Standorte zu löschen — mit ihm gingen
+   * 16 Diensttage ihre Vorbelegung und ein Dutzend Stammdatensätze verloren,
+   * und der Prüfstand wäre danach ein anderer. Der Weg legt deshalb einen
+   * eigenen Standort an, hängt zwei Rettungsmittel und eine Zielklinik daran,
+   * löscht ihn und räumt das Überlebende hinterher weg.
+   */
+  {
+    name: 'ap5-standort-loeschen-variante-b',
+    paket: 'AP5', punkt: 'M-S9-10 (b)', rolle: 'demo',
+    was: 'Rettungsmittel ohne Standortpflicht überleben das Löschen ihres Standorts',
+    soll: 'Rückfrage trennt die Zahl und nennt den Namen · nachher unter „Ohne Standort", hervorgehoben · Standort weg',
+    async fahren(k) {
+      const NAME = 'KP Löschprobe';
+      const BLEIBT = 'KP Bergwacht Probe';
+      const GEHT   = 'KP Standardfalke';
+      let seite = null;
+      try {
+        /* Standort anlegen — er landet auf seiner eigenen Seite (E-S9-19). */
+        await k.gehZu(LISTE(k));
+        await k.seite.fill('#sdbase-name', NAME);
+        await Promise.all([
+          k.seite.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}),
+          k.seite.click('.listen-form button[type="submit"]'),
+        ]);
+        await k.seite.waitForTimeout(250);
+        seite = k.seite.url();
+
+        /* Zwei Rettungsmittel: eines mit Standortpflicht, eines ohne — und
+           eine Zielklinik dazu, damit die Zahl der mitgelöschten Sätze
+           GRÖSSER als eins wird. Mit nur einem stünde dort die
+           Einzahlform, und der Weg prüfte die Trennung der Zahl nicht:
+           „1 wird mitgelöscht, 1 bleibt" sieht auch dann richtig aus, wenn
+           gar nicht gerechnet wird. */
+        for (const [name, typ] of [[GEHT, 'standard'], [BLEIBT, 'bergwacht']]) {
+          await k.gehZu(seite);
+          await k.seite.click('.karte-aktion[data-dialog="dlg-veh"]');
+          await k.seite.waitForTimeout(150);
+          await k.seite.fill('#dlgveh-name', name);
+          await k.seite.selectOption('#dlgveh-typ', typ);
+          await k.seite.waitForTimeout(100);
+          await k.seite.check('#dlg-veh .vehkind-radio[value="air"]', { force: true });
+          await k.seite.waitForTimeout(100);
+          await Promise.all([
+            k.seite.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}),
+            k.seite.click('#dlg-veh [data-fuell="knopf"]'),
+          ]);
+          await k.seite.waitForTimeout(200);
+        }
+
+        await k.gehZu(seite);
+        await k.seite.click('.karte-aktion[data-dialog="dlg-td"]');
+        await k.seite.waitForTimeout(150);
+        await k.seite.fill('#dlg-td input[name="name"]', 'KP Klinik Probe');
+        await Promise.all([
+          k.seite.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}),
+          k.seite.click('#dlg-td [data-fuell="knopf"]'),
+        ]);
+        await k.seite.waitForTimeout(200);
+
+        /* Die Rückfrage lesen, BEVOR geklickt wird — sie ist die halbe
+           Entscheidung: Wer sie wegklickt, findet das Überlebende später
+           unter „Ohne Standort" und fragt sich, woher es kommt. */
+        await k.gehZu(seite);
+        const frage = await k.seite.evaluate(() =>
+          document.querySelector('form[id^="f-bdel-"]')?.getAttribute('data-confirm') || '');
+        await k.bild('ap5-loeschen-rueckfrage');
+
+        await k.seite.evaluate(() => document.querySelector('form[id^="f-bdel-"]').submit());
+        await k.seite.waitForTimeout(600);
+        const mass = await k.seite.evaluate((n) => {
+          const z = document.querySelector('.zeile:target');
+          return {
+            hash: location.hash,
+            text: z ? z.textContent.replace(/\s+/g, ' ').trim() : '',
+            flaeche: z ? getComputedStyle(z).backgroundColor : '',
+            karteOffen: !!document.getElementById('sd-ohne')?.open,
+            ohne: document.querySelectorAll('#sd-ohne-veh > .zeile').length,
+            standortWeg: !Array.from(document.querySelectorAll('a.zeile'))
+              .some(a => (a.textContent || '').includes(n)),
+          };
+        }, NAME);
+        await k.bild('ap5-loeschen-danach');
+
+        const orange = /rgb\(255,\s*235,\s*214\)/.test(mass.flaeche);
+        const ok = /2 eigene Stammdatensätze/.test(frage)
+                && frage.includes(BLEIBT)
+                && /1 Rettungsmittel ohne Standortpflicht/.test(frage)
+                && !frage.includes(GEHT)
+                && /^#veh-\d+$/.test(mass.hash) && orange
+                && mass.text.includes(BLEIBT) && mass.karteOffen
+                && mass.standortWeg;
+        return {
+          ist: `Rückfrage: „${frage.slice(0, 160)}…" · nachher Adresse „${mass.hash}", `
+             + `Zeile „${mass.text.slice(0, 30)}", Fläche ${mass.flaeche || '—'}, `
+             + `Karte offen ${mass.karteOffen}, ${mass.ohne} Einträge unter „Ohne Standort", `
+             + `Standort weg: ${mass.standortWeg}`,
+          ok,
+          bemerkung: ok ? ''
+            : 'Variante b greift nicht — entweder zählt die Rückfrage falsch, '
+              + 'oder das Rettungsmittel ist mitgelöscht worden',
+        };
+      } finally {
+        await k.gehZu(LISTE(k));
+        await k.seite.evaluate((n) => {
+          const z = Array.from(document.querySelectorAll('#sd-ohne-veh > .zeile'))
+            .find(x => (x.textContent || '').includes(n));
+          if (!z) { return; }
+          for (let e = z.previousElementSibling; e; e = e.previousElementSibling) {
+            if (e.tagName !== 'FORM') { break; }
+            const a = e.querySelector('input[name="action"]');
+            if (a && a.value === 'veh_del') { e.submit(); return; }
+          }
+        }, BLEIBT);
+        await k.seite.waitForTimeout(500);
+      }
+    },
+  },
 ];

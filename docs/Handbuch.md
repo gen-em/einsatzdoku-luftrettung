@@ -2436,6 +2436,21 @@ Auswahllisten genau die Einträge des Standorts stehen, der am Diensttag
 hinterlegt ist, und sonst nichts. **Rettungsmittel** dürfen seit Web 16.0.0
 ohne Standort bestehen, wenn ihr Typ es zulässt — siehe unten.
 
+**Einen Standort löschen nimmt seine Stammdaten mit — mit einer Ausnahme
+seit Web 17.1.0.** Rettungsmittel der Typen Bergwacht, Veranstaltung und
+Sonstiges brauchen keinen Standort; dann darf das Löschen eines Standorts sie
+auch nicht kosten. Sie behalten Bezeichnung, Kurznamen, Betriebsart und
+Fähigkeiten und stehen danach in der Karte **„Ohne Standort"** auf der
+Standortliste. Was sie verlieren, sind die Vorschlagslisten des Standorts —
+die hingen an ihm, nicht an ihnen.
+
+Die Rückfrage sagt das vorher und nennt sie mit Namen: „5 eigene
+Stammdatensätze … werden mitgelöscht. 1 Rettungsmittel ohne Standortpflicht —
+Bergwacht Hochkreuth — bleibt bestehen und steht danach unter ‚Ohne
+Standort'." Nach dem Löschen führt die Seite gleich dorthin, mit der Zeile
+orange hinterlegt. Bereits dokumentierte Diensttage bleiben in jedem Fall
+unverändert — sie haben ihre Angaben beim Anlegen eingefroren.
+
 ### 9.1a Vier Typen von Rettungsmitteln
 
 Seit Web 16.0.0 hat ein Rettungsmittel **zwei** Angaben, nicht eine:

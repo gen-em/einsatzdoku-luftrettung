@@ -91,6 +91,149 @@ function stammdaten_dup_personal_count(string $table, string $col, string $val,
     return (int)$st->fetchColumn();
 }
 
+/* ---------------------------------------------------------------------------
+ * EIN STANDORT WIRD GELOESCHT — WAS ES UEBERLEBT      S9/AP5-5, M-S9-10 (b)
+ * ---------------------------------------------------------------------------
+ *
+ * `vehicles_ibfk_2` steht auf ON DELETE CASCADE, und das ist E15 woertlich:
+ * Was an einem Standort haengt, geht mit ihm. Seit E-S9-09 nimmt es dabei
+ * aber auch das mit, was ohne diesen Standort bestehen DUERFTE — Bergwacht,
+ * Veranstaltung, Sonstiges. AP4 hat das bewusst stehen lassen und begruendet:
+ * `ON DELETE SET NULL` waere falsch, weil es JEDES Standard-Rettungsmittel
+ * standortlos machte, also einen Datensatz erzeugte, den die Pruefschicht nie
+ * anlegen wuerde.
+ *
+ * VARIANTE B (freigegeben 08.09.2026): Die Ausnahme ist Anwendungslogik VOR
+ * dem `DELETE`, kein Fremdschluessel. Ein `UPDATE`, das den drei Typen ohne
+ * Standortpflicht den Standort abnimmt, laeuft in derselben Transaktion; der
+ * Rest geht mit wie bisher.
+ *
+ * DIE REGEL STEHT NICHT HIER, sondern in `VEHICLE_TYPEN[...]['standort']` —
+ * derselben Angabe, aus der `pruef_rettungsmittel()` entscheidet, ob ein Typ
+ * ohne Standort angelegt werden darf. Zwei Fassungen davon liefen beim
+ * naechsten Typ auseinander, und zwar still: Ein Rettungsmittel wuerde
+ * geloescht, das man haette anlegen duerfen.
+ *
+ * ZWEI AUFRUFSTELLEN, EINE FASSUNG: `einstellungen.php` (eigene Standorte)
+ * und `admin_stammdaten.php` (systemweite). `$userId === null` meint den
+ * systemweiten Bestand — dieselbe Unterscheidung wie in
+ * `stammdaten_dup_global()` darueber.
+ *
+ * WARUM HIER UND NICHT IN `validate_lib.php`. Das Konzept schreibt „eine
+ * Funktion neben `pruef_rettungsmittel()`" — gemeint ist: EINE Fassung fuer
+ * beide Seiten. Die Datei selbst sagt in ihrem Kopf „Diese Datei aendert von
+ * sich aus nichts"; ein `UPDATE` darin waere der erste Verstoss dagegen.
+ * `db.php` fuehrt mit `stammdaten_dup_global()` und
+ * `stammdaten_dup_personal_count()` bereits genau diese Sorte Helfer: eine
+ * Abfrage ueber den Stammdatenbestand, die beide Seiten brauchen.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Die Rettungsmittel eines Standorts, die sein Loeschen ueberleben.
+ *
+ * Gibt Kennung und Bezeichnung zurueck — die Rueckfrage nennt sie mit NAMEN
+ * (M-S9-10, Anmerkung 3): Ein Rettungsmittel, das einen Standort verlaesst,
+ * ist eine Nachricht und keine Statistik.
+ *
+ * @return list<array{id:int,name:string}>
+ */
+function stammdaten_ohne_standortpflicht(int $baseId, ?int $userId): array
+{
+    $typen = array_keys(array_filter(VEHICLE_TYPEN,
+        static fn(array $t): bool => $t['standort'] === false));
+    if ($typen === []) { return []; }
+    $platz = implode(',', array_fill(0, count($typen), '?'));
+    $sql = 'SELECT id, name FROM vehicles
+             WHERE base_id = ? AND typ IN (' . $platz . ')
+               AND user_id ' . ($userId === null ? 'IS NULL' : '= ?') . '
+             ORDER BY name';
+    $werte = array_merge([$baseId], $typen);
+    if ($userId !== null) { $werte[] = $userId; }
+    $q = db()->prepare($sql);
+    $q->execute($werte);
+    $raus = [];
+    foreach ($q as $z) { $raus[] = ['id' => (int)$z['id'], 'name' => (string)$z['name']]; }
+    return $raus;
+}
+
+/**
+ * Ihnen den Standort abnehmen — VOR dem `DELETE FROM bases`.
+ *
+ * Muss in derselben Transaktion laufen wie das Loeschen: Sonst stuende bei
+ * einem Abbruch dazwischen ein Rettungsmittel ohne Standort da, dessen
+ * Standort es noch gibt.
+ *
+ * @return int wie viele
+ */
+function stammdaten_standort_loesen(int $baseId, ?int $userId): int
+{
+    $typen = array_keys(array_filter(VEHICLE_TYPEN,
+        static fn(array $t): bool => $t['standort'] === false));
+    if ($typen === []) { return 0; }
+    $platz = implode(',', array_fill(0, count($typen), '?'));
+    $sql = 'UPDATE vehicles SET base_id = NULL
+             WHERE base_id = ? AND typ IN (' . $platz . ')
+               AND user_id ' . ($userId === null ? 'IS NULL' : '= ?');
+    $werte = array_merge([$baseId], $typen);
+    if ($userId !== null) { $werte[] = $userId; }
+    $q = db()->prepare($sql);
+    $q->execute($werte);
+    return $q->rowCount();
+}
+
+/**
+ * Der Satz der Rueckfrage vor dem Loeschen eines Standorts (M-S9-10 b).
+ *
+ * Er steht an EINER Stelle, weil er an zwei gebraucht wird und weil er drei
+ * Zahlen zusammenbringt, die leicht auseinanderlaufen: die Zahl der
+ * mitgeloeschten Saetze, die Zahl der ueberlebenden Rettungsmittel und deren
+ * Namen. Bis Web 17.0.0 zaehlte die Rueckfrage ALLES mit — sie sagte „6
+ * werden mitgeloescht", und eines davon blieb dann doch nicht.
+ *
+ * $zusatz haengt hinten an (die Verwaltung nennt zusaetzlich, wie viele
+ * Konten den Standort gewaehlt haben).
+ */
+function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben,
+                                bool $systemweit, string $zusatz = ''): string
+{
+    $bleibt = count($bleiben);
+    $mit    = max(0, $anzahlGesamt - $bleibt);
+    /* DIE BEUGUNG STEHT AUSGESCHRIEBEN, sie wird nicht gerechnet. Der erste
+       Entwurf schnitt das „e" von „eigene" ab und hängte ein „r" an — daraus
+       wurde „Ein eigenr Stammdatensatz" (und „systemweitr"). Deutsche
+       Adjektivendungen aus einer Zeichenkette abzuleiten geht schief, sobald
+       jemand ein zweites Wort einsetzt; vier Formen hinzuschreiben kostet
+       vier Zeilen und hält. Gefunden von der Klickprobe. */
+    $einer = $systemweit ? 'Ein systemweiter Stammdatensatz' : 'Ein eigener Stammdatensatz';
+    $viele = $systemweit ? ' systemweite Stammdatensätze'    : ' eigene Stammdatensätze';
+    $keine = $systemweit ? 'systemweiten' : 'eigenen';
+    $satz = 'Standort „' . $name . '“ ' . ($systemweit ? 'systemweit ' : '') . 'löschen? ';
+    if ($mit > 0) {
+        $satz .= ($mit === 1 ? $einer : $mit . $viele)
+               . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere '
+               . 'Rettungsmittel, Bergwacht) '
+               . ($mit === 1 ? 'wird' : 'werden') . ' mitgelöscht. ';
+    } else {
+        $satz .= 'Es hängen keine ' . $keine . ' Stammdaten daran, die mitgelöscht würden. ';
+    }
+    if ($bleibt > 0) {
+        /* MIT NAMEN, NICHT MIT ZAHL (M-S9-10, Anmerkung 3). Bei mehr als
+           dreien wird die Aufzaehlung sonst laenger als der Rest des Textes;
+           dann nur die Zahl und die ersten drei. */
+        $namen = array_column($bleiben, 'name');
+        $liste = count($namen) <= 3
+            ? implode(', ', $namen)
+            : implode(', ', array_slice($namen, 0, 3)) . ' und '
+              . (count($namen) - 3) . ' weitere';
+        $satz .= ($bleibt === 1
+                ? '1 Rettungsmittel ohne Standortpflicht — ' . $liste . ' — bleibt bestehen und steht'
+                : $bleibt . ' Rettungsmittel ohne Standortpflicht (' . $liste . ') bleiben bestehen und stehen')
+               . ' danach unter „Ohne Standort“. ';
+    }
+    if ($zusatz !== '') { $satz .= $zusatz . ' '; }
+    return $satz . 'Bereits dokumentierte Diensttage bleiben unverändert.';
+}
+
 /**
  * Adresse einer statischen Datei mit angehaengtem Erkennungswert.
  * Aendert sich die Datei, aendert sich die Adresse, und der Browser laedt

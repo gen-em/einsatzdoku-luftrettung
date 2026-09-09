@@ -385,6 +385,37 @@ steht, ist der Stand nach Teil 2 — nicht die Abnahme von AP5.
 | Bilderlauf | **6 von 7** berührten Seiten, **48 Einzelbilder + 6 Kontaktbögen, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** (Zeigergerät, 44/36 px). Die **siebte** — die Standortseite der Verwaltung — konnte **nicht** fotografiert werden, siehe Abschnitt 0 | `tools/screenshots/aufnehmen.mjs` |
 | `Design.md` nachgezogen | 9.11 um drei Absätze (Rollen des Inhalts mit Zahlen, `display` an `[open]`, Dialog über Dialog), Änderungsverlauf um eine Zeile. Erzeugte Tabellen neu — Bausteinvorrat **unverändert 39 Funktionen**, kein neues Token, kein neues Symbol | `tools/design/tabellen.py alle` |
 
+### AP5 Teil 5 — Standort löschen, Variante b (Web 17.1.0)
+
+| Soll (M-S9-10 b) | Ist | Mittel |
+|---|---|---|
+| Rettungsmittel ohne Standortpflicht überleben das Löschen ihres Standorts | **Erfüllt.** Standort mit einem **Standard**- und einem **Bergwacht**-Rettungsmittel und einer Zielklinik: Nach dem Löschen steht das Bergwacht-Rettungsmittel unter „Ohne Standort", das Standard-Rettungsmittel und die Zielklinik sind fort. Karte „Ohne Standort" **3 Einträge** (2 aus dem Referenzbestand + 1 überlebtes) | Klickprobe `ap5-standort-loeschen-variante-b` |
+| Der Fremdschlüssel bleibt `ON DELETE CASCADE`; die Ausnahme ist Anwendungslogik | **Erfüllt.** `grep -n "ON DELETE" server/install.php server/update.php` unverändert; das `UPDATE vehicles SET base_id = NULL` läuft **vor** dem `DELETE FROM bases`, in **derselben Transaktion** (`beginTransaction()` … `commit()`, mit `rollBack()` im Fehlerfall) | Lesen (`server/einstellungen.php`, `server/admin_stammdaten.php`) |
+| Die Regel steht an einer Stelle | **Erfüllt.** Weder das `UPDATE` noch die Rückfrage kennen die Typennamen: Beide lesen `VEHICLE_TYPEN[...]['standort']` — dieselbe Angabe, aus der `pruef_rettungsmittel()` entscheidet, ob ein Typ ohne Standort angelegt werden darf. Drei Funktionen in `db.php`, **zwei** Aufrufstellen | Lesen (`server/db.php`) |
+| Die Rückfrage trennt die Zahl und nennt das Überlebende mit Namen | **Erfüllt und wörtlich gemessen:** „Standort „KP Löschprobe" löschen? **2 eigene Stammdatensätze** dieses Standorts (…) werden mitgelöscht. **1 Rettungsmittel ohne Standortpflicht — KP Bergwacht Probe — bleibt bestehen** und steht danach unter „Ohne Standort". Bereits dokumentierte Diensttage bleiben unverändert." Der Name des mitgelöschten Rettungsmittels steht **nicht** darin — das prüft der Weg eigens | Klickprobe, Bild |
+| Danach die Landung auf dem Überlebenden, hervorgehoben | **Erfüllt.** Adresse **`#veh-208`**, Fläche **rgb(255, 235, 214)**, die zugeklappte Karte „Ohne Standort" ist **offen** (das Ankerskript öffnet die Vorfahren) | Klickprobe, Bild |
+| Der Bestand bleibt nach dem Prüflauf unverändert | **Erfüllt: 0 Probeeinträge.** Der Weg legt Standort, zwei Rettungsmittel und eine Zielklinik an und räumt in `finally` auch das Überlebende wieder ab — es hängt nach dem Löschen an keinem Standort mehr und würde sonst dauerhaft stehenbleiben | Klickprobe |
+| Klickprobe insgesamt | **35 von 35** Wegen erfüllt, 0 verfehlt | `tools/klickprobe/` |
+| Wortliste, Vollständigkeit, Kontraste, Linkprobe | Wortliste **0 Treffer außerhalb der Ausnahmen** bei 96 Regeln, 96 gegriffen; Vollständigkeit **317 = 317**; Kontraste **22 Paare, 0 verfehlt**; Linkprobe **130 Verweise, 0 unbekannte Abweichungen** | die vier Prüfmittel |
+| Stilvergleich und Bilderlauf | **Nicht gefahren, und das ist begründet:** Dieses Paket fasst `style.css` nicht an (0 Zeilen) und ändert kein Markup, das ein Bild zeigte — die Rückfrage ist ein `data-confirm`-Text, den `confirm.js` erst beim Klick zeichnet, und der Bilderlauf klickt nicht. Was zu sehen ist, zeigen die zwei Bilder der Klickprobe | — |
+
+**Ein Fund beim Bauen, gefunden von der Klickprobe.** Der erste Entwurf von
+`stammdaten_loeschfrage()` leitete die deutsche Adjektivendung aus der
+Zeichenkette ab (`rtrim('eigene','e') . 'r'`) und schrieb **„Ein eigenr
+Stammdatensatz"** — bei der systemweiten Fassung „systemweitr". Der Weg
+verglich den Satz **wörtlich** und meldete es; vier Formen stehen jetzt
+ausgeschrieben. *Die Lehre: Ein Prüfmittel, das nur „eine Meldung erschien"
+zählt, hätte das durchgelassen.*
+
+**Eine Frage, die dieses Paket nicht beantwortet** (siehe Abschnitt 4): Ein
+Rettungsmittel, das einer **NutzerIn** gehört und an einem **systemweiten**
+Standort hängt, geht weiterhin mit, wenn die Verwaltung diesen Standort
+löscht — auch wenn sein Typ keinen Standort braucht. Der Grund ist keine
+Entscheidung, sondern ein Zuschnitt: Die Rückfrage der Verwaltung zählt seit
+jeher nur den systemweiten Bestand und sagt daneben, wie viele Konten den
+Standort gewählt haben; sie könnte einen Satz über fremde Rettungsmittel
+nicht belegen, ohne vorher etwas zu zählen, was sie sonst nirgends zählt.
+
 ## 2. Fehlerfunde
 
 
@@ -961,6 +992,23 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   beiden Listen. **Das ging bis Web 16.3.0 gar nicht** — der Haken „Ohne
   Standort" konnte nur zwischen „dieser Standort" und „keiner" wechseln.
 
+- [ ] **34 — Einen Standort mit Rettungsmitteln ohne Standortpflicht löschen (AP5, Teil 5).**
+  *Weg:* Einen Standort wählen, an dem **beides** hängt — mindestens ein
+  Rettungsmittel vom Typ Standard und eines vom Typ Bergwacht,
+  Veranstaltung oder Sonstiges. Auf seiner Seite „Löschen" wählen und die
+  Rückfrage **lesen**, bevor du bestätigst.
+  *Erwartet:* Die Rückfrage nennt zwei Zahlen — wie viele mitgehen und wie
+  viele bleiben — und die bleibenden **mit Namen**. Nach dem Bestätigen
+  öffnet sich die Karte „Ohne Standort" von selbst, und die überlebende
+  Zeile ist orange hinterlegt. Kurzname, Betriebsart und Fähigkeiten sind
+  unverändert; die Vorbelegung (Stern) hängt weiter am Rettungsmittel, wenn
+  sie dort hing.
+  *Scheitern erkennbar an:* Die Rückfrage nennt nur eine Zahl; oder das
+  Rettungsmittel ist nach dem Löschen fort. **Bereits dokumentierte
+  Diensttage müssen in jedem Fall unverändert bleiben** — das ist die
+  wichtigere Hälfte der Prüfung und mit einem Blick in die Diensttage-Leiste
+  zu sehen.
+
 - [ ] **19 — Nach dem Kurznamen suchen (AP4).**
   *Weg:* Suche öffnen, den **Kurznamen** eines Rettungsmittels eintippen, das
   an mindestens einem Diensttag hängt.
@@ -1005,6 +1053,44 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
 Stellen, an denen Konzept und Auftrag einander widersprechen oder das Konzept
 schweigt. Jede ist vorläufig entschieden **und** revidierbar; der Preis einer
 Gegenentscheidung steht dabei.
+
+### Neu aus AP5 Teil 4 und 5 (09.09.2026)
+
+**Frage 8 — Geht ein fremdes Rettungsmittel mit, wenn die Verwaltung einen
+systemweiten Standort löscht?** Variante b (M-S9-10) rettet die
+Rettungsmittel ohne Standortpflicht, und zwar auf beiden Seiten: Im Konto die
+eigenen, in der Verwaltung die systemweiten. **Nicht gerettet werden die
+Rettungsmittel einzelner NutzerInnen, die an einem systemweiten Standort
+hängen** — sie gehen mit ihm, auch wenn ihr Typ keinen Standort braucht.
+
+Das ist kein Versehen, sondern ein Zuschnitt: Die Rückfrage der Verwaltung
+zählt seit jeher **nur** den systemweiten Bestand („5 systemweite
+Stammdatensätze werden mitgelöscht") und sagt daneben, wie viele Konten den
+Standort gewählt haben. Sie könnte einen Satz über fremde Rettungsmittel
+nicht belegen, ohne vorher etwas zu zählen, was sie sonst nirgends zählt —
+und dann stünde in der Rückfrage einer Administratorin, wie viele
+Rettungsmittel fremder Konten sie gerade löscht, was eine neue Auskunft über
+fremde Bestände wäre.
+
+*Drei Wege:* **(a)** so lassen, wie es ist, und den Satz ins Handbuch
+schreiben. **(b)** Auch die fremden retten, ohne sie zu zählen — die
+Rückfrage bliebe, wie sie ist, und die Rettung geschähe still. **(c)** Auch
+die fremden retten **und** in der Rückfrage nennen („… und 3 Rettungsmittel
+in 2 Konten bleiben bestehen").
+*Empfehlung: **(b)*** — der Grund für die Rettung ist derselbe (der Typ
+braucht keinen Standort), und wer den Standort löscht, hat kein Interesse
+daran, fremde Rettungsmittel mitzunehmen. Die zusätzliche Auskunft aus (c)
+gehört nicht in eine Löschrückfrage.
+*Wenn (a):* Der Satz steht im Handbuch 9.4 und in der Löschrückfrage der
+Verwaltung — heute steht er in keiner von beiden.
+
+**Frage 9 — Bekommt der Referenzbestand einen systemweiten Standort?** Ohne
+einen ist die Standortseite der Verwaltung nicht zu fotografieren (Abschnitt
+0, Backlog Nr. 166). *Empfehlung: ja* — einer mit einem Rettungsmittel, einer
+Zielklinik und einer Besatzungs-Vorbelegung genügt, und er deckt zugleich die
+Anzeige „systemweit" in der Kontoansicht ab, die heute an keiner Stelle
+gemessen ist. Das berührt Fixture, Prüfsummen und die beiden Kreisläufe
+(`edbak`, `csv`) und gehört deshalb in ein eigenes Paket.
 
 ### Neu aus AP5 (08.09.2026)
 
