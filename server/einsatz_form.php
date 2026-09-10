@@ -1914,7 +1914,7 @@ async function patLaden(){
     for (const col of Object.keys(PAT_KAT)) {
       const el = document.getElementById('pat_' + col);
       if (!el) { continue; }
-      const ausBlob = o[PAT_KAT[col]];
+      const ausBlob = o[PAT_KAT[col].blob];
       if (ausBlob != null) { el.value = ausBlob; }
       else if (PAT_ALT[col] != null) { el.value = PAT_ALT[col]; }
     }
@@ -2021,7 +2021,7 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
     const el = document.getElementById('pat_' + col);
     if (!el) { continue; }
     const v = el.value.trim();
-    if (v !== '') { o[PAT_KAT[col]] = v; }
+    if (v !== '') { o[PAT_KAT[col].blob] = v; }
   }
   // Alter nur speichern, wenn es NICHT aus dem Geburtsdatum folgt — sonst
   // muesste es bei jeder Korrektur des Geburtsdatums nachgezogen werden.

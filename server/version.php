@@ -3768,5 +3768,41 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION. `missions.notes` ist bereits NULL-faehig (schema.sql) und
  * bleibt stehen, bis P8 sie entfernt (R60). `update.php` muss NICHT laufen.
+ *
+ * 19.0.1 — S9/AP7 Schritt 2a: Anzeige und Suche lesen aus dem Blob.
+ *
+ * ZUR ZAEHLWEISE: Die Hauptnummer gehoert dem ganzen Umbau; seine Schritte
+ * zaehlen an der Korrekturstelle weiter, bis er steht. Eine zweite
+ * Hauptnummer fuer denselben Umbau waere eine zweite Erzaehlung.
+ *
+ * DIE SUCHE WAR DAS LOCH. `api/suchindex.php` lieferte `m.notes` im
+ * Klartext — fuer den GESAMTEN aktiven Bestand, bei jedem Aufruf der
+ * Suchseite, ohne dass irgendjemand entsperrt haben musste. Der Kopfkommentar
+ * derselben Datei zaehlt seit jeher auf, was der Server angeblich nicht
+ * sieht. Gemessen: alte Fassung 31 Schluessel je Einsatz mit `notes`, neue
+ * Fassung 30 ohne. Der Heuhaufen in `suche.php` nimmt die Notiz jetzt aus dem
+ * entschluesselten `_pat` — gefunden wird sie also nur nach dem Entsperren,
+ * wie Diagnose und Einsatzort. Gemessen an einem Suchwort aus einer Notiz:
+ * gesperrt 0 von 83, entsperrt 1 von 83, und ein Klartextwort findet
+ * gesperrt weiter 31 Treffer.
+ *
+ * DIE ANZEIGE bekommt die Notiz aus `zeigePat()` statt aus `m.fields` —
+ * dieselbe Karte, derselbe Rang 80, aber MIT Schloss, weil sie es jetzt
+ * verdient. `api/mission.php` brauchte dafuer keine Zeile: Es fragt
+ * mf_ist_spalte(), und die Antwort hat sich mit dem Katalogeintrag von selbst
+ * geaendert — so soll ein Feldkatalog wirken.
+ *
+ * ZEILENUMBRUECHE BLEIBEN JETZT STEHEN. Die Notiz ist das einzige mehrzeilige
+ * Feld; ueber `m.fields` und `esc()` wurden aus drei Zeilen bisher eine. Der
+ * Umzug war der Moment, das zu entscheiden statt zu erben. Gemessen: ein
+ * Umbruch im Text, ein <br> in der Zeile.
+ *
+ * DREI SICHTBARE SAETZE ZAEHLEN AUF, WAS GESPERRT IST — auf der Suchseite, in
+ * der Einsatzansicht und auf der Startseite. Zwei davon nennen die Notizen
+ * jetzt mit; sie waren eine Zusage und stimmten nicht mehr. Der dritte
+ * (Startseite) nennt nur, was DORT verborgen bleibt, und bleibt unveraendert.
+ *
+ * NOCH OFFEN: Export, Sicherung, Import (Schritt 2b), der Anhebelauf
+ * (Schritt 3), die Kennzeichnung (Schritt 4) und die normative Doku.
  */
-const WEB_VERSION = '19.0.0';
+const WEB_VERSION = '19.0.1';

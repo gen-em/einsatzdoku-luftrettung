@@ -14,6 +14,36 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.0.1] — 2026-09-10
+
+### Web — Anzeige und Suche lesen die Notiz aus dem verschlüsselten Block (E-S9-01, Schritt 2a von 5)
+
+**Die Suche war das eigentliche Loch.** `api/suchindex.php` lieferte `m.notes`
+im Klartext — für den *gesamten* aktiven Bestand, bei jedem Aufruf der
+Suchseite, ohne dass irgendjemand entsperrt haben musste. Der Kopfkommentar
+derselben Datei zählt seit jeher auf, was der Server angeblich nicht sieht.
+**Gemessen:** alte Fassung 31 Schlüssel je Einsatz mit `notes`, neue Fassung 30
+ohne. Der Freitext-Heuhaufen in `suche.php` nimmt die Notiz jetzt aus dem
+entschlüsselten `_pat`; gefunden wird sie also nur nach dem Entsperren, wie
+Diagnose und Einsatzort. **Gemessen** an einem Suchwort aus einer Notiz:
+gesperrt **0 von 83**, entsperrt **1 von 83** — und ein Klartextwort findet
+gesperrt weiterhin **31** Treffer, die Suche ist also nicht stumpf geworden.
+
+**Die Anzeige** bekommt die Notiz aus `zeigePat()` statt aus `m.fields`:
+dieselbe Karte, derselbe Rang, aber **mit Schloss**. `api/mission.php` brauchte
+dafür keine Zeile — es fragt `mf_ist_spalte()`, und die Antwort hat sich mit
+dem Katalogeintrag von selbst geändert. So soll ein Feldkatalog wirken.
+
+**Zeilenumbrüche bleiben stehen.** Die Notiz ist das einzige mehrzeilige Feld
+des Formulars; über `m.fields` und `esc()` wurden aus drei Zeilen bisher eine.
+Der Umzug war der Moment, das zu entscheiden statt es zu erben.
+
+**Zwei sichtbare Sätze waren eine Zusage und stimmten nicht mehr:** Die
+Sperrhinweise auf der Suchseite und in der Einsatzansicht zählen auf, was ohne
+Entsperren verborgen bleibt — die Notizen fehlten dort. Beide nennen sie jetzt.
+Der dritte Satz auf der Startseite nennt nur, was *dort* verborgen ist, und
+bleibt unverändert.
+
 ## [Web 19.0.0] — 2026-09-10
 
 ### Web — die Notizen des Einsatzes werden Ende-zu-Ende verschlüsselt (E-S9-01, Schritt 1 von 5)

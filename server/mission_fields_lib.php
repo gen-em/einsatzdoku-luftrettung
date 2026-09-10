@@ -127,7 +127,8 @@ function mf_crew_felder(): array
 }
 
 /**
- * Verschluesselte Felder des Katalogs: Feldname => Schluessel im `pat_blob`.
+ * Verschluesselte Felder des Katalogs: Feldname => ['blob' => Schluessel im
+ * `pat_blob`, 'label' => Beschriftung].
  *
  * Abgeleitet aus 'store' => 'pat' (S9/AP7), genau wie mf_crew_felder() aus
  * 'store' => 'crew'. Der Blobschluessel ist der Feldname, sofern nicht
@@ -136,10 +137,16 @@ function mf_crew_felder(): array
  * gehoeren zu handgeschriebenem Markup, das keinen Katalogeintrag hat. Diese
  * Funktion nennt nur die Felder, die BEIDES sind — Katalogfeld und Blobinhalt.
  *
- * Gebraucht, wo eine Liste der Blobfelder gebraucht wird, ohne sie ein zweites
- * Mal zu fuehren: Formular (Rendern und Fuellen), Export, Sicherung, Import.
+ * DIE BESCHRIFTUNG STEHT MIT DABEI, weil die Anzeige sie sonst nirgends mehr
+ * bekaeme: `api/mission.php` liefert nur Spalten, und ein Blobfeld ist keine.
+ * Zwei Funktionen fuer dieselbe Feldmenge waeren der Anfang davon, dass sie
+ * auseinanderlaufen.
  *
- * @return array<string,string>
+ * Gebraucht, wo eine Liste der Blobfelder gebraucht wird, ohne sie ein zweites
+ * Mal zu fuehren: Formular (Rendern und Fuellen), Anzeige, Export, Sicherung,
+ * Import.
+ *
+ * @return array<string,array{blob:string,label:string}>
  */
 function mf_pat_felder(): array
 {
@@ -150,7 +157,10 @@ function mf_pat_felder(): array
     $sammle = static function (array $felder) use (&$sammle, &$gefunden): void {
         foreach ($felder as $col => $f) {
             if (($f['store'] ?? null) === 'pat') {
-                $gefunden[(string)$col] = (string)($f['blob_key'] ?? $col);
+                $gefunden[(string)$col] = [
+                    'blob'  => (string)($f['blob_key'] ?? $col),
+                    'label' => (string)($f['label'] ?? $col),
+                ];
             }
             if (!empty($f['children']) && is_array($f['children'])) { $sammle($f['children']); }
         }

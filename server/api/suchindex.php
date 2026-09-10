@@ -16,9 +16,19 @@ require_once __DIR__ . '/../mission_fields_lib.php';
  * nicht gebraucht.
  *
  * Verschluesselte Angaben (Einsatznummer, Name, Geburtsdatum, Alter, Diagnose,
- * Einsatzort) gehen wie ueberall als `pat_blob` unveraendert als Chiffretext
+ * Einsatzort, Beschreibung des Einsatzorts und seit S9/AP7 die NOTIZEN des
+ * Einsatzes) gehen wie ueberall als `pat_blob` unveraendert als Chiffretext
  * an den Browser. Der Server sieht sie nicht und filtert nicht danach —
  * deshalb nimmt dieser Endpunkt auch keinerlei Suchparameter entgegen.
+ *
+ * DIESER ABSATZ STIMMTE BIS WEB 19.0.0 NICHT. Zwei Bildschirmseiten weiter
+ * stand `m.notes` in der Auswahl und im Datensatz — im Klartext, fuer den
+ * GESAMTEN aktiven Bestand, bei jedem Aufruf der Suchseite und ohne dass
+ * irgendjemand entsperrt haben musste. Die groesste Menge Freitext, die die
+ * Anwendung ueberhaupt herausgibt, ging damit an der Zusage vorbei, waehrend
+ * derselbe Kommentar das Gegenteil versprach. Wer hier kuenftig ein Feld
+ * ergaenzt, gleiche diesen Absatz ab — er ist die Zusage, nicht ihre
+ * Beschreibung.
  *
  * DAS SUCHDATUM IST DAS ECHTE EINSATZDATUM (E14, Web 6.0.0). Es wird aus
  * `started_at` in Ortszeit abgeleitet, nicht aus dem Datum des Diensttags. Ein
@@ -51,7 +61,7 @@ try {
                 m.false_alarm,
                 m.winch, m.winch_cycles, m.winch_cycles_pat, m.winch_airload,
                 m.bergwacht, m.bw_unit, m.bw_info,
-                m.secondary, m.other_ema, m.notes, m.crew_override,
+                m.secondary, m.other_ema, m.crew_override,
                 m.pat_blob,
                 /* `ended_at` statt der Phase-9-Unterabfrage
                    (Web 14.2.2, F-R64-05) -- siehe api/day.php. */
@@ -194,7 +204,9 @@ try {
             'bw_info'     => $m['bw_info'] !== null ? (string)$m['bw_info'] : null,
             'secondary'   => (int)$m['secondary'] === 1,
             'other_ema'   => $m['other_ema'] !== null ? (string)$m['other_ema'] : null,
-            'notes'       => $m['notes'] !== null ? (string)$m['notes'] : null,
+            /* 'notes' faellt hier weg (S9/AP7): Der Text liegt im `pat_blob`
+               daneben und wird im Browser entschluesselt — suche.php baut den
+               Heuhaufen dann aus `m._pat.notes`. */
             // Standort, Rettungsmittel und Art aus den Snapshot-Spalten des
             // Diensttags (E8) — nie aus den Stammdaten.
             'base'        => $d !== null && $d['base_name'] !== null ? (string)$d['base_name'] : null,
