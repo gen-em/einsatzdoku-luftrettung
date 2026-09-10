@@ -408,14 +408,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     stehen, ist der Sollwert von P-P3-03 nicht erreicht — und das steht so im
     Prüfprotokoll, statt die Zahl schönzurechnen.
 
-43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt.**
+43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt — und das
+    Transportziel auch nicht.**
+    *Ausdrücklich bestätigt 10.09.2026:* **Die Zielklinik soll
+    verschlüsselt werden.** Gemeint sind `missions.transport_dest` (der
+    Name) und `missions.dest_lat`/`dest_lon` (die Koordinate) — heute
+    Klartext, und zwar bewusst: Der Pin ist ohne Entsperren sichtbar
+    (`mission_fields.php`, Katalogeintrag `transport_dest`). Der Umfang
+    unten nennt sie seit dem 06.09.2026; diese Zeile steht darüber, damit
+    sie beim Lesen nicht in der Aufzählung untergeht.
+    *Warum trotzdem nicht vorgezogen:* `mission_phases` trägt zu **jeder**
+    Phase eine Koordinate, und Phase 7 heißt „Ankunft Klinik". Das
+    Transportziel zu verschlüsseln und diese Spalte stehen zu lassen,
+    verschöbe die Sache um eine Tabelle — `Konzept-V1-Ortsdaten.md`
+    Abschnitt 5 nennt das „Symbolik". Es gehört zu Weg B oder nirgendwohin.
     *Entschieden 06.09.2026 (R78):* **Weg C sofort** (Sofortpaket, nur
     Dokumente: die Zusage in `CLAUDE.md` 4, `Technik.md`, README, Handbuch
     und im Datenschutztext auf das eingrenzen, was sie hält), **Weg B als
     eigene Phase S11 nach P6, vor der Öffnung** — mit einem
     Konto-Schlüsselpaar (Nr. 53), Umfang Spur, Phasenkoordinaten,
-    Reanimationsereignisse und Zielklinik, Altbestand per Einmalwerkzeug im
-    Browser. Die Uhr kann es: ECDH P-256, AES-256-CBC, HMAC-SHA256 ab
+    Reanimationsereignisse und **Zielklinik samt Koordinate**, Altbestand
+    per Einmalwerkzeug im Browser. Die Uhr kann es: ECDH P-256, AES-256-CBC, HMAC-SHA256 ab
     Connect IQ 3.0.0 (geprüft). Skizze in
     `docs/konzepte/Vorbereitung-Sicherheitspaket.md`, SP-9.
     *Aufgenommen 30.08.2026 aus der ersten Rückmeldungsrunde.* Der Einsatzort
