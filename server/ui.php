@@ -2353,7 +2353,16 @@ function ui_ortsfeld(array $o): void
 
     if ($mitFeld): ?>
       <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
-        <label for="<?= e($p) ?>addr"><?= e((string)($o['label'] ?? '')) ?>
+        <?php /* 'geschuetzt' => true haengt das Schloss an die Beschriftung
+                 (S9/AP7, E-S9-02). Der Einsatzort und der manuelle Abfahrtort
+                 liegen im `pat_blob`, das Transportziel und der Standort eines
+                 Rettungsmittels nicht — und man sieht es einem Ortsfeld sonst
+                 nicht an. Ein eigener Schluessel und kein HTML im 'label':
+                 Jenes wird escaped, und das soll es bleiben. */ ?>
+        <label for="<?= e($p) ?>addr"><?= e((string)($o['label'] ?? '')) ?><?=
+            !empty($o['geschuetzt'])
+              ? ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt')
+              : '' ?>
           <?php if (!empty($o['hinweis'])): ?>
             <span class="feld-klein-inline"><?= e((string)$o['hinweis']) ?></span>
           <?php endif; ?>

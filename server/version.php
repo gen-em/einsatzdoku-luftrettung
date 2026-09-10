@@ -3887,5 +3887,49 @@ declare(strict_types=1);
  *
  * NOCH OFFEN: die Kennzeichnung mit Schloss und die Karte „Was hier gilt"
  * (Schritt 4), die normative Doku samt CLAUDE.md 4 (Schritt 5).
+ *
+ * 19.1.0 — S9/AP7 Schritt 4: zwei Zeichen sagen, wer mitliest (E-S9-02).
+ *
+ * ZUR ZAEHLWEISE, IN ABWANDLUNG VON 19.0.1: Die Korrekturstellen zaehlten die
+ * Schritte, die nur VERSCHIEBEN — Katalog, Wege, Altbestand. Dieser Schritt
+ * fuegt etwas hinzu, das man sieht und benutzt: ein Zeichen an jedem
+ * verschluesselten Feld, eine Kleinzeile an jedem Klartext-Freitextfeld, eine
+ * Legende. Das ist eine Nebennummer, kein Feinschliff.
+ *
+ * ZWEI ZEICHEN, DIE EINANDER AUSSCHLIESSEN. Ein verschluesseltes Feld traegt
+ * das SCHLOSS, ein Klartext-Freitextfeld die KLEINZEILE „Klartext — keine
+ * Patientendaten" (Nr. 132). Die Wahl steht an EINER Stelle
+ * ($feldKennzeichen() in einsatz_form.php) und nicht in jedem Zweig; der Satz
+ * selbst steht einmal im Katalog. Ein Satz, der an vier Feldern verschieden
+ * lautet, ist kein Versprechen mehr, sondern vier. GEMESSEN: 8 Schloesser
+ * (Einsatznummer, Nachname, Vorname, Geburtsdatum, Alter, Diagnose,
+ * Einsatzort, Beschreibung Einsatzort — dazu die Karte „Notizen", die es als
+ * Kartenzahl traegt), 9 Kleinzeilen (Bergwacht-Angaben, weiterer Notarzt,
+ * sieben Rollen) und 0 Felder mit BEIDEM.
+ *
+ * DAS SCHLOSS STEHT RECHTS VOM WORT. Das Konzept sagt „links neben der
+ * Beschriftung"; der vorhandene Baustein `.symbol-schutz` setzt es ueber
+ * `margin-left` dahinter, und genauso steht es seit Web 15 in der
+ * LESEANSICHT. Links hiesse eine neue CSS-Regel und damit eine neue
+ * Darstellung — Mockup und Freigabe (CLAUDE.md 5), fuer einen Unterschied,
+ * den niemand verlangt hat. Formular und Leseansicht zeigen jetzt dasselbe
+ * Zeichen an derselben Stelle; das ist mehr wert als der Wortlaut.
+ *
+ * ZWEI FEHLER, DIE KEINE ZAHL GEMELDET HAT — beide auf dem Bild gefunden:
+ *
+ *   - DAS SCHLOSS DER KARTE „NOTIZEN" STAND ALLEIN IN EINER LEEREN ZEILE.
+ *     Traegt ein Feld den Namen seiner Karte, blendet $labelSichtbar() das
+ *     Wort aus (es stuende zweimal da) — das Zeichen blieb und zeigte auf
+ *     nichts. Es entfaellt dort; die Karte sagt es als Kartenzahl.
+ *   - „WEITERER NOTARZTKLARTEXT — KEINE PATIENTENDATEN". `.feld-klein-inline`
+ *     bringt keinen eigenen Abstand mit; die uebrigen Verwender stehen im
+ *     Markup auf einer eigenen Zeile und bekommen ihn vom HTML geschenkt.
+ *
+ * KEIN NEUER BAUSTEIN, KEIN NEUES TOKEN. Das Schloss ist `.symbol-schutz`,
+ * die Kleinzeile `.feld-klein-inline`, die Legende dieselbe klappbare Karte
+ * wie „Reanimation" darueber. `docs/Design.md` neu erzeugt: unveraendert.
+ * Neu ist EIN Schluessel am Baustein Ortsfeld — 'geschuetzt' => true haengt
+ * das Schloss an seine Beschriftung, weil 'label' escaped wird und das
+ * bleiben soll.
  */
-const WEB_VERSION = '19.0.3';
+const WEB_VERSION = '19.1.0';

@@ -1033,9 +1033,25 @@ in dieser Reihenfolge:
    Notarzt
 5. **Abweichende Besatzung** — zugeklappt mit der Vorschau „vom Diensttag";
    mit gespeicherter Abweichung offen
-6. **Notizen**
+6. **Notizen** — seit Web 19 **verschlüsselt** wie die Patientendaten
 7. **Einsatzphasen**
 8. **Reanimation** — zugeklappt („keine"), mit Bestand offen
+9. **Was hier gilt** — zugeklappt; die Legende zu den beiden Zeichen
+
+**Zwei Zeichen sagen dir, wer mitliest.** Ein **Schloss** neben der
+Beschriftung heißt: Dieses Feld ver- und entschlüsselt dein Browser, der Server
+sieht nur Chiffretext. Es steht an Name, Geburtsdatum, Alter, Diagnose,
+Einsatznummer, Einsatzort samt Beschreibung — und seit Web 19 an den
+**Notizen des Einsatzes**. Die Kleinzeile **„Klartext — keine
+Patientendaten"** heißt das Gegenteil: Dieses Feld wird unverschlüsselt
+gespeichert. Sie steht an den Bergwacht-Angaben, am weiteren Notarzt, an den
+Besatzungsnamen — und am Notizfeld des **Diensttags**, das weiterhin Klartext
+ist. Die zugeklappte Karte **„Was hier gilt"** am Ende des Formulars erklärt
+beides in drei Sätzen.
+
+> Die Notizen des Einsatzes und die des Diensttags heißen gleich und werden
+> verschieden behandelt. Genau deshalb tragen sie verschiedene Zeichen: Wer
+> Patientenbezogenes notieren will, gehört in das Feld mit dem Schloss.
 
 Windeneinsatz und Bergwacht fehlen ganz, wenn der Diensttag die jeweilige
 Fähigkeit nicht mitbringt und im Einsatz nichts dazu eingetragen ist.

@@ -342,7 +342,19 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
         <p class="feld-hinweis" id="sd-hint" <?= ($SD_VEHICLES || $SD_BASES) ? 'hidden' : '' ?>>
           Noch keine Standorte hinterlegt — unter
           <a href="einstellungen.php?t=standorte">Einstellungen → Standorte</a> anlegen.</p>
-        <label>Notizen <textarea name="notes" rows="3" maxlength="2000"></textarea></label>
+        <?php /* DIE KLEINZEILE AUCH HIER (S9/AP7, E-S9-02, Nr. 132). Die
+                 Notizen des DIENSTTAGS bleiben Klartext — sie sind
+                 Betriebsnotizen, nicht Patientendaten (Antwort 1 vom
+                 06.09.2026). Damit stehen im Formular des Diensttags und im
+                 Formular des Einsatzes zwei Felder mit derselben Beschriftung
+                 „Notizen" und entgegengesetzter Behandlung: Das eine traegt das
+                 Schloss, dieses die Kleinzeile. Ohne sie waere der Unterschied
+                 nicht zu sehen — und genau dann schreibt jemand hier hinein,
+                 was er dort haette schreiben sollen. Der Satz steht wortgleich
+                 im Katalog (mission_fields.php); er ist hier ausgeschrieben,
+                 weil dieses Feld kein Katalogfeld ist. */ ?>
+        <label>Notizen <span class="feld-klein-inline">Klartext — keine Patientendaten</span>
+          <textarea name="notes" rows="3" maxlength="2000"></textarea></label>
         <div class="tag-form-fuss">
           <?= ui_knopf(['text' => 'Speichern', 'art' => 'primaer']) ?>
           <span id="savestate" class="feld-klein-inline" role="status"></span>

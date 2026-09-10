@@ -14,6 +14,46 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.1.0] — 2026-09-10
+
+### Web — zwei Zeichen sagen, wer mitliest (E-S9-02, Schritt 4 von 5)
+
+Ein **Schloss** neben der Beschriftung heißt: Dieses Feld ver- und
+entschlüsselt der Browser. Die Kleinzeile **„Klartext — keine
+Patientendaten"** heißt das Gegenteil. Die beiden schließen einander aus, und
+die Wahl steht an **einer** Stelle im Code statt in jedem Zweig; der Satz selbst
+steht einmal im Feldkatalog — ein Satz, der an vier Feldern verschieden lautet,
+ist kein Versprechen mehr, sondern vier.
+
+**Gemessen:** 8 Schlösser (Einsatznummer, Nachname, Vorname, Geburtsdatum,
+Alter, Diagnose, Einsatzort, Beschreibung Einsatzort — dazu die Karte
+„Notizen", die es als Kartenzahl trägt), 9 Kleinzeilen (Bergwacht-Angaben,
+weiterer Notarzt, sieben Besatzungsrollen) und **0 Felder mit beidem**. Das
+Notizfeld des **Diensttags** trägt die Kleinzeile: Es bleibt Klartext, und
+ohne den Hinweis wäre der Unterschied zum gleichnamigen Feld am Einsatz nicht
+zu sehen.
+
+Am Ende des Formulars steht die zugeklappte Karte **„Was hier gilt"** mit drei
+Sätzen: was das Schloss bedeutet, was Klartext bedeutet, und dass der Server
+das eine nie und das andere immer sieht.
+
+**Das Schloss steht rechts vom Wort**, nicht links wie im Konzept formuliert:
+Der vorhandene Baustein setzt es über `margin-left` dahinter, und genauso steht
+es seit Web 15 in der Leseansicht. Links hieße eine neue CSS-Regel und damit
+eine neue Darstellung — Mockup und Freigabe, für einen Unterschied, den niemand
+verlangt hat. Formular und Leseansicht zeigen jetzt dasselbe Zeichen an
+derselben Stelle.
+
+**Zwei Fehler, die keine Zahl gemeldet hat** — beide auf dem Bild gefunden und
+vor der Auslieferung behoben: Das Schloss der Karte „Notizen" stand **allein in
+einer leeren Zeile**, weil dort die Beschriftung ausgeblendet ist (sie ist der
+Kartentitel) und das Zeichen stehenblieb. Und die Kleinzeile klebte ohne
+Abstand am Wort — „Weiterer NotarztKlartext — keine Patientendaten".
+
+**Kein neuer Baustein, kein neues Token**: `docs/Design.md` neu erzeugt und
+unverändert. Neu ist ein Schlüssel am Baustein Ortsfeld (`geschuetzt`), weil
+dessen Beschriftung escaped wird und das bleiben soll.
+
 ## [Web 19.0.3] — 2026-09-10
 
 ### Web — der Altbestand zieht beim Entsperren um (E-S9-01, Schritt 3 von 5)

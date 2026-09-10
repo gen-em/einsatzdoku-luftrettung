@@ -237,6 +237,21 @@ declare(strict_types=1);
  * unnoetig, sondern falsch: Ein Einsatz kann eine belegte Rolle tragen, die die
  * Art des Tages nicht vorsieht, und die muss sichtbar bleiben.
  */
+/* DER EINE SATZ AN DEN KLARTEXT-FREITEXTFELDERN (S9/AP7, E-S9-02, Nr. 132).
+ *
+ * Er steht an EINER Stelle und nicht viermal ausgeschrieben: Ein Satz, der an
+ * vier Feldern verschieden lautet, ist kein Versprechen mehr, sondern vier.
+ * Eine Variable und keine Konstante, weil diese Datei mehrfach `require`d wird
+ * und ein zweites `const` eine Warnung erzeugte — dieselbe Bauart wie
+ * `$mf_crew_kinder` darunter.
+ * Getragen wird er von `bw_info`, `other_ema`, den Besatzungs-Freitexten und —
+ * ausserhalb dieses Katalogs — vom Notizfeld des DIENSTTAGS (index.php).
+ *
+ * NICHT getragen wird er von `notes`: Die Notizen des Einsatzes sind seit
+ * Web 19.0.0 verschluesselt und tragen stattdessen das Schloss. Wer den
+ * Hinweis dort ergaenzt, sagt das Gegenteil der Wahrheit. */
+$mf_hinweis_klartext = 'Klartext — keine Patientendaten';
+
 $mf_crew_kinder = [];
 foreach (CREW_ROLES as $mf_code => $mf_rolle) {
     $mf_crew_kinder['crew_' . $mf_code] = [
@@ -252,6 +267,7 @@ foreach (CREW_ROLES as $mf_code => $mf_rolle) {
         'role_gate'   => $mf_code,
         'store'       => 'crew',
         'role_code'   => $mf_code,
+        'hinweis'     => $mf_hinweis_klartext,
     ];
 }
 
@@ -404,6 +420,7 @@ return [
             ],
             'bw_info' => [
                 'label' => 'Namen / Infos', 'type' => 'text', 'max' => 190,
+                'hinweis' => $mf_hinweis_klartext,
             ],
         ],
     ],
@@ -440,6 +457,7 @@ return [
          * „Weitere Rettungsmittel" direkt darueber. */
         'label' => 'Weiterer Notarzt', 'type' => 'text', 'max' => 190,
         'gruppe' => 'mittel',
+        'hinweis' => $mf_hinweis_klartext,
     ],
 
     /* ---- Gruppe „Abweichende Besatzung" ----------------------------------- */

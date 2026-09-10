@@ -943,7 +943,50 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               : e($label);
       };
 
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER, &$SUGGEST_FELDER, $labelSichtbar): void {
+      /* ---- Kennzeichnung der Beschriftung (S9/AP7, E-S9-02) --------------
+       *
+       * ZWEI ZEICHEN, DIE EINANDER AUSSCHLIESSEN: Ein verschluesseltes Feld
+       * traegt das SCHLOSS, ein Klartext-Freitextfeld die KLEINZEILE „Klartext
+       * — keine Patientendaten" (Katalogschluessel 'hinweis', Nr. 132). Beides
+       * an einem Feld waere ein Widerspruch; deshalb steht die Wahl hier an
+       * EINER Stelle und nicht in jedem Zweig von renderField().
+       *
+       * DAS SCHLOSS STEHT RECHTS VOM WORT, nicht links. Das Konzept sagt
+       * „links neben der Beschriftung"; der vorhandene Baustein `.symbol-schutz`
+       * setzt es ueber `margin-left` dahinter, und genauso steht es seit
+       * Web 15 in der LESEANSICHT (`dtGeschuetzt()` in einsatz.php). Links
+       * hiesse eine neue CSS-Regel und damit eine neue Darstellung — die
+       * braeuchte Mockup und Freigabe (CLAUDE.md 5), fuer einen Unterschied,
+       * den niemand verlangt hat. Formular und Leseansicht zeigen dasselbe
+       * Zeichen an derselben Stelle; das ist mehr wert als der Wortlaut.
+       *
+       * KEIN ZWEITES ZEICHEN FUER „OFFEN" (E-S9-02): Die Kleinzeile ist Text,
+       * kein Symbol. Ein zweites Symbol machte die Karte zum Zeichenteppich.
+       */
+      $feldKennzeichen = function (array $f) use (&$kartenTitel): string {
+          /* KEIN ZEICHEN AN EINER UNSICHTBAREN BESCHRIFTUNG. Traegt ein Feld
+             den Namen seiner Karte, blendet $labelSichtbar() das Wort aus (es
+             stuende zweimal da) — das Zeichen bliebe dann allein in einer
+             leeren Zeile stehen und zeigte auf nichts. Die Karte sagt es
+             ohnehin selbst: „Notizen · Ende-zu-Ende-verschluesselt".
+             GEFUNDEN AUF DEM BILD, nicht von einer Zahl. */
+          if (($f['label'] ?? null) === $kartenTitel) { return ''; }
+
+          if (($f['store'] ?? null) === 'pat') {
+              /* Kein Leerzeichen davor: `.symbol-schutz` bringt seinen Abstand
+                 als `margin-left` mit. */
+              return ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt');
+          }
+          /* HIER SCHON. `.feld-klein-inline` hat keinen eigenen Abstand — die
+             uebrigen Verwender stehen im Markup auf einer eigenen Zeile und
+             bekommen ihn vom HTML geschenkt. Ohne das Leerzeichen las sich die
+             Zeile „Weiterer NotarztKlartext — keine Patientendaten". */
+          return isset($f['hinweis'])
+              ? ' <span class="feld-klein-inline">' . e((string)$f['hinweis']) . '</span>'
+              : '';
+      };
+
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER, &$SUGGEST_FELDER, $labelSichtbar, $feldKennzeichen): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
           /* FILTER: verstecken, aber immer rendern (siehe mission_fields.php).
@@ -1117,7 +1160,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                * Spaltenwert — nach der Anhebung NULL, davor der Altbestand;
                * beides gehoert nicht ins Markup. */
               $pat = ($f['store'] ?? null) === 'pat'; ?>
-            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= $labelSichtbar($f['label']) ?>
+            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= $labelSichtbar($f['label']) . $feldKennzeichen($f) ?>
               <textarea <?= $pat ? 'id="pat_' . e($col) . '"' : 'name="f_' . e($col) . '"' ?>
                 rows="3" maxlength="<?= (int)($f['max'] ?? 190) ?>"
                 placeholder="<?= e($f['placeholder'] ?? '') ?>"><?= $pat ? '' : e($val) ?></textarea>
@@ -1129,7 +1172,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                      SUGGEST_FELDER — hier steht nur das leere <ul> (E-S9-07). */ ?>
             <?php if (isset($f['suggest_src'])) { $SUGGEST_FELDER[$col] = $suggestSrc($f); } ?>
             <label class="<?= trim(($depth ? 'fld-sub ' : '')
-                                 . (isset($f['suggest_src']) ? 'feld-vorschlag' : '')) ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
+                                 . (isset($f['suggest_src']) ? 'feld-vorschlag' : '')) ?>"<?= $hideAttr ?>><?= e($f['label']) . $feldKennzeichen($f) ?>
               <input type="<?= $type === 'number' ? 'number' : 'text' ?>"
                 name="f_<?= e($col) ?>" value="<?= e($val) ?>" autocomplete="off"
                 <?= isset($f['max']) ? 'maxlength="' . (int)$f['max'] . '"' : '' ?>
@@ -1246,24 +1289,36 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              (Skript unten), nicht als Formularwerte zum Server. */ ?>
     <div class="form-raster">
     <div class="form-spalte">
-    <?php ui_karte_start(['titel' => 'PatientIn', 'zahl' => 'Ende-zu-Ende-verschlüsselt',
+    <?php /* Einmal gebaut, siebenmal gesetzt — das Zeichen ist an jedem Feld
+             dasselbe, und siebenmal ui_symbol() aufzurufen hiesse siebenmal die
+             Gelegenheit, es verschieden zu schreiben. */
+          $SCHLOSS = ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt');
+          ui_karte_start(['titel' => 'PatientIn', 'zahl' => 'Ende-zu-Ende-verschlüsselt',
                           'klasse' => 'form-block-patientin']); ?>
+      <?php /* JEDES FELD TRAEGT DAS SCHLOSS (S9/AP7, E-S9-02). Die Karte hat
+               ihre Plakette „Ende-zu-Ende-verschluesselt" — und die beantwortet
+               die Frage fuer die KARTE, nicht fuer die einzelne Zeile. Dieselbe
+               Ueberlegung hat in S3/AP6 das Schloss in die PatientIn-Karte der
+               LESEANSICHT gebracht (E-S3-16); das Formular zieht hier nach, und
+               beide Seiten zeigen jetzt dasselbe Zeichen an derselben Stelle.
+               Katalogfelder bekommen es ueber $feldKennzeichen(); diese hier
+               sind von Hand geschrieben und bekommen es von Hand. */ ?>
       <div id="patfields">
-        <label>Einsatznummer
+        <label>Einsatznummer<?= $SCHLOSS ?>
           <input type="text" id="pat_mission_no" maxlength="64" autocomplete="off"
                  placeholder="z. B. Leitstellen-Nr."></label>
         <div class="patname">
-          <label>Nachname <input type="text" id="pat_last" maxlength="120" autocomplete="off"></label>
-          <label>Vorname <input type="text" id="pat_first" maxlength="120" autocomplete="off"></label>
+          <label>Nachname<?= $SCHLOSS ?> <input type="text" id="pat_last" maxlength="120" autocomplete="off"></label>
+          <label>Vorname<?= $SCHLOSS ?> <input type="text" id="pat_first" maxlength="120" autocomplete="off"></label>
         </div>
         <div class="fld-reihe">
-          <label>Geburtsdatum
+          <label>Geburtsdatum<?= $SCHLOSS ?>
             <input type="date" id="pat_dob" max="<?= e(date('Y-m-d')) ?>"></label>
-          <label>Alter
+          <label>Alter<?= $SCHLOSS ?>
             <input type="number" id="pat_age" min="0" max="120" step="1">
             <span class="feld-klein-inline" id="agehint"></span></label>
         </div>
-        <label>Diagnose <input type="text" id="pat_dx" maxlength="190"></label>
+        <label>Diagnose<?= $SCHLOSS ?> <input type="text" id="pat_dx" maxlength="190"></label>
       </div>
 
     <?php /* ---- GRUPPE 2: Einsatz ------------------------------------------
@@ -1293,6 +1348,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               ui_ortsfeld([
                   'praefix'     => 'loc',
                   'label'       => 'Einsatzort',
+                  'geschuetzt'  => true,
                   'hinweis'     => 'Adresse, Koordinaten oder Plus Code',
                   'max'         => 255,
                   'platzhalter' => 'tippen für Vorschläge — auch Koordinaten oder Plus Code',
@@ -1305,7 +1361,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                  neuem Namen wiederaufzubauen, steht der Zusatz jetzt dort, wo
                  ihn `ui_feld()` auch hinsetzt: als `.feld-klein` hinter dem
                  Feld. */ ?>
-        <label>Beschreibung Einsatzort
+        <label>Beschreibung Einsatzort<?= $SCHLOSS ?>
           <input type="text" id="pat_site_desc" maxlength="190" autocomplete="off">
         </label>
         <p class="feld-klein">Zufahrt, Besonderheiten, Lage vor Ort</p>
@@ -1356,6 +1412,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                     'praefix'     => 'start',
                     'klasse'      => 'fld-sub',
                     'label'       => 'Manueller Abfahrtort',
+                    'geschuetzt'  => true,
                     'hinweis'     => 'Adresse, Koordinaten oder Plus Code',
                     'max'         => 255,
                     'platzhalter' => 'tippen für Vorschläge — auch Koordinaten oder Plus Code',
@@ -1459,6 +1516,42 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     <?php ui_karte_ende(true); ?>
     </div><?php /* .form-spalte (rechts) */ ?>
     </div><?php /* .form-raster */ ?>
+
+    <?php /* ---- „Was hier gilt" (S9/AP7, E-S9-02) ------------------------
+             DIE LEGENDE ZU DEN ZEICHEN, und nur sie. Drei Saetze: was das
+             Schloss bedeutet, was Klartext bedeutet, und was der Server davon
+             sieht. Sie steht ZUGEKLAPPT und am ENDE (R74 (5)): Wer sie
+             braucht, sucht sie einmal; wer sie nicht braucht, soll ueber sie
+             nicht hinweglesen muessen. Kein neuer Baustein — dieselbe
+             klappbare Karte wie „Reanimation" darueber.
+
+             AUSSERHALB DES RASTERS, ueber die volle Breite: Sie gehoert zu
+             beiden Spalten, nicht zu einer. */ ?>
+    <?php ui_karte_start(['titel' => 'Was hier gilt', 'klasse' => 'form-block-legende',
+                          'zu' => true]); ?>
+      <p class="feld-hinweis">
+        <?= ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt') ?>
+        <strong>Das Schloss</strong> steht an jedem Feld, das dein Browser
+        ver- und entschlüsselt: Name, Geburtsdatum, Alter, Diagnose,
+        Einsatznummer, Einsatzort samt Beschreibung und die Notizen des
+        Einsatzes. Ohne dein Passwort sind sie nicht zu lesen.
+      </p>
+      <p class="feld-hinweis">
+        <strong>„Klartext — keine Patientendaten"</strong> steht an den
+        Freitextfeldern, die unverschlüsselt gespeichert werden: die
+        Bergwacht-Angaben, der weitere Notarzt, die Besatzungsnamen und die
+        Notizen des <em>Diensttags</em>. Dort gehören keine Angaben zu einer
+        Person hinein.
+      </p>
+      <p class="feld-hinweis">
+        <strong>Der Server</strong> sieht das eine nie und das andere immer.
+        Er kann die verschlüsselten Felder weder anzeigen noch durchsuchen —
+        deshalb findet die Suche sie erst, wenn du entsperrt hast. Alles
+        übrige — Zeiten, Phasen samt Koordinaten, GPS-Daten, Transportziel —
+        liegt lesbar in der Datenbank, weil Auswertung und Statistik darauf
+        angewiesen sind.
+      </p>
+    <?php ui_karte_ende(true); ?>
 
     <?php /* Speichern-Leiste statt Knopf am Ende (E-P3-29): Sie klebt unten
              und erscheint, sobald das Formular schmutzig ist (forms.js).
