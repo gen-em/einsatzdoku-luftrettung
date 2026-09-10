@@ -1485,6 +1485,29 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   „Abweichende Besatzung" verweist (dann ist der berichtigte Satz nicht
   ausgeliefert).
 
+- [ ] **31 — Ein Konto ohne Schlüsselhülle und das Notizfeld (AP7).**
+  *Weg:* Nur wenn es ein solches Konto gibt (`pat_wrap_rc IS NULL`): anmelden,
+  einen Einsatz öffnen.
+  *Erwartet:* Die Meldung „Entschlüsselung nicht möglich" steht oben, und das
+  Notizfeld ist **gesperrt** — wie Name, Diagnose und Einsatzort. Ein
+  Speichern lässt eine vorhandene Notiz unverändert.
+  *Scheitern erkennbar an:* Das Notizfeld ist bedienbar (dann fällt der
+  eingetippte Text beim Speichern spurlos weg), oder eine vorhandene Notiz
+  verschwindet nach dem Speichern.
+
+- [ ] **32 — Der Anhebelauf auf dem Produktivbestand (AP7).**
+  *Weg:* Nach dem Deploy einmal anmelden und entsperren. Danach in der
+  Datenbank `SELECT COUNT(*) FROM missions WHERE notes IS NOT NULL AND notes <> ''`
+  je Konto zählen.
+  *Erwartet:* Für jedes Konto, das sich entsperrt hat, **0**. Konten, die sich
+  nie entsperren, behalten ihren Klartext — das ist derselbe Zustand wie vor
+  Web 19 und kein Fehler.
+  *Scheitern erkennbar an:* Die Zahl bleibt trotz Entsperren stehen (dann
+  greift der Endpunkt nicht — Netzwerkreiter des Browsers auf
+  `pat_anheben.php` ansehen), oder Notizen fehlen danach in der Einsatzansicht
+  (dann ist etwas geschrieben worden, was sich nicht öffnen lässt — **sofort
+  melden**, die Sicherung von vor dem Deploy ist dann die Rückfalllinie).
+
 - [ ] **22 — Die Nachbearbeitung auf einer Installation, die A12 nie
   abgeschlossen hat (AP4).**
   *Weg:* Nur wenn es eine solche Installation gibt: „Zuordnung offen" in der
@@ -1496,6 +1519,72 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
   *Scheitern erkennbar an:* Die Rückfrage nennt fünf Tabellen, oder ein
   Bergwacht-Rettungsmittel ohne Standort steht als offener Punkt — beides
   hieße, die Entkopplung ist unvollständig.
+
+---
+
+## 3b. AP7 — Verschlüsselung und Kennzeichnung (10.09.2026)
+
+**Was nicht geprüft werden konnte und warum**, zuerst:
+
+- **Ein Konto ohne Schlüsselhülle** (`pat_wrap_rc IS NULL`) ist auf dem lokalen
+  Prüfstand nicht hergestellt worden. Solche Konten gibt es nachweislich
+  (`adminbackup_lib.php` behandelt sie ausdrücklich, `pw_handling.php` kennt
+  die Erstvergabe). Dort ist das Notizfeld ab Web 19 **gesperrt** wie jedes
+  andere geschützte Feld — der Riegel greift, das ist gelesen, aber nicht
+  gefahren. **Steht als Prüfpunkt 31.**
+- **Der Anhebelauf auf einem großen Bestand** (mehr als 200 Einsätze mit
+  Klartext, also mehr als eine Runde) ist nicht gefahren: Der Prüfstand hat
+  keinen. Gemessen ist eine Runde mit 12 Einsätzen und die Leerrunde danach.
+- **Zwei Browser gleichzeitig** — die Wache je Zeile (`pat_blob <=> ?`) ist
+  gelesen und begründet, aber nicht durch einen echten Wettlauf belegt.
+
+**Die Prüfmittel, mit Mittel und Zahl:**
+
+| Mittel | Ergebnis |
+|---|---|
+| Formular, Rundlauf | Einsatz 2324: der POST trägt **kein `f_notes` und keinen Klartext** (1163 Byte, Klartextprobe negativ), Spalte danach `NULL`, Text nach dem Neuladen wortgleich zurück |
+| Formular, gesperrte Sitzung | Riegelmeldung sichtbar, Notizfeld **gesperrt**, Speichern lässt den Blob **byteweise unverändert** (397 Byte, Prüfsumme `94f8c377…` vorher wie nachher) |
+| Suchindex | alte Fassung **31 Schlüssel** je Einsatz mit `notes`, neue **30** ohne — getrennt gefahren, nachdem ein erster Lauf beide Fassungen in eine Befehlskette gehängt hatte und sich dadurch selbst widersprach |
+| Suche | Suchwort aus einer Notiz: **gesperrt 0 von 83, entsperrt 1 von 83**; Klartextwort gesperrt weiter **31** Treffer |
+| Anzeige | Zeile „Notizen" mit **Schloss**, Rang 80 unverändert, ein Zeilenumbruch → **ein `<br>`** |
+| Anhebelauf | 12 Einsätze mit Klartext, ein Anmeldevorgang, drei Aufrufe (GET 12 · POST **angehoben 12, übersprungen 0** · GET leer mit `offen: 0`), Spalte danach **0**. `manual = 1` bei **86 vorher wie nachher**, `edited = 1` bei **79 vorher wie nachher** — die Uhr-Falle ist umgangen |
+| Kennzeichnung | **8 Schlösser** (Einsatznummer, Nachname, Vorname, Geburtsdatum, Alter, Diagnose, Einsatzort, Beschreibung Einsatzort), **9 Kleinzeilen** (Bergwacht-Angaben, weiterer Notarzt, sieben Rollen), **0 Felder mit beidem**; Diensttag-Notizfeld trägt die Kleinzeile, kein Schloss; Legende „Was hier gilt" zugeklappt, 3 Absätze, kein Überlauf |
+| Kreislauf CSV | **9120 Einzelvergleiche, 0 unerklärte Abweichungen, 1070 erwartete, 0 ungenutzte Regeln** (zwei neue Regeln mit Begründung) |
+| Kreislauf Sicherung | **287 842 Einzelvergleiche, 0 unerklärte, 159 erwartete**; die Notiz erscheint in **beiden** Hälften — Spalte leer, `pat.notes` gefüllt, gleicher Wortlaut |
+| Referenzbestand | `notes` in den Quelldaten von `felder` nach `geschuetzt` umgezogen (**85 Einsätze**, 87 gesamt, 2 ohne geschützten Block); erzeugte Ausgabe **byte-gleich**; Generator **283 989 Einzelprüfungen, keine Befunde**; Quelldatenprüfung **5961 Einzelprüfungen, keine Befunde, 0 offene Matrixzeilen** |
+| Klickprobe | **40 von 40** nach jedem Schritt; zum Abschluss **80 von 80 als Zeigergerät und 80 von 80 als Fingergerät** über 390 und 1280 px |
+| Bilderlauf | nach jedem Schritt die berührten Seiten; zum Abschluss der volle Lauf: **360 Einzelbilder und 45 Kontaktbögen je Bedienhöhe**, **0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** |
+| Wortliste | **0 Treffer** außerhalb der Ausnahmen bei 96 Regeln, 96 gegriffen, 0 ungenutzt — die neuen sichtbaren Texte laufen mit |
+| Kontraste | **22 Paare, 0 verfehlt** |
+| Linkprobe | **116 Verweise, 0 unbekannte Abweichungen** |
+| Vollständigkeit | 328 → **330**, beide Unterschiede benannt (je ein „…" in einem neuen Kommentar) |
+| Stilvergleich | **nicht gefahren** — `style.css` ist in AP7 unberührt |
+
+**Fünf Funde, alle vor der Auslieferung behoben:**
+
+1. **`readField()` hätte die Notiz gelöscht.** Es fragte nur auf `'crew'` ab
+   und machte aus allem anderen eine Spalte. Ein Feld ohne `name` sendet
+   nichts — jedes Speichern hätte `NULL` geschrieben, bei gesperrter Sitzung
+   also die Notiz vernichtet: kein Blob, keine Spalte, keine Meldung.
+2. **Der Riegel `PAT_INPUTS` fasste nur `input`**, nicht `textarea`. Die Notiz
+   ist das einzige mehrzeilige Feld; sie wäre bei gesperrtem Schlüssel
+   bedienbar geblieben und der Text beim Speichern verfallen.
+3. **114 verlorene Notizen im CSV-Kreislauf.** `import.js` führt die Ziele des
+   pat-Blocks in einem **abschließenden** `switch`; das Profil zeigte nach dem
+   Umzug auf `pat.notes`, der `case` fehlte. **Kein anderes Prüfmittel hätte
+   das gesehen** — die Seite sah richtig aus, die Zahl der Einsätze stimmte,
+   nur der Text war weg.
+4. **Das Schloss der Karte „Notizen" stand allein in einer leeren Zeile.**
+   Dort ist die Beschriftung ausgeblendet (sie ist der Kartentitel), das
+   Zeichen blieb und zeigte auf nichts. *Auf dem Bild gefunden.*
+5. **„Weiterer NotarztKlartext — keine Patientendaten".** `.feld-klein-inline`
+   bringt keinen eigenen Abstand mit. *Ebenfalls auf dem Bild gefunden.*
+
+> **Dreimal in einem Arbeitspaket hat das Ansehen etwas gefunden, was alle
+> Zahlen grün gemeldet hätten** (Funde 4 und 5, dazu die zwei Standortfelder
+> aus AP6). Der Satz aus `CLAUDE.md` 6 — „eine grüne Zahl ist erst dann ein
+> Beleg, wenn sie das Gemessene benennt" — hat hier eine Ergänzung verdient:
+> Manches benennt keine Zahl, weil es keine gibt.
 
 ---
 

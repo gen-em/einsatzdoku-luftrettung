@@ -449,7 +449,12 @@ def csv_zeile(dienst: dict, einsatz: dict, phasen: list[dict]) -> dict:
         # Getrennt mit Komma: der Import zerlegt an Komma UND Semikolon, aber
         # ein Semikolon waere hier zugleich das Feldtrennzeichen der Datei.
         "weitere_rettungsmittel": ", ".join(f.get("other_resources") or []),
-        "notizen": f.get("notes") or "",
+        # SEIT S9/AP7 EINE GESCHUETZTE ANGABE: Die Notiz des Einsatzes liegt im
+        # Ende-zu-Ende-verschluesselten pat_blob und steht in den Quelldaten
+        # deshalb unter `geschuetzt`, nicht unter `felder`. Die CSV-SPALTE
+        # heisst unveraendert `notizen` und steht an derselben Stelle — der
+        # Import bildet sie auf `pat.notes` ab (import_profiles.js).
+        "notizen": g.get("notes") or "",
         "pat_mission_no": g.get("mission_no") or "",
         "pat_geburtsdatum": g.get("dob") or "",
         "pat_alter": g.get("age") if g.get("age") is not None else "",

@@ -1374,6 +1374,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     in den Klartext. Ein Schlüssel `hinweis` im Feldkatalog, ein Text für
     alle; das Symbol dazu bringt Nr. 108. Zuordnung: Sofortpaket Sicherheit.
     *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-02, AP7) — `hinweis` an `bw_info`, `other_ema`, `crew_*` und `days.notes`; nicht an `notes`, das wird verschlüsselt (E-S9-01). Zuordnung jetzt: S9.*
+    *Umgesetzt 10.09.2026 in S9/AP7 (Web 19.1.0): Der Schlüssel `hinweis` steht
+    im Katalog, der Satz „Klartext — keine Patientendaten" einmal als Variable;
+    getragen wird er von `bw_info`, `other_ema`, den sieben Besatzungsfeldern
+    und — außerhalb des Katalogs — vom Notizfeld des Diensttags. `notes` trägt
+    stattdessen das Schloss. **Gemessen: 9 Kleinzeilen, 8 Schlösser, 0 Felder
+    mit beidem.** Der Punkt wandert mit dem Abschluss von S9 (AP8) nach
+    Erledigt — hier steht er, damit dazwischen niemand zweimal anfängt.*
 
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des

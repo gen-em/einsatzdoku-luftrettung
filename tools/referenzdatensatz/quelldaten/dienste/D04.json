@@ -143,8 +143,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
@@ -157,7 +156,8 @@
           "lon": 10.25026
         },
         "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
-        "start": null
+        "start": null,
+        "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
       },
       "abdeckung": []
     },
@@ -230,8 +230,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Straßenglätte auf der Anfahrt, verlängerte Ausrückzeit."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Pneumonie mit respiratorischer Insuffizienz",
@@ -244,7 +243,8 @@
           "lon": 10.28258
         },
         "site_desc": "Pflegeheim, Zimmer 14",
-        "start": null
+        "start": null,
+        "notes": "Straßenglätte auf der Anfahrt, verlängerte Ausrückzeit."
       },
       "abdeckung": []
     },
@@ -319,8 +319,7 @@
           "KTW Talwang 76/85"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Zufahrt eng, RTW musste am Ortsrand halten."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Anaphylaxie nach Wespenstich",
@@ -333,7 +332,8 @@
           "lon": 10.28163
         },
         "site_desc": "Gartengrundstück",
-        "start": null
+        "start": null,
+        "notes": "Zufahrt eng, RTW musste am Ortsrand halten."
       },
       "abdeckung": []
     },
@@ -408,8 +408,7 @@
           "KTW Talwang 76/85"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Landeplatz durch die Feuerwehr von Schnee freigeräumt."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schlaganfall, Lyse-Fenster offen",
@@ -422,7 +421,8 @@
           "lon": 10.25365
         },
         "site_desc": "Wohnhaus, Bad",
-        "start": null
+        "start": null,
+        "notes": "Landeplatz durch die Feuerwehr von Schnee freigeräumt."
       },
       "abdeckung": []
     },
@@ -525,8 +525,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Zufahrt eng, RTW musste am Ortsrand halten."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Kreislaufstillstand bei Vorderwandinfarkt",
@@ -539,7 +538,8 @@
           "lon": 10.25234
         },
         "site_desc": "Werkstatt eines Landmaschinenbetriebs",
-        "start": null
+        "start": null,
+        "notes": "Zufahrt eng, RTW musste am Ortsrand halten."
       },
       "abdeckung": []
     },
@@ -644,8 +644,7 @@
           "KTW Talwang 76/85"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Anaphylaxie nach Wespenstich",
@@ -658,7 +657,8 @@
           "lon": 10.24733
         },
         "site_desc": "Gartengrundstück",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     }

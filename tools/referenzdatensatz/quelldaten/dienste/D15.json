@@ -136,8 +136,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Sichtflug am Grat grenzwertig, Rückflug über das Haupttal."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Status asthmaticus",
@@ -150,7 +149,8 @@
           "lon": 10.40876
         },
         "site_desc": "Ferienwohnung im Dachgeschoss",
-        "start": null
+        "start": null,
+        "notes": "Sichtflug am Grat grenzwertig, Rückflug über das Haupttal."
       },
       "abdeckung": []
     },
@@ -224,8 +224,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "@Leitstelle: Alter unbekannt und im Feld frei erfasst; der Wert ist absichtlich kein Alter (R20-Prüffall)."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schlaganfall mit Halbseitensymptomatik",
@@ -238,7 +237,8 @@
           "lon": 10.281
         },
         "site_desc": "Talstation, Kassenhäuschen",
-        "start": null
+        "start": null,
+        "notes": "@Leitstelle: Alter unbekannt und im Feld frei erfasst; der Wert ist absichtlich kein Alter (R20-Prüffall)."
       },
       "abdeckung": [
         "geschuetzt-alter",
@@ -335,8 +335,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Übergabezeit aus der Tabelle der Leitstelle übernommen; nachträglich erfasst, kein Track vorhanden."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "<img src=x onerror=\"alert('R20-dx')\">Thoraxtrauma nach Sturz vom Gerüst",
@@ -349,7 +348,8 @@
           "lon": 10.398
         },
         "site_desc": "\"><script>alert('R20-ort')</script>Baustelle, Gerüst im 2. OG",
-        "start": null
+        "start": null,
+        "notes": "Übergabezeit aus der Tabelle der Leitstelle übernommen; nachträglich erfasst, kein Track vorhanden."
       },
       "abdeckung": [
         "herkunft-import",
@@ -446,8 +446,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "+Nachtrag der Bergungsdaten: Absturz beim Abstieg, früh einsetzende Dunkelheit. Die Ersatzmaschine führt keine Winde — die Bergung erfolgte zu Fuß bis zum Landeplatz im Talgrund."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Beckenfraktur nach Absturz im Steilgelände",
@@ -460,7 +459,8 @@
           "lon": 10.133
         },
         "site_desc": "Steilgelände unterhalb des Steigs, Landung im Talgrund",
-        "start": null
+        "start": null,
+        "notes": "+Nachtrag der Bergungsdaten: Absturz beim Abstieg, früh einsetzende Dunkelheit. Die Ersatzmaschine führt keine Winde — die Bergung erfolgte zu Fuß bis zum Landeplatz im Talgrund."
       },
       "abdeckung": [
         "geschuetzt-dob",
@@ -521,8 +521,7 @@
         "other_ema": "Rückruf der Hausärztin dokumentiert",
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Nachforderung der Bereitschaft dokumentiert. Nachträglich aus dem Papierprotokoll erfasst; Landung auf der Wiese, Patient blieb vor Ort."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Hypoglykämie, nach Glukosegabe beschwerdefrei",
@@ -535,7 +534,8 @@
           "lon": 10.411
         },
         "site_desc": "Feldweg am Ortsrand",
-        "start": null
+        "start": null,
+        "notes": "Nachforderung der Bereitschaft dokumentiert. Nachträglich aus dem Papierprotokoll erfasst; Landung auf der Wiese, Patient blieb vor Ort."
       },
       "abdeckung": [
         "herkunft-import",
@@ -594,8 +594,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Nachtrag aus dem Papierprotokoll: Einsatz auf dem Anflug storniert, Person war bereits im RTW."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": null,
@@ -608,7 +607,8 @@
           "lon": 10.398
         },
         "site_desc": null,
-        "start": null
+        "start": null,
+        "notes": "Nachtrag aus dem Papierprotokoll: Einsatz auf dem Anflug storniert, Person war bereits im RTW."
       },
       "abdeckung": [
         "herkunft-import",

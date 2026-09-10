@@ -240,7 +240,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      und zurücknehmen, S4/A2b — siehe 4.97e) ·
 │   │                      gpx_import.php (GPX herein, S4/A3 — siehe 4.97f) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
-│   │                      adminbackup_freigabe.php (freigegebenes Backup für die NutzerIn)
+│   │                      adminbackup_freigabe.php (freigegebenes Backup für die NutzerIn) ·
+│   │                      kdf_upgrade.php (stille Anhebung der Rundenzahl) ·
+│   │                      pat_anheben.php (stille Anhebung des Notiz-Altbestands
+│   │                      in den verschlüsselten Block, ab Web 19.0.0 — siehe 4.98d)
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
 │   │                      crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),

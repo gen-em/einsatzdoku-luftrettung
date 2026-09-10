@@ -448,6 +448,9 @@ def main() -> int:
             vorheriger = e
 
             f = e["felder"]
+            # Die Notiz des Einsatzes liegt seit S9/AP7 unter `geschuetzt`;
+            # die Abdeckung braucht deshalb beide Bloecke.
+            gs = e["geschuetzt"]
             if f:
                 if f["transport_mode"]:
                     merke([f"transport-{f['transport_mode']}"], wo)
@@ -468,7 +471,11 @@ def main() -> int:
                     merke(["besatzung-abweichend"], wo)
                 if f["other_ema"]:
                     merke(["weiterer-notarzt"], wo)
-                if f["notes"]:
+                # SEIT S9/AP7 unter `geschuetzt`: Die Notiz des Einsatzes liegt
+                # im verschluesselten pat_blob. `f["notes"]` liefe hier in
+                # einen KeyError — und zwar sofort, was besser ist als ein
+                # `.get()`, das die Abdeckung still verloere.
+                if (gs or {}).get("notes"):
                     merke(["notizen-einsatz"], wo)
                 if len(f["other_resources"]) > 1:
                     merke(["weitere-rettungsmittel-mehrere"], wo)
@@ -546,7 +553,7 @@ def main() -> int:
             if re.search(r"[äöüÄÖÜß]", text):
                 merke(["sonderzeichen-umlaute"], wo)
             for zeichen, marke in (("=", "gleich"), ("+", "plus"), ("-", "minus"), ("@", "at")):
-                for feld in ((f or {}).get("notes"), (f or {}).get("bw_info"), (f or {}).get("other_ema")):
+                for feld in ((g or {}).get("notes"), (f or {}).get("bw_info"), (f or {}).get("other_ema")):
                     if isinstance(feld, str) and feld.startswith(zeichen):
                         merke([f"sonderzeichen-formel-{marke}"], wo)
 

@@ -141,8 +141,7 @@
           "FF Hochkreuth 40/1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Landung auf dem Sportplatz, Zufahrt für den RTW frei gehalten."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schlaganfall mit Halbseitensymptomatik",
@@ -155,7 +154,8 @@
           "lon": 10.03998
         },
         "site_desc": "Seniorenwohnanlage, Erdgeschoss",
-        "start": null
+        "start": null,
+        "notes": "Landung auf dem Sportplatz, Zufahrt für den RTW frei gehalten."
       },
       "abdeckung": []
     },
@@ -230,8 +230,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Anfahrt der Bergwacht über die Talabfahrt; Landung auf der Piste erst nach Sperrung durch den Pistendienst."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Unterschenkelfraktur nach Sturz auf der Talabfahrt",
@@ -244,7 +243,8 @@
           "lon": 10.343
         },
         "site_desc": "Talabfahrt Nord, unterhalb der Mittelstation",
-        "start": null
+        "start": null,
+        "notes": "Anfahrt der Bergwacht über die Talabfahrt; Landung auf der Piste erst nach Sperrung durch den Pistendienst."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -377,8 +377,7 @@
           "First Responder Sonnenau"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "First Responder hatte bei Eintreffen bereits mit der Herzdruckmassage begonnen."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Kammerflimmern bei akutem Koronarsyndrom, ROSC nach 23 Minuten",
@@ -391,7 +390,8 @@
           "lon": 10.25
         },
         "site_desc": "Einfamilienhaus, Wohnzimmer im Erdgeschoss",
-        "start": null
+        "start": null,
+        "notes": "First Responder hatte bei Eintreffen bereits mit der Herzdruckmassage begonnen."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -478,8 +478,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Alarmierung noch am Klinikum Auwiesen; Transport bodengebunden, weil das Ziel ohne Landemöglichkeit ist."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Distale Radiusfraktur",
@@ -492,7 +491,8 @@
           "lon": 10.33
         },
         "site_desc": "Hofzufahrt, vereist",
-        "start": null
+        "start": null,
+        "notes": "Alarmierung noch am Klinikum Auwiesen; Transport bodengebunden, weil das Ziel ohne Landemöglichkeit ist."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -578,8 +578,7 @@
           "Bergwacht Felsgrat"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Abflug nach Zwischenlandung zur Betankung; Windenrettung wegen Lawinenkegel ohne Landemöglichkeit."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Wirbelsäulentrauma nach Lawinenverschüttung",
@@ -596,7 +595,8 @@
           "addr": "Landeplatz Sennalpe Ödwang",
           "lat": 47.532,
           "lon": 10.287
-        }
+        },
+        "notes": "Abflug nach Zwischenlandung zur Betankung; Windenrettung wegen Lawinenkegel ohne Landemöglichkeit."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -677,8 +677,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Rückflug mit Zwischenlandung zur Betankung."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Krampfanfall, postiktal orientiert",
@@ -691,7 +690,8 @@
           "lon": 10.12644
         },
         "site_desc": "Straßenrand vor der Bushaltestelle",
-        "start": null
+        "start": null,
+        "notes": "Rückflug mit Zwischenlandung zur Betankung."
       },
       "abdeckung": []
     }

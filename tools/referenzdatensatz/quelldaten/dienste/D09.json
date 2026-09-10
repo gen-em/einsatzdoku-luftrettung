@@ -140,8 +140,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Landung auf dem Sportplatz, Übergabe am Klinikdach war wegen Bauarbeiten nicht möglich."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Verbrennung Grad IIb, ca. 18 % Körperoberfläche",
@@ -154,7 +153,8 @@
           "lon": 10.22
         },
         "site_desc": "Hofstelle, Grillunfall im Innenhof",
-        "start": null
+        "start": null,
+        "notes": "Landung auf dem Sportplatz, Übergabe am Klinikdach war wegen Bauarbeiten nicht möglich."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -298,8 +298,7 @@
           "NEF Hochkreuth 71/82"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Zwei getrennte Reanimationen: Nach dem ersten ROSC kam es während der Umlagerung zum erneuten Kreislaufstillstand."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Rezidivierender Kreislaufstillstand bei Vorderwandinfarkt",
@@ -312,7 +311,8 @@
           "lon": 10.29
         },
         "site_desc": "Werkstatt, hinter der Hebebühne",
-        "start": null
+        "start": null,
+        "notes": "Zwei getrennte Reanimationen: Nach dem ersten ROSC kam es während der Umlagerung zum erneuten Kreislaufstillstand."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -389,8 +389,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Rückflug mit Zwischenlandung zur Betankung."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Amputationsverletzung der Hand",
@@ -403,7 +402,8 @@
           "lon": 10.22464
         },
         "site_desc": "Sägewerk, Halle 2",
-        "start": null
+        "start": null,
+        "notes": "Rückflug mit Zwischenlandung zur Betankung."
       },
       "abdeckung": []
     },
@@ -475,8 +475,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Doppelt dokumentiert und deshalb in den Papierkorb gelegt."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Anaphylaxie nach Wespenstich",
@@ -489,7 +488,8 @@
           "lon": 10.312
         },
         "site_desc": "Gartengrundstück am Hang",
-        "start": null
+        "start": null,
+        "notes": "Doppelt dokumentiert und deshalb in den Papierkorb gelegt."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -568,8 +568,7 @@
           "Bergwacht Felsgrat"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Rückflug mit Zwischenlandung zur Betankung."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Wirbelsäulentrauma nach Sturz",
@@ -582,7 +581,8 @@
           "lon": 10.22687
         },
         "site_desc": "Wanderweg oberhalb der Alpe",
-        "start": null
+        "start": null,
+        "notes": "Rückflug mit Zwischenlandung zur Betankung."
       },
       "abdeckung": []
     },
@@ -657,8 +657,7 @@
           "Bergwacht Sonnenau"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Windeneinsatz ohne Patiententransport an der Winde: Nur Personal wurde abgesetzt."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Oberschenkelfraktur nach Sturz am Klettersteig",
@@ -671,7 +670,8 @@
           "lon": 10.343
         },
         "site_desc": "Steilgelände, Absetzen des Bergretters aus dem Schwebeflug",
-        "start": null
+        "start": null,
+        "notes": "Windeneinsatz ohne Patiententransport an der Winde: Nur Personal wurde abgesetzt."
       },
       "abdeckung": [
         "herkunft-watch",

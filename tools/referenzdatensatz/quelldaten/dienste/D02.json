@@ -137,8 +137,7 @@
           "Wasserwacht Auwiesen"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Anflug wegen tiefer Bewölkung über das Tal geführt."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Akzidentelle Hypothermie",
@@ -151,7 +150,8 @@
           "lon": 10.33936
         },
         "site_desc": "Feldweg, Person im Straßengraben",
-        "start": null
+        "start": null,
+        "notes": "Anflug wegen tiefer Bewölkung über das Tal geführt."
       },
       "abdeckung": []
     },
@@ -207,8 +207,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Storno auf dem Anflug: Die gemeldete Person war beim Eintreffen des Rettungsdienstes ansprechbar und lehnte eine Behandlung ab.\nRückflug ohne Landung am Einsatzort."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": null,
@@ -221,7 +220,8 @@
           "lon": 10.125
         },
         "site_desc": null,
-        "start": null
+        "start": null,
+        "notes": "Storno auf dem Anflug: Die gemeldete Person war beim Eintreffen des Rettungsdienstes ansprechbar und lehnte eine Behandlung ab.\nRückflug ohne Landung am Einsatzort."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -302,8 +302,7 @@
           "FF Hochkreuth 40/1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Rückflug mit Zwischenlandung zur Betankung."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Intrazerebrale Blutung",
@@ -316,7 +315,8 @@
           "lon": 10.19873
         },
         "site_desc": "Innerklinische Übernahme, Intensiv",
-        "start": null
+        "start": null,
+        "notes": "Rückflug mit Zwischenlandung zur Betankung."
       },
       "abdeckung": []
     },
@@ -378,8 +378,7 @@
           "Bergwacht Moosachtal"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Ambulant belassen: Nach Reposition der Schulter war die Patientin gehfähig; \"kein Transport gewünscht\" ausdrücklich dokumentiert."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schulterluxation, geschlossen reponiert",
@@ -392,7 +391,8 @@
           "lon": 10.133
         },
         "site_desc": "Wanderweg oberhalb der Alpe, Waldgrenze",
-        "start": null
+        "start": null,
+        "notes": "Ambulant belassen: Nach Reposition der Schulter war die Patientin gehfähig; \"kein Transport gewünscht\" ausdrücklich dokumentiert."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -469,8 +469,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Landeplatz durch die Feuerwehr von Schnee freigeräumt."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Anaphylaxie nach Insektenstich",
@@ -483,7 +482,8 @@
           "lon": 10.28759
         },
         "site_desc": "Gartengrundstück am Hang",
-        "start": null
+        "start": null,
+        "notes": "Landeplatz durch die Feuerwehr von Schnee freigeräumt."
       },
       "abdeckung": []
     },

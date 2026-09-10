@@ -81,17 +81,32 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
 
 - **Ende-zu-Ende-Verschlüsselung — und zwar genau dieser Felder.** Name,
   Geburtsdatum, Alter, Diagnose, Einsatznummer, Adresse und Koordinate des
-  Einsatzorts und dessen Beschreibung werden im Browser ver- und entschlüsselt
-  (der Katalog steht in `docs/Technik.md` 4.98). Klartext dieser Felder geht nie
-  an den Server, in ein Log oder in eine API-Antwort.
-  **Im Klartext liegen dagegen:** die GPS-Spur, die Koordinate **jeder Phase**
-  (Phase 4 und 5 sind der Einsatzort), `site_ele_m`, das Transportziel samt
-  Koordinate, Zeiten, Reanimationsverlauf und Besatzungsnamen. Aus Spur und
+  Einsatzorts, dessen Beschreibung und — seit Web 19.0.0 — die **Notizen des
+  Einsatzes** werden im Browser ver- und entschlüsselt (der Katalog steht in
+  `docs/Technik.md` 4.98). Klartext dieser Felder geht nie an den Server, in
+  ein Log oder in eine API-Antwort.
+  **Im Klartext liegen dagegen:** die **Notizen des Diensttags**
+  (`days.notes` — Betriebsnotizen, nicht die des Einsatzes), die GPS-Spur, die
+  Koordinate **jeder Phase** (Phase 4 und 5 sind der Einsatzort),
+  `site_ele_m`, das Transportziel samt Koordinate, Zeiten,
+  Reanimationsverlauf und Besatzungsnamen. Aus Spur und
   Phasenkoordinaten **lässt sich der Einsatzort rekonstruieren** — die
   Verschlüsselung der Adresse verbirgt ihn nicht. Wer das aufweichen oder
   ausweiten will, findet den Weg in `docs/konzepte/Konzept-V1-Ortsdaten.md`
   (Weg B) und Backlog Nr. 43; wer die Zusage zitiert, zitiert diesen Absatz
   vollständig oder gar nicht.
+  **Der Weg ins Blob führt über den Feldkatalog** (`'store' => 'pat'` in
+  `mission_fields.php`), nicht über handgeschriebenes Markup: `mf_ist_spalte()`
+  nimmt ein solches Feld dann von selbst aus jedem `SELECT`, `INSERT` und
+  `UPDATE` auf `missions`. Wer ein weiteres Feld verschlüsselt, ergänzt den
+  Katalogeintrag, diesen Absatz **und** `docs/Technik.md` 4.98 — und schreibt
+  einen Anhebelauf für den Altbestand (`api/pat_anheben.php` ist das Muster;
+  der Server kann nicht verschlüsseln, nur der Browser kann es).
+  **Zwei Zeichen tragen die Zusage in die Oberfläche:** ein Schloss an jedem
+  verschlüsselten Feld, die Kleinzeile „Klartext — keine Patientendaten" an
+  jedem Klartext-Freitextfeld. Sie schließen einander aus; die Wahl steht an
+  einer Stelle (`$feldKennzeichen()` in `einsatz_form.php`), der Satz einmal im
+  Katalog.
 - **Keine fremde Quelle zur Laufzeit.** Kein CDN, keine Google Fonts, kein
   externes Skript. Schriften und Bibliotheken liegen unter
   `server/assets/fonts/` bzw. `server/assets/vendor/`, mit Herkunft und

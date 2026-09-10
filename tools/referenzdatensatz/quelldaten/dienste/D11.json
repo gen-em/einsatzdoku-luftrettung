@@ -146,8 +146,7 @@
           "KTW Talwang 76/85"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Anaphylaxie nach Wespenstich",
@@ -160,7 +159,8 @@
           "lon": 10.24911
         },
         "site_desc": "Gartengrundstück",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -235,8 +235,7 @@
           "ELW Talwang 1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Verkehrsunfall auf der Umgehung; Schockraum wegen Sturzhöhe und Aufprallgeschwindigkeit voranmeldet."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
@@ -249,7 +248,8 @@
           "lon": 10.25
         },
         "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
-        "start": null
+        "start": null,
+        "notes": "Verkehrsunfall auf der Umgehung; Schockraum wegen Sturzhöhe und Aufprallgeschwindigkeit voranmeldet."
       },
       "abdeckung": [
         "herkunft-wear",
@@ -331,8 +331,7 @@
           "RTW Talwang 76/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schlaganfall, Lyse-Fenster offen",
@@ -345,7 +344,8 @@
           "lon": 10.24885
         },
         "site_desc": "Wohnhaus, Bad",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -418,8 +418,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Patient wurde nach Aufklärung ambulant belassen."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Femurfraktur nach häuslichem Sturz",
@@ -432,7 +431,8 @@
           "lon": 10.24923
         },
         "site_desc": "Wohnhaus, Flur",
-        "start": null
+        "start": null,
+        "notes": "Patient wurde nach Aufklärung ambulant belassen."
       },
       "abdeckung": []
     },
@@ -494,8 +494,7 @@
           "KTW Talwang 76/85"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Patientin lehnte den Transport nach Aufklärung ab; Hausärztin verständigt."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Hypertensive Entgleisung",
@@ -508,7 +507,8 @@
           "lon": 10.287
         },
         "site_desc": "Seniorenwohnanlage, Erdgeschoss",
-        "start": null
+        "start": null,
+        "notes": "Patientin lehnte den Transport nach Aufklärung ab; Hausärztin verständigt."
       },
       "abdeckung": [
         "herkunft-wear",
@@ -615,8 +615,7 @@
           "First Responder Sonnenau"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Von Hand angelegt: Das Gerät war während des Einsatzes ohne Ladung.\nZeiten aus dem Einsatzprotokoll des RTW übernommen."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Kreislaufstillstand bei Lungenembolie, ROSC nach 22 Minuten",
@@ -629,7 +628,8 @@
           "lon": 10.33
         },
         "site_desc": "Werkstatt eines Landmaschinenbetriebs",
-        "start": null
+        "start": null,
+        "notes": "Von Hand angelegt: Das Gerät war während des Einsatzes ohne Ladung.\nZeiten aus dem Einsatzprotokoll des RTW übernommen."
       },
       "abdeckung": [
         "herkunft-manuell",

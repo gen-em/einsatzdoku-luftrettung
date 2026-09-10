@@ -122,8 +122,7 @@
           "RTW Talwang 76/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Sturz aus dem Stand mit Platzwunde",
@@ -136,7 +135,8 @@
           "lon": 10.33144
         },
         "site_desc": "Vorplatz der Kapelle",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -209,8 +209,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Nachforderung des Rettungshubschraubers geprüft, wegen Sichtflug verworfen."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
@@ -223,7 +222,8 @@
           "lon": 10.25153
         },
         "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
-        "start": null
+        "start": null,
+        "notes": "Nachforderung des Rettungshubschraubers geprüft, wegen Sichtflug verworfen."
       },
       "abdeckung": []
     },
@@ -296,8 +296,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Femurfraktur nach häuslichem Sturz",
@@ -310,7 +309,8 @@
           "lon": 10.24958
         },
         "site_desc": "Wohnhaus, Flur",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -384,8 +384,7 @@
           "RTW Talwang 76/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Transportbeginn um 23:59, Ankunft Klinik um 00:14 — der Einsatz läuft über Mitternacht."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Obere gastrointestinale Blutung",
@@ -398,7 +397,8 @@
           "lon": 10.281
         },
         "site_desc": "Gasthof, Gästezimmer im 1. OG",
-        "start": null
+        "start": null,
+        "notes": "Transportbeginn um 23:59, Ankunft Klinik um 00:14 — der Einsatz läuft über Mitternacht."
       },
       "abdeckung": [
         "herkunft-android",
@@ -485,8 +485,7 @@
           "ELW Talwang 1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Lange Versorgungszeit am Einsatzort wegen eingeklemmter Person; \"Uhren zurückgestellt\" im Protokoll vermerkt, damit die Zeiten nachvollziehbar bleiben."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Thoraxtrauma und Femurfraktur nach Verkehrsunfall",
@@ -499,7 +498,8 @@
           "lon": 10.133
         },
         "site_desc": "Fahrzeug gegen Baum, Person eingeklemmt, technische Rettung",
-        "start": null
+        "start": null,
+        "notes": "Lange Versorgungszeit am Einsatzort wegen eingeklemmter Person; \"Uhren zurückgestellt\" im Protokoll vermerkt, damit die Zeiten nachvollziehbar bleiben."
       },
       "abdeckung": [
         "herkunft-android",
