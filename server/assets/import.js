@@ -462,7 +462,9 @@
     // Felder, die unveraendert nach zeile.mission durchgereicht werden.
     var EINFACHE_ZIELE = ['day', 'einsatzdatum', 'alarm', 'ended', 'final',
         'transport_dest', 'winch',
-        'notes', 'site_ele_m', 'distance_m', 'ascent_m',
+        /* 'notes' steht hier nicht mehr (S9/AP7): Das Ziel heisst jetzt
+           'pat.notes' und laeuft ueber den verschluesselten Block. */
+        'site_ele_m', 'distance_m', 'ascent_m',
         'schockraum', 'secondary', 'winch_cycles', 'winch_cycles_pat',
         'winch_airload', 'bergwacht', 'bw_unit', 'bw_info', 'other_ema',
         'crew_override', 'rea',
@@ -493,6 +495,13 @@
         case 'pat.age': zeile.pat.age = wert; break;
         case 'pat.dx': zeile.pat.dx = wert; break;
         case 'pat.site_desc': zeile.pat.site_desc = wert; break;
+        /* NOTIZEN (S9/AP7). Dieser `switch` ist eine ABSCHLIESSENDE Liste: Ein
+           Ziel ohne `case` faellt heraus, ohne Fehler und ohne Meldung. Genau
+           das ist beim Umzug passiert — das Profil zeigte auf `pat.notes`,
+           hier stand nichts, und der CSV-Kreislauf meldete 114 verlorene
+           Notizen. Wer ein Ziel in `import_profiles.js` ergaenzt, ergaenzt es
+           hier mit. */
+        case 'pat.notes': zeile.pat.notes = wert; break;
         case 'pat.mission_no': zeile.pat.mission_no = wert; break;
         // Die drei Ortsangaben koennen in beliebiger Spaltenreihenfolge
         // kommen — deshalb zusammenfuehren statt ueberschreiben.
@@ -598,7 +607,7 @@
                        und nicht „nicht abgeschlossen". */
                     final: 1,
                     transport_dest: null, winch: 0, resources: [],
-                    notes: null, site_ele_m: null,
+                    site_ele_m: null,
                     distance_m: null, ascent_m: null,
                     schockraum: 0, secondary: 0,
                     winch_cycles: null, winch_cycles_pat: null, winch_airload: 0,
@@ -610,7 +619,8 @@
                     crew_override: 0
                 },
                 pat: { last: null, first: null, dob: null, age: null, dx: null,
-                       mission_no: null, loc: null, site_desc: null },
+                       mission_no: null, loc: null, site_desc: null,
+                       notes: null },
                 dayCrew: {},
                 crew: {}                       // ausdrueckliche Einsatzbesatzung
             };

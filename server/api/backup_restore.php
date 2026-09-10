@@ -98,7 +98,7 @@ if ($nutzlast < 6) {
  * ein Bergwacht-Rettungsmittel als STANDARD-Rettungsmittel an — mit
  * Standortpflicht und Rollenvorlagen, und ohne dass man dem Datensatz den
  * Verlust ansaehe. */
-const NUTZLAST_HOECHSTENS = 10;
+const NUTZLAST_HOECHSTENS = 11;
 if ($nutzlast > NUTZLAST_HOECHSTENS) {
     json_out(['error' => 'version_neu',
               'meldung' => 'Dieses Backup hat das Format ' . $nutzlast

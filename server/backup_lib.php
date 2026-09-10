@@ -229,7 +229,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
                        winch, winch_cycles, winch_cycles_pat, winch_airload,
                        bergwacht, secondary, schockraum, bw_unit, bw_info,
                        other_ema, crew_override,
-                       pat_blob, notes, created_at, deleted_at, deleted_with_day';
+                       pat_blob, created_at, deleted_at, deleted_with_day';
     /* NICHT in der Liste, und zwar mit Absicht:
      *
      *   id, user_id, device_id   Interne Verweise. Sie gelten nur in DIESER
@@ -708,8 +708,20 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          *
          * DER SPURVERGLEICH BLEIBT AUF `>= 8`. Er entscheidet, ob Punktlisten
          * oder Verweise in der Datei stehen, und daran aendert die 10 nichts —
-         * dieselbe Falle, vor der schon der Absatz zur 9 warnt. */
-        'version' => $ohneSpuren ? 10 : 7,
+         * dieselbe Falle, vor der schon der Absatz zur 9 warnt.
+         *
+         * 11 SEIT S9/AP7: Die Notizen des Einsatzes sind aus der Spalte
+         * `missions.notes` in den verschluesselten `pat`-Block gewandert. Eine
+         * 11er-Datei traegt sie deshalb NUR dort — eine aeltere Installation,
+         * die sie in der Spalte sucht, faende nichts und meldete trotzdem
+         * Erfolg. Das ist genau der stille Schaden, gegen den diese Zahl da
+         * ist: Die alte Installation weist die Datei jetzt ab.
+         *
+         * Umgekehrt bleibt der Weg offen: Eine 10er-Datei traegt den Klartext
+         * in der Spalte, und der Einspielweg schreibt sie weiter (siehe
+         * `$extraCols` weiter unten) — der Anhebelauf holt sie danach in den
+         * Blob. */
+        'version' => $ohneSpuren ? 11 : 7,
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-notarzt',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
@@ -1653,7 +1665,24 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
         };
         $collectCols($FIELDS);
         // Alt-Backups: loc_* wird ignoriert
-        $extraCols = array_merge($extraCols, ['start_src', 'pat_blob', 'created_at']);
+        /* `notes` STEHT HIER, obwohl es seit S9/AP7 kein Katalogfeld mit
+         * Spalte mehr ist (mf_ist_spalte() sagt nein) — und genau deshalb
+         * muss es von Hand dazu.
+         *
+         * Eine Sicherungsdatei mit Nutzlast 10 oder aelter traegt die Notiz im
+         * KLARTEXT in dieser Spalte. Faellt sie hier aus der Liste, wird sie
+         * beim Einspielen stillschweigend verworfen: kein Fehler, keine
+         * Meldung, eine Notiz weniger. Sie wird deshalb weiter geschrieben —
+         * und der Anhebelauf (Schritt 3) holt sie beim naechsten Entsperren
+         * in den Blob. Eine Datei mit Nutzlast 11 oder neuer traegt an dieser
+         * Stelle NULL und den Text im `pat`-Block; dann schreibt diese Spalte
+         * NULL, was richtig ist.
+         *
+         * Wenn P8 die Spalte entfernt (R60), faellt dieser Eintrag mit ihr —
+         * und mit ihm die Faehigkeit, eine 10er-Datei vollstaendig
+         * einzuspielen. Das gehoert dann ausdruecklich entschieden. */
+        $extraCols = array_merge($extraCols,
+                                 ['start_src', 'pat_blob', 'notes', 'created_at']);
 
         foreach (($data['missions'] ?? []) as $m) {
             if (!is_array($m)) { $stats['missions_skipped']++; $grund['aufbau']++; continue; }

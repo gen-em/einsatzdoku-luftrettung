@@ -295,7 +295,11 @@
         'weitere_rettungsmittel': { target: 'resources', parse: ['pipeList', 'maxEach:120'] },
         // `trimMehrzeilig` statt `trim`: Die Notiz ist das einzige Feld, das
         // Zeilenumbrueche traegt, und `trim` zog sie weg (Backlog Nr. 27).
-        'notizen': { target: 'notes', parse: ['trimMehrzeilig', 'max:2000'] },
+        // ZIEL IST DER PAT-BLOCK (S9/AP7) — und damit `sensitive: true`: Der
+        // Wert darf den Browser nur verschluesselt verlassen. Ohne die Marke
+        // ginge er als Klartextspalte an `import_commit.php`, und der Import
+        // waere das Loch, das das Formular gerade geschlossen hat.
+        'notizen': { target: 'pat.notes', parse: ['trimMehrzeilig', 'max:2000'], sensitive: true },
 
         'pat_mission_no': { target: 'pat.mission_no', parse: ['trim', 'max:64'], sensitive: true },
         'pat_nachname': { target: 'pat.last', parse: ['trim'], sensitive: true },
@@ -459,7 +463,8 @@
                eingetragen, damit frühere Dateien erkannt werden. */
             'Flugkilometer': { target: null },
             'Kilometer': { target: null },
-            'Notizen': { target: 'notes', parse: ['dashLeer', 'trimMehrzeilig', 'max:2000'] }
+            // Ebenfalls in den pat-Block (S9/AP7), siehe oben.
+            'Notizen': { target: 'pat.notes', parse: ['dashLeer', 'trimMehrzeilig', 'max:2000'], sensitive: true }
         },
 
         dedupeKey: ['mission_no', 'day+alarm'],

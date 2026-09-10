@@ -14,6 +14,41 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.0.2] — 2026-09-10
+
+### Web — Export, Sicherung und Import führen die Notiz verschlüsselt (E-S9-01, Schritt 2b von 5); Nutzlast 10 → 11
+
+**Die Nutzlastnummer musste steigen.** Eine 11er-Sicherung trägt die Notiz nur
+noch im `pat`-Block. Eine Installation vor Web 19 suchte sie in der Spalte,
+fände dort `null`, spielte die Datei ein und meldete **Erfolg** — mit lauter
+leeren Notizen. Genau dieser stille Schaden ist der Grund für die Zahl; eine
+ältere Installation weist eine 11er-Datei jetzt ab.
+
+**Der Weg zurück bleibt offen**, und das ist eine ausdrückliche Entscheidung:
+`notes` steht im Einspielweg weiterhin in `$extraCols` — von Hand, denn
+`mf_ist_spalte()` sagt seit Schritt 1 nein. Eine 10er-Datei trägt den Klartext
+in der Spalte; fiele sie aus der Liste, würde er beim Einspielen
+stillschweigend verworfen. Er wird deshalb weiter geschrieben, und der
+Anhebelauf holt ihn beim nächsten Entsperren in den Blob.
+
+**Ein Fund, den nur der Kreislauf gemeldet hat.** `import.js` führt die Ziele
+des pat-Blocks in einem **abschließenden** `switch`; ein Ziel ohne `case` fällt
+heraus, ohne Fehler und ohne Meldung. Das Profil zeigte nach dem Umzug auf
+`pat.notes`, der `case` fehlte — und der CSV-Kreislauf meldete **114 verlorene
+Notizen**. Kein anderes Prüfmittel hätte das gesehen: Die Seite sah richtig aus,
+die Zahl der Einsätze stimmte, nur der Text war weg. Nach der Behebung: **9120
+Einzelvergleiche, 0 unerklärte Abweichungen, 1070 erwartete, 0 ungenutzte
+Regeln** — die zwei neuen Ausnahmeregeln decken die beabsichtigte
+Formatbeschreibung (`missions.notes` → `pat_blob.notes`) und die um zwei Zeilen
+verschobene LIESMICH-Datei ab.
+
+**Die Schranke wirkt weiter**, nur über den Blob statt über eine eigene Spalte:
+Ohne den Haken für personenbezogene Angaben fällt der `pat_blob` schon
+serverseitig weg, und ohne entsperrte Sitzung gäbe es auch mit Haken nichts zu
+lesen. Der Import behandelt die Notiz als `sensitive` — sie verlässt den Browser
+nur verschlüsselt, und `api/import_commit.php` nimmt die Spalte gar nicht mehr
+entgegen.
+
 ## [Web 19.0.1] — 2026-09-10
 
 ### Web — Anzeige und Suche lesen die Notiz aus dem verschlüsselten Block (E-S9-01, Schritt 2a von 5)

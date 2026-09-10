@@ -370,7 +370,25 @@ einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
 
-**Nutzlastversion 10 (seit Web 16.0.0).** Wie 9 — keine Punktlisten, Spuren
+**Nutzlastversion 11 (seit Web 19.0.0).** Wie 10, mit einer Verschiebung: Die
+**Notizen des Einsatzes** stehen nicht mehr als Klartextspalte `notes` im
+`missions`-Datensatz, sondern als Schlüssel `notes` im verschlüsselten
+`pat`-Block daneben. Die Spalte `notes` bleibt im Format bestehen und ist in
+einer 11er-Datei **immer `null`** — sie trägt den Altbestand einer Installation,
+die die Anhebung noch nicht durchlaufen hat.
+
+*Warum die Zahl steigen musste:* Eine Installation vor Web 19 sucht die Notiz
+in der Spalte. Sie fände dort `null`, spielte die Datei ein und meldete Erfolg —
+mit lauter leeren Notizen. Genau dieser stille Schaden ist der Grund für die
+Nutzlastnummer; eine ältere Installation **weist eine 11er-Datei jetzt ab**.
+Umgekehrt bleibt der Weg offen: Web 19 liest eine 10er-Datei weiterhin
+vollständig ein, schreibt den Klartext in die Spalte, und der Anhebelauf holt
+ihn beim nächsten Entsperren in den Blob.
+
+*Die Tagesnotizen (`days.notes`) sind davon nicht betroffen* — sie sind
+Betriebsnotizen und bleiben Klartext.
+
+**Nutzlastversion 10 (Web 16.0.0 bis 18.1.1).** Wie 9 — keine Punktlisten, Spuren
 als Verweise —, dazu **vier Felder mehr**, alle zum Rettungsmittel:
 
 | Was | Wo |
@@ -487,7 +505,7 @@ seit Web 4.1.2 auch:
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 10,                        // 8/9/10 = Verweise, 6/7 = Punktlisten
+  "version": 11,                        // 8/9/10/11 = Verweise, 6/7 = Punktlisten
   "app": "einsatzdoku-notarzt",         // Kennung der Anwendung
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
@@ -647,6 +665,8 @@ seit Web 4.1.2 auch:
 
     "winch": 0, "winch_cycles": null, "winch_cycles_pat": null,
     "winch_airload": 0, "bergwacht": 0, "bw_unit": null, "bw_info": null,
+    // `notes` ist in Nutzlast 11 IMMER null — die Notiz steht unten im
+    // `pat`-Block. Gefuellt ist die Spalte nur in aelteren Dateien.
     "other_ema": null, "notes": null,
 
     // Abweichende Besatzung (seit Version 6 als Objekt role_code => name; bis
@@ -666,11 +686,15 @@ seit Web 4.1.2 auch:
              "loc": { "addr": "Ringstr. 18, 87439 Kempten",
                       "lat": 47.72, "lon": 10.31 },
              "site_desc": "Zufahrt über Forstweg, letzte 300 m zu Fuß",
+             "notes": "Landeplatz durch die Feuerwehr freigeräumt.\nRTW …",
              "start": { "addr": "Wache Kempten", "lat": 47.72, "lon": 10.31 } },
                                             // site_desc seit Version 5,
                                             // start seit Version 6 (manueller
                                             // Abfahrtort, nur bei
-                                            // start_src = "manual")
+                                            // start_src = "manual"),
+                                            // notes seit Nutzlast 11 — die
+                                            // Notiz des Einsatzes, mit ihren
+                                            // Zeilenumbrüchen
     // Ließ sich ein Einsatz beim Export NICHT entschlüsseln, steht statt
     // `pat` das Kennzeichen `pat_unreadable` und — seit Web 4.1.0 — der
     // unveränderte Chiffretext `pat_blob` in der Datei:

@@ -208,7 +208,10 @@
             m.crew = {};
             m.bw_info = null;
             m.other_ema = null;
-            m.notes = null;
+            /* `m.notes` gibt es hier nicht mehr (S9/AP7): Die Notiz steckt im
+               `pat_blob`, und der wird zwei Zeilen weiter unten geleert. Die
+               Zeile ersatzlos zu streichen ist richtig — sie stehen zu lassen
+               waere harmlos, aber sie behauptete, es gaebe noch eine Spalte. */
             m.site_ele_m = null;
             m.pat_blob = null;
             m.pat = null;
@@ -304,8 +307,11 @@
         { label: 'Höhe Einsatzort (m)', star: true },
         // Neutral: Die Tabelle führt beide Arten (Abschnitt 3.9).
         { label: 'Kilometer', star: false },
-        // Das Formular warnt "keine Patientendaten!" — was tatsaechlich dort
-        // steht, weiss nur, wer es geschrieben hat.
+        /* Seit S9/AP7 ist die Notiz verschluesselt. `star: true` bleibt und
+           bedeutet jetzt zweierlei: Ohne den Haken fuer personenbezogene
+           Angaben faellt der Blob schon serverseitig weg, und ohne Entsperren
+           gaebe es auch mit Haken nichts zu lesen. Die Warnung „keine
+           Patientendaten!" ist mit der Verschluesselung entfallen. */
         { label: 'Notizen', star: true }
     ]);
 
@@ -361,7 +367,13 @@
                     return (m.distance_m === null || m.distance_m === undefined)
                         ? '-' : Number((m.distance_m / 1000).toFixed(1));
                 case 'Notizen': {
-                    var n = (m.notes || '').replace(/\r\n|\r|\n/g, '; ').trim();
+                    /* AUS DEM ENTSCHLUESSELTEN BLOCK (S9/AP7). `pat` ist
+                       null, solange nicht entsperrt wurde — dann steht hier
+                       „-", wie bei jeder anderen geschuetzten Angabe. Die
+                       Ersetzung der Zeilenumbrueche bleibt: Eine Tabellenzelle
+                       mit drei Zeilen sprengt jede Spaltenbreite. */
+                    var n = ((pat && pat.notes) || '')
+                            .replace(/\r\n|\r|\n/g, '; ').trim();
                     return n === '' ? '-' : n;
                 }
                 /* Besatzung: die Spalte trägt ihre Rolle als 'rolle' bei sich
@@ -813,7 +825,7 @@
             { feld: 'bw_info', typ: 'text', einheit: '', beschreibung: 'Bergwacht: Namen / Infos', pers: true, get: function (c) { return orEmpty(c.m.bw_info); } },
             { feld: 'other_ema', typ: 'text', einheit: '', beschreibung: 'Anderer Notarzt', pers: true, get: function (c) { return orEmpty(c.m.other_ema); } },
             { feld: 'weitere_rettungsmittel', typ: 'text', einheit: '', beschreibung: 'mission_resources.name, mit | verkettet', get: function (c) { return pipeList(c.m.resources); } },
-            { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'missions.notes', pers: true, get: function (c) { return orEmpty(c.m.notes); } },
+            { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'pat_blob.notes', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.notes) : ''; } },
 
             { feld: 'pat_mission_no', typ: 'text', einheit: '', beschreibung: 'Einsatznummer (pat_blob.mission_no)', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.mission_no) : ''; } },
             { feld: 'pat_nachname', typ: 'text', einheit: '', beschreibung: 'pat_blob.last', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.last) : ''; } },
@@ -959,12 +971,14 @@
         ].concat(opts.patient ? [
             'Diese Datei enthält alle nachstehenden Gruppen:',
             '  - Patientendaten (pat_-Spalten): Einsatznummer, Name, Geburtsdatum,',
-            '    Alter, Diagnose, Einsatzort mit Adresse und Koordinaten',
+            '    Alter, Diagnose, Einsatzort mit Adresse und Koordinaten,',
+            '    Notizen des Einsatzes',
             '  - Besatzung: die des Diensttags (tag_crew_*) und die tatsächliche',
             '    des Einsatzes (crew_*), ebenso im Blatt Diensttage',
             '  - weitere Namen: bw_info (Bergwacht: Namen / Infos), other_ema',
             '    (anderer Notarzt)',
-            '  - Freitext: notizen bei Einsatz und Diensttag',
+            '  - Freitext: notizen beim Diensttag (die des Einsatzes stehen oben',
+            '    bei den Patientendaten — sie sind seit Web 19 verschlüsselt)',
             '  - Ortsangaben: die Koordinaten der Phasen (Phase 4 = Ankunft',
             '    Einsatzort, Phase 5 = Ankunft PatientIn), hoehe_einsatzort_m',
             '    und, falls gewählt, die GPS-Daten als GPX unter tracks/'

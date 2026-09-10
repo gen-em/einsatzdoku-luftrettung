@@ -26,7 +26,7 @@ Unter der Schranke stehen:
 | Patientendaten | `pat_mission_no`, `pat_nachname`, `pat_vorname`, `pat_geburtsdatum`, `pat_alter`, `pat_diagnose`, `pat_ort_adresse`, `pat_ort_lat`, `pat_ort_lon`, `pat_ort_beschreibung` |
 | Besatzung | `tag_crew_*` und `crew_*` (Einsätze) sowie `crew_*` (Diensttage) — je Rolle des Katalogs eine Spalte, siehe 3.8 |
 | Weitere Namen | `bw_info` („Bergwacht: Namen / Infos"), `other_ema` (anderer Notarzt) |
-| Freitext | `notizen` (Einsatz) und `notizen` (Diensttag) |
+| Freitext | `notizen` (Diensttag). Die `notizen` des **Einsatzes** stehen seit Web 19 im verschlüsselten Block und fallen mit ihm — die Schranke wirkt für sie also weiter, nur über den `pat_blob` statt über eine eigene Spalte |
 | Ort des Geschehens | `phase_02_lat/lon` … `phase_09_lat/lon`, `hoehe_einsatzort_m`, GPX-Spuren unter `tracks/` |
 
 **Warum die Phasenkoordinaten.** Phase 4 ist „Ankunft Einsatzort", Phase 5
@@ -544,7 +544,7 @@ Besatzungsspalten sind personenbezogen.
 | `bw_info` | text | — | **ja** | Bergwacht: Namen / Infos |
 | `other_ema` | text | — | **ja** | Anderer Notarzt |
 | `weitere_rettungsmittel` | text | — | nein | mission_resources.name, mit \| verkettet |
-| `notizen` | text | — | **ja** | missions.notes |
+| `notizen` | text | — | **ja** | pat_blob.notes — **verschlüsselt** (seit Web 19.0.0); ohne entsperrte Sitzung bleibt die Spalte leer, auch mit gesetztem Haken |
 | `pat_mission_no` | text | — | **ja** | Einsatznummer (pat_blob.mission_no) |
 | `pat_nachname` | text | — | **ja** | pat_blob.last |
 | `pat_vorname` | text | — | **ja** | pat_blob.first |
@@ -773,6 +773,14 @@ nicht abgeschlossene Einsatz des Referenzdatensatzes kam damit als
 abgeschlossen zurück — im Überschreiben-Modus auch dann, wenn er im Bestand
 richtig stand. Jetzt sendet der Browser die beiden Felder nur, wenn das Profil
 die Spalte führt.
+
+> **Seit Web 19.0.0 liegt die Einsatznotiz im `pat_blob`.** Für das
+> CSV-Format ändert sich die Spalte nicht — sie heißt weiter `notizen` und
+> steht an derselben Stelle. Was sich ändert, ist ihre Herkunft und damit ihre
+> Bedingung: Sie ist nur gefüllt, wenn **beides** zutrifft — der Haken für
+> personenbezogene Angaben ist gesetzt **und** die Verschlüsselung ist in
+> dieser Sitzung entsperrt. Beim Rückimport ist sie ein `sensitive`-Feld und
+> wird im Browser verschlüsselt, bevor sie den Rechner verlässt.
 
 **Mehrzeilige Notizen behalten ihre Zeilenumbrüche** (seit Web 8.0.0). Der
 Parser `trim` zog jede Leerraumfolge auf ein Leerzeichen zusammen, und ein

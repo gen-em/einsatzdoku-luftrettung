@@ -41,7 +41,9 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  *
  *   - keine Besatzungsnamen (day_crew, mission_crew),
  *   - kein bw_info ("Namen / Infos" der Bergwacht) und kein other_ema,
- *   - keine Notizen (missions.notes, days.notes),
+ *   - keine Tagesnotizen (days.notes) — die Notizen des EINSATZES stehen seit
+ *     S9/AP7 im `pat_blob` und reisen mit ihm: Ohne Flag kommt kein Blob mit,
+ *     und mit Flag kommt er als Chiffretext, den nur der Browser oeffnet,
  *   - keine Koordinaten der Phasen (lat/lon; die Zeitpunkte bleiben, sie
  *     tragen Alarm- und Endzeit) und kein site_ele_m,
  *   - keinen pat_blob,
@@ -276,10 +278,13 @@ function export_meta(array $b, int $userId): never
      * DASS die Besatzung an diesem Einsatz von der des Diensttags abwich, nicht
      * wer geflogen ist. Ohne ihn liesse sich nicht mehr erkennen, dass die
      * leeren Namensspalten leer gemacht wurden und nicht leer waren. */
+    /* `notes` steht hier NICHT mehr (S9/AP7): Die Notiz liegt im `pat_blob`
+     * und faellt mit ihm — die Schranke wirkt fuer sie also weiter, aber ueber
+     * den Blob statt ueber eine eigene Spalte. */
     $einsPersCols = $pers
-        ? 'x.site_ele_m, x.bw_info, x.other_ema, x.notes, x.pat_blob'
+        ? 'x.site_ele_m, x.bw_info, x.other_ema, x.pat_blob'
         : 'NULL AS site_ele_m, NULL AS bw_info, NULL AS other_ema,
-           NULL AS notes, NULL AS pat_blob';
+           NULL AS pat_blob';
     $st = $pdo->prepare(
         "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at,
                 x.distance_m, x.ascent_m,
@@ -439,7 +444,8 @@ function export_meta(array $b, int $userId): never
             // Rollensatz bildet).
             'crew'             => (object)($crewByMission[$id] ?? []),
             'pat_blob'         => $pers && !empty($r['pat_blob']) ? (string)$r['pat_blob'] : null,
-            'notes'            => $r['notes'],
+            /* 'notes' entfaellt (S9/AP7) — der Text reist im 'pat_blob' eine
+               Zeile darueber mit. */
             'track_points'     => $trackCountByMission[$id] ?? 0,
             'phases'           => $phasesByMission[$id] ?? [],
             'resources'        => $resourcesByMission[$id] ?? [],

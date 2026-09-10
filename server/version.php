@@ -3804,5 +3804,40 @@ declare(strict_types=1);
  *
  * NOCH OFFEN: Export, Sicherung, Import (Schritt 2b), der Anhebelauf
  * (Schritt 3), die Kennzeichnung (Schritt 4) und die normative Doku.
+ *
+ * 19.0.2 — S9/AP7 Schritt 2b: die Aussenwege. Export, Sicherung und Import
+ * fuehren die Notiz im verschluesselten Block; NUTZLAST 10 -> 11.
+ *
+ * DIE NUTZLASTNUMMER MUSSTE STEIGEN. Eine 11er-Sicherung traegt die Notiz nur
+ * noch im `pat`-Block. Eine Installation vor Web 19 suchte sie in der Spalte,
+ * faende dort NULL, spielte die Datei ein und meldete Erfolg — mit lauter
+ * leeren Notizen. Genau dieser stille Schaden ist der Grund fuer die Zahl;
+ * eine aeltere Installation weist eine 11er-Datei jetzt ab
+ * (`NUTZLAST_HOECHSTENS` in api/backup_restore.php zieht mit).
+ *
+ * DER WEG ZURUECK BLEIBT OFFEN, und das ist eine ausdrueckliche Entscheidung:
+ * `notes` steht im Einspielweg weiter in `$extraCols` — von HAND, denn
+ * mf_ist_spalte() sagt seit Schritt 1 nein. Eine 10er-Datei traegt den
+ * Klartext in der Spalte; faellt sie aus der Liste, wird er beim Einspielen
+ * stillschweigend verworfen. Er wird deshalb weiter geschrieben, und der
+ * Anhebelauf holt ihn beim naechsten Entsperren in den Blob. Wenn P8 die
+ * Spalte entfernt (R60), faellt mit ihr die Faehigkeit, eine 10er-Datei
+ * vollstaendig einzuspielen — das gehoert dort ausdruecklich entschieden.
+ *
+ * EIN FUND, DEN NUR DER KREISLAUF GEMELDET HAT. `import.js` fuehrt die Ziele
+ * des pat-Blocks in einem ABSCHLIESSENDEN `switch`; ein Ziel ohne `case`
+ * faellt heraus, ohne Fehler und ohne Meldung. Das Profil zeigte nach dem
+ * Umzug auf `pat.notes`, der `case` fehlte — und der CSV-Kreislauf meldete
+ * 114 VERLORENE NOTIZEN. Kein anderes Pruefmittel haette das gesehen: Die
+ * Seite sah richtig aus, die Zahl der Einsaetze stimmte, nur der Text war
+ * weg. Nach der Behebung: 9120 Einzelvergleiche, 0 unerklaerte Abweichungen,
+ * 1070 erwartete, 0 ungenutzte Regeln.
+ *
+ * DIE SCHRANKE WIRKT WEITER, aber ueber den Blob statt ueber eine eigene
+ * Spalte: Ohne den Haken fuer personenbezogene Angaben faellt der `pat_blob`
+ * schon serverseitig weg, und ohne entsperrte Sitzung gaebe es auch mit Haken
+ * nichts zu lesen. Der Import behandelt die Notiz als `sensitive` — sie
+ * verlaesst den Browser nur verschluesselt; `api/import_commit.php` nimmt die
+ * Spalte gar nicht mehr entgegen.
  */
-const WEB_VERSION = '19.0.1';
+const WEB_VERSION = '19.0.2';
