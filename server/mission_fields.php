@@ -465,10 +465,24 @@ return [
         'children' => $mf_crew_kinder,
     ],
 
-    /* ---- Gruppe „Notizen" ------------------------------------------------- */
+    /* ---- Gruppe „Notizen" -------------------------------------------------
+     *
+     * 'store' => 'pat' (S9/AP7): Das Feld ist KEINE Spalte in `missions` mehr,
+     * sondern ein Schluessel im Ende-zu-Ende-verschluesselten `pat_blob`.
+     * mf_ist_spalte() nimmt es damit von selbst aus jedem SELECT, INSERT und
+     * UPDATE — dieselbe Mechanik, die seit Web 6.0.0 die Besatzung aus
+     * `missions` heraushaelt ('store' => 'crew').
+     *
+     * DER PLATZHALTER IST WEG. Er lautete „Freitext (keine Patientendaten!)"
+     * und war die Notbremse dafuer, dass hier Klartext auf dem Server landete.
+     * Mit der Verschluesselung ist die Warnung gegenstandslos — und sie
+     * stuende der Sache im Weg: In die Notizen GEHOERT, was zum Einsatz zu
+     * sagen ist. Die Spalte `missions.notes` bleibt NULL-faehig stehen, bis
+     * P8 sie entfernt (R60).
+     */
     'notes' => [
         'label' => 'Notizen', 'type' => 'textarea', 'max' => 2000,
         'gruppe' => 'notizen',
-        'placeholder' => 'Freitext (keine Patientendaten!)',
+        'store' => 'pat',
     ],
 ];

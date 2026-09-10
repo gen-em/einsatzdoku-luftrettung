@@ -385,9 +385,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (($f['store'] ?? null) === 'crew') {
                 $crewVals[(string)($f['role_code'] ?? substr($col, 5))] = $v;
-            } else {
+            } elseif (mf_ist_spalte($f)) {
                 $fieldCols[] = $col; $fieldVals[] = $v;
             }
+            /* SONST: NICHTS. Ein Feld mit 'store' => 'pat' darf hier NICHT
+             * ankommen (S9/AP7).
+             *
+             * Bis hierher stand ein blosses `else` — und das hiess: Alles, was
+             * nicht Besatzung ist, ist eine Spalte. Fuer ein verschluesseltes
+             * Feld waere das der stille Schaden gewesen: Das Formular schickt
+             * `f_notes` nicht mehr mit (kein `name`, der Wert liegt im Blob),
+             * `$raw` waere leer, `$v` also NULL — und jedes Speichern
+             * schriebe NULL in die Spalte, waehrend der Anhebelauf sie noch
+             * gebraucht haette. Bei GESPERRTER Sitzung, wo gar kein Blob
+             * entsteht, waere die Notiz damit weg gewesen: kein Blob, keine
+             * Spalte, keine Meldung.
+             *
+             * Gefragt wird mf_ist_spalte() und nicht 'store' === 'pat',
+             * damit die Antwort an EINER Stelle steht. */
 
             /* ---- Ortsfeld: die beiden Koordinatenspalten daneben (E37) -----
              *
@@ -443,9 +458,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // PatientInnendaten: der Browser liefert NUR Chiffretext (pat_blob).
         // Leerer Wert = Blob nicht anfassen (z. B. Sitzung nicht entsperrt).
         if ($patReady) {
+            $blobGesetzt = false;
             $pb = (string)($_POST['pat_blob'] ?? '');
             if ($pb === '__CLEAR__') {
                 $fieldCols[] = 'pat_blob'; $fieldVals[] = null;
+                $blobGesetzt = true;
             } elseif ($pb !== '') {
                 /* MUSTERVERLETZUNG MELDEN STATT UEBERGEHEN.
                  *
@@ -470,6 +487,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            . 'Seite neu laden und erneut versuchen.';
                 } else {
                     $fieldCols[] = 'pat_blob'; $fieldVals[] = $ok;
+                    $blobGesetzt = true;
+                }
+            }
+
+            /* DIE ALTE SPALTE GEHT MIT AUF NULL (S9/AP7).
+             *
+             * Sobald der Browser einen Blob geliefert hat, steht der Inhalt
+             * verschluesselt da — der Klartext daneben ist dann nicht nur
+             * ueberfluessig, er ist genau das, was die Zusage ausschliesst.
+             * Er faellt deshalb im selben UPDATE, nicht erst beim Anhebelauf.
+             *
+             * NUR wenn ein Blob kam: Bei gesperrter Sitzung (`$pb === ''`)
+             * bleibt beides unangetastet — sonst loeschte ein Speichern ohne
+             * Schluessel die Notiz, und niemand koennte sie zurueckholen.
+             *
+             * Die Namen kommen aus dem Katalog (mf_pat_felder()), nicht aus
+             * einer Liste hier: Ein zweites verschluesseltes Katalogfeld
+             * (S11: Zielklinik) zieht damit von selbst nach. */
+            if ($blobGesetzt) {
+                foreach (array_keys(mf_pat_felder()) as $pcol) {
+                    $fieldCols[] = $pcol; $fieldVals[] = null;
                 }
             }
         }
@@ -1064,10 +1102,25 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               <?php }
               return;
           }
-          if ($type === 'textarea') { ?>
+          if ($type === 'textarea') {
+              /* EIN VERSCHLUESSELTES FELD TRAEGT KEIN `name` (S9/AP7).
+               *
+               * Dieselbe Regel wie bei den handgeschriebenen Feldern der Karte
+               * „PatientIn": Ohne `name` schickt der Browser den Wert NICHT
+               * mit — er packt ihn unten in den `pat_blob`. Ein `name` hier
+               * waere der kuerzeste Weg, die Verschluesselungszusage zu
+               * brechen, und zwar lautlos: Das Formular saehe unveraendert
+               * aus, und der Klartext stuende im Server-Log der Anfrage.
+               *
+               * Der Wert kommt ebenfalls nicht von hier, sondern aus dem
+               * entschluesselten Blob (patLaden() unten). `$val` waere der
+               * Spaltenwert — nach der Anhebung NULL, davor der Altbestand;
+               * beides gehoert nicht ins Markup. */
+              $pat = ($f['store'] ?? null) === 'pat'; ?>
             <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= $labelSichtbar($f['label']) ?>
-              <textarea name="f_<?= e($col) ?>" rows="3" maxlength="<?= (int)($f['max'] ?? 190) ?>"
-                placeholder="<?= e($f['placeholder'] ?? '') ?>"><?= e($val) ?></textarea>
+              <textarea <?= $pat ? 'id="pat_' . e($col) . '"' : 'name="f_' . e($col) . '"' ?>
+                rows="3" maxlength="<?= (int)($f['max'] ?? 190) ?>"
+                placeholder="<?= e($f['placeholder'] ?? '') ?>"><?= $pat ? '' : e($val) ?></textarea>
             </label>
           <?php return; } ?>
             <?php /* MIT VORSCHLAGSLISTE: der Behaelter traegt `position:relative`
@@ -1351,8 +1404,16 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       <?php $gruppeRendern('besatzung'); ?>
     <?php ui_karte_ende(true); ?>
 
-    <?php ui_karte_start(['titel' => 'Notizen', 'klasse' => 'form-block-notizen']); ?>
+    <?php /* DIE NOTIZEN LIEGEN IM VERSCHLUESSELTEN BLOCK (E-S9-01, S9/AP7).
+             Der Rahmen `#patnotes` ist das Gegenstueck zu `#patfields` und
+             `#patort`: Er sagt dem Riegel unten, was zu sperren ist, solange
+             der Schluessel zu ist. Die Karte traegt deshalb dieselbe Zahl wie
+             die Karte „PatientIn". */ ?>
+    <?php ui_karte_start(['titel' => 'Notizen', 'zahl' => 'Ende-zu-Ende-verschlüsselt',
+                          'klasse' => 'form-block-notizen']); ?>
+      <div id="patnotes">
       <?php $kartenTitel = 'Notizen'; $gruppeRendern('notizen'); $kartenTitel = ''; ?>
+      </div>
     <?php ui_karte_ende(); ?>
 
     <?php /* Felder ohne Gruppe — es gibt derzeit keine. Der Block steht da,
@@ -1604,6 +1665,23 @@ function reaSitzung(daten) {
 
 // ---- PatientInnendaten & Einsatzort: lokale Ver-/Entschluesselung ------
 const PAT_PREV = <?= json_js($mission['pat_blob'] ?? null) ?>;
+<?php /* DIE VERSCHLUESSELTEN KATALOGFELDER (S9/AP7): Feldname => Schluessel im
+         Blob. Aus mf_pat_felder(), nicht aus einer zweiten Liste — sonst
+         liefen Katalog und Formular auseinander, und zwar still.
+
+         PAT_ALT ist der ALTBESTAND aus der Spalte, solange die Anhebung
+         diesen Einsatz nicht erreicht hat. Ohne ihn zeigte das Formular ein
+         leeres Notizfeld, obwohl in der Datenbank Text steht — und das
+         naechste Speichern haette ihn zugedeckt. Der Klartext geht dabei
+         nicht an einen Dritten: Er steht schon in der Spalte, der Server
+         kennt ihn ohnehin, und der Browser gehoert der NutzerIn. */
+      $patAlt = [];
+      foreach (array_keys(mf_pat_felder()) as $pcol) {
+          $pv = $mission[$pcol] ?? null;
+          if ($pv !== null && (string)$pv !== '') { $patAlt[$pcol] = (string)$pv; }
+      } ?>
+const PAT_KAT = <?= json_js(mf_pat_felder()) ?>;
+const PAT_ALT = <?= json_js($patAlt) ?>;
 /* Bezugstag fuer die Altersberechnung: das ECHTE Einsatzdatum, nicht heute und
    nicht das Datum des Diensttags. Bei einem Dienst ueber Mitternacht sind das
    zwei verschiedene Tage, und gefragt ist der, an dem der Einsatz lief. */
@@ -1802,7 +1880,14 @@ document.querySelectorAll('.showif').forEach(box => {
  * REGEL im Klartext und bleibt bedienbar. Sie ist ein <select> und faellt schon
  * deshalb nicht unter diesen Selektor — die Auswahl ist trotzdem ausdruecklich
  * gemeint und keine Nachlaessigkeit. */
-const PAT_INPUTS = '#patfields input, #patort input';
+/* DER RIEGEL FASST AUCH `textarea`, seit die Notizen im Blob liegen (S9/AP7).
+ * Bis dahin stand hier nur `input` — richtig, solange jedes verschluesselte
+ * Feld einzeilig war. Die Notiz ist das einzige mehrzeilige Feld des
+ * Formulars; ohne die Erweiterung waere sie bei gesperrtem Schluessel
+ * bedienbar geblieben, und was jemand hineingeschrieben haette, waere beim
+ * Speichern spurlos verschwunden (`if (!PAT_CK) return;` unten). */
+const PAT_INPUTS = '#patfields input, #patort input, '
+                 + '#patnotes textarea, #patnotes input';
 
 async function patLaden(){
   PAT_CK = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
@@ -1823,6 +1908,16 @@ async function patLaden(){
     if (o.dx != null) document.getElementById('pat_dx').value = o.dx;
     if (o.site_desc != null) document.getElementById('pat_site_desc').value = o.site_desc;
     if (o.age != null) document.getElementById('pat_age').value = o.age;
+    /* KATALOGFELDER MIT 'store' => 'pat' (S9/AP7). Reihenfolge: Blob zuerst,
+       Spalte nur als Rueckfall — ein bereits angehobener Einsatz hat beides,
+       und der Blob ist der neuere Stand. */
+    for (const col of Object.keys(PAT_KAT)) {
+      const el = document.getElementById('pat_' + col);
+      if (!el) { continue; }
+      const ausBlob = o[PAT_KAT[col]];
+      if (ausBlob != null) { el.value = ausBlob; }
+      else if (PAT_ALT[col] != null) { el.value = PAT_ALT[col]; }
+    }
     zeigeAlter();
     if (o.loc) {
       // addr steht unveraendert im Textfeld — auch dann, wenn dort noch eine
@@ -1917,6 +2012,17 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   // Eigener Schluessel auf oberster Ebene, NICHT in loc: 'loc' entsteht nur bei
   // gefuellter Adresse, eine Beschreibung ohne Ortsangabe ginge sonst verloren (E5).
   if (siteDesc !== '') o.site_desc = siteDesc;
+  /* KATALOGFELDER MIT 'store' => 'pat' (S9/AP7). Ein leeres Feld erzeugt
+     KEINEN Schluessel — dieselbe Regel wie oben: Der Blob traegt nur, was
+     dasteht. Die Laengengrenze steht am `maxlength` des Feldes; der Server
+     kann sie nicht mehr pruefen, weil er den Inhalt nicht sieht. Das gilt
+     fuer jedes verschluesselte Feld und ist der Preis der Zusage. */
+  for (const col of Object.keys(PAT_KAT)) {
+    const el = document.getElementById('pat_' + col);
+    if (!el) { continue; }
+    const v = el.value.trim();
+    if (v !== '') { o[PAT_KAT[col]] = v; }
+  }
   // Alter nur speichern, wenn es NICHT aus dem Geburtsdatum folgt — sonst
   // muesste es bei jeder Korrektur des Geburtsdatums nachgezogen werden.
   if (age !== '' && EdPat.alterAm(dob, MISSION_DAY) === null) o.age = parseInt(age, 10);

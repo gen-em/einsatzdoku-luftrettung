@@ -14,6 +14,60 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.0.0] — 2026-09-10
+
+### Web — die Notizen des Einsatzes werden Ende-zu-Ende verschlüsselt (E-S9-01, Schritt 1 von 5)
+
+`missions.notes` war die letzte Spalte, in der ein Freitext im Klartext auf dem
+Server lag. Die einzige Sicherung dagegen war der Platzhalter „Freitext (keine
+Patientendaten!)" — eine Bitte, keine Sicherung. Ab hier gilt für die Notizen
+dasselbe wie für Diagnose und Einsatzort: Der Browser ver- und entschlüsselt,
+der Server sieht Chiffretext. **Der Platzhalter entfällt damit**; in die
+Notizen gehört, was zum Einsatz zu sagen ist.
+
+**Zwei Dinge, die vorher nirgends standen, und die der eigentliche Grund sind.**
+Die Suche lieferte jede Notiz im Klartext an den Browser — für den *gesamten*
+aktiven Bestand, bei jedem Aufruf der Suchseite, ohne dass jemand entsperrt
+haben musste (`api/suchindex.php:54`, `:197`), während der Kopfkommentar
+derselben Datei aufzählt, was der Server angeblich nicht sieht. Und die Zusage
+**E6 „Administration sieht keinen Klartext"** (`adminbackup_lib.php:352`) stimmte
+nicht: `notes` steht namentlich in der Spaltenliste des Adminpakets
+(`backup_lib.php:232`). AP7 schließt beides.
+
+**Der Weg ist der Feldkatalog, nicht ein zweiter Sonderfall.** Der neue
+Schlüssel `'store' => 'pat'` steht neben dem vorhandenen `'crew'`;
+`mf_ist_spalte()` nimmt das Feld damit von selbst aus jedem `SELECT`, `INSERT`
+und `UPDATE` auf `missions`. Der Einsatzort war seinerzeit *ohne* Katalogeintrag
+verschlüsselt worden, mit Markup von Hand und Kennungen, an denen ein Dutzend
+Aufrufe hängen. Diesen Weg ein zweites Mal zu gehen hieße, die Zusage
+„Feldkatalog statt Sonderfall" erneut zu brechen — und S11 verschiebt die
+Zielklinik denselben Weg und findet den Schlüssel dann vor.
+
+**Vier Stellen hätten still danebengegriffen**, alle vor der Auslieferung
+gefunden: `readField()` fragte nur auf `'crew'` ab und machte aus allem anderen
+eine Spalte — ein Feld ohne `name` sendet nichts, und jedes Speichern hätte
+`NULL` geschrieben, bei gesperrter Sitzung also die Notiz gelöscht, ohne Blob,
+ohne Spalte, ohne Meldung. Der Riegel `PAT_INPUTS` fasste nur `input`, nicht
+`textarea` — das Feld wäre bei gesperrtem Schlüssel bedienbar geblieben und der
+Text beim Speichern verfallen. Beim Altbestand fehlte der Rückfall auf die noch
+gefüllte Spalte, sodass das Formular ein leeres Feld gezeigt und das nächste
+Speichern den Text zugedeckt hätte. Und die Spalte geht jetzt im **selben**
+`UPDATE` auf `NULL`, sobald ein Blob ankommt — aber nur dann; bei gesperrter
+Sitzung bleibt beides unangetastet.
+
+**Gemessen:** Rundlauf an einem Einsatz — der POST trägt kein `f_notes` und
+keinen Klartext (1163 Byte), die Spalte ist danach `NULL`, der Text kommt nach
+dem Neuladen wortgleich zurück. Gesperrte Sitzung: Riegelmeldung sichtbar,
+Notizfeld gesperrt, und ein Speichern lässt den Blob byteweise unverändert
+(397 Byte, Prüfsumme `94f8c377…` vorher wie nachher). 0 Konsolenfehler.
+
+**Noch nicht in diesem Schritt:** die lesenden Wege (`api/mission.php`, Suche,
+Export, Sicherung, Import), der Anhebelauf für den Altbestand, die
+Kennzeichnung mit Schloss und die normative Dokumentation. Sie folgen in den
+Schritten 2 bis 5 desselben Arbeitspakets; bis dahin zeigt die Einsatzansicht
+die Notiz eines gerade gespeicherten Einsatzes nicht an. **Keine Migration** —
+die Spalte ist bereits `NULL`-fähig und bleibt bis P8 stehen (R60).
+
 ## [Web 18.1.1] — 2026-09-09
 
 ### Web — zwei Diensttage mit „Anderem Rettungsmittel" boten verschiedene Rollen an

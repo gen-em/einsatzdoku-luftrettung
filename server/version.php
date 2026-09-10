@@ -3706,5 +3706,67 @@ declare(strict_types=1);
  *
  * KORREKTURNUMMER: eine Ungleichheit beseitigt, kein neues Feld, kein
  * Datenmodell. `update.php` muss NICHT laufen.
+ *
+ * 19.0.0 — S9/AP7: DIE NOTIZEN DES EINSATZES WERDEN VERSCHLUESSELT.
+ * (Schritt 1 von fuenf: Katalog und Formular.)
+ *
+ * WARUM EINE HAUPTNUMMER. Es kommt kein Feld dazu und keine Spalte weg — es
+ * aendert sich, WER den Inhalt sehen kann. `missions.notes` war die letzte
+ * Spalte, in der ein Freitext im Klartext auf dem Server lag; der Platzhalter
+ * „Freitext (keine Patientendaten!)" war die einzige Sicherung dagegen, und
+ * eine Bitte ist keine Sicherung. Ab hier gilt fuer die Notizen dasselbe wie
+ * fuer Diagnose und Einsatzort: Der Browser ver- und entschluesselt, der
+ * Server sieht Chiffretext.
+ *
+ * WAS DAS AUFRAEUMT, und es stand vorher nirgends: Die Suche lieferte jede
+ * Notiz im Klartext an den Browser, fuer den GESAMTEN aktiven Bestand, ohne
+ * dass jemand entsperrt haben musste (`api/suchindex.php`) — waehrend der
+ * Kopfkommentar derselben Datei aufzaehlt, was der Server angeblich nicht
+ * sieht. Und die Zusage E6 „Administration sieht keinen Klartext"
+ * (`adminbackup_lib.php`) stimmte nicht: `notes` steht in der Spaltenliste
+ * des Adminpakets. Beides ist kein Nebeneffekt von AP7, sondern sein Grund.
+ *
+ * DER WEG IST DER KATALOG, nicht ein Sonderfall. `'store' => 'pat'` neben dem
+ * vorhandenen `'crew'`: mf_ist_spalte() nimmt das Feld damit VON SELBST aus
+ * jedem SELECT, INSERT und UPDATE auf `missions`. Der Einsatzort ist seinerzeit
+ * ohne Katalogeintrag verschluesselt worden — mit Markup von Hand und
+ * Kennungen, an denen ein Dutzend Aufrufe haengen. Diesen Weg noch einmal zu
+ * gehen hiesse, die Zusage „Feldkatalog statt Sonderfall" (CLAUDE.md 4) ein
+ * zweites Mal zu brechen; S11 verschiebt die Zielklinik denselben Weg und
+ * findet den Schluessel dann vor.
+ *
+ * VIER STELLEN, DIE STILL DANEBENGEGRIFFEN HAETTEN:
+ *
+ *   - `readField()` fragte `'store' === 'crew'` und machte aus ALLEM ANDEREN
+ *     eine Spalte. Ein Feld ohne `name` sendet nichts, `$raw` waere leer, und
+ *     jedes Speichern haette NULL in die Spalte geschrieben — bei gesperrter
+ *     Sitzung waere die Notiz damit weg gewesen: kein Blob, keine Spalte,
+ *     keine Meldung. Gefragt wird jetzt mf_ist_spalte().
+ *   - Der Riegel `PAT_INPUTS` fasste nur `input`. Die Notiz ist das einzige
+ *     mehrzeilige Feld; sie waere bei gesperrtem Schluessel bedienbar
+ *     geblieben und der Text beim Speichern spurlos verfallen.
+ *   - Ein leeres Feld beim Altbestand: Solange die Anhebung einen Einsatz
+ *     nicht erreicht hat, steht der Text noch in der Spalte. Ohne Rueckfall
+ *     (PAT_ALT) zeigte das Formular ein leeres Feld und das naechste
+ *     Speichern deckte den Text zu.
+ *   - Die Spalte geht jetzt im SELBEN UPDATE auf NULL, sobald ein Blob kam —
+ *     nicht erst beim Anhebelauf. Nur dann: Bei gesperrter Sitzung bleibt
+ *     beides unangetastet.
+ *
+ * GEMESSEN: Rundlauf am Einsatz 2324 — der POST traegt kein `f_notes` und
+ * keinen Klartext (1163 Byte, Klartextprobe negativ), die Spalte ist danach
+ * NULL, der Text kommt nach dem Neuladen wortgleich zurueck. Gesperrte
+ * Sitzung: Riegelmeldung sichtbar, Notizfeld gesperrt, und ein Speichern
+ * laesst den Blob byteweise unveraendert (397 Byte, Pruefsumme 94f8c377…
+ * vorher wie nachher). 0 Konsolenfehler.
+ *
+ * NOCH NICHT IN DIESEM SCHRITT: die lesenden Wege (api/mission.php, Suche,
+ * Export, Sicherung, Import), der Anhebelauf, die Kennzeichnung mit Schloss
+ * und die normative Dokumentation (CLAUDE.md 4, Technik 4.98). Sie folgen in
+ * den Schritten 2 bis 5; bis dahin zeigt die Einsatzansicht die Notiz eines
+ * gerade gespeicherten Einsatzes nicht an.
+ *
+ * KEINE MIGRATION. `missions.notes` ist bereits NULL-faehig (schema.sql) und
+ * bleibt stehen, bis P8 sie entfernt (R60). `update.php` muss NICHT laufen.
  */
-const WEB_VERSION = '18.1.1';
+const WEB_VERSION = '19.0.0';
