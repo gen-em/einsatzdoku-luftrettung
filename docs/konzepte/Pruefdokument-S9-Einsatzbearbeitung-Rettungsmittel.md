@@ -1588,6 +1588,65 @@ Was nur am Gerät geht. Je Punkt: der Bedienweg, das erwartete Ergebnis, und
 
 ---
 
+## 3c. AP8 — Abschluss (10.09.2026)
+
+**Der Stilvergleich gegen `main`**, zum ersten Mal über die ganze Phase (die
+einzelnen Pakete verglichen jeweils gegen ihren Vorgänger):
+
+| | Zahl |
+|---|---|
+| Kaskade | **693 → 743 Regeln**; **30 entfallen**, **186 neu**, **8 mit anderem Endwert**, **0 Reihenfolgeumkehrungen** |
+| Berechnete Stile | **45 240 Elementmessungen, 2696 Abweichungen**, 168 Eigenschaften je Element |
+
+**Jede Abweichung ist zugeordnet** — das ist der Zweck des Vergleichs, nicht
+eine Null:
+
+- Die **30 entfallenen** Werte: 28 aus **AP1** (`.loc-suggest` und
+  `.rmlist`/`.rmopt` — die beiden alten Vorschlagslisten, ersetzt durch den
+  gemeinsamen Baustein `.vorschlaege`), 2 aus **AP3** (die Ringe der
+  Kartenschilder).
+- Die **8 geänderten Endwerte**: sämtlich **AP3** (E-S9-12) —
+  `--geo-kreis` 32 → 28 px, `--geo-schild` 36 → 30 px, dazu `.geo-ringpunkt`,
+  `.geo-schild-kasten` und die beiden `…-beide`-Schatten.
+- Die **2696 Abweichungen** der berechneten Stile: fast vollständig an
+  `dialog`, `.dialog`, `.dialog-kopf`, `.dialog-inhalt`, `.dialog-fuss` und
+  dem `<form>` darin — das ist **AP5 Teil 4** (E-S9-19), dort schon mit 936
+  Abweichungen gegen den damaligen Vorgänger belegt. Dazu die
+  Leisten-Einrückung aus **AP4a** (`.akkordeon-inhalt` 12 → 4 px,
+  `.eintrag` gap 8 → 4 px) und die **Dokumenthöhe** von `html`/`body`
+  (24 147 → 24 206 px), die daraus folgt, dass der Katalog neue Bausteine
+  zeigt.
+
+**Die übrigen Prüfmittel des Abschlusses:**
+
+| Mittel | Ergebnis |
+|---|---|
+| Klickprobe | **80 von 80 als Zeigergerät und 80 von 80 als Fingergerät** (40 Wege × 390 und 1280 px) |
+| Bilderlauf | **360 Einzelbilder und 45 Kontaktbögen je Bedienhöhe**, **0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** |
+| Wartungsprobe | **51 Erwartungen, 0 nicht erfüllt** |
+| Wiederherstellungsprobe | **94 Erwartungen, 0 nicht erfüllt** |
+| Kreislauf CSV | **9120 Einzelvergleiche, 0 unerklärt, 1070 erwartet** |
+| Kreislauf Sicherung | **287 842 Einzelvergleiche, 0 unerklärt, 159 erwartet** |
+| Referenzbestand | Generator **283 989 Einzelprüfungen**, Quelldaten **5961**, je ohne Befund, **0 offene Matrixzeilen** |
+| Wortliste | **0 Treffer** außerhalb der Ausnahmen, 96 Regeln, 96 gegriffen, 0 ungenutzt |
+| Kontraste | **22 Paare, 0 verfehlt** |
+| Linkprobe | **116 Verweise, 0 unbekannte Abweichungen** |
+| Vollständigkeit | **330** |
+| `docs/Design.md` | neu erzeugt, **unverändert** |
+
+**Eine Zahl im Konzept stimmte nicht.** Es sagt, im Abschluss wanderten
+**zwanzig** Backlog-Punkte nach *Erledigt*. Von den 22 genannten Nummern
+standen **elf schon dort** — AP1 bis AP7 hatten sie unterwegs verschoben.
+AP8 hat die verbleibenden **neun** bewegt (44, 69, 108, 109, 111, 112, 113,
+132, 152). Die Zahl im Konzept war zum Zeitpunkt des Schreibens richtig; sie
+ist keine Abweichung, sondern ein Datum.
+
+**Dabei gefunden:** `docs/Rahmenplan.md` Abschnitt 5 führte **Nr. 69 zweimal**
+— dieselbe Sorte Artefakt wie die Fahrplan-Dopplung aus AP5. Beide Zeilen sind
+mit dem Punkt weggefallen.
+
+---
+
 ## 4. Fragen an den Auftraggeber
 
 

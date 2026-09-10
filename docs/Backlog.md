@@ -433,18 +433,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nachmittag), und die eigentliche Lösung — Schlüssel auf die Uhr — in eine
     eigene Phase zusammen mit der ohnehin anstehenden Uhr-Arbeit.
 
-44. **Sprungliste bei Standorten mit vielen Rettungsmitteln.**
-    *Aufgenommen 30.08.2026.* Ein Standort mit neun Rettungsmitteln zwingt zum
-    Scrollen, um den zu finden, den man sucht. Vorschlag: eine Zeile runder
-    Marken direkt unter der Überschrift „Rettungsmittel", die zum Eintrag
-    springen — erst ab sechs Einträgen, darunter sieht man die Liste ohnehin
-    ganz.
-
-    Mockup liegt: `docs/mockups/N1-sprungliste.html` mit Bildern für 900 und
-    390 px. **Wartet auf Freigabe** — es wäre eine neue Darstellung, und die
-    braucht nach `docs/Design.md` 1 eine ausdrückliche Zustimmung.
-    *Konzept S9 (07.09.2026): E-S9-14, M-S9-05 (Pille mit Artzeichen, ab sechs; in der Standortseite, AP5).*
-
 45. **Dritte Kartengröße zwischen klein und Vollbild.**
     *Aufgenommen 30.08.2026, zurückgestellt.* Die Karte des Diensttags ist im
     Regelfall klein und im Vollbild oft zu groß. Vorschlag aus der Durchsicht:
@@ -784,42 +772,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     vorher wieder nach — die Zählung von heute ist morgen genauso alt.
 
 
-69. **Kurzname je Rettungsmittel als Stammdatenfeld.**
-    *Zulieferung aus P3; bis Fassung 16 ohne Nummer im Rahmenplan-Abschnitt
-    P4 geführt.* Leiste, Kacheln und Plaketten zeigen den vollen Namen des
-    Rettungsmittels; auf schmalen Breiten bricht er um oder wird
-    abgeschnitten. Ein Kurzname (etwa „RTH 1", „NEF 2") als eigenes
-    Stammdatenfeld würde an diesen drei Stellen verwendet, der volle Name
-    bleibt in Formularen und Exporten. Schemaänderung, Feldkatalog, Export,
-    Import und Backup ziehen nach — deshalb ein eigener Punkt und kein
-    Nebenklapp. Zuordnung: Backlog-Runde.
-    *Konzept S9 (07.09.2026): E-S9-09 (`vehicles.kurz`, `days.vehicle_kurz`, Nutzlast 10; AP4).*
-    *Umgesetzt mit Web 16.0.0 (S9/AP4, 07.09.2026): `vehicles.kurz` und
-    `days.vehicle_kurz`, bis 16 Zeichen, freiwillig. Die Leiste zeigt ihn,
-    Tooltip und Formulare den vollen Namen; Sicherung (Nutzlast 10) und
-    Export (`diensttage.csv`, Spalte am Ende) führen ihn NEBEN der
-    Bezeichnung mit, die Suche findet beides. **Kacheln und Plaketten
-    zeigen ihn noch nicht** — sie zeigen heute gar keinen
-    Rettungsmittelnamen (`EdMissionTable.kachel()`), es gibt dort nichts
-    zu ersetzen; das wäre eine neue Darstellung und braucht ein Mockup.
-    Der Punkt bleibt deshalb offen und wandert erst mit AP8 nach
-    Erledigt — oder wird dort auf diesen Rest zurückgeschnitten.*
-    *Entschieden am 08.09.2026 nach Mockup M-S9-08: **zurückgeschnitten.**
-    Kacheln und Plaketten bekommen den Kurznamen **nicht** — beide nennen
-    heute gar kein Rettungsmittel, und die zwei gezeigten Varianten kosten
-    mehr, als sie einbringen (Kachel 92 → 124 px, oder eine neue
-    Darstellung). Dafür zeigt die Leiste ihn künftig in **jeder** Breite
-    (Variante 2: Kurzname sichtbar, Akkordeon 8 px eingerückt) — Nachtrag
-    AP4a. Mit dessen Auslieferung ist der Punkt erledigt und wandert im
-    Abschluss (AP8) hinüber.*
-    *Gebaut mit Web 16.1.0 (S9/AP4a, 08.09.2026): Der Nebentext der Leiste
-    bleibt im Band 1024–1199 px stehen, wenn ein Kurzname eingefroren ist
-    (`.eintrag-neben.kurz`); das Akkordeon rückt dort je Ebene 8 statt 12 px
-    ein — seit Web 16.1.1 je Ebene 4 px, dazu 4 px Abstand in der Zeile
-    (Freigabe M-S9-11, Weg 2). Gemessen an der laufenden Anwendung: dem Kurznamen stehen im Band **64 bis 79 px** zur Verfügung (vorher 48 bis 63) — „BW Hoch" (55 px) und „NEF 76/1" (53) stehen damit an **jedem** Datum ganz; gemessen **13 Kurznamen, 0 Ellipsen** (vorher 10).
-    Der Punkt ist sachlich erledigt; er wandert
-    mit AP8 nach* Erledigt.
-
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**
     *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
     mit Rahmenplan Fassung 16, wie R39 es vorsah.* Das Alternativmodell zu
@@ -1139,66 +1091,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     E-S4-16 dann um den Unterschied App-Signaturschlüssel / Upload-Schlüssel
     ergänzen. **Nach v1.0**, wenn die Releases häufiger werden.
 
-108. **Schloss-Icon und Legende für verschlüsselte Felder.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.1), Schritt 8
-    (S9).*
-    Es ist nicht ersichtlich, welche Felder verschlüsselt gespeichert werden.
-    Soll: Schloss-Icon am Feld plus Legende (F13). Getrennt von Nr. 109.
-    *Konzept S9 (07.09.2026): E-S9-02 (Schloss am Label, Karte „Was hier gilt"; AP7).*
-
-109. **Notizfeld verschlüsseln, Suche bleibt.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.2), Schritt 8
-    (S9).*
-    Das Notizfeld soll verschlüsselt werden und **durchsuchbar bleiben**, wie
-    in allen anderen Feldern (F14/F18); Filtern ist nicht nötig. **Offener
-    Zielkonflikt, im S9-Konzept als Erstes zu prüfen:** Werden die übrigen
-    durchsuchbaren Felder im Klartext gehalten und serverseitig durchsucht,
-    ist beides nicht ohne Kompromiss zu haben — dann Optionen mit Vor- und
-    Nachteilen, bevor entschieden wird. Betrifft Datenmodell und
-    Verschlüsselung (Migration); die Antwort geht in das Bedrohungsmodell
-    des R17-Reviews ein (Nr. 43, R69). Fable-Schritt.
-    *Konzept S9 (07.09.2026): E-S9-01 (Notizen im pat_blob, Katalogschlüssel `store => pat`, stille Anhebung; AP7).*
-
-111. **Neue Rettungsmittel-Arten.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.1), Schritt 8
-    (S9).*
-    Bergwachtnotarzt, Veranstaltungsnotarzt, Sonstiges — mit eigenem Icon,
-    ohne Rollen-Vorlagen, ein Standort kann eingegeben werden (F16).
-    Migration.
-    *Konzept S9 (07.09.2026): E-S9-09, E-S9-13 (`vehicles.typ`, Betriebsart bleibt `kind`; AP4).*
-
-112. **Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.2), Schritt 8
-    (S9).*
-    Ein Rettungsmittel kann in der Tageszuordnung manuell definiert werden;
-    es gilt nur für den Tag, die dauerhafte Aufnahme in den Stamm bleibt
-    manuell über die Einstellungen (F17). Bedingung: Suche und Filter müssen
-    für solche Einträge greifen.
-    *Konzept S9 (07.09.2026): E-S9-10 („Anderes Rettungsmittel …" im Zuordnungsformular; AP6).*
-    *Gebaut mit Web 18.1.0 (S9/AP6, 09.09.2026): Der letzte Eintrag der Auswahl
-    klappt Bezeichnung, Typ mit Betriebsart und einen Standort auf, der Auswahl
-    und Freitext zugleich ist. Gespeichert wird nur in der Momentaufnahme des
-    Tages — `vehicle_id` bleibt NULL. **Die Bedingung ist gemessen:** Der Name
-    steht in der Tagesliste, die aus der Momentaufnahme kommt und nicht aus den
-    Stammdaten (Klickprobe `ap6-adhoc-speichern-und-finden`). Nach *Erledigt*
-    wandert der Punkt mit dem Abschluss von S9 (AP8).*
-
-113. **Rollen unmittelbar nach der Auswahl bearbeitbar.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.3), Schritt 8
-    (S9).*
-    Heute muss erst gespeichert und erneut „bearbeiten" geklickt werden,
-    bevor Rollen editierbar sind. Soll: sofort bearbeitbar; sind Rollen für
-    das Rettungsmittel vordefiniert, werden sie nach der Auswahl automatisch
-    nachgeladen. Für manuell definierte Rettungsmittel (Nr. 112) und Arten
-    ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
-    *Konzept S9 (07.09.2026): E-S9-11 (`api/day.php?vorschau=`; AP6).*
-    *Gebaut mit Web 18.1.0 (S9/AP6, 09.09.2026): `api/day.php?vorschau=` liefert
-    Rollensatz und Vorlagen zu einer noch nicht gespeicherten Wahl und schreibt
-    nichts; das Formular zeichnet die Felder bei `change` neu. Gemessen über
-    sechs Rettungsmittel: Rollenzahlen **5/3/0/3/0/0**, die Zuordnung in der
-    Datenbank danach unverändert. Getippte Namen bleiben stehen, wo die Rolle
-    bleibt. Nach *Erledigt* mit dem Abschluss von S9 (AP8).*
-
 114. **Abgewiesene Pakete sichtbar machen und ausräumen.**
     *Ergänzung 06.09.2026 (Krypto-Review AN-2):* Die Pakete bleiben samt
     GPS-Spur **dauerhaft** liegen — sie überleben Trennen und Neukopplung,
@@ -1366,22 +1258,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
     Wartungsseite. Zuordnung: Backlog-Runde oder P6.
 
-132. **Klartext-Freitextfelder ohne Hinweis.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-12).* `notes` trägt den
-    Placeholder „Freitext (keine Patientendaten!)", `bw_info` („Namen /
-    Infos"), die Besatzungs-Freitexte und `days.notes` nicht
-    (`mission_fields.php:395,426,459`). Bedienfehler tragen Patientendaten
-    in den Klartext. Ein Schlüssel `hinweis` im Feldkatalog, ein Text für
-    alle; das Symbol dazu bringt Nr. 108. Zuordnung: Sofortpaket Sicherheit.
-    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-02, AP7) — `hinweis` an `bw_info`, `other_ema`, `crew_*` und `days.notes`; nicht an `notes`, das wird verschlüsselt (E-S9-01). Zuordnung jetzt: S9.*
-    *Umgesetzt 10.09.2026 in S9/AP7 (Web 19.1.0): Der Schlüssel `hinweis` steht
-    im Katalog, der Satz „Klartext — keine Patientendaten" einmal als Variable;
-    getragen wird er von `bw_info`, `other_ema`, den sieben Besatzungsfeldern
-    und — außerhalb des Katalogs — vom Notizfeld des Diensttags. `notes` trägt
-    stattdessen das Schloss. **Gemessen: 9 Kleinzeilen, 8 Schlösser, 0 Felder
-    mit beidem.** Der Punkt wandert mit dem Abschluss von S9 (AP8) nach
-    Erledigt — hier steht er, damit dazwischen niemand zweimal anfängt.*
-
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
     Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
@@ -1492,34 +1368,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Korrekturstufe zu Nr. 148/149 mitbehoben, weil die Behebung die
     Import-Schnittstelle berührt und damit mehr ist als ein Name (K4).
     Zuordnung: **Backlog-Runde**.
-
-152. **Standortseiten: Standort zuerst, ein Menüpunkt, Kennzahlen, Dialoge, Landung auf der neuen Zeile.**
-    *Aufgenommen 07.09.2026 vom Auftraggeber bei der Freigabe der S9-Mockups
-    (Rahmenplan Fassung 34).* Zwei Menüpunkte für eine Sache: „Standorte"
-    (Name, Lage) und „Rettungsmittel" (je Standort eine zugeklappte Karte
-    mit drei Listen — Rettungsmittel, Besatzungsvorlagen, Zielkliniken; alle
-    drei hängen am Standort, `crew_presets.base_id`,
-    `transport_dests.base_id`, E15). Der Name des zweiten ist falsch, die
-    zugeklappten Karten sind leicht zu übersehen, lange Listen zwingen zum
-    Scrollen, und die Eingabe (`sd_form()`) klebt unter jeder Liste.
-    **Soll:** „Rettungsmittel" entfällt; **„Standorte"** ist Liste (eine
-    Zeile je Standort mit drei Zahlen, „Ohne Standort" als letzter Eintrag)
-    und **Seite je Standort** mit **sechs** Karten (Standort, Rettungsmittel,
-    Besatzung, Zielkliniken, Weitere Rettungsmittel, Bergwacht — letztere nur
-    mit luftgebundenem Rettungsmittel, E29, sonst fünf; hier stand bis zum
-    08.09.2026 „vier", und das war falsch: Am Standort hängen sechs
-    Stammdatenlisten, und die zwei übergangenen wären ohne Karte von der
-    Seite aus nicht erreichbar — Entscheidung des Auftraggebers, Frage 7 des
-    Prüfdokuments), **Kennzahlen** als Inhaltsverzeichnis
-    (`Design.md` 9.10), „Zum Anfang" je Karte, Sprungliste (Nr. 44) in den
-    Rettungsmitteln, **Filterfeld** in Besatzung und Zielkliniken; Anlegen
-    und Bearbeiten im **Dialog** (9.11); nach dem Anlegen Redirect mit
-    `#veh-<id>` und `:target`-Hervorhebung der neuen Zeile, keine
-    zusätzliche Meldung. Verwaltung → Stammdaten ebenso. Datenmodell und
-    Formate unberührt; Handbuch 6 neu. Konzept: **E-S9-18, E-S9-19**, Mockups
-    M-S9-06, M-S9-07. Zuordnung: **S9**, AP5.
-
----
 
 153. **`querySelector` mit einem Wert aus dem URL-Fragment.**
     *Aufgenommen 07.09.2026 aus Nr. 135 (Krypto-Review K-15), beim Abschluss
@@ -1784,6 +1632,176 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+44. **Sprungliste bei Standorten mit vielen Rettungsmitteln.**
+    *Aufgenommen 30.08.2026.* Ein Standort mit neun Rettungsmitteln zwingt zum
+    Scrollen, um den zu finden, den man sucht. Vorschlag: eine Zeile runder
+    Marken direkt unter der Überschrift „Rettungsmittel", die zum Eintrag
+    springen — erst ab sechs Einträgen, darunter sieht man die Liste ohnehin
+    ganz.
+
+    Mockup liegt: `docs/mockups/N1-sprungliste.html` mit Bildern für 900 und
+    390 px. **Wartet auf Freigabe** — es wäre eine neue Darstellung, und die
+    braucht nach `docs/Design.md` 1 eine ausdrückliche Zustimmung.
+    *Konzept S9 (07.09.2026): E-S9-14, M-S9-05 (Pille mit Artzeichen, ab sechs; in der Standortseite, AP5).*
+
+    **Erledigt mit Web 16.3.0 am 08.09.2026 (S9/AP5 Teil 3, E-S9-14).** Die Sprungliste erscheint ab sechs Rettungsmitteln. Gemessen: bei 5 keine Liste, bei 6 eine mit 6 Pillen, 6 Artzeichen, 6 gültigen Zielen, Pillenhöhe 36 px.
+
+69. **Kurzname je Rettungsmittel als Stammdatenfeld.**
+    *Zulieferung aus P3; bis Fassung 16 ohne Nummer im Rahmenplan-Abschnitt
+    P4 geführt.* Leiste, Kacheln und Plaketten zeigen den vollen Namen des
+    Rettungsmittels; auf schmalen Breiten bricht er um oder wird
+    abgeschnitten. Ein Kurzname (etwa „RTH 1", „NEF 2") als eigenes
+    Stammdatenfeld würde an diesen drei Stellen verwendet, der volle Name
+    bleibt in Formularen und Exporten. Schemaänderung, Feldkatalog, Export,
+    Import und Backup ziehen nach — deshalb ein eigener Punkt und kein
+    Nebenklapp. Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-09 (`vehicles.kurz`, `days.vehicle_kurz`, Nutzlast 10; AP4).*
+    *Umgesetzt mit Web 16.0.0 (S9/AP4, 07.09.2026): `vehicles.kurz` und
+    `days.vehicle_kurz`, bis 16 Zeichen, freiwillig. Die Leiste zeigt ihn,
+    Tooltip und Formulare den vollen Namen; Sicherung (Nutzlast 10) und
+    Export (`diensttage.csv`, Spalte am Ende) führen ihn NEBEN der
+    Bezeichnung mit, die Suche findet beides. **Kacheln und Plaketten
+    zeigen ihn noch nicht** — sie zeigen heute gar keinen
+    Rettungsmittelnamen (`EdMissionTable.kachel()`), es gibt dort nichts
+    zu ersetzen; das wäre eine neue Darstellung und braucht ein Mockup.
+    Der Punkt bleibt deshalb offen und wandert erst mit AP8 nach
+    Erledigt — oder wird dort auf diesen Rest zurückgeschnitten.*
+    *Entschieden am 08.09.2026 nach Mockup M-S9-08: **zurückgeschnitten.**
+    Kacheln und Plaketten bekommen den Kurznamen **nicht** — beide nennen
+    heute gar kein Rettungsmittel, und die zwei gezeigten Varianten kosten
+    mehr, als sie einbringen (Kachel 92 → 124 px, oder eine neue
+    Darstellung). Dafür zeigt die Leiste ihn künftig in **jeder** Breite
+    (Variante 2: Kurzname sichtbar, Akkordeon 8 px eingerückt) — Nachtrag
+    AP4a. Mit dessen Auslieferung ist der Punkt erledigt und wandert im
+    Abschluss (AP8) hinüber.*
+    *Gebaut mit Web 16.1.0 (S9/AP4a, 08.09.2026): Der Nebentext der Leiste
+    bleibt im Band 1024–1199 px stehen, wenn ein Kurzname eingefroren ist
+    (`.eintrag-neben.kurz`); das Akkordeon rückt dort je Ebene 8 statt 12 px
+    ein — seit Web 16.1.1 je Ebene 4 px, dazu 4 px Abstand in der Zeile
+    (Freigabe M-S9-11, Weg 2). Gemessen an der laufenden Anwendung: dem Kurznamen stehen im Band **64 bis 79 px** zur Verfügung (vorher 48 bis 63) — „BW Hoch" (55 px) und „NEF 76/1" (53) stehen damit an **jedem** Datum ganz; gemessen **13 Kurznamen, 0 Ellipsen** (vorher 10).
+    Der Punkt ist sachlich erledigt; er wandert
+    mit AP8 nach* Erledigt.
+
+    **Erledigt mit Web 16.0.0 am 07.09.2026 (S9/AP4, E-S9-08).** `vehicles.kurz` (16 Zeichen) und der eingefrorene `days.vehicle_kurz`. Der Kurzname steht in Kachel, Plakettenzeile und Leiste; im Band 1024–1199 px ist er das Einzige, was von der Unterzeile bleibt — gemessen 13 Kurznamen, 0 Ellipsen.
+
+108. **Schloss-Icon und Legende für verschlüsselte Felder.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.1), Schritt 8
+    (S9).*
+    Es ist nicht ersichtlich, welche Felder verschlüsselt gespeichert werden.
+    Soll: Schloss-Icon am Feld plus Legende (F13). Getrennt von Nr. 109.
+    *Konzept S9 (07.09.2026): E-S9-02 (Schloss am Label, Karte „Was hier gilt"; AP7).*
+
+    **Erledigt mit Web 19.1.0 am 10.09.2026 (S9/AP7, E-S9-02).** Das Schloss steht an jedem verschlüsselten Feld des Formulars, die zugeklappte Karte „Was hier gilt“ am Ende erklärt es in drei Sätzen. Gemessen: 8 Schlösser, 9 Kleinzeilen, **0 Felder mit beidem**. Kein neuer Baustein — `docs/Design.md` neu erzeugt und unverändert.
+
+109. **Notizfeld verschlüsseln, Suche bleibt.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.2), Schritt 8
+    (S9).*
+    Das Notizfeld soll verschlüsselt werden und **durchsuchbar bleiben**, wie
+    in allen anderen Feldern (F14/F18); Filtern ist nicht nötig. **Offener
+    Zielkonflikt, im S9-Konzept als Erstes zu prüfen:** Werden die übrigen
+    durchsuchbaren Felder im Klartext gehalten und serverseitig durchsucht,
+    ist beides nicht ohne Kompromiss zu haben — dann Optionen mit Vor- und
+    Nachteilen, bevor entschieden wird. Betrifft Datenmodell und
+    Verschlüsselung (Migration); die Antwort geht in das Bedrohungsmodell
+    des R17-Reviews ein (Nr. 43, R69). Fable-Schritt.
+    *Konzept S9 (07.09.2026): E-S9-01 (Notizen im pat_blob, Katalogschlüssel `store => pat`, stille Anhebung; AP7).*
+
+    **Erledigt mit Web 19.0.0 bis 19.0.3 am 10.09.2026 (S9/AP7, E-S9-01).** `missions.notes` liegt als Schlüssel `notes` im `pat_blob`; die Suche findet die Notiz nach dem Entsperren wie die Diagnose. Gemessen: gesperrt 0 von 83, entsperrt 1 von 83, Klartextwort gesperrt weiter 31 Treffer. **Der Grund stand vorher nirgends:** `api/suchindex.php` lieferte jede Notiz im Klartext für den gesamten aktiven Bestand, ohne dass jemand entsperrt haben musste (31 Schlüssel je Einsatz vorher, 30 nachher).
+
+111. **Neue Rettungsmittel-Arten.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.1), Schritt 8
+    (S9).*
+    Bergwachtnotarzt, Veranstaltungsnotarzt, Sonstiges — mit eigenem Icon,
+    ohne Rollen-Vorlagen, ein Standort kann eingegeben werden (F16).
+    Migration.
+    *Konzept S9 (07.09.2026): E-S9-09, E-S9-13 (`vehicles.typ`, Betriebsart bleibt `kind`; AP4).*
+
+    **Erledigt mit Web 16.0.0 am 07.09.2026 (S9/AP4, E-S9-09).** `vehicles.typ` mit vier Werten (Standard, Bergwacht, Veranstaltung, Sonstiges); die Betriebsart folgt dem Typ, der Standort ist außerhalb von „Standard“ freiwillig. Prüfschicht 8 von 8 Fällen wie festgelegt.
+
+112. **Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.2), Schritt 8
+    (S9).*
+    Ein Rettungsmittel kann in der Tageszuordnung manuell definiert werden;
+    es gilt nur für den Tag, die dauerhafte Aufnahme in den Stamm bleibt
+    manuell über die Einstellungen (F17). Bedingung: Suche und Filter müssen
+    für solche Einträge greifen.
+    *Konzept S9 (07.09.2026): E-S9-10 („Anderes Rettungsmittel …" im Zuordnungsformular; AP6).*
+    *Gebaut mit Web 18.1.0 (S9/AP6, 09.09.2026): Der letzte Eintrag der Auswahl
+    klappt Bezeichnung, Typ mit Betriebsart und einen Standort auf, der Auswahl
+    und Freitext zugleich ist. Gespeichert wird nur in der Momentaufnahme des
+    Tages — `vehicle_id` bleibt NULL. **Die Bedingung ist gemessen:** Der Name
+    steht in der Tagesliste, die aus der Momentaufnahme kommt und nicht aus den
+    Stammdaten (Klickprobe `ap6-adhoc-speichern-und-finden`). Nach *Erledigt*
+    wandert der Punkt mit dem Abschluss von S9 (AP8).*
+
+    **Erledigt mit Web 18.1.0 am 09.09.2026 (S9/AP6, E-S9-10).** „Anderes Rettungsmittel …“ am Diensttag: `vehicle_id` bleibt NULL, Bezeichnung, Typ, Betriebsart und Standort stehen in der Momentaufnahme, **kein Stammdatensatz entsteht**. Suche, Filter und Tagesliste finden ihn trotzdem.
+
+113. **Rollen unmittelbar nach der Auswahl bearbeitbar.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.3), Schritt 8
+    (S9).*
+    Heute muss erst gespeichert und erneut „bearbeiten" geklickt werden,
+    bevor Rollen editierbar sind. Soll: sofort bearbeitbar; sind Rollen für
+    das Rettungsmittel vordefiniert, werden sie nach der Auswahl automatisch
+    nachgeladen. Für manuell definierte Rettungsmittel (Nr. 112) und Arten
+    ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
+    *Konzept S9 (07.09.2026): E-S9-11 (`api/day.php?vorschau=`; AP6).*
+    *Gebaut mit Web 18.1.0 (S9/AP6, 09.09.2026): `api/day.php?vorschau=` liefert
+    Rollensatz und Vorlagen zu einer noch nicht gespeicherten Wahl und schreibt
+    nichts; das Formular zeichnet die Felder bei `change` neu. Gemessen über
+    sechs Rettungsmittel: Rollenzahlen **5/3/0/3/0/0**, die Zuordnung in der
+    Datenbank danach unverändert. Getippte Namen bleiben stehen, wo die Rolle
+    bleibt. Nach *Erledigt* mit dem Abschluss von S9 (AP8).*
+
+    **Erledigt mit Web 18.1.0 am 09.09.2026 (S9/AP6, E-S9-11).** `api/day.php?vorschau=<vehicle_id>` beantwortet die Frage für eine noch nicht gespeicherte Wahl und **schreibt nichts**; die Rollenfelder erscheinen sofort. Gemessen: Rollenzahlen 5/3/0/3/0/0 über sechs Rettungsmittel, der Diensttag in der Datenbank dabei unverändert.
+
+132. **Klartext-Freitextfelder ohne Hinweis.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-12).* `notes` trägt den
+    Placeholder „Freitext (keine Patientendaten!)", `bw_info` („Namen /
+    Infos"), die Besatzungs-Freitexte und `days.notes` nicht
+    (`mission_fields.php:395,426,459`). Bedienfehler tragen Patientendaten
+    in den Klartext. Ein Schlüssel `hinweis` im Feldkatalog, ein Text für
+    alle; das Symbol dazu bringt Nr. 108. Zuordnung: Sofortpaket Sicherheit.
+    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-02, AP7) — `hinweis` an `bw_info`, `other_ema`, `crew_*` und `days.notes`; nicht an `notes`, das wird verschlüsselt (E-S9-01). Zuordnung jetzt: S9.*
+    *Umgesetzt 10.09.2026 in S9/AP7 (Web 19.1.0): Der Schlüssel `hinweis` steht
+    im Katalog, der Satz „Klartext — keine Patientendaten" einmal als Variable;
+    getragen wird er von `bw_info`, `other_ema`, den sieben Besatzungsfeldern
+    und — außerhalb des Katalogs — vom Notizfeld des Diensttags. `notes` trägt
+    stattdessen das Schloss. **Gemessen: 9 Kleinzeilen, 8 Schlösser, 0 Felder
+    mit beidem.** Der Punkt wandert mit dem Abschluss von S9 (AP8) nach
+    Erledigt — hier steht er, damit dazwischen niemand zweimal anfängt.*
+
+    **Erledigt mit Web 19.1.0 am 10.09.2026 (S9/AP7, E-S9-02).** Der Katalogschlüssel `hinweis` trägt den einen Satz „Klartext — keine Patientendaten“ an `bw_info`, `other_ema` und den sieben Besatzungsfeldern; das Notizfeld des Diensttags trägt ihn außerhalb des Katalogs. `notes` trägt ihn **nicht** — es ist seit Web 19 verschlüsselt und trägt das Schloss. Gemessen: 9 Kleinzeilen, 0 Widersprüche.
+
+152. **Standortseiten: Standort zuerst, ein Menüpunkt, Kennzahlen, Dialoge, Landung auf der neuen Zeile.**
+    *Aufgenommen 07.09.2026 vom Auftraggeber bei der Freigabe der S9-Mockups
+    (Rahmenplan Fassung 34).* Zwei Menüpunkte für eine Sache: „Standorte"
+    (Name, Lage) und „Rettungsmittel" (je Standort eine zugeklappte Karte
+    mit drei Listen — Rettungsmittel, Besatzungsvorlagen, Zielkliniken; alle
+    drei hängen am Standort, `crew_presets.base_id`,
+    `transport_dests.base_id`, E15). Der Name des zweiten ist falsch, die
+    zugeklappten Karten sind leicht zu übersehen, lange Listen zwingen zum
+    Scrollen, und die Eingabe (`sd_form()`) klebt unter jeder Liste.
+    **Soll:** „Rettungsmittel" entfällt; **„Standorte"** ist Liste (eine
+    Zeile je Standort mit drei Zahlen, „Ohne Standort" als letzter Eintrag)
+    und **Seite je Standort** mit **sechs** Karten (Standort, Rettungsmittel,
+    Besatzung, Zielkliniken, Weitere Rettungsmittel, Bergwacht — letztere nur
+    mit luftgebundenem Rettungsmittel, E29, sonst fünf; hier stand bis zum
+    08.09.2026 „vier", und das war falsch: Am Standort hängen sechs
+    Stammdatenlisten, und die zwei übergangenen wären ohne Karte von der
+    Seite aus nicht erreichbar — Entscheidung des Auftraggebers, Frage 7 des
+    Prüfdokuments), **Kennzahlen** als Inhaltsverzeichnis
+    (`Design.md` 9.10), „Zum Anfang" je Karte, Sprungliste (Nr. 44) in den
+    Rettungsmitteln, **Filterfeld** in Besatzung und Zielkliniken; Anlegen
+    und Bearbeiten im **Dialog** (9.11); nach dem Anlegen Redirect mit
+    `#veh-<id>` und `:target`-Hervorhebung der neuen Zeile, keine
+    zusätzliche Meldung. Verwaltung → Stammdaten ebenso. Datenmodell und
+    Formate unberührt; Handbuch 6 neu. Konzept: **E-S9-18, E-S9-19**, Mockups
+    M-S9-06, M-S9-07. Zuordnung: **S9**, AP5.
+
+---
+
+    **Erledigt mit Web 16.2.0 bis 17.1.1 am 08./09.09.2026 (S9/AP5, E-S9-18 und E-S9-19).** Standort zuerst: ein Menüpunkt, eine Liste, je Standort eine Seite mit sechs Karten; Anlegen und Bearbeiten im Dialog mit Landung auf der neuen Zeile. Gemessen: 5 Dialoge im Markup, davon sichtbar 0; nach dem Öffnen genau einer.
 
 166. **~~Der Referenzbestand kennt keinen systemweiten Standort~~ —
     ZURÜCKGEZOGEN am 09.09.2026, am Tag der Aufnahme.** *Aufgenommen in
