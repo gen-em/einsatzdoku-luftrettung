@@ -17,6 +17,7 @@
 #   socat                tools/referenzdatensatz/einspielen/lokal_starten.sh
 #   Android-SDK 36       ./gradlew build
 #   python3-cffi         cryptography -> tools/referenzdatensatz/vergleich
+#   jsonschema          tools/referenzdatensatz/quelldaten/pruefen.py
 #
 # WAS ES NICHT TUT: den Uhr-Pruefstand aufbauen. Der holt sein SDK selbst
 # (tools/uhr-pruefstand/pruefstand.sh aufbau) und braucht dafuer die
@@ -91,6 +92,15 @@ python_teile() {
     python3 -c 'from cryptography.hazmat.primitives.ciphers.aead import AESGCM' 2>/dev/null \
         || pip3 install --quiet --break-system-packages cffi
     python3 -c 'from cryptography.hazmat.primitives.ciphers.aead import AESGCM; print("   cryptography brauchbar")'
+
+    # jsonschema fuer quelldaten/pruefen.py des Referenzdatensatzes. Es fehlt im
+    # Abbild, und der Lauf bricht dann mit ModuleNotFoundError ab -- am
+    # 07.09.2026 (S9/AP4) beim ersten Aufbau nach der Erweiterung der
+    # Referenz-Stammdaten aufgefallen. Anders als bei cryptography sagt der
+    # Fehler hier immerhin, was fehlt.
+    python3 -c 'import jsonschema' 2>/dev/null \
+        || pip3 install --quiet --break-system-packages jsonschema
+    python3 -c 'import jsonschema; print("   jsonschema", jsonschema.__version__)'
 }
 
 alles() { pakete; datenbank; android; python_teile;

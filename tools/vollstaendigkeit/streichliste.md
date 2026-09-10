@@ -107,7 +107,7 @@ im selben Paket hier ein, nicht später.
 | `mono` | Festbreitenschrift für den JSON-Bericht → keine Klasse nötig: `pre` trägt die Schrift und den Rahmen seit O2 selbst (Abschnitt 15). Auf der Demoseite entfernt; `nachbearbeitung.php` und `update.php` folgen in O11. | O9c |
 | `rowactions` | Knopfzeile unter einer Auskunft → die Handlungen stehen in der Titelzeile (`ui_titelzeile` mit `ui_knopf` und `ui_aktionen`), wie auf jeder anderen umgebauten Seite. | O9c |
 | `inline-form` | Formular um einen einzelnen Knopf, damit er nicht umbricht — ersatzlos. Die Formulare liegen jetzt versteckt im Seitenkopf, und der Knopf verweist über `form="…"` auf sie; damit steht kein Formular mehr im Weg des Layouts. | O9c |
-| `ac-form` | [bleibt] Formular des Rettungsmittels — reiner **Skriptanker**. Das Skript sucht `form.ac-form`, um Rollen- und Fähigkeitshaken zur gewählten Art passend ein- und auszublenden; gestaltet wird nichts. Steht seit O8a in `einstellungen.php` und seit O9c auch in `admin_stammdaten.php`, beide aus derselben Vorlage. | O9c |
+| `ac-form` | [bleibt] Formular des Rettungsmittels — reiner **Skriptanker**. Das Skript sucht `form.ac-form`, um Rollen- und Fähigkeitshaken zur gewählten Art passend ein- und auszublenden; gestaltet wird nichts. Steht seit O8a in `einstellungen.php` (bis S9/AP5b auch in `admin_stammdaten.php`, beide aus derselben Vorlage). | O9c |
 | `vehkind-radio` | [bleibt] Die beiden Radios „luftgebunden / bodengebunden" — Skriptanker desselben Skripts. | O9c |
 | `rollehaken` | [bleibt] Ein einzelner Rollenhaken — Skriptanker (`lab.dataset.kind` entscheidet, ob er zur Art passt). Die 44-px-Zeile kommt aus `label:has(> input[type=checkbox])`. | O9c |
 | `rollen-zeile` | [bleibt] Der `.feld`-Block um die Rollenhaken — Skriptanker, damit die ganze Zeile verschwindet, solange keine Art gewählt ist. Gestaltet wird er als `.feld`. | O9c |
@@ -142,3 +142,8 @@ im selben Paket hier ein, nicht später.
 | `warnzeile` | Hervorhebung einer blockierten Migrationszeile. Ersatzlos: Der Status steht als Plakette in der Zeile (`blockiert`, Ton rot), und die Zeile ist keine Tabellenzeile mehr. | O11 |
 | `loeschhinweis` | „Löscht Daten:" an einer Migrationszeile → Teil der Kleinzeile der `.zeile`. | O11 |
 | `sep` | Waagerechte Trennlinie zwischen den Abschnitten der Wartungsseite. Ersatzlos: Die Abschnitte sind Karten, und Karten trennen sich selbst. Damit fällt auch die Elementregel für `hr` — es gibt in der ganzen Anwendung keines mehr. | O11 |
+| `loc-suggest` | Trefferliste unter dem Ortsfeld → `.vorschlaege` (`Design.md` 9.28, Baustein `assets/vorschlagsliste.js`). Sie stand im Fluss und schob beim Tippen alles darunter weg; die neue schwebt. Ihre Zeilen hatten keine Bedienhöhe — die neue ist `--knopf` hoch. | S9/AP1 |
+| `rmlist` | Trefferliste der weiteren Rettungsmittel → `.vorschlaege`, derselbe Baustein. Sie übernahm auf `click` gegen einen 150-ms-Blur-Aufschub und verlor damit jeden Klick, der länger dauerte (Backlog Nr. 102); der Baustein übernimmt auf `mousedown`. | S9/AP1 |
+| `rmopt` | Eine Zeile dieser Liste → `.vorschlag`. | S9/AP1 |
+| `rmneu` | Die freie Eingabe am Ende dieser Liste („… übernehmen") → `.vorschlag-neu`. Damit ist zugleich die offene Frage aus `ohne-regel.md` beantwortet: Ja, sie hebt sich ab — sie ist eine Handlung, kein Datensatz, und trägt Orange und Kopfschrift. | S9/AP1 |
+

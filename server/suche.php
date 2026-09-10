@@ -251,9 +251,16 @@ ui_seite_start(['titel' => 'Suche']);
 
     <div class="meldung meldung-info" id="lockbanner" role="status" hidden>
       <?= ui_symbol('schloss', 'symbol-gross') ?>
+      <?php /* DIE AUFZAEHLUNG IST EINE ZUSAGE, kein Zierrat: Wer sie liest,
+               schliesst daraus, was OHNE Entsperren durchsucht wird. Seit
+               S9/AP7 gehoeren die Notizen dazu — vorher waren sie das einzige
+               Freitextfeld, das auch gesperrt gefunden wurde, und dieser Satz
+               sagte nichts davon. Wer hier ein Feld ergaenzt, ergaenzt es
+               auch in `einsatz.php` und `index.php`; die drei Saetze nennen
+               je das, was auf IHRER Seite verborgen bleibt. */ ?>
       <p>Geschützte Angaben sind gesperrt — Einsatznummer, Name, Geburtsdatum,
-         Alter, Diagnose und Einsatzort werden nicht durchsucht und bleiben in
-         der Trefferliste verborgen.</p>
+         Alter, Diagnose, Einsatzort und Notizen werden nicht durchsucht und
+         bleiben in der Trefferliste verborgen.</p>
       <div class="meldung-aktion">
         <?= ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
                       'typ' => 'button', 'attr' => ' id="unlockbtn"']) ?>
@@ -354,7 +361,11 @@ ui_seite_start(['titel' => 'Suche']);
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Artsymbole für die Spalte „Art" der Einsatztabelle — dieselben wie in
          der Tagesleiste, aus dt_art_symbole() (Befund P9). */ ?>
-<script>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
+<script>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+        /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
+           zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
+           zeichnet. Dieselbe Quelle wie auf der Serverseite. */
+        const TYP_SYMBOLE = <?= json_js(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <?php /* Boolesche Freitextsuche (Baustein B10, Web 7.0.0). Eigene Datei, weil
@@ -420,6 +431,11 @@ const TRANSPORT_OPTIONEN = <?php
    aus CREW_ROLES (db.php, E4); die Kurznamen der fuenf Flugrollen sind
    historisch (c1…c5) und bleiben, weil sie in verschickten Links stehen. */
 const CREW_ROLLEN = <?= json_js(array_keys(CREW_ROLES)) ?>;
+<?php /* DIE VERSCHLUESSELTEN KATALOGFELDER (S9/AP7). Der Suchindex liefert sie
+         nicht mehr als Spalte; der Heuhaufen holt sie aus dem entschluesselten
+         `_pat`. Die Liste kommt aus dem Katalog, damit ein zweites solches
+         Feld (S11: Zielklinik) von selbst durchsuchbar wird. */ ?>
+const PAT_KAT = <?= json_js(mf_pat_felder()) ?>;
 const CREW_FILTER = <?php
     /* Bis Web 5.10.0 standen die fuenf Filter einzeln im Katalog. Die
      * Zuordnung Rolle -> Kurzname steht jetzt hier, an EINER Stelle: Die
@@ -686,8 +702,8 @@ function inBereich(wert, von, bis) {
  */
 function baueHeuhaufen(m) {
   const teile = [
-    m.transport_dest, m.bw_unit, m.bw_info, m.other_ema, m.notes,
-    m.base, m.vehicle
+    m.transport_dest, m.bw_unit, m.bw_info, m.other_ema,
+    m.base, m.vehicle, m.vehicle_kurz
   ].concat(CREW_ROLLEN.map(r => m.crew[r])).concat(m.resources);
 
   if (m._pat) {
@@ -695,6 +711,16 @@ function baueHeuhaufen(m) {
     // Beschreibung Einsatzort liegt seit Web 3.3.0 im pat_blob und ist damit
     // erst nach dem Entsperren durchsuchbar — wie Diagnose und Einsatzort.
     if (m._pat.site_desc) { teile.push(m._pat.site_desc); }
+    /* NOTIZEN seit S9/AP7 ebenfalls im Blob — und damit erst nach dem
+       Entsperren durchsuchbar. Vorher standen sie als `m.notes` im Klartext
+       oben in dieser Liste und waren als einziges Freitextfeld OHNE Entsperren
+       zu finden; genau das war der Bruch, den AP7 schliesst. Wer die Notiz
+       jetzt sucht und nicht entsperrt hat, findet sie nicht — wie bei
+       Diagnose und Einsatzort. */
+    for (const col of Object.keys(PAT_KAT)) {
+      const wert = m._pat[PAT_KAT[col].blob];
+      if (wert != null) { teile.push(wert); }
+    }
     if (m._pat.loc && m._pat.loc.addr) { teile.push(m._pat.loc.addr); }
     // Geburtsdatum in beiden Schreibweisen, damit sowohl "1985-03-12" als
     // auch "12.03.1985" gefunden wird.

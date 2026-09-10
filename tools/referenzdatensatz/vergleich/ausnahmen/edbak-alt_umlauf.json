@@ -1,14 +1,14 @@
 {
   "name": "edbak-alt-umlauf",
-  "beschreibung": "Erwartete Abweichungen beim FORMATUEBERGREIFENDEN Umlauf: die einteilige Referenz mit Nutzlast 7 hinein, Containerfassung 4 mit Nutzlast 8 heraus (R11-Abnahme, S2/AP5). GEMESSEN am Referenzdatensatz nach R64/AP4: 287 743 Einzelvergleiche, 647 Abweichungen — die grosse Mehrheit sind Felder, die es in Nutzlast 7 GAR NICHT GAB (darunter seit Nutzlast 9 `geraet_art`, `geraet_modell` und `schnitte` an jedem Einsatz und jedem Segment), dazu die bekannte device_id-Regel und die Fassungsnummer selbst. Die Zahl 560 aus S2/AP5 gilt nicht mehr: Sie stammt aus der Zeit vor Nutzlast 9. KEINE davon betrifft einen Spurpunkt: Die 55 861 Punkte kommen unveraendert zurueck, und genau das soll dieser Lauf belegen. Jede Regel traegt die Zahl, mit der sie belegt ist. DIESE LISTE FAELLT MIT NADOKU 1.0 WEG, zusammen mit dem Altformat (Backlog Nr. 46) — dann gibt es nur noch den Lauf `--art edbak`.",
+  "beschreibung": "Erwartete Abweichungen beim FORMATUEBERGREIFENDEN Umlauf: die einteilige Referenz mit Nutzlast 7 hinein, Containerfassung 4 mit Nutzlast 10 heraus (R11-Abnahme, S2/AP5). GEMESSEN am Referenzdatensatz nach S9/AP4 (07.09.2026): 287 781 Einzelvergleiche, 653 Abweichungen — die grosse Mehrheit sind Felder, die es in Nutzlast 7 GAR NICHT GAB (darunter seit Nutzlast 9 `geraet_art`, `geraet_modell` und `schnitte` an jedem Einsatz und jedem Segment), dazu die bekannte device_id-Regel und die Fassungsnummer selbst. Die Zahl 560 aus S2/AP5 gilt nicht mehr: Sie stammt aus der Zeit vor Nutzlast 9. KEINE davon betrifft einen Spurpunkt: Die 55 861 Punkte kommen unveraendert zurueck, und genau das soll dieser Lauf belegen. Jede Regel traegt die Zahl, mit der sie belegt ist. DIESE LISTE FAELLT MIT NADOKU 1.0 WEG, zusammen mit dem Altformat (Backlog Nr. 46) — dann gibt es nur noch den Lauf `--art edbak`.",
   "regeln": [
     {
       "bereich": "kopf",
       "feld": "version",
       "art": "wert",
       "von": "7",
-      "nach": "9",
-      "begruendung": "GEMESSEN 1x. Die Nutzlastfassung steigt von 7 auf 9 — genau das ist der Zweck dieses Laufs. Bis Web 14.1.0 stand hier 8; mit Nutzlast 9 (Geraete-Momentaufnahme und Sperrvermerke, R64 / Backlog Nr. 63) schreibt edbak_build() eine 9. Die Regel steht auf 'von 7' und 'nach 9', weil die Altformat-Referenz eingefroren bleibt: Sie IST der Beleg dafuer, dass eine alte Datei noch einspielbar ist."
+      "nach": "10",
+      "begruendung": "GEMESSEN 1x. Die Nutzlastfassung steigt von 7 auf 10 — genau das ist der Zweck dieses Laufs. Die Zahl ist dreimal gewandert: bis Web 14.1.0 stand hier 8, mit Nutzlast 9 (Geraete-Momentaufnahme und Sperrvermerke, R64) eine 9, und seit Web 16.0.0 (Typ und Kurzname am Rettungsmittel, E-S9-09) eine 10. Die Regel steht auf 'von 7', weil die Altformat-Referenz eingefroren bleibt: Sie IST der Beleg dafuer, dass eine alte Datei noch einspielbar ist."
     },
     {
       "bereich": "missions",
@@ -64,6 +64,38 @@
       "feld": "schnitte",
       "art": "wert",
       "begruendung": "GEMESSEN 87x (04.09.2026, Stand vor der Referenz-Erneuerung in AP4). Die Liste der Sperrvermerke gibt es erst seit Nutzlast 9 (R64 / Backlog Nr. 63); die eingefrorene Altformat-Referenz vom 24.08.2026 traegt Nutzlast 7 und kennt den Schluessel nicht. Der Umlauf schreibt ihn an JEDEN Einsatz, leer erlaubt — deshalb 'None' -> '[]' an allen 87. Die Regel nennt bewusst kein 'nach': Sobald der Referenzbestand einen Schnitt traegt (E-R64-16), steht an einem Einsatz eine nicht leere Liste, und die Regel muss beides decken. ZAHL IN AP4 NEU MESSEN (dann 88 Einsaetze)."
+    },
+    {
+      "bereich": "kopf",
+      "feld": "typ",
+      "art": "zusaetzlich",
+      "begruendung": "GEMESSEN 3x (je Rettungsmittel der Altformat-Referenz einmal). Nutzlast 7 kennt das Feld nicht — `vehicles.typ` gibt es erst seit Web 16.0.0 (E-S9-09). Der Rueckweg setzt es auf 'standard', und das ist die richtige Aussage: Jedes Rettungsmittel aus der Zeit davor WAR ein Standard-Rettungsmittel; die Migration `2026_09_07_rettungsmittel_typ` fuellt den Bestand mit derselben Vorgabe. Die Zahl 3 steigt auf 6, sobald die Altformat-Referenz einmal neu erzeugt wird — sie ist bewusst eingefroren und traegt die drei Rettungsmittel von damals."
+    },
+    {
+      "bereich": "kopf",
+      "feld": "kurz",
+      "art": "zusaetzlich",
+      "begruendung": "GEMESSEN 3x. Wie `typ`: neu in Nutzlast 10. Der Wert bleibt NULL — ein Kurzname ist freiwillig, und eine alte Datei kann keinen mitbringen. Der Vergleich meldet das Feld trotzdem, weil es in der einen Datei fehlt und in der anderen steht; das ist der Unterschied, den diese Regel erklaert."
+    },
+    {
+      "bereich": "missions",
+      "feld": "notes",
+      "art": "wert",
+      "nach": "None",
+      "begruendung": "GEMESSEN 143x (71 Einsaetze, je zwei Haelften, dazu einer aus dem Papierkorb). S9/AP7, Nutzlast 11: Die Notiz des Einsatzes steht nicht mehr in der Klartextspalte `notes`, sondern als Schluessel `notes` im verschluesselten `pat`-Block. Der Umlauf zeigt deshalb ZWEI Abweichungen je Einsatz — die Spalte wird leer, der Blobschluessel kommt hinzu. GENAU DAS IST DER BELEG, dass der Text nicht verlorengeht, sondern umzieht: Beide Haelften tragen denselben Wortlaut. Die Referenzdatei stammt vom 07.09.2026 und beschreibt den alten Stand; sie wird NICHT neu erzeugt, weil eine frische Referenz jede echte Abweichung in den uebrigen 287 699 Vergleichen mit zudecken wuerde."
+    },
+    {
+      "bereich": "missions",
+      "feld": "notes",
+      "art": "zusaetzlich",
+      "begruendung": "GEMESSEN 143x (71 Einsaetze, je zwei Haelften, dazu einer aus dem Papierkorb). S9/AP7, Nutzlast 11: Die Notiz des Einsatzes steht nicht mehr in der Klartextspalte `notes`, sondern als Schluessel `notes` im verschluesselten `pat`-Block. Der Umlauf zeigt deshalb ZWEI Abweichungen je Einsatz — die Spalte wird leer, der Blobschluessel kommt hinzu. GENAU DAS IST DER BELEG, dass der Text nicht verlorengeht, sondern umzieht: Beide Haelften tragen denselben Wortlaut. Die Referenzdatei stammt vom 07.09.2026 und beschreibt den alten Stand; sie wird NICHT neu erzeugt, weil eine frische Referenz jede echte Abweichung in den uebrigen 287 699 Vergleichen mit zudecken wuerde."
+    },
+    {
+      "bereich": "kopf",
+      "feld": "version",
+      "art": "wert",
+      "nach": "11",
+      "begruendung": "GEMESSEN 1x. S9/AP7: Die Nutzlastnummer steigt von 10 auf 11, weil die Notiz des Einsatzes in den verschluesselten pat-Block gewandert ist. Eine Installation vor Web 19 suchte sie in der Spalte, faende dort NULL und meldete trotzdem Erfolg — genau dieser stille Schaden ist der Zweck der Zahl. Die Referenzdatei vom 07.09.2026 traegt noch die 10."
     }
   ]
 }

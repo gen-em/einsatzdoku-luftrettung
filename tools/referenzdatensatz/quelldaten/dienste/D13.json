@@ -142,8 +142,7 @@
           "ELW Talwang 1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Synkope unklarer Genese",
@@ -156,7 +155,8 @@
           "lon": 10.24989
         },
         "site_desc": "Supermarkt, Kassenbereich",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -229,8 +229,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Zufahrt eng, RTW musste am Ortsrand halten."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Pneumonie mit respiratorischer Insuffizienz",
@@ -243,7 +242,8 @@
           "lon": 10.25078
         },
         "site_desc": "Pflegeheim, Zimmer 14",
-        "start": null
+        "start": null,
+        "notes": "Zufahrt eng, RTW musste am Ortsrand halten."
       },
       "abdeckung": []
     },
@@ -319,8 +319,7 @@
           "RTW Talwang 76/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Nachforderung des Rettungshubschraubers geprüft, wegen Sichtflug verworfen."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Akutes Koronarsyndrom mit ST-Hebung",
@@ -333,7 +332,8 @@
           "lon": 10.25111
         },
         "site_desc": "Mehrfamilienhaus, 3. OG ohne Aufzug",
-        "start": null
+        "start": null,
+        "notes": "Nachforderung des Rettungshubschraubers geprüft, wegen Sichtflug verworfen."
       },
       "abdeckung": []
     },
@@ -394,8 +394,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Nachforderung des Rettungshubschraubers geprüft, wegen Sichtflug verworfen."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Hypoglykämie",
@@ -408,7 +407,8 @@
           "lon": 10.24727
         },
         "site_desc": "Werkstatt, hinter der Hebebühne",
-        "start": null
+        "start": null,
+        "notes": "Nachforderung des Rettungshubschraubers geprüft, wegen Sichtflug verworfen."
       },
       "abdeckung": []
     },
@@ -484,8 +484,7 @@
           "ELW Talwang 1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schlaganfall, Lyse-Fenster offen",
@@ -498,7 +497,8 @@
           "lon": 10.24732
         },
         "site_desc": "Wohnhaus, Bad",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -569,8 +569,7 @@
           "RTW Talwang 76/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Nachträglich aus der Exportdatei der Leitstelle übernommen; Transport bodengebunden durch den RTW, die Notärztin blieb am Einsatzort zurück."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Krampfanfall, postiktal orientiert",
@@ -583,7 +582,8 @@
           "lon": 10.411
         },
         "site_desc": "Straßenrand vor der Bushaltestelle",
-        "start": null
+        "start": null,
+        "notes": "Nachträglich aus der Exportdatei der Leitstelle übernommen; Transport bodengebunden durch den RTW, die Notärztin blieb am Einsatzort zurück."
       },
       "abdeckung": [
         "herkunft-import",

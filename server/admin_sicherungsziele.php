@@ -182,7 +182,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       'titel' => 'Backup-Ziele',
       'unter' => 'FTP-, FTPS- und SFTP-Gegenstellen, auf die Backups geschoben '
                . 'werden. Nicht zu verwechseln mit den Transportzielen unter '
-               . '<a href="admin_stammdaten.php">Stammdaten</a> — das sind Zielkliniken.',
+               . '<a href="einstellungen.php?t=standorte">Standorte</a> — das sind Zielkliniken.',
       'aktionen' => $schluesselDa && $tabelleDa
           ? (($aktiveZiele > 0
               ? ui_knopf(['text' => 'Jetzt versenden', 'symbol' => 'tausch',

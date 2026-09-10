@@ -591,6 +591,77 @@
       "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz benennt, WELCHES BILD zur Wahl steht — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Begruendung wie `logowahl-installation` fuer den Code (server/admin_installation.php); der Handbuch-Abschnitt „Installation“ (11.3) ist mit S8/AP3 entstanden und beschreibt dieselbe Bedienung."
     },
     {
+      "id": "spur-fachbegriff-code",
+      "datei": "server/spur_lib.php",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist. CLAUDE.md 4 nennt ihn namentlich: „Spuren nur über spur_lib.php“. Diese Datei IST der Fachbegriff: Ihre Meldungen („Spur-Blob laesst sich nicht entpacken“, „Index liegt ausserhalb der Spur“) beschreiben das Speicherformat und erreichen eine NutzerIn nur als Ausnahme, die etwas Kaputtes meldet — dort ist die praezise Bezeichnung richtiger als die freundliche."
+    },
+    {
+      "id": "spurteil-sicherungsformat",
+      "muster": "spur",
+      "klasse": "F",
+      "zeile": "Spurteil",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist. CLAUDE.md 4 nennt ihn namentlich: „Spuren nur über spur_lib.php“. „Spurteil“ ist der NAME DER DATEI im Sicherungsarchiv (docs/Backup-Format.md), nicht eine Beschreibung. Wer ein Archiv oeffnet, sieht ihn dort stehen; eine Meldung, die ihn anders nennt als das Verzeichnis, hilft niemandem beim Suchen. Das Backup-Format ist von E-S9-03 ausdruecklich ausgenommen."
+    },
+    {
+      "id": "spur-gpx-fachbegriff",
+      "datei": "server/tag_spuren.php",
+      "muster": "spur",
+      "klasse": "Homonym",
+      "zeile": "eine eigene Spur",
+      "begruendung": "Hier ist „Spur“ der Fachbegriff des GPX-FORMATS: Eine GPX-Datei enthaelt Tracks, und der Satz erklaert genau das — „jede Aufzeichnung bleibt darin eine eigene Spur“. Ein Kartenprogramm nennt sie so; die Anwendung waere die einzige, die es anders schriebe."
+    },
+        {
+      "id": "spur-fachdokument-technik",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/Technik.md beschreibt das Verfahren, nicht die Bedienung — E-S9-03 nennt sie ausdruecklich als ausgenommen. Das Handbuch dagegen ist umgestellt: `grep -c Spur docs/Handbuch.md` = 0 (vorher 41 Zeilen)."
+    },
+    {
+      "id": "spur-fachdokument-jsonvertrag",
+      "bereich": "c",
+      "datei": "docs/JSON-Vertrag.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/JSON-Vertrag.md ist ein Vertrag: Seine Namen stehen in Antworten, die Geraete lesen. E-S9-03 nennt ihn ausdruecklich als ausgenommen. Das Handbuch dagegen ist umgestellt: `grep -c Spur docs/Handbuch.md` = 0 (vorher 41 Zeilen)."
+    },
+    {
+      "id": "spur-fachdokument-backupformat",
+      "bereich": "c",
+      "datei": "docs/Backup-Format.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/Backup-Format.md beschreibt Dateinamen und Felder im Archiv („Spurteil“). E-S9-03 nennt es ausdruecklich als ausgenommen. Das Handbuch dagegen ist umgestellt: `grep -c Spur docs/Handbuch.md` = 0 (vorher 41 Zeilen)."
+    },
+    {
+      "id": "spur-fachdokument-exportformat",
+      "bereich": "c",
+      "datei": "docs/Export-Format.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/Export-Format.md nennt Tabellen und Spalten des Exports — dieselbe Begruendung wie beim Backup-Format. Das Handbuch dagegen ist umgestellt: `grep -c Spur docs/Handbuch.md` = 0 (vorher 41 Zeilen)."
+    },
+    {
+      "id": "spur-fachdokument-design",
+      "bereich": "c",
+      "datei": "docs/Design.md",
+      "muster": "spur",
+      "klasse": "F",
+      "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist; CLAUDE.md 4 nennt ihn namentlich. docs/Design.md nennt Zeichenklassen und Bausteine (`.geo-schild`, Spurfarben `--spur-1..8`), also Code, nicht Anzeige. Das Handbuch dagegen ist umgestellt: `grep -c Spur docs/Handbuch.md` = 0 (vorher 41 Zeilen)."
+    },
+    {
+      "id": "spur-handbuch-zitat-alt",
+      "bereich": "c",
+      "datei": "docs/Handbuch.md",
+      "muster": "spur",
+      "klasse": "C",
+      "zeile": "Bis dahin hie|„Spur · 852 Punkte",
+      "begruendung": "Ein ZITAT des alten Wortlauts, mit Versionsangabe: „Seit Web 15.9.0 steht keine Zahl mehr darin. Bis dahin hiess sie „Spur · 852 Punkte“ bzw. „Spur ausgeduennt · 113 von 443 Punkten“.“ Dieselbe Klasse wie bei `abflug` („Saetze mit Versionsangabe bleiben“): Wer nachliest, warum die Plakette heute anders heisst, braucht den alten Namen — sonst findet er die Stelle nicht wieder. Ohne dieses eine Zitat ist das Handbuch frei von „Spur“."
+    },
+    {
       "id": "handbuch-geraete-verlust-garmin",
       "datei": "docs/Handbuch.md",
       "von": "\\*\\*Uhr verloren\\? Sofort trennen\\.\\*\\*",

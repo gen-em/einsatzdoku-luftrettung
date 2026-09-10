@@ -107,7 +107,7 @@ $trashDays     = $zeigeListe ? trash_list_days($userId) : [];
 $trashMissions = $zeigeListe ? trash_list_missions($userId) : [];
 
 /* Meldung aus der Sitzung abholen — dieselbe Mechanik wie in
- * admin_stammdaten.php und einstellungen.php. Sie wird gebraucht, seit das
+ * einstellungen.php. Sie wird gebraucht, seit das
  * Zurueckholen eines Einsatzes abgelehnt werden kann (Backlog Nr. 33): Nach
  * einer Umleitung ist eine Variable weg, und eine Handlung, die nichts tut
  * und nichts sagt, ist die schlechteste von beidem. */
@@ -145,8 +145,9 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
         <?php foreach ($trashDays as $t):
               $tid = (int)$t['id'];
               $klein = [];
-              $klein[] = $t['vehicle_name'] !== null && $t['vehicle_name'] !== ''
-                       ? (string)$t['vehicle_name'] : 'ohne Rettungsmittel';
+              /* Kurzname, wenn einer gesetzt ist (Nr. 69) — die Kleinzeile ist
+                 eine Plakettenzeile und traegt drei Angaben nebeneinander. */
+              $klein[] = dt_rm_kurz($t) !== '' ? dt_rm_kurz($t) : 'ohne Rettungsmittel';
               $klein[] = (int)$t['einsaetze'] === 1
                        ? '1 Einsatz' : (int)$t['einsaetze'] . ' Einsätze';
               $klein[] = 'gelöscht am ' . fmt_local((string)$t['deleted_at'], 'd.m.Y H:i');
@@ -162,7 +163,8 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
           <?php ui_zeile([
               'text'  => dt_lesbar($t, true),
               'klein' => implode(' · ', $klein),
-              'plaketten' => ui_artzeichen($t['kind'] === null ? null : (string)$t['kind']),
+              'plaketten' => ui_artzeichen($t['kind'] === null ? null : (string)$t['kind'], '',
+                                           $t['vehicle_typ'] === null ? null : (string)$t['vehicle_typ']),
               'aktionen' => ui_zeilenaktionen([
                   'titel' => dt_lesbar($t, true),
                   'eintraege' => [

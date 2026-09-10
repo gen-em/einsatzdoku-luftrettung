@@ -185,8 +185,11 @@ declare(strict_types=1);
  *                                   unmaskiert ausgegeben und darf deshalb
  *                                   Auszeichnung enthalten (`&shy;`, `<br>`)
  *   'placeholder'
- *   'suggest_src'                   nur bei 'text': Quelle der <datalist>-
+ *   'suggest_src'                   nur bei 'text' und 'loc': Quelle der
  *                                   Vorschlaege; Freitext bleibt moeglich.
+ *                                   Seit S9/AP1 (E-S9-07) zeichnet sie
+ *                                   assets/vorschlagsliste.js unter dem Feld,
+ *                                   nicht mehr eine native <datalist>.
  *                                     'transport_dests'  Stammdaten-Tabelle
  *                                     'crew:<rolle>'     Besatzungs-Vorbelegungen
  *                                                        der Rolle (CREW_ROLES)
@@ -234,6 +237,21 @@ declare(strict_types=1);
  * unnoetig, sondern falsch: Ein Einsatz kann eine belegte Rolle tragen, die die
  * Art des Tages nicht vorsieht, und die muss sichtbar bleiben.
  */
+/* DER EINE SATZ AN DEN KLARTEXT-FREITEXTFELDERN (S9/AP7, E-S9-02, Nr. 132).
+ *
+ * Er steht an EINER Stelle und nicht viermal ausgeschrieben: Ein Satz, der an
+ * vier Feldern verschieden lautet, ist kein Versprechen mehr, sondern vier.
+ * Eine Variable und keine Konstante, weil diese Datei mehrfach `require`d wird
+ * und ein zweites `const` eine Warnung erzeugte — dieselbe Bauart wie
+ * `$mf_crew_kinder` darunter.
+ * Getragen wird er von `bw_info`, `other_ema`, den Besatzungs-Freitexten und —
+ * ausserhalb dieses Katalogs — vom Notizfeld des DIENSTTAGS (index.php).
+ *
+ * NICHT getragen wird er von `notes`: Die Notizen des Einsatzes sind seit
+ * Web 19.0.0 verschluesselt und tragen stattdessen das Schloss. Wer den
+ * Hinweis dort ergaenzt, sagt das Gegenteil der Wahrheit. */
+$mf_hinweis_klartext = 'Klartext — keine Patientendaten';
+
 $mf_crew_kinder = [];
 foreach (CREW_ROLES as $mf_code => $mf_rolle) {
     $mf_crew_kinder['crew_' . $mf_code] = [
@@ -249,6 +267,7 @@ foreach (CREW_ROLES as $mf_code => $mf_rolle) {
         'role_gate'   => $mf_code,
         'store'       => 'crew',
         'role_code'   => $mf_code,
+        'hinweis'     => $mf_hinweis_klartext,
     ];
 }
 
@@ -364,6 +383,13 @@ return [
                 'placeholder' => 'z. B. Klinikum Westried',
                 'suggest_src' => 'transport_dests',
                 'lat_col' => 'dest_lat', 'lon_col' => 'dest_lon',
+                /* PIN-KNOPF UND KARTE (S9/AP2, E-S9-06 d; PS-7). Ein per
+                 * Karte gewaehltes Ziel ist ein AD-HOC-WERT DIESES EINSATZES
+                 * und kein Stammdatensatz — die Koordinate wird am Einsatz
+                 * eingefroren (`dest_lat`/`dest_lon`), die Zielklinik-Liste
+                 * bleibt unberuehrt. Genau deshalb steht der Schluessel hier
+                 * im Katalog und nicht als Sonderfall im Formular. */
+                'ortswahl' => true,
                 /* Beschriftung des Suchfeldes daneben. Es hiess „Koordinaten
                  * (optional)" — was es einsammelt, sind aber laengst keine
                  * Zahlen mehr, sondern eine Adresse, ein Plus Code oder ein
@@ -394,6 +420,7 @@ return [
             ],
             'bw_info' => [
                 'label' => 'Namen / Infos', 'type' => 'text', 'max' => 190,
+                'hinweis' => $mf_hinweis_klartext,
             ],
         ],
     ],
@@ -430,6 +457,7 @@ return [
          * „Weitere Rettungsmittel" direkt darueber. */
         'label' => 'Weiterer Notarzt', 'type' => 'text', 'max' => 190,
         'gruppe' => 'mittel',
+        'hinweis' => $mf_hinweis_klartext,
     ],
 
     /* ---- Gruppe „Abweichende Besatzung" ----------------------------------- */
@@ -455,10 +483,24 @@ return [
         'children' => $mf_crew_kinder,
     ],
 
-    /* ---- Gruppe „Notizen" ------------------------------------------------- */
+    /* ---- Gruppe „Notizen" -------------------------------------------------
+     *
+     * 'store' => 'pat' (S9/AP7): Das Feld ist KEINE Spalte in `missions` mehr,
+     * sondern ein Schluessel im Ende-zu-Ende-verschluesselten `pat_blob`.
+     * mf_ist_spalte() nimmt es damit von selbst aus jedem SELECT, INSERT und
+     * UPDATE — dieselbe Mechanik, die seit Web 6.0.0 die Besatzung aus
+     * `missions` heraushaelt ('store' => 'crew').
+     *
+     * DER PLATZHALTER IST WEG. Er lautete „Freitext (keine Patientendaten!)"
+     * und war die Notbremse dafuer, dass hier Klartext auf dem Server landete.
+     * Mit der Verschluesselung ist die Warnung gegenstandslos — und sie
+     * stuende der Sache im Weg: In die Notizen GEHOERT, was zum Einsatz zu
+     * sagen ist. Die Spalte `missions.notes` bleibt NULL-faehig stehen, bis
+     * P8 sie entfernt (R60).
+     */
     'notes' => [
         'label' => 'Notizen', 'type' => 'textarea', 'max' => 2000,
         'gruppe' => 'notizen',
-        'placeholder' => 'Freitext (keine Patientendaten!)',
+        'store' => 'pat',
     ],
 ];

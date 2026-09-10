@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * vollstaendig — sie nennt, was diese Anwendung nachweislich braucht und
      * was ein Hoster tatsaechlich abschalten kann. */
     foreach (['zip' => 'Backups sind ZIP-Dateien (ext/zip, Klasse ZipArchive)',
-              'zlib' => 'Spuren werden komprimiert gespeichert (ext/zlib)',
+              'zlib' => 'GPS-Daten werden komprimiert gespeichert (ext/zlib)',
               'openssl' => 'Zufall und Pruefsummen (ext/openssl)',
               'mbstring' => 'Texte in UTF-8 (ext/mbstring)'] as $erw => $wofuer) {
         if (!extension_loaded($erw)) {

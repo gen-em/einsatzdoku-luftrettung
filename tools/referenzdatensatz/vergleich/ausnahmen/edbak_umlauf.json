@@ -1,6 +1,6 @@
 {
   "name": "edbak-umlauf",
-  "beschreibung": "Erwartete Abweichungen beim Umlauf Backup -> frisches Konto -> Backup. SEIT S2/AP5 IN CONTAINERFASSUNG 4, hinein wie heraus: GEMESSEN am Referenzdatensatz nach R64/AP4 (88 Einsaetze / 5 im Papierkorb, 100 Ruhesegmente / 5, 16 Diensttage / 1, 55 861 Spurpunkte in 182 Spuren, 1 Sperrvermerk): 287 713 Einzelvergleiche, 16 Abweichungen, alle derselben Ursache. MIT NUTZLAST 9 IST DIE LISTE NICHT GEWACHSEN: Der Sperrvermerk und die Momentaufnahme kommen unveraendert zurueck, und der Bestand von AP4 zeigt sie erstmals an einem echten Fall. Vor AP4 stand dieser Lauf auf 88 unerklaerten Abweichungen -- 87mal `missions.schnitte` None -> [] und einmal die Fassung 8 -> 9; beide waren die Folge einer Referenz, die aelter war als der Code, und sind mit der Erneuerung verschwunden. Eine Ausnahmeregel dafuer waere ein Filter gewesen. WARUM DIE ZAHLEN GEFALLEN SIND (286 739 -> 252 882 Einzelvergleiche): Die Punkte werden nicht mehr als Fuenftupel je Punkt verglichen, sondern als dekodierte Spur — der Vergleich zaehlt dieselben Punkte anders. Die Zahl der Punkte selbst ist unveraendert; sie steht oben. DER FORMATUEBERGREIFENDE LAUF (Altformat hinein, Fassung 4 heraus) hat eine EIGENE Liste: edbak-alt_umlauf.json. Jede Regel unten traegt die Zahl, mit der sie belegt ist. NICHT MEHR NOETIG seit Web 8.0.0: eine Regel fuer `deleted_at`. Der Loeschzeitpunkt entsteht beim Einspielen neu (E-S1-03), aber die Normalisierung ersetzt ihn durch eine Zeitmarke und erhaelt dabei die Unterscheidung leer/gesetzt — der ZUSTAND wird also verglichen, nicht der Zeitpunkt.",
+  "beschreibung": "Erwartete Abweichungen beim Umlauf Backup -> frisches Konto -> Backup. SEIT S2/AP5 IN CONTAINERFASSUNG 4, hinein wie heraus: GEMESSEN am Referenzdatensatz nach S9/AP4, 07.09.2026 (88 Einsaetze / 5 im Papierkorb, 100 Ruhesegmente / 5, 16 Diensttage / 1, 55 861 Spurpunkte in 182 Spuren, 1 Sperrvermerk, SECHS Rettungsmittel statt drei -- je eines der vier Typen, zwei davon ohne Standort): 287 771 Einzelvergleiche, 16 Abweichungen, alle derselben Ursache. MIT NUTZLAST 10 IST DIE LISTE EBENFALLS NICHT GEWACHSEN: Typ und Kurzname ueberstehen den Umlauf unveraendert, und dass sie es tun, ist der Grund, warum hier keine Regel dafuer steht -- eine Ausnahme dafuer waere ein Filter. WAS DIESER LAUF BELEGT UND WAS NICHT: Am RETTUNGSMITTEL sind alle vier Typen und beide Kurznamen belegt (sechs Eintraege, zwei ohne Standort). Am DIENSTTAG belegt er nur `vehicle_typ = 'standard'` (16 von 16) und `vehicle_kurz = NULL` (16 von 16): Alle 16 Dienste des Referenzbestands fahren ein Standard-Rettungsmittel, und keines davon hat einen Kurznamen. Dass ein Bergwacht-Tag mit Kurznamen den Weg ebenfalls uebersteht, belegt NICHT dieser Lauf, sondern der Klickprobe-Weg `ap4-zuordnen-friert-ein` -- er ordnet zu, liest Leiste und Tooltip und stellt zurueck. Wer die Diensttage des Referenzbestands eines Tages auf mehrere Typen verteilt, kann diesen Satz streichen. MIT NUTZLAST 9 IST DIE LISTE NICHT GEWACHSEN: Der Sperrvermerk und die Momentaufnahme kommen unveraendert zurueck, und der Bestand von AP4 zeigt sie erstmals an einem echten Fall. Vor AP4 stand dieser Lauf auf 88 unerklaerten Abweichungen -- 87mal `missions.schnitte` None -> [] und einmal die Fassung 8 -> 9; beide waren die Folge einer Referenz, die aelter war als der Code, und sind mit der Erneuerung verschwunden. Eine Ausnahmeregel dafuer waere ein Filter gewesen. WARUM DIE ZAHLEN GEFALLEN SIND (286 739 -> 252 882 Einzelvergleiche): Die Punkte werden nicht mehr als Fuenftupel je Punkt verglichen, sondern als dekodierte Spur — der Vergleich zaehlt dieselben Punkte anders. Die Zahl der Punkte selbst ist unveraendert; sie steht oben. DER FORMATUEBERGREIFENDE LAUF (Altformat hinein, Fassung 4 heraus) hat eine EIGENE Liste: edbak-alt_umlauf.json. Jede Regel unten traegt die Zahl, mit der sie belegt ist. NICHT MEHR NOETIG seit Web 8.0.0: eine Regel fuer `deleted_at`. Der Loeschzeitpunkt entsteht beim Einspielen neu (E-S1-03), aber die Normalisierung ersetzt ihn durch eine Zeitmarke und erhaelt dabei die Unterscheidung leer/gesetzt — der ZUSTAND wird also verglichen, nicht der Zeitpunkt.",
   "regeln": [
     {
       "bereich": "days",
@@ -8,6 +8,26 @@
       "art": "wert",
       "nach": "None",
       "begruendung": "GEMESSEN 16x (je Diensttag einmal): days[].refs[].device_id wird im frischen Konto null. Geraete stehen in keinem Backup — sie tragen einen API-Schluessel, und ein mitgesichertes Geraet waere ein mitgesicherter Zugang. Die Dienstkennung day_ref selbst bleibt WOERTLICH erhalten; nur ihre Zuordnung zu einem Geraet nicht. Das ist gewollt: Nach einer Wiederherstellung muss jede Uhr neu gekoppelt werden, und die day_refs verhindern trotzdem, dass ein spaeter eintreffender Upload den Diensttag erneut anlegt."
+    },
+    {
+      "bereich": "missions",
+      "feld": "notes",
+      "art": "wert",
+      "nach": "None",
+      "begruendung": "GEMESSEN 143x (71 Einsaetze, je zwei Haelften, dazu einer aus dem Papierkorb). S9/AP7, Nutzlast 11: Die Notiz des Einsatzes steht nicht mehr in der Klartextspalte `notes`, sondern als Schluessel `notes` im verschluesselten `pat`-Block. Der Umlauf zeigt deshalb ZWEI Abweichungen je Einsatz — die Spalte wird leer, der Blobschluessel kommt hinzu. GENAU DAS IST DER BELEG, dass der Text nicht verlorengeht, sondern umzieht: Beide Haelften tragen denselben Wortlaut. Die Referenzdatei stammt vom 07.09.2026 und beschreibt den alten Stand; sie wird NICHT neu erzeugt, weil eine frische Referenz jede echte Abweichung in den uebrigen 287 699 Vergleichen mit zudecken wuerde."
+    },
+    {
+      "bereich": "missions",
+      "feld": "notes",
+      "art": "zusaetzlich",
+      "begruendung": "GEMESSEN 143x (71 Einsaetze, je zwei Haelften, dazu einer aus dem Papierkorb). S9/AP7, Nutzlast 11: Die Notiz des Einsatzes steht nicht mehr in der Klartextspalte `notes`, sondern als Schluessel `notes` im verschluesselten `pat`-Block. Der Umlauf zeigt deshalb ZWEI Abweichungen je Einsatz — die Spalte wird leer, der Blobschluessel kommt hinzu. GENAU DAS IST DER BELEG, dass der Text nicht verlorengeht, sondern umzieht: Beide Haelften tragen denselben Wortlaut. Die Referenzdatei stammt vom 07.09.2026 und beschreibt den alten Stand; sie wird NICHT neu erzeugt, weil eine frische Referenz jede echte Abweichung in den uebrigen 287 699 Vergleichen mit zudecken wuerde."
+    },
+    {
+      "bereich": "kopf",
+      "feld": "version",
+      "art": "wert",
+      "nach": "11",
+      "begruendung": "GEMESSEN 1x. S9/AP7: Die Nutzlastnummer steigt von 10 auf 11, weil die Notiz des Einsatzes in den verschluesselten pat-Block gewandert ist. Eine Installation vor Web 19 suchte sie in der Spalte, faende dort NULL und meldete trotzdem Erfolg — genau dieser stille Schaden ist der Zweck der Zahl. Die Referenzdatei vom 07.09.2026 traegt noch die 10."
     }
   ]
 }

@@ -2863,6 +2863,22 @@ declare(strict_types=1);
  *          die Anwendung. Keine Migration — und das ist hier die Pointe: Was
  *          fehlt, ist eine ZEILE IM REGISTER, und die holt der Knopf nach.
  */
+/* HIER TREFFEN ZWEI ZWEIGE AUFEINANDER (08.09.2026).
+ *
+ * Schritt 9a (Sofortpaket Sicherheit) und Schritt 8 (S9) sind nach Web 15.5.2
+ * PARALLEL gelaufen — der Beschluss vom 07.09.2026 hat sie ausdruecklich
+ * nebeneinander gestellt, weil sie sich in keiner Datei beruehren. Beide
+ * haben danach weitergezaehlt, und beide haben 15.6.0 vergeben.
+ *
+ * 9a ist zuerst auf `main` und damit ausgeliefert; S9 hat deshalb
+ * umnummeriert. Was in aelteren Dokumenten dieses Zweiges als 15.6.0, 15.6.1,
+ * 15.7.0 oder 15.8.0 stand, heisst jetzt 15.7.0, 15.7.1, 15.8.0 und 15.9.0.
+ * Die Erzaehlung darunter steht in der Reihenfolge der Nummern, nicht in der
+ * Reihenfolge, in der sie geschrieben wurde.
+ *
+ * DIE LEHRE, falls wieder zwei Schritte parallel laufen: Eine Nummer ist
+ * nicht frei, weil sie im eigenen Zweig frei ist.
+ */
 /* 15.6.0  SOFORTPAKET SICHERHEIT, WEB-TEIL (Rahmenplan Schritt 9a, R78).
  *          Elf Punkte aus dem Krypto-Review, je einer ein Commit, einzeln
  *          ruecknehmbar. NEBENNUMMER, weil neue Regeln und ein neues
@@ -2918,4 +2934,1002 @@ declare(strict_types=1);
  *          KEINE MIGRATION. Was Konten betrifft, zieht sich still nach: Die
  *          Rundenzahl beim naechsten Anmelden, alles andere gilt sofort.
  */
-const WEB_VERSION = '15.6.0';
+/* 15.7.0  EINE VORSCHLAGSLISTE STATT DREIER UND EINER VIERTEN VOM BROWSER
+ *          (S9/AP1, E-S9-07 und E-S9-08; Backlog Nr. 68, 102, 106).
+ *
+ *          Unter einem Feld, das Vorschlaege macht, lag bisher eine von drei
+ *          Fassungen — und am Transportziel zwei davon uebereinander: die
+ *          eigene Liste des Ortsfelds und die native `<datalist>` des
+ *          Browsers, die dieser UEBER dem Feld zeichnet. Auf dem Handy zeigte
+ *          die native oft gar nichts; an den Besatzungsfeldern war sie die
+ *          einzige Quelle und damit dort blind. Jetzt gibt es
+ *          `assets/vorschlagsliste.js` — eine Liste, mit Gruppen
+ *          („Zielkliniken" ueber „Adressen"), Symbol und Herkunftszeile je
+ *          Eintrag, Pfeiltasten, Enter und Escape.
+ *
+ *          UND SIE UEBERNIMMT AUF `mousedown`. Das ist Nr. 102: Die alte
+ *          Liste der weiteren Rettungsmittel wartete auf `click`, das Feld
+ *          versteckte sie 150 ms nach `blur` — wer die Maus laenger haelt,
+ *          bekommt kein `click`. Gemessen mit dem neuen `tools/klickprobe/`
+ *          bei 300 ms gehaltener Maus: vorher 0 von 3 Uebernahmen, nachher
+ *          3 von 3.
+ *
+ *          NEBENNUMMER, weil sich das VERHALTEN sichtbar aendert — eine neue
+ *          Liste, eine neue Bedienung, ein neues Pruefmittel —, aber kein Weg
+ *          durch die Anwendung ein anderer wird und keine Spalte sich regt.
+ *          Keine Migration.
+ */
+/* 15.7.1  DIE VORSCHLAGSLISTE LAG HINTER DER SPEICHERN-LEISTE (S9/AP1).
+ *          Gemeldet vom Auftraggeber am Bild, nicht von einem Pruefmittel.
+ *          Die Liste stand auf `z-index:20` — dem Wert der alten `.rmlist`,
+ *          die als einzige der drei Vorgaengerinnen ueberhaupt schwebte. Die
+ *          klebende Speichern-Leiste liegt auf 30 und deckte damit genau die
+ *          untersten Trefferzeilen zu: gemessen 61 px Ueberlappung, und
+ *          `elementFromPoint` traf in der Schnittflaeche die Leiste.
+ *
+ *          Betroffen ist die Zeile, zu der man scrollt — je weiter unten das
+ *          Feld steht, desto mehr Liste liegt darunter. Ein Bild zeigt das
+ *          nur, wenn die Scrollposition zufaellig passt; deshalb misst die
+ *          Klickprobe es jetzt in beide Richtungen (`elementFromPoint` in der
+ *          Schnittflaeche, und die Kopfleiste muss ueber der Liste bleiben).
+ *
+ *          Ebene jetzt 35: ueber der Speichern-Leiste (30), unter der
+ *          Kopfleiste (40) — eine Vorschlagsliste, die ueber die Kopfleiste
+ *          malt, verdeckt den Weg aus der Seite heraus.
+ *
+ *          KORREKTURNUMMER: ein Zahlenwert, kein neues Verhalten. Keine
+ *          Migration.
+ */
+/* 15.8.0  EINE ADRESSE STATT ZWEIER, UND ZWEI SCHALTER DAVOR (S9/AP2).
+ *          Die Anschrift des Adressdienstes stand zweimal fest im
+ *          Auslieferungsstand — `assets/ortsfeld.js` fuer die Suche,
+ *          `assets/ortswahl.js` fuer die Umkehrsuche. Wer sie aendern wollte,
+ *          musste den Code aendern; wer sie gar nicht wollte, konnte nichts
+ *          tun. Beides ist vorbei: `assets/geocoder.js` ist der eine Weg nach
+ *          draussen (`suche`, `umkehr`, `an`), `server/geocoder_lib.php` die
+ *          eine Quelle der Einstellungen, und im Auslieferungsstand der
+ *          Browserdateien steht der Name des Dienstes nun kein einziges Mal
+ *          (`grep -rn komoot server/assets/` = 0).
+ *
+ *          ZWEI SCHALTER, WEIL ES ZWEI ENTSCHEIDUNGEN SIND. Die BetreiberIn
+ *          entscheidet fuer die Installation (Betrieb -> Servereinstellungen,
+ *          Karte „Adresssuche", dazu das Feld „Dienst" — wer einen eigenen
+ *          Photon betreibt, traegt ihn dort ein, und die Anfragen mit dem
+ *          Einsatzort verlassen das eigene Haus nicht mehr). Die NutzerIn
+ *          entscheidet fuer ihr Konto (Einstellungen -> Profil, Karte
+ *          „Datenschutz"). Die Installation ist die Obergrenze: Ist sie aus,
+ *          steht der Kontoschalter ausgegraut da und sagt, wer ihn
+ *          abgeschaltet hat. Aus heisst wirklich aus — gemessen mit der
+ *          Klickprobe am Netzwerkprotokoll: an 2 Anfragen an den Dienst,
+ *          aus 0, bei Tippen, Kartenwahl und Uebernehmen.
+ *
+ *          DER KARTENDIALOG IST JETZT UEBERALL DERSELBE und kann mehr: ein
+ *          Suchfeld im Kopf (ein Treffer setzt das Kreuz und uebernimmt
+ *          nichts), die aufgezeichnete Spur des Einsatzes als Linie mit
+ *          Start- und Endpunkt, und bei leerem Ortsfeld faehrt die Karte auf
+ *          diese Spur. Den Pin-Knopf tragen jetzt fuenf Felder statt zweier:
+ *          Einsatzort, manueller Abfahrtort, Transportziel und die
+ *          Lagefelder der Standorte in Konto- und Systemverwaltung — Backlog
+ *          Nr. 70 („Karte fuer Standorte") war genau das fehlende Drittel.
+ *
+ *          NEBENNUMMER MIT MIGRATION: `users.adresssuche` kommt hinzu
+ *          (`2026_09_07_adresssuche_konto`). Nach dem Deploy muss eine
+ *          Administratorin `update.php` aufrufen; bis dahin gilt fuer jedes
+ *          Konto die Vorgabe „an", und die Anwendung laeuft weiter — beide
+ *          Leser vertragen die fehlende Spalte.
+ */
+/* 15.9.0  DIE KARTE WIRD LEISER, DIE PFEILE ZEIGEN WIEDER HIN (S9/AP3).
+ *          Vier Dinge auf einmal, alle an derselben Karte und denselben
+ *          Woertern.
+ *
+ *          KLEINERE ZEICHEN (E-S9-12, Mockup M-S9-01 V1). Der Farbring war
+ *          bisher ein zweiter und dritter Rahmen AUSSERHALB des dunkelblauen
+ *          Randes; ein Standort mit Doppelring mass dadurch 60 px und deckte
+ *          auf der Handykarte mehr als ein Drittel der Hoehe. Jetzt ERSETZT
+ *          der Farbrand den dunkelblauen: nachgemessen 32 px ohne
+ *          Aufzeichnung, 32 mit Start oder Ende, 38 mit beidem, Einsatzort
+ *          28, Ringpunkt 14 und 20. Aussen liegt am Schild immer 1 px Schnee,
+ *          damit Blau nicht auf Gruen stoesst. Token `--geo-schild` 36 -> 30,
+ *          `--geo-kreis` 32 -> 28; `geo.js` zieht seine Zahlen nach, wie sein
+ *          Kopfkommentar es seit je verlangt.
+ *
+ *          DIE RICHTUNGSPFEILE DREHTEN SICH NIE (Backlog Nr. 72). `geo.js`
+ *          setzte die Laufrichtung als `transform:rotate()` auf ein
+ *          Inline-<span> — und dort wirkt `transform` nicht. Alle Pfeile
+ *          zeigten nach Norden, und auf Nord-Sued-Abschnitten sah das richtig
+ *          aus. Die Winkelrechnung war die ganze Zeit korrekt. Gemessen an
+ *          der Bildschirmmatrix des SVG: vorher a=0,833 b=0 c=0 d=0,833 bei
+ *          behaupteten 90 Grad, nachher 12 von 12 Pfeilen in 30-Grad-
+ *          Schritten auf 0,1 Grad genau. Derselbe Fehler steckte drei Zeilen
+ *          darueber im Punkt des Abfahrtorts (Nr. 162, neu aufgenommen): Er
+ *          mass 4 x 18 px statt 12 x 12, und die Spurfarbe des Einsatzes lag
+ *          in einem 0 px breiten Inhaltskasten.
+ *
+ *          WINDENKACHELN NACH FAEHIGKEIT (E-S9-04, Nr. 104). Sie erschienen
+ *          nur, wenn im Zeitraum tatsaechlich eine Winde geflogen wurde —
+ *          damit war „null Windeneinsaetze" von „Winde nicht eingerichtet"
+ *          nicht zu unterscheiden. Das eine ist eine Aussage ueber den
+ *          Dienst, das andere eine ueber die Stammdaten. `api/range.php`
+ *          liefert jetzt `faehigkeiten`, und die Kacheln stehen, sobald ein
+ *          Luft-Diensttag die Winde traegt — auch mit dem Wert 0.
+ *
+ *          „SPUR" HEISST FUER DIE NUTZERIN „GPS-DATEN" (E-S9-03, Nr. 110).
+ *          72 sichtbare Zeichenketten in 18 Dateien und 41 Zeilen im
+ *          Handbuch. Fachbegriff bleibt er, wo er einer ist: im Code, in
+ *          Technik.md, im JSON-Vertrag und im Sicherungsformat. Die Wortliste
+ *          bekommt dafuer eine Regel und sechs begruendete Ausnahmen.
+ *
+ *          DREI NEUE ZEICHEN (E-S9-13): Bergwacht, Veranstaltung, Sonstiges;
+ *          Vorrat 49 -> 52. `dt_art_symbol()` nimmt den Diensttag-Typ schon
+ *          entgegen — im Datenmodell steht er erst mit AP4.
+ *
+ *          NEBENNUMMER: neue Funktionen, ein neuer Antwortschluessel, neue
+ *          Zeichen, geaenderte Texte — aber kein Weg durch die Anwendung wird
+ *          ein anderer und keine Spalte regt sich. Keine Migration.
+ *
+ * 16.0.0 GIBT DEM RETTUNGSMITTEL EINE ZWEITE ACHSE (S9/AP4, E-S9-09).
+ *
+ * Bis hierher hatte ein Rettungsmittel genau eine Eigenschaft: `kind`, Luft
+ * oder Boden. Daran hingen vier Dinge zugleich — Rollen-Vorlagen,
+ * Faehigkeiten, Kachelsatz und Zeichen. Solange es Rettungshubschrauber und
+ * Notarzteinsatzfahrzeuge gab, war das richtig. Ein Bergwacht-Dienst, ein
+ * Sanitaetsdienst auf einer Veranstaltung und „sonst etwas" passen in keine
+ * der beiden Schubladen, ohne eine Aussage mitzuschleppen, die niemand
+ * gemeint hat.
+ *
+ * ZWEI ACHSEN STATT EINER ERWEITERTEN. `kind` bleibt die BETRIEBSART und
+ * steuert weiter, was sie steuerte; `typ` ist die ART DES DIENSTES —
+ * standard, bergwacht, veranstaltung, sonstiges. Die beiden sind unabhaengig:
+ * Eine Bergwacht fliegt oder faehrt, und beides ist ein Bergwacht-Dienst.
+ * Haette man `kind` um 'bergwacht' erweitert, muesste jede Stelle, die heute
+ * air/ground unterscheidet, kuenftig raten, welche Betriebsart dahintersteckt
+ * — und die Phasenbeschriftungen sind seit Web 6.0.0 gerade deshalb neutral
+ * (E20/E21), damit die Uhr die Art nicht kennen muss.
+ *
+ * HAUPTNUMMER AUS DREI GRUENDEN, von denen jeder einzelne reicht: Das
+ * Datenmodell aendert sich mit einer Migration (`vehicles.typ`,
+ * `vehicles.kurz`, `days.vehicle_typ`, `days.vehicle_kurz`), das Dateiformat
+ * der Sicherung wechselt (Nutzlast 9 -> 10, wie 11.0.0), und eine feste
+ * Zusage wird eingeschraenkt: „Jedes Rettungsmittel gehoert zu genau einem
+ * Standort" (E15) gilt nur noch fuer den Typ 'standard'. `vehicles.base_id`
+ * ist wieder NULL-faehig — diesmal dauerhaft und mit Absicht.
+ *
+ * DER KURZNAME (Backlog Nr. 69) ist die kleinere Haelfte und die
+ * sichtbarere: bis 16 Zeichen, freiwillig. Die DIENSTTAGE-LEISTE zeigt ihn
+ * STATT der Bezeichnung, wo der Platz knapp ist; Formulare, Export und
+ * Sicherung zeigen weiter den vollen Namen — und fuehren den Kurznamen
+ * DANEBEN, damit er den Rueckweg uebersteht. Der Konzepttext nannte
+ * daneben Kacheln und Plaketten; gebaut wurde das nie, weil beide gar kein
+ * Rettungsmittel nennen und es dort nichts zu ersetzen gab (entschieden am
+ * 08.09.2026, siehe 16.1.0).
+ *
+ * WAS DABEI BEINAHE STILL KAPUTTGEGANGEN WAERE, und deshalb steht es hier:
+ * `nb_moeglich()` (nachbearbeitung_lib.php) entschied ALLEIN an der
+ * Nullbarkeit von `vehicles.base_id`, ob die einmalige Nachbearbeitung aus
+ * A12 ueberhaupt existiert. Mit dieser Migration waere sie in JEDER
+ * Installation wiederauferstanden, haette die rechtmaessig standortlosen
+ * Rettungsmittel als offene Punkte gemeldet — und ihr Knopf haette die
+ * Migration mit einem `ALTER TABLE ... NOT NULL` zurueckgenommen. Gemessen
+ * am 07.09.2026: nb_moeglich() false -> true, zwei falsche offene Punkte.
+ * Die zweite Stufe kennt jetzt vier Tabellen statt fuenf; `vehicles` gehoert
+ * nicht mehr dazu.
+ *
+ * ZWEI WEITERE STILLE STELLEN sind mitgegangen: `dt_vehicle_erlaubt()` liess
+ * ein zentrales Rettungsmittel ohne Standort nicht durch, waehrend
+ * `dt_vehicles()` es anbot — die Auswahl waere beim Speichern wortlos auf
+ * NULL zurueckgefallen. Und beide Stammdatenseiten laden mit
+ * `base_id IN (...)`; ein Rettungsmittel ohne Standort waere dort unsichtbar
+ * und damit weder zu aendern noch zu loeschen gewesen. Es bekommt bis AP5
+ * eine eigene Karte „Ohne Standort".
+ *
+ * DAS ZEICHEN FUER VERANSTALTUNG IST GETAUSCHT: Tabler „ticket" statt
+ * „building-stadium". Gemessen: „ticket" haelt seine Binnenflaeche von 96 px
+ * bis 16 px unveraendert, „building-stadium" verliert bei 18 px zwei seiner
+ * vier auf einen einzelnen Pixel. Der Vorrat bleibt bei 52 Dateien.
+ *
+ * 16.1.0 RAEUMT ZWEI FREIGABEN NACH (S9/AP4a, 08.09.2026).
+ *
+ * Zwei Fragen waren nach AP4 offen geblieben, weil ihre Antwort eine
+ * Gestaltungsentscheidung ist; die Mockups M-S9-08 und M-S9-09 haben sie
+ * gestellt, der Auftraggeber hat sie beantwortet. Nichts davon ruehrt an
+ * Datenmodell oder Format: keine Migration, keine Spalte, kein Schluessel.
+ *
+ * DER KURZNAME IM SCHMALEN BAND. Die Begruendung des Kurznamens war „die
+ * schmalste Stelle der Anwendung" — und genau dort stand er nicht: Zwischen
+ * 1024 und 1199 px ist die Leiste 220 px breit, und `.eintrag-neben` war
+ * dort ausgeblendet. Jetzt bleibt er sichtbar, wenn einer gesetzt ist; der
+ * volle Name bleibt fort. Das Akkordeon rueckt in diesem Band je Ebene 8
+ * statt 12 px ein — die Einrueckung wirkt zweimal (Jahr und Monat), macht
+ * also 8 px mehr Platz fuer den Eintrag.
+ *
+ * WIE VIEL VOM KURZNAMEN ANKOMMT, HAENGT AM DATUM DANEBEN, und das ist beim
+ * Bauen zuerst uebersehen worden. `.eintrag-text` schrumpft nicht, und seine
+ * Breite schwankt: Bricolage Grotesque setzt Ziffern PROPORTIONAL, und die
+ * Regel `tabular-nums` nennt diesen `<span>` nicht. Gemessen an den dreizehn
+ * Datumsangaben des Pruefbestands: Datum 76 bis 83 px, fuer den Nebentext
+ * bleiben 48 bis 55 px. „BW Hoch" braucht 55 — VIER Datumsangaben tragen ihn
+ * ganz, NEUN mit Auslassungszeichen. Ohne die Einrueckung waere es keine
+ * einzige (40 bis 47 px). Die erste Messung stand auf 57 px und war an einer
+ * einzigen, zufaellig schmalen Datumsangabe genommen; gefunden hat es die
+ * adversarische Gegenprobe. „BW Ho..." sagt mehr als der leere Platz von
+ * vorher, und der Tooltip nennt weiterhin alles — ob das genuegt oder das
+ * Datum im schmalen Band kuerzer werden soll, entscheidet der Auftraggeber.
+ *
+ * DABEI KAM HERAUS, DASS DIE ALTE BEGRUENDUNG AN DREI STELLEN FALSCH STAND:
+ * „Unter 1200 px entfaellt der Name ganz" (style.css, ui.php, Handbuch).
+ * Die Regel steht im Block `@media (min-width:1024px)`, die Grundregel
+ * setzt gar kein `display` — unter 1024 px, also in der Schublade, stand der
+ * Name immer, und er steht dort weiter. Es sind DREI Zustaende, nicht zwei;
+ * die Saetze sind berichtigt.
+ *
+ * DER TYP BEIM ZUSAMMENFUEHREN. Zwei Diensttage verschiedenen Typs lassen
+ * sich zusammenfuehren — das bleibt so, `dt_merge_pruefen()` ist
+ * unveraendert und prueft weiter allein die Betriebsart. Aber die Vorschau
+ * verschwieg, was danach gilt: Der Typ folgt dem gewinnenden Rettungsmittel,
+ * und wer das andere waehlt, aendert ihn. Jetzt nennt „Der Diensttag danach"
+ * ihn in einer eigenen Zeile, und die beiden Wahlzeilen tragen Typ und
+ * Kurznamen im Zusatz.
+ *
+ * DIE GEWINNERREGEL STEHT DESHALB JETZT AN EINER STELLE STATT AN ZWEIEN.
+ * Sie lag in `dt_zusammenfuehren()`, also innerhalb der Transaktion; die
+ * Vorschau haette sie nachbauen muessen. `dt_merge_rm_gewinner()` ist die
+ * eine Fassung, die beide befragen — genau die Falle, vor der der Kommentar
+ * ueber dem UPDATE warnt: Der Zieltag truege sonst den NAMEN des einen und
+ * den TYP des anderen Rettungsmittels.
+ *
+ * 16.1.1 GIBT DEM KURZNAMEN DEN PLATZ, DEN ER BRAUCHT (S9, Freigabe M-S9-11).
+ *
+ * Die Frage aus 16.1.0 ist beantwortet. Das Mockup M-S9-11 hat drei Wege an
+ * der laufenden Anwendung gemessen, und der Auftraggeber hat den zweiten
+ * gewaehlt: Im Band 1024-1199 px rueckt das Akkordeon je Ebene 4 statt 12 px
+ * ein, und der Abstand in der Zeile geht von 8 auf 4 px. Beides wirkt
+ * zweimal — zwei Akkordeonebenen, zwei Zwischenraeume —, macht also 16 px.
+ *
+ * GEMESSEN AN DEN DREIZEHN DATUMSANGABEN DES PRUEFBESTANDS: Dem Nebentext
+ * standen 48 bis 63 px zur Verfuegung, jetzt 64 bis 79. „BW Hoch" braucht 55
+ * und „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz statt an dreien
+ * von zwoelf; „RTH Murnau" (76 px) an den meisten. Vorher: 13 Kurznamen,
+ * 10 mit Auslassungszeichen. Nachher: 13 Kurznamen, KEINES.
+ *
+ * DER ABSTAND IST GESCOPED, DIE EINRUECKUNG NICHT. `.eintrag` tragen auch
+ * der Leistenfuss, die Hauptpunkte der Schublade und jede Zeile des
+ * Einstellungsmenues; sie haben keinen Nebentext und damit kein
+ * Platzproblem. Eine ungescopte `gap`-Regel haette sie ohne Not
+ * zusammengerueckt — deshalb `.akkordeon:not(.leiste-gruppe) .eintrag`. Die
+ * Einrueckung braucht das nicht: Dort schirmt eine vorhandene, spezifischere
+ * Regel das Menue schon ab. Nachgemessen bei 1100 und 1280 px: Menue 0 px
+ * Einrueckung und 8 px Abstand, Leistenfuss 8 px — in jeder Breite
+ * unveraendert.
+ *
+ * WEG 3 IST VERWORFEN (08.09.2026): Im schmalen Band das JAHR aus dem Datum
+ * zu nehmen — es steht als Akkordeon-Ueberschrift darueber — haette rund
+ * 30 px gebracht und auch den laengsten erlaubten Kurznamen getragen. Es
+ * aendert aber, was in einer Zeile STEHT, und zwar abhaengig von der
+ * Fensterbreite; und nach einem Sprung aus der Suche ist die Jahreszeile
+ * weggerollt, dann fehlt das Jahr ganz. Das Datum behaelt es in jeder
+ * Breite.
+ *
+ * 16.2.0 MACHT AUS ZWEI REITERN EINE LISTE UND VIELE SEITEN (S9/AP5-1, PS-12).
+ *
+ * Seit Web 7.0.0 standen „Standorte" und „Rettungsmittel" nebeneinander im
+ * Menue, geschnitten nach Taetigkeit. Der Schnitt hat sich nicht bewaehrt:
+ * Beide Reiter luden DENSELBEN Bestand, und wer einen Standort einrichtete,
+ * ging zwischen ihnen hin und her — anlegen dort, ausstatten hier. Jetzt
+ * fuehrt „Standorte" auf die Liste, und die Liste auf je EINE Seite
+ * (`t=standort&s=<id>`), die alles traegt, was an diesem Standort haengt.
+ *
+ * DIE ZEILE IST DER VERWEIS, nicht mehr der Name darin. Damit fallen die
+ * Zeilenaktionen weg — ein Knopf in einem Link ist kein gueltiges Markup —,
+ * und „Loeschen" und „Als Vorbelegung" stehen im Aktionsmenue der
+ * Standortseite. Das ist zugleich der bessere Ort: Wer einen Standort
+ * loescht, hat vorher gesehen, was daran haengt. Die Kleinzeile nennt statt
+ * der Lage die DREI ZAHLEN (Rettungsmittel, Besatzung, Zielkliniken); die
+ * Lage steht auf der Seite selbst.
+ *
+ * ZWEI WEICHEN STATT ZWEIER TOTER LINKS. `t=rettungsmittel` fuehrt auf die
+ * Liste, wie `t=stammdaten` es seit Web 7.0.0 tut — der Name steht in
+ * Lesezeichen und in aelterer Dokumentation. Und `t=standort` ohne gueltige
+ * Kennung fuehrt ebenfalls dorthin: geprueft mit `dt_base_erlaubt()` GANZ
+ * OBEN, vor der ersten Zeile Ausgabe. Weiter unten haette `header()` still
+ * versagt und die Seite stuende halb da; genau das ist beim Bauen passiert.
+ *
+ * NEBENNUMMER, NOCH KEINE HAUPTNUMMER: Der Weg durch die Anwendung aendert
+ * sich spuerbar, aber AP5 ist erst zum Teil gebaut — die Standortseite traegt
+ * bis auf Weiteres die alten Bloecke des Reiters „Rettungsmittel". Wenn sie
+ * ihre Gestalt aus M-S9-06 hat und die Verwaltung nachgezogen ist, steigt die
+ * Hauptnummer.
+ *
+ * 16.2.1 REPARIERT ZWEI STELLEN, DIE 16.2.0 UEBERSEHEN HAT — beide gefunden
+ * von der Codelesung, nicht im Browser, weil beide OHNE Fehlermeldung
+ * ausfallen:
+ *   - Das Leaflet-Stylesheet haengt an einer Reiterliste, in der noch
+ *     „rettungsmittel" stand und „standort" fehlte. Der Pin am Nur-Lage-
+ *     Ortsfeld der Standortseite haette eine unformatierte Karte gezeigt.
+ *   - Das Geruest bekam `menue => $tab`, und `standort` ist kein
+ *     Menueschluessel. Die Leiste haette KEINEN aktiven Eintrag gehabt — und
+ *     `menue.js` haengt seine Unterpunkte genau daran, was in AP5 Teil 2
+ *     gebraucht wird. Jetzt meldet die Seite „standorte" als aktiv.
+ * Die Lehre steht hier, weil sie wiederkommt: Wer einen Reiter umbenennt,
+ * greppt nach seinem Namen — er steht nicht nur in der Weissliste.
+ *
+ * 16.2.2 GIBT DER STANDORTSEITE IHRE GLIEDERUNG UND DREI WEGE ZURUECK
+ * (S9/AP5-2). Sechs Karten mit Kennung, drei Kennzahlen als
+ * Inhaltsverzeichnis und „Zum Anfang" am Ende jeder Karte standen mit 16.2.0
+ * schon da; was fehlte, waren die Wege dazwischen. Drei davon fuehrten ins
+ * Leere, und keiner hat sich beschwert:
+ *
+ *   - `ui_nach_oben()` sprang auf `#seitenanfang`. Diese Kennung gibt es in
+ *     der ganzen Anwendung nicht; ein Verweis auf ein fehlendes Ziel erzeugt
+ *     weder Fehler noch Meldung, er tut nur nichts. Ziel ist jetzt `#inhalt`
+ *     — die Kennung, die das Geruest ohnehin an das `<main>` haengt.
+ *   - Nach jedem Speichern und jedem Loeschen ging die Umleitung auf
+ *     `t=rettungsmittel`. Diesen Reiter gibt es seit 16.2.0 nicht mehr; die
+ *     Weiche am Seitenkopf warf damit JEDE Aenderung an einem
+ *     Rettungsmittel, einer Rolle, einer Zielklinik oder einer Bereitschaft
+ *     auf die Standortliste — mit einem Anker, der dort nichts findet. Wer
+ *     zehn Zielkliniken eintraegt, klickte zehnmal zurueck. Das Ziel ist
+ *     jetzt die Seite des Standorts, an dem die Sache haengt, und es steht
+ *     als ganze Adresse (`sd_seite()`) statt als Reitername.
+ *   - Dieselbe tote Adresse stand als Vorgabewert in `sd_zeile()` und
+ *     `sd_form()` und in acht Aufrufen, die sie nicht ueberschrieben.
+ *
+ * UND „OHNE STANDORT" STEHT JETZT AUF DER LISTE. Bergwacht, Veranstaltung
+ * und Sonstiges brauchen keinen Standort (16.0.0); ihre Karte hing bis
+ * hierher unter der letzten Standortkarte und erschien damit auf JEDER
+ * Standortseite — sichtbar als siebter Unterpunkt in der Leiste, wo die
+ * Seite sechs Karten hat. Sie gehoert dorthin, wo die Standorte stehen und
+ * keiner von ihnen gemeint ist. Bearbeitet wird ein solcher Eintrag
+ * weiterhin im Formular des ersten Standorts; das loest erst der Dialog aus
+ * AP5-4 auf.
+ *
+ * KORREKTURSTUFE UND KEINE NEBENNUMMER: Es kommt keine Funktion hinzu. Es
+ * geht nur das, was 16.2.0 halb fertig hinterlassen hat.
+ *
+ * 16.3.0 GIBT DEN LANGEN LISTEN ZWEI HILFSMITTEL (S9/AP5-3, M-S9-05/-06).
+ *
+ * Eine Standortseite mit zwoelf Rettungsmitteln, zwei Dutzend
+ * Besatzungseintraegen und drei Dutzend Zielkliniken ist mehrere Bildschirme
+ * lang, und bis hierher half dagegen nichts. Jetzt bekommt jede Liste ab
+ * SECHS Eintraegen ein Hilfsmittel — eine Zahl, eine Regel, keine
+ * Sonderfaelle je Karte (`SD_HILFE_AB`, stammdaten_ui.php):
+ *
+ *   - Die RETTUNGSMITTEL bekommen die SPRUNGLISTE: eine umbrechende Zeile
+ *     runder Pillen, jede mit dem Artzeichen ihres Rettungsmittels. Sie
+ *     bekommen sie als einzige, weil ihre Eintraege ein Zeichen tragen, an
+ *     dem man sie in einer Pillenreihe wiedererkennt. Eine Reihe aus zwoelf
+ *     Namen ohne Zeichen waere keine Orientierung, sondern dieselbe Liste
+ *     ein zweites Mal.
+ *   - ALLE UEBRIGEN bekommen den KARTENFILTER: ein Feld mit Lupe, das im
+ *     Browser ausblendet, was nicht passt. Konzept und Mockup nennen nur
+ *     Besatzung und Zielkliniken; „Weitere Rettungsmittel" und „Bergwacht"
+ *     sind dieselbe Listenform mit demselben Problem, und zwei Sorten Liste
+ *     auf einer Seite waeren schwerer zu erklaeren als eine Regel.
+ *
+ * DIE ANGESPRUNGENE ZEILE FAERBT SICH — ueber `:target`, ohne Skript. Das
+ * ist der erste `:target` dieser Anwendung; er ueberlebt den Ruecksprung aus
+ * dem Verlauf, was die von Hand gesetzte `.zeile-hervor` nicht tut. Dafuer
+ * tragen die Zeilen der fuenf Listen jetzt Kennungen (`veh-7`, `crew-12`,
+ * `td-3`, `res-9`, `bw-2`) — dieselben Vorsaetze, die ihre verborgenen
+ * Formulare seit jeher tragen. Das Konzept schrieb `#dest-<id>` fuer die
+ * Zielkliniken; die heissen an jeder anderen Stelle `td`, und ein zweiter
+ * Name fuer dieselbe Sache im selben Modul ist kein Gewinn — berichtigt ist
+ * das Konzept.
+ *
+ * DAS ARTZEICHEN STEHT JETZT WIRKLICH IN DER ZEILE (F-S9-K-04). Der
+ * Kommentar daneben behauptete es seit Web 7.0.0 („Das Symbol vor dem Namen
+ * sagt die Art"), und `dt_art_symbol()` wurde dafuer sogar berechnet —
+ * benutzt hat das Ergebnis niemand. Die Zeile zeigte Namen und Rollen und
+ * sonst nichts. Jetzt steht es links, mit TYP: sonst zeigte eine Bergwacht
+ * dasselbe Zeichen wie ein NEF.
+ *
+ * DREI DINGE, DIE DABEI GERADEGEZOGEN WURDEN:
+ *
+ *   - DER DOPPELTE TITEL IST WEG. Jede Karte trug ihren Namen und ihre Zahl
+ *     zweimal — einmal im Kartenkopf, einmal als `h3.sd-titel` unmittelbar
+ *     darunter. Auf dem Bild von 16.2.2 steht „Rettungsmittel 3" zweimal
+ *     untereinander. Die Rollen der Besatzung sind dafuer von `h4` auf `h3`
+ *     gerueckt, sonst klaffte zwischen dem `h2` der Karte und ihnen eine
+ *     Ebene. In der VERWALTUNG bleibt beides, wie es ist — sie wird mit
+ *     AP5-4 umgestellt.
+ *   - DIE KARTEN TRAGEN DEN VORSATZ `k-`. `Design.md` 9.25 schreibt ihn fuer
+ *     jede Karte vor, die Sprungziel sein soll, und der uebrige Bestand
+ *     haelt sich an dreissig Stellen daran. Die Mockups zeichnen
+ *     `#standort`; ein Bild ist aber keine Namensregel, und eine Regel, die
+ *     man fuer die sechs neuesten Karten aufweicht, ist ab dann keine.
+ *   - DER BILDERLAUF MISST DIE PILLE MIT. `.sprungziel` ist `--knopf` hoch,
+ *     traegt aber nicht `.knopf` — und die Auswahl des Bilderlaufs kannte
+ *     nur `.knopf`. Ohne diese Zeile stuende in `Design.md` eine
+ *     44/36-Zusage, die kein Pruefmittel deckt. Genau so ist `.listenfilter`
+ *     seit O6 ungemessen geblieben.
+ *
+ * NEBENNUMMER: Es kommen Funktionen hinzu, kein Datenmodell und keine
+ * Migration. `update.php` muss NICHT laufen.
+ *
+ * ---------------------------------------------------------------------------
+ * 17.0.0 — S9/AP5-4: Anlegen und Bearbeiten im Dialog; die Verwaltung
+ * bekommt dieselben Standortseiten (E-S9-19, M-S9-07).
+ *
+ * HAUPTNUMMER OHNE MIGRATION, wie schon bei 7.0.0 und 16.2.0: Das Datenmodell
+ * ist unangetastet — `update.php` muss NICHT laufen —, aber die Wege durch die
+ * Anwendung sind andere. Wer sie kennt, findet zwei Dinge an neuer Stelle:
+ *
+ *   1. DIE EINGABE STEHT NICHT MEHR UNTER DER LISTE. „Anlegen" ist ein Knopf
+ *      im Kartenkopf, „Bearbeiten" ein Eintrag im Zeilenmenue; beide oeffnen
+ *      denselben Dialog. Die zehn Formulare der Standortseite (eines je Liste,
+ *      und in der Besatzung eines je ROLLE) sind ersatzlos entfallen, mit
+ *      ihnen `sd_form()` und die fuenf GET-Parameter `ev`, `ec`, `et`, `er`,
+ *      `ew`.
+ *   2. VERWALTUNG → STAMMDATEN hat keine zwei Reiter mehr. „Standorte
+ *      systemweit" und „Rettungsmittel systemweit" sind zu einer Liste und je
+ *      einer Standortseite geworden — dieselbe Gliederung wie im Konto seit
+ *      16.2.0, dieselben sechs Karten, dieselben Kennzahlen, dieselben fuenf
+ *      Dialoge aus derselben Datei. `t=rettungsmittel` bleibt als Weiche.
+ *
+ * WARUM UEBERHAUPT. Drei Dinge waren am Formular unter der Liste falsch, und
+ * alle drei sind mit den Standortseiten schlimmer geworden: Wer den zwoelften
+ * Eintrag anlegen wollte, rollte an elf vorbei; „Bearbeiten" lud die Seite neu
+ * und aenderte still die Werte eines Formulars weiter unten (auf einem Handy
+ * sah man davon nichts); und in der Besatzungskarte stand dasselbe Formular
+ * fuenfmal, je Rolle einmal — der Kartenfilter musste sie eigens verbergen.
+ *
+ * FUENF DIALOGE AUS DREI FUNKTIONEN. E-S9-19 nennt drei ARTEN — Rettungsmittel,
+ * Besatzungsmitglied, Zielklinik — und M-S9-07 zeichnet sie. „Weitere
+ * Rettungsmittel" und „Bergwacht" zeichnet das Mockup nicht; sie haben genau
+ * ein Feld, dasselbe wie das Besatzungsmitglied ohne die Rolle. Deshalb wird
+ * `sd_dialog_eintrag()` dreimal aufgerufen. Der Gegenentwurf — EIN Dialog, der
+ * seine Beschriftungen vom Oeffner holt — ist erwogen und verworfen: Die
+ * Feldbeschriftung steht im `<label>` neben dem Pflichtstern, `data-fuell`
+ * setzt `textContent` und wuerfe ihn weg; und ein Text, der erst im Browser
+ * entsteht, laeuft an der Wortliste vorbei.
+ *
+ * DER STANDORT IST EIN FELD GEWORDEN, kein Haken. „Ohne Standort" war bis
+ * hierher ein Kaestchen, das die verborgene Kennung der Standortkarte schlug:
+ * Man sah beim Setzen nicht, WAS man ueberschrieb, und ein Rettungsmittel von
+ * einem Standort auf einen anderen zu verschieben ging gar nicht. Jetzt ist es
+ * der erste Eintrag einer Auswahl (Wert 0), und die Auswahl erscheint nur bei
+ * den drei Typen ohne Standortpflicht — beim Typ Standard steht darunter, zu
+ * welchem Standort der Dialog gehoert. Damit faellt auch der Kunstgriff, mit
+ * dem ein standortloses Rettungsmittel auf der Seite des ERSTEN Standorts
+ * bearbeitet wurde.
+ *
+ * FEHLER BLEIBEN IM DIALOG (E-S9-19). Bis hierher ging jeder Fehler denselben
+ * Weg wie jede Meldung: in die Sitzung, Umleitung, Kasten am Seitenkopf. Fuer
+ * ein Formular unter der Liste war das richtig — es stand danach wieder da,
+ * mit seinen Werten. Ein Dialog steht nach dem Neuladen nicht wieder da: Er
+ * waere zu, die Eingabe waere weg, und oben stuende „Bezeichnung fehlt" ueber
+ * einer Liste, in der man gerade nichts eingegeben hat. Der Fehlerweg leitet
+ * deshalb NICHT um; die Seite ist die Antwort auf den POST, und das
+ * Seitenskript oeffnet den Dialog wieder (`window.edDialog.auf`).
+ *
+ * DER ERFOLGSFALL HAT DAFUER KEINE MELDUNG MEHR. Die Umleitung fuehrt auf die
+ * geschriebene ZEILE (`#veh-7`), `:target` faerbt sie — das ist die
+ * Bestaetigung. Und „Standort anlegen" landet auf der neuen Standortseite:
+ * Sie ist zugleich der Ort, an dem als Naechstes etwas zu tun ist.
+ *
+ * FUENF FUNDE, DIE DABEI HERAUSKAMEN, und keiner davon war ein Bild wert:
+ *
+ *   - BACKLOG NR. 163: `crew_save` in der Verwaltung las `role`, das Formular
+ *     schickte `role_code`. Seit Web 9.10.0 meldete die Anwendung „Bitte Rolle
+ *     und Namen angeben." — bei ausgefuellter Rolle und ausgefuelltem Namen.
+ *     Eine systemweite Besatzungs-Vorbelegung liess sich zwei Jahre lang weder
+ *     anlegen noch aendern. Kein Bild zeigt eine Meldung, die erst nach einem
+ *     Klick erscheint; die Klickprobe fuhr diesen Weg bis heute nicht.
+ *   - F-S9-U-27: `.dialog{display:flex}` schlug die Browservorgabe
+ *     `dialog:not([open]){display:none}` — eine UA-Regel verliert gegen JEDE
+ *     Autorenregel. Alle fuenf Dialoge standen als Kaesten am Seitenende, mit
+ *     Feldern, die man ausfuellen kann, und Knoepfen, die absenden. Sichtbar
+ *     nur auf einem Vollseitenbild. `display` gehoert an `[open]`.
+ *   - F-S9-U-28: `base_save` prueft `if ($n !== '')` — ohne `else`. Ein leerer
+ *     Standortname wurde wortlos verworfen.
+ *   - Ein UPDATE auf einen vorhandenen Namen lief in eine ungefangene
+ *     PDOException (weisse Seite) — bei Besatzung, weiteren Rettungsmitteln,
+ *     Bergwacht und Zielkliniken. Mit der Rolle als Feld wurde daraus ein
+ *     wahrscheinlicher Fall statt eines seltenen.
+ *   - `crew_save` schrieb die ROLLE nicht mit. Das war richtig, solange sie
+ *     eine verborgene Kennung war; als Feld haette eine Rollenaenderung
+ *     wortlos nichts getan.
+ *
+ * DER DIALOG ROLLT JETZT IN SICH. `.dialog` hatte keine Hoehenangabe — das
+ * ging, solange jeder Dialog aus zwei Saetzen und zwei Knoepfen bestand. Der
+ * Rettungsmittel-Dialog hat vier Felder, fuenf Rollenhaken und zwei
+ * Faehigkeitshaken und ist am Handy hoeher als das Glas; die Browservorgabe
+ * kappte unten ab, und unten steht der Fuss mit „Anlegen". Kopf und Fuss
+ * stehen jetzt fest, der Inhalt rollt. Das trifft auch den GPX-Dialog, der
+ * dasselbe Problem hatte, ohne dass es jemand gemeldet haette.
+ *
+ * HAUPTNUMMER: Die Wege sind andere. `update.php` muss NICHT laufen.
+ *
+ * ---------------------------------------------------------------------------
+ * 17.1.0 — S9/AP5-5: Ein Standort loeschen kostet nicht mehr, was ohne ihn
+ * bestehen darf (M-S9-10, Variante b).
+ *
+ * `vehicles_ibfk_2` steht auf ON DELETE CASCADE, und das ist E15 woertlich:
+ * Was an einem Standort haengt, geht mit ihm. Seit E-S9-09 nahm es dabei aber
+ * auch das mit, was ohne diesen Standort bestehen DUERFTE — Bergwacht,
+ * Veranstaltung, Sonstiges. Ein Sanitaetsdienst, der nie zu einem Standort
+ * gehoerte und nur zufaellig einem zugeordnet war, verschwand mit dem
+ * Standort; die Rueckfrage sagte „6 Stammdatensaetze werden mitgeloescht" und
+ * verschwieg, dass eines davon nicht haette mitgehen muessen.
+ *
+ * AP4 hatte das bewusst stehen lassen und begruendet: `ON DELETE SET NULL`
+ * waere die falsche Antwort, weil sie JEDES Standard-Rettungsmittel
+ * standortlos machte — einen Datensatz, den die Pruefschicht nie anlegen
+ * wuerde. Die Antwort ist deshalb Anwendungslogik VOR dem `DELETE`: ein
+ * `UPDATE`, das den drei Typen ohne Standortpflicht den Standort abnimmt, in
+ * derselben Transaktion. Der Fremdschluessel bleibt, wie er ist.
+ *
+ * DREI FUNKTIONEN IN `db.php`, neben `stammdaten_dup_global()`:
+ * `stammdaten_ohne_standortpflicht()` (wer ueberlebt, mit Namen),
+ * `stammdaten_standort_loesen()` (das UPDATE) und `stammdaten_loeschfrage()`
+ * (der Satz). Zwei Aufrufstellen, eine Fassung — und die REGEL steht in
+ * keiner davon, sondern in `VEHICLE_TYPEN[...]['standort']`: derselben
+ * Angabe, aus der `pruef_rettungsmittel()` entscheidet, ob ein Typ ohne
+ * Standort angelegt werden darf. Zwei Fassungen liefen beim naechsten Typ
+ * auseinander, und zwar still.
+ *
+ * NICHT in `validate_lib.php`, obwohl das Konzept „neben
+ * `pruef_rettungsmittel()`" schreibt: Der Kopf jener Datei sagt „Diese Datei
+ * aendert von sich aus nichts", und ein `UPDATE` darin waere der erste
+ * Verstoss dagegen. Gemeint war „eine Fassung fuer beide Seiten" — und die
+ * ist es.
+ *
+ * DIE RUECKFRAGE TRENNT DIE ZAHL und nennt das Ueberlebende mit NAMEN: „5
+ * werden mitgeloescht. 1 Rettungsmittel ohne Standortpflicht — Bergwacht
+ * Hochkreuth — bleibt bestehen und steht danach unter ,Ohne Standort'." Ein
+ * Rettungsmittel, das einen Standort verlaesst, ist eine Nachricht und keine
+ * Statistik (M-S9-10, Anmerkung 3). Ab vier Namen nur noch drei und „und N
+ * weitere" — sonst waere die Aufzaehlung laenger als der uebrige Text.
+ *
+ * DIE UMLEITUNG ZEIGT AUF DAS UEBERLEBENDE, nicht auf die Standortliste: Wer
+ * die Rueckfrage schnell wegklickt, findet den Eintrag sonst spaeter unter
+ * „Ohne Standort" und fragt sich, woher er kommt. Die Karte ist zugeklappt;
+ * das Ankerskript oeffnet sie.
+ *
+ * EIN FUND BEIM BAUEN, von der Klickprobe: Der erste Entwurf leitete die
+ * deutsche Adjektivendung aus der Zeichenkette ab (`rtrim('eigene','e').'r'`)
+ * und schrieb „Ein eigenr Stammdatensatz". Vier Formen stehen jetzt
+ * ausgeschrieben.
+ *
+ * WAS DIESE FASSUNG NICHT TUT: Ein Rettungsmittel, das einer NutzerIn gehoert
+ * und an einem SYSTEMWEITEN Standort haengt, geht weiterhin mit, wenn die
+ * Verwaltung diesen Standort loescht — auch wenn sein Typ keinen Standort
+ * braucht. Das ist Bestandsverhalten; die Rueckfrage der Verwaltung zaehlt
+ * seit jeher nur den systemweiten Bestand. Vermerkt im Pruefdokument.
+ *
+ * NEBENNUMMER: veraendertes Verhalten beim Loeschen, kein Datenmodell, keine
+ * Migration. `update.php` muss NICHT laufen.
+ *
+ * ---------------------------------------------------------------------------
+ * 17.1.1 — S9/AP5-6: der Prueflauf, und was er gefunden hat.
+ *
+ * DER LEERZUSTAND DES KARTENFILTERS SAGTE ETWAS FALSCHES. „Kein Eintrag passt
+ * dazu. Leere den Filter, um etwas anzulegen." — richtig, solange die
+ * Anlegen-Formulare in der Liste standen und beim Filtern mitverschwanden.
+ * Seit 17.0.0 steht „Anlegen" im KARTENKOPF, also ausserhalb der gefilterten
+ * Liste; es ist auch bei null Treffern da. Der Satz beschrieb eine Sackgasse,
+ * die es nicht mehr gibt, und sagt jetzt, was der Filter tatsaechlich
+ * verdeckt: alles Uebrige.
+ *
+ * ZWEI PRUEFMITTEL HABEN DABEI SELBST ETWAS GELERNT, und beide Male ist es
+ * dieselbe Sorte Fehler — ein Werkzeug, das das Richtige misst und den
+ * falschen Grund nennt:
+ *
+ *   - DIE KLICKPROBE lief zum ersten Mal ueber ZWEI Breiten. Zwei Wege waren
+ *     fuer 1280 px geschrieben: „Bearbeiten" steht unter 720 px im
+ *     Aktionsblatt und nicht in der Zeile (der Weg oeffnet jetzt erst das
+ *     „⋯"), und die Richtungspfeile auf der Spur gibt es bei 390 px gar
+ *     nicht — `geo.js` zeichnet sie erst, wenn die Spur am Bildschirm laenger
+ *     als 280 px ist (E-P3-33/40). Der Pfeilweg misst diese Laenge jetzt
+ *     (`getTotalLength()` am Spurpfad) und erwartet Pfeile genau dann, wenn
+ *     die Schwelle es sagt: gemessen 190 px bei 390er Fenster (0 Pfeile,
+ *     richtig) und 358 px bei 1280 (2 Pfeile).
+ *   - DER BILDERLAUF warf zwei Gruende in einen Topf. „OHNE BILD: 8
+ *     Aufnahmen — Sitzung nicht zu halten" stand da, wo in Wahrheit ein
+ *     Platzhalter nicht aufloesbar war (die Standortseite der Verwaltung; der
+ *     Referenzbestand hat keinen systemweiten Standort, Backlog Nr. 166).
+ *     Jede ausgefallene Aufnahme traegt jetzt ihren Grund, und die
+ *     Zusammenfassung zaehlt nach Grund.
+ *
+ * EIN FUND AM CODE, beim Gegenlesen von AP5-5: Das `UPDATE`, das den
+ * Rettungsmitteln ohne Standortpflicht den Standort abnimmt, lief VOR der
+ * Pruefung, ob der Standort ueberhaupt der eigene ist. Das `DELETE` darunter
+ * schuetzt sich selbst (`AND user_id = ?`) und tat bei einer fremden Kennung
+ * nichts — das UPDATE davor tat etwas: Ein abgeschicktes `base_del` mit der
+ * Kennung eines ZENTRALEN Standorts haette den eigenen Rettungsmitteln dort
+ * den Standort abgenommen, ohne dass ein Standort geloescht worden waere.
+ * Beide Seiten pruefen jetzt zuerst und fassen dann an.
+ *
+ * KORREKTURSTUFE: ein Text, zwei Pruefmittel, eine Absicherung. Keine
+ * Migration, kein Datenmodell.
+ *
+ * ---------------------------------------------------------------------------
+ * 18.0.0 — S9/AP5b: DIE ZENTRALEN STAMMDATEN VERLIEREN IHRE OBERFLAECHE.
+ *
+ * `admin_stammdaten.php` IST GESTRICHEN. Ersatzlos, mitsamt der Karte
+ * „Vordefinierte Standorte" in den Einstellungen jedes Kontos und dem
+ * Schreibweg `ub_toggle` dahinter. Damit kann in dieser Anwendung niemand
+ * mehr einen zentralen (systemweiten) Standort, ein zentrales Rettungsmittel,
+ * eine zentrale Besatzungs-Vorbelegung, Zielklinik, Bereitschaft oder ein
+ * weiteres Rettungsmittel anlegen, aendern oder loeschen. Die zwoelf
+ * Schreibwege, die das konnten, standen ausnahmslos in dieser einen Datei.
+ *
+ * WARUM EINE HAUPTNUMMER OHNE MIGRATION — schon zum zweiten Mal in dieser
+ * Zaehlung (17.0.0 war die erste). Das Datenmodell bleibt unangetastet:
+ * `user_id` ist in allen sechs Stammdatentabellen weiter NULL-faehig, die
+ * Tabelle `user_bases` steht, das Feld `stammdaten.user_bases` der
+ * Kontosicherung wird weiter geschrieben und gelesen, und die Abfragen, die
+ * zentrale Eintraege in die Kontoansicht holen, bleiben Zeile fuer Zeile
+ * dieselben. Was faellt, ist eine ZUSAGE der Anwendung: Sie hat bis hier
+ * angeboten, Stammdaten fuer alle Konten zentral zu pflegen. Das Handbuch
+ * verliert dafuer einen ganzen Abschnitt (9.4), die Einstellungen eine Karte,
+ * die Verwaltung eine Seite. Eine Nebennummer waere fuer den Wegfall einer
+ * Zusage die falsche Groesse.
+ *
+ * DER BESCHLUSS IST AELTER ALS DIESES PAKET. Rahmenplan R39 vom 30.08.2026
+ * schafft die zentralen Stammdaten ab und stellt den Rueckbau nach P5. Das
+ * S9-Konzept hat ihn nie aufgenommen — in AP5-4 ist die Verwaltungsseite
+ * deshalb noch auf Dialoge umgebaut worden, also fuer ein Modell, das
+ * abgeschafft wird. Am 09.09.2026 hat der Auftraggeber entschieden, die Tuer
+ * jetzt zu schliessen und die Seite gleich ganz zu streichen: Es gibt genau
+ * eine Installation, dort sind alle zentralen Standorte geloescht, und ein
+ * Weg, der sie neu anlegen kann, waere Arbeit fuer die Migration in P5.
+ *
+ * WAS IN P5 FOLGT (Backlog Nr. 168): `user_id` auf NOT NULL, `user_bases`
+ * weg, das Feld aus der Nutzlast, die Abfragen entschlacken. Die Vorbedingung
+ * dafuer — null Zeilen mit `user_id IS NULL` in sechs Tabellen — haelt ab
+ * jetzt von selbst, weil keine mehr entstehen koennen. Ein `ALTER TABLE`
+ * laesst sich in MySQL nicht zurueckrollen; deshalb ist die geschlossene Tuer
+ * die Voraussetzung und nicht der Rest.
+ *
+ * WAS DER ALTBESTAND MACHT, falls in einer Anlage doch noch eine zentrale
+ * Zeile steht: Sie bleibt sichtbar und unveraenderlich — in der
+ * Kontoansicht mit der Plakette „systemweit", in den Auswahllisten wie
+ * bisher. Aendern und loeschen kann sie niemand mehr; das braucht dann den
+ * Rueckbau in P5 oder einen Eingriff in der Datenbank. Der Hinweis der
+ * Nachbearbeitung, der bisher zum Anlegen unter „Standorte systemweit"
+ * aufforderte, sagt das jetzt statt in eine Sackgasse zu fuehren.
+ *
+ * MITGEGANGEN, weil es sonst ins Leere zeigt: der Verweis der
+ * Sicherungsziele-Seite (jetzt auf „Standorte" im Konto),
+ * `stammdaten_dup_personal_count()` in `db.php` (sechs Aufrufer, alle in der
+ * geloeschten Datei), der zweite Parameter von `sd_seite()` und die Option
+ * `bearbeiten_href` in `stammdaten_ui.php` (beide ohne Aufrufer), der fuenfte
+ * Einbauort des Kartendialogs in der Klickprobe, zwei Seiten des Bilderlaufs
+ * und der Platzhalter `__ADMIN_STANDORT__`, der sich ohnehin nie aufloesen
+ * liess.
+ *
+ * DEPLOY: Der Deploy synchronisiert `server/` und loescht, was im
+ * Repositorium entfaellt — die Datei verschwindet also vom Webspace. Das gilt
+ * aber nur, solange die Zustandsdatei der Aktion dort intakt ist; ist sie es
+ * nicht, laedt der Deploy alles neu hoch und loescht nichts. Nach dem Merge
+ * gehoert deshalb ein Aufruf mit STATUSCODE dazu: `admin_stammdaten.php` muss
+ * 404 antworten. Eine 200 mit Anmeldeseite sieht im Browser aus wie ein
+ * Erfolg. `update.php` muss NICHT laufen.
+ *
+ * ---------------------------------------------------------------------------
+ * 18.1.0 — S9/AP6: die Tageszuordnung antwortet sofort, und ein Dienst darf
+ * auf einem Fahrzeug stattfinden, das es als Stammdatensatz nicht gibt.
+ *
+ * ZWEI DINGE, EIN FORMULAR.
+ *
+ * ERSTENS: DIE ROLLEN ERSCHEINEN OHNE SPEICHERN (E-S9-11). Die
+ * Besatzungsfelder entstanden bisher ausschliesslich aus der Tagesantwort,
+ * also aus dem eingefrorenen `day_crew`. Wer ein anderes Rettungsmittel
+ * waehlte, sah weiter die Rollen des alten und bekam die neuen erst nach dem
+ * Speichern — zwei Speichervorgaenge fuer eine Handlung, und dazwischen zeigte
+ * das Formular etwas anderes an, als darueber ausgewaehlt war. Der neue
+ * lesende Aufruf `api/day.php?vorschau=<vehicle_id>[&base=<base_id>]`
+ * beantwortet dieselbe Frage fuer eine noch nicht gespeicherte Wahl und
+ * SCHREIBT NICHTS; eingefroren wird weiterhin erst beim Speichern (E8).
+ * Getippte Namen bleiben stehen, wo die Rolle bleibt — ohne das waere jede
+ * versehentliche Auswahl ein Datenverlust.
+ *
+ * ZWEITENS: „ANDERES RETTUNGSMITTEL …" (E-S9-10). Der letzte Eintrag der
+ * Auswahl klappt drei Felder auf — Bezeichnung, Typ mit Betriebsart und einen
+ * Standort, der Auswahl UND Freitext ist. Gespeichert wird nur am Tag:
+ * `vehicle_id` bleibt NULL, `vehicle_name`, `vehicle_typ`, `kind` und der
+ * Standort stehen in der Momentaufnahme. ES ENTSTEHT KEIN STAMMDATENSATZ
+ * (F17) — wer einmal auf einem fremden Fahrzeug Dienst tut, soll dafuer
+ * keinen Eintrag anlegen muessen, den er danach nie wieder braucht. Suche,
+ * Filter und Tagesliste finden ihn trotzdem: Sie lesen die Momentaufnahme.
+ *
+ * KEIN ROLLENSATZ, KEINE FAEHIGKEITEN (F19). Ein Rettungsmittel nur fuer den
+ * Tag fuehrt keine Besatzungsrollen; das Formular sagt das. (Der Satz verwies
+ * zunaechst auf die abweichende Besatzung am einzelnen Einsatz — das war
+ * falsch, siehe 18.1.1.) Vorhandene NAMEN in
+ * `day_crew` werden dabei NICHT geloescht — dieselbe Regel wie beim Wechsel
+ * auf ein Rettungsmittel mit weniger Rollen: Ein Name, den jemand eingetragen
+ * hat, ueberlebt und steht wieder da, sobald die Rolle zurueckkommt.
+ *
+ * DREI STELLEN, AN DENEN EINE REGEL JETZT NUR NOCH EINMAL STEHT:
+ * `pruef_typ_betriebsart()` (Typ und Betriebsart, geteilt von Stammdatensatz
+ * und Tagesfassung), `pruef_tagesrettungsmittel()` (die Pruefschicht auch fuer
+ * diesen Schreibweg — CLAUDE.md 4) und `dt_rollensatz_einfrieren()` (das
+ * Einfrieren, geteilt von beiden Wegen in `dt_zuordnen()`).
+ *
+ * EIN FUND BEIM BAUEN, und er waere still geblieben: Die Vorschlagsliste des
+ * Standortfelds setzte die verborgene Kennung VOR dem `input`-Ereignis, das
+ * die Speichern-Leiste weckt — und der eigene Zuhoerer darunter loeschte sie
+ * gleich wieder, weil Tippen Freitext bedeutet. Der Treffer sah aus wie ein
+ * Treffer und wurde als Freitext gespeichert, ohne Koordinate. Gemessen:
+ * Kennung „" statt „77". Jetzt faellt erst das Ereignis, dann steht die
+ * Kennung.
+ *
+ * ZWEI FUNDE BEIM PRUEFEN, beide vor der Auslieferung behoben:
+ *
+ *   - ZWEI FELDER „STANDORT" AUF EINER SEITE. Das Auswahlfeld des Diensttags
+ *     blieb neben dem des Tagesfahrzeugs stehen, obwohl der Weg `adhoc`
+ *     `base_id` gar nicht mitschickt: bedienbar, ohne dass etwas geschieht.
+ *     Gefunden auf dem Bild des Bilderlaufs, nicht von einer Zahl. Das
+ *     aeussere Feld geht jetzt mit.
+ *   - STILLER VERLUST VON BESATZUNGSNAMEN (F-S9-U-34). Die Rollenvorschau
+ *     uebernimmt getippte Namen aus den SICHTBAREN Feldern — und beim
+ *     Tagesfahrzeug gibt es keine. Auf dem Rueckweg auf ein Rettungsmittel
+ *     MIT Rollen rendert sie deshalb leere Felder fuer Rollen, die in
+ *     `day_crew` einen Namen haben, und das Speichern schrieb die Leere
+ *     zurueck. Gemessen an Diensttag 399: drei Namen vorher, null nachher,
+ *     ohne Fehler und ohne Meldung. Das Formular merkt sich jetzt die
+ *     geladenen Namen und legt die sichtbaren Felder darueber; ein geleertes
+ *     Feld ueberschreibt weiterhin, sonst kaeme ein geloeschter Name zurueck.
+ *
+ * NEBENNUMMER: neue Funktionen, kein Datenmodell, keine Migration.
+ * `update.php` muss NICHT laufen.
+ *
+ * 18.1.1 — S9/AP6: zwei Diensttage mit „Anderem Rettungsmittel" boten
+ * verschiedene Besatzungsrollen an. Jetzt beide keine.
+ *
+ * WORAN ES LAG. `dt_rollensatz_einfrieren()` loescht beim Wechsel des
+ * Rettungsmittels nur LEERE Rollen — ein eingetragener Name ueberlebt, damit
+ * ein versehentlicher Wechsel keine Eingabe kostet. Ein Diensttag, der von
+ * einem Rettungsmittel MIT Rollen auf „Anderes Rettungsmittel" umgestellt
+ * wurde, behielt deshalb die benannten Zeilen in `day_crew`. Das
+ * Einsatzformular liest genau diese Zeilenmenge (`role_gate`) — und bot dort
+ * weiter die Rollen des frueheren Rettungsmittels an, waehrend ein FRISCH
+ * angelegter Adhoc-Tag keine bot. Gemessen: derselbe Tag, 3 Rollen mit
+ * Rettungsmittel, danach 2 (die beiden benannten) statt 0.
+ *
+ * WAS JETZT GILT. Gefragt ist der DIENST, und ein Rettungsmittel nur fuer den
+ * Tag fuehrt keine Rollen (E-S9-10, F19) — `einsatz_form.php` fragt dafuer
+ * `dt_ist_tagesrettungsmittel()`, und die Antwort steht an EINER Stelle, nicht
+ * als Vergleich vor Ort. Die NAMEN bleiben unangetastet: Sie stehen weiter in
+ * `day_crew`, die Leseansicht des Tages zeigt sie, und sie kehren zurueck,
+ * sobald wieder ein Rettungsmittel mit dieser Rolle zugeordnet ist
+ * (Auftraggeberentscheidung vom 09.09.2026, Weg a).
+ *
+ * WAS DAMIT SICHTBAR WIRD, und es ist keine Folge dieser Aenderung, sondern
+ * eine Luecke, die sie nur noch gleichmaessig macht: An einem Diensttag mit
+ * „Anderem Rettungsmittel" laesst sich BESATZUNG UEBERHAUPT NICHT ERFASSEN —
+ * weder am Tag (kein Rollensatz) noch am einzelnen Einsatz (dasselbe Tor).
+ * Der Hinweis im Tagesformular und das Handbuch behaupteten das Gegenteil;
+ * beide sind berichtigt. Ob ein solcher Tag Rollen anbieten SOLL — und
+ * welche —, ist eine Gestaltungsfrage und steht im Backlog.
+ *
+ * KORREKTURNUMMER: eine Ungleichheit beseitigt, kein neues Feld, kein
+ * Datenmodell. `update.php` muss NICHT laufen.
+ *
+ * 19.0.0 — S9/AP7: DIE NOTIZEN DES EINSATZES WERDEN VERSCHLUESSELT.
+ * (Schritt 1 von fuenf: Katalog und Formular.)
+ *
+ * WARUM EINE HAUPTNUMMER. Es kommt kein Feld dazu und keine Spalte weg — es
+ * aendert sich, WER den Inhalt sehen kann. `missions.notes` war die letzte
+ * Spalte, in der ein Freitext im Klartext auf dem Server lag; der Platzhalter
+ * „Freitext (keine Patientendaten!)" war die einzige Sicherung dagegen, und
+ * eine Bitte ist keine Sicherung. Ab hier gilt fuer die Notizen dasselbe wie
+ * fuer Diagnose und Einsatzort: Der Browser ver- und entschluesselt, der
+ * Server sieht Chiffretext.
+ *
+ * WAS DAS AUFRAEUMT, und es stand vorher nirgends: Die Suche lieferte jede
+ * Notiz im Klartext an den Browser, fuer den GESAMTEN aktiven Bestand, ohne
+ * dass jemand entsperrt haben musste (`api/suchindex.php`) — waehrend der
+ * Kopfkommentar derselben Datei aufzaehlt, was der Server angeblich nicht
+ * sieht. Und die Zusage E6 „Administration sieht keinen Klartext"
+ * (`adminbackup_lib.php`) stimmte nicht: `notes` steht in der Spaltenliste
+ * des Adminpakets. Beides ist kein Nebeneffekt von AP7, sondern sein Grund.
+ *
+ * DER WEG IST DER KATALOG, nicht ein Sonderfall. `'store' => 'pat'` neben dem
+ * vorhandenen `'crew'`: mf_ist_spalte() nimmt das Feld damit VON SELBST aus
+ * jedem SELECT, INSERT und UPDATE auf `missions`. Der Einsatzort ist seinerzeit
+ * ohne Katalogeintrag verschluesselt worden — mit Markup von Hand und
+ * Kennungen, an denen ein Dutzend Aufrufe haengen. Diesen Weg noch einmal zu
+ * gehen hiesse, die Zusage „Feldkatalog statt Sonderfall" (CLAUDE.md 4) ein
+ * zweites Mal zu brechen; S11 verschiebt die Zielklinik denselben Weg und
+ * findet den Schluessel dann vor.
+ *
+ * VIER STELLEN, DIE STILL DANEBENGEGRIFFEN HAETTEN:
+ *
+ *   - `readField()` fragte `'store' === 'crew'` und machte aus ALLEM ANDEREN
+ *     eine Spalte. Ein Feld ohne `name` sendet nichts, `$raw` waere leer, und
+ *     jedes Speichern haette NULL in die Spalte geschrieben — bei gesperrter
+ *     Sitzung waere die Notiz damit weg gewesen: kein Blob, keine Spalte,
+ *     keine Meldung. Gefragt wird jetzt mf_ist_spalte().
+ *   - Der Riegel `PAT_INPUTS` fasste nur `input`. Die Notiz ist das einzige
+ *     mehrzeilige Feld; sie waere bei gesperrtem Schluessel bedienbar
+ *     geblieben und der Text beim Speichern spurlos verfallen.
+ *   - Ein leeres Feld beim Altbestand: Solange die Anhebung einen Einsatz
+ *     nicht erreicht hat, steht der Text noch in der Spalte. Ohne Rueckfall
+ *     (PAT_ALT) zeigte das Formular ein leeres Feld und das naechste
+ *     Speichern deckte den Text zu.
+ *   - Die Spalte geht jetzt im SELBEN UPDATE auf NULL, sobald ein Blob kam —
+ *     nicht erst beim Anhebelauf. Nur dann: Bei gesperrter Sitzung bleibt
+ *     beides unangetastet.
+ *
+ * GEMESSEN: Rundlauf am Einsatz 2324 — der POST traegt kein `f_notes` und
+ * keinen Klartext (1163 Byte, Klartextprobe negativ), die Spalte ist danach
+ * NULL, der Text kommt nach dem Neuladen wortgleich zurueck. Gesperrte
+ * Sitzung: Riegelmeldung sichtbar, Notizfeld gesperrt, und ein Speichern
+ * laesst den Blob byteweise unveraendert (397 Byte, Pruefsumme 94f8c377…
+ * vorher wie nachher). 0 Konsolenfehler.
+ *
+ * NOCH NICHT IN DIESEM SCHRITT: die lesenden Wege (api/mission.php, Suche,
+ * Export, Sicherung, Import), der Anhebelauf, die Kennzeichnung mit Schloss
+ * und die normative Dokumentation (CLAUDE.md 4, Technik 4.98). Sie folgen in
+ * den Schritten 2 bis 5; bis dahin zeigt die Einsatzansicht die Notiz eines
+ * gerade gespeicherten Einsatzes nicht an.
+ *
+ * KEINE MIGRATION. `missions.notes` ist bereits NULL-faehig (schema.sql) und
+ * bleibt stehen, bis P8 sie entfernt (R60). `update.php` muss NICHT laufen.
+ *
+ * 19.0.1 — S9/AP7 Schritt 2a: Anzeige und Suche lesen aus dem Blob.
+ *
+ * ZUR ZAEHLWEISE: Die Hauptnummer gehoert dem ganzen Umbau; seine Schritte
+ * zaehlen an der Korrekturstelle weiter, bis er steht. Eine zweite
+ * Hauptnummer fuer denselben Umbau waere eine zweite Erzaehlung.
+ *
+ * DIE SUCHE WAR DAS LOCH. `api/suchindex.php` lieferte `m.notes` im
+ * Klartext — fuer den GESAMTEN aktiven Bestand, bei jedem Aufruf der
+ * Suchseite, ohne dass irgendjemand entsperrt haben musste. Der Kopfkommentar
+ * derselben Datei zaehlt seit jeher auf, was der Server angeblich nicht
+ * sieht. Gemessen: alte Fassung 31 Schluessel je Einsatz mit `notes`, neue
+ * Fassung 30 ohne. Der Heuhaufen in `suche.php` nimmt die Notiz jetzt aus dem
+ * entschluesselten `_pat` — gefunden wird sie also nur nach dem Entsperren,
+ * wie Diagnose und Einsatzort. Gemessen an einem Suchwort aus einer Notiz:
+ * gesperrt 0 von 83, entsperrt 1 von 83, und ein Klartextwort findet
+ * gesperrt weiter 31 Treffer.
+ *
+ * DIE ANZEIGE bekommt die Notiz aus `zeigePat()` statt aus `m.fields` —
+ * dieselbe Karte, derselbe Rang 80, aber MIT Schloss, weil sie es jetzt
+ * verdient. `api/mission.php` brauchte dafuer keine Zeile: Es fragt
+ * mf_ist_spalte(), und die Antwort hat sich mit dem Katalogeintrag von selbst
+ * geaendert — so soll ein Feldkatalog wirken.
+ *
+ * ZEILENUMBRUECHE BLEIBEN JETZT STEHEN. Die Notiz ist das einzige mehrzeilige
+ * Feld; ueber `m.fields` und `esc()` wurden aus drei Zeilen bisher eine. Der
+ * Umzug war der Moment, das zu entscheiden statt zu erben. Gemessen: ein
+ * Umbruch im Text, ein <br> in der Zeile.
+ *
+ * DREI SICHTBARE SAETZE ZAEHLEN AUF, WAS GESPERRT IST — auf der Suchseite, in
+ * der Einsatzansicht und auf der Startseite. Zwei davon nennen die Notizen
+ * jetzt mit; sie waren eine Zusage und stimmten nicht mehr. Der dritte
+ * (Startseite) nennt nur, was DORT verborgen bleibt, und bleibt unveraendert.
+ *
+ * NOCH OFFEN: Export, Sicherung, Import (Schritt 2b), der Anhebelauf
+ * (Schritt 3), die Kennzeichnung (Schritt 4) und die normative Doku.
+ *
+ * 19.0.2 — S9/AP7 Schritt 2b: die Aussenwege. Export, Sicherung und Import
+ * fuehren die Notiz im verschluesselten Block; NUTZLAST 10 -> 11.
+ *
+ * DIE NUTZLASTNUMMER MUSSTE STEIGEN. Eine 11er-Sicherung traegt die Notiz nur
+ * noch im `pat`-Block. Eine Installation vor Web 19 suchte sie in der Spalte,
+ * faende dort NULL, spielte die Datei ein und meldete Erfolg — mit lauter
+ * leeren Notizen. Genau dieser stille Schaden ist der Grund fuer die Zahl;
+ * eine aeltere Installation weist eine 11er-Datei jetzt ab
+ * (`NUTZLAST_HOECHSTENS` in api/backup_restore.php zieht mit).
+ *
+ * DER WEG ZURUECK BLEIBT OFFEN, und das ist eine ausdrueckliche Entscheidung:
+ * `notes` steht im Einspielweg weiter in `$extraCols` — von HAND, denn
+ * mf_ist_spalte() sagt seit Schritt 1 nein. Eine 10er-Datei traegt den
+ * Klartext in der Spalte; faellt sie aus der Liste, wird er beim Einspielen
+ * stillschweigend verworfen. Er wird deshalb weiter geschrieben, und der
+ * Anhebelauf holt ihn beim naechsten Entsperren in den Blob. Wenn P8 die
+ * Spalte entfernt (R60), faellt mit ihr die Faehigkeit, eine 10er-Datei
+ * vollstaendig einzuspielen — das gehoert dort ausdruecklich entschieden.
+ *
+ * EIN FUND, DEN NUR DER KREISLAUF GEMELDET HAT. `import.js` fuehrt die Ziele
+ * des pat-Blocks in einem ABSCHLIESSENDEN `switch`; ein Ziel ohne `case`
+ * faellt heraus, ohne Fehler und ohne Meldung. Das Profil zeigte nach dem
+ * Umzug auf `pat.notes`, der `case` fehlte — und der CSV-Kreislauf meldete
+ * 114 VERLORENE NOTIZEN. Kein anderes Pruefmittel haette das gesehen: Die
+ * Seite sah richtig aus, die Zahl der Einsaetze stimmte, nur der Text war
+ * weg. Nach der Behebung: 9120 Einzelvergleiche, 0 unerklaerte Abweichungen,
+ * 1070 erwartete, 0 ungenutzte Regeln.
+ *
+ * DIE SCHRANKE WIRKT WEITER, aber ueber den Blob statt ueber eine eigene
+ * Spalte: Ohne den Haken fuer personenbezogene Angaben faellt der `pat_blob`
+ * schon serverseitig weg, und ohne entsperrte Sitzung gaebe es auch mit Haken
+ * nichts zu lesen. Der Import behandelt die Notiz als `sensitive` — sie
+ * verlaesst den Browser nur verschluesselt; `api/import_commit.php` nimmt die
+ * Spalte gar nicht mehr entgegen.
+ *
+ * 19.0.3 — S9/AP7 Schritt 3: der Altbestand zieht um. `api/pat_anheben.php`.
+ *
+ * DER SERVER KANN NICHT VERSCHLUESSELN, und das ist der ganze Punkt der
+ * Zusage. Der Inhaltsschluessel liegt in der Schluesselhuelle des Kontos und
+ * wird aus dem Passwort abgeleitet; umziehen kann den Altbestand nur der
+ * Browser. `assets/unlock.js` tut es im Hintergrund, sobald ein Schluessel
+ * vorliegt — an ALLEN DREI Entsperrwegen, nicht nur nach der Anmeldung: Die
+ * KDF-Anhebung haengt am Vormerkfach, weil sie die Passwortableitungen
+ * braucht; diese hier braucht den Inhaltsschluessel, und den gibt es auch
+ * Stunden spaeter ueber den Dialog.
+ *
+ * VIER REGELN, JEDE AUS EINEM KONKRETEN SCHADEN:
+ *
+ *   - EINE WACHE JE ZEILE. `missions` fuehrt kein `updated_at`. Jedes UPDATE
+ *     traegt `notes IS NOT NULL` UND `pat_blob <=> ?` — der Blob muss noch
+ *     genau der sein, den dieser Browser gelesen hat. Sonst ueberschriebe ein
+ *     zweites Fenster eine inzwischen geaenderte Diagnose, lautlos. `<=>`
+ *     statt `=`, weil der Blob NULL sein darf.
+ *   - KEIN `manual = 1`, KEIN `edited = 1`. Das Formular setzt beides bei
+ *     jedem Speichern, und `ingest.php` hoert bei `manual = 1` auf, Daten der
+ *     Uhr zu uebernehmen. Ein Anhebelauf, der den Formularweg nachbaute,
+ *     froere den gesamten Altbestand eines Kontos still gegen die Uhr ein —
+ *     ungefragt, beim naechsten Entsperren. Geschrieben werden genau zwei
+ *     Spalten. GEMESSEN: 88 Einsaetze, `manual = 1` bei 86 vorher wie
+ *     nachher, `edited = 1` bei 79 vorher wie nachher.
+ *   - DER BLOB GEWINNT. Steht dort schon eine Notiz, bleibt sie; die Spalte
+ *     ist dann ein Rest. Gemessen an einem Einsatz, dessen Spalte einen
+ *     anderen Text trug als sein Blob: Der Blobtext stand danach da.
+ *   - EIN UNLESBARER BLOB WIRD NICHT ANGEFASST. Er gehoert zu einem anderen
+ *     Schluessel; ihn zu ersetzen hiesse, fremde Angaben zu loeschen.
+ *
+ * KEIN GESPEICHERTER MERKER. „Einmal je Konto" ist die Wirkung, nicht der
+ * Mechanismus: Sobald kein Einsatz mehr Klartext traegt, liefert GET eine
+ * leere Liste. Ein Merker kostete eine Spalte samt Migration — und waere
+ * falsch, sobald wieder Klartext hereinkommt: eine eingespielte Sicherung mit
+ * Nutzlast 10, ein CSV-Import einer alten Datei, das Zuruecksetzen des
+ * Demo-Kontos. Der abgeleitete Zustand kennt diesen Fall von selbst.
+ *
+ * GEMESSEN: 12 Einsaetze mit Klartext, ein Anmeldevorgang, drei Aufrufe
+ * (GET 12, POST angehoben 12 / uebersprungen 0, GET leer mit offen 0), Spalte
+ * danach 0, 0 Konsolenfehler. Sicherungsumlauf 287 842 Einzelvergleiche,
+ * 0 unerklaerte Abweichungen, 159 erwartete — die Notiz steht dort in BEIDEN
+ * Haelften: Spalte leer, `pat.notes` gefuellt, gleicher Wortlaut. Das ist der
+ * Beleg, dass sie umzieht statt zu verschwinden.
+ *
+ * NOCH OFFEN: die Kennzeichnung mit Schloss und die Karte „Was hier gilt"
+ * (Schritt 4), die normative Doku samt CLAUDE.md 4 (Schritt 5).
+ *
+ * 19.1.0 — S9/AP7 Schritt 4: zwei Zeichen sagen, wer mitliest (E-S9-02).
+ *
+ * ZUR ZAEHLWEISE, IN ABWANDLUNG VON 19.0.1: Die Korrekturstellen zaehlten die
+ * Schritte, die nur VERSCHIEBEN — Katalog, Wege, Altbestand. Dieser Schritt
+ * fuegt etwas hinzu, das man sieht und benutzt: ein Zeichen an jedem
+ * verschluesselten Feld, eine Kleinzeile an jedem Klartext-Freitextfeld, eine
+ * Legende. Das ist eine Nebennummer, kein Feinschliff.
+ *
+ * ZWEI ZEICHEN, DIE EINANDER AUSSCHLIESSEN. Ein verschluesseltes Feld traegt
+ * das SCHLOSS, ein Klartext-Freitextfeld die KLEINZEILE „Klartext — keine
+ * Patientendaten" (Nr. 132). Die Wahl steht an EINER Stelle
+ * ($feldKennzeichen() in einsatz_form.php) und nicht in jedem Zweig; der Satz
+ * selbst steht einmal im Katalog. Ein Satz, der an vier Feldern verschieden
+ * lautet, ist kein Versprechen mehr, sondern vier. GEMESSEN: 8 Schloesser
+ * (Einsatznummer, Nachname, Vorname, Geburtsdatum, Alter, Diagnose,
+ * Einsatzort, Beschreibung Einsatzort — dazu die Karte „Notizen", die es als
+ * Kartenzahl traegt), 9 Kleinzeilen (Bergwacht-Angaben, weiterer Notarzt,
+ * sieben Rollen) und 0 Felder mit BEIDEM.
+ *
+ * DAS SCHLOSS STEHT RECHTS VOM WORT. Das Konzept sagt „links neben der
+ * Beschriftung"; der vorhandene Baustein `.symbol-schutz` setzt es ueber
+ * `margin-left` dahinter, und genauso steht es seit Web 15 in der
+ * LESEANSICHT. Links hiesse eine neue CSS-Regel und damit eine neue
+ * Darstellung — Mockup und Freigabe (CLAUDE.md 5), fuer einen Unterschied,
+ * den niemand verlangt hat. Formular und Leseansicht zeigen jetzt dasselbe
+ * Zeichen an derselben Stelle; das ist mehr wert als der Wortlaut.
+ *
+ * ZWEI FEHLER, DIE KEINE ZAHL GEMELDET HAT — beide auf dem Bild gefunden:
+ *
+ *   - DAS SCHLOSS DER KARTE „NOTIZEN" STAND ALLEIN IN EINER LEEREN ZEILE.
+ *     Traegt ein Feld den Namen seiner Karte, blendet $labelSichtbar() das
+ *     Wort aus (es stuende zweimal da) — das Zeichen blieb und zeigte auf
+ *     nichts. Es entfaellt dort; die Karte sagt es als Kartenzahl.
+ *   - „WEITERER NOTARZTKLARTEXT — KEINE PATIENTENDATEN". `.feld-klein-inline`
+ *     bringt keinen eigenen Abstand mit; die uebrigen Verwender stehen im
+ *     Markup auf einer eigenen Zeile und bekommen ihn vom HTML geschenkt.
+ *
+ * KEIN NEUER BAUSTEIN, KEIN NEUES TOKEN. Das Schloss ist `.symbol-schutz`,
+ * die Kleinzeile `.feld-klein-inline`, die Legende dieselbe klappbare Karte
+ * wie „Reanimation" darueber. `docs/Design.md` neu erzeugt: unveraendert.
+ * Neu ist EIN Schluessel am Baustein Ortsfeld — 'geschuetzt' => true haengt
+ * das Schloss an seine Beschriftung, weil 'label' escaped wird und das
+ * bleiben soll.
+ */
+const WEB_VERSION = '19.1.0';

@@ -127,12 +127,58 @@ function mf_crew_felder(): array
 }
 
 /**
+ * Verschluesselte Felder des Katalogs: Feldname => ['blob' => Schluessel im
+ * `pat_blob`, 'label' => Beschriftung].
+ *
+ * Abgeleitet aus 'store' => 'pat' (S9/AP7), genau wie mf_crew_felder() aus
+ * 'store' => 'crew'. Der Blobschluessel ist der Feldname, sofern nicht
+ * 'blob_key' etwas anderes sagt — die aelteren Blobschluessel des Formulars
+ * (`last`, `first`, `dob`, `dx`, `loc`, …) stehen NICHT im Katalog: Sie
+ * gehoeren zu handgeschriebenem Markup, das keinen Katalogeintrag hat. Diese
+ * Funktion nennt nur die Felder, die BEIDES sind — Katalogfeld und Blobinhalt.
+ *
+ * DIE BESCHRIFTUNG STEHT MIT DABEI, weil die Anzeige sie sonst nirgends mehr
+ * bekaeme: `api/mission.php` liefert nur Spalten, und ein Blobfeld ist keine.
+ * Zwei Funktionen fuer dieselbe Feldmenge waeren der Anfang davon, dass sie
+ * auseinanderlaufen.
+ *
+ * Gebraucht, wo eine Liste der Blobfelder gebraucht wird, ohne sie ein zweites
+ * Mal zu fuehren: Formular (Rendern und Fuellen), Anzeige, Export, Sicherung,
+ * Import.
+ *
+ * @return array<string,array{blob:string,label:string}>
+ */
+function mf_pat_felder(): array
+{
+    static $felder = null;
+    if ($felder !== null) { return $felder; }
+
+    $gefunden = [];
+    $sammle = static function (array $felder) use (&$sammle, &$gefunden): void {
+        foreach ($felder as $col => $f) {
+            if (($f['store'] ?? null) === 'pat') {
+                $gefunden[(string)$col] = [
+                    'blob'  => (string)($f['blob_key'] ?? $col),
+                    'label' => (string)($f['label'] ?? $col),
+                ];
+            }
+            if (!empty($f['children']) && is_array($f['children'])) { $sammle($f['children']); }
+        }
+    };
+    $sammle(require __DIR__ . '/mission_fields.php');
+
+    return $felder = $gefunden;
+}
+
+/**
  * Ist dieses Feld eine Spalte in `missions`?
  *
  * Zwei Feldarten sind es nicht: 'resources' (eigene Zeilen in
- * `mission_resources`) und alles mit 'store' (seit Web 6.0.0 die Besatzung in
- * `mission_crew`). Beide duerfen nicht in ein SELECT, INSERT oder UPDATE auf
- * `missions` geraten.
+ * `mission_resources`) und alles mit 'store' — seit Web 6.0.0 die Besatzung in
+ * `mission_crew` ('crew'), seit S9/AP7 die Notizen im verschluesselten
+ * `pat_blob` ('pat'). Beide duerfen nicht in ein SELECT, INSERT oder UPDATE
+ * auf `missions` geraten; bei 'pat' waere es zusaetzlich ein Bruch der
+ * Verschluesselungszusage (CLAUDE.md 4).
  *
  * Ein Ortsfeld ('loc', seit Web 6.1.0) IST eine Spalte — es traegt die
  * Bezeichnung. Seine beiden Koordinatenspalten stehen daneben und kommen aus

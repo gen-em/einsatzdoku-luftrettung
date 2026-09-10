@@ -317,9 +317,21 @@
   --schalter-breit:46px;               /* der Schalter aus E-P3-28 … */
   --schalter-hoch:26px;                /* … 26 hoch, damit er in eine */
   --schalter-punkt:20px;               /* 44-px-Zeile passt und greifbar bleibt */
-  --geo-kreis:32px;                    /* Einsatzort-Kreis auf der Karte */
-  --geo-schild:36px;                   /* Kästchen für Standort und Zielklinik */
-  --geo-ring:3px;                      /* Ringstärke Start/Ende am Schild */
+  --geo-kreis:28px;                    /* Einsatzort-Kreis auf der Karte */
+  --geo-schild:30px;                   /* Kästchen für Standort und Zielklinik */
+  --geo-ring:3px;                      /* Randstärke des Farbrands Start/Ende */
+  /* Zwei abgeleitete Maße aus M-S9-01 V1 (S9/AP3). Die Skala ist geschlossen
+   * (`CLAUDE.md` 5), deshalb stehen sie nicht als neue Stufen da, sondern als
+   * Rechnung — und die Rechnung IST ihre Herkunft:
+   *   Ringpunkt 14 px = --abstand-4 (16) minus --strich-stark (2). Er ist der
+   *     Ring ohne Schild und soll um genau eine Randstärke kleiner sein als
+   *     das Rasterfeld, in dem er bisher saß.
+   *   Symbol im Schild 18 px = --symbol (20) minus --strich-stark (2). Der
+   *     Kasten schrumpft um 6 px; das Symbol gibt eine Randstärke ab, damit
+   *     der Weißraum um es herum nicht auf null fällt.
+   * Das Symbol IM KREIS bekommt kein eigenes Maß — es ist --symbol-klein. */
+  --geo-ringpunkt:calc(var(--abstand-4) - var(--strich-stark)); /* Ring ohne Schild (14 px) */
+  --geo-symbol:calc(var(--symbol) - var(--strich-stark)); /* Symbol im Kartenschild (18 px) */
   /* Speicherbalken (E-S8-18, Web 15.1.0). Zwei Maße, beide abgeleitet:
    * 8 px ist --abstand-2, also eine Stufe des Vierer-Rasters — ein Balken,
    * der eine Zeile Grafik ist und keine Fläche; 10 px ist --radius, die
@@ -958,8 +970,11 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   font-family:var(--schrift-kopf);font-weight:400;
 }
 /* Lange Rettungsmittelnamen werden abgeschnitten („NEF Neubran…"); der volle
- * Name steht im Tooltip und im Seitentitel. Unter 1200 px entfällt der Name
- * ganz — das Artzeichen bleibt (E-P3-09). */
+ * Name steht im Tooltip und im Seitentitel. Drei Zustände über die Breiten,
+ * nicht zwei: In der Schublade (unter 1024 px, 320 px breit) steht der Name
+ * seit jeher; im Band 1024–1199 px ist die Leiste 220 px schmal und zeigt
+ * nur einen gesetzten Kurznamen (`.kurz`, S9/AP4a); ab 1200 px steht wieder
+ * jeder Name. Das Artzeichen bleibt überall (E-P3-09). */
 .eintrag-neben{
   flex:0 1 auto;min-width:0;
   color:var(--gedaempft);font-size:var(--groesse-2);
@@ -1057,6 +1072,20 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   padding:var(--abstand-3) 0;
   border-bottom:var(--strich) solid var(--linie);
 }
+/* DIE ZEILE ALS VERWEIS (S9/AP5, M-S9-06). Sie sieht aus wie jede andere
+ * Zeile — der Unterschied ist der Winkel rechts und die Flaeche, die sich
+ * anfassen laesst. Keine Unterstreichung: Die ganze Zeile ist der Link, und
+ * ein unterstrichener Name daerinnen sagte, nur er sei es. */
+/* „ZUM ANFANG" (S9/AP5): rechtsbuendig am Ende eines Abschnitts, mit Luft
+ * darueber. Der Knopf selbst ist `.knopf knopf-leise` — die Klasse traegt
+ * die Bedienhoehe und wird vom Bilderlauf gemessen. */
+.nach-oben{margin:var(--abstand-4) 0 0;text-align:right}
+a.zeile{text-decoration:none;color:inherit}
+a.zeile:hover{background:var(--rauch);text-decoration:none}
+a.zeile:hover .zeile-haupt{color:var(--blau-tief)}
+a.zeile:focus-visible{outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark);border-radius:var(--radius-klein)}
+.zeile-weiter{color:var(--sand);flex:0 0 auto}
+a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .zeile:last-child{border-bottom:0;padding-bottom:0}
 .zeile:first-child{padding-top:0}
 .zeile-text{flex:1 1 auto;min-width:0}
@@ -1080,6 +1109,27 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 /* Kein eigener Fokusring: Es gibt EINEN fuer die ganze Anwendung
  * (`:focus-visible` weiter oben), und der greift auch hier. */
 .spur-zeile{cursor:pointer}
+
+/* DIE ANGESPRUNGENE ZEILE (S9/AP5, M-S9-05 und M-S9-07).
+ *
+ * Wer aus der Sprungliste kommt oder gerade etwas angelegt hat, landet auf
+ * einer Zeile unter zwoelf gleich aussehenden. `:target` faerbt genau die,
+ * deren Kennung in der Adresse steht — OHNE SKRIPT, und es ueberlebt den
+ * Ruecksprung aus dem Verlauf. `.zeile-hervor` (weiter oben) sagt dasselbe,
+ * wird aber von Hand gesetzt und ist nach einem Neuladen weg; sie bleibt der
+ * Weg fuer eine Auswahl, die das Skript trifft (Spurliste), `:target` der
+ * fuer eine, die in der Adresse steht.
+ *
+ * DER RAND DER FLAECHE: Die Zeile liegt in `.karte-inhalt`, und das hat
+ * `--abstand-4` Innenabstand. Damit die Flaeche bis an den Kartenrand
+ * reicht, ist der negative Aussenabstand GENAU dieser Wert — die Mockups
+ * schreiben `--abstand-3` und lassen so je Seite 4 px Weiss stehen. */
+.zeile:target{
+  background:var(--orange-hell);
+  margin:0 calc(var(--abstand-4) * -1);
+  padding-left:var(--abstand-4);
+  padding-right:var(--abstand-4);
+}
 
 /* ---- Titelzeile ---------------------------------------------------------- */
 .titelzeile{margin-bottom:var(--abstand-4)}
@@ -1398,6 +1448,17 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
 .schalter-box:focus-visible + .schalter-label .schalter-griff{
   outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark);
 }
+/* AUSGEGRAUT — ein Schalter, den eine Einstellung darueber gesperrt hat
+ * (S9/AP2, E-S9-05: die Installation ist die Obergrenze des Kontoschalters).
+ * Dieselbe Sprache wie beim gesperrten Eingabefeld (`.feld-eingabe:disabled`):
+ * gedaempfte Schrift, Rauch als Flaeche, `not-allowed` am Zeiger. Ein
+ * ZWEITES Aussehen fuer denselben Zustand waere zwei Aussagen fuer eine
+ * Sache. Warum er gesperrt ist, sagt der Absatz daneben — die Farbe kann das
+ * nicht, und sie soll es nicht versuchen. */
+.schalter-box:disabled + .schalter-label{cursor:not-allowed}
+.schalter-box:disabled + .schalter-label .schalter-text{color:var(--gedaempft)}
+.schalter-box:disabled + .schalter-label .schalter-griff{background:var(--rauch)}
+.schalter-box:disabled + .schalter-label .schalter-griff::after{background:var(--sand)}
 /* Abhängige Felder klappen darunter auf, eingerückt mit orangem Randstrich. */
 .schalter-abhaengig{
   margin:var(--abstand-2) 0 var(--abstand-4) var(--abstand-3);
@@ -1624,8 +1685,16 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* == 15. DIALOG ============================================================
  *
- * Bestätigen, Entsperren, Rückspielen, Karte wählen: am Desktop eine Karte im
- * Schleier, mobil ein Blatt von unten (E-P3-27, 5.3).
+ * Bestätigen, Entsperren, Rückspielen, Karte wählen, Stammdaten anlegen: eine
+ * Karte im Schleier — **in jeder Breite**.
+ *
+ * HIER STAND „am Desktop eine Karte im Schleier, mobil ein Blatt von unten"
+ * (E-P3-27, 5.3), und `Design.md` 9.11 sagte es nach. Es stimmt nicht und hat
+ * nie gestimmt: Zu `.dialog` gibt es in diesem Stylesheet **keine einzige
+ * Medienabfrage**. Das Blatt (`.blatt`, Abschnitt 10) ist ein eigener
+ * Baustein mit eigenem Skript und eigenem Markup — es ersetzt keinen Dialog,
+ * es steht neben ihm. Berichtigt in S9/AP5-4, als der Satz beim Bau der
+ * Stammdaten-Dialoge zum ersten Mal jemanden in die Irre geführt hat.
  */
 .dialog{
   border:0;padding:0;
@@ -1634,10 +1703,49 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   box-shadow:var(--schatten-hoch);
   max-width:min(92vw,32rem);width:100%;
   color:var(--asphalt);
+  /* EIN DIALOG, DER LÄNGER IST ALS DER BILDSCHIRM, ROLLT IN SICH (S9/AP5-4).
+   * Bis Web 16.3.0 hatte `.dialog` keine Höhenangabe. Das ging so lange gut,
+   * wie jeder Dialog aus zwei Sätzen und zwei Knöpfen bestand; der
+   * Rettungsmittel-Dialog hat vier Felder, fünf Rollenhaken und zwei
+   * Fähigkeitshaken und ist am Handy höher als das Glas. Ohne Angabe kappt
+   * die Browservorgabe (`max-height: calc(100% - 6px - 2em)`) unten ab — und
+   * unten steht der Fuß mit „Anlegen". Der Dialog war dann nicht zu
+   * bedienen, ohne dass etwas fehlerhaft ausgesehen hätte.
+   *
+   * Kopf und Fuß stehen fest, der Inhalt rollt. `dvh` statt `vh`, weil die
+   * Adressleiste mobiler Browser mitrechnet; die Seitenhülle macht es an
+   * zwei Stellen schon so. */
+  max-height:calc(100dvh - var(--abstand-5));
 }
+/* `display` GEHOERT AN `[open]` UND NICHT AN `.dialog` (Fund F-S9-U-27, beim
+ * Bau der Stammdaten-Dialoge). Die Browservorgabe versteckt einen
+ * geschlossenen Dialog mit `dialog:not([open]){display:none}` — eine
+ * UA-Regel, und die verliert gegen JEDE Autorenregel, ganz gleich wie
+ * spezifisch. `.dialog{display:flex}` machte damit alle fuenf Dialoge der
+ * Standortseite sichtbar: als Kaesten am Seitenende, mit Feldern, die man
+ * ausfuellen kann, und Knoepfen, die absenden. Aufgefallen ist es an einem
+ * Vollseitenbild — im Fensterausschnitt standen sie unter der Falz.
+ * Dieselbe Falle wie bei `.zeile-knoepfe` (Abschnitt 11, dort gegen
+ * `.nur-ab-720`): Ein `display` in der Grundregel schlaegt das, was den
+ * Baustein ein- und ausblendet. */
+.dialog[open]{display:flex;flex-direction:column}
+/* Fast jeder Dialog hat ein <form> zwischen sich und seinen drei Teilen; der
+ * GPX-Dialog hat keins. Die Kette muss deshalb über beide Formen laufen. */
+.dialog > form{display:flex;flex-direction:column;min-height:0}
 .dialog::backdrop{background:var(--schleier)}
-.dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0}
-.dialog-inhalt{padding:var(--abstand-4)}
+.dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0;flex:0 0 auto}
+/* UNTERZEILE IM KOPF (S9/AP5-4, M-S9-07). Sie sagt, worauf sich der Dialog
+ * bezieht — der Standort, zu dem das neue Rettungsmittel gehört. Das gehört
+ * nicht in den Titel („Rettungsmittel an Standort Talwang anlegen" wäre eine
+ * Zeile, die umbricht) und nicht ins Formular (es ist kein Feld, es ist der
+ * Zusammenhang). Dieselbe Rolle wie `.titelzeile-unter` an einer Seite. */
+.dialog-kopf .unterzeile{
+  margin:var(--abstand-1) 0 0;
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
+/* Der Inhalt ist der Teil, der rollt — `min-height:0`, weil ein Flexkind
+ * sonst nicht unter seine Inhaltshoehe schrumpft und dann gar nichts rollt. */
+.dialog-inhalt{padding:var(--abstand-4);overflow-y:auto;min-height:0}
 /* Ein erklärender Absatz vor den Feldern braucht Luft nach unten — sonst
  * klebt die erste Beschriftung an ihm (O9, Rückspieldialog). Der letzte
  * Absatz bekommt keine: Er steht ohnehin vor dem Fuß mit eigenem Abstand. */
@@ -1646,6 +1754,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .dialog-fuss{
   display:flex;gap:var(--abstand-3);justify-content:flex-end;
   padding:0 var(--abstand-4) var(--abstand-4);
+  flex:0 0 auto;
 }
 .dialog-fuss .knopf{flex:1 1 auto}
 
@@ -1819,10 +1928,43 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
      ungenutzt in :root (F-P3-BC). */
   .leiste-filter{width:var(--leiste-filter-schmal)}
 
-  /* Unter 1200 px entfällt der Rettungsmittelname in der Leiste; das
-     Artzeichen bleibt (E-P3-09). Bei 220 px Leistenbreite bliebe von ihm
-     ohnehin nur eine Ellipse. */
+  /* IN DIESEM BAND IST DIE LEISTE 220 PX SCHMAL. Der volle
+     Rettungsmittelname bliebe hier ohnehin nur eine Ellipse — er entfällt,
+     das Artzeichen bleibt (E-P3-09). Ein gesetzter KURZNAME steht dagegen
+     (S9/AP4a, Freigabe M-S9-08 Variante 2; Platz nach M-S9-11 Weg 2).
+     WIE VIEL VON IHM, HÄNGT AM DATUM DANEBEN. `.eintrag-text` schrumpft
+     nicht (`flex:1 0 auto`), und seine Breite schwankt: Bricolage Grotesque
+     setzt Ziffern PROPORTIONAL — die Regel `tabular-nums` (Abschnitt 3)
+     nennt `.zahl,td,th,time,output`, nicht diesen `<span>`. Gemessen an den
+     dreizehn Datumsangaben des Prüfbestands bei 1024 und bei 1199 px steht
+     dem Nebentext zur Verfügung: ohne die beiden Regeln darunter 48–63 px,
+     mit der Einrückung allein 56–71, mit beiden 64–79. „BW Hoch" braucht 55,
+     „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz, „RTH Murnau" (76)
+     an den meisten. Ein Auslassungszeichen bleibt möglich und ist kein
+     Fehler: Der Tooltip nennt die volle Bezeichnung.
+     Der Zustand darunter — Schublade, 320 px — bleibt unberührt: Dort greift
+     dieser Block nicht, und der volle Name steht dort weiterhin. */
   .eintrag-neben{display:none}
+  .eintrag-neben.kurz{display:block}
+
+  /* ZWEIMAL VIER PIXEL, ZWEIMAL WIRKSAM (Freigabe M-S9-11, Weg 2).
+     Die Einrückung wirkt je Akkordeonebene (Jahr, Monat), der Abstand je
+     Zwischenraum der Zeile (Zeichen–Datum, Datum–Name): 12 → 4 px und
+     8 → 4 px bringen dem Nebentext zusammen 16 px.
+
+     DIE EINRÜCKUNG GILT UNGESCOPED, DER ABSTAND NICHT — und beides mit
+     Grund. `.leiste-gruppe > .akkordeon-inhalt{padding-left:0}` weiter oben
+     ist spezifischer (0-2-0 gegen 0-1-0) und hält das Einstellungsmenü von
+     der Einrückung heraus; wer hier `.leiste .akkordeon-inhalt` schriebe,
+     überholte diese Ausnahme und rückte das Menü von 0 auf 4 px ein.
+     Für den Abstand gibt es keine solche Ausnahme: `.eintrag` tragen auch
+     der Leistenfuß, die Hauptpunkte der Schublade und jede Zeile des
+     Einstellungsmenüs. Sie haben keinen Nebentext und damit kein
+     Platzproblem — eine ungescopte `gap`-Regel rückte sie ohne Not
+     zusammen. Deshalb `:not(.leiste-gruppe)`: Es trifft die Diensttage,
+     nicht das Menü. */
+  .akkordeon-inhalt{padding-left:var(--abstand-1)}
+  .akkordeon:not(.leiste-gruppe) .eintrag{gap:var(--abstand-1)}
 
   /* Das Aktionsmenü wird ein Aufklappmenü statt eines Blattes. */
   .blatt{
@@ -1841,6 +1983,11 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .leiste{width:var(--leiste)}
   .leiste-filter{width:var(--leiste-filter)}
   .eintrag-neben{display:block}
+  /* Ab hier ist die Leiste 260 px — Einrückung und Abstand gehen auf ihr
+     normales Maß zurück (Gegenstück zu den beiden 4-px-Regeln im 1024er
+     Block). */
+  .akkordeon-inhalt{padding-left:var(--abstand-3)}
+  .akkordeon:not(.leiste-gruppe) .eintrag{gap:var(--abstand-2)}
   .geo{height:var(--karte-desktop)}
   .zweispalter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-4);align-items:start}
 
@@ -2117,51 +2264,68 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 /* == 21. KARTENMARKER (O3, E-P3-40, Mockup 26) =============================
  *
  * Der Marker-Satz gilt für alle drei Kartenseiten und entsteht in
- * assets/geo.js. Die Zeichnung: Schilder (Haus, Klinik) als weiße, dunkel-
- * blau umrandete Kästchen mit Namensschild darunter; der Einsatzort als
- * oranger Kreis mit Pin; Start und Ende als blauer bzw. roter Ring UM das
- * Schild des Ortes, an dem die Spur beginnt oder endet — beides am selben
- * Ort als Doppelring. Richtungspfeile erscheinen erst ab einer Zoomstufe,
- * bei der sie nicht gedrängt stehen.
+ * assets/geo.js. Die Zeichnung: Schilder (Haus, Klinik) als weiße Kästchen;
+ * der Einsatzort als oranger Kreis mit Pin; Start und Ende als blauer bzw.
+ * roter Rand am Schild des Ortes, an dem die Spur beginnt oder endet —
+ * beides am selben Ort als Doppelrand. Richtungspfeile erscheinen erst ab
+ * einer Zoomstufe, bei der sie nicht gedrängt stehen.
+ *
+ * DER FARBRING IST SEIT S9/AP3 DER RAND (M-S9-01 V1, E-S9-12). Bis Web
+ * 15.8.0 lag er als zweiter und dritter `box-shadow` AUSSERHALB des
+ * dunkelblauen Randes; ein Standort mit Doppelring maß dadurch 60 px und
+ * deckte auf der Handykarte mehr als ein Drittel der Höhe. Jetzt ersetzt der
+ * Farbrand den dunkelblauen: 38 px beim Doppelrand, 32 px sonst. Ohne
+ * Aufzeichnung bleibt der Rand dunkelblau — er sagt dann nichts über die
+ * Spur, sondern trennt nur.
+ *
+ * AUSSEN LIEGT IMMER 1 px SCHNEE (F6), am Schild und nur dort. Er trennt die
+ * Farbe von der Karte, damit Blau nicht auf Grün und Rot nicht auf Braun
+ * stößt. Der Einsatzort-Kreis bekommt ihn NICHT: Er ist orange auf einer
+ * Karte, die kein Orange trägt, und die freigegebene Maßleiste des Mockups
+ * nennt für ihn 28 px — mit Trennlinie wären es 30.
+ *
+ * DIE SCHATTENANGABEN TRAGEN DEN SCHLAGSCHATTEN MIT. Bis Web 15.8.0
+ * überschrieben die drei Ringregeln `box-shadow` vollständig; ein beringtes
+ * Schild hatte deshalb keinen Schatten, ein unberingtes schon. Das war
+ * niemandem aufgefallen, weil beide Zustände selten nebeneinander stehen.
  */
 /* KEIN NAMENSSCHILD MEHR (S3/AP7). Die Spalte traegt seit S3 genau ein Kind;
  * `gap` und `flex-direction` bleiben trotzdem stehen, weil die Ringklassen
  * darauf aufsetzen und ein Marker mit zwei Kindern jederzeit wiederkommen
  * kann — dann aber mit ausdruecklichem `iconSize` (siehe geo.js). */
 .geo-schild{display:flex;flex-direction:column;align-items:center;gap:var(--abstand-1)}
-/* ENGER (S3/AP7): 36 statt 44 px. Die 44 kamen von `--knopf` — der Kasten
- * ist aber kein Bedienelement, sondern eine Zeichnung, und die 44-px-Regel
- * gilt fuer das, was man DRUECKT. Das Symbol darin bleibt bei 20 px; was
- * verschwindet, ist Weissraum zwischen Symbol und Rand (12 px ringsum
- * vorher, 8 px jetzt). */
+/* ENGER, ZWEITE STUFE (S9/AP3): 30 statt 36 px, davor 44. Die 44 kamen von
+ * `--knopf` — der Kasten ist aber kein Bedienelement, sondern eine Zeichnung,
+ * und die 44-px-Regel gilt fuer das, was man DRUECKT (R76 gilt hier nicht,
+ * S3/AP7). Untergrenze am Finger ist WCAG 2.5.8 mit 24 px; 30 px liegen
+ * darueber. Das Symbol gibt eine Randstaerke ab (--geo-symbol, 18 px), damit
+ * der Weissraum ringsum nicht auf null faellt. */
 .geo-schild-kasten{
   display:flex;align-items:center;justify-content:center;
   width:var(--geo-schild);height:var(--geo-schild);
   background:var(--schnee);color:var(--dunkelblau);
   border:var(--strich-stark) solid var(--dunkelblau);
   border-radius:var(--radius);
-  box-shadow:var(--schatten);
+  box-shadow:0 0 0 var(--strich) var(--schnee),var(--schatten);
 }
-/* Ringe liegen als zusätzliche Rahmen um das Kästchen. Der Doppelring ist
- * außen rot (Ende) und innen blau (Start) — wie im Mockup. */
-.geo-ring-start .geo-schild-kasten{
-  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
-             0 0 0 calc(var(--geo-ring) * 2) var(--blau);
-}
-.geo-ring-ende .geo-schild-kasten{
-  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
-             0 0 0 calc(var(--geo-ring) * 2) var(--rot);
-}
+.geo-schild-kasten .symbol{width:var(--geo-symbol);height:var(--geo-symbol)}
+/* DER FARBRAND ERSETZT DEN DUNKELBLAUEN, er liegt nicht darum herum. Der
+ * Doppelrand ist innen blau (Start) und aussen rot (Ende): blauer Rand, 1 px
+ * Schnee, 2 px Rot, 1 px Schnee — 38 px statt frueher 60. Die Schnee-Angabe
+ * VOR der roten liegt oben und laesst von deren 3 px Spread 2 px stehen. */
+.geo-ring-start .geo-schild-kasten{border-color:var(--blau);border-width:var(--geo-ring)}
+.geo-ring-ende  .geo-schild-kasten{border-color:var(--rot);border-width:var(--geo-ring)}
 .geo-ring-beide .geo-schild-kasten{
-  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
-             0 0 0 calc(var(--geo-ring) * 2) var(--blau),
-             0 0 0 calc(var(--geo-ring) * 3) var(--schnee),
-             0 0 0 calc(var(--geo-ring) * 4) var(--rot);
+  border-color:var(--blau);border-width:var(--geo-ring);
+  box-shadow:0 0 0 var(--strich) var(--schnee),
+             0 0 0 var(--geo-ring) var(--rot),
+             0 0 0 calc(var(--geo-ring) + var(--strich)) var(--schnee),
+             var(--schatten);
 }
-/* OHNE WEISSE UMRANDUNG UND ETWAS KLEINER (S3/AP7). Der weisse Rand war ein
+/* OHNE WEISSE UMRANDUNG UND KLEINER (S3/AP7, S9/AP3). Der weisse Rand war ein
  * Rest aus der Zeit vor dem Schatten: Er sollte den Kreis von der Karte
  * abheben. Das tut der Schatten, und der Rand machte den Kreis zusaetzlich
- * um 4 px breiter, als er aussah. 32 statt 36 px. */
+ * um 4 px breiter, als er aussah. 28 px, davor 32, davor 36. */
 .geo-kreis{
   display:flex;align-items:center;justify-content:center;
   width:var(--geo-kreis);height:var(--geo-kreis);
@@ -2169,12 +2333,45 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   border-radius:var(--radius-rund);
   box-shadow:var(--schatten);
 }
+.geo-kreis .symbol{width:var(--symbol-klein);height:var(--symbol-klein)}
+/* DER PUNKT BRAUCHT EINEN KASTEN, sonst hat er keinen (Backlog Nr. 153,
+ * S9/AP3). Er ist ein <span> (geo.js, markerPunkt), und an einem nicht
+ * ersetzten Inline-Element wirken `width` und `height` NICHT: Gemessen in
+ * der Tagesuebersicht am 07.09.2026 stand er auf 4 x 18 px statt 16 x 16 —
+ * uebrig blieben die beiden 2-px-Raender als weisser Strich, und die
+ * Spurfarbe im `background` lag in einem 0 px breiten Inhaltskasten und war
+ * nie zu sehen. Derselbe Fehler wie beim Pfeil eine Regel weiter unten. */
 .geo-punkt{
+  display:block;
   width:var(--abstand-3);height:var(--abstand-3);
   border-radius:var(--radius-rund);
   border:var(--strich-stark) solid var(--schnee);
 }
-.geo-pfeil{color:var(--dunkelblau)}
+/* DER PFEIL BRAUCHT EINEN KASTEN, DAMIT ER SICH DREHEN KANN (Backlog Nr. 72,
+ * S9/AP3). `geo.js` setzt die Laufrichtung als `transform:rotate(Ndeg)` auf
+ * diesen <span>; `transform` wirkt aber nicht auf ein nicht ersetztes
+ * Inline-Element, und die Regel hier setzte bis Web 15.8.0 nur die Farbe.
+ * Jeder Pfeil zeigte deshalb nach Norden, und auf Nord-Sued-Abschnitten sah
+ * das richtig aus.
+ *
+ * DER BERECHNETE WERT LUEGT DABEI: `getComputedStyle` meldet die
+ * Drehmatrix auch am Inline-Element. Nachweisbar ist der Fehler nur an der
+ * Geometrie — ein 20-px-Kasten mit `rotate(45deg)` misst 28,3 px, wenn die
+ * Drehung greift, und 20 px, wenn nicht. Gemessen am 07.09.2026: 20 px,
+ * Bildschirmmatrix des SVG a=0,833 b=0 c=0 d=0,833 bei behauptetem 90-Grad.
+ *
+ * `display:flex` MIT AUSDRUECKLICHER GROESSE, nicht `inline-block`: Der
+ * Drehpunkt muss auf `iconAnchor: [10, 10]` aus geo.js treffen. Bei einem
+ * Inline-Block haengt die Kastenhoehe an der Zeilenhoehe der Karte
+ * (leaflet.css setzt 12px/1.5) und an `vertical-align` des Symbols — der
+ * Pfeil drehte sich dann um einen Punkt, der bei der naechsten
+ * Schriftaenderung woanders liegt. `--symbol` ist dieselbe Zahl, die
+ * geo.js als `iconSize` uebergibt. */
+.geo-pfeil{
+  display:flex;align-items:center;justify-content:center;
+  width:var(--symbol);height:var(--symbol);
+  color:var(--dunkelblau);
+}
 .geo-pfeil .symbol{
   filter:drop-shadow(0 0 var(--strich) var(--schnee))
          drop-shadow(0 0 var(--strich) var(--schnee));
@@ -2311,20 +2508,36 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 body.map-fs-lock{overflow:hidden}
 .geo:fullscreen{margin:0;border-radius:0}
 
-/* ---- Ring ohne Schild: Start/Ende der Spur abseits von Standort/Ziel ----- */
+/* ---- Ring ohne Schild: Start/Ende der Spur abseits von Standort/Ziel -----
+ *
+ * ER STEHT HIER UND NICHT IN ABSCHNITT 21, wo der uebrige Marker-Satz liegt —
+ * eine alte Einordnung, die stehenbleibt: Ihn zu verschieben waere eine
+ * Reihenfolgeaenderung im Stylesheet und damit ein Fall fuer den
+ * Stilvergleich, der waehrend P3 ausgesetzt ist. Wer Abschnitt 21 aendert,
+ * aendert hier mit (S9/AP3: 16 -> 14 px, Rand 3 -> 2 px nach M-S9-01 V1).
+ * Seine Groesse steht auch in geo.js (`iconSize`), und die Legende des
+ * Kartendialogs benutzt dieselben Klassen — siehe dort. */
+/* DIE ANTIPPFLAECHE UM DEN RING (S9/AP3, geo.js `RINGFELD_PX`). Sie ist
+ * durchsichtig und 24 px gross — die Untergrenze aus WCAG 2.5.8, die E-S9-12
+ * im selben Absatz nennt, in dem es den Ring auf 14 px setzt. Die Zeichnung
+ * bleibt 14 px; nur der Finger bekommt mehr. */
+.geo-ringpunkt-feld{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;
+}
 .geo-ringpunkt{
   display:block;
-  width:var(--abstand-4);height:var(--abstand-4);
+  width:var(--geo-ringpunkt);height:var(--geo-ringpunkt);
   border-radius:var(--radius-rund);
   background:var(--schnee);
-  border:var(--geo-ring) solid var(--blau);
+  border:var(--strich-stark) solid var(--blau);
   box-shadow:var(--schatten);
 }
 .geo-ringpunkt-ende{border-color:var(--rot)}
 .geo-ringpunkt-beide{
   border-color:var(--blau);
-  box-shadow:0 0 0 var(--strich-stark) var(--schnee),
-             0 0 0 calc(var(--geo-ring) * 2) var(--rot);
+  box-shadow:0 0 0 var(--strich) var(--schnee),
+             0 0 0 var(--geo-ring) var(--rot);
 }
 
 
@@ -2389,23 +2602,15 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 .loc-widget > label{margin-bottom:var(--abstand-1)}
 /* Und der Block als Ganzes braucht den Abstand nach unten, den ein `label`
  * mitbraechte — sonst klebte „Beschreibung Einsatzort" am Koordinaten-Chip. */
-.loc-widget{margin-bottom:var(--abstand-3)}
+/* `position:relative`, seit die Trefferliste ueber dem folgenden Inhalt
+ * schwebt statt ihn zu verschieben (S9/AP1): Ohne einen positionierten
+ * Vorfahren haengte sie am Seitenanfang. */
+.loc-widget{margin-bottom:var(--abstand-3);position:relative}
 .ortsfeld-zeile{display:flex;gap:var(--abstand-2);align-items:stretch}
 .ortsfeld-zeile input{flex:1 1 auto;min-width:0}
 .ortsfeld-zeile .knopf-symbol{flex:0 0 auto}
 .ortsfeld-aktionen{position:relative;display:inline-flex}
 
-/* Vorschlagsliste unter dem Feld (Photon, Stammdaten, Koordinaten). */
-.loc-suggest{
-  margin:var(--abstand-1) 0 0;
-  background:var(--schnee);
-  border:var(--strich) solid var(--linie-stark);
-  border-radius:var(--radius-klein);
-  box-shadow:var(--schatten);
-  overflow:hidden;
-}
-.loc-suggest li{padding:var(--abstand-2) var(--abstand-3);cursor:pointer}
-.loc-suggest li:hover{background:var(--rauch)}
 .locstate{color:var(--gedaempft);font-size:var(--groesse-2);margin:var(--abstand-1) 0 0}
 .locstate:empty{display:none}
 .locstate-fehler{color:var(--rot-tief)}
@@ -2438,20 +2643,82 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   flex:1 1 8rem;min-width:0;border:0;min-height:0;
   padding:var(--abstand-1);background:none;
 }
-.rmlist{
-  position:absolute;left:0;right:0;z-index:20;
+
+/* ---- Vorschlagsliste: EIN Baustein unter jedem Feld (S9/AP1, E-S9-07) ----
+ *
+ * Sie ersetzt drei Fassungen auf einmal: `.loc-suggest` (Photon-Liste des
+ * Ortsfelds), `.rmlist`/`.rmopt` (weitere Rettungsmittel) und jede native
+ * `<datalist>`. Rahmen, Schatten und Radius sind die der alten
+ * `.loc-suggest`; neu sind die Gruppenzeile, das Symbol je Eintrag, die
+ * gedaempfte Nebenzeile und die Markierung, die Zeiger und Pfeiltaste teilen.
+ * Mockup M-S9-03, freigegeben 07.09.2026.
+ *
+ * SIE SCHWEBT (`position:absolute`), sie schiebt nicht. Die alte
+ * `.loc-suggest` stand im Fluss und drueckte beim Tippen alles darunter nach
+ * unten — auf einem 390-px-Schirm sprang das halbe Formular. Der Behaelter
+ * traegt dafuer `position:relative`: `.loc-widget`, `.rmbox`,
+ * `.feld-vorschlag`.
+ *
+ * IHRE EBENE IST 35, UND DAS IST EINE ENTSCHEIDUNG. Sie stand zuerst auf 20 —
+ * dem Wert der alten `.rmlist`, die als einzige schwebte. Damit lag sie UNTER
+ * der klebenden Speichern-Leiste (30), und die deckte beim Tippen genau die
+ * untersten Trefferzeilen zu: gemessen 61 px Ueberlappung, und
+ * `elementFromPoint` traf in der Schnittflaeche die Leiste. Gefunden hat es
+ * der Auftraggeber am Bild, kein Pruefmittel — ein Bild zeigt die Ueberdeckung
+ * nur, wenn die Scrollposition zufaellig passt. Die Klickprobe misst sie
+ * jetzt (`ap1-liste-ueber-speichern-leiste`).
+ *
+ * NACH OBEN IST SIE EBENSO BEGRENZT: Die Kopfleiste liegt auf 40 und bleibt
+ * darueber — eine Vorschlagsliste, die ueber die Kopfleiste malt, verdeckt
+ * den Weg aus der Seite heraus. 35 ist der Platz dazwischen, und er ist der
+ * einzige.
+ *
+ * KEIN EIGENES HOEHENTOKEN. Die Zeile ist `--knopf` hoch und folgt damit
+ * beiden Bedienhoehen von selbst (44 px am Finger, 36 px am Zeigergeraet ab
+ * 1024 px, R76). */
+.vorschlaege{
+  position:absolute;left:0;right:0;z-index:35;
+  margin:var(--abstand-1) 0 0;padding:0;list-style:none;
   background:var(--schnee);
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
   box-shadow:var(--schatten);
   overflow:hidden;
 }
-.rmlist .rmopt{
-  display:block;width:100%;text-align:left;
-  background:none;border:0;border-radius:0;min-height:var(--knopf);
-  padding:var(--abstand-2) var(--abstand-3);cursor:pointer;
+/* Die Gruppenzeile sagt, WOHER die Eintraege darunter kommen. Sie ist keine
+ * Zeile zum Anfassen und traegt deshalb keine Bedienhoehe. */
+.vorschlaege-gruppe{
+  padding:var(--abstand-1) var(--abstand-3);
+  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-1);
+  letter-spacing:.06em;text-transform:uppercase;color:var(--gedaempft);
+  background:var(--rauch);border-top:var(--strich) solid var(--linie);
 }
-.rmlist .rmopt:hover{background:var(--rauch)}
+.vorschlaege-gruppe:first-child{border-top:0}
+.vorschlag{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);padding:var(--abstand-1) var(--abstand-3);
+  border-left:var(--abstand-1) solid transparent;cursor:pointer;
+}
+.vorschlag .symbol{color:var(--gedaempft)}
+.vorschlag-text{flex:1 1 auto;min-width:0}
+/* Eine Zeile je Zeile: Ein umbrechender Ortsname schoebe die naechste
+ * Zeile aus der Bedienhoehe. */
+.vorschlag-haupt{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vorschlag-neben{
+  display:block;color:var(--gedaempft);font-size:var(--groesse-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Zeiger und Pfeiltaste teilen sich EINE Markierung — sonst haette die
+ * Tastaturbedienung ein zweites Aussehen fuer dieselbe Aussage. */
+.vorschlag:hover,.vorschlag.aktiv{background:var(--rauch);border-left-color:var(--orange)}
+/* Die freie Eingabe ist eine HANDLUNG, kein Datensatz. */
+.vorschlag-neu .vorschlag-haupt{
+  color:var(--orange-tief);font-family:var(--schrift-kopf);font-weight:600;
+}
+.vorschlag-neu .symbol{color:var(--orange-tief)}
+/* Behaelter eines Textfeldes mit Vorschlagsliste (Besatzungsfelder). Das
+ * Ortsfeld und die Rettungsmittelbox bringen ihren eigenen mit. */
+.feld-vorschlag{position:relative}
 
 /* ---- Phasen- und Reanimationszeilen (Mockup 22/25) ----------------------- */
 .phasen-eingabe{
@@ -2581,6 +2848,37 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   transform:translateX(-50%)}
 .ortswahl-kreuz::after{top:50%;left:0;right:0;height:var(--strich-stark);
   transform:translateY(-50%)}
+
+/* ---- Suchfeld im Dialogkopf (S9/AP2, E-S9-06; Mockup M-S9-04) ------------
+ *
+ * Der Behaelter traegt `position:relative`, weil die Trefferliste
+ * (`.vorschlaege`, 9.28) darin schwebt — dieselbe Anforderung wie bei
+ * `.loc-widget` und `.rmbox`. Die Zeile selbst ist die des Ortsfelds
+ * (`.ortsfeld-zeile`, Feld plus Lupe): Dasselbe Bedienelement soll nicht
+ * zweimal aussehen. */
+.dialog-suche{position:relative;margin-bottom:var(--abstand-3)}
+/* Das Suchfeld steht im KOPF (M-S9-04). Damit die Karte unmittelbar darunter
+ * beginnt, faellt der obere Innenabstand des Inhalts weg — sonst stuende
+ * zwischen Feld und Karte zweimal Luft: der Abstand des Feldes und der des
+ * Inhalts. Auf den Kartendialog begrenzt; jeder andere Dialog behaelt seinen. */
+.dialog-karte .dialog-inhalt{padding-top:0}
+
+/* ---- Legende unter der Karte (S9/AP2) ------------------------------------
+ *
+ * Eine Zeile, gedaempft: „Aufzeichnung · Start · Ende". Sie erscheint nur,
+ * wenn eine Spur gezeichnet wurde — eine Legende ohne Gegenstueck erklaert
+ * nichts. Die Ringpunkte sind dieselben wie auf der Karte (`.geo-ringpunkt`,
+ * blau = Start, `.geo-ringpunkt-ende` rot = Ende) und brauchen hier keine
+ * eigene Regel — sie tragen ihre Groesse selbst. */
+.legende{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
+.legende > span{display:inline-flex;align-items:center;gap:var(--abstand-1)}
+.legende-linie{
+  display:inline-block;width:var(--abstand-5);height:var(--abstand-1);
+  background:var(--spur-1);border-radius:var(--radius-klein);
+}
 
 /* Blatt-Zeilen gibt es seit O5 auch als <button> (Ortswahl) — dieselbe
  * Gestalt wie die Verweise, ohne Knopf-Grundform. */
@@ -2725,6 +3023,16 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
  * Die Kachel selbst ist der Baustein aus O1 (`.kennzahl`, ui_kennzahl) — hier
  * stehen nur Raster, mobile Kappung und die Segmentwahl in der Titelzeile.
  * ======================================================================== */
+
+/* DREI SPALTEN, IN JEDER BREITE (S9/AP5, M-S9-07): das Inhaltsverzeichnis
+ * der Standortseite. Die Regel steht mit Absicht OHNE Medienabfrage und
+ * NACH der Vierspalten-Regel des 1024er Bandes — nur so gewinnt sie in jeder
+ * Breite. Im 720er Block darunter waere sie am Handy wirkungslos, und dort
+ * stuenden zwei Kacheln nebeneinander und eine allein; das freigegebene
+ * Mockup zeigt die drei auch bei 376 px in einer Reihe. Drei Kacheln zu je
+ * rund 110 px sind schmal — sie tragen eine Zahl und ein Wort, und mehr
+ * sollen sie nicht. */
+.kennzahl-raster-3{grid-template-columns:repeat(3,minmax(0,1fr))}
 
 /* Spaltenzahl folgt dem Satz: vier Kacheln in vier Spalten, acht in zwei
  * Reihen zu vier, zehn in zwei Reihen zu fünf — so bleibt keine Reihe halb
@@ -3324,3 +3632,88 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* Die Erklärung nimmt den Rest der Zeile — ohne das bliebe sie bei kurzem
  * Text schmal neben der Kachel stehen und bräche mitten im Satz. */
 .logo-vorschau > .feld-hinweis{flex:1 1 12rem;margin:0}
+
+/* ---- Sprungliste und Kartenfilter (S9/AP5, M-S9-05 und M-S9-06) ----------
+ *
+ * Zwei Hilfsmittel für eine LANGE Liste in einer Karte, beide ab sechs
+ * Einträgen (`SD_HILFE_AB`, stammdaten_ui.php): die Sprungliste führt zu
+ * einem bestimmten Eintrag, der Filter blendet die übrigen aus. Sie stehen
+ * nebeneinander in derselben Datei, weil sie dieselbe Frage beantworten —
+ * „wie finde ich hier etwas?" — und weil die Wahl zwischen ihnen davon
+ * abhängt, ob die Einträge ein Zeichen haben, an dem man sie erkennt.
+ *
+ * KEIN NEUES TOKEN. Alles kommt aus der Skala: --knopf für die Höhe (44 px
+ * am Finger, 36 px am Zeiger ab 1024 px), --symbol-klein für das Artzeichen,
+ * --radius-rund für die Pille, --groesse-2 für ihre Schrift. */
+
+/* DIE PILLE IST EIN VERWEIS UND SIEHT AUS WIE EIN ZIEL, nicht wie ein Wert:
+ * Schnee auf --linie-stark, nicht Blau. Der Koordinaten-Chip (.rmchip) macht
+ * es umgekehrt, und das ist der Unterschied — er TRÄGT etwas, sie FÜHRT
+ * irgendwohin. Voll rund, damit sie sich von der eckigen Plakette daneben
+ * unterscheidet.
+ *
+ * DIE HÖHE IST --knopf, und der Bilderlauf misst sie: `.sprungziel` steht
+ * seit S9/AP5 in seiner Auswahl (aufnehmen.mjs). Ohne das wäre die 44/36
+ * hier eine Zusage ohne Prüfmittel — genau der Fall, der `.listenfilter`
+ * vier Monate lang ungemessen gelassen hat. */
+.sprungliste{display:flex;flex-wrap:wrap;gap:var(--abstand-1);
+  margin:0 0 var(--abstand-3)}
+.sprungziel{
+  display:inline-flex;align-items:center;
+  height:var(--knopf);padding:0 var(--abstand-3) 0 var(--abstand-2);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-rund);
+  background:var(--schnee);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-2);
+  text-decoration:none;white-space:nowrap;
+}
+/* Ohne Artzeichen steht der Text sonst zu weit links an der Rundung. */
+.sprungziel > .sprungziel-text:first-child{padding-left:var(--abstand-1)}
+.sprungziel .symbol{
+  width:var(--symbol-klein);height:var(--symbol-klein);
+  margin-right:var(--abstand-1);color:var(--gedaempft);flex:0 0 auto;
+}
+.sprungziel:hover{background:var(--rauch);text-decoration:none}
+/* `.aktiv` und nicht `.ziel` — ein Name für „hier stehst du", derselbe wie an
+ * Kennzahl, Listenfilter, Leisteneintrag und Seitenknopf. */
+.sprungziel.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+.sprungziel.aktiv .symbol{color:var(--orange-tief)}
+
+/* DER FILTER HEISST `.kartenfilter` UND NICHT `.filterfeld`: `.filterfelder`
+ * (Mehrzahl) ist seit P3 der Innenabstand einer aufgeklappten Filtergruppe
+ * der Suchseite. Zwei Klassen, die sich um ein „r" unterscheiden und
+ * Verschiedenes meinen, sind derselbe Fehler, den `.listenfilter-zahl` weiter
+ * oben ausdrücklich umgangen hat.
+ *
+ * ER IST 44/36 HOCH UND NICHT 48. Die 48 (--suchfeld) gehören dem großen
+ * Suchfeld, das die Haupthandlung SEINER Seite ist; ein Filter in einer von
+ * sechs Karten ist das nicht. Hier gilt die Regel, nicht die Ausnahme.
+ *
+ * DIE LUPE HAT KEIN `top`. Der Behälter zentriert senkrecht
+ * (`align-items:center`), und damit sitzt sie in BEIDEN Bedienhöhen mittig.
+ * Das Mockup schreibt `top:12px`; das stimmt bei 44 px und sitzt bei 36 px
+ * 4 px zu tief. Dieselbe Lösung wie bei `.suchfeld-lupe`. */
+.kartenfilter{position:relative;display:flex;align-items:center;
+  margin:0 0 var(--abstand-3)}
+.kartenfilter input{
+  width:100%;min-height:var(--knopf);
+  padding-left:calc(var(--abstand-3) + var(--symbol) + var(--abstand-2));
+  padding-right:calc(var(--abstand-2) + var(--knopf));
+}
+/* Das browsereigene Kreuz von `type="search"` abstellen: Es sitzt je nach
+ * Browser woanders, und daneben stünde unseres. */
+.kartenfilter input::-webkit-search-cancel-button{display:none}
+.kartenfilter-lupe{
+  position:absolute;left:var(--abstand-3);
+  color:var(--gedaempft);pointer-events:none;
+}
+.kartenfilter-x{
+  position:absolute;right:0;
+  display:flex;align-items:center;justify-content:center;
+  width:var(--knopf);height:var(--knopf);
+  border:0;background:none;color:var(--gedaempft);cursor:pointer;
+}
+.kartenfilter-x:hover{color:var(--asphalt)}
+/* Der Leerzustand ist ein gewöhnlicher Hinweis; er braucht nur den Abstand,
+ * den die weggefilterten Zeilen hinterlassen. */
+.kartenfilter-leer{margin:var(--abstand-3) 0 0}

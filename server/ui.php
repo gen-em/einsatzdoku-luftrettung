@@ -315,10 +315,17 @@ function ui_logo_masse(int $hoehe): array
  * WO KEIN SVG HINEINPASST — in einem <option> etwa —, nimmt man nicht dieses
  * Markup, sondern das WORT aus dt_art_symbol()['text'].
  */
-function ui_artzeichen(?string $kind, string $klassen = ''): string
+function ui_artzeichen(?string $kind, string $klassen = '', ?string $typ = null): string
 {
     require_once __DIR__ . '/diensttag_lib.php';
-    $sym = dt_art_symbol($kind);
+    /* DER TYP STEHT AN DRITTER STELLE, nicht an zweiter. `$klassen` ist die
+     * dokumentierte zweite Stelle (`docs/Design.md` 9.15) — wer den Typ dorthin
+     * schoebe, braeche jeden kuenftigen Aufruf mit Klassen, ohne dass etwas
+     * meldet. Seit AP4 (Web 16.0.0) uebergeben ihn alle sechs Aufrufer:
+     * Leiste, Papierkorb, Diensttag loeschen, Zusammenfuehren, Nachbearbeitung
+     * und die Stammdatenliste. NULL bleibt zulaessig und bedeutet „kein Typ
+     * bekannt" — dann zeichnet die Betriebsart. */
+    $sym = dt_art_symbol($kind, $typ);
     /* OHNE DIE KLASSE `artzeichen` (P3/O11). Sie stammt aus der Zeit, als das
      * Artzeichen ein EMOJI war, und war dessen Korsett:
      * `width:1.4em;text-align:center;font-size:1.05em;cursor:help`. Seit O2
@@ -552,8 +559,13 @@ function ui_geruest_ende(array $o = []): void
  *     rechts (Balken).
  *  2  Der Winkel steht in Sand: Er ist Mechanik, keine Botschaft.
  *  3  Lange Rettungsmittelnamen werden mit Ellipse abgeschnitten; der volle
- *     Name steht im Tooltip und im Seitentitel. Unter 1200 px entfällt der
- *     Name ganz, das Artzeichen bleibt.
+ *     Name steht im Tooltip und im Seitentitel. Im Band 1024 bis 1199 px ist
+ *     die Leiste 220 px schmal: Dort steht nur noch, was auch hineinpasst —
+ *     ein gesetzter KURZNAME (Klasse `kurz`), sonst nichts. Unterhalb von
+ *     1024 px liegt die Leiste als Schublade und ist mit 320 px wieder breit
+ *     genug für den vollen Namen; sie zeigt ihn seit jeher und behält ihn
+ *     (S9/AP4a, Freigabe M-S9-08 Variante 2). Das Artzeichen bleibt in jeder
+ *     Breite.
  *
  * Das Artzeichen kommt aus dem Symbolvorrat statt als Emoji (E-P3-18) — es
  * lässt sich damit färben und auf Kontrast prüfen, und es sieht auf jedem
@@ -649,17 +661,41 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
               <div class="akkordeon-inhalt">
               <?php foreach ($monatsTage as $t):
                   $kind = $t['kind'] === null ? null : (string)$t['kind'];
-                  $sym  = dt_art_symbol($kind);
-                  $name = (string)($t['vehicle_name'] ?? '');
-                  $titel = $name !== '' ? $name . ' — ' . $sym['text'] : $sym['text'];
+                  $typ  = $t['vehicle_typ'] === null ? null : (string)$t['vehicle_typ'];
+                  $sym  = dt_art_symbol($kind, $typ);
+                  /* DIE LEISTE ZEIGT DEN KURZNAMEN (Nr. 69, E-S9-09): Sie ist
+                     die schmalste Stelle der Anwendung, und „C1" statt
+                     „Christoph 1" ist genau dafuer gedacht. Der TITEL nennt
+                     weiterhin die volle Bezeichnung — wer den Kurznamen nicht
+                     zuordnen kann, findet sie im Tooltip. */
+                  $name = dt_rm_kurz($t);
+                  $voll = trim((string)($t['vehicle_name'] ?? ''));
+                  /* NUR EIN ECHTER KURZNAME TRAEGT DIE KLASSE. `dt_rm_kurz()`
+                     faellt auf die volle Bezeichnung zurueck, sein Ergebnis
+                     sagt also nicht, ob ein Kurzname gesetzt ist — dafuer die
+                     Spalte selbst lesen. Sonst stuende im schmalen Band genau
+                     das wieder da, was die Regel dort ausblendet: ein voller
+                     Name als Ellipse.
+                     UND NICHT AM MEHRFACHEN TAG. Teilen sich zwei Diensttage
+                     ein Datum, traegt die Zeile Datum UND Uhrzeit
+                     („28.03.2026 06:30" statt „28.03.2026"); `.eintrag-text`
+                     schrumpft nicht (`flex:1 0 auto`), also geht der Platz
+                     vom Nebentext ab. Gemessen bei 1024, 1100 und 1199 px:
+                     3 px fuer einen Kurznamen, der 55 braucht — eine Ellipse
+                     ohne Buchstaben. Die ist schlechter als kein Nebentext,
+                     also bleibt er dort aus, wie vor S9/AP4a. */
+                  $mehrfach = (bool)$t['mehrfach'];
+                  $hatKurz = !$mehrfach
+                          && trim((string)($t['vehicle_kurz'] ?? '')) !== '';
+                  $titel = $voll !== '' ? $voll . ' — ' . $sym['text'] : $sym['text'];
                   $ist = (int)$t['id'] === $currentDayId; ?>
                 <a class="eintrag<?= $ist ? ' aktiv' : '' ?>"
                    href="index.php?d=<?= (int)$t['id'] ?>"
                    <?= $ist ? 'aria-current="page"' : '' ?> title="<?= ui_e($titel) ?>">
-                  <?= ui_artzeichen($kind) ?>
-                  <span class="eintrag-text"><?= ui_e(dt_lesbar($t, (bool)$t['mehrfach'])) ?></span>
+                  <?= ui_artzeichen($kind, '', $typ) ?>
+                  <span class="eintrag-text"><?= ui_e(dt_lesbar($t, $mehrfach)) ?></span>
                   <?php if ($name !== ''): ?>
-                    <span class="eintrag-neben"><?= ui_e($name) ?></span>
+                    <span class="eintrag-neben<?= $hatKurz ? ' kurz' : '' ?>"><?= ui_e($name) ?></span>
                   <?php else: ?>
                     <span class="eintrag-neben">—</span>
                   <?php endif; ?>
@@ -725,10 +761,14 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
  * den dritten Block sieht, sieht auch die ersten beiden, und wer nur den
  * ersten sieht, soll nicht raten müssen, ob es weitere gibt.
  *
- * „STAMMDATEN SYSTEMWEIT" HAT KEINEN EINTRAG MEHR (E-S8-14). Die Seite bleibt
- * und ist über ihre Adresse erreichbar; sie wird einmal bei der Einrichtung
- * gepflegt und danach jahrelang nicht. Ein Menüpunkt, den man einmal
- * benutzt, kostet siebzehn Mal Platz. Der Weg dorthin steht im Handbuch.
+ * „STAMMDATEN SYSTEMWEIT" GIBT ES NICHT MEHR (S9/AP5b, Rahmenplan R39).
+ * Erst nahm E-S8-14 der Seite den Menüpunkt — sie wurde einmal bei der
+ * Einrichtung gepflegt und danach jahrelang nicht, und ein Menüpunkt, den man
+ * einmal benutzt, kostet siebzehn Mal Platz. Seit S9/AP5b ist die Seite
+ * ersatzlos gestrichen: Es gibt eine Installation, dort steht kein zentraler
+ * Standort mehr, und es soll keinen neuen geben können. Standorte pflegt jedes
+ * Konto selbst unter „Standorte". Wer hier einen Eintrag vermisst, sucht eine
+ * Seite, die es nicht mehr gibt — nicht einen vergessenen Menüpunkt.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -781,8 +821,15 @@ function ui_einstellungen_punkte(): array
              * erste Schritt jeder neuen NutzerIn; Standorte und
              * Rettungsmittel werden einmal gepflegt. */
             ['geraete',        'einstellungen.php?t=geraete',        'Geräte',          'uhr'],
+            /* NUR NOCH EIN PUNKT FUER DIE STAMMDATEN (S9/AP5, PS-12).
+             * „Rettungsmittel" stand hier seit Web 7.0.0 daneben; der Schnitt
+             * nach Taetigkeit hat sich nicht bewaehrt, weil beide Reiter
+             * DENSELBEN Bestand luden und man zwischen ihnen hin und her
+             * ging, um einen Standort einzurichten. Jetzt fuehrt „Standorte"
+             * auf die Liste und die Liste auf je eine Standortseite, die
+             * alles traegt, was an diesem Standort haengt. Der alte Reiter
+             * bleibt als Weiche in `einstellungen.php` erreichbar. */
             ['standorte',      'einstellungen.php?t=standorte',      'Standorte',       'standort'],
-            ['rettungsmittel', 'einstellungen.php?t=rettungsmittel', 'Rettungsmittel',  'fahrzeug'],
             ['backup',         'einstellungen.php?t=backup',         'Backup',          'sicherung'],
             ['import',         'import.php',                         'Import / Export', 'tausch'],
         ],
@@ -1374,24 +1421,190 @@ function ui_karte_ende(bool $klappbar = false): void
 
 
 /* ---------------------------------------------------------------------------
+ * ZUM ANFANG  (.nach-oben)                                    S9/AP5, M-S9-06
+ *
+ * Der Rueckweg am Ende eines langen Abschnitts. Eine Standortseite mit zehn
+ * Rettungsmitteln und drei Dutzend Zielkliniken ist mehrere Bildschirme lang;
+ * wer unten ankommt, will nicht dorthin zurueckwischen, wo das
+ * Inhaltsverzeichnis steht.
+ *
+ * EIGENE FUNKTION UND KEINE OPTION AN `ui_karte_ende()`: Die hat als einziger
+ * Baustein kein `array $o`, dafuer 115 Aufrufstellen — eine Signaturaenderung
+ * kostete 115 Zeilen fuer eine Zeile Gewinn. Und so steht sie in der
+ * erzeugten Bausteintabelle.
+ *
+ * `.knopf knopf-leise` GIBT ES SCHON, und die Klasse ist hier kein Zierrat:
+ * Der Bilderlauf misst Bedienhoehen an `.knopf`. Ein eigener Klassenname
+ * waere aus seiner Messung gefallen — genau so ist der Export-Knopf vier
+ * Monate ungestaltet geblieben (F-P3-BA).
+ *
+ * KEIN `scroll-margin-top`: `html` traegt bereits `scroll-padding-top`; die
+ * zweite Angabe war schon einmal gebaut und wieder ausgebaut, weil sie sich
+ * addierte (gemessen 140 statt 72 px).
+ *
+ * DAS ZIEL IST `#inhalt` — die Kennung, die `ui_leiste_ende()` ohnehin an das
+ * `<main>` haengt. Zuerst stand hier `#seitenanfang`, eine Kennung, die es in
+ * dieser Anwendung nirgends gibt: Der Knopf sprang nach nirgendwo, und weil
+ * ein Verweis auf ein fehlendes Ziel weder Fehler noch Meldung erzeugt, waere
+ * das erst jemandem aufgefallen, der ihn drueckt. Eine zweite Kennung
+ * anzulegen hiesse, dieselbe Stelle zweimal zu benennen.
+ * ------------------------------------------------------------------------ */
+function ui_nach_oben(string $ziel = '#inhalt'): void
+{
+    echo '  <p class="nach-oben">'
+       . ui_knopf(['text' => 'Zum Anfang', 'symbol' => 'pfeil-hoch',
+                   'art' => 'leise', 'href' => $ziel])
+       . "</p>\n";
+}
+
+
+/* ---------------------------------------------------------------------------
+ * SPRUNGLISTE  (.sprungliste / .sprungziel)                  S9/AP5, M-S9-05
+ *
+ * Eine umbrechende Zeile runder Marken ueber einer langen Liste: Artzeichen
+ * plus Name, ein Klick springt zur Zeile. Sie ersetzt kein Inhaltsverzeichnis
+ * der SEITE (das sind die Kennzahlen am Kopf und die Unterpunkte der Leiste),
+ * sondern fuehrt INNERHALB einer Liste — deshalb steht sie in der Karte und
+ * nicht darueber.
+ *
+ * AB SECHS EINTRAEGEN (`SD_HILFE_AB`, stammdaten_ui.php). Darunter sieht man
+ * die ganze Liste ohne zu rollen, und eine Sprungliste waere eine zweite
+ * Aufzaehlung derselben Namen.
+ *
+ * SIE IST EIN `<nav>` MIT `<a>`, KEIN KNOPF. Ein Sprungziel ist Navigation:
+ * Es aendert nichts, es steht im Verlauf, und der Rueckwaertsknopf bringt
+ * einen zurueck. Dieselbe Ueberlegung traegt `.listenfilter` auf der
+ * Suchseite, die ebenfalls als `<a>` gebaut ist.
+ *
+ * DIE PILLE HEISST IM ZIELZUSTAND `.aktiv` UND NICHT `.ziel`. Das Mockup
+ * schreibt `.ziel`, aber `.aktiv` ist in dieser Anwendung seit Langem das
+ * Wort fuer „hier stehst du" — Kopfleiste, Leiste, Kennzahl, Listenfilter,
+ * Blattzeile und Seitenknopf tragen es, und `.kennzahl.aktiv` ist Zeichen
+ * fuer Zeichen dieselbe Deklaration. Ein zweiter Name fuer denselben Zustand
+ * ist eine zweite Sprache.
+ *
+ * KEIN `scroll-margin-top` AN DEN ZIELEN: `html` traegt
+ * `scroll-padding-top` (style.css), und das gilt fuer jedes Sprungziel der
+ * Seite. Die zweite Angabe war einmal gebaut und addierte sich (gemessen
+ * 140 statt 72 px).
+ *
+ * $o: eintraege [ ['text', 'href', 'vorn' (fertiges Markup, meist ein
+ *     Artzeichen)] ], label (Beschriftung fuer die Vorlesesoftware)
+ * ------------------------------------------------------------------------ */
+function ui_sprungliste(array $o): void
+{
+    $eintraege = (array)($o['eintraege'] ?? []);
+    if (!$eintraege) { return; }
+    echo '  <nav class="sprungliste" aria-label="'
+       . ui_e((string)($o['label'] ?? 'Zu einem Eintrag springen')) . '">' . "\n";
+    foreach ($eintraege as $e) {
+        echo '    <a class="sprungziel" href="' . ui_e((string)$e['href']) . '">'
+           . (string)($e['vorn'] ?? '')
+           . '<span class="sprungziel-text">' . ui_e((string)$e['text']) . '</span>'
+           . "</a>\n";
+    }
+    echo "  </nav>\n";
+}
+
+
+/* ---------------------------------------------------------------------------
+ * KARTENFILTER  (.kartenfilter)                              S9/AP5, M-S9-06
+ *
+ * Ein Feld mit Lupe ueber einer langen Liste in einer Karte: Tippen blendet
+ * aus, was nicht passt — im Browser, ohne Anfrage. Erst ab `SD_HILFE_AB`
+ * Eintraegen; darunter ist die Liste kuerzer als das Feld darueber.
+ *
+ * ER HEISST NICHT `.filterfeld`. Das Stylesheet fuehrt seit P3
+ * `.filterfelder` (Mehrzahl) als Innenabstand einer aufgeklappten
+ * Filtergruppe der Suchseite. Zwei Klassen, die sich um ein `r`
+ * unterscheiden und Verschiedenes meinen, sind derselbe Fehler, den
+ * `.listenfilter-zahl` einmal ausdruecklich umgangen hat („SIE HEISST NICHT
+ * `.filterzahl`. Diese Klasse ist seit O6 vergeben", style.css). `.kartenfilter`
+ * sagt zugleich, wo er steht — in einer Karte, nicht am Seitenkopf.
+ *
+ * ER IST NICHT DAS GROSSE SUCHFELD. `.suchfeld` ist 48 px hoch
+ * (`--suchfeld`), und das ist die eine benannte Ausnahme von der
+ * 44/36-Regel: Es ist die Haupthandlung SEINER Seite. Ein Filter in einer
+ * von sechs Karten ist das nicht — hier gilt die Regel, nicht die Ausnahme.
+ * Uebernommen ist von dort, was dort schon richtig ist: die Lupe absolut
+ * links mit `pointer-events:none` in einem `align-items:center`-Behaelter
+ * (also OHNE `top`, das sich in der zweiten Bedienhoehe verrechnete), das
+ * Loeschkreuz rechts und die Beschriftung fuer die Vorlesesoftware.
+ *
+ * DER LEERZUSTAND STEHT IM MARKUP, nicht im Skript. Weder Mockup noch
+ * Konzept sagen, was in der Karte steht, wenn nichts uebrig bleibt; ohne
+ * Antwort sieht eine gefilterte Liste ohne Treffer aus wie eine leere Liste.
+ * Der Absatz steht deshalb hier, verborgen, und das Skript blendet ihn ein.
+ *
+ * $o: id (Kennung des Eingabefelds), ziel (Kennung des Listenbehaelters),
+ *     label (Beschriftung fuer die Vorlesesoftware), platzhalter
+ * ------------------------------------------------------------------------ */
+function ui_kartenfilter(array $o): void
+{
+    $id   = (string)$o['id'];
+    $ziel = (string)$o['ziel'];
+    echo '  <div class="kartenfilter" data-kartenfilter="' . ui_e($ziel) . '">' . "\n";
+    echo '    ' . ui_symbol('lupe', 'kartenfilter-lupe') . "\n";
+    echo '    <label class="nur-vorlesen" for="' . ui_e($id) . '">'
+       . ui_e((string)($o['label'] ?? 'Liste filtern')) . "</label>\n";
+    /* `type="search"` und NICHT `type="text"`: Die Tastatur des Handys zeigt
+       dann eine Suchtaste statt einer Zeilenschaltung, und Vorlesesoftware
+       nennt das Feld ein Suchfeld. Das browsereigene Kreuz stellt `style.css`
+       ab — es sitzt je nach Browser woanders, und daneben stuende unseres. */
+    echo '    <input type="search" id="' . ui_e($id) . '" autocomplete="off"'
+       . ' spellcheck="false" placeholder="'
+       . ui_e((string)($o['platzhalter'] ?? 'Filtern')) . '">' . "\n";
+    echo '    <button type="button" class="kartenfilter-x" hidden title="Filter leeren">'
+       . ui_symbol('schliessen', '', 'Filter leeren') . "</button>\n";
+    echo "  </div>\n";
+    /* DER ZWEITE SATZ IST MIT WEB 17.0.0 EIN ANDERER. Er lautete „Leere den
+       Filter, um etwas anzulegen" — richtig, solange die Anlegen-Formulare in
+       der Liste standen und beim Filtern mit verschwanden. Angelegt wird
+       seither im Dialog, und dessen Oeffner steht im KARTENKOPF, also
+       ausserhalb der gefilterten Liste: „Anlegen" ist auch bei null Treffern
+       da. Der Satz sagt jetzt, was der Filter tatsaechlich verdeckt — alles
+       Uebrige — und nicht mehr eine Sackgasse, die es nicht mehr gibt. */
+    echo '  <p class="kartenfilter-leer feld-hinweis" data-leer-fuer="' . ui_e($ziel)
+       . '" hidden>Kein Eintrag passt dazu. Leere den Filter, um wieder alle'
+       . ' zu sehen.</p>' . "\n";
+}
+
+
+/* ---------------------------------------------------------------------------
  * ZEILE  (.zeile)
  *
  * Text links (fett plus Kleinzeile), Plaketten, Aktionen rechts. Am Desktop
  * sind die Aktionen Knöpfe zu 44 px, mobil ein einziges „⋯" je Zeile, das
  * dasselbe Aktionsblatt öffnet (E-P3-26).
  *
+ * DIE GANZE ZEILE ALS VERWEIS (`href_ganz`, S9/AP5, Mockup M-S9-06). Die
+ * Standortliste fuehrt auf je eine Seite; dort ist nicht der Name der Link,
+ * sondern die Zeile, und rechts steht ein Winkel statt eines Knopfes. Zwei
+ * Dinge folgen daraus:
+ *   - Der Behaelter ist dann ein `<a>`, kein `<div>`. Ein `<a>` DARF keine
+ *     Knoepfe oder Links enthalten; `aktionen` und `href` bleiben deshalb in
+ *     dieser Form leer, und wer sie doch mitgibt, bekommt sie nicht
+ *     gerendert — lieber eine fehlende Schaltflaeche als verschachteltes
+ *     Markup, das je nach Browser anders zerfaellt.
+ *   - Der Winkel steht in `zeile-aktionen`, also am selben Platz wie sonst
+ *     die Knoepfe. Er ist Zierde und traegt keinen eigenen Namen: Was die
+ *     Zeile tut, sagt ihr Text.
+ *
  * $o: vorn (Markup), text, klein, plaketten (Markup), aktionen (Markup),
- *     href, klasse
+ *     href, href_ganz, klasse, attr
  * ------------------------------------------------------------------------ */
 function ui_zeile(array $o): void
 {
+    $ganz = trim((string)($o['href_ganz'] ?? ''));
     $k = 'zeile' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
     /* `attr` wie bei ui_knopf() und ui_aktionen(): fertige Attribute, die der
      * Aufrufer anhaengt — etwa `data-…` und `tabindex` fuer eine Zeile, die
      * mit etwas anderem auf der Seite verknuepft ist (S2/AP4, tag_spuren.php).
      * Keine neue Darstellung, nur dieselbe Zusatzoption an einem dritten
      * Baustein. */
-    echo '<div class="' . $k . '"' . (string)($o['attr'] ?? '') . '>' . "\n";
+    echo ($ganz !== ''
+        ? '<a class="' . $k . '" href="' . ui_e($ganz) . '"'
+        : '<div class="' . $k . '"') . (string)($o['attr'] ?? '') . '>' . "\n";
     /* VORN steht, was VOR dem Text gehört (O9b): in der NutzerInnen-Liste das
      * Auswahlkästchen. Es gehört nicht zu den Aktionen rechts — es wählt die
      * Zeile aus, statt an ihr zu handeln, und in der Tabellenfassung derselben
@@ -1401,7 +1614,7 @@ function ui_zeile(array $o): void
     }
     echo '  <div class="zeile-text">' . "\n";
     $t = '<span class="zeile-haupt">' . ui_e((string)($o['text'] ?? '')) . '</span>';
-    echo '    ' . (!empty($o['href'])
+    echo '    ' . (!empty($o['href']) && $ganz === ''
         ? '<a href="' . ui_e((string)$o['href']) . '">' . $t . '</a>'
         : $t) . "\n";
     if (!empty($o['klein'])) {
@@ -1411,10 +1624,13 @@ function ui_zeile(array $o): void
     if (!empty($o['plaketten'])) {
         echo '  <div class="zeile-plaketten">' . (string)$o['plaketten'] . "</div>\n";
     }
-    if (!empty($o['aktionen'])) {
+    if ($ganz !== '') {
+        echo '  <div class="zeile-aktionen">'
+           . ui_symbol('winkel', 'symbol-rechts zeile-weiter') . "</div>\n";
+    } elseif (!empty($o['aktionen'])) {
         echo '  <div class="zeile-aktionen">' . (string)$o['aktionen'] . "</div>\n";
     }
-    echo "</div>\n";
+    echo ($ganz !== '' ? "</a>\n" : "</div>\n");
 }
 
 
@@ -1991,21 +2207,104 @@ function ui_abbruch(int $code, string $text, array $o = []): never
  *
  * Schluessel:
  *   praefix     Pflicht. Bildet `<p>addr`, `<p>such`, `<p>lat`, `<p>lon`,
- *               `<p>suggest`, `<p>state`, `<p>chips`, `<p>dl`.
+ *               `<p>suggest`, `<p>state`, `<p>chips`.
  *   such        eigenes Suchfeld erzeugen (getrennte Suche, siehe ortsfeld.js)
  *   such_hinweis / such_platzhalter
  *   label, hinweis, platzhalter, max, wert           (nur bei feld = true)
  *   name        POST-Name des Bezeichnungsfeldes; null = keiner (der Wert
  *               wandert dann verschluesselt in den pat_blob)
  *   lat_name / lon_name, lat / lon                   Koordinatenfelder
- *   datalist    Liste von Namen fuer eine <datalist> (Stammdaten-Vorschlaege)
+ *   ortswahl    Pin-Knopf mit dem Blatt „Meine Position / Auf der Karte" —
+ *               seit Web 15.8.0 in BEIDEN Fassungen (E-S9-06 c)
  *   klasse      zusaetzliche Klasse am Rahmen (z. B. 'loc-inline')
+ *
+ * KEINE `<datalist>` MEHR (S9/AP1, E-S9-07). Bis Web 15.5.2 nahm der
+ * Schluessel 'datalist' eine Namensliste entgegen und haengte sie als native
+ * Vorschlagsliste an das Feld. Am Transportziel standen damit ZWEI Listen
+ * uebereinander — die native, vom Browser ueber dem Feld gezeichnet, und die
+ * eigene darunter (PS-6); mobil zeigte die native nichts (Backlog 68). Die
+ * Stammdaten kommen jetzt als GRUPPE in die eine Liste; uebergeben werden sie
+ * dem Skript (`EdOrtsfeld.init({vorschlaege: […]})`), nicht dem Markup.
  */
+/**
+ * Die Einstellungen der Adresssuche fuer den Browser (S9/AP2, E-S9-05).
+ *
+ * WARUM NICHT IM KRYPTO-BOOTSTRAP, wie das Konzept es vorsah. Dort stehen
+ * schon Konstanten fuer den Browser, und der Gedanke war richtig — nur haengt
+ * die Adresssuche nicht an der Verschluesselung: Eine Seite kann Ortsfelder
+ * tragen, ohne `ui_krypto_bootstrap()` zu rufen. Bis S9/AP5b war die
+ * systemweite Stammdatenpflege genau so ein Fall; sie brauchte keine
+ * Verschluesselung, trug aber zwei Ortsfelder, und die Adresssuche haette dort
+ * ohne Einstellung dagestanden und waere auf den Rueckfall gefallen. Die Seite
+ * ist gestrichen, die Moeglichkeit nicht: Der naechste Ortsfeld-Einbau kann
+ * wieder einer sein. Also ein eigener, kleiner Bootstrap — und er wird nicht
+ * von den Seiten gerufen, sondern von `ui_ortsfeld()` selbst: Wo ein Ortsfeld
+ * steht, stehen seine Einstellungen, und keine Seite kann sie vergessen.
+ *
+ * EINMAL JE SEITENAUFBAU. Merkzettel wie beim Krypto-Bootstrap: Sieben
+ * Ortsfelder auf einer Seite sind der Regelfall, nicht die Ausnahme, und
+ * siebenmal dasselbe Skript ist siebenmal Ballast.
+ *
+ * `window.` UND NICHT `const` — daran ist AP2 einmal vorbeigelaufen. Der
+ * Krypto-Bootstrap schreibt `const PAT_WRAP = …`, und das geht dort gut, weil
+ * seine Leser INLINE-Skripte derselben Seite sind: Ein `const` auf oberster
+ * Ebene liegt im globalen LEXIKALISCHEN Bereich, den ein Skript sieht — aber
+ * es wird KEINE Eigenschaft von `window`. `assets/geocoder.js` ist eine
+ * eigene Datei und liest `global.GEO_DIENST`; die stand damit auf
+ * `undefined`, `EdGeocoder.an()` lieferte `false`, und der Kartendialog kam
+ * ohne Suchfeld — auf einer Seite, deren Hinweiszeile daneben sagte, die
+ * Suche sei an. In der Konsole war nichts zu sehen: Wer dort `GEO_DIENST`
+ * eintippt, bekommt den lexikalischen Wert und damit die Antwort, die er
+ * erwartet. Gefunden hat es die Klickprobe (F-S9-P-08). Eine Zuweisung an
+ * `window` ist ausserdem beim zweiten Mal harmlos — der Merkzettel bleibt
+ * trotzdem, denn zweimal dasselbe auszugeben ist auch dann falsch.
+ */
+function ui_geocoder_bootstrap(): void
+{
+    static $schon = false;
+    if ($schon) { return; }
+    $schon = true;
+
+    require_once __DIR__ . '/geocoder_lib.php';
+    echo '<script>window.GEO_AN = ' . json_encode(geocoder_an())
+       . '; window.GEO_DIENST = ' . json_encode(geocoder_dienst(),
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
+       . ";</script>\n";
+}
+
+/**
+ * Der Hinweis unter dem Ortsfeld — EINMAL je Seite (S9/AP2, E-S9-05, Nr. 137).
+ *
+ * WARUM NUR EINMAL. „Ein Hinweis am Ortsfeld" heisst es im Auftrag, und beim
+ * Einsatzformular waeren das drei gleiche Saetze auf einer Seite. Auf
+ * `einstellungen.php?t=standorte` waeren es zehn und mehr: Dort steht ein
+ * Ortsfeld je Standort UND je Zielklinik. Zehnmal derselbe Datenschutzhinweis
+ * ist keine Auskunft mehr, sondern Tapete — und Tapete liest niemand.
+ *
+ * Er steht deshalb am ERSTEN Ortsfeld der Seite, und sein Satz ist auf die
+ * Seite bezogen formuliert, nicht auf das Feld. Die vollstaendige Erklaerung
+ * mit dem Schalter steht in der Karte „Datenschutz" im Profil, der Absatz mit
+ * der Dienstadresse im Datenschutztext.
+ *
+ * Ist die Suche aus, erscheint er GAR NICHT: Er sagt aus, dass etwas das
+ * Geraet verlaesst — und dann verlaesst nichts das Geraet.
+ */
+function ui_geocoder_hinweis(): void
+{
+    static $schon = false;
+    if ($schon) { return; }
+    require_once __DIR__ . '/geocoder_lib.php';
+    if (!geocoder_an()) { return; }
+    $schon = true;
+    echo '<p class="feld-klein loc-datenschutz">Vorschläge und Umkehrsuche kommen von '
+       . ui_e(geocoder_host()) . '; getippter Text verlässt das Gerät. '
+       . 'Abschalten: Einstellungen → Profil, Karte „Datenschutz".</p>' . "\n";
+}
+
 function ui_ortsfeld(array $o): void
 {
     $p = (string)$o['praefix'];
     $mitFeld = ($o['feld'] ?? true) !== false;
-    $dl = $o['datalist'] ?? null;
 
     $versteckt = !empty($o['versteckt']) ? ' hidden' : '';
 
@@ -2017,24 +2316,18 @@ function ui_ortsfeld(array $o): void
      * (assets/ortswahl.js). */
     $mitWahl = !empty($o['ortswahl']);
 
-    if ($mitFeld): ?>
-      <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
-        <label for="<?= e($p) ?>addr"><?= e((string)($o['label'] ?? '')) ?>
-          <?php if (!empty($o['hinweis'])): ?>
-            <span class="feld-klein-inline"><?= e((string)$o['hinweis']) ?></span>
-          <?php endif; ?>
-        </label>
-        <div class="ortsfeld-zeile">
-          <input type="text" id="<?= e($p) ?>addr" autocomplete="off"
-                 <?= isset($o['name']) && $o['name'] !== null ? 'name="' . e((string)$o['name']) . '"' : '' ?>
-                 <?= isset($o['max']) ? 'maxlength="' . (int)$o['max'] . '"' : '' ?>
-                 <?= $dl !== null ? 'list="' . e($p) . 'dl"' : '' ?>
-                 placeholder="<?= e((string)($o['platzhalter'] ?? '')) ?>"
-                 value="<?= e((string)($o['wert'] ?? '')) ?>">
-          <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
-                  title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
-                  class="nur-vorlesen">Suchen</span></button>
-          <?php if ($mitWahl): ?>
+    /* DIE EINSTELLUNGEN DER ADRESSSUCHE gehen mit dem ersten Ortsfeld der
+     * Seite in den Browser — nicht die Seite bestellt sie, sondern das Feld
+     * bringt sie mit (S9/AP2). */
+    ui_geocoder_bootstrap();
+
+    /* DER PIN-KNOPF STEHT IN BEIDEN FASSUNGEN (E-S9-06 c). Bis Web 15.7.1
+     * rendete ihn nur der `feld = true`-Zweig; die Nur-Lage-Fassung der
+     * Stammdaten hatte deshalb keine Karte — und Backlog Nr. 70 („Karte fuer
+     * Standorte") war genau das. Der Block steht jetzt einmal hier und wird
+     * zweimal ausgegeben. */
+    $pinKnopf = static function () use ($o, $p): void {
+        ?>
             <span class="aktionen ortsfeld-aktionen">
               <button type="button" class="knopf knopf-symbol" title="Ort setzen"
                       aria-expanded="false" aria-controls="<?= e($p) ?>ortsblatt"
@@ -2042,7 +2335,7 @@ function ui_ortsfeld(array $o): void
                       class="nur-vorlesen">Ort setzen</span></button>
               <div class="blatt" id="<?= e($p) ?>ortsblatt" hidden>
                 <div class="blatt-griff" aria-hidden="true"></div>
-                <h2 class="blatt-titel"><?= e((string)($o['label'] ?? 'Ort')) ?> setzen</h2>
+                <h2 class="blatt-titel"><?= e((string)($o['label'] ?? $o['such_hinweis'] ?? 'Ort')) ?> setzen</h2>
                 <div class="blatt-liste">
                   <button type="button" class="blatt-zeile"
                           data-ortswahl="position" data-praefix="<?= e($p) ?>">
@@ -2055,7 +2348,35 @@ function ui_ortsfeld(array $o): void
                         data-blatt-zu>Abbrechen</button>
               </div>
             </span>
+        <?php
+    };
+
+    if ($mitFeld): ?>
+      <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
+        <?php /* 'geschuetzt' => true haengt das Schloss an die Beschriftung
+                 (S9/AP7, E-S9-02). Der Einsatzort und der manuelle Abfahrtort
+                 liegen im `pat_blob`, das Transportziel und der Standort eines
+                 Rettungsmittels nicht — und man sieht es einem Ortsfeld sonst
+                 nicht an. Ein eigener Schluessel und kein HTML im 'label':
+                 Jenes wird escaped, und das soll es bleiben. */ ?>
+        <label for="<?= e($p) ?>addr"><?= e((string)($o['label'] ?? '')) ?><?=
+            !empty($o['geschuetzt'])
+              ? ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt')
+              : '' ?>
+          <?php if (!empty($o['hinweis'])): ?>
+            <span class="feld-klein-inline"><?= e((string)$o['hinweis']) ?></span>
           <?php endif; ?>
+        </label>
+        <div class="ortsfeld-zeile">
+          <input type="text" id="<?= e($p) ?>addr" autocomplete="off"
+                 <?= isset($o['name']) && $o['name'] !== null ? 'name="' . e((string)$o['name']) . '"' : '' ?>
+                 <?= isset($o['max']) ? 'maxlength="' . (int)$o['max'] . '"' : '' ?>
+                 placeholder="<?= e((string)($o['platzhalter'] ?? '')) ?>"
+                 value="<?= e((string)($o['wert'] ?? '')) ?>">
+          <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
+                  title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
+                  class="nur-vorlesen">Suchen</span></button>
+          <?php if ($mitWahl) { $pinKnopf(); } ?>
         </div>
     <?php else: ?>
       <?php /* NUR-LAGE-FASSUNG (feld = false): ein Suchfeld ohne Namensfeld.
@@ -2083,10 +2404,14 @@ function ui_ortsfeld(array $o): void
           <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
                   title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
                   class="nur-vorlesen">Suchen</span></button>
+          <?php if ($mitWahl) { $pinKnopf(); } ?>
         </div>
     <?php endif; ?>
 
-      <ul id="<?= e($p) ?>suggest" class="loc-suggest" hidden></ul>
+      <?php /* Die Trefferliste — EIN Baustein fuer Stammdaten, Adressen und
+               erkannte Koordinaten (assets/vorschlagsliste.js, E-S9-07). Das
+               Markup ist leer; gefuellt wird es beim Tippen. */ ?>
+      <ul id="<?= e($p) ?>suggest" class="vorschlaege" hidden></ul>
       <?php /* Meldungszeile unmittelbar unter dem Feld: Sie sagt etwas über
                DIESES Eingabefeld aus („Koordinaten gesetzt — dieses Feld ist
                die Bezeichnung", „Bezeichnung fehlt"), nicht über den Chip
@@ -2095,17 +2420,13 @@ function ui_ortsfeld(array $o): void
       <?php /* Bestätigte Koordinaten stehen als Chip UNTER dem Textfeld, nicht
                darin — sonst vernichtet die erste getippte Bezeichnung sie. */ ?>
       <div class="rmchips" id="<?= e($p) ?>chips"></div>
+      <?php ui_geocoder_hinweis(); ?>
       <input type="hidden" id="<?= e($p) ?>lat"
              <?= isset($o['lat_name']) ? 'name="' . e((string)$o['lat_name']) . '"' : '' ?>
              value="<?= e((string)($o['lat'] ?? '')) ?>">
       <input type="hidden" id="<?= e($p) ?>lon"
              <?= isset($o['lon_name']) ? 'name="' . e((string)$o['lon_name']) . '"' : '' ?>
              value="<?= e((string)($o['lon'] ?? '')) ?>">
-      <?php if ($dl !== null): ?>
-        <datalist id="<?= e($p) ?>dl">
-          <?php foreach ((array)$dl as $s): ?><option value="<?= e((string)$s) ?>"><?php endforeach; ?>
-        </datalist>
-      <?php endif; ?>
       </div>
 <?php }
 

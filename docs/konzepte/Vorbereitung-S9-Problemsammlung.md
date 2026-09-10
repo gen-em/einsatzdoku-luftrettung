@@ -5,8 +5,10 @@ Muster wie `Vorbereitung-S5-Kopplung-umgekehrt.md`: die Sammlung mit den
 bereits gefallenen Entscheidungen, aus der das S9-Konzept nach K1 entsteht.
 **Rahmenplan:** Schritt 8 (Fassung 26), Backlog Nr. 101–113 **und 147**
 (PS-11, Fassung 32).
-**Status:** Sammlung abgeschlossen, **alle Rückfragen geklärt** — Analyse
-und Konzept können beginnen. **Stand:** 06.09.2026.
+**Status:** **Konzept liegt vor und ist freigegeben** (07.09.2026,
+`Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`, E-S9-01 bis -19, sieben
+Mockups). Diese Sammlung bleibt als Herkunft der Punkte liegen; was
+weitergilt, steht im Konzept. **Stand:** 07.09.2026.
 **Vorgehen:** Repo-Analyse und Konzepterstellung erfolgen gebündelt nach
 ausdrücklichem Go des Auftraggebers; Konzept mit Fable (R14), Umsetzung
 Opus, Fable-Schritte im Konzept markiert (K2).
@@ -37,6 +39,7 @@ S9-Konzept als E-S9-…; F3–F6 sind beantwortet und gehen als E-S9-… ein.
 | 112 | PS-10.2 | Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung | Erweiterung |
 | 113 | PS-10.3 | Rollen unmittelbar nach Auswahl bearbeitbar, Vorlagen nachladen | Bug / Workflow |
 | 147 | PS-11 | Aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung (Fassung 32) | Erweiterung |
+| 152 | PS-12 | Standortseiten: Standort zuerst, ein Menüpunkt, Kennzahlen, Dialoge, Landung (Fassung 34) | Umbau |
 
 **Verbindungen in den Rahmenplan (beim Einordnen festgehalten):**
 
@@ -344,6 +347,25 @@ der vorhandene Pin-Knopf — kein neuer Menüpunkt, keine neue Darstellung.
 
 **Abhängigkeiten:** PS-1 (gemeinsamer Kartendialog — dort entsteht der Dialog neu, die
 Spur gehört von Anfang an hinein), PS-7 (Zielklinik bekommt den Dialog).
+
+---
+
+## PS-12 — Standortseiten: Standort zuerst
+
+*Nachgetragen 07.09.2026 (Backlog Nr. 152, Rahmenplan Fassung 34), aus der
+Rückmeldung zu M-S9-05/-06.*
+
+**Ist:** Zwei Menüpunkte für eine Sache — „Standorte" (Name, Lage) und
+„Rettungsmittel" (je Standort eine zugeklappte Karte mit drei Listen:
+Rettungsmittel, Besatzungsvorlagen, Zielkliniken). Der Name des zweiten ist
+falsch, die zugeklappten Karten sind leicht zu übersehen, lange Listen
+zwingen zum Scrollen, die Eingabe klebt unter jeder Liste.
+
+**Soll (Auftraggeber, 07.09.2026):** Standort zuerst — „Rettungsmittel"
+entfällt, „Standorte" wird Liste und Seite je Standort; Inhaltsverzeichnis
+oben, „Zum Anfang" je Abschnitt; Anlegen im Dialog; nach dem Anlegen
+Landung auf der neuen Zeile. Konzept: E-S9-18, E-S9-19; Mockups M-S9-06,
+M-S9-07.
 
 ---
 

@@ -49,7 +49,7 @@ if ($quellId > 0) {
         $fehler = $p['meldung'];
     } else {
         $quelle   = $p['quelle'];
-        $vorschau = dt_merge_vorschau($userId, $p['ziel'], $quelle);
+        $vorschau = dt_merge_vorschau($userId, $p['ziel'], $quelle, $wahl);
     }
 }
 
@@ -206,7 +206,8 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
                         'plakette' => ui_plakette('verschwindet danach', ['ton' => 'rot'])]); ?>
 
     <p class="feld-hinweis">
-      <?= ui_artzeichen($quelle['kind'] === null ? null : (string)$quelle['kind']) ?>
+      <?= ui_artzeichen($quelle['kind'] === null ? null : (string)$quelle['kind'], '',
+                        $quelle['vehicle_typ'] === null ? null : (string)$quelle['vehicle_typ']) ?>
       <?= e($wer($quelle)) ?> · <?= e($quellSym['text']) ?>
     </p>
 
@@ -265,6 +266,41 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
           'text' => 'Art',
           'plaketten' => ui_plakette($ergSym['text'], ['ton' => 'blau']),
       ]);
+      /* DIE ART BLEIBT DIE BETRIEBSART, DER TYP STEHT DARUNTER (S9/AP4a,
+         Freigabe M-S9-09 Variante c). Beides in eine Zeile zu ziehen waere
+         moeglich — `dt_art_symbol()` kennt den Typ seit Web 16.0.0 und
+         antwortete dann „Bergwacht, luftgebunden" —, aber der Typ ist eine
+         Eigenschaft des Rettungsmittels und die Betriebsart eine des
+         Dienstes; sie folgen beim Zusammenfuehren derselben Wahl und heissen
+         trotzdem nicht dasselbe. Ton blau wie die uebrigen Ergebniswerte
+         dieser Karte — die Tonliste fuehrt „Bergwacht" unter Orange, aber
+         orange warnt, und hier wird nichts gewarnt, sondern berichtet.
+         Kein Symbol in der Plakette, aus demselben Grund wie bei „Art". */
+      /* WENN ZWEI RETTUNGSMITTEL ZUR WAHL STEHEN, DARF DIE ZEILE KEINEN
+         EINZELNEN WERT BEHAUPTEN. Die Seite laedt beim Klick auf ein Radio
+         nicht neu — `$wahl` kommt aus dem POST, und Schritt 2 wird per GET
+         gerendert. Eine Plakette „Standard" neben der Kleinzeile „folgt dem
+         gewaehlten Rettungsmittel" waere deshalb genau dann falsch, wenn
+         jemand das andere waehlt: Sie zeigte weiter den Typ des Zieltags,
+         waehrend `dt_zusammenfuehren()` den des Quelltags schreibt.
+         Also nennt sie beide, und die Kleinzeile sagt, wer entscheidet.
+         Das weicht von M-S9-09 ab, das eine Plakette zeigt — ein Mockup ist
+         ein Standbild und kennt den Klick nicht. */
+      $typZiel   = dt_typ_label($ziel['vehicle_typ'] === null
+                                ? null : (string)$ziel['vehicle_typ']);
+      $typQuelle = dt_typ_label($quelle['vehicle_typ'] === null
+                                ? null : (string)$quelle['vehicle_typ']);
+      $typOffen  = isset($vorschau['wahlen']['vehicle']) && $typZiel !== $typQuelle;
+      ui_zeile([
+          'text'  => 'Typ',
+          'klein' => $typOffen
+              ? 'Folgt dem Rettungsmittel, das du unten wählst.' : '',
+          'plaketten' => ui_plakette(
+              $typOffen
+                  ? ($typZiel ?: '—') . ' oder ' . ($typQuelle ?: '—')
+                  : (dt_typ_label($vorschau['vehicle_typ']) ?: '—'),
+              ['ton' => 'blau']),
+      ]);
       ui_zeile([
           'text'  => 'Notizen',
           'klein' => 'Die Notizen beider Diensttage werden aneinandergehängt; '
@@ -290,6 +326,24 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
         <?php /* Aus `fieldset`/`legend` mit blanken Radios wird die Wahlliste
                  (E-P3-20): 44 px hohe Zeilen, die gewählte hell orange, der
                  Fokusring an der Zeile statt am unsichtbaren Radio. */ ?>
+        <?php /* BEIM RETTUNGSMITTEL STEHT DER TYP MIT IM ZUSATZ, davor der
+                 Kurzname, wenn es einen gibt (S9/AP4a). Er entscheidet mit,
+                 was der Zieltag danach traegt, und ohne ihn waere die Wahl
+                 zwischen zwei Namen eine zwischen zwei Woertern.
+                 Der Tag bleibt im Zusatz stehen — anders als im Mockup, das
+                 ihn durch den Typ ersetzt: Er sagt, WOHER die Angabe kommt,
+                 und die beiden anderen Widersprueche nennen ihn auch.
+                 Der Kurzname steht NEBEN der Bezeichnung, nie statt ihrer
+                 (E-S9-09) — die Bezeichnung ist der Text der Zeile. */
+              $rmZusatz = static function (array $tag): string {
+                  $teile = [];
+                  $typ = dt_typ_label($tag['vehicle_typ'] === null
+                                      ? null : (string)$tag['vehicle_typ']);
+                  if ($typ !== '') { $teile[] = $typ; }
+                  $kurz = trim((string)($tag['vehicle_kurz'] ?? ''));
+                  if ($kurz !== '') { $teile[] = $kurz; }
+                  return $teile ? implode(' · ', $teile) . ' · ' : '';
+              }; ?>
         <?php foreach ($vorschau['wahlen'] as $feld => $w): ?>
           <div class="listen-form">
             <h3 class="listen-form-titel"><?= e($w['titel']) ?></h3>
@@ -298,9 +352,11 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
                 'wert' => $wahl[$feld],
                 'optionen' => [
                     'ziel'   => ['text' => $w['ziel'],
-                                 'zusatz' => dt_lesbar($ziel, true) . ', bleibt'],
+                                 'zusatz' => ($feld === 'vehicle' ? $rmZusatz($ziel) : '')
+                                           . dt_lesbar($ziel, true) . ', bleibt'],
                     'quelle' => ['text' => $w['quelle'],
-                                 'zusatz' => dt_lesbar($quelle, true) . ', wird aufgenommen'],
+                                 'zusatz' => ($feld === 'vehicle' ? $rmZusatz($quelle) : '')
+                                           . dt_lesbar($quelle, true) . ', wird aufgenommen'],
                 ],
             ]); ?>
           </div>

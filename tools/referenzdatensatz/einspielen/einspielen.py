@@ -143,9 +143,18 @@ def stufe_stammdaten(lauf: Lauf) -> None:
             speichern({"action": "base_default", "id": ids["standorte"][b["name"]]})
 
     for r in st["rettungsmittel"]:
-        speichern({"action": "veh_save", "name": r["name"], "kind": r["art"],
-                   "base_id": ids["standorte"][r["standort"]],
-                   "roles[]": r["rollen"], "caps[]": r["faehigkeiten"]})
+        # TYP, KURZNAME UND DER HAKEN "OHNE STANDORT" (S9/AP4, E-S9-09).
+        # `standort` nennt weiterhin die Karte, aus der das Formular kommt --
+        # es traegt die Kennung verborgen mit. `ohne_standort` schlaegt sie;
+        # ob das zulaessig ist, entscheidet der Typ in der Pruefschicht.
+        daten = {"action": "veh_save", "name": r["name"], "kind": r["art"],
+                 "typ": r.get("typ", "standard"),
+                 "kurz": r.get("kurz") or "",
+                 "base_id": ids["standorte"][r["standort"]],
+                 "roles[]": r["rollen"], "caps[]": r["faehigkeiten"]}
+        if r.get("ohne_standort"):
+            daten["ohne_standort"] = "1"
+        speichern(daten)
     ids = kennungen(s)
     for r in st["rettungsmittel"]:
         if r["standard"]:

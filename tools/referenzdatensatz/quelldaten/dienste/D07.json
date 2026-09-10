@@ -147,8 +147,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Sichtflug am Grat grenzwertig, Rückflug über das Haupttal."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma nach Sturz",
@@ -161,7 +160,8 @@
           "lon": 10.10906
         },
         "site_desc": "Wohnhaus, Treppenaufgang",
-        "start": null
+        "start": null,
+        "notes": "Sichtflug am Grat grenzwertig, Rückflug über das Haupttal."
       },
       "abdeckung": []
     },
@@ -222,8 +222,7 @@
           "Bergwacht Sonnenau"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Maschine blieb am Einsatzort, weil während der Versorgung bereits der nächste Einsatz gemeldet wurde."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Distorsion des oberen Sprunggelenks",
@@ -236,7 +235,8 @@
           "lon": 10.023
         },
         "site_desc": "Wanderweg oberhalb der Alpe, Wiesenhang mit Landemöglichkeit",
-        "start": null
+        "start": null,
+        "notes": "Maschine blieb am Einsatzort, weil während der Versorgung bereits der nächste Einsatz gemeldet wurde."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -314,8 +314,7 @@
           "Bergwacht Moosachtal"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Direktstart vom vorigen Einsatzort ohne Rückkehr zur Station."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Synkope mit Sturz aus dem Stand, Platzwunde okzipital",
@@ -328,7 +327,8 @@
           "lon": 10.281
         },
         "site_desc": "Vorplatz der Kapelle",
-        "start": null
+        "start": null,
+        "notes": "Direktstart vom vorigen Einsatzort ohne Rückkehr zur Station."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -408,8 +408,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Sichtflug am Grat grenzwertig, Rückflug über das Haupttal."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Milzruptur nach Skikollision",
@@ -422,7 +421,8 @@
           "lon": 10.36856
         },
         "site_desc": "Skipiste, Einmündung der Talabfahrt",
-        "start": null
+        "start": null,
+        "notes": "Sichtflug am Grat grenzwertig, Rückflug über das Haupttal."
       },
       "abdeckung": []
     },
@@ -497,8 +497,7 @@
           "Bergwacht Felsgrat"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Absturz im Blockwerk; Bergung nur mit der Winde möglich, Sichtflug am Grat grenzwertig."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma und Thoraxtrauma nach Absturz im Blockwerk",
@@ -511,7 +510,8 @@
           "lon": 10.023
         },
         "site_desc": "Blockwerk unterhalb der Gratschneide, kein Landeplatz",
-        "start": null
+        "start": null,
+        "notes": "Absturz im Blockwerk; Bergung nur mit der Winde möglich, Sichtflug am Grat grenzwertig."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -596,8 +596,7 @@
           "First Responder Sonnenau"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Rückflug mit Zwischenlandung zur Betankung."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Beckenfraktur nach Absturz",
@@ -610,7 +609,8 @@
           "lon": 10.13474
         },
         "site_desc": "Steilgelände unterhalb des Steigs",
-        "start": null
+        "start": null,
+        "notes": "Rückflug mit Zwischenlandung zur Betankung."
       },
       "abdeckung": []
     },
@@ -682,8 +682,7 @@
         "other_ema": "Dr. Weißgerber (abgebende Klinik)",
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Verlegung zur Neurochirurgie; Übernahme auf der Intensivstation, Beatmung fortgeführt."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Intrazerebrale Blutung, Verlegung zur neurochirurgischen Versorgung",
@@ -696,7 +695,8 @@
           "lon": 10.217
         },
         "site_desc": "Innerklinische Übernahme, Intensivstation",
-        "start": null
+        "start": null,
+        "notes": "Verlegung zur Neurochirurgie; Übernahme auf der Intensivstation, Beatmung fortgeführt."
       },
       "abdeckung": [
         "herkunft-watch",

@@ -81,6 +81,11 @@ PAARE = [
     ('Orange tief auf Schnee',            'orange-tief', 'schnee',     3.0, 'nur gross oder fett'),
     ('Orange tief auf Rauch',             'orange-tief', 'rauch',      3.0, 'nur gross oder fett'),
     ('Orange tief auf Orange hell',       'orange-tief', 'orange-hell', 3.0, 'Warnung, Auftakt fett'),
+    # Der Zielzustand: aktive Kennzahl, aktiver Listenfilter, aktives
+    # Sprungziel. Die Kombination steht seit O6 in der Anwendung
+    # (.kennzahl.aktiv, .listenfilter.aktiv) und wurde nie gerechnet —
+    # eingetragen mit S9/AP5, als das Sprungziel als dritte Stelle dazukam.
+    ('Dunkelblau auf Orange hell',        'dunkelblau', 'orange-hell', 4.5, 'aktives Sprungziel, aktive Kennzahl'),
     ('Rot auf Schnee (Gefahrknopf)',      'rot',        'schnee',      3.0, 'Rand und Schrift ab 18 px'),
     ('Blau als Fokusring',                'blau',       'schnee',      3.0, 'Rand'),
     ('Linie stark auf Schnee',            'linie-stark', 'schnee',     3.0, 'Rand von Bedienelementen'),

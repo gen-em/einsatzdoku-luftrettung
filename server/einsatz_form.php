@@ -38,8 +38,18 @@ $dayBaseId = $tag['base_id'] !== null ? (int)$tag['base_id'] : null;
 /* Rollen dieses Diensttags: der EINGEFRORENE Rollensatz aus `day_crew` (E8).
  * Er steuert, welche Besatzungsfelder sichtbar sind ('role_gate'). Ein
  * neutraler Diensttag hat keine Rollen (E26) — dann sind alle verborgen ausser
- * den bereits belegten. */
-$dayRoles = dt_crew($dayId);
+ * den bereits belegten.
+ *
+ * EIN TAG MIT RETTUNGSMITTEL NUR FUER DEN TAG FUEHRT KEINE ROLLEN (E-S9-10,
+ * F19, Frage 11). Der Rollensatz waere hier trotzdem nicht zwingend leer:
+ * `dt_rollensatz_einfrieren()` loescht beim Wechsel nur LEERE Rollen, damit
+ * ein versehentlicher Wechsel keine Eingabe kostet — benannte Zeilen bleiben
+ * stehen. Ohne diese Abfrage haetten zwei Adhoc-Tage verschiedene Rollen: ein
+ * frisch angelegter keine, ein umgestellter die des frueheren Rettungsmittels.
+ * Gefragt ist der DIENST, und der fuehrt keine. Die Namen selbst bleiben
+ * unangetastet in `day_crew` und in der Leseansicht des Tages sichtbar; was
+ * an einem Einsatz bereits eingetragen ist, bleibt es ebenfalls ($belegt). */
+$dayRoles = dt_ist_tagesrettungsmittel($tag) ? [] : dt_crew($dayId);
 /* Art und Faehigkeiten desselben Diensttags, beide EINGEFROREN (E8). Sie
  * steuern 'kind_gate' und 'cap_gate' genauso, wie `day_crew` 'role_gate'
  * steuert — gefragt wird immer der Dienst, nie das heutige Rettungsmittel.
@@ -375,9 +385,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (($f['store'] ?? null) === 'crew') {
                 $crewVals[(string)($f['role_code'] ?? substr($col, 5))] = $v;
-            } else {
+            } elseif (mf_ist_spalte($f)) {
                 $fieldCols[] = $col; $fieldVals[] = $v;
             }
+            /* SONST: NICHTS. Ein Feld mit 'store' => 'pat' darf hier NICHT
+             * ankommen (S9/AP7).
+             *
+             * Bis hierher stand ein blosses `else` — und das hiess: Alles, was
+             * nicht Besatzung ist, ist eine Spalte. Fuer ein verschluesseltes
+             * Feld waere das der stille Schaden gewesen: Das Formular schickt
+             * `f_notes` nicht mehr mit (kein `name`, der Wert liegt im Blob),
+             * `$raw` waere leer, `$v` also NULL — und jedes Speichern
+             * schriebe NULL in die Spalte, waehrend der Anhebelauf sie noch
+             * gebraucht haette. Bei GESPERRTER Sitzung, wo gar kein Blob
+             * entsteht, waere die Notiz damit weg gewesen: kein Blob, keine
+             * Spalte, keine Meldung.
+             *
+             * Gefragt wird mf_ist_spalte() und nicht 'store' === 'pat',
+             * damit die Antwort an EINER Stelle steht. */
 
             /* ---- Ortsfeld: die beiden Koordinatenspalten daneben (E37) -----
              *
@@ -433,9 +458,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // PatientInnendaten: der Browser liefert NUR Chiffretext (pat_blob).
         // Leerer Wert = Blob nicht anfassen (z. B. Sitzung nicht entsperrt).
         if ($patReady) {
+            $blobGesetzt = false;
             $pb = (string)($_POST['pat_blob'] ?? '');
             if ($pb === '__CLEAR__') {
                 $fieldCols[] = 'pat_blob'; $fieldVals[] = null;
+                $blobGesetzt = true;
             } elseif ($pb !== '') {
                 /* MUSTERVERLETZUNG MELDEN STATT UEBERGEHEN.
                  *
@@ -460,6 +487,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            . 'Seite neu laden und erneut versuchen.';
                 } else {
                     $fieldCols[] = 'pat_blob'; $fieldVals[] = $ok;
+                    $blobGesetzt = true;
+                }
+            }
+
+            /* DIE ALTE SPALTE GEHT MIT AUF NULL (S9/AP7).
+             *
+             * Sobald der Browser einen Blob geliefert hat, steht der Inhalt
+             * verschluesselt da — der Klartext daneben ist dann nicht nur
+             * ueberfluessig, er ist genau das, was die Zusage ausschliesst.
+             * Er faellt deshalb im selben UPDATE, nicht erst beim Anhebelauf.
+             *
+             * NUR wenn ein Blob kam: Bei gesperrter Sitzung (`$pb === ''`)
+             * bleibt beides unangetastet — sonst loeschte ein Speichern ohne
+             * Schluessel die Notiz, und niemand koennte sie zurueckholen.
+             *
+             * Die Namen kommen aus dem Katalog (mf_pat_felder()), nicht aus
+             * einer Liste hier: Ein zweites verschluesseltes Katalogfeld
+             * (S11: Zielklinik) zieht damit von selbst nach. */
+            if ($blobGesetzt) {
+                foreach (array_keys(mf_pat_felder()) as $pcol) {
+                    $fieldCols[] = $pcol; $fieldVals[] = null;
                 }
             }
         }
@@ -784,8 +832,14 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           return $f['options'] ?? [];
       };
       // Vorschlagslisten fuer Text-Felder mit suggest_src (Konzept Abschnitt 6.4):
-      // persoenlich + zentral, dedupliziert, alphabetisch — natives <datalist>,
-      // Freitext bleibt uneingeschraenkt moeglich.
+      // persoenlich + zentral, dedupliziert, alphabetisch; Freitext bleibt
+      // uneingeschraenkt moeglich.
+      //
+      // SEIT S9/AP1 (E-S9-07) GEHT DIE LISTE NICHT MEHR ALS <datalist> IN DAS
+      // MARKUP, sondern als Daten an assets/vorschlagsliste.js. Die native
+      // Fassung zeichnete der Browser UEBER dem Feld — am Transportziel damit
+      // ueber der eigenen Liste (PS-6) —, und auf dem Handy zeigte sie oft
+      // gar nichts (Backlog 68). Der Inhalt ist derselbe geblieben.
       //
       // Seit Web 5.5.0 auch 'crew:<rolle>' (E8). Die Abfrage ist dieselbe wie
       // in $optSrc; der Unterschied liegt nicht in den Daten, sondern darin,
@@ -802,6 +856,11 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       // Ortsfeld sie beim Uebernehmen eines Vorschlags nachladen. Rollen liefern
       // keine — dort bleiben beide Werte null, statt zwei Formen derselben
       // Liste zu haben.
+      /* Was das Skript unten fuer die Vorschlagslisten braucht: je Spalte die
+       * Eintraege, die der Katalog dort vorschlaegt. Dasselbe Verfahren wie bei
+       * $LOC_FELDER — die Daten reisen als JSON in die Seite, das Markup bleibt
+       * leer (E-S9-07). */
+      $SUGGEST_FELDER = [];
       $suggestCache = [];
       $suggestSrc = function (array $f) use ($userId, $dayBaseId, &$suggestCache): array {
           $src = (string)($f['suggest_src'] ?? '');
@@ -884,7 +943,50 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               : e($label);
       };
 
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER, $labelSichtbar): void {
+      /* ---- Kennzeichnung der Beschriftung (S9/AP7, E-S9-02) --------------
+       *
+       * ZWEI ZEICHEN, DIE EINANDER AUSSCHLIESSEN: Ein verschluesseltes Feld
+       * traegt das SCHLOSS, ein Klartext-Freitextfeld die KLEINZEILE „Klartext
+       * — keine Patientendaten" (Katalogschluessel 'hinweis', Nr. 132). Beides
+       * an einem Feld waere ein Widerspruch; deshalb steht die Wahl hier an
+       * EINER Stelle und nicht in jedem Zweig von renderField().
+       *
+       * DAS SCHLOSS STEHT RECHTS VOM WORT, nicht links. Das Konzept sagt
+       * „links neben der Beschriftung"; der vorhandene Baustein `.symbol-schutz`
+       * setzt es ueber `margin-left` dahinter, und genauso steht es seit
+       * Web 15 in der LESEANSICHT (`dtGeschuetzt()` in einsatz.php). Links
+       * hiesse eine neue CSS-Regel und damit eine neue Darstellung — die
+       * braeuchte Mockup und Freigabe (CLAUDE.md 5), fuer einen Unterschied,
+       * den niemand verlangt hat. Formular und Leseansicht zeigen dasselbe
+       * Zeichen an derselben Stelle; das ist mehr wert als der Wortlaut.
+       *
+       * KEIN ZWEITES ZEICHEN FUER „OFFEN" (E-S9-02): Die Kleinzeile ist Text,
+       * kein Symbol. Ein zweites Symbol machte die Karte zum Zeichenteppich.
+       */
+      $feldKennzeichen = function (array $f) use (&$kartenTitel): string {
+          /* KEIN ZEICHEN AN EINER UNSICHTBAREN BESCHRIFTUNG. Traegt ein Feld
+             den Namen seiner Karte, blendet $labelSichtbar() das Wort aus (es
+             stuende zweimal da) — das Zeichen bliebe dann allein in einer
+             leeren Zeile stehen und zeigte auf nichts. Die Karte sagt es
+             ohnehin selbst: „Notizen · Ende-zu-Ende-verschluesselt".
+             GEFUNDEN AUF DEM BILD, nicht von einer Zahl. */
+          if (($f['label'] ?? null) === $kartenTitel) { return ''; }
+
+          if (($f['store'] ?? null) === 'pat') {
+              /* Kein Leerzeichen davor: `.symbol-schutz` bringt seinen Abstand
+                 als `margin-left` mit. */
+              return ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt');
+          }
+          /* HIER SCHON. `.feld-klein-inline` hat keinen eigenen Abstand — die
+             uebrigen Verwender stehen im Markup auf einer eigenen Zeile und
+             bekommen ihn vom HTML geschenkt. Ohne das Leerzeichen las sich die
+             Zeile „Weiterer NotarztKlartext — keine Patientendaten". */
+          return isset($f['hinweis'])
+              ? ' <span class="feld-klein-inline">' . e((string)$f['hinweis']) . '</span>'
+              : '';
+      };
+
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER, &$SUGGEST_FELDER, $labelSichtbar, $feldKennzeichen): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
           /* FILTER: verstecken, aber immer rendern (siehe mission_fields.php).
@@ -918,7 +1020,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   <input type="text" id="rminput" class="rmeingabe" autocomplete="off"
                          placeholder="Tippen zum Suchen, Enter zum Übernehmen">
                 </div>
-                <div class="rmlist" id="rmlist" hidden></div>
+                <ul class="vorschlaege" id="rmlist" hidden></ul>
               </div>
             </label>
           <?php return; }
@@ -1008,6 +1110,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   'praefix'     => $praefix,
                   'vorschlaege' => $sugg,
                   'label'       => (string)($f['label'] ?? $col),
+                  'ortswahl'    => !empty($f['ortswahl']),
               ];
               ui_ortsfeld([
                   'praefix'     => $praefix,
@@ -1027,7 +1130,9 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   'versteckt'   => $hide,
                   'lat'         => isset($ort['lat']) ? ortWert($col, 'lat', $ort['lat']) : '',
                   'lon'         => isset($ort['lon']) ? ortWert($col, 'lon', $ort['lon']) : '',
-                  'datalist'    => array_map(static fn(array $s): string => $s['name'], $sugg),
+                  /* Der Katalog entscheidet, ob das Feld einen Pin-Knopf
+                   * bekommt (E-S9-06 d) — nicht diese Datei. */
+                  'ortswahl'    => !empty($f['ortswahl']),
               ]);
               if (!empty($f['children'])) { ?>
                 <div class="childfields">
@@ -1040,22 +1145,40 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               <?php }
               return;
           }
-          if ($type === 'textarea') { ?>
-            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= $labelSichtbar($f['label']) ?>
-              <textarea name="f_<?= e($col) ?>" rows="3" maxlength="<?= (int)($f['max'] ?? 190) ?>"
-                placeholder="<?= e($f['placeholder'] ?? '') ?>"><?= e($val) ?></textarea>
+          if ($type === 'textarea') {
+              /* EIN VERSCHLUESSELTES FELD TRAEGT KEIN `name` (S9/AP7).
+               *
+               * Dieselbe Regel wie bei den handgeschriebenen Feldern der Karte
+               * „PatientIn": Ohne `name` schickt der Browser den Wert NICHT
+               * mit — er packt ihn unten in den `pat_blob`. Ein `name` hier
+               * waere der kuerzeste Weg, die Verschluesselungszusage zu
+               * brechen, und zwar lautlos: Das Formular saehe unveraendert
+               * aus, und der Klartext stuende im Server-Log der Anfrage.
+               *
+               * Der Wert kommt ebenfalls nicht von hier, sondern aus dem
+               * entschluesselten Blob (patLaden() unten). `$val` waere der
+               * Spaltenwert — nach der Anhebung NULL, davor der Altbestand;
+               * beides gehoert nicht ins Markup. */
+              $pat = ($f['store'] ?? null) === 'pat'; ?>
+            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= $labelSichtbar($f['label']) . $feldKennzeichen($f) ?>
+              <textarea <?= $pat ? 'id="pat_' . e($col) . '"' : 'name="f_' . e($col) . '"' ?>
+                rows="3" maxlength="<?= (int)($f['max'] ?? 190) ?>"
+                placeholder="<?= e($f['placeholder'] ?? '') ?>"><?= $pat ? '' : e($val) ?></textarea>
             </label>
           <?php return; } ?>
-            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
+            <?php /* MIT VORSCHLAGSLISTE: der Behaelter traegt `position:relative`
+                     (`feld-vorschlag`), damit die Liste unter dem Feld haengt und
+                     nicht am Seitenanfang. Gefuellt wird sie im Skript unten aus
+                     SUGGEST_FELDER — hier steht nur das leere <ul> (E-S9-07). */ ?>
+            <?php if (isset($f['suggest_src'])) { $SUGGEST_FELDER[$col] = $suggestSrc($f); } ?>
+            <label class="<?= trim(($depth ? 'fld-sub ' : '')
+                                 . (isset($f['suggest_src']) ? 'feld-vorschlag' : '')) ?>"<?= $hideAttr ?>><?= e($f['label']) . $feldKennzeichen($f) ?>
               <input type="<?= $type === 'number' ? 'number' : 'text' ?>"
-                name="f_<?= e($col) ?>" value="<?= e($val) ?>"
+                name="f_<?= e($col) ?>" value="<?= e($val) ?>" autocomplete="off"
                 <?= isset($f['max']) ? 'maxlength="' . (int)$f['max'] . '"' : '' ?>
-                <?= isset($f['suggest_src']) ? 'list="dl_' . e($col) . '"' : '' ?>
                 placeholder="<?= e($f['placeholder'] ?? '') ?>" step="any">
-              <?php if (isset($f['suggest_src'])): $sugg = $suggestSrc($f); ?>
-                <datalist id="dl_<?= e($col) ?>">
-                  <?php foreach ($sugg as $s): ?><option value="<?= e($s['name']) ?>"><?php endforeach; ?>
-                </datalist>
+              <?php if (isset($f['suggest_src'])): ?>
+                <ul id="vl_<?= e($col) ?>" class="vorschlaege" hidden></ul>
               <?php endif; ?>
             </label>
             <?php if (!empty($f['children'])): ?>
@@ -1166,24 +1289,36 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              (Skript unten), nicht als Formularwerte zum Server. */ ?>
     <div class="form-raster">
     <div class="form-spalte">
-    <?php ui_karte_start(['titel' => 'PatientIn', 'zahl' => 'Ende-zu-Ende-verschlüsselt',
+    <?php /* Einmal gebaut, siebenmal gesetzt — das Zeichen ist an jedem Feld
+             dasselbe, und siebenmal ui_symbol() aufzurufen hiesse siebenmal die
+             Gelegenheit, es verschieden zu schreiben. */
+          $SCHLOSS = ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt');
+          ui_karte_start(['titel' => 'PatientIn', 'zahl' => 'Ende-zu-Ende-verschlüsselt',
                           'klasse' => 'form-block-patientin']); ?>
+      <?php /* JEDES FELD TRAEGT DAS SCHLOSS (S9/AP7, E-S9-02). Die Karte hat
+               ihre Plakette „Ende-zu-Ende-verschluesselt" — und die beantwortet
+               die Frage fuer die KARTE, nicht fuer die einzelne Zeile. Dieselbe
+               Ueberlegung hat in S3/AP6 das Schloss in die PatientIn-Karte der
+               LESEANSICHT gebracht (E-S3-16); das Formular zieht hier nach, und
+               beide Seiten zeigen jetzt dasselbe Zeichen an derselben Stelle.
+               Katalogfelder bekommen es ueber $feldKennzeichen(); diese hier
+               sind von Hand geschrieben und bekommen es von Hand. */ ?>
       <div id="patfields">
-        <label>Einsatznummer
+        <label>Einsatznummer<?= $SCHLOSS ?>
           <input type="text" id="pat_mission_no" maxlength="64" autocomplete="off"
                  placeholder="z. B. Leitstellen-Nr."></label>
         <div class="patname">
-          <label>Nachname <input type="text" id="pat_last" maxlength="120" autocomplete="off"></label>
-          <label>Vorname <input type="text" id="pat_first" maxlength="120" autocomplete="off"></label>
+          <label>Nachname<?= $SCHLOSS ?> <input type="text" id="pat_last" maxlength="120" autocomplete="off"></label>
+          <label>Vorname<?= $SCHLOSS ?> <input type="text" id="pat_first" maxlength="120" autocomplete="off"></label>
         </div>
         <div class="fld-reihe">
-          <label>Geburtsdatum
+          <label>Geburtsdatum<?= $SCHLOSS ?>
             <input type="date" id="pat_dob" max="<?= e(date('Y-m-d')) ?>"></label>
-          <label>Alter
+          <label>Alter<?= $SCHLOSS ?>
             <input type="number" id="pat_age" min="0" max="120" step="1">
             <span class="feld-klein-inline" id="agehint"></span></label>
         </div>
-        <label>Diagnose <input type="text" id="pat_dx" maxlength="190"></label>
+        <label>Diagnose<?= $SCHLOSS ?> <input type="text" id="pat_dx" maxlength="190"></label>
       </div>
 
     <?php /* ---- GRUPPE 2: Einsatz ------------------------------------------
@@ -1213,6 +1348,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               ui_ortsfeld([
                   'praefix'     => 'loc',
                   'label'       => 'Einsatzort',
+                  'geschuetzt'  => true,
                   'hinweis'     => 'Adresse, Koordinaten oder Plus Code',
                   'max'         => 255,
                   'platzhalter' => 'tippen für Vorschläge — auch Koordinaten oder Plus Code',
@@ -1225,7 +1361,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                  neuem Namen wiederaufzubauen, steht der Zusatz jetzt dort, wo
                  ihn `ui_feld()` auch hinsetzt: als `.feld-klein` hinter dem
                  Feld. */ ?>
-        <label>Beschreibung Einsatzort
+        <label>Beschreibung Einsatzort<?= $SCHLOSS ?>
           <input type="text" id="pat_site_desc" maxlength="190" autocomplete="off">
         </label>
         <p class="feld-klein">Zufahrt, Besonderheiten, Lage vor Ort</p>
@@ -1276,6 +1412,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                     'praefix'     => 'start',
                     'klasse'      => 'fld-sub',
                     'label'       => 'Manueller Abfahrtort',
+                    'geschuetzt'  => true,
                     'hinweis'     => 'Adresse, Koordinaten oder Plus Code',
                     'max'         => 255,
                     'platzhalter' => 'tippen für Vorschläge — auch Koordinaten oder Plus Code',
@@ -1324,8 +1461,16 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       <?php $gruppeRendern('besatzung'); ?>
     <?php ui_karte_ende(true); ?>
 
-    <?php ui_karte_start(['titel' => 'Notizen', 'klasse' => 'form-block-notizen']); ?>
+    <?php /* DIE NOTIZEN LIEGEN IM VERSCHLUESSELTEN BLOCK (E-S9-01, S9/AP7).
+             Der Rahmen `#patnotes` ist das Gegenstueck zu `#patfields` und
+             `#patort`: Er sagt dem Riegel unten, was zu sperren ist, solange
+             der Schluessel zu ist. Die Karte traegt deshalb dieselbe Zahl wie
+             die Karte „PatientIn". */ ?>
+    <?php ui_karte_start(['titel' => 'Notizen', 'zahl' => 'Ende-zu-Ende-verschlüsselt',
+                          'klasse' => 'form-block-notizen']); ?>
+      <div id="patnotes">
       <?php $kartenTitel = 'Notizen'; $gruppeRendern('notizen'); $kartenTitel = ''; ?>
+      </div>
     <?php ui_karte_ende(); ?>
 
     <?php /* Felder ohne Gruppe — es gibt derzeit keine. Der Block steht da,
@@ -1372,6 +1517,42 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     </div><?php /* .form-spalte (rechts) */ ?>
     </div><?php /* .form-raster */ ?>
 
+    <?php /* ---- „Was hier gilt" (S9/AP7, E-S9-02) ------------------------
+             DIE LEGENDE ZU DEN ZEICHEN, und nur sie. Drei Saetze: was das
+             Schloss bedeutet, was Klartext bedeutet, und was der Server davon
+             sieht. Sie steht ZUGEKLAPPT und am ENDE (R74 (5)): Wer sie
+             braucht, sucht sie einmal; wer sie nicht braucht, soll ueber sie
+             nicht hinweglesen muessen. Kein neuer Baustein — dieselbe
+             klappbare Karte wie „Reanimation" darueber.
+
+             AUSSERHALB DES RASTERS, ueber die volle Breite: Sie gehoert zu
+             beiden Spalten, nicht zu einer. */ ?>
+    <?php ui_karte_start(['titel' => 'Was hier gilt', 'klasse' => 'form-block-legende',
+                          'zu' => true]); ?>
+      <p class="feld-hinweis">
+        <?= ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt') ?>
+        <strong>Das Schloss</strong> steht an jedem Feld, das dein Browser
+        ver- und entschlüsselt: Name, Geburtsdatum, Alter, Diagnose,
+        Einsatznummer, Einsatzort samt Beschreibung und die Notizen des
+        Einsatzes. Ohne dein Passwort sind sie nicht zu lesen.
+      </p>
+      <p class="feld-hinweis">
+        <strong>„Klartext — keine Patientendaten"</strong> steht an den
+        Freitextfeldern, die unverschlüsselt gespeichert werden: die
+        Bergwacht-Angaben, der weitere Notarzt, die Besatzungsnamen und die
+        Notizen des <em>Diensttags</em>. Dort gehören keine Angaben zu einer
+        Person hinein.
+      </p>
+      <p class="feld-hinweis">
+        <strong>Der Server</strong> sieht das eine nie und das andere immer.
+        Er kann die verschlüsselten Felder weder anzeigen noch durchsuchen —
+        deshalb findet die Suche sie erst, wenn du entsperrt hast. Alles
+        übrige — Zeiten, Phasen samt Koordinaten, GPS-Daten, Transportziel —
+        liegt lesbar in der Datenbank, weil Auswertung und Statistik darauf
+        angewiesen sind.
+      </p>
+    <?php ui_karte_ende(true); ?>
+
     <?php /* Speichern-Leiste statt Knopf am Ende (E-P3-29): Sie klebt unten
              und erscheint, sobald das Formular schmutzig ist (forms.js).
              KEIN "Verwerfen" und kein Abbrechen-Link mehr — der Rueckweg oben
@@ -1385,9 +1566,21 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
 <script src="<?= asset('assets/locparse.js') ?>"></script>
+<?php /* html.js (EdHtml.escape) und vorschlagsliste.js (EdVorschlaege) VOR
+         ortsfeld.js: Die Komponente baut ihre Trefferliste beim Aufbau, und
+         der Baustein muss dann stehen. Die Reihenfolge ist die Abhaengigkeit,
+         nicht der Zufall (E-S9-07). */ ?>
+<script src="<?= asset('assets/html.js') ?>"></script>
+<script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
+<?php /* geocoder.js VOR ortsfeld.js und ortswahl.js: Beide fragen beim
+         Aufbau, ob die Adresssuche an ist (S9/AP2, E-S9-05). */ ?>
+<script src="<?= asset('assets/geocoder.js') ?>"></script>
 <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
+<?php /* geo.js liefert die Ringpunkte und die Spurfarbe fuer die
+         aufgezeichnete Spur im Kartendialog (S9/AP2, E-S9-06 b). */ ?>
+<script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/ortswahl.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
@@ -1565,6 +1758,23 @@ function reaSitzung(daten) {
 
 // ---- PatientInnendaten & Einsatzort: lokale Ver-/Entschluesselung ------
 const PAT_PREV = <?= json_js($mission['pat_blob'] ?? null) ?>;
+<?php /* DIE VERSCHLUESSELTEN KATALOGFELDER (S9/AP7): Feldname => Schluessel im
+         Blob. Aus mf_pat_felder(), nicht aus einer zweiten Liste — sonst
+         liefen Katalog und Formular auseinander, und zwar still.
+
+         PAT_ALT ist der ALTBESTAND aus der Spalte, solange die Anhebung
+         diesen Einsatz nicht erreicht hat. Ohne ihn zeigte das Formular ein
+         leeres Notizfeld, obwohl in der Datenbank Text steht — und das
+         naechste Speichern haette ihn zugedeckt. Der Klartext geht dabei
+         nicht an einen Dritten: Er steht schon in der Spalte, der Server
+         kennt ihn ohnehin, und der Browser gehoert der NutzerIn. */
+      $patAlt = [];
+      foreach (array_keys(mf_pat_felder()) as $pcol) {
+          $pv = $mission[$pcol] ?? null;
+          if ($pv !== null && (string)$pv !== '') { $patAlt[$pcol] = (string)$pv; }
+      } ?>
+const PAT_KAT = <?= json_js(mf_pat_felder()) ?>;
+const PAT_ALT = <?= json_js($patAlt) ?>;
 /* Bezugstag fuer die Altersberechnung: das ECHTE Einsatzdatum, nicht heute und
    nicht das Datum des Diensttags. Bei einem Dienst ueber Mitternacht sind das
    zwei verschiedene Tage, und gefragt ist der, an dem der Einsatz lief. */
@@ -1595,9 +1805,42 @@ const ortStart = EdOrtsfeld.init({
   bezeichnungPlatzhalter: 'Bezeichnung des Abfahrtortes'
 });
 
+/* ---- Die aufgezeichnete Spur fuer den Kartendialog (S9/AP2, E-S9-06 b) ----
+ *
+ * WER DEN EINSATZORT NACHTRAEGT, HAT DIE SPUR — und der Ort liegt fast immer
+ * auf ihr. Der Dialog zeichnet sie deshalb, und bei leerem Feld oeffnet die
+ * Karte gleich darauf (Backlog Nr. 147, PS-11).
+ *
+ * GEHOLT WIRD UEBER `api/mission.php`, NICHT EINGEBETTET. Das ist die Vorgabe
+ * aus E-S9-06 b, und der Grund liegt in S11: Wenn die Spur eines Tages
+ * verschluesselt reist, aendert sich nur der Abholweg — die Seite bliebe, wie
+ * sie ist. Eine in das Formular eingebettete Spur waere dagegen eine zweite
+ * Stelle, an der Ortsdaten im Klartext stehen.
+ *
+ * ERST BEIM OEFFNEN, UND NUR EINMAL. Das Konzept sagt „holt sie beim Laden";
+ * gebaut ist es als Funktion, die beim ERSTEN Oeffnen des Dialogs abruft und
+ * das Versprechen behaelt. Der Unterschied ist eine Abwaegung und keine
+ * Abweichung in der Sache: Die allermeisten Formularaufrufe oeffnen den Dialog
+ * nie, und `api/mission.php` liefert die ganze Einsatzzeile samt Phasen und
+ * einigen hundert Spurpunkten. Der Dialog steht sofort; die Spur kommt nach
+ * und passt die Karte dann ein — wer bis dahin selbst geschoben hat, behaelt
+ * seinen Ausschnitt. */
+const SPUR_EINSATZ = <?= $editing ? json_encode((string)$id) : 'null' ?>;
+let spurVersprechen = null;
+function spurHolen() {
+  if (SPUR_EINSATZ === null) { return Promise.resolve(null); }
+  if (!spurVersprechen) {
+    spurVersprechen = fetch('api/mission.php?id=' + encodeURIComponent(SPUR_EINSATZ))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => (d && Array.isArray(d.track) && d.track.length > 1) ? d.track : null)
+      .catch(() => null);
+  }
+  return spurVersprechen;
+}
+
 // Pin-Blatt (Geolocation, Kartendialog) an beide Felder haengen (E-P3-34).
-EdOrtswahl.registriere('loc', ortEinsatz);
-EdOrtswahl.registriere('start', ortStart);
+EdOrtswahl.registriere('loc', ortEinsatz, { spur: spurHolen });
+EdOrtswahl.registriere('start', ortStart, { spur: spurHolen });
 
 /* Ortsfelder aus dem Feldkatalog (derzeit die Zielklinik). Sie tragen einen
  * NAMEN und daneben eine Koordinate, deshalb getrennte Suche: „Klinikum
@@ -1605,12 +1848,79 @@ EdOrtswahl.registriere('start', ortStart);
  * Namen weg. Trifft die Eingabe einen Stammdatensatz, kommen dessen Koordinaten
  * mit und bleiben ueberschreibbar (A13l). */
 const LOC_FELDER = <?= json_js($LOC_FELDER, JSON_UNESCAPED_UNICODE) ?>;
-const ORTSFELDER = LOC_FELDER.map(lf => EdOrtsfeld.init({
-  praefix: lf.praefix,
-  getrennteSuche: true,
-  vorschlaege: lf.vorschlaege,
-  bezeichnungPlatzhalter: 'Bezeichnung'
-})).filter(Boolean);
+
+/* ---- Textfelder mit Vorschlagsliste (Katalog `suggest_src`) ---------------
+ *
+ * Bis Web 15.5.2 hingen hier native `<datalist>`-Listen am Feld — an den
+ * Besatzungsfeldern die einzige Vorschlagsquelle, und auf dem Handy zeigte
+ * der Browser sie oft gar nicht (Backlog 68). Jetzt zeichnet derselbe
+ * Baustein, der auch am Ortsfeld haengt (E-S9-07): eine Liste unter dem Feld,
+ * mit Gruppenzeile, Tastatur und Uebernahme auf `mousedown`.
+ *
+ * DIE GRUPPENZEILE STEHT AUCH BEI EINER EINZIGEN GRUPPE — anders als am
+ * Einsatzort. Sie sagt, woher die Namen kommen („Vorlagen des Standorts") und
+ * damit zugleich, dass ein Name daneben erlaubt ist: Wer aushilft, steht oft
+ * nicht in den Stammdaten (E8). Ohne die Zeile saehe die Liste wie eine
+ * Auswahl aus, und genau das ist sie nicht. */
+const SUGGEST_FELDER = <?= json_js($SUGGEST_FELDER, JSON_UNESCAPED_UNICODE) ?>;
+
+/* Bis zu sechs Vorschlaege — dieselbe Zahl wie bei der Adresssuche
+ * (`limit=6`), damit keine Liste laenger wird als die andere. */
+const SUGGEST_MAX = 6;
+
+Object.keys(SUGGEST_FELDER).forEach(spalte => {
+  const feld = document.querySelector('input[name="f_' + spalte + '"]');
+  const liste = document.getElementById('vl_' + spalte);
+  if (!feld || !liste) { return; }
+  const eintraege = SUGGEST_FELDER[spalte] || [];
+  const istBesatzung = spalte.startsWith('crew_');
+  const titel = istBesatzung ? 'Vorlagen des Standorts' : 'Vorschläge';
+  /* Kein Zeichen fuer eine Herkunft, die es noch nicht gibt: Heute traegt nur
+   * `crew:<rolle>` diesen Weg (das Transportziel ist ein Ortsfeld und hat
+   * seinen eigenen). Ein hierher geratenes neues Katalogfeld bekommt seine
+   * Zeile lieber ohne Zeichen als mit einem beliebigen. */
+  const zeichen = istBesatzung ? 'profil' : '';
+
+  const steuer = EdVorschlaege.init({
+    feld, behaelter: liste.parentNode, liste,
+    /* `input` von Hand feuern: Ein programmatisch gesetzter Wert loest kein
+       Ereignis aus, und ohne eines merkt die Aenderungsverfolgung
+       (assets/forms.js) nichts — die Speichern-Leiste bliebe aus. */
+    beiWahl: e => {
+      feld.value = e.wert.name;
+      feld.dispatchEvent(new Event('input', { bubbles: true }));
+      feld.focus();
+    }
+  });
+  if (!steuer) { return; }
+
+  feld.addEventListener('input', () => {
+    const q = feld.value.trim().toLowerCase();
+    if (q === '') { steuer.verstecke(); return; }
+    const treffer = eintraege
+      .filter(v => String(v.name).toLowerCase().includes(q))
+      /* Ein Eintrag, der WORTGLEICH im Feld steht, ist kein Vorschlag mehr —
+       * ihn anzubieten hiesse, das Getippte noch einmal anzubieten. */
+      .filter(v => String(v.name).toLowerCase() !== q)
+      .slice(0, SUGGEST_MAX);
+    steuer.zeige([{ titel, eintraege: treffer.map(v => ({
+      haupt: v.name, symbol: zeichen, art: 'vorlage', wert: v
+    })) }], feld.value.trim());
+  });
+});
+const ORTSFELDER = LOC_FELDER.map(lf => {
+  const steuer = EdOrtsfeld.init({
+    praefix: lf.praefix,
+    getrennteSuche: true,
+    vorschlaege: lf.vorschlaege,
+    bezeichnungPlatzhalter: 'Bezeichnung'
+  });
+  /* Der Pin-Knopf haengt am Katalogfeld (E-S9-06 d) — heute ist das genau
+   * das Transportziel. Dieselbe Spur wie am Einsatzort: Es ist derselbe
+   * Einsatz, und das Ziel liegt an ihrem Ende. */
+  if (steuer && lf.ortswahl) { EdOrtswahl.registriere(lf.praefix, steuer, { spur: spurHolen }); }
+  return steuer;
+}).filter(Boolean);
 
 /* ---- Abfahrtort: Regel waehlen, manuelles Feld ein-/ausblenden (E34) ------
  *
@@ -1663,7 +1973,14 @@ document.querySelectorAll('.showif').forEach(box => {
  * REGEL im Klartext und bleibt bedienbar. Sie ist ein <select> und faellt schon
  * deshalb nicht unter diesen Selektor — die Auswahl ist trotzdem ausdruecklich
  * gemeint und keine Nachlaessigkeit. */
-const PAT_INPUTS = '#patfields input, #patort input';
+/* DER RIEGEL FASST AUCH `textarea`, seit die Notizen im Blob liegen (S9/AP7).
+ * Bis dahin stand hier nur `input` — richtig, solange jedes verschluesselte
+ * Feld einzeilig war. Die Notiz ist das einzige mehrzeilige Feld des
+ * Formulars; ohne die Erweiterung waere sie bei gesperrtem Schluessel
+ * bedienbar geblieben, und was jemand hineingeschrieben haette, waere beim
+ * Speichern spurlos verschwunden (`if (!PAT_CK) return;` unten). */
+const PAT_INPUTS = '#patfields input, #patort input, '
+                 + '#patnotes textarea, #patnotes input';
 
 async function patLaden(){
   PAT_CK = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
@@ -1684,6 +2001,16 @@ async function patLaden(){
     if (o.dx != null) document.getElementById('pat_dx').value = o.dx;
     if (o.site_desc != null) document.getElementById('pat_site_desc').value = o.site_desc;
     if (o.age != null) document.getElementById('pat_age').value = o.age;
+    /* KATALOGFELDER MIT 'store' => 'pat' (S9/AP7). Reihenfolge: Blob zuerst,
+       Spalte nur als Rueckfall — ein bereits angehobener Einsatz hat beides,
+       und der Blob ist der neuere Stand. */
+    for (const col of Object.keys(PAT_KAT)) {
+      const el = document.getElementById('pat_' + col);
+      if (!el) { continue; }
+      const ausBlob = o[PAT_KAT[col].blob];
+      if (ausBlob != null) { el.value = ausBlob; }
+      else if (PAT_ALT[col] != null) { el.value = PAT_ALT[col]; }
+    }
     zeigeAlter();
     if (o.loc) {
       // addr steht unveraendert im Textfeld — auch dann, wenn dort noch eine
@@ -1778,6 +2105,17 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   // Eigener Schluessel auf oberster Ebene, NICHT in loc: 'loc' entsteht nur bei
   // gefuellter Adresse, eine Beschreibung ohne Ortsangabe ginge sonst verloren (E5).
   if (siteDesc !== '') o.site_desc = siteDesc;
+  /* KATALOGFELDER MIT 'store' => 'pat' (S9/AP7). Ein leeres Feld erzeugt
+     KEINEN Schluessel — dieselbe Regel wie oben: Der Blob traegt nur, was
+     dasteht. Die Laengengrenze steht am `maxlength` des Feldes; der Server
+     kann sie nicht mehr pruefen, weil er den Inhalt nicht sieht. Das gilt
+     fuer jedes verschluesselte Feld und ist der Preis der Zusage. */
+  for (const col of Object.keys(PAT_KAT)) {
+    const el = document.getElementById('pat_' + col);
+    if (!el) { continue; }
+    const v = el.value.trim();
+    if (v !== '') { o[PAT_KAT[col].blob] = v; }
+  }
   // Alter nur speichern, wenn es NICHT aus dem Geburtsdatum folgt — sonst
   // muesste es bei jeder Korrektur des Geburtsdatums nachgezogen werden.
   if (age !== '' && EdPat.alterAm(dob, MISSION_DAY) === null) o.age = parseInt(age, 10);
@@ -1902,46 +2240,65 @@ document.getElementById('addrea').addEventListener('click', ev => {
     input.focus();
   }
 
+  /* ---- DIE TREFFERLISTE IST DER BAUSTEIN (S9/AP1, E-S9-08) ---------------
+   *
+   * PS-2, und warum es ihn gab: Hier stand bis Web 15.5.2 eine eigene Liste
+   * aus Knoepfen (gestrichene Klasse `rmopt`), die auf `click` uebernahm —
+   * und daneben ein `blur`-Aufschub von 150 ms, der die Liste versteckte.
+   * Ein Mausklick ist
+   * `mousedown` -> `blur` -> `mouseup` -> `click`; wer die Taste laenger als
+   * 150 ms haelt, findet den Knopf beim `mouseup` schon `hidden`, und der
+   * Browser feuert kein `click`. Die Liste schloss, uebernommen wurde nichts.
+   * Am Finger fiel es nicht auf (ein Tipp ist kuerzer), an der Maus staendig.
+   *
+   * Gemessen vor der Behebung mit tools/klickprobe/ (300 ms gehaltene Maus):
+   * 0 von 3 Uebernahmen — und im ersten Durchgang verschwand sogar ein
+   * bereits gewaehltes Rettungsmittel, weil unter dem Zeiger nach dem
+   * Verstecken der Liste das Kreuz eines Chips lag und DAS den Klick bekam.
+   *
+   * Der Baustein uebernimmt auf `mousedown` mit `preventDefault` — vor dem
+   * `blur` und ohne ihn auszuloesen. Pfeiltasten, Enter und Escape kommen
+   * mit; die Ruecktaste im leeren Feld bleibt hier, sie gehoert zu den Chips
+   * und nicht zur Liste. */
+  const steuer = EdVorschlaege.init({
+    feld: input, behaelter: box.closest('.rmbox') || input.parentNode, liste,
+    beiWahl: e => hinzu(e.wert)
+  });
+
   function suche(){
     const q = input.value.trim();
-    liste.innerHTML = '';
-    if (q.length < 2) { liste.hidden = true; return; }      // erst ab zwei Zeichen
+    if (q.length < 2) { steuer.verstecke(); return; }        // erst ab zwei Zeichen
 
     const ql = q.toLowerCase();
     const treffer = vorlagen.filter(v =>
       v.toLowerCase().includes(ql) &&
       !gewaehlt.some(g => g.toLowerCase() === v.toLowerCase()));
 
-    treffer.slice(0, 8).forEach(v => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'rmopt'; b.textContent = v;
-      b.addEventListener('click', () => hinzu(v));
-      liste.appendChild(b);
-    });
+    const zeilen = treffer.slice(0, 8).map(v => ({
+      haupt: v, neben: 'Vorbelegung des Standorts',
+      symbol: 'fahrzeug', art: 'vorbelegung', wert: v
+    }));
 
     // Freie Eingabe immer anbieten, wenn sie nicht exakt schon dabei ist
     const exakt = treffer.some(v => v.toLowerCase() === ql)
                || gewaehlt.some(g => g.toLowerCase() === ql);
     if (!exakt) {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'rmopt rmneu';
-      b.textContent = '\u201e' + q + '\u201c \u00fcbernehmen';
-      b.addEventListener('click', () => hinzu(q));
-      liste.appendChild(b);
+      zeilen.push({
+        haupt: '\u201e' + q + '\u201c \u00fcbernehmen',
+        neben: 'freie Eingabe', symbol: 'plus',
+        art: 'frei', neu: true, wert: q
+      });
     }
-    liste.hidden = liste.children.length === 0;
+    /* OHNE GRUPPENZEILE: Es gibt nur eine Sorte Vorbelegung, und die freie
+       Eingabe darunter ist keine zweite Gruppe, sondern eine Handlung
+       (M-S9-03, Anmerkung 5). */
+    steuer.zeige([{ titel: null, eintraege: zeilen }], q);
   }
 
   input.addEventListener('input', suche);
   input.addEventListener('keydown', ev => {
-    if (ev.key === 'Enter') {
-      ev.preventDefault();
-      const erster = liste.querySelector('.rmopt');
-      if (erster) { erster.click(); }
-    } else if (ev.key === 'Escape') {
-      liste.hidden = true;
-    } else if ((ev.key === 'Backspace' || ev.key === 'Delete')
-               && input.value === '' && gewaehlt.length) {
+    if ((ev.key === 'Backspace' || ev.key === 'Delete')
+        && input.value === '' && gewaehlt.length) {
       /* Rücktaste im LEEREN Feld nimmt den letzten Eintrag zurück — dasselbe
          Verhalten wie bei Empfängerfeldern im Mailprogramm. Ohne diese Zeile
          wäre der einzige Weg zurück das kleine ✕ mit der Maus, und die
@@ -1952,8 +2309,10 @@ document.getElementById('addrea').addEventListener('click', ev => {
       zeichneChips();
       suche();
     }
+    /* Pfeiltasten, Enter und Escape hoert der Baustein selbst ab; er steht
+       als erster am Feld und nimmt Enter das Absenden ab, solange die Liste
+       offen ist. */
   });
-  input.addEventListener('blur', () => setTimeout(() => { liste.hidden = true; }, 150));
   input.addEventListener('focus', suche);
 
   zeichneChips();

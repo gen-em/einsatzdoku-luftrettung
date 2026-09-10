@@ -325,46 +325,46 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-95 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+97 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--schnee` | `#FFFCFA` | 34 |  |
-| `--rauch` | `#F7F5ED` | 26 |  |
-| `--sand` | `#D4C7AD` | 11 |  |
+| `--schnee` | `#FFFCFA` | 33 |  |
+| `--rauch` | `#F7F5ED` | 29 |  |
+| `--sand` | `#D4C7AD` | 13 |  |
 
 **Schrift**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--asphalt` | `#1A0500` | 20 |  |
-| `--dunkelblau` | `#1A2E4D` | 51 |  |
-| `--gedaempft` | `#6E6459` | 49 |  |
+| `--asphalt` | `#1A0500` | 21 |  |
+| `--dunkelblau` | `#1A2E4D` | 52 |  |
+| `--gedaempft` | `#6E6459` | 58 |  |
 | `--auf-dunkel` | `#FFFFFF` | 7 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 29 |  |
+| `--linie` | `#E3DAC6` | 30 |  |
 | `--linie-stark` | `var(--gedaempft)` | 11 |  |
 
 **Orange — Handeln**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--orange` | `#FF8F1F` | 28 |  |
-| `--orange-tief` | `#C25A00` | 13 |  |
-| `--orange-hell` | `#FFEBD6` | 18 |  |
+| `--orange` | `#FF8F1F` | 30 |  |
+| `--orange-tief` | `#C25A00` | 16 |  |
+| `--orange-hell` | `#FFEBD6` | 20 |  |
 
 **Blau — Auswählen und Erklären**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--blau` | `#4280E5` | 11 |  |
-| `--blau-tief` | `#1F4E9C` | 15 |  |
+| `--blau` | `#4280E5` | 12 |  |
+| `--blau-tief` | `#1F4E9C` | 17 |  |
 | `--blau-hell` | `#D9ECFD` | 4 |  |
 
 **Rot — Aufmerksamkeit**
@@ -386,8 +386,8 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-1` | `12px` | 6 |  |
-| `--groesse-2` | `13px` | 38 |  |
+| `--groesse-1` | `12px` | 7 |  |
+| `--groesse-2` | `13px` | 42 |  |
 | `--groesse-3` | `15px` | 11 |  |
 | `--groesse-4` | `16px` | 10 |  |
 | `--groesse-5` | `19px` | 6 |  |
@@ -401,17 +401,17 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 55 |  |
-| `--abstand-2` | `8px` | 85 |  |
-| `--abstand-3` | `12px` | 110 |  |
-| `--abstand-4` | `16px` | 53 |  |
-| `--abstand-5` | `24px` | 21 |  |
+| `--abstand-1` | `4px` | 66 |  |
+| `--abstand-2` | `8px` | 88 |  |
+| `--abstand-3` | `12px` | 119 |  |
+| `--abstand-4` | `16px` | 55 |  |
+| `--abstand-5` | `24px` | 23 |  |
 
 **Radien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--radius-klein` | `6px` | 19 | Plakette, Kästchen, Eingabefeld |
+| `--radius-klein` | `6px` | 20 | Plakette, Kästchen, Eingabefeld |
 | `--radius` | `10px` | 17 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 6 | Karte, Blatt, Dialog |
 
@@ -420,7 +420,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--kopf` | `56px` | 7 |  |
-| `--knopf` | `44px` | 37 |  |
+| `--knopf` | `44px` | 42 |  |
 | `--leiste` | `260px` | 1 | Seitenleiste ab 1200 |
 | `--leiste-schmal` | `220px` | 1 | Seitenleiste 1024–1199 |
 | `--leiste-filter` | `280px` | 1 | Filterleiste der Suche ab 1200 |
@@ -433,18 +433,20 @@ auseinanderlaufen kann.
 | `--listensuche-breit` | `36rem` | 1 | Höchstbreite des Suchfelds einer Liste |
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
-| `--symbol-klein` | `16px` | 2 | Zusatzzeichen an einer Beschriftung |
-| `--symbol` | `20px` | 10 | Symbolgröße in der Zeile |
+| `--symbol-klein` | `16px` | 6 | Zusatzzeichen an einer Beschriftung |
+| `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 9 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 38 | Haarlinie |
-| `--strich-stark` | `2px` | 28 | Aktivstrich, Randstrich, Fokus |
-| `--radius-rund` | `999px` | 16 | Zähler, Griff, Punkt — voll rund |
+| `--strich` | `1px` | 43 | Haarlinie |
+| `--strich-stark` | `2px` | 30 | Aktivstrich, Randstrich, Fokus |
+| `--radius-rund` | `999px` | 17 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
 | `--schalter-punkt` | `20px` | 4 | 44-px-Zeile passt und greifbar bleibt |
-| `--geo-kreis` | `32px` | 2 | Einsatzort-Kreis auf der Karte |
-| `--geo-schild` | `36px` | 2 | Kästchen für Standort und Zielklinik |
-| `--geo-ring` | `3px` | 10 | Ringstärke Start/Ende am Schild |
+| `--geo-kreis` | `28px` | 2 | Einsatzort-Kreis auf der Karte |
+| `--geo-schild` | `30px` | 2 | Kästchen für Standort und Zielklinik |
+| `--geo-ring` | `3px` | 6 | Randstärke des Farbrands Start/Ende |
+| `--geo-ringpunkt` | `calc(var(--abstand-4) - var(--strich-stark))` | 2 | Ring ohne Schild (14 px) |
+| `--geo-symbol` | `calc(var(--symbol) - var(--strich-stark))` | 2 | Symbol im Kartenschild (18 px) |
 | `--balken` | `8px` | 1 | Höhe des Speicherbalkens |
 | `--logo-kachel` | `var(--kopf)` | 2 | Vorschau-Kachel der Installation … |
 | `--balken-punkt` | `10px` | 2 | Farbpunkt in seiner Legende |
@@ -466,7 +468,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--spur-1` | `var(--orange)` | 0 |  |
+| `--spur-1` | `var(--orange)` | 1 |  |
 | `--spur-2` | `var(--blau)` | 0 |  |
 | `--spur-3` | `var(--rot)` | 0 |  |
 | `--spur-4` | `var(--dunkelblau)` | 0 |  |
@@ -497,7 +499,7 @@ auseinanderlaufen kann.
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 2 |  |
 | `--auf-dunkel-strich` | `rgba(255,255,255,.35)` | 1 |  |
 
-**Ungenutzt:** `--spur-1`, `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
+**Ungenutzt:** `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
 
 ## 5. Schriftskala
 
@@ -676,8 +678,8 @@ zusätzlich als `--s-*` in `:root`, damit man sie nachlesen kann.
 | Schwelle | was sich ändert |
 |---|---|
 | **720** | Handy → Tablet hoch: Einsatzkachel wird Tabelle, Zeilenaktionen werden Knopfreihe statt Blatt, Karte 220 px |
-| **1024** | Schublade → feste Leiste; die Hauptpunkte wandern in die Kopfleiste; das Aktionsblatt wird ein Aufklappmenü |
-| **1200** | Leiste 260 px (Filterleiste 280), Zweispalter: Einsatzansicht, Formularkarten, Kontoseite |
+| **1024** | Schublade → feste Leiste; die Hauptpunkte wandern in die Kopfleiste; das Aktionsblatt wird ein Aufklappmenü; im Band bis 1199 px zeigt der Nebentext der Leiste **nur noch einen Kurznamen** (`.eintrag-neben.kurz`), das Akkordeon rückt je Ebene **4 statt 12 px** ein und der Abstand in der Diensttagszeile geht von 8 auf 4 px |
+| **1200** | Leiste 260 px (Filterleiste 280), Zweispalter: Einsatzansicht, Formularkarten, Kontoseite; der Nebentext der Leiste steht wieder für **jeden** Namen, Akkordeon-Einrückung und Zeilenabstand gehen auf 12 bzw. 8 px zurück |
 | **1600** | Die Karte steht neben Diensttag-Daten und Tabelle |
 
 Dazu **eine** Ausnahme nach unten: `@media (max-width:479px)` lässt in der
@@ -703,6 +705,9 @@ Zusammen 21 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px,
 |---|---|---|---|---|---|
 | Kopfleiste | Menüknopf, Logo, Zahnrad | wie < 720 | Hauptpunkte sichtbar | wie 1024 | wie 1024 |
 | Leiste / Schublade | Schublade | Schublade | Leiste 220 | Leiste 260 | Leiste 260 |
+| Nebentext der Leiste | jeder Name | jeder Name | **nur Kurznamen** | jeder Name | jeder Name |
+| Akkordeon-Einrückung je Ebene | 12 px | 12 px | **4 px** | 12 px | 12 px |
+| Abstand in der Diensttagszeile | 8 px | 8 px | **4 px** | 8 px | 8 px |
 | Filterleiste (Suche) | Schublade + Knopf | Schublade + Knopf | 240 | 280 | 280 |
 | Einsätze | Kachel | Tabelle | Tabelle | Tabelle | Tabelle |
 | Zeilenaktionen | „⋯" + Blatt von unten | Knopfreihe | Knopfreihe, Blatt wird Aufklappmenü | wie 1024 | wie 1024 |
@@ -713,6 +718,7 @@ Zusammen 21 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px,
 | Formularkarten | 1 | 1 | 1 | 2 | 2 |
 | Kontoseite | 1 | 1 | 1 | 2 | 2 |
 | Kennzahlen | 2 Spalten, 4 + Aufklapper | 4/5 Spalten | 4/5 | 4/5 | 4/5 |
+| Kennzahlen `.kennzahl-raster-3` | **3** | **3** | **3** | **3** | **3** |
 | Diensttag-Daten | 1 Spalte | 2 Spalten | 2 | 2 | schmal (Tabellenbreite) |
 | Verwaltungslisten | Zeilen mit „⋯" | Zeilen mit Knopfreihe | wie 720 | wie 720 | wie 720 |
 | Rahmen | — | — | — | — | max 1680, zentriert |
@@ -766,29 +772,30 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
 | `aktualisieren.svg` | Tabler Icons „refresh" (MIT) | 1 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 3 |
+| `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 29 |
 | `datenbank.svg` | Tabler Icons „database" (MIT) | 10 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 20 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 23 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 25 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 19 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 24 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
-| `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
-| `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 2 |
+| `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
+| `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
 | `korb.svg` | Tabler Icons „trash" (MIT) | 21 |
 | `luftlinie.svg` | — | 0 |
-| `lupe.svg` | Tabler Icons „search" (MIT) | 8 |
+| `lupe.svg` | Tabler Icons „search" (MIT) | 12 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
-| `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 8 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 16 |
-| `position.svg` | Tabler Icons „current-location" (MIT) | 4 |
-| `profil.svg` | Tabler Icons „user" (MIT) | 12 |
+| `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 9 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 22 |
+| `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
+| `profil.svg` | Tabler Icons „user" (MIT) | 16 |
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 25 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
@@ -797,23 +804,25 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 9 |
 | `server.svg` | Tabler Icons „server" (MIT) | 6 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 10 |
+| `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
-| `standort.svg` | Tabler Icons „map-pin" (MIT) | 4 |
+| `standort.svg` | Tabler Icons „map-pin" (MIT) | 22 |
 | `status.svg` | Tabler Icons „activity" (MIT) | 27 |
-| `stern.svg` | Tabler Icons „star" (MIT) | 9 |
-| `stift.svg` | Tabler Icons „pencil" (MIT) | 7 |
+| `stern.svg` | Tabler Icons „star" (MIT) | 7 |
+| `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 11 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
+| `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 9 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 27 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
-| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 17 |
+| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
-| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 27 |
+| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 28 |
 
-49 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
+52 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
 
 ## 9. Bausteine
@@ -846,6 +855,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | eine aus **wenigen kurzen** Möglichkeiten | `ui_segment()` | ein `<select>` |
 | eine aus mehreren **mit Erklärung** | `ui_wahlliste()` | Radios von Hand |
 | eine Adresse mit Koordinaten | `ui_ortsfeld()` | ein Textfeld |
+| **Vorschläge zu einem Textfeld** | `EdVorschlaege.init()` (9.28) | eine `<datalist>` — der Browser zeichnet sie über dem Feld, mobil oft gar nicht |
 | einen Seitenkopf mit Rückweg | `ui_titelzeile()` | ein `<h1>` |
 | „gibt es nicht" / „kein Zugriff" | `ui_abbruch($code, $text)` | `exit('… nicht gefunden.')` |
 | ein Zeichen | `ui_symbol('name')` / `edSymbol('name')` | ein Emoji, ein Unicode-Zeichen, ein Inline-Pfad |
@@ -859,7 +869,11 @@ für eine Rückfrage — nicht für ein neues Element.
 | eine **Füllung gegen eine Grenze** zeigen | `.speicher-balken` mit seinen drei Schwellen (9.19) | ein `<progress>` oder ein eigener Balken |
 | eine **Zahl an einem Menüpunkt** („hier ist etwas zu tun") | `ui_zaehler()` — drei Töne wie die Ampel (9.25) | eine Zahl in Klammern hinter dem Text |
 | mehrere Karten **nebeneinander** | einen der drei Wege aus 9.26 — und lies dort erst, welcher | ein eigenes Raster je Seite |
-| **Sprungmarken** innerhalb einer langen Seite | die Unterpunkte der Einstellungsleiste; sie entstehen von selbst aus den Karten mit `id` (9.25) | ein Inhaltsverzeichnis von Hand |
+| **Sprungmarken** von Karte zu Karte | die Unterpunkte der Einstellungsleiste; sie entstehen von selbst aus den Karten mit `id` (9.25) | ein Inhaltsverzeichnis von Hand |
+| ein **Inhaltsverzeichnis am Seitenkopf**, wo es keine Leiste gibt (Handy) | `ui_kennzahl(['href' => '#k-…'])` in `.kennzahl-raster-3` (9.10) | Pillen, Knöpfe oder eine eigene Liste |
+| in eine **lange Liste** hineinspringen | `ui_sprungliste()` — ab sechs Einträgen, und nur wo die Einträge ein Zeichen tragen (9.31) | dieselben Namen ein zweites Mal aufzählen |
+| eine **lange Liste durchsuchen** | `ui_kartenfilter()` — ab sechs Einträgen, filtert im Browser (9.32) | ein zweites `.suchfeld` (das ist 48 px hoch und gehört der Seitensuche) |
+| an das **Ende eines langen Abschnitts** einen Rückweg | `ui_nach_oben()` (9.33) | einen gedämpften Textverweis ohne `.knopf` |
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
@@ -870,38 +884,43 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 141 |
 | `ui_symbol()` | `.symbol` | ja (+6 Unterklassen) | 194 |
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 297 |
-| `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 352 |
-| `ui_geruest_start()` | `.inhalt` | ja | 427 |
-| `ui_leiste_ende()` | `.leiste` | ja (+11 Unterklassen) | 498 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 522 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 562 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 763 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 886 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 957 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1041 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1084 |
-| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1151 |
-| `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1197 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1250 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1276 |
-| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1312 |
-| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1370 |
-| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1386 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1428 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1470 |
-| `ui_feld()` | `.feld` | ja (+18 Unterklassen) | 1539 |
-| `ui_schalter()` | `.schalter` | ja (+16 Unterklassen) | 1604 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1648 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1701 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1745 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1844 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 1906 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 1947 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2004 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2157 |
+| `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 359 |
+| `ui_geruest_start()` | `.inhalt` | ja | 434 |
+| `ui_leiste_ende()` | `.leiste` | ja (+13 Unterklassen) | 505 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 529 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 574 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 803 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 933 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja (+2 Unterklassen) | 1004 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1088 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1131 |
+| `ui_meldung_markup()` | `.meldung` | ja (+13 Unterklassen) | 1198 |
+| `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1244 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1297 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1323 |
+| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1359 |
+| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1417 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1452 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1494 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1542 |
+| `ui_zeile()` | `.zeile` | ja (+15 Unterklassen) | 1596 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1644 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1686 |
+| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1755 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1820 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1864 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1917 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1961 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2060 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2122 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2163 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2262 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2292 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2304 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2471 |
 
-34 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
-**Ohne Regel im Stylesheet:** `ui_logo_masse()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
+39 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
 
@@ -1228,10 +1247,42 @@ Kontextmenü.
 Töne wie bei der Plakette (`neutral` / `orange` / `rot`). Die Hervorhebung
 der Extremwerte ist **orange, nicht rot** — siehe 3.1.
 
+**Das Raster** (`.kennzahl-raster`) folgt dem Satz: zwei Spalten unter 720 px,
+darüber vier oder fünf, je nach Zahl der Kacheln (Kapitel 7). Eine Ausnahme
+gibt es, und sie hat einen eigenen Namen: **`.kennzahl-raster-3` steht in
+jeder Breite auf drei Spalten**, auch am Handy. Sie ist für ein
+Inhaltsverzeichnis gedacht und nicht für Zahlen, die man vergleicht — drei
+Kacheln zu je rund 110 px tragen eine Zahl und ein Wort, und mehr sollen sie
+dort nicht. Die Regel liegt bewusst **ohne** Medienabfrage im Stylesheet und
+nach der Vierspalten-Regel des 1024er Bandes; nur so gewinnt sie überall
+(S9/AP5, M-S9-07).
+
+**Als Inhaltsverzeichnis** trägt jede Kachel ein `href` auf die Kennung einer
+Karte (`#k-rettungsmittel`). Das ist der Weg für eine Seite, die am Handy
+keine Leiste hat — am Schreibtisch entstehen dieselben Ziele noch einmal als
+Unterpunkte der Leiste (9.25), und beide holen sie aus denselben `id`.
+
 ### 9.11 Dialog und Blatt
 
-**Am Schreibtisch eine Karte im Schleier, mobil ein Blatt von unten**
-(E-P3-27). Dasselbe Markup, das Stylesheet entscheidet.
+**Eine Karte im Schleier — in jeder Breite.**
+
+> *Hier stand bis Web 17.0.0: „Am Schreibtisch eine Karte im Schleier, mobil
+> ein Blatt von unten (E-P3-27). Dasselbe Markup, das Stylesheet
+> entscheidet." Das stimmt nicht und hat nie gestimmt: Zu `.dialog` gibt es
+> im Stylesheet **keine einzige Medienabfrage**. Das **Blatt** (`.blatt`,
+> Abschnitt 10 des Stylesheets) ist ein eigener Baustein mit eigenem Skript
+> und eigenem Markup — es steht neben dem Dialog, es ist nicht seine mobile
+> Form. Berichtigt in S9/AP5-4, als der Satz beim Bau der
+> Stammdaten-Dialoge zum ersten Mal jemanden in die Irre geführt hat.*
+
+**Der Kopf trägt Titel und, wo nötig, eine Unterzeile** (`.unterzeile`, seit
+Web 17.0.0): Sie sagt, worauf sich der Dialog bezieht — der Standort, zu dem
+das neue Rettungsmittel gehört. Das gehört nicht in den Titel („Rettungsmittel
+an Standort Talwang anlegen" bricht um) und nicht ins Formular (es ist kein
+Feld, es ist der Zusammenhang). Dieselbe Rolle wie `.titelzeile-unter` an
+einer Seite. **Der Titel bleibt 24 px** (`h2`, `--groesse-6`) — M-S9-07
+zeichnet 19 px, aber die zwölf vorhandenen Dialoge tragen alle ein `h2` im
+Kopf und sprängen mit; das Mockup bleibt hier folgenlos.
 
 ```html
 <dialog class="dialog" role="alertdialog">
@@ -1249,6 +1300,31 @@ der Extremwerte ist **orange, nicht rot** — siehe 3.1.
 > Reanimationen, Ruhesegmente, Trackpunkte — bekommt eine eigene **Seite**.
 > Ein Dialog, der einen halben Bildschirm Text trägt, ist keiner mehr; und
 > der Weg zu einer Seite hat eine Adresse, die man zurückgehen kann.
+
+**Ein Formulardialog rollt in sich** (seit Web 17.0.0). Kopf und Fuß stehen
+fest, `.dialog-inhalt` bekommt `overflow-y:auto`; die Höhe ist auf
+`100dvh` minus 24 px begrenzt. Ohne das kappt die Browservorgabe unten ab —
+und unten steht der Fuß mit der Hauptschaltfläche. Der Rettungsmittel-Dialog
+(vier Felder, fünf Rollenhaken, zwei Fähigkeitshaken) ist am Handy höher als
+das Glas; gemessen bei 390 × 780 px: Dialog **756 px**, Fuß bei **768 px**
+sichtbar, Rollweg **279 px**.
+
+> **`display` steht an `.dialog[open]`, nicht an `.dialog`** (Fund F-S9-U-27).
+> Der Browser versteckt einen geschlossenen Dialog mit
+> `dialog:not([open]){display:none}` — das ist eine Regel des Browsers, und
+> die verliert gegen **jede** Regel des Stylesheets, ganz gleich wie
+> spezifisch. `.dialog{display:flex}` machte damit alle fünf Dialoge einer
+> Standortseite sichtbar: als Kästen am Seitenende, mit ausfüllbaren Feldern
+> und absendenden Knöpfen. Aufgefallen an einem Vollseitenbild; im
+> Fensterausschnitt standen sie unter der Falz. Dieselbe Falle wie bei
+> `.zeile-knoepfe` gegen `.nur-ab-720`. Die Klickprobe misst es seither
+> (`ap5-dialoge-sind-zu`).
+
+**Ein Dialog kann einen zweiten öffnen.** Das Ortsfeld im Zielklinik-Dialog
+trägt den Pin-Knopf, und der öffnet den Kartendialog (9.29) — zwei modale
+Dialoge übereinander. Das trägt der Browser von sich aus: Der zweite kommt in
+die oberste Ebene, der erste bleibt darunter stehen und ist nach dem
+Schließen wieder da. Geprüft am 09.09.2026 im Browser, 1280 px.
 
 ### 9.12 Aktionsmenü der Seite
 
@@ -1289,6 +1365,12 @@ Vorschlagsliste und Kartenwahl. Gegenstück zu `assets/ortsfeld.js`: Die
 Funktion erzeugt die Elemente, das Skript belebt sie — **beide bilden ihre
 Kennungen aus demselben Präfix.**
 
+**Die Trefferliste ist seit Web 15.7.0 ein eigener Baustein** (9.28): Das
+Ortsfeld sagt, *was* darin steht (erkannte Koordinate, Stammdaten, Adressen);
+*wie* es dasteht, entscheidet die Liste. Der Schlüssel `datalist` ist damit
+ersatzlos entfallen — Stammdaten gehen als `vorschlaege` an
+`EdOrtsfeld.init()`, nicht als Markup in die Seite.
+
 ```php
 ui_ortsfeld([
   'praefix' => 'site', 'label' => 'Einsatzort',
@@ -1314,15 +1396,35 @@ Platzhalter bekommt, gilt die Regel aus 9.7: erfundener Ort, kein echter
 
 **Es sucht beim Tippen** (seit Web 12.3.3, E-S3-06) — in **beiden**
 Bedienformen, also auch bei Standort und Zielklinik, wo bis dahin nur die
-Lupe suchte. Drei Grenzen fassen das ein und stehen als Konstanten oben in
-`assets/ortsfeld.js`: **400 ms** Ruhe nach dem letzten Tastendruck, **ab drei
-Zeichen**, **höchstens eine offene Anfrage** (eine laufende wird abgebrochen).
-Die Lupe umgeht die Entprellung, nicht die Mindestlänge.
+Lupe suchte. Drei Grenzen fassen das ein und stehen seit Web 15.8.0 in
+`assets/geocoder.js` (vorher in `ortsfeld.js`): **400 ms** Ruhe nach dem
+letzten Tastendruck, **ab drei Zeichen**, **höchstens eine offene Anfrage**
+(eine laufende wird abgebrochen). Die Lupe umgeht die Entprellung, nicht die
+Mindestlänge.
 
 > **Das ist eine Auskunft an Dritte, und sie steht in `docs/Lizenzen.md` 6.2.**
-> Die Adresssuche geht an Photon; jede Anfrage trägt die eingetippten
-> Buchstaben dorthin. Stehen bereits Koordinaten, ruht die Suche ganz — die
-> Formaterkennung läuft lokal und hat Vorrang.
+> Die Adresssuche geht an einen Photon-Dienst; jede Anfrage trägt die
+> eingetippten Buchstaben dorthin. Stehen bereits Koordinaten, ruht die Suche
+> ganz — die Formaterkennung läuft lokal und hat Vorrang.
+
+**Die Kleinzeile darunter nennt den Dienst — einmal je Seite** (Web 15.8.0,
+`ui_geocoder_hinweis()`, `.loc-datenschutz`). Nicht je Feld: Auf der
+Standortseite steht ein Ortsfeld je Standort **und** je Zielklinik, das wären
+zehn gleiche Sätze und mehr. Zehnmal derselbe Datenschutzhinweis ist keine
+Auskunft mehr, sondern Tapete. Sie steht am **ersten** Ortsfeld der Seite und
+ist auf die Seite bezogen formuliert; ist die Adresssuche aus, fehlt sie ganz
+— sie sagt aus, dass etwas hinausgeht, und dann geht nichts hinaus.
+
+**Der Pin-Knopf steht in beiden Formen** (Web 15.8.0). Bis dahin rendete ihn
+nur `feld => true`; die Nur-Lage-Fassung hatte deshalb keine Karte, und
+Backlog Nr. 70 („Karte für Standorte") war genau das. Der Block steht jetzt
+einmal in `ui_ortsfeld()` und wird zweimal ausgegeben.
+
+**Stammdaten stehen sofort da, Adressen entprellt.** Die Stammdaten liegen im
+Browser; auf sie zu warten wäre eine Wartezeit ohne Grund, und sie erscheinen
+ab dem ersten Zeichen. Ist die Adresssuche aus, bleibt die Stammdatengruppe
+stehen — sie kommt aus dem eigenen Bestand und hat mit dem Dienst nichts zu
+tun.
 
 ### 9.14 Abbruchseite
 
@@ -1484,7 +1586,22 @@ API-Schlüssel (Geräte) sowie die SHA-256-Prüfsumme des APK. **Die große Stuf
 bleibt zwei Werten:** dem Kopplungscode und dem Wiederherstellungsschlüssel —
 beide sind kurz und werden abgeschrieben, nicht kopiert.
 
+**Kein Symbol am Knopf.** Der Vorrat (Kapitel 8) hat keines für „kopieren",
+und ein neues bräuchte Freigabe mit Mockup. Das Wort tut es. Ohne
+Zwischenablage-Berechtigung markiert der Knopf den Wert und sagt „markiert —
+Strg+C"; die Rückmeldung steht **im Knopf** und nicht daneben, weil ein Kasten,
+der aufklappt, den Rest der Seite verschiebt.
+
+> *Dieser Absatz stand bis Web 16.3.0 am Ende von 9.18a und handelte dort vom
+> Kopieren-Knopf, den 9.18a gar nicht kennt. Zurückgeschoben, als 9.18a beim
+> Anlegen des Kartenfilters gegengelesen wurde.*
+
 ### 9.18a Kopf einer langen Liste: Suche über den Filtern
+
+*Sie ist **kein** Filterfeld.* Hier steht nur, wie `.listensuche` und
+`.filterreihe` zueinander liegen; beide arbeiten **serverseitig** (ein
+`<form method="get">` und Verweise, ohne Skript). Ein Feld, das eine bereits
+gerenderte Liste im Browser ausdünnt, ist der Kartenfilter — 9.32.
 
 `.listenkopf` ist eine **Spalte, in jeder Breite**: oben `.listensuche` (mit
 der Höchstbreite `--listensuche-breit`, 36 rem), darunter `.filterreihe` mit
@@ -1503,11 +1620,6 @@ lesbar, sondern nur breiter.
 **Die Regel gilt für jede Liste mit Suche und Filtern**, nicht für die eine
 Seite, auf der sie aufgefallen ist.
 
-**Kein Symbol am Knopf.** Der Vorrat (Kapitel 8) hat keines für „kopieren",
-und ein neues bräuchte Freigabe mit Mockup. Das Wort tut es. Ohne
-Zwischenablage-Berechtigung markiert der Knopf den Wert und sagt „markiert —
-Strg+C"; die Rückmeldung steht **im Knopf** und nicht daneben, weil ein Kasten,
-der aufklappt, den Rest der Seite verschiebt.
 
 ### 9.19 Speicherbalken (`.speicher-balken`)
 
@@ -1560,9 +1672,10 @@ Gemessen bei Schwellen 70/90: 36 % blau, 71 % orange, 88 % orange, 95 % rot,
 
 **Zwei neue Token, beide abgeleitet:** `--balken: 8px` ist `--abstand-2`, also
 eine Stufe des Vierer-Rasters — ein Balken, der eine Zeile Grafik ist und keine
-Fläche. `--balken-punkt: 10px` ist `--radius`, die kleinste Rundung der Skala,
-und ergibt einen Punkt, der neben 13-px-Text lesbar ist, ohne ihn zu
-überragen.
+Fläche. `--balken-punkt: 10px` ist `--radius` — die **mittlere** Rundung der Skala
+(die kleinste ist `--radius-klein` mit 6 px, siehe Kapitel 4; der Satz nannte
+sie bis Web 16.3.0 falsch die kleinste) — und ergibt einen Punkt, der neben
+13-px-Text lesbar ist, ohne ihn zu überragen.
 
 ### 9.20 Lesespalte im Gerüst
 
@@ -1738,6 +1851,384 @@ Seitenüberschrift „Einstellungen"; in drei Spalten benennt sie die Spalte,
 und ohne sie stünde eine namenlose neben zwei benannten. Im Markup steht sie
 immer, damit ein Vorleseprogramm alle Blöcke gleich benennt.
 
+### 9.28 Vorschlagsliste (`.vorschlaege`)
+
+*Neu mit Web 15.7.0 (S9/AP1, E-S9-07). Mockup
+`docs/konzepte/konzept-s9/mockups/M-S9-03-vorschlagsliste.html`, freigegeben
+am 07.09.2026.* Gebaut wird sie in `assets/vorschlagsliste.js`, nicht in
+`ui.php`: Sie entsteht beim Tippen im Browser, es gibt keine PHP-Seite, die
+sie ausgeben könnte — nur das leere `<ul class="vorschlaege" hidden>`. In der
+erzeugten Bausteintabelle (Kapitel 9, Anfang) steht sie deshalb nicht; sie
+liest `ui.php`.
+
+**Zweck:** Treffer unter einem Eingabefeld anbieten — aus mehreren Quellen,
+in Gruppen, mit Tastatur.
+
+```html
+<div class="loc-widget">            <!-- oder .rmbox, .feld-vorschlag -->
+  <input type="text" autocomplete="off">
+  <ul class="vorschlaege" hidden>
+    <li class="vorschlaege-gruppe">Zielkliniken</li>
+    <li class="vorschlag aktiv" data-art="stamm">
+      <svg class="symbol">…</svg>
+      <span class="vorschlag-text">
+        <span class="vorschlag-haupt"><b>Klin</b>ik Talwang</span>
+        <span class="vorschlag-neben">Stammdaten · mit Koordinate</span>
+      </span>
+    </li>
+  </ul>
+</div>
+```
+
+```js
+const steuer = EdVorschlaege.init({ feld, behaelter, liste, beiWahl });
+steuer.zeige([{ titel: 'Zielkliniken', eintraege: [
+  { haupt: 'Klinik Talwang', neben: 'Stammdaten · mit Koordinate',
+    symbol: 'klinik', art: 'stamm', wert: satz }
+] }], 'Klin');
+```
+
+**Sie ersetzt vier Dinge auf einmal:** die Photon-Liste des Ortsfelds
+(`.loc-suggest`), die Liste der weiteren Rettungsmittel (`.rmlist`/`.rmopt`),
+die freie Eingabe darin (`.rmneu`) und **jede** native `<datalist>`. Der Grund
+für den letzten Punkt steht in Backlog Nr. 68: Der Browser zeichnet sie über
+dem Feld, am Transportziel also über der eigenen Liste, und auf dem Handy oft
+gar nicht.
+
+**Übernommen wird auf `mousedown` mit `preventDefault()`, nie auf `click`.**
+Das ist die eine Regel, die dieser Baustein nicht zur Wahl stellt, und sie hat
+eine Nummer: Backlog Nr. 102. Ein Mausklick ist `mousedown` → `blur` →
+`mouseup` → `click`; wer die Taste länger hält als der Blur-Aufschub (150 ms),
+findet den Eintrag beim `mouseup` schon versteckt, und `click` fällt nie.
+Gemessen bei 300 ms gehaltener Maus: vorher 0 von 3 Übernahmen, nachher 3 von
+3 (`tools/klickprobe/`).
+
+**Ob eine Gruppenzeile erscheint, entscheidet der Aufrufer** — er setzt
+`titel` oder lässt ihn weg. Die Regel ist nicht mechanisch: Das Besatzungsfeld
+trägt „Vorlagen des Standorts" auch als einzige Gruppe, weil die Zeile sagt,
+woher die Namen kommen und damit, dass ein Name daneben erlaubt ist. Der
+Einsatzort zeigt allein Adressen und trägt keine Zeile — eine Überschrift ohne
+Gegenstück ist keine Gliederung. Die weiteren Rettungsmittel tragen keine,
+weil die freie Eingabe darunter keine zweite Gruppe ist, sondern eine
+Handlung.
+
+**Zustände und Maße:**
+
+| | |
+|---|---|
+| `.vorschlaege` | schwebt (`position:absolute`, **`z-index:35`**); der Behälter trägt `position:relative` |
+| `.vorschlaege-gruppe` | Herkunftszeile auf Rauch, `--groesse-1`, versal — keine Bedienhöhe, sie ist nicht anzufassen |
+| `.vorschlag` | `min-height: var(--knopf)` — folgt beiden Bedienhöhen von selbst (44/36, R76) |
+| `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` Orange links — **eine** Markierung für Zeiger und Pfeiltaste |
+| `.vorschlag-haupt` | eine Zeile, mit Ellipse; der getippte Teil in `<b>` |
+| `.vorschlag-neben` | die Herkunft, gedämpft, `--groesse-2` |
+| `.vorschlag-neu` | die freie Eingabe: `--orange-tief`, Kopfschrift — sie ist eine Handlung, kein Datensatz |
+
+**Kein neues Token.** Alle Werte kommen aus der Skala; die Höhe ist `--knopf`.
+
+> **`--knopf` ist die Untergrenze, nicht das Sollmaß.** Eine Zeile mit
+> Haupt- **und** Herkunftszeile misst gemessen rund **51 px** — in beiden
+> Bedienstufen dieselbe, weil der Text höher ist als der Knopf. Nur eine
+> **einzeilige** Zeile folgt der Umschaltung sichtbar (gemessen 44 px bei
+> 390 px, 36 px bei 1280 px am Zeiger). Wer die Bedienhöhe belegen will,
+> misst deshalb ein Besatzungsfeld und kein Transportziel.
+
+> **Ebene 35 — zwischen Speichern-Leiste und Kopfleiste.** Sie stand zuerst
+> auf 20, dem Wert der alten `.rmlist`. Die klebende Speichern-Leiste liegt
+> auf **30** und deckte damit genau die untersten Trefferzeilen zu: gemessen
+> **61 px Überlappung**, und `elementFromPoint` traf in der Schnittfläche die
+> Leiste. Nach oben ist sie ebenso begrenzt — die Kopfleiste liegt auf **40**
+> und bleibt darüber, denn eine Vorschlagsliste, die über sie malt, verdeckt
+> den Weg aus der Seite heraus. 35 ist der Platz dazwischen, und er ist der
+> einzige. Gefunden hat es der Auftraggeber am Bild; die Klickprobe misst es
+> seither in beide Richtungen.
+
+> **Sie schiebt nicht, sie schwebt.** Die alte `.loc-suggest` stand im Fluss
+> und drückte beim Tippen alles darunter nach unten — auf einem 390-px-Schirm
+> sprang das halbe Formular, und der Eintrag, auf den man zielte, war beim
+> Loslassen woanders. Wer einen neuen Behälter baut, gibt ihm
+> `position:relative`; ohne einen positionierten Vorfahren hängt die Liste am
+> Seitenanfang.
+
+### 9.29 Kartendialog (`.dialog-karte`)
+
+*Suchfeld, Spur und Legende neu mit Web 15.8.0 (S9/AP2, E-S9-06). Mockup
+`docs/konzepte/konzept-s9/mockups/M-S9-04-kartendialog.html`, freigegeben am
+07.09.2026. Der Dialog selbst gibt es seit Web 9.4.0.* Gebaut wird er in
+`assets/ortswahl.js`, nicht in `ui.php` — er entsteht auf Knopfdruck im
+Browser und wird beim Schließen wieder entfernt; in der erzeugten
+Bausteintabelle steht er deshalb nicht.
+
+**Zweck:** Einen Punkt auf der Karte wählen. **Ein** Dialog für fünf
+Einbauorte: Einsatzort, manueller Abfahrtort, Transportziel und die
+Lagefelder der Standorte in Konto- und Systemverwaltung.
+
+```html
+<dialog class="dialog dialog-karte">
+  <div class="dialog-kopf"><h2>Auf der Karte wählen</h2>
+    <div class="dialog-suche">           <!-- nur bei EdGeocoder.an() -->
+      <div class="ortsfeld-zeile">…Feld + Lupe…</div>
+      <ul class="vorschlaege" data-liste hidden></ul>
+    </div>
+  </div>
+  <div class="dialog-inhalt">
+    <div class="ortswahl-karte"><div class="geo" data-karte></div>
+      <span class="ortswahl-kreuz" aria-hidden="true"></span></div>
+    <p class="feld-hinweis">Karte verschieben, bis das Kreuz auf dem Ort steht.</p>
+    <div class="legende" data-legende hidden>
+      <span><span class="legende-linie"></span> Aufzeichnung</span>
+      <span><span class="geo-ringpunkt"></span> Start</span>
+      <span><span class="geo-ringpunkt geo-ringpunkt-ende"></span> Ende</span>
+    </div>
+  </div>
+  <div class="dialog-fuss">…Abbrechen · Übernehmen…</div>
+</dialog>
+```
+
+**Das Suchfeld steht im Kopf, nicht im Inhalt.** Das ist keine Formsache: Im
+Inhalt schöbe die aufklappende Trefferliste die Karte nach unten, und das
+Kreuz wanderte unter dem Finger weg. Im Kopf legt sich die Liste **über** die
+Karte (`.vorschlaege` schwebt, 9.28), und die Karte steht still. Dazu fällt
+der obere Innenabstand des Inhalts weg (`.dialog-karte .dialog-inhalt`) —
+sonst stünde zwischen Feld und Karte zweimal Luft.
+
+**Ein Treffer setzt das Kreuz, mehr nicht** (F1). Die Karte fährt hin
+(`setView`, Zoom 15), der Name wandert ins **Suchfeld**, damit man sieht,
+wonach sie steht — ins Formular geschrieben wird nichts. Erst „Übernehmen"
+übernimmt. So lässt sich ein Treffer noch von Hand nachjustieren, statt eine
+ungefähre Adresse als Tatsache zu speichern.
+
+**Die Zeichnung ist die aufgezeichnete Spur, sonst nichts.** Linie in
+`EdGeo.spurFarbe(0)`, Ringpunkte an Anfang und Ende (`EdGeo.markerRing`) —
+**keine Luftlinie, keine Schilder für Standort und Klinik**: Sie gehören
+nicht in einen Auswahldialog, sie würden das Kreuz verdecken. Die Legende
+erscheint mit der Spur und nicht vorher; ohne Aufzeichnung (Stammdaten haben
+keinen Einsatz) bleibt sie versteckt.
+
+> **`fitBounds` nur bei leerem Feld — und nur, solange niemand geschoben
+> hat.** Steht schon eine Koordinate, ist sie die Aussage und bleibt der
+> Mittelpunkt; die Spur ist dann Zusatz. Und weil die Spur nachgeladen wird,
+> könnte sie einer NutzerIn, die inzwischen selbst gezielt hat, die Karte
+> unter dem Kreuz wegreißen — `dragstart`/`zoomstart` setzen deshalb ein
+> Merkzeichen, das den Einpassvorgang abbestellt.
+
+**Kein neues Token für den Dialog selbst.** `.legende-linie` ist
+`--abstand-5` × `--abstand-1`, also **24 × 4 px** in `--spur-1`; die
+Ringpunkte sind die aus M-S9-01 und tragen ihre Größe selbst (9.30), die
+Schrift ist `--groesse-2` in `--gedaempft`.
+
+> **Die Legende erbt die Ringpunkte, also auch ihre Änderungen.** Mit Web
+> 15.9.0 sind sie von 16 auf 14 px gegangen und ihr Rand von 3 auf 2 px
+> (M-S9-01 V1) — die Legende im Dialog ist damit mitgeschrumpft, ohne dass
+> hier eine Zeile stand. Wer die Zeichen ändert, sehe sie neben dem 13-px-Text
+> dieser Zeile an.
+
+### 9.30 Kartenzeichen (`.geo-*`)
+
+*Maße neu gefasst mit Web 15.9.0 (S9/AP3, E-S9-12). Mockup
+`docs/konzepte/konzept-s9/mockups/M-S9-01-kartenschilder.html`, Variante V1,
+freigegeben am 06.09.2026.* Gebaut werden sie in `assets/geo.js` als
+Leaflet-`divIcon`; das Stylesheet zeichnet, das Modul setzt nur die Maße, die
+Leaflet als Zahl braucht.
+
+**Zweck:** Standort, Zielklinik, Einsatzort, Anfang und Ende der Aufzeichnung
+und ihre Richtung auf einer Karte kenntlich machen — auf 160 px Kartenhöhe am
+Handy genauso wie auf 600 px am Schreibtisch.
+
+| Zeichen | Klasse | Außenmaß | woraus |
+|---|---|---|---|
+| Schild ohne Aufzeichnung | `.geo-schild-kasten` | **32 px** | `--geo-schild` 30 + 2 × 1 px Schnee |
+| Schild mit Start **oder** Ende | `+ .geo-ring-start` / `-ende` | **32 px** | Farbrand liegt **innen** (`border-box`) |
+| Schild mit beidem | `+ .geo-ring-beide` | **38 px** | 30 + 2 × (1 Schnee + 2 Rot + 1 Schnee) |
+| Einsatzort | `.geo-kreis` | **28 px** | `--geo-kreis`, kein Rand |
+| Ring ohne Schild | `.geo-ringpunkt` | **14 px** | `--geo-ringpunkt`, Rand `--strich-stark` |
+| Ring ohne Schild, beides | `+ .geo-ringpunkt-beide` | **20 px** | 14 + 2 × (1 Schnee + 2 Rot) |
+| Abfahrtort | `.geo-punkt` | **12 px** | `--abstand-3` |
+| Richtungspfeil | `.geo-pfeil` | **20 px** | `--symbol` |
+
+**Der Farbring IST der Rand, er liegt nicht darum herum.** Bis Web 15.8.0 lag
+er als zweiter und dritter `box-shadow` außerhalb des dunkelblauen Randes —
+ein Standort mit Doppelring maß dadurch **60 px** und deckte auf der
+Handykarte mehr als ein Drittel der Höhe. Jetzt ersetzt der Farbrand den
+dunkelblauen. Ohne Aufzeichnung bleibt der Rand dunkelblau: Er sagt dann
+nichts über die Spur, er trennt nur.
+
+**Außen liegt am Schild immer 1 px Schnee** (F6) — die Trennlinie, damit Blau
+nicht auf Kartengrün und Rot nicht auf Braun stößt. Der Einsatzort-Kreis
+bekommt sie **nicht**: Er ist orange, und Orange kommt auf keiner der drei
+Kartenebenen vor; die freigegebene Maßleiste nennt für ihn 28 px, mit
+Trennlinie wären es 30.
+
+> **R76 gilt hier nicht** (S3/AP7): Ein Kartenzeichen ist eine Zeichnung, kein
+> Bedienelement, und die 44/36-px-Regel gilt für das, was man **drückt**.
+> Untergrenze am Finger ist statt dessen **24 px** (WCAG 2.5.8) — und die
+> gilt für alles, was ein Popup öffnet. Der Ringpunkt ist 14 px groß und
+> öffnet eines: Er sitzt deshalb in einer durchsichtigen 24-px-Fläche
+> (`.geo-ringpunkt-feld`). Die Zeichnung bleibt klein, der Finger trifft
+> trotzdem.
+
+**Die Maße stehen zweimal, und das ist Absicht.** Leaflet braucht sie als
+Zahl (`iconSize`, `iconAnchor`), das Stylesheet als Token. Wer eines ändert,
+ändert beides — sonst wandert der Anker, und zwar ohne Fehlermeldung.
+Betroffen: `--geo-schild` / `SCHILD_PX`, `--geo-kreis` / `KREIS_PX`,
+`--geo-ringpunkt` / `RINGPUNKT_PX`.
+
+> **Ein `<span>` ohne `display` ist kein Kasten.** `.geo-pfeil` trug seine
+> Drehung als `transform:rotate()` und `.geo-punkt` seine Größe als
+> `width`/`height` — beides wirkt an einem nicht ersetzten Inline-Element
+> **nicht**. Die Pfeile zeigten dadurch bis Web 15.8.0 ausnahmslos nach Norden
+> (Backlog Nr. 72), der Abfahrtort maß 4 × 18 px statt 12 × 12 und zeigte
+> seine Farbe nie (Nr. 162). Beide haben jetzt einen ausdrücklichen Kasten.
+> **Der berechnete Stil verrät das nicht:** `getComputedStyle` meldet die
+> Drehmatrix auch dort, wo sie nichts tut. Nachweisbar ist es nur an der
+> Geometrie — ein 20-px-Kasten mit `rotate(45deg)` misst 28,3 px, wenn die
+> Drehung greift, und 20 px, wenn nicht.
+
+**Kein neues Token außer zwei abgeleiteten.** `--geo-ringpunkt` ist
+`--abstand-4` minus `--strich-stark`, `--geo-symbol` ist `--symbol` minus
+`--strich-stark` — die Rechnung steht im Stylesheet und **ist** ihre
+Herkunft. 14 px und 18 px stehen auf keiner Skala des Projekts, und die Skala
+ist geschlossen; eine begründete Ableitung ist der Weg, den Kapitel 6 dafür
+vorsieht.
+
+### 9.31 Sprungliste (`.sprungliste` / `.sprungziel`)
+
+**Zweck:** in eine **lange Liste** hineinspringen. Eine umbrechende Zeile
+runder Pillen über der Liste, jede mit Artzeichen und Namen; ein Klick führt
+zur Zeile, und die Zeile färbt sich (`:target`, unten). Freigegeben mit
+M-S9-05 und M-S9-06.
+
+**Ab sechs Einträgen** (`SD_HILFE_AB`, `stammdaten_ui.php`). Darunter sieht
+man die ganze Liste, ohne zu rollen, und die Sprungliste wäre dieselbe
+Aufzählung ein zweites Mal.
+
+**Nur wo die Einträge ein Zeichen tragen.** Auf der Standortseite bekommen die
+Rettungsmittel eine Sprungliste und keine der übrigen fünf Listen: An ihrem
+Artzeichen erkennt man sie in einer Pillenreihe wieder. Eine Reihe aus zwölf
+Namen ohne Zeichen ist keine Orientierung — sie ist eine zweite Liste. Wer
+eine Liste ohne Zeichen durchsuchbar machen will, nimmt den Kartenfilter
+(9.32).
+
+| Was | Wert | Herkunft |
+|---|---|---|
+| Höhe der Pille | **44 px** am Finger, **36 px** am Zeiger ab 1024 px | `--knopf` — dieselbe Bedienhöhe wie ein Knopf |
+| Rundung | voll | `--radius-rund` |
+| Fläche / Rand | Schnee auf `--linie-stark` | ein **Ziel**, kein Wert — der Koordinaten-Chip macht es umgekehrt |
+| Schrift | Bricolage 600, 13 px | `--schrift-kopf`, `--groesse-2` |
+| Artzeichen | 16 px, gedämpft | `--symbol-klein` |
+| Zielzustand | Orange-hell auf `--orange` | `.sprungziel.aktiv` |
+
+**Sie ist ein `<nav>` mit `<a>`, kein Knopf.** Ein Sprungziel ist Navigation:
+Es ändert nichts, es steht im Verlauf, und die Zurück-Taste bringt einen
+zurück. Dieselbe Überlegung trägt die Filterreihe der Suchseite.
+
+**Der Zielzustand heißt `.aktiv` und nicht `.ziel`.** Das Mockup schreibt
+`.ziel`; `.aktiv` ist in dieser Anwendung seit Langem das Wort für „hier
+stehst du" — Kopfleiste, Leiste, Kennzahl, Listenfilter, Blattzeile und
+Seitenknopf tragen es, und `.kennzahl.aktiv` ist Zeichen für Zeichen dieselbe
+Deklaration. Ein zweiter Name für denselben Zustand ist eine zweite Sprache.
+
+**Die angesprungene Zeile** trägt `.zeile:target` — Orange-hell, bis an den
+Kartenrand gezogen (negativer Außenabstand von genau `--abstand-4`, dem
+Innenabstand der Karte; die Mockups schreiben `--abstand-3` und lassen so je
+Seite 4 px Weiß stehen). **Ohne Skript**, und es überlebt den Rücksprung aus
+dem Verlauf — `.zeile-hervor` (Spurliste) sagt dasselbe, wird aber von Hand
+gesetzt und ist nach einem Neuladen weg.
+
+**Kein `scroll-margin-top`.** `html` trägt `scroll-padding-top`, und das gilt
+für jedes Sprungziel der Seite. Die zweite Angabe war einmal gebaut und
+addierte sich: gemessen 140 statt 72 px. Nachgemessen an der Standortseite
+sitzt die angesprungene Zeile bei **72 px** — die Kopfleiste misst 56.
+
+**Wann nicht:** für Sprungmarken von Karte zu Karte (das sind die Unterpunkte
+der Leiste, 9.25, und am Handy die Kennzahlen, 9.10) und für eine Liste, die
+kürzer ist als sechs Einträge.
+
+### 9.32 Kartenfilter (`.kartenfilter`)
+
+**Zweck:** eine **lange Liste in einer Karte** durchsuchen. Ein Feld mit Lupe
+über der Liste; Tippen blendet aus, was nicht passt — im Browser, ohne
+Anfrage, ohne Neuladen, ohne Adressänderung. Freigegeben mit M-S9-06.
+
+**Ab sechs Einträgen**, dieselbe Schwelle wie die Sprungliste
+(`SD_HILFE_AB`). Darunter ist die Liste kürzer als das Feld darüber.
+
+| Was | Wert | Herkunft |
+|---|---|---|
+| Höhe | **44 px** am Finger, **36 px** am Zeiger ab 1024 px | `--knopf` |
+| Lupe | 20 px, gedämpft, links, `pointer-events:none` | `--symbol`, `--abstand-3` |
+| Innenabstand links | Lupe plus Luft | `calc(--abstand-3 + --symbol + --abstand-2)` |
+| Löschkreuz | rechts, in Knopfgröße | `--knopf` |
+
+**Er heißt nicht `.filterfeld`.** Das Stylesheet führt seit P3 `.filterfelder`
+(Mehrzahl) als Innenabstand einer aufgeklappten Filtergruppe der Suchseite.
+Zwei Klassen, die sich um ein „r" unterscheiden und Verschiedenes meinen, sind
+derselbe Fehler, den `.listenfilter-zahl` einmal ausdrücklich umgangen hat.
+
+**Er ist nicht das große Suchfeld.** `.suchfeld` ist **48 px** hoch
+(`--suchfeld`) — die eine benannte Ausnahme von der 44/36-Regel, weil es die
+Haupthandlung *seiner* Seite ist. Ein Filter in einer von sechs Karten ist das
+nicht: Hier gilt die Regel, nicht die Ausnahme. Übernommen ist von dort, was
+dort schon richtig ist — die Lupe absolut links in einem
+`align-items:center`-Behälter (also **ohne** `top`, das sich in der zweiten
+Bedienhöhe um 4 px verrechnete), das Löschkreuz und die Beschriftung für die
+Vorlesesoftware.
+
+**Vier Dinge, die ein naiver Filter falsch macht** und die der Baustein
+deshalb mitmacht (`assets/kartenfilter.js`):
+
+1. Die **verborgenen POST-Formulare** stehen *neben* der Zeile, nicht darin.
+   Wer über alle Kinder filtert, versteckt sie mit — und dann zeigt das
+   Aktionsmenü einer sichtbaren Zeile über `form=` auf ein Formular mit
+   `display:none`. Gefiltert wird ausschließlich über `.zeile`.
+2. Ein **Zwischentitel** ohne sichtbare Zeile bleibt sonst stehen und lässt
+   die Karte leer statt gefiltert aussehen. Er geht mit seiner Gruppe.
+3. Die **Anlegen-Formulare** sind verborgen, solange gefiltert wird — heute
+   ein Netz, kein Weg: Bis Web 16.3.0 stand in der Besatzungskarte eines je
+   Rolle, und unter einem Treffer stünden sonst vier verwaiste. Mit Web 17.0.0
+   sind sie samt `sd_form()` entfallen; angelegt wird im Dialog, und dessen
+   Öffner steht im **Kartenkopf**, also außerhalb der gefilterten Liste. Die
+   Regel bleibt stehen, weil sie eine Absicht beschreibt (ein Filter ist ein
+   **Lesezustand**) und die nächste Liste mit einem Formular darin sie
+   geschenkt bekommt. Die Klickprobe misst seither beides: **0 Formulare**
+   und **„Anlegen" sichtbar** — auch bei null Treffern.
+4. Der **Leerzustand** steht als verborgener Absatz im Markup und sagt, wie
+   man den Filter wieder leert. Ein Text, den das Skript zusammensetzt, liefe
+   an der Wortliste vorbei.
+
+**Kein Zustand in der Adresse.** Der Filter ist eine Lesehilfe, kein
+Standpunkt: Er soll nach dem Neuladen weg sein und keine Adresse erzeugen, die
+jemand teilt und die beim Empfänger eine halbe Liste zeigt.
+
+**Wann nicht:** für einen Bestand, der *nicht* vollständig im Dokument steht
+(Tausende Einsätze, seitenweise geladen) — das ist die Filterreihe der
+Suchseite, und die filtert auf dem Server.
+
+### 9.33 „Zum Anfang" (`.nach-oben`)
+
+**Zweck:** der Rückweg am Ende eines langen Abschnitts. Eine Standortseite mit
+zehn Rettungsmitteln und drei Dutzend Zielkliniken ist mehrere Bildschirme
+lang; wer unten ankommt, will nicht dorthin zurückwischen, wo das
+Inhaltsverzeichnis steht. Rechtsbündig, mit Luft darüber, am Ende **jeder**
+Karte.
+
+**Der Knopf ist `.knopf knopf-leise`, kein Textverweis** — und das ist kein
+Geschmack, sondern eine Messfrage: Der Bilderlauf misst Bedienhöhen an
+`.knopf`. Ein gedämpfter 13-px-Verweis (so das Mockup) wäre aus seiner Messung
+gefallen, und in dieser Richtlinie stünde eine 44/36-Zusage, die kein
+Prüfmittel deckt. Genau so ist der Export-Knopf vier Monate ungestaltet
+geblieben (F-P3-BA).
+
+**Das Ziel ist `#inhalt`** — die Kennung, die `ui_leiste_ende()` ohnehin an
+das `<main>` hängt. Zuerst stand dort `#seitenanfang`, eine Kennung, die es in
+der Anwendung nirgends gibt: Der Knopf sprang nach nirgendwo, ohne Fehler und
+ohne Meldung (F-S9-U-17). Eine zweite Kennung für dieselbe Stelle anzulegen
+hieße, sie zweimal zu benennen; das Inhaltsverzeichnis steht als erstes
+Element im `<main>`, der Sprung landet also dort, wo das Mockup hinwill.
+
+**Eigene Funktion und keine Option an `ui_karte_ende()`:** Die hat als
+einziger Baustein kein `array $o`, dafür 115 Aufrufstellen.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Fünf Typen
@@ -1812,6 +2303,7 @@ lief, misst einen Stand, den es nicht mehr gibt.
 | `tools/design/tabellen.py` | Erzeugt die Tabellen dieses Dokuments aus den Quellen. |
 | `tools/wortliste/wortliste.py` | Sprechen Oberfläche und Dokumentation neutral von Land und Luft? |
 | `tools/stilvergleich/` | Hat sich am Erscheinungsbild etwas geändert, das nicht geplant war? |
+| `tools/klickprobe/probe.mjs` | Tut ein Bedienelement, was es soll — wenn man es **bedient**? Je Weg eine Zahl. |
 
 **Der Stilvergleich hat während P3 geruht** und ist in O12 neu geeicht: Die
 Frage „hat sich etwas geändert?" ist in einer Phase, in der sich alles ändert,
@@ -1820,6 +2312,15 @@ wacht er wieder — und dann gilt: **Bei einer beabsichtigten
 Gestaltungsänderung ist das Ergebnis keine Null, sondern eine Liste.** Sie
 wird gegen die Liste der geplanten Änderungen gehalten; jede Abweichung
 darüber hinaus ist unbeabsichtigt und wird geklärt, bevor committet wird.
+
+**Und bis S9 hat kein Prüfmittel je ein Element bedient.** Der Bilderlauf
+fotografiert, die Vollständigkeit liest das Stylesheet, die Linkprobe folgt
+Adressen. Zwei gemeldete Fehler sind genau dort hindurchgelaufen — ein Knopf,
+der auf 404 führte (Nr. 148), und eine Trefferliste, die jeden Klick verlor,
+der länger als 150 ms dauerte (Nr. 102). Die **Klickprobe** (S9, E-S9-16)
+schließt diese Lücke, und ihr erster Befund ist ein Satz über Werkzeuge:
+`locator.click()` hält die Taste rund 10 ms und findet Nr. 102 deshalb
+**nicht**. Ein Prüfmittel misst, was es tut, nicht was es meint.
 
 **Und kein Prüfmittel sieht, wie es aussieht.** Die vierzehn Punkte der ersten
 Rückmeldungsrunde nach P3 (Web 9.14.0) sind allesamt durch jedes Werkzeug
@@ -1866,6 +2367,14 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 16.1.1 (S9)** | Kapitel 7: Im Band 1024–1199 px rückt das Akkordeon je Ebene **4 statt 8 px** ein, und der Abstand der Diensttagszeile geht von 8 auf **4 px** (Freigabe M-S9-11, Weg 2). Gemessen: dem Nebentext stehen dort **64–79 px** statt 48–63 zur Verfügung — dreizehn Kurznamen, **keiner** mehr mit Auslassungszeichen (vorher zehn). Der Abstand ist mit `:not(.leiste-gruppe)` eingegrenzt, weil die Zeilenklasse auch Leistenfuß, Schubladen-Hauptpunkte und Einstellungsmenü trägt; nachgemessen bleiben die bei 8 px. **Keine neue Schwelle, kein neues Token** — 4 px ist `--abstand-1`. |
+| **Web 17.1.1 (S9/AP5-6)** | **9.32 Kartenfilter**, Punkt 3 berichtigt: Die Anlegen-Formulare in der Liste gibt es seit Web 17.0.0 nicht mehr — die Regel bleibt als Netz stehen, und die Klickprobe misst seither **0 Formulare UND „Anlegen" sichtbar**, auch bei null Treffern. Punkt 4 nachgezogen: Der Leerzustand sagt jetzt „Leere den Filter, um wieder alle zu sehen" statt „…, um etwas anzulegen" — der alte Satz beschrieb eine Sackgasse, die es nicht mehr gibt. **Keine Regel im Stylesheet berührt.** |
+| **Web 17.0.0 (S9/AP5-4)** | **9.11 Dialog** um drei Absätze ergänzt: Ein Formulardialog **rollt in sich** (Kopf und Fuß fest, `.dialog-inhalt` mit `overflow-y:auto`, Höhe `100dvh` minus 24 px) — der Rettungsmittel-Dialog ist am Handy höher als das Glas, und ohne die Angabe kappte die Browservorgabe den Fuß mit „Anlegen“ ab; **`display` gehört an `.dialog[open]`** (Fund F-S9-U-27: eine Regel des Browsers verliert gegen jede Regel des Stylesheets, und `.dialog{display:flex}` machte alle fünf geschlossenen Dialoge einer Standortseite sichtbar); und **ein Dialog kann einen zweiten öffnen** (Ortsfeld → Kartendialog, zwei modale Ebenen, vom Browser getragen). Die Zahlen: Kaskade **741 → 743 Regeln, 0 entfallen, 10 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **45 500 Elementmessungen, 936 Abweichungen**, sämtlich an `dialog`, `.dialog`, `.dialog-kopf`, `.dialog-inhalt`, `.dialog-fuss` und dem `<form>` darin — also genau die zehn neuen Regeln; Pseudoprobe dieselben 936. **Kein neues Token, kein neuer Baustein, kein neues Symbol**; der Vorrat bleibt bei 39 Funktionen. |
+| **Web 16.3.0 (S9/AP5-3)** | **Drei neue Kapitel: 9.31 Sprungliste** (Pille mit Artzeichen, ab sechs Einträgen, Zielzustand `.aktiv` statt `.ziel`, angesprungene Zeile über `:target`), **9.32 Kartenfilter** (Feld mit Lupe, filtert im Browser; heißt nicht `.filterfeld` wegen `.filterfelder`, und ist 44/36 hoch statt 48 wie `.suchfeld`) und **9.33 „Zum Anfang"** (nachgetragen — der Baustein steht seit Web 16.2.0 in der erzeugten Tabelle und hatte keinen Prosa-Eintrag). Kapitel 9.0 um **vier** Zeilen ergänzt: Die eine Zeile „Sprungmarken → Unterpunkte der Leiste, **nicht** von Hand" beschrieb allein die Seitenebene und verbot dem Wortlaut nach, was AP5 mit Mockup gebaut hat. Kapitel 7 und 9.10: die Ausnahme `.kennzahl-raster-3` — drei Spalten in **jeder** Breite. Kapitel 4: neues Kontrastpaar „Dunkelblau auf Orange hell" (21 → **22** gerechnete Paare); die Kombination steht seit O6 an `.kennzahl.aktiv` und `.listenfilter.aktiv` in der Anwendung und war nie gerechnet. **Kein neues Token, kein neues Symbol.** Zwei Berichtigungen beim Gegenlesen: Der Absatz „Kein Symbol am Knopf" stand in 9.18a und gehört zu 9.18; `--radius` (10 px) ist nicht „die kleinste Rundung der Skala" — das ist `--radius-klein` (6 px). |
+| **Web 16.1.0 (S9/AP4a)** | Kapitel 7 (Schwellen und Verhalten je Baustein): Der Nebentext der Leiste hat **drei** Zustände statt zweier — unter 1024 px jeder Name, im Band 1024–1199 px nur ein Kurzname (`.eintrag-neben.kurz`), ab 1200 px wieder jeder; im Band rückt das Akkordeon je Ebene 8 statt 12 px ein. Gemessen: Der Datumstext ist dort **76 bis 83 px** breit (Bricolage Grotesque setzt Ziffern **proportional** — `tabular-nums` nennt `.zahl,td,th,time,output`, nicht `.eintrag-text`), dem Nebentext bleiben **48 bis 55 px**, und „BW Hoch" braucht 55: **4 von 13** Datumsangaben tragen ihn ganz, 9 mit Auslassungszeichen; ohne die Einrückung keine einzige. **Keine neue Schwelle** — beide Regeln liegen in vorhandenen Medienblöcken —, **kein neues Token**: 8 px ist `--abstand-2`. Kapitel 9.7 unberührt: Die Wahlliste trägt den neuen Zusatz mit ihrem vorhandenen `zusatz`-Schlüssel. |
+| **Web 15.9.0 (S9/AP3)** | Neues Kapitel **9.30 Kartenzeichen** — der Farbring ist jetzt der Rand, alle acht Außenmaße als Tabelle, die 24-px-Untergrenze am antippbaren Ringpunkt und die Warnung, dass ein `<span>` ohne `display` kein Kasten ist (Backlog Nr. 72 und Nr. 162). Zwei **abgeleitete** Token (`--geo-ringpunkt`, `--geo-symbol`); `--geo-ring` bedeutet nun Randstärke statt Schattenschrittweite. Kapitel 8: Symbolvorrat **49 → 52** (Bergwacht, Veranstaltung, Sonstiges). Kapitel 9.29 berichtigt: `.legende-linie` misst **24 × 4 px**, nicht 22 × 4. |
+| **Web 15.8.0 (S9/AP2)** | Neues Kapitel **9.29 Kartendialog** — Suchfeld im Kopf (und warum nicht im Inhalt), Spur mit Ringpunkten und Legende, `fitBounds` nur bei leerem Feld. Kapitel 9.13 nachgezogen: Die drei Grenzen der Adressabfrage stehen jetzt in `assets/geocoder.js`, die Kleinzeile `.loc-datenschutz` steht **einmal je Seite**, und den Pin-Knopf rendern seither **beide** Formen von `ui_ortsfeld()` (Backlog Nr. 70). Kein neues Token. |
+| **Web 15.7.0/15.7.1 (S9/AP1)** | Neues Kapitel **9.28 Vorschlagsliste** — ein Baustein für vier abgelöste Fassungen, Übernahme auf `mousedown` (Backlog Nr. 102), Gruppenzeile nach Entscheidung des Aufrufers, `z-index: 35` zwischen Speichern-Leiste und Kopfleiste. Kapitel 9.13: Der Schlüssel `datalist` ist ersatzlos entfallen. |
 | **Web 15.5.0 (S8/AP7)** | Kapitel 6: **zwei Höhen für Bedienelemente** — 44 px am Finger, 36 px am Zeiger ab 1024 px, an drei Medienmerkmalen zugleich (`hover`, `pointer`, `min-width`). Kapitel 9.4 nachgezogen. Kapitel 9.7: neue Regel `.feld-eingabe:disabled` (F-S8-P-03) und der Zusammenhang mit `.feldsatz-gesperrt`. Die erzeugten Tabellen zählen seither **ohne Kommentare**: Die Schwellentabelle hatte eine zusammengesetzte Abfrage verschluckt (20 → 21 Medienblöcke), die Bausteintabelle zählte Klassennamen aus Kommentaren als Unterklassen mit — elf Zeilen korrigiert, `ui_feld()` von „+24" auf **+18**. |
 | **Web 12.4.2 (S3/AP11)** | Kapitel 2.3: Logotabelle auf die tatsächlichen Dateinamen gebracht (sie führte noch die Namen von vor dem NEF-Platzhalter-Ersatz) und um die Rahmenmaße ergänzt. Neue Zusage: **Rahmen = Zeichnung** — das Bodenlogo war auf ein Quadrat gepolstert, ein Zehntel seiner Höhe war leer. Dazu zwei Warnungen für den nächsten, der eine SVG anfasst (`getBBox()` prüfen; XML verbietet `--` im Kommentar). |
 | **Web 12.4.1 (S3/AP10)** | Kapitel 9.7: neue Regel `.feldsatz-gesperrt` — ein `<fieldset>`, das nur gruppiert, für das `disabled`-Attribut. Die Elementregeln für `fieldset` sind mit O11 gefallen; ohne diese Rücknahme bringt der Browser Rahmen und Polsterung mit. |

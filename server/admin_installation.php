@@ -264,6 +264,45 @@ ui_seite_start(['titel' => 'Installation']);
                           : ''),
           ]); ?>
 
+          <?php if ($k === 'datenschutz'): ?>
+            <?php /* TEXTBAUSTEIN ZUR ADRESSSUCHE (S9/AP2, E-S9-05, Nr. 137).
+                     Die Anwendung liefert KEINEN Rechtstext mit — was darin
+                     steht, ist Sache der BetreiberIn (R32). Ein Absatz, den
+                     die Anwendung von sich aus in die Datenschutzerklaerung
+                     schriebe, waere genau das, was dieses Modul seit Web
+                     9.11.0 nicht tut.
+
+                     Was sie tun kann und hier tut: den Satz VORSCHLAGEN, mit
+                     der Adresse, die tatsaechlich eingestellt ist. Wer den
+                     Dienst wechselt, sieht hier den neuen Namen und weiss,
+                     dass der Text nachzuziehen ist.
+
+                     Er steht nur, solange die Adresssuche eingeschaltet ist:
+                     Ein Absatz ueber eine Abfrage, die nicht stattfindet,
+                     waere eine falsche Auskunft in einem Rechtstext. */ ?>
+            <?php require_once __DIR__ . '/geocoder_lib.php'; ?>
+            <?php if (geocoder_installation_an()): ?>
+              <p class="feld-hinweis"><strong>Zum Übernehmen: die Adresssuche.</strong>
+                 Diese Installation fragt beim Tippen in einem Ortsfeld und nach
+                 jeder Wahl auf der Karte
+                 <strong><?= e(geocoder_host()) ?></strong>; der getippte Text
+                 und die Koordinate verlassen dabei das Gerät. Wer das nennt,
+                 nennt eine Verarbeitung durch Dritte — der Baustein unten ist
+                 ein Vorschlag, keine Rechtsberatung. Abschaltbar unter
+                 Betrieb → Servereinstellungen und je Konto im Profil.</p>
+              <?= ui_codeblock_lang(
+                    '### Adresssuche' . "\n\n"
+                  . 'Wenn du in ein Ortsfeld tippst oder auf der Karte einen Ort '
+                  . 'wählst, fragt dein Browser den Adressdienst '
+                  . geocoder_host() . '. Übertragen werden dabei der getippte '
+                  . 'Text beziehungsweise die gewählte Koordinate, dazu — wie bei '
+                  . 'jedem Abruf im Internet — deine IP-Adresse. Namen, Diagnosen '
+                  . 'und Einsatznummern werden nicht übertragen. Die Suche lässt '
+                  . 'sich abschalten: in deinem Profil unter „Datenschutz".',
+                    'Vorschlag für den Abschnitt „Adresssuche"') ?>
+            <?php endif; ?>
+          <?php endif; ?>
+
           <?php if (!$leer): ?>
             <div class="vorschau">
               <h4>Vorschau</h4>
@@ -308,4 +347,7 @@ ui_seite_start(['titel' => 'Installation']);
 <?php /* forms.js bringt ui_geruest_ende() NICHT mit (nur symbol, schublade,
          blatt, confirm) — ohne diese Zeile bliebe die Speichern-Leiste
          unsichtbar, und zwar ohne jede Fehlermeldung. */ ?>
-<?php ui_seite_ende(['skripte' => ['assets/forms.js']]); ?>
+<?php /* `assets/kopieren.js` gehoert zum Wertekasten (Design.md 9.18): Der
+         Textbaustein zur Adresssuche traegt einen Kopieren-Knopf, und ohne das
+         Skript bliebe er versteckt (S9/AP2). */ ?>
+<?php ui_seite_ende(['skripte' => ['assets/forms.js', 'assets/kopieren.js']]); ?>

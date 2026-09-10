@@ -48,7 +48,8 @@ ui_seite_start(['titel' => 'Diensttag löschen']);
   <?php ui_karte_start(['titel' => 'Diensttag ' . dt_lesbar($tag, true)]); ?>
 
     <p class="feld-hinweis">
-      <?= ui_artzeichen($tag['kind'] === null ? null : (string)$tag['kind']) ?>
+      <?= ui_artzeichen($tag['kind'] === null ? null : (string)$tag['kind'], '',
+                        $tag['vehicle_typ'] === null ? null : (string)$tag['vehicle_typ']) ?>
       <?= $wer ? e(implode(' · ', $wer)) : 'ohne Zuordnung von Standort und Rettungsmittel' ?>
     </p>
 

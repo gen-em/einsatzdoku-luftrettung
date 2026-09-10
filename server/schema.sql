@@ -21,6 +21,7 @@ CREATE TABLE users (
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich (E17)
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
+  adresssuche   TINYINT(1) NOT NULL DEFAULT 1,       -- Adressvorschlaege aus dem Internet; die Installation ist die Obergrenze (app_state.adresssuche, E-S9-05/R79)
   last_login    DATETIME NULL,                       -- UTC, letzte erfolgreiche Anmeldung; NULL = noch nie (Kontoseite, NutzerInnen-Liste)
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -98,9 +99,21 @@ CREATE TABLE user_bases (
 CREATE TABLE vehicles (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
-  base_id INT UNSIGNED NOT NULL,                   -- jedes Rettungsmittel gehoert einem Standort
+  -- Seit Web 16.0.0 NULL-faehig: Die Typen ausser 'standard' brauchen keinen
+  -- Standort (E-S9-09). Die Pflicht bei 'standard' steht in validate_lib.php,
+  -- nicht hier — die Datenbank kann sie nicht auf eine zweite Spalte beziehen,
+  -- ohne den Fehler an der Pruefschicht vorbei als SQL-Fehler zu melden.
+  -- ON DELETE CASCADE bleibt: Loeschen eines Standorts nimmt seine
+  -- Rettungsmittel mit (E15), es macht sie nicht standortlos.
+  base_id INT UNSIGNED NULL,
   name VARCHAR(64) NOT NULL,                       -- bis Web 5.10.0: `registration`
+  kurz VARCHAR(16) NULL,                           -- Kurzname fuer Leiste, Kacheln, Plaketten (Nr. 69)
+  -- `kind` ist die BETRIEBSART (Luft/Boden) und steuert Rollen, Faehigkeiten,
+  -- Kachelsatz und Hoehe. `typ` ist die ART DES DIENSTES und davon unabhaengig:
+  -- Eine Bergwacht fliegt oder faehrt, und beides ist ein Bergwacht-Dienst
+  -- (E-S9-09). ENUM und nicht VARCHAR, weil der Wertevorrat geschlossen ist.
   kind ENUM('air','ground') NOT NULL,
+  typ ENUM('standard','bergwacht','veranstaltung','sonstiges') NOT NULL DEFAULT 'standard',
   UNIQUE KEY uq_user_name (user_id, name),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (base_id) REFERENCES bases(id) ON DELETE CASCADE
@@ -171,7 +184,7 @@ CREATE TABLE transport_dests (
   name VARCHAR(190) NOT NULL,
   -- Optionale Koordinaten (E37). Werden AM EINSATZ eingefroren
   -- (missions.dest_lat/dest_lon), nicht ueber den Namen aufgeloest: das Feld
-  -- ist Freitext mit <datalist>, eine Aufloesung ueber Namensgleichheit waere
+  -- ist Freitext mit Vorschlagsliste, eine Aufloesung ueber Namensgleichheit waere
   -- bruechig — ein umbenannter Eintrag verloere seine Koordinate.
   lat DECIMAL(9,6) NULL,
   lon DECIMAL(9,6) NULL,
@@ -227,6 +240,11 @@ CREATE TABLE days (
   base_lat     DECIMAL(9,6) NULL,          -- eingefrorene Standortkoordinate
   base_lon     DECIMAL(9,6) NULL,
   vehicle_name VARCHAR(64) NULL,           -- eingefrorene Rettungsmittelbezeichnung
+  -- Typ und Kurzname gehoeren in dieselbe Momentaufnahme wie Bezeichnung
+  -- und Betriebsart (E8, Web 16.0.0). NULL bei einem Tag ohne
+  -- Rettungsmittel; die Anzeige faellt dann auf die Betriebsart zurueck.
+  vehicle_typ  ENUM('standard','bergwacht','veranstaltung','sonstiges') NULL,
+  vehicle_kurz VARCHAR(16) NULL,           -- eingefrorener Kurzname (Nr. 69)
   notes    TEXT NULL,
   deleted_at DATETIME NULL,
   INDEX idx_user_day (user_id, day),
@@ -727,5 +745,11 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- einer frischen Installation nichts zu tun: Sie hat keinen Bestand, und
   -- ihr erstes Konto legt install.php gleich als BetreiberIn an.
   ('2026_09_05_rolle_betreiberin', 'skipped'),
+  ('2026_09_07_adresssuche_konto', 'skipped'),
+  -- `typ`, `kurz` und das NULL-faehige `base_id` stehen oben schon an
+  -- vehicles, `vehicle_typ` und `vehicle_kurz` an days (Web 16.0.0,
+  -- S9/AP4). Das Nachfuellen des Bestands hat auf einer frischen
+  -- Installation nichts zu tun: Sie hat keine Diensttage.
+  ('2026_09_07_rettungsmittel_typ', 'skipped'),
   -- rest_segments.created_at steht oben schon im Schema (Web 15.6.0).
   ('2026_09_07_rest_segments_created_at', 'skipped');

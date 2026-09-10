@@ -126,8 +126,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Landeplatz durch die Feuerwehr abgesichert."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Beckenfraktur nach Absturz",
@@ -140,7 +139,8 @@
           "lon": 10.50575
         },
         "site_desc": "Steilgelände unterhalb des Steigs",
-        "start": null
+        "start": null,
+        "notes": "Landeplatz durch die Feuerwehr abgesichert."
       },
       "abdeckung": []
     },
@@ -214,8 +214,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Ersatzmaschine im Dienst; Windenrettung war an diesem Tag nicht möglich."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma nach Sturz vom Dach",
@@ -228,7 +227,8 @@
           "lon": 10.228
         },
         "site_desc": "Wohnhaus, Vordach über der Hofeinfahrt",
-        "start": null
+        "start": null,
+        "notes": "Ersatzmaschine im Dienst; Windenrettung war an diesem Tag nicht möglich."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -304,8 +304,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Landung auf dem Sportplatz, Zufahrt für den RTW frei gehalten."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Thoraxtrauma nach Sturz aus Höhe",
@@ -318,7 +317,8 @@
           "lon": 10.37259
         },
         "site_desc": "Baustelle, Gerüst im 2. OG",
-        "start": null
+        "start": null,
+        "notes": "Landung auf dem Sportplatz, Zufahrt für den RTW frei gehalten."
       },
       "abdeckung": []
     },
@@ -390,8 +390,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Verlegung aus der Grundversorgung in die Bergklinik."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Sepsis bei Pyelonephritis, Verlegung zur Intensivtherapie",
@@ -404,7 +403,8 @@
           "lon": 10.217
         },
         "site_desc": "Innerklinische Übernahme, Intensivstation",
-        "start": null
+        "start": null,
+        "notes": "Verlegung aus der Grundversorgung in die Bergklinik."
       },
       "abdeckung": [
         "herkunft-watch",

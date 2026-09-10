@@ -552,8 +552,7 @@
         "other_ema",
         "other_resources",
         "crew_override",
-        "crew",
-        "notes"
+        "crew"
       ],
       "additionalProperties": false,
       "properties": {
@@ -709,13 +708,6 @@
             ],
             "maxLength": 120
           }
-        },
-        "notes": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "maxLength": 2000
         }
       }
     },
@@ -723,11 +715,11 @@
       "$kommentar": "Inhalt des pat_blob. Wird im Browser bzw. im Einspielskript mit dem Inhaltsschluessel verschluesselt; der Server sieht davon NIE Klartext.",
       "type": "object",
       "required": [
-        "dx",
-        "dob",
         "age",
-        "mission_no",
+        "dob",
+        "dx",
         "loc",
+        "mission_no",
         "site_desc",
         "start"
       ],
@@ -856,6 +848,14 @@
               }
             }
           ]
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2000,
+          "$kommentar": "Seit Web 19.0.0 (S9/AP7) im Ende-zu-Ende-verschluesselten pat_blob und deshalb hier bei den geschuetzten Angaben. Bis dahin stand das Feld unter `felder` -- also bei den Klartextspalten von `missions`."
         }
       }
     }

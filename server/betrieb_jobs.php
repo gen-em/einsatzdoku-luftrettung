@@ -126,20 +126,20 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
         $stand = is_array($zst) ? ($zst['stand'] ?? []) : [];
         $benennung = [
             'luecke'      => ['Lücke in der Nummernfolge',
-                              'Diese Spuren werden NICHT verdichtet — die Position im '
+                              'Diese GPS-Daten werden NICHT verdichtet — die Position im '
                             . 'Blob ist die Nummer, eine Lücke verschöbe jeden Punkt '
                             . 'dahinter. Meist eine Uhr, die ein Teilstück nie '
                             . 'nachgeliefert hat.'],
             'zu_gross'    => ['Zu viele Punkte',
-                              'Über 50 000 Punkte je Spur. Eine solche Spur ist aus '
+                              'Über 50 000 Punkte je Aufzeichnung. Solche GPS-Daten sind aus '
                             . 'einem Backup nicht wiederherstellbar; sie bleibt '
                             . 'deshalb als Zeilen stehen.'],
-            'stufe3'      => ['Punkte auf einer ausgedünnten Spur',
+            'stufe3'      => ['Punkte auf ausgedünnten GPS-Daten',
                               'Erwartet werden hier null. Steht eine Zahl da, nimmt '
                             . 'die Uhr-Schnittstelle Punkte an, die sie nach der '
                             . 'Ausdünnung verwerfen sollte.'],
             'nachzuegler' => ['Wartet auf die Verdichtung',
-                              'Zu diesen Spuren sind noch Punkte nachgekommen. Sie '
+                              'Zu diesen GPS-Daten sind noch Punkte nachgekommen. Sie '
                             . 'werden erst verdichtet und dann ausgedünnt.'],
             'fehler'      => ['Prüfung nicht bestanden',
                               'Die Rundlauf- oder Ausdünnungsprüfung hat angeschlagen. '
@@ -224,14 +224,14 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
     <p class="feld-hinweis"><strong>Reihenfolge.</strong> Die Jobs laufen in
        der Reihenfolge dieser Liste, und was ins Restbudget nicht mehr passt,
        kommt beim nächsten Mal. Deshalb steht die eigentliche Arbeit vorn und
-       das Sicherheitsnetz („Verwaiste Spuren") hinten.</p>
+       das Sicherheitsnetz („Verwaiste GPS-Daten") hinten.</p>
     <p class="feld-hinweis"><strong>Anhalten</strong> geht nur auf der
        Kommandozeile: <code>php jobs.php --pause &lt;Minuten&gt;</code>,
        höchstens <?= (int)(JOB_PAUSE_MAX_S / 3600) ?> Stunden. Die Pause läuft
        von selbst ab — eine vergessene Pause hält die Installation nicht
        dauerhaft an.</p>
     <p class="feld-hinweis"><strong>Ein Rückstand ist kein Fehler.</strong> Er
-       zählt auch mit, was einfach noch zu frisch ist: Eine Spur wird erst zwei
+       zählt auch mit, was einfach noch zu frisch ist: GPS-Daten werden erst zwei
        Wochen nach dem Einsatz verdichtet und sechs Monate danach ausgedünnt.</p>
   <?php ui_karte_ende(true); ?>
 

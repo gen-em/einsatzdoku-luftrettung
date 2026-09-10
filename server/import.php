@@ -6,7 +6,7 @@ require_once __DIR__ . '/auth_guard.php';
  * Import bestehender Einsatzlisten (Excel/CSV/ZIP) und Export.
  *
  * Eigene Seite, erscheint aber ueber ui_leiste_einstellungen() als Eintrag der
- * Einstellungen — dasselbe Muster wie admin_stammdaten.php. Grund fuer die
+ * Einstellungen. Grund fuer die
  * eigene Datei statt eines weiteren Zweigs in einstellungen.php: Die
  * Review-Tabelle bringt eine Menge Markup und Logik mit; in einer Datei mit
  * bereits ueber tausend Zeilen waere das nicht mehr zu ueberblicken.

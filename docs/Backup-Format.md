@@ -370,7 +370,60 @@ einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
 
-**Nutzlastversion 9 (seit Web 14.2.0).** Wie 8 — keine Punktlisten, Spuren als
+**Nutzlastversion 11 (seit Web 19.0.0).** Wie 10, mit einer Verschiebung: Die
+**Notizen des Einsatzes** stehen nicht mehr als Klartextspalte `notes` im
+`missions`-Datensatz, sondern als Schlüssel `notes` im verschlüsselten
+`pat`-Block daneben. Die Spalte `notes` bleibt im Format bestehen und ist in
+einer 11er-Datei **immer `null`** — sie trägt den Altbestand einer Installation,
+die die Anhebung noch nicht durchlaufen hat.
+
+*Warum die Zahl steigen musste:* Eine Installation vor Web 19 sucht die Notiz
+in der Spalte. Sie fände dort `null`, spielte die Datei ein und meldete Erfolg —
+mit lauter leeren Notizen. Genau dieser stille Schaden ist der Grund für die
+Nutzlastnummer; eine ältere Installation **weist eine 11er-Datei jetzt ab**.
+Umgekehrt bleibt der Weg offen: Web 19 liest eine 10er-Datei weiterhin
+vollständig ein, schreibt den Klartext in die Spalte, und der Anhebelauf holt
+ihn beim nächsten Entsperren in den Blob.
+
+*Die Tagesnotizen (`days.notes`) sind davon nicht betroffen* — sie sind
+Betriebsnotizen und bleiben Klartext.
+
+**Nutzlastversion 10 (Web 16.0.0 bis 18.1.1).** Wie 9 — keine Punktlisten, Spuren
+als Verweise —, dazu **vier Felder mehr**, alle zum Rettungsmittel:
+
+| Was | Wo |
+|---|---|
+| `typ` | je Rettungsmittel: `standard` \| `bergwacht` \| `veranstaltung` \| `sonstiges` (E-S9-09). Der Wertevorrat steht in `VEHICLE_TYPEN` (`server/db.php`) |
+| `kurz` | je Rettungsmittel: der Kurzname, bis 16 Zeichen; `null` = keiner gesetzt |
+| `vehicle_typ` | je Diensttag: der eingefrorene Typ (E8); `null` = kein Rettungsmittel |
+| `vehicle_kurz` | je Diensttag: der eingefrorene Kurzname; `null` = keiner |
+
+**Alle vier sind optional.** Eine 9er-Datei ist gültig; ein fehlender `typ`
+wird beim Einspielen zu `standard` — was die richtige Aussage ist, denn jedes
+Rettungsmittel aus der Zeit davor **war** ein Standard-Rettungsmittel. Ein
+fehlender Kurzname bleibt `null`. Ein **unbekannter** `typ` dagegen wird
+abgelehnt und gezählt, nicht stillschweigend zu `standard` gemacht: Das machte
+aus einem Bergwacht-Rettungsmittel einer neueren Fassung ein
+Standard-Rettungsmittel, ohne dass es jemand merkt.
+
+**`base_ref` darf jetzt `null` sein.** Bis Nutzlast 9 wurde ein
+Rettungsmittel ohne auflösbaren Standort übersprungen — `vehicles.base_id`
+trug NOT NULL. Seit E-S9-09 ist der Standort nur beim Typ `standard` Pflicht;
+die drei anderen dürfen ohne bestehen. Ein **Standard**-Rettungsmittel ohne
+auflösbaren Standort wird weiterhin übersprungen und gezählt.
+
+**Warum die Nummer dann überhaupt steigt:** derselbe Grund wie bei der 9 —
+sie sagt einem Leser, was in der Datei stehen **kann**, und sie lässt die
+Schranke nach oben arbeiten. Hier besonders deutlich: Ohne sie legte eine
+Installation vor Web 16.0.0 ein Bergwacht-Rettungsmittel als
+**Standard**-Rettungsmittel an, mit Standortpflicht und Rollenvorlagen — und
+man sähe dem Datensatz den Verlust nicht an.
+
+**Der Vergleich, der über den Spurweg entscheidet, bleibt bei `>= 8`.** Eine
+Anhebung auf 9 oder 10 würfe jede vorhandene 8er- und 9er-Datei in den
+Punktlisten-Zweig: Die Einsätze kämen an, die Spuren nicht — ohne Meldung.
+
+**Nutzlastversion 9 (Web 14.2.0 bis 15.9.0).** Wie 8 — keine Punktlisten, Spuren als
 Verweise —, dazu **drei Dinge mehr**:
 
 | Was | Wo |
@@ -452,7 +505,7 @@ seit Web 4.1.2 auch:
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 9,                         // 8/9 = Verweise, 6/7 = Punktlisten
+  "version": 11,                        // 8/9/10/11 = Verweise, 6/7 = Punktlisten
   "app": "einsatzdoku-notarzt",         // Kennung der Anwendung
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
@@ -477,20 +530,40 @@ seit Web 4.1.2 auch:
     // Die Liste kommt SORTIERT aus der Datenbank — `ORDER BY role_code`, also
     // alphabetisch, nicht in der Reihenfolge des Katalogs. Sie bedeutet
     // nichts; wer sie ausliest, sortiert selbst.
-    "vehicles":     [ { "name": "Christoph 17", "kind": "air",
+    // `typ` und `kurz` seit Nutzlast 10 (E-S9-09). `kind` ist die
+    // BETRIEBSART, `typ` die ART DES DIENSTES — zwei Achsen, unabhängig
+    // voneinander. `kurz` ist der Kurzname (bis 16 Zeichen) und NULL, wenn
+    // keiner gesetzt ist; ein Leerstring wäre eine Angabe, wo keine ist.
+    // `base_ref` darf bei jedem Typ AUSSER `standard` null sein: Diese
+    // Rettungsmittel brauchen keinen Standort. Der dritte Eintrag unten zeigt
+    // den Fall — ohne Standort, ohne Rollen-Vorlagen, ohne Fähigkeiten.
+    "vehicles":     [ { "name": "Christoph 17", "kurz": null,
+                        "typ": "standard", "kind": "air",
                         "base_ref": "Kempten",
                         "roles": ["fr", "hems", "other", "p1", "p2"],
                         "capabilities": ["winch", "bergwacht"],
                         "is_default": 1 },
-                      { "name": "NEF Kempten 1", "kind": "ground",
+                      { "name": "NEF Kempten 1", "kurz": null,
+                        "typ": "standard", "kind": "ground",
                         "base_ref": "Kempten",
                         "roles": ["driver", "other", "trainee"],
+                        "capabilities": [],
+                        "is_default": 0 },
+                      { "name": "Sanitätsdienst Allgäuer Festwoche",
+                        "kurz": "SanD Fest",
+                        "typ": "veranstaltung", "kind": "ground",
+                        "base_ref": null,
+                        "roles": [],
                         "capabilities": [],
                         "is_default": 0 } ],
 
     // Auswahl ZENTRALER Standorte dieser NutzerIn, als Namensliste. Zentrale
     // Standorte selbst gehören dem Konto nicht und werden nicht exportiert —
     // die Auswahl schon, sonst stünden nach dem Einspielen leere Listen da.
+    // SEIT WEB 18.0.0 IN DER REGEL LEER: Es gibt keine Oberfläche mehr, die
+    // zentrale Standorte anlegt oder auswählt (Rahmenplan R39). Das Feld
+    // bleibt im Format, damit ältere Sicherungen unverändert einspielen; es
+    // fällt mit dem Rückbau in P5 (Backlog Nr. 168).
     "user_bases":   [ "Zentrale Wache Süd" ],
 
     // Alle übrigen Stammdaten tragen ihren Standort (base_ref). Ohne ihn ließe
@@ -517,6 +590,14 @@ seit Web 4.1.2 auch:
     "ended_at":   "2026-07-19 17:30:00",
     "kind": "air",                        // null = neutral, noch nicht zugeordnet
     "vehicle_name": "Christoph 17",       // eingefroren
+    // Typ und Kurzname gehören zur SELBEN Momentaufnahme (E8) und stehen seit
+    // Nutzlast 10 hier. Beide null, wenn der Tag kein Rettungsmittel führt;
+    // `vehicle_kurz` auch dann, wenn das Rettungsmittel keinen Kurznamen hat.
+    // Sie werden beim Einspielen AUS DER DATEI genommen, nicht aus den
+    // heutigen Stammdaten nachgeschlagen — das wäre der Durchgriff, den das
+    // Einfrieren gerade ausschließt.
+    "vehicle_typ": "standard",            // eingefroren, null = kein Rettungsmittel
+    "vehicle_kurz": null,                 // eingefroren, null = kein Kurzname
     "base_name": "Kempten",               // eingefroren
     "base_lat": 47.72, "base_lon": 10.31, // eingefroren
     "vehicle_ref": "Christoph 17", "base_ref": "Kempten",   // Stammdaten-Verweis
@@ -584,6 +665,8 @@ seit Web 4.1.2 auch:
 
     "winch": 0, "winch_cycles": null, "winch_cycles_pat": null,
     "winch_airload": 0, "bergwacht": 0, "bw_unit": null, "bw_info": null,
+    // `notes` ist in Nutzlast 11 IMMER null — die Notiz steht unten im
+    // `pat`-Block. Gefuellt ist die Spalte nur in aelteren Dateien.
     "other_ema": null, "notes": null,
 
     // Abweichende Besatzung (seit Version 6 als Objekt role_code => name; bis
@@ -603,11 +686,15 @@ seit Web 4.1.2 auch:
              "loc": { "addr": "Ringstr. 18, 87439 Kempten",
                       "lat": 47.72, "lon": 10.31 },
              "site_desc": "Zufahrt über Forstweg, letzte 300 m zu Fuß",
+             "notes": "Landeplatz durch die Feuerwehr freigeräumt.\nRTW …",
              "start": { "addr": "Wache Kempten", "lat": 47.72, "lon": 10.31 } },
                                             // site_desc seit Version 5,
                                             // start seit Version 6 (manueller
                                             // Abfahrtort, nur bei
-                                            // start_src = "manual")
+                                            // start_src = "manual"),
+                                            // notes seit Nutzlast 11 — die
+                                            // Notiz des Einsatzes, mit ihren
+                                            // Zeilenumbrüchen
     // Ließ sich ein Einsatz beim Export NICHT entschlüsseln, steht statt
     // `pat` das Kennzeichen `pat_unreadable` und — seit Web 4.1.0 — der
     // unveränderte Chiffretext `pat_blob` in der Datei:
@@ -800,10 +887,12 @@ in Abschnitt 3.
   `aircraft`): intern seit Version 3 in einer
   nutzerbezogenen Tabelle (`user_defaults`) abgelegt, im Exportformat aber
   weiterhin als Flag je Zeile abgebildet (Abwärtskompatibilität).
-- **Zentrale (globale) Stammdaten** (vom Admin gepflegt, seit Version 3)
-  gehören nicht dem Konto und werden **nicht** exportiert. Beim Import werden
-  Einträge, die zentral bereits (case-insensitiv) vorhanden sind, still
-  übersprungen und in der Ergebnismeldung gezählt.
+- **Zentrale (globale) Stammdaten** gehören nicht dem Konto und werden
+  **nicht** exportiert. Beim Import werden Einträge, die zentral bereits
+  (case-insensitiv) vorhanden sind, still übersprungen und in der
+  Ergebnismeldung gezählt — diese Regel gilt unverändert. Gepflegt wurden sie
+  von einer Administratorin (seit Version 3); **seit Web 18.0.0 gibt es dafür
+  keine Seite mehr** (Rahmenplan R39), es kann also nur noch Altbestand sein.
 - **`origin`** (seit Version 4): Herkunft des Einsatzes, wird beim Anlegen
   einmalig gesetzt und nie wieder geändert. **Sechs Werte seit Web 14.0.0**
   (vorher drei), einer je Client-App:

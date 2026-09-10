@@ -140,8 +140,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Amputationsverletzung der Hand",
@@ -154,7 +153,8 @@
           "lon": 10.22128
         },
         "site_desc": "Sägewerk, Halle 2",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -230,8 +230,7 @@
           "FF Hochkreuth 40/1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Technische Rettung durch die Feuerwehr; Transport in das überregionale Traumazentrum wegen instabilem Becken."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Polytrauma nach Verkehrsunfall, instabile Beckenfraktur",
@@ -244,7 +243,8 @@
           "lon": 10.398
         },
         "site_desc": "Fahrzeug im Straßengraben, Person eingeklemmt",
-        "start": null
+        "start": null,
+        "notes": "Technische Rettung durch die Feuerwehr; Transport in das überregionale Traumazentrum wegen instabilem Becken."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -328,8 +328,7 @@
           "RTW Hochkreuth 71/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Erste Landung an falscher Koordinate der Leitstelle; Phase \"Ankunft Einsatzort\" deshalb ein zweites Mal gesetzt."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Intoxikation mit Mischkonsum, GCS 8",
@@ -342,7 +341,8 @@
           "lon": 10.312
         },
         "site_desc": "Badesee, Uferbereich hinter dem Kiosk",
-        "start": null
+        "start": null,
+        "notes": "Erste Landung an falscher Koordinate der Leitstelle; Phase \"Ankunft Einsatzort\" deshalb ein zweites Mal gesetzt."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -421,8 +421,7 @@
           "First Responder Sonnenau"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Landung auf dem Sportplatz, Zufahrt für den RTW frei gehalten."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Verbrennung Grad IIb",
@@ -435,7 +434,8 @@
           "lon": 10.40794
         },
         "site_desc": "Hofstelle, Grillunfall im Innenhof",
-        "start": null
+        "start": null,
+        "notes": "Landung auf dem Sportplatz, Zufahrt für den RTW frei gehalten."
       },
       "abdeckung": []
     },
@@ -511,8 +511,7 @@
         "crew_override": 1,
         "crew": {
           "p1": "Servatius Kroll"
-        },
-        "notes": "Pilotenwechsel zur Mittagsablösung; ab diesem Einsatz fliegt Servatius Kroll."
+        }
       },
       "geschuetzt": {
         "dx": "Offene Unterschenkelfraktur nach Absturz im Klettersteig",
@@ -525,7 +524,8 @@
           "lon": 10.371
         },
         "site_desc": "Exponierte Lage, kein Landeplatz, Bergung mit der Winde",
-        "start": null
+        "start": null,
+        "notes": "Pilotenwechsel zur Mittagsablösung; ab diesem Einsatz fliegt Servatius Kroll."
       },
       "abdeckung": [
         "herkunft-watch",
@@ -606,8 +606,7 @@
           "Wasserwacht Auwiesen"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Landeplatz durch die Feuerwehr abgesichert."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Amputationsverletzung der Hand",
@@ -620,7 +619,8 @@
           "lon": 10.04327
         },
         "site_desc": "Sägewerk, Halle 2",
-        "start": null
+        "start": null,
+        "notes": "Landeplatz durch die Feuerwehr abgesichert."
       },
       "abdeckung": []
     }

@@ -228,7 +228,8 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
         ?>
           <div class="listen-form">
             <h3 class="listen-form-titel">
-              <?= ui_artzeichen($t['kind'] === null ? null : (string)$t['kind']) ?>
+              <?= ui_artzeichen($t['kind'] === null ? null : (string)$t['kind'], '',
+                                $t['vehicle_typ'] === null ? null : (string)$t['vehicle_typ']) ?>
               <a href="index.php?d=<?= $tid ?>"><?= e(dt_lesbar($t, true)) ?></a>
             </h3>
             <?php /* `.feld-hinweis`, nicht `.feld-klein`: Der Text steht VOR
@@ -305,9 +306,18 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
              oder bei keinem Standort —, blieb er offen.</p>
 
           <?php if (!$basen): ?>
+            <?php /* SEIT S9/AP5b OHNE ZENTRAL-ZWEIG (R39). Der Satz forderte hier
+                     auf, „zuerst unter ‚Standorte systemweit' einen anzulegen" — die
+                     Seite ist ersatzlos gestrichen, und einen zentralen Standort kann
+                     niemand mehr anlegen. Ein zentraler Eintrag ohne Standort, wenn es
+                     ihn in einer Anlage noch gibt, laesst sich hier deshalb nicht mehr
+                     aufloesen; er braucht einen Eingriff in der Datenbank. Der Zweig
+                     `$istZentral` bleibt (Zeilen darunter) — er meldet einen Zustand,
+                     der nicht mehr entstehen kann, aber bestehen koennte. Faellt mit
+                     dem Rueckbau in P5 (Backlog Nr. 168). */ ?>
             <?= ui_meldung_markup('warn', 'Es steht kein passender Standort zur '
                 . 'Verfügung' . ($istZentral
-                    ? ' — bitte zuerst unter „Standorte systemweit" einen anlegen.'
+                    ? ' — dieser Eintrag lässt sich hier nicht mehr zuordnen.'
                     : '.')) ?>
           <?php endif; ?>
 
@@ -370,13 +380,19 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
            lässt sich der Standortbezug jetzt <strong>verbindlich</strong> machen:
            <code>base_id</code> bekommt die Bedingung <code>NOT NULL</code>.
            Danach stimmen aktualisierte Installation und Neuinstallation in genau
-           den fünf Spalten überein, in denen sie sich bis dahin unterschieden.</p>
+           den vier Spalten überein, in denen sie sich bis dahin unterschieden.</p>
+        <p class="feld-hinweis">Die <strong>Rettungsmittel sind seit Web 16.0.0
+           nicht mehr dabei</strong>: Bergwacht, Veranstaltung und Sonstiges
+           brauchen keinen Standort, ihre Spalte bleibt dauerhaft frei
+           (E&#8209;S9&#8209;09). Ein Rettungsmittel des Typs „Standard“ ohne
+           Standort steht trotzdem weiter oben in der Liste — dort ist der
+           fehlende Standort eine Lücke, keine Absicht.</p>
         <?php if (ist_admin()): ?>
           <?php /* Der Dialogtitel steht ausdruecklich dabei (O11): „Bestaetigen"
                    waere hier zu wenig — es geht um eine Schemaaenderung, und
                    der Titel ist das erste, was ein Screenreader vorliest. */ ?>
           <form method="post" action="nachbearbeitung.php"
-                data-confirm="Die Spalte base_id bekommt in fünf Tabellen die Bedingung NOT NULL. Das ist eine Schemaänderung und lässt sich nicht über den Papierkorb zurücknehmen. Fortfahren?"
+                data-confirm="Die Spalte base_id bekommt in vier Tabellen die Bedingung NOT NULL — Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel und Bergwacht-Bereitschaften. Die Rettungsmittel selbst bleiben ausgenommen, ihr Standort ist seit Web 16.0.0 freiwillig. Das ist eine Schemaänderung und lässt sich nicht über den Papierkorb zurücknehmen. Fortfahren?"
                 data-confirm-titel="Standortbezug verbindlich machen"
                 data-confirm-ok="Bedingung setzen" data-confirm-tone="danger">
             <?= csrf_field() ?><input type="hidden" name="action" value="notnull">

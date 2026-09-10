@@ -109,15 +109,27 @@ const EdMissionTable = (() => {
    * dt_art_symbole() (diensttag_lib.php) und wird von der einbindenden Seite
    * als ART_SYMBOLE gesetzt — dieselbe Loesung wie bei CREW_ROLLEN (Befund
    * P9). Der Rueckfall haelt die Datei fuer sich lauffaehig; er ist die
-   * Notloesung, nicht die Quelle. */
+   * Notloesung, nicht die Quelle.
+   *
+   * DER TYP GEHT VOR DER BETRIEBSART (E-S9-13, Web 16.0.0) — dieselbe Regel
+   * wie in dt_art_symbol() auf der Serverseite, und aus demselben Grund: Das
+   * Typzeichen sagt, WORUM es geht, die Betriebsart sagt, WOMIT. Ohne diese
+   * zweite Liste zeichnete die Einsatztabelle die Betriebsart, waehrend die
+   * Leiste daneben den Typ zeichnet — zwei Zeichen fuer denselben Tag.
+   * TYP_SYMBOLE kommt aus dt_typ_symbole() und kennt 'standard' bewusst
+   * nicht: Dessen Zeichen IST das der Betriebsart. */
   const ART_FALLBACK = {
     air:    { symbol: 'hubschrauber',   text: 'luftgebunden' },
     ground: { symbol: 'fahrzeug',       text: 'bodengebunden' },
     '':     { symbol: 'ohne-zuordnung', text: 'ohne Zuordnung' }
   };
-  function artSymbol(kind) {
+  function artSymbol(kind, typ) {
     const alle = (typeof ART_SYMBOLE !== 'undefined' && ART_SYMBOLE) ? ART_SYMBOLE : ART_FALLBACK;
-    return alle[kind || ''] || alle[''] || ART_FALLBACK[''];
+    const art  = alle[kind || ''] || alle[''] || ART_FALLBACK[''];
+    if (!typ || typ === 'standard') { return art; }
+    const typen = (typeof TYP_SYMBOLE !== 'undefined' && TYP_SYMBOLE) ? TYP_SYMBOLE : {};
+    if (!typen[typ]) { return art; }
+    return { symbol: typen[typ].symbol, text: typen[typ].text + ', ' + art.text };
   }
 
   /* ---- Bausteine der Zellen (P3/O3) ------------------------------------- */
@@ -165,7 +177,7 @@ const EdMissionTable = (() => {
        unter das Datum geschoben, sobald die Kachel schmal wird. */
     h += '<span class="kachel-zeit">';
     if (opts.artDatum) {
-      var s = artSymbol(m.kind);
+      var s = artSymbol(m.kind, m.day_typ);
       h += '<span class="kachel-art">'
          + (typeof edSymbol === 'function' ? edSymbol(s.symbol, '', s.text) : esc(s.text))
          + '</span>';
@@ -255,7 +267,7 @@ const EdMissionTable = (() => {
       nurWenn: liste => new Set(liste.map(m => m.kind || '')).size > 1,
       wert: m => m.kind || '',
       zelle: m => {
-        const s = artSymbol(m.kind);
+        const s = artSymbol(m.kind, m.day_typ);
         /* Seit P3/O2 kommt das Zeichen aus dem Symbolvorrat statt als Emoji
            (E-P3-18). edSymbol() erzeugt dieselbe Zeichenkette wie ui_symbol()
            in PHP; faellt assets/symbol.js aus, bleibt das Wort. */

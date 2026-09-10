@@ -70,7 +70,7 @@ try {
     if (count($liste) > BACKUP_SPUREN_RESTORE_MAX) {
         json_out(['error' => 'zu_viele',
                   'meldung' => 'Höchstens ' . BACKUP_SPUREN_RESTORE_MAX
-                             . ' Spuren je Anfrage.'], 400);
+                             . ' Aufzeichnungen je Anfrage.'], 400);
     }
 
     /* DIE ARBEIT STEHT IN backup_lib.php (S2/AP6).

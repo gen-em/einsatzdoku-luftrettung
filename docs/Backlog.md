@@ -433,18 +433,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nachmittag), und die eigentliche Lösung — Schlüssel auf die Uhr — in eine
     eigene Phase zusammen mit der ohnehin anstehenden Uhr-Arbeit.
 
-44. **Sprungliste bei Standorten mit vielen Rettungsmitteln.**
-    *Aufgenommen 30.08.2026.* Ein Standort mit neun Rettungsmitteln zwingt zum
-    Scrollen, um den zu finden, den man sucht. Vorschlag: eine Zeile runder
-    Marken direkt unter der Überschrift „Rettungsmittel", die zum Eintrag
-    springen — erst ab sechs Einträgen, darunter sieht man die Liste ohnehin
-    ganz.
-
-    Mockup liegt: `docs/mockups/N1-sprungliste.html` mit Bildern für 900 und
-    390 px. **Wartet auf Freigabe** — es wäre eine neue Darstellung, und die
-    braucht nach `docs/Design.md` 1 eine ausdrückliche Zustimmung.
-    *Konzept S9 (07.09.2026): E-S9-14, M-S9-05 (Pille mit Artzeichen, ab sechs; in der Standortseite, AP5).*
-
 45. **Dritte Kartengröße zwischen klein und Vollbild.**
     *Aufgenommen 30.08.2026, zurückgestellt.* Die Karte des Diensttags ist im
     Regelfall klein und im Vollbild oft zu groß. Vorschlag aus der Durchsicht:
@@ -783,44 +771,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
     vorher wieder nach — die Zählung von heute ist morgen genauso alt.
 
-68. **Vorschlagsfelder über `<datalist>` zeigen auf dem Handy nichts an.**
-    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers
-    (Rahmenplan Fassung 16).* Die Besatzungsfelder des Diensttags
-    (`index.php`, `renderCrewFields()`) bieten die hinterlegten
-    Crewmitglieder über ein `<datalist>` an, und dasselbe Muster tragen
-    weitere Felder — beobachtet ist der Ausfall an den Crew-Feldern **und**
-    an der Zielklinik. Mobile Browser zeigen `<datalist>`-Vorschläge nicht
-    oder nur nach Tippen und ohne brauchbare Filterung; die Suche in den
-    Stammdaten fällt dort stillschweigend aus, ohne Fehler und ohne Hinweis.
-    **Zu tun:** zuerst **alle** Vorschlagsfelder erheben (`grep -l datalist
-    server/` nennt `index.php`, `einsatz_form.php`, `mission_fields.php`,
-    `ui.php`, `assets/ortsfeld.js`), jedes einzeln am Handy prüfen (Chromium
-    mobil und WebKit), dann auf einen Baustein umstellen, der mobil trägt.
-    Das Ortsfeld sucht seit S3 beim Tippen mit eigener Trefferliste und ist
-    das Muster; ob es selbst noch ein `<datalist>` benutzt, ist Teil der
-    Erhebung. Ein neuer Baustein braucht Mockup und Freigabe (`Design.md` 1).
-    Zuordnung: Backlog-Runde.
-    *Konzept S9 (07.09.2026): E-S9-07 (kein `<datalist>` mehr, Baustein Vorschlagsliste; AP1, Besatzung AP6).*
-
-69. **Kurzname je Rettungsmittel als Stammdatenfeld.**
-    *Zulieferung aus P3; bis Fassung 16 ohne Nummer im Rahmenplan-Abschnitt
-    P4 geführt.* Leiste, Kacheln und Plaketten zeigen den vollen Namen des
-    Rettungsmittels; auf schmalen Breiten bricht er um oder wird
-    abgeschnitten. Ein Kurzname (etwa „RTH 1", „NEF 2") als eigenes
-    Stammdatenfeld würde an diesen drei Stellen verwendet, der volle Name
-    bleibt in Formularen und Exporten. Schemaänderung, Feldkatalog, Export,
-    Import und Backup ziehen nach — deshalb ein eigener Punkt und kein
-    Nebenklapp. Zuordnung: Backlog-Runde.
-    *Konzept S9 (07.09.2026): E-S9-09 (`vehicles.kurz`, `days.vehicle_kurz`, Nutzlast 10; AP4).*
-
-70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
-    *Zulieferung aus P3; bis Fassung 16 ohne Nummer.* Die Position eines
-    Standorts wird über die Ortssuche oder von Hand als Koordinate erfasst;
-    das Ortsfeld der Einsätze kann seit P3 die Position auch auf der Karte
-    wählen. Dieselbe Kartenwahl fehlt in den Stammdaten der Standorte.
-    **Zu tun:** den vorhandenen Baustein des Ortsfelds dort einbinden, kein
-    neuer Baustein. Zuordnung: Backlog-Runde.
-    *Konzept S9 (07.09.2026): E-S9-06 c (Pin-Knopf in der Nur-Lage-Fassung, Standortkarte der Standortseite; AP2/AP5).*
 
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**
     *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
@@ -833,27 +783,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ihre Stammdaten selbst pflegt und die zentralen Stammdaten in P5
     entfallen (R39). Wieder aufzunehmen, falls Wachen oder Verbände als
     organisierte Träger auftreten. Zuordnung: nach v1.0.
-
-72. **Die Richtungspfeile auf der Spur zeigen teilweise in die falsche
-    Richtung.**
-    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers mit
-    Bildschirmfoto (Rahmenplan Fassung 16).* Auf einer Spur, die von Nordwest
-    nach Südost läuft, zeigt der Pfeil senkrecht nach oben. **Wahrscheinliche
-    Ursache, am Code gelesen und nicht im Browser nachgestellt:**
-    `pfeilIcon()` in `assets/geo.js` dreht den Pfeil mit
-    `style="transform:rotate(…deg)"` auf einem `<span class="geo-pfeil">`;
-    die Regel `.geo-pfeil` in `style.css` setzt nur die Farbe, keine
-    Anzeigeart, und die SVG darin ist ebenfalls inline. `transform` wirkt
-    nach CSS-Regel **nicht** auf nicht ersetzte Inline-Elemente — die
-    Drehung wird verworfen, jeder Pfeil steht ungedreht und zeigt nach
-    Norden. „Teilweise falsch" passt dazu: Auf Abschnitten Richtung Norden
-    stimmt der Pfeil zufällig. Die Winkelrechnung selbst
-    (`atan2` plus 90 Grad) ist richtig. **Zu tun:** `.geo-pfeil` auf
-    `display:inline-block` (oder `block`) setzen, dann im Browser über
-    mehrere Zoomstufen und Laufrichtungen prüfen; falls der Pfeil danach
-    immer noch abweicht, die Rechnung gegen die Projektion nachmessen.
-    Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
-    Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
 
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
     hat.**
@@ -1162,125 +1091,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     E-S4-16 dann um den Unterschied App-Signaturschlüssel / Upload-Schlüssel
     ergänzen. **Nach v1.0**, wenn die Releases häufiger werden.
 
-101. **Adresssuche im Kartendialog.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-1), Rahmenplan
-    Schritt 8 (S9), R73.*
-    Im aufploppenden Kartendialog (Transportziel, Einsatzort usw.) kann kein
-    Ort per Adresse gesucht werden. Soll: Adress- und Ortssuche im Dialog;
-    ein Klick auf einen Treffer **setzt den Pin**, die Übernahme bleibt ein
-    eigener, bestätigender Schritt (F1). Zuerst zu prüfen: die
-    Geocoding-Quelle — dieselbe wie die heutigen Adressvorschläge oder keine
-    (`CLAUDE.md` 4, Datenschutz). Vorbereitung
-    `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
-    *Konzept S9 (07.09.2026): E-S9-05, E-S9-06 (Geocoder-Modul, Suchfeld im Dialog; AP2).*
-
-102. **Weitere Rettungsmittel: die Auswahl wird nicht übernommen.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-2), Schritt 8 (S9).*
-    Die Suche im hinterlegten Stand liefert Treffer; ein Klick schließt den
-    Dialog, das Rettungsmittel wird aber nicht in den Einsatz übernommen.
-    Bug, nur Desktop/Web (F2).
-    *Konzept S9 (07.09.2026): E-S9-08 (mousedown statt click, Ursache Blur-Verzögerung; AP1).*
-
-103. **Kompaktere Buttons Einsatzort, Standort, Zielklinik.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-3), Schritt 8 (S9).*
-    Die drei Buttons sollen kleiner werden; Prüfidee: die farbige Umrandung
-    der Icons von Standort und Zielklinik als Anzeige Einsatzbeginn/-ende
-    nutzen und die separate Anzeige sparen — ob das gestalterisch trägt, ist
-    offen; Icon-Größe separat justierbar. Liefergegenstand sind Mockups
-    mehrerer Optionen **im S9-Konzept** (Fable-Schritt, F8). Hängt an der
-    Bedienhöhe am Schreibtisch (Nr. 74, S8). Offen: F3–F6 (Rahmenplan
-    Abschnitt 6).
-    *Konzept S9 (07.09.2026): E-S9-12, M-S9-01 V1 (Farbring statt Rand, 30/28/3 px; AP3).*
-
-104. **Windenkacheln fehlen bei Nullwert.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-4), Schritt 8 (S9).*
-    In Monats- und Jahresansicht fehlen die Windenkacheln, wenn im Zeitraum
-    keine Windeneinsätze geflogen wurden. Soll: Sobald ein Hubschrauber mit
-    Winde als Einsatzmittel ausgewählt war, erscheinen die Kacheln — auch
-    mit „0" (F7).
-    *Konzept S9 (07.09.2026): E-S9-04 (Fähigkeit statt Zählung, `api/range.php` liefert `faehigkeiten`; AP3).*
-
-105. **Hubschrauber-Icon in der linken Leiste.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-5), Schritt 8 (S9).*
-    Das Icon neben den Tagesdaten überzeugt nicht; Varianten entstehen im
-    S9-Konzept (Fable-Schritt, F8), nicht vorab.
-    *Konzept S9 (07.09.2026): E-S9-13, M-S9-02 — Hubschrauber bleibt Tabler „helicopter"; erledigt sich mit „Ist".*
-
-106. **Klinik- und Adressvorschläge überlagern sich.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-6), Schritt 8 (S9).*
-    Beide Vorschlagsarten in **einer** Liste: Kliniken oben, visuell
-    abgesetzt, darunter die Adressen. Klinikvorschläge nur im
-    Zielklinik-Kontext (F9), höchstens zwei (F10).
-    *Konzept S9 (07.09.2026): E-S9-07, M-S9-03 (eine Vorschlagsliste mit Gruppen; AP1).*
-
-107. **Zielklinik per Koordinaten und Karte.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-7), Schritt 8 (S9).*
-    An beiden Stellen (Vorbelegung bei den Rettungsmitteln,
-    Einsatzbearbeitung) zusätzlich Koordinateneingabe und Auswahl über den
-    standardisierten Kartendialog (Nr. 101). Koordinaten einheitlich wie in
-    den übrigen Feldern (F11); so gewählte Zielkliniken sind Ad-hoc-Einträge
-    je Einsatz, kein Stammdateneintrag (F12). Migration; Vertrag prüfen.
-    *Konzept S9 (07.09.2026): E-S9-06 (Pin-Knopf am Katalogfeld, Ad-hoc-Wert; AP2).*
-
-108. **Schloss-Icon und Legende für verschlüsselte Felder.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.1), Schritt 8
-    (S9).*
-    Es ist nicht ersichtlich, welche Felder verschlüsselt gespeichert werden.
-    Soll: Schloss-Icon am Feld plus Legende (F13). Getrennt von Nr. 109.
-    *Konzept S9 (07.09.2026): E-S9-02 (Schloss am Label, Karte „Was hier gilt"; AP7).*
-
-109. **Notizfeld verschlüsseln, Suche bleibt.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.2), Schritt 8
-    (S9).*
-    Das Notizfeld soll verschlüsselt werden und **durchsuchbar bleiben**, wie
-    in allen anderen Feldern (F14/F18); Filtern ist nicht nötig. **Offener
-    Zielkonflikt, im S9-Konzept als Erstes zu prüfen:** Werden die übrigen
-    durchsuchbaren Felder im Klartext gehalten und serverseitig durchsucht,
-    ist beides nicht ohne Kompromiss zu haben — dann Optionen mit Vor- und
-    Nachteilen, bevor entschieden wird. Betrifft Datenmodell und
-    Verschlüsselung (Migration); die Antwort geht in das Bedrohungsmodell
-    des R17-Reviews ein (Nr. 43, R69). Fable-Schritt.
-    *Konzept S9 (07.09.2026): E-S9-01 (Notizen im pat_blob, Katalogschlüssel `store => pat`, stille Anhebung; AP7).*
-
-110. **Kachel „Spur" heißt „GPS-Daten".**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-9), Schritt 8 (S9).*
-    Die Kachel neben „editiert" zeigt z. B. „Spur · 852 Punkte"; „Spur" ist
-    schwer verständlich. Soll: „GPS-Daten", die Punktzahl entfällt (F15);
-    Wortliste nachziehen.
-    *Konzept S9 (07.09.2026): E-S9-03 („GPS-Daten" überall in der NutzerInnen-Sicht; AP3).*
-    *Android-Teil erledigt 07.09.2026 (Android 0.14.1, Zweig des Sofortpakets):
-    die fünf sichtbaren Texte der Handy-App sagen „GPS-Daten". Die befristete
-    Wortlisten-Ausnahme `spur-android-wartet-auf-9a` liegt auf dem S9-Zweig;
-    wer von 9a und S9 zweiter mergt, streicht sie (K7) — sonst meldet die
-    Wortliste sie als ungenutzt.*
-
-111. **Neue Rettungsmittel-Arten.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.1), Schritt 8
-    (S9).*
-    Bergwachtnotarzt, Veranstaltungsnotarzt, Sonstiges — mit eigenem Icon,
-    ohne Rollen-Vorlagen, ein Standort kann eingegeben werden (F16).
-    Migration.
-    *Konzept S9 (07.09.2026): E-S9-09, E-S9-13 (`vehicles.typ`, Betriebsart bleibt `kind`; AP4).*
-
-112. **Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.2), Schritt 8
-    (S9).*
-    Ein Rettungsmittel kann in der Tageszuordnung manuell definiert werden;
-    es gilt nur für den Tag, die dauerhafte Aufnahme in den Stamm bleibt
-    manuell über die Einstellungen (F17). Bedingung: Suche und Filter müssen
-    für solche Einträge greifen.
-    *Konzept S9 (07.09.2026): E-S9-10 („Anderes Rettungsmittel …" im Zuordnungsformular; AP6).*
-
-113. **Rollen unmittelbar nach der Auswahl bearbeitbar.**
-    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.3), Schritt 8
-    (S9).*
-    Heute muss erst gespeichert und erneut „bearbeiten" geklickt werden,
-    bevor Rollen editierbar sind. Soll: sofort bearbeitbar; sind Rollen für
-    das Rettungsmittel vordefiniert, werden sie nach der Auswahl automatisch
-    nachgeladen. Für manuell definierte Rettungsmittel (Nr. 112) und Arten
-    ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
-    *Konzept S9 (07.09.2026): E-S9-11 (`api/day.php?vorschau=`; AP6).*
-
 114. **Abgewiesene Pakete sichtbar machen und ausräumen.**
     *Ergänzung 06.09.2026 (Krypto-Review AN-2):* Die Pakete bleiben samt
     GPS-Spur **dauerhaft** liegen — sie überleben Trennen und Neukopplung,
@@ -1448,29 +1258,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
     Wartungsseite. Zuordnung: Backlog-Runde oder P6.
 
-132. **Klartext-Freitextfelder ohne Hinweis.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-12).* `notes` trägt den
-    Placeholder „Freitext (keine Patientendaten!)", `bw_info` („Namen /
-    Infos"), die Besatzungs-Freitexte und `days.notes` nicht
-    (`mission_fields.php:395,426,459`). Bedienfehler tragen Patientendaten
-    in den Klartext. Ein Schlüssel `hinweis` im Feldkatalog, ein Text für
-    alle; das Symbol dazu bringt Nr. 108. Zuordnung: Sofortpaket Sicherheit.
-    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-02, AP7) — `hinweis` an `bw_info`, `other_ema`, `crew_*` und `days.notes`; nicht an `notes`, das wird verschlüsselt (E-S9-01). Zuordnung jetzt: S9.*
-
-137. **Photon und Kachelserver bekommen den Einsatzort im Klartext.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-6).* Beim Tippen der
-    Adresse geht der Text ab drei Zeichen an `photon.komoot.io`
-    (`ortsfeld.js:82,360`), die Umkehrsuche schickt die Koordinate
-    (`ortswahl.js:34`), die Kachelserver sehen den Ausschnitt. Nicht der
-    eigene Server, aber ein Dritter ohne Vertrag — der Wortlaut „keine
-    fremde Quelle zur Laufzeit" (`CLAUDE.md` 4) deckt es nicht. Sofortpaket:
-    Hinweis am Feld, Nennung im Datenschutztext, Schalter je Installation
-    (die Komponente hat `adresssuche` schon, `ortsfeld.js:118`);
-    **Entschieden (F-SP-4): Schalter je Installation, Vorgabe „an".** Selbstbetrieb ist
-    die Frage von Nr. 101 (S9 PS-1) mit der Hosting-Entscheidung.
-    Zuordnung: Sofortpaket Sicherheit, Rest S9.
-    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-05, AP2) — Hinweis am Feld, Datenschutztext, Installationsschalter (Karte „Adresssuche" auf Betrieb → Servereinstellungen, `app_state` `adresssuche`), Kontoschalter (Profil → Datenschutz), Dienstadresse. Zuordnung jetzt: S9.*
-
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
     Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
@@ -1530,30 +1317,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Design-Skizze für Weg B (Nr. 43, SP-9) zur Prüfung. Zuordnung: P6,
     R17 Stück 1.
 
-147. **Die aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung zeigen.**
-    *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Wer im
-    Einsatzformular „Auf der Karte wählen" öffnet (`ortswahl.js`, Fadenkreuz),
-    sieht eine leere Karte — obwohl der Einsatz eine GPS-Aufzeichnung hat und
-    `api/mission.php` sie längst liefert. Der Ort, der gesucht wird, liegt fast
-    immer **auf** der Spur; ohne sie sucht man ihn auf der Karte neu.
-    **Soll:** Liegt eine Aufzeichnung vor (`$hatTrack`, dieselbe Schwelle wie
-    das Formular: mehr als ein Punkt), zeichnet der Dialog sie in der ersten
-    Spurfarbe; ist das Feld noch leer, öffnet die Karte auf der Spur
-    (`fitBounds`), sonst wie heute auf der Koordinate. **Nur die Spur, keine
-    Luftlinie** — `luftlinie.js` bleibt außen vor; eine gedachte Verbindung
-    hilft beim Suchen nicht und wäre im Auswahldialog eine Falschaussage. Gilt
-    für **jeden** Kartendialog des Einsatzformulars: heute den Einsatzort,
-    mit PS-7 (Nr. 107) auch die Zielklinik — der manuelle Abfahrtort erscheint
-    ohne Spur ohnehin nicht. An Photon geht weiterhin nur die Koordinate
-    (Umkehrsuche), nie ein Spurpunkt. **Ort nach R74:** der vorhandene
-    Pin-Knopf am Feld — kein neuer Menüpunkt, keine neue Darstellung, der
-    Dialog bekommt eine Ebene mehr. Verträglich mit S11 (Weg B): Der Dialog
-    läuft im Browser, wo die Spur nach S11 entschlüsselt vorliegt.
-    Zuordnung: **S9**, als PS-11 der Vorbereitung und Ergänzung zu PS-1
-    (Nr. 101, gemeinsamer Kartendialog) — der Dialog entsteht dort ohnehin
-    neu.
-    *Konzept S9 (07.09.2026): E-S9-06 b (Spur im Dialog, fitBounds bei leerem Feld; AP2).*
-
 150. **Der Cron-Befehl für den Job-Einstieg steht mit dem Repositoriumspfad in der Dokumentation.**
     *Aufgenommen 06.09.2026 vom Auftraggeber, geprüft gegen `main`.* Der
     Deploy legt den **Inhalt** von `server/` nach `./httpdocs/`
@@ -1605,29 +1368,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Korrekturstufe zu Nr. 148/149 mitbehoben, weil die Behebung die
     Import-Schnittstelle berührt und damit mehr ist als ein Name (K4).
     Zuordnung: **Backlog-Runde**.
-
-152. **Standortseiten: Standort zuerst, ein Menüpunkt, Kennzahlen, Dialoge, Landung auf der neuen Zeile.**
-    *Aufgenommen 07.09.2026 vom Auftraggeber bei der Freigabe der S9-Mockups
-    (Rahmenplan Fassung 34).* Zwei Menüpunkte für eine Sache: „Standorte"
-    (Name, Lage) und „Rettungsmittel" (je Standort eine zugeklappte Karte
-    mit drei Listen — Rettungsmittel, Besatzungsvorlagen, Zielkliniken; alle
-    drei hängen am Standort, `crew_presets.base_id`,
-    `transport_dests.base_id`, E15). Der Name des zweiten ist falsch, die
-    zugeklappten Karten sind leicht zu übersehen, lange Listen zwingen zum
-    Scrollen, und die Eingabe (`sd_form()`) klebt unter jeder Liste.
-    **Soll:** „Rettungsmittel" entfällt; **„Standorte"** ist Liste (eine
-    Zeile je Standort mit drei Zahlen, „Ohne Standort" als letzter Eintrag)
-    und **Seite je Standort** mit vier Karten (Standort, Rettungsmittel,
-    Besatzung, Zielkliniken), **Kennzahlen** als Inhaltsverzeichnis
-    (`Design.md` 9.10), „Zum Anfang" je Karte, Sprungliste (Nr. 44) in den
-    Rettungsmitteln, **Filterfeld** in Besatzung und Zielkliniken; Anlegen
-    und Bearbeiten im **Dialog** (9.11); nach dem Anlegen Redirect mit
-    `#veh-<id>` und `:target`-Hervorhebung der neuen Zeile, keine
-    zusätzliche Meldung. Verwaltung → Stammdaten ebenso. Datenmodell und
-    Formate unberührt; Handbuch 6 neu. Konzept: **E-S9-18, E-S9-19**, Mockups
-    M-S9-06, M-S9-07. Zuordnung: **S9**, AP5.
-
----
 
 153. **`querySelector` mit einem Wert aus dem URL-Fragment.**
     *Aufgenommen 07.09.2026 aus Nr. 135 (Krypto-Review K-15), beim Abschluss
@@ -1784,11 +1524,755 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zu betrachten.
 
 
+167. **Löschen eines Standorts hinterlässt verwaiste Vorbelegungen.**
+    *Aufgenommen 09.09.2026 bei der Bestandsaufnahme zu R39.*
+    `user_defaults` trägt bewusst **keinen Fremdschlüssel auf `item_id`** —
+    die Spalte zeigt je nach `kind` auf `bases.id` oder `vehicles.id`, und
+    zwei Zieltabellen lassen keinen zu (`schema.sql:196-208`). Beide
+    Löschwege räumen darum von Hand ab, was sie kennen: die Vorbelegung des
+    **Standorts** (`einstellungen.php`, `base_del`) und die des einzeln
+    gelöschten **Rettungsmittels** (`einstellungen.php`, `veh_del`). Nicht
+    abgeräumt
+    werden die Vorbelegungen der Rettungsmittel, die mit dem Standort
+    **kaskadieren** — und das sind beim Löschen eines Standorts alle.
+    Gemessen an der lokalen Anlage in einer zurückgerollten Transaktion:
+    Rettungsmittel fort (0 Zeilen), Vorbelegung steht noch (1 Zeile).
+    Die Wirkung ist still: `dt_standardwerte()` liefert eine tote Kennung,
+    das Auswahlfeld findet dazu nichts und belegt nichts vor — es sieht aus
+    wie „keine Vorbelegung gesetzt", und niemand kann die Zeile loswerden.
+    Behebung: Im `base_del`-Weg vor dem Löschen des Standorts auch
+    `DELETE FROM user_defaults WHERE kind = "vehicle" AND item_id IN
+    (SELECT id FROM vehicles WHERE base_id = ?)` — innerhalb derselben
+    Transaktion, in der der Standort fällt. Seit Web 17.1.0 löst
+    `stammdaten_standort_loesen()` die Rettungsmittel ohne Standortpflicht
+    vorher heraus; deren Vorbelegung muss **bleiben**, die Abfrage läuft
+    also nach dem Lösen. Nicht dringend, aber ein Rest, der sich mit jedem
+    gelöschten Standort vermehrt. *(Nachtrag 09.09.2026, Web 18.0.0: Es gibt
+    nur noch EINEN Löschweg — `admin_stammdaten.php` ist mit S9/AP5b
+    gestrichen. Der Befund bleibt derselbe, die Behebung ist damit halb so
+    groß.)*
+
+168. **Zentrale Stammdaten vollständig zurückbauen — damit kein
+    Überbleibsel bleibt.** *Aufgenommen 09.09.2026, zugeordnet **P5**
+    (Rahmenplan R39, Beschluss vom 30.08.2026).* **Die Tür ist zu seit
+    Web 18.0.0** (S9/AP5b): `admin_stammdaten.php` ist ersatzlos gestrichen,
+    die Karte „Vordefinierte Standorte" und der Schreibweg `ub_toggle` mit
+    ihr — **kein Schema, keine Migration**. Damit kann keine neue Zeile mit
+    `user_id IS NULL` mehr entstehen, und die Vorbedingung unten hält von
+    selbst. Der eigentliche
+    Rückbau steht aus, und ohne ihn bleibt das Modell im Schema, in den
+    Sicherungsformaten und in der Dokumentation stehen, obwohl es keine Daten
+    mehr trägt. Die Fundstellen sind aufgenommen:
+    `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`, **208
+    Befunde** auf sechs Flächen (23 Schema, 71 Code, 83 Dokumentation, 22
+    Prüfmittel, 9 Daten) — das Dokument bleibt bis P5 liegen und wird
+    danach gelöscht wie ein Konzept.
+
+    *Was der Rückbau umfasst:* **(1)** `user_id` in `bases`, `vehicles`,
+    `crew_presets`, `resources`, `bw_units` und `transport_dests` auf
+    `NOT NULL` ziehen; **(2)** `user_bases` samt Auswahlweg entfernen (E16);
+    **(3)** das Feld `stammdaten.user_bases` aus der Nutzlast der
+    Kontosicherung nehmen, Nutzlastversion heben, den Import ältere Pakete
+    still darüber hinweglesen lassen; **(4)** `admin_stammdaten.php` samt
+    Menüeintrag entfernen; **(5)** die Abfragen entschlacken, die heute
+    „eigen ODER zentral" fragen (`dt_base_erlaubt()`, `dt_bases()`,
+    `dt_vehicles()`, die Dublettenprüfung, der Einspielweg); **(6)**
+    Dokumentation austragen (`docs/Technik.md` Datenmodell,
+    `docs/Backup-Format.md`, `docs/Handbuch.md`); **(7)** die Prüfmittel
+    nachziehen (Platzhalter `__ADMIN_STANDORT__` des Bilderlaufs, der
+    Klickprobenweg zu Nr. 163, die Umlaufausnahmen des Referenzbestands).
+
+    *Vorbedingung, die vor dem `ALTER TABLE` zu messen ist:* **0 Zeilen mit
+    `user_id IS NULL`** in allen sechs Tabellen. Steht auch nur eine da,
+    bricht die Änderung ab, und MySQL kennt kein Zurückrollen von
+    Schemaänderungen — die Installation bliebe auf halbem Weg stehen. Die
+    geschlossene Tür aus S9 sorgt dafür, dass diese Null von da an hält;
+    vorhandene Einträge lassen sich über die Verwaltung noch löschen.
+
+    *Abnahme („keine Überbleibsel"):* `grep -rn "zentral" server/` nennt
+    keine Stammdatenstelle mehr; `grep -rn "user_bases" server/ docs/` ist
+    **0**; Register und `SHOW CREATE TABLE` sind zwischen frischer
+    Installation und migrierter Datenbank strukturgleich; die Kreisläufe
+    `edbak`, `edbak-alt` und `csv` laufen mit **0 unerklärten** Abweichungen;
+    eine Sicherung im alten Format spielt weiterhin ein.
+
+169. **Ein Diensttag mit „Anderem Rettungsmittel" kann keine Besatzung
+    festhalten.** *Aufgenommen 09.09.2026 beim Beantworten von Frage 11
+    (S9/AP6, Web 18.1.1).* Ein Rettungsmittel nur für den Tag führt keine
+    Besatzungsrollen (E-S9-10, F19). Das gilt seit Web 18.1.1
+    **gleichmäßig** — vorher bot ein aus einer früheren Zuordnung
+    umgestellter Tag die alten Rollen an, ein frisch angelegter keine. Die
+    Gleichmäßigkeit legt die Lücke frei: Es gibt an einem solchen Tag
+    **keinen** Weg, einen Besatzungsnamen einzutragen, weder am Tag noch am
+    einzelnen Einsatz — beide fragen denselben Rollensatz.
+
+    *Warum das nicht nebenbei zu schließen ist:* Der Rollensatz kommt aus
+    `vehicle_roles` des Stammdatensatzes, und einen solchen gibt es hier
+    gerade nicht. Drei Wege sind denkbar, und sie unterscheiden sich in dem,
+    was sie versprechen:
+    **(a)** Der Adhoc-Dialog bekommt Rollenhaken wie das
+    Stammdatenformular — ehrlich, aber er wächst um sieben Felder und wird
+    damit zu dem Formular, das er nicht sein wollte.
+    **(b)** Der Tag bietet die Rollen an, die zu seiner **Betriebsart**
+    passen (luft/boden) — billig, aber es ist geraten, und E26 sagt
+    ausdrücklich: geraten wird nicht.
+    **(c)** So lassen und im Text sagen (heutiger Stand): Wer die Besatzung
+    braucht, legt das Rettungsmittel an. Kostet einen Stammdatensatz, den
+    F17 gerade ersparen wollte.
+
+    *Bis zur Entscheidung gilt (c).* Hinweis im Tagesformular und Handbuch
+    sagen es seit Web 18.1.1 zutreffend; vorher verwiesen beide auf die
+    abweichende Besatzung am Einsatz, wo dieselbe Sperre greift.
+    *Abnahme:* Ein Diensttag mit „Anderem Rettungsmittel" erlaubt einen
+    Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
+    tut. Kein dritter Zustand.
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+44. **Sprungliste bei Standorten mit vielen Rettungsmitteln.**
+    *Aufgenommen 30.08.2026.* Ein Standort mit neun Rettungsmitteln zwingt zum
+    Scrollen, um den zu finden, den man sucht. Vorschlag: eine Zeile runder
+    Marken direkt unter der Überschrift „Rettungsmittel", die zum Eintrag
+    springen — erst ab sechs Einträgen, darunter sieht man die Liste ohnehin
+    ganz.
+
+    Mockup liegt: `docs/mockups/N1-sprungliste.html` mit Bildern für 900 und
+    390 px. **Wartet auf Freigabe** — es wäre eine neue Darstellung, und die
+    braucht nach `docs/Design.md` 1 eine ausdrückliche Zustimmung.
+    *Konzept S9 (07.09.2026): E-S9-14, M-S9-05 (Pille mit Artzeichen, ab sechs; in der Standortseite, AP5).*
+
+    **Erledigt mit Web 16.3.0 am 08.09.2026 (S9/AP5 Teil 3, E-S9-14).** Die Sprungliste erscheint ab sechs Rettungsmitteln. Gemessen: bei 5 keine Liste, bei 6 eine mit 6 Pillen, 6 Artzeichen, 6 gültigen Zielen, Pillenhöhe 36 px.
+
+69. **Kurzname je Rettungsmittel als Stammdatenfeld.**
+    *Zulieferung aus P3; bis Fassung 16 ohne Nummer im Rahmenplan-Abschnitt
+    P4 geführt.* Leiste, Kacheln und Plaketten zeigen den vollen Namen des
+    Rettungsmittels; auf schmalen Breiten bricht er um oder wird
+    abgeschnitten. Ein Kurzname (etwa „RTH 1", „NEF 2") als eigenes
+    Stammdatenfeld würde an diesen drei Stellen verwendet, der volle Name
+    bleibt in Formularen und Exporten. Schemaänderung, Feldkatalog, Export,
+    Import und Backup ziehen nach — deshalb ein eigener Punkt und kein
+    Nebenklapp. Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-09 (`vehicles.kurz`, `days.vehicle_kurz`, Nutzlast 10; AP4).*
+    *Umgesetzt mit Web 16.0.0 (S9/AP4, 07.09.2026): `vehicles.kurz` und
+    `days.vehicle_kurz`, bis 16 Zeichen, freiwillig. Die Leiste zeigt ihn,
+    Tooltip und Formulare den vollen Namen; Sicherung (Nutzlast 10) und
+    Export (`diensttage.csv`, Spalte am Ende) führen ihn NEBEN der
+    Bezeichnung mit, die Suche findet beides. **Kacheln und Plaketten
+    zeigen ihn noch nicht** — sie zeigen heute gar keinen
+    Rettungsmittelnamen (`EdMissionTable.kachel()`), es gibt dort nichts
+    zu ersetzen; das wäre eine neue Darstellung und braucht ein Mockup.
+    Der Punkt bleibt deshalb offen und wandert erst mit AP8 nach
+    Erledigt — oder wird dort auf diesen Rest zurückgeschnitten.*
+    *Entschieden am 08.09.2026 nach Mockup M-S9-08: **zurückgeschnitten.**
+    Kacheln und Plaketten bekommen den Kurznamen **nicht** — beide nennen
+    heute gar kein Rettungsmittel, und die zwei gezeigten Varianten kosten
+    mehr, als sie einbringen (Kachel 92 → 124 px, oder eine neue
+    Darstellung). Dafür zeigt die Leiste ihn künftig in **jeder** Breite
+    (Variante 2: Kurzname sichtbar, Akkordeon 8 px eingerückt) — Nachtrag
+    AP4a. Mit dessen Auslieferung ist der Punkt erledigt und wandert im
+    Abschluss (AP8) hinüber.*
+    *Gebaut mit Web 16.1.0 (S9/AP4a, 08.09.2026): Der Nebentext der Leiste
+    bleibt im Band 1024–1199 px stehen, wenn ein Kurzname eingefroren ist
+    (`.eintrag-neben.kurz`); das Akkordeon rückt dort je Ebene 8 statt 12 px
+    ein — seit Web 16.1.1 je Ebene 4 px, dazu 4 px Abstand in der Zeile
+    (Freigabe M-S9-11, Weg 2). Gemessen an der laufenden Anwendung: dem Kurznamen stehen im Band **64 bis 79 px** zur Verfügung (vorher 48 bis 63) — „BW Hoch" (55 px) und „NEF 76/1" (53) stehen damit an **jedem** Datum ganz; gemessen **13 Kurznamen, 0 Ellipsen** (vorher 10).
+    Der Punkt ist sachlich erledigt; er wandert
+    mit AP8 nach* Erledigt.
+
+    **Erledigt mit Web 16.0.0 am 07.09.2026 (S9/AP4, E-S9-08).** `vehicles.kurz` (16 Zeichen) und der eingefrorene `days.vehicle_kurz`. Der Kurzname steht in Kachel, Plakettenzeile und Leiste; im Band 1024–1199 px ist er das Einzige, was von der Unterzeile bleibt — gemessen 13 Kurznamen, 0 Ellipsen.
+
+108. **Schloss-Icon und Legende für verschlüsselte Felder.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.1), Schritt 8
+    (S9).*
+    Es ist nicht ersichtlich, welche Felder verschlüsselt gespeichert werden.
+    Soll: Schloss-Icon am Feld plus Legende (F13). Getrennt von Nr. 109.
+    *Konzept S9 (07.09.2026): E-S9-02 (Schloss am Label, Karte „Was hier gilt"; AP7).*
+
+    **Erledigt mit Web 19.1.0 am 10.09.2026 (S9/AP7, E-S9-02).** Das Schloss steht an jedem verschlüsselten Feld des Formulars, die zugeklappte Karte „Was hier gilt“ am Ende erklärt es in drei Sätzen. Gemessen: 8 Schlösser, 9 Kleinzeilen, **0 Felder mit beidem**. Kein neuer Baustein — `docs/Design.md` neu erzeugt und unverändert.
+
+109. **Notizfeld verschlüsseln, Suche bleibt.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-8.2), Schritt 8
+    (S9).*
+    Das Notizfeld soll verschlüsselt werden und **durchsuchbar bleiben**, wie
+    in allen anderen Feldern (F14/F18); Filtern ist nicht nötig. **Offener
+    Zielkonflikt, im S9-Konzept als Erstes zu prüfen:** Werden die übrigen
+    durchsuchbaren Felder im Klartext gehalten und serverseitig durchsucht,
+    ist beides nicht ohne Kompromiss zu haben — dann Optionen mit Vor- und
+    Nachteilen, bevor entschieden wird. Betrifft Datenmodell und
+    Verschlüsselung (Migration); die Antwort geht in das Bedrohungsmodell
+    des R17-Reviews ein (Nr. 43, R69). Fable-Schritt.
+    *Konzept S9 (07.09.2026): E-S9-01 (Notizen im pat_blob, Katalogschlüssel `store => pat`, stille Anhebung; AP7).*
+
+    **Erledigt mit Web 19.0.0 bis 19.0.3 am 10.09.2026 (S9/AP7, E-S9-01).** `missions.notes` liegt als Schlüssel `notes` im `pat_blob`; die Suche findet die Notiz nach dem Entsperren wie die Diagnose. Gemessen: gesperrt 0 von 83, entsperrt 1 von 83, Klartextwort gesperrt weiter 31 Treffer. **Der Grund stand vorher nirgends:** `api/suchindex.php` lieferte jede Notiz im Klartext für den gesamten aktiven Bestand, ohne dass jemand entsperrt haben musste (31 Schlüssel je Einsatz vorher, 30 nachher).
+
+111. **Neue Rettungsmittel-Arten.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.1), Schritt 8
+    (S9).*
+    Bergwachtnotarzt, Veranstaltungsnotarzt, Sonstiges — mit eigenem Icon,
+    ohne Rollen-Vorlagen, ein Standort kann eingegeben werden (F16).
+    Migration.
+    *Konzept S9 (07.09.2026): E-S9-09, E-S9-13 (`vehicles.typ`, Betriebsart bleibt `kind`; AP4).*
+
+    **Erledigt mit Web 16.0.0 am 07.09.2026 (S9/AP4, E-S9-09).** `vehicles.typ` mit vier Werten (Standard, Bergwacht, Veranstaltung, Sonstiges); die Betriebsart folgt dem Typ, der Standort ist außerhalb von „Standard“ freiwillig. Prüfschicht 8 von 8 Fällen wie festgelegt.
+
+112. **Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.2), Schritt 8
+    (S9).*
+    Ein Rettungsmittel kann in der Tageszuordnung manuell definiert werden;
+    es gilt nur für den Tag, die dauerhafte Aufnahme in den Stamm bleibt
+    manuell über die Einstellungen (F17). Bedingung: Suche und Filter müssen
+    für solche Einträge greifen.
+    *Konzept S9 (07.09.2026): E-S9-10 („Anderes Rettungsmittel …" im Zuordnungsformular; AP6).*
+    *Gebaut mit Web 18.1.0 (S9/AP6, 09.09.2026): Der letzte Eintrag der Auswahl
+    klappt Bezeichnung, Typ mit Betriebsart und einen Standort auf, der Auswahl
+    und Freitext zugleich ist. Gespeichert wird nur in der Momentaufnahme des
+    Tages — `vehicle_id` bleibt NULL. **Die Bedingung ist gemessen:** Der Name
+    steht in der Tagesliste, die aus der Momentaufnahme kommt und nicht aus den
+    Stammdaten (Klickprobe `ap6-adhoc-speichern-und-finden`). Nach *Erledigt*
+    wandert der Punkt mit dem Abschluss von S9 (AP8).*
+
+    **Erledigt mit Web 18.1.0 am 09.09.2026 (S9/AP6, E-S9-10).** „Anderes Rettungsmittel …“ am Diensttag: `vehicle_id` bleibt NULL, Bezeichnung, Typ, Betriebsart und Standort stehen in der Momentaufnahme, **kein Stammdatensatz entsteht**. Suche, Filter und Tagesliste finden ihn trotzdem.
+
+113. **Rollen unmittelbar nach der Auswahl bearbeitbar.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-10.3), Schritt 8
+    (S9).*
+    Heute muss erst gespeichert und erneut „bearbeiten" geklickt werden,
+    bevor Rollen editierbar sind. Soll: sofort bearbeitbar; sind Rollen für
+    das Rettungsmittel vordefiniert, werden sie nach der Auswahl automatisch
+    nachgeladen. Für manuell definierte Rettungsmittel (Nr. 112) und Arten
+    ohne Vorlagen (Nr. 111) entfällt die Rollenbearbeitung (F19).
+    *Konzept S9 (07.09.2026): E-S9-11 (`api/day.php?vorschau=`; AP6).*
+    *Gebaut mit Web 18.1.0 (S9/AP6, 09.09.2026): `api/day.php?vorschau=` liefert
+    Rollensatz und Vorlagen zu einer noch nicht gespeicherten Wahl und schreibt
+    nichts; das Formular zeichnet die Felder bei `change` neu. Gemessen über
+    sechs Rettungsmittel: Rollenzahlen **5/3/0/3/0/0**, die Zuordnung in der
+    Datenbank danach unverändert. Getippte Namen bleiben stehen, wo die Rolle
+    bleibt. Nach *Erledigt* mit dem Abschluss von S9 (AP8).*
+
+    **Erledigt mit Web 18.1.0 am 09.09.2026 (S9/AP6, E-S9-11).** `api/day.php?vorschau=<vehicle_id>` beantwortet die Frage für eine noch nicht gespeicherte Wahl und **schreibt nichts**; die Rollenfelder erscheinen sofort. Gemessen: Rollenzahlen 5/3/0/3/0/0 über sechs Rettungsmittel, der Diensttag in der Datenbank dabei unverändert.
+
+132. **Klartext-Freitextfelder ohne Hinweis.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-12).* `notes` trägt den
+    Placeholder „Freitext (keine Patientendaten!)", `bw_info` („Namen /
+    Infos"), die Besatzungs-Freitexte und `days.notes` nicht
+    (`mission_fields.php:395,426,459`). Bedienfehler tragen Patientendaten
+    in den Klartext. Ein Schlüssel `hinweis` im Feldkatalog, ein Text für
+    alle; das Symbol dazu bringt Nr. 108. Zuordnung: Sofortpaket Sicherheit.
+    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-02, AP7) — `hinweis` an `bw_info`, `other_ema`, `crew_*` und `days.notes`; nicht an `notes`, das wird verschlüsselt (E-S9-01). Zuordnung jetzt: S9.*
+    *Umgesetzt 10.09.2026 in S9/AP7 (Web 19.1.0): Der Schlüssel `hinweis` steht
+    im Katalog, der Satz „Klartext — keine Patientendaten" einmal als Variable;
+    getragen wird er von `bw_info`, `other_ema`, den sieben Besatzungsfeldern
+    und — außerhalb des Katalogs — vom Notizfeld des Diensttags. `notes` trägt
+    stattdessen das Schloss. **Gemessen: 9 Kleinzeilen, 8 Schlösser, 0 Felder
+    mit beidem.** Der Punkt wandert mit dem Abschluss von S9 (AP8) nach
+    Erledigt — hier steht er, damit dazwischen niemand zweimal anfängt.*
+
+    **Erledigt mit Web 19.1.0 am 10.09.2026 (S9/AP7, E-S9-02).** Der Katalogschlüssel `hinweis` trägt den einen Satz „Klartext — keine Patientendaten“ an `bw_info`, `other_ema` und den sieben Besatzungsfeldern; das Notizfeld des Diensttags trägt ihn außerhalb des Katalogs. `notes` trägt ihn **nicht** — es ist seit Web 19 verschlüsselt und trägt das Schloss. Gemessen: 9 Kleinzeilen, 0 Widersprüche.
+
+152. **Standortseiten: Standort zuerst, ein Menüpunkt, Kennzahlen, Dialoge, Landung auf der neuen Zeile.**
+    *Aufgenommen 07.09.2026 vom Auftraggeber bei der Freigabe der S9-Mockups
+    (Rahmenplan Fassung 34).* Zwei Menüpunkte für eine Sache: „Standorte"
+    (Name, Lage) und „Rettungsmittel" (je Standort eine zugeklappte Karte
+    mit drei Listen — Rettungsmittel, Besatzungsvorlagen, Zielkliniken; alle
+    drei hängen am Standort, `crew_presets.base_id`,
+    `transport_dests.base_id`, E15). Der Name des zweiten ist falsch, die
+    zugeklappten Karten sind leicht zu übersehen, lange Listen zwingen zum
+    Scrollen, und die Eingabe (`sd_form()`) klebt unter jeder Liste.
+    **Soll:** „Rettungsmittel" entfällt; **„Standorte"** ist Liste (eine
+    Zeile je Standort mit drei Zahlen, „Ohne Standort" als letzter Eintrag)
+    und **Seite je Standort** mit **sechs** Karten (Standort, Rettungsmittel,
+    Besatzung, Zielkliniken, Weitere Rettungsmittel, Bergwacht — letztere nur
+    mit luftgebundenem Rettungsmittel, E29, sonst fünf; hier stand bis zum
+    08.09.2026 „vier", und das war falsch: Am Standort hängen sechs
+    Stammdatenlisten, und die zwei übergangenen wären ohne Karte von der
+    Seite aus nicht erreichbar — Entscheidung des Auftraggebers, Frage 7 des
+    Prüfdokuments), **Kennzahlen** als Inhaltsverzeichnis
+    (`Design.md` 9.10), „Zum Anfang" je Karte, Sprungliste (Nr. 44) in den
+    Rettungsmitteln, **Filterfeld** in Besatzung und Zielkliniken; Anlegen
+    und Bearbeiten im **Dialog** (9.11); nach dem Anlegen Redirect mit
+    `#veh-<id>` und `:target`-Hervorhebung der neuen Zeile, keine
+    zusätzliche Meldung. Verwaltung → Stammdaten ebenso. Datenmodell und
+    Formate unberührt; Handbuch 6 neu. Konzept: **E-S9-18, E-S9-19**, Mockups
+    M-S9-06, M-S9-07. Zuordnung: **S9**, AP5.
+
+---
+
+    **Erledigt mit Web 16.2.0 bis 17.1.1 am 08./09.09.2026 (S9/AP5, E-S9-18 und E-S9-19).** Standort zuerst: ein Menüpunkt, eine Liste, je Standort eine Seite mit sechs Karten; Anlegen und Bearbeiten im Dialog mit Landung auf der neuen Zeile. Gemessen: 5 Dialoge im Markup, davon sichtbar 0; nach dem Öffnen genau einer.
+
+166. **~~Der Referenzbestand kennt keinen systemweiten Standort~~ —
+    ZURÜCKGEZOGEN am 09.09.2026, am Tag der Aufnahme.** *Aufgenommen in
+    S9/AP5-4 mit dem Vorschlag, dem Generator des Referenzbestands **einen
+    systemweiten Standort hinzuzufügen**, damit der Bilderlauf die
+    Standortseite der Verwaltung fotografieren kann.* Der Vorschlag ist
+    falsch: **Rahmenplan R39** (Beschluss vom 30.08.2026) schafft die
+    zentralen Stammdaten ab und baut sie in **P5** zurück; auf dem
+    Produktivsystem sind sie am 09.09.2026 bereits gelöscht. Einen Bestand
+    aufzubauen, damit ein Prüfmittel eine Seite fotografieren kann, die
+    zurückgebaut wird, ist Arbeit in die falsche Richtung.
+    **Was bleibt:** Die Standortseite der Verwaltung ist nicht zu
+    fotografieren, und das ist ab jetzt ein **Zustand und kein Mangel** —
+    der Bilderlauf meldet ihn mit Grund („8× Platzhalter
+    `__ADMIN_STANDORT__` nicht auflösbar"), und der Eintrag
+    `42a-stammdaten-standortseite` in `tools/screenshots/seiten.json` fällt
+    mit dem Rückbau weg. Die Klickprobe deckt die Seite bis dahin ab
+    (`ap5-verwaltung-besatzung-anlegen` stellt den Fall selbst her).
+    *Diese Nummer bleibt stehen und wird nicht gelöscht — sie ist der
+    Beleg dafür, dass der Vorschlag geprüft und verworfen wurde.*
+
+163. **Systemweite Besatzungs-Vorbelegungen ließen sich nicht anlegen.**
+    *Nachtrag 09.09.2026 (Web 18.0.0, S9/AP5b): **gegenstandslos** —
+    `admin_stammdaten.php` ist ersatzlos gestrichen (Rahmenplan R39, Nr. 168).
+    Der Punkt bleibt hier stehen, weil er behoben WAR, bevor die Seite fiel;
+    der Klickprobenweg dazu misst dieselbe Zusage jetzt an der Kontoseite
+    (`ap5-besatzung-anlegen`).*
+    *Aufgenommen und behoben 09.09.2026 in S9/AP5-4, Web 17.0.0.* Das
+    Formular in `admin_stammdaten.php` schickte den Schlüssel `role_code`,
+    der Schreibweg `crew_save` derselben Datei las `role`. Damit war die
+    geprüfte Rolle **immer leer**, die Bedingung
+    `!array_key_exists($role, CREW_ROLES)` schlug jedes Mal an, und die
+    Verwaltung meldete „Bitte Rolle und Namen angeben." — bei ausgefüllter
+    Rolle und ausgefülltem Namen. Anlegen **und** Ändern einer systemweiten
+    Vorbelegung waren damit seit **Web 9.10.0** unmöglich, also rund zwei
+    Jahre. Die Kontoansicht war nie betroffen: Sie schickt seit jeher `role`.
+    Gefunden beim Umbau auf die Dialoge, nicht von einem Prüfmittel — kein
+    Bild zeigt eine Fehlermeldung, die erst nach einem Klick erscheint, und
+    die Klickprobe fuhr diesen Weg bis dahin nicht. Behoben, indem der
+    gemeinsame Dialog `role` schickt (ein Name für eine Sache) und der
+    Schreibweg die Rolle beim Ändern **mitschreibt** — als Feld kann sie sich
+    jetzt ändern. Der Weg `ap5-verwaltung-besatzung-anlegen` misst ihn: Er
+    legt einen systemweiten Standort samt Rettungsmittel an, legt die
+    Vorbelegung an, prüft die Landung auf `#crew-<id>` und räumt alles wieder
+    ab.
+
+164. **Ein Umbenennen auf einen vorhandenen Namen endete in einer weißen Seite.**
+    *Aufgenommen und behoben 09.09.2026 in S9/AP5-4, Web 17.0.0.* Beim
+    **Anlegen** fängt `INSERT IGNORE` die Dublette ab; beim **Ändern** gibt es
+    kein Gegenstück, und der Eindeutigkeitsschlüssel
+    (`uq_user_base_role_name` und Geschwister) warf eine PDOException, die
+    niemand fing. Betroffen waren Besatzung, weitere Rettungsmittel,
+    Bergwacht und Zielkliniken der Kontoansicht — seit es diese Listen gibt.
+    Selten getroffen, solange nur der Name änderbar war; mit der Rolle als
+    Feld im Dialog wurde daraus ein wahrscheinlicher Fall. Behoben mit einer
+    gemeinsamen Schließung `$sdAendern()`, die `ist_dublettenfehler()`
+    auswertet und dieselbe Meldung gibt wie der Anlegen-Weg.
+
+165. **Ein leerer Standortname wurde wortlos verworfen.**
+    *Aufgenommen und behoben 09.09.2026 in S9/AP5-4, Web 17.0.0.*
+    `base_save` in `einstellungen.php` prüfte `if ($n !== '')` — **ohne**
+    Gegenzweig. Wer das Namensfeld leerte und absendete, sah die Seite neu
+    geladen, keinen neuen Standort und keine Meldung. Das `required` im
+    Markup fängt den Regelfall ab; es ist eine Bequemlichkeit und keine
+    Prüfung. Behoben: „Bitte einen Namen eintragen." Dieselbe Bauart von
+    Fehler wie F-S9-U-17 bis -19 aus AP5-2 — ein Weg, der nichts tut und
+    nichts sagt.
+
+162. **Der kleine Punkt des Abfahrtorts hat keinen Kasten und zeigt seine Farbe nie.**
+    *Aufgenommen 07.09.2026 in S9/AP3, gefunden bei der Aufklärung zu Nr. 72.*
+    `.geo-punkt` (`assets/geo.js`, `markerPunkt()`) setzt `width` und
+    `height` an einem `<span>` — und an einem nicht ersetzten Inline-Element
+    wirken beide **nicht**. Gemessen in der Tagesübersicht am 07.09.2026:
+    **4 × 18 px statt 12 × 12**; übrig blieben die beiden 2-px-Ränder als
+    weißer Strich, und die Spurfarbe des Einsatzes (`background`, aus
+    `EdGeo.spurFarbe()`) lag in einem 0 px breiten Inhaltskasten und war nie
+    zu sehen. Betroffen: `index.php` und `einsatz.php`, je der manuelle
+    Abfahrtort der Luftlinie. **Derselbe Fehler wie Nr. 72**, drei Zeilen
+    darüber im Stylesheet, und in keinem Backlog-Punkt.
+
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3).** Eine Zeile:
+    `display:block`. Gemessen nachher **12 × 12 px**, Fläche
+    `rgb(31, 78, 156)` — die Spurfarbe steht. Der Weg
+    `ap3-geo-punkt-sichtbar` der Klickprobe misst es.
+
+72. **Die Richtungspfeile auf der Spur zeigen teilweise in die falsche
+    Richtung.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers mit
+    Bildschirmfoto (Rahmenplan Fassung 16).* Auf einer Spur, die von Nordwest
+    nach Südost läuft, zeigt der Pfeil senkrecht nach oben. **Wahrscheinliche
+    Ursache, am Code gelesen und nicht im Browser nachgestellt:**
+    `pfeilIcon()` in `assets/geo.js` dreht den Pfeil mit
+    `style="transform:rotate(…deg)"` auf einem `<span class="geo-pfeil">`;
+    die Regel `.geo-pfeil` in `style.css` setzt nur die Farbe, keine
+    Anzeigeart, und die SVG darin ist ebenfalls inline. `transform` wirkt
+    nach CSS-Regel **nicht** auf nicht ersetzte Inline-Elemente — die
+    Drehung wird verworfen, jeder Pfeil steht ungedreht und zeigt nach
+    Norden. „Teilweise falsch" passt dazu: Auf Abschnitten Richtung Norden
+    stimmt der Pfeil zufällig. Die Winkelrechnung selbst
+    (`atan2` plus 90 Grad) ist richtig. **Zu tun:** `.geo-pfeil` auf
+    `display:inline-block` (oder `block`) setzen, dann im Browser über
+    mehrere Zoomstufen und Laufrichtungen prüfen; falls der Pfeil danach
+    immer noch abweicht, die Rechnung gegen die Projektion nachmessen.
+    Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
+    Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
+
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3, E-S9-12).** Der Verdacht
+    im Punkt stimmte, und er war die ganze Ursache: `.geo-pfeil` ist ein
+    `<span>`, das Stylesheet setzte daran nur die Farbe — und `transform`
+    wirkt an einem nicht ersetzten Inline-Element **nicht**. Die
+    Winkelrechnung in `geo.js` war die ganze Zeit richtig; sie kam nur nie an.
+
+    **Gemessen, nicht geschlossen.** Eine Kontrollprobe zeigt es: Ein
+    20-px-Kasten mit `rotate(45deg)` misst **28,3 px** (= 20·√2), wenn die
+    Drehung greift, und **20 px**, wenn nicht — gemessen waren 20. Die
+    Bildschirmmatrix des SVG lautete `a=0,833 b=0 c=0 d=0,833` bei
+    behaupteten 90 Grad, also reine Skalierung ohne Drehanteil. Nachher
+    treffen **12 von 12 Pfeilen** in 30-Grad-Schritten ihren Sollwinkel auf
+    **0,1 Grad** genau, und auf der Spur des Referenzeinsatzes **2 von 2**.
+
+    **Der berechnete Stil verrät den Fehler nicht** — `getComputedStyle`
+    meldet die Drehmatrix auch am Inline-Element. Wer ihn in den
+    Entwicklerwerkzeugen prüft, bekommt „sieht richtig aus" zurück; nachweisbar
+    ist er nur an der Geometrie. Der Weg `ap3-pfeile-drehen` der Klickprobe
+    misst seither die Bildschirmmatrix.
+
+    *Der Weg:* `.geo-pfeil` bekommt einen ausdrücklichen Kasten
+    (`display:flex` mit `--symbol`), nicht `inline-block` — bei einem
+    Inline-Block hinge der Drehpunkt an der Zeilenhöhe der Karte und
+    verschöbe sich bei der nächsten Schriftänderung. Die zweite im Konzept
+    zugelassene Möglichkeit („die Drehung wandert in das SVG") ist verworfen:
+    `pfeil-hoch.svg` ist zugleich die Sortierrichtung von sieben
+    Tabellenköpfen, sechs davon über `.symbol-oben` gedreht — ein
+    Winkelparameter an `edSymbol()` stellte eine zweite Drehmechanik neben
+    die vorhandene.
+
+103. **Kompaktere Buttons Einsatzort, Standort, Zielklinik.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-3), Schritt 8 (S9).*
+    Die drei Buttons sollen kleiner werden; Prüfidee: die farbige Umrandung
+    der Icons von Standort und Zielklinik als Anzeige Einsatzbeginn/-ende
+    nutzen und die separate Anzeige sparen — ob das gestalterisch trägt, ist
+    offen; Icon-Größe separat justierbar. Liefergegenstand sind Mockups
+    mehrerer Optionen **im S9-Konzept** (Fable-Schritt, F8). Hängt an der
+    Bedienhöhe am Schreibtisch (Nr. 74, S8). Offen: F3–F6 (Rahmenplan
+    Abschnitt 6).
+    *Konzept S9 (07.09.2026): E-S9-12, M-S9-01 V1 (Farbring statt Rand, 30/28/3 px; AP3).*
+
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3, E-S9-12).** Variante V1
+    des Mockups M-S9-01, freigegeben am 06.09.2026: **Der Farbring ist jetzt
+    der Rand** und liegt nicht mehr darum herum. Nachgemessen im Browser
+    (Klickprobe `ap3-schildmasse`): **32 px** ohne Aufzeichnung, 32 mit Start
+    oder Ende, **38** mit beidem — vorher 36, 48 und 60. Einsatzort-Kreis
+    32 → **28**, Ringpunkt 16 → **14**, mit beidem 28 → **20**. Symbol im
+    Schild 20 → **18**, im Kreis 20 → **16**.
+
+    Außen liegt am Schild immer **1 px Schnee** als Trennlinie zur Karte (F6);
+    der Einsatzort-Kreis bekommt sie nicht, weil Orange auf keiner der drei
+    Kartenebenen vorkommt und die freigegebene Maßleiste 28 px nennt.
+
+    Zwei Dinge fielen dabei auf und sind mit behoben: Ein **beringtes Schild
+    hatte keinen Schlagschatten** (die Ringregeln überschrieben `box-shadow`
+    vollständig), und der **Ringpunkt ist antippbar** — er öffnet ein Popup.
+    E-S9-12 nennt im selben Absatz 24 px als Untergrenze am Finger
+    (WCAG 2.5.8), setzt ihn aber auf 14. Beides zugleich geht nur so: Die
+    Zeichnung bleibt 14 px und sitzt in einer durchsichtigen 24-px-Fläche.
+    Vorher waren es 16 px, also ebenfalls darunter — der Fehler ist älter als
+    dieses Paket.
+
+104. **Windenkacheln fehlen bei Nullwert.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-4), Schritt 8 (S9).*
+    In Monats- und Jahresansicht fehlen die Windenkacheln, wenn im Zeitraum
+    keine Windeneinsätze geflogen wurden. Soll: Sobald ein Hubschrauber mit
+    Winde als Einsatzmittel ausgewählt war, erscheinen die Kacheln — auch
+    mit „0" (F7).
+    *Konzept S9 (07.09.2026): E-S9-04 (Fähigkeit statt Zählung, `api/range.php` liefert `faehigkeiten`; AP3).*
+
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3, E-S9-04).** Kehrt
+    E30/A13d ausdrücklich um. `api/range.php` liefert jetzt `faehigkeiten`,
+    und die beiden Windenkacheln stehen, sobald ein **Luft**-Diensttag des
+    Zeitraums die Winde trägt — auch mit dem Wert 0. Gemessen mit der
+    Klickprobe (`ap3-windenkacheln-nach-faehigkeit`), alle drei Fälle über die
+    Oberfläche hergestellt und danach zurückgestellt: Januar mit Windeneinsatz
+    **2 Kacheln**; Januar **ohne** Windeneinsatz, Fähigkeit steht: **2
+    Kacheln mit „0 Winden-Cycles" und „0,0 Ø Winden-Cycles / Flugtag"**;
+    November ohne Fähigkeit: **0 Kacheln**.
+
+    **Die Einschränkung auf Luft ist kein Beiwerk.** Die Migration
+    `2026_08_17_notarzt_erweiterung` hat seinerzeit jedem bestehenden
+    Diensttag beide Fähigkeiten gegeben, ohne nach der Art zu fragen. Auf
+    einem gewachsenen Bestand trägt deshalb auch ein NEF-Tag von 2025 die
+    Winde — ohne diese Bedingung stünden die Kacheln überall, und die
+    Änderung sähe richtig aus, während sie nur die Altlast zeigte.
+    Boden und Gemischt sind unberührt, wie das Konzept es verlangt.
+
+105. **Hubschrauber-Icon in der linken Leiste.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-5), Schritt 8 (S9).*
+    Das Icon neben den Tagesdaten überzeugt nicht; Varianten entstehen im
+    S9-Konzept (Fable-Schritt, F8), nicht vorab.
+    *Konzept S9 (07.09.2026): E-S9-13, M-S9-02 — Hubschrauber bleibt Tabler „helicopter"; erledigt sich mit „Ist".*
+
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3, E-S9-13).** Mockup
+    M-S9-02, freigegeben am 06.09.2026: **Der Hubschrauber bleibt.** Die
+    eigene Strichzeichnung (Variante B) und die Bildmarken (C, C2) sind
+    gesehen und verworfen; Tabler „helicopter" und „ambulance" bleiben, wie
+    sie sind. Der Punkt ist damit mit „Ist" beantwortet — was er verlangte,
+    war die Prüfung, nicht der Wechsel.
+
+    Neu sind statt dessen die **Zeichen der Diensttag-Typen**:
+    `bergwacht.svg` (Tabler „mountain"), `veranstaltung.svg`
+    („building-stadium"), `sonstiges.svg` („dots-circle-horizontal").
+    Symbolvorrat **49 → 52**. `dt_art_symbol()` nimmt den Typ schon entgegen
+    und stellt ihn **vor** die Betriebsart — ein Bergwacht-Dienst trägt den
+    Berg, gleich ob er fliegt oder fährt; der Tooltip nennt beides
+    („Bergwacht, luftgebunden"). Im Datenmodell gibt es den Typ noch nicht,
+    er kommt mit AP4; bis dahin ist der Parameter immer `null` und die
+    Funktion antwortet unverändert.
+
+110. **Kachel „Spur" heißt „GPS-Daten".**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-9), Schritt 8 (S9).*
+    Die Kachel neben „editiert" zeigt z. B. „Spur · 852 Punkte"; „Spur" ist
+    schwer verständlich. Soll: „GPS-Daten", die Punktzahl entfällt (F15);
+    Wortliste nachziehen.
+    *Konzept S9 (07.09.2026): E-S9-03 („GPS-Daten" überall in der NutzerInnen-Sicht; AP3).*
+
+    **Erledigt mit Web 15.9.0 am 07.09.2026 (S9/AP3, E-S9-03).** Umbenannt
+    sind **72 sichtbare Zeichenketten in 18 Dateien** und **41 Zeilen im
+    Handbuch** — die Plakette der Einsatzansicht, das Aktionsmenü, die ganze
+    Seite „GPS-Daten des Diensttages", die Jobnamen im Betrieb, der
+    Sicherungs- und Importweg. `grep -c "Spur" docs/Handbuch.md` ist von
+    **41 auf 0** gegangen (bis auf ein Zitat des alten Wortlauts mit
+    Versionsangabe).
+
+    **Fachbegriff bleibt er, wo er einer ist:** im Code (`spur_lib.php`), in
+    `docs/Technik.md`, im JSON-Vertrag und im Sicherungsformat — dort heißt
+    die Datei im Archiv „Spurteil", und eine Meldung, die sie anders nennt,
+    hilft beim Suchen nicht. Auch der GPX-Fachbegriff bleibt: Eine GPX-Datei
+    enthält Spuren, und der Satz, der das erklärt, sagt es weiter so.
+
+    Die **Plakette nennt keine Zahl mehr**: „GPS-Daten" statt
+    „Spur · 852 Punkte", „GPS-Daten ausgedünnt" statt „Spur ausgedünnt · 113
+    von 443 Punkten". Wie viele Messpunkte eine Aufzeichnung hat, sagt nichts
+    über den Einsatz; wer die Zahl braucht, findet sie auf der Seite
+    „GPS-Daten des Diensttages".
+
+    Die **Wortliste** hat dafür eine neue Regel bekommen (`spur`,
+    großgeschrieben, damit sie das Substantiv trifft und nicht den
+    Bezeichner) und sechs begründete Ausnahmen; sie steht auf **0/0/0** bei
+    96 Regeln, alle gegriffen.
+
+    **Die Android-App bleibt außen vor.** Fünf ihrer sichtbaren Texte sagen
+    noch „Spur". Sie zählt getrennt, braucht einen eigenen APK-Bau und einen
+    Emulatorlauf; Schritt 9a arbeitet ohnehin an ihr und nimmt sie dort mit
+    (Entscheidung des Auftraggebers, 07.09.2026). Die Wortliste führt das als
+    **befristete** Ausnahme in Klasse D — sie wird mit 9a gelöscht.
+
+70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
+    *Zulieferung aus P3; bis Fassung 16 ohne Nummer.* Die Position eines
+    Standorts wird über die Ortssuche oder von Hand als Koordinate erfasst;
+    das Ortsfeld der Einsätze kann seit P3 die Position auch auf der Karte
+    wählen. Dieselbe Kartenwahl fehlt in den Stammdaten der Standorte.
+    **Zu tun:** den vorhandenen Baustein des Ortsfelds dort einbinden, kein
+    neuer Baustein. Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-06 c (Pin-Knopf in der Nur-Lage-Fassung, Standortkarte der Standortseite; AP2/AP5).*
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP2, E-S9-06 c).** Kein neuer
+    Baustein, wie der Punkt es verlangte: Der Pin-Knopf samt Blatt („Meine
+    Position übernehmen" / „Auf der Karte wählen") stand in `ui_ortsfeld()`
+    schon — nur im falschen Zweig. Die Funktion hat zwei Formen, und die
+    Nur-Lage-Fassung (`feld => false`), die Standorte und Zielkliniken
+    benutzen, gab ihn nicht aus. Der Block steht jetzt einmal da und wird
+    zweimal ausgegeben. Gemessen mit `tools/klickprobe/` (Weg
+    `ap2-dialog-fuenf-einbauorte`): Der Dialog öffnet aus **5 von 5**
+    Einbauorten mit Karte darin — Einsatzort, manueller Abfahrtort,
+    Transportziel, Standort im Konto (`einstellungen.php`) und Standort
+    systemweit (`admin_stammdaten.php`). Ohne Spur, denn zu einem Standort
+    gehört kein Einsatz.
+
+101. **Adresssuche im Kartendialog.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-1), Rahmenplan
+    Schritt 8 (S9), R73.*
+    Im aufploppenden Kartendialog (Transportziel, Einsatzort usw.) kann kein
+    Ort per Adresse gesucht werden. Soll: Adress- und Ortssuche im Dialog;
+    ein Klick auf einen Treffer **setzt den Pin**, die Übernahme bleibt ein
+    eigener, bestätigender Schritt (F1). Zuerst zu prüfen: die
+    Geocoding-Quelle — dieselbe wie die heutigen Adressvorschläge oder keine
+    (`CLAUDE.md` 4, Datenschutz). Vorbereitung
+    `docs/konzepte/Vorbereitung-S9-Problemsammlung.md`.
+    *Konzept S9 (07.09.2026): E-S9-05, E-S9-06 (Geocoder-Modul, Suchfeld im Dialog; AP2).*
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP2, E-S9-05, E-S9-06 a).**
+    Die zuerst zu klärende Frage — welche Geocoding-Quelle — ist so
+    beantwortet: dieselbe wie bisher (Photon), aber **einstellbar und
+    abschaltbar**. `assets/geocoder.js` ist der eine Weg nach draußen; die
+    Anschrift steht nicht mehr im ausgelieferten Browserstand
+    (`grep -rn "komoot" server/assets/` = **0**), sondern in `app_state` und
+    ist unter Betrieb → Servereinstellungen zu ändern. Zwei Schalter davor
+    (Installation und Konto) können sie ganz abstellen; nachgemessen am
+    Netzwerkprotokoll: eingeschaltet **2** Anfragen auf demselben Weg,
+    ausgeschaltet **0**. Das Suchfeld sitzt im Dialogkopf; ein Treffer setzt
+    das Kreuz und übernimmt nichts (F1) — gemessen: Feld nach dem Treffer
+    leer, 0 Chips, nach „Übernehmen" 1 Chip.
+
+107. **Zielklinik per Koordinaten und Karte.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-7), Schritt 8 (S9).*
+    An beiden Stellen (Vorbelegung bei den Rettungsmitteln,
+    Einsatzbearbeitung) zusätzlich Koordinateneingabe und Auswahl über den
+    standardisierten Kartendialog (Nr. 101). Koordinaten einheitlich wie in
+    den übrigen Feldern (F11); so gewählte Zielkliniken sind Ad-hoc-Einträge
+    je Einsatz, kein Stammdateneintrag (F12). Migration; Vertrag prüfen.
+    *Konzept S9 (07.09.2026): E-S9-06 (Pin-Knopf am Katalogfeld, Ad-hoc-Wert; AP2).*
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP2, E-S9-06 d).** Kein
+    Sonderfall im Formular, sondern ein Schlüssel im Feldkatalog:
+    `'ortswahl' => true` an `transport_dest` in `mission_fields.php`, und
+    Pin-Knopf, Blatt und Kartendialog kommen von selbst — die Regel
+    „Feldkatalog statt Sonderfall" (`CLAUDE.md` 4). Die Koordinateneingabe war
+    schon da (F11); ein per Karte gewähltes Ziel bleibt ein **Ad-hoc-Wert des
+    Einsatzes** und wird kein Stammdatensatz (F12). Migration und Vertrag
+    blieben unberührt: Die Koordinate liegt weiter in `dest_lat/lon` im
+    Klartext (bis S11), der JSON-Vertrag ist unverändert (R12).
+
+137. **Photon und Kachelserver bekommen den Einsatzort im Klartext.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-6).* Beim Tippen der
+    Adresse geht der Text ab drei Zeichen an `photon.komoot.io`
+    (`ortsfeld.js:82,360`), die Umkehrsuche schickt die Koordinate
+    (`ortswahl.js:34`), die Kachelserver sehen den Ausschnitt. Nicht der
+    eigene Server, aber ein Dritter ohne Vertrag — der Wortlaut „keine
+    fremde Quelle zur Laufzeit" (`CLAUDE.md` 4) deckt es nicht. Sofortpaket:
+    Hinweis am Feld, Nennung im Datenschutztext, Schalter je Installation
+    (die Komponente hat `adresssuche` schon, `ortsfeld.js:118`);
+    **Entschieden (F-SP-4): Schalter je Installation, Vorgabe „an".** Selbstbetrieb ist
+    die Frage von Nr. 101 (S9 PS-1) mit der Hosting-Entscheidung.
+    Zuordnung: Sofortpaket Sicherheit, Rest S9.
+    *Konzept S9 (07.09.2026): **ganz nach S9** (E-S9-05, AP2) — Hinweis am Feld, Datenschutztext, Installationsschalter (Karte „Adresssuche" auf Betrieb → Servereinstellungen, `app_state` `adresssuche`), Kontoschalter (Profil → Datenschutz), Dienstadresse. Zuordnung jetzt: S9.*
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP2, E-S9-05).** Alle vier
+    Teile des Sofortpakets stehen, und der Schalter ist zwei geworden:
+    **(1)** Kleinzeile unter dem Ortsfeld, die den Dienst beim Namen nennt —
+    einmal je Seite, nicht je Feld, und nur bei eingeschalteter Suche.
+    **(2)** Textbaustein zum Kopieren unter Verwaltung → Installation, mit der
+    tatsächlich eingetragenen Dienstadresse. Der ursprünglich vorgesehene Weg
+    (Vorlage in `rechtstexte_lib.php`) ging nicht: Die Anwendung liefert
+    **keinen** Rechtstext mit und kann deshalb keinen Absatz einsetzen; sie
+    kann ihn nur bereitlegen. **(3)** Installationsschalter, Karte
+    „Adresssuche" auf Betrieb → Servereinstellungen, `app_state` `adresssuche`,
+    Vorgabe „an" (F-SP-4). **(4)** Kontoschalter, Profil → Karte
+    „Datenschutz", `users.adresssuche`. Dazu der Selbstbetrieb aus Nr. 101:
+    Das Feld „Dienst" nimmt die Adresse eines eigenen Photon auf — ohne
+    Codeänderung und ohne neue Auslieferung.
+
+    **Die Kachelserver bleiben.** Sie sind die Karte selbst und lassen sich
+    nicht abschalten, ohne die Karte abzuschaffen; was sie sehen, steht in
+    `docs/Lizenzen.md` 6.1. Damit ist der Adressdienst der einzige
+    Laufzeitdienst des Projekts, den man ausschalten kann.
+
+147. **Die aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung zeigen.**
+    *Aufgenommen 06.09.2026 vom Auftraggeber (Rahmenplan Fassung 32).* Wer im
+    Einsatzformular „Auf der Karte wählen" öffnet (`ortswahl.js`, Fadenkreuz),
+    sieht eine leere Karte — obwohl der Einsatz eine GPS-Aufzeichnung hat und
+    `api/mission.php` sie längst liefert. Der Ort, der gesucht wird, liegt fast
+    immer **auf** der Spur; ohne sie sucht man ihn auf der Karte neu.
+    **Soll:** Liegt eine Aufzeichnung vor (`$hatTrack`, dieselbe Schwelle wie
+    das Formular: mehr als ein Punkt), zeichnet der Dialog sie in der ersten
+    Spurfarbe; ist das Feld noch leer, öffnet die Karte auf der Spur
+    (`fitBounds`), sonst wie heute auf der Koordinate. **Nur die Spur, keine
+    Luftlinie** — `luftlinie.js` bleibt außen vor; eine gedachte Verbindung
+    hilft beim Suchen nicht und wäre im Auswahldialog eine Falschaussage. Gilt
+    für **jeden** Kartendialog des Einsatzformulars: heute den Einsatzort,
+    mit PS-7 (Nr. 107) auch die Zielklinik — der manuelle Abfahrtort erscheint
+    ohne Spur ohnehin nicht. An Photon geht weiterhin nur die Koordinate
+    (Umkehrsuche), nie ein Spurpunkt. **Ort nach R74:** der vorhandene
+    Pin-Knopf am Feld — kein neuer Menüpunkt, keine neue Darstellung, der
+    Dialog bekommt eine Ebene mehr. Verträglich mit S11 (Weg B): Der Dialog
+    läuft im Browser, wo die Spur nach S11 entschlüsselt vorliegt.
+    Zuordnung: **S9**, als PS-11 der Vorbereitung und Ergänzung zu PS-1
+    (Nr. 101, gemeinsamer Kartendialog) — der Dialog entsteht dort ohnehin
+    neu.
+    *Konzept S9 (07.09.2026): E-S9-06 b (Spur im Dialog, fitBounds bei leerem Feld; AP2).*
+
+    **Erledigt mit Web 15.8.0 am 07.09.2026 (S9/AP2, E-S9-06 b).** Der Dialog
+    zeichnet die aufgezeichnete Spur in der ersten Spurfarbe, mit Ringpunkt
+    an Anfang und Ende und einer Legende darunter; **keine Luftlinie**, wie
+    verlangt. Er wartet nicht auf sie: Der Dialog steht sofort, die Spur kommt
+    über `api/mission.php` nach. Ist das Ortsfeld leer, passt sich die Karte
+    beim Eintreffen auf die Spur ein (`fitBounds`, 24 px Rand) — aber nur,
+    wenn niemand inzwischen selbst geschoben oder gezoomt hat; sonst risse es
+    die Karte unter dem Kreuz weg. Steht schon eine Koordinate, bleibt sie der
+    Mittelpunkt. Gemessen mit `tools/klickprobe/` (Weg `ap2-spur-im-dialog`)
+    an einem Einsatz mit 309 Punkten: **1 Linie, 4 Ringpunkte** (2 auf der
+    Karte, 2 in der Legende), Legende sichtbar, **0 Pfeile**.
+
+68. **Vorschlagsfelder über `<datalist>` zeigen auf dem Handy nichts an.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers
+    (Rahmenplan Fassung 16).* Die Besatzungsfelder des Diensttags
+    (`index.php`, `renderCrewFields()`) bieten die hinterlegten
+    Crewmitglieder über ein `<datalist>` an, und dasselbe Muster tragen
+    weitere Felder — beobachtet ist der Ausfall an den Crew-Feldern **und**
+    an der Zielklinik. Mobile Browser zeigen `<datalist>`-Vorschläge nicht
+    oder nur nach Tippen und ohne brauchbare Filterung; die Suche in den
+    Stammdaten fällt dort stillschweigend aus, ohne Fehler und ohne Hinweis.
+    **Zu tun:** zuerst **alle** Vorschlagsfelder erheben (`grep -l datalist
+    server/` nennt `index.php`, `einsatz_form.php`, `mission_fields.php`,
+    `ui.php`, `assets/ortsfeld.js`), jedes einzeln am Handy prüfen (Chromium
+    mobil und WebKit), dann auf einen Baustein umstellen, der mobil trägt.
+    Das Ortsfeld sucht seit S3 beim Tippen mit eigener Trefferliste und ist
+    das Muster; ob es selbst noch ein `<datalist>` benutzt, ist Teil der
+    Erhebung. Ein neuer Baustein braucht Mockup und Freigabe (`Design.md` 1).
+    Zuordnung: Backlog-Runde.
+    *Konzept S9 (07.09.2026): E-S9-07 (kein `<datalist>` mehr, Baustein Vorschlagsliste; AP1, Besatzung AP6).*
+
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP1, E-S9-07).** Die Erhebung
+    hat fünf Dateien genannt — `ui.php` (Ortsfeld), `einsatz_form.php`
+    (Transportziel und Besatzung des Einsatzes), `index.php`
+    (`renderCrewFields()`), `mission_fields.php` und `assets/ortsfeld.js`, die
+    beiden letzten nur im Kommentar. Alle sind umgestellt: `grep -rn datalist
+    server/` findet **0** Treffer außerhalb von Kommentaren (vorher 12 in
+    sechs Dateien, davon 8 im gerenderten Markup einer Einsatzseite). An die
+    Stelle tritt `assets/vorschlagsliste.js` — ein Baustein mit Gruppen,
+    Symbolen, Herkunftszeile, Pfeiltasten, Enter und Escape (`Design.md`
+    9.28, Mockup M-S9-03, freigegeben 07.09.2026). Gemessen mit
+    `tools/klickprobe/` am Besatzungsfeld eines Einsatzes: vorher **keine
+    eigene Liste und 8 `<datalist>`**, nachher der Wert im Feld und **0
+    `<datalist>`**. Der Punkt verlangte, jedes Feld einzeln am Handy zu
+    prüfen (Chromium mobil und WebKit) — das steht als Punkt auf der
+    Prüfliste des Auftraggebers; der Prüfstand hat weder WebKit noch einen
+    Finger.
+
+102. **Weitere Rettungsmittel: die Auswahl wird nicht übernommen.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-2), Schritt 8 (S9).*
+    Die Suche im hinterlegten Stand liefert Treffer; ein Klick schließt den
+    Dialog, das Rettungsmittel wird aber nicht in den Einsatz übernommen.
+    Bug, nur Desktop/Web (F2).
+    *Konzept S9 (07.09.2026): E-S9-08 (mousedown statt click, Ursache Blur-Verzögerung; AP1).*
+
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP1, E-S9-08).** Die Ursache
+    steht im Konzept mit Zeilenangabe: Die Trefferliste übernahm auf `click`
+    (`einsatz_form.php:1921`), das Eingabefeld versteckte sie 150 ms nach
+    `blur` (`:1957`). Ein Mausklick ist `mousedown` → `blur` → `mouseup` →
+    `click`; dauert er länger als 150 ms, ist der Knopf beim `mouseup` schon
+    `hidden`, und der Browser feuert kein `click`. Ein Fingertipp ist
+    schneller — deshalb war der Fehler auf Desktop beschränkt (F2). Die Liste
+    ist jetzt eine Verwendung des gemeinsamen Bausteins und übernimmt auf
+    `mousedown` mit `preventDefault()`. Gemessen mit `tools/klickprobe/` bei
+    **300 ms gehaltener Maus, dieselbe Fassung der Probe gegen beide
+    Stände**: vorher **0 von 3** Übernahmen, nachher **3 von 3**. Nebenbefund
+    aus dem Vorher-Lauf: Es blieb nicht beim Nichtstun — im ersten Durchgang
+    verschwand ein bereits gewähltes Rettungsmittel, weil nach dem Verstecken
+    der Liste das Kreuz eines Chips unter dem Zeiger lag und den Klick bekam.
+    Dass `locator.click()` von Playwright den Fehler **nicht** findet (es
+    hält die Taste rund 10 ms), ist der Grund, warum die Probe
+    `mouse.down()`, warten und `mouse.up()` von Hand fährt.
+
+106. **Klinik- und Adressvorschläge überlagern sich.**
+    *Aufgenommen 03.09.2026 aus der Problemsammlung (PS-6), Schritt 8 (S9).*
+    Beide Vorschlagsarten in **einer** Liste: Kliniken oben, visuell
+    abgesetzt, darunter die Adressen. Klinikvorschläge nur im
+    Zielklinik-Kontext (F9), höchstens zwei (F10).
+    *Konzept S9 (07.09.2026): E-S9-07, M-S9-03 (eine Vorschlagsliste mit Gruppen; AP1).*
+
+    **Erledigt mit Web 15.7.0 am 07.09.2026 (S9/AP1, E-S9-07).** Es gibt jetzt
+    **eine** Liste. Oben unter „Zielkliniken" höchstens zwei Stammdatentreffer
+    (F10) — sie erscheinen bei **Teilübereinstimmung**, nicht mehr erst bei
+    genauer Namensgleichheit (F-S9-K-01) —, darunter unter „Adressen" die
+    Vorschläge der Adresssuche. Ein Stammdatentreffer setzt Name und
+    Koordinate, ein Adresstreffer nur die Koordinate. Stammdaten stehen
+    **nur im Zielklinik-Kontext** (F9): Einsatzort und Abfahrtort zeigen
+    allein Adressen, und dort entfällt die Gruppenzeile. Gemessen mit
+    `tools/klickprobe/`, Tipp „Klin" am Transportziel: vorher **1 eigene
+    Liste ohne Gruppen neben 8 `<datalist>`**, nachher **1 Liste mit 2
+    Gruppen, 2 Stammdaten- und 4 Adresstreffern und 0 `<datalist>`** (die
+    Adressen aus der Attrappe des Prüfstands, `limit=6` wie im Betrieb).
 
 127. **Anmeldeformular ohne CSRF-Token.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-8).* `login.php:246`

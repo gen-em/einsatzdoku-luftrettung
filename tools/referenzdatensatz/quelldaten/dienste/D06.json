@@ -132,8 +132,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Zufahrt erst nach Räumung durch den Bauhof befahrbar."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Fieberkrampf beim Kleinkind",
@@ -146,7 +145,8 @@
           "lon": 10.28461
         },
         "site_desc": "Ferienwohnung, Kinderzimmer",
-        "start": null
+        "start": null,
+        "notes": "Zufahrt erst nach Räumung durch den Bauhof befahrbar."
       },
       "abdeckung": []
     },
@@ -219,8 +219,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Synkope unklarer Genese",
@@ -233,7 +232,8 @@
           "lon": 10.25142
         },
         "site_desc": "Supermarkt, Kassenbereich",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -307,8 +307,7 @@
           "RTW Talwang 76/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Einsatz über Mitternacht; das Einsatzdatum liegt einen Tag nach dem Beginn des Dienstes."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Akutes Koronarsyndrom mit ST-Hebung",
@@ -321,7 +320,8 @@
           "lon": 10.25
         },
         "site_desc": "Mehrfamilienhaus, 3. OG ohne Aufzug",
-        "start": null
+        "start": null,
+        "notes": "Einsatz über Mitternacht; das Einsatzdatum liegt einen Tag nach dem Beginn des Dienstes."
       },
       "abdeckung": [
         "herkunft-wear",
@@ -432,8 +432,7 @@
           "KTW Talwang 76/85"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Reanimation erfolglos abgebrochen, Todesfeststellung am Einsatzort; kein Transport.\nAbfahrt vom Kreisklinikum Auwiesen, wo das NEF nach dem vorigen Einsatz noch stand — als manueller Abfahrtort erfasst, weil der Standort Talwang keine Koordinaten führt."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Kreislaufstillstand unklarer Genese, Todesfeststellung am Einsatzort",
@@ -450,7 +449,8 @@
           "addr": "Kreisklinikum Auwiesen, Zufahrt Notaufnahme",
           "lat": 47.718,
           "lon": 10.322
-        }
+        },
+        "notes": "Reanimation erfolglos abgebrochen, Todesfeststellung am Einsatzort; kein Transport.\nAbfahrt vom Kreisklinikum Auwiesen, wo das NEF nach dem vorigen Einsatz noch stand — als manueller Abfahrtort erfasst, weil der Standort Talwang keine Koordinaten führt."
       },
       "abdeckung": [
         "herkunft-android",

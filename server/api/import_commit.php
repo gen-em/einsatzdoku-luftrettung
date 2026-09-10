@@ -266,10 +266,10 @@ function import_commit(array $b, int $userId): never
                                    site_ele_m, distance_m, ascent_m,
                                    schockraum, secondary, winch_cycles, winch_cycles_pat,
                                    winch_airload, bergwacht, bw_unit, bw_info,
-                                   other_ema, notes,
+                                   other_ema,
                                    transport_mode, na_escort, false_alarm,
                                    dest_lat, dest_lon, start_src)
-             VALUES (?,?,?,?,?,?,?,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+             VALUES (?,?,?,?,?,?,?,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         /* UEBERSCHREIBEN LOESCHT NICHTS, WAS DIE DATEI NICHT KENNT (P10, A9).
          *
          * Die Felder unter der Export-Schranke stehen hier mit
@@ -311,7 +311,6 @@ function import_commit(array $b, int $userId): never
                                  bw_unit = ?,
                                  bw_info     = COALESCE(?, bw_info),
                                  other_ema   = COALESCE(?, other_ema),
-                                 notes       = COALESCE(?, notes),
                                  transport_mode = ?, na_escort = ?, false_alarm = ?,
                                  dest_lat = ?, dest_lon = ?, start_src = ?,
                                  manual = 1, edited = 1
@@ -465,7 +464,12 @@ function import_commit(array $b, int $userId): never
                 $txt($m['bw_unit'] ?? null, 120),
                 $txt($m['bw_info'] ?? null, 190),
                 $txt($m['other_ema'] ?? null, 190),
-                $txt($m['notes'] ?? null, 2000),
+                /* `notes` NIMMT DIESER ENDPUNKT NICHT MEHR ENTGEGEN (S9/AP7).
+                 * Der Text steht im `pat_blob` daneben, den der Browser
+                 * verschluesselt liefert. Waere die Spalte hier geblieben,
+                 * koennte eine Nutzlast sie weiter im Klartext fuellen — der
+                 * Import waere dann das Loch, das das Formular gerade
+                 * geschlossen hat, und zwar eines, das niemandem auffiele. */
                 /* Etappe 2 (Web 6.1.0). Beide ENUM-Spalten werden gegen ihre
                  * Werteliste geprueft: Ein unbekannter Wert wird zu NULL statt
                  * die Zeile mit einem Datenbankfehler scheitern zu lassen — die

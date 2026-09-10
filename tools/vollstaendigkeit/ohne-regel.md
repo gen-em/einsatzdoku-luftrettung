@@ -27,6 +27,7 @@ gegen die sie schützt.
 
 | Klasse | Grund |
 |---|---|
+| `loc-datenschutz` | [bleibt] Anker, keine Gestaltung. Die Kleinzeile unter dem Ortsfeld (`ui_geocoder_hinweis()`, S9/AP2) trägt ihr Aussehen von `.feld-klein`; diese zweite Klasse steht nur da, damit die Klickprobe sie zählen kann (`ap2-kontoschalter-aus-keine-anfrage`: 0 Hinweiszeilen bei ausgeschalteter Suche). Eine eigene Regel gäbe ihr ein Aussehen, das sie nicht haben soll. |
 | `art` | [bleibt] Kein Klassenname, sondern eine **Variable**: `geo.js:81` baut `'geo-ringpunkt-' + art`. Das Werkzeug liest Zeichenketten, nicht ausgeführten Code, und nimmt das Bruchstück vor dem `+` für einen Namen. |
 | `k` | [bleibt] Dasselbe: `geo.js:49` und `missiontable.js:160` bauen `'<span class="' + k + '">'`. |
 | `klasse` | [bleibt] Dasselbe: `import_ui.js:359` und `:459` setzen `class="' + klasse + '"`. |
@@ -51,7 +52,6 @@ gegen die sie schützt.
 | `imp-param` | [bleibt] Skriptanker an den Importparametern; `import_ui.js:89` sammelt `.imp-param`, um die eingestellten Werte einzulesen. |
 | `rea-kopf` | [offen] Kopfzeile einer Reanimationssitzung. Sie steht neben `phasen-eingabe`, und **von dort** kommt das Aussehen — die Klasse selbst tut nichts, und kein Skript liest sie. Entweder ist sie ein Rest und gehört weg, oder die Kopfzeile soll sich von einer gewöhnlichen Phasenzeile unterscheiden und braucht eine Regel. Das ist eine Gestaltungsfrage, keine Aufräumarbeit. |
 | `rea-beginn` | [offen] Beschriftung „Reanimationsbeginn" in derselben Kopfzeile; dasselbe Bild — Aussehen aus der Elementregel für `label`, kein Skript liest die Klasse. |
-| `rmneu` | [offen] Der Knopf „neu" in der Rettungsmittelwahl. Er steht neben `rmopt`, und von dort kommt sein Aussehen; ob sich der Neu-Knopf von den übrigen Möglichkeiten abheben soll, ist offen. |
 | `phasen-name` | [offen] Der Name einer Phase in der Einsatzansicht (`einsatz.php:631`). Ohne Regel steht er in der Textschrift der Zeile; ein Name neben einer Zeitangabe könnte eine eigene wollen. |
 | `imp-warn` | [offen] „abweichende Crew (…)" in der Kopfzeile einer Tagesgruppe der Importvorschau — ein **Warnhinweis, der wie Fließtext aussieht**. Von allen Einträgen dieser Liste der wahrscheinlichste echte Fund. |
 | `imp-daygroup` | [offen] Die Kopfzeile einer Tagesgruppe in der Importvorschau. Sie trägt ihren Text in `<strong>`, sonst nichts — eine Gruppenüberschrift, die aussieht wie eine Datenzeile. |

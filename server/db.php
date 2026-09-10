@@ -78,17 +78,164 @@ function stammdaten_dup_global(string $table, string $col, string $val,
     return (bool)$st->fetchColumn();
 }
 
-/** Anzahl PERSOENLICHER Eintraege (aller NutzerInnen) mit gleichem
- *  (Vergleichs-)Namen wie der uebergebene — fuer die Duplikat-Warnung
- *  (Nutzer-Ansicht) bzw. den Admin-Hinweis "N Nutzer haben ...". */
-function stammdaten_dup_personal_count(string $table, string $col, string $val,
-                                        ?string $extraCol = null, ?string $extraVal = null): int {
-    $sql = "SELECT COUNT(*) FROM $table WHERE user_id IS NOT NULL AND LOWER($col) = LOWER(?)";
-    $params = [$val];
-    if ($extraCol !== null) { $sql .= " AND $extraCol = ?"; $params[] = $extraVal; }
-    $st = db()->prepare($sql);
-    $st->execute($params);
-    return (int)$st->fetchColumn();
+/* `stammdaten_dup_personal_count()` STAND HIER BIS S9/AP5b. Sie zaehlte, wie
+ * viele Konten denselben Namen selbst fuehren, und beantwortete damit den
+ * Admin-Hinweis „N NutzerInnen haben ..." auf der systemweiten
+ * Stammdatenpflege. Ihre sechs Aufrufer standen ausnahmslos in
+ * `admin_stammdaten.php`; mit der Seite verliert die Frage ihre Stelle. */
+
+/* ---------------------------------------------------------------------------
+ * EIN STANDORT WIRD GELOESCHT — WAS ES UEBERLEBT      S9/AP5-5, M-S9-10 (b)
+ * ---------------------------------------------------------------------------
+ *
+ * `vehicles_ibfk_2` steht auf ON DELETE CASCADE, und das ist E15 woertlich:
+ * Was an einem Standort haengt, geht mit ihm. Seit E-S9-09 nimmt es dabei
+ * aber auch das mit, was ohne diesen Standort bestehen DUERFTE — Bergwacht,
+ * Veranstaltung, Sonstiges. AP4 hat das bewusst stehen lassen und begruendet:
+ * `ON DELETE SET NULL` waere falsch, weil es JEDES Standard-Rettungsmittel
+ * standortlos machte, also einen Datensatz erzeugte, den die Pruefschicht nie
+ * anlegen wuerde.
+ *
+ * VARIANTE B (freigegeben 08.09.2026): Die Ausnahme ist Anwendungslogik VOR
+ * dem `DELETE`, kein Fremdschluessel. Ein `UPDATE`, das den drei Typen ohne
+ * Standortpflicht den Standort abnimmt, laeuft in derselben Transaktion; der
+ * Rest geht mit wie bisher.
+ *
+ * DIE REGEL STEHT NICHT HIER, sondern in `VEHICLE_TYPEN[...]['standort']` —
+ * derselben Angabe, aus der `pruef_rettungsmittel()` entscheidet, ob ein Typ
+ * ohne Standort angelegt werden darf. Zwei Fassungen davon liefen beim
+ * naechsten Typ auseinander, und zwar still: Ein Rettungsmittel wuerde
+ * geloescht, das man haette anlegen duerfen.
+ *
+ * EINE AUFRUFSTELLE SEIT S9/AP5b: `einstellungen.php` (eigene Standorte).
+ * Bis dahin waren es zwei — `admin_stammdaten.php` pflegte den systemweiten
+ * Bestand und uebergab dafuer `$userId === null`. Die Seite ist gestrichen
+ * (R39), der Zweig `$userId === null` bleibt: Er ist billig, er trifft in
+ * einer Anlage ohne zentrale Eintraege nie, und der Rueckbau in P5 (Backlog
+ * Nr. 168) will genau hier nachsehen. Dieselbe Unterscheidung fuehrt
+ * `stammdaten_dup_global()` darueber.
+ *
+ * WARUM HIER UND NICHT IN `validate_lib.php`. Das Konzept schreibt „eine
+ * Funktion neben `pruef_rettungsmittel()`" — gemeint ist: EINE Fassung fuer
+ * beide Seiten. Die Datei selbst sagt in ihrem Kopf „Diese Datei aendert von
+ * sich aus nichts"; ein `UPDATE` darin waere der erste Verstoss dagegen.
+ * `db.php` fuehrt mit `stammdaten_dup_global()` bereits genau diese Sorte
+ * Helfer: eine Abfrage ueber den Stammdatenbestand, die mehrere Schreibwege
+ * brauchen.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Die Rettungsmittel eines Standorts, die sein Loeschen ueberleben.
+ *
+ * Gibt Kennung und Bezeichnung zurueck — die Rueckfrage nennt sie mit NAMEN
+ * (M-S9-10, Anmerkung 3): Ein Rettungsmittel, das einen Standort verlaesst,
+ * ist eine Nachricht und keine Statistik.
+ *
+ * @return list<array{id:int,name:string}>
+ */
+function stammdaten_ohne_standortpflicht(int $baseId, ?int $userId): array
+{
+    $typen = array_keys(array_filter(VEHICLE_TYPEN,
+        static fn(array $t): bool => $t['standort'] === false));
+    if ($typen === []) { return []; }
+    $platz = implode(',', array_fill(0, count($typen), '?'));
+    $sql = 'SELECT id, name FROM vehicles
+             WHERE base_id = ? AND typ IN (' . $platz . ')
+               AND user_id ' . ($userId === null ? 'IS NULL' : '= ?') . '
+             ORDER BY name';
+    $werte = array_merge([$baseId], $typen);
+    if ($userId !== null) { $werte[] = $userId; }
+    $q = db()->prepare($sql);
+    $q->execute($werte);
+    $raus = [];
+    foreach ($q as $z) { $raus[] = ['id' => (int)$z['id'], 'name' => (string)$z['name']]; }
+    return $raus;
+}
+
+/**
+ * Ihnen den Standort abnehmen — VOR dem `DELETE FROM bases`.
+ *
+ * Muss in derselben Transaktion laufen wie das Loeschen: Sonst stuende bei
+ * einem Abbruch dazwischen ein Rettungsmittel ohne Standort da, dessen
+ * Standort es noch gibt.
+ *
+ * @return int wie viele
+ */
+function stammdaten_standort_loesen(int $baseId, ?int $userId): int
+{
+    $typen = array_keys(array_filter(VEHICLE_TYPEN,
+        static fn(array $t): bool => $t['standort'] === false));
+    if ($typen === []) { return 0; }
+    $platz = implode(',', array_fill(0, count($typen), '?'));
+    $sql = 'UPDATE vehicles SET base_id = NULL
+             WHERE base_id = ? AND typ IN (' . $platz . ')
+               AND user_id ' . ($userId === null ? 'IS NULL' : '= ?');
+    $werte = array_merge([$baseId], $typen);
+    if ($userId !== null) { $werte[] = $userId; }
+    $q = db()->prepare($sql);
+    $q->execute($werte);
+    return $q->rowCount();
+}
+
+/**
+ * Der Satz der Rueckfrage vor dem Loeschen eines Standorts (M-S9-10 b).
+ *
+ * Er stand an EINER Stelle, weil er an zwei gebraucht wurde, und er steht dort
+ * weiter, weil er drei
+ * Zahlen zusammenbringt, die leicht auseinanderlaufen: die Zahl der
+ * mitgeloeschten Saetze, die Zahl der ueberlebenden Rettungsmittel und deren
+ * Namen. Bis Web 17.0.0 zaehlte die Rueckfrage ALLES mit — sie sagte „6
+ * werden mitgeloescht", und eines davon blieb dann doch nicht.
+ *
+ * $zusatz haengt hinten an (die Verwaltung nannte zusaetzlich, wie viele
+ * Konten den Standort gewaehlt haben).
+ *
+ * SEIT S9/AP5b HAT DIESE FUNKTION EINEN AUFRUFER, NICHT ZWEI. Mit
+ * `admin_stammdaten.php` (R39) faellt der Aufrufer weg, der `$systemweit =
+ * true` und `$zusatz` uebergab: Beide sind seither unerreichbar. Sie bleiben
+ * trotzdem stehen — die vier ausgeschriebenen Beugungsformen unten sind
+ * sichtbarer Text, und den baut man nicht als Nebenwirkung eines
+ * Streichpakets um. Sie fallen mit dem Modell in P5 (Backlog Nr. 168).
+ */
+function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben,
+                                bool $systemweit, string $zusatz = ''): string
+{
+    $bleibt = count($bleiben);
+    $mit    = max(0, $anzahlGesamt - $bleibt);
+    /* DIE BEUGUNG STEHT AUSGESCHRIEBEN, sie wird nicht gerechnet. Der erste
+       Entwurf schnitt das „e" von „eigene" ab und hängte ein „r" an — daraus
+       wurde „Ein eigenr Stammdatensatz" (und „systemweitr"). Deutsche
+       Adjektivendungen aus einer Zeichenkette abzuleiten geht schief, sobald
+       jemand ein zweites Wort einsetzt; vier Formen hinzuschreiben kostet
+       vier Zeilen und hält. Gefunden von der Klickprobe. */
+    $einer = $systemweit ? 'Ein systemweiter Stammdatensatz' : 'Ein eigener Stammdatensatz';
+    $viele = $systemweit ? ' systemweite Stammdatensätze'    : ' eigene Stammdatensätze';
+    $keine = $systemweit ? 'systemweiten' : 'eigenen';
+    $satz = 'Standort „' . $name . '“ ' . ($systemweit ? 'systemweit ' : '') . 'löschen? ';
+    if ($mit > 0) {
+        $satz .= ($mit === 1 ? $einer : $mit . $viele)
+               . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere '
+               . 'Rettungsmittel, Bergwacht) '
+               . ($mit === 1 ? 'wird' : 'werden') . ' mitgelöscht. ';
+    } else {
+        $satz .= 'Es hängen keine ' . $keine . ' Stammdaten daran, die mitgelöscht würden. ';
+    }
+    if ($bleibt > 0) {
+        /* MIT NAMEN, NICHT MIT ZAHL (M-S9-10, Anmerkung 3). Bei mehr als
+           dreien wird die Aufzaehlung sonst laenger als der Rest des Textes;
+           dann nur die Zahl und die ersten drei. */
+        $namen = array_column($bleiben, 'name');
+        $liste = count($namen) <= 3
+            ? implode(', ', $namen)
+            : implode(', ', array_slice($namen, 0, 3)) . ' und '
+              . (count($namen) - 3) . ' weitere';
+        $satz .= ($bleibt === 1
+                ? '1 Rettungsmittel ohne Standortpflicht — ' . $liste . ' — bleibt bestehen und steht'
+                : $bleibt . ' Rettungsmittel ohne Standortpflicht (' . $liste . ') bleiben bestehen und stehen')
+               . ' danach unter „Ohne Standort“. ';
+    }
+    if ($zusatz !== '') { $satz .= $zusatz . ' '; }
+    return $satz . 'Bereits dokumentierte Diensttage bleiben unverändert.';
 }
 
 /**
@@ -433,6 +580,50 @@ const CREW_ROLES = [
 const VEHICLE_CAPABILITIES = [
     'winch'     => 'Winde',
     'bergwacht' => 'Bergwacht',
+];
+
+/**
+ * Typen eines Rettungsmittels (E-S9-09, Web 16.0.0).
+ *
+ * ZWEI ACHSEN, NICHT EINE. `kind` ist die BETRIEBSART — Luft oder Boden — und
+ * steuert weiter, was sie immer steuerte: Rollenkatalog, Faehigkeiten,
+ * Kachelsatz, Hoehe. `typ` ist die ART DES DIENSTES. Die beiden sind
+ * unabhaengig voneinander: Eine Bergwacht fliegt oder faehrt, und beides ist
+ * ein Bergwacht-Dienst. Wer statt dessen `kind` um 'bergwacht' erweitert
+ * haette, muesste an jeder Stelle, die heute air/ground unterscheidet, raten,
+ * welche Betriebsart dahintersteckt.
+ *
+ * DIESE TABELLE IST DIE EINE QUELLE. Aus ihr ziehen die Pruefschicht
+ * (`pruef_rettungsmittel()`), die Formulare, die Sicherung und die Zeichen
+ * (`dt_typ_symbole()`). Ein fuenfter Typ wird hier eingetragen und kostet
+ * zusaetzlich eine Migration — das ENUM in `vehicles.typ` und `days.vehicle_typ`
+ * ist bewusst geschlossen (dieselbe Abwaegung wie bei `users.role`).
+ *
+ * Die Spalten:
+ *   label        Beschriftung in Formular, Liste und Plakette
+ *   betriebsart  null = frei waehlbar; sonst der eine erlaubte Wert
+ *   rollen       duerfen Rollen-Vorlagen (`vehicle_roles`) hinterlegt werden?
+ *   standort     ist `base_id` Pflicht?
+ *
+ * FAEHIGKEITEN STEHEN NICHT ALS SPALTE DARIN, obwohl E-S9-09 sie nennt: Sie
+ * kommen ausschliesslich an luftgebundenen Rettungsmitteln vor (E29), und
+ * 'veranstaltung' ist auf Boden festgelegt — „Veranstaltung hat keine
+ * Faehigkeiten" folgt damit aus den beiden Angaben, die schon dastehen. Eine
+ * eigene Spalte waere eine zweite Fassung derselben Aussage, und zwei
+ * Fassungen koennen auseinanderlaufen.
+ *
+ * Die Reihenfolge im Array ist die Anzeigereihenfolge; 'standard' steht
+ * zuerst, weil es die Vorgabe ist.
+ */
+const VEHICLE_TYPEN = [
+    'standard'      => ['label' => 'Standard',      'betriebsart' => null,
+                        'rollen' => true,  'standort' => true],
+    'bergwacht'     => ['label' => 'Bergwacht',     'betriebsart' => null,
+                        'rollen' => false, 'standort' => false],
+    'veranstaltung' => ['label' => 'Veranstaltung', 'betriebsart' => 'ground',
+                        'rollen' => false, 'standort' => false],
+    'sonstiges'     => ['label' => 'Sonstiges',     'betriebsart' => null,
+                        'rollen' => false, 'standort' => false],
 ];
 
 /**

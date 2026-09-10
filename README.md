@@ -10,12 +10,12 @@ Einsatzorts sind **Ende-zu-Ende-verschlüsselt** (Schlüssel aus dem
 Login-Passwort, Wiederherstellungsschlüssel als Rettungsanker); ein
 verschlüsseltes **Backup** (.edbak) sichert alle Daten in eine Datei.
 
-> **Was die Verschlüsselung nicht abdeckt.** GPS-Spur, die Koordinate jeder
-> Einsatzphase, Transportziel, Zeiten und Reanimationsverlauf liegen im
+> **Was die Verschlüsselung nicht abdeckt.** Die GPS-Daten, die Koordinate
+> jeder Einsatzphase, Transportziel, Zeiten und Reanimationsverlauf liegen im
 > Klartext in der Datenbank — sie werden für Auswertung und Sortierung
-> gebraucht, die der Server leisten muss. **Aus Spur und Phasenkoordinaten
-> lässt sich der Einsatzort rekonstruieren**, auch wenn die Adresse
-> verschlüsselt ist. Wer eine Installation betreibt, sollte das wissen und den
+> gebraucht, die der Server leisten muss. **Aus den GPS-Daten und den
+> Phasenkoordinaten lässt sich der Einsatzort rekonstruieren**, auch wenn die
+> Adresse verschlüsselt ist. Wer eine Installation betreibt, sollte das wissen und den
 > Datenbankzugang entsprechend behandeln; Einzelheiten in `docs/Technik.md`
 > 4.98.
 

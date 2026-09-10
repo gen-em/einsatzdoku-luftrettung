@@ -78,12 +78,13 @@ Wortliste.
   Genau darin liegt der zweite Teil von Nr. 151: Dort stimmt nicht nur der
   Name nicht, sondern auch die Form des Werts.
 - **Ein Verweis, dessen Ziel erst zur Laufzeit entsteht**, taucht hier nicht
-  auf. Es gibt einen: `admin_stammdaten.php:571` baut
-  `$seite . '&ev=' . $vid` — die Zielseite steht in einer Variablen, und die
-  Probe weiß dann nicht, wogegen sie halten soll. Von Hand nachgesehen: Die
-  Seite liest `ev` über `$pickNach()`, der Verweis stimmt. Käme ein solcher
-  Fall neu dazu, fände die Probe ihn nicht — deshalb steht er hier und nicht
-  in einer Ausnahmeliste, die ihn verschwinden ließe.
+  auf. Zurzeit gibt es keinen. Bis Web 16.x baute `admin_stammdaten.php`
+  `$seite . '&ev=' . $vid` — die Zielseite stand in einer Variablen, und die
+  Probe wusste dann nicht, wogegen sie halten sollte; von Hand nachgesehen
+  war der Verweis richtig. Die Zeile ist mit dem Umbau auf Dialoge (S9/AP5-4)
+  entfallen, die Seite selbst mit S9/AP5b. Käme ein solcher Fall neu dazu,
+  fände die Probe ihn nicht — deshalb steht der Hinweis hier und nicht in
+  einer Ausnahmeliste, die ihn verschwinden ließe.
 - **Sie ersetzt keinen Klick.** Ob der Knopf überhaupt sichtbar ist, ob die
   Seite mit dem richtigen Parameter auch das Richtige zeigt, und ob der Weg
   dahinter trägt, sagt der Browser.
@@ -95,5 +96,5 @@ Wortliste.
 Bei jeder Änderung, die einen Verweis anfasst oder einen Parameter einer Seite
 umbenennt — und im Prüflauf am Ende eines Arbeitspakets, zusammen mit
 Wortliste, Vollständigkeit und Bilderlauf (`CLAUDE.md` 6). Sie ist billig:
-ein Lauf über 99 Zielseiten und 132 Verweise dauert den Bruchteil einer
+ein Lauf über 99 Zielseiten und 116 Verweise dauert den Bruchteil einer
 Sekunde.

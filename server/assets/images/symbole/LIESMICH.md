@@ -1,6 +1,6 @@
 # Symbolvorrat Gen-EM NAdoku (P3, E-P3-18)
 
-49 Zeichen, je eine Datei. Grundlage ist **Tabler Icons** (MIT-Lizenz,
+52 Zeichen, je eine Datei. Grundlage ist **Tabler Icons** (MIT-Lizenz,
 Paweł Kuna; Lizenztext in `LICENSE-tabler-icons.txt`): 24 × 24, Strich 2 px,
 runde Enden und Ecken, Farbe über `currentColor`. Ein Zeichen (Luftlinie)
 ist ein eigener Entwurf im selben Stil. Jede Datei trägt im Kommentar den
@@ -51,7 +51,7 @@ CSS-Drehung. Gefüllter Stern: per CSS `fill:currentColor`.
 | `sicherung.svg` | archive | Backup, Sicherungen |
 | `tausch.svg` | arrows-exchange | Import/Export, Freigeben, Verschieben |
 | `gruppe.svg` | users | NutzerInnen |
-| `datenbank.svg` | database | Stammdaten systemweit; Betrieb → Komplett-Backup |
+| `datenbank.svg` | database | Betrieb → Komplett-Backup |
 | `rechtstexte.svg` | file-text | Rechtstexte (Admin) |
 | `kolben.svg` | flask | Demo-Konto, Demo-Hinweis |
 | `werkzeug.svg` | tool | (frei, seit S8/AP5 — „Wartung“ als Seite gibt es nicht mehr) |
@@ -67,4 +67,7 @@ CSS-Drehung. Gefüllter Stern: per CSS `fill:currentColor`.
 | `hubschrauber.svg` | helicopter | Art luftgebunden |
 | `fahrzeug.svg` | ambulance | Art bodengebunden |
 | `ohne-zuordnung.svg` | circle-dashed | Diensttag ohne Rettungsmittel |
+| `bergwacht.svg` | mountain | Diensttag-Typ Bergwacht (S9/AP3) |
+| `veranstaltung.svg` | ticket | Diensttag-Typ Veranstaltung (S9/AP3, Zeichnung getauscht in S9/AP4) |
+| `sonstiges.svg` | dots-circle-horizontal | Diensttag-Typ Sonstiges (S9/AP3) |
 | `luftlinie.svg` | — (eigen) | Luftlinie |

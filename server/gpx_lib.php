@@ -194,9 +194,9 @@ function gpx_bauen_viele(iterable $spuren, string $name,
         $beschreibung = $einzeln;
     } else {
         $stufenText = count($stufen) > 1
-            ? 'teils ausgedünnt — jede Spur nennt ihre Stufe'
+            ? 'teils ausgedünnt — jede Aufzeichnung nennt ihre Stufe'
             : (isset($stufen[SPUR_STUFE_DUENN]) ? 'alle ausgedünnt' : 'alle im Original');
-        $beschreibung = sprintf('%d Spuren — %d Punkte insgesamt · %s',
+        $beschreibung = sprintf('%d Aufzeichnungen — %d Punkte insgesamt · %s',
                                 $anzahl, $punkte, $stufenText);
     }
 

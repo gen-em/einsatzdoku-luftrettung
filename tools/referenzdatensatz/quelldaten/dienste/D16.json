@@ -143,8 +143,7 @@
           "ELW Talwang 1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Patient wurde nach Aufklärung ambulant belassen."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
@@ -157,7 +156,8 @@
           "lon": 10.25278
         },
         "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
-        "start": null
+        "start": null,
+        "notes": "Patient wurde nach Aufklärung ambulant belassen."
       },
       "abdeckung": []
     },
@@ -232,8 +232,7 @@
           "ELW Talwang 1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
@@ -246,7 +245,8 @@
           "lon": 10.25266
         },
         "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -319,8 +319,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Übergabe an der Notaufnahme ohne Voranmeldung."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
@@ -333,7 +332,8 @@
           "lon": 10.2835
         },
         "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
-        "start": null
+        "start": null,
+        "notes": "Übergabe an der Notaufnahme ohne Voranmeldung."
       },
       "abdeckung": []
     },
@@ -397,8 +397,7 @@
           "ELW Talwang 1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Hypertensive Entgleisung",
@@ -411,7 +410,8 @@
           "lon": 10.27813
         },
         "site_desc": "Seniorenwohnanlage, Erdgeschoss",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -486,8 +486,7 @@
           "KTW Talwang 76/85"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Straßenglätte auf der Anfahrt, verlängerte Ausrückzeit."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Akutes Abdomen",
@@ -500,7 +499,8 @@
           "lon": 10.2812
         },
         "site_desc": "Wohnhaus, Küche",
-        "start": null
+        "start": null,
+        "notes": "Straßenglätte auf der Anfahrt, verlängerte Ausrückzeit."
       },
       "abdeckung": []
     },
@@ -561,8 +561,7 @@
         "crew_override": 1,
         "crew": {
           "driver": "Gerd Wallner"
-        },
-        "notes": "Von Hand angelegt; die Ablösung des Fahrers war bereits im Dienst, deshalb abweichende Besatzung.\n-20 min Verzögerung durch Schneeräumung der Zufahrt."
+        }
       },
       "geschuetzt": {
         "dx": "Rippenprellung nach Sturz, ambulant belassen",
@@ -579,7 +578,8 @@
           "addr": "Zwischenhalt Parkplatz Talstation",
           "lat": 47.508,
           "lon": 10.371
-        }
+        },
+        "notes": "Von Hand angelegt; die Ablösung des Fahrers war bereits im Dienst, deshalb abweichende Besatzung.\n-20 min Verzögerung durch Schneeräumung der Zufahrt."
       },
       "abdeckung": [
         "herkunft-manuell",

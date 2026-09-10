@@ -56,6 +56,15 @@
       ]
     },
     {
+      "name": "12-tagesuebersicht-adhoc",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "index.php",
+      "vorher": [
+        "tagdaten-adhoc"
+      ]
+    },
+    {
       "name": "12-einsatzansicht",
       "gruppe": "Inhalt",
       "rolle": "demo",
@@ -156,10 +165,10 @@
       "pfad": "einstellungen.php?t=standorte"
     },
     {
-      "name": "32-einstellungen-rettungsmittel",
+      "name": "32-standortseite",
       "gruppe": "Einstellungen",
       "rolle": "demo",
-      "pfad": "einstellungen.php?t=rettungsmittel"
+      "pfad": "__STANDORT__"
     },
     {
       "name": "33-einstellungen-geraete",
@@ -208,18 +217,6 @@
       "gruppe": "Administration",
       "rolle": "admin",
       "pfad": "__KONTO__"
-    },
-    {
-      "name": "42-stammdaten-systemweit",
-      "gruppe": "Administration",
-      "rolle": "admin",
-      "pfad": "admin_stammdaten.php"
-    },
-    {
-      "name": "42a-stammdaten-rettungsmittel",
-      "gruppe": "Administration",
-      "rolle": "admin",
-      "pfad": "admin_stammdaten.php?t=rettungsmittel"
     },
     {
       "name": "43-sicherungen",

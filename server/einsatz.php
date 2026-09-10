@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/mission_fields_lib.php';   // mf_pat_felder() (S9/AP7)
 
 // Einsatz-ID einlesen und Eigentum pruefen (liefert auch den Diensttag fuer die
 // Seitenleiste). Ohne Treffer: sauberes 404.
@@ -76,7 +77,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
                * — eine Spur endet am Einsatzort und tut damit dasselbe. Ohne
                * die Rueckfrage haette dieselbe Anwendung zwei Tueren mit zwei
                * verschiedenen Massstaeben. */
-              $eintraege[] = ['text' => 'Spur als GPX',
+              $eintraege[] = ['text' => 'GPS-Daten als GPX',
                               'href' => 'gpx.php?art=mission&id=' . $mid,
                               'attr' => 'data-confirm="Die Datei zeigt den '
                                       . 'gefahrenen oder geflogenen Weg — also '
@@ -123,8 +124,8 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
            entsperrt, unlesbar. */ ?>
   <div class="meldung meldung-info" id="lockbanner" role="status" hidden>
     <?= ui_symbol('schloss', 'symbol-gross') ?>
-    <p>Geschützte Angaben sind gesperrt — Einsatzort, PatientIn und Diagnose
-       bleiben verborgen, bis die Verschlüsselung entsperrt ist.</p>
+    <p>Geschützte Angaben sind gesperrt — Einsatzort, PatientIn, Diagnose und
+       Notizen bleiben verborgen, bis die Verschlüsselung entsperrt ist.</p>
     <div class="meldung-aktion">
       <?= ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
                     'typ' => 'button', 'attr' => ' id="unlockbtn"']) ?>
@@ -436,6 +437,12 @@ function hlPhase(idx, on){
  * am Ende der Einsatz-Karte statt zu verschwinden: Ein neues Katalogfeld
  * erscheint auch ohne Aenderung an dieser Liste. */
 const RANG_SONST = 900;
+<?php /* DIE VERSCHLUESSELTEN KATALOGFELDER (S9/AP7). Sie stehen NICHT in
+         `m.fields` — jene Liste kommt aus den Spalten von `missions`, und ein
+         Blobfeld ist keine. Ohne diese Konstante haette die Anzeige keine
+         Beschriftung fuer sie. Rang und Zielkarte kommen wie bei jedem
+         anderen Feld aus RANG und KARTE_ZIEL. */ ?>
+const PAT_KAT = <?= json_js(mf_pat_felder()) ?>;
 /* Ob die Hoehe des Einsatzorts gezeigt wird und wie hoch sie liegt. Beides
  * entscheidet init(), gebraucht wird es in zeigePat(): Dort entsteht die
  * Zeile „Einsatzort", und die Hoehe gehoert in ihre Kleinzeile. */
@@ -599,8 +606,8 @@ async function init(){
   const spurPlakette = SPUR.hat
     ? ' ' + plakette(SPUR.stufe === 3 ? 'orange' : 'neutral',
         SPUR.stufe === 3
-          ? `Spur ausgedünnt · ${SPUR.n} von ${SPUR.n0} Punkten`
-          : `Spur · ${SPUR.n} Punkte`)
+          ? 'GPS-Daten ausgedünnt'
+          : 'GPS-Daten')
     : '';
   const kennzeichen = plakette('neutral', ORIGIN_LABEL[m.origin] || m.origin || 'Uhr')
     + (m.edited ? ' ' + plakette('neutral', 'editiert') : '')
@@ -886,6 +893,22 @@ async function zeigePat(m, bounds){
   }
   if (o.dx != null) {
     zeile('einsatz', RANG.pat_dx, dtGeschuetzt('Diagnose'), esc(String(o.dx)));
+  }
+  /* KATALOGFELDER MIT 'store' => 'pat' (S9/AP7). Bis dahin kamen die Notizen
+     ueber `m.fields` aus der Spalte und landeten ueber KARTE_ZIEL/RANG in der
+     Einsatz-Karte; sie kommen jetzt von hier — dieselbe Karte, derselbe Rang,
+     aber mit Schloss, weil sie ab jetzt verschluesselt sind.
+
+     ZEILENUMBRUECHE BLEIBEN. Die Notiz ist das einzige mehrzeilige Feld des
+     Formulars, und zeile() setzt fertiges HTML: Ohne die Ersetzung stuenden
+     drei Zeilen als eine da. `esc()` laeuft VORHER — was hier durchkommt, ist
+     ausschliesslich das <br>, das dieser Code selbst schreibt. */
+  for (const col of Object.keys(PAT_KAT)) {
+    const wert = o[PAT_KAT[col].blob];
+    if (wert == null || String(wert).trim() === '') { continue; }
+    zeile(KARTE_ZIEL[col] || 'einsatz', RANG[col] ?? RANG_SONST,
+          dtGeschuetzt(PAT_KAT[col].label),
+          esc(String(wert)).replace(/\n/g, '<br>'));
   }
   await zeichneLuftlinie(m, o, ck, bounds);
 }

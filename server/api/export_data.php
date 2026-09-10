@@ -41,7 +41,9 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  *
  *   - keine Besatzungsnamen (day_crew, mission_crew),
  *   - kein bw_info ("Namen / Infos" der Bergwacht) und kein other_ema,
- *   - keine Notizen (missions.notes, days.notes),
+ *   - keine Tagesnotizen (days.notes) — die Notizen des EINSATZES stehen seit
+ *     S9/AP7 im `pat_blob` und reisen mit ihm: Ohne Flag kommt kein Blob mit,
+ *     und mit Flag kommt er als Chiffretext, den nur der Browser oeffnet,
  *   - keine Koordinaten der Phasen (lat/lon; die Zeitpunkte bleiben, sie
  *     tragen Alarm- und Endzeit) und kein site_ele_m,
  *   - keinen pat_blob,
@@ -216,7 +218,7 @@ function export_meta(array $b, int $userId): never
      * Aus der Datenbank kommen die Werte trotzdem nicht (SELECT NULL). */
     $st = $pdo->prepare(
         "SELECT d.id, d.day, d.started_at, d.ended_at, d.kind,
-                d.vehicle_name, d.base_name" . ($pers ? ', d.notes' : ', NULL AS notes') . "
+                d.vehicle_name, d.vehicle_typ, d.vehicle_kurz, d.base_name" . ($pers ? ', d.notes' : ', NULL AS notes') . "
          FROM days d
          WHERE d.user_id = ?$whereTag
          ORDER BY d.day, d.started_at, d.id");
@@ -252,7 +254,13 @@ function export_meta(array $b, int $userId): never
             'started_at'   => export_iso_utc($r['started_at']),
             'ended_at'     => export_iso_utc($r['ended_at']),
             'kind'         => $r['kind'] !== null ? (string)$r['kind'] : null,
+            /* DER EXPORT ZEIGT DIE VOLLE BEZEICHNUNG (E-S9-09) — der Kurzname
+               steht daneben als eigene Spalte, nicht an ihrer Stelle: Er ist
+               eine Abkuerzung fuer den Hausgebrauch, und wer die Datei
+               auswertet, kennt sie nicht. */
             'vehicle'      => $r['vehicle_name'] !== null ? (string)$r['vehicle_name'] : null,
+            'vehicle_kurz' => $r['vehicle_kurz'] !== null ? (string)$r['vehicle_kurz'] : null,
+            'vehicle_typ'  => $r['vehicle_typ']  !== null ? (string)$r['vehicle_typ']  : null,
             'base'         => $r['base_name'] !== null ? (string)$r['base_name'] : null,
             'crew'         => (object)($crewByDay[$id] ?? []),
             'capabilities' => $capsByDay[$id] ?? [],
@@ -270,10 +278,13 @@ function export_meta(array $b, int $userId): never
      * DASS die Besatzung an diesem Einsatz von der des Diensttags abwich, nicht
      * wer geflogen ist. Ohne ihn liesse sich nicht mehr erkennen, dass die
      * leeren Namensspalten leer gemacht wurden und nicht leer waren. */
+    /* `notes` steht hier NICHT mehr (S9/AP7): Die Notiz liegt im `pat_blob`
+     * und faellt mit ihm — die Schranke wirkt fuer sie also weiter, aber ueber
+     * den Blob statt ueber eine eigene Spalte. */
     $einsPersCols = $pers
-        ? 'x.site_ele_m, x.bw_info, x.other_ema, x.notes, x.pat_blob'
+        ? 'x.site_ele_m, x.bw_info, x.other_ema, x.pat_blob'
         : 'NULL AS site_ele_m, NULL AS bw_info, NULL AS other_ema,
-           NULL AS notes, NULL AS pat_blob';
+           NULL AS pat_blob';
     $st = $pdo->prepare(
         "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at,
                 x.distance_m, x.ascent_m,
@@ -433,7 +444,8 @@ function export_meta(array $b, int $userId): never
             // Rollensatz bildet).
             'crew'             => (object)($crewByMission[$id] ?? []),
             'pat_blob'         => $pers && !empty($r['pat_blob']) ? (string)$r['pat_blob'] : null,
-            'notes'            => $r['notes'],
+            /* 'notes' entfaellt (S9/AP7) — der Text reist im 'pat_blob' eine
+               Zeile darueber mit. */
             'track_points'     => $trackCountByMission[$id] ?? 0,
             'phases'           => $phasesByMission[$id] ?? [],
             'resources'        => $resourcesByMission[$id] ?? [],
@@ -489,7 +501,7 @@ function export_track(array $b, int $userId): never
      * diese Pruefung ist die zweite Schranke, nicht die erste. */
     if (empty($b['patient'])) {
         json_out(['error'   => 'personenbezogen',
-                  'meldung' => 'GPX-Spuren enden am Einsatzort und sind deshalb an '
+                  'meldung' => 'Die GPS-Daten im GPX enden am Einsatzort und sind deshalb an '
                              . 'die personenbezogenen Angaben gebunden.'], 403);
     }
 

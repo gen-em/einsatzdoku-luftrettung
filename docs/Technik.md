@@ -61,9 +61,15 @@ Daten erst nach Server-Bestätigung.
 │   │                        mf_show_if() + mf_gates_erfuellt() = Sichtbarkeit)
 │   ├── tageszuordnung_lib.php  Einsatz verschieben · Datum eines Tages ändern
 │   ├── einsatz_verschieben.php  die zugehörige Seite
-│   ├── einstellungen.php  Profil/Standorte/Rettungsmittel/Backup/Geräte
-│   │                       (Reiter `?t=`; `t=stammdaten` ist die Weiche auf
-│   │                        den alten, geteilten Punkt „Standortdaten")
+│   ├── einstellungen.php  Profil/Standorte/Backup/Geräte (Reiter `?t=`)
+│   │                       Seit Web 16.2.0 führt `t=standorte` auf die LISTE
+│   │                       der Standorte und `t=standort&s=<id>` auf die
+│   │                       Seite EINES Standorts mit allem, was daran hängt;
+│   │                       die Karte „Ohne Standort" steht seit Web 16.2.2
+│   │                       auf der Liste. Zwei Weichen: `t=stammdaten` (der
+│   │                       alte, geteilte Punkt „Standortdaten") und
+│   │                       `t=rettungsmittel` (der bis Web 16.1.1 eigene
+│   │                       Reiter) führen beide auf die Liste
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
 │   ├── admin_users.php + admin_user.php  NutzerInnen (Liste · Kontoseite)
@@ -73,14 +79,14 @@ Daten erst nach Server-Bestätigung.
 │   │                       Die Kontoseite ist seit Web 9.8.0 die Drehscheibe
 │   │                       eines Kontos: Kontodaten, Geräte, Konto-Backups
 │   │                       dieses Kontos mit Freigabe-Zustandszeile, Löschung
-│   ├── admin_stammdaten.php  Systemweite Stammdaten aller sechs Typen
-│   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`;
-│   │                        seit Web 9.10.0 EIN Menuepunkt „Stammdaten
-│   │                        systemweit" mit Segmentwahl in der Titelzeile)
-│   ├── stammdaten_ui.php  Zeile und Anlegen-Formular der Stammdatenlisten —
-│   │                       eine Fassung fuer die Kontoansicht
-│   │                       (einstellungen.php) und die Adminansicht
-│   │                       (admin_stammdaten.php), seit Web 9.10.0
+│   ├── stammdaten_ui.php  Zeile, Dialoge und Adresse der Stammdatenlisten
+│   │                       fuer einstellungen.php, seit Web 9.10.0. Bis
+│   │                       Web 17.1.1 diente sie ZWEI Ansichten — die
+│   │                       zweite war admin_stammdaten.php (systemweite
+│   │                       Stammdaten), mit Web 18.0.0 gestrichen (R39).
+│   │                       `sd_zeile()`, `sd_seite()`, `sd_oeffner()` und die
+│   │                       drei Dialogfunktionen; `sd_form()` ist mit
+│   │                       Web 17.0.0 entfallen — angelegt wird im Dialog
 │   ├── diensttag_neu.php  Diensttag von Hand anlegen · diensttag_datum.php Datum ändern
 │   │                       · diensttag_zusammenfuehren.php  mehrfach gestartete Dienste
 │   │                         wieder zu einem Diensttag vereinen
@@ -209,6 +215,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       · apk.php liefert die Datei aus
 │   │                       · apk/ die Dateien selbst (entstehen nur auf dem
 │   │                         Server, im Deploy ausgenommen)
+│   ├── geocoder_lib.php   Adresssuche: die beiden Schalter (Installation und
+│   │                       Konto) und die Dienstadresse — die EINZIGE Quelle
+│   │                       dieser drei Werte (S9/AP2). Der Browser bekommt sie
+│   │                       ueber ui_geocoder_bootstrap() aus ui_ortsfeld()
 │   ├── install.php        Serverinstallation
 │   ├── migration_lib.php  Migrationskatalog und Lauf (S8/AP2): Katalog,
 │   │                       Register, Lauf, Stand, Inhaltszählung. Die EINZIGE
@@ -230,7 +240,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      und zurücknehmen, S4/A2b — siehe 4.97e) ·
 │   │                      gpx_import.php (GPX herein, S4/A3 — siehe 4.97f) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
-│   │                      adminbackup_freigabe.php (freigegebenes Backup für die NutzerIn)
+│   │                      adminbackup_freigabe.php (freigegebenes Backup für die NutzerIn) ·
+│   │                      kdf_upgrade.php (stille Anhebung der Rundenzahl) ·
+│   │                      pat_anheben.php (stille Anhebung des Notiz-Altbestands
+│   │                      in den verschlüsselten Block, ab Web 19.0.0 — siehe 4.98d)
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
 │   │                      crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
@@ -248,6 +261,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      schneiden.js (Karte „Ruhesegmente" und Schneide-Bereich
 │   │                       der Tagesansicht, S4/A2b — siehe 4.97e),
 │   │                      geo.js (EdGeo: Marker-Satz und Spurfarben der Karten, s. u.),
+│   │                      geocoder.js (EdGeocoder: der EINE Weg zum Adressdienst —
+│   │                       suche(), umkehr(), an(); keine Adresse im Code, s. u.),
 │   │                      ortswahl.js (Geolocation + Kartendialog am Ortsfeld, s. u.),
 │   │                      blatt.js (Aktions- und Sortierblätter) + schublade.js (mobile Leiste),
 │   │                      dialog.js (öffnet Dialoge, die im Markup stehen, und füllt sie
@@ -264,7 +279,7 @@ Daten erst nach Server-Bestätigung.
 │   │       │                favicon.png + favicon-fahrzeug.png (erzeugt aus den
 │   │       │                Logodateien, s. tools/logos/); das Fahrzeug-Logo ist bis
 │   │       │                zur Zulieferung ein PLATZHALTER (gestrichelter Rahmen)
-│   │       └── symbole/    49 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
+│   │       └── symbole/    52 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
 │   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
 │   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und
 │   │                       LIESMICH.md mit der Zuordnung Datei -> Tabler-Name ->
@@ -357,6 +372,18 @@ Daten erst nach Server-Bestätigung.
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer
 │   │                      Installation mit Betrieb fahren (s. LIESMICH.md)
+│   ├── klickprobe/        fährt Bedienwege im Browser und BEDIENT dabei
+│   │                      Elemente (S9, E-S9-16): Playwright wie der
+│   │                      Bilderlauf, aber `mouse.down()` — **300 ms halten** —
+│   │                      `mouse.up()` statt `locator.click()`, das die Taste
+│   │                      nur rund 10 ms hält und Backlog Nr. 102 deshalb
+│   │                      nicht findet. Je Weg eine Zahl. Jedes Arbeitspaket
+│   │                      legt seine Wege als eigene Datei unter `wege/` dazu;
+│   │                      der Läufer kennt keinen einzelnen. Die Adressabfrage
+│   │                      läuft gegen `attrappe.mjs` — der Prüfstand hat
+│   │                      dorthin keinen Netzzugang, und ohne feste
+│   │                      Trefferzahl wäre jeder Sollwert geraten. Braucht
+│   │                      die lokale Installation (s. LIESMICH.md)
 │   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit der des
 │   │                      Repositoriums: jede Datei unter `server/assets/`
 │   │                      über SHA-256, und auf `login.php` die GANZE Menge
@@ -521,15 +548,15 @@ Daten erst nach Server-Bestätigung.
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
 | `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → der Job `waisen` entfernt Waisen (4.97a). **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
 | `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Job `waisen` ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
-| `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel (`kind` = `air`/`ground`, dazu `vehicle_roles` und `vehicle_capabilities`) und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0. **Jeder Eintrag gehört genau einem Standort** (`base_id`, E15) — es gibt keine standortübergreifenden Stammdaten. `user_id` NULL = **zentral** (vom Admin gepflegt), sonst persönlich |
+| `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` NULL = **zentral**, sonst persönlich — siehe den Hinweis unter der Tabelle |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
-| `user_bases` | Auswahl **zentraler** Standorte je NutzerIn (E16). Nur ausgewählte erscheinen in den Auswahllisten; eigene Standorte brauchen hier keine Zeile |
-| `resources` | Vorbelegung „Andere Rettungsmittel" ; `user_id` NULL = zentral, sonst persönlich |
+| `user_bases` | Auswahl **zentraler** Standorte je NutzerIn (E16). Nur ausgewählte erscheinen in den Auswahllisten; eigene Standorte brauchen hier keine Zeile. **Seit Web 18.0.0 ohne Oberfläche** — die Karte, die aus- und abwählte, ist mit den zentralen Stammdaten entfallen; geschrieben wird die Tabelle nur noch beim Einspielen einer Kontosicherung |
+| `resources` | Vorbelegung „Andere Rettungsmittel" ; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
 | `mission_resources` | Rettungsmittel-Zuordnung je Einsatz (eigene Zeilen, einzeln entfernbar) |
-| `bw_units` | Bergwacht-Bereitschaften; `user_id` NULL = zentral, sonst persönlich |
-| `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` NULL = zentral, sonst persönlich |
-| `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id`, persönlich oder zentral); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
-| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`) — Stammdatenänderungen wirken nur in die Zukunft (E8). `kind IS NULL` = neutral, noch nicht zugeordnet (E26) |
+| `bw_units` | Bergwacht-Bereitschaften; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
+| `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` NULL = zentral (ohne Oberfläche, s. u.), sonst persönlich |
+| `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id`, persönlich oder zentral — ohne FK, weil es zwei Zieltabellen sind); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
+| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). `kind IS NULL` = neutral, noch nicht zugeordnet (E26) **Seit Web 18.1.0 kann die Momentaufnahme ohne Stammdatensatz bestehen** (E-S9-10): `vehicle_id IS NULL` bei gesetztem `vehicle_name` heißt „ein Rettungsmittel nur für diesen Tag“ — Bezeichnung, Typ, Betriebsart und der Standort (als Kennung oder als bloßer Name) stehen dann allein hier. Suche, Filter und Tagesliste lesen ohnehin die Momentaufnahme und finden es deshalb; `day_crew` und `day_capabilities` bekommen dafür keinen Satz |
 | `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
 | `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
@@ -543,6 +570,18 @@ Daten erst nach Server-Bestätigung.
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
 | `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTP-, FTPS- oder SFTP-Gegenstelle je Zeile. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
+
+**Zum Wert `user_id IS NULL`.** Er bezeichnet einen **zentralen
+(systemweiten)** Stammdatensatz — einen, der keinem Konto gehört und allen
+angeboten wird. Das Schema trägt ihn weiter, **aber seit Web 18.0.0 gibt es
+keine Oberfläche mehr, die solche Zeilen anlegt, ändert oder löscht**: Die
+Verwaltungsseite `admin_stammdaten.php` ist ersatzlos gestrichen (Rahmenplan
+R39). Vorhandene Zeilen bleiben sichtbar und unveränderlich — in der
+Kontoansicht mit der Plakette „systemweit" —, und die Abfragen behalten ihren
+Zweig `user_id IS NULL` genau dafür. Der Rückbau des Modells (Spalten auf
+`NOT NULL`, `user_bases` weg, Feld aus der Nutzlast der Kontosicherung) steht
+in P5 und ist als **Backlog Nr. 168** aufgenommen; die Vorarbeit dazu liegt
+in `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`.
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
 Punkte-PK tragen das auf Jahre problemlos (~1 Mio. Punkte/Jahr).
@@ -896,17 +935,38 @@ halbe Karte. Browser ohne `ResizeObserver` behalten das alte Verhalten.
 
 **Marker-Satz und Spurfarben (`assets/geo.js`, ab Web 9.2.0):** Das
 `EdGeo`-Modul liefert alles, was auf einer Einsatzkarte steht, aus einer
-Hand: `markerStandort()`/`markerZiel()` (weiße Schilder mit Haus- bzw.
-Klinik-Symbol; `ring: 'start' | 'ende' | 'beide'` legt Farbringe für
-Dienstbeginn und -ende darum), `markerEinsatzort()` (oranger Kreis mit
-Einsatzort-Symbol), `markerPunkt()` (kleiner Farbpunkt, z. B. Abfahrt) und
-`pfeile()` (Richtungspfeile alle 140 Bildschirm-Pixel auf einer Spur, neu
-verteilt bei jedem Zoom; der `remove`-Handler der Ebene räumt den Zuhörer
-ab). Alle Marker sind `divIcon`s mit CSS-Klassen (`.geo-schild`,
-`.geo-kreis`, `.geo-ring-*`, `.geo-pfeil`) — Form und Farbe stehen im
-Stylesheet, nicht im Skript. Die **Spurfarben** kommen als Token aus
-`:root` (`--spur-1 … --spur-8`, `--spur-ruhe`); `EdGeo.spurFarbe(i)` liest
-sie per `getComputedStyle`, JS enthält keinen Farbwert.
+Hand — **acht Exporte**, hier vollständig:
+
+| Export | Was | Klasse | Maß |
+|---|---|---|---|
+| `markerStandort()` / `markerZiel()` | weißes Schild mit Haus- bzw. Klinik-Symbol; `ring: 'start' \| 'ende' \| 'beide'` färbt seinen **Rand** | `.geo-schild-kasten`, `.geo-ring-*` | 32 px, mit beidem 38 |
+| `markerEinsatzort()` | oranger Kreis mit Einsatzort-Symbol | `.geo-kreis` | 28 px |
+| `markerRing()` | Ring **ohne** Schild — Anfang oder Ende der Aufzeichnung abseits von Standort und Ziel | `.geo-ringpunkt` in `.geo-ringpunkt-feld` | Zeichnung 14 px, Antippfläche 24 |
+| `markerPunkt()` | kleiner Farbpunkt in der Spurfarbe, für den manuellen Abfahrtort | `.geo-punkt` | 12 px |
+| `pfeile()` | Richtungspfeile alle 140 Bildschirm-Pixel auf einer Spur, neu verteilt bei jedem Zoom (der `remove`-Handler der Ebene räumt den Zuhörer ab) | `.geo-pfeil` | 20 px |
+| `spurFarbe(i)` / `ruheFarbe()` | die Farbe, nicht die Zeichnung | — | — |
+
+Alle Marker sind `divIcon`s; **Form und Farbe stehen im Stylesheet, nicht im
+Skript** (`docs/Design.md` 9.30 beschreibt sie). Die **Spurfarben** kommen als
+Token aus `:root` (`--spur-1 … --spur-8`, `--spur-ruhe`); `EdGeo.spurFarbe(i)`
+liest sie per `getComputedStyle`, JS enthält keinen Farbwert.
+
+> **Die Maße stehen zweimal** — als Token im Stylesheet und als Zahl in
+> `geo.js`, weil Leaflet sie für `iconSize` und `iconAnchor` braucht. Wer
+> eines ändert, ändert beides; sonst wandert der Anker, und es meldet sich
+> nichts. Betroffen sind `--geo-schild`/`SCHILD_PX`, `--geo-kreis`/`KREIS_PX`
+> und `--geo-ringpunkt`/`RINGPUNKT_PX`.
+
+**Zwei Zeichen brauchten seit jeher einen Kasten und hatten keinen** (behoben
+mit Web 15.9.0): `.geo-pfeil` trug seine Drehung und `.geo-punkt` seine Größe
+an einem `<span>` ohne `display` — und an einem nicht ersetzten
+Inline-Element wirken weder `transform` noch `width`. Die Pfeile zeigten
+dadurch ausnahmslos nach Norden (Backlog Nr. 72), der Abfahrtort maß
+4 × 18 px statt 12 × 12 und zeigte seine Farbe nie (Nr. 162). Nachweisbar war
+beides nur an der **Geometrie**: `getComputedStyle` meldet die Drehmatrix
+auch dort, wo sie nichts bewirkt. Gemessen wird deshalb die Bildschirmmatrix
+des SVG (`getScreenCTM`), und dafür gibt es seit AP3 einen Weg der Klickprobe
+(`ap3-pfeile-drehen`).
 
 Der Phasenmarker-Toggle in `einsatz.php` ist als eigenes `L.Control`
 (Position `topleft`, unterhalb des Vollbild-Controls) umgesetzt statt als
@@ -1273,6 +1333,18 @@ sie beim Zuordnen galten. Deklariert wird das je Feld über `role_gate` in
 `mission_fields.php`; `einsatz_form.php` lädt die Rollen einmal über
 `dt_crew()` und setzt beim Rendern nur das `hidden`-Attribut.
 
+**Ein Diensttag mit einem Rettungsmittel nur für den Tag führt keine Rollen**
+(E-S9-10, seit Web 18.1.1): `einsatz_form.php` fragt vorher
+`dt_ist_tagesrettungsmittel()` und übergibt dann einen leeren Satz. Ohne diese
+Abfrage hingen die angebotenen Rollen davon ab, was dem Tag *vorher* zugeordnet
+war — `dt_rollensatz_einfrieren()` löscht beim Wechsel nur **leere** Rollen, ein
+benannter Name überlebt und brachte seine Rolle mit. Zwei Tage derselben Art
+boten damit Verschiedenes an. Die Namen bleiben davon unberührt: Sie stehen
+weiter in `day_crew` und in der Leseansicht des Tages, unerreichbar nur für das
+Einsatzformular, bis wieder ein Rettungsmittel mit dieser Rolle zugeordnet ist.
+**Die Folge ist eine bekannte Lücke** — an einem solchen Tag lässt sich
+Besatzung überhaupt nicht erfassen (Backlog Nr. 169).
+
 Dieselbe Mechanik tragen zwei weitere Filter: **`cap_gate`** prüft die
 eingefrorenen Fähigkeiten (`day_capabilities`) und steuert damit Winde und
 Bergwacht, **`kind_gate`** die Art des Diensttags. Alle drei laufen über
@@ -1292,9 +1364,20 @@ dieses Bereichs und steht ausführlich in Abschnitt 4.98b: Ein durch `role_gate`
 nur versteckt; ein durch `show_if` **ausgeschlossenes** Unterfeld wird geleert.
 
 Das Diensttag-Formular filtert nach demselben Rollensatz, dort aber
-clientseitig (`index.php`, `updateCrewFields()` aus der Antwort von
+clientseitig (`index.php`, `renderCrewFields()` aus der Antwort von
 `api/day.php`), weil das Rettungsmittel im Formular selbst gewechselt werden
 kann. Im Einsatzformular steht es fest, daher serverseitig.
+
+**Seit Web 18.1.0 zeichnet es sie beim Wechsel sofort neu** (E-S9-11). Dafür
+gibt es `api/day.php?vorschau=<vehicle_id>[&base=<base_id>]`: einen **lesenden**
+Aufruf, der Rollensatz (`vehicle_roles`) und Vorlagen (`crew_presets` des
+Standorts) zu einer **noch nicht gespeicherten** Wahl liefert und nichts
+schreibt. Eingefroren wird weiterhin erst beim Speichern durch `dt_zuordnen()`
+(E8). Der Standort kommt mit, weil die Vorlagen an ihm hängen und Formular und
+Rettungsmittel dort auseinanderfallen können; ohne ihn fällt die Vorschau auf
+den Standort des Rettungsmittels zurück. `dt_vehicle_erlaubt()` und
+`dt_base_erlaubt()` gelten auch hier — ohne sie beantwortete der Endpunkt für
+jede Kennung, welche **Namen** an einem fremden Standort hinterlegt sind.
 
 **Einsatzort-Höhe:** `site_elevation_lib.php` (`compute_site_elevation()`) ist
 die **einzige Implementierung** — Referenzzeitpunkt Phase 5 „Ankunft
@@ -1335,6 +1418,31 @@ Seit Web 6.2.0 kommen dazu: die **Art des Diensttags** (`kind`) und
 Kachelsatz und Divisor, ohne je Tab nachzuladen — `tage_art` wird in SQL
 gerechnet und nicht aus der Einsatzliste, weil ein Diensttag ohne Einsatz dort
 nicht auftaucht, aber mitzählt.
+
+**Seit Web 15.9.0 kommt `faehigkeiten` dazu** (S9/AP3, E-S9-04) — ein flaches
+Objekt über `VEHICLE_CAPABILITIES`, heute `{winch, bergwacht}`, mit
+Wahrheitswerten. Es sagt, welche Fähigkeiten die **Luft**-Diensttage des
+Zeitraums tragen, gerechnet als `GROUP BY` über `day_capabilities` mit Join
+auf `days`. Die Zeitraumübersicht entscheidet daran über die beiden
+Windenkacheln, statt sie aus der Einsatzliste zu erschließen: „null
+Windeneinsätze" ist eine Aussage über den Dienst, „Winde nicht eingerichtet"
+eine über die Stammdaten, und bis dahin waren beide nicht zu unterscheiden.
+
+Drei Bedingungen der Abfrage sind nicht verhandelbar. `day_capabilities`
+führt **weder `user_id` noch `deleted_at`** — der Join auf `days` trägt
+Kontobezug und Papierkorb, sonst zählte die Antwort fremde und gelöschte
+Diensttage mit. Und `d.kind = 'air'`: Die Migration
+`2026_08_17_notarzt_erweiterung` hat seinerzeit **jedem** bestehenden
+Diensttag beide Fähigkeiten gegeben, ohne nach der Art zu fragen (das
+Gegenstück für `vehicle_capabilities` filtert dagegen auf `air`). Auf einem
+gewachsenen Bestand trägt deshalb auch ein NEF-Tag von 2025 die Winde — ohne
+diese Bedingung stünden die Kacheln in jedem Zeitraum, der einen Alttag
+enthält, und die Anzeige sähe richtig aus, während sie nur die Altlast
+zeigte.
+
+`bergwacht` fährt mit, obwohl heute keine Kachel daran hängt: Der Schlüssel
+spannt sich über den Katalog auf und wächst mit ihm; eine Antwort, die nur
+die Hälfte nennt, müsste beim nächsten Verbraucher erweitert werden.
 
 **Fehlerbehandlung der Lese-/Schreib-APIs:** `api/range.php`, `api/day.php`,
 `api/mission.php`, `api/suchindex.php` und `api/backup_data.php` kapseln ihre Datenbankzugriffe in
@@ -3846,16 +3954,32 @@ Browser), erzeugt in `einsatz_form.php`:
 | `loc.addr` | Adresse des Einsatzorts |
 | `loc.lat`, `loc.lon` | Koordinaten des Einsatzorts |
 | `site_desc` | Beschreibung des Einsatzorts (Zufahrt, Landestelle) |
+| `notes` | **Notizen des Einsatzes** (seit Web 19.0.0, S9/AP7). Bis dahin die Klartextspalte `missions.notes`; sie bleibt `NULL`-fähig stehen, bis P8 sie entfernt (R60), und trägt nur noch Altbestand, den die Anhebung nicht erreicht hat |
 
 Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
 `__CLEAR__` übertragen und löscht den vorhandenen.
+
+> **`notes` ist das erste Feld, das über den Feldkatalog in den Block kommt.**
+> Alle Schlüssel darüber entstehen aus handgeschriebenem Markup in
+> `einsatz_form.php` mit festen Kennungen. `notes` trägt dagegen
+> `'store' => 'pat'` in `mission_fields.php`; `mf_ist_spalte()` nimmt es damit
+> von selbst aus jedem `SELECT`, `INSERT` und `UPDATE` auf `missions`, und
+> `mf_pat_felder()` ist die eine Liste, aus der Formular, Anzeige und Suche
+> schöpfen. Ein weiteres solches Feld (S11: Zielklinik) braucht nur den
+> Katalogeintrag.
+>
+> **Der Altbestand zieht beim Entsperren um** — `api/pat_anheben.php`, siehe
+> Abschnitt 4.98d. Ein Konto, das sich nie entsperrt, behält seinen Klartext
+> in der Spalte; das ist derselbe Zustand wie vor Web 19, nicht schlechter.
 
 > **`site_desc` ist ein aktives Feld, kein Altbestand.** Es sieht wie ein Rest
 > der früheren Klartextspalte aus, ist aber Teil des verschlüsselten Blocks und
 > wird an acht Stellen gelesen und geschrieben. Es zu entfernen zerstörte
 > stillschweigend vorhandene Patientendaten.
 
-**Im Klartext in der Datenbank** stehen dagegen: Zeiten und Phasen — samt
+**Im Klartext in der Datenbank** stehen dagegen: die **Tagesnotizen**
+(`days.notes`, Betriebsnotizen des Diensttags — nicht die des Einsatzes),
+Zeiten und Phasen — samt
 **Koordinate jeder Phase**, und Phase 4 und 5 sind der Einsatzort —, Track,
 Distanz und Steigung, `site_ele_m`, Transportziel mit `dest_lat`/`dest_lon`,
 Schockraum, Reanimationsereignisse, Besatzung, Einsatzmittel, Diensttag- und
@@ -3922,18 +4046,18 @@ Die Komponente besteht aus zwei Hälften, die dasselbe Präfix teilen:
 
 | Hälfte | Datei | Aufgabe |
 |---|---|---|
-| Markup | `ui_ortsfeld()` in `ui.php` | erzeugt `<p>addr`, `<p>such`, `<p>lat`, `<p>lon`, `<p>suggest`, `<p>state`, `<p>chips`, `<p>dl` |
+| Markup | `ui_ortsfeld()` in `ui.php` | erzeugt `<p>addr`, `<p>lat`, `<p>lon`, `<p>suggest`, `<p>state`, `<p>chips` |
 | Verhalten | `assets/ortsfeld.js` | `EdOrtsfeld.init({praefix, …})` |
 
-Eine Verwendung ist damit ein PHP-Aufruf und ein `init()`. Die sechs:
+Eine Verwendung ist damit ein PHP-Aufruf und ein `init()`. Die fünf:
 
 | Verwendung | Präfix | Besonderheit |
 |---|---|---|
 | Einsatzort | `loc` | Textfeld = Suchfeld (die Adresse **ist** die Bezeichnung) |
 | Manueller Abfahrtort | `start` | wie Einsatzort, eigener Blob-Schlüssel `start` |
-| Zielklinik am Einsatz | `f_transport_dest_` | getrennte Suche, `<datalist>` aus den Stammdaten **mit Koordinaten** |
-| Standort im Konto / zentral | `sdbase` / `adbase` | getrennte Suche, nur Zubehör (`feld => false`) |
-| Zielklinik im Konto / zentral | `sdtd<id>` / `adtd<id>` | dito, Präfix trägt die Standortkennung — das Formular steht einmal je Standort auf der Seite |
+| Zielklinik am Einsatz | `f_transport_dest_` | getrennte Suche, Stammdaten **mit Koordinaten** als eigene Gruppe der Vorschlagsliste |
+| Standort im Konto | `sdbase` | getrennte Suche, nur Zubehör (`feld => false`) |
+| Zielklinik im Konto | `sdtd<id>` | dito, Präfix trägt die Standortkennung — der Dialog steht einmal je Standort auf der Seite |
 
 **Zwei Bedienformen, ein Code.** Bei `getrennteSuche: false` sucht das
 Textfeld beim Tippen; ein Adresstreffer wird zur Bezeichnung. Bei `true`
@@ -3946,16 +4070,92 @@ Netzanfrage, Bestätigung statt sofortiger Übernahme, ruhende Suche bei
 gesetzten Koordinaten, und die Prüfung „Koordinaten ohne Bezeichnung" beim
 Absenden.
 
+**Die Trefferliste ist seit Web 15.7.0 ein eigener Baustein**
+(`assets/vorschlagsliste.js`, `EdVorschlaege`, S9/AP1, E-S9-07). Sie ersetzt
+drei Fassungen und eine vierte, die der Browser beisteuerte: die Photon-Liste
+des Ortsfelds, die Liste der weiteren Rettungsmittel und jede native
+`<datalist>` (Backlog Nr. 68, 102, 106). Das Ortsfeld sagt ihr, **was**
+darin steht — erkannte Koordinate, Stammdaten, Adressen —, und **ob** eine
+Gruppenzeile erscheint; **wie** es dasteht, entscheidet der Baustein. Er
+übernimmt auf `mousedown` mit `preventDefault()`, kennt Pfeiltasten, Enter
+und Escape und braucht `EdHtml.escape` (`assets/html.js`) sowie `edSymbol`
+(`assets/symbol.js`). Gestaltung und Zustände: `docs/Design.md` 9.28.
+
+Zwei Zahlen des Bausteins stehen als Konstanten in `ortsfeld.js`:
+**höchstens zwei** Stammdatentreffer über den Adressen (F10) und die
+Photon-Grenze **sechs** in der Abfrageadresse. Stammdaten erscheinen ab dem
+ersten Zeichen bei Teilübereinstimmung und **ohne** die 400-ms-Entprellung —
+sie liegen im Browser; die Adressabfrage bleibt bei ihren drei Grenzen.
+
+**Der Adressdienst hat seit Web 15.8.0 genau einen Zugang**
+(`assets/geocoder.js`, `EdGeocoder`, S9/AP2, E-S9-05). Vorher stand die
+Anschrift zweimal fest im ausgelieferten Code — in `ortsfeld.js` für die
+Vorwärtssuche, in `ortswahl.js` für die Umkehrsuche. Das Modul hat vier
+Mitglieder: `an()` (darf gefragt werden?), `dienst()`/`host()` (wen?),
+`suche(q, {sofort})` und `umkehr(lat, lon)`. Bei ihm liegen auch die drei
+Grenzen der Abfrage — **400 ms** Entprellung, **drei** Zeichen Mindestlänge,
+**sechs** Treffer — und der `AbortController`, der eine überholte Anfrage
+abbricht; `suche()` liefert dann `null` statt eines veralteten Ergebnisses.
+**Es gibt keine Rückfalladresse:** Fehlt der Bootstrap, ist `an()` falsch und
+es geht nichts hinaus. `grep -rn "komoot" server/assets/` = 0 ist damit eine
+Eigenschaft und keine Momentaufnahme.
+
+Die Einstellungen dazu stehen in `server/geocoder_lib.php`:
+`geocoder_installation_an()` (`app_state`-Schlüssel `adresssuche`),
+`geocoder_konto_an($userId)` (Spalte `users.adresssuche`, Migration
+`2026_09_07_adresssuche_konto`), `geocoder_dienst()`/`geocoder_host()`
+(`app_state`-Schlüssel `geocoder_url`, Vorgabe `GEOCODER_VORGABE`) und
+`geocoder_an()`, das **beide** Schalter verundet — die Frage, die ein
+Aufrufer stellen sollte. Geschrieben wird über `geocoder_installation_setzen()`
+und `geocoder_konto_setzen()`; beide ziehen den Zwischenspeicher der laufenden
+Anfrage nach, weil die Seite sich nach dem Speichern selbst ausgibt. Beide
+Leser vertragen eine **fehlende** Spalte bzw. Tabelle — das Fenster zwischen
+Deploy und `update.php`.
+
+In den Browser kommen die Werte über **`ui_geocoder_bootstrap()`**, und zwar
+aus `ui_ortsfeld()` selbst: Wo ein Ortsfeld steht, stehen seine Einstellungen,
+und keine Seite kann sie vergessen. Der Beleg war bis Web 17.1.1
+`admin_stammdaten.php` — sie rief `ui_krypto_bootstrap()` nie auf und hätte
+die Einstellungen sonst nicht gehabt. Die Seite ist gestrichen (Web 18.0.0),
+die Bauform bleibt: Der nächste Ortsfeld-Einbau kann wieder auf einer Seite
+ohne Verschlüsselung stehen. Ausgegeben wird
+**`window.GEO_AN`/`window.GEO_DIENST`**, nicht `const`: Ein `const` auf
+oberster Ebene liegt im globalen lexikalischen Bereich, wird aber keine
+Eigenschaft von `window` — eine eigene Datei, die `global.GEO_DIENST` liest,
+findet dann nichts (F-S9-P-08). `ui_geocoder_hinweis()` gibt die Kleinzeile
+unter dem **ersten** Ortsfeld der Seite aus, und nur bei eingeschalteter
+Suche.
+
 **Die Ortswahl** (`assets/ortswahl.js`, Web 9.4.0, E-P3-34): Der Pin-Knopf
-am Ortsfeld (`ui_ortsfeld` mit `'ortswahl' => true` — Einsatzort und
-manueller Abfahrtort) öffnet ein Blatt mit „Meine Position übernehmen"
-(`navigator.geolocation`, nur über HTTPS) und „Auf der Karte wählen"
-(Leaflet-Dialog mit **Fadenkreuz** in der Kartenmitte statt Klick-Marker —
-auf dem Handy verdeckt der eigene Finger sonst genau die Stelle). Zur
-Koordinate holt die **Photon-Umkehrsuche** eine Adresse; sie füllt das Feld
-nur, wenn es leer ist (`EdOrtsfeld`-Steuerobjekt, `uebernehmen()`), und die
-Anfrage trägt ausschließlich die Koordinate. Die Verwendungen registrieren
-sich mit `EdOrtswahl.registriere(praefix, steuerobjekt)`.
+am Ortsfeld (`ui_ortsfeld` mit `'ortswahl' => true`) öffnet ein Blatt mit
+„Meine Position übernehmen" (`navigator.geolocation`, nur über HTTPS) und
+„Auf der Karte wählen" (Leaflet-Dialog mit **Fadenkreuz** in der Kartenmitte
+statt Klick-Marker — auf dem Handy verdeckt der eigene Finger sonst genau die
+Stelle). Zur Koordinate holt `EdGeocoder.umkehr()` eine Adresse; sie füllt
+das Feld nur, wenn es leer ist (`EdOrtsfeld`-Steuerobjekt, `uebernehmen()`),
+und die Anfrage trägt ausschließlich die Koordinate.
+
+Seit Web 15.8.0 tragen **fünf** Felder den Knopf statt zweier: Einsatzort,
+manueller Abfahrtort, Transportziel (über den Feldkatalog, `'ortswahl' =>
+true` an `transport_dest`), das Lagefeld des Standorts (`einstellungen.php`)
+und das der Zielklinik im Standortdialog (`stammdaten_ui.php`). Bis Web 17.1.1
+stand statt des letzten das Lagefeld der systemweiten Stammdatenpflege in
+dieser Aufzählung; die Zahl blieb dieselbe, gezählt wird jetzt das Richtige. Der Block dafür steht in
+`ui_ortsfeld()` **einmal** und wird in beiden Zweigen ausgegeben — bis Web
+15.7.1 rendete ihn nur der `feld = true`-Zweig, und die Nur-Lage-Fassung der
+Stammdaten hatte deshalb keine Karte (Backlog Nr. 70).
+
+Der Dialog selbst kann seit Web 15.8.0 zweierlei mehr. Erstens ein
+**Suchfeld** im Kopf (nur bei `EdGeocoder.an()`): Ein Treffer ruft
+`karte.setView()` und schreibt den Namen ins Suchfeld — **ins Formular
+schreibt er nichts**; erst „Übernehmen" übernimmt (F1). Zweitens die
+**aufgezeichnete Spur**: Der Aufrufer übergibt sie als Feld oder als
+Funktion, `EdOrtswahl.registriere(praefix, steuerobjekt, {spur})`; der Dialog
+wartet nicht auf sie, sondern zeichnet nach — Linie in `EdGeo.spurFarbe(0)`,
+`EdGeo.markerRing()` an Anfang und Ende, Legende sichtbar. `fitBounds` läuft
+**nur** bei leerem Ortsfeld und **nur**, solange niemand selbst geschoben oder
+gezoomt hat (`dragstart`/`zoomstart` setzen ein Merkzeichen). Pfeile trägt der
+Dialog nicht: Hier wird ein Punkt gewählt, keine Fahrt gelesen.
 
 **Die Luftlinie** (`assets/luftlinie.js`) zeichnet, was ohne GPS-Aufzeichnung
 über den Weg bekannt ist: **Abfahrtort → Einsatzort → Zielklinik**, immer
@@ -4074,6 +4274,46 @@ Trackpunkte, weil erst zwei eine Linie ergeben — dieselbe Bedingung, die die
 Einsatzansicht für ihre Luftlinie anlegt. Das Skript des Formulars fragt
 `start_src` deshalb überall auf Existenz ab, statt sie vorauszusetzen. Die
 gespeicherte Regel bleibt in der Datenbank unangetastet.
+
+### 4.98d Der Anhebelauf für Altbestand (`api/pat_anheben.php`, ab Web 19.0.0)
+
+Ein Feld, das aus einer Klartextspalte in den verschlüsselten Block wandert,
+lässt vorhandene Daten zurück — und **der Server kann sie nicht selbst
+verschlüsseln**: Der Inhaltsschlüssel liegt in der Schlüsselhülle des Kontos
+und wird aus dem Passwort abgeleitet. Umziehen kann nur der Browser.
+
+`api/pat_anheben.php` ist die beiden Hälften dieses Umzugs. **GET** liefert bis
+zu 200 Einsätze dieses Kontos, die noch Klartext in `missions.notes` haben,
+samt vorhandenem `pat_blob`. **POST** nimmt je Einsatz den neuen Blob entgegen
+und setzt die Spalte auf `NULL`. `assets/unlock.js` ruft beides im Hintergrund
+auf, sobald ein Inhaltsschlüssel vorliegt — an **allen drei** Entsperrwegen
+(Vormerkfach nach der Anmeldung, `EdKeyGuard`, Dialog), in Runden, ohne dass
+jemand darauf wartet.
+
+Vier Regeln, jede aus einem konkreten Schaden hergeleitet:
+
+- **Eine Wache je Zeile.** `missions` führt kein `updated_at`. Jedes `UPDATE`
+  trägt deshalb `notes IS NOT NULL` **und** `pat_blob <=> ?` — der Blob muss
+  noch genau der sein, den dieser Browser gelesen hat. `<=>` statt `=`, weil
+  der Blob `NULL` sein darf. Sonst überschriebe ein zweites Fenster eine
+  inzwischen geänderte Diagnose, lautlos.
+- **Kein `manual = 1`, kein `edited = 1`.** Das Einsatzformular setzt beides bei
+  jedem Speichern, und `ingest.php` hört bei `manual = 1` auf, Daten der Uhr zu
+  übernehmen. Ein Anhebelauf, der den Formularweg nachbaute, fröre den
+  gesamten Altbestand eines Kontos still gegen die Uhr ein. Geschrieben werden
+  genau zwei Spalten.
+- **Der Blob gewinnt.** Steht dort schon eine Notiz, bleibt sie; die Spalte ist
+  dann ein Rest.
+- **Ein unlesbarer Blob wird nicht angefasst.** Er gehört zu einem anderen
+  Schlüssel; ihn zu ersetzen hieße, fremde Angaben zu löschen. Der Klartext
+  bleibt dann stehen.
+
+**Es gibt keinen gespeicherten Merker.** „Einmal je Konto" ist die Wirkung,
+nicht der Mechanismus: Sobald kein Einsatz mehr Klartext trägt, liefert GET eine
+leere Liste. Ein Merker kostete eine Spalte samt Migration — und wäre falsch,
+sobald wieder Klartext hereinkommt: eine eingespielte Sicherung mit Nutzlast 10,
+ein CSV-Import einer alten Datei, das Zurücksetzen des Demo-Kontos. Der
+abgeleitete Zustand kennt diesen Fall von selbst.
 
 ### 4.99 Gemeinsame Bausteine
 

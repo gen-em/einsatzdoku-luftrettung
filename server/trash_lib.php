@@ -377,7 +377,8 @@ function trash_purge_expired(PDO $pdo): void {
 
 function trash_list_days(int $userId): array {
     $st = db()->prepare(
-        'SELECT d.id, d.day, d.started_at, d.kind, d.vehicle_name, d.base_name, d.deleted_at,
+        'SELECT d.id, d.day, d.started_at, d.kind, d.vehicle_name, d.vehicle_typ,
+                d.vehicle_kurz, d.base_name, d.deleted_at,
                 (SELECT COUNT(*) FROM missions m
                   WHERE m.day_id = d.id
                     AND m.deleted_with_day = 1 AND m.deleted_at IS NOT NULL) AS einsaetze

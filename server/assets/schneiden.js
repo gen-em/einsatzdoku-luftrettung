@@ -465,7 +465,7 @@ const EdSchnitt = (() => {
     los.disabled = true;
     gpxFehler('');
     document.getElementById('gpx-tagsatz').textContent =
-      'Die Spur wird dem Diensttag ' + tagText + ' zugeordnet.';
+      'Die GPS-Daten werden dem Diensttag ' + tagText + ' zugeordnet.';
 
     datei.onchange = () => {
       const f = datei.files && datei.files[0];

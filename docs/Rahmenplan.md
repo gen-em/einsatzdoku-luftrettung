@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 37 (07.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 38 (10.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -34,6 +34,17 @@ phpMyAdmin-Notweg und die Regel dahinter stehen jetzt im Runbook.
 **Als Nächstes:** Die Korrekturstufe 148/149 ist **gemergt** (PR #36,
 Web 15.5.2 auf `main`); offen ist die zweiteilige Prüfliste des
 Auftraggebers in `docs/konzepte/Pruefdokument-Korrektur-148-149.md`
+(„Ausstehende ausführen", Zusammenführen-Knopf). **Die S9-Umsetzung läuft**
+(Opus, Claude Code, Zweig `claude/go-bwucrx`): **AP1 ist gebaut und geprüft**
+(Web 15.7.0 und Korrekturstufe 15.7.1; Backlog 68, 102, 106 erledigt), **AP2
+ebenso** (Web 15.8.0; Backlog 70, 101, 107, 137, 147 erledigt — mit einer
+Migration, die nach dem Merge `update.php` verlangt) und **AP3** (Web 15.9.0;
+Backlog 72, 103, 104, 105, 110 erledigt, dazu **Nr. 162** neu aufgenommen und
+im selben Zug behoben). AP4 wartet auf die
+Freigabe des Auftraggebers. **Schritt 9a läuft parallel** auf eigenem Zweig ohne Nr. 137
+und 132; die beiden Zweige berühren sich in keiner Anwendungsdatei, nur in
+der Buchführung (K7) — **wer zweiter mergt, zieht nach**, und die
+Versionsstufen 15.7.0 bis 15.8.0 verschieben sich dann.
 („Ausstehende ausführen", Zusammenführen-Knopf). **Beschluss 07.09.2026:**
 Nr. 137 und 132 sind ganz nach S9 gewandert — **die S9-Umsetzung beginnt
 jetzt** (Opus, Claude Code, Auftrag liegt vor), **Schritt 9a läuft
@@ -199,9 +210,9 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | **erledigt und gemergt** (Web 13.0.0–13.2.0, Uhr 3.0.0, PR #28/#29; **Paket E** Android 0.8.0–0.10.1, PR #31); Prüfliste S5 und Freigabe des Abschlusses offen (Abschnitt 6) |
 | 6 | **S4 — Rest** | Kopplungsmodul, feste Server-Adresse, App-Name, Insets, Herkunft je Einsatz (R64), Gerätetest, **Play Console nach R65** (interner Test-Track für Handy und Uhr, Versionscode-Versatz, Signaturweg), Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | **gemergt** (PR #33, 04.09.2026; Web 13.3.0–14.2.2, Android 0.11.0–0.13.0): Teil A, Teil B (R64 und Nr. 63) und Teil C (Play-Console-Vorbereitung) sind auf `main`, `update.php` ist gelaufen. **Offen:** Gerätetest am S24 und mit der Wear-OS-Uhr (Backlog 81, Abschnitt 6), Android 1.0.0 nach E-R45-7, D-U-N-S und Signaturschlüssel für die Play Console |
 | 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Backup-Optionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61); dazu die Rolle **BetreiberIn** (R75), der Block **Betrieb** mit sieben Seiten und das **Ordnungsprinzip** (R74) | Schritte 4 und 6 | **liegt vor** (Fable, 05.09.2026), `docs/konzepte/Konzept-S8-Einstellungen-Administration-Wartung.md`, zwölf Mockups | Fable (Konzept), Opus (Umsetzung) | **erledigt, Web 15.0.0 bis 15.5.1** (Abschnitt 8) — acht Arbeitspakete, Konzept nach R62 gelöscht, Prüfdokument bleibt |
-| 8 | **S9 — Einsatzbearbeitung und Rettungsmittel** | Problemsammlung vom 03.09.2026 (Nr. 101–113): Adresssuche und gemeinsamer Kartendialog, Rettungsmittel-Übernahme, kompaktere Kartenschilder, Windenkacheln, Artzeichen, Vorschlagsliste, Transportziel ad hoc, Schloss-Kennzeichnung, Notizfeld verschlüsselt, „GPS-Daten", neue Rettungsmittel-Typen, Tageszuordnung, Rollen; dazu **Nr. 147** (Spur im Kartendialog), **Nr. 44, 68, 69, 70, 72** (06.09.2026) und **Nr. 152** (PS-12 Standortseiten, 07.09.2026) | Schritt 7 **erfüllt**; F3–F6 **beantwortet 06.09.2026**; **keine weitere** — Nr. 137/132 sind in S9 (07.09.2026) | **Konzept liegt vor und ist freigegeben** (Fable, 06./07.09.2026): `docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`, E-S9-01 bis -19, sieben Mockups in `konzept-s9/mockups/` | Umsetzung Opus, acht Arbeitspakete, kein Fable-Schritt | **Umsetzung beauftragt 07.09.2026**, parallel zu 9a |
+| 8 | **S9 — Einsatzbearbeitung und Rettungsmittel** | Problemsammlung vom 03.09.2026 (Nr. 101–113): Adresssuche und gemeinsamer Kartendialog, Rettungsmittel-Übernahme, kompaktere Kartenschilder, Windenkacheln, Artzeichen, Vorschlagsliste, Transportziel ad hoc, Schloss-Kennzeichnung, Notizfeld verschlüsselt, „GPS-Daten", neue Rettungsmittel-Typen, Tageszuordnung, Rollen; dazu **Nr. 147** (Spur im Kartendialog), **Nr. 44, 68, 69, 70, 72** (06.09.2026) und **Nr. 152** (PS-12 Standortseiten, 07.09.2026) | Schritt 7 **erfüllt**; F3–F6 **beantwortet 06.09.2026**; **keine weitere** — Nr. 137/132 sind in S9 (07.09.2026) | **Konzept liegt vor und ist freigegeben** (Fable, 06./07.09.2026): `docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`, E-S9-01 bis -19, sieben Mockups in `konzept-s9/mockups/` | Umsetzung Opus, acht Arbeitspakete, kein Fable-Schritt | **Gebaut und geprüft** (Zweig `claude/go-bwucrx`): **AP1 bis AP8 erledigt** (AP4a und AP5b eingeschlossen) 07.–10.09.2026, Web 15.7.0 bis **19.1.0**, Migrationen `2026_09_07_adresssuche_konto` und `2026_09_07_rettungsmittel_typ`. **Offen ist der Merge auf `main`** nach Freigabe; danach muss eine Administratorin **`update.php`** aufrufen (die beiden Migrationen aus AP2 und AP4 — AP7 braucht keine). Siehe Abschnitt 8 |
 | 9 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen — die **Korrekturstufe mit Nr. 148 und 149** ist **gebaut und geprüft** (Web 15.5.2, 06.09.2026, Zweig `claude/backlog-148-149-web-md24ve`); offen sind der Merge auf `main` und die zweiteilige Prüfliste danach |
-| 9a | **Sofortpaket Sicherheit** (R78) | Web: Nr. 127–131, 133–136, 138 (Rundenzahl 600 000, Login-CSRF, E-Mail-Nachweis, Ordner, GPX, `wiederherstellen.php`, Bauordner, Ersetzfenster der Uhr, Maskierung, Weg C, Integritätswache aus Nr. 140) — **ohne 132 und 137, die sind seit dem 07.09.2026 in S9**; Android: Nr. 142–145 und der Räumteil von 114 | Web sofort; Android nach Schritt 6 auf `main` | keins; `docs/konzepte/Vorbereitung-Sicherheitspaket.md` ist die Spezifikation (Muster R42, Prüfdokument mit Zahlen) | Opus | **gebaut, geprüft und gegengeprüft (Web 15.6.0 und Android 0.14.0, 07.09.2026)** — Nachbesserungen nach der adversarischen Gegenprüfung committet, Zweig gepusht; Merge auf `main` nach Freigabe, **danach `update.php`** |
+| 9a | **Sofortpaket Sicherheit** (R78) | Web: Nr. 127–131, 133–136, 138 (Rundenzahl 600 000, Login-CSRF, E-Mail-Nachweis, Ordner, GPX, `wiederherstellen.php`, Bauordner, Ersetzfenster der Uhr, Maskierung, Weg C, Integritätswache aus Nr. 140) — **ohne 132 und 137, die sind seit dem 07.09.2026 in S9**; Android: Nr. 142–145 und der Räumteil von 114 | Web sofort; Android nach Schritt 6 auf `main` | keins; `docs/konzepte/Vorbereitung-Sicherheitspaket.md` ist die Spezifikation (Muster R42, Prüfdokument mit Zahlen) | Opus | **gebaut, geprüft und gegengeprüft (Web 15.6.0 und Android 0.14.0, 07.09.2026)** — Nachbesserungen nach der adversarischen Gegenprüfung committet, Zweig gepusht; **am 08.09.2026 auf `main` gemergt** (PR #37, Merge-Commit `f299bbf`), **danach `update.php`** |
 | 9b | **S10 — Sicherheit** (R78) | Server-Anteil am Datenschlüssel mit Schlüsselblatt, Kennung und Rotation (SP-3); Adminpakete versiegeln, `ftp` abschaffen (Nr. 139) | Schritt 9a; **vor P5** (Hauptstufe, Umstellung aller Hüllen) | neu, nach K1 aus der Vorbereitung | Fable (Konzept), Opus | offen |
 | 10 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb; Zweitfaktor für alle Konten (Nr. 141) und CSP nach Bauplan SP-5 (Nr. 8) | Schritte 2, 5, 7 und 9b; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt: Store-Verteilung (R65), Update-Weg (R66), Auslieferungskette (R67), Repositorium (R68), Code-Review (R69), Web-App auf Android (R70), Phasenschnitt (R71), Doku-Anforderungen (R72), Problemsammlung (R73); Ergebnis sind die Konzepte der Phasen P6–P8 mit je eigenem Paketschnitt | Festlegungen: keine (vorgezogen); Paketschnitte: die jeweilige Vorphase, P6 nach der Freigaberunde des Reviews | `docs/konzepte/Konzept-Planung-v1.0.md` | Fable (R14) | **Festlegungen entschieden** 03.09.2026 (R65–R73); offen nur die Paketschnitte je Phasenkonzept |
@@ -558,6 +569,8 @@ Suche läuft im Browser, Notizen werden verschlüsselt wie die Diagnose
 (E-S9-01, Katalogschlüssel `store => 'pat'`, stille Anhebung des
 Altbestands). **Dazu genommen** (06.09.2026): Nr. 44, 68, 69, 70, 72, weil
 sie in denselben Dateien liegen; **PS-12 Standortseiten** (07.09.2026,
+Nr. 152 — Fassung 34 nannte hier irrtümlich Nr. 150, das ist der
+Cron-Befehl aus Fassung 33): Der Menüpunkt „Rettungsmittel" entfällt, „Standorte" wird Liste
 Nr. 152): Der Menüpunkt „Rettungsmittel" entfällt, „Standorte" wird Liste
 und Seite je Standort mit Kennzahlen als Inhaltsverzeichnis, Anlegen im
 Dialog und Landung auf der neuen Zeile. Sieben Mockups freigegeben: Schilder
@@ -569,6 +582,204 @@ Anlegen-Dialoge. Neues Prüfmittel `tools/klickprobe/` (E-S9-16), weil PS-2
 und Nr. 148 beide ein Klick waren, den niemand getan hat. **Umsetzung
 beauftragt am 07.09.2026** (Auftrag `Prompt-Umsetzung-S9.md`, außerhalb
 des Repositoriums; Opus, Claude Code, eigener Zweig).
+
+**Umsetzung, Stand 07.09.2026** (Zweig `claude/go-bwucrx`; Statusblock und
+Zahlen im Konzept, Prüfprotokoll in
+`docs/konzepte/Pruefdokument-S9-Einsatzbearbeitung-Rettungsmittel.md`):
+
+**AP1 — Vorschlagsliste und Klickprobe · erledigt, Web 15.7.0 und 15.7.1.** Eine Liste
+statt dreier und einer vierten vom Browser: `assets/vorschlagsliste.js`
+(`EdVorschlaege`) mit Gruppen, Symbol und Herkunftszeile je Eintrag,
+Pfeiltasten, Enter und Escape — und Übernahme auf `mousedown`, nie auf
+`click`. Damit sind **Backlog 68, 102 und 106** erledigt. Neuer Baustein
+`Design.md` 9.28; `loc-suggest`, `rmlist`, `rmopt` und `rmneu` auf der
+Streichliste. **Neues Prüfmittel `tools/klickprobe/`** (E-S9-16), das erste
+im Projekt, das ein Element *bedient*: `mouse.down()` — 300 ms halten —
+`mouse.up()`, weil `locator.click()` die Taste rund 10 ms hält und Nr. 102
+deshalb **nicht** findet. Zahlen: PS-2 **0 von 3 → 3 von 3** (dieselbe
+Fassung der Probe gegen beide Stände), `datalist` **12 → 0** außerhalb von
+Kommentaren, Transportziel **1 Liste · 2 Gruppen · 2 Stammdaten · 4
+Adressen · 0 `<datalist>`**, Bedienhöhe einzeilig **44/36/44** (390 px,
+1280 px Zeiger, 1280 px Finger), Klickprobe **12 von 12** Wegen über zwei
+Breiten × zwei Bedienhöhen, Bilderlauf sieben Seiten **0/0/0** in beiden
+Bedienhöhen, Wortliste **0/0/0**, Vollständigkeit **300 → 298** (Differenz
+erklärt), Kontraste **21/0**, Linkprobe **132/0**. Fünf Funde, alle behoben —
+drei davon im Prüfmittel selbst.
+
+**Korrekturstufe 15.7.1** (07.09.2026, vom Auftraggeber am Bild gemeldet):
+Die Liste lag mit `z-index: 20` **hinter** der klebenden Speichern-Leiste (30)
+und verdeckte deren unterste Trefferzeilen — gemessen 61 bis 69 px
+Überlappung, `elementFromPoint` traf die Leiste. Ebene jetzt **35**, zwischen
+Speichern-Leiste und Kopfleiste (40); die Klickprobe misst sie in beide
+Richtungen und zählt damit **16 von 16** Wegen. Der Befund dahinter:
+Bilderlauf und Klickprobe meldeten beide Null und hatten beide recht — sie
+haben etwas anderes gemessen.
+
+**Von den drei Fragen an den Auftraggeber sind zwei entschieden**
+(07.09.2026): Die Besatzungsfelder des Diensttags gehören zu **AP1** (so
+gebaut), und im Abschluss wandern **zwanzig** Backlog-Punkte nach *Erledigt*
+— also auch **Nr. 132 und Nr. 137**, je mit dem Vermerk „aus dem Sofortpaket
+übernommen" (das Konzept sagte achtzehn; diese Entscheidung geht vor). Offen
+ist die dritte („`<datalist>` in der Streichliste"), Prüfdokument
+Abschnitt 4.
+
+**AP2 — Geocoder und Kartendialog · erledigt, Web 15.8.0.** Die Anschrift
+des Adressdienstes stand zweimal fest im ausgelieferten Code; jetzt steht sie
+nirgends dort. `assets/geocoder.js` (`EdGeocoder`) ist der eine Weg nach
+draußen, `server/geocoder_lib.php` die eine Quelle der Einstellungen, und
+`ui_ortsfeld()` bringt sie selbst ins Dokument — wo ein Ortsfeld steht,
+stehen seine Einstellungen. **Zwei Schalter davor:** einer je Installation
+(Betrieb → Servereinstellungen, Karte „Adresssuche", dazu das Feld „Dienst" —
+wer einen eigenen Photon betreibt, trägt ihn ein und hält die Anfragen im
+eigenen Haus), einer je Konto (Profil → Karte „Datenschutz",
+`users.adresssuche`). **Der Kartendialog** bekommt ein Suchfeld im Kopf (ein
+Treffer setzt nur das Kreuz, F1), die aufgezeichnete Spur mit Start- und
+Endring samt Legende und `fitBounds` bei leerem Feld; den Pin-Knopf tragen
+jetzt **fünf** Felder statt zweier. Damit sind **Backlog 70, 101, 107, 137
+und 147** erledigt und der Adressdienst ist der einzige Laufzeitdienst des
+Projekts, den man abschalten kann. Neuer Baustein `Design.md` 9.29.
+
+Zahlen: `grep -rn "komoot" server/assets/` **2 → 0**; Dialog aus **5 von 5**
+Einbauorten; Treffer im Suchfeld **Feld leer / 0 Chips**, nach „Übernehmen"
+**1 Chip**; Spur **1 Linie · 4 Ringpunkte · Legende sichtbar · 0 Pfeile** bei
+309 Punkten; Kontoschalter **an → 2 Anfragen, aus → 0** an
+`photon.komoot.io` (mit Gegenprobe, sonst belegt die Null nichts);
+Installationsschalter aus → Kontoschalter gesperrt mit Grund; Hinweis am
+Ortsfeld **1 bei 3 Ortsfeldern**; Klickprobe **40 von 40** Wegen, 36 Bilder;
+Bilderlauf **zehn berührte Seiten 0/0/0** in beiden Bedienhöhen; Wortliste
+**0/0/0**; Vollständigkeit **298 → 304** (Differenz erklärt: sechs
+Menüpfeile „→" in deutschen Sätzen, dazu ein eingetragener Anker); Kontraste
+**21/0**; Linkprobe **134/0**; Migrationsregister **44 = 44**.
+
+**Drei Funde, alle behoben — und keiner davon im Browser zu sehen.** Der
+Bootstrap schrieb `const`, `assets/geocoder.js` las `window`: Ein `const` auf
+oberster Ebene liegt im globalen lexikalischen Bereich, wird aber keine
+Eigenschaft von `window` — der Dialog kam ohne Suchfeld, während die
+Hinweiszeile daneben sagte, die Suche sei an, und die Konsole die erwartete
+Antwort gab (F-S9-P-08). Die Betriebsseite zeigte nach dem Speichern den
+**alten** Schalterstand, weil der Zwischenspeicher der laufenden Anfrage vor
+dem Schreiben gefüllt und danach nicht nachgezogen wurde (F-S9-P-09). Und das
+**Demo-Konto konnte seine eigene Adresssuche nicht abschalten**: Der Schalter
+stand im Profilformular, und der Demo-Wächter verwirft dieses ganz, damit die
+öffentlichen Zugangsdaten stehen bleiben — die Karte „Datenschutz" hat jetzt
+ihr eigenes Formular (F-S9-P-10). Gefunden hat alle drei die Klickprobe.
+
+**Zwei neue Fragen an den Auftraggeber** (Prüfdokument, Abschnitt 4):
+**Pfeile auf der Spur im Kartendialog?** — Konzepttext E-S9-06 (b) sagt
+„keine Pfeile", Anmerkung 3 des Mockups M-S9-04 sagt „Pfeile wie in der
+Einsatzansicht", und das Bild zeichnet einen; gebaut ist **ohne**, eine
+Gegenentscheidung kostet vier Zeilen. Und: Der **Kopf des Kartendialogs** ist
+jetzt eine Überschrift wie in jedem anderen Dialog (bisher als einziger
+nackter Text) — das Mockup zeigt es so, das Konzept schweigt.
+
+**Nach dem Merge auf `main` muss eine Administratorin `update.php`
+aufrufen** — AP2 bringt die Migration `2026_09_07_adresssuche_konto`
+(Spalte `users.adresssuche`). Bis dahin gilt für jedes Konto die Vorgabe
+„an", und die Anwendung läuft weiter; beide Leser vertragen die fehlende
+Spalte.
+
+**AP3 — Karte und Zeichen · erledigt, Web 15.9.0.** Vier Dinge an derselben
+Karte und denselben Wörtern.
+
+**Die Zeichen werden kleiner** (M-S9-01 V1): Der Farbring ist jetzt der
+**Rand** und liegt nicht mehr darum herum — ein Standort mit Doppelring maß
+60 px und deckte auf der Handykarte mehr als ein Drittel der Höhe.
+Nachgemessen im Browser: **32 / 32 / 38 / 28 / 14 / 20 px** gegen vorher
+36 / 48 / 60 / 32 / 16 / 28.
+
+**Die Richtungspfeile haben sich nie gedreht** (Nr. 72). `transform` wirkt
+nicht an einem Inline-`<span>`; die Winkelrechnung war die ganze Zeit
+richtig, sie kam nur nie an. Gemessen an der Bildschirmmatrix des SVG:
+vorher `a=0,833 b=0 c=0 d=0,833` bei behaupteten 90 Grad, nachher **12 von
+12** Pfeilen in 30-Grad-Schritten auf **0,1 Grad** genau. Derselbe Fehler
+steckte drei Zeilen darüber im Punkt des Abfahrtorts — **Nr. 162**, in keinem
+Backlog-Punkt, 4 × 18 px statt 12 × 12 und die Spurfarbe nie sichtbar.
+
+**Die Windenkacheln folgen der Fähigkeit** (Nr. 104), nicht mehr der
+Zählung: „null Windeneinsätze" ist eine Aussage über den Dienst, „Winde nicht
+eingerichtet" eine über die Stammdaten. `api/range.php` liefert
+`faehigkeiten`; die Abfrage ist auf **Luft** eingeschränkt, weil eine
+Migration von 2026 jedem damals bestehenden Diensttag beide Fähigkeiten gab.
+
+**„Spur" heißt für die NutzerIn „GPS-Daten"** (Nr. 110): 72 sichtbare
+Zeichenketten in 18 Dateien, 41 Zeilen im Handbuch. Fachbegriff bleibt er im
+Code, in `Technik.md`, im JSON-Vertrag und im Sicherungsformat. Die
+**Android-App** bleibt außen vor — sie zählt getrennt und braucht einen
+Emulatorlauf; **Schritt 9a nimmt sie mit** (Entscheidung des Auftraggebers,
+07.09.2026, Handzettel im Prüfdokument Abschnitt 6).
+
+Dazu **drei neue Zeichen** (Bergwacht, Veranstaltung, Sonstiges; Vorrat
+49 → 52) und `dt_art_symbol()`, das den Diensttag-Typ schon entgegennimmt —
+im Datenmodell steht er erst mit AP4.
+
+Zahlen: Schildmaße **7 von 7** getroffen; Pfeile **12 von 12** und **2 von 2**
+auf der Spur; Windenkacheln **2 / 2 mit „0" / 0**; Artzeichen **6 von 6**;
+Wortliste **0/0/0** bei 96 Regeln mit neuer Regel `spur`; `grep -c "Spur"
+docs/Handbuch.md` **41 → 0**; Klickprobe **6 von 6** Wegen; Vollständigkeit
+**304 = 304**; Kontraste **21/0**; Linkprobe **134/0**; Bilderlauf zehn berührte Seiten **80 Bilder, 0/0/0** in beiden Bedienhöhen.
+
+**Eine Frage aus AP3 ist entschieden, eine bleibt.** Die Lesbarkeit von
+`veranstaltung.svg` bei 18 px hat der Auftraggeber am 07.09.2026 mit dem
+Tausch auf Tabler „ticket" beantwortet (Messung: „ticket" hält seine
+Binnenfläche von 96 px bis 16 px, „building-stadium" verliert bei 18 px zwei
+seiner vier auf einen einzelnen Pixel). Offen bleibt die alte Frage 2 aus AP1.
+
+**AP4 — Rettungsmittel: Typ, Kurzname, Standort optional** (07.09.2026,
+Web **16.0.0**, Migration `2026_09_07_rettungsmittel_typ`, Nutzlast 9 → 10).
+Zwei Achsen statt einer: `kind` bleibt die Betriebsart, `typ` ist die Art des
+Dienstes (Standard, Bergwacht, Veranstaltung, Sonstiges). Kurzname bis 16
+Zeichen; `vehicles.base_id` wieder NULL-fähig, Pflicht nur bei „Standard";
+`days` friert Typ und Kurznamen ein. Alle drei Schreibwege laufen jetzt über
+eine gemeinsame `pruef_rettungsmittel()` — vorher prüften Konto, Verwaltung
+und Sicherung dieselbe Sache dreimal ungleich, das Einspielen am
+schwächsten. **Hauptnummer**, weil Datenmodell, Dateiformat und eine feste
+Zusage (E15) zugleich betroffen sind. **Drei stille Stellen gefunden und
+behoben:** `nb_moeglich()` hätte die abgeschlossene Nachbearbeitung in jeder
+Installation wiederbelebt und ihr Knopf die Migration zurückgenommen;
+`dt_vehicle_erlaubt()` hätte ein zentrales Rettungsmittel ohne Standort beim
+Speichern wortlos verworfen; beide Stammdatenseiten hätten es unsichtbar
+gemacht. **Zahlen:** Kreisläufe **edbak 287 771 / csv 9 118 / edbak-alt
+287 781 Einzelvergleiche, je 0 unerklärt** (16 / 1 021 / 653 erwartet);
+Klickprobe **6 von 6** neuen Wegen; Register **45 = 45**; frische Installation
+und migrierte Datenbank strukturgleich; Referenzbestand **3 → 6
+Rettungsmittel** (je einer der vier Typen, zwei ohne Standort, zwei mit
+Kurznamen), Demo-Fixture neu, 55 861 Spurpunkte unverändert; Wortliste
+**0/0/0** bei 96 Regeln über fünf Bereiche (178 Dateien); Vollständigkeit
+**304 = 304**; Kontraste **21 Paare, 0 verfehlt**; Linkprobe **140 Verweise,
+0 unbekannte Abweichungen**; Bilderlauf **11 berührte Seiten, 88 Einzelbilder
+je Lauf, 0/0/0 in beiden Bedienhöhen**. `veranstaltung.svg` trägt jetzt Tabler
+„ticket" (Entscheidung des Auftraggebers vom 07.09.2026, mit Messung
+begründet).
+
+**AP4a — die Nachträge aus den Freigaben vom 08.09.2026** (Web **16.1.0**,
+keine Migration). Die vier Fragen aus AP4 sind entschieden: Kachel und
+Plakettenzeile bleiben, wie sie sind (der Kurzname gilt allein für die
+Leiste, E-S9-09 ist entsprechend zurückgeschnitten); die Leiste zeigt ihn
+dafür auch im Band 1024–1199 px, in dem sie 220 px schmal ist; der
+Vergleichsdialog des Zusammenführens nennt den Typ; und Rettungsmittel ohne
+Standortpflicht sollen das Löschen ihres Standorts überleben — das gehört zu
+AP5. Gebaut sind die ersten drei Punkte, also zwei Änderungen: zwei Regeln in
+`style.css` samt einer Klasse in `ui.php`, und eine Zeile plus zwei Zusätze
+im Vergleichsdialog. Dabei zeigte sich, dass die Begründung „unter 1200 px
+entfällt der Rettungsmittelname" an drei Stellen falsch stand — sie gilt nur
+im Band 1024–1199 px, in der Schublade stand der Name immer; berichtigt.
+Prüfzahlen: Klickprobe **10 von 10** Wegen über fünf Breiten (390, 1024,
+1100, 1199, 1280 px) in beiden Bedienhöhen, 0 Rückstände; dem Kurznamen bleiben im Band je nach Datum **48 bis 55 px** — „BW Hoch" braucht 55, also tragen ihn **4 von 13** Datumsangaben ganz und **9 mit Auslassungszeichen**; ohne die Einrückung wäre es **keine einzige** (40 bis 47 px).
+Diese Zahl ist die **Berichtigung** einer ersten Messung, die 57 px meldete
+und dabei zufällig das schmalste Datum getroffen hatte — gefunden von der
+adversarischen Gegenprobe, zusammen mit zwei weiteren Fehlern (der Kurzname
+verschwand am mehrfachen Tag auf 3 px; die Zeile „Typ" behauptete einen
+Wert, den die Wahl ändert). Mit **Web 16.1.1** ist die Frage beantwortet: Das Mockup
+**M-S9-11** hat drei Wege an der laufenden Anwendung gemessen, gewählt ist
+Weg 2 — im Band je Ebene 4 px Einrückung und 4 px Abstand in der Zeile.
+Danach stehen dem Nebentext **64 bis 79 px** statt 48 bis 63 zur Verfügung,
+und von dreizehn Kurznamen trägt **keiner** mehr ein Auslassungszeichen
+(vorher zehn). Weg 3 — das Jahr im schmalen Band aus dem Datum nehmen —
+ist verworfen; das Datum behält sein Jahr in jeder Breite. Die Gewinnerregel
+des Zusammenführens steht seither an **einer** Stelle statt an zweien
+(`dt_merge_rm_gewinner()`).
+
+**AP5 bis AP8 — offen.** AP5 beginnt nach dem Wort des Auftraggebers (K7).
 
 ### Schritt 9 — Backlog-Runde
 
@@ -749,7 +960,7 @@ auf SHA-256, Mengengrenze je Konto, IP-Grenzwerte für NAT, Onboarding mit
 Notfallblatt) · Support-Rolle, Admin-TOTP, Audit-Protokoll,
 Ankündigungsbanner, Fehlerprotokoll-Sicht, Health-Endpunkt ·
 Betriebslage-Dashboard im festen Minimalumfang samt Geräteverteilung (R42)
-· Rückbau der zentralen Stammdaten (R39) · Servicemodell (R33) ·
+· Rückbau der zentralen Stammdaten (R39, **Backlog Nr. 168**) — die Bestandsaufnahme dazu liegt vor (`docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`, 208 Befunde), S9 hat die Tür mit Web 18.0.0 bereits geschlossen · Servicemodell (R33) ·
 Admin-Optionen für Support-Adresse (R31), Rechtstexte (R32) und die
 S2-Sicherungseinstellungen · Mengenbremse `ingest.php` (R19,
 Grundsatzfrage zuerst) · CSP mit HSTS, `frame-ancestors`, `nosniff` (Nr. 8)
@@ -974,7 +1185,6 @@ Nr. 115 ist in Nr. 95 aufgegangen.
 | 41 | Sechs Klassen ohne Regel | Backlog-Runde | Gestaltungsentscheidung mit Mockup |
 | 42 | Drei Unicode-Symbole im Markup | Backlog-Runde | Gestaltungsentscheidung |
 | 43 | GPS-Spur und Phasenkoordinaten im Klartext | P6 (Weg B) und Backlog-Runde (Weg C) | Vorstudie `docs/konzepte/Konzept-V1-Ortsdaten.md`: Weg C (Zusage in `CLAUDE.md` 4, Technik und Datenschutztext ehrlich eingrenzen) jetzt; Weg B (Schlüssel auf das Gerät) entscheidet der R17-Review (R69, Stück 2; eigene R-Nummer nach der Freigaberunde); drei Fragen an den Auftraggeber in Abschnitt 6 — spätestens mit dem Abschluss von P5; die Frage hängt mit dem Notizfeld aus S9 zusammen (Nr. 109) |
-| 44 | Sprungliste bei vielen Rettungsmitteln | **S9** (AP5) | M-S9-05 freigegeben 07.09.2026 (E-S9-14); N1 abgelöst |
 | 45 | Dritte Kartengröße | nach v1.0 | ohne Mockup, ohne Bedarf |
 | 46 | Altformat der Sicherung abschaffen | P7 | Stichtag NaDoku 1.0 (R71) |
 | 47 | Natives `confirm()` fernhalten | Backlog-Runde | Prüfmittel |
@@ -999,7 +1209,6 @@ Nr. 115 ist in Nr. 95 aufgegangen.
 | 65 | 14 Fassungshinweise, AGP 9 | Backlog-Runde | eigene Runde nach dem S4-Rest, nur `android/` |
 | 67 | `csrf_check()` ohne API-Zweig | P5 | CSRF-Umfeld (R21) |
 | 68 | Vorschlagsfelder über `<datalist>` zeigen mobil nichts (Crew-Felder, Zielklinik, alle weiteren) | **S9** (AP1, AP6) | E-S9-07: ein Baustein Vorschlagsliste, kein `<datalist>` mehr |
-| 69 | Kurzname je Rettungsmittel | **S9** (AP4) | E-S9-09: `vehicles.kurz`, Diensttag-Schnappschuss, Nutzlast 10 |
 | 70 | „Auf der Karte setzen" für Standorte | **S9** (AP2/AP5) | E-S9-06 c: Pin-Knopf in der Nur-Lage-Fassung |
 | 71 | Regionen mit Unteradmins | nach v1.0 | verworfen, festgehalten (R39) |
 | 72 | Richtungspfeile auf der Spur zeigen teils falsch | **S9** (AP3) | belegt (Zuarbeits-Screenshot 06.09.2026); E-S9-12 |
@@ -1019,12 +1228,7 @@ Nr. 115 ist in Nr. 95 aufgegangen.
 | 105 | Hubschrauber-Icon in der linken Leiste (PS-5) | S9 | Varianten im Konzept (Fable, F8) |
 | 106 | Klinik- und Adressvorschläge in einer Liste (PS-6) | S9 | Kliniken nur im Zielklinik-Kontext, höchstens zwei (F9, F10) |
 | 107 | Zielklinik per Koordinaten und Karte, ad hoc (PS-7) | S9 | wie übrige Felder (F11), kein Stammdateneintrag (F12); Migration |
-| 108 | Schloss-Icon und Legende für verschlüsselte Felder (PS-8.1) | S9 | F13 |
-| 109 | Notizfeld verschlüsseln, Suche bleibt (PS-8.2) | S9 | **Zielkonflikt zuerst** (F14/F18); Fable; Bedrohungsmodell, Nr. 43 |
 | 110 | Kachel „Spur" → „GPS-Daten" ohne Punktzahl (PS-9) | S9 | F15; Wortliste |
-| 111 | Neue Rettungsmittel-Arten mit eigenem Icon, ohne Rollen-Vorlagen (PS-10.1) | S9 | F16; Migration |
-| 112 | Rettungsmittel ohne Stammdateneintrag in der Tageszuordnung (PS-10.2) | S9 | gilt nur für den Tag (F17); Suche und Filter müssen greifen |
-| 113 | Rollen unmittelbar nach Auswahl bearbeitbar, Vorlagen nachladen (PS-10.3) | S9 | entfällt für Arten ohne Vorlagen (F19) |
 | 114 | Abgewiesene Pakete sichtbar machen und ausräumen | **Backlog-Runde** | Räumteil (30 Tage, beim Trennen) **erledigt mit Android 0.14.0** (R78); der Bedienweg zum Sichtbarmachen bleibt |
 | 116 | Kontrastwerkzeug misst nur seine Paarliste | Backlog-Runde | Android-Prüfmittel `android/werkzeuge/kontraste.py`; Paare aus dem Code ableiten |
 | 117 | Kein Vermerk, ob eine NutzerIn je ein Backup gezogen hat (B-S8-07) | Backlog-Runde | Spalte an `users`, Zeile auf der Kontoseite |
@@ -1041,7 +1245,6 @@ Nr. 115 ist in Nr. 95 aufgegangen.
 | 129 | `apk/` und `demo/` ungesperrt (K-9) | Sofortpaket Sicherheit | eine `RewriteRule`-Zeile für beide Ordner |
 | 130 | DOCTYPE-Sperre GPX umgehbar (K-10) | Sofortpaket Sicherheit | UTF-8-Pflicht, kein Nullbyte; `tools/gpxprobe/` |
 | 131 | `wiederherstellen.php` gibt Auskunft (K-11) | Sofortpaket Sicherheit | Kennung statt Text, keine Kontenzahl |
-| 132 | Freitextfelder ohne Klartext-Hinweis (K-12) | **S9** (AP7, seit 07.09.2026) | `hinweis` im Feldkatalog an `bw_info`, `other_ema`, `crew_*`, dazu `days.notes`; nicht an `notes` (verschlüsselt, E-S9-01); Symbol E-S9-02 |
 | 133 | Klartext-Reste auf dem Server (K-13) | Sofortpaket Sicherheit | Bauordner räumen; Rest benennen |
 | 134 | Verlorene Uhr kann Phasen ersetzen (K-14) | Sofortpaket Sicherheit | Zeitfenster **72 h** ab Einsatzbeginn (F-SP-8) |
 | 135 | Kopfzeilen und Maskierung (K-15) | Sofortpaket Sicherheit / P5 | `JSON_HEX`, Cast sofort; Kopfzeilen mit Nr. 8 |
@@ -1055,7 +1258,8 @@ Nr. 115 ist in Nr. 95 aufgegangen.
 | 147 | Aufgezeichnete Spur im Kartendialog der Einsatzbearbeitung | **S9** (PS-11) | Ergänzung zu PS-1 (Nr. 101): nur die Spur, keine Luftlinie; jeder Kartendialog des Einsatzformulars; Zoom auf die Spur bei leerem Feld; Ort nach R74: der vorhandene Pin-Knopf, kein neuer Menüpunkt |
 | 150 | Cron-Befehl für `jobs.php` mit dem Repositoriumspfad dokumentiert | Backlog-Runde | vier Stellen (`server/jobs.php` 13, `Technik.md` 2424 und 5220, `CHANGELOG.md` 6210); der Deploy legt den Inhalt von `server/` nach `httpdocs/` — abgetippt ergibt das „Could not open input file". Die Karte „Auslöser" ist **nicht** betroffen (baut über `__DIR__`). Zwei Fragen offen: ob der Changelog angefasst wird, und welche Schreibweise künftig gilt |
 | 151 | Nach dem Import führt „Ersten Tag öffnen" auf den falschen Tag | Backlog-Runde | `import_ui.js` verweist auf `index.php?day=<Datum>`, die Seite liest `d` und erwartet eine Kennung — sie fällt still auf den jüngsten Tag zurück. Behebung braucht die Tageskennung aus `api/import_commit.php`; steht mit Nummer in `tools/linkprobe/ausnahmen.md` |
-| 152 | Standortseiten: Standort zuerst, ein Menüpunkt, Kennzahlen, Dialoge, Landung | **S9** (AP5, PS-12) | aufgenommen 07.09.2026; E-S9-18, E-S9-19; M-S9-06, M-S9-07 |
+| 167 | Löschen eines Standorts hinterlässt verwaiste Vorbelegungen (`user_defaults`) | Backlog-Runde | gefunden 09.09.2026 bei der Bestandsaufnahme zu R39; klein und still, vermehrt sich mit jedem gelöschten Standort |
+| 168 | **Zentrale Stammdaten vollständig zurückbauen** (R39) | **P5** | S9 hat nur die Tür geschlossen (Weg c, kein Schema). Was bleibt, steht mit Fundstelle in `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md` — **208 Befunde**, davon 23 am Schema. Vorbedingung des `ALTER TABLE`: **0 Zeilen mit `user_id IS NULL`** in allen sechs Tabellen |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -1067,7 +1271,10 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | ~~**`update.php` aufrufen — VIER Migrationen**~~ | Schritt 5, Prüfliste S5 Punkt 1 | **erledigt 04.09.2026, 23:15** — alle vier und `2026_09_04_herkunft_geraet` verbucht; `2026_09_05_rolle_betreiberin` am 06.09.2026 per phpMyAdmin (Nr. 149) |
 | ~~**Entscheidung zur Reihenfolge 9a / S9**~~ | Schritt 8 / 9a | **entschieden 07.09.2026: Nr. 137 und 132 ganz nach S9**, beide Schritte parallel; S9-Umsetzung beauftragt |
 | **Nach dem Merge von Web 15.5.2: einmal Betrieb → Updates öffnen und „Ausstehende ausführen" drücken** — die Migration steht dort seit 15.5.2 unter *Ausstehend* mit der Plakette „nicht nötig"; der Knopf verbucht `2026_09_05_rolle_betreiberin` als `skipped`, und der Zähler „1" an Updates und Status verschwindet. **Der Menüzähler hängt bis zu 60 Sekunden nach** (Zwischenspeicher) — das ist kein Fehlschlag. Danach die NutzerInnen-Liste ansehen: jedes frühere Admin-Konto heißt „BetreiberIn" (Prüfliste S8, P-02). Bedienweg und Fehlerbilder: `docs/konzepte/Pruefdokument-Korrektur-148-149.md`, Punkt 1 | Nr. 149, Prüfliste S8 | **fällig, sobald 15.5.2 auf `main` ist** |
+| **Nach dem Merge von S9: `update.php` aufrufen** — AP2 bringt die Migration `2026_09_07_adresssuche_konto` (Spalte `users.adresssuche`, Kontoschalter der Adresssuche). Bis dahin gilt für jedes Konto die Vorgabe „an", und die Anwendung läuft weiter — beide Leser vertragen die fehlende Spalte, **belegt ist das aber nur durch Lesen des Codes**, nicht durch Messen (Prüfdokument S9, Abschnitt 0 und Prüfliste Punkt 8) | S9/AP2 | **fällig nach dem Merge von S9** |
 | **Auf einem Diensttag mit Überschneidungswarnung den Knopf „Diensttage zusammenführen" drücken** — er führte bis Web 15.5.1 auf eine 404-Seite (Nr. 148). Erwartet: die Seite „Diensttag aufnehmen" mit dem geöffneten Tag in der Unterzeile. Punkt 2 desselben Prüfdokuments | Nr. 148 | **fällig, sobald 15.5.2 auf `main` ist** |
+| **Nach dem Merge von S9: die Prüfliste im Prüfdokument abarbeiten (32 Punkte)** — darunter drei, die auf dem Prüfstand **nicht** hergestellt werden konnten und deshalb ausdrücklich benannt sind: ein Konto **ohne Schlüsselhülle** (Punkt 31 — dort ist das Notizfeld gesperrt wie jedes geschützte Feld), der **Anhebelauf über mehr als eine Runde** (mehr als 200 Einsätze mit Klartext) und **zwei Browser gleichzeitig** gegen die Wache je Zeile. Dazu Punkt 32: nach dem Deploy einmal anmelden und entsperren, danach je Konto `SELECT COUNT(*) FROM missions WHERE notes IS NOT NULL AND notes <> ''` zählen — für jedes entsperrte Konto **0**; Konten, die sich nie entsperren, behalten ihren Klartext, und das ist kein Fehler | S9-Abnahme | **fällig nach dem Merge von S9** |
+| **Freigabe des S9-Abschlusses** — danach löscht K9 das Konzept (`Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`); das Prüfdokument bleibt, bis seine Prüfliste abgehakt ist. **Ebenfalls zu löschen:** `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md` erst nach P5, sie wird dort gebraucht | Schritt 8 | — |
 | **Prüfliste S5 (12 Punkte)**, darunter: die Bestandsuhr **einmal neu koppeln** (E-S5-42, vorher den Sync leerlaufen lassen), beide Kopplungsmails im Postfach sichten, Antwortgleichheit auf Produktiv nachmessen, die Geräteseite **ohne JavaScript**, drei Punkte nur am Gerät (Verbindungsabriss, Tastensperre, Oberfläche auf zwei Geräteklassen), **ein Update mit Wartungsmodus** und **eine Kopplung mit dem Handbuch in der Hand** (P2-Punkt 4.1) | S5-Abnahme | nach `update.php` |
 | **Freigabe des S5-Abschlusses** — danach löscht R62 die beiden Konzepte (`Konzept-S5-Kopplung-umgekehrt.md`, `…-Zusatz-Wartungsmodus.md`); das Prüfdokument bleibt bis zur abgehakten Prüfliste | Schritt 5 | — |
 | ~~**Merge von Paket E**~~ | Schritt 5 / Schritt 6 | **erledigt 03.09.2026** (PR #31); der S4-Rest folgte am 04.09.2026 (PR #33) |
@@ -1172,7 +1379,7 @@ werden nie neu vergeben.
 | R36 | Zielbild Dienstbetrieb, keine Telemetrie, Hosting-Entscheidung vor P5 | gilt |
 | R37 | Konto-Lebenszyklus und Registrierungs-Sicherheitspaket (elf Punkte) | gilt, P5 |
 | R38 | Support-Rolle, Admin-TOTP, Audit, Dashboard im Minimalumfang | gilt, P5 |
-| R39 | Zentrale Stammdaten entfallen; Regionen-Modell verworfen | gilt, P5; Regionen als Nr. 71 festgehalten |
+| R39 | Zentrale Stammdaten entfallen; Regionen-Modell verworfen | gilt, P5; Regionen als Nr. 71 festgehalten. **Zweistufig seit 09.09.2026:** In der laufenden Anlage sind alle zentralen Standorte gelöscht (Auskunft des Auftraggebers); **S9 hat die Tür geschlossen** (Web 18.0.0, AP5b: `admin_stammdaten.php` ersatzlos gestrichen, Karte „Vordefinierte Standorte“ und `ub_toggle` mit ihr — kein Schema, keine Migration), **P5 baut zurück** (Nr. 168). Bestandsaufnahme mit 208 Befunden: `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md` — sie bleibt bis P5 liegen |
 | R40 | Deploy-Umbau: Staging ab P5, Neuaufsetzen am P8-Schnitt, CI-Prüftor, Torwächter | gilt; (1) läuft, (2) ab P5-Beginn, (3) und (4) in P8 — (4) präzisiert durch R67 |
 | R41 | Recht und Betreiberorganisation vor der Öffnung; Öffnung in Wellen | gilt; Prüfung in P8 (R71); MDR-Abgrenzung vor Welle 1 (R65); Betreiberhandbuch generisch mit Notfall-FAQ, Zugänge in der Betriebsakte außerhalb des Repositoriums (R72) |
 | R42 | Gerätekennung beim Koppeln | Uhr-Seite erledigt (1.9.0); **Speicherung erledigt (Web 12.9.0, S6)** — drei Spalten statt zwei, begründet im Changelog; Auswertung P5 (Backlog 80) |
@@ -1565,6 +1772,59 @@ gegen die Seiten: **acht deckungsgleich**, drei Abweichungen begründet.
 *Reste:* Abschnitt 6 (Play-Store- und Connect-IQ-Adresse, Prüfliste des
 Prüfdokuments), Backlog 117–122 und 124–126.
 
+### S9 — Einsatzbearbeitung und Rettungsmittel · Web 15.7.0 bis 19.1.0 · 07.–10.09.2026 (R73)
+`docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md` (Fable,
+freigegeben 06./07.09.2026, E-S9-01 bis -19, sieben Mockups), Prüfdokument
+daneben. **Acht Arbeitspakete plus zwei Nachträge (AP4a, AP5b)**, je ein
+Commit, Zweig `claude/go-bwucrx`; letzter inhaltlicher Commit `3e9849c`.
+
+**Was gebaut ist.** *AP1* Vorschlagsliste statt `<datalist>` (102) und das
+Prüfmittel `tools/klickprobe/` · *AP2* Geocoder mit Kontoschalter und
+gemeinsamer Kartendialog (101, 106, 107, 137, 147), Migration
+`2026_09_07_adresssuche_konto` · *AP3* kleinere Kartenschilder, Artzeichen
+aus einer Hand, Richtungspfeile richtig gedreht, „Spur" heißt sichtbar
+„GPS-Daten" (72, 103, 105, 110) · *AP4/AP4a* Rettungsmittel bekommen **Typ**
+und **Kurznamen**, der Standort wird außerhalb von „Standard" freiwillig
+(69, 111), Migration `2026_09_07_rettungsmittel_typ`, Sicherungsnutzlast
+9 → 10 · *AP5* **Standort zuerst**: ein Menüpunkt, eine Liste, je Standort
+eine Seite, Anlegen und Bearbeiten im Dialog (44, 152) · *AP5b* die
+zentralen Stammdaten verlieren ihre Oberfläche (R39, Web 18.0.0) · *AP6*
+Rollen erscheinen ohne Speichern, und ein Dienst darf auf einem Fahrzeug
+stattfinden, das es als Stammdatensatz nicht gibt (112, 113) · *AP7* die
+**Notizen des Einsatzes werden Ende-zu-Ende-verschlüsselt** (109), Schloss
+und Klartext-Hinweis kennzeichnen jedes Feld (108, 132), Sicherungsnutzlast
+10 → 11.
+
+**Was AP7 aufgedeckt hat, und es stand vorher nirgends:** `api/suchindex.php`
+lieferte **jede Notiz im Klartext** für den gesamten aktiven Bestand, bei
+jedem Aufruf der Suchseite, **ohne dass jemand entsperrt haben musste** —
+während der Kopfkommentar derselben Datei aufzählte, was der Server angeblich
+nicht sieht. Und die Zusage **E6 „Administration sieht keinen Klartext"**
+stimmte nicht: `notes` stand in der Spaltenliste des Adminpakets. Beides ist
+zu. `CLAUDE.md` Abschnitt 4 und `docs/Technik.md` 4.98 sind nachgezogen —
+dort fehlte `notes` bis dahin in **beiden** Listen.
+
+**Prüfzahlen zum Abschluss:** Klickprobe **80 von 80 als Zeiger- und 80 von 80
+als Fingergerät** (40 Wege × 390/1280 px) · Bilderlauf **360 Einzelbilder und
+45 Kontaktbögen je Bedienhöhe, 0 Überlauf / 0 Konsolenfehler / 0 falsche
+Knopfhöhen** · Kreislauf CSV **9120 Einzelvergleiche, 0 unerklärt** ·
+Kreislauf Sicherung **287 842 Einzelvergleiche, 0 unerklärt** · Referenzbestand
+**283 989** Einzelprüfungen im Generator und **5961** in den Quelldaten, je
+ohne Befund, 0 offene Matrixzeilen · Wortliste **0 Treffer** bei 96 Regeln, 96
+gegriffen · Kontraste **22 Paare, 0 verfehlt** · Linkprobe **116 Verweise, 0
+unbekannte Abweichungen** · Vollständigkeit **330**, jeder Unterschied
+benannt · `docs/Design.md` neu erzeugt und unverändert.
+
+*Funde beim Bauen:* F-S9-P-01 bis -07 und F-S9-U-01 bis -35, alle behoben —
+darunter drei, die **Daten gekostet hätten**: der stille Verlust von
+Besatzungsnamen (F-S9-U-34), `readField()`, das eine verschlüsselte Notiz
+beim Speichern gelöscht hätte, und der fehlende `case` in `import.js`, der im
+CSV-Umlauf **114 Notizen** verschluckte. *Reste:* Backlog **163**
+(gegenstandslos), **166** (zurückgezogen), **167**, **168** (P5, Schemarückbau
+zu R39) und **169** (Besatzung am Tagesrettungsmittel) neu; Prüfliste im
+Prüfdokument, 32 Punkte. *Nach dem Merge:* **`update.php`** (die beiden
+Migrationen aus AP2 und AP4).
+
 ### 9a — Sofortpaket Sicherheit · Web 15.6.0, Android 0.14.0 · 07.09.2026 (R78)
 `docs/konzepte/Vorbereitung-Sicherheitspaket.md` als Spezifikation (kein
 Konzept nach K1, Muster R42), Prüfdokument
@@ -1665,9 +1925,14 @@ nach Freigabe.
 | **28** | **05.09.2026** | **S8-Konzept eingetroffen und Umsetzung begonnen** (Schritt 7, Zweig `claude/umsetzung-buuvfq`). Das Konzept liegt als `docs/konzepte/Konzept-S8-Einstellungen-Administration-Wartung.md` mit Prüfdokument und zwölf Mockups (01 und 03–12 freigegeben, 02 verworfen). **Vier neue Programmentscheidungen:** **R74** Ordnungsprinzip — jede Funktion hat genau einen Ort nach Zielgruppe, Objekt und Häufigkeit, Ausnahmen eine Ebene tiefer, ein Paket ohne benannten Ort wird nicht gemergt (K1 ergänzt) · **R75** dritte Rolle **BetreiberIn** mit Hierarchie BetreiberIn ⊇ Admin ⊇ NutzerIn; die Migration macht alle heutigen Admins zu BetreiberInnen, das letzte solche Konto ist geschützt — eine **Ausnahme zu „Nicht Umfang: Rollen"** in Schritt 7, die Support-Rolle bleibt bei R38 · **R76** Bedienhöhe in **zwei Stufen** (44 px, am Zeigergerät ab 1024 px 36 px) — beantwortet Nr. 74, auf die S9 PS-3 wartet · **R77** drei Backup-Begriffe (Backup, Konto-Backup, Komplett-Backup) mit einem Verb je Rückweg. Dazu: die **Wartungsseite wird aufgelöst** (Nr. 77) und der Block **Betrieb** trägt sieben Seiten, darunter die neuen **Status** und **Statistik**; **Backlog Nr. 80 ist geteilt** — Gerätemodelle und Nutzung nach S8, Herkunft je Einsatz und Dashboard bleiben P5; sechs neue Backlog-Kandidaten (117–122). Schritt 10 nennt jetzt je P5-Option ihre Seite (E-S8-12), Schritt 8 die Vorgabe für die Tagesübersicht. Zwei Zuarbeiten in Abschnitt 6 (Play-Beitrittslink, Connect-IQ-Adresse); die Freigabe des Konzepts ist erledigt. Die Sperre „S8 zu S4-Rest und S7" ist erfüllt |
 | **29** | **05.09.2026** | **Die Wortmarke ist vorgezogen** (Web 15.3.2, Auftrag vom 05.09.2026). Schritt 13 (P7) sah „Umbenennung überall" vor; ausgelöst hat es der Tab-Titel, der in Web 15.3.1 auf **Gen-EM NAdoku** ging und die Kopfleiste mit „Gen-EM Einsatzdoku" daneben stehen ließ. Jetzt heißt der Name überall dort so, wo er als Name auftritt: Kopfleiste, Schublade, Anmeldeseite, Passwortseiten, Einrichter, Absendername der System-E-Mails, Urheberfeld von GPX (beide Wege) und CSV, die Markierungsdateien von Einrichtung und Wiederherstellung, neun Skript-Dateiköpfe und die Titel von README, Handbuch, Technik, Backlog, Changelog, Geräte-Eingabe und Uhr-Layoutregeln. **Bei P7 bleibt** die Langform „Gen-EM Einsatzdokumentation Notarzt" in den Texten der System-E-Mails (20 Stellen in sechs Dateien) — sie ist der beschreibende Name und steht in Betreffzeilen, die Bestandsnutzerinnen wiederfinden; und die Historie bleibt unberührt (`version.php`, ältere Changelog-Einträge, `Design.md`, Archiv). Damit ist die Abnahme „kein ‚Einsatzdoku' mehr" in Schritt 13 auf eine Frage zusammengeschrumpft. Dazu zwei gemeldete Fehler behoben (Web 15.3.1): die Karte nutzte ab 1600 px nur ihren oberen Teil (Leaflet rechnete mit 400 × 324 statt 400 × 840 px), und der Tab-Titel |
 | **30** | **06.09.2026** | **Krypto- und Sicherheitsreview vorgezogen und entschieden (R78).** Auf die Frage „ist das sicher?" liegt der Befund in `docs/konzepte/Review-Krypto-Sicherheit.md`: Verfahren richtig gebaut, kein kritischer Fund; drei Wege bleiben — schwaches Passwort plus Datenbankabzug, Angreifer mit Codezugang, Klartext-Ortsdaten. Entschieden: **Sofortpaket Sicherheit** als Schritt 9a (Nr. 127–138, 142–145), **S10 — Sicherheit** als Schritt 9b vor P5 (Server-Anteil am Datenschlüssel mit Schlüsselblatt, Adminpakete versiegeln), Zweitfaktor für alle in P5 (Nr. 141), CSP-Bauplan zu Nr. 8, **Weg B als S11** (Schritt 12a, nach P6, vor der Öffnung; Nr. 43 und 53 zusammengeführt; die drei Fragen aus `Konzept-V1-Ortsdaten.md` beantwortet), Deploy-Tor mit Staging. Backlog 127–146 angelegt; 8, 43, 53, 114 ergänzt. Am selben Tag nachentschieden: Photon-Schalter mit Vorgabe „an" (F-SP-4), Ersetzfenster 72 h (F-SP-8), Integritätswache sofort (F-SP-9). Vorschläge und Entscheidungen in `docs/konzepte/Vorbereitung-Sicherheitspaket.md`. |
+| **35** | **07.09.2026** | **S9/AP1 gebaut und geprüft** (Web 15.7.0, Zweig `claude/go-bwucrx`): eine Vorschlagsliste statt dreier und einer vierten vom Browser — `assets/vorschlagsliste.js` mit Gruppen, Tastatur und Übernahme auf `mousedown`; **Backlog 68, 102, 106 erledigt**, neuer Baustein `Design.md` 9.28, vier Klassen auf der Streichliste. Dazu das **erste Prüfmittel des Projekts, das ein Element bedient** (`tools/klickprobe/`, E-S9-16): PS-2 **0 von 3 → 3 von 3** bei 300 ms gehaltener Maus, und der Nebenbefund, dass `locator.click()` den Fehler gar nicht findet. `datalist` **12 → 0** außerhalb von Kommentaren; Klickprobe 12 von 12 Wegen über zwei Breiten × zwei Bedienhöhen; Bilderlauf, Wortliste, Vollständigkeit und Kontraste mit Zahl im Prüfdokument. Vier Funde, alle behoben — **drei davon im Prüfmittel selbst**, darunter `fill('')`, das kein neutrales Leeren ist und dem Lauf einen Chip gelöscht hat. **Berichtigt:** Der Block Schritt 8 nannte PS-12 als „Nr. 150"; es ist **Nr. 152** (150 ist der Cron-Befehl aus Fassung 33). **Korrekturstufe 15.7.1 am selben Tag**, vom Auftraggeber am Bild gemeldet: Die Liste lag mit `z-index: 20` hinter der klebenden Speichern-Leiste (30) und verdeckte deren unterste Trefferzeilen (61–69 px, mit `elementFromPoint` nachgewiesen) — Ebene jetzt **35**, zwischen Leiste und Kopfleiste (40); die Klickprobe misst sie seither in beide Richtungen (16 von 16 Wegen). Bilderlauf und Klickprobe hatten beide Null gemeldet und beide recht: Sie messen etwas anderes. **Zwei der drei Fragen entschieden** (Diensttags-Besatzung → AP1; **zwanzig** Backlog-Punkte im Abschluss, also auch Nr. 132 und 137), die dritte offen — Prüfdokument, Abschnitt 4 |
+| **36** | **07.09.2026** | **S9/AP2 gebaut und geprüft** (Web **15.8.0**, Zweig `claude/go-bwucrx`): Die Anschrift des Adressdienstes stand zweimal fest im ausgelieferten Code — jetzt steht sie **nirgends** dort (`grep -rn "komoot" server/assets/` **2 → 0**); `assets/geocoder.js` ist der eine Weg nach draußen, `server/geocoder_lib.php` die eine Quelle der Einstellungen. **Zwei Schalter davor** — Installation (Betrieb → Servereinstellungen, Karte „Adresssuche" mit dem Feld „Dienst") und Konto (Profil → Karte „Datenschutz", `users.adresssuche`, Migration `2026_09_07_adresssuche_konto`): **an → 2 Anfragen, aus → 0**, gemessen am Netzwerkprotokoll **mit Gegenprobe**, denn eine Null ohne sie belegt nichts. Der **Kartendialog** bekommt Suchfeld im Kopf (Treffer setzt nur das Kreuz, F1), die aufgezeichnete Spur mit Ringen und Legende und `fitBounds` bei leerem Feld; der Pin-Knopf steht jetzt an **5 von 5** Einbauorten statt an zweien. **Backlog 70, 101, 107, 137, 147 erledigt**, neuer Baustein `Design.md` 9.29. Klickprobe **40 von 40** Wegen (36 Bilder), Bilderlauf zehn berührte Seiten **0/0/0**, Wortliste **0/0/0**, Vollständigkeit **298 → 304** (Differenz erklärt), Kontraste **21/0**, Linkprobe **134/0**, Register **44 = 44**. **Drei Funde, alle behoben und keiner im Browser zu sehen**, alle drei von der Klickprobe: `const` im Bootstrap wird keine Eigenschaft von `window` (Dialog ohne Suchfeld, Konsole antwortete trotzdem richtig); nach dem Speichern zeigte die Betriebsseite den **alten** Schalterstand; und das **Demo-Konto konnte seine eigene Adresssuche nicht abschalten**, weil der Schalter im Profilformular stand, das der Demo-Wächter ganz verwirft. **Zwei neue Fragen** (Pfeile auf der Spur — Konzepttext und Mockup widersprechen einander; Überschrift im Dialogkopf), Prüfdokument Abschnitt 4. **Nach dem Merge muss `update.php` laufen.** |
+| **37** | **07.09.2026** | **S9/AP3 gebaut und geprüft** (Web **15.9.0**, Zweig `claude/go-bwucrx`): Die Kartenzeichen werden kleiner — der Farbring ist jetzt der **Rand** und liegt nicht mehr darum herum; nachgemessen **32 / 32 / 38 / 28 / 14 / 20 px** gegen vorher 36 / 48 / 60 / 32 / 16 / 28 (M-S9-01 V1). **Die Richtungspfeile haben sich nie gedreht** (Nr. 72): `transform` wirkt nicht an einem Inline-`<span>`, die Winkelrechnung war die ganze Zeit richtig. Gemessen an der Bildschirmmatrix des SVG — vorher `a=0,833 b=0 c=0 d=0,833` bei behaupteten 90 Grad, nachher **12 von 12** Pfeilen in 30-Grad-Schritten auf **0,1 Grad** genau. **Derselbe Fehler drei Zeilen darüber** am Punkt des Abfahrtorts, in keinem Backlog-Punkt: 4 × 18 px statt 12 × 12, Spurfarbe nie sichtbar — als **Nr. 162** aufgenommen und behoben. **Windenkacheln nach Fähigkeit** statt nach Zählung (Nr. 104), `api/range.php` liefert `faehigkeiten`, auf Luft eingeschränkt wegen einer Migrationsaltlast von 2026. **„Spur" heißt „GPS-Daten"** (Nr. 110): 72 sichtbare Zeichenketten in 18 Dateien, 41 Handbuchzeilen, neue Wortlisten-Regel und sechs Ausnahmen; die Android-Texte gehen an **Schritt 9a** (Entscheidung des Auftraggebers). Drei neue Zeichen, Vorrat **49 → 52**. **Backlog 72, 103, 104, 105, 110 erledigt.** Neues Kapitel `Design.md` 9.30, Markersatz in `Technik.md` erstmals vollständig. Klickprobe **6 von 6**, Wortliste **0/0/0** (96 Regeln), Vollständigkeit **304 = 304**, Kontraste **21/0**, Linkprobe **134/0**. Zwei Funde stammen aus einer **Gegenprobe der Aufklärung**, die niemand beauftragt hatte: dass E-S9-13 gar keine Abnahme besaß, und dass der antippbare Ringpunkt unter die 24-px-Grenze fällt, die derselbe Beschluss nennt. |
 | **39** | **08.09.2026** | **Die beiden Client-Punkte aus der Gegenprüfung — Uhr 3.1.0 und Android 0.15.0** (Backlog Nr. 159 und 160, auf Wunsch vor dem Merge). **Nr. 159 lag nicht dort, wo der Backlog ihn vermutete:** Er nannte `400`, und den kann die Uhr kaum auslösen; bedienbar erreichbar sind `401` und `403` (Gerät im Web gelöscht oder abgeschaltet). Beide fielen in denselben Zweig wie eine Störung und wurden endlos wiederholt — das Paket blockierte die Warteschlange, und weil ein Rückstand zugleich das Trennen sperrte, war die Uhr nur noch durch Löschen der App zu retten (dieselbe Sackgasse wie Nr. 157 beim Handy). Jetzt drei Fälle: `401`/`403` halten das Senden an und nennen den Grund (**nichts wird verworfen**), ein `400` **mit** Fehlerschlüssel parkt das eine Paket, alles Übrige bleibt Störung. Geparkte zählen nicht im Rückstand, das Trennen ist frei, und ein **kurzer START** verwirft sie nach Rückfrage. **Nr. 160:** Die Dienstanzeige führt das Datum, sobald der Dienst an einem anderen Kalendertag begann, und nach **26 Stunden** erinnert die App einmal ans Beenden (Zahl gewählt, Begründung am Code: regulär bis 24 h). Der Vorschlag, `day` je Paket zu bilden, wurde geprüft und **verworfen** — er ändert am Fall nichts Sichtbares und verschlechtert den Offline-Fall. **Mockups vorab freigegeben** (CLAUDE.md 5). **Backlog 161 neu** (aus einer Aufzeichnung ein Stück löschen können — heute geht nur alles oder nichts). Prüfzahlen: `./gradlew build` grün, Handy **264** Prüffälle je Bauart (261 + 3 in `ZeitTest`), Uhr 71, 0 Fehlschläge, Lint 0 Fehler / **14** Warnungen (eine neue `PluralsCandidate`, nicht stummgeschaltet), APK Handy 7 868 398 B, Uhr 19 574 402 B; Wortliste **0/0/0** (87 Regeln); Uhr-Prüfstand **Stufe I: 99 von 99 Geräten übersetzt, 0 Fehler, 0 Warnungen** (mit dem endgültigen Stand gefahren, nachdem die Wortliste eine Korrektur erzwang), **Stufe II erreicht** — die App startet im Simulator (fenix6pro, 65,9 kB), die Sync-Seite ließ sich dort **nicht ansteuern**: Weder Tastendruck noch Mausklick erreichten den Simulator im virtuellen Bildschirm; **Emulator: fünf Bilder** (`android/emulator-bilder/0150-*.png`), beide Änderungen im laufenden Programm gesehen — „Dienst läuft seit Di. 08.09., 20:53" und die Erinnerung „Dienst läuft seit 27 Stunden" samt Knopf. **Drei Prüfmittel fanden je einen echten Fehler:** die strenge Typprüfung drei ungecastete Wörterbuchwerte, die Wortliste einen fest geschriebenen Tastennamen (auf der Venu 3s heißt die Taste „Action"), und der Emulator einen englischen Wochentag mitten im deutschen Satz („Tue 08.09." statt „Di. 08.09.") — die Sprache des Datums ist jetzt fest deutsch, wie alle Texte der App |
 | **38** | **07.09.2026** | **Android 0.14.1 — „GPS-Daten" statt „Spur" in fünf Texten des Handy-Moduls** (Auftrag des Auftraggebers, E-S9-03, Backlog Nr. 110): Akkuwarnung, Zweck des Benachrichtigungskanals, Hinweis im Modus „nur aufzeichnen", Ortungshinweis, Standortwarnung. Dieselbe Person liest Browser und Handy; die Weboberfläche sagt seit Web 15.8.0 (S9/AP3) „GPS-Daten". Die Uhr sagt „Spur" nur in einem Kommentar. Eigene Fassung, weil die Android-Apps getrennt zählen, einen APK-Bau und nach CLAUDE.md 6 einen Emulatorlauf brauchen. **K7-Vermerk:** Die befristete Wortlisten-Ausnahme `spur-android-wartet-auf-9a` liegt auf dem S9-Zweig, nicht auf diesem — wer zweiter mergt, streicht sie. Prüfzahlen: `./gradlew build` grün, Handy 261 Prüffälle je Bauart, Uhr 71, 0 Fehlschläge, Lint 0 Fehler (13 Warnungen, unverändert), APK Handy 7 867 430 B, Uhr 19 574 402 B; Wortliste 0/0/0 (87 Regeln); Emulator Stufe II erreicht — Boot 502 s, fünf Bilder, alle fünf Texte im laufenden Programm gesehen (Dienstansicht, laufender Dienst, zwei Warnmeldungen, Kanalseite). Dazu am selben Tag die **zweite Nachbesserung zu Nr. 134** (`15b9881`, siehe Zeile 37) |
 | **37** | **07.09.2026** | **Schritt 9a, Web-Teil adversarisch gegengeprüft und nachgebessert.** Ein Workflow aus 93 Agenten griff den fertigen Web-Teil aus sechs Blickwinkeln an, jeder Fund wurde dreimal zu widerlegen versucht und gegen den heutigen Stand reproduziert: 29 Funde, **22 hielten**. Sechs zur Dokumentation berichtigt, sechzehn zum Code behoben, je Punkt ein Commit: **134** — der Anker des Ersetzfensters war das vom Gerät gesendete `started_at` (eine falsch gestellte Uhr schloss das Fenster sofort und verlor Punkte), jetzt `max(started_at, created_at)` serverseitig, Zukunft zählt nicht, Diensttag bleibt, Abschlusspaket wird als `kept_meta` genannt, kein leerer Tag; Migration `rest_segments.created_at` — **`update.php` nach dem Merge**; **130** — UTF-7 über die Kodierungsdeklaration umging die DOCTYPE-Sperre, jetzt nur UTF-8/ASCII; **136** — die Statuszeile hätte das Demo-Konto für immer als „Übergang" gezählt, und die Anteilsregel maß den Rest ohne Sonderzeichen (2–15 % aller Zufallspasswörter abgewiesen, jetzt 0 %), strich Listenwörter in Listenreihenfolge und nicht unter sechs Zeichen; **140** — die Wache sah `<base href>` und `formaction` nicht, ihre Selbstprobe hing an Bezeichnern, ein Dateiname mit Leerzeichen brach den Lauf ab; beim Nachprüfen 27 Angriffsvarianten, **17 noch grün** (unzitiertes `src=`, Ereignisattribute, `meta refresh`, Einbettungen, `javascript:`), geschlossen im zweiten Commit, Selbstprobe 12 → 28. Zweite Gegenprüfung auf die Nachbesserungen: im ersten Anlauf nur zu Nr. 134 gelaufen (2 von 10 Angreifern, keine Skeptiker — Sitzungsgrenze des API-Kontingents), zwei Löcher — die Migration scheiterte an Randdaten und galt danach als erledigt, ein eingeholtes Zukunfts-`started_at` öffnete das Fenster erneut —, behoben (`15b9881`: Anker `created_at` allein, Migration dreischrittig mit Kappung). **Wiederaufnahme auf Anweisung, alle zehn Angreifer: 30 Funde (21 verschiedene), alle behoben, je Punkt ein Commit** — 134: ein neuer `client_ref` schrieb den Zeitraum eines alten Diensttags um, der Rückfall vor der Migration lief in ein 500, ein Anker 1970-01-01 00:00:00 galt als keiner, ein Papierkorb-Tag verlor seinen Einsatz (`76eaea4`); 130: die Deklarationsprüfung brach den Dateidialog-Import einer Latin-1-Datei (`9f51078`); 136: Statuszeile mit falschem Grund und zwei Zählfehlern (`a8ee900`), Passwortregel mit Emoji als zwei Zeichen, füllbarem Rest, quadratischer Laufzeit und Ziffern-Symbol-Zufall zu 46–91 % abgewiesen (`caf0cea`, `b42ad1d`); 140: `TAG_RE` endete im Attributwert, `lstrip` nahm eine Menge statt eines Bereichs (`2c61524`). **Eine vierte Nachbesserung fand die Sitzung selbst** (`d4eb0a3`): Die dritte hatte den nachgelieferten Dienst um seinen Tageszeitraum gebracht, und der Einsatz mit den absurden Zeiten stand weiter in der Datenbank — jetzt weist die gemeinsame Prüfschicht ein Paket ab, dessen Zeiten nicht zu seinem `day` gehören, und die Tagesregel hängt an der Serverzeit (Ingestprobe 56 → 62/0, davor 62/4). Skeptiker: je Fund ein Skeptiker, der ihn zu **widerlegen** versuchte und dafür gegen den unveränderten Stand `448ce9f` reproduzierte — **24 von 30 hielten**, sechs wurden widerlegt (Vorbestand oder Randfall ohne beobachtbare Folge: der Diensttag im Papierkorb bei offenem Fenster; drei Zählfälle der Statuszeile, die nur über einen von Hand gesetzten Rundenwert entstehen; die Sonderzeichen-Tastaturreihe, die als Entscheidung dokumentiert ist; die quadratische Laufzeit, die keine Zusage verletzt). **Behoben sind alle dreißig** — auch die sechs, weil jede Behebung für sich mit einer Zahl belegt ist. **Backlog 154–161 neu.** Prüfzahlen: ingestprobe 47 → 62/0, gpxprobe 88 → 95/2, wartungsprobe 51/0, Wache 30/0 und 112/112, Wortliste 0/0/0, linkprobe 132/0/1/0. Offen: der Merge auf `main` nach Freigabe, danach `update.php` |
+| **38** | **10.09.2026** | **S9 gebaut und geprüft (Schritt 8, Web 15.7.0 bis 19.1.0, Zweig `claude/go-bwucrx`).** Acht Arbeitspakete plus zwei Nachträge (AP4a, AP5b), Erledigt-Zeile in Abschnitt 8. **AP7** verschlüsselt die **Notizen des Einsatzes** — und deckte dabei zwei Stellen auf, an denen die Zusage schon vorher nicht stimmte: `api/suchindex.php` lieferte jede Notiz **im Klartext** für den gesamten aktiven Bestand, ohne Entsperren (31 Schlüssel je Einsatz vorher, 30 nachher), und **E6 „Administration sieht keinen Klartext"** war unwahr, weil `notes` in der Spaltenliste des Adminpakets stand. `CLAUDE.md` Abschnitt 4 und `docs/Technik.md` 4.98 nennen die Notizen jetzt; in 4.98 fehlten sie bis dahin in **beiden** Listen. **AP5b** hat die zentralen Stammdaten ihrer Oberfläche beraubt (R39, Web 18.0.0) — der Schemarückbau bleibt P5 (Nr. 168). **Backlog:** neun Punkte nach *Erledigt* (44, 69, 108, 109, 111, 112, 113, 132, 152) — das Konzept sagte „zwanzig", elf davon hatten AP1 bis AP7 unterwegs schon verschoben; Abschnitt 5 bereinigt, dabei eine **Dopplung von Nr. 69** entfernt. Neu: 163 (gegenstandslos), 166 (zurückgezogen), 167, 168, 169. **Prüfzahlen:** Klickprobe 80/80 als Zeiger- und 80/80 als Fingergerät, Bilderlauf 360 Bilder und 45 Kontaktbögen je Bedienhöhe mit 0/0/0, Kreisläufe CSV 9120/0 und Sicherung 287 842/0, Referenzbestand 283 989 und 5961 Einzelprüfungen ohne Befund, Wortliste 0 bei 96 Regeln, Kontraste 22/0, Linkprobe 116/0, Vollständigkeit 330. **Drei Funde hätten Daten gekostet** und sind behoben: F-S9-U-34 (stiller Verlust von Besatzungsnamen), `readField()` (hätte eine verschlüsselte Notiz beim Speichern gelöscht) und der fehlende `case` in `import.js` (114 Notizen im CSV-Umlauf). Offen: der **Merge auf `main`** nach Freigabe, danach **`update.php`** |
+| **37** | **09.09.2026** | **Zwischenstand S9** (AP1 bis AP6, Web 15.7.0 bis 18.1.0): Frage 10 entschieden (Weg c — die Tür zu den zentralen Stammdaten wird geschlossen, der Schemarückbau bleibt P5), Frage 11 entschieden (Weg a — die Leseansicht berichtet den Bestand; das Einsatzformular zieht nach). Fahrplan-Dopplung der Schritte 8, 9 und 9a entfernt |
 | **36** | **07.09.2026** | **Schritt 9a, Android-Teil gebaut und geprüft (Android 0.14.0)** — damit ist 9a vollständig gebaut, Erledigt-Zeile in Abschnitt 8. Fünf Punkte, fünf Commits: HTTP-Ausnahme nur im Prüf-APK, Klartextverbot im Release (142); abgewiesene Pakete nach 30 Tagen und beim Trennen geräumt, `dienst`-Zeilen mit ihnen (114 Räumteil); Entscheidung gegen Certificate Pinning in `android/LIESMICH.md` (143); Data-Layer-Empfang prüft `sourceNodeId` gegen die verbundenen Knoten und die Zeit der Uhr gegen Dienstfenster und Gegenwart (144); `distributionSha256Sum` im Gradle-Wrapper, aus zwei Wegen belegt (145). **Zwei gewählte Zahlen** mit Begründung am Code: 30 Tage, fünf Minuten; die Schnittstelle `Nachrichtenweg` bleibt unverändert. **Backlog:** 142–145 nach *Erledigt*, 114 bleibt offen mit dem Vermerk „Räumteil erledigt"; Abschnitt 5 bereinigt. Prüfzahlen `./gradlew build` grün — Handy **261 Prüffälle je Bauart** (Debug und Release; vorher 247), **0 Fehlschläge**, 15 übersprungen (14 Rundlauf ohne Installation und der jeweils bauartfremde Fall aus Nr. 142); Uhr **71 Prüffälle**, 0 übersprungen; Lint **0 Fehler** (Handy 13 Warnungen, unverändert die `libs.versions.toml`-Hinweise; Uhr 0); Release-APK Handy **7 867 394 B** (+332 B gegen 0.13.0), Uhr **19 574 406 B** (unverändert); Bilderlauf 72 Bilder wie zuvor; Emulator Stufe II erreicht im fünften Anlauf: Boot 715 s, Kopplung, Einstellungen und Trennen mit acht Bildern, Räumlauf am echten Android-SQLite 1 → 0 in allen vier Tabellen, Gerät am Server gelöscht; vier Anläufe ohne Boot wegen des Android-Watchdogs unter TCG, Gegenmittel `ro.hw_timeout_multiplier` als Root (F-SP-P-07); Wear-Emulator nicht gefahren. Offen: der Merge auf `main` nach Freigabe |
 | **35** | **07.09.2026** | **Schritt 9a, Web-Teil gebaut und geprüft (Web 15.6.0, Zweig `claude/sofortpaket-sicherheit-1t70p1`).** Elf Punkte aus dem Krypto-Review in vierzehn Commits (drei Nachbesserungen): Rundenzahl 600 000 und Passwortregeln (136), Login-CSRF (127), E-Mail-Wechsel mit Nachweis samt Hinweismail an die alte Adresse (128), `apk/` und `demo/` gesperrt (129), DOCTYPE-Sperre des GPX-Imports gegen UTF-16 (130), `wiederherstellen.php` ohne Auskunft (131), Bauordner des Komplettbackups (133), **Ersetzfenster 72 h** (134), `json_js()` an 44 Stellen (135), **Weg C** in vier Dokumenten (138) und die **Integritätswache** als tägliche Action (140). **Zwei Funde beim Bauen**, beide in 136 behoben und beide von derselben Art — eine Maßnahme, die nie ausgelöst hat, ist nicht geprüft: Die stille Anhebung lief nicht beim nächsten Anmelden (sie braucht `CSRF`, das nur drei von sieben Seiten ausgaben), und die Wartungsseite meldete nur verwaiste Rundenzahlen statt der Zahl, die sagt, wann der Altwert weg darf. **Eine Regeländerung mit Ansage:** Die Sperrliste der Passwortprüfung rechnet den Anteil statt des Vorkommens, sonst widerspräche die Passphrasen-Empfehlung der eigenen Prüfung. **Neu:** `tools/integritaetswache/`, `tools/gpxprobe/` Teil 8, `tools/ingestprobe/` Teil 9 (dazu ihre Zeitstempel von festen März-Daten auf `time()`), `tools/wartungsprobe/` 12a. **Backlog:** zehn Punkte nach *Erledigt*, 140 bleibt offen (Wache steht; Branch-Schutz/2FA sind Zuarbeit, Deploy-Tor ist S10), **153 neu** (`querySelector` aus 135 herausgelöst). Offen: der Android-Teil und danach der Merge. |
 | **34** | **07.09.2026** | **S9-Konzept liegt vor und ist freigegeben; 148/149 gemergt.** Korrekturstufe Web 15.5.2 am 06.09.2026 als PR #36 auf `main` (Prüfliste des Auftraggebers offen); Schritt 9a noch nicht begonnen. **S9-Konzept:** Fable im Projektraum, 06./07.09.2026: `docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md` mit E-S9-01 bis -19, acht Arbeitspaketen, 33 Prüfpunkten mit Sollzahl und sieben freigegebenen Mockups (`konzept-s9/mockups/`, mit LIESMICH zur Herkunft der Zeichen und Kacheln). Der Zielkonflikt PS-8.2 ist am Code aufgelöst (Suche im Browser, Notizen in den `pat_blob`); PS-2 hat eine Ursache (`click` gegen 150-ms-Blur), PS-3 eine Zahl (Doppelring 60 px → 38), Nr. 72 ist belegt. **Dazu genommen:** Nr. 44, 68, 69, 70, 72 (06.09.) und **PS-12 Standortseiten** als **Nr. 152** (07.09.): „Rettungsmittel" entfällt als Menüpunkt, „Standorte" wird Liste und Seite je Standort mit Kennzahlen, Dialogen und Landung auf der neuen Zeile. **R79** (Geocoding abschaltbar je Installation und Konto, Dienstadresse als Einstellung). Vorgabe an 9a zu Nr. 137 und 132 im Block Schritt 9a; Abschnitt 4 um die Berührung S9/S11 ergänzt; Backlog: 152 neu, Vermerke „Konzept S9" an achtzehn Einträgen. **Beschluss am selben Tag:** Nr. 137 und 132 ganz nach S9 (E-S9-05, E-S9-02), weil 9a nicht begonnen hatte — Sperre S9/9a aufgehoben, beide parallel; S9-Umsetzung beauftragt (`Prompt-Umsetzung-S9.md`), 9a um zwei Punkte leichter |

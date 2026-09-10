@@ -721,3 +721,359 @@ function ist_liste($wert): bool
 {
     return is_array($wert) && ($wert === [] || array_is_list($wert));
 }
+
+/* ---------------------------------------------------------------------------
+ * Stammdaten: Rettungsmittel (E-S9-09, Web 16.0.0)
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Groesste Laenge des Kurznamens (Nr. 69). Steht hier und nicht nur im Schema,
+ * weil das Formular sie als `maxlength` braucht und die Sicherung sie beim
+ * Einlesen kappt — dieselbe Zahl, eine Quelle.
+ */
+const RM_KURZ_MAX = 16;
+
+/** Groesste Laenge der Bezeichnung, wie `vehicles.name` sie traegt. */
+const RM_NAME_MAX = 64;
+
+/**
+ * Ein Rettungsmittel pruefen — die eine Stelle fuer alle Schreibwege.
+ *
+ * WARUM DIESE FUNKTION IN DIESER DATEI STEHT. Bis Web 15.9.0 prueften die
+ * Rettungsmittel drei Wege getrennt und ungleich:
+ *
+ *   einstellungen.php    veh_save        Konto        drei Regeln, mit Meldung
+ *   admin_stammdaten.php veh_save        Verwaltung   dieselben drei, kopiert
+ *   backup_lib.php       Einspielen      Datei        zwei, still uebergangen
+ *
+ * Mit dem Typ kaemen an jeder der drei Stellen vier weitere Regeln dazu, und
+ * die dritte Kopie waere dann die, die als erste veraltet. (Die mittlere Zeile
+ * ist Geschichte: `admin_stammdaten.php` ist mit S9/AP5b gestrichen, es sind
+ * jetzt zwei Schreibwege. Die Tabelle bleibt vollstaendig — sie begruendet,
+ * warum es die Pruefschicht gibt, und dafuer zaehlt der damalige Stand.) Der Kopf dieser
+ * Datei nennt Einsatzdaten als ihren Gegenstand; die Rettungsmittel sind der
+ * erste STAMMDATENSATZ, der hier einzieht — aus demselben Grund, aus dem die
+ * Einsatzdaten hier stehen: vier Wege, ein Massstab.
+ *
+ * WAS SIE NICHT PRUEFT: ob der Standort existiert und wem er gehoert. Das
+ * haengt am Aufrufer und steht dort; hier kommt eine
+ * bereits aufgeloeste ID an oder null. Ebenso wenig prueft sie die Dublette —
+ * die braucht die Datenbank.
+ *
+ * ZWEI ARTEN VON RUECKMELDUNG, weil es zwei Arten von Aufrufern gibt. Die
+ * Formulare zeigen einer Person einen Satz; sie lesen `fehler`, das je Feld
+ * eine ausformulierte Meldung traegt (AP5 stellt sie in die Dialoge). Die
+ * Sicherung zaehlt und meldet nicht; sie uebergibt eine `Pruefliste` und
+ * liest hinterher `nachUrsache()`. Beide bekommen dieselben Regeln.
+ *
+ * @param  array $roh  name, kurz, typ, kind, base_id, roles[], caps[]
+ * @return array{daten: ?array, fehler: array<string,string>}
+ */
+/**
+ * TYP UND BETRIEBSART — die Regeln, die sich zwei Schreibwege teilen.
+ *
+ * Sie stehen an EINER Stelle, seit es zwei Verwendungen gibt: den
+ * STAMMDATENSATZ (`pruef_rettungsmittel()`) und das Rettungsmittel NUR FUER
+ * EINEN TAG (`pruef_tagesrettungsmittel()`, S9/AP6, E-S9-10). Beide fragen
+ * dasselbe — welcher Typ, und welche Betriebsart laesst er zu —, und eine
+ * zweite Fassung davon liefe beim naechsten Typ auseinander. Genau dieser
+ * Fehler steht weiter unten als Begruendung der vier Stammdatenlisten.
+ *
+ * @return array{typ:?string, kind:?string, regeln:?array, fehler:array<string,string>}
+ */
+function pruef_typ_betriebsart(array $roh, ?Pruefliste $p = null): array
+{
+    $fehler = [];
+
+    /* TYP — Vorgabe 'standard'. Ein UNBEKANNTER Wert wird nicht stillschweigend
+     * zu 'standard': Das machte aus einem Bergwacht-Rettungsmittel einer
+     * neueren Fassung ein Standard-Rettungsmittel, ohne dass es jemand merkt.
+     * Er wird abgelehnt und gemeldet. */
+    $typRoh = trim((string)($roh['typ'] ?? ''));
+    if ($typRoh === '') {
+        $typ = 'standard';
+    } elseif (array_key_exists($typRoh, VEHICLE_TYPEN)) {
+        $typ = $typRoh;
+    } else {
+        $typ = null;
+        $p?->melde('Typ', 'unbekannter Wert');
+        $fehler['typ'] = 'Dieser Typ ist nicht bekannt. Bitte einen der vier '
+                       . 'Typen wählen: Standard, Bergwacht, Veranstaltung, Sonstiges.';
+    }
+    $regeln = $typ !== null ? VEHICLE_TYPEN[$typ] : null;
+
+    /* BETRIEBSART — Pflicht seit Web 7.0.0, und bei einem Typ mit fester
+     * Betriebsart nicht wahlfrei. „Fest" heisst hier: Der Wert wird gesetzt,
+     * nicht abgelehnt. Das Formular zeigt das Feld ausgegraut, also kann ein
+     * abweichender Wert nur aus einer gebauten Anfrage oder einer aelteren
+     * Sicherung kommen — beides soll den Datensatz nicht kosten, aber auch
+     * nicht unbemerkt bleiben. */
+    $kindRoh = (string)($roh['kind'] ?? '');
+    $kind = in_array($kindRoh, ['air', 'ground'], true) ? $kindRoh : null;
+    if ($regeln !== null && $regeln['betriebsart'] !== null) {
+        if ($kind !== null && $kind !== $regeln['betriebsart']) {
+            $p?->melde('Betriebsart', 'bei Typ „' . $regeln['label'] . '" festgelegt — überschrieben');
+        }
+        $kind = $regeln['betriebsart'];
+    } elseif ($kind === null) {
+        $fehler['kind'] = 'Bitte die Art wählen: luftgebunden oder bodengebunden. '
+                        . 'Sie entscheidet über Besatzungsrollen und die im '
+                        . 'Einsatzformular sichtbaren Felder.';
+    }
+
+    return ['typ' => $typ, 'kind' => $kind, 'regeln' => $regeln, 'fehler' => $fehler];
+}
+
+function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
+{
+    $fehler = [];
+
+    /* BEZEICHNUNG — Pflicht. Zuschneiden statt ablehnen (wie pruef_text): Ein
+     * zu langer Name ist eine zu lange Eingabe, keine falsche. */
+    $name = pruef_text($roh['name'] ?? null, RM_NAME_MAX, 'Bezeichnung', $p);
+    if ($name === null) {
+        $fehler['name'] = 'Bitte eine Bezeichnung für das Rettungsmittel eintragen.';
+    }
+
+    /* KURZNAME — freiwillig, bis 16 Zeichen (Nr. 69). NULL heisst „keiner",
+     * nicht „leer": Die Anzeige entscheidet daran, ob sie ihn statt der
+     * Bezeichnung zeigt. */
+    $kurz = pruef_text($roh['kurz'] ?? null, RM_KURZ_MAX, 'Kurzname', $p);
+
+    ['typ' => $typ, 'kind' => $kind, 'regeln' => $regeln, 'fehler' => $tkFehler]
+        = pruef_typ_betriebsart($roh, $p);
+    $fehler += $tkFehler;
+
+    /* STANDORT — Pflicht nur noch bei 'standard' (E-S9-09). Die Vorschlagslisten
+     * haengen am Standort (E15); ein Standard-Rettungsmittel ohne ihn hinterliesse
+     * eine leere Tagesuebersicht. Die drei anderen Typen haben oft keinen:
+     * Eine Bergwacht-Bereitschaft hat ein Einsatzgebiet, ein Sanitaetsdienst
+     * einen Ort, der jedes Mal woanders liegt. */
+    $baseRoh = $roh['base_id'] ?? null;
+    $baseId  = ($baseRoh === null || $baseRoh === '' || (int)$baseRoh <= 0) ? null : (int)$baseRoh;
+    if ($regeln !== null && $regeln['standort'] && $baseId === null) {
+        $p?->melde('Standort', 'fehlt bei Typ „' . $regeln['label'] . '"');
+        $fehler['base_id'] = 'Bitte einen Standort wählen. Ein Rettungsmittel des Typs '
+                           . '„Standard" gehört zu genau einem Standort.';
+    }
+
+    /* ROLLEN-VORLAGEN — nur bei 'standard', und dort gefiltert auf die
+     * Betriebsart (E5/E6): Ein bodengebundenes Rettungsmittel kann keinen
+     * Flugretter fuehren. Die Filterung geschieht hier und nicht nur im
+     * Formular — ein Haken, den die Oberflaeche nicht anbietet, darf auch ueber
+     * eine gesendete Anfrage nicht hereinkommen.
+     *
+     * Bei den drei anderen Typen bleibt `vehicle_roles` leer (E-S9-09). Das ist
+     * keine Einschraenkung der Dokumentation, sondern der VORLAGE: Der
+     * Diensttag bekommt dann keinen Rollensatz angeboten (F19). */
+    $rollen = [];
+    if ($regeln !== null && $regeln['rollen'] && $kind !== null) {
+        $erlaubt = array_keys(crew_roles_fuer_art($kind));
+        foreach ((array)($roh['roles'] ?? []) as $rc) {
+            if (in_array((string)$rc, $erlaubt, true)) { $rollen[] = (string)$rc; }
+        }
+    } elseif ($roh['roles'] ?? []) {
+        $p?->melde('Rollen', 'bei diesem Typ nicht vorgesehen — verworfen');
+    }
+
+    /* FAEHIGKEITEN — ausschliesslich an luftgebundenen Rettungsmitteln (E29).
+     * Fuer 'veranstaltung' folgt daraus von selbst „keine": Der Typ ist auf
+     * Boden festgelegt. Deshalb steht hier keine zweite Bedingung auf den Typ. */
+    $caps = [];
+    if ($kind === 'air') {
+        foreach ((array)($roh['caps'] ?? []) as $c) {
+            if (array_key_exists((string)$c, VEHICLE_CAPABILITIES)) { $caps[] = (string)$c; }
+        }
+    } elseif ($roh['caps'] ?? []) {
+        $p?->melde('Fähigkeiten', 'nur an luftgebundenen Rettungsmitteln — verworfen');
+    }
+
+    if ($fehler !== [] || $name === null || $typ === null || $kind === null) {
+        return ['daten' => null, 'fehler' => $fehler];
+    }
+
+    return [
+        'daten' => [
+            'name'    => $name,
+            'kurz'    => $kurz,
+            'typ'     => $typ,
+            'kind'    => $kind,
+            'base_id' => $baseId,
+            'roles'   => array_values(array_unique($rollen)),
+            'caps'    => array_values(array_unique($caps)),
+        ],
+        'fehler' => [],
+    ];
+}
+
+
+/* ---------------------------------------------------------------------------
+ * DIE VIER EINFACHEN STAMMDATENLISTEN                          S9/AP5-4
+ *
+ * Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel und
+ * Bergwacht-Bereitschaften folgen demselben Muster: ein Name, ein Standort,
+ * bei der Besatzung eine Rolle dazu. Bis Web 16.3.0 stand diese Pruefung
+ * ACHTMAL ausgeschrieben — viermal in `einstellungen.php`, viermal in
+ * `admin_stammdaten.php` — und die acht Fassungen waren nicht gleich (die
+ * Verwaltungsseite ist mit S9/AP5b gestrichen; die ACHT ist die Zahl, die
+ * diese Schicht begruendet hat, und bleibt deshalb stehen):
+ *
+ *   - Die Kontoansicht meldete bei LEEREM NAMEN gar nichts. Kein `notice`,
+ *     kein `error`, also auch keine Umleitung: Der POST versickerte
+ *     wortlos, und die Seite kam als POST-Ergebnis zurueck, als waere nichts
+ *     gewesen. Die Verwaltung meldete an derselben Stelle „Bitte einen Namen
+ *     eintragen." Mit einem Dialog faellt das auf, weil er zugeht.
+ *   - Die Zielklinik hiess im Konto „Name" mit 190 Zeichen, in der Verwaltung
+ *     „Bezeichnung" mit 120 im Formular und 190 im Handler.
+ *
+ * `CLAUDE.md` 4 sagt: Einsatzdaten laufen ueber die gemeinsame Pruefschicht,
+ * alle Schreibwege, ohne Ausnahme. Fuer die Stammdaten galt das bisher nur
+ * beim Rettungsmittel.
+ *
+ * DIE OBERGRENZEN STEHEN HIER UND NICHT IM FORMULAR. `maxlength` im Markup
+ * ist eine Bequemlichkeit fuer die Tippende, keine Regel — wer die Seite
+ * umgeht, umgeht auch das Attribut. Die Zahlen sind die des Schemas.
+ * ------------------------------------------------------------------------ */
+/**
+ * EIN RETTUNGSMITTEL NUR FUER DIESEN TAG (S9/AP6, E-S9-10).
+ *
+ * WOFUER. Ein Dienst auf einem Fahrzeug, das dieses Konto sonst nie fuehrt —
+ * die Aushilfe, das Fremdfahrzeug, der einmalige Sanitaetsdienst. Bis Web
+ * 18.1.0 blieb dafuer nur, einen Stammdatensatz anzulegen, ihn einmal zu
+ * benutzen und danach in der Auswahl stehen zu lassen. Was hier entsteht,
+ * steht AUSSCHLIESSLICH in der Momentaufnahme des Diensttags: kein
+ * Stammdatensatz, keine Zeile in `vehicles` (F17).
+ *
+ * WAS SIE MIT `pruef_rettungsmittel()` TEILT: Typ und Betriebsart, ueber
+ * `pruef_typ_betriebsart()` — dieselbe Regel, eine Fassung.
+ *
+ * WORIN SIE SICH UNTERSCHEIDET, und warum:
+ *
+ *   - KEIN KURZNAME. Er ist eine Eigenschaft des Bestands (Nr. 69) und dient
+ *     der Wiedererkennung in Listen. Was einen Tag lang existiert, wird nicht
+ *     wiedererkannt.
+ *   - KEINE ROLLEN, KEINE FAEHIGKEITEN (F19). Der Tag bekommt keinen
+ *     Rollensatz und keine Fluglisten; `day_crew` und `day_capabilities`
+ *     bleiben leer.
+ *   - DER STANDORT IST FREIWILLIG — auch beim Typ „Standard". Am
+ *     Stammdatensatz ist er dort Pflicht, weil die Vorschlagslisten an ihm
+ *     haengen (E15) und ein Standard-Rettungsmittel ohne Standort eine leere
+ *     Tagesuebersicht hinterliesse. Hier gibt es keine Vorschlagslisten, weil
+ *     es keine Rollen gibt: Die Begruendung traegt nicht, also gilt die Regel
+ *     nicht.
+ *   - DER STANDORT DARF FREITEXT SEIN. `base_id` nennt einen Standort aus der
+ *     Liste, `base_name` einen Ort, den es als Stammdatensatz nicht gibt. Wo
+ *     eine Kennung steht, holt der Aufrufer Namen UND Koordinate aus den
+ *     Stammdaten; Freitext bleibt Freitext ohne Koordinate.
+ *
+ * @return array{daten:?array{name:string,typ:string,kind:string,base_id:?int,base_name:?string},
+ *               fehler:array<string,string>}
+ */
+function pruef_tagesrettungsmittel(array $roh, ?Pruefliste $p = null): array
+{
+    $fehler = [];
+
+    $name = pruef_text($roh['name'] ?? null, RM_NAME_MAX, 'Bezeichnung', $p);
+    if ($name === null) {
+        $fehler['name'] = 'Bitte eine Bezeichnung für das Rettungsmittel eintragen.';
+    }
+
+    ['typ' => $typ, 'kind' => $kind, 'fehler' => $tkFehler]
+        = pruef_typ_betriebsart($roh, $p);
+    $fehler += $tkFehler;
+
+    /* STANDORT: KENNUNG ODER FREITEXT. Steht eine Kennung da, gewinnt sie —
+     * der Aufrufer holt Namen und Koordinate aus den Stammdaten.
+     *
+     * DER TEXT KOMMT TROTZDEM MIT, und zwar als Rueckfall. Er ist die
+     * Beschriftung desselben Feldes, also ohnehin derselbe Name. Ohne ihn
+     * verloere der Tag seinen Standort STILL, wenn die Kennung sich als
+     * fremd erweist: `dt_base_erlaubt()` macht daraus NULL, und dann stuende
+     * weder Kennung noch Name da. Was jemand tippen darf, darf auch als
+     * Rueckfall stehen bleiben. */
+    $baseRoh = $roh['base_id'] ?? null;
+    $baseId  = ($baseRoh === null || $baseRoh === '' || (int)$baseRoh <= 0) ? null : (int)$baseRoh;
+    $baseName = pruef_text($roh['base_name'] ?? null, SD_NAME_MAX, 'Standort', $p);
+
+    if ($fehler !== [] || $name === null || $typ === null || $kind === null) {
+        return ['daten' => null, 'fehler' => $fehler];
+    }
+
+    return [
+        'daten' => [
+            'name'      => $name,
+            'typ'       => $typ,
+            'kind'      => $kind,
+            'base_id'   => $baseId,
+            'base_name' => $baseName,
+        ],
+        'fehler' => [],
+    ];
+}
+
+const SD_NAME_MAX = 120;   // crew_presets, resources, bw_units
+const SD_ZIEL_MAX = 190;   // transport_dests — laengere Klinikbezeichnungen
+
+/** Welche Tabelle wie heisst, wie lang sie darf und wie ihr Feld beschriftet ist. */
+const SD_LISTEN = [
+    'crew_presets'    => ['max' => SD_NAME_MAX, 'label' => 'Name',        'rolle' => true],
+    'transport_dests' => ['max' => SD_ZIEL_MAX, 'label' => 'Bezeichnung', 'rolle' => false],
+    'resources'       => ['max' => SD_NAME_MAX, 'label' => 'Bezeichnung', 'rolle' => false],
+    'bw_units'        => ['max' => SD_NAME_MAX, 'label' => 'Bezeichnung', 'rolle' => false],
+];
+
+/**
+ * Einen Eintrag einer der vier einfachen Listen pruefen.
+ *
+ * $roh: name, base_id (int|null), rolle (nur crew_presets), id (0 = neu)
+ * $tabelle: einer der vier Schluessel aus SD_LISTEN
+ *
+ * Rueckgabe wie `pruef_rettungsmittel()`: ['daten' => …|null, 'fehler' => []].
+ * `fehler` ist je FELD eine Meldung — der Dialog zeigt sie an seinem Feld,
+ * und wer nur eine Zeile hat, nimmt die erste.
+ */
+function pruef_stammdaten(string $tabelle, array $roh, ?Pruefliste $p = null): array
+{
+    if (!array_key_exists($tabelle, SD_LISTEN)) {
+        throw new InvalidArgumentException('Unbekannte Stammdatenliste: ' . $tabelle);
+    }
+    $regeln = SD_LISTEN[$tabelle];
+    $fehler = [];
+
+    $name = pruef_text($roh['name'] ?? null, $regeln['max'], $regeln['label'], $p);
+    if ($name === null) {
+        $fehler['name'] = 'Bitte eine ' . ($regeln['label'] === 'Name' ? 'Person' : 'Bezeichnung')
+                        . ' eintragen.';
+    }
+
+    /* DIE ROLLE IST PFLICHT UND MUSS IM KATALOG STEHEN. Ein unbekannter Wert
+       wird nicht stillschweigend zur ersten Rolle: Das machte aus einer
+       Pilotin eine Notaerztin, ohne dass es jemand merkt. */
+    $rolle = null;
+    if ($regeln['rolle']) {
+        $rolle = trim((string)($roh['rolle'] ?? ''));
+        if (!array_key_exists($rolle, CREW_ROLES)) {
+            $p?->melde('Rolle', 'unbekannter Wert');
+            $fehler['rolle'] = 'Bitte eine Rolle wählen.';
+            $rolle = null;
+        }
+    }
+
+    /* DER STANDORT IST HIER IMMER PFLICHT — anders als beim Rettungsmittel,
+       das seit Web 16.0.0 ohne auskommen darf. Diese vier Listen sind
+       Vorschlagslisten FUER einen Standort; ohne ihn haetten sie keinen Ort,
+       an dem sie erscheinen. Das Schema sagt dasselbe: `base_id NOT NULL`. */
+    $baseId = isset($roh['base_id']) && (int)$roh['base_id'] > 0
+        ? (int)$roh['base_id'] : null;
+    if ($baseId === null) {
+        $p?->melde('Standort', 'fehlt');
+        $fehler['base_id'] = 'Bitte einen Standort wählen.';
+    }
+
+    if ($fehler !== []) { return ['daten' => null, 'fehler' => $fehler]; }
+
+    return [
+        'daten'  => ['name' => $name, 'base_id' => $baseId, 'rolle' => $rolle],
+        'fehler' => [],
+    ];
+}

@@ -289,9 +289,7 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen Geräten
 untereinander. Abmelden steht getrennt am Ende und fragt sicherheitshalber
 nach. Bis Web 6.3.0 hieß der Punkt für Standorte und Rettungsmittel zusammen
-„Standortdaten"; der alte Link führt weiterhin zu „Standorte". **Stammdaten
-systemweit** hat seit Web 15.4.0 keinen Menüpunkt mehr — die Seite bleibt und
-ist über ihre Adresse erreichbar (Abschnitt 9.4).
+„Standortdaten"; der alte Link führt weiterhin zu „Standorte".
 
 **In der Leiste klappen dieselben drei Blöcke auf und zu.** Offen sind
 „Einstellungen" und der Block, in dem die gerade geöffnete Seite steht; die
@@ -490,6 +488,28 @@ Den **Standard der Installation** setzt die Verwaltung unter
 angemeldete Konten — aber nur bei denen, die hier „Standard der Installation"
 stehen haben. Eine getroffene eigene Wahl bleibt unberührt.
 
+**Karte „Datenschutz": die Adresssuche.** Seit Web 15.8.0 steht im Profil
+darunter der Schalter **„Adressvorschläge aus dem Internet"**. Er entscheidet
+für **dein Konto**, auf jedem Gerät: Ist er an, schickt dein Browser beim
+Tippen in einem Ortsfeld den getippten Text an einen Adressdienst und bekommt
+Vorschläge zurück; nach einer Wahl auf der Karte geht die Koordinate denselben
+Weg, um die Adresse dazu zu holen. Welcher Dienst das ist, steht in der Karte
+namentlich — die BetreiberIn trägt ihn ein (12.5), und es kann ein selbst
+betriebener sein.
+
+**Nichts anderes verlässt dabei das Gerät** — kein Name, keine Diagnose,
+keine Einsatznummer. Was ohne die Suche bleibt: Koordinaten, Plus Codes,
+„Meine Position", der Kartendialog und die Karte selbst. Was entfällt: die
+Adressvorschläge beim Tippen, die Umkehrsuche (also die Adresse zu einer
+Koordinate) und das Suchfeld im Kartendialog. Der Hinweis unter dem Ortsfeld
+verschwindet dann ebenfalls — er sagt aus, dass etwas hinausgeht, und dann
+geht nichts hinaus.
+
+Die Karte hat einen **eigenen** Speichern-Knopf; sie hängt nicht am Knopf
+darüber. Hat die **Installation** die Adresssuche abgeschaltet, steht der
+Schalter ausgegraut da und sagt es — dann ändert er nichts, und wer ihn
+braucht, wendet sich an die BetreiberIn.
+
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
 Es gibt ein Konto, in dem sich alles gefahrlos ausprobieren lässt:
@@ -557,7 +577,18 @@ vorausgewählt. Liegen mehrere Diensttage auf einem Kalendertag, steht bei jedem
 zusätzlich die Uhrzeit des Dienstbeginns — sonst ließen sie sich nicht
 unterscheiden. Vor dem Datum steht ein Zeichen für die Art: ein Hubschrauber
 für luftgebunden, ein Rettungswagen für bodengebunden, ein gestrichelter Kreis
-für „noch ohne Zuordnung". Der Name des Rettungsmittels steht rechts daneben.
+für „noch ohne Zuordnung". Trägt der Diensttag ein Rettungsmittel mit einem
+eigenen **Typ**, steht dessen Zeichen davor — ein Berg für Bergwacht, eine
+Eintrittskarte für Veranstaltung, ein Kreis mit drei Punkten für Sonstiges
+(seit Web 16.0.0). Der Typ geht der Art vor: Ein Bergwacht-Dienst trägt den
+Berg, ob er nun geflogen oder gefahren wird; wo du mit der Maus darüber
+stehenbleibst, nennt der Hinweis beides („Bergwacht, luftgebunden").
+
+Rechts daneben steht der Name des Rettungsmittels — und zwar sein
+**Kurzname**, wenn einer hinterlegt ist („BW Hoch" statt „Bergwacht
+Hochkreuth"). Die Leiste ist die schmalste Stelle der Anwendung; der volle
+Name steht im Hinweis, sobald du darüber stehenbleibst, und überall sonst
+ohnehin.
 (Bis Web 8.0.1 waren das Emoji — sie sahen auf jedem Betriebssystem anders
 aus; seit Web 9.0.0 sind es gezeichnete Symbole, die sich mitfärben.)
 
@@ -566,7 +597,7 @@ als Überschrift, darunter Rettungsmittel, Standort und Dienstbeginn in
 einer Zeile. Rechts daneben öffnet der Knopf **„···"** das Aktionsblatt des
 Tages mit **„Einsatz nachtragen"**, **„Diensttag-Daten bearbeiten"**,
 **„Datum ändern"** (Abschnitt 4.2a), **„Anderen Diensttag aufnehmen"**
-(Abschnitt 4.5a), **„Spuren als GPX"** (Abschnitt 4.1a) und **„Tag löschen"**
+(Abschnitt 4.5a), **„GPS-Daten als GPX"** (Abschnitt 4.1a) und **„Tag löschen"**
 (Abschnitt 8). Auf dem Handy fährt
 das Blatt von unten herein, am Desktop steht es als Menü am Knopf; Escape
 schließt es, die Tastatur bedient es vollständig.
@@ -586,14 +617,49 @@ Pro Tag:
   bodengebunden Fahrer, Praktikant und Sonstige.
   Ein Diensttag ohne Rettungsmittel zeigt keine Rollen — trag Standort und
   Rettungsmittel nach, dann erscheinen sie.
+
+  **Seit Web 18.1.0 erscheinen sie sofort**, sobald du das Rettungsmittel
+  wechselst — vorher musstest du erst speichern, um die neuen Rollen
+  überhaupt zu sehen, und danach ein zweites Mal, um sie zu füllen. Namen,
+  die du schon eingetragen hast, bleiben stehen, solange das neue
+  Rettungsmittel dieselbe Rolle führt. Gespeichert ist damit noch nichts:
+  Erst „Speichern" schreibt die Zuordnung fest.
+
+  **„Anderes Rettungsmittel …"** steht als letzter Eintrag der Auswahl (seit
+  Web 18.1.0). Er ist für den Dienst auf einem Fahrzeug, das du sonst nie
+  fährst — die Aushilfe, das Fremdfahrzeug, der einmalige Sanitätsdienst.
+  Darunter klappen drei Felder auf: **Bezeichnung**, **Typ** (und die
+  Betriebsart, die er zulässt) und **Standort**. Das Standortfeld ist beides
+  zugleich: Tippst du und wählst einen Vorschlag, übernimmt es den Standort
+  samt Koordinate; tippst du etwas anderes, bleibt es dein Text.
+
+  **Es entsteht dabei kein Stammdatensatz.** Das Rettungsmittel steht nur an
+  diesem einen Diensttag und taucht in keiner Auswahlliste wieder auf; in
+  Suche, Filter und Diensttage-Leiste findest du es trotzdem. Wenn du es
+  öfter brauchst, leg es unter *Einstellungen → Standorte* an.
+  **Besatzungsrollen gibt es dafür nicht** — und zwar auch nicht am einzelnen
+  Einsatz: Das Einsatzformular zeigt dieselben Rollen wie der Diensttag, und
+  der führt hier keine. An einem solchen Tag lässt sich die Besatzung also
+  nicht festhalten. Wer sie braucht, legt das Rettungsmittel unter
+  *Einstellungen → Standorte* an und ordnet es zu; dann stehen seine Rollen
+  am Tag und am Einsatz zur Verfügung.
+
+  > Bis Web 18.1.0 stand hier, Namen ließen sich am einzelnen Einsatz
+  > nachtragen. Das stimmte nicht: Ein frisch angelegter Tag dieser Art bot
+  > auch dort keine Rollen an, und ein aus einer früheren Zuordnung
+  > umgestellter bot die alten an. Seit Web 18.1.1 verhalten sich beide
+  > gleich.
 - **Karte** mit allen Einsätzen des Tages (jeder in eigener Farbe, beginnend
   mit Orange/Blau/Rot) und dem Ruhe-Track in gedämpftem Graublau. Kleine
-  **Richtungspfeile** auf den Spuren zeigen die Bewegungsrichtung.
+  **Richtungspfeile** auf den Aufzeichnungen zeigen die Bewegungsrichtung.
   Der **Standort** steht als Haus-Schild auf der Karte, der **Einsatzort**
-  als oranger Kreis; Dienstbeginn und -ende tragen Ringe am Standort-Schild.
+  als oranger Kreis. Anfang und Ende der Aufzeichnung sind hier **nicht**
+  gekennzeichnet — die Tagesübersicht zeigt den ganzen Tag, und was ihn
+  einrahmt, steht am einzelnen Einsatz (Abschnitt 4.2). Bis Web 15.9.0
+  behauptete dieser Absatz das Gegenteil.
   **Transportziele zeigt diese Karte nicht** (seit Web 12.3.2): Sie
   beantwortet, wo das Rettungsmittel an diesem Tag unterwegs war, und acht
-  Klinik-Schilder zwischen acht Spuren beantworten eine andere Frage. Das
+  Klinik-Schilder zwischen acht Aufzeichnungen beantworten eine andere Frage. Das
   Transportziel steht in der Einsatzansicht, wo es zu **einem** Einsatz
   gehört.
   Einsätze ohne aufgezeichneten Track verbindet eine **gestrichelte
@@ -641,28 +707,28 @@ Pro Tag:
   steht vollständig in der Einsatzansicht unter **Besatzung** — mit „(abw.)"
   an der betroffenen Rolle (Abschnitt 5). Das Feld selbst ist unverändert.
 
-### 4.1a Spuren des Diensttages
+### 4.1a GPS-Daten des Diensttages
 
-Erreichbar über **„···" → „Spuren als GPX"**. Die Seite zeigt oben die Karte
-des Tages und darunter **jede aufgezeichnete Spur als eigene Zeile**, in der
+Erreichbar über **„···" → „GPS-Daten als GPX"**. Die Seite zeigt oben die Karte
+des Tages und darunter **jede Aufzeichnung als eigene Zeile**, in der
 Reihenfolge, in der der Tag verlaufen ist: Ruhezeit, Einsatz, Ruhezeit,
 Einsatz. Einsätze tragen ihre Nummer. Je Zeile stehen Zeitraum, Punktzahl und,
 wo zutreffend, die Plakette **„ausgedünnt"**.
 
 Wer auf eine Zeile zeigt, sieht auf der Karte, welche Linie gemeint ist; ein
-Klick zoomt auf sie. **GPX** lädt genau diese Spur herunter.
+Klick zoomt auf sie. **GPX** lädt genau diese Aufzeichnung herunter.
 
 **Mehrere auf einmal.** Links in jeder Zeile steht ein Kästchen. Sobald eines
-angekreuzt ist, erscheint unten eine Leiste — sie sagt, wie viele Spuren
+angekreuzt ist, erscheint unten eine Leiste — sie sagt, wie viele Aufzeichnungen
 ausgewählt sind, und **„Auswahl als GPX"** lädt sie als *eine* Datei herunter.
 Die Karte zeigt dabei mit: Was ausgewählt ist, bleibt kräftig, der Rest tritt
 zurück.
 
-In der Datei bleibt jede Spur ein eigener Track — Kartenprogramme zeigen sie
+In der Datei bleibt jede Aufzeichnung ein eigener Track — Kartenprogramme zeigen sie
 getrennt an und ziehen keine Verbindungslinie vom Ende der einen zum Anfang
 der nächsten. Der Dateiname nennt Tag und Anzahl,
 z. B. `diensttag_2026-05-10_4-spuren_original.gpx`; sind Original- und
-ausgedünnte Spuren gemischt, heißt er `…_gemischt.gpx`, und jede Spur trägt
+ausgedünnte Aufzeichnungen gemischt, heißt er `…_gemischt.gpx`, und jede trägt
 ihre Kennzeichnung in der Datei bei sich.
 
 Ein Eintrag ohne Aufzeichnung steht in der Liste, hat aber ein abgeschaltetes
@@ -672,7 +738,7 @@ Diese Seite ist die einzige Stelle, an der auch die **Ruhezeiten** einzeln
 greifbar sind — auf der Tagesübersicht sind sie nur eine schwarze Linie auf
 der Karte.
 
-> **Eine Spur zeigt den Weg, also auch den Einsatzort.** Die Datei ist damit
+> **GPS-Daten zeigen den Weg, also auch den Einsatzort.** Die Datei ist damit
 > so zu behandeln wie die geschützten Angaben selbst, obwohl sie ohne
 > Schlüssel lesbar ist. Der Hinweis steht auf der Seite über der Liste.
 
@@ -684,7 +750,7 @@ der Karte.
 auf der Uhr einen Knopf gedrückt. Er fehlt also in der Liste — aber der
 **Weg** ist aufgezeichnet: Das Gerät hat durchgezeichnet und alles als
 Ruhezeit gebucht. Wer den Einsatz einfach nachträgt, bekommt einen Einsatz
-ohne Spur, und die Fahrt bleibt als Ruhezeit stehen.
+ohne GPS-Daten, und die Fahrt bleibt als Ruhezeit stehen.
 
 Unter der Einsatzliste steht deshalb die Karte **„Ruhesegmente"**: jede
 Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
@@ -709,7 +775,7 @@ zeigte die Ruhezeit später eine Fahrt über 40 km.
 
 **Was danach noch fehlt:** Einsatzort, Alter und Diagnose. Die sind
 verschlüsselt und können nur im Browser entstehen — der geschnittene Einsatz
-ist zunächst ein Einsatz mit Zeiten, Phasen und Spur. Öffne ihn und trag den
+ist zunächst ein Einsatz mit Zeiten, Phasen und GPS-Daten. Öffne ihn und trag den
 Rest wie gewohnt nach (Abschnitt 4.3).
 
 **Rückgängig** steht an derselben Segmentzeile, neben einer Plakette mit dem
@@ -724,7 +790,7 @@ geschnittenen Zeitraum. Es holt die Punkte zurück und löscht den Einsatz.
 > **Ein Zeitraum, in dem kein Punkt liegt, lässt sich nicht schneiden.** Die
 > Anwendung sagt es und legt nichts an. Das passiert, wenn du denselben
 > Bereich ein zweites Mal schneidest oder wenn das Gerät dort nicht
-> aufgezeichnet hat. Für einen Einsatz ohne Spur ist **„Nachtragen"** der
+> aufgezeichnet hat. Für einen Einsatz ohne GPS-Daten ist **„Nachtragen"** der
 > richtige Weg.
 
 **Und wenn das Gerät den Zeitraum später noch nachliefert?** Es kommt nicht
@@ -742,7 +808,7 @@ weg.
 Eine Aufzeichnung, die woanders entstanden ist — auf einer Wanderuhr, als
 Export aus einer anderen Software, aus einem eigenen Backup —, lässt sich
 einem Diensttag hinzufügen. Über **„···" → „GPX importieren"**; der Eintrag
-steht direkt neben **„Spuren als GPX"**, denn es ist derselbe Weg in die
+steht direkt neben **„GPS-Daten als GPX"**, denn es ist derselbe Weg in die
 andere Richtung.
 
 **Zwei Möglichkeiten, und die Wahl ist wichtig:**
@@ -764,8 +830,8 @@ entsteht nichts.
 **Die Datei sollte UTF-8 sein.** GPX schreibt das vor, und Geräte halten sich
 daran. Wählst du die Datei im Browser aus, wandelt er sie beim Lesen nach
 UTF-8 um — die Punkte kommen dann an, Umlaute aus einer Latin-1-Datei aber
-als Ersatzzeichen; sie stehen nur im Namen der Spur, und den speichert der
-Import nicht. Wer den Import unmittelbar über die Schnittstelle anspricht,
+als Ersatzzeichen; sie stehen nur im Namen der Aufzeichnung, und den
+speichert der Import nicht. Wer den Import unmittelbar über die Schnittstelle anspricht,
 muss UTF-8 liefern: Dort werden eine andere Kodierung, ein Nullbyte oder eine
 Kodierungsangabe wie UTF-7 oder UTF-16 abgelehnt (seit Web 15.6.0), und die
 Meldung sagt, was zu tun ist: als UTF-8 speichern und erneut versuchen. Eine
@@ -773,14 +839,14 @@ Kodierungsangabe wie ISO-8859-1 in einer Datei, deren Inhalt UTF-8 ist — so
 kommt die Latin-1-Datei aus dem Dateidialog an —, ist dagegen erlaubt.
 
 **Was toleriert wird:** GPX 1.0 ebenso wie 1.1, und Dateien ohne
-Namensraumangabe. Mehrere Abschnitte in einer Datei werden zu **einer** Spur
+Namensraumangabe. Mehrere Abschnitte in einer Datei werden zu **einer** Aufzeichnung
 zusammengeführt und nach Zeit sortiert. Einzelne unbrauchbare Punkte — eine
 Koordinate außerhalb des Erlaubten, eine unlesbare Zeit — fallen heraus, ohne
 die Datei zu verwerfen; wie viele es waren, steht in der Rückmeldung.
 
 Nach dem Import steht das neue Segment beziehungsweise der Einsatz an seiner
 Stelle in der Tagesansicht, und die Rückmeldung nennt Punktzahl und Zeitraum.
-Der Diensttag verlängert sich, wenn die Spur über seinen bisherigen Zeitraum
+Der Diensttag verlängert sich, wenn die Aufzeichnung über seinen bisherigen Zeitraum
 hinausreicht.
 
 ### 4.2 Einsatzansicht
@@ -789,10 +855,10 @@ hinausreicht.
 Tagesübersicht. Der Titel heißt „Einsatz N · Uhrzeit" (N = Nummer des Tages
 nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
 **„Bearbeiten"** als oranger Hauptknopf und das Aktionsblatt mit
-**Verschieben**, **Spur als GPX** und **Löschen** (mobil „···", am Desktop
+**Verschieben**, **GPS-Daten als GPX** und **Löschen** (mobil „···", am Desktop
 „Aktionen"; Escape schließt, die Tastatur bedient es vollständig — seit
-Web 9.3.0 dasselbe Blatt wie auf der Startseite). **Spur als GPX** erscheint
-nur, wenn der Einsatz überhaupt eine Spur hat, und lädt sie als GPX-Datei
+Web 9.3.0 dasselbe Blatt wie auf der Startseite). **GPS-Daten als GPX** erscheint
+nur, wenn der Einsatz überhaupt GPS-Daten hat, und lädt sie als GPX-Datei
 herunter — lesbar von jedem Kartenprogramm. In der Unterzeile stehen Zeitspanne — bei einem
 Einsatz ohne Ende „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
 Rettungsmittel und Standort:
@@ -817,11 +883,19 @@ hat keinen eigenen Zugang zum Server, sie reicht ihre Ereignisse ans Handy
 weiter, und das sendet. Der Unterschied sagt, **wo du getippt hast**, nicht
 welches Gerät hochgeladen hat.
 
-Trägt der Einsatz eine Spur, steht dort außerdem, wie viele Punkte sie hat —
-und ob sie noch die **Originalspur** ist oder bereits **ausgedünnt** (das
-geschieht sechs Monate nach dem Einsatz, siehe Abschnitt 9). Bei einer
-ausgedünnten Spur nennt die Plakette beide Zahlen: „Spur ausgedünnt · 113 von
-443 Punkten".
+Trägt der Einsatz GPS-Daten, steht dort außerdem die Plakette
+**„GPS-Daten"** — und ob die Aufzeichnung noch vollständig ist oder bereits
+**ausgedünnt** (das geschieht sechs Monate nach dem Einsatz, siehe
+Abschnitt 9). Dann heißt die Plakette **„GPS-Daten ausgedünnt"** und ist
+orange.
+
+**Seit Web 15.9.0 steht keine Zahl mehr darin.** Bis dahin hieß sie
+„Spur · 852 Punkte" bzw. „Spur ausgedünnt · 113 von 443 Punkten". Die Zahlen
+sind gegangen, weil sie eine Frage beantworteten, die niemand stellt: Wie
+viele Messpunkte eine Aufzeichnung hat, sagt nichts über den Einsatz — es
+sagt etwas über das Speicherverfahren. Wer die Punktzahl doch braucht,
+findet sie auf der Seite **„GPS-Daten des Diensttages"** (4.1a), wo sie zur
+Sache gehört.
 
 Wurde der Einsatz nach dem Anlegen verändert, erscheint zusätzlich das
 Bearbeitungskennzeichen **„editiert"** — unabhängig von der Herkunft. Ein von
@@ -870,9 +944,17 @@ Phasen, ab 1200 px rechts oben und beim Rollen klebend) zeigt den Track mit
 Klinik-Schild und den Einsatzort als orangen Kreis. **Die Schilder tragen
 keinen Namen** (seit Web 12.3.2) — nur das Symbol; der Name erscheint als
 Kurzinfo, wenn der Mauszeiger darauf steht. **Start und Ende der
-Aufzeichnung** tragen einen blauen bzw. roten Ring — am Schild des Ortes,
-an dem die Spur beginnt oder endet, sonst als eigener Ringpunkt; beides am
-selben Ort ergibt einen Doppelring. Einsätze ohne Track zeigt die
+Aufzeichnung** färben den **Rand** des Schildes blau bzw. rot — am Schild des
+Ortes, an dem die Aufzeichnung beginnt oder endet, sonst als eigener kleiner
+Ring daneben; beides am selben Ort ergibt einen doppelten Rand, außen rot und
+innen blau.
+
+Seit **Web 15.9.0** ist der Farbrand wirklich der Rand und liegt nicht mehr
+darum herum: Ein Standort mit beidem maß vorher 60 px und deckte auf dem Handy
+mehr als ein Drittel der Kartenhöhe — jetzt sind es 38 px. Die Zeichen sind
+insgesamt kleiner geworden (Schild 36 → 30, Einsatzort-Kreis 32 → 28 px), und
+die **Richtungspfeile zeigen erstmals wirklich in Fahrtrichtung**; bis dahin
+zeigten sie ausnahmslos nach Norden. Einsätze ohne Track zeigt die
 gestrichelte Luftlinie. Auf dem Track sitzen an den GPS-Positionen der
 Zeitstempel **Phasen-Nummern**, die standardmäßig **ausgeblendet** sind —
 ein Control auf der Karte („Einsatzphasen anzeigen") blendet sie ein,
@@ -915,7 +997,7 @@ Einsätze.
 ganze Tag steht am falschen Datum. In der Tagesübersicht: **Aktionen → „Datum
 ändern"**.
 Hier **wandern alle Zeitstempel mit** — Einsätze, Ruhesegmente, Phasenzeiten,
-Reanimationsprotokolle und die GPS-Spur. Die abgelesenen Uhrzeiten bleiben
+Reanimationsprotokolle und die GPS-Daten. Die abgelesenen Uhrzeiten bleiben
 dabei stehen; verschoben wird nur das Datum, auch über eine Zeitumstellung
 hinweg.
 
@@ -951,9 +1033,25 @@ in dieser Reihenfolge:
    Notarzt
 5. **Abweichende Besatzung** — zugeklappt mit der Vorschau „vom Diensttag";
    mit gespeicherter Abweichung offen
-6. **Notizen**
+6. **Notizen** — seit Web 19 **verschlüsselt** wie die Patientendaten
 7. **Einsatzphasen**
 8. **Reanimation** — zugeklappt („keine"), mit Bestand offen
+9. **Was hier gilt** — zugeklappt; die Legende zu den beiden Zeichen
+
+**Zwei Zeichen sagen dir, wer mitliest.** Ein **Schloss** neben der
+Beschriftung heißt: Dieses Feld ver- und entschlüsselt dein Browser, der Server
+sieht nur Chiffretext. Es steht an Name, Geburtsdatum, Alter, Diagnose,
+Einsatznummer, Einsatzort samt Beschreibung — und seit Web 19 an den
+**Notizen des Einsatzes**. Die Kleinzeile **„Klartext — keine
+Patientendaten"** heißt das Gegenteil: Dieses Feld wird unverschlüsselt
+gespeichert. Sie steht an den Bergwacht-Angaben, am weiteren Notarzt, an den
+Besatzungsnamen — und am Notizfeld des **Diensttags**, das weiterhin Klartext
+ist. Die zugeklappte Karte **„Was hier gilt"** am Ende des Formulars erklärt
+beides in drei Sätzen.
+
+> Die Notizen des Einsatzes und die des Diensttags heißen gleich und werden
+> verschieden behandelt. Genau deshalb tragen sie verschiedene Zeichen: Wer
+> Patientenbezogenes notieren will, gehört in das Feld mit dem Schloss.
 
 Windeneinsatz und Bergwacht fehlen ganz, wenn der Diensttag die jeweilige
 Fähigkeit nicht mitbringt und im Einsatz nichts dazu eingetragen ist.
@@ -1008,19 +1106,55 @@ auch eine zweistellige Jahreszahl (z. B. „23.04.33") — die Anwendung ergänz
 automatisch das plausible Jahrhundert. Der Einsatzort sucht beim Tippen: Ab
 drei Buchstaben erscheinen Adressvorschläge (OpenStreetMap); die Auswahl
 eines Vorschlags speichert die Koordinaten und setzt den Pin auf den Karten.
-Freitext ohne Vorschlag geht auch — dann ohne Pin.
+Freitext ohne Vorschlag geht auch — dann ohne Pin. **Unter dem ersten
+Ortsfeld einer Seite** steht eine Kleinzeile, die den Adressdienst beim Namen
+nennt und sagt, was ihn erreicht; sie fehlt, wenn die Adresssuche
+abgeschaltet ist (Abschnitt 3.1a). Sie steht nur einmal je Seite — auf der
+Standortseite wären es sonst zehn gleiche Sätze.
+
+**So wird eine Vorschlagsliste bedient** (seit Web 15.7.0 überall dieselbe —
+Einsatzort, Abfahrtort, Transportziel, Besatzung, weitere Rettungsmittel).
+Sie öffnet unter dem Feld und legt sich über den Inhalt darunter; der
+getippte Teil steht in jedem Treffer **fett**. Mit **Pfeil auf** und
+**Pfeil ab** wanderst du durch die Einträge, **Enter** übernimmt den
+markierten (ohne Markierung den ersten), **Esc** schließt die Liste; mit der
+Maus oder dem Finger genügt ein Antippen. Kommen die Treffer aus
+verschiedenen Quellen, stehen sie in **Gruppen** untereinander, jede mit
+einer kleinen Überschrift; ein Symbol und eine feine Zeile unter dem Treffer
+sagen zusätzlich, woher er stammt.
 
 Neben dem Feld stehen seit Web 9.4.0 zwei Knöpfe: Die **Lupe** stößt die
 Suche ausdrücklich an — sie ersetzt das frühere zweite Suchfeld
-(„Lokalisation …") auch am Transportziel, wo ein Treffer weiterhin **nur die
-Koordinaten** übernimmt und den eingetragenen Namen nie überschreibt. Der
+(„Lokalisation …") auch am Transportziel, wo ein Adresstreffer weiterhin
+**nur die Koordinaten** übernimmt und den eingetragenen Namen nie
+überschreibt. Der
 **Pin** öffnet ein Blatt mit zwei Wegen: **„Meine Position übernehmen"**
 (Standort des Geräts; der Browser fragt nach der Freigabe) und **„Auf der
-Karte wählen"** — eine Karte mit Fadenkreuz in der Mitte; verschieben, bis
-das Kreuz auf dem Ort steht, dann „Übernehmen". In beiden Fällen holt die
-Anwendung zur Koordinate eine Adresse (Photon/OpenStreetMap-Umkehrsuche);
-sie füllt das Feld nur, wenn es leer ist. Die Anfrage trägt ausschließlich
-die Koordinate — nie Namen, Diagnose oder andere Inhalte.
+Karte wählen"** — der Kartendialog. In beiden Fällen holt die Anwendung zur
+Koordinate eine Adresse (Umkehrsuche beim Adressdienst, Abschnitt 3.1a); sie
+füllt das Feld nur, wenn es leer ist. Die Anfrage trägt ausschließlich die
+Koordinate — nie Namen, Diagnose oder andere Inhalte.
+
+**Der Kartendialog** (seit Web 15.8.0 an fünf Stellen derselbe: Einsatzort,
+manueller Abfahrtort, Transportziel sowie die Lage von Standorten und
+Zielkliniken in den Stammdaten) zeigt eine Karte mit **Fadenkreuz in der
+Mitte**: verschieben, bis das Kreuz auf dem Ort steht, dann **„Übernehmen"**.
+Drei Dinge helfen beim Zielen:
+
+- Im Kopf steht ein **Suchfeld**. Ein Treffer daraus **setzt nur das Kreuz** —
+  die Karte fährt hin, ins Formular geschrieben wird nichts. Erst
+  „Übernehmen" übernimmt. So lässt sich ein Ort suchen und anschließend von
+  Hand genauer treffen, ohne dass eine ungenaue Adresse schon im Einsatz
+  steht. Ist die Adresssuche abgeschaltet (Abschnitt 3.1a), fehlt das Feld.
+- Ist für den Einsatz eine **GPS-Aufzeichnung** vorhanden, liegt sie als Linie
+  auf der Karte, mit Ring am Start und am Ende; eine Legende darunter sagt,
+  was was ist. Der Einsatzort liegt fast immer an dieser Linie — und mit ihr
+  vor Augen findet man ihn auch dann, wenn man die Gegend nicht kennt.
+- Ist das Ortsfeld noch **leer**, stellt sich die Karte beim Öffnen von selbst
+  auf diese Aufzeichnung ein. Steht schon eine Koordinate, bleibt sie der
+  Mittelpunkt — sie ist die Aussage, die Aufzeichnung nur Zusatz. Und wer selbst
+  geschoben oder gezoomt hat, dem wird die Karte nicht mehr weggezogen, auch
+  wenn die Aufzeichnung erst danach fertig geladen ist.
 
 **Gespeicherte Koordinaten stehen unter dem Feld.** Sobald Koordinaten gesetzt
 sind — egal ob über einen Adressvorschlag oder über eine der unten genannten
@@ -1039,8 +1173,9 @@ Alternativ zur Adresse erkennt das Feld beim Tippen auch vier weitere
 Formate — die Umwandlung erfolgt lokal im Browser, es wird dabei keine
 Anfrage an einen externen Server gestellt. Wie bei einer Adresse erscheint
 dann ein Eintrag in der Vorschlagsliste (z. B. „Koordinaten übernehmen
-(Dezimalgrad): 47.72610, 10.31700"); erst mit dessen Auswahl werden
-Koordinaten und Pin übernommen. **Das Textfeld wird dabei geleert** — es
+(Dezimalgrad): 47.72610, 10.31700") — und zwar **allein**: Wer Zahlen tippt,
+sucht keine Adresse. Erst mit seiner Auswahl werden Koordinaten und Pin
+übernommen. **Das Textfeld wird dabei geleert** — es
 gehört ab dann der Bezeichnung, die du selbst einträgst (z. B. „Talstation
 Nebelhorn", „Wanderweg 401, Ostrachtal"). Ohne diese Bezeichnung lässt sich
 der Einsatz nicht speichern; in den Listen stünde sonst nur eine Zahlenreihe
@@ -1117,10 +1252,11 @@ Anlegen eingefroren.
 des Diensttags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
 wiederholt werden. Wechselt jedoch während des Dienstes jemand (typisch: ein
 Pilotenwechsel oder Fahrerwechsel am Nachmittag), setzt du am betroffenen
-Einsatz den Haken **„Abweichende Besatzung"**. Darunter erscheint je Rolle des Diensttags ein
-Textfeld mit Vorschlagsliste: Sobald du hineinklickst oder zu tippen beginnst, schlägt das
-Feld deine Besatzungs-Vorbelegungen und die zentralen Stammdaten der jeweiligen
-Rolle vor (Abschnitt 9.1 bzw. 9.4).
+Einsatz den Haken **„Abweichende Besatzung"**. Darunter erscheint je Rolle des
+Diensttags ein Textfeld mit Vorschlagsliste: Sobald du zu tippen beginnst,
+schlägt das Feld unter der Überschrift „Vorlagen des Standorts" deine
+Besatzungs-Vorbelegungen der jeweiligen Rolle vor
+(Abschnitt 9.1) — bedient wie oben in Abschnitt 4.3 beschrieben.
 
 **Seit Web 5.5.0 ist jeder Name eintragbar**, auch einer, der nicht in den
 Stammdaten steht. Das ist der eigentliche Anlass für dieses Feld: Wer aushilft,
@@ -1196,9 +1332,15 @@ auseinanderzuhalten.
 Jeder Tag trägt vorn ein Zeichen für seine Art — Hubschrauber für
 luftgebunden, Rettungswagen für bodengebunden, ein gestrichelter Kreis für
 einen Diensttag ohne Rettungsmittel. Rechts daneben steht der Name des
-Rettungsmittels; ist er zu lang, wird er abgekürzt, und der volle Name
-erscheint, wenn der Mauszeiger darauf steht. Auf schmaleren Bildschirmen
-entfällt er ganz.
+Rettungsmittels — sein **Kurzname**, wenn einer hinterlegt ist; ist er zu
+lang, wird er abgekürzt, und der volle Name erscheint, wenn der Mauszeiger
+darauf steht.
+
+Auf mittelbreiten Bildschirmen wird die Leiste schmal, und dort steht nur
+noch, was auch hineinpasst: ein **Kurzname bleibt sichtbar**, ein voller Name
+entfällt — von ihm bliebe ohnehin nur eine Abkürzung mit Auslassungspunkten.
+Auf dem Handy liegt die Leiste als Schublade über der Seite und ist wieder
+breit genug; dort steht der Name wie am großen Bildschirm.
 
 Ein Klick auf das **Balkensymbol** neben Jahreszahl oder Monatsname öffnet eine
 Übersicht dieses Zeitraums. Unter dem Titel steht, wie viele Diensttage er hat
@@ -1326,10 +1468,14 @@ Danach in zwei Schritten:
    Uhr-Kennungen — daran lassen sich zwei Bruchstücke desselben Dienstes
    auseinanderhalten. Liegt der gesuchte Tag weiter entfernt, korrigiere zuerst
    sein Datum (Abschnitt 4.2a).
-2. **Vorschau bestätigen.** Sie zeigt den entstehenden Zeitraum, die Art und
-   was alles wandert. Widersprechen sich die beiden Tage bei Rettungsmittel,
-   Standort oder Besatzung, wählst du hier, was gelten soll; vorbelegt ist
-   immer der Tag, der bleibt.
+2. **Vorschau bestätigen.** Sie zeigt den entstehenden Zeitraum, die Art, den
+   **Typ** des Rettungsmittels und was alles wandert. Widersprechen sich die
+   beiden Tage bei Rettungsmittel, Standort oder Besatzung, wählst du hier,
+   was gelten soll; vorbelegt ist immer der Tag, der bleibt. Bei den beiden
+   Rettungsmitteln stehen Typ und Kurzname mit dabei — der Typ des
+   zusammengeführten Tages folgt dem, das du wählst. Zwei Tage mit
+   **verschiedenem Typ** lassen sich zusammenführen; nur verschiedene *Arten*
+   (luft- und bodengebunden) gehen nicht.
 
 Danach hängen Einsätze, Ruhesegmente und Uhr-Kennungen am Zieltag, sein Zeitraum
 umschließt beide, und Notizen sind aneinandergehängt — nichts wird
@@ -1365,7 +1511,7 @@ Handgelenk und das Handy in der Tasche —, legt **jedes einen eigenen
 Diensttag** an. Die Geräte wissen nichts voneinander; jedes bekommt seine
 eigene Dienstkennung, und der Server ordnet danach zu. Es geht dabei nichts
 verloren und nichts wird überschrieben: **Es steht alles doppelt.** Derselbe
-Einsatz zweimal, dieselbe Spur zweimal — und in der Jahresübersicht zählt der
+Einsatz zweimal, dieselben GPS-Daten zweimal — und in der Jahresübersicht zählt der
 Dienst doppelt.
 
 Der häufigste Fall ist die Uhr, die im Spind noch mitläuft, während du längst
@@ -1400,7 +1546,7 @@ ein Klick auf eine Zeile öffnet den Einsatz. Die Zeile hebt sich dabei hervor,
 sobald der Zeiger darüber steht. Ohne Maus geht es auch: Mit der Tabulatortaste
 springst du von Zeile zu Zeile, Enter oder Leertaste öffnen den Einsatz. Ganz
 links trägt jede Zeile einen **Farbstreifen** — es ist die Farbe, in der die
-Spur dieses Einsatzes auf der Karte seines Diensttags gezeichnet ist.
+Aufzeichnung dieses Einsatzes auf der Karte seines Diensttags gezeichnet ist.
 
 **Auf schmalen Geräten** (unter 720 px) wird aus jeder Zeile eine **Kachel**,
 wie auf der Tagesübersicht: oben Artzeichen und Datum, darunter Ort und
@@ -1612,11 +1758,11 @@ es nicht mehr.
   vollständig übernommenen Server.
 - **Verschlüsselt sind nicht alle Daten, sondern diese:** Name, Geburtsdatum,
   Alter, Diagnose, Einsatznummer sowie Adresse, Koordinate und Beschreibung des
-  Einsatzorts. **Im Klartext liegen dagegen:** die GPS-Spur, die Koordinate
+  Einsatzorts. **Im Klartext liegen dagegen:** die GPS-Daten, die Koordinate
   jeder Einsatzphase, das Transportziel, alle Zeiten, der Verlauf einer
   Reanimation und die Namen der Besatzung — sie werden für Auswertung und
   Statistik gebraucht, die der Server rechnet.
-  **Der Einsatzort lässt sich damit aus der Spur ableiten**, auch wenn die
+  **Der Einsatzort lässt sich damit aus den GPS-Daten ableiten**, auch wenn die
   Adresse verschlüsselt ist. Das ist keine Lücke, sondern die Grenze dieser
   Bauform, und sie steht hier, damit niemand mehr erwartet, als sie hält. Wer
   eine Installation betreibt, behandelt den Datenbankzugang entsprechend.
@@ -1694,7 +1840,7 @@ Datei und kann nicht auseinanderlaufen.
 > |---|---|---|---|
 > | **Backup** | du selbst | **deine** Einsätze, Diensttage, Stammdaten | Einstellungen → **Backup** (dieses Kapitel) |
 > | **Konto-Backup** | die Verwaltung, je Konto | die Daten **einer** NutzerIn, verschlüsselt mit deren Schlüssel | Verwaltung → **Konto-Backups** (Regeln, 11.4) und die **Kontoseite** (Pakete, 11.1); was es für dich bedeutet: 6.1 |
-> | **Komplett-Backup** | die BetreiberIn, einmal für alles | **alle** Konten, Stammdaten, Geräte, Spuren — jede Tabelle | Betrieb → **Komplett-Backup** (12.6) |
+> | **Komplett-Backup** | die BetreiberIn, einmal für alles | **alle** Konten, Stammdaten, Geräte, GPS-Daten — jede Tabelle | Betrieb → **Komplett-Backup** (12.6) |
 >
 > Dazu kommen die **Backup-Ziele** (12.7): eine Gegenstelle, auf die die
 > Konto-Backups zusätzlich geschoben werden. Sie sind kein viertes Backup,
@@ -1708,16 +1854,16 @@ jedem, der die Datei in die Hand bekommt, steht nur dieses Passwort.
 
 **Seit Web 11.0.0 ist die Datei innen mehrteilig.** An der Bedienung ändert
 das nichts — eine Datei, ein Passwort, ein Knopf. Innen liegen jetzt aber ein
-Verzeichnis, ein Kopf, die Einträge in Fenstern und die Spuren in eigenen,
+Verzeichnis, ein Kopf, die Einträge in Fenstern und die GPS-Daten in eigenen,
 einzeln verschlüsselten Teilen. Der Grund ist die Menge: Bei ein paar tausend
-Einsätzen sind die Spurpunkte der weitaus größte Teil, und in einem Stück
+Einsätzen sind die GPS-Punkte der weitaus größte Teil, und in einem Stück
 brachten sie ältere Telefone an ihre Grenze. Sie sind jetzt außerdem gepackt
 statt ausgeschrieben — gemessen am Beispielbestand **218 KB statt 739 KB**,
 also 70 % weniger.
 
 Was du davon merkst: Die Statuszeile zählt beim Sichern und beim Einspielen
 die Teile mit („Einträge werden übertragen (Teil 2 von 5) …"), und die
-Abschlussmeldung nennt Einträge, Spuren und Punkte.
+Abschlussmeldung nennt Einträge, Aufzeichnungen und Punkte.
 
 **Die Abschlussmeldung nennt außerdem den Dateinamen** (seit Web 12.2.1) —
 etwa `einsatzdoku-backup-2026-09-01.edbak`. Das Herunterladen läuft ohne
@@ -2258,38 +2404,156 @@ offen ist. Danach verschwindet die Seite von selbst.
 
 ## 9. Stammdaten (Standorte und Rettungsmittel)
 
-Deine Vorbelegungen liegen seit Web 7.0.0 hinter **zwei** Menüpunkten. Der
-Schnitt folgt der Tätigkeit:
+Deine Vorbelegungen liegen seit Web 16.2.0 hinter **einem** Menüpunkt:
+**Einstellungen → Standorte**. Von Web 7.0.0 bis 16.1.1 waren es zwei
+(„Standorte" und „Rettungsmittel"), geschnitten nach Tätigkeit — anlegen dort,
+ausstatten hier. Der Schnitt hat sich nicht bewährt: Beide zeigten denselben
+Bestand, und wer einen Standort einrichtete, ging zwischen ihnen hin und her.
 
-| Menüpunkt | Inhalt |
+| Wo | Was |
 |---|---|
-| **Einstellungen → Standorte** | Eigene Standorte anlegen und bearbeiten, **vordefinierte** Standorte auswählen. Und sonst nichts. |
-| **Einstellungen → Rettungsmittel** | Was an den ausgewählten Standorten hängt: Rettungsmittel samt Rollen und Fähigkeiten, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel, Bergwacht-Bereitschaften. |
+| **Einstellungen → Standorte** (die Liste) | Eigene Standorte anlegen und bearbeiten — und die Karte **„Ohne Standort"** für Rettungsmittel, die keinen brauchen. |
+| **Die Seite eines Standorts** (ein Klick auf seine Zeile) | Alles, was an diesem Standort hängt: Lage, Rettungsmittel samt Rollen und Fähigkeiten, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel, Bergwacht-Bereitschaften. |
 
 Bis Web 6.3.0 hieß beides zusammen „Standortdaten" — der Name passte auf keinen
-der beiden Teile. Ein alter Link (`?t=stammdaten`) führt weiterhin zu
-„Standorte".
+der beiden Teile. Zwei alte Links führen weiterhin auf die Liste:
+`?t=stammdaten` (der Name bis Web 6.3.0) und `?t=rettungsmittel` (der Reiter
+bis Web 16.1.1).
 
-Unter „Rettungsmittel" steht **je Standort ein Block**, darin je Datenart ein
-eigener aufklappbarer Abschnitt mit der Zahl der Einträge im Kopf. Alles startet
-zugeklappt. Nach dem Speichern öffnet sich der Weg bis zu der Stelle wieder, an
-der du getippt hast, und die Seite springt dorthin.
+**Die ganze Zeile der Liste ist der Verweis** — nicht der Name darin. Sie nennt
+in der Kleinzeile drei Zahlen: Rettungsmittel, Besatzung, Zielkliniken. Löschen
+und „Als Vorbelegung" stehen nicht mehr hier, sondern im Aktionsmenü der
+Standortseite: Wer einen Standort löscht, sieht vorher, was daran hängt.
+
+**Auf der Standortseite** steht je Datenart eine eigene Karte — Standort,
+Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel und (nur bei
+einem luftgebundenen Rettungsmittel) Bergwacht. Drei Kennzahlen am Kopf
+springen in die drei größten; am Ende jeder Karte führt **„Zum Anfang"**
+zurück. Am Schreibtisch stehen dieselben Karten als Unterpunkte in der Leiste
+links. Nach dem Speichern kehrt die Seite an die Stelle zurück, an der du
+getippt hast.
+
+**Wird eine Liste lang, bekommt sie ab sechs Einträgen ein Hilfsmittel**
+(seit Web 16.3.0):
+
+- Über den **Rettungsmitteln** steht dann eine Reihe runder Marken, je eine
+  mit dem Zeichen und dem Namen. Ein Tipp darauf springt zu der Zeile, und
+  die Zeile ist kurz orange hinterlegt, damit du sie unter den anderen
+  wiederfindest.
+- Über den **übrigen Listen** steht ein **Filterfeld** mit einer Lupe. Tippe
+  ein paar Buchstaben, und es bleibt stehen, was dazu passt — sofort, ohne
+  Warten. Die Rollenüberschriften der Besatzung verschwinden mit, solange
+  darunter niemand mehr steht. „Anlegen" bleibt dabei erreichbar: Es steht im
+  Kartenkopf, also über dem Filter. Der Filter verschwindet beim Neuladen —
+  er steht nicht in der Adresse und lässt sich nicht weitergeben.
+
+**Angelegt und bearbeitet wird seit Web 17.0.0 in einem Dialog.** „Anlegen"
+steht rechts im Kartenkopf, „Bearbeiten" im Menü der Zeile; beide öffnen
+dasselbe Fenster über der Seite, und unter dem Titel steht, zu welchem
+Standort es gehört. Vorher stand unter jeder Liste ein Formular — wer den
+zwölften Eintrag anlegen wollte, rollte an elf vorbei, und „Bearbeiten" lud
+die Seite neu und änderte die Werte eines Formulars weiter unten, was auf
+einem Handy nicht zu sehen war.
+
+> **Für einen einzigen Dienst brauchst du keinen Stammdatensatz.** Wer einmal
+> auf einem fremden Fahrzeug aushilft, wählt in der Tagesübersicht unter
+> *Diensttag-Daten → Rettungsmittel* den letzten Eintrag **„Anderes
+> Rettungsmittel …"** und trägt Bezeichnung, Typ und Standort dort ein
+> (Abschnitt 4.1, seit Web 18.1.0). Das bleibt an diesem Diensttag und
+> erscheint hier nicht. Erst was du öfter brauchst, gehört auf diese Seite.
+
+Zwei Dinge daran sind bewusst so:
+
+- **Geht etwas schief, bleibt der Dialog offen** — mit deiner Eingabe und
+  der Meldung darin. Du berichtigst, was zu berichtigen ist, und drückst
+  noch einmal.
+- **Geht es gut, gibt es keine Erfolgsmeldung.** Die Seite springt zu der
+  Zeile, die du gerade geschrieben hast, und die Zeile ist kurz orange
+  hinterlegt. Das ist die Bestätigung, und sie steht dort, wo du hinsiehst.
+  Ein neuer **Standort** führt aus demselben Grund gleich auf seine eigene
+  Seite: Dort ist als Nächstes etwas zu tun.
+
+Ein Rettungsmittel zeigt in seiner Zeile **sein Artzeichen** links vom Namen
+— es sagt Art und Typ zugleich, dasselbe Zeichen wie in der Diensttage-Leiste
+(Abschnitt 3). Fahre mit der Maus darüber oder lass es dir vorlesen: Die
+Textalternative nennt beides ausgeschrieben.
 
 ### 9.1 Standorte, Rettungsmittel, Besatzung, Bergwacht
 
-**Der Standort ist der Anker.** An ihm hängen Rettungsmittel, Zielkliniken,
-weitere Rettungsmittel, Bergwacht-Bereitschaften und Besatzungs-Vorbelegungen —
-jeder Eintrag gehört genau **einem** Standort. Eine Zielklinik, die von zwei
-Standorten angefahren wird, ist deshalb zweimal anzulegen. Das ist der Preis
-dafür, dass in den Auswahllisten genau die Einträge des Standorts stehen, der
-am Diensttag hinterlegt ist, und sonst nichts.
+**Der Standort ist der Anker — mit einer Ausnahme seit Web 16.0.0.** An ihm
+hängen Rettungsmittel, Zielkliniken, weitere Rettungsmittel,
+Bergwacht-Bereitschaften und Besatzungs-Vorbelegungen — jeder Eintrag gehört
+genau **einem** Standort. Eine Zielklinik, die von zwei Standorten angefahren
+wird, ist deshalb zweimal anzulegen. Das ist der Preis dafür, dass in den
+Auswahllisten genau die Einträge des Standorts stehen, der am Diensttag
+hinterlegt ist, und sonst nichts. **Rettungsmittel** dürfen seit Web 16.0.0
+ohne Standort bestehen, wenn ihr Typ es zulässt — siehe unten.
+
+**Einen Standort löschen nimmt seine Stammdaten mit — mit einer Ausnahme
+seit Web 17.1.0.** Rettungsmittel der Typen Bergwacht, Veranstaltung und
+Sonstiges brauchen keinen Standort; dann darf das Löschen eines Standorts sie
+auch nicht kosten. Sie behalten Bezeichnung, Kurznamen, Betriebsart und
+Fähigkeiten und stehen danach in der Karte **„Ohne Standort"** auf der
+Standortliste. Was sie verlieren, sind die Vorschlagslisten des Standorts —
+die hingen an ihm, nicht an ihnen.
+
+Die Rückfrage sagt das vorher und nennt sie mit Namen: „5 eigene
+Stammdatensätze … werden mitgelöscht. 1 Rettungsmittel ohne Standortpflicht —
+Bergwacht Hochkreuth — bleibt bestehen und steht danach unter ‚Ohne
+Standort'." Nach dem Löschen führt die Seite gleich dorthin, mit der Zeile
+orange hinterlegt. Bereits dokumentierte Diensttage bleiben in jedem Fall
+unverändert — sie haben ihre Angaben beim Anlegen eingefroren.
+
+### 9.1a Vier Typen von Rettungsmitteln
+
+Seit Web 16.0.0 hat ein Rettungsmittel **zwei** Angaben, nicht eine:
+
+- die **Art** (luftgebunden oder bodengebunden) — sie entscheidet wie bisher
+  über Besatzungsrollen, Fähigkeiten und die Felder im Einsatzformular;
+- den **Typ** — worum es bei diesem Dienst geht.
+
+| Typ | Art | Rollen-Vorlagen | Fähigkeiten | Standort |
+|---|---|---|---|---|
+| **Standard** | wählbar | ja | nach Art | **Pflicht** |
+| **Bergwacht** | wählbar | keine | nach Art | freiwillig |
+| **Veranstaltung** | fest bodengebunden | keine | keine | freiwillig |
+| **Sonstiges** | wählbar | keine | nach Art | freiwillig |
+
+Die beiden Angaben sind **unabhängig**: Eine Bergwacht fliegt oder fährt, und
+beides ist ein Bergwacht-Dienst. Wählst du „Veranstaltung", setzt die Anwendung
+die Art auf bodengebunden — auch wenn im Formular etwas anderes stand.
+
+**„Keine Rollen-Vorlagen"** heißt: Ein Diensttag mit einem solchen
+Rettungsmittel bekommt keine Besatzungsfelder angeboten. Das ist keine
+Einschränkung der Dokumentation, sondern der Vorlage.
+
+**Ohne Standort** hat ein Rettungsmittel keine Vorschlagslisten — die hängen am
+Standort. Es steht seit Web 16.2.2 auf der **Standortliste** in einer eigenen,
+zugeklappten Karte **„Ohne Standort"** — dort, wo die Standorte stehen und
+keiner von ihnen gemeint ist; auf der Seite eines Standorts hat es nichts zu
+suchen. Löschen kannst du es in dieser Karte, „Bearbeiten" öffnet das Formular
+auf der Seite des ersten Standorts (mit gesetztem Haken). Angelegt wird es über
+denselben Haken „Ohne Standort" im Rettungsmittel-Formular eines beliebigen
+Standorts.
+
+**Der Kurzname** (bis 16 Zeichen, freiwillig) steht dort, wo der Platz knapp
+ist: in der **Diensttage-Leiste**, und dort in jeder Bildschirmbreite — auch
+in der schmalen, in der ein voller Name entfällt —, und in der Kleinzeile des
+**Papierkorbs**. Formulare, Export und Backup
+zeigen weiter die volle Bezeichnung — wer eine Exportdatei auswertet, kennt
+eure Abkürzungen nicht. Suchen kannst du nach beidem.
+
 
 Zu einem **Standort** lassen sich Koordinaten hinterlegen — freiwillig. Sie sind
 die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie im
 Feld **„Lage (optional)"** unter dem Namen: Adresse suchen, Koordinatenpaar
 oder Plus Code eintippen, der Vorschlag darunter übernimmt sie. Der **Name**
 bleibt dabei unberührt — „Standort Kempten" ist keine Adresse, und die Suche
-schreibt nur die Koordinaten.
+schreibt nur die Koordinaten. Seit Web 15.8.0 steht neben dem Feld auch der
+**Pin-Knopf** mit „Meine Position übernehmen" und dem Kartendialog (4.3) —
+bis dahin gab es ihn nur im Einsatzformular, und eine Lage ließ sich hier nur
+tippen, nicht zeigen. Eine Aufzeichnung liegt im Dialog nicht: Zu einem
+Standort gehört kein Einsatz, also gibt es nichts aufzuzeichnen.
 
 **Die Zeilenaktionen** stehen am Schreibtisch als Knöpfe rechts in der Zeile:
 „Als Vorbelegung" (setzt den Stern), „Bearbeiten" (füllt das Formular
@@ -2304,10 +2568,6 @@ Dasselbe gilt für alle übrigen Listen: Ein **Standort** ist unter
 Abschnitte Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel
 und Bergwacht — der letzte nur, wenn an diesem Standort ein luftgebundenes
 Rettungsmittel steht.
-
-**Vordefinierte Standorte** stehen in einer eigenen, zugeklappten Karte
-darunter; ihr Kopf nennt, wie viele es gibt und wie viele davon ausgewählt
-sind.
 
 Ein **Rettungsmittel** ist entweder **luftgebunden** oder **bodengebunden**.
 Diese Wahl entscheidet über alles Weitere:
@@ -2345,26 +2605,19 @@ abgeschlossener Dienstnachweis, kein Blick auf den heutigen Stammdatenbestand;
 wer eine alte Bezeichnung korrigieren will, tut das am Diensttag selbst.
 
 Das mit einem **Stern** als Vorbelegung markierte Rettungsmittel und der so
-markierte Standort werden bei neuen
-Diensttagen vorbelegt — das gilt auch für vom Admin zentral hinterlegte
-Einträge (s. 9.4). Bei **Standorten** ließ sich das bis Web 6.3.0 nur für eigene
-Einträge setzen; die Schaltfläche fehlte bei den vordefinierten, obwohl der
-Server es längst erlaubte. Ein Konto, das ausschliesslich mit vordefinierten
-Standorten arbeitet — der Regelfall überall dort, wo die Standorte zentral
-gepflegt werden —, konnte damit gar keine Vorbelegung setzen. Jetzt steht sie
-bei jedem **ausgewählten** vordefinierten
-Standort. (Nicht ausgewählte bleiben aussen vor: Was nicht in den Auswahllisten
-steht, kann auch keine Vorbelegung sein.)
+markierte Standort werden bei neuen Diensttagen vorbelegt.
 
 ### 9.2 Andere Rettungsmittel
 
 Hier legst du weitere Rettungsmittel als Vorbelegung an (RTW, NEF, RTH …). Im
 Einsatzformular tippst du im Feld **Weitere Rettungsmittel** mindestens zwei
-Zeichen — dann erscheinen die passenden Einträge zum Anklicken. Jeder
-übernommene Eintrag steht als eigenes Element mit kleinem Kreuz zum Entfernen;
-mehrere sind möglich, doppelte werden abgewiesen. Steht etwas nicht in der
-Vorbelegung, lässt es sich trotzdem übernehmen — es gilt dann nur für diesen
-Einsatz.
+Zeichen — dann erscheint die Vorschlagsliste mit den passenden Einträgen
+(Bedienung wie in Abschnitt 4.3). Jeder übernommene Eintrag steht als eigenes
+Element mit kleinem Kreuz zum Entfernen; mehrere sind möglich, doppelte werden
+abgewiesen. Steht etwas nicht in der Vorbelegung, lässt es sich trotzdem
+übernehmen — die letzte Zeile der Liste bietet den getippten Text in Orange
+an („… übernehmen"); es gilt dann nur für diesen Einsatz. Die **Rücktaste im
+leeren Feld** nimmt den zuletzt übernommenen Eintrag wieder zurück.
 
 Löschst du später ein Rettungsmittel aus der Vorbelegung, behalten bereits
 dokumentierte Einsätze ihren Eintrag: Die Zuordnung wird je Einsatz gespeichert
@@ -2372,60 +2625,31 @@ und hängt nicht an der Liste.
 
 ### 9.3 Transportziele (Zielkliniken)
 
-Vorbelegung für das Feld **Zielklinik** im Einsatz. Anders als bei den
-Rettungsmitteln bleibt das Feld dort ein einfaches Textfeld mit Vorschlagsliste
-(Tastatur-Pfeiltasten bzw. Antippen) — Freitext ist weiterhin uneingeschränkt
-möglich.
+Vorbelegung für das Feld **Transportziel** im Einsatz. Anders als bei den
+Rettungsmitteln bleibt das Feld dort ein einfaches Textfeld mit
+Vorschlagsliste (Bedienung wie in Abschnitt 4.3) — Freitext ist weiterhin
+uneingeschränkt möglich.
 
-Zu jeder Zielklinik lassen sich **Koordinaten** hinterlegen, auf denselben drei
-Wegen wie beim Einsatzort (Adresssuche, Koordinatenpaar, Plus Code) und auf drei
-Ebenen: zentral durch die Verwaltung, hier im eigenen Konto und einmalig am
-einzelnen Einsatz. Wird ein Vorschlag mit hinterlegten Koordinaten übernommen,
+**Zwei Gruppen in einer Liste** (seit Web 15.7.0): Ganz oben stehen unter
+„Zielkliniken" **höchstens zwei** Treffer aus deinen Stammdaten — sie
+erscheinen, sobald der getippte Text irgendwo im Namen vorkommt, und ein
+Treffer setzt **Name und Koordinate**. Darunter stehen unter „Adressen" die
+Vorschläge der Adresssuche; ein Treffer von dort setzt **nur die Koordinate**
+und lässt den eingetragenen Namen stehen. Bis Web 15.5.2 waren das zwei
+getrennte Listen übereinander, und auf dem Handy blieben die Stammdaten
+unsichtbar.
+
+Zu jeder Zielklinik lassen sich **Koordinaten** hinterlegen, auf denselben
+Wegen wie beim Einsatzort — Adresssuche, Koordinatenpaar, Plus Code und seit
+Web 15.8.0 auch über den **Pin-Knopf** mit „Meine Position übernehmen" und dem
+Kartendialog (4.3) — und auf zwei
+Ebenen: hier im eigenen Konto und einmalig am einzelnen Einsatz. Wird ein Vorschlag mit hinterlegten Koordinaten übernommen,
 sind sie vorbelegt und lassen sich am Einsatz überschreiben.
 
 Koordinaten sind **freiwillig**. Ohne sie bleibt die Zielklinik ein gültiger
 Eintrag; es entstehen lediglich kein Pin und keine Luftlinie. Eine spätere
 Korrektur wirkt nur auf neue Einsätze — am Einsatz ist die Koordinate
 eingefroren.
-
-### 9.4 Vordefinierte (systemweite) Stammdaten
-
-Der Admin kann alle sechs Bereiche zusätzlich **systemweit** hinterlegen — auf
-einer eigenen Seite, die zu keinem Menüblock gehört (Kasten am Ende dieses
-Abschnitts). **Vordefinierte Standorte erscheinen erst in deinen
-Auswahllisten, wenn du sie unter „Standorte → Vordefinierte Standorte" angehakt
-hast** — sonst stünden in einem gemeinsam genutzten System alle Standorte aller
-Häuser in jeder Liste. Der Block hieß bis Web 6.3.0 „Zentrale Standorte
-auswählen"; „zentral" beschrieb die Verwaltung, nicht den Nutzen.
-Abwählen entfernt keine Daten; bereits dokumentierte Diensttage bleiben
-unverändert.
-
-Solche Einträge erscheinen mit dem Kennzeichen **„zentral"**, stehen automatisch in allen Vorbelegungen zur
-Verfügung und lassen sich hier nicht bearbeiten oder löschen. Versuchst du,
-einen persönlichen Eintrag mit demselben Namen anzulegen, wird das mit einem
-Hinweis abgelehnt — der systemweite Eintrag steht dir ja bereits zur Verfügung.
-Existiert umgekehrt schon ein persönlicher Eintrag, bevor der Admin denselben
-Namen systemweit anlegt, bleibt dein Eintrag bestehen und erhält lediglich einen
-Warnhinweis („identisch mit systemweitem Eintrag") — du kannst ihn dann bei
-Bedarf löschen.
-
-**So kommt die Verwaltung dorthin.** Die Seite pflegt dieselben sechs Bereiche
-wie eine NutzerIn unter Standorte und Rettungsmittel (9.1–9.3), jedoch für
-**alle** Konten gemeinsam; oben rechts steht die Wahl zwischen **Standorte**
-und **Rettungsmittel**. Namensgleiche Einträge werden auch hier abgelehnt;
-existieren bereits persönliche Einträge mit demselben Namen bei einzelnen
-NutzerInnen, weist ein Hinweis darauf hin (keine Blockade). Seit Web 9.10.0
-gilt das auch für **Standorte** — dort fehlte der Hinweis als einzigem der
-sechs Bereiche, und ein systemweiter Standort, den ein Dutzend Konten bereits
-selbst angelegt hatte, entstand ohne jede Warnung.
-
-> **Die Seite hat seit Web 15.4.0 keinen Menüpunkt mehr** (E-S8-14) — und das
-> ist der Grund, warum sie hier steht und nicht in Kapitel 11 oder 12: Sie
-> gehört zu keinem der beiden Blöcke. **Zwei Wege führen hin:** die Adresse
-> `admin_stammdaten.php` (Lesezeichen) und der Verweis „Stammdaten" im Text
-> von Betrieb → Backup-Ziele. Der Grund für den Wegfall: Sie wird einmal bei
-> der Einrichtung gepflegt und danach jahrelang nicht — ein Menüpunkt, den man
-> einmal benutzt, kostet siebzehn Mal Platz.
 
 ---
 
@@ -2596,7 +2820,7 @@ Im Dienst steht neben dem roten Aufnahmepunkt eine Zeile, und sie sagt
 
 | Zeile | Bedeutung |
 |---|---|
-| „Aufzeichnung läuft seit 07:02 · GPS empfängt" | Es kommen brauchbare Positionen. Nur hier entsteht eine Spur. |
+| „Aufzeichnung läuft seit 07:02 · GPS empfängt" | Es kommen brauchbare Positionen. Nur hier entstehen GPS-Daten. |
 | „Dienst läuft seit 07:02 · GPS sucht …" | Der Empfänger fängt sich noch ein. Nach einem Kaltstart im Freien dauert das eine halbe bis eine Minute. |
 | „Dienst läuft seit 07:02 · kein GPS-Signal seit 3 min · keine Aufzeichnung" | Es kommt nichts an — Tiefgarage, Metallkoffer, Handy tief in der Tasche. |
 | „Dienst läuft seit 07:02 · GPS zu ungenau · keine Aufzeichnung" | Es kommen Positionen, aber mit über 100 m Streuung. Das ist kein GPS mehr, sondern aus Funkzelle oder WLAN geschätzt. |
@@ -2605,7 +2829,7 @@ Im Dienst steht neben dem roten Aufnahmepunkt eine Zeile, und sie sagt
 
 **„Aufzeichnung läuft" steht nur in der ersten Zeile.** In allen anderen heißt
 es „Dienst läuft", weil das wahr ist und das andere nicht — der Dienst läuft,
-die Zeiten und Phasen werden dokumentiert, aber es entsteht keine Spur. Der
+die Zeiten und Phasen werden dokumentiert, aber es entstehen keine GPS-Daten. Der
 rote Punkt bleibt trotzdem stehen: Er zeigt den Dienst, nicht das Signal.
 
 **Das Telefon vibriert, wenn nichts aufgezeichnet wird**, und wiederholt es
@@ -3108,6 +3332,18 @@ Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
 Getippte. Sie entsteht auf dem Server, mit demselben Renderer wie die
 öffentliche Seite.
 
+**Textbaustein „Adresssuche"** (seit Web 15.8.0). Weil die Anwendung keinen
+Rechtstext mitliefert, kann sie den Absatz zur Adresssuche nicht selbst
+einsetzen — sie legt ihn aber bereit: Unter dem Feld für die
+Datenschutzerklärung steht ein fertiger Abschnitt zum **Kopieren**, in dem
+die tatsächlich eingetragene Dienstadresse (12.5) schon eingesetzt ist. Er
+nennt, was übertragen wird — der getippte Text und die Koordinate — und was
+nicht. Einfügen und an die eigene Erklärung anpassen musst du ihn selbst.
+
+Der Baustein erscheint nur, solange die Adresssuche eingeschaltet ist. Wer sie
+abschaltet, braucht den Absatz nicht — und ein Absatz über eine Übertragung,
+die nicht stattfindet, wäre falsch.
+
 ### 11.6 Demo-Konto
 
 Unter **Verwaltung → Demo-Konto** wird das Demo-Konto **angelegt**,
@@ -3383,20 +3619,20 @@ hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
 **„scheitert"**, wird unter anderem der Papierkorb nicht mehr geleert; die
 Ursache steht in derselben Karte im Klartext.
 
-Was dort **liegenbleibt**, steht mit Kennung darunter — nicht nur „3 Spuren",
+Was dort **liegenbleibt**, steht mit Kennung darunter — nicht nur „3 Aufzeichnungen",
 sondern welche. Vier Gründe kommen vor: eine **Lücke in der Nummernfolge**
-(eine Uhr hat ein Teilstück nie nachgeliefert; die Spur bleibt dann so stehen,
-wie sie ist), **zu viele Punkte** (über 50 000 in einer Spur), **Punkte auf
-einer ausgedünnten Spur** (hier sollte immer null stehen) und eine **nicht
+(eine Uhr hat ein Teilstück nie nachgeliefert; die Aufzeichnung bleibt dann so stehen,
+wie sie ist), **zu viele Punkte** (über 50 000 in einer Aufzeichnung), **Punkte auf
+ausgedünnten GPS-Daten** (hier sollte immer null stehen) und eine **nicht
 bestandene Prüfung** (dabei wurde nichts gelöscht und nichts ersetzt). Ein
 Rückstand ohne solche Listen ist normal: Er zählt auch mit, was einfach noch zu
 frisch ist.
 
-**Was mit alten Spuren geschieht.** Die Anwendung legt GPS-Punkte in drei
+**Was mit alten GPS-Daten geschieht.** Die Anwendung legt GPS-Punkte in drei
 Stufen ab. Frisch von der Uhr kommen sie als einzelne Punkte; sobald ein
 Einsatz abgeschlossen ist und zwei Wochen nichts mehr nachgekommen ist, werden
 sie zu einem kompakten Paket zusammengefasst — daran ändert sich nichts, was
-man sieht. **Sechs Monate nach dem Einsatz** wird die Spur ausgedünnt: Es
+man sieht. **Sechs Monate nach dem Einsatz** werden die GPS-Daten ausgedünnt: Es
 bleiben die Punkte, die den Weg beschreiben, und die zu den Einsatzphasen
 gehören; dazwischenliegende, die auf der Linie liegen, fallen weg. Auf der
 Karte sieht der Weg danach genauso aus. **Die Punktzahl in Export und GPX ist
@@ -3438,6 +3674,29 @@ nur die Zusammensetzung, ohne Füllstand.
 Gemessen wird **einmal täglich** im Aufräumjob; der Stand steht im Kartenkopf.
 Darunter Speichergrenze, Warnschwellen, Ablage und Reste abgebrochener Läufe.
 
+**Karte „Adresssuche"** (seit Web 15.8.0). Beim Tippen in einem Ortsfeld und
+nach jeder Wahl auf der Karte fragt die Anwendung einen **Adressdienst** —
+vorwärts nach Vorschlägen zum getippten Text, rückwärts nach der Adresse zu
+einer Koordinate. Der getippte Text und die Koordinate verlassen dabei das
+Gerät; alles Übrige bleibt hier. Zwei Einstellungen:
+
+- **Adresssuche im Internet** — der Schalter für die **ganze Installation**.
+  Aus heißt: keine Vorschläge, keine Umkehrsuche, kein Suchfeld im
+  Kartendialog, kein Hinweis unter dem Ortsfeld — für alle Konten. Der
+  Schalter im Profil (3.1a) kann danach nur noch einschränken, nicht
+  wieder öffnen; er steht dann ausgegraut da und nennt den Grund.
+- **Dienst** — die Adresse eines Photon-Dienstes, mit `https://`. Vorgabe ist
+  der frei betriebene Gemeinschaftsdienst `https://photon.komoot.io`. **Wer
+  einen eigenen betreibt, trägt ihn hier ein** — dann verlassen die Anfragen
+  mit dem Einsatzort das eigene Haus nicht. Das braucht keine neue
+  Auslieferung und keine Änderung am Code.
+
+Die Karte hat ihr eigenes „Speichern": Ein Tippfehler in der Speichergrenze
+soll die Dienstadresse nicht mit abweisen und umgekehrt. Welcher Dienst
+eingetragen ist, erscheint anschließend im Hinweis unter dem Ortsfeld, in der
+Karte „Datenschutz" jedes Profils und im Textbaustein für die
+Datenschutzerklärung (11.5).
+
 ### 12.6 Komplett-Backup
 
 Seit Web 12.2.0 gibt es unter **Betrieb → Komplett-Backup** einen
@@ -3445,7 +3704,7 @@ zweiten, grösseren Knopf. Der Unterschied zu allem darüber ist der Zweck:
 
 | | Backup eines Kontos | Komplett-Backup |
 |---|---|---|
-| enthält | die Daten **einer** NutzerIn | **alle** Konten, Stammdaten, Geräte, Spuren — jede Tabelle |
+| enthält | die Daten **einer** NutzerIn | **alle** Konten, Stammdaten, Geräte, GPS-Daten — jede Tabelle |
 | hilft gegen | „jemand hat sich vertan" | „der Server ist weg" |
 | wo | Verwaltung → **Konto-Backups** (Regeln) und die Kontoseite (Pakete) | Betrieb → **Komplett-Backup** |
 | wer | Admin und BetreiberIn | nur BetreiberIn |

@@ -1,0 +1,133 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>S9 · Mockup M-S9-09 (Handy)</title><style>
+@font-face{font-family:'Open Sans';font-weight:400;src:url(../../../../server/assets/fonts/open-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Open Sans';font-weight:600;src:url(../../../../server/assets/fonts/open-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;--asphalt:#1A0500;--dunkelblau:#1A2E4D;--gedaempft:#6E6459;
+  --linie:#E3DAC6;--linie-stark:var(--gedaempft);--orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-tief:#1F4E9C;--blau-hell:#D9ECFD;--rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;--schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --knopf:44px;--symbol:20px;--symbol-klein:16px;--strich:1px;--strich-stark:2px;
+}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.55;width:1280px}
+.mock-kopf{padding:20px 24px 4px}.mock-kopf h1{font-family:var(--schrift-kopf);font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p,.unter{margin:0 24px 10px;color:var(--gedaempft);font-size:var(--groesse-2)}.mock-kopf p{margin:0}
+h2{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:18px 24px 2px;color:var(--dunkelblau)}
+.frames{display:flex;margin:0 24px;align-items:flex-start;flex-wrap:wrap}.frames > div{flex:0 0 auto;margin:0 18px 14px 0}
+.rahmen-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-2);font-weight:600;color:var(--gedaempft);letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.frame{background:var(--rauch);border:1px solid #CFC7B5;border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(26,46,77,.10);box-sizing:border-box}
+.notiz{padding:10px 24px 26px;max-width:1180px}.notiz ol{margin:0;padding-left:20px}.notiz li{margin-bottom:6px}
+.empf{background:var(--schnee);border-left:4px solid var(--orange);padding:6px 10px;margin:8px 0}
+.neu{outline:2px dashed var(--orange);outline-offset:2px;border-radius:4px}
+code{font-family:ui-monospace,monospace;font-size:.92em;background:var(--rauch);padding:0 3px;border-radius:3px}
+/* ---- Anwendung ------------------------------------------------------------ */
+.symbol{width:var(--symbol);height:var(--symbol);flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.karte{background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);margin-bottom:var(--abstand-4)}
+.karte:last-child{margin-bottom:0}
+.karte-kopf{display:flex;align-items:center;gap:var(--abstand-2);padding:var(--abstand-3) var(--abstand-4);border-bottom:var(--strich) solid var(--linie)}
+.karte-titel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);color:var(--dunkelblau);margin:0;flex:1 1 auto;min-width:0}
+.karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2)}
+.karte-inhalt{padding:var(--abstand-4)}
+.akkordeon-winkel{color:var(--sand)}
+p{margin:0 0 var(--abstand-3)}
+.feld-hinweis{color:var(--gedaempft);font-size:var(--groesse-2);margin:0 0 var(--abstand-3)}
+.zeile{display:flex;align-items:center;padding:var(--abstand-3) 0;border-bottom:var(--strich) solid var(--linie)}
+.zeile:last-child{border-bottom:0;padding-bottom:0}
+.zeile-vorn{flex:0 0 auto;display:flex;align-items:center;color:var(--dunkelblau);margin-right:var(--abstand-3)}
+.zeile-text{flex:1 1 auto;min-width:0}
+.zeile-haupt{font-weight:600;color:var(--asphalt)}
+.zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+.zeile-plaketten{flex:0 1 auto;margin-left:var(--abstand-3);display:flex;gap:var(--abstand-1);flex-wrap:wrap;justify-content:flex-end}
+.zeile-aktionen{flex:0 0 auto;margin-left:var(--abstand-2)}
+.plakette{display:inline-flex;align-items:center;gap:var(--abstand-1);padding:var(--abstand-1) var(--abstand-2);border-radius:var(--radius-klein);font-size:var(--groesse-1);font-weight:600;white-space:nowrap}
+.plakette-neutral{background:var(--rauch);color:var(--gedaempft);border:var(--strich) solid var(--linie)}
+.plakette-orange{background:var(--orange-hell);color:var(--asphalt)}
+.plakette-blau{background:var(--blau-hell);color:var(--dunkelblau)}
+.plakette-rot{background:var(--rosa);color:var(--rot-tief)}
+.knopf{display:inline-flex;align-items:center;justify-content:center;height:var(--knopf);padding:0 var(--abstand-4);border-radius:var(--radius);border:var(--strich-stark) solid transparent;font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-3);box-sizing:border-box;color:var(--dunkelblau);text-decoration:none}
+.knopf-neutral{background:var(--schnee);border-color:var(--linie-stark)}
+.listen-form{margin-top:var(--abstand-2)}
+.listen-form-titel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);color:var(--dunkelblau);margin:0 0 var(--abstand-2)}
+.wahlliste{display:flex;flex-direction:column}
+.wahl-zeile{display:flex;align-items:center;gap:var(--abstand-3);min-height:var(--knopf);padding:var(--abstand-2) var(--abstand-3);border-radius:var(--radius-klein)}
+.wahl-punkt{flex:0 0 auto;width:var(--symbol);height:var(--symbol);border:var(--strich-stark) solid var(--linie-stark);border-radius:var(--radius-rund);background:var(--schnee)}
+.wahl-text{flex:1 1 auto;font-weight:600;color:var(--dunkelblau)}
+.wahl-zusatz{flex:0 0 auto;color:var(--gedaempft);font-size:var(--groesse-2);text-align:right}
+/* Regel der Anwendung (style.css): unter 480 px rutscht der Zusatz unter den Text */
+@media (max-width:479px){.wahl-zeile{flex-wrap:wrap}.wahl-zusatz{flex:1 0 100%;padding-left:calc(var(--symbol) + var(--abstand-3));text-align:left}}
+.wahl-zeile.an{background:var(--orange-hell)}
+.wahl-zeile.an .wahl-punkt{border-color:var(--orange);box-shadow:inset 0 0 0 var(--strich-stark) var(--schnee);background:var(--orange)}
+
+body{width:400px}.frames{display:block;margin:0 12px}.frames > div{margin:0 0 14px}.mock-kopf{padding:14px 12px 2px}.mock-kopf h1{font-size:18px}h2{margin-left:12px;margin-right:12px}.unter{margin-left:12px;margin-right:12px}
+</style></head><body>
+<div class="mock-kopf"><h1>S9 · M-S9-09 (Handy-Fassung) — Zusammenführen bei verschiedenem Typ (Frage 5 aus AP4)</h1>
+<p>Der geöffnete Diensttag 28.01.2026 fährt Alpenfalke 1 (Standard, luftgebunden, 07:00 – 15:40). In der Nachbarschaft liegen ein zweiter Tag desselben Datums mit „Bergwacht Hochkreuth" (Typ Bergwacht, luftgebunden, Kurzname „BW Hoch", 16:30 – 22:15) und einer mit NEF Talwang 76/1 (bodengebunden). Heute prüft <code>dt_merge_pruefen()</code> nur die <b>Betriebsart</b>: Der NEF-Tag ist nicht wählbar, der Bergwacht-Tag schon — und der Typ steht in keinem der beiden Schritte. Seit AP4 folgt der Typ des Ergebnisses dem gewählten Rettungsmittel. Drei Wege: (a) so lassen, (b) den Typ prüfen wie die Betriebsart und ablehnen, (c) den Typ zeigen und über die vorhandene Wahl entscheiden lassen.</p></div>
+
+<h2>Schritt 1 — Kandidaten · 390 px</h2>
+<p class="unter">Links Ist: der Bergwacht-Tag steht unter den wählbaren Kandidaten, ohne dass sein Typ genannt wird. Rechts Variante <b>b</b>: Er wandert in „Nicht wählbar", mit demselben Satzbau, den die Betriebsart heute schon benutzt. (Die Karte „Nicht wählbar" ist in der Anwendung zugeklappt und hier zum Lesen offen.)</p>
+<div class="frames">
+<div><p class="rahmen-titel">Ist · (a)</p><div class="frame" style="width:376px">
+<div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Diensttage in der Nachbarschaft</h3><span class="karte-zahl">1</span></div><div class="karte-inhalt">
+<p class="feld-hinweis">Welcher Diensttag soll in den geöffneten aufgenommen werden?</p>
+<div class="zeile"><span class="zeile-vorn"><svg class="symbol" viewBox="0 0 24 24"><path d="M3 20h18l-6.921 -14.612a2.3 2.3 0 0 0 -4.158 0l-6.921 14.612"/><path d="M7.5 11l2 2.5l2.5 -2.5l2 3l2.5 -2"/></svg></span><span class="zeile-text"><span class="zeile-haupt">28.01.2026 16:30</span><span class="zeile-klein">Bergwacht Hochkreuth · Luftrettungsstation Hochkreuth · 3 Einsätze</span></span><span class="zeile-aktionen"><a class="knopf knopf-neutral" href="#">Aufnehmen</a></span></div>
+</div></div>
+<div class="karte"><div class="karte-kopf"><svg class="symbol akkordeon-winkel" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></svg><h3 class="karte-titel">Nicht wählbar</h3><span class="karte-zahl">1 in der Nachbarschaft</span></div><div class="karte-inhalt">
+<p class="feld-hinweis">Zusammenführen geht nur zwischen Diensttagen <strong>derselben Art</strong>: Art, Rollensatz und Fähigkeiten sind eingefroren (E8), und einen luftgebundenen mit einem bodengebundenen Dienst zu verschmelzen ergäbe einen Dienst, den es nie gab.</p>
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">29.01.2026 07:15</span><span class="zeile-klein">NEF Talwang 76/1 · Notarztstandort Talwang — dieser Diensttag ist bodengebunden, der geöffnete ist luftgebunden.</span></span><span class="zeile-plaketten"><span class="plakette plakette-rot">bodengebunden</span></span></div>
+</div></div>
+</div></div>
+
+<div><p class="rahmen-titel">Variante b · ablehnen</p><div class="frame" style="width:376px">
+<div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Diensttage in der Nachbarschaft</h3><span class="karte-zahl">0</span></div><div class="karte-inhalt">
+<p class="feld-hinweis">Kein Diensttag in der Nachbarschaft lässt sich aufnehmen.</p>
+</div></div>
+<div class="karte"><div class="karte-kopf"><svg class="symbol akkordeon-winkel" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></svg><h3 class="karte-titel">Nicht wählbar</h3><span class="karte-zahl">2 in der Nachbarschaft</span></div><div class="karte-inhalt">
+<p class="feld-hinweis">Zusammenführen geht nur zwischen Diensttagen <strong>derselben Art <span class="neu">und desselben Typs</span></strong>: Art, Typ, Rollensatz und Fähigkeiten sind eingefroren (E8), und einen Bergwacht-Dienst mit einem Standard-Dienst zu verschmelzen ergäbe einen Dienst, den es nie gab.</p>
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">28.01.2026 16:30</span><span class="zeile-klein">Bergwacht Hochkreuth · Luftrettungsstation Hochkreuth — <span class="neu">dieser Diensttag ist Bergwacht, der geöffnete ist Standard.</span></span></span><span class="zeile-plaketten"><span class="plakette plakette-rot neu">Bergwacht</span></span></div>
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">29.01.2026 07:15</span><span class="zeile-klein">NEF Talwang 76/1 · Notarztstandort Talwang — dieser Diensttag ist bodengebunden, der geöffnete ist luftgebunden.</span></span><span class="zeile-plaketten"><span class="plakette plakette-rot">bodengebunden</span></span></div>
+</div></div>
+</div></div>
+</div>
+
+<h2>Schritt 2 — Vorschau und Widersprüche · 390 px</h2>
+<p class="unter">Nach der Wahl des Bergwacht-Tags. Links Ist: „Der Diensttag danach" nennt die Art, nicht den Typ; der Widerspruch „Rettungsmittel" steht schon heute da, sobald zwei verschiedene Rettungsmittel aufeinandertreffen — der Typ folgt still dem Gewinner. Rechts Variante <b>c</b>: eine Zeile „Typ" in der Vorschau und der Typ als Zusatz der beiden Wahlzeilen. Kein neuer Schritt, kein neuer Baustein.</p>
+<div class="frames">
+<div><p class="rahmen-titel">Ist · (a)</p><div class="frame" style="width:376px">
+<div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Der Diensttag danach</h3></div><div class="karte-inhalt">
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">Datum</span></span><span class="zeile-plaketten"><span class="plakette plakette-blau">28.01.2026</span></span></div>
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">Dienstbeginn und -ende</span></span><span class="zeile-plaketten"><span class="plakette plakette-blau">07:00 – 22:15</span></span></div>
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">Art</span></span><span class="zeile-plaketten"><span class="plakette plakette-blau">luftgebunden</span></span></div>
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">Notizen</span><span class="zeile-klein">Die Notizen beider Diensttage werden aneinandergehängt; nichts wird überschrieben.</span></span></div>
+</div></div>
+<div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Widersprüche</h3><span class="karte-zahl">1</span></div><div class="karte-inhalt">
+<p class="feld-hinweis">Die beiden Diensttage widersprechen sich an diesen Stellen. Was soll gelten? Vorbelegt ist jeweils der Tag, der bleibt.</p>
+<div class="listen-form"><h4 class="listen-form-titel">Rettungsmittel</h4><div class="wahlliste">
+<div class="wahl-zeile an"><span class="wahl-punkt"></span><span class="wahl-text">Alpenfalke 1</span><span class="wahl-zusatz">bleibt</span></div>
+<div class="wahl-zeile"><span class="wahl-punkt"></span><span class="wahl-text">Bergwacht Hochkreuth</span><span class="wahl-zusatz">wird aufgenommen</span></div>
+</div></div>
+</div></div>
+</div></div>
+
+<div><p class="rahmen-titel">Variante c · zeigen und wählen lassen</p><div class="frame" style="width:376px">
+<div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Der Diensttag danach</h3></div><div class="karte-inhalt">
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">Datum</span></span><span class="zeile-plaketten"><span class="plakette plakette-blau">28.01.2026</span></span></div>
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">Dienstbeginn und -ende</span></span><span class="zeile-plaketten"><span class="plakette plakette-blau">07:00 – 22:15</span></span></div>
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">Art</span></span><span class="zeile-plaketten"><span class="plakette plakette-blau">luftgebunden</span></span></div>
+<div class="zeile neu"><span class="zeile-text"><span class="zeile-haupt">Typ</span><span class="zeile-klein">folgt dem gewählten Rettungsmittel</span></span><span class="zeile-plaketten"><span class="plakette plakette-blau">Standard</span></span></div>
+<div class="zeile"><span class="zeile-text"><span class="zeile-haupt">Notizen</span><span class="zeile-klein">Die Notizen beider Diensttage werden aneinandergehängt; nichts wird überschrieben.</span></span></div>
+</div></div>
+<div class="karte"><div class="karte-kopf"><h3 class="karte-titel">Widersprüche</h3><span class="karte-zahl">1</span></div><div class="karte-inhalt">
+<p class="feld-hinweis">Die beiden Diensttage widersprechen sich an diesen Stellen. Was soll gelten? Vorbelegt ist jeweils der Tag, der bleibt.</p>
+<div class="listen-form"><h4 class="listen-form-titel">Rettungsmittel</h4><div class="wahlliste">
+<div class="wahl-zeile an"><span class="wahl-punkt"></span><span class="wahl-text">Alpenfalke 1</span><span class="wahl-zusatz"><span class="neu">Standard</span> · bleibt</span></div>
+<div class="wahl-zeile"><span class="wahl-punkt"></span><span class="wahl-text">Bergwacht Hochkreuth</span><span class="wahl-zusatz"><span class="neu">Bergwacht · BW Hoch</span> · wird aufgenommen</span></div>
+</div></div>
+</div></div>
+</div></div>
+</div>
+
+<p class="unter">Anmerkungen und Empfehlung stehen in der großen Fassung.</p>
+</body></html>

@@ -309,9 +309,13 @@ class Werk:
                 "bergwacht": bergwacht, "bw_unit": bw_unit, "bw_info": bw_info,
                 "other_ema": None, "other_resources": mittel,
                 "crew_override": 0, "crew": {},
-                "notes": self.z.choice(self.notizen),
             },
-            "geschuetzt": geschuetzt,
+            # Die Notiz gehoert seit S9/AP7 zu den GESCHUETZTEN Angaben: Sie
+            # liegt im Ende-zu-Ende-verschluesselten pat_blob. Unter `felder`
+            # stuende sie bei den Klartextspalten von `missions` — dort steht
+            # nur noch die Notiz des DIENSTTAGS.
+            "geschuetzt": ({**geschuetzt, "notes": self.z.choice(self.notizen)}
+                           if isinstance(geschuetzt, dict) else geschuetzt),
             "abdeckung": [],
         }, ende
 

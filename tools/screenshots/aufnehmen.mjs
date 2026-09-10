@@ -318,6 +318,25 @@ async function platzhalter() {
     '__TAG_SPUREN__':   tag ? `tag_spuren.php?d=${tag}`               : null,
   };
 
+  /* DIE STANDORTSEITE BRAUCHT IHREN STANDORT (S9/AP5). Sie ersetzt den
+     Reiter „Rettungsmittel", und dessen Adresse gibt es nicht mehr. Die
+     Kennung kommt aus der Liste — ueber denselben Weg, den eine NutzerIn
+     geht —, und ein nicht aufgeloester Platzhalter ist `null` und fuehrt
+     dazu, dass die Seite NICHT fotografiert wird. Ein Ruecklauf auf die
+     Liste ergaebe zwei Namen fuer dasselbe Bild; genau davor warnt der
+     Kommentar darueber. */
+  const d = rollen.demo.seite;
+  await gehZu(rollen.demo, `${BASIS}/einstellungen.php?t=standorte`,
+              'einstellungen.php?t=standorte');
+  const sHref = await d.locator('a.zeile[href*="t=standort&s="]').first()
+                       .getAttribute('href').catch(() => null);
+  p['__STANDORT__'] = sHref || null;
+
+  /* `__ADMIN_STANDORT__` STAND HIER BIS S9/AP5b. Der Platzhalter zeigte auf
+     die Standortseite der systemweiten Stammdatenpflege; sie ist mit dem
+     Modell gestrichen (R39). Er war ohnehin nie aufloesbar — der
+     Referenzbestand hat keinen zentralen Standort, und die acht Aufnahmen
+     fielen jedes Mal aus (F-S9-U-33). */
   const a = rollen.admin.seite;
   await gehZu(rollen.admin, `${BASIS}/admin_users.php`, 'admin_users.php');
   const href = await a.locator('a[href*="admin_user.php?id="]').first()
@@ -391,7 +410,7 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 }
 
 async function vorher(seite, schritte, fehlerSammler) {
-  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten'];
+  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
@@ -418,6 +437,29 @@ async function vorher(seite, schritte, fehlerSammler) {
                            seite.locator('#koppeln .knopf-primaer').click()]);
       }
       await seite.waitForLoadState('networkidle');
+      continue;
+    }
+    if (schritt === 'tagdaten-adhoc') {
+      /* DAS FORMULAR „DIENSTTAG-DATEN" MIT AUFGEKLAPPTEM „ANDEREM
+         RETTUNGSMITTEL" (S9/AP6, E-S9-10). Das Konzept verlangt fuer diesen
+         Zustand ein Bild und kein Mockup — die Felder sind vorhandene
+         Bausteine, zu sehen ist nur, wie sie zusammenstehen.
+
+         DER SCHRITT SCHREIBT NICHTS. Er oeffnet das Formular und waehlt den
+         letzten Eintrag der Auswahl; gespeichert wird erst durch „Speichern",
+         und das drueckt hier niemand. Der Diensttag bleibt also, wie er ist —
+         wichtig, weil der Bilderlauf am Referenzbestand faehrt. */
+      const knopf = seite.locator('#tagdatenknopf');
+      if (!(await knopf.count())) { continue; }
+      if ((await seite.locator('#dayform').getAttribute('hidden')) !== null) {
+        await knopf.click();
+        await seite.waitForTimeout(400);
+      }
+      const wahl = seite.locator('#vehsel');
+      if (await wahl.count()) {
+        await wahl.selectOption('adhoc');
+        await seite.waitForTimeout(450);
+      }
       continue;
     }
     if (schritt === 'schublade') {
@@ -507,6 +549,16 @@ const bericht = { basis: BASIS, skala: SKALA, seiten: [], knopf: [], stand: new 
 /* Aufnahmen, bei denen die Sitzung mitten im Lauf neu aufgebaut werden
  * musste (Demo-Reset), und solche, die deshalb GAR NICHT entstanden. */
 const verlorene = [];
+/* AUSGEFALLENE AUFNAHMEN, JE MIT GRUND (S9/AP5-6). Vorher stand hier eine
+   Liste aus Zeichenketten, und der Bericht schrieb darueber pauschal „die
+   Seite leitete auch nach einer Neuanmeldung auf die Anmeldung um". Es gibt
+   aber ZWEI Gruende, und der zweite ist ein ganz anderer Befund: Ein
+   Platzhalter, der sich nicht aufloesen laesst, heisst „diese Seite gibt es
+   im Bestand nicht" — nicht „die Sitzung ging verloren". Beim Lauf zu AP5-4
+   meldete der Bericht acht verlorene Sitzungen, wo in Wahrheit acht Bilder
+   einer Seite fehlten, die es ohne systemweiten Standort gar nicht gibt.
+   Ein Pruefmittel, das den falschen Grund nennt, schickt die naechste Suche
+   in die falsche Richtung. */
 const ausgefallen = [];
 
 /* ---- Der Wartungsmodus als Zustand der Installation (S5 Paket W) ---------
@@ -551,7 +603,10 @@ for (const eintrag of liste) {
   const aufgeloest = Object.prototype.hasOwnProperty.call(PLATZ, eintrag.pfad)
     ? PLATZ[eintrag.pfad] : eintrag.pfad;
   if (aufgeloest === null) {
-    for (const { b } of BREITEN) { ausgefallen.push(`${eintrag.name} @ ${b}`); }
+    for (const { b } of BREITEN) {
+      ausgefallen.push({ was: `${eintrag.name} @ ${b}`,
+                         grund: `Platzhalter ${eintrag.pfad} nicht auflösbar` });
+    }
     console.log(`${eintrag.name.padEnd(34)} OHNE BILD — Platzhalter ${eintrag.pfad} nicht auflösbar`);
     continue;
   }
@@ -687,7 +742,13 @@ for (const eintrag of liste) {
          `display:none` ist, und die Eintraege in einem geschlossenen
          Aktionsblatt. Ein Knopf, den es gerade nicht gibt, ist nicht zu hoch
          und nicht zu niedrig — er ist nicht da. */
-      knoepfe: Array.from(document.querySelectorAll('.knopf'))
+      /* `.sprungziel` MISST MIT (S9/AP5). Die Pille der Sprungliste ist
+         `height:var(--knopf)` hoch, also 44/36 — aber sie traegt nicht
+         `.knopf`, und eine Auswahl, die nur `.knopf` kennt, haette diese
+         Zusage nie gemessen. Genau so ist `.listenfilter` seit O6 ungemessen
+         geblieben und der Export-Knopf vier Monate ungestaltet (F-P3-BA).
+         Wer ein neues Bedienelement baut, traegt es hier ein. */
+      knoepfe: Array.from(document.querySelectorAll('.knopf, .sprungziel'))
         .filter(el => el.offsetParent !== null || el.getClientRects().length > 0)
         .map(el => ({
           text: (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 24)
@@ -706,7 +767,8 @@ for (const eintrag of liste) {
     if (hin.abbruch) {
       /* KEIN BILD. Ein Bild der Anmeldeseite unter dem Namen einer anderen
          Seite ist schlimmer als gar keines: Es sieht wie ein Beleg aus. */
-      ausgefallen.push(`${eintrag.name} @ ${b}`);
+      ausgefallen.push({ was: `${eintrag.name} @ ${b}`,
+                         grund: 'Seite leitete auf die Anmeldung um' });
       rmSync(datei, { force: true });
     } else {
       await seite.screenshot({ path: datei, fullPage: true }).catch(() => {});
@@ -816,10 +878,11 @@ if (verlorene.length || ausgefallen.length) {
     for (const v of verlorene) md += `- ${v}\n`;
   }
   if (ausgefallen.length) {
-    md += `\n**${ausgefallen.length} Aufnahmen sind AUSGEFALLEN** — die Seite `
-       +  `leitete auch nach einer Neuanmeldung auf die Anmeldung um. Für sie `
-       +  `gibt es kein Bild; das ist Absicht.\n\n`;
-    for (const a of ausgefallen) md += `- ${a}\n`;
+    md += `\n**${ausgefallen.length} Aufnahmen sind AUSGEFALLEN.** Für sie gibt `
+       +  `es kein Bild; das ist Absicht — ein Bild der falschen Seite unter dem `
+       +  `Namen einer anderen sieht wie ein Beleg aus. Der Grund steht je `
+       +  `Zeile.\n\n`;
+    for (const a of ausgefallen) md += `- ${a.was} — ${a.grund}\n`;
   }
 }
 
@@ -830,7 +893,14 @@ console.log(`\n${bilderZahl} Einzelbilder, ${bericht.seiten.length} Kontaktböge
 console.log(`Überlauf: ${gesamtUeberlauf} · Konsolenfehler: ${gesamtKonsole}`
   + ` · Knöpfe falscher Höhe: ${bericht.knopf.length}`  + ` (${FINGER ? 'Finger, 44 px' : 'Zeiger, 44/36 px'})`);
 if (verlorene.length)   { console.log(`Sitzung neu aufgebaut: ${verlorene.length}× (Demo-Reset, normal)`); }
-if (ausgefallen.length) { console.log(`OHNE BILD: ${ausgefallen.length} Aufnahmen — Sitzung nicht zu halten`); }
+if (ausgefallen.length) {
+  /* NACH GRUND GEZAEHLT, nicht in einen Topf: „8 ohne Bild" sagt nichts, „8
+     ohne Bild, Grund: Platzhalter nicht auflösbar" sagt, wo man nachsieht. */
+  const nachGrund = {};
+  for (const a of ausgefallen) { nachGrund[a.grund] = (nachGrund[a.grund] || 0) + 1; }
+  const teile = Object.entries(nachGrund).map(([g, n]) => `${n}× ${g}`).join(' · ');
+  console.log(`OHNE BILD: ${ausgefallen.length} Aufnahmen — ${teile}`);
+}
 console.log(`Bericht: ${join(AUSGABE, 'bericht.md')}`);
 
 await browser.close();

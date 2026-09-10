@@ -229,7 +229,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
                        winch, winch_cycles, winch_cycles_pat, winch_airload,
                        bergwacht, secondary, schockraum, bw_unit, bw_info,
                        other_ema, crew_override,
-                       pat_blob, notes, created_at, deleted_at, deleted_with_day';
+                       pat_blob, created_at, deleted_at, deleted_with_day';
     /* NICHT in der Liste, und zwar mit Absicht:
      *
      *   id, user_id, device_id   Interne Verweise. Sie gelten nur in DIESER
@@ -495,7 +495,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * Ruhe-Segmente verweisen mit `day_id` hierher, und beim Einspielen wird die
      * Kennung auf die neu vergebene umgeschrieben.
      *
-     * ANGEZEIGT UND GESICHERT WERDEN DIE SNAPSHOT-SPALTEN (E8): `vehicle_name`
+     * ANGEZEIGT UND GESICHERT WERDEN DIE SNAPSHOT-SPALTEN (E8): `vehicle_name`,
+     * seit Nutzlast 10 auch `vehicle_typ` und `vehicle_kurz` (E-S9-09),
      * und `base_name` stehen im Diensttag selbst. Der frueher noetige Join auf
      * `aircraft` und `bases` ist damit entfallen — und mit ihm die Luecke, dass
      * ein geloeschtes Rettungsmittel ein Backup ohne Bezeichnung hinterliess.
@@ -517,6 +518,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * Fenstern elfmal zu holen, zu kodieren und zu uebertragen. */
     $dayZeilen = $nurFenster ? [] : $q('SELECT d.id, d.day, d.started_at, d.ended_at, d.kind,
                             d.base_name, d.base_lat, d.base_lon, d.vehicle_name,
+                            d.vehicle_typ, d.vehicle_kurz,
                             d.notes, d.deleted_at,
                             v.name AS vehicle_ref, b.name AS base_ref
                      FROM days d
@@ -579,7 +581,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     /* Rettungsmittel (bis Web 5.10.0: `aircraft`). Art, Rollen und
      * Faehigkeiten gehoeren dazu; der Standort als NAME, weil Kennungen nur in
      * dieser Datenbank gelten (E15). */
-    $vehZeilen = $q('SELECT id, name, kind, base_id FROM vehicles
+    $vehZeilen = $q('SELECT id, name, kurz, kind, typ, base_id FROM vehicles
                      WHERE user_id = ? ORDER BY name', [$userId]);
     $vehIds = array_map(static fn($v) => (int)$v['id'], $vehZeilen);
     $vehRollen = $vehCaps = [];
@@ -600,7 +602,12 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         $vid = (int)$v['id'];
         $vehicles[] = [
             'name'         => (string)$v['name'],
+            /* Kurzname und Typ seit Nutzlast 10 (E-S9-09). `kurz` bleibt NULL,
+             * wenn keiner gesetzt ist — ein Leerstring waere eine Angabe, wo
+             * keine ist, und die Gegenseite muesste beide Faelle unterscheiden. */
+            'kurz'         => $v['kurz'] !== null ? (string)$v['kurz'] : null,
             'kind'         => (string)$v['kind'],
+            'typ'          => (string)$v['typ'],
             'base_ref'     => $v['base_id'] !== null ? ($baseNameById[(int)$v['base_id']] ?? null) : null,
             'roles'        => $vehRollen[$vid] ?? [],
             'capabilities' => $vehCaps[$vid] ?? [],
@@ -687,8 +694,34 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          * Felder ebenfalls — sie unterscheidet sich weiter nur durch die
          * Punkte. Sie wird weiterhin GELESEN (E-S2-12) und nur noch fuer die
          * Demo-Fixture geschrieben. Mit NaDoku 1.0 faellt sie weg
-         * (Backlog Nr. 46). */
-        'version' => $ohneSpuren ? 9 : 7,
+         * (Backlog Nr. 46).
+         *
+         * NUTZLAST 10 (E-S9-09 / Backlog Nr. 69, Web 16.0.0): wie 9, dazu am
+         * Rettungsmittel `typ` und `kurz`. Beides ist optional — eine 9er-Datei
+         * bleibt lesbar, `typ` fehlt dann und wird 'standard', `kurz` bleibt
+         * NULL. Die Zahl steigt trotzdem, und zwar aus demselben Grund wie bei
+         * der 9: Sie sagt einem Leser, was in der Datei stehen KANN, und sie
+         * laesst `NUTZLAST_HOECHSTENS` arbeiten — eine aeltere Installation
+         * weist eine 10er-Datei AB, statt ein Bergwacht-Rettungsmittel
+         * stillschweigend als Standard-Rettungsmittel anzulegen. Genau das
+         * waere der stille Schaden: Der Datensatz saehe unauffaellig aus.
+         *
+         * DER SPURVERGLEICH BLEIBT AUF `>= 8`. Er entscheidet, ob Punktlisten
+         * oder Verweise in der Datei stehen, und daran aendert die 10 nichts —
+         * dieselbe Falle, vor der schon der Absatz zur 9 warnt.
+         *
+         * 11 SEIT S9/AP7: Die Notizen des Einsatzes sind aus der Spalte
+         * `missions.notes` in den verschluesselten `pat`-Block gewandert. Eine
+         * 11er-Datei traegt sie deshalb NUR dort — eine aeltere Installation,
+         * die sie in der Spalte sucht, faende nichts und meldete trotzdem
+         * Erfolg. Das ist genau der stille Schaden, gegen den diese Zahl da
+         * ist: Die alte Installation weist die Datei jetzt ab.
+         *
+         * Umgekehrt bleibt der Weg offen: Eine 10er-Datei traegt den Klartext
+         * in der Spalte, und der Einspielweg schreibt sie weiter (siehe
+         * `$extraCols` weiter unten) — der Anhebelauf holt sie danach in den
+         * Blob. */
+        'version' => $ohneSpuren ? 11 : 7,
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-notarzt',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
@@ -1044,26 +1077,47 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                 ->execute([$userId, $bid]);
         }
 
-        /* Rettungsmittel samt Art, Rollen und Faehigkeiten (E3, E29).
+        /* Rettungsmittel samt Typ, Art, Rollen und Faehigkeiten (E3, E29, E-S9-09).
          *
-         * OHNE STANDORT WIRD NICHT ANGELEGT: `vehicles.base_id` traegt nach der
-         * Nachbearbeitung NOT NULL (A12), und ein Rettungsmittel ohne Standort
-         * waere nach E15 kein gueltiger Zustand. Der Fall wird gezaehlt, nicht
-         * stillschweigend uebergangen. */
+         * SEIT WEB 16.0.0 UEBER DIESELBE PRUEFUNG WIE DIE FORMULARE
+         * (`pruef_rettungsmittel()`, validate_lib.php). Vorher stand hier die
+         * duennste der drei Fassungen: `kind` fiel im Zweifel auf 'air',
+         * Rollen wurden ungefiltert uebernommen, und geprueft wurde nur, ob ein
+         * Name und ein Standort da waren. Genau die Reihenfolge, die der Kopf
+         * dieser Datei beklagt — je unvertrauenswuerdiger die Quelle, desto
+         * weniger Pruefung.
+         *
+         * OHNE STANDORT WIRD JETZT ANGELEGT, WENN DER TYP ES ERLAUBT. Bis
+         * Web 15.9.0 trug `vehicles.base_id` NOT NULL, und ein Rettungsmittel
+         * ohne Standort war nach E15 kein gueltiger Zustand; seit E-S9-09 ist
+         * er es fuer die drei Typen ausser 'standard'. Ein Standard-Rettungs-
+         * mittel ohne aufloesbaren Standort wird weiterhin uebersprungen — die
+         * Pruefschicht sagt das, nicht diese Schleife.
+         *
+         * DIE URSACHEN WERDEN GEZAEHLT, nicht stillschweigend uebergangen: Die
+         * `Pruefliste` sammelt sie, und `stammdaten_skipped` bleibt die Zahl,
+         * die der Bericht nennt. */
         $hv = $pdo->prepare("SELECT COUNT(*) FROM user_defaults WHERE user_id = ? AND kind = 'vehicle'");
         $hv->execute([$userId]);
         $hasDefVeh = (bool)$hv->fetchColumn();
         $newDefVehName = null;
         foreach (($sd['vehicles'] ?? []) as $v) {
-            $name = (string)($v['name'] ?? '');
-            if ($name === '') { $stats['stammdaten_skipped']++; continue; }
-            $kind = ($v['kind'] ?? '') === 'ground' ? 'ground' : 'air';
-            $bid  = $baseIdByName(isset($v['base_ref']) ? (string)$v['base_ref'] : null);
-            if ($bid === null) { $stats['stammdaten_skipped']++; continue; }
+            $geprueft = pruef_rettungsmittel([
+                'name'    => $v['name'] ?? null,
+                'kurz'    => $v['kurz'] ?? null,
+                'typ'     => $v['typ']  ?? null,
+                'kind'    => $v['kind'] ?? null,
+                'base_id' => $baseIdByName(isset($v['base_ref']) ? (string)$v['base_ref'] : null),
+                'roles'   => $v['roles'] ?? [],
+                'caps'    => $v['capabilities'] ?? [],
+            ], $pruef);
+            $rm = $geprueft['daten'];
+            if ($rm === null) { $stats['stammdaten_skipped']++; continue; }
+            $name = $rm['name'];
             if (stammdaten_dup_global('vehicles', 'name', $name)) { $stats['stammdaten_skipped']++; continue; }
-            $st = $pdo->prepare('INSERT IGNORE INTO vehicles (user_id, base_id, name, kind)
-                                 VALUES (?,?,?,?)');
-            $st->execute([$userId, $bid, $name, $kind]);
+            $st = $pdo->prepare('INSERT IGNORE INTO vehicles (user_id, base_id, name, kurz, kind, typ)
+                                 VALUES (?,?,?,?,?,?)');
+            $st->execute([$userId, $rm['base_id'], $name, $rm['kurz'], $rm['kind'], $rm['typ']]);
             $stats['stammdaten'] += $st->rowCount();
 
             $x = $pdo->prepare('SELECT id FROM vehicles WHERE user_id = ? AND name = ?');
@@ -1072,22 +1126,17 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
             if ($vid !== false) {
                 $insR = $pdo->prepare('INSERT IGNORE INTO vehicle_roles (vehicle_id, role_code)
                                        VALUES (?,?)');
-                foreach ((array)($v['roles'] ?? []) as $rc) {
-                    if (array_key_exists((string)$rc, CREW_ROLES)) { $insR->execute([(int)$vid, (string)$rc]); }
-                }
+                foreach ($rm['roles'] as $rc) { $insR->execute([(int)$vid, $rc]); }
                 /* Faehigkeiten kommen ausschliesslich an luftgebundenen
                  * Rettungsmitteln vor (E29, schema.sql). Bei einem
                  * bodengebundenen werden sie verworfen statt gespeichert — sonst
                  * traege der Bestand einen Zustand, den die Oberflaeche nicht
-                 * herstellen kann. */
-                if ($kind === 'air') {
+                 * herstellen kann. Das Verwerfen geschieht seit Web 16.0.0 in
+                 * `pruef_rettungsmittel()`; hier steht nur noch das Schreiben. */
+                if ($rm['caps']) {
                     $insC = $pdo->prepare('INSERT IGNORE INTO vehicle_capabilities
                                            (vehicle_id, capability) VALUES (?,?)');
-                    foreach ((array)($v['capabilities'] ?? []) as $cap) {
-                        if (array_key_exists((string)$cap, VEHICLE_CAPABILITIES)) {
-                            $insC->execute([(int)$vid, (string)$cap]);
-                        }
-                    }
+                    foreach ($rm['caps'] as $cap) { $insC->execute([(int)$vid, $cap]); }
                 }
             }
             if (!$hasDefVeh && (int)($v['is_default'] ?? 0)) { $newDefVehName = $name; }
@@ -1320,6 +1369,22 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
             $kindWert  = in_array($d['kind'] ?? null, ['air', 'ground'], true) ? $d['kind'] : null;
             $vName     = $d['vehicle_name'] ?? null;
             $bName     = $d['base_name'] ?? null;
+            /* TYP UND KURZNAME KOMMEN AUS DER DATEI, NICHT AUS DEN HEUTIGEN
+             * STAMMDATEN (E8, Nutzlast 10). Ein Blick auf `vehicles` waere
+             * genau der Durchgriff, den das Einfrieren ausschliesst — und er
+             * schluege bei jedem Tag fehl, dessen Rettungsmittel es hier gar
+             * nicht gibt. Eine Datei aelterer Fassung hat die Felder nicht:
+             * `vehicle_typ` bleibt dann NULL, und die Anzeige faellt auf die
+             * Betriebsart zurueck. Ein unbekannter Wert wird ebenso NULL — das
+             * ENUM naehme ihn ohnehin nicht an, und ein stilles 'standard'
+             * behauptete etwas. */
+            $vTyp      = array_key_exists((string)($d['vehicle_typ'] ?? ''), VEHICLE_TYPEN)
+                       ? (string)$d['vehicle_typ'] : null;
+            if (($d['vehicle_typ'] ?? null) !== null && $vTyp === null) {
+                $pruef->melde('days.vehicle_typ', 'unbekannter Wert — leer gelassen');
+            }
+            $vKurz     = pruef_text($d['vehicle_kurz'] ?? null, RM_KURZ_MAX,
+                                    'days.vehicle_kurz', $pruef);
 
             // Schritt 1: ueber einen Einsatz, der im Ziel schon liegt.
             $vorhanden = false;
@@ -1390,12 +1455,13 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
 
             $st = $pdo->prepare('INSERT INTO days
                 (user_id, day, started_at, ended_at, vehicle_id, base_id, kind,
-                 base_name, base_lat, base_lon, vehicle_name, notes, deleted_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
+                 base_name, base_lat, base_lon, vehicle_name, vehicle_typ,
+                 vehicle_kurz, notes, deleted_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
             $st->execute([$userId, $tagWert, $startedAt, $endedAt,
                 $vehId, $baseId, $kindWert,
                 $bName, $d['base_lat'] ?? null, $d['base_lon'] ?? null,
-                $vName, $d['notes'] ?? null,
+                $vName, $vTyp, $vKurz, $d['notes'] ?? null,
                 $dateiGeloescht ? $loeschZeit : null]);
             $neuId = (int)$pdo->lastInsertId();
             $stats['days']++;
@@ -1599,7 +1665,24 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
         };
         $collectCols($FIELDS);
         // Alt-Backups: loc_* wird ignoriert
-        $extraCols = array_merge($extraCols, ['start_src', 'pat_blob', 'created_at']);
+        /* `notes` STEHT HIER, obwohl es seit S9/AP7 kein Katalogfeld mit
+         * Spalte mehr ist (mf_ist_spalte() sagt nein) — und genau deshalb
+         * muss es von Hand dazu.
+         *
+         * Eine Sicherungsdatei mit Nutzlast 10 oder aelter traegt die Notiz im
+         * KLARTEXT in dieser Spalte. Faellt sie hier aus der Liste, wird sie
+         * beim Einspielen stillschweigend verworfen: kein Fehler, keine
+         * Meldung, eine Notiz weniger. Sie wird deshalb weiter geschrieben —
+         * und der Anhebelauf (Schritt 3) holt sie beim naechsten Entsperren
+         * in den Blob. Eine Datei mit Nutzlast 11 oder neuer traegt an dieser
+         * Stelle NULL und den Text im `pat`-Block; dann schreibt diese Spalte
+         * NULL, was richtig ist.
+         *
+         * Wenn P8 die Spalte entfernt (R60), faellt dieser Eintrag mit ihr —
+         * und mit ihm die Faehigkeit, eine 10er-Datei vollstaendig
+         * einzuspielen. Das gehoert dann ausdruecklich entschieden. */
+        $extraCols = array_merge($extraCols,
+                                 ['start_src', 'pat_blob', 'notes', 'created_at']);
 
         foreach (($data['missions'] ?? []) as $m) {
             if (!is_array($m)) { $stats['missions_skipped']++; $grund['aufbau']++; continue; }

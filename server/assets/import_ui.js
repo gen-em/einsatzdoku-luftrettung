@@ -572,6 +572,9 @@
                 }
                 if (m.pat.dx) { pat.dx = m.pat.dx; }
                 if (m.pat.site_desc) { pat.site_desc = m.pat.site_desc; }
+                // Notizen des Einsatzes (S9/AP7) — verschluesselt wie alles
+                // andere hier; die Zeilenumbrueche bleiben unangetastet.
+                if (m.pat.notes) { pat.notes = m.pat.notes; }
                 if (m.pat.loc && (m.pat.loc.addr || m.pat.loc.lat !== undefined)) {
                     pat.loc = {};
                     if (m.pat.loc.addr) { pat.loc.addr = m.pat.loc.addr; }
@@ -632,7 +635,9 @@
                     bw_unit: m.bw_unit || null,
                     bw_info: m.bw_info || null,
                     other_ema: m.other_ema || null,
-                    notes: m.notes || null,
+                    /* `notes` faellt aus der Nutzlast (S9/AP7): Der Text steht
+                       im `pat_blob` oben. Wer ihn hier wieder einfuegte,
+                       schickte ihn im Klartext an den Server. */
 
                     // Ab Web 6.1.0: Transportart, Fehleinsatz,
                     // Zielklinik-Koordinate und Abfahrtortregel (E17/E34/E37).

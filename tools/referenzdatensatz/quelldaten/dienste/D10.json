@@ -144,8 +144,7 @@
           "RTW Talwang 76/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Obere gastrointestinale Blutung",
@@ -158,7 +157,8 @@
           "lon": 10.24611
         },
         "site_desc": "Gasthof, Gästezimmer",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -234,8 +234,7 @@
           "RTW Talwang 76/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Pneumonie mit respiratorischer Insuffizienz",
@@ -248,7 +247,8 @@
           "lon": 10.28915
         },
         "site_desc": "Pflegeheim, Zimmer 14",
-        "start": null
+        "start": null,
+        "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
       },
       "abdeckung": []
     },
@@ -323,8 +323,7 @@
           "ELW Talwang 1"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": null
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Akzidentelle Hypothermie",
@@ -337,7 +336,8 @@
           "lon": 10.25055
         },
         "site_desc": "Bushaltestelle am Ortsrand",
-        "start": null
+        "start": null,
+        "notes": null
       },
       "abdeckung": []
     },
@@ -412,8 +412,7 @@
           "RTW Talwang 76/83"
         ],
         "crew_override": 0,
-        "crew": {},
-        "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Schlaganfall, Lyse-Fenster offen",
@@ -426,7 +425,8 @@
           "lon": 10.27781
         },
         "site_desc": "Wohnhaus, Bad",
-        "start": null
+        "start": null,
+        "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
       },
       "abdeckung": []
     },
@@ -529,8 +529,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Angehörige vor Ort, Betreuung durch die Besatzung."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Nierenkolik",
@@ -543,7 +542,8 @@
           "lon": 10.24944
         },
         "site_desc": "Wohnhaus, Schlafzimmer",
-        "start": null
+        "start": null,
+        "notes": "Angehörige vor Ort, Betreuung durch die Besatzung."
       },
       "abdeckung": []
     },
@@ -616,8 +616,7 @@
         "other_ema": null,
         "other_resources": [],
         "crew_override": 0,
-        "crew": {},
-        "notes": "Übergabe an der Notaufnahme ohne Voranmeldung."
+        "crew": {}
       },
       "geschuetzt": {
         "dx": "Akutes Abdomen",
@@ -630,7 +629,8 @@
           "lon": 10.25361
         },
         "site_desc": "Wohnhaus, Küche",
-        "start": null
+        "start": null,
+        "notes": "Übergabe an der Notaufnahme ohne Voranmeldung."
       },
       "abdeckung": []
     }

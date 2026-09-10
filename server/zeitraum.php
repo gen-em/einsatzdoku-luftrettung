@@ -133,7 +133,11 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
          der Tagesleiste. Gleiches Muster wie CREW_ROLLEN in import.php
          (Befund P9); assets/missiontable.js führt einen Rückfall, falls die
          Vorgabe fehlt. */ ?>
-<script>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
+<script>const ART_SYMBOLE = <?= json_js(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;
+        /* Die Zeichen der Diensttag-TYPEN daneben (E-S9-13, Web 16.0.0) — sonst
+           zeichnet diese Tabelle die Betriebsart, waehrend die Leiste den Typ
+           zeichnet. Dieselbe Quelle wie auf der Serverseite. */
+        const TYP_SYMBOLE = <?= json_js(dt_typ_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
@@ -174,6 +178,12 @@ let fixierteMid = null;   // per Klick festgesetzte Einsatz-ID oder null
    deshalb kommen sie aus der Datenbank und nicht aus der Einsatzliste. */
 let tageGesamt = 0;
 let tageArt = { air: 0, ground: 0, neutral: 0 };
+/* Welche Faehigkeiten die LUFT-Diensttage des Zeitraums tragen (E-S9-04).
+   Aus api/range.php, nicht aus der Einsatzliste gerechnet — der Unterschied
+   ist der ganze Punkt: „null Windeneinsaetze" ist etwas anderes als „Winde
+   nicht eingerichtet". Vorgabe `false`, damit eine alte Antwort ohne den
+   Schluessel die Kacheln versteckt statt sie falsch zu zeigen. */
+let faehig = { winch: false, bergwacht: false };
 
 /* Tableiste und gewaehlte Ansicht (E28).
  *
@@ -222,7 +232,12 @@ function fmtKmDe(meter){ return (meter / 1000).toFixed(1).replace('.', ',') + ' 
  *   text     (k) => Anzeigewert; `k` sind die einmal gerechneten Kennzahlen
  *   extrem   Name des Extremwerts in `k`; macht die Kachel anklickbar und
  *            verknuepft sie mit ihrem Traeger-Einsatz
- *   nurWenn  (liste) => bool, datengetriebene Sichtbarkeit (E30, A13d)
+ *   nurWenn  (liste, faehig) => bool, datengetriebene Sichtbarkeit.
+ *            `liste` ist die GEFILTERTE Einsatzliste der Ansicht, `faehig`
+ *            die Faehigkeiten der Luft-Diensttage des GANZEN Zeitraums
+ *            (E-S9-04). Wer ueber Vorhandensein statt ueber Zaehlung
+ *            entscheidet, nimmt das zweite — es steht auch dann, wenn kein
+ *            Einsatz die Sache je ausgeloest hat.
  * ================================================================== */
 
 /* Ein Eintrag je Kachel — seit O7 mit GETRENNTER EINHEIT:
@@ -301,15 +316,23 @@ const KACHELN_LUFT = [
   { id: 'maxhoehe',     label: 'Höchster Einsatzort',   extrem: 'maxHoehe',
     wert: k => k.maxHoehe.wert != null ? wertGanz(k.maxHoehe.wert) : '–',
     einheit: k => k.maxHoehe.wert != null ? 'm' : '' },
-  /* NUR BEI TATSAECHLICHEN WINDENEINSAETZEN (E30, A13d) — nicht schon, wenn
-     das Rettungsmittel es könnte. Damit lässt sich „null Windeneinsätze"
-     nicht mehr von „Winde nicht eingerichtet" unterscheiden; das ist gewollt,
-     weil eine Dauerkachel mit dem Wert null nur Platz kostet. */
+  /* NACH FAEHIGKEIT, NICHT NACH ZAEHLUNG (E-S9-04, PS-4, Backlog Nr. 104).
+     Kehrt E30/A13d ausdruecklich um. Bis Web 15.8.0 stand hier
+     `liste.some(m => m.winch)`: keine Winde geflogen, keine Kachel — und
+     damit war „null Windeneinsätze" von „Winde nicht eingerichtet" nicht zu
+     unterscheiden. Das eine ist eine Aussage über den Dienst, das andere
+     eine über die Stammdaten, und der Auftraggeber will die erste. Trägt ein
+     Luft-Diensttag des Zeitraums die Fähigkeit, steht die Kachel — auch mit
+     dem Wert 0. Trägt keiner sie, fehlt sie wie bisher.
+
+     Die Fähigkeit ist am Diensttag EINGEFROREN (E29); ein später
+     abgewähltes Windenrettungsmittel nimmt einem vergangenen Zeitraum seine
+     Kachel deshalb nicht weg. */
   { id: 'winchcycles',  label: 'Winden-Cycles', mobil: true,   wert: k => String(k.winden),
-    nurWenn: liste => liste.some(m => m.winch) },
+    nurWenn: (liste, f) => f.winch },
   { id: 'avgwinch',     label: 'Ø Winden-Cycles / Flugtag',
     wert: k => k.tage > 0 ? fmtDe1(k.winden / k.tage) : '–',
-    nurWenn: liste => liste.some(m => m.winch) }
+    nurWenn: (liste, f) => f.winch }
 ];
 
 const KACHELSATZ = { air: KACHELN_LUFT, ground: KACHELN_BODEN, mix: KACHELN_GEMISCHT };
@@ -367,13 +390,15 @@ function zeichneStatistik(liste, tage){
   grid.innerHTML = '';
   grid.className = 'kennzahl-raster kennzahl-raster-' + SPALTEN_JE_SATZ[ansicht];
 
-  const satz = KACHELSATZ[ansicht].filter(def => !def.nurWenn || def.nurWenn(liste));
+  const satz = KACHELSATZ[ansicht].filter(def => !def.nurWenn || def.nurWenn(liste, faehig));
 
   /* MOBIL VIER (E-P3-37). Welche vier, sagt die Kachel selbst (`mobil`).
-     Fällt eine davon am Bestand weg — die Winden-Cycles ohne Windeneinsatz —,
-     rückt die nächste des Satzes nach: Vier Kacheln füllen zwei Reihen zu
-     zweit, drei ließen eine halbe Reihe leer. Das steht so nicht im Konzept;
-     dort ist der Fall „Luftansicht ohne Winde" nicht bedacht. */
+     Fällt eine davon am Bestand weg — die Winden-Cycles in einem Zeitraum,
+     dessen Luft-Diensttage die Winde gar nicht tragen (seit Web 15.9.0 der
+     Auslöser, vorher: kein Windeneinsatz) —, rückt die nächste des Satzes
+     nach: Vier Kacheln füllen zwei Reihen zu zweit, drei ließen eine halbe
+     Reihe leer. Das steht so nicht im Konzept; dort ist der Fall
+     „Luftansicht ohne Winde" nicht bedacht. */
   const vorn = satz.filter(d => d.mobil);
   while (vorn.length < 4 && vorn.length < satz.length) {
     const naechste = satz.find(d => !vorn.includes(d));
@@ -785,6 +810,7 @@ function zeigeFehler(msg){
   bases      = d.bases || [];
   tageGesamt = d.tage || 0;
   tageArt = d.tage_art || { air: 0, ground: 0, neutral: 0 };
+  faehig  = Object.assign({ winch: false, bergwacht: false }, d.faehigkeiten || {});
 
   /* Welche Ansicht es gibt, entscheiden die DIENSTTAGE des Zeitraums, nicht
      die Einsaetze (E28): Ein bodengebundener Dienst ohne einen einzigen

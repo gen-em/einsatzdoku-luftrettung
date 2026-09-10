@@ -46,7 +46,9 @@
         "winch",
         "bergwacht"
       ],
-      "standard": true
+      "standard": true,
+      "typ": "standard",
+      "kurz": null
     },
     {
       "name": "Alpenfalke 2",
@@ -59,7 +61,9 @@
       ],
       "faehigkeiten": [],
       "standard": false,
-      "$warum": "OHNE Faehigkeiten und mit kleinerem Rollensatz. Prueft zweierlei: dass Winden- und Bergwachtfelder an seinen Diensttagen gar nicht erscheinen (cap_gate), und dass der eingefrorene Rollensatz eines Diensttags wirklich vom Rettungsmittel kommt."
+      "$warum": "OHNE Faehigkeiten und mit kleinerem Rollensatz. Prueft zweierlei: dass Winden- und Bergwachtfelder an seinen Diensttagen gar nicht erscheinen (cap_gate), und dass der eingefrorene Rollensatz eines Diensttags wirklich vom Rettungsmittel kommt.",
+      "typ": "standard",
+      "kurz": null
     },
     {
       "name": "NEF Talwang 76/1",
@@ -71,7 +75,52 @@
         "other"
       ],
       "faehigkeiten": [],
-      "standard": false
+      "standard": false,
+      "typ": "standard",
+      "kurz": null
+    },
+    {
+      "name": "Bergwacht Hochkreuth",
+      "kurz": "BW Hoch",
+      "typ": "bergwacht",
+      "art": "air",
+      "standort": "Luftrettungsstation Hochkreuth",
+      "rollen": [
+        "p1",
+        "hems"
+      ],
+      "faehigkeiten": [
+        "winch",
+        "bergwacht"
+      ],
+      "standard": false,
+      "$warum": "TYP bergwacht MIT Standort und MIT Kurznamen. Prueft dreierlei: dass ein Typ ausser 'standard' einen Standort haben DARF, dass die Rollen-Vorlagen dabei verworfen werden (E-S9-09 -- die zwei hier mitgeschickten Rollen duerfen NICHT ankommen), und dass der Kurzname den Kreislauf ueberlebt."
+    },
+    {
+      "name": "Sanitätsdienst Seefest",
+      "kurz": null,
+      "typ": "veranstaltung",
+      "art": "air",
+      "standort": "Luftrettungsstation Hochkreuth",
+      "ohne_standort": true,
+      "rollen": [],
+      "faehigkeiten": [
+        "winch"
+      ],
+      "standard": false,
+      "$warum": "TYP veranstaltung OHNE Standort, mit ABSICHTLICH falscher Betriebsart 'air' und einer Windenfaehigkeit. Prueft, dass die Pruefschicht die Betriebsart auf 'ground' zwingt (E-S9-09) und die Faehigkeit damit von selbst wegfaellt -- ohne den Datensatz abzulehnen. `standort` nennt die Karte, aus der das Formular abgeschickt wird; `ohne_standort` schlaegt sie."
+    },
+    {
+      "name": "Reserve Talwang",
+      "kurz": "Reserve",
+      "typ": "sonstiges",
+      "art": "ground",
+      "standort": "Notarztstandort Talwang",
+      "ohne_standort": true,
+      "rollen": [],
+      "faehigkeiten": [],
+      "standard": false,
+      "$warum": "TYP sonstiges OHNE Standort und MIT Kurznamen -- der Fall, den die Standortliste unter 'Ohne Standort' fuehrt (E-S9-18)."
     }
   ],
   "besatzung": [
