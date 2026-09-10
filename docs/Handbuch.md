@@ -919,7 +919,9 @@ ist danach nicht noch einmal nötig.
 **„verschlüsselt"**, und die einzelnen geschützten Zeilen — Einsatzort,
 Beschreibung, Diagnose, Name, Geburtsdatum — tragen daneben ein kleines
 **Schloss**. Die Plakette sagt „hier stehen verschlüsselte Angaben", das
-Schloss sagt „diese hier".
+Schloss sagt „diese hier". Auch die **Einsatznummer** trägt es (seit
+Web 19.1.1) — sie ist seit langem verschlüsselt, war aber die einzige Zeile
+des Blocks ohne das Zeichen.
 
 Die Angaben selbst stehen in **vier Karten**:
 
@@ -1048,6 +1050,10 @@ gespeichert. Sie steht an den Bergwacht-Angaben, am weiteren Notarzt, an den
 Besatzungsnamen — und am Notizfeld des **Diensttags**, das weiterhin Klartext
 ist. Die zugeklappte Karte **„Was hier gilt"** am Ende des Formulars erklärt
 beides in drei Sätzen.
+
+Bei den **Notizen des Einsatzes** steht das Schloss am **Kartentitel** und
+nicht am Feld: Die Karte enthält genau dieses eine Feld, und seine
+Beschriftung heißt wie die Karte — sie würde sonst zweimal dastehen.
 
 > Die Notizen des Einsatzes und die des Diensttags heißen gleich und werden
 > verschieden behandelt. Genau deshalb tragen sie verschiedene Zeichen: Wer

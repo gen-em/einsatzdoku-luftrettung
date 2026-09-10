@@ -178,8 +178,20 @@ Klartext steht, ist Symbolik. Es gehört zu B — oder gar nicht.
 
 ## 6. Was noch zu klären ist
 
-| Frage | Wer |
-|---|---|
-| Ist die Spur überhaupt schützenswert, oder reicht der Personenbezug? | Philipp, ggf. mit Datenschutzberatung |
-| Was soll bei einem Passwortwechsel mit nicht synchronisierten Uhr-Daten geschehen? | vor Weg B zu entscheiden |
-| Genügt für den Bestand ein Stichtag („ab hier verschlüsselt"), oder muss rückwirkend? | vor Weg B zu entscheiden |
+**Nichts mehr — alle drei sind am 06.09.2026 mit R78 entschieden**
+(Rahmenplan Fassung 30, Vorbereitung `Vorbereitung-Sicherheitspaket.md`
+SP-9). Die Tabelle bleibt als Protokoll stehen, mit der Antwort daneben;
+ohne sie liest sie sich wie eine offene Liste und hat das am 10.09.2026
+auch getan.
+
+| Frage | Wer | Antwort |
+|---|---|---|
+| Ist die Spur überhaupt schützenswert, oder reicht der Personenbezug? | Philipp, ggf. mit Datenschutzberatung | **Ja** — Weg B ist beschlossen und als **S11** eingeplant (Schritt 12a, nach P6, vor der Öffnung) |
+| Was soll bei einem Passwortwechsel mit nicht synchronisierten Uhr-Daten geschehen? | vor Weg B zu entscheiden | **Nichts** — das Konto-Schlüsselpaar (Backlog Nr. 53) hängt nicht am Passwort: Der private Teil liegt unter dem Inhaltsschlüssel gehüllt wie `pat_wrap_rc`, der öffentliche im Klartext auf dem Gerät. Ein Passwortwechsel berührt ihn nicht, und die Uhr verschlüsselt weiter |
+| Genügt für den Bestand ein Stichtag („ab hier verschlüsselt"), oder muss rückwirkend? | vor Weg B zu entscheiden | **Rückwirkend** — Altbestand per Einmalwerkzeug im Browser, für das eine Konto; danach wird das Werkzeug entfernt |
+
+**Und das Transportziel** (`transport_dest`, `dest_lat`, `dest_lon`) gehört
+seit demselben Beschluss zum Umfang von Weg B — R78 (6) kehrt damit die
+Klartext-Entscheidung im Feldkatalog ausdrücklich um. Am 10.09.2026 hat der
+Auftraggeber sie eigens bestätigt; Backlog Nr. 43 nennt sie seither in der
+ersten Zeile statt nur in der Aufzählung.

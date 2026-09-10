@@ -408,14 +408,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     stehen, ist der Sollwert von P-P3-03 nicht erreicht — und das steht so im
     Prüfprotokoll, statt die Zahl schönzurechnen.
 
-43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt.**
+43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt — und das
+    Transportziel auch nicht.**
+    *Ausdrücklich bestätigt 10.09.2026:* **Die Zielklinik soll
+    verschlüsselt werden.** Gemeint sind `missions.transport_dest` (der
+    Name) und `missions.dest_lat`/`dest_lon` (die Koordinate) — heute
+    Klartext, und zwar bewusst: Der Pin ist ohne Entsperren sichtbar
+    (`mission_fields.php`, Katalogeintrag `transport_dest`). Der Umfang
+    unten nennt sie seit dem 06.09.2026; diese Zeile steht darüber, damit
+    sie beim Lesen nicht in der Aufzählung untergeht.
+    *Warum trotzdem nicht vorgezogen:* `mission_phases` trägt zu **jeder**
+    Phase eine Koordinate, und Phase 7 heißt „Ankunft Klinik". Das
+    Transportziel zu verschlüsseln und diese Spalte stehen zu lassen,
+    verschöbe die Sache um eine Tabelle — `Konzept-V1-Ortsdaten.md`
+    Abschnitt 5 nennt das „Symbolik". Es gehört zu Weg B oder nirgendwohin.
     *Entschieden 06.09.2026 (R78):* **Weg C sofort** (Sofortpaket, nur
     Dokumente: die Zusage in `CLAUDE.md` 4, `Technik.md`, README, Handbuch
     und im Datenschutztext auf das eingrenzen, was sie hält), **Weg B als
     eigene Phase S11 nach P6, vor der Öffnung** — mit einem
     Konto-Schlüsselpaar (Nr. 53), Umfang Spur, Phasenkoordinaten,
-    Reanimationsereignisse und Zielklinik, Altbestand per Einmalwerkzeug im
-    Browser. Die Uhr kann es: ECDH P-256, AES-256-CBC, HMAC-SHA256 ab
+    Reanimationsereignisse und **Zielklinik samt Koordinate**, Altbestand
+    per Einmalwerkzeug im Browser. Die Uhr kann es: ECDH P-256, AES-256-CBC, HMAC-SHA256 ab
     Connect IQ 3.0.0 (geprüft). Skizze in
     `docs/konzepte/Vorbereitung-Sicherheitspaket.md`, SP-9.
     *Aufgenommen 30.08.2026 aus der ersten Rückmeldungsrunde.* Der Einsatzort
@@ -1626,6 +1639,29 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Abnahme:* Ein Diensttag mit „Anderem Rettungsmittel" erlaubt einen
     Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
     tut. Kein dritter Zustand.
+
+170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.**
+    *Aufgenommen 10.09.2026 nach zwei Rückmeldungen zu Web 19.1.0 (behoben
+    mit 19.1.1).* AP7 hat gezählt, **wie viele** Schlösser und Kleinzeilen
+    stehen — 8, 9, und 0 Felder mit beidem — und die Zahlen stimmten. Sie
+    konnten den Fehler trotzdem nicht finden: In der Leseansicht fehlte das
+    Schloss an der Einsatznummer, im Formular an der Karte „Notizen".
+    Beides meldete ein Mensch, der hinsah.
+
+    *Warum die Zahl nicht half:* Sie war aus dem gebauten Zustand erhoben
+    und hatte kein Sollmaß daneben. Eine Zählung, die ihre eigene Liste
+    bestätigt, findet Abweichungen von dieser Liste — nie eine fehlende
+    Zeile darin.
+
+    *Was ein Sollmaß wäre:* Der Feldkatalog weiß es bereits. Jedes Feld mit
+    `'store' => 'pat'` gehört zum verschlüsselten Block, jedes
+    Klartext-Freitextfeld trägt `'hinweis'`. Eine Probe könnte das Formular
+    und die Leseansicht aufrufen und für **jeden** Katalogeintrag prüfen,
+    ob das erwartete Zeichen an der erwarteten Stelle steht — und für die
+    acht von Hand geschriebenen Beschriftungen der Karte „PatientIn"
+    ebenso. Erwartet wird dann nicht „8 Schlösser", sondern „8 von 8".
+    *Abnahme:* Eine Probe, die rot wird, wenn man ein `dtGeschuetzt()` in
+    `einsatz.php` durch einen nackten String ersetzt.
 
 ## Erledigt
 

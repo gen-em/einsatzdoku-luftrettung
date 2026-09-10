@@ -1348,7 +1348,7 @@ function ui_plakette(string $text, array $o = []): string
  * („keine", „vom Diensttag", „3 · 1 ausgewählt").
  *
  * $o: titel, zahl, aktion ['text','href','symbol','art','form','attr'],
- *     zu (bool), vorschau, klasse, id, plakette
+ *     zu (bool), vorschau, klasse, id, plakette, geschuetzt (bool)
  *
  * DIE KOPFAKTION KANN AUCH EIN ABSENDEKNOPF SEIN (S8/AP3). „Jetzt sichern"
  * auf der Kontoseite ist ein POST, kein Link — mit `form` wird aus dem <a>
@@ -1359,6 +1359,28 @@ function ui_plakette(string $text, array $o = []): string
 function ui_karte_start(array $o = []): void
 {
     $zu = !empty($o['zu']) || isset($o['vorschau']);
+
+    /* 'geschuetzt' => true haengt das SCHLOSS an den Kartentitel (Web 19.1.1).
+     *
+     * Gedacht ist es fuer eine Karte, deren Inhalt vollstaendig im `pat_blob`
+     * liegt, ohne dass ein einzelnes Feld das Zeichen tragen KANN: Die Karte
+     * „Notizen" enthaelt genau ein Feld, und dessen Beschriftung heisst wie die
+     * Karte — $labelSichtbar() blendet sie deshalb aus (sie stuende zweimal
+     * da), und mit ihr verschwand das Schloss. Uebrig blieb die Kleinzeile
+     * „Ende-zu-Ende-verschluesselt", also ein Text, wo die Karte „PatientIn"
+     * daneben acht Schloesser zeigt. Wer das nebeneinander sieht, liest den
+     * Unterschied als Aussage ueber die Sache — und liest falsch.
+     *
+     * DAS ZEICHEN STEHT IM <h2>, nicht daneben. `.karte-kopf` ist ein
+     * Flex-Kasten mit `gap`; ein eigenes Flex-Kind bekaeme den Abstand zweimal
+     * (gap plus das `margin-left` von `.symbol-schutz`). Im Titel verhaelt es
+     * sich genau wie in einer Feldbeschriftung: Wort, dann Symbol. Keine neue
+     * CSS-Regel, keine neue Darstellung — derselbe Baustein an einer weiteren
+     * Stelle. */
+    $titel = ui_e((string)($o['titel'] ?? ''))
+           . (!empty($o['geschuetzt'])
+               ? ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt')
+               : '');
     $k  = 'karte' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
     $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
 
@@ -1367,7 +1389,7 @@ function ui_karte_start(array $o = []): void
            . (!empty($o['offen']) ? ' open' : '') . ">\n";
         echo '  <summary class="karte-kopf">' . "\n";
         echo '    ' . ui_symbol('winkel', 'akkordeon-winkel') . "\n";
-        echo '    <h2 class="karte-titel">' . ui_e((string)($o['titel'] ?? '')) . "</h2>\n";
+        echo '    <h2 class="karte-titel">' . $titel . "</h2>\n";
         if (isset($o['zahl'])) {
             echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";
         }
@@ -1382,7 +1404,7 @@ function ui_karte_start(array $o = []): void
     echo '<section class="' . $k . '"' . $id . ">\n";
     if (isset($o['titel'])) {
         echo '  <div class="karte-kopf">' . "\n";
-        echo '    <h2 class="karte-titel">' . ui_e((string)$o['titel']) . "</h2>\n";
+        echo '    <h2 class="karte-titel">' . $titel . "</h2>\n";
         if (isset($o['zahl'])) {
             echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";
         }

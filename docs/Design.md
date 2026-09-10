@@ -780,7 +780,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 25 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 24 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 30 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
@@ -801,12 +801,12 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 9 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
-| `schloss.svg` | Tabler Icons „lock" (MIT) | 9 |
+| `schloss.svg` | Tabler Icons „lock" (MIT) | 14 |
 | `server.svg` | Tabler Icons „server" (MIT) | 6 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 10 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
-| `standort.svg` | Tabler Icons „map-pin" (MIT) | 22 |
+| `standort.svg` | Tabler Icons „map-pin" (MIT) | 23 |
 | `status.svg` | Tabler Icons „activity" (MIT) | 27 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
@@ -899,25 +899,25 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1297 |
 | `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1323 |
 | `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1359 |
-| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1417 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1452 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1494 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1542 |
-| `ui_zeile()` | `.zeile` | ja (+15 Unterklassen) | 1596 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1644 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1686 |
-| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1755 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1820 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1864 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1917 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1961 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2060 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2122 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2163 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2262 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2292 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2304 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2471 |
+| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1439 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1474 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1516 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1564 |
+| `ui_zeile()` | `.zeile` | ja (+15 Unterklassen) | 1618 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1666 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1708 |
+| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1777 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1842 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1886 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1939 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1983 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2082 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 2144 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2185 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2284 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2314 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2326 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2502 |
 
 39 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -944,6 +944,20 @@ karte-klappbar">` mit Winkel links und Vorschau rechts) · mit Plakette.
 
 **Eine zweite Kopfaktion gibt es nicht** (E-P3-25). Was mehr braucht, bekommt
 ein Aktionsmenü.
+
+**Das Schloss am Titel** (`ui_karte_start(['geschuetzt' => true])`, Web 19.1.1)
+für eine Karte, deren Inhalt vollständig Ende-zu-Ende-verschlüsselt ist, ohne
+dass ein einzelnes Feld das Zeichen tragen kann — der Fall der Karte
+„Notizen" im Einsatzformular, die genau ein Feld enthält und dessen
+Beschriftung ausblendet (sie ist der Kartentitel). Das Zeichen steht **im
+`<h2>`**, nicht als eigenes Element daneben: `.karte-kopf` ist ein Flex-Kasten
+mit `gap`, und `.symbol-schutz` bringt sein `margin-left` selbst mit — daneben
+bekäme es den Abstand zweimal. Es ist derselbe Baustein wie an einer
+Feldbeschriftung, an derselben Stelle: rechts vom Wort.
+
+```html
+<h2 class="karte-titel">Notizen<svg class="symbol symbol-schutz">…</svg></h2>
+```
 
 ### 9.2 Zeile — der Listeneintrag
 
