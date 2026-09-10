@@ -3839,5 +3839,53 @@ declare(strict_types=1);
  * nichts zu lesen. Der Import behandelt die Notiz als `sensitive` — sie
  * verlaesst den Browser nur verschluesselt; `api/import_commit.php` nimmt die
  * Spalte gar nicht mehr entgegen.
+ *
+ * 19.0.3 — S9/AP7 Schritt 3: der Altbestand zieht um. `api/pat_anheben.php`.
+ *
+ * DER SERVER KANN NICHT VERSCHLUESSELN, und das ist der ganze Punkt der
+ * Zusage. Der Inhaltsschluessel liegt in der Schluesselhuelle des Kontos und
+ * wird aus dem Passwort abgeleitet; umziehen kann den Altbestand nur der
+ * Browser. `assets/unlock.js` tut es im Hintergrund, sobald ein Schluessel
+ * vorliegt — an ALLEN DREI Entsperrwegen, nicht nur nach der Anmeldung: Die
+ * KDF-Anhebung haengt am Vormerkfach, weil sie die Passwortableitungen
+ * braucht; diese hier braucht den Inhaltsschluessel, und den gibt es auch
+ * Stunden spaeter ueber den Dialog.
+ *
+ * VIER REGELN, JEDE AUS EINEM KONKRETEN SCHADEN:
+ *
+ *   - EINE WACHE JE ZEILE. `missions` fuehrt kein `updated_at`. Jedes UPDATE
+ *     traegt `notes IS NOT NULL` UND `pat_blob <=> ?` — der Blob muss noch
+ *     genau der sein, den dieser Browser gelesen hat. Sonst ueberschriebe ein
+ *     zweites Fenster eine inzwischen geaenderte Diagnose, lautlos. `<=>`
+ *     statt `=`, weil der Blob NULL sein darf.
+ *   - KEIN `manual = 1`, KEIN `edited = 1`. Das Formular setzt beides bei
+ *     jedem Speichern, und `ingest.php` hoert bei `manual = 1` auf, Daten der
+ *     Uhr zu uebernehmen. Ein Anhebelauf, der den Formularweg nachbaute,
+ *     froere den gesamten Altbestand eines Kontos still gegen die Uhr ein —
+ *     ungefragt, beim naechsten Entsperren. Geschrieben werden genau zwei
+ *     Spalten. GEMESSEN: 88 Einsaetze, `manual = 1` bei 86 vorher wie
+ *     nachher, `edited = 1` bei 79 vorher wie nachher.
+ *   - DER BLOB GEWINNT. Steht dort schon eine Notiz, bleibt sie; die Spalte
+ *     ist dann ein Rest. Gemessen an einem Einsatz, dessen Spalte einen
+ *     anderen Text trug als sein Blob: Der Blobtext stand danach da.
+ *   - EIN UNLESBARER BLOB WIRD NICHT ANGEFASST. Er gehoert zu einem anderen
+ *     Schluessel; ihn zu ersetzen hiesse, fremde Angaben zu loeschen.
+ *
+ * KEIN GESPEICHERTER MERKER. „Einmal je Konto" ist die Wirkung, nicht der
+ * Mechanismus: Sobald kein Einsatz mehr Klartext traegt, liefert GET eine
+ * leere Liste. Ein Merker kostete eine Spalte samt Migration — und waere
+ * falsch, sobald wieder Klartext hereinkommt: eine eingespielte Sicherung mit
+ * Nutzlast 10, ein CSV-Import einer alten Datei, das Zuruecksetzen des
+ * Demo-Kontos. Der abgeleitete Zustand kennt diesen Fall von selbst.
+ *
+ * GEMESSEN: 12 Einsaetze mit Klartext, ein Anmeldevorgang, drei Aufrufe
+ * (GET 12, POST angehoben 12 / uebersprungen 0, GET leer mit offen 0), Spalte
+ * danach 0, 0 Konsolenfehler. Sicherungsumlauf 287 842 Einzelvergleiche,
+ * 0 unerklaerte Abweichungen, 159 erwartete — die Notiz steht dort in BEIDEN
+ * Haelften: Spalte leer, `pat.notes` gefuellt, gleicher Wortlaut. Das ist der
+ * Beleg, dass sie umzieht statt zu verschwinden.
+ *
+ * NOCH OFFEN: die Kennzeichnung mit Schloss und die Karte „Was hier gilt"
+ * (Schritt 4), die normative Doku samt CLAUDE.md 4 (Schritt 5).
  */
-const WEB_VERSION = '19.0.2';
+const WEB_VERSION = '19.0.3';

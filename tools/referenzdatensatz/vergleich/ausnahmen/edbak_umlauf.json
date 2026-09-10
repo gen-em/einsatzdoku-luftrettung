@@ -8,6 +8,26 @@
       "art": "wert",
       "nach": "None",
       "begruendung": "GEMESSEN 16x (je Diensttag einmal): days[].refs[].device_id wird im frischen Konto null. Geraete stehen in keinem Backup — sie tragen einen API-Schluessel, und ein mitgesichertes Geraet waere ein mitgesicherter Zugang. Die Dienstkennung day_ref selbst bleibt WOERTLICH erhalten; nur ihre Zuordnung zu einem Geraet nicht. Das ist gewollt: Nach einer Wiederherstellung muss jede Uhr neu gekoppelt werden, und die day_refs verhindern trotzdem, dass ein spaeter eintreffender Upload den Diensttag erneut anlegt."
+    },
+    {
+      "bereich": "missions",
+      "feld": "notes",
+      "art": "wert",
+      "nach": "None",
+      "begruendung": "GEMESSEN 143x (71 Einsaetze, je zwei Haelften, dazu einer aus dem Papierkorb). S9/AP7, Nutzlast 11: Die Notiz des Einsatzes steht nicht mehr in der Klartextspalte `notes`, sondern als Schluessel `notes` im verschluesselten `pat`-Block. Der Umlauf zeigt deshalb ZWEI Abweichungen je Einsatz — die Spalte wird leer, der Blobschluessel kommt hinzu. GENAU DAS IST DER BELEG, dass der Text nicht verlorengeht, sondern umzieht: Beide Haelften tragen denselben Wortlaut. Die Referenzdatei stammt vom 07.09.2026 und beschreibt den alten Stand; sie wird NICHT neu erzeugt, weil eine frische Referenz jede echte Abweichung in den uebrigen 287 699 Vergleichen mit zudecken wuerde."
+    },
+    {
+      "bereich": "missions",
+      "feld": "notes",
+      "art": "zusaetzlich",
+      "begruendung": "GEMESSEN 143x (71 Einsaetze, je zwei Haelften, dazu einer aus dem Papierkorb). S9/AP7, Nutzlast 11: Die Notiz des Einsatzes steht nicht mehr in der Klartextspalte `notes`, sondern als Schluessel `notes` im verschluesselten `pat`-Block. Der Umlauf zeigt deshalb ZWEI Abweichungen je Einsatz — die Spalte wird leer, der Blobschluessel kommt hinzu. GENAU DAS IST DER BELEG, dass der Text nicht verlorengeht, sondern umzieht: Beide Haelften tragen denselben Wortlaut. Die Referenzdatei stammt vom 07.09.2026 und beschreibt den alten Stand; sie wird NICHT neu erzeugt, weil eine frische Referenz jede echte Abweichung in den uebrigen 287 699 Vergleichen mit zudecken wuerde."
+    },
+    {
+      "bereich": "kopf",
+      "feld": "version",
+      "art": "wert",
+      "nach": "11",
+      "begruendung": "GEMESSEN 1x. S9/AP7: Die Nutzlastnummer steigt von 10 auf 11, weil die Notiz des Einsatzes in den verschluesselten pat-Block gewandert ist. Eine Installation vor Web 19 suchte sie in der Spalte, faende dort NULL und meldete trotzdem Erfolg — genau dieser stille Schaden ist der Zweck der Zahl. Die Referenzdatei vom 07.09.2026 traegt noch die 10."
     }
   ]
 }

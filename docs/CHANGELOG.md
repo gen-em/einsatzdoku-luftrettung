@@ -14,6 +14,45 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.0.3] — 2026-09-10
+
+### Web — der Altbestand zieht beim Entsperren um (E-S9-01, Schritt 3 von 5)
+
+**Der Server kann nicht verschlüsseln**, und das ist der ganze Punkt der
+Zusage: Der Inhaltsschlüssel liegt in der Schlüsselhülle des Kontos und wird
+aus dem Passwort abgeleitet. Umziehen kann den Altbestand nur der Browser. Der
+neue Endpunkt `api/pat_anheben.php` ist die beiden Hälften davon — **GET**
+liefert bis zu 200 Einsätze mit Klartext in der Spalte, **POST** nimmt je
+Einsatz den neuen Blob entgegen und setzt die Spalte auf `NULL`.
+`assets/unlock.js` ruft beides im Hintergrund auf, sobald ein Schlüssel
+vorliegt, an **allen drei** Entsperrwegen.
+
+**Vier Regeln, jede aus einem konkreten Schaden hergeleitet.** Eine **Wache je
+Zeile**, weil `missions` kein `updated_at` führt: Jedes `UPDATE` verlangt, dass
+der Blob noch genau der ist, den dieser Browser gelesen hat — sonst
+überschriebe ein zweites Fenster eine inzwischen geänderte Diagnose, lautlos.
+**Kein `manual = 1`**, weil `ingest.php` dann aufhört, Daten der Uhr zu
+übernehmen: Ein Anhebelauf, der den Formularweg nachbaute, fröre den gesamten
+Altbestand eines Kontos still gegen die Uhr ein. **Der Blob gewinnt**, wenn
+dort schon eine Notiz steht. Und ein **unlesbarer Blob wird nicht angefasst** —
+er gehört zu einem anderen Schlüssel.
+
+**Es gibt keinen gespeicherten Merker.** „Einmal je Konto" ist die Wirkung,
+nicht der Mechanismus: Sobald kein Einsatz mehr Klartext trägt, liefert GET
+eine leere Liste. Ein Merker kostete eine Spalte samt Migration — und wäre
+falsch, sobald wieder Klartext hereinkommt: eine eingespielte Sicherung mit
+Nutzlast 10, ein CSV-Import einer alten Datei, das Zurücksetzen des
+Demo-Kontos. Der abgeleitete Zustand kennt diesen Fall von selbst.
+
+**Gemessen:** 12 Einsätze mit Klartext, ein Anmeldevorgang, drei Aufrufe
+(GET 12 · POST angehoben 12, übersprungen 0 · GET leer mit `offen: 0`), Spalte
+danach **0**, 0 Konsolenfehler. `manual = 1` bei **86 vorher wie nachher**,
+`edited = 1` bei **79 vorher wie nachher** — die Falle ist umgangen.
+Sicherungsumlauf **287 842 Einzelvergleiche, 0 unerklärte Abweichungen, 159
+erwartete**; die Notiz steht dort in **beiden** Hälften — Spalte leer,
+`pat.notes` gefüllt, gleicher Wortlaut. Das ist der Beleg, dass sie umzieht
+statt zu verschwinden.
+
 ## [Web 19.0.2] — 2026-09-10
 
 ### Web — Export, Sicherung und Import führen die Notiz verschlüsselt (E-S9-01, Schritt 2b von 5); Nutzlast 10 → 11

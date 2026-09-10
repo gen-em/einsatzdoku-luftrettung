@@ -3951,16 +3951,32 @@ Browser), erzeugt in `einsatz_form.php`:
 | `loc.addr` | Adresse des Einsatzorts |
 | `loc.lat`, `loc.lon` | Koordinaten des Einsatzorts |
 | `site_desc` | Beschreibung des Einsatzorts (Zufahrt, Landestelle) |
+| `notes` | **Notizen des Einsatzes** (seit Web 19.0.0, S9/AP7). Bis dahin die Klartextspalte `missions.notes`; sie bleibt `NULL`-fähig stehen, bis P8 sie entfernt (R60), und trägt nur noch Altbestand, den die Anhebung nicht erreicht hat |
 
 Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
 `__CLEAR__` übertragen und löscht den vorhandenen.
+
+> **`notes` ist das erste Feld, das über den Feldkatalog in den Block kommt.**
+> Alle Schlüssel darüber entstehen aus handgeschriebenem Markup in
+> `einsatz_form.php` mit festen Kennungen. `notes` trägt dagegen
+> `'store' => 'pat'` in `mission_fields.php`; `mf_ist_spalte()` nimmt es damit
+> von selbst aus jedem `SELECT`, `INSERT` und `UPDATE` auf `missions`, und
+> `mf_pat_felder()` ist die eine Liste, aus der Formular, Anzeige und Suche
+> schöpfen. Ein weiteres solches Feld (S11: Zielklinik) braucht nur den
+> Katalogeintrag.
+>
+> **Der Altbestand zieht beim Entsperren um** — `api/pat_anheben.php`, siehe
+> Abschnitt 4.98d. Ein Konto, das sich nie entsperrt, behält seinen Klartext
+> in der Spalte; das ist derselbe Zustand wie vor Web 19, nicht schlechter.
 
 > **`site_desc` ist ein aktives Feld, kein Altbestand.** Es sieht wie ein Rest
 > der früheren Klartextspalte aus, ist aber Teil des verschlüsselten Blocks und
 > wird an acht Stellen gelesen und geschrieben. Es zu entfernen zerstörte
 > stillschweigend vorhandene Patientendaten.
 
-**Im Klartext in der Datenbank** stehen dagegen: Zeiten und Phasen — samt
+**Im Klartext in der Datenbank** stehen dagegen: die **Tagesnotizen**
+(`days.notes`, Betriebsnotizen des Diensttags — nicht die des Einsatzes),
+Zeiten und Phasen — samt
 **Koordinate jeder Phase**, und Phase 4 und 5 sind der Einsatzort —, Track,
 Distanz und Steigung, `site_ele_m`, Transportziel mit `dest_lat`/`dest_lon`,
 Schockraum, Reanimationsereignisse, Besatzung, Einsatzmittel, Diensttag- und
@@ -4255,6 +4271,46 @@ Trackpunkte, weil erst zwei eine Linie ergeben — dieselbe Bedingung, die die
 Einsatzansicht für ihre Luftlinie anlegt. Das Skript des Formulars fragt
 `start_src` deshalb überall auf Existenz ab, statt sie vorauszusetzen. Die
 gespeicherte Regel bleibt in der Datenbank unangetastet.
+
+### 4.98d Der Anhebelauf für Altbestand (`api/pat_anheben.php`, ab Web 19.0.0)
+
+Ein Feld, das aus einer Klartextspalte in den verschlüsselten Block wandert,
+lässt vorhandene Daten zurück — und **der Server kann sie nicht selbst
+verschlüsseln**: Der Inhaltsschlüssel liegt in der Schlüsselhülle des Kontos
+und wird aus dem Passwort abgeleitet. Umziehen kann nur der Browser.
+
+`api/pat_anheben.php` ist die beiden Hälften dieses Umzugs. **GET** liefert bis
+zu 200 Einsätze dieses Kontos, die noch Klartext in `missions.notes` haben,
+samt vorhandenem `pat_blob`. **POST** nimmt je Einsatz den neuen Blob entgegen
+und setzt die Spalte auf `NULL`. `assets/unlock.js` ruft beides im Hintergrund
+auf, sobald ein Inhaltsschlüssel vorliegt — an **allen drei** Entsperrwegen
+(Vormerkfach nach der Anmeldung, `EdKeyGuard`, Dialog), in Runden, ohne dass
+jemand darauf wartet.
+
+Vier Regeln, jede aus einem konkreten Schaden hergeleitet:
+
+- **Eine Wache je Zeile.** `missions` führt kein `updated_at`. Jedes `UPDATE`
+  trägt deshalb `notes IS NOT NULL` **und** `pat_blob <=> ?` — der Blob muss
+  noch genau der sein, den dieser Browser gelesen hat. `<=>` statt `=`, weil
+  der Blob `NULL` sein darf. Sonst überschriebe ein zweites Fenster eine
+  inzwischen geänderte Diagnose, lautlos.
+- **Kein `manual = 1`, kein `edited = 1`.** Das Einsatzformular setzt beides bei
+  jedem Speichern, und `ingest.php` hört bei `manual = 1` auf, Daten der Uhr zu
+  übernehmen. Ein Anhebelauf, der den Formularweg nachbaute, fröre den
+  gesamten Altbestand eines Kontos still gegen die Uhr ein. Geschrieben werden
+  genau zwei Spalten.
+- **Der Blob gewinnt.** Steht dort schon eine Notiz, bleibt sie; die Spalte ist
+  dann ein Rest.
+- **Ein unlesbarer Blob wird nicht angefasst.** Er gehört zu einem anderen
+  Schlüssel; ihn zu ersetzen hieße, fremde Angaben zu löschen. Der Klartext
+  bleibt dann stehen.
+
+**Es gibt keinen gespeicherten Merker.** „Einmal je Konto" ist die Wirkung,
+nicht der Mechanismus: Sobald kein Einsatz mehr Klartext trägt, liefert GET eine
+leere Liste. Ein Merker kostete eine Spalte samt Migration — und wäre falsch,
+sobald wieder Klartext hereinkommt: eine eingespielte Sicherung mit Nutzlast 10,
+ein CSV-Import einer alten Datei, das Zurücksetzen des Demo-Kontos. Der
+abgeleitete Zustand kennt diesen Fall von selbst.
 
 ### 4.99 Gemeinsame Bausteine
 

@@ -241,6 +241,82 @@ const EdUnlock = (() => {
     return null;
   }
 
+  /* ---- Stille Anhebung der Einsatz-Notizen (S9/AP7, E-S9-01) -------------
+   *
+   * Bis Web 19.0.0 lagen die Notizen des Einsatzes im KLARTEXT in der Spalte
+   * `missions.notes`. Sie gehören in den `pat_blob` — und dorthin bringen kann
+   * sie nur der Browser, denn nur er hat den Schlüssel. Sobald einer da ist,
+   * läuft das hier im Hintergrund.
+   *
+   * WARUM HIER UND NICHT BEI `loeseVormerkung`: Die KDF-Anhebung hängt dort,
+   * weil sie die Ableitungen des Passworts braucht, die es nur unmittelbar
+   * nach der Anmeldung gibt. Diese hier braucht den INHALTSSCHLÜSSEL — und den
+   * gibt es nach jedem Entsperren, auch wenn es Stunden später über den Dialog
+   * geschieht. Sie hängt deshalb an allen drei Wegen, nicht an einem.
+   *
+   * NIEMAND WARTET DARAUF. Kein `await` beim Aufrufer, kein Fehler nach außen:
+   * Die Seite soll sich nicht anders verhalten, weil im Hintergrund ein
+   * Altbestand umzieht. Scheitert es, bleibt der Klartext stehen und der
+   * nächste Entsperrvorgang versucht es erneut.
+   */
+  let anhebenLief = false;
+
+  async function notizenAnheben(ck) {
+    if (anhebenLief || !ck || typeof CSRF === 'undefined') { return; }
+    anhebenLief = true;                       // je Seitenaufruf nur einmal
+    try {
+      /* In Runden, weil der Endpunkt höchstens 200 Einsätze je Aufruf
+         liefert: Ein Konto mit tausend Altnotizen soll nicht eine einzige
+         riesige Anfrage bauen. */
+      for (let runde = 0; runde < 50; runde++) {
+        const r = await fetch('api/pat_anheben.php', { credentials: 'same-origin' });
+        if (!r.ok) { return; }
+        const j = await r.json();
+        const liste = (j && j.missions) || [];
+        if (!liste.length) { return; }
+
+        const posten = [];
+        for (const m of liste) {
+          let o = {};
+          if (m.pat_blob) {
+            try { o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {}; }
+            catch (e) {
+              /* NICHT ANFASSEN. Ein Blob, der sich mit diesem Schlüssel nicht
+                 öffnen lässt, gehört zu einem anderen Schlüssel — ihn zu
+                 ersetzen hieße, fremde Angaben zu löschen. Der Klartext bleibt
+                 dann in der Spalte stehen; das ist der ehrlichere Zustand. */
+              continue;
+            }
+          }
+          /* Steht im Blob schon eine Notiz, GEWINNT SIE. Sie ist der neuere
+             Stand — die Spalte ist dann ein Rest, den ein Speichern hätte
+             leeren sollen. */
+          if (o.notes == null || String(o.notes).trim() === '') { o.notes = m.notes; }
+          posten.push({
+            id: m.id,
+            pat_blob: await EdCrypto.encrypt(ck, JSON.stringify(o)),
+            blob_alt: m.pat_blob || null
+          });
+        }
+        if (!posten.length) { return; }       // nur Unlesbare — weitere Runden bringen nichts
+
+        const a = await fetch('api/pat_anheben.php', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
+          body: JSON.stringify({ missions: posten })
+        });
+        if (!a.ok) { return; }
+        const erg = await a.json();
+        /* Kein Fortschritt trotz Posten: Dann greift die Wache je Zeile (ein
+           anderes Fenster war schneller) — eine weitere Runde liefe endlos. */
+        if (!erg || !erg.angehoben) { return; }
+      }
+    } catch (e) {
+      /* still: siehe Kopf */
+    }
+  }
+
   async function ensureContentKey(wrap, kdfSalt, kdfIter) {
     if (!wrap) { return null; }
 
@@ -250,7 +326,7 @@ const EdUnlock = (() => {
      * Anmelden — und zwar bei jedem Anmelden. */
     if (!EdCrypto.getDataKey()) {
       const ausVormerkung = await loeseVormerkung(wrap, kdfIter);
-      if (ausVormerkung) { return ausVormerkung; }
+      if (ausVormerkung) { notizenAnheben(ausVormerkung); return ausVormerkung; }
     }
 
     // NICHT EdCrypto.getContentKey: Jene Fassung liefert einen
@@ -260,7 +336,7 @@ const EdUnlock = (() => {
     // Stellen tun das, eine nicht. EdKeyGuard prueft es selbst und verwirft
     // einen fremden oder zu alten Schluessel.
     const vorhanden = await EdKeyGuard.contentKey(wrap);
-    if (vorhanden) { return vorhanden; }
+    if (vorhanden) { notizenAnheben(vorhanden); return vorhanden; }
 
     // Ohne Salt laesst sich nichts ableiten; sehr alte Browser ohne <dialog>
     // bekommen bewusst keinen window.prompt (Passwort im Klartext sichtbar).
@@ -268,6 +344,10 @@ const EdUnlock = (() => {
 
     if (laufend) { return laufend; }
     laufend = frage(wrap, kdfSalt, kdfIter).finally(() => { laufend = null; });
+    /* Der dritte Weg: über den Dialog. `then` statt `await`, damit der
+       Aufrufer seinen Schlüssel sofort bekommt und die Anhebung daneben
+       läuft. */
+    laufend.then(ck => { if (ck) { notizenAnheben(ck); } });
     return laufend;
   }
 
