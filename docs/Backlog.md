@@ -1627,6 +1627,29 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
     tut. Kein dritter Zustand.
 
+170. **Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist.**
+    *Aufgenommen 10.09.2026 nach zwei Rückmeldungen zu Web 19.1.0 (behoben
+    mit 19.1.1).* AP7 hat gezählt, **wie viele** Schlösser und Kleinzeilen
+    stehen — 8, 9, und 0 Felder mit beidem — und die Zahlen stimmten. Sie
+    konnten den Fehler trotzdem nicht finden: In der Leseansicht fehlte das
+    Schloss an der Einsatznummer, im Formular an der Karte „Notizen".
+    Beides meldete ein Mensch, der hinsah.
+
+    *Warum die Zahl nicht half:* Sie war aus dem gebauten Zustand erhoben
+    und hatte kein Sollmaß daneben. Eine Zählung, die ihre eigene Liste
+    bestätigt, findet Abweichungen von dieser Liste — nie eine fehlende
+    Zeile darin.
+
+    *Was ein Sollmaß wäre:* Der Feldkatalog weiß es bereits. Jedes Feld mit
+    `'store' => 'pat'` gehört zum verschlüsselten Block, jedes
+    Klartext-Freitextfeld trägt `'hinweis'`. Eine Probe könnte das Formular
+    und die Leseansicht aufrufen und für **jeden** Katalogeintrag prüfen,
+    ob das erwartete Zeichen an der erwarteten Stelle steht — und für die
+    acht von Hand geschriebenen Beschriftungen der Karte „PatientIn"
+    ebenso. Erwartet wird dann nicht „8 Schlösser", sondern „8 von 8".
+    *Abnahme:* Eine Probe, die rot wird, wenn man ein `dtGeschuetzt()` in
+    `einsatz.php` durch einen nackten String ersetzt.
+
 ## Erledigt
 
 

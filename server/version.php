@@ -3931,5 +3931,40 @@ declare(strict_types=1);
  * Neu ist EIN Schluessel am Baustein Ortsfeld — 'geschuetzt' => true haengt
  * das Schloss an seine Beschriftung, weil 'label' escaped wird und das
  * bleiben soll.
+ *
+ * ---------------------------------------------------------------------------
+ * 19.1.1 — DAS SCHLOSS AN DEN BEIDEN STELLEN, AN DENEN ES FEHLTE.
+ *
+ * Beide Befunde kamen von aussen, aus einem Blick auf den Bildschirm, nicht
+ * aus einer Zahl dieses Hauses. Das gehoert zur Sache dazu: 19.1.0 hat
+ * gezaehlt, WIE VIELE Zeichen stehen, und dabei nicht gepruefen, ob an jeder
+ * Stelle eines steht, an der eines hingehoert. Eine Zahl, die ihr eigenes
+ * Sollmass setzt, bestaetigt sich selbst.
+ *
+ *   - LESEANSICHT, EINSATZNUMMER (einsatz.php). Sieben der acht Zeilen des
+ *     entschluesselten Blocks liefen ueber dtGeschuetzt(), die achte nicht.
+ *     Die Nummer liegt seit Web 2.9.0 im `pat_blob` — die Migration
+ *     `2026_07_29_einsatznummer_verschluesselt` hat die Spalte damals sogar
+ *     geloescht —, und sie steht dort ueberhaupt nur, WEIL entschluesselt
+ *     wurde. Wer die Karte las, schloss aus dem fehlenden Schloss auf
+ *     Klartext, und ein Leitstellen-Aktenzeichen ist genau die Angabe, bei
+ *     der jemand das wissen will.
+ *
+ *   - FORMULAR, KARTE „NOTIZEN" (einsatz_form.php). Hier war es die Kehrseite
+ *     einer Berichtigung aus 19.1.0: Weil das Zeichen dort allein in einer
+ *     leeren Zeile stand (die Feldbeschriftung heisst wie die Karte und wird
+ *     ausgeblendet), hat 19.1.0 es entfernt und die Kartenzahl als Ersatz
+ *     genommen. Ein Text ist aber kein Zeichen: Daneben zeigt „PatientIn" an
+ *     jedem Feld ein Schloss, und der Unterschied las sich als Aussage ueber
+ *     die Sache.
+ *
+ * Der Weg zurueck ist NICHT das alte, freistehende Zeichen, sondern ein neuer
+ * Schluessel an ui_karte_start(): 'geschuetzt' => true haengt das Schloss an
+ * den KARTENTITEL, im <h2> und nicht als eigenes Flex-Kind (`.karte-kopf` hat
+ * `gap`; daneben bekaeme es den Abstand zweimal). Damit steht es dort, wo es
+ * ueberall sonst steht — rechts vom Wort, `.symbol-schutz`, keine neue
+ * CSS-Regel und keine neue Darstellung.
+ *
+ * Eine Korrekturnummer: keine neue Funktion, kein Feld, keine Migration.
  */
-const WEB_VERSION = '19.1.0';
+const WEB_VERSION = '19.1.1';

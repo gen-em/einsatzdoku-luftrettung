@@ -1466,7 +1466,14 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              `#patort`: Er sagt dem Riegel unten, was zu sperren ist, solange
              der Schluessel zu ist. Die Karte traegt deshalb dieselbe Zahl wie
              die Karte „PatientIn". */ ?>
+    <?php /* 'geschuetzt' => true: DAS SCHLOSS AN DEN KARTENTITEL (Web 19.1.1).
+             Diese Karte hat genau ein Feld, und dessen Beschriftung heisst wie
+             sie — $labelSichtbar() blendet sie aus, $feldKennzeichen() gibt
+             deshalb nichts zurueck, und die Karte blieb als einzige des
+             verschluesselten Blocks ohne Zeichen. Nur die Kleinzeile stand da,
+             waehrend „PatientIn" daneben an jedem Feld ein Schloss zeigt. */ ?>
     <?php ui_karte_start(['titel' => 'Notizen', 'zahl' => 'Ende-zu-Ende-verschlüsselt',
+                          'geschuetzt' => true,
                           'klasse' => 'form-block-notizen']); ?>
       <div id="patnotes">
       <?php $kartenTitel = 'Notizen'; $gruppeRendern('notizen'); $kartenTitel = ''; ?>

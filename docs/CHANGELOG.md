@@ -14,6 +14,40 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.1.1] — 2026-09-10
+
+### Web — das Schloss an den beiden Stellen, an denen es fehlte
+
+Zwei Meldungen aus der Bedienung, beide vom Bildschirm und nicht von einer
+Zahl. Das gehört zum Befund dazu: Web 19.1.0 hat gezählt, **wie viele** Zeichen
+stehen, und dabei nicht geprüft, ob an jeder Stelle eines steht, an die eines
+gehört. Eine Zählung, die ihr eigenes Sollmaß setzt, bestätigt sich selbst.
+
+**Leseansicht, Einsatznummer.** Sieben der acht Zeilen des entschlüsselten
+Blocks trugen das Schloss, die achte nicht. Die Einsatznummer liegt seit
+Web 2.9.0 im verschlüsselten Block — die damalige Migration hat die Klartext-
+spalte sogar gelöscht —, und sie erscheint dort überhaupt nur, **weil**
+entschlüsselt wurde. Wer die Karte las, schloss aus dem fehlenden Zeichen auf
+Klartext; ein Leitstellen-Aktenzeichen ist genau die Angabe, bei der jemand das
+wissen will.
+
+**Formular, Karte „Notizen".** Hier war es die Kehrseite einer Berichtigung aus
+19.1.0: Weil das Zeichen dort allein in einer leeren Zeile stand — die
+Feldbeschriftung heißt wie die Karte und wird deshalb ausgeblendet —, hat
+19.1.0 es entfernt und die Kartenzahl „Ende-zu-Ende-verschlüsselt" als Ersatz
+genommen. Ein Text ist aber kein Zeichen: Daneben zeigt „PatientIn" an jedem
+einzelnen Feld ein Schloss, und der Unterschied las sich als Aussage über die
+Sache.
+
+Der Weg zurück ist **nicht** das alte, freistehende Zeichen, sondern ein neuer
+Schlüssel an der Karte (`geschuetzt`): Das Schloss hängt jetzt am **Kartentitel**
+— im `<h2>` und nicht als eigenes Element daneben, weil der Kartenkopf einen
+eigenen Abstand mitbringt und das Zeichen ihn sonst doppelt bekäme. Damit steht
+es dort, wo es überall sonst steht: rechts vom Wort, derselbe Baustein. Keine
+neue CSS-Regel, keine neue Darstellung.
+
+Keine Migration, kein neues Feld.
+
 ## [Web 19.1.0] — 2026-09-10
 
 ### Web — zwei Zeichen sagen, wer mitliest (E-S9-02, Schritt 4 von 5)

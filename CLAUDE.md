@@ -106,7 +106,13 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   verschlüsselten Feld, die Kleinzeile „Klartext — keine Patientendaten" an
   jedem Klartext-Freitextfeld. Sie schließen einander aus; die Wahl steht an
   einer Stelle (`$feldKennzeichen()` in `einsatz_form.php`), der Satz einmal im
-  Katalog.
+  Katalog. Das Schloss gilt für **beide** Ansichten — im Formular und in
+  `einsatz.php` (`dtGeschuetzt()`); kann eine Karte es an keinem Feld tragen,
+  weil deren Beschriftung ausgeblendet ist, trägt es der **Kartentitel**
+  (`ui_karte_start(['geschuetzt' => true])`). **Und: Die Zahl belegt es
+  nicht.** „8 Schlösser gezählt" sagt nichts darüber, ob eines fehlt — beide
+  Lücken, die Web 19.1.1 geschlossen hat, standen neben einer richtigen Zahl
+  (Backlog Nr. 170).
 - **Keine fremde Quelle zur Laufzeit.** Kein CDN, keine Google Fonts, kein
   externes Skript. Schriften und Bibliotheken liegen unter
   `server/assets/fonts/` bzw. `server/assets/vendor/`, mit Herkunft und

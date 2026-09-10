@@ -1647,6 +1647,59 @@ mit dem Punkt weggefallen.
 
 ---
 
+## 3d. Nachtrag zu AP7 — das Schloss an zwei Stellen (Web 19.1.1, 10.09.2026)
+
+**Beide Befunde kamen von aussen.** Kein Prüfmittel dieses Hauses hat sie
+gemeldet, und das ist der eigentliche Punkt: AP7 hat gezählt, **wie viele**
+Zeichen stehen (8 Schlösser, 9 Kleinzeilen, 0 Felder mit beidem), und dabei
+nicht geprüft, ob an jeder Stelle eines steht, an die eines gehört. Eine
+Zählung, die ihr eigenes Sollmaß setzt, bestätigt sich selbst — sie kann nur
+Abweichungen von der eigenen Liste finden, nie eine fehlende Zeile darin.
+
+| Fund | Ort | Was war | Was ist |
+|---|---|---|---|
+| N-1 | Leseansicht, Karte „PatientIn" | 7 von 8 Zeilen des entschlüsselten Blocks liefen über `dtGeschuetzt()`, die Einsatznummer nicht | `einsatz.php` — alle 8 |
+| N-2 | Formular, Karte „Notizen" | nur die Kartenzahl „Ende-zu-Ende-verschlüsselt", kein Zeichen; daneben trägt „PatientIn" an jedem Feld eines | `ui_karte_start(['geschuetzt' => true])` hängt das Schloss an den **Kartentitel** |
+
+**N-2 ist die Kehrseite einer Berichtigung aus AP7.** Dort stand das Zeichen
+allein in einer leeren Zeile (die Feldbeschriftung heißt wie die Karte und wird
+deshalb ausgeblendet); AP7 hat es entfernt und den Text als Ersatz genommen.
+Ein Text ist aber kein Zeichen. Der Weg zurück ist nicht das freistehende
+Zeichen, sondern der Kartentitel: im `<h2>` und nicht als eigenes Flex-Kind,
+weil `.karte-kopf` ein `gap` mitbringt und `.symbol-schutz` sein `margin-left`
+— daneben stünde der Abstand zweimal.
+
+**Gemessen im Browser** (lokale Installation, Einsatz 3464, Demo-Konto,
+Chromium 1280 × 1400/1600):
+
+| | Zahl |
+|---|---|
+| Leseansicht, Karte „PatientIn" | **2 von 2** sichtbaren Zeilen mit Schloss (Einsatznummer, Alter) — vorher 1 von 2 |
+| Leseansicht, Karte „Einsatz" | **4 von 5** mit Schloss; ohne bleibt „Weitere Rettungsmittel" (Klartext, richtig so) |
+| Formular, Kartentitel | **1 von 9** mit Schloss: „Notizen“ — vorher 0 von 9 |
+| Formular, Feldbeschriftungen | **8** mit Schloss (unverändert), **10** Schlösser auf der Seite gesamt (8 Felder + Kartentitel + Legende) |
+| Konsolenfehler der Leseansicht | **0**; die 27 fehlgeschlagenen Abrufe sind Kartenkacheln von `tile.openstreetmap.org` und ein abgebrochener `kdf_upgrade.php` beim Seitenwechsel — der Container hat keinen Ausgang ins Netz |
+
+**Die übrigen Prüfmittel:**
+
+| Mittel | Ergebnis |
+|---|---|
+| Wortliste | **0 Treffer** außerhalb der Ausnahmen, alle fünf Bereiche a–e gelaufen (99 + 35 + 8 + 2 + 35 Dateien, 664 erklärte Treffer), 96 Regeln, 96 gegriffen, 0 ungenutzt |
+| Vollständigkeit | **330 Befunde** — unverändert gegenüber AP8; `style.css` ist nicht angefasst |
+| `php -l` | 3 Dateien, **0 Syntaxfehler** |
+| Stilvergleich | **nicht gefahren, und zwar zu Recht**: Er greift bei Änderungen an `server/assets/style.css`, die Regeln verschieben, zusammenführen, entfernen oder ihre Reihenfolge berühren. Das Stylesheet ist byte-gleich; geändert ist Markup |
+
+**Dabei gefunden — die Symboltabelle in `docs/Design.md` war seit längerem
+stale.** Sie ist erzeugt (`tools/design/tabellen.py symbole`), aber der Stand
+auf `main` wich in drei Zeilen vom Quelltext ab: `hinweis.svg` 24 statt **30**,
+`schloss.svg` 9 statt **13**, `standort.svg` 22 statt **23**. Nachgerechnet
+gegen den Stand **vor** dieser Änderung — es sind also nicht meine Zeichen. Die
+Zeile in 3c, `docs/Design.md` sei „neu erzeugt, unverändert", stimmt damit für
+drei der vier Tabellen. Alle vier sind jetzt neu erzeugt und eingesetzt;
+`schloss.svg` steht danach bei **14** (das eine neue am Kartentitel).
+
+---
+
 ## 4. Fragen an den Auftraggeber
 
 

@@ -837,7 +837,17 @@ async function zeigePat(m, bounds){
 
   const o = r.daten || {};
   if (o.mission_no != null && String(o.mission_no) !== '') {
-    zeile('patientin', RANG.mission_no, 'Einsatznummer', esc(String(o.mission_no)));
+    /* DAS SCHLOSS FEHLTE HIER ALS EINZIGEM (Web 19.1.1). Die Einsatznummer
+       liegt seit Web 2.9.0 im `pat_blob` — die Migration
+       `2026_07_29_einsatznummer_verschluesselt` hat die Spalte damals sogar
+       geloescht —, und sie steht hier ueberhaupt nur, WEIL entschluesselt
+       wurde: `zeigePat()` laeuft erst nach dem Entsperren. Sieben der acht
+       Zeilen dieses Blocks trugen das Zeichen, diese nicht. Das ist keine
+       Kleinigkeit: Wer die Karte liest, schliesst aus dem fehlenden Schloss,
+       dass die Nummer im Klartext liegt — und ein Leitstellen-Aktenzeichen ist
+       genau die Angabe, bei der jemand das wissen will. */
+    zeile('patientin', RANG.mission_no, dtGeschuetzt('Einsatznummer'),
+          esc(String(o.mission_no)));
   }
   /* SCHLOSS AUCH IN DER PATIENTIN-KARTE (S3/AP6, E-S3-16). F-N1-B hielt es
      hier fuer Laerm, weil die Karte ihre Plakette traegt. Die Rueckmeldung
