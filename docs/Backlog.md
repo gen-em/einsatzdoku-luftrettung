@@ -822,18 +822,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     vorher wieder nach — die Zählung von heute ist morgen genauso alt.
 
 
-71. **Regionen mit Unteradmins — verworfen, festgehalten.**
-    *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
-    mit Rahmenplan Fassung 16, wie R39 es vorsah.* Das Alternativmodell zu
-    den zentralen Stammdaten: Regionen hängen am zentralen Standort und
-    vererben auf alle Untertypen; `user_regions` n:m, weil NotärztInnen in
-    mehreren Bereichen arbeiten; Unteradmin als Zusatzbefugnis in eigener
-    Tabelle, ausdrücklich ohne Kontoeinblick; null Regionen bedeutet das
-    heutige Verhalten. **Verworfen**, weil im Dienstbetrieb jede NutzerIn
-    ihre Stammdaten selbst pflegt und die zentralen Stammdaten in P5
-    entfallen (R39). Wieder aufzunehmen, falls Wachen oder Verbände als
-    organisierte Träger auftreten. Zuordnung: nach v1.0.
-
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
     hat.**
     *Aufgenommen 02.09.2026 als Frage des Auftraggebers (Rahmenplan Fassung
@@ -1556,6 +1544,49 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+71. **Regionen mit Unteradmins — verworfen, festgehalten.**
+    *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
+    mit Rahmenplan Fassung 16, wie R39 es vorsah.* Das Alternativmodell zu
+    den zentralen Stammdaten: Regionen hängen am zentralen Standort und
+    vererben auf alle Untertypen; `user_regions` n:m, weil NotärztInnen in
+    mehreren Bereichen arbeiten; Unteradmin als Zusatzbefugnis in eigener
+    Tabelle, ausdrücklich ohne Kontoeinblick; null Regionen bedeutet das
+    heutige Verhalten. **Verworfen**, weil im Dienstbetrieb jede NutzerIn
+    ihre Stammdaten selbst pflegt und die zentralen Stammdaten in P5
+    entfallen (R39). Wieder aufzunehmen, falls Wachen oder Verbände als
+    organisierte Träger auftreten. Zuordnung: keine.
+
+    **Ausgetragen am 12.09.2026 — nicht gebaut, sondern verworfen.** Der
+    Punkt stand zweieinhalb Wochen unter *Offen* und trug seine Entscheidung
+    im eigenen Titel: „verworfen, festgehalten". Das ist derselbe Fall wie
+    **Nr. 19, 159 und 160**, die Rahmenplan-Fassung 41 aus demselben Grund
+    verschoben hat — ein Eintrag, über den entschieden ist, gehört nicht in
+    eine Liste offener Arbeit, egal in welche Richtung entschieden wurde.
+    Er hat die Übersicht über das, was wirklich aussteht, um eine Zeile
+    verfälscht, und er hätte es weiter getan.
+
+    **Er steht hier als Entscheidung, nicht als Erledigung.** Gebaut ist
+    nichts und soll nichts werden. Der Text oben bleibt vollständig stehen,
+    weil er das Modell beschreibt, das man wieder aufnehmen würde, falls
+    Wachen oder Verbände als organisierte Träger auftreten — dann ist dies
+    die Vorlage und nicht ein leeres Blatt.
+
+    **Aber die Vorlage passt dann nicht mehr auf das Haus, und das gehört
+    dazugesagt.** Die R39-Bestandsaufnahme hat es aufgeschrieben und
+    ausdrücklich verlangt, dass es *im Punkt* steht
+    (`docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`): Nr. 71
+    ist der **einzige** Backlog-Punkt, der das **zurückgebaute** Modell
+    fachlich voraussetzt. Regionen hängen laut R39-Text „am zentralen
+    Standort und vererben über E15" — zentrale Stammdaten also. Die gibt es
+    nicht mehr: **S9 hat die Tür geschlossen** (Web 18.0.0, AP5b —
+    `admin_stammdaten.php` ersatzlos gestrichen), **P5 baut zurück**
+    (Nr. 168). Wer diesen Punkt später aufgreift, findet die Grundlage nicht
+    mehr vor und muss ihn **neu denken**, nicht nur wieder aufnehmen.
+
+    *Die Bestandsaufnahme selbst führt Nr. 71 weiter im offenen Teil des
+    Backlogs — sie ist ein datierter Stand vom 09.09.2026 und wird als
+    Protokoll nicht fortgeschrieben.*
 
 118. **Die Hintergrundjobs lassen sich nur auf der Kommandozeile anhalten.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-16).* `php jobs.php
