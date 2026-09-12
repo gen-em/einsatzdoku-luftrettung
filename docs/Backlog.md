@@ -662,6 +662,65 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nicht in S3 gemacht, weil die Vereinheitlichung Sortierung, Sortierblatt
     und die Kachelform berührt — das ist ein eigenes Paket, kein Nachklapp.
 
+    **Nachgemessen am 12.09.2026 (Backlog-Runde 2) — der Punkt ist größer als
+    er dasteht, und zwei seiner Angaben stimmen nicht.** Er bleibt offen: Was
+    hier zu tun wäre, braucht ein Mockup und eine Freigabe und passt damit
+    nicht in eine Backlog-Runde. Damit der nächste Anlauf nicht wieder bei
+    null anfängt, steht hier, was gemessen ist.
+
+    *Was am Text oben nicht stimmt:*
+
+    - *„`missiontable.js` führt die Spaltendefinitionen der drei
+      Einsatztabellen an einer Stelle."* Es sind **zwei** Tabellen
+      (`suche.php`, `zeitraum.php`). Die dritte hat sie **nie** von dort
+      bezogen: `index.php` baut Kopf, Zellen und Sortierschlüssel selbst, in
+      **drei** getrennten Listen. Von `missiontable.js` holt sie nur
+      Zellbausteine. Es sind also zwei Erzeuger und **vier** Spaltenlisten —
+      sechs, wenn man `api/range.php` und `api/suchindex.php` mitzählt, die
+      `winch`/`bergwacht`/`secondary`/`false_alarm` hart im SELECT führen,
+      während `api/day.php` sie aus `mf_tagesspalten()` zieht.
+    - *„weil die Vereinheitlichung … die Kachelform berührt."* Tut sie nicht
+      mehr. Seit E-P3-32 baut `index.php` seine Kacheln bereits über
+      `EdMissionTable.kachel()`, wortgleich zu den anderen beiden. Von den
+      drei genannten Hindernissen sind zwei übrig — und eines davon, das
+      **Sortierblatt**, ist selbst dreifach vorhanden (`index.php` baut es aus
+      den `th`, `suche.php` und `zeitraum.php` je aus `tabelle.spalten()`).
+
+    *Fünf Driften, vier davon sichtbar* (der Eintrag nennt nur die eine
+    behobene):
+
+    1. **Spaltensatz:** drei Spalten nur im Modul, eine nur in `index.php`.
+    2. **Sekundärtransport:** ein Wort mit weichem Trennstrich gegen zwei
+       Zeilen mit hartem `<br>` — Kopfhöhe **42 gegen 64 px**.
+    3. **Ausrichtung:** Alter zentriert gegen rechtsbündig, Beginn zentriert
+       gegen links. Die Entscheidung dazu fiel in **derselben Sitzung**, in
+       der dieser Punkt aufgenommen wurde (S3/AP5 Block I) — sie wurde am
+       zweiten Aufbau getroffen und erreichte den ersten nie. Der Punkt hat
+       sich beim Aufschreiben also selbst wiederholt.
+    4. **Hakenreihenfolge:** Sekundär-Bergwacht-Winde gegen
+       Winde-Bergwacht-Sekundär, genau umgekehrt.
+    5. Die Dauerspalte — behoben, wie oben beschrieben.
+
+    *Und eine Falle, die „nur den Erzeuger zusammenführen, 0 Pixel bewegen
+    sich" widerlegt:* Die beiden Sortierungen behandeln **Gleichstände**
+    verschieden. `index.php` multipliziert den Stichentscheid mit der
+    Richtung, `missiontable.js` verlässt sich auf die stabile Sortierung.
+    Nachgerechnet mit sechs gleichwertigen Zeilen: heute absteigend
+    6,5,4,3,2,1 — über das Modul 1,2,3,4,5,6. Ein zweiter Klick auf
+    „Sekundärtransport" dreht an einem NEF-Tag heute alle sechs Zeilen und
+    täte es danach nicht mehr. Dazu setzt `missiontable.js` `sortable` auf
+    **jeden** Kopf, woran `cursor:pointer` und ein Hover hängen.
+
+    *Was daraus folgt:* **Schritt 0 ist eine Freigabe, keine Codearbeit.** Drei
+    Fragen müssen vorher beantwortet sein — Beschriftung, Ausrichtung,
+    Hakenreihenfolge —, und jede Antwort ändert eine der beiden Seiten
+    sichtbar. Danach der Erzeuger (rund 110 Zeilen JS und 21 Zeilen PHP
+    entfallen), danach die Liste aus dem Feldkatalog, soweit er sie trägt: Er
+    kennt heute **3 von 13** Spalten, und nur für die Tagesübersicht —
+    `day_col` heißt wörtlich das. Vier Spalten können gar nicht aus ihm
+    kommen, weil sie keine Spalten von `missions` sind. Geschätzt
+    zweieinhalb bis drei Tage. Zuordnung: eigenes Paket, nicht Backlog-Runde.
+
 58. **Kein Prüfmittel fragt, ob eine Seite ihr Gerüst hat.**
     *Aufgenommen 02.09.2026 als Lehre aus F-S3-C (S3/AP5).*
     `tag_spuren.php` lief zwei Jahre ohne `ui_geruest_start()`: keine
@@ -1458,6 +1517,39 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zwischen den beiden Arten abweicht.
     *Abnahme:* Beide Kreisläufe melden 0 unerklärte Abweichungen **und**
     0 ungenutzte Regeln.
+
+174. **Der Referenzbestand deckt „Rettungsmittel ohne Standort" nur noch
+     zur Hälfte ab.**
+    *Aufgenommen 12.09.2026 in Backlog-Runde 2, nachdem die Klickprobe den
+    Verlust gemeldet hat.* Beim Neubau des Referenzbestands (Nr. 155,
+    Web 19.2.0) haben **zwei** Rettungsmittel ihren leeren Standort
+    verloren: „Reserve Talwang" und „Sanitätsdienst Seefest" standen bis
+    dahin unter „Ohne Standort" und hingen danach an einem. Die
+    **Demo-Fixture ist repariert** (beide wieder ohne Standort, gemessen
+    2 von 6, Spurpunkte unverändert 55 861) — die **Referenzdatei** der
+    Kreisläufe (`tools/referenzdatensatz/referenz/*.edbak` und `*.zip`)
+    aber nicht: Sie stammt aus demselben Neubau und trägt weiterhin sechs
+    Rettungsmittel **mit** Standort.
+
+    *Was damit nicht geprüft ist:* ob ein `vehicles.base_id = NULL` einen
+    Export und den Import zurück übersteht. Das Format trägt den Standort
+    als **Namen** (`base_ref`), nicht als Kennung, und `base_ref: null` ist
+    der Fall, der im Kreislauf jetzt nicht mehr vorkommt. Der Standort ist
+    seit S9/AP4 freiwillig (E-S9-18) — der Fall ist also kein Sonderfall,
+    sondern einer von zweien.
+
+    *Warum es nicht sofort behoben wurde:* Die Referenzdatei neu zu
+    erzeugen heißt, die dreistufige Einspielkette noch einmal zu fahren.
+    Das ist kein Handgriff am Ende einer Sitzung, und es gehört mit Nr. 173
+    zusammen, das dieselben Dateien anfasst.
+
+    *Und die Lehre daneben:* Der Verlust ist **unbemerkt** durch Runde 1
+    gegangen, obwohl die Kreisläufe dort grün waren. Gefunden hat ihn die
+    **Klickprobe** — das einzige Prüfmittel mit einem Sollmaß, das nicht
+    aus dem gebauten Zustand stammt. Dasselbe Muster wie Nr. 170.
+
+    *Abnahme:* Der Kreislauf `edbak` trägt ein Rettungsmittel mit
+    `base_ref: null`, und es kommt unverändert zurück.
 
 ## Erledigt
 

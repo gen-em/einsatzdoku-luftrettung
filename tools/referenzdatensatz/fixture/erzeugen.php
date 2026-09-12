@@ -23,6 +23,20 @@ declare(strict_types=1);
  * annimmt.
  *
  * DIESES SKRIPT LIEST NUR. Es schreibt eine Datei, sonst nichts.
+ *
+ * VORHER DIE JOBS ANHALTEN — sonst stimmt die Punktzahl nicht.
+ *
+ *     php server/jobs.php --pause 1800      (0 hebt auf; seit Web 19.3.0
+ *                                            geht es auch als Knopf unter
+ *                                            Betrieb -> Hintergrundjobs)
+ *
+ * Der Grund: Die Verdichtung und die Ausduennung laufen HUCKEPACK auf jeder
+ * Anfrage mit (jobs_lauf() aus auth_guard.php). Wer laenger am Pruefstand
+ * arbeitet und danach erzeugt, bekommt eine Fixture mit ausgeduennten
+ * Aufzeichnungen — und zwar ohne jede Meldung. Gemessen am 12.09.2026:
+ * 47 576 statt 55 861 Punkten, also 8285 weniger, nach einer Sitzung mit
+ * einigen hundert Seitenaufrufen. Die Zahl steht am Ende des Laufs; wer sie
+ * nicht gegen die erwartete haelt, merkt es nicht.
  */
 
 $email = $argv[1] ?? 'demo@gen-em.org';

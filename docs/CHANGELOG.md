@@ -146,6 +146,22 @@ vertauschte Regelpaare; berechnete Stile in dreizehn Fensterbreiten **68 224**
 Elementmessungen ohne eine einzige Abweichung; die Seite selbst in drei
 Breiten mit **0** abweichenden Rechtecken.
 
+**Die Demo-Fixture ist repariert** — und gefunden hat es ein Prüfmittel, nicht
+ein Mensch. Beim Neubau des Referenzbestands in Web 19.2.0 hatten **zwei** der
+sechs Rettungsmittel ihren *leeren* Standort verloren; seit S9/AP4 ist der
+Standort freiwillig, und die beiden waren die einzige Abdeckung dieses Falls.
+Die Klickprobe hat es gemeldet (39 von 40 Wegen), weil sie als einziges
+Prüfmittel ein Sollmaß hat, das nicht aus dem gebauten Zustand stammt. Jetzt
+wieder **2 von 6** ohne Standort, **40 von 40** Wegen erfüllt.
+
+**Beim Nachbauen ist eine zweite Sache aufgefallen:** Der erste Versuch, die
+Fixture neu zu erzeugen, lieferte **47 576** statt **55 861** Spurpunkten. Die
+Hintergrundjobs laufen huckepack auf jeder Anfrage mit und hatten die
+Aufzeichnungen während der Arbeit ausgedünnt. Mit angehaltenen Jobs
+(`php jobs.php --pause 1800` — oder seit heute dem Knopf) stimmt die Zahl
+wieder auf den Punkt. Wer eine Fixture erzeugt, hält vorher die Jobs an; das
+steht jetzt auch in der Anleitung.
+
 ## [Web 19.2.0] — 2026-09-12
 
 ### Web — die Anmeldung rechnet wieder nur einmal
