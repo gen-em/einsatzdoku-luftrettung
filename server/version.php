@@ -3966,5 +3966,19 @@ declare(strict_types=1);
  * CSS-Regel und keine neue Darstellung.
  *
  * Eine Korrekturnummer: keine neue Funktion, kein Feld, keine Migration.
+ *
+ * ---------------------------------------------------------------------------
+ * 19.1.2 — BACKLOG-RUNDE (Rahmenplan Schritt 9): Einzelpunkte, die keiner
+ * Phase beduerfen. Eine Korrekturstufe fuer die ganze Runde, je Punkt ein
+ * Commit — dasselbe Muster wie die Korrekturstufe 15.5.2 (Nr. 148/149).
+ *
+ * Was sie gemeinsam haben: Es sind Fehler, die STILL sind. Keiner von ihnen
+ * wirft eine Meldung, keiner faellt beim Bedienen auf, und drei von ihnen
+ * zeigen stattdessen etwas Plausibles — den juengsten Diensttag statt des
+ * importierten, eine leere Trefferliste statt 83 Einsaetzen, eine
+ * Vorbelegung, die aussieht, als waere keine gesetzt. Genau deshalb standen
+ * sie im Backlog und nicht in einem Fehlerbericht.
+ *
+ * Die Punkte im Einzelnen stehen im Changelog. Keine Migration.
  */
-const WEB_VERSION = '19.1.1';
+const WEB_VERSION = '19.1.2';

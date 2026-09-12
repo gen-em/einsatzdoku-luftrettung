@@ -60,7 +60,11 @@ require_once __DIR__ . '/../diensttag_lib.php';
  *
  * Antwort:
  *   { ok, days_inserted, days_updated, missions_inserted,
- *     missions_overwritten, missions_skipped, first_day }
+ *     missions_overwritten, missions_skipped, first_day_id }
+ *
+ * `first_day_id` ist die KENNUNG des fruehesten angelegten Diensttags
+ * (`days.id`), nicht sein Datum — `index.php?d=` erwartet eine Kennung,
+ * und ein Datum bestimmt seit E9 keinen Tag mehr (Backlog Nr. 151).
  *
  * WARUM SO WENIG: Die Anfrage enthaelt ausschliesslich Datum und Uhrzeit.
  * Name, Geburtsdatum, Diagnose, Einsatzort und seit Web 2.9.0 auch die
@@ -331,7 +335,15 @@ function import_commit(array $b, int $userId): never
         $insReaE = $pdo->prepare(
             'INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
 
-        $neu = 0; $ersetzt = 0; $uebersprungen = 0; $ersterTag = null;
+        $neu = 0; $ersetzt = 0; $uebersprungen = 0;
+        /* ZWEI MERKER FUER DEN ERSTEN TAG, nicht einer (Backlog Nr. 151).
+         * `$ersterTag` ist der KALENDERTAG und taugt nicht als Ziel eines
+         * Verweises: Seit E9 koennen mehrere Diensttage auf einem Datum
+         * liegen, und `index.php` erwartet in `?d=` eine KENNUNG. Die
+         * Kennung liegt in `$dayIdByDate[$tag]` bereit, aber nur INNERHALB
+         * der Einsatzschleife — an der Stelle, an der die Antwort entsteht,
+         * ist `$tag` nicht mehr im Zugriff. Deshalb laeuft sie hier mit. */
+        $ersterTag = null; $ersterTagId = 0;
 
         /* URSACHEN GETRENNT ZAEHLEN.
          *
@@ -675,7 +687,9 @@ function import_commit(array $b, int $userId): never
             $delRes->execute([$id]);
             foreach ($sauber as $name) { $insRes->execute([$id, $name]); }
 
-            if ($ersterTag === null || $tag < $ersterTag) { $ersterTag = $tag; }
+            if ($ersterTag === null || $tag < $ersterTag) {
+                $ersterTag = $tag; $ersterTagId = $dayId;
+            }
         }
 
         $pdo->commit();
@@ -691,7 +705,12 @@ function import_commit(array $b, int $userId): never
             // deutbar (M5-14).
             'skipped_reasons'       => array_filter($grund),
             'rejected'              => $pruef->nachUrsache(),
-            'first_day'             => $ersterTag,
+            /* DIE KENNUNG, NICHT DAS DATUM (Backlog Nr. 151). `first_day`
+             * ist ersatzlos entfallen — es hatte genau einen Verbraucher
+             * (`assets/import_ui.js`), und der wechselt im selben Paket.
+             * Ein zurueckgelassener Schluessel ohne Leser ist die naechste
+             * Falle. */
+            'first_day_id'          => $ersterTagId ?: null,
         ]);
     } catch (Throwable $ex) {
         $pdo->rollBack();

@@ -14,6 +14,28 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.1.2] — 2026-09-12
+
+### Web — Backlog-Runde: fünf stille Fehler
+
+Einzelpunkte aus dem Backlog, die keiner Phase bedürfen (Rahmenplan
+Schritt 9). Was sie verbindet: **Keiner von ihnen meldet sich.** Drei zeigen
+sogar etwas Plausibles — den jüngsten Diensttag statt des importierten, eine
+leere Trefferliste statt 83 Einsätzen, eine Vorbelegung, die aussieht, als
+wäre keine gesetzt. Genau deshalb standen sie im Backlog und nicht in einem
+Fehlerbericht.
+
+**Nach einem Import führt „Ersten Tag öffnen" auf den richtigen Tag** (Nr. 151).
+Der Verweis lautete `index.php?day=<Kalendertag>`; gelesen wird `d`, und dort
+erwartet die Startseite eine **Kennung**. Zweimal falsch also — der
+Parametername und die Form des Werts —, und beides scheiterte still: Die
+Startseite fiel auf den jüngsten Diensttag zurück und zeigte eine Seite, die
+plausibel aussah und nicht die versprochene war. Gemerkt hätte es nur, wer
+zufällig einen älteren Tag importierte. `api/import_commit.php` liefert jetzt
+`first_day_id` statt `first_day`; der Kalendertag ist **ersatzlos entfallen**,
+weil er genau einen Verbraucher hatte und ein zurückgelassener Schlüssel ohne
+Leser die nächste Falle ist.
+
 ## [Web 19.1.1] — 2026-09-10
 
 ### Web — das Schloss an den beiden Stellen, an denen es fehlte

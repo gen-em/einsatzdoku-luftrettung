@@ -753,7 +753,15 @@
                    ? '<br><span class="feld-klein-inline">Einzelne Werte verworfen: '
                      + verworfen.join(', ') + '. Die Einsätze wurden trotzdem angelegt.</span>'
                    : '')
-                + (d.first_day ? ' <a href="index.php?day=' + esc(d.first_day) + '">Ersten Tag öffnen</a>' : '')
+                /* KENNUNG STATT DATUM (Backlog Nr. 151). Hier stand
+                   `index.php?day=<Kalendertag>`; gelesen wird `d`, und dort
+                   erwartet die Startseite eine Diensttags-KENNUNG. Zweimal
+                   falsch also — der Parametername UND die Form des Werts —,
+                   und beides scheiterte STILL: `index.php` faellt auf
+                   `dt_neuester()` zurueck und zeigte den juengsten Tag. Wer
+                   nach einem Import klickte, landete auf einer plausibel
+                   aussehenden Seite, die nicht die versprochene war. */
+                + (d.first_day_id ? ' <a href="index.php?d=' + esc(d.first_day_id) + '">Ersten Tag öffnen</a>' : '')
                 + '</p></div>';
 
             // Ein zweiter Klick wuerde alles ein weiteres Mal anlegen. Der Weg
