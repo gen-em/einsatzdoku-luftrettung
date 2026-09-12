@@ -85,7 +85,7 @@ Den Browserschritt baut es **nicht** nach, sondern ruft `passwort_setzen.mjs`
 die der Knopf im Adminbereich ruft.
 
 Die Vorgaben sind die, die die Prüfmittel ohne Schalter erwarten:
-`admin@gen-em.org` / `adminlokal2026` (`kreislauf.py`, `aufnehmen.mjs`) und
+`admin@gen-em.org` / `pruefstandzugang2026` (`kreislauf.py`, `aufnehmen.mjs`) und
 `demo@gen-em.org` / `nadokudemo0815`.
 
 **Warum TLS.** Die Anwendung setzt ihr Sitzungs-Cookie mit `secure`

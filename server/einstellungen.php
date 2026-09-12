@@ -707,6 +707,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $geloest = stammdaten_standort_loesen($bid, $userId);
                 $pdo->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
                     ->execute([$userId, $bid]);
+                /* UND DIE VORBELEGUNGEN DER RETTUNGSMITTEL, DIE MIT DEM
+                 * STANDORT FALLEN (Backlog Nr. 167).
+                 *
+                 * `user_defaults.item_id` traegt bewusst KEINEN
+                 * Fremdschluessel: Die Spalte zeigt je nach `kind` auf
+                 * `bases.id` ODER `vehicles.id`, und zwei Zieltabellen lassen
+                 * keinen zu (schema.sql 196-208). Was die Kaskade mitnimmt,
+                 * muss dieser Weg deshalb von Hand abraeumen — fuer das
+                 * einzeln geloeschte Rettungsmittel tut `veh_del` seit jeher
+                 * dasselbe, fuer die kaskadierten tat es niemand.
+                 *
+                 * Die Wirkung war still: `dt_standardwerte()` lieferte eine
+                 * tote Kennung, das Auswahlfeld fand dazu nichts und belegte
+                 * nichts vor — es sah aus wie „keine Vorbelegung gesetzt",
+                 * und mit jedem geloeschten Standort kam eine solche Zeile
+                 * dazu.
+                 *
+                 * DIE STELLE IST NICHT BELIEBIG. Vor
+                 * `stammdaten_standort_loesen()` traefe die Unterabfrage auch
+                 * die Rettungsmittel OHNE Standortpflicht — die ueberleben
+                 * aber (E-S9-09, Web 17.1.0) und behalten ihre Vorbelegung.
+                 * Nach `DELETE FROM bases` sind die Zeilen in `vehicles`
+                 * bereits kaskadiert fort und die Unterabfrage faende nichts
+                 * mehr. Zwischen beiden ist das einzige Fenster. */
+                $pdo->prepare('DELETE FROM user_defaults
+                                WHERE user_id = ? AND kind = "vehicle"
+                                  AND item_id IN (SELECT id FROM vehicles WHERE base_id = ?)')
+                    ->execute([$userId, $bid]);
                 $pdo->prepare('DELETE FROM bases WHERE id = ? AND user_id = ?')
                     ->execute([$bid, $userId]);
                 $pdo->commit();

@@ -907,19 +907,34 @@ function ist_letzte_betreiberin(PDO $pdo, int $userId, ?string $rolle): bool
  * gehoert, das jemand einsetzen koennte. Seine einzige Aufgabe ist, denselben
  * Rechenaufwand zu erzeugen.
  *
- * ZUR RUNDENZAHL ($2y$10$): Sie entspricht der, mit der PASSWORD_DEFAULT auf
- * PHP 8.1 bis 8.3 arbeitet — also der Rundenzahl aller hier gespeicherten
- * Hashes. Legt eine spaetere PHP-Fassung teurere Hashes an, gehoert dieser
- * Wert nachgezogen, sonst faellt der unbekannte Zweig wieder aus dem Takt.
+ * ZUR RUNDENZAHL ($2y$12$, seit Web 19.1.2 — Backlog Nr. 93): Sie entspricht
+ * der, mit der PASSWORD_DEFAULT auf PHP 8.4 arbeitet, also der Rundenzahl der
+ * hier neu angelegten Hashes.
  *
- * STAND 03.09.2026 (S5, V-S5-13): Genau das ist eingetreten. PHP 8.4 legt
- * Kostenfaktor 12 an — gemessen 228 ms je Pruefung gegen 57 ms fuer diesen
- * Wert. Verdeckt wird der Unterschied heute nur von der Mindestdauer 0,35 s
- * in rate_gleiche_dauer(); auf einem langsameren Rechner als dem Messstand
- * kippt das. Backlog-Kandidat; hier nicht nebenbei geaendert, weil ein neuer
- * Wert jede Installation betrifft, die noch auf PHP 8.3 laeuft.
+ * WARUM DIE ZAHL ALLEIN NICHT REICHT. Sie stand von Web 5 bis 19.1.1 auf 10
+ * (PHP 8.1 bis 8.3) und fiel mit PHP 8.4 aus dem Takt — gemessen am
+ * 12.09.2026: 231,3 ms fuer den bekannten Zweig gegen 57,9 ms fuer diesen
+ * Wert, also Faktor 3,99. Verdeckt hat das nur die Mindestdauer von 0,35 s in
+ * rate_gleiche_dauer(); auf einem langsameren Rechner kippt sie. Eine feste
+ * Zahl geht beim naechsten Vorgabesprung wieder aus dem Takt, und auf einer
+ * Installation mit PHP 8.1 bis 8.3 (Technik.md 11 verspricht >= 8.1) kehrt
+ * sie das Leck sogar um: blind 231 ms gegen echt 58 ms, derselbe Abstand in
+ * der anderen Richtung.
+ *
+ * DESHALB PRUEFT login.php den Wert, statt ihm zu vertrauen:
+ * password_needs_rehash() sagt fuer 0,0000 ms (gemessen ueber 2000 Laeufe),
+ * ob die Konstante noch zur Vorgabe passt; passt sie nicht, rechnet der
+ * blinde Zweig ein password_hash() mit PASSWORD_DEFAULT und kostet damit
+ * genau so viel wie der bekannte. Der Normalfall bleibt der billige
+ * Vergleich.
+ *
+ * WAS NICHT GEHT, und warum es hier steht: BEIDES zu tun — beim Start hashen
+ * UND danach pruefen — macht den blinden Zweig um 234 ms LANGSAMER als den
+ * bekannten (gemessen 465,5 gegen 231,3 ms) und sprengt dazu die
+ * Mindestdauer. Wer hier „sicherheitshalber" etwas hinzufuegt, dreht das
+ * Leck um.
  */
-const AUTH_VERGLEICHSWERT = '$2y$10$ZX1Xrc9GGuRDFtXcHFnamOR.a5ztKtqmvlaxsdApTgxVKhLdRmbJy';
+const AUTH_VERGLEICHSWERT = '$2y$12$Q6vjbOl.EIszd6TOEs39Kexy6uGWwrczpmFVKXpNXU7HXBNWNndSW';
 
 /* ---- Geraeteschluessel: SHA-256 statt bcrypt (Web 13.0.0, S5 E-S5-42) ----
  *

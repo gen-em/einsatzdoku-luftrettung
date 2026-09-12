@@ -14,6 +14,157 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.1.2] — 2026-09-12
+
+### Web — Backlog-Runde: fünf stille Fehler
+
+Einzelpunkte aus dem Backlog, die keiner Phase bedürfen (Rahmenplan
+Schritt 9). Was sie verbindet: **Keiner von ihnen meldet sich.** Drei zeigen
+sogar etwas Plausibles — den jüngsten Diensttag statt des importierten, eine
+leere Trefferliste statt 83 Einsätzen, eine Vorbelegung, die aussieht, als
+wäre keine gesetzt. Genau deshalb standen sie im Backlog und nicht in einem
+Fehlerbericht.
+
+**Nach einem Import führt „Ersten Tag öffnen" auf den richtigen Tag** (Nr. 151).
+Der Verweis lautete `index.php?day=<Kalendertag>`; gelesen wird `d`, und dort
+erwartet die Startseite eine **Kennung**. Zweimal falsch also — der
+Parametername und die Form des Werts —, und beides scheiterte still: Die
+Startseite fiel auf den jüngsten Diensttag zurück und zeigte eine Seite, die
+plausibel aussah und nicht die versprochene war. Gemerkt hätte es nur, wer
+zufällig einen älteren Tag importierte. `api/import_commit.php` liefert jetzt
+`first_day_id` statt `first_day`; der Kalendertag ist **ersatzlos entfallen**,
+weil er genau einen Verbraucher hatte und ein zurückgelassener Schlüssel ohne
+Leser die nächste Falle ist.
+
+**Das Löschen eines Standorts räumt seine Vorbelegungen mit ab** (Nr. 167).
+`user_defaults.item_id` trägt bewusst **keinen** Fremdschlüssel — die Spalte
+zeigt je nach Art auf einen Standort **oder** ein Rettungsmittel, und zwei
+Zieltabellen lassen keinen zu. Was die Kaskade mitnimmt, muss der Löschweg
+deshalb von Hand abräumen; für das einzeln gelöschte Rettungsmittel tat er das
+seit jeher, für die mit dem Standort kaskadierten tat es niemand. Die Wirkung
+war still: Die Vorbelegung zeigte auf eine tote Kennung, das Auswahlfeld fand
+dazu nichts und belegte nichts vor — es sah aus wie „keine Vorbelegung
+gesetzt", und mit jedem gelöschten Standort kam eine solche Zeile dazu.
+
+**Gemessen** an der laufenden Anlage, derselbe Bedienweg über die Oberfläche
+gegen beide Stände: vorher **1** verwaiste Zeile, nachher **0** — bei sonst
+gleichen Zahlen (Rettungsmittel und Standort in beiden Fällen fort). Die
+Stelle im Ablauf ist nicht beliebig: vor dem Herauslösen träfe die Abfrage
+auch die Rettungsmittel **ohne** Standortpflicht, die das Löschen überleben
+und ihre Vorbelegung behalten sollen; nach dem Löschen des Standorts wären
+ihre Zeilen bereits fort. Zwischen beiden ist das einzige Fenster.
+
+**Ein geteilter Suchlink mit einem Sonderzeichen zeigt wieder Treffer**
+(Nr. 153). Die Suche merkt sich ihre Filter im URL-Fragment, und ein Wert von
+dort landete ungeprüft in einem CSS-Selektor. Aus `#wi=%22` wurde ein Selektor
+mit drei Anführungszeichen — der wirft einen Fehler, und weil das Lesen des
+Fragments außerhalb der Fehlerbehandlung stand, riss er den **ganzen
+Seitenaufbau** mit: keine Trefferliste, keine Filterzahl, und die Freitextsuche
+blieb bis zum Neuladen wirkungslos. Der Backlog hatte das kleiner beschrieben
+(„bricht die Auswahl"); gemessen bricht die Seite.
+
+**Gemessen** mit zehn Probewerten gegen beide Stände: vorher **4 Ausnahmen**
+und nur **6 von 10** Aufrufen mit Trefferliste, nachher **0 Ausnahmen** und
+**10 von 10** — bei unverändertem Verhalten für die gemeinten Werte
+(„ja" 6 Treffer, „nein" 77, „egal" 83). Behoben nicht durch Maskieren,
+sondern indem der Wert gar nicht erst in einen Selektor kommt: Die drei
+Auswahlknöpfe stehen ohnehin da und lassen sich vergleichen. Ein unbekannter
+Wert fällt weiterhin still auf „egal" — alte geteilte Links behalten damit ihr
+Verhalten.
+
+**Im Wartungsmodus kommt die BetreiberIn wieder herein** (Nr. 171 — beim
+Aufklären von Nr. 97 gefunden). Die Anmeldeseite war von der Wartung
+ausgenommen, „damit eine abgemeldete Administratorin hineinkommt". Sie kam auch
+— mit Balken und Formular. **Abschicken ließ sie sich trotzdem nicht:** Der
+Browser holt vorher das Salt und die Rundenzahlen von einem zweiten Endpunkt,
+und der stand nicht in der Ausnahmeliste. Ohne diese Werte leitet der Browser
+kein Token ab, und die Seite schrieb „Anmeldung derzeit nicht möglich". Der
+einzige Ausweg war SSH oder FTP — also genau die Lage, die die Ausnahmeliste
+verhindern soll. Das Handbuch versprach den Weg, den es nicht gab.
+
+**Die Wartungsprobe meldete dazu grün**, weil sie das Formular sah und nicht
+seinen Weg: Ein Formular, das nicht abgeschickt werden kann, erfüllt „mit
+Anmeldeformular". Sie misst den Nebenaufruf jetzt mit (**51 → 53
+Erwartungen**), und die Ausnahmeliste hat zwölf statt elf Einträge.
+
+**Wartung ist keine Störung** (Nr. 97). Zwei Stellen verwarfen die Antwort des
+Servers und erfanden einen eigenen Satz: Der GPX-Export meldete „Serverfehler
+beim Laden der Tracks (503)", und die Gerätekopplung sagte nach drei
+Wartetakten „Die Verbindung zum Server ist gerade gestört" — inhaltlich falsch,
+die Verbindung stand ja, der Server hatte bewusst geantwortet. Beide zeigen
+jetzt den Satz, den der Server mitschickt; die Kopplung steigt beim **ersten**
+Takt aus statt beim dritten.
+
+**Der Backlog-Eintrag stimmte in vier von sechs Aussagen nicht mehr** und ist
+beim Austragen berichtigt worden: Zwei der genannten Dateien enthalten gar kein
+`fetch()` mehr (und riefen am Tag der Aufnahme einen **fremden** Dienst, den
+die Wartung nie sieht), eine zeigt nicht „ihre allgemeine Meldung", sondern
+bewusst gar nichts, und acht Aufrufstellen in sechs Seiten fehlten in der
+Liste. Gezählt nach der Behebung: **18** Stellen treffen das Wartungstor,
+**13** zeigen den Text, **5** schweigen mit Absicht — Hintergrund- und
+Komfortwege, wo eine Meldung falsch wäre und nicht fehlend. Ein gemeinsamer
+Baustein ist **nicht** gebaut worden: Er hätte zwei Stellen bedient und
+achtzehn anfassen müssen.
+
+**Die Anmeldung verrät nicht mehr über die Rechenzeit, ob es ein Konto gibt**
+(Nr. 93). Damit ein Angreifer aus der Antwortdauer nicht ablesen kann, welche
+Adressen existieren, rechnet auch der Zweig „Adresse unbekannt" eine
+bcrypt-Prüfung — gegen einen festen Vergleichswert. Dessen Rundenzahl stand
+seit Web 5 auf dem Wert, den PHP 8.1 bis 8.3 anlegten; **PHP 8.4 legt einen
+teureren an**, und damit war der blinde Zweig viermal schneller als der echte.
+Verdeckt hat das nur eine Mindestdauer von 0,35 Sekunden — auf einem
+langsameren Rechner kippt sie.
+
+**Gemessen** auf derselben Maschine, Median aus je 15 Läufen: vorher
+**231,9 ms** gegen **58,2 ms**, also **173,7 ms Abstand** (Faktor 3,98);
+nachher **232,5** gegen **232,7 ms**, also **0,1 ms** (0,06 %).
+
+**Die neue Zahl allein hätte nicht gereicht.** Sie geht beim nächsten
+PHP-Sprung wieder aus dem Takt, und auf einer Installation mit PHP 8.1 bis 8.3
+— die Anwendung verspricht ab 8.1 — kehrte sie das Leck sogar um. Deshalb
+**prüft** die Anmeldung den Wert jetzt, statt ihm zu vertrauen: Passt er nicht
+mehr zur Vorgabe, rechnet der blinde Zweig stattdessen einen frischen Hash und
+kostet damit genau so viel wie der echte. Die Prüfung selbst ist gratis
+(0,0000 ms über 2000 Läufe). **Beides zusammen wäre falsch** — hashen *und*
+prüfen macht den blinden Zweig 234 ms **langsamer** als den echten und dreht
+das Leck um; das steht jetzt als Warnung am Code.
+
+**Die Zahl in der Diensttage-Leiste wird gezählt, nicht abgeholt** (Nr. 38).
+Der Eintrag „Zuordnung offen" ließ sich bei **jedem** Seitenaufbau jede Zeile
+jedes offenen Diensttags samt Einsatzzahl kommen, um sie danach wegzuwerfen.
+Gemessen mit fünf offenen Punkten: **1,316 ms → 0,566 ms**, sechs Abfragen →
+zwei; beide Wege liefern dieselben Zahlen.
+
+**Der größere Posten lag daneben und stand in keinem Backlog-Punkt:** Der
+Torwächter, der entscheidet, ob die Nachbearbeitung überhaupt noch läuft,
+fragte das Schema **je Tabelle einzeln** — vier Abfragen, und der Kurzschluss
+half gerade dann nicht, wenn es darauf ankam, denn er greift nur, solange eine
+Spalte noch offen ist. Auf einer fertig nachbearbeiteten Installation, also im
+Regelfall, liefen alle vier. Jetzt ist es eine: **1,405 ms → 0,320 ms je
+Seitenaufbau**.
+
+Damit Liste und Zahl nicht auseinanderlaufen können, steht die Bedingung
+„Diensttag offen" jetzt an **einer** Stelle und wird von beiden benutzt — sie
+stand vorher nur in der Liste, und die Zahl entstand daraus durch Zählen.
+
+**Zwei Riegel um die Demo-Fixture** (Nr. 155, teilweise). Die Fixture bringt
+die Rundenzahl des Demo-Kontos mit, und der Reset schreibt sie alle 30 Minuten
+unverändert zurück. Steht dort ein Wert, den die Anwendung nicht mehr anbietet,
+ist der Reset **still erfolgreich** — und niemand kommt mehr in das Konto.
+Deshalb weist das Einspielen eine solche Fixture jetzt ab, und der Erzeuger
+bricht ab, wenn das Konto nicht auf der Zielrundenzahl steht. Geprüft wird
+gegen die **Liste** der noch bedienten Werte, nicht gegen den Zielwert: Eine
+ältere, aber brauchbare Fixture soll weiterlaufen. **Offen bleibt der Neubau
+der Fixture selbst** — und das Streichen des Altwerts gehört in ein eigenes
+Paket, weil es bei falscher Reihenfolge Konten aussperrt.
+
+*Am Prüfstand, ohne Auslieferung:* Das Passwort des lokalen Prüfstands fiel
+seit dem Sofortpaket durch die **eigene** Passwortregel (Nr. 156) — und der
+Aufbau merkte es nicht, sondern lief durch und druckte am Ende Zugangsdaten,
+die er nie gesetzt hatte. Ursache war eine Rohrleitung: Der Rückgabewert einer
+Rohrleitung ist der des letzten Glieds, also gelang immer `sed`. Jetzt bricht
+der Aufbau ab und nennt den Grund, den die Seite die ganze Zeit anzeigte.
+
 ## [Web 19.1.1] — 2026-09-10
 
 ### Web — das Schloss an den beiden Stellen, an denen es fehlte

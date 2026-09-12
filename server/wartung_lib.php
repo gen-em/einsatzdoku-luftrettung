@@ -95,6 +95,20 @@ const WARTUNG_RETRY_S = 300;
  *                        Was danach geschieht, entscheidet login.php selbst
  *                        (E-S5W-09): Admin weiter, alles andere sofort
  *                        wieder abgemeldet und auf die Wartungsseite.
+ *   auth_salt.php        OHNE DIESE ZEILE IST login.php NUTZLOS (Nr. 171,
+ *                        Web 19.1.2). Die Anmeldeseite kam waehrend der
+ *                        Wartung, aber das Formular laesst sich nicht
+ *                        abschicken: Der Browser holt zuerst das Salt und
+ *                        die Rundenzahlen von hier, und ohne sie leitet er
+ *                        kein Token ab. Der Endpunkt laedt `db.php` und
+ *                        liegt nicht unter `/api/`, bekam also die
+ *                        HTML-Wartungsseite — `login.php` las daraus
+ *                        „Anmeldung derzeit nicht möglich" und blieb
+ *                        stehen. Damit war der Rueckweg, den diese Liste
+ *                        oeffnen soll, in Wahrheit zu; das Handbuch (12.3)
+ *                        versprach ihn trotzdem. Das Risiko ist kein neues:
+ *                        `login.php` liest dieselbe Tabelle und steht seit
+ *                        jeher hier.
  *   logout.php           wer drin ist, muss auch wieder hinaus.
  *   install.php          hat mit `install.lock` seine eigene Sperre.
  *
@@ -111,6 +125,7 @@ const WARTUNG_AUSNAHMEN = [
     'wiederherstellen.php',
     'jobs.php',
     'login.php',
+    'auth_salt.php',
     'logout.php',
     'install.php',
 ];

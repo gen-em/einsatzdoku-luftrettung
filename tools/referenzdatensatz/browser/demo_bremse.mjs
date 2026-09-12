@@ -52,7 +52,7 @@ else if (ersteSperre !== grenze + 1) {
 }
 
 // Gegenprobe: ein anderes Konto bleibt unberührt.
-const andere = await versuch('admin@gen-em.org', 'adminlokal2026');
+const andere = await versuch('admin@gen-em.org', 'pruefstandzugang2026');
 console.log(`Gegenprobe admin@gen-em.org: ${andere.drin ? 'kommt herein' : 'ABGEWIESEN'}`);
 if (!andere.drin) { befunde.push('Die Demo-Sperre trifft auch ein anderes Konto'); }
 

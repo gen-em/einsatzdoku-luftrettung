@@ -367,7 +367,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      seit Web 15.5.2 die Zählweise der Migrationen
 │   │                      (Teil 6, Backlog Nr. 149) und seit 15.6.0, dass die
 │   │                      Integritätswache im Wartungsmodus nicht rot wird
-│   │                      (12a, Nr. 140) — 51 Erwartungen.
+│   │                      (12a, Nr. 140) — 53 Erwartungen.
 │   │                      **Legt den Schalter selbst um** und nimmt für
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer
@@ -4374,7 +4374,7 @@ Die Bausteine im Einzelnen:
 | Prüfschicht | `validate_lib.php` | Wertebereiche, Längen, Formate, Mengen aller Einsatz- und Ruhesegmentfelder. Unterscheidet „Wert war ungültig" von „Wert war nicht vorhanden" (`Pruefliste`), damit ein Fehler nicht als Erfolg gemeldet werden kann. |
 | Kalendertag | `validate_lib.php` | Ein unmöglicher Tag wird abgelehnt statt still verschoben (30. Februar → 2. März). Sichtbar nur über die Warnungsabfrage der Datumsklasse. |
 | Ratenschutz | `ratelimit_lib.php` | Zählung je Konto **und** IP, in der Datenbank. Greift **vor** teuren Prüfungen (bcrypt, PBKDF2), Antwortzeit bei Misserfolg konstant. Seit Web 4.4.0 an `login`, `salt`, `reset`, `pair`; seit 13.0.0 dazu `pair_start` (jede Sitzungsanfrage je Adresse) und `pair_code` (Code-Eingabe im Web je Konto und Adresse), E-S5-16. |
-| Fester Vergleichswert | `AUTH_VERGLEICHSWERT` in `db.php` | Ein bcrypt-Hash ohne zugehöriges Geheimnis, damit auch der Zweig „Kennung unbekannt" eine Passwortprüfung rechnet. Ohne ihn beantwortet die Antwortzeit die Frage, welche Konten und Geräte es gibt. Seit Web 13.0.0 daneben `GERAET_VERGLEICHSWERT` (SHA-256) für die Gerätepfade — dieselbe Aufgabe, anderes Verfahren (E-S5-42). |
+| Fester Vergleichswert | `AUTH_VERGLEICHSWERT` in `db.php` | Ein bcrypt-Hash ohne zugehöriges Geheimnis, damit auch der Zweig „Kennung unbekannt" eine Passwortprüfung rechnet. Ohne ihn beantwortet die Antwortzeit die Frage, welche Konten und Geräte es gibt. **Seine Rundenzahl muss zu `PASSWORD_DEFAULT` passen, und die wächst mit den PHP-Fassungen** — seit Web 19.1.2 prüft `login.php` das mit `password_needs_rehash()` und rechnet im Bedarfsfall einen frischen Hash statt eines Vergleichs (Backlog Nr. 93; vorher 173,7 ms Abstand, nachher 0,1 ms). Seit Web 13.0.0 daneben `GERAET_VERGLEICHSWERT` (SHA-256) für die Gerätepfade — dieselbe Aufgabe, anderes Verfahren (E-S5-42). |
 | Antwort abschließen | `antwort_abschliessen()` in `smtp.php` | Beendet die Antwort, bevor der Mailversand beginnt. Nimmt dem Versand die messbare Wirkung auf die Antwortzeit. |
 | Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
 | Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn nach derselben Frist ablaufen wie die Sitzung — **gleitend wie sie**: Jeder Treffer erneuert den Zeitstempel (R44, seit Web 12.9.0). Vorher war es eine feste Frist ab dem Entsperren, und genau daraus entstand der Entsperrdialog mitten in der Arbeit. **Muss vor `unlock.js` geladen werden.** |
@@ -5941,7 +5941,7 @@ für das sie da ist.
 (neben `db.php`)? (2) Ist die aufgerufene Seite eine der elf Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/wartungsprobe/probe.php` (51 Erwartungen; seit Web 15.5.2 misst
+`php tools/wartungsprobe/probe.php` (53 Erwartungen; seit Web 15.5.2 misst
 ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, und
 seit 15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot
 wird, Nr. 140).

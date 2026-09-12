@@ -33,4 +33,11 @@ gezählt, und er hat einen Ort, an dem über ihn entschieden wird.
 
 | Verweis | Backlog | Sache |
 |---|---|---|
-| `index.php?day=` | Nr. 151 | `import_ui.js` verweist nach einem Import mit „Ersten Tag öffnen" auf `index.php?day=<Kalendertag>`. Die Startseite liest `$_GET['d']` und erwartet dort eine **Kennung** — ein Datum bestimmt seit E9 keinen Diensttag mehr, weil mehrere auf einem Kalendertag liegen können. Der Verweis führt deshalb still auf den jüngsten Tag statt auf den importierten. Behebung braucht mehr als einen Namen: `api/import_commit.php` muss die Tageskennung mitliefern. Zurückgestellt aus der Korrekturstufe zu Nr. 148/149 (K4). |
+
+Diese Tabelle ist seit Web 19.1.2 **leer**, und das ist der gewünschte
+Zustand. Ihr einziger Eintrag war `index.php?day=` (Backlog Nr. 151) — der
+Verweis nach einem Import, der still auf den jüngsten statt auf den
+importierten Diensttag führte. Er ist behoben: `api/import_commit.php`
+liefert seither die Tageskennung als `first_day_id`, und `import_ui.js`
+verweist auf `index.php?d=`. Die Zeile ist mit der Behebung verschwunden,
+wie es der Kopf dieses Dokuments verlangt.

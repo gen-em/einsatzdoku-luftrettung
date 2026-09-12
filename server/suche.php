@@ -548,7 +548,28 @@ function wertSetzen(f, v) {
   }
   if (f.art === 'segment') {
     const gruppe = $(f.el);
-    const treffer = gruppe.querySelector(`input[value="${v || ''}"]`)
+    /* KEIN SELEKTOR MIT DEM WERT (Backlog Nr. 153).
+     *
+     * Hier stand ein querySelector auf `input[value="<Wert>"]`, und der Wert
+     * kommt aus dem URL-Fragment — URLSearchParams dekodiert, aus `#wi=%22`
+     * wurde also ein Selektor mit drei Anfuehrungszeichen (""").
+     * Der wirft einen SyntaxError, und weil `fragmentLesen()` ausserhalb des
+     * try steht, riss er den ganzen Seitenaufbau mit: keine Trefferliste,
+     * keine Filterzahl, und die Freitextsuche blieb bis zum Neuladen
+     * wirkungslos. Die Folge war also groesser, als „bricht die Auswahl"
+     * vermuten laesst.
+     *
+     * Die drei Werte stehen ohnehin als Radios da; sie zu VERGLEICHEN
+     * braucht weder Selektor noch Maskierung. `CSS.escape()` taete es auch,
+     * ist aber die fehleranfaelligere Fassung: Sie maskiert fuer einen
+     * Selektor, den es hier gar nicht braucht.
+     *
+     * Der Rueckfall auf `input[value=""]` bleibt — er ist der Grund, warum
+     * ein unbekannter Wert (`#wi=xyz`, und den gibt es in alten geteilten
+     * Verweisen) still auf „egal" faellt. */
+    const wert = v || '';
+    const treffer = [...gruppe.querySelectorAll('input[type=radio]')]
+                      .find(i => i.value === wert)
                  || gruppe.querySelector('input[value=""]');
     if (treffer) { treffer.checked = true; }
     return;

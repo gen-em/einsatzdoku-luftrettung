@@ -96,7 +96,23 @@
     let antwort;
     try {
       const a = await fetch(quelle, { credentials: 'same-origin' });
-      if (!a.ok) { throw new Error('HTTP ' + a.status); }
+      if (!a.ok) {
+        /* WARTUNG IST KEINE STOERUNG (Backlog Nr. 97). Hier stand nur
+           `throw new Error('HTTP ' + a.status)`; der Rumpf wurde verworfen,
+           und nach drei Takten las die Person „Die Verbindung zum Server
+           ist gerade gestört" — inhaltlich falsch, die Verbindung steht ja,
+           der Server hat bewusst geantwortet. Waehrend einer Wartung wird
+           die Kopplung ohnehin nicht fertig; also sofort aussteigen statt
+           dreimal nachzufragen. Der Dreifehler-Rueckzug bleibt fuer alles
+           andere. */
+        const d = await a.json().catch(() => null);
+        if (d && d.error === 'maintenance') {
+          anhalten();
+          schlussText(d.meldung || 'NAdoku wird gerade aktualisiert. Bitte später erneut.');
+          return;
+        }
+        throw new Error('HTTP ' + a.status);
+      }
       antwort = await a.json();
       fehler = 0;
     } catch (e) {

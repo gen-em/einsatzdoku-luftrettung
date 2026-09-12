@@ -33,7 +33,7 @@ const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MO
 
 const BASIS = process.env.ED_BASIS || 'https://127.0.0.1:8443';
 const MAIL  = process.env.ED_MAIL || 'admin@gen-em.org';
-const PW    = process.env.ED_PW   || 'adminlokal2026';
+const PW    = process.env.ED_PW   || 'pruefstandzugang2026';
 
 const befunde = [];
 const pruef = (was, ok, dazu = '') => {

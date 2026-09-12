@@ -822,7 +822,7 @@ def main() -> int:
     p.add_argument("--basis", default="https://127.0.0.1:8443")
     p.add_argument("--stufen", default=",".join(ALLE_STUFEN))
     p.add_argument("--admin-email", default="admin@gen-em.org")
-    p.add_argument("--admin-passwort", default="adminlokal2026")
+    p.add_argument("--admin-passwort", default="pruefstandzugang2026")
     p.add_argument("--zustand", default=str(HIER / "lauf.json"))
     p.add_argument("--konto", default=None,
                    help="abweichendes Zielkonto (Kreislaufpruefung B5)")

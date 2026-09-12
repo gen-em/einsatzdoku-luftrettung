@@ -62,8 +62,10 @@ Heute leer, und das ist der gewünschte Zustand.
 **2. Bekannte Abweichungen** — echte Fehler, die noch nicht behoben sind, je
 mit **Backlog-Nummer**. Ohne Nummer gehört nichts hierher. Das ist der
 Unterschied zum Ausblenden: Der Fund bleibt sichtbar, er wird bei jedem Lauf
-genannt, und er hat einen Ort, an dem über ihn entschieden wird. Heute steht
-dort **eine** Zeile: `index.php?day=` aus `import_ui.js` (Nr. 151).
+genannt, und er hat einen Ort, an dem über ihn entschieden wird. **Heute ist
+auch diese Tabelle leer** (seit Web 19.1.2): Ihre einzige Zeile war
+`index.php?day=` aus `import_ui.js` (Nr. 151), und sie ist mit der Behebung
+verschwunden — so, wie es die Regel unten verlangt.
 
 **Eine tote Zeile macht den Lauf rot.** Steht in einer der beiden Tabellen ein
 Verweis, den es nicht mehr gibt, meldet die Probe das und gibt 1 zurück. Bei
@@ -75,8 +77,12 @@ Wortliste.
 
 - **Sie prüft Namen, nicht Werte.** Ein `?d=<Kalendertag>` an einer Seite, die
   unter `d` eine *Kennung* erwartet, ist für sie in Ordnung — er ist es nicht.
-  Genau darin liegt der zweite Teil von Nr. 151: Dort stimmt nicht nur der
-  Name nicht, sondern auch die Form des Werts.
+  Genau darin lag der zweite Teil von Nr. 151 (behoben mit Web 19.1.2): Dort
+  stimmte nicht nur der Name nicht, sondern auch die Form des Werts — und
+  **den zweiten Teil hätte die Probe auch nach der Umbenennung nicht
+  gefunden.** Das Beispiel bleibt hier stehen, weil es die Grenze am besten
+  zeigt: Ein grüner Lauf sagt „jeder Verweis nennt einen Parameter, den seine
+  Zielseite liest", nicht „jeder Verweis führt dorthin, wohin er verspricht".
 - **Ein Verweis, dessen Ziel erst zur Laufzeit entsteht**, taucht hier nicht
   auf. Zurzeit gibt es keinen. Bis Web 16.x baute `admin_stammdaten.php`
   `$seite . '&ev=' . $vid` — die Zielseite stand in einer Variablen, und die

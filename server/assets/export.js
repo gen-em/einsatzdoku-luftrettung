@@ -1076,8 +1076,18 @@
             body: JSON.stringify({ action: 'track', owner_type: ownerType,
                                    ids: ids, patient: true })
         });
-        if (!res.ok) { throw new Error('Serverfehler beim Laden der Tracks (' + res.status + ').'); }
-        return res.json();
+        /* DEN RUMPF LESEN, NICHT NUR DEN STATUS (Backlog Nr. 97). Hier
+           stand ein throw mit dem nackten Statuscode im Text —
+           die Antwort wurde verworfen, und im Wartungsmodus las die Person
+           „Serverfehler beim Laden der Tracks (503)" statt des Satzes, den
+           der Server mitschickt. Dieselbe Datei macht es in fetchMeta()
+           seit jeher richtig; sie war in sich uneinheitlich. */
+        var daten = await res.json().catch(function () { return null; });
+        if (!res.ok || (daten && daten.error)) {
+            throw new Error((daten && daten.meldung)
+                || ('Serverfehler beim Laden der Tracks (' + res.status + ').'));
+        }
+        return daten;
     }
 
     /** Holt GPX-relevante Tracks blockweise (höchstens 25 IDs je Anfrage, siehe
