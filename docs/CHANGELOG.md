@@ -129,6 +129,24 @@ kostet damit genau so viel wie der echte. Die Prüfung selbst ist gratis
 prüfen macht den blinden Zweig 234 ms **langsamer** als den echten und dreht
 das Leck um; das steht jetzt als Warnung am Code.
 
+**Die Zahl in der Diensttage-Leiste wird gezählt, nicht abgeholt** (Nr. 38).
+Der Eintrag „Zuordnung offen" ließ sich bei **jedem** Seitenaufbau jede Zeile
+jedes offenen Diensttags samt Einsatzzahl kommen, um sie danach wegzuwerfen.
+Gemessen mit fünf offenen Punkten: **1,316 ms → 0,566 ms**, sechs Abfragen →
+zwei; beide Wege liefern dieselben Zahlen.
+
+**Der größere Posten lag daneben und stand in keinem Backlog-Punkt:** Der
+Torwächter, der entscheidet, ob die Nachbearbeitung überhaupt noch läuft,
+fragte das Schema **je Tabelle einzeln** — vier Abfragen, und der Kurzschluss
+half gerade dann nicht, wenn es darauf ankam, denn er greift nur, solange eine
+Spalte noch offen ist. Auf einer fertig nachbearbeiteten Installation, also im
+Regelfall, liefen alle vier. Jetzt ist es eine: **1,405 ms → 0,320 ms je
+Seitenaufbau**.
+
+Damit Liste und Zahl nicht auseinanderlaufen können, steht die Bedingung
+„Diensttag offen" jetzt an **einer** Stelle und wird von beiden benutzt — sie
+stand vorher nur in der Liste, und die Zahl entstand daraus durch Zählen.
+
 ## [Web 19.1.1] — 2026-09-10
 
 ### Web — das Schloss an den beiden Stellen, an denen es fehlte

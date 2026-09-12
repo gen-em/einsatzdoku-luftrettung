@@ -97,11 +97,9 @@ const NB_NOTNULL = ['crew_presets', 'transport_dests', 'resources', 'bw_units'];
  */
 function nb_offene_tage(int $userId, int $limit = 500): array
 {
-    $ohneStandort = [];
-    foreach (VEHICLE_TYPEN as $typ => $regeln) {
-        if (!$regeln['standort']) { $ohneStandort[] = $typ; }
-    }
-    $platzhalter = implode(',', array_fill(0, count($ohneStandort), '?'));
+    // Die Bedingung steht in nb_tage_bedingung() — dieselbe, die
+    // nb_offene_tage_zahl() benutzt (Backlog Nr. 38).
+    $b = nb_tage_bedingung();
 
     $q = db()->prepare('SELECT d.id, d.day, d.started_at, d.ended_at, d.kind,
                                d.base_id, d.vehicle_id, d.base_name, d.vehicle_name,
@@ -109,14 +107,10 @@ function nb_offene_tage(int $userId, int $limit = 500): array
                                (SELECT COUNT(*) FROM missions m
                                  WHERE m.day_id = d.id AND m.deleted_at IS NULL) AS einsaetze
                           FROM days d
-                         WHERE d.user_id = ? AND d.deleted_at IS NULL
-                           AND (d.vehicle_id IS NULL
-                                OR (d.base_id IS NULL
-                                    AND (d.vehicle_typ IS NULL
-                                         OR d.vehicle_typ NOT IN (' . $platzhalter . '))))
+                         WHERE d.user_id = ? AND ' . $b['sql'] . '
                          ORDER BY d.day DESC, d.started_at DESC
                          LIMIT ' . (int)$limit);
-    $q->execute(array_merge([$userId], $ohneStandort)); return $q->fetchAll();
+    $q->execute(array_merge([$userId], $b['args'])); return $q->fetchAll();
 }
 
 /**
@@ -165,12 +159,87 @@ function nb_offen_gesamt(int $userId): int
 {
     if (!nb_moeglich()) { return 0; }
 
-    $n = count(nb_offene_tage($userId));
-    foreach (nb_offene_stammdaten($userId) as $zeilen) { $n += count($zeilen); }
-    if (ist_admin()) {
-        foreach (nb_offene_stammdaten($userId, true) as $zeilen) { $n += count($zeilen); }
-    }
+    /* ZAEHLEN, NICHT HOLEN (Backlog Nr. 38, Web 19.1.2).
+     *
+     * Hier stand dreimal `count(...)` ueber volle Ergebnismengen — die Zahl
+     * der Seitenleiste liess sich also jede Zeile jedes offenen Diensttags
+     * samt Einsatzzahl-Unterabfrage kommen, um sie danach wegzuwerfen. Der
+     * Fehler faellt nur auf einer Installation auf, auf der die
+     * Nachbearbeitung noch laeuft; genau dort ist die Menge aber am
+     * groessten.
+     *
+     * `nb_offene_tage()` bleibt unveraendert — die Liste braucht die Zeilen.
+     * Damit Liste und Zahl nicht auseinanderlaufen koennen, steht die
+     * Bedingung „Diensttag offen" jetzt an EINER Stelle
+     * (`nb_tage_bedingung()`) und wird von beiden benutzt. */
+    $n = nb_offene_tage_zahl($userId);
+    $n += nb_offene_stammdaten_zahl($userId);
+    if (ist_admin()) { $n += nb_offene_stammdaten_zahl($userId, true); }
     return $n;
+}
+
+/**
+ * Die Bedingung „Diensttag offen" — EINE Stelle fuer Liste und Zahl.
+ *
+ * Sie stand bis Web 19.1.2 nur in `nb_offene_tage()`. Die Zahl daneben
+ * entstand, indem dieselbe Abfrage gefahren und ihr Ergebnis gezaehlt wurde;
+ * wer die Bedingung aendert und die zweite Stelle uebersieht, laesst Liste
+ * und Zahl auseinanderlaufen. Jetzt gibt es nur eine.
+ *
+ * @return array{sql: string, args: list<string>}
+ */
+function nb_tage_bedingung(): array
+{
+    $ohneStandort = [];
+    foreach (VEHICLE_TYPEN as $typ => $regeln) {
+        if (!$regeln['standort']) { $ohneStandort[] = $typ; }
+    }
+    $platzhalter = implode(',', array_fill(0, count($ohneStandort), '?'));
+    return [
+        'sql'  => 'd.deleted_at IS NULL
+                   AND (d.vehicle_id IS NULL
+                        OR (d.base_id IS NULL
+                            AND (d.vehicle_typ IS NULL
+                                 OR d.vehicle_typ NOT IN (' . $platzhalter . '))))',
+        'args' => $ohneStandort,
+    ];
+}
+
+/** Zahl der offenen Diensttage — wie nb_offene_tage(), nur ohne die Zeilen. */
+function nb_offene_tage_zahl(int $userId): int
+{
+    $b = nb_tage_bedingung();
+    $q = db()->prepare('SELECT COUNT(*) FROM days d
+                         WHERE d.user_id = ? AND ' . $b['sql']);
+    $q->execute(array_merge([$userId], $b['args']));
+    return (int)$q->fetchColumn();
+}
+
+/**
+ * Zahl der offenen Stammdatensaetze ueber alle fuenf Tabellen — EINE Abfrage.
+ *
+ * Die Tabellennamen stammen aus NB_STAMMDATEN, nicht aus einer Anfrage; ein
+ * Platzhalter ist fuer Tabellennamen ohnehin nicht moeglich. Die Bedingung je
+ * Tabelle ist dieselbe wie in nb_offene_stammdaten() — auch der Sonderfall
+ * `vehicles`, wo nur der Typ 'standard' einen Mangel darstellt (E-S9-09).
+ */
+function nb_offene_stammdaten_zahl(int $userId, bool $zentral = false): int
+{
+    $teile = []; $args = [];
+    foreach (array_keys(NB_STAMMDATEN) as $tabelle) {
+        $nur = $tabelle === 'vehicles' ? " AND typ = 'standard'" : '';
+        if ($zentral) {
+            $teile[] = "SELECT COUNT(*) FROM `$tabelle`
+                         WHERE base_id IS NULL AND user_id IS NULL$nur";
+        } else {
+            $teile[] = "SELECT COUNT(*) FROM `$tabelle`
+                         WHERE base_id IS NULL AND user_id = ?$nur";
+            $args[] = $userId;
+        }
+    }
+    $q = db()->prepare('SELECT (' . implode(') + (', $teile) . ')');
+    $q->execute($args);
+    return (int)$q->fetchColumn();
 }
 
 /**
@@ -197,13 +266,34 @@ function nb_moeglich(): bool
 {
     static $moeglich = null;
     if ($moeglich !== null) { return $moeglich; }
-    foreach (NB_NOTNULL as $tabelle) {
-        if (nb_spalte_nullbar($tabelle)) { return $moeglich = true; }
-    }
-    return $moeglich = false;
+
+    /* EINE ABFRAGE STATT VIER (Backlog Nr. 38, Web 19.1.2).
+     *
+     * Hier lief `nb_spalte_nullbar()` je Tabelle einzeln — und der
+     * Kurzschluss half gerade dann nicht, wenn es darauf ankam: Er greift
+     * nur, wenn eine Spalte NOCH nullbar ist. Auf einer fertig
+     * nachbearbeiteten Installation, also im Regelfall, liefen alle vier.
+     * Gemessen an der lokalen Anlage: 4 Einzelabfragen 1,071 ms, eine
+     * gemeinsame 0,355 ms — je Seitenaufbau, denn die Frage kommt aus der
+     * Seitenleiste. */
+    $platzhalter = implode(',', array_fill(0, count(NB_NOTNULL), '?'));
+    $q = db()->prepare("SELECT COUNT(*) FROM information_schema.columns
+                         WHERE table_schema = DATABASE()
+                           AND column_name = 'base_id'
+                           AND is_nullable = 'YES'
+                           AND table_name IN ($platzhalter)");
+    $q->execute(NB_NOTNULL);
+    return $moeglich = ((int)$q->fetchColumn() > 0);
 }
 
-/** Ist `base_id` dieser Tabelle noch nullbar? */
+/**
+ * Ist `base_id` dieser Tabelle noch nullbar?
+ *
+ * Seit Web 19.1.2 fragt `nb_moeglich()` alle vier Tabellen in EINER Abfrage
+ * (Backlog Nr. 38); diese Funktion bleibt, weil die beiden Laeufe weiter
+ * unten je Tabelle einzeln entscheiden muessen — sie ueberspringen die
+ * fertigen und arbeiten an den offenen.
+ */
 function nb_spalte_nullbar(string $tabelle): bool
 {
     $q = db()->prepare("SELECT is_nullable FROM information_schema.columns
