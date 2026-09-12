@@ -1159,21 +1159,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (`CLAUDE.md` 5); betroffen ist jede Seite mit `ui_aktionen()` (zehn
     Aufrufe). Zuordnung: Backlog-Runde oder P7 (Gesicht v1.0).
 
-125. **`.form-raster` und `.zweispalter` sind dieselbe Regel unter zwei Namen.**
-    *Aufgenommen 05.09.2026 bei S8/AP5 (8).* Beide sind ab 1200 px ein Grid
-    mit zwei gleichen Spalten und `align-items:start`; der einzige
-    Unterschied ist, dass die Kindelemente einmal `.form-spalte` heißen und
-    einmal ein blankes `<div>` sind. `.form-raster` steht auf sechs Seiten,
-    `.zweispalter` auf einer (`admin_installation.php`). **Zu tun:** eine
-    Regel behalten, die andere austragen — die Seite mit dem blanken `<div>`
-    ist die, die umzustellen ist. Das ist keine Gestaltungsänderung: Die
-    berechneten Werte sind identisch, der Stilvergleich muss null melden.
-    **Warum es nicht in S8 erledigt wurde:** AP5 hat mit `.karten-raster`
-    eine dritte Klasse hinzugefügt, die etwas anderes tut (der Browser teilt
-    auf, nicht die Seite) — die beiden alten zusammenzulegen wäre eine
-    Änderung an sechs Seiten außerhalb des Pakets gewesen. Zuordnung:
-    Aufräumpaket P6 oder Backlog-Runde.
-
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
     Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
@@ -1675,6 +1660,73 @@ zutreffen.
     - **POST ohne Formular-Token: 403**, nichts geschrieben.
     - Bedienhöhen **36 px** (Zeiger, 1280 px) und **44 px** (Finger, 390 px),
       waagerechter Überlauf **0**, Konsolenfehler **0** in beiden.
+
+125. **`.form-raster` und `.zweispalter` sind dieselbe Regel unter zwei Namen.**
+    *Aufgenommen 05.09.2026 bei S8/AP5 (8).* Beide sind ab 1200 px ein Grid
+    mit zwei gleichen Spalten und `align-items:start`; der einzige
+    Unterschied ist, dass die Kindelemente einmal `.form-spalte` heißen und
+    einmal ein blankes `<div>` sind. `.form-raster` steht auf sechs Seiten,
+    `.zweispalter` auf einer (`admin_installation.php`). **Zu tun:** eine
+    Regel behalten, die andere austragen — die Seite mit dem blanken `<div>`
+    ist die, die umzustellen ist. Das ist keine Gestaltungsänderung: Die
+    berechneten Werte sind identisch, der Stilvergleich muss null melden.
+    **Warum es nicht in S8 erledigt wurde:** AP5 hat mit `.karten-raster`
+    eine dritte Klasse hinzugefügt, die etwas anderes tut (der Browser teilt
+    auf, nicht die Seite) — die beiden alten zusammenzulegen wäre eine
+    Änderung an sechs Seiten außerhalb des Pakets gewesen. Zuordnung:
+    Aufräumpaket P6 oder Backlog-Runde.
+
+    **Erledigt mit Web 19.3.0 (12.09.2026, Backlog-Runde 2).** `.zweispalter`
+    ist gestrichen; `admin_installation.php` trägt `.form-raster` mit zwei
+    `.form-spalte`-Kindern wie die fünf anderen Seiten.
+
+    **Zwei Angaben des Eintrags oben stimmen nicht:**
+
+    - *„`.form-raster` steht auf sechs Seiten."* Es waren **fünf**
+      (`betrieb_status`, `betrieb_statistik`, `admin_sicherungen`,
+      `admin_user`, `einsatz_form`). Mit der Installationsseite sind es
+      jetzt sechs.
+    - *„Die berechneten Werte sind identisch."* Fast. `.zweispalter` setzte
+      `gap: var(--abstand-4)` für **beide** Richtungen, `.form-raster` setzt
+      `gap: 0 var(--abstand-4)` — der **Zeilenabstand** ist null.
+      Gemessen: rowGap **16 px → 0 px** ab 1200 px. Es fällt nicht auf,
+      solange ein Raster genau zwei Kinder in einer Zeile hat, und das ist
+      auf allen sechs Seiten so — deshalb **0 abweichende Rechtecke**. Aber
+      „identisch" war das nie, und wer es beim nächsten Mal nachschlägt,
+      soll den Unterschied kennen.
+
+    **Die Wahl fiel auf `.form-raster`, obwohl der Name schlechter ist.**
+    Drei der fünf Seiten sind keine Formulare, und „Zweispalter" sagt, was
+    die Klasse tut. Aber: `.form-raster` behalten kostet **1** CSS-Zeile und
+    **3** Markup-Zeilen; `.zweispalter` behalten kostete 5 Seiten,
+    10 Umbenennungen von `.form-spalte`, zwei Stellen in `assets/menue.js`,
+    einen Streichlisteneintrag und die Design.md-Tabelle. Fünf gegen eins
+    schlägt den besseren Namen.
+
+    **Die Kinder tragen `.form-spalte`, und das ist nicht kosmetisch.** Die
+    Klasse hat **keine** CSS-Regel (nachgezählt: 0 Treffer im Stylesheet) —
+    aber `assets/menue.js` liest sie, um in der Leiste je *Spalte* die
+    oberste sichtbare Karte zu markieren. Die Hülle nur umzubenennen und die
+    Kinder blank zu lassen wäre keine Vereinheitlichung gewesen, sondern
+    dieselbe Sonderstellung unter fremdem Namen. **Die eine sichtbare Folge:**
+    Die Leiste markiert auf dieser Seite ab 1200 px jetzt **zwei**
+    Unterpunkte statt einem („Logo" und „Impressum") — genau wie auf den
+    fünf anderen Seiten.
+
+    **Gemessen:**
+
+    - **Kaskadenvergleich:** Regeln **743 → 742**; entfallen **4** (die vier
+      Deklarationen von `.zweispalter`), neu **0**, anderer Endwert **0**,
+      vertauschte Paare bei gleicher Spezifität **0**.
+    - **Berechnete Stile in Chromium**, 13 Breiten: **48 165**
+      Elementmessungen über `seiten.html`, `katalog.html` und
+      `js_markup.html`, **0 Abweichungen**, 166 Eigenschaften je Element;
+      dazu die Pseudoprobe gegen die umgeschriebenen Stylesheets:
+      **20 059** Messungen, **0 Abweichungen**.
+    - **Geometrie der Seite selbst** (angemeldet, 1100 / 1280 / 1920 px,
+      je 90 Nachkommen des Rasters): **0 abweichende Rechtecke**, Kinder
+      identisch, `display` block/grid unverändert, Überlauf **0**.
+    - **Vollständigkeit 334 → 334**, Wortliste **0/0**.
 
 126. **Von der Wartungsseite führt kein Weg zurück in die Verwaltung.**
     *Aufgenommen 06.09.2026 bei S8/AP8, aus dem Umschreiben von Handbuch 12.3.*

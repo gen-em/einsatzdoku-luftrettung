@@ -1257,7 +1257,6 @@ heute **72 = 72**.
 | 121 | Vorschau der Rechtstexte beim Tippen (Mockup 09) | Backlog-Runde | heute nur der gespeicherte Stand |
 | 122 | Freie Zeiträume und Diagramme in der Statistik (Mockup 04) | P5 / Backlog-Runde | Diagrammbibliothek müsste vendoriert werden |
 | 124 | Aktionsblatt öffnet weit weg von seinem Knopf | Backlog-Runde | mit Bild gemeldet, Tagesübersicht am Handy |
-| 125 | `.form-raster` und `.zweispalter` sind dieselbe Regel | P6 / Backlog-Runde | eine behalten, die andere austragen |
 | 139 | Adminpakete unversiegelt, `ftp` (K-4) | S10 | `sk_versiegeln()`; `Backup-Format.md` 5 neu |
 | 140 | Push auf `main` ist Deploy (K-16) | Zuarbeit / S10 | Branch-Schutz und 2FA sofort; Deploy-Tor mit Staging (R40 (2)); Integritätswache im Sofortpaket (F-SP-9) |
 | 141 | Zweitfaktor für alle Konten (K-5) | P5 | erweitert R38 |

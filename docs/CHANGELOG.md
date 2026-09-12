@@ -122,6 +122,30 @@ die Arten *blau* und *orange*, und alle elf vorhandenen tragen ein Symbol.
 Eine textnackte wäre eine neue Darstellung gewesen, das Zeichen ist der
 kleinere Eingriff.
 
+**Eine von zwei gleichlautenden CSS-Regeln ist weg** (Nr. 125). `.zweispalter`
+und `.form-raster` taten dasselbe — ab 1200 px ein Grid mit zwei gleichen
+Spalten — unter zwei Namen; die erste hatte genau einen Verwender, die zweite
+fünf. Zwei Namen für eine Sache heißt: Wer den einen ändert, ändert den
+anderen nicht mit, und zwar ohne dass es auffällt. `.zweispalter` ist
+gestrichen, die Installationsseite trägt jetzt `.form-raster` wie die anderen.
+
+**Ganz gleich waren sie übrigens nicht**, und das ist der Fund an dieser
+Aufräumarbeit: `.zweispalter` setzte den Abstand für beide Richtungen,
+`.form-raster` setzt den Zeilenabstand auf null. Gemessen sind das 16 px, die
+nirgends zu sehen sind — weil jedes dieser Raster genau zwei Kinder in einer
+Zeile hat. „Identisch" galt nur für das, was man sieht.
+
+**Eine sichtbare Folge bleibt:** In der Leiste markiert die Installationsseite
+ab 1200 px jetzt zwei Unterpunkte statt einem, weil die Spalten die dafür
+nötige Klasse tragen. Genau so verhalten sich die fünf anderen zweispaltigen
+Seiten seit jeher.
+
+Nachgerechnet, weil das Stylesheet berührt ist: Kaskadenvergleich 743 → 742
+Regeln, vier entfallene Deklarationen, **0** geänderte Endwerte und **0**
+vertauschte Regelpaare; berechnete Stile in dreizehn Fensterbreiten **68 224**
+Elementmessungen ohne eine einzige Abweichung; die Seite selbst in drei
+Breiten mit **0** abweichenden Rechtecken.
+
 ## [Web 19.2.0] — 2026-09-12
 
 ### Web — die Anmeldung rechnet wieder nur einmal
