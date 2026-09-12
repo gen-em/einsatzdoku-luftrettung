@@ -36,6 +36,24 @@ zufällig einen älteren Tag importierte. `api/import_commit.php` liefert jetzt
 weil er genau einen Verbraucher hatte und ein zurückgelassener Schlüssel ohne
 Leser die nächste Falle ist.
 
+**Das Löschen eines Standorts räumt seine Vorbelegungen mit ab** (Nr. 167).
+`user_defaults.item_id` trägt bewusst **keinen** Fremdschlüssel — die Spalte
+zeigt je nach Art auf einen Standort **oder** ein Rettungsmittel, und zwei
+Zieltabellen lassen keinen zu. Was die Kaskade mitnimmt, muss der Löschweg
+deshalb von Hand abräumen; für das einzeln gelöschte Rettungsmittel tat er das
+seit jeher, für die mit dem Standort kaskadierten tat es niemand. Die Wirkung
+war still: Die Vorbelegung zeigte auf eine tote Kennung, das Auswahlfeld fand
+dazu nichts und belegte nichts vor — es sah aus wie „keine Vorbelegung
+gesetzt", und mit jedem gelöschten Standort kam eine solche Zeile dazu.
+
+**Gemessen** an der laufenden Anlage, derselbe Bedienweg über die Oberfläche
+gegen beide Stände: vorher **1** verwaiste Zeile, nachher **0** — bei sonst
+gleichen Zahlen (Rettungsmittel und Standort in beiden Fällen fort). Die
+Stelle im Ablauf ist nicht beliebig: vor dem Herauslösen träfe die Abfrage
+auch die Rettungsmittel **ohne** Standortpflicht, die das Löschen überleben
+und ihre Vorbelegung behalten sollen; nach dem Löschen des Standorts wären
+ihre Zeilen bereits fort. Zwischen beiden ist das einzige Fenster.
+
 ## [Web 19.1.1] — 2026-09-10
 
 ### Web — das Schloss an den beiden Stellen, an denen es fehlte
