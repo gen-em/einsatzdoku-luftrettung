@@ -1362,10 +1362,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *(a)* Demo-Konto anheben und die Fixture neu erzeugen — der Neubau ist
     unvermeidlich, weil die Anhebung drei der neun `konto`-Felder tauscht.
     *(b)* **320 000 aus `KDF_ITER_LISTE` streichen — eigenes Paket, eigene
-    Version.** Das ist mindestens eine Nebenstufe: Der Schritt nimmt der
-    Anmeldung einen angebotenen Wert, halbiert ihre Rechenzeit spürbar und
-    **sperrt bei falscher Reihenfolge Konten unwiderruflich aus**. Er darf
-    kein Anhang an (a) sein.
+    Version.** Das ist mindestens eine Nebenstufe. Der Weg ist am Code
+    nachgesehen: `auth_salt.php` schickt die **Liste** an den Browser
+    (Zeile 91 bzw. 123), der rechnet für **jeden** Wert darin ein Token
+    (`login.php:365-368`), und der Server greift den heraus, der zur
+    gespeicherten `kdf_iter` des Kontos gehört (`login.php:155-157`). Fehlt
+    der Wert in der Liste, entsteht das Token nie, `$token` bleibt leer, und
+    **jedes Konto, das noch auf 320 000 steht, kommt nicht mehr herein**.
+
+    *Wie schlimm genau:* **nicht unwiderruflich** — Passwort und Hash
+    bleiben unberührt, und der Wert wieder in die Liste zu setzen stellt den
+    Zugang her. Aber das ist eine **Code-Änderung samt Deploy**, kein
+    Handgriff in der Verwaltung. Für die Betroffenen ist die Sperre so lange
+    vollständig. Deshalb: erst alle Konten anheben (Statuszeile
+    „Schlüsselableitung" zeigt, wer noch aussteht), dann streichen — und
+    nicht als Anhang an (a).
 
     *Der Text oben nennt `erzeugen.php` ohne Pfad; die Datei liegt unter
     `tools/referenzdatensatz/fixture/`, und daneben gibt es ein völlig
