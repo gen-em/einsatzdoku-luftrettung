@@ -253,7 +253,7 @@ def main() -> int:
     p.add_argument("--konto-passwort", default="umlaufpruefung2026")
     p.add_argument("--backup-passwort", default="nadokudemo0815")
     p.add_argument("--admin-email", default="admin@gen-em.org")
-    p.add_argument("--admin-passwort", default="adminlokal2026")
+    p.add_argument("--admin-passwort", default="pruefstandzugang2026")
     p.add_argument("--ausnahmen", default=None)
     p.add_argument("--frisch", action="store_true",
                    help="vorhandenes Umlaufkonto vorher löschen")

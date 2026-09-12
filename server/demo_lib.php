@@ -111,6 +111,24 @@ function demo_fixture_laden(): array
             throw new RuntimeException("Fixture unvollstaendig: konto.$pflicht fehlt.");
         }
     }
+    /* DIE RUNDENZAHL MUSS BEDIENBAR SEIN (Backlog Nr. 155).
+     *
+     * Die Fixture bringt `kdf_iter` mit, und der Reset schreibt den Wert
+     * unveraendert ins Konto. Steht dort eine Zahl, die diese Fassung gar
+     * nicht mehr anbietet, kann sich das Demo-Konto nach dem Reset nicht mehr
+     * anmelden — und zwar still, denn der Reset selbst gelingt.
+     *
+     * Geprueft wird gegen KDF_ITER_LISTE und nicht gegen KDF_ITER_ZIEL: Eine
+     * aeltere, aber noch bediente Fixture soll weiter laufen. Abgewiesen wird
+     * nur der Fall, der niemanden mehr hereinlaesst — genau der entsteht,
+     * wenn jemand den Altwert aus der Liste streicht, bevor die Fixture neu
+     * gebaut ist. */
+    if (!in_array((int)$fx['konto']['kdf_iter'], KDF_ITER_LISTE, true)) {
+        throw new RuntimeException('Die Fixture traegt die Rundenzahl '
+            . (int)$fx['konto']['kdf_iter'] . '; diese Fassung bietet nur '
+            . implode(', ', array_map('strval', KDF_ITER_LISTE))
+            . ' an — das Demo-Konto koennte sich nicht anmelden.');
+    }
     return $fx;
 }
 

@@ -22,7 +22,7 @@ const basis   = process.argv[2] || 'https://127.0.0.1:8443';
 const schritte = (process.argv[3] || 'anlegen,lesen,veraendern,reset,sperren').split(',');
 const ordner  = process.env.AUSGABE || '/tmp/b6-demo';
 const admin   = process.env.ADMIN_EMAIL || 'admin@gen-em.org';
-const adminPw = process.env.ADMIN_PASSWORT || 'adminlokal2026';
+const adminPw = process.env.ADMIN_PASSWORT || 'pruefstandzugang2026';
 const demo    = process.env.DEMO_EMAIL || 'demo@gen-em.org';
 const demoPw  = process.env.DEMO_PASSWORT || 'nadokudemo0815';
 mkdirSync(ordner, { recursive: true });

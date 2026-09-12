@@ -145,7 +145,7 @@ def main() -> int:
                    help="Messstandkonto vorher löschen (nur mit Präfix "
                         f"'{PRAEFIX}')")
     p.add_argument("--admin-email", default="admin@gen-em.org")
-    p.add_argument("--admin-passwort", default="adminlokal2026")
+    p.add_argument("--admin-passwort", default="pruefstandzugang2026")
     a = p.parse_args()
 
     pathlib.Path(a.ausgabe).mkdir(parents=True, exist_ok=True)

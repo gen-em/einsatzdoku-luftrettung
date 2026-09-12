@@ -61,7 +61,20 @@ await seite.click('#gobtn');
 
 // Der Wiederherstellungsschluessel erscheint erst, wenn die Schluessel
 // erzeugt sind. Er MUSS bestaetigt werden, sonst speichert die Seite nicht.
-await seite.waitForSelector('#rcbox:not([hidden])', { timeout: 30000 });
+/* DEN GRUND NENNEN STATT 30 s ZU SCHWEIGEN (Backlog Nr. 156). Weist das
+   Formular das Passwort ab, wird `#rcbox` nie sichtbar — der Aufruf lief
+   dann in seine Zeitgrenze und warf einen Playwright-Fehler ueber einen
+   Selektor. Die Seite sagt den Grund die ganze Zeit in `#state`; sie wurde
+   nur nie gelesen. */
+try {
+  await seite.waitForSelector('#rcbox:not([hidden])', { timeout: 30000 });
+} catch (e) {
+  const grund = ((await seite.locator('#state').textContent()) || '').trim();
+  console.error('Das Formular hat das Passwort nicht angenommen: '
+                + (grund || 'keine Meldung in #state'));
+  await browser.close();
+  process.exit(1);
+}
 const rc = (await seite.locator('#rccode').textContent()).trim();
 await seite.check('#rcok');
 await Promise.all([

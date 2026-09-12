@@ -18,7 +18,7 @@
 #
 # DIE VORGABEN SIND NICHT BELIEBIG. Sie sind die, die die Pruefmittel ohne
 # Schalter erwarten:
-#   admin@gen-em.org / adminlokal2026   kreislauf.py, aufnehmen.mjs
+#   admin@gen-em.org / pruefstandzugang2026   kreislauf.py, aufnehmen.mjs
 #   demo@gen-em.org  / nadokudemo0815   Handbuch, aufnehmen.mjs, spurprobe
 # Wer sie aendert, gibt sie jedem Werkzeug einzeln mit.
 #
@@ -35,7 +35,7 @@ DB=${DB:-nadoku}
 DBUSER=${DBUSER:-nadoku}
 DBPASS=${DBPASS:-nadokulokal}
 ADMIN=${ADMIN:-admin@gen-em.org}
-ADMINPW=${ADMINPW:-adminlokal2026}
+ADMINPW=${ADMINPW:-pruefstandzugang2026}
 ADRESSE=${ADRESSE:-127.0.0.1:8080}
 TLS_PORT=${TLS_PORT:-8443}
 JAR=$(mktemp)
@@ -94,8 +94,25 @@ sh "$WURZEL/tools/referenzdatensatz/einspielen/lokal_starten.sh" >/dev/null
 
 echo "== 6. Admin-Passwort im Browser setzen"
 cd "$WURZEL/tools/referenzdatensatz/einspielen"
-NODE_PATH=${NODE_PATH:-/opt/node22/lib/node_modules} \
-  node passwort_setzen.mjs "$LINK" "$ADMINPW" /tmp/admin-rc.json | sed 's/^/   /'
+# OHNE ROHRLEITUNG (Backlog Nr. 156). Hier stand `node ... | sed 's/^/   /'`.
+# /bin/sh ist dash, und der Rueckgabewert einer Rohrleitung ist der des
+# LETZTEN Glieds -- `sed` gelingt immer. Das `set -e` oben griff deshalb
+# nicht: Scheiterte das Setzen des Passworts, lief das Skript weiter und
+# druckte am Ende Zugangsdaten, die es nie gesetzt hat. Ein stiller
+# Durchlauf mit falscher Erfolgsmeldung ist schlimmer als ein Abbruch.
+# `set -o pipefail` waere die naheliegende Loesung und geht in dash nicht.
+PWLOG=$(mktemp)
+if NODE_PATH=${NODE_PATH:-/opt/node22/lib/node_modules} \
+     node passwort_setzen.mjs "$LINK" "$ADMINPW" /tmp/admin-rc.json >"$PWLOG" 2>&1
+then
+  sed 's/^/   /' "$PWLOG"; rm -f "$PWLOG"
+else
+  sed 's/^/   /' "$PWLOG"; rm -f "$PWLOG"
+  echo "   Schritt 6 gescheitert: das Admin-Passwort wurde NICHT gesetzt."
+  echo "   Haeufigste Ursache: \$ADMINPW faellt durch die Guetepruefung"
+  echo "   (server/assets/pwquality.js). Die Meldung der Seite steht oben."
+  exit 1
+fi
 cd "$WURZEL"
 
 echo "== 7. Demo-Konto aus der Fixture anlegen"

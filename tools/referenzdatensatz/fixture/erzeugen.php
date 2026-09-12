@@ -47,6 +47,28 @@ if ($u['role'] !== 'user') {
     fwrite(STDERR, "Das Demo-Konto muss die Rolle 'user' haben, hat aber '{$u['role']}'.\n");
     exit(2);
 }
+/* ZIELRUNDENZAHL, SONST ABBRUCH (Backlog Nr. 155).
+ *
+ * Die Fixture bringt die Rundenzahl des Kontos mit (`konto.kdf_iter` unten),
+ * und der Demo-Reset schreibt sie unveraendert nach `users.kdf_iter`. Steht
+ * sie unter KDF_ITER_ZIEL, kann der Altwert NIE aus KDF_ITER_LISTE
+ * verschwinden: `api/kdf_upgrade.php` ueberspringt das Demo-Konto
+ * ausdruecklich (E-P1-19, weil ein Upgrade bis zum naechsten Reset nicht mehr
+ * zu den oeffentlichen Zugangsdaten passte). Die Fixture wird alle 30 Minuten
+ * eingespielt und haelt den Altwert damit dauerhaft am Leben.
+ *
+ * Der Riegel steht hier und nicht nur in der Dokumentation, weil die Zusage
+ * in `api/kdf_upgrade.php` sonst eine unbelegte bleibt. */
+if ((int)$u['kdf_iter'] !== KDF_ITER_ZIEL) {
+    fwrite(STDERR, sprintf(
+        "ABBRUCH: %s rechnet mit %d Runden, KDF_ITER_ZIEL ist %d.\n"
+      . "Erst das Konto anheben (Passwort im Browser neu setzen, oder die\n"
+      . "stille Anhebung laufen lassen -- beides nur an einem Konto ohne\n"
+      . "app_state.demo_user_id), dann die Fixture erzeugen.\n",
+        $email, (int)$u['kdf_iter'], KDF_ITER_ZIEL));
+    exit(2);
+}
+
 $id = (int)$u['id'];
 
 /* ---- Geraete -------------------------------------------------------------
