@@ -3611,11 +3611,16 @@ nach.
 **Wenn du dich selbst aussperrst.** Es gibt zwei Wege zurück. Der erste: Die
 **Anmeldeseite funktioniert weiter**. Melde dich mit einem BetreiberIn-Konto
 an — die Anmeldung führt danach auf die Startseite, und die zeigt im
-Wartungsmodus die Wartungsseite. **Von dort führt kein Knopf weiter**; tippe
-die Adresse **`betrieb_updates.php`** in die Adresszeile, dann steht der
-Schalter wieder vor dir. Der zweite Weg: Wer Zugang zum Webspace hat, löscht
-die Datei `wartung.lock` neben den übrigen Serverdateien. Mehr als diese Datei
-ist der Schalter nicht.
+Wartungsmodus die Wartungsseite. Dort steht der Knopf **„Zur Verwaltung"**,
+und der bringt dich zum Schalter zurück. Der zweite Weg: Wer Zugang zum
+Webspace hat, löscht die Datei `wartung.lock` neben den übrigen Serverdateien.
+Mehr als diese Datei ist der Schalter nicht.
+
+> Beides hat bis September 2026 nicht funktioniert, und zwar nacheinander:
+> Bis Web 19.1.2 ließ sich das Anmeldeformular gar nicht abschicken, und bis
+> Web 19.3.0 führte von der Wartungsseite kein Knopf weiter — man musste die
+> Adresse `betrieb_updates.php` von Hand eintippen. Der Satz oben beschreibt
+> seither einen Weg, den es auch gibt.
 
 ### 12.4 Hintergrundjobs
 

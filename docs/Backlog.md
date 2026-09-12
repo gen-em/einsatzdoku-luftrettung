@@ -1206,24 +1206,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Änderung an sechs Seiten außerhalb des Pakets gewesen. Zuordnung:
     Aufräumpaket P6 oder Backlog-Runde.
 
-126. **Von der Wartungsseite führt kein Weg zurück in die Verwaltung.**
-    *Aufgenommen 06.09.2026 bei S8/AP8, aus dem Umschreiben von Handbuch 12.3.*
-    Wer sich während des Wartungsmodus anmeldet, landet auf der Startseite —
-    und die zeigt die **Wartungsseite** (503). Von dort führt **kein Knopf**
-    weiter; der einzige Weg ist, `betrieb_updates.php` von Hand in die
-    Adresszeile zu tippen. Das Handbuch hat das bis AP8 anders beschrieben
-    („dann bist du wieder auf der Wartungsseite" — richtig, aber es fehlte,
-    dass es dort aufhört); jetzt steht die Adresse da.
-    **Zu bedenken, und deshalb kein Nebenbei-Bau:** Die Wartungsseite ist
-    das, was **jeder Besucher** sieht. Sie entsteht **ohne Datenbank** —
-    `wartung_tor()` steht in `db.php` vor jeder Verbindung, und
-    `wartung_seite_html()` lädt nichts. Sie kann die Rolle also nicht kennen;
-    ein Link stünde für alle da. Das ist verkraftbar (die Adresse steht im
-    Handbuch, und die Seite dahinter hat ihre eigene Schranke), aber es ist
-    eine Entscheidung, keine Selbstverständlichkeit. **Vorschlag:** eine
-    unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
-    Wartungsseite. Zuordnung: Backlog-Runde oder P6.
-
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
     Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
@@ -1529,6 +1511,53 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+126. **Von der Wartungsseite führt kein Weg zurück in die Verwaltung.**
+    *Aufgenommen 06.09.2026 bei S8/AP8, aus dem Umschreiben von Handbuch 12.3.*
+    Wer sich während des Wartungsmodus anmeldet, landet auf der Startseite —
+    und die zeigt die **Wartungsseite** (503). Von dort führt **kein Knopf**
+    weiter; der einzige Weg ist, `betrieb_updates.php` von Hand in die
+    Adresszeile zu tippen. Das Handbuch hat das bis AP8 anders beschrieben
+    („dann bist du wieder auf der Wartungsseite" — richtig, aber es fehlte,
+    dass es dort aufhört); jetzt steht die Adresse da.
+    **Zu bedenken, und deshalb kein Nebenbei-Bau:** Die Wartungsseite ist
+    das, was **jeder Besucher** sieht. Sie entsteht **ohne Datenbank** —
+    `wartung_tor()` steht in `db.php` vor jeder Verbindung, und
+    `wartung_seite_html()` lädt nichts. Sie kann die Rolle also nicht kennen;
+    ein Link stünde für alle da. Das ist verkraftbar (die Adresse steht im
+    Handbuch, und die Seite dahinter hat ihre eigene Schranke), aber es ist
+    eine Entscheidung, keine Selbstverständlichkeit. **Vorschlag:** eine
+    unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
+    Wartungsseite. Zuordnung: Backlog-Runde oder P6.
+
+    **Erledigt mit Web 19.3.0 (12.09.2026, Backlog-Runde 2).** Die Seite trug
+    **0 Verweise** (gemessen am gerenderten Markup, 913 Bytes); jetzt trägt
+    sie einen: den Knopf **„Zur Verwaltung"** auf `betrieb_updates.php`,
+    gemessene Höhe **44 px** — die Bedienhöhe, ohne neue Regel.
+
+    **Zwei Annahmen des Eintrags oben waren falsch, und beide in der Sache:**
+
+    - *„Sie kann die Rolle nicht kennen."* Für den Aufrufer in `db.php`
+      stimmt das. Es gibt aber einen **zweiten**: `login.php` zeigt dieselbe
+      Seite für Konten **ohne** Verwaltungsrecht — dort ist die Rolle bekannt
+      und bekannt unzureichend. Genau dort steht der Knopf jetzt **nicht**
+      (`wartung_antwort_seite(false)`), denn er führte garantiert auf ein 403.
+    - *„Sieh dir das eingebettete CSS an."* Es gibt keines. Die Seite
+      **verlinkt** das vollständige Stylesheet — deshalb tragen `.knopf` und
+      `.knopf-neutral` hier wie überall, und es brauchte weder eine neue Regel
+      noch ein Mockup.
+
+    **Fällig geworden ist der Punkt erst durch Nr. 171** — er ist die zweite
+    Hälfte derselben Reparatur: Bis Web 19.1.2 ließ sich das Anmeldeformular
+    im Wartungsmodus gar nicht abschicken; wer nicht hereinkam, stand auch
+    nicht vor der Sackgasse.
+
+    **Kein `ui_knopf()`:** `wartung_lib.php` lädt nichts — kein `db.php`, kein
+    `ui.php` (Eigenschaft 2 ihres Dateikopfs). Der Knopf ist reines Markup.
+    **Nicht gebaut:** der Balken mit Zeitpunkt und schaltendem Konto — das
+    wäre auf einer Seite, die jeder Besucher sieht, ein Namensleck.
+    Wartungsprobe **53 → 55 Erwartungen** (19a neu, 18 um den Parameter
+    erweitert).
 
 155. **Die Fixture des Referenzbestands trägt die alte Rundenzahl.**
     *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 136).*

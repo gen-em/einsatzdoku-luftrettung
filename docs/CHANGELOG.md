@@ -14,6 +14,27 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.3.0] — 2026-09-12
+
+### Web — Backlog-Runde 2: der Block Betrieb wird fertig
+
+**Von der Wartungsseite führt wieder ein Weg zurück** (Nr. 126). Wer sich
+während einer Wartung anmeldet, landet auf der Startseite — und die zeigt die
+Wartungsseite. Die trug **keinen einzigen Verweis**; der einzige Weg zum
+Schalter war, `betrieb_updates.php` von Hand in die Adresszeile zu tippen.
+Jetzt steht dort der Knopf **„Zur Verwaltung"**.
+
+**Fällig geworden ist das erst durch die vorige Fassung.** Bis Web 19.1.2 ließ
+sich das Anmeldeformular im Wartungsmodus gar nicht abschicken — wer nicht
+hereinkam, stand auch nicht vor der Sackgasse. Dies ist die zweite Hälfte
+derselben Reparatur.
+
+**An einer Stelle steht der Knopf bewusst nicht:** Meldet sich ein Konto
+**ohne** Verwaltungsrecht an, zeigt die Anmeldung dieselbe Seite — dort ist die
+Rolle bekannt und reicht nicht, der Knopf führte garantiert auf eine
+Fehlerseite. **Nicht gebaut** ist die Zeile mit Zeitpunkt und schaltendem
+Konto: Auf einer Seite, die jeder Besucher sieht, wäre das ein Namensleck.
+
 ## [Web 19.2.0] — 2026-09-12
 
 ### Web — die Anmeldung rechnet wieder nur einmal

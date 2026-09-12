@@ -4017,5 +4017,15 @@ declare(strict_types=1);
  *
  * Keine Migration. Die Fixture ist neu erzeugt (gleiche Zahlen: 16
  * Diensttage, 88 Einsaetze, 2 Geraete, 55 861 Spurpunkte).
+ *
+ * ---------------------------------------------------------------------------
+ * 19.3.0 — BACKLOG-RUNDE 2: der Block Betrieb wird fertig.
+ *
+ * Eine Nebennummer, weil zwei Handgriffe dazukommen, die es nur auf der
+ * Kommandozeile gab oder gar nicht. Die uebrigen Punkte der Runde sind
+ * Korrekturen und laufen unter derselben Nummer mit — das Muster der
+ * Korrekturstufe 15.5.2 und der Runde 19.1.2.
+ *
+ * Die Punkte im Einzelnen stehen im Changelog. Keine Migration.
  */
-const WEB_VERSION = '19.2.0';
+const WEB_VERSION = '19.3.0';
