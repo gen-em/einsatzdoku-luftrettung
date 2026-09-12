@@ -296,24 +296,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     und die Frage, ob die Zielzahlen aus E-S2-24 (Suche ≤ 5 s, Tagesansicht
     ≤ 3 s, Backup ≤ 5 min) gehalten werden.
 
-38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
-    *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste
-    ruft bei **jedem** Seitenaufruf `nb_offen_gesamt()`. Die Funktion bricht
-    zwar sofort ab, wenn `vehicles.base_id` schon `NOT NULL` trägt — auf einer
-    Neuinstallation ist das von Anfang an so, dort kostet sie eine einzige
-    `information_schema`-Abfrage, die zusätzlich pro Aufruf gemerkt wird.
-
-    Auf einer **migrierten** Installation, deren Nachbearbeitung noch niemand
-    abgeschlossen hat, läuft sie dagegen durch: `nb_offene_tage($userId)` holt
-    bis zu 500 Diensttage samt einer Unterabfrage je Zeile — nur um
-    `count()` darauf anzuwenden —, dazu bis zu zehn weitere Abfragen für die
-    Stammdatentabellen. Ein `SELECT COUNT(*)` täte es in allen Fällen.
-
-    Kein Fehler und kein Zustand, der bleiben soll (die Seite existiert, um ihn
-    zu beenden) — aber unnötig, und er trifft genau die Installationen, die
-    ohnehin am meisten Bestand tragen. Behebung: eine eigene Zählfunktion
-    neben `nb_offene_tage()`, die nur `COUNT(*)` fragt.
-
 40. **55 Altklassen ohne Gegenstück.**
     *Aufgenommen in P3/O11, war für O12 vorgesehen, in O12 bewusst
     zurückgestellt.* Die Vollständigkeitsprüfung verlangt für jede der 220
@@ -1025,19 +1007,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Tastenfolge eine Zeichenkette wie `Down,Down,hold:Return,wait:8` ist. Dann
     braucht die nächste Ansicht keine eigene Schleife.
 
-93. **`AUTH_VERGLEICHSWERT` trägt Kostenfaktor 10, PHP 8.4 legt 12 an.**
-    *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-13.*
-    Der feste Vergleichswert, gegen den `login.php` und `auth_salt.php` bei
-    unbekannter Adresse rechnen, wurde einmal erzeugt und liegt seither als
-    Konstante. Er kostet **57 ms**; ein echter Hash unter PHP 8.4 kostet
-    **228 ms**. Der Unterschied ist heute verdeckt, weil `rate_gleiche_dauer()`
-    ohnehin auf 0,35 s auffüllt — also ist nichts ablesbar. Verdeckt heißt
-    aber nicht beseitigt: Wächst die Mindestdauer nicht mit, wenn die Hardware
-    langsamer oder der Kostenfaktor höher wird, wird die Lücke wieder sichtbar.
-    **Vorschlag:** den Vergleichswert auf den tatsächlichen Kostenfaktor
-    ziehen, sobald keine Installation mehr auf PHP 8.3 läuft — oder
-    `rate_gleiche_dauer()` an dieser Stelle auf 0,5 s.
-
 94. **„bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/`.**
     *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-05.*
     Der Kopfkommentar von `erzeugen.sh` sagt, die erzeugten Kacheln seien
@@ -1344,39 +1313,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Zu tun:** nach der Klärung die betroffenen Stellen angleichen; keine
     Codeänderung an der Mechanik. Zuordnung: **Backlog-Runde**.
 
-151. **Nach einem Import führt „Ersten Tag öffnen" auf den falschen Diensttag.**
-    *Aufgenommen 06.09.2026 aus der Korrekturstufe zu Nr. 148, gefunden vom
-    neuen `tools/linkprobe/` an seinem ersten Tag.* `import_ui.js:751` baut
-    den Verweis `index.php?day=<Kalendertag>`; `index.php:25` liest
-    `$_GET['d']` und erwartet dort eine **Kennung**. Der Kommentar darüber
-    sagt es selbst: „NICHT mehr ein Datum: Seit E9 können mehrere Diensttage
-    auf einem Kalendertag liegen, ein Datum bestimmt also keinen Tag mehr."
-    Zweimal falsch also — der Parametername **und** die Form des Werts.
-    **Anders als Nr. 148 scheitert das still:** `index.php` fällt auf
-    `dt_neuester()` zurück und zeigt den jüngsten Tag. Wer nach einem Import
-    auf den Verweis klickt, landet auf einer plausibel aussehenden Seite, die
-    nicht die versprochene ist — und merkt es nur, wenn der importierte Tag
-    zufällig nicht der jüngste ist.
-    **Zu tun:** `api/import_commit.php` liefert die Tageskennung mit — sie
-    liegt dort in `$dayIdByDate[$tag]` bereits vor —, `import_ui.js` verweist
-    auf `index.php?d=<Kennung>`. Danach die Zeile aus der Tabelle „Bekannte
-    Abweichungen" in `tools/linkprobe/ausnahmen.md` **entfernen**; eine tote
-    Zeile dort macht den Lauf rot, und das ist Absicht. Nicht in der
-    Korrekturstufe zu Nr. 148/149 mitbehoben, weil die Behebung die
-    Import-Schnittstelle berührt und damit mehr ist als ein Name (K4).
-    Zuordnung: **Backlog-Runde**.
-
-153. **`querySelector` mit einem Wert aus dem URL-Fragment.**
-    *Aufgenommen 07.09.2026 aus Nr. 135 (Krypto-Review K-15), beim Abschluss
-    des Sofortpakets herausgelöst.* `suche.php` setzt einen Wert aus dem
-    URL-Fragment unmaskiert in einen `querySelector` ein. Kein XSS — der Wert
-    landet nicht im Markup —, aber ein Zeichen wie `"` oder `]` bricht die
-    Auswahl, und die Seite verhält sich dann anders, als der geteilte Link
-    verspricht. Behebung: über `CSS.escape()` oder den Wert vor der Auswahl
-    gegen eine Positivliste halten. Die Nummer steht getrennt, weil Nr. 135
-    mit Web 15.6.0 nach *Erledigt* gewandert ist und dieser Teil sonst
-    unsichtbar würde. Zuordnung: Backlog-Runde.
-
 154. **Handy-App liest `kept_points` und `kept_meta` nicht.**
     *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 134).*
     `Sendeantwort.kt` nimmt aus der Antwort von `ingest.php` nur
@@ -1403,22 +1339,37 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `api/kdf_upgrade.php` eine geprüfte ist. Zuordnung: Backlog-Runde, vor
     dem Streichen des Altwerts.
 
-156. **Das Prüfstand-Passwort `adminlokal2026` fällt durch die Passwortregel.**
-    *Aufgenommen 07.09.2026 aus der Nachbesserung zu Nr. 136.* Seit die
-    Sperrliste jeden Eintrag streicht, auch „admin" mit fünf Zeichen, bleibt
-    von `adminlokal2026` nur „lokal" (5) — abgewiesen. Betroffen ist allein
-    der lokale Prüfstand: `tools/referenzdatensatz/einspielen/lokal_einrichten.sh`
-    setzt das Passwort über `passwort_setzen.mjs` durch das Browserformular
-    und bricht dort ab; `einspielen.py` (`--admin-passwort`), `kreislauf.py`,
-    `demo_bremse.mjs`, `demo_pruefen.mjs`, `komplettprobe/klickweg.mjs`,
-    `screenshots/aufnehmen.mjs` und `messstand/messen.py` melden sich damit
-    an. `nadokudemo0815` und `umlaufpruefung2026` bleiben gültig. Eine
-    bereits eingerichtete Installation ist nicht betroffen — geprüft wird
-    beim Setzen, nicht beim Anmelden. Behebung: ein neues Prüfstand-Passwort
-    ohne Listenwort wählen und an allen genannten Stellen samt
-    `einspielen/LIESMICH.md` und `lokal_einrichten.sh` (Kopfkommentar)
-    eintragen; **nicht** die Regel für den Prüfstand lockern. Zuordnung:
-    Backlog-Runde, vor dem nächsten Neuaufbau eines Prüfstands.
+    **Teilweise erledigt am 12.09.2026 (Backlog-Runde) — die zwei Riegel
+    stehen, der Neubau nicht.** Gebaut sind die beiden Stellen, die den
+    Fehler überhaupt bemerkbar machen:
+    `tools/referenzdatensatz/fixture/erzeugen.php` bricht ab, wenn das
+    Demo-Konto nicht auf `KDF_ITER_ZIEL` steht (sonst bleibt die Zusage in
+    `api/kdf_upgrade.php` eine unbelegte), und `server/demo_lib.php` weist
+    eine Fixture ab, deren Rundenzahl diese Fassung gar nicht mehr anbietet
+    — geprüft gegen `KDF_ITER_LISTE`, damit eine ältere, aber bediente
+    Fixture weiterläuft. Ohne den zweiten Riegel wäre ein Reset **still
+    erfolgreich** und niemand käme mehr herein.
+
+    **Gemessen am 12.09.2026:** `KDF_ITER_ZIEL` 600 000, Liste
+    [600 000, 320 000], Fixture **320 000**. Riegel 2 lässt sie durch
+    (richtig — der Wert wird noch bedient), Riegel 1 wiese eine
+    Neuerzeugung aus dem heutigen Demo-Konto ab (richtig). Nach einem
+    vollständigen Neuaufbau steht `admin@gen-em.org` auf **600 000**,
+    `demo@gen-em.org` weiterhin auf **320 000** — die Fixture bringt den
+    Wert mit.
+
+    **Offen bleiben zwei Schritte, und sie gehören getrennt:**
+    *(a)* Demo-Konto anheben und die Fixture neu erzeugen — der Neubau ist
+    unvermeidlich, weil die Anhebung drei der neun `konto`-Felder tauscht.
+    *(b)* **320 000 aus `KDF_ITER_LISTE` streichen — eigenes Paket, eigene
+    Version.** Das ist mindestens eine Nebenstufe: Der Schritt nimmt der
+    Anmeldung einen angebotenen Wert, halbiert ihre Rechenzeit spürbar und
+    **sperrt bei falscher Reihenfolge Konten unwiderruflich aus**. Er darf
+    kein Anhang an (a) sein.
+
+    *Der Text oben nennt `erzeugen.php` ohne Pfad; die Datei liegt unter
+    `tools/referenzdatensatz/fixture/`, und daneben gibt es ein völlig
+    anderes `generator/erzeugen.py`.*
 
 157. **Handy-App: Sackgasse zwischen „Schlüssel abgewiesen" und „Gerät trennen".**
     *Aufgenommen 07.09.2026 aus dem Emulatorlauf zu Android 0.14.1.* Wird
@@ -1468,34 +1419,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Protokoll. Zuordnung: Backlog-Runde, gemeinsam mit Nr. 43 (Ortsdaten)
     zu betrachten.
 
-
-167. **Löschen eines Standorts hinterlässt verwaiste Vorbelegungen.**
-    *Aufgenommen 09.09.2026 bei der Bestandsaufnahme zu R39.*
-    `user_defaults` trägt bewusst **keinen Fremdschlüssel auf `item_id`** —
-    die Spalte zeigt je nach `kind` auf `bases.id` oder `vehicles.id`, und
-    zwei Zieltabellen lassen keinen zu (`schema.sql:196-208`). Beide
-    Löschwege räumen darum von Hand ab, was sie kennen: die Vorbelegung des
-    **Standorts** (`einstellungen.php`, `base_del`) und die des einzeln
-    gelöschten **Rettungsmittels** (`einstellungen.php`, `veh_del`). Nicht
-    abgeräumt
-    werden die Vorbelegungen der Rettungsmittel, die mit dem Standort
-    **kaskadieren** — und das sind beim Löschen eines Standorts alle.
-    Gemessen an der lokalen Anlage in einer zurückgerollten Transaktion:
-    Rettungsmittel fort (0 Zeilen), Vorbelegung steht noch (1 Zeile).
-    Die Wirkung ist still: `dt_standardwerte()` liefert eine tote Kennung,
-    das Auswahlfeld findet dazu nichts und belegt nichts vor — es sieht aus
-    wie „keine Vorbelegung gesetzt", und niemand kann die Zeile loswerden.
-    Behebung: Im `base_del`-Weg vor dem Löschen des Standorts auch
-    `DELETE FROM user_defaults WHERE kind = "vehicle" AND item_id IN
-    (SELECT id FROM vehicles WHERE base_id = ?)` — innerhalb derselben
-    Transaktion, in der der Standort fällt. Seit Web 17.1.0 löst
-    `stammdaten_standort_loesen()` die Rettungsmittel ohne Standortpflicht
-    vorher heraus; deren Vorbelegung muss **bleiben**, die Abfrage läuft
-    also nach dem Lösen. Nicht dringend, aber ein Rest, der sich mit jedem
-    gelöschten Standort vermehrt. *(Nachtrag 09.09.2026, Web 18.0.0: Es gibt
-    nur noch EINEN Löschweg — `admin_stammdaten.php` ist mit S9/AP5b
-    gestrichen. Der Befund bleibt derselbe, die Behebung ist damit halb so
-    groß.)*
 
 168. **Zentrale Stammdaten vollständig zurückbauen — damit kein
     Überbleibsel bleibt.** *Aufgenommen 09.09.2026, zugeordnet **P5**
@@ -1624,6 +1547,192 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
 
+38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
+    *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste
+    ruft bei **jedem** Seitenaufruf `nb_offen_gesamt()`. Die Funktion bricht
+    zwar sofort ab, wenn `vehicles.base_id` schon `NOT NULL` trägt — auf einer
+    Neuinstallation ist das von Anfang an so, dort kostet sie eine einzige
+    `information_schema`-Abfrage, die zusätzlich pro Aufruf gemerkt wird.
+
+    Auf einer **migrierten** Installation, deren Nachbearbeitung noch niemand
+    abgeschlossen hat, läuft sie dagegen durch: `nb_offene_tage($userId)` holt
+    bis zu 500 Diensttage samt einer Unterabfrage je Zeile — nur um
+    `count()` darauf anzuwenden —, dazu bis zu zehn weitere Abfragen für die
+    Stammdatentabellen. Ein `SELECT COUNT(*)` täte es in allen Fällen.
+
+    Kein Fehler und kein Zustand, der bleiben soll (die Seite existiert, um ihn
+    zu beenden) — aber unnötig, und er trifft genau die Installationen, die
+    ohnehin am meisten Bestand tragen. Behebung: eine eigene Zählfunktion
+    neben `nb_offene_tage()`, die nur `COUNT(*)` fragt.
+
+    **Erledigt mit Web 19.1.2 (12.09.2026, Backlog-Runde).** Gemessen mit
+    fünf offenen Punkten (in einer zurückgerollten Transaktion hergestellt):
+    alt **1,316 ms / 6 Abfragen**, neu **0,566 ms / 2 Abfragen**, beide Wege
+    dieselben Zahlen (3 Diensttage, 2 Stammdatensätze, Summe 5).
+    **Der größere Posten stand in diesem Punkt gar nicht:** `nb_moeglich()`
+    fragte das Schema je Tabelle einzeln — **1,405 → 0,320 ms** je
+    Seitenaufbau. Der Text oben ist an zwei Stellen älter als der Code und
+    war beim Austragen zu berichtigen: `vehicles` steht seit Web 16.0.0
+    bewusst **nicht** in `NB_NOTNULL` (E-S9-09), und es waren **vier**
+    `information_schema`-Abfragen, nicht eine. Die Bedingung „Diensttag
+    offen" liegt jetzt in `nb_tage_bedingung()`, damit Liste und Zahl nicht
+    auseinanderlaufen können.
+93. **`AUTH_VERGLEICHSWERT` trägt Kostenfaktor 10, PHP 8.4 legt 12 an.**
+    *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-13.*
+    Der feste Vergleichswert, gegen den `login.php` und `auth_salt.php` bei
+    unbekannter Adresse rechnen, wurde einmal erzeugt und liegt seither als
+    Konstante. Er kostet **57 ms**; ein echter Hash unter PHP 8.4 kostet
+    **228 ms**. Der Unterschied ist heute verdeckt, weil `rate_gleiche_dauer()`
+    ohnehin auf 0,35 s auffüllt — also ist nichts ablesbar. Verdeckt heißt
+    aber nicht beseitigt: Wächst die Mindestdauer nicht mit, wenn die Hardware
+    langsamer oder der Kostenfaktor höher wird, wird die Lücke wieder sichtbar.
+    **Vorschlag:** den Vergleichswert auf den tatsächlichen Kostenfaktor
+    ziehen, sobald keine Installation mehr auf PHP 8.3 läuft — oder
+    `rate_gleiche_dauer()` an dieser Stelle auf 0,5 s.
+
+    **Erledigt mit Web 19.1.2 (12.09.2026, Backlog-Runde).** Gemessen auf
+    derselben Maschine, Median aus je 15 Läufen: alt **231,9 gegen 58,2 ms**
+    (Abstand 173,7 ms, Faktor 3,98), neu **232,5 gegen 232,7 ms** (0,1 ms,
+    0,06 %). **Die neue Zahl allein hätte nicht gereicht** — sie fällt beim
+    nächsten Vorgabesprung wieder heraus und kehrt das Leck auf PHP 8.1–8.3
+    sogar um. Deshalb prüft `login.php` den Wert jetzt mit
+    `password_needs_rehash()` (gemessen 0,0000 ms über 2000 Läufe) und
+    rechnet im Bedarfsfall ein `password_hash()`. **Beides zusammen wäre
+    falsch:** 465,5 ms, also 234 ms *langsamer* als der Gegenzweig — das
+    steht als Warnung am Code. Der Text oben nannte `auth_salt.php` als
+    zweiten Verwender; der rechnet überhaupt kein bcrypt (HMAC-Pseudosalt,
+    eigene Mindestdauer). Genau ein Verwender: `login.php:161`.
+151. **Nach einem Import führt „Ersten Tag öffnen" auf den falschen Diensttag.**
+    *Aufgenommen 06.09.2026 aus der Korrekturstufe zu Nr. 148, gefunden vom
+    neuen `tools/linkprobe/` an seinem ersten Tag.* `import_ui.js:751` baut
+    den Verweis `index.php?day=<Kalendertag>`; `index.php:25` liest
+    `$_GET['d']` und erwartet dort eine **Kennung**. Der Kommentar darüber
+    sagt es selbst: „NICHT mehr ein Datum: Seit E9 können mehrere Diensttage
+    auf einem Kalendertag liegen, ein Datum bestimmt also keinen Tag mehr."
+    Zweimal falsch also — der Parametername **und** die Form des Werts.
+    **Anders als Nr. 148 scheitert das still:** `index.php` fällt auf
+    `dt_neuester()` zurück und zeigt den jüngsten Tag. Wer nach einem Import
+    auf den Verweis klickt, landet auf einer plausibel aussehenden Seite, die
+    nicht die versprochene ist — und merkt es nur, wenn der importierte Tag
+    zufällig nicht der jüngste ist.
+    **Zu tun:** `api/import_commit.php` liefert die Tageskennung mit — sie
+    liegt dort in `$dayIdByDate[$tag]` bereits vor —, `import_ui.js` verweist
+    auf `index.php?d=<Kennung>`. Danach die Zeile aus der Tabelle „Bekannte
+    Abweichungen" in `tools/linkprobe/ausnahmen.md` **entfernen**; eine tote
+    Zeile dort macht den Lauf rot, und das ist Absicht. Nicht in der
+    Korrekturstufe zu Nr. 148/149 mitbehoben, weil die Behebung die
+    Import-Schnittstelle berührt und damit mehr ist als ein Name (K4).
+    Zuordnung: **Backlog-Runde**.
+
+    **Erledigt mit Web 19.1.2 (12.09.2026, Backlog-Runde).**
+    `api/import_commit.php` liefert `first_day_id` (die Kennung);
+    `first_day` ist **ersatzlos entfallen** — es hatte genau einen
+    Verbraucher, und ein Schlüssel ohne Leser ist die nächste Falle.
+    Die Zeile in `tools/linkprobe/ausnahmen.md` ist gestrichen; die Probe
+    meldet **116 Verweise, 0 Abweichungen, 0 Ausnahmen, 0 tote Zeilen**
+    (vorher 1 bekannte, wiedergefunden). Der Backlog sagte, die Kennung
+    liege in `$dayIdByDate[$tag]` bereits vor — das stimmt nur **innerhalb**
+    der Einsatzschleife; an der Stelle, an der die Antwort entsteht, ist
+    `$tag` nicht mehr im Zugriff.
+153. **`querySelector` mit einem Wert aus dem URL-Fragment.**
+    *Aufgenommen 07.09.2026 aus Nr. 135 (Krypto-Review K-15), beim Abschluss
+    des Sofortpakets herausgelöst.* `suche.php` setzt einen Wert aus dem
+    URL-Fragment unmaskiert in einen `querySelector` ein. Kein XSS — der Wert
+    landet nicht im Markup —, aber ein Zeichen wie `"` oder `]` bricht die
+    Auswahl, und die Seite verhält sich dann anders, als der geteilte Link
+    verspricht. Behebung: über `CSS.escape()` oder den Wert vor der Auswahl
+    gegen eine Positivliste halten. Die Nummer steht getrennt, weil Nr. 135
+    mit Web 15.6.0 nach *Erledigt* gewandert ist und dieser Teil sonst
+    unsichtbar würde. Zuordnung: Backlog-Runde.
+
+    **Erledigt mit Web 19.1.2 (12.09.2026, Backlog-Runde) — und die Folge
+    war größer als hier beschrieben.** Nicht die Auswahl brach, sondern der
+    **Seitenaufbau**: `fragmentLesen()` steht außerhalb des `try`, die
+    Ausnahme riss die async-IIFE ab, und danach fehlten Trefferliste und
+    Filterzahl; die Freitextsuche griff bis zum Neuladen nicht mehr.
+    Gemessen mit zehn Probewerten gegen beide Stände: alt **4 Ausnahmen,
+    6/10 mit Trefferliste**, neu **0 Ausnahmen, 10/10** — bei unverändertem
+    Verhalten für die gemeinten Werte (6 / 77 / 83 Treffer). Behoben **nicht**
+    mit `CSS.escape()`: Die drei Werte stehen als Radios da und lassen sich
+    vergleichen; ein Selektor wird gar nicht gebraucht.
+156. **Das Prüfstand-Passwort `adminlokal2026` fällt durch die Passwortregel.**
+    *Aufgenommen 07.09.2026 aus der Nachbesserung zu Nr. 136.* Seit die
+    Sperrliste jeden Eintrag streicht, auch „admin" mit fünf Zeichen, bleibt
+    von `adminlokal2026` nur „lokal" (5) — abgewiesen. Betroffen ist allein
+    der lokale Prüfstand: `tools/referenzdatensatz/einspielen/lokal_einrichten.sh`
+    setzt das Passwort über `passwort_setzen.mjs` durch das Browserformular
+    und bricht dort ab; `einspielen.py` (`--admin-passwort`), `kreislauf.py`,
+    `demo_bremse.mjs`, `demo_pruefen.mjs`, `komplettprobe/klickweg.mjs`,
+    `screenshots/aufnehmen.mjs` und `messstand/messen.py` melden sich damit
+    an. `nadokudemo0815` und `umlaufpruefung2026` bleiben gültig. Eine
+    bereits eingerichtete Installation ist nicht betroffen — geprüft wird
+    beim Setzen, nicht beim Anmelden. Behebung: ein neues Prüfstand-Passwort
+    ohne Listenwort wählen und an allen genannten Stellen samt
+    `einspielen/LIESMICH.md` und `lokal_einrichten.sh` (Kopfkommentar)
+    eintragen; **nicht** die Regel für den Prüfstand lockern. Zuordnung:
+    Backlog-Runde, vor dem nächsten Neuaufbau eines Prüfstands.
+
+    **Erledigt am 12.09.2026 (Backlog-Runde) — und „bricht dort ab" war
+    falsch; der wahre Fall ist schlimmer.** `lokal_einrichten.sh` rief
+    `node passwort_setzen.mjs … | sed`; `/bin/sh` ist dash, und der
+    Rückgabewert einer Rohrleitung ist der des **letzten** Glieds. Das
+    `set -e` griff nicht: Das Skript lief weiter und druckte am Ende
+    Zugangsdaten, **die es nie gesetzt hatte** — ein stiller Durchlauf mit
+    falscher Erfolgsmeldung. `set -o pipefail` gibt es in dash nicht;
+    Schritt 6 läuft jetzt ohne Rohrleitung, über eine Protokolldatei, mit
+    ausdrücklichem Abbruch und Ursachenhinweis. Dazu nennt
+    `passwort_setzen.mjs` den **Grund** aus `#state`, statt 30 Sekunden in
+    seine Zeitgrenze zu laufen.
+
+    Neues Passwort **`pruefstandzugang2026`**, am Regelcode nachgerechnet
+    (Node-`vm` über `pwquality.js`): `adminlokal2026` **abgewiesen**,
+    `pruefstandzugang2026` **erlaubt, Stärke 3**; `nadokudemo0815` (1) und
+    `umlaufpruefung2026` (2) bleiben gültig. Ersetzt an **11 Stellen in 10
+    Dateien** unter `tools/` — die 8 Treffer in `docs/` bleiben, sie sind
+    Protokolle von einem Datum. Belegt durch zwei vollständige Neuaufbauten:
+    mit dem neuen Passwort **Rückgabewert 0**, 88 Einsätze / 16 Diensttage /
+    2 Geräte; mit dem alten **Rückgabewert 1** und der Meldung der Seite im
+    Protokoll (vorher: Rückgabewert 0 und falsche Zugangsdaten).
+    `tools/klickprobe/probe.mjs` und `tools/containeraufbau/aufbau.sh`
+    fehlten in der Liste oben.
+167. **Löschen eines Standorts hinterlässt verwaiste Vorbelegungen.**
+    *Aufgenommen 09.09.2026 bei der Bestandsaufnahme zu R39.*
+    `user_defaults` trägt bewusst **keinen Fremdschlüssel auf `item_id`** —
+    die Spalte zeigt je nach `kind` auf `bases.id` oder `vehicles.id`, und
+    zwei Zieltabellen lassen keinen zu (`schema.sql:196-208`). Beide
+    Löschwege räumen darum von Hand ab, was sie kennen: die Vorbelegung des
+    **Standorts** (`einstellungen.php`, `base_del`) und die des einzeln
+    gelöschten **Rettungsmittels** (`einstellungen.php`, `veh_del`). Nicht
+    abgeräumt
+    werden die Vorbelegungen der Rettungsmittel, die mit dem Standort
+    **kaskadieren** — und das sind beim Löschen eines Standorts alle.
+    Gemessen an der lokalen Anlage in einer zurückgerollten Transaktion:
+    Rettungsmittel fort (0 Zeilen), Vorbelegung steht noch (1 Zeile).
+    Die Wirkung ist still: `dt_standardwerte()` liefert eine tote Kennung,
+    das Auswahlfeld findet dazu nichts und belegt nichts vor — es sieht aus
+    wie „keine Vorbelegung gesetzt", und niemand kann die Zeile loswerden.
+    Behebung: Im `base_del`-Weg vor dem Löschen des Standorts auch
+    `DELETE FROM user_defaults WHERE kind = "vehicle" AND item_id IN
+    (SELECT id FROM vehicles WHERE base_id = ?)` — innerhalb derselben
+    Transaktion, in der der Standort fällt. Seit Web 17.1.0 löst
+    `stammdaten_standort_loesen()` die Rettungsmittel ohne Standortpflicht
+    vorher heraus; deren Vorbelegung muss **bleiben**, die Abfrage läuft
+    also nach dem Lösen. Nicht dringend, aber ein Rest, der sich mit jedem
+    gelöschten Standort vermehrt. *(Nachtrag 09.09.2026, Web 18.0.0: Es gibt
+    nur noch EINEN Löschweg — `admin_stammdaten.php` ist mit S9/AP5b
+    gestrichen. Der Befund bleibt derselbe, die Behebung ist damit halb so
+    groß.)*
+
+    **Erledigt mit Web 19.1.2 (12.09.2026, Backlog-Runde).** Gemessen am
+    laufenden Stand, derselbe Bedienweg über die Oberfläche gegen beide
+    Fassungen: **verwaiste Vorbelegung alt 1, neu 0** — bei sonst gleichen
+    Zahlen (Rettungsmittel und Standort in beiden Fällen fort). Die Stelle
+    im Ablauf steht als Kommentar am Code: zwischen
+    `stammdaten_standort_loesen()` und `DELETE FROM bases` ist das einzige
+    Fenster. Der Haupttext oben sagte „beide Löschwege" — es gibt seit
+    Web 18.0.0 nur einen; der Nachtrag vom 09.09.2026 sagte es bereits
+    richtig. **Ein Aufräumlauf für den Altbestand ist nicht gebaut:** Er
+    bräuchte eine Migration, und der Bestand ist nach Lage der Dinge klein.
 171. **Im Wartungsmodus kommt niemand mehr herein — auch die BetreiberIn nicht.**
     *Aufgenommen und behoben am 12.09.2026 (Web 19.1.2), gefunden beim
     Aufklären von Nr. 97.* `login.php` steht seit jeher in

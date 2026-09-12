@@ -147,6 +147,24 @@ Damit Liste und Zahl nicht auseinanderlaufen können, steht die Bedingung
 „Diensttag offen" jetzt an **einer** Stelle und wird von beiden benutzt — sie
 stand vorher nur in der Liste, und die Zahl entstand daraus durch Zählen.
 
+**Zwei Riegel um die Demo-Fixture** (Nr. 155, teilweise). Die Fixture bringt
+die Rundenzahl des Demo-Kontos mit, und der Reset schreibt sie alle 30 Minuten
+unverändert zurück. Steht dort ein Wert, den die Anwendung nicht mehr anbietet,
+ist der Reset **still erfolgreich** — und niemand kommt mehr in das Konto.
+Deshalb weist das Einspielen eine solche Fixture jetzt ab, und der Erzeuger
+bricht ab, wenn das Konto nicht auf der Zielrundenzahl steht. Geprüft wird
+gegen die **Liste** der noch bedienten Werte, nicht gegen den Zielwert: Eine
+ältere, aber brauchbare Fixture soll weiterlaufen. **Offen bleibt der Neubau
+der Fixture selbst** — und das Streichen des Altwerts gehört in ein eigenes
+Paket, weil es bei falscher Reihenfolge Konten aussperrt.
+
+*Am Prüfstand, ohne Auslieferung:* Das Passwort des lokalen Prüfstands fiel
+seit dem Sofortpaket durch die **eigene** Passwortregel (Nr. 156) — und der
+Aufbau merkte es nicht, sondern lief durch und druckte am Ende Zugangsdaten,
+die er nie gesetzt hatte. Ursache war eine Rohrleitung: Der Rückgabewert einer
+Rohrleitung ist der des letzten Glieds, also gelang immer `sed`. Jetzt bricht
+der Aufbau ab und nennt den Grund, den die Seite die ganze Zeit anzeigte.
+
 ## [Web 19.1.1] — 2026-09-10
 
 ### Web — das Schloss an den beiden Stellen, an denen es fehlte

@@ -1077,7 +1077,7 @@
                                    ids: ids, patient: true })
         });
         /* DEN RUMPF LESEN, NICHT NUR DEN STATUS (Backlog Nr. 97). Hier
-           stand `if (!res.ok) throw new Error('… (' + res.status + ').')` —
+           stand ein throw mit dem nackten Statuscode im Text —
            die Antwort wurde verworfen, und im Wartungsmodus las die Person
            „Serverfehler beim Laden der Tracks (503)" statt des Satzes, den
            der Server mitschickt. Dieselbe Datei macht es in fetchMeta()

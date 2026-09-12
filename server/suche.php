@@ -550,7 +550,7 @@ function wertSetzen(f, v) {
     const gruppe = $(f.el);
     /* KEIN SELEKTOR MIT DEM WERT (Backlog Nr. 153).
      *
-     * Hier stand `gruppe.querySelector(`input[value=«Wert»]`)`, und der Wert
+     * Hier stand ein querySelector auf `input[value="<Wert>"]`, und der Wert
      * kommt aus dem URL-Fragment — URLSearchParams dekodiert, aus `#wi=%22`
      * wurde also ein Selektor mit drei Anfuehrungszeichen (""").
      * Der wirft einen SyntaxError, und weil `fragmentLesen()` ausserhalb des
