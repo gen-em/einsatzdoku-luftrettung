@@ -15,6 +15,26 @@ Abschnitt 4 beantwortet „was muss **ich** noch tun?".*
 
 ---
 
+## 0a. Der Merge bringt ZWEI Stufen, und die erste hat eine Bedingung
+
+**Gemessen am 12.09.2026:** `origin/main` trägt **Web 19.1.2**. PR #40 hat die
+erste Backlog-Runde bis dorthin gemergt — **Web 19.2.0 ist nicht auf `main`**
+und geht mit diesem Zweig zusammen hinaus.
+
+Das zählt, weil 19.2.0 die Nummer mit Backlog **Nr. 155** ist: Sie streicht
+die alte Rundenzahl **320 000** aus `KDF_ITER_LISTE`. **Ein Konto, das noch
+auf 320 000 steht, kann sich danach nicht mehr anmelden** — Passwort und Hash
+bleiben zwar unberührt, und der Wert wieder einzutragen stellt den Zugang her,
+aber das ist eine Codeänderung plus Deploy.
+
+**Deshalb vor dem Merge, nicht danach:** Betrieb → Status aufrufen und die
+Zeile **„Schlüsselableitung"** lesen. Sie muss sagen, dass **kein Konto im
+Übergang** steht. Am 12.09.2026 hast du das bestätigt; wenn seither ein
+Bestandskonto dazugekommen ist oder eines noch nie angemeldet war, gilt die
+Bestätigung nicht mehr.
+
+---
+
 ## 0. Was NICHT geprüft werden konnte — und warum
 
 Steht bewusst vor der Prüfliste.
@@ -207,6 +227,13 @@ Marken in der Leiste **1 → 2** ab 1200 px („Logo" und „Impressum").
 
 Je Punkt: der Bedienweg, das erwartete Ergebnis, und **woran ein Scheitern
 zu erkennen ist**.
+
+- [ ] **0. VOR dem Merge: die Zeile „Schlüsselableitung".** Betrieb → Status.
+      *Erwartet:* kein Konto im Übergang.
+      *Scheitern erkennt man an:* der Plakette „Übergang läuft" mit einer Zahl
+      über null. Dann **nicht mergen** — sonst sperrt 19.2.0 diese Konten aus
+      (Backlog Nr. 155, siehe 0a). Der Ausweg ist, die betroffenen Konten sich
+      einmal anmelden zu lassen; sie ziehen dabei still nach.
 
 - [ ] **1. Die Testmail an der echten Installation.** Nach dem Deploy
       Betrieb → Status öffnen, im Kopf der Karte „E-Mail" auf **„Testmail an
