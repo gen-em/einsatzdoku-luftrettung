@@ -1323,65 +1323,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     in `Sendeantwort` aufnehmen und in der Ergebniszeile nennen; Prüffall in
     `SendeantwortTest`. Zuordnung: nächste Android-Stufe.
 
-155. **Die Fixture des Referenzbestands trägt die alte Rundenzahl.**
-    *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 136).*
-    `demo/fixture.json.gz` führt das Demo-Konto mit 320 000 Runden; der
-    Demo-Reset spielt es alle 30 Minuten so ein, und die stille Anhebung
-    überspringt das Demo-Konto ohnehin (`api/kdf_upgrade.php`, E-P1-19 —
-    ein Upgrade passte bis zum nächsten Reset nicht mehr zu den
-    öffentlichen Zugangsdaten). Folge: Der Altwert kann nie aus
-    `KDF_ITER_LISTE` gestrichen werden, und die Statuszeile
-    „Schlüsselableitung" sagt das seit der Nachbesserung ausdrücklich (das
-    Demo-Konto zählt dort nicht mehr als „Übergang läuft"). Behebung: den
-    Referenzbestand mit `KDF_ITER_ZIEL` neu bauen
-    (`tools/referenzdatensatz/`), und `erzeugen.php` soll abbrechen, wenn
-    das Demo-Konto nicht auf dem Zielwert steht — damit die Zusage in
-    `api/kdf_upgrade.php` eine geprüfte ist. Zuordnung: Backlog-Runde, vor
-    dem Streichen des Altwerts.
-
-    **Teilweise erledigt am 12.09.2026 (Backlog-Runde) — die zwei Riegel
-    stehen, der Neubau nicht.** Gebaut sind die beiden Stellen, die den
-    Fehler überhaupt bemerkbar machen:
-    `tools/referenzdatensatz/fixture/erzeugen.php` bricht ab, wenn das
-    Demo-Konto nicht auf `KDF_ITER_ZIEL` steht (sonst bleibt die Zusage in
-    `api/kdf_upgrade.php` eine unbelegte), und `server/demo_lib.php` weist
-    eine Fixture ab, deren Rundenzahl diese Fassung gar nicht mehr anbietet
-    — geprüft gegen `KDF_ITER_LISTE`, damit eine ältere, aber bediente
-    Fixture weiterläuft. Ohne den zweiten Riegel wäre ein Reset **still
-    erfolgreich** und niemand käme mehr herein.
-
-    **Gemessen am 12.09.2026:** `KDF_ITER_ZIEL` 600 000, Liste
-    [600 000, 320 000], Fixture **320 000**. Riegel 2 lässt sie durch
-    (richtig — der Wert wird noch bedient), Riegel 1 wiese eine
-    Neuerzeugung aus dem heutigen Demo-Konto ab (richtig). Nach einem
-    vollständigen Neuaufbau steht `admin@gen-em.org` auf **600 000**,
-    `demo@gen-em.org` weiterhin auf **320 000** — die Fixture bringt den
-    Wert mit.
-
-    **Offen bleiben zwei Schritte, und sie gehören getrennt:**
-    *(a)* Demo-Konto anheben und die Fixture neu erzeugen — der Neubau ist
-    unvermeidlich, weil die Anhebung drei der neun `konto`-Felder tauscht.
-    *(b)* **320 000 aus `KDF_ITER_LISTE` streichen — eigenes Paket, eigene
-    Version.** Das ist mindestens eine Nebenstufe. Der Weg ist am Code
-    nachgesehen: `auth_salt.php` schickt die **Liste** an den Browser
-    (Zeile 91 bzw. 123), der rechnet für **jeden** Wert darin ein Token
-    (`login.php:365-368`), und der Server greift den heraus, der zur
-    gespeicherten `kdf_iter` des Kontos gehört (`login.php:155-157`). Fehlt
-    der Wert in der Liste, entsteht das Token nie, `$token` bleibt leer, und
-    **jedes Konto, das noch auf 320 000 steht, kommt nicht mehr herein**.
-
-    *Wie schlimm genau:* **nicht unwiderruflich** — Passwort und Hash
-    bleiben unberührt, und der Wert wieder in die Liste zu setzen stellt den
-    Zugang her. Aber das ist eine **Code-Änderung samt Deploy**, kein
-    Handgriff in der Verwaltung. Für die Betroffenen ist die Sperre so lange
-    vollständig. Deshalb: erst alle Konten anheben (Statuszeile
-    „Schlüsselableitung" zeigt, wer noch aussteht), dann streichen — und
-    nicht als Anhang an (a).
-
-    *Der Text oben nennt `erzeugen.php` ohne Pfad; die Datei liegt unter
-    `tools/referenzdatensatz/fixture/`, und daneben gibt es ein völlig
-    anderes `generator/erzeugen.py`.*
-
 157. **Handy-App: Sackgasse zwischen „Schlüssel abgewiesen" und „Gerät trennen".**
     *Aufgenommen 07.09.2026 aus dem Emulatorlauf zu Android 0.14.1.* Wird
     das Gerät serverseitig gelöscht, während ein Paket noch aussteht (hier:
@@ -1552,11 +1493,130 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfung am Code wäre stabiler als eine an der Stoppuhr.
     *Abnahme:* Zehn Läufe hintereinander, zehnmal dieselbe Zahl.
 
+173. **Die Umlaufprüfungen führen tote Regeln.**
+    *Aufgenommen 12.09.2026 beim Neubau des Referenzbestands (Nr. 155,
+    Web 19.2.0).* Beide Kreisläufe erfüllen ihr Abnahmekriterium —
+    **edbak 287 687 Einzelvergleiche, 0 unerklärt** (16 erwartet) und
+    **csv 9120 Einzelvergleiche, 0 unerklärt** (1021 erwartet) —, melden
+    dabei aber **3 bzw. 2 ungenutzte Regeln**. Vorher waren es 0.
+
+    *Die Ursache ist bekannt und harmlos:* Die Regeln beschreiben einen
+    **Übergang**, den es nicht mehr gibt. Zwei betreffen
+    `missions.notes` („GEMESSEN 143x") aus S9/AP7, als die Notizen halb in
+    der Spalte und halb im verschlüsselten Block lagen; eine betrifft
+    `kopf.version` („nach 11") aus demselben Paket, als die Nutzlast von 10
+    auf 11 stieg. Der neu gebaute Referenzbestand trägt die Notizen von
+    Anfang an im Block und beide Seiten dieselbe Nutzlastnummer — also
+    keine Abweichung, also keine Regel, die greift.
+
+    *Warum das trotzdem zählt:* Eine Ausnahmeregel, die nichts mehr
+    erklärt, ist dasselbe wie eine tote Zeile in
+    `tools/linkprobe/ausnahmen.md` — sie sieht aus wie geprüftes Wissen und
+    ist keines mehr. Die Linkprobe macht den Lauf dafür rot; der Kreislauf
+    nennt die Zahl nur. Das ist der mildere Umgang mit demselben Problem.
+
+    *Zu tun:* Die drei bzw. zwei Regeln aus
+    `tools/referenzdatensatz/vergleich/ausnahmen/{edbak,csv}_umlauf.json`
+    entfernen, mit einem Satz im Änderungsverlauf der Datei, warum sie
+    gegenstandslos geworden sind. **Nicht** am Ende einer langen Sitzung
+    gemacht, weil die Dateien die Vergleichsgrundlage sind und ihr Format
+    zwischen den beiden Arten abweicht.
+    *Abnahme:* Beide Kreisläufe melden 0 unerklärte Abweichungen **und**
+    0 ungenutzte Regeln.
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+155. **Die Fixture des Referenzbestands trägt die alte Rundenzahl.**
+    *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 136).*
+    `demo/fixture.json.gz` führt das Demo-Konto mit 320 000 Runden; der
+    Demo-Reset spielt es alle 30 Minuten so ein, und die stille Anhebung
+    überspringt das Demo-Konto ohnehin (`api/kdf_upgrade.php`, E-P1-19 —
+    ein Upgrade passte bis zum nächsten Reset nicht mehr zu den
+    öffentlichen Zugangsdaten). Folge: Der Altwert kann nie aus
+    `KDF_ITER_LISTE` gestrichen werden, und die Statuszeile
+    „Schlüsselableitung" sagt das seit der Nachbesserung ausdrücklich (das
+    Demo-Konto zählt dort nicht mehr als „Übergang läuft"). Behebung: den
+    Referenzbestand mit `KDF_ITER_ZIEL` neu bauen
+    (`tools/referenzdatensatz/`), und `erzeugen.php` soll abbrechen, wenn
+    das Demo-Konto nicht auf dem Zielwert steht — damit die Zusage in
+    `api/kdf_upgrade.php` eine geprüfte ist. Zuordnung: Backlog-Runde, vor
+    dem Streichen des Altwerts.
+
+    **Teilweise erledigt am 12.09.2026 (Backlog-Runde) — die zwei Riegel
+    stehen, der Neubau nicht.** Gebaut sind die beiden Stellen, die den
+    Fehler überhaupt bemerkbar machen:
+    `tools/referenzdatensatz/fixture/erzeugen.php` bricht ab, wenn das
+    Demo-Konto nicht auf `KDF_ITER_ZIEL` steht (sonst bleibt die Zusage in
+    `api/kdf_upgrade.php` eine unbelegte), und `server/demo_lib.php` weist
+    eine Fixture ab, deren Rundenzahl diese Fassung gar nicht mehr anbietet
+    — geprüft gegen `KDF_ITER_LISTE`, damit eine ältere, aber bediente
+    Fixture weiterläuft. Ohne den zweiten Riegel wäre ein Reset **still
+    erfolgreich** und niemand käme mehr herein.
+
+    **Gemessen am 12.09.2026:** `KDF_ITER_ZIEL` 600 000, Liste
+    [600 000, 320 000], Fixture **320 000**. Riegel 2 lässt sie durch
+    (richtig — der Wert wird noch bedient), Riegel 1 wiese eine
+    Neuerzeugung aus dem heutigen Demo-Konto ab (richtig). Nach einem
+    vollständigen Neuaufbau steht `admin@gen-em.org` auf **600 000**,
+    `demo@gen-em.org` weiterhin auf **320 000** — die Fixture bringt den
+    Wert mit.
+
+    **Offen bleiben zwei Schritte, und sie gehören getrennt:**
+    *(a)* Demo-Konto anheben und die Fixture neu erzeugen — der Neubau ist
+    unvermeidlich, weil die Anhebung drei der neun `konto`-Felder tauscht.
+    *(b)* **320 000 aus `KDF_ITER_LISTE` streichen — eigenes Paket, eigene
+    Version.** Das ist mindestens eine Nebenstufe. Der Weg ist am Code
+    nachgesehen: `auth_salt.php` schickt die **Liste** an den Browser
+    (Zeile 91 bzw. 123), der rechnet für **jeden** Wert darin ein Token
+    (`login.php:365-368`), und der Server greift den heraus, der zur
+    gespeicherten `kdf_iter` des Kontos gehört (`login.php:155-157`). Fehlt
+    der Wert in der Liste, entsteht das Token nie, `$token` bleibt leer, und
+    **jedes Konto, das noch auf 320 000 steht, kommt nicht mehr herein**.
+
+    *Wie schlimm genau:* **nicht unwiderruflich** — Passwort und Hash
+    bleiben unberührt, und der Wert wieder in die Liste zu setzen stellt den
+    Zugang her. Aber das ist eine **Code-Änderung samt Deploy**, kein
+    Handgriff in der Verwaltung. Für die Betroffenen ist die Sperre so lange
+    vollständig. Deshalb: erst alle Konten anheben (Statuszeile
+    „Schlüsselableitung" zeigt, wer noch aussteht), dann streichen — und
+    nicht als Anhang an (a).
+
+    *Der Text oben nennt `erzeugen.php` ohne Pfad; die Datei liegt unter
+    `tools/referenzdatensatz/fixture/`, und daneben gibt es ein völlig
+    anderes `generator/erzeugen.py`.*
+
+    **Vollständig erledigt am 12.09.2026 — Web 19.2.0.** Der Neubau ist über
+    die **drei Läufe** aus `tools/referenzdatensatz/LIESMICH.md` gefahren,
+    nicht über eine Abkürzung: Quelldaten prüfen (99 Marken, keine offene
+    Matrixzeile), erzeugen (283 989 Einzelprüfungen, keine Befunde),
+    einspielen über die regulären Wege (386 Anfragen), CSV-Einsätze im
+    Browser, dann `fixture/erzeugen.php`. **Die neue Fixture trägt 600 000**
+    und dieselben Zahlen wie die alte: 16 Diensttage, 88 Einsätze, 2 Geräte,
+    55 861 Spurpunkte, Papierkorb 5/1/5.
+
+    **Danach ist 320 000 aus `KDF_ITER_LISTE` entfallen** (Schritt b, den der
+    Eintrag oben in ein eigenes Paket verwiesen hat — er ist es geworden).
+    Das Tor aus dem Kommentar zu `KDF_ITER_LISTE` ist gefahren:
+    `SELECT COUNT(*) FROM users WHERE kdf_iter = 320000` → **0**, auf dem
+    Prüfstand wie auf der Produktivinstallation (Statuszeile
+    „Schlüsselableitung", bestätigt vom Auftraggeber). Gemessen im Browser,
+    Median aus je drei Anmeldungen: **1580 → 1369 ms**, also rund 210 ms je
+    Anmeldung; der Salz-Endpunkt liefert jetzt `[600000]` statt zweier Werte,
+    und die Anmeldung mit anschließendem Entsperren zeigt weiter **83
+    Einsätze**.
+
+    **Zwei Anläufe waren nötig, und der erste ist lehrreich:** Ich habe den
+    Neubau zuerst auf eine Installation gesetzt, die bereits Demo-Daten trug.
+    `einspielen.py` hält seinen Zustand in `lauf.json` und hielt die Stufen
+    für erledigt — `ingest` sendete **0 Anfragen**, und `zuordnen` scheiterte
+    danach an einem Diensttag, den es nie gab. Der Weg ist: erst wischen
+    (`lokal_einrichten.sh`), dann das Demo-Konto samt `app_state`-Marker
+    entfernen, `lauf.json` leeren, **dann** die Stufen. Steht so jetzt nicht
+    im LIESMICH — es beschreibt nur den Fall der leeren Installation.
 
 38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
     *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste

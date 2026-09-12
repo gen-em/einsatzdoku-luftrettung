@@ -14,6 +14,34 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.2.0] — 2026-09-12
+
+### Web — die Anmeldung rechnet wieder nur einmal
+
+Wer sich anmeldet, leitet aus dem Passwort einen Schlüssel ab — und zwar so oft,
+wie die Anwendung Rundenzahlen anbietet. Seit dem Sprung auf 600 000 standen
+**zwei** Werte in der Liste, damit Konten auf dem Altwert weiter hereinkamen.
+Jetzt steht nur noch einer: **gemessen 1580 → 1369 ms je Anmeldung** (Median
+aus je drei Anmeldungen im Browser), also rund 210 ms weniger.
+
+**Warum das nicht früher ging — das ist der eigentliche Fund** (Nr. 155). Die
+Demo-Fixture brachte die alte Rundenzahl mit, der Reset schrieb sie **alle 30
+Minuten** zurück, und die stille Anhebung überspringt das Demo-Konto
+ausdrücklich. Der Altwert konnte deshalb **nie von selbst verschwinden** — die
+Bedingung „erst, wenn kein Konto ihn mehr trägt" hätte auf ewig ein Konto
+gefunden. Aufgelöst hat es erst der **Neubau des Referenzbestands** über den
+dokumentierten Weg, dessen Passwortschritt im Browser mit dem Zielwert
+ableitet.
+
+**Das Tor ist gefahren worden:** `SELECT COUNT(*) FROM users WHERE kdf_iter =
+320000` ergab **0** — auf dem Prüfstand wie auf der Produktivinstallation, wo
+die Statuszeile „Schlüsselableitung" kein Konto mehr im Übergang zeigt. Ohne
+diese Null hätte der Schritt jedes betroffene Konto ausgesperrt, und zwar bis
+zum nächsten Deploy.
+
+Die neue Fixture trägt dieselben Zahlen wie die alte: **16 Diensttage, 88
+Einsätze, 2 Geräte, 55 861 Spurpunkte.** Keine Migration.
+
 ## [Web 19.1.2] — 2026-09-12
 
 ### Web — Backlog-Runde: fünf stille Fehler

@@ -3980,5 +3980,42 @@ declare(strict_types=1);
  * sie im Backlog und nicht in einem Fehlerbericht.
  *
  * Die Punkte im Einzelnen stehen im Changelog. Keine Migration.
+ *
+ * ---------------------------------------------------------------------------
+ * 19.2.0 — DIE ALTE RUNDENZAHL IST WEG (Backlog Nr. 155, 136).
+ *
+ * `KDF_ITER_LISTE` traegt nur noch 600000. Damit rechnet jede Anmeldung
+ * wieder EINMAL ab statt zweimal — gemessen 1580 -> 1369 ms (Median aus je
+ * drei Anmeldungen im Browser), also rund 210 ms je Anmeldung.
+ *
+ * WARUM DAS EINE NEBENNUMMER IST UND KEINE KORREKTUR: Der Schritt nimmt der
+ * Anmeldung einen angebotenen Wert. Wer ihn faelschlich geht, sperrt jedes
+ * Konto aus, das noch auf dem Altwert steht — der Browser rechnet dessen
+ * Token dann gar nicht erst. Rueckholbar ist das nur ueber eine
+ * Codeaenderung samt Deploy, nicht in der Verwaltung.
+ *
+ * DAS TOR STEHT IM KOMMENTAR ZU KDF_ITER_LISTE und ist gefahren worden:
+ * `SELECT COUNT(*) FROM users WHERE kdf_iter = 320000` ergab **0**, auf dem
+ * Pruefstand wie auf der Produktivinstallation (Statuszeile
+ * „Schluesselableitung": kein Konto im Uebergang, bestaetigt vom
+ * Auftraggeber am 12.09.2026).
+ *
+ * WARUM ES NICHT FRUEHER GING, und das ist der eigentliche Fund: Die
+ * Demo-Fixture brachte die alte Rundenzahl mit, der Reset schrieb sie alle
+ * 30 Minuten zurueck, und die stille Anhebung ueberspringt das Demo-Konto
+ * ausdruecklich (E-P1-19). Der Altwert konnte deshalb NIE von selbst
+ * verschwinden — jede Abfrage haette ewig 1 ergeben. Aufgeloest hat es erst
+ * der Neubau des Referenzbestands ueber die drei Laeufe
+ * (`tools/referenzdatensatz/LIESMICH.md`), mit dem Passwortschritt im
+ * Browser, der mit KDF_ITER_ZIEL ableitet.
+ *
+ * ZWEI RIEGEL HALTEN ES FEST (aus 19.1.2): `fixture/erzeugen.php` bricht ab,
+ * wenn das Konto nicht auf dem Zielwert steht, und `demo_fixture_laden()`
+ * weist eine Fixture ab, deren Rundenzahl diese Fassung nicht mehr anbietet.
+ * Der zweite ist der wichtigere — ohne ihn waere ein Reset mit einer alten
+ * Fixture STILL erfolgreich, und niemand kaeme mehr in das Demo-Konto.
+ *
+ * Keine Migration. Die Fixture ist neu erzeugt (gleiche Zahlen: 16
+ * Diensttage, 88 Einsaetze, 2 Geraete, 55 861 Spurpunkte).
  */
-const WEB_VERSION = '19.1.2';
+const WEB_VERSION = '19.2.0';
