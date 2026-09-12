@@ -89,7 +89,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ## Offen
 
-8. Content-Security-Policy als zusätzliche Verteidigungslinie.
+8. **Content-Security-Policy als zusätzliche Verteidigungslinie.**
     *Ergänzung 06.09.2026 (Krypto-Review, R78):* Die Bestandsaufnahme
     macht sie enger möglich als hier angenommen — **null**
     Inline-Ereignisbehandler, **ein** `style`-Attribut, alle Skriptblöcke
@@ -118,10 +118,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ein fester Abstand je Anfrage wäre falsch. Das Demo-Konto ist mit
     abgedeckt, sobald der Topf existiert (E-P1-09 führt es als benanntes
     Restrisiko).
-19. **`$title` in `einsatz_loeschen.php` wird nie gelesen.** Die Variable wird
-    gesetzt, der Titel steht daneben als Literal. Gefunden in P0 (dort F-06).
-    Einzeiler, aber bewusst nicht nebenbei erledigt: Er stand nicht auf der
-    Freigabeliste.
 21. **Die 43 weiteren Funde der A4-Nachlese sichten.** Die Erhebung „toter
     Code" in P0/A4 hat mit einer zweiten, breiteren Methode 43 zusätzliche
     Kandidaten geliefert (Abschnitt 9.3 des P0-Konzepts). Sie sind **nicht**
@@ -1469,58 +1465,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dafür, die Regel in einem Satz erklären zu können. Zuordnung:
     Backlog-Runde.
 
-159. **Die Uhr behandelt `400` nicht vertragsgemäß — sie wiederholt endlos.**
-    *Aufgenommen 08.09.2026 aus der Gegenprüfung der Zeitregel (Nr. 134).*
-    `docs/JSON-Vertrag.md` sagt für `400 {"error":"payload"}`: „nicht
-    wiederholen, lokal als fehlerhaft markieren". `watch/source/Uploader.mc`
-    tut das Gegenteil: Bei jedem Code außer Erfolg setzt es nur `lastError`
-    und `_busy = false` — „später erneut (nächster syncAll-Auslöser)". Ein
-    Paket, das der Server dauerhaft ablehnt, blockiert damit die
-    Warteschlange, und zwar ohne Ende. Heute fällt das nicht auf, weil
-    `ingest.php` fast nie `400` antwortet; genau deshalb ist in dieser Runde
-    die Zeitprüfung auch **nicht** als Abweisung gebaut worden, sondern als
-    Verwerfen des Werts. Die Handy-App macht es richtig
-    (`Sendeantwort.kt`), räumt abgewiesene Pakete aber nach 30 Tagen weg —
-    ohne Bedienweg zum Nachreichen (Nr. 114). Behebung: In `Uploader.mc`
-    `400` von den übrigen Fehlern trennen, das Paket lokal als fehlerhaft
-    kennzeichnen und aus der Warteschlange nehmen; die Uhr zeigt es an.
-    Zuordnung: nächste Uhr-Stufe. **Vor jeder künftigen Änderung, die
-    `ingest.php` einen neuen `400`-Fall gibt, zuerst dieser Punkt.**
-
-    **Erledigt am 08.09.2026** mit **Uhr 3.1.0** — und mit anderem Zuschnitt,
-    als hier stand. `400` war der falsche Fokus: Die Uhr kann ihn kaum
-    auslösen. Bedienbar erreichbar sind `401` und `403` (Gerät im Web
-    gelöscht oder abgeschaltet), und sie sagen nichts über das Paket,
-    sondern über das Gerät — dort wird deshalb nichts geparkt, sondern das
-    Senden angehalten. Der schwerere Teil des Fundes war ohnehin ein
-    anderer: Weil ein Rückstand das Trennen sperrte, war die Uhr nach einer
-    dauerhaften Ablehnung nur noch durch Löschen der App zu retten. Das ist
-    behoben; geparkte Pakete zählen nicht mehr im Rückstand.
-
-160. **Ein fortgesetzter Dienst führt das Handy tagelang unter dem alten
-    Datum — und die Anzeige verrät es nicht.** *Aufgenommen 08.09.2026 aus
-    derselben Gegenprüfung.* `Dienstklammer.beginnen()` gibt bei laufendem
-    Dienst den vorhandenen zurück (E-R45-13, gewollt). Wer den Dienst am
-    Freitag nicht beendet und am Montag „Dienst beginnen" drückt, arbeitet
-    im Freitagsdienst weiter; jedes Paket trägt weiter `day` = Freitag.
-    Die Anzeige sagt „Dienst läuft seit 07:00" — **ohne Datum**, also nicht
-    von heute Morgen zu unterscheiden. Für den Server ist das seit dieser
-    Runde unschädlich (`day` ist Anzeigedatum, und Zeiten außerhalb des
-    Fensters schreiben den Diensttag nur nicht fort), für die Dokumentation
-    des Dienstes ist es falsch. Behebung: Läuft der Dienst länger als einen
-    Kalendertag, das Datum in der Anzeige mitführen und beim zweiten
-    „Dienst beginnen" ausdrücklich fragen, ob fortgesetzt oder neu begonnen
-    wird. Zuordnung: nächste Android-Stufe.
-
-    **Erledigt am 08.09.2026** mit **Android 0.15.0** — allerdings anders als
-    hier vorgeschlagen. Die Anzeige führt das Datum, sobald der Dienst an
-    einem anderen Kalendertag begann, und nach 26 Stunden erinnert die App
-    einmal daran, ihn zu beenden. Die Rückfrage beim zweiten „Dienst
-    beginnen" ist **nicht** gebaut: Den Startknopf gibt es bei laufendem
-    Dienst gar nicht, die Frage müsste an die Uhr, und wer am Montag einfach
-    weiterarbeitet, drückt ohnehin nichts. Was offen bleibt, ist das
-    Löschen der schon hochgeladenen Aufzeichnung — Nr. 161.
-
 161. **Aus einer Aufzeichnung ein Stück löschen können.** *Aufgenommen
     08.09.2026 beim Bauen von Nr. 160.* Ein vergessener Dienst zeichnet
     weiter auf — auch das Wochenende, auch den Weg nach Hause. Was dabei
@@ -1668,6 +1612,86 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+19. **`$title` in `einsatz_loeschen.php` wird nie gelesen.** Die Variable wird
+    gesetzt, der Titel steht daneben als Literal. Gefunden in P0 (dort F-06).
+    Einzeiler, aber bewusst nicht nebenbei erledigt: Er stand nicht auf der
+    Freigabeliste.
+
+    **Überholt — festgestellt am 12.09.2026 beim Sichten der Backlog-Runde.**
+    Es gibt in `server/einsatz_loeschen.php` **kein `$title` mehr**, und auch
+    keinen Titel als Literal daneben: Die Seite setzt ihren Titel über
+    `ui_seite_start(['titel' => 'Einsatz löschen'])` (Zeile 30), wie jede
+    andere seit P3. Gemessen: `grep -c '\$title' server/einsatz_loeschen.php`
+    → **0**; der Schlüssel des Bausteins heißt `titel`, nicht `title`. Der
+    Punkt hat sich mit dem
+    Umbau auf die gemeinsamen Bausteine von selbst erledigt und ist nur nie
+    ausgetragen worden — festgehalten, weil ein Backlog, der behobene Dinge
+    weiterführt, seine eigene Glaubwürdigkeit kostet.
+
+159. **Die Uhr behandelt `400` nicht vertragsgemäß — sie wiederholt endlos.**
+    *Aufgenommen 08.09.2026 aus der Gegenprüfung der Zeitregel (Nr. 134).*
+    `docs/JSON-Vertrag.md` sagt für `400 {"error":"payload"}`: „nicht
+    wiederholen, lokal als fehlerhaft markieren". `watch/source/Uploader.mc`
+    tut das Gegenteil: Bei jedem Code außer Erfolg setzt es nur `lastError`
+    und `_busy = false` — „später erneut (nächster syncAll-Auslöser)". Ein
+    Paket, das der Server dauerhaft ablehnt, blockiert damit die
+    Warteschlange, und zwar ohne Ende. Heute fällt das nicht auf, weil
+    `ingest.php` fast nie `400` antwortet; genau deshalb ist in dieser Runde
+    die Zeitprüfung auch **nicht** als Abweisung gebaut worden, sondern als
+    Verwerfen des Werts. Die Handy-App macht es richtig
+    (`Sendeantwort.kt`), räumt abgewiesene Pakete aber nach 30 Tagen weg —
+    ohne Bedienweg zum Nachreichen (Nr. 114). Behebung: In `Uploader.mc`
+    `400` von den übrigen Fehlern trennen, das Paket lokal als fehlerhaft
+    kennzeichnen und aus der Warteschlange nehmen; die Uhr zeigt es an.
+    Zuordnung: nächste Uhr-Stufe. **Vor jeder künftigen Änderung, die
+    `ingest.php` einen neuen `400`-Fall gibt, zuerst dieser Punkt.**
+
+    **Erledigt am 08.09.2026** mit **Uhr 3.1.0** — und mit anderem Zuschnitt,
+    als hier stand. `400` war der falsche Fokus: Die Uhr kann ihn kaum
+    auslösen. Bedienbar erreichbar sind `401` und `403` (Gerät im Web
+    gelöscht oder abgeschaltet), und sie sagen nichts über das Paket,
+    sondern über das Gerät — dort wird deshalb nichts geparkt, sondern das
+    Senden angehalten. Der schwerere Teil des Fundes war ohnehin ein
+    anderer: Weil ein Rückstand das Trennen sperrte, war die Uhr nach einer
+    dauerhaften Ablehnung nur noch durch Löschen der App zu retten. Das ist
+    behoben; geparkte Pakete zählen nicht mehr im Rückstand.
+
+    *(Ausgetragen am 12.09.2026: Der Punkt trug seine Erledigung seit dem
+    08.09.2026 im eigenen Text, stand aber weiter unter „Offen“ —
+    gefunden beim Abgleich von `Rahmenplan.md` Abschnitt 5 gegen diese
+    Liste. `CLAUDE.md` 2.4 sagt: erledigte Punkte werden verschoben,
+    nicht nur vermerkt.)*
+
+160. **Ein fortgesetzter Dienst führt das Handy tagelang unter dem alten
+    Datum — und die Anzeige verrät es nicht.** *Aufgenommen 08.09.2026 aus
+    derselben Gegenprüfung.* `Dienstklammer.beginnen()` gibt bei laufendem
+    Dienst den vorhandenen zurück (E-R45-13, gewollt). Wer den Dienst am
+    Freitag nicht beendet und am Montag „Dienst beginnen" drückt, arbeitet
+    im Freitagsdienst weiter; jedes Paket trägt weiter `day` = Freitag.
+    Die Anzeige sagt „Dienst läuft seit 07:00" — **ohne Datum**, also nicht
+    von heute Morgen zu unterscheiden. Für den Server ist das seit dieser
+    Runde unschädlich (`day` ist Anzeigedatum, und Zeiten außerhalb des
+    Fensters schreiben den Diensttag nur nicht fort), für die Dokumentation
+    des Dienstes ist es falsch. Behebung: Läuft der Dienst länger als einen
+    Kalendertag, das Datum in der Anzeige mitführen und beim zweiten
+    „Dienst beginnen" ausdrücklich fragen, ob fortgesetzt oder neu begonnen
+    wird. Zuordnung: nächste Android-Stufe.
+
+    **Erledigt am 08.09.2026** mit **Android 0.15.0** — allerdings anders als
+    hier vorgeschlagen. Die Anzeige führt das Datum, sobald der Dienst an
+    einem anderen Kalendertag begann, und nach 26 Stunden erinnert die App
+    einmal daran, ihn zu beenden. Die Rückfrage beim zweiten „Dienst
+    beginnen" ist **nicht** gebaut: Den Startknopf gibt es bei laufendem
+    Dienst gar nicht, die Frage müsste an die Uhr, und wer am Montag einfach
+    weiterarbeitet, drückt ohnehin nichts. Was offen bleibt, ist das
+    Löschen der schon hochgeladenen Aufzeichnung — Nr. 161.
+
+    *(Ausgetragen am 12.09.2026: Der Punkt trug seine Erledigung seit dem
+    08.09.2026 im eigenen Text, stand aber weiter unter „Offen“ —
+    gefunden beim Abgleich von `Rahmenplan.md` Abschnitt 5 gegen diese
+    Liste. `CLAUDE.md` 2.4 sagt: erledigte Punkte werden verschoben,
+    nicht nur vermerkt.)*
 
 44. **Sprungliste bei Standorten mit vielen Rettungsmitteln.**
     *Aufgenommen 30.08.2026.* Ein Standort mit neun Rettungsmitteln zwingt zum
