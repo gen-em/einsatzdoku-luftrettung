@@ -279,7 +279,7 @@ Daten erst nach Server-Bestätigung.
 │   │       │                favicon.png + favicon-fahrzeug.png (erzeugt aus den
 │   │       │                Logodateien, s. tools/logos/); das Fahrzeug-Logo ist bis
 │   │       │                zur Zulieferung ein PLATZHALTER (gestrichelter Rahmen)
-│   │       └── symbole/    52 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
+│   │       └── symbole/    53 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
 │   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
 │   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und
 │   │                       LIESMICH.md mit der Zuordnung Datei -> Tabler-Name ->
@@ -5437,6 +5437,35 @@ Ein Skript, das die Vorgabe selbst herstellt, ließe bei jedem Seitenaufruf
 kurz den anderen Zustand aufblitzen. Ausnahme beim Anwenden des gemerkten
 Zustands: Der Block, der die aktive Seite trägt, bleibt offen — sonst stünde
 der aktive Eintrag unsichtbar in einem zugeklappten Block.
+
+**Die Statusseite schreibt an zwei Stellen — und nur an diesen zwei.** Ihre
+Zusage lautet „ändert nichts am Bestand"; beide Ausnahmen ändern keinen
+Bestand, sondern prüfen an Ort und Stelle: der fehlende **Serverschlüssel**
+(seit Web 15.2.0) und seit Web 19.3.0 der Knopf **„Testmail an mich"** im Kopf
+der Karte E-Mail (Backlog Nr. 120, freigegeben am 12.09.2026). Für SMTP gibt
+es keine zuständige Seite, auf die zu verweisen wäre — der Zugang steht allein
+in der `config.php`.
+
+Drei Dinge hängen an dieser Testmail, und jedes davon ist ein eigener Fehler,
+wenn es fehlt:
+
+- **Der POST-Zweig steht vor `status_karten()`.** `smtp_send()` vermerkt den
+  Versand selbst (`smtp_versand_vermerken()` schreibt `smtp_last` und
+  `smtp_last_ok`), und die Erhebung liest diese Marken. Stünde der Zweig
+  danach, zeigte die Zeile „Letzter Versand" den Stand von vor dem Klick.
+- **Erst `smtp_eingerichtet()`, dann versuchen.** `smtp_send()` prüft das
+  nicht selbst: Es baut die Verbindung auf, scheitert und vermerkt einen
+  Fehlschlag. Ohne die Vorprüfung machte ein Klick auf einer Installation ohne
+  Mailserver aus „nicht eingerichtet" (neutral, keine Aufforderung) ein
+  „fehlgeschlagen" (rot, zählt in der Meldung oben mit) — eine Statusseite,
+  die ein Problem behauptet, das es nicht gibt.
+- **Ratenschutz und kurzes Zeitlimit.** Topf `testmail` (3 je Stunde, Merkmal
+  Konto UND IP) und `$zeitlimit = 5` statt der Vorgabe 15. Der Versand läuft
+  synchron, weil sein Ergebnis gezeigt werden soll; jeder Protokollschritt hat
+  sein eigenes Limit, und bei 15 s hielte ein hängender Mailserver die Seite
+  über zwei Minuten. `ratelimit_lib.php` muss `betrieb_status.php` dafür
+  ausdrücklich nachladen — weder `auth_guard.php` noch `status_lib.php` tun
+  es.
 
 **Die Zähler kommen aus `status_lib.php`.** Diese Datei ist mit AP5 aus
 `betrieb_status.php` herausgelöst worden und enthält die **eine** Erhebung:

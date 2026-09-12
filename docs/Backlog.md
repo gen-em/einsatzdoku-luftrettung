@@ -1112,16 +1112,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zu sagen, dass die Anwendung es nicht weiß. Zuordnung: Backlog-Runde
     (Entscheidung), Umsetzung frühestens P5.
 
-120. **Eine Testmail aus der Oberfläche senden.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (E-S8-16).* Die Statusseite
-    (S8 AP4) zeigt für E-Mail nur, ob SMTP **eingerichtet** ist — ob eine
-    Zustellung tatsächlich funktioniert, weiß sie nicht, und ob die letzte
-    Zustellung aufgezeichnet wird, war beim Bau zu prüfen. Eine Warnmail, die
-    nie ankommt, fällt damit erst auf, wenn jemand sie vermisst. **Zu tun:**
-    ein Knopf „Testmail an mich" auf der Statusseite, der über den regulären
-    Versandweg geht und das Ergebnis in derselben Zeile zeigt. **Neue
-    Funktion**, deshalb nicht Teil von S8. Zuordnung: Backlog-Runde.
-
 121. **Vorschau der Rechtstexte beim Tippen.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09); Titel und Text
     berichtigt 05.09.2026 in S8/AP3.* **Eine Vorschau gibt es seit Web
@@ -1612,6 +1602,79 @@ zutreffen.
     Geschichte der zwei Umbenennungen ersetzt. Und zwei Codekommentare
     (`index.php`, `gpx.php`) nannten „Spuren als GPX"; der Eintrag heißt seit
     S9 „GPS-Daten als GPX".
+
+120. **Eine Testmail aus der Oberfläche senden.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (E-S8-16).* Die Statusseite
+    (S8 AP4) zeigt für E-Mail nur, ob SMTP **eingerichtet** ist — ob eine
+    Zustellung tatsächlich funktioniert, weiß sie nicht, und ob die letzte
+    Zustellung aufgezeichnet wird, war beim Bau zu prüfen. Eine Warnmail, die
+    nie ankommt, fällt damit erst auf, wenn jemand sie vermisst. **Zu tun:**
+    ein Knopf „Testmail an mich" auf der Statusseite, der über den regulären
+    Versandweg geht und das Ergebnis in derselben Zeile zeigt. **Neue
+    Funktion**, deshalb nicht Teil von S8. Zuordnung: Backlog-Runde.
+
+    **Erledigt mit Web 19.3.0 (12.09.2026, Backlog-Runde 2).**
+
+    **Der Eintrag ist an einer Stelle eine Fassung hinterher.** „Ob die letzte
+    Zustellung aufgezeichnet wird, war beim Bau zu prüfen" — sie wird
+    aufgezeichnet, und zwar **seit Web 15.3.0**: `smtp_send()` ruft
+    `smtp_versand_vermerken()` in beiden Ausgängen, die Marken `smtp_last`
+    und `smtp_last_ok` stehen in `app_state`, und die Zeile „Letzter Versand"
+    zeichnet daraus Zeitpunkt, Alter und Ampel. Damit war die halbe Aufgabe
+    schon gebaut; offen war allein der **Auslöser**.
+
+    **Die eigentliche Frage war keine technische.** Die Statusseite sagt an
+    vier Stellen schriftlich zu, nichts zu ändern — Dateikopf, Unterzeile,
+    Karte „Was hier gilt", Handbuch 12.1 — „mit genau einer Ausnahme". Ein
+    Testmail-Knopf macht daraus zwei. **Freigegeben am 12.09.2026** mit der
+    Begründung, dass beide Ausnahmen keinen Bestand ändern, sondern an Ort
+    und Stelle prüfen, und dass es für SMTP überhaupt keine zuständige Seite
+    gibt: Der Zugang steht allein in der `config.php`. Alle vier Stellen sind
+    mitgeschrieben.
+
+    **Gebaut als Kopfaktion der Karte „E-Mail"**, mit dem neuen Zeichen
+    `mail.svg` (Tabler „mail", MIT) — dem **53.** des Vorrats. Der Weg dahin
+    war nicht gerade: Zuerst war „Kopfaktion ohne Symbol" vorgesehen. Die
+    Gegenprobe hat zwei Messungen dagegengestellt, und beide halten: Eine
+    Kopfaktion kennt nur `blau` und `orange` (`.karte-aktion-blau` /
+    `-orange`) — `neutral` gäbe eine **Klasse ohne Regel**, also einen
+    ungestalteten Knopf, und zwar ohne jede Fehlermeldung, weil die
+    Vollständigkeitsprüfung zur Laufzeit zusammengesetzte Klassen nicht sieht.
+    Und **alle elf** vorhandenen Kopfaktionen tragen ein Symbol; eine
+    textnackte wäre die erste gewesen und damit eine neue Darstellung. Das
+    Zeichen ist deshalb der kleinere Eingriff.
+
+    **Vier Dinge, die der Bau gebraucht hat und ohne die er falsch wäre:**
+
+    - `ratelimit_lib.php` muss `betrieb_status.php` **selbst nachladen** —
+      weder `auth_guard.php` noch `status_lib.php` tun es. Ohne die Zeile
+      gäbe es einen Fatal Error, und zwar erst beim ersten Klick.
+    - Der POST-Zweig steht **vor** `status_karten()`, sonst zeigte die Zeile
+      „Letzter Versand" den Stand von vor dem Klick.
+    - **Erst `smtp_eingerichtet()`, dann versuchen.** `smtp_send()` prüft das
+      nicht selbst. Ohne die Vorprüfung machte ein Klick auf einer
+      Installation ohne Mailserver aus „nicht eingerichtet" (neutral) ein
+      „fehlgeschlagen" (rot, zählt mit).
+    - Ratenschutz `testmail` (3 je Stunde, Konto UND IP) und `$zeitlimit = 5`
+      statt der Vorgabe 15.
+
+    **Gemessen im Browser** gegen einen SMTP-Auffänger auf dem Prüfstand
+    (implizites TLS, eigenes Zertifikat im Vertrauensspeicher — `smtp.php`
+    prüft die Gegenstelle):
+
+    - **Erfolg:** Zeile „Letzter Versand" **„kein Versand"/neutral →
+      „zugestellt"/blau**, `app_state.smtp_last_ok = 1`, `smtp_last` auf die
+      Minute; die Nachricht liegt vollständig im Auffänger (Betreff, To, Body).
+      Meldung *in der Karte*, nicht oben neben der Zusammenfassung.
+    - **Kein SMTP** (Host in der `config.php` geleert): Meldung „es wurde
+      nichts versucht", `app_state` **leer**, Ratenzähler **nicht** verbraucht,
+      Zeilen bleiben neutral. Der rote Punkt, den es nicht gibt, entsteht nicht.
+    - **Ratenschutz:** der 4. Versuch innerhalb einer Stunde wird abgewiesen
+      („Bis 20:17 Uhr geht keine mehr hinaus"); zwei Zeilen in `rate_limits`
+      (`ip:127.0.0.1` und `id:1`).
+    - **POST ohne Formular-Token: 403**, nichts geschrieben.
+    - Bedienhöhen **36 px** (Zeiger, 1280 px) und **44 px** (Finger, 390 px),
+      waagerechter Überlauf **0**, Konsolenfehler **0** in beiden.
 
 126. **Von der Wartungsseite führt kein Weg zurück in die Verwaltung.**
     *Aufgenommen 06.09.2026 bei S8/AP8, aus dem Umschreiben von Handbuch 12.3.*

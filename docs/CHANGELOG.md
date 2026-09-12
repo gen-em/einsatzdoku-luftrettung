@@ -92,6 +92,36 @@ Komplett-Backup und den Mailversand weg. Neben einem Knopf ist diese
 Aufzählung die Entscheidungsgrundlage, deshalb nennt sie den Preis jetzt
 vollständig.
 
+**„Testmail an mich" auf Betrieb → Status** (Nr. 120). Die Karte E-Mail sagte
+bisher nur, ob SMTP **eingerichtet** ist. Das ist nicht dasselbe wie
+*funktioniert*: Ein falsches Passwort im Zugang fiel erst auf, wenn jemand
+einen Einladungslink vermisste. Der Knopf im Kartenkopf schickt eine kurze
+Nachricht über den regulären Versandweg an die eigene Adresse; die Zeile
+„Letzter Versand" — die es seit Web 15.3.0 gibt — zeigt danach das Ergebnis.
+Die halbe Aufgabe war also schon gebaut; gefehlt hat der Auslöser.
+
+**Die Statusseite gibt dafür eine Zusage auf.** Sie sagte an vier Stellen,
+sie ändere nichts, „mit genau einer Ausnahme" — dem fehlenden
+Serverschlüssel. Jetzt sind es zwei, und der Satz ist an allen vier Stellen
+mitgeschrieben: Beide Ausnahmen ändern keinen Bestand, sondern prüfen an Ort
+und Stelle. Für SMTP gibt es auch gar keine zuständige Seite, auf die zu
+verweisen wäre — der Zugang steht allein in der `config.php`. Eine
+Dokumentation, die die Seite nicht mehr beschreibt, wäre schlimmer als keine.
+
+**Drei Vorkehrungen, die nicht wegzulassen sind.** Ohne SMTP wird gar nichts
+erst versucht — sonst machte ein Klick aus dem neutralen „nicht eingerichtet"
+ein rotes „fehlgeschlagen", und die Statusseite behauptete ein Problem, das
+es nicht gibt. Höchstens drei Testmails je Stunde, gezählt über Konto und
+Adresse. Und das Zeitlimit des Versands steht auf fünf statt fünfzehn
+Sekunden: Der Versand läuft in der Seitenanfrage mit, und jeder
+Protokollschritt hat sein eigenes Limit.
+
+**Ein 53. Zeichen im Symbolvorrat** (Tabler „mail", MIT). Der Knopf sollte
+zunächst ohne Symbol auskommen — das ging nicht: Eine Kopfaktion kennt nur
+die Arten *blau* und *orange*, und alle elf vorhandenen tragen ein Symbol.
+Eine textnackte wäre eine neue Darstellung gewesen, das Zeichen ist der
+kleinere Eingriff.
+
 ## [Web 19.2.0] — 2026-09-12
 
 ### Web — die Anmeldung rechnet wieder nur einmal

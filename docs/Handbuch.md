@@ -3459,10 +3459,28 @@ solange, rechnet jede Anmeldung zweimal). Das Demo-Konto zählt dort nicht
 mit: Es bleibt auf der Rundenzahl seiner Fixture, und der Altwert bleibt
 deshalb in der Liste, bis der Referenzbestand neu gebaut ist.
 
-**Die Seite ändert nichts.** Jede Zeile führt auf die Seite, auf der sich
-etwas ändern lässt. Die einzige Ausnahme ist der fehlende **Serverschlüssel** —
-ohne ihn gibt es weder Komplett-Backup noch Versand auf ein Backup-Ziel, und
-der Weg dorthin ist ein Knopf.
+**Eine Testmail an dich selbst.** Im Kopf der Karte **E-Mail** steht seit
+Web 19.3.0 der Knopf **„Testmail an mich"**. Er schickt eine kurze Nachricht
+über den regulären Versandweg an die Adresse, mit der du angemeldet bist —
+und beantwortet damit die Frage, die die Zeile „SMTP" nicht beantworten kann:
+*Eingerichtet* heißt nicht *funktioniert*. Ein falsches Passwort im
+SMTP-Zugang fiel bis dahin erst auf, wenn jemand einen Einladungslink
+vermisste.
+
+Nach dem Klick sagt die Meldung oben, ob der Mailserver die Nachricht
+angenommen hat, und die Zeile **„Letzter Versand"** steht auf *zugestellt*
+oder *fehlgeschlagen*. **Ob sie ankommt, sagt erst das Postfach** — angenommen
+ist nicht zugestellt. Steht kein SMTP in der `config.php`, wird gar nichts
+erst versucht; die Meldung sagt das, statt einen Fehlschlag zu erfinden.
+Höchstens **drei Testmails je Stunde**: Der Versand läuft in der Seitenanfrage
+mit, und öfter zu prüfen bringt keine andere Antwort.
+
+**Die Seite ändert nichts am Bestand.** Jede Zeile führt auf die Seite, auf
+der sich etwas ändern lässt. **Zwei Ausnahmen** führen nicht weg, sondern
+prüfen an Ort und Stelle: der fehlende **Serverschlüssel** — ohne ihn gibt es
+weder Komplett-Backup noch Versand auf ein Backup-Ziel, und der Weg dorthin
+ist ein Knopf — und die **Testmail**. Für SMTP gibt es überhaupt keine
+zuständige Seite: Der Zugang steht allein in der `config.php`.
 
 **Die Zahlen sind nicht alle gleich alt.** Wartungsmodus, Migrationen, Jobs,
 Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von

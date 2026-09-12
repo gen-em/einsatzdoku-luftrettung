@@ -230,7 +230,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
       <?php endforeach; ?>
     <?php endforeach; endif; ?>
     <?php /* ANHALTEN OHNE KOMMANDOZEILE (Backlog Nr. 118). Hier stand bis
-             Web 19.3.0: „Anhalten nur auf der Kommandozeile … Ein Knopf dafür
+             Web 19.3.0: „Anhalten nur auf der Kommandozeile ... Ein Knopf dafür
              wäre eine neue Funktion und steht im Backlog (Nr. 118)." Auf
              geteiltem Hosting gibt es diese Kommandozeile in der Regel nicht.
 
