@@ -62,6 +62,36 @@ führte im Menü noch „Rettungsmittel", das seit Web 19.0.0 in „Standorte"
 aufgegangen ist, und zwei Codekommentare nannten „Spuren als GPX" statt
 „GPS-Daten als GPX".
 
+**Die Hintergrundjobs lassen sich jetzt aus der Oberfläche anhalten**
+(Nr. 118). Bis hierher war `php jobs.php --pause` die einzige Handlung an den
+Jobs ohne Knopf — und auf geteiltem Hosting gibt es diese Kommandozeile in der
+Regel nicht. Die Seite zeigte den Pausenzustand an und nannte den Befehl, den
+sie selbst nicht auslösen konnte. Jetzt steht am Fuß der Karte „Zustand" der
+Knopf **„Jobs anhalten"** mit einer Dauerwahl aus 15 Min., 30 Min., 1 Std. und
+2 Std.; läuft eine Pause, steht an seiner Stelle die orange Meldung mit
+**„Pause aufheben"**.
+
+**Serverseitig kommt nichts Neues hinzu.** Der Knopf ruft dieselbe
+Bibliotheksfunktion wie die Kommandozeile, schreibt denselben Schlüssel und
+unterliegt derselben Deckelung auf zwei Stunden — `jobs_lib.php` ist
+unverändert. Die Dauern sind eine geschlossene Liste statt eines Zahlenfelds:
+Ein Textfeld müsste die Einheit erklären, und ein Vertipper sähe aus wie ein
+Fehler der Anwendung.
+
+**Dabei ist eine Falschangabe aufgefallen, die seit Web 10.2.0 dastand.** Die
+Oberfläche schrieb `php jobs.php --pause <Minuten>`; der Code rechnet in
+**Sekunden**. Zwei Zeilen weiter stand „höchstens 2 Stunden" — was nur mit
+Sekunden aufgeht. Wer den daneben empfohlenen Befehl `--pause 60` im Glauben
+an Minuten abtippte, bekam eine Minute Ruhe und wunderte sich. Berichtigt an
+allen drei Stellen.
+
+**Und zwei Kleinigkeiten in derselben Meldung:** Sie enthielt `<code>`-Markup
+als Text — die Meldungsfunktion escapt, also waren die spitzen Klammern zu
+lesen. Und sie zählte drei der sieben Jobs auf und ließ das geplante
+Komplett-Backup und den Mailversand weg. Neben einem Knopf ist diese
+Aufzählung die Entscheidungsgrundlage, deshalb nennt sie den Preis jetzt
+vollständig.
+
 ## [Web 19.2.0] — 2026-09-12
 
 ### Web — die Anmeldung rechnet wieder nur einmal

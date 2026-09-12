@@ -2821,13 +2821,29 @@ Gemessen am Messstand (5345 Einsätze, 3,3 Mio. Punkte, `memory_limit=64M`):
 Verdichtung **9395 Spuren in 44,3 s**, 2 936 497 Zeilen entfernt, Spitze
 4,0 MB · Ausdünnung **4973 Spuren in 15,2 s**, Spitze 4,0 MB.
 
-#### Die Jobs anhalten (ab Web 10.2.0)
+#### Die Jobs anhalten (ab Web 10.2.0, Knopf ab Web 19.3.0)
 
-`php jobs.php --pause <Sekunden>` (0 hebt auf). Die Pause gilt für **alle drei
+**Zwei Wege, ein Schalter.** `php jobs.php --pause <Sekunden>` (0 hebt auf) und
+seit Web 19.3.0 der Knopf **„Jobs anhalten"** in der Karte „Zustand" auf
+Betrieb → Hintergrundjobs, mit einer Dauerwahl aus 15 Min., 30 Min., 1 Std.
+und 2 Std. Beide rufen `jobs_pause()` und schreiben denselben Schlüssel
+`jobs_pause_bis` nach `app_state` — es gibt keinen zweiten Speicherort und
+keine zweite Deckelung. Der Knopf ist dort nötig, wo es keine Kommandozeile
+gibt: auf geteiltem Hosting ist das der Regelfall.
+
+Die Pause gilt für **alle drei
 Auslöser** — sonst räumte ein Cron weg, was gerade gemessen wird — und läuft
 von selbst ab (`JOB_PAUSE_MAX_S` = 2 h); eine Pause ohne Ende wäre eine, die
 jemand vergisst. Betrieb → Hintergrundjobs zeigt sie als eigene Plakette an,
-damit eine laufende Pause nicht wie ein arbeitender Job aussieht.
+damit eine laufende Pause nicht wie ein arbeitender Job aussieht; in der
+Meldung daneben steht der Knopf **„Pause aufheben"**.
+
+**Die Oberfläche nannte bis Web 19.3.0 die falsche Einheit.** An zwei Stellen
+stand `php jobs.php --pause <Minuten>` — der Code rechnet in Sekunden, und
+`jobs.php --hilfe` sagt es auch. Der Nachbarsatz rechnete `JOB_PAUSE_MAX_S /
+3600` und kam damit auf „höchstens 2 Stunden", was nur mit Sekunden aufgeht;
+wer den empfohlenen Befehl `--pause 60` im Glauben an Minuten abtippte, bekam
+eine Minute Ruhe. Berichtigt.
 
 **Warum es sie gibt.** Seit die Jobs Zeilen löschen und Blobs ersetzen, ändern
 sie den Bestand, während eine Messung darüber läuft. Der Kreislauf spielt ein

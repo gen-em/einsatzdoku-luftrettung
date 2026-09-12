@@ -3687,6 +3687,25 @@ zu verlieren. Und die Uhr kann zu einem ausgedünnten Einsatz keine Punkte mehr
 nachliefern; sie bekommt eine Bestätigung, damit sie ihren Speicher leert, die
 Punkte werden aber nicht mehr aufgenommen.
 
+**Die Arbeit anhalten.** Am Ende der Karte „Zustand" steht **„Jobs
+anhalten"** mit einer Dauerwahl: *15 Min.*, *30 Min.*, *1 Std.* oder
+*2 Std.*. Das ist für den Fall gedacht, dass etwas schiefläuft oder ein großes
+Backup einzuspielen ist. **Während der Pause geschieht gar nichts** — nichts
+wird verdichtet, ausgedünnt, aufgeräumt, gesichert oder versendet, auch das
+geplante Komplett-Backup nicht. Die Rückfrage sagt genau das.
+
+Die Pause **läuft von selbst ab**; länger als zwei Stunden am Stück geht
+nicht, damit eine vergessene Pause die Installation nicht dauerhaft anhält.
+Solange sie läuft, steht an der Karte die Plakette **„angehalten"** und
+darunter eine orange Meldung mit dem Zeitpunkt und dem Knopf **„Pause
+aufheben"**; der Knopf zum Anhalten ist dann nicht da, weil es nichts
+anzuhalten gibt. Auch **Betrieb → Status** zeigt die Pause als eigene Zeile.
+
+*Seit Web 19.3.0.* Vorher ging das nur auf der Kommandozeile
+(`php jobs.php --pause <Sekunden>`, `0` hebt auf) — und die gibt es auf
+geteiltem Hosting meist nicht. Der Befehl funktioniert weiterhin; beide Wege
+schreiben denselben Wert.
+
 Daneben, in der Karte **„Auslöser"**, stehen die drei Wege, auf denen diese
 Arbeit angestoßen werden kann — mit fertigem Befehl bzw. fertiger Adresse und
 seit Web 15.1.0 einem Knopf **„Kopieren"** daneben. **Eingerichtet werden muss keiner:** Ohne Einrichtung läuft die

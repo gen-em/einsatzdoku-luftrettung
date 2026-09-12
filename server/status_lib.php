@@ -302,7 +302,8 @@ function status_erhebung(): array
             $jobZeilen[] = status_z('Pause',
                 'Die Hintergrundarbeit ist angehalten bis '
                 . fmt_local(str_replace(['T', 'Z'], [' ', ''], $jobPause), 'd.m.Y · H:i')
-                . ' Uhr. Aufheben: php jobs.php --pause 0',
+                . ' Uhr. Aufheben über Betrieb → Hintergrundjobs '
+                . '(oder php jobs.php --pause 0)',
                 'orange', 'angehalten', 'betrieb_jobs.php');
         }
 

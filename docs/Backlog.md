@@ -1112,17 +1112,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zu sagen, dass die Anwendung es nicht weiß. Zuordnung: Backlog-Runde
     (Entscheidung), Umsetzung frühestens P5.
 
-118. **Die Hintergrundjobs lassen sich nur auf der Kommandozeile anhalten.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-16).* `php jobs.php
-    --pause <Minuten>` ist die einzige Job-Handlung ohne Oberfläche. Die
-    Seite „Hintergrundjobs" (S8 AP2) zeigt den Pausenzustand an und nennt
-    den Befehl, kann ihn aber nicht auslösen. Wer keinen Shell-Zugang hat —
-    und das ist auf geteiltem Hosting die Regel —, kann die Jobs nicht
-    anhalten, wenn etwas schiefläuft. **Zu tun:** ein Knopf „Jobs anhalten"
-    mit Dauerwahl auf derselben Seite, serverseitig derselbe
-    `app_state`-Schlüssel. Das ist eine **neue Funktion** und deshalb nicht
-    Teil von S8. Zuordnung: Backlog-Runde oder P5.
-
 120. **Eine Testmail aus der Oberfläche senden.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (E-S8-16).* Die Statusseite
     (S8 AP4) zeigt für E-Mail nur, ob SMTP **eingerichtet** ist — ob eine
@@ -1500,6 +1489,60 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+118. **Die Hintergrundjobs lassen sich nur auf der Kommandozeile anhalten.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-16).* `php jobs.php
+    --pause <Minuten>` ist die einzige Job-Handlung ohne Oberfläche. Die
+    Seite „Hintergrundjobs" (S8 AP2) zeigt den Pausenzustand an und nennt
+    den Befehl, kann ihn aber nicht auslösen. Wer keinen Shell-Zugang hat —
+    und das ist auf geteiltem Hosting die Regel —, kann die Jobs nicht
+    anhalten, wenn etwas schiefläuft. **Zu tun:** ein Knopf „Jobs anhalten"
+    mit Dauerwahl auf derselben Seite, serverseitig derselbe
+    `app_state`-Schlüssel. Das ist eine **neue Funktion** und deshalb nicht
+    Teil von S8. Zuordnung: Backlog-Runde oder P5.
+
+    **Erledigt mit Web 19.3.0 (12.09.2026, Backlog-Runde 2).** Der Knopf
+    **„Jobs anhalten"** steht am Fuß der Karte „Zustand", mit einer
+    Dauerwahl aus **15 Min. · 30 Min. · 1 Std. · 2 Std.** als Segmentreihe.
+    Serverseitig wie beauftragt: `jobs_pause()` aus `jobs_lib.php`, derselbe
+    Schlüssel `jobs_pause_bis`, dieselbe Deckelung auf `JOB_PAUSE_MAX_S` —
+    **0 Zeilen** in `jobs_lib.php`, es kommt nur ein zweiter Auslöser für
+    dieselbe Funktion dazu. Läuft eine Pause, steht statt des Knopfes die
+    orange Meldung mit **„Pause aufheben"**; der Knopf zum Anhalten ist dann
+    weg, weil es nichts anzuhalten gibt.
+
+    **Der Eintrag oben nennt die falsche Einheit, und er hat sie nicht
+    erfunden.** `php jobs.php --pause <Minuten>` stand so in der Oberfläche
+    (`betrieb_jobs.php`, zweimal) — der Code rechnet in **Sekunden**
+    (`jobs_pause(int $sekunden)`, und `jobs.php --hilfe` sagt es auch). Der
+    Nachbarsatz derselben Karte rechnete `JOB_PAUSE_MAX_S / 3600` und kam auf
+    „höchstens 2 Stunden": Das geht nur mit Sekunden auf, 7200 Minuten wären
+    120 Stunden. Wer den daneben empfohlenen Befehl `--pause 60` im Glauben
+    an Minuten abtippte, bekam **eine Minute** Ruhe. Beide Stellen
+    berichtigt, dazu die Statusseite.
+
+    **Zwei Funde nebenbei, beide in einer Zeile sichtbar:**
+
+    - Die Meldung der laufenden Pause enthielt `<code>php jobs.php --pause
+      0</code>` als Text — `ui_meldung_markup()` escapt ihren Text, also
+      standen die spitzen Klammern auf der Seite. Der Befehl ist jetzt
+      unnötig, der Knopf steht daneben.
+    - Der Text zählte **drei** der sieben Jobs auf („verdichtet, ausgedünnt
+      oder aufgeräumt") und ließ das geplante Komplett-Backup und den
+      Mailversand weg. Harmlos, solange niemand danach entscheidet — neben
+      einem Knopf ist es die Entscheidungsgrundlage. Rückfrage und Meldung
+      nennen den Preis jetzt vollständig.
+
+    **Gemessen im Browser** (angemeldet als BetreiberIn): Anhalten auf
+    15 Min. → Plakette **„läuft" → „angehalten"**, `app_state.jobs_pause_bis`
+    gesetzt auf **+15 Min.** (18:54 → 19:09 Ortszeit), „Pause aufheben" →
+    Zeile **gelöscht**, Plakette zurück auf „läuft". Bedienhöhen **36 px** am
+    Zeigergerät (1280 px) und **44 px** am Fingergerät (390 px), Knopf wie
+    Segmenttasten; waagerechter Überlauf **0** in beiden, Konsolenfehler
+    **0**. Gegenprobe: ein Wert außerhalb der Liste (999 999 s, im Browser
+    hineingeschrieben) wird abgewiesen — Meldung „Bitte eine der angebotenen
+    Dauern wählen.", **nichts geschrieben**; ein POST ohne Formular-Token
+    gibt **403**, ebenfalls nichts geschrieben.
 
 119. **„Import / Export" ist als Sammelpunkt unvollständig.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-18).* Der Menüpunkt
