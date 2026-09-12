@@ -54,6 +54,24 @@ auch die Rettungsmittel **ohne** Standortpflicht, die das Löschen überleben
 und ihre Vorbelegung behalten sollen; nach dem Löschen des Standorts wären
 ihre Zeilen bereits fort. Zwischen beiden ist das einzige Fenster.
 
+**Ein geteilter Suchlink mit einem Sonderzeichen zeigt wieder Treffer**
+(Nr. 153). Die Suche merkt sich ihre Filter im URL-Fragment, und ein Wert von
+dort landete ungeprüft in einem CSS-Selektor. Aus `#wi=%22` wurde ein Selektor
+mit drei Anführungszeichen — der wirft einen Fehler, und weil das Lesen des
+Fragments außerhalb der Fehlerbehandlung stand, riss er den **ganzen
+Seitenaufbau** mit: keine Trefferliste, keine Filterzahl, und die Freitextsuche
+blieb bis zum Neuladen wirkungslos. Der Backlog hatte das kleiner beschrieben
+(„bricht die Auswahl"); gemessen bricht die Seite.
+
+**Gemessen** mit zehn Probewerten gegen beide Stände: vorher **4 Ausnahmen**
+und nur **6 von 10** Aufrufen mit Trefferliste, nachher **0 Ausnahmen** und
+**10 von 10** — bei unverändertem Verhalten für die gemeinten Werte
+(„ja" 6 Treffer, „nein" 77, „egal" 83). Behoben nicht durch Maskieren,
+sondern indem der Wert gar nicht erst in einen Selektor kommt: Die drei
+Auswahlknöpfe stehen ohnehin da und lassen sich vergleichen. Ein unbekannter
+Wert fällt weiterhin still auf „egal" — alte geteilte Links behalten damit ihr
+Verhalten.
+
 ## [Web 19.1.1] — 2026-09-10
 
 ### Web — das Schloss an den beiden Stellen, an denen es fehlte
