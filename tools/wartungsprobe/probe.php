@@ -353,6 +353,31 @@ pruefe(str_contains($a10['rumpf'], 'Wartungsmodus seit'),
 pruefe(str_contains($a10['rumpf'], 'name="password"'),
        '10  ... und mit Anmeldeformular — die Verwaltung kommt hinein');
 
+/* 10a  UND DAS FORMULAR LAESST SICH AUCH ABSCHICKEN (Backlog Nr. 171).
+ *
+ * Erwartung 10 war gruen, waehrend der Rueckweg in Wahrheit zu war: Die
+ * Seite kam mit Balken und Formular, aber `login.php` holt vor dem Absenden
+ * das Salt und die Rundenzahlen aus `auth_salt.php` — ohne sie leitet der
+ * Browser kein Token ab und schickt nie ab. Der Endpunkt stand nicht in
+ * WARTUNG_AUSNAHMEN, lud aber `db.php` und liegt nicht unter `/api/`; er
+ * bekam also die HTML-Wartungsseite, und die Anmeldeseite schrieb
+ * „Anmeldung derzeit nicht möglich".
+ *
+ * DAS IST DER FALL AUS CLAUDE.md 6: eine gruene Zahl, die nicht benennt,
+ * was sie gemessen hat. Ein Formular, das nicht abgesendet werden kann,
+ * erfuellt „mit Anmeldeformular" — und niemand sah es, weil die Probe den
+ * Nebenaufruf nicht kannte. Deshalb misst sie ihn jetzt. */
+/* JSON, nicht Formular: auth_salt.php liest den Rumpf als JSON. `hole()`
+ * entscheidet das an der Kopfzeile. */
+$a10b = hole('auth_salt.php', null, ['email' => 'admin@gen-em.org'],
+             ['Content-Type: application/json']);
+pruefe($a10b['code'] === 200,
+       '10a auth_salt.php -> 200 (ohne ihn ist login.php nutzlos)',
+       'HTTP ' . $a10b['code']);
+pruefe(isset($a10b['daten']['salt']) && is_string($a10b['daten']['salt']),
+       '10a ... und liefert JSON mit `salt`',
+       substr((string)$a10b['rumpf'], 0, 60));
+
 $a11 = hole('wiederherstellen.php', $sidAdmin);
 pruefe($a11['code'] !== 503, '11  wiederherstellen.php mit Admin-Sitzung: nicht 503',
        'HTTP ' . $a11['code']);
@@ -442,15 +467,20 @@ pruefe($rc === 0 && count($aus) > 3,
 /* Die Ausnahmeliste wird gegen die Entscheidung gezaehlt, nicht gegen sich
  * selbst: Wer eine Datei aus E-S5W-04 herausnimmt, soll hier scheitern und
  * nicht erst auf dem Produktivserver. */
+/* `auth_salt.php` ist mit Web 19.1.2 dazugekommen (Backlog Nr. 171):
+ * `login.php` stand schon in der Liste, war ohne diesen Nebenaufruf aber
+ * nicht benutzbar — der Browser holt dort Salt und Rundenzahlen und leitet
+ * ohne sie kein Token ab. Erwartung 10 meldete trotzdem gruen, weil sie das
+ * Formular sah und nicht seinen Weg; Erwartung 10a misst ihn seither. */
 $sollAusnahmen = ['betrieb_status.php', 'betrieb_statistik.php',
                   'betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
                   'update.php', 'wiederherstellen.php', 'jobs.php',
-                  'login.php', 'logout.php', 'install.php'];
+                  'login.php', 'auth_salt.php', 'logout.php', 'install.php'];
 sort($sollAusnahmen);
 $istAusnahmen = WARTUNG_AUSNAHMEN;
 sort($istAusnahmen);
 pruefe($istAusnahmen === $sollAusnahmen,
-       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4',
+       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171',
        implode(', ', $istAusnahmen));
 
 /* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer

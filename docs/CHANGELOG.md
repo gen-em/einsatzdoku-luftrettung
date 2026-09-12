@@ -72,6 +72,40 @@ Auswahlknöpfe stehen ohnehin da und lassen sich vergleichen. Ein unbekannter
 Wert fällt weiterhin still auf „egal" — alte geteilte Links behalten damit ihr
 Verhalten.
 
+**Im Wartungsmodus kommt die BetreiberIn wieder herein** (Nr. 171 — beim
+Aufklären von Nr. 97 gefunden). Die Anmeldeseite war von der Wartung
+ausgenommen, „damit eine abgemeldete Administratorin hineinkommt". Sie kam auch
+— mit Balken und Formular. **Abschicken ließ sie sich trotzdem nicht:** Der
+Browser holt vorher das Salt und die Rundenzahlen von einem zweiten Endpunkt,
+und der stand nicht in der Ausnahmeliste. Ohne diese Werte leitet der Browser
+kein Token ab, und die Seite schrieb „Anmeldung derzeit nicht möglich". Der
+einzige Ausweg war SSH oder FTP — also genau die Lage, die die Ausnahmeliste
+verhindern soll. Das Handbuch versprach den Weg, den es nicht gab.
+
+**Die Wartungsprobe meldete dazu grün**, weil sie das Formular sah und nicht
+seinen Weg: Ein Formular, das nicht abgeschickt werden kann, erfüllt „mit
+Anmeldeformular". Sie misst den Nebenaufruf jetzt mit (**51 → 53
+Erwartungen**), und die Ausnahmeliste hat zwölf statt elf Einträge.
+
+**Wartung ist keine Störung** (Nr. 97). Zwei Stellen verwarfen die Antwort des
+Servers und erfanden einen eigenen Satz: Der GPX-Export meldete „Serverfehler
+beim Laden der Tracks (503)", und die Gerätekopplung sagte nach drei
+Wartetakten „Die Verbindung zum Server ist gerade gestört" — inhaltlich falsch,
+die Verbindung stand ja, der Server hatte bewusst geantwortet. Beide zeigen
+jetzt den Satz, den der Server mitschickt; die Kopplung steigt beim **ersten**
+Takt aus statt beim dritten.
+
+**Der Backlog-Eintrag stimmte in vier von sechs Aussagen nicht mehr** und ist
+beim Austragen berichtigt worden: Zwei der genannten Dateien enthalten gar kein
+`fetch()` mehr (und riefen am Tag der Aufnahme einen **fremden** Dienst, den
+die Wartung nie sieht), eine zeigt nicht „ihre allgemeine Meldung", sondern
+bewusst gar nichts, und acht Aufrufstellen in sechs Seiten fehlten in der
+Liste. Gezählt nach der Behebung: **18** Stellen treffen das Wartungstor,
+**13** zeigen den Text, **5** schweigen mit Absicht — Hintergrund- und
+Komfortwege, wo eine Meldung falsch wäre und nicht fehlend. Ein gemeinsamer
+Baustein ist **nicht** gebaut worden: Er hätte zwei Stellen bedient und
+achtzehn anfassen müssen.
+
 ## [Web 19.1.1] — 2026-09-10
 
 ### Web — das Schloss an den beiden Stellen, an denen es fehlte

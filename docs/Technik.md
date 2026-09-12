@@ -367,7 +367,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      seit Web 15.5.2 die Zählweise der Migrationen
 │   │                      (Teil 6, Backlog Nr. 149) und seit 15.6.0, dass die
 │   │                      Integritätswache im Wartungsmodus nicht rot wird
-│   │                      (12a, Nr. 140) — 51 Erwartungen.
+│   │                      (12a, Nr. 140) — 53 Erwartungen.
 │   │                      **Legt den Schalter selbst um** und nimmt für
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer
@@ -5941,7 +5941,7 @@ für das sie da ist.
 (neben `db.php`)? (2) Ist die aufgerufene Seite eine der elf Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/wartungsprobe/probe.php` (51 Erwartungen; seit Web 15.5.2 misst
+`php tools/wartungsprobe/probe.php` (53 Erwartungen; seit Web 15.5.2 misst
 ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, und
 seit 15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot
 wird, Nr. 140).

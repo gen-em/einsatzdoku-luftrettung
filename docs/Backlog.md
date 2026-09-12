@@ -1071,18 +1071,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Android-Auslieferung gekostet, für eine Lage, die wenige Minuten dauert.
     **Nach v1.0** neu abwägen — dann gibt es mehr als eine Uhr.
 
-97. **Die Browser-Skripte zeigen den Wartungstext uneinheitlich.**
-    *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-10).*
-    Die 503-Antwort trägt ein Feld `meldung`. **`export.js`, `import_ui.js`
-    und `schneiden.js`** lesen es aus jeder Fehlerantwort und zeigen es an —
-    ohne eine Zeile Änderung. **`kopplung.js`** wirft `'HTTP ' + status`,
-    **`unlock.js`, `ortsfeld.js` und `ortswahl.js`** zeigen ihre allgemeine
-    Meldung. Wer während einer Wartung eine Adresse sucht, liest also je nach
-    Stelle etwas anderes.
-    **Bewusst so gelassen:** Drei davon sind Komfortwege, der vierte ist der
-    Kopplungstakt, der sich nach drei Fehlern selbst beendet — und während
-    einer Wartung koppelt ohnehin niemand.
-
 99. **Fassungsprüfung auf Klick.**
     *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R66, Option A2).*
     Ein Knopf „Auf neue Fassung prüfen" auf der Wartungsseite, der einmalig
@@ -1607,11 +1595,113 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Abnahme:* Eine Probe, die rot wird, wenn man ein `dtGeschuetzt()` in
     `einsatz.php` durch einen nackten String ersetzt.
 
+172. **Eine Erwartung der Wartungsprobe flackert.**
+    *Aufgenommen 12.09.2026 in der Backlog-Runde (Web 19.1.2).* Erwartung 15
+    lautet „das 503 kommt schneller als die Antwort ohne Wartung" und belegt
+    damit, dass das Wartungstor **vor** Datenbank und Ratenschutz greift. Sie
+    vergleicht zwei **Einzelmessungen** mit `<` und ohne Spielraum. Auf der
+    lokalen Anlage liegen beide bei rund **71 ms** — der Vorsprung des Tores
+    verschwindet hinter Prozessstart und TLS. Gemessen: **0, 1, 0** nicht
+    erfüllte Erwartungen in drei Läufen hintereinander, jedes Mal war es
+    diese; die Zahlen lagen bei 71,7 gegen 71,6 ms.
+
+    *Warum das zählt:* Eine Probe, die bei jedem dritten Lauf ohne Grund rot
+    wird, wird nach dem dritten Mal nicht mehr gelesen — dasselbe Argument,
+    mit dem F-S8-P-06 seinerzeit die Probe berichtigt hat. Und sie ist heute
+    die einzige rote Zahl eines sonst grünen Laufs.
+
+    *Was zu tun wäre — nicht in der Runde gemacht, weil es eine Entscheidung
+    über das Prüfmittel ist:* Entweder mehrfach messen und Mediane
+    vergleichen, oder die Erwartung anders stellen. Der Satz, den sie
+    eigentlich belegen will, ist **strukturell** wahr und nicht zeitlich:
+    `wartung_tor()` steht in `db.php` vor jedem Verbindungsaufbau. Eine
+    Prüfung am Code wäre stabiler als eine an der Stoppuhr.
+    *Abnahme:* Zehn Läufe hintereinander, zehnmal dieselbe Zahl.
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+171. **Im Wartungsmodus kommt niemand mehr herein — auch die BetreiberIn nicht.**
+    *Aufgenommen und behoben am 12.09.2026 (Web 19.1.2), gefunden beim
+    Aufklären von Nr. 97.* `login.php` steht seit jeher in
+    `WARTUNG_AUSNAHMEN`, ausdrücklich „damit eine abgemeldete
+    Administratorin hineinkommt". Die Seite kam auch — mit Balken und
+    Formular. Abschicken ließ sie sich trotzdem nicht: Der Browser holt
+    vorher Salt und Rundenzahlen aus **`auth_salt.php`**, und ohne sie
+    leitet er kein Token ab. Dieser Endpunkt stand **nicht** in der Liste,
+    lädt aber `db.php` und liegt nicht unter `/api/` — er bekam also die
+    HTML-Wartungsseite mit 503, und die Anmeldeseite schrieb „Anmeldung
+    derzeit nicht möglich. Bitte später erneut."
+
+    **Der einzige Ausweg war SSH oder FTP** — also genau die Lage, die die
+    Ausnahmeliste verhindern soll. Und `docs/Handbuch.md` 12.3 versprach den
+    Weg, den es nicht gab: „Die **Anmeldeseite funktioniert weiter**. Melde
+    dich mit einem BetreiberIn-Konto an."
+
+    **Die Wartungsprobe meldete dazu grün.** Erwartung 10 lautete
+    „`login.php` → 200 mit Balken **und** Formular" — ein Formular, das nicht
+    abgeschickt werden kann, erfüllt das. `auth_salt` kam in der Probe **null
+    mal** vor. Das ist der Fall aus `CLAUDE.md` 6: eine grüne Zahl, die nicht
+    benennt, was sie gemessen hat; dasselbe Muster wie F-S8-P-04, nur eine
+    Ebene tiefer — im Nebenaufruf statt in der Seite.
+
+    **Behoben:** `auth_salt.php` in `WARTUNG_AUSNAHMEN`, mit derselben
+    Begründung, die dort bei `login.php` steht. Das Risiko — eine Abfrage auf
+    `users` während einer laufenden Migration — ist kein neues: `login.php`
+    liest dieselbe Tabelle und steht seit jeher in der Liste. **Und die Probe
+    misst es jetzt:** neue Erwartung **10a** (`auth_salt.php` → 200 mit JSON
+    und `salt`), Erwartungen **51 → 53**, Ausnahmeliste elf → **zwölf**
+    Einträge. Gemessen: 53 Erwartungen, 0 nicht erfüllt.
+
+97. **Die Browser-Skripte zeigen den Wartungstext uneinheitlich.**
+    *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-10).*
+    Die 503-Antwort trägt ein Feld `meldung`. **`export.js`, `import_ui.js`
+    und `schneiden.js`** lesen es aus jeder Fehlerantwort und zeigen es an —
+    ohne eine Zeile Änderung. **`kopplung.js`** wirft `'HTTP ' + status`,
+    **`unlock.js`, `ortsfeld.js` und `ortswahl.js`** zeigen ihre allgemeine
+    Meldung. Wer während einer Wartung eine Adresse sucht, liest also je nach
+    Stelle etwas anderes.
+    **Bewusst so gelassen:** Drei davon sind Komfortwege, der vierte ist der
+    Kopplungstakt, der sich nach drei Fehlern selbst beendet — und während
+    einer Wartung koppelt ohnehin niemand.
+
+    **Erledigt mit Web 19.1.2 (12.09.2026, Backlog-Runde) — und der Eintrag
+    oben stimmte in vier von sechs Aussagen nicht mehr.** Er bleibt stehen,
+    weil er das Protokoll ist; hier steht, was der Code dazu sagt:
+
+    - **`ortsfeld.js` und `ortswahl.js` gehören gar nicht dazu.** Beide
+      enthalten heute kein `fetch()` mehr (seit Web 15.7.0 läuft alles über
+      `EdGeocoder`) — und am Tag der Aufnahme fetchten sie **Photon**, also
+      einen fremden Dienst. Der Wartungsmodus hat diese Anfragen nie
+      gesehen und konnte nie ein 503 darauf geben. Die Begründung des
+      Eintrags („wer während einer Wartung eine Adresse sucht") beschreibt
+      einen Vorgang, den es nicht gibt.
+    - **`unlock.js` zeigt nicht „seine allgemeine Meldung", sondern gar
+      nichts** — an allen drei Stellen, ausdrücklich begründet („Bewusst
+      still"). Für eine Hintergrundanhebung ist das richtig, nicht falsch.
+    - **`export.js` ist in sich uneinheitlich:** `fetchMeta()` zeigte den
+      Text, `fetchTrack()` verwarf die Antwort und meldete „Serverfehler
+      beim Laden der Tracks (503)". Das stand nirgends.
+    - **Acht Aufrufstellen in sechs PHP-Seiten fehlten in der Liste** —
+      darunter die Startseite, also die Seite, die im Reiter offen steht,
+      wenn jemand die Wartung einschaltet.
+
+    **Gezählt nach der Behebung:** 20 Aufrufstellen, davon 2 an einen
+    Dritten (Adresssuche) → **18 treffen das Tor**. **13 zeigen den Text**,
+    **5 schweigen bewusst** (Hintergrund- und Komfortwege, wo eine Meldung
+    falsch wäre, nicht fehlend). Geändert wurden genau zwei Zeilen —
+    `export.js` (`fetchTrack` liest jetzt den Rumpf wie `fetchMeta`) und
+    `kopplung.js` (Wartung ist keine Störung: sofort aussteigen statt nach
+    drei Takten „Die Verbindung zum Server ist gerade gestört" zu sagen,
+    was inhaltlich falsch ist — die Verbindung steht ja).
+
+    **Kein gemeinsamer Baustein gebaut, und das mit Absicht.** Von 18
+    Stellen waren 11 schon richtig und 5 sollen schweigen; ein Helfer hätte
+    2 Stellen bedient und 18 anfassen müssen. Wenn später doch einer
+    entsteht, ist `assets/html.js` das Muster.
 
 19. **`$title` in `einsatz_loeschen.php` wird nie gelesen.** Die Variable wird
     gesetzt, der Titel steht daneben als Literal. Gefunden in P0 (dort F-06).
