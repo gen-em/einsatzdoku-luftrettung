@@ -1255,7 +1255,6 @@ heute **72 = 72**.
 | 116 | Kontrastwerkzeug misst nur seine Paarliste | Backlog-Runde | Android-Prüfmittel `android/werkzeuge/kontraste.py`; Paare aus dem Code ableiten |
 | 117 | Kein Vermerk, ob eine NutzerIn je ein Backup gezogen hat (B-S8-07) | Backlog-Runde | Spalte an `users`, Zeile auf der Kontoseite |
 | 118 | Hintergrundjobs nur auf der Kommandozeile anzuhalten (B-S8-16) | Backlog-Runde | Schalter auf Betrieb → Hintergrundjobs |
-| 119 | „Import / Export" als Sammelpunkt unvollständig (B-S8-18) | Backlog-Runde / S9 | der GPX-Import je Diensttag fehlt dort |
 | 120 | Testmail aus der Oberfläche (E-S8-16) | Backlog-Runde | eine Zeile auf Betrieb → Status |
 | 121 | Vorschau der Rechtstexte beim Tippen (Mockup 09) | Backlog-Runde | heute nur der gespeicherte Stand |
 | 122 | Freie Zeiträume und Diagramme in der Statistik (Mockup 04) | P5 / Backlog-Runde | Diagrammbibliothek müsste vendoriert werden |

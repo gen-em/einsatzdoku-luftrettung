@@ -282,14 +282,22 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 
 | Block | wer sieht ihn | was darin steht |
 |---|---|---|
-| **Einstellungen** | alle | Profil, Geräte, **Standorte**, **Rettungsmittel**, Backup, Import / Export — Kapitel 3 bis 10 |
+| **Einstellungen** | alle | Profil, Geräte, **Standorte**, Backup, Import / Export — Kapitel 3 bis 10 |
 | **Verwaltung** | Admins | NutzerInnen, **Konto-Backups**, **Installation**, Demo-Konto — **Kapitel 11** |
 | **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** — **Kapitel 12** |
 
 Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen Geräten
 untereinander. Abmelden steht getrennt am Ende und fragt sicherheitshalber
-nach. Bis Web 6.3.0 hieß der Punkt für Standorte und Rettungsmittel zusammen
-„Standortdaten"; der alte Link führt weiterhin zu „Standorte".
+nach.
+
+Der Punkt für die Stammdaten hat zweimal den Namen gewechselt, und beide alten
+Links funktionieren weiter. Bis Web 6.3.0 hieß er „Standortdaten" und trug
+Standorte und Rettungsmittel zusammen. Danach standen „Standorte" und
+„Rettungsmittel" nebeneinander im Menü — bis Web 19.0.0: Seither gibt es
+**nur noch „Standorte"**, und die Rettungsmittel eines Standorts stehen auf
+dessen eigener Seite. Der Grund war, dass beide Reiter denselben Bestand
+luden und man zwischen ihnen hin und her ging, um einen einzigen Standort
+einzurichten.
 
 **In der Leiste klappen dieselben drei Blöcke auf und zu.** Offen sind
 „Einstellungen" und der Block, in dem die gerade geöffnete Seite steht; die
@@ -810,6 +818,10 @@ Export aus einer anderen Software, aus einem eigenen Backup —, lässt sich
 einem Diensttag hinzufügen. Über **„···" → „GPX importieren"**; der Eintrag
 steht direkt neben **„GPS-Daten als GPX"**, denn es ist derselbe Weg in die
 andere Richtung.
+
+**Warum hier und nicht unter „Import / Export"?** Eine Aufzeichnung gehört immer zu
+*einem* Diensttag — und welcher das ist, weiß nur die Tagesübersicht. Unter
+Import / Export steht dieselbe Begründung, samt Verweis hierher.
 
 **Zwei Möglichkeiten, und die Wahl ist wichtig:**
 
@@ -2034,6 +2046,22 @@ Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
 Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
 Jahresliste.
 
+**Der Name ist weiter gefasst als die Seite, und seit Web 19.3.0 sagt sie das
+selbst.** Hier läuft die **Einsatzliste als Ganzes** in beide Richtungen —
+mehr nicht. Die übrigen Wege für Daten hinein und hinaus liegen dort, wohin
+sie gehören, und die Seite nennt sie am Ende unter „Was hier gilt“:
+
+| Weg | wo | Abschnitt |
+|---|---|---|
+| Vollständiges Backup erstellen und einspielen | Einstellungen → Backup | 6 |
+| GPX-Datei einlesen | Tagesübersicht, „Aktionen → GPX importieren“ | 4.1c |
+| GPS-Daten eines Diensttags als GPX | Tagesübersicht, „Aktionen → GPS-Daten als GPX“ | 4.1a |
+| GPS-Daten eines Einsatzes als GPX | Seite des Einsatzes, „Aktionen → GPS-Daten als GPX“ | 4.2 |
+
+Bis Web 19.3.0 stand auf der Seite kein einziger Verweis auf einen dieser
+Wege. Wer den GPX-Import dort suchte, fand ihn nicht — und erfuhr auch nicht,
+wo er stattdessen steht.
+
 **Der Weg hat drei Schritte, und jeder ist eine eigene Karte:** *1. Datei
 wählen*, *2. Prüfen und korrigieren*, *3. Übernehmen*. Die Schritte 2 und 3
 erscheinen erst, wenn der vorige getan ist. In Schritt 2 lässt sich die
@@ -2107,7 +2135,9 @@ Rückimport der eigenen Exportformate ist da genauer — siehe „Zurücklesen" 
 
 Auf derselben Seite, unterhalb des Importbereichs, steht der **Export**. Er ist
 zum Weiterverarbeiten in anderen Programmen gedacht — **nicht als Backup**. Für
-ein vollständiges Backup gibt es Abschnitt 6.
+ein vollständiges Backup gibt es Abschnitt 6. Dieser Satz stand lange nur hier
+im Handbuch; seit Web 19.3.0 steht er auch auf der Seite selbst, und die
+Backup-Seite verweist umgekehrt hierher.
 
 Wie beim Import passiert alles im Browser: Der Server liefert nur Rohdaten, die
 geschützten Angaben werden erst auf deinem Rechner entschlüsselt. Ohne den Haken

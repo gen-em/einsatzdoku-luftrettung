@@ -1123,17 +1123,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `app_state`-Schlüssel. Das ist eine **neue Funktion** und deshalb nicht
     Teil von S8. Zuordnung: Backlog-Runde oder P5.
 
-119. **„Import / Export" ist als Sammelpunkt unvollständig.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-18).* Der Menüpunkt
-    verspricht, alle Wege für Daten hinein und hinaus zu tragen — tatsächlich
-    liegt der **GPX-Import je Diensttag** auf der Tagesübersicht (neben
-    „Spuren als GPX", E-S4-18) und der Backup-Rückweg auf „Backup". Nach dem
-    Ordnungsprinzip (R74, Regel 2) ist das für den GPX-Weg sogar richtig — er
-    gehört zu *diesem* Diensttag —, aber dann ist der Name des Sammelpunkts
-    zu weit. **Zu klären mit S9**, das die Tagesübersicht ohnehin umbaut: ob
-    „Import / Export" enger heißt (etwa „Einsatzliste") oder ob die Seite die
-    anderen Wege wenigstens nennt. Zuordnung: Backlog-Runde, mit S9 abstimmen.
-
 120. **Eine Testmail aus der Oberfläche senden.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (E-S8-16).* Die Statusseite
     (S8 AP4) zeigt für E-Mail nur, ob SMTP **eingerichtet** ist — ob eine
@@ -1511,6 +1500,75 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+119. **„Import / Export" ist als Sammelpunkt unvollständig.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-18).* Der Menüpunkt
+    verspricht, alle Wege für Daten hinein und hinaus zu tragen — tatsächlich
+    liegt der **GPX-Import je Diensttag** auf der Tagesübersicht (neben
+    „Spuren als GPX", E-S4-18) und der Backup-Rückweg auf „Backup". Nach dem
+    Ordnungsprinzip (R74, Regel 2) ist das für den GPX-Weg sogar richtig — er
+    gehört zu *diesem* Diensttag —, aber dann ist der Name des Sammelpunkts
+    zu weit. **Zu klären mit S9**, das die Tagesübersicht ohnehin umbaut: ob
+    „Import / Export" enger heißt (etwa „Einsatzliste") oder ob die Seite die
+    anderen Wege wenigstens nennt. Zuordnung: Backlog-Runde, mit S9 abstimmen.
+
+    **Erledigt mit Web 19.3.0 (12.09.2026, Backlog-Runde 2)** — als Verweis,
+    nicht als Verlegung und nicht als Umbenennung.
+
+    **Zuerst die Zahl, die den Punkt größer macht, als er dasteht.** Eine
+    NutzerIn hat **acht** Wege für Daten hinein und hinaus: Einsatzliste
+    hinaus und herein (`import.php`), Backup hinaus und herein sowie ein
+    freigegebenes Konto-Backup herein (`einstellungen.php?t=backup`), GPX
+    herein je Diensttag, GPX hinaus je Diensttag und je Einsatz. Auf dem
+    Sammelpunkt liegen **zwei**. Der Eintrag oben liest sich wie eine
+    Kleinigkeit an einer Stelle; gemessen fehlten **sechs**.
+
+    **Und der eigentliche Befund stand nicht im Eintrag:** Die Seite trug
+    nicht nur die anderen Wege nicht — sie **nannte** sie nicht einmal.
+    Gemessen **0 Vorkommen von `href`** in `server/import.php`, ebenso 0 im
+    Backup-Reiter. Der Eintrag fragt, „ob die Seite die anderen Wege
+    wenigstens nennt", als wäre das der Rückfallplan; tatsächlich war genau
+    das das Fehlende.
+
+    **Drei Handgriffe, alle in vorhandenen Bausteinen:**
+
+    - Ein **Untertitel** an der Titelzeile grenzt den zu weiten Namen ein
+      (Vorbild `admin_sicherungen.php`, B-S8-08).
+    - Eine **zugeklappte Karte „Was hier gilt"** als letzte der Seite nennt
+      in vier Absätzen die übrigen Wege *mit Begründung*, warum sie dort und
+      nicht hier liegen. Diese Karte stand auf **9** Seiten der Anwendung,
+      jetzt auf **10**. Die Adresse des Backups wird aus
+      `ui_einstellungen_punkte()` gelesen, nicht abgeschrieben — das war der
+      Fehler, den Nr. 151 zwei Tage vorher behoben hat.
+    - Der **Rückweg**: Der Backup-Reiter nennt jetzt `import.php`. Vorher
+      zeigte kein Verweis in eine der beiden Richtungen.
+
+    **Nicht gemacht, und warum nicht:**
+
+    - *Umbenennen in „Einsatzliste"* (der Vorschlag des Eintrags) würde den
+      Export verstecken. „Einsatzliste" sagt nicht, dass man dort eine Datei
+      herausbekommt, und der Menüpunkt ist der einzige Ort dafür. Der Name
+      ginge von zu weit auf zu eng.
+    - *Den GPX-Import auf die Sammelseite holen* verstößt gegen R74 Regel 1
+      und 2, verdoppelte entweder das Dialog-Markup oder zerlegte
+      `schneiden.js`, und bräuchte eine Weiterleitung zurück in die
+      Tagesansicht — ein neuer Weg durch die Anwendung, also Konzeptarbeit,
+      für ein schlechteres Ergebnis.
+
+    **Gemessen nach der Änderung** (Browser, angemeldet, 1280 px): Verweise
+    im Seiteninhalt **0 → 4**, Karten **4 → 5**, die neue Karte ist ein
+    `<details>` und steht **zu**; waagerechter Überlauf **0** auch
+    aufgeklappt, Konsolenfehler **0**. Alle drei Ziele geben **200**. Am
+    Konto ohne Diensttag (`admin@gen-em.org`, 0 Diensttage) führt der
+    GPS-Verweis auf „Noch keine Daten" — deshalb hängt der Satz am Diensttag
+    und verspricht kein Menü.
+
+    **Zwei Funde aus derselben Ecke gleich mitgenommen:** Das Handbuch
+    führte im Menüblock Einstellungen noch **„Rettungsmittel"**, den es seit
+    Web 19.0.0 nicht mehr gibt (S9/AP5) — ausgetragen und durch die
+    Geschichte der zwei Umbenennungen ersetzt. Und zwei Codekommentare
+    (`index.php`, `gpx.php`) nannten „Spuren als GPX"; der Eintrag heißt seit
+    S9 „GPS-Daten als GPX".
 
 126. **Von der Wartungsseite führt kein Weg zurück in die Verwaltung.**
     *Aufgenommen 06.09.2026 bei S8/AP8, aus dem Umschreiben von Handbuch 12.3.*

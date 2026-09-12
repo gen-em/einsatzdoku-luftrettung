@@ -35,6 +35,33 @@ Rolle bekannt und reicht nicht, der Knopf führte garantiert auf eine
 Fehlerseite. **Nicht gebaut** ist die Zeile mit Zeitpunkt und schaltendem
 Konto: Auf einer Seite, die jeder Besucher sieht, wäre das ein Namensleck.
 
+**„Import / Export" sagt jetzt, was es nicht ist** (Nr. 119). Der Menüpunkt
+verspricht dem Namen nach alle Wege für Daten hinein und hinaus. Eine NutzerIn
+hat davon **acht**; auf der Seite liegen **zwei**. Das allein wäre vertretbar —
+eine GPS-Spur gehört zu *einem* Diensttag, und deshalb steht ihr Import nach
+dem Ordnungsprinzip (R74, Regel 2) richtig auf der Tagesübersicht. Nicht
+vertretbar war, dass die Seite die anderen sechs Wege **nicht einmal nannte**:
+gemessen null Verweise, in beiden Richtungen — auch der Backup-Reiter schwieg
+über den Export.
+
+**Behoben mit Sprache, nicht mit einer zweiten Funktion.** Ein Untertitel
+grenzt den zu weiten Namen ein, und eine zugeklappte Karte „Was hier gilt" am
+Seitenende nennt die übrigen Wege *mit Begründung*, warum sie dort und nicht
+hier liegen. Diese Karte ist kein neuer Baustein: Sie stand bereits auf neun
+Seiten, `import.php` war die Lücke. Der Backup-Reiter verweist jetzt zurück.
+
+**Nicht umbenannt**, obwohl der Backlog es andachte: „Einsatzliste" wäre
+genauer für den Import und würde den **Export** verstecken — der Menüpunkt ist
+der einzige Ort dafür. Und **nicht verlegt**: Den GPX-Import zusätzlich auf die
+Sammelseite zu holen, hieße dasselbe Formular zweimal im Markup zu führen oder
+`schneiden.js` zu zerlegen, und es bräuchte einen neuen Weg zurück in die
+Tagesansicht. Der Preis stünde in keinem Verhältnis zum Gewinn.
+
+**Zwei Altlasten aus derselben Ecke gleich mit ausgetragen:** Das Handbuch
+führte im Menü noch „Rettungsmittel", das seit Web 19.0.0 in „Standorte"
+aufgegangen ist, und zwei Codekommentare nannten „Spuren als GPX" statt
+„GPS-Daten als GPX".
+
 ## [Web 19.2.0] — 2026-09-12
 
 ### Web — die Anmeldung rechnet wieder nur einmal
