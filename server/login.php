@@ -156,9 +156,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             $token = $tokenNach[$konto] ?? '';
             $ok = $token !== '' && password_verify($token, $u['password_hash']);
         } else {
-            // Unbekannte Adresse oder Konto ohne gesetztes Passwort: trotzdem
-            // eine bcrypt-Pruefung, damit dieser Zweig nicht schneller ist.
-            password_verify(reset($tokenNach) ?: '', AUTH_VERGLEICHSWERT);
+            /* Unbekannte Adresse oder Konto ohne gesetztes Passwort: trotzdem
+             * eine bcrypt-Rechnung, damit dieser Zweig nicht schneller ist.
+             *
+             * DER VERGLEICHSWERT WIRD GEPRUEFT, NICHT GEGLAUBT (Backlog
+             * Nr. 93). Er traegt eine feste Rundenzahl (db.php), und die
+             * Vorgabe von PASSWORD_DEFAULT waechst mit den PHP-Fassungen —
+             * von Web 5 bis 19.1.1 stand er auf 10, waehrend PHP 8.4 laengst
+             * 12 anlegte, und der blinde Zweig war damit viermal schneller
+             * als der bekannte. password_needs_rehash() kostet nichts
+             * (0,0000 ms ueber 2000 Laeufe) und faengt genau das ab: Passt
+             * die Konstante, bleibt es beim billigen Vergleich; passt sie
+             * nicht, kostet ein password_hash() mit der Vorgabe genau so
+             * viel wie die Pruefung im Gegenzweig.
+             *
+             * NICHT BEIDES. Hashen UND danach pruefen macht diesen Zweig um
+             * 234 ms LANGSAMER als den anderen und sprengt die Mindestdauer
+             * — das Leck waere dann umgedreht. */
+            if (password_needs_rehash(AUTH_VERGLEICHSWERT, PASSWORD_DEFAULT)) {
+                password_hash(reset($tokenNach) ?: '', PASSWORD_DEFAULT);
+            } else {
+                password_verify(reset($tokenNach) ?: '', AUTH_VERGLEICHSWERT);
+            }
             $ok = false;
         }
 

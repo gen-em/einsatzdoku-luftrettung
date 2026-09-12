@@ -106,6 +106,29 @@ Komfortwege, wo eine Meldung falsch wäre und nicht fehlend. Ein gemeinsamer
 Baustein ist **nicht** gebaut worden: Er hätte zwei Stellen bedient und
 achtzehn anfassen müssen.
 
+**Die Anmeldung verrät nicht mehr über die Rechenzeit, ob es ein Konto gibt**
+(Nr. 93). Damit ein Angreifer aus der Antwortdauer nicht ablesen kann, welche
+Adressen existieren, rechnet auch der Zweig „Adresse unbekannt" eine
+bcrypt-Prüfung — gegen einen festen Vergleichswert. Dessen Rundenzahl stand
+seit Web 5 auf dem Wert, den PHP 8.1 bis 8.3 anlegten; **PHP 8.4 legt einen
+teureren an**, und damit war der blinde Zweig viermal schneller als der echte.
+Verdeckt hat das nur eine Mindestdauer von 0,35 Sekunden — auf einem
+langsameren Rechner kippt sie.
+
+**Gemessen** auf derselben Maschine, Median aus je 15 Läufen: vorher
+**231,9 ms** gegen **58,2 ms**, also **173,7 ms Abstand** (Faktor 3,98);
+nachher **232,5** gegen **232,7 ms**, also **0,1 ms** (0,06 %).
+
+**Die neue Zahl allein hätte nicht gereicht.** Sie geht beim nächsten
+PHP-Sprung wieder aus dem Takt, und auf einer Installation mit PHP 8.1 bis 8.3
+— die Anwendung verspricht ab 8.1 — kehrte sie das Leck sogar um. Deshalb
+**prüft** die Anmeldung den Wert jetzt, statt ihm zu vertrauen: Passt er nicht
+mehr zur Vorgabe, rechnet der blinde Zweig stattdessen einen frischen Hash und
+kostet damit genau so viel wie der echte. Die Prüfung selbst ist gratis
+(0,0000 ms über 2000 Läufe). **Beides zusammen wäre falsch** — hashen *und*
+prüfen macht den blinden Zweig 234 ms **langsamer** als den echten und dreht
+das Leck um; das steht jetzt als Warnung am Code.
+
 ## [Web 19.1.1] — 2026-09-10
 
 ### Web — das Schloss an den beiden Stellen, an denen es fehlte
