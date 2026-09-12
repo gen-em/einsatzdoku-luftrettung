@@ -4019,13 +4019,26 @@ declare(strict_types=1);
  * Diensttage, 88 Einsaetze, 2 Geraete, 55 861 Spurpunkte).
  *
  * ---------------------------------------------------------------------------
- * 19.3.0 — BACKLOG-RUNDE 2: der Block Betrieb wird fertig.
+ * 19.3.0 — BACKLOG-RUNDE 2: der Block Betrieb wird bedienbar.
  *
- * Eine Nebennummer, weil zwei Handgriffe dazukommen, die es nur auf der
- * Kommandozeile gab oder gar nicht. Die uebrigen Punkte der Runde sind
- * Korrekturen und laufen unter derselben Nummer mit — das Muster der
- * Korrekturstufe 15.5.2 und der Runde 19.1.2.
+ * Eine Nebennummer, weil zwei Handgriffe dazukommen, die es bisher NUR auf
+ * der Kommandozeile gab oder gar nicht: die Hintergrundjobs anhalten
+ * (Nr. 118) und eine Testmail schicken (Nr. 120). Beides sind Dinge, die
+ * eine BetreiberIn auf geteiltem Hosting sonst nicht tun kann.
  *
+ * Die uebrigen drei Punkte der Runde sind Korrekturen und laufen unter
+ * derselben Nummer mit — das Muster der Korrekturstufe 15.5.2 und der
+ * Runde 19.1.2: der Rueckweg aus der Wartungsseite (Nr. 126), die
+ * Querverweise auf „Import / Export" (Nr. 119) und das Streichen der
+ * doppelten Rasterregel `.zweispalter` (Nr. 125).
+ *
+ * ZWEI SEITEN GEBEN DABEI EINE ZUSAGE AUF ODER SCHRAENKEN SIE EIN, und
+ * beides ist ausdruecklich freigegeben: Betrieb -> Status hatte „genau eine
+ * Ausnahme" von „rein lesend" und hat jetzt zwei; „Import / Export" traegt
+ * nicht mehr den Anspruch, alle Datenwege zu fuehren, sondern sagt, wo die
+ * uebrigen liegen.
+ *
+ * Ein neues Zeichen im Symbolvorrat (`mail.svg`, Tabler „mail", das 53.).
  * Die Punkte im Einzelnen stehen im Changelog. Keine Migration.
  */
 const WEB_VERSION = '19.3.0';
