@@ -154,7 +154,7 @@ Namen nicht weiterführen. Hier wird nichts verändert.
 `server/assets/images/symbole/LICENSE-tabler-icons.txt`
 (© 2020–2026 Paweł Kuna).
 
-52 Dateien unter `server/assets/images/symbole/`, je Zeichen eine Datei,
+53 Dateien unter `server/assets/images/symbole/`, je Zeichen eine Datei,
 24 × 24, Strich 2 px, Farbe über `currentColor`. Jede Datei trägt im Kommentar
 ihren Tabler-Namen; die Zuordnungstabelle steht in der `LIESMICH.md` daneben.
 Eine erzeugte Übersicht liefert `python3 tools/design/tabellen.py symbole`.
@@ -443,6 +443,7 @@ Laufzeit wird nichts nachgeladen, die Zusage aus Abschnitt 2 bleibt unberührt.
 
 | Fassung | Was |
 |---|---|
+| Web 19.3.0 (Backlog-Runde 2) | Abschnitt 5: **ein neues Zeichen**, Tabler Icons **„mail"** (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `mail.svg`. Es trägt den Knopf „Testmail an mich" auf Betrieb → Status (Backlog Nr. 120). **52 → 53 Dateien.** Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: derselbe Satz, aus dem die 52 kommen. Gebraucht wurde es, weil der Vorrat kein Zeichen für „E-Mail" hatte (gemessen: 0 Treffer) und alle elf vorhandenen Kopfaktionen eines tragen — eine textnackte wäre eine neue Darstellung gewesen. |
 | Web 16.0.0 (S9/AP4) | Abschnitt 5: `veranstaltung.svg` trägt jetzt Tabler Icons **„ticket“** statt „building-stadium“ — dieselbe Quelle, dieselbe Lizenz, eine andere Zeichnung. Grund ist die Lesbarkeit im Kartenschild: Gemessen am 07.09.2026 hält „ticket“ seine eine Binnenfläche von 96 px bis herunter auf 16 px unverändert, während „building-stadium“ bei 18 px zwei seiner vier Binnenflächen auf einen einzelnen Pixel verliert und bei 16 px zwei ganz schließt; der Deckungsgrad liegt bei 33 statt 26 Prozent. M-S9-02 hatte „ticket“ selbst empfohlen und „building-stadium“ bei 20 px „einen Klumpen“ genannt. **Die Zahl der Dateien bleibt 52.** |
 | Web 15.9.0 (S9/AP3) | Abschnitt 5: **drei neue Zeichen**, alle Tabler Icons (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `bergwacht.svg` („mountain“), `veranstaltung.svg` („building-stadium“), `sonstiges.svg` („dots-circle-horizontal“). Sie stehen für die Diensttag-Typen aus M-S9-02. **49 → 52 Dateien.** Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: Es ist derselbe Satz, aus dem die 49 kommen. |
 | Web 15.8.0 (S9/AP2) | Abschnitt 6.2 neu gefasst: Der Adressdienst ist **einstellbar** und **abschaltbar** geworden. Die Vorgabe `https://photon.komoot.io` steht nur noch in `server/geocoder_lib.php`; in den ausgelieferten Browserdateien kommt der Name nicht mehr vor. Zwei Schalter (Installation, Konto) können den Dienst ganz ausschalten — nachgemessen am Netzwerkprotokoll, nicht behauptet. |

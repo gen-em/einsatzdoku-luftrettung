@@ -219,7 +219,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * ist. */
             if (wartung_aktiv() && !rolle_darf_verwalten($u['role'] ?? null)) {
                 session_verwerfen();
-                wartung_antwort_seite();
+                /* OHNE RUECKWEG (Backlog Nr. 126). Das ist die einzige Stelle,
+                 * an der wir die Rolle KENNEN — und sie reicht nicht: Hinter
+                 * `betrieb_updates.php` steht `require_betreiberin()`. Ein
+                 * Knopf, der hier steht, fuehrt garantiert auf ein 403. */
+                wartung_antwort_seite(false);
             }
 
             session_regenerate_id(true);

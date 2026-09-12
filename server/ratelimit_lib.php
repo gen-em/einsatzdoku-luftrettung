@@ -105,6 +105,21 @@ const RATE_GRENZEN = [
      * laenger waere Strafe, kuerzer waere wirkungslos. */
     'demo'  => ['max' => 20, 'fenster' => 3600, 'sperre' => 3600],
     'demog' => ['max' => 300, 'fenster' => 3600, 'sperre' => 3600],
+
+    /* TESTMAIL ZAEHLT WIE DEMO: die MENGE, nicht Fehlversuche (Backlog
+     * Nr. 120). Auf Betrieb -> Status steht seit Web 19.3.0 ein Knopf
+     * „Testmail an mich"; er ist nur BetreiberInnen zugaenglich, es gibt also
+     * nichts zu erraten. Begrenzt wird der Verbrauch am Mailrelais — und die
+     * Zeit: Der Versand laeuft SYNCHRON in der Seitenanfrage, weil sein
+     * Ergebnis gezeigt werden soll, und ein haengender Mailserver haelt
+     * dabei einen PHP-Arbeitsprozess.
+     *
+     * Drei je Stunde reichen fuer den Zweck: Man prueft nach dem Einrichten
+     * einmal, nach einer Aenderung noch einmal, und wenn es dann immer noch
+     * nicht geht, liegt es nicht an der Zahl der Versuche. Merkmal ist Konto
+     * UND IP (rate_merkmale()) — die Kontokennung, nicht die Adresse, aus
+     * demselben Grund wie in einstellungen.php. */
+    'testmail' => ['max' => 3, 'fenster' => 3600, 'sperre' => 3600],
 ];
 
 /**

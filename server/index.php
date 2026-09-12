@@ -216,7 +216,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
              * dieselbe Freigabe wie ein neuer Baustein. */
             ['text' => 'GPS-Daten als GPX', 'symbol' => 'karte',
              'href' => 'tag_spuren.php?d=' . (int)$selDay, 'attr' => 'id="dayspurenlink"'],
-            /* GPX HEREIN (S4/A3, E-S4-18). Es steht neben „Spuren als GPX" —
+            /* GPX HEREIN (S4/A3, E-S4-18). Es steht neben „GPS-Daten als GPX" —
              * hinaus und herein sind dieselbe Sache in zwei Richtungen, und
              * wer den einen Weg sucht, sucht dort auch den anderen. Kein
              * Verweis, sondern ein Knopf: Der Import ist ein Dialog auf

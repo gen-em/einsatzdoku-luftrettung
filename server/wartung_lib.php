@@ -290,11 +290,11 @@ function wartung_antwort_json(): never
  * KEIN SKRIPT auf dieser Seite. Sie soll auch dann stehen, wenn die
  * Skriptdateien gerade zur Haelfte hochgeladen sind.
  */
-function wartung_antwort_seite(): never
+function wartung_antwort_seite(bool $rueckweg = true): never
 {
     wartung_kopfzeilen();
     header('Content-Type: text/html; charset=utf-8');
-    echo wartung_seite_html();
+    echo wartung_seite_html($rueckweg);
     exit;
 }
 
@@ -307,7 +307,7 @@ function wartung_antwort_seite(): never
  * deshalb brauchte diese Seite keine eigene Freigabe mit Mockup; ihr Text
  * steht wortgleich im Konzept (4.3) und ist damit freigegeben.
  */
-function wartung_seite_html(): string
+function wartung_seite_html(bool $rueckweg = true): string
 {
     $stamm = random_int(0, 1) === 1 ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter';
     $logo  = 'assets/images/' . $stamm . '.svg';
@@ -343,6 +343,34 @@ function wartung_seite_html(): string
       . '      <p>Hast du gerade ein Formular abgeschickt: Geh im Browser'
       . ' <strong>zurück</strong> — die Eingaben stehen noch im Formular — und'
       . ' schick es später erneut ab.</p>' . "\n"
+      /* DER RUECKWEG IN DIE VERWALTUNG (Backlog Nr. 126).
+       *
+       * Bis hierher endete die Seite im Nichts: Wer sich waehrend der
+       * Wartung anmeldete, landete auf der Startseite, und die zeigt
+       * diese Seite — ohne einen einzigen Verweis. Der einzige Weg war,
+       * `betrieb_updates.php` von Hand in die Adresszeile zu tippen.
+       *
+       * FAELLIG GEWORDEN IST DAS ERST MIT NR. 171. Bis Web 19.1.2 liess
+       * sich das Anmeldeformular gar nicht abschicken (auth_salt.php
+       * stand nicht in der Ausnahmeliste) — wer nicht hereinkam, stand
+       * auch nicht vor der Sackgasse. Dies ist die zweite Haelfte
+       * derselben Reparatur.
+       *
+       * REINES MARKUP, KEIN ui_knopf(). Diese Datei laedt nichts —
+       * kein db.php, kein ui.php (Eigenschaft 2 im Dateikopf). Das
+       * Stylesheet ist verlinkt, also tragen `.knopf` und
+       * `.knopf-neutral` hier genauso wie ueberall (Design.md 9.4).
+       *
+       * $rueckweg = false an der EINEN Stelle, an der wir sicher
+       * wissen, dass er ins Leere zeigt: login.php verwirft die
+       * Sitzung eines Kontos OHNE Verwaltungsrecht und zeigt diese
+       * Seite. Sonst steht der Verweis fuer jeden da — das ist
+       * verkraftbar, weil hinter der Adresse `require_betreiberin()`
+       * steht und sie ohnehin im Handbuch 12.3 genannt wird. */
+      . ($rueckweg
+          ? '      <p><a class="knopf knopf-neutral" href="betrieb_updates.php">'
+            . '<span>Zur Verwaltung</span></a></p>' . "\n"
+          : '')
       . '    </div>' . "\n"
       . '  </main>' . "\n"
       . '</div>' . "\n"

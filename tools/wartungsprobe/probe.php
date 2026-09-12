@@ -495,8 +495,12 @@ pruefe(str_contains($loginQuelle, 'kdf_iter, logo_wahl, role'),
  * Nicht-Admin gegolten und sich waehrend der Wartung selbst ausgesperrt. */
 pruefe(preg_match('/wartung_aktiv\(\)\s*&&\s*!rolle_darf_verwalten\(/s', $loginQuelle) === 1
        && str_contains($loginQuelle, 'session_verwerfen();')
-       && str_contains($loginQuelle, 'wartung_antwort_seite();'),
-       '18  ... und verwirft im Wartungsmodus die Sitzung ohne Verwaltungsrecht');
+       /* `(false)` seit Web 19.1.3 (Backlog Nr. 126): An DIESER Stelle ist die
+        * Rolle bekannt und reicht nicht — ein Rueckweg-Knopf fuehrte garantiert
+        * auf ein 403. Die Probe prueft den Parameter mit, sonst faellt er beim
+        * naechsten Umbau still weg. */
+       && str_contains($loginQuelle, 'wartung_antwort_seite(false);'),
+       '18  ... und verwirft im Wartungsmodus die Sitzung ohne Verwaltungsrecht (ohne Rueckweg)');
 $posErfolg = strpos($loginQuelle, "rate_erfolg('login'");
 $posTor    = strpos($loginQuelle, 'wartung_aktiv() &&');
 pruefe($posErfolg !== false && $posTor !== false && $posErfolg < $posTor,
@@ -516,6 +520,23 @@ pruefe(!str_contains($seite['rumpf'], '<script'),
 pruefe(str_contains($seite['rumpf'], 'liefern ihre Daten danach')
        && str_contains($seite['rumpf'], 'zurück'),
        '19  ... und sagt beides: Geraete liefern nach, Formular ueber Zurueck');
+
+/* 19a  DER RUECKWEG (Backlog Nr. 126, Web 19.1.3).
+ *
+ * Bis dahin trug die Seite NULL Verweise — gemessen am gerenderten Markup —,
+ * und der einzige Weg zurueck war, `betrieb_updates.php` von Hand zu tippen.
+ * Das Handbuch (12.3) beschrieb den Weg trotzdem. Faellig geworden ist der
+ * Punkt erst mit Nr. 171: Vorher kam man gar nicht erst so weit, weil sich
+ * das Anmeldeformular nicht abschicken liess. */
+pruefe(str_contains($seite['rumpf'], 'href="betrieb_updates.php"')
+       && str_contains($seite['rumpf'], 'Zur Verwaltung'),
+       '19a ... und traegt den Rueckweg in die Verwaltung');
+/* Die Gegenprobe am Code: An der einen Stelle, an der die Rolle bekannt und
+ * unzureichend ist, steht der Knopf NICHT — sonst fuehrte er auf ein 403. */
+pruefe(str_contains($loginQuelle, 'wartung_antwort_seite(false);')
+       && preg_match('/function wartung_seite_html\(bool \$rueckweg = true\)/',
+                     (string)file_get_contents($wurzel . '/wartung_lib.php')) === 1,
+       '19a ... und login.php zeigt sie ohne ihn (Rolle bekannt, reicht nicht)');
 
 /* Der Muenzwurf des Logos (statt logo_stamm(), das die Datenbank braucht).
  * Zwanzig Aufrufe muessen beide Logos zeigen — sonst ist der Wurf keiner. */

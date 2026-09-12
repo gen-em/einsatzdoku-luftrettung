@@ -2517,7 +2517,14 @@ ui_seite_start(['titel' => 'Einstellungen',
        einzelne Datei (<code>.edbak</code>), verschlüsselt mit einem Passwort
        deiner Wahl. Ver- und Entschlüsselung passieren vollständig in deinem
        Browser — der Server sieht die Inhalte nie. Dadurch lässt sich ein
-       Backup auch in ein anderes Konto einspielen.</p>
+       Backup auch in ein anderes Konto einspielen.
+       <?php /* DER RUECKWEG (Backlog Nr. 119). Der Verweis zeigte bisher nur
+                in eine Richtung: Import / Export sagte nichts vom Backup, und
+                das Backup nichts vom Export. Beide Seiten bewegen die Daten
+                EINER NutzerIn — wer auf der falschen steht, soll die andere
+                genannt bekommen, nicht das Menue absuchen muessen. */ ?>
+       Zum Weiterverarbeiten in anderen Programmen — Excel, CSV — gibt es
+       stattdessen <a href="import.php">Import / Export</a>.</p>
 
     <div id="lockwarn" hidden>
       <?php ui_meldung(

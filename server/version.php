@@ -3980,5 +3980,65 @@ declare(strict_types=1);
  * sie im Backlog und nicht in einem Fehlerbericht.
  *
  * Die Punkte im Einzelnen stehen im Changelog. Keine Migration.
+ *
+ * ---------------------------------------------------------------------------
+ * 19.2.0 — DIE ALTE RUNDENZAHL IST WEG (Backlog Nr. 155, 136).
+ *
+ * `KDF_ITER_LISTE` traegt nur noch 600000. Damit rechnet jede Anmeldung
+ * wieder EINMAL ab statt zweimal — gemessen 1580 -> 1369 ms (Median aus je
+ * drei Anmeldungen im Browser), also rund 210 ms je Anmeldung.
+ *
+ * WARUM DAS EINE NEBENNUMMER IST UND KEINE KORREKTUR: Der Schritt nimmt der
+ * Anmeldung einen angebotenen Wert. Wer ihn faelschlich geht, sperrt jedes
+ * Konto aus, das noch auf dem Altwert steht — der Browser rechnet dessen
+ * Token dann gar nicht erst. Rueckholbar ist das nur ueber eine
+ * Codeaenderung samt Deploy, nicht in der Verwaltung.
+ *
+ * DAS TOR STEHT IM KOMMENTAR ZU KDF_ITER_LISTE und ist gefahren worden:
+ * `SELECT COUNT(*) FROM users WHERE kdf_iter = 320000` ergab **0**, auf dem
+ * Pruefstand wie auf der Produktivinstallation (Statuszeile
+ * „Schluesselableitung": kein Konto im Uebergang, bestaetigt vom
+ * Auftraggeber am 12.09.2026).
+ *
+ * WARUM ES NICHT FRUEHER GING, und das ist der eigentliche Fund: Die
+ * Demo-Fixture brachte die alte Rundenzahl mit, der Reset schrieb sie alle
+ * 30 Minuten zurueck, und die stille Anhebung ueberspringt das Demo-Konto
+ * ausdruecklich (E-P1-19). Der Altwert konnte deshalb NIE von selbst
+ * verschwinden — jede Abfrage haette ewig 1 ergeben. Aufgeloest hat es erst
+ * der Neubau des Referenzbestands ueber die drei Laeufe
+ * (`tools/referenzdatensatz/LIESMICH.md`), mit dem Passwortschritt im
+ * Browser, der mit KDF_ITER_ZIEL ableitet.
+ *
+ * ZWEI RIEGEL HALTEN ES FEST (aus 19.1.2): `fixture/erzeugen.php` bricht ab,
+ * wenn das Konto nicht auf dem Zielwert steht, und `demo_fixture_laden()`
+ * weist eine Fixture ab, deren Rundenzahl diese Fassung nicht mehr anbietet.
+ * Der zweite ist der wichtigere — ohne ihn waere ein Reset mit einer alten
+ * Fixture STILL erfolgreich, und niemand kaeme mehr in das Demo-Konto.
+ *
+ * Keine Migration. Die Fixture ist neu erzeugt (gleiche Zahlen: 16
+ * Diensttage, 88 Einsaetze, 2 Geraete, 55 861 Spurpunkte).
+ *
+ * ---------------------------------------------------------------------------
+ * 19.3.0 — BACKLOG-RUNDE 2: der Block Betrieb wird bedienbar.
+ *
+ * Eine Nebennummer, weil zwei Handgriffe dazukommen, die es bisher NUR auf
+ * der Kommandozeile gab oder gar nicht: die Hintergrundjobs anhalten
+ * (Nr. 118) und eine Testmail schicken (Nr. 120). Beides sind Dinge, die
+ * eine BetreiberIn auf geteiltem Hosting sonst nicht tun kann.
+ *
+ * Die uebrigen drei Punkte der Runde sind Korrekturen und laufen unter
+ * derselben Nummer mit — das Muster der Korrekturstufe 15.5.2 und der
+ * Runde 19.1.2: der Rueckweg aus der Wartungsseite (Nr. 126), die
+ * Querverweise auf „Import / Export" (Nr. 119) und das Streichen der
+ * doppelten Rasterregel `.zweispalter` (Nr. 125).
+ *
+ * ZWEI SEITEN GEBEN DABEI EINE ZUSAGE AUF ODER SCHRAENKEN SIE EIN, und
+ * beides ist ausdruecklich freigegeben: Betrieb -> Status hatte „genau eine
+ * Ausnahme" von „rein lesend" und hat jetzt zwei; „Import / Export" traegt
+ * nicht mehr den Anspruch, alle Datenwege zu fuehren, sondern sagt, wo die
+ * uebrigen liegen.
+ *
+ * Ein neues Zeichen im Symbolvorrat (`mail.svg`, Tabler „mail", das 53.).
+ * Die Punkte im Einzelnen stehen im Changelog. Keine Migration.
  */
-const WEB_VERSION = '19.1.2';
+const WEB_VERSION = '19.3.0';

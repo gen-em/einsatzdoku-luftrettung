@@ -43,6 +43,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'jobs_
     }
 }
 
+/* DIE JOBS ANHALTEN UND WIEDER FREIGEBEN (Backlog Nr. 118).
+ *
+ * Bis Web 19.3.0 ging das nur mit `php jobs.php --pause <Sekunden>`. Auf
+ * geteiltem Hosting ist eine Kommandozeile die Ausnahme, nicht die Regel —
+ * wer keine hat, konnte die Hintergrundarbeit nicht anhalten, wenn etwas
+ * schieflief oder ein grosses Backup einzuspielen war. Die Seite zeigte den
+ * Zustand an und nannte den Befehl, den sie selbst nicht ausloesen konnte.
+ *
+ * SERVERSEITIG DERSELBE WEG: `jobs_pause()` aus `jobs_lib.php`, derselbe
+ * Schluessel `jobs_pause_bis` in `app_state`, dieselbe Deckelung auf
+ * JOB_PAUSE_MAX_S. Kein zweiter Weg, den niemand pflegt — hier kommt nur
+ * ein zweiter Ausloeser fuer dieselbe Funktion dazu.
+ *
+ * DER ZWEIG STEHT VOR `jobs_pause_bis()` WEITER UNTEN. Stuende er danach,
+ * zeigte die Seite nach dem Klick den Zustand von vor dem Klick — dieselbe
+ * Falle, die `wartung_aktiv()` mit `clearstatcache()` umgeht.
+ *
+ * DIE DAUERN SIND EINE GESCHLOSSENE LISTE, keine freie Zahl: Ein Textfeld
+ * muesste die Einheit erklaeren (der Code rechnet in SEKUNDEN, die
+ * Oberflaeche sagte bis heute faelschlich „Minuten"), und ein Vertipper
+ * saehe aus wie ein Fehler der Anwendung. Vier Werte decken den Zweck ab;
+ * laenger als zwei Stunden laesst die Bibliothek ohnehin nicht zu. */
+/* EINE Liste, zwei Verwender: die Pruefung unten und die Tastenreihe im
+ * Formular. Zwei Listen liefen beim ersten Zusatzwert auseinander — und der
+ * Fehler waere still, weil die Pruefung die Wahl dann einfach abweist. */
+$JOB_PAUSE_DAUERN = [900 => '15 Min.', 1800 => '30 Min.',
+                     3600 => '1 Std.', 7200 => '2 Std.'];
+
+$pauseMeldung = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST'
+    && in_array($_POST['action'] ?? '', ['jobs_pause_an', 'jobs_pause_aus'], true)) {
+    csrf_check();
+    try {
+        if (($_POST['action'] ?? '') === 'jobs_pause_aus') {
+            jobs_pause(0);
+            $pauseMeldung = ['ok', 'Die Pause ist aufgehoben — die Hintergrundarbeit '
+                                . 'läuft wieder.'];
+        } else {
+            $sek = (int)($_POST['dauer'] ?? 0);
+            if (!isset($JOB_PAUSE_DAUERN[$sek])) {
+                $pauseMeldung = ['fehler', 'Bitte eine der angebotenen Dauern wählen.'];
+            } else {
+                jobs_pause($sek);
+                $pauseMeldung = ['ok', 'Die Hintergrundarbeit ist angehalten bis '
+                    . fmt_local((string)jobs_pause_bis(), 'd.m.Y H:i') . '.'];
+            }
+        }
+    } catch (Throwable $ex) {
+        $pauseMeldung = ['fehler', 'Die Pause ließ sich nicht setzen: '
+                                . $ex->getMessage()];
+    }
+}
+
 $jobs      = jobs_zustand();
 $jobFehler = count(array_filter($jobs, fn($j) => !empty($j['letzter_fehler'])));
 $jobNie    = count(array_filter($jobs, fn($j) => $j['letzter_lauf'] === null));
@@ -78,12 +131,30 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
                 : ($jobNie === count($jobs)
                    ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
                    : ui_plakette('läuft', ['ton' => 'blau']))))]); ?>
+    <?php if ($pauseMeldung): ?>
+      <?= ui_meldung_markup($pauseMeldung[0], $pauseMeldung[1]) ?>
+    <?php endif; ?>
     <?php if ($jobPause !== null): ?>
+      <?php /* DAS FORMULAR STEHT VERSTECKT DANEBEN, DER KNOPF ZEIGT DARAUF.
+               `ui_meldung_markup()` nimmt den Knopf als Zeichenkette und setzt
+               ihn in `.meldung-aktion` — ein <form> mitten in einer Meldung
+               ginge nicht, und zwei Formulare ineinander erst recht nicht.
+               Dasselbe Muster wie bei „Alle sichern" in admin_sicherungen.php.
+
+               UND DER TEXT TRUG BIS WEB 19.3.0 SICHTBARES MARKUP: Hier stand
+               `<code>php jobs.php --pause 0</code>`, aber
+               `ui_meldung_markup()` escapt seinen Text — auf der Seite waren
+               die spitzen Klammern zu lesen. Jetzt braucht es den Befehl
+               nicht mehr, der Knopf daneben tut es. */ ?>
+      <form method="post" action="betrieb_jobs.php" id="f-jobpause-aus" hidden>
+        <?= csrf_field() ?><input type="hidden" name="action" value="jobs_pause_aus">
+      </form>
       <?= ui_meldung_markup('warn', 'Die Hintergrundarbeit ist angehalten bis '
-          . e(fmt_local($jobPause, 'd.m.Y H:i')) . '. Bis dahin wird nichts '
-          . 'verdichtet, ausgedünnt oder aufgeräumt. Die Pause läuft von '
-          . 'selbst ab; aufheben lässt sie sich mit '
-          . '<code>php jobs.php --pause 0</code>.') ?>
+          . fmt_local($jobPause, 'd.m.Y H:i') . '. Bis dahin wird nichts '
+          . 'verdichtet, ausgedünnt, aufgeräumt, gesichert oder versendet — '
+          . 'auch das Komplett-Backup nicht. Die Pause läuft von selbst ab.',
+          '', ui_knopf(['text' => 'Pause aufheben', 'art' => 'neutral',
+                        'typ' => 'submit', 'attr' => ' form="f-jobpause-aus"'])) ?>
     <?php endif; ?>
     <?php if ($jobs === []): ?>
       <p class="feld-hinweis">Die Tabelle <code>jobs</code> gibt es noch nicht —
@@ -158,9 +229,45 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
         ]); ?>
       <?php endforeach; ?>
     <?php endforeach; endif; ?>
-    <p class="feld-hinweis">Anhalten nur auf der Kommandozeile:
-       <code>php jobs.php --pause 60</code>. Ein Knopf dafür wäre eine neue
-       Funktion und steht im Backlog (Nr. 118).</p>
+    <?php /* ANHALTEN OHNE KOMMANDOZEILE (Backlog Nr. 118). Hier stand bis
+             Web 19.3.0: „Anhalten nur auf der Kommandozeile ... Ein Knopf dafür
+             wäre eine neue Funktion und steht im Backlog (Nr. 118)." Auf
+             geteiltem Hosting gibt es diese Kommandozeile in der Regel nicht.
+
+             DIE RUECKFRAGE NENNT DEN PREIS VOLLSTAENDIG. Der alte Text zählte
+             drei der sieben Jobs auf („verdichtet, ausgedünnt, aufgeräumt")
+             und ließ das geplante Komplett-Backup und den Mailversand weg —
+             harmlos, solange niemand danach entscheidet. Neben einem Knopf
+             ist es die Entscheidungsgrundlage. */ ?>
+    <?php if ($jobs !== [] && $jobPause === null): ?>
+      <form method="post" action="betrieb_jobs.php">
+        <?= csrf_field() ?><input type="hidden" name="action" value="jobs_pause_an">
+        <h3 class="listen-form-titel">Anhalten</h3>
+        <p class="feld-hinweis">Für den Fall, dass etwas schiefläuft oder ein
+           großes Backup einzuspielen ist. Die Pause läuft von selbst ab —
+           länger als <?= (int)(JOB_PAUSE_MAX_S / 3600) ?> Stunden am Stück
+           geht nicht.</p>
+        <?php ui_segment(['name' => 'dauer', 'wert' => '1800',
+                          'label' => 'Dauer der Pause',
+                          'optionen' => array_map('strval',
+                              array_combine(array_map('strval',
+                                  array_keys($JOB_PAUSE_DAUERN)),
+                                  array_values($JOB_PAUSE_DAUERN)))]); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Jobs anhalten', 'art' => 'neutral',
+                        'typ' => 'submit',
+                        'attr' => ' data-confirm="Während der Pause wird nichts '
+                                . 'verdichtet, ausgedünnt, aufgeräumt, gesichert '
+                                . 'und versendet — auch das geplante '
+                                . 'Komplett-Backup nicht."'
+                                . ' data-confirm-ok="Anhalten"'
+                                /* Kein „danger": Anhalten loescht nichts und
+                                   laeuft von selbst ab. Der rote Ton ist fuer
+                                   das Unumkehrbare da. */
+                                . ' data-confirm-tone="normal"']) ?>
+        </div>
+      </form>
+    <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
   <?php /* ---- Auslöser (E-S2-17) ---------------------------------------------
@@ -225,10 +332,12 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
        der Reihenfolge dieser Liste, und was ins Restbudget nicht mehr passt,
        kommt beim nächsten Mal. Deshalb steht die eigentliche Arbeit vorn und
        das Sicherheitsnetz („Verwaiste GPS-Daten") hinten.</p>
-    <p class="feld-hinweis"><strong>Anhalten</strong> geht nur auf der
-       Kommandozeile: <code>php jobs.php --pause &lt;Minuten&gt;</code>,
-       höchstens <?= (int)(JOB_PAUSE_MAX_S / 3600) ?> Stunden. Die Pause läuft
-       von selbst ab — eine vergessene Pause hält die Installation nicht
+    <p class="feld-hinweis"><strong>Anhalten</strong> geht seit Web 19.3.0
+       über den Knopf in der Karte „Zustand" — und weiterhin auf der
+       Kommandozeile: <code>php jobs.php --pause &lt;Sekunden&gt;</code>
+       (<code>0</code> hebt auf). Beide Wege schreiben denselben Wert.
+       Höchstens <?= (int)(JOB_PAUSE_MAX_S / 3600) ?> Stunden am Stück; die
+       Pause läuft von selbst ab — eine vergessene hält die Installation nicht
        dauerhaft an.</p>
     <p class="feld-hinweis"><strong>Ein Rückstand ist kein Fehler.</strong> Er
        zählt auch mit, was einfach noch zu frisch ist: GPS-Daten werden erst zwei

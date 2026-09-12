@@ -1046,15 +1046,26 @@ function geraet_schluessel_gueltig(string $schluessel, string $hash): bool
  *
  * 600000 IST DER ZIELWERT SEIT DEM 07.09.2026 (Backlog Nr. 136, SP-1). 320000
  * lag unter der Empfehlung (OWASP 2023, Bitwarden); gemessen kostet der Sprung
- * je Ableitung rund das Doppelte und halbiert die Rate des Angreifers. 320000
- * bleibt in der Liste, bis die Abfrage oben 0 ergibt — bis dahin rechnet jede
- * Anmeldung zweimal ab, und die Wartungsseite zeigt, wer noch darauf steht.
+ * je Ableitung rund das Doppelte und halbiert die Rate des Angreifers.
+ *
+ * 320000 IST AM 12.09.2026 ENTFALLEN (Backlog Nr. 155), nach derselben
+ * Abfrage wie 310000 am 14.08.2026: `SELECT COUNT(*) FROM users WHERE
+ * kdf_iter = 320000` ergab **0**. Der Weg dahin war nicht die Abfrage
+ * allein, sondern die Demo-Fixture: Sie brachte die alte Rundenzahl mit,
+ * der Reset schrieb sie alle 30 Minuten zurueck, und die stille Anhebung
+ * ueberspringt das Demo-Konto ausdruecklich (E-P1-19). Der Altwert konnte
+ * deshalb NIE von selbst verschwinden. Erst der Neubau des
+ * Referenzbestands mit KDF_ITER_ZIEL hat das aufgeloest; zwei Riegel
+ * halten es fest (fixture/erzeugen.php und demo_fixture_laden()).
+ *
+ * DAMIT RECHNET JEDE ANMELDUNG WIEDER NUR EINMAL AB — das war der Preis
+ * des Uebergangs, nicht sein Ziel.
  *
  * REIHENFOLGE: Der Zielwert steht VORNE. Der Browser probiert nicht der Reihe
  * nach (er schickt alle Token), aber die Reihenfolge ist die Lesart.
  */
 const KDF_ITER_ZIEL  = 600000;
-const KDF_ITER_LISTE = [600000, 320000];
+const KDF_ITER_LISTE = [600000];
 
 /* ---- Mindestlaenge des Passworts ----------------------------------------
  *

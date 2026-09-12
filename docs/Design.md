@@ -404,7 +404,7 @@ auseinanderlaufen kann.
 | `--abstand-1` | `4px` | 66 |  |
 | `--abstand-2` | `8px` | 88 |  |
 | `--abstand-3` | `12px` | 119 |  |
-| `--abstand-4` | `16px` | 55 |  |
+| `--abstand-4` | `16px` | 54 |  |
 | `--abstand-5` | `24px` | 23 |  |
 
 **Radien**
@@ -789,6 +789,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `korb.svg` | Tabler Icons „trash" (MIT) | 21 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 12 |
+| `mail.svg` | Tabler Icons „mail" (MIT) | 3 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
@@ -796,7 +797,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `plus.svg` | Tabler Icons „plus" (MIT) | 22 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 16 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 25 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 26 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 9 |
@@ -822,7 +823,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 28 |
 
-52 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
+53 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
 
 ## 9. Bausteine
@@ -1826,18 +1827,22 @@ Menüpunkte zweiter Ordnung; wer sie dafür hält, sucht dahinter eine eigene
 Seite. Die Markierung ist **fett, nicht orange**: Orange heißt in dieser
 Oberfläche „hier stehst du" und gehört dem aktiven Menüpunkt.
 
+**Auf einer zweispaltigen Seite sind es zwei Marken, nicht eine.** `menue.js`
+bestimmt die oberste sichtbare Karte je `.form-spalte` — sonst bliebe die
+rechte Spalte, in der man gerade liest, unmarkiert. Das betrifft die sechs
+Seiten mit `.form-raster` (9.26); überall sonst ist es genau eine.
+
 Sie entstehen im Browser aus den Karten der Seite, nicht aus PHP. Der Grund
 steht im Kopf von `assets/menue.js`: Die Leiste wird vor dem Inhalt
 gezeichnet, die Seite müsste ihre Kartentitel also zweimal nennen.
 **Voraussetzung ist eine `id` an der Karte** — mit dem Vorsatz `k-`; ohne
 sie ist die Karte kein Sprungziel und erscheint nicht.
 
-### 9.26 Zwei Kartenspalten — drei Wege, und wann welcher
+### 9.26 Zwei Kartenspalten — zwei Wege, und wann welcher
 
 | Klasse | ab | wer teilt auf | wofür |
 |---|---|---|---|
 | `.form-raster` + `.form-spalte` | 1200 | die Seite, im Markup | Karten mit thematischer Ordnung: links Server und E-Mail, rechts Jobs und Backups |
-| `.zweispalter` + zwei `<div>` | 1200 | die Seite, im Markup | zwei Blöcke beliebigen Inhalts, nicht nur Karten |
 | `.karten-raster` | 1200 | der Browser (Mehrspaltensatz) | eine Reihe gleichrangiger Karten ohne Ordnung |
 
 `.karten-raster` nimmt die Karten **direkt** als Kinder und lässt sie
@@ -1848,8 +1853,23 @@ braucht keine Zuordnung — dafür lässt sich keine erzwingen.
 Betrieb → Updates: vier Karten, einspaltig 1206 px, zweispaltig 977 px. Ab
 vier Karten ohne thematische Ordnung lohnt es sich; darunter nicht.
 
-`.form-raster` und `.zweispalter` tun dasselbe unter zwei Namen — das ist ein
-Altbestand und steht als Aufräumpunkt im Backlog, nicht als Vorbild.
+**Es waren bis Web 19.3.0 drei Wege.** `.zweispalter` tat dasselbe wie
+`.form-raster` unter einem zweiten Namen — Grid, zwei gleiche Spalten,
+`align-items:start` — und hatte genau **einen** Verwender (die
+Installationsseite) gegen fünf. Er ist gestrichen, die Seite trägt jetzt
+`.form-raster` mit `.form-spalte` wie die anderen fünf (Backlog Nr. 125).
+
+Ganz gleich waren die beiden Regeln übrigens nicht: `.zweispalter` setzte
+`gap: var(--abstand-4)` für beide Richtungen, `.form-raster` setzt
+`gap: 0 var(--abstand-4)` — Spaltenabstand ja, **Zeilenabstand null**. Das
+fällt nicht auf, solange ein Raster genau zwei Kinder in einer Zeile hat, und
+das ist auf allen sechs Seiten so. Es ist der Grund, warum „identisch" hier
+nur für das gilt, was man sieht.
+
+**`.form-spalte` trägt keine CSS-Regel** (nachgezählt: 0 Treffer im
+Stylesheet) und ist trotzdem Pflicht: `assets/menue.js` liest die Klasse, um
+in der Leiste je Spalte die oberste sichtbare Karte zu markieren. Ein
+`.form-raster` ohne `.form-spalte`-Kinder ist deshalb eine halbe Bauform.
 
 ### 9.27 Die Einstellungs-Übersicht in drei Spalten
 

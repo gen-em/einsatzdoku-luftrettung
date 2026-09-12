@@ -662,6 +662,65 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nicht in S3 gemacht, weil die Vereinheitlichung Sortierung, Sortierblatt
     und die Kachelform berührt — das ist ein eigenes Paket, kein Nachklapp.
 
+    **Nachgemessen am 12.09.2026 (Backlog-Runde 2) — der Punkt ist größer als
+    er dasteht, und zwei seiner Angaben stimmen nicht.** Er bleibt offen: Was
+    hier zu tun wäre, braucht ein Mockup und eine Freigabe und passt damit
+    nicht in eine Backlog-Runde. Damit der nächste Anlauf nicht wieder bei
+    null anfängt, steht hier, was gemessen ist.
+
+    *Was am Text oben nicht stimmt:*
+
+    - *„`missiontable.js` führt die Spaltendefinitionen der drei
+      Einsatztabellen an einer Stelle."* Es sind **zwei** Tabellen
+      (`suche.php`, `zeitraum.php`). Die dritte hat sie **nie** von dort
+      bezogen: `index.php` baut Kopf, Zellen und Sortierschlüssel selbst, in
+      **drei** getrennten Listen. Von `missiontable.js` holt sie nur
+      Zellbausteine. Es sind also zwei Erzeuger und **vier** Spaltenlisten —
+      sechs, wenn man `api/range.php` und `api/suchindex.php` mitzählt, die
+      `winch`/`bergwacht`/`secondary`/`false_alarm` hart im SELECT führen,
+      während `api/day.php` sie aus `mf_tagesspalten()` zieht.
+    - *„weil die Vereinheitlichung … die Kachelform berührt."* Tut sie nicht
+      mehr. Seit E-P3-32 baut `index.php` seine Kacheln bereits über
+      `EdMissionTable.kachel()`, wortgleich zu den anderen beiden. Von den
+      drei genannten Hindernissen sind zwei übrig — und eines davon, das
+      **Sortierblatt**, ist selbst dreifach vorhanden (`index.php` baut es aus
+      den `th`, `suche.php` und `zeitraum.php` je aus `tabelle.spalten()`).
+
+    *Fünf Driften, vier davon sichtbar* (der Eintrag nennt nur die eine
+    behobene):
+
+    1. **Spaltensatz:** drei Spalten nur im Modul, eine nur in `index.php`.
+    2. **Sekundärtransport:** ein Wort mit weichem Trennstrich gegen zwei
+       Zeilen mit hartem `<br>` — Kopfhöhe **42 gegen 64 px**.
+    3. **Ausrichtung:** Alter zentriert gegen rechtsbündig, Beginn zentriert
+       gegen links. Die Entscheidung dazu fiel in **derselben Sitzung**, in
+       der dieser Punkt aufgenommen wurde (S3/AP5 Block I) — sie wurde am
+       zweiten Aufbau getroffen und erreichte den ersten nie. Der Punkt hat
+       sich beim Aufschreiben also selbst wiederholt.
+    4. **Hakenreihenfolge:** Sekundär-Bergwacht-Winde gegen
+       Winde-Bergwacht-Sekundär, genau umgekehrt.
+    5. Die Dauerspalte — behoben, wie oben beschrieben.
+
+    *Und eine Falle, die „nur den Erzeuger zusammenführen, 0 Pixel bewegen
+    sich" widerlegt:* Die beiden Sortierungen behandeln **Gleichstände**
+    verschieden. `index.php` multipliziert den Stichentscheid mit der
+    Richtung, `missiontable.js` verlässt sich auf die stabile Sortierung.
+    Nachgerechnet mit sechs gleichwertigen Zeilen: heute absteigend
+    6,5,4,3,2,1 — über das Modul 1,2,3,4,5,6. Ein zweiter Klick auf
+    „Sekundärtransport" dreht an einem NEF-Tag heute alle sechs Zeilen und
+    täte es danach nicht mehr. Dazu setzt `missiontable.js` `sortable` auf
+    **jeden** Kopf, woran `cursor:pointer` und ein Hover hängen.
+
+    *Was daraus folgt:* **Schritt 0 ist eine Freigabe, keine Codearbeit.** Drei
+    Fragen müssen vorher beantwortet sein — Beschriftung, Ausrichtung,
+    Hakenreihenfolge —, und jede Antwort ändert eine der beiden Seiten
+    sichtbar. Danach der Erzeuger (rund 110 Zeilen JS und 21 Zeilen PHP
+    entfallen), danach die Liste aus dem Feldkatalog, soweit er sie trägt: Er
+    kennt heute **3 von 13** Spalten, und nur für die Tagesübersicht —
+    `day_col` heißt wörtlich das. Vier Spalten können gar nicht aus ihm
+    kommen, weil sie keine Spalten von `missions` sind. Geschätzt
+    zweieinhalb bis drei Tage. Zuordnung: eigenes Paket, nicht Backlog-Runde.
+
 58. **Kein Prüfmittel fragt, ob eine Seite ihr Gerüst hat.**
     *Aufgenommen 02.09.2026 als Lehre aus F-S3-C (S3/AP5).*
     `tag_spuren.php` lief zwei Jahre ohne `ui_geruest_start()`: keine
@@ -1112,38 +1171,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zu sagen, dass die Anwendung es nicht weiß. Zuordnung: Backlog-Runde
     (Entscheidung), Umsetzung frühestens P5.
 
-118. **Die Hintergrundjobs lassen sich nur auf der Kommandozeile anhalten.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-16).* `php jobs.php
-    --pause <Minuten>` ist die einzige Job-Handlung ohne Oberfläche. Die
-    Seite „Hintergrundjobs" (S8 AP2) zeigt den Pausenzustand an und nennt
-    den Befehl, kann ihn aber nicht auslösen. Wer keinen Shell-Zugang hat —
-    und das ist auf geteiltem Hosting die Regel —, kann die Jobs nicht
-    anhalten, wenn etwas schiefläuft. **Zu tun:** ein Knopf „Jobs anhalten"
-    mit Dauerwahl auf derselben Seite, serverseitig derselbe
-    `app_state`-Schlüssel. Das ist eine **neue Funktion** und deshalb nicht
-    Teil von S8. Zuordnung: Backlog-Runde oder P5.
-
-119. **„Import / Export" ist als Sammelpunkt unvollständig.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-18).* Der Menüpunkt
-    verspricht, alle Wege für Daten hinein und hinaus zu tragen — tatsächlich
-    liegt der **GPX-Import je Diensttag** auf der Tagesübersicht (neben
-    „Spuren als GPX", E-S4-18) und der Backup-Rückweg auf „Backup". Nach dem
-    Ordnungsprinzip (R74, Regel 2) ist das für den GPX-Weg sogar richtig — er
-    gehört zu *diesem* Diensttag —, aber dann ist der Name des Sammelpunkts
-    zu weit. **Zu klären mit S9**, das die Tagesübersicht ohnehin umbaut: ob
-    „Import / Export" enger heißt (etwa „Einsatzliste") oder ob die Seite die
-    anderen Wege wenigstens nennt. Zuordnung: Backlog-Runde, mit S9 abstimmen.
-
-120. **Eine Testmail aus der Oberfläche senden.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (E-S8-16).* Die Statusseite
-    (S8 AP4) zeigt für E-Mail nur, ob SMTP **eingerichtet** ist — ob eine
-    Zustellung tatsächlich funktioniert, weiß sie nicht, und ob die letzte
-    Zustellung aufgezeichnet wird, war beim Bau zu prüfen. Eine Warnmail, die
-    nie ankommt, fällt damit erst auf, wenn jemand sie vermisst. **Zu tun:**
-    ein Knopf „Testmail an mich" auf der Statusseite, der über den regulären
-    Versandweg geht und das Ergebnis in derselben Zeile zeigt. **Neue
-    Funktion**, deshalb nicht Teil von S8. Zuordnung: Backlog-Runde.
-
 121. **Vorschau der Rechtstexte beim Tippen.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09); Titel und Text
     berichtigt 05.09.2026 in S8/AP3.* **Eine Vorschau gibt es seit Web
@@ -1190,39 +1217,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Darstellung eines Bausteins und brauchen Mockup und Freigabe
     (`CLAUDE.md` 5); betroffen ist jede Seite mit `ui_aktionen()` (zehn
     Aufrufe). Zuordnung: Backlog-Runde oder P7 (Gesicht v1.0).
-
-125. **`.form-raster` und `.zweispalter` sind dieselbe Regel unter zwei Namen.**
-    *Aufgenommen 05.09.2026 bei S8/AP5 (8).* Beide sind ab 1200 px ein Grid
-    mit zwei gleichen Spalten und `align-items:start`; der einzige
-    Unterschied ist, dass die Kindelemente einmal `.form-spalte` heißen und
-    einmal ein blankes `<div>` sind. `.form-raster` steht auf sechs Seiten,
-    `.zweispalter` auf einer (`admin_installation.php`). **Zu tun:** eine
-    Regel behalten, die andere austragen — die Seite mit dem blanken `<div>`
-    ist die, die umzustellen ist. Das ist keine Gestaltungsänderung: Die
-    berechneten Werte sind identisch, der Stilvergleich muss null melden.
-    **Warum es nicht in S8 erledigt wurde:** AP5 hat mit `.karten-raster`
-    eine dritte Klasse hinzugefügt, die etwas anderes tut (der Browser teilt
-    auf, nicht die Seite) — die beiden alten zusammenzulegen wäre eine
-    Änderung an sechs Seiten außerhalb des Pakets gewesen. Zuordnung:
-    Aufräumpaket P6 oder Backlog-Runde.
-
-126. **Von der Wartungsseite führt kein Weg zurück in die Verwaltung.**
-    *Aufgenommen 06.09.2026 bei S8/AP8, aus dem Umschreiben von Handbuch 12.3.*
-    Wer sich während des Wartungsmodus anmeldet, landet auf der Startseite —
-    und die zeigt die **Wartungsseite** (503). Von dort führt **kein Knopf**
-    weiter; der einzige Weg ist, `betrieb_updates.php` von Hand in die
-    Adresszeile zu tippen. Das Handbuch hat das bis AP8 anders beschrieben
-    („dann bist du wieder auf der Wartungsseite" — richtig, aber es fehlte,
-    dass es dort aufhört); jetzt steht die Adresse da.
-    **Zu bedenken, und deshalb kein Nebenbei-Bau:** Die Wartungsseite ist
-    das, was **jeder Besucher** sieht. Sie entsteht **ohne Datenbank** —
-    `wartung_tor()` steht in `db.php` vor jeder Verbindung, und
-    `wartung_seite_html()` lädt nichts. Sie kann die Rolle also nicht kennen;
-    ein Link stünde für alle da. Das ist verkraftbar (die Adresse steht im
-    Handbuch, und die Seite dahinter hat ihre eigene Schranke), aber es ist
-    eine Entscheidung, keine Selbstverständlichkeit. **Vorschlag:** eine
-    unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
-    Wartungsseite. Zuordnung: Backlog-Runde oder P6.
 
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
@@ -1322,54 +1316,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ein Erfolg aus. Der Server sagt es; die App hört es nicht. Beide Felder
     in `Sendeantwort` aufnehmen und in der Ergebniszeile nennen; Prüffall in
     `SendeantwortTest`. Zuordnung: nächste Android-Stufe.
-
-155. **Die Fixture des Referenzbestands trägt die alte Rundenzahl.**
-    *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 136).*
-    `demo/fixture.json.gz` führt das Demo-Konto mit 320 000 Runden; der
-    Demo-Reset spielt es alle 30 Minuten so ein, und die stille Anhebung
-    überspringt das Demo-Konto ohnehin (`api/kdf_upgrade.php`, E-P1-19 —
-    ein Upgrade passte bis zum nächsten Reset nicht mehr zu den
-    öffentlichen Zugangsdaten). Folge: Der Altwert kann nie aus
-    `KDF_ITER_LISTE` gestrichen werden, und die Statuszeile
-    „Schlüsselableitung" sagt das seit der Nachbesserung ausdrücklich (das
-    Demo-Konto zählt dort nicht mehr als „Übergang läuft"). Behebung: den
-    Referenzbestand mit `KDF_ITER_ZIEL` neu bauen
-    (`tools/referenzdatensatz/`), und `erzeugen.php` soll abbrechen, wenn
-    das Demo-Konto nicht auf dem Zielwert steht — damit die Zusage in
-    `api/kdf_upgrade.php` eine geprüfte ist. Zuordnung: Backlog-Runde, vor
-    dem Streichen des Altwerts.
-
-    **Teilweise erledigt am 12.09.2026 (Backlog-Runde) — die zwei Riegel
-    stehen, der Neubau nicht.** Gebaut sind die beiden Stellen, die den
-    Fehler überhaupt bemerkbar machen:
-    `tools/referenzdatensatz/fixture/erzeugen.php` bricht ab, wenn das
-    Demo-Konto nicht auf `KDF_ITER_ZIEL` steht (sonst bleibt die Zusage in
-    `api/kdf_upgrade.php` eine unbelegte), und `server/demo_lib.php` weist
-    eine Fixture ab, deren Rundenzahl diese Fassung gar nicht mehr anbietet
-    — geprüft gegen `KDF_ITER_LISTE`, damit eine ältere, aber bediente
-    Fixture weiterläuft. Ohne den zweiten Riegel wäre ein Reset **still
-    erfolgreich** und niemand käme mehr herein.
-
-    **Gemessen am 12.09.2026:** `KDF_ITER_ZIEL` 600 000, Liste
-    [600 000, 320 000], Fixture **320 000**. Riegel 2 lässt sie durch
-    (richtig — der Wert wird noch bedient), Riegel 1 wiese eine
-    Neuerzeugung aus dem heutigen Demo-Konto ab (richtig). Nach einem
-    vollständigen Neuaufbau steht `admin@gen-em.org` auf **600 000**,
-    `demo@gen-em.org` weiterhin auf **320 000** — die Fixture bringt den
-    Wert mit.
-
-    **Offen bleiben zwei Schritte, und sie gehören getrennt:**
-    *(a)* Demo-Konto anheben und die Fixture neu erzeugen — der Neubau ist
-    unvermeidlich, weil die Anhebung drei der neun `konto`-Felder tauscht.
-    *(b)* **320 000 aus `KDF_ITER_LISTE` streichen — eigenes Paket, eigene
-    Version.** Das ist mindestens eine Nebenstufe: Der Schritt nimmt der
-    Anmeldung einen angebotenen Wert, halbiert ihre Rechenzeit spürbar und
-    **sperrt bei falscher Reihenfolge Konten unwiderruflich aus**. Er darf
-    kein Anhang an (a) sein.
-
-    *Der Text oben nennt `erzeugen.php` ohne Pfad; die Datei liegt unter
-    `tools/referenzdatensatz/fixture/`, und daneben gibt es ein völlig
-    anderes `generator/erzeugen.py`.*
 
 157. **Handy-App: Sackgasse zwischen „Schlüssel abgewiesen" und „Gerät trennen".**
     *Aufgenommen 07.09.2026 aus dem Emulatorlauf zu Android 0.14.1.* Wird
@@ -1541,11 +1487,473 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfung am Code wäre stabiler als eine an der Stoppuhr.
     *Abnahme:* Zehn Läufe hintereinander, zehnmal dieselbe Zahl.
 
+173. **Die Umlaufprüfungen führen tote Regeln.**
+    *Aufgenommen 12.09.2026 beim Neubau des Referenzbestands (Nr. 155,
+    Web 19.2.0).* Beide Kreisläufe erfüllen ihr Abnahmekriterium —
+    **edbak 287 687 Einzelvergleiche, 0 unerklärt** (16 erwartet) und
+    **csv 9120 Einzelvergleiche, 0 unerklärt** (1021 erwartet) —, melden
+    dabei aber **3 bzw. 2 ungenutzte Regeln**. Vorher waren es 0.
+
+    *Die Ursache ist bekannt und harmlos:* Die Regeln beschreiben einen
+    **Übergang**, den es nicht mehr gibt. Zwei betreffen
+    `missions.notes` („GEMESSEN 143x") aus S9/AP7, als die Notizen halb in
+    der Spalte und halb im verschlüsselten Block lagen; eine betrifft
+    `kopf.version` („nach 11") aus demselben Paket, als die Nutzlast von 10
+    auf 11 stieg. Der neu gebaute Referenzbestand trägt die Notizen von
+    Anfang an im Block und beide Seiten dieselbe Nutzlastnummer — also
+    keine Abweichung, also keine Regel, die greift.
+
+    *Warum das trotzdem zählt:* Eine Ausnahmeregel, die nichts mehr
+    erklärt, ist dasselbe wie eine tote Zeile in
+    `tools/linkprobe/ausnahmen.md` — sie sieht aus wie geprüftes Wissen und
+    ist keines mehr. Die Linkprobe macht den Lauf dafür rot; der Kreislauf
+    nennt die Zahl nur. Das ist der mildere Umgang mit demselben Problem.
+
+    *Zu tun:* Die drei bzw. zwei Regeln aus
+    `tools/referenzdatensatz/vergleich/ausnahmen/{edbak,csv}_umlauf.json`
+    entfernen, mit einem Satz im Änderungsverlauf der Datei, warum sie
+    gegenstandslos geworden sind. **Nicht** am Ende einer langen Sitzung
+    gemacht, weil die Dateien die Vergleichsgrundlage sind und ihr Format
+    zwischen den beiden Arten abweicht.
+    *Abnahme:* Beide Kreisläufe melden 0 unerklärte Abweichungen **und**
+    0 ungenutzte Regeln.
+
+174. **Der Referenzbestand deckt „Rettungsmittel ohne Standort" nur noch
+     zur Hälfte ab.**
+    *Aufgenommen 12.09.2026 in Backlog-Runde 2, nachdem die Klickprobe den
+    Verlust gemeldet hat.* Beim Neubau des Referenzbestands (Nr. 155,
+    Web 19.2.0) haben **zwei** Rettungsmittel ihren leeren Standort
+    verloren: „Reserve Talwang" und „Sanitätsdienst Seefest" standen bis
+    dahin unter „Ohne Standort" und hingen danach an einem. Die
+    **Demo-Fixture ist repariert** (beide wieder ohne Standort, gemessen
+    2 von 6, Spurpunkte unverändert 55 861) — die **Referenzdatei** der
+    Kreisläufe (`tools/referenzdatensatz/referenz/*.edbak` und `*.zip`)
+    aber nicht: Sie stammt aus demselben Neubau und trägt weiterhin sechs
+    Rettungsmittel **mit** Standort.
+
+    *Was damit nicht geprüft ist:* ob ein `vehicles.base_id = NULL` einen
+    Export und den Import zurück übersteht. Das Format trägt den Standort
+    als **Namen** (`base_ref`), nicht als Kennung, und `base_ref: null` ist
+    der Fall, der im Kreislauf jetzt nicht mehr vorkommt. Der Standort ist
+    seit S9/AP4 freiwillig (E-S9-18) — der Fall ist also kein Sonderfall,
+    sondern einer von zweien.
+
+    *Warum es nicht sofort behoben wurde:* Die Referenzdatei neu zu
+    erzeugen heißt, die dreistufige Einspielkette noch einmal zu fahren.
+    Das ist kein Handgriff am Ende einer Sitzung, und es gehört mit Nr. 173
+    zusammen, das dieselben Dateien anfasst.
+
+    *Und die Lehre daneben:* Der Verlust ist **unbemerkt** durch Runde 1
+    gegangen, obwohl die Kreisläufe dort grün waren. Gefunden hat ihn die
+    **Klickprobe** — das einzige Prüfmittel mit einem Sollmaß, das nicht
+    aus dem gebauten Zustand stammt. Dasselbe Muster wie Nr. 170.
+
+    *Abnahme:* Der Kreislauf `edbak` trägt ein Rettungsmittel mit
+    `base_ref: null`, und es kommt unverändert zurück.
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+118. **Die Hintergrundjobs lassen sich nur auf der Kommandozeile anhalten.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-16).* `php jobs.php
+    --pause <Minuten>` ist die einzige Job-Handlung ohne Oberfläche. Die
+    Seite „Hintergrundjobs" (S8 AP2) zeigt den Pausenzustand an und nennt
+    den Befehl, kann ihn aber nicht auslösen. Wer keinen Shell-Zugang hat —
+    und das ist auf geteiltem Hosting die Regel —, kann die Jobs nicht
+    anhalten, wenn etwas schiefläuft. **Zu tun:** ein Knopf „Jobs anhalten"
+    mit Dauerwahl auf derselben Seite, serverseitig derselbe
+    `app_state`-Schlüssel. Das ist eine **neue Funktion** und deshalb nicht
+    Teil von S8. Zuordnung: Backlog-Runde oder P5.
+
+    **Erledigt mit Web 19.3.0 (12.09.2026, Backlog-Runde 2).** Der Knopf
+    **„Jobs anhalten"** steht am Fuß der Karte „Zustand", mit einer
+    Dauerwahl aus **15 Min. · 30 Min. · 1 Std. · 2 Std.** als Segmentreihe.
+    Serverseitig wie beauftragt: `jobs_pause()` aus `jobs_lib.php`, derselbe
+    Schlüssel `jobs_pause_bis`, dieselbe Deckelung auf `JOB_PAUSE_MAX_S` —
+    **0 Zeilen** in `jobs_lib.php`, es kommt nur ein zweiter Auslöser für
+    dieselbe Funktion dazu. Läuft eine Pause, steht statt des Knopfes die
+    orange Meldung mit **„Pause aufheben"**; der Knopf zum Anhalten ist dann
+    weg, weil es nichts anzuhalten gibt.
+
+    **Der Eintrag oben nennt die falsche Einheit, und er hat sie nicht
+    erfunden.** `php jobs.php --pause <Minuten>` stand so in der Oberfläche
+    (`betrieb_jobs.php`, zweimal) — der Code rechnet in **Sekunden**
+    (`jobs_pause(int $sekunden)`, und `jobs.php --hilfe` sagt es auch). Der
+    Nachbarsatz derselben Karte rechnete `JOB_PAUSE_MAX_S / 3600` und kam auf
+    „höchstens 2 Stunden": Das geht nur mit Sekunden auf, 7200 Minuten wären
+    120 Stunden. Wer den daneben empfohlenen Befehl `--pause 60` im Glauben
+    an Minuten abtippte, bekam **eine Minute** Ruhe. Beide Stellen
+    berichtigt, dazu die Statusseite.
+
+    **Zwei Funde nebenbei, beide in einer Zeile sichtbar:**
+
+    - Die Meldung der laufenden Pause enthielt `<code>php jobs.php --pause
+      0</code>` als Text — `ui_meldung_markup()` escapt ihren Text, also
+      standen die spitzen Klammern auf der Seite. Der Befehl ist jetzt
+      unnötig, der Knopf steht daneben.
+    - Der Text zählte **drei** der sieben Jobs auf („verdichtet, ausgedünnt
+      oder aufgeräumt") und ließ das geplante Komplett-Backup und den
+      Mailversand weg. Harmlos, solange niemand danach entscheidet — neben
+      einem Knopf ist es die Entscheidungsgrundlage. Rückfrage und Meldung
+      nennen den Preis jetzt vollständig.
+
+    **Gemessen im Browser** (angemeldet als BetreiberIn): Anhalten auf
+    15 Min. → Plakette **„läuft" → „angehalten"**, `app_state.jobs_pause_bis`
+    gesetzt auf **+15 Min.** (18:54 → 19:09 Ortszeit), „Pause aufheben" →
+    Zeile **gelöscht**, Plakette zurück auf „läuft". Bedienhöhen **36 px** am
+    Zeigergerät (1280 px) und **44 px** am Fingergerät (390 px), Knopf wie
+    Segmenttasten; waagerechter Überlauf **0** in beiden, Konsolenfehler
+    **0**. Gegenprobe: ein Wert außerhalb der Liste (999 999 s, im Browser
+    hineingeschrieben) wird abgewiesen — Meldung „Bitte eine der angebotenen
+    Dauern wählen.", **nichts geschrieben**; ein POST ohne Formular-Token
+    gibt **403**, ebenfalls nichts geschrieben.
+
+119. **„Import / Export" ist als Sammelpunkt unvollständig.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-18).* Der Menüpunkt
+    verspricht, alle Wege für Daten hinein und hinaus zu tragen — tatsächlich
+    liegt der **GPX-Import je Diensttag** auf der Tagesübersicht (neben
+    „Spuren als GPX", E-S4-18) und der Backup-Rückweg auf „Backup". Nach dem
+    Ordnungsprinzip (R74, Regel 2) ist das für den GPX-Weg sogar richtig — er
+    gehört zu *diesem* Diensttag —, aber dann ist der Name des Sammelpunkts
+    zu weit. **Zu klären mit S9**, das die Tagesübersicht ohnehin umbaut: ob
+    „Import / Export" enger heißt (etwa „Einsatzliste") oder ob die Seite die
+    anderen Wege wenigstens nennt. Zuordnung: Backlog-Runde, mit S9 abstimmen.
+
+    **Erledigt mit Web 19.3.0 (12.09.2026, Backlog-Runde 2)** — als Verweis,
+    nicht als Verlegung und nicht als Umbenennung.
+
+    **Zuerst die Zahl, die den Punkt größer macht, als er dasteht.** Eine
+    NutzerIn hat **acht** Wege für Daten hinein und hinaus: Einsatzliste
+    hinaus und herein (`import.php`), Backup hinaus und herein sowie ein
+    freigegebenes Konto-Backup herein (`einstellungen.php?t=backup`), GPX
+    herein je Diensttag, GPX hinaus je Diensttag und je Einsatz. Auf dem
+    Sammelpunkt liegen **zwei**. Der Eintrag oben liest sich wie eine
+    Kleinigkeit an einer Stelle; gemessen fehlten **sechs**.
+
+    **Und der eigentliche Befund stand nicht im Eintrag:** Die Seite trug
+    nicht nur die anderen Wege nicht — sie **nannte** sie nicht einmal.
+    Gemessen **0 Vorkommen von `href`** in `server/import.php`, ebenso 0 im
+    Backup-Reiter. Der Eintrag fragt, „ob die Seite die anderen Wege
+    wenigstens nennt", als wäre das der Rückfallplan; tatsächlich war genau
+    das das Fehlende.
+
+    **Drei Handgriffe, alle in vorhandenen Bausteinen:**
+
+    - Ein **Untertitel** an der Titelzeile grenzt den zu weiten Namen ein
+      (Vorbild `admin_sicherungen.php`, B-S8-08).
+    - Eine **zugeklappte Karte „Was hier gilt"** als letzte der Seite nennt
+      in vier Absätzen die übrigen Wege *mit Begründung*, warum sie dort und
+      nicht hier liegen. Diese Karte stand auf **9** Seiten der Anwendung,
+      jetzt auf **10**. Die Adresse des Backups wird aus
+      `ui_einstellungen_punkte()` gelesen, nicht abgeschrieben — das war der
+      Fehler, den Nr. 151 zwei Tage vorher behoben hat.
+    - Der **Rückweg**: Der Backup-Reiter nennt jetzt `import.php`. Vorher
+      zeigte kein Verweis in eine der beiden Richtungen.
+
+    **Nicht gemacht, und warum nicht:**
+
+    - *Umbenennen in „Einsatzliste"* (der Vorschlag des Eintrags) würde den
+      Export verstecken. „Einsatzliste" sagt nicht, dass man dort eine Datei
+      herausbekommt, und der Menüpunkt ist der einzige Ort dafür. Der Name
+      ginge von zu weit auf zu eng.
+    - *Den GPX-Import auf die Sammelseite holen* verstößt gegen R74 Regel 1
+      und 2, verdoppelte entweder das Dialog-Markup oder zerlegte
+      `schneiden.js`, und bräuchte eine Weiterleitung zurück in die
+      Tagesansicht — ein neuer Weg durch die Anwendung, also Konzeptarbeit,
+      für ein schlechteres Ergebnis.
+
+    **Gemessen nach der Änderung** (Browser, angemeldet, 1280 px): Verweise
+    im Seiteninhalt **0 → 4**, Karten **4 → 5**, die neue Karte ist ein
+    `<details>` und steht **zu**; waagerechter Überlauf **0** auch
+    aufgeklappt, Konsolenfehler **0**. Alle drei Ziele geben **200**. Am
+    Konto ohne Diensttag (`admin@gen-em.org`, 0 Diensttage) führt der
+    GPS-Verweis auf „Noch keine Daten" — deshalb hängt der Satz am Diensttag
+    und verspricht kein Menü.
+
+    **Zwei Funde aus derselben Ecke gleich mitgenommen:** Das Handbuch
+    führte im Menüblock Einstellungen noch **„Rettungsmittel"**, den es seit
+    Web 19.0.0 nicht mehr gibt (S9/AP5) — ausgetragen und durch die
+    Geschichte der zwei Umbenennungen ersetzt. Und zwei Codekommentare
+    (`index.php`, `gpx.php`) nannten „Spuren als GPX"; der Eintrag heißt seit
+    S9 „GPS-Daten als GPX".
+
+120. **Eine Testmail aus der Oberfläche senden.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (E-S8-16).* Die Statusseite
+    (S8 AP4) zeigt für E-Mail nur, ob SMTP **eingerichtet** ist — ob eine
+    Zustellung tatsächlich funktioniert, weiß sie nicht, und ob die letzte
+    Zustellung aufgezeichnet wird, war beim Bau zu prüfen. Eine Warnmail, die
+    nie ankommt, fällt damit erst auf, wenn jemand sie vermisst. **Zu tun:**
+    ein Knopf „Testmail an mich" auf der Statusseite, der über den regulären
+    Versandweg geht und das Ergebnis in derselben Zeile zeigt. **Neue
+    Funktion**, deshalb nicht Teil von S8. Zuordnung: Backlog-Runde.
+
+    **Erledigt mit Web 19.3.0 (12.09.2026, Backlog-Runde 2).**
+
+    **Der Eintrag ist an einer Stelle eine Fassung hinterher.** „Ob die letzte
+    Zustellung aufgezeichnet wird, war beim Bau zu prüfen" — sie wird
+    aufgezeichnet, und zwar **seit Web 15.3.0**: `smtp_send()` ruft
+    `smtp_versand_vermerken()` in beiden Ausgängen, die Marken `smtp_last`
+    und `smtp_last_ok` stehen in `app_state`, und die Zeile „Letzter Versand"
+    zeichnet daraus Zeitpunkt, Alter und Ampel. Damit war die halbe Aufgabe
+    schon gebaut; offen war allein der **Auslöser**.
+
+    **Die eigentliche Frage war keine technische.** Die Statusseite sagt an
+    vier Stellen schriftlich zu, nichts zu ändern — Dateikopf, Unterzeile,
+    Karte „Was hier gilt", Handbuch 12.1 — „mit genau einer Ausnahme". Ein
+    Testmail-Knopf macht daraus zwei. **Freigegeben am 12.09.2026** mit der
+    Begründung, dass beide Ausnahmen keinen Bestand ändern, sondern an Ort
+    und Stelle prüfen, und dass es für SMTP überhaupt keine zuständige Seite
+    gibt: Der Zugang steht allein in der `config.php`. Alle vier Stellen sind
+    mitgeschrieben.
+
+    **Gebaut als Kopfaktion der Karte „E-Mail"**, mit dem neuen Zeichen
+    `mail.svg` (Tabler „mail", MIT) — dem **53.** des Vorrats. Der Weg dahin
+    war nicht gerade: Zuerst war „Kopfaktion ohne Symbol" vorgesehen. Die
+    Gegenprobe hat zwei Messungen dagegengestellt, und beide halten: Eine
+    Kopfaktion kennt nur `blau` und `orange` (`.karte-aktion-blau` /
+    `-orange`) — `neutral` gäbe eine **Klasse ohne Regel**, also einen
+    ungestalteten Knopf, und zwar ohne jede Fehlermeldung, weil die
+    Vollständigkeitsprüfung zur Laufzeit zusammengesetzte Klassen nicht sieht.
+    Und **alle elf** vorhandenen Kopfaktionen tragen ein Symbol; eine
+    textnackte wäre die erste gewesen und damit eine neue Darstellung. Das
+    Zeichen ist deshalb der kleinere Eingriff.
+
+    **Vier Dinge, die der Bau gebraucht hat und ohne die er falsch wäre:**
+
+    - `ratelimit_lib.php` muss `betrieb_status.php` **selbst nachladen** —
+      weder `auth_guard.php` noch `status_lib.php` tun es. Ohne die Zeile
+      gäbe es einen Fatal Error, und zwar erst beim ersten Klick.
+    - Der POST-Zweig steht **vor** `status_karten()`, sonst zeigte die Zeile
+      „Letzter Versand" den Stand von vor dem Klick.
+    - **Erst `smtp_eingerichtet()`, dann versuchen.** `smtp_send()` prüft das
+      nicht selbst. Ohne die Vorprüfung machte ein Klick auf einer
+      Installation ohne Mailserver aus „nicht eingerichtet" (neutral) ein
+      „fehlgeschlagen" (rot, zählt mit).
+    - Ratenschutz `testmail` (3 je Stunde, Konto UND IP) und `$zeitlimit = 5`
+      statt der Vorgabe 15.
+
+    **Gemessen im Browser** gegen einen SMTP-Auffänger auf dem Prüfstand
+    (implizites TLS, eigenes Zertifikat im Vertrauensspeicher — `smtp.php`
+    prüft die Gegenstelle):
+
+    - **Erfolg:** Zeile „Letzter Versand" **„kein Versand"/neutral →
+      „zugestellt"/blau**, `app_state.smtp_last_ok = 1`, `smtp_last` auf die
+      Minute; die Nachricht liegt vollständig im Auffänger (Betreff, To, Body).
+      Meldung *in der Karte*, nicht oben neben der Zusammenfassung.
+    - **Kein SMTP** (Host in der `config.php` geleert): Meldung „es wurde
+      nichts versucht", `app_state` **leer**, Ratenzähler **nicht** verbraucht,
+      Zeilen bleiben neutral. Der rote Punkt, den es nicht gibt, entsteht nicht.
+    - **Ratenschutz:** der 4. Versuch innerhalb einer Stunde wird abgewiesen
+      („Bis 20:17 Uhr geht keine mehr hinaus"); zwei Zeilen in `rate_limits`
+      (`ip:127.0.0.1` und `id:1`).
+    - **POST ohne Formular-Token: 403**, nichts geschrieben.
+    - Bedienhöhen **36 px** (Zeiger, 1280 px) und **44 px** (Finger, 390 px),
+      waagerechter Überlauf **0**, Konsolenfehler **0** in beiden.
+
+125. **`.form-raster` und `.zweispalter` sind dieselbe Regel unter zwei Namen.**
+    *Aufgenommen 05.09.2026 bei S8/AP5 (8).* Beide sind ab 1200 px ein Grid
+    mit zwei gleichen Spalten und `align-items:start`; der einzige
+    Unterschied ist, dass die Kindelemente einmal `.form-spalte` heißen und
+    einmal ein blankes `<div>` sind. `.form-raster` steht auf sechs Seiten,
+    `.zweispalter` auf einer (`admin_installation.php`). **Zu tun:** eine
+    Regel behalten, die andere austragen — die Seite mit dem blanken `<div>`
+    ist die, die umzustellen ist. Das ist keine Gestaltungsänderung: Die
+    berechneten Werte sind identisch, der Stilvergleich muss null melden.
+    **Warum es nicht in S8 erledigt wurde:** AP5 hat mit `.karten-raster`
+    eine dritte Klasse hinzugefügt, die etwas anderes tut (der Browser teilt
+    auf, nicht die Seite) — die beiden alten zusammenzulegen wäre eine
+    Änderung an sechs Seiten außerhalb des Pakets gewesen. Zuordnung:
+    Aufräumpaket P6 oder Backlog-Runde.
+
+    **Erledigt mit Web 19.3.0 (12.09.2026, Backlog-Runde 2).** `.zweispalter`
+    ist gestrichen; `admin_installation.php` trägt `.form-raster` mit zwei
+    `.form-spalte`-Kindern wie die fünf anderen Seiten.
+
+    **Zwei Angaben des Eintrags oben stimmen nicht:**
+
+    - *„`.form-raster` steht auf sechs Seiten."* Es waren **fünf**
+      (`betrieb_status`, `betrieb_statistik`, `admin_sicherungen`,
+      `admin_user`, `einsatz_form`). Mit der Installationsseite sind es
+      jetzt sechs.
+    - *„Die berechneten Werte sind identisch."* Fast. `.zweispalter` setzte
+      `gap: var(--abstand-4)` für **beide** Richtungen, `.form-raster` setzt
+      `gap: 0 var(--abstand-4)` — der **Zeilenabstand** ist null.
+      Gemessen: rowGap **16 px → 0 px** ab 1200 px. Es fällt nicht auf,
+      solange ein Raster genau zwei Kinder in einer Zeile hat, und das ist
+      auf allen sechs Seiten so — deshalb **0 abweichende Rechtecke**. Aber
+      „identisch" war das nie, und wer es beim nächsten Mal nachschlägt,
+      soll den Unterschied kennen.
+
+    **Die Wahl fiel auf `.form-raster`, obwohl der Name schlechter ist.**
+    Drei der fünf Seiten sind keine Formulare, und „Zweispalter" sagt, was
+    die Klasse tut. Aber: `.form-raster` behalten kostet **1** CSS-Zeile und
+    **3** Markup-Zeilen; `.zweispalter` behalten kostete 5 Seiten,
+    10 Umbenennungen von `.form-spalte`, zwei Stellen in `assets/menue.js`,
+    einen Streichlisteneintrag und die Design.md-Tabelle. Fünf gegen eins
+    schlägt den besseren Namen.
+
+    **Die Kinder tragen `.form-spalte`, und das ist nicht kosmetisch.** Die
+    Klasse hat **keine** CSS-Regel (nachgezählt: 0 Treffer im Stylesheet) —
+    aber `assets/menue.js` liest sie, um in der Leiste je *Spalte* die
+    oberste sichtbare Karte zu markieren. Die Hülle nur umzubenennen und die
+    Kinder blank zu lassen wäre keine Vereinheitlichung gewesen, sondern
+    dieselbe Sonderstellung unter fremdem Namen. **Die eine sichtbare Folge:**
+    Die Leiste markiert auf dieser Seite ab 1200 px jetzt **zwei**
+    Unterpunkte statt einem („Logo" und „Impressum") — genau wie auf den
+    fünf anderen Seiten.
+
+    **Gemessen:**
+
+    - **Kaskadenvergleich:** Regeln **743 → 742**; entfallen **4** (die vier
+      Deklarationen von `.zweispalter`), neu **0**, anderer Endwert **0**,
+      vertauschte Paare bei gleicher Spezifität **0**.
+    - **Berechnete Stile in Chromium**, 13 Breiten: **48 165**
+      Elementmessungen über `seiten.html`, `katalog.html` und
+      `js_markup.html`, **0 Abweichungen**, 166 Eigenschaften je Element;
+      dazu die Pseudoprobe gegen die umgeschriebenen Stylesheets:
+      **20 059** Messungen, **0 Abweichungen**.
+    - **Geometrie der Seite selbst** (angemeldet, 1100 / 1280 / 1920 px,
+      je 90 Nachkommen des Rasters): **0 abweichende Rechtecke**, Kinder
+      identisch, `display` block/grid unverändert, Überlauf **0**.
+    - **Vollständigkeit 334 → 334**, Wortliste **0/0**.
+
+126. **Von der Wartungsseite führt kein Weg zurück in die Verwaltung.**
+    *Aufgenommen 06.09.2026 bei S8/AP8, aus dem Umschreiben von Handbuch 12.3.*
+    Wer sich während des Wartungsmodus anmeldet, landet auf der Startseite —
+    und die zeigt die **Wartungsseite** (503). Von dort führt **kein Knopf**
+    weiter; der einzige Weg ist, `betrieb_updates.php` von Hand in die
+    Adresszeile zu tippen. Das Handbuch hat das bis AP8 anders beschrieben
+    („dann bist du wieder auf der Wartungsseite" — richtig, aber es fehlte,
+    dass es dort aufhört); jetzt steht die Adresse da.
+    **Zu bedenken, und deshalb kein Nebenbei-Bau:** Die Wartungsseite ist
+    das, was **jeder Besucher** sieht. Sie entsteht **ohne Datenbank** —
+    `wartung_tor()` steht in `db.php` vor jeder Verbindung, und
+    `wartung_seite_html()` lädt nichts. Sie kann die Rolle also nicht kennen;
+    ein Link stünde für alle da. Das ist verkraftbar (die Adresse steht im
+    Handbuch, und die Seite dahinter hat ihre eigene Schranke), aber es ist
+    eine Entscheidung, keine Selbstverständlichkeit. **Vorschlag:** eine
+    unauffällige Zeile „Verwaltung: betrieb_updates.php" am Fuß der
+    Wartungsseite. Zuordnung: Backlog-Runde oder P6.
+
+    **Erledigt mit Web 19.3.0 (12.09.2026, Backlog-Runde 2).** Die Seite trug
+    **0 Verweise** (gemessen am gerenderten Markup, 913 Bytes); jetzt trägt
+    sie einen: den Knopf **„Zur Verwaltung"** auf `betrieb_updates.php`,
+    gemessene Höhe **44 px** — die Bedienhöhe, ohne neue Regel.
+
+    **Zwei Annahmen des Eintrags oben waren falsch, und beide in der Sache:**
+
+    - *„Sie kann die Rolle nicht kennen."* Für den Aufrufer in `db.php`
+      stimmt das. Es gibt aber einen **zweiten**: `login.php` zeigt dieselbe
+      Seite für Konten **ohne** Verwaltungsrecht — dort ist die Rolle bekannt
+      und bekannt unzureichend. Genau dort steht der Knopf jetzt **nicht**
+      (`wartung_antwort_seite(false)`), denn er führte garantiert auf ein 403.
+    - *„Sieh dir das eingebettete CSS an."* Es gibt keines. Die Seite
+      **verlinkt** das vollständige Stylesheet — deshalb tragen `.knopf` und
+      `.knopf-neutral` hier wie überall, und es brauchte weder eine neue Regel
+      noch ein Mockup.
+
+    **Fällig geworden ist der Punkt erst durch Nr. 171** — er ist die zweite
+    Hälfte derselben Reparatur: Bis Web 19.1.2 ließ sich das Anmeldeformular
+    im Wartungsmodus gar nicht abschicken; wer nicht hereinkam, stand auch
+    nicht vor der Sackgasse.
+
+    **Kein `ui_knopf()`:** `wartung_lib.php` lädt nichts — kein `db.php`, kein
+    `ui.php` (Eigenschaft 2 ihres Dateikopfs). Der Knopf ist reines Markup.
+    **Nicht gebaut:** der Balken mit Zeitpunkt und schaltendem Konto — das
+    wäre auf einer Seite, die jeder Besucher sieht, ein Namensleck.
+    Wartungsprobe **53 → 55 Erwartungen** (19a neu, 18 um den Parameter
+    erweitert).
+
+155. **Die Fixture des Referenzbestands trägt die alte Rundenzahl.**
+    *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 136).*
+    `demo/fixture.json.gz` führt das Demo-Konto mit 320 000 Runden; der
+    Demo-Reset spielt es alle 30 Minuten so ein, und die stille Anhebung
+    überspringt das Demo-Konto ohnehin (`api/kdf_upgrade.php`, E-P1-19 —
+    ein Upgrade passte bis zum nächsten Reset nicht mehr zu den
+    öffentlichen Zugangsdaten). Folge: Der Altwert kann nie aus
+    `KDF_ITER_LISTE` gestrichen werden, und die Statuszeile
+    „Schlüsselableitung" sagt das seit der Nachbesserung ausdrücklich (das
+    Demo-Konto zählt dort nicht mehr als „Übergang läuft"). Behebung: den
+    Referenzbestand mit `KDF_ITER_ZIEL` neu bauen
+    (`tools/referenzdatensatz/`), und `erzeugen.php` soll abbrechen, wenn
+    das Demo-Konto nicht auf dem Zielwert steht — damit die Zusage in
+    `api/kdf_upgrade.php` eine geprüfte ist. Zuordnung: Backlog-Runde, vor
+    dem Streichen des Altwerts.
+
+    **Teilweise erledigt am 12.09.2026 (Backlog-Runde) — die zwei Riegel
+    stehen, der Neubau nicht.** Gebaut sind die beiden Stellen, die den
+    Fehler überhaupt bemerkbar machen:
+    `tools/referenzdatensatz/fixture/erzeugen.php` bricht ab, wenn das
+    Demo-Konto nicht auf `KDF_ITER_ZIEL` steht (sonst bleibt die Zusage in
+    `api/kdf_upgrade.php` eine unbelegte), und `server/demo_lib.php` weist
+    eine Fixture ab, deren Rundenzahl diese Fassung gar nicht mehr anbietet
+    — geprüft gegen `KDF_ITER_LISTE`, damit eine ältere, aber bediente
+    Fixture weiterläuft. Ohne den zweiten Riegel wäre ein Reset **still
+    erfolgreich** und niemand käme mehr herein.
+
+    **Gemessen am 12.09.2026:** `KDF_ITER_ZIEL` 600 000, Liste
+    [600 000, 320 000], Fixture **320 000**. Riegel 2 lässt sie durch
+    (richtig — der Wert wird noch bedient), Riegel 1 wiese eine
+    Neuerzeugung aus dem heutigen Demo-Konto ab (richtig). Nach einem
+    vollständigen Neuaufbau steht `admin@gen-em.org` auf **600 000**,
+    `demo@gen-em.org` weiterhin auf **320 000** — die Fixture bringt den
+    Wert mit.
+
+    **Offen bleiben zwei Schritte, und sie gehören getrennt:**
+    *(a)* Demo-Konto anheben und die Fixture neu erzeugen — der Neubau ist
+    unvermeidlich, weil die Anhebung drei der neun `konto`-Felder tauscht.
+    *(b)* **320 000 aus `KDF_ITER_LISTE` streichen — eigenes Paket, eigene
+    Version.** Das ist mindestens eine Nebenstufe. Der Weg ist am Code
+    nachgesehen: `auth_salt.php` schickt die **Liste** an den Browser
+    (Zeile 91 bzw. 123), der rechnet für **jeden** Wert darin ein Token
+    (`login.php:365-368`), und der Server greift den heraus, der zur
+    gespeicherten `kdf_iter` des Kontos gehört (`login.php:155-157`). Fehlt
+    der Wert in der Liste, entsteht das Token nie, `$token` bleibt leer, und
+    **jedes Konto, das noch auf 320 000 steht, kommt nicht mehr herein**.
+
+    *Wie schlimm genau:* **nicht unwiderruflich** — Passwort und Hash
+    bleiben unberührt, und der Wert wieder in die Liste zu setzen stellt den
+    Zugang her. Aber das ist eine **Code-Änderung samt Deploy**, kein
+    Handgriff in der Verwaltung. Für die Betroffenen ist die Sperre so lange
+    vollständig. Deshalb: erst alle Konten anheben (Statuszeile
+    „Schlüsselableitung" zeigt, wer noch aussteht), dann streichen — und
+    nicht als Anhang an (a).
+
+    *Der Text oben nennt `erzeugen.php` ohne Pfad; die Datei liegt unter
+    `tools/referenzdatensatz/fixture/`, und daneben gibt es ein völlig
+    anderes `generator/erzeugen.py`.*
+
+    **Vollständig erledigt am 12.09.2026 — Web 19.2.0.** Der Neubau ist über
+    die **drei Läufe** aus `tools/referenzdatensatz/LIESMICH.md` gefahren,
+    nicht über eine Abkürzung: Quelldaten prüfen (99 Marken, keine offene
+    Matrixzeile), erzeugen (283 989 Einzelprüfungen, keine Befunde),
+    einspielen über die regulären Wege (386 Anfragen), CSV-Einsätze im
+    Browser, dann `fixture/erzeugen.php`. **Die neue Fixture trägt 600 000**
+    und dieselben Zahlen wie die alte: 16 Diensttage, 88 Einsätze, 2 Geräte,
+    55 861 Spurpunkte, Papierkorb 5/1/5.
+
+    **Danach ist 320 000 aus `KDF_ITER_LISTE` entfallen** (Schritt b, den der
+    Eintrag oben in ein eigenes Paket verwiesen hat — er ist es geworden).
+    Das Tor aus dem Kommentar zu `KDF_ITER_LISTE` ist gefahren:
+    `SELECT COUNT(*) FROM users WHERE kdf_iter = 320000` → **0**, auf dem
+    Prüfstand wie auf der Produktivinstallation (Statuszeile
+    „Schlüsselableitung", bestätigt vom Auftraggeber). Gemessen im Browser,
+    Median aus je drei Anmeldungen: **1580 → 1369 ms**, also rund 210 ms je
+    Anmeldung; der Salz-Endpunkt liefert jetzt `[600000]` statt zweier Werte,
+    und die Anmeldung mit anschließendem Entsperren zeigt weiter **83
+    Einsätze**.
+
+    **Zwei Anläufe waren nötig, und der erste ist lehrreich:** Ich habe den
+    Neubau zuerst auf eine Installation gesetzt, die bereits Demo-Daten trug.
+    `einspielen.py` hält seinen Zustand in `lauf.json` und hielt die Stufen
+    für erledigt — `ingest` sendete **0 Anfragen**, und `zuordnen` scheiterte
+    danach an einem Diensttag, den es nie gab. Der Weg ist: erst wischen
+    (`lokal_einrichten.sh`), dann das Demo-Konto samt `app_state`-Marker
+    entfernen, `lauf.json` leeren, **dann** die Stufen. Steht so jetzt nicht
+    im LIESMICH — es beschreibt nur den Fall der leeren Installation.
 
 38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
     *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste

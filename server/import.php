@@ -35,7 +35,23 @@ ui_seite_start(['titel' => 'Import / Export']);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'import']); ?>
-    <?php ui_titelzeile(['titel' => 'Import / Export']); ?>
+    <?php /* DER UNTERTITEL IST DIE ABGRENZUNG (Backlog Nr. 119). Der
+             Menuepunkt heisst „Import / Export" und verspricht damit alle Wege
+             fuer Daten hinein und hinaus. Tatsaechlich traegt er zwei von
+             acht: die Einsatzliste in beide Richtungen. Backup und GPS-Spuren
+             liegen anderswo — und stehen bis Web 19.3.0 auf dieser Seite
+             nirgends, auch nicht als Verweis. Der Name laesst sich nicht
+             enger fassen, ohne den Export zu verstecken („Einsatzliste" sagt
+             nicht, dass man dort eine Datei herausbekommt); also grenzt ein
+             Satz ihn ein, und die Karte am Seitenende nennt den Rest.
+             Vorbild Zeichen fuer Zeichen: admin_sicherungen.php (B-S8-08). */ ?>
+    <?php ui_titelzeile([
+        'titel' => 'Import / Export',
+        'unter' => 'Die Einsatzliste als Ganzes — herein und hinaus. Das '
+                 . 'vollständige Backup und einzelne GPS-Aufzeichnungen laufen '
+                 . 'über andere Wege; welche das sind, steht unten unter '
+                 . '„Was hier gilt".',
+    ]); ?>
     <p class="seiten-erklaerung">Übernimmt eine vorhandene Einsatzliste (Excel oder
        CSV) in dieses Konto. Die Datei wird <strong>nicht hochgeladen</strong> — sie
        wird in deinem Browser gelesen, geprüft und dort verschlüsselt. Der Server
@@ -240,6 +256,61 @@ ui_seite_start(['titel' => 'Import / Export']);
       </div>
       <div id="exp_state" class="zustandszeile"></div>
     <?php ui_karte_ende(); ?>
+
+    <?php /* DIE SEITE NENNT DIE ANDEREN WEGE (Backlog Nr. 119). Vorher stand
+             in dieser Datei kein einziger Verweis — gemessen null. Eine Seite,
+             die „Import / Export" heisst und sechs von acht Wegen weder traegt
+             noch erwaehnt, schickt jede Suche ins Leere.
+
+             Die Bauform ist nicht neu: eine zugeklappte Karte „Was hier gilt"
+             als letzte der Seite, wie R74 Regel 5 es vorschreibt und wie sie
+             auf neun anderen Seiten steht. Zugeklappt, weil import.php bei
+             360 px ohnehin die laengste Seite der Anwendung ist.
+
+             DIE ADRESSEN STEHEN NICHT ZWEIMAL: `einstellungen.php?t=backup`
+             kommt aus ui_einstellungen_punkte() (ui.php) — von Hand
+             abgeschrieben waere er beim naechsten Umbau an zwei Stellen
+             falsch. Genau dieser Fehler war Backlog Nr. 151.
+
+             UND DER GPS-SATZ VERSPRICHT KEINE SEITE, SONDERN EINEN DIENSTTAG:
+             Ein Konto ohne Diensttag sieht auf der Tagesuebersicht gar kein
+             Aktionsmenue (index.php, `hidden`). „Auf der Tagesuebersicht,
+             am Diensttag, den du ansiehst" haelt auch dann. */ ?>
+    <?php
+      $punkte  = ui_einstellungen_punkte();
+      $backupZ = 'einstellungen.php?t=backup';
+      foreach ($punkte[0]['punkte'] as $pk) {
+          if ($pk[0] === 'backup') { $backupZ = $pk[1]; break; }
+      }
+    ?>
+    <?php ui_karte_start(['titel' => 'Was hier gilt', 'id' => 'k-gilt',
+                          'vorschau' => 'Backup · GPS-Daten']); ?>
+      <p class="feld-hinweis"><strong>Ein Export ist kein Backup.</strong> Die
+      Datei hier ist zum Weiterverarbeiten in anderen Programmen gedacht: Sie
+      trägt die Einsatzliste, aber keine GPS-Daten, keine Stammdaten und keine
+      Einstellungen. Ein vollständiges Backup deines Kontos — alles in einer
+      verschlüsselten <code>.edbak</code>-Datei — gibt es unter
+      <a href="<?= ui_e($backupZ) ?>">Backup</a>.</p>
+
+      <p class="feld-hinweis"><strong>Ein Backup einspielen</strong> geht
+      ebenfalls dort und nicht hier. Der Unterschied zählt: Diese Seite
+      <em>ergänzt</em> Einsätze aus einer fremden Liste, ein Backup stellt
+      deinen eigenen Stand wieder her.</p>
+
+      <p class="feld-hinweis"><strong>Eine GPS-Aufzeichnung als GPX einlesen</strong>
+      läuft auf der <a href="index.php">Tagesübersicht</a> — am Diensttag, den
+      du gerade ansiehst, über <strong>Aktionen</strong> (auf schmalen Geräten
+      „&#183;&#183;&#183;") <strong>→ GPX importieren</strong>. Der Ort ist
+      Absicht: Eine Aufzeichnung gehört immer zu <em>einem</em> Diensttag, und welcher
+      das ist, weiß nur die Tagesübersicht. Solange das Konto noch keinen
+      Diensttag hat, steht dieses Menü nicht zur Verfügung.</p>
+
+      <p class="feld-hinweis"><strong>GPS-Daten hinaus</strong> gibt es an
+      denselben beiden Stellen wie die Einsätze selbst: auf der
+      <a href="index.php">Tagesübersicht</a> unter <strong>Aktionen →
+      GPS-Daten als GPX</strong> für den ganzen Diensttag, und auf der Seite
+      eines Einsatzes unter demselben Eintrag für dessen Aufzeichnung allein.</p>
+    <?php ui_karte_ende(true); ?>
 
     <script src="<?= asset('assets/vendor/xlsx.full.min.js') ?>"></script>
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>

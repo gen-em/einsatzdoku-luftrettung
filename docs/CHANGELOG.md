@@ -14,6 +14,182 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.3.0] — 2026-09-12
+
+### Web — Backlog-Runde 2: der Block Betrieb wird fertig
+
+**Von der Wartungsseite führt wieder ein Weg zurück** (Nr. 126). Wer sich
+während einer Wartung anmeldet, landet auf der Startseite — und die zeigt die
+Wartungsseite. Die trug **keinen einzigen Verweis**; der einzige Weg zum
+Schalter war, `betrieb_updates.php` von Hand in die Adresszeile zu tippen.
+Jetzt steht dort der Knopf **„Zur Verwaltung"**.
+
+**Fällig geworden ist das erst durch die vorige Fassung.** Bis Web 19.1.2 ließ
+sich das Anmeldeformular im Wartungsmodus gar nicht abschicken — wer nicht
+hereinkam, stand auch nicht vor der Sackgasse. Dies ist die zweite Hälfte
+derselben Reparatur.
+
+**An einer Stelle steht der Knopf bewusst nicht:** Meldet sich ein Konto
+**ohne** Verwaltungsrecht an, zeigt die Anmeldung dieselbe Seite — dort ist die
+Rolle bekannt und reicht nicht, der Knopf führte garantiert auf eine
+Fehlerseite. **Nicht gebaut** ist die Zeile mit Zeitpunkt und schaltendem
+Konto: Auf einer Seite, die jeder Besucher sieht, wäre das ein Namensleck.
+
+**„Import / Export" sagt jetzt, was es nicht ist** (Nr. 119). Der Menüpunkt
+verspricht dem Namen nach alle Wege für Daten hinein und hinaus. Eine NutzerIn
+hat davon **acht**; auf der Seite liegen **zwei**. Das allein wäre vertretbar —
+eine GPS-Spur gehört zu *einem* Diensttag, und deshalb steht ihr Import nach
+dem Ordnungsprinzip (R74, Regel 2) richtig auf der Tagesübersicht. Nicht
+vertretbar war, dass die Seite die anderen sechs Wege **nicht einmal nannte**:
+gemessen null Verweise, in beiden Richtungen — auch der Backup-Reiter schwieg
+über den Export.
+
+**Behoben mit Sprache, nicht mit einer zweiten Funktion.** Ein Untertitel
+grenzt den zu weiten Namen ein, und eine zugeklappte Karte „Was hier gilt" am
+Seitenende nennt die übrigen Wege *mit Begründung*, warum sie dort und nicht
+hier liegen. Diese Karte ist kein neuer Baustein: Sie stand bereits auf neun
+Seiten, `import.php` war die Lücke. Der Backup-Reiter verweist jetzt zurück.
+
+**Nicht umbenannt**, obwohl der Backlog es andachte: „Einsatzliste" wäre
+genauer für den Import und würde den **Export** verstecken — der Menüpunkt ist
+der einzige Ort dafür. Und **nicht verlegt**: Den GPX-Import zusätzlich auf die
+Sammelseite zu holen, hieße dasselbe Formular zweimal im Markup zu führen oder
+`schneiden.js` zu zerlegen, und es bräuchte einen neuen Weg zurück in die
+Tagesansicht. Der Preis stünde in keinem Verhältnis zum Gewinn.
+
+**Zwei Altlasten aus derselben Ecke gleich mit ausgetragen:** Das Handbuch
+führte im Menü noch „Rettungsmittel", das seit Web 19.0.0 in „Standorte"
+aufgegangen ist, und zwei Codekommentare nannten „Spuren als GPX" statt
+„GPS-Daten als GPX".
+
+**Die Hintergrundjobs lassen sich jetzt aus der Oberfläche anhalten**
+(Nr. 118). Bis hierher war `php jobs.php --pause` die einzige Handlung an den
+Jobs ohne Knopf — und auf geteiltem Hosting gibt es diese Kommandozeile in der
+Regel nicht. Die Seite zeigte den Pausenzustand an und nannte den Befehl, den
+sie selbst nicht auslösen konnte. Jetzt steht am Fuß der Karte „Zustand" der
+Knopf **„Jobs anhalten"** mit einer Dauerwahl aus 15 Min., 30 Min., 1 Std. und
+2 Std.; läuft eine Pause, steht an seiner Stelle die orange Meldung mit
+**„Pause aufheben"**.
+
+**Serverseitig kommt nichts Neues hinzu.** Der Knopf ruft dieselbe
+Bibliotheksfunktion wie die Kommandozeile, schreibt denselben Schlüssel und
+unterliegt derselben Deckelung auf zwei Stunden — `jobs_lib.php` ist
+unverändert. Die Dauern sind eine geschlossene Liste statt eines Zahlenfelds:
+Ein Textfeld müsste die Einheit erklären, und ein Vertipper sähe aus wie ein
+Fehler der Anwendung.
+
+**Dabei ist eine Falschangabe aufgefallen, die seit Web 10.2.0 dastand.** Die
+Oberfläche schrieb `php jobs.php --pause <Minuten>`; der Code rechnet in
+**Sekunden**. Zwei Zeilen weiter stand „höchstens 2 Stunden" — was nur mit
+Sekunden aufgeht. Wer den daneben empfohlenen Befehl `--pause 60` im Glauben
+an Minuten abtippte, bekam eine Minute Ruhe und wunderte sich. Berichtigt an
+allen drei Stellen.
+
+**Und zwei Kleinigkeiten in derselben Meldung:** Sie enthielt `<code>`-Markup
+als Text — die Meldungsfunktion escapt, also waren die spitzen Klammern zu
+lesen. Und sie zählte drei der sieben Jobs auf und ließ das geplante
+Komplett-Backup und den Mailversand weg. Neben einem Knopf ist diese
+Aufzählung die Entscheidungsgrundlage, deshalb nennt sie den Preis jetzt
+vollständig.
+
+**„Testmail an mich" auf Betrieb → Status** (Nr. 120). Die Karte E-Mail sagte
+bisher nur, ob SMTP **eingerichtet** ist. Das ist nicht dasselbe wie
+*funktioniert*: Ein falsches Passwort im Zugang fiel erst auf, wenn jemand
+einen Einladungslink vermisste. Der Knopf im Kartenkopf schickt eine kurze
+Nachricht über den regulären Versandweg an die eigene Adresse; die Zeile
+„Letzter Versand" — die es seit Web 15.3.0 gibt — zeigt danach das Ergebnis.
+Die halbe Aufgabe war also schon gebaut; gefehlt hat der Auslöser.
+
+**Die Statusseite gibt dafür eine Zusage auf.** Sie sagte an vier Stellen,
+sie ändere nichts, „mit genau einer Ausnahme" — dem fehlenden
+Serverschlüssel. Jetzt sind es zwei, und der Satz ist an allen vier Stellen
+mitgeschrieben: Beide Ausnahmen ändern keinen Bestand, sondern prüfen an Ort
+und Stelle. Für SMTP gibt es auch gar keine zuständige Seite, auf die zu
+verweisen wäre — der Zugang steht allein in der `config.php`. Eine
+Dokumentation, die die Seite nicht mehr beschreibt, wäre schlimmer als keine.
+
+**Drei Vorkehrungen, die nicht wegzulassen sind.** Ohne SMTP wird gar nichts
+erst versucht — sonst machte ein Klick aus dem neutralen „nicht eingerichtet"
+ein rotes „fehlgeschlagen", und die Statusseite behauptete ein Problem, das
+es nicht gibt. Höchstens drei Testmails je Stunde, gezählt über Konto und
+Adresse. Und das Zeitlimit des Versands steht auf fünf statt fünfzehn
+Sekunden: Der Versand läuft in der Seitenanfrage mit, und jeder
+Protokollschritt hat sein eigenes Limit.
+
+**Ein 53. Zeichen im Symbolvorrat** (Tabler „mail", MIT). Der Knopf sollte
+zunächst ohne Symbol auskommen — das ging nicht: Eine Kopfaktion kennt nur
+die Arten *blau* und *orange*, und alle elf vorhandenen tragen ein Symbol.
+Eine textnackte wäre eine neue Darstellung gewesen, das Zeichen ist der
+kleinere Eingriff.
+
+**Eine von zwei gleichlautenden CSS-Regeln ist weg** (Nr. 125). `.zweispalter`
+und `.form-raster` taten dasselbe — ab 1200 px ein Grid mit zwei gleichen
+Spalten — unter zwei Namen; die erste hatte genau einen Verwender, die zweite
+fünf. Zwei Namen für eine Sache heißt: Wer den einen ändert, ändert den
+anderen nicht mit, und zwar ohne dass es auffällt. `.zweispalter` ist
+gestrichen, die Installationsseite trägt jetzt `.form-raster` wie die anderen.
+
+**Ganz gleich waren sie übrigens nicht**, und das ist der Fund an dieser
+Aufräumarbeit: `.zweispalter` setzte den Abstand für beide Richtungen,
+`.form-raster` setzt den Zeilenabstand auf null. Gemessen sind das 16 px, die
+nirgends zu sehen sind — weil jedes dieser Raster genau zwei Kinder in einer
+Zeile hat. „Identisch" galt nur für das, was man sieht.
+
+**Eine sichtbare Folge bleibt:** In der Leiste markiert die Installationsseite
+ab 1200 px jetzt zwei Unterpunkte statt einem, weil die Spalten die dafür
+nötige Klasse tragen. Genau so verhalten sich die fünf anderen zweispaltigen
+Seiten seit jeher.
+
+Nachgerechnet, weil das Stylesheet berührt ist: Kaskadenvergleich 743 → 742
+Regeln, vier entfallene Deklarationen, **0** geänderte Endwerte und **0**
+vertauschte Regelpaare; berechnete Stile in dreizehn Fensterbreiten **68 224**
+Elementmessungen ohne eine einzige Abweichung; die Seite selbst in drei
+Breiten mit **0** abweichenden Rechtecken.
+
+**Die Demo-Fixture ist repariert** — und gefunden hat es ein Prüfmittel, nicht
+ein Mensch. Beim Neubau des Referenzbestands in Web 19.2.0 hatten **zwei** der
+sechs Rettungsmittel ihren *leeren* Standort verloren; seit S9/AP4 ist der
+Standort freiwillig, und die beiden waren die einzige Abdeckung dieses Falls.
+Die Klickprobe hat es gemeldet (39 von 40 Wegen), weil sie als einziges
+Prüfmittel ein Sollmaß hat, das nicht aus dem gebauten Zustand stammt. Jetzt
+wieder **2 von 6** ohne Standort, **40 von 40** Wegen erfüllt.
+
+**Beim Nachbauen ist eine zweite Sache aufgefallen:** Der erste Versuch, die
+Fixture neu zu erzeugen, lieferte **47 576** statt **55 861** Spurpunkten. Die
+Hintergrundjobs laufen huckepack auf jeder Anfrage mit und hatten die
+Aufzeichnungen während der Arbeit ausgedünnt. Mit angehaltenen Jobs
+(`php jobs.php --pause 1800` — oder seit heute dem Knopf) stimmt die Zahl
+wieder auf den Punkt. Wer eine Fixture erzeugt, hält vorher die Jobs an; das
+steht jetzt auch in der Anleitung.
+
+## [Web 19.2.0] — 2026-09-12
+
+### Web — die Anmeldung rechnet wieder nur einmal
+
+Wer sich anmeldet, leitet aus dem Passwort einen Schlüssel ab — und zwar so oft,
+wie die Anwendung Rundenzahlen anbietet. Seit dem Sprung auf 600 000 standen
+**zwei** Werte in der Liste, damit Konten auf dem Altwert weiter hereinkamen.
+Jetzt steht nur noch einer: **gemessen 1580 → 1369 ms je Anmeldung** (Median
+aus je drei Anmeldungen im Browser), also rund 210 ms weniger.
+
+**Warum das nicht früher ging — das ist der eigentliche Fund** (Nr. 155). Die
+Demo-Fixture brachte die alte Rundenzahl mit, der Reset schrieb sie **alle 30
+Minuten** zurück, und die stille Anhebung überspringt das Demo-Konto
+ausdrücklich. Der Altwert konnte deshalb **nie von selbst verschwinden** — die
+Bedingung „erst, wenn kein Konto ihn mehr trägt" hätte auf ewig ein Konto
+gefunden. Aufgelöst hat es erst der **Neubau des Referenzbestands** über den
+dokumentierten Weg, dessen Passwortschritt im Browser mit dem Zielwert
+ableitet.
+
+**Das Tor ist gefahren worden:** `SELECT COUNT(*) FROM users WHERE kdf_iter =
+320000` ergab **0** — auf dem Prüfstand wie auf der Produktivinstallation, wo
+die Statuszeile „Schlüsselableitung" kein Konto mehr im Übergang zeigt. Ohne
+diese Null hätte der Schritt jedes betroffene Konto ausgesperrt, und zwar bis
+zum nächsten Deploy.
+
+Die neue Fixture trägt dieselben Zahlen wie die alte: **16 Diensttage, 88
+Einsätze, 2 Geräte, 55 861 Spurpunkte.** Keine Migration.
+
 ## [Web 19.1.2] — 2026-09-12
 
 ### Web — Backlog-Runde: fünf stille Fehler

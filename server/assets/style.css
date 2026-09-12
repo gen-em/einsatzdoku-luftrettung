@@ -1978,7 +1978,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .blatt-zeile{min-height:var(--knopf)}
 }
 
-/* ---- ab 1200: breite Leiste und Zweispalter ------------------------------ */
+/* ---- ab 1200: breite Leiste ---------------------------------------------- */
 @media (min-width:1200px){
   .leiste{width:var(--leiste)}
   .leiste-filter{width:var(--leiste-filter)}
@@ -1989,14 +1989,13 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .akkordeon-inhalt{padding-left:var(--abstand-3)}
   .akkordeon:not(.leiste-gruppe) .eintrag{gap:var(--abstand-2)}
   .geo{height:var(--karte-desktop)}
-  .zweispalter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-4);align-items:start}
 
   /* ---- Karten, die sich selbst auf zwei Spalten verteilen (E-S8-15) -------
    *
-   * DER UNTERSCHIED ZU `.form-raster` UND `.zweispalter`: Dort entscheidet
-   * die Seite, welche Karte in welche Spalte gehört, und schreibt dafür zwei
-   * Behälter ins Markup. Hier fließen die Karten selbst — der Umbruch fällt
-   * beim Zeichnen, und eine Karte, die dazukommt, braucht keine Zuordnung.
+   * DER UNTERSCHIED ZU `.form-raster`: Dort entscheidet die Seite, welche
+   * Karte in welche Spalte gehört, und schreibt dafür zwei Behälter ins
+   * Markup. Hier fließen die Karten selbst — der Umbruch fällt beim
+   * Zeichnen, und eine Karte, die dazukommt, braucht keine Zuordnung.
    *
    * Deshalb Mehrspaltensatz und nicht Grid: Grid bräuchte die Zuordnung
    * wieder. `break-inside:avoid` hält jede Karte zusammen; ohne das reißt der
@@ -2006,9 +2005,10 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
    * ist die Zahl nicht die Frage, sondern die Höhe. Von den sieben dort
    * genannten Seiten stehen Status, Statistik und Konto-Backups längst
    * zweispaltig (`.form-raster`, mit einer thematischen Zuordnung von Hand,
-   * die eine automatische Verteilung verschlechtern würde), Installation
-   * über `.zweispalter`, und Hintergrundjobs (3 Karten) wie Geräte (2)
-   * haben zu wenige. Übrig bleibt Updates mit vier: 1206 px hoch einspaltig,
+   * die eine automatische Verteilung verschlechtern würde) — seit
+   * Web 19.3.0 auch die Installation, die dafür bis dahin eine zweite,
+   * gleichlautende Regel `.zweispalter` hatte (Backlog Nr. 125) —, und
+   * Hintergrundjobs (3 Karten) wie Geräte (2) haben zu wenige. Übrig bleibt Updates mit vier: 1206 px hoch einspaltig,
    * 977 px zweispaltig — 229 px, und damit passt die Seite auf einen
    * üblichen Bildschirm. Die Regel gilt also für vier Karten aufwärts, wenn
    * sie keine thematische Ordnung haben. */
@@ -3577,8 +3577,10 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  *
  * Impressum und Datenschutzerklärung — die beiden öffentlichen Seiten und
  * ihr Editor. Erstaunlich wenig eigenes: Die Seiten sind Lesespalte
- * (`.rahmen-lesespalte`) plus eine Karte plus `.text`, der Editor ist der
- * Zweispalter mit zwei Karten und je einem Textfeld. Was hier steht, sind
+ * (`.rahmen-lesespalte`) plus eine Karte plus `.text`, der Editor ist das
+ * Kartenraster (`.form-raster`, seit Web 19.3.0 — davor eine zweite,
+ * gleichlautende Regel `.zweispalter`) mit zwei Karten und je einem
+ * Textfeld. Was hier steht, sind
  * die drei Dinge, für die es im Bestand nichts gab.
  * ======================================================================== */
 

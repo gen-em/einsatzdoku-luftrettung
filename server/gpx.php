@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Spuren als GPX-Datei — je Einsatz, je Ruhesegment, und mehrere ausgewaehlte
+ * GPS-Daten als GPX-Datei — je Einsatz, je Ruhesegment, und mehrere ausgewaehlte
  * eines Diensttages in EINER Datei (S2/AP4, E-S2-09).
  *
  * DIE ERSTE DATEI, DIE DIESER SERVER AUSLIEFERT. Warum das hier richtig und

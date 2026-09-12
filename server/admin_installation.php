@@ -144,14 +144,30 @@ ui_seite_start(['titel' => 'Installation']);
 
   <?php ui_meldung($notice, $error, 'ok', '  '); ?>
 
-  <?php /* Links das Logo, rechts die beiden Texte (Mockup 09). Der zweite
-           Zweig des Zweispalters ist ein schlichtes <div> — die Karten
-           bringen ihren Abstand selbst mit (`.karte { margin-bottom }`), es
-           braucht dafuer keine eigene Regel. Unter 1200 px ist der
-           Zweispalter ein Block, und alles steht untereinander. */ ?>
-  <div class="zweispalter">
+  <?php /* Links das Logo, rechts die beiden Texte (Mockup 09).
+           Unter 1200 px ist das Raster ein Block, und alles steht
+           untereinander.
 
-    <div>
+           `.form-raster` MIT `.form-spalte`, WIE AUF DEN FUENF ANDEREN
+           SEITEN (Backlog Nr. 125, Web 19.3.0). Bis dahin trug diese Seite
+           als EINZIGE eine eigene Klasse `.zweispalter` — dieselbe Regel
+           Zeichen fuer Zeichen (Grid, zwei gleiche Spalten, `align-items:
+           start`), nur unter anderem Namen und in einem anderen Block des
+           Stylesheets. Zwei Namen fuer eine Sache heisst: Wer den einen
+           aendert, aendert den anderen nicht mit, und zwar ohne dass es
+           auffaellt.
+
+           DIE SPALTEN TRAGEN `.form-spalte`, obwohl die Klasse keine
+           CSS-Regel hat (gemessen: 0 Treffer im Stylesheet). Sie ist
+           trotzdem noetig: `assets/menue.js` liest sie, um in der Leiste je
+           SPALTE die oberste sichtbare Karte zu markieren. Ohne sie waere
+           die Seite weiterhin die Ausnahme — nur unter fremdem Namen und
+           mit halber Bauform. Sichtbare Folge: In der Leiste stehen
+           kuenftig ZWEI Marken statt einer, wie auf den fuenf anderen
+           Seiten auch. */ ?>
+  <div class="form-raster">
+
+    <div class="form-spalte">
       <?php ui_karte_start(['titel' => 'Logo', 'id' => 'k-logo',
                             'zahl' => 'Standard dieser Installation']); ?>
         <?php if ($logoMeldung !== null): ?>
@@ -202,13 +218,17 @@ ui_seite_start(['titel' => 'Installation']);
           </div>
         </form>
       <?php ui_karte_ende(); ?>
-    </div>
+    </div><?php /* .form-spalte (links) */ ?>
 
-    <?php /* data-dirty-track haengt die Speichern-Leiste an das Formular
+    <?php /* DIE RECHTE SPALTE IST DAS FORMULAR SELBST, kein <div> darum.
+             Ein zusaetzlicher Behaelter schoebe das <form> aus dem Raster
+             heraus, und `.form-spalte` muss am direkten Kind haengen.
+
+             data-dirty-track haengt die Speichern-Leiste an das Formular
              (assets/forms.js) — ohne das Attribut erschiene sie nie, und zwar
              lautlos. data-submit-on-ctrl-enter, weil der Hinweistext der Leiste
              es zusagt. */ ?>
-    <form method="post" data-dirty-track data-submit-on-ctrl-enter>
+    <form class="form-spalte" method="post" data-dirty-track data-submit-on-ctrl-enter>
       <?= csrf_field() ?>
 
       <?php foreach (RT_TEXTE as $k => $name):
@@ -330,9 +350,9 @@ ui_seite_start(['titel' => 'Installation']);
       <?php ui_speichern_leiste(['text' => 'Änderungen speichern',
                                  'hinweis' => 'Es gibt ungespeicherte Änderungen',
                                  'hinweis_vorlage' => 'Ungespeichert']); ?>
-    </form>
+    </form><?php /* .form-spalte (rechts) */ ?>
 
-  </div>
+  </div><?php /* .form-raster */ ?>
 
   <?php /* Die Vorschau zeigt den GESPEICHERTEN Stand. Das ist keine
            Einschraenkung, die man verschweigt — wer gerade getippt hat und
