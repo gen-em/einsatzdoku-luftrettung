@@ -378,64 +378,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     feststellbar" und wird als solcher gezählt; auch das ist eine ehrliche
     Auskunft, „ersatzlos" wäre eine erfundene.
 
-41. **Fünf Klassen im Markup ohne Regel — Gestaltungsfragen, am 12.09.2026 entschieden.**
-    *Aufgenommen in P3/O12 als Rest von Nr. 39.* Nach dem Eintragen der
-    begründeten Fälle in `tools/vollstaendigkeit/ohne-regel.md` blieben sechs
-    Namen übrig, bei denen die Frage offen war, ob sie eine Regel brauchen;
-    seit S9/AP1 sind es **fünf** (gemessen 13.09.2026) — `rmneu` ist dort
-    beantwortet, siehe unten. Sie stehen mit dem Vermerk `[offen]` und
-    bleiben deshalb ein Befund:
-
-    - `imp-warn` — „abweichende Crew (…)" in der Kopfzeile einer Tagesgruppe
-      der Importvorschau. Ein **Warnhinweis, der wie Fließtext aussieht**;
-      von allen fünf der wahrscheinlichste echte Fund.
-    - `imp-daygroup` — die Kopfzeile einer Tagesgruppe selbst. Sie trägt ihren
-      Text in `<strong>`, sonst nichts: eine Gruppenüberschrift, die aussieht
-      wie eine Datenzeile.
-    - `rea-kopf`, `rea-beginn` — Kopfzeile und Beschriftung einer
-      Reanimationssitzung. Das Aussehen kommt vom Nachbarn `phasen-eingabe`
-      bzw. von der Elementregel für `label`; kein Skript liest die Klassen.
-      Entweder Reste, oder die Kopfzeile soll sich von einer gewöhnlichen
-      Phasenzeile abheben.
-    - `rmneu` — der Knopf „neu" in der Rettungsmittelwahl, neben `rmopt`.
-      **Beantwortet in S9/AP1** und seither auf `streichliste.md` („Ja, sie
-      hebt sich ab — sie ist eine Handlung, kein Datensatz").
-    - `phasen-name` — der Name einer Phase in der Einsatzansicht.
-
-    Jedes davon ist eine **Entscheidung**, kein Aufräumen: Entweder die Klasse
-    verschwindet, oder sie bekommt eine Regel — und dann ist das eine neue
-    Darstellung und braucht nach `docs/Design.md` 1 eine Freigabe. Deshalb
-    nicht am Phasenende erledigt.
-
-    **Entschieden am 12.09.2026:** `imp-warn` und `imp-daygroup` bekommen
-    eine Regel — dort ist tatsächlich etwas schief (ein Warnhinweis, der wie
-    Fließtext aussieht, und eine Gruppenüberschrift, die wie eine Datenzeile
-    aussieht). `rea-kopf`, `rea-beginn` und `phasen-name` werden gestrichen
-    und **mit Begründung** in `tools/vollstaendigkeit/streichliste.md`
-    eingetragen. Die zwei neuen Regeln sind zwei **neue Darstellungen** und
-    gehen in die **Mockup-Runde** (mit Nr. 42, 45 und 124; Ort im
-    Rahmenplan).
-    **Die drei Streichungen sind erledigt (Backlog-Runde 3, AP5, Web 19.3.1,
-    13.09.2026); der Punkt bleibt offen und liegt bei 9c.** `rea-kopf` und
-    `rea-beginn` sind aus `einsatz_form.php`, `phasen-name` zweimal aus
-    `einsatz.php`; alle drei stehen mit Begründung auf `streichliste.md`, die
-    drei `[offen]`-Zeilen in `ohne-regel.md` sind heraus. Gemessen gegen den
-    Stand davor: `[offen]` **5 → 2**, „auf der Streichliste, aber noch im
-    Markup" **0**, „`ohne-regel.md`: Eintrag ungenutzt" **0**, Befunde
-    insgesamt **334 → 330**. Die vierte weggefallene Meldung hatte der Auftrag
-    nicht vorhergesehen: `rea-kopf` stand im alten Stylesheet und war bis
-    hierher auch „ohne Gegenstück" (**53 → 52**).
-    **Im Browser bewegt sich nichts.** Vier Seiten vor und nach der Änderung:
-    im DOM `rea-kopf` 2 → 0, `rea-beginn` 2 → 0, `phasen-name` 9 → 0 und
-    22 → 0, `rea-sitzung` und `phasen-eingabe` unverändert. Bildvergleich
-    **0 abweichende Bildpunkte** auf allen vier Seiten, nachdem der
-    Demo-Zähler geschwärzt war — er zählt bis zum nächsten Reset herunter und
-    verursachte auf jeder Seite dieselben 3079 Punkte (Rahmen y 117–126).
-    **Beim Austragen berichtigt:** Der Eintrag zu `phasen-name` in
-    `ohne-regel.md` nannte `einsatz.php:631`; es sind die Zeilen 764 und 805.
-    **Offen bleiben `imp-warn` und `imp-daygroup`** — sie brauchen je eine
-    Regel, und das sind zwei neue Darstellungen (Mockup-Runde 9c).
-
 42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
     *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4, AP5, AP5b
     und AP6, zuletzt am 13.09.2026.* P-P3-03 verlangt null. Die Prüfung
@@ -1577,11 +1519,131 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zuordnung: **S10 Sicherheit** (Schritt 9b) oder das Bedrohungsmodell
     (P6, R69) — die Entscheidung gehört in den Rahmenplan.
 
+182. **Die Kopfzeile einer Tagesgruppe steht außerhalb des Sichtfensters.**
+    *Aufgenommen 13.09.2026 als Fehlerfund 2 der Mockup-Runde 9c (AP1); mit
+    Web 19.4.0 ausdrücklich NICHT behoben, weil eine Lösung eine neue
+    Darstellung wäre und damit nach `Design.md` 1.2 eine Freigabe braucht.*
+    Die Vorschau des CSV-Imports gruppiert ihre Zeilen nach Diensttagen. Der
+    Gruppenkopf ist ein `<tr><td colspan>` **in derselben Tabelle** — damit
+    ist er so breit wie die Tabelle, nicht wie das Sichtfenster. Gemessen am
+    13.09.2026 mit einer Datei aus dem Referenz-Export: Zelle **2677 px**,
+    sichtbar **342 px** (bei 400 px Fenster), **654** (720), **954** (1280),
+    **1354** (1920). Die Plakette „abweichende Crew" beginnt bei x = 940 bis
+    1324 und ist in **keiner** dieser vier Breiten sichtbar, ohne waagerecht
+    zu scrollen. Der `flex-wrap` der Kopfzeile greift nie — sie bleibt
+    einzeilig (40/44 px), weil in einer 2677 px breiten Zelle nichts umbricht.
+    **Kein Rückschritt, aber jetzt ein sichtbarer Widerspruch.** Vor
+    Web 19.4.0 stand dort Fließtext an derselben Stelle (gemessen x = 1077 bei
+    400 px, x = 1341 bei 1280 px) — ebenso unsichtbar. Neu ist, dass die
+    Aussage jetzt eine **Plakette** trägt: die Form, mit der die Anwendung
+    „Zustand, der Aufmerksamkeit will" zeigt. Eine Plakette, die man nur
+    findet, wenn man sie sucht, ist die falsche Form für ihre Aussage.
+    **Drei Wege, alle mit Folgen:**
+    **(a) so lassen** — kostet nichts, lässt aber die Warnung dort, wo sie
+    niemand sieht; die Zusage des Bausteins gilt dann nur in schmalen
+    Tabellen, und das steht seit Web 19.4.0 in `Design.md` 9.34.
+    **(b) Kopfzeile am linken Rand festheften** — `position:sticky; left:0`,
+    Breite an das Sichtfenster gebunden. Datum, Besatzung und Plakette stehen
+    dann immer da, wo gelesen wird; die Datenzeilen scrollen darunter durch.
+    **CSS allein reicht nicht:** Die Zelle ist 2677 px breit, und die Breite
+    des Sichtfensters kennt das Stylesheet nicht — es braucht eine gemessene
+    Zahl (ein Custom Property, das ein Skript bei jeder Größenänderung setzt).
+    Erst damit greift auch der Umbruch in zwei Zeilen, den das Konzept am
+    Handy erwartet hat.
+    **(c) je Tagesgruppe eine eigene Tabelle** mit der Überschrift darüber
+    statt darin. Löst es an der Wurzel, verändert aber den Aufbau der Vorschau
+    erheblich — und die Spalten der Gruppen fluchten dann nicht mehr
+    zwangsläufig untereinander, was der Grund für die eine gemeinsame Tabelle
+    war.
+    *Abnahme (für b oder c):* Bei 400 px sind Datum, Besatzungszeile und
+    Plakette ohne waagerechtes Scrollen sichtbar; der waagerechte Überlauf der
+    **Seite** bleibt 0; die Spalten der Datenzeilen fluchten weiterhin über
+    alle Gruppen hinweg. Zuordnung: **Mockup-Runde 9c** (wenn die Freigabe
+    dort noch fällt) oder eine spätere Runde.
+
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+41. **Fünf Klassen im Markup ohne Regel — Gestaltungsfragen, am 12.09.2026 entschieden.**
+    *Aufgenommen in P3/O12 als Rest von Nr. 39.* Nach dem Eintragen der
+    begründeten Fälle in `tools/vollstaendigkeit/ohne-regel.md` blieben sechs
+    Namen übrig, bei denen die Frage offen war, ob sie eine Regel brauchen;
+    seit S9/AP1 sind es **fünf** (gemessen 13.09.2026) — `rmneu` ist dort
+    beantwortet, siehe unten. Sie stehen mit dem Vermerk `[offen]` und
+    bleiben deshalb ein Befund:
+
+    - `imp-warn` — „abweichende Crew (…)" in der Kopfzeile einer Tagesgruppe
+      der Importvorschau. Ein **Warnhinweis, der wie Fließtext aussieht**;
+      von allen fünf der wahrscheinlichste echte Fund.
+    - `imp-daygroup` — die Kopfzeile einer Tagesgruppe selbst. Sie trägt ihren
+      Text in `<strong>`, sonst nichts: eine Gruppenüberschrift, die aussieht
+      wie eine Datenzeile.
+    - `rea-kopf`, `rea-beginn` — Kopfzeile und Beschriftung einer
+      Reanimationssitzung. Das Aussehen kommt vom Nachbarn `phasen-eingabe`
+      bzw. von der Elementregel für `label`; kein Skript liest die Klassen.
+      Entweder Reste, oder die Kopfzeile soll sich von einer gewöhnlichen
+      Phasenzeile abheben.
+    - `rmneu` — der Knopf „neu" in der Rettungsmittelwahl, neben `rmopt`.
+      **Beantwortet in S9/AP1** und seither auf `streichliste.md` („Ja, sie
+      hebt sich ab — sie ist eine Handlung, kein Datensatz").
+    - `phasen-name` — der Name einer Phase in der Einsatzansicht.
+
+    Jedes davon ist eine **Entscheidung**, kein Aufräumen: Entweder die Klasse
+    verschwindet, oder sie bekommt eine Regel — und dann ist das eine neue
+    Darstellung und braucht nach `docs/Design.md` 1 eine Freigabe. Deshalb
+    nicht am Phasenende erledigt.
+
+    **Entschieden am 12.09.2026:** `imp-warn` und `imp-daygroup` bekommen
+    eine Regel — dort ist tatsächlich etwas schief (ein Warnhinweis, der wie
+    Fließtext aussieht, und eine Gruppenüberschrift, die wie eine Datenzeile
+    aussieht). `rea-kopf`, `rea-beginn` und `phasen-name` werden gestrichen
+    und **mit Begründung** in `tools/vollstaendigkeit/streichliste.md`
+    eingetragen. Die zwei neuen Regeln sind zwei **neue Darstellungen** und
+    gehen in die **Mockup-Runde** (mit Nr. 42, 45 und 124; Ort im
+    Rahmenplan).
+    **Die drei Streichungen sind erledigt (Backlog-Runde 3, AP5, Web 19.3.1,
+    13.09.2026); der Punkt bleibt offen und liegt bei 9c.** `rea-kopf` und
+    `rea-beginn` sind aus `einsatz_form.php`, `phasen-name` zweimal aus
+    `einsatz.php`; alle drei stehen mit Begründung auf `streichliste.md`, die
+    drei `[offen]`-Zeilen in `ohne-regel.md` sind heraus. Gemessen gegen den
+    Stand davor: `[offen]` **5 → 2**, „auf der Streichliste, aber noch im
+    Markup" **0**, „`ohne-regel.md`: Eintrag ungenutzt" **0**, Befunde
+    insgesamt **334 → 330**. Die vierte weggefallene Meldung hatte der Auftrag
+    nicht vorhergesehen: `rea-kopf` stand im alten Stylesheet und war bis
+    hierher auch „ohne Gegenstück" (**53 → 52**).
+    **Im Browser bewegt sich nichts.** Vier Seiten vor und nach der Änderung:
+    im DOM `rea-kopf` 2 → 0, `rea-beginn` 2 → 0, `phasen-name` 9 → 0 und
+    22 → 0, `rea-sitzung` und `phasen-eingabe` unverändert. Bildvergleich
+    **0 abweichende Bildpunkte** auf allen vier Seiten, nachdem der
+    Demo-Zähler geschwärzt war — er zählt bis zum nächsten Reset herunter und
+    verursachte auf jeder Seite dieselben 3079 Punkte (Rahmen y 117–126).
+    **Beim Austragen berichtigt:** Der Eintrag zu `phasen-name` in
+    `ohne-regel.md` nannte `einsatz.php:631`; es sind die Zeilen 764 und 805.
+    **Offen bleiben `imp-warn` und `imp-daygroup`** — sie brauchen je eine
+    Regel, und das sind zwei neue Darstellungen (Mockup-Runde 9c).
+
+    **Erledigt mit Web 19.4.0** (Mockup-Runde 9c, AP1, 13.09.2026).
+    `imp-daygroup` hat eine Regel: Rauch als Fläche, kräftige Oberlinie, das
+    Datum in Kopfschrift und Dunkelblau (und **deutsch** statt ISO — F-MR-2),
+    der Rest gedämpft. `imp-warn` ist **ersatzlos gestrichen**: Die Warnung
+    ist eine `.plakette-orange` mit dem Symbol `warnung` geworden (M-MR-01,
+    Variante A, F-MR-1), die Gruppe „Nicht zuordenbar" trägt dieselbe
+    Kopfzeile mit `.plakette-rot` (F-MR-3). Gemessen gegen den Stand davor:
+    `[offen]` **2 → 0**, „ohne Gegenstück" **52 → 50**, „auf der Streichliste,
+    aber noch im Markup" **0**, „Eintrag ungenutzt" **0**, Befunde insgesamt
+    **330 → 326**. Im Browser mit einer Datei geprüft, die alle drei Fälle
+    auslöst: 400/720/1280 px, **0** waagerechter Überlauf, keine
+    Konsolenfehler.
+    **Ein Befund ist dabei entstanden und NICHT behoben** (Fehlerfund 2 im
+    Konzept, eigener Backlog-Punkt Nr. 182): Die Kopfzeile sitzt in einer
+    Zelle, die so breit ist wie die ganze Vorschautabelle — 2677 px gegen
+    342 bis 1354 px Sichtfenster. Besatzung und Plakette stehen damit in
+    jeder Breite außerhalb des Sichtfensters. Das ist älter als diese Stufe
+    (der alte Fließtext stand an derselben Stelle), aber es trifft jetzt eine
+    Plakette, die Aufmerksamkeit will.
 
 179. **Die Zusage „keine fremde Quelle zur Laufzeit" zählt kein Prüfmittel
     nach.** *Aufgenommen 13.09.2026 beim Beheben von Nr. 176, gefunden von der

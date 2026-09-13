@@ -50,5 +50,3 @@ gegen die sie schützt.
 | `imp-dup` | [bleibt] Wie `imp-cell` — Auswahlfeld für Dubletten, gelesen in `import_ui.js:819`. |
 | `imp-daymode` | [bleibt] Wie `imp-cell` — Auswahlfeld für den Umgang mit abweichender Besatzung, gelesen in `import_ui.js:824`. |
 | `imp-param` | [bleibt] Skriptanker an den Importparametern; `import_ui.js:89` sammelt `.imp-param`, um die eingestellten Werte einzulesen. |
-| `imp-warn` | [offen] „abweichende Crew (…)" in der Kopfzeile einer Tagesgruppe der Importvorschau — ein **Warnhinweis, der wie Fließtext aussieht**. Von allen Einträgen dieser Liste der wahrscheinlichste echte Fund. |
-| `imp-daygroup` | [offen] Die Kopfzeile einer Tagesgruppe in der Importvorschau. Sie trägt ihren Text in `<strong>`, sonst nichts — eine Gruppenüberschrift, die aussieht wie eine Datenzeile. |

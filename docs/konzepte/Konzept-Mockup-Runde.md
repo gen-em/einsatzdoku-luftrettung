@@ -22,10 +22,10 @@ nach K9 als Vorlage daneben.*
 >
 > | | |
 > |---|---|
-> | In Arbeit | **noch keines** — die Umsetzung wartet auf den Merge von **Backlog-Runde 3** (Zweig `claude/backlog-runde-3-umsetzung-woqxjm`, AP1–AP8 gebaut, kein PR offen). Sie streicht drei der fünf `[offen]`-Klassen und bringt mit `zusagen.md` die Mechanik, die AP2 braucht (E-MR-24) |
-> | Erledigt | — |
-> | Haken | drei Rückfragen am 13.09.2026 gestellt und beantwortet: E-MR-24 (Ausnahmeliste der Unicode-Prüfung), E-MR-25 (Markierung für alle Öffner), Fehlerfund 1 ohne eigene Backlog-Nummer. Vier veraltete Sollwerte in der Prüfdokument-Vorlage sind vermerkt und werden beim Ausfüllen berichtigt (Abschnitt 5) |
-> | Stufe | **Web 19.4.0** geplant (Nebenstufe, neue Darstellungen) — auf 19.3.1 aufsetzend, das Runde 3 mitbringt. Uhr und Android unberührt |
+> | In Arbeit | **AP2** (Nr. 42) — als Nächstes. Backlog-Runde 3 ist am 13.09.2026 gemergt (PR #43, `8f1712c`, Web 19.3.1) und in den Arbeitszweig geholt; sie hat drei der fünf `[offen]`-Klassen gestrichen und bringt mit `zusagen.md` die Mechanik, die AP2 braucht (E-MR-24) |
+> | Erledigt | **AP1** (Nr. 41, Web 19.4.0, 13.09.2026) — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen. Gemessen `[offen]` **2 → 0**, „ohne Gegenstück" **52 → 50**, Befunde **330 → 326**; im Browser 400/720/1280 px, 0 waagerechter Überlauf, keine Konsolenfehler; Wortliste 0/0 |
+> | Haken | **Fehlerfund 2 wartet auf eine Entscheidung** (Abschnitt 6, Backlog Nr. 182): Der Gruppenkopf der Importvorschau sitzt in einer 2677 px breiten Zelle und steht damit in **jeder** Breite außerhalb des Sichtfensters. Nach K4 nicht mitbehoben — eine Lösung wäre eine neue Darstellung. **Die Abnahme von AP1 ist an dieser Stelle nicht erfüllbar**, wie sie im Konzept steht (siehe Abschnitt 5) |
+> | Stufe | **Web 19.4.0** (Nebenstufe, neue Darstellungen), gesetzt mit AP1 — AP2 bis AP4 sind Korrekturstufen darauf oder heben die Nebenstufe, je nach Inhalt. Uhr und Android unberührt |
 
 ---
 
@@ -318,11 +318,39 @@ Sie werden beim Ausfüllen berichtigt, nicht stillschweigend überschrieben:
 | 3. Im Browser, Tagesübersicht | „ab 1600 px **kein Knopf**" | der Knopf bleibt und macht die Karte breit — E-MR-16 |
 | 4. Prüfliste, Punkt 4 | „F-MR-6 nachjustieren" | F-MR-6 ist durch 6a/6b ersetzt (E-MR-11) |
 
+**Fehlerfund 2 (13.09.2026, beim Prüfen von AP1 im Browser):**
+Der Gruppenkopf der Importvorschau ist ein `<tr><td colspan>` **in derselben
+Tabelle** wie die Datenzeilen — damit ist er so breit wie die Tabelle, nicht
+wie das Sichtfenster. Gemessen mit einer Datei aus dem Referenz-Export:
+
+| Fenster | Zelle | sichtbar | Plakette beginnt bei | sichtbar? |
+|---|---|---|---|---|
+| 400 px | 2677 px | 342 px | x = 940 | **nein** |
+| 720 px | 2677 px | 654 px | x = 944 | **nein** |
+| 1280 px | 2677 px | 954 px | x = 1204 | **nein** |
+| 1920 px | 2677 px | 1354 px | x = 1324 | **nein** |
+
+Zweierlei folgt: **(1) Die Abnahme von AP1 ist, wie sie dasteht, nicht
+erfüllbar.** Sie verlangt „am Handy bricht die Kopfzeile in zwei Zeilen" —
+das kann sie nicht, weil in einer 2677 px breiten Zelle nichts umbricht; die
+Zeile bleibt in jeder Breite einzeilig (40/44 px). Die Erwartung stammt aus
+dem Mockup, und dort hatte die Tabelle **fünf** Spalten statt zwanzig.
+**(2) Es ist kein Rückschritt, aber ein neuer Widerspruch.** Der alte
+Fließtext stand ebenso außerhalb (gemessen x = 1077 bei 400 px, x = 1341 bei
+1280 px, beide unsichtbar) — neu ist, dass die Aussage jetzt eine
+**Plakette** trägt: die Form für „Zustand, der Aufmerksamkeit will".
+
+Nach K4 **nicht nebenbei behoben**: Jede der drei Lösungen wäre eine neue
+Darstellung und braucht nach `Design.md` 1.2 eine Freigabe. Angelegt als
+**Backlog Nr. 182** mit drei Wegen; der mittlere (Kopfzeile am linken Rand
+festheften) braucht eine **gemessene** Breite — CSS allein reicht nicht,
+weil das Stylesheet die Breite des Sichtfensters nicht kennt.
+
 | AP | Punkt | Stand | Probleme / wie gelöst |
 |---|---|---|---|
 | — | Freigabe F-MR-1 … F-MR-13 | **erteilt 13.09.2026** (vier Fassungen der Mockups) | |
 | — | Rückfragen der Umsetzung | **beantwortet 13.09.2026** | Drei Befunde beim Vorbereiten: (1) die für AP2 vorgesehene Ausnahmeliste `ausnahmen.md` wird von der Unicode-Prüfung gar nicht gelesen → E-MR-24; (2) die Regel aus E-MR-23 trifft vier Bauarten mehr als gezählt → E-MR-25, gilt für alle; (3) Fehlerfund 1 bekommt keine eigene Nummer, sondern läuft in AP2 mit. Dazu der Rahmenplan: das Lieferpaket trägt Fassung 46, Runde 3 hat ihn auf 47 neu gefasst — die Freigabe wird nach dem Merge dort nachgetragen, die Fassung 46 aus dem Paket nicht übernommen |
-| AP1 | 41 | offen | |
+| AP1 | 41 | **erledigt** (Web 19.4.0, 13.09.2026) | **Zwei Abweichungen vom Konzepttext, beide begründet.** (1) Die Kopfzeile verwendet nicht die Klassennamen des Mockups (`.zeile`, `.tag`, `.rest`): `.zeile` ist in dieser Anwendung ein **Baustein** (Design.md 9.2, Listeneintrag) und hätte seine Regel mitgebracht. Sie heißen `.imp-kopfzeile`, `.imp-tag`, `.imp-rest` — dieselbe Familie wie die übrigen sechs `imp-`-Anker. (2) `.plakette` steht auf `white-space:nowrap`; der Konflikttext wächst mit der Zahl der abweichenden Rollen und wäre bei 360 px breiter als das Gerät. In dieser Kopfzeile darf sie umbrechen — eine gescopte Regel, im Stylesheet und in Design.md 9.34 begründet. **Dazu Fehlerfund 2**, siehe unten. |
 | AP2 | 42 | offen | |
 | AP3 | 45 | offen | |
 | AP4 | 124 | offen | |

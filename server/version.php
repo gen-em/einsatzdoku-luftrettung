@@ -4075,5 +4075,42 @@ declare(strict_types=1);
  * Ueberschrift, weil sie zur selben Runde gehoeren. Uhr und Android sind
  * unberuehrt. Keine Migration — `update.php` muss nach dem Deploy nicht
  * laufen.
+ *
+ * 19.4.0 — MOCKUP-RUNDE 9c, AP1: DIE IMPORTVORSCHAU BEKOMMT EINE UEBERSCHRIFT.
+ *
+ * Vier Gestaltungsaufgaben in einer Freigaberunde (Rahmenplan Schritt 9c,
+ * `Konzept-Mockup-Runde.md`); dies ist die erste. Backlog Nr. 41 fragte, was
+ * mit fuenf Klassen geschehen soll, die im Markup stehen und keine Regel
+ * haben. Drei davon hat Backlog-Runde 3 gestrichen (19.3.1); die beiden
+ * letzten sitzen in der Importvorschau und sind hier beantwortet — die eine
+ * bekommt eine Regel, die andere faellt weg.
+ *
+ * `imp-daygroup` ist die Kopfzeile einer Tagesgruppe. Sie trug ihren Text in
+ * `<strong>` und sah damit aus wie die Datenzeilen darunter — eine
+ * Ueberschrift, die keine war. Jetzt traegt sie Rauch als Flaeche, eine
+ * kraeftige Oberlinie, das Datum in Kopfschrift und Dunkelblau, den Rest
+ * gedaempft und eine Stufe kleiner. Und das Datum steht deutsch
+ * ("17.01.2026" statt "2026-01-17"): Die ISO-Form kam aus der Datei und ist
+ * bis in die Oberflaeche durchgereicht worden.
+ *
+ * `imp-warn` ist ersatzlos gestrichen. Die Warnung "abweichende Crew" stand
+ * als Fliesstext zwischen zwei Punkten; sie ist jetzt eine
+ * `.plakette-orange` mit dem Symbol `warnung` — der Baustein, mit dem die
+ * Anwendung ueberall "Zustand, der Aufmerksamkeit will" zeigt. Dieselbe
+ * Kopfzeile traegt die Gruppe "Nicht zuordenbar", dort in Rot und mit der
+ * Zahl der Zeilen statt einer Klammer.
+ *
+ * NEUE STUFE, KEINE KORREKTUR: Es sind neue Darstellungen (Mockup M-MR-01,
+ * Variante A, freigegeben am 13.09.2026), kein Fehler, der behoben wird.
+ * Uhr und Android sind unberuehrt. Keine Migration.
+ *
+ * WAS DIESE STUFE NICHT LOEST und was beim Pruefen im Browser aufgefallen
+ * ist: Die Kopfzeile sitzt in einer Tabellenzelle, die so breit ist wie die
+ * ganze Vorschautabelle — gemessen 2677 px bei 342 bis 1354 px Sichtfenster.
+ * Besatzung und Plakette stehen deshalb in JEDER Breite ausserhalb des
+ * Sichtfensters, bis jemand waagerecht scrollt. Das ist kein Rueckschritt
+ * (der alte Fliesstext stand an derselben Stelle, gemessen bei x=1077 statt
+ * x=940), aber es ist jetzt eine Plakette, die Aufmerksamkeit will und keine
+ * bekommt. Steht als Fehlerfund 2 im Konzept.
  */
-const WEB_VERSION = '19.3.1';
+const WEB_VERSION = '19.4.0';

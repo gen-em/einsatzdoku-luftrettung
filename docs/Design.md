@@ -2281,6 +2281,53 @@ Element im `<main>`, der Sprung landet also dort, wo das Mockup hinwill.
 **Eigene Funktion und keine Option an `ui_karte_ende()`:** Die hat als
 einziger Baustein kein `array $o`, dafür 115 Aufrufstellen.
 
+### 9.34 Kopfzeile einer Tagesgruppe (`.imp-daygroup`)
+
+**Zweck:** die Überschrift über einer Gruppe von Zeilen **innerhalb** einer
+Tabelle. Bisher nur in der Importvorschau, wo die eingelesenen Einsätze nach
+Diensttagen gruppiert erscheinen. Freigegeben mit M-MR-01, Variante A
+(F-MR-1, Mockup-Runde 9c).
+
+```html
+<tr class="imp-daygroup"><td colspan="…">
+  <div class="imp-kopfzeile">
+    <span class="imp-tag">17.01.2026</span>
+    <span class="imp-rest">Besatzung … · 2 Einsätze · Diensttag vorhanden</span>
+    <span class="plakette plakette-orange"><svg class="symbol symbol-klein">…</svg>
+      abweichende Besatzung: Weber → Muster</span>
+    <select class="imp-daymode">…</select>
+  </div>
+</td></tr>
+```
+
+**Der Unterschied zur Datenzeile ist die Schriftfamilie, nicht das Gewicht.**
+Vorher stand dort `<strong>` — dasselbe, was auch eine betonte Zelle trägt.
+Was eine Überschrift in dieser Anwendung ausmacht, ist die Kopfschrift; das
+Gewicht allein trägt sie nicht. Dazu Rauch als Fläche und eine kräftige
+Oberlinie (`--strich-stark`), damit die Gruppe sichtbar beginnt.
+
+**Ein Zustand an der Gruppe ist eine Plakette, keine eigene Regel.** Die
+Warnung „abweichende Crew" war Fließtext und bekam in Variante B des Mockups
+eine eigene Regel; freigegeben ist Variante A — die vorhandene
+`.plakette-orange` mit dem Symbol `warnung`, in Rot (`.plakette-rot`) für die
+Gruppe „Nicht zuordenbar". Das ist dieselbe Form wie überall sonst, und ein
+Leser erkennt sie ohne Lernen. **Die eine Abweichung:** In dieser Kopfzeile
+darf die Plakette **umbrechen** (`white-space:normal`) — sie trägt hier einen
+Satz, keine Vokabel, und wäre bei 360 px sonst breiter als das Gerät.
+
+**Wann nicht:** für eine Überschrift, die **über** einer Tabelle steht statt
+in ihr — das ist der Kartentitel (`ui_karte_start()`). Diese Kopfzeile gibt
+es nur, weil die Gruppen sich eine Tabelle teilen müssen, damit die Spalten
+fluchten.
+
+**Was sie nicht kann.** Die Zelle ist so breit wie die Tabelle, nicht wie das
+Sichtfenster — in der Importvorschau gemessen 2677 px gegen 342 bis 1354 px
+sichtbar. Alles nach dem Datum steht damit außerhalb des Sichtfensters, bis
+jemand waagerecht scrollt, und der `flex-wrap` der Zeile greift nie. Wer
+diesen Baustein in einer **schmalen** Tabelle verwendet, merkt davon nichts;
+wer ihn in einer breiten verwendet, muss es wissen. Der Befund ist mit
+Web 19.4.0 aufgenommen und nicht behoben.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Fünf Typen
@@ -2419,6 +2466,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 19.4.0 (Mockup-Runde 9c / AP1)** | **9.34 neu — Kopfzeile einer Tagesgruppe** (`.imp-daygroup`), freigegeben mit M-MR-01 Variante A (F-MR-1/F-MR-2/F-MR-3). Die Kopfzeile der Importvorschau war eine Datenzeile mit `<strong>`; sie trägt jetzt Rauch, eine kräftige Oberlinie und das Datum in Kopfschrift, und das Datum steht deutsch. Die Warnung „abweichende Crew" ist eine `.plakette-orange` geworden — `imp-warn` ist ersatzlos gestrichen, weil eine zweite Darstellung für „Zustand, der Aufmerksamkeit will" den Vorrat vergrößert hätte, ohne etwas zu können. **Eine begründete Abweichung am Baustein Plakette:** in dieser Kopfzeile darf sie umbrechen. Gemessen: `pruefen.py` „im Markup ohne Regel, als `[offen]` vermerkt" **2 → 0**, Sollmenge ohne Gegenstück **52 → 50**, Hexfarben außerhalb `:root` **0**; im Browser 400/720/1280 px, **0** waagerechter Überlauf, keine Konsolenfehler. **Kein neues Token, kein neues Symbol.** |
 | **13.09.2026 (Textpflege, keine Auslieferung)** | **2.5** berichtigt: „B1 erledigt, nachgemessen" traf seit dem Commit „Update Logos" nicht mehr zu (Backlog Nr. 62). Der Absatz sagt jetzt den gemessenen Stand vom 13.09.2026 und die Entscheidung vom 12.09.2026, neue Vorlagen anzufordern. **Zwei Nachbesserungen am selben Tag:** Der Absatz nannte die weiße Fassung in Prosa statt beim Dateinamen und war damit der einzige Treffer der Wortliste außerhalb der Ausnahmeliste (jetzt `gen-em_logo_helicopter_weiss.svg`, 0 Treffer) — und er zählte `gen-em_logo_nef.png` zu den richtigen Dateien, obwohl sie den **alten** Korpuswert `#1D0E0A` trägt, genau wie die `.svg` daneben, die derselbe Absatz als falsch führt. Alle acht Dateien sind nachgemessen (SVG-Farbwerte und dekodierte Bildpunkte der PNG): richtig sind die beiden Fassungen **ohne** Korpus, `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef_weiss.png`. Die beiden PNG der Luftmarke tragen die alten Werte um ein bis zwei Stufen je Kanal verschoben, weil sie gerastert sind. |
 | **Web 16.1.1 (S9)** | Kapitel 7: Im Band 1024–1199 px rückt das Akkordeon je Ebene **4 statt 8 px** ein, und der Abstand der Diensttagszeile geht von 8 auf **4 px** (Freigabe M-S9-11, Weg 2). Gemessen: dem Nebentext stehen dort **64–79 px** statt 48–63 zur Verfügung — dreizehn Kurznamen, **keiner** mehr mit Auslassungszeichen (vorher zehn). Der Abstand ist mit `:not(.leiste-gruppe)` eingegrenzt, weil die Zeilenklasse auch Leistenfuß, Schubladen-Hauptpunkte und Einstellungsmenü trägt; nachgemessen bleiben die bei 8 px. **Keine neue Schwelle, kein neues Token** — 4 px ist `--abstand-1`. |
 | **Web 17.1.1 (S9/AP5-6)** | **9.32 Kartenfilter**, Punkt 3 berichtigt: Die Anlegen-Formulare in der Liste gibt es seit Web 17.0.0 nicht mehr — die Regel bleibt als Netz stehen, und die Klickprobe misst seither **0 Formulare UND „Anlegen" sichtbar**, auch bei null Treffern. Punkt 4 nachgezogen: Der Leerzustand sagt jetzt „Leere den Filter, um wieder alle zu sehen" statt „…, um etwas anzulegen" — der alte Satz beschrieb eine Sackgasse, die es nicht mehr gibt. **Keine Regel im Stylesheet berührt.** |

@@ -3719,3 +3719,55 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* Der Leerzustand ist ein gewöhnlicher Hinweis; er braucht nur den Abstand,
  * den die weggefilterten Zeilen hinterlassen. */
 .kartenfilter-leer{margin:var(--abstand-3) 0 0}
+
+
+/* ===========================================================================
+ * 29  IMPORTVORSCHAU                      (Mockup-Runde 9c, M-MR-01, E-MR-09)
+ *
+ * Die Vorschau des CSV-Imports gruppiert ihre Zeilen nach Diensttagen. Der
+ * Gruppenkopf ist eine Tabellenzeile ueber die volle Breite — und sah bis
+ * Web 19.3.1 aus wie eine Datenzeile: Text in `<strong>`, sonst nichts.
+ * `imp-daygroup` und `imp-warn` standen deshalb seit O11 als `[offen]` in
+ * `ohne-regel.md`; Backlog Nr. 41 ist der Eintrag dazu.
+ *
+ * WAS DIE REGEL TUT. Sie macht aus der Datenzeile eine Ueberschrift: Flaeche
+ * in Rauch, kraeftige Oberlinie, das Datum in Kopfschrift und Dunkelblau,
+ * der Rest gedaempft und eine Stufe kleiner. Damit traegt der Kopf dieselbe
+ * Sprache wie jede andere Zwischenueberschrift der Anwendung.
+ *
+ * WARUM `imp-warn` NICHT AUCH EINE REGEL BEKOMMT (F-MR-1, Variante A). Die
+ * Warnung „abweichende Crew" ist ein Zustand, der Aufmerksamkeit will — und
+ * dafuer gibt es den Baustein schon: `.plakette-orange` mit dem Symbol
+ * `warnung`. Eine zweite Darstellung fuer dieselbe Aussage waere eine
+ * Darstellung zu viel; die Klasse ist deshalb ersatzlos gestrichen und steht
+ * mit Begruendung auf `streichliste.md`. Dieselbe Kopfzeile traegt die
+ * Gruppe „Nicht zuordenbar", dort mit `.plakette-rot` (F-MR-3, E-MR-13).
+ *
+ * DIE ZEILE BRICHT UM. Am Handy passen Datum, Besatzung, Plakette und
+ * Auswahlfeld nicht nebeneinander; `flex-wrap` laesst sie in zwei Zeilen
+ * fallen, statt die Tabelle waagerecht ueberlaufen zu lassen.
+ * ======================================================================== */
+.imp-daygroup td{
+  background:var(--rauch);
+  border-top:var(--strich-stark) solid var(--linie);
+  padding:var(--abstand-2) var(--abstand-3);
+}
+.imp-kopfzeile{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);
+}
+/* KOPFSCHRIFT, NICHT NUR FETT. Der Unterschied zwischen Ueberschrift und
+ * Datenzeile ist in dieser Anwendung die Schriftfamilie, nicht das Gewicht —
+ * `<strong>` allein hat genau deshalb nicht gereicht. */
+.imp-tag{
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-3);color:var(--dunkelblau);
+}
+.imp-rest{color:var(--gedaempft);font-size:var(--groesse-2)}
+/* DIE EINE ABWEICHUNG VOM BAUSTEIN, und sie ist noetig: `.plakette` steht auf
+ * `white-space:nowrap`, weil eine Plakette sonst ueblicherweise ein einzelnes
+ * Wort ist („freigegeben", „kein Ende"). Hier traegt sie den Konflikttext,
+ * und der waechst mit der Zahl der abweichenden Rollen — „HEMS: Weber ->
+ * Muster, P1: Berger -> Beispiel". Bei 360 px waere das eine Plakette, die
+ * breiter ist als das Geraet. Sie darf deshalb umbrechen; alles andere am
+ * Baustein bleibt. */
+.imp-kopfzeile .plakette{white-space:normal}

@@ -343,6 +343,36 @@
 
     // ------------------------------------------------------------ Zeichnen
 
+    /* ---- Der Kopf einer Tagesgruppe (Mockup-Runde 9c, M-MR-01) ------------
+     *
+     * Drei kurze Bauer statt einer langen Zeichenkette. Der Grund ist nicht
+     * Aesthetik: Die Kopfzeile entsteht an ZWEI Stellen — einmal fuer
+     * „Nicht zuordenbar", einmal je Diensttag —, und bis Web 19.3.1 hatte
+     * jede ihr eigenes Markup. Genau so hat die Gruppe „Nicht zuordenbar"
+     * ihre Zaehlung in Klammern behalten, waehrend die Tagesgruppen daneben
+     * mit Punkten gliederten.
+     */
+    function kopfzeile(spalten, inhalt) {
+        return '<tr class="imp-daygroup"><td colspan="' + spalten + '">' +
+               '<div class="imp-kopfzeile">' + inhalt + '</div></td></tr>';
+    }
+
+    /* Der Baustein aus Design.md 9.6, hier als Zeichenkette. edSymbol() steht
+     * zur Verfuegung: symbol.js laedt zwar erst am Seitenende, aber gezeichnet
+     * wird erst, nachdem jemand eine Datei gewaehlt hat. */
+    function plakette(ton, text) {
+        return '<span class="plakette plakette-' + ton + '">' +
+               edSymbol('warnung', 'symbol-klein') + esc(text) + '</span>';
+    }
+
+    /* DATUM WIE UEBERALL SONST (F-MR-2). `t.day` ist ISO, weil die Datei es
+     * so liefert und der Server es so speichert — in der Oberflaeche steht
+     * es deutsch. EdPat.datumDe() ist dieselbe Funktion, die jede andere
+     * Seite benutzt; patient.js liegt auf dieser Seite vor import_ui.js. */
+    function tagDe(iso) {
+        return (window.EdPat && EdPat.datumDe(iso)) || iso;
+    }
+
     function zeileSichtbar(z, dup) {
         if (S.filter === 'probleme') { return z.status !== 'ok'; }
         if (S.filter === 'dubletten') { return !!dup; }
@@ -398,8 +428,10 @@
         var spaltenZahl = anzeigeSpalten().length + 2;
 
         if (ohneTag.length) {
-            koerper += '<tr class="imp-daygroup"><td colspan="' + spaltenZahl + '">' +
-                'Nicht zuordenbar (' + ohneTag.length + ')</td></tr>';
+            koerper += kopfzeile(spaltenZahl,
+                '<span class="imp-tag">Nicht zuordenbar</span>' +
+                plakette('rot', ohneTag.length
+                    + (ohneTag.length === 1 ? ' Zeile' : ' Zeilen')));
             ohneTag.forEach(function (z) {
                 if (!zeileSichtbar(z, null)) { return; }
                 koerper += zeileHtml(z, null);
@@ -417,18 +449,19 @@
             var crewText = belegt.length
                 ? belegt.map(function (r) { return (LABELS[r] || r) + ' ' + t.crew[r]; }).join(', ')
                 : 'keine Besatzung in der Datei';
-            var kopfZelle = '<strong>' + esc(t.day) + '</strong> · ' + esc(crewText) +
+            var kopfZelle = '<span class="imp-tag">' + esc(tagDe(t.day)) + '</span>' +
+                '<span class="imp-rest">' + esc(crewText) +
                 ' · ' + t.missionen.length + ' Einsätze · ' +
-                (b ? 'Diensttag vorhanden' : 'Diensttag wird angelegt');
+                (b ? 'Diensttag vorhanden' : 'Diensttag wird angelegt') + '</span>';
             if (konflikt) {
                 var w = S.wahlTag[t.day] || 'keep';
-                kopfZelle += ' · <span class="imp-warn">abweichende Crew (' + esc(konflikt) + ')</span> ' +
+                kopfZelle += plakette('orange', 'abweichende Crew: ' + konflikt) +
                     '<select class="imp-daymode" data-day="' + esc(t.day) + '">' +
                     '<option value="keep"' + (w === 'keep' ? ' selected' : '') + '>gespeicherte Crew behalten</option>' +
                     '<option value="update"' + (w === 'update' ? ' selected' : '') + '>Crew aus der Datei übernehmen</option>' +
                     '</select>';
             }
-            koerper += '<tr class="imp-daygroup"><td colspan="' + spaltenZahl + '">' + kopfZelle + '</td></tr>';
+            koerper += kopfzeile(spaltenZahl, kopfZelle);
 
             t.missionen.forEach(function (m) {
                 var z = nachSrcRow[m.srcRow];

@@ -14,6 +14,73 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.4.0] — 2026-09-13
+
+Mockup-Runde 9c, erstes von vier Arbeitspaketen
+(`docs/konzepte/Konzept-Mockup-Runde.md`, Rahmenplan Schritt 9c). Vier
+Gestaltungsaufgaben, die alle eine Freigabe brauchten, sind am 13.09.2026 in
+**einer** Runde gezeichnet und freigegeben worden statt in vier; AP1 setzt
+die erste um.
+
+### Web — die Importvorschau bekommt eine Überschrift (Backlog Nr. 41)
+
+**Das Problem.** Die Vorschau des CSV-Imports gruppiert ihre Zeilen nach
+Diensttagen, und über jeder Gruppe steht eine Zeile mit Datum, Besatzung,
+Zahl der Einsätze und dem Vermerk, ob der Diensttag schon existiert. Diese
+Zeile trug ihren Text in `<strong>` und sonst nichts — sie sah aus wie die
+Datenzeilen darunter. Die Warnung „abweichende Crew" stand daneben als
+Fließtext zwischen zwei Punkten und war von der Besatzungsangabe davor nicht
+zu unterscheiden. Beide Klassen (`imp-daygroup`, `imp-warn`) standen seit O11
+als `[offen]` in `tools/vollstaendigkeit/ohne-regel.md`: Klassen im Markup,
+für die es keine Regel gab und bei denen niemand entschieden hatte, ob sie
+eine brauchen.
+
+**Warum ein Mockup nötig war.** Beide Antworten sind neue Darstellungen, und
+dafür verlangt `Design.md` 1.2 eine Freigabe mit Bild. Das Mockup M-MR-01
+stellte zwei Wege gegeneinander: **(A)** die Kopfzeile bekommt eine Regel und
+die Warnung wird eine vorhandene `.plakette-orange`, **(B)** beide bekommen je
+eine eigene Regel. Freigegeben ist **A** (F-MR-1) — und zwar nicht aus
+Sparsamkeit: Die Plakette ist die Form, mit der die Anwendung an jeder
+anderen Stelle „Zustand, der Aufmerksamkeit will" zeigt (Filter, Sync,
+Kennzahlen). Eine zweite Darstellung für dieselbe Aussage hätte den Vorrat
+vergrößert, ohne etwas zu können, was der Baustein nicht kann. `imp-warn`
+fällt damit ersatzlos weg und steht mit Begründung auf der Streichliste.
+
+**Was jetzt dasteht.** Die Kopfzeile trägt Rauch als Fläche, eine kräftige
+Oberlinie, das Datum in Kopfschrift und Dunkelblau, den Rest gedämpft und
+eine Stufe kleiner. Das Datum steht **deutsch** — „17.01.2026" statt
+„2026-01-17" (F-MR-2). Die ISO-Form kam aus der Importdatei und ist bis in
+die Oberfläche durchgereicht worden; sie ist dort das einzige Datum der
+Anwendung gewesen, das so aussah. Die Gruppe „Nicht zuordenbar" trägt
+dieselbe Kopfzeile mit `.plakette-rot` und nennt die Zahl der Zeilen, statt
+sie in Klammern hinter den Text zu setzen (F-MR-3).
+
+**Eine Abweichung vom Baustein, und sie ist begründet.** `.plakette` steht
+auf `white-space:nowrap`, weil eine Plakette sonst ein einzelnes Wort ist
+(„freigegeben", „kein Ende"). Hier trägt sie den Konflikttext, und der wächst
+mit der Zahl der abweichenden Rollen. Bei 360 px wäre das eine Plakette,
+breiter als das Gerät; in der Kopfzeile darf sie deshalb umbrechen.
+
+**Was diese Stufe NICHT löst.** Beim Prüfen im Browser ist aufgefallen: Die
+Kopfzeile sitzt in einer Tabellenzelle, die so breit ist wie die ganze
+Vorschautabelle — gemessen **2677 px** bei einem Sichtfenster von 342 bis
+1354 px. Besatzung und Plakette stehen deshalb in **jeder** Breite außerhalb
+des Sichtfensters, bis jemand waagerecht scrollt. Das ist kein Rückschritt —
+der alte Fließtext stand an derselben Stelle (gemessen x=1077 statt jetzt
+x=940) —, aber es ist jetzt eine Plakette, die Aufmerksamkeit will und keine
+bekommt. Der Befund liegt als Fehlerfund 2 im Konzept und wartet auf eine
+Entscheidung; er ist älter als diese Stufe und wird nicht nebenbei behoben.
+
+Gemessen: `tools/vollstaendigkeit/pruefen.py` meldet **0** Klassen „im Markup
+ohne Regel, als `[offen]` vermerkt" (vorher 2), **0** ungenutzte Einträge in
+beiden Hilfslisten und **0** Klassen „auf der Streichliste, aber noch im
+Markup"; die Sollmenge des alten Stylesheets hat zwei Namen weniger ohne
+Gegenstück (52 → 50). Im Browser geprüft mit einer Importdatei, die alle drei
+Fälle auslöst (vorhandener Tag mit abweichender Besatzung, neuer Tag, eine
+Zeile ohne verwertbares Datum): 400, 720 und 1280 px, **0** waagerechter
+Überlauf der Seite, **keine** Konsolenfehler. Wortliste: 0 Treffer außerhalb
+der Ausnahmen, 0 ungenutzte Ausnahmen.
+
 ## [Web 19.3.1] — 2026-09-13
 
 Backlog-Runde 3, neun Punkte in drei Blöcken
