@@ -1560,6 +1560,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Seite** bleibt 0; die Spalten der Datenzeilen fluchten weiterhin über
     alle Gruppen hinweg. Zuordnung: **Mockup-Runde 9c** (wenn die Freigabe
     dort noch fällt) oder eine spätere Runde.
+    **Mockup M-MR-05 liegt seit dem 14.09.2026 vor** (`konzept-mockup-runde/
+    mockups/`, Freigabefrage F-MR-14). Alle drei Wege sind **in die laufende
+    Anwendung eingesetzt und darin gemessen** — nicht gezeichnet; die Bilder
+    sind Bildschirmfotos. Ergebnis: **(a)** Kopf bei 400 px nicht sichtbar,
+    Zeile 44 px · **(b)** sichtbar, Zeile 231 px bei 400 und 122 px bei
+    1280 px, eine Tabelle, Spalten fluchten · **(c)** sichtbar, 233 / 124 px,
+    drei Tabellen, **Spalten fluchten nicht** (eine von vierzehn weicht schon
+    bei drei Gruppen ab). Waagerechter Überlauf der Seite in allen sechs
+    Messungen **0**, Konsolenfehler **keine**.
+    **Zwei Kosten von (c) wurden erst am Bestand sichtbar** und standen oben
+    noch nicht: die fehlende Spaltenflucht ist messbar, und der
+    **Spaltenkopf wiederholt sich je Gruppe** — lässt man ihn weg, hat jede
+    Gruppe außer der ersten keine Spaltenbeschriftung. **Empfehlung (b).**
 
 ## Erledigt
 

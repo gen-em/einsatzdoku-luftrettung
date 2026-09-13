@@ -24,7 +24,7 @@ nach K9 als Vorlage daneben.*
 > |---|---|
 > | In Arbeit | **AP2** (Nr. 42) — als Nächstes. Backlog-Runde 3 ist am 13.09.2026 gemergt (PR #43, `8f1712c`, Web 19.3.1) und in den Arbeitszweig geholt; sie hat drei der fünf `[offen]`-Klassen gestrichen und bringt mit `zusagen.md` die Mechanik, die AP2 braucht (E-MR-24) |
 > | Erledigt | **AP1** (Nr. 41, Web 19.4.0, 13.09.2026) — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen. Gemessen `[offen]` **2 → 0**, „ohne Gegenstück" **52 → 50**, Befunde **330 → 326**; im Browser 400/720/1280 px, 0 waagerechter Überlauf, keine Konsolenfehler; Wortliste 0/0 |
-> | Haken | **Fehlerfund 2 wartet auf eine Entscheidung** (Abschnitt 6, Backlog Nr. 182): Der Gruppenkopf der Importvorschau sitzt in einer 2677 px breiten Zelle und steht damit in **jeder** Breite außerhalb des Sichtfensters. Nach K4 nicht mitbehoben — eine Lösung wäre eine neue Darstellung. **Die Abnahme von AP1 ist an dieser Stelle nicht erfüllbar**, wie sie im Konzept steht (siehe Abschnitt 5) |
+> | Haken | **F-MR-14 liegt zur Freigabe vor** (Mockup **M-MR-05**, 14.09.2026): Fehlerfund 2 aus AP1 — der Gruppenkopf der Importvorschau steht in jeder Breite außerhalb des Sichtfensters (Backlog Nr. 182). Drei Wege sind **am laufenden Bestand gebaut und gemessen**; Empfehlung **B**. Bis zur Antwort bleibt es beim ausgelieferten Zustand (Weg A). **Die Abnahme von AP1 ist an dieser Stelle nicht erfüllbar**, wie sie im Konzept steht (siehe Abschnitt 5) |
 > | Stufe | **Web 19.4.0** (Nebenstufe, neue Darstellungen), gesetzt mit AP1 — AP2 bis AP4 sind Korrekturstufen darauf oder heben die Nebenstufe, je nach Inhalt. Uhr und Android unberührt |
 
 ---
@@ -96,6 +96,7 @@ Ab 1024 px dasselbe Markup als Aufklappmenü — dort ist nichts zu ändern.
 | **E-MR-22** | **`--dauer` wird `.24s`** — für die ganze Anwendung, nicht nur fürs Blatt (F-MR-12: „alles auf 240 ms"). Betroffen sind alle Nutzer des Tokens: Schublade und Schleier, Akkordeon-Winkel, Winkel am „Aktionen"-Knopf, Schalter-Griffe, Kennzahlen-Winkel — und neu das Blatt. Kein zweites Token; `prefers-reduced-motion` bleibt ohne Bewegung | Auftraggeber 13.09.2026 |
 | **E-MR-23** | Die orange Markierung (D4) gilt für **beide** Knöpfe — `ui_aktionen()` und `ui_zeilenaktionen()` — über eine Regel an `[data-blatt][aria-expanded="true"]` (F-MR-13) | Auftraggeber 13.09.2026 |
 | **E-MR-08** | Die Mockups sind HTML mit den echten Token, gerendert mit `wkhtmltoimage` (wie S9); Kartenhintergrund ist eine Attrappe, keine Kacheln | Fable 13.09.2026 |
+| **E-MR-26** | Nr. 182: Das Mockup dazu (**M-MR-05**) wird **nicht gezeichnet, sondern gemessen** — die drei Wege werden in die laufende Anwendung eingesetzt und darin fotografiert. Grund: Der Befund entstand genau daran, dass M-MR-01 eine Tabelle mit **fünf** Spalten zeigte und die Anwendung **vierzehn** hat. Eine zweite Skizze hätte denselben Fehler wiederholen können. Die Bilder sind deshalb Bildschirmfotos, das Dokument selbst ist mit Chromium über Playwright gerendert | Opus 14.09.2026 |
 | **E-MR-24** | Nr. 42, Prüfmittel: **Die Unicode-Prüfung bekommt eine Ausnahmeliste — sie hat heute keine.** AP2 verweist die `'✕'`-Ausnahme auf `tools/vollstaendigkeit/ausnahmen.md`; diese Datei wird aber ausschließlich von der **Token**-Prüfung gelesen (Eigenschaftsnamen wie `clip-path`), der Eintrag stünde wirkungslos da. Backlog-Runde 3 liefert die passende Mechanik mit: `zusagen.md` (vier Spalten Prüfung · Datei · Muster · Grund) und `zusagen_werten()`, das eine **ungenutzte Ausnahme als Befund** meldet. Die Unicode-Prüfung wird auf diese Mechanik umgestellt, `'✕'` in `einsatz_form.php` dort eingetragen. Damit ist die Zusage „keine Unicode-Zeichen als Symbol" zum ersten Mal **messbar** statt behauptet | Opus 13.09.2026 (Befund), Auftraggeber 13.09.2026 (Freigabe) |
 | **E-MR-25** | Nr. 124: Die Markierung gilt für **alle** Öffner, nicht nur für die beiden Bausteine. Nachgezählt am Code: neben den 6 `ui_aktionen()`- und 9 `ui_zeilenaktionen()`-Aufrufen tragen **vier weitere Bauarten** `data-blatt` — der Pin-Knopf des Ortsfelds (`ui.php`, `…ortsblatt`; erscheint im Einsatzformular und in den Stammdaten) und drei handgeschriebene Sortierblatt-Öffner (`index.php`, `suche.php`, `zeitraum.php`). Die Regel an `[data-blatt][aria-expanded="true"]` erreicht sie von selbst, und das ist gewollt: „Blatt offen" ist dieselbe Aussage, gleich an welchem Knopf. Der Hinweis in `Design.md` 3.1 (Orange = Handlung) wird entsprechend um „und geöffnet" erweitert — siehe AP4 | Opus 13.09.2026 (Nachzählung), Auftraggeber 13.09.2026 |
 
@@ -140,6 +141,15 @@ vorgeschlagen" reicht. Die Empfehlung steht dabei.
 - **F-MR-12** — **240 ms, und zwar als neuer Wert von `--dauer`** für alle
   Bewegungen (E-MR-22).
 - **F-MR-13** — **ja** (E-MR-23).
+
+**M-MR-05 — Gruppenkopf der Importvorschau (Nr. 182, nachgereicht 14.09.2026)**
+
+- **F-MR-14** Welcher Weg? **A** so lassen (Nr. 182 bleibt offen) · **B**
+  Kopfzeile am linken Rand heften, mit vier Zeilen JavaScript für die
+  gemessene Breite · **C** je Gruppe eine eigene Tabelle. *Empfehlung B.*
+  **Nebenfrage nur bei B:** Besatzungszeile am Handy kürzen (eine Zeile,
+  Auslassungszeichen), damit der Kopf niedriger bleibt? Ohne Kürzung sind es
+  bei zwei abweichenden Rollen 231 px, bei einer rund 130.
 
 ---
 
@@ -345,6 +355,24 @@ Darstellung und braucht nach `Design.md` 1.2 eine Freigabe. Angelegt als
 **Backlog Nr. 182** mit drei Wegen; der mittlere (Kopfzeile am linken Rand
 festheften) braucht eine **gemessene** Breite — CSS allein reicht nicht,
 weil das Stylesheet die Breite des Sichtfensters nicht kennt.
+
+**Mockup M-MR-05 liegt seit dem 14.09.2026 vor** (E-MR-26, Freigabefrage
+F-MR-14). Alle drei Wege sind in die laufende Anwendung eingesetzt und darin
+gemessen worden:
+
+| Weg | Kopf sichtbar bei 400 px | Kopfhöhe 400 / 1280 | Tabellen | Spalten fluchten |
+|---|---|---|---|---|
+| **A** so lassen | **nein** | 44 / 40 px | 1 | ja |
+| **B** geheftet | **ja** | 231 / 122 px | 1 | ja |
+| **C** eigene Tabelle je Gruppe | **ja** | 233 / 124 px | 3 | **nein — 1 von 14** |
+
+Waagerechter Überlauf der Seite in allen sechs Messungen **0**,
+Konsolenfehler in allen drei Wegen **keine**. **C hat zwei Kosten**, die im
+Backlog noch nicht standen und erst am Bestand sichtbar wurden: Die Spalten
+fluchten schon bei drei Gruppen und fünf Zeilen nicht mehr (eine von
+vierzehn weicht ab), und der **Spaltenkopf wiederholt sich je Gruppe** —
+lässt man ihn weg, haben alle Gruppen außer der ersten keine
+Spaltenbeschriftung. Empfehlung deshalb **B**.
 
 | AP | Punkt | Stand | Probleme / wie gelöst |
 |---|---|---|---|
