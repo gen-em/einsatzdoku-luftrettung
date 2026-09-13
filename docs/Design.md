@@ -209,11 +209,16 @@ nachgemessen in `gen-em_logo_helicopter.svg` stimmten `#1A0500`, `#4280E5`,
 **Das gilt nicht mehr.** Der Commit „Update Logos" hat mit neuen
 Vektorvorlagen die alten Werte zurückgebracht (Backlog Nr. 62, aufgenommen
 31.08.2026). Nachgemessen am 13.09.2026: `gen-em_logo_helicopter.svg` führt
-`#587ABC`, `#E3322B`, `#F7941D` und Korpus `#1D0E0A`; die weiße
-Hubschrauber-Fassung trägt dieselben alten Farbelemente;
-`gen-em_logo_nef.svg` den alten Korpuswert. Richtig sind allein
-`gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef.png`. Auch die
-PNG-Fassungen tragen die alten Werte — es gibt keine korrigierte Quelle.
+`#587ABC`, `#E3322B`, `#F7941D` und Korpus `#1D0E0A`;
+`gen-em_logo_helicopter_weiss.svg` trägt dieselben alten Farbelemente;
+`gen-em_logo_nef.svg` den alten Korpuswert. **Die PNG-Fassungen sind
+dieselbe Lage** (nachgemessen am 13.09.2026, Bildpunkte dekodiert):
+`gen-em_logo_helicopter.png` und `gen-em_logo_helicopter_weiss.png` tragen
+die alten Farbwerte — um ein bis zwei Stufen je Kanal verschoben, weil sie
+gerastert sind (`#1C0B0B`, `#E4302C`, `#577ABC`) —, `gen-em_logo_nef.png`
+den alten Korpuswert. **Richtig sind allein die beiden Fassungen ohne
+Korpus:** `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef_weiss.png`. Es
+gibt keine korrigierte Quelle.
 **Entschieden am 12.09.2026: neue Vorlagen in den Markenfarben anfordern**
 (Rahmenplan Abschnitt 6, Zuarbeit); bis sie vorliegen, bleibt dieser Absatz
 so stehen, damit hier keine falsche Zusage steht. Nach der Behebung alle
@@ -2414,7 +2419,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
-| **13.09.2026 (Textpflege, keine Auslieferung)** | **2.5** berichtigt: „B1 erledigt, nachgemessen" traf seit dem Commit „Update Logos" nicht mehr zu (Backlog Nr. 62). Der Absatz sagt jetzt den gemessenen Stand vom 13.09.2026 und die Entscheidung vom 12.09.2026, neue Vorlagen anzufordern. |
+| **13.09.2026 (Textpflege, keine Auslieferung)** | **2.5** berichtigt: „B1 erledigt, nachgemessen" traf seit dem Commit „Update Logos" nicht mehr zu (Backlog Nr. 62). Der Absatz sagt jetzt den gemessenen Stand vom 13.09.2026 und die Entscheidung vom 12.09.2026, neue Vorlagen anzufordern. **Zwei Nachbesserungen am selben Tag:** Der Absatz nannte die weiße Fassung in Prosa statt beim Dateinamen und war damit der einzige Treffer der Wortliste außerhalb der Ausnahmeliste (jetzt `gen-em_logo_helicopter_weiss.svg`, 0 Treffer) — und er zählte `gen-em_logo_nef.png` zu den richtigen Dateien, obwohl sie den **alten** Korpuswert `#1D0E0A` trägt, genau wie die `.svg` daneben, die derselbe Absatz als falsch führt. Alle acht Dateien sind nachgemessen (SVG-Farbwerte und dekodierte Bildpunkte der PNG): richtig sind die beiden Fassungen **ohne** Korpus, `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef_weiss.png`. Die beiden PNG der Luftmarke tragen die alten Werte um ein bis zwei Stufen je Kanal verschoben, weil sie gerastert sind. |
 | **Web 16.1.1 (S9)** | Kapitel 7: Im Band 1024–1199 px rückt das Akkordeon je Ebene **4 statt 8 px** ein, und der Abstand der Diensttagszeile geht von 8 auf **4 px** (Freigabe M-S9-11, Weg 2). Gemessen: dem Nebentext stehen dort **64–79 px** statt 48–63 zur Verfügung — dreizehn Kurznamen, **keiner** mehr mit Auslassungszeichen (vorher zehn). Der Abstand ist mit `:not(.leiste-gruppe)` eingegrenzt, weil die Zeilenklasse auch Leistenfuß, Schubladen-Hauptpunkte und Einstellungsmenü trägt; nachgemessen bleiben die bei 8 px. **Keine neue Schwelle, kein neues Token** — 4 px ist `--abstand-1`. |
 | **Web 17.1.1 (S9/AP5-6)** | **9.32 Kartenfilter**, Punkt 3 berichtigt: Die Anlegen-Formulare in der Liste gibt es seit Web 17.0.0 nicht mehr — die Regel bleibt als Netz stehen, und die Klickprobe misst seither **0 Formulare UND „Anlegen" sichtbar**, auch bei null Treffern. Punkt 4 nachgezogen: Der Leerzustand sagt jetzt „Leere den Filter, um wieder alle zu sehen" statt „…, um etwas anzulegen" — der alte Satz beschrieb eine Sackgasse, die es nicht mehr gibt. **Keine Regel im Stylesheet berührt.** |
 | **Web 17.0.0 (S9/AP5-4)** | **9.11 Dialog** um drei Absätze ergänzt: Ein Formulardialog **rollt in sich** (Kopf und Fuß fest, `.dialog-inhalt` mit `overflow-y:auto`, Höhe `100dvh` minus 24 px) — der Rettungsmittel-Dialog ist am Handy höher als das Glas, und ohne die Angabe kappte die Browservorgabe den Fuß mit „Anlegen“ ab; **`display` gehört an `.dialog[open]`** (Fund F-S9-U-27: eine Regel des Browsers verliert gegen jede Regel des Stylesheets, und `.dialog{display:flex}` machte alle fünf geschlossenen Dialoge einer Standortseite sichtbar); und **ein Dialog kann einen zweiten öffnen** (Ortsfeld → Kartendialog, zwei modale Ebenen, vom Browser getragen). Die Zahlen: Kaskade **741 → 743 Regeln, 0 entfallen, 10 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **45 500 Elementmessungen, 936 Abweichungen**, sämtlich an `dialog`, `.dialog`, `.dialog-kopf`, `.dialog-inhalt`, `.dialog-fuss` und dem `<form>` darin — also genau die zehn neuen Regeln; Pseudoprobe dieselben 936. **Kein neues Token, kein neuer Baustein, kein neues Symbol**; der Vorrat bleibt bei 39 Funktionen. |
