@@ -15,7 +15,12 @@ Fuenf Pruefungen:
   3  Symbole -- Inline-SVG mit Pfaden, Unicode-Symbolzeichen, Emoji im Markup;
      Verweise auf fehlende Symboldateien; Dateien ohne Verweis (Hinweis).
   4  Knopfregel -- jede Hoehenangabe an einer .knopf-Regel kommt aus --knopf.
-  5  Ausgabe -- je Pruefung Zahl und Liste, Rueckgabewert != 0 bei Befund.
+  5  Zusagen -- Regeln, die bisher nur im Kopf standen: kein natives
+     confirm()/alert()/prompt() ausser den begruendeten Rueckfaellen
+     (Backlog Nr. 47), und jede Seite mit eigener Huelle hat ihr Geruest
+     (Nr. 58). Ausnahmen mit Grund in zusagen.md.
+
+Dazu die Ausgabe: je Pruefung Zahl und Liste, Rueckgabewert != 0 bei Befund.
 
 Aufruf und Bedeutung stehen in LIESMICH.md daneben.
 Kein PHP noetig; nur Python 3.
@@ -161,6 +166,58 @@ def markup_klassen(dateien):
 
 
 # ------------------------------------------------------- Hilfslisten lesen
+def ohne_php_js_kommentare(text, ist_php):
+    """Kommentare durch Leerzeichen ersetzen, Zeilenumbrueche erhalten.
+
+    WARUM NICHT MIT EINEM AUSDRUCK. `//` steht in jeder URL, `#` in jeder
+    Farbe, `/*` in mancher Zeichenkette. Ein regulaerer Ausdruck, der das
+    trennen soll, wird entweder zu grob (und streicht Code weg) oder zu fein
+    (und laesst Kommentare stehen) -- beides macht die Pruefung wertlos, und
+    zwar lautlos. Dieser Abtaster geht stattdessen Zeichen fuer Zeichen und
+    merkt sich, ob er gerade in einer Zeichenkette steht.
+
+    DIE UMBRUECHE MUESSEN BLEIBEN, sonst zeigt jede Fundstelle daneben --
+    dieselbe Regel wie bei ohne_kommentare() fuer CSS.
+
+    `#` GILT NUR IN PHP. In JavaScript begaenne es ein privates Feld, und im
+    eigenen Code gibt es davon keines (nachgesehen am 13.09.2026) -- aber die
+    Unterscheidung kostet nichts und nimmt der naechsten Fassung eine Falle.
+
+    WAS ER NICHT KANN: Heredoc/Nowdoc (`<<<`) und Regex-Literale mit `//`
+    darin. Beides kommt im eigenen Code nicht vor (nachgesehen; die Treffer
+    liegen alle unter server/vendor/, und das ist ausgenommen). Wer das
+    aendert, erweitert diesen Abtaster -- oder die Pruefung liest Kommentar
+    fuer Code.
+    """
+    aus = []
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        if c in ('"', "'", '`'):
+            ende = c
+            aus.append(c); i += 1
+            while i < n:
+                if text[i] == '\\' and i + 1 < n:
+                    aus.append(text[i]); aus.append(text[i+1]); i += 2; continue
+                aus.append(text[i])
+                if text[i] == ende:
+                    i += 1; break
+                i += 1
+            continue
+        if c == '/' and i + 1 < n and text[i+1] == '*':
+            j = text.find('*/', i + 2)
+            j = n if j < 0 else j + 2
+            aus.append(''.join(z if z == '\n' else ' ' for z in text[i:j]))
+            i = j; continue
+        if (c == '/' and i + 1 < n and text[i+1] == '/') or (c == '#' and ist_php):
+            j = text.find('\n', i)
+            j = n if j < 0 else j
+            aus.append(' ' * (j - i))
+            i = j; continue
+        aus.append(c); i += 1
+    return ''.join(aus)
+
+
 def liste_lesen(name, spalten=1):
     """Zeilen einer Markdown-Tabelle als Liste von Spaltenlisten.
 
@@ -177,7 +234,7 @@ def liste_lesen(name, spalten=1):
         felder = [f.strip() for f in roh.strip('|').split('|')]
         if not felder or set(felder[0]) <= set('-: '):
             continue
-        if felder[0].lower() in ('klasse', 'muster', 'wert', 'datei'):
+        if felder[0].lower() in ('klasse', 'muster', 'wert', 'datei', 'prüfung'):
             continue
         zeilen.append(felder)
     return [z for z in zeilen if len(z) >= spalten]
@@ -408,6 +465,150 @@ def pruefung_knopf(bericht):
 
 
 # ============================================================== Bericht
+# =========================================================== 5. Zusagen
+NATIVE_DIALOGE = re.compile(r'(?<![\w$.])(?:window\s*\.\s*)?(confirm|alert|prompt)\s*\(')
+
+# ---- Fremde Quellen zur Laufzeit (Backlog Nr. 179) -------------------------
+#
+# DIE ZUSAGE. CLAUDE.md 4: kein CDN, keine Google Fonts, kein externes Skript;
+# Schriften und Bibliotheken liegen unter server/assets/ mit Herkunft und
+# SHA-256 im Dateikopf. Bis Web 19.3.1 hat das KEIN Mittel nachgezaehlt, und
+# eine CSP schickt die Anwendung auch nicht -- aufgefallen ist die Luecke, als
+# ein Kommentar im Bilderlauf sie an genau diese Datei weiterschob (Nr. 176).
+#
+# WARUM DAS MUSTER SO GROB IST -- und das ist Absicht. Ein Ausdruck, der nur
+# die Ladekonstrukte kennt (src=, <link href=, fetch(, url(), @import), findet
+# in DIESEM Bestand NICHTS: Die Kartenkacheln gehen ueber `L.tileLayer(...)`,
+# die Anschrift des Adressdienstes steht als PHP-Konstante. Beides gemessen am
+# 13.09.2026 -- ein solcher Ausdruck meldete 0 Treffer, waehrend fuenf echte
+# Laufzeitquellen im Code standen. Deshalb wird JEDE absolute Adresse in
+# eigenem Quelltext gemeldet, und die Ausnahmeliste traegt die Begruendung.
+# Das ist mehr Arbeit beim Eintragen und dafuer eine Liste, die vollstaendig
+# ist: Sie nennt jede fremde Adresse im ausgelieferten Code, mit ihrer Art.
+#
+# NICHT JEDER TREFFER IST EIN LADEN. Die Liste unterscheidet vier Arten, und
+# die Spalte "Grund" sagt sie: gewollte Laufzeitquelle (Kacheln, Adressdienst),
+# Navigationsziel (ein <a href>, das ein Mensch anklickt -- das laedt nichts),
+# XML-Namensraum (eine Kennung, keine Adresse) und Beispieltext.
+FREMDE_QUELLE = re.compile(
+    r'(?<![\w])(?:https?:)?//[a-z0-9{][a-z0-9.\-{}]*\.[a-z]{2,}', re.I)
+
+
+UMLAUTE = {'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue', 'ß': 'ss'}
+
+
+def umlautfrei(t):
+    """Umlaute aufloesen und kleinschreiben -- fuer den Vergleich, nicht fuer die Anzeige.
+
+    WARUM DAS NOETIG IST. Die Beschriftungen in dieser Datei sind ASCII
+    ("Gegenstueck", "Knopfhoehe", "Seite ohne Geruest"); die Hilfslisten sind
+    Markdown und werden von Menschen gelesen, also stehen dort Umlaute
+    ("Seite ohne Gerüst"). Beim ersten Lauf hat deshalb keine der sieben
+    Ausnahmen gegriffen, und die Pruefung meldete sieben Befunde, die alle
+    erklaert waren -- ohne dass irgendwo "Vergleich fehlgeschlagen" stand.
+    Genau die Sorte Fehler, gegen die diese Gruppe gebaut ist."""
+    return ''.join(UMLAUTE.get(c, c) for c in t).lower()
+
+
+def zusagen_treffer(muster, endungen=('.php', '.js')):
+    """Alle Fundstellen eines Musters in server/, ohne Kommentare.
+
+    Liefert (kurzer Pfad, Zeile, Fundtext) -- das Format, das die
+    Ausnahmeliste vergleicht und der Bericht zeigt.
+
+    GRENZE FUER .css: Der Kommentar-Abtaster kennt zwei Sprachen, PHP und JS.
+    Auf ein Stylesheet wird die JS-Lesart angewendet -- die trifft `/* */`
+    richtig, hielte aber ein unquotiertes `url(//host)` fuer einen
+    Kommentaranfang und schnitte den Rest der Zeile weg. Heute gibt es keines
+    (gemessen: 0 absolute Adressen in server/assets/*.css, die Schriften
+    liegen lokal). Wer eines einfuehrt, faellt hier durch -- deshalb steht die
+    Grenze hier und nicht in einer Fussnote."""
+    for pfad in quelldateien(endungen=endungen):
+        text = lies(pfad)
+        ohne = ohne_php_js_kommentare(text, pfad.endswith('.php'))
+        for m in muster.finditer(ohne):
+            yield kurz(pfad), zeile_von(ohne, m.start()), m.group(0).strip()
+
+
+def zusagen_werten(bericht, name, treffer, listenname='zusagen.md'):
+    """Treffer gegen die Ausnahmeliste halten -- in beide Richtungen.
+
+    EINE AUSNAHME, DIE NICHTS MEHR ERKLAERT, IST EIN BEFUND. Sonst verwahrlost
+    die Liste so still wie die Sache, gegen die sie schuetzt -- dieselbe Regel
+    wie bei ohne-regel.md (Backlog Nr. 39).
+
+    DIE LISTE HAT VIER SPALTEN: Pruefung | Datei | Muster | Grund. Die erste
+    sagt, zu welcher Pruefung die Zeile gehoert -- so tragen alle Zusagen EINE
+    Liste, und ein Mensch sieht beim Lesen, wovon eine Zeile spricht. Die
+    zweite ist die DATEI und nicht die Zeile: Eine Zeilennummer altert mit dem
+    naechsten Paket, das die Datei anfasst (genau daran ist der Eintrag zu
+    `phasen-name` in ohne-regel.md gealtert, AP5).
+    """
+    regeln = [(z[1].strip('`'), z[2].strip('`'))
+              for z in liste_lesen(listenname, 4)
+              if umlautfrei(z[0].strip('*` ')) == umlautfrei(name)]
+
+    offen, benutzt = [], set()
+    for pfad, zeile, text in treffer:
+        for k, (datei, mus) in enumerate(regeln):
+            if pfad.endswith(datei) and mus in text:
+                benutzt.add(k); break
+        else:
+            offen.append('%s:%d  %s' % (pfad, zeile, text))
+    ungenutzt = ['%s  (%s)' % (d, m) for k, (d, m) in enumerate(regeln) if k not in benutzt]
+    bericht.befund('5 Zusagen', name, offen)
+    bericht.zahl('5 Zusagen', name + ': Ausnahmen mit Grund', len(regeln))
+    bericht.befund('5 Zusagen', name + ': Ausnahme ungenutzt', ungenutzt)
+
+
+def geruest_treffer():
+    """Dateien mit Seitenhuelle, denen das Geruest fehlt -- und die Gegenrichtung.
+
+    DAS KRITERIUM IST `ui_seite_start(`, NICHT `require_admin()` (E-BR3-06).
+    Die naeheliegende Regel waere "bindet die Wache ein und ruft kein Geruest";
+    sie liefert heute 15 Treffer, und alle 15 sind richtig so -- Bibliotheken,
+    Endpunkte ohne Seite, Seiten vor der Anmeldung, der Notausgang. Ein Mittel,
+    das mit 15 Rot anfaengt, wird nie wieder gelesen.
+
+    `ui_seite_start()` dagegen ist der Anfang JEDER Seitenhuelle: Wer ihn ruft,
+    gibt eine Seite aus, und eine Seite der angemeldeten Anwendung hat ein
+    Geruest. Beide Haelften werden verlangt -- `ui_geruest_ende()` ebenso, denn
+    ein Geruest, das nicht geschlossen wird, ist keines.
+    """
+    seite, anfang, ende = {}, set(), set()
+    for pfad in quelldateien():
+        text = ohne_php_js_kommentare(lies(pfad), pfad.endswith('.php'))
+        k = kurz(pfad)
+        if 'ui_seite_start(' in text:
+            seite[k] = zeile_von(text, text.index('ui_seite_start('))
+        if 'ui_geruest_start(' in text: anfang.add(k)
+        if 'ui_geruest_ende(' in text:  ende.add(k)
+    ohne = [(k, z, 'ui_seite_start') for k, z in sorted(seite.items())
+            if k not in anfang or k not in ende]
+    gegen = sorted(anfang - set(seite))
+    return ohne, gegen
+
+
+def pruefung_zusagen(bericht):
+    """Zusagen, die bisher nur im Kopf standen (Backlog Nr. 47, 58).
+
+    WOFUER. Die Anwendung gibt Versprechen, die kein Mittel nachzaehlt: "kein
+    natives confirm()", "jede Seite hat ihr Geruest". Ein Versprechen ohne
+    Pruefmittel haelt genau so lange, wie sich jemand daran erinnert."""
+    zusagen_werten(bericht, 'native Dialoge', zusagen_treffer(NATIVE_DIALOGE))
+    zusagen_werten(bericht, 'fremde Quelle',
+                   zusagen_treffer(FREMDE_QUELLE, ('.php', '.js', '.css')))
+
+    ohne, gegen = geruest_treffer()
+    zusagen_werten(bericht, 'Seite ohne Geruest', ohne)
+    # GEGENRICHTUNG ALS HINWEIS, NICHT ALS BEFUND: Geruest ohne Seitenhuelle
+    # ist nicht zwangslaeufig falsch -- es KANN aber eine Seite ohne `<head>`
+    # sein, und genau eine war es (apk.php, behoben mit Web 19.3.1: die
+    # 404-Seite ging ohne Doctype und ohne Stylesheet hinaus). Deshalb steht
+    # die Zahl da, auch wenn sie null ist.
+    bericht.hinweis('5 Zusagen', 'Geruest ohne Seitenhuelle', gegen)
+
+
 class Bericht:
     def __init__(self, ausfuehrlich):
         self.ausfuehrlich = ausfuehrlich
@@ -488,6 +689,7 @@ def main():
     pruefung_werte(b)
     pruefung_symbole(b)
     pruefung_knopf(b)
+    pruefung_zusagen(b)
     return b.drucken()
 
 

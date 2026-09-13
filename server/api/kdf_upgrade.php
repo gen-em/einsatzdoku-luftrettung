@@ -42,6 +42,19 @@ require_once __DIR__ . '/../demo_lib.php';
  * fluege bei jeder Anmeldung stillschweigend jedes andere offene Fenster
  * hinaus, ohne dass jemand versteht, warum.
  *
+ * ---- WARUM DIE CSRF-PRUEFUNG VOR DEM DEMO-AUSSTIEG STEHT -----------------
+ *
+ * Die Pruefung gilt fuer JEDEN Aufrufer, auch fuer den, der gleich wieder
+ * geht. Bis zum 13.09.2026 stand der Demo-Ausstieg davor: Ein Aufruf ohne
+ * Token kam fuer das Demo-Konto mit 200 zurueck, waehrend jedes andere Konto
+ * 403 sah. Folgenlos war das nur, weil hinter dem Ausstieg nichts steht —
+ * wer dort einmal etwas hinschreibt, hat eine ungeschuetzte Stelle geerbt,
+ * ohne es zu merken. Am Regelfall aendert der Tausch nichts: `unlock.js` ist
+ * der einzige Aufrufer und schickt `X-CSRF` immer mit, und `auth_guard.php`
+ * legt das Sitzungstoken bei jeder angemeldeten Anfrage an, bevor diese Datei
+ * laeuft (Backlog Nr. 67, Unterpunkt; der Hauptpunkt — ein API-Zweig in
+ * `csrf_check()` — bleibt bei P5).
+ *
  * ---- WAS BEI EINEM FEHLSCHLAG PASSIERT -----------------------------------
  *
  * Nichts. Die Transaktion faellt zurueck, das Konto behaelt seine alte
@@ -51,6 +64,13 @@ require_once __DIR__ . '/../demo_lib.php';
  */
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405); }
+
+/* Formular-Token zuerst — die Begruendung der Reihenfolge steht im
+ * Kopfkommentar. auth_guard.php hat das Sitzungstoken bereits angelegt, also
+ * ist die linke Seite hier nie leer. */
+if (!hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')) {
+    json_out(['error' => 'csrf'], 403);
+}
 
 /* Demo-Konto: Die Rundenzahl bleibt, wie sie ist (E-P1-19).
  *
@@ -67,9 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405
  * nach der Anmeldung auf, ohne dass jemand etwas angefordert haette. Ein
  * Fehler stuende dort als Stoerung, wo es keine gibt. */
 if (demo_ist_demo($userId)) { json_out(['ok' => true, 'uebersprungen' => 'demo']); }
-if (!hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')) {
-    json_out(['error' => 'csrf'], 403);
-}
 
 $b = json_decode((string)file_get_contents('php://input'), true);
 if (!is_array($b)) { json_out(['error' => 'format'], 400); }

@@ -24,9 +24,21 @@ entstanden waren. Genau davor warnt `tools/logos/LIESMICH.md` für das Favicon �
 Bildprogramm nachbaut".
 
 Das Rezept unten ist aus den vorhandenen Dateien **zurückgerechnet**. Es
-reproduziert die vier, die es vor diesem Werkzeug schon gab, bitgleich
+reproduziert die vier, die es vor diesem Werkzeug schon gab, **pixelgleich**
 (`compare -metric AE` liefert 0). Das ist der Beleg, dass es das richtige ist
 und nicht bloß ein ähnliches.
+
+**Pixelgleich ist die schwächere Zusage, und die einzige, die das Messmittel
+deckt:** `compare -metric AE` zählt abweichende **Bildpunkte**, nicht Bytes.
+Bitgleich können zwei PNG hier ohnehin nicht sein — warum, sagt der nächste
+Absatz. **Bis zum 13.09.2026 widerlegte sich dieses Dokument selbst:** Hier
+stand „bitgleich", und acht Zeilen weiter unten sagte derselbe Text
+„pixelgleich" (gemessen an `HEAD`: Zeile 27 gegen Zeile 35). Der
+Kopfkommentar von `erzeugen.sh` stand auf der stärkeren Seite. Wer die Zusage
+prüfte, prüfte je nach gelesener Zeile etwas anderes (Backlog Nr. 94). Die
+stärkere Zusage wäre mit `-define png:exclude-chunk=time` einzulösen und ist
+**bewusst nicht** eingelöst: Sie würde nichts belegen, was hier gebraucht
+wird.
 
 **`git status` ist dafür kein Maßstab.** Ein Lauf schreibt in jedes PNG einen
 `tIME`-Block mit der aktuellen Uhrzeit; danach meldet Git alle Dateien als

@@ -50,8 +50,5 @@ gegen die sie schützt.
 | `imp-dup` | [bleibt] Wie `imp-cell` — Auswahlfeld für Dubletten, gelesen in `import_ui.js:819`. |
 | `imp-daymode` | [bleibt] Wie `imp-cell` — Auswahlfeld für den Umgang mit abweichender Besatzung, gelesen in `import_ui.js:824`. |
 | `imp-param` | [bleibt] Skriptanker an den Importparametern; `import_ui.js:89` sammelt `.imp-param`, um die eingestellten Werte einzulesen. |
-| `rea-kopf` | [offen] Kopfzeile einer Reanimationssitzung. Sie steht neben `phasen-eingabe`, und **von dort** kommt das Aussehen — die Klasse selbst tut nichts, und kein Skript liest sie. Entweder ist sie ein Rest und gehört weg, oder die Kopfzeile soll sich von einer gewöhnlichen Phasenzeile unterscheiden und braucht eine Regel. Das ist eine Gestaltungsfrage, keine Aufräumarbeit. |
-| `rea-beginn` | [offen] Beschriftung „Reanimationsbeginn" in derselben Kopfzeile; dasselbe Bild — Aussehen aus der Elementregel für `label`, kein Skript liest die Klasse. |
-| `phasen-name` | [offen] Der Name einer Phase in der Einsatzansicht (`einsatz.php:631`). Ohne Regel steht er in der Textschrift der Zeile; ein Name neben einer Zeitangabe könnte eine eigene wollen. |
 | `imp-warn` | [offen] „abweichende Crew (…)" in der Kopfzeile einer Tagesgruppe der Importvorschau — ein **Warnhinweis, der wie Fließtext aussieht**. Von allen Einträgen dieser Liste der wahrscheinlichste echte Fund. |
 | `imp-daygroup` | [offen] Die Kopfzeile einer Tagesgruppe in der Importvorschau. Sie trägt ihren Text in `<strong>`, sonst nichts — eine Gruppenüberschrift, die aussieht wie eine Datenzeile. |

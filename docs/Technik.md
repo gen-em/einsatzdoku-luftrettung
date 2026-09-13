@@ -470,7 +470,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      Seit Web 9.10.1 prueft er nach JEDEM Aufruf, ob er
 │   │                      die richtige Seite vor sich hat, und meldet sich bei
 │   │                      Bedarf neu an; ein nicht aufloesbarer Platzhalter
-│   │                      ergibt kein Bild (F-P3-AQ).
+│   │                      ergibt kein Bild (F-P3-AQ). Welche rote Zeile als
+│   │                      Konsolenfehler zaehlt, entscheidet istRauschen() in
+│   │                      drei Klassen; --selbstprobe haelt die Funktion gegen
+│   │                      fuenfzehn Faelle mit Sollwert, je einer traegt eine
+│   │                      Klasse (Backlog Nr. 176; die Mutationsprobe dazu
+│   │                      steht in der LIESMICH).
 │   │                      kontrast.py rechnet die Kontraste der Token nach
 │   │                      (s. LIESMICH.md)
 │   ├── spurprobe/         prüft den Rundlauf des Blob-Formats SPUR1 über den
@@ -513,9 +518,17 @@ Daten erst nach Server-Bestätigung.
 │   ├── vollstaendigkeit/  prüft, ob beim Redesign etwas verlorengegangen ist
 │   │                      (jede Klasse des alten Stylesheets hat eine Regel
 │   │                      oder steht mit Begründung auf der Streichliste) und
-│   │                      ob jeder Wert in :root steht. Drei Hilfslisten mit
+│   │                      ob jeder Wert in :root steht. Vier Hilfslisten mit
 │   │                      Begründungspflicht: streichliste.md, ausnahmen.md,
-│   │                      ohne-regel.md (s. LIESMICH.md)
+│   │                      ohne-regel.md, zusagen.md (s. LIESMICH.md). Seit
+│   │                      Web 19.3.1 zählt Gruppe 5 „Zusagen" DREI Regeln
+│   │                      nach, die vorher nur im Kopf standen: native
+│   │                      Dialoge und Seite ohne Gerüst (Backlog Nr. 47, 58)
+│   │                      sowie „keine fremde Quelle zur Laufzeit" (Nr. 179)
+│   │                      — Letztere meldet jede absolute Adresse in eigenem
+│   │                      Quelltext; die 15 Ausnahmen nennen je Eintrag die
+│   │                      Art. Am Quelltext, nicht zur Laufzeit: eine CSP
+│   │                      schickt die Anwendung nicht (Nr. 181)
 │   ├── freigabeprobe/    der Freigabeweg MIT Wiederherstellungsschlüssel
 │   │                      (E20): Kasten erscheint, falscher Schlüssel wird
 │   │                      abgewiesen, richtiger schlüsselt um. Die Krypto
@@ -531,6 +544,11 @@ Daten erst nach Server-Bestätigung.
 │                          Dokumentation neutral von Land und Luft sprechen:
 │                          Sperrliste, Ausnahmeliste mit Begründungen, drei
 │                          Zahlen je Bereich (s. LIESMICH.md)
+├── .claude/hooks/session-start.sh  beschafft beim Containerstart, was der
+│                          Pruefstand braucht und das Abbild nicht mitbringt:
+│                          MariaDB, ImageMagick, rsvg-convert, Python-
+│                          jsonschema. STARTET nichts — das macht
+│                          tools/referenzdatensatz/einspielen/lokal_starten.sh
 └── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
 ```
 
@@ -4444,6 +4462,51 @@ Schutz gegen einen Angreifer mit Zugriff auf die Ablaufumgebung (Hoster,
 Datenbank, Protokolle) hängt damit allein an der Passwortwahl der Person. Das
 ist eine bewusste Entscheidung und gehört genau so dokumentiert.
 
+### 2a Was der Wegwerf-Container mitbringt — und was nicht
+
+Aufgestellt am 13.09.2026 (Backlog-Runde 3), nachdem zwei Arbeitspakete
+dieselbe Viertelstunde verloren hatten: AP2 konnte `tools/uhr-bilder/`
+nicht laufen lassen, AP4 musste vor der ersten Browserprobe einen
+Datenbankserver nachinstallieren.
+
+**Das Abbild bringt mit:** PHP 8.4 (mit `pdo_mysql`, `mysqli`, `openssl`,
+`gd`, `zip`, `mbstring`), Node 22 samt Playwright und Chromium unter
+`/opt/pw-browsers/`, `socat`, `zip`/`unzip`, `git`, `curl`, `openssl`, und
+aus Python `requests` und `cryptography`.
+
+**Es bringt NICHT mit**, und ohne diese vier steht die Hälfte der Prüfmittel:
+
+| fehlt | wer es braucht |
+|---|---|
+| **MariaDB** | jede Browserprobe, beide Kreisläufe, Klickprobe, Wartungsprobe, `lokal_einrichten.sh` |
+| **ImageMagick** (`convert`, `compare`) | `tools/uhr-bilder/erzeugen.sh` und jeder Bildvergleich |
+| **rsvg-convert** (`librsvg2-bin`) | dieselbe Kette: SVG → PNG für die Uhr-Bilder |
+| **Python `jsonschema`** | `tools/referenzdatensatz/` prüft damit seine Quelldaten |
+
+`.claude/hooks/session-start.sh` beschafft sie beim Sitzungsstart und meldet
+je Stück „ok" oder „FEHLT". Zwei Dinge sind daran Absicht: Er **startet
+nichts** — das bleibt bei `lokal_starten.sh`, das Einrichten bei
+`lokal_einrichten.sh` —, und er **schlägt nicht fehl**, wenn etwas fehlt: Eine
+Sitzung, die sich wegen eines Bildwerkzeugs nicht öffnen lässt, ist schlimmer
+als eine, die den Mangel mit Zahl meldet. Auf einer Entwicklungsmaschine tut
+er gar nichts (`CLAUDE_CODE_REMOTE`).
+
+**Eine Falle, die Zeit kostet, wenn man sie nicht kennt:** `python3` ist in
+diesem Abbild **3.11** (deadsnakes), während apt seine Python-Pakete nach
+**3.12** legt. Ein `apt-get install python3-jsonschema` landet damit in einem
+Verzeichnis, das `python3` nicht liest — deshalb nimmt der Hook dafür `pip`
+mit `--break-system-packages`. Dasselbe erklärt, warum das apt-`cryptography`
+(für 3.12 gebaut, abi3) hier nur meistens trägt; der Hook prüft den Import und
+ersetzt das Paket nur, wenn er scheitert.
+
+**Und eine, die Messungen verfälscht:** Der eingebaute PHP-Server (`php -S`)
+liefert nach einer Dateiänderung für einige Sekunden noch den alten Stand.
+Gemessen am 13.09.2026: dieselbe Anfrage 0 s nach der Änderung mit dem alten
+Verhalten, 4 s danach mit dem neuen. Es ist **nicht** opcache
+(`opcache.enable_cli` ist Off). Wer eine Serveränderung prüft, startet den
+Server vorher neu — sonst misst er den Stand davor und hält ihn für den
+danach.
+
 ### 4.99a Demo-Konto (ab Web 7.3.0)
 
 Ein Konto zum Ausprobieren: erfundene Daten, öffentliche Zugangsdaten,
@@ -4575,7 +4638,11 @@ der Konto-Identität folgenlos — die zweite Linie hinter den Sperren unten.
 
 Das KDF-Upgrade antwortet mit Erfolg statt mit Fehler, weil der Browser es von
 sich aus nach der Anmeldung aufruft: Ein Fehler stünde dort als Störung, wo es
-keine gibt.
+keine gibt. **Vor diesem stillen Erfolg steht seit Web 19.3.1 die Prüfung des
+Formular-Tokens** (Backlog Nr. 67, Unterpunkt): Bis dahin lag der Demo-Ausstieg
+davor, und ein Aufruf ohne Token bekam für das Demo-Konto 200, während jedes
+andere Konto 403 sah. Der stille Erfolg gilt also für den regulären Aufruf —
+`unlock.js` schickt `X-CSRF` immer mit —, nicht für jeden Aufruf.
 
 `reset_request.php` weist **still** ab. Die Antwort dieser Seite ist für jede
 Adresse dieselbe; eine Sondermeldung für das Demo-Konto wäre die einzige
