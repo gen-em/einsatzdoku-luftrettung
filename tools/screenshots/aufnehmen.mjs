@@ -134,10 +134,12 @@ const liste = FILTER.length
  * GEMESSEN, in zwei Schritten. Der Fund: von fuenf gebauten Faellen mit
  * lokaler Fundstelle verschluckte das alte Muster DREI (die drei Codes) und
  * zaehlte zwei (ERR_CONNECTION_REFUSED und einen HTTP-Status). Der Nachweis:
- * die zehn Faelle der Selbstprobe unten, woertlich durch die alte Funktion
- * geschickt (`git show origin/main:… | sed -n '/^const KACHELRAUSCHEN =/,/^}/p'`)
+ * die ERSTEN ZEHN Faelle der Selbstprobe unten, woertlich durch die alte
+ * Funktion geschickt
+ * (`git show origin/main:… | sed -n '/^const KACHELRAUSCHEN =/,/^}/p'`)
  * — SECHS von zehn richtig, vier falsch: die drei lokalen Abbrueche und der
- * Fall ohne Fundstelle. Dieselben zehn durch die neue Funktion: ZEHN von zehn.
+ * Fall ohne Fundstelle. Dieselben zehn durch die neue Funktion: zehn von zehn;
+ * die Probe hat seit der Gegenpruefung FUENFZEHN Faelle und meldet 15 von 15.
  * Und am laufenden Browser, mit angehaltenem PHP-Server: zwei Konsolenfehler
  * auf der eigenen Basis, davon verwarf der alte Filter EINEN, der neue KEINEN.
  *

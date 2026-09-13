@@ -473,7 +473,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      ergibt kein Bild (F-P3-AQ). Welche rote Zeile als
 │   │                      Konsolenfehler zaehlt, entscheidet istRauschen() in
 │   │                      drei Klassen; --selbstprobe haelt die Funktion gegen
-│   │                      zehn Faelle mit Sollwert (Backlog Nr. 176).
+│   │                      fuenfzehn Faelle mit Sollwert, je einer traegt eine
+│   │                      Klasse (Backlog Nr. 176; die Mutationsprobe dazu
+│   │                      steht in der LIESMICH).
 │   │                      kontrast.py rechnet die Kontraste der Token nach
 │   │                      (s. LIESMICH.md)
 │   ├── spurprobe/         prüft den Rundlauf des Blob-Formats SPUR1 über den

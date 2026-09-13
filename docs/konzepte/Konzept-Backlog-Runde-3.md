@@ -499,15 +499,20 @@ Aufrufer von `ui_seite_start(`).
 **117/0** · Wartungsprobe **55/0** · Spurprobe **45/0** · Kontraste **22/0** ·
 Klickprobe **40/40** · Kreisläufe **287 687/0** und **9 120/0** gegen die neue
 Referenz · Bilderlauf **360 Bilder / 45 Kontaktbögen, 0/0/0** · `php -l`
-**100/0** · Selbstprüfzahl **54 = 54** · Backlog-Nummernmenge gegen `dabd7a3`
-**0 verloren, 0 doppelt**.
+**100/0** (Dateien ohne `server/vendor/`; mit `vendor/` 449, ebenfalls 0) ·
+Selbstprüfzahl **54 = 54** nach AP12 — sie ist in der Runde gewandert und steht
+je Stand in der Zeile von Abschnitt 8, die ihn nennt (AP10 54, AP11 56, AP12
+54) · Backlog-Nummernmenge gegen `dabd7a3` **0 verloren, 0 doppelt** bei
+**177** Einträgen · Selbstproben der beiden Rauschregeln **15 von 15** und
+**13 von 13**, je mit Mutationsprobe.
 
 **Und was sie nicht belegt** (ausführlich im Prüfdokument, Abschnitt 0 und 5):
 kein Simulatorlauf für Nr. 91 und 94, kein Produktivstand. **Der Vorbehalt zu
 „0 Konsolenfehler" ist mit AP11 weg** — er lautete „0 außerhalb dreier
 Fehlerarten, die der Rauschfilter verschluckt", und genau diese drei Arten
 zählt der Filter jetzt mit, wenn sie auf der eigenen Basis auftreten (Nr. 176;
-Selbstprobe 10 von 10, dieselbe Zahl 0 nach dem erneuten Lauf). Was bleibt: ein
+Selbstprobe **15 von 15** samt sechs Mutationen je 14 von 15, dieselbe Zahl 0
+nach dem erneuten Lauf). Was bleibt: ein
 Verbindungsfehler auf einer **fremden** Adresse ist weiterhin stumm — dass zur
 Laufzeit keine fremde Quelle angefragt wird, messen andere.
 

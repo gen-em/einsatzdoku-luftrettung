@@ -1780,17 +1780,34 @@ zutreffen.
     Die Herkunft wird über `URL.origin` gegen `BASIS` verglichen, nicht über
     `startsWith` — das verträgt einen abschließenden Schrägstrich in
     `--basis` und rechnet Vorgabeports mit.
-    **Zwei Entscheidungen bewusst zur lauten Seite hin:** Eine Meldung ohne
-    Fundstelle wird **gezählt**, nicht verworfen; und der Fehlercode wird nur
+    **Drei Entscheidungen bewusst zur lauten Seite hin:** Eine Meldung ohne
+    **zuordenbare** Fundstelle wird **gezählt**, nicht verworfen — leer, keine
+    Adresse (`<anonymous>`) oder undurchsichtige Herkunft (`data:`, `blob:`, wo
+    `URL.origin` die Zeichenkette „null" liefert); der Fehlercode wird nur
     noch im Wortlaut gesucht, nicht auch in der Fundstelle (in einer URL
-    kommt er nicht vor — die zweite Suche war ohne Wirkung).
-    **Belegt in drei Richtungen.** (1) Neue **Selbstprobe**
-    `node tools/screenshots/aufnehmen.mjs --selbstprobe` — zehn gebaute Fälle
-    mit Sollwert, **10 von 10** erwartungsgemäß; sie braucht weder Browser
-    noch Server und löscht die Ausgabe nicht. (2) Dieselben zehn Fälle durch
-    die **alte** Funktion, wörtlich aus `git show origin/main` geholt statt
+    kommt er nicht vor — die zweite Suche war ohne Wirkung); und **Klasse 2
+    verwirft nur einen Statuscode** — verliert die Seite selbst die
+    Verbindung, wird das gezählt, denn ein Verbindungsabbruch ist kein
+    Statuscode.
+    *Die erste und die dritte dieser drei sind Berichtigungen aus der
+    Gegenprüfung des Nachtrags, nicht des ersten Entwurfs; er zählte die leere
+    Fundstelle, verwarf aber die unlesbare, und seine Klasse 2 verschluckte
+    genau die drei Codes, um die dieser Punkt geht.*
+    **Belegt in vier Richtungen.** (1) Neue **Selbstprobe**
+    `node tools/screenshots/aufnehmen.mjs --selbstprobe` — **fünfzehn** gebaute
+    Fälle mit Sollwert, **15 von 15** erwartungsgemäß; sie braucht **keinen
+    laufenden** Browser und keinen Server (das Playwright-Modul muss vorhanden
+    sein, weil die Datei es am Kopf lädt) und löscht die Ausgabe nicht.
+    (2) **Mutationsprobe:** Jede der drei Klassen einzeln herausgenommen, dazu
+    die Schranke an Klasse 2 und beide Zweige der Herkunftsauskunft — **sechs
+    Läufe, je 14 von 15**. Ohne sie wäre die Probe blind geblieben: Ihr erster
+    Entwurf hatte zehn Fälle und meldete **10 von 10 auch bei gelöschter
+    Klasse 1 oder 3**, weil jeder verwerfende Fall einen Kachelgastgeber in der
+    URL trug. Das hat die Gegenprüfung gefunden, nicht ich; das Rezept steht in
+    der LIESMICH. (3) Die **ersten zehn** Fälle durch die
+    **alte** Funktion, wörtlich aus `git show origin/main` geholt statt
     abgeschrieben: **6 von 10** — falsch waren die drei lokalen Abbrüche und
-    der Fall ohne Fundstelle. (3) Am laufenden Browser: Seite geladen,
+    der Fall ohne Fundstelle. (4) Am laufenden Browser: Seite geladen,
     **PHP-Server angehalten** (socat blieb, die Basis also dieselbe), Symbol
     und API-Aufruf nachgeladen — zwei Konsolenfehler auf der eigenen Basis
     (`ERR_EMPTY_RESPONSE`, `ERR_CONNECTION_RESET`), davon verwarf der alte
