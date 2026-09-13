@@ -139,6 +139,37 @@ Kapitels. Und **nichts in der Oberfläche**: Die Zahlen heißen seit S8 richtig;
 ein zusätzlicher Hinweis neben jeder von ihnen erklärte dieselbe Sache
 viermal.
 
+### Web — die CSRF-Prüfung steht vor dem Demo-Ausstieg, nicht dahinter
+
+**Eine geerbte Lücke, die noch niemandem geschadet hat** (Nr. 67, Unterpunkt).
+`api/kdf_upgrade.php` stieg für das Demo-Konto aus, **bevor** es das
+Formular-Token prüfte. Ein Aufruf ohne Token bekam dort 200 zurück, während
+jedes andere Konto 403 sah. Folgenlos war das nur, weil hinter dem Ausstieg
+nichts steht — wer dort einmal etwas hinschreibt, erbt eine ungeschützte
+Stelle, ohne es zu merken. Die zwei Zeilen sind getauscht, und der
+Kopfkommentar sagt jetzt, warum die Reihenfolge so ist.
+
+**Am Regelfall ändert das nichts, und das ist vorher gemessen worden.**
+`assets/unlock.js` ist der einzige Aufrufer (die drei anderen Fundstellen im
+Code sind Kommentare) und schickt `X-CSRF` immer mit; `auth_guard.php` legt
+das Sitzungstoken bei jeder angemeldeten Anfrage an, bevor diese Datei läuft.
+Die linke Seite von `hash_equals()` ist hier also nie leer — ein Aufruf ohne
+Token trifft nicht auf zwei leere Zeichenketten.
+
+**Belegt am Prüfstand, alter gegen neuer Stand bei sonst gleichem Aufbau:**
+ohne Header **vorher 200**, jetzt **403** `{"error":"csrf"}`; mit Header
+unverändert **200** mit `uebersprungen: demo`. Dazu falscher Header 403 und
+leerer Header 403. Im Browser (Chromium, Demo-Anmeldung über die
+Anmeldeseite): Anmeldung läuft durch, **0 Konsolenfehler**, und alle
+Messwerte der Sichtprüfung sind Zeichen für Zeichen dieselben wie am alten
+Stand — der Weg, auf dem `unlock.js` den Inhaltsschlüssel übernimmt, ist
+nicht berührt.
+
+**Der Hauptpunkt bleibt offen und liegt bei P5:** ein `ist_api_aufruf()`-Zweig
+in `csrf_check()`, damit die Endpunkte unter `server/api/` die Prüfung nicht
+jeder selbst schreiben. Dieser Tausch ersetzt ihn nicht; er nimmt nur einer
+Datei die Sonderstellung.
+
 ## [Web 19.3.0] — 2026-09-12
 
 ### Web — Backlog-Runde 2: der Block Betrieb wird fertig

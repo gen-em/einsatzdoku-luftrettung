@@ -4575,7 +4575,11 @@ der Konto-Identität folgenlos — die zweite Linie hinter den Sperren unten.
 
 Das KDF-Upgrade antwortet mit Erfolg statt mit Fehler, weil der Browser es von
 sich aus nach der Anmeldung aufruft: Ein Fehler stünde dort als Störung, wo es
-keine gibt.
+keine gibt. **Vor diesem stillen Erfolg steht seit Web 19.3.1 die Prüfung des
+Formular-Tokens** (Backlog Nr. 67, Unterpunkt): Bis dahin lag der Demo-Ausstieg
+davor, und ein Aufruf ohne Token bekam für das Demo-Konto 200, während jedes
+andere Konto 403 sah. Der stille Erfolg gilt also für den regulären Aufruf —
+`unlock.js` schickt `X-CSRF` immer mit —, nicht für jeden Aufruf.
 
 `reset_request.php` weist **still** ab. Die Antwort dieser Seite ist für jede
 Adresse dieselbe; eine Sondermeldung für das Demo-Konto wäre die einzige

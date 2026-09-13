@@ -952,6 +952,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Backlog-Punkt altert also, während der Punkt liegt**, und sie altert
     lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
     vorher wieder nach — die Zählung von heute ist morgen genauso alt.
+    **Der Unterpunkt ist erledigt (Backlog-Runde 3, AP4, Web 19.3.1, 13.09.2026);
+    der Punkt selbst bleibt offen und liegt bei P5.** In
+    `server/api/kdf_upgrade.php` steht die CSRF-Prüfung jetzt **vor** dem
+    Demo-Ausstieg. Bis dahin kam ein Aufruf ohne Formular-Token für das
+    Demo-Konto mit 200 zurück, während jedes andere Konto 403 sah — folgenlos
+    nur, weil hinter dem Ausstieg nichts steht. Am Prüfstand gemessen, alter
+    gegen neuer Stand bei sonst gleichem Aufbau: **ohne Header vorher 200,
+    jetzt 403 `{"error":"csrf"}`; mit Header unverändert 200 mit
+    `uebersprungen: demo`.** Dazu falscher und leerer Header, beide 403. Die
+    Reihenfolge ist im Kopfkommentar der Datei begründet, der stille Erfolg in
+    `docs/Technik.md` als bedingt gekennzeichnet.
+    **Offen bleibt der Hauptpunkt:** der `ist_api_aufruf()`-Zweig in
+    `csrf_check()` (oder die Invariante im Funktionskopf), damit die Endpunkte
+    unter `server/api/` die Prüfung nicht jeder selbst schreiben. Vor dem
+    Anfassen neu zählen — siehe die Lehre oben.
 
 
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
