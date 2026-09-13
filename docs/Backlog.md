@@ -415,6 +415,26 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     eingetragen. Die zwei neuen Regeln sind zwei **neue Darstellungen** und
     gehen in die **Mockup-Runde** (mit Nr. 42, 45 und 124; Ort im
     Rahmenplan).
+    **Die drei Streichungen sind erledigt (Backlog-Runde 3, AP5, Web 19.3.1,
+    13.09.2026); der Punkt bleibt offen und liegt bei 9c.** `rea-kopf` und
+    `rea-beginn` sind aus `einsatz_form.php`, `phasen-name` zweimal aus
+    `einsatz.php`; alle drei stehen mit Begründung auf `streichliste.md`, die
+    drei `[offen]`-Zeilen in `ohne-regel.md` sind heraus. Gemessen gegen den
+    Stand davor: `[offen]` **5 → 2**, „auf der Streichliste, aber noch im
+    Markup" **0**, „`ohne-regel.md`: Eintrag ungenutzt" **0**, Befunde
+    insgesamt **334 → 330**. Die vierte weggefallene Meldung hatte der Auftrag
+    nicht vorhergesehen: `rea-kopf` stand im alten Stylesheet und war bis
+    hierher auch „ohne Gegenstück" (**53 → 52**).
+    **Im Browser bewegt sich nichts.** Vier Seiten vor und nach der Änderung:
+    im DOM `rea-kopf` 2 → 0, `rea-beginn` 2 → 0, `phasen-name` 9 → 0 und
+    22 → 0, `rea-sitzung` und `phasen-eingabe` unverändert. Bildvergleich
+    **0 abweichende Bildpunkte** auf allen vier Seiten, nachdem der
+    Demo-Zähler geschwärzt war — er zählt bis zum nächsten Reset herunter und
+    verursachte auf jeder Seite dieselben 3079 Punkte (Rahmen y 117–126).
+    **Beim Austragen berichtigt:** Der Eintrag zu `phasen-name` in
+    `ohne-regel.md` nannte `einsatz.php:631`; es sind die Zeilen 764 und 805.
+    **Offen bleiben `imp-warn` und `imp-daygroup`** — sie brauchen je eine
+    Regel, und das sind zwei neue Darstellungen (Mockup-Runde 9c).
 
 42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
     *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4, AP5, AP5b

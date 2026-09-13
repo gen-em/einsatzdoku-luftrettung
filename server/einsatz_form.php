@@ -1731,9 +1731,15 @@ function reaSitzung(daten) {
   box.dataset.nr = n;
 
   const kopf = document.createElement('div');
-  kopf.className = 'phasen-eingabe rea-kopf';
+  /* Nur `phasen-eingabe`. Bis Web 19.3.1 stand hier zusaetzlich `rea-kopf`
+     und am <label> darunter `rea-beginn` — zwei Klassen ohne Regel, ohne
+     Leser und ohne Wirkung (Backlog Nr. 41, entschieden am 12.09.2026). Das
+     Aussehen kam von `phasen-eingabe` beziehungsweise von der Elementregel
+     fuer `label`; die Kopfzeile einer Reanimationssitzung soll sich von einer
+     Phasenzeile NICHT abheben. Wer das aendern will, braucht ein Mockup und
+     eine Freigabe (Design.md 1) — und dann erst die Klasse. */
+  kopf.className = 'phasen-eingabe';
   const lab = document.createElement('label');
-  lab.className = 'rea-beginn';
   lab.textContent = 'Reanimationsbeginn';
   const start = document.createElement('input');
   start.type = 'text'; start.className = 'zeitfeld';

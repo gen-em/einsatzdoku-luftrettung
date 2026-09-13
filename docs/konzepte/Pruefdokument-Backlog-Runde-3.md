@@ -9,7 +9,7 @@ beantwortet „was muss **ich** noch tun?". Muster:
 
 > | | |
 > |---|---|
-> | Stand | **AP1 bis AP4 erledigt** (13.09.2026) — Block A zu vier Fünfteln; AP5 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
+> | Stand | **Block A vollständig** (AP1–AP5, 13.09.2026); AP6 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
 > | Stufe | **Web 19.3.1 — Korrektur** (E-BR3-14; die Begründung steht im Konzept). **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt. `version.php` steigt erst mit AP4 — dem ersten Paket, das `server/` anfasst |
 > | Punkte | Backlog **Nr. 91, 94, 117, 47, 58, 173, 174** erledigt; **Nr. 67** Unterpunkt erledigt, Punkt bleibt (P5); **Nr. 41** drei Streichungen erledigt, Punkt bleibt (9c) |
 > | Neu entstanden | Prüfgruppe „5 Zusagen" in `tools/vollstaendigkeit/`, Liste `zusagen.md`; neue Referenzdateien unter `tools/referenzdatensatz/referenz/` |
@@ -87,7 +87,7 @@ dazukommt, gehört hierher.
 
 | Mittel | Vorher (Runde 2, 12.09.2026) | Soll | Ergebnis |
 |---|---|---|---|
-| **Vollständigkeit** (`tools/vollstaendigkeit/pruefen.py`) | 334 Befunde; `[offen]` 5 | `[offen]` **2**; „auf der Streichliste, aber noch im Markup" **0**; „ohne-regel.md: Eintrag ungenutzt" **0**; Gesamtzahl 334 − 3 = **331** (plus/minus, was Unicode-Kommentare seither dazugetan haben — nennen) | [ ] |
+| **Vollständigkeit** (`tools/vollstaendigkeit/pruefen.py`) | 334 Befunde; `[offen]` 5; „ohne Gegenstück" 53; „auf der Streichliste" 125 | `[offen]` **2**; „auf der Streichliste, aber noch im Markup" **0**; „ohne-regel.md: Eintrag ungenutzt" **0**; Gesamtzahl **330** — nicht 331 wie im Konzept: `rea-kopf` war zusätzlich ein Befund „ohne Gegenstück" | `[offen]` **2** (`imp-warn`, `imp-daygroup`) ✓ · noch im Markup **0** ✓ · ungenutzt **0** ✓ · „ohne Gegenstück" **52** ✓ · Streichliste **126** ✓ · **BEFUNDE 330** ✓ |
 | **Gruppe 5 „Zusagen", native Dialoge** | — (neu) | **0** Befunde, **2** Ausnahmen (`confirm.js`, `forms.js`), **0** Ausnahmen ungenutzt | [ ] |
 | **Gruppe 5 „Zusagen", Seite ohne Gerüst** | — (neu) | **0** Befunde, **7** Ausnahmen, Hinweis „Gerüst ohne Seitenhülle" **1** (`apk.php`) | [ ] |
 | **Probe, dass beide rot werden** | — | je ein eingeschleuster Verstoß → Rückgabewert ≠ 0; danach entfernt | [ ] |
@@ -106,7 +106,9 @@ dazukommt, gehört hierher.
 | **Backlog-Nummernmenge gegen `dabd7a3`** (neu ab AP3, wegen F-BR3-01) | 170 Einträge | **0 verloren, 0 doppelt**; nur beabsichtigte Verschiebungen | nach AP3 **171 Einträge, 0 verloren, 0 doppelt**; aus *Offen* heraus: 81, 87, 88 (Durchsicht) und 91, 94, 117 (diese Runde) ✓ |
 | **Linkprobe** (`tools/linkprobe/probe.py`) | 0 Abweichungen, 0 tote Ausnahmen | **0 / 0** | [ ] |
 | **Wartungsprobe** (`tools/wartungsprobe/probe.php`) | 55 Erwartungen, 0 nicht erfüllt (15 flattert, Nr. 172) | **0** nicht erfüllt | [ ] |
-| **Bilderlauf** Einsatzbearbeitung mit Reanimation und Einsatzansicht mit Phasen | — | **0** abweichende Bildpunkte gegen den Stand vor AP5 (`compare -metric AE`) — die drei Klassen hatten keine Regel | [ ] |
+| **Bilderlauf** Einsatzbearbeitung mit Reanimation und Einsatzansicht mit Phasen | — | **0** abweichende Bildpunkte gegen den Stand vor AP5 (`compare -metric AE`) — die drei Klassen hatten keine Regel | **0 auf allen vier Seiten** ✓ (1280 × bis 1943 px, ganze Seite). **Unmaskiert 3079 auf jeder** — das ist der Demo-Zähler, nicht die Änderung: Rahmen **aller** abweichenden Punkte y 117–126, x 808–1204, Text „in ca. 10 Minuten" gegen „in ca. 8 Minuten". Gegenprobe, dass der Vergleich misst: zwei verschiedene Seiten **525 585** Bildpunkte |
+| **AP5 · Klassen im gerenderten DOM** (vier Seiten, vor/nach) | `rea-kopf` 2, `rea-beginn` 2, `phasen-name` 9 und 22 | alle **0**; `rea-sitzung` und `phasen-eingabe` **unverändert** | **0 / 0 / 0 / 0** ✓ · `rea-sitzung` 2 → 2, `phasen-eingabe` 22 → 22 und 9 → 9 ✓ |
+| **AP5 · Konsolenfehler** auf den vier Seiten | — | 0 | **0** ✓ (Kartenkacheln ausgenommen — kein Netzzugang dorthin) |
 | **`kdf_upgrade` ohne Header** (Demo-Sitzung über den regulären Anmeldeweg, ohne `X-CSRF`) | **200** `{"ok":true,"uebersprungen":"demo"}` — am alten Stand selbst gemessen, nicht angenommen | **403** `{"error":"csrf"}`; mit Header weiterhin 200 | **403** `{"error":"csrf"}` ✓ · mit Header **200** `uebersprungen: demo` ✓ |
 | **AP4 · falscher und leerer Header** | — | beide **403** | **403 / 403** ✓ |
 | **AP4 · Gegenprobe an einem zweiten Endpunkt** (`api/day.php` ohne Header) | — | **403** — zeigt, dass die Probe den Header wirklich wegließ | **403** ✓ |

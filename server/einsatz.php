@@ -761,7 +761,7 @@ async function init(){
     row.className = 'phasen-zeile';
     row.dataset.idx = idx;
     row.innerHTML = `<span class="phasen-nr">${p.phase}</span>`
-      + `<span class="phasen-name">${esc(p.label)}</span>`
+      + `<span>${esc(p.label)}</span>`
       + `<span class="phasen-zeit">${p.time}`
       + (abstand != null ? `<span class="phasen-abstand">+${abstand} min</span>` : '')
       + '</span>';
@@ -802,7 +802,7 @@ async function init(){
       events.forEach(e2 => {
         liste.insertAdjacentHTML('beforeend',
           `<div class="phasen-zeile"><span class="phasen-nr"></span>`
-          + `<span class="phasen-name">${esc(e2.label)}</span>`
+          + `<span>${esc(e2.label)}</span>`
           + `<span class="phasen-zeit">${e2.time}</span></div>`);
       });
       wrap.appendChild(liste);

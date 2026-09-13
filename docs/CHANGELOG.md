@@ -139,6 +139,55 @@ Kapitels. Und **nichts in der Oberfläche**: Die Zahlen heißen seit S8 richtig;
 ein zusätzlicher Hinweis neben jeder von ihnen erklärte dieselbe Sache
 viermal.
 
+### Web — drei Klassen ohne Regel verlassen das Markup
+
+**Drei von fünf sind entschieden, nicht aufgeräumt** (Nr. 41, entschieden am
+12.09.2026). `rea-kopf`, `rea-beginn` und `phasen-name` standen im Markup,
+hatten keine Regel im Stylesheet und keinen Leser im Skript — aber die Frage
+dahinter war eine Gestaltungsfrage: Soll sich die Kopfzeile einer
+Reanimationssitzung von einer gewöhnlichen Phasenzeile abheben? Soll der Name
+einer Phase eine eigene Schrift bekommen? Die Antwort ist **nein**, und
+deshalb verschwinden die Klassen, statt eine Regel zu bekommen. Ein Ja hätte
+eine neue Darstellung bedeutet und damit ein Mockup mit Freigabe
+(`Design.md` 1).
+
+**Vier Stellen im Code:** `kopf.className` und die `className`-Zeile am
+`<label>` in `einsatz_form.php` (das Aussehen kam vom Nachbarn
+`phasen-eingabe` beziehungsweise von der Elementregel für `label`, beide
+bleiben), und zweimal `class="phasen-name"` am `<span>` in `einsatz.php` —
+das `<span>` selbst bleibt, es gruppiert den Text. Die Bindung des Labels an
+sein Eingabefeld hängt an `htmlFor`, nicht an der Klasse; sie ist unberührt.
+
+**Alle drei stehen jetzt mit Begründung auf `streichliste.md`**, und die drei
+`[offen]`-Zeilen in `ohne-regel.md` sind heraus. Nur eine der drei
+(`rea-kopf`) stammte aus dem alten Stylesheet; die beiden anderen stehen
+dort, damit die Prüfung meldet, falls sie ins Markup zurückkehren („auf der
+Streichliste, aber noch im Markup"). Beim Austragen fiel auf, dass der
+Eintrag zu `phasen-name` auf `einsatz.php:631` zeigte — nachgemessen sind es
+die Zeilen 764 und 805.
+
+**Gemessen, und zwar gegen den Stand davor:** `pruefen.py` meldet jetzt **2**
+statt 5 `[offen]` (übrig sind `imp-warn` und `imp-daygroup`, die beiden mit
+einer echten Gestaltungsfrage — sie gehen in die Mockup-Runde), „auf der
+Streichliste, aber noch im Markup" **0**, „`ohne-regel.md`: Eintrag ungenutzt"
+**0**. Die Befunde insgesamt gehen von **334 auf 330** — drei durch die
+`[offen]`-Zeilen und **eine vierte**, die der Auftrag nicht vorhergesehen
+hatte: `rea-kopf` stand im alten Stylesheet und war bis hierher auch ein
+Befund „ohne Gegenstück" (53 → 52).
+
+**Im Browser: nichts bewegt sich.** Vier Seiten vor und nach der Änderung
+fotografiert (Einsatzbearbeitung mit zwei Reanimationssitzungen,
+Einsatzansicht mit 9 und mit 22 Phasen), im DOM gezählt: `rea-kopf` 2 → **0**,
+`rea-beginn` 2 → **0**, `phasen-name` 9 → **0** und 22 → **0**, während
+`rea-sitzung` (2) und `phasen-eingabe` (22/9) unverändert stehen. Der
+Bildvergleich meldete zunächst **3079** abweichende Bildpunkte auf **allen
+vier** Seiten — dieselbe Zahl auf verschiedenen Seiten kann nicht von den
+Klassen kommen. Der Rahmen aller abweichenden Punkte liegt bei y 117–126,
+x 808–1204: die Zeile des Demo-Hinweises, die bis zum nächsten Reset
+herunterzählt („in ca. 10 Minuten" gegen „in ca. 8 Minuten"). Mit
+geschwärztem Zähler: **0 abweichende Bildpunkte auf allen vier Seiten**,
+0 Konsolenfehler.
+
 ### Werkzeug — der Container beschafft seinen Prüfstand selbst
 
 **Zweimal dieselbe Viertelstunde, dann eine Datei** (Auftrag des
