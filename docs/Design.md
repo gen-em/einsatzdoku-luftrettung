@@ -343,14 +343,14 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-97 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+100 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--schnee` | `#FFFCFA` | 33 |  |
-| `--rauch` | `#F7F5ED` | 29 |  |
+| `--rauch` | `#F7F5ED` | 30 |  |
 | `--sand` | `#D4C7AD` | 13 |  |
 
 **Schrift**
@@ -358,15 +358,15 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 21 |  |
-| `--dunkelblau` | `#1A2E4D` | 52 |  |
-| `--gedaempft` | `#6E6459` | 58 |  |
+| `--dunkelblau` | `#1A2E4D` | 53 |  |
+| `--gedaempft` | `#6E6459` | 59 |  |
 | `--auf-dunkel` | `#FFFFFF` | 7 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 30 |  |
+| `--linie` | `#E3DAC6` | 31 |  |
 | `--linie-stark` | `var(--gedaempft)` | 11 |  |
 
 **Orange — Handeln**
@@ -382,7 +382,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--blau` | `#4280E5` | 12 |  |
-| `--blau-tief` | `#1F4E9C` | 17 |  |
+| `--blau-tief` | `#1F4E9C` | 18 |  |
 | `--blau-hell` | `#D9ECFD` | 4 |  |
 
 **Rot — Aufmerksamkeit**
@@ -405,7 +405,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--groesse-1` | `12px` | 7 |  |
-| `--groesse-2` | `13px` | 42 |  |
+| `--groesse-2` | `13px` | 43 |  |
 | `--groesse-3` | `15px` | 11 |  |
 | `--groesse-4` | `16px` | 10 |  |
 | `--groesse-5` | `19px` | 6 |  |
@@ -419,9 +419,9 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 66 |  |
-| `--abstand-2` | `8px` | 88 |  |
-| `--abstand-3` | `12px` | 119 |  |
+| `--abstand-1` | `4px` | 67 |  |
+| `--abstand-2` | `8px` | 90 |  |
+| `--abstand-3` | `12px` | 120 |  |
 | `--abstand-4` | `16px` | 54 |  |
 | `--abstand-5` | `24px` | 23 |  |
 
@@ -452,11 +452,14 @@ auseinanderlaufen kann.
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
 | `--symbol-klein` | `16px` | 6 | Zusatzzeichen an einer Beschriftung |
+| `--symbol-winzig` | `calc(var(--symbol-klein) - var(--abstand-1))` | 4 | 12 px, im Chip |
+| `--ziel-chip` | `calc(var(--symbol-gross) + var(--abstand-1))` | 2 | 28 px, Treffziel |
+| `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 9 | Symbolgröße im Knopf und Kartenkopf |
 | `--strich` | `1px` | 43 | Haarlinie |
-| `--strich-stark` | `2px` | 30 | Aktivstrich, Randstrich, Fokus |
-| `--radius-rund` | `999px` | 17 | Zähler, Griff, Punkt — voll rund |
+| `--strich-stark` | `2px` | 31 | Aktivstrich, Randstrich, Fokus |
+| `--radius-rund` | `999px` | 18 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
 | `--schalter-punkt` | `20px` | 4 | 44-px-Zeile passt und greifbar bleibt |

@@ -4,6 +4,32 @@ Entstanden in P3 (Konzept, Anlage F). Zusammen mit
 `tools/vollstaendigkeit/` ersetzt sie den Stilvergleich für die Dauer der
 Phase.
 
+> ## Drei Engines liegen bereit — dieses Werkzeug fährt bislang eine
+>
+> Seit dem 14.09.2026 beschafft der Startvorgang **Chromium, Firefox und
+> WebKit** (`.claude/hooks/session-start.sh`, Backlog Nr. 183). Der Bilderlauf
+> benutzt weiterhin nur Chromium; was er meldet, gilt genau für ihn. Wer ihn
+> auf drei Engines bringt, findet hier vorab, was dabei zu wissen ist:
+>
+> - **Der Browser kommt über `PLAYWRIGHT_BROWSERS_PATH`** (Vorgabe
+>   `/opt/pw-browsers`) und heißt in Playwright `chromium`, `firefox` oder
+>   `webkit`. Gemessen am 14.09.2026: 141.0.7390.37, 142.0.1, 26.0.
+> - **`waitUntil: 'load'` hängt in Firefox**, solange die Kartenkacheln nicht
+>   erreichbar sind — es wartet auf sie, Chromium nicht. Entweder
+>   `domcontentloaded` nehmen oder die Kacheln abfangen (dieses Werkzeug tut
+>   Letzteres bereits, siehe `kachelAntwort`).
+> - **Firefox meldet Konsolenfehler für die `latin-ext`-Schriftschnitte.** Er
+>   fordert sie an und bricht sie ab (`NS_BINDING_ABORTED`, 0x804B0002),
+>   sobald die Seite wechselt; die Dateien sind alle vorhanden und werden bei
+>   ruhiger Seite geladen (nachgemessen: fünf Schnitte, `document.fonts`
+>   meldet `loaded`). Ein Rauschfilter für drei Engines muss das kennen,
+>   sonst meldet Firefox auf jeder Seite Fehler und die Zusage „0
+>   Konsolenfehler" ist nicht mehr zu halten.
+> - **Maße weichen um wenige Pixel ab.** Dieselbe Kopfzeile maß bei 400 px
+>   231 px (Chromium), 232 px (Firefox) und 233 px (WebKit) — Schriftmetrik,
+>   kein Befund. Ein Vergleich über Engines braucht eine Toleranz, kein
+>   `===`.
+
 ## Warum es sie gibt
 
 Ein Redesign, das „voll mobiltauglich auf allen Seiten" verspricht, muss das

@@ -4474,7 +4474,7 @@ Datenbankserver nachinstallieren.
 `/opt/pw-browsers/`, `socat`, `zip`/`unzip`, `git`, `curl`, `openssl`, und
 aus Python `requests` und `cryptography`.
 
-**Es bringt NICHT mit**, und ohne diese vier steht die Hälfte der Prüfmittel:
+**Es bringt NICHT mit**, und ohne diese fünf steht die Hälfte der Prüfmittel:
 
 | fehlt | wer es braucht |
 |---|---|
@@ -4482,9 +4482,31 @@ aus Python `requests` und `cryptography`.
 | **ImageMagick** (`convert`, `compare`) | `tools/uhr-bilder/erzeugen.sh` und jeder Bildvergleich |
 | **rsvg-convert** (`librsvg2-bin`) | dieselbe Kette: SVG → PNG für die Uhr-Bilder |
 | **Python `jsonschema`** | `tools/referenzdatensatz/` prüft damit seine Quelldaten |
+| **Firefox und WebKit** samt sechs Systembibliotheken | jede Aussage über die Oberfläche, die für mehr als Chromium gelten soll (seit 14.09.2026, Backlog Nr. 183) |
+
+**Die beiden anderen Engines, und warum sie dazugehören.** Bis zum 14.09.2026
+lief jede Browserprobe des Projekts in Chromium — und das war tragbar, solange
+die Oberfläche sich auf Breitentricks beschränkte. Seit Web 19.4.1 hängt eine
+Darstellung an einer **Container-Abfrage**, seit P3 ohnehin an `:has()` und
+`dvh`. Eine Engine, die eines davon nicht kann, fiele **lautlos** durch jede
+Prüfung. Der Startvorgang holt deshalb `firefox` und `webkit` über Playwright
+nach; die beiden Downloadadressen (`cdn.playwright.dev`,
+`playwright.download.prss.microsoft.com`) mussten dafür in der Egress-Liste
+der Arbeitsumgebung freigegeben werden und waren es bis dahin nicht.
+Gemessen am 14.09.2026: **Chromium 141.0.7390.37, Firefox 142.0.1,
+WebKit 26.0**.
+
+**Was die Werkzeuge daraus machen, ist noch offen.** Bilderlauf, Klickprobe
+und Stilvergleich fahren weiterhin Chromium; dreifach gemessen sind bislang
+nur Backlog Nr. 182 und Nr. 42, und zwar von Hand. Wer das Mittel baut, findet
+die drei Fallstricke in `tools/screenshots/LIESMICH.md` (Firefox wartet bei
+`waitUntil:'load'` auf die Kartenkacheln; er meldet abgebrochene
+`latin-ext`-Schriftabrufe als Konsolenfehler; Maße weichen um wenige Pixel
+ab).
 
 `.claude/hooks/session-start.sh` beschafft sie beim Sitzungsstart und meldet
-je Stück „ok" oder „FEHLT". Zwei Dinge sind daran Absicht: Er **startet
+je Stück „ok" oder „FEHLT" — die drei Engines **einzeln**, denn „3 Browser da"
+sagt nicht, welcher fehlt, und es fehlt immer nur einer. Zwei Dinge sind daran Absicht: Er **startet
 nichts** — das bleibt bei `lokal_starten.sh`, das Einrichten bei
 `lokal_einrichten.sh` —, und er **schlägt nicht fehl**, wenn etwas fehlt: Eine
 Sitzung, die sich wegen eines Bildwerkzeugs nicht öffnen lässt, ist schlimmer

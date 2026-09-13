@@ -241,7 +241,14 @@
             var x = document.createElement('button');
             x.type = 'button';
             x.className = 'rmx';
-            x.textContent = '×';
+            /* DAS ZEICHEN IST EIN SYMBOL, KEIN MALZEICHEN (Backlog Nr. 42,
+             * M-MR-02 Variante C). Bis Web 19.4.1 stand hier das Malzeichen als
+             * Text; das Treffziel war so gross wie das Zeichen. Jetzt:
+             * `schliessen` in 12 px, zentriert in einem 28-px-Ziel, das
+             * unsichtbar ueber den Chiprand ragt (Stylesheet, .rmx).
+             * edSymbol() liegt vor — `symbol.js` kommt aus ui_geruest_ende()
+             * und damit vor jedem Skript der Seite. */
+            x.innerHTML = edSymbol('schliessen', '', 'Koordinaten entfernen');
             x.title = 'Koordinaten entfernen';
             x.addEventListener('click', function () {
                 latF.value = '';

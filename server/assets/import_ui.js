@@ -362,7 +362,10 @@
      * wird erst, nachdem jemand eine Datei gewaehlt hat. */
     function plakette(ton, text) {
         return '<span class="plakette plakette-' + ton + '">' +
-               edSymbol('warnung', 'symbol-klein') + esc(text) + '</span>';
+               edSymbol('warnung') + esc(text) + '</span>';
+        /* OHNE ZUSATZKLASSE: `symbol-klein` ist ein TOKEN, keine Klasse — der
+         * Aufruf hat bis Web 19.4.1 nichts bewirkt. Die Groesse kommt aus
+         * `.plakette .symbol` (14 px), und die gilt fuer jede Plakette. */
     }
 
     /* DATUM WIE UEBERALL SONST (F-MR-2). `t.day` ist ISO, weil die Datei es

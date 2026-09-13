@@ -378,57 +378,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     feststellbar" und wird als solcher gezählt; auch das ist eine ehrliche
     Auskunft, „ersatzlos" wäre eine erfundene.
 
-42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
-    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4, AP5, AP5b
-    und AP6, zuletzt am 13.09.2026.* P-P3-03 verlangt null. Die Prüfung
-    meldet **255** Treffer (gemessen 13.09.2026; 195 bei der vorigen
-    Fortschreibung, 158 bei Aufnahme); alle bis auf drei sind Kommentare oder
-    richtige Typografie (die
-    Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der Hinweise,
-    das Malzeichen in „3× RTW"). Drei sind echte Symbole — dieselben drei wie
-    bei der Aufnahme:
-
-    > **Die Zahl wächst mit dem Text, nicht mit dem Problem.** Jeder neue
-    > Hinweissatz mit Auslassungspunkten erhöht sie um eins; S2/AP3 hat sie
-    > mit einer einzigen neuen Zeile auf der Wartungsseite von 167 auf 168
-    > gebracht, S2/AP4 mit den Kopfkommentaren dreier neuer Dateien von 168
-    > auf 174 (`?art=…&id=…` allein zählt viermal), S2/AP5 mit den
-    > Fortschrittsmeldungen des Backup-Laufs („Teil 2 von 5 …") auf 189
-    > S2/AP5b mit drei Auslassungspunkten in **Kommentaren** auf 192 und
-    > S2/AP6 mit den Fortschrittsmeldungen des Freigabewegs auf 195 und die
-    > Pakete bis Web 19.3.0 auf 255 — jedes Mal gemessen gegen den Stand
-    > davor, nicht geschätzt. Neu seit der letzten Zählung sind außerdem
-    > **8 Emoji**, alle im Kommentar von `assets/pwquality.js`, der erklärt,
-    > warum `schriftzeichen()` in Grapheme zerlegt: dieselbe Sorte Rauschen.
-    > Wer die Zahl als
-    > Fortschrittsmaß liest, liest sie falsch — gemeint sind die drei unten.
-    > Das Prüfmittel trennt beides nicht, und das gehört hierhin und nicht in
-    > eine Fußnote.
-
-
-    - `wegKnopf()` in `server/einsatz_form.php` — `'✕'` als **Rückfall**, wenn
-      `edSymbol()` beim synchronen Aufbau noch nicht geladen ist. Mit
-      Begründung im Code; das ist kein Fehler, sondern ein Netz, und es
-      gehört eher dokumentiert als entfernt.
-    - `zeichne()` in `server/assets/ortsfeld.js` — `x.textContent = '×'` am
-      Koordinaten-Chip. Der Knopf `.rmx` ist textgroß gebaut und hat keine
-      Symbolregel; ein SVG hineinzusetzen heißt, ihn neu zu bemaßen.
-    - `ZEICHEN_UNLESBAR` in `server/assets/patient.js` — `⚠` für einen nicht entschlüsselbaren
-      Datensatz. Das Zeichen steht nicht nur in einer Zelle, sondern **im
-      Satz** („… ist mit ⚠ gekennzeichnet"). Ein SVG im Fließtext ist eine
-      Gestaltungsfrage, keine Ersetzung.
-
-    Die beiden letzten sind also kein mechanischer Tausch. Solange sie
-    stehen, ist der Sollwert von P-P3-03 nicht erreicht — und das steht so im
-    Prüfprotokoll, statt die Zahl schönzurechnen.
-
-    **Entschieden am 12.09.2026: beide ersetzen.** Das `×` am
-    Koordinaten-Chip — der Knopf `.rmx` ist textgroß gebaut und wird neu
-    bemaßt — und das `⚠` im Fließtext, das Grundlinie und eine Größe relativ
-    zur Schrift braucht (der fummeligere der beiden Fälle). Beide gehen in
-    die **Mockup-Runde** (mit Nr. 41, 45 und 124). Der `✕`-Rückfall in
-    `wegKnopf()` **bleibt** und wird als begründete Ausnahme dokumentiert.
-
 43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt — und das
     Transportziel auch nicht.**
     *Ausdrücklich bestätigt 10.09.2026:* **Die Zielklinik soll
@@ -1549,12 +1498,141 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Importvorschau und eine Kartenseite in **drei** Engines und meldet je
     Engine dieselben Zahlen (Überlauf, Konsolenfehler, Knopfhöhen). Zuordnung:
     **Zuarbeit** (Allowlist) plus eine spätere Backlog-Runde für das Mittel.
+    **Die erste Hälfte ist am 14.09.2026 erledigt.** Der Auftraggeber hat die
+    beiden Adressen freigegeben; `.claude/hooks/session-start.sh` beschafft
+    seither **Firefox und WebKit** samt sechs Systembibliotheken und meldet die
+    drei Engines **einzeln** („3 Browser da" sagt nicht, welcher fehlt).
+    Gemessen: Chromium 141.0.7390.37, Firefox 142.0.1, WebKit 26.0 — alle drei
+    starten und laden eine Seite. **Nr. 182 und Nr. 42 sind seither in allen
+    dreien gemessen** und stimmen überein (Abweichungen von 1–2 px in der
+    Zeilenhöhe, Schriftmetrik).
+    **Drei Fallstricke sind dabei gefunden und in `tools/screenshots/LIESMICH.md`
+    festgehalten**, damit der Nächste sie nicht sucht: (1) `waitUntil:'load'`
+    hängt in Firefox, solange die Kartenkacheln nicht erreichbar sind —
+    Chromium nicht; (2) Firefox meldet abgebrochene `latin-ext`-Schriftabrufe
+    als Konsolenfehler (`NS_BINDING_ABORTED`), obwohl alle zehn Dateien
+    vorhanden sind und bei ruhiger Seite laden — ein Rauschfilter für drei
+    Engines muss das kennen, sonst ist „0 Konsolenfehler" nicht mehr zu
+    halten; (3) Maße weichen um wenige Pixel ab, ein Vergleich über Engines
+    braucht eine Toleranz.
+    **Offen bleibt die zweite Hälfte:** das Mittel, das die drei von sich aus
+    fährt. Bilderlauf, Klickprobe und Stilvergleich benutzen weiterhin
+    Chromium, und die bisherigen Dreifachmessungen sind Handarbeit.
+
+184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
+    *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
+    benutzen wollte.* `ohne_php_js_kommentare()` in
+    `tools/vollstaendigkeit/pruefen.py` (Backlog-Runde 3, Nr. 47/58) geht
+    zeichenweise durch die Datei und merkt sich, ob es gerade in einer
+    Zeichenkette steht. In einer **PHP-Datei mit HTML** trifft es dabei auf
+    Anführungszeichen im Fließtext, die kein String sind — und ein einzelnes
+    ungepaartes `"` schickt es in den Zeichenketten-Modus, aus dem es erst
+    beim nächsten herauskommt.
+    **Gemessen** an `server/einsatz_form.php`: ab Zeile 1547 verschluckt es
+    **rund 800 Zeilen am Stück**; der Kommentar in Zeile 1613 wird nicht mehr
+    erkannt. Von 2350 Zeilen werden 853 geleert — der Rest bleibt stehen, ohne
+    dass irgendetwas meldet.
+    **Die Folge sind falsche NEGATIVE, und die sind teurer als falsche
+    positive:** Die drei Zusagen-Prüfungen (`native Dialoge`, `Seite ohne
+    Gerüst`, `fremde Quelle`) suchen ihre Muster in genau diesem Text. Was im
+    verschluckten Bereich steht, wird nicht gefunden — und die Gruppe meldet
+    trotzdem **0**. Genau die Sorte grüner Zahl, gegen die `CLAUDE.md` 6
+    warnt.
+    *Warum AP2 ihn nicht benutzt hat:* Mit Ausblenden fiele die Symbolzahl von
+    252 auf 108. Eine kleinere Zahl, die durch Wegsehen entsteht, ist
+    schlechter als eine große, die alles zeigt — deshalb zählt die
+    Symbolprüfung weiterhin den ganzen Quelltext.
+    **Weg:** Für `.php`-Dateien nur **innerhalb** der Bereiche abtasten, die
+    wirklich Code sind — `<?php … ?>`, `<?= … ?>` und `<script> … </script>`;
+    alles dazwischen ist HTML, dort gibt es keine Zeichenketten und keine
+    `//`-Kommentare. *Abnahme:* An `einsatz_form.php` werden die Kommentare ab
+    Zeile 1547 wieder erkannt (geleerte Zeilen deutlich über 853); die drei
+    Zusagen-Prüfungen bleiben bei 0 Befunden **und** finden eine testweise
+    eingeschleuste `confirm(`-Stelle im bisher verschluckten Bereich.
+    Zuordnung: **Backlog-Runde**.
 
 ## Erledigt
 
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
+    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4, AP5, AP5b
+    und AP6, zuletzt am 13.09.2026.* P-P3-03 verlangt null. Die Prüfung
+    meldet **255** Treffer (gemessen 13.09.2026; 195 bei der vorigen
+    Fortschreibung, 158 bei Aufnahme); alle bis auf drei sind Kommentare oder
+    richtige Typografie (die
+    Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der Hinweise,
+    das Malzeichen in „3× RTW"). Drei sind echte Symbole — dieselben drei wie
+    bei der Aufnahme:
+
+    > **Die Zahl wächst mit dem Text, nicht mit dem Problem.** Jeder neue
+    > Hinweissatz mit Auslassungspunkten erhöht sie um eins; S2/AP3 hat sie
+    > mit einer einzigen neuen Zeile auf der Wartungsseite von 167 auf 168
+    > gebracht, S2/AP4 mit den Kopfkommentaren dreier neuer Dateien von 168
+    > auf 174 (`?art=…&id=…` allein zählt viermal), S2/AP5 mit den
+    > Fortschrittsmeldungen des Backup-Laufs („Teil 2 von 5 …") auf 189
+    > S2/AP5b mit drei Auslassungspunkten in **Kommentaren** auf 192 und
+    > S2/AP6 mit den Fortschrittsmeldungen des Freigabewegs auf 195 und die
+    > Pakete bis Web 19.3.0 auf 255 — jedes Mal gemessen gegen den Stand
+    > davor, nicht geschätzt. Neu seit der letzten Zählung sind außerdem
+    > **8 Emoji**, alle im Kommentar von `assets/pwquality.js`, der erklärt,
+    > warum `schriftzeichen()` in Grapheme zerlegt: dieselbe Sorte Rauschen.
+    > Wer die Zahl als
+    > Fortschrittsmaß liest, liest sie falsch — gemeint sind die drei unten.
+    > Das Prüfmittel trennt beides nicht, und das gehört hierhin und nicht in
+    > eine Fußnote.
+
+
+    - `wegKnopf()` in `server/einsatz_form.php` — `'✕'` als **Rückfall**, wenn
+      `edSymbol()` beim synchronen Aufbau noch nicht geladen ist. Mit
+      Begründung im Code; das ist kein Fehler, sondern ein Netz, und es
+      gehört eher dokumentiert als entfernt.
+    - `zeichne()` in `server/assets/ortsfeld.js` — `x.textContent = '×'` am
+      Koordinaten-Chip. Der Knopf `.rmx` ist textgroß gebaut und hat keine
+      Symbolregel; ein SVG hineinzusetzen heißt, ihn neu zu bemaßen.
+    - `ZEICHEN_UNLESBAR` in `server/assets/patient.js` — `⚠` für einen nicht entschlüsselbaren
+      Datensatz. Das Zeichen steht nicht nur in einer Zelle, sondern **im
+      Satz** („… ist mit ⚠ gekennzeichnet"). Ein SVG im Fließtext ist eine
+      Gestaltungsfrage, keine Ersetzung.
+
+    Die beiden letzten sind also kein mechanischer Tausch. Solange sie
+    stehen, ist der Sollwert von P-P3-03 nicht erreicht — und das steht so im
+    Prüfprotokoll, statt die Zahl schönzurechnen.
+
+    **Entschieden am 12.09.2026: beide ersetzen.** Das `×` am
+    Koordinaten-Chip — der Knopf `.rmx` ist textgroß gebaut und wird neu
+    bemaßt — und das `⚠` im Fließtext, das Grundlinie und eine Größe relativ
+    zur Schrift braucht (der fummeligere der beiden Fälle). Beide gehen in
+    die **Mockup-Runde** (mit Nr. 41, 45 und 124). Der `✕`-Rückfall in
+    `wegKnopf()` **bleibt** und wird als begründete Ausnahme dokumentiert.
+
+    **Erledigt mit Web 19.4.2** (Mockup-Runde 9c, AP2, 14.09.2026). Der
+    Entfernen-Knopf im Chip trägt `schliessen` in 12 px, zentriert in einem
+    28-px-Ziel (M-MR-02 Variante C, F-MR-6b), 6 px zum Text und 6 px zum
+    Chiprand (E-MR-18); das Ziel liegt als Pseudoelement über dem Symbol,
+    damit der Chip seine Höhe behält. **Beide** Chip-Erzeuger sind umgestellt
+    — `ortsfeld.js` und `einsatz_form.php`, wo dasselbe Zeichen als
+    JavaScript-Escape stand (Fehlerfund 1 des Konzepts). Das Warnzeichen im
+    Satz von `patient.js` ist dasselbe Symbol wie die Marke in der Tabelle,
+    über die neue Klasse `.symbol-text` so groß wie die Schrift und auf der
+    Grundlinie.
+    **Der `✕`-Rückfall in `wegKnopf()` ist NICHT zur Ausnahme geworden,
+    sondern entfallen.** Sein Vermerk („symbol.js lädt erst am Seitenende")
+    war falsch — `symbol.js` kommt aus `ui_geruest_ende()` und damit als
+    erstes Skript der Seite. Nachgemessen am laufenden Formular: `typeof
+    edSymbol` ist `function`, alle acht Entfernen-Knöpfe tragen ein SVG,
+    keiner das Zeichen. Der Zweig war seit seiner Entstehung tot. **Nr. 42
+    braucht damit überhaupt keine Ausnahme.**
+    *Gemessen:* Unicode-Zeichen **255 → 252** (die vier echten Treffer
+    namentlich weg; die dreizehn verbliebenen nicht-typografischen stehen in
+    Kommentaren oder im Satz), Befunde insgesamt **326 → 323**. Im Browser in
+    **drei Engines** (Chromium 141, Firefox 142, WebKit 26): Chip 3/3 mit SVG,
+    0 mit Zeichen, Symbol 12 × 12 px, Ziel 28 × 28 px rund, Abstände 6/6 px,
+    Chiphöhe 28–28,2 px; Entfernen-Knöpfe 8/8 mit SVG; Meldung mit
+    `symbol symbol-text`, 15 × 15 px bei 15 px Schrift, Farbe `--orange-tief`.
+    Das Treffziel ist von **17 × 15 px auf 28 × 28 px** gewachsen.
 
 182. **Die Kopfzeile einer Tagesgruppe steht außerhalb des Sichtfensters.**
     *Aufgenommen 13.09.2026 als Fehlerfund 2 der Mockup-Runde 9c (AP1); mit

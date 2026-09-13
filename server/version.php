@@ -4148,5 +4148,48 @@ declare(strict_types=1);
  * KORREKTURSTUFE, KEINE NEBENSTUFE: Es ist dieselbe Darstellung an
  * derselben Stelle; sie ist jetzt zu sehen. Uhr und Android unberuehrt,
  * keine Migration.
+ *
+ * 19.4.2 — MOCKUP-RUNDE 9c, AP2: ZWEI ZEICHEN WERDEN SYMBOLE (Nr. 42).
+ *
+ * Der Entfernen-Knopf im Chip und das Warnzeichen im Satz einer Meldung
+ * standen als Unicode-Zeichen im Markup. Beide sind jetzt Symbole aus dem
+ * Vorrat — und der Knopf hat ein Treffziel, das diesen Namen verdient.
+ *
+ * DER CHIP. `.rmx` trug ein Malzeichen als TEXT, und das Ziel war so gross
+ * wie das Zeichen: gemessen 17 x 15 px. Auf einem Handy mit Handschuhen ist
+ * das kein Bedienelement, und ein Fehlgriff loescht eine Koordinate oder ein
+ * Rettungsmittel. Jetzt: `schliessen` in 12 px, zentriert in einem 28-px-Ziel
+ * (M-MR-02 Variante C, F-MR-6b), 6 px zum Text und 6 px zum Chiprand
+ * (E-MR-18). Das Ziel liegt als Pseudoelement UEBER dem Symbol — ein
+ * groesserer Knopf haette den Chip hoeher gemacht; so bleibt er bei seinen
+ * 28,1 px und das Ziel ragt unsichtbar darueber hinaus.
+ *
+ * BEIDE CHIPS, EINE REGEL (E-MR-11). Koordinaten (`ortsfeld.js`) und
+ * beteiligte Rettungsmittel (`einsatz_form.php`) setzten dasselbe Zeichen auf
+ * ZWEI Arten — einmal als Zeichen, einmal als JavaScript-Escape. Die zweite
+ * hat die Vollstaendigkeitspruefung nie gesehen (Fehlerfund 1 des Konzepts);
+ * sie sieht Escape-Folgen jetzt.
+ *
+ * DAS WARNZEICHEN IM SATZ. `patient.js` trug das Zeichen als Konstante und
+ * setzte den Satz mit `textContent`. Es sah in jedem System anders aus, nahm
+ * die Schriftfarbe der Meldung nicht an und war etwas anderes als die Marke,
+ * die dieselbe Sache in der Tabelle daneben traegt. Jetzt dasselbe Symbol,
+ * ueber die neue Klasse `.symbol-text` so gross wie die Schrift (`1em`) und
+ * auf der Grundlinie; die Farbe kommt aus `.meldung-warn .symbol`.
+ *
+ * EINE AUSNAHME WENIGER, NICHT EINE MEHR. Das Konzept sah vor, den
+ * Zeichen-Rueckfall in `wegKnopf()` als begruendete Ausnahme stehen zu
+ * lassen. Der Vermerk daneben („symbol.js laedt erst am Seitenende") war
+ * falsch: `symbol.js` kommt aus `ui_geruest_ende()` und damit als erstes
+ * Skript der Seite. Nachgemessen am laufenden Formular — `typeof edSymbol`
+ * ist `function`, alle acht Entfernen-Knoepfe tragen ein SVG, keiner das
+ * Zeichen. Der Zweig war seit seiner Entstehung tot und ist fort; damit
+ * braucht Nr. 42 UEBERHAUPT keine Ausnahme.
+ *
+ * NEU: drei abgeleitete Token (`--symbol-winzig` 12 px, `--ziel-chip` 28 px,
+ * `--symbol-text` 1em) und die Klasse `.symbol-text`. Kein neuer Farbwert,
+ * kein neues Symbol — `schliessen` und `warnung` lagen im Vorrat.
+ *
+ * Uhr und Android unberuehrt, keine Migration.
  */
-const WEB_VERSION = '19.4.1';
+const WEB_VERSION = '19.4.2';

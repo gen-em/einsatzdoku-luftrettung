@@ -4,7 +4,12 @@
 **die Zahlen trägt die Umsetzung ein**. Fortgeschrieben nach jedem
 Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
-> **Stand: AP1 gemessen (13.09.2026) und Nr. 182 behoben (14.09.2026, Web 19.4.1). AP2 bis AP5 offen.**
+> **Stand: AP1 und AP2 gemessen, Nr. 182 behoben. AP3 bis AP5 offen.**
+>
+> **Seit dem 14.09.2026 hat der Prüfstand drei Engines** — Chromium 141,
+> Firefox 142, WebKit 26 (Backlog Nr. 183, der Startvorgang beschafft sie).
+> Nr. 182 und Nr. 42 sind in allen dreien gemessen; **Prüflistenpunkt 6
+> entfällt damit**.
 >
 > **Vier Sollwerte der Vorlage waren veraltet** — sie entstand vor E-MR-16,
 > E-MR-19 und E-MR-21 — und sind hier berichtigt: Symboldateien **55** statt
@@ -14,10 +19,10 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
 > | | |
 > |---|---|
-> | Stufe | **Web 19.4.1** — 19.4.0 die Nebenstufe aus AP1, 19.4.1 die Korrektur zu Nr. 182. Keine Migration. Uhr und Android unberührt |
-> | Punkte | Backlog **Nr. 41 und 182 erledigt**; 42, 45, 124 offen |
+> | Stufe | **Web 19.4.2** — 19.4.0 die Nebenstufe aus AP1, 19.4.1 die Korrektur zu Nr. 182, 19.4.2 das AP2. Keine Migration. Uhr und Android unberührt |
+> | Punkte | Backlog **Nr. 41, 42 und 182 erledigt**; 45 und 124 offen. **Nr. 183 zur Hälfte** (Engines da, Mittel offen), **Nr. 184 neu** (Kommentar-Abtaster) |
 > | Neu entstanden | Token `--symbol-text`, `--karte-gross`; **`--dauer` von .18s auf .24s** (alle Bewegungen); Klassen `.symbol-text`, `.geo-gross`; Symbole `karte-gross.svg`, `karte-breit.svg` (54., 55.); Regel `.imp-daygroup`; Knopf offen = `--orange-hell`/`--orange-tief` (D4); Ausnahme `'✕'` in `ausnahmen.md`; Streichliste `imp-warn` |
-> | Prüfumgebung | Wegwerf-Container: PHP 8.4.19, MariaDB 10.11.14, Node 22.22.2, Playwright 1.56.1, Chromium 141.0.7390.37. Lokale Installation über `lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte) |
+> | Prüfumgebung | Wegwerf-Container: PHP 8.4.19, MariaDB 10.11.14, Node 22.22.2, Playwright 1.56.1, **Chromium 141.0.7390.37 · Firefox 142.0.1 · WebKit 26.0**. Lokale Installation über `lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte) |
 > | Ergebnis | AP1 **grün, Vorbehalt aufgelöst** (Nr. 182 behoben). Rest offen |
 
 ## 0. Was NICHT geprüft werden konnte
@@ -27,21 +32,20 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
   Kopfzeile nimmt über eine Container-Abfrage die **sichtbare** Breite an; die
   Abnahme von AP1 („am Handy bricht die Kopfzeile in zwei Zeilen") ist damit
   nachträglich erfüllt. Zahlen in Abschnitt 3.
-- **Nr. 182 in einer ZWEITEN Engine: erledigt, WebKitGTK 2.52.6** (Safaris
-  Familie). Gemessen am 14.09.2026 mit einem Schnappschuss der echten Vorschau
-  (dasselbe Markup, dasselbe Stylesheet über den laufenden Server): 400 px →
-  Kopf 342 = Sicht 342 · 720 → 654 = 654 · 1280 → 1214 = 1214; `container-type`
-  löst zu `inline-size` auf, `position` zu `sticky`; Datum, Besatzung, Plakette
-  **und** Auswahlfeld in allen drei im Sichtfenster; Kopfhöhe 233/195/95 px, sie
-  bricht also. (Die 1214 statt 954 bei 1280 px kommen daher, dass der
-  Schnappschuss ohne Seitenleiste steht — mehr Platz, gleiche Aussage.)
-- **Was weiterhin NICHT geprüft ist: Firefox (Gecko).** Playwrights
-  Browser-Downloads sind in dieser Arbeitsumgebung gesperrt
-  (`cdn.playwright.dev` und `playwright.download.prss.microsoft.com`, beide
-  403), und Ubuntus `firefox`-Paket ist nur eine Snap-Hülle. Zwei von drei
-  Engines sind damit belegt. Auf einem Browser ohne Container-Abfragen fiele
-  `width:100cqi` aus und die Kopfzeile stünde wie in Web 19.4.0 da — kein
-  Absturz, kein Datenverlust, nur der alte Zustand. **Prüfliste Punkt 6.**
+- ~~**Nr. 182 nur in Chromium gemessen.**~~ **Erledigt: alle drei Engines.**
+  Der Auftraggeber hat am 14.09.2026 die beiden Downloadadressen freigegeben
+  (`cdn.playwright.dev`, `playwright.download.prss.microsoft.com`, bis dahin
+  403); seither liegen Chromium 141, Firefox 142 und WebKit 26 im Prüfstand,
+  und der Startvorgang beschafft sie. Zahlen in Abschnitt 3.
+- **Was weiterhin offen ist: kein Prüfmittel fährt die drei.** Bilderlauf,
+  Klickprobe und Stilvergleich benutzen Chromium; Nr. 182 und Nr. 42 sind von
+  **Hand** dreifach gemessen. Backlog **Nr. 183** (zweite Hälfte).
+- **Und eine Zahl, die kleiner aussehen könnte, als sie ist.** Die
+  Symbolprüfung meldet 252 Unicode-Zeichen. Mit ausgeblendeten Kommentaren
+  wären es 108 — aber der Abtaster dafür verschluckt in `einsatz_form.php`
+  rund **800 Zeilen am Stück** (Backlog **Nr. 184**), und dieselbe Schwäche
+  trifft die drei Zusagen-Prüfungen aus Backlog-Runde 3, die dann **falsche
+  Negative** liefern. Die 252 sind deshalb Absicht.
 - **AP1 und Nr. 182: Der Bilderlauf sieht die Vorschau nicht.** `seiten.json` führt
   `import.php` im Grundzustand — ohne gewählte Datei gibt es keine
   Vorschautabelle. Die acht Bilder der Seite belegen die Seite, **nicht** die
@@ -72,7 +76,7 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 | Mittel | Vorher (Backlog-Runde 3) | Soll | Ergebnis |
 |---|---|---|---|
 | `tools/vollstaendigkeit/pruefen.py` — `[offen]` | 2 | **0** | **0** ✓ (AP1) |
-| — Unicode-Zeichen als Symbol, echte Treffer | **4**, nicht 3 (nachgemessen 13.09.2026: `einsatz_form.php:1617` Rückfall, `ortsfeld.js:244`, `patient.js:133`, dazu `einsatz_form.php:2227` als Escape-Folge, die das Mittel heute nicht sieht) | **0** echte; Ausnahme für den Rückfall in **`zusagen.md`** (nicht `ausnahmen.md` — E-MR-24); die Gesamtzahl fällt mit dem Ausblenden der Kommentare deutlich unter die heutigen **255** und wird genannt | [AP2] |
+| — Unicode-Zeichen als Symbol | **4** echte, nicht 3 (nachgemessen: `einsatz_form.php` zweimal — Rückfall und Escape-Folge —, `ortsfeld.js`, `patient.js`) | **0** echte | **0** ✓ — alle vier namentlich weg. Gesamtzahl **255 → 252**; die dreizehn verbliebenen nicht-typografischen stehen in Kommentaren oder im Satz. **Keine Ausnahme nötig** (AP2): Der Rückfall in `wegKnopf()` war toter Code und ist entfallen |
 | — Hexfarben außerhalb `:root` | 0 | **0** (Hover des Chips als Token) | **0** ✓ (nach AP1) |
 | — Symboldateien | 53 | **55** (E-MR-19: zwei Symbole), alle mit Anker `id="i"` und Verweis | 53 nach AP1 (AP3 legt sie an) |
 | `tools/screenshots/aufnehmen.mjs` — Importvorschau, Einsatzformular, Suche, Tagesübersicht (klein/groß), Seiten mit `data-blatt` | — | 8 Breiten je Seite, **0** waagerechter Überlauf, Knopfhöhen ≥ 44 px | **AP1:** `--nur 35-` → **8 Einzelbilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe** (Zeiger, 44/36 px). **Achtung, was das misst:** die Importseite im Grundzustand, nicht die Vorschau — siehe Abschnitt 0 |
@@ -121,6 +125,26 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
     Feld) ✓ · Überspringen-Kästchen setzt `imp-skipped` ✓ · Tageswahl
     (`imp-daymode`) behält `update` ✓. **Eine** Tabelle, **ein** Element mit
     der Kennung `tabelle`. ✓
+- **AP2 (Nr. 42) — in DREI Engines** (Chromium 141, Firefox 142, WebKit 26),
+  Einsatzformular und Startseite, 1280 px:
+  - Chip: **3 von 3** mit SVG, **0** mit Zeichen; Symbol **12 × 12 px**; Ziel
+    **28 × 28 px** und rund; Abstand **6 px** zum Text und **6 px** zum
+    Chiprand — in allen drei Engines dieselben Zahlen. ✓
+  - Chiphöhe 28,1 / 28,1–28,2 / 28,0 px — **unverändert gegenüber vorher**
+    (nachgemessen am Stand davor: ebenfalls 28,1). Die „26 px" des Mockups
+    waren gezeichnet. ✓
+  - Das Treffziel ist von **17 × 15 px auf 28 × 28 px** gewachsen. ✓
+  - Entfernen-Knöpfe der Phasen- und Reanimationszeilen: **8 von 8** mit SVG,
+    **0** mit Zeichen — der Rückfall war tot. ✓
+  - Meldung: SVG mit `symbol symbol-text`, **15 × 15 px** bei 15 px Schrift
+    (also `1em`), Farbe `rgb(194, 90, 0)` = `--orange-tief`; **kein rohes
+    Markup** im Text sichtbar. ✓
+  - Konsolenfehler: **keine** in Chromium und WebKit. **Firefox meldet
+    abgebrochene `latin-ext`-Schriftabrufe** (`NS_BINDING_ABORTED`) — ein
+    Merkmal des Prüfstands, kein Anwendungsfehler: Bei ruhiger Seite lädt er
+    alle fünf Schnitte, und der Chip misst dann 28,1 px wie in Chromium.
+    Nachgemessen; steht in `tools/screenshots/LIESMICH.md` für den, der die
+    Prüfmittel auf drei Engines bringt. ⚠
 - Koordinaten-Chip: Ziel **28 × 28 px** (DevTools messen; F-MR-6b, E-MR-21), Hover sichtbar, Entfernen wirkt. **Beide** Chips — Koordinaten und beteiligte Rettungsmittel. [ ]
 - Suche mit einem unlesbaren Eintrag: Symbol sitzt auf der Grundlinie in 19/15/13 px. [ ]
 - Tagesübersicht: groß ↔ klein, Kacheln füllen nach `invalidateSize`; **ab 1600 px bleibt der Knopf und macht die Karte breit** (E-MR-16), mit Querpfeilen statt senkrechten (E-MR-19). [ ]
@@ -136,15 +160,17 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 | 3 | CSV-Import mit einer Datei, deren Crew von einem gespeicherten Tag abweicht | Tagesgruppe hat Kopfzeile, Warnung als orange Plakette mit Symbol — **und am Handy ist alles davon ohne waagerechtes Scrollen zu sehen** (seit Web 19.4.1, Nr. 182) | Wenn die Kopfzeile fehlt oder wie eine Datenzeile aussieht: AP1 hat nicht gegriffen. Wenn nach dem Datum nichts mehr kommt: die Container-Abfrage greift auf diesem Browser nicht — siehe Punkt 6 |
 | 4 | Einsatz bearbeiten, Koordinaten setzen, Chip-`×` tippen | Ziel trifft sich leicht (**28 px**, F-MR-6b), Koordinaten weg, Textfeld bleibt | Ziel zu klein: F-MR-6b nachjustieren |
 | 5 | Freigabe des Abschlusses | — | — |
-| 6 | **In Firefox** (Handy genügt): Importvorschau mit derselben Datei öffnen. *Chromium 141 und WebKitGTK 2.52.6 sind bereits belegt — es fehlt nur Gecko* | Die Kopfzeile bricht um und steht vollständig im Bild | Steht nach dem Datum nichts: Der Browser kennt keine Container-Abfragen. Kein Absturz, kein Datenverlust — es ist der Zustand von Web 19.4.0. Dann im Konzept vermerken und `--sicht` über einen `ResizeObserver` nachrüsten (die Fassung ist gemessen und liegt im Prüfprotokoll) |
+| ~~6~~ | ~~In Firefox nachsehen~~ | **Entfällt.** Seit dem 14.09.2026 hat der Prüfstand alle drei Engines; Nr. 182 und Nr. 42 sind in Chromium 141, Firefox 142 und WebKit 26 gemessen und stimmen überein | — |
 
 ## 5. Grenzen · 6. Offen
 
 - Der Bilderlauf misst Ruhezustände; die Bewegung ist nur am Gerät zu bewerten.
-- **Nr. 182 ist in ZWEI Engines gemessen** — Chromium 141 (Playwright) und
-  WebKitGTK 2.52.6 (`xvfb-run -a /usr/bin/python3.12 webkit-mess.py`, gegen
-  einen Schnappschuss der echten Vorschau). **Gecko fehlt**, weil die
-  Browser-Downloads gesperrt sind; Backlog **Nr. 183**.
+- **Nr. 182 und Nr. 42 sind in DREI Engines gemessen** — Chromium 141,
+  Firefox 142, WebKit 26 über Playwright, alle drei im Prüfstand. Was
+  **fehlt**, ist ein Prüfmittel, das sie von sich aus fährt: Bilderlauf,
+  Klickprobe und Stilvergleich benutzen weiterhin Chromium, und die
+  Dreifachmessung war Handarbeit (Backlog **Nr. 183**, zweite Hälfte).
+- **AP3 und AP4 sind noch in keiner Engine geprüft** — sie sind nicht gebaut.
 - **Fehlerfund 1** (Konzept Abschnitt 6): dasselbe Malzeichen als
   JavaScript-Escape im zweiten Chip — das Prüfmittel sieht Escape-Folgen
   nicht. Läuft in **AP2** mit (E-MR-24), keine eigene Backlog-Nummer.

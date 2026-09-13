@@ -14,6 +14,104 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.4.2] — 2026-09-14
+
+Mockup-Runde 9c, zweites Arbeitspaket: **Backlog Nr. 42** — die letzten
+Unicode-Zeichen, die als Symbol im Markup standen.
+
+### Web — der Entfernen-Knopf im Chip bekommt ein Ziel, das man trifft
+
+**Das Problem war nicht das Zeichen, sondern die Fläche darunter.** `.rmx`
+trug ein Malzeichen als Text; das Treffziel war so groß wie das Zeichen —
+**gemessen 17 × 15 px**. Auf einem Handy mit Handschuhen ist das kein
+Bedienelement, sondern ein Glücksspiel, und ein Fehlgriff löscht eine
+Koordinate oder ein beteiligtes Rettungsmittel.
+
+Jetzt: das Symbol `schliessen` in **12 px**, zentriert in einem **28-px-Ziel**
+(M-MR-02 Variante C, F-MR-6b), mit **6 px zum Text und 6 px zum Chiprand** —
+gleich viel beidseits, wie es die Skizze des Auftraggebers verlangt (E-MR-18).
+
+**Warum ein Pseudoelement und kein größerer Knopf:** Ein 28 px hoher Knopf
+hätte den Chip 28 px hoch gemacht — und der soll seine Höhe behalten. Das
+`::before` liegt absolut über dem Symbol, vergrößert die Trefferfläche des
+Knopfes und nimmt keinen Platz im Fluss. Nachgemessen: Der Chip ist **vorher
+wie nachher 28,1 px** hoch. (Die „26 px" des Mockups waren gezeichnet, nicht
+gemessen — der Wert kommt aus der Zeilenhöhe `--zeile` und war nie 26.)
+
+**Beide Chips, eine Regel** (E-MR-11). Koordinaten (`ortsfeld.js`) und
+beteiligte Rettungsmittel (`einsatz_form.php`) setzten dasselbe Zeichen auf
+**zwei Arten** — einmal als Zeichen, einmal als JavaScript-Escape. Die zweite
+hat die Vollständigkeitsprüfung nie gesehen; sie sieht Escape-Folgen jetzt
+(unten).
+
+### Web — das Warnzeichen im Satz ist dasselbe Symbol wie in der Tabelle
+
+`patient.js` trug das Zeichen als Konstante `ZEICHEN_UNLESBAR` und setzte den
+Satz mit `textContent`. Drei Dinge waren daran falsch: Es sah in jedem System
+anders aus, es nahm die Schriftfarbe der Meldung nicht an, und es war etwas
+**anderes** als die Marke, die dieselbe Sache in der Tabelle daneben trägt —
+`missiontable.js` benutzt dort seit P3 das Symbol.
+
+Jetzt dasselbe Symbol, über die neue Klasse `.symbol-text` so groß wie die
+Schrift, in der es steht (`1em`), und auf der Grundlinie statt in der
+Zeilenmitte. Die Farbe kommt aus `.meldung-warn .symbol` — dieselbe Regel,
+die auch das große Symbol der Meldung färbt. `hinweisUnlesbar()` liefert
+damit Markup statt Text, und `zeigeUnlesbar()` setzt es mit `innerHTML`; was
+hineingeht, ist ausschließlich eigener Text, eine eigene Zahl und das Markup
+aus `edSymbol()`.
+
+### Web — eine Ausnahme weniger, nicht eine mehr
+
+Das Konzept sah vor, den `✕`-Rückfall in `wegKnopf()` als **begründete
+Ausnahme** stehen zu lassen. Der Vermerk daneben — „symbol.js lädt erst am
+Seitenende (`ui_seite_ende`)" — war **falsch**: `symbol.js` kommt aus
+`ui_geruest_ende()` und damit als *erstes* Skript der Seite; der betroffene
+Aufbau steht danach. Nachgemessen am laufenden Formular: `typeof edSymbol` ist
+`function`, **alle acht** Entfernen-Knöpfe tragen ein SVG, **keiner** das
+Zeichen. Der Zweig war seit seiner Entstehung tot.
+
+Er ist fort, und der Vermerk ist durch die Messung ersetzt. **Damit braucht
+Nr. 42 überhaupt keine Ausnahme** — weder in `ausnahmen.md` (die liest
+ausschließlich die Token-Prüfung, ein Eintrag dort stünde wirkungslos da) noch
+in `zusagen.md`.
+
+### Prüfmittel — die Symbolprüfung sieht Escape-Folgen
+
+`tools/vollstaendigkeit/pruefen.py` suchte Zeichen und übersah damit
+`'\u00d7'` — dieselbe Sache, anders geschrieben. Genau daran ist der zweite
+Chip jahrelang vorbeigekommen. Die Prüfung löst `\uXXXX` jetzt auf, bevor sie
+zählt, und zwar **längentreu**, damit jede Fundstelle auf ihrer Zeile bleibt.
+
+**Was bewusst NICHT gemacht wurde:** die Kommentare auszublenden. Das hätte
+die Zahl von 252 auf 108 gedrückt, und der Abtaster dafür (`ohne_php_js_­kommentare()`
+aus Backlog-Runde 3) ist dieser Aufgabe nicht gewachsen — in einer PHP-Datei
+mit HTML schickt ihn ein ungepaartes `"` im Fließtext in den
+Zeichenketten-Modus, und er verschluckt alles bis zum nächsten; in
+`einsatz_form.php` ab Zeile 1547 **rund 800 Zeilen am Stück**. Eine kleinere
+Zahl, die durch Wegsehen entsteht, ist schlechter als eine große, die alles
+zeigt. Der Befund ist als **Backlog Nr. 184** aufgenommen — er betrifft auch
+die drei Zusagen-Prüfungen, die denselben Abtaster benutzen.
+
+Gemessen: Unicode-Zeichen **255 → 252**, Emoji unverändert 8, Befunde
+insgesamt **326 → 323**. Die **vier echten Treffer sind namentlich weg**
+(`einsatz_form.php` zweimal, `ortsfeld.js`, `patient.js`); die verbliebenen
+dreizehn nicht-typografischen stehen alle in Kommentaren oder im Satz
+(„3× Standorte"), der Rest ist `…` und `→`.
+
+**Im Browser geprüft — in drei Engines** (Chromium 141, Firefox 142,
+WebKit 26), seit dem 14.09.2026 alle drei im Prüfstand: Chip 3 von 3 mit SVG,
+**0** mit Zeichen, Symbol **12 × 12 px**, Ziel **28 × 28 px** rund, Abstand
+**6 px** zum Text und **6 px** zum Rand, Chiphöhe 28–28,2 px — in allen drei
+Engines identisch. Entfernen-Knöpfe **8 von 8** mit SVG. Meldung: SVG mit
+`symbol symbol-text`, **15 × 15 px** bei 15 px Schrift, Farbe
+`rgb(194, 90, 0)` = `--orange-tief`, kein rohes Markup im Text.
+
+Neu entstanden: drei abgeleitete Token (`--symbol-winzig` 12 px = `--symbol-klein`
+− `--abstand-1`, `--ziel-chip` 28 px = `--symbol-gross` + `--abstand-1`,
+`--symbol-text` 1em) und die Klasse `.symbol-text`. **Kein neuer Farbwert, kein
+neues Symbol** — `schliessen` und `warnung` lagen im Vorrat. Token-Tabelle in
+`docs/Design.md` neu erzeugt: 97 → 100.
+
 ## [Web 19.4.1] — 2026-09-14
 
 ### Web — die Kopfzeile der Importvorschau steht da, wo gelesen wird (Backlog Nr. 182)

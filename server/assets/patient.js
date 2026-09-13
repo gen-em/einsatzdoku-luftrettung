@@ -130,7 +130,29 @@
 
   /** Anzeigezeichen fuer einen Datensatz, der sich nicht entschluesseln laesst.
    *  Bewusst NICHT der Gedankenstrich, der "keine Angaben" bedeutet. */
-  const ZEICHEN_UNLESBAR = '⚠';
+  /**
+   * Die Marke fuer einen unlesbaren Eintrag — als SYMBOL im Satz.
+   *
+   * Bis Web 19.4.1 stand hier eine Konstante ZEICHEN_UNLESBAR mit dem
+   * Unicode-Warnzeichen als Text. Drei Dinge waren daran falsch: Es sah in
+   * jedem System anders aus, es nahm die Schriftfarbe der Meldung nicht an,
+   * und es war etwas anderes als die Marke, die dieselbe Sache in der Tabelle
+   * daneben traegt (`missiontable.js` benutzt dort seit P3 `edSymbol`).
+   *
+   * `symbol-text` macht es so gross wie die Schrift, in der es steht, und
+   * setzt es auf die Grundlinie (Stylesheet, Abschnitt 3). Die Farbe kommt
+   * aus `.meldung-warn .symbol` — dieselbe Regel, die auch das grosse Symbol
+   * der Meldung faerbt.
+   *
+   * EDSYMBOL LIEGT VOR. Der frueher hier stehende Vorbehalt („symbol.js wird
+   * auf dieser Seite nicht in jedem Fall geladen") trifft nicht zu:
+   * `ui_geruest_ende()` gibt `symbol.js` als ERSTES Skript aus, und alle
+   * sieben Seiten, die patient.js laden, rufen es. Nachgemessen am
+   * 14.09.2026 auf allen sieben: `typeof edSymbol === 'function'`.
+   */
+  function markeUnlesbar() {
+    return edSymbol('warnung', 'symbol-text', 'nicht lesbar');
+  }
 
   /**
    * Entschluesselt EINEN Patientenblock.
@@ -177,7 +199,10 @@
       el.appendChild(document.createElement('p'));
       main.insertBefore(el, main.firstChild);
     }
-    el.querySelector('p').textContent = hinweisUnlesbar(zahl);
+    /* innerHTML STATT textContent, seit der Satz ein Symbol traegt (Nr. 42).
+       Was hineingeht, ist ausschliesslich eigener Text, eine eigene Zahl und
+       das Markup aus edSymbol() — nichts davon stammt aus Daten. */
+    el.querySelector('p').innerHTML = hinweisUnlesbar(zahl);
   }
 
   /**
@@ -254,12 +279,16 @@
            + 'Schritten bitte den Wiederherstellungsschlüssel bereithalten.';
     }
     return zahl.unlesbar === 1
-      ? '1 Eintrag lässt sich nicht entschlüsseln und ist mit ' + ZEICHEN_UNLESBAR + ' gekennzeichnet.'
+      ? '1 Eintrag lässt sich nicht entschlüsseln und ist mit ' + markeUnlesbar() + ' gekennzeichnet.'
       : `${zahl.unlesbar} Einträge lassen sich nicht entschlüsseln und sind mit `
-        + ZEICHEN_UNLESBAR + ' gekennzeichnet.';
+        + markeUnlesbar() + ' gekennzeichnet.';
   }
 
+  /* `hinweisUnlesbar()` liefert seit Web 19.4.2 MARKUP, nicht mehr blossen
+   * Text — wer es einsetzt, nimmt innerHTML. Einziger Aufrufer ist
+   * zeigeUnlesbar() hier in der Datei. `ZEICHEN_UNLESBAR` ist mit dem Zeichen
+   * entfallen; es hatte keinen Aufrufer ausserhalb dieser Datei. */
   window.EdPat = { alterAm, alterAnzeige, alterText, name, datumDe,
                    entschluessle, entschluessleListe, hinweisUnlesbar,
-                   zeigeUnlesbar, ZEICHEN_UNLESBAR };
+                   zeigeUnlesbar, markeUnlesbar };
 })();

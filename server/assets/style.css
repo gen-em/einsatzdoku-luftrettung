@@ -309,6 +309,22 @@
   --uebersicht-spalte:240px;           /* schmalste Spalte der Einstellungs-Übersicht */
   --suchfeld:48px;                     /* das große Suchfeld */
   --symbol-klein:16px;                 /* Zusatzzeichen an einer Beschriftung */
+  /* Drei abgeleitete Symbolmasse aus der Mockup-Runde 9c (AP2, Nr. 42). Die
+   * Skala ist geschlossen (`CLAUDE.md` 5), deshalb stehen sie als RECHNUNG da,
+   * und die Rechnung ist ihre Herkunft:
+   *   --symbol-winzig 12 px = --symbol-klein (16) minus --abstand-1 (4). So
+   *     gross wie das Malzeichen, das es ersetzt (E-MR-14): Der 16-px-Vorschlag
+   *     war „zu gross, zu dicht" und ist verworfen.
+   *   --ziel-chip    28 px = --symbol-gross (24) plus --abstand-1 (4). Das
+   *     TREFFZIEL um dieses Symbol, freigegeben als F-MR-6b. Es ist groesser
+   *     als das der Filter-Plakette (20 px, .plakette-weg) — mit Absicht: Der
+   *     Chip steht in einem Formular, die Plakette in einer Leiste, und ein
+   *     Fehlgriff kostet hier einen Wert.
+   *   --symbol-text  1em = so gross wie die Schrift, in der es steht. Das
+   *     Warnzeichen im Satz einer Meldung waechst mit ihr (E-MR-10). */
+  --symbol-winzig:calc(var(--symbol-klein) - var(--abstand-1)); /* 12 px, im Chip */
+  --ziel-chip:calc(var(--symbol-gross) + var(--abstand-1));     /* 28 px, Treffziel */
+  --symbol-text:1em;                   /* Symbol im Fliesstext */
   --symbol:20px;                       /* Symbolgröße in der Zeile */
   --symbol-gross:24px;                 /* Symbolgröße im Knopf und Kartenkopf */
   --strich:1px;                        /* Haarlinie */
@@ -581,6 +597,21 @@ img,svg,video{max-width:100%;height:auto}
   vertical-align:middle;
 }
 .symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
+/* EIN SYMBOL IM FLIESSTEXT (E-MR-10, Mockup-Runde 9c / AP2). Es waechst mit
+ * der Schrift, in der es steht — `1em`, nicht 16 oder 20 px —, und sitzt auf
+ * der Grundlinie statt in der Zeilenmitte: `vertical-align:middle` laesst ein
+ * Zeichen in einem Satz zu hoch schweben. Der Wert `-.15em` ist die
+ * Unterlaenge der Grundschrift und kein Mass der Skala; er steht relativ zur
+ * Schriftgroesse und geht deshalb mit ihr mit.
+ *
+ * WOFUER. Die Meldung „N Eintraege lassen sich nicht entschluesseln und sind
+ * mit … gekennzeichnet" trug das Zeichen bis Web 19.4.1 als Unicode `⚠` —
+ * damit sah es in jedem System anders aus und nahm die Schriftfarbe nicht an.
+ * Jetzt ist es dasselbe Symbol wie die Marke in der Tabelle daneben. */
+.symbol-text{
+  width:var(--symbol-text);height:var(--symbol-text);
+  vertical-align:-.15em;
+}
 
 /* Der Winkel liegt EINMAL vor (winkel.svg, zeigt nach unten) und wird
  * gedreht — statt vier Dateien für vier Richtungen. */
@@ -2618,17 +2649,54 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 /* ---- Chips (Koordinaten am Ortsfeld, gewählte Rettungsmittel) ------------ */
 .rmchips{display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center}
 .rmchip{
-  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  display:inline-flex;align-items:center;
   background:var(--blau-hell);color:var(--dunkelblau);
   border-radius:var(--radius-rund);
-  padding:var(--abstand-1) var(--abstand-2);
   font-size:var(--groesse-2);font-weight:600;
+  /* GLEICH VIEL ABSTAND ZUM TEXT WIE ZUM RAND (E-MR-18, Skizze des
+   * Auftraggebers): 6 px beidseits des Symbols. 6 px ist keine Stufe des
+   * Vierer-Rasters — es ist anderthalb `--abstand-1`, und genau so steht es
+   * da, damit die Zahl ihre Herkunft behaelt. Links bleibt `--abstand-2`:
+   * Dort steht Text an einer runden Kante und braucht mehr Luft. */
+  gap:calc(var(--abstand-1) * 1.5);
+  padding:var(--abstand-1) calc(var(--abstand-1) * 1.5)
+          var(--abstand-1) var(--abstand-2);
 }
+/* DAS ENTFERNEN-ZIEL IST GROESSER ALS DAS, WAS MAN SIEHT — und das ist der
+ * ganze Punkt von Backlog Nr. 42 (M-MR-02, Variante C).
+ *
+ * Bis Web 19.4.1 stand hier das Malzeichen `×` als TEXT, und das Ziel war so
+ * gross wie das Zeichen: gemessen 11 x 15 px. Auf einem Handy mit Handschuhen
+ * ist das kein Bedienelement, sondern ein Glueckspiel — und ein Fehlgriff
+ * loescht eine Koordinate oder ein Rettungsmittel.
+ *
+ * WARUM EIN PSEUDOELEMENT UND KEIN GROESSERER KNOPF: Ein 28 px hoher Knopf
+ * machte den Chip 28 px hoch, und der soll bei 26 bleiben. Das `::before`
+ * liegt ABSOLUT ueber dem Symbol, vergroessert die Trefferflaeche des Knopfes
+ * (sie gehoert zu ihm, nicht zum Chip) und nimmt keinen Platz im Fluss. Der
+ * Chip behaelt seine Hoehe, das Ziel ragt unsichtbar darueber hinaus.
+ *
+ * EINE REGEL FUER BEIDE CHIPS (E-MR-11): Koordinaten (`ortsfeld.js`) und
+ * beteiligte Rettungsmittel (`einsatz_form.php`) teilen sich `.rmchip`/`.rmx`.
+ * Bis hierher setzten sie dasselbe Zeichen auf zwei Arten — einmal als
+ * Zeichen, einmal als JavaScript-Escape; die zweite hat die
+ * Vollstaendigkeitspruefung nie gesehen. */
 .rmx{
+  position:relative;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:var(--symbol-winzig);height:var(--symbol-winzig);
   border:0;background:none;color:inherit;cursor:pointer;
-  min-height:0;padding:0 var(--abstand-1);
-  font-size:var(--groesse-3);line-height:1;
+  min-height:0;padding:0;
 }
+.rmx .symbol{width:var(--symbol-winzig);height:var(--symbol-winzig)}
+.rmx::before{
+  content:"";position:absolute;
+  width:var(--ziel-chip);height:var(--ziel-chip);
+  border-radius:var(--radius-rund);
+}
+/* Rueckmeldung ohne neue Flaeche: der Ton wird kraeftiger. Eine Fuellung
+ * haette eine zweite Blauflaeche auf der ersten bedeutet. */
+.rmx:hover{color:var(--blau-tief)}
 /* Eingabefeld mit Chips darin (Weitere Rettungsmittel, Mockup 22). */
 .rmbox{position:relative}
 .rmfeld{
