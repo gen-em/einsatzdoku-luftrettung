@@ -1226,7 +1226,6 @@ damit „nach v1.0" verlassen — dort stehen noch **acht**: 50, 51, 52, 55,
 | 58 | Prüfmittel: Seite ohne Gerüst | Backlog-Runde | Prüfmittel, ein Nachmittag. **Vor dem Bauen:** Eine naive Regel liefert heute 15 Treffer, alle berechtigt — das Kriterium „gibt eigenes Markup aus" muss operationalisiert werden, sonst ist das Mittel beim ersten Lauf rot |
 | 80 | Auswertung der Gerätestatistik (Rest von 59) | **P5** (Rest) | Gerätemodelle und Nutzung sind **gebaut** (S8 AP4, Betrieb → Statistik). Offen: **Herkunft je Einsatz (R64-Werte) und Betriebslage-Dashboard**, mit der Datenschutzerklärung als Vorbedingung (Abschnitt 6) |
 | 90 | Der Simulator kann keinen Verbindungsabriss herstellen | nach v1.0 | aus S5/C; Prüfmittel der Uhr, nur am Gerät nachweisbar (Prüfliste S5) |
-| 91 | Auswahl in `WatchUi.Confirmation` im Bildabzug nicht sichtbar | Backlog-Runde | aus S5/C; Prüfmittel `tools/uhr-bilder/` |
 | 92 | `pruefstand.sh bildreihe` fotografiert nur den Startbildschirm | Backlog-Runde | aus S5/C; Tastenfolge als Parameter |
 | 62 | Logodateien mit alten Farbwerten | **Zuarbeit** (Abschnitt 6) | **Entschieden 12.09.2026: neue Vorlagen anfordern** — auch die PNG tragen die alten Werte, es gibt keine korrigierte Quelle. `Design.md` 2.5 ist am 13.09.2026 berichtigt; bis zur Lieferung passiert am Code nichts |
 | 65 | 14 Fassungshinweise, AGP 9 | Backlog-Runde | eigene Runde nach dem S4-Rest, nur `android/` |

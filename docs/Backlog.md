@@ -1068,20 +1068,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     oder eine Prüf-Einstellung in der App, die einen negativen Code
     einspeist (dann aber als Fremdkörper im ausgelieferten Code).
 
-91. **Die Auswahl in `WatchUi.Confirmation` ist im Bildabzug nicht zu sehen.**
-    *Aufgenommen 03.09.2026 aus S5 Paket C.*
-    Beim Rundlauf musste „Nein" auf der Rückfrage ausgelöst werden. Welche der
-    beiden Schaltflächen gerade gewählt ist, zeigt der Bildabzug **nicht** —
-    `Cancel` und `Confirm` stehen ohne erkennbare Hervorhebung nebeneinander,
-    und `Up`/`Down` änderten daran nichts Sichtbares. Gemessen: Ein `Return`
-    ohne weitere Taste **bestätigt** (die Vorauswahl steht also auf
-    `Confirm`), und BACK räumt den Dialog weg, **ohne** `onResponse` zu rufen.
-    **Folge für die Prüfmittel:** Ein Rundlauf, der eine Ablehnung im Dialog
-    belegen will, kann sie nicht am Bild ablesen — er muss sie an der Wirkung
-    messen (Datenbank: kein Gerät, keine Sitzung). Das ist gemacht, aber es
-    gehört aufgeschrieben, damit die nächste Instanz nicht wieder eine halbe
-    Stunde an der Tastensteuerung sucht.
-
 92. **`pruefstand.sh bildreihe` fotografiert nur den Startbildschirm.**
     *Aufgenommen 03.09.2026 aus S5 Paket C.*
     Für Stufe II verlangt die Abnahme „je Vertreter ein Bild der `PairView`".
@@ -1647,6 +1633,32 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+91. **Die Auswahl in `WatchUi.Confirmation` ist im Bildabzug nicht zu sehen.**
+    *Aufgenommen 03.09.2026 aus S5 Paket C.*
+    Beim Rundlauf musste „Nein" auf der Rückfrage ausgelöst werden. Welche der
+    beiden Schaltflächen gerade gewählt ist, zeigt der Bildabzug **nicht** —
+    `Cancel` und `Confirm` stehen ohne erkennbare Hervorhebung nebeneinander,
+    und `Up`/`Down` änderten daran nichts Sichtbares. Gemessen: Ein `Return`
+    ohne weitere Taste **bestätigt** (die Vorauswahl steht also auf
+    `Confirm`), und BACK räumt den Dialog weg, **ohne** `onResponse` zu rufen.
+    **Folge für die Prüfmittel:** Ein Rundlauf, der eine Ablehnung im Dialog
+    belegen will, kann sie nicht am Bild ablesen — er muss sie an der Wirkung
+    messen (Datenbank: kein Gerät, keine Sitzung). Das ist gemacht, aber es
+    gehört aufgeschrieben, damit die nächste Instanz nicht wieder eine halbe
+    Stunde an der Tastensteuerung sucht.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP1 — keine Versionsstufe, nur
+    `tools/`).** Aufgeschrieben in `tools/uhr-pruefstand/LIESMICH.md`, neuer
+    Unterabschnitt „`WatchUi.Confirmation`: die Auswahl ist im Bild nicht zu
+    sehen" unter „Bedienung simulieren", direkt hinter „Tasten sind heikler als
+    Maus". Er trägt alle vier gemessenen Aussagen und verweist für die Zahlen auf
+    den Simulator-Rundlauf in `docs/konzepte/Pruefdokument-S5-Kopplung-umgekehrt.md`
+    (Paket C). **Dabei präzisiert:** BACK ist kein *Ersatz* für „Nein" — weil
+    `KoppelnDelegate` (`watch/source/PairView.mc`) nur `onResponse` hat, läuft das
+    dort stehende `Pair.ablehnen(...)` bei BACK gar nicht; die zwei Fälle sind
+    getrennt zu prüfen. **Nicht nachgemessen:** kein Connect-IQ-Simulator im
+    Prüfstand dieser Runde; die Aussagen stammen aus dem Messprotokoll vom
+    03.09.2026 (siehe Prüfdokument, Abschnitt 0).
 
 87. **Die Weboberfläche als installierbare Web-App auf Android.**
     *Aufgenommen 02.09.2026 auf Anweisung des Auftraggebers: vor v1.0

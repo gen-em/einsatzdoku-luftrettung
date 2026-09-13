@@ -347,6 +347,42 @@ Gemessen am 31.08.2026 auf der fenix6pro (Fünf-Tasten-Profil): `Down` blättert
 vom Startbildschirm zur Sync-Seite, `Escape` wirkt als BACK — auf dem
 Startbildschirm heißt das `System.exit()`, die App ist danach fort.
 
+### `WatchUi.Confirmation`: die Auswahl ist im Bild nicht zu sehen
+
+Gemessen am 03.09.2026 in S5 Paket C, an der Rückbestätigung der Kopplung
+(`WatchUi.Confirmation` in `watch/source/Pair.mc`, Delegat `KoppelnDelegate`
+in `watch/source/PairView.mc`). Wer eine Rückfrage im Simulator bedienen
+muss, verliert sonst eine halbe Stunde an der Tastensteuerung — deshalb
+steht es hier.
+
+**Der Bildabzug zeigt nicht, welche Schaltfläche gewählt ist.** `Cancel` und
+`Confirm` stehen ohne erkennbare Hervorhebung nebeneinander, und `Up`/`Down`
+änderten daran nichts Sichtbares. Zwei Abzüge vor und nach einem `Down` sind
+also nicht zu unterscheiden — auch dann nicht, wenn die Auswahl tatsächlich
+gewandert ist. Das Bild beantwortet die Frage nicht, und kein zweites Bild
+hilft.
+
+**Ein `Return` ohne weitere Taste bestätigt.** Die Vorauswahl steht auf
+`Confirm`. Wer „Ja" auslösen will, drückt einmal `Return`; wer „Nein" will,
+kommt mit `Return` allein nicht hin.
+
+**BACK räumt den Dialog weg, ohne `onResponse` zu rufen.** Damit ist BACK
+**kein Ersatz für „Nein"** — die beiden nehmen verschiedene Wege durch den
+Code: `KoppelnDelegate` hat nur `onResponse`, und was dort steht
+(`Pair.ablehnen(...)`), läuft bei BACK gar nicht. Ein Prüffall, der „die
+Trägerin lehnt ab" belegen will und dafür BACK drückt, belegt einen anderen
+Fall. Beide sind es wert, geprüft zu werden — aber als zwei.
+
+**Eine Ablehnung wird an der Wirkung gemessen, nicht am Bild.** Nach dem
+Rundlauf in der Datenbank nachsehen: kein Gerät, keine Sitzung. So macht es
+der Simulator-Rundlauf aus S5 Paket C (6 Fälle × 3 Zielgeräte gegen eine
+echte lokale Installation, 5 von 6 Fällen belegt — Ja, Nein, BACK,
+Fristablauf, Gerätelimit; Zahlen in
+`docs/konzepte/Pruefdokument-S5-Kopplung-umgekehrt.md`, Abschnitt „Paket C").
+Die Regel gilt über die Kopplung hinaus: Bei jeder `Confirmation` — Trennen,
+Einsatzabschluss, Verlassen der App — ist der Zustand danach der Beleg, nicht
+das Bild davor.
+
 ## Grenzen
 
 Was der Prüfstand **nicht** leistet, und woran das liegt:

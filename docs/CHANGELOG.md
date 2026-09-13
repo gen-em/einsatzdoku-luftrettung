@@ -14,6 +14,57 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.3.1] — 2026-09-13
+
+Backlog-Runde 3, neun Punkte in drei Blöcken
+(`docs/konzepte/Konzept-Backlog-Runde-3.md`). **Eine Korrekturstufe für die
+ganze Runde**, und zwar aus einem Grund: Von den neun Punkten fassen genau
+zwei `server/` an, und beide sind Fehlerbehebung beziehungsweise Feinschliff
+— die CSRF-Prüfung in `api/kdf_upgrade.php` vor den Demo-Ausstieg gesetzt
+(Nr. 67) und drei Klassen ohne Regel aus dem Markup gestrichen (Nr. 41).
+Keine neue Funktion, kein neues Feld, keine Migration. Die übrigen sieben
+Punkte liegen in `tools/` und `docs/` und lösen nach CLAUDE.md 2 keine Stufe
+aus; sie stehen hier unter derselben Überschrift, weil sie zur selben Runde
+gehören. Uhr und Android sind unberührt.
+
+### Prüfmittel — die Auswahl in `WatchUi.Confirmation` ist im Bild nicht zu sehen
+
+**Das Problem war nicht der Dialog, sondern das Suchen** (Nr. 91, aufgenommen
+am 03.09.2026 aus S5 Paket C). Wer im Simulator eine Rückfrage bedienen muss,
+sieht am Bildabzug **nicht**, welche der beiden Schaltflächen gewählt ist:
+`Cancel` und `Confirm` stehen ohne erkennbare Hervorhebung nebeneinander, und
+`Up`/`Down` ändern daran nichts Sichtbares. Zwei Abzüge vor und nach einem
+Tastendruck sind nicht zu unterscheiden — auch dann nicht, wenn die Auswahl
+gewandert ist. Das hat in S5 eine halbe Stunde gekostet, und es steht seither
+nirgends: `grep -c Confirmation tools/uhr-pruefstand/LIESMICH.md` lieferte
+**0**.
+
+**Aufgeschrieben sind vier gemessene Aussagen**, in einem neuen Unterabschnitt
+unter „Bedienung simulieren", direkt hinter „Tasten sind heikler als Maus" —
+dort, wo die nächste Instanz sucht. Erstens die Blindheit des Bildes.
+Zweitens: Ein `Return` ohne weitere Taste **bestätigt**, die Vorauswahl steht
+auf `Confirm`. Drittens: BACK räumt den Dialog weg, **ohne** `onResponse` zu
+rufen — und ist damit **kein Ersatz für „Nein"**, weil die beiden
+verschiedene Wege durch den Code nehmen (`KoppelnDelegate` in
+`watch/source/PairView.mc` hat nur `onResponse`, und das darin stehende
+`Pair.ablehnen(...)` läuft bei BACK gar nicht). Viertens die Folge für jeden
+Prüffall: Eine Ablehnung wird **an der Wirkung** gemessen, nicht am Bild — in
+der Datenbank nachsehen, kein Gerät, keine Sitzung. So macht es der
+Simulator-Rundlauf aus S5 Paket C, und der Abschnitt verweist darauf.
+
+**Die Regel gilt über die Kopplung hinaus** — Trennen, Einsatzabschluss und
+Verlassen der App benutzen denselben Baustein. Deshalb steht sie in der
+LIESMICH des Prüfstands und nicht als Kommentar an einer Fundstelle.
+
+**Bewusst nicht gemacht:** kein neuer Prüfweg, keine Zeile an
+`pruefstand.sh`. Der Punkt war eine fehlende Auskunft, keine fehlende
+Funktion — ein Werkzeug, das die Auswahl sichtbar machen könnte, gibt es
+nicht, weil der Simulator sie nicht zeichnet. **Und nicht nachgemessen:** Die
+vier Aussagen stammen aus dem Messprotokoll vom 03.09.2026; der Prüfstand
+dieser Runde hat keinen Connect-IQ-Simulator, die Runde bestätigt sie also
+nicht noch einmal. Wer sie anzweifelt, braucht den Simulator — das steht im
+Prüfdokument unter „was nicht geprüft werden konnte".
+
 ## [Web 19.3.0] — 2026-09-12
 
 ### Web — Backlog-Runde 2: der Block Betrieb wird fertig

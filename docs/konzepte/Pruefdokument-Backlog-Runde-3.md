@@ -1,4 +1,4 @@
-# Prüfdokument — Backlog-Runde 3 (Vorlage)
+# Prüfdokument — Backlog-Runde 3
 
 *Angelegt am 13.09.2026 (Fable) mit dem Konzept `Konzept-Backlog-Runde-3.md`;
 **die Zahlen trägt die Umsetzung ein.** Alles in `[eckigen Klammern]` ist
@@ -9,11 +9,12 @@ beantwortet „was muss **ich** noch tun?". Muster:
 
 > | | |
 > |---|---|
-> | Stufe | **Web [x.y.z]** — [Korrektur/Neben]. **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt |
+> | Stand | **AP1 erledigt** (13.09.2026), AP2 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
+> | Stufe | **Web 19.3.1 — Korrektur** (E-BR3-14; die Begründung steht im Konzept). **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt. `version.php` steigt erst mit AP4 — dem ersten Paket, das `server/` anfasst |
 > | Punkte | Backlog **Nr. 91, 94, 117, 47, 58, 173, 174** erledigt; **Nr. 67** Unterpunkt erledigt, Punkt bleibt (P5); **Nr. 41** drei Streichungen erledigt, Punkt bleibt (9c) |
 > | Neu entstanden | Prüfgruppe „5 Zusagen" in `tools/vollstaendigkeit/`, Liste `zusagen.md`; neue Referenzdateien unter `tools/referenzdatensatz/referenz/` |
-> | Prüfumgebung | [Wegwerf-Container: PHP, MariaDB, Browser — mit Fassungen] |
-> | Ergebnis | [Alles Maschinelle grün / Abweichungen …; N Punkte bleiben für den Auftraggeber] |
+> | Prüfumgebung | Wegwerf-Container (Linux 6.18, x86_64). **Für AP1 nicht gebraucht** — der Punkt ist Dokumentation. Fassungen von PHP, MariaDB und Browser werden mit dem ersten Paket eingetragen, das sie benutzt (AP4) |
+> | Ergebnis | **Nach AP1:** maschinell grün, soweit AP1 reicht — Wortliste 0/0, Selbstprüfzahl 58 = 58, `grep -c Confirmation` 3 (war 0). Noch kein Urteil über die Runde |
 
 ---
 
@@ -26,8 +27,17 @@ dazukommt, gehört hierher.
   gemessenen Verhaltens (S5/C, V-S5-05). Die Runde misst es **nicht** noch
   einmal — kein Connect-IQ-Simulator im Prüfstand. Die Aussagen stammen aus
   dem Backlog-Eintrag und dem Messprotokoll von damals; wer sie anzweifelt,
-  braucht den Simulator. [Bestätigen oder: „Simulator lief, Aussagen
-  nachgemessen" mit Datum.]
+  braucht den Simulator. **Bestätigt für Nr. 91 (AP1, 13.09.2026):** Es gibt
+  keinen Connect-IQ-Simulator in diesem Container, und es wurde keiner
+  beschafft. Die vier Aussagen des neuen LIESMICH-Abschnitts sind
+  **abgeschrieben, nicht gemessen** — Quelle ist der Backlog-Eintrag Nr. 91
+  und der Simulator-Rundlauf aus S5 Paket C
+  (`Pruefdokument-S5-Kopplung-umgekehrt.md`). **Eine fünfte Aussage ist
+  dagegen am Code belegt, nicht abgeschrieben:** dass BACK kein Ersatz für
+  „Nein" ist, folgt daraus, dass `KoppelnDelegate` in
+  `watch/source/PairView.mc` nur `onResponse` trägt — das ist gelesen und
+  nachprüfbar, ohne Simulator. Prüfliste Punkt 4 holt die Gegenprobe beim
+  Auftraggeber ein.
 - **Der Tausch in `kdf_upgrade.php` am Produktivserver.** Geprüft auf dem
   Prüfstand mit dem Demo-Konto und einem Aufruf ohne Header. Ob das
   Produktiv-Demo-Konto nach dem Deploy unverändert hereinkommt, sagt erst
@@ -73,6 +83,9 @@ dazukommt, gehört hierher.
 | **Wartungsprobe** (`tools/wartungsprobe/probe.php`) | 55 Erwartungen, 0 nicht erfüllt (15 flattert, Nr. 172) | **0** nicht erfüllt | [ ] |
 | **Bilderlauf** Einsatzbearbeitung mit Reanimation und Einsatzansicht mit Phasen | — | **0** abweichende Bildpunkte gegen den Stand vor AP5 (`compare -metric AE`) — die drei Klassen hatten keine Regel | [ ] |
 | **`kdf_upgrade` ohne Header** (`curl` mit Demo-Sitzung, ohne `X-CSRF`) | 200 `uebersprungen: demo` | **403** `{"error":"csrf"}`; mit Header weiterhin 200 | [ ] |
+| **AP1 · `grep -c Confirmation tools/uhr-pruefstand/LIESMICH.md`** | **0** — die Lehre aus S5/C stand nirgends | ≥ 1 | **3** ✓ |
+| **AP1 · die vier Aussagen einzeln** (Bild blind · `Return` bestätigt · BACK ohne `onResponse` · Wirkung statt Bild) | — | je **1** Fundstelle | **1 / 1 / 1 / 1** ✓ |
+| **Selbstprüfzahl** (Rahmenplan Abschnitt 5 ↔ offene Backlog-Punkte, Einzeiler aus Fassung 46) | 59 = 59 | gleich nach **jedem** Paket, nicht erst in AP10 (E-BR3-13) | nach AP1 **58 = 58** ✓ |
 
 ---
 

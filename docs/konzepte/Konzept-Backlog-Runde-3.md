@@ -18,6 +18,17 @@ Prüfdokument nach K9 liegt als Vorlage daneben
 > | Versionsnummer | legt die Umsetzung fest (K3). Nur AP4 fasst `server/` an; Uhr und Android bleiben unberührt |
 > | Reihenfolge | A → B → C → Abschluss (AP10). Block C zuletzt, damit die Regression gegen die neue Referenz läuft |
 
+## Stand (13.09.2026, von der Umsetzung geführt)
+
+| | |
+|---|---|
+| **In Arbeit** | **AP2** — Nr. 94, „bitgleich" → „pixelgleich" |
+| **Erledigt** | **AP1** (Nr. 91) |
+| **Offen** | AP3 bis AP10 |
+| **Stufe der Runde** | **Web 19.3.1 — Korrektur** (E-BR3-14), festgelegt vor AP1; `version.php` wird mit AP4 hochgestuft, dem ersten Paket, das `server/` anfasst |
+| **Hakt es?** | Nein. Zwei Abweichungen vom Konzept sind entschieden und begründet: E-BR3-13 (Abschnitt-5-Zeilen wandern je Paket, nicht gesammelt in AP10) und E-BR3-14 |
+| **Zweig** | `claude/backlog-runde-3-umsetzung-woqxjm`, nach jedem Paket gepusht |
+
 ---
 
 ## 0. Warum dieser Schnitt
@@ -169,6 +180,8 @@ nur, was dieses Paket braucht, plus der Schnitt vom 13.09.2026.
 | **E-BR3-10** | Nr. 174: Die Referenzdateien werden über die **reguläre Kette** neu erzeugt (Erzeugen → Einspielen → Exportieren), nicht von Hand berichtigt — die `.edbak` ist versiegelt, und der Einspielweg ist selbst ein Prüfling (S2/AP5) | Backlog Nr. 174, Nr. 46 |
 | **E-BR3-11** | **Textpflege:** kein Block — mit Teil 1 des Auftrags am 13.09.2026 erledigt | Entscheidung 16, ausgeführt |
 | **E-BR3-12** | **Keine Fable-Schritte.** Zwei Haltepunkte (Abschnitt 3), an denen die Umsetzung anhält und berichtet, statt zu entscheiden | Fable 13.09.2026 |
+| **E-BR3-13** | **Die Zeile in Rahmenplan Abschnitt 5 wandert mit ihrem Paket, nicht gesammelt in AP10.** AP10 (4) hatte „sieben Zeilen raus" am Ende vorgesehen. Das geht nicht: Der Rahmenplan verlangt seit Fassung 45/46, dass **wer einen Backlog-Punkt austrägt, die Selbstprüfzahl im selben Zug nachrechnet** — und die Zahl wird rot, sobald ein Punkt den Backlog verlässt und seine Zeile stehen bleibt. Nach AP1 gemessen: **58 = 58**. AP10 rechnet am Ende nur noch nach, statt auszutragen | Umsetzung 13.09.2026, aus Rahmenplan Abschnitt 5 |
+| **E-BR3-14** | **Die Stufe der Runde ist `Web 19.3.1` — eine Korrektur.** K3 und Abschnitt 5 hatten die Wahl der Umsetzung überlassen. Begründung: Von den neun Punkten fassen genau zwei `server/` an, und beide sind nach der Zählweise in CLAUDE.md 2 Korrektur — die CSRF-Prüfung vor den Demo-Ausstieg setzen (AP4, Fehlerbehebung) und drei Klassen ohne Regel aus dem Markup streichen (AP5, Feinschliff). Keine neue Funktion, kein neues Feld, keine Migration. Die Überschrift im Changelog steht seit AP1, damit die `tools/`- und `docs/`-Punkte einen Ort haben; `version.php` steigt erst mit AP4 | Umsetzung 13.09.2026 (K3) |
 
 ---
 
@@ -486,7 +499,7 @@ Wird von der umsetzenden Instanz nach jedem Paket fortgeschrieben.
 
 | AP | Punkt | Stand | Probleme / wie gelöst |
 |---|---|---|---|
-| AP1 | 91 | offen | |
+| AP1 | 91 | **erledigt** 13.09.2026 | Zwei Dinge kamen dazu, die das Konzept nicht vorsah. **Erstens:** Der Befund sagte „BACK räumt den Dialog weg, ohne `onResponse` zu rufen" — beim Lesen von `watch/source/PairView.mc` zeigt sich die Folge, die daraus erst den Nutzen macht: `KoppelnDelegate` hat **nur** `onResponse`, also läuft das dort stehende `Pair.ablehnen(...)` bei BACK gar nicht. BACK ist damit **kein Ersatz für „Nein"**; es sind zwei Prüffälle, nicht einer. Das steht jetzt so in der LIESMICH. **Zweitens:** Die Zeile zu Nr. 91 in Rahmenplan Abschnitt 5 nannte als Fundstelle `tools/uhr-bilder/` — das ist das Werkzeug von Nr. 94. Sie hätte die nächste Instanz in die falsche Datei geschickt; mit dem Austragen ist sie weg. Abnahme erfüllt: `grep -c Confirmation` = **3** (war 0), alle vier Aussagen belegt, Selbstprüfzahl **58 = 58** |
 | AP2 | 94 | offen | |
 | AP3 | 117 | offen | |
 | AP4 | 67 (Unterpunkt) | offen | |
