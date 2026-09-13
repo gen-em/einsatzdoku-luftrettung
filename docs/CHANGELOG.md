@@ -65,6 +65,41 @@ dieser Runde hat keinen Connect-IQ-Simulator, die Runde bestätigt sie also
 nicht noch einmal. Wer sie anzweifelt, braucht den Simulator — das steht im
 Prüfdokument unter „was nicht geprüft werden konnte".
 
+### Prüfmittel — „pixelgleich" ist die Zusage, die das Messmittel deckt
+
+**Ein Dokument, das sich selbst widerlegte** (Nr. 94, aufgenommen am
+03.09.2026 aus der S5-Vorbereitung V-S5-05). `tools/uhr-bilder/LIESMICH.md`
+sagte in Zeile 27 „bitgleich" und in Zeile 35 „pixelgleich" — acht Zeilen
+auseinander, im selben Text, über dieselbe Sache. Der Kopfkommentar von
+`erzeugen.sh` stand auf der stärkeren Seite („BITGLEICH"). Wer die Zusage
+prüfte, prüfte je nach gelesener Zeile etwas anderes.
+
+**Richtig ist die schwächere.** `compare -metric AE` zählt abweichende
+**Bildpunkte**, nicht Bytes — es belegt Pixel-, nicht Bitgleichheit. Und
+bitgleich können zwei PNG hier ohnehin nicht sein: Jeder Lauf schreibt einen
+`tIME`-Block mit der aktuellen Uhrzeit, weshalb dieselbe LIESMICH acht Zeilen
+weiter erklärt, warum `git status` kein Maßstab ist. Das Wort steht jetzt an
+beiden Stellen auf „pixelgleich", mit der Begründung in der LIESMICH und
+einem Verweis darauf im Kopfkommentar des Skripts.
+
+**`-define png:exclude-chunk=time` ist bewusst nicht gesetzt.** Damit wäre die
+stärkere Zusage tatsächlich einzulösen — der Backlog-Eintrag hat beide Wege
+genannt. Sie belegte aber nichts, was hier gebraucht wird: Gemessen wird, ob
+ein Bildpunkt anders ist, und dafür reicht das schwächere Wort. Eine Zusage
+einzulösen, die niemand liest, kostet eine Zeile Wartung und bringt keine
+Auskunft.
+
+**Ein Prüfmittel hing daran, und das stand nicht im Konzept.**
+`tools/s5-anker/anker.py` hält die Fundstellen der S5-Konzepte am Inhalt
+statt an der Zeilennummer fest — und einer seiner Anker suchte wörtlich
+`sie BITGLEICH \(geprueft` in genau dieser Zeile. Nach der Wortänderung hätte
+er „NICHT GEFUNDEN" gemeldet. Er sucht jetzt den Teil des Satzes, den die
+Streitfrage nicht berührt (`geprueft mit \`compare -metric AE\``), und heißt
+`uhrbilder.wortlaut` statt `uhrbilder.bitgleich`: So hält er auch die nächste
+Umformulierung des Adjektivs aus. Gemessen nach der Änderung: der Anker steht
+auf „unveraendert", und die Gesamtzahl der nicht gefundenen Anker bleibt bei
+**7** — die Änderung hat keinen zerbrochen.
+
 ## [Web 19.3.0] — 2026-09-12
 
 ### Web — Backlog-Runde 2: der Block Betrieb wird fertig

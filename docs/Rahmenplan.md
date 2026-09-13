@@ -1232,7 +1232,6 @@ damit „nach v1.0" verlassen — dort stehen noch **acht**: 50, 51, 52, 55,
 | 67 | `csrf_check()` ohne API-Zweig | P5 | CSRF-Umfeld (R21) |
 | 76 | Demo-Reset läuft alle 30 Minuten, auch ohne Änderung | Backlog-Runde | erst messen (Laufzeit, Last), dann entscheiden |
 | 77 | Wartungsseite `update.php` in Unterseiten aufteilen | **P6** (Rest) | **Konzept liegt vor** (E-S8-05): die Seite wird **aufgelöst**; der Block Betrieb trägt Status, Statistik, Updates, Hintergrundjobs, Servereinstellungen, Komplett-Backup und Backup-Ziele. Wartungsmodus **und** ausstehende Migrationen liegen zusammen auf „Updates" (R66: nur Ausstehende mit „Ausstehende ausführen", ausgeführte bis P5 eingeklappt, danach im Audit-Protokoll); `update.php` wird Weiterleitung bis P6. AP2 und AP4 |
-| 94 | „bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/` | Backlog-Runde | aus S5 (V-S5-05); ein Wort — oder `-define png:exclude-chunk=time` |
 | 95 | Die Android-Rundlauffälle lassen Daten im Admin-Konto zurück | Backlog-Runde (Android) | 9 Diensttage, 5 Einsätze, 14 439 Punkte; Aufräumen im `@After` oder eigenes Prüfkonto; **Nr. 115 (Paket E) sagte dasselbe und ist hier aufgegangen** (Fassung 32); Schritt 6 hat es nicht mitgenommen |
 | 96 | Eigene Wartungsmeldung auf Uhr und Handy, `Retry-After` auswerten | nach v1.0 | aus S5/W (E-S5W-08); heute behandeln die Clients das 503 als gewöhnliches 5xx, und das genügt |
 | 99 | Fassungsprüfung auf Klick der Administratorin (GitHub-Releases) | nach v1.0 | R66, Option A2; nur wenn Selbsthoster es verlangen; kein Hintergrundlauf |

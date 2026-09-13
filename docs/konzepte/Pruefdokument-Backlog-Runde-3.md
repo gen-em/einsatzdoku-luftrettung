@@ -9,7 +9,7 @@ beantwortet „was muss **ich** noch tun?". Muster:
 
 > | | |
 > |---|---|
-> | Stand | **AP1 erledigt** (13.09.2026), AP2 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
+> | Stand | **AP1 und AP2 erledigt** (13.09.2026), AP3 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
 > | Stufe | **Web 19.3.1 — Korrektur** (E-BR3-14; die Begründung steht im Konzept). **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt. `version.php` steigt erst mit AP4 — dem ersten Paket, das `server/` anfasst |
 > | Punkte | Backlog **Nr. 91, 94, 117, 47, 58, 173, 174** erledigt; **Nr. 67** Unterpunkt erledigt, Punkt bleibt (P5); **Nr. 41** drei Streichungen erledigt, Punkt bleibt (9c) |
 > | Neu entstanden | Prüfgruppe „5 Zusagen" in `tools/vollstaendigkeit/`, Liste `zusagen.md`; neue Referenzdateien unter `tools/referenzdatensatz/referenz/` |
@@ -47,6 +47,14 @@ dazukommt, gehört hierher.
   Besucheränderungen mit, wenn das Demo-Konto nicht vorher zurückgesetzt
   wurde (LIESMICH, „Regressionslauf"). [Gelaufen? Wenn ja: nach Reset,
   Ergebnis.]
+- **`tools/uhr-bilder/erzeugen.sh` ist nicht gelaufen** (AP2, 13.09.2026). Das
+  Skript braucht `convert`, `compare` und `rsvg-convert`; im Container ist
+  **kein ImageMagick** installiert (`command -v magick convert compare` leer).
+  Die Änderung ist reiner Kommentar — keine Zeile Code berührt —, und
+  `bash -n` meldet 0 Fehler. Was damit **nicht** belegt ist: dass das Rezept
+  die vier Altdateien heute noch pixelgleich reproduziert. Diese Zahl stammt
+  vom 02.09.2026 und ist von AP2 nicht nachgemessen worden; die Zusage im
+  Dokument ist nur schwächer formuliert, nicht neu belegt.
 - [Weiteres.]
 
 ---
@@ -78,7 +86,10 @@ dazukommt, gehört hierher.
 | **Kreislauf csv** (`--art csv --frisch`) | 9 120 Einzelvergleiche, 0 unerklärt, 1 021 erwartet, **2 ungenutzte Regeln** | **0 unerklärt, 0 ungenutzt**, neue Referenz | [ ] |
 | **Rettungsmittel ohne Standort** in der eingespielten Installation | 0 von 6 (Referenz vom 12.09.) | **2 von 6** vor dem Export und nach dem Umlauf | [ ] |
 | **Klickprobe** (`tools/klickprobe/probe.mjs`) | 40 von 40 | **40 von 40** | [ ] |
-| **Wortliste** (`tools/wortliste/`) | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzt | **0 / 0**; `grep -ci bitgleich tools/uhr-bilder/` = **0** | [ ] |
+| **Wortliste** (`tools/wortliste/`) | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzt | **0 / 0** | **0 / 0** nach AP1 und AP2 ✓ |
+| **AP2 · „bitgleich" in `tools/uhr-bilder/`** | Zusage an 2 Stellen behauptet | **0 Vorkommen, die die Bitgleichheit behaupten** — das Sollmaß „`grep -ci` = 0" ist berichtigt, weil der verlangte Zusatz das Wort verneinen muss (E-BR3-15) | **3 Vorkommen, 0 Behauptungen** ✓ (2 Verneinung, 1 datierte Rückschau) |
+| **AP2 · `tools/s5-anker/anker.py`** | Anker `uhrbilder.bitgleich` „unveraendert"; 7 nicht gefunden | Anker findet die Stelle weiter; **nicht gefunden bleibt 7** | Anker `uhrbilder.wortlaut` **„unveraendert"**, nicht gefunden **7** ✓ |
+| **AP2 · Syntax der berührten Dateien** | — | `bash -n` und Python-Parser ohne Fehler | **beide ok** ✓ |
 | **Linkprobe** (`tools/linkprobe/probe.py`) | 0 Abweichungen, 0 tote Ausnahmen | **0 / 0** | [ ] |
 | **Wartungsprobe** (`tools/wartungsprobe/probe.php`) | 55 Erwartungen, 0 nicht erfüllt (15 flattert, Nr. 172) | **0** nicht erfüllt | [ ] |
 | **Bilderlauf** Einsatzbearbeitung mit Reanimation und Einsatzansicht mit Phasen | — | **0** abweichende Bildpunkte gegen den Stand vor AP5 (`compare -metric AE`) — die drei Klassen hatten keine Regel | [ ] |

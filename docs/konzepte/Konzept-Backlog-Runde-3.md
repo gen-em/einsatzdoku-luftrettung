@@ -22,11 +22,11 @@ Prüfdokument nach K9 liegt als Vorlage daneben
 
 | | |
 |---|---|
-| **In Arbeit** | **AP2** — Nr. 94, „bitgleich" → „pixelgleich" |
-| **Erledigt** | **AP1** (Nr. 91) |
-| **Offen** | AP3 bis AP10 |
+| **In Arbeit** | **AP3** — Nr. 117, Absatz in `docs/Handbuch.md` 11.2 |
+| **Erledigt** | **AP1** (Nr. 91), **AP2** (Nr. 94) |
+| **Offen** | AP4 bis AP10 |
 | **Stufe der Runde** | **Web 19.3.1 — Korrektur** (E-BR3-14), festgelegt vor AP1; `version.php` wird mit AP4 hochgestuft, dem ersten Paket, das `server/` anfasst |
-| **Hakt es?** | Nein. Zwei Abweichungen vom Konzept sind entschieden und begründet: E-BR3-13 (Abschnitt-5-Zeilen wandern je Paket, nicht gesammelt in AP10) und E-BR3-14 |
+| **Hakt es?** | Nein. Drei Abweichungen vom Konzept sind entschieden und begründet: E-BR3-13 (Abschnitt-5-Zeilen wandern je Paket, nicht gesammelt in AP10), E-BR3-14 (Stufe) und E-BR3-15 (die Abnahme von AP2 war so nicht erfüllbar) |
 | **Zweig** | `claude/backlog-runde-3-umsetzung-woqxjm`, nach jedem Paket gepusht |
 
 ---
@@ -181,6 +181,7 @@ nur, was dieses Paket braucht, plus der Schnitt vom 13.09.2026.
 | **E-BR3-11** | **Textpflege:** kein Block — mit Teil 1 des Auftrags am 13.09.2026 erledigt | Entscheidung 16, ausgeführt |
 | **E-BR3-12** | **Keine Fable-Schritte.** Zwei Haltepunkte (Abschnitt 3), an denen die Umsetzung anhält und berichtet, statt zu entscheiden | Fable 13.09.2026 |
 | **E-BR3-13** | **Die Zeile in Rahmenplan Abschnitt 5 wandert mit ihrem Paket, nicht gesammelt in AP10.** AP10 (4) hatte „sieben Zeilen raus" am Ende vorgesehen. Das geht nicht: Der Rahmenplan verlangt seit Fassung 45/46, dass **wer einen Backlog-Punkt austrägt, die Selbstprüfzahl im selben Zug nachrechnet** — und die Zahl wird rot, sobald ein Punkt den Backlog verlässt und seine Zeile stehen bleibt. Nach AP1 gemessen: **58 = 58**. AP10 rechnet am Ende nur noch nach, statt auszutragen | Umsetzung 13.09.2026, aus Rahmenplan Abschnitt 5 |
+| **E-BR3-15** | **Die Abnahme von AP2 ist berichtigt: `grep -ci bitgleich tools/uhr-bilder/` = 0 ist nicht erfüllbar.** Das Konzept verlangte in AP2 beides — den Zusatz in der LIESMICH, „dass `compare -metric AE` genau das misst und ein PNG wegen des Zeitstempel-Chunks nie bitgleich ist" (E-BR3-04), **und** null Vorkommen des Wortes. Der Zusatz lässt sich ohne das Wort nicht schreiben; er verneint es. Neues Sollmaß, das die Absicht trifft: **null Vorkommen, die die Bitgleichheit behaupten** — jedes verbliebene ist Verneinung oder datierte Rückschau. Gemessen nach AP2: **3 Vorkommen, 0 Behauptungen** | Umsetzung 13.09.2026 |
 | **E-BR3-14** | **Die Stufe der Runde ist `Web 19.3.1` — eine Korrektur.** K3 und Abschnitt 5 hatten die Wahl der Umsetzung überlassen. Begründung: Von den neun Punkten fassen genau zwei `server/` an, und beide sind nach der Zählweise in CLAUDE.md 2 Korrektur — die CSRF-Prüfung vor den Demo-Ausstieg setzen (AP4, Fehlerbehebung) und drei Klassen ohne Regel aus dem Markup streichen (AP5, Feinschliff). Keine neue Funktion, kein neues Feld, keine Migration. Die Überschrift im Changelog steht seit AP1, damit die `tools/`- und `docs/`-Punkte einen Ort haben; `version.php` steigt erst mit AP4 | Umsetzung 13.09.2026 (K3) |
 
 ---
@@ -500,7 +501,7 @@ Wird von der umsetzenden Instanz nach jedem Paket fortgeschrieben.
 | AP | Punkt | Stand | Probleme / wie gelöst |
 |---|---|---|---|
 | AP1 | 91 | **erledigt** 13.09.2026 | Zwei Dinge kamen dazu, die das Konzept nicht vorsah. **Erstens:** Der Befund sagte „BACK räumt den Dialog weg, ohne `onResponse` zu rufen" — beim Lesen von `watch/source/PairView.mc` zeigt sich die Folge, die daraus erst den Nutzen macht: `KoppelnDelegate` hat **nur** `onResponse`, also läuft das dort stehende `Pair.ablehnen(...)` bei BACK gar nicht. BACK ist damit **kein Ersatz für „Nein"**; es sind zwei Prüffälle, nicht einer. Das steht jetzt so in der LIESMICH. **Zweitens:** Die Zeile zu Nr. 91 in Rahmenplan Abschnitt 5 nannte als Fundstelle `tools/uhr-bilder/` — das ist das Werkzeug von Nr. 94. Sie hätte die nächste Instanz in die falsche Datei geschickt; mit dem Austragen ist sie weg. Abnahme erfüllt: `grep -c Confirmation` = **3** (war 0), alle vier Aussagen belegt, Selbstprüfzahl **58 = 58** |
-| AP2 | 94 | offen | |
+| AP2 | 94 | **erledigt** 13.09.2026 | **Drei Dinge, die das Konzept nicht hatte.** (1) **Ein Prüfmittel hing an dem Wort:** `tools/s5-anker/anker.py` verankerte die Stelle wörtlich an `sie BITGLEICH \(geprueft` und hätte nach der Änderung „NICHT GEFUNDEN" gemeldet. Gelöst, indem der Anker auf den Teil des Satzes umgestellt wurde, den die Streitfrage nicht berührt (`geprueft mit \`compare -metric AE\``) und von `uhrbilder.bitgleich` in `uhrbilder.wortlaut` umbenannt — so hält er auch die nächste Umformulierung aus. Gemessen: Anker „unveraendert", nicht gefundene Anker unverändert 7. (2) **Die Abnahme war unerfüllbar** — siehe E-BR3-15. (3) **Der Backlog-Eintrag war ungenau:** Die Selbstwiderlegung lag nicht zwischen `erzeugen.sh` und der LIESMICH, sondern **innerhalb der LIESMICH** (an `HEAD` gemessen Zeile 27 gegen 35, acht Zeilen). Beim Austragen berichtigt. **Eigener Fehler, korrigiert:** Ich hatte zuerst einen sieben Zeilen langen Begründungsblock in `erzeugen.sh` geschrieben — das Konzept sagt dort „ein Wort" und verortet die Begründung in der LIESMICH; der Block ist auf Wort plus Verweis gekürzt, sonst stünde dieselbe Erklärung zweimal. **Nicht geprüft:** `erzeugen.sh` ist nicht gelaufen (kein ImageMagick, kein `rsvg-convert` im Container); reiner Kommentar, `bash -n` trägt. Selbstprüfzahl **57 = 57** |
 | AP3 | 117 | offen | |
 | AP4 | 67 (Unterpunkt) | offen | |
 | AP5 | 41 (Streichungen) | offen | |

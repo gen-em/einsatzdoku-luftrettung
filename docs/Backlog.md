@@ -1082,16 +1082,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Tastenfolge eine Zeichenkette wie `Down,Down,hold:Return,wait:8` ist. Dann
     braucht die nächste Ansicht keine eigene Schleife.
 
-94. **„bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/`.**
-    *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-05.*
-    Der Kopfkommentar von `erzeugen.sh` sagt, die erzeugten Kacheln seien
-    **bitgleich**; die `LIESMICH.md` daneben sagt **pixelgleich**. Beides kann
-    nicht stimmen: PNG trägt einen Zeitstempel-Chunk, und der ändert sich bei
-    jedem Lauf. Wer die Zusage prüft, prüft je nach gelesenem Dokument etwas
-    anderes.
-    **Vorschlag:** ein Wort ändern — oder `-define png:exclude-chunk=time`
-    setzen und die stärkere Zusage tatsächlich einlösen.
-
 95. **Die Rundlauffälle der Android-App lassen Daten im Admin-Konto zurück.**
     *Aufgenommen 03.09.2026 aus der S5-Vorbereitung, Abschnitt 8.2.*
     Gemessen: **9 Diensttage, 5 Einsätze und 14 439 Spurpunkte**, die kein
@@ -1633,6 +1623,37 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+94. **„bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/`.**
+    *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-05.*
+    Der Kopfkommentar von `erzeugen.sh` sagt, die erzeugten Kacheln seien
+    **bitgleich**; die `LIESMICH.md` daneben sagt **pixelgleich**. Beides kann
+    nicht stimmen: PNG trägt einen Zeitstempel-Chunk, und der ändert sich bei
+    jedem Lauf. Wer die Zusage prüft, prüft je nach gelesenem Dokument etwas
+    anderes.
+    **Vorschlag:** ein Wort ändern — oder `-define png:exclude-chunk=time`
+    setzen und die stärkere Zusage tatsächlich einlösen.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP2 — keine Versionsstufe, nur
+    `tools/`).** Gewählt ist **ein Wort**, nicht `-define
+    png:exclude-chunk=time` (E-BR3-04): `compare -metric AE` zählt
+    Bildpunkte, also ist „pixelgleich" die Zusage, die es deckt — die
+    stärkere einzulösen belegte nichts, was hier gebraucht wird. Geändert in
+    `tools/uhr-bilder/erzeugen.sh` (Kopfkommentar, mit Verweis auf die
+    LIESMICH) und `tools/uhr-bilder/LIESMICH.md` („Warum es dieses Werkzeug
+    gibt", mit der Begründung).
+    **Der Eintrag war ungenau:** Die Selbstwiderlegung lag nicht zwischen den
+    beiden Dateien, sondern **innerhalb der LIESMICH** — an `HEAD` gemessen
+    Zeile 27 („bitgleich") gegen Zeile 35 („pixelgleich"), acht Zeilen
+    auseinander. `erzeugen.sh` stand zusätzlich auf der stärkeren Seite.
+    **Ein Prüfmittel hing daran, und das Konzept nannte es nicht:**
+    `tools/s5-anker/anker.py` verankerte die Stelle wörtlich an
+    `sie BITGLEICH \(geprueft` und hätte danach „NICHT GEFUNDEN" gemeldet. Der
+    Anker heißt jetzt `uhrbilder.wortlaut` und sucht den Teil des Satzes, den
+    die Streitfrage nicht berührt; gemessen danach „unveraendert", nicht
+    gefundene Anker unverändert **7**.
+    **Nicht geprüft:** `erzeugen.sh` ist nicht gelaufen — kein ImageMagick und
+    kein `rsvg-convert` im Container. Die Änderung ist reiner Kommentar,
+    `bash -n` trägt.
 
 91. **Die Auswahl in `WatchUi.Confirmation` ist im Bildabzug nicht zu sehen.**
     *Aufgenommen 03.09.2026 aus S5 Paket C.*
