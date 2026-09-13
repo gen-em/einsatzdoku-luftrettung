@@ -4040,5 +4040,40 @@ declare(strict_types=1);
  *
  * Ein neues Zeichen im Symbolvorrat (`mail.svg`, Tabler „mail", das 53.).
  * Die Punkte im Einzelnen stehen im Changelog. Keine Migration.
+ *
+ * 19.3.1 — BACKLOG-RUNDE 3: neun Punkte, zwei davon am Server.
+ *
+ * Eine Korrekturnummer, und das ist eine Entscheidung (E-BR3-14): Von den
+ * neun Punkten der Runde fassen genau zwei `server/` an, und beide sind
+ * Fehlerbehebung beziehungsweise Feinschliff — die CSRF-Pruefung in
+ * `api/kdf_upgrade.php` wandert vor den Demo-Ausstieg (Nr. 67, Unterpunkt),
+ * und drei Klassen ohne Regel verlassen das Markup (Nr. 41, drei von fuenf).
+ * Keine neue Funktion, kein neues Feld, keine Migration.
+ *
+ * DIE REIHENFOLGE IN `kdf_upgrade.php` WAR EINE GEERBTE LUECKE. Der
+ * Demo-Ausstieg stand vor der Pruefung: Ein Aufruf ohne Formular-Token kam
+ * fuer das Demo-Konto mit 200 zurueck, waehrend jedes andere Konto 403 sah.
+ * Folgenlos war das nur, weil hinter dem Ausstieg nichts steht — wer dort
+ * einmal etwas hinschreibt, erbt eine ungeschuetzte Stelle, ohne es zu
+ * merken. Gemessen am Pruefstand, alter gegen neuer Stand: ohne Header
+ * vorher 200, jetzt 403; mit Header unveraendert 200 und
+ * `uebersprungen: demo`. Der HAUPTPUNKT von Nr. 67 — ein API-Zweig in
+ * `csrf_check()`, damit die fuenfzehn Endpunkte unter `server/api/` die
+ * Pruefung nicht jeder selbst schreiben — bleibt bei P5.
+ *
+ * DAZU EIN FUND, DEN DAS NEUE PRUEFMITTEL SELBST GEMACHT HAT (Nr. 58). Die
+ * 404-Seite von `apk.php` rief `ui_geruest_start()` und `ui_seite_ende()`,
+ * aber nie `ui_seite_start()` — und nur letzteres gibt `<!doctype>`, `<head>`
+ * und `<body>` aus. Die Seite ging als Bruchstueck hinaus: ohne Doctype, ohne
+ * Titel, OHNE STYLESHEET; der Browser las sie im Quirks-Modus und zeichnete
+ * sie in Times New Roman. Gefunden ueber die GEGENRICHTUNG der Pruefung
+ * ("Geruest ohne Seitenhuelle"), behoben mit einer Zeile. Erreichbar war es
+ * ueber jeden Verweis auf ein APK, das nicht mehr im Ordner liegt.
+ *
+ * Die uebrigen sieben Punkte liegen in `tools/` und `docs/` und loesen nach
+ * CLAUDE.md 2 keine Stufe aus; sie stehen im Changelog unter derselben
+ * Ueberschrift, weil sie zur selben Runde gehoeren. Uhr und Android sind
+ * unberuehrt. Keine Migration — `update.php` muss nach dem Deploy nicht
+ * laufen.
  */
-const WEB_VERSION = '19.3.0';
+const WEB_VERSION = '19.3.1';

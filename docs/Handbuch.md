@@ -3094,6 +3094,26 @@ Klick öffnet die Liste, die sie meint. Seit Web 15.2.0 heißen Zahl, Filter und
 Spalte **gleich** — vorher gab es vier Namen für zwei Filter, und wer den einen
 suchte, fand den anderen nicht.
 
+**Zwei der vier Zahlen messen Backups, und zwar nur eine Sorte.**
+„Konto-Backup überfällig" und „nie Konto-Backup" — und ebenso die beiden
+Filter darunter, die Spalte **Konto-Backup** je Zeile und die Erinnerungsmail —
+sehen ausschließlich auf die **Konto-Backups der Verwaltung**: auf das jüngste
+Paket im Kontoordner, also die zweite der drei Bedeutungen von „Backup" aus
+Kapitel 6. „Konten" und „Admins" zählen den Bestand und haben mit Backups
+nichts zu tun.
+
+**Ob eine NutzerIn selbst je ein Backup gezogen hat, weiß die Anwendung
+nicht.** Dieses Backup — das erste aus der Tabelle in Kapitel 6, unter
+Einstellungen → „Backup" — entsteht **im Browser**; der Server bekommt die
+Datei nie zu sehen und hält deshalb auch keinen Zeitpunkt dazu. Das ist
+Absicht und nicht eine Lücke, die noch zu schließen wäre: Ein Vermerk „hat am
+… gesichert" wäre eine neue Aufzeichnung über das Verhalten einer NutzerIn,
+und bei einer Anwendung, deren Zusage die Ende-zu-Ende-Verschlüsselung ist,
+wird so etwas nicht als Nebenprodukt erhoben. Ein Konto, das seit Jahren
+zuverlässig eigene Backups zieht, steht in dieser Liste also genauso unter
+„nie Konto-Backup" wie eines, das nichts tut. Wer wissen will, ob jemand
+eigene Backups macht, fragt die Person.
+
 Darunter die Liste selbst.
 
 - **Suchen** nach Name oder E-Mail-Adresse. Das Feld steht seit Web 15.4.1 in

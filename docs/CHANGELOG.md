@@ -14,6 +14,628 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.3.1] — 2026-09-13
+
+Backlog-Runde 3, neun Punkte in drei Blöcken
+(`docs/konzepte/Konzept-Backlog-Runde-3.md`). **Eine Korrekturstufe für die
+ganze Runde**, und zwar aus einem Grund: Von den neun Punkten fassen genau
+zwei `server/` an, und beide sind Fehlerbehebung beziehungsweise Feinschliff
+— die CSRF-Prüfung in `api/kdf_upgrade.php` vor den Demo-Ausstieg gesetzt
+(Nr. 67) und drei Klassen ohne Regel aus dem Markup gestrichen (Nr. 41).
+Keine neue Funktion, kein neues Feld, keine Migration. Die übrigen sieben
+Punkte liegen in `tools/` und `docs/` und lösen nach CLAUDE.md 2 keine Stufe
+aus; sie stehen hier unter derselben Überschrift, weil sie zur selben Runde
+gehören. Uhr und Android sind unberührt.
+
+**Vier weitere Punkte sind im Abschluss und in seiner Gegenprüfung entstanden
+und auf Anweisung gleich mitbehoben** (Nr. 176, 178, 179, 180 — die Abschnitte
+darunter). Alle vier betreffen **Prüfmittel**, also das, womit die Zahlen dieser
+Stufe belegt sind; deshalb stehen sie hier und nicht in der nächsten Runde.
+Zwei Punkte bleiben offen und sind als Entscheidung notiert: **Nr. 177**
+(doppelte Fassungsnummern im Rahmenplan, zurückgestellt) und **Nr. 181** (die
+Content-Security-Policy).
+
+### Prüfmittel — die Kopplungsprobe misst wieder das Richtige, und die Zusage „keine fremde Quelle" hat ein Messmittel
+
+**Drei Punkte, ein Ursprung** (Nr. 178, 179, 180). Alle drei sind beim Beheben
+von Nr. 176 und bei dessen Gegenprüfung entstanden, und alle drei liegen in
+`tools/` — keine Versionsstufe, keine Änderung an der Anwendung.
+
+**Nr. 180 — ein Prüfmittel, das niemand fährt, ist kein Prüfmittel.** Um
+Nr. 178 überhaupt zu belegen, musste der Kopplungsrundlauf einmal laufen. Er
+meldete „Alle sichtbaren Knöpfe 44 px: **6 Knöpfe, 36 px**" —
+`rundlauf.mjs:214` verlangte einen fest verdrahteten Sollwert. Seit **Web
+15.5.0** gelten zwei (E-S8-09, R76), und bei 1280 px am Zeigergerät sind 36 px
+richtig. Der Fehler lag also im Prüfmittel, nicht in der Anwendung; belegt vom
+Bilderlauf, der beide Sollwerte kennt und über 360 Aufnahmen **0** Knöpfe
+falscher Höhe meldet. **Die unangenehme Zahl ist das Datum:** rot seit dem
+06.09.2026, gefahren erst am 13.09.2026 — weil dieser Rundlauf in keiner Reihe
+von Mitteln steht, die nach einem Arbeitspaket laufen. Jetzt leitet er den
+Sollwert ab wie der Bilderlauf, mit den Schaltern `--finger` und `--breite`;
+gemessen **25/0** als Zeigergerät (36 px) und **25/0** mit `--finger` (44 px).
+Dazu die Falle von S8/AP7: Die Eingabeart fällt nach dem ersten
+Vollseiten-Abzug zurück, und dieser Rundlauf macht mehrere — sie wird deshalb
+vor der Messung erneut gesendet, und **nur** im Fingerlauf, weil
+`{enabled:false}` am Zeigergerät denselben Fehler spiegelverkehrt erzeugt.
+
+**Nr. 178 — drei Kanäle, drei Regeln.** Derselbe Fehler wie Nr. 176, nur
+breiter: Ein Ausdruck für alle Kanäle, geprüft nur gegen den Text, dessen
+Alternative `Failed to load resource` **jede** Ressourcenmeldung verwarf —
+gleich welcher Herkunft und gleich welchen Grundes. Der scharfe Teil sind
+**404 und 500**: Für die feuert `requestfailed` nicht (die Anfrage ist auf
+Transportebene gelungen), sie stehen nur in der Konsole, und die wurde
+weggeworfen. Das Werkzeug konnte einen Serverfehler mitten im Kopplungsrundlauf
+nicht sehen. Jetzt entscheidet jeder Kanal nach dem, was er liefert: `console`
+hat Text **und** Fundstelle, `requestfailed` hat die Adresse und nie einen
+Statuscode — dort bleibt `ERR_ABORTED` auf **jeder** Herkunft Rauschen, weil
+dieser Rundlauf mehrfach navigiert und eine überholte Anfrage genau das meldet
+(14 solche Abbrüche in der ersten Ladung nach der Anmeldung, 0 in den
+folgenden) —, und `pageerror` ist **nie** Rauschen.
+
+**Belegt in vier Richtungen**, weil die Lehre aus Nr. 176 frisch ist: neue
+**Selbstprobe** (`--selbstprobe`, dreizehn Fälle) **13 von 13**;
+**Mutationsprobe** mit sechs Läufen, je eine Regel herausgenommen, **12 von 13**
+in jedem — und die ersten elf Fälle hätten das *nicht* geleistet, weil zwei
+Zweige der Herkunftsauskunft grün blieben, daher Fall 12 (`<anonymous>`) und 13
+(`data:`); die **alte** Regel gegen dieselben Fälle, wörtlich aus `git show`:
+**7 von 11**, **4 verschluckte echte Fehler**; und am laufenden Stand eine
+Wegwerfdatei mit HTTP 500 plus ein Kachelabruf im selben Lauf — der 500er
+**erscheint** im Protokoll, die Kachel **nicht**, der Rundlauf bleibt bei
+**25/0**.
+
+**Nr. 179 — die Zusage aus CLAUDE.md 4 hatte kein Messmittel.** „Kein CDN,
+keine Google Fonts, kein externes Skript" stand seit P3 im Text und wurde von
+nichts nachgezählt. Jetzt zählt es die dritte Prüfung der Gruppe 5,
+**`fremde Quelle`**. **Das Muster ist mit Absicht grob**, und das ist die Lehre
+des Punktes: Ein Ausdruck, der nur die Ladekonstrukte kennt (`src=`,
+`<link href=`, `fetch(`, `url()`, `@import`), wurde gebaut und gemessen — **0
+Treffer**, während **fünf** echte Laufzeitquellen im Code standen. Die Kacheln
+gehen über `L.tileLayer(...)`, die Anschrift des Adressdienstes ist eine
+PHP-Konstante. Gemeldet wird deshalb **jede** absolute Adresse in eigenem
+Quelltext, und die **Ausnahmeliste ist der Inhalt**: 15 Einträge, jeder mit
+seiner Art — vier gewollte Kachelserver, ein Rückfall im Kartendialog, der
+Adressdienst als *Vorgabe* (seit S9/AP2 eine Einstellung je Installation und
+Konto, R79), sechs **Navigationsziele** (die Lizenz- und Spendenhinweise, die
+CC-BY-SA und ODbL verlangen — ein `<a href>` lädt nichts), ein
+**XML-Namensraum** (`GPX_NS`, wird nie abgerufen) und zwei **Beispieltexte**.
+Gemessen: **0 Befunde, 15 Ausnahmen, 0 ungenutzt**, Gesamtzahl unverändert
+**330**; Gegenprobe mit eingeschleuster `https://cdn.example/x.js` genau **1
+Befund** und **331**.
+
+**Was dabei offen bleibt, ist eine Entscheidung: Nr. 181.** Die Prüfung sieht
+den **Quelltext**, nicht die Laufzeit — eine Content-Security-Policy schickt die
+Anwendung nicht (0 Fundstellen). Sie ist die zweite Hälfte derselben Zusage und
+ausdrücklich **nicht** mitgemacht: Sie braucht Ausnahmen für vier Kachelserver
+und den Adressdienst, dessen Anschrift eine Einstellung ist — die Richtlinie
+muss also zur Laufzeit gebaut werden —, und wer sie zu eng setzt, macht die
+Karten grau. Das ist eine Festlegung, kein Nachtrag.
+
+### Prüfmittel — der Bilderlauf verwarf auch Fehler des eigenen Servers
+
+**Eine Zusage, die die Dokumentation richtig beschrieb und der Code nicht
+einhielt** (Nr. 176, gefunden im Abschlusspaket der Runde). `istRauschen()` in
+`tools/screenshots/aufnehmen.mjs` entscheidet, welche rote Konsolenzeile in
+den Bericht kommt. Die LIESMICH sagte, gefiltert werde „über die **Fundstelle**
+der Meldung, nicht über ihren Wortlaut" — für die Kachelhosts stimmte das, für
+drei Fehlercodes nicht: `ERR_CONNECTION_RESET`, `ERR_CONNECTION_CLOSED` und
+`ERR_ABORTED` standen in **demselben** Muster wie die Gastgebernamen und
+wurden gegen den Wortlaut geprüft. **Damit fiel jeder Abruf auf dem eigenen
+Server unter das Kartenrauschen, sobald er mit einem dieser drei scheiterte.**
+Der Bericht konnte „0 Konsolenfehler" melden für eine Seite, auf der das
+Stylesheet nicht angekommen ist.
+
+**Warum die Codes überhaupt drinstanden** — und warum das kein Schlamperei-,
+sondern ein Abkürzungsfehler war: In dieser Arbeitsumgebung setzt die
+Egress-Sperre den TLS-Handschlag zu den Kachelservern zurück (F-P3-AC). Der
+Code beschreibt also einen erwartbaren Zustand; er beschreibt nur nicht, **wo**
+er erwartbar ist. Jetzt greift die Codeliste nur, wenn die Fundstelle **nicht**
+die eigene Basis ist; die Hostliste ist unverändert, ein Kachelabruf trägt
+seinen Gastgeber in der Fundstelle und fällt weiter heraus.
+
+**Drei Entscheidungen dabei bewusst zur lauten Seite hin.** Eine Meldung
+**ohne zuordenbare** Fundstelle wird gezählt, nicht verworfen — leer, keine
+Adresse (`<anonymous>`) oder undurchsichtige Herkunft (`data:`, `blob:`, wo
+`URL.origin` die Zeichenkette „null" liefert); eine Zeile zu viel im Bericht
+ist besser als eine stille Lücke. Der Fehlercode wird nur noch im Wortlaut
+gesucht, nicht auch in der Fundstelle: In einer URL kommt er nicht vor, die
+zweite Suche war ohne Wirkung und verdeckte nur, worauf es ankommt. Und
+**Klasse 2 verwirft nur einen Statuscode** — verliert die Seite selbst die
+Verbindung, wird das gezählt; ein Verbindungsabbruch ist kein Statuscode, und
+die Klasse ist ihrem eigenen Kommentar nach für die 404-Antwort der
+Abbruchseite gedacht.
+
+**Belegt in vier Richtungen, nicht behauptet.** Die neue **Selbstprobe**
+(`node tools/screenshots/aufnehmen.mjs --selbstprobe`) hält die Funktion gegen
+**fünfzehn** gebaute Fälle mit Sollwert: **15 von 15** erwartungsgemäß. Die
+ersten zehn dieser Fälle durch die **alte** Funktion — wörtlich aus `git show`
+geholt, nicht abgeschrieben — ergeben **6 von 10**, die vier falschen sind drei
+lokale Abbrüche und der Fall ohne Fundstelle. **Und die Probe selbst hat eine
+Gegenprobe**, weil ihr erster Entwurf sich selbst bestätigte: Mit zehn Fällen
+meldete sie **10 von 10 auch dann, wenn man Klasse 1 oder Klasse 3 löschte** —
+alle verwerfenden Fälle trugen einen Kachelgastgeber in der URL, also fing sie
+die eine, und fiel die weg, die andere. Die Fälle 11 bis 15 lösen das auf;
+nachgemessen mit sechs Mutationen (je eine Klasse, die Schranke an Klasse 2 und
+beide Zweige der Herkunftsauskunft): **15 von 15** unverändert, **14 von 15**
+in jeder Mutation. Das Rezept steht in der LIESMICH. Und am laufenden Browser: Seite geladen,
+**PHP-Server angehalten** (socat blieb, die Basis also dieselbe), dann Symbol
+und API-Aufruf nachgeladen — zwei Konsolenfehler auf der eigenen Basis
+(`ERR_EMPTY_RESPONSE` und `ERR_CONNECTION_RESET`), davon verwarf der alte
+Filter **einen**, der neue **keinen**. Der Abschlusslauf über 45 Seiten meldet
+mit der neuen Regel unverändert **0 Konsolenfehler** — die Zahl war also
+richtig, sie war nur nicht belegt.
+
+**Was weiterhin stumm bleibt** und deshalb in den Grenzen der LIESMICH steht:
+ein Verbindungsfehler auf einer **fremden** Adresse. Hier stand zuerst, ob eine
+solche Adresse überhaupt abgerufen werden darf, messe
+`tools/vollstaendigkeit/` — **das ist falsch**, und die Berichtigung ist der
+unangenehmere Teil dieses Eintrags: Dessen Gruppe 5 kennt genau zwei Zusagen
+(native Dialoge, Seite ohne Gerüst), **kein** Werkzeug des Repositoriums zählt
+„keine fremde Quelle zur Laufzeit" nach, und eine CSP schickt die Anwendung
+auch nicht (0 Fundstellen für `Content-Security-Policy` unter `server/`). Das
+ist derselbe Fehler wie Nr. 176, nur in die andere Richtung — eine Prüfung
+behauptet, die es nicht gibt. Die Lücke steht als **Backlog Nr. 179**.
+
+**Zwei Nachbarn haben denselben Fehler nicht, einer schon** — nachgesehen, weil
+eine behobene Lücke die Frage nach den Geschwistern aufwirft:
+`referenzdatensatz/browser/papierkorb_misch.mjs` prüft Text **und** Fundstelle
+(sein Kommentar nennt den Bilderlauf als Vorbild — der war also das schwächere
+von beiden, und das ist jetzt umgekehrt), `messstand/browserprobe.mjs` hängt an
+`requestfailed` und hat die Adresse immer dabei. **`kopplungsprobe/rundlauf.mjs`
+verwirft mit „Failed to load resource" jede Ressourcenmeldung** — 4 von 8
+gebauten Fällen falsch, darunter ein 404 und ein 500 auf der eigenen Basis, für
+die `requestfailed` nicht feuert. Das ist **Nr. 178**; die LIESMICH dort sagt es
+jetzt, statt weiter „dieselbe Rauschregel wie der Bilderlauf" zu behaupten.
+**Und beim Fahren dieser Probe fiel Nr. 180 auf:** Sie verlangt 44 px für jeden
+Knopf, seit Web 15.5.0 gelten zwei Sollwerte (E-S8-09/R76), und bei 1280 px am
+Zeigergerät sind 36 px richtig — sie ist **seit dem 06.09.2026 rot** und wurde
+erst jetzt gefahren, weil sie in keiner Reihe von Mitteln steht, die nach einem
+Paket laufen.
+
+### Prüfmittel — die Auswahl in `WatchUi.Confirmation` ist im Bild nicht zu sehen
+
+**Das Problem war nicht der Dialog, sondern das Suchen** (Nr. 91, aufgenommen
+am 03.09.2026 aus S5 Paket C). Wer im Simulator eine Rückfrage bedienen muss,
+sieht am Bildabzug **nicht**, welche der beiden Schaltflächen gewählt ist:
+`Cancel` und `Confirm` stehen ohne erkennbare Hervorhebung nebeneinander, und
+`Up`/`Down` ändern daran nichts Sichtbares. Zwei Abzüge vor und nach einem
+Tastendruck sind nicht zu unterscheiden — auch dann nicht, wenn die Auswahl
+gewandert ist. Das hat in S5 eine halbe Stunde gekostet, und es steht seither
+nirgends: `grep -c Confirmation tools/uhr-pruefstand/LIESMICH.md` lieferte
+**0**.
+
+**Aufgeschrieben sind vier gemessene Aussagen**, in einem neuen Unterabschnitt
+unter „Bedienung simulieren", direkt hinter „Tasten sind heikler als Maus" —
+dort, wo die nächste Instanz sucht. Erstens die Blindheit des Bildes.
+Zweitens: Ein `Return` ohne weitere Taste **bestätigt**, die Vorauswahl steht
+auf `Confirm`. Drittens: BACK räumt den Dialog weg, **ohne** `onResponse` zu
+rufen — und ist damit **kein Ersatz für „Nein"**, weil die beiden
+verschiedene Wege durch den Code nehmen (`KoppelnDelegate` in
+`watch/source/PairView.mc` hat nur `onResponse`, und das darin stehende
+`Pair.ablehnen(...)` läuft bei BACK gar nicht). Viertens die Folge für jeden
+Prüffall: Eine Ablehnung wird **an der Wirkung** gemessen, nicht am Bild — in
+der Datenbank nachsehen, kein Gerät, keine Sitzung. So macht es der
+Simulator-Rundlauf aus S5 Paket C, und der Abschnitt verweist darauf.
+
+**Die Regel gilt über die Kopplung hinaus** — Trennen, Einsatzabschluss und
+Verlassen der App benutzen denselben Baustein. Deshalb steht sie in der
+LIESMICH des Prüfstands und nicht als Kommentar an einer Fundstelle.
+
+**Bewusst nicht gemacht:** kein neuer Prüfweg, keine Zeile an
+`pruefstand.sh`. Der Punkt war eine fehlende Auskunft, keine fehlende
+Funktion — ein Werkzeug, das die Auswahl sichtbar machen könnte, gibt es
+nicht, weil der Simulator sie nicht zeichnet. **Und nicht nachgemessen:** Die
+vier Aussagen stammen aus dem Messprotokoll vom 03.09.2026; der Prüfstand
+dieser Runde hat keinen Connect-IQ-Simulator, die Runde bestätigt sie also
+nicht noch einmal. Wer sie anzweifelt, braucht den Simulator — das steht im
+Prüfdokument unter „was nicht geprüft werden konnte".
+
+### Prüfmittel — „pixelgleich" ist die Zusage, die das Messmittel deckt
+
+**Ein Dokument, das sich selbst widerlegte** (Nr. 94, aufgenommen am
+03.09.2026 aus der S5-Vorbereitung V-S5-05). `tools/uhr-bilder/LIESMICH.md`
+sagte in Zeile 27 „bitgleich" und in Zeile 35 „pixelgleich" — acht Zeilen
+auseinander, im selben Text, über dieselbe Sache. Der Kopfkommentar von
+`erzeugen.sh` stand auf der stärkeren Seite („BITGLEICH"). Wer die Zusage
+prüfte, prüfte je nach gelesener Zeile etwas anderes.
+
+**Richtig ist die schwächere.** `compare -metric AE` zählt abweichende
+**Bildpunkte**, nicht Bytes — es belegt Pixel-, nicht Bitgleichheit. Und
+bitgleich können zwei PNG hier ohnehin nicht sein: Jeder Lauf schreibt einen
+`tIME`-Block mit der aktuellen Uhrzeit, weshalb dieselbe LIESMICH acht Zeilen
+weiter erklärt, warum `git status` kein Maßstab ist. Das Wort steht jetzt an
+beiden Stellen auf „pixelgleich", mit der Begründung in der LIESMICH und
+einem Verweis darauf im Kopfkommentar des Skripts.
+
+**`-define png:exclude-chunk=time` ist bewusst nicht gesetzt.** Damit wäre die
+stärkere Zusage tatsächlich einzulösen — der Backlog-Eintrag hat beide Wege
+genannt. Sie belegte aber nichts, was hier gebraucht wird: Gemessen wird, ob
+ein Bildpunkt anders ist, und dafür reicht das schwächere Wort. Eine Zusage
+einzulösen, die niemand liest, kostet eine Zeile Wartung und bringt keine
+Auskunft.
+
+**Ein Prüfmittel hing daran, und das stand nicht im Konzept.**
+`tools/s5-anker/anker.py` hält die Fundstellen der S5-Konzepte am Inhalt
+statt an der Zeilennummer fest — und einer seiner Anker suchte wörtlich
+`sie BITGLEICH \(geprueft` in genau dieser Zeile. Nach der Wortänderung hätte
+er „NICHT GEFUNDEN" gemeldet. Er sucht jetzt den Teil des Satzes, den die
+Streitfrage nicht berührt (`geprueft mit \`compare -metric AE\``), und heißt
+`uhrbilder.wortlaut` statt `uhrbilder.bitgleich`: So hält er auch die nächste
+Umformulierung des Adjektivs aus. Gemessen nach der Änderung: der Anker steht
+auf „unveraendert", und die Gesamtzahl der nicht gefundenen Anker bleibt bei
+**7** — die Änderung hat keinen zerbrochen.
+
+### Web — das Handbuch sagt, was die Kennzahlen der NutzerInnen-Liste nicht messen
+
+**Die Lücke bleibt, und sie steht jetzt da** (Nr. 117, aufgenommen am
+05.09.2026 aus dem S8-Konzept als B-S8-07). Ob eine NutzerIn selbst je ein
+Backup gezogen hat, weiß die Anwendung nicht: Die Datei entsteht im Browser,
+der Server bekommt sie nie zu sehen. S8 hat die Begriffe schon ehrlich
+gemacht — die Kennzahlen heißen seit Web 15.2.0 „Konto-Backup überfällig" und
+„nie Konto-Backup" —, aber wer sie liest, konnte daraus nicht schließen, was
+sie **nicht** abdecken.
+
+**Entschieden am 12.09.2026: nicht erheben.** Ein Vermerk „hat am … gesichert"
+wäre eine neue Aufzeichnung über das Verhalten einer NutzerIn, und bei einer
+Anwendung, deren Zusage die Ende-zu-Ende-Verschlüsselung ist, wird so etwas
+nicht als Nebenprodukt erhoben. Gegengeprüft am 13.09.2026: `users` trägt
+keine solche Spalte (16 Spalten, keine davon ein Backup-Zeitpunkt), und
+`edbak_konto_stand()` liest ausschließlich die Pakete im Kontoordner.
+
+**Zwei Absätze in Handbuch 11.2**, direkt hinter den vier Zahlen. Der erste
+sagt, was gemessen wird: „Konto-Backup überfällig" und „nie Konto-Backup", die
+beiden Filter, die Spalte je Zeile und die Erinnerungsmail sehen alle nur auf
+das jüngste Paket im Kontoordner — die **zweite** der drei Bedeutungen von
+„Backup" aus Kapitel 6. Der zweite sagt, was nicht gemessen wird, samt der
+Folge, die in der Liste sichtbar wird: Ein Konto, das seit Jahren zuverlässig
+eigene Backups zieht, steht dort genauso unter „nie Konto-Backup" wie eines,
+das nichts tut. Wer es wissen will, fragt die Person.
+
+**Eine Zahl im Auftrag war falsch, und mit ihr wäre der Absatz falsch
+geworden.** Das Konzept schrieb „alle **vier** messen Konto-Backups der
+Verwaltung". Die vier Zahlen über der Liste sind aber **Konten**, **Admins**,
+**Konto-Backup überfällig** und **nie Konto-Backup** — nur die letzten zwei
+haben mit Backups zu tun. Die Vier des Backlog-Eintrags meinte etwas anderes:
+zwei Kennzahlen plus Filter plus Erinnerungsmail. Der Handbuchabsatz sagt
+deshalb „zwei der vier Zahlen" und zählt die vier Stellen einzeln auf.
+
+**Kein Warnkasten, keine neue Darstellung** — zwei Absätze im Ton des
+Kapitels. Und **nichts in der Oberfläche**: Die Zahlen heißen seit S8 richtig;
+ein zusätzlicher Hinweis neben jeder von ihnen erklärte dieselbe Sache
+viermal.
+
+### Prüfmittel — der Referenzbestand kennt wieder das Rettungsmittel ohne Standort
+
+**Der Einspielweg hat den Fall verloren, nicht die Referenzdatei** (Nr. 174).
+Zwei Einträge der Quelldaten tragen seit Web 16.0.0 `"ohne_standort": true`;
+in der frisch eingespielten Installation standen **0 von 6** ohne Standort
+statt 2. Damit fehlte dem Bestand der zweite von zwei Fällen, die S9/AP4
+ausdrücklich erlaubt (E-S9-18) — und die Klickprobe blieb bei 39 von 40.
+
+**Die Ursache ist ein Feld, das niemand mehr liest.** `einspielen.py` schickte
+`ohne_standort=1` **neben** einer echten Standortkennung. Bis Web 16.3.0 war
+das richtig: Damals stand im Formular ein Haken neben der Standortauswahl.
+Web 16.3.0 hat ihn durch den **ersten Eintrag der Auswahlliste** ersetzt —
+„Ohne Standort" —, und zwar mit Begründung: Der Haken „schlug eine verborgene
+Standortkennung; wer ihn setzte, sah nicht, WAS er damit überschrieb." Seither
+las das Feld niemand mehr, die Kennung daneben zählte, und beide Einträge
+bekamen einen Standort. **Ein Sender, der ein Feld schickt, das niemand liest,
+meldet keinen Fehler — er wird still ignoriert.**
+
+`einspielen.py` schickt jetzt `base_id=0`, also den Listeneintrag „Ohne
+Standort"; `dt_base_erlaubt()` macht daraus `NULL`. Ob der Typ das darf,
+entscheidet weiterhin die Prüfschicht (Pflicht nur bei „Standard"). **An der
+Anwendung ist keine Zeile geändert** — sie war nie kaputt.
+
+**Beide Referenzdateien sind über die reguläre Kette neu erzeugt** (E-BR3-10),
+nicht von Hand berichtigt: Quelldaten prüfen, erzeugen, prüfen · einspielen
+über `ingest.php`, `api/day.php`, das Einsatzformular und die Weboberfläche ·
+exportieren im Browser. Keine Zeile per SQL.
+
+**Gemessen.** Vorher: 0 von 6 ohne Standort. Nachher: **2 von 6** („Sanitäts-
+dienst Seefest", „Reserve Talwang"). Die Kette: Quelldaten **5 961**
+Einzelprüfungen / 0 Befunde, Generator **283 989** Einzelprüfungen / 0
+Befunde, 526 Ingest-Anfragen / 0 Fehler, 16 Diensttage zugeordnet, 79
+nachgetragen, 2 von Hand, Sperrliste bestanden, 4 CSV-Einsätze. Export:
+**188 Einträge** (85 mit geschützten Angaben), 16 Diensttage, 182
+Aufzeichnungen mit **55 861** Punkten; CSV **83 Einsätze**, 172 GPX.
+
+**Gegen die neue Referenz:** edbak **287 687** Einzelvergleiche, **0**
+unerklärt, 16 erwartet, **0 ungenutzt**; csv **9 120**, **0** unerklärt,
+1 021 erwartet, **0 ungenutzt**. Das Abnahmekriterium von Nr. 174 — ein
+Rettungsmittel mit `base_ref: null` kommt **unverändert** durch den Umlauf —
+ist an beiden Umlaufkonten gemessen: Referenzkonto **2**, edbak-Umlauf **2**,
+csv-Umlauf **2**. **Klickprobe 40 von 40** (sie hatte den Verlust mit 39
+gefunden).
+
+**Die Zahlen der LIESMICH waren daneben** und sind nachgezogen: Sie nannte
+„3 Rettungsmittel", es sind **6** — und die zwei ohne Standort stehen jetzt
+ausdrücklich dabei, mit dem Satz, woran man denselben Fehler wiedererkennt.
+
+### Prüfmittel — fünf Regeln, die nichts mehr erklärten
+
+**Eine Regel, die nichts mehr erklärt, ist kein Netz, sondern Ballast**
+(Nr. 173). Die Ausnahmelisten der beiden Kreisläufe trugen fünf Regeln zum
+Übergang aus S9/AP7: Die Notiz des Einsatzes wanderte damals in den
+verschlüsselten Block, die Nutzlastnummer stieg von 10 auf 11. Der
+Referenzbestand jener Zeit trug die Notiz noch im Klartext; der heutige tut
+das von Anfang an nicht mehr — und damit gab es nichts mehr zu erklären.
+
+**Der Kreislauf hat sie selbst gemeldet**, als „ungenutzte Regeln": drei in
+`edbak_umlauf.json` (zweimal `missions.notes`, einmal `kopf.version` „nach
+11") und zwei in `csv_umlauf.json` (`felder.beschreibung` „nach
+pat_blob.notes" und die LIESMICH-Regel). Vorher gemessen, wie der Auftrag es
+verlangt: **3 und 2** — die erwarteten Zahlen. Erst danach gestrichen.
+
+**Der Grund steht in der Datei, nicht nur im Changelog.** Das Feld
+`beschreibung` beider Ausnahmelisten trägt jetzt einen datierten Satz,
+welche Regeln weg sind und warum sie gegenstandslos wurden. Wer in einem Jahr
+eine Abweichung sucht, die es nicht gibt, findet dort die Antwort.
+
+**Gemessen nach dem Streichen:** edbak **287 687** Einzelvergleiche, **0**
+unerklärt, 16 erwartet, **0 ungenutzt**; csv **9 120** Einzelvergleiche,
+**0** unerklärt, 1 021 erwartet, **0 ungenutzt**. Die Zeile „ungenutzte
+Regeln" erscheint seither gar nicht mehr — das Werkzeug druckt sie nur, wenn
+es welche gibt.
+
+**Vorläufig ist diese Abnahme trotzdem:** Das nächste Paket (Nr. 174) ersetzt
+die Referenzdateien, gegen die hier verglichen wurde. Beide Kreisläufe laufen
+danach noch einmal.
+
+### Web — die 404-Seite von `apk.php` ging ohne Kopf hinaus
+
+**Gefunden hat es das neue Prüfmittel, und zwar über seine Gegenrichtung**
+(Backlog Nr. 58, siehe unten). `apk.php` liefert eine APK aus; zeigt der
+Verweis auf eine Datei, die nicht mehr im Ordner liegt, gibt es eine
+404-Seite. Die rief `ui_geruest_start()`, `ui_geruest_ende()` und
+`ui_seite_ende()` — aber **nie `ui_seite_start()`**. Nur letzteres gibt
+`<!doctype html>`, `<head>` und `<body>` aus.
+
+**Die Seite ging also als Bruchstück hinaus**: Sie begann mit
+`<header class="kopf">` und endete trotzdem mit `</body></html>`. Gemessen
+am Prüfstand: kein Doctype, kein `<title>`, **kein Stylesheet**; der Browser
+las sie im Quirks-Modus (`document.compatMode` = `BackCompat`) und zeichnete
+sie in Times New Roman mit blau unterstrichenen Verweisen. Nach der Behebung:
+`CSS1Compat`, Open Sans, Titel „Datei nicht gefunden — Gen-EM NAdoku", die
+Meldungskarte und der Rückweg zum Geräte-Reiter.
+
+**Erreichbar ist das nicht theoretisch:** Es genügt ein Verweis auf ein APK,
+das nicht mehr liegt — nach jedem Aufräumen und aus jedem alten Lesezeichen.
+
+**Eine Zeile behebt es**, und der Kommentar daneben sagt, was der Unterschied
+zwischen den beiden Funktionen ist — damit die nächste Seite ihn nicht wieder
+verwechselt. Auf die Ausnahmeliste kommt `apk.php` **nicht**: Ein Fund gehört
+behoben, nicht erklärt.
+
+### Prüfmittel — jede Seite mit eigener Hülle hat ihr Gerüst
+
+**Der Anlass war `tag_spuren.php`** (Nr. 58): eine angemeldete Seite, der das
+Gerüst fehlte — Diensttag-Leiste und Menü verschwanden, ohne dass es jemandem
+auffiel. Behoben ist das längst; was fehlte, war das Mittel, das es beim
+nächsten Mal findet.
+
+**Das Kriterium ist `ui_seite_start(`, nicht „bindet die Wache ein".** Die
+naheliegende Regel des Backlog-Eintrags („bindet `require_admin()` oder
+`auth_guard.php` ein und ruft `ui_geruest_start()` nicht") liefert **15**
+Treffer, und alle 15 sind richtig so: sechs Bibliotheken, vier Endpunkte ohne
+Seite, vier Seiten vor der Anmeldung und der Notausgang `update.php`. Ein
+Mittel, das mit 15 Rot anfängt, wird nie wieder gelesen. `ui_seite_start()`
+dagegen ist der Anfang **jeder** Seitenhülle: Wer ihn ruft, gibt eine Seite
+aus. Verlangt werden **beide** Hälften des Gerüsts — ein Gerüst, das nicht
+geschlossen wird, ist keines.
+
+**Sieben Ausnahmen, jede mit ihrem eigenen Grund** — nicht „Seite vor der
+Anmeldung" als Sammelposten: `install.php` (läuft nur, solange es kein Konto
+gibt), `login.php` (stellt die Sitzung erst her), `reset_request.php` und
+`wiederherstellen.php` (Zugang ohne Sitzung; letztere bringt ihre eigene
+mit, weil es die Installation noch nicht gibt), `pw_handling.php` (Einmal-Link,
+der Dateikopf sagt „keine Sitzung"), `rechtstext_seite.php` (öffentliche
+Rechtstexte, R32) und `session_lib.php` — die letzte ist der interessante
+Fall: Sie gibt die Abmelde-Zwischenseite **nach** `session_destroy()` aus.
+Dort wäre ein Gerüst nicht nur falsch, es ließe sich nicht bauen.
+
+**Gemessen:** **0** Befunde, **7** Ausnahmen, **0** ungenutzt, Hinweis
+„Gerüst ohne Seitenhülle" **0** (er stand bei 1, bis `apk.php` behoben war).
+`tag_spuren.php` — der Anlass — steht **nicht** auf der Liste und ist **kein**
+Befund: Sie hat ihr Gerüst. Eine eingeschleuste neue Seite mit
+`ui_seite_start()` ohne Gerüst wird mit Datei und Zeile gemeldet; danach
+entfernt.
+
+**Ein stiller Fehler beim Bauen, festgehalten weil er lehrreich ist:** Beim
+ersten Lauf griff **keine** der sieben Ausnahmen, und die Prüfung meldete
+sieben Befunde, die alle erklärt waren — ohne dass irgendwo „Vergleich
+fehlgeschlagen" stand. Grund: Die Beschriftungen in `pruefen.py` sind ASCII
+(„Seite ohne Geruest"), die Hilfslisten sind Markdown für Menschen („Seite
+ohne Gerüst"). Der Vergleich löst Umlaute jetzt auf. Genau die Sorte Fehler,
+gegen die diese Gruppe gebaut ist.
+
+### Prüfmittel — eine Zusage, die bisher nur im Kopf stand, wird nachgezählt
+
+**„Kein natives `confirm()`" war ein Versprechen ohne Messgerät** (Nr. 47).
+Die Anwendung hat mit `edConfirm()` einen eigenen Dialog, weil Browser bei
+nativen Dialogen anbieten, „keine weiteren Meldungen dieser Seite" zu zeigen
+— wer das einmal klickt, bekommt auch die nächste Rückfrage nicht mehr. Nur:
+Dass niemand versehentlich wieder ein `confirm()` schreibt, hing daran, dass
+sich jemand erinnert.
+
+**Neue Prüfgruppe „5 Zusagen"** in `tools/vollstaendigkeit/pruefen.py`, nicht
+ein eigenes Werkzeug: Das Mittel liest bereits `server/**/*.php` und
+`server/assets/*.js`, hat Bericht, Listenleser und Ausnahmemechanik. Die
+erste Prüfung darin heißt **native Dialoge** und sucht `confirm(`, `alert(`
+und `prompt(` — auch als `window.`-Aufruf — außerhalb von Kommentaren.
+
+**Der Kommentar-Abtaster ist der Kern, und er ist kein regulärer Ausdruck.**
+`//` steht in jeder URL, `#` in jeder Farbe, `/*` in mancher Zeichenkette;
+ein Ausdruck, der das trennen soll, wird entweder zu grob und streicht Code
+weg oder zu fein und lässt Kommentare stehen — beides macht die Prüfung
+lautlos wertlos. Stattdessen geht ein Abtaster Zeichen für Zeichen und merkt
+sich, ob er in einer Zeichenkette steht. Die Zeilenumbrüche bleiben erhalten,
+sonst zeigte jede Fundstelle daneben. `#` gilt nur in PHP — in JavaScript
+begänne es ein privates Feld. Was er **nicht** kann, steht als Satz an seinem
+Kopf: Heredoc und Regex-Literale mit `//` darin; beides kommt im eigenen Code
+nicht vor (nachgesehen — die Treffer liegen alle unter `server/vendor/`, und
+das ist ausgenommen).
+
+**Was das ausmacht, ist messbar:** Ein grober `grep` findet **fünf** Stellen,
+drei davon in Kommentaren (`unlock.js` erklärt, warum es dort *kein*
+`window.prompt` gibt; `confirm.js` und `version.php` erzählen von der
+Ersetzung). Nach dem Abtaster bleiben **zwei** — und genau die sind die
+berechtigten Rückfälle.
+
+**Zwei Ausnahmen, beide mit Grund** in der neuen Liste
+`tools/vollstaendigkeit/zusagen.md`: `assets/confirm.js` (der Rückfall der
+Ersatzfunktion selbst, für Browser ohne `<dialog>`) und `assets/forms.js`
+(der Rückfall der Formularrückfrage, falls `confirm.js` nicht geladen ist).
+Der Backlog-Eintrag nannte bis zum 13.09.2026 nur **eine** — eine
+Ausnahmeliste mit einem Eintrag wäre beim ersten Lauf rot gewesen.
+
+**Die Liste wird in beide Richtungen geprüft.** Ein Treffer ohne Eintrag ist
+ein Befund, und ein Eintrag, der nichts mehr erklärt, ebenso („Ausnahme
+ungenutzt") — dieselbe Regel wie bei `ohne-regel.md`. Ihre zweite Spalte ist
+die **Datei**, nicht die Zeile: Eine Zeilennummer altert mit dem nächsten
+Paket, und genau daran ist der Eintrag zu `phasen-name` gealtert (AP5).
+
+**Gemessen, mit Gegenproben in beide Richtungen.** Ist-Stand: **0** Befunde,
+**2** Ausnahmen, **0** ungenutzt, Gesamtzahl unverändert **330**. Ein
+eingeschleustes `window.confirm("x")` in einer PHP-Datei: **1 Befund** mit
+Datei und Zeile, Gesamtzahl 331. Dieselben drei Aufrufe als Blockkommentar,
+Zeilenkommentar und PHP-Raute: **0 Befunde** — der Abtaster trägt für alle
+drei Formen. Eine Ausnahme auf eine Datei umgebogen, die es nicht gibt:
+**1 Befund plus 1 „Ausnahme ungenutzt"**. Alle Proben wieder entfernt.
+
+**Die Zählung im Kopf ist berichtigt.** Die LIESMICH führte fünf Prüfungen,
+von denen die fünfte die *Ausgabe* war — sie prüft nichts, sie zeigt. Jetzt
+steht an der Fünf eine echte Prüfung, und die Ausgabe steht daneben.
+
+### Web — drei Klassen ohne Regel verlassen das Markup
+
+**Drei von fünf sind entschieden, nicht aufgeräumt** (Nr. 41, entschieden am
+12.09.2026). `rea-kopf`, `rea-beginn` und `phasen-name` standen im Markup,
+hatten keine Regel im Stylesheet und keinen Leser im Skript — aber die Frage
+dahinter war eine Gestaltungsfrage: Soll sich die Kopfzeile einer
+Reanimationssitzung von einer gewöhnlichen Phasenzeile abheben? Soll der Name
+einer Phase eine eigene Schrift bekommen? Die Antwort ist **nein**, und
+deshalb verschwinden die Klassen, statt eine Regel zu bekommen. Ein Ja hätte
+eine neue Darstellung bedeutet und damit ein Mockup mit Freigabe
+(`Design.md` 1).
+
+**Vier Stellen im Code:** `kopf.className` und die `className`-Zeile am
+`<label>` in `einsatz_form.php` (das Aussehen kam vom Nachbarn
+`phasen-eingabe` beziehungsweise von der Elementregel für `label`, beide
+bleiben), und zweimal `class="phasen-name"` am `<span>` in `einsatz.php` —
+das `<span>` selbst bleibt, es gruppiert den Text. Die Bindung des Labels an
+sein Eingabefeld hängt an `htmlFor`, nicht an der Klasse; sie ist unberührt.
+
+**Alle drei stehen jetzt mit Begründung auf `streichliste.md`**, und die drei
+`[offen]`-Zeilen in `ohne-regel.md` sind heraus. Nur eine der drei
+(`rea-kopf`) stammte aus dem alten Stylesheet; die beiden anderen stehen
+dort, damit die Prüfung meldet, falls sie ins Markup zurückkehren („auf der
+Streichliste, aber noch im Markup"). Beim Austragen fiel auf, dass der
+Eintrag zu `phasen-name` auf `einsatz.php:631` zeigte — nachgemessen sind es
+die Zeilen 764 und 805.
+
+**Gemessen, und zwar gegen den Stand davor:** `pruefen.py` meldet jetzt **2**
+statt 5 `[offen]` (übrig sind `imp-warn` und `imp-daygroup`, die beiden mit
+einer echten Gestaltungsfrage — sie gehen in die Mockup-Runde), „auf der
+Streichliste, aber noch im Markup" **0**, „`ohne-regel.md`: Eintrag ungenutzt"
+**0**. Die Befunde insgesamt gehen von **334 auf 330** — drei durch die
+`[offen]`-Zeilen und **eine vierte**, die der Auftrag nicht vorhergesehen
+hatte: `rea-kopf` stand im alten Stylesheet und war bis hierher auch ein
+Befund „ohne Gegenstück" (53 → 52).
+
+**Im Browser: nichts bewegt sich.** Vier Seiten vor und nach der Änderung
+fotografiert (Einsatzbearbeitung mit zwei Reanimationssitzungen,
+Einsatzansicht mit 9 und mit 22 Phasen), im DOM gezählt: `rea-kopf` 2 → **0**,
+`rea-beginn` 2 → **0**, `phasen-name` 9 → **0** und 22 → **0**, während
+`rea-sitzung` (2) und `phasen-eingabe` (22/9) unverändert stehen. Der
+Bildvergleich meldete zunächst **3079** abweichende Bildpunkte auf **allen
+vier** Seiten — dieselbe Zahl auf verschiedenen Seiten kann nicht von den
+Klassen kommen. Der Rahmen aller abweichenden Punkte liegt bei y 117–126,
+x 808–1204: die Zeile des Demo-Hinweises, die bis zum nächsten Reset
+herunterzählt („in ca. 10 Minuten" gegen „in ca. 8 Minuten"). Mit
+geschwärztem Zähler: **0 abweichende Bildpunkte auf allen vier Seiten**,
+0 Konsolenfehler.
+
+### Werkzeug — der Container beschafft seinen Prüfstand selbst
+
+**Zweimal dieselbe Viertelstunde, dann eine Datei** (Auftrag des
+Auftraggebers, 13.09.2026). AP2 dieser Runde konnte `tools/uhr-bilder/`
+nicht laufen lassen, weil kein ImageMagick im Abbild liegt; AP4 musste vor
+der ersten Browserprobe einen Datenbankserver nachinstallieren. Beides ist
+keine Eigenheit dieser Runde, sondern eine Eigenschaft des Wegwerf-Containers
+— also gehört es an den Sitzungsstart und nicht in ein Arbeitspaket.
+
+`.claude/hooks/session-start.sh` beschafft **vier Dinge**, die das Abbild
+nicht mitbringt und ohne die die Hälfte der Prüfmittel stillsteht: **MariaDB**
+(jede Browserprobe, beide Kreisläufe, Klickprobe, Wartungsprobe),
+**ImageMagick** (`convert` und `compare` — Uhr-Bilder und jeder
+Bildvergleich), **rsvg-convert** und **Python `jsonschema`** (die Prüfung der
+Quelldaten des Referenzdatensatzes).
+
+**Drei Entscheidungen, die der Kopf der Datei begründet.** Er **startet
+nichts** — das bleibt bei `lokal_starten.sh`, das Einrichten bei
+`lokal_einrichten.sh`; die Arbeitsteilung des Repositoriums bleibt, wo sie
+war. Er **schlägt nicht fehl**, wenn etwas fehlt, sondern meldet je Stück „ok"
+oder „FEHLT": Eine Sitzung, die sich wegen eines Bildwerkzeugs nicht öffnen
+lässt, ist schlimmer als eine, die den Mangel mit Zahl nennt. Und er läuft
+**nur im Container** (`CLAUDE_CODE_REMOTE`) — auf einer Entwicklungsmaschine
+hat die Person ihre Werkzeuge selbst installiert, und ein Hook, der dort apt
+anwirft, wäre eine Zumutung.
+
+**`apt-get update` läuft erst im zweiten Versuch.** Die Paketlisten des
+Abbilds sind meist frisch genug; sind sie es nicht, scheitert der Lauf mit
+404 auf einzelne `.deb` — genau so gesehen am 13.09.2026 —, und erst dann
+lohnt der Listenabgleich. Andersherum kostete jeder Sitzungsstart eine Minute
+umsonst.
+
+**Zwei Fallen des Abbilds sind dabei aufgefallen und stehen jetzt in
+`docs/Technik.md` 2a.** Erstens: `python3` ist hier **3.11** (deadsnakes),
+während apt seine Python-Pakete nach **3.12** legt — ein
+`apt-get install python3-jsonschema` landet in einem Verzeichnis, das
+`python3` nicht liest. Deshalb `pip` mit `--break-system-packages`, und
+deshalb prüft der Hook den `cryptography`-Import statt ihn blind zu ersetzen.
+Zweitens: Der eingebaute PHP-Server liefert nach einer Dateiänderung einige
+Sekunden lang noch den alten Stand (gemessen: 0 s altes Verhalten, 4 s neues;
+**nicht** opcache, `opcache.enable_cli` ist Off). Wer eine Serveränderung
+prüft, startet den Server vorher neu — sonst misst er den Stand davor.
+
+**Gemessen:** erster Lauf installiert, zweiter Lauf 0 Nachinstallationen in
+**0,6 s**, **9 von 9** Stücken „ok"; ohne `CLAUDE_CODE_REMOTE` keine Ausgabe
+und Rückgabewert 0. Danach im selben Container nachgewiesen: `php -l` über
+**100** Dateien 0 Fehler, Spurprobe **45 Erwartungen / 0 nicht erfüllt**,
+Wortliste 0/0 — und `tools/uhr-bilder/erzeugen.sh` lief erstmals durch, was
+den offenen Punkt aus AP2 schließt (Zahlen dort).
+
+### Web — die CSRF-Prüfung steht vor dem Demo-Ausstieg, nicht dahinter
+
+**Eine geerbte Lücke, die noch niemandem geschadet hat** (Nr. 67, Unterpunkt).
+`api/kdf_upgrade.php` stieg für das Demo-Konto aus, **bevor** es das
+Formular-Token prüfte. Ein Aufruf ohne Token bekam dort 200 zurück, während
+jedes andere Konto 403 sah. Folgenlos war das nur, weil hinter dem Ausstieg
+nichts steht — wer dort einmal etwas hinschreibt, erbt eine ungeschützte
+Stelle, ohne es zu merken. Die zwei Zeilen sind getauscht, und der
+Kopfkommentar sagt jetzt, warum die Reihenfolge so ist.
+
+**Am Regelfall ändert das nichts, und das ist vorher gemessen worden.**
+`assets/unlock.js` ist der einzige Aufrufer (die drei anderen Fundstellen im
+Code sind Kommentare) und schickt `X-CSRF` immer mit; `auth_guard.php` legt
+das Sitzungstoken bei jeder angemeldeten Anfrage an, bevor diese Datei läuft.
+Die linke Seite von `hash_equals()` ist hier also nie leer — ein Aufruf ohne
+Token trifft nicht auf zwei leere Zeichenketten.
+
+**Belegt am Prüfstand, alter gegen neuer Stand bei sonst gleichem Aufbau:**
+ohne Header **vorher 200**, jetzt **403** `{"error":"csrf"}`; mit Header
+unverändert **200** mit `uebersprungen: demo`. Dazu falscher Header 403 und
+leerer Header 403. Im Browser (Chromium, Demo-Anmeldung über die
+Anmeldeseite): Anmeldung läuft durch, **0 Konsolenfehler**, und alle
+Messwerte der Sichtprüfung sind Zeichen für Zeichen dieselben wie am alten
+Stand — der Weg, auf dem `unlock.js` den Inhaltsschlüssel übernimmt, ist
+nicht berührt.
+
+**Der Hauptpunkt bleibt offen und liegt bei P5:** ein `ist_api_aufruf()`-Zweig
+in `csrf_check()`, damit die Endpunkte unter `server/api/` die Prüfung nicht
+jeder selbst schreiben. Dieser Tausch ersetzt ihn nicht; er nimmt nur einer
+Datei die Sonderstellung.
+
 ## [Web 19.3.0] — 2026-09-12
 
 ### Web — Backlog-Runde 2: der Block Betrieb wird fertig

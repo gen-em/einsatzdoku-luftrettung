@@ -39,6 +39,20 @@ foreach (apk_liste() as $e) {
 if ($treffer === null) {
     http_response_code(404);
     require_once __DIR__ . '/ui.php';
+    /* ui_seite_start() OEFFNET DIE HUELLE, ui_geruest_start() NICHT.
+     *
+     * Bis Web 19.3.1 fehlte die erste Zeile hier, und die 404-Seite ging ohne
+     * `<!doctype>`, `<head>`, `<title>` und ohne Stylesheet hinaus — sie
+     * begann mit `<header class="kopf">` und endete trotzdem mit
+     * `</body></html>`. Der Browser las sie im Quirks-Modus (`compatMode`
+     * BackCompat) und zeichnete sie in Times New Roman. Gefunden hat es die
+     * neue Pruefung "Seite ohne Geruest" (Backlog Nr. 58) ueber ihre
+     * GEGENRICHTUNG: eine Datei mit Geruest, aber ohne Seitenhuelle.
+     *
+     * Die Seite ist erreichbar, sobald ein Verweis auf ein APK zeigt, das
+     * nicht mehr im Ordner liegt — also nach jedem Aufraeumen und aus jedem
+     * alten Lesezeichen. */
+    ui_seite_start(['titel' => 'Datei nicht gefunden']);
     ui_geruest_start(['aktiv' => 'einstellungen']);
     ui_titelzeile(['titel' => 'Datei nicht gefunden',
                    'zurueck' => ['text' => 'Geräte', 'href' => 'einstellungen.php?t=geraete']]);

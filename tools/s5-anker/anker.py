@@ -119,8 +119,15 @@ ANKER: list[tuple] = [
      r"^84\. \*\*Die Android-App kennt nur"),
     ("D", "rahmenplan.sperren",    "docs/Rahmenplan.md", 486,
      r"S5-Umsetzung zu S6 und S7"),
-    ("D", "uhrbilder.bitgleich",   "tools/uhr-bilder/erzeugen.sh", 13,
-     r"sie BITGLEICH \(geprueft"),
+    # uhrbilder.wortlaut hiess bis zum 13.09.2026 "uhrbilder.bitgleich" und
+    # suchte "sie BITGLEICH \(geprueft". Backlog Nr. 94 hat das Wort zu
+    # PIXELGLEICH berichtigt (Backlog-Runde 3, AP2) — genau die Stelle, die
+    # dieser Anker festhielt. Der Anker bleibt, sucht aber jetzt den Teil des
+    # Satzes, der von der Streitfrage NICHT beruehrt ist: das Messmittel. So
+    # haelt er auch die naechste Umformulierung des Adjektivs aus, statt bei
+    # jeder NICHT GEFUNDEN zu melden.
+    ("D", "uhrbilder.wortlaut",    "tools/uhr-bilder/erzeugen.sh", 13,
+     r"geprueft mit `compare -metric AE`"),
     # ---- Paket E: Android-Ortung und Dienstende (Zusatzkonzept) ------------
     #
     # Kennungen mit "e." — sie gehoeren zum Zusatz

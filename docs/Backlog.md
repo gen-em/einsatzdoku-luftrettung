@@ -7,6 +7,23 @@ Bewusst offene Punkte.
 sondern nach unten in den Abschnitt *Erledigt* verschoben und behalten ihre
 Nummer. Neue Punkte hängen sich hinten an.
 
+**Zur Schreibweise von Fundstellen und Zahlen (Regel seit 13.09.2026).**
+Einträge nennen **Funktionsnamen statt Zeilennummern**
+(`ingest_tag_nachziehen()` statt `ingest.php:623`); in Markdown-Dokumenten,
+die keine Funktionen kennen, die Abschnittsüberschrift oder den
+Auslieferungseintrag (`Technik.md` 4.97a statt `Technik.md:2674`).
+Funktionsnamen und Überschriften überleben Auslieferungen, Zeilennummern
+nicht — am wenigsten in `docs/CHANGELOG.md`, wo jeder neue Eintrag oben
+dazukommt und alles darunter nach unten wandert. Wo eine Zeile wirklich
+gebraucht wird, steht das Messdatum daneben. Dasselbe gilt für gezählte
+Werte: „53, gemessen 13.09.2026" kostet eine Klammer und sagt der nächsten
+Instanz sofort, wie alt der Wert ist. Anlass war die Durchsicht
+vom 12.09.2026: Von sechs Einträgen mit Zeilennummern waren alle sechs
+verschoben, von sieben gezählten Werten alle sieben veraltet — und keiner
+davon sah falsch aus. (Nebenbei: Kein Absatz darf mit einer Zahl und einem
+Punkt beginnen — der Einzeiler oben hielte ein Datum am Zeilenanfang für
+eine Nummer.)
+
 **Zu den fehlenden Nummern 4, 6 und 7.** Sie waren vergeben und sind ohne
 Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
 deshalb dauerhaft frei — weder werden sie neu vergeben noch nachgetragen. Diese
@@ -78,6 +95,23 @@ nicht liest. **148 und 149 stehen seit dieser Stufe unter *Erledigt***; ihre
 Nummern bleiben, und Teil (a) von 149 ist als Regel im Runbook abgelegt und
 wird in P5 und P6 wieder aufgerufen.
 
+**Zu den Nummern 87, 81, 88 und 175 (Backlog-Durchsicht vom 12.09.2026,
+eingearbeitet 13.09.2026).** Die Durchsicht hat alle 61 offenen Punkte gegen
+Web 19.3.0 · Uhr 3.1.0 · Android 0.15.0 gehalten und sechzehn Entscheidungen
+protokolliert (`docs/konzepte/Backlog-Durchsicht-2026-09-12.md`). Kein Punkt
+hatte sich unbemerkt selbst erledigt; gealtert waren Zahlen, Zeilennummern
+und sechs Aussagen — alle berichtigt. Drei Punkte verlassen *Offen*: **87**
+ist als Erhebung mit R70 beantwortet und stünde sonst neben P7 ein zweites
+Mal; **81** ist ohne Beleg am Gerät geschlossen, weil die wahrscheinliche
+Ursache seit Android 0.11.1 behoben ist — mit einer Wiederöffnungsbedingung
+im Eintrag; **88** ist verworfen und steht wie Nr. 71 als Entscheidung unter
+*Erledigt*. Zehn weitere Einträge tragen jetzt ihre Entscheidung im Text
+(57, 41, 42, 45, 124, 150, 117, 169, 21, 62); vier davon (41, 42, 45, 124)
+bilden die Mockup-Runde, die `docs/Rahmenplan.md` verortet. Die Zahl der
+offenen Punkte fällt damit von 61 auf 58 — und steigt mit **175** (ein
+Nebenfund der Gegenprüfung, angelegt auf Anweisung vom 13.09.2026) auf
+**59**.
+
 **Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
 rekonstruierbar: Code und Changelog verweisen an neun Stellen namentlich auf
 sie („Backlog Nr. 10"), und aus diesen Fundstellen geht eindeutig hervor,
@@ -103,8 +137,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
     Mengenbremse.** `RATE_GRENZEN` (`ratelimit_lib.php`) kennt keinen Topf
     `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
-    `rate_misserfolg()`. Die drei übrigen offenen Endpunkte (`login`, `salt`,
-    `reset`, `pair`) haben ihn. Gefunden in P0/A6 (dort F-16); die
+    `rate_misserfolg()`. Die übrigen offenen Endpunkte haben ihn — `RATE_GRENZEN`
+    führt **neun** Töpfe (gemessen 13.09.2026: `login`, `salt`, `reset`,
+    `pair`, `pair_start`, `pair_code`, `demo`, `demog`, `testmail`; bei
+    Aufnahme waren es „die drei übrigen", genannt vier). Gefunden in P0/A6 (dort F-16); die
     Konzeptarbeit dazu ist an **Phase P5** übergeben (Rahmenplan R19), weil
     die richtige Grenze von der Uhr-Seite her zu bestimmen ist — eine Uhr, die
     einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden. **P1 misst
@@ -126,10 +162,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     keine hinreichende Begründung — ein Feld kann für ein älteres Backup
     oder eine künftige Uhr-Fassung gebraucht werden. Eigenes Paket mit eigener
     Freigabe.
+    **Entschieden am 12.09.2026: an den P6-Review übergeben** (R69). Die
+    Quellliste — Abschnitt 9.3 des P0-Konzepts — existiert nicht mehr; das
+    Konzept steht im Rahmenplan (Abschnitt 8) ausdrücklich als „nicht im
+    Repositorium". Der Review geht ohnehin alles durch und findet die
+    Kandidaten neu; ein eigenes Paket vorher wäre Arbeit ohne Liste.
+    Zuordnung: **P6**.
 23. **`docs/JSON-Vertrag.md` 3.3 nennt eine Reanimationsart, die kein
     Schreibweg annimmt.** Der Vertrag führt `beginn` unter den gültigen Werten
-    von `events[].type`; `ingest.php:299` speichert das Ereignis **still
-    nicht**, `einsatz_form.php:317` weist es ab. Beide begründen es gleich und
+    von `events[].type`; `ingest_tag_nachziehen()` in `ingest.php` speichert das
+    Ereignis **still nicht**, die Ereignisprüfung in `einsatz_form.php` weist
+    es ab (bei Aufnahme `ingest.php:299` und `einsatz_form.php:317`, am
+    13.09.2026 Zeilen 623 und 328). Beide begründen es gleich und
     richtig: Der Reanimationsbeginn steckt in `started_at` der Sitzung. Der
     Vertrag sagt von sich, eine Abweichung sei „ein Fehler in der Umsetzung,
     nicht im Vertrag" — hier spricht die Sache für den Code. **Vorschlag:
@@ -229,11 +273,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Stille Kappungen** — gefährlicher als langsame Seiten, weil eine
     Dokumentation, die Zeilen verschweigt, falsch ist: `dt_liste($userId, 500)`
-    in der Diensttage-Leiste (`ui.php:498`), 120 in `api/day.php:130`, 400 im
-    Verschiebe-Dialog (`einsatz_verschieben.php:64`). Keine davon sagt der
-    Anwenderin, dass sie greift. **Laute Grenzen** dagegen melden sich
-    ordentlich mit HTTP 413: Import bei 3000 Einsätzen / 600 Diensttagen
-    (`api/import_commit.php:93`), Export bei 5000 (`api/export_data.php:182`).
+    in der Diensttage-Leiste (`ui_leiste_diensttage()` in `ui.php`), 120 im
+    GET-Zweig von `api/day.php`, 400 im Verschiebe-Dialog (`$LIMIT` in
+    `einsatz_verschieben.php`). Keine davon sagt der Anwenderin, dass sie
+    greift. **Laute Grenzen** dagegen melden sich ordentlich mit HTTP 413:
+    Import bei 3000 Einsätzen / 600 Diensttagen (`api/import_commit.php`),
+    Export bei 5000 (`api/export_data.php`). *Alle sechs Kappungen am
+    13.09.2026 bestätigt; die Zeilennummern der Aufnahme sind verschoben.*
 
     **Die zweite Achse — viele KONTEN statt vieler Einsätze — ist seit P3/O9b
     gemessen** und vorerst erledigt (`tools/pruefkonten/`, 300 Konten): Die
@@ -248,11 +294,17 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `edbak_intervall()` fragte je Zeile die Datenbank — 304 Abfragen und
     27,7 ms für eine Subtraktion.
 
-    **Noch nicht auf dieser Achse gemessen:** `admin_sicherungen.php` (die
-    Übersicht dort liest weiterhin je Konto ein Verzeichnis **und** eine
-    Begleitdatei — F-P3-F, fällig in O9c) und der Sammelvorgang „Alle sichern"
+    **Noch nicht auf dieser Achse gemessen:** der Sammelvorgang „Alle sichern"
     (222 ms je Konto mit 82 Einsätzen; die Liste begrenzt eine Sammelaktion
     deshalb auf ein Zeitbudget von 20 s und sagt, was übrig blieb).
+    *Berichtigt 13.09.2026:* Hier stand, `admin_sicherungen.php` lese
+    „weiterhin je Konto ein Verzeichnis **und** eine Begleitdatei" (F-P3-F).
+    Das stimmt nicht mehr — die Seite zählt über `edbak_stand_zaehlen()` →
+    `edbak_staende()`: **ein** `scandir` der Wurzel, je Konto nur die kleine
+    `konto.json`; ein `scandir` je Ordner bleibt nur für Ordner ohne lesbare
+    Begleitdatei (der Code sagt es dazu) und für die **verwaisten** Ordner
+    (`edbak_verwaiste()` → `edbak_pakete()`). Das ist genau die Bauform, die
+    dieser Eintrag ein paar Zeilen höher als gelöst beschreibt.
 
     **Was noch fehlt:** die Serverseite bei vielen EINSÄTZEN. Sie ist die
     einzige Größe, die die Sondierung nicht erreicht — dafür braucht es echte
@@ -262,8 +314,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Verteilungen: realistisch mit rund sechs Einsätzen je Diensttag, und
     verdichtet auf ein Kalenderjahr für die Zeitraumübersicht. Zwei Fallstricke
     stehen dabei fest: Das Demo-Konto scheidet als Ziel aus (es setzt sich alle
-    1800 s selbst zurück, `demo_lib.php:52`), und ein `pat_blob` ist zwar 1:1
-    kopierbar (AES-GCM ohne `additionalData`, IV im Blob — `crypto.js:109`),
+    1800 s selbst zurück — `DEMO_RESET_SEKUNDEN` und
+    `demo_reset_wenn_faellig()` in `demo_lib.php`), und ein `pat_blob` ist
+    zwar 1:1 kopierbar (AES-GCM ohne `additionalData`, IV im Blob —
+    `encrypt()` in `crypto.js`),
     darf aber niemals mit behaltenem IV und geändertem Klartext geschrieben
     werden: Das bräche die Verschlüsselung für die echten Einsätze desselben
     Kontos gleich mit.
@@ -291,17 +345,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       am Messstand 6 202 931 verwaiste Punkte aus zwei Konten (F-S2-B,
       behoben in AP1).
 
-    **Was hier offen bleibt,** bis die Phase durch ist: Zeitraumübersicht und
-    Nachbearbeitung bei dieser Menge, `admin_sicherungen.php` (siehe oben),
-    und die Frage, ob die Zielzahlen aus E-S2-24 (Suche ≤ 5 s, Tagesansicht
-    ≤ 3 s, Backup ≤ 5 min) gehalten werden.
+    **Was hier offen bleibt,** bis die Phase durch ist — drei Messungen:
+    Zeitraumübersicht und Nachbearbeitung bei 5 000 Einsätzen, die Frage, ob
+    die Zielzahlen aus E-S2-24 (Suche ≤ 5 s, Tagesansicht ≤ 3 s, Backup
+    ≤ 5 min) gehalten werden, und `post_max_size` des Produktivservers
+    (siehe oben). Dieser Eintrag ist die **führende** Fassung; die Bemerkung
+    in Rahmenplan Abschnitt 5 verweist hierher.
 
-40. **55 Altklassen ohne Gegenstück.**
+40. **Altklassen ohne Gegenstück — 53 (gemessen 13.09.2026), 55 bei Aufnahme.**
     *Aufgenommen in P3/O11, war für O12 vorgesehen, in O12 bewusst
     zurückgestellt.* Die Vollständigkeitsprüfung verlangt für jede der 220
     Klassen des alten Stylesheets entweder eine Regel im neuen oder einen
     Eintrag auf der Streichliste. O11 hat 22 Einträge nachgetragen (die Zahl
-    fiel von 78 auf 55); die übrigen stammen aus O1 bis O10 und sind dort mit
+    fiel von 78 auf 55, seither auf 53); die übrigen stammen aus O1 bis O10 und sind dort mit
     dem Umbau verschwunden, ohne eingetragen zu werden. Die Streichliste ist
     damit unvollständig — sie sagt nicht zu jeder verschwundenen Klasse,
     *warum* sie verschwunden ist, und genau das ist ihr Zweck.
@@ -322,15 +378,17 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     feststellbar" und wird als solcher gezählt; auch das ist eine ehrliche
     Auskunft, „ersatzlos" wäre eine erfundene.
 
-41. **Sechs Klassen im Markup ohne Regel — offene Gestaltungsfragen.**
+41. **Fünf Klassen im Markup ohne Regel — Gestaltungsfragen, am 12.09.2026 entschieden.**
     *Aufgenommen in P3/O12 als Rest von Nr. 39.* Nach dem Eintragen der
-    begründeten Fälle in `tools/vollstaendigkeit/ohne-regel.md` bleiben sechs
-    Namen übrig, bei denen die Frage offen ist, ob sie eine Regel brauchen.
-    Sie stehen dort mit dem Vermerk `[offen]` und bleiben deshalb ein Befund:
+    begründeten Fälle in `tools/vollstaendigkeit/ohne-regel.md` blieben sechs
+    Namen übrig, bei denen die Frage offen war, ob sie eine Regel brauchen;
+    seit S9/AP1 sind es **fünf** (gemessen 13.09.2026) — `rmneu` ist dort
+    beantwortet, siehe unten. Sie stehen mit dem Vermerk `[offen]` und
+    bleiben deshalb ein Befund:
 
     - `imp-warn` — „abweichende Crew (…)" in der Kopfzeile einer Tagesgruppe
       der Importvorschau. Ein **Warnhinweis, der wie Fließtext aussieht**;
-      von allen sechs der wahrscheinlichste echte Fund.
+      von allen fünf der wahrscheinlichste echte Fund.
     - `imp-daygroup` — die Kopfzeile einer Tagesgruppe selbst. Sie trägt ihren
       Text in `<strong>`, sonst nichts: eine Gruppenüberschrift, die aussieht
       wie eine Datenzeile.
@@ -340,6 +398,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
       Entweder Reste, oder die Kopfzeile soll sich von einer gewöhnlichen
       Phasenzeile abheben.
     - `rmneu` — der Knopf „neu" in der Rettungsmittelwahl, neben `rmopt`.
+      **Beantwortet in S9/AP1** und seither auf `streichliste.md` („Ja, sie
+      hebt sich ab — sie ist eine Handlung, kein Datensatz").
     - `phasen-name` — der Name einer Phase in der Einsatzansicht.
 
     Jedes davon ist eine **Entscheidung**, kein Aufräumen: Entweder die Klasse
@@ -347,10 +407,41 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Darstellung und braucht nach `docs/Design.md` 1 eine Freigabe. Deshalb
     nicht am Phasenende erledigt.
 
+    **Entschieden am 12.09.2026:** `imp-warn` und `imp-daygroup` bekommen
+    eine Regel — dort ist tatsächlich etwas schief (ein Warnhinweis, der wie
+    Fließtext aussieht, und eine Gruppenüberschrift, die wie eine Datenzeile
+    aussieht). `rea-kopf`, `rea-beginn` und `phasen-name` werden gestrichen
+    und **mit Begründung** in `tools/vollstaendigkeit/streichliste.md`
+    eingetragen. Die zwei neuen Regeln sind zwei **neue Darstellungen** und
+    gehen in die **Mockup-Runde** (mit Nr. 42, 45 und 124; Ort im
+    Rahmenplan).
+    **Die drei Streichungen sind erledigt (Backlog-Runde 3, AP5, Web 19.3.1,
+    13.09.2026); der Punkt bleibt offen und liegt bei 9c.** `rea-kopf` und
+    `rea-beginn` sind aus `einsatz_form.php`, `phasen-name` zweimal aus
+    `einsatz.php`; alle drei stehen mit Begründung auf `streichliste.md`, die
+    drei `[offen]`-Zeilen in `ohne-regel.md` sind heraus. Gemessen gegen den
+    Stand davor: `[offen]` **5 → 2**, „auf der Streichliste, aber noch im
+    Markup" **0**, „`ohne-regel.md`: Eintrag ungenutzt" **0**, Befunde
+    insgesamt **334 → 330**. Die vierte weggefallene Meldung hatte der Auftrag
+    nicht vorhergesehen: `rea-kopf` stand im alten Stylesheet und war bis
+    hierher auch „ohne Gegenstück" (**53 → 52**).
+    **Im Browser bewegt sich nichts.** Vier Seiten vor und nach der Änderung:
+    im DOM `rea-kopf` 2 → 0, `rea-beginn` 2 → 0, `phasen-name` 9 → 0 und
+    22 → 0, `rea-sitzung` und `phasen-eingabe` unverändert. Bildvergleich
+    **0 abweichende Bildpunkte** auf allen vier Seiten, nachdem der
+    Demo-Zähler geschwärzt war — er zählt bis zum nächsten Reset herunter und
+    verursachte auf jeder Seite dieselben 3079 Punkte (Rahmen y 117–126).
+    **Beim Austragen berichtigt:** Der Eintrag zu `phasen-name` in
+    `ohne-regel.md` nannte `einsatz.php:631`; es sind die Zeilen 764 und 805.
+    **Offen bleiben `imp-warn` und `imp-daygroup`** — sie brauchen je eine
+    Regel, und das sind zwei neue Darstellungen (Mockup-Runde 9c).
+
 42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
     *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4, AP5, AP5b
-    und AP6.* P-P3-03 verlangt null. Die Prüfung meldet **195** Treffer (bei
-    Aufnahme 158); 192 davon sind Kommentare oder richtige Typografie (die
+    und AP6, zuletzt am 13.09.2026.* P-P3-03 verlangt null. Die Prüfung
+    meldet **255** Treffer (gemessen 13.09.2026; 195 bei der vorigen
+    Fortschreibung, 158 bei Aufnahme); alle bis auf drei sind Kommentare oder
+    richtige Typografie (die
     Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der Hinweise,
     das Malzeichen in „3× RTW"). Drei sind echte Symbole — dieselben drei wie
     bei der Aufnahme:
@@ -362,22 +453,25 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     > auf 174 (`?art=…&id=…` allein zählt viermal), S2/AP5 mit den
     > Fortschrittsmeldungen des Backup-Laufs („Teil 2 von 5 …") auf 189
     > S2/AP5b mit drei Auslassungspunkten in **Kommentaren** auf 192 und
-    > S2/AP6 mit den Fortschrittsmeldungen des Freigabewegs auf 195 — jedes
-    > Mal gemessen gegen den Stand davor, nicht geschätzt.
+    > S2/AP6 mit den Fortschrittsmeldungen des Freigabewegs auf 195 und die
+    > Pakete bis Web 19.3.0 auf 255 — jedes Mal gemessen gegen den Stand
+    > davor, nicht geschätzt. Neu seit der letzten Zählung sind außerdem
+    > **8 Emoji**, alle im Kommentar von `assets/pwquality.js`, der erklärt,
+    > warum `schriftzeichen()` in Grapheme zerlegt: dieselbe Sorte Rauschen.
     > Wer die Zahl als
     > Fortschrittsmaß liest, liest sie falsch — gemeint sind die drei unten.
     > Das Prüfmittel trennt beides nicht, und das gehört hierhin und nicht in
     > eine Fußnote.
 
 
-    - `server/einsatz_form.php:1416` — `'✕'` als **Rückfall**, wenn
+    - `wegKnopf()` in `server/einsatz_form.php` — `'✕'` als **Rückfall**, wenn
       `edSymbol()` beim synchronen Aufbau noch nicht geladen ist. Mit
       Begründung im Code; das ist kein Fehler, sondern ein Netz, und es
       gehört eher dokumentiert als entfernt.
-    - `server/assets/ortsfeld.js:197` — `x.textContent = '×'` am
+    - `zeichne()` in `server/assets/ortsfeld.js` — `x.textContent = '×'` am
       Koordinaten-Chip. Der Knopf `.rmx` ist textgroß gebaut und hat keine
       Symbolregel; ein SVG hineinzusetzen heißt, ihn neu zu bemaßen.
-    - `server/assets/patient.js:133` — `⚠` für einen nicht entschlüsselbaren
+    - `ZEICHEN_UNLESBAR` in `server/assets/patient.js` — `⚠` für einen nicht entschlüsselbaren
       Datensatz. Das Zeichen steht nicht nur in einer Zelle, sondern **im
       Satz** („… ist mit ⚠ gekennzeichnet"). Ein SVG im Fließtext ist eine
       Gestaltungsfrage, keine Ersetzung.
@@ -385,6 +479,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Die beiden letzten sind also kein mechanischer Tausch. Solange sie
     stehen, ist der Sollwert von P-P3-03 nicht erreicht — und das steht so im
     Prüfprotokoll, statt die Zahl schönzurechnen.
+
+    **Entschieden am 12.09.2026: beide ersetzen.** Das `×` am
+    Koordinaten-Chip — der Knopf `.rmx` ist textgroß gebaut und wird neu
+    bemaßt — und das `⚠` im Fließtext, das Grundlinie und eine Größe relativ
+    zur Schrift braucht (der fummeligere der beiden Fälle). Beide gehen in
+    die **Mockup-Runde** (mit Nr. 41, 45 und 124). Der `✕`-Rückfall in
+    `wegKnopf()` **bleibt** und wird als begründete Ausnahme dokumentiert.
 
 43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt — und das
     Transportziel auch nicht.**
@@ -429,6 +530,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Regelfall klein und im Vollbild oft zu groß. Vorschlag aus der Durchsicht:
     eine mittlere Fassung über die volle Breite des Diensttags, über der
     Liste. Kein Mockup, keine Freigabe — bewusst nicht in dieser Runde.
+    **Entschieden am 12.09.2026: bauen, Mockup zuerst.** Geht in die
+    **Mockup-Runde** (mit Nr. 41, 42 und 124) und verlässt damit die Gruppe
+    „nach v1.0" im Rahmenplan.
 
 46. **Das Altformat des Backups wird mit NaDoku 1.0 abgeschafft.**
     *Aufgenommen 31.08.2026 (S2/AP5), Entscheidung desselben Tages.* Seit
@@ -440,9 +544,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (`openBackup`, Fassung 2 und 3), der Punktlisten-Rückweg in
     `backup_lib.php` (`$spurSchreiben`, `$insPoint`), die Annahme von
     Nutzlast 6 und 7 in `api/backup_restore.php`, die Fassungsweiche in
-    `tools/referenzdatensatz/vergleich/lesen.py`, die einteilige
+    `tools/referenzdatensatz/vergleich/kreislauf.py` (`umlauf_edbak()` und
+    `--art edbak-alt` in `main()` — *nicht* `lesen.py`, wie hier bis zum
+    13.09.2026 stand; dort kommt `version` nicht vor), die einteilige
     Referenzdatei unter `referenz/altformat/` samt dem Lauf `--art edbak-alt`
-    und seiner Ausnahmeliste.
+    und seiner Ausnahmeliste `vergleich/ausnahmen/edbak-alt_umlauf.json`.
 
     **Und der Messstand hängt daran.** `tools/messstand/vervielfaeltigen.py`
     baut den 5000er-Bestand, indem es die Referenz-Nutzlast vervielfältigt und
@@ -470,34 +576,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Vorher zu klären: Was geschieht mit einer alten Datei nach dem Stichtag?
     Vorschlag: Die Meldung nennt die letzte Fassung, die sie noch einspielen
     konnte — so wie es `version_alt` heute für Nutzlasten unter 6 tut.
-47. **Nichts hält das native `confirm()` draußen.**
-    *Aufgenommen 31.08.2026 (S2/AP5b, aus F-S2-D).* `assets/confirm.js` gibt
-    es, weil Browser bei nativen Dialogen „keine weiteren Dialoge dieser
-    Seite anzeigen" anbieten — danach verschwinden Rückfragen stillschweigend. Das
-    Handbuch sagt das auch zu: „Alle Rückfragen erscheinen als Fenster
-    **innerhalb der Seite**."
-
-    Diese Zusage war zwei Jahre lang falsch. Zwei Aufrufe im Backup-Bereich
-    von `einstellungen.php` benutzten weiter `window.confirm`; aufgefallen ist
-    es erst, als der Kreislauftest daran hängenblieb — Playwright weist native
-    Dialoge stillschweigend ab, und das Einspielen brach ab, ohne dass jemand
-    eine Frage gesehen hätte. Beide sind auf `window.edConfirm` umgestellt.
-
-    Was fehlt, ist die Schranke: eine Prüfung, die `confirm(`, `alert(` und
-    `prompt(` in `server/**/*.php` und `server/assets/*.js` findet und meldet
-    — mit Ausnahmeliste für die eine berechtigte Stelle (`confirm.js` selbst
-    benutzt `window.confirm` als Rückfall für Browser ohne `<dialog>`).
-
-    > **Warum eine Prüfung und nicht nur Aufmerksamkeit.** Der Fehler ist
-    > unsichtbar: Ein natives `confirm()` funktioniert im Alltag, es fällt
-    > erst bei einer abgeschalteten Dialogsorte oder in einem Prüfbrowser auf
-    > — also genau dann, wenn niemand hinsieht.
-
-    Naheliegender Ort: `tools/vollstaendigkeit/`, das ohnehin Markup und
-    Stylesheet gegeneinanderhält, oder ein eigenes kleines Prüfmittel neben
-    `tools/wortliste/`. Verwandt mit Nr. 36 (Klassennamen, die JavaScript
-    sucht): beides sind Zusagen, die im Code stehen und die niemand nachzählt.
-
 48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
     *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
     manuell mehr je Konto möglich". Umgesetzt ist die Zahl für die ganze
@@ -721,23 +799,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     kommen, weil sie keine Spalten von `missions` sind. Geschätzt
     zweieinhalb bis drei Tage. Zuordnung: eigenes Paket, nicht Backlog-Runde.
 
-58. **Kein Prüfmittel fragt, ob eine Seite ihr Gerüst hat.**
-    *Aufgenommen 02.09.2026 als Lehre aus F-S3-C (S3/AP5).*
-    `tag_spuren.php` lief zwei Jahre ohne `ui_geruest_start()`: keine
-    Diensttag-Leiste, kein `.rahmen`/`.inhalt` und damit kein seitlicher
-    Innenabstand — auf 412 px saß die linke Kante bei 0 statt 12 px.
-    **Gefunden hat es ein Mensch auf einem Telefon.**
-    Kein Werkzeug konnte es finden, und das ist kein Zufall: Der Bilderlauf
-    misst waagerechten Überlauf (`scrollWidth > innerWidth`), und eine Seite
-    ohne Innenabstand läuft nicht über — sie ist nur randlos. Die
-    Vollständigkeitsprüfung fragt nach Klassen ohne Regel, nicht nach Seiten
-    ohne Gerüst. Der Stilvergleich misst Markup-Proben.
-    **Die Frage ist am Quelltext zu beantworten:** Jede Seite, die
-    `require_admin()` oder `auth_guard.php` einbindet und eigenes Markup
-    ausgibt, muss `ui_geruest_start()` und `ui_geruest_ende()` aufrufen. Ein
-    kleines Prüfmittel dafür wäre ein Nachmittag und fände die ganze Klasse
-    von Fehlern statt eines Falls.
+    **Entschieden am 12.09.2026: Das gemeinsame Modul (`assets/missiontable.js`)
+    ist die Vorlage.** Beschriftung der Spalte „Sekundärtransport",
+    Ausrichtung von Alter und Beginn und die Reihenfolge der Haken folgen
+    ihm; `index.php` zieht nach. Die drei Freigabefragen aus Schritt 0 sind
+    damit beantwortet; es bleibt ein eigenes Paket.
 
+    > **Bindende Nebenbedingung — am Code belegt und wichtiger, als sie
+    > klingt.** Die bedingte Anzeige von Winde und Bergwacht läuft über
+    > `cap_gate` im Feldkatalog (`mission_fields.php`): Ein Feld erscheint
+    > nur, wenn der Diensttag die passende Fähigkeit trägt. `index.php` holt
+    > seine Spalten über `mf_tagesspalten()` und bekommt das Verhalten
+    > geschenkt. **Suche und Zeitraumübersicht tun das nicht** —
+    > `api/range.php` und `api/suchindex.php` führen `winch`, `bergwacht`,
+    > `secondary` und `false_alarm` hart im SELECT.
+    >
+    > Genau die Eigenschaft, die erhalten bleiben soll, sitzt heute auf der
+    > Seite, die weichen soll. Sie muss beim Zusammenführen **ausdrücklich**
+    > mitgenommen werden — als erster Prüffall des Pakets. Geht sie verloren,
+    > fällt das erst an einem NEF-Tag auf, an dem plötzlich Windenspalten
+    > stehen — und dann sieht es aus wie ein neuer Fehler, nicht wie ein
+    > verlorener Vertrag.
 
 62. **Logodateien tragen teilweise wieder die alten Farbwerte.**
     *Bis zum 02.09.2026 trug dieser Punkt die Nummer 49. Sie war durch die
@@ -756,12 +838,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     vorab; S4/B1 übernimmt den dann aktuellen Stand der Dateien in die App.
     Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
     Ableitungen nachmessen.
+    **Entschieden am 12.09.2026: neue Vorlagen anfordern.** Der Punkt ist
+    größer, als er dastand: Auch die PNG-Fassungen tragen die alten Werte —
+    im Repositorium gemessen 13.09.2026 (`gen-em_logo_helicopter.png`, die
+    häufigsten deckenden Pixel: `#E4302C`, `#577ABC`, `#F7941D`, `#1C0B0B`),
+    und laut der Durchsicht vom 12.09.2026 ebenso die beigelegten Vorlagen
+    — es gibt keine korrigierte Quelle, aus der sich die Dateien ableiten
+    ließen. Richtig sind heute nur `gen-em_logo_nef_weiss.svg` und
+    `gen-em_logo_nef.png`; `gen-em_logo_nef.svg` trägt den alten Korpus. Bis
+    korrigierte Vorlagen in den Markenfarben vorliegen, passiert am Code
+    nichts. `Design.md` 2.5 („B1 erledigt, nachgemessen") ist am 13.09.2026
+    berichtigt, damit dort bis zur Lieferung keine falsche Zusage steht.
+    Zuordnung: **wartet auf Zuarbeit** (Rahmenplan Abschnitt 6).
 
 65. **Vierzehn Fassungshinweise im Android-Baulauf hängen an einer
     Entscheidung.**
     *Aufgenommen 02.09.2026 als Rest aus B-S4-04 (S4/D1).*
-    `lintDebug` meldet für `android/handy/` 14 Warnungen, und sie sind nicht
-    vierzehn Entscheidungen, sondern **eine**: `androidx.wear.compose` 1.6.2
+    `lintDebug` meldete für `android/handy/` 14 Warnungen (Stand Android
+    0.11.x; die Zahl ist am 13.09.2026 vier Android-Stufen alt und ohne SDK
+    nicht nachzählbar — gemessen sind AGP 8.13.2, Kotlin 2.1.21, Compose-BOM
+    2025.06.01, wear-compose 1.4.1, `abortOnError = true`, nichts
+    stummgeschaltet), und sie sind nicht vierzehn Entscheidungen, sondern
+    **eine**: `androidx.wear.compose` 1.6.2
     und die Compose-BOM 2026.08.00 verlangen einen neueren Compose-Compiler;
     der hängt an Kotlin, Kotlin 2.4 an AGP 9. Dieselbe Kette ziehen
     `core-ktx`, `lifecycle`, `activity-compose` und die vier
@@ -780,21 +878,25 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Ein Endpunkt, der sie aufriefe, schickte einer `fetch()`-Anfrage also eine
     Fehlerseite statt eines Fehlerobjekts — die Oberfläche zeigte „unerwartete
     Antwort" statt „Sitzung abgelaufen".
-    **Bisher folgenlos, weil es diesen Aufrufer nicht gibt.** Von den 15
-    Dateien unter `server/api/` ruft **keine** `csrf_check()` auf. Die **elf**,
-    die POST annehmen, prüfen jede selbst gegen `HTTP_X_CSRF` — neun davon
-    ändern Zustand (acht schreiben in die Datenbank,
-    `adminbackup_freigabe.php` in eine Begleitdatei), die beiden anderen
+    **Bisher folgenlos, weil es diesen Aufrufer nicht gibt.** Von den **17**
+    Dateien unter `server/api/` (gemessen 13.09.2026; 15 bei der Zählung vom
+    02.09.2026) ruft **keine** `csrf_check()` auf. Die **zwölf**, die POST
+    annehmen, prüfen jede selbst gegen `HTTP_X_CSRF` — seit dem 02.09.2026
+    ist `pat_anheben.php` dazugekommen; die meisten ändern Zustand, zwei
     (`backup_spuren.php`, `export_data.php`) lesen nur und benutzen POST für
-    die Nutzlast. Die übrigen **vier** (`backup_data.php`, `mission.php`,
-    `range.php`, `suchindex.php`) sind streng GET-only, weisen alles andere
-    mit 405 ab und haben kein Schreib-SQL; ihnen fehlt die Prüfung also nicht.
+    die Nutzlast. Die übrigen **fünf** (`backup_data.php`,
+    `kopplung_stand.php`, `mission.php`, `range.php`, `suchindex.php`) sind
+    streng GET-only, weisen alles andere mit 405 ab und haben kein
+    Schreib-SQL; ihnen fehlt die Prüfung also nicht — `kopplung_stand.php`
+    sagt im Kopf, warum. Die Invariante hält.
     Es ist damit eine **unausgesprochene Invariante**, keine Störung — und die
     Nachzählung hat keinen ungeschützten schreibenden Endpunkt gefunden.
     **Zwei Einschränkungen an diesen Sätzen**, aus einer Gegenprüfung vom
     02.09.2026, damit die nächste Zählung nicht darauf hereinfällt:
-    `kdf_upgrade.php` prüft erst in Zeile 67 — Zeile 66 steigt für das
-    Demo-Konto vorher mit `json_out(['ok' => true, …])` aus. Heute folgenlos,
+    `kdf_upgrade.php` prüft `HTTP_X_CSRF` erst **nach** dem Demo-Ausstieg —
+    die Zeile davor steigt für das Demo-Konto mit `json_out(['ok' => true,
+    …])` aus (Zeilen 69 und 70, gemessen 13.09.2026; 66 und 67 bei
+    Aufnahme). Heute folgenlos,
     weil hinter dem Ausstieg nichts steht; kippt aber, sobald dort mehr steht
     als ein `json_out()`. Die beiden Zeilen gehören getauscht. Und „kein
     Schreib-SQL" gilt für die vier **Dateien**, nicht für die vier
@@ -820,6 +922,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Backlog-Punkt altert also, während der Punkt liegt**, und sie altert
     lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
     vorher wieder nach — die Zählung von heute ist morgen genauso alt.
+    **Der Unterpunkt ist erledigt (Backlog-Runde 3, AP4, Web 19.3.1, 13.09.2026);
+    der Punkt selbst bleibt offen und liegt bei P5.** In
+    `server/api/kdf_upgrade.php` steht die CSRF-Prüfung jetzt **vor** dem
+    Demo-Ausstieg. Bis dahin kam ein Aufruf ohne Formular-Token für das
+    Demo-Konto mit 200 zurück, während jedes andere Konto 403 sah — folgenlos
+    nur, weil hinter dem Ausstieg nichts steht. Am Prüfstand gemessen, alter
+    gegen neuer Stand bei sonst gleichem Aufbau: **ohne Header vorher 200,
+    jetzt 403 `{"error":"csrf"}`; mit Header unverändert 200 mit
+    `uebersprungen: demo`.** Dazu falscher und leerer Header, beide 403. Die
+    Reihenfolge ist im Kopfkommentar der Datei begründet, der stille Erfolg in
+    `docs/Technik.md` als bedingt gekennzeichnet.
+    **Offen bleibt der Hauptpunkt:** der `ist_api_aufruf()`-Zweig in
+    `csrf_check()` (oder die Invariante im Funktionskopf), damit die Endpunkte
+    unter `server/api/` die Prüfung nicht jeder selbst schreiben. Vor dem
+    Anfassen neu zählen — siehe die Lehre oben.
 
 
 76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
@@ -914,96 +1031,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ---
 
-81. **Das App-Symbol wird in der Benachrichtigung falsch dargestellt.**
-    *Aufgenommen 02.09.2026 vom Auftraggeber, mit Bildschirmfoto (Android,
-    laufende Aufzeichnung, 13:16).* In der Benachrichtigungsleiste erscheint
-    die Bildmarke **zu groß und angeschnitten** — der weiße Korpus reicht bis
-    an den Rand der Kachel, die farbigen Flächen sitzen links.
-    **Was geprüft wurde und stimmt** (damit die Suche nicht dort anfängt):
-    Das *Meldungssymbol* in der Statusleiste ist richtig — `symbol_meldung.xml`
-    ist ein einfarbiger Aufnahmepunkt, wie Android es verlangt. Das Manifest
-    zeigt mit `android:icon` und `android:roundIcon` auf `@mipmap/symbol`. Die
-    adaptive Kachel setzt die Marke auf 52 dp Breite in einer 108-dp-Kachel,
-    mittig, weiß auf `marke_dunkelblau`; die PNG-Vorlagen haben einen sauberen
-    Alphakanal (59 % vollständig durchsichtig).
-    **Nachgerechnet:** Die Kachel wurde aus den Quelldateien so zusammengesetzt,
-    wie Android sie zeichnet (108 dp, Vordergrund 52 × 33 dp mittig, sichtbarer
-    Kreis 72 dp) — das Ergebnis ist richtig: weiße Marke auf Dunkelblau, mit
-    Luft zum Rand. **Der Fehler ist aus dem heutigen Quellstand also nicht
-    nachvollziehbar.**
-    **Zu klären, bevor gesucht wird:** Welche App-Fassung liegt auf dem Gerät
-    (Einstellungen → Apps → NAdoku)? Ist es eine ältere als 0.7.7, erklärt das
-    den Befund und der Punkt erledigt sich mit der nächsten Auslieferung. Ist
-    es 0.7.7, liegt es an einem Zeichenweg, der hier nicht nachgebaut wurde —
-    Verdacht dann zuerst auf die `<monochrome>`-Ebene (Android 13+, „Themed
-    Icons") und auf die Symbolform des Herstellers.
-    **Beantwortet am 04.09.2026:** Die App-Fassung auf dem Gerät war **0.7.7**
-    — also *nicht älter* als 0.7.7. Der Punkt erledigt sich damit **nicht** von
-    selbst mit der nächsten Auslieferung; er bleibt ein echter Fund. Der Ort
-    ist der **Kopf der Benachrichtigung** (One UI zeichnet ihn als runde
-    Kachel links), nicht das Symbol in der Statusleiste. Ob „Themed Icons"
-    eingeschaltet sind, ist noch offen.
-
-    **Nachgemessen am 04.09.2026 — und eine Vermutung damit widerlegt.** Der
-    Verdacht lag auf der `<monochrome>`-Ebene: Sie verweist in
-    `mipmap/symbol.xml` auf **dasselbe** Drawable wie der Vordergrund, und
-    `marke_luft_weiss.png` ist **nicht einfarbig** — sie trägt vier Farbtöne
-    (weiß 54,5 %, rot 23,1 %, blau 13,6 %, orange 8,8 %; „weiß" meint nur den
-    Korpus). Android nimmt aus einer monochromen Ebene nur den Alphakanal und
-    färbt ihn ein, also müsste daraus ein Klumpen ohne Binnenzeichnung werden.
-
-    **Wird es aber nicht.** Der Alphakanal wurde einfarbig gefüllt und
-    angesehen: Die Silhouette ist **erkennbar**, weil die Binnenzeichnung des
-    Motivs nicht aus den Farben entsteht, sondern aus **durchsichtigen
-    Trennlinien** zwischen den Farbflächen. Sie überleben die Einfärbung. Der
-    Verweis ist also unsauber, aber nicht die Ursache des gemeldeten Bildes.
-
-    **Was damit weiterhin fehlt:** ein Beleg, wie One UI den
-    Benachrichtigungskopf zeichnet. Der Emulator führt AOSP und beantwortet
-    das nicht — er kann nur zeigen, dass es *dort* richtig aussieht.
-
-    **Prüfweg:** Am Gerät ansehen, nicht im Emulator — die Symbolform ist eine
-    Herstellereinstellung. Zuordnung: **S4-Rest** (Schritt 6), zusammen mit dem
-    Gerätetest auf dem S24.
-
-87. **Die Weboberfläche als installierbare Web-App auf Android.**
-    *Aufgenommen 02.09.2026 auf Anweisung des Auftraggebers: vor v1.0
-    prüfen, was es braucht, damit Android die Seite aus dem Browser heraus
-    als App auf dem Startbildschirm ablegt.* **Stand heute, am Code
-    gelesen:** kein Web-App-Manifest, kein Service Worker, kein
-    `theme-color`; vorhanden ist allein ein `apple-touch-icon` (`db.php`,
-    je Logo-Wahl). Chrome bietet „App installieren" nur an, wenn ein
-    Manifest mit Name, Startadresse, `display: standalone` und Symbolen in
-    192 und 512 px über HTTPS ausgeliefert wird. Ob zusätzlich ein Service
-    Worker Pflicht ist, hat sich in den Chrome-Fassungen der letzten Jahre
-    geändert — das ist am aktuellen Stand der Chrome-Dokumentation
-    nachzusehen, nicht aus dem Gedächtnis zu beantworten; ohne Service
-    Worker gibt es jedenfalls keine Offline-Seite, nur den Eintrag auf dem
-    Startbildschirm. **Zu prüfen (Erhebung, ein Nachmittag):** Manifest-
-    Felder und Symbolsatz aus den vorhandenen Logos (Rezept wie
-    `tools/uhr-bilder/`) · Umgang mit der Logo-Wahl je Profil — ein
-    Startbildschirm-Symbol ist fest wie das Launcher-Symbol der Uhr (R47),
-    also Vorgabe der Installation · Anmeldung und `sessionStorage`-Schlüssel
-    im Standalone-Fenster (ein Tab, ein Schlüssel, R44) · Wirkung auf die
-    CSP (Nr. 8) und die Zusage „keine fremde Quelle" · Nachweis mit der
-    Installierbarkeits-Diagnose in Chrome und am S24. **Abgrenzung:** Das ist
-    nicht die Android-App aus S4. Die zeichnet GPS auf und braucht dafür
-    einen Vordergrunddienst (E-R45-5: keine PWA für die Aufzeichnung); die
-    Web-App zeigt nur die Oberfläche. Beides nebeneinander ist gewollt.
-    **Entscheidung** über Umfang und Zeitpunkt in der Planung v1.0
-    (Rahmenplan Schritt 10); Umsetzung dann in P6 oder als Kleinpaket davor.
-    Zuordnung: Backlog-Runde (Erhebung), Entscheidung in Schritt 10.
-
-88. **Kachel „Einsätze je Gerät" in der Zeitraumübersicht.**
-    *Aufgenommen 02.09.2026 aus der Entscheidung zu Nr. 83 (R64).* Jede
-    NutzerIn sieht in ihrer Zeitraumübersicht die eigenen Einsätze nach
-    Herkunft: Garmin-Uhr, Handy, Handy mit Wear-Fernbedienung, GPX-Import,
-    Schnitt, von Hand — als Kachel neben den vorhandenen Kennzahlen, mit
-    Modell als Untertitel, wo eines gespeichert ist. **Neue Darstellung:**
-    Mockup und Freigabe nach `Design.md` 1 vor der Umsetzung; Baustein
-    `ui_kennzahl` aus P3 als Ausgangspunkt. Braucht die Spalten aus R64
-    (Nr. 83, S4-Rest). Zuordnung: Backlog-Runde, nach dem S4-Rest.
-
 ---
 
 90. **Der Simulator kann keinen Verbindungsabriss herstellen.**
@@ -1026,20 +1053,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     oder eine Prüf-Einstellung in der App, die einen negativen Code
     einspeist (dann aber als Fremdkörper im ausgelieferten Code).
 
-91. **Die Auswahl in `WatchUi.Confirmation` ist im Bildabzug nicht zu sehen.**
-    *Aufgenommen 03.09.2026 aus S5 Paket C.*
-    Beim Rundlauf musste „Nein" auf der Rückfrage ausgelöst werden. Welche der
-    beiden Schaltflächen gerade gewählt ist, zeigt der Bildabzug **nicht** —
-    `Cancel` und `Confirm` stehen ohne erkennbare Hervorhebung nebeneinander,
-    und `Up`/`Down` änderten daran nichts Sichtbares. Gemessen: Ein `Return`
-    ohne weitere Taste **bestätigt** (die Vorauswahl steht also auf
-    `Confirm`), und BACK räumt den Dialog weg, **ohne** `onResponse` zu rufen.
-    **Folge für die Prüfmittel:** Ein Rundlauf, der eine Ablehnung im Dialog
-    belegen will, kann sie nicht am Bild ablesen — er muss sie an der Wirkung
-    messen (Datenbank: kein Gerät, keine Sitzung). Das ist gemacht, aber es
-    gehört aufgeschrieben, damit die nächste Instanz nicht wieder eine halbe
-    Stunde an der Tastensteuerung sucht.
-
 92. **`pruefstand.sh bildreihe` fotografiert nur den Startbildschirm.**
     *Aufgenommen 03.09.2026 aus S5 Paket C.*
     Für Stufe II verlangt die Abnahme „je Vertreter ein Bild der `PairView`".
@@ -1053,16 +1066,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Vorschlag:** `bildreihe <liste> <ziel> [tastenfolge]`, wobei die
     Tastenfolge eine Zeichenkette wie `Down,Down,hold:Return,wait:8` ist. Dann
     braucht die nächste Ansicht keine eigene Schleife.
-
-94. **„bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/`.**
-    *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-05.*
-    Der Kopfkommentar von `erzeugen.sh` sagt, die erzeugten Kacheln seien
-    **bitgleich**; die `LIESMICH.md` daneben sagt **pixelgleich**. Beides kann
-    nicht stimmen: PNG trägt einen Zeitstempel-Chunk, und der ändert sich bei
-    jedem Lauf. Wer die Zusage prüft, prüft je nach gelesenem Dokument etwas
-    anderes.
-    **Vorschlag:** ein Wort ändern — oder `-define png:exclude-chunk=time`
-    setzen und die stärkere Zusage tatsächlich einlösen.
 
 95. **Die Rundlauffälle der Android-App lassen Daten im Admin-Konto zurück.**
     *Aufgenommen 03.09.2026 aus der S5-Vorbereitung, Abschnitt 8.2.*
@@ -1107,7 +1110,8 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 114. **Abgewiesene Pakete sichtbar machen und ausräumen.**
     *Ergänzung 06.09.2026 (Krypto-Review AN-2):* Die Pakete bleiben samt
     GPS-Spur **dauerhaft** liegen — sie überleben Trennen und Neukopplung,
-    und `dienst`-Zeilen werden nie gelöscht (`puffer/Puffer.kt:449-514`).
+    und `dienst`-Zeilen werden nie gelöscht (`puffer/Puffer.kt`; der Räumteil
+    ist heute `abgewieseneRaeumen()`, bei Aufnahme Zeilen 449–514).
     **Räumteil erledigt mit Android 0.14.0 am 07.09.2026:**
     `Puffer.abgewieseneRaeumen()` löscht abgeschlossene abgewiesene Pakete
     samt Punkten und Phasen nach 30 Tagen (jeder Sendelauf räumt vorher)
@@ -1142,22 +1146,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     der Liste fehlen. Das Zweite ist deutlich billiger und fängt denselben
     Fehler. Dieselbe Frage stellt sich für
     `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
-
-117. **Niemand weiß, ob eine NutzerIn je ein Backup gezogen hat.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-07).* Die Kennzahlen
-    „Backup überfällig" und „nie gesichert", der Filter der
-    NutzerInnen-Liste und die Erinnerungsmail messen **ausschließlich** die
-    Konto-Backups der Verwaltung — den Stand des jüngsten Pakets im
-    Kontoordner (`edbak_konto_stand()`). Ob eine NutzerIn selbst je ein
-    Backup heruntergeladen hat, weiß niemand: Die Datei entsteht im Browser
-    und der Server sieht sie nie. S8 hat die Begriffe ehrlich gemacht — die
-    Kennzahlen heißen jetzt „Konto-Backup überfällig" und „nie
-    Konto-Backup" —, aber die Lücke selbst bleibt. **Zu klären:** ob ein
-    Zeitstempel „zuletzt Backup erzeugt" je Konto überhaupt gewollt ist. Er
-    wäre eine neue Erhebung über eine Handlung der NutzerIn und keine
-    Kleinigkeit; die Alternative ist, es dabei zu belassen und im Handbuch
-    zu sagen, dass die Anwendung es nicht weiß. Zuordnung: Backlog-Runde
-    (Entscheidung), Umsetzung frühestens P5.
 
 121. **Vorschau der Rechtstexte beim Tippen.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09); Titel und Text
@@ -1203,14 +1191,29 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (c) so lassen. **Empfehlung: (b)** — behält die Erreichbarkeit, behebt
     das Gemeldete und ist die kleinste Änderung. Alle drei ändern die
     Darstellung eines Bausteins und brauchen Mockup und Freigabe
-    (`CLAUDE.md` 5); betroffen ist jede Seite mit `ui_aktionen()` (zehn
-    Aufrufe). Zuordnung: Backlog-Runde oder P7 (Gesicht v1.0).
+    (`CLAUDE.md` 5); betroffen ist jede Seite mit `ui_aktionen()`.
+    Zuordnung: Backlog-Runde oder P7 (Gesicht v1.0).
+    **Entschieden am 12.09.2026: Weg (b).** Das Blatt bleibt unten; das „⋯"
+    bleibt hervorgehoben, solange das Blatt offen ist, und das Blatt fährt
+    sichtbar aus seiner Richtung auf. Geht in die **Mockup-Runde** (mit
+    Nr. 41, 42 und 45) — als einziger der vier ein Punkt aus einer
+    Rückmeldung von außen; gerät die Runde ins Rutschen, darf er sie
+    verlassen.
+    *Nachgezählt 13.09.2026:* `ui_aktionen()` hat **sechs** Aufrufe auf fünf
+    Seiten (`index.php`, `einsatz.php`, `admin_user.php` zweimal,
+    `admin_demo.php`, `admin_sicherungen.php`) — hier standen „zehn".
+    Dasselbe Blatt baut auch `ui_zeilenaktionen()` (neun Aufrufe:
+    Geräteliste, Stammdaten, Papierkorb, Sicherungsziele, Komplettsicherung,
+    Einstellungen); beide öffnen über `data-blatt` in `assets/blatt.js`. Die
+    Änderung sitzt damit im Baustein und erreicht alle fünfzehn Öffner; ob
+    Weg (b) für die Zeilenblätter gleich mitgilt, klärt das Mockup.
 
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
     Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
     mit allen Klartextfeldern, E-Mail, Name und `pat_wrap_rc`; der Versand
-    lässt reines `ftp` zu (`schema.sql:512`) und prüft bei FTPS kein
+    lässt reines `ftp` zu (`backup_targets.protokoll` in `schema.sql`) und
+    prüft bei FTPS kein
     Zertifikat (`sicherungsziel_lib.php:31-33`). Die Begründung in
     `Backup-Format.md` 5 („kein Schlüssel, ohne ihn zu speichern") ist seit
     dem Serverschlüssel (Web 12.1.0) überholt. Versiegeln mit
@@ -1271,20 +1274,25 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (`docs/konzepte/Konzept-Planung-v1.0.md`, Abschnitt 2.3) — einen
     Unterordner `server/` gibt es auf einer Installation also nicht. Vier
     Stellen dokumentieren den Aufruf trotzdem mit dem Pfad, den das
-    Repositorium hat: `server/jobs.php:13` („`php /pfad/zu/server/jobs.php`"),
-    `docs/Technik.md:2424` und `:5220` sowie `docs/CHANGELOG.md:6210` (je
-    „`* * * * * php …/server/jobs.php`"). Wer den Befehl aus dem Docstring
+    Repositorium hat: der Kopfkommentar von `server/jobs.php`
+    („`php /pfad/zu/server/jobs.php`"), `docs/Technik.md` 4.97a „Die drei
+    Auslöser (E-S2-17)" und Runbook 7 „Hintergrundjobs einrichten" sowie der
+    Eintrag Web 10.1.0 in `docs/CHANGELOG.md` (je
+    „`* * * * * php …/server/jobs.php`"; am 13.09.2026 Zeilen 13, 2674,
+    6042 und 8722 — bei Aufnahme 13, 2424, 5220 und 6210). Wer den Befehl aus dem Docstring
     oder aus `Technik.md` abtippt, bekommt **„Could not open input file"** —
     genau das ist beim Einrichten des Plesk-Cron auf der Installation
     luftrettung.net passiert.
     **Nicht betroffen, und das gehört ausdrücklich festgehalten:**
-    `server/betrieb_jobs.php:186` baut den Befehl über `__DIR__` und gibt
-    damit den korrekten Installationspfad aus. Die Karte **„Auslöser"** auf
-    Betrieb → Hintergrundjobs ist richtig; der Kopier-Knopf (E-S8-10) ist der
-    verlässliche Weg, und daran ist nichts zu ändern. Ebenso wenig gemeint
-    sind Nennungen der Datei als *Datei* (`docs/Technik.md:2413`: „`server/jobs.php`
-    (Einstieg)") — dort ist der Repositoriumspfad der richtige.
-    **Zu klären:** (1) Ob `docs/CHANGELOG.md` angefasst wird. Changelog-Einträge
+    der Wertekasten in `server/betrieb_jobs.php` baut den Befehl über
+    `__DIR__` und gibt damit den korrekten Installationspfad aus. Die Karte
+    **„Auslöser"** auf Betrieb → Hintergrundjobs ist richtig; der
+    Kopier-Knopf (E-S8-10) ist der verlässliche Weg, und daran ist nichts zu
+    ändern. Ebenso wenig gemeint sind Nennungen der Datei als *Datei*
+    (`docs/Technik.md` 4.97a: „`server/jobs.php` (Einstieg)") — dort ist
+    der Repositoriumspfad der richtige. Der Eintrag Web 15.5.2 im Changelog
+    beschreibt diesen Fund selbst und ist **kein** fünfter Fall.
+    **Zu klären war:** (1) Ob `docs/CHANGELOG.md` angefasst wird. Changelog-Einträge
     sind historische Protokolle; rückwirkendes Ändern kann unerwünscht sein —
     die Alternative wäre, die Stelle stehen zu lassen und nur die drei
     lebenden Fundstellen zu berichtigen. (2) Welche Schreibweise künftig gilt:
@@ -1292,8 +1300,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     „`php /pfad/zur/installation/jobs.php`") oder gar kein abtippbarer
     Beispielpfad mehr, sondern der konsequente Verweis auf den Kopier-Knopf
     im Betreiberbereich, der den Pfad dieser Installation kennt.
-    **Zu tun:** nach der Klärung die betroffenen Stellen angleichen; keine
-    Codeänderung an der Mechanik. Zuordnung: **Backlog-Runde**.
+    **Entschieden am 12.09.2026 — beide Fragen beantwortet:** (1)
+    `docs/CHANGELOG.md` wird **rückwirkend berichtigt**; es sind alle vier
+    Stellen. (2) Künftig steht ein **Platzhalter ohne `server/`** (etwa
+    „`php /pfad/zur/installation/jobs.php`") plus ein Satz, dass der
+    Kopier-Knopf auf Betrieb → Hintergrundjobs der verlässliche Weg ist.
+    **Zu tun:** die vier Stellen angleichen; keine Codeänderung an der
+    Mechanik. Zuordnung: **Backlog-Runde**.
 
 154. **Handy-App liest `kept_points` und `kept_meta` nicht.**
     *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 134).*
@@ -1425,6 +1438,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Bis zur Entscheidung gilt (c).* Hinweis im Tagesformular und Handbuch
     sagen es seit Web 18.1.1 zutreffend; vorher verwiesen beide auf die
     abweichende Besatzung am Einsatz, wo dieselbe Sperre greift.
+    **Am 12.09.2026 vertagt auf P5** — dort wird über die Rettungsmittel
+    ohnehin entschieden. Bis dahin gilt (c), und Hinweis und Handbuch sagen
+    es zutreffend; kein dritter Zustand. Zuordnung: **P5**.
     *Abnahme:* Ein Diensttag mit „Anderem Rettungsmittel" erlaubt einen
     Besatzungsnamen — oder der Text sagt weiterhin richtig, dass er es nicht
     tut. Kein dritter Zustand.
@@ -1449,6 +1465,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ob das erwartete Zeichen an der erwarteten Stelle steht — und für die
     acht von Hand geschriebenen Beschriftungen der Karte „PatientIn"
     ebenso. Erwartet wird dann nicht „8 Schlösser", sondern „8 von 8".
+    *Berichtigt 13.09.2026 — das Sollmaß ist so noch nicht zu haben:* Der
+    Feldkatalog trägt **genau ein** Feld mit `'store' => 'pat'` (`notes`,
+    aus S9/AP7) und drei mit `'hinweis'`. Die acht Schlösser der Karte
+    „PatientIn" stehen als handgeschriebene `dtGeschuetzt()`-Aufrufe in
+    `einsatz.php` und sind im Katalog **überhaupt nicht vorhanden** — das
+    vorgeschlagene Sollmaß deckte 1 von 8 ab. Das Sollmaß muss also neu
+    bestimmt werden, bevor die Probe gebaut wird; Befund und
+    Abnahmekriterium bleiben richtig.
     *Abnahme:* Eine Probe, die rot wird, wenn man ein `dtGeschuetzt()` in
     `einsatz.php` durch einen nackten String ersetzt.
 
@@ -1475,36 +1499,330 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfung am Code wäre stabiler als eine an der Stoppuhr.
     *Abnahme:* Zehn Läufe hintereinander, zehnmal dieselbe Zahl.
 
-173. **Die Umlaufprüfungen führen tote Regeln.**
-    *Aufgenommen 12.09.2026 beim Neubau des Referenzbestands (Nr. 155,
-    Web 19.2.0).* Beide Kreisläufe erfüllen ihr Abnahmekriterium —
-    **edbak 287 687 Einzelvergleiche, 0 unerklärt** (16 erwartet) und
-    **csv 9120 Einzelvergleiche, 0 unerklärt** (1021 erwartet) —, melden
-    dabei aber **3 bzw. 2 ungenutzte Regeln**. Vorher waren es 0.
+175. **`edbak_uebersicht()` hat keinen Aufrufer mehr.**
+    *Aufgenommen 13.09.2026 als Nebenfund der Gegenprüfung zu Nr. 37;
+    angelegt auf Anweisung des Auftraggebers.* Die Funktion in
+    `adminbackup_lib.php` liest für **jedes** Konto eine Begleitdatei und
+    ein Verzeichnis — die Bauform, die E-P3-41 mit `edbak_konto_stand()` für
+    die Kontoseite und O9c mit `edbak_staende()` und `edbak_verwaiste()` für
+    die Zähler und die verwaisten Ordner abgelöst hat. Am 13.09.2026 ruft
+    sie **niemand** mehr auf, weder in `server/` noch in `tools/`; genannt
+    wird sie nur noch in `docs/Technik.md` („Die Kontoseite (E-P3-41, seit
+    Web 9.8.0)") als Begründung, warum die Kontoseite anders liest.
+    **Zu tun:** die Funktion austragen und den Satz in `Technik.md` so
+    fassen, dass er die abgelöste Bauform als Vergangenheit beschreibt.
+    *Abnahme:* `grep -rn edbak_uebersicht server/ tools/ docs/` ist leer,
+    bis auf den Changelog. Zuordnung: Backlog-Runde.
 
-    *Die Ursache ist bekannt und harmlos:* Die Regeln beschreiben einen
-    **Übergang**, den es nicht mehr gibt. Zwei betreffen
-    `missions.notes` („GEMESSEN 143x") aus S9/AP7, als die Notizen halb in
-    der Spalte und halb im verschlüsselten Block lagen; eine betrifft
-    `kopf.version` („nach 11") aus demselben Paket, als die Nutzlast von 10
-    auf 11 stieg. Der neu gebaute Referenzbestand trägt die Notizen von
-    Anfang an im Block und beide Seiten dieselbe Nutzlastnummer — also
-    keine Abweichung, also keine Regel, die greift.
+177. **Der Änderungsverlauf des Rahmenplans führt sechs Fassungsnummern
+    doppelt.** *Aufgenommen 13.09.2026 in Backlog-Runde 3, AP10.* In
+    Abschnitt 10 stehen zwischen der Zeile „30" und der Zeile „47" sechs
+    Zeilen mit den Nummern **35, 36, 37, 39, 38, 37** (S9/AP1 bis AP3, die
+    beiden Client-Punkte, Android 0.14.1, die adversarische Gegenprüfung von
+    9a) — dieselben Nummern trägt der darunter anschließende Block ein
+    zweites Mal, mit anderem Inhalt. Ursache ist dieselbe wie bei den
+    Fassungen 39, 41 und 42: Mehrere Sitzungen schrieben am selben Tag in
+    dasselbe Dokument. **Die Folge ist praktisch:** Ein Verweis auf „Fassung
+    38" ist nicht auflösbar, und der Verlauf zählt nicht mehr mit der
+    Kopfzeile zusammen. **Zu tun:** entscheiden, ob die sechs Zeilen eine
+    eigene Nummernfolge bekommen (dann verschieben sich keine Verweise, weil
+    auf sie keiner zeigt) oder als „Zwischenstände ohne Fassung" ohne Nummer
+    geführt werden; die Entscheidung gehört in den Kopf von Abschnitt 10.
+    **Nicht in dieser Runde behoben**, weil das Umnummerieren historischer
+    Zeilen eine Festlegung ist und keine Korrektur (K4). *Abnahme:* jede
+    Nummer in Abschnitt 10 kommt genau einmal vor. Zuordnung: Backlog-Runde.
+    **Zurückgestellt am 13.09.2026 auf Anweisung des Auftraggebers**
+    („nur historisch, ignorieren"). Dazu drei Messwerte, damit die Entscheidung
+    auf dem Tisch liegt und nicht auf einer Annahme: **Rein historisch ist es
+    nicht ganz** — zwei Dokumente zitieren betroffene Nummern,
+    `docs/konzepte/Pruefdokument-Sofortpaket-Sicherheit.md` („9a steht seit
+    **Fassung 36** in Abschnitt 8") und
+    `docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`
+    („**Fassung 38** mit Änderungsverlauf"); beide Nummern sind doppelt
+    vergeben. Wer der Spur folgt, findet zwei Zeilen und muss aus dem
+    Zusammenhang wählen — lästig, aber nicht irreführend. **Der Fund ist
+    älter als diese Runde:** `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`
+    hat ihn am 09.09.2026 schon verzeichnet (dort für 35, 36 und 37) und
+    nennt zusätzlich eine **fehlende** Zeile für den 09.09.2026. **Keine
+    Wirkung auf Code, Daten oder Oberfläche** — deshalb bleibt der Punkt offen
+    statt zurückgezogen: Er kostet nichts, solange niemand ihn anfasst, und er
+    ist mit der nächsten größeren Rahmenplan-Pflege in einem Zug zu machen.
 
-    *Warum das trotzdem zählt:* Eine Ausnahmeregel, die nichts mehr
-    erklärt, ist dasselbe wie eine tote Zeile in
-    `tools/linkprobe/ausnahmen.md` — sie sieht aus wie geprüftes Wissen und
-    ist keines mehr. Die Linkprobe macht den Lauf dafür rot; der Kreislauf
-    nennt die Zahl nur. Das ist der mildere Umgang mit demselben Problem.
+181. **Die Anwendung schickt keine Content-Security-Policy.**
+    *Aufgenommen 13.09.2026 als zweite Hälfte von Nr. 179; dort ausdrücklich
+    nicht mitgemacht, weil es eine Festlegung ist und kein Nachtrag.* Seit dem
+    13.09.2026 zählt `tools/vollstaendigkeit/` die Zusage „keine fremde Quelle
+    zur Laufzeit" nach (Prüfung `fremde Quelle`, Nr. 179) — **am Quelltext**.
+    Zur Laufzeit hält sie nichts: `grep -rn "Content-Security-Policy" server/`
+    ergibt **0**. Ein eingeschleustes Skript, das nicht im Repositorium steht
+    — über eine Lücke, ein Fremdpaket, einen kompromittierten Deploy —, lädt
+    ungehindert.
+    **Was zu entscheiden ist, nicht nur zu bauen.** Die Richtlinie braucht
+    Ausnahmen für genau die Quellen, die Nr. 179 als gewollt aufführt: vier
+    Kachelserver (`tile.openstreetmap.org`, `tile.openmaps.fr`,
+    `{s}.tile.opentopomap.org`, `server.arcgisonline.com`) unter `img-src`,
+    und den Adressdienst unter `connect-src` — **dessen Anschrift ist seit
+    S9/AP2 eine Einstellung je Installation** (`app_state.geocoder_url`), die
+    Richtlinie muss also zur Laufzeit gebaut werden und kann nicht als
+    feste Zeichenkette im Code stehen. Dazu die Frage, ob `'unsafe-inline'`
+    für `style-src` bleibt oder die Inline-Stile weichen (das entscheidet über
+    den Aufwand), und ob `report-only` vorgeschaltet wird, um eine Woche zu
+    messen, bevor die Richtlinie greift.
+    **Wer sie zu eng setzt, macht die Karten grau** — und das fällt erst im
+    Einsatz auf. *Abnahme:* Jede Seite schickt die Richtlinie; die vier
+    Kachelserver und der eingestellte Adressdienst funktionieren; ein
+    eingeschleustes `<script src="https://cdn.example/x.js">` wird vom Browser
+    **blockiert** (Konsolenmeldung im Bilderlauf, der solche Fehler seit
+    Nr. 176 wieder zählt); der Bilderlauf bleibt bei 0 Konsolenfehlern.
+    Zuordnung: **S10 Sicherheit** (Schritt 9b) oder das Bedrohungsmodell
+    (P6, R69) — die Entscheidung gehört in den Rahmenplan.
 
-    *Zu tun:* Die drei bzw. zwei Regeln aus
-    `tools/referenzdatensatz/vergleich/ausnahmen/{edbak,csv}_umlauf.json`
-    entfernen, mit einem Satz im Änderungsverlauf der Datei, warum sie
-    gegenstandslos geworden sind. **Nicht** am Ende einer langen Sitzung
-    gemacht, weil die Dateien die Vergleichsgrundlage sind und ihr Format
-    zwischen den beiden Arten abweicht.
-    *Abnahme:* Beide Kreisläufe melden 0 unerklärte Abweichungen **und**
-    0 ungenutzte Regeln.
+## Erledigt
+
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
+
+179. **Die Zusage „keine fremde Quelle zur Laufzeit" zählt kein Prüfmittel
+    nach.** *Aufgenommen 13.09.2026 beim Beheben von Nr. 176, gefunden von der
+    Gegenprüfung des Nachtrags.* `CLAUDE.md` 4 verspricht: kein CDN, keine
+    Google Fonts, kein externes Skript; Schriften und Bibliotheken liegen unter
+    `server/assets/`. **Nachgesehen am 13.09.2026: Dieses Versprechen hat kein
+    Messmittel.** `tools/vollstaendigkeit/` Gruppe 5 („Zusagen") kennt genau
+    zwei — kein natives `confirm()`/`alert()`/`prompt()` und „jede Seite mit
+    Hülle hat ihr Gerüst" —, und `pruefen.py` sieht keine einzige Adresse an.
+    Kein anderes Werkzeug zählt es. **Auch die Laufzeit hält es nicht:** Die
+    Anwendung schickt **keine** Content-Security-Policy (0 Fundstellen für
+    `Content-Security-Policy` unter `server/`). Aufgefallen ist es, weil der
+    Kommentar zu Nr. 176 die Lücke an dieses Prüfmittel weiterschob — also
+    genau der Fehler, den Nr. 176 behoben hat, nur umgekehrt: Der Code behauptet
+    eine Prüfung, die es nicht gibt. Beide Behauptungen sind berichtigt (Code,
+    LIESMICH, Changelog). **Zu tun:** die Zusage nachzählbar machen, am besten
+    als dritte Prüfung in Gruppe 5 — jede `src`/`href`/`url()`-Adresse und jeder
+    `fetch`-Aufruf unter `server/` muss entweder relativ sein oder auf der
+    Ausnahmeliste stehen. **Die Ausnahmeliste ist der eigentliche Inhalt:** Die
+    Kartenkacheln und die Ortssuche sind **gewollte** Laufzeitquellen mit
+    dokumentierter Herkunft (`map_layers.js`, `ortsfeld.js`), und seit S9/AP2
+    steht die Anschrift des Adressdienstes nicht mehr im ausgelieferten Code,
+    sondern in einer Einstellung — die Prüfung muss beides auseinanderhalten,
+    sonst meldet sie das Erlaubte. **Eine CSP ist die zweite Hälfte** und
+    gehört in dieselbe Überlegung; sie braucht Ausnahmen für genau diese
+    Quellen und ist damit keine Nebenzeile, sondern eine Festlegung.
+    *Abnahme:* die Prüfung meldet **0** Befunde am heutigen Stand, **1** für
+    eine eingeschleuste `https://cdn.example/x.js` in einer Seite, und die
+    Ausnahmeliste nennt je Eintrag den Grund. Zuordnung: Backlog-Runde, dem
+    Bedrohungsmodell (P6, R69) zuarbeitend.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, Nachtrag AP12 — keine
+    Versionsstufe, nur `tools/`).** Dritte Prüfung in Gruppe 5 „Zusagen":
+    **`fremde Quelle`** in `tools/vollstaendigkeit/pruefen.py`.
+    **Das Muster ist mit Absicht grob**, und das ist die Lehre dieses
+    Punktes: Ein Ausdruck, der nur die Ladekonstrukte kennt (`src=`,
+    `<link href=`, `fetch(`, `url()`, `@import`), meldete am 13.09.2026
+    **0 Treffer** — während fünf echte Laufzeitquellen im Code standen. Die
+    Kacheln gehen über `L.tileLayer(...)`, die Anschrift des Adressdienstes
+    ist eine PHP-Konstante. Gemeldet wird deshalb **jede absolute Adresse**
+    in eigenem Quelltext (`.php`, `.js`, `.css` unter `server/`, ohne
+    `vendor/`), und die Ausnahmeliste trägt die Begründung.
+    **Die Liste ist der Inhalt, nicht der Nebenschluss:** 15 Einträge, und
+    die Spalte „Grund" sagt die **Art** — vier gewollte Laufzeitquellen
+    (drei Kachelserver plus Luftbild), eine fünfte als Rückfall im
+    Kartendialog, der Adressdienst als *Vorgabe* (seit S9/AP2 eine
+    Einstellung, je Installation und Konto abschaltbar, R79), sechs
+    **Navigationsziele** (Lizenz- und Spendenhinweise, die CC-BY-SA und ODbL
+    verlangen — ein `<a href>` lädt nichts), ein **XML-Namensraum**
+    (`GPX_NS`, wird nie abgerufen) und zwei **Beispieltexte**.
+    **Abnahme erfüllt, mit Gegenprobe:** am heutigen Stand **0 Befunde,
+    15 Ausnahmen, 0 ungenutzt**, Gesamtzahl unverändert **330**; mit einer
+    eingeschleusten `https://cdn.example/x.js` in `impressum.php` genau
+    **1 Befund** mit `Datei:Zeile` und Gesamt **331**, danach zurückgenommen.
+    **Eine Grenze steht im Code, nicht in einer Fußnote:** Auf `.css` wendet
+    der Kommentar-Abtaster die JS-Lesart an — `/* */` trifft er richtig,
+    hielte aber ein unquotiertes `url(//host)` für einen Kommentaranfang.
+    Heute gibt es keines (gemessen: 0 absolute Adressen in den Stylesheets,
+    die Schriften liegen lokal).
+    **Die zweite Hälfte ist nicht mitgemacht:** Eine
+    Content-Security-Policy schickt die Anwendung weiterhin nicht. Das ist
+    eine Festlegung und kein Nachtrag — sie braucht Ausnahmen für genau
+    diese Quellen. Steht als **Nr. 181**.
+
+178. **Die Kopplungsprobe wirft JEDE Meldung „Failed to load resource" weg.**
+    *Aufgenommen 13.09.2026 beim Beheben von Nr. 176; nach K4 nicht
+    mitbehoben.* Beim Beheben von Nr. 176 sind die Geschwisterwerkzeuge nach
+    demselben Fehler durchsucht worden. Zwei sind in Ordnung:
+    `tools/referenzdatensatz/browser/papierkorb_misch.mjs` prüft Text **und**
+    Fundstelle und führt in seinem Muster nur Gastgebernamen plus zwei Codes,
+    die auf `127.0.0.1` nicht vorkommen können (`ERR_TUNNEL_CONNECTION_FAILED`,
+    `ERR_NAME_NOT_RESOLVED`); `tools/messstand/browserprobe.mjs` hängt an
+    `requestfailed` und hat die Adresse immer dabei. **Eines ist es nicht:**
+    `tools/kopplungsprobe/rundlauf.mjs` filtert mit
+    `/tile\.openstreetmap\.org|ERR_ABORTED|Failed to load resource/` **nur
+    über den Text** — die dritte Alternative verwirft damit *jede*
+    Ressourcenmeldung, gleich welcher Herkunft und gleich welchen Grundes. Der
+    Kommentar daneben begründet die Kacheln und `ERR_ABORTED`; die dritte
+    Alternative begründet er nicht. **Gemessen an acht gebauten Fällen: 4 von 8
+    falsch eingestuft, alle vier verschluckte echte Fehler** — Symbol mit
+    `ERR_CONNECTION_RESET`, Stylesheet mit **404**, API mit **500**, Skript mit
+    `ERR_CONNECTION_REFUSED`. **Der 404 und der 500 sind der scharfe Teil:**
+    Für sie feuert `requestfailed` nicht (die Anfrage ist auf Transportebene
+    gelungen), sie stehen also nur in der Konsole — und die wird hier
+    weggeworfen. Das Werkzeug meldet „0 Konsolenfehler" und könnte einen
+    Serverfehler mitten im Kopplungsrundlauf nicht sehen. **Zu tun:** dieselbe
+    Trennung wie in `tools/screenshots/aufnehmen.mjs` (Nr. 176) — Gastgeber am
+    Namen, Verbindungscodes nur auf fremder Fundstelle, „Failed to load
+    resource" **nicht** als Rauschen —, dazu die Fundstelle mitlesen; die
+    Kopplungsprobe liest sie heute nicht. *Abnahme:* ein eingeschleuster
+    500er-Aufruf auf der eigenen Basis erscheint im Lauf, eine Kachel nicht,
+    und der Rundlauf bleibt im Übrigen bei seiner Zahl. Zuordnung:
+    Backlog-Runde.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, Nachtrag AP12 — keine
+    Versionsstufe, nur `tools/`).** Statt eines Ausdrucks für alle drei
+    Kanäle jetzt **drei Kanäle, drei Regeln** — die Unterscheidung folgt
+    daraus, was der Kanal überhaupt liefert. **`console`** hat Text *und*
+    Fundstelle: Rauschen ist eine fremde Quelle am Namen oder ein
+    Verbindungsfehler auf nachweisbar fremder Fundstelle; alles andere zählt,
+    auch ein Statuscode auf der eigenen Basis. **`requestfailed`** hat die
+    Adresse immer dabei und einen Statuscode nie: Rauschen ist eine fremde
+    Quelle — und `ERR_ABORTED` auf **jeder** Herkunft, weil dieser Rundlauf
+    mehrfach navigiert und eine überholte Anfrage genau das meldet (gemessen
+    im Nachtrag zu Nr. 176: 14 solche Abbrüche in der ersten Ladung nach der
+    Anmeldung, 0 in den folgenden). **`pageerror`** ist **nie** Rauschen.
+    Die Klasse „Statuscode der Seite selbst", die der Bilderlauf braucht,
+    fehlt hier mit Absicht: Dieser Rundlauf besucht keine Seite, die
+    absichtlich mit 404 oder 409 antwortet.
+    **Belegt in vier Richtungen.** (1) Neue **Selbstprobe**
+    `node tools/kopplungsprobe/rundlauf.mjs --selbstprobe`: dreizehn Fälle,
+    je einer trägt eine Regel — **13 von 13**. (2) **Mutationsprobe**, sechs
+    Läufe mit je einer herausgenommenen Regel: **12 von 13** in jedem. Die
+    ersten elf Fälle allein hätten das nicht geleistet: Zwei Zweige von
+    `herkunft()` blieben grün, weil der Fall mit leerer Fundstelle schon an
+    der ersten Zeile herauskommt — deshalb Fall 12 (`<anonymous>`) und 13
+    (`data:`). Dieselbe Lehre wie bei der blinden Selbstprobe zu Nr. 176,
+    und diesmal vor dem Melden gemessen. (3) Dieselben dreizehn Fälle durch
+    die **alte** Regel, wörtlich aus `git show origin/main` geholt:
+    **7 von 11** der damals vergleichbaren Fälle, **4 verschluckte echte
+    Fehler** — alle vier auf dem Konsolenkanal, darunter der 500er und der
+    404. (4) **Am laufenden Stand**, mit einer Wegwerfdatei
+    `server/probe178.php` (HTTP 500) und einem Kachelabruf im selben Lauf:
+    Der 500er **erscheint** im Protokoll („console: … status of 500 …
+    [/probe178.php]"), die Kachel **nicht**, und der Rundlauf bleibt bei
+    **25 Erwartungen, 0 nicht erfüllt**. Die Wegwerfdatei ist danach
+    gelöscht; `git status` ist sauber.
+    **Die LIESMICH behauptet nicht mehr „dieselbe Rauschregel wie der
+    Bilderlauf"** — sie nennt die drei Kanäle und den Unterschied.
+
+180. **Die Kopplungsprobe misst die Knopfhöhe gegen einen Sollwert, den es
+    seit Web 15.5.0 nicht mehr gibt — und ist seither rot.** *Aufgenommen
+    13.09.2026, gefunden beim Nachfahren der Kopplungsprobe für Nr. 178.*
+    `tools/kopplungsprobe/rundlauf.mjs:214` prüft
+    `mass.knoepfe.every(h => h === 44)` — **ein** Sollwert, fest verdrahtet.
+    Seit Web 15.5.0 gelten **zwei** (E-S8-09, R76): 44 px am Fingergerät und
+    unter 1024 px, **36 px am Zeigergerät ab 1024 px**. Der Rundlauf öffnet
+    seinen Browser mit 1280 px als Zeigergerät, misst also zu Recht 36 px und
+    meldet sie als Fehler. **Gemessen am 13.09.2026: 25 Erwartungen, 1 nicht
+    erfüllt — „6 Knöpfe, 36 px".** Alles andere grün, Konsolenfehler 0,
+    Prüfgerät wieder abgemeldet (2 Geräte wie vorher).
+    **Der Fehler liegt im Prüfmittel, nicht in der Anwendung**, und das ist
+    belegt: Der Bilderlauf kennt beide Sollwerte und meldet über **360**
+    Aufnahmen in acht Breiten **0** Knöpfe falscher Höhe — auch bei 1280 px.
+    **Die unangenehme Zahl daran ist das Datum:** Der Sollwert ist am
+    06.09.2026 zweigeteilt worden, der Rundlauf ist seither rot, und
+    aufgefallen ist es am 13.09.2026 nur, weil ein anderer Punkt zufällig
+    dazu führte, ihn zu fahren. Ein Prüfmittel, das niemand fährt, ist kein
+    Prüfmittel — dieselbe Lehre wie bei Nr. 172 (Erwartung, die flackert) und
+    Nr. 176. **Zu tun:** dieselbe Weiche wie im Bilderlauf — Sollwert aus der
+    emulierten Eingabeart und der Fensterbreite ableiten, Ausnahmen benannt —,
+    und den Rundlauf in die Reihe der Mittel aufnehmen, die nach einem Paket
+    laufen. *Abnahme:* `node tools/kopplungsprobe/rundlauf.mjs` meldet
+    **25 Erwartungen, 0 nicht erfüllt** am Zeigergerät, und mit erzwungenem
+    Fingergerät ebenfalls 0. Zuordnung: Backlog-Runde.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, Nachtrag AP12 — keine
+    Versionsstufe, nur `tools/`).** `rundlauf.mjs` leitet den Sollwert jetzt
+    aus der emulierten Eingabeart und der Fensterbreite ab, dieselbe Weiche
+    wie im Bilderlauf: `(!FINGER && BREITE >= 1024) ? 36 : 44`. Dazu zwei
+    neue Schalter — `--finger` (Fingergerät) und `--breite` —, und die
+    Eingabeart wird **vor der Messung erneut gesendet**, weil sie sonst nach
+    dem ersten Vollseiten-Screenshot zurückfällt (Fund aus S8/AP7; dieser
+    Rundlauf macht mehrere Abzüge). Nur im Fingerlauf gesendet: Am
+    Zeigergerät kippt `{enabled:false}` beide Medienmerkmale auf
+    `none`/`coarse` und misst denselben Fehler spiegelverkehrt.
+    **Abnahme erfüllt, beide Richtungen gemessen:** als Zeigergerät
+    **25 Erwartungen, 0 nicht erfüllt** („6 Knöpfe, 36 px"), mit `--finger`
+    ebenfalls **25 / 0** („6 Knöpfe, 44 px"). Die Beschriftung nennt jetzt
+    Sollwert, Eingabeart und Breite, damit die Zeile im Protokoll ohne
+    Nachdenken zu lesen ist.
+
+176. **Der Rauschfilter des Bilderlaufs verschluckt auch lokale Fehler.**
+    *Aufgenommen 13.09.2026 in Backlog-Runde 3, AP10, beim Aufklären von
+    Abrufen, die auf dem Prüfstand scheiterten.* `istRauschen()` in
+    `tools/screenshots/aufnehmen.mjs` prüft `KACHELRAUSCHEN` gegen den
+    **Meldungstext** und gegen die Fundstelle. Im Muster stehen neben den
+    Kartenhosts auch drei Fehlercodes — `ERR_CONNECTION_RESET`,
+    `ERR_CONNECTION_CLOSED`, `ERR_ABORTED`. Ein Abruf **auf dem eigenen
+    Server**, der mit einem dieser drei scheitert, wird deshalb als
+    Kartenrauschen weggeworfen, obwohl seine Fundstelle `127.0.0.1` ist.
+    Gemessen am Muster: von fünf gebauten Fällen mit lokaler Fundstelle
+    werden **drei von fünf verschluckt** (RESET, CLOSED, ABORTED) und zwei
+    gezählt (REFUSED, HTTP 500). Der Bericht meldet dann „0 Konsolenfehler"
+    für eine Seite, auf der das Stylesheet nicht angekommen ist — dieselbe
+    Falle wie F-P3-AQ, nur eine Ebene tiefer. **Zu tun:** die Codeliste nur
+    dann greifen lassen, wenn die Fundstelle **nicht** die eigene Basis ist;
+    die Hostliste bleibt wie sie ist. *Abnahme:* ein eingeschleuster
+    Verbindungsabbruch auf einer Adresse der eigenen Basis erscheint im
+    Bericht, einer von `tile.openstreetmap.org` nicht. Zuordnung:
+    Backlog-Runde.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, Nachtrag AP11 — keine
+    Versionsstufe, nur `tools/` und `docs/`); auf Anweisung des
+    Auftraggebers gleich mitbehoben, weil der Punkt das Messmittel
+    betrifft, mit dem alle Bildzahlen dieser Stufe belegt sind.**
+    `istRauschen()` hat jetzt **drei getrennte Klassen**: fremde Quellen am
+    Namen (Gastgeber im Wortlaut oder in der Fundstelle), der Statuscode der
+    Seite selbst, und Verbindungsfehler **nur auf einer fremden Fundstelle**.
+    Die Herkunft wird über `URL.origin` gegen `BASIS` verglichen, nicht über
+    `startsWith` — das verträgt einen abschließenden Schrägstrich in
+    `--basis` und rechnet Vorgabeports mit.
+    **Drei Entscheidungen bewusst zur lauten Seite hin:** Eine Meldung ohne
+    **zuordenbare** Fundstelle wird **gezählt**, nicht verworfen — leer, keine
+    Adresse (`<anonymous>`) oder undurchsichtige Herkunft (`data:`, `blob:`, wo
+    `URL.origin` die Zeichenkette „null" liefert); der Fehlercode wird nur
+    noch im Wortlaut gesucht, nicht auch in der Fundstelle (in einer URL
+    kommt er nicht vor — die zweite Suche war ohne Wirkung); und **Klasse 2
+    verwirft nur einen Statuscode** — verliert die Seite selbst die
+    Verbindung, wird das gezählt, denn ein Verbindungsabbruch ist kein
+    Statuscode.
+    *Die erste und die dritte dieser drei sind Berichtigungen aus der
+    Gegenprüfung des Nachtrags, nicht des ersten Entwurfs; er zählte die leere
+    Fundstelle, verwarf aber die unlesbare, und seine Klasse 2 verschluckte
+    genau die drei Codes, um die dieser Punkt geht.*
+    **Belegt in vier Richtungen.** (1) Neue **Selbstprobe**
+    `node tools/screenshots/aufnehmen.mjs --selbstprobe` — **fünfzehn** gebaute
+    Fälle mit Sollwert, **15 von 15** erwartungsgemäß; sie braucht **keinen
+    laufenden** Browser und keinen Server (das Playwright-Modul muss vorhanden
+    sein, weil die Datei es am Kopf lädt) und löscht die Ausgabe nicht.
+    (2) **Mutationsprobe:** Jede der drei Klassen einzeln herausgenommen, dazu
+    die Schranke an Klasse 2 und beide Zweige der Herkunftsauskunft — **sechs
+    Läufe, je 14 von 15**. Ohne sie wäre die Probe blind geblieben: Ihr erster
+    Entwurf hatte zehn Fälle und meldete **10 von 10 auch bei gelöschter
+    Klasse 1 oder 3**, weil jeder verwerfende Fall einen Kachelgastgeber in der
+    URL trug. Das hat die Gegenprüfung gefunden, nicht ich; das Rezept steht in
+    der LIESMICH. (3) Die **ersten zehn** Fälle durch die
+    **alte** Funktion, wörtlich aus `git show origin/main` geholt statt
+    abgeschrieben: **6 von 10** — falsch waren die drei lokalen Abbrüche und
+    der Fall ohne Fundstelle. (4) Am laufenden Browser: Seite geladen,
+    **PHP-Server angehalten** (socat blieb, die Basis also dieselbe), Symbol
+    und API-Aufruf nachgeladen — zwei Konsolenfehler auf der eigenen Basis
+    (`ERR_EMPTY_RESPONSE`, `ERR_CONNECTION_RESET`), davon verwarf der alte
+    Filter **einen**, der neue **keinen**.
+    **Die Abnahme dieses Eintrags ist damit erfüllt**, und zwar genauer als
+    gefordert: Der Eintrag verlangte einen eingeschleusten Verbindungsabbruch
+    auf der eigenen Basis, der im Bericht erscheint — gemessen ist der
+    Abbruch am Browser **und** die Einstufung an der Funktion selbst.
+    **Und die Zahl der Runde hält:** Der Abschlusslauf über 45 Seiten meldet
+    mit der neuen Regel unverändert **0 Konsolenfehler**. Sie war also
+    richtig — sie war nur nicht belegt.
+    **Dabei eine falsche Aussage in der Dokumentation berichtigt:** Die
+    LIESMICH behauptete, gefiltert werde „über die Fundstelle der Meldung,
+    nicht über ihren Wortlaut". Für die Kachelhosts stimmte das, für die drei
+    Codes nicht. Der Absatz nennt jetzt die drei Klassen und die Falle.
 
 174. **Der Referenzbestand deckt „Rettungsmittel ohne Standort" nur noch
      zur Hälfte ab.**
@@ -1538,12 +1856,417 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     *Abnahme:* Der Kreislauf `edbak` trägt ein Rettungsmittel mit
     `base_ref: null`, und es kommt unverändert zurück.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP9 — keine Versionsstufe; an der
+    Anwendung ist keine Zeile geändert).**
+    **Die Ursache war nicht die Referenzdatei, sondern der Einspielweg.**
+    `einspielen.py` schickte `ohne_standort=1` **neben** einer echten
+    Standortkennung. Bis Web 16.3.0 war das richtig — damals stand im Formular
+    ein Haken neben der Standortauswahl. Web 16.3.0 hat ihn durch den ersten
+    Eintrag der Auswahlliste ersetzt („Ohne Standort"), mit Begründung: Der
+    Haken „schlug eine verborgene Standortkennung; wer ihn setzte, sah nicht,
+    WAS er damit überschrieb." Seither las das Feld niemand mehr, die Kennung
+    daneben zählte, und **beide Einträge bekamen einen Standort**. Ein Sender,
+    der ein Feld schickt, das niemand liest, meldet keinen Fehler — er wird
+    still ignoriert. `einspielen.py` schickt jetzt `base_id=0`.
+    **Beide Referenzdateien sind über die reguläre Kette neu erzeugt**
+    (E-BR3-10), keine Zeile per SQL. Gemessen: vorher 0 von 6 ohne Standort,
+    nachher **2 von 6**. Kette: Quelldaten 5 961 Einzelprüfungen / 0 Befunde,
+    Generator 283 989 / 0, Ingest 526 Anfragen / 0 Fehler, 16 Diensttage
+    zugeordnet, 79 nachgetragen, 2 von Hand, Sperrliste bestanden, 4
+    CSV-Einsätze. Export: 188 Einträge (85 geschützt), 182 Aufzeichnungen mit
+    55 861 Punkten; CSV 83 Einsätze, 172 GPX.
+    **Abnahme gegen die neue Referenz:** edbak 287 687 Einzelvergleiche / 0
+    unerklärt / 0 ungenutzt, csv 9 120 / 0 / 0. Das Kriterium — ein
+    Rettungsmittel mit `base_ref: null` kommt **unverändert** zurück — an
+    beiden Umlaufkonten gemessen: Referenz 2, edbak-Umlauf 2, csv-Umlauf 2.
+    **Klickprobe 40 von 40** (sie hatte den Verlust mit 39 gefunden).
+    **Nebenbei berichtigt:** Die LIESMICH nannte „3 Rettungsmittel", es sind 6;
+    die zwei ohne Standort stehen jetzt ausdrücklich dabei.
 
-## Erledigt
+173. **Die Umlaufprüfungen führen tote Regeln.**
+    *Aufgenommen 12.09.2026 beim Neubau des Referenzbestands (Nr. 155,
+    Web 19.2.0).* Beide Kreisläufe erfüllen ihr Abnahmekriterium —
+    **edbak 287 687 Einzelvergleiche, 0 unerklärt** (16 erwartet) und
+    **csv 9120 Einzelvergleiche, 0 unerklärt** (1021 erwartet) —, melden
+    dabei aber **3 bzw. 2 ungenutzte Regeln**. Vorher waren es 0.
 
+    *Die Ursache ist bekannt und harmlos:* Die Regeln beschreiben einen
+    **Übergang**, den es nicht mehr gibt. Zwei betreffen
+    `missions.notes` („GEMESSEN 143x") aus S9/AP7, als die Notizen halb in
+    der Spalte und halb im verschlüsselten Block lagen; eine betrifft
+    `kopf.version` („nach 11") aus demselben Paket, als die Nutzlast von 10
+    auf 11 stieg. Der neu gebaute Referenzbestand trägt die Notizen von
+    Anfang an im Block und beide Seiten dieselbe Nutzlastnummer — also
+    keine Abweichung, also keine Regel, die greift.
 
-Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
-zutreffen.
+    *Warum das trotzdem zählt:* Eine Ausnahmeregel, die nichts mehr
+    erklärt, ist dasselbe wie eine tote Zeile in
+    `tools/linkprobe/ausnahmen.md` — sie sieht aus wie geprüftes Wissen und
+    ist keines mehr. Die Linkprobe macht den Lauf dafür rot; der Kreislauf
+    nennt die Zahl nur. Das ist der mildere Umgang mit demselben Problem.
+
+    *Zu tun:* Die drei bzw. zwei Regeln aus
+    `tools/referenzdatensatz/vergleich/ausnahmen/{edbak,csv}_umlauf.json`
+    entfernen, mit einem Satz im Änderungsverlauf der Datei, warum sie
+    gegenstandslos geworden sind. **Nicht** am Ende einer langen Sitzung
+    gemacht, weil die Dateien die Vergleichsgrundlage sind und ihr Format
+    zwischen den beiden Arten abweicht.
+    *Abnahme:* Beide Kreisläufe melden 0 unerklärte Abweichungen **und**
+    0 ungenutzte Regeln.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP8 — keine Versionsstufe, nur
+    `tools/`).** Vorher gemessen, wie der Auftrag es verlangt: **3 ungenutzte
+    Regeln im edbak-Umlauf, 2 im csv-Umlauf** — die erwarteten Zahlen. Erst
+    danach gestrichen, namentlich: `missions.notes` (zweimal, als `wert` und
+    als `zusaetzlich`) und `kopf.version` „nach 11" aus `edbak_umlauf.json`;
+    `felder.beschreibung` „nach pat_blob.notes" und die LIESMICH-Regel aus
+    `csv_umlauf.json`. Alle fünf beschrieben den Übergang aus S9/AP7 (Notiz
+    in den verschlüsselten Block, Nutzlast 10 → 11), den der heutige
+    Referenzbestand nicht mehr kennt.
+    **Der Grund steht in der Datei:** Das Feld `beschreibung` beider Listen
+    trägt einen datierten Satz, welche Regeln weg sind und warum sie
+    gegenstandslos wurden.
+    **Gemessen danach:** edbak 287 687 Einzelvergleiche / 0 unerklärt / 16
+    erwartet / 0 ungenutzt; csv 9 120 / 0 / 1 021 / 0. **Vorläufig**, weil
+    AP9 die Referenzdateien ersetzt — beide Kreisläufe laufen danach erneut.
+
+58. **Kein Prüfmittel fragt, ob eine Seite ihr Gerüst hat.**
+    *Aufgenommen 02.09.2026 als Lehre aus F-S3-C (S3/AP5).*
+    `tag_spuren.php` lief zwei Jahre ohne `ui_geruest_start()`: keine
+    Diensttag-Leiste, kein `.rahmen`/`.inhalt` und damit kein seitlicher
+    Innenabstand — auf 412 px saß die linke Kante bei 0 statt 12 px.
+    **Gefunden hat es ein Mensch auf einem Telefon.**
+    Kein Werkzeug konnte es finden, und das ist kein Zufall: Der Bilderlauf
+    misst waagerechten Überlauf (`scrollWidth > innerWidth`), und eine Seite
+    ohne Innenabstand läuft nicht über — sie ist nur randlos. Die
+    Vollständigkeitsprüfung fragt nach Klassen ohne Regel, nicht nach Seiten
+    ohne Gerüst. Der Stilvergleich misst Markup-Proben.
+    **Die Frage ist am Quelltext zu beantworten:** Jede Seite, die
+    `require_admin()` oder `auth_guard.php` einbindet und eigenes Markup
+    ausgibt, muss `ui_geruest_start()` und `ui_geruest_ende()` aufrufen. Ein
+    kleines Prüfmittel dafür wäre ein Nachmittag und fände die ganze Klasse
+    von Fehlern statt eines Falls.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP7 — Prüfmittel ohne
+    Versionsstufe; der Fund darin lief unter Web 19.3.1).** Zweite Prüfung der
+    Gruppe „5 Zusagen": **Seite ohne Gerüst**.
+    **Das Kriterium ist `ui_seite_start(`, nicht „bindet die Wache ein"**
+    (E-BR3-06) — damit die naive Regel nicht wieder vorgeschlagen wird: Sie
+    liefert 15 Treffer, und alle 15 sind richtig so. Wer `ui_seite_start()`
+    ruft, gibt eine Seite aus; verlangt werden **beide** Hälften des Gerüsts,
+    denn ein Gerüst, das nicht geschlossen wird, ist keines. Gezählt wird
+    außerhalb von Kommentaren.
+    **Gemessen:** 0 Befunde, **7 Ausnahmen** mit je eigenem Grund
+    (`install.php`, `login.php`, `reset_request.php`, `wiederherstellen.php`,
+    `pw_handling.php`, `rechtstext_seite.php`, `session_lib.php` — letztere
+    gibt die Abmeldeseite **nach** `session_destroy()` aus), 0 ungenutzte
+    Ausnahmen. `tag_spuren.php`, der Anlass des Punktes, steht **nicht** auf
+    der Liste und ist **kein** Befund. Eine eingeschleuste Seite ohne Gerüst
+    wird mit Datei und Zeile gemeldet.
+    **Die Gegenrichtung hat sich sofort bezahlt gemacht** und ist der
+    eigentliche Gewinn: Der Hinweis „Gerüst ohne Seitenhülle" zeigte auf
+    `apk.php`. Deren 404-Seite ging ohne `<!doctype>`, ohne Titel und **ohne
+    Stylesheet** hinaus (Quirks-Modus, Times New Roman) — erreichbar über
+    jeden Verweis auf ein APK, das nicht mehr liegt. Mit einer Zeile behoben
+    (Web 19.3.1); auf die Ausnahmeliste kommt die Datei **nicht**, ein Fund
+    gehört behoben, nicht erklärt. Der Hinweis steht seither auf 0.
+    **Ein stiller Fehler beim Bauen:** Beim ersten Lauf griff keine der
+    sieben Ausnahmen — die Beschriftungen in `pruefen.py` sind ASCII („Seite
+    ohne Geruest"), die Liste ist Markdown („Gerüst"). Der Vergleich löst
+    Umlaute jetzt auf.
+
+47. **Nichts hält das native `confirm()` draußen.**
+    *Aufgenommen 31.08.2026 (S2/AP5b, aus F-S2-D).* `assets/confirm.js` gibt
+    es, weil Browser bei nativen Dialogen „keine weiteren Dialoge dieser
+    Seite anzeigen" anbieten — danach verschwinden Rückfragen stillschweigend. Das
+    Handbuch sagt das auch zu: „Alle Rückfragen erscheinen als Fenster
+    **innerhalb der Seite**."
+
+    Diese Zusage war zwei Jahre lang falsch. Zwei Aufrufe im Backup-Bereich
+    von `einstellungen.php` benutzten weiter `window.confirm`; aufgefallen ist
+    es erst, als der Kreislauftest daran hängenblieb — Playwright weist native
+    Dialoge stillschweigend ab, und das Einspielen brach ab, ohne dass jemand
+    eine Frage gesehen hätte. Beide sind auf `window.edConfirm` umgestellt.
+
+    Was fehlt, ist die Schranke: eine Prüfung, die `confirm(`, `alert(` und
+    `prompt(` in `server/**/*.php` und `server/assets/*.js` findet und meldet
+    — mit Ausnahmeliste für die **zwei** berechtigten Stellen (gemessen
+    13.09.2026): `confirm.js` selbst benutzt `window.confirm` als Rückfall
+    für Browser ohne `<dialog>`, und `forms.js` tut dasselbe für den Fall,
+    dass `edConfirm` nicht geladen ist. *Berichtigt 13.09.2026:* Hier stand
+    „die eine berechtigte Stelle" — eine Ausnahmeliste mit einem Eintrag
+    wäre beim ersten Lauf rot gewesen.
+
+    > **Warum eine Prüfung und nicht nur Aufmerksamkeit.** Der Fehler ist
+    > unsichtbar: Ein natives `confirm()` funktioniert im Alltag, es fällt
+    > erst bei einer abgeschalteten Dialogsorte oder in einem Prüfbrowser auf
+    > — also genau dann, wenn niemand hinsieht.
+
+    Naheliegender Ort: `tools/vollstaendigkeit/`, das ohnehin Markup und
+    Stylesheet gegeneinanderhält, oder ein eigenes kleines Prüfmittel neben
+    `tools/wortliste/`. Verwandt mit Nr. 36 (Klassennamen, die JavaScript
+    sucht): beides sind Zusagen, die im Code stehen und die niemand nachzählt.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP6 — keine Versionsstufe, nur
+    `tools/`).** Neue Prüfgruppe **„5 Zusagen"** in
+    `tools/vollstaendigkeit/pruefen.py` mit der Prüfung **native Dialoge**:
+    `confirm(`, `alert(`, `prompt(` — auch als `window.`-Aufruf — in
+    `server/**/*.php` und `server/assets/*.js`, **außerhalb von Kommentaren**.
+    Kein eigenes Werkzeug: Das Mittel liest diese Dateien ohnehin und hat
+    Bericht, Listenleser und Ausnahmemechanik (E-BR3-05).
+    **Der Kommentar-Abtaster ist der Kern und bewusst kein regulärer
+    Ausdruck:** `//` steht in jeder URL, `#` in jeder Farbe, `/*` in mancher
+    Zeichenkette. Er geht Zeichen für Zeichen und merkt sich, ob er in einer
+    Zeichenkette steht; Zeilenumbrüche bleiben erhalten, sonst zeigte jede
+    Fundstelle daneben. Was er nicht kann (Heredoc, Regex-Literale mit `//`),
+    steht an seinem Kopf — im eigenen Code kommt beides nicht vor.
+    **Messbar, was das ausmacht:** grob **5** Treffer, drei davon in
+    Kommentaren; nach dem Abtaster **2** — und das sind genau die
+    berechtigten Rückfälle (`assets/confirm.js` für Browser ohne `<dialog>`,
+    `assets/forms.js`, falls `confirm.js` nicht geladen ist). Beide mit Grund
+    in der neuen Liste `tools/vollstaendigkeit/zusagen.md`, die **in beide
+    Richtungen** geprüft wird.
+    **Gegenproben:** Ist-Stand 0 Befunde / 2 Ausnahmen / 0 ungenutzt,
+    Gesamtzahl unverändert 330. Eingeschleustes `window.confirm("x")` in einer
+    PHP-Datei → **1 Befund** mit Datei und Zeile, Gesamtzahl 331. Dieselben
+    Aufrufe als Blockkommentar, Zeilenkommentar und PHP-Raute → **0**.
+    Ausnahme auf eine Datei umgebogen, die es nicht gibt → **1 Befund plus
+    1 „Ausnahme ungenutzt"**. Alle Proben entfernt.
+
+117. **Niemand weiß, ob eine NutzerIn je ein Backup gezogen hat.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-07).* Die Kennzahlen
+    „Backup überfällig" und „nie gesichert", der Filter der
+    NutzerInnen-Liste und die Erinnerungsmail messen **ausschließlich** die
+    Konto-Backups der Verwaltung — den Stand des jüngsten Pakets im
+    Kontoordner (`edbak_konto_stand()`). Ob eine NutzerIn selbst je ein
+    Backup heruntergeladen hat, weiß niemand: Die Datei entsteht im Browser
+    und der Server sieht sie nie. S8 hat die Begriffe ehrlich gemacht — die
+    Kennzahlen heißen jetzt „Konto-Backup überfällig" und „nie
+    Konto-Backup" —, aber die Lücke selbst bleibt. **Zu klären:** ob ein
+    Zeitstempel „zuletzt Backup erzeugt" je Konto überhaupt gewollt ist. Er
+    wäre eine neue Erhebung über eine Handlung der NutzerIn und keine
+    Kleinigkeit; die Alternative ist, es dabei zu belassen und im Handbuch
+    zu sagen, dass die Anwendung es nicht weiß. Zuordnung: Backlog-Runde
+    (Entscheidung), Umsetzung frühestens P5.
+    **Entschieden am 12.09.2026: nicht erheben.** Ein Zeitstempel wäre eine
+    neue Erhebung über eine Handlung der NutzerIn; bei einer Anwendung, deren
+    Versprechen die Ende-zu-Ende-Verschlüsselung ist, wäre das kein
+    Nebenprodukt. Stattdessen sagt das Handbuch, dass die Anwendung es nicht
+    weiß und was die Kennzahlen tatsächlich messen. Gegengeprüft 13.09.2026:
+    `users` trägt keine solche Spalte, die Kennzahlen messen über
+    `edbak_konto_stand()` ausschließlich die Konto-Backups der Verwaltung.
+    **Damit ist der Punkt ein Absatz im Handbuch** — die billigste Umsetzung
+    im ganzen Backlog. Zuordnung: **Backlog-Runde** (Handbuchsatz).
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP3 — keine Versionsstufe, nur
+    `docs/`).** Zwei Absätze in `docs/Handbuch.md` 11.2, direkt hinter den
+    vier Zahlen: Der erste sagt, was gemessen wird (die beiden Kennzahlen,
+    die beiden Filter, die Spalte je Zeile und die Erinnerungsmail sehen
+    alle nur auf das jüngste Paket im Kontoordner — die zweite der drei
+    Backup-Bedeutungen aus Kapitel 6); der zweite, was nicht gemessen wird,
+    samt der Folge in der Liste: Ein Konto, das zuverlässig eigene Backups
+    zieht, steht dort genauso unter „nie Konto-Backup" wie eines, das nichts
+    tut.
+    **Eine Zahl im Konzept war falsch.** Der Auftrag lautete „alle vier
+    messen Konto-Backups der Verwaltung". Die vier Zahlen über der Liste
+    sind aber Konten, Admins, Konto-Backup überfällig und nie Konto-Backup —
+    nur die letzten zwei haben mit Backups zu tun. Die Vier dieses Eintrags
+    meinte etwas anderes: zwei Kennzahlen plus Filter plus Erinnerungsmail.
+    Der Absatz sagt deshalb „zwei der vier Zahlen" und zählt die vier
+    Stellen einzeln auf.
+    **Gegengeprüft am Code (13.09.2026):** `users` hat 16 Spalten, keine
+    davon ein Backup-Zeitpunkt; `edbak_konto_stand()` liest
+    `edbak_pakete()` und die Begleitdatei, also nur den Kontoordner; die
+    Erinnerungsmail filtert über `edbak_faellige_konten()` auf dieselben
+    Stände. **Nichts in der Oberfläche** — die Zahlen heißen seit S8 richtig.
+
+94. **„bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/`.**
+    *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-05.*
+    Der Kopfkommentar von `erzeugen.sh` sagt, die erzeugten Kacheln seien
+    **bitgleich**; die `LIESMICH.md` daneben sagt **pixelgleich**. Beides kann
+    nicht stimmen: PNG trägt einen Zeitstempel-Chunk, und der ändert sich bei
+    jedem Lauf. Wer die Zusage prüft, prüft je nach gelesenem Dokument etwas
+    anderes.
+    **Vorschlag:** ein Wort ändern — oder `-define png:exclude-chunk=time`
+    setzen und die stärkere Zusage tatsächlich einlösen.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP2 — keine Versionsstufe, nur
+    `tools/`).** Gewählt ist **ein Wort**, nicht `-define
+    png:exclude-chunk=time` (E-BR3-04): `compare -metric AE` zählt
+    Bildpunkte, also ist „pixelgleich" die Zusage, die es deckt — die
+    stärkere einzulösen belegte nichts, was hier gebraucht wird. Geändert in
+    `tools/uhr-bilder/erzeugen.sh` (Kopfkommentar, mit Verweis auf die
+    LIESMICH) und `tools/uhr-bilder/LIESMICH.md` („Warum es dieses Werkzeug
+    gibt", mit der Begründung).
+    **Der Eintrag war ungenau:** Die Selbstwiderlegung lag nicht zwischen den
+    beiden Dateien, sondern **innerhalb der LIESMICH** — an `HEAD` gemessen
+    Zeile 27 („bitgleich") gegen Zeile 35 („pixelgleich"), acht Zeilen
+    auseinander. `erzeugen.sh` stand zusätzlich auf der stärkeren Seite.
+    **Ein Prüfmittel hing daran, und das Konzept nannte es nicht:**
+    `tools/s5-anker/anker.py` verankerte die Stelle wörtlich an
+    `sie BITGLEICH \(geprueft` und hätte danach „NICHT GEFUNDEN" gemeldet. Der
+    Anker heißt jetzt `uhrbilder.wortlaut` und sucht den Teil des Satzes, den
+    die Streitfrage nicht berührt; gemessen danach „unveraendert", nicht
+    gefundene Anker unverändert **7**.
+    **Nachgetragen am 13.09.2026, nach dem Startvorgang aus AP4:** Mit
+    ImageMagick und `rsvg-convert` im Container ist `erzeugen.sh` **gelaufen**,
+    und damit ist die Zusage nicht nur neu formuliert, sondern **gemessen**:
+    17 PNG neu erzeugt, davon **0 bytegleich** mit dem Stand in Git (jede trägt
+    einen neuen `tIME`-Block) und **0 mit abweichenden Bildpunkten**
+    (`compare -metric AE` gegen `git show HEAD:<pfad>`). „bitgleich" wäre also
+    nachweisbar falsch gewesen, „pixelgleich" ist nachweisbar richtig.
+    Gegenprobe, dass das Messmittel überhaupt misst: weiß gegen schwarz,
+    64 × 64 px, **4096** Bildpunkte. Die 17 Dateien sind danach zurückgesetzt —
+    ein Zeitstempel gehört nicht in einen Commit.
+
+91. **Die Auswahl in `WatchUi.Confirmation` ist im Bildabzug nicht zu sehen.**
+    *Aufgenommen 03.09.2026 aus S5 Paket C.*
+    Beim Rundlauf musste „Nein" auf der Rückfrage ausgelöst werden. Welche der
+    beiden Schaltflächen gerade gewählt ist, zeigt der Bildabzug **nicht** —
+    `Cancel` und `Confirm` stehen ohne erkennbare Hervorhebung nebeneinander,
+    und `Up`/`Down` änderten daran nichts Sichtbares. Gemessen: Ein `Return`
+    ohne weitere Taste **bestätigt** (die Vorauswahl steht also auf
+    `Confirm`), und BACK räumt den Dialog weg, **ohne** `onResponse` zu rufen.
+    **Folge für die Prüfmittel:** Ein Rundlauf, der eine Ablehnung im Dialog
+    belegen will, kann sie nicht am Bild ablesen — er muss sie an der Wirkung
+    messen (Datenbank: kein Gerät, keine Sitzung). Das ist gemacht, aber es
+    gehört aufgeschrieben, damit die nächste Instanz nicht wieder eine halbe
+    Stunde an der Tastensteuerung sucht.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP1 — keine Versionsstufe, nur
+    `tools/`).** Aufgeschrieben in `tools/uhr-pruefstand/LIESMICH.md`, neuer
+    Unterabschnitt „`WatchUi.Confirmation`: die Auswahl ist im Bild nicht zu
+    sehen" unter „Bedienung simulieren", direkt hinter „Tasten sind heikler als
+    Maus". Er trägt alle vier gemessenen Aussagen und verweist für die Zahlen auf
+    den Simulator-Rundlauf in `docs/konzepte/Pruefdokument-S5-Kopplung-umgekehrt.md`
+    (Paket C). **Dabei präzisiert:** BACK ist kein *Ersatz* für „Nein" — weil
+    `KoppelnDelegate` (`watch/source/PairView.mc`) nur `onResponse` hat, läuft das
+    dort stehende `Pair.ablehnen(...)` bei BACK gar nicht; die zwei Fälle sind
+    getrennt zu prüfen. **Nicht nachgemessen:** kein Connect-IQ-Simulator im
+    Prüfstand dieser Runde; die Aussagen stammen aus dem Messprotokoll vom
+    03.09.2026 (siehe Prüfdokument, Abschnitt 0).
+
+87. **Die Weboberfläche als installierbare Web-App auf Android.**
+    *Aufgenommen 02.09.2026 auf Anweisung des Auftraggebers: vor v1.0
+    prüfen, was es braucht, damit Android die Seite aus dem Browser heraus
+    als App auf dem Startbildschirm ablegt.* **Stand heute, am Code
+    gelesen:** kein Web-App-Manifest, kein Service Worker, kein
+    `theme-color`; vorhanden ist allein ein `apple-touch-icon` (`db.php`,
+    je Logo-Wahl). Chrome bietet „App installieren" nur an, wenn ein
+    Manifest mit Name, Startadresse, `display: standalone` und Symbolen in
+    192 und 512 px über HTTPS ausgeliefert wird. Ob zusätzlich ein Service
+    Worker Pflicht ist, hat sich in den Chrome-Fassungen der letzten Jahre
+    geändert — das ist am aktuellen Stand der Chrome-Dokumentation
+    nachzusehen, nicht aus dem Gedächtnis zu beantworten; ohne Service
+    Worker gibt es jedenfalls keine Offline-Seite, nur den Eintrag auf dem
+    Startbildschirm. **Zu prüfen (Erhebung, ein Nachmittag):** Manifest-
+    Felder und Symbolsatz aus den vorhandenen Logos (Rezept wie
+    `tools/uhr-bilder/`) · Umgang mit der Logo-Wahl je Profil — ein
+    Startbildschirm-Symbol ist fest wie das Launcher-Symbol der Uhr (R47),
+    also Vorgabe der Installation · Anmeldung und `sessionStorage`-Schlüssel
+    im Standalone-Fenster (ein Tab, ein Schlüssel, R44) · Wirkung auf die
+    CSP (Nr. 8) und die Zusage „keine fremde Quelle" · Nachweis mit der
+    Installierbarkeits-Diagnose in Chrome und am S24. **Abgrenzung:** Das ist
+    nicht die Android-App aus S4. Die zeichnet GPS auf und braucht dafür
+    einen Vordergrunddienst (E-R45-5: keine PWA für die Aufzeichnung); die
+    Web-App zeigt nur die Oberfläche. Beides nebeneinander ist gewollt.
+    **Entscheidung** über Umfang und Zeitpunkt in der Planung v1.0
+    (Rahmenplan Schritt 10); Umsetzung dann in P6 oder als Kleinpaket davor.
+    Zuordnung: Backlog-Runde (Erhebung), Entscheidung in Schritt 10.
+
+    **Ausgetragen am 13.09.2026 — beantwortet, nicht erledigt.** *Erhebung
+    mit R70 (03.09.2026) beantwortet; die Umsetzung führt der Fahrplan als
+    P7. Ausgetragen, weil derselbe Auftrag sonst an zwei Stellen stünde —
+    das Muster, das Rahmenplan-Fassung 45 als Ursache von sieben falschen
+    Zuordnungen benannt hat.* R70 sagt: Manifest allein, kein Service Worker
+    (Chrome auf Android verlangt seit Version 108 keinen), in P7 mit der
+    Umbenennung, Name „NAdoku Web", eigenes Symbol, Nachweis am S24 und an
+    einem iPhone. Gegengeprüft am 13.09.2026: kein Web-App-Manifest, kein
+    Service Worker, kein `theme-color`; `apple-touch-icon` in
+    `favicon_tags()` (`db.php`, je Logo-Wahl) und `ui_favicon()` (`ui.php`,
+    Rückfall) — der Stand ist derselbe wie oben beschrieben, die Erhebung hat
+    ihn nur bereits bewertet.
+
+81. **Das App-Symbol wird in der Benachrichtigung falsch dargestellt.**
+    *Aufgenommen 02.09.2026 vom Auftraggeber, mit Bildschirmfoto (Android,
+    laufende Aufzeichnung, 13:16).* In der Benachrichtigungsleiste erscheint
+    die Bildmarke **zu groß und angeschnitten** — der weiße Korpus reicht bis
+    an den Rand der Kachel, die farbigen Flächen sitzen links.
+    **Was geprüft wurde und stimmt** (damit die Suche nicht dort anfängt):
+    Das *Meldungssymbol* in der Statusleiste ist richtig — `symbol_meldung.xml`
+    ist ein einfarbiger Aufnahmepunkt, wie Android es verlangt. Das Manifest
+    zeigt mit `android:icon` und `android:roundIcon` auf `@mipmap/symbol`. Die
+    adaptive Kachel setzt die Marke auf 52 dp Breite in einer 108-dp-Kachel,
+    mittig, weiß auf `marke_dunkelblau`; die PNG-Vorlagen haben einen sauberen
+    Alphakanal (59 % vollständig durchsichtig).
+    **Nachgerechnet:** Die Kachel wurde aus den Quelldateien so zusammengesetzt,
+    wie Android sie zeichnet (108 dp, Vordergrund 52 × 33 dp mittig, sichtbarer
+    Kreis 72 dp) — das Ergebnis ist richtig: weiße Marke auf Dunkelblau, mit
+    Luft zum Rand. **Der Fehler ist aus dem heutigen Quellstand also nicht
+    nachvollziehbar.**
+    **Zu klären, bevor gesucht wird:** Welche App-Fassung liegt auf dem Gerät
+    (Einstellungen → Apps → NAdoku)? Ist es eine ältere als 0.7.7, erklärt das
+    den Befund und der Punkt erledigt sich mit der nächsten Auslieferung. Ist
+    es 0.7.7, liegt es an einem Zeichenweg, der hier nicht nachgebaut wurde —
+    Verdacht dann zuerst auf die `<monochrome>`-Ebene (Android 13+, „Themed
+    Icons") und auf die Symbolform des Herstellers.
+    **Beantwortet am 04.09.2026:** Die App-Fassung auf dem Gerät war **0.7.7**
+    — also *nicht älter* als 0.7.7. Der Punkt erledigt sich damit **nicht** von
+    selbst mit der nächsten Auslieferung; er bleibt ein echter Fund. Der Ort
+    ist der **Kopf der Benachrichtigung** (One UI zeichnet ihn als runde
+    Kachel links), nicht das Symbol in der Statusleiste. Ob „Themed Icons"
+    eingeschaltet sind, ist noch offen.
+
+    **Nachgemessen am 04.09.2026 — und eine Vermutung damit widerlegt.** Der
+    Verdacht lag auf der `<monochrome>`-Ebene: Sie verweist in
+    `mipmap/symbol.xml` auf **dasselbe** Drawable wie der Vordergrund, und
+    `marke_luft_weiss.png` ist **nicht einfarbig** — sie trägt vier Farbtöne
+    (weiß 54,5 %, rot 23,1 %, blau 13,6 %, orange 8,8 %; „weiß" meint nur den
+    Korpus). Android nimmt aus einer monochromen Ebene nur den Alphakanal und
+    färbt ihn ein, also müsste daraus ein Klumpen ohne Binnenzeichnung werden.
+
+    **Wird es aber nicht.** Der Alphakanal wurde einfarbig gefüllt und
+    angesehen: Die Silhouette ist **erkennbar**, weil die Binnenzeichnung des
+    Motivs nicht aus den Farben entsteht, sondern aus **durchsichtigen
+    Trennlinien** zwischen den Farbflächen. Sie überleben die Einfärbung. Der
+    Verweis ist also unsauber, aber nicht die Ursache des gemeldeten Bildes.
+
+    **Was damit weiterhin fehlt:** ein Beleg, wie One UI den
+    Benachrichtigungskopf zeichnet. Der Emulator führt AOSP und beantwortet
+    das nicht — er kann nur zeigen, dass es *dort* richtig aussieht.
+
+    **Prüfweg:** Am Gerät ansehen, nicht im Emulator — die Symbolform ist eine
+    Herstellereinstellung. Zuordnung: **S4-Rest** (Schritt 6), zusammen mit dem
+    Gerätetest auf dem S24.
+
+    **Geschlossen am 12.09.2026 ohne Beleg am Gerät.** Die wahrscheinliche
+    Ursache ist gefunden und behoben: `android:roundIcon` zeigte auf dasselbe
+    adaptive Symbol wie `android:icon` — ein Kategorienfehler. Eine
+    Oberfläche, die `roundIcon` bevorzugt und als fertiges Bild behandelt,
+    zeichnet den Vordergrund auf die volle Fläche, und das ergibt genau das
+    gemeldete Bild. Das Attribut ist seit **Android 0.11.1 (04.09.2026)**
+    ausgetragen, die Begründung steht ausführlich im Manifest von
+    `android/handy/`. „Themed Icons" waren aus, die `<monochrome>`-Ebene
+    also gar nicht im Spiel — ebenfalls am 04.09.2026 geklärt; der Satz „ob
+    ‚Themed Icons' eingeschaltet sind, ist noch offen" oben war seither
+    überholt. *Die Erklärung im Manifest ist eine Erklärung, kein Beweis —
+    der Emulator führt AOSP und beantwortet nicht, wie One UI den
+    Benachrichtigungskopf zeichnet.* **Wieder zu öffnen ist der Punkt durch
+    genau einen Fund:** ein Bildschirmfoto, auf dem das Symbol unter Android
+    0.11.1 oder neuer immer noch angeschnitten erscheint. Der Gerätetest am
+    S24 entfällt damit als eigene Abnahme (Rahmenplan Abschnitt 6).
+
+88. **Kachel „Einsätze je Gerät" in der Zeitraumübersicht.**
+    *Aufgenommen 02.09.2026 aus der Entscheidung zu Nr. 83 (R64).* Jede
+    NutzerIn sieht in ihrer Zeitraumübersicht die eigenen Einsätze nach
+    Herkunft: Garmin-Uhr, Handy, Handy mit Wear-Fernbedienung, GPX-Import,
+    Schnitt, von Hand — als Kachel neben den vorhandenen Kennzahlen, mit
+    Modell als Untertitel, wo eines gespeichert ist. **Neue Darstellung:**
+    Mockup und Freigabe nach `Design.md` 1 vor der Umsetzung; Baustein
+    `ui_kennzahl` aus P3 als Ausgangspunkt. Braucht die Spalten aus R64
+    (Nr. 83, S4-Rest). Zuordnung: Backlog-Runde, nach dem S4-Rest.
+
+    **Verworfen am 12.09.2026.** *Die Daten liegen seit dem S4-Rest vor
+    (R64); es fehlte allein die Darstellung, und sie wird nicht gebraucht.
+    Steht hier als Entscheidung, nicht als Erledigung* — nach dem Muster von
+    Nr. 71. Der Text oben bleibt stehen, damit die Vorlage da ist, falls die
+    Kachel doch einmal gewollt wird. Der Verweis aus der Rahmenplan-Zeile zu
+    Nr. 80 („die NutzerInnen-Sicht ist Nr. 88") ist mit der Austragung
+    entfernt.
 
 71. **Regionen mit Unteradmins — verworfen, festgehalten.**
     *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben

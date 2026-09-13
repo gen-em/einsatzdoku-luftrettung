@@ -64,7 +64,11 @@ die sonst niemand nachhält:
 
 - **waagerechter Überlauf** (`scrollWidth > innerWidth`) je Seite und Breite —
   der Prüfpunkt P-P3-06;
-- **Konsolenfehler** je Seite und Breite;
+- **Konsolenfehler** je Seite und Breite — gezählt werden Konsolenmeldungen
+  vom Typ `error`, die `istRauschen()` durchlässt, **und jede** `pageerror`
+  (eine nicht abgefangene JavaScript-Ausnahme). Die zweite Sorte läuft
+  absichtlich **nicht** durch den Rauschfilter: Eine Ausnahme im eigenen Code
+  ist nie Rauschen. Wer die Zahl liest, liest also zwei Dinge in einer;
 - **Knopfhöhen**: jedes `.knopf` muss so hoch sein, wie es die **emulierte
   Eingabeart** verlangt (P-P3-04, seit Web 15.5.0 zwei Sollwerte):
   **44 px** am Fingergerät und unter 1024 px, **36 px** am Zeigergerät ab
@@ -91,8 +95,45 @@ node tools/screenshots/aufnehmen.mjs                  # alles
 node tools/screenshots/aufnehmen.mjs --nur 10-,12-    # nur diese Seiten
 node tools/screenshots/aufnehmen.mjs --klein          # 1× statt 2×
 node tools/screenshots/aufnehmen.mjs --finger         # als Fingergerät
+node tools/screenshots/aufnehmen.mjs --selbstprobe    # nur die Rauschprobe
 python3 tools/screenshots/kontrast.py                 # Kontraste der Token
 ```
+
+`--selbstprobe` prüft nur `istRauschen()` gegen **fünfzehn** gebaute Fälle und
+endet mit ≠ 0, wenn einer davon anders eingestuft wird als erwartet. Sie
+braucht **keinen laufenden Browser und keinen Server** — das Playwright-Modul
+muss aber vorhanden sein, weil die Datei es an ihrem Kopf lädt; ohne
+Installation bricht sie mit `ERR_MODULE_NOT_FOUND` ab. Sie **löscht die
+Ausgabe nicht** — alle anderen Aufrufe tun das (siehe Grenzen).
+
+### Trägt jede Klasse einen Fall?
+
+Die Probe selbst braucht eine Gegenprobe, und zwar aus einem gemessenen Grund:
+Ihr **erster** Entwurf hatte zehn Fälle und meldete **10 von 10 auch dann, wenn
+man Klasse 1 oder Klasse 3 aus `istRauschen()` löschte** — alle verwerfenden
+Fälle trugen einen Kachelgastgeber in der URL, also fing sie Klasse 1, und fiel
+die weg, fing sie Klasse 3. Die Probe belegte damit die Unterscheidung nicht,
+um die es ging; sie bestätigte sich selbst. Die Fälle 11 bis 13 lösen das auf.
+
+Nachgemessen wird es, indem man jede Klasse einzeln herausnimmt — die Probe
+muss **jedes Mal rot** werden:
+
+```
+S=/tmp/mut; mkdir -p $S; cp tools/screenshots/seiten.json $S/
+lauf() { cp tools/screenshots/aufnehmen.mjs $S/a.mjs; eval "$2"
+         printf '%-34s' "$1"; node $S/a.mjs --selbstprobe | tail -1; }
+lauf "unverändert"           "true"
+lauf "Klasse 1 gelöscht"     "sed -i '/FREMDE_QUELLEN.test(text)/d' \$S/a.mjs"
+lauf "Klasse 2 gelöscht"     "sed -i '/nur ein Statuscode/,+2d' \$S/a.mjs"
+lauf "Klasse-2-Schranke weg"  "sed -i 's/&& !VERBINDUNGSCODES.test(text))/)/' \$S/a.mjs"
+lauf "Klasse 3 gelöscht"     "sed -i \"/herkunft(ort) === 'fremd'/d\" \$S/a.mjs"
+lauf "herkunft: keine→fremd" "sed -i \"s/if (!o || o === 'null') return 'keine';/if (false) return 'keine';/\" \$S/a.mjs"
+```
+
+Gemessen am 13.09.2026: **15 von 15** unverändert, und **14 von 15** in allen
+fünf Mutationen; dazu die sechste von Hand — den `catch`-Zweig von
+`herkunft()` auf `'fremd'` gestellt, ebenfalls **14 von 15** (das ist der Fall
+`<anonymous>`). Bleibt eine grün, ist der zugehörige Fall verlorengegangen.
 
 Rückgabewert ≠ 0, sobald Überlauf, Konsolenfehler oder ein Knopf mit falscher
 Höhe gefunden wird.
@@ -168,7 +209,7 @@ Zustands aufzunehmen. Zurück bleibt eine Sitzung, die nach zehn Minuten
 verfällt — eine Gerätezeile entsteht nie, denn das Gerät sagt in diesem Lauf
 kein Ja.
 
-## Fünf Fallen, die hier schon zugeschnappt sind
+## Sechs Fallen, die hier schon zugeschnappt sind
 
 **Der Inhaltsschlüssel hängt an der Registerkarte.** Der erste Entwurf
 öffnete je Aufnahme eine neue Seite. Jede davon startete mit leerem
@@ -179,10 +220,37 @@ jede Breite ändert sich nur die Fenstergröße.
 
 **Nicht jede rote Zeile ist ein Fehler.** Kartenkacheln und Ortssuche sind
 bewusste Laufzeitquellen; und die Abbruchseite antwortet mit 404 — das ist
-ihre Aufgabe, nicht ihr Fehler. Beides wird ausgefiltert, und zwar über die
-**Fundstelle** der Meldung, nicht über ihren Wortlaut. Ein Bericht, der
-jede rote Zeile meldet, wird nach zwei Läufen weggeklickt, und dann geht der
-echte Fehler mit unter.
+ihre Aufgabe, nicht ihr Fehler. Ein Bericht, der jede rote Zeile meldet, wird
+nach zwei Läufen weggeklickt, und dann geht der echte Fehler mit unter.
+`istRauschen()` wirft deshalb drei Klassen weg: **fremde Quellen** am Namen
+(Gastgeber im Wortlaut oder in der Fundstelle), **den Statuscode der Seite
+selbst** (Fundstelle = Seitenadresse) und **Verbindungsfehler auf einer
+fremden Fundstelle**.
+
+**Eine Dokumentation, die das Richtige sagt, belegt nicht, dass der Code es
+tut** (Backlog Nr. 176, behoben am 13.09.2026). Der Absatz darüber behauptete
+bis dahin, gefiltert werde „über die **Fundstelle** der Meldung, nicht über
+ihren Wortlaut" — der Code tat für die dritte Klasse das Gegenteil:
+`ERR_CONNECTION_RESET`, `ERR_CONNECTION_CLOSED` und `ERR_ABORTED` standen in
+**demselben** Muster wie die Kachelhosts und wurden gegen den Wortlaut geprüft.
+Damit fiel jeder Abruf auf dem **eigenen** Server unter das Kartenrauschen,
+sobald er mit einem dieser drei scheiterte. Am alten Muster nachgerechnet: von
+zehn gebauten Fällen waren **vier** falsch eingestuft, drei davon lokale
+Abbrüche. Am laufenden Browser gemessen (Seite geladen, PHP-Server angehalten,
+Symbol und API-Aufruf nachgeladen): zwei Konsolenfehler auf der eigenen Basis,
+davon verwarf der **alte** Filter **einen** (`api/day.php` mit
+`ERR_CONNECTION_RESET`), der neue **keinen** — dieselbe Lehre wie bei F-P3-AQ,
+eine Ebene tiefer. Nachzählbar ist die Unterscheidung seither mit
+`--selbstprobe`: fünfzehn Fälle mit Sollwert, erwartet **15 von 15**, ohne
+laufenden Browser und ohne Server, und ohne die Ausgabe des letzten Laufs zu
+löschen.
+Drei Entscheidungen darin sind bewusst zur lauten Seite hin getroffen: Eine
+Meldung **ohne Fundstelle** wird gezählt, nicht verworfen; der Fehlercode wird
+nur noch im Wortlaut gesucht, nicht auch in der Fundstelle (in einer URL kommt
+er nicht vor); und **Klasse 2 verwirft nur einen Statuscode** — verliert die
+Seite selbst die Verbindung, wird das gezählt, denn ein Verbindungsabbruch ist
+kein Statuscode. Die letzte der drei ist erst im zweiten Anlauf dazugekommen
+(Abschnitt „Trägt jede Klasse einen Fall?").
 
 **Der Prüf-Browser kommt nicht überall hin, wo `curl` hinkommt.** In der
 Claude-Arbeitsumgebung setzt die Egress-Sperre Chromiums TLS-Handschlag zu
@@ -227,3 +295,19 @@ Fehler im Bericht statt als grüne Zahl.
   Kartenkopf, ein Dialog: Was nicht in der Liste steht, ist nicht im Bild.
 - **Das Bild sagt nicht, ob es richtig ist.** Es sagt, wie es aussieht. Der
   Abgleich gegen die Mockups bleibt Sichtprüfung.
+- **Ein Verbindungsfehler auf einer fremden Adresse bleibt stumm.** Die dritte
+  Rauschklasse verwirft ihn — sie kann nicht wissen, ob die Adresse überhaupt
+  abgerufen werden durfte. Hier stand zuerst, das messe
+  `tools/vollstaendigkeit/`; **als es hier stand, war das falsch** — dessen
+  Gruppe 5 kannte zwei Zusagen, und kein Werkzeug zählte „keine fremde Quelle
+  zur Laufzeit" nach. **Seit dem 13.09.2026 tut es das** (Backlog Nr. 179,
+  Prüfung `fremde Quelle`, 15 Ausnahmen mit Grund) — aber **am Quelltext**,
+  nicht zur Laufzeit. Was erst zur Laufzeit dazukommt, sieht weiterhin
+  niemand: Eine Content-Security-Policy schickt die Anwendung nicht
+  (**Nr. 181**).
+- **Jeder Lauf löscht den vorigen.** `ausgabe/` wird beim Start geräumt
+  (`rmSync`). Zwei Läufe zu vergleichen geht nur, wenn der erste Bericht
+  vorher weggesichert wurde — sonst ist seine Zahl hinterher unbelegbar. In
+  Backlog-Runde 3 hat genau das eine Zahl gekostet: Ein früherer Lauf hatte
+  15 Konsolenfehler gemeldet, der Abschlusslauf 0, und der alte Bericht war
+  nicht mehr da.

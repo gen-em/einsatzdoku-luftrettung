@@ -10,8 +10,10 @@
 # nachbaut".
 #
 # Das Rezept ist aus den vorhandenen Dateien zurueckgerechnet und reproduziert
-# sie BITGLEICH (geprueft mit `compare -metric AE`, Ergebnis 0 fuer alle vier
-# Dateien, die es vorher schon gab).
+# sie PIXELGLEICH (geprueft mit `compare -metric AE`, Ergebnis 0 fuer alle vier
+# Dateien, die es vorher schon gab) — bis zum 13.09.2026 stand hier das
+# staerkere "bitgleich", das dieses Messmittel nicht deckt. Warum:
+# LIESMICH.md, Abschnitt "Warum es dieses Werkzeug gibt" (Backlog Nr. 94).
 #
 # Anleitung: LIESMICH.md im selben Verzeichnis.
 
