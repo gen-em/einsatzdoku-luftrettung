@@ -1,0 +1,123 @@
+# Prüfdokument — Backlog-Runde 3 (Vorlage)
+
+*Angelegt am 13.09.2026 (Fable) mit dem Konzept `Konzept-Backlog-Runde-3.md`;
+**die Zahlen trägt die Umsetzung ein.** Alles in `[eckigen Klammern]` ist
+auszufüllen, alles andere ist Sollwert oder Anweisung. Das Prüfprotokoll in
+Abschnitt 2 und 3 beantwortet „ist es belegt?"; die Prüfliste in Abschnitt 4
+beantwortet „was muss **ich** noch tun?". Muster:
+`Pruefdokument-Backlog-Runde-2.md`.*
+
+> | | |
+> |---|---|
+> | Stufe | **Web [x.y.z]** — [Korrektur/Neben]. **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt |
+> | Punkte | Backlog **Nr. 91, 94, 117, 47, 58, 173, 174** erledigt; **Nr. 67** Unterpunkt erledigt, Punkt bleibt (P5); **Nr. 41** drei Streichungen erledigt, Punkt bleibt (9c) |
+> | Neu entstanden | Prüfgruppe „5 Zusagen" in `tools/vollstaendigkeit/`, Liste `zusagen.md`; neue Referenzdateien unter `tools/referenzdatensatz/referenz/` |
+> | Prüfumgebung | [Wegwerf-Container: PHP, MariaDB, Browser — mit Fassungen] |
+> | Ergebnis | [Alles Maschinelle grün / Abweichungen …; N Punkte bleiben für den Auftraggeber] |
+
+---
+
+## 0. Was NICHT geprüft werden konnte — und warum
+
+Steht bewusst vor allem anderen. Erwartet sind mindestens diese drei; was
+dazukommt, gehört hierher.
+
+- **Nr. 91 und 94 am Simulator.** Beide Punkte sind Dokumentation eines
+  gemessenen Verhaltens (S5/C, V-S5-05). Die Runde misst es **nicht** noch
+  einmal — kein Connect-IQ-Simulator im Prüfstand. Die Aussagen stammen aus
+  dem Backlog-Eintrag und dem Messprotokoll von damals; wer sie anzweifelt,
+  braucht den Simulator. [Bestätigen oder: „Simulator lief, Aussagen
+  nachgemessen" mit Datum.]
+- **Der Tausch in `kdf_upgrade.php` am Produktivserver.** Geprüft auf dem
+  Prüfstand mit dem Demo-Konto und einem Aufruf ohne Header. Ob das
+  Produktiv-Demo-Konto nach dem Deploy unverändert hereinkommt, sagt erst
+  Punkt 1 der Prüfliste.
+- **Die neue Referenz gegen die Demo-Installation.** Die Kreisläufe liefen
+  gegen den Prüfstand. Der Vergleich gegen `nadoku.gen-em.org` misst
+  Besucheränderungen mit, wenn das Demo-Konto nicht vorher zurückgesetzt
+  wurde (LIESMICH, „Regressionslauf"). [Gelaufen? Wenn ja: nach Reset,
+  Ergebnis.]
+- [Weiteres.]
+
+---
+
+## 1. Zusagen, die sich geändert haben
+
+- **`tools/uhr-bilder/`:** „bitgleich" → „pixelgleich" an zwei Stellen. Die
+  schwächere Zusage ist die, die `compare -metric AE` tatsächlich belegt.
+- **Handbuch 11.2:** sagt jetzt, dass die vier Kennzahlen nur Konto-Backups
+  der Verwaltung messen und die Anwendung nicht weiß, ob eine NutzerIn je ein
+  Backup gezogen hat.
+- **Zwei neue Zusagen mit Prüfmittel:** kein natives `confirm()`/`alert()`/
+  `prompt()` außerhalb der zwei Rückfälle; jede Seite mit `ui_seite_start()`
+  hat ihr Gerüst, sieben Ausnahmen mit Grund. Beide sind Regeln, die vorher
+  nur im Kopf standen.
+- [Weiteres, falls beim Bauen eine Zusage berührt wurde.]
+
+---
+
+## 2. Was maschinell geprüft wurde — mit Mittel und Zahl
+
+| Mittel | Vorher (Runde 2, 12.09.2026) | Soll | Ergebnis |
+|---|---|---|---|
+| **Vollständigkeit** (`tools/vollstaendigkeit/pruefen.py`) | 334 Befunde; `[offen]` 5 | `[offen]` **2**; „auf der Streichliste, aber noch im Markup" **0**; „ohne-regel.md: Eintrag ungenutzt" **0**; Gesamtzahl 334 − 3 = **331** (plus/minus, was Unicode-Kommentare seither dazugetan haben — nennen) | [ ] |
+| **Gruppe 5 „Zusagen", native Dialoge** | — (neu) | **0** Befunde, **2** Ausnahmen (`confirm.js`, `forms.js`), **0** Ausnahmen ungenutzt | [ ] |
+| **Gruppe 5 „Zusagen", Seite ohne Gerüst** | — (neu) | **0** Befunde, **7** Ausnahmen, Hinweis „Gerüst ohne Seitenhülle" **1** (`apk.php`) | [ ] |
+| **Probe, dass beide rot werden** | — | je ein eingeschleuster Verstoß → Rückgabewert ≠ 0; danach entfernt | [ ] |
+| **Kreislauf edbak** (`vergleich/kreislauf.py --art edbak --frisch`) | 287 687 Einzelvergleiche, 0 unerklärt, 16 erwartet, **3 ungenutzte Regeln** | **0 unerklärt, 0 ungenutzt**, gegen die **neue** Referenz; ein Rettungsmittel mit `base_ref: null` kommt unverändert zurück | [ ] |
+| **Kreislauf csv** (`--art csv --frisch`) | 9 120 Einzelvergleiche, 0 unerklärt, 1 021 erwartet, **2 ungenutzte Regeln** | **0 unerklärt, 0 ungenutzt**, neue Referenz | [ ] |
+| **Rettungsmittel ohne Standort** in der eingespielten Installation | 0 von 6 (Referenz vom 12.09.) | **2 von 6** vor dem Export und nach dem Umlauf | [ ] |
+| **Klickprobe** (`tools/klickprobe/probe.mjs`) | 40 von 40 | **40 von 40** | [ ] |
+| **Wortliste** (`tools/wortliste/`) | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzt | **0 / 0**; `grep -ci bitgleich tools/uhr-bilder/` = **0** | [ ] |
+| **Linkprobe** (`tools/linkprobe/probe.py`) | 0 Abweichungen, 0 tote Ausnahmen | **0 / 0** | [ ] |
+| **Wartungsprobe** (`tools/wartungsprobe/probe.php`) | 55 Erwartungen, 0 nicht erfüllt (15 flattert, Nr. 172) | **0** nicht erfüllt | [ ] |
+| **Bilderlauf** Einsatzbearbeitung mit Reanimation und Einsatzansicht mit Phasen | — | **0** abweichende Bildpunkte gegen den Stand vor AP5 (`compare -metric AE`) — die drei Klassen hatten keine Regel | [ ] |
+| **`kdf_upgrade` ohne Header** (`curl` mit Demo-Sitzung, ohne `X-CSRF`) | 200 `uebersprungen: demo` | **403** `{"error":"csrf"}`; mit Header weiterhin 200 | [ ] |
+
+---
+
+## 3. Was im Browser geprüft wurde
+
+- **Demo-Anmeldung** auf dem Prüfstand nach AP4: Anmeldung läuft durch,
+  Netzwerkreiter zeigt `api/kdf_upgrade.php` → 200 mit `uebersprungen: demo`.
+  [Ergebnis.]
+- **Einsatzbearbeitung mit Reanimationssitzung** und **Einsatzansicht mit
+  Phasen** nach AP5: sehen aus wie vorher (Bilderlauf, Abschnitt 2). [Ergebnis.]
+- **Handbuch-Absatz** (AP3) im gerenderten Handbuch gelesen, Ton und Ort
+  passen. [Ergebnis.]
+
+---
+
+## 4. Prüfliste — was der Auftraggeber noch tun muss
+
+| # | Bedienweg | Erwartet | Wenn nicht |
+|---|---|---|---|
+| 1 | Nach dem Deploy: **Demo-Konto anmelden** (`nadoku.gen-em.org`, Zugang laut Betriebsakte) | Anmeldung wie immer; Betrieb → Status, Zeile „Schlüsselableitung" unverändert | Der Tausch in `kdf_upgrade.php` hat den Demo-Weg getroffen — Anmeldung schlägt fehl oder Status zeigt das Demo-Konto „im Übergang". Sofort melden; Rückweg ist ein Commit (die zwei Zeilen zurück) plus Deploy |
+| 2 | **Einen Einsatz mit Reanimation** öffnen (Bearbeitung und Ansicht) | Kopfzeile der Reanimationssitzung und Phasennamen sehen aus wie vor der Stufe | Eine der drei Klassen hatte doch eine Wirkung (Regel aus einem anderen Selektor oder ein Skript). Bildschirmfoto; die Klasse kommt zurück, der Streichlisten-Eintrag wird berichtigt |
+| 3 | Handbuch 11.2 lesen | Der neue Absatz sagt verständlich, was die vier Zahlen nicht messen | Formulierung, nicht Sache: Änderungswunsch an die nächste Instanz |
+| 4 | `tools/uhr-pruefstand/LIESMICH.md`, neuer Unterabschnitt zu `Confirmation` lesen | Deckt sich mit deiner Erinnerung an den S5/C-Rundlauf | Abweichung nennen — die Runde hat es nicht nachgemessen (Abschnitt 0) |
+| 5 | **Freigabe des Abschlusses:** danach löscht K9-Lebenszyklus das Konzept; dieses Prüfdokument bleibt | — | — |
+
+---
+
+## 5. Grenzen der benutzten Prüfmittel
+
+- **Die neue Prüfgruppe sieht Aufrufe, keine Wirkung.** `ui_seite_start()`
+  in einer Datei heißt nicht, dass die Seite erreichbar ist; ein `confirm(`
+  in einer zur Laufzeit zusammengesetzten Zeichenkette findet sie nicht.
+  Beides ist bewusst: Ein Mittel, das mehr verspricht, wird ungenau.
+- **Die Kreisläufe vergleichen gegen die Referenz, die diese Runde selbst
+  erzeugt hat.** Ein Fehler, der auf beiden Seiten gleich ist, bleibt
+  unsichtbar — deshalb die Zeile „Rettungsmittel ohne Standort 2 von 6" als
+  Sollmaß von außen (Abschnitt 2) und die Klickprobe.
+- **Alle Messungen aus einem Wegwerf-Container**, nicht vom Produktivserver.
+
+---
+
+## 6. Was aus der Runde offen bleibt
+
+- **Nr. 67** (Hauptpunkt, `csrf_check()` ohne API-Zweig) — P5.
+- **Nr. 41** (Regeln für `imp-warn`, `imp-daygroup`) — Mockup-Runde 9c.
+- **Nr. 172** (Wartungsprobe, Erwartung 15 flattert) — unverändert, nicht
+  Teil dieser Runde.
+- [Fehlerfunde aus Konzept Abschnitt 7, falls welche.]
