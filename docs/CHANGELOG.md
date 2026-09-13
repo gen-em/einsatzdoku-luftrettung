@@ -139,6 +139,36 @@ Kapitels. Und **nichts in der Oberfläche**: Die Zahlen heißen seit S8 richtig;
 ein zusätzlicher Hinweis neben jeder von ihnen erklärte dieselbe Sache
 viermal.
 
+### Prüfmittel — fünf Regeln, die nichts mehr erklärten
+
+**Eine Regel, die nichts mehr erklärt, ist kein Netz, sondern Ballast**
+(Nr. 173). Die Ausnahmelisten der beiden Kreisläufe trugen fünf Regeln zum
+Übergang aus S9/AP7: Die Notiz des Einsatzes wanderte damals in den
+verschlüsselten Block, die Nutzlastnummer stieg von 10 auf 11. Der
+Referenzbestand jener Zeit trug die Notiz noch im Klartext; der heutige tut
+das von Anfang an nicht mehr — und damit gab es nichts mehr zu erklären.
+
+**Der Kreislauf hat sie selbst gemeldet**, als „ungenutzte Regeln": drei in
+`edbak_umlauf.json` (zweimal `missions.notes`, einmal `kopf.version` „nach
+11") und zwei in `csv_umlauf.json` (`felder.beschreibung` „nach
+pat_blob.notes" und die LIESMICH-Regel). Vorher gemessen, wie der Auftrag es
+verlangt: **3 und 2** — die erwarteten Zahlen. Erst danach gestrichen.
+
+**Der Grund steht in der Datei, nicht nur im Changelog.** Das Feld
+`beschreibung` beider Ausnahmelisten trägt jetzt einen datierten Satz,
+welche Regeln weg sind und warum sie gegenstandslos wurden. Wer in einem Jahr
+eine Abweichung sucht, die es nicht gibt, findet dort die Antwort.
+
+**Gemessen nach dem Streichen:** edbak **287 687** Einzelvergleiche, **0**
+unerklärt, 16 erwartet, **0 ungenutzt**; csv **9 120** Einzelvergleiche,
+**0** unerklärt, 1 021 erwartet, **0 ungenutzt**. Die Zeile „ungenutzte
+Regeln" erscheint seither gar nicht mehr — das Werkzeug druckt sie nur, wenn
+es welche gibt.
+
+**Vorläufig ist diese Abnahme trotzdem:** Das nächste Paket (Nr. 174) ersetzt
+die Referenzdateien, gegen die hier verglichen wurde. Beide Kreisläufe laufen
+danach noch einmal.
+
 ### Web — die 404-Seite von `apk.php` ging ohne Kopf hinaus
 
 **Gefunden hat es das neue Prüfmittel, und zwar über seine Gegenrichtung**

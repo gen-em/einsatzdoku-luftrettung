@@ -1499,37 +1499,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfung am Code wäre stabiler als eine an der Stoppuhr.
     *Abnahme:* Zehn Läufe hintereinander, zehnmal dieselbe Zahl.
 
-173. **Die Umlaufprüfungen führen tote Regeln.**
-    *Aufgenommen 12.09.2026 beim Neubau des Referenzbestands (Nr. 155,
-    Web 19.2.0).* Beide Kreisläufe erfüllen ihr Abnahmekriterium —
-    **edbak 287 687 Einzelvergleiche, 0 unerklärt** (16 erwartet) und
-    **csv 9120 Einzelvergleiche, 0 unerklärt** (1021 erwartet) —, melden
-    dabei aber **3 bzw. 2 ungenutzte Regeln**. Vorher waren es 0.
-
-    *Die Ursache ist bekannt und harmlos:* Die Regeln beschreiben einen
-    **Übergang**, den es nicht mehr gibt. Zwei betreffen
-    `missions.notes` („GEMESSEN 143x") aus S9/AP7, als die Notizen halb in
-    der Spalte und halb im verschlüsselten Block lagen; eine betrifft
-    `kopf.version` („nach 11") aus demselben Paket, als die Nutzlast von 10
-    auf 11 stieg. Der neu gebaute Referenzbestand trägt die Notizen von
-    Anfang an im Block und beide Seiten dieselbe Nutzlastnummer — also
-    keine Abweichung, also keine Regel, die greift.
-
-    *Warum das trotzdem zählt:* Eine Ausnahmeregel, die nichts mehr
-    erklärt, ist dasselbe wie eine tote Zeile in
-    `tools/linkprobe/ausnahmen.md` — sie sieht aus wie geprüftes Wissen und
-    ist keines mehr. Die Linkprobe macht den Lauf dafür rot; der Kreislauf
-    nennt die Zahl nur. Das ist der mildere Umgang mit demselben Problem.
-
-    *Zu tun:* Die drei bzw. zwei Regeln aus
-    `tools/referenzdatensatz/vergleich/ausnahmen/{edbak,csv}_umlauf.json`
-    entfernen, mit einem Satz im Änderungsverlauf der Datei, warum sie
-    gegenstandslos geworden sind. **Nicht** am Ende einer langen Sitzung
-    gemacht, weil die Dateien die Vergleichsgrundlage sind und ihr Format
-    zwischen den beiden Arten abweicht.
-    *Abnahme:* Beide Kreisläufe melden 0 unerklärte Abweichungen **und**
-    0 ungenutzte Regeln.
-
 174. **Der Referenzbestand deckt „Rettungsmittel ohne Standort" nur noch
      zur Hälfte ab.**
     *Aufgenommen 12.09.2026 in Backlog-Runde 2, nachdem die Klickprobe den
@@ -1583,6 +1552,52 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+173. **Die Umlaufprüfungen führen tote Regeln.**
+    *Aufgenommen 12.09.2026 beim Neubau des Referenzbestands (Nr. 155,
+    Web 19.2.0).* Beide Kreisläufe erfüllen ihr Abnahmekriterium —
+    **edbak 287 687 Einzelvergleiche, 0 unerklärt** (16 erwartet) und
+    **csv 9120 Einzelvergleiche, 0 unerklärt** (1021 erwartet) —, melden
+    dabei aber **3 bzw. 2 ungenutzte Regeln**. Vorher waren es 0.
+
+    *Die Ursache ist bekannt und harmlos:* Die Regeln beschreiben einen
+    **Übergang**, den es nicht mehr gibt. Zwei betreffen
+    `missions.notes` („GEMESSEN 143x") aus S9/AP7, als die Notizen halb in
+    der Spalte und halb im verschlüsselten Block lagen; eine betrifft
+    `kopf.version` („nach 11") aus demselben Paket, als die Nutzlast von 10
+    auf 11 stieg. Der neu gebaute Referenzbestand trägt die Notizen von
+    Anfang an im Block und beide Seiten dieselbe Nutzlastnummer — also
+    keine Abweichung, also keine Regel, die greift.
+
+    *Warum das trotzdem zählt:* Eine Ausnahmeregel, die nichts mehr
+    erklärt, ist dasselbe wie eine tote Zeile in
+    `tools/linkprobe/ausnahmen.md` — sie sieht aus wie geprüftes Wissen und
+    ist keines mehr. Die Linkprobe macht den Lauf dafür rot; der Kreislauf
+    nennt die Zahl nur. Das ist der mildere Umgang mit demselben Problem.
+
+    *Zu tun:* Die drei bzw. zwei Regeln aus
+    `tools/referenzdatensatz/vergleich/ausnahmen/{edbak,csv}_umlauf.json`
+    entfernen, mit einem Satz im Änderungsverlauf der Datei, warum sie
+    gegenstandslos geworden sind. **Nicht** am Ende einer langen Sitzung
+    gemacht, weil die Dateien die Vergleichsgrundlage sind und ihr Format
+    zwischen den beiden Arten abweicht.
+    *Abnahme:* Beide Kreisläufe melden 0 unerklärte Abweichungen **und**
+    0 ungenutzte Regeln.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP8 — keine Versionsstufe, nur
+    `tools/`).** Vorher gemessen, wie der Auftrag es verlangt: **3 ungenutzte
+    Regeln im edbak-Umlauf, 2 im csv-Umlauf** — die erwarteten Zahlen. Erst
+    danach gestrichen, namentlich: `missions.notes` (zweimal, als `wert` und
+    als `zusaetzlich`) und `kopf.version` „nach 11" aus `edbak_umlauf.json`;
+    `felder.beschreibung` „nach pat_blob.notes" und die LIESMICH-Regel aus
+    `csv_umlauf.json`. Alle fünf beschrieben den Übergang aus S9/AP7 (Notiz
+    in den verschlüsselten Block, Nutzlast 10 → 11), den der heutige
+    Referenzbestand nicht mehr kennt.
+    **Der Grund steht in der Datei:** Das Feld `beschreibung` beider Listen
+    trägt einen datierten Satz, welche Regeln weg sind und warum sie
+    gegenstandslos wurden.
+    **Gemessen danach:** edbak 287 687 Einzelvergleiche / 0 unerklärt / 16
+    erwartet / 0 ungenutzt; csv 9 120 / 0 / 1 021 / 0. **Vorläufig**, weil
+    AP9 die Referenzdateien ersetzt — beide Kreisläufe laufen danach erneut.
 
 58. **Kein Prüfmittel fragt, ob eine Seite ihr Gerüst hat.**
     *Aufgenommen 02.09.2026 als Lehre aus F-S3-C (S3/AP5).*
