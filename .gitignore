@@ -73,6 +73,21 @@ tools/referenzdatensatz/einspielen/lauf.json
 # passwortaequivalenten Schluessel in der Datei. Genau diese Person liest die
 # Anleitung nicht noch einmal.
 tools/referenzdatensatz/einspielen/*rc.json
+#
+# UND DASSELBE OHNE VERZEICHNIS (13.09.2026, Backlog-Runde 3 / AP9). Die Regel
+# darueber ist an `einspielen/` gebunden, der Dateiname aber ist ein RELATIVER
+# Pfad im Aufruf: `node einspielen/passwort_setzen.mjs '<Link>' '<Passwort>'
+# rc.json` legt ihn dorthin, wo die Aufrufende steht — die Anleitung ruft aus
+# `tools/referenzdatensatz/`, also eine Ebene hoeher, und dort griff die Regel
+# nicht. Gefunden, weil der Stop-Hook die Datei als unverfolgt meldete, nicht
+# weil jemand sie bemerkt haette.
+#
+# Genau die Fortsetzung des Arguments oben: Ein Muster wirkt ohne Zutun -- aber
+# nur, soweit es reicht. `**/rc.json` trifft den Dateinamen in JEDEM
+# Verzeichnis und ist bewusst der exakte Name statt `*rc.json`: Letzteres
+# verschluckte auch `.eslintrc.json` und Geschwister. Heute gibt es davon
+# keine im Repositorium (nachgesehen), morgen vielleicht schon.
+**/rc.json
 # Laufprotokoll des Referenz-Exports (Zeitpunkt und Dateinamen des letzten
 # Laufs). Die erzeugten Dateien selbst gehoeren ins Repositorium (E-P1-12),
 # das Protokoll ihres Entstehens nicht.
