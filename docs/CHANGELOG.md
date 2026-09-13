@@ -139,6 +139,64 @@ Kapitels. Und **nichts in der Oberfläche**: Die Zahlen heißen seit S8 richtig;
 ein zusätzlicher Hinweis neben jeder von ihnen erklärte dieselbe Sache
 viermal.
 
+### Prüfmittel — eine Zusage, die bisher nur im Kopf stand, wird nachgezählt
+
+**„Kein natives `confirm()`" war ein Versprechen ohne Messgerät** (Nr. 47).
+Die Anwendung hat mit `edConfirm()` einen eigenen Dialog, weil Browser bei
+nativen Dialogen anbieten, „keine weiteren Meldungen dieser Seite" zu zeigen
+— wer das einmal klickt, bekommt auch die nächste Rückfrage nicht mehr. Nur:
+Dass niemand versehentlich wieder ein `confirm()` schreibt, hing daran, dass
+sich jemand erinnert.
+
+**Neue Prüfgruppe „5 Zusagen"** in `tools/vollstaendigkeit/pruefen.py`, nicht
+ein eigenes Werkzeug: Das Mittel liest bereits `server/**/*.php` und
+`server/assets/*.js`, hat Bericht, Listenleser und Ausnahmemechanik. Die
+erste Prüfung darin heißt **native Dialoge** und sucht `confirm(`, `alert(`
+und `prompt(` — auch als `window.`-Aufruf — außerhalb von Kommentaren.
+
+**Der Kommentar-Abtaster ist der Kern, und er ist kein regulärer Ausdruck.**
+`//` steht in jeder URL, `#` in jeder Farbe, `/*` in mancher Zeichenkette;
+ein Ausdruck, der das trennen soll, wird entweder zu grob und streicht Code
+weg oder zu fein und lässt Kommentare stehen — beides macht die Prüfung
+lautlos wertlos. Stattdessen geht ein Abtaster Zeichen für Zeichen und merkt
+sich, ob er in einer Zeichenkette steht. Die Zeilenumbrüche bleiben erhalten,
+sonst zeigte jede Fundstelle daneben. `#` gilt nur in PHP — in JavaScript
+begänne es ein privates Feld. Was er **nicht** kann, steht als Satz an seinem
+Kopf: Heredoc und Regex-Literale mit `//` darin; beides kommt im eigenen Code
+nicht vor (nachgesehen — die Treffer liegen alle unter `server/vendor/`, und
+das ist ausgenommen).
+
+**Was das ausmacht, ist messbar:** Ein grober `grep` findet **fünf** Stellen,
+drei davon in Kommentaren (`unlock.js` erklärt, warum es dort *kein*
+`window.prompt` gibt; `confirm.js` und `version.php` erzählen von der
+Ersetzung). Nach dem Abtaster bleiben **zwei** — und genau die sind die
+berechtigten Rückfälle.
+
+**Zwei Ausnahmen, beide mit Grund** in der neuen Liste
+`tools/vollstaendigkeit/zusagen.md`: `assets/confirm.js` (der Rückfall der
+Ersatzfunktion selbst, für Browser ohne `<dialog>`) und `assets/forms.js`
+(der Rückfall der Formularrückfrage, falls `confirm.js` nicht geladen ist).
+Der Backlog-Eintrag nannte bis zum 13.09.2026 nur **eine** — eine
+Ausnahmeliste mit einem Eintrag wäre beim ersten Lauf rot gewesen.
+
+**Die Liste wird in beide Richtungen geprüft.** Ein Treffer ohne Eintrag ist
+ein Befund, und ein Eintrag, der nichts mehr erklärt, ebenso („Ausnahme
+ungenutzt") — dieselbe Regel wie bei `ohne-regel.md`. Ihre zweite Spalte ist
+die **Datei**, nicht die Zeile: Eine Zeilennummer altert mit dem nächsten
+Paket, und genau daran ist der Eintrag zu `phasen-name` gealtert (AP5).
+
+**Gemessen, mit Gegenproben in beide Richtungen.** Ist-Stand: **0** Befunde,
+**2** Ausnahmen, **0** ungenutzt, Gesamtzahl unverändert **330**. Ein
+eingeschleustes `window.confirm("x")` in einer PHP-Datei: **1 Befund** mit
+Datei und Zeile, Gesamtzahl 331. Dieselben drei Aufrufe als Blockkommentar,
+Zeilenkommentar und PHP-Raute: **0 Befunde** — der Abtaster trägt für alle
+drei Formen. Eine Ausnahme auf eine Datei umgebogen, die es nicht gibt:
+**1 Befund plus 1 „Ausnahme ungenutzt"**. Alle Proben wieder entfernt.
+
+**Die Zählung im Kopf ist berichtigt.** Die LIESMICH führte fünf Prüfungen,
+von denen die fünfte die *Ausgabe* war — sie prüft nichts, sie zeigt. Jetzt
+steht an der Fünf eine echte Prüfung, und die Ausgabe steht daneben.
+
 ### Web — drei Klassen ohne Regel verlassen das Markup
 
 **Drei von fünf sind entschieden, nicht aufgeräumt** (Nr. 41, entschieden am

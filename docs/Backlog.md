@@ -576,38 +576,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Vorher zu klären: Was geschieht mit einer alten Datei nach dem Stichtag?
     Vorschlag: Die Meldung nennt die letzte Fassung, die sie noch einspielen
     konnte — so wie es `version_alt` heute für Nutzlasten unter 6 tut.
-47. **Nichts hält das native `confirm()` draußen.**
-    *Aufgenommen 31.08.2026 (S2/AP5b, aus F-S2-D).* `assets/confirm.js` gibt
-    es, weil Browser bei nativen Dialogen „keine weiteren Dialoge dieser
-    Seite anzeigen" anbieten — danach verschwinden Rückfragen stillschweigend. Das
-    Handbuch sagt das auch zu: „Alle Rückfragen erscheinen als Fenster
-    **innerhalb der Seite**."
-
-    Diese Zusage war zwei Jahre lang falsch. Zwei Aufrufe im Backup-Bereich
-    von `einstellungen.php` benutzten weiter `window.confirm`; aufgefallen ist
-    es erst, als der Kreislauftest daran hängenblieb — Playwright weist native
-    Dialoge stillschweigend ab, und das Einspielen brach ab, ohne dass jemand
-    eine Frage gesehen hätte. Beide sind auf `window.edConfirm` umgestellt.
-
-    Was fehlt, ist die Schranke: eine Prüfung, die `confirm(`, `alert(` und
-    `prompt(` in `server/**/*.php` und `server/assets/*.js` findet und meldet
-    — mit Ausnahmeliste für die **zwei** berechtigten Stellen (gemessen
-    13.09.2026): `confirm.js` selbst benutzt `window.confirm` als Rückfall
-    für Browser ohne `<dialog>`, und `forms.js` tut dasselbe für den Fall,
-    dass `edConfirm` nicht geladen ist. *Berichtigt 13.09.2026:* Hier stand
-    „die eine berechtigte Stelle" — eine Ausnahmeliste mit einem Eintrag
-    wäre beim ersten Lauf rot gewesen.
-
-    > **Warum eine Prüfung und nicht nur Aufmerksamkeit.** Der Fehler ist
-    > unsichtbar: Ein natives `confirm()` funktioniert im Alltag, es fällt
-    > erst bei einer abgeschalteten Dialogsorte oder in einem Prüfbrowser auf
-    > — also genau dann, wenn niemand hinsieht.
-
-    Naheliegender Ort: `tools/vollstaendigkeit/`, das ohnehin Markup und
-    Stylesheet gegeneinanderhält, oder ein eigenes kleines Prüfmittel neben
-    `tools/wortliste/`. Verwandt mit Nr. 36 (Klassennamen, die JavaScript
-    sucht): beides sind Zusagen, die im Code stehen und die niemand nachzählt.
-
 48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
     *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
     manuell mehr je Konto möglich". Umgesetzt ist die Zahl für die ganze
@@ -1633,6 +1601,63 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+47. **Nichts hält das native `confirm()` draußen.**
+    *Aufgenommen 31.08.2026 (S2/AP5b, aus F-S2-D).* `assets/confirm.js` gibt
+    es, weil Browser bei nativen Dialogen „keine weiteren Dialoge dieser
+    Seite anzeigen" anbieten — danach verschwinden Rückfragen stillschweigend. Das
+    Handbuch sagt das auch zu: „Alle Rückfragen erscheinen als Fenster
+    **innerhalb der Seite**."
+
+    Diese Zusage war zwei Jahre lang falsch. Zwei Aufrufe im Backup-Bereich
+    von `einstellungen.php` benutzten weiter `window.confirm`; aufgefallen ist
+    es erst, als der Kreislauftest daran hängenblieb — Playwright weist native
+    Dialoge stillschweigend ab, und das Einspielen brach ab, ohne dass jemand
+    eine Frage gesehen hätte. Beide sind auf `window.edConfirm` umgestellt.
+
+    Was fehlt, ist die Schranke: eine Prüfung, die `confirm(`, `alert(` und
+    `prompt(` in `server/**/*.php` und `server/assets/*.js` findet und meldet
+    — mit Ausnahmeliste für die **zwei** berechtigten Stellen (gemessen
+    13.09.2026): `confirm.js` selbst benutzt `window.confirm` als Rückfall
+    für Browser ohne `<dialog>`, und `forms.js` tut dasselbe für den Fall,
+    dass `edConfirm` nicht geladen ist. *Berichtigt 13.09.2026:* Hier stand
+    „die eine berechtigte Stelle" — eine Ausnahmeliste mit einem Eintrag
+    wäre beim ersten Lauf rot gewesen.
+
+    > **Warum eine Prüfung und nicht nur Aufmerksamkeit.** Der Fehler ist
+    > unsichtbar: Ein natives `confirm()` funktioniert im Alltag, es fällt
+    > erst bei einer abgeschalteten Dialogsorte oder in einem Prüfbrowser auf
+    > — also genau dann, wenn niemand hinsieht.
+
+    Naheliegender Ort: `tools/vollstaendigkeit/`, das ohnehin Markup und
+    Stylesheet gegeneinanderhält, oder ein eigenes kleines Prüfmittel neben
+    `tools/wortliste/`. Verwandt mit Nr. 36 (Klassennamen, die JavaScript
+    sucht): beides sind Zusagen, die im Code stehen und die niemand nachzählt.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP6 — keine Versionsstufe, nur
+    `tools/`).** Neue Prüfgruppe **„5 Zusagen"** in
+    `tools/vollstaendigkeit/pruefen.py` mit der Prüfung **native Dialoge**:
+    `confirm(`, `alert(`, `prompt(` — auch als `window.`-Aufruf — in
+    `server/**/*.php` und `server/assets/*.js`, **außerhalb von Kommentaren**.
+    Kein eigenes Werkzeug: Das Mittel liest diese Dateien ohnehin und hat
+    Bericht, Listenleser und Ausnahmemechanik (E-BR3-05).
+    **Der Kommentar-Abtaster ist der Kern und bewusst kein regulärer
+    Ausdruck:** `//` steht in jeder URL, `#` in jeder Farbe, `/*` in mancher
+    Zeichenkette. Er geht Zeichen für Zeichen und merkt sich, ob er in einer
+    Zeichenkette steht; Zeilenumbrüche bleiben erhalten, sonst zeigte jede
+    Fundstelle daneben. Was er nicht kann (Heredoc, Regex-Literale mit `//`),
+    steht an seinem Kopf — im eigenen Code kommt beides nicht vor.
+    **Messbar, was das ausmacht:** grob **5** Treffer, drei davon in
+    Kommentaren; nach dem Abtaster **2** — und das sind genau die
+    berechtigten Rückfälle (`assets/confirm.js` für Browser ohne `<dialog>`,
+    `assets/forms.js`, falls `confirm.js` nicht geladen ist). Beide mit Grund
+    in der neuen Liste `tools/vollstaendigkeit/zusagen.md`, die **in beide
+    Richtungen** geprüft wird.
+    **Gegenproben:** Ist-Stand 0 Befunde / 2 Ausnahmen / 0 ungenutzt,
+    Gesamtzahl unverändert 330. Eingeschleustes `window.confirm("x")` in einer
+    PHP-Datei → **1 Befund** mit Datei und Zeile, Gesamtzahl 331. Dieselben
+    Aufrufe als Blockkommentar, Zeilenkommentar und PHP-Raute → **0**.
+    Ausnahme auf eine Datei umgebogen, die es nicht gibt → **1 Befund plus
+    1 „Ausnahme ungenutzt"**. Alle Proben entfernt.
 
 117. **Niemand weiß, ob eine NutzerIn je ein Backup gezogen hat.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-07).* Die Kennzahlen

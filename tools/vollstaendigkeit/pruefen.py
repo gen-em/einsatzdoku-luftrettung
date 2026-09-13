@@ -15,7 +15,11 @@ Fuenf Pruefungen:
   3  Symbole -- Inline-SVG mit Pfaden, Unicode-Symbolzeichen, Emoji im Markup;
      Verweise auf fehlende Symboldateien; Dateien ohne Verweis (Hinweis).
   4  Knopfregel -- jede Hoehenangabe an einer .knopf-Regel kommt aus --knopf.
-  5  Ausgabe -- je Pruefung Zahl und Liste, Rueckgabewert != 0 bei Befund.
+  5  Zusagen -- Regeln, die bisher nur im Kopf standen: kein natives
+     confirm()/alert()/prompt() ausser den begruendeten Rueckfaellen
+     (Backlog Nr. 47). Ausnahmen mit Grund in zusagen.md.
+
+Dazu die Ausgabe: je Pruefung Zahl und Liste, Rueckgabewert != 0 bei Befund.
 
 Aufruf und Bedeutung stehen in LIESMICH.md daneben.
 Kein PHP noetig; nur Python 3.
@@ -161,6 +165,58 @@ def markup_klassen(dateien):
 
 
 # ------------------------------------------------------- Hilfslisten lesen
+def ohne_php_js_kommentare(text, ist_php):
+    """Kommentare durch Leerzeichen ersetzen, Zeilenumbrueche erhalten.
+
+    WARUM NICHT MIT EINEM AUSDRUCK. `//` steht in jeder URL, `#` in jeder
+    Farbe, `/*` in mancher Zeichenkette. Ein regulaerer Ausdruck, der das
+    trennen soll, wird entweder zu grob (und streicht Code weg) oder zu fein
+    (und laesst Kommentare stehen) -- beides macht die Pruefung wertlos, und
+    zwar lautlos. Dieser Abtaster geht stattdessen Zeichen fuer Zeichen und
+    merkt sich, ob er gerade in einer Zeichenkette steht.
+
+    DIE UMBRUECHE MUESSEN BLEIBEN, sonst zeigt jede Fundstelle daneben --
+    dieselbe Regel wie bei ohne_kommentare() fuer CSS.
+
+    `#` GILT NUR IN PHP. In JavaScript begaenne es ein privates Feld, und im
+    eigenen Code gibt es davon keines (nachgesehen am 13.09.2026) -- aber die
+    Unterscheidung kostet nichts und nimmt der naechsten Fassung eine Falle.
+
+    WAS ER NICHT KANN: Heredoc/Nowdoc (`<<<`) und Regex-Literale mit `//`
+    darin. Beides kommt im eigenen Code nicht vor (nachgesehen; die Treffer
+    liegen alle unter server/vendor/, und das ist ausgenommen). Wer das
+    aendert, erweitert diesen Abtaster -- oder die Pruefung liest Kommentar
+    fuer Code.
+    """
+    aus = []
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        if c in ('"', "'", '`'):
+            ende = c
+            aus.append(c); i += 1
+            while i < n:
+                if text[i] == '\\' and i + 1 < n:
+                    aus.append(text[i]); aus.append(text[i+1]); i += 2; continue
+                aus.append(text[i])
+                if text[i] == ende:
+                    i += 1; break
+                i += 1
+            continue
+        if c == '/' and i + 1 < n and text[i+1] == '*':
+            j = text.find('*/', i + 2)
+            j = n if j < 0 else j + 2
+            aus.append(''.join(z if z == '\n' else ' ' for z in text[i:j]))
+            i = j; continue
+        if (c == '/' and i + 1 < n and text[i+1] == '/') or (c == '#' and ist_php):
+            j = text.find('\n', i)
+            j = n if j < 0 else j
+            aus.append(' ' * (j - i))
+            i = j; continue
+        aus.append(c); i += 1
+    return ''.join(aus)
+
+
 def liste_lesen(name, spalten=1):
     """Zeilen einer Markdown-Tabelle als Liste von Spaltenlisten.
 
@@ -177,7 +233,7 @@ def liste_lesen(name, spalten=1):
         felder = [f.strip() for f in roh.strip('|').split('|')]
         if not felder or set(felder[0]) <= set('-: '):
             continue
-        if felder[0].lower() in ('klasse', 'muster', 'wert', 'datei'):
+        if felder[0].lower() in ('klasse', 'muster', 'wert', 'datei', 'prüfung'):
             continue
         zeilen.append(felder)
     return [z for z in zeilen if len(z) >= spalten]
@@ -408,6 +464,61 @@ def pruefung_knopf(bericht):
 
 
 # ============================================================== Bericht
+# =========================================================== 5. Zusagen
+NATIVE_DIALOGE = re.compile(r'(?<![\w$.])(?:window\s*\.\s*)?(confirm|alert|prompt)\s*\(')
+
+
+def zusagen_treffer(muster):
+    """Alle Fundstellen eines Musters in server/, ohne Kommentare.
+
+    Liefert (kurzer Pfad, Zeile, Fundtext) -- das Format, das die
+    Ausnahmeliste vergleicht und der Bericht zeigt."""
+    for pfad in quelldateien():
+        text = lies(pfad)
+        ohne = ohne_php_js_kommentare(text, pfad.endswith('.php'))
+        for m in muster.finditer(ohne):
+            yield kurz(pfad), zeile_von(ohne, m.start()), m.group(0).strip()
+
+
+def zusagen_werten(bericht, name, treffer, listenname='zusagen.md'):
+    """Treffer gegen die Ausnahmeliste halten -- in beide Richtungen.
+
+    EINE AUSNAHME, DIE NICHTS MEHR ERKLAERT, IST EIN BEFUND. Sonst verwahrlost
+    die Liste so still wie die Sache, gegen die sie schuetzt -- dieselbe Regel
+    wie bei ohne-regel.md (Backlog Nr. 39).
+
+    DIE LISTE HAT VIER SPALTEN: Pruefung | Datei | Muster | Grund. Die erste
+    sagt, zu welcher Pruefung die Zeile gehoert -- so tragen alle Zusagen EINE
+    Liste, und ein Mensch sieht beim Lesen, wovon eine Zeile spricht. Die
+    zweite ist die DATEI und nicht die Zeile: Eine Zeilennummer altert mit dem
+    naechsten Paket, das die Datei anfasst (genau daran ist der Eintrag zu
+    `phasen-name` in ohne-regel.md gealtert, AP5).
+    """
+    regeln = [(z[1].strip('`'), z[2].strip('`'))
+              for z in liste_lesen(listenname, 4) if z[0].strip('*` ') == name]
+
+    offen, benutzt = [], set()
+    for pfad, zeile, text in treffer:
+        for k, (datei, mus) in enumerate(regeln):
+            if pfad.endswith(datei) and mus in text:
+                benutzt.add(k); break
+        else:
+            offen.append('%s:%d  %s' % (pfad, zeile, text))
+    ungenutzt = ['%s  (%s)' % (d, m) for k, (d, m) in enumerate(regeln) if k not in benutzt]
+    bericht.befund('5 Zusagen', name, offen)
+    bericht.zahl('5 Zusagen', name + ': Ausnahmen mit Grund', len(regeln))
+    bericht.befund('5 Zusagen', name + ': Ausnahme ungenutzt', ungenutzt)
+
+
+def pruefung_zusagen(bericht):
+    """Zusagen, die bisher nur im Kopf standen (Backlog Nr. 47, 58).
+
+    WOFUER. Die Anwendung gibt Versprechen, die kein Mittel nachzaehlt: "kein
+    natives confirm()", "jede Seite hat ihr Geruest". Ein Versprechen ohne
+    Pruefmittel haelt genau so lange, wie sich jemand daran erinnert."""
+    zusagen_werten(bericht, 'native Dialoge', zusagen_treffer(NATIVE_DIALOGE))
+
+
 class Bericht:
     def __init__(self, ausfuehrlich):
         self.ausfuehrlich = ausfuehrlich
@@ -488,6 +599,7 @@ def main():
     pruefung_werte(b)
     pruefung_symbole(b)
     pruefung_knopf(b)
+    pruefung_zusagen(b)
     return b.drucken()
 
 

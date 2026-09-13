@@ -9,7 +9,7 @@ beantwortet „was muss **ich** noch tun?". Muster:
 
 > | | |
 > |---|---|
-> | Stand | **Block A vollständig** (AP1–AP5, 13.09.2026); AP6 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
+> | Stand | **Block A vollständig** (AP1–AP5) und **AP6** erledigt (13.09.2026); AP7 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
 > | Stufe | **Web 19.3.1 — Korrektur** (E-BR3-14; die Begründung steht im Konzept). **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt. `version.php` steigt erst mit AP4 — dem ersten Paket, das `server/` anfasst |
 > | Punkte | Backlog **Nr. 91, 94, 117, 47, 58, 173, 174** erledigt; **Nr. 67** Unterpunkt erledigt, Punkt bleibt (P5); **Nr. 41** drei Streichungen erledigt, Punkt bleibt (9c) |
 > | Neu entstanden | Prüfgruppe „5 Zusagen" in `tools/vollstaendigkeit/`, Liste `zusagen.md`; neue Referenzdateien unter `tools/referenzdatensatz/referenz/` |
@@ -88,7 +88,11 @@ dazukommt, gehört hierher.
 | Mittel | Vorher (Runde 2, 12.09.2026) | Soll | Ergebnis |
 |---|---|---|---|
 | **Vollständigkeit** (`tools/vollstaendigkeit/pruefen.py`) | 334 Befunde; `[offen]` 5; „ohne Gegenstück" 53; „auf der Streichliste" 125 | `[offen]` **2**; „auf der Streichliste, aber noch im Markup" **0**; „ohne-regel.md: Eintrag ungenutzt" **0**; Gesamtzahl **330** — nicht 331 wie im Konzept: `rea-kopf` war zusätzlich ein Befund „ohne Gegenstück" | `[offen]` **2** (`imp-warn`, `imp-daygroup`) ✓ · noch im Markup **0** ✓ · ungenutzt **0** ✓ · „ohne Gegenstück" **52** ✓ · Streichliste **126** ✓ · **BEFUNDE 330** ✓ |
-| **Gruppe 5 „Zusagen", native Dialoge** | — (neu) | **0** Befunde, **2** Ausnahmen (`confirm.js`, `forms.js`), **0** Ausnahmen ungenutzt | [ ] |
+| **Gruppe 5 „Zusagen", native Dialoge** | — (neu) | **0** Befunde, **2** Ausnahmen (`confirm.js`, `forms.js`), **0** Ausnahmen ungenutzt | **0 / 2 / 0** ✓, Gesamtzahl unverändert **330** |
+| **AP6 · was der Kommentar-Abtaster ausmacht** | grober `grep`: **5** Treffer | nach dem Abtaster **2** — die drei übrigen sind Kommentare | **5 → 2** ✓ (`unlock.js`, `confirm.js`-Kopf, `version.php` sind Kommentare) |
+| **AP6 · Probe: `window.confirm("x")` in einer PHP-Datei** | 0 Befunde | **1** Befund mit `Datei:Zeile`; Gesamtzahl steigt | **1** (`server/einsatz.php:998`), Gesamt **330 → 331** ✓, danach entfernt |
+| **AP6 · Probe: dieselben Aufrufe als Kommentar** (`/* */`, `//`, `#`) | — | **0** Befunde — der Abtaster trägt für alle drei Formen | **0** ✓, danach entfernt |
+| **AP6 · Probe: Ausnahme zeigt ins Leere** | 0 ungenutzt | **1** Befund **und** **1** „Ausnahme ungenutzt" | **1 / 1** ✓, danach zurückgenommen |
 | **Gruppe 5 „Zusagen", Seite ohne Gerüst** | — (neu) | **0** Befunde, **7** Ausnahmen, Hinweis „Gerüst ohne Seitenhülle" **1** (`apk.php`) | [ ] |
 | **Probe, dass beide rot werden** | — | je ein eingeschleuster Verstoß → Rückgabewert ≠ 0; danach entfernt | [ ] |
 | **Kreislauf edbak** (`vergleich/kreislauf.py --art edbak --frisch`) | 287 687 Einzelvergleiche, 0 unerklärt, 16 erwartet, **3 ungenutzte Regeln** | **0 unerklärt, 0 ungenutzt**, gegen die **neue** Referenz; ein Rettungsmittel mit `base_ref: null` kommt unverändert zurück | [ ] |

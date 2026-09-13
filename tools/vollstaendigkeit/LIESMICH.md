@@ -47,14 +47,16 @@ zur Sollmenge und verliert damit genau die Auskunft, um die es geht.
 | 2 | Werte außerhalb der Token — Hexfarben, `rgb()`, Schriftgrößen, Pixelmaße, `50px`-Reste, `style="…"` in PHP/JS | 0 außer `ausnahmen.md` |
 | 3 | Symbole — Inline-SVG mit Pfaden, Unicode-Zeichen als Symbol, Emoji, Verweise auf fehlende Dateien, Dateien ohne Anker `id="i"` | 0 |
 | 4 | Knopfregel — jede Höhenangabe an einer `.knopf`-Regel kommt aus `--knopf` | 0 |
-| 5 | Ausgabe — je Prüfung Zahl und Liste mit `Datei:Zeile` | — |
+| 5 | **Zusagen** — Regeln, die bisher nur im Kopf standen. Heute eine: **native Dialoge** (kein `confirm()`/`alert()`/`prompt()`, auch nicht als `window.`-Aufruf, außerhalb von Kommentaren). Ausnahmen mit Grund in `zusagen.md`, in **beide** Richtungen geprüft | 0 Befunde · 0 ungenutzte Ausnahmen |
+
+Dazu die **Ausgabe**: je Prüfung Zahl und Liste mit `Datei:Zeile`, Rückgabewert ≠ 0 bei Befund. Sie war bis Web 19.3.1 als „Prüfung 5" mitgezählt — sie prüft aber nichts, sie zeigt. Seit Backlog Nr. 47 steht an der Fünf eine echte Prüfung.
 
 Zusätzlich als **Hinweis** (kein Befund): Regeln im Stylesheet, deren Klasse
 im Markup nicht vorkommt, und Symboldateien, auf die nichts verweist. Beides
 kann richtig sein — eine Klasse kann zur Laufzeit zusammengesetzt werden, ein
 Symbol kann für ein späteres Paket schon dabeiliegen.
 
-## Die drei Hilfslisten
+## Die vier Hilfslisten
 
 `streichliste.md`, `ausnahmen.md` und `ohne-regel.md` sind Markdown-Tabellen,
 damit ein Mensch sie liest. Alle drei verlangen eine **Begründung**; ein
@@ -64,6 +66,7 @@ Eintrag ohne Grund ist keiner, sondern ein weggedrücktes Ergebnis.
 |---|---|---|
 | `streichliste.md` | Klassen des **alten** Stylesheets, die es nicht mehr gibt — je mit dem Baustein, der sie ersetzt | `[bleibt]` für die wenigen, die im Markup stehen bleiben (Skriptanker) |
 | `ausnahmen.md` | Werte, die außerhalb der Token stehen dürfen — Geometrie statt Gestaltung | — |
+| `zusagen.md` | Stellen, an denen eine **Zusage** bewusst nicht gilt — vier Spalten: Prüfung, Datei, Muster, Grund. Die zweite Spalte ist die **Datei**, nicht die Zeile: Eine Zeilennummer altert mit dem nächsten Paket (genau daran ist der Eintrag zu `phasen-name` in `ohne-regel.md` gealtert) | — |
 | `ohne-regel.md` | Klassen im Markup, die **keine** Regel brauchen | `[bleibt]` = begründet, kein Befund · `[offen]` = Frage offen, bleibt Befund unter eigener Überschrift |
 
 Die erste Spalte von `ausnahmen.md` ist der **Eigenschaftsname**, nicht die

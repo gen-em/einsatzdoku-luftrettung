@@ -513,9 +513,11 @@ Daten erst nach Server-Bestätigung.
 │   ├── vollstaendigkeit/  prüft, ob beim Redesign etwas verlorengegangen ist
 │   │                      (jede Klasse des alten Stylesheets hat eine Regel
 │   │                      oder steht mit Begründung auf der Streichliste) und
-│   │                      ob jeder Wert in :root steht. Drei Hilfslisten mit
+│   │                      ob jeder Wert in :root steht. Vier Hilfslisten mit
 │   │                      Begründungspflicht: streichliste.md, ausnahmen.md,
-│   │                      ohne-regel.md (s. LIESMICH.md)
+│   │                      ohne-regel.md, zusagen.md (s. LIESMICH.md). Seit
+│   │                      Web 19.3.1 zählt Gruppe 5 „Zusagen" Regeln nach,
+│   │                      die vorher nur im Kopf standen (Backlog Nr. 47)
 │   ├── freigabeprobe/    der Freigabeweg MIT Wiederherstellungsschlüssel
 │   │                      (E20): Kasten erscheint, falscher Schlüssel wird
 │   │                      abgewiesen, richtiger schlüsselt um. Die Krypto
