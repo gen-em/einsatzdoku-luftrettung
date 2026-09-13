@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 47 (13.09.2026)** — dieses Dokument steuert das Programm:
+**Fassung 48 (13.09.2026)** — dieses Dokument steuert das Programm:
 Reihenfolge, Status, programmweite Entscheidungen. Es hält nur, was für die
 nächsten Schritte gebraucht wird. Der eingefrorene Altbestand — die
 Fassungsvermerke, die Phasentexte mit ihren Umsetzungsblöcken und die 50
@@ -10,8 +10,10 @@ Abschnitt 5" oder „Fassung 13" meinen das Archiv; sein Kopf sagt, welcher
 alte Abschnitt wo weiterlebt.
 
 **Stand am 13.09.2026, gemessen an `origin/main` (`dabd7a3`):** **Web
-19.3.0**, **Uhr 3.1.0**, **Android 0.15.0**. **Es steht nichts zum Merge
-an.** Die jüngsten Merges in der Reihenfolge, in der sie liefen: die
+19.3.0**, **Uhr 3.1.0**, **Android 0.15.0**. **Zum Merge steht die
+Backlog-Runde 3** (Zweig `claude/backlog-runde-3-umsetzung-woqxjm`, Web
+19.3.1, Uhr und Android unberührt) — gebaut und geprüft, Erledigt-Zeile in
+Abschnitt 8, **keine Migration**. Die jüngsten Merges in der Reihenfolge, in der sie liefen: die
 Korrekturstufe **Nr. 148 und 149** am 06.09.2026 (PR #36, Web 15.5.2),
 **Schritt 9a** am 08.09.2026 (PR #37, `f299bbf`, Web 15.6.0 / Android
 0.14.0, dazu Uhr 3.1.0 und Android 0.15.0 aus den Punkten 159/160), **S9**
@@ -52,9 +54,9 @@ an keinem frischen Merge und deshalb nur in Abschnitt 6.
 **Als Nächstes** laufen zwei Dinge parallel, beide in Abschnitt 3: die
 **Mockup-Runde 9c** — vier Gestaltungsaufgaben (Backlog 41, 42, 45, 124) in
 einer Freigaberunde statt vier; sie läuft früh, weil sie eine Freigabe
-braucht und am Ende darauf warten müsste — und die **Backlog-Runde 3**, seit
-dem 13.09.2026 konzipiert (`docs/konzepte/Konzept-Backlog-Runde-3.md`, zehn
-Arbeitspakete in drei Blöcken). Die Festlegungen für v1.0 sind entschieden
+braucht und am Ende darauf warten müsste — und, nach dem Merge der
+**Backlog-Runde 3**, der **Schritt 9b (S10 Sicherheit)**; die Runde 3 selbst
+ist gebaut (Web 19.3.1, zehn Arbeitspakete, neun Backlog-Punkte). Die Festlegungen für v1.0 sind entschieden
 (R65 bis R73; der Schnitt ist in die drei Phasen P6, P7 und P8 geteilt,
 R71). Von den Zuarbeiten hat die **D-U-N-S-Nummer** für das
 Play-Console-Organisationskonto die längste Vorlaufzeit — bis zu vier
@@ -801,6 +803,23 @@ war aus dem Tritt geraten (24 erledigte Zeilen, neun fehlende offene), und
 drei Backlog-Punkte trugen ihre Erledigung im eigenen Text, standen aber
 weiter unter *Offen* — Nr. 19, 159 und 160.
 
+**Runde 3 ist gebaut (13.09.2026, Web 19.3.1, Zweig
+`claude/backlog-runde-3-umsetzung-woqxjm`).** Erstmals mit Konzept — zehn
+Arbeitspakete in drei Blöcken —, weil neun Punkte in einer Stufe zu viele
+sind, um sie in einer Auftragszeile zu ordnen; die Erledigt-Zeile steht in
+Abschnitt 8. **Sieben Punkte sind weg** (91, 94, 117, 47, 58, 173, 174),
+**zwei bleiben mit Vermerk offen**: von **Nr. 67** ist der Unterpunkt
+erledigt (die CSRF-Prüfung in `kdf_upgrade.php`), der Hauptpunkt gehört nach
+P5; von **Nr. 41** sind drei der fünf Klassen gestrichen, die zwei
+verbleibenden brauchen Regeln und damit die Mockup-Runde 9c.
+
+**Die Runde bleibt offen.** Abschnitt 5 führt weiter Punkte, die keiner Phase
+bedürfen; die nächste Runde nimmt sich die nächsten. Was diese Runde gelehrt
+hat, steht in `CLAUDE.md` nicht als neue Regel, sondern als Zahl im
+Prüfdokument: Ein Prüfmittel, das eine Zusage nachzählt, findet beim ersten
+Lauf einen echten Fehler (`apk.php` lieferte seine 404-Seite ohne Seitenhülle
+aus) — eine Zusage, die nur im Kopf steht, ist keine.
+
 ### Schritt 9a — Sofortpaket Sicherheit
 
 **Nr. 132 und 137 sind seit dem 07.09.2026 nicht mehr Teil von 9a** — sie
@@ -1155,7 +1174,10 @@ Gegenprüfungen entstanden, 162–170 in S9** (162 in AP3, 163–166 in AP5,
 167 bei der Bestandsaufnahme zu R39, 168 mit R39, 169 in AP6, 170 nach
 Web 19.1.0); **171 und 172 mit Fassung 43, 174 mit Fassung 44** (die
 beiden Backlog-Runden), **175 mit Fassung 46** (Nebenfund der
-Backlog-Durchsicht vom 12.09.2026, angelegt 13.09.2026).
+Backlog-Durchsicht vom 12.09.2026, angelegt 13.09.2026); **176 und 177 mit
+Fassung 48** (zwei Funde aus dem Abschlusspaket der Backlog-Runde 3 — der
+Rauschfilter des Bilderlaufs und die doppelten Fassungsnummern in
+Abschnitt 10).
 
 **Mit Fassung 41 ist die Tabelle wieder deckungsgleich mit dem Backlog.**
 Sie war es nicht mehr: **24 Zeilen** nannten Punkte, die längst erledigt
@@ -1253,6 +1275,8 @@ damit „nach v1.0" verlassen — dort stehen noch **acht**: 50, 51, 52, 55,
 | 169 | Ein Diensttag mit „Anderem Rettungsmittel" kann keine Besatzung festhalten | **P5** | **Vertagt 12.09.2026 auf P5** — dort wird über die Rettungsmittel ohnehin entschieden. Bis dahin gilt (c) „so lassen und im Text sagen"; Hinweis und Handbuch sagen es seit Web 18.1.1 zutreffend, kein dritter Zustand. Drei Wege stehen im Backlog |
 | 170 | Kein Prüfmittel misst, ob die Kennzeichnung vollständig ist | Backlog-Runde | aus Web 19.1.1: AP7 zählte, **wie viele** Schlösser stehen, und konnte deshalb nicht sehen, dass zwei fehlen. Sollmaß **muss neu bestimmt werden** (13.09.2026): Der Feldkatalog trägt genau ein `'store' => 'pat'` und drei `'hinweis'`; die acht Schlösser der Karte „PatientIn" stehen handgeschrieben in `einsatz.php` — das vorgeschlagene Sollmaß deckte 1 von 8 ab |
 | 175 | `edbak_uebersicht()` hat keinen Aufrufer mehr | Backlog-Runde | Nebenfund 13.09.2026 bei der Gegenprüfung zu Nr. 37: die Funktion ist durch `edbak_konto_stand()`, `edbak_staende()` und `edbak_verwaiste()` abgelöst und wird nur noch in `Technik.md` als Begründung genannt. Austragen, Satz anpassen |
+| 176 | Der Rauschfilter des Bilderlaufs verschluckt auch lokale Fehler | Backlog-Runde | Fund 13.09.2026 in Runde 3/AP10: `KACHELRAUSCHEN` prüft drei Fehlercodes gegen den Meldungstext, ohne die Fundstelle anzusehen — von fünf gebauten Fällen mit lokaler Fundstelle werden **3 von 5** verschluckt. Der Bericht kann „0 Konsolenfehler" melden, während das Stylesheet nicht angekommen ist |
+| 177 | Der Änderungsverlauf des Rahmenplans führt sechs Fassungsnummern doppelt | Backlog-Runde | Fund 13.09.2026 in Runde 3/AP10: Abschnitt 10 trägt **35, 36, 37, 39, 38, 37** zweimal, mit verschiedenem Inhalt. Ein Verweis auf „Fassung 38" ist nicht auflösbar. Umnummerieren ist eine Festlegung, keine Korrektur — deshalb nicht mitbehoben (K4) |
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
@@ -1269,6 +1293,7 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | **Nach dem Merge von S9: die Prüfliste im Prüfdokument abarbeiten (32 Punkte)** — darunter drei, die auf dem Prüfstand **nicht** hergestellt werden konnten und deshalb ausdrücklich benannt sind: ein Konto **ohne Schlüsselhülle** (Punkt 31 — dort ist das Notizfeld gesperrt wie jedes geschützte Feld), der **Anhebelauf über mehr als eine Runde** (mehr als 200 Einsätze mit Klartext) und **zwei Browser gleichzeitig** gegen die Wache je Zeile. Dazu Punkt 32: nach dem Deploy einmal anmelden und entsperren, danach je Konto `SELECT COUNT(*) FROM missions WHERE notes IS NOT NULL AND notes <> ''` zählen — für jedes entsperrte Konto **0**; Konten, die sich nie entsperren, behalten ihren Klartext, und das ist kein Fehler | S9-Abnahme | **fällig** — seit dem 10.09.2026 (PR #38/#39) |
 | **Prüfliste 9a — P-1 bis P-12** (`docs/konzepte/Pruefdokument-Sofortpaket-Sicherheit.md`). **Nachgetragen mit Fassung 47:** Der Kopf nannte sie seit dem Merge als fällig und verwies für „alles Weitere" auf diesen Abschnitt — hier stand sie nicht. Zwölf Punkte zum Sofortpaket Sicherheit, darunter die Rundenzahl 600 000 am echten Konto, der E-Mail-Nachweis und die Integritätswache | Schritt 9a | **fällig seit dem 08.09.2026** (PR #37) |
 | **Prüfliste Backlog-Runde 2 — sieben Punkte** (`docs/konzepte/Pruefdokument-Backlog-Runde-2.md`). **Nachgetragen mit Fassung 47** aus demselben Grund; die Runde ist am 12.09.2026 gemergt (PR #41, Web 19.2.0 und 19.3.0) | Schritt 9, Runde 2 | **fällig seit dem 12.09.2026** |
+| **Prüfliste Backlog-Runde 3 — fünf Punkte** (`docs/konzepte/Pruefdokument-Backlog-Runde-3.md`): Demo-Konto am Produktivstand anmelden (Punkt 1 — das Risiko ist kleiner, als es in AP4 aussah: `KDF_ITER_LISTE` hat seit Nr. 155 einen Eintrag, und dann kann `unlock.js` den geänderten Weg gar nicht auslösen; der Punkt bleibt für das nächste Anheben des Zielwerts stehen), einen Einsatz mit Reanimation ansehen, Handbuch 11.2 lesen, den neuen `Confirmation`-Abschnitt der Uhr-LIESMICH gegen die eigene Erinnerung halten (die Runde hat ihn **nicht** nachgemessen — kein Simulator), und die Freigabe des Abschlusses | Schritt 9, Runde 3 | **fällig nach dem Merge** |
 | **Freigabe des S9-Abschlusses** — danach löscht K9 das Konzept (`Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`); das Prüfdokument bleibt, bis seine Prüfliste abgehakt ist. **Ebenfalls zu löschen:** `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md` erst nach P5, sie wird dort gebraucht | Schritt 8 | — |
 | **Prüfliste S5 (12 Punkte)**, darunter: die Bestandsuhr **einmal neu koppeln** (E-S5-42, vorher den Sync leerlaufen lassen), beide Kopplungsmails im Postfach sichten, Antwortgleichheit auf Produktiv nachmessen, die Geräteseite **ohne JavaScript**, drei Punkte nur am Gerät (Verbindungsabriss, Tastensperre, Oberfläche auf zwei Geräteklassen), **ein Update mit Wartungsmodus** und **eine Kopplung mit dem Handbuch in der Hand** (P2-Punkt 4.1) | S5-Abnahme | nach `update.php` |
 | **Freigabe des S5-Abschlusses** — danach löscht R62 die beiden Konzepte (`Konzept-S5-Kopplung-umgekehrt.md`, `…-Zusatz-Wartungsmodus.md`); das Prüfdokument bleibt bis zur abgehakten Prüfliste | Schritt 5 | — |
@@ -1953,6 +1978,78 @@ Bilderlauf **96** Bilder über sechs Seiten in beiden Bedienhöhen ohne
 Auftraggeberin (Abschnitt 6). *Merges:* PR #41 (`6f316ee`, die Stufen) und
 PR #42 (`dabd7a3`, zwei Doku-Nachträge ohne Stufe).
 
+### Backlog-Runde 3 · Web 19.3.1 · 13.09.2026 (Schritt 9)
+
+**Die erste Backlog-Runde mit Konzept** (`Konzept-Backlog-Runde-3.md`, zehn
+Arbeitspakete in drei Blöcken) — neun Punkte in einer Stufe sind zu viele, um
+sie in einer Auftragszeile zu ordnen; K1 verlangt für diese Größe ein Konzept.
+Zweig `claude/backlog-runde-3-umsetzung-woqxjm`, je Paket ein Commit und ein
+Push. **Eine Korrekturstufe für die ganze Runde:** Von den neun Punkten fassen
+genau **zwei** `server/` an, beide Fehlerbehebung — sonst liegt alles in
+`tools/` und `docs/`. **Keine Migration**, Uhr und Android unberührt
+(`git diff --stat origin/main -- watch android` leer).
+
+**Sieben Punkte erledigt** (91 die Lehre zu `WatchUi.Confirmation`, 94
+„pixelgleich" statt „bitgleich", 117 was die Kennzahlen der NutzerInnen-Liste
+**nicht** messen, 47 kein natives `confirm()`/`alert()`/`prompt()`, 58 jede
+Seite mit eigener Hülle hat ihr Gerüst, 173 fünf Ausnahmeregeln ohne
+Gegenstand, 174 das Rettungsmittel ohne Standort im Referenzbestand),
+**zwei mit Vermerk offen**: **Nr. 67** — der Unterpunkt ist erledigt (die
+CSRF-Prüfung in `api/kdf_upgrade.php` steht jetzt **vor** dem Demo-Ausstieg),
+der Hauptpunkt gehört nach P5; **Nr. 41** — drei der fünf Klassen sind aus dem
+Markup gestrichen, die zwei übrigen brauchen Regeln und damit 9c.
+
+**Zwei neue Prüfungen, und die erste fand sofort einen echten Fehler.** Die
+Gruppe „5 Zusagen" in `tools/vollstaendigkeit/pruefen.py` zählt zwei Regeln
+nach, die vorher nur im Kopf standen; die Ausnahmen samt Grund stehen in
+`tools/vollstaendigkeit/zusagen.md` (2 + 7). Beim ersten Lauf meldete sie,
+dass `apk.php` Gerüst und `ui_seite_ende()` ruft, aber nie `ui_seite_start()`
+— **die 404-Seite ging ohne Doctype, Titel und Stylesheet hinaus**, Quirks-
+Modus, Times New Roman. Belegt am Prüfstand, behoben mit einer Zeile und
+**nicht** auf die Ausnahmeliste gesetzt. Das ist der Sinn des Haltepunkts
+H-BR3-1: Ein Fund gehört behoben, nicht erklärt.
+
+**Der zweite Haltepunkt hat gehalten — und meine erste Diagnose war falsch.**
+H-BR3-2: Die Vormessung zu Nr. 174 ergab 0 statt 2 Rettungsmittel ohne
+Standort; ich habe angehalten, gemeldet und behauptet, die Anwendung sei seit
+Web 17.0.0 kaputt. Beim Einbauen der freigegebenen Wiederherstellung zeigte
+ein Kommentar in `stammdaten_ui.php`, dass der Haken „ohne Standort" in Web
+16.3.0 **absichtlich** durch den ersten Eintrag der Auswahlliste ersetzt wurde.
+Die Serveränderung ist zurückgenommen; der Fehler saß allein in
+`tools/referenzdatensatz/einspielen/einspielen.py`, das ein seit 16.3.0 totes
+Feld neben einer echten Kennung schickte. **Die Lehre steht im Konzept:** Ich
+habe aus der Historie geschlossen, statt zuerst zu prüfen, wie die Sache heute
+gebaut ist.
+
+**Ein Beinahe-Verlust im Backlog (F-BR3-01)** und die Dauerprüfung, die daraus
+folgt: Mein erstes Austragungsskript suchte das Ende eines Eintrags an der
+nächsten Nummer — steht die schon unter *Erledigt*, reicht der Löschbereich
+rund 300 Zeilen zu tief. Aufgefallen ist es nur, weil danach ein Lookup ins
+Leere lief. Seither wird nach jedem Austragen die **Nummernmenge gegen
+`dabd7a3`** verglichen (0 verloren, 0 doppelt); die Selbstprüfzahl allein
+hätte es nicht gefunden, denn sie zählt die offenen Punkte.
+
+**Der Prüfstand ist in dieser Runde neu entstanden** und bleibt: Der
+Wegwerf-Container brachte keinen Datenbankserver mit, und das kostete AP4 eine
+Stunde. `.claude/hooks/session-start.sh` beschafft ihn jetzt beim Start
+(MariaDB, ImageMagick, `librsvg`, `jsonschema`) — was er mitbringt und was
+nicht, steht in `docs/Technik.md` 2a.
+
+*Prüfzahlen:* Wortliste **0/0**, Vollständigkeit **330** Befunde (`[offen]`
+**2**, Gruppe 5 **0/2/0** und **0/7/0**), Linkprobe **117/0**, Wartungsprobe
+**55/0**, Spurprobe **45/0**, Kontraste **22/0**, Klickprobe **40/40**,
+Kreisläufe **287 687/0** und **9 120/0** gegen die **neue** Referenz,
+Bilderlauf **360 Bilder / 45 Kontaktbögen, 0 Überlauf / 0 Konsolenfehler / 0
+Knopfhöhen** (Gegenprobe: 356 verschiedene Bilder, die vier Doppel sind die
+Schublade ab 1024 px), `php -l` **100/0**, Selbstprüfzahl **54 = 54**.
+*Keine Migration.* *Prüfdokument:*
+`docs/konzepte/Pruefdokument-Backlog-Runde-3.md`, fünf Punkte für die
+Auftraggeberin. **Zwei neue Nummern aus dem Abschlusspaket:** **176** (der
+Rauschfilter des Bilderlaufs verschluckt lokale Fehler — solange er offen ist,
+heißt „0 Konsolenfehler" genau: 0 außerhalb dreier Fehlerarten) und **177**
+(sechs doppelte Fassungsnummern in Abschnitt 10 dieses Dokuments).
+*Merge:* **steht an.**
+
 
 ## 9. Pflege dieses Dokuments
 
@@ -2024,6 +2121,7 @@ PR #42 (`dabd7a3`, zwei Doku-Nachträge ohne Stufe).
 | **39** | **08.09.2026** | **Die beiden Client-Punkte aus der Gegenprüfung — Uhr 3.1.0 und Android 0.15.0** (Backlog Nr. 159 und 160, auf Wunsch vor dem Merge). **Nr. 159 lag nicht dort, wo der Backlog ihn vermutete:** Er nannte `400`, und den kann die Uhr kaum auslösen; bedienbar erreichbar sind `401` und `403` (Gerät im Web gelöscht oder abgeschaltet). Beide fielen in denselben Zweig wie eine Störung und wurden endlos wiederholt — das Paket blockierte die Warteschlange, und weil ein Rückstand zugleich das Trennen sperrte, war die Uhr nur noch durch Löschen der App zu retten (dieselbe Sackgasse wie Nr. 157 beim Handy). Jetzt drei Fälle: `401`/`403` halten das Senden an und nennen den Grund (**nichts wird verworfen**), ein `400` **mit** Fehlerschlüssel parkt das eine Paket, alles Übrige bleibt Störung. Geparkte zählen nicht im Rückstand, das Trennen ist frei, und ein **kurzer START** verwirft sie nach Rückfrage. **Nr. 160:** Die Dienstanzeige führt das Datum, sobald der Dienst an einem anderen Kalendertag begann, und nach **26 Stunden** erinnert die App einmal ans Beenden (Zahl gewählt, Begründung am Code: regulär bis 24 h). Der Vorschlag, `day` je Paket zu bilden, wurde geprüft und **verworfen** — er ändert am Fall nichts Sichtbares und verschlechtert den Offline-Fall. **Mockups vorab freigegeben** (CLAUDE.md 5). **Backlog 161 neu** (aus einer Aufzeichnung ein Stück löschen können — heute geht nur alles oder nichts). Prüfzahlen: `./gradlew build` grün, Handy **264** Prüffälle je Bauart (261 + 3 in `ZeitTest`), Uhr 71, 0 Fehlschläge, Lint 0 Fehler / **14** Warnungen (eine neue `PluralsCandidate`, nicht stummgeschaltet), APK Handy 7 868 398 B, Uhr 19 574 402 B; Wortliste **0/0/0** (87 Regeln); Uhr-Prüfstand **Stufe I: 99 von 99 Geräten übersetzt, 0 Fehler, 0 Warnungen** (mit dem endgültigen Stand gefahren, nachdem die Wortliste eine Korrektur erzwang), **Stufe II erreicht** — die App startet im Simulator (fenix6pro, 65,9 kB), die Sync-Seite ließ sich dort **nicht ansteuern**: Weder Tastendruck noch Mausklick erreichten den Simulator im virtuellen Bildschirm; **Emulator: fünf Bilder** (`android/emulator-bilder/0150-*.png`), beide Änderungen im laufenden Programm gesehen — „Dienst läuft seit Di. 08.09., 20:53" und die Erinnerung „Dienst läuft seit 27 Stunden" samt Knopf. **Drei Prüfmittel fanden je einen echten Fehler:** die strenge Typprüfung drei ungecastete Wörterbuchwerte, die Wortliste einen fest geschriebenen Tastennamen (auf der Venu 3s heißt die Taste „Action"), und der Emulator einen englischen Wochentag mitten im deutschen Satz („Tue 08.09." statt „Di. 08.09.") — die Sprache des Datums ist jetzt fest deutsch, wie alle Texte der App |
 | **38** | **07.09.2026** | **Android 0.14.1 — „GPS-Daten" statt „Spur" in fünf Texten des Handy-Moduls** (Auftrag des Auftraggebers, E-S9-03, Backlog Nr. 110): Akkuwarnung, Zweck des Benachrichtigungskanals, Hinweis im Modus „nur aufzeichnen", Ortungshinweis, Standortwarnung. Dieselbe Person liest Browser und Handy; die Weboberfläche sagt seit Web 15.8.0 (S9/AP3) „GPS-Daten". Die Uhr sagt „Spur" nur in einem Kommentar. Eigene Fassung, weil die Android-Apps getrennt zählen, einen APK-Bau und nach CLAUDE.md 6 einen Emulatorlauf brauchen. **K7-Vermerk:** Die befristete Wortlisten-Ausnahme `spur-android-wartet-auf-9a` liegt auf dem S9-Zweig, nicht auf diesem — wer zweiter mergt, streicht sie. Prüfzahlen: `./gradlew build` grün, Handy 261 Prüffälle je Bauart, Uhr 71, 0 Fehlschläge, Lint 0 Fehler (13 Warnungen, unverändert), APK Handy 7 867 430 B, Uhr 19 574 402 B; Wortliste 0/0/0 (87 Regeln); Emulator Stufe II erreicht — Boot 502 s, fünf Bilder, alle fünf Texte im laufenden Programm gesehen (Dienstansicht, laufender Dienst, zwei Warnmeldungen, Kanalseite). Dazu am selben Tag die **zweite Nachbesserung zu Nr. 134** (`15b9881`, siehe Zeile 37) |
 | **37** | **07.09.2026** | **Schritt 9a, Web-Teil adversarisch gegengeprüft und nachgebessert.** Ein Workflow aus 93 Agenten griff den fertigen Web-Teil aus sechs Blickwinkeln an, jeder Fund wurde dreimal zu widerlegen versucht und gegen den heutigen Stand reproduziert: 29 Funde, **22 hielten**. Sechs zur Dokumentation berichtigt, sechzehn zum Code behoben, je Punkt ein Commit: **134** — der Anker des Ersetzfensters war das vom Gerät gesendete `started_at` (eine falsch gestellte Uhr schloss das Fenster sofort und verlor Punkte), jetzt `max(started_at, created_at)` serverseitig, Zukunft zählt nicht, Diensttag bleibt, Abschlusspaket wird als `kept_meta` genannt, kein leerer Tag; Migration `rest_segments.created_at` — **`update.php` nach dem Merge**; **130** — UTF-7 über die Kodierungsdeklaration umging die DOCTYPE-Sperre, jetzt nur UTF-8/ASCII; **136** — die Statuszeile hätte das Demo-Konto für immer als „Übergang" gezählt, und die Anteilsregel maß den Rest ohne Sonderzeichen (2–15 % aller Zufallspasswörter abgewiesen, jetzt 0 %), strich Listenwörter in Listenreihenfolge und nicht unter sechs Zeichen; **140** — die Wache sah `<base href>` und `formaction` nicht, ihre Selbstprobe hing an Bezeichnern, ein Dateiname mit Leerzeichen brach den Lauf ab; beim Nachprüfen 27 Angriffsvarianten, **17 noch grün** (unzitiertes `src=`, Ereignisattribute, `meta refresh`, Einbettungen, `javascript:`), geschlossen im zweiten Commit, Selbstprobe 12 → 28. Zweite Gegenprüfung auf die Nachbesserungen: im ersten Anlauf nur zu Nr. 134 gelaufen (2 von 10 Angreifern, keine Skeptiker — Sitzungsgrenze des API-Kontingents), zwei Löcher — die Migration scheiterte an Randdaten und galt danach als erledigt, ein eingeholtes Zukunfts-`started_at` öffnete das Fenster erneut —, behoben (`15b9881`: Anker `created_at` allein, Migration dreischrittig mit Kappung). **Wiederaufnahme auf Anweisung, alle zehn Angreifer: 30 Funde (21 verschiedene), alle behoben, je Punkt ein Commit** — 134: ein neuer `client_ref` schrieb den Zeitraum eines alten Diensttags um, der Rückfall vor der Migration lief in ein 500, ein Anker 1970-01-01 00:00:00 galt als keiner, ein Papierkorb-Tag verlor seinen Einsatz (`76eaea4`); 130: die Deklarationsprüfung brach den Dateidialog-Import einer Latin-1-Datei (`9f51078`); 136: Statuszeile mit falschem Grund und zwei Zählfehlern (`a8ee900`), Passwortregel mit Emoji als zwei Zeichen, füllbarem Rest, quadratischer Laufzeit und Ziffern-Symbol-Zufall zu 46–91 % abgewiesen (`caf0cea`, `b42ad1d`); 140: `TAG_RE` endete im Attributwert, `lstrip` nahm eine Menge statt eines Bereichs (`2c61524`). **Eine vierte Nachbesserung fand die Sitzung selbst** (`d4eb0a3`): Die dritte hatte den nachgelieferten Dienst um seinen Tageszeitraum gebracht, und der Einsatz mit den absurden Zeiten stand weiter in der Datenbank — jetzt weist die gemeinsame Prüfschicht ein Paket ab, dessen Zeiten nicht zu seinem `day` gehören, und die Tagesregel hängt an der Serverzeit (Ingestprobe 56 → 62/0, davor 62/4). Skeptiker: je Fund ein Skeptiker, der ihn zu **widerlegen** versuchte und dafür gegen den unveränderten Stand `448ce9f` reproduzierte — **24 von 30 hielten**, sechs wurden widerlegt (Vorbestand oder Randfall ohne beobachtbare Folge: der Diensttag im Papierkorb bei offenem Fenster; drei Zählfälle der Statuszeile, die nur über einen von Hand gesetzten Rundenwert entstehen; die Sonderzeichen-Tastaturreihe, die als Entscheidung dokumentiert ist; die quadratische Laufzeit, die keine Zusage verletzt). **Behoben sind alle dreißig** — auch die sechs, weil jede Behebung für sich mit einer Zahl belegt ist. **Backlog 154–161 neu.** Prüfzahlen: ingestprobe 47 → 62/0, gpxprobe 88 → 95/2, wartungsprobe 51/0, Wache 30/0 und 112/112, Wortliste 0/0/0, linkprobe 132/0/1/0. Offen: der Merge auf `main` nach Freigabe, danach `update.php` |
+| **48** | **13.09.2026** | **Backlog-Runde 3 gebaut und geprüft (Schritt 9, Web 19.3.1, Zweig `claude/backlog-runde-3-umsetzung-woqxjm`).** Erste Backlog-Runde mit Konzept — zehn Arbeitspakete, neun Punkte, eine Korrekturstufe; Erledigt-Zeile in Abschnitt 8. **Sieben Punkte erledigt** (91, 94, 117, 47, 58, 173, 174), **zwei mit Vermerk offen** (67 Unterpunkt, 41 drei von fünf Streichungen). **Die neue Prüfgruppe „5 Zusagen" fand beim ersten Lauf einen echten Fehler:** `apk.php` lieferte seine 404-Seite ohne Seitenhülle aus — ohne Doctype, Titel und Stylesheet; behoben, **nicht** auf die Ausnahmeliste gesetzt (H-BR3-1). **Der zweite Haltepunkt hat gehalten, meine erste Diagnose dazu war falsch:** Ich hielt die Anwendung für kaputt (Haken „ohne Standort" seit Web 17.0.0 weg), tatsächlich ist er in Web 16.3.0 **absichtlich** durch den ersten Eintrag der Auswahlliste ersetzt worden; der Fehler saß allein in `einspielen.py`. Serveränderung zurückgenommen. **Zwei neue Nummern aus dem Abschlusspaket: 176** (der Rauschfilter des Bilderlaufs prüft drei Fehlercodes gegen den Meldungstext und verschluckt damit auch lokale Fehler — **3 von 5** gebauten Fällen) **und 177** (Abschnitt 10 dieses Dokuments führt **sechs** Fassungsnummern doppelt: 35, 36, 37, 39, 38, 37 — ein Verweis auf „Fassung 38" ist nicht auflösbar; Umnummerieren ist eine Festlegung, deshalb nicht mitbehoben). **Dazu die Buchführung des Kopfes:** Der Kopf sagt jetzt, dass die Runde zum Merge steht, und nennt sie nicht mehr „seit dem 13.09.2026 konzipiert". Prüfzahlen: Wortliste 0/0, Vollständigkeit 330, Linkprobe 117/0, Wartungsprobe 55/0, Spurprobe 45/0, Kontraste 22/0, Klickprobe 40/40, Kreisläufe 287 687/0 und 9 120/0, Bilderlauf **360 Bilder, 0/0/0** (Gegenprobe: 356 verschiedene — die vier Doppel sind die Schublade ab 1024 px), `php -l` 100/0, Selbstprüfzahl **54 = 54**. Offen: der Merge auf `main` nach Freigabe |
 | **47** | **13.09.2026** | **Der Kopf ist auf das zurückgeführt, was Abschnitt 9 ihm zugesteht: Fassungsnummer, gemessener Stand, Fälliges, Leseanleitung.** Gemeldet von Fable für die Zeilen 48–75 („erzählt noch, die S9-Umsetzung laufe und AP4 warte auf Freigabe" — Stand vom 07.09.); ein Audit mit sechs Linsen fand **82 Rohbefunde, 43 nach Zusammenlegung**, davon 13 von 14 gegengeprüften haltend. Der Kopf schrumpft von 98 auf 61 Zeilen (107 auf 70 bis zum Beginn von Abschnitt 1). **Ausgetragen:** die Erzählung der abgeschlossenen Pakete (S9 laufend mit AP1–AP3, 9a als Parallelzweig, die Merge-Rückschau „seit Fassung 25", der Werdegang von 9a mit Commits und Agentenzahlen) — sie steht vollständig in Abschnitt 3, 8 und 10; dazu drei **Fassungsvermerke im Kopf**, die Abschnitt 9 ausdrücklich verbietet (Fassung 16 samt Rückschau auf Fassung 15, Fassung 33, und der Kasten „Berichtigt mit Fassung 32"). **Vier Sachfehler behoben:** „Alle Migrationen sind angewendet" widersprach dreizehn Zeilen weiter oben drei offenen Migrationen; „sobald 15.5.2 auf `main` ist" stellte eine seit dem 06.09. erfüllte Bedingung als künftige dar; der Halbsatz „(„Ausstehende ausführen", Zusammenführen-Knopf)." stand ein zweites Mal ohne Bezugssatz im Absatz (Spur eines misslungenen Edits); und Paket E endete bei **Android 0.10.2**, nicht 0.10.1 (`docs/CHANGELOG.md` führt 0.10.2 vom 03.09.2026, und Abschnitt 8 nennt sie richtig) — die falsche Spanne stand an drei Stellen: im Kopf und zweimal in Abschnitt 3 (Schritt 5 und der Parallelitätsabsatz). **Drei Stellen außerhalb des Kopfes nachgezogen,** alle vom Audit gefunden: Abschnitt 3 führte für S7 zehn Tage nach dem Merge noch „PR gegen `main` offen"; Abschnitt 3 sagte für Schritt 9 „offen ist allein die zweiteilige Prüfliste" und „die übrigen Einzelpunkte sind unangetastet", obwohl zwei Runden zwölf Punkte erledigt hatten; und Abschnitt 6 führte zwei der vier fälligen Prüflisten nicht (9a mit P-1 bis P-12, Backlog-Runde 2 mit sieben) — während der Kopf für „alles Weitere" dorthin verwies. **Abschnitt 8 hat jetzt eine Erledigt-Zeile für Backlog-Runde 2;** ohne sie kamen die Merges **PR #41 und #42 im ganzen Dokument nicht vor** (gemessen: null Fundstellen). Abschnitt 5 unberührt, Selbstprüfzahl bleibt **59 = 59**. Kein Code, keine Versionsstufe |
 | **46** | **13.09.2026** | **Backlog-Durchsicht vom 12.09.2026 eingearbeitet** (Protokoll `docs/konzepte/Backlog-Durchsicht-2026-09-12.md`; sechzehn Entscheidungen, alle 61 offenen Punkte gegen Web 19.3.0 · Uhr 3.1.0 · Android 0.15.0 gehalten, am 13.09.2026 nachgemessen). **Drei Austragungen:** Nr. 87 (Erhebung mit R70 beantwortet, stand neben P7 doppelt), Nr. 81 (geschlossen ohne Beleg am Gerät — `roundIcon` seit Android 0.11.1 ausgetragen; Wiederöffnungsbedingung: ein Bildschirmfoto unter 0.11.1 oder neuer), Nr. 88 (verworfen, als Entscheidung unter *Erledigt*; der Verweis in Zeile 80 ist mit heraus). **Zehn Zuordnungen mit Entscheidung:** 57 (Modul gewinnt, Nebenbedingung `cap_gate`, eigenes Paket), 41/42/45/124 (**Mockup-Runde, neuer Schritt 9c** — ab jetzt parallel, vor P5; 124 darf die Runde verlassen), 150 (beide Fragen beantwortet, Changelog rückwirkend), 117 (nicht erheben, Handbuchsatz), 169 (vertagt auf P5), 21 (an P6, Quellliste existiert nicht mehr), 62 (Zuarbeit: neue Logovorlagen, Zeile in Abschnitt 6; `Design.md` 2.5 berichtigt). **Nr. 175 neu** (`edbak_uebersicht()` ohne Aufrufer, Nebenfund). **Zwei Zahlen nachgerechnet:** Selbstprüfzahl **59 = 59** (61 − 3 + 1; der Einzeiler steht jetzt wirklich im Absatz — Fassung 45 hatte ihn angekündigt, nicht hingeschrieben), „nach v1.0" **8** (45 verlässt die Gruppe). Nr. 37: der Backlog-Eintrag ist die führende Fassung, die Zeile hier verweist. Nr. 170 und 58 nach den Gegenprüfungen berichtigt; drei Fahrplan-Nennungen von Nr. 87 auf R70 umgeformt. **Entscheidung 16 (Textpflege):** komplett im selben Zug im Backlog erledigt, kein eigener Block. Kopf: Fassung und `main`-Stand (19.3.0) nachgezogen — der Kopf nannte seit Fassung 43 noch 19.1.1. **Am selben Tag Backlog-Runde 3 konzipiert** (K1, `Konzept-Backlog-Runde-3.md`; Prüfdokument-Vorlage nach K9): neun Punkte in drei Blöcken, Nr. 173/174 als eigener Block, weil die Referenzdateien neu erzeugt werden müssen; Textpflege war mit dieser Fassung bereits erledigt (Entscheidung 16) |
 | **45** | **12.09.2026** | **Sieben Zuordnungen berichtigt — vier davon zeigten auf etwas, das es so nicht mehr gibt.** Aufgefallen bei der Frage der Auftraggeberin „Ist S4-Rest nicht schon durch? Nach v1.0 soll doch nichts mehr offen sein" — beides traf zu. **Nr. 53** stand auf „nach v1.0", obwohl **R78 (6)** am 06.09.2026 entschieden hat, dass das Konto-Schlüsselpaar mit **S11** kommt („löst Nr. 53 mit", Fassung 30: „43 und 53 zusammengeführt") und der Backlog-Eintrag seither wörtlich schreibt: „Zuordnung damit S11, nicht mehr ‚nach v1.0‘". Nur die Tabellenzeile hatte es nicht mitbekommen. **Nr. 43** behauptete, über Weg B „entscheidet der R17-Review" — er hat entschieden, ebenfalls mit R78: Weg B ist **S11**, Schritt 12a, und so steht es im Fahrplan und in `CLAUDE.md` 4; offen bleibt allein Weg C. **Nr. 81** trug „S4-Rest" — diese Phase ist seit dem 04.09.2026 gemergt (PR #33), und der Punkt ist keine Codearbeit mehr, sondern die **Zuarbeit**, die der Fahrplan ausdrücklich als ihren Rest nennt: ein Blick auf dem echten S24, weil der Emulator AOSP führt und One UI nicht beantwortet. **Nr. 88** trug den Zusatz „nach S4-Rest", dessen Vorbedingung seit demselben Tag erfüllt ist. **Nr. 71** schließlich stand unter *Offen* und trug seine Entscheidung im Titel — „Regionen mit Unteradmins — **verworfen**, festgehalten"; ausgetragen nach dem Muster von Fassung 41 (Nr. 19, 159, 160), mit dem ausdrücklichen Vermerk, dass er als **Entscheidung** dort steht und nicht als Erledigung. **Die Zahlen danach: 62 → 61 offene Punkte**, Abschnitt 5 und Backlog wieder deckungsgleich (**61 = 61**); „nach v1.0" **11 → 9**, und diese neun sind sämtlich begründete Zurückstellungen mit Messwert oder Bedingung („erst messen", „Bedarf abwarten", „nur wenn Selbsthoster es verlangen") — kein Arbeitsvorrat, sondern ein Entscheidungsprotokoll. **Die Ursache ist dieselbe wie in Fassung 42:** Eine Entscheidung fällt an einer Stelle (hier R78 im Registerabschnitt) und wird in der Zuordnungstabelle nicht nachgezogen. Gegenmittel bleibt, was dort steht — messen statt fortschreiben; dazu jetzt: **wer eine R-Nummer beschließt, die einen Backlog-Punkt verschiebt, ändert dessen Zeile in Abschnitt 5 im selben Zug**. **Zwei Berichtigungen kamen am selben Tag nach**, gefunden von einer Vollständigkeitskritik über alle Punkte: **(6)** Nr. 43 trug außer S11 noch „und Backlog-Runde (Weg C)" — **Weg C ist als eigener Punkt Nr. 138 herausgelöst und mit Web 15.6.0 am 07.09.2026 erledigt**; von den beiden Wegen ist einer gebaut und einer terminiert, der Punkt gehört ganz zu S11. **(7)** Die **Selbstprüfzahl** dieses Abschnitts stand auf „72 = 72" — dem Stand von Fassung 41, und damit durch drei Fassungen überholt. Eine Zahl, die die Deckungsgleichheit belegen soll und selbst veraltet, ist schlimmer als keine: Die nächste Instanz misst gegen sie und meldet eine Lücke, die es nicht gibt. Jetzt **61 = 61**, mit einem Absatz daneben, der das Nachrechnen zur Pflicht jeder Zeilenänderung macht |

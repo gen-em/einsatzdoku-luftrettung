@@ -1514,6 +1514,44 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Abnahme:* `grep -rn edbak_uebersicht server/ tools/ docs/` ist leer,
     bis auf den Changelog. Zuordnung: Backlog-Runde.
 
+176. **Der Rauschfilter des Bilderlaufs verschluckt auch lokale Fehler.**
+    *Aufgenommen 13.09.2026 in Backlog-Runde 3, AP10, beim Aufklären von
+    Abrufen, die auf dem Prüfstand scheiterten.* `istRauschen()` in
+    `tools/screenshots/aufnehmen.mjs` prüft `KACHELRAUSCHEN` gegen den
+    **Meldungstext** und gegen die Fundstelle. Im Muster stehen neben den
+    Kartenhosts auch drei Fehlercodes — `ERR_CONNECTION_RESET`,
+    `ERR_CONNECTION_CLOSED`, `ERR_ABORTED`. Ein Abruf **auf dem eigenen
+    Server**, der mit einem dieser drei scheitert, wird deshalb als
+    Kartenrauschen weggeworfen, obwohl seine Fundstelle `127.0.0.1` ist.
+    Gemessen am Muster: von fünf gebauten Fällen mit lokaler Fundstelle
+    werden **drei von fünf verschluckt** (RESET, CLOSED, ABORTED) und zwei
+    gezählt (REFUSED, HTTP 500). Der Bericht meldet dann „0 Konsolenfehler"
+    für eine Seite, auf der das Stylesheet nicht angekommen ist — dieselbe
+    Falle wie F-P3-AQ, nur eine Ebene tiefer. **Zu tun:** die Codeliste nur
+    dann greifen lassen, wenn die Fundstelle **nicht** die eigene Basis ist;
+    die Hostliste bleibt wie sie ist. *Abnahme:* ein eingeschleuster
+    Verbindungsabbruch auf einer Adresse der eigenen Basis erscheint im
+    Bericht, einer von `tile.openstreetmap.org` nicht. Zuordnung:
+    Backlog-Runde.
+
+177. **Der Änderungsverlauf des Rahmenplans führt sechs Fassungsnummern
+    doppelt.** *Aufgenommen 13.09.2026 in Backlog-Runde 3, AP10.* In
+    Abschnitt 10 stehen zwischen der Zeile „30" und der Zeile „47" sechs
+    Zeilen mit den Nummern **35, 36, 37, 39, 38, 37** (S9/AP1 bis AP3, die
+    beiden Client-Punkte, Android 0.14.1, die adversarische Gegenprüfung von
+    9a) — dieselben Nummern trägt der darunter anschließende Block ein
+    zweites Mal, mit anderem Inhalt. Ursache ist dieselbe wie bei den
+    Fassungen 39, 41 und 42: Mehrere Sitzungen schrieben am selben Tag in
+    dasselbe Dokument. **Die Folge ist praktisch:** Ein Verweis auf „Fassung
+    38" ist nicht auflösbar, und der Verlauf zählt nicht mehr mit der
+    Kopfzeile zusammen. **Zu tun:** entscheiden, ob die sechs Zeilen eine
+    eigene Nummernfolge bekommen (dann verschieben sich keine Verweise, weil
+    auf sie keiner zeigt) oder als „Zwischenstände ohne Fassung" ohne Nummer
+    geführt werden; die Entscheidung gehört in den Kopf von Abschnitt 10.
+    **Nicht in dieser Runde behoben**, weil das Umnummerieren historischer
+    Zeilen eine Festlegung ist und keine Korrektur (K4). *Abnahme:* jede
+    Nummer in Abschnitt 10 kommt genau einmal vor. Zuordnung: Backlog-Runde.
+
 ## Erledigt
 
 
