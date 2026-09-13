@@ -1520,6 +1520,36 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (P6, R69) — die Entscheidung gehört in den Rahmenplan.
 
 
+183. **Der Prüfstand kennt nur eine Engine.**
+    *Aufgenommen 14.09.2026 bei der Gegenprobe zu Nr. 182.* Jede Browserprüfung
+    des Projekts — Bilderlauf, Klickprobe, Stilvergleich, Kopplungsprobe — läuft
+    über Playwright, und Playwright hat in dieser Arbeitsumgebung **nur
+    Chromium**. Solange die Anwendung sich auf Breitentricks beschränkte, war
+    das tragbar; seit Web 19.4.1 hängt eine Darstellung an einer
+    Container-Abfrage (`container-type:inline-size`, `100cqi`), und seit P3
+    ohnehin an `:has()` (sechsmal im Stylesheet) und `dvh`. Eine Engine, die
+    eines davon nicht kann, fällt heute **lautlos** durch jede Prüfung.
+    **Zwei von drei sind inzwischen belegt**, und der Weg dahin steht hier,
+    weil er wiederverwendbar ist: WebKitGTK 2.52.6 kommt aus den Paketquellen
+    (`xvfb`, `python3-gi`, `gir1.2-webkit2-4.1`) und lässt sich über
+    `WebKit2.WebView.evaluate_javascript` genauso ausmessen wie Chromium —
+    gegen einen Schnappschuss der echten Seite, damit Markup und Stylesheet
+    dieselben sind. Das Messskript der Sitzung liegt nicht im Repositorium;
+    wer den Punkt baut, macht ein Prüfmittel daraus.
+    **Was fehlt, ist Gecko.** Playwrights Browser-Downloads sind gesperrt —
+    `cdn.playwright.dev` und `playwright.download.prss.microsoft.com` antworten
+    beide mit **403 „request blocked: no rule or allowlist entry allows host"**.
+    Ubuntus `firefox` ist nur eine Snap-Hülle und läuft im Container nicht.
+    **Die billigste Lösung ist keine Codearbeit**, sondern ein Eintrag in der
+    Egress-Allowlist der Arbeitsumgebung für diese beiden Hosts; danach liefert
+    `playwright install firefox webkit` beide Engines, und dieselben Skripte
+    laufen dreifach.
+    *Abnahme:* `tools/screenshots/` und `tools/vollstaendigkeit/` bleiben
+    unberührt; ein neues oder erweitertes Mittel fährt mindestens die
+    Importvorschau und eine Kartenseite in **drei** Engines und meldet je
+    Engine dieselben Zahlen (Überlauf, Konsolenfehler, Knopfhöhen). Zuordnung:
+    **Zuarbeit** (Allowlist) plus eine spätere Backlog-Runde für das Mittel.
+
 ## Erledigt
 
 

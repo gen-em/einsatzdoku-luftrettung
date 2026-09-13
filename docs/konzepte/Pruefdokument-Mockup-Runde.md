@@ -27,14 +27,21 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
   Kopfzeile nimmt über eine Container-Abfrage die **sichtbare** Breite an; die
   Abnahme von AP1 („am Handy bricht die Kopfzeile in zwei Zeilen") ist damit
   nachträglich erfüllt. Zahlen in Abschnitt 3.
-- **Was bei Nr. 182 NICHT geprüft werden konnte: die Container-Abfrage auf
-  einem anderen Browser als Chromium 141.** Der Prüfstand hat nur ihn.
-  `container-type`/`cqi` sind seit 2023 in allen drei Browserfamilien, und das
-  Projekt setzt mit `:has()` (sechsmal im Stylesheet) und `dvh` bereits
-  dieselbe Generation voraus — belegt ist hier aber nur Chromium. Auf einem
-  Browser ohne Container-Abfragen fiele `width:100cqi` aus, und die Kopfzeile
-  stünde wieder so da wie in Web 19.4.0: kein Absturz, kein Datenverlust, nur
-  der alte Zustand. **Prüfliste Punkt 6.**
+- **Nr. 182 in einer ZWEITEN Engine: erledigt, WebKitGTK 2.52.6** (Safaris
+  Familie). Gemessen am 14.09.2026 mit einem Schnappschuss der echten Vorschau
+  (dasselbe Markup, dasselbe Stylesheet über den laufenden Server): 400 px →
+  Kopf 342 = Sicht 342 · 720 → 654 = 654 · 1280 → 1214 = 1214; `container-type`
+  löst zu `inline-size` auf, `position` zu `sticky`; Datum, Besatzung, Plakette
+  **und** Auswahlfeld in allen drei im Sichtfenster; Kopfhöhe 233/195/95 px, sie
+  bricht also. (Die 1214 statt 954 bei 1280 px kommen daher, dass der
+  Schnappschuss ohne Seitenleiste steht — mehr Platz, gleiche Aussage.)
+- **Was weiterhin NICHT geprüft ist: Firefox (Gecko).** Playwrights
+  Browser-Downloads sind in dieser Arbeitsumgebung gesperrt
+  (`cdn.playwright.dev` und `playwright.download.prss.microsoft.com`, beide
+  403), und Ubuntus `firefox`-Paket ist nur eine Snap-Hülle. Zwei von drei
+  Engines sind damit belegt. Auf einem Browser ohne Container-Abfragen fiele
+  `width:100cqi` aus und die Kopfzeile stünde wie in Web 19.4.0 da — kein
+  Absturz, kein Datenverlust, nur der alte Zustand. **Prüfliste Punkt 6.**
 - **AP1 und Nr. 182: Der Bilderlauf sieht die Vorschau nicht.** `seiten.json` führt
   `import.php` im Grundzustand — ohne gewählte Datei gibt es keine
   Vorschautabelle. Die acht Bilder der Seite belegen die Seite, **nicht** die
@@ -129,15 +136,15 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 | 3 | CSV-Import mit einer Datei, deren Crew von einem gespeicherten Tag abweicht | Tagesgruppe hat Kopfzeile, Warnung als orange Plakette mit Symbol — **und am Handy ist alles davon ohne waagerechtes Scrollen zu sehen** (seit Web 19.4.1, Nr. 182) | Wenn die Kopfzeile fehlt oder wie eine Datenzeile aussieht: AP1 hat nicht gegriffen. Wenn nach dem Datum nichts mehr kommt: die Container-Abfrage greift auf diesem Browser nicht — siehe Punkt 6 |
 | 4 | Einsatz bearbeiten, Koordinaten setzen, Chip-`×` tippen | Ziel trifft sich leicht (**28 px**, F-MR-6b), Koordinaten weg, Textfeld bleibt | Ziel zu klein: F-MR-6b nachjustieren |
 | 5 | Freigabe des Abschlusses | — | — |
-| 6 | **Auf einem zweiten Browser** (Firefox oder Safari, Handy genügt): Importvorschau mit derselben Datei öffnen | Die Kopfzeile bricht um und steht vollständig im Bild, wie in Chromium | Steht nach dem Datum nichts: Der Browser kennt keine Container-Abfragen. Kein Absturz, kein Datenverlust — es ist der Zustand von Web 19.4.0. Dann im Konzept vermerken und `--sicht` über einen `ResizeObserver` nachrüsten (die Fassung ist gemessen und liegt im Prüfprotokoll) |
+| 6 | **In Firefox** (Handy genügt): Importvorschau mit derselben Datei öffnen. *Chromium 141 und WebKitGTK 2.52.6 sind bereits belegt — es fehlt nur Gecko* | Die Kopfzeile bricht um und steht vollständig im Bild | Steht nach dem Datum nichts: Der Browser kennt keine Container-Abfragen. Kein Absturz, kein Datenverlust — es ist der Zustand von Web 19.4.0. Dann im Konzept vermerken und `--sicht` über einen `ResizeObserver` nachrüsten (die Fassung ist gemessen und liegt im Prüfprotokoll) |
 
 ## 5. Grenzen · 6. Offen
 
 - Der Bilderlauf misst Ruhezustände; die Bewegung ist nur am Gerät zu bewerten.
-- **Alles zu Nr. 182 ist in Chromium 141 gemessen.** Die Container-Abfrage ist
-  seit 2023 in allen drei Browserfamilien, und das Projekt setzt mit `:has()`
-  und `dvh` dieselbe Generation schon voraus — belegt ist hier aber nur
-  Chromium (Prüfliste Punkt 6).
+- **Nr. 182 ist in ZWEI Engines gemessen** — Chromium 141 (Playwright) und
+  WebKitGTK 2.52.6 (`xvfb-run -a /usr/bin/python3.12 webkit-mess.py`, gegen
+  einen Schnappschuss der echten Vorschau). **Gecko fehlt**, weil die
+  Browser-Downloads gesperrt sind; Backlog **Nr. 183**.
 - **Fehlerfund 1** (Konzept Abschnitt 6): dasselbe Malzeichen als
   JavaScript-Escape im zweiten Chip — das Prüfmittel sieht Escape-Folgen
   nicht. Läuft in **AP2** mit (E-MR-24), keine eigene Backlog-Nummer.
