@@ -531,6 +531,11 @@ Daten erst nach Server-Bestätigung.
 │                          Dokumentation neutral von Land und Luft sprechen:
 │                          Sperrliste, Ausnahmeliste mit Begründungen, drei
 │                          Zahlen je Bereich (s. LIESMICH.md)
+├── .claude/hooks/session-start.sh  beschafft beim Containerstart, was der
+│                          Pruefstand braucht und das Abbild nicht mitbringt:
+│                          MariaDB, ImageMagick, rsvg-convert, Python-
+│                          jsonschema. STARTET nichts — das macht
+│                          tools/referenzdatensatz/einspielen/lokal_starten.sh
 └── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
 ```
 
@@ -4443,6 +4448,51 @@ die Kehrseite ist, dass er die Stärke prinzipiell nicht prüfen kann. Der
 Schutz gegen einen Angreifer mit Zugriff auf die Ablaufumgebung (Hoster,
 Datenbank, Protokolle) hängt damit allein an der Passwortwahl der Person. Das
 ist eine bewusste Entscheidung und gehört genau so dokumentiert.
+
+### 2a Was der Wegwerf-Container mitbringt — und was nicht
+
+Aufgestellt am 13.09.2026 (Backlog-Runde 3), nachdem zwei Arbeitspakete
+dieselbe Viertelstunde verloren hatten: AP2 konnte `tools/uhr-bilder/`
+nicht laufen lassen, AP4 musste vor der ersten Browserprobe einen
+Datenbankserver nachinstallieren.
+
+**Das Abbild bringt mit:** PHP 8.4 (mit `pdo_mysql`, `mysqli`, `openssl`,
+`gd`, `zip`, `mbstring`), Node 22 samt Playwright und Chromium unter
+`/opt/pw-browsers/`, `socat`, `zip`/`unzip`, `git`, `curl`, `openssl`, und
+aus Python `requests` und `cryptography`.
+
+**Es bringt NICHT mit**, und ohne diese vier steht die Hälfte der Prüfmittel:
+
+| fehlt | wer es braucht |
+|---|---|
+| **MariaDB** | jede Browserprobe, beide Kreisläufe, Klickprobe, Wartungsprobe, `lokal_einrichten.sh` |
+| **ImageMagick** (`convert`, `compare`) | `tools/uhr-bilder/erzeugen.sh` und jeder Bildvergleich |
+| **rsvg-convert** (`librsvg2-bin`) | dieselbe Kette: SVG → PNG für die Uhr-Bilder |
+| **Python `jsonschema`** | `tools/referenzdatensatz/` prüft damit seine Quelldaten |
+
+`.claude/hooks/session-start.sh` beschafft sie beim Sitzungsstart und meldet
+je Stück „ok" oder „FEHLT". Zwei Dinge sind daran Absicht: Er **startet
+nichts** — das bleibt bei `lokal_starten.sh`, das Einrichten bei
+`lokal_einrichten.sh` —, und er **schlägt nicht fehl**, wenn etwas fehlt: Eine
+Sitzung, die sich wegen eines Bildwerkzeugs nicht öffnen lässt, ist schlimmer
+als eine, die den Mangel mit Zahl meldet. Auf einer Entwicklungsmaschine tut
+er gar nichts (`CLAUDE_CODE_REMOTE`).
+
+**Eine Falle, die Zeit kostet, wenn man sie nicht kennt:** `python3` ist in
+diesem Abbild **3.11** (deadsnakes), während apt seine Python-Pakete nach
+**3.12** legt. Ein `apt-get install python3-jsonschema` landet damit in einem
+Verzeichnis, das `python3` nicht liest — deshalb nimmt der Hook dafür `pip`
+mit `--break-system-packages`. Dasselbe erklärt, warum das apt-`cryptography`
+(für 3.12 gebaut, abi3) hier nur meistens trägt; der Hook prüft den Import und
+ersetzt das Paket nur, wenn er scheitert.
+
+**Und eine, die Messungen verfälscht:** Der eingebaute PHP-Server (`php -S`)
+liefert nach einer Dateiänderung für einige Sekunden noch den alten Stand.
+Gemessen am 13.09.2026: dieselbe Anfrage 0 s nach der Änderung mit dem alten
+Verhalten, 4 s danach mit dem neuen. Es ist **nicht** opcache
+(`opcache.enable_cli` ist Off). Wer eine Serveränderung prüft, startet den
+Server vorher neu — sonst misst er den Stand davor und hält ihn für den
+danach.
 
 ### 4.99a Demo-Konto (ab Web 7.3.0)
 

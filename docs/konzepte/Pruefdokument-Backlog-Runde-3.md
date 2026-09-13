@@ -57,14 +57,13 @@ dazukommt, gehört hierher.
   Besucheränderungen mit, wenn das Demo-Konto nicht vorher zurückgesetzt
   wurde (LIESMICH, „Regressionslauf"). [Gelaufen? Wenn ja: nach Reset,
   Ergebnis.]
-- **`tools/uhr-bilder/erzeugen.sh` ist nicht gelaufen** (AP2, 13.09.2026). Das
-  Skript braucht `convert`, `compare` und `rsvg-convert`; im Container ist
-  **kein ImageMagick** installiert (`command -v magick convert compare` leer).
-  Die Änderung ist reiner Kommentar — keine Zeile Code berührt —, und
-  `bash -n` meldet 0 Fehler. Was damit **nicht** belegt ist: dass das Rezept
-  die vier Altdateien heute noch pixelgleich reproduziert. Diese Zahl stammt
-  vom 02.09.2026 und ist von AP2 nicht nachgemessen worden; die Zusage im
-  Dokument ist nur schwächer formuliert, nicht neu belegt.
+- **~~`tools/uhr-bilder/erzeugen.sh` ist nicht gelaufen~~ — erledigt am
+  13.09.2026.** Stand so hier, weil der Container kein ImageMagick mitbrachte.
+  Mit dem Startvorgang aus AP4 (`.claude/hooks/session-start.sh`) ist es
+  nachinstalliert, das Skript **gelaufen** und die Zusage **gemessen** statt
+  nur umformuliert — die Zahlen stehen in Abschnitt 2. Der Eintrag bleibt
+  sichtbar, damit nachvollziehbar ist, dass die Lücke bestand und wodurch sie
+  geschlossen wurde.
 - [Weiteres.]
 
 ---
@@ -100,6 +99,8 @@ dazukommt, gehört hierher.
 | **AP2 · „bitgleich" in `tools/uhr-bilder/`** | Zusage an 2 Stellen behauptet | **0 Vorkommen, die die Bitgleichheit behaupten** — das Sollmaß „`grep -ci` = 0" ist berichtigt, weil der verlangte Zusatz das Wort verneinen muss (E-BR3-15) | **3 Vorkommen, 0 Behauptungen** ✓ (2 Verneinung, 1 datierte Rückschau) |
 | **AP2 · `tools/s5-anker/anker.py`** | Anker `uhrbilder.bitgleich` „unveraendert"; 7 nicht gefunden | Anker findet die Stelle weiter; **nicht gefunden bleibt 7** | Anker `uhrbilder.wortlaut` **„unveraendert"**, nicht gefunden **7** ✓ |
 | **AP2 · Syntax der berührten Dateien** | — | `bash -n` und Python-Parser ohne Fehler | **beide ok** ✓ |
+| **AP2 · `erzeugen.sh` gelaufen, Zusage gemessen** (nachgetragen 13.09.2026) | die Zahl stammte vom 02.09.2026 | 0 Dateien mit abweichenden Bildpunkten; bytegleich darf **keine** sein | **17 PNG erzeugt · 0 bytegleich · 0 mit abweichenden Bildpunkten** ✓ — „bitgleich" wäre nachweisbar falsch, „pixelgleich" nachweisbar richtig |
+| **AP2 · Gegenprobe, dass `compare` misst** | — | weiß gegen schwarz ≠ 0 | 64 × 64 px → **4096** Bildpunkte ✓ |
 | **AP3 · „letztes Backup der NutzerIn" als Messwert im Handbuch** | — | **0** Fundstellen (grep auf „zuletzt … Backup", „letztes Backup") | **0** ✓ |
 | **AP3 · Gegenprobe am Code** | — | `users` ohne Backup-Spalte; `edbak_konto_stand()` liest nur den Kontoordner; Erinnerungsmail auf denselben Ständen | **16 Spalten, keine davon ein Backup-Zeitpunkt**; `edbak_pakete()` + Begleitdatei; `edbak_faellige_konten()` filtert auf `ueberfaellig`/`nie` ✓ |
 | **Backlog-Nummernmenge gegen `dabd7a3`** (neu ab AP3, wegen F-BR3-01) | 170 Einträge | **0 verloren, 0 doppelt**; nur beabsichtigte Verschiebungen | nach AP3 **171 Einträge, 0 verloren, 0 doppelt**; aus *Offen* heraus: 81, 87, 88 (Durchsicht) und 91, 94, 117 (diese Runde) ✓ |

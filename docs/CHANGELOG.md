@@ -139,6 +139,56 @@ Kapitels. Und **nichts in der Oberfläche**: Die Zahlen heißen seit S8 richtig;
 ein zusätzlicher Hinweis neben jeder von ihnen erklärte dieselbe Sache
 viermal.
 
+### Werkzeug — der Container beschafft seinen Prüfstand selbst
+
+**Zweimal dieselbe Viertelstunde, dann eine Datei** (Auftrag des
+Auftraggebers, 13.09.2026). AP2 dieser Runde konnte `tools/uhr-bilder/`
+nicht laufen lassen, weil kein ImageMagick im Abbild liegt; AP4 musste vor
+der ersten Browserprobe einen Datenbankserver nachinstallieren. Beides ist
+keine Eigenheit dieser Runde, sondern eine Eigenschaft des Wegwerf-Containers
+— also gehört es an den Sitzungsstart und nicht in ein Arbeitspaket.
+
+`.claude/hooks/session-start.sh` beschafft **vier Dinge**, die das Abbild
+nicht mitbringt und ohne die die Hälfte der Prüfmittel stillsteht: **MariaDB**
+(jede Browserprobe, beide Kreisläufe, Klickprobe, Wartungsprobe),
+**ImageMagick** (`convert` und `compare` — Uhr-Bilder und jeder
+Bildvergleich), **rsvg-convert** und **Python `jsonschema`** (die Prüfung der
+Quelldaten des Referenzdatensatzes).
+
+**Drei Entscheidungen, die der Kopf der Datei begründet.** Er **startet
+nichts** — das bleibt bei `lokal_starten.sh`, das Einrichten bei
+`lokal_einrichten.sh`; die Arbeitsteilung des Repositoriums bleibt, wo sie
+war. Er **schlägt nicht fehl**, wenn etwas fehlt, sondern meldet je Stück „ok"
+oder „FEHLT": Eine Sitzung, die sich wegen eines Bildwerkzeugs nicht öffnen
+lässt, ist schlimmer als eine, die den Mangel mit Zahl nennt. Und er läuft
+**nur im Container** (`CLAUDE_CODE_REMOTE`) — auf einer Entwicklungsmaschine
+hat die Person ihre Werkzeuge selbst installiert, und ein Hook, der dort apt
+anwirft, wäre eine Zumutung.
+
+**`apt-get update` läuft erst im zweiten Versuch.** Die Paketlisten des
+Abbilds sind meist frisch genug; sind sie es nicht, scheitert der Lauf mit
+404 auf einzelne `.deb` — genau so gesehen am 13.09.2026 —, und erst dann
+lohnt der Listenabgleich. Andersherum kostete jeder Sitzungsstart eine Minute
+umsonst.
+
+**Zwei Fallen des Abbilds sind dabei aufgefallen und stehen jetzt in
+`docs/Technik.md` 2a.** Erstens: `python3` ist hier **3.11** (deadsnakes),
+während apt seine Python-Pakete nach **3.12** legt — ein
+`apt-get install python3-jsonschema` landet in einem Verzeichnis, das
+`python3` nicht liest. Deshalb `pip` mit `--break-system-packages`, und
+deshalb prüft der Hook den `cryptography`-Import statt ihn blind zu ersetzen.
+Zweitens: Der eingebaute PHP-Server liefert nach einer Dateiänderung einige
+Sekunden lang noch den alten Stand (gemessen: 0 s altes Verhalten, 4 s neues;
+**nicht** opcache, `opcache.enable_cli` ist Off). Wer eine Serveränderung
+prüft, startet den Server vorher neu — sonst misst er den Stand davor.
+
+**Gemessen:** erster Lauf installiert, zweiter Lauf 0 Nachinstallationen in
+**0,6 s**, **9 von 9** Stücken „ok"; ohne `CLAUDE_CODE_REMOTE` keine Ausgabe
+und Rückgabewert 0. Danach im selben Container nachgewiesen: `php -l` über
+**100** Dateien 0 Fehler, Spurprobe **45 Erwartungen / 0 nicht erfüllt**,
+Wortliste 0/0 — und `tools/uhr-bilder/erzeugen.sh` lief erstmals durch, was
+den offenen Punkt aus AP2 schließt (Zahlen dort).
+
 ### Web — die CSRF-Prüfung steht vor dem Demo-Ausstieg, nicht dahinter
 
 **Eine geerbte Lücke, die noch niemandem geschadet hat** (Nr. 67, Unterpunkt).

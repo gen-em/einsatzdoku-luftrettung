@@ -1687,9 +1687,16 @@ zutreffen.
     Anker heißt jetzt `uhrbilder.wortlaut` und sucht den Teil des Satzes, den
     die Streitfrage nicht berührt; gemessen danach „unveraendert", nicht
     gefundene Anker unverändert **7**.
-    **Nicht geprüft:** `erzeugen.sh` ist nicht gelaufen — kein ImageMagick und
-    kein `rsvg-convert` im Container. Die Änderung ist reiner Kommentar,
-    `bash -n` trägt.
+    **Nachgetragen am 13.09.2026, nach dem Startvorgang aus AP4:** Mit
+    ImageMagick und `rsvg-convert` im Container ist `erzeugen.sh` **gelaufen**,
+    und damit ist die Zusage nicht nur neu formuliert, sondern **gemessen**:
+    17 PNG neu erzeugt, davon **0 bytegleich** mit dem Stand in Git (jede trägt
+    einen neuen `tIME`-Block) und **0 mit abweichenden Bildpunkten**
+    (`compare -metric AE` gegen `git show HEAD:<pfad>`). „bitgleich" wäre also
+    nachweisbar falsch gewesen, „pixelgleich" ist nachweisbar richtig.
+    Gegenprobe, dass das Messmittel überhaupt misst: weiß gegen schwarz,
+    64 × 64 px, **4096** Bildpunkte. Die 17 Dateien sind danach zurückgesetzt —
+    ein Zeitstempel gehört nicht in einen Commit.
 
 91. **Die Auswahl in `WatchUi.Confirmation` ist im Bildabzug nicht zu sehen.**
     *Aufgenommen 03.09.2026 aus S5 Paket C.*
