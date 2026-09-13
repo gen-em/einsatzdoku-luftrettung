@@ -62,9 +62,20 @@ SELECT 1800 - (UNIX_TIMESTAMP() - v) AS rest_s
 Ist `rest_s` klein, erst den Reset abwarten (oder ihn im Adminbereich
 auslösen), dann fahren. Beobachtet am 03.09.2026 in D Hälfte 1.
 
-Konsolenfehler zählt er wie der Bilderlauf, mit derselben Rauschregel: Die
-Kartenkacheln kommen von einem fremden Server, den ein abgeschotteter
-Prüfstand nicht erreicht.
+Konsolenfehler zählt er **nicht** wie der Bilderlauf. Bis zum 13.09.2026 stand
+hier „mit derselben Rauschregel"; seit der Bilderlauf seine Regel in drei
+Klassen getrennt hat (Backlog Nr. 176), stimmt das nicht mehr — und die hiesige
+Regel ist die schwächere von beiden: `istRauschen()` in `rundlauf.mjs` prüft nur
+den **Text** und verwirft mit der Alternative `Failed to load resource`
+**jede** Ressourcenmeldung, gleich welcher Herkunft und gleich welchen Grundes.
+An acht gebauten Fällen nachgerechnet: **4 von 8** falsch eingestuft, alle vier
+verschluckte echte Fehler — darunter ein **404** und ein **500** auf der eigenen
+Basis, für die `requestfailed` nicht feuert und die deshalb nur in der Konsole
+stehen. Das ist **Backlog Nr. 178**; bis es behoben ist, heißt „0
+Konsolenfehler" in diesem Werkzeug: **keine Ausnahme und kein Abruf, der
+nicht als „Failed to load resource" gemeldet wurde.** Der Grund für die
+Kacheln gilt unverändert: Sie kommen von einem fremden Server, den ein
+abgeschotteter Prüfstand nicht erreicht.
 
 ---
 

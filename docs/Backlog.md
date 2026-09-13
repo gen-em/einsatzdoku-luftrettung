@@ -1578,6 +1578,62 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     und der Rundlauf bleibt im Übrigen bei seiner Zahl. Zuordnung:
     Backlog-Runde.
 
+179. **Die Zusage „keine fremde Quelle zur Laufzeit" zählt kein Prüfmittel
+    nach.** *Aufgenommen 13.09.2026 beim Beheben von Nr. 176, gefunden von der
+    Gegenprüfung des Nachtrags.* `CLAUDE.md` 4 verspricht: kein CDN, keine
+    Google Fonts, kein externes Skript; Schriften und Bibliotheken liegen unter
+    `server/assets/`. **Nachgesehen am 13.09.2026: Dieses Versprechen hat kein
+    Messmittel.** `tools/vollstaendigkeit/` Gruppe 5 („Zusagen") kennt genau
+    zwei — kein natives `confirm()`/`alert()`/`prompt()` und „jede Seite mit
+    Hülle hat ihr Gerüst" —, und `pruefen.py` sieht keine einzige Adresse an.
+    Kein anderes Werkzeug zählt es. **Auch die Laufzeit hält es nicht:** Die
+    Anwendung schickt **keine** Content-Security-Policy (0 Fundstellen für
+    `Content-Security-Policy` unter `server/`). Aufgefallen ist es, weil der
+    Kommentar zu Nr. 176 die Lücke an dieses Prüfmittel weiterschob — also
+    genau der Fehler, den Nr. 176 behoben hat, nur umgekehrt: Der Code behauptet
+    eine Prüfung, die es nicht gibt. Beide Behauptungen sind berichtigt (Code,
+    LIESMICH, Changelog). **Zu tun:** die Zusage nachzählbar machen, am besten
+    als dritte Prüfung in Gruppe 5 — jede `src`/`href`/`url()`-Adresse und jeder
+    `fetch`-Aufruf unter `server/` muss entweder relativ sein oder auf der
+    Ausnahmeliste stehen. **Die Ausnahmeliste ist der eigentliche Inhalt:** Die
+    Kartenkacheln und die Ortssuche sind **gewollte** Laufzeitquellen mit
+    dokumentierter Herkunft (`map_layers.js`, `ortsfeld.js`), und seit S9/AP2
+    steht die Anschrift des Adressdienstes nicht mehr im ausgelieferten Code,
+    sondern in einer Einstellung — die Prüfung muss beides auseinanderhalten,
+    sonst meldet sie das Erlaubte. **Eine CSP ist die zweite Hälfte** und
+    gehört in dieselbe Überlegung; sie braucht Ausnahmen für genau diese
+    Quellen und ist damit keine Nebenzeile, sondern eine Festlegung.
+    *Abnahme:* die Prüfung meldet **0** Befunde am heutigen Stand, **1** für
+    eine eingeschleuste `https://cdn.example/x.js` in einer Seite, und die
+    Ausnahmeliste nennt je Eintrag den Grund. Zuordnung: Backlog-Runde, dem
+    Bedrohungsmodell (P6, R69) zuarbeitend.
+
+180. **Die Kopplungsprobe misst die Knopfhöhe gegen einen Sollwert, den es
+    seit Web 15.5.0 nicht mehr gibt — und ist seither rot.** *Aufgenommen
+    13.09.2026, gefunden beim Nachfahren der Kopplungsprobe für Nr. 178.*
+    `tools/kopplungsprobe/rundlauf.mjs:214` prüft
+    `mass.knoepfe.every(h => h === 44)` — **ein** Sollwert, fest verdrahtet.
+    Seit Web 15.5.0 gelten **zwei** (E-S8-09, R76): 44 px am Fingergerät und
+    unter 1024 px, **36 px am Zeigergerät ab 1024 px**. Der Rundlauf öffnet
+    seinen Browser mit 1280 px als Zeigergerät, misst also zu Recht 36 px und
+    meldet sie als Fehler. **Gemessen am 13.09.2026: 25 Erwartungen, 1 nicht
+    erfüllt — „6 Knöpfe, 36 px".** Alles andere grün, Konsolenfehler 0,
+    Prüfgerät wieder abgemeldet (2 Geräte wie vorher).
+    **Der Fehler liegt im Prüfmittel, nicht in der Anwendung**, und das ist
+    belegt: Der Bilderlauf kennt beide Sollwerte und meldet über **360**
+    Aufnahmen in acht Breiten **0** Knöpfe falscher Höhe — auch bei 1280 px.
+    **Die unangenehme Zahl daran ist das Datum:** Der Sollwert ist am
+    06.09.2026 zweigeteilt worden, der Rundlauf ist seither rot, und
+    aufgefallen ist es am 13.09.2026 nur, weil ein anderer Punkt zufällig
+    dazu führte, ihn zu fahren. Ein Prüfmittel, das niemand fährt, ist kein
+    Prüfmittel — dieselbe Lehre wie bei Nr. 172 (Erwartung, die flackert) und
+    Nr. 176. **Zu tun:** dieselbe Weiche wie im Bilderlauf — Sollwert aus der
+    emulierten Eingabeart und der Fensterbreite ableiten, Ausnahmen benannt —,
+    und den Rundlauf in die Reihe der Mittel aufnehmen, die nach einem Paket
+    laufen. *Abnahme:* `node tools/kopplungsprobe/rundlauf.mjs` meldet
+    **25 Erwartungen, 0 nicht erfüllt** am Zeigergerät, und mit erzwungenem
+    Fingergerät ebenfalls 0. Zuordnung: Backlog-Runde.
+
 ## Erledigt
 
 

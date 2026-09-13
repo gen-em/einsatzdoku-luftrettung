@@ -54,19 +54,31 @@ er erwartbar ist. Jetzt greift die Codeliste nur, wenn die Fundstelle **nicht**
 die eigene Basis ist; die Hostliste ist unverändert, ein Kachelabruf trägt
 seinen Gastgeber in der Fundstelle und fällt weiter heraus.
 
-**Zwei Entscheidungen dabei bewusst zur lauten Seite hin.** Eine Meldung
-**ohne** Fundstelle wird gezählt, nicht verworfen — sie lässt sich nicht
-zuordnen, und eine Zeile zu viel im Bericht ist besser als eine stille Lücke.
-Und der Fehlercode wird nur noch im Wortlaut gesucht, nicht auch in der
-Fundstelle: In einer URL kommt er nicht vor, die zweite Suche war ohne Wirkung
-und verdeckte nur, worauf es ankommt.
+**Drei Entscheidungen dabei bewusst zur lauten Seite hin.** Eine Meldung
+**ohne zuordenbare** Fundstelle wird gezählt, nicht verworfen — leer, keine
+Adresse (`<anonymous>`) oder undurchsichtige Herkunft (`data:`, `blob:`, wo
+`URL.origin` die Zeichenkette „null" liefert); eine Zeile zu viel im Bericht
+ist besser als eine stille Lücke. Der Fehlercode wird nur noch im Wortlaut
+gesucht, nicht auch in der Fundstelle: In einer URL kommt er nicht vor, die
+zweite Suche war ohne Wirkung und verdeckte nur, worauf es ankommt. Und
+**Klasse 2 verwirft nur einen Statuscode** — verliert die Seite selbst die
+Verbindung, wird das gezählt; ein Verbindungsabbruch ist kein Statuscode, und
+die Klasse ist ihrem eigenen Kommentar nach für die 404-Antwort der
+Abbruchseite gedacht.
 
-**Belegt in drei Richtungen, nicht behauptet.** Die neue **Selbstprobe**
+**Belegt in vier Richtungen, nicht behauptet.** Die neue **Selbstprobe**
 (`node tools/screenshots/aufnehmen.mjs --selbstprobe`) hält die Funktion gegen
-zehn gebaute Fälle mit Sollwert: **10 von 10** erwartungsgemäß. Dieselben zehn
-Fälle durch die **alte** Funktion — wörtlich aus `git show` geholt, nicht
-abgeschrieben — ergeben **6 von 10**, die vier falschen sind drei lokale
-Abbrüche und der Fall ohne Fundstelle. Und am laufenden Browser: Seite geladen,
+**fünfzehn** gebaute Fälle mit Sollwert: **15 von 15** erwartungsgemäß. Die
+ersten zehn dieser Fälle durch die **alte** Funktion — wörtlich aus `git show`
+geholt, nicht abgeschrieben — ergeben **6 von 10**, die vier falschen sind drei
+lokale Abbrüche und der Fall ohne Fundstelle. **Und die Probe selbst hat eine
+Gegenprobe**, weil ihr erster Entwurf sich selbst bestätigte: Mit zehn Fällen
+meldete sie **10 von 10 auch dann, wenn man Klasse 1 oder Klasse 3 löschte** —
+alle verwerfenden Fälle trugen einen Kachelgastgeber in der URL, also fing sie
+die eine, und fiel die weg, die andere. Die Fälle 11 bis 15 lösen das auf;
+nachgemessen mit sechs Mutationen (je eine Klasse, die Schranke an Klasse 2 und
+beide Zweige der Herkunftsauskunft): **15 von 15** unverändert, **14 von 15**
+in jeder Mutation. Das Rezept steht in der LIESMICH. Und am laufenden Browser: Seite geladen,
 **PHP-Server angehalten** (socat blieb, die Basis also dieselbe), dann Symbol
 und API-Aufruf nachgeladen — zwei Konsolenfehler auf der eigenen Basis
 (`ERR_EMPTY_RESPONSE` und `ERR_CONNECTION_RESET`), davon verwarf der alte
@@ -75,9 +87,31 @@ mit der neuen Regel unverändert **0 Konsolenfehler** — die Zahl war also
 richtig, sie war nur nicht belegt.
 
 **Was weiterhin stumm bleibt** und deshalb in den Grenzen der LIESMICH steht:
-ein Verbindungsfehler auf einer **fremden** Adresse. Ob eine solche Adresse zur
-Laufzeit überhaupt abgerufen werden darf, ist die Zusage aus CLAUDE.md 4 und
-wird von `tools/vollstaendigkeit/` gemessen, nicht hier.
+ein Verbindungsfehler auf einer **fremden** Adresse. Hier stand zuerst, ob eine
+solche Adresse überhaupt abgerufen werden darf, messe
+`tools/vollstaendigkeit/` — **das ist falsch**, und die Berichtigung ist der
+unangenehmere Teil dieses Eintrags: Dessen Gruppe 5 kennt genau zwei Zusagen
+(native Dialoge, Seite ohne Gerüst), **kein** Werkzeug des Repositoriums zählt
+„keine fremde Quelle zur Laufzeit" nach, und eine CSP schickt die Anwendung
+auch nicht (0 Fundstellen für `Content-Security-Policy` unter `server/`). Das
+ist derselbe Fehler wie Nr. 176, nur in die andere Richtung — eine Prüfung
+behauptet, die es nicht gibt. Die Lücke steht als **Backlog Nr. 179**.
+
+**Zwei Nachbarn haben denselben Fehler nicht, einer schon** — nachgesehen, weil
+eine behobene Lücke die Frage nach den Geschwistern aufwirft:
+`referenzdatensatz/browser/papierkorb_misch.mjs` prüft Text **und** Fundstelle
+(sein Kommentar nennt den Bilderlauf als Vorbild — der war also das schwächere
+von beiden, und das ist jetzt umgekehrt), `messstand/browserprobe.mjs` hängt an
+`requestfailed` und hat die Adresse immer dabei. **`kopplungsprobe/rundlauf.mjs`
+verwirft mit „Failed to load resource" jede Ressourcenmeldung** — 4 von 8
+gebauten Fällen falsch, darunter ein 404 und ein 500 auf der eigenen Basis, für
+die `requestfailed` nicht feuert. Das ist **Nr. 178**; die LIESMICH dort sagt es
+jetzt, statt weiter „dieselbe Rauschregel wie der Bilderlauf" zu behaupten.
+**Und beim Fahren dieser Probe fiel Nr. 180 auf:** Sie verlangt 44 px für jeden
+Knopf, seit Web 15.5.0 gelten zwei Sollwerte (E-S8-09/R76), und bei 1280 px am
+Zeigergerät sind 36 px richtig — sie ist **seit dem 06.09.2026 rot** und wurde
+erst jetzt gefahren, weil sie in keiner Reihe von Mitteln steht, die nach einem
+Paket laufen.
 
 ### Prüfmittel — die Auswahl in `WatchUi.Confirmation` ist im Bild nicht zu sehen
 

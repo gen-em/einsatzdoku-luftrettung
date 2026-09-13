@@ -147,39 +147,69 @@ const liste = FILTER.length
  *
  * ZWEI ENTSCHEIDUNGEN DABEI, beide bewusst zur lauten Seite hin:
  *
- *   - OHNE FUNDSTELLE WIRD GEZAEHLT. Eine Meldung ohne `location().url` laesst
- *     sich nicht zuordnen. Lieber eine Zeile zu viel im Bericht als eine
- *     stille Luecke; wer sie erklaert, erklaert sie mit Zahl.
+ *   - OHNE ZUORDENBARE FUNDSTELLE WIRD GEZAEHLT. Eine Meldung ohne
+ *     `location().url`, mit einer Fundstelle, die keine Adresse ist
+ *     (`<anonymous>`), oder mit undurchsichtiger Herkunft (`data:`, `blob:`)
+ *     laesst sich nicht zuordnen. Lieber eine Zeile zu viel im Bericht als
+ *     eine stille Luecke; wer sie erklaert, erklaert sie mit Zahl.
  *   - DER CODE WIRD NUR IM TEXT GESUCHT, nicht mehr auch in der Fundstelle.
  *     Ein Fehlercode kommt in keiner URL vor; die zweite Suche war ohne
  *     Wirkung und verdeckte nur, worauf es ankommt.
  *
  * Was diese Klasse WEITERHIN verschweigt: einen Verbindungsfehler auf einer
- * fremden Adresse, die gar nicht abgerufen werden duerfte. Dass zur Laufzeit
- * keine fremde Quelle angefragt wird, ist die Zusage aus CLAUDE.md 4 — sie
- * wird von tools/vollstaendigkeit/ gemessen, nicht hier.
+ * fremden Adresse, die gar nicht abgerufen werden duerfte. Hier stand zuerst,
+ * das messe tools/vollstaendigkeit/ — DAS IST FALSCH und am 13.09.2026
+ * nachgesehen: Dessen Gruppe 5 kennt genau zwei Zusagen (native Dialoge,
+ * Seite ohne Geruest), und kein Werkzeug im Repositorium zaehlt "keine fremde
+ * Quelle zur Laufzeit" nach; eine CSP schickt die Anwendung auch nicht
+ * (0 Fundstellen fuer Content-Security-Policy unter server/). Die Luecke steht
+ * als Backlog Nr. 179. Bis dahin gilt: Diese Klasse sieht nicht, ob eine
+ * fremde Adresse ueberhaupt abgerufen werden durfte, und niemand sonst sieht
+ * es auch.
  *
  * SELBSTPROBE: `node tools/screenshots/aufnehmen.mjs --selbstprobe` haelt
- * diese Funktion gegen zehn gebaute Faelle und nennt die Zahl. Sie laeuft
+ * diese Funktion gegen fuenfzehn gebaute Faelle und nennt die Zahl. Sie laeuft
  * ohne Browser und ohne Server und loescht die Ausgabe des letzten Laufs
  * nicht.
+ *
+ * JEDE DER DREI KLASSEN TRAEGT MINDESTENS EINEN FALL — und das ist nicht
+ * selbstverstaendlich, sondern der zweite Anlauf. Der erste Entwurf hatte zehn
+ * Faelle und meldete 10 von 10 AUCH DANN, wenn man Klasse 1 oder Klasse 3
+ * loeschte: Alle verwerfenden Faelle trugen einen Kachelgastgeber in der URL,
+ * also fing sie Klasse 1 — und fiel die weg, fing sie Klasse 3. Die Probe
+ * belegte damit die Richtung, um die es ging, ueberhaupt nicht. Die drei
+ * Faelle, die das aufloesen, sind Nr. 11 bis 13; Nr. 14 und 15 halten den
+ * Grundsatz "nicht zuordenbar wird gezaehlt"; die Gegenprobe dazu steht in
+ * der LIESMICH ("Traegt jede Klasse einen Fall?") und wird von Hand gefahren:
+ * Wer eine Klassenzeile loescht, muss die Probe rot sehen.
  */
 const FREMDE_QUELLEN =
   /tile\.|openstreetmap|opentopomap|arcgisonline|photon\.komoot/i;
 const VERBINDUNGSCODES =
   /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|ERR_INTERNET_DISCONNECTED|ERR_CONNECTION_RESET|ERR_CONNECTION_CLOSED|ERR_ABORTED/i;
 
-/* Gleiche Herkunft wie BASIS? Ueber `URL.origin`, nicht ueber startsWith:
- * das vertraegt einen abschliessenden Schraegstrich in --basis und rechnet
- * Vorgabeports mit. Eine Fundstelle, die keine Adresse ist (`<anonymous>`,
- * leer), ist keine eigene. */
-function istEigeneHerkunft(ort) {
-  if (!ort) return false;
+/* DREI Antworten, nicht zwei: 'eigen', 'fremd' oder 'keine'.
+ *
+ * Verglichen wird ueber `URL.origin`, nicht ueber startsWith: das vertraegt
+ * einen abschliessenden Schraegstrich in --basis und rechnet Vorgabeports mit.
+ *
+ * WARUM DREI. Der erste Entwurf hatte ein `istEigeneHerkunft()`, das bei einer
+ * Fundstelle wie `<anonymous>` `false` lieferte — Klasse 3 las das als "fremd"
+ * und verwarf die Meldung. Damit wurde eine LEERE Fundstelle gezaehlt und eine
+ * UNLESBARE verworfen, genau entgegen dem Grundsatz zwei Absaetze weiter oben.
+ * 'keine' fasst beide Faelle zusammen und wird gezaehlt. Dazu gehoert auch die
+ * undurchsichtige Herkunft (`data:`, `blob:`): `URL.origin` liefert dort die
+ * Zeichenkette "null", und die ist keine Auskunft. */
+function herkunft(ort) {
+  if (!ort) return 'keine';
+  let o;
   try {
-    return new URL(ort).origin === new URL(BASIS).origin;
+    o = new URL(ort).origin;
   } catch {
-    return false;
+    return 'keine';
   }
+  if (!o || o === 'null') return 'keine';
+  return o === new URL(BASIS).origin ? 'eigen' : 'fremd';
 }
 
 function istRauschen(meldung, seitenAdresse) {
@@ -187,10 +217,12 @@ function istRauschen(meldung, seitenAdresse) {
   const ort = (meldung.location && meldung.location().url) || '';
   // 1 Fremde Laufzeitquellen, am Namen erkannt.
   if (FREMDE_QUELLEN.test(text) || FREMDE_QUELLEN.test(ort)) return true;
-  // 2 Der Statuscode der Seite selbst.
-  if (ort && seitenAdresse && ort.split('#')[0] === seitenAdresse.split('#')[0]) return true;
-  // 3 Verbindungsfehler — aber nur auf einer fremden Fundstelle (Nr. 176).
-  if (VERBINDUNGSCODES.test(text) && ort && !istEigeneHerkunft(ort)) return true;
+  // 2 Der Statuscode der Seite selbst — und WIRKLICH nur ein Statuscode.
+  if (ort && seitenAdresse && ort.split('#')[0] === seitenAdresse.split('#')[0]
+      && !VERBINDUNGSCODES.test(text)) return true;
+  // 3 Verbindungsfehler — aber nur auf einer NACHWEISBAR fremden Fundstelle
+  //   (Nr. 176). 'keine' zaehlt, siehe herkunft().
+  if (VERBINDUNGSCODES.test(text) && herkunft(ort) === 'fremd') return true;
   return false;
 }
 
@@ -230,6 +262,25 @@ const SELBSTPROBE = [
   { nr: 10, soll: 'rauschen', grund: 'Unterbereich eines Kachelservers',
     text: 'Failed to load resource: net::ERR_CONNECTION_CLOSED',
     ort:  'https://a.tile.openstreetmap.org/12/2200/1400.png' },
+  /* 11 bis 13 halten je EINE Klasse. Ohne sie bliebe die Probe gruen, wenn man
+   * eine Klassenzeile loescht — siehe den Kopfkommentar. */
+  { nr: 11, soll: 'rauschen', grund: 'NUR Klasse 1: Kachelserver ohne Verbindungscode (HTTP 500)',
+    text: 'Failed to load resource: the server responded with a status of 500 (Internal Server Error)',
+    ort:  'https://tile.openstreetmap.org/12/2200/1400.png' },
+  { nr: 12, soll: 'rauschen', grund: 'NUR Klasse 3: fremde Herkunft ausserhalb der Gastgeberliste',
+    text: 'Failed to load resource: net::ERR_CONNECTION_RESET',
+    ort:  'https://beispiel.example/irgendwas.js' },
+  { nr: 13, soll: 'fehler',   grund: 'NUR die Schranke an Klasse 2: die Seite selbst verliert die Verbindung',
+    text: 'Failed to load resource: net::ERR_CONNECTION_RESET',
+    ort:  'SEITE' },
+  /* 14 und 15: eine Fundstelle, die sich nicht zuordnen laesst, wird GEZAEHLT
+   * — wie die leere in Fall 9. Der erste Entwurf verwarf sie. */
+  { nr: 14, soll: 'fehler',   grund: 'Fundstelle ist keine Adresse (<anonymous>)',
+    text: 'Failed to load resource: net::ERR_CONNECTION_RESET',
+    ort:  '<anonymous>' },
+  { nr: 15, soll: 'fehler',   grund: 'undurchsichtige Herkunft (data:) — URL.origin sagt "null"',
+    text: 'Failed to load resource: net::ERR_CONNECTION_CLOSED',
+    ort:  'data:text/html,<p>x' },
 ];
 
 if (flag('--selbstprobe')) {
