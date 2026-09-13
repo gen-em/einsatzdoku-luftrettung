@@ -1222,7 +1222,6 @@ damit „nach v1.0" verlassen — dort stehen noch **acht**: 50, 51, 52, 55,
 | 54 | Migrationslauf nach Wiederherstellung | P5 | mit dem Wartungsmodus-Torwächter (R40.4) |
 | 55 | Komplettsicherung ohne scharfen Schnappschuss | nach v1.0 | — |
 | 57 | Tagesübersicht baut ihre Tabelle zweimal | **eigenes Paket** (2½–3 Tage) | **Entschieden 12.09.2026: das gemeinsame Modul `missiontable.js` gewinnt** — Beschriftung, Ausrichtung, Hakenreihenfolge folgen ihm. **Nebenbedingung `cap_gate`:** die bedingte Anzeige von Winde und Bergwacht sitzt heute in `index.php` (über `mf_tagesspalten()`), Suche und Zeitraum führen die Spalten hart im SELECT — beim Zusammenführen ausdrücklich mitnehmen, erster Prüffall des Pakets |
-| 58 | Prüfmittel: Seite ohne Gerüst | Backlog-Runde | Prüfmittel, ein Nachmittag. **Vor dem Bauen:** Eine naive Regel liefert heute 15 Treffer, alle berechtigt — das Kriterium „gibt eigenes Markup aus" muss operationalisiert werden, sonst ist das Mittel beim ersten Lauf rot |
 | 80 | Auswertung der Gerätestatistik (Rest von 59) | **P5** (Rest) | Gerätemodelle und Nutzung sind **gebaut** (S8 AP4, Betrieb → Statistik). Offen: **Herkunft je Einsatz (R64-Werte) und Betriebslage-Dashboard**, mit der Datenschutzerklärung als Vorbedingung (Abschnitt 6) |
 | 90 | Der Simulator kann keinen Verbindungsabriss herstellen | nach v1.0 | aus S5/C; Prüfmittel der Uhr, nur am Gerät nachweisbar (Prüfliste S5) |
 | 92 | `pruefstand.sh bildreihe` fotografiert nur den Startbildschirm | Backlog-Runde | aus S5/C; Tastenfolge als Parameter |

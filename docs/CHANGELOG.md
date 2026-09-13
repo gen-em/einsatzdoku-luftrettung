@@ -139,6 +139,73 @@ Kapitels. Und **nichts in der Oberfläche**: Die Zahlen heißen seit S8 richtig;
 ein zusätzlicher Hinweis neben jeder von ihnen erklärte dieselbe Sache
 viermal.
 
+### Web — die 404-Seite von `apk.php` ging ohne Kopf hinaus
+
+**Gefunden hat es das neue Prüfmittel, und zwar über seine Gegenrichtung**
+(Backlog Nr. 58, siehe unten). `apk.php` liefert eine APK aus; zeigt der
+Verweis auf eine Datei, die nicht mehr im Ordner liegt, gibt es eine
+404-Seite. Die rief `ui_geruest_start()`, `ui_geruest_ende()` und
+`ui_seite_ende()` — aber **nie `ui_seite_start()`**. Nur letzteres gibt
+`<!doctype html>`, `<head>` und `<body>` aus.
+
+**Die Seite ging also als Bruchstück hinaus**: Sie begann mit
+`<header class="kopf">` und endete trotzdem mit `</body></html>`. Gemessen
+am Prüfstand: kein Doctype, kein `<title>`, **kein Stylesheet**; der Browser
+las sie im Quirks-Modus (`document.compatMode` = `BackCompat`) und zeichnete
+sie in Times New Roman mit blau unterstrichenen Verweisen. Nach der Behebung:
+`CSS1Compat`, Open Sans, Titel „Datei nicht gefunden — Gen-EM NAdoku", die
+Meldungskarte und der Rückweg zum Geräte-Reiter.
+
+**Erreichbar ist das nicht theoretisch:** Es genügt ein Verweis auf ein APK,
+das nicht mehr liegt — nach jedem Aufräumen und aus jedem alten Lesezeichen.
+
+**Eine Zeile behebt es**, und der Kommentar daneben sagt, was der Unterschied
+zwischen den beiden Funktionen ist — damit die nächste Seite ihn nicht wieder
+verwechselt. Auf die Ausnahmeliste kommt `apk.php` **nicht**: Ein Fund gehört
+behoben, nicht erklärt.
+
+### Prüfmittel — jede Seite mit eigener Hülle hat ihr Gerüst
+
+**Der Anlass war `tag_spuren.php`** (Nr. 58): eine angemeldete Seite, der das
+Gerüst fehlte — Diensttag-Leiste und Menü verschwanden, ohne dass es jemandem
+auffiel. Behoben ist das längst; was fehlte, war das Mittel, das es beim
+nächsten Mal findet.
+
+**Das Kriterium ist `ui_seite_start(`, nicht „bindet die Wache ein".** Die
+naheliegende Regel des Backlog-Eintrags („bindet `require_admin()` oder
+`auth_guard.php` ein und ruft `ui_geruest_start()` nicht") liefert **15**
+Treffer, und alle 15 sind richtig so: sechs Bibliotheken, vier Endpunkte ohne
+Seite, vier Seiten vor der Anmeldung und der Notausgang `update.php`. Ein
+Mittel, das mit 15 Rot anfängt, wird nie wieder gelesen. `ui_seite_start()`
+dagegen ist der Anfang **jeder** Seitenhülle: Wer ihn ruft, gibt eine Seite
+aus. Verlangt werden **beide** Hälften des Gerüsts — ein Gerüst, das nicht
+geschlossen wird, ist keines.
+
+**Sieben Ausnahmen, jede mit ihrem eigenen Grund** — nicht „Seite vor der
+Anmeldung" als Sammelposten: `install.php` (läuft nur, solange es kein Konto
+gibt), `login.php` (stellt die Sitzung erst her), `reset_request.php` und
+`wiederherstellen.php` (Zugang ohne Sitzung; letztere bringt ihre eigene
+mit, weil es die Installation noch nicht gibt), `pw_handling.php` (Einmal-Link,
+der Dateikopf sagt „keine Sitzung"), `rechtstext_seite.php` (öffentliche
+Rechtstexte, R32) und `session_lib.php` — die letzte ist der interessante
+Fall: Sie gibt die Abmelde-Zwischenseite **nach** `session_destroy()` aus.
+Dort wäre ein Gerüst nicht nur falsch, es ließe sich nicht bauen.
+
+**Gemessen:** **0** Befunde, **7** Ausnahmen, **0** ungenutzt, Hinweis
+„Gerüst ohne Seitenhülle" **0** (er stand bei 1, bis `apk.php` behoben war).
+`tag_spuren.php` — der Anlass — steht **nicht** auf der Liste und ist **kein**
+Befund: Sie hat ihr Gerüst. Eine eingeschleuste neue Seite mit
+`ui_seite_start()` ohne Gerüst wird mit Datei und Zeile gemeldet; danach
+entfernt.
+
+**Ein stiller Fehler beim Bauen, festgehalten weil er lehrreich ist:** Beim
+ersten Lauf griff **keine** der sieben Ausnahmen, und die Prüfung meldete
+sieben Befunde, die alle erklärt waren — ohne dass irgendwo „Vergleich
+fehlgeschlagen" stand. Grund: Die Beschriftungen in `pruefen.py` sind ASCII
+(„Seite ohne Geruest"), die Hilfslisten sind Markdown für Menschen („Seite
+ohne Gerüst"). Der Vergleich löst Umlaute jetzt auf. Genau die Sorte Fehler,
+gegen die diese Gruppe gebaut ist.
+
 ### Prüfmittel — eine Zusage, die bisher nur im Kopf stand, wird nachgezählt
 
 **„Kein natives `confirm()`" war ein Versprechen ohne Messgerät** (Nr. 47).

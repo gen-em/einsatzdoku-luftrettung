@@ -821,24 +821,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     > stehen — und dann sieht es aus wie ein neuer Fehler, nicht wie ein
     > verlorener Vertrag.
 
-58. **Kein Prüfmittel fragt, ob eine Seite ihr Gerüst hat.**
-    *Aufgenommen 02.09.2026 als Lehre aus F-S3-C (S3/AP5).*
-    `tag_spuren.php` lief zwei Jahre ohne `ui_geruest_start()`: keine
-    Diensttag-Leiste, kein `.rahmen`/`.inhalt` und damit kein seitlicher
-    Innenabstand — auf 412 px saß die linke Kante bei 0 statt 12 px.
-    **Gefunden hat es ein Mensch auf einem Telefon.**
-    Kein Werkzeug konnte es finden, und das ist kein Zufall: Der Bilderlauf
-    misst waagerechten Überlauf (`scrollWidth > innerWidth`), und eine Seite
-    ohne Innenabstand läuft nicht über — sie ist nur randlos. Die
-    Vollständigkeitsprüfung fragt nach Klassen ohne Regel, nicht nach Seiten
-    ohne Gerüst. Der Stilvergleich misst Markup-Proben.
-    **Die Frage ist am Quelltext zu beantworten:** Jede Seite, die
-    `require_admin()` oder `auth_guard.php` einbindet und eigenes Markup
-    ausgibt, muss `ui_geruest_start()` und `ui_geruest_ende()` aufrufen. Ein
-    kleines Prüfmittel dafür wäre ein Nachmittag und fände die ganze Klasse
-    von Fehlern statt eines Falls.
-
-
 62. **Logodateien tragen teilweise wieder die alten Farbwerte.**
     *Bis zum 02.09.2026 trug dieser Punkt die Nummer 49. Sie war durch die
     Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
@@ -1601,6 +1583,50 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+58. **Kein Prüfmittel fragt, ob eine Seite ihr Gerüst hat.**
+    *Aufgenommen 02.09.2026 als Lehre aus F-S3-C (S3/AP5).*
+    `tag_spuren.php` lief zwei Jahre ohne `ui_geruest_start()`: keine
+    Diensttag-Leiste, kein `.rahmen`/`.inhalt` und damit kein seitlicher
+    Innenabstand — auf 412 px saß die linke Kante bei 0 statt 12 px.
+    **Gefunden hat es ein Mensch auf einem Telefon.**
+    Kein Werkzeug konnte es finden, und das ist kein Zufall: Der Bilderlauf
+    misst waagerechten Überlauf (`scrollWidth > innerWidth`), und eine Seite
+    ohne Innenabstand läuft nicht über — sie ist nur randlos. Die
+    Vollständigkeitsprüfung fragt nach Klassen ohne Regel, nicht nach Seiten
+    ohne Gerüst. Der Stilvergleich misst Markup-Proben.
+    **Die Frage ist am Quelltext zu beantworten:** Jede Seite, die
+    `require_admin()` oder `auth_guard.php` einbindet und eigenes Markup
+    ausgibt, muss `ui_geruest_start()` und `ui_geruest_ende()` aufrufen. Ein
+    kleines Prüfmittel dafür wäre ein Nachmittag und fände die ganze Klasse
+    von Fehlern statt eines Falls.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP7 — Prüfmittel ohne
+    Versionsstufe; der Fund darin lief unter Web 19.3.1).** Zweite Prüfung der
+    Gruppe „5 Zusagen": **Seite ohne Gerüst**.
+    **Das Kriterium ist `ui_seite_start(`, nicht „bindet die Wache ein"**
+    (E-BR3-06) — damit die naive Regel nicht wieder vorgeschlagen wird: Sie
+    liefert 15 Treffer, und alle 15 sind richtig so. Wer `ui_seite_start()`
+    ruft, gibt eine Seite aus; verlangt werden **beide** Hälften des Gerüsts,
+    denn ein Gerüst, das nicht geschlossen wird, ist keines. Gezählt wird
+    außerhalb von Kommentaren.
+    **Gemessen:** 0 Befunde, **7 Ausnahmen** mit je eigenem Grund
+    (`install.php`, `login.php`, `reset_request.php`, `wiederherstellen.php`,
+    `pw_handling.php`, `rechtstext_seite.php`, `session_lib.php` — letztere
+    gibt die Abmeldeseite **nach** `session_destroy()` aus), 0 ungenutzte
+    Ausnahmen. `tag_spuren.php`, der Anlass des Punktes, steht **nicht** auf
+    der Liste und ist **kein** Befund. Eine eingeschleuste Seite ohne Gerüst
+    wird mit Datei und Zeile gemeldet.
+    **Die Gegenrichtung hat sich sofort bezahlt gemacht** und ist der
+    eigentliche Gewinn: Der Hinweis „Gerüst ohne Seitenhülle" zeigte auf
+    `apk.php`. Deren 404-Seite ging ohne `<!doctype>`, ohne Titel und **ohne
+    Stylesheet** hinaus (Quirks-Modus, Times New Roman) — erreichbar über
+    jeden Verweis auf ein APK, das nicht mehr liegt. Mit einer Zeile behoben
+    (Web 19.3.1); auf die Ausnahmeliste kommt die Datei **nicht**, ein Fund
+    gehört behoben, nicht erklärt. Der Hinweis steht seither auf 0.
+    **Ein stiller Fehler beim Bauen:** Beim ersten Lauf griff keine der
+    sieben Ausnahmen — die Beschriftungen in `pruefen.py` sind ASCII („Seite
+    ohne Geruest"), die Liste ist Markdown („Gerüst"). Der Vergleich löst
+    Umlaute jetzt auf.
 
 47. **Nichts hält das native `confirm()` draußen.**
     *Aufgenommen 31.08.2026 (S2/AP5b, aus F-S2-D).* `assets/confirm.js` gibt

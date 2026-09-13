@@ -4061,6 +4061,15 @@ declare(strict_types=1);
  * `csrf_check()`, damit die fuenfzehn Endpunkte unter `server/api/` die
  * Pruefung nicht jeder selbst schreiben — bleibt bei P5.
  *
+ * DAZU EIN FUND, DEN DAS NEUE PRUEFMITTEL SELBST GEMACHT HAT (Nr. 58). Die
+ * 404-Seite von `apk.php` rief `ui_geruest_start()` und `ui_seite_ende()`,
+ * aber nie `ui_seite_start()` — und nur letzteres gibt `<!doctype>`, `<head>`
+ * und `<body>` aus. Die Seite ging als Bruchstueck hinaus: ohne Doctype, ohne
+ * Titel, OHNE STYLESHEET; der Browser las sie im Quirks-Modus und zeichnete
+ * sie in Times New Roman. Gefunden ueber die GEGENRICHTUNG der Pruefung
+ * ("Geruest ohne Seitenhuelle"), behoben mit einer Zeile. Erreichbar war es
+ * ueber jeden Verweis auf ein APK, das nicht mehr im Ordner liegt.
+ *
  * Die uebrigen sieben Punkte liegen in `tools/` und `docs/` und loesen nach
  * CLAUDE.md 2 keine Stufe aus; sie stehen im Changelog unter derselben
  * Ueberschrift, weil sie zur selben Runde gehoeren. Uhr und Android sind

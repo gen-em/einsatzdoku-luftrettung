@@ -9,7 +9,7 @@ beantwortet „was muss **ich** noch tun?". Muster:
 
 > | | |
 > |---|---|
-> | Stand | **Block A vollständig** (AP1–AP5) und **AP6** erledigt (13.09.2026); AP7 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
+> | Stand | **Block A und B vollständig** (AP1–AP7, 13.09.2026); AP8 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
 > | Stufe | **Web 19.3.1 — Korrektur** (E-BR3-14; die Begründung steht im Konzept). **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt. `version.php` steigt erst mit AP4 — dem ersten Paket, das `server/` anfasst |
 > | Punkte | Backlog **Nr. 91, 94, 117, 47, 58, 173, 174** erledigt; **Nr. 67** Unterpunkt erledigt, Punkt bleibt (P5); **Nr. 41** drei Streichungen erledigt, Punkt bleibt (9c) |
 > | Neu entstanden | Prüfgruppe „5 Zusagen" in `tools/vollstaendigkeit/`, Liste `zusagen.md`; neue Referenzdateien unter `tools/referenzdatensatz/referenz/` |
@@ -93,7 +93,11 @@ dazukommt, gehört hierher.
 | **AP6 · Probe: `window.confirm("x")` in einer PHP-Datei** | 0 Befunde | **1** Befund mit `Datei:Zeile`; Gesamtzahl steigt | **1** (`server/einsatz.php:998`), Gesamt **330 → 331** ✓, danach entfernt |
 | **AP6 · Probe: dieselben Aufrufe als Kommentar** (`/* */`, `//`, `#`) | — | **0** Befunde — der Abtaster trägt für alle drei Formen | **0** ✓, danach entfernt |
 | **AP6 · Probe: Ausnahme zeigt ins Leere** | 0 ungenutzt | **1** Befund **und** **1** „Ausnahme ungenutzt" | **1 / 1** ✓, danach zurückgenommen |
-| **Gruppe 5 „Zusagen", Seite ohne Gerüst** | — (neu) | **0** Befunde, **7** Ausnahmen, Hinweis „Gerüst ohne Seitenhülle" **1** (`apk.php`) | [ ] |
+| **Gruppe 5 „Zusagen", Seite ohne Gerüst** | — (neu) | **0** Befunde, **7** Ausnahmen, Hinweis „Gerüst ohne Seitenhülle" **1** (`apk.php`) | **0 / 7 / 0** ✓ · Hinweis **0**, nicht 1: `apk.php` war ein **Fehler** und ist behoben (H-BR3-1) |
+| **AP7 · die sieben Ausnahmen einzeln geprüft** | — | jede ist wirklich außerhalb der Sitzung, sonst H-BR3-1 | **7/7 bestätigt** ✓ — `pw_handling.php` sagt im Dateikopf „keine Sitzung", `session_lib.php` rendert **nach** `session_destroy()` |
+| **AP7 · `tag_spuren.php`** (der Anlass des Punktes) | ohne Gerüst (behoben in S9) | **kein** Befund und **keine** Ausnahme | 6 Aufrufe, 0 auf der Liste, 0 als Befund ✓ |
+| **AP7 · Probe: neue Seite ohne Gerüst** | — | wird mit `Datei:Zeile` gemeldet | **1 Befund** (`server/probe_ap7.php:4`) ✓, danach entfernt |
+| **AP7 · `apk.php` 404 vorher/nachher** (Browser) | Doctype **nein**, Stylesheet **nein**, `compatMode` **BackCompat**, Times New Roman | Doctype ja, Stylesheet ja, `CSS1Compat`, Open Sans | **alles ✓** — Titel „Datei nicht gefunden — Gen-EM NAdoku", Antwort 4187 → 4688 Zeichen |
 | **Probe, dass beide rot werden** | — | je ein eingeschleuster Verstoß → Rückgabewert ≠ 0; danach entfernt | [ ] |
 | **Kreislauf edbak** (`vergleich/kreislauf.py --art edbak --frisch`) | 287 687 Einzelvergleiche, 0 unerklärt, 16 erwartet, **3 ungenutzte Regeln** | **0 unerklärt, 0 ungenutzt**, gegen die **neue** Referenz; ein Rettungsmittel mit `base_ref: null` kommt unverändert zurück | [ ] |
 | **Kreislauf csv** (`--art csv --frisch`) | 9 120 Einzelvergleiche, 0 unerklärt, 1 021 erwartet, **2 ungenutzte Regeln** | **0 unerklärt, 0 ungenutzt**, neue Referenz | [ ] |

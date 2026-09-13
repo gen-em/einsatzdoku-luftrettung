@@ -17,7 +17,8 @@ Fuenf Pruefungen:
   4  Knopfregel -- jede Hoehenangabe an einer .knopf-Regel kommt aus --knopf.
   5  Zusagen -- Regeln, die bisher nur im Kopf standen: kein natives
      confirm()/alert()/prompt() ausser den begruendeten Rueckfaellen
-     (Backlog Nr. 47). Ausnahmen mit Grund in zusagen.md.
+     (Backlog Nr. 47), und jede Seite mit eigener Huelle hat ihr Geruest
+     (Nr. 58). Ausnahmen mit Grund in zusagen.md.
 
 Dazu die Ausgabe: je Pruefung Zahl und Liste, Rueckgabewert != 0 bei Befund.
 
@@ -468,6 +469,22 @@ def pruefung_knopf(bericht):
 NATIVE_DIALOGE = re.compile(r'(?<![\w$.])(?:window\s*\.\s*)?(confirm|alert|prompt)\s*\(')
 
 
+UMLAUTE = {'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue', 'ß': 'ss'}
+
+
+def umlautfrei(t):
+    """Umlaute aufloesen und kleinschreiben -- fuer den Vergleich, nicht fuer die Anzeige.
+
+    WARUM DAS NOETIG IST. Die Beschriftungen in dieser Datei sind ASCII
+    ("Gegenstueck", "Knopfhoehe", "Seite ohne Geruest"); die Hilfslisten sind
+    Markdown und werden von Menschen gelesen, also stehen dort Umlaute
+    ("Seite ohne Gerüst"). Beim ersten Lauf hat deshalb keine der sieben
+    Ausnahmen gegriffen, und die Pruefung meldete sieben Befunde, die alle
+    erklaert waren -- ohne dass irgendwo "Vergleich fehlgeschlagen" stand.
+    Genau die Sorte Fehler, gegen die diese Gruppe gebaut ist."""
+    return ''.join(UMLAUTE.get(c, c) for c in t).lower()
+
+
 def zusagen_treffer(muster):
     """Alle Fundstellen eines Musters in server/, ohne Kommentare.
 
@@ -495,7 +512,8 @@ def zusagen_werten(bericht, name, treffer, listenname='zusagen.md'):
     `phasen-name` in ohne-regel.md gealtert, AP5).
     """
     regeln = [(z[1].strip('`'), z[2].strip('`'))
-              for z in liste_lesen(listenname, 4) if z[0].strip('*` ') == name]
+              for z in liste_lesen(listenname, 4)
+              if umlautfrei(z[0].strip('*` ')) == umlautfrei(name)]
 
     offen, benutzt = [], set()
     for pfad, zeile, text in treffer:
@@ -510,6 +528,34 @@ def zusagen_werten(bericht, name, treffer, listenname='zusagen.md'):
     bericht.befund('5 Zusagen', name + ': Ausnahme ungenutzt', ungenutzt)
 
 
+def geruest_treffer():
+    """Dateien mit Seitenhuelle, denen das Geruest fehlt -- und die Gegenrichtung.
+
+    DAS KRITERIUM IST `ui_seite_start(`, NICHT `require_admin()` (E-BR3-06).
+    Die naeheliegende Regel waere "bindet die Wache ein und ruft kein Geruest";
+    sie liefert heute 15 Treffer, und alle 15 sind richtig so -- Bibliotheken,
+    Endpunkte ohne Seite, Seiten vor der Anmeldung, der Notausgang. Ein Mittel,
+    das mit 15 Rot anfaengt, wird nie wieder gelesen.
+
+    `ui_seite_start()` dagegen ist der Anfang JEDER Seitenhuelle: Wer ihn ruft,
+    gibt eine Seite aus, und eine Seite der angemeldeten Anwendung hat ein
+    Geruest. Beide Haelften werden verlangt -- `ui_geruest_ende()` ebenso, denn
+    ein Geruest, das nicht geschlossen wird, ist keines.
+    """
+    seite, anfang, ende = {}, set(), set()
+    for pfad in quelldateien():
+        text = ohne_php_js_kommentare(lies(pfad), pfad.endswith('.php'))
+        k = kurz(pfad)
+        if 'ui_seite_start(' in text:
+            seite[k] = zeile_von(text, text.index('ui_seite_start('))
+        if 'ui_geruest_start(' in text: anfang.add(k)
+        if 'ui_geruest_ende(' in text:  ende.add(k)
+    ohne = [(k, z, 'ui_seite_start') for k, z in sorted(seite.items())
+            if k not in anfang or k not in ende]
+    gegen = sorted(anfang - set(seite))
+    return ohne, gegen
+
+
 def pruefung_zusagen(bericht):
     """Zusagen, die bisher nur im Kopf standen (Backlog Nr. 47, 58).
 
@@ -517,6 +563,15 @@ def pruefung_zusagen(bericht):
     natives confirm()", "jede Seite hat ihr Geruest". Ein Versprechen ohne
     Pruefmittel haelt genau so lange, wie sich jemand daran erinnert."""
     zusagen_werten(bericht, 'native Dialoge', zusagen_treffer(NATIVE_DIALOGE))
+
+    ohne, gegen = geruest_treffer()
+    zusagen_werten(bericht, 'Seite ohne Geruest', ohne)
+    # GEGENRICHTUNG ALS HINWEIS, NICHT ALS BEFUND: Geruest ohne Seitenhuelle
+    # ist nicht zwangslaeufig falsch -- es KANN aber eine Seite ohne `<head>`
+    # sein, und genau eine war es (apk.php, behoben mit Web 19.3.1: die
+    # 404-Seite ging ohne Doctype und ohne Stylesheet hinaus). Deshalb steht
+    # die Zahl da, auch wenn sie null ist.
+    bericht.hinweis('5 Zusagen', 'Geruest ohne Seitenhuelle', gegen)
 
 
 class Bericht:

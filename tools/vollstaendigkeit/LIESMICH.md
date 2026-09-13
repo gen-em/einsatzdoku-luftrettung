@@ -47,7 +47,9 @@ zur Sollmenge und verliert damit genau die Auskunft, um die es geht.
 | 2 | Werte außerhalb der Token — Hexfarben, `rgb()`, Schriftgrößen, Pixelmaße, `50px`-Reste, `style="…"` in PHP/JS | 0 außer `ausnahmen.md` |
 | 3 | Symbole — Inline-SVG mit Pfaden, Unicode-Zeichen als Symbol, Emoji, Verweise auf fehlende Dateien, Dateien ohne Anker `id="i"` | 0 |
 | 4 | Knopfregel — jede Höhenangabe an einer `.knopf`-Regel kommt aus `--knopf` | 0 |
-| 5 | **Zusagen** — Regeln, die bisher nur im Kopf standen. Heute eine: **native Dialoge** (kein `confirm()`/`alert()`/`prompt()`, auch nicht als `window.`-Aufruf, außerhalb von Kommentaren). Ausnahmen mit Grund in `zusagen.md`, in **beide** Richtungen geprüft | 0 Befunde · 0 ungenutzte Ausnahmen |
+| 5 | **Zusagen** — Regeln, die bisher nur im Kopf standen. Zwei: **native Dialoge** (kein `confirm()`/`alert()`/`prompt()`, auch nicht als `window.`-Aufruf) und **Seite ohne Gerüst** (wer `ui_seite_start(` ruft, ruft auch `ui_geruest_start(` **und** `ui_geruest_ende(`). Beide zählen nur außerhalb von Kommentaren; Ausnahmen mit Grund in `zusagen.md`, in **beide** Richtungen geprüft. Dazu ein **Hinweis**: Gerüst ohne Seitenhülle | 0 Befunde · 0 ungenutzte Ausnahmen |
+
+**Warum das Kriterium `ui_seite_start(` heißt und nicht „bindet die Wache ein".** Die naheliegende Regel („bindet `require_admin()` oder `auth_guard.php` ein und ruft kein Gerüst") liefert **15** Treffer, und alle 15 sind richtig so: Bibliotheken, Endpunkte ohne Seite, Seiten vor der Anmeldung, der Notausgang. Ein Mittel, das mit 15 Rot anfängt, wird nie wieder gelesen. `ui_seite_start()` dagegen ist der Anfang **jeder** Seitenhülle — wer ihn ruft, gibt eine Seite aus. **Der Hinweis in der Gegenrichtung hat sich sofort bezahlt gemacht:** Er zeigte auf `apk.php`, dessen 404-Seite ohne `<!doctype>` und ohne Stylesheet hinausging (behoben mit Web 19.3.1).
 
 Dazu die **Ausgabe**: je Prüfung Zahl und Liste mit `Datei:Zeile`, Rückgabewert ≠ 0 bei Befund. Sie war bis Web 19.3.1 als „Prüfung 5" mitgezählt — sie prüft aber nichts, sie zeigt. Seit Backlog Nr. 47 steht an der Fünf eine echte Prüfung.
 
