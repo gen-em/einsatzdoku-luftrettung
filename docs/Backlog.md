@@ -416,15 +416,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nachmittag), und die eigentliche Lösung — Schlüssel auf die Uhr — in eine
     eigene Phase zusammen mit der ohnehin anstehenden Uhr-Arbeit.
 
-45. **Dritte Kartengröße zwischen klein und Vollbild.**
-    *Aufgenommen 30.08.2026, zurückgestellt.* Die Karte des Diensttags ist im
-    Regelfall klein und im Vollbild oft zu groß. Vorschlag aus der Durchsicht:
-    eine mittlere Fassung über die volle Breite des Diensttags, über der
-    Liste. Kein Mockup, keine Freigabe — bewusst nicht in dieser Runde.
-    **Entschieden am 12.09.2026: bauen, Mockup zuerst.** Geht in die
-    **Mockup-Runde** (mit Nr. 41, 42 und 124) und verlässt damit die Gruppe
-    „nach v1.0" im Rahmenplan.
-
 46. **Das Altformat des Backups wird mit NaDoku 1.0 abgeschafft.**
     *Aufgenommen 31.08.2026 (S2/AP5), Entscheidung desselben Tages.* Seit
     Web 11.0.0 schreibt die Anwendung Containerfassung 4; die einteiligen
@@ -1556,6 +1547,38 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+45. **Dritte Kartengröße zwischen klein und Vollbild.**
+    *Aufgenommen 30.08.2026, zurückgestellt.* Die Karte des Diensttags ist im
+    Regelfall klein und im Vollbild oft zu groß. Vorschlag aus der Durchsicht:
+    eine mittlere Fassung über die volle Breite des Diensttags, über der
+    Liste. Kein Mockup, keine Freigabe — bewusst nicht in dieser Runde.
+    **Entschieden am 12.09.2026: bauen, Mockup zuerst.** Geht in die
+    **Mockup-Runde** (mit Nr. 41, 42 und 124) und verlässt damit die Gruppe
+    „nach v1.0" im Rahmenplan.
+
+    **Erledigt mit Web 19.5.0** (Mockup-Runde 9c, AP3, 14.09.2026). Ein Knopf
+    unter dem für das Vollbild, **nur auf der Tagesübersicht**. Bis 1599 px
+    wird die Karte höher (`--karte-gross` = `min(60vh, 520px)`), ab 1600 px —
+    wo sie ohnehin hoch in einer eigenen Spalte steht — stattdessen **breit**:
+    Das Raster fällt auf eine Spalte, die Karte rückt zwischen Diensttag-Daten
+    und Liste. Dieselbe Klasse `.geo-gross` trägt beides; welche Wirkung sie
+    hat, entscheidet das Stylesheet, damit die Schwelle 1600 an einer Stelle
+    bleibt. Aus demselben Grund trägt der Knopf beide Zeichen und das
+    Stylesheet blendet je Breite eines aus (E-MR-19). Die Wahl bleibt erhalten
+    (`localStorage`, je Browser und Gerät — der erste der Anwendung).
+    *Gemessen in drei Engines* (Chromium 141, Firefox 142, WebKit 26), fünf
+    Breiten je Engine, fünfzehn Messungen mit demselben Bild: klein
+    160/220/300 px bzw. 820–864 px in der Spalte, groß **520 px** in jeder;
+    ab 1600 px wechselt „groß" vom Raster in den Fluss und nimmt die volle
+    Inhaltsbreite (1308/1388 px); Symbol wechselt von senkrecht auf quer;
+    `aria-pressed` folgt; Liste steht in allen fünfzehn unter der Karte;
+    **0** waagerechter Überlauf, **keine** Konsolenfehler; nach dem Neuladen
+    wieder 520 px. Kacheln nach dem Umschalten: 10 → **15**, davon 5 am
+    Unterrand, **0 px unbedeckt** (schon nach 200 ms). Voller Bilderlauf
+    **360 Bilder, 0/0/0**.
+    Neu: Token `--karte-gross`, Klasse `.geo-gross`, Symbole
+    `karte-gross.svg` und `karte-breit.svg`. Kein neuer Farbwert.
 
 42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
     *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4, AP5, AP5b

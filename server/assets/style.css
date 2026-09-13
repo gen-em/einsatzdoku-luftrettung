@@ -366,6 +366,14 @@
   --karte-mobil:160px;
   --karte-tablet:220px;
   --karte-desktop:300px;
+  /* DIE DRITTE GROESSE (Backlog Nr. 45, M-MR-03, F-MR-7). Zwischen 300 px und
+   * Vollbild lag nichts: Wer mehr von der Spur sehen wollte, musste die Seite
+   * verlassen. `min()` statt einer festen Zahl, und beide Haelften haben einen
+   * Grund — 60vh laesst auf jedem Geraet ein Drittel des Glases fuer die
+   * Liste darunter uebrig, 520 px deckelt das auf einem hohen Schreibtisch-
+   * bildschirm, wo 60vh sonst 800 px waeren und die Liste aus dem Bild
+   * schoebe. Freigegeben am 13.09.2026. */
+  --karte-gross:min(60vh, 520px);
 
   /* ---- Spurfarben (P3/O3, E-P3-40) --------------------------------------
    * Acht Farben für die Einsätze eines Tages, in Vergabereihenfolge. Bis
@@ -3873,3 +3881,43 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * breiter ist als das Geraet. Sie darf deshalb umbrechen; alles andere am
  * Baustein bleibt. */
 .imp-kopfzeile .plakette{white-space:normal}
+
+
+/* ===========================================================================
+ * 30  DRITTE KARTENGROESSE                 (Mockup-Runde 9c, M-MR-03, AP3)
+ *
+ * Die Karte der Tagesuebersicht hatte zwei Zustaende: ihre Hoehe nach Breite
+ * (160 / 220 / 300 px) und Vollbild. Dazwischen lag nichts — wer mehr von der
+ * Spur sehen wollte, musste die Seite verlassen und wiederkommen. Backlog
+ * Nr. 45 fuellt die Luecke mit EINEM Zustand und EINEM Knopf.
+ *
+ * ZWEI WIRKUNGEN JE BREITE (E-MR-16, F-MR-9 geaendert). Bis 1599 px wird die
+ * Karte HOEHER — `--karte-gross`, also min(60vh, 520px). Ab 1600 px steht sie
+ * ohnehin in einer eigenen Spalte und ist dort schon hoch; dort wird sie
+ * stattdessen BREIT: Das Raster faellt auf eine Spalte, und die Karte rueckt
+ * zwischen Diensttag-Daten und Einsatzliste — dorthin, wo sie unter 1600 px
+ * immer steht. Die DOM-Reihenfolge ist bereits Daten, Karte, Liste; es genuegt
+ * deshalb, das Raster abzuschalten.
+ *
+ * WARUM `:has()` UND KEINE ZWEITE KLASSE AM RASTER. Der Zustand gehoert der
+ * Karte, nicht dem Raster — `blatt.js` und `map_fullscreen.js` setzen ihn
+ * dort, und eine zweite Klasse an einem Vorfahren waere eine zweite Stelle,
+ * die auseinanderlaufen kann. `:has()` steht seit P3 an sechs Stellen im
+ * Stylesheet; die Browsergeneration ist damit ohnehin vorausgesetzt.
+ * ======================================================================== */
+.geo-gross{height:var(--karte-gross)}
+
+/* DER KNOPF TRAEGT BEIDE ZEICHEN, das Stylesheet zeigt je Breite eins
+ * (E-MR-19). Ein Knopf, der sein Symbol per JavaScript tauscht, haette die
+ * Schwelle 1600 ein zweites Mal im Code — sie steht in dieser Anwendung
+ * ausschliesslich hier. */
+.karte-groesse .symbol-breit{display:none}
+
+@media (min-width:1600px){
+  /* Vorrang vor `.geo-spalte .geo{height:100%}` aus Abschnitt 20 — gleiche
+   * Spezifitaet, spaeter in der Datei. */
+  .geo-spalte .geo-gross{height:var(--karte-gross)}
+  .tag-raster:has(.geo-gross){display:block}
+  .karte-groesse .symbol-hoch{display:none}
+  .karte-groesse .symbol-breit{display:inline-block}
+}

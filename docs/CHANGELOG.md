@@ -14,6 +14,70 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.5.0] — 2026-09-14
+
+Mockup-Runde 9c, drittes Arbeitspaket: **Backlog Nr. 45** — die dritte
+Kartengröße.
+
+### Web — die Karte der Tagesübersicht bekommt einen Zwischenzustand
+
+**Zwischen 300 px und Vollbild lag nichts.** Wer mehr von der Spur sehen
+wollte, musste die Seite verlassen und wiederkommen — und verlor dabei den
+Blick auf die Einsatzliste. Jetzt liegt dazwischen ein Knopf, unter dem für
+das Vollbild.
+
+**Ein Zustand, zwei Wirkungen je Breite** (F-MR-9, geändert gegenüber der
+ersten Mockup-Fassung). Bis 1599 px wird die Karte **höher** —
+`min(60vh, 520px)`, beide Hälften mit Grund: 60vh lässt auf jedem Gerät ein
+gutes Drittel des Glases für die Liste darunter, 520 px deckelt das auf einem
+hohen Schreibtischbildschirm, wo 60vh sonst 800 px wären. Ab 1600 px steht die
+Karte ohnehin in einer eigenen Spalte und ist dort schon hoch; **dort wird sie
+stattdessen breit**: Das Raster fällt auf eine Spalte, und sie rückt zwischen
+Diensttag-Daten und Einsatzliste — dorthin, wo sie unter 1600 px immer steht.
+
+Beides trägt dieselbe Klasse `.geo-gross`; **welche** Wirkung sie hat,
+entscheidet das Stylesheet. Die Schwelle 1600 steht damit weiterhin an genau
+einer Stelle der Anwendung. Aus demselben Grund trägt der Knopf **beide
+Zeichen** und das Stylesheet blendet je Breite eines aus — senkrechte Pfeile
+für höher, Querpfeile für breiter (E-MR-19): Ein Knopf, der sein Symbol per
+JavaScript tauscht, hätte die Schwelle ein zweites Mal im Code.
+
+**Nur auf der Tagesübersicht.** `attachGroessenControl()` wird ausdrücklich
+einzeln gerufen; Einsatzansicht, Spurenseite und Zeitraumübersicht haben keine
+Liste unter der Karte, die vom Höherwerden etwas hätte.
+
+**Die Wahl bleibt erhalten** (F-MR-8) — je Browser und Gerät, nicht je Konto:
+Wer am Schreibtisch groß arbeitet, will das am Handy nicht zwangsläufig. Das
+ist der **erste `localStorage` dieser Anwendung**. Er kann werfen (privates
+Fenster, geblockte Seitendaten) und leer zurückkommen; beides ist abgefangen,
+und die Karte steht dann eben klein da.
+
+**Ohne `invalidateSize()` bliebe die Kacheldarstellung auf der alten Höhe**
+stehen, und zwar bis zur nächsten Größenänderung des Fensters — Leaflet merkt
+von einer Klasse nichts. Nachgemessen: vorher 10 Kacheln, nach dem Umschalten
+**15**, davon **5 am Unterrand**, **0 px unbedeckt**, schon nach 200 ms.
+
+Neu: Token `--karte-gross`, Klasse `.geo-gross`, die Symbole
+`karte-gross.svg` und `karte-breit.svg` (54. und 55. des Vorrats, beide
+Tabler). **Kein neuer Farbwert.** Token-Tabelle in `docs/Design.md` 100 → 101,
+Symboltabelle 53 → 55.
+
+Gemessen **in drei Engines** (Chromium 141, Firefox 142, WebKit 26), fünf
+Fensterbreiten je Engine — und in allen fünfzehn Messungen dasselbe Bild:
+
+| Breite | klein | groß | Raster groß | Symbol | Liste unter der Karte |
+|---|---|---|---|---|---|
+| 400 px | 160 px | **520 px** | Fluss | senkrecht | ja |
+| 720 px | 220 px | **520 px** | Fluss | senkrecht | ja |
+| 1280 px | 300 px | **520 px** | Fluss | senkrecht | ja |
+| 1600 px | 843–864 px (Spalte) | **520 px, volle Breite** | Fluss statt Raster | quer | ja |
+| 1920 px | 820–840 px (Spalte) | **520 px, volle Breite** | Fluss statt Raster | quer | ja |
+
+Dazu: `aria-pressed` folgt dem Zustand, **0** waagerechter Überlauf in allen
+fünfzehn, **keine** Konsolenfehler, und nach dem Neuladen steht die Karte
+wieder groß (520 px). Voller Bilderlauf: **360 Bilder, 0 Überlauf, 0
+Konsolenfehler, 0 Knöpfe falscher Höhe**.
+
 ## [Web 19.4.2] — 2026-09-14
 
 Mockup-Runde 9c, zweites Arbeitspaket: **Backlog Nr. 42** — die letzten

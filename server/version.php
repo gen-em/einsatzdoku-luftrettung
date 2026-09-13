@@ -4191,5 +4191,43 @@ declare(strict_types=1);
  * kein neues Symbol — `schliessen` und `warnung` lagen im Vorrat.
  *
  * Uhr und Android unberuehrt, keine Migration.
+ *
+ * 19.5.0 — MOCKUP-RUNDE 9c, AP3: DIE DRITTE KARTENGROESSE (Nr. 45).
+ *
+ * Die Karte der Tagesuebersicht hatte zwei Zustaende: ihre Hoehe nach
+ * Fensterbreite (160 / 220 / 300 px) und Vollbild. Dazwischen lag nichts —
+ * wer mehr von der Spur sehen wollte, musste die Seite verlassen und
+ * wiederkommen. Jetzt liegt dazwischen ein Knopf.
+ *
+ * EIN ZUSTAND, ZWEI WIRKUNGEN JE BREITE (E-MR-16, F-MR-9 geaendert). Bis
+ * 1599 px wird die Karte HOEHER — `--karte-gross`, also min(60vh, 520px).
+ * Ab 1600 px steht sie ohnehin in einer eigenen Spalte und ist dort schon
+ * hoch; dort wird sie stattdessen BREIT: Das Raster faellt auf eine Spalte,
+ * und die Karte rueckt zwischen Diensttag-Daten und Einsatzliste — dorthin,
+ * wo sie unter 1600 px immer steht. Beides traegt dieselbe Klasse
+ * `.geo-gross`; WELCHE Wirkung sie hat, entscheidet das Stylesheet. Die
+ * Schwelle 1600 steht damit weiterhin an genau einer Stelle.
+ *
+ * DER KNOPF TRAEGT BEIDE ZEICHEN (E-MR-19) — senkrechte Pfeile bis 1599 px,
+ * Querpfeile darueber; das Stylesheet blendet je Breite eines aus. Ein
+ * Knopf, der sein Symbol per JavaScript tauscht, haette die Schwelle ein
+ * zweites Mal im Code.
+ *
+ * NUR AUF DER TAGESUEBERSICHT. `attachGroessenControl()` wird ausdruecklich
+ * einzeln gerufen; Einsatzansicht, Spurenseite und Zeitraumuebersicht haben
+ * keine Liste unter der Karte, die vom Hoeherwerden etwas haette.
+ *
+ * DER ZUSTAND WIRD GEMERKT (F-MR-8), je Browser und Geraet, nicht je Konto:
+ * Wer am Schreibtisch gross arbeitet, will das am Handy nicht zwangslaeufig.
+ * Das ist der erste `localStorage` dieser Anwendung; er kann werfen und leer
+ * zurueckkommen, und beides ist abgefangen — dann steht die Karte eben klein
+ * da.
+ *
+ * NEU: Token `--karte-gross`, Klasse `.geo-gross`, zwei Symbole
+ * (`karte-gross.svg`, `karte-breit.svg`; 54. und 55. des Vorrats). Kein
+ * neuer Farbwert.
+ *
+ * NEBENSTUFE, KEINE KORREKTUR: Es ist eine neue Funktion an einer Stelle,
+ * an der bisher keine war. Uhr und Android unberuehrt, keine Migration.
  */
-const WEB_VERSION = '19.4.2';
+const WEB_VERSION = '19.5.0';

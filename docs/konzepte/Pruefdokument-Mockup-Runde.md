@@ -4,7 +4,7 @@
 **die Zahlen trägt die Umsetzung ein**. Fortgeschrieben nach jedem
 Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
-> **Stand: AP1 und AP2 gemessen, Nr. 182 behoben. AP3 bis AP5 offen.**
+> **Stand: AP1, AP2 und AP3 gemessen, Nr. 182 behoben. AP4 und AP5 offen.**
 >
 > **Seit dem 14.09.2026 hat der Prüfstand drei Engines** — Chromium 141,
 > Firefox 142, WebKit 26 (Backlog Nr. 183, der Startvorgang beschafft sie).
@@ -19,8 +19,8 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
 > | | |
 > |---|---|
-> | Stufe | **Web 19.4.2** — 19.4.0 die Nebenstufe aus AP1, 19.4.1 die Korrektur zu Nr. 182, 19.4.2 das AP2. Keine Migration. Uhr und Android unberührt |
-> | Punkte | Backlog **Nr. 41, 42 und 182 erledigt**; 45 und 124 offen. **Nr. 183 zur Hälfte** (Engines da, Mittel offen), **Nr. 184 neu** (Kommentar-Abtaster) |
+> | Stufe | **Web 19.5.0** — 19.4.0 Nebenstufe (AP1), 19.4.1 Korrektur (Nr. 182), 19.4.2 AP2, 19.5.0 AP3. Keine Migration. Uhr und Android unberührt |
+> | Punkte | Backlog **Nr. 41, 42, 45 und 182 erledigt**; 124 offen. **Nr. 183 zur Hälfte** (Engines da, Mittel offen), **Nr. 184 neu** (Kommentar-Abtaster) |
 > | Neu entstanden | Token `--symbol-text`, `--karte-gross`; **`--dauer` von .18s auf .24s** (alle Bewegungen); Klassen `.symbol-text`, `.geo-gross`; Symbole `karte-gross.svg`, `karte-breit.svg` (54., 55.); Regel `.imp-daygroup`; Knopf offen = `--orange-hell`/`--orange-tief` (D4); Ausnahme `'✕'` in `ausnahmen.md`; Streichliste `imp-warn` |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19, MariaDB 10.11.14, Node 22.22.2, Playwright 1.56.1, **Chromium 141.0.7390.37 · Firefox 142.0.1 · WebKit 26.0**. Lokale Installation über `lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte) |
 > | Ergebnis | AP1 **grün, Vorbehalt aufgelöst** (Nr. 182 behoben). Rest offen |
@@ -78,7 +78,7 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 | `tools/vollstaendigkeit/pruefen.py` — `[offen]` | 2 | **0** | **0** ✓ (AP1) |
 | — Unicode-Zeichen als Symbol | **4** echte, nicht 3 (nachgemessen: `einsatz_form.php` zweimal — Rückfall und Escape-Folge —, `ortsfeld.js`, `patient.js`) | **0** echte | **0** ✓ — alle vier namentlich weg. Gesamtzahl **255 → 252**; die dreizehn verbliebenen nicht-typografischen stehen in Kommentaren oder im Satz. **Keine Ausnahme nötig** (AP2): Der Rückfall in `wegKnopf()` war toter Code und ist entfallen |
 | — Hexfarben außerhalb `:root` | 0 | **0** (Hover des Chips als Token) | **0** ✓ (nach AP1) |
-| — Symboldateien | 53 | **55** (E-MR-19: zwei Symbole), alle mit Anker `id="i"` und Verweis | 53 nach AP1 (AP3 legt sie an) |
+| — Symboldateien | 53 | **55** (E-MR-19: zwei Symbole), alle mit Anker `id="i"` und Verweis | **55** ✓ (AP3), beide mit Anker und Verweis |
 | `tools/screenshots/aufnehmen.mjs` — Importvorschau, Einsatzformular, Suche, Tagesübersicht (klein/groß), Seiten mit `data-blatt` | — | 8 Breiten je Seite, **0** waagerechter Überlauf, Knopfhöhen ≥ 44 px | **AP1:** `--nur 35-` → **8 Einzelbilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe** (Zeiger, 44/36 px). **Achtung, was das misst:** die Importseite im Grundzustand, nicht die Vorschau — siehe Abschnitt 0 |
 | `tools/screenshots/kontrast.py` | 0 verfehlt | **0** verfehlt (Orange-Symbol auf `--orange-hell`, Blau-hell-Knopf auf Dunkelblau: Werte nennen) | **22 Paare gerechnet, 0 verfehlt** ✓ (nach AP1; AP1 führt keine neue Farbe ein) |
 | `tools/stilvergleich/` (Browser) | — | Abweichungen nur auf den berührten Seiten, alle erklärt | **AP1:** Kaskade **0 entfallen, 14 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen** — genau die 14 Deklarationen des Pakets. Berechnete Stile **45 812 Elementmessungen, 273 Abweichungen**, sämtlich an `.imp-kopfzeile`, `.imp-tag`, `.imp-rest`, der `.plakette` darin und den Hüllen (Gesamthöhe der Probe 24 302,7 → 24 299,6 px, 3,1 px kürzer durch den Flex-Fluss) |
@@ -147,7 +147,23 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
     Prüfmittel auf drei Engines bringt. ⚠
 - Koordinaten-Chip: Ziel **28 × 28 px** (DevTools messen; F-MR-6b, E-MR-21), Hover sichtbar, Entfernen wirkt. **Beide** Chips — Koordinaten und beteiligte Rettungsmittel. [ ]
 - Suche mit einem unlesbaren Eintrag: Symbol sitzt auf der Grundlinie in 19/15/13 px. [ ]
-- Tagesübersicht: groß ↔ klein, Kacheln füllen nach `invalidateSize`; **ab 1600 px bleibt der Knopf und macht die Karte breit** (E-MR-16), mit Querpfeilen statt senkrechten (E-MR-19). [ ]
+- **AP3 — Tagesübersicht, in drei Engines** (Chromium 141, Firefox 142,
+  WebKit 26), je fünf Fensterbreiten, fünfzehn Messungen mit demselben Bild:
+  - klein 160 / 220 / 300 px unter 1600 px, 820–864 px in der Spalte darüber. ✓
+  - groß **520 px** in **jeder** Breite (`min(60vh, 520px)` bei 900 px Glas). ✓
+  - ab 1600 px wechselt „groß" vom Raster in den Fluss (`display: grid → block`)
+    und nimmt die volle Inhaltsbreite (1308 / 1388 px). ✓
+  - Symbol wechselt von senkrecht auf quer genau an der Schwelle. ✓
+  - `aria-pressed` folgt dem Zustand; die Liste steht in allen fünfzehn
+    Messungen **unter** der Karte. ✓
+  - **0** waagerechter Überlauf, **keine** Konsolenfehler. ✓
+  - Nach dem Neuladen steht die Karte wieder groß (520 px) — `localStorage`
+    trägt. ✓
+  - Kacheln nach dem Umschalten: 10 → **15**, davon 5 am Unterrand, **0 px
+    unbedeckt**, schon nach 200 ms. `invalidateSize()` greift. ✓
+  - **Berichtigt:** Meine erste Messung meldete „410 px Kachellücke" — das war
+    ein Messfehler, `.leaflet-tile-pane` hat kein aussagekräftiges Rechteck.
+    An den Kacheln selbst gemessen ist nichts unbedeckt.
 - Aktionsblatt auf `index.php` und in der Geräteliste (Zeilenaktion): Knopf markiert, Blatt fährt auf, `prefers-reduced-motion` ohne Bewegung. [ ]
 
 ## 4. Prüfliste — Auftraggeber

@@ -343,7 +343,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-100 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+101 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
@@ -484,6 +484,7 @@ auseinanderlaufen kann.
 | `--karte-mobil` | `160px` | 1 |  |
 | `--karte-tablet` | `220px` | 1 |  |
 | `--karte-desktop` | `300px` | 4 |  |
+| `--karte-gross` | `min(60vh, 520px)` | 2 |  |
 
 **Spurfarben (P3/O3, E-P3-40)**
 
@@ -804,6 +805,8 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 30 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
+| `karte-breit.svg` | Tabler Icons „arrows-horizontal" (MIT) | 1 |
+| `karte-gross.svg` | Tabler Icons „arrows-vertical" (MIT) | 1 |
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
@@ -821,7 +824,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 26 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
-| `schliessen.svg` | Tabler Icons „x" (MIT) | 9 |
+| `schliessen.svg` | Tabler Icons „x" (MIT) | 11 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 14 |
 | `server.svg` | Tabler Icons „server" (MIT) | 6 |
@@ -837,14 +840,14 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 9 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
-| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 27 |
+| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 29 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 28 |
 
-53 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
+55 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
 
 ## 9. Bausteine

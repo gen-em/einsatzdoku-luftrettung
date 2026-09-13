@@ -683,6 +683,19 @@ Pro Tag:
   der Einsatzort auf einer Wiese, im Wald oder auf einem Parkplatz lag. Es ist
   bewusst nicht der Standard, weil es deutlich größere Kacheln lädt. Beide
   Controls stehen auf allen drei Kartenseiten der Anwendung zur Verfügung.
+
+  Unter dem Vollbild-Knopf steht seit Web 19.5.0 ein **dritter Knopf** — nur
+  hier, auf der Tagesübersicht. Er **vergrößert die Karte**, ohne die Seite zu
+  verlassen: Sie wird so hoch, dass ein gutes Drittel des Bildschirms für die
+  Einsatzliste darunter bleibt. Auf sehr breiten Bildschirmen (ab 1600 px),
+  wo sie ohnehin hoch neben Daten und Tabelle steht, macht derselbe Knopf sie
+  stattdessen **breit**: Sie rückt dann über die ganze Inhaltsbreite zwischen
+  Diensttag-Daten und Liste. Das Zeichen im Knopf sagt, was gerade passiert —
+  senkrechte Pfeile für höher, Querpfeile für breiter. Ein zweiter Klick
+  stellt den Ausgangszustand wieder her, und **die Wahl bleibt erhalten**:
+  Wer die Karte groß lässt, findet sie beim nächsten Aufruf groß vor. Das
+  merkt sich der Browser, nicht das Konto — am Handy kann sie also klein
+  bleiben, während sie am Schreibtisch groß steht.
 - **Einsätze**: Die Kopfzeile der Karte nennt Anzahl und Kilometersumme des
   Tages und trägt rechts **„+ Nachtragen"** — das öffnet das
   Eingabeformular für diesen Tag.
