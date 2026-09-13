@@ -1,0 +1,164 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup M-MR-02 — Zwei Zeichen werden Symbole (Nr. 42)</title>
+<style>
+@font-face{font-family:'Open Sans';font-weight:400;src:url(../../../../server/assets/fonts/open-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Open Sans';font-weight:600;src:url(../../../../server/assets/fonts/open-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:500;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+/* ---- Token aus server/assets/style.css (Auszug, unverändert, 13.09.2026) ---- */
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;--asphalt:#1A0500;--dunkelblau:#1A2E4D;
+  --gedaempft:#6E6459;--linie:#E3DAC6;--linie-stark:#D4C7AD;
+  --orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-hell:#D9ECFD;--rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;--schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;--groesse-6:24px;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --knopf:44px;--blatt-zeile:50px;--symbol-klein:16px;--symbol:20px;--symbol-gross:24px;
+  --strich:1px;--strich-stark:2px;--dauer:.18s;
+  --schatten:0 2px 8px rgba(26,5,0,.10);--schatten-hoch:0 8px 28px rgba(26,5,0,.22);
+  --karte-mobil:160px;--karte-tablet:220px;--karte-desktop:300px;
+  /* ---- VORSCHLAG (neu, Freigabe): ---- */
+  --symbol-text:1em;--karte-gross:520px;
+}
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) ---- */
+*{box-sizing:border-box}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-weight:600;font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.reihe{padding:14px 24px 6px}
+.reihe h2{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);margin:0 0 6px;color:var(--dunkelblau)}
+.reihe p.erk{margin:0 0 10px;font-size:var(--groesse-2);color:var(--gedaempft);max-width:900px}
+.nebeneinander{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.rahmen{background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);overflow:hidden;box-shadow:var(--schatten)}
+.rahmen-titel{font-size:var(--groesse-1);font-weight:600;color:var(--gedaempft);padding:6px 12px;background:var(--rauch);border-bottom:var(--strich) solid var(--linie);letter-spacing:.02em}
+.mass{display:inline-block;font-size:11px;color:var(--rot-tief);background:var(--rosa);border-radius:4px;padding:0 5px;margin-left:6px;font-family:var(--schrift-text);font-weight:400;vertical-align:middle}
+.notiz{background:var(--schnee);border-left:var(--strich-stark) solid var(--orange);padding:10px 14px;margin:8px 0 0;font-size:var(--groesse-2);max-width:900px}
+.empf{border-left-color:var(--blau)}
+/* ---- Bausteine der Anwendung (Auszug, nachgebaut) ---- */
+.symbol{width:var(--symbol);height:var(--symbol);flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
+.symbol-klein{width:var(--symbol-klein);height:var(--symbol-klein)}
+.symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
+.knopf{display:inline-flex;align-items:center;justify-content:center;gap:var(--abstand-2);height:var(--knopf);padding:0 var(--abstand-4);border-radius:var(--radius);border:var(--strich) solid transparent;font:inherit;font-weight:600;cursor:pointer;background:var(--dunkelblau);color:#fff}
+.knopf-neutral{background:var(--schnee);color:var(--dunkelblau);border-color:var(--linie-stark)}
+.knopf-symbol{width:var(--knopf);height:var(--knopf);padding:0;background:none;color:inherit;border-color:transparent}
+.plakette{display:inline-flex;align-items:center;gap:var(--abstand-1);padding:var(--abstand-1) var(--abstand-2);border-radius:var(--radius-klein);font-size:var(--groesse-1);font-weight:600;line-height:1.2}
+.plakette-orange{background:var(--orange-hell);color:var(--asphalt)}
+.plakette-orange .symbol{color:var(--orange-tief)}
+.meldung{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);padding:var(--abstand-3) var(--abstand-4);border-radius:var(--radius);margin-bottom:var(--abstand-3)}
+.meldung-warn{background:var(--orange-hell);color:var(--asphalt)}
+.meldung-warn .symbol{color:var(--orange-tief)}
+.karte{background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);margin-bottom:var(--abstand-4)}
+.karte-kopf{display:flex;align-items:center;gap:var(--abstand-2);padding:var(--abstand-3) var(--abstand-4);border-bottom:var(--strich) solid var(--linie)}
+.karte-titel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);margin:0;color:var(--dunkelblau)}
+.karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2)}
+.karte-inhalt{padding:var(--abstand-3) var(--abstand-4)}
+.tabelle{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:var(--groesse-2)}
+.tabelle th{text-align:center;font-weight:600;color:var(--dunkelblau);padding:var(--abstand-2);border-bottom:var(--strich-stark) solid var(--linie);white-space:nowrap}
+.tabelle td{padding:var(--abstand-2);border-bottom:var(--strich) solid var(--linie);vertical-align:middle}
+.rmchips{display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center}
+.rmchip{display:inline-flex;align-items:center;gap:var(--abstand-1);background:var(--blau-hell);color:var(--dunkelblau);border-radius:var(--radius-rund);padding:var(--abstand-1) var(--abstand-2);font-size:var(--groesse-2);font-weight:600}
+.rmx{border:0;background:none;color:inherit;cursor:pointer;min-height:0;padding:0 var(--abstand-1);font-size:var(--groesse-3);line-height:1;font-family:inherit}
+.kopf{background:var(--dunkelblau);color:#fff;height:50px;display:flex;align-items:center;padding:0 var(--abstand-3);gap:var(--abstand-2);font-family:var(--schrift-kopf);font-weight:600}
+.geo{height:var(--karte-mobil);border-radius:var(--radius);overflow:hidden;background:var(--rauch);position:relative;margin-bottom:var(--abstand-4)}
+.geo svg.attrappe{position:absolute;inset:0;width:100%;height:100%}
+.leaflet-bar{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:2px;background:#fff;border-radius:4px;box-shadow:0 1px 5px rgba(0,0,0,.35);overflow:hidden;z-index:2}
+.leaflet-bar a{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--dunkelblau);border-bottom:1px solid #ccc;font-weight:700;font-size:18px;text-decoration:none}
+.leaflet-bar a:last-child{border-bottom:0}
+.leaflet-bar a.aktiv{background:var(--blau-hell)}
+.leaflet-bar .symbol{width:18px;height:18px}
+select.imp-daymode{font:inherit;font-size:var(--groesse-2);height:32px;border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein);background:var(--schnee);color:var(--asphalt);padding:0 6px}
+/* QtWebKit (wkhtmltoimage) kennt kein flex-gap — Ersatzabstände nur fürs Bild */
+.plakette .symbol{margin-right:4px}.karte-zahl{margin-left:8px}.blatt-zeile .symbol{margin-right:12px}.rmchip .rmx{margin-left:4px}.imp-warn .symbol{margin-right:4px}.zeile > *{margin-right:8px}.knopf .symbol + *{margin-left:8px}.leaflet-bar a{margin-bottom:2px}
+@media (max-width:600px){.reihe{padding:12px 12px 4px}.mock-kopf{padding:16px 12px 2px}.nebeneinander{gap:16px}.rahmen{width:100%!important}}
+</style></head><body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+ <symbol id="s-schliessen" viewBox="0 0 24 24"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></symbol>
+ <symbol id="s-warnung" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0"/><path d="M12 16h.01"/></symbol>
+ <symbol id="s-punkte" viewBox="0 0 24 24"><path d="M4 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M18 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/></symbol>
+ <symbol id="s-vollbild" viewBox="0 0 24 24"><path d="M4 8v-2a2 2 0 0 1 2 -2h2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M16 20h2a2 2 0 0 0 2 -2v-2"/></symbol>
+ <symbol id="s-karte-gross" viewBox="0 0 24 24"><path d="M8 7l4 -4l4 4"/><path d="M8 17l4 4l4 -4"/><path d="M12 3v18"/></symbol>
+ <symbol id="s-karte" viewBox="0 0 24 24"><path d="M12 4l-8 4l8 4l8 -4l-8 -4"/><path d="M4 12l8 4l8 -4"/><path d="M4 16l8 4l8 -4"/></symbol>
+ <symbol id="s-winkel" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></symbol>
+ <symbol id="s-stift" viewBox="0 0 24 24"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></symbol>
+ <symbol id="s-korb" viewBox="0 0 24 24"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></symbol>
+ <symbol id="s-plus" viewBox="0 0 24 24"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></symbol>
+</svg>
+
+<style>
+.rahmen{padding:14px 16px;width:auto}
+.neu .rmx{display:inline-flex;align-items:center;justify-content:center;width:var(--symbol-gross);height:var(--symbol-gross);margin:-4px -6px -4px 0;border-radius:var(--radius-rund);padding:0}
+.neu .rmx:hover{background:rgba(66,128,229,.18)}
+.neu .rmx .symbol{width:var(--symbol-klein);height:var(--symbol-klein)}
+.symbol-text{width:var(--symbol-text);height:var(--symbol-text);vertical-align:-.15em;display:inline-block;stroke-width:2.2}
+.satz-gross{font-size:var(--groesse-5)}
+.satz-klein{font-size:var(--groesse-2)}
+.zelle{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:var(--strich) solid var(--linie);border-radius:var(--radius-klein);background:var(--schnee);margin-right:12px}
+.gedaempft{color:var(--gedaempft)}
+.oran{color:var(--orange-tief)}
+</style>
+<div class="mock-kopf"><h1>M-MR-02 — Zwei Zeichen werden Symbole</h1>
+<p>Backlog Nr. 42 · Entscheidung 8 vom 12.09.2026: <code>×</code> am Koordinaten-Chip und <code>⚠</code> im Fließtext werden SVG; der <code>✕</code>-Rückfall in <code>wegKnopf()</code> bleibt als Ausnahme.</p></div>
+
+
+<style>
+/* C: Ziel 28 px rund, das Symbol sitzt in seiner MITTE; der Kreis endet genau am Chiprand */
+/* Fassung 4: Text → Symbol 6 px, Symbol → Chiprand 6 px (symmetrisch); das 28-px-Ziel bleibt um das Symbol zentriert */
+.c .rmchip{padding-right:6px}
+.c .rmx{position:relative;display:inline-block;vertical-align:middle;width:28px;height:28px;margin:-5px -8px -5px 0;border-radius:var(--radius-rund);padding:0}
+.c .rmx .symbol{position:absolute;left:8px;top:8px;width:12px;height:12px;stroke-width:2.2}
+.c .rmchip .rmx{margin-left:-2px}
+.lupe{zoom:2.5;-webkit-transform-origin:0 0;display:inline-block;padding:6px 10px;background:var(--rauch);border-radius:6px}
+.c .rmx.zeig{outline:1px dashed var(--rot);outline-offset:-1px}
+.cs .rmx{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin:-5px -8px -5px 0;border-radius:var(--radius-rund);padding:0;font-size:var(--groesse-3);line-height:1}
+.cs .rmchip .rmx{margin-left:8px}
+.cs .rmx.zeig{outline:1px dashed var(--rot);outline-offset:-1px}
+.gross-alt .rmx{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin:-4px -6px -4px 0;border-radius:var(--radius-rund);padding:0}
+.gross-alt .rmx .symbol{width:16px;height:16px}
+</style>
+<div class="reihe"><h2>1 · Der Entfernen-Knopf im Chip — Koordinaten <em>und</em> beteiligte Rettungsmittel</h2>
+<p class="erk">Rückmeldung vom 13.09.2026: Das 16-px-Symbol war zu groß und saß zu dicht am Text; das kleine <code>×</code> ist gut, nur das Ziel ist zu klein. <strong>Am Code geprüft:</strong> Beide Chips teilen die Klassen <code>.rmchip</code>/<code>.rmx</code> — die beteiligten Rettungsmittel (<code>einsatz_form.php</code>) setzen dasselbe Zeichen, nur als <code>'\u00d7'</code> geschrieben, was die Unicode-Prüfung nicht sieht. Eine Regel für beide.</p>
+<div class="nebeneinander">
+<div class="rahmen ist"><div class="rahmen-titel" style="margin:-14px -16px 12px">Ist — beide Chips heute</div>
+ <div class="rmchips" style="margin-bottom:10px"><span class="gedaempft" style="font-size:13px;margin-right:6px">Einsatzort</span><span class="rmchip">47.72611, 10.31862<button class="rmx" type="button">×</button></span></div>
+ <div class="rmchips"><span class="gedaempft" style="font-size:13px;margin-right:6px">Rettungsmittel</span><span class="rmchip">Christoph 17<button class="rmx" type="button">×</button></span><span class="rmchip">NEF Kempten<button class="rmx" type="button">×</button></span></div>
+ <div class="mass" style="margin:10px 0 0">Zeichen 15 px · Ziel ≈ 11 × 15 px · Abstand 4 px</div></div>
+<div class="rahmen gross-alt"><div class="rahmen-titel" style="margin:-14px -16px 12px">Verworfen (erster Vorschlag) — Symbol 16 px</div>
+ <div class="rmchips"><span class="rmchip">47.72611, 10.31862<button class="rmx" type="button"><svg class="symbol" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-schliessen"/></svg></button></span><span class="rmchip">Christoph 17<button class="rmx" type="button"><svg class="symbol" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-schliessen"/></svg></button></span></div>
+ <div class="mass" style="margin:10px 0 0">zu groß, zu dicht — Rückmeldung 13.09.2026</div></div>
+</div>
+<div class="nebeneinander" style="margin-top:20px">
+<div class="rahmen c"><div class="rahmen-titel" style="margin:-14px -16px 12px">Vorschlag C, Fassung 4 — Symbol 12 px in der Mitte des 28-px-Ziels, <em>6 px zum Text, 6 px zum Rand</em> <span class="mass">freigegeben, Abstand nachgebessert</span></div>
+ <div class="rmchips" style="margin-bottom:10px"><span class="gedaempft" style="font-size:13px;margin-right:6px">Einsatzort</span><span class="rmchip">47.72611, 10.31862<button class="rmx" type="button"><svg class="symbol" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-schliessen"/></svg></button></span></div>
+ <div class="rmchips" style="margin-bottom:10px"><span class="gedaempft" style="font-size:13px;margin-right:6px">Rettungsmittel</span><span class="rmchip">Christoph 17<button class="rmx" type="button"><svg class="symbol" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-schliessen"/></svg></button></span><span class="rmchip">NEF Kempten<button class="rmx" type="button"><svg class="symbol" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-schliessen"/></svg></button></span></div>
+ <div class="rmchips"><span class="gedaempft" style="font-size:13px;margin-right:6px">Ziel sichtbar gemacht</span><span class="rmchip">Christoph 17<button class="rmx zeig" type="button"><svg class="symbol" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-schliessen"/></svg></button></span></div>
+ <div style="margin:14px 0 6px"><span class="lupe"><span class="rmchip">Christoph 17<button class="rmx zeig" type="button"><svg class="symbol" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-schliessen"/></svg></button></span></span></div>
+ <div class="mass" style="margin:10px 0 0">Lupe 2,5× · Symbol 12 px in der Mitte des Kreises · Text→Symbol 6 px = Symbol→Rand 6 px · Kreis 28 px, ragt 5 px über die Chipzeile und 8 px über den Chiprand (unsichtbar) · Chip 26 px</div></div>
+<div class="rahmen cs"><div class="rahmen-titel" style="margin:-14px -16px 12px">Vorschlag C′ — das Textzeichen behalten, nur das Ziel vergrößern</div>
+ <div class="rmchips" style="margin-bottom:10px"><span class="rmchip">47.72611, 10.31862<button class="rmx" type="button">×</button></span><span class="rmchip">Christoph 17<button class="rmx" type="button">×</button></span></div>
+ <div class="rmchips"><span class="gedaempft" style="font-size:13px;margin-right:6px">Ziel sichtbar gemacht</span><span class="rmchip">Christoph 17<button class="rmx zeig" type="button">×</button></span></div>
+ <div class="mass" style="margin:10px 0 0">Zeichen 15 px · Abstand 8 px · Ziel 28 × 28 px — sieht aus wie C</div></div>
+</div>
+<div class="notiz empf"><strong>Warum C und nicht C′:</strong> Beide sehen gleich aus. C′ behält aber zwei Unicode-Zeichen im Markup — eins davon als <code>\u00d7</code>, das die Prüfung P-P3-03 heute nicht sieht (Nebenfund, wird als Backlog-Punkt gemeldet). Mit C ist der Chip überall gleich: <code>schliessen</code> in 12 px, so groß wie das Zeichen vorher, und die Prüfung kann die Zusage „keine Symbole als Zeichen" einlösen, statt sie für Chips auszunehmen. Das Ziel von 28 px ist größer als das der Filter-Plakette (20 px, <code>.plakette-weg</code>) — mit Absicht: Der Chip steht in einem Formular, die Plakette in einer Leiste, und ein Fehlgriff kostet hier einen Wert.<br><strong>Neue Freigabefrage:</strong> F-MR-6a = C (freigegeben 13.09.2026, Symbol zentriert) · F-MR-6b Ziel 28 px — bleibt offen, Vorschlag 28</div></div>
+<div class="reihe"><h2>2 · Das Warnzeichen im Satz (<code>patient.js</code>, <code>ZEICHEN_UNLESBAR</code>)</h2>
+<p class="erk">Das Zeichen steht <em>im Satz</em> der Meldung und als Marke in der Zelle. Ein SVG im Fließtext braucht zwei Dinge: eine Größe relativ zur Schrift und einen Sitz auf der Grundlinie. Vorschlag: neue Klasse <code>.symbol-text</code> mit <code>--symbol-text: 1em</code> und <code>vertical-align: -.15em</code>, Farbe <code>--orange-tief</code>. Sie wächst mit der Schrift — unten dieselbe Meldung in 19, 15 und 13 px.</p>
+<div class="nebeneinander">
+<div class="rahmen ist" style="flex:1 1 380px"><div class="rahmen-titel" style="margin:-14px -16px 12px">Ist — Textzeichen ⚠</div>
+ <div class="meldung meldung-warn satz-gross" style="display:block">3 Einträge lassen sich nicht entschlüsseln und sind mit ⚠ gekennzeichnet.</div>
+ <div class="meldung meldung-warn" style="display:block">3 Einträge lassen sich nicht entschlüsseln und sind mit ⚠ gekennzeichnet.</div>
+ <div class="meldung meldung-warn satz-klein" style="display:block;margin-bottom:0">3 Einträge lassen sich nicht entschlüsseln und sind mit ⚠ gekennzeichnet.</div></div>
+<div class="rahmen neu" style="flex:1 1 380px"><div class="rahmen-titel" style="margin:-14px -16px 12px">Vorschlag — <code>warnung</code> als Textsymbol</div>
+ <div class="meldung meldung-warn satz-gross" style="display:block">3 Einträge lassen sich nicht entschlüsseln und sind mit <span class="oran"><svg class="symbol symbol-text" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-warnung"/></svg></span> gekennzeichnet.</div>
+ <div class="meldung meldung-warn" style="display:block">3 Einträge lassen sich nicht entschlüsseln und sind mit <span class="oran"><svg class="symbol symbol-text" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-warnung"/></svg></span> gekennzeichnet.</div>
+ <div class="meldung meldung-warn satz-klein" style="display:block;margin-bottom:0">3 Einträge lassen sich nicht entschlüsseln und sind mit <span class="oran"><svg class="symbol symbol-text" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-warnung"/></svg></span> gekennzeichnet.</div></div>
+</div>
+<h2 style="margin-top:16px">Dieselbe Marke in der Tabellenzelle</h2>
+<div class="nebeneinander">
+<div class="rahmen ist"><div class="rahmen-titel" style="margin:-14px -16px 12px">Ist</div><span class="zelle"><span class="oran">⚠</span> <span class="gedaempft">—</span></span><span class="zelle">Sturz, Unterschenkel</span></div>
+<div class="rahmen neu"><div class="rahmen-titel" style="margin:-14px -16px 12px">Vorschlag</div><span class="zelle"><span class="oran"><svg class="symbol symbol-klein" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-warnung"/></svg></span> <span class="gedaempft">—</span></span><span class="zelle">Sturz, Unterschenkel</span></div>
+</div>
+<div class="notiz"><strong>Für die Umsetzung, am Code belegt:</strong> <code>patient.js</code> darf <code>edSymbol()</code> nicht voraussetzen — <code>symbol.js</code> ist auf der Suchseite nicht in jedem Fall geladen (Kommentar in <code>zeigeUnlesbar()</code>). Das Markup wird als Zeichenkette gebaut: <code>&lt;svg class="symbol symbol-text"&gt;&lt;use href="…/warnung.svg#i"&gt;&lt;/svg&gt;</code>. In der Zelle genügt <code>symbol-klein</code>; im Satz braucht es <code>symbol-text</code>.<br><strong>Freigabefragen:</strong> F-MR-4 <code>--symbol-text: 1em</code> mit <code>vertical-align:-.15em</code> — so? · F-MR-5 Farbe im Satz <code>--orange-tief</code> (wie das Symbol der Meldung) — ja? · F-MR-6 ist durch F-MR-6a/6b oben ersetzt (13.09.2026)</div></div>
+</body></html>

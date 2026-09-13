@@ -1,0 +1,146 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup M-MR-01 — Importvorschau: Tagesgruppe und Warnhinweis (Nr. 41)</title>
+<style>
+@font-face{font-family:'Open Sans';font-weight:400;src:url(../../../../server/assets/fonts/open-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Open Sans';font-weight:600;src:url(../../../../server/assets/fonts/open-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:500;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:600;src:url(../../../../server/assets/fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2')}
+/* ---- Token aus server/assets/style.css (Auszug, unverändert, 13.09.2026) ---- */
+:root{
+  --schnee:#FFFCFA;--rauch:#F7F5ED;--sand:#D4C7AD;--asphalt:#1A0500;--dunkelblau:#1A2E4D;
+  --gedaempft:#6E6459;--linie:#E3DAC6;--linie-stark:#D4C7AD;
+  --orange:#FF8F1F;--orange-tief:#C25A00;--orange-hell:#FFEBD6;
+  --blau:#4280E5;--blau-hell:#D9ECFD;--rot:#D63338;--rot-tief:#9E2226;--rosa:#FCE2D6;
+  --schrift-kopf:'Bricolage Grotesque',system-ui,sans-serif;--schrift-text:'Open Sans',system-ui,sans-serif;
+  --groesse-1:12px;--groesse-2:13px;--groesse-3:15px;--groesse-4:16px;--groesse-5:19px;--groesse-6:24px;
+  --abstand-1:4px;--abstand-2:8px;--abstand-3:12px;--abstand-4:16px;--abstand-5:24px;
+  --radius-klein:6px;--radius:10px;--radius-gross:12px;--radius-rund:999px;
+  --knopf:44px;--blatt-zeile:50px;--symbol-klein:16px;--symbol:20px;--symbol-gross:24px;
+  --strich:1px;--strich-stark:2px;--dauer:.18s;
+  --schatten:0 2px 8px rgba(26,5,0,.10);--schatten-hoch:0 8px 28px rgba(26,5,0,.22);
+  --karte-mobil:160px;--karte-tablet:220px;--karte-desktop:300px;
+  /* ---- VORSCHLAG (neu, Freigabe): ---- */
+  --symbol-text:1em;--karte-gross:520px;
+}
+/* ---- Mockup-Rahmen (nicht Teil der Anwendung) ---- */
+*{box-sizing:border-box}
+body{margin:0;background:#EDE9DF;font-family:var(--schrift-text);color:var(--asphalt);font-size:var(--groesse-3);line-height:1.5}
+.mock-kopf{padding:20px 24px 4px}
+.mock-kopf h1{font-family:var(--schrift-kopf);font-weight:600;font-size:22px;margin:0 0 4px;color:var(--dunkelblau)}
+.mock-kopf p{margin:0;color:var(--gedaempft);font-size:var(--groesse-2)}
+.reihe{padding:14px 24px 6px}
+.reihe h2{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);margin:0 0 6px;color:var(--dunkelblau)}
+.reihe p.erk{margin:0 0 10px;font-size:var(--groesse-2);color:var(--gedaempft);max-width:900px}
+.nebeneinander{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.rahmen{background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);overflow:hidden;box-shadow:var(--schatten)}
+.rahmen-titel{font-size:var(--groesse-1);font-weight:600;color:var(--gedaempft);padding:6px 12px;background:var(--rauch);border-bottom:var(--strich) solid var(--linie);letter-spacing:.02em}
+.mass{display:inline-block;font-size:11px;color:var(--rot-tief);background:var(--rosa);border-radius:4px;padding:0 5px;margin-left:6px;font-family:var(--schrift-text);font-weight:400;vertical-align:middle}
+.notiz{background:var(--schnee);border-left:var(--strich-stark) solid var(--orange);padding:10px 14px;margin:8px 0 0;font-size:var(--groesse-2);max-width:900px}
+.empf{border-left-color:var(--blau)}
+/* ---- Bausteine der Anwendung (Auszug, nachgebaut) ---- */
+.symbol{width:var(--symbol);height:var(--symbol);flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
+.symbol-klein{width:var(--symbol-klein);height:var(--symbol-klein)}
+.symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
+.knopf{display:inline-flex;align-items:center;justify-content:center;gap:var(--abstand-2);height:var(--knopf);padding:0 var(--abstand-4);border-radius:var(--radius);border:var(--strich) solid transparent;font:inherit;font-weight:600;cursor:pointer;background:var(--dunkelblau);color:#fff}
+.knopf-neutral{background:var(--schnee);color:var(--dunkelblau);border-color:var(--linie-stark)}
+.knopf-symbol{width:var(--knopf);height:var(--knopf);padding:0;background:none;color:inherit;border-color:transparent}
+.plakette{display:inline-flex;align-items:center;gap:var(--abstand-1);padding:var(--abstand-1) var(--abstand-2);border-radius:var(--radius-klein);font-size:var(--groesse-1);font-weight:600;line-height:1.2}
+.plakette-orange{background:var(--orange-hell);color:var(--asphalt)}
+.plakette-orange .symbol{color:var(--orange-tief)}
+.meldung{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);padding:var(--abstand-3) var(--abstand-4);border-radius:var(--radius);margin-bottom:var(--abstand-3)}
+.meldung-warn{background:var(--orange-hell);color:var(--asphalt)}
+.meldung-warn .symbol{color:var(--orange-tief)}
+.karte{background:var(--schnee);border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);margin-bottom:var(--abstand-4)}
+.karte-kopf{display:flex;align-items:center;gap:var(--abstand-2);padding:var(--abstand-3) var(--abstand-4);border-bottom:var(--strich) solid var(--linie)}
+.karte-titel{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);margin:0;color:var(--dunkelblau)}
+.karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2)}
+.karte-inhalt{padding:var(--abstand-3) var(--abstand-4)}
+.tabelle{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:var(--groesse-2)}
+.tabelle th{text-align:center;font-weight:600;color:var(--dunkelblau);padding:var(--abstand-2);border-bottom:var(--strich-stark) solid var(--linie);white-space:nowrap}
+.tabelle td{padding:var(--abstand-2);border-bottom:var(--strich) solid var(--linie);vertical-align:middle}
+.rmchips{display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center}
+.rmchip{display:inline-flex;align-items:center;gap:var(--abstand-1);background:var(--blau-hell);color:var(--dunkelblau);border-radius:var(--radius-rund);padding:var(--abstand-1) var(--abstand-2);font-size:var(--groesse-2);font-weight:600}
+.rmx{border:0;background:none;color:inherit;cursor:pointer;min-height:0;padding:0 var(--abstand-1);font-size:var(--groesse-3);line-height:1;font-family:inherit}
+.kopf{background:var(--dunkelblau);color:#fff;height:50px;display:flex;align-items:center;padding:0 var(--abstand-3);gap:var(--abstand-2);font-family:var(--schrift-kopf);font-weight:600}
+.geo{height:var(--karte-mobil);border-radius:var(--radius);overflow:hidden;background:var(--rauch);position:relative;margin-bottom:var(--abstand-4)}
+.geo svg.attrappe{position:absolute;inset:0;width:100%;height:100%}
+.leaflet-bar{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:2px;background:#fff;border-radius:4px;box-shadow:0 1px 5px rgba(0,0,0,.35);overflow:hidden;z-index:2}
+.leaflet-bar a{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--dunkelblau);border-bottom:1px solid #ccc;font-weight:700;font-size:18px;text-decoration:none}
+.leaflet-bar a:last-child{border-bottom:0}
+.leaflet-bar a.aktiv{background:var(--blau-hell)}
+.leaflet-bar .symbol{width:18px;height:18px}
+select.imp-daymode{font:inherit;font-size:var(--groesse-2);height:32px;border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein);background:var(--schnee);color:var(--asphalt);padding:0 6px}
+/* QtWebKit (wkhtmltoimage) kennt kein flex-gap — Ersatzabstände nur fürs Bild */
+.plakette .symbol{margin-right:4px}.karte-zahl{margin-left:8px}.blatt-zeile .symbol{margin-right:12px}.rmchip .rmx{margin-left:4px}.imp-warn .symbol{margin-right:4px}.zeile > *{margin-right:8px}.knopf .symbol + *{margin-left:8px}.leaflet-bar a{margin-bottom:2px}
+@media (max-width:600px){.reihe{padding:12px 12px 4px}.mock-kopf{padding:16px 12px 2px}.nebeneinander{gap:16px}.rahmen{width:100%!important}}
+</style></head><body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+ <symbol id="s-schliessen" viewBox="0 0 24 24"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></symbol>
+ <symbol id="s-warnung" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0"/><path d="M12 16h.01"/></symbol>
+ <symbol id="s-punkte" viewBox="0 0 24 24"><path d="M4 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M18 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/></symbol>
+ <symbol id="s-vollbild" viewBox="0 0 24 24"><path d="M4 8v-2a2 2 0 0 1 2 -2h2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M16 20h2a2 2 0 0 0 2 -2v-2"/></symbol>
+ <symbol id="s-karte-gross" viewBox="0 0 24 24"><path d="M8 7l4 -4l4 4"/><path d="M8 17l4 4l4 -4"/><path d="M12 3v18"/></symbol>
+ <symbol id="s-karte" viewBox="0 0 24 24"><path d="M12 4l-8 4l8 4l8 -4l-8 -4"/><path d="M4 12l8 4l8 -4"/><path d="M4 16l8 4l8 -4"/></symbol>
+ <symbol id="s-winkel" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></symbol>
+ <symbol id="s-stift" viewBox="0 0 24 24"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></symbol>
+ <symbol id="s-korb" viewBox="0 0 24 24"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></symbol>
+ <symbol id="s-plus" viewBox="0 0 24 24"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></symbol>
+</svg>
+
+<style>
+/* IST — keine Regel: die Klassen tun nichts */
+.ist .imp-daygroup td{padding:var(--abstand-2)}
+/* VORSCHLAG — Regel für imp-daygroup (beide Varianten) */
+.neu .imp-daygroup td{background:var(--rauch);border-top:var(--strich-stark) solid var(--linie);border-bottom:var(--strich) solid var(--linie);padding:var(--abstand-2) var(--abstand-3)}
+.neu .imp-daygroup .tag{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-3);color:var(--dunkelblau);margin-right:var(--abstand-2)}
+.neu .imp-daygroup .rest{color:var(--gedaempft);font-size:var(--groesse-2)}
+.neu .imp-daygroup .zeile{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2)}
+/* Variante B — eigene Regel für imp-warn */
+.b .imp-warn{color:var(--orange-tief);font-weight:600;display:inline-flex;align-items:center;gap:var(--abstand-1)}
+.b .imp-warn .symbol{width:var(--symbol-klein);height:var(--symbol-klein)}
+.rahmen{width:100%;max-width:1180px}
+</style>
+<div class="mock-kopf"><h1>M-MR-01 — Importvorschau: Kopfzeile der Tagesgruppe und Warnhinweis</h1>
+<p>Backlog Nr. 41 · Entscheidung 7 vom 12.09.2026: <code>imp-warn</code> und <code>imp-daygroup</code> bekommen eine Regel. Ist gegen zwei Varianten, gleiche Daten.</p></div>
+
+<div class="reihe"><h2>Ist (Web 19.3.0)</h2>
+<p class="erk">Die Tagesgruppe ist eine Datenzeile mit <code>&lt;strong&gt;</code>, sonst nichts. Die Warnung „abweichende Crew" steht als Fließtext zwischen Punkten — sie sieht aus wie der Rest.</p>
+<div class="rahmen ist"><div class="rahmen-titel">Vorschau · Ist</div><table class="tabelle">
+<thead><tr><th></th><th>Beginn</th><th>Ende</th><th>Einsatzort</th><th>Diagnose</th><th>Sek.</th><th></th></tr></thead>
+<tbody>
+<tr class="imp-daygroup"><td colspan="7"><strong>2026-09-11</strong> · P1 Dr. Beispiel, HEMS Muster · 2 Einsätze · Diensttag wird angelegt</td></tr>
+<tr><td>3</td><td>08:12</td><td>09:40</td><td>Oberstdorf, Nebelhorn</td><td>Sturz, Unterschenkel</td><td>–</td><td></td></tr>
+<tr><td>4</td><td>13:05</td><td>14:10</td><td>Kempten, Klinikum</td><td>Sekundärtransport</td><td>✓</td><td></td></tr>
+<tr class="imp-daygroup"><td colspan="7"><strong>2026-09-12</strong> · P1 Dr. Beispiel, HEMS Muster · 3 Einsätze · Diensttag vorhanden · <span class="imp-warn">abweichende Crew (HEMS: Muster ≠ Weber)</span> <select class="imp-daymode"><option>gespeicherte Crew behalten</option><option>Crew aus der Datei übernehmen</option></select></td></tr>
+<tr><td>5</td><td>07:55</td><td>08:30</td><td>Sonthofen</td><td>Thoraxschmerz</td><td>–</td><td></td></tr>
+<tr><td>6</td><td>10:20</td><td>11:45</td><td>Immenstadt, B308</td><td>VU, Polytrauma</td><td>–</td><td></td></tr>
+<tr><td>7</td><td>16:00</td><td>16:50</td><td>Kempten</td><td>Fehleinsatz</td><td>–</td><td></td></tr>
+</tbody></table></div></div>
+
+<div class="reihe"><h2>Vorschlag A — vorhandene Bausteine, eine neue Regel <span class="mass">empfohlen</span></h2>
+<p class="erk"><code>imp-daygroup</code> bekommt eine Regel: Hintergrund <code>--rauch</code>, Oberlinie <code>--strich-stark</code>, Datum in Kopfschrift <code>--groesse-3</code> Dunkelblau, der Rest gedämpft in <code>--groesse-2</code>. Die Warnung wird eine <strong>Plakette</strong> (<code>.plakette-orange</code>, Symbol <code>warnung</code>) — ein Baustein, den es schon gibt; <code>imp-warn</code> entfällt und geht mit Begründung auf die Streichliste.</p>
+<div class="rahmen neu a"><div class="rahmen-titel">Vorschau · Vorschlag A</div><table class="tabelle">
+<thead><tr><th></th><th>Beginn</th><th>Ende</th><th>Einsatzort</th><th>Diagnose</th><th>Sek.</th><th></th></tr></thead>
+<tbody>
+<tr class="imp-daygroup"><td colspan="7"><div class="zeile"><span class="tag">11.09.2026</span><span class="rest">P1 Dr. Beispiel, HEMS Muster · 2 Einsätze · Diensttag wird angelegt</span></div></td></tr>
+<tr><td>3</td><td>08:12</td><td>09:40</td><td>Oberstdorf, Nebelhorn</td><td>Sturz, Unterschenkel</td><td>–</td><td></td></tr>
+<tr><td>4</td><td>13:05</td><td>14:10</td><td>Kempten, Klinikum</td><td>Sekundärtransport</td><td>✓</td><td></td></tr>
+<tr class="imp-daygroup"><td colspan="7"><div class="zeile"><span class="tag">12.09.2026</span><span class="rest">P1 Dr. Beispiel, HEMS Muster · 3 Einsätze · Diensttag vorhanden</span><span class="plakette plakette-orange"><svg class="symbol symbol-klein" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-warnung"/></svg>abweichende Crew: HEMS Muster ≠ Weber</span><select class="imp-daymode"><option>gespeicherte Crew behalten</option><option>Crew aus der Datei übernehmen</option></select></div></td></tr>
+<tr><td>5</td><td>07:55</td><td>08:30</td><td>Sonthofen</td><td>Thoraxschmerz</td><td>–</td><td></td></tr>
+<tr><td>6</td><td>10:20</td><td>11:45</td><td>Immenstadt, B308</td><td>VU, Polytrauma</td><td>–</td><td></td></tr>
+<tr><td>7</td><td>16:00</td><td>16:50</td><td>Kempten</td><td>Fehleinsatz</td><td>–</td><td></td></tr>
+</tbody></table></div>
+<div class="notiz empf"><strong>Maße:</strong> Kopfzeile 38 px hoch bei einer Zeile (8 + 22 + 8), Datum 15 px Kopfschrift, Rest 13 px; Plakette 12 px fett mit 16-px-Symbol, Höhe 22 px; das Auswahlfeld 32 px wie bisher. Am Handy (400 px) bricht die Zeile um: Datum und Rest, darunter Plakette und Auswahl. <strong>Warum die Plakette:</strong> Sie ist dieselbe Form, mit der die Anwendung überall „Zustand, der Aufmerksamkeit will" zeigt (Filter, Sync, Kennzahlen) — ein Leser erkennt sie ohne Lernen.</div></div>
+
+<div class="reihe"><h2>Vorschlag B — eigene Regel für <code>imp-warn</code></h2>
+<p class="erk">Kopfzeile wie A; die Warnung bleibt Text, aber in <code>--orange-tief</code>, fett, mit 16-px-Symbol davor. Kein zusätzlicher Kasten — ruhiger, aber schwächer abgesetzt, und eine zweite Regel für etwas, das die Plakette schon kann.</p>
+<div class="rahmen neu b"><div class="rahmen-titel">Vorschau · Vorschlag B</div><table class="tabelle">
+<thead><tr><th></th><th>Beginn</th><th>Ende</th><th>Einsatzort</th><th>Diagnose</th><th>Sek.</th><th></th></tr></thead>
+<tbody>
+<tr class="imp-daygroup"><td colspan="7"><div class="zeile"><span class="tag">12.09.2026</span><span class="rest">P1 Dr. Beispiel, HEMS Muster · 3 Einsätze · Diensttag vorhanden ·</span><span class="imp-warn"><svg class="symbol" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#s-warnung"/></svg>abweichende Crew (HEMS: Muster ≠ Weber)</span><select class="imp-daymode"><option>gespeicherte Crew behalten</option><option>Crew aus der Datei übernehmen</option></select></div></td></tr>
+<tr><td>5</td><td>07:55</td><td>08:30</td><td>Sonthofen</td><td>Thoraxschmerz</td><td>–</td><td></td></tr>
+<tr><td>6</td><td>10:20</td><td>11:45</td><td>Immenstadt, B308</td><td>VU, Polytrauma</td><td>–</td><td></td></tr>
+</tbody></table></div>
+<div class="notiz"><strong>Freigabefragen:</strong> F-MR-1 Variante A oder B? · F-MR-2 Datum als „12.09.2026" (wie überall in der Oberfläche) statt „2026-09-12" (heute, Dateiformat)? · F-MR-3 „Nicht zuordenbar (n)" bekommt dieselbe Kopfzeile, mit Plakette in Rot (<code>.plakette-rot</code>) statt Orange — ja?</div></div>
+</body></html>
