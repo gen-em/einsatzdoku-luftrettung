@@ -14,6 +14,75 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.4.1] — 2026-09-14
+
+### Web — die Kopfzeile der Importvorschau steht da, wo gelesen wird (Backlog Nr. 182)
+
+**Der Fehlerfund aus 19.4.0, behoben.** Die Kopfzeile einer Tagesgruppe sitzt
+in einer Tabellenzelle, und die ist so breit wie die ganze Vorschautabelle —
+gemessen **2653 px gegen 342 px** Sichtfenster am Handy. `flex-wrap` griff
+deshalb nie: In einer 2653 px breiten Zeile bricht nichts um. Alles hinter dem
+Datum stand außerhalb des Sichtfensters — die Besatzung, die orange Plakette
+„abweichende Crew" und das Auswahlfeld, mit dem man entscheidet, welche
+Besatzung gilt. In **keiner** der gemessenen Breiten war die Plakette ohne
+waagerechtes Scrollen zu sehen.
+
+**Die Lösung braucht kein JavaScript, und das war die Überraschung.** Der
+Rollbereich der Vorschau wird über `container-type: inline-size` zum
+Größencontainer; `100cqi` ist damit die **sichtbare** Breite statt der
+Tabellenbreite. Der Inhalt der Kopfzeile heftet sich mit
+`position:sticky; left:0` an den linken Rand des Rollbereichs und bleibt
+stehen, während die Datenzeilen darunter waagerecht durchlaufen. Die Fläche
+(das `<td>`) bleibt durchgehend, damit das Band nicht auf halber Strecke
+aufhört — nur sein Inhalt folgt dem Blick. Vier Deklarationen im Stylesheet,
+ein Klassenname in `import.php`, **null Zeilen Skript**.
+
+**Die Container-Eigenschaft sitzt an einer eigenen Klasse** (`.imp-roll`),
+nicht an `.tabelle-scroll`: Die trägt neun Stellen auf sechs Seiten, und
+`container-type` bringt `contain: layout inline-size` mit. Eine global
+gesetzte Eigenschaft für ein örtliches Problem wäre falsch.
+
+**Warum der Umweg hierher gehört.** Zur Freigabe standen drei Wege (Mockup
+M-MR-05, F-MR-14): so lassen, heften, oder je Diensttag-Gruppe eine eigene
+Tabelle. Der dritte war zuerst gewählt. Die Kartierung davor hat **58 Befunde**
+ergeben, **22 davon „bricht"** — und vier davon scheitern **lautlos**:
+
+- Der delegierte Ereignisbehandler hängt an `$('tabelle')` und wird beim
+  Seitenstart **synchron** gesetzt. Fällt das Element weg, wirft es
+  `TypeError`, die Start-Funktion bricht mitten drin ab, und `sperrstatus()`
+  läuft nie — der Sperrhinweis bliebe versteckt, obwohl die Verschlüsselung
+  gesperrt sein kann. Nicht die Zellbearbeitung wäre kaputt, sondern die
+  ganze Seite.
+- Das Auswahlfeld der Tageswahl wäre aus dem Tabellenbaum gefallen. Sein
+  Scheitern hätte man **nach** dem Import in den Daten gesehen, nicht davor
+  in der Vorschau.
+- Mehrere `id="tabelle"` hätten nur die erste Gruppe bedienbar gelassen —
+  ein Ausgang, der beim Prüfen wie Erfolg aussieht.
+- `.imp-daygroup td` hätte nichts mehr getroffen; der Kopf wäre fast genau
+  auf den Zustand vor Web 19.4.0 zurückgefallen.
+
+Dazu hätte der Weg die **Spaltenflucht über die Gruppen** gebrochen — und
+genau die steht in der Abnahmezeile von Nr. 182. Nachgemessen: `width` auf
+der einen abweichenden Spalte ist in dieser Tabelle wirkungslos (183 px mit
+und ohne Regel), `table-layout:fixed` macht das Eingabefeld **52 px** breit
+und lässt **9 von 14** Spaltentiteln aus ihrer Zelle laufen.
+
+**Was bleibt:** Der Kopf wird am Handy hoch — **231 px bei 400 px**, 270 px
+bei 360 px, im ungünstigsten Fall (zwei abweichende Rollen mit langen Namen);
+bei einer Rolle rund 130 px. Das ist der Preis dafür, dass die Angabe
+vollständig dasteht, und er ist bewusst nicht gedrückt worden: Der Text ist
+der Grund, warum jemand hinsieht.
+
+Gemessen im Browser bei **sieben Fensterbreiten** (360, 400, 720, 1024, 1280,
+1600, 1920 px): Datum, Besatzung, Plakette **und** Auswahlfeld in **jeder**
+Breite im Sichtfenster, Kopfbreite immer gleich der sichtbaren Breite,
+**0** waagerechter Überlauf der Seite, **keine** Konsolenfehler. Waagerecht um
+1500 px gescrollt: Die Kopfzeile bleibt stehen, die Datenzeilen laufen durch.
+Die vier Bedienwege am delegierten Behandler nachgefahren — Zellbearbeitung
+(der getippte Wert überlebt zwei Neuzeichnungen, steht also im Datenmodell),
+Überspringen-Kästchen, Tageswahl —, alle drei wirken; **eine** Tabelle,
+**ein** Element mit der Kennung `tabelle`.
+
 ## [Web 19.4.0] — 2026-09-13
 
 Mockup-Runde 9c, erstes von vier Arbeitspaketen

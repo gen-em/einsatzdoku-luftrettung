@@ -23,9 +23,9 @@ nach K9 als Vorlage daneben.*
 > | | |
 > |---|---|
 > | In Arbeit | **AP2** (Nr. 42) — als Nächstes. Backlog-Runde 3 ist am 13.09.2026 gemergt (PR #43, `8f1712c`, Web 19.3.1) und in den Arbeitszweig geholt; sie hat drei der fünf `[offen]`-Klassen gestrichen und bringt mit `zusagen.md` die Mechanik, die AP2 braucht (E-MR-24) |
-> | Erledigt | **AP1** (Nr. 41, Web 19.4.0, 13.09.2026) — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen. Gemessen `[offen]` **2 → 0**, „ohne Gegenstück" **52 → 50**, Befunde **330 → 326**; im Browser 400/720/1280 px, 0 waagerechter Überlauf, keine Konsolenfehler; Wortliste 0/0 |
-> | Haken | **F-MR-14 liegt zur Freigabe vor** (Mockup **M-MR-05**, 14.09.2026): Fehlerfund 2 aus AP1 — der Gruppenkopf der Importvorschau steht in jeder Breite außerhalb des Sichtfensters (Backlog Nr. 182). Drei Wege sind **am laufenden Bestand gebaut und gemessen**; Empfehlung **B**. Bis zur Antwort bleibt es beim ausgelieferten Zustand (Weg A). **Die Abnahme von AP1 ist an dieser Stelle nicht erfüllbar**, wie sie im Konzept steht (siehe Abschnitt 5) |
-> | Stufe | **Web 19.4.0** (Nebenstufe, neue Darstellungen), gesetzt mit AP1 — AP2 bis AP4 sind Korrekturstufen darauf oder heben die Nebenstufe, je nach Inhalt. Uhr und Android unberührt |
+> | Erledigt | **AP1** (Nr. 41, Web 19.4.0, 13.09.2026) — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen. Gemessen `[offen]` **2 → 0**, „ohne Gegenstück" **52 → 50**, Befunde **330 → 326**. **Dazu Nr. 182** (Web 19.4.1, 14.09.2026, F-MR-14 = Weg B): die Kopfzeile nimmt über eine Container-Abfrage die sichtbare Breite an, **ohne JavaScript**; gemessen bei 7 Breiten, alle vier Teile im Sichtfenster, 0 Überlauf, keine Konsolenfehler |
+> | Haken | **keiner offen.** Fehlerfund 2 ist mit Web 19.4.1 erledigt (Nr. 182). Die Abnahme von AP1 — „am Handy bricht die Kopfzeile in zwei Zeilen" — ist damit **nachträglich erfüllt**: Sie war in 19.4.0 unerfüllbar, weil `flex-wrap` in einer 2653 px breiten Zeile nie greift; seit 19.4.1 ist die Zeile so breit wie das Sichtfenster und bricht |
+> | Stufe | **Web 19.4.1** — 19.4.0 war die Nebenstufe aus AP1, 19.4.1 die Korrektur zu Nr. 182. AP2 bis AP4 setzen darauf auf. Uhr und Android unberührt |
 
 ---
 
@@ -96,6 +96,8 @@ Ab 1024 px dasselbe Markup als Aufklappmenü — dort ist nichts zu ändern.
 | **E-MR-22** | **`--dauer` wird `.24s`** — für die ganze Anwendung, nicht nur fürs Blatt (F-MR-12: „alles auf 240 ms"). Betroffen sind alle Nutzer des Tokens: Schublade und Schleier, Akkordeon-Winkel, Winkel am „Aktionen"-Knopf, Schalter-Griffe, Kennzahlen-Winkel — und neu das Blatt. Kein zweites Token; `prefers-reduced-motion` bleibt ohne Bewegung | Auftraggeber 13.09.2026 |
 | **E-MR-23** | Die orange Markierung (D4) gilt für **beide** Knöpfe — `ui_aktionen()` und `ui_zeilenaktionen()` — über eine Regel an `[data-blatt][aria-expanded="true"]` (F-MR-13) | Auftraggeber 13.09.2026 |
 | **E-MR-08** | Die Mockups sind HTML mit den echten Token, gerendert mit `wkhtmltoimage` (wie S9); Kartenhintergrund ist eine Attrappe, keine Kacheln | Fable 13.09.2026 |
+| **E-MR-28** | Nr. 182: **Weg B, und zwar ohne JavaScript** (F-MR-14). Die im Mockup und im Backlog behauptete Notwendigkeit einer *gemessenen* Breite war **falsch**: `container-type:inline-size` am Rollbereich macht `100cqi` zur sichtbaren Breite, und beide Fassungen (Container-Abfrage und `ResizeObserver`) sind bei sechs Fensterbreiten auf den Pixel gleich gemessen. Die Eigenschaft sitzt an einer **eigenen Klasse** `.imp-roll`, nicht an `.tabelle-scroll` — die trägt neun Stellen auf sechs Seiten, und `container-type` bringt Containment mit | Opus 14.09.2026 (Messung); Auftraggeber 14.09.2026 (Freigabe) |
+| **E-MR-27** | Nr. 182: **Weg C ist verworfen**, obwohl er am 13.09.2026 gewählt war. Grundlage ist eine Kartierung mit fünf Linsen (17 Agenten): **58 Befunde, 22 davon „bricht"**, alle drei Entwürfe von allen drei Skeptikern widerlegt. Ausschlaggebend sind vier **lautlose** Fehlerquellen und ein Widerspruch: C kann die dritte Bedingung seiner eigenen Abnahmezeile (Spaltenflucht über alle Gruppen) nachweislich nicht erfüllen. **Die Entscheidung ist dem Auftraggeber mit den Zahlen vorgelegt und von ihm getroffen worden** — nicht nebenbei umgestoßen | Auftraggeber 14.09.2026 |
 | **E-MR-26** | Nr. 182: Das Mockup dazu (**M-MR-05**) wird **nicht gezeichnet, sondern gemessen** — die drei Wege werden in die laufende Anwendung eingesetzt und darin fotografiert. Grund: Der Befund entstand genau daran, dass M-MR-01 eine Tabelle mit **fünf** Spalten zeigte und die Anwendung **vierzehn** hat. Eine zweite Skizze hätte denselben Fehler wiederholen können. Die Bilder sind deshalb Bildschirmfotos, das Dokument selbst ist mit Chromium über Playwright gerendert | Opus 14.09.2026 |
 | **E-MR-24** | Nr. 42, Prüfmittel: **Die Unicode-Prüfung bekommt eine Ausnahmeliste — sie hat heute keine.** AP2 verweist die `'✕'`-Ausnahme auf `tools/vollstaendigkeit/ausnahmen.md`; diese Datei wird aber ausschließlich von der **Token**-Prüfung gelesen (Eigenschaftsnamen wie `clip-path`), der Eintrag stünde wirkungslos da. Backlog-Runde 3 liefert die passende Mechanik mit: `zusagen.md` (vier Spalten Prüfung · Datei · Muster · Grund) und `zusagen_werten()`, das eine **ungenutzte Ausnahme als Befund** meldet. Die Unicode-Prüfung wird auf diese Mechanik umgestellt, `'✕'` in `einsatz_form.php` dort eingetragen. Damit ist die Zusage „keine Unicode-Zeichen als Symbol" zum ersten Mal **messbar** statt behauptet | Opus 13.09.2026 (Befund), Auftraggeber 13.09.2026 (Freigabe) |
 | **E-MR-25** | Nr. 124: Die Markierung gilt für **alle** Öffner, nicht nur für die beiden Bausteine. Nachgezählt am Code: neben den 6 `ui_aktionen()`- und 9 `ui_zeilenaktionen()`-Aufrufen tragen **vier weitere Bauarten** `data-blatt` — der Pin-Knopf des Ortsfelds (`ui.php`, `…ortsblatt`; erscheint im Einsatzformular und in den Stammdaten) und drei handgeschriebene Sortierblatt-Öffner (`index.php`, `suche.php`, `zeitraum.php`). Die Regel an `[data-blatt][aria-expanded="true"]` erreicht sie von selbst, und das ist gewollt: „Blatt offen" ist dieselbe Aussage, gleich an welchem Knopf. Der Hinweis in `Design.md` 3.1 (Orange = Handlung) wird entsprechend um „und geöffnet" erweitert — siehe AP4 | Opus 13.09.2026 (Nachzählung), Auftraggeber 13.09.2026 |
@@ -145,11 +147,17 @@ vorgeschlagen" reicht. Die Empfehlung steht dabei.
 **M-MR-05 — Gruppenkopf der Importvorschau (Nr. 182, nachgereicht 14.09.2026)**
 
 - **F-MR-14** Welcher Weg? **A** so lassen (Nr. 182 bleibt offen) · **B**
-  Kopfzeile am linken Rand heften, mit vier Zeilen JavaScript für die
-  gemessene Breite · **C** je Gruppe eine eigene Tabelle. *Empfehlung B.*
-  **Nebenfrage nur bei B:** Besatzungszeile am Handy kürzen (eine Zeile,
-  Auslassungszeichen), damit der Kopf niedriger bleibt? Ohne Kürzung sind es
-  bei zwei abweichenden Rollen 231 px, bei einer rund 130.
+  Kopfzeile am linken Rand heften · **C** je Gruppe eine eigene Tabelle.
+  **Beantwortet am 14.09.2026: B** — und zwar **ohne JavaScript** (E-MR-28);
+  die vier Zeilen `ResizeObserver`, die hier zuerst standen, braucht es nicht.
+  **Der Weg dorthin gehört zur Antwort:** Am 13.09.2026 war **C** gewählt; die
+  Kartierung davor (fünf Linsen, 17 Agenten) ergab **58 Befunde, 22 davon
+  „bricht"**, und der Auftraggeber hat die Entscheidung daraufhin auf B
+  geändert (E-MR-27).
+  **Nebenfrage:** Besatzungszeile am Handy kürzen? — **nein, vorerst nicht.**
+  Ohne Kürzung sind es bei zwei abweichenden Rollen 231 px, bei einer rund 130.
+  Der Text ist der Grund, warum jemand hinsieht; Kürzen wäre eine Zeile CSS,
+  wenn es am Gerät zu wuchtig wirkt.
 
 ---
 
@@ -356,7 +364,26 @@ Darstellung und braucht nach `Design.md` 1.2 eine Freigabe. Angelegt als
 festheften) braucht eine **gemessene** Breite — CSS allein reicht nicht,
 weil das Stylesheet die Breite des Sichtfensters nicht kennt.
 
-**Mockup M-MR-05 liegt seit dem 14.09.2026 vor** (E-MR-26, Freigabefrage
+**Erledigt mit Web 19.4.1 am 14.09.2026 — Weg B, und ohne JavaScript**
+(E-MR-27, E-MR-28). Der Rollbereich trägt `container-type:inline-size` an
+einer eigenen Klasse `.imp-roll`, die Kopfzeile nimmt mit `width:100cqi` die
+sichtbare Breite an und heftet sich mit `position:sticky;left:0` an den linken
+Rand. Gemessen bei **sieben** Fensterbreiten (360 bis 1920 px): Datum,
+Besatzung, Plakette **und** Auswahlfeld in jeder im Sichtfenster, Kopfbreite
+immer gleich der sichtbaren Breite, 0 waagerechter Überlauf, keine
+Konsolenfehler; waagerecht um 1500 px gescrollt bleibt die Kopfzeile stehen.
+**Damit ist auch die Abnahme von AP1 nachträglich erfüllt** — „am Handy bricht
+die Kopfzeile in zwei Zeilen" war in 19.4.0 unerfüllbar und ist es jetzt nicht
+mehr.
+
+**Zwei Irrtümer, die hier festgehalten gehören**, weil beide Dokumente sie
+behauptet haben: **(1)** Weg B brauche eine *gemessene* Breite aus JavaScript
+— falsch, die Container-Abfrage liefert sie, und beide Fassungen sind bei
+sechs Fensterbreiten auf den Pixel gleich. **(2)** Kosten Nr. 1 von Weg C sei
+„eine Spalte mit einer Breite" — auch falsch: `width` ist auf dieser Spalte
+wirkungslos (183 px mit und ohne Regel), nur `min-width` beißt.
+
+**Mockup M-MR-05 lag seit dem 14.09.2026 vor** (E-MR-26, Freigabefrage
 F-MR-14). Alle drei Wege sind in die laufende Anwendung eingesetzt und darin
 gemessen worden:
 

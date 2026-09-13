@@ -1519,6 +1519,13 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zuordnung: **S10 Sicherheit** (Schritt 9b) oder das Bedrohungsmodell
     (P6, R69) — die Entscheidung gehört in den Rahmenplan.
 
+
+## Erledigt
+
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
+
 182. **Die Kopfzeile einer Tagesgruppe steht außerhalb des Sichtfensters.**
     *Aufgenommen 13.09.2026 als Fehlerfund 2 der Mockup-Runde 9c (AP1); mit
     Web 19.4.0 ausdrücklich NICHT behoben, weil eine Lösung eine neue
@@ -1573,12 +1580,45 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     noch nicht: die fehlende Spaltenflucht ist messbar, und der
     **Spaltenkopf wiederholt sich je Gruppe** — lässt man ihn weg, hat jede
     Gruppe außer der ersten keine Spaltenbeschriftung. **Empfehlung (b).**
-
-## Erledigt
-
-
-Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
-zutreffen.
+    **Erledigt mit Web 19.4.1** (14.09.2026). **Weg (b)** — freigegeben mit
+    F-MR-14, nachdem (c) zuerst gewählt und nach der Kartierung verworfen
+    worden war. Und (b) braucht **kein JavaScript**: Der Rollbereich trägt
+    `container-type: inline-size` über eine eigene Klasse `.imp-roll`, die
+    Kopfzeile nimmt mit `width:100cqi` die **sichtbare** Breite an und heftet
+    sich mit `position:sticky; left:0` an den linken Rand. Die Fläche bleibt an
+    der Zelle und damit durchgehend; das Polster wandert in die Kopfzeile. Vier
+    Deklarationen im Stylesheet, ein Klassenname in `import.php`, null Zeilen
+    Skript. Die Annahme im Absatz oben, es brauche eine gemessene Zahl, war
+    **falsch**: Beide Fassungen sind bei sechs Fensterbreiten auf den Pixel
+    gleich gemessen.
+    *Abnahme erfüllt:* Bei 400 px sind Datum, Besatzungszeile **und** Plakette
+    ohne waagerechtes Scrollen sichtbar — nachgemessen bei **sieben** Breiten
+    (360 bis 1920 px), dazu das Auswahlfeld; waagerechter Überlauf der Seite
+    **0** in jeder; die Spalten fluchten weiterhin über alle Gruppen (eine
+    Tabelle, unverändert). Waagerecht um 1500 px gescrollt: Kopfzeile bleibt
+    stehen. Die drei Bedienwege am delegierten Behandler nachgefahren
+    (Zellbearbeitung, Überspringen, Tageswahl) — alle wirken; der getippte
+    Zellwert überlebt zwei Neuzeichnungen.
+    **Warum (c) verworfen wurde**, obwohl es zuerst gewählt war: Eine
+    Kartierung mit fünf Linsen fand **58 Befunde, 22 davon „bricht"**, und alle
+    drei Entwürfe wurden von allen drei Skeptikern widerlegt. Vier Befunde
+    scheitern **lautlos** — der delegierte Behandler hängt an `$('tabelle')`
+    und hätte beim Seitenstart die ganze Importseite mitgerissen (`sperrstatus()`
+    läuft dann nie, der Sperrhinweis bleibt versteckt); das Auswahlfeld der
+    Tageswahl wäre aus dem Tabellenbaum gefallen und sein Scheitern erst **nach**
+    dem Import in den Daten sichtbar geworden; mehrere `id="tabelle"` hätten nur
+    die erste Gruppe bedienbar gelassen; `.imp-daygroup td` hätte nichts mehr
+    getroffen. Dazu: (c) kann die **dritte Bedingung der Abnahme oben** —
+    Spaltenflucht über alle Gruppen — nachweislich nicht erfüllen. Nachgemessen
+    ist auch, dass die naheliegende Rettung nicht trägt: `width` auf der einen
+    abweichenden Spalte („Aktion", 143/183/64 px je Gruppe) ist in dieser
+    Tabelle wirkungslos (183 px mit und ohne Regel, nur `min-width` beißt), und
+    `table-layout:fixed` macht das Eingabefeld **52 px** breit und lässt **9 von
+    14** Spaltentiteln aus ihrer Zelle laufen.
+    **Was bleibt und bewusst nicht behoben ist:** Der Kopf wird am Handy hoch —
+    231 px bei 400 px im ungünstigsten Fall (zwei abweichende Rollen mit langen
+    Namen), rund 130 px bei einer. Kürzen wäre eine Zeile CSS; der Text ist aber
+    der Grund, warum jemand hinsieht.
 
 41. **Fünf Klassen im Markup ohne Regel — Gestaltungsfragen, am 12.09.2026 entschieden.**
     *Aufgenommen in P3/O12 als Rest von Nr. 39.* Nach dem Eintragen der

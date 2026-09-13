@@ -2289,7 +2289,9 @@ Diensttagen gruppiert erscheinen. Freigegeben mit M-MR-01, Variante A
 (F-MR-1, Mockup-Runde 9c).
 
 ```html
-<tr class="imp-daygroup"><td colspan="…">
+<div class="tabelle-scroll imp-roll">          <!-- Größencontainer -->
+ <table class="tabelle">
+  <tr class="imp-daygroup"><td colspan="…">
   <div class="imp-kopfzeile">
     <span class="imp-tag">17.01.2026</span>
     <span class="imp-rest">Besatzung … · 2 Einsätze · Diensttag vorhanden</span>
@@ -2297,7 +2299,9 @@ Diensttagen gruppiert erscheinen. Freigegeben mit M-MR-01, Variante A
       abweichende Besatzung: Weber → Muster</span>
     <select class="imp-daymode">…</select>
   </div>
-</td></tr>
+  </td></tr>
+ </table>
+</div>
 ```
 
 **Der Unterschied zur Datenzeile ist die Schriftfamilie, nicht das Gewicht.**
@@ -2320,13 +2324,34 @@ in ihr — das ist der Kartentitel (`ui_karte_start()`). Diese Kopfzeile gibt
 es nur, weil die Gruppen sich eine Tabelle teilen müssen, damit die Spalten
 fluchten.
 
-**Was sie nicht kann.** Die Zelle ist so breit wie die Tabelle, nicht wie das
-Sichtfenster — in der Importvorschau gemessen 2677 px gegen 342 bis 1354 px
-sichtbar. Alles nach dem Datum steht damit außerhalb des Sichtfensters, bis
-jemand waagerecht scrollt, und der `flex-wrap` der Zeile greift nie. Wer
-diesen Baustein in einer **schmalen** Tabelle verwendet, merkt davon nichts;
-wer ihn in einer breiten verwendet, muss es wissen. Der Befund ist mit
-Web 19.4.0 aufgenommen und nicht behoben.
+**Wie sie das Sichtfenster findet — und warum das der Kern ist.** Die Zelle
+ist so breit wie die **Tabelle**, nicht wie das Sichtfenster: in der
+Importvorschau gemessen 2653 px gegen 342 px am Handy. Web 19.4.0 hat das
+übersehen und `flex-wrap` gesetzt; in einer 2653 px breiten Zeile bricht aber
+nichts um, und alles nach dem Datum stand außerhalb (Backlog Nr. 182).
+
+Seit Web 19.4.1 trägt der Rollbereich `container-type: inline-size` über eine
+**eigene Klasse** (`.imp-roll`), und die Kopfzeile nimmt mit `width:100cqi`
+die **sichtbare** Breite an; `position:sticky; left:0` hält sie am linken Rand,
+während die Datenzeilen darunter durchlaufen. Das Polster wandert dafür von der
+Zelle in die Kopfzeile — Fläche und Oberlinie bleiben an der Zelle und laufen
+über die ganze Tabellenbreite, damit das Band durchgehend bleibt.
+
+Drei Sätze für den nächsten, der das braucht:
+
+- **`width:100%` wäre falsch** — das ist die Breite der Zelle, also 2653 px.
+  Nur `cqi` kennt den Rollbereich.
+- **Eine gemessene Zahl aus JavaScript braucht es nicht.** Beide Fassungen
+  sind bei sechs Fensterbreiten auf den Pixel gleich; die CSS-Fassung kommt
+  ohne `ResizeObserver` aus.
+- **Die Container-Eigenschaft gehört nicht an `.tabelle-scroll`.** Die Klasse
+  trägt neun Stellen auf sechs Seiten, und `container-type` bringt
+  `contain: layout inline-size` mit — eine globale Eigenschaft für ein
+  örtliches Problem.
+
+**Der Preis:** Am Handy wird der Kopf hoch — 231 px bei 400 px im ungünstigsten
+Fall (zwei abweichende Rollen mit langen Namen), rund 130 px bei einer. Das ist
+gewollt: Der Text ist der Grund, warum jemand hinsieht.
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
@@ -2466,6 +2491,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 19.4.1 (Mockup-Runde 9c / Nr. 182)** | **9.34 fortgeschrieben:** Aus „Was sie nicht kann" wird „Wie sie das Sichtfenster findet". Die Kopfzeile nimmt über eine Container-Abfrage (`container-type:inline-size` an `.imp-roll`, `width:100cqi`) die **sichtbare** Breite statt der Tabellenbreite an und heftet sich mit `position:sticky;left:0` an den linken Rand. **Kein JavaScript** — beide Fassungen (Container-Abfrage und gemessene Zahl) sind bei sechs Fensterbreiten auf den Pixel gleich. Freigegeben mit **M-MR-05, F-MR-14 = Weg B**; Weg C (je Gruppe eine eigene Tabelle) ist nach einer Kartierung mit **58 Befunden, 22 davon „bricht"** verworfen worden — er hätte die Spaltenflucht gebrochen, die in der Abnahme von Nr. 182 steht. Gemessen: 7 Breiten von 360 bis 1920 px, Datum/Besatzung/Plakette/Auswahl in **jeder** im Sichtfenster, **0** waagerechter Überlauf, keine Konsolenfehler. **Kein neues Token, kein neues Symbol, kein neuer Baustein.** |
 | **Web 19.4.0 (Mockup-Runde 9c / AP1)** | **9.34 neu — Kopfzeile einer Tagesgruppe** (`.imp-daygroup`), freigegeben mit M-MR-01 Variante A (F-MR-1/F-MR-2/F-MR-3). Die Kopfzeile der Importvorschau war eine Datenzeile mit `<strong>`; sie trägt jetzt Rauch, eine kräftige Oberlinie und das Datum in Kopfschrift, und das Datum steht deutsch. Die Warnung „abweichende Crew" ist eine `.plakette-orange` geworden — `imp-warn` ist ersatzlos gestrichen, weil eine zweite Darstellung für „Zustand, der Aufmerksamkeit will" den Vorrat vergrößert hätte, ohne etwas zu können. **Eine begründete Abweichung am Baustein Plakette:** in dieser Kopfzeile darf sie umbrechen. Gemessen: `pruefen.py` „im Markup ohne Regel, als `[offen]` vermerkt" **2 → 0**, Sollmenge ohne Gegenstück **52 → 50**, Hexfarben außerhalb `:root` **0**; im Browser 400/720/1280 px, **0** waagerechter Überlauf, keine Konsolenfehler. **Kein neues Token, kein neues Symbol.** |
 | **13.09.2026 (Textpflege, keine Auslieferung)** | **2.5** berichtigt: „B1 erledigt, nachgemessen" traf seit dem Commit „Update Logos" nicht mehr zu (Backlog Nr. 62). Der Absatz sagt jetzt den gemessenen Stand vom 13.09.2026 und die Entscheidung vom 12.09.2026, neue Vorlagen anzufordern. **Zwei Nachbesserungen am selben Tag:** Der Absatz nannte die weiße Fassung in Prosa statt beim Dateinamen und war damit der einzige Treffer der Wortliste außerhalb der Ausnahmeliste (jetzt `gen-em_logo_helicopter_weiss.svg`, 0 Treffer) — und er zählte `gen-em_logo_nef.png` zu den richtigen Dateien, obwohl sie den **alten** Korpuswert `#1D0E0A` trägt, genau wie die `.svg` daneben, die derselbe Absatz als falsch führt. Alle acht Dateien sind nachgemessen (SVG-Farbwerte und dekodierte Bildpunkte der PNG): richtig sind die beiden Fassungen **ohne** Korpus, `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef_weiss.png`. Die beiden PNG der Luftmarke tragen die alten Werte um ein bis zwei Stufen je Kanal verschoben, weil sie gerastert sind. |
 | **Web 16.1.1 (S9)** | Kapitel 7: Im Band 1024–1199 px rückt das Akkordeon je Ebene **4 statt 8 px** ein, und der Abstand der Diensttagszeile geht von 8 auf **4 px** (Freigabe M-S9-11, Weg 2). Gemessen: dem Nebentext stehen dort **64–79 px** statt 48–63 zur Verfügung — dreizehn Kurznamen, **keiner** mehr mit Auslassungszeichen (vorher zehn). Der Abstand ist mit `:not(.leiste-gruppe)` eingegrenzt, weil die Zeilenklasse auch Leistenfuß, Schubladen-Hauptpunkte und Einstellungsmenü trägt; nachgemessen bleiben die bei 8 px. **Keine neue Schwelle, kein neues Token** — 4 px ist `--abstand-1`. |

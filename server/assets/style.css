@@ -3743,17 +3743,51 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * mit Begruendung auf `streichliste.md`. Dieselbe Kopfzeile traegt die
  * Gruppe „Nicht zuordenbar", dort mit `.plakette-rot` (F-MR-3, E-MR-13).
  *
- * DIE ZEILE BRICHT UM. Am Handy passen Datum, Besatzung, Plakette und
- * Auswahlfeld nicht nebeneinander; `flex-wrap` laesst sie in zwei Zeilen
- * fallen, statt die Tabelle waagerecht ueberlaufen zu lassen.
+ * DIE ZEILE BRICHT UM — ABER ERST SEIT WEB 19.4.1, und der Umweg dorthin ist
+ * der Kern dieses Abschnitts (Backlog Nr. 182, M-MR-05, F-MR-14 = Weg B).
+ *
+ * Web 19.4.0 hat `flex-wrap` gesetzt und geglaubt, damit sei es getan. Es war
+ * es nicht: Die Zelle ist so breit wie die TABELLE, nicht wie das
+ * Sichtfenster — gemessen 2653 px gegen 342 px am Handy. In einer 2653 px
+ * breiten Zeile bricht nichts um, und alles hinter dem Datum stand ausserhalb
+ * des Sichtfensters. Die Plakette „abweichende Crew" war damit in KEINER
+ * Breite zu sehen, ohne waagerecht zu scrollen — eine Plakette, die
+ * Aufmerksamkeit will und keine bekommt.
+ *
+ * DIE LOESUNG IST EINE CONTAINER-ABFRAGE, und sie braucht kein JavaScript.
+ * `.imp-roll` (der Rollbereich der Vorschau) wird zum Groessencontainer;
+ * `100cqi` ist damit die SICHTBARE Breite, nicht die der Tabelle. Der Inhalt
+ * der Kopfzeile heftet sich mit `position:sticky; left:0` an den linken Rand
+ * des Rollbereichs und bleibt stehen, waehrend die Datenzeilen darunter
+ * waagerecht durchlaufen. Erst dadurch greift `flex-wrap` ueberhaupt.
+ *
+ *   WARUM NICHT `width:100%`: Das waere die Breite der ZELLE — 2653 px.
+ *   WARUM NICHT EINE GEMESSENE ZAHL AUS JAVASCRIPT: Weil es sie nicht
+ *     braucht. Beide Fassungen sind bei sechs Fensterbreiten (360 bis
+ *     1920 px) auf den Pixel gleich gemessen worden; die CSS-Fassung kommt
+ *     ohne `ResizeObserver` aus.
+ *   WARUM NICHT AN `.tabelle-scroll`: Die Klasse traegt neun Stellen auf
+ *     sechs Seiten, und `container-type` bringt `contain: layout
+ *     inline-size` mit. Eine global gesetzte Eigenschaft fuer ein oertliches
+ *     Problem waere falsch — deshalb die eigene Klasse `.imp-roll`, die
+ *     `import.php` neben `tabelle-scroll` setzt.
+ *
+ * DIE FLAECHE BLEIBT DURCHGEHEND. Das Polster wandert von der Zelle in die
+ * Kopfzeile; Rauch und Oberlinie bleiben an der Zelle und laufen damit ueber
+ * die ganze Tabellenbreite. Das Band hoert also nicht auf halber Strecke auf,
+ * nur sein Inhalt folgt dem Blick.
  * ======================================================================== */
+.imp-roll{container-type:inline-size}
 .imp-daygroup td{
   background:var(--rauch);
   border-top:var(--strich-stark) solid var(--linie);
-  padding:var(--abstand-2) var(--abstand-3);
+  padding:0;
 }
 .imp-kopfzeile{
   display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);
+  position:sticky;left:0;
+  width:100cqi;box-sizing:border-box;
+  padding:var(--abstand-2) var(--abstand-3);
 }
 /* KOPFSCHRIFT, NICHT NUR FETT. Der Unterschied zwischen Ueberschrift und
  * Datenzeile ist in dieser Anwendung die Schriftfamilie, nicht das Gewicht —

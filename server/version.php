@@ -4112,5 +4112,41 @@ declare(strict_types=1);
  * (der alte Fliesstext stand an derselben Stelle, gemessen bei x=1077 statt
  * x=940), aber es ist jetzt eine Plakette, die Aufmerksamkeit will und keine
  * bekommt. Steht als Fehlerfund 2 im Konzept.
+ *
+ * 19.4.1 — DIE KOPFZEILE STEHT DA, WO GELESEN WIRD (Backlog Nr. 182).
+ *
+ * Der Fehlerfund aus 19.4.0, behoben. Die Kopfzeile einer Tagesgruppe sitzt
+ * in einer Tabellenzelle, die so breit ist wie die ganze Vorschautabelle —
+ * gemessen 2653 px gegen 342 px Sichtfenster am Handy. `flex-wrap` griff
+ * deshalb nie, und alles hinter dem Datum stand ausserhalb des
+ * Sichtfensters: Besatzung, die orange Plakette „abweichende Crew" und das
+ * Auswahlfeld daneben. In KEINER der gemessenen Breiten war die Plakette zu
+ * sehen, ohne waagerecht zu scrollen — eine Plakette, die Aufmerksamkeit
+ * will und keine bekommt.
+ *
+ * DIE LOESUNG BRAUCHT KEIN JAVASCRIPT, und das ist die Pointe. Der
+ * Rollbereich der Vorschau wird ueber `container-type:inline-size` zum
+ * Groessencontainer; `100cqi` ist damit die SICHTBARE Breite statt der
+ * Tabellenbreite. Der Inhalt der Kopfzeile heftet sich mit
+ * `position:sticky; left:0` an den linken Rand und bleibt stehen, waehrend
+ * die Datenzeilen darunter durchlaufen. Vier Deklarationen im Stylesheet,
+ * ein Klassenname in `import.php`, null Zeilen Skript.
+ *
+ * DER UMWEG GEHOERT ZUR SACHE. Zur Freigabe standen drei Wege (M-MR-05,
+ * F-MR-14): so lassen, heften, oder je Gruppe eine eigene Tabelle. Der
+ * dritte war zuerst gewaehlt und ist nach der Kartierung verworfen worden —
+ * 22 Befunde der Art „bricht", darunter vier, die LAUTLOS scheitern: der
+ * delegierte Ereignisbehandler haengt an `$('tabelle')` und haette beim
+ * Seitenstart die ganze Importseite mitgerissen; das Auswahlfeld der
+ * Tageswahl waere aus dem Tabellenbaum gefallen und sein Scheitern erst
+ * NACH dem Import in den Daten sichtbar geworden; mehrere `id="tabelle"`
+ * haetten nur die erste Gruppe bedienbar gelassen; und `.imp-daygroup td`
+ * haette nichts mehr getroffen, womit der Kopf auf den Zustand vor 19.4.0
+ * zurueckgefallen waere. Dazu haette der Weg die Spaltenflucht ueber die
+ * Gruppen gebrochen — eine Bedingung, die in der Abnahme von Nr. 182 steht.
+ *
+ * KORREKTURSTUFE, KEINE NEBENSTUFE: Es ist dieselbe Darstellung an
+ * derselben Stelle; sie ist jetzt zu sehen. Uhr und Android unberuehrt,
+ * keine Migration.
  */
-const WEB_VERSION = '19.4.0';
+const WEB_VERSION = '19.4.1';

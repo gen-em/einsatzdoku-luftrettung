@@ -4,7 +4,7 @@
 **die Zahlen trägt die Umsetzung ein**. Fortgeschrieben nach jedem
 Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
-> **Stand: AP1 gemessen (13.09.2026), AP2 bis AP5 offen.**
+> **Stand: AP1 gemessen (13.09.2026) und Nr. 182 behoben (14.09.2026, Web 19.4.1). AP2 bis AP5 offen.**
 >
 > **Vier Sollwerte der Vorlage waren veraltet** — sie entstand vor E-MR-16,
 > E-MR-19 und E-MR-21 — und sind hier berichtigt: Symboldateien **55** statt
@@ -14,25 +14,28 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
 > | | |
 > |---|---|
-> | Stufe | **Web 19.4.0** — Nebenstufe (neue Darstellungen), gesetzt mit AP1. Keine Migration. Uhr und Android unberührt |
-> | Punkte | Backlog **Nr. 41 erledigt** (AP1); 42, 45, 124 offen. **Nr. 182 neu** — Fehlerfund 2 aus AP1, nach K4 nicht mitbehoben |
+> | Stufe | **Web 19.4.1** — 19.4.0 die Nebenstufe aus AP1, 19.4.1 die Korrektur zu Nr. 182. Keine Migration. Uhr und Android unberührt |
+> | Punkte | Backlog **Nr. 41 und 182 erledigt**; 42, 45, 124 offen |
 > | Neu entstanden | Token `--symbol-text`, `--karte-gross`; **`--dauer` von .18s auf .24s** (alle Bewegungen); Klassen `.symbol-text`, `.geo-gross`; Symbole `karte-gross.svg`, `karte-breit.svg` (54., 55.); Regel `.imp-daygroup`; Knopf offen = `--orange-hell`/`--orange-tief` (D4); Ausnahme `'✕'` in `ausnahmen.md`; Streichliste `imp-warn` |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19, MariaDB 10.11.14, Node 22.22.2, Playwright 1.56.1, Chromium 141.0.7390.37. Lokale Installation über `lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte) |
-> | Ergebnis | AP1 **grün**, mit einem ausdrücklichen Vorbehalt (Abschnitt 0). Rest offen |
+> | Ergebnis | AP1 **grün, Vorbehalt aufgelöst** (Nr. 182 behoben). Rest offen |
 
 ## 0. Was NICHT geprüft werden konnte
 
-- **AP1: Die Kopfzeile der Tagesgruppe ist NICHT sichtbar, und das ist
-  gemessen, nicht ungeprüft.** Die Abnahme im Konzept verlangt „am Handy
-  bricht die Kopfzeile in zwei Zeilen". Das ist **nicht erfüllbar**: Die
-  Zelle ist so breit wie die ganze Vorschautabelle — gemessen 2677 px gegen
-  342 px Sichtfenster bei 400 px Fenster —, in ihr bricht nichts um, und
-  Besatzung und Plakette stehen in **allen vier** gemessenen Breiten
-  außerhalb des Sichtfensters. Kein Rückschritt (der alte Fließtext stand
-  ebenso außerhalb), aber die Abnahme dieses Punktes steht offen. Fehlerfund 2
-  im Konzept, Backlog **Nr. 182**, drei Wege dort beschrieben. **Bevor die
-  Runde abgeschlossen wird, braucht das eine Entscheidung.**
-- **AP1: Der Bilderlauf sieht die Vorschau nicht.** `seiten.json` führt
+- ~~**AP1: Die Kopfzeile der Tagesgruppe ist NICHT sichtbar.**~~ **Erledigt
+  mit Web 19.4.1** (14.09.2026, Backlog Nr. 182, F-MR-14 = Weg B). Die
+  Kopfzeile nimmt über eine Container-Abfrage die **sichtbare** Breite an; die
+  Abnahme von AP1 („am Handy bricht die Kopfzeile in zwei Zeilen") ist damit
+  nachträglich erfüllt. Zahlen in Abschnitt 3.
+- **Was bei Nr. 182 NICHT geprüft werden konnte: die Container-Abfrage auf
+  einem anderen Browser als Chromium 141.** Der Prüfstand hat nur ihn.
+  `container-type`/`cqi` sind seit 2023 in allen drei Browserfamilien, und das
+  Projekt setzt mit `:has()` (sechsmal im Stylesheet) und `dvh` bereits
+  dieselbe Generation voraus — belegt ist hier aber nur Chromium. Auf einem
+  Browser ohne Container-Abfragen fiele `width:100cqi` aus, und die Kopfzeile
+  stünde wieder so da wie in Web 19.4.0: kein Absturz, kein Datenverlust, nur
+  der alte Zustand. **Prüfliste Punkt 6.**
+- **AP1 und Nr. 182: Der Bilderlauf sieht die Vorschau nicht.** `seiten.json` führt
   `import.php` im Grundzustand — ohne gewählte Datei gibt es keine
   Vorschautabelle. Die acht Bilder der Seite belegen die Seite, **nicht** die
   Kopfzeile. Diese ist von Hand mit Playwright und einer eigens gebauten
@@ -48,9 +51,9 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
 ## 1. Zusagen, die sich geändert haben
 
-- `Design.md` **9.34 neu** (AP1): Kopfzeile einer Tagesgruppe. Mit einem
-  ausdrücklichen „Was sie nicht kann" — sie taugt nur in **schmalen**
-  Tabellen, solange Nr. 182 offen ist.
+- `Design.md` **9.34 neu** (AP1), **fortgeschrieben mit 19.4.1**: Aus „Was sie
+  nicht kann" wird „Wie sie das Sichtfenster findet". Der Baustein taugt jetzt
+  auch in **breiten** Tabellen — das war vorher ausdrücklich nicht so.
 - `Design.md` 9.6 Plakette (AP1): eine begründete Abweichung — in dieser
   Kopfzeile darf sie umbrechen, weil sie dort einen Satz trägt, keine Vokabel.
 - `Design.md` 9.12 (E-P3-27): Weg (b) ergänzt — Knopf markiert, Blatt fährt auf.
@@ -88,9 +91,29 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
   - `.imp-warn` im DOM: **0**. ✓
   - Waagerechter Überlauf der **Seite**: **0** in allen drei Breiten. ✓
   - Konsolenfehler: **keine**. ✓
-  - **Nicht erfüllt:** Plakette und Auswahl in zwei Zeilen am Handy — die
-    Zeile bleibt einzeilig (40/44 px), und die Plakette steht außerhalb des
-    Sichtfensters. Abschnitt 0, Backlog Nr. 182. ✗
+  - ~~**Nicht erfüllt:** Plakette und Auswahl in zwei Zeilen am Handy.~~
+    **Erfüllt seit Web 19.4.1**, siehe den Block darunter.
+- **Nr. 182 — die Kopfzeile im Sichtfenster** (Web 19.4.1, dieselbe
+  Importdatei, Playwright). Gemessen bei **sieben** Fensterbreiten — 360, 400,
+  720, 1024, 1280, 1600, 1920 px:
+  - Kopfbreite **gleich** der sichtbaren Breite in jeder: 302 = 302, 342 = 342,
+    654 = 654, 738 = 738, 954 = 954, 1274 = 1274, 1354 = 1354. ✓
+  - Datum, Besatzung, Plakette **und** Auswahlfeld im Sichtfenster — in
+    **allen sieben**. ✓
+  - Höhe der Kopfzeile: 270 / 231 / 193 / 189 / 122 / 87 / 87 px — sie bricht
+    also, und zwar je schmaler desto mehr. ✓
+  - Die Fläche bleibt durchgehend: das `<td>` misst in jeder Breite 2677 px,
+    nur sein Inhalt folgt dem Blick. ✓
+  - Waagerechter Überlauf der **Seite**: **0** in allen sieben. ✓
+  - Waagerecht um 1500 px gescrollt: Kopfzeile bleibt bei 0 px stehen, die
+    Datenzeilen laufen durch. ✓
+  - Konsolenfehler: **keine**. ✓
+  - **Die drei Bedienwege am delegierten Behandler**, weil Weg C sie
+    mitgerissen hätte: Zellbearbeitung — der getippte Wert `PROBE-4711`
+    überlebt **zwei** Neuzeichnungen (steht also im Datenmodell, nicht nur im
+    Feld) ✓ · Überspringen-Kästchen setzt `imp-skipped` ✓ · Tageswahl
+    (`imp-daymode`) behält `update` ✓. **Eine** Tabelle, **ein** Element mit
+    der Kennung `tabelle`. ✓
 - Koordinaten-Chip: Ziel **28 × 28 px** (DevTools messen; F-MR-6b, E-MR-21), Hover sichtbar, Entfernen wirkt. **Beide** Chips — Koordinaten und beteiligte Rettungsmittel. [ ]
 - Suche mit einem unlesbaren Eintrag: Symbol sitzt auf der Grundlinie in 19/15/13 px. [ ]
 - Tagesübersicht: groß ↔ klein, Kacheln füllen nach `invalidateSize`; **ab 1600 px bleibt der Knopf und macht die Karte breit** (E-MR-16), mit Querpfeilen statt senkrechten (E-MR-19). [ ]
@@ -103,13 +126,18 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 | 1 | Am S24: Tagesübersicht, „⋯" tippen | Knopf färbt sich hell-orange (D4), Blatt kommt erkennbar von unten; nach „Abbrechen" beides zurück | Bewegung zu schnell/zu langsam: `--dauer` nachjustieren (nur der Wert) |
 | 1a | Am S24: ☰ tippen (Schublade), ein Akkordeon auf- und zuklappen | Beides in 240 ms — fühlt sich gleich an wie das Blatt, nicht träge | Wenn träge: `--dauer` zurück auf .18s und fürs Blatt doch ein eigener Wert — dann als Entscheidung ins Konzept |
 | 2 | Am S24: Tagesübersicht, Kartenknopf „vergrößern" | Karte wird deutlich höher, Liste bleibt darunter erreichbar; nach Neuladen bleibt der Zustand | Höhe unpassend: F-MR-7 nachjustieren **Ab 1600 px macht derselbe Knopf die Karte breit statt hoch** (E-MR-16) — am Gerät nicht prüfbar, dafür am Schreibtisch nachsehen |
-| 3 | CSV-Import mit einer Datei, deren Crew von einem gespeicherten Tag abweicht | Tagesgruppe hat Kopfzeile, Warnung als orange Plakette mit Symbol. **Am Handy sind Warnung und Auswahlfeld erst nach waagerechtem Scrollen sichtbar** — das ist bekannt (Nr. 182), und dieser Punkt soll die Entscheidung dazu einholen | Wenn die Kopfzeile selbst fehlt oder aussieht wie eine Datenzeile: AP1 hat nicht gegriffen |
+| 3 | CSV-Import mit einer Datei, deren Crew von einem gespeicherten Tag abweicht | Tagesgruppe hat Kopfzeile, Warnung als orange Plakette mit Symbol — **und am Handy ist alles davon ohne waagerechtes Scrollen zu sehen** (seit Web 19.4.1, Nr. 182) | Wenn die Kopfzeile fehlt oder wie eine Datenzeile aussieht: AP1 hat nicht gegriffen. Wenn nach dem Datum nichts mehr kommt: die Container-Abfrage greift auf diesem Browser nicht — siehe Punkt 6 |
 | 4 | Einsatz bearbeiten, Koordinaten setzen, Chip-`×` tippen | Ziel trifft sich leicht (**28 px**, F-MR-6b), Koordinaten weg, Textfeld bleibt | Ziel zu klein: F-MR-6b nachjustieren |
 | 5 | Freigabe des Abschlusses | — | — |
+| 6 | **Auf einem zweiten Browser** (Firefox oder Safari, Handy genügt): Importvorschau mit derselben Datei öffnen | Die Kopfzeile bricht um und steht vollständig im Bild, wie in Chromium | Steht nach dem Datum nichts: Der Browser kennt keine Container-Abfragen. Kein Absturz, kein Datenverlust — es ist der Zustand von Web 19.4.0. Dann im Konzept vermerken und `--sicht` über einen `ResizeObserver` nachrüsten (die Fassung ist gemessen und liegt im Prüfprotokoll) |
 
 ## 5. Grenzen · 6. Offen
 
 - Der Bilderlauf misst Ruhezustände; die Bewegung ist nur am Gerät zu bewerten.
+- **Alles zu Nr. 182 ist in Chromium 141 gemessen.** Die Container-Abfrage ist
+  seit 2023 in allen drei Browserfamilien, und das Projekt setzt mit `:has()`
+  und `dvh` dieselbe Generation schon voraus — belegt ist hier aber nur
+  Chromium (Prüfliste Punkt 6).
 - **Fehlerfund 1** (Konzept Abschnitt 6): dasselbe Malzeichen als
   JavaScript-Escape im zweiten Chip — das Prüfmittel sieht Escape-Folgen
   nicht. Läuft in **AP2** mit (E-MR-24), keine eigene Backlog-Nummer.
