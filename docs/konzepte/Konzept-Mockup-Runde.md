@@ -17,6 +17,16 @@ nach K9 als Vorlage daneben.*
 > | Rutschklausel | Nr. 124 ist der einzige Punkt aus einer Rückmeldung von außen und darf die Runde verlassen (AP4 ist allein baubar) |
 > | Versionsnummer | legt die Umsetzung fest (K3) |
 
+> **Statusblock — Umsetzung** (Opus, Zweig `claude/jolly-planck-vexxpd`;
+> fortgeschrieben nach jedem Arbeitspaket, danach gepusht)
+>
+> | | |
+> |---|---|
+> | In Arbeit | **noch keines** — die Umsetzung wartet auf den Merge von **Backlog-Runde 3** (Zweig `claude/backlog-runde-3-umsetzung-woqxjm`, AP1–AP8 gebaut, kein PR offen). Sie streicht drei der fünf `[offen]`-Klassen und bringt mit `zusagen.md` die Mechanik, die AP2 braucht (E-MR-24) |
+> | Erledigt | — |
+> | Haken | drei Rückfragen am 13.09.2026 gestellt und beantwortet: E-MR-24 (Ausnahmeliste der Unicode-Prüfung), E-MR-25 (Markierung für alle Öffner), Fehlerfund 1 ohne eigene Backlog-Nummer. Vier veraltete Sollwerte in der Prüfdokument-Vorlage sind vermerkt und werden beim Ausfüllen berichtigt (Abschnitt 5) |
+> | Stufe | **Web 19.4.0** geplant (Nebenstufe, neue Darstellungen) — auf 19.3.1 aufsetzend, das Runde 3 mitbringt. Uhr und Android unberührt |
+
 ---
 
 ## 1. Befund — am Code gelesen, 13.09.2026
@@ -86,6 +96,8 @@ Ab 1024 px dasselbe Markup als Aufklappmenü — dort ist nichts zu ändern.
 | **E-MR-22** | **`--dauer` wird `.24s`** — für die ganze Anwendung, nicht nur fürs Blatt (F-MR-12: „alles auf 240 ms"). Betroffen sind alle Nutzer des Tokens: Schublade und Schleier, Akkordeon-Winkel, Winkel am „Aktionen"-Knopf, Schalter-Griffe, Kennzahlen-Winkel — und neu das Blatt. Kein zweites Token; `prefers-reduced-motion` bleibt ohne Bewegung | Auftraggeber 13.09.2026 |
 | **E-MR-23** | Die orange Markierung (D4) gilt für **beide** Knöpfe — `ui_aktionen()` und `ui_zeilenaktionen()` — über eine Regel an `[data-blatt][aria-expanded="true"]` (F-MR-13) | Auftraggeber 13.09.2026 |
 | **E-MR-08** | Die Mockups sind HTML mit den echten Token, gerendert mit `wkhtmltoimage` (wie S9); Kartenhintergrund ist eine Attrappe, keine Kacheln | Fable 13.09.2026 |
+| **E-MR-24** | Nr. 42, Prüfmittel: **Die Unicode-Prüfung bekommt eine Ausnahmeliste — sie hat heute keine.** AP2 verweist die `'✕'`-Ausnahme auf `tools/vollstaendigkeit/ausnahmen.md`; diese Datei wird aber ausschließlich von der **Token**-Prüfung gelesen (Eigenschaftsnamen wie `clip-path`), der Eintrag stünde wirkungslos da. Backlog-Runde 3 liefert die passende Mechanik mit: `zusagen.md` (vier Spalten Prüfung · Datei · Muster · Grund) und `zusagen_werten()`, das eine **ungenutzte Ausnahme als Befund** meldet. Die Unicode-Prüfung wird auf diese Mechanik umgestellt, `'✕'` in `einsatz_form.php` dort eingetragen. Damit ist die Zusage „keine Unicode-Zeichen als Symbol" zum ersten Mal **messbar** statt behauptet | Opus 13.09.2026 (Befund), Auftraggeber 13.09.2026 (Freigabe) |
+| **E-MR-25** | Nr. 124: Die Markierung gilt für **alle** Öffner, nicht nur für die beiden Bausteine. Nachgezählt am Code: neben den 6 `ui_aktionen()`- und 9 `ui_zeilenaktionen()`-Aufrufen tragen **vier weitere Bauarten** `data-blatt` — der Pin-Knopf des Ortsfelds (`ui.php`, `…ortsblatt`; erscheint im Einsatzformular und in den Stammdaten) und drei handgeschriebene Sortierblatt-Öffner (`index.php`, `suche.php`, `zeitraum.php`). Die Regel an `[data-blatt][aria-expanded="true"]` erreicht sie von selbst, und das ist gewollt: „Blatt offen" ist dieselbe Aussage, gleich an welchem Knopf. Der Hinweis in `Design.md` 3.1 (Orange = Handlung) wird entsprechend um „und geöffnet" erweitert — siehe AP4 | Opus 13.09.2026 (Nachzählung), Auftraggeber 13.09.2026 |
 
 ---
 
@@ -180,11 +192,28 @@ symbol-text">`-Markup als Zeichenkette liefert (Sprite-Verweis
 Meldung); die Zellmarke in `symbol-klein`. `wegKnopf()`: Kommentar
 ergänzen, dass `✕` die begründete Ausnahme ist, und die Ausnahme in
 `tools/vollstaendigkeit/ausnahmen.md` (Muster `'✕'`, Grund: Rückfall vor
-dem Laden von `symbol.js`) eintragen.
-*Abnahme:* `pruefen.py` „Unicode-Zeichen als Symbol im Markup": die drei
+dem Laden von `symbol.js`) eintragen — **berichtigt durch E-MR-24:** die
+Ausnahme geht nach `tools/vollstaendigkeit/zusagen.md`, nicht nach
+`ausnahmen.md`, und die Unicode-Prüfung wird dafür auf `zusagen_werten()`
+umgestellt (Kommentare über `ohne_php_js_kommentare()` ausblenden,
+`\uXXXX`-Folgen vor dem Zählen dekodieren — damit ist der Fehlerfund 1
+im selben Zug erledigt und braucht keine eigene Backlog-Nummer).
+*Abnahme:* `pruefen.py` „Unicode-Zeichen als Symbol im Markup": die vier
 echten Treffer sind **null** — der Rückfall steht als Ausnahme und wird
-nicht mehr gezählt; die Restzahl (Kommentare, Typografie) bleibt und wird
-genannt. Bilderlauf Einsatzformular (Chip) und Suche (Meldung) in 8
+nicht mehr gezählt.
+
+> **Vier, nicht drei** (nachgezählt 13.09.2026 am Lauf gegen Web 19.3.0):
+> `einsatz_form.php:1617` (`wegKnopf()`-Rückfall `✕` — bleibt als
+> Ausnahme), `ortsfeld.js:244` (`×`), `patient.js:133` (`⚠`) und
+> `einsatz_form.php:2227` (dasselbe Malzeichen als JavaScript-Escape
+> geschrieben — vom Prüfmittel heute nicht gesehen, Fehlerfund 1). Der
+> Lauf meldet daneben **255** Treffer; die
+> übrigen 251 sind Kommentare (`‹`, `⋯`, `★`, `✓`, Erklärtexte, die das
+> Zeichen nennen) und Typografie im Satz (`…`, `→`, „3× Standorte",
+> „(2×)"). Nach dem Umbau aus E-MR-24 fallen die Kommentare heraus und
+> die Zahl wird zum ersten Mal aussagekräftig — die verbleibende
+> Restzahl (Typografie) wird im Prüfdokument genannt, nicht
+> stillschweigend hingenommen. Bilderlauf Einsatzformular (Chip) und Suche (Meldung) in 8
 Breiten; `kontrast.py` für Orange auf `--orange-hell` unverändert 0
 verfehlt. Backlog Nr. 42 nach *Erledigt*; P-P3-03 im Prüfprotokoll
 erreicht.
@@ -226,12 +255,18 @@ der Kommentar am Token nennen den neuen Wert und den Anlass. Kein
 zusätzliches Token fürs Blatt.
 Markierung nach E-MR-21 (D4): `[data-blatt][aria-expanded="true"]{background:
 var(--orange-hell);color:var(--orange-tief);border-color:var(--orange-hell)}`
-— kein Ring; nach F-MR-13 für beide Knöpfe; ab 1024 px bleibt das
+— kein Ring; nach F-MR-13 und **E-MR-25 für ALLE Öffner**, nicht nur die
+beiden Bausteine; ab 1024 px bleibt das
 Aufklappmenü, die Markierung gilt dort mit (der Winkel dreht weiterhin).
 `Design.md` 3.1: ein Satz, dass `--orange-hell` mit `--orange-tief` auch
 „geöffnet" heißt (wie die Plakette „hier ist etwas"), nicht nur „Handlung".
-*Abnahme:* Bilderlauf aller Seiten mit `data-blatt` (15 Öffner auf elf
-Seiten — nachzählen) in 8 Breiten; Klickprobe: Öffnen → Knopf markiert,
+*Abnahme:* Bilderlauf aller Seiten mit `data-blatt` in 8 Breiten.
+**Nachgezählt 13.09.2026: 6 `ui_aktionen()`-Aufrufe (5 Dateien), 9
+`ui_zeilenaktionen()`-Aufrufe (6 Dateien), der Pin-Knopf des Ortsfelds
+(`ui.php`, in jedem Ortsfeld) und 3 handgeschriebene Sortierblatt-Öffner
+(`index.php`, `suche.php`, `zeitraum.php`)** — also vier Bauarten mehr,
+als die Zeile „15 Öffner auf elf Seiten" im Rahmenplan nennt. Die
+Rahmenplanzeile wird beim Abschluss berichtigt. Klickprobe: Öffnen → Knopf markiert,
 Blatt sichtbar; Schließen → Knopf zurück. `grep -c "var(--dauer)"
 style.css` ist nach dem Umbau um genau die Blatt-Regel größer; kein
 anderer Zeitwert im Stylesheet. `E-P3-27` in `Design.md` 9.12 um
@@ -261,9 +296,32 @@ nur den Koordinaten-Chip; (2) das Prüfmittel sollte `\uXXXX`-Folgen in
 JS-Zeichenketten dekodieren, bevor es zählt — als eigener Backlog-Punkt,
 Nummer vergibt der Auftraggeber.
 
+> **Erledigt in AP2 statt als Backlog-Punkt** (Auftraggeber 13.09.2026,
+> Rückfrage zu (2)). Der Einwand war: Wenn AP2 die Fundstelle ohnehin
+> beseitigt, wozu dann noch ein Punkt? Die Antwort trennt beides — die
+> **Zeile** verschwindet mit AP2, die **Blindstelle des Prüfmittels**
+> bleibt: Wer morgen ein anderes Zeichen als Escape-Folge schreibt,
+> bekommt wieder keinen Treffer. Weil E-MR-24 dieselbe Funktion ohnehin
+> umbaut, kostet das Dekodieren dort nur ein paar Zeilen; ein eigener
+> Backlog-Punkt wäre teurer als die Behebung. **Nr. 176 wird nicht
+> vergeben.** Stellt sich beim Bauen heraus, dass der Umbau größer ist
+> als hier angenommen, wird der Punkt nachgemeldet — dann mit Nummer.
+
+**Vier veraltete Sollwerte in der Prüfdokument-Vorlage** (gefunden
+13.09.2026 beim Gegenlesen; die Vorlage entstand vor E-MR-16, -19 und -21).
+Sie werden beim Ausfüllen berichtigt, nicht stillschweigend überschrieben:
+
+| Stelle in `Pruefdokument-Mockup-Runde.md` | steht da | richtig ist |
+|---|---|---|
+| 2. Maschinell, „Symboldateien" | 53 → **54** | **55** — E-MR-19 verlangt zwei Symbole, nicht eines |
+| 3. Im Browser, Chip | Ziel **24 × 24 px** | **28 px** — F-MR-6b, E-MR-21 |
+| 3. Im Browser, Tagesübersicht | „ab 1600 px **kein Knopf**" | der Knopf bleibt und macht die Karte breit — E-MR-16 |
+| 4. Prüfliste, Punkt 4 | „F-MR-6 nachjustieren" | F-MR-6 ist durch 6a/6b ersetzt (E-MR-11) |
+
 | AP | Punkt | Stand | Probleme / wie gelöst |
 |---|---|---|---|
 | — | Freigabe F-MR-1 … F-MR-13 | **erteilt 13.09.2026** (vier Fassungen der Mockups) | |
+| — | Rückfragen der Umsetzung | **beantwortet 13.09.2026** | Drei Befunde beim Vorbereiten: (1) die für AP2 vorgesehene Ausnahmeliste `ausnahmen.md` wird von der Unicode-Prüfung gar nicht gelesen → E-MR-24; (2) die Regel aus E-MR-23 trifft vier Bauarten mehr als gezählt → E-MR-25, gilt für alle; (3) Fehlerfund 1 bekommt keine eigene Nummer, sondern läuft in AP2 mit. Dazu der Rahmenplan: das Lieferpaket trägt Fassung 46, Runde 3 hat ihn auf 47 neu gefasst — die Freigabe wird nach dem Merge dort nachgetragen, die Fassung 46 aus dem Paket nicht übernommen |
 | AP1 | 41 | offen | |
 | AP2 | 42 | offen | |
 | AP3 | 45 | offen | |
