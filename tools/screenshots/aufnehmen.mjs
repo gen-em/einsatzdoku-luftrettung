@@ -109,22 +109,145 @@ const liste = FILTER.length
  *
  * 1  Kartenkacheln und Ortssuche sind bewusste Laufzeitquellen (map_layers.js
  *    und ortsfeld.js nennen Herkunft und Lizenz). Ein gescheiterter Abruf sagt
- *    ueber die Anwendung nichts.
+ *    ueber die Anwendung nichts. Erkannt am NAMEN der Quelle, gleich mit
+ *    welchem Fehler sie scheitert.
  * 2  Der Statuscode der SEITE SELBST. Die Abbruchseite antwortet mit 404 oder
  *    409 — das ist ihre Aufgabe, nicht ihr Fehler. Chromium meldet trotzdem
  *    "Failed to load resource". Erkannt wird das daran, dass die Fundstelle
  *    der Meldung die Seitenadresse selbst ist.
+ * 3  Verbindungsfehler auf einer FREMDEN Adresse. Hier liegt der Grund, warum
+ *    es diese dritte Klasse ueberhaupt gibt: Der Pruef-Browser kommt in dieser
+ *    Umgebung nicht an die Kachelserver, und die Egress-Sperre setzt die
+ *    Verbindung zurueck — der Fehlercode steht dann in der Meldung, ohne dass
+ *    der Gastgebername ueberall mitkaeme (Erklaerung im Absatz zu
+ *    kachelAntwort() weiter unten).
+ *
+ * ---- WARUM KLASSE 3 AN DIE FUNDSTELLE GEBUNDEN IST (Backlog Nr. 176) -------
+ *
+ * Bis Runde 3 stand Klasse 3 in DEMSELBEN Muster wie Klasse 1, und geprueft
+ * wurde es gegen den Meldungstext. Damit fiel jeder Abruf auf dem EIGENEN
+ * Server unter das Kartenrauschen, sobald er mit einem der Codes scheiterte:
+ * ERR_CONNECTION_RESET, ERR_CONNECTION_CLOSED und ERR_ABORTED. Der Bericht
+ * konnte "0 Konsolenfehler" melden fuer eine Seite, auf der das Stylesheet
+ * nicht angekommen ist.
+ *
+ * GEMESSEN, in zwei Schritten. Der Fund: von fuenf gebauten Faellen mit
+ * lokaler Fundstelle verschluckte das alte Muster DREI (die drei Codes) und
+ * zaehlte zwei (ERR_CONNECTION_REFUSED und einen HTTP-Status). Der Nachweis:
+ * die zehn Faelle der Selbstprobe unten, woertlich durch die alte Funktion
+ * geschickt (`git show origin/main:… | sed -n '/^const KACHELRAUSCHEN =/,/^}/p'`)
+ * — SECHS von zehn richtig, vier falsch: die drei lokalen Abbrueche und der
+ * Fall ohne Fundstelle. Dieselben zehn durch die neue Funktion: ZEHN von zehn.
+ * Und am laufenden Browser, mit angehaltenem PHP-Server: zwei Konsolenfehler
+ * auf der eigenen Basis, davon verwarf der alte Filter EINEN, der neue KEINEN.
+ *
+ * Seither gilt Klasse 3 nur, wenn die Fundstelle NICHT die eigene Basis ist.
+ * Die Hostliste (Klasse 1) ist unveraendert; ein Kachelabruf traegt seinen
+ * Gastgeber in der Fundstelle und faellt weiter heraus.
+ *
+ * ZWEI ENTSCHEIDUNGEN DABEI, beide bewusst zur lauten Seite hin:
+ *
+ *   - OHNE FUNDSTELLE WIRD GEZAEHLT. Eine Meldung ohne `location().url` laesst
+ *     sich nicht zuordnen. Lieber eine Zeile zu viel im Bericht als eine
+ *     stille Luecke; wer sie erklaert, erklaert sie mit Zahl.
+ *   - DER CODE WIRD NUR IM TEXT GESUCHT, nicht mehr auch in der Fundstelle.
+ *     Ein Fehlercode kommt in keiner URL vor; die zweite Suche war ohne
+ *     Wirkung und verdeckte nur, worauf es ankommt.
+ *
+ * Was diese Klasse WEITERHIN verschweigt: einen Verbindungsfehler auf einer
+ * fremden Adresse, die gar nicht abgerufen werden duerfte. Dass zur Laufzeit
+ * keine fremde Quelle angefragt wird, ist die Zusage aus CLAUDE.md 4 — sie
+ * wird von tools/vollstaendigkeit/ gemessen, nicht hier.
+ *
+ * SELBSTPROBE: `node tools/screenshots/aufnehmen.mjs --selbstprobe` haelt
+ * diese Funktion gegen zehn gebaute Faelle und nennt die Zahl. Sie laeuft
+ * ohne Browser und ohne Server und loescht die Ausgabe des letzten Laufs
+ * nicht.
  */
-const KACHELRAUSCHEN =
-  /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|ERR_INTERNET_DISCONNECTED|ERR_CONNECTION_RESET|ERR_CONNECTION_CLOSED|ERR_ABORTED|tile\.|openstreetmap|opentopomap|arcgisonline|photon\.komoot/i;
+const FREMDE_QUELLEN =
+  /tile\.|openstreetmap|opentopomap|arcgisonline|photon\.komoot/i;
+const VERBINDUNGSCODES =
+  /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|ERR_INTERNET_DISCONNECTED|ERR_CONNECTION_RESET|ERR_CONNECTION_CLOSED|ERR_ABORTED/i;
+
+/* Gleiche Herkunft wie BASIS? Ueber `URL.origin`, nicht ueber startsWith:
+ * das vertraegt einen abschliessenden Schraegstrich in --basis und rechnet
+ * Vorgabeports mit. Eine Fundstelle, die keine Adresse ist (`<anonymous>`,
+ * leer), ist keine eigene. */
+function istEigeneHerkunft(ort) {
+  if (!ort) return false;
+  try {
+    return new URL(ort).origin === new URL(BASIS).origin;
+  } catch {
+    return false;
+  }
+}
 
 function istRauschen(meldung, seitenAdresse) {
   const text = meldung.text();
   const ort = (meldung.location && meldung.location().url) || '';
-  if (KACHELRAUSCHEN.test(text) || KACHELRAUSCHEN.test(ort)) return true;
-  // Der Statuscode der Seite selbst.
+  // 1 Fremde Laufzeitquellen, am Namen erkannt.
+  if (FREMDE_QUELLEN.test(text) || FREMDE_QUELLEN.test(ort)) return true;
+  // 2 Der Statuscode der Seite selbst.
   if (ort && seitenAdresse && ort.split('#')[0] === seitenAdresse.split('#')[0]) return true;
+  // 3 Verbindungsfehler — aber nur auf einer fremden Fundstelle (Nr. 176).
+  if (VERBINDUNGSCODES.test(text) && ort && !istEigeneHerkunft(ort)) return true;
   return false;
+}
+
+/* ---- Selbstprobe der Rauschunterscheidung -------------------------------
+ *
+ * Zehn Faelle, je mit Sollwert. Der Punkt der Sache sind die Faelle 3 bis 5:
+ * Sie sind der Grund fuer Nr. 176 und waren am alten Muster stumm. Fall 10
+ * haelt die Gegenrichtung fest — ein Kachelabruf bleibt Rauschen. */
+const SELBSTPROBE = [
+  { nr:  1, soll: 'rauschen', grund: 'Kachelserver, Verbindung zurueckgesetzt',
+    text: 'Failed to load resource: net::ERR_CONNECTION_RESET',
+    ort:  'https://tile.openstreetmap.org/12/2200/1400.png' },
+  { nr:  2, soll: 'rauschen', grund: 'Ortssuche, Verbindung zurueckgesetzt',
+    text: 'Failed to load resource: net::ERR_CONNECTION_RESET',
+    ort:  'https://photon.komoot.io/api/?q=Tal' },
+  { nr:  3, soll: 'fehler',   grund: 'eigener Server, Symbol zurueckgesetzt (Nr. 176)',
+    text: 'Failed to load resource: net::ERR_CONNECTION_RESET',
+    ort:  'EIGEN/assets/images/symbole/haus.svg?v=19.3.1' },
+  { nr:  4, soll: 'fehler',   grund: 'eigener Server, Stylesheet abgeschnitten (Nr. 176)',
+    text: 'Failed to load resource: net::ERR_CONNECTION_CLOSED',
+    ort:  'EIGEN/assets/style.css' },
+  { nr:  5, soll: 'fehler',   grund: 'eigener Server, Abruf abgeraeumt (Nr. 176)',
+    text: 'Failed to load resource: net::ERR_ABORTED',
+    ort:  'EIGEN/api/day.php?d=32' },
+  { nr:  6, soll: 'fehler',   grund: 'eigener Server, Verbindung abgelehnt',
+    text: 'Failed to load resource: net::ERR_CONNECTION_REFUSED',
+    ort:  'EIGEN/assets/symbol.js' },
+  { nr:  7, soll: 'fehler',   grund: 'eigener Server, HTTP 500',
+    text: 'Failed to load resource: the server responded with a status of 500 (Internal Server Error)',
+    ort:  'EIGEN/api/day.php?d=32' },
+  { nr:  8, soll: 'rauschen', grund: 'die Seite selbst antwortet mit 404 (Abbruchseite)',
+    text: 'Failed to load resource: the server responded with a status of 404 (Not Found)',
+    ort:  'SEITE' },
+  { nr:  9, soll: 'fehler',   grund: 'Verbindungsfehler ohne Fundstelle — wird gezaehlt',
+    text: 'Failed to load resource: net::ERR_CONNECTION_RESET',
+    ort:  '' },
+  { nr: 10, soll: 'rauschen', grund: 'Unterbereich eines Kachelservers',
+    text: 'Failed to load resource: net::ERR_CONNECTION_CLOSED',
+    ort:  'https://a.tile.openstreetmap.org/12/2200/1400.png' },
+];
+
+if (flag('--selbstprobe')) {
+  const seitenAdresse = BASIS + '/einsatz.php?id=1';
+  let erfuellt = 0;
+  console.log('Selbstprobe istRauschen() — Basis ' + BASIS + '\n');
+  for (const f of SELBSTPROBE) {
+    const ort = f.ort === 'SEITE' ? seitenAdresse : f.ort.replace('EIGEN', BASIS);
+    const meldung = { text: () => f.text, location: () => ({ url: ort }) };
+    const ist = istRauschen(meldung, seitenAdresse) ? 'rauschen' : 'fehler';
+    const ok = ist === f.soll;
+    if (ok) erfuellt++;
+    console.log(`${ok ? ' ok ' : 'FEHL'}  ${String(f.nr).padStart(2)}  `
+      + `soll ${f.soll.padEnd(8)} ist ${ist.padEnd(8)}  ${f.grund}`);
+  }
+  console.log(`\n${erfuellt} von ${SELBSTPROBE.length} Faellen erwartungsgemaess, `
+    + `${SELBSTPROBE.length - erfuellt} nicht.`);
+  process.exit(erfuellt === SELBSTPROBE.length ? 0 : 1);
 }
 
 rmSync(AUSGABE, { recursive: true, force: true });

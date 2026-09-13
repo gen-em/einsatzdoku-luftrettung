@@ -10,12 +10,12 @@ wird nach der Freigabe gelöscht.*
 
 > | | |
 > |---|---|
-> | Stand | **Vollständig — AP1 bis AP10 erledigt** (13.09.2026), alle neun Backlog-Punkte. Offen ist der **Merge auf `main`** nach Freigabe und danach die Prüfliste in Abschnitt 4 |
+> | Stand | **Vollständig — AP1 bis AP10 und der Nachtrag AP11 erledigt** (13.09.2026): die neun Backlog-Punkte des Auftrags, dazu **Nr. 176** auf Anweisung. Offen ist der **Merge auf `main`** nach Freigabe und danach die Prüfliste in Abschnitt 4 |
 > | Stufe | **Web 19.3.1 — Korrektur** (E-BR3-14; die Begründung steht im Konzept). **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt. `version.php` steigt erst mit AP4 — dem ersten Paket, das `server/` anfasst |
 > | Punkte | Backlog **Nr. 91, 94, 117, 47, 58, 173, 174** erledigt; **Nr. 67** Unterpunkt erledigt, Punkt bleibt (P5); **Nr. 41** drei Streichungen erledigt, Punkt bleibt (9c) |
 > | Neu entstanden | Prüfgruppe „5 Zusagen" in `tools/vollstaendigkeit/`, Liste `zusagen.md`; neue Referenzdateien unter `tools/referenzdatensatz/referenz/` |
 > | Prüfumgebung | Wegwerf-Container (Linux 6.18, x86_64): **PHP 8.4.19** (eingebauter Server, `opcache.enable_cli` Off), **MariaDB 10.11.14** (mit AP4 nachinstalliert — der Container bringt keinen Datenbankserver mit), TLS über `socat` auf 8443, **Chromium** über Playwright. Volle Installation mit Demo-Konto: 88 Einsätze, 16 Diensttage, 2 Geräte. **Kein ImageMagick, kein `rsvg-convert`** (AP2), **kein Connect-IQ-Simulator** (AP1) |
-> | Ergebnis | **Maschinell grün, mit zwei Funden und einer nicht reproduzierbaren Zahl.** Wortliste **0/0**, Vollständigkeit **330** Befunde (`[offen]` 2, Gruppe 5: 0/2/0 und 0/7/0), Linkprobe **117/0**, Wartungsprobe **55/0**, Spurprobe **45/0**, Kontraste **22/0**, Klickprobe **40/40**, Kreisläufe **287 687/0** und **9 120/0** gegen die neue Referenz, Bilderlauf **360 Bilder, 0/0/0**, `php -l` **100/0**, Selbstprüfzahl **54 = 54**. **Zwei echte Funde:** `apk.php` lieferte seine 404-Seite ohne Seitenhülle aus (behoben, H-BR3-1) und der Rauschfilter des Bilderlaufs verschluckt lokale Fehler (**nicht** behoben — Nr. 176, K4). **Eine Zahl bleibt offen:** Ein früherer Bilderlauf meldete 15 Konsolenfehler, der Abschlusslauf 0; der alte Bericht existiert nicht mehr (Abschnitt 2) |
+> | Ergebnis | **Maschinell grün, mit zwei Funden und einer nicht reproduzierbaren Zahl.** Wortliste **0/0**, Vollständigkeit **330** Befunde (`[offen]` 2, Gruppe 5: 0/2/0 und 0/7/0), Linkprobe **117/0**, Wartungsprobe **55/0**, Spurprobe **45/0**, Kontraste **22/0**, Klickprobe **40/40**, Kreisläufe **287 687/0** und **9 120/0** gegen die neue Referenz, Bilderlauf **360 Bilder, 0/0/0**, `php -l` **100/0**, Selbstprüfzahl **54 = 54**. **Zwei echte Funde, beide behoben:** `apk.php` lieferte seine 404-Seite ohne Seitenhülle aus (H-BR3-1) und der Rauschfilter des Bilderlaufs verschluckte Fehler des eigenen Servers (Nr. 176, auf Anweisung in **AP11** behoben — Selbstprobe **10 von 10**, alte Funktion 6 von 10, am Browser 1 von 2 verworfen gegen 0 von 2). **Nr. 177** (doppelte Fassungsnummern im Rahmenplan) ist **zurückgestellt**, rein dokumentarisch. **Eine Zahl bleibt offen:** Ein früherer Bilderlauf meldete 15 Konsolenfehler, der Abschlusslauf 0; der alte Bericht existiert nicht mehr (Abschnitt 2) |
 
 ---
 
@@ -82,16 +82,20 @@ dazukommt, gehört hierher.
   Rundlaufs, **kein Serverfehler**. Die Zahl der Konsolenfehler des
   Bilderlaufs ist davon unberührt, weil ein abgeräumter Teilabruf gar keine
   Konsolenmeldung erzeugt (0 von 14).
-- **Dabei ist ein echter Fund abgefallen, der NICHT behoben ist:** Der
-  Rauschfilter des Bilderlaufs (`istRauschen()` in
-  `tools/screenshots/aufnehmen.mjs`) prüft drei Fehlercodes gegen den
-  **Meldungstext**, ohne die Fundstelle anzusehen — ein lokaler Abruf, der mit
-  `ERR_CONNECTION_RESET`, `ERR_CONNECTION_CLOSED` oder `ERR_ABORTED`
-  scheitert, wird als Kartenrauschen weggeworfen. Am Muster nachgerechnet:
-  **3 von 5** gebauten Fällen mit lokaler Fundstelle werden verschluckt, zwei
-  gezählt (`ERR_CONNECTION_REFUSED`, HTTP 500). **Das ist Backlog Nr. 176**
-  und nach K4 nicht in dieser Runde behoben. Es heißt auch: Die Zeile
-  „0 Konsolenfehler" unten deckt diese drei Fehlerarten **nicht** ab.
+- **~~Dabei ist ein echter Fund abgefallen, der NICHT behoben ist~~ — behoben
+  am 13.09.2026 in AP11, auf Anweisung.** Der Rauschfilter des Bilderlaufs
+  (`istRauschen()` in `tools/screenshots/aufnehmen.mjs`) prüfte drei
+  Fehlercodes gegen den **Meldungstext**, ohne die Fundstelle anzusehen — ein
+  lokaler Abruf, der mit `ERR_CONNECTION_RESET`, `ERR_CONNECTION_CLOSED` oder
+  `ERR_ABORTED` scheiterte, wurde als Kartenrauschen weggeworfen. **Das war
+  Backlog Nr. 176**; der Eintrag steht jetzt unter *Erledigt*. Der Absatz
+  bleibt sichtbar, damit nachvollziehbar ist, dass die Lücke bestand: Die Zeile
+  „0 Konsolenfehler" der ersten Messung deckte diese drei Fehlerarten **nicht**
+  ab — die Messung ist nach der Behebung wiederholt worden und meldet dieselbe
+  Zahl (Abschnitt 2, AP11-Zeilen). **Was weiterhin nicht abgedeckt ist:** ein
+  Verbindungsfehler auf einer **fremden** Adresse. Er wird verworfen, weil der
+  Filter nicht wissen kann, ob die Adresse überhaupt abgerufen werden durfte;
+  das messen `tools/vollstaendigkeit/` und die Zusage aus `CLAUDE.md` 4.
 
 ---
 
@@ -106,6 +110,13 @@ dazukommt, gehört hierher.
   `prompt()` außerhalb der zwei Rückfälle; jede Seite mit `ui_seite_start()`
   hat ihr Gerüst, sieben Ausnahmen mit Grund. Beide sind Regeln, die vorher
   nur im Kopf standen.
+- **`tools/screenshots/LIESMICH.md`:** Der Satz „gefiltert wird über die
+  **Fundstelle** der Meldung, nicht über ihren Wortlaut" stand dort seit P3 und
+  war für drei Fehlercodes **unwahr**. Er ist durch die drei Klassen ersetzt,
+  die der Code tatsächlich unterscheidet, samt der Falle und ihrer Zahl
+  (Nr. 176, AP11). Das ist die einzige Zusagenänderung des Nachtrags — und eine
+  eigene Sorte: nicht eine Zusage, die aufgeweicht oder ausgeweitet wird,
+  sondern eine, die nie eingelöst war.
 - **Keine weitere Zusage berührt.** Die Runde hat keine Zusage aus
   `CLAUDE.md` 4 angefasst: kein Feld ist in den verschlüsselten Block
   gewandert oder daraus heraus, keine fremde Laufzeitquelle ist dazugekommen,
@@ -161,16 +172,22 @@ dazukommt, gehört hierher.
 | **AP1 · `grep -c Confirmation tools/uhr-pruefstand/LIESMICH.md`** | **0** — die Lehre aus S5/C stand nirgends | ≥ 1 | **3** ✓ |
 | **AP1 · die vier Aussagen einzeln** (Bild blind · `Return` bestätigt · BACK ohne `onResponse` · Wirkung statt Bild) | — | je **1** Fundstelle | **1 / 1 / 1 / 1** ✓ |
 | **Selbstprüfzahl** (Rahmenplan Abschnitt 5 ↔ offene Backlog-Punkte, Einzeiler aus Fassung 46) | 59 = 59 | gleich nach **jedem** Paket, nicht erst in AP10 (E-BR3-13) | nach AP1 **58 = 58** ✓ |
-| **AP10 · Bilderlauf über alles** (`aufnehmen.mjs --klein`, Zeigergerät) | 12.09.2026: 96 Bilder über sechs Seiten | **0** Überlauf, **0** Konsolenfehler, **0** Knöpfe falscher Höhe | **45 Seiten × 8 Breiten = 360 Einzelbilder, 45 Kontaktbögen · Überlauf 0 · Konsolenfehler 0 · Knopfhöhen 0** ✓ |
+| **AP10 · Bilderlauf über alles** (`aufnehmen.mjs --klein`, Zeigergerät) | 12.09.2026: 96 Bilder über sechs Seiten | **0** Überlauf, **0** Konsolenfehler, **0** Knöpfe falscher Höhe | **45 Seiten × 8 Breiten = 360 Einzelbilder, 45 Kontaktbögen · Überlauf 0 · Konsolenfehler 0 · Knopfhöhen 0** ✓ — **diese Messung lief noch mit dem alten Rauschfilter**; die „0 Konsolenfehler" war damit schwächer belegt, als sie aussah. Der Lauf ist nach der Behebung von Nr. 176 wiederholt worden (AP11-Zeile weiter unten) und meldet dieselbe Zahl |
 | **AP10 · Gegenprobe, dass die 360 Bilder nicht dasselbe zeigen** (Rezept aus der LIESMICH) | — | Dateizahl = Zahl verschiedener Bilder | **360 Dateien, 356 verschiedene** — die vier Doppel sind **erklärt und erwartet**: `11-tagesuebersicht-schublade` bei 1024, 1280, 1440 und 1920 px ist Bild für Bild `10-tagesuebersicht`, weil `.nur-schublade{display:none}` in `@media (min-width:1024px)` steht (`style.css:1887/1921`) — ab 1024 px gibt es keine Schublade. Unter 1024 px (360/390/420/768) unterscheiden sich beide ✓ |
 | **AP10 · der frühere Lauf meldete 15 Konsolenfehler** | — | aufklären oder als Grenze benennen | **nicht reproduzierbar.** Der Abschlusslauf auf demselben Stand meldet **0** über 45 Seiten. Der Bericht des früheren Laufs existiert nicht mehr — `aufnehmen.mjs` löscht `ausgabe/` bei jedem Start (`rmSync`), die Wortlaute sind damit weg. Was aufgeklärt ist, steht in Abschnitt 0: die gescheiterten **Abrufe** waren `ERR_ABORTED` aus der Navigation und erzeugen **gar keine** Konsolenmeldung (0 von 14) |
-| **AP10 · Spurprobe** (`php tools/spurprobe/probe.php`) | 45 Erwartungen, 0 nicht erfüllt | **0** nicht erfüllt | **45 Erwartungen, 0 nicht erfüllt** ✓ |
+| **AP10 · Spurprobe** (`php tools/spurprobe/probe.php`) | 45 Erwartungen, 0 nicht erfüllt | **0** nicht erfüllt | **45 Erwartungen, 0 nicht erfüllt** ✓ — nach AP11 erneut gelaufen, gleiche Zahl |
+| **AP11 · die übrigen Mittel nach dem Nachtrag erneut** | die Zahlen aus AP10 | alle **unverändert** — der Nachtrag fasst nur `tools/screenshots/` und Dokumente an | Wortliste **0/0** · Vollständigkeit **330** · Linkprobe **117/0** · Wartungsprobe **55/0** · Spurprobe **45/0** · Kontraste **22/0** · `php -l` **100/0** ✓ · **S5-Anker: nicht gefunden 7, mehrdeutig 1, verschoben 35, unverändert 9** — unverändert; kein Anker zeigt in `tools/screenshots/` (nachgesehen, weil AP2 genau diese Falle hatte) |
 | **AP10 · Kontraste** (`python3 tools/screenshots/kontrast.py`) | 22 Paare, 0 verfehlt | **0** verfehlt | **22 Paare, 0 verfehlt** ✓ |
 | **AP10 · `php -l` über `server/`** | — | 0 Fehler | **100 Dateien, 0 Fehler** ✓ |
-| **AP10 · Selbstprüfzahl am Ende** | nach AP1 58 = 58 | gleich — und die zwei neuen Nummern 176/177 sind in **beiden** Listen | **54 = 54** ✓ (52 = 52 vor dem Anlegen von 176 und 177) |
-| **AP10 · Backlog-Nummernmenge gegen `dabd7a3`** | 170 Einträge | 0 verloren, 0 doppelt | **171 → 173 Einträge, 0 verloren, 0 doppelt**; neu 175 (Runde 2/Durchsicht, hier eingetragen), **176** und **177** (Funde dieses Pakets) ✓ |
+| **Selbstprüfzahl am Ende** | nach AP1 58 = 58 | gleich — und jede neue Nummer in **beiden** Listen | nach AP10 **54 = 54** (52 = 52 vor dem Anlegen von 176 und 177), nach AP11 **53 = 53** ✓ — Nr. 176 ist aus Abschnitt 5 heraus und unter *Erledigt* |
+| **Backlog-Nummernmenge gegen `dabd7a3`** | 170 Einträge | 0 verloren, 0 doppelt | **171 → 173 Einträge, 0 verloren, 0 doppelt**; neu 175 (Runde 2/Durchsicht, hier eingetragen), **176** und **177** (Funde des Abschlusses). **Nach dem Verschieben von 176 in AP11 erneut gemessen: 173 Einträge, 0 verloren, 0 doppelt** ✓ |
 | **AP10 · `kdf_upgrade.php` aus dem Browser** (Demo-Anmeldung, alle `api/`-Antworten mitgeschrieben) | — | der Endpunkt wird aufgerufen und antwortet 200 | **er wird NICHT aufgerufen — und kann es auf diesem Stand nicht**: `unlock.js:184` ruft nur, wenn `KDF_ITER_ZIEL !== kdf_iter` **und** ein Token zur gespeicherten Rundenzahl vorliegt; `KDF_ITER_LISTE` hat seit dem 12.09.2026 (Nr. 155) **einen** Eintrag, und alle **4** Konten der Installation stehen auf **600 000** (SQL nachgezählt). Gemessen wurden stattdessen zwei Aufrufe: `api/day.php` **200**, `api/pat_anheben.php` **200**; Anmeldung landet auf `index.php`, Titel „Tagesübersicht — Gen-EM NAdoku" ✓ |
 | **AP10 · `watch/` und `android/` unberührt** | — | leerer Diff | `git diff --stat origin/main -- watch android` **leer** ✓ |
+| **AP11 · Selbstprobe der Rauschunterscheidung** (`aufnehmen.mjs --selbstprobe`, neu) | — (das Mittel gab es nicht) | **10 von 10** Fällen erwartungsgemäß; Rückgabewert 0 | **10 von 10, 0 nicht** ✓ — darunter die drei Fälle, um die es geht (Symbol mit `ERR_CONNECTION_RESET`, Stylesheet mit `ERR_CONNECTION_CLOSED`, API mit `ERR_ABORTED`, alle auf der eigenen Basis) und die Gegenrichtung (Kachelserver bleibt Rauschen, 2 Fälle) |
+| **AP11 · dieselben zehn Fälle durch die ALTE Funktion** | — | die Probe muss am alten Stand **rot** werden, sonst prüft sie nichts | **6 von 10, 4 falsch** ✓ — falsch eingestuft: Symbol/RESET, Stylesheet/CLOSED, API/ABORTED und der Fall **ohne Fundstelle**. Die alte Funktion ist **wörtlich aus `git show origin/main:tools/screenshots/aufnehmen.mjs`** geholt (`sed -n '/^const KACHELRAUSCHEN =/,/^}/p'`), nicht abgeschrieben — ein abgeschriebenes Muster hätte den Beweis wertlos gemacht |
+| **AP11 · am laufenden Browser** (Seite geladen, **PHP-Server angehalten**, socat weiter; Symbol und API-Aufruf nachgeladen) | — | ein echter Verbindungsverlust auf der **eigenen** Basis; der alte Filter verwirft ihn, der neue nicht | **2 Konsolenfehler auf der eigenen Basis** ✓ — `assets/images/symbole/haus.svg?probe176=1` → `ERR_EMPTY_RESPONSE`, `api/day.php?d=32` → `ERR_CONNECTION_RESET`. **ALT verwarf 1 von 2, NEU 0 von 2** ✓. **Nebenbefund:** `ERR_EMPTY_RESPONSE` stand nie im Muster — der Fehler war also nur für einen Teil der Abbrüche unsichtbar, nicht für alle |
+| **AP11 · Bilderlauf nach der Behebung** (dieselbe Installation, dieselben 45 Seiten) | AP10: 360 Bilder, 0/0/0 | die Zahl muss **halten** — sonst war sie vorher falsch | **45 Seiten, 360 Einzelbilder, 45 Kontaktbögen · Überlauf 0 · Konsolenfehler 0 · Knopfhöhen 0** ✓. Gegenprobe erneut: **360 Dateien, 356 verschiedene**, dieselben vier erklärten Doppel (Schublade ab 1024 px). Die Zahl der Runde war also richtig — sie war nur nicht belegt |
+| **AP11 · Syntax und Nebenwirkung** | — | `node --check` ohne Fehler; `--selbstprobe` löscht die Ausgabe **nicht** | **`node --check` 0 Fehler** ✓ · der Probelauf endet **vor** `rmSync(AUSGABE)`: `bericht.md` **2905 Bytes vor und 2905 Bytes nach** dem Probelauf, **360** Einzelbilder unverändert ✓ |
 
 ---
 
@@ -234,12 +251,13 @@ dazukommt, gehört hierher.
   Ausnahmen erklärt, 96 von 96 Regeln gegriffen), und AP10 hat ausschließlich
   Dateien angefasst, die **keiner** dieser Bereiche führt. Für sie gibt es
   keinen maschinellen Beleg, nur gelesenen Text.
-- **Der Bilderlauf zählt drei Fehlerarten nicht mit.** `ERR_CONNECTION_RESET`,
-  `ERR_CONNECTION_CLOSED` und `ERR_ABORTED` fallen auch dann unter das
-  Kartenrauschen, wenn die Fundstelle der eigene Server ist (Nr. 176, mit Zahl
-  in Abschnitt 0). „0 Konsolenfehler" heißt also: **0 außerhalb dieser drei
-  Arten.** Solange Nr. 176 offen ist, gehört dieser Satz zu jeder Zahl des
-  Bilderlaufs.
+- **~~Der Bilderlauf zählt drei Fehlerarten nicht mit.~~** Behoben in AP11
+  (Nr. 176): Die drei Codes zählen jetzt mit, wenn die Fundstelle die eigene
+  Herkunft ist. **Was bleibt:** Ein Verbindungsfehler auf einer **fremden**
+  Adresse wird weiterhin verworfen — der Filter kann nicht wissen, ob die
+  Adresse überhaupt abgerufen werden durfte. Und eine Meldung **ohne**
+  Fundstelle wird seit AP11 **gezählt**; wer nach einem Lauf eine unerklärte
+  Zeile sieht, sucht dort zuerst.
 - **Der Bilderlauf löscht seine eigene Vorgeschichte.** `rmSync(AUSGABE)` beim
   Start heißt: Es gibt immer nur den letzten Lauf. Wer zwei Läufe vergleichen
   will, sichert den Bericht vorher — sonst ist die frühere Zahl unbelegbar,
@@ -254,11 +272,26 @@ dazukommt, gehört hierher.
 - **Nr. 41** (Regeln für `imp-warn`, `imp-daygroup`) — Mockup-Runde 9c.
 - **Nr. 172** (Wartungsprobe, Erwartung 15 flattert) — unverändert, nicht
   Teil dieser Runde.
-- **Nr. 176** (Rauschfilter des Bilderlaufs verschluckt lokale Fehler) —
-  neu in dieser Runde, Backlog-Runde. Nach K4 nicht mitbehoben.
+- **~~Nr. 176~~ (Rauschfilter des Bilderlaufs) — erledigt in AP11**, auf
+  Anweisung vom 13.09.2026. Bleibt hier stehen, weil die Begründung sich
+  gedreht hat: Ich hatte den Punkt nach K4 nur eingetragen, „weil er das
+  Messmittel dieser Runde ändert"; der Auftraggeber hat daraus den
+  Gegenschluss gezogen — **weil** er das Messmittel ist, gehört er in diese
+  Stufe (E-BR3-17).
+- **Nr. 178** (die Kopplungsprobe wirft jede Meldung „Failed to load
+  resource" weg) — neu in AP11, beim Durchsuchen der Geschwisterwerkzeuge
+  gefunden, **nicht behoben** (K4). Gemessen **4 von 8** gebauten Fällen falsch,
+  darunter ein **404** und ein **500** auf der eigenen Basis, für die
+  `requestfailed` nicht feuert. Die beiden anderen Browserwerkzeuge sind
+  geprüft und in Ordnung. Braucht eine eigene Abnahme (ein eingeschleuster
+  500er im Rundlauf, dafür ein gekoppeltes Gerät) — deshalb ein Paket, kein
+  Nachtrag.
 - **Nr. 177** (sechs doppelte Fassungsnummern im Änderungsverlauf des
-  Rahmenplans) — neu in dieser Runde, Backlog-Runde. Umnummerieren
-  historischer Zeilen ist eine Festlegung, keine Korrektur.
+  Rahmenplans) — neu in dieser Runde, **zurückgestellt** am 13.09.2026
+  („nur historisch"). Nachgemessen und im Backlog vermerkt: **zwei** andere
+  Dokumente zitieren betroffene Nummern, und der Fund ist schon am 09.09.2026
+  in der R39-Bestandsaufnahme verzeichnet worden. Ohne Wirkung auf Code, Daten
+  oder Oberfläche; bleibt offen für die nächste größere Rahmenplan-Pflege.
 - **Nr. 175** (`edbak_uebersicht()` ohne Aufrufer) — nicht Teil dieser Runde,
   am 13.09.2026 aus der Durchsicht übernommen und hier nur eingetragen.
 - **Die 15 Konsolenfehler eines früheren Bilderlaufs** sind nicht aufgeklärt,

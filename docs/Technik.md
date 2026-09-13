@@ -470,7 +470,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      Seit Web 9.10.1 prueft er nach JEDEM Aufruf, ob er
 │   │                      die richtige Seite vor sich hat, und meldet sich bei
 │   │                      Bedarf neu an; ein nicht aufloesbarer Platzhalter
-│   │                      ergibt kein Bild (F-P3-AQ).
+│   │                      ergibt kein Bild (F-P3-AQ). Welche rote Zeile als
+│   │                      Konsolenfehler zaehlt, entscheidet istRauschen() in
+│   │                      drei Klassen; --selbstprobe haelt die Funktion gegen
+│   │                      zehn Faelle mit Sollwert (Backlog Nr. 176).
 │   │                      kontrast.py rechnet die Kontraste der Token nach
 │   │                      (s. LIESMICH.md)
 │   ├── spurprobe/         prüft den Rundlauf des Blob-Formats SPUR1 über den

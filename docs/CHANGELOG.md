@@ -27,6 +27,58 @@ Punkte liegen in `tools/` und `docs/` und lösen nach CLAUDE.md 2 keine Stufe
 aus; sie stehen hier unter derselben Überschrift, weil sie zur selben Runde
 gehören. Uhr und Android sind unberührt.
 
+**Ein zehnter Punkt ist im Abschluss entstanden und auf Anweisung gleich
+mitbehoben** (Nr. 176, der Abschnitt darunter): Er betrifft das Messmittel,
+mit dem alle Bildzahlen dieser Stufe belegt sind — deshalb steht er hier und
+nicht in der nächsten Runde.
+
+### Prüfmittel — der Bilderlauf verwarf auch Fehler des eigenen Servers
+
+**Eine Zusage, die die Dokumentation richtig beschrieb und der Code nicht
+einhielt** (Nr. 176, gefunden im Abschlusspaket der Runde). `istRauschen()` in
+`tools/screenshots/aufnehmen.mjs` entscheidet, welche rote Konsolenzeile in
+den Bericht kommt. Die LIESMICH sagte, gefiltert werde „über die **Fundstelle**
+der Meldung, nicht über ihren Wortlaut" — für die Kachelhosts stimmte das, für
+drei Fehlercodes nicht: `ERR_CONNECTION_RESET`, `ERR_CONNECTION_CLOSED` und
+`ERR_ABORTED` standen in **demselben** Muster wie die Gastgebernamen und
+wurden gegen den Wortlaut geprüft. **Damit fiel jeder Abruf auf dem eigenen
+Server unter das Kartenrauschen, sobald er mit einem dieser drei scheiterte.**
+Der Bericht konnte „0 Konsolenfehler" melden für eine Seite, auf der das
+Stylesheet nicht angekommen ist.
+
+**Warum die Codes überhaupt drinstanden** — und warum das kein Schlamperei-,
+sondern ein Abkürzungsfehler war: In dieser Arbeitsumgebung setzt die
+Egress-Sperre den TLS-Handschlag zu den Kachelservern zurück (F-P3-AC). Der
+Code beschreibt also einen erwartbaren Zustand; er beschreibt nur nicht, **wo**
+er erwartbar ist. Jetzt greift die Codeliste nur, wenn die Fundstelle **nicht**
+die eigene Basis ist; die Hostliste ist unverändert, ein Kachelabruf trägt
+seinen Gastgeber in der Fundstelle und fällt weiter heraus.
+
+**Zwei Entscheidungen dabei bewusst zur lauten Seite hin.** Eine Meldung
+**ohne** Fundstelle wird gezählt, nicht verworfen — sie lässt sich nicht
+zuordnen, und eine Zeile zu viel im Bericht ist besser als eine stille Lücke.
+Und der Fehlercode wird nur noch im Wortlaut gesucht, nicht auch in der
+Fundstelle: In einer URL kommt er nicht vor, die zweite Suche war ohne Wirkung
+und verdeckte nur, worauf es ankommt.
+
+**Belegt in drei Richtungen, nicht behauptet.** Die neue **Selbstprobe**
+(`node tools/screenshots/aufnehmen.mjs --selbstprobe`) hält die Funktion gegen
+zehn gebaute Fälle mit Sollwert: **10 von 10** erwartungsgemäß. Dieselben zehn
+Fälle durch die **alte** Funktion — wörtlich aus `git show` geholt, nicht
+abgeschrieben — ergeben **6 von 10**, die vier falschen sind drei lokale
+Abbrüche und der Fall ohne Fundstelle. Und am laufenden Browser: Seite geladen,
+**PHP-Server angehalten** (socat blieb, die Basis also dieselbe), dann Symbol
+und API-Aufruf nachgeladen — zwei Konsolenfehler auf der eigenen Basis
+(`ERR_EMPTY_RESPONSE` und `ERR_CONNECTION_RESET`), davon verwarf der alte
+Filter **einen**, der neue **keinen**. Der Abschlusslauf über 45 Seiten meldet
+mit der neuen Regel unverändert **0 Konsolenfehler** — die Zahl war also
+richtig, sie war nur nicht belegt.
+
+**Was weiterhin stumm bleibt** und deshalb in den Grenzen der LIESMICH steht:
+ein Verbindungsfehler auf einer **fremden** Adresse. Ob eine solche Adresse zur
+Laufzeit überhaupt abgerufen werden darf, ist die Zusage aus CLAUDE.md 4 und
+wird von `tools/vollstaendigkeit/` gemessen, nicht hier.
+
 ### Prüfmittel — die Auswahl in `WatchUi.Confirmation` ist im Bild nicht zu sehen
 
 **Das Problem war nicht der Dialog, sondern das Suchen** (Nr. 91, aufgenommen

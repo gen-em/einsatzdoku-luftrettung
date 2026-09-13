@@ -23,13 +23,13 @@ Prüfdokument nach K9 liegt als Vorlage daneben
 | | |
 |---|---|
 | **In Arbeit** | **nichts mehr** — die Runde ist gebaut und geprüft. Offen ist die **Freigabe** und danach der **Merge auf `main`** (deployt sofort, Abschnitt 3 von `CLAUDE.md`) |
-| **Erledigt** | **Block A** (AP1–AP5), **Block B** (AP6, AP7), **Block C** (AP8, AP9) und der **Abschluss** (AP10) — alle neun Punkte, zehn von zehn Paketen |
-| **Offen** | nichts aus dem Auftrag. Nicht aus dem Auftrag, aber neu entstanden: **Nr. 176** (Rauschfilter des Bilderlaufs) und **Nr. 177** (doppelte Fassungsnummern im Rahmenplan) — beide nach K4 nur eingetragen, nicht behoben |
+| **Erledigt** | **Block A** (AP1–AP5), **Block B** (AP6, AP7), **Block C** (AP8, AP9), der **Abschluss** (AP10) und der **Nachtrag AP11** — alle neun Punkte des Auftrags, dazu **Nr. 176** auf Anweisung |
+| **Offen** | nichts aus dem Auftrag. Neu entstanden und **behoben**: **Nr. 176** (Rauschfilter des Bilderlaufs — AP11, auf Anweisung vom 13.09.2026, weil er das Messmittel aller Bildzahlen dieser Stufe betrifft). Neu entstanden und **zurückgestellt**: **Nr. 177** (doppelte Fassungsnummern im Rahmenplan — rein dokumentarisch, Entscheidung des Auftraggebers). Neu entstanden und **nach K4 nicht behoben**: **Nr. 178** (dieselbe Lücke, breiter, in `tools/kopplungsprobe/` — braucht eine eigene Abnahme am gekoppelten Gerät) |
 | **H-BR3-1** | **Ausgelöst und aufgelöst** (AP7): Die Gegenrichtung der neuen Prüfung fand einen echten Fehler — die 404-Seite von `apk.php` ohne Seitenhülle. Gemeldet, belegt, behoben; **nicht** auf die Ausnahmeliste gesetzt |
 | **H-BR3-2** | **Ausgelöst und aufgelöst** (AP9): Die Vormessung ergab 0 statt 2 Rettungsmittel ohne Standort. Angehalten, gemeldet — und die erste Diagnose war **falsch** (siehe AP9 unten). Nach der Berichtigung lief die Kette durch |
 | **Prüfstand** | **steht seit AP4**: MariaDB 10.11.14 (nachinstalliert), PHP 8.4.19, `socat`-TLS auf 8443, volle Installation mit Demo-Konto (88 Einsätze, 16 Diensttage, 2 Geräte), Chromium über Playwright. Aufbau: `lokal_starten.sh` + `lokal_einrichten.sh` |
 | **Stufe der Runde** | **Web 19.3.1 — Korrektur** (E-BR3-14), festgelegt vor AP1; `version.php` wird mit AP4 hochgestuft, dem ersten Paket, das `server/` anfasst |
-| **Hakt es?** | Nein. Vier Abweichungen vom Konzept sind entschieden und begründet: E-BR3-13 (Abschnitt-5-Zeilen wandern je Paket, nicht gesammelt in AP10), E-BR3-14 (Stufe), E-BR3-15 (die Abnahme von AP2 war so nicht erfüllbar) und E-BR3-16 (der Bilderlauf lief über **alle** Seiten, nicht nur über die zwei berührten — Begründung in AP10) |
+| **Hakt es?** | Nein. Fünf Abweichungen vom Konzept sind entschieden und begründet: E-BR3-13 (Abschnitt-5-Zeilen wandern je Paket, nicht gesammelt in AP10), E-BR3-14 (Stufe), E-BR3-15 (die Abnahme von AP2 war so nicht erfüllbar), E-BR3-16 (der Bilderlauf lief über **alle** Seiten, nicht nur über die zwei berührten) und E-BR3-17 (ein elftes Paket, das das Konzept nicht hatte — Nr. 176) |
 | **Zweig** | `claude/backlog-runde-3-umsetzung-woqxjm`, nach jedem Paket gepusht |
 
 ---
@@ -187,6 +187,7 @@ nur, was dieses Paket braucht, plus der Schnitt vom 13.09.2026.
 | **E-BR3-15** | **Die Abnahme von AP2 ist berichtigt: `grep -ci bitgleich tools/uhr-bilder/` = 0 ist nicht erfüllbar.** Das Konzept verlangte in AP2 beides — den Zusatz in der LIESMICH, „dass `compare -metric AE` genau das misst und ein PNG wegen des Zeitstempel-Chunks nie bitgleich ist" (E-BR3-04), **und** null Vorkommen des Wortes. Der Zusatz lässt sich ohne das Wort nicht schreiben; er verneint es. Neues Sollmaß, das die Absicht trifft: **null Vorkommen, die die Bitgleichheit behaupten** — jedes verbliebene ist Verneinung oder datierte Rückschau. Gemessen nach AP2: **3 Vorkommen, 0 Behauptungen** | Umsetzung 13.09.2026 |
 | **E-BR3-14** | **Die Stufe der Runde ist `Web 19.3.1` — eine Korrektur.** K3 und Abschnitt 5 hatten die Wahl der Umsetzung überlassen. Begründung: Von den neun Punkten fassen genau zwei `server/` an, und beide sind nach der Zählweise in CLAUDE.md 2 Korrektur — die CSRF-Prüfung vor den Demo-Ausstieg setzen (AP4, Fehlerbehebung) und drei Klassen ohne Regel aus dem Markup streichen (AP5, Feinschliff). Keine neue Funktion, kein neues Feld, keine Migration. Die Überschrift im Changelog steht seit AP1, damit die `tools/`- und `docs/`-Punkte einen Ort haben; `version.php` steigt erst mit AP4 | Umsetzung 13.09.2026 (K3) |
 | **E-BR3-16** | **Der Bilderlauf des Abschlusses läuft über ALLE Seiten, nicht über die zwei berührten.** AP10 (1) hatte „Bilderlauf auf den zwei berührten Seiten" vorgesehen. Der Vergleich vor/nach auf diesen Seiten hat AP5 aber schon geführt (0 abweichende Bildpunkte auf vier Seiten) — AP10 beantwortet die andere Frage: ob die Runde irgendwo **sonst** etwas kaputtgemacht hat. Dafür reichen zwei Seiten nicht. Gemessen: 45 Seiten, 360 Bilder, 0/0/0 | Umsetzung 13.09.2026, AP10 |
+| **E-BR3-17** | **Nr. 176 wird in DIESER Stufe behoben, nicht in der nächsten Runde — als elftes Paket (AP11).** Die Umsetzung hatte den Fund nach K4 nur eingetragen, mit der Begründung, er ändere das Messmittel, mit dem diese Runde ihre Zahlen belegt. Der Auftraggeber hat den Gegenschluss gezogen: **Weil** das Messmittel die Zahlen dieser Stufe trägt, gehört es in diese Stufe. Eine Zahl wird nicht belastbar, indem das ungenaue Mittel eine Backlog-Nummer bekommt. Keine Versionsstufe — nur `tools/` und `docs/` | Auftraggeber 13.09.2026, nach AP10 |
 
 ---
 
@@ -501,9 +502,13 @@ Referenz · Bilderlauf **360 Bilder / 45 Kontaktbögen, 0/0/0** · `php -l`
 **0 verloren, 0 doppelt**.
 
 **Und was sie nicht belegt** (ausführlich im Prüfdokument, Abschnitt 0 und 5):
-kein Simulatorlauf für Nr. 91 und 94, kein Produktivstand, und „0
-Konsolenfehler" heißt solange Nr. 176 offen ist: 0 außerhalb dreier
-Fehlerarten, die der Rauschfilter verschluckt.
+kein Simulatorlauf für Nr. 91 und 94, kein Produktivstand. **Der Vorbehalt zu
+„0 Konsolenfehler" ist mit AP11 weg** — er lautete „0 außerhalb dreier
+Fehlerarten, die der Rauschfilter verschluckt", und genau diese drei Arten
+zählt der Filter jetzt mit, wenn sie auf der eigenen Basis auftreten (Nr. 176;
+Selbstprobe 10 von 10, dieselbe Zahl 0 nach dem erneuten Lauf). Was bleibt: ein
+Verbindungsfehler auf einer **fremden** Adresse ist weiterhin stumm — dass zur
+Laufzeit keine fremde Quelle angefragt wird, messen andere.
 
 ---
 
@@ -524,20 +529,49 @@ Roman) und mit Bild. Behoben mit einer Zeile unter Web 19.3.1, Kommentar
 daneben. **Nicht auf der Ausnahmeliste** — H-BR3-1: ein Fund gehört behoben,
 nicht erklärt.
 
-**F-BR3-03 · Der Rauschfilter des Bilderlaufs verschluckt auch lokale
-Fehler.** (AP10, 13.09.2026 — jetzt **Backlog Nr. 176**.) `istRauschen()` in
-`tools/screenshots/aufnehmen.mjs` prüft `KACHELRAUSCHEN` gegen den
-Meldungstext **und** gegen die Fundstelle. Im Muster stehen neben den
-Kartenhosts drei Fehlercodes — `ERR_CONNECTION_RESET`,
+**F-BR3-05 · Dieselbe Lücke, größer, in der Kopplungsprobe.** (AP11,
+13.09.2026 — jetzt **Backlog Nr. 178**, nach K4 **nicht** mitbehoben.) Nachdem
+Nr. 176 behoben war, lag die Frage auf der Hand, ob die anderen
+Browserwerkzeuge denselben Fehler tragen. **Zwei nicht:**
+`tools/referenzdatensatz/browser/papierkorb_misch.mjs` prüft Text **und**
+Fundstelle und führt im Muster nur Gastgebernamen plus zwei Codes, die auf
+`127.0.0.1` nicht vorkommen können; sein Kommentar nennt `tools/screenshots,
+istRauschen` als Vorbild — der Bilderlauf war also das schwächere von beiden,
+und das ist jetzt umgekehrt. `tools/messstand/browserprobe.mjs` hängt an
+`requestfailed` und hat die Adresse immer dabei. **Eines doch, und breiter:**
+`tools/kopplungsprobe/rundlauf.mjs` filtert
+`/tile\.openstreetmap\.org|ERR_ABORTED|Failed to load resource/` nur über den
+Text — die dritte Alternative verwirft **jede** Ressourcenmeldung. Gemessen an
+acht gebauten Fällen: **4 von 8** falsch, alle vier verschluckte echte Fehler,
+darunter ein **404** und ein **500** auf der eigenen Basis. Für die feuert
+`requestfailed` nicht, sie stehen nur in der Konsole — das Werkzeug könnte
+einen Serverfehler mitten im Kopplungsrundlauf nicht sehen. **Nicht
+mitbehoben**, weil die Kopplungsprobe ihre eigene Abnahme braucht (ein
+eingeschleuster 500er im Rundlauf) und dafür ein gekoppeltes Gerät am Stand —
+das ist ein Paket, kein Nachtrag.
+
+**F-BR3-03 · Der Rauschfilter des Bilderlaufs verschluckte auch lokale
+Fehler — gefunden in AP10, auf Anweisung behoben in AP11.** (13.09.2026 —
+**Backlog Nr. 176**, erledigt.) `istRauschen()` in
+`tools/screenshots/aufnehmen.mjs` prüfte `KACHELRAUSCHEN` gegen den
+Meldungstext **und** gegen die Fundstelle. In diesem einen Muster standen neben
+den Kartenhosts drei Fehlercodes — `ERR_CONNECTION_RESET`,
 `ERR_CONNECTION_CLOSED`, `ERR_ABORTED`. Ein Abruf auf dem **eigenen** Server,
-der mit einem dieser drei scheitert, wird deshalb als Kartenrauschen
-weggeworfen. Am Muster nachgerechnet: **3 von 5** gebauten Fällen mit lokaler
-Fundstelle werden verschluckt, zwei gezählt (`ERR_CONNECTION_REFUSED`,
-HTTP 500). Der Bericht kann „0 Konsolenfehler" melden für eine Seite, auf der
-das Stylesheet nicht angekommen ist. **Nicht behoben** (K4): Die Änderung ist
-klein — die Codeliste nur greifen lassen, wenn die Fundstelle nicht die eigene
-Basis ist —, aber sie ändert das Messmittel, mit dem diese Runde ihre Zahlen
-belegt hat. Das gehört in die nächste Runde, nicht in diese.
+der mit einem dieser drei scheiterte, wurde deshalb als Kartenrauschen
+weggeworfen. Am alten Muster nachgerechnet: **3 von 5** gebauten Fällen mit
+lokaler Fundstelle wurden verschluckt, zwei gezählt
+(`ERR_CONNECTION_REFUSED`, HTTP 500). Der Bericht konnte „0 Konsolenfehler"
+melden für eine Seite, auf der das Stylesheet nicht angekommen ist.
+
+**Zuerst nach K4 nicht behoben, dann auf Anweisung doch** — und die Begründung
+hat sich dabei gedreht: Ich hatte argumentiert, der Punkt ändere das
+Messmittel, mit dem diese Runde ihre Zahlen belegt, und gehöre deshalb in die
+nächste Runde. Der Auftraggeber hat genau daraus den Gegenschluss gezogen:
+**Weil** das Messmittel die Zahlen dieser Stufe trägt, gehört es in diese
+Stufe. Das ist das stärkere Argument — eine Zahl, die mit einem ungenauen
+Mittel gemessen wurde, wird nicht dadurch belastbar, dass das Mittel eine
+Nummer im Backlog hat. Umgesetzt als **AP11** (Abschnitt 8), belegt in drei
+Richtungen; die Zahl der Runde hält.
 
 **F-BR3-04 · Der Änderungsverlauf des Rahmenplans führt sechs Fassungsnummern
 doppelt.** (AP10, 13.09.2026 — jetzt **Backlog Nr. 177**.) Abschnitt 10 trägt
@@ -592,7 +626,8 @@ Wird von der umsetzenden Instanz nach jedem Paket fortgeschrieben.
 | AP7 | 58 | **erledigt** 13.09.2026 | **H-BR3-1 ist ausgelöst worden — aber nicht dort, wo das Konzept ihn erwartet hat.** Die sieben Ausnahmen sind alle echt; `pw_handling.php` und `session_lib.php`, die beiden zu prüfenden, halten stand (die eine sagt im Dateikopf „keine Sitzung", die andere rendert **nach** `session_destroy()`). Der Fund kam aus der **Gegenrichtung**, die das Konzept nur als Hinweis vorgesehen hatte: `apk.php` ruft Gerüst und `ui_seite_ende()`, aber nie `ui_seite_start()` — seine 404-Seite ging ohne Doctype, Titel und Stylesheet hinaus, Quirks-Modus, Times New Roman. Am Prüfstand belegt (HTML beginnt mit `<header>`, `compatMode` BackCompat) und mit Bild. Nach Rückfrage behoben, **nicht** auf die Liste gesetzt; der Hinweis steht seither auf **0** statt auf 1. **Zwei Zahlen des Konzepts stimmten nicht ganz:** `ui_seite_start(` rufen **36** Dateien, nicht 37 (das Konzept zählte mit Kommentaren — `version.php` nennt es in einem), und der erwartete Hinweis „1" ist nach der Behebung 0. **Ein stiller Fehler beim Bauen:** Beim ersten Lauf griff keine der sieben Ausnahmen, weil `pruefen.py` ASCII beschriftet („Geruest") und die Liste Markdown („Gerüst") — sieben Befunde, alle erklärt, ohne dass irgendwo „Vergleich fehlgeschlagen" stand. Der Vergleich löst Umlaute jetzt auf |
 | AP8 | 173 | **erledigt** 13.09.2026 | Ohne Überraschung — die einzige der zehn Zeilen, die genau so lief, wie das Konzept sie beschrieben hat. Vorher gemessen: **3 und 2** ungenutzte Regeln, die erwarteten Zahlen; die Namen holt `bericht.json` des jeweiligen Laufs (`ungenutzte_regeln`), nicht das Auge. Alle fünf beschrieben den S9/AP7-Übergang. Danach: edbak **287 687 / 0 / 16 / 0**, csv **9 120 / 0 / 1 021 / 0** — die Zeile „ungenutzte Regeln" druckt das Werkzeug nur noch, wenn es welche gibt. **Vorläufig**, wie das Konzept sagt: AP9 ersetzt die Referenz, AP10 lässt beide erneut laufen |
 | AP9 | 174 | **erledigt** 13.09.2026 | **H-BR3-2 hat genau das getan, wofür er da ist — und meine erste Diagnose war trotzdem falsch.** Die Vormessung ergab 0 statt 2 ohne Standort; ich habe angehalten und gemeldet. **Meine Diagnose lautete: die Anwendung ist kaputt** — Web 17.0.0 habe beim Dialog-Umbau den Haken „ohne Standort" und die Bedingung im Speicherweg entfernt. Der Auftraggeber hat den Weg „wiederherstellen" freigegeben; beim Einbauen zeigte der Kommentar in `stammdaten_ui.php:262`, dass der Haken **absichtlich** durch den ersten Eintrag der Auswahlliste ersetzt wurde (Web 16.3.0, mit Begründung). Die Anwendung war nie kaputt. **Serveränderung zurückgenommen**, der Fehler saß allein in `einspielen.py`: Es schickte das seit 16.3.0 tote Feld `ohne_standort=1` **neben** einer echten Kennung; jetzt `base_id=0`. **Was ich daraus mitnehme:** Ich hatte die Historie gelesen (16.0.0 führt ein, 17.0.0 entfernt) und daraus geschlossen, statt zuerst zu prüfen, wie die Sache **heute** gebaut ist. Der Kommentar, der alles erklärte, stand 100 Zeilen über der Stelle, die ich gelesen hatte. **Ein zweiter Stolperstein:** `lauf.json` hält den Zustand der Stufen; nach dem Neuaufsetzen der Datenbank hielten sie ihre Arbeit für erledigt (`ingest` sendete 0 Anfragen), und die Kette brach ab. Vor einem Neuaufbau muss er weg. Alle Abnahmezahlen erfüllt, Selbstprüfzahl **52 = 52** — die Zahl, die AP10 vorhersagt |
-| AP10 | Abschluss | **erledigt** 13.09.2026 | **Der Bilderlauf lief über alles, nicht über zwei Seiten (E-BR3-16).** Das Konzept verlangte ihn „auf den zwei berührten Seiten" — der Vergleich vor/nach war in AP5 aber schon geführt (0 abweichende Bildpunkte auf vier Seiten). Was in AP10 fehlte, war die andere Frage: Hat die Runde irgendwo sonst etwas kaputtgemacht? Die beantwortet nur der ganze Lauf: **45 Seiten × 8 Breiten = 360 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knopfhöhen.** **Eine Zahl war zuerst nicht zu erklären und ist es jetzt teilweise:** Ein früherer Lauf hatte 15 Konsolenfehler gemeldet und Abrufe, die auf dem **eigenen** Server scheiterten. Nachgemessen mit einem eigenen Rundlauf: **14 gescheiterte Abrufe, alle `ERR_ABORTED`, alle in der ersten Ladung nach der Anmeldung, 0 in den folgenden, 0 Konsolenmeldungen daraus** — die nächste Navigation räumt das noch ladende Dokument ab, ein Messartefakt und kein Serverfehler (jede Datei einzeln HTTP 200, 20 gleichzeitige Anfragen je Port 20 von 20). Die **15** selbst sind nicht mehr messbar: `aufnehmen.mjs` löscht `ausgabe/` bei jedem Start, der alte Bericht ist weg. Steht so im Prüfdokument, statt als „aufgeklärt" zu gelten. **Dabei ein echter Fund, nicht behoben (K4):** Der Rauschfilter des Bilderlaufs prüft drei Fehlercodes gegen den Meldungstext, ohne die Fundstelle anzusehen — **3 von 5** gebauten Fällen mit lokaler Fundstelle werden verschluckt. Das ist **Nr. 176**; solange er offen ist, heißt „0 Konsolenfehler" genau: 0 außerhalb dieser drei Arten. **Ein zweiter Fund in der Buchführung:** Der Änderungsverlauf des Rahmenplans führt **sechs** Fassungsnummern doppelt (35, 36, 37, 39, 38, 37) — **Nr. 177**, nicht mitbehoben, weil Umnummerieren historischer Zeilen eine Festlegung ist. **Eine Gegenprobe hat sich gelohnt:** 360 Bilder, aber nur **356 verschiedene**. Die vier Doppel sind erklärt — `11-tagesuebersicht-schublade` ist ab 1024 px Bild für Bild `10-tagesuebersicht`, weil `.nur-schublade` dort auf `display:none` steht. Ohne die Probe wäre „360 Bilder" eine Zahl ohne Aussage geblieben (F-P3-AQ). **Und eine Annahme aus AP4 ist berichtigt:** `api/kdf_upgrade.php` ist vom Browser auf diesem Stand **gar nicht** erreichbar — `unlock.js:184` ruft nur bei abweichender Rundenzahl, `KDF_ITER_LISTE` hat seit Nr. 155 einen Eintrag, und alle 4 Konten stehen auf 600 000 (SQL nachgezählt). Prüflistenpunkt 1 sagt das jetzt und bleibt trotzdem stehen: Beim nächsten Anheben des Zielwerts wird der Weg wieder scharf |
+| AP10 | Abschluss | **erledigt** 13.09.2026 | **Der Bilderlauf lief über alles, nicht über zwei Seiten (E-BR3-16).** Das Konzept verlangte ihn „auf den zwei berührten Seiten" — der Vergleich vor/nach war in AP5 aber schon geführt (0 abweichende Bildpunkte auf vier Seiten). Was in AP10 fehlte, war die andere Frage: Hat die Runde irgendwo sonst etwas kaputtgemacht? Die beantwortet nur der ganze Lauf: **45 Seiten × 8 Breiten = 360 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knopfhöhen.** **Eine Zahl war zuerst nicht zu erklären und ist es jetzt teilweise:** Ein früherer Lauf hatte 15 Konsolenfehler gemeldet und Abrufe, die auf dem **eigenen** Server scheiterten. Nachgemessen mit einem eigenen Rundlauf: **14 gescheiterte Abrufe, alle `ERR_ABORTED`, alle in der ersten Ladung nach der Anmeldung, 0 in den folgenden, 0 Konsolenmeldungen daraus** — die nächste Navigation räumt das noch ladende Dokument ab, ein Messartefakt und kein Serverfehler (jede Datei einzeln HTTP 200, 20 gleichzeitige Anfragen je Port 20 von 20). Die **15** selbst sind nicht mehr messbar: `aufnehmen.mjs` löscht `ausgabe/` bei jedem Start, der alte Bericht ist weg. Steht so im Prüfdokument, statt als „aufgeklärt" zu gelten. **Dabei ein echter Fund, nicht behoben (K4):** Der Rauschfilter des Bilderlaufs prüft drei Fehlercodes gegen den Meldungstext, ohne die Fundstelle anzusehen — **3 von 5** gebauten Fällen mit lokaler Fundstelle werden verschluckt. Das ist **Nr. 176** — **in AP11 behoben**, siehe die Zeile darunter; bis dahin hieß „0 Konsolenfehler" genau: 0 außerhalb dieser drei Arten. **Ein zweiter Fund in der Buchführung:** Der Änderungsverlauf des Rahmenplans führt **sechs** Fassungsnummern doppelt (35, 36, 37, 39, 38, 37) — **Nr. 177**, nicht mitbehoben, weil Umnummerieren historischer Zeilen eine Festlegung ist. **Eine Gegenprobe hat sich gelohnt:** 360 Bilder, aber nur **356 verschiedene**. Die vier Doppel sind erklärt — `11-tagesuebersicht-schublade` ist ab 1024 px Bild für Bild `10-tagesuebersicht`, weil `.nur-schublade` dort auf `display:none` steht. Ohne die Probe wäre „360 Bilder" eine Zahl ohne Aussage geblieben (F-P3-AQ). **Und eine Annahme aus AP4 ist berichtigt:** `api/kdf_upgrade.php` ist vom Browser auf diesem Stand **gar nicht** erreichbar — `unlock.js:184` ruft nur bei abweichender Rundenzahl, `KDF_ITER_LISTE` hat seit Nr. 155 einen Eintrag, und alle 4 Konten stehen auf 600 000 (SQL nachgezählt). Prüflistenpunkt 1 sagt das jetzt und bleibt trotzdem stehen: Beim nächsten Anheben des Zielwerts wird der Weg wieder scharf |
+| AP11 | 176 (Nachtrag) | **erledigt** 13.09.2026 | **Nicht im Konzept vorgesehen** — der Auftraggeber hat den Fund aus AP10 zur Behebung angewiesen, mit dem Argument, das den meinen umdreht: Weil `istRauschen()` das Messmittel aller Bildzahlen dieser Stufe ist, gehört es in diese Stufe und nicht in die nächste Runde. **Die Umsetzung war klein, die Beweisführung nicht.** Drei Klassen statt einer Musterzeile, Herkunftsvergleich über `URL.origin` statt `startsWith` (verträgt einen Schrägstrich in `--basis`, rechnet Vorgabeports mit). Zwei Randfälle bewusst entschieden und im Code begründet: eine Meldung **ohne** Fundstelle wird **gezählt** (nicht zuordenbar → lieber eine Zeile zu viel als eine stille Lücke), und der Fehlercode wird nur noch im Wortlaut gesucht, weil er in keiner URL vorkommt. **Belegt in drei Richtungen, weil eine nicht gereicht hätte:** Eine neue Selbstprobe (`--selbstprobe`, zehn gebaute Fälle mit Sollwert) meldet **10 von 10** — das zeigt aber nur, dass der neue Code tut, was ich erwarte. Deshalb zweitens dieselben zehn Fälle durch die **alte** Funktion, **wörtlich aus `git show origin/main` geholt statt abgeschrieben**: **6 von 10**, falsch sind die drei lokalen Abbrüche und der Fall ohne Fundstelle. Und drittens, weil beides gebaute Fälle sind: am **laufenden Browser** — Seite geladen, **PHP-Server angehalten** (socat blieb, die Basis also dieselbe), dann Symbol und API-Aufruf nachgeladen. Chromium meldete zwei Fehler auf der eigenen Basis (`ERR_EMPTY_RESPONSE` für das Symbol, `ERR_CONNECTION_RESET` für `api/day.php`); der alte Filter verwarf **einen**, der neue **keinen**. **Ein Nebenbefund daraus:** Der Symbolabruf scheiterte mit `ERR_EMPTY_RESPONSE`, und der Code stand nie im Muster — der Fehler war also nur für einen Teil der Abbrüche unsichtbar, nicht für alle. **Die Zahl der Runde hält:** Abschlusslauf mit der neuen Regel unverändert 45 Seiten, 360 Bilder, 0/0/0. Dazu berichtigt: Die LIESMICH behauptete seit P3, gefiltert werde „über die Fundstelle, nicht über den Wortlaut" — für die drei Codes war das unwahr. **Und der Prüfstand war zwischendurch weg:** php und socat waren zwischen zwei Läufen verschwunden (0 Prozesse, keine Ports); `lokal_starten.sh` hat ihn zweimal wieder hochgefahren, einmal nach dem absichtlichen Anhalten. Wer eine Messung wiederholt, prüft vorher, ob der Stand noch steht. **Und zuletzt die Frage, die sich nach jeder Behebung stellt: tragen die Geschwister denselben Fehler?** Drei Browserwerkzeuge durchgesehen — `papierkorb_misch.mjs` prüft Text **und** Fundstelle und nennt den Bilderlauf als Vorbild (der war also das schwächere von beiden, jetzt umgekehrt), `messstand/browserprobe.mjs` hängt an `requestfailed` und hat die Adresse immer dabei, **`kopplungsprobe/rundlauf.mjs` aber verwirft mit „Failed to load resource" jede Ressourcenmeldung** — gemessen 4 von 8 gebauten Fällen falsch, darunter ein 404 und ein 500 auf der eigenen Basis. Das ist **Nr. 178** und F-BR3-05, nach K4 nicht mitbehoben |
 
 ---
 

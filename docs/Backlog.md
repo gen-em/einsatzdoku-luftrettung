@@ -1514,6 +1514,76 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     *Abnahme:* `grep -rn edbak_uebersicht server/ tools/ docs/` ist leer,
     bis auf den Changelog. Zuordnung: Backlog-Runde.
 
+177. **Der Änderungsverlauf des Rahmenplans führt sechs Fassungsnummern
+    doppelt.** *Aufgenommen 13.09.2026 in Backlog-Runde 3, AP10.* In
+    Abschnitt 10 stehen zwischen der Zeile „30" und der Zeile „47" sechs
+    Zeilen mit den Nummern **35, 36, 37, 39, 38, 37** (S9/AP1 bis AP3, die
+    beiden Client-Punkte, Android 0.14.1, die adversarische Gegenprüfung von
+    9a) — dieselben Nummern trägt der darunter anschließende Block ein
+    zweites Mal, mit anderem Inhalt. Ursache ist dieselbe wie bei den
+    Fassungen 39, 41 und 42: Mehrere Sitzungen schrieben am selben Tag in
+    dasselbe Dokument. **Die Folge ist praktisch:** Ein Verweis auf „Fassung
+    38" ist nicht auflösbar, und der Verlauf zählt nicht mehr mit der
+    Kopfzeile zusammen. **Zu tun:** entscheiden, ob die sechs Zeilen eine
+    eigene Nummernfolge bekommen (dann verschieben sich keine Verweise, weil
+    auf sie keiner zeigt) oder als „Zwischenstände ohne Fassung" ohne Nummer
+    geführt werden; die Entscheidung gehört in den Kopf von Abschnitt 10.
+    **Nicht in dieser Runde behoben**, weil das Umnummerieren historischer
+    Zeilen eine Festlegung ist und keine Korrektur (K4). *Abnahme:* jede
+    Nummer in Abschnitt 10 kommt genau einmal vor. Zuordnung: Backlog-Runde.
+    **Zurückgestellt am 13.09.2026 auf Anweisung des Auftraggebers**
+    („nur historisch, ignorieren"). Dazu drei Messwerte, damit die Entscheidung
+    auf dem Tisch liegt und nicht auf einer Annahme: **Rein historisch ist es
+    nicht ganz** — zwei Dokumente zitieren betroffene Nummern,
+    `docs/konzepte/Pruefdokument-Sofortpaket-Sicherheit.md` („9a steht seit
+    **Fassung 36** in Abschnitt 8") und
+    `docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`
+    („**Fassung 38** mit Änderungsverlauf"); beide Nummern sind doppelt
+    vergeben. Wer der Spur folgt, findet zwei Zeilen und muss aus dem
+    Zusammenhang wählen — lästig, aber nicht irreführend. **Der Fund ist
+    älter als diese Runde:** `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`
+    hat ihn am 09.09.2026 schon verzeichnet (dort für 35, 36 und 37) und
+    nennt zusätzlich eine **fehlende** Zeile für den 09.09.2026. **Keine
+    Wirkung auf Code, Daten oder Oberfläche** — deshalb bleibt der Punkt offen
+    statt zurückgezogen: Er kostet nichts, solange niemand ihn anfasst, und er
+    ist mit der nächsten größeren Rahmenplan-Pflege in einem Zug zu machen.
+
+178. **Die Kopplungsprobe wirft JEDE Meldung „Failed to load resource" weg.**
+    *Aufgenommen 13.09.2026 beim Beheben von Nr. 176; nach K4 nicht
+    mitbehoben.* Beim Beheben von Nr. 176 sind die Geschwisterwerkzeuge nach
+    demselben Fehler durchsucht worden. Zwei sind in Ordnung:
+    `tools/referenzdatensatz/browser/papierkorb_misch.mjs` prüft Text **und**
+    Fundstelle und führt in seinem Muster nur Gastgebernamen plus zwei Codes,
+    die auf `127.0.0.1` nicht vorkommen können (`ERR_TUNNEL_CONNECTION_FAILED`,
+    `ERR_NAME_NOT_RESOLVED`); `tools/messstand/browserprobe.mjs` hängt an
+    `requestfailed` und hat die Adresse immer dabei. **Eines ist es nicht:**
+    `tools/kopplungsprobe/rundlauf.mjs` filtert mit
+    `/tile\.openstreetmap\.org|ERR_ABORTED|Failed to load resource/` **nur
+    über den Text** — die dritte Alternative verwirft damit *jede*
+    Ressourcenmeldung, gleich welcher Herkunft und gleich welchen Grundes. Der
+    Kommentar daneben begründet die Kacheln und `ERR_ABORTED`; die dritte
+    Alternative begründet er nicht. **Gemessen an acht gebauten Fällen: 4 von 8
+    falsch eingestuft, alle vier verschluckte echte Fehler** — Symbol mit
+    `ERR_CONNECTION_RESET`, Stylesheet mit **404**, API mit **500**, Skript mit
+    `ERR_CONNECTION_REFUSED`. **Der 404 und der 500 sind der scharfe Teil:**
+    Für sie feuert `requestfailed` nicht (die Anfrage ist auf Transportebene
+    gelungen), sie stehen also nur in der Konsole — und die wird hier
+    weggeworfen. Das Werkzeug meldet „0 Konsolenfehler" und könnte einen
+    Serverfehler mitten im Kopplungsrundlauf nicht sehen. **Zu tun:** dieselbe
+    Trennung wie in `tools/screenshots/aufnehmen.mjs` (Nr. 176) — Gastgeber am
+    Namen, Verbindungscodes nur auf fremder Fundstelle, „Failed to load
+    resource" **nicht** als Rauschen —, dazu die Fundstelle mitlesen; die
+    Kopplungsprobe liest sie heute nicht. *Abnahme:* ein eingeschleuster
+    500er-Aufruf auf der eigenen Basis erscheint im Lauf, eine Kachel nicht,
+    und der Rundlauf bleibt im Übrigen bei seiner Zahl. Zuordnung:
+    Backlog-Runde.
+
+## Erledigt
+
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
+
 176. **Der Rauschfilter des Bilderlaufs verschluckt auch lokale Fehler.**
     *Aufgenommen 13.09.2026 in Backlog-Runde 3, AP10, beim Aufklären von
     Abrufen, die auf dem Prüfstand scheiterten.* `istRauschen()` in
@@ -1533,30 +1603,42 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Verbindungsabbruch auf einer Adresse der eigenen Basis erscheint im
     Bericht, einer von `tile.openstreetmap.org` nicht. Zuordnung:
     Backlog-Runde.
-
-177. **Der Änderungsverlauf des Rahmenplans führt sechs Fassungsnummern
-    doppelt.** *Aufgenommen 13.09.2026 in Backlog-Runde 3, AP10.* In
-    Abschnitt 10 stehen zwischen der Zeile „30" und der Zeile „47" sechs
-    Zeilen mit den Nummern **35, 36, 37, 39, 38, 37** (S9/AP1 bis AP3, die
-    beiden Client-Punkte, Android 0.14.1, die adversarische Gegenprüfung von
-    9a) — dieselben Nummern trägt der darunter anschließende Block ein
-    zweites Mal, mit anderem Inhalt. Ursache ist dieselbe wie bei den
-    Fassungen 39, 41 und 42: Mehrere Sitzungen schrieben am selben Tag in
-    dasselbe Dokument. **Die Folge ist praktisch:** Ein Verweis auf „Fassung
-    38" ist nicht auflösbar, und der Verlauf zählt nicht mehr mit der
-    Kopfzeile zusammen. **Zu tun:** entscheiden, ob die sechs Zeilen eine
-    eigene Nummernfolge bekommen (dann verschieben sich keine Verweise, weil
-    auf sie keiner zeigt) oder als „Zwischenstände ohne Fassung" ohne Nummer
-    geführt werden; die Entscheidung gehört in den Kopf von Abschnitt 10.
-    **Nicht in dieser Runde behoben**, weil das Umnummerieren historischer
-    Zeilen eine Festlegung ist und keine Korrektur (K4). *Abnahme:* jede
-    Nummer in Abschnitt 10 kommt genau einmal vor. Zuordnung: Backlog-Runde.
-
-## Erledigt
-
-
-Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
-zutreffen.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, Nachtrag AP11 — keine
+    Versionsstufe, nur `tools/` und `docs/`); auf Anweisung des
+    Auftraggebers gleich mitbehoben, weil der Punkt das Messmittel
+    betrifft, mit dem alle Bildzahlen dieser Stufe belegt sind.**
+    `istRauschen()` hat jetzt **drei getrennte Klassen**: fremde Quellen am
+    Namen (Gastgeber im Wortlaut oder in der Fundstelle), der Statuscode der
+    Seite selbst, und Verbindungsfehler **nur auf einer fremden Fundstelle**.
+    Die Herkunft wird über `URL.origin` gegen `BASIS` verglichen, nicht über
+    `startsWith` — das verträgt einen abschließenden Schrägstrich in
+    `--basis` und rechnet Vorgabeports mit.
+    **Zwei Entscheidungen bewusst zur lauten Seite hin:** Eine Meldung ohne
+    Fundstelle wird **gezählt**, nicht verworfen; und der Fehlercode wird nur
+    noch im Wortlaut gesucht, nicht auch in der Fundstelle (in einer URL
+    kommt er nicht vor — die zweite Suche war ohne Wirkung).
+    **Belegt in drei Richtungen.** (1) Neue **Selbstprobe**
+    `node tools/screenshots/aufnehmen.mjs --selbstprobe` — zehn gebaute Fälle
+    mit Sollwert, **10 von 10** erwartungsgemäß; sie braucht weder Browser
+    noch Server und löscht die Ausgabe nicht. (2) Dieselben zehn Fälle durch
+    die **alte** Funktion, wörtlich aus `git show origin/main` geholt statt
+    abgeschrieben: **6 von 10** — falsch waren die drei lokalen Abbrüche und
+    der Fall ohne Fundstelle. (3) Am laufenden Browser: Seite geladen,
+    **PHP-Server angehalten** (socat blieb, die Basis also dieselbe), Symbol
+    und API-Aufruf nachgeladen — zwei Konsolenfehler auf der eigenen Basis
+    (`ERR_EMPTY_RESPONSE`, `ERR_CONNECTION_RESET`), davon verwarf der alte
+    Filter **einen**, der neue **keinen**.
+    **Die Abnahme dieses Eintrags ist damit erfüllt**, und zwar genauer als
+    gefordert: Der Eintrag verlangte einen eingeschleusten Verbindungsabbruch
+    auf der eigenen Basis, der im Bericht erscheint — gemessen ist der
+    Abbruch am Browser **und** die Einstufung an der Funktion selbst.
+    **Und die Zahl der Runde hält:** Der Abschlusslauf über 45 Seiten meldet
+    mit der neuen Regel unverändert **0 Konsolenfehler**. Sie war also
+    richtig — sie war nur nicht belegt.
+    **Dabei eine falsche Aussage in der Dokumentation berichtigt:** Die
+    LIESMICH behauptete, gefiltert werde „über die Fundstelle der Meldung,
+    nicht über ihren Wortlaut". Für die Kachelhosts stimmte das, für die drei
+    Codes nicht. Der Absatz nennt jetzt die drei Klassen und die Falle.
 
 174. **Der Referenzbestand deckt „Rettungsmittel ohne Standort" nur noch
      zur Hälfte ab.**
