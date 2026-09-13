@@ -143,17 +143,32 @@ def stufe_stammdaten(lauf: Lauf) -> None:
             speichern({"action": "base_default", "id": ids["standorte"][b["name"]]})
 
     for r in st["rettungsmittel"]:
-        # TYP, KURZNAME UND DER HAKEN "OHNE STANDORT" (S9/AP4, E-S9-09).
-        # `standort` nennt weiterhin die Karte, aus der das Formular kommt --
-        # es traegt die Kennung verborgen mit. `ohne_standort` schlaegt sie;
-        # ob das zulaessig ist, entscheidet der Typ in der Pruefschicht.
+        # TYP, KURZNAME UND "OHNE STANDORT" (S9/AP4, E-S9-09).
+        #
+        # `standort` nennt die Karte, aus der das Formular kommt. Traegt der
+        # Eintrag `ohne_standort`, geht statt der Kennung eine 0 hinaus -- das
+        # ist der Eintrag "Ohne Standort" der Auswahlliste, und
+        # `dt_base_erlaubt()` macht daraus NULL. Ob der Typ das darf,
+        # entscheidet weiterhin die Pruefschicht (Pflicht nur bei "standard").
+        #
+        # BIS ZUM 13.09.2026 STAND HIER EIN EIGENES FELD `ohne_standort=1`.
+        # Das war bis Web 16.3.0 richtig: Damals war es ein Haken neben der
+        # Standortauswahl. Web 16.3.0 hat ihn durch den ersten Eintrag der
+        # Auswahlliste ersetzt -- mit Begruendung (der Haken "schlug eine
+        # verborgene Standortkennung; wer ihn setzte, sah nicht, WAS er damit
+        # ueberschrieb"). Das Feld las seither niemand mehr, und weil daneben
+        # weiterhin eine echte Kennung stand, bekamen BEIDE Eintraege einen
+        # Standort. Aufgefallen ist es erst am Referenzbestand: 0 von 6 statt
+        # 2 von 6 ohne Standort (Backlog Nr. 174).
+        #
+        # Die Lehre steht in der LIESMICH: Ein Sender, der ein Feld schickt,
+        # das niemand liest, meldet keinen Fehler -- er wird still ignoriert.
         daten = {"action": "veh_save", "name": r["name"], "kind": r["art"],
                  "typ": r.get("typ", "standard"),
                  "kurz": r.get("kurz") or "",
-                 "base_id": ids["standorte"][r["standort"]],
+                 "base_id": 0 if r.get("ohne_standort")
+                            else ids["standorte"][r["standort"]],
                  "roles[]": r["rollen"], "caps[]": r["faehigkeiten"]}
-        if r.get("ohne_standort"):
-            daten["ohne_standort"] = "1"
         speichern(daten)
     ids = kennungen(s)
     for r in st["rettungsmittel"]:

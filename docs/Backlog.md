@@ -1499,6 +1499,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Prüfung am Code wäre stabiler als eine an der Stoppuhr.
     *Abnahme:* Zehn Läufe hintereinander, zehnmal dieselbe Zahl.
 
+175. **`edbak_uebersicht()` hat keinen Aufrufer mehr.**
+    *Aufgenommen 13.09.2026 als Nebenfund der Gegenprüfung zu Nr. 37;
+    angelegt auf Anweisung des Auftraggebers.* Die Funktion in
+    `adminbackup_lib.php` liest für **jedes** Konto eine Begleitdatei und
+    ein Verzeichnis — die Bauform, die E-P3-41 mit `edbak_konto_stand()` für
+    die Kontoseite und O9c mit `edbak_staende()` und `edbak_verwaiste()` für
+    die Zähler und die verwaisten Ordner abgelöst hat. Am 13.09.2026 ruft
+    sie **niemand** mehr auf, weder in `server/` noch in `tools/`; genannt
+    wird sie nur noch in `docs/Technik.md` („Die Kontoseite (E-P3-41, seit
+    Web 9.8.0)") als Begründung, warum die Kontoseite anders liest.
+    **Zu tun:** die Funktion austragen und den Satz in `Technik.md` so
+    fassen, dass er die abgelöste Bauform als Vergangenheit beschreibt.
+    *Abnahme:* `grep -rn edbak_uebersicht server/ tools/ docs/` ist leer,
+    bis auf den Changelog. Zuordnung: Backlog-Runde.
+
+## Erledigt
+
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
+
 174. **Der Referenzbestand deckt „Rettungsmittel ohne Standort" nur noch
      zur Hälfte ab.**
     *Aufgenommen 12.09.2026 in Backlog-Runde 2, nachdem die Klickprobe den
@@ -1531,27 +1552,32 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     *Abnahme:* Der Kreislauf `edbak` trägt ein Rettungsmittel mit
     `base_ref: null`, und es kommt unverändert zurück.
-
-175. **`edbak_uebersicht()` hat keinen Aufrufer mehr.**
-    *Aufgenommen 13.09.2026 als Nebenfund der Gegenprüfung zu Nr. 37;
-    angelegt auf Anweisung des Auftraggebers.* Die Funktion in
-    `adminbackup_lib.php` liest für **jedes** Konto eine Begleitdatei und
-    ein Verzeichnis — die Bauform, die E-P3-41 mit `edbak_konto_stand()` für
-    die Kontoseite und O9c mit `edbak_staende()` und `edbak_verwaiste()` für
-    die Zähler und die verwaisten Ordner abgelöst hat. Am 13.09.2026 ruft
-    sie **niemand** mehr auf, weder in `server/` noch in `tools/`; genannt
-    wird sie nur noch in `docs/Technik.md` („Die Kontoseite (E-P3-41, seit
-    Web 9.8.0)") als Begründung, warum die Kontoseite anders liest.
-    **Zu tun:** die Funktion austragen und den Satz in `Technik.md` so
-    fassen, dass er die abgelöste Bauform als Vergangenheit beschreibt.
-    *Abnahme:* `grep -rn edbak_uebersicht server/ tools/ docs/` ist leer,
-    bis auf den Changelog. Zuordnung: Backlog-Runde.
-
-## Erledigt
-
-
-Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
-zutreffen.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP9 — keine Versionsstufe; an der
+    Anwendung ist keine Zeile geändert).**
+    **Die Ursache war nicht die Referenzdatei, sondern der Einspielweg.**
+    `einspielen.py` schickte `ohne_standort=1` **neben** einer echten
+    Standortkennung. Bis Web 16.3.0 war das richtig — damals stand im Formular
+    ein Haken neben der Standortauswahl. Web 16.3.0 hat ihn durch den ersten
+    Eintrag der Auswahlliste ersetzt („Ohne Standort"), mit Begründung: Der
+    Haken „schlug eine verborgene Standortkennung; wer ihn setzte, sah nicht,
+    WAS er damit überschrieb." Seither las das Feld niemand mehr, die Kennung
+    daneben zählte, und **beide Einträge bekamen einen Standort**. Ein Sender,
+    der ein Feld schickt, das niemand liest, meldet keinen Fehler — er wird
+    still ignoriert. `einspielen.py` schickt jetzt `base_id=0`.
+    **Beide Referenzdateien sind über die reguläre Kette neu erzeugt**
+    (E-BR3-10), keine Zeile per SQL. Gemessen: vorher 0 von 6 ohne Standort,
+    nachher **2 von 6**. Kette: Quelldaten 5 961 Einzelprüfungen / 0 Befunde,
+    Generator 283 989 / 0, Ingest 526 Anfragen / 0 Fehler, 16 Diensttage
+    zugeordnet, 79 nachgetragen, 2 von Hand, Sperrliste bestanden, 4
+    CSV-Einsätze. Export: 188 Einträge (85 geschützt), 182 Aufzeichnungen mit
+    55 861 Punkten; CSV 83 Einsätze, 172 GPX.
+    **Abnahme gegen die neue Referenz:** edbak 287 687 Einzelvergleiche / 0
+    unerklärt / 0 ungenutzt, csv 9 120 / 0 / 0. Das Kriterium — ein
+    Rettungsmittel mit `base_ref: null` kommt **unverändert** zurück — an
+    beiden Umlaufkonten gemessen: Referenz 2, edbak-Umlauf 2, csv-Umlauf 2.
+    **Klickprobe 40 von 40** (sie hatte den Verlust mit 39 gefunden).
+    **Nebenbei berichtigt:** Die LIESMICH nannte „3 Rettungsmittel", es sind 6;
+    die zwei ohne Standort stehen jetzt ausdrücklich dabei.
 
 173. **Die Umlaufprüfungen führen tote Regeln.**
     *Aufgenommen 12.09.2026 beim Neubau des Referenzbestands (Nr. 155,

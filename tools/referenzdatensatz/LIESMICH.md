@@ -44,8 +44,17 @@ einer Zahl benennt.
 | Einsätze | **88** (83 aktiv, 5 im Papierkorb) — 87 aus den Quelldaten plus der eine geschnittene, der erst auf dem Server entsteht |
 | Ruhesegmente | 100 (95 aktiv) |
 | Spurpunkte | 55 861 |
-| Stammdaten | 2 Standorte, 3 Rettungsmittel, 15 Besatzungs-Vorbelegungen, 8 Zielkliniken, 3 Bereitschaften, 8 weitere Rettungsmittel |
+| Stammdaten | 2 Standorte, **6 Rettungsmittel — davon 2 OHNE Standort**, 15 Besatzungs-Vorbelegungen, 8 Zielkliniken, 3 Bergwacht-Bereitschaften, 8 weitere Rettungsmittel |
 | Geräte | 2 — dazu entsteht beim Nachtragen und beim Import das virtuelle „Manuelle Einträge" (`manual-<konto>`), also 3 Zeilen in `devices` |
+
+**Die zwei Rettungsmittel ohne Standort sind kein Schmuck, sondern der
+zweite von zwei Fällen** (E-S9-18): „Sanitätsdienst Seefest" und „Reserve
+Talwang" tragen `base_id = NULL`, und nur dadurch deckt der Bestand ab,
+was S9/AP4 ausdrücklich erlaubt — Bergwacht, Veranstaltung und Sonstiges
+brauchen keinen Standort. Bis zum 13.09.2026 fehlte der Fall: Nicht in
+den Quelldaten, die ihn seit Web 16.0.0 tragen, sondern im **Einspielweg**
+(Backlog Nr. 174, Einzelheiten im Changelog zu Web 19.3.1). Wer die Zahl
+2 hier auf 0 fallen sieht, hat denselben Fehler wieder.
 
 Die Verteilung ist ungleich, mit Häufungen — acht luft- und acht
 bodengebundene Diensttage, im Schnitt gut fünf Einsätze je Tag.

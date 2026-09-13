@@ -9,7 +9,7 @@ beantwortet „was muss **ich** noch tun?". Muster:
 
 > | | |
 > |---|---|
-> | Stand | **AP1 bis AP8 erledigt** (13.09.2026); AP9 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
+> | Stand | **AP1 bis AP9 erledigt** (13.09.2026) — alle neun Backlog-Punkte; AP10 (Abschluss) in Arbeit |
 > | Stufe | **Web 19.3.1 — Korrektur** (E-BR3-14; die Begründung steht im Konzept). **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt. `version.php` steigt erst mit AP4 — dem ersten Paket, das `server/` anfasst |
 > | Punkte | Backlog **Nr. 91, 94, 117, 47, 58, 173, 174** erledigt; **Nr. 67** Unterpunkt erledigt, Punkt bleibt (P5); **Nr. 41** drei Streichungen erledigt, Punkt bleibt (9c) |
 > | Neu entstanden | Prüfgruppe „5 Zusagen" in `tools/vollstaendigkeit/`, Liste `zusagen.md`; neue Referenzdateien unter `tools/referenzdatensatz/referenz/` |
@@ -99,10 +99,12 @@ dazukommt, gehört hierher.
 | **AP7 · Probe: neue Seite ohne Gerüst** | — | wird mit `Datei:Zeile` gemeldet | **1 Befund** (`server/probe_ap7.php:4`) ✓, danach entfernt |
 | **AP7 · `apk.php` 404 vorher/nachher** (Browser) | Doctype **nein**, Stylesheet **nein**, `compatMode` **BackCompat**, Times New Roman | Doctype ja, Stylesheet ja, `CSS1Compat`, Open Sans | **alles ✓** — Titel „Datei nicht gefunden — Gen-EM NAdoku", Antwort 4187 → 4688 Zeichen |
 | **Probe, dass beide rot werden** | — | je ein eingeschleuster Verstoß → Rückgabewert ≠ 0; danach entfernt | [ ] |
-| **Kreislauf edbak** (`vergleich/kreislauf.py --art edbak --frisch`) | 287 687 Einzelvergleiche, 0 unerklärt, 16 erwartet, **3 ungenutzte Regeln** | **0 unerklärt, 0 ungenutzt**, gegen die **neue** Referenz; ein Rettungsmittel mit `base_ref: null` kommt unverändert zurück | **nach AP8** (alte Referenz): 287 687 / **0** / 16 / **0** ✓ · gegen die neue Referenz: [AP9/AP10] |
-| **Kreislauf csv** (`--art csv --frisch`) | 9 120 Einzelvergleiche, 0 unerklärt, 1 021 erwartet, **2 ungenutzte Regeln** | **0 unerklärt, 0 ungenutzt**, neue Referenz | **nach AP8** (alte Referenz): 9 120 / **0** / 1 021 / **0** ✓ · gegen die neue Referenz: [AP9/AP10] |
-| **Rettungsmittel ohne Standort** in der eingespielten Installation | 0 von 6 (Referenz vom 12.09.) | **2 von 6** vor dem Export und nach dem Umlauf | [ ] |
-| **Klickprobe** (`tools/klickprobe/probe.mjs`) | 40 von 40 | **40 von 40** | [ ] |
+| **Kreislauf edbak** (`vergleich/kreislauf.py --art edbak --frisch`) | 287 687 Einzelvergleiche, 0 unerklärt, 16 erwartet, **3 ungenutzte Regeln** | **0 unerklärt, 0 ungenutzt**, gegen die **neue** Referenz; ein Rettungsmittel mit `base_ref: null` kommt unverändert zurück | **287 687 / 0 unerklärt / 16 erwartet / 0 ungenutzt** gegen die **neue** Referenz ✓ · `base_ref: null` unverändert (2 vorher, 2 nachher) ✓ |
+| **Kreislauf csv** (`--art csv --frisch`) | 9 120 Einzelvergleiche, 0 unerklärt, 1 021 erwartet, **2 ungenutzte Regeln** | **0 unerklärt, 0 ungenutzt**, neue Referenz | **9 120 / 0 unerklärt / 1 021 erwartet / 0 ungenutzt** gegen die **neue** Referenz ✓ |
+| **Rettungsmittel ohne Standort** in der eingespielten Installation | 0 von 6 (Referenz vom 12.09.) | **2 von 6** vor dem Export und nach dem Umlauf | **2 von 6** ✓ (Sanitätsdienst Seefest, Reserve Talwang) · nach dem Umlauf: edbak-Konto **2**, csv-Konto **2** ✓ |
+| **AP9 · die drei Läufe der Kette** | — | jede Stufe ohne Befund | Quelldaten **5 961** Einzelprüfungen / **0** Befunde · Generator **283 989** / **0** · Ingest **526** Anfragen / **0** Fehler · 16 Diensttage zugeordnet · 79 nachgetragen · 2 von Hand · Sperrliste **bestanden** · 4 CSV-Einsätze ✓ |
+| **AP9 · Export** | — | beide Referenzdateien neu | edbak **188 Einträge** (85 geschützt), 16 Diensttage, 182 Aufzeichnungen, **55 861** Punkte · CSV **83 Einsätze**, **172** GPX ✓ |
+| **Klickprobe** (`tools/klickprobe/probe.mjs`) | 39 von 40 bei der Aufnahme von Nr. 174 | **40 von 40** | **40 von 40, 0 verfehlt** ✓ |
 | **Wortliste** (`tools/wortliste/`) | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzt | **0 / 0** | **0 / 0** nach AP1 und AP2 ✓ |
 | **AP2 · „bitgleich" in `tools/uhr-bilder/`** | Zusage an 2 Stellen behauptet | **0 Vorkommen, die die Bitgleichheit behaupten** — das Sollmaß „`grep -ci` = 0" ist berichtigt, weil der verlangte Zusatz das Wort verneinen muss (E-BR3-15) | **3 Vorkommen, 0 Behauptungen** ✓ (2 Verneinung, 1 datierte Rückschau) |
 | **AP2 · `tools/s5-anker/anker.py`** | Anker `uhrbilder.bitgleich` „unveraendert"; 7 nicht gefunden | Anker findet die Stelle weiter; **nicht gefunden bleibt 7** | Anker `uhrbilder.wortlaut` **„unveraendert"**, nicht gefunden **7** ✓ |

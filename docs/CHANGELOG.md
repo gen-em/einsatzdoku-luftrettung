@@ -139,6 +139,54 @@ Kapitels. Und **nichts in der Oberfläche**: Die Zahlen heißen seit S8 richtig;
 ein zusätzlicher Hinweis neben jeder von ihnen erklärte dieselbe Sache
 viermal.
 
+### Prüfmittel — der Referenzbestand kennt wieder das Rettungsmittel ohne Standort
+
+**Der Einspielweg hat den Fall verloren, nicht die Referenzdatei** (Nr. 174).
+Zwei Einträge der Quelldaten tragen seit Web 16.0.0 `"ohne_standort": true`;
+in der frisch eingespielten Installation standen **0 von 6** ohne Standort
+statt 2. Damit fehlte dem Bestand der zweite von zwei Fällen, die S9/AP4
+ausdrücklich erlaubt (E-S9-18) — und die Klickprobe blieb bei 39 von 40.
+
+**Die Ursache ist ein Feld, das niemand mehr liest.** `einspielen.py` schickte
+`ohne_standort=1` **neben** einer echten Standortkennung. Bis Web 16.3.0 war
+das richtig: Damals stand im Formular ein Haken neben der Standortauswahl.
+Web 16.3.0 hat ihn durch den **ersten Eintrag der Auswahlliste** ersetzt —
+„Ohne Standort" —, und zwar mit Begründung: Der Haken „schlug eine verborgene
+Standortkennung; wer ihn setzte, sah nicht, WAS er damit überschrieb." Seither
+las das Feld niemand mehr, die Kennung daneben zählte, und beide Einträge
+bekamen einen Standort. **Ein Sender, der ein Feld schickt, das niemand liest,
+meldet keinen Fehler — er wird still ignoriert.**
+
+`einspielen.py` schickt jetzt `base_id=0`, also den Listeneintrag „Ohne
+Standort"; `dt_base_erlaubt()` macht daraus `NULL`. Ob der Typ das darf,
+entscheidet weiterhin die Prüfschicht (Pflicht nur bei „Standard"). **An der
+Anwendung ist keine Zeile geändert** — sie war nie kaputt.
+
+**Beide Referenzdateien sind über die reguläre Kette neu erzeugt** (E-BR3-10),
+nicht von Hand berichtigt: Quelldaten prüfen, erzeugen, prüfen · einspielen
+über `ingest.php`, `api/day.php`, das Einsatzformular und die Weboberfläche ·
+exportieren im Browser. Keine Zeile per SQL.
+
+**Gemessen.** Vorher: 0 von 6 ohne Standort. Nachher: **2 von 6** („Sanitäts-
+dienst Seefest", „Reserve Talwang"). Die Kette: Quelldaten **5 961**
+Einzelprüfungen / 0 Befunde, Generator **283 989** Einzelprüfungen / 0
+Befunde, 526 Ingest-Anfragen / 0 Fehler, 16 Diensttage zugeordnet, 79
+nachgetragen, 2 von Hand, Sperrliste bestanden, 4 CSV-Einsätze. Export:
+**188 Einträge** (85 mit geschützten Angaben), 16 Diensttage, 182
+Aufzeichnungen mit **55 861** Punkten; CSV **83 Einsätze**, 172 GPX.
+
+**Gegen die neue Referenz:** edbak **287 687** Einzelvergleiche, **0**
+unerklärt, 16 erwartet, **0 ungenutzt**; csv **9 120**, **0** unerklärt,
+1 021 erwartet, **0 ungenutzt**. Das Abnahmekriterium von Nr. 174 — ein
+Rettungsmittel mit `base_ref: null` kommt **unverändert** durch den Umlauf —
+ist an beiden Umlaufkonten gemessen: Referenzkonto **2**, edbak-Umlauf **2**,
+csv-Umlauf **2**. **Klickprobe 40 von 40** (sie hatte den Verlust mit 39
+gefunden).
+
+**Die Zahlen der LIESMICH waren daneben** und sind nachgezogen: Sie nannte
+„3 Rettungsmittel", es sind **6** — und die zwei ohne Standort stehen jetzt
+ausdrücklich dabei, mit dem Satz, woran man denselben Fehler wiedererkennt.
+
 ### Prüfmittel — fünf Regeln, die nichts mehr erklärten
 
 **Eine Regel, die nichts mehr erklärt, ist kein Netz, sondern Ballast**
