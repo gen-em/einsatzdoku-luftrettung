@@ -10,12 +10,12 @@ wird nach der Freigabe gelöscht.*
 
 > | | |
 > |---|---|
-> | Stand | **Vollständig — AP1 bis AP10 und der Nachtrag AP11 erledigt** (13.09.2026): die neun Backlog-Punkte des Auftrags, dazu **Nr. 176** auf Anweisung. Offen ist der **Merge auf `main`** nach Freigabe und danach die Prüfliste in Abschnitt 4 |
+> | Stand | **Vollständig — AP1 bis AP10 und die Nachträge AP11 und AP12 erledigt** (13.09.2026): die neun Backlog-Punkte des Auftrags, dazu **Nr. 176, 178, 179 und 180** auf Anweisung. Offen ist der **Merge auf `main`** nach Freigabe und danach die Prüfliste in Abschnitt 4 |
 > | Stufe | **Web 19.3.1 — Korrektur** (E-BR3-14; die Begründung steht im Konzept). **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt. `version.php` steigt erst mit AP4 — dem ersten Paket, das `server/` anfasst |
 > | Punkte | Backlog **Nr. 91, 94, 117, 47, 58, 173, 174** erledigt; **Nr. 67** Unterpunkt erledigt, Punkt bleibt (P5); **Nr. 41** drei Streichungen erledigt, Punkt bleibt (9c) |
 > | Neu entstanden | Prüfgruppe „5 Zusagen" in `tools/vollstaendigkeit/`, Liste `zusagen.md`; neue Referenzdateien unter `tools/referenzdatensatz/referenz/` |
 > | Prüfumgebung | Wegwerf-Container (Linux 6.18, x86_64): **PHP 8.4.19** (eingebauter Server, `opcache.enable_cli` Off), **MariaDB 10.11.14** (mit AP4 nachinstalliert — der Container bringt keinen Datenbankserver mit), TLS über `socat` auf 8443, **Chromium** über Playwright. Volle Installation mit Demo-Konto: 88 Einsätze, 16 Diensttage, 2 Geräte. **Kein ImageMagick, kein `rsvg-convert`** (AP2), **kein Connect-IQ-Simulator** (AP1) |
-> | Ergebnis | **Maschinell grün, mit zwei Funden und einer nicht reproduzierbaren Zahl.** Wortliste **0/0**, Vollständigkeit **330** Befunde (`[offen]` 2, Gruppe 5: 0/2/0 und 0/7/0), Linkprobe **117/0**, Wartungsprobe **55/0**, Spurprobe **45/0**, Kontraste **22/0**, Klickprobe **40/40**, Kreisläufe **287 687/0** und **9 120/0** gegen die neue Referenz, Bilderlauf **360 Bilder, 0/0/0**, `php -l` **100/0**, Selbstprüfzahl **54 = 54**. **Zwei echte Funde, beide behoben:** `apk.php` lieferte seine 404-Seite ohne Seitenhülle aus (H-BR3-1) und der Rauschfilter des Bilderlaufs verschluckte Fehler des eigenen Servers (Nr. 176, auf Anweisung in **AP11** behoben — Selbstprobe **15 von 15** samt sechs Mutationen, alte Funktion 6 von 10, am Browser 1 von 2 verworfen gegen 0 von 2). **Drei Punkte bleiben offen:** **Nr. 177** (doppelte Fassungsnummern im Rahmenplan) **zurückgestellt**, rein dokumentarisch; **Nr. 178** (dieselbe Lücke, breiter, in der Kopplungsprobe), **Nr. 179** (die Zusage „keine fremde Quelle zur Laufzeit" hat kein Messmittel) und **Nr. 180** (die Kopplungsprobe ist seit dem 06.09.2026 rot, weil sie gegen einen abgeschafften Sollwert misst) nach K4 nur eingetragen. **Der Nachtrag ist gegengeprüft worden, und das hat fünf eigene Fehler gefunden** — die blinde Selbstprobe, eine Klasse, die vor der anderen verwarf, eine unlesbare Fundstelle auf der stillen Seite, zwei falsche Buchführungszahlen und zwei zu weit gefasste Sätze; alle behoben, alle in Abschnitt 2 und 6 benannt. **Eine Zahl bleibt offen:** Ein früherer Bilderlauf meldete 15 Konsolenfehler, der Abschlusslauf 0; der alte Bericht existiert nicht mehr (Abschnitt 2) |
+> | Ergebnis | **Maschinell grün, mit zwei Funden und einer nicht reproduzierbaren Zahl.** Wortliste **0/0**, Vollständigkeit **330** Befunde (`[offen]` 2, Gruppe 5: 0/2/0 und 0/7/0), Linkprobe **117/0**, Wartungsprobe **55/0**, Spurprobe **45/0**, Kontraste **22/0**, Klickprobe **40/40**, Kreisläufe **287 687/0** und **9 120/0** gegen die neue Referenz, Bilderlauf **360 Bilder, 0/0/0**, `php -l` **100/0**, Selbstprüfzahl **54 = 54**. **Zwei echte Funde, beide behoben:** `apk.php` lieferte seine 404-Seite ohne Seitenhülle aus (H-BR3-1) und der Rauschfilter des Bilderlaufs verschluckte Fehler des eigenen Servers (Nr. 176, auf Anweisung in **AP11** behoben — Selbstprobe **15 von 15** samt sechs Mutationen, alte Funktion 6 von 10, am Browser 1 von 2 verworfen gegen 0 von 2). **Vier Prüfmittel-Punkte sind auf Anweisung mitbehoben** — 176 (AP11) sowie **178, 179, 180** (AP12): die Kopplungsprobe trennt ihre Rauschregel in drei Kanäle und leitet die Knopfhöhe ab, und die Zusage „keine fremde Quelle zur Laufzeit" hat mit der Prüfung `fremde Quelle` erstmals ein Messmittel (15 Ausnahmen mit Grund). **Zwei Punkte bleiben offen, beide als Entscheidung:** **Nr. 177** (doppelte Fassungsnummern im Rahmenplan) **zurückgestellt**, rein dokumentarisch, und **Nr. 181** (die Content-Security-Policy — die Laufzeitseite von Nr. 179). **Der Nachtrag ist gegengeprüft worden, und das hat fünf eigene Fehler gefunden** — die blinde Selbstprobe, eine Klasse, die vor der anderen verwarf, eine unlesbare Fundstelle auf der stillen Seite, zwei falsche Buchführungszahlen und zwei zu weit gefasste Sätze; alle behoben, alle in Abschnitt 2 und 6 benannt. **Eine Zahl bleibt offen:** Ein früherer Bilderlauf meldete 15 Konsolenfehler, der Abschlusslauf 0; der alte Bericht existiert nicht mehr (Abschnitt 2) |
 
 ---
 
@@ -183,6 +183,15 @@ dazukommt, gehört hierher.
 | **AP10 · der frühere Lauf meldete 15 Konsolenfehler** | — | aufklären oder als Grenze benennen | **nicht reproduzierbar.** Der Abschlusslauf auf demselben Stand meldet **0** über 45 Seiten. Der Bericht des früheren Laufs existiert nicht mehr — `aufnehmen.mjs` löscht `ausgabe/` bei jedem Start (`rmSync`), die Wortlaute sind damit weg. Was aufgeklärt ist, steht in Abschnitt 0: die gescheiterten **Abrufe** waren `ERR_ABORTED` aus der Navigation und erzeugen **gar keine** Konsolenmeldung (0 von 14) |
 | **AP10 · Spurprobe** (`php tools/spurprobe/probe.php`) | 45 Erwartungen, 0 nicht erfüllt | **0** nicht erfüllt | **45 Erwartungen, 0 nicht erfüllt** ✓ — nach AP11 erneut gelaufen, gleiche Zahl |
 | **AP11 · Kopplungsrundlauf** (`node tools/kopplungsprobe/rundlauf.mjs`, gefahren, um Nr. 178 zu belegen) | — (in dieser Runde bis dahin nicht gefahren) | 25 Erwartungen, 0 nicht erfüllt | **25 Erwartungen, 1 nicht erfüllt** — „Alle sichtbaren Knöpfe 44 px: 6 Knöpfe, 36 px". **Das ist kein Fehler der Anwendung, sondern des Mittels:** `rundlauf.mjs:214` verlangt einen fest verdrahteten Sollwert, seit Web 15.5.0 gelten zwei (E-S8-09/R76), und bei 1280 px am Zeigergerät sind 36 px richtig — belegt vom Bilderlauf, der beide kennt und **0 von 360** falscher Höhe meldet. **Rot seit dem 06.09.2026**, gefahren erst heute: **Nr. 180**. Alles übrige grün, Konsolenfehler **0**, Prüfgerät wieder abgemeldet (2 Geräte wie vorher) |
+| **AP12 · Kopplungsrundlauf, beide Bedienhöhen** (Nr. 180) | AP11: 25 Erwartungen, **1 nicht erfüllt** | **25 / 0** in beiden | als Zeigergerät **25 Erwartungen, 0 nicht erfüllt** (6 Knöpfe, 36 px) ✓ · mit `--finger` **25 / 0** (6 Knöpfe, 44 px) ✓ · Konsolenfehler je **0**, Prüfgerät je wieder abgemeldet (2 Geräte wie vorher) |
+| **AP12 · Selbstprobe der Rauschregeln** (`rundlauf.mjs --selbstprobe`, neu; Nr. 178) | — (das Mittel gab es nicht) | **13 von 13**; jede Regel trägt einen Fall | **13 von 13, 0 nicht** ✓ — darunter der **500er** und der **404** auf der eigenen Basis (die beiden Fälle, um die es geht), `ERR_ABORTED` als Rauschen auf dem Abrufkanal und `pageerror` als nie-Rauschen |
+| **AP12 · Mutationsprobe der Rauschregeln** (sechs Läufe) | — | **jede** Mutation muss rot werden | **13 von 13** unverändert, **12 von 13** in allen sechs ✓ (console/fremde Quellen · console/Verbindungscodes · abruf/fremde Quellen · abruf/ERR_ABORTED · `herkunft()`-Zweig „keine" → „fremd" · `catch`-Zweig → „fremd"). **Die erste Fassung hatte elf Fälle und ZWEI grüne Mutationen** — beide `herkunft()`-Zweige ungedeckt, weil der Fall mit leerer Fundstelle schon an der ersten Zeile herauskommt; deshalb Fall 12 (`<anonymous>`) und 13 (`data:`). Diesmal **vor** dem Melden gemessen |
+| **AP12 · die alte Regel gegen dieselben Fälle** (wörtlich aus `git show origin/main`) | — | muss rot werden, sonst prüft die Probe nichts | **7 von 11** vergleichbaren Fällen, **4 falsch — alle vier verschluckte echte Fehler** ✓, alle auf dem Konsolenkanal: Symbol/RESET, **HTTP 500**, **HTTP 404**, Fundstelle nicht zuordenbar |
+| **AP12 · Abnahme am laufenden Stand** (Nr. 178: eingeschleuster 500er **und** eine Kachel im selben Lauf) | — | der 500er erscheint, die Kachel nicht, der Rundlauf bleibt bei seiner Zahl | **alle drei ✓** — `console: Failed to load resource: … status of 500 … [/probe178.php]` im Protokoll, **1 Konsolenfehler**; die Kachel `tile.openstreetmap.org/1/0/0.png` **nicht** gemeldet; **25 Erwartungen, 0 nicht erfüllt**. Die Wegwerfdatei `server/probe178.php` ist gelöscht, `git status` sauber (nachgesehen) |
+| **AP12 · Prüfung „fremde Quelle"** (`tools/vollstaendigkeit/`, neu; Nr. 179) | — (die Zusage hatte kein Messmittel) | **0** Befunde, Ausnahmen mit Grund, **0** ungenutzt, Gesamtzahl unverändert **330** | **0 / 15 / 0** ✓ · Gesamtzahl **330** ✓ — die 15 Einträge nennen je Eintrag die **Art**: 4 gewollte Kachelserver, 1 Rückfall im Kartendialog, 1 Adressdienst als Vorgabe, 6 Navigationsziele, 1 XML-Namensraum, 2 Beispieltexte |
+| **AP12 · warum das Muster grob ist** (der Entwurf, der nicht taugte) | — | ein Ausdruck auf die Ladekonstrukte allein muss geprüft **und verworfen** werden, nicht unterstellt | **0 Treffer** bei `src=`/`<link href=`/`fetch(`/`url()`/`@import` — **während 5 echte Laufzeitquellen im Code standen** ✓. Die Kacheln gehen über `L.tileLayer(...)`, der Adressdienst ist eine PHP-Konstante. Ein Prüfmittel, das seine eigene Sache nicht findet, ist schlimmer als keines |
+| **AP12 · Gegenprobe zu „fremde Quelle"** | — | genau **1** Befund mit `Datei:Zeile`, danach zurückgenommen | eingeschleustes `<script src="https://cdn.example/x.js">` in `impressum.php` → **1 Befund** (`server/impressum.php:3  https://cdn.example`), Gesamt **330 → 331** ✓; danach zurückgenommen, `git diff` auf die Datei **leer** |
+| **AP12 · zwei Kleinigkeiten beim Bauen des Musters** | — | beide vor dem Melden gefunden | (1) Der erste Ausdruck übersah **`{s}.tile.opentopomap.org`** — ein Platzhalter im Gastgebernamen; das Muster lässt `{`/`}` jetzt zu. (2) Ein Ausnahme-Muster mit Pfad (`openmaps.fr/donate`) griff nicht, weil der Treffer beim Gastgeber endet: jetzt `//openmaps.fr`, mit führendem `//`, damit es nicht auch auf `tile.openmaps.fr` passt ✓ |
 | **AP11 · die übrigen Mittel nach dem Nachtrag erneut** | die Zahlen aus AP10 | alle **unverändert** — der Nachtrag fasst nur `tools/screenshots/` und Dokumente an | Wortliste **0/0** · Vollständigkeit **330** · Linkprobe **117/0** · Wartungsprobe **55/0** · Spurprobe **45/0** · Kontraste **22/0** · `php -l` **100/0** ✓ · **S5-Anker: nicht gefunden 7, mehrdeutig 1, verschoben 35, unverändert 9** — unverändert; kein Anker zeigt in `tools/screenshots/` (nachgesehen, weil AP2 genau diese Falle hatte) |
 | **AP10 · Kontraste** (`python3 tools/screenshots/kontrast.py`) | 22 Paare, 0 verfehlt | **0** verfehlt | **22 Paare, 0 verfehlt** ✓ |
 | **AP10 · `php -l` über `server/`** | — | 0 Fehler | **100 Dateien, 0 Fehler** ✓ — das sind die Dateien **ohne `server/vendor/`** (`find server -name '*.php' -not -path 'server/vendor/*'`). Nachgetragen am 13.09.2026 auf einen Befund der Gegenprüfung, die „über `server/`" wörtlich nahm: **mit** `vendor/` sind es **449** Dateien, ebenfalls **0 Fehler** (gemessen) |
@@ -281,33 +290,33 @@ dazukommt, gehört hierher.
 - **Nr. 41** (Regeln für `imp-warn`, `imp-daygroup`) — Mockup-Runde 9c.
 - **Nr. 172** (Wartungsprobe, Erwartung 15 flattert) — unverändert, nicht
   Teil dieser Runde.
-- **Nr. 180** (die Kopplungsprobe misst gegen einen Sollwert, den es seit
-  Web 15.5.0 nicht mehr gibt) — neu in AP11, **nicht behoben** (K4). Gemessen
-  **25 Erwartungen, 1 nicht erfüllt**; der Fehler liegt im Mittel, nicht in der
-  Anwendung. **Rot seit dem 06.09.2026** — der eigentliche Befund ist, dass der
-  Rundlauf in keiner Reihe von Mitteln steht, die nach einem Paket laufen.
-- **Nr. 179** (die Zusage „keine fremde Quelle zur Laufzeit" zählt kein
-  Prüfmittel nach) — neu in AP11, von der Gegenprüfung gefunden, **nicht
-  behoben** (K4). Gemessen: `tools/vollstaendigkeit/` Gruppe 5 kennt zwei
-  Zusagen und sieht keine Adresse an, **0** Fundstellen für
-  `Content-Security-Policy` unter `server/`. Der Inhalt der Aufgabe ist die
-  Ausnahmeliste — Kacheln und Ortssuche sind gewollte Laufzeitquellen —, und
-  eine CSP gehört in dieselbe Überlegung; das ist eine Festlegung, keine
-  Nebenzeile.
+- **~~Nr. 180~~ — erledigt in AP12.** Sollwert wird abgeleitet, gemessen 25/0 in
+  beiden Bedienhöhen. **Was NICHT behoben ist, ist der eigentliche Befund:** Der
+  Rundlauf steht weiterhin in keiner Reihe von Mitteln, die nach einem
+  Arbeitspaket laufen — er war deshalb sieben Tage rot, ohne dass es auffiel.
+  Wer ihn in die Reihe aufnimmt, entscheidet das nicht hier; die LIESMICH sagt
+  es jetzt an seiner Stelle.
+- **Nr. 181** (die Anwendung schickt keine Content-Security-Policy) — neu in
+  AP12, **ausdrücklich nicht mitgemacht**: Sie ist die Laufzeitseite von
+  Nr. 179, braucht Ausnahmen für vier Kachelserver und den Adressdienst
+  (dessen Anschrift eine Einstellung ist, die Richtlinie muss also zur Laufzeit
+  gebaut werden), und wer sie zu eng setzt, macht die Karten grau. Eine
+  Festlegung, keine Korrektur — Zuordnung S10 oder P6 ist im Rahmenplan als
+  Frage vermerkt.
+- **~~Nr. 179~~ — erledigt in AP12**, am Quelltext: Prüfung `fremde Quelle`,
+  0 Befunde, 15 Ausnahmen mit Grund und Art, 0 ungenutzt. Die Laufzeitseite
+  ist **Nr. 181** (siehe unten).
 - **~~Nr. 176~~ (Rauschfilter des Bilderlaufs) — erledigt in AP11**, auf
   Anweisung vom 13.09.2026. Bleibt hier stehen, weil die Begründung sich
   gedreht hat: Ich hatte den Punkt nach K4 nur eingetragen, „weil er das
   Messmittel dieser Runde ändert"; der Auftraggeber hat daraus den
   Gegenschluss gezogen — **weil** er das Messmittel ist, gehört er in diese
   Stufe (E-BR3-17).
-- **Nr. 178** (die Kopplungsprobe wirft jede Meldung „Failed to load
-  resource" weg) — neu in AP11, beim Durchsuchen der Geschwisterwerkzeuge
-  gefunden, **nicht behoben** (K4). Gemessen **4 von 8** gebauten Fällen falsch,
-  darunter ein **404** und ein **500** auf der eigenen Basis, für die
-  `requestfailed` nicht feuert. Die beiden anderen Browserwerkzeuge sind
-  geprüft und in Ordnung. Braucht eine eigene Abnahme (ein eingeschleuster
-  500er im Rundlauf, dafür ein gekoppeltes Gerät) — deshalb ein Paket, kein
-  Nachtrag.
+- **~~Nr. 178~~ — erledigt in AP12.** Drei Kanäle, drei Regeln; Selbstprobe
+  13/13, sechs Mutationen je 12/13, alte Regel 7/11 mit vier verschluckten
+  echten Fehlern, und die Abnahme am laufenden Stand mit eingeschleustem 500er
+  erfüllt. Die beiden anderen Browserwerkzeuge waren schon vorher in Ordnung
+  (geprüft).
 - **Nr. 177** (sechs doppelte Fassungsnummern im Änderungsverlauf des
   Rahmenplans) — neu in dieser Runde, **zurückgestellt** am 13.09.2026
   („nur historisch"). Nachgemessen und im Backlog vermerkt: **zwei** andere

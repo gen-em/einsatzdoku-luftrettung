@@ -27,10 +27,88 @@ Punkte liegen in `tools/` und `docs/` und lösen nach CLAUDE.md 2 keine Stufe
 aus; sie stehen hier unter derselben Überschrift, weil sie zur selben Runde
 gehören. Uhr und Android sind unberührt.
 
-**Ein zehnter Punkt ist im Abschluss entstanden und auf Anweisung gleich
-mitbehoben** (Nr. 176, der Abschnitt darunter): Er betrifft das Messmittel,
-mit dem alle Bildzahlen dieser Stufe belegt sind — deshalb steht er hier und
-nicht in der nächsten Runde.
+**Vier weitere Punkte sind im Abschluss und in seiner Gegenprüfung entstanden
+und auf Anweisung gleich mitbehoben** (Nr. 176, 178, 179, 180 — die Abschnitte
+darunter). Alle vier betreffen **Prüfmittel**, also das, womit die Zahlen dieser
+Stufe belegt sind; deshalb stehen sie hier und nicht in der nächsten Runde.
+Zwei Punkte bleiben offen und sind als Entscheidung notiert: **Nr. 177**
+(doppelte Fassungsnummern im Rahmenplan, zurückgestellt) und **Nr. 181** (die
+Content-Security-Policy).
+
+### Prüfmittel — die Kopplungsprobe misst wieder das Richtige, und die Zusage „keine fremde Quelle" hat ein Messmittel
+
+**Drei Punkte, ein Ursprung** (Nr. 178, 179, 180). Alle drei sind beim Beheben
+von Nr. 176 und bei dessen Gegenprüfung entstanden, und alle drei liegen in
+`tools/` — keine Versionsstufe, keine Änderung an der Anwendung.
+
+**Nr. 180 — ein Prüfmittel, das niemand fährt, ist kein Prüfmittel.** Um
+Nr. 178 überhaupt zu belegen, musste der Kopplungsrundlauf einmal laufen. Er
+meldete „Alle sichtbaren Knöpfe 44 px: **6 Knöpfe, 36 px**" —
+`rundlauf.mjs:214` verlangte einen fest verdrahteten Sollwert. Seit **Web
+15.5.0** gelten zwei (E-S8-09, R76), und bei 1280 px am Zeigergerät sind 36 px
+richtig. Der Fehler lag also im Prüfmittel, nicht in der Anwendung; belegt vom
+Bilderlauf, der beide Sollwerte kennt und über 360 Aufnahmen **0** Knöpfe
+falscher Höhe meldet. **Die unangenehme Zahl ist das Datum:** rot seit dem
+06.09.2026, gefahren erst am 13.09.2026 — weil dieser Rundlauf in keiner Reihe
+von Mitteln steht, die nach einem Arbeitspaket laufen. Jetzt leitet er den
+Sollwert ab wie der Bilderlauf, mit den Schaltern `--finger` und `--breite`;
+gemessen **25/0** als Zeigergerät (36 px) und **25/0** mit `--finger` (44 px).
+Dazu die Falle von S8/AP7: Die Eingabeart fällt nach dem ersten
+Vollseiten-Abzug zurück, und dieser Rundlauf macht mehrere — sie wird deshalb
+vor der Messung erneut gesendet, und **nur** im Fingerlauf, weil
+`{enabled:false}` am Zeigergerät denselben Fehler spiegelverkehrt erzeugt.
+
+**Nr. 178 — drei Kanäle, drei Regeln.** Derselbe Fehler wie Nr. 176, nur
+breiter: Ein Ausdruck für alle Kanäle, geprüft nur gegen den Text, dessen
+Alternative `Failed to load resource` **jede** Ressourcenmeldung verwarf —
+gleich welcher Herkunft und gleich welchen Grundes. Der scharfe Teil sind
+**404 und 500**: Für die feuert `requestfailed` nicht (die Anfrage ist auf
+Transportebene gelungen), sie stehen nur in der Konsole, und die wurde
+weggeworfen. Das Werkzeug konnte einen Serverfehler mitten im Kopplungsrundlauf
+nicht sehen. Jetzt entscheidet jeder Kanal nach dem, was er liefert: `console`
+hat Text **und** Fundstelle, `requestfailed` hat die Adresse und nie einen
+Statuscode — dort bleibt `ERR_ABORTED` auf **jeder** Herkunft Rauschen, weil
+dieser Rundlauf mehrfach navigiert und eine überholte Anfrage genau das meldet
+(14 solche Abbrüche in der ersten Ladung nach der Anmeldung, 0 in den
+folgenden) —, und `pageerror` ist **nie** Rauschen.
+
+**Belegt in vier Richtungen**, weil die Lehre aus Nr. 176 frisch ist: neue
+**Selbstprobe** (`--selbstprobe`, dreizehn Fälle) **13 von 13**;
+**Mutationsprobe** mit sechs Läufen, je eine Regel herausgenommen, **12 von 13**
+in jedem — und die ersten elf Fälle hätten das *nicht* geleistet, weil zwei
+Zweige der Herkunftsauskunft grün blieben, daher Fall 12 (`<anonymous>`) und 13
+(`data:`); die **alte** Regel gegen dieselben Fälle, wörtlich aus `git show`:
+**7 von 11**, **4 verschluckte echte Fehler**; und am laufenden Stand eine
+Wegwerfdatei mit HTTP 500 plus ein Kachelabruf im selben Lauf — der 500er
+**erscheint** im Protokoll, die Kachel **nicht**, der Rundlauf bleibt bei
+**25/0**.
+
+**Nr. 179 — die Zusage aus CLAUDE.md 4 hatte kein Messmittel.** „Kein CDN,
+keine Google Fonts, kein externes Skript" stand seit P3 im Text und wurde von
+nichts nachgezählt. Jetzt zählt es die dritte Prüfung der Gruppe 5,
+**`fremde Quelle`**. **Das Muster ist mit Absicht grob**, und das ist die Lehre
+des Punktes: Ein Ausdruck, der nur die Ladekonstrukte kennt (`src=`,
+`<link href=`, `fetch(`, `url()`, `@import`), wurde gebaut und gemessen — **0
+Treffer**, während **fünf** echte Laufzeitquellen im Code standen. Die Kacheln
+gehen über `L.tileLayer(...)`, die Anschrift des Adressdienstes ist eine
+PHP-Konstante. Gemeldet wird deshalb **jede** absolute Adresse in eigenem
+Quelltext, und die **Ausnahmeliste ist der Inhalt**: 15 Einträge, jeder mit
+seiner Art — vier gewollte Kachelserver, ein Rückfall im Kartendialog, der
+Adressdienst als *Vorgabe* (seit S9/AP2 eine Einstellung je Installation und
+Konto, R79), sechs **Navigationsziele** (die Lizenz- und Spendenhinweise, die
+CC-BY-SA und ODbL verlangen — ein `<a href>` lädt nichts), ein
+**XML-Namensraum** (`GPX_NS`, wird nie abgerufen) und zwei **Beispieltexte**.
+Gemessen: **0 Befunde, 15 Ausnahmen, 0 ungenutzt**, Gesamtzahl unverändert
+**330**; Gegenprobe mit eingeschleuster `https://cdn.example/x.js` genau **1
+Befund** und **331**.
+
+**Was dabei offen bleibt, ist eine Entscheidung: Nr. 181.** Die Prüfung sieht
+den **Quelltext**, nicht die Laufzeit — eine Content-Security-Policy schickt die
+Anwendung nicht (0 Fundstellen). Sie ist die zweite Hälfte derselben Zusage und
+ausdrücklich **nicht** mitgemacht: Sie braucht Ausnahmen für vier Kachelserver
+und den Adressdienst, dessen Anschrift eine Einstellung ist — die Richtlinie
+muss also zur Laufzeit gebaut werden —, und wer sie zu eng setzt, macht die
+Karten grau. Das ist eine Festlegung, kein Nachtrag.
 
 ### Prüfmittel — der Bilderlauf verwarf auch Fehler des eigenen Servers
 

@@ -468,6 +468,31 @@ def pruefung_knopf(bericht):
 # =========================================================== 5. Zusagen
 NATIVE_DIALOGE = re.compile(r'(?<![\w$.])(?:window\s*\.\s*)?(confirm|alert|prompt)\s*\(')
 
+# ---- Fremde Quellen zur Laufzeit (Backlog Nr. 179) -------------------------
+#
+# DIE ZUSAGE. CLAUDE.md 4: kein CDN, keine Google Fonts, kein externes Skript;
+# Schriften und Bibliotheken liegen unter server/assets/ mit Herkunft und
+# SHA-256 im Dateikopf. Bis Web 19.3.1 hat das KEIN Mittel nachgezaehlt, und
+# eine CSP schickt die Anwendung auch nicht -- aufgefallen ist die Luecke, als
+# ein Kommentar im Bilderlauf sie an genau diese Datei weiterschob (Nr. 176).
+#
+# WARUM DAS MUSTER SO GROB IST -- und das ist Absicht. Ein Ausdruck, der nur
+# die Ladekonstrukte kennt (src=, <link href=, fetch(, url(), @import), findet
+# in DIESEM Bestand NICHTS: Die Kartenkacheln gehen ueber `L.tileLayer(...)`,
+# die Anschrift des Adressdienstes steht als PHP-Konstante. Beides gemessen am
+# 13.09.2026 -- ein solcher Ausdruck meldete 0 Treffer, waehrend fuenf echte
+# Laufzeitquellen im Code standen. Deshalb wird JEDE absolute Adresse in
+# eigenem Quelltext gemeldet, und die Ausnahmeliste traegt die Begruendung.
+# Das ist mehr Arbeit beim Eintragen und dafuer eine Liste, die vollstaendig
+# ist: Sie nennt jede fremde Adresse im ausgelieferten Code, mit ihrer Art.
+#
+# NICHT JEDER TREFFER IST EIN LADEN. Die Liste unterscheidet vier Arten, und
+# die Spalte "Grund" sagt sie: gewollte Laufzeitquelle (Kacheln, Adressdienst),
+# Navigationsziel (ein <a href>, das ein Mensch anklickt -- das laedt nichts),
+# XML-Namensraum (eine Kennung, keine Adresse) und Beispieltext.
+FREMDE_QUELLE = re.compile(
+    r'(?<![\w])(?:https?:)?//[a-z0-9{][a-z0-9.\-{}]*\.[a-z]{2,}', re.I)
+
 
 UMLAUTE = {'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue', 'ß': 'ss'}
 
@@ -485,12 +510,20 @@ def umlautfrei(t):
     return ''.join(UMLAUTE.get(c, c) for c in t).lower()
 
 
-def zusagen_treffer(muster):
+def zusagen_treffer(muster, endungen=('.php', '.js')):
     """Alle Fundstellen eines Musters in server/, ohne Kommentare.
 
     Liefert (kurzer Pfad, Zeile, Fundtext) -- das Format, das die
-    Ausnahmeliste vergleicht und der Bericht zeigt."""
-    for pfad in quelldateien():
+    Ausnahmeliste vergleicht und der Bericht zeigt.
+
+    GRENZE FUER .css: Der Kommentar-Abtaster kennt zwei Sprachen, PHP und JS.
+    Auf ein Stylesheet wird die JS-Lesart angewendet -- die trifft `/* */`
+    richtig, hielte aber ein unquotiertes `url(//host)` fuer einen
+    Kommentaranfang und schnitte den Rest der Zeile weg. Heute gibt es keines
+    (gemessen: 0 absolute Adressen in server/assets/*.css, die Schriften
+    liegen lokal). Wer eines einfuehrt, faellt hier durch -- deshalb steht die
+    Grenze hier und nicht in einer Fussnote."""
+    for pfad in quelldateien(endungen=endungen):
         text = lies(pfad)
         ohne = ohne_php_js_kommentare(text, pfad.endswith('.php'))
         for m in muster.finditer(ohne):
@@ -563,6 +596,8 @@ def pruefung_zusagen(bericht):
     natives confirm()", "jede Seite hat ihr Geruest". Ein Versprechen ohne
     Pruefmittel haelt genau so lange, wie sich jemand daran erinnert."""
     zusagen_werten(bericht, 'native Dialoge', zusagen_treffer(NATIVE_DIALOGE))
+    zusagen_werten(bericht, 'fremde Quelle',
+                   zusagen_treffer(FREMDE_QUELLE, ('.php', '.js', '.css')))
 
     ohne, gegen = geruest_treffer()
     zusagen_werten(bericht, 'Seite ohne Geruest', ohne)

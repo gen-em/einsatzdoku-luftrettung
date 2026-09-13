@@ -1548,35 +1548,40 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     statt zurückgezogen: Er kostet nichts, solange niemand ihn anfasst, und er
     ist mit der nächsten größeren Rahmenplan-Pflege in einem Zug zu machen.
 
-178. **Die Kopplungsprobe wirft JEDE Meldung „Failed to load resource" weg.**
-    *Aufgenommen 13.09.2026 beim Beheben von Nr. 176; nach K4 nicht
-    mitbehoben.* Beim Beheben von Nr. 176 sind die Geschwisterwerkzeuge nach
-    demselben Fehler durchsucht worden. Zwei sind in Ordnung:
-    `tools/referenzdatensatz/browser/papierkorb_misch.mjs` prüft Text **und**
-    Fundstelle und führt in seinem Muster nur Gastgebernamen plus zwei Codes,
-    die auf `127.0.0.1` nicht vorkommen können (`ERR_TUNNEL_CONNECTION_FAILED`,
-    `ERR_NAME_NOT_RESOLVED`); `tools/messstand/browserprobe.mjs` hängt an
-    `requestfailed` und hat die Adresse immer dabei. **Eines ist es nicht:**
-    `tools/kopplungsprobe/rundlauf.mjs` filtert mit
-    `/tile\.openstreetmap\.org|ERR_ABORTED|Failed to load resource/` **nur
-    über den Text** — die dritte Alternative verwirft damit *jede*
-    Ressourcenmeldung, gleich welcher Herkunft und gleich welchen Grundes. Der
-    Kommentar daneben begründet die Kacheln und `ERR_ABORTED`; die dritte
-    Alternative begründet er nicht. **Gemessen an acht gebauten Fällen: 4 von 8
-    falsch eingestuft, alle vier verschluckte echte Fehler** — Symbol mit
-    `ERR_CONNECTION_RESET`, Stylesheet mit **404**, API mit **500**, Skript mit
-    `ERR_CONNECTION_REFUSED`. **Der 404 und der 500 sind der scharfe Teil:**
-    Für sie feuert `requestfailed` nicht (die Anfrage ist auf Transportebene
-    gelungen), sie stehen also nur in der Konsole — und die wird hier
-    weggeworfen. Das Werkzeug meldet „0 Konsolenfehler" und könnte einen
-    Serverfehler mitten im Kopplungsrundlauf nicht sehen. **Zu tun:** dieselbe
-    Trennung wie in `tools/screenshots/aufnehmen.mjs` (Nr. 176) — Gastgeber am
-    Namen, Verbindungscodes nur auf fremder Fundstelle, „Failed to load
-    resource" **nicht** als Rauschen —, dazu die Fundstelle mitlesen; die
-    Kopplungsprobe liest sie heute nicht. *Abnahme:* ein eingeschleuster
-    500er-Aufruf auf der eigenen Basis erscheint im Lauf, eine Kachel nicht,
-    und der Rundlauf bleibt im Übrigen bei seiner Zahl. Zuordnung:
-    Backlog-Runde.
+181. **Die Anwendung schickt keine Content-Security-Policy.**
+    *Aufgenommen 13.09.2026 als zweite Hälfte von Nr. 179; dort ausdrücklich
+    nicht mitgemacht, weil es eine Festlegung ist und kein Nachtrag.* Seit dem
+    13.09.2026 zählt `tools/vollstaendigkeit/` die Zusage „keine fremde Quelle
+    zur Laufzeit" nach (Prüfung `fremde Quelle`, Nr. 179) — **am Quelltext**.
+    Zur Laufzeit hält sie nichts: `grep -rn "Content-Security-Policy" server/`
+    ergibt **0**. Ein eingeschleustes Skript, das nicht im Repositorium steht
+    — über eine Lücke, ein Fremdpaket, einen kompromittierten Deploy —, lädt
+    ungehindert.
+    **Was zu entscheiden ist, nicht nur zu bauen.** Die Richtlinie braucht
+    Ausnahmen für genau die Quellen, die Nr. 179 als gewollt aufführt: vier
+    Kachelserver (`tile.openstreetmap.org`, `tile.openmaps.fr`,
+    `{s}.tile.opentopomap.org`, `server.arcgisonline.com`) unter `img-src`,
+    und den Adressdienst unter `connect-src` — **dessen Anschrift ist seit
+    S9/AP2 eine Einstellung je Installation** (`app_state.geocoder_url`), die
+    Richtlinie muss also zur Laufzeit gebaut werden und kann nicht als
+    feste Zeichenkette im Code stehen. Dazu die Frage, ob `'unsafe-inline'`
+    für `style-src` bleibt oder die Inline-Stile weichen (das entscheidet über
+    den Aufwand), und ob `report-only` vorgeschaltet wird, um eine Woche zu
+    messen, bevor die Richtlinie greift.
+    **Wer sie zu eng setzt, macht die Karten grau** — und das fällt erst im
+    Einsatz auf. *Abnahme:* Jede Seite schickt die Richtlinie; die vier
+    Kachelserver und der eingestellte Adressdienst funktionieren; ein
+    eingeschleustes `<script src="https://cdn.example/x.js">` wird vom Browser
+    **blockiert** (Konsolenmeldung im Bilderlauf, der solche Fehler seit
+    Nr. 176 wieder zählt); der Bilderlauf bleibt bei 0 Konsolenfehlern.
+    Zuordnung: **S10 Sicherheit** (Schritt 9b) oder das Bedrohungsmodell
+    (P6, R69) — die Entscheidung gehört in den Rahmenplan.
+
+## Erledigt
+
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
 
 179. **Die Zusage „keine fremde Quelle zur Laufzeit" zählt kein Prüfmittel
     nach.** *Aufgenommen 13.09.2026 beim Beheben von Nr. 176, gefunden von der
@@ -1607,6 +1612,103 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     eine eingeschleuste `https://cdn.example/x.js` in einer Seite, und die
     Ausnahmeliste nennt je Eintrag den Grund. Zuordnung: Backlog-Runde, dem
     Bedrohungsmodell (P6, R69) zuarbeitend.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, Nachtrag AP12 — keine
+    Versionsstufe, nur `tools/`).** Dritte Prüfung in Gruppe 5 „Zusagen":
+    **`fremde Quelle`** in `tools/vollstaendigkeit/pruefen.py`.
+    **Das Muster ist mit Absicht grob**, und das ist die Lehre dieses
+    Punktes: Ein Ausdruck, der nur die Ladekonstrukte kennt (`src=`,
+    `<link href=`, `fetch(`, `url()`, `@import`), meldete am 13.09.2026
+    **0 Treffer** — während fünf echte Laufzeitquellen im Code standen. Die
+    Kacheln gehen über `L.tileLayer(...)`, die Anschrift des Adressdienstes
+    ist eine PHP-Konstante. Gemeldet wird deshalb **jede absolute Adresse**
+    in eigenem Quelltext (`.php`, `.js`, `.css` unter `server/`, ohne
+    `vendor/`), und die Ausnahmeliste trägt die Begründung.
+    **Die Liste ist der Inhalt, nicht der Nebenschluss:** 15 Einträge, und
+    die Spalte „Grund" sagt die **Art** — vier gewollte Laufzeitquellen
+    (drei Kachelserver plus Luftbild), eine fünfte als Rückfall im
+    Kartendialog, der Adressdienst als *Vorgabe* (seit S9/AP2 eine
+    Einstellung, je Installation und Konto abschaltbar, R79), sechs
+    **Navigationsziele** (Lizenz- und Spendenhinweise, die CC-BY-SA und ODbL
+    verlangen — ein `<a href>` lädt nichts), ein **XML-Namensraum**
+    (`GPX_NS`, wird nie abgerufen) und zwei **Beispieltexte**.
+    **Abnahme erfüllt, mit Gegenprobe:** am heutigen Stand **0 Befunde,
+    15 Ausnahmen, 0 ungenutzt**, Gesamtzahl unverändert **330**; mit einer
+    eingeschleusten `https://cdn.example/x.js` in `impressum.php` genau
+    **1 Befund** mit `Datei:Zeile` und Gesamt **331**, danach zurückgenommen.
+    **Eine Grenze steht im Code, nicht in einer Fußnote:** Auf `.css` wendet
+    der Kommentar-Abtaster die JS-Lesart an — `/* */` trifft er richtig,
+    hielte aber ein unquotiertes `url(//host)` für einen Kommentaranfang.
+    Heute gibt es keines (gemessen: 0 absolute Adressen in den Stylesheets,
+    die Schriften liegen lokal).
+    **Die zweite Hälfte ist nicht mitgemacht:** Eine
+    Content-Security-Policy schickt die Anwendung weiterhin nicht. Das ist
+    eine Festlegung und kein Nachtrag — sie braucht Ausnahmen für genau
+    diese Quellen. Steht als **Nr. 181**.
+
+178. **Die Kopplungsprobe wirft JEDE Meldung „Failed to load resource" weg.**
+    *Aufgenommen 13.09.2026 beim Beheben von Nr. 176; nach K4 nicht
+    mitbehoben.* Beim Beheben von Nr. 176 sind die Geschwisterwerkzeuge nach
+    demselben Fehler durchsucht worden. Zwei sind in Ordnung:
+    `tools/referenzdatensatz/browser/papierkorb_misch.mjs` prüft Text **und**
+    Fundstelle und führt in seinem Muster nur Gastgebernamen plus zwei Codes,
+    die auf `127.0.0.1` nicht vorkommen können (`ERR_TUNNEL_CONNECTION_FAILED`,
+    `ERR_NAME_NOT_RESOLVED`); `tools/messstand/browserprobe.mjs` hängt an
+    `requestfailed` und hat die Adresse immer dabei. **Eines ist es nicht:**
+    `tools/kopplungsprobe/rundlauf.mjs` filtert mit
+    `/tile\.openstreetmap\.org|ERR_ABORTED|Failed to load resource/` **nur
+    über den Text** — die dritte Alternative verwirft damit *jede*
+    Ressourcenmeldung, gleich welcher Herkunft und gleich welchen Grundes. Der
+    Kommentar daneben begründet die Kacheln und `ERR_ABORTED`; die dritte
+    Alternative begründet er nicht. **Gemessen an acht gebauten Fällen: 4 von 8
+    falsch eingestuft, alle vier verschluckte echte Fehler** — Symbol mit
+    `ERR_CONNECTION_RESET`, Stylesheet mit **404**, API mit **500**, Skript mit
+    `ERR_CONNECTION_REFUSED`. **Der 404 und der 500 sind der scharfe Teil:**
+    Für sie feuert `requestfailed` nicht (die Anfrage ist auf Transportebene
+    gelungen), sie stehen also nur in der Konsole — und die wird hier
+    weggeworfen. Das Werkzeug meldet „0 Konsolenfehler" und könnte einen
+    Serverfehler mitten im Kopplungsrundlauf nicht sehen. **Zu tun:** dieselbe
+    Trennung wie in `tools/screenshots/aufnehmen.mjs` (Nr. 176) — Gastgeber am
+    Namen, Verbindungscodes nur auf fremder Fundstelle, „Failed to load
+    resource" **nicht** als Rauschen —, dazu die Fundstelle mitlesen; die
+    Kopplungsprobe liest sie heute nicht. *Abnahme:* ein eingeschleuster
+    500er-Aufruf auf der eigenen Basis erscheint im Lauf, eine Kachel nicht,
+    und der Rundlauf bleibt im Übrigen bei seiner Zahl. Zuordnung:
+    Backlog-Runde.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, Nachtrag AP12 — keine
+    Versionsstufe, nur `tools/`).** Statt eines Ausdrucks für alle drei
+    Kanäle jetzt **drei Kanäle, drei Regeln** — die Unterscheidung folgt
+    daraus, was der Kanal überhaupt liefert. **`console`** hat Text *und*
+    Fundstelle: Rauschen ist eine fremde Quelle am Namen oder ein
+    Verbindungsfehler auf nachweisbar fremder Fundstelle; alles andere zählt,
+    auch ein Statuscode auf der eigenen Basis. **`requestfailed`** hat die
+    Adresse immer dabei und einen Statuscode nie: Rauschen ist eine fremde
+    Quelle — und `ERR_ABORTED` auf **jeder** Herkunft, weil dieser Rundlauf
+    mehrfach navigiert und eine überholte Anfrage genau das meldet (gemessen
+    im Nachtrag zu Nr. 176: 14 solche Abbrüche in der ersten Ladung nach der
+    Anmeldung, 0 in den folgenden). **`pageerror`** ist **nie** Rauschen.
+    Die Klasse „Statuscode der Seite selbst", die der Bilderlauf braucht,
+    fehlt hier mit Absicht: Dieser Rundlauf besucht keine Seite, die
+    absichtlich mit 404 oder 409 antwortet.
+    **Belegt in vier Richtungen.** (1) Neue **Selbstprobe**
+    `node tools/kopplungsprobe/rundlauf.mjs --selbstprobe`: dreizehn Fälle,
+    je einer trägt eine Regel — **13 von 13**. (2) **Mutationsprobe**, sechs
+    Läufe mit je einer herausgenommenen Regel: **12 von 13** in jedem. Die
+    ersten elf Fälle allein hätten das nicht geleistet: Zwei Zweige von
+    `herkunft()` blieben grün, weil der Fall mit leerer Fundstelle schon an
+    der ersten Zeile herauskommt — deshalb Fall 12 (`<anonymous>`) und 13
+    (`data:`). Dieselbe Lehre wie bei der blinden Selbstprobe zu Nr. 176,
+    und diesmal vor dem Melden gemessen. (3) Dieselben dreizehn Fälle durch
+    die **alte** Regel, wörtlich aus `git show origin/main` geholt:
+    **7 von 11** der damals vergleichbaren Fälle, **4 verschluckte echte
+    Fehler** — alle vier auf dem Konsolenkanal, darunter der 500er und der
+    404. (4) **Am laufenden Stand**, mit einer Wegwerfdatei
+    `server/probe178.php` (HTTP 500) und einem Kachelabruf im selben Lauf:
+    Der 500er **erscheint** im Protokoll („console: … status of 500 …
+    [/probe178.php]"), die Kachel **nicht**, und der Rundlauf bleibt bei
+    **25 Erwartungen, 0 nicht erfüllt**. Die Wegwerfdatei ist danach
+    gelöscht; `git status` ist sauber.
+    **Die LIESMICH behauptet nicht mehr „dieselbe Rauschregel wie der
+    Bilderlauf"** — sie nennt die drei Kanäle und den Unterschied.
 
 180. **Die Kopplungsprobe misst die Knopfhöhe gegen einen Sollwert, den es
     seit Web 15.5.0 nicht mehr gibt — und ist seither rot.** *Aufgenommen
@@ -1633,12 +1735,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     laufen. *Abnahme:* `node tools/kopplungsprobe/rundlauf.mjs` meldet
     **25 Erwartungen, 0 nicht erfüllt** am Zeigergerät, und mit erzwungenem
     Fingergerät ebenfalls 0. Zuordnung: Backlog-Runde.
-
-## Erledigt
-
-
-Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
-zutreffen.
+    **Erledigt 13.09.2026 (Backlog-Runde 3, Nachtrag AP12 — keine
+    Versionsstufe, nur `tools/`).** `rundlauf.mjs` leitet den Sollwert jetzt
+    aus der emulierten Eingabeart und der Fensterbreite ab, dieselbe Weiche
+    wie im Bilderlauf: `(!FINGER && BREITE >= 1024) ? 36 : 44`. Dazu zwei
+    neue Schalter — `--finger` (Fingergerät) und `--breite` —, und die
+    Eingabeart wird **vor der Messung erneut gesendet**, weil sie sonst nach
+    dem ersten Vollseiten-Screenshot zurückfällt (Fund aus S8/AP7; dieser
+    Rundlauf macht mehrere Abzüge). Nur im Fingerlauf gesendet: Am
+    Zeigergerät kippt `{enabled:false}` beide Medienmerkmale auf
+    `none`/`coarse` und misst denselben Fehler spiegelverkehrt.
+    **Abnahme erfüllt, beide Richtungen gemessen:** als Zeigergerät
+    **25 Erwartungen, 0 nicht erfüllt** („6 Knöpfe, 36 px"), mit `--finger`
+    ebenfalls **25 / 0** („6 Knöpfe, 44 px"). Die Beschriftung nennt jetzt
+    Sollwert, Eingabeart und Breite, damit die Zeile im Protokoll ohne
+    Nachdenken zu lesen ist.
 
 176. **Der Rauschfilter des Bilderlaufs verschluckt auch lokale Fehler.**
     *Aufgenommen 13.09.2026 in Backlog-Runde 3, AP10, beim Aufklären von

@@ -22,7 +22,8 @@ Bilderlauf tut das nicht.
 
 ## `rundlauf.mjs` — der Weg im Browser (S5 Paket B)
 
-25 Erwartungen in einem Zug: anmelden · die drei Zustände der Karte „Gerät
+25 Erwartungen in einem Zug (ohne Zählung: Selbstprobe und Mutationsprobe der
+Rauschregeln, Abschnitt „Was nicht als Fehler zählt"): anmelden · die drei Zustände der Karte „Gerät
 koppeln" · beide Fehlerwege (Code mit „0", unbekannter Code) · die Eingabe
 **mit Leerzeichen und klein geschrieben**, so wie ein Mensch abliest · die
 Umleitung nach dem Beanspruchen · ein Neuladen im Wartezustand · das Ja am
@@ -32,7 +33,33 @@ Rückkehr in Zustand 1 · Überlauf und Knopfhöhen · das Abmelden des Prüfger
 ```bash
 node tools/kopplungsprobe/rundlauf.mjs
 node tools/kopplungsprobe/rundlauf.mjs --bilder /tmp/kopplung   # mit Bildern
+node tools/kopplungsprobe/rundlauf.mjs --finger                 # Fingergerät
+node tools/kopplungsprobe/rundlauf.mjs --breite 768             # andere Breite
+node tools/kopplungsprobe/rundlauf.mjs --selbstprobe            # nur die Rauschregeln
 ```
+
+### Zwei Sollwerte für die Knopfhöhe
+
+Seit Web 15.5.0 gelten **zwei** (E-S8-09, R76): **44 px** am Fingergerät und
+unter 1024 px, **36 px** am Zeigergerät ab 1024 px. Der Rundlauf leitet den
+Sollwert aus `--finger` und `--breite` ab; die Zeile im Protokoll nennt ihn
+samt Eingabeart und Breite. Gemessen am 13.09.2026: **25/0** als Zeigergerät
+(6 Knöpfe, 36 px) und **25/0** mit `--finger` (6 Knöpfe, 44 px).
+
+**Hier stand bis zum 13.09.2026 ein fest verdrahtetes `=== 44`** — und damit
+war der Rundlauf **seit dem 06.09.2026 rot**, ohne dass es auffiel: Er steht in
+keiner Reihe von Mitteln, die nach einem Arbeitspaket laufen, und wurde erst
+gefahren, weil ein anderer Punkt dazu führte (Backlog Nr. 180). Der Fehler lag
+im Prüfmittel, nicht in der Anwendung; belegt vom Bilderlauf, der beide
+Sollwerte kennt und über 360 Aufnahmen **0** Knöpfe falscher Höhe meldet.
+
+**Die Eingabeart hält nicht von selbst.** `hasTouch` am Kontext setzt sie
+richtig, aber ein Vollseiten-Screenshot — und dieser Rundlauf macht mehrere —
+schiebt sie zurück auf `hover:hover`/`pointer:fine`. Deshalb wird
+`Emulation.setTouchEmulationEnabled` vor der Messung erneut gesendet, und
+**nur im Fingerlauf**: Am Zeigergerät ist `{enabled:false}` nicht das
+Gegenteil, sondern kippt beide Merkmale auf `none`/`coarse` (Fund aus S8/AP7,
+ausführlich in `tools/screenshots/aufnehmen.mjs`).
 
 Er läuft im **Demo-Konto** — dort ist Ausprobieren erwünscht, und der Reset
 alle 30 Minuten fängt auf, was ein Abbruch liegenlässt. Das Prüfgerät meldet
@@ -62,20 +89,63 @@ SELECT 1800 - (UNIX_TIMESTAMP() - v) AS rest_s
 Ist `rest_s` klein, erst den Reset abwarten (oder ihn im Adminbereich
 auslösen), dann fahren. Beobachtet am 03.09.2026 in D Hälfte 1.
 
-Konsolenfehler zählt er **nicht** wie der Bilderlauf. Bis zum 13.09.2026 stand
-hier „mit derselben Rauschregel"; seit der Bilderlauf seine Regel in drei
-Klassen getrennt hat (Backlog Nr. 176), stimmt das nicht mehr — und die hiesige
-Regel ist die schwächere von beiden: `istRauschen()` in `rundlauf.mjs` prüft nur
-den **Text** und verwirft mit der Alternative `Failed to load resource`
-**jede** Ressourcenmeldung, gleich welcher Herkunft und gleich welchen Grundes.
-An acht gebauten Fällen nachgerechnet: **4 von 8** falsch eingestuft, alle vier
-verschluckte echte Fehler — darunter ein **404** und ein **500** auf der eigenen
-Basis, für die `requestfailed` nicht feuert und die deshalb nur in der Konsole
-stehen. Das ist **Backlog Nr. 178**; bis es behoben ist, heißt „0
-Konsolenfehler" in diesem Werkzeug: **keine Ausnahme und kein Abruf, der
-nicht als „Failed to load resource" gemeldet wurde.** Der Grund für die
-Kacheln gilt unverändert: Sie kommen von einem fremden Server, den ein
-abgeschotteter Prüfstand nicht erreicht.
+### Was nicht als Fehler zählt — drei Kanäle, drei Regeln
+
+Bis zum 13.09.2026 stand hier „Konsolenfehler zählt er wie der Bilderlauf, mit
+derselben Rauschregel". Das war zweimal unzutreffend: Der Bilderlauf hatte
+seine Regel gerade in drei Klassen getrennt (Nr. 176), und die hiesige war die
+**schwächere** von beiden — ein Ausdruck für alle Kanäle, geprüft nur gegen den
+Text, dessen Alternative `Failed to load resource` **jede** Ressourcenmeldung
+verwarf. An dreizehn gebauten Fällen nachgerechnet: **4 verschluckte echte
+Fehler**, darunter ein **404** und ein **500** auf der eigenen Basis, für die
+`requestfailed` nicht feuert und die deshalb nur in der Konsole stehen. Das war
+**Backlog Nr. 178**, behoben am 13.09.2026.
+
+Jetzt entscheidet jeder Kanal nach dem, was er überhaupt liefert:
+
+| Kanal | Rauschen ist | Alles andere |
+|---|---|---|
+| `console` | eine fremde Quelle am Namen (Wortlaut **oder** Fundstelle), oder ein Verbindungsfehler auf **nachweisbar fremder** Fundstelle | zählt — auch ein Statuscode, auch auf der eigenen Basis |
+| `requestfailed` | eine fremde Quelle, und **`ERR_ABORTED` auf jeder Herkunft** | zählt |
+| `pageerror` | **nichts** | zählt immer |
+
+**Warum `ERR_ABORTED` hier pauschal Rauschen ist** und im Bilderlauf nicht:
+Dieser Rundlauf navigiert mehrfach, und eine laufende Anfrage, die von der
+nächsten Navigation überholt wird, meldet genau das — gemessen im Nachtrag zu
+Nr. 176: **14** solche Abbrüche in der ersten Ladung nach der Anmeldung, **0**
+in den folgenden. Ohne diese Regel färbte jede Navigation den Lauf rot. Die
+Klasse „Statuscode der Seite selbst", die der Bilderlauf braucht, fehlt hier
+mit Absicht: Dieser Rundlauf besucht keine Seite, die absichtlich mit 404 oder
+409 antwortet.
+
+**Nachzählbar, nicht behauptet.** `node tools/kopplungsprobe/rundlauf.mjs
+--selbstprobe` hält die Regeln gegen **dreizehn** Fälle mit Sollwert, ohne
+Browser und ohne Server (das Playwright-Modul muss vorhanden sein, weil die
+Datei es am Kopf lädt). Erwartet: **13 von 13**. Und weil eine Probe, die sich
+selbst bestätigt, nichts belegt — die Lehre aus Nr. 176 —, wird jede Regel
+einzeln herausgenommen; die Probe muss **jedes Mal rot** werden:
+
+```
+S=/tmp/mut178; mkdir -p $S
+lauf() { cp tools/kopplungsprobe/rundlauf.mjs $S/a.mjs; eval "$2"
+         printf '%-38s' "$1"; node $S/a.mjs --selbstprobe | tail -1; }
+lauf "unverändert"                  "true"
+lauf "console: fremde Quellen weg"  "sed -i '/FREMDE_QUELLEN.test(text)/d' \$S/a.mjs"
+lauf "console: Verbindungscodes weg" "sed -i \"/herkunft(ort) === 'fremd'/d\" \$S/a.mjs"
+lauf "abruf: fremde Quellen weg"    "sed -i '/FREMDE_QUELLEN.test(url)/d' \$S/a.mjs"
+lauf "abruf: ERR_ABORTED weg"       "sed -i '/ERR_ABORTED\/i.test(code)/d' \$S/a.mjs"
+lauf "herkunft: keine→fremd"        "sed -i \"s/if (!o || o === 'null') return 'keine';/if (false) return 'keine';/\" \$S/a.mjs"
+```
+
+Gemessen am 13.09.2026: **13 von 13** unverändert, **12 von 13** in allen fünf
+Mutationen; dazu die sechste von Hand (den `catch`-Zweig von `herkunft()` auf
+`'fremd'` gestellt), ebenfalls 12 von 13. **Die ersten elf Fälle hätten das
+nicht geleistet:** Zwei Zweige von `herkunft()` blieben grün, weil der Fall mit
+leerer Fundstelle schon an der ersten Zeile herauskommt — deshalb gibt es Fall
+12 (`<anonymous>`) und 13 (`data:`).
+
+Der Grund für die Kacheln gilt unverändert: Sie kommen von einem fremden
+Server, den ein abgeschotteter Prüfstand nicht erreicht.
 
 ---
 

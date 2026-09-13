@@ -158,14 +158,13 @@ const liste = FILTER.length
  *
  * Was diese Klasse WEITERHIN verschweigt: einen Verbindungsfehler auf einer
  * fremden Adresse, die gar nicht abgerufen werden duerfte. Hier stand zuerst,
- * das messe tools/vollstaendigkeit/ — DAS IST FALSCH und am 13.09.2026
- * nachgesehen: Dessen Gruppe 5 kennt genau zwei Zusagen (native Dialoge,
- * Seite ohne Geruest), und kein Werkzeug im Repositorium zaehlt "keine fremde
- * Quelle zur Laufzeit" nach; eine CSP schickt die Anwendung auch nicht
- * (0 Fundstellen fuer Content-Security-Policy unter server/). Die Luecke steht
- * als Backlog Nr. 179. Bis dahin gilt: Diese Klasse sieht nicht, ob eine
- * fremde Adresse ueberhaupt abgerufen werden durfte, und niemand sonst sieht
- * es auch.
+ * das messe tools/vollstaendigkeit/ — das war FALSCH, als es hier stand:
+ * Dessen Gruppe 5 kannte zwei Zusagen, und kein Werkzeug zaehlte "keine fremde
+ * Quelle zur Laufzeit" nach. Seit dem 13.09.2026 tut es das (Backlog Nr. 179,
+ * Pruefung `fremde Quelle`) — aber AM QUELLTEXT, nicht zur Laufzeit: Es
+ * meldet jede absolute Adresse in eigenem Code gegen eine Ausnahmeliste mit
+ * Grund. Was zur Laufzeit dazukommt, sieht weiterhin niemand; eine
+ * Content-Security-Policy schickt die Anwendung nicht (Backlog Nr. 181).
  *
  * SELBSTPROBE: `node tools/screenshots/aufnehmen.mjs --selbstprobe` haelt
  * diese Funktion gegen fuenfzehn gebaute Faelle und nennt die Zahl. Sie laeuft

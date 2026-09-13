@@ -47,7 +47,27 @@ zur Sollmenge und verliert damit genau die Auskunft, um die es geht.
 | 2 | Werte außerhalb der Token — Hexfarben, `rgb()`, Schriftgrößen, Pixelmaße, `50px`-Reste, `style="…"` in PHP/JS | 0 außer `ausnahmen.md` |
 | 3 | Symbole — Inline-SVG mit Pfaden, Unicode-Zeichen als Symbol, Emoji, Verweise auf fehlende Dateien, Dateien ohne Anker `id="i"` | 0 |
 | 4 | Knopfregel — jede Höhenangabe an einer `.knopf`-Regel kommt aus `--knopf` | 0 |
-| 5 | **Zusagen** — Regeln, die bisher nur im Kopf standen. Zwei: **native Dialoge** (kein `confirm()`/`alert()`/`prompt()`, auch nicht als `window.`-Aufruf) und **Seite ohne Gerüst** (wer `ui_seite_start(` ruft, ruft auch `ui_geruest_start(` **und** `ui_geruest_ende(`). Beide zählen nur außerhalb von Kommentaren; Ausnahmen mit Grund in `zusagen.md`, in **beide** Richtungen geprüft. Dazu ein **Hinweis**: Gerüst ohne Seitenhülle | 0 Befunde · 0 ungenutzte Ausnahmen |
+| 5 | **Zusagen** — Regeln, die bisher nur im Kopf standen. **Drei:** **native Dialoge** (kein `confirm()`/`alert()`/`prompt()`, auch nicht als `window.`-Aufruf), **Seite ohne Gerüst** (wer `ui_seite_start(` ruft, ruft auch `ui_geruest_start(` **und** `ui_geruest_ende(`) und **fremde Quelle** (jede absolute Adresse in eigenem Quelltext, seit Backlog Nr. 179). Alle drei zählen nur außerhalb von Kommentaren; Ausnahmen mit Grund in `zusagen.md`, in **beide** Richtungen geprüft. Dazu ein **Hinweis**: Gerüst ohne Seitenhülle | 0 Befunde · 0 ungenutzte Ausnahmen |
+
+**Warum „fremde Quelle" jede absolute Adresse meldet und nicht nur die
+Ladekonstrukte.** Die naheliegende Regel wäre, nach `src=`, `<link href=`,
+`fetch(`, `url()` und `@import` zu suchen — also nach dem, was tatsächlich
+etwas lädt. Sie wurde gebaut und gemessen (13.09.2026): **0 Treffer**, während
+**fünf** echte Laufzeitquellen im Code standen. Die Kartenkacheln gehen über
+`L.tileLayer(...)`, die Anschrift des Adressdienstes ist eine PHP-Konstante —
+beides sieht kein Ladekonstrukt. Gemeldet wird deshalb **jede** absolute
+Adresse in `server/**/*.{php,js,css}` (ohne `vendor/`, `fonts/`, `demo/`), und
+`zusagen.md` trägt die Begründung. **Das verschiebt die Arbeit in die Liste,
+und das ist der Punkt:** Sie nennt heute 15 Adressen mit ihrer Art — vier
+gewollte Kachelserver, ein Rückfall im Kartendialog, der Adressdienst als
+Vorgabe, sechs Navigationsziele (Lizenz- und Spendenhinweise; ein `<a href>`
+lädt nichts), ein XML-Namensraum und zwei Beispieltexte. Wer eine sechzehnte
+einführt, muss sie eintragen und begründen. **Die Grenze steht im Code:** Auf
+`.css` wird die JS-Lesart des Kommentar-Abtasters angewendet; ein unquotiertes
+`url(//host)` hielte er für einen Kommentaranfang. Heute gibt es keines
+(gemessen: 0 absolute Adressen in den Stylesheets). **Und was diese Prüfung
+NICHT leistet:** Sie sieht den Quelltext, nicht die Laufzeit. Eine
+Content-Security-Policy schickt die Anwendung nicht (Backlog Nr. 181).
 
 **Warum das Kriterium `ui_seite_start(` heißt und nicht „bindet die Wache ein".** Die naheliegende Regel („bindet `require_admin()` oder `auth_guard.php` ein und ruft kein Gerüst") liefert **15** Treffer, und alle 15 sind richtig so: Bibliotheken, Endpunkte ohne Seite, Seiten vor der Anmeldung, der Notausgang. Ein Mittel, das mit 15 Rot anfängt, wird nie wieder gelesen. `ui_seite_start()` dagegen ist der Anfang **jeder** Seitenhülle — wer ihn ruft, gibt eine Seite aus. **Der Hinweis in der Gegenrichtung hat sich sofort bezahlt gemacht:** Er zeigte auf `apk.php`, dessen 404-Seite ohne `<!doctype>` und ohne Stylesheet hinausging (behoben mit Web 19.3.1).
 

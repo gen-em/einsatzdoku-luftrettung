@@ -519,8 +519,14 @@ Daten erst nach Server-Bestätigung.
 │   │                      ob jeder Wert in :root steht. Vier Hilfslisten mit
 │   │                      Begründungspflicht: streichliste.md, ausnahmen.md,
 │   │                      ohne-regel.md, zusagen.md (s. LIESMICH.md). Seit
-│   │                      Web 19.3.1 zählt Gruppe 5 „Zusagen" Regeln nach,
-│   │                      die vorher nur im Kopf standen (Backlog Nr. 47)
+│   │                      Web 19.3.1 zählt Gruppe 5 „Zusagen" DREI Regeln
+│   │                      nach, die vorher nur im Kopf standen: native
+│   │                      Dialoge und Seite ohne Gerüst (Backlog Nr. 47, 58)
+│   │                      sowie „keine fremde Quelle zur Laufzeit" (Nr. 179)
+│   │                      — Letztere meldet jede absolute Adresse in eigenem
+│   │                      Quelltext; die 15 Ausnahmen nennen je Eintrag die
+│   │                      Art. Am Quelltext, nicht zur Laufzeit: eine CSP
+│   │                      schickt die Anwendung nicht (Nr. 181)
 │   ├── freigabeprobe/    der Freigabeweg MIT Wiederherstellungsschlüssel
 │   │                      (E20): Kasten erscheint, falscher Schlüssel wird
 │   │                      abgewiesen, richtiger schlüsselt um. Die Krypto

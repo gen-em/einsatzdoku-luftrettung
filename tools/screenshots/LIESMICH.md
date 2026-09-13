@@ -298,12 +298,13 @@ Fehler im Bericht statt als grüne Zahl.
 - **Ein Verbindungsfehler auf einer fremden Adresse bleibt stumm.** Die dritte
   Rauschklasse verwirft ihn — sie kann nicht wissen, ob die Adresse überhaupt
   abgerufen werden durfte. Hier stand zuerst, das messe
-  `tools/vollstaendigkeit/`; **das ist falsch**, nachgesehen am 13.09.2026:
-  Dessen Gruppe 5 kennt genau zwei Zusagen (native Dialoge, Seite ohne
-  Gerüst), und **kein** Werkzeug des Repositoriums zählt „keine fremde Quelle
-  zur Laufzeit" nach — eine CSP schickt die Anwendung auch nicht
-  (0 Fundstellen für `Content-Security-Policy` unter `server/`). Die Lücke ist
-  **Backlog Nr. 179**. Bis dahin sieht sie niemand.
+  `tools/vollstaendigkeit/`; **als es hier stand, war das falsch** — dessen
+  Gruppe 5 kannte zwei Zusagen, und kein Werkzeug zählte „keine fremde Quelle
+  zur Laufzeit" nach. **Seit dem 13.09.2026 tut es das** (Backlog Nr. 179,
+  Prüfung `fremde Quelle`, 15 Ausnahmen mit Grund) — aber **am Quelltext**,
+  nicht zur Laufzeit. Was erst zur Laufzeit dazukommt, sieht weiterhin
+  niemand: Eine Content-Security-Policy schickt die Anwendung nicht
+  (**Nr. 181**).
 - **Jeder Lauf löscht den vorigen.** `ausgabe/` wird beim Start geräumt
   (`rmSync`). Zwei Läufe zu vergleichen geht nur, wenn der erste Bericht
   vorher weggesichert wurde — sonst ist seine Zahl hinterher unbelegbar. In
