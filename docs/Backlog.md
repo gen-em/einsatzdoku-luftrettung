@@ -1162,31 +1162,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Fehler. Dieselbe Frage stellt sich für
     `tools/screenshots/kontrast.py` (Web). Zuordnung: Backlog-Runde.
 
-117. **Niemand weiß, ob eine NutzerIn je ein Backup gezogen hat.**
-    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-07).* Die Kennzahlen
-    „Backup überfällig" und „nie gesichert", der Filter der
-    NutzerInnen-Liste und die Erinnerungsmail messen **ausschließlich** die
-    Konto-Backups der Verwaltung — den Stand des jüngsten Pakets im
-    Kontoordner (`edbak_konto_stand()`). Ob eine NutzerIn selbst je ein
-    Backup heruntergeladen hat, weiß niemand: Die Datei entsteht im Browser
-    und der Server sieht sie nie. S8 hat die Begriffe ehrlich gemacht — die
-    Kennzahlen heißen jetzt „Konto-Backup überfällig" und „nie
-    Konto-Backup" —, aber die Lücke selbst bleibt. **Zu klären:** ob ein
-    Zeitstempel „zuletzt Backup erzeugt" je Konto überhaupt gewollt ist. Er
-    wäre eine neue Erhebung über eine Handlung der NutzerIn und keine
-    Kleinigkeit; die Alternative ist, es dabei zu belassen und im Handbuch
-    zu sagen, dass die Anwendung es nicht weiß. Zuordnung: Backlog-Runde
-    (Entscheidung), Umsetzung frühestens P5.
-    **Entschieden am 12.09.2026: nicht erheben.** Ein Zeitstempel wäre eine
-    neue Erhebung über eine Handlung der NutzerIn; bei einer Anwendung, deren
-    Versprechen die Ende-zu-Ende-Verschlüsselung ist, wäre das kein
-    Nebenprodukt. Stattdessen sagt das Handbuch, dass die Anwendung es nicht
-    weiß und was die Kennzahlen tatsächlich messen. Gegengeprüft 13.09.2026:
-    `users` trägt keine solche Spalte, die Kennzahlen messen über
-    `edbak_konto_stand()` ausschließlich die Konto-Backups der Verwaltung.
-    **Damit ist der Punkt ein Absatz im Handbuch** — die billigste Umsetzung
-    im ganzen Backlog. Zuordnung: **Backlog-Runde** (Handbuchsatz).
-
 121. **Vorschau der Rechtstexte beim Tippen.**
     *Aufgenommen 05.09.2026 aus dem S8-Konzept (Mockup 09); Titel und Text
     berichtigt 05.09.2026 in S8/AP3.* **Eine Vorschau gibt es seit Web
@@ -1623,6 +1598,52 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+117. **Niemand weiß, ob eine NutzerIn je ein Backup gezogen hat.**
+    *Aufgenommen 05.09.2026 aus dem S8-Konzept (B-S8-07).* Die Kennzahlen
+    „Backup überfällig" und „nie gesichert", der Filter der
+    NutzerInnen-Liste und die Erinnerungsmail messen **ausschließlich** die
+    Konto-Backups der Verwaltung — den Stand des jüngsten Pakets im
+    Kontoordner (`edbak_konto_stand()`). Ob eine NutzerIn selbst je ein
+    Backup heruntergeladen hat, weiß niemand: Die Datei entsteht im Browser
+    und der Server sieht sie nie. S8 hat die Begriffe ehrlich gemacht — die
+    Kennzahlen heißen jetzt „Konto-Backup überfällig" und „nie
+    Konto-Backup" —, aber die Lücke selbst bleibt. **Zu klären:** ob ein
+    Zeitstempel „zuletzt Backup erzeugt" je Konto überhaupt gewollt ist. Er
+    wäre eine neue Erhebung über eine Handlung der NutzerIn und keine
+    Kleinigkeit; die Alternative ist, es dabei zu belassen und im Handbuch
+    zu sagen, dass die Anwendung es nicht weiß. Zuordnung: Backlog-Runde
+    (Entscheidung), Umsetzung frühestens P5.
+    **Entschieden am 12.09.2026: nicht erheben.** Ein Zeitstempel wäre eine
+    neue Erhebung über eine Handlung der NutzerIn; bei einer Anwendung, deren
+    Versprechen die Ende-zu-Ende-Verschlüsselung ist, wäre das kein
+    Nebenprodukt. Stattdessen sagt das Handbuch, dass die Anwendung es nicht
+    weiß und was die Kennzahlen tatsächlich messen. Gegengeprüft 13.09.2026:
+    `users` trägt keine solche Spalte, die Kennzahlen messen über
+    `edbak_konto_stand()` ausschließlich die Konto-Backups der Verwaltung.
+    **Damit ist der Punkt ein Absatz im Handbuch** — die billigste Umsetzung
+    im ganzen Backlog. Zuordnung: **Backlog-Runde** (Handbuchsatz).
+    **Erledigt 13.09.2026 (Backlog-Runde 3, AP3 — keine Versionsstufe, nur
+    `docs/`).** Zwei Absätze in `docs/Handbuch.md` 11.2, direkt hinter den
+    vier Zahlen: Der erste sagt, was gemessen wird (die beiden Kennzahlen,
+    die beiden Filter, die Spalte je Zeile und die Erinnerungsmail sehen
+    alle nur auf das jüngste Paket im Kontoordner — die zweite der drei
+    Backup-Bedeutungen aus Kapitel 6); der zweite, was nicht gemessen wird,
+    samt der Folge in der Liste: Ein Konto, das zuverlässig eigene Backups
+    zieht, steht dort genauso unter „nie Konto-Backup" wie eines, das nichts
+    tut.
+    **Eine Zahl im Konzept war falsch.** Der Auftrag lautete „alle vier
+    messen Konto-Backups der Verwaltung". Die vier Zahlen über der Liste
+    sind aber Konten, Admins, Konto-Backup überfällig und nie Konto-Backup —
+    nur die letzten zwei haben mit Backups zu tun. Die Vier dieses Eintrags
+    meinte etwas anderes: zwei Kennzahlen plus Filter plus Erinnerungsmail.
+    Der Absatz sagt deshalb „zwei der vier Zahlen" und zählt die vier
+    Stellen einzeln auf.
+    **Gegengeprüft am Code (13.09.2026):** `users` hat 16 Spalten, keine
+    davon ein Backup-Zeitpunkt; `edbak_konto_stand()` liest
+    `edbak_pakete()` und die Begleitdatei, also nur den Kontoordner; die
+    Erinnerungsmail filtert über `edbak_faellige_konten()` auf dieselben
+    Stände. **Nichts in der Oberfläche** — die Zahlen heißen seit S8 richtig.
 
 94. **„bitgleich" gegen „pixelgleich" in `tools/uhr-bilder/`.**
     *Aufgenommen 03.09.2026 aus S5, Vorbereitung V-S5-05.*

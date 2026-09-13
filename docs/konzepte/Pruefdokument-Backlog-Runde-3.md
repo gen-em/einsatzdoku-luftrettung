@@ -9,7 +9,7 @@ beantwortet „was muss **ich** noch tun?". Muster:
 
 > | | |
 > |---|---|
-> | Stand | **AP1 und AP2 erledigt** (13.09.2026), AP3 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
+> | Stand | **AP1, AP2 und AP3 erledigt** (13.09.2026) — Block A zu drei Fünfteln; AP4 in Arbeit. Die Zeilen zu noch nicht gelaufenen Paketen tragen weiter `[ ]` |
 > | Stufe | **Web 19.3.1 — Korrektur** (E-BR3-14; die Begründung steht im Konzept). **Keine Migration**, `update.php` muss nach dem Deploy **nicht** laufen. Uhr und Android unberührt. `version.php` steigt erst mit AP4 — dem ersten Paket, das `server/` anfasst |
 > | Punkte | Backlog **Nr. 91, 94, 117, 47, 58, 173, 174** erledigt; **Nr. 67** Unterpunkt erledigt, Punkt bleibt (P5); **Nr. 41** drei Streichungen erledigt, Punkt bleibt (9c) |
 > | Neu entstanden | Prüfgruppe „5 Zusagen" in `tools/vollstaendigkeit/`, Liste `zusagen.md`; neue Referenzdateien unter `tools/referenzdatensatz/referenz/` |
@@ -90,6 +90,9 @@ dazukommt, gehört hierher.
 | **AP2 · „bitgleich" in `tools/uhr-bilder/`** | Zusage an 2 Stellen behauptet | **0 Vorkommen, die die Bitgleichheit behaupten** — das Sollmaß „`grep -ci` = 0" ist berichtigt, weil der verlangte Zusatz das Wort verneinen muss (E-BR3-15) | **3 Vorkommen, 0 Behauptungen** ✓ (2 Verneinung, 1 datierte Rückschau) |
 | **AP2 · `tools/s5-anker/anker.py`** | Anker `uhrbilder.bitgleich` „unveraendert"; 7 nicht gefunden | Anker findet die Stelle weiter; **nicht gefunden bleibt 7** | Anker `uhrbilder.wortlaut` **„unveraendert"**, nicht gefunden **7** ✓ |
 | **AP2 · Syntax der berührten Dateien** | — | `bash -n` und Python-Parser ohne Fehler | **beide ok** ✓ |
+| **AP3 · „letztes Backup der NutzerIn" als Messwert im Handbuch** | — | **0** Fundstellen (grep auf „zuletzt … Backup", „letztes Backup") | **0** ✓ |
+| **AP3 · Gegenprobe am Code** | — | `users` ohne Backup-Spalte; `edbak_konto_stand()` liest nur den Kontoordner; Erinnerungsmail auf denselben Ständen | **16 Spalten, keine davon ein Backup-Zeitpunkt**; `edbak_pakete()` + Begleitdatei; `edbak_faellige_konten()` filtert auf `ueberfaellig`/`nie` ✓ |
+| **Backlog-Nummernmenge gegen `dabd7a3`** (neu ab AP3, wegen F-BR3-01) | 170 Einträge | **0 verloren, 0 doppelt**; nur beabsichtigte Verschiebungen | nach AP3 **171 Einträge, 0 verloren, 0 doppelt**; aus *Offen* heraus: 81, 87, 88 (Durchsicht) und 91, 94, 117 (diese Runde) ✓ |
 | **Linkprobe** (`tools/linkprobe/probe.py`) | 0 Abweichungen, 0 tote Ausnahmen | **0 / 0** | [ ] |
 | **Wartungsprobe** (`tools/wartungsprobe/probe.php`) | 55 Erwartungen, 0 nicht erfüllt (15 flattert, Nr. 172) | **0** nicht erfüllt | [ ] |
 | **Bilderlauf** Einsatzbearbeitung mit Reanimation und Einsatzansicht mit Phasen | — | **0** abweichende Bildpunkte gegen den Stand vor AP5 (`compare -metric AE`) — die drei Klassen hatten keine Regel | [ ] |

@@ -100,6 +100,45 @@ Umformulierung des Adjektivs aus. Gemessen nach der Änderung: der Anker steht
 auf „unveraendert", und die Gesamtzahl der nicht gefundenen Anker bleibt bei
 **7** — die Änderung hat keinen zerbrochen.
 
+### Web — das Handbuch sagt, was die Kennzahlen der NutzerInnen-Liste nicht messen
+
+**Die Lücke bleibt, und sie steht jetzt da** (Nr. 117, aufgenommen am
+05.09.2026 aus dem S8-Konzept als B-S8-07). Ob eine NutzerIn selbst je ein
+Backup gezogen hat, weiß die Anwendung nicht: Die Datei entsteht im Browser,
+der Server bekommt sie nie zu sehen. S8 hat die Begriffe schon ehrlich
+gemacht — die Kennzahlen heißen seit Web 15.2.0 „Konto-Backup überfällig" und
+„nie Konto-Backup" —, aber wer sie liest, konnte daraus nicht schließen, was
+sie **nicht** abdecken.
+
+**Entschieden am 12.09.2026: nicht erheben.** Ein Vermerk „hat am … gesichert"
+wäre eine neue Aufzeichnung über das Verhalten einer NutzerIn, und bei einer
+Anwendung, deren Zusage die Ende-zu-Ende-Verschlüsselung ist, wird so etwas
+nicht als Nebenprodukt erhoben. Gegengeprüft am 13.09.2026: `users` trägt
+keine solche Spalte (16 Spalten, keine davon ein Backup-Zeitpunkt), und
+`edbak_konto_stand()` liest ausschließlich die Pakete im Kontoordner.
+
+**Zwei Absätze in Handbuch 11.2**, direkt hinter den vier Zahlen. Der erste
+sagt, was gemessen wird: „Konto-Backup überfällig" und „nie Konto-Backup", die
+beiden Filter, die Spalte je Zeile und die Erinnerungsmail sehen alle nur auf
+das jüngste Paket im Kontoordner — die **zweite** der drei Bedeutungen von
+„Backup" aus Kapitel 6. Der zweite sagt, was nicht gemessen wird, samt der
+Folge, die in der Liste sichtbar wird: Ein Konto, das seit Jahren zuverlässig
+eigene Backups zieht, steht dort genauso unter „nie Konto-Backup" wie eines,
+das nichts tut. Wer es wissen will, fragt die Person.
+
+**Eine Zahl im Auftrag war falsch, und mit ihr wäre der Absatz falsch
+geworden.** Das Konzept schrieb „alle **vier** messen Konto-Backups der
+Verwaltung". Die vier Zahlen über der Liste sind aber **Konten**, **Admins**,
+**Konto-Backup überfällig** und **nie Konto-Backup** — nur die letzten zwei
+haben mit Backups zu tun. Die Vier des Backlog-Eintrags meinte etwas anderes:
+zwei Kennzahlen plus Filter plus Erinnerungsmail. Der Handbuchabsatz sagt
+deshalb „zwei der vier Zahlen" und zählt die vier Stellen einzeln auf.
+
+**Kein Warnkasten, keine neue Darstellung** — zwei Absätze im Ton des
+Kapitels. Und **nichts in der Oberfläche**: Die Zahlen heißen seit S8 richtig;
+ein zusätzlicher Hinweis neben jeder von ihnen erklärte dieselbe Sache
+viermal.
+
 ## [Web 19.3.0] — 2026-09-12
 
 ### Web — Backlog-Runde 2: der Block Betrieb wird fertig

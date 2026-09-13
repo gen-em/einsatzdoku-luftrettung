@@ -1238,7 +1238,6 @@ damit „nach v1.0" verlassen — dort stehen noch **acht**: 50, 51, 52, 55,
 | 100 | Play-API-Upload aus der Auslieferungskette | nach v1.0 | R67; Upload-Schlüssel als GitHub-Secret plus Dienstkonto, wenn die Releases häufiger werden; E-S4-16 dann ergänzen |
 | 114 | Abgewiesene Pakete sichtbar machen und ausräumen | **Backlog-Runde** | Räumteil (30 Tage, beim Trennen) **erledigt mit Android 0.14.0** (R78); der Bedienweg zum Sichtbarmachen bleibt |
 | 116 | Kontrastwerkzeug misst nur seine Paarliste | Backlog-Runde | Android-Prüfmittel `android/werkzeuge/kontraste.py`; Paare aus dem Code ableiten |
-| 117 | Kein Vermerk, ob eine NutzerIn je ein Backup gezogen hat (B-S8-07) | Backlog-Runde (Handbuchsatz) | **Entschieden 12.09.2026: nicht erheben.** Das Handbuch sagt, dass die Anwendung es nicht weiß und was die Kennzahlen messen — ein Absatz, die billigste Umsetzung im Backlog |
 | 121 | Vorschau der Rechtstexte beim Tippen (Mockup 09) | Backlog-Runde | heute nur der gespeicherte Stand |
 | 122 | Freie Zeiträume und Diagramme in der Statistik (Mockup 04) | P5 / Backlog-Runde | Diagrammbibliothek müsste vendoriert werden |
 | 124 | Aktionsblatt öffnet weit weg von seinem Knopf | **Mockup-Runde** (9c) | **Entschieden 12.09.2026: Weg (b)** — Knopf bleibt hervorgehoben, Blatt fährt sichtbar aus seiner Richtung auf. Mit Bild gemeldet (Tagesübersicht am Handy); als einziger der vier aus einer Rückmeldung von außen — darf die Runde verlassen, wenn sie rutscht |

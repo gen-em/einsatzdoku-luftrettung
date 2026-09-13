@@ -22,9 +22,9 @@ Prüfdokument nach K9 liegt als Vorlage daneben
 
 | | |
 |---|---|
-| **In Arbeit** | **AP3** — Nr. 117, Absatz in `docs/Handbuch.md` 11.2 |
-| **Erledigt** | **AP1** (Nr. 91), **AP2** (Nr. 94) |
-| **Offen** | AP4 bis AP10 |
+| **In Arbeit** | **AP4** — Nr. 67 Unterpunkt, CSRF-Prüfung in `api/kdf_upgrade.php` |
+| **Erledigt** | **AP1** (Nr. 91), **AP2** (Nr. 94), **AP3** (Nr. 117) — Block A zu drei Fünfteln |
+| **Offen** | AP5 bis AP10. **AP4 ist das erste Paket, das `server/` anfasst** — dort steigt `version.php` auf 19.3.1 |
 | **Stufe der Runde** | **Web 19.3.1 — Korrektur** (E-BR3-14), festgelegt vor AP1; `version.php` wird mit AP4 hochgestuft, dem ersten Paket, das `server/` anfasst |
 | **Hakt es?** | Nein. Drei Abweichungen vom Konzept sind entschieden und begründet: E-BR3-13 (Abschnitt-5-Zeilen wandern je Paket, nicht gesammelt in AP10), E-BR3-14 (Stufe) und E-BR3-15 (die Abnahme von AP2 war so nicht erfüllbar) |
 | **Zweig** | `claude/backlog-runde-3-umsetzung-woqxjm`, nach jedem Paket gepusht |
@@ -488,9 +488,34 @@ der Verweis und, je AP, ob die Abnahme erfüllt ist (Abschnitt 8).
 
 ## 7. Fehlerfunde (K4)
 
-Leer. Was beim Bauen auffällt und nicht zu dieser Runde gehört, kommt hierher
-mit Datei, Symptom und Vermutung — und wird **nicht** nebenbei behoben. Am
-Ende entscheidet der Auftraggeber, was davon ein Backlog-Punkt wird.
+Was beim Bauen auffällt und nicht zu dieser Runde gehört, steht hier mit
+Datei, Symptom und Vermutung — und wird **nicht** nebenbei behoben. Am Ende
+entscheidet der Auftraggeber, was davon ein Backlog-Punkt wird.
+
+**F-BR3-01 · Kein Fund am Code, sondern am Vorgehen: Ein Backlog-Punkt
+auszutragen ist gefährlicher, als es aussieht.** (AP3, 13.09.2026.) Das
+Skript, mit dem ich AP1 und AP2 ausgetragen habe, suchte das Ende eines
+Eintrags an der **nächsten Nummer** — „Nr. 117 endet, wo Nr. 118 anfängt". Das
+ist falsch, sobald der Nachfolger schon unter *Erledigt* steht: Nr. 118 liegt
+dort seit Runde 2, das Blockende landete rund 300 Zeilen zu tief, und die
+Löschung hätte den halben Erledigt-Teil mitgenommen. Aufgefallen ist es nur,
+weil danach ein Lookup ins Leere lief und das Schreiben deshalb ausblieb —
+nicht weil eine Prüfung es gemeldet hätte.
+
+AP1 und AP2 sind nachgemessen und unbeschädigt (Nr. 92 und Nr. 95 stehen noch
+in *Offen*, deshalb traf es dort zu): gegen `dabd7a3` **keine Nummer
+verloren**, keine Duplikate, 171 Einträge. Das Werkzeug sucht jetzt den
+nächsten Eintrag **innerhalb des Offen-Teils**, welche Nummer er auch trägt.
+
+**Was daraus für die Runde folgt:** Nach jedem Austragen wird nicht nur die
+Selbstprüfzahl gerechnet, sondern die **Nummernmenge gegen `dabd7a3`
+verglichen** (verloren / doppelt / dazugekommen). Die Selbstprüfzahl allein
+hätte diesen Fehler **nicht** gefunden: Sie zählt die offenen Punkte, und die
+wären ja richtig gewesen — verschwunden wären erledigte. Das ist dieselbe
+Lehre wie bei Backlog Nr. 170: Eine Zahl belegt nicht, dass nichts fehlt.
+**Für den Auftraggeber:** kein Handlungsbedarf, nichts ist kaputt; die Zeile
+steht hier, weil die Runde noch vier Punkte austrägt (47, 58, 173, 174) und
+weil die nächste Instanz dieselbe Falle findet.
 
 ---
 
@@ -502,7 +527,7 @@ Wird von der umsetzenden Instanz nach jedem Paket fortgeschrieben.
 |---|---|---|---|
 | AP1 | 91 | **erledigt** 13.09.2026 | Zwei Dinge kamen dazu, die das Konzept nicht vorsah. **Erstens:** Der Befund sagte „BACK räumt den Dialog weg, ohne `onResponse` zu rufen" — beim Lesen von `watch/source/PairView.mc` zeigt sich die Folge, die daraus erst den Nutzen macht: `KoppelnDelegate` hat **nur** `onResponse`, also läuft das dort stehende `Pair.ablehnen(...)` bei BACK gar nicht. BACK ist damit **kein Ersatz für „Nein"**; es sind zwei Prüffälle, nicht einer. Das steht jetzt so in der LIESMICH. **Zweitens:** Die Zeile zu Nr. 91 in Rahmenplan Abschnitt 5 nannte als Fundstelle `tools/uhr-bilder/` — das ist das Werkzeug von Nr. 94. Sie hätte die nächste Instanz in die falsche Datei geschickt; mit dem Austragen ist sie weg. Abnahme erfüllt: `grep -c Confirmation` = **3** (war 0), alle vier Aussagen belegt, Selbstprüfzahl **58 = 58** |
 | AP2 | 94 | **erledigt** 13.09.2026 | **Drei Dinge, die das Konzept nicht hatte.** (1) **Ein Prüfmittel hing an dem Wort:** `tools/s5-anker/anker.py` verankerte die Stelle wörtlich an `sie BITGLEICH \(geprueft` und hätte nach der Änderung „NICHT GEFUNDEN" gemeldet. Gelöst, indem der Anker auf den Teil des Satzes umgestellt wurde, den die Streitfrage nicht berührt (`geprueft mit \`compare -metric AE\``) und von `uhrbilder.bitgleich` in `uhrbilder.wortlaut` umbenannt — so hält er auch die nächste Umformulierung aus. Gemessen: Anker „unveraendert", nicht gefundene Anker unverändert 7. (2) **Die Abnahme war unerfüllbar** — siehe E-BR3-15. (3) **Der Backlog-Eintrag war ungenau:** Die Selbstwiderlegung lag nicht zwischen `erzeugen.sh` und der LIESMICH, sondern **innerhalb der LIESMICH** (an `HEAD` gemessen Zeile 27 gegen 35, acht Zeilen). Beim Austragen berichtigt. **Eigener Fehler, korrigiert:** Ich hatte zuerst einen sieben Zeilen langen Begründungsblock in `erzeugen.sh` geschrieben — das Konzept sagt dort „ein Wort" und verortet die Begründung in der LIESMICH; der Block ist auf Wort plus Verweis gekürzt, sonst stünde dieselbe Erklärung zweimal. **Nicht geprüft:** `erzeugen.sh` ist nicht gelaufen (kein ImageMagick, kein `rsvg-convert` im Container); reiner Kommentar, `bash -n` trägt. Selbstprüfzahl **57 = 57** |
-| AP3 | 117 | offen | |
+| AP3 | 117 | **erledigt** 13.09.2026 | **Der Auftrag enthielt eine falsche Zahl.** Das Konzept schrieb „Alle **vier** messen Konto-Backups der Verwaltung". Die vier Zahlen über der Liste sind aber **Konten, Admins, Konto-Backup überfällig, nie Konto-Backup** — nur die letzten zwei haben mit Backups zu tun. Die Vier des Backlog-Eintrags meinte etwas anderes: zwei Kennzahlen plus Filter plus Erinnerungsmail. Wörtlich umgesetzt hätte das Handbuch etwas Falsches behauptet. Der Absatz sagt jetzt „zwei der vier Zahlen" und zählt die vier Stellen einzeln auf. **Zwei Absätze statt einem**, weil zwei verschiedene Aussagen zu machen sind (was gemessen wird / was nicht) und der zweite die sichtbare Folge braucht: Ein Konto mit zuverlässigen eigenen Backups steht genauso unter „nie Konto-Backup" wie eines ohne. **Am Code gegengeprüft:** `users` 16 Spalten ohne Backup-Zeitpunkt, `edbak_konto_stand()` liest nur den Kontoordner, `edbak_faellige_konten()` filtert auf dieselben Stände. Selbstprüfzahl **56 = 56** |
 | AP4 | 67 (Unterpunkt) | offen | |
 | AP5 | 41 (Streichungen) | offen | |
 | AP6 | 47 | offen | |
