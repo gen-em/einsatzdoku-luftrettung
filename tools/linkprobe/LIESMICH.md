@@ -47,7 +47,7 @@ Verweise; er hätte trotzdem eine runde Zahl gemeldet.
 |---|---|
 | **FEHLT** | Die Zielseite liest diesen Namen nicht — ein Befund. Die Meldung nennt, welche Namen sie stattdessen liest. |
 | **ZIEL WEG** | Die Zieldatei gibt es nicht — ein Befund. |
-| *dynamisch* | Die Zielseite liest ihre Parameter über eine Variable (`$_GET[$name]`, wie `konten_param()` in `admin_users.php` oder `$pickIn()` in `einstellungen.php`). Statisch nicht entscheidbar; wird **gezählt und genannt**, nicht gemeldet. Heute zehn Verweise. |
+| *dynamisch* | Die Zielseite liest ihre Parameter über eine Variable (`$_GET[$name]`, wie `konten_param()` in `admin_users.php` oder `$pickIn()` in `einstellungen.php`). Statisch nicht entscheidbar; wird **gezählt und genannt**, nicht gemeldet. Heute **vier** Verweise (Stand 14.09.2026). |
 
 Fremdes wird übergangen: `vendor`, `fonts`, `demo`. Zeilen, die mit `*`, `//`
 oder `#` beginnen, ebenso — dort stehen Beispieladressen in Kommentaren, und
@@ -96,11 +96,18 @@ Wortliste.
   dahinter trägt, sagt der Browser.
 - **Sie sieht nur `server/`.** Was die Uhr oder die Android-Apps aufrufen,
   steht im JSON-Vertrag und wird dort geprüft.
+- **`server/config.php` ist seit S10/AP5 ausgenommen** (`AUSGENOMMEN` im
+  Kopf). Zwei Gründe: Die Datei liegt nur auf installierten Instanzen — die
+  Zahl hing also davon ab, wo das Werkzeug lief —, und sie trägt seit S10
+  Serverschlüssel **und** Server-Anteil. Ein Geheimnis gehört in keinen
+  Bericht, auch nicht bruchstückweise. Die Zielseitenzahl ist dadurch von 101
+  auf **100** gefallen; an den Verweisen hat sich nichts geändert, die Datei
+  trägt keinen.
 
 ## Wann sie läuft
 
 Bei jeder Änderung, die einen Verweis anfasst oder einen Parameter einer Seite
 umbenennt — und im Prüflauf am Ende eines Arbeitspakets, zusammen mit
 Wortliste, Vollständigkeit und Bilderlauf (`CLAUDE.md` 6). Sie ist billig:
-ein Lauf über 99 Zielseiten und 116 Verweise dauert den Bruchteil einer
+ein Lauf über 100 Zielseiten und 117 Verweise dauert den Bruchteil einer
 Sekunde.

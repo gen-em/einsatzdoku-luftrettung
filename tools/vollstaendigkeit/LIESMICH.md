@@ -109,6 +109,13 @@ Markup verschwunden ist, steht als „Eintrag ungenutzt" da.
 
 - **Es misst Text, keine Darstellung.** Ob eine Regel richtig aussieht, sagt
   nur der Browser. Dafür ist `tools/screenshots/` da.
+- **`server/config.php` wird seit S10/AP5 nicht mehr gelesen**
+  (`AUSGENOMMEN` im Kopf von `pruefen.py`). Die Datei liegt nur auf
+  installierten Instanzen — dasselbe Werkzeug meldete also auf einem blanken
+  Auscheck eine andere Zahl als auf einer Installation — und sie trägt seit
+  S10 Serverschlüssel und Server-Anteil; ein Geheimnis gehört in keinen
+  Bericht. Sie steuerte **genau einen** Treffer bei (ein `→` in ihrem
+  Kopfkommentar), die Befundzahl ist dadurch von 341 auf **340** gefallen.
 - **Klassen aus zusammengesetzten Zeichenketten** (`'imp-' + art`) erkennt es
   nicht als Literal und meldet sie in der Gegenrichtung nicht. Das ist
   Absicht: Die erste Fassung zählte jedes Wort im Quelltext als Klasse und

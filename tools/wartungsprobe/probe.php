@@ -306,6 +306,18 @@ pruefe($a6b['code'] === 200 && $a6c['code'] === 200
        'jobs ' . $a6b['code'] . ', server ' . $a6c['code']
        . ', status ' . $a6d['code'] . ', statistik ' . $a6e['code']);
 
+/* DAS SCHLUESSELBLATT IST DIE SECHSTE AUSNAHMESEITE (S10/AP3).
+ *
+ * Es steht seit Web 20.1.0 in `WARTUNG_AUSNAHMEN`, und zwar aus einem Grund,
+ * der genau hier zu messen ist: Die Lage, in der jemand den Server-Anteil vom
+ * Blatt abliest, IST eine Wartungslage — `config.php` ist verlorengegangen
+ * oder wird gerade wiederhergestellt. Waere die Seite gesperrt, stuende der
+ * Wert hinter genau der Tuer, die man ohne ihn nicht mehr aufbekommt. */
+$a6f = hole('betrieb_schluesselblatt.php', $sidAdmin);
+pruefe($a6f['code'] === 200,
+       '6a  betrieb_schluesselblatt.php mit BetreiberIn-Sitzung -> 200 (S10/AP3)',
+       'HTTP ' . $a6f['code']);
+
 /* WER IN DER AUSNAHMELISTE STEHT, ZEIGT DEN BALKEN (S8/AP8).
  *
  * Der Balken ist die einzige Stelle, an der ein stehengebliebener
@@ -323,6 +335,20 @@ foreach (['betrieb_updates.php' => $a6, 'betrieb_jobs.php' => $a6b,
 pruefe($ohneBalken === [],
        '6   ... und ALLE FUENF tragen den Balken „Wartungsmodus seit"',
        'ohne Balken: ' . implode(', ', $ohneBalken));
+
+/* DAS SCHLUESSELBLATT TRAEGT IHN NICHT — UND ZWAR ABSICHTLICH.
+ *
+ * Es ist die sechste Ausnahmeseite, steht aber bewusst NICHT in der Schleife
+ * darueber: Die Seite hat kein Geruest, kein Menue und keine Kopfleiste
+ * (dieselbe Bauform wie `wartung_seite_html()`), weil sie gedruckt wird —
+ * ein Balken auf dem Papier waere ein Fremdkoerper. Die Erwartung steht hier
+ * als AUSDRUECKLICHE Gegenaussage, damit niemand die Seite spaeter „der
+ * Vollstaendigkeit halber" in die Schleife oben nimmt und sich wundert. */
+pruefe(!str_contains($a6f['rumpf'], 'Wartungsmodus seit')
+       && !str_contains($a6f['rumpf'], '<nav'),
+       '6a  ... und das Blatt traegt WEDER Balken NOCH Geruest (es wird gedruckt)',
+       'Balken ' . (str_contains($a6f['rumpf'], 'Wartungsmodus seit') ? 'da' : 'weg')
+       . ', <nav> ' . (str_contains($a6f['rumpf'], '<nav') ? 'da' : 'weg'));
 
 $a7 = hole('betrieb_updates.php', $sidUser);
 pruefe($a7['code'] !== 503,
@@ -472,15 +498,24 @@ pruefe($rc === 0 && count($aus) > 3,
  * nicht benutzbar — der Browser holt dort Salt und Rundenzahlen und leitet
  * ohne sie kein Token ab. Erwartung 10 meldete trotzdem gruen, weil sie das
  * Formular sah und nicht seinen Weg; Erwartung 10a misst ihn seither. */
+/* `betrieb_schluesselblatt.php` ist mit Web 20.1.0 dazugekommen (S10/AP3).
+ * Die Begruendung steht bei Erwartung 6a: Wer den Server-Anteil vom Blatt
+ * abliest, tut das in einer Wartungslage — die Seite hinter der Sperre waere
+ * genau dann unerreichbar, wenn man sie braucht.
+ * DIESE ZEILE WAR DER BEFUND VON AP5: Die Ausnahmeliste wuchs in AP3 auf 13
+ * Eintraege, die Erwartung zaehlte weiter 12, und die Wartungsprobe stand
+ * seither auf 1 nicht erfuellt — bemerkt hat es niemand, weil AP3 sie nicht
+ * gefahren hat. Genau dafuer ist die Erwartung da. */
 $sollAusnahmen = ['betrieb_status.php', 'betrieb_statistik.php',
                   'betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
+                  'betrieb_schluesselblatt.php',
                   'update.php', 'wiederherstellen.php', 'jobs.php',
                   'login.php', 'auth_salt.php', 'logout.php', 'install.php'];
 sort($sollAusnahmen);
 $istAusnahmen = WARTUNG_AUSNAHMEN;
 sort($istAusnahmen);
 pruefe($istAusnahmen === $sollAusnahmen,
-       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171',
+       '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10',
        implode(', ', $istAusnahmen));
 
 /* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer

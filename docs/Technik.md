@@ -418,7 +418,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      seit Web 15.5.2 die Zählweise der Migrationen
 │   │                      (Teil 6, Backlog Nr. 149) und seit 15.6.0, dass die
 │   │                      Integritätswache im Wartungsmodus nicht rot wird
-│   │                      (12a, Nr. 140) — 55 Erwartungen.
+│   │                      (12a, Nr. 140) und seit S10 mit 6a, dass das
+│   │                      Schlüsselblatt erreichbar bleibt — 57 Erwartungen.
 │   │                      **Legt den Schalter selbst um** und nimmt für
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer
@@ -480,13 +481,18 @@ Daten erst nach Server-Bestätigung.
 │   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL;
 │   │   │                  lokal_einrichten.sh baut eine Installation von Null
 │   │   │                  auf (install.php über HTTP, Passwort im Browser,
-│   │   │                  Demo-Konto), lokal_starten.sh fährt sie nur hoch
+│   │   │                  Demo-Konto), lokal_starten.sh fährt sie nur hoch;
+│   │   │                  sitzungsprobe.py misst, dass sitzung.py BEIDE
+│   │   │                  Hüllenfassungen öffnet (edk1: und edka1:, S10)
 │   │   ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
 │   │   │                  werte (P-07), Exporte, Umläufe, Papierkorb-Mischfall,
 │   │   │                  Abnahme der Demo-Funktion
 │   │   ├── referenz/      die eingecheckten Referenz-Exporte
 │   │   ├── vergleich/     Vergleichswerkzeug und Kreislauftests
-│   │   └── fixture/       erzeugt server/demo/fixture.json.gz
+│   │   └── fixture/       erzeugt server/demo/fixture.json.gz; riegelprobe.php
+│   │                      misst die zwei Riegel darin (Zielrundenzahl,
+│   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
+│   │                      der Produktivinstallation ausgesperrt, S10)
 │   ├── design/            erzeugt die Tabellen von docs/Design.md aus den
 │   │                      Quellen: Token aus :root, Schwellen aus den
 │   │                      @media-Bloecken, Symbole aus dem Vorrat, Bausteine
@@ -588,8 +594,9 @@ Daten erst nach Server-Bestätigung.
 │   ├── wiederherstellungs-probe/
 │   │                      Grenzfälle von edbak_restore(), die der Kreislauf
 │   │                      nicht herstellen kann: Papierkorb-Mischfall,
-│   │                      kaputte Datei, Adminpaket Fassung 2, Speichergrenze
-│   │                      und der Auftrag „Alle sichern" (E-S1-04/19, S2/AP6,
+│   │                      kaputte Datei, Adminpaket Fassung 3, Speichergrenze,
+│   │                      der Auftrag „Alle sichern" und der Rückweg bei
+│   │                      verlorenem Server-Anteil (E-S1-04/19, S2/AP6, S10;
 │   │                      Backlog Nr. 31/35; s. LIESMICH.md)
 │   └── wortliste/         zählt nach, ob sichtbare Texte und normative
 │                          Dokumentation neutral von Land und Luft sprechen:
@@ -3775,10 +3782,13 @@ Am Messbestand: 5 000 Einsätze, **1 121 802 Zeilen** in 34 Tabellen.
 | Einspielen | 784 Anweisungen in 6,0 s |
 | Rundlauf | **34 von 34** Schemata zeichengleich, **34 von 34** Prüfsummen gleich (`CHECKSUM TABLE EXTENDED`) |
 
-`tools/komplettprobe/` fährt den ganzen Zyklus: **76 Erwartungen**,
-einschliesslich Versand auf eine echte FTP-Gegenstelle, „halbe Datei liegt
-dort", abgeschnitten an einer Blockgrenze, veränderter Dateikopf und beide
-Wiederanlauf-Zweige. Was sie nicht prüfen kann — die Oberfläche, eine volle
+`tools/komplettprobe/` fährt den ganzen Zyklus: **72 Erwartungen mit allen
+Schaltern** (`--pruefdb` und `--ziel`; ohne sie sind es 64, weil die Teile 7
+und 10 dann mit `[ -- ]` ausfallen), einschliesslich Versand auf eine echte
+FTPS-Gegenstelle, „halbe Datei liegt dort", abgeschnitten an einer
+Blockgrenze, veränderter Dateikopf, beide Wiederanlauf-Zweige und seit S10
+Teil 11: **Server-Anteil und Serverschlüssel stehen 0× im Dump, die Kennung
+dagegen fährt mit**. Was sie nicht prüfen kann — die Oberfläche, eine volle
 Platte, ein echter Absturz mitten in der Anfrage, der Migrationslauf — steht
 an erster Stelle ihrer `LIESMICH.md`.
 
@@ -5278,7 +5288,7 @@ Wartung automatisch bei ausstehender Migration — ist P5 und wird denselben
 Zustand setzen; Steuerung aus der Auslieferungskette ist P5 mit R67; eine
 eigene Wartungsmeldung auf Uhr und Handy ist Backlog-Kandidat.
 
-**Nachweis:** `php tools/wartungsprobe/probe.php` — 40 Erwartungen, beide
+**Nachweis:** `php tools/wartungsprobe/probe.php` — **57 Erwartungen**, beide
 Richtungen (zu wenig gesperrt / zu viel gesperrt), einschließlich der drei
 Regeln aus E-S5W-09 am Code. Betriebsablauf: Abschnitt 7.
 
@@ -6274,13 +6284,16 @@ und liefert nach. Die sieben Schritte:
    „arbeitet, braucht Aufmerksamkeit", rot „arbeitet nicht". Steht dort eine
    Zahl, ist der Deploy noch nicht fertig.
 
-**Was währenddessen erreichbar bleibt** (E-S5W-04): die fünf Betriebsseiten
-`betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`,
-`betrieb_jobs.php` und `betrieb_server.php`, dazu
-`update.php` und
+**Was währenddessen erreichbar bleibt** (E-S5W-04): die **sechs**
+Betriebsseiten `betrieb_status.php`, `betrieb_statistik.php`,
+`betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php` und — seit
+S10 — `betrieb_schluesselblatt.php` (die Lage, in der man das Blatt braucht,
+ist genau eine Wartungslage), dazu `update.php` und
 `wiederherstellen.php` (die Arbeit selbst und der Rückweg), `jobs.php` mit
 Token — das Komplett-Backup der Kette läuft **während** der Wartung, genau
-dann ist es konsistent —, `login.php`/`logout.php` und `install.php`. Alles
+dann ist es konsistent —, `login.php` mit `auth_salt.php` (ohne den
+Nebenaufruf holt der Browser weder Salz noch Rundenzahl und leitet kein Token
+ab, Backlog Nr. 171), `logout.php` und `install.php`. Alles
 unter `assets/` läuft ohnehin nicht durch PHP. Der CLI-Notausgang
 `php update.php` ist nie getort.
 
@@ -6326,13 +6339,14 @@ für das sie da ist.
 
 **Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
 (1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
-(neben `db.php`)? (2) Ist die aufgerufene Seite eine der elf Ausnahmen?
+(neben `db.php`)? (2) Ist die aufgerufene Seite eine der **dreizehn** Ausnahmen?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
-`php tools/wartungsprobe/probe.php` (53 Erwartungen; seit Web 15.5.2 misst
-ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, und
-seit 15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot
-wird, Nr. 140).
+`php tools/wartungsprobe/probe.php` (**57 Erwartungen**; seit Web 15.5.2 misst
+ihr Teil 6 zusaetzlich die Zaehlweise der Migrationen, Backlog Nr. 149, seit
+15.6.0 mit 12a, dass die Integritaetswache im Wartungsmodus nicht rot wird,
+Nr. 140, und seit S10 mit 6a, dass das **Schluesselblatt** erreichbar bleibt —
+die Lage, in der man es braucht, ist eine Wartungslage).
 
 **Die Integritaetswache ist rot:** `tools/integritaetswache/LIESMICH.md`,
 Abschnitt „Wenn sie rot wird" — in dieser Reihenfolge: Wurde gerade deployt?

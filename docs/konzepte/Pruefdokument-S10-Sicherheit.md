@@ -13,10 +13,11 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **AP4 erledigt** (Web 20.2.0), AP5 als Nächstes. |
-> | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines** · AP3: **Betriebslauf** in drei Engines (Oberfläche der fünf Lagen, Blatt im Druck, Rotation, Neuanfang, Reset) · AP4: Freigabe-, Wiederherstellungs-, Versand- und Komplettprobe, dazu fünf Wege am `ftp`-Altziel und die Cron-Zeile; alles aus AP1 bis AP3 erneut (Abschnitt 2) |
+> | Stand | 14.09.2026 — **AP5 erledigt** (keine Stufe: AP5 ändert keine Datei unter `server/`), AP6 als Nächstes. |
+> | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines** · AP3: **Betriebslauf** in drei Engines (Oberfläche der fünf Lagen, Blatt im Druck, Rotation, Neuanfang, Reset) · AP4: Freigabe-, Wiederherstellungs-, Versand- und Komplettprobe, dazu fünf Wege am `ftp`-Altziel und die Cron-Zeile · **AP5: Wartungs-, Riegel-, Sitzungs-, Wiederherstellungs-, Komplett-, Endpunkt- und Generatorprüfung, Prüfkonten, beide Kreisläufe**; alles aus AP1 bis AP3 erneut (Abschnitt 2) |
 > | Offen | P-01 bis P-14 |
-> | Fragen | keine. Das erste `@media print` des Projekts (Schlüsselblatt) war nach `CLAUDE.md` 5 freigabepflichtig und ist am **14.09.2026 nach Vorlage der Bilder abgenommen** — ohne weiteres Mockup (E-S10-U-06). |
+> | Prüfmittel, die in AP5 **kaputt** vorgefunden wurden | die **Wartungsprobe** (seit AP3 auf 1 nicht erfüllt, unbemerkt), zwei **Prüfmittel mit Rückständen** (2 Wegwerfkonten, 3 verwaiste Paketordner), die **Voraussetzung der Endpunktprobe** als blosse Meldung, `pruefkonten.php` ohne Serverschlüssel-Riegel, **sieben abgeschriebene Zahlen** in Anleitungen und Kommentaren, **zwei Prüfmittel, die `config.php` lasen**, die **erzeugten Tabellen von `docs/Design.md`** sieben Zeilen hinter den Quellen, ein **falsch beschriebenes Fach** in der Abmelde-Probe — und **zwei Fehler in AP5s eigener Arbeit**, gefunden von der Gegenprobe des Pakets: eine Erwartung, die nicht fehlschlagen konnte, und zwei Proben, die den Zustand hätten herstellen können, den sie messen (F-S10-AP5-01 bis -12) |
+> | Fragen | **eine: F-S10-6** (Konzept Abschnitt 7) — der zweite Riegel in `server/demo_lib.php`. Er ist inhaltlich unstrittig, aber `server/` und damit eine Korrekturstufe samt Deploy; AP5 ist stufenlos geplant. Empfehlung: jetzt, als Web 20.2.1. Das erste `@media print` des Projekts (Schlüsselblatt) war nach `CLAUDE.md` 5 freigabepflichtig und ist am **14.09.2026 nach Vorlage der Bilder abgenommen** — ohne weiteres Mockup (E-S10-U-06). |
 > | Fehlerfunde | **drei in der Anwendung** (F-1 bis F-3, in AP2 behoben), **vier in Bestand und Dokumentation** (F-15 bis F-17 in AP3, F-S10-AP4-04 in AP4), **neunzehn am Prüfstand** (F-S10-U-01, F-11 bis F-14, F-S10-AP3-01 bis -09, F-S10-AP4-01 bis -06). **Zwei Prüfmittel waren kaputt, bevor AP4 sie anfasste** — die Komplettprobe stürzte ab (Rückgabewert 255), die Wiederherstellungsprobe scheiterte an ihrer eigenen Arithmetik |
 > | Prüfumgebung | PHP **8.4.19** (CLI, NTS) · MariaDB **10.11.14** · Python **3.11.15** · Node **22.22.2** · Playwright **1.56.1** mit drei Engines: Chromium **141.0.7390.37**, Firefox **142.0.1**, WebKit **26.0** · lokale Installation über `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto; `admin@gen-em.org` und `demo@gen-em.org` mit den Vorgabekennwörtern) |
 
@@ -60,6 +61,27 @@ die echten Backup-Ziele) bleibt und ist jetzt der einzige, der an AP4 hängt:
    Fall hergestellt und abgewiesen worden; dass ein echtes Ziel den Namen
    nicht ändert, ist eine Annahme über fremde Server → **P-12**.
 
+**Stand nach AP5 — was weiterhin offen ist.** AP5 fasst keine Datei unter
+`server/` an; es hat deshalb **nichts Neues** an die Liste oben angehängt. Zwei
+Sätze gehören trotzdem hierher, weil sie sagen, worüber die AP5-Zahlen
+**nichts** aussagen:
+
+1. **Teil 12 und Teil 11 nehmen den Anteil aus dem Speicher, nicht von der
+   Platte.** Gemessen ist das Verhalten der Bibliothek bei fehlendem
+   `$CFG['kdf_anteil']` — **nicht**, ob eine Installation nach einem echten
+   Wiederanlauf aus einer Sicherung ohne `config.php` genau diesen Zustand
+   vorfindet. Das bleibt **P-05** und **P-06**.
+2. **Teil 11 sucht Zeichenketten.** Er belegt, dass Anteil, Vor-Anteil und
+   Serverschlüssel **im Klartext** nicht im Dump stehen (0 Treffer in
+   1 904 401 Byte). Ein Geheimnis in anderer Kodierung fände er nicht — das
+   ist die Grenze jeder Volltextsuche. Tragfähig ist sie, weil `config.php`
+   nachweislich nicht Teil der Sicherung ist; die Suche ist die **zweite**
+   Sicherung, nicht die erste.
+3. **Die Linkprobe sagt über `betrieb_schluesselblatt.php` nichts aus.** Die
+   Seite trägt keinen parametrisierten Verweis und liest keinen Parameter —
+   sie steht in den 100 Zielseiten, hat aber nichts beizutragen. Eine
+   gleichbleibende Zahl heisst hier „nichts zu zählen", nicht „geprüft".
+
 **Stand nach AP3 — was weiterhin offen ist.** Punkt 1 von AP2 ist damit
 **erledigt**: Der neue Betriebslauf (`tools/anteilprobe/betriebslauf.mjs`)
 stellt `abweichend` und `Rotation` her, **bedient sie an der Oberfläche** und
@@ -87,12 +109,14 @@ stellt sie zurück — in drei Engines. Offen bleiben:
 > **nicht** rückrechenbar. Das Konto ist über den regulären Weg neu angelegt
 > worden (`einspielen.py --stufen konto,stammdaten`, `passwort_setzen.mjs`,
 > `kreislauf.py --art csv --frisch`) und misst seither wieder **9120/0**. Der
-> **alte Kontostand liegt geparkt** unter
+> alte Kontostand lag geparkt unter
 > `umlauf-csv-ausgesperrt-20260914@gen-em.org` — mit 83 Einsätzen, deren
-> geschützte Angaben niemand mehr öffnen kann. Er ist nicht gelöscht worden,
-> weil Löschen die eine Handlung ist, die sich nicht zurücknehmen lässt;
-> **er darf gelöscht werden** (Verwaltung → NutzerInnen → Konto löschen) und
-> verschwindet ohnehin mit dem Wegwerf-Container. Auf luftrettung.net ist
+> geschützte Angaben niemand mehr öffnen konnte. Er ist zunächst nicht
+> gelöscht worden, weil Löschen die eine Handlung ist, die sich nicht
+> zurücknehmen lässt; **am 14.09.2026 hat der Auftraggeber das Löschen
+> freigegeben, und es ist über den regulären Weg geschehen** (Verwaltung →
+> NutzerInnen → Konto löschen). Die Prüfinstallation führt seither wieder
+> **vier** Konten. Auf luftrettung.net ist
 > davon nichts passiert und nichts zu tun — es betrifft ausschließlich die
 > Prüfinstallation. *Der Fehler lag im Prüfmittel, nicht in der Anwendung:
 > Die stille Umstellung hat genau das getan, was sie soll.*
@@ -346,11 +370,27 @@ AP4 sie anfasste (Abschnitt 4).
 | AP4 | Klickprobe · Kreisläufe | Regression | **43/43** · **9120/0** und **287 687/0** |
 | AP4 | Bilderlauf, 4 Seiten × 8 Breiten, beide Bedienhöhen | Überlauf / Konsole / Knopfhöhe | je 32 Bilder **0/0/0** |
 | AP4 | Vollständigkeit · Kontraste | Befunde vorher → nachher · Paare/verfehlt | **335 → 341** (erklärt), Hexfarben **0** · **22/0** |
-| AP5 | Kreisläufe (R24) | csv und edbak, unerklärte Abweichungen | 0 / 0 |
-| AP5 | `sitzung.py` | CK aus `edk1:`- und `edka1:`-Hülle | von 2 |
-| AP5 | Wiederherstellungs-, Komplett-, Wartungsprobe | Erwartungen / nicht erfüllt | |
-| alle | Wortliste | Treffer außerhalb Ausnahmen / ungenutzte Ausnahmen / Fallen | 0/0/0 |
-| alle | Vollständigkeit | Befunde vorher → nachher, Unterschied erklärt | |
+| AP5 | `php -l` · `ast.parse` | berührte Dateien | **0 Fehler in 6 PHP, 3 Python** |
+| AP5 | Kreisläufe (R24), je `--frisch` | csv und edbak, unerklärte Abweichungen | **9120 / 0** und **287 687 / 0** |
+| AP5 | `tools/referenzdatensatz/einspielen/sitzungsprobe.py` | CK aus `edk1:`- und `edka1:`-Hülle, gegen `pat_key_check` gerechnet | **2 von 2** |
+| AP5 | `tools/referenzdatensatz/fixture/riegelprobe.php` | Hüllen-Riegel, beide Richtungen, **ohne Schreibvorgang** | **4 von 4** |
+| AP5 | `tools/wartungsprobe/probe.php` | Wartungsmodus, Ausnahmeliste (13), Blatt erreichbar | **57 / 0** — vorher **55 / 1** (F-S10-AP5-01) |
+| AP5 | `tools/wiederherstellungs-probe/probe.php` | zwölf Teile, neu Teil 12 | **106 / 0** (vorher 98) |
+| AP5 | `tools/komplettprobe/probe.php --pruefdb --ziel` | elf Teile, neu Teil 11 | **72 / 0** (vorher 63, gleiche Schalter); ohne Schalter **64** (vorher 55) |
+| AP5 | darin Teil 11 | Anteil · Vor-Anteil · Serverschlüssel der **Installation** im Klartext-Dump | **0 Treffer** in 1 904 401 Byte; Kennung **3 Treffer** |
+| AP5 | `tools/anteilprobe/endpunkt.py` · `probe.php --schreiben` | Regression, E0 neu | **34 / 0** (vorher 33) · **69 / 0** |
+| AP5 | `tools/freigabeprobe/probe.mjs` | Regression gegen ein Fassung-3-Paket (Posten aus E-S10-15, in AP4 gebaut) | **16 / 0** |
+| AP5 | `tools/versandprobe/probe.php` | Regression FTPS/SFTP, Negativfälle | **116 / 0** (Anleitung nannte 115) |
+| AP5 | `tools/jobprobe/probe.php` | **neu:** `uebergangen` übersteht `jobs_lauf()` | **27 / 0** (vorher 24) |
+| AP5 | `tools/design/tabellen.py alle` gegen `docs/Design.md` | erzeugte Zeilen / abweichend | **237 / 0** (vorher **7** abweichend) |
+| AP5 | `tools/referenzdatensatz/generator/pruefen.py` | Einzelprüfungen / Befunde, HKDF-Block neu | **283 997 / 0** (vorher 283 989) |
+| AP5 | `pruefkonten.php anlegen 8` | Konten mit Hülle · Fassung-1-Pakete lesbar | **0 von 8** · **16 von 16** |
+| AP5 | Klickprobe | Regression über alle Bedienwege | **43 / 43** |
+| AP5 | Nachlese auf der Prüfinstallation | Wegwerfkonten · verwaiste Paketordner | **0** · **0** (vorher 2 · 3 — F-S10-AP5-02) |
+| AP5 | Bilderlauf, 4 Betriebsseiten × 8 Breiten | Überlauf / Konsole / Knopfhöhe | **32 Bilder, 0/0/0** (Gegenprobe; AP5 ändert keine Datei unter `server/`) |
+| alle | Wortliste | Treffer außerhalb Ausnahmen / ungenutzte Ausnahmen / Fallen | **0/0/0** |
+| alle | Vollständigkeit | Befunde vorher → nachher, Unterschied erklärt | **341 → 340** — der eine ist `config.php` (F-S10-AP5-06); Hexfarben **0** |
+| AP5 | Linkprobe | Verweise / Abweichungen, über wie viele Zielseiten | **117 / 0** über **100** (vorher 101) |
 | AP6 | Linkprobe | Verweise, unbekannte Abweichungen | / 0 |
 
 ---
@@ -372,6 +412,34 @@ AP4 sie anfasste (Abschnitt 4).
   Ob in einer Hülle wirklich derselbe Inhaltsschlüssel steckt, sieht nur, wer
   sie öffnet. Deshalb misst die Endpunktprobe den Rundlauf (E8) und nicht
   bloß den Statuscode — eine grüne 200 allein wäre hier kein Beleg.
+
+**Was AP5 dazugebaut hat, und wo auch das aufhört:**
+
+- **Teil 12 der Wiederherstellungsprobe und Teil 11 der Komplettprobe nehmen
+  den Anteil aus dem Speicher, nicht von der Platte.** `config.php` wird nicht
+  angefasst. Gemessen ist damit, wie sich die Bibliothek verhält, wenn
+  `$CFG['kdf_anteil']` fehlt — **nicht**, ob eine Installation den Zustand
+  nach einem echten Wiederanlauf so vorfindet. Das steht im Betriebslauf
+  (AP3) und in P-05.
+- **Die Riegelprobe stellt keine Hülle nach**, sondern zeigt `erzeugen.php`
+  auf ein Konto, das seine `edka1:`-Hülle regulär bekommen hat. Der Preis: Sie
+  braucht ein solches Konto im Bestand und sagt es, wenn keines da ist. Der
+  Gewinn: Sie fasst die Datenbank nicht an — und genau daran ist in AP3 ein
+  Konto verlorengegangen (F-S10-AP3-08).
+- **Die Sitzungsprobe misst zwei Konten, nicht den Bestand.** Sie prüft
+  ausdrücklich nach, dass die beiden **verschiedene** Präfixe tragen, und
+  meldet sonst einen Befund statt einer grünen Zwei. Was sie nicht sagt: ob
+  irgendein drittes Konto eine Hülle trägt, die zu keinem Anteil passt — das
+  zählt `anteil_zaehlung()` auf der Statusseite.
+- **Teil 11 sucht Zeichenketten in einem Dump.** Er belegt, dass **diese** drei
+  Geheimnisse nicht im Klartext darin stehen. Ein Geheimnis, das der Dump in
+  anderer Kodierung trüge (hex-umgedreht, base64, in Teilen), fände er nicht —
+  das ist die Grenze jeder Volltextsuche und mit ihr zu leben, solange
+  `config.php` nachweislich nicht in der Sicherung liegt.
+- **Der Bilderlauf hatte in AP5 nichts zu finden** — AP5 ändert keine Datei
+  unter `server/` (`git status server/` meldet 0 Dateien). Er ist trotzdem über
+  die vier Betriebsseiten gefahren (**32 Bilder, 0/0/0**), weil eine Gegenprobe
+  mit Zahl mehr wert ist als ein Argument, warum sie sich erübrigt.
 
 - **Der Betriebslauf sieht die Oberfläche, aber nicht das Papier.** Er misst
   das Blatt in `media: print` bei 718 px — das ist die *gerechnete*
@@ -461,7 +529,7 @@ Ausnahmeliste des Wartungsmodus als „elf Skripte" und ließ `auth_salt.php` au
 
 **F-S10-AP3-01 bis -08 — acht Funde am Prüfstand, und zwei davon haben etwas
 kaputtgemacht.** Sie stehen im Konzept, Abschnitt 6, und in
-`tools/anteilprobe/LIESMICH.md` („Elf Fallen"). Die beiden teuren:
+`tools/anteilprobe/LIESMICH.md` („Dreizehn Fallen" — die Überschrift stand bis AP5 auf „Elf", während zwölf darunter standen). Die beiden teuren:
 
 - **F-S10-AP3-05 — ein Konto ohne Passwort.** Der Betriebslauf legte sechs
   Felder des Admin-Kontos über `php -r` zurück und setzte die Werte mit
@@ -501,6 +569,91 @@ kaputtgemacht.** Sie stehen im Konzept, Abschnitt 6, und in
 *Was diese neun verbindet:* **Sieben von ihnen sahen aus wie ein Fehler der
 Anwendung.** Das ist die teuerste Sorte, weil man am falschen Ende sucht —
 und AP3 hat daran mehr Zeit verloren als am Bauen.
+
+### AP5 — zwölf Funde, und keiner davon in der Anwendung
+
+AP5 ist das Paket, in dem die Prüfmittel nachziehen. Es hat dabei zwölf Dinge
+gefunden, und die meisten haben dieselbe Form: **Ein Prüfmittel meldete eine Zahl, die
+nicht mehr das mass, was daneben stand.**
+
+- **F-S10-AP5-01 — die Wartungsprobe war seit AP3 rot.** AP3 hat
+  `betrieb_schluesselblatt.php` in `WARTUNG_AUSNAHMEN` aufgenommen; Erwartung 17
+  der Wartungsprobe hält diese Liste gegen eine fest hingeschriebene Sollliste
+  und stand seither auf **55 Erwartungen, 1 nicht erfüllt**. Die Erwartung tat
+  genau das, wofür sie gebaut ist — nur ist die Wartungsprobe nicht Teil des
+  Satzes, den man nach einer Oberflächenänderung fährt, und so hat sie niemand
+  gesehen. *Behoben:* Sollliste auf dreizehn, dazu **Erwartung 6a** (das Blatt
+  ist im Wartungsmodus erreichbar und trägt dabei **weder** Balken **noch**
+  Gerüst — als ausdrückliche Gegenaussage). Danach **57 von 57**.
+  **Die Lehre:** Wer eine Liste ändert, die ein Prüfmittel bewacht, fährt
+  dieses Prüfmittel — auch wenn es nicht im Standardsatz steht.
+- **F-S10-AP5-02 — zwei Prüfmittel liessen etwas liegen.** Die
+  Wiederherstellungsprobe löschte drei ihrer fünf Wegwerfkonten, und keiner
+  ihrer Läufe räumte die Paketordner unter `server/sicherungen/`. Vorgefunden:
+  **2** Konten und **3** verwaiste Ordner. *Behoben,* danach **0** und **0**.
+- **F-S10-AP5-03 — vier abgeschriebene Zahlen.** „76 Erwartungen" (gemessen
+  71/55), „30 von 30" (gemessen 106), und in **einem** Dokument zwei
+  verschiedene Zahlen für **dieselbe** Wartungsprobe (40 und 53, gemessen 57).
+  *Dass zwei verschiedene Zahlen nebeneinander standen, ist der Beleg, dass
+  beide abgeschrieben waren.*
+- **F-S10-AP5-04 — eine Voraussetzung, die nur eine Meldung war.**
+  `endpunkt.py` stellt seine Ausgangslage her und lief bei einem Fehlschlag
+  mit zwei Warnzeilen weiter. *Behoben:* Die Voraussetzung ist **Erwartung
+  E0** und wird mitgezählt (**34 von 34**).
+- **F-S10-AP5-05 — ein Riegel an der falschen Ebene.** AP4 hat
+  `edbak_sicherung_erzeugen()` einen Serverschlüssel-Riegel gegeben;
+  `pruefkonten.php` greift eine Ebene tiefer auf `edbak_begleit_schreiben()`
+  und wäre ohne Schlüssel **mitten im Bestand** abgebrochen. *Behoben.*
+
+- **F-S10-AP5-06 — zwei Prüfmittel lasen die Datei mit den Geheimnissen.**
+  `tools/vollstaendigkeit/` und `tools/linkprobe/` laufen über alles unter
+  `server/` und nahmen bisher nur drei **Verzeichnisse** aus, keine Datei —
+  also auch `config.php` nicht, die seit S10 Serverschlüssel **und**
+  Server-Anteil trägt. Ausgetreten ist nichts (gemeldet wurde aus ihr genau
+  ein `→` aus dem Kopfkommentar), aber der zweite Schaden war schon da: Auf
+  einem blanken Auscheck gibt es die Datei nicht, dieselbe Probe meldete also
+  je nach Umgebung eine andere Zahl. *Behoben:* `AUSGENOMMEN` in beiden
+  Werkzeugen. Vollständigkeit **341 → 340**, Linkprobe **101 → 100**
+  Zielseiten bei unveränderten **117** Verweisen.
+
+- **F-S10-AP5-07 — eine Erwartung, die nicht fehlschlagen konnte.** Teil 11
+  der Komplettprobe suchte den Serverschlüssel im Dump und nahm ihn aus dem
+  `config.php` der **Arbeitskopie** — das bekommt beim Start einen frisch
+  gewürfelten Wert. Gesucht wurde also etwas, das nie in der Datenbank stand;
+  **0 Treffer waren zwangsläufig**. *Behoben:* gesucht wird der Schlüssel der
+  Installation, und eine zweite Erwartung belegt, dass die beiden verschieden
+  sind. Gefunden hat das die **Gegenprobe des eigenen Pakets**, nicht ein Lauf.
+- **F-S10-AP5-08 — zwei Prüfmittel hätten den Zustand hergestellt, den sie
+  messen.** `anteil_zustand()` legt die fehlende Marke selbst an; auf einer
+  Installation ohne Marke hätten Teil 12 und Teil 11 sie erzeugt. *Behoben:*
+  Beide lesen die Marke vorher und lassen den Block sonst mit Begründung aus.
+
+- **F-S10-AP5-09 — die erzeugten Tabellen in `docs/Design.md` waren sieben
+  Zeilen hinter ihren Quellen.** Verursacht von S10/AP3 (neue Seite, neue
+  Karte), gesehen von niemandem: sechs Symbolzählungen und eine Zeilennummer.
+  `CLAUDE.md` 5 sagt, die Tabellen seien **erzeugt** — was daraus folgt, sagt
+  der Satz nicht: Wer eine Seite baut, erzeugt sie neu. *Behoben,* Gegenprobe
+  **237 erzeugte Zeilen, 0 abweichend**.
+- **F-S10-AP5-10 — drei weitere abgeschriebene Zahlen, alle aus AP4.**
+  Versandprobe 115 statt 116, Freigabeprobe ohne ihre drei neuen
+  Siegel-Erwartungen, und in `klickweg.mjs` die Rundenzahl **320 000**, die es
+  seit Backlog Nr. 155 nicht mehr gibt — dazu zwei Lücken, wo
+  `waitForLoadState` und `waitForNavigation` stehen sollten.
+- **F-S10-AP5-11 — die Abmelde-Probe beschrieb ein Fach falsch, das sie misst.**
+  Seit AP2 liegen im Vormerkfach Hälften (`hf`), nicht Datenschlüssel (`dk`).
+  Am Messergebnis ändert das nichts, an der Auskunft alles.
+
+- **F-S10-AP5-12 — der Demo-Reset fällt auch der Endpunktprobe in den Lauf.**
+  Gemessen am 14.09.2026, 18:27:55 UTC: **30 von 34**, Minuten später
+  **34 von 34**. Abschnitt E10 misst das Demo-Konto, und während des Resets
+  ist es kurz weg (HTTP 404). *Behoben:* dieselbe Warnung, die die Klickprobe
+  seit AP3 hat. **Die Falle war bekannt und an einem Ort geschlossen; den
+  zweiten hat niemand gesucht.**
+
+*Was diese zwölf verbindet:* **Kein einziger ist ein Fehler der Anwendung.**
+Alle fünf sind Prüfmittel, die grün meldeten oder still danebenlagen — und
+das ist die Sorte, die am längsten unentdeckt bleibt, weil niemand ein
+Prüfmittel prüft.
 
 ---
 

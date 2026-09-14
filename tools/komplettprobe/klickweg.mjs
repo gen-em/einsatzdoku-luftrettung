@@ -16,7 +16,7 @@
  *   1. UEBER TLS, nicht ueber Port 8080. Die Sitzung setzt `secure`; ueber
  *      http bleibt man auf der Anmeldeseite stehen, ohne Fehlermeldung.
  *   2. `waitForNavigation`, nicht `waitForLoadState`. Die Anmeldung leitet den
- *      Schluessel im Browser ab (PBKDF2, 320 000 Runden) und geht erst danach
+ *      Schluessel im Browser ab (PBKDF2, `KDF_ITER_ZIEL` Runden — heute 600 000) und geht erst danach
  *      weiter; `waitForLoadState` faellt sofort durch, weil es auf die
  *      AKTUELLE Seite wartet. Dasselbe Muster wie in `aufnehmen.mjs`.
  *
@@ -52,9 +52,14 @@ try {
   await seite.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
   await seite.fill('input[name="email"]', MAIL);
   await seite.fill('input[name="password"]', PW);
-  /* Die Anmeldung leitet den Schluessel im Browser ab (PBKDF2, 320 000 Runden).
-   *  faellt dabei sofort durch — es wartet auf die AKTUELLE
-   * Seite. Es braucht  mit Frist, wie im Bilderlauf. */
+  /* Die Anmeldung leitet den Schluessel im Browser ab (PBKDF2, `KDF_ITER_ZIEL`
+   * Runden — heute 600 000). `waitForLoadState` faellt dabei sofort durch: Es
+   * wartet auf die AKTUELLE Seite, und die ist laengst geladen. Es braucht
+   * `waitForNavigation` mit Frist, wie im Bilderlauf.
+   *
+   * (Hier standen bis S10/AP5 zwei Luecken statt der beiden Namen und die
+   * Zahl 320 000, die es seit Backlog Nr. 155 nicht mehr gibt. Ein Kommentar,
+   * der die Falle beschreiben soll, nennt die Funktion, die hineinfuehrt.) */
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
     seite.click('button[type="submit"]'),

@@ -47,7 +47,7 @@ const RC_DATEI = process.env.ADMIN_RC || '/tmp/admin-rc.json';
 const NEU_PW = 'Neuanfangprobe!2026';
 const motor = motorWahl(process.argv.slice(2));
 
-let ok = 0, offen = 0;
+let ok = 0, offen = 0, nichtGemessen = 0;
 const pruefe = (was, ist, soll) => {
   const gleich = JSON.stringify(ist) === JSON.stringify(soll);
   gleich ? ok++ : offen++;
@@ -528,7 +528,13 @@ try {
    *      Chiffretext geht wieder auf. Ein Reset, der die Daten verliert,
    *      gelingt auch. */
   if (!rcDa || ckVorher === null) {
-    console.log('  übersprungen (siehe Abschnitt 8)');
+    /* NICHT GEMESSEN IST NICHT ERFUELLT (S10/AP5, dieselbe Lehre wie
+     * F-S10-AP5-04). Bis dahin stand hier nur ein `console.log`, und die
+     * Schlusszeile meldete dann „40 von 40 erfüllt, 0 offen" — eine Zahl, die
+     * grün aussieht und zehn Erwartungen verschweigt. Der Zähler trägt sie
+     * jetzt bis in die Schlusszeile, wie es `umstellungslauf.mjs` tut. */
+    nichtGemessen += 10;
+    console.log('  übersprungen (siehe Abschnitt 8) — 10 Erwartungen NICHT gemessen');
   } else {
     const tabN = await tabAnmelden(ADMIN, ADMIN_PW);
     pruefe('das Konto kommt hinein (die Anmeldung gelingt)',
@@ -661,5 +667,6 @@ try {
   await browser.close();
 }
 
-console.log(`\nErgebnis (${motor}): ${ok} von ${ok + offen} erfüllt, ${offen} offen.`);
+console.log(`\nErgebnis (${motor}): ${ok} von ${ok + offen} erfüllt, ${offen} offen`
+  + (nichtGemessen ? `, ${nichtGemessen} NICHT gemessen (Grund oben).` : '.'));
 process.exit(offen === 0 ? 0 : 1);

@@ -638,6 +638,151 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
     }
 }
 
+/* =========================================================================
+ * Teil 11 — Zwei Geheimnisse in config.php, und keines gehoert ins Archiv
+ *           (S10/AP5, E-S10-15; Zusage aus SP-3 „Was nicht ins Archiv gehoert")
+ *
+ * DIE ZUSAGE. `config.php` traegt seit S10 zwei Geheimnisse: den
+ * Serverschluessel, der jede Sicherung versiegelt, und den Server-Anteil, der
+ * in den Datenschluessel jedes Kontos eingeht. Das Komplettbackup sichert die
+ * DATENBANK — `config.php` ist ausdruecklich NICHT darin, und das ist kein
+ * Versehen, sondern der Sinn der Sache: Laege der Serverschluessel in der
+ * Datei, die er versiegelt, waere das Siegel eine Verzierung.
+ *
+ * Bis AP5 stand diese Zusage ungemessen da. Sie ist billig zu messen und
+ * teuer zu verlieren: Ein kuenftiger Eintrag in `app_state`, ein
+ * Diagnosefeld, eine Fehlermeldung, die den Wert mitschreibt — und der
+ * Serverschluessel laege im Archiv, ohne dass eine Zeile Code „falsch"
+ * aussaehe.
+ *
+ * DIE GEGENRICHTUNG GEHOERT DAZU. Die KENNUNG (acht Zeichen, aus dem Wert
+ * nicht zurueckzurechnen) MUSS mitfahren: Sie steht in `app_state` und ist
+ * das Einzige, woran eine wiederangelaufene Installation merkt, dass ihr
+ * `config.php` einen ANDEREN Anteil fuehrt als der Bestand erwartet. Ohne sie
+ * waere der Zustand nicht „abweichend", sondern „nicht eingerichtet" — und
+ * die Anwendung schriebe stillschweigend Huellen auf einen Anteil, mit dem
+ * der Altbestand nicht mehr aufgeht.
+ * ====================================================================== */
+kopf('Teil 11 — Kein Geheimnis im Archiv, aber die Kennung (S10/AP5)');
+
+global $CFG, $CFG_ECHT;
+$anteilHex = strtolower((string)($CFG['kdf_anteil'] ?? ''));
+$anteilAlt = strtolower((string)($CFG['kdf_anteil_alt'] ?? ''));
+/* DER SERVERSCHLUESSEL MUSS DER ECHTE SEIN, NICHT DER DER ARBEITSKOPIE.
+ *
+ * Diese Probe laeuft gegen eine Kopie von `server/`, und ihr `config.php`
+ * bekommt oben einen FRISCHEN Schluessel (`bin2hex(random_bytes(32))`) —
+ * damit sie nie mit dem echten siegelt. Genau deshalb waere die Suche nach
+ * `$CFG['server_key']` eine Scheinpruefung: Der Wert ist Sekunden alt und war
+ * nie in der Datenbank, 0 Treffer sind zwangslaeufig. Gesucht wird der
+ * Schluessel der INSTALLATION aus `$CFG_ECHT` — der einzige, der ueberhaupt
+ * im Bestand haette landen koennen.
+ *
+ * Der Anteil dagegen wird NICHT ersetzt: `$CFG` traegt ihn unveraendert aus
+ * `$CFG_ECHT`, die Suche darueber ist also schon die echte. Der Unterschied
+ * steht hier, weil er beim Lesen nicht zu sehen ist — beide Zeilen sehen
+ * gleich aus und messen Verschiedenes. */
+$skHex     = strtolower((string)($CFG_ECHT['server_key'] ?? ''));
+$skKopie   = strtolower((string)($CFG['server_key'] ?? ''));
+$dump      = strtolower((string)@file_get_contents($klar));
+
+if ($dump === '') {
+    offenlassen('Geheimnisse im Dump',
+        'der Klartext-Dump aus Teil 6 liegt nicht mehr da — Teil 11 misst nichts');
+} else {
+    pruef('Der Server-Anteil steht NICHT im Dump',
+          $anteilHex === '' || substr_count($dump, $anteilHex) === 0,
+          $anteilHex === '' ? 'kein Anteil eingerichtet — nichts zu suchen'
+                            : '0 Treffer fuer 64 Hexzeichen in '
+                              . number_format(strlen($dump), 0, ',', '.') . ' Byte');
+    pruef('Der Serverschluessel der INSTALLATION ebenso wenig',
+          $skHex === '' || substr_count($dump, $skHex) === 0,
+          $skHex === '' ? 'kein Serverschluessel eingetragen'
+                        : '0 Treffer (aus config.php der Installation, nicht der Kopie)');
+    /* Die Gegenprobe zur Gegenprobe: Der Schluessel der Arbeitskopie ist ein
+     * ANDERER. Waeren beide gleich, haette die Zeile darueber den falschen
+     * Wert gesucht — und niemand saehe es an ihrem gruenen Haken. */
+    pruef('...und der Schluessel der Arbeitskopie ist nachweislich ein anderer',
+          $skKopie !== '' && $skKopie !== $skHex,
+          'Kopie ' . substr($skKopie, 0, 8) . '… gegen Installation '
+          . ($skHex === '' ? '(keiner)' : substr($skHex, 0, 8) . '…'));
+    pruef('Und auch der VORHERIGE Anteil nicht (Rotation)',
+          $anteilAlt === '' || substr_count($dump, $anteilAlt) === 0,
+          $anteilAlt === '' ? 'keine Rotation im Gange' : '0 Treffer');
+
+    /* Die Kennung MUSS mitfahren — sie ist die Sollangabe, gegen die eine
+     * wiederangelaufene Installation ihren eigenen Anteil haelt. */
+    $kennungSoll = schluessel_kennung($anteilHex !== '' ? $anteilHex : null);
+    if ($kennungSoll === null) {
+        offenlassen('Die Kennung faehrt mit',
+            'kein Anteil eingerichtet — es gibt keine Kennung, die mitfahren koennte');
+    } else {
+        pruef('Die KENNUNG dagegen faehrt mit (sonst waere der Wiederanlauf blind)',
+              substr_count($dump, $kennungSoll) > 0
+              && str_contains($dump, 'kdf_anteil_kennung'),
+              'app_state.kdf_anteil_kennung = ' . $kennungSoll
+              . ', ' . substr_count($dump, $kennungSoll) . ' Treffer');
+        /* ACHT ZEICHEN SIND KEIN HALBES GEHEIMNIS. Die Kennung ist der Anfang
+         * eines SHA-256 ueber den Wert; aus ihr ist der Wert nicht
+         * zurueckzurechnen, und sie steht ohnehin auf jeder Statusseite. Die
+         * Erwartung nennt den Unterschied, damit ihn niemand fuer einen
+         * Widerspruch zu den drei Erwartungen darueber haelt. */
+        pruef('...und sie ist nicht der Wert: 8 Zeichen gegen 64',
+              strlen($kennungSoll) === 8 && strlen($anteilHex) === 64
+              && !str_starts_with($anteilHex, $kennungSoll),
+              'Kennung 8 Zeichen (SHA-256-Anfang), Anteil 64 — nicht rueckrechenbar');
+    }
+
+    /* ---- Der Wiederanlauf: Anteil weg, Sicherung trotzdem zu oeffnen ----- */
+    /* Im Speicher, nicht auf der Platte — dieselbe Bauart wie Teil 12 der
+     * Wiederherstellungsprobe. `config.php` wird nicht angefasst.
+     *
+     * ABER `anteil_zustand()` KANN SCHREIBEN, und die Datenbank ist hier die
+     * ECHTE (die Arbeitskopie betrifft nur `server/`, nicht MariaDB). Im
+     * Zweig `$erwartet === null` ruft die Funktion
+     * `schluessel_marke_setzen('kdf_anteil_kennung', …)` und legt die Marke an
+     * — auf einer Installation, die noch keine hat, entstuende sie also durch
+     * diese Probe. Das ist zwar dasselbe, was der erste Seitenaufruf ohnehin
+     * taete (E-S10-U-02), aber ein Pruefmittel soll den Zustand nicht
+     * herstellen, den es misst. Deshalb der Riegel: ohne vorhandene Marke
+     * wird dieser Block gar nicht erst betreten. */
+    if (schluessel_marke_lesen('kdf_anteil_kennung') === null) {
+        offenlassen('Wiederanlauf ohne Anteil',
+            'diese Installation fuehrt keine Marke `kdf_anteil_kennung` — der '
+          . 'Zustand waere `fehlt` statt `abweichend`, und `anteil_zustand()` '
+          . 'legte die Marke beim Zuruecklegen an. Nicht gemessen, statt etwas '
+          . 'zu hinterlassen.');
+    } else {
+    $anteilSicher = $CFG['kdf_anteil'] ?? null;
+    $standVor11   = anteil_zustand(true);
+    try {
+        unset($CFG['kdf_anteil']);
+        kdf_anteil(true); kdf_anteil_alt(true);
+        $stand11 = anteil_zustand(true);
+        pruef('Ohne Anteil, aber mit Marke: Stand „abweichend"',
+              ($stand11['stand'] ?? '') === 'abweichend'
+              || $anteilSicher === null,
+              'Stand „' . (string)($stand11['stand'] ?? '?') . '"');
+
+        $bl11 = 0;
+        $fehl11 = '';
+        try {
+            $bl11 = komp_oeffnen($pfad, (string)serverschluessel(), static fn() => null);
+        } catch (Throwable $e) { $fehl11 = $e->getMessage(); }
+        pruef('Die Komplettsicherung oeffnet TROTZDEM — sie haengt am Serverschluessel',
+              $bl11 > 0 && $fehl11 === '',
+              $fehl11 === '' ? $bl11 . ' Bloecke' : $fehl11);
+    } finally {
+        if ($anteilSicher !== null) { $CFG['kdf_anteil'] = $anteilSicher; }
+        kdf_anteil(true); kdf_anteil_alt(true);
+        $standNach11 = anteil_zustand(true);
+        pruef('Nach dem Zuruecklegen steht der Stand wieder wie zuvor',
+              ($standNach11['stand'] ?? '') === ($standVor11['stand'] ?? ''),
+              'Stand „' . (string)($standNach11['stand'] ?? '?') . '"');
+    }
+    }
+}
+
 /* ---- Schluss ------------------------------------------------------------- */
 echo "\n-> $n Erwartungen, $offen nicht erfuellt\n";
 exit($offen === 0 ? 0 : 1);

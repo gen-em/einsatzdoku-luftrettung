@@ -15,7 +15,7 @@ Firefox, WebKit). Er bringt **nicht** mit:
 
 | fehlt | wer es braucht |
 |---|---|
-| MariaDB | jede Probe mit Installation: `ingestprobe`, `spurprobe`, `komplettprobe`, `jobprobe`, `screenshots`, `referenzdatensatz` |
+| MariaDB | jede Probe mit Installation: `ingestprobe`, `spurprobe`, `komplettprobe`, `jobprobe`, `screenshots`, `referenzdatensatz`, `anteilprobe`, `wartungsprobe`, `wiederherstellungs-probe`, `pruefkonten` |
 | Android-SDK unter `/opt/android-sdk` | `./gradlew build` — und `CLAUDE.md` 6 wie `android/LIESMICH.md` setzen genau diesen Pfad voraus |
 | `librsvg2-bin`, `imagemagick` | `tools/uhr-bilder/erzeugen.sh`, Bildvergleiche |
 | `socat` | `tools/referenzdatensatz/einspielen/lokal_starten.sh` (TLS vor dem PHP-Server) |

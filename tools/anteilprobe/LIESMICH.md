@@ -44,19 +44,30 @@ Vier ihrer Lagen entstehen aber erst, wenn man `config.php` oder `app_state`
 von Hand verstellt — im Browser sind sie praktisch nicht herzustellen. Hier
 werden sie hergestellt, gemessen und zurückgestellt.
 
+## Was jeder Teil voraussetzt
+
+Damit ein Lauf, der rot meldet, nicht mit einer fehlenden Voraussetzung
+verwechselt wird — dieselbe Lehre wie F-S10-AP3-03:
+
+| Teil | braucht |
+|---|---|
+| A–D (`probe.php`) | MariaDB und eine `server/config.php` mit einem eingerichteten `kdf_anteil`. **Ohne Anteil meldet Teil B eine andere Lage**, nicht einen Fehler |
+| E (`endpunkt.py`) | zusätzlich einen laufenden Server unter `https://127.0.0.1:8443` (`tools/referenzdatensatz/einspielen/lokal_starten.sh`) und das Admin-Konto mit seinem Kennwort. **E0 stellt die Ausgangslage selbst her** und zählt sie mit |
+| F, G (`*.mjs`) | zusätzlich Playwright mit der gewünschten Engine (`tools/containeraufbau/aufbau.sh browser`). **G Abschnitt 8b** braucht zusätzlich den Wiederherstellungsschlüssel aus Abschnitt 8; fehlt er, meldet der Lauf **10 nicht gemessene** Erwartungen statt einer kleineren grünen Zahl |
+
 ## Was gemessen wird
 
 | Teil | Was | Erwartungen |
 |---|---|---|
-| **A** | `schluessel_kennung()` und `konto_anteil()` — die beiden Rechnungen, gegen von Hand nachgerechnete Werte | 13 |
+| **A** | `schluessel_kennung()` und `konto_anteil()` — die beiden Rechnungen, gegen von Hand nachgerechnete Werte | 11 |
 | **A2** | `huelle_anteil_kennung()` — das Präfix `edka1:<kennung>:` lesen, und die sechs Formen, die **keine** Kennung sind | 7 |
 | **A3** | `WRAP_RE` nimmt beide Hüllenfassungen, `PAT_BLOB_RE` bleibt eng | 5 |
-| **B** | die fünf Lagen aus E-S10-09: nicht eingerichtet · bereit · Rotation · abweichend (zweimal, von beiden Seiten) · Neuanfang | 24 |
+| **B** | die fünf Lagen aus E-S10-09: nicht eingerichtet · bereit · Rotation · abweichend (zweimal, von beiden Seiten) · Neuanfang | 29 |
 | **C** | `kdf_anteil_alt` ohne laufende Rotation | 3 |
 | **D** | `config_eintrag_schreiben()` an der echten `config.php` — anlegen, nicht still ersetzen, mit Ansage ersetzen, entfernen, fremder Eintrag, kein Hexwert, Datei hinterher byte-gleich | 14 |
-| **E** | `api/kdf_upgrade.php` als Hüllenfassung — über echtes HTTP mit angemeldeter Sitzung | 33 |
+| **E** | `api/kdf_upgrade.php` als Hüllenfassung — über echtes HTTP mit angemeldeter Sitzung; **E0** ist seit S10/AP5 die Ausgangslage selbst (`huelle_stellen.py` hat die Hülle auf `edk1:` gestellt) | 34 |
 | **F** | `umstellungslauf.mjs` — stellt der **Browser** von selbst um? Erstes Anmelden, zweites Anmelden (0 Aufrufe), Daten lesbar, HKDF-Dauer, Entsperrdialog, Demo-Konto | 16 |
-| **G** | `betriebslauf.mjs` — die **Oberfläche** der Zustände (S10/AP3): drei gleiche Kennungen, das Blatt im Druck bei 210 mm, `abweichend`, Nachtragen falsch und richtig, Rotation, alten Anteil entfernen, Neuanfang und sein zweiter Versuch | 35 |
+| **G** | `betriebslauf.mjs` — die **Oberfläche** der Zustände (S10/AP3): drei gleiche Kennungen, das Blatt im Druck bei 210 mm, `abweichend`, Nachtragen falsch und richtig, Rotation, alten Anteil entfernen, Neuanfang und sein zweiter Versuch | 50 |
 
 Gemessen am 14.09.2026: **69 von 69** (A bis D), **33 von 33** (E),
 **16 von 16** (F) und **35 von 35** (G) — F und G in **drei Engines**.
@@ -104,13 +115,17 @@ Statusseite meldet, es stehe niemand mehr auf dem alten Anteil. Zwei Zeilen
 Prüfung im Endpunkt schließen das aus; E2 und E3 messen sie in beide
 Richtungen.
 
-## Elf Fallen, in die dieser Prüfstand gelaufen ist
+## Dreizehn Fallen, in die dieser Prüfstand gelaufen ist
 
 Sie stehen hier, weil sie beim nächsten Mal wieder danebenlägen. **Zehn von
 ihnen sahen aus wie ein Fehler der Anwendung und waren einer des Prüfmittels**
 — die teuerste Sorte, weil man am falschen Ende sucht. Zwei davon haben
 obendrein etwas kaputtgemacht: ein Konto ohne Passwort und ein Konto ohne
 Schlüssel.
+
+*Die Überschrift sagte bis S10/AP5 „Elf", während zwölf Absätze darunter
+standen — eine abgeschriebene Zahl in einem Dokument, das vom Zählen handelt.
+Nachgezählt und mit der dreizehnten fortgeschrieben.*
 
 **`php -S` bedient EINE Anfrage zur Zeit.** Teil F öffnet in Schritt 5 einen
 zweiten Tab für den Entsperrdialog. Blieb der offen, wartete Schritt 6
@@ -211,6 +226,17 @@ also fragt keine Seite von selbst danach. Der Lauf ruft
 eintragen, „Entsperren" drücken, lesen, was dasteht. **Die Meldung erscheint
 erst nach der Eingabe**, und das ist richtig so: Der Dialog fragt zuerst nach
 dem Passwort und sagt erst dann, woran die Ableitung gescheitert ist.
+
+**Eine übersprungene Erwartung, die nicht mitgezählt wird, sieht aus wie
+Erfolg.** Abschnitt 8b des Betriebslaufs überspringt seine zehn Erwartungen,
+wenn der Wiederherstellungsschlüssel aus Abschnitt 8 fehlt — bis S10/AP5 mit
+einer Zeile auf der Konsole und sonst nichts. Die Schlusszeile meldete dann
+**„40 von 40 erfüllt, 0 offen"**: grün, rund, und zehn Erwartungen ärmer als
+beim Lauf davor. Wer nur auf die letzte Zeile sieht, sieht den Unterschied
+nicht. Der Lauf führt jetzt einen Zähler `nichtGemessen` wie
+`umstellungslauf.mjs` und trägt ihn bis in die Schlusszeile. *Dieselbe Falle
+wie bei `endpunkt.py` (Nr. 8) — und sie ist deshalb zweimal aufgetreten, weil
+sie beim ersten Mal als Einzelfall behandelt wurde statt als Muster.*
 
 **Der Schnappschuss gehört vor die ERSTE Handlung, nicht vor die, die man für
 die erste hält.** Das ist die teuerste Zeile dieser Datei, denn sie hat echte

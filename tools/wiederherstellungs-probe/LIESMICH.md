@@ -79,6 +79,41 @@ Dazu zwei **Gegenproben**: Ein eindeutiger Kandidat muss weiterhin greifen
 mehrdeutig gemeldet werden. Ohne sie bewiese Teil 4 nur, dass die
 Wiedererkennung nichts mehr findet.
 
+## Teil 12 — der Rückweg, wenn der Server-Anteil weg ist (S10)
+
+`config.php` trägt seit S10 **zwei** Geheimnisse: den Serverschlüssel, der
+jede Sicherung versiegelt, und den Server-Anteil, der in den Datenschlüssel
+jedes Kontos eingeht. Kommt die Datei aus einer Sicherung ohne beides zurück,
+steht die Marke `kdf_anteil_kennung` noch in `app_state`, der Wert aber nicht
+mehr in der Datei — `anteil_zustand()` nennt das **abweichend**.
+
+Das ist genau die Lage, in der jemand ein Backup einspielt. Wäre der Rückweg
+dann gesperrt, stünde die Rettung hinter der Tür, die man ohne den Anteil
+nicht aufbekommt. Acht Erwartungen messen, dass er offen bleibt:
+
+- Der Zustand ist `abweichend`, und es wird **kein** Anteil mehr ausgeliefert.
+- Die `edka1:`-Hülle wird abgewiesen — **mit Begründung**, nicht still. (Ein
+  stiller Fehlschlag sähe aus wie ein falsch getipptes Passwort; das ist die
+  ganze Begründung der Zustandsmaschine.)
+- Die **Wiederherstellungs**-Hülle bleibt offen — sie hängt nie am Anteil
+  (E-S10-04). Deshalb ist der Verlust des Anteils kein Datenverlust, sondern
+  ein Passwort-Reset für alle.
+- `edbak_restore()` läuft trotzdem durch, legt den Chiffretext unverändert ab
+  und **rührt die drei Schlüsselfelder des Kontos nicht an**.
+- Ein Adminpaket der Fassung 3 entsteht und öffnet: Der Serverschlüssel ist
+  ein anderes Geheimnis, und nur eines fehlt.
+
+**Die Lage wird im Speicher hergestellt, nicht auf der Platte.** Der Eintrag
+wird aus `$CFG` genommen und im `finally` zurückgelegt; `config.php` wird nicht
+angefasst und `app_state` nicht beschrieben. Stirbt der Prozess mittendrin, ist
+auf der Platte nichts geschehen — anders als bei einem Lauf, der die Datei
+schreibt und auf sein `finally` angewiesen ist. Die achte Erwartung zählt das
+Zurücklegen nach.
+
+*Die fünf Zustände selbst rechnet `tools/anteilprobe/probe.php` nach, die
+Oberfläche dazu `betriebslauf.mjs` im Browser. Hier steht die eine Frage, die
+nur diese Probe stellen kann.*
+
 ## Warum eine eigene Probe und nicht der Kreislauf
 
 Der Kreislauf (`tools/referenzdatensatz/`) fährt eine **echte** Backup
@@ -98,7 +133,15 @@ im Browser, Hochladen) und die Anzeige danach; dafür ist der Kreislauf da.
 
     php tools/wiederherstellungs-probe/probe.php
 
-Erwartet: **30 von 30**, Rückgabe `0`.
+Erwartet: **106 von 106**, Rückgabe `0`.
+
+> **Die Zahl hier war jahrelang falsch.** Sie stand auf **30**, während die
+> Probe längst auf zwölf Teile gewachsen war — dieselbe Krankheit, an der die
+> Anleitung der Komplettprobe litt (dort „76", gemessen 71). Der Kopf von
+> `probe.php` führt die Zahl seither mit, und sie ist gemessen, nicht
+> geschätzt: **94** bis S10/AP4, **98** nach dessen vier neuen Erwartungen an
+> der Fassung 3, **106** mit Teil 12. Wer eine Zahl abschreibt statt sie zu
+> messen, schreibt irgendwann eine ab, die es nicht mehr gibt.
 
 Der Vorher-Vergleich braucht eine **ganze** Kopie von `server/` aus dem
 Vergleichsstand — die Änderungen liegen in mehreren Dateien:
@@ -121,9 +164,13 @@ dahinter.
 
 ## Was die Probe anfasst
 
-Sie legt in der Datenbank aus `config.php` fünf Wegwerfkonten unterhalb von
+Sie legt in der Datenbank aus `config.php` Wegwerfkonten unterhalb von
 `@example.invalid` an und löscht sie am Ende wieder — samt allem, was daran
-hängt. Sie rührt kein anderes Konto an. Trotzdem: **gegen eine
+hängt, und seit S10/AP5 auch samt ihrer Paketordner unter
+`server/sicherungen/` (vorher blieben die stehen und häuften sich bei jedem
+Lauf). Sie rührt kein anderes Konto an. Teil 12 nimmt zusätzlich den
+Server-Anteil **aus dem Speicher** und legt ihn zurück; `config.php` wird
+dabei nicht geschrieben. Trotzdem: **gegen eine
 Testinstallation fahren, nicht gegen den Produktivserver.**
 
 ## Grenzen

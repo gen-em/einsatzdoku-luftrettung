@@ -813,7 +813,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 20 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 25 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 26 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 30 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
@@ -823,7 +823,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 21 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 12 |
 | `mail.svg` | Tabler Icons „mail" (MIT) | 3 |
@@ -839,21 +839,21 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 11 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
-| `schloss.svg` | Tabler Icons „lock" (MIT) | 14 |
+| `schloss.svg` | Tabler Icons „lock" (MIT) | 17 |
 | `server.svg` | Tabler Icons „server" (MIT) | 6 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 10 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 23 |
-| `status.svg` | Tabler Icons „activity" (MIT) | 27 |
+| `status.svg` | Tabler Icons „activity" (MIT) | 29 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
-| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 11 |
+| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 12 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 9 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
-| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 29 |
+| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 30 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
@@ -955,7 +955,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 2284 |
 | `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 2314 |
 | `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 2326 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2502 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 2509 |
 
 39 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.

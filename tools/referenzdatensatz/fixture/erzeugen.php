@@ -83,6 +83,60 @@ if ((int)$u['kdf_iter'] !== KDF_ITER_ZIEL) {
     exit(2);
 }
 
+/* DIE DEMO-HUELLE BLEIBT `edk1:`, SONST ABBRUCH (S10, E-S10-15).
+ *
+ * Seit S10 haengt der Datenschluessel zusaetzlich am Server-Anteil aus
+ * `config.php`. Eine Huelle, die damit gebildet wurde, traegt das Praefix
+ * `edka1:<kennung>:` — und sie laesst sich nur auf DER Installation oeffnen,
+ * deren Anteil diese Kennung hat.
+ *
+ * Die Fixture geht aber gerade NICHT dorthin zurueck, aus der sie stammt:
+ * Sie liegt unter `server/demo/` und wird beim Deploy auf die
+ * Produktivinstallation gelegt, die ihren eigenen Anteil fuehrt. Eine
+ * `edka1:`-Huelle in der Fixture hiesse dort: Das Demo-Konto meldet sich an
+ * (der bcrypt-Hash passt), und danach laesst sich nichts oeffnen. Alle 30
+ * Minuten aufs Neue, ohne Meldung.
+ *
+ * Dass es nicht dazu kommt, ist heute an zwei Stellen abgesichert, und beide
+ * sind fuer sich allein zu wenig:
+ *
+ *   - `api/kdf_upgrade.php` ueberspringt das Demo-Konto (E-P1-19), die stille
+ *     Umstellung fasst es also nicht an. Das ist eine Zusage ueber den
+ *     REGULAEREN Weg — sie sagt nichts ueber eine Huelle, die jemand von Hand
+ *     gesetzt hat oder die aus einem anderen Bestand stammt.
+ *   - `huelle_pw_pruefen($wrap, istDemo: true)` in `serverkrypto_lib.php`
+ *     weist eine `edka1:`-Huelle fuer das Demo-Konto ab. Das greift auf den
+ *     SCHREIBWEGEN der Anwendung — der Demo-Reset in `demo_lib.php` schreibt
+ *     mit eigenem SQL und kommt dort nicht vorbei.
+ *
+ * Deshalb steht der Riegel hier, an der Stelle, an der die Datei entsteht.
+ * Dieselbe Bauart wie der Riegel auf `KDF_ITER_ZIEL` darueber (Nr. 155): Wer
+ * eine Fixture erzeugt, die spaeter niemanden mehr hereinlaesst, soll es
+ * JETZT erfahren und nicht nach dem Deploy.
+ *
+ * `pat_wrap_rc` wird mitgeprueft, obwohl sie nie einen Anteil tragen darf
+ * (`huelle_rc_pruefen()`, E-S10-04): Sie ist der einzige Rueckweg, wenn der
+ * Anteil verlorengeht, und eine Fixture, die ihn mit einem Anteil verbindet,
+ * nimmt dem Demo-Konto genau den. Zwei Zeilen, die nie zuschlagen sollten —
+ * das ist der Sinn eines Riegels. */
+foreach (['pat_wrap_pw' => 'Schluesselhuelle',
+          'pat_wrap_rc' => 'Wiederherstellungs-Huelle'] as $spalte => $name) {
+    $huelle = (string)($u[$spalte] ?? '');
+    if ($huelle === '') { continue; }
+    if (!str_starts_with($huelle, 'edk1:')) {
+        fwrite(STDERR, sprintf(
+            "ABBRUCH: Die %s von %s traegt `%s`, erwartet ist `edk1:`.\n"
+          . "Die Fixture wird auf einer Installation mit einem ANDEREN\n"
+          . "Server-Anteil eingespielt; eine Huelle mit Anteil ist dort nicht zu\n"
+          . "oeffnen. Das Demo-Konto kaeme herein und saehe nichts.\n"
+          . "Weg zurueck: Passwort des Demo-Kontos im Browser neu setzen,\n"
+          . "solange `config.php` KEINEN `kdf_anteil` fuehrt -- oder\n"
+          . "`tools/anteilprobe/huelle_stellen.py %s <passwort> edk1`.\n",
+            $name, $email, explode(':', $huelle)[0] . ':', $email));
+        exit(2);
+    }
+}
+
 $id = (int)$u['id'];
 
 /* ---- Geraete -------------------------------------------------------------

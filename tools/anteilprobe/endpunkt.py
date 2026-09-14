@@ -113,6 +113,30 @@ def feld(spalte: str, uid: str) -> str:
                f'$st->execute([{uid}]); echo (string)$st->fetchColumn();')
 
 
+def demo_uhr() -> str | None:
+    """Zeitpunkt des letzten Demo-Resets, oder None.
+
+    DIESELBE FALLE WIE IN DER KLICKPROBE (F-S10-AP3-09). Das Demo-Konto setzt
+    sich alle 30 Minuten zurueck, und E10 misst genau dieses Konto. Faellt der
+    Reset in den Lauf, verschwindet das Konto fuer den Bruchteil einer
+    Sekunde, der Endpunkt antwortet 404, und der Lauf meldet **30 von 34** —
+    ohne dass an der Anwendung etwas fehlt.
+
+    Gemessen am 14.09.2026, 18:27:55 UTC: genau so geschehen, zweimal
+    hintereinander in einem Schlusslauf. Ein zweiter Lauf Minuten spaeter gab
+    34 von 34. Wer nur die rote Zahl sieht, sucht den Fehler zwei Stunden lang
+    an der falschen Stelle — deshalb steht die Frage jetzt im Lauf selbst.
+    """
+    try:
+        wert = php('require ' + json.dumps(str(WURZEL / "server" / "demo_lib.php"))
+                   + '; echo (string)demo_letzter_reset();').strip()
+        return wert or None
+    except Exception:
+        return None
+
+
+DEMO_RESET_VOR = demo_uhr()
+
 print(f"Anteilprobe, Teil E — {BASIS}")
 
 # DIE VORAUSSETZUNG WIRD HERGESTELLT, NICHT VORAUSGESETZT.
@@ -147,6 +171,18 @@ print(f"  Konto {uid}, Rundenzahl {iter_vorher}, "
       f"Huelle {wrap_vorher[:14]}…, ANTEIL_STAND {s.anteil_stand}")
 
 try:
+    # DIE VORAUSSETZUNG IST EINE ERWARTUNG, KEIN `print` (S10/AP5).
+    #
+    # Der Aufruf von `huelle_stellen.py` oben stellt die Ausgangslage her, und
+    # sein Fehlschlag stand bis AP5 nur als Meldung da. Der Lauf lief weiter,
+    # mass ab E4 eine bereits umgestellte Huelle — der Endpunkt antwortet dann
+    # `nicht_noetig` — und meldete trotzdem seine Zahl. Genau so ist
+    # F-S10-AP3-03 entstanden: 22 von 33, ohne dass an der Anwendung etwas
+    # fehlte. Eine Voraussetzung, die nur als Meldung dasteht, ist keine.
+    teil("E0. Die Ausgangslage")
+    pruefe("huelle_stellen.py hat die Huelle auf `edk1:` gestellt",
+           bool(wrap_vorher) and wrap_vorher.startswith("edk1:"), True)
+
     teil("E1. Die Seite liefert Anteil und Kennung")
     pruefe("ANTEIL_STAND ist 'bereit'", s.anteil_stand, "bereit")
     pruefe("ANTEIL_KENNUNG sind 8 Hexzeichen",
@@ -264,6 +300,18 @@ finally:
     zurueck = feld("pat_wrap_pw", uid)
     print(f"\nHuelle zurueckgelegt: "
           f"{'byte-gleich' if zurueck == wrap_vorher else 'ABWEICHUNG'}")
+
+DEMO_RESET_NACH = demo_uhr()
+if (DEMO_RESET_VOR is not None and DEMO_RESET_NACH is not None
+        and DEMO_RESET_VOR != DEMO_RESET_NACH):
+    print("\nACHTUNG: Der Demo-Reset lief WAEHREND dieses Laufs "
+          f"({DEMO_RESET_VOR} -> {DEMO_RESET_NACH}).")
+    print("  Abschnitt E10 misst das Demo-Konto; waehrend des Resets ist es "
+          "kurz weg,")
+    print("  und der Endpunkt antwortet 404. Ein Fehlschlag dort ist dann "
+          "KEIN Befund")
+    print("  an der Anwendung — den Lauf wiederholen (der Reset kommt alle "
+          "30 Minuten).")
 
 print(f"\nErgebnis: {zahl['ok']} von {zahl['ok'] + zahl['offen']} "
       f"Erwartungen erfuellt, {zahl['offen']} offen.")

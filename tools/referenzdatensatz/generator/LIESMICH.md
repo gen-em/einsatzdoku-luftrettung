@@ -38,9 +38,26 @@ wenn das Konto existiert.
 | `erzeugen.py` | Hauptlauf: Spuren, Payloads, Sendeplan, Formulardaten, CSV, GPX |
 | `spur.py` | Spurerzeugung; Ausdünnung wie auf der Uhr |
 | `gelaende.py` | Höhenmodell aus rund fünfzig Stützpunkten |
-| `krypto.py` | PBKDF2 und AES-256-GCM nach `server/assets/crypto.js` |
+| `krypto.py` | PBKDF2, HKDF und AES-256-GCM nach `server/assets/crypto.js` — beide Hüllenfassungen (`edk1:` und `edka1:<kennung>:`, S10) |
 | `routen/` | Straßengeometrie und Fahrzeiten-Tafel (einmaliger Abruf, eingecheckt) |
 | `pruefen.py` | prüft die Erzeugnisse |
+
+## Der Server-Anteil in `krypto.py` (S10)
+
+Seit S10 ist die PBKDF2-Hälfte nicht mehr selbst der Datenschlüssel. Trägt
+eine Schlüsselhülle das Präfix `edka1:<kennung>:`, kommt er aus
+`HKDF-SHA256(Hälfte, Konto-Anteil)`; trägt sie `edk1:`, bleibt es die Hälfte.
+Entschieden wird **am Präfix der Hülle**, nicht am Zustand der Installation —
+während einer Rotation gilt beides gleichzeitig, aber je für einen Teil der
+Konten.
+
+`hkdf_sha256()` ist ausgeschrieben und nicht aus einer Bibliothek geholt: vier
+Zeilen gegen einen weiteren Fremdbestandteil (E-S10-15). Der Preis ist, dass
+niemand sie für uns prüft — **`pruefen.py` rechnet deshalb bei jedem Lauf den
+Prüffall 1 aus RFC 5869 nach**, dazu einen Hüllenrundlauf in beide Fassungen
+und den Fall, der laut sein muss: eine Kennung, zu der kein Anteil vorliegt.
+Ein Rückfall auf die Hälfte ergäbe dort einen Schlüssel, der nicht passt, und
+der Fehlschlag sähe aus wie ein falsch getipptes Passwort.
 
 ## Drei Entscheidungen, die man sehen muss
 

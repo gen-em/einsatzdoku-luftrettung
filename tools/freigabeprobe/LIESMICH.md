@@ -44,6 +44,13 @@ Diese Probe stellt sich ein Konto her, dessen Schlüssel sie kennt.
 | Der richtige läuft durch | Einsatz und Spur kommen an |
 | Der Chiffretext ist ein **anderer** | umgeschlüsselt, nicht durchgereicht |
 | Der **Klartext** ist derselbe | geöffnet mit dem Schlüssel des Zielkontos |
+| Das Paket ist **Fassung 3** | seit S10/AP4 — und die Nummer allein zählt nicht |
+| **Jeder** ZIP-Eintrag trägt `edsk1:` | gezählt am rohen Archiv, nicht am Manifest |
+| Auch `konto.json` daneben | sonst stünde die E-Mail offen im Ablageordner |
+
+Erwartet: **16 Erwartungen, 0 nicht erfüllt** (gemessen 14.09.2026; bis
+S10/AP4 waren es 14 — die drei Zeilen oben sind mit der Fassung 3
+dazugekommen, die Zahl erst in AP5 nachgezogen).
 
 ## Alle Krypto kommt aus der Anwendung
 

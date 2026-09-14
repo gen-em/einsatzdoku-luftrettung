@@ -55,7 +55,10 @@ declare(strict_types=1);
  *     cp server/config.php /tmp/vorher/
  *     php tools/wiederherstellungs-probe/probe.php /tmp/vorher
  *
- * Erwartet: **94 von 94** mit dem heutigen Stand, Rueckgabe 0.
+ * Erwartet: **106 von 106** mit dem heutigen Stand, Rueckgabe 0.
+ * (94 bis S10/AP4 — Teil 8 hat mit der Fassung 3 vier Erwartungen dazu
+ *  bekommen, Teil 12 acht. Wer die Zahl hier nicht mitfuehrt, hat beim
+ *  naechsten Lauf keinen Vergleich, sondern nur ein Gefuehl.)
  *
  * (Die Zahl stand bis Web 14.2.0 auf 30 und war seit Langem falsch — die
  * Probe ist auf elf Teile gewachsen. Sie ist ausserdem seit einiger Zeit
@@ -911,7 +914,14 @@ $sag('Ein liegengebliebener Bauordner blockiert die Loeschung nicht mehr',
      $geloescht === true && !is_dir(edbak_ordner($kennung)),
      $geloescht ? 'Ordner weg' : ' NICHT geloescht');
 
-$weg($ziel9); $weg($ziel6); $weg($quelle);
+/* ALLE FUENF WEGWERFKONTEN, nicht drei. `$ziel10` und `$ziel11` sind bei
+ * den beiden Negativfaellen aus S10/AP4 entstanden (umbenanntes Paket,
+ * untergeschobener Teil) und hier nie geloescht worden — sie standen nach
+ * jedem Lauf in `users` und wuchsen nicht weiter auf, weil `$konto()` sie
+ * beim naechsten Mal ueberschreibt. Aufgefallen in AP5 beim Nachzaehlen der
+ * `@example.invalid`-Konten: zwei uebrig, wo keines uebrig sein sollte. Der
+ * Kopf dieser Datei sagt „loescht sie am Ende wieder" — seit jetzt stimmt es. */
+$weg($ziel9); $weg($ziel6); $weg($ziel10); $weg($ziel11); $weg($quelle);
 
 /* ==========================================================================
  * Teil 9 — Speichergrenze und Schwellen (S2/AP6, E-S2-14/15)
@@ -1361,6 +1371,171 @@ $sag('(5) ...und die Momentaufnahme bleibt NULL statt leer',
      $g8->fetchColumn() === null, 'geraet_art IS NULL');
 $weg($uid11c);
 $weg($uid11);
+
+/* ==========================================================================
+ * TEIL 12 — DER RUECKWEG, WENN DER SERVER-ANTEIL WEG IST (S10/AP5, E-S10-15)
+ *
+ * DIE LAGE. `config.php` fuehrt seit S10 zwei Geheimnisse: den
+ * Serverschluessel (oeffnet Sicherungen) und den Server-Anteil (geht in den
+ * Datenschluessel jedes Kontos ein). Geht die Datei verloren und kommt aus
+ * einer Sicherung ohne sie zurueck, steht die Marke `kdf_anteil_kennung` noch
+ * in `app_state`, der Wert aber nicht mehr in der Datei. `anteil_zustand()`
+ * nennt das `abweichend` — und genau das ist der Ernstfall, fuer den der
+ * Wiederherstellungsweg da ist.
+ *
+ * WAS HIER GEMESSEN WIRD, und was ausdruecklich anderswo steht. Die fuenf
+ * Zustaende selbst rechnet `tools/anteilprobe/probe.php` nach, die
+ * Oberflaeche dazu `betriebslauf.mjs` im Browser. Hier steht die Frage, die
+ * nur diese Probe stellen kann: **Bleibt der Rueckweg offen, waehrend der
+ * Anteil fehlt?** Ein Backup einzuspielen ist die Handlung, die man in dieser
+ * Lage vornimmt; waere sie gesperrt, stuende die Rettung hinter der Tuer, die
+ * man ohne den Anteil nicht aufbekommt.
+ *
+ * WIE DIE LAGE HERGESTELLT WIRD — IM SPEICHER, NICHT AUF DER PLATTE.
+ * `kdf_anteil()`, `kdf_anteil_alt()` und `anteil_zustand()` lesen aus `$CFG`
+ * und halten ihr Ergebnis in einem `static`, das sich mit `true` verwerfen
+ * laesst. Der Eintrag wird deshalb nur aus dem Feld genommen und danach
+ * zurueckgelegt: `config.php` wird nicht angefasst, `app_state` nicht
+ * beschrieben (der Zweig `abweichend` in `anteil_zustand()` kehrt VOR
+ * `schluessel_marke_setzen()` um). Stirbt der Prozess mittendrin, ist auf der
+ * Platte nichts geschehen — anders als bei einem Prueflauf, der die Datei
+ * schreibt und auf sein `finally` angewiesen ist.
+ * ====================================================================== */
+echo "\n  Teil 12 — Der Rueckweg, wenn der Server-Anteil weg ist (S10/AP5)\n";
+require_once $server . '/serverkrypto_lib.php';
+
+global $CFG;
+$anteilVorher = $CFG['kdf_anteil'] ?? null;
+/* MARKE ZUERST LESEN, DANN DEN ZUSTAND FRAGEN (Gegenprobe zu AP5).
+ *
+ * `anteil_zustand()` ist nicht nur eine Auskunft: Fehlt die Marke in
+ * `app_state` und steht ein Wert in `config.php`, SCHREIBT sie die Kennung
+ * nach (E-S10-U-02). Das ist richtig — der erste Seitenaufruf taete es
+ * ohnehin —, aber ein Pruefmittel soll den Zustand nicht herstellen, den es
+ * misst. Die Marke wird deshalb vorher gelesen, und ohne sie laeuft Teil 12
+ * gar nicht erst an. */
+$markeVorher  = schluessel_marke_lesen('kdf_anteil_kennung');
+$standVorher  = $markeVorher === null ? ['stand' => 'ohne Marke'] : anteil_zustand(true);
+
+if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
+    /* KEINE GRUENE ZAHL FUER EINE NICHT GEMESSENE LAGE. Ohne eingerichteten
+     * Anteil gibt es nichts wegzunehmen, und ohne Marke waere der Zustand
+     * `fehlt` statt `abweichend` — ein anderer Fall. */
+    $sag('Teil 12 uebersprungen: kein eingerichteter Anteil', false,
+         'Stand „' . (string)($standVorher['stand'] ?? '?') . '" statt „bereit" — '
+         . 'erst `Server-Anteil anlegen` auf Betrieb -> Servereinstellungen');
+} else {
+    $uid12 = $konto('probe-anteilweg@example.invalid');
+    $huelleNeu = 'edka1:' . $standVorher['kennung'] . ':' . str_repeat('QUJD', 16);
+    $huelleRc  = 'edk1:' . str_repeat('WFla', 16);
+    /* `account_key` wie in Teil 8: Ohne Kontokennung legt
+     * `edbak_sicherung_erzeugen()` kein Paket an — die Kennung ist der
+     * Ordnername der Ablage und geht in den Siegelzweck ein (S10/AP4). */
+    $kennung12 = bin2hex(random_bytes(8));
+    $pdo->prepare('UPDATE users SET pat_wrap_pw = ?, pat_wrap_rc = ?, pat_key_check = ?,
+                          account_key = ? WHERE id = ?')
+        ->execute([$huelleNeu, $huelleRc, str_repeat('b', 32), $kennung12, $uid12]);
+
+    try {
+        /* ---- Der Anteil verschwindet (nur im Speicher) -------------------- */
+        unset($CFG['kdf_anteil']);
+        kdf_anteil(true); kdf_anteil_alt(true);
+        $weg12 = anteil_zustand(true);
+
+        $sag('(1) Ohne Wert, aber mit Marke: Stand „abweichend"',
+             ($weg12['stand'] ?? '') === 'abweichend',
+             'Stand „' . (string)($weg12['stand'] ?? '?') . '", Marke '
+             . (string)($weg12['erwartet'] ?? '—'));
+        $sag('(2) Es wird kein Anteil mehr ausgeliefert',
+             anteil_ausgeliefert() === null && konto_anteile($uid12) === [],
+             'anteil_ausgeliefert() = null, KONTO_ANTEILE leer');
+
+        /* Die Hülle des Kontos ist jetzt unbrauchbar — aber NICHT still: Die
+         * Prüfschicht sagt, warum, und nennt den Anteil. Ein stiller
+         * Fehlschlag sähe aus wie ein falsches Passwort (das ist die ganze
+         * Begründung der Zustandsmaschine, E-S10-03). */
+        $grund12 = huelle_pw_pruefen($huelleNeu);
+        $sag('(3) Die `edka1:`-Huelle wird abgewiesen — MIT Begruendung',
+             is_string($grund12) && str_contains($grund12, 'Server-Anteil'),
+             is_string($grund12) ? mb_substr($grund12, 0, 52) . '…' : 'null (durchgelassen!)');
+
+        /* DIE ZUSAGE AUS E-S10-04, und sie ist der Kern dieses Teils:
+         * `pat_wrap_rc` haengt NICHT am Anteil. Der Verlust des Anteils ist
+         * deshalb kein Datenverlust, sondern ein Passwort-Reset fuer alle. */
+        $sag('(4) Die Wiederherstellungs-Huelle bleibt offen (E-S10-04)',
+             huelle_rc_pruefen($huelleRc) === null,
+             'huelle_rc_pruefen() = null — der Rueckweg steht');
+
+        /* ---- Und jetzt die Handlung, die man in dieser Lage vornimmt ------ */
+        $st12 = edbak_restore($uid12, [
+          'version' => 7,
+          'days' => [['id' => 9120, 'day' => '2026-07-20', 'kind' => 'ground',
+                      'vehicle_name' => 'Probe A12', 'base_name' => 'Probenstation']],
+          'missions' => [
+            ['client_ref' => 'anteil-1', 'day_id' => 9120,
+             'started_at' => '2026-07-20 06:00:00', 'ended_at' => '2026-07-20 07:00:00',
+             'pat_blob' => 'edk1:' . str_repeat('QUJD', 16),
+             'track' => [[0, 47.30, 11.30, 500.0, 1784000000],
+                         [1, 47.31, 11.31, 505.0, 1784000060]]],
+          ],
+        ]);
+        $g12 = $pdo->prepare('SELECT pat_blob FROM missions WHERE user_id = ? AND client_ref = ?');
+        $g12->execute([$uid12, 'anteil-1']);
+        $blob12 = $g12->fetchColumn();
+        $mid12 = (int)$pdo->query('SELECT id FROM missions WHERE user_id = ' . $uid12
+                                  . " AND client_ref = 'anteil-1'")->fetchColumn();
+        /* Die Spur wird ueber `spur_lib.php` gezaehlt und nicht per SQL —
+         * seit Web 10.0.0 liegt sie je nach Alter in `track_points` ODER als
+         * Blob in `track_blobs`, und wer eine der beiden Tabellen unmittelbar
+         * liest, zaehlt frueher oder spaeter eine halbe Spur (CLAUDE.md 4). */
+        $punkte12 = spur_zahlen($pdo, 'mission', [$mid12])[$mid12] ?? 0;
+        $sag('(5) Ein Backup laesst sich TROTZDEM einspielen',
+             (int)($st12['missions'] ?? 0) === 1 && $punkte12 === 2
+               && $blob12 === 'edk1:' . str_repeat('QUJD', 16),
+             (int)($st12['missions'] ?? 0) . ' Einsatz, ' . $punkte12
+             . ' Spurpunkte, Chiffretext unveraendert');
+
+        /* Der Rueckweg schreibt Einsaetze, keine Schluessel. Ruehrte er die
+         * Huelle an, waere aus „Anteil weg" ein Datenverlust geworden. */
+        $h12 = $pdo->prepare('SELECT pat_wrap_pw, pat_wrap_rc, pat_key_check FROM users WHERE id = ?');
+        $h12->execute([$uid12]);
+        $nach12 = $h12->fetch(PDO::FETCH_ASSOC);
+        $sag('(6) ...und ruehrt die drei Schluesselfelder des Kontos nicht an',
+             $nach12['pat_wrap_pw'] === $huelleNeu
+               && $nach12['pat_wrap_rc'] === $huelleRc
+               && $nach12['pat_key_check'] === str_repeat('b', 32),
+             'pat_wrap_pw, pat_wrap_rc, pat_key_check unveraendert');
+
+        /* ZWEI GEHEIMNISSE IN EINER DATEI — und nur eines fehlt. Der
+         * Serverschluessel versiegelt die Adminpakete (S10/AP4); mit dem
+         * Anteil hat er nichts zu tun. Waeren die beiden verquickt, waere der
+         * Verlust des Anteils zugleich der Verlust aller Sicherungen. */
+        [$ok12, $grundP12, $infoP12] = edbak_sicherung_erzeugen($uid12);
+        $kopf12 = $ok12 ? edbak_paket_kopf_lesen($kennung12, (string)$infoP12['datei']) : null;
+        $sag('(7) Ein Adminpaket entsteht und oeffnet — der Serverschluessel ist ein ANDERES Geheimnis',
+             $ok12 === true && is_array($kopf12) && (int)($kopf12['version'] ?? 0) === 3,
+             $ok12 ? 'Fassung ' . (int)($kopf12['version'] ?? 0) : (string)$grundP12);
+    } finally {
+        /* ZURUECKLEGEN UND NACHZAEHLEN. Das `finally` steht hier, weil jede
+         * der Erwartungen darueber eine Ausnahme werfen kann — und weil ein
+         * Prozess, der mit fehlendem Anteil im Speicher weiterliefe, den Rest
+         * der Probe still falsch messen wuerde. */
+        if ($anteilVorher !== null) { $CFG['kdf_anteil'] = $anteilVorher; }
+        kdf_anteil(true); kdf_anteil_alt(true);
+        $zurueck12 = anteil_zustand(true);
+        $sag('(8) Nach dem Zuruecklegen steht der Stand wieder auf „bereit"',
+             ($zurueck12['stand'] ?? '') === ($standVorher['stand'] ?? '')
+               && ($zurueck12['kennung'] ?? null) === ($standVorher['kennung'] ?? null),
+             'Stand „' . (string)($zurueck12['stand'] ?? '?') . '", Kennung '
+             . (string)($zurueck12['kennung'] ?? '—'));
+        /* Auch die Ablage raeumen — wie Teil 8. Ein geloeschtes Konto laesst
+         * seinen Paketordner sonst stehen, und `server/sicherungen/` fuellt
+         * sich bei jedem Lauf um einen weiteren Ordner mit Siegeln, die
+         * niemand mehr oeffnen will. */
+        if (isset($kennung12)) { @edbak_ordner_loeschen($kennung12); }
+        if (isset($uid12)) { $weg($uid12); }
+    }
+}
 
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);
 exit($fehler === 0 ? 0 : 1);

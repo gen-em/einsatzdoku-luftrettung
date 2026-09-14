@@ -41,6 +41,27 @@ SYMBOLE = os.path.join(SERVER, 'assets', 'images', 'symbole')
 # Verzeichnisse, die nicht uns gehoeren: fremde Bibliotheken und Schriften.
 FREMD = ('vendor', 'fonts', 'demo')
 
+# EINE DATEI, DIE NICHT GELESEN WIRD (S10/AP5).
+#
+# `config.php` liegt nur auf installierten Instanzen, steht in `.gitignore`
+# und traegt seit S10 ZWEI Geheimnisse: den Serverschluessel und den
+# Server-Anteil. Sie hier auszunehmen hat zwei Gruende, und beide zaehlen:
+#
+#   1. DIE ZAHL SOLL REPRODUZIERBAR SEIN. Auf einem blanken Auscheck gibt es
+#      die Datei nicht, auf einer Installation schon — dasselbe Werkzeug
+#      meldete also zwei verschiedene Zahlen, je nachdem wo es lief. Eine
+#      Zahl, die von der Umgebung abhaengt, ist als Vergleich unbrauchbar.
+#   2. EIN GEHEIMNIS GEHOERT IN KEINEN BERICHT. Heute traegt kein Muster auf
+#      einen 64-Hex-Wert zu; morgen kann eines dazukommen, und dann stuende
+#      ein Schluesselbruchstueck in einer Datei unter `tools/ausgabe/`.
+#      Der billigste Zeitpunkt, das zu verhindern, ist der, bevor es
+#      passiert.
+#
+# Gemessen beim Ausnehmen: Die Datei steuerte GENAU EINEN Treffer bei
+# (ein `\u2192` in ihrem Kopfkommentar).
+AUSGENOMMEN = ('config.php',)
+
+
 
 # ---------------------------------------------------------------- Einlesen
 def quelldateien(wurzel=SERVER, endungen=('.php', '.js')):
@@ -48,7 +69,7 @@ def quelldateien(wurzel=SERVER, endungen=('.php', '.js')):
     for dp, dns, fns in os.walk(wurzel):
         dns[:] = [d for d in dns if d not in FREMD]
         for fn in sorted(fns):
-            if fn.endswith(endungen):
+            if fn.endswith(endungen) and fn not in AUSGENOMMEN:
                 yield os.path.join(dp, fn)
 
 

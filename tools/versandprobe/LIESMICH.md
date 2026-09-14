@@ -103,8 +103,15 @@ php tools/versandprobe/probe.php             /srv/versandprobe --echt
 sh  tools/versandprobe/echte_gegenstellen.sh --stop
 ```
 
-Erwartet in **beiden** Fällen: **115 Erwartungen, 0 nicht erfüllt.** Der
-Rückgabewert ist 0, wenn alles hält, sonst 1.
+Erwartet in **beiden** Fällen: **116 Erwartungen, 0 nicht erfüllt** (gemessen
+14.09.2026). Der Rückgabewert ist 0, wenn alles hält, sonst 1.
+
+*Die Zahl stand bis S10/AP5 auf 115.* S10/AP4 hat `ftp` aus `SZ_PROTOKOLLE`
+genommen und die Prüfung von „nicht `ftp`" auf „steht im Katalog" umgestellt
+— seither wird auch ein **leeres** Protokoll abgewiesen, und das ist eine
+eigene Erwartung. Nachgezogen wurde sie erst in AP5; wer eine Zahl in einer
+Anleitung lässt, während er die Probe ändert, hinterlässt genau die Abschrift,
+vor der der Kasten in `tools/komplettprobe/LIESMICH.md` warnt.
 
 ### Der Hostschlüsselwechsel
 

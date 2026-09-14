@@ -128,7 +128,17 @@ Weg nicht mehr, den eine NutzerIn geht (E-P1-10).
 - **Kein Sonderendpunkt.** Die Anmeldung leitet PBKDF2 selbst ab und
   schickt das **Token**, nicht das Passwort — wie der Browser. Den
   Inhaltsschlüssel packt es aus `PAT_WRAP` aus, das jede angemeldete Seite
-  ohnehin mitgibt.
+  ohnehin mitgibt. Seit S10 kommt der Datenschlüssel dafür aus
+  `HKDF(PBKDF2-Hälfte, Konto-Anteil)`, sobald die Hülle `edka1:<kennung>:`
+  trägt; den Anteil liefert die Seite als `KONTO_ANTEILE` — dieselbe Quelle,
+  aus der auch der Browser ihn nimmt.
+- **Und es stellt NICHT um** (E-S10-15). `sitzung.py` liest, was dasteht. Ein
+  Konto, das nur über den Prüfstand angemeldet war, bleibt auf `edk1:`; die
+  stille Umstellung gehört dem Browser, und sie zu messen ist Sache von
+  `tools/anteilprobe/umstellungslauf.mjs`. Das ist die Grenze dieses
+  Prüfmittels — und der Grund, warum **beide** Fassungen für es lesbar sein
+  müssen. Gemessen wird das von `sitzungsprobe.py` (2 von 2), an je einem
+  echten Konto des Bestands.
 
 ## Messprotokoll (E-P1-14, Vorarbeit R19)
 

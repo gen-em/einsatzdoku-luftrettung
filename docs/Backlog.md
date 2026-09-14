@@ -486,6 +486,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Vorschlag: Die Meldung nennt die letzte Fassung, die sie noch einspielen
     konnte — so wie es `version_alt` heute für Nutzlasten unter 6 tut.
 
+    **Die dritte Toleranz ist seit S10/AP5 gemessen, nicht nur behauptet.**
+    `tools/pruefkonten/` legt seine Testpakete als **Fassung 1** an
+    (einteiliges JSON, unversiegelt). Nach dem Umbau von AP4 wurden sie
+    einmal gegengelesen: `edbak_paket_kopf_lesen()` öffnet **16 von 16**.
+    Das ist der billigste verfügbare Beleg dafür, dass die Weiche wirklich
+    nach Fassung unterscheidet und nicht bloß aussieht, als täte sie es —
+    und er entsteht bei jedem Lauf von `pruefkonten.php` von selbst.
+
     **Zwei Reste aus S10 gehen hier mit** (Konzept S10, E-S10-13 und
     E-S10-14, 13.09.2026). Beide sind nach S10 nur noch **Toleranz**, nicht
     mehr Funktion, und beide sind an keiner Stelle erreichbar, die sie

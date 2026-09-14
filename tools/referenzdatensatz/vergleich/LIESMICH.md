@@ -204,6 +204,13 @@ mehr als Fünftupel je Punkt gezählt, sondern als dekodierte Spur — dieselben
 48 981 Punkte, anders gezählt. Wer die Zahl als Fortschrittsmaß liest, liest
 sie falsch.
 
+Diese beiden Zahlen sind ein **Datumsstand**, kein Sollwert. Seither ist der
+Referenzbestand zweimal neu gebaut worden; gemessen am 14.09.2026 (S10/AP5,
+je mit `--frisch`): **csv 9120 Einzelvergleiche, 0 unerklärte, 1021
+erwartete** und **edbak 287 687, 0 unerklärte, 16 erwartete**. Die
+Ausnahmelisten tragen ihre Zahlen mit dem Datum, an dem sie gemessen wurden —
+wer sie vergleicht, vergleicht Stände, nicht Sollwerte.
+
 ## Die Werkzeuge brauchen HTTPS
 
 `kreislauf.py` spricht mit `https://127.0.0.1:8443` und nicht mit
