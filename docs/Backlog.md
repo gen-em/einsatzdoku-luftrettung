@@ -1571,6 +1571,74 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Vollständigkeit melden keine ungenutzten Ausnahmen. Zuordnung: **vor 1.0**,
     zusammen mit Nr. 46.
 
+188. **Eine Dokumentenprobe: kein Prüfmittel misst Verweise zwischen
+    Dokumenten.**
+    *Aufgenommen 14.09.2026 (S10-Nachlauf).* Am 14.09.2026 wurde nach der
+    Löschung des S10-Konzepts gemeldet: „Wortliste 0/0/0, Linkprobe 117
+    Verweise, 0 Abweichungen". Beide Zahlen stimmen und **keine von beiden
+    belegt, was sie zu belegen schien**: Die Linkprobe liest `<seite>.php?…`
+    in `server/` und sieht `docs/` überhaupt nicht; die Wortliste zählt
+    Wörter. Genau der Fall, vor dem `CLAUDE.md` 6 warnt — eine grüne Zahl,
+    die das Gemessene nicht benennt.
+
+    **Der Beleg, dass die Lücke etwas kostet:** Die Fahrplanzeile zu Schritt 7
+    sagte vom 06.09. bis zum 14.09.2026 „Konzept **liegt vor**" und nannte
+    einen Pfad, den es seit dem Abschluss von S8 nicht mehr gab — **acht Tage
+    lang, neben lauter grünen Zahlen**, und in derselben Tabellenzeile stand
+    zwei Spalten weiter „Konzept nach R62 gelöscht". Ein Selbstwiderspruch
+    in einer Zeile, den niemand gemessen hat, weil ihn nichts misst.
+
+    **Was zu bauen ist:** eine Probe nach dem Muster von `tools/linkprobe/`,
+    die jeden Pfad- und Dateinamensverweis in `docs/`, `server/`, `tools/`,
+    `android/` und `watch/` gegen `git ls-files` hält. Drei Dinge muss sie
+    können, sonst meldet sie Rauschen statt Befunden:
+
+    - **Relative Pfade auflösen.** `api/day.php` heißt `server/api/day.php`;
+      eine naive Prüfung meldet dafür über 200 falsche Treffer.
+    - **Eingefrorene Dokumente auslassen** — `docs/Rahmenplan-Archiv.md`,
+      `docs/CHANGELOG.md` und `docs/konzepte/erledigt/` beschreiben, was
+      damals war, und werden nicht fortgeschrieben (R62).
+    - **Eine Ausnahmeliste mit Begründung** für das, was mit Absicht fehlt:
+      `config.php`, `wartung.lock`, `server/apk/`, `server/sicherungen/`,
+      Ausgabeordner der Prüfmittel — und geplante Dokumente wie
+      `Review-R17.md`, die es noch nicht gibt.
+
+    **Warum es eilt:** Für `Konzept-Mockup-Runde.md` und
+    `Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md` ist die Löschung in
+    Abschnitt 6 des Rahmenplans bereits angekündigt. Ohne die Probe wiederholt
+    sich der Vorgang zweimal.
+
+    *Abnahme:* Der Lauf meldet **0 Treffer außerhalb der Ausnahmeliste und 0
+    ungenutzte Ausnahmen** — dieselbe Form wie die Wortliste — und nennt
+    dabei, **wie viele** Verweise er geprüft hat. Ein Lauf ohne diese zweite
+    Zahl ist keiner. Zuordnung: **P6** (Review und Bereinigung, R69) oder
+    früher, wenn vorher ein weiteres Konzept gelöscht wird.
+
+189. **`server/schema.sql` nennt einen Pfad, den es seit dem 02.09.2026 nicht
+    mehr gibt.**
+    *Aufgenommen 14.09.2026 (S10-Nachlauf, Fund der Vollständigkeitskritik.)*
+    Zeile 528 verweist auf `docs/Konzept-S2`; die Datei liegt seit der
+    Neuordnung vom 02.09.2026 (`781e624`) unter
+    `docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md`.
+
+    **Dass es ein Versehen ist und keine Protokollzeile, belegt der Zwilling:**
+    `server/migration_lib.php:1770` erklärt **dieselbe** Sache mit **demselben**
+    Beleg F-S2-G und ist auf das neue Verzeichnis gezogen worden. Von zwei
+    gleichlautenden Kommentaren wurde einer nachgeführt. Beide kürzen den
+    Dateinamen auf `Konzept-S2` ab — wer hier anfasst, schreibt ihn an beiden
+    Stellen aus, sonst bleibt die Hälfte des Fundes stehen.
+
+    **Warum es nicht im Nachlauf mitging:** Die Datei liegt unter `server/`.
+    Eine Änderung dort verlangt eine Versionsstufe (`CLAUDE.md` 2) und löst
+    beim Merge einen Deploy aus (`CLAUDE.md` 3) — für einen Kommentar, der
+    weder Verhalten noch Schema berührt, ist das der falsche Preis. Gehört in
+    das nächste Paket, das `server/` ohnehin anfasst.
+
+    *Abnahme:* Beide Kommentare nennen denselben, vollständigen Pfad, und die
+    Datei dort existiert. Zuordnung: **mitlaufend** — nächstes Paket unter
+    `server/`, spätestens der Kommentardurchgang in P6 (R69), der die
+    Konzept- und Beschlussverweise im Code ohnehin durchgeht.
+
 ## Erledigt
 
 
@@ -1589,8 +1657,9 @@ zutreffen.
     `sk_versiegeln()` wie das Komplettbackup, `ftp` aus der Auswahl,
     bestehende `ftp`-Ziele mit rotem Hinweis. Zuordnung: **S10** (R78).
 
-    *Konzept S10 liegt vor (13.09.2026), E-S10-13 und E-S10-14; Umsetzung in
-    **AP4**.* Entschieden ist dabei mehr, als der Punkt verlangte, und
+    *Konzept S10 (13.09.2026) — nach der Freigabe gelöscht (R62/K9), zuletzt
+    unter Commit `a00f6b5`; E-S10-13 und E-S10-14; Umsetzung in **AP4**.*
+    Entschieden ist dabei mehr, als der Punkt verlangte, und
     zweierlei anders: **Auch `manifest.json` wird versiegelt**, nicht nur die
     Teile — der Zweck bindet jeden Teil an Konto **und** Teilnamen
     (`adminpaket|<konto>|<teil>`), sodass ein Umhängen an der Prüfsumme
