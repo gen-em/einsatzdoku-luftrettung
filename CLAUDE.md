@@ -108,6 +108,21 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   Katalogeintrag, diesen Absatz **und** `docs/Technik.md` 4.98 — und schreibt
   einen Anhebelauf für den Altbestand (`api/pat_anheben.php` ist das Muster;
   der Server kann nicht verschlüsseln, nur der Browser kann es).
+  **Seit S10 hängt der Datenschlüssel zusätzlich am Server-Anteil**
+  (`kdf_anteil` in `config.php`, E-S10-17). Er wird je Konto per HMAC über die
+  Kontonummer abgeleitet, geht per HKDF in den Datenschlüssel ein und wird nur
+  an die angemeldete Sitzung ausgeliefert. **Der Server kann damit weiterhin
+  nichts öffnen** — er kennt den Anteil, nicht die PBKDF2-Hälfte aus dem
+  Passwort. Was sich ändert, ist die Rechnung des Angreifers: Ein
+  Datenbankabzug allein reicht nicht mehr für einen Offline-Angriff auf das
+  Passwort. **`config.php` ist damit Schlüsselträger aller Konten** — das
+  Wiederanlaufpaket (vier Stücke) und das Schlüsselblatt sind Pflicht, nicht
+  Empfehlung. Wer diesen Absatz zitiert, zitiert den nächsten Satz mit:
+  **`pat_wrap_rc` hängt NICHT am Anteil.** Der Wiederherstellungsschlüssel
+  öffnet ohne ihn, und deshalb ist der Verlust des Anteils **kein
+  Datenverlust**, sondern ein Passwort-Reset für alle. Eine
+  `edka1:`-Wiederherstellungshülle wäre der Verlust genau dieses Rückwegs;
+  `WRAP_RC_RE` und `huelle_rc_pruefen()` lassen sie nicht zu.
   **Zwei Zeichen tragen die Zusage in die Oberfläche:** ein Schloss an jedem
   verschlüsselten Feld, die Kleinzeile „Klartext — keine Patientendaten" an
   jedem Klartext-Freitextfeld. Sie schließen einander aus; die Wahl steht an

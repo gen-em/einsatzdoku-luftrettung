@@ -3,12 +3,19 @@
  * Prinzip (angelehnt an Bitwarden):
  *  - Aus dem Login-Passwort leitet der Browser per PBKDF2 (Rundenzahl je
  *    Konto, SHA-256, nutzerspezifisches Salt) 512 Bit ab und teilt sie:
- *      · dataKey  (256 Bit): bleibt IM BROWSER, verschlüsselt Daten
+ *      · Hälfte    (256 Bit): bleibt IM BROWSER, geht in den Datenschlüssel
  *      · authToken (256 Bit): geht statt des Passworts zum Server
  *    Der Server sieht das Passwort damit nie und kann nichts entschlüsseln.
+ *  - SEIT S10 ist die Hälfte nicht mehr selbst der Datenschlüssel: Sie wird
+ *    per HKDF mit dem SERVER-ANTEIL des Kontos gemischt, der aus `config.php`
+ *    stammt und nur an die angemeldete Sitzung geht. Ein Datenbankabzug allein
+ *    reicht damit nicht mehr für einen Offline-Angriff aufs Passwort — der
+ *    Server kann trotzdem nichts öffnen, er kennt die Hälfte nicht.
  *  - Ein zufälliger Inhaltsschlüssel (CK) verschlüsselt die eigentlichen
  *    Daten (AES-256-GCM). CK liegt doppelt verpackt auf dem Server:
- *    einmal mit dem dataKey, einmal mit dem Wiederherstellungsschlüssel.
+ *    einmal mit dem Datenschlüssel, einmal mit dem
+ *    Wiederherstellungsschlüssel. Die zweite Hülle hängt NICHT am Anteil —
+ *    sie ist der Rückweg, wenn er verloren geht.
  *  - Passwort ändern = CK neu verpacken; die Daten bleiben unangetastet.
  */
 'use strict';
@@ -60,6 +67,13 @@ const EdCrypto = (() => {
    *
    * Lieber ein lauter Fehler beim Entwickeln als ein leiser im Betrieb.
    */
+  /* SEIT S10 HEISST DIE ERSTE HAELFTE `haelfteHex` (E-S10-04). Sie IST der
+   * Datenschluessel nicht mehr; sie ist eine von zwei Zutaten — die andere
+   * ist der Server-Anteil. Der Name ist mitgewandert, obwohl das jede
+   * Aufrufstelle anfasst, und genau deshalb: Ein Feld, das nach dem
+   * Datenschluessel benannt ist und keiner ist, wird beim naechsten Mal
+   * wieder als einer benutzt. Der alte Name kommt im Code nicht mehr vor;
+   * wo er noch steht, erzaehlt er diese Umbenennung (version.php). */
   async function deriveKeys(password, saltHex, iter) {
     pruefeRunden(iter, 'deriveKeys');
     const base = await crypto.subtle.importKey(
@@ -69,9 +83,96 @@ const EdCrypto = (() => {
       base, 512);
     const all = new Uint8Array(bits);
     return {
-      dataKeyHex: toHex(all.slice(0, 32)),     // bleibt lokal
+      haelfteHex: toHex(all.slice(0, 32)),     // bleibt lokal, geht in den dk
       authToken:  toHex(all.slice(32, 64))     // ersetzt das Passwort zum Server
     };
+  }
+
+  /* ---- Der Server-Anteil (S10, E-S10-04 bis E-S10-08) -------------------
+   *
+   * WAS SICH GEAENDERT HAT. Bis Web 19.7.0 war die erste Haelfte der
+   * PBKDF2-Ableitung unmittelbar der Datenschluessel. Seit S10 steht eine
+   * zweite Ableitung dazwischen:
+   *
+   *     dk = HKDF-SHA256(ikm  = Haelfte (32 Byte),
+   *                      salt = Konto-Anteil (32 Byte aus KONTO_ANTEILE),
+   *                      info = "edka1|dk")                     -> 32 Byte
+   *
+   * Der Konto-Anteil kommt vom Server und nur an die angemeldete Sitzung. Wer
+   * die Datenbank hat, hat ihn NICHT — er liegt in `config.php`. Das ist der
+   * ganze Gewinn: Ein Datenbankabzug allein genuegt nicht mehr, um ein
+   * Passwort offline durchzuprobieren (Krypto-Review K-3, Weg 1).
+   *
+   * WARUM HKDF UND NICHT „die beiden Werte aneinanderhaengen und hashen".
+   * HKDF ist genau fuer diesen Fall gemacht (RFC 5869): aus einem Geheimnis
+   * und einem zweiten Wert einen Schluessel fester Laenge bilden. Es liegt in
+   * WebCrypto, kostet keinen Fremdbestandteil und keine eigene Rechnung —
+   * und eine selbstgebaute Verknuepfung waere die Stelle, an der jemand in
+   * fuenf Jahren nachrechnen muesste, ob sie traegt.
+   *
+   * KEIN VORGABEWERT FUER `anteile`, DIESELBE HALTUNG WIE BEI DER RUNDENZAHL.
+   * Wer eine `edka1:`-Huelle oeffnen will und keinen Anteil hat, bekommt
+   * einen Fehler — keinen Rueckfall auf die Haelfte. Ein Rueckfall ergaebe
+   * einen Schluessel, der nicht passt, und der Fehlschlag saehe aus wie ein
+   * falsches Passwort. Genau diese Verwechslung soll S10 abschaffen.
+   */
+  const HUELLE_PRAEFIX = 'edka1:';
+  const HKDF_INFO = 'edka1|dk';
+
+  /** Die Anteil-Kennung im Praefix einer Huelle — oder null (Altfassung). */
+  function huelleKennung(huelle) {
+    const m = /^edka1:([0-9a-f]{8}):/.exec(String(huelle == null ? '' : huelle));
+    return m ? m[1] : null;
+  }
+
+  /**
+   * Der Datenschluessel zu DIESER Huelle.
+   *
+   * ENTSCHIEDEN WIRD AM PRAEFIX DER HUELLE, nicht am Zustand der Installation.
+   * Das ist der Unterschied zwischen „dieses Konto ist umgestellt" und „diese
+   * Installation liefert einen Anteil aus": Waehrend einer Rotation gilt
+   * beides gleichzeitig, aber je nur fuer einen Teil der Konten. Wer statt
+   * des Praefixes ANTEIL_STAND fragte, oeffnete waehrend einer Rotation die
+   * Haelfte der Huellen mit dem falschen Schluessel.
+   *
+   * @param haelfteHex erste Haelfte der PBKDF2-Ableitung (64 Hex)
+   * @param huelle     die Huelle, die geoeffnet werden soll
+   * @param anteile    KONTO_ANTEILE aus der Seite: { kennung: 64 hex } oder null
+   */
+  async function datenschluessel(haelfteHex, huelle, anteile) {
+    return datenschluesselZu(haelfteHex, huelleKennung(huelle), anteile);
+  }
+
+  /**
+   * Derselbe Datenschluessel, aber zu einer GENANNTEN Kennung.
+   *
+   * Gebraucht beim Umhuellen: Dort ist die Zielkennung bekannt (ANTEIL_KENNUNG),
+   * eine Huelle mit ihr aber noch nicht gebaut. Ohne diese Fassung muesste der
+   * Aufrufer ein Praefix zusammensetzen und es sich selbst wieder auseinander-
+   * nehmen lassen — eine Attrappe, die beim naechsten Formatwechsel bricht.
+   *
+   * `kennung === null` heisst „ohne Anteil": die Haelfte unveraendert.
+   */
+  async function datenschluesselZu(haelfteHex, kennung, anteile) {
+    if (kennung === null || kennung === undefined) { return haelfteHex; }
+    const hex = (anteile || {})[kennung];
+    if (!hex) {
+      /* Die Huelle gehoert zu einem Anteil, den diese Seite nicht ausliefert.
+       * Drei Lagen fuehren hierher, und `unlock.js` unterscheidet sie in der
+       * Meldung: der Anteil fehlt, er ist ein anderer, oder er wurde erneuert
+       * (Neuanfang). Keine davon ist ein falsches Passwort. */
+      const fehler = new Error('Der Server-Anteil zu dieser Schlüsselhülle '
+        + 'liegt nicht vor (Kennung ' + kennung + ').');
+      fehler.name = 'AnteilFehlt';
+      fehler.kennung = kennung;
+      throw fehler;
+    }
+    const ikm = await crypto.subtle.importKey(
+      'raw', fromHex(haelfteHex), 'HKDF', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits(
+      { name: 'HKDF', hash: 'SHA-256', salt: fromHex(hex), info: te.encode(HKDF_INFO) },
+      ikm, 256);
+    return toHex(bits);
   }
 
   /* ---- AES-256-GCM ----------------------------------------------------- */
@@ -175,6 +276,45 @@ const EdCrypto = (() => {
     const pt = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: raw.slice(0, 12) }, key, raw.slice(12));
     return td.decode(pt);
+  }
+
+  /* ---- Schlüsselhüllen: öffnen und bauen (S10, E-S10-08) ---------------
+   *
+   * WARUM DAFUER ZWEI EIGENE FUNKTIONEN UND NICHT `decrypt`/`encrypt`.
+   * `decrypt()` liest die Kennung als FASSUNG DES VERFAHRENS und weist alles
+   * ausser `edk1:` mit „neuere Programmfassung" ab. Eine Huelle traegt aber
+   * zwei verschiedene Dinge im Praefix: die Fassung UND, seit S10, die
+   * Kennung des Anteils. Beides in `decrypt()` zu vermengen hiesse, jedem
+   * Huellenwechsel eine Fehlermeldung mitzugeben — und die `pat_blob`-Seite
+   * mit einer Kennung zu belasten, die dort nie vorkommt.
+   *
+   * Die Trennung ist zugleich die Antwort auf die Frage, WO die Kennung
+   * ueberhaupt hingehoert: an die Huelle, nicht an den Datensatz. `encrypt()`
+   * und `decrypt()` bleiben deshalb Wort fuer Wort, wie sie waren.
+   */
+
+  /** Eine Huelle oeffnen — beide Fassungen und der Bestand ohne Praefix. */
+  async function huelleOeffnen(dkHex, huelle) {
+    const text = String(huelle == null ? '' : huelle);
+    /* Die Kennung wird hier nur ABGESCHNITTEN. Welcher Schluessel zu ihr
+     * gehoert, hat `datenschluessel()` eine Ebene darueber entschieden. */
+    return decrypt(dkHex, text.startsWith(HUELLE_PRAEFIX)
+      ? text.slice(text.indexOf(':', HUELLE_PRAEFIX.length) + 1)
+      : text);
+  }
+
+  /**
+   * Eine Huelle bauen — mit Anteil-Kennung oder ohne.
+   *
+   * `kennung` ist ANTEIL_KENNUNG aus der Seite: der Anteil, mit dem NEUE
+   * Huellen entstehen. Ist sie null (kein Anteil ausgeliefert, oder
+   * Demo-Konto), entsteht die Altfassung `edk1:` — der Weg bricht dann nicht,
+   * er stellt nur nicht um (E-S10-08).
+   */
+  async function huelleBauen(dkHex, ckHex, kennung) {
+    const roh = await encrypt(dkHex, ckHex);        // liefert `edk1:` + base64
+    if (!kennung) { return roh; }
+    return HUELLE_PRAEFIX + kennung + ':' + roh.slice(CHIFFRE_PRAEFIX.length);
   }
 
   /* ---- Wiederherstellungsschlüssel ------------------------------------ */
@@ -339,13 +479,24 @@ const EdCrypto = (() => {
    * Der Schlüssel ist in diesem Moment aber bekannt: Er wurde eine Zeile
    * vorher mit dem alten Datenschlüssel entpackt, um ihn neu zu verpacken. */
   const setContentKey = hex => sessionStorage.setItem(S_CK, hex);
+  /* SEIT S10 UEBER `huelleOeffnen()` UND NICHT MEHR UEBER `decrypt()`.
+   *
+   * Das ist die Zeile, an der S10 beinahe stillschweigend jede Anzeigeseite
+   * gesperrt haette. `decrypt()` weist jede Kennung ausser `edk1:` ab — eine
+   * `edka1:`-Huelle liefe hier also in den `catch` und damit auf `null`, und
+   * `null` heisst fuer die Aufrufer „gesperrt". Diese Funktion haengt an
+   * `EdKeyGuard.contentKey()`, und das benutzt JEDE Seite mit geschuetzten
+   * Angaben: Der Entsperrdialog waere nach der Umstellung bei jedem zweiten
+   * Seitenaufbau erschienen — beim ersten nicht, weil dort der Schluessel
+   * noch aus dem Vormerkfach kommt. Gefunden beim Gegenlesen des Konzepts
+   * (Fund F-1); der Katalog der „fuenf Stellen" zaehlt diese hier nicht mit. */
   async function getContentKey(wrapPw) {
     let ck = sessionStorage.getItem(S_CK);
     if (ck) return ck;
     const dk = getDataKey();
     if (!dk || !wrapPw) return null;
     try {
-      ck = await decrypt(dk, wrapPw);          // CK liegt als Hex im Wrap
+      ck = await huelleOeffnen(dk, wrapPw);     // CK liegt als Hex im Wrap
       sessionStorage.setItem(S_CK, ck);
       return ck;
     } catch (e) { return null; }               // Wrap passt nicht (z. B. nach Reset)
@@ -359,27 +510,38 @@ const EdCrypto = (() => {
    * Seitenwechsel, und der löscht alles, was nur im Speicher stand.
    *
    * WAS DARIN LIEGT
-   * Je Rundenzahl der Datenschlüssel UND das Auth-Token. Der Datenschlüssel
-   * liegt dort ohnehin schon (S_DK) — er entschlüsselt alle geschützten
-   * Angaben. Das Token kommt hinzu, weil die stille Anhebung es als Nachweis
-   * braucht: Ohne ihn könnte, wer eine offene Sitzung übernimmt, ein
+   * Je Rundenzahl die PBKDF2-HÄLFTE und das Auth-Token. Die Hälfte liegt dort
+   * ohnehin schon — aus ihr entsteht der Datenschlüssel, der alle geschützten
+   * Angaben öffnet. Das Token kommt hinzu, weil die stille Umstellung es als
+   * Nachweis braucht: Ohne ihn könnte, wer eine offene Sitzung übernimmt, ein
    * beliebiges neues Token setzen — das wäre nichts anderes als eine
    * Passwortänderung ohne Kenntnis des Passworts.
    *
-   * WIE LANGE
-   * Einen Seitenwechsel. Die erste Seite, die den Inhaltsschlüssel braucht,
-   * räumt das Fach ab (unlock.js). Beim Abmelden und bei jedem Anmeldeversuch
-   * wird es geleert.
+   * DAS FELD HIESS BIS S10 `dk` UND HEISST JETZT `hf`. Es hielt schon immer
+   * dieselben Bytes; seit S10 sind sie nicht mehr der Datenschlüssel, sondern
+   * dessen erste Zutat (E-S10-04). Ein Feld, das `dk` heißt und keiner ist,
+   * wird beim nächsten Mal wieder als einer benutzt. Ein Fach aus der Zeit
+   * davor liefert `holeAbleitungen()` als `null` zurück — dann erscheint der
+   * Entsperrdialog, und das ist das richtige Verhalten für eine Anmeldung,
+   * die über einen Deploy hinweg unterwegs war.
+   *
+   * SEIT S10 LIEGT ES NACH JEDER ANMELDUNG DA, nicht mehr nur bei mehreren
+   * Rundenzahlen (E-S10-07). Der Grund: Ob die Hülle dieses Kontos den Anteil
+   * braucht, weiß erst die angemeldete Seite — `login.php` kennt weder
+   * `KDF_ITER` noch `PAT_WRAP`. Das Fach ist damit einen Seitenwechsel lang
+   * belegt statt gar nicht; geräumt wird es unverändert von der ersten Seite,
+   * die den Inhaltsschlüssel braucht (unlock.js), beim Abmelden und bei jedem
+   * Anmeldeversuch.
    */
   const S_VOR = 'edkvor';
 
-  function merkeAbleitungen(datenschluessel, tokens) {
-    sessionStorage.setItem(S_VOR, JSON.stringify({ dk: datenschluessel, tk: tokens }));
+  function merkeAbleitungen(haelften, tokens) {
+    sessionStorage.setItem(S_VOR, JSON.stringify({ hf: haelften, tk: tokens }));
   }
   function holeAbleitungen() {
     try {
       const o = JSON.parse(sessionStorage.getItem(S_VOR) || 'null');
-      return (o && o.dk && o.tk) ? o : null;
+      return (o && o.hf && o.tk) ? o : null;
     } catch (e) { return null; }
   }
   const vergissAbleitungen = () => sessionStorage.removeItem(S_VOR);
@@ -781,6 +943,10 @@ const EdCrypto = (() => {
   }
 
   return { deriveKeys, encrypt, decrypt, randomHex,
+           /* Server-Anteil und Hüllen (S10) */
+           datenschluessel, datenschluesselZu,
+           huelleOeffnen, huelleBauen, huelleKennung,
+           HUELLE_PRAEFIX,
            newRecoveryCode, recoveryKeyHex,
            pruefeRecoveryCode, recoveryCodeMeldung, RC_CHARS, RC_LEN,
            contentKeyCheck, wrapFingerprint,

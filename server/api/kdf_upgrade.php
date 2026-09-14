@@ -160,12 +160,15 @@ $anteilKennung = anteil_ausgeliefert();
 $neuKennung    = $wrapPw === null ? null : huelle_anteil_kennung($wrapPw);
 $altKennung    = huelle_anteil_kennung($patWrapPw);
 
-if ($wrapPw !== null && $neuKennung !== $anteilKennung) {
-    /* Deckt beide Richtungen ab: eine Huelle auf dem ALTEN Anteil (Kennung
-     * gesetzt, aber nicht die aktuelle), eine Huelle OHNE Anteil, obwohl
-     * einer ausgeliefert wird, und eine Huelle MIT Anteil, obwohl keiner
-     * ausgeliefert wird. Alle drei sind ein Fehler des Browsers und keine
-     * Lage, die der Server stillschweigend speichern darf. */
+/* DIESELBE PRUEFUNG WIE AN DEN DREI ANDEREN SCHREIBWEGEN (Fund F-3). Sie
+ * deckt beide Richtungen ab: eine Huelle auf dem ALTEN Anteil, eine Huelle
+ * OHNE Anteil, obwohl einer ausgeliefert wird, und eine Huelle MIT Anteil,
+ * obwohl keiner ausgeliefert wird. Alle drei sind ein Fehler des Browsers
+ * und keine Lage, die der Server stillschweigend speichern darf.
+ *
+ * Das Demo-Konto ist hier schon oben ausgestiegen — der Parameter steht
+ * trotzdem, damit die Aufrufe an allen vier Stellen gleich aussehen. */
+if (huelle_pw_pruefen($wrapPw, demo_ist_demo($userId)) !== null) {
     json_out(['error' => 'anteil_kennung'], 400);
 }
 

@@ -116,6 +116,10 @@ if (preg_match('/^[a-f0-9]{64}$/', $token)) {
 // Inhaltsschluessel — dann ist dies die Erstvergabe.
 $erstvergabe = $row !== null && $row['pat_wrap_rc'] === null;
 
+/* Die Kontonummer des Tokens — gebraucht fuer die Huellenpruefung unten und
+ * fuer die Konstanten der Seite. Das Demo-Konto ist ausgenommen (E-P1-19). */
+$pwUserIdPruef = $row !== null ? (int)$row['user_id'] : 0;
+
 $error = null; $done = false;
 if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $neuTok  = (string)($_POST['new_token'] ?? '');
@@ -140,6 +144,19 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
             : 'Der Wiederherstellungsschlüssel passt nicht. Es wurde nichts geändert.';
     } elseif ($erstvergabe && !preg_match(WRAP_RE, $wrapRc)) {
         $error = 'Die Schlüssel konnten nicht erzeugt werden. Es wurde nichts geändert.';
+    } elseif (($huellenFehler = huelle_pw_pruefen($wrapPw, demo_ist_demo($pwUserIdPruef)))
+              !== null) {
+        /* SEIT S10 (E-S10-08, Fund F-3): Die neue Huelle muss zum AKTUELLEN
+         * Server-Anteil gehoeren — oder zu keinem, wenn keiner ausgeliefert
+         * wird. Ohne diese Zeile koennte ein Reset waehrend einer Rotation
+         * eine Huelle auf dem ALTEN Anteil schreiben; unbrauchbar wuerde sie
+         * erst, wenn der alte Wert aus config.php verschwindet. */
+        $error = $huellenFehler;
+    } elseif ($erstvergabe
+              && ($huellenFehler = huelle_rc_pruefen($wrapRc)) !== null) {
+        /* Und die Wiederherstellungs-Huelle darf NIE am Anteil haengen — sie
+         * ist der Rueckweg fuer genau den Fall, dass er verloren ist. */
+        $error = $huellenFehler;
     } elseif ($keyChk !== '' && !preg_match('/^[0-9a-f]{32}$/', $keyChk)) {
         $error = 'Die Prüfsumme des Inhaltsschlüssels ist unbrauchbar. Es wurde nichts geändert.';
     } elseif (!$erstvergabe && $chkSoll !== null && $keyChk !== $chkSoll) {
@@ -460,6 +477,8 @@ if (ERSTVERGABE) {
       // Neues Konto: immer der Zielwert (M2-01). Es gibt keinen Altbestand,
       // der beruecksichtigt werden muesste.
       const k    = await EdCrypto.deriveKeys(pw1, salt, KDF_ITER_ZIEL);
+      const dk   = await EdCrypto.datenschluesselZu(k.haelfteHex, ANTEIL_KENNUNG,
+                                                    KONTO_ANTEILE);
       const ck   = EdCrypto.randomHex(32);          // Inhaltsschluessel
       const rc   = EdCrypto.newRecoveryCode();
       const rk   = await EdCrypto.recoveryKeyHex(rc);
@@ -467,7 +486,12 @@ if (ERSTVERGABE) {
       document.getElementById('new_salt').value  = salt;
       document.getElementById('new_iter').value  = KDF_ITER_ZIEL;
       document.getElementById('new_token').value = k.authToken;
-      document.getElementById('wrap_pw').value   = await EdCrypto.encrypt(k.dataKeyHex, ck);
+      document.getElementById('wrap_pw').value   =
+        await EdCrypto.huelleBauen(dk, ck, ANTEIL_KENNUNG);
+      /* DIE WIEDERHERSTELLUNGS-HUELLE BEKOMMT KEINEN ANTEIL (E-S10-04) — hier
+       * steht deshalb `encrypt()` und nicht `huelleBauen()`. Sie ist der
+       * Rueckweg fuer den Fall, dass der Anteil verloren ist; haengte sie
+       * selbst daran, gaebe es keinen. */
       document.getElementById('wrap_rc').value   = await EdCrypto.encrypt(rk, ck);
       // Pruefsumme des Inhaltsschluessels: Sie wird hier erstmals gesetzt und
       // ist ab jetzt der Massstab, an dem jedes spaetere Umpacken gemessen
@@ -559,13 +583,17 @@ if (ERSTVERGABE) {
       state.textContent = 'Neues Passwort wird eingerichtet …';
       const salt = EdCrypto.randomHex(16);
       // Zuruecksetzen baut die Ableitung vollstaendig neu auf — also gleich
-      // mit dem Zielwert (M2-01).
+      // mit dem Zielwert (M2-01) und, seit S10, mit dem AKTUELLEN
+      // Server-Anteil (E-S10-08).
       const k    = await EdCrypto.deriveKeys(pw1, salt, KDF_ITER_ZIEL);
+      const dk   = await EdCrypto.datenschluesselZu(k.haelfteHex, ANTEIL_KENNUNG,
+                                                    KONTO_ANTEILE);
 
       document.getElementById('new_salt').value  = salt;
       document.getElementById('new_iter').value  = KDF_ITER_ZIEL;
       document.getElementById('new_token').value = k.authToken;
-      document.getElementById('wrap_pw').value   = await EdCrypto.encrypt(k.dataKeyHex, ck);
+      document.getElementById('wrap_pw').value   =
+        await EdCrypto.huelleBauen(dk, ck, ANTEIL_KENNUNG);
       document.getElementById('key_check').value = await EdCrypto.contentKeyCheck(ck);
 
       form.dataset.ready = '1';

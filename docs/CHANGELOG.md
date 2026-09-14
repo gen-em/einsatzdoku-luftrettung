@@ -14,6 +14,89 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.0.0] — 2026-09-14
+
+Schritt 9b (**S10 — Sicherheit**, R78), zweites Arbeitspaket: der Browser
+benutzt den Server-Anteil. **Das ist die Hauptstufe von S10.**
+
+### Web — der Datenschlüssel hängt jetzt wirklich am Server-Anteil
+
+**Was 19.7.0 vorbereitet hat, wird hier wahr.** Die erste Hälfte der
+PBKDF2-Ableitung ist nicht mehr selbst der Datenschlüssel; dazwischen steht
+HKDF-SHA256 mit dem Anteil dieses Kontos. Jede Schlüsselhülle wechselt dabei
+ihr Format von `edk1:` auf `edka1:<kennung>:` — **still, beim nächsten
+Anmelden**. Niemand gibt etwas ein, niemand sieht einen Dialog, kein Datensatz
+wird angefasst: Der Inhaltsschlüssel bleibt derselbe, nur seine Hülle ist eine
+andere. Deshalb bleibt auch `pat_key_check` gleich, und deshalb ist ein
+abgebrochener Versuch folgenlos.
+
+**Warum die Hauptnummer.** Nicht wegen des Datenmodells — es bleibt
+unangetastet, und eine Migration gibt es nicht. Sondern weil sich die
+Schlüsselkette der Anwendung ändert: Wer die Datenbank hat, hatte bis 19.7.0
+alles, was er zum Durchprobieren eines Passworts braucht. Ab jetzt nicht mehr.
+
+**`login.php` setzt den Datenschlüssel nicht mehr selbst**, auch nicht bei
+einer einzigen Rundenzahl. Bis 19.7.0 fehlte ihm nur eine Angabe: welche
+Rundenzahl gilt. Jetzt fehlt eine zweite — ob die Hülle dieses Kontos den
+Anteil braucht, steht in *ihrem* Präfix, und die kennt erst die angemeldete
+Seite. Eine Anmeldeseite, die den Schlüssel setzt, ohne die Hülle gesehen zu
+haben, rät. Das Vormerkfach liegt dafür nach jeder Anmeldung einen
+Seitenwechsel lang im `sessionStorage` statt gar nicht; geräumt wird es
+unverändert von der ersten Seite, die den Inhaltsschlüssel braucht.
+
+**Die Meldung sagt endlich, was los ist.** Wenn der Anteil fehlt oder ein
+anderer ist, ließ sich das bisher nicht von einem falschen Passwort
+unterscheiden — und es trifft *alle Konten gleichzeitig*. Der Entsperrdialog
+nennt jetzt die erwartete Kennung („Der Server-Anteil der Verschlüsselung
+fehlt oder ist nicht der, mit dem die Hüllen gebaut wurden (Kennung `ab12cd34`
+erwartet)"), und nach einem Neuanfang sagt er stattdessen, dass der
+Wiederherstellungsschlüssel hilft. „Passwort falsch" bei einem richtigen
+Passwort ist die teuerste Auskunft, die diese Anwendung geben kann: Sie
+schickt die NutzerIn in den Reset und die Administration auf die falsche
+Fährte.
+
+**Drei Funde aus dem Gegenlesen des Konzepts sind mit behoben**, und alle drei
+wären teuer geworden:
+
+- **`EdCrypto.getContentKey()` rief `decrypt()` unmittelbar** — und das weist
+  jede Kennung außer `edk1:` ab. Über `EdKeyGuard.contentKey()` hätte das
+  **jede Anzeigeseite** gesperrt, und zwar erst beim *zweiten* Seitenaufbau:
+  Der erste bekommt den Schlüssel aus dem Vormerkfach. Ein Fehler, der beim
+  Ausprobieren nicht auftritt und im Betrieb sofort. Der Katalog der „fünf
+  Stellen" im Konzept zählt diese hier nicht mit.
+- **`WRAP_RE` prüfte beide Hüllen mit einer Regel.** Seit 19.7.0 nahm sie
+  `edka1:` an — damit auch für `pat_wrap_rc`, das nie am Anteil hängen darf.
+  Eine `edka1:`-Wiederherstellungshülle wäre der Verlust genau des Rückwegs,
+  den die Zusage verspricht, und man sähe es dem Feld nicht an, bis es zu spät
+  ist. Jetzt zwei Ausdrücke: `WRAP_PW_RE` und `WRAP_RC_RE`.
+- **Die Kennungsprüfung saß an einem von vier Schreibwegen** für
+  `pat_wrap_pw`. Nachgezählt: `pw_handling.php` zweimal (Erstvergabe, Reset),
+  `einstellungen.php` (Passwortwechsel), `api/kdf_upgrade.php`. Jetzt an allen
+  vier, über *eine* Funktion — „Feldkatalog statt Sonderfall" gilt auch für
+  Prüfungen.
+
+**`deriveKeys()` liefert `haelfteHex` statt `dataKeyHex`.** Das fasst jede
+Aufrufstelle an, und genau deshalb ist es so: Ein Feld, das „dataKey" heißt
+und keiner ist, wird beim nächsten Mal wieder als einer benutzt.
+`grep dataKeyHex server/` ergibt 0.
+
+**Das Demo-Konto bleibt außen vor** und behält seine `edk1:`-Hülle — dieselbe
+Begründung wie bei der Rundenzahl: Die Fixture muss auf jeder Installation
+aufgehen.
+
+**Gemessen, nicht geschätzt.** Die zusätzliche HKDF-Ableitung kostet im
+Browser **unter 0,12 ms** — sie läuft einmal je Anmeldung und ist neben
+600 000 PBKDF2-Runden nicht zu bemerken. Die Zahl stammt aus 500 Ableitungen
+am Stück: eine Einzelmessung liegt unter dem Raster, auf das die Engines
+`performance.now()` gegen Seitenkanäle grob stellen, und hätte nur „0,000 ms"
+gesagt.
+
+**Neu: `tools/anteilprobe/umstellungslauf.mjs`** — die eine Frage, die kein
+anderes Prüfmittel beantworten kann: Stellt der *Browser* von selbst um? Der
+Lauf setzt seine Voraussetzung selbst her (`huelle_stellen.py` stellt die
+Hülle des Prüfkontos auf `edk1:` zurück), sonst misst der zweite Aufruf etwas
+anderes als der erste.
+
 ## [Web 19.7.0] — 2026-09-14
 
 Schritt 9b (**S10 — Sicherheit**, R78), erstes Arbeitspaket: die Grundlage im

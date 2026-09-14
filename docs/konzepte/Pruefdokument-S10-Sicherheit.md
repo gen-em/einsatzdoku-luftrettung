@@ -13,11 +13,11 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **AP1 erledigt** (Web 19.7.0), AP2 als Nächstes. |
-> | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe (Abschnitt 2) |
+> | Stand | 14.09.2026 — **AP2 erledigt** (Web 20.0.0, die Hauptstufe), AP3 als Nächstes. |
+> | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines**, dazu alles aus AP1 erneut (Abschnitt 2) |
 > | Offen | P-01 bis P-14 |
 > | Fragen | keine |
-> | Fehlerfunde | keine in der Anwendung; **ein Befund am Prüfstand** (F-S10-U-01, Abschnitt 4) |
+> | Fehlerfunde | **drei in der Anwendung** (F-1 bis F-3, im Gegenlesen gefunden, in AP2 behoben); **fünf am Prüfstand** (F-S10-U-01, F-11 bis F-14) |
 > | Prüfumgebung | PHP **8.4.19** (CLI, NTS) · MariaDB **10.11.14** · Python **3.11.15** · Node **22.22.2** · Playwright **1.56.1** mit drei Engines: Chromium **141.0.7390.37**, Firefox **142.0.1**, WebKit **26.0** · lokale Installation über `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto; `admin@gen-em.org` und `demo@gen-em.org` mit den Vorgabekennwörtern) |
 
 ---
@@ -39,7 +39,24 @@ ist Buchführung plus eine `tools/`-Änderung, und beides ist in Abschnitt 2 mit
 Zahl belegt. Die drei Punkte oben bleiben unverändert stehen; sie hängen an
 Paketen, die noch nicht gebaut sind.
 
-**Stand nach AP1 — drei Dinge, die hier nicht geprüft werden konnten:**
+**Stand nach AP2 — was weiterhin offen ist.** Punkt 1 von AP1 ist damit
+**erledigt**: Der Umstellungslauf misst jetzt im echten Browser, dass
+`unlock.js` von selbst umstellt, und zwar in allen drei Engines. Offen
+bleiben:
+
+1. **Die Zustände `abweichend` und `Rotation` an der Oberfläche.** Die
+   Anteilprobe stellt sie in der Zustandsmaschine her, und `unlock.js` hat die
+   Meldungen dafür — **ausgelöst wurden sie noch nicht.** Dazu braucht es die
+   Karte aus AP3 (Anteil wechseln, Kennung verstellen); vorher gibt es keinen
+   Bedienweg, der sie herstellt. → **AP3**, und dort ausdrücklich zu messen.
+2. **`config.php` der echten Installation** (Beschreibbarkeit, OPcache des
+   Hosters) → **P-01** und **P-06**.
+3. **Die Umstellung an echtem Bestand.** Gemessen ist sie an
+   `umlauf-csv@gen-em.org` mit 83 Einsätzen (80 mit verschlüsseltem Block,
+   alle 80 nach der Umstellung geöffnet). Auf luftrettung.net liegt mehr →
+   **P-03**.
+
+**Stand nach AP1 — drei Dinge, die dort nicht geprüft werden konnten:**
 
 1. **Der Browser benutzt den Anteil noch nicht.** Das ist kein Versäumnis,
    sondern der Zuschnitt von AP1: Es gibt in dieser Stufe keinen Weg, auf dem
@@ -103,6 +120,42 @@ gemessen; beide fassen die Schlüsselkette von einem Ende zum anderen an.
 Attrappe hätte bauen müssen und `sitzung.py` an der ersten `edka1:`-Hülle
 gescheitert wäre. HKDF ist gegen Prüfvektor 1 aus RFC 5869 nachgerechnet.
 
+**AP2 — Browser, stille Umstellung (Web 20.0.0, die Hauptstufe).** Der
+Datenschlüssel hängt jetzt tatsächlich am Server-Anteil, und jede Hülle
+wechselt ihr Format still beim nächsten Anmelden. Fünf Stellen im Browser
+gehen über drei gemeinsame Funktionen; `login.php` setzt den Datenschlüssel
+nie mehr selbst.
+
+*Was die Zahlen sagen.* Der neue **Umstellungslauf** misst im echten Browser,
+was kein anderes Prüfmittel messen kann: **16 von 16** in allen drei Engines,
+je zweimal gefahren. Die beiden Zahlen, auf die es ankommt, stehen darin —
+**80 von 80** verschlüsselten Blöcken lassen sich nach der Umstellung öffnen
+(wäre einer dabei, der es nicht tut, wären die Daten dieses Kontos verloren),
+und beim **zweiten** Anmelden ruft der Browser `kdf_upgrade.php` **0**-mal
+(die Umstellung ist ein einmaliger Vorgang, kein Dauerzustand).
+
+*Die gemessene Zahl aus dem Konzept.* Die zusätzliche HKDF-Ableitung kostet
+je Ableitung **0,023–0,154 ms** — Chromium 141 rund 0,025, WebKit 26 rund
+0,10, Firefox 142 rund 0,14. Erwartet waren „unter 5 ms"; gemessen ist es
+zwei Größenordnungen darunter. Sie läuft einmal je Anmeldung, neben 600 000
+PBKDF2-Runden. **Als Block gemessen (500 Ableitungen am Stück), nicht je
+Ableitung:** Eine Einzelmessung liegt unter dem Raster, auf das die Engines
+`performance.now()` gegen Seitenkanäle grob stellen — sie hätte „0,000 ms"
+gesagt, und das wäre eine Aussage über die Uhr gewesen, nicht über die
+Rechnung.
+
+*Drei Funde in der Anwendung sind mit behoben* (F-1 bis F-3, Konzept
+Abschnitt 6). Alle drei stammen aus dem Gegenlesen **vor** dem Bauen, keiner
+aus einem Prüfmittel — und alle drei hätten sich erst im Betrieb gezeigt:
+F-1 beim *zweiten* Seitenaufbau nach dem Anmelden, F-2 erst beim Verlust des
+Anteils, F-3 erst bei einer Rotation.
+
+*Vier weitere Funde betreffen den Prüfstand* (F-11 bis F-14), und drei davon
+sahen aus wie ein Fehler der Anwendung: die Mengenbremse des Demo-Kontos, die
+nie einlaufende Netzruhe hinter dem Egress-Filter und der einzelne PHP-Prozess,
+der eine Anfrage zur Zeit bedient. **Sie sind der Grund, warum der Lauf in
+drei Engines fährt** — zwei der drei traten in Chromium gar nicht auf.
+
 ---
 
 ## 2. Maschinelle Prüfungen (Mittel und Zahl)
@@ -127,9 +180,15 @@ gescheitert wäre. HKDF ist gegen Prüfvektor 1 aus RFC 5869 nachgerechnet.
 | AP1 | Kreisläufe (R24) | csv / edbak, unerklärte Abweichungen | **9120/0** und **287 687/0** |
 | AP1 | `tools/screenshots/` (5 Seiten × 8 Breiten) | Überlauf / Konsole / Knopfhöhe | 48 Bilder, **0/0/0** |
 | AP1 | `tools/linkprobe/` | Verweise / unbekannte Abweichungen | **117 / 0** |
-| AP2 | Browserlauf am Referenzbestand | Umstellung `edk1:` → `edka1:`, Aufrufe von `kdf_upgrade.php` beim zweiten Anmelden | / 0 |
-| AP2 | HKDF-Dauer im Browser | ms je Ableitung, Gerät nennen | |
-| AP2 | Bilderlauf | berührte Seiten × Breiten × Bedienhöhen, Überlauf / Konsole / Knopfhöhe | 0/0/0 |
+| AP2 | `umstellungslauf.mjs`, 3 Engines × 2 Läufe | Umstellung `edk1:` → `edka1:` durch den **Browser** | **16 von 16** je Lauf, **6/6** Läufe grün |
+| AP2 | dasselbe, Schritt 1 / 2 | `kdf_upgrade.php` beim ersten / zweiten Anmelden | **1 Aufruf (200)** / **0 Aufrufe** |
+| AP2 | dasselbe, Schritt 3 | verschlüsselte Blöcke nach der Umstellung geöffnet | **80 von 80** |
+| AP2 | dasselbe, Schritt 6 | Demo-Konto bleibt `edk1:`, Endpunkt übersprungen | **5 von 5** |
+| AP2 | HKDF-Dauer im Browser (500 Ableitungen am Stück) | ms je Ableitung, Engine genannt | Chromium 141 **0,023–0,025** · WebKit 26 **0,106–0,114** · Firefox 142 **0,136–0,154** |
+| AP2 | `grep -ro dataKeyHex server/` | Vorkommen des alten Namens | **0 im Code** (2 in der Versionserzählung) |
+| AP2 | Anteilprobe + Endpunktprobe (Regression nach F-2/F-3) | Serverseite | **69 von 69** · **33 von 33** |
+| AP2 | Klickprobe · Kreisläufe | Regression | **43 von 43** · **9120/0** und **287 687/0** |
+| AP2 | Bilderlauf (5 Seiten × 8 Breiten) | Überlauf / Konsole / Knopfhöhe | 48 Bilder **0/0/0** |
 | AP3 | Browserlauf | Anlegen, Nachtragen falsch/richtig, Rotation, Neuanfang | |
 | AP3 | Kontraste | Paare, verfehlt | |
 | AP4 | `unzip -p` | Teile mit `edsk1:` / Teile gesamt; `"email"`-Treffer im Rohtext | n/n · 0 |
@@ -168,6 +227,24 @@ gescheitert wäre. HKDF ist gegen Prüfvektor 1 aus RFC 5869 nachgerechnet.
 ## 4. Fehlerfunde während der Umsetzung
 
 *Je mit Beleg und Behebung (Konzept Abschnitt 6 hält die nicht-blockierenden).*
+
+**F-1 bis F-3 — drei Funde in der Anwendung, im Gegenlesen gefunden, in AP2
+behoben.** Sie stehen im Konzept, Abschnitt 6, mit Beleg. Was sie verbindet:
+**Keiner wäre von einem Prüfmittel gefunden worden, und jeder hätte sich erst
+im Betrieb gezeigt** — F-1 beim *zweiten* Seitenaufbau nach dem Anmelden
+(der erste bekommt den Schlüssel aus dem Vormerkfach), F-2 erst beim Verlust
+des Server-Anteils, F-3 erst bei einer Rotation. Das ist der Ertrag des
+adversarischen Gegenlesens **vor** dem Bauen.
+
+**F-11 bis F-14 — vier Funde am Prüfstand** (AP2, alle behoben; Konzept
+Abschnitt 6). **Drei davon sahen aus wie ein Fehler der Anwendung:** die
+Mengenbremse des Demo-Kontos (der Lauf wartete drei Minuten und meldete
+„Timeout", während der Grund auf der Seite stand), die nie einlaufende
+Netzruhe hinter dem Egress-Filter, und `php -S`, das eine Anfrage zur Zeit
+bedient (ein offener zweiter Tab ließ den nächsten Schritt minutenlang warten
+auf eine Seite, die einzeln in 1,7 s da ist). **Zwei der vier traten in
+Chromium gar nicht auf** — sie sind der Beleg dafür, wofür die drei Engines
+seit Web 19.5.1 da sind.
 
 **F-S10-U-01 — WebKit lag im Abbild und startete nicht** (AP0, 14.09.2026,
 behoben). *Befund:* Seit AP3b (Backlog Nr. 183) fahren Bilderlauf, Klickprobe

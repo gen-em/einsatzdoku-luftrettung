@@ -368,27 +368,36 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
      * eingefroren, und zwar doppelt so lange wie gewohnt. */
     const runden = Array.isArray(d.iter) && d.iter.length ? d.iter : [310000];
     state.textContent = 'Schlüssel werden abgeleitet …';
-    const tokens = {}, datenschluessel = {};
+    const tokens = {}, haelften = {};
     for (const it of runden) {
       const k = await EdCrypto.deriveKeys(pw, d.salt, it);
       tokens[it] = k.authToken;
-      datenschluessel[it] = k.dataKeyHex;
+      haelften[it] = k.haelfteHex;
     }
     document.getElementById('toks').value = JSON.stringify(tokens);
 
-    /* Der Datenschlüssel kann erst gesetzt werden, wenn feststeht, welche
-     * Rundenzahl gilt — und das weiß erst die nächste, angemeldete Seite
-     * (KDF_ITER aus auth_guard.php). Bei nur einer Zahl gibt es nichts zu
-     * entscheiden, dann läuft es wie bisher.
+    /* ---- IMMER ins Vormerkfach, seit S10 (E-S10-07) ---------------------
+     *
+     * Diese Seite setzt den Datenschlüssel NICHT MEHR SELBST, und zwar auch
+     * dann nicht, wenn nur eine Rundenzahl in Frage kommt.
+     *
+     * WARUM SIE ES NICHT MEHR KANN. Bis Web 19.7.0 fehlte ihr nur EINE
+     * Angabe: welche Rundenzahl für dieses Konto gilt. Bei einer einzigen Zahl
+     * gab es nichts zu entscheiden, und sie setzte den Schlüssel sofort. Seit
+     * S10 fehlt ihr eine zweite: Ob die Hülle dieses Kontos den Server-Anteil
+     * braucht, steht im PRÄFIX der Hülle — und die kennt erst die angemeldete
+     * Seite (`PAT_WRAP` aus auth_guard.php). Eine Anmeldeseite, die den
+     * Datenschlüssel setzt, ohne die Hülle gesehen zu haben, rät.
+     *
+     * WAS DAS KOSTET: Das Fach liegt jetzt nach jeder Anmeldung einen
+     * Seitenwechsel lang im sessionStorage statt gar nicht. Geräumt wird es
+     * unverändert von der ersten Seite, die den Inhaltsschlüssel braucht
+     * (unlock.js), beim Abmelden und bei jedem Anmeldeversuch.
      *
      * Die Ablage im Vormerkfach ist dasselbe Verfahren, das der
      * Passwortwechsel seit Web 4.5.0 benutzt (M2-07): Der neue Stand liegt
      * bereit, wird aber erst übernommen, wenn der Server ihn bestätigt hat. */
-    if (runden.length === 1) {
-      EdCrypto.setDataKey(datenschluessel[runden[0]]);
-    } else {
-      EdCrypto.merkeAbleitungen(datenschluessel, tokens);
-    }
+    EdCrypto.merkeAbleitungen(haelften, tokens);
     f.elements['password'].value = '';               // verlaesst den Browser nie
     f.dataset.ready = '1';
     state.textContent = '';

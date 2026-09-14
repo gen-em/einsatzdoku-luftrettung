@@ -20,10 +20,10 @@ Dateien.
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **AP1 erledigt (Web 19.7.0).** Konzept freigegeben; fünf Fragen (F-S10-1 bis -5) am 13.09.2026 mit dem Auftraggeber entschieden und als E-S10-03, -05, -12, -13, -14 übernommen. Keine offene Frage. |
+> | Stand | 14.09.2026 — **AP2 erledigt (Web 20.0.0, die Hauptstufe).** Konzept freigegeben; fünf Fragen (F-S10-1 bis -5) am 13.09.2026 mit dem Auftraggeber entschieden und als E-S10-03, -05, -12, -13, -14 übernommen. Keine offene Frage. |
 > | Entschieden | E-S10-01 bis E-S10-18 (Abschnitt 2), dazu E-S10-U-01 bis -03 aus der Umsetzung (Abschnitt 2a) |
-> | Offen | nichts. Zwei Zahlen werden **beim Bauen gemessen**, nicht hier gesetzt (Abschnitt 3, AP2 und AP4) |
-> | Umsetzung | **AP0 und AP1 erledigt, AP2 als Nächstes.** Sechs Arbeitspakete (Abschnitt 3), eines nach dem anderen; nach jedem Paket Statusblock hier, Prüfprotokoll (Abschnitt 5), Push (K7). Voraussetzung erfüllt: Backlog-Runde 3 (PR #43) **und** Mockup-Runde 9c (PR #44) sind gemergt; `origin/main` stand am 14.09.2026 auf `3886e26`, **Web 19.6.0** |
+> | Offen | nichts. **Eine der zwei gemessenen Zahlen steht:** HKDF im Browser (AP2). Die zweite — Paketgröße Fassung 3 — kommt mit AP4 |
+> | Umsetzung | **AP0 bis AP2 erledigt, AP3 als Nächstes.** Sechs Arbeitspakete (Abschnitt 3), eines nach dem anderen; nach jedem Paket Statusblock hier, Prüfprotokoll (Abschnitt 5), Push (K7). Voraussetzung erfüllt: Backlog-Runde 3 (PR #43) **und** Mockup-Runde 9c (PR #44) sind gemergt; `origin/main` stand am 14.09.2026 auf `3886e26`, **Web 19.6.0** |
 > | Fable-Schritte der Umsetzung | keine |
 
 > **Stand der Umsetzung**
@@ -32,7 +32,7 @@ Dateien.
 > |---|---|---|---|
 > | AP0 Ablage und Buchführung | **erledigt** 14.09.2026 | keine (nur `docs/`, `tools/`) | Rahmenplan Fassung **60**; Backlog-Vermerke an **3** Nummern (46, 139, 155); Containeraufbau **3 von 3** Engines |
 > | AP1 Grundlage Server | **erledigt** 14.09.2026 | **19.7.0** | Anteilprobe **69 von 69** + Endpunktprobe **33 von 33**; `php -l` **0** Fehler in 9 Dateien; Klickprobe **43 von 43**; Kreisläufe csv **9120/0** und edbak **287 687/0**; Bilderlauf 48 Bilder **0/0/0**; Wortliste **0/0/0**; Linkprobe **117/0** |
-> | AP2 Browser: Datenschlüssel mit Anteil, stille Umstellung | offen | **20.0.0** vorgesehen (Haupt) | |
+> | AP2 Browser: Datenschlüssel mit Anteil, stille Umstellung | **erledigt** 14.09.2026 | **20.0.0** (Haupt) | Umstellungslauf **16 von 16** in **drei Engines, je zweimal**; darin **80 von 80** Blöcken nach der Umstellung lesbar und **0** Aufrufe von `kdf_upgrade.php` beim zweiten Anmelden; HKDF **0,023–0,154 ms** je Ableitung; Anteilprobe **69 von 69** + Endpunktprobe **33 von 33**; Klickprobe **43 von 43**; Kreisläufe **9120/0** und **287 687/0**; Bilderlauf 48 Bilder **0/0/0**; Wortliste **0/0/0**; Linkprobe **117/0**; `dataKeyHex` **0 im Code** (2 in der Versionserzählung) |
 > | AP3 Betrieb: Schlüsselblatt, Nachtragen, Rotation, Status | offen | 20.1.0 vorgesehen | |
 > | AP4 Adminpakete versiegeln, `ftp` abschaffen | offen | 20.2.0 vorgesehen | |
 > | AP5 Prüfmittel und Referenzbestand | offen | keine (nur `tools/`) | |
@@ -447,6 +447,22 @@ sondern verhindert zweierlei:
   Solange AP1 keine umstellt, fällt das nicht auf — AP2 stellt um, und dann
   hätte es zwischen AP2 und AP5 stillgestanden.
 
+**E-S10-U-04 Die Hüllenprüfung steht an einer Stelle, nicht an vier**
+(14.09.2026, aus Fund F-3). Das Konzept nennt in E-S10-08 „eine Funktion für
+alle fünf Stellen" — gemeint ist der Browser. Serverseitig fehlte die
+Entsprechung: Die Prüfung, ob eine Hülle zum aktuellen Anteil gehört, stand
+nur in `api/kdf_upgrade.php`, während `pat_wrap_pw` an **vier** Stellen
+geschrieben wird. Sie liegt jetzt als `huelle_pw_pruefen()` in
+`serverkrypto_lib.php` und wird von allen vieren gerufen; `huelle_rc_pruefen()`
+daneben hält die Wiederherstellungs-Hülle vom Anteil fern.
+
+*Warum das keine Verschärfung ist, sondern das Gemeinte:* `CLAUDE.md` 4
+verlangt eine **gemeinsame Prüfschicht** — „alle Schreibwege, ohne Ausnahme".
+Eine Prüfung an einem von vier Wegen erfüllt das nicht; sie erweckt nur den
+Anschein. Dazu kommen zwei Ausdrücke statt eines (`WRAP_PW_RE`, `WRAP_RC_RE`),
+weil eine Regel für zwei Hüllen mit verschiedenen Zusagen früher oder später
+die falsche durchlässt.
+
 Vorgezogen sind: `hkdf_sha256()`, `datenschluessel()`, `huelle_kennung()`,
 `huelle_bauen()` und die Erweiterung von `entschluesseln()` auf das
 `edka1:`-Präfix in `krypto.py`; in `sitzung.py` das Lesen von
@@ -654,6 +670,19 @@ Wird je Paket fortgeschrieben: Mittel, Zahl, Stand. Leer bis AP1.
 | AP1 | `tools/screenshots/` (5 Seiten, 8 Breiten) | Überlauf / Konsolenfehler / Knopfhöhen | 48 Bilder, **0/0/0** |
 | AP1 | `tools/wortliste/` (alle fünf Bereiche) | Treffer / ungenutzte Ausnahmen / Fallen | **0/0/0** |
 | AP1 | `tools/linkprobe/` | Verweise / unbekannte Abweichungen | **117 / 0** |
+| AP2 | `tools/anteilprobe/umstellungslauf.mjs`, drei Engines × zwei Läufe | stille Umstellung im echten Browser | **16 von 16** je Lauf, **6 von 6** Läufen grün |
+| AP2 | darin Schritt 1 | `kdf_upgrade.php` beim **ersten** Anmelden | **1 Aufruf**, Status 200, **kein** Entsperrdialog |
+| AP2 | darin Schritt 2 | `kdf_upgrade.php` beim **zweiten** Anmelden | **0 Aufrufe** |
+| AP2 | darin Schritt 3 | verschlüsselte Blöcke nach der Umstellung geöffnet | **80 von 80** (83 Einträge, 80 mit Block) |
+| AP2 | darin Schritt 4 | **die gemessene Zahl:** HKDF je Ableitung (500 am Stück) | Chromium 141 **0,023–0,025 ms** · WebKit 26 **0,106–0,114 ms** · Firefox 142 **0,136–0,154 ms** (erwartet: unter 5 ms) |
+| AP2 | darin Schritt 5 | Entsperrdialog öffnet die `edka1:`-Hülle | **1 von 1** |
+| AP2 | darin Schritt 6 | Demo-Konto: `KONTO_ANTEILE` null, Hülle bleibt `edk1:`, Endpunkt übersprungen | **5 von 5** |
+| AP2 | `grep -ro dataKeyHex server/` | Vorkommen des alten Namens | **0 im Code**, 2 in der Versionserzählung |
+| AP2 | `tools/anteilprobe/probe.php --schreiben` und `endpunkt.py` | Regression der Serverseite nach F-2/F-3 | **69 von 69** und **33 von 33** |
+| AP2 | `tools/klickprobe/probe.mjs` | Regression über alle Bedienwege | **43 von 43** |
+| AP2 | Kreisläufe (R24) | csv / edbak | **9120/0** und **287 687/0** |
+| AP2 | `tools/screenshots/` (5 Seiten × 8 Breiten) | Überlauf / Konsole / Knopfhöhe | 48 Bilder **0/0/0** |
+| AP2 | `tools/wortliste/`, `tools/linkprobe/` | | **0/0/0** · **117/0** |
 
 ---
 
@@ -672,9 +701,13 @@ Oberfläche/Doku) und werden vor AP4 nachgeholt. Die Funde unten sind
 
 | Nr. | Fund | Wo | Entscheidung |
 |---|---|---|---|
-| F-1 | `EdCrypto.getContentKey()` ruft `decrypt()` unmittelbar und wirft damit an jeder `edka1:`-Hülle — auch über `EdKeyGuard.contentKey()`, das **jede** Anzeigeseite benutzt. Der Katalog der „fünf Stellen" in 1.2 zählt sie nicht mit | `crypto.js`, `keyguard.js` | **AP2.** `getContentKey()` geht über `huelleOeffnen()`. Ohne das wäre nach AP2 jede Seite gesperrt, und zwar erst beim zweiten Aufruf — der erste kommt aus dem Vormerkfach |
-| F-2 | `WRAP_RE` prüft `pat_wrap_pw` **und** `pat_wrap_rc`. Seit AP1 nimmt sie `edka1:` an — für `pat_wrap_rc` soll das nie gelten (E-S10-04), und nichts hält es auf | `validate_lib.php` | **AP2.** Zwei Ausdrücke statt einem, und eine gemeinsame Prüffunktion in `serverkrypto_lib.php`. Ein `edka1:`-`pat_wrap_rc` wäre der Verlust des Rückwegs — genau das, was die Zusage ausschließt |
-| F-3 | Die Kennungsprüfung sitzt an **einem von vier** Schreibwegen für `pat_wrap_pw`: `pw_handling.php` (Erstvergabe **und** Reset), `einstellungen.php` (Passwortwechsel) und `api/kdf_upgrade.php` — nur der letzte prüft | vier Dateien | **AP2.** Dieselbe Prüffunktion wie F-2 an allen vier. „Feldkatalog statt Sonderfall" gilt auch hier: eine Prüfung, die an drei Stellen fehlt, ist keine |
+| F-1 | `EdCrypto.getContentKey()` ruft `decrypt()` unmittelbar und wirft damit an jeder `edka1:`-Hülle — auch über `EdKeyGuard.contentKey()`, das **jede** Anzeigeseite benutzt. Der Katalog der „fünf Stellen" in 1.2 zählt sie nicht mit | `crypto.js`, `keyguard.js` | **Erledigt in AP2.** `getContentKey()` geht über `huelleOeffnen()`. Ohne das wäre nach AP2 jede Seite gesperrt, und zwar erst beim zweiten Aufruf — der erste kommt aus dem Vormerkfach |
+| F-2 | `WRAP_RE` prüft `pat_wrap_pw` **und** `pat_wrap_rc`. Seit AP1 nimmt sie `edka1:` an — für `pat_wrap_rc` soll das nie gelten (E-S10-04), und nichts hält es auf | `validate_lib.php` | **Erledigt in AP2.** `WRAP_PW_RE` und `WRAP_RC_RE`, dazu `huelle_pw_pruefen()` / `huelle_rc_pruefen()` in `serverkrypto_lib.php`. Ein `edka1:`-`pat_wrap_rc` wäre der Verlust des Rückwegs — genau das, was die Zusage ausschließt |
+| F-3 | Die Kennungsprüfung sitzt an **einem von vier** Schreibwegen für `pat_wrap_pw`: `pw_handling.php` (Erstvergabe **und** Reset), `einstellungen.php` (Passwortwechsel) und `api/kdf_upgrade.php` — nur der letzte prüft | vier Dateien | **Erledigt in AP2.** Dieselbe Prüffunktion an allen vier. „Feldkatalog statt Sonderfall" gilt auch hier: eine Prüfung, die an drei Stellen fehlt, ist keine |
+| F-11 | Die Mengenbremse des Demo-Kontos (E-P1-20: 20 Anmeldungen je Stunde) schlägt zu, wenn der Umstellungslauf mehrfach hintereinander fährt. Der Lauf blieb dann **drei Minuten** in der Zeitgrenze stehen und meldete „Timeout exceeded" — während auf der Anmeldeseite der wahre Grund stand | `tools/anteilprobe/umstellungslauf.mjs` | **Erledigt in AP2** (Prüfmittel, kein Anwendungsfehler). Der Lauf liest die Meldung und zählt den Demo-Teil als *nicht gemessen, mit Grund*. **Dieselbe Bremse erklärt den einen nicht reproduzierbaren Fehlschlag der Endpunktprobe vom selben Tag** |
+| F-12 | `waitUntil: 'networkidle'` läuft in Firefox und WebKit nie ein: Die Kartenkacheln liegen bei `tile.openstreetmap.org` und werden vom Egress-Filter abgewiesen, beide Engines versuchen es weiter. Chromium kam durch — ein Unterschied, den man **ohne die drei Motoren nie gesehen hätte** | dasselbe | **Erledigt in AP2.** Gewartet wird auf `EdCrypto`/`EdUnlock` statt auf Netzruhe |
+| F-13 | Jede Engine nennt einen abgebrochenen Ladevorgang anders: `ERR_ABORTED` (Chromium), `Load request cancelled` (WebKit), `NS_BINDING_ABORTED` (Firefox). Ein Filter auf die Chromium-Schreibweise meldet in den anderen beiden eine rote Zahl für harmloses Verhalten | dasselbe | **Erledigt in AP2.** Zwei Töpfe: Fehler der **Anwendung** werden gezählt, Fehler des **Prüfstands** genannt |
+| F-14 | `php -S` bedient **eine** Anfrage zur Zeit. Ein in Schritt 5 geöffneter zweiter Tab hielt mit seiner Karte die Leitung besetzt; Schritt 6 wartete daraufhin **minutenlang** auf eine Seite, die einzeln gemessen in **1,7 s** da ist | dasselbe | **Erledigt in AP2.** Der Tab wird sofort geschlossen. Drei der vier Prüfstandsfunde sahen aus wie ein Fehler der Anwendung und waren keiner — die teuerste Sorte, weil man am falschen Ende sucht |
 | F-4 | Nach dem Zurückspielen eines Komplettbackups steht der Anteil **immer** auf `abweichend` — das Backup bringt `app_state` mit, `config.php` aber nicht, und `install.php` würfelt einen neuen Anteil | `komplett_lib.php`, Runbook | **Kein Fehler, sondern der Zweck der Marke** — ohne sie sähe derselbe Zustand aus wie „Passwort falsch" für alle. **In AP1 dokumentiert:** Runbook 7 nennt den Fall als Regelfall nach Schritt 5, mit Griff und Rückweg |
 | F-5 | `E-S10-07` verlangt, dass `login.php` **immer** ins Vormerkfach legt — damit liegt das Anmelde-Token nach **jeder** Anmeldung im `sessionStorage`, heute nur bei mehreren Rundenzahlen (also nie) | `login.php`, `crypto.js` | **AP2, mit Ansage.** Das Fach wird von der ersten Seite geräumt, die den Inhaltsschlüssel braucht — aber „die erste Seite" ist nicht jede. Zu prüfen ist, ob eine Räumung auch ohne Hülle stattfindet; sonst bleibt das Token länger liegen als nötig |
 | F-6 | `SZ_PORTS` wird geprüft, nicht `SZ_PROTOKOLLE` — `ftp` aus der einen Liste zu streichen genügt nicht | `sicherungsziel_lib.php` | **AP4.** Vor dem Bauen nachzählen, an wie vielen Stellen `ftp` steht (die Gegenlesung nennt fünf allein in der Versandprobe) |

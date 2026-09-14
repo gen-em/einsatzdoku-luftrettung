@@ -4338,5 +4338,53 @@ declare(strict_types=1);
  * `anteil_zustand()` „nicht eingerichtet", es wird nichts ausgeliefert, und
  * alles laeuft wie vorher. Der Anteil entsteht erst, wenn ihn jemand anlegt;
  * die Karte dafuer kommt mit AP3, der Installer legt ihn ab sofort mit an.
+ *
+ * 20.0.0 IST DIE HAUPTNUMMER VON S10 — HIER HAENGT DER DATENSCHLUESSEL
+ * TATSAECHLICH AM SERVER-ANTEIL. Die erste Haelfte der PBKDF2-Ableitung ist
+ * nicht mehr selbst der Datenschluessel; zwischen ihr und ihm steht
+ * HKDF-SHA256 mit dem Anteil dieses Kontos. Jede Schluesselhuelle wechselt
+ * dabei ihr Format von `edk1:` auf `edka1:<kennung>:`, und zwar STILL beim
+ * naechsten Anmelden — niemand gibt etwas ein, niemand sieht einen Dialog.
+ *
+ * DAS IST DER UMBAU, FUER DEN DIE HAUPTNUMMER DA IST. Nicht wegen des
+ * Datenmodells — es bleibt unangetastet, und eine Migration gibt es NICHT —,
+ * sondern weil sich die Schluesselkette der Anwendung aendert. Wer die
+ * Datenbank hat, hatte bis 19.7.0 alles, was er zum Durchprobieren eines
+ * Passworts braucht. Ab 20.0.0 nicht mehr.
+ *
+ * WAS SICH IM BROWSER AENDERT. `EdCrypto` bekommt drei Funktionen
+ * (`datenschluessel()`, `huelleOeffnen()`, `huelleBauen()`), und die fuenf
+ * Stellen, die bisher `deriveKeys().dataKeyHex` + `decrypt()` riefen, gehen
+ * ueber sie: Anmeldung, Entsperrdialog, Passwortwechsel, Export-Passwortprobe
+ * und Reset. `deriveKeys()` liefert kein `dataKeyHex` mehr, sondern
+ * `haelfteHex` — der Name ist mitgewandert, weil ein Feld, das „dataKey"
+ * heisst und keiner ist, beim naechsten Mal wieder als einer benutzt wird.
+ *
+ * `login.php` SETZT DEN DATENSCHLUESSEL NICHT MEHR SELBST, auch nicht bei
+ * einer einzigen Rundenzahl. Ihm fehlt seit S10 eine zweite Angabe: Ob die
+ * Huelle dieses Kontos den Anteil braucht, steht in IHREM Praefix — und die
+ * kennt erst die angemeldete Seite. Das Vormerkfach liegt deshalb nach jeder
+ * Anmeldung einen Seitenwechsel lang im sessionStorage statt gar nicht.
+ *
+ * DREI FUNDE AUS DEM GEGENLESEN DES KONZEPTS SIND HIER MIT BEHOBEN, und alle
+ * drei waeren teuer geworden:
+ *   F-1  `EdCrypto.getContentKey()` rief `decrypt()` unmittelbar — das wirft
+ *        an jeder `edka1:`-Huelle. Ueber `EdKeyGuard.contentKey()` haette das
+ *        JEDE Anzeigeseite gesperrt, und zwar erst beim ZWEITEN Seitenaufbau
+ *        (der erste bekommt den Schluessel aus dem Vormerkfach).
+ *   F-2  `WRAP_RE` prueft beide Huellen mit EINER Regel. Seit 19.7.0 nahm sie
+ *        `edka1:` an — auch fuer `pat_wrap_rc`, das nie daran haengen darf.
+ *        Jetzt zwei Ausdruecke: `WRAP_PW_RE` und `WRAP_RC_RE`.
+ *   F-3  Die Kennungspruefung sass an EINEM von VIER Schreibwegen fuer
+ *        `pat_wrap_pw`. Jetzt an allen vier, ueber eine Funktion
+ *        (`huelle_pw_pruefen()`).
+ *
+ * GEMESSEN, NICHT GESCHAETZT: Die zusaetzliche HKDF-Ableitung kostet im
+ * Browser **unter 0,12 ms** (500 Ableitungen am Stueck, drei Engines; die
+ * Zahlen stehen im Changelog). Sie laeuft einmal je Anmeldung.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION — dieselbe Lage wie bei 19.7.0.
+ * Eine Installation ohne `kdf_anteil` verhaelt sich weiterhin wie vor S10;
+ * die Umstellung beginnt erst, wenn der Anteil angelegt wird.
  */
-const WEB_VERSION = '19.7.0';
+const WEB_VERSION = '20.0.0';

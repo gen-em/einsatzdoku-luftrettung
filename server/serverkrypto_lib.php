@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 
+/* WRAP_PW_RE und WRAP_RC_RE — die beiden Hüllen-Ausdrücke der gemeinsamen
+ * Prüfschicht (CLAUDE.md 4). Sie stehen dort und nicht hier, weil sie zu den
+ * Formaten der Anwendung gehören; gebraucht werden sie in
+ * `huelle_pw_pruefen()` weiter unten. */
+require_once __DIR__ . '/validate_lib.php';
+
 /**
  * DIE GEHEIMNISSE DES SERVERS — seit S10 sind es zwei.
  *
@@ -479,6 +485,70 @@ function anteil_ausgeliefert(): ?string
 {
     $z = anteil_zustand();
     return in_array($z['stand'], ['bereit', 'rotation'], true) ? $z['kennung'] : null;
+}
+
+/**
+ * Darf diese Passwort-Hülle so gespeichert werden? `null` = ja, sonst der Grund.
+ *
+ * DIE EINE PRÜFUNG FÜR ALLE VIER SCHREIBWEGE (S10, Fund F-3). `pat_wrap_pw`
+ * wird an vier Stellen geschrieben — `pw_handling.php` bei Erstvergabe und
+ * bei Reset, `einstellungen.php` beim Passwortwechsel und
+ * `api/kdf_upgrade.php` bei der stillen Umstellung. Nach AP1 prüfte nur der
+ * letzte, ob die Kennung im Präfix die aktuelle ist. Das genügt nicht: Ein
+ * Passwortwechsel während einer Rotation könnte eine Hülle auf dem ALTEN
+ * Anteil schreiben, und die wäre in dem Augenblick unbrauchbar, in dem
+ * `kdf_anteil_alt` aus `config.php` verschwindet — also genau dann, wenn die
+ * Statusseite meldet, es stehe niemand mehr auf dem alten.
+ *
+ * ZWEI RICHTUNGEN, EINE REGEL: Wird ein Anteil ausgeliefert, MUSS die Hülle
+ * seine Kennung tragen; wird keiner ausgeliefert, darf sie KEINE tragen. Der
+ * Server kann die Hülle nicht öffnen — was er prüfen kann, ist das Präfix,
+ * und für diesen Fehler genügt das.
+ *
+ * DAS DEMO-KONTO IST AUSGENOMMEN und muss es sein (E-P1-19): Es bekommt
+ * keinen Anteil, seine Hülle bleibt `edk1:`. Der Aufrufer sagt das mit
+ * `$istDemo`, statt dass diese Funktion `demo_lib.php` nachlädt — sie liegt
+ * unter `db.php` und soll dort nicht hinaufgreifen.
+ */
+function huelle_pw_pruefen(?string $wrap, bool $istDemo = false): ?string
+{
+    if ($wrap === null || $wrap === '') { return null; }
+    if (!preg_match(WRAP_PW_RE, $wrap)) {
+        return 'Die Schlüsselhülle hat ein unbrauchbares Format.';
+    }
+    $hat  = huelle_anteil_kennung($wrap);
+    $soll = $istDemo ? null : anteil_ausgeliefert();
+
+    if ($soll === null && $hat !== null) {
+        return 'Diese Schlüsselhülle nennt einen Server-Anteil, den diese '
+             . 'Installation nicht ausliefert. Es wurde nichts geändert.';
+    }
+    if ($soll !== null && $hat !== $soll) {
+        return 'Diese Schlüsselhülle gehört nicht zum aktuellen Server-Anteil '
+             . '(Kennung ' . $soll . ' erwartet). Es wurde nichts geändert.';
+    }
+    return null;
+}
+
+/**
+ * Dasselbe für die Wiederherstellungs-Hülle — sie trägt NIE einen Anteil.
+ *
+ * Der eigene Ausdruck (`WRAP_RC_RE`) tut das schon; diese Funktion ist der
+ * Ort, an dem die Begründung steht, und der Aufrufer, der beide Hüllen prüft,
+ * ruft zwei Funktionen statt einer Regel zweimal. Wer `pat_wrap_rc` je an den
+ * Anteil hängt, nimmt der Anwendung ihren Rückweg (E-S10-04).
+ */
+function huelle_rc_pruefen(?string $wrap): ?string
+{
+    if ($wrap === null || $wrap === '') { return null; }
+    if (huelle_anteil_kennung($wrap) !== null) {
+        return 'Die Wiederherstellungs-Hülle darf nicht am Server-Anteil '
+             . 'hängen — sie ist der Rückweg, wenn er verloren geht.';
+    }
+    if (!preg_match(WRAP_RC_RE, $wrap)) {
+        return 'Die Wiederherstellungs-Hülle hat ein unbrauchbares Format.';
+    }
+    return null;
 }
 
 /**

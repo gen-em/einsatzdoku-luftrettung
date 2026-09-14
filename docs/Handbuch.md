@@ -1794,6 +1794,23 @@ es nicht mehr.
 - Verschlüsselte Felder sind serverseitig nicht durchsuchbar; der Schutz wirkt
   gegen Datenbank-Diebstahl und Mitleser, prinzipbedingt nicht gegen einen
   vollständig übernommenen Server.
+- **Seit dem Sicherheitsschritt kommt ein zweites Stück dazu, und du merkst
+  nichts davon.** Der Schlüssel entsteht nicht mehr allein aus deinem
+  Passwort: Ein zweiter Wert, der **Server-Anteil**, liegt in einer
+  Einstellungsdatei auf dem Server und geht mit ein. Der Server kann damit
+  weiterhin **nichts** öffnen — ihm fehlt der Teil, der aus deinem Passwort
+  kommt. Was es ändert: Wer nur die Datenbank stiehlt, hat jetzt nicht mehr
+  alles, was er zum Durchprobieren deines Passworts bräuchte. Deine Anmeldung
+  bleibt, wie sie war; beim ersten Mal nach dem Update stellt der Browser
+  deine Schlüsselhülle still um, ohne dass du etwas tust.
+- **Wenn eine Meldung vom „Server-Anteil" spricht, ist nicht dein Passwort
+  schuld.** Steht beim Entsperren *„Der Server-Anteil der Verschlüsselung
+  fehlt oder ist nicht der, mit dem die Hüllen gebaut wurden"*, dann fehlt auf
+  dem Server eine Einstellung — bitte die Administration verständigen und
+  **nicht** das Passwort zurücksetzen. Es sind keine Daten verloren, und es
+  betrifft alle gleichzeitig. Heißt die Meldung dagegen *„Der Server-Anteil
+  wurde erneuert"*, hilft der **Wiederherstellungsschlüssel**: Damit setzt du
+  dein Passwort neu, und alles ist wieder da.
 - **Verschlüsselt sind nicht alle Daten, sondern diese:** Name, Geburtsdatum,
   Alter, Diagnose, Einsatznummer sowie Adresse, Koordinate und Beschreibung des
   Einsatzorts. **Im Klartext liegen dagegen:** die GPS-Daten, die Koordinate

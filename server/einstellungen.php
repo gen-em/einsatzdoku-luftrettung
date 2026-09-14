@@ -282,6 +282,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Der Inhaltsschlüssel konnte nicht umgepackt werden — '
                    . 'das Passwort wurde NICHT geändert. Bitte Seite neu laden '
                    . 'und erneut versuchen.';
+        } elseif ($patReady
+                  && ($huellenFehler = huelle_pw_pruefen($wrapPw,
+                        demo_ist_demo($userId))) !== null) {
+            /* SEIT S10 (E-S10-08, Fund F-3): Die neue Huelle muss zum
+             * AKTUELLEN Server-Anteil gehoeren. Ohne diese Zeile schriebe ein
+             * Passwortwechsel waehrend einer Rotation eine Huelle auf dem
+             * ALTEN Anteil — unbrauchbar in dem Augenblick, in dem der alte
+             * Wert aus config.php verschwindet. */
+            $error = $huellenFehler . ' Das Passwort wurde NICHT geändert.';
         } elseif ($patReady && $keyChk !== '' && !preg_match('/^[0-9a-f]{32}$/', $keyChk)) {
             $error = 'Die Prüfsumme des Inhaltsschlüssels ist unbrauchbar — '
                    . 'das Passwort wurde NICHT geändert.';
@@ -1399,17 +1408,25 @@ ui_seite_start(['titel' => 'Einstellungen',
       if (n1 !== f.elements['new2'].value) { st.textContent = 'Neue Passwörter ungleich.'; return; }
       st.textContent = 'Schlüssel werden neu abgeleitet…';
       try {
-        let oldDataKey = null;
         /* Das ALTE Passwort mit der Rundenzahl dieses Kontos ableiten, das
          * NEUE mit dem Zielwert (M2-01). Ein Passwortwechsel ist ohnehin ein
          * vollstaendiger Neuaufbau der Ableitung — er ist damit die zweite
          * Gelegenheit, bei der ein Konto die Anhebung mitnimmt, neben der
-         * stillen Anhebung beim Anmelden. */
+         * stillen Anhebung beim Anmelden.
+         *
+         * SEIT S10 GILT DASSELBE FUER DEN SERVER-ANTEIL (E-S10-08): Die alte
+         * Huelle wird mit dem Schluessel geoeffnet, den IHR Praefix verlangt;
+         * die neue entsteht immer mit dem AKTUELLEN Anteil. Ein
+         * Passwortwechsel stellt damit nebenbei um, auch wenn das Konto sich
+         * seit der Rotation nicht angemeldet hat. */
         const ok = await EdCrypto.deriveKeys(oldPw, KDF_SALT, KDF_ITER);
         document.getElementById('pw_oldtok').value = ok.authToken;
-        oldDataKey = ok.dataKeyHex;
+        const altDk = await EdCrypto.datenschluessel(ok.haelfteHex, PAT_WRAP,
+                                                     KONTO_ANTEILE);
         const salt = EdCrypto.randomHex(16);
         const nk = await EdCrypto.deriveKeys(n1, salt, KDF_ITER_ZIEL);
+        const neuDk = await EdCrypto.datenschluesselZu(nk.haelfteHex,
+                                                       ANTEIL_KENNUNG, KONTO_ANTEILE);
         document.getElementById('pw_newtok').value = nk.authToken;
         document.getElementById('pw_newsalt').value = salt;
         document.getElementById('pw_newiter').value = KDF_ITER_ZIEL;
@@ -1419,13 +1436,14 @@ ui_seite_start(['titel' => 'Einstellungen',
         if (PAT_WRAP) {
           let ck;
           try {
-            ck = await EdCrypto.decrypt(oldDataKey, PAT_WRAP);
+            ck = await EdCrypto.huelleOeffnen(altDk, PAT_WRAP);
           } catch (e) {
             st.textContent = 'Die geschützten Angaben lassen sich mit dem aktuellen '
                            + 'Passwort nicht entschlüsseln. Es wurde nichts geändert.';
             return;
           }
-          document.getElementById('pw_wrap').value = await EdCrypto.encrypt(nk.dataKeyHex, ck);
+          document.getElementById('pw_wrap').value =
+            await EdCrypto.huelleBauen(neuDk, ck, ANTEIL_KENNUNG);
           // Pruefsumme des Inhaltsschluessels mitsenden. Der Server kann die
           // Huelle nicht oeffnen und darum bisher nicht erkennen, ob darin
           // derselbe Schluessel steckt. Er lernt dadurch nichts ueber den
@@ -1455,7 +1473,7 @@ ui_seite_start(['titel' => 'Einstellungen',
          * Das Vormerkfach liegt im sessionStorage, also im selben Tab und nur
          * bis zu dessen Ende — dieselbe Lebensdauer wie der Schluessel, den
          * es ersetzen soll. */
-        sessionStorage.setItem('edk_neu', nk.dataKeyHex);
+        sessionStorage.setItem('edk_neu', neuDk);
         f.dataset.ready = '1';
         f.submit();
       } catch (e) { st.textContent = 'Fehler bei der Schlüsselableitung.'; }
@@ -2793,8 +2811,15 @@ ui_seite_start(['titel' => 'Einstellungen',
         }
         expState.textContent = 'Kontopasswort wird geprüft…';
         try {
+          /* Der Nachweis ist, dass sich die Hülle öffnen lässt — seit S10
+           * also über den Datenschlüssel aus Hälfte UND Server-Anteil
+           * (E-S10-08). Mit `decrypt()` scheiterte es hier an jeder
+           * `edka1:`-Hülle, und die Meldung behauptete dann „das ist nicht
+           * dein Kontopasswort" für ein richtiges Passwort. */
           const k = await EdCrypto.deriveKeys(pw, KDF_SALT, KDF_ITER);
-          await EdCrypto.decrypt(k.dataKeyHex, PAT_WRAP);
+          const dk = await EdCrypto.datenschluessel(k.haelfteHex, PAT_WRAP,
+                                                    KONTO_ANTEILE);
+          await EdCrypto.huelleOeffnen(dk, PAT_WRAP);
         } catch (e) {
           melde(expState, 'Das ist nicht dein Kontopasswort. Es wurde keine '
                                + 'Datei erzeugt.', 'fehler');

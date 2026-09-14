@@ -1139,6 +1139,17 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Design-Skizze für Weg B (Nr. 43, SP-9) zur Prüfung. Zuordnung: P6,
     R17 Stück 1.
 
+    *Vermerk 14.09.2026 (S10/AP2, Web 20.0.0):* **Der erste Punkt ist mit S10
+    kleiner geworden, und zwar messbar.** Die Begründung „nach S10 klein, weil
+    der Abzug allein dann nichts mehr nützt" ist ab Web 20.0.0 kein Vorgriff
+    mehr, sondern der Zustand: Der Datenschlüssel hängt am Server-Anteil aus
+    `config.php`, und ein Datenbankabzug ohne diese Datei reicht für einen
+    Offline-Angriff nicht. Argon2id bliebe der bessere Algorithmus, aber es
+    verteidigt jetzt gegen einen Angreifer, der ohnehin schon beides hat.
+    **Der zweite Punkt ist unberührt:** Der Inhaltsschlüssel liegt weiterhin
+    als Hex im `sessionStorage`, und daran ändert S10 nichts — der Anteil
+    schützt die Hülle, nicht den entpackten Schlüssel.
+
 150. **Der Cron-Befehl für den Job-Einstieg steht mit dem Repositoriumspfad in der Dokumentation.**
     *Aufgenommen 06.09.2026 vom Auftraggeber, geprüft gegen `main`.* Der
     Deploy legt den **Inhalt** von `server/` nach `./httpdocs/`

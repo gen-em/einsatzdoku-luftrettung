@@ -686,6 +686,41 @@ geht. Ebenso unberührt: die PBKDF2-Ableitung selbst, das Auth-Token,
 `auth_salt.php`, der Inhaltsschlüssel, jeder `pat_blob`, `pat_key_check`, das
 `.edbak`-Format und der Freigabeweg.
 
+*Die fünf Stellen im Browser* (E-S10-08). Alle gehen über dieselben drei
+Funktionen in `crypto.js` — `datenschluessel()`, `huelleOeffnen()`,
+`huelleBauen()` — statt über `deriveKeys().haelfteHex` + `decrypt()`:
+
+| Stelle | Datei | öffnet mit | baut mit |
+|---|---|---|---|
+| Anmeldung (stille Umstellung) | `unlock.js`, `loeseVormerkung()` | Präfix der alten Hülle | aktuellem Anteil |
+| Entsperrdialog | `unlock.js`, `frage()` | Präfix der Hülle | — |
+| Passwortwechsel | `einstellungen.php` | Präfix der alten Hülle | aktuellem Anteil |
+| Export-Passwortprobe | `einstellungen.php` | Präfix der Hülle | — |
+| Erstvergabe und Reset | `pw_handling.php` | `pat_wrap_rc` (**ohne** Anteil) | aktuellem Anteil |
+
+**Eine sechste kam beim Gegenlesen dazu:** `EdCrypto.getContentKey()` rief
+`decrypt()` unmittelbar und wäre an jeder `edka1:`-Hülle gescheitert. Da
+`EdKeyGuard.contentKey()` darauf aufsetzt, betrifft das **jede** Anzeigeseite
+— und zwar erst beim zweiten Seitenaufbau, weil der erste den Schlüssel aus
+dem Vormerkfach bekommt. Sie geht seit Web 20.0.0 ebenfalls über
+`huelleOeffnen()`.
+
+*Geöffnet wird nach dem Präfix der Hülle, nicht nach dem Zustand der
+Installation.* Das ist der Unterschied zwischen „dieses Konto ist umgestellt"
+und „diese Installation liefert einen Anteil aus": Während einer Rotation
+gilt beides gleichzeitig, aber je nur für einen Teil der Konten. Wer statt des
+Präfixes `ANTEIL_STAND` fragte, öffnete dann die Hälfte der Hüllen mit dem
+falschen Schlüssel. **Gebaut** wird dagegen immer mit dem *aktuellen* Anteil
+(`ANTEIL_KENNUNG`) — so stellt jeder Schreibweg nebenbei um.
+
+*Die Umstellung selbst* läuft über `api/kdf_upgrade.php` (Abschnitt oben):
+Der Browser öffnet die alte Hülle, baut sie mit dem aktuellen Anteil neu und
+schickt sie mit dem Anmelde-Token als Nachweis. Ein Fehlschlag bleibt still —
+die alte Hülle bleibt gültig. **`login.php` setzt den Datenschlüssel seit
+Web 20.0.0 nie mehr selbst:** Ob die Hülle den Anteil braucht, steht in ihrem
+Präfix, und das kennt erst die angemeldete Seite. Das Vormerkfach liegt
+deshalb nach jeder Anmeldung einen Seitenwechsel lang im `sessionStorage`.
+
 *Ausgeliefert wird nur an die angemeldete Sitzung* und nur der eigene Anteil:
 `auth_guard.php` stellt `$kontoAnteile`, `$anteilKennung` und `$anteilStand`
 bereit, `ui_krypto_bootstrap()` gibt sie als `KONTO_ANTEILE`,

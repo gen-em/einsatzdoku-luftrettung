@@ -72,6 +72,29 @@ def teil(name: str) -> None:
     print(f"\n{name}")
 
 
+def antwort(r):
+    """Die JSON-Antwort — oder ein lesbarer Befund statt eines Absturzes.
+
+    WARUM DAS HIER STEHT. Am 14.09.2026 ist dieser Lauf EINMAL beim Lesen
+    der Antwort gescheitert: Sie war kein JSON. Vier Laeufe danach
+    waren gruen, im Serverprotokoll standen 0 Antworten mit 5xx und keine
+    PHP-Meldung — die Ursache liess sich nicht feststellen, weil der
+    ROHTEXT nicht mehr da war. Eine Ausnahme, die die interessante Zeile
+    wegwirft, ist die teuerste Art zu scheitern.
+
+    Seither faengt die Probe das ab und zeigt Statuscode, Kopfzeile und die
+    ersten 300 Zeichen. Der naechste Fehlschlag ist damit ein Befund mit
+    Text statt eines Ratespiels.
+    """
+    try:
+        return r.json()
+    except ValueError:
+        print(f"  !! Antwort ist kein JSON — Status {r.status_code}, "
+              f"Content-Type {r.headers.get('Content-Type')!r}")
+        print(f"  !! Rohtext: {r.text[:300]!r}")
+        return {}
+
+
 def php(code: str) -> str:
     """Ein Stueck PHP gegen dieselbe Installation laufen lassen.
 
@@ -137,26 +160,26 @@ try:
     # genuegt, weil der Fehler im Praefix steckt.
     r = ruf(koerper(krypto.huelle_bauen(ck, dk_neu, "deadbeef")))
     pruefe("HTTP-Status", r.status_code, 400)
-    pruefe("Fehlerkennung", r.json().get("error"), "anteil_kennung")
+    pruefe("Fehlerkennung", antwort(r).get("error"), "anteil_kennung")
     pruefe("die Huelle in der Datenbank ist unveraendert",
            feld("pat_wrap_pw", uid), wrap_vorher)
 
     teil("E3. Eine Huelle OHNE Anteil wird abgewiesen, solange einer ausgeliefert wird")
     r = ruf(koerper(krypto.huelle_bauen(ck, s.haelfte, None)))
     pruefe("HTTP-Status", r.status_code, 400)
-    pruefe("Fehlerkennung", r.json().get("error"), "anteil_kennung")
+    pruefe("Fehlerkennung", antwort(r).get("error"), "anteil_kennung")
 
     teil("E4. Ein falsches alt_token wird abgewiesen (der Nachweis)")
     r = ruf(koerper(huelle_neu, token="0" * 64))
     pruefe("HTTP-Status", r.status_code, 403)
-    pruefe("Fehlerkennung", r.json().get("error"), "nachweis")
+    pruefe("Fehlerkennung", antwort(r).get("error"), "nachweis")
 
     teil("E5. Eine abweichende Pruefsumme wird abgewiesen")
     k = koerper(huelle_neu)
     k["key_check"] = "f" * 32
     r = ruf(k)
     pruefe("HTTP-Status", r.status_code, 409)
-    pruefe("Fehlerkennung", r.json().get("error"), "key_check_abweichung")
+    pruefe("Fehlerkennung", antwort(r).get("error"), "key_check_abweichung")
     pruefe("die Huelle ist unveraendert", feld("pat_wrap_pw", uid), wrap_vorher)
 
     teil("E6. Die Umstellung bei GLEICHER Rundenzahl gelingt")
@@ -164,8 +187,8 @@ try:
     # dieser Aufruf waere mit 'nicht_noetig' abgewiesen worden.
     r = ruf(koerper(huelle_neu))
     pruefe("HTTP-Status", r.status_code, 200)
-    pruefe("ok", r.json().get("ok"), True)
-    pruefe("die Antwort nennt die neue Kennung", r.json().get("huelle"), kennung)
+    pruefe("ok", antwort(r).get("ok"), True)
+    pruefe("die Antwort nennt die neue Kennung", antwort(r).get("huelle"), kennung)
     pruefe("die Huelle traegt jetzt das edka1-Praefix",
            feld("pat_wrap_pw", uid).startswith(f"edka1:{kennung}:"), True)
     pruefe("die Pruefsumme ist unveraendert", feld("pat_key_check", uid), chk_vorher)
@@ -174,7 +197,7 @@ try:
     teil("E7. Derselbe Aufruf ein zweites Mal hat nichts mehr zu tun")
     r = ruf(koerper(huelle_neu))
     pruefe("HTTP-Status", r.status_code, 400)
-    pruefe("Fehlerkennung", r.json().get("error"), "nicht_noetig")
+    pruefe("Fehlerkennung", antwort(r).get("error"), "nicht_noetig")
 
     teil("E8. Der Rundlauf — die neue Huelle laesst sich wieder oeffnen")
     # Waere der Inhaltsschluessel danach ein anderer, waeren alle Daten des
@@ -188,7 +211,7 @@ try:
     r = s.s.post(f"{BASIS}/api/kdf_upgrade.php", json=koerper(huelle_neu),
                  timeout=60, headers={"Content-Type": "application/json"})
     pruefe("HTTP-Status", r.status_code, 403)
-    pruefe("Fehlerkennung", r.json().get("error"), "csrf")
+    pruefe("Fehlerkennung", antwort(r).get("error"), "csrf")
 
     teil("E10. Das Demo-Konto wird uebersprungen und bleibt auf edk1:")
     d = Sitzung(BASIS).anmelden(DEMO, DEMO_PW)
@@ -210,7 +233,7 @@ try:
                      "neu_iter": 600000})
     pruefe("HTTP-Status", r.status_code, 200)
     pruefe("der Endpunkt meldet 'uebersprungen'",
-           r.json().get("uebersprungen"), "demo")
+           antwort(r).get("uebersprungen"), "demo")
 
 finally:
     php('$st = db()->prepare("UPDATE users SET pat_wrap_pw = ?, pat_key_check = ?,'
