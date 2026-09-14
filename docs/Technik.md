@@ -374,7 +374,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      seit Web 15.5.2 die Zählweise der Migrationen
 │   │                      (Teil 6, Backlog Nr. 149) und seit 15.6.0, dass die
 │   │                      Integritätswache im Wartungsmodus nicht rot wird
-│   │                      (12a, Nr. 140) — 53 Erwartungen.
+│   │                      (12a, Nr. 140) — 55 Erwartungen.
 │   │                      **Legt den Schalter selbst um** und nimmt für
 │   │                      Teil 6 eine Zeile aus dem Migrationsregister;
 │   │                      räumt beides im finally ab. Nicht auf einer

@@ -4,8 +4,9 @@
 **die Zahlen trägt die Umsetzung ein**. Fortgeschrieben nach jedem
 Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
-> **Stand: AP1, AP2, AP3, AP3b und AP4 gemessen, Nr. 182 behoben. AP5
-> offen.**
+> **Stand: fertig gemessen. Alle fünf Arbeitspakete sind gebaut und geprüft;
+> was jetzt noch aussteht, steht in Abschnitt 4 und ist Ihre Sache — sieben
+> Punkte, davon zwei, die nur ein echtes iPhone zeigen kann.**
 >
 > **Seit dem 14.09.2026 hat der Prüfstand drei Engines** — Chromium 141,
 > Firefox 142, WebKit 26 (Backlog Nr. 183, der Startvorgang beschafft sie).
@@ -72,8 +73,20 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
   unten" gelesen werden, sagt erst Punkt 1 der Prüfliste — und ob die
   Schublade mit 240 statt 180 ms noch flink genug wirkt (Punkt 1a).
 - **`localStorage` der Kartengröße über Browserwechsel** — gilt je Browser,
-  nicht je Konto; so gewollt (F-MR-8). [Bestätigen.]
-- [Weiteres.]
+  nicht je Konto; so gewollt (F-MR-8). Am Prüfstand ist belegt, dass der
+  Zustand **einen Neuladevorgang übersteht** (nach dem Neuladen wieder
+  520 px); dass er an einem **anderen** Gerät *nicht* gilt, folgt aus der
+  Bauart und ist nicht eigens gemessen — dafür bräuchte es zwei Geräte.
+- **Das offene Blatt sieht kein Bilderlauf.** `seiten.json` öffnet keines;
+  die 360 Bilder zeigen ausschließlich Ruhezustände. Belegt ist es über die
+  Klickprobe (drei Wege) und eine Handmessung über fünf Öffner, drei Motoren
+  und beide Bewegungseinstellungen — aber eben nicht über den Bilderlauf,
+  und wer dessen Zahl zitiert, zitiert diesen Zustand nicht mit.
+- **Die Auffahrt selbst ist nur gerechnet belegt, nicht gesehen.** Gemessen
+  sind Fahrtdauer (240 ms) und eine Zwischenlage (389 px unter der Ruhelage);
+  ob die Bewegung sich auf einem echten Gerät richtig anfühlt, sagt erst
+  Punkt 1 der Prüfliste. Ein Standbild aus der Fahrt liegt bei, es ersetzt
+  das Urteil nicht.
 
 ## 1. Zusagen, die sich geändert haben
 
@@ -97,8 +110,10 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 | `tools/screenshots/aufnehmen.mjs` — Importvorschau, Einsatzformular, Suche, Tagesübersicht (klein/groß), Seiten mit `data-blatt` | — | 8 Breiten je Seite, **0** waagerechter Überlauf, Knopfhöhen ≥ 44 px | **AP1:** `--nur 35-` → **8 Einzelbilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe** (Zeiger, 44/36 px). **Achtung, was das misst:** die Importseite im Grundzustand, nicht die Vorschau — siehe Abschnitt 0 |
 | `tools/screenshots/kontrast.py` | 0 verfehlt | **0** verfehlt (Orange-Symbol auf `--orange-hell`, Blau-hell-Knopf auf Dunkelblau: Werte nennen) | **22 Paare gerechnet, 0 verfehlt** ✓ (nach AP1; AP1 führt keine neue Farbe ein) |
 | `tools/stilvergleich/` (Browser) | — | Abweichungen nur auf den berührten Seiten, alle erklärt | **AP1:** Kaskade **0 entfallen, 14 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen** — genau die 14 Deklarationen des Pakets. Berechnete Stile **45 812 Elementmessungen, 273 Abweichungen**, sämtlich an `.imp-kopfzeile`, `.imp-tag`, `.imp-rest`, der `.plakette` darin und den Hüllen (Gesamthöhe der Probe 24 302,7 → 24 299,6 px, 3,1 px kürzer durch den Flex-Fluss) |
-| Klickprobe | 40 von 40 | **40 von 40** + [n] neue Wege (Blatt auf/zu, Karte groß/klein) | [AP5] |
-| Kreisläufe csv/edbak (R24) | 0 / 0 | **0 unerklärt, 0 ungenutzt** | [AP5] |
+| Klickprobe | 40 von 40 | **43 von 43** (drei neue Wege fürs Blatt) | **43 von 43** ✓ (Chromium). Für die Karte sind **keine** neuen Wege entstanden: Ihr Zustand ist eine Klasse und eine Höhe, beides misst der Bilderlauf in acht Breiten — ein Bedienweg hätte dort nichts gezeigt, was ein Bild nicht zeigt |
+| Kreisläufe csv/edbak (R24) | 0 / 0 | **0 unerklärt** | **csv: 9120 Einzelvergleiche, 0 unerklärt** (1021 erwartet) · **edbak: 287 687 Einzelvergleiche, 0 unerklärt** (16 erwartet) ✓ |
+| Wartungsprobe | 53 Erwartungen | 0 nicht erfüllt | **55 Erwartungen, 0 nicht erfüllt** ✓ — die Zahl ist seit Web 15.6.0 auf 55 gewachsen; `docs/Technik.md` nannte noch 53 und ist berichtigt |
+| Linkprobe | 117 / 0 | **117 / 0** | **117 Verweise, 0 Abweichungen, 0 tote Zeilen** ✓ |
 | Wortliste | 0 / 0 | **0 / 0** | **0 / 0** ✓ (nach AP1; zwei Treffer im neuen `Design.md`-Beispiel sind beim Schreiben entstanden und sofort neutral gefasst worden) |
 | **AP3b — Stilvergleich in drei Motoren** | — | dieselbe Zahl in allen dreien | **Kaskade** 758 → 759 Regeln, **0 entfallen, 1 neu** (`select.feld-eingabe contain: paint`), **0 anderer Endwert, 0 Reihenfolgeumkehrungen**. **Berechnete Stile** je Motor **46 150 Elementmessungen, 104 Abweichungen** — 8 Auswahlfelder × 13 Breiten, einzige geänderte Eigenschaft `contain: none → paint`; Pseudoprobe **20 540 Messungen, 13 Abweichungen**. Chromium, Firefox und WebKit **identisch**, 14–18 s je Motor ✓ |
 | **AP3b — Klickprobe in drei Motoren** | 40 von 40 (Chromium) | 40 von 40 je Motor | **40 / 40 / 40** ✓ — mit `lokal_einrichten.sh` (8 s) vor **jedem** Lauf, und bei Firefox und WebKit **erst im zweiten Anlauf**. Die drei Läufe im Einzelnen stehen in Abschnitt 3; **kein** Fehlschlag war ein Motorunterschied, alle waren Datenreste des Vorlaufs oder Zeitgrenzen. Der eine echte Motorbefund — WebKit meldete „1 von 12" bei den Richtungspfeilen — war ein Fehler der **Probe** (Nr. 186) und ist behoben |
@@ -263,7 +278,7 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 | 2 | Am S24: Tagesübersicht, Kartenknopf „vergrößern" | Karte wird deutlich höher, Liste bleibt darunter erreichbar; nach Neuladen bleibt der Zustand | Höhe unpassend: F-MR-7 nachjustieren **Ab 1600 px macht derselbe Knopf die Karte breit statt hoch** (E-MR-16) — am Gerät nicht prüfbar, dafür am Schreibtisch nachsehen |
 | 3 | CSV-Import mit einer Datei, deren Crew von einem gespeicherten Tag abweicht | Tagesgruppe hat Kopfzeile, Warnung als orange Plakette mit Symbol — **und am Handy ist alles davon ohne waagerechtes Scrollen zu sehen** (seit Web 19.4.1, Nr. 182) | Wenn die Kopfzeile fehlt oder wie eine Datenzeile aussieht: AP1 hat nicht gegriffen. Wenn nach dem Datum nichts mehr kommt: die Container-Abfrage greift auf diesem Browser nicht — siehe Punkt 6 |
 | 4 | Einsatz bearbeiten, Koordinaten setzen, Chip-`×` tippen | Ziel trifft sich leicht (**28 px**, F-MR-6b), Koordinaten weg, Textfeld bleibt | Ziel zu klein: F-MR-6b nachjustieren |
-| 5 | Freigabe des Abschlusses | — | — |
+| 5 | **Freigabe des Abschlusses** | Danach löscht K9 das Konzept (`Konzept-Mockup-Runde.md`); **dieses Prüfdokument bleibt**, bis die Punkte oben abgehakt sind, und wird dann ebenso gelöscht. Der Merge nach `main` **deployt sofort** (`CLAUDE.md` 3) — es ist **keine Migration** dabei, `update.php` muss also nicht gerufen werden | — |
 | 6a | **Am iPhone (echtes Safari): Import öffnen, eine Datei wählen, waagerecht wischen** | Die Seite lässt sich **nicht** seitwärts schieben; die Kopfzeile jeder Tagesgruppe bleibt am linken Rand stehen | Wenn sich die Seite um ein paar Pixel schieben lässt: Die Regel aus Web 19.5.1 (`select{contain:paint}`) greift auf echtem Safari nicht so wie auf Playwrights WebKit — dann mit der Breite melden, an der es auftritt. Wenn nach dem Datum nichts mehr kommt: Die Container-Abfrage greift dort nicht (Nr. 182) |
 | 6b | **Am iPhone: einen Chip-`×` mit dem Daumen antippen, Taste kurz halten** | Der Chip verschwindet | Auf iOS ist `mousedown` eine eigene Geschichte; der Prüfstand fährt eine Maus und kann das nicht zeigen |
 | ~~6~~ | ~~In Firefox nachsehen~~ | **Entfällt.** Seit dem 14.09.2026 hat der Prüfstand alle drei Engines; Nr. 182 und Nr. 42 sind in Chromium 141, Firefox 142 und WebKit 26 gemessen und stimmen überein | — |
@@ -276,9 +291,20 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
   **WebKit ist nicht Safari** (gleicher Kern, anderer Unterbau) und Firefox
   läuft **headless**; und der Container hat **Aussetzer** — vier
   `page.goto`-Abbrüche in einem WebKit-Lauf, im nächsten keiner.
-- **AP4 ist noch in keiner Engine geprüft** — es ist nicht gebaut.
-- **Fehlerfund 1** (Konzept Abschnitt 6): dasselbe Malzeichen als
-  JavaScript-Escape im zweiten Chip — das Prüfmittel sieht Escape-Folgen
-  nicht. Läuft in **AP2** mit (E-MR-24), keine eigene Backlog-Nummer.
-- **Fehlerfund 2** (aus AP1): die Kopfzeile außerhalb des Sichtfensters —
-  **Backlog Nr. 182**, Entscheidung steht aus. Abschnitt 0.
+- **Was der Bilderlauf von dieser Runde NICHT gesehen hat:** das offene
+  Aktionsblatt und die Importvorschau. Er fotografiert Ruhezustände, und
+  `seiten.json` öffnet kein Blatt und wählt keine Datei. Beides ist statt
+  dessen von Hand und mit der Klickprobe gemessen (Abschnitt 3) — wer die
+  Zahl „360 Bilder, 0/0/0" liest, liest damit **nicht** über diese zwei
+  Zustände.
+- **Vier Fehlerfunde, alle erledigt.** Fund 1 (Malzeichen als
+  JavaScript-Escape) lief in AP2 mit, ohne eigene Nummer; Fund 2 wurde
+  **Nr. 182** (Kopfzeile außerhalb des Sichtfensters, Web 19.4.1); Fund 3
+  **Nr. 185** (WebKit-Überlauf, 19.5.1); Fund 4 **Nr. 186** (die Klickprobe
+  maß Drehungen falsch). Zwei davon hat der dreifache Lauf am Tag seiner
+  Fertigstellung gefunden.
+- **Neu aufgenommen und offen: Nr. 184** — der Kommentar-Abtaster der
+  Prüfmittel verliert in PHP-Dateien mit HTML die Spur und verschluckt in
+  `einsatz_form.php` rund 800 Zeilen am Stück. Die Folge sind **falsche
+  Negative** in den drei Zusagen-Prüfungen aus Backlog-Runde 3. Einer
+  Backlog-Runde zugeordnet, nicht dieser hier.

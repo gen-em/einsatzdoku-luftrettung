@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 56 (14.09.2026)** — dieses Dokument steuert das Programm:
+**Fassung 59 (14.09.2026)** — dieses Dokument steuert das Programm:
 Reihenfolge, Status, programmweite Entscheidungen. Es hält nur, was für die
 nächsten Schritte gebraucht wird. Der eingefrorene Altbestand — die
 Fassungsvermerke, die Phasentexte mit ihren Umsetzungsblöcken und die 50
@@ -9,11 +9,11 @@ Programmentscheidungen im Volltext — liegt **wörtlich und unverändert** in
 Abschnitt 5" oder „Fassung 13" meinen das Archiv; sein Kopf sagt, welcher
 alte Abschnitt wo weiterlebt.
 
-**Stand am 13.09.2026, gemessen an `origin/main` (`dabd7a3`):** **Web
-19.3.0**, **Uhr 3.1.0**, **Android 0.15.0**. **Zum Merge steht die
-Backlog-Runde 3** (Zweig `claude/backlog-runde-3-umsetzung-woqxjm`, Web
-19.3.1, Uhr und Android unberührt) — gebaut und geprüft, Erledigt-Zeile in
-Abschnitt 8, **keine Migration**. Die jüngsten Merges in der Reihenfolge, in der sie liefen: die
+**Stand am 14.09.2026, gemessen an `origin/main` (`8f1712c`):** **Web
+19.3.1**, **Uhr 3.1.0**, **Android 0.15.0**. Die Backlog-Runde 3 ist
+**gemergt** (PR #43). **Zum Merge steht die Mockup-Runde 9c** (Zweig
+`claude/jolly-planck-vexxpd`, **Web 19.6.0**, Uhr und Android unberührt) —
+gebaut und geprüft, Erledigt-Zeile in Abschnitt 8, **keine Migration**. Die jüngsten Merges in der Reihenfolge, in der sie liefen: die
 Korrekturstufe **Nr. 148 und 149** am 06.09.2026 (PR #36, Web 15.5.2),
 **Schritt 9a** am 08.09.2026 (PR #37, `f299bbf`, Web 15.6.0 / Android
 0.14.0, dazu Uhr 3.1.0 und Android 0.15.0 aus den Punkten 159/160), **S9**
@@ -193,7 +193,7 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 9 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen — die **Korrekturstufe mit Nr. 148 und 149** ist gebaut, geprüft und **am 06.09.2026 auf `main` gemergt** (Web 15.5.2, PR #36). Ihre **zweiteilige Prüfliste** in `docs/konzepte/Pruefdokument-Korrektur-148-149.md` ist seit dem Merge **fällig**. **Zwei Runden sind seither gebaut und gemergt** (berichtigt mit Fassung 47 — hier stand „offen ist allein die zweiteilige Prüfliste" und „die übrigen Einzelpunkte sind unangetastet", beides überholt): **Runde 1** am 12.09.2026 (PR #40, Web 19.1.2, sieben Punkte — 38, 93, 97, 151, 153, 156, 167; Abschnitt 8) und **Runde 2** am selben Tag (PR #41, Web 19.2.0 und 19.3.0, fünf Punkte — 118, 119, 120, 125, 126; Prüfdokument `Pruefdokument-Backlog-Runde-2.md` mit **sieben** offenen Punkten, ebenfalls fällig). **Runde 3 ist konzipiert** (13.09.2026, `docs/konzepte/Konzept-Backlog-Runde-3.md`, Prüfdokument-Vorlage daneben): Block A Nr. 91, 94, 117, 67-Unterpunkt, 41-Streichungen · Block B Nr. 47, 58 (Prüfgruppe „Zusagen" in `tools/vollstaendigkeit/`) · Block C Nr. 173, 174 (Referenzdateien neu) — keine Fable-Schritte, Umsetzung Opus |
 | 9a | **Sofortpaket Sicherheit** (R78) | Web: Nr. 127–131, 133–136, 138 (Rundenzahl 600 000, Login-CSRF, E-Mail-Nachweis, Ordner, GPX, `wiederherstellen.php`, Bauordner, Ersetzfenster der Uhr, Maskierung, Weg C, Integritätswache aus Nr. 140) — **ohne 132 und 137, die sind seit dem 07.09.2026 in S9**; Android: Nr. 142–145 und der Räumteil von 114 | Web sofort; Android nach Schritt 6 auf `main` | keins; `docs/konzepte/Vorbereitung-Sicherheitspaket.md` ist die Spezifikation (Muster R42, Prüfdokument mit Zahlen) | Opus | **gebaut, geprüft und gegengeprüft (Web 15.6.0 und Android 0.14.0, 07.09.2026)** — Nachbesserungen nach der adversarischen Gegenprüfung committet, Zweig gepusht; **am 08.09.2026 auf `main` gemergt** (PR #37, Merge-Commit `f299bbf`), **danach `update.php`** |
 | 9b | **S10 — Sicherheit** (R78) | Server-Anteil am Datenschlüssel mit Schlüsselblatt, Kennung und Rotation (SP-3); Adminpakete versiegeln, `ftp` abschaffen (Nr. 139) | Schritt 9a; **vor P5** (Hauptstufe, Umstellung aller Hüllen) | neu, nach K1 aus der Vorbereitung | Fable (Konzept), Opus | offen |
-| 9c | **Mockup-Runde** | Vier Gestaltungsaufgaben, eine Freigaberunde statt vier (Entscheidung 15 vom 12.09.2026): **Nr. 41** zwei Regeln für die Importvorschau (`imp-warn`, `imp-daygroup`), **Nr. 42** `×` am Koordinaten-Chip (`.rmx` neu bemaßen) und `⚠` im Fließtext, **Nr. 45** dritte Kartengröße, **Nr. 124** Aktionsblatt nach Weg (b) — ein Baustein, sechs `ui_aktionen()`- und neun `ui_zeilenaktionen()`-Öffner (gemessen 13.09.2026) | keine; **ab jetzt, parallel** — die Runde braucht eine Freigabe und läuft deshalb früh, damit sie nicht am Ende wartet | keins; Mockups nach `Design.md` 1, Freigabe je Mockup | Fable (Mockups), Opus (Umsetzung) | **Freigegeben am 13.09.2026** (`docs/konzepte/Konzept-Mockup-Runde.md`, vier Mockups in vier Fassungen, F-MR-1 bis F-MR-13 beantwortet; darunter `--dauer` fuer die ganze Anwendung auf 240 ms). **AP1 erledigt** (Web 19.4.0, 13.09.2026): Nr. 41 ist beantwortet — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen, `pruefen.py` meldet **0** `[offen]` statt 2. Dabei **Nr. 182** entstanden und mit **Web 19.4.1 gleich erledigt** (M-MR-05, F-MR-14 = Weg B): Die Kopfzeile nimmt ueber eine Container-Abfrage die sichtbare Breite an — **ohne JavaScript**. Weg C war zuerst gewaehlt und ist nach einer Kartierung mit **58 Befunden, 22 davon „bricht"**, verworfen worden. **AP2 bis AP5 offen**, Opus. **Drei Rueckfragen vor Beginn beantwortet** (13.09.2026): die Unicode-Pruefung bekommt eine Ausnahmeliste ueber `zusagen.md` statt des wirkungslosen Eintrags in `ausnahmen.md` (E-MR-24), die orange Markierung gilt fuer **alle** Blatt-Oeffner und nicht nur fuer die beiden Bausteine (E-MR-25), und Fehlerfund 1 laeuft in AP2 mit statt als eigener Backlog-Punkt. **Nr. 124 ist der einzige der vier aus einer Rueckmeldung von aussen** und darf die Runde verlassen, wenn sie ins Rutschen geraet. Ort begruendet in Fassung 46: vor P5, nicht in P7 |
+| 9c | **Mockup-Runde** | Vier Gestaltungsaufgaben, eine Freigaberunde statt vier (Entscheidung 15 vom 12.09.2026): **Nr. 41** zwei Regeln für die Importvorschau (`imp-warn`, `imp-daygroup`), **Nr. 42** `×` am Koordinaten-Chip (`.rmx` neu bemaßen) und `⚠` im Fließtext, **Nr. 45** dritte Kartengröße, **Nr. 124** Aktionsblatt nach Weg (b) — **vier Bauarten** von Öffnern: sechs `ui_aktionen()`, neun `ui_zeilenaktionen()`, der Pin-Knopf des Ortsfelds und drei handgeschriebene Sortierblatt-Knöpfe (nachgezählt 13.09.2026, berichtigt in AP4 — die Regel hängt am Attribut und erreicht alle) | keine; **ab jetzt, parallel** — die Runde braucht eine Freigabe und läuft deshalb früh, damit sie nicht am Ende wartet | keins; Mockups nach `Design.md` 1, Freigabe je Mockup | Fable (Mockups), Opus (Umsetzung) | **Freigegeben am 13.09.2026** (`docs/konzepte/Konzept-Mockup-Runde.md`, vier Mockups in vier Fassungen, F-MR-1 bis F-MR-13 beantwortet; darunter `--dauer` fuer die ganze Anwendung auf 240 ms). **AP1 erledigt** (Web 19.4.0, 13.09.2026): Nr. 41 ist beantwortet — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen, `pruefen.py` meldet **0** `[offen]` statt 2. Dabei **Nr. 182** entstanden und mit **Web 19.4.1 gleich erledigt** (M-MR-05, F-MR-14 = Weg B): Die Kopfzeile nimmt ueber eine Container-Abfrage die sichtbare Breite an — **ohne JavaScript**. Weg C war zuerst gewaehlt und ist nach einer Kartierung mit **58 Befunden, 22 davon „bricht"**, verworfen worden. **Erledigt am 14.09.2026, Web 19.6.0.** AP2 (Nr. 42, 19.4.2) — die beiden Chips und der Satz der Meldung tragen Symbole, das Treffziel waechst von 17 x 15 auf 28 x 28 px; **AP3** (Nr. 45, 19.5.0) — die dritte Kartengroesse, ein Zustand mit zwei Wirkungen je Breite; **AP3b** (Nr. 183, 19.5.1) — Bilderlauf, Klickprobe und Stilvergleich fahren seither `--motor chromium|firefox|webkit`, und der erste dreifache Lauf brachte gleich zwei Befunde (Nr. 185, Nr. 186, beide erledigt); **AP4** (Nr. 124, 19.6.0) — das Blatt faehrt auf, der offene Oeffner ist orange hinterlegt, `--dauer` steht auf 240 ms. Zahlen in Abschnitt 8. **Drei Rueckfragen vor Beginn beantwortet** (13.09.2026): die Unicode-Pruefung bekommt eine Ausnahmeliste ueber `zusagen.md` statt des wirkungslosen Eintrags in `ausnahmen.md` (E-MR-24), die orange Markierung gilt fuer **alle** Blatt-Oeffner und nicht nur fuer die beiden Bausteine (E-MR-25), und Fehlerfund 1 laeuft in AP2 mit statt als eigener Backlog-Punkt. **Nr. 124 ist der einzige der vier aus einer Rueckmeldung von aussen** und darf die Runde verlassen, wenn sie ins Rutschen geraet. Ort begruendet in Fassung 46: vor P5, nicht in P7 |
 | 10 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb; Zweitfaktor für alle Konten (Nr. 141) und CSP nach Bauplan SP-5 (Nr. 8) | Schritte 2, 5, 7 und 9b; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt: Store-Verteilung (R65), Update-Weg (R66), Auslieferungskette (R67), Repositorium (R68), Code-Review (R69), Web-App auf Android (R70), Phasenschnitt (R71), Doku-Anforderungen (R72), Problemsammlung (R73); Ergebnis sind die Konzepte der Phasen P6–P8 mit je eigenem Paketschnitt | Festlegungen: keine (vorgezogen); Paketschnitte: die jeweilige Vorphase, P6 nach der Freigaberunde des Reviews | `docs/konzepte/Konzept-Planung-v1.0.md` | Fable (R14) | **Festlegungen entschieden** 03.09.2026 (R65–R73); offen nur die Paketschnitte je Phasenkonzept |
 | 12 | **P6 — Review und Bereinigung** | Bedrohungsmodell (Eingang: `Review-Krypto-Sicherheit.md`, R78); Bug- und Sicherheitsreview in zwölf Stücken (R17, R69); Freigaberunde; Sofortpaket; Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); Fragen Nr. 146; R5-Ausnahmeliste | Schritte 8 und 10; Nr. 43-Fragen beantwortet (R78) | `docs/konzepte/Review-R17.md`, Paketschnitt nach der Freigaberunde | Fable (Review, Kryptographie), sonst Opus | offen |
@@ -1310,6 +1310,8 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | **Prüfliste 9a — P-1 bis P-12** (`docs/konzepte/Pruefdokument-Sofortpaket-Sicherheit.md`). **Nachgetragen mit Fassung 47:** Der Kopf nannte sie seit dem Merge als fällig und verwies für „alles Weitere" auf diesen Abschnitt — hier stand sie nicht. Zwölf Punkte zum Sofortpaket Sicherheit, darunter die Rundenzahl 600 000 am echten Konto, der E-Mail-Nachweis und die Integritätswache | Schritt 9a | **fällig seit dem 08.09.2026** (PR #37) |
 | **Prüfliste Backlog-Runde 2 — sieben Punkte** (`docs/konzepte/Pruefdokument-Backlog-Runde-2.md`). **Nachgetragen mit Fassung 47** aus demselben Grund; die Runde ist am 12.09.2026 gemergt (PR #41, Web 19.2.0 und 19.3.0) | Schritt 9, Runde 2 | **fällig seit dem 12.09.2026** |
 | **Prüfliste Backlog-Runde 3 — fünf Punkte** (`docs/konzepte/Pruefdokument-Backlog-Runde-3.md`): Demo-Konto am Produktivstand anmelden (Punkt 1 — das Risiko ist kleiner, als es in AP4 aussah: `KDF_ITER_LISTE` hat seit Nr. 155 einen Eintrag, und dann kann `unlock.js` den geänderten Weg gar nicht auslösen; der Punkt bleibt für das nächste Anheben des Zielwerts stehen), einen Einsatz mit Reanimation ansehen, Handbuch 11.2 lesen, den neuen `Confirmation`-Abschnitt der Uhr-LIESMICH gegen die eigene Erinnerung halten (die Runde hat ihn **nicht** nachgemessen — kein Simulator), und die Freigabe des Abschlusses | Schritt 9, Runde 3 | **fällig nach dem Merge** |
+| **Prüfliste Mockup-Runde 9c — sieben Punkte** (`docs/konzepte/Pruefdokument-Mockup-Runde.md`): die Bewegung des Blattes und der Schublade am Gerät (Punkt 1 und 1a — fühlen sich 240 ms richtig an?), die dritte Kartengröße am Handy (2), der Import mit abweichender Besatzung (3), das Treffziel des Chip-`×` (4), und **zwei Punkte, die nur echtes Safari zeigt** (6a, 6b) — der Prüfstand fährt Playwrights WebKit, gleicher Kern, anderer Unterbau | Schritt 9c | nach dem Merge |
+| **Freigabe des Abschlusses der Mockup-Runde 9c** — danach löscht K9 das Konzept (`Konzept-Mockup-Runde.md`); das Prüfdokument bleibt, bis seine Prüfliste abgehakt ist | Schritt 9c | vor dem Merge |
 | **Freigabe des S9-Abschlusses** — danach löscht K9 das Konzept (`Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`); das Prüfdokument bleibt, bis seine Prüfliste abgehakt ist. **Ebenfalls zu löschen:** `docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md` erst nach P5, sie wird dort gebraucht | Schritt 8 | — |
 | **Prüfliste S5 (12 Punkte)**, darunter: die Bestandsuhr **einmal neu koppeln** (E-S5-42, vorher den Sync leerlaufen lassen), beide Kopplungsmails im Postfach sichten, Antwortgleichheit auf Produktiv nachmessen, die Geräteseite **ohne JavaScript**, drei Punkte nur am Gerät (Verbindungsabriss, Tastensperre, Oberfläche auf zwei Geräteklassen), **ein Update mit Wartungsmodus** und **eine Kopplung mit dem Handbuch in der Hand** (P2-Punkt 4.1) | S5-Abnahme | nach `update.php` |
 | **Freigabe des S5-Abschlusses** — danach löscht R62 die beiden Konzepte (`Konzept-S5-Kopplung-umgekehrt.md`, `…-Zusatz-Wartungsmodus.md`); das Prüfdokument bleibt bis zur abgehakten Prüfliste | Schritt 5 | — |
@@ -1994,6 +1996,65 @@ Bilderlauf **96** Bilder über sechs Seiten in beiden Bedienhöhen ohne
 Auftraggeberin (Abschnitt 6). *Merges:* PR #41 (`6f316ee`, die Stufen) und
 PR #42 (`dabd7a3`, zwei Doku-Nachträge ohne Stufe).
 
+### Mockup-Runde 9c · Web 19.4.0 bis 19.6.0 · 13.–14.09.2026 (Schritt 9c)
+
+**Vier Gestaltungsaufgaben, eine Freigaberunde statt vier** (Entscheidung 15
+vom 12.09.2026). Konzept `Konzept-Mockup-Runde.md` mit fünf Mockups, F-MR-1
+bis F-MR-14 beantwortet; Zweig `claude/jolly-planck-vexxpd`, je Paket ein
+Commit und ein Push. **Sieben Versionsstufen**, weil zwei Befunde unterwegs
+entstanden und gleich behoben wurden.
+
+**Die vier Punkte der Runde:** **Nr. 41** (Web 19.4.0) — die Kopfzeile der
+Tagesgruppe in der Importvorschau hat eine Regel, `imp-warn` ist gestrichen,
+`pruefen.py` meldet **0** `[offen]` statt 2. **Nr. 42** (19.4.2) — beide
+Chips und der Satz der Meldung tragen Symbole statt Unicode-Zeichen; das
+Treffziel des Entfernen-Knopfes wächst von 17 × 15 auf **28 × 28 px**.
+**Nr. 45** (19.5.0) — die dritte Kartengröße: ein Zustand, zwei Wirkungen je
+Breite (bis 1599 px höher, darüber breit), der Zustand wird je Gerät gemerkt.
+**Nr. 124** (19.6.0) — das Aktionsblatt fährt auf, und der offene Öffner ist
+orange hinterlegt; `--dauer` steht seither auf **240 ms** für die ganze
+Anwendung.
+
+**Drei Punkte sind unterwegs entstanden und miterledigt worden.** **Nr. 182**
+(19.4.1): Die Kopfzeile aus AP1 stand außerhalb des Sichtfensters — die Zelle
+ist so breit wie die Tabelle (gemessen 2653 px gegen 342 px am Handy), nicht
+wie das Bild. Gelöst mit einer **Container-Abfrage ohne JavaScript**; Weg C
+(eine Tabelle je Gruppe) war zuerst gewählt und ist nach einer Kartierung mit
+**58 Befunden, 22 davon „bricht"** verworfen worden, weil er die Spaltenflucht
+gebrochen hätte, die in seiner eigenen Abnahmezeile steht. **Nr. 185**
+(19.5.1): `import.php` lief bei 360 px **nur in WebKit** um 6 px über, ohne
+dass ein Element hinausragte — WebKit rechnet den längsten Eintrag eines
+`<select>` in den Überlauf des Kastens. **Nr. 186**: Die Klickprobe maß
+Drehungen mit `getScreenCTM()`, das in WebKit die CSS-Transformation eines
+HTML-Vorfahren nicht enthält; ein Fehler des Prüfmittels, der wie einer der
+Anwendung aussah.
+
+**Nr. 183 ist damit ganz erledigt** (AP3b, 19.5.1): Bilderlauf, Klickprobe und
+Stilvergleich fahren seither `--motor chromium|firefox|webkit`; Motorwahl und
+Firefox-Voreinstellung liegen an **einer** Stelle (`tools/motor.mjs`). Wie oft
+welches Mittel dreifach fährt, steht in `docs/Technik.md` und ist gemessen
+begründet: Stilvergleich immer (14–18 s je Motor), Bilderlauf gestaffelt
+(Chromium voll, die anderen `--nur` plus `--risiko`), Klickprobe nach Bedarf
+und nur mit frisch eingespieltem Bestand dazwischen. **Beide Befunde oben
+stammen aus dem allerersten dreifachen Lauf** — der Punkt hat sich am Tag
+seiner Fertigstellung bezahlt gemacht.
+
+**Prüfzahlen:** Kreisläufe (R24) **csv 9120 Einzelvergleiche, 0 unerklärt**
+(1021 erwartet) und **edbak 287 687, 0 unerklärt** (16 erwartet);
+Vollständigkeit **323 Befunde**, `[offen]` **0**, Hexfarben außerhalb `:root`
+**0**, Pixelmaße **0**, Symboldateien **55**; Stilvergleich je Arbeitspaket in
+**drei Motoren** mit identischen Zahlen und ohne unerklärte Abweichung;
+Klickprobe **43 von 43** (drei Wege neu); Bilderlauf Chromium voll **360
+Bilder, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen**, Firefox,
+WebKit und der Fingerlauf je 80 Bilder **0/0/0**; Wortliste **0/0**, Linkprobe
+**117/0**, Kontraste **22 Paare, 0 verfehlt**, Wartungsprobe **55
+Erwartungen, 0 nicht erfüllt**. Selbstprüfzahl **51 = 51**.
+
+*Reste:* die Prüfliste des Auftraggebers im Prüfdokument — was nur am Gerät zu
+beurteilen ist (fühlen sich 240 ms richtig an?) und was nur echtes Safari
+zeigt; dazu **Nr. 184** (der Kommentar-Abtaster der Prüfmittel), neu
+aufgenommen und einer Backlog-Runde zugeordnet.
+
 ### Backlog-Runde 3 · Web 19.3.1 · 13.09.2026 (Schritt 9)
 
 **Die erste Backlog-Runde mit Konzept** (`Konzept-Backlog-Runde-3.md`, zehn
@@ -2153,6 +2214,9 @@ Abschnitt 5 als Frage.
 
 | Fassung | Datum | Was |
 |---|---|---|
+| **59** | **14.09.2026** | **Mockup-Runde 9c abgeschlossen (Web 19.6.0).** Erledigt-Zeile in Abschnitt 8 mit allen Pruefzahlen, Schritt 9c auf erledigt, die vier Backlog-Zeilen aus Abschnitt 5 ausgetragen (Selbstpruefzahl **51 = 51**), zwei Zeilen nach Abschnitt 6 (Pruefliste und Freigabe des Abschlusses). Kopf gegengelesen und **gemessen**: `origin/main` steht auf `8f1712c` mit **Web 19.3.1**, die Backlog-Runde 3 ist gemergt — der Kopf nannte sie noch als ausstehend. Die Oeffnerzahl in der 9c-Zeile ist berichtigt: **vier Bauarten**, nicht zwei Bausteine |
+| **58** | **14.09.2026** | **AP4 der Mockup-Runde gebaut (Web 19.6.0, Backlog Nr. 124).** Das Aktionsblatt faehrt von unten auf statt dazustehen, und der Oeffner traegt `--orange-hell` mit `--orange-tief`, solange sein Blatt offen ist (Fassung D4). Die Markierung haengt am **Attribut** `[data-blatt][aria-expanded="true"]` und erreicht damit alle vier Bauarten von Oeffnern — auch die naechste. Am Schreibtisch faehrt ausdruecklich nichts; `blatt.js` fragt dafuer die **gerechnete** Fahrtdauer, statt eine zu kennen. `--dauer` steht seither auf **240 ms** fuer die ganze Anwendung (E-MR-22). Gemessen: drei neue Klickprobe-Wege, 3/3 in allen drei Motoren; Stilvergleich 46 202 Elementmessungen / 390 Abweichungen, saemtlich erklaert; Bilderlauf 360 Bilder 0/0/0. **Nachgezogen, was AP2 und AP3 offen gelassen hatten:** die vier erzeugten Tabellen in `Design.md` standen auf einem alten Stand — `tabellen.py` schreibt nichts, es gibt nur aus |
+| **57** | **14.09.2026** | **AP3b: die Pruefmittel fahren drei Engines (Web 19.5.1, Backlog Nr. 183 ganz erledigt).** `tools/motor.mjs` haelt Motorwahl und Firefox-Voreinstellung an einer Stelle; Bilderlauf, Klickprobe und Stilvergleich kennen `--motor`. Die Staffelung ist gemessen begruendet und steht in `docs/Technik.md`. **Zwei Befunde aus dem allerersten dreifachen Lauf**, beide erledigt: **Nr. 185** (`import.php` lief bei 360 px nur in WebKit um 6 px ueber — WebKit rechnet den laengsten `<select>`-Eintrag in den Ueberlauf) und **Nr. 186** (die Klickprobe mass Drehungen mit `getScreenCTM()`, das in WebKit die CSS-Transformation eines HTML-Vorfahren nicht enthaelt — ein Fehler des Pruefmittels, der wie einer der Anwendung aussah). **Ein Satz zurueckgenommen:** Firefox meldet die `latin-ext`-Schriften NICHT als Konsolenfehler; die Abbrueche stammten von einem Messskript |
 | **56** | **14.09.2026** | **AP3 der Mockup-Runde gebaut (Web 19.5.0, Backlog Nr. 45).** Die Karte der Tagesuebersicht bekommt einen Zwischenzustand zwischen 300 px und Vollbild: bis 1599 px wird sie hoeher (`min(60vh, 520px)`), ab 1600 px — wo sie ohnehin hoch in einer eigenen Spalte steht — stattdessen **breit**, dann faellt das Raster auf eine Spalte. Dieselbe Klasse traegt beides, damit die Schwelle 1600 an EINER Stelle bleibt; aus demselben Grund traegt der Knopf beide Zeichen und das Stylesheet blendet je Breite eines aus. Die Wahl bleibt erhalten (erster `localStorage` der Anwendung, je Browser). **In drei Engines gemessen**, fuenf Breiten je Engine: gross ueberall 520 px, ab 1600 px volle Inhaltsbreite, Symbol wechselt, `aria-pressed` folgt, 0 Ueberlauf, keine Konsolenfehler, nach Neuladen wieder gross; Kacheln 10 → 15, 0 px unbedeckt. Voller Bilderlauf 360 Bilder, 0/0/0. Neu: Token `--karte-gross`, Klasse `.geo-gross`, zwei Symbole (54./55.). Abschnitt 5: eine Zeile raus, Selbstpruefzahl **53 = 53** |
 | **55** | **14.09.2026** | **AP2 der Mockup-Runde gebaut (Web 19.4.2, Backlog Nr. 42) und der Pruefstand auf drei Engines gebracht.** Der Entfernen-Knopf im Chip traegt jetzt ein Symbol in einem **28-px-Ziel** statt eines Malzeichens mit 17 x 15 px Trefferflaeche; das Warnzeichen im Satz ist dasselbe Symbol wie die Marke in der Tabelle. **Eine Ausnahme weniger, nicht eine mehr:** Der `x`-Rueckfall in `wegKnopf()` sollte laut Konzept als begruendete Ausnahme bleiben — sein Vermerk war falsch, der Zweig seit jeher tot (nachgemessen: 8 von 8 Knoepfen tragen ein SVG), und er ist fort. **Nr. 183 ist zur Haelfte erledigt:** Nach der Freigabe der beiden Downloadadressen liegen Chromium 141, Firefox 142 und WebKit 26 im Pruefstand; Nr. 182 und Nr. 42 sind in allen dreien gemessen und stimmen ueberein. Offen bleibt das Mittel, das sie benutzt. **Nr. 184 neu:** Der Kommentar-Abtaster aus Runde 3 verschluckt in PHP mit HTML rund 800 Zeilen am Stueck — falsche Negative in drei Zusagen-Pruefungen. Deshalb blendet die Symbolpruefung Kommentare NICHT aus: 252 statt geschoenter 108. Selbstpruefzahl **54 = 54** |
 | **54** | **14.09.2026** | **Nr. 183 neu: der Pruefstand kennt nur eine Engine** — aufgefallen bei der Gegenprobe zu Nr. 182. Punkt 6 der Mockup-Runden-Pruefliste ist damit zur Haelfte selbst erledigt: **WebKitGTK 2.52.6** aus den Paketquellen (xvfb + python3-gi) misst dieselbe Kopfzeile wie Chromium — 400 px Kopf 342 = Sicht 342, 720 → 654 = 654, 1280 → 1214 = 1214, `container-type` loest auf, alle vier Teile im Sichtfenster. **Gecko fehlt**: Playwrights Downloads sind mit 403 gesperrt, Ubuntus `firefox` ist eine Snap-Huelle. Nur `docs/`, keine Versionsstufe. Selbstpruefzahl **54 = 54** |
