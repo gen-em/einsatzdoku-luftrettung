@@ -7,7 +7,9 @@ Auftraggeber** — alles, was nur auf der Installation geht.
 
 **Das Konzept ist fort.** `Konzept-S10-Sicherheit.md` trug den Statusblock
 der Umsetzung, alle Entscheidungen (E-S10-01 bis -18 und E-S10-U-01 bis -16),
-das Prüfprotokoll mit jeder Zahl und die dreiundzwanzig Fehlerfunde. Es ist
+das Prüfprotokoll mit jeder Zahl und die **47** Fehlerfunde seines
+Abschnitts 6 (nachgezählt am Stand unter `a00f6b5`; hier stand zuerst
+„dreiundzwanzig", und diese Zahl hatte keine Grundlage). Es ist
 nach der Freigabe des Abschlusses am 14.09.2026 gelöscht worden (R62/K9) —
 **die Git-Historie behält es vollständig**:
 
@@ -16,11 +18,15 @@ nach der Freigabe des Abschlusses am 14.09.2026 gelöscht worden (R62/K9) —
 Die Kurzfassung steht im Rahmenplan, Abschnitt 8, unter *S10 — Sicherheit*.
 **Dieses Dokument bleibt**, bis seine Prüfliste abgehakt ist (R62).
 
+Die Verweise weiter unten auf Konzeptabschnitte — Abschnitt 6 (Fehlerfunde),
+Abschnitt 7 (Fragen), Abschnitt 8 (Einträge für Rahmenplan und Backlog) —
+zeigen auf den Stand unter jenem Commit.
+
 > **Statusblock**
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **alle sechs Arbeitspakete erledigt** (Web 19.7.0 bis **20.2.1**). Offen ist allein die **Freigabe des Abschlusses**; danach wird das Konzept gelöscht, **dieses Dokument bleibt**, bis seine Prüfliste abgehakt ist. |
+> | Stand | 14.09.2026 — **alle sechs Arbeitspakete erledigt** (Web 19.7.0 bis **20.2.1**). Die **Freigabe des Abschlusses ist erteilt**; das Konzept ist danach gelöscht worden (zuletzt unter Commit `a00f6b5`), **dieses Dokument bleibt**, bis seine Prüfliste abgehakt ist. |
 > | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines** · AP3: **Betriebslauf** in drei Engines (Oberfläche der fünf Lagen, Blatt im Druck, Rotation, Neuanfang, Reset) · AP4: Freigabe-, Wiederherstellungs-, Versand- und Komplettprobe, dazu fünf Wege am `ftp`-Altziel und die Cron-Zeile · **AP5: Wartungs-, Riegel-, Sitzungs-, Wiederherstellungs-, Komplett-, Endpunkt- und Generatorprüfung, Prüfkonten, beide Kreisläufe**; alles aus AP1 bis AP3 erneut (Abschnitt 2) |
 > | Offen | P-01 bis P-14 |
 > | Prüfmittel, die in AP5 **kaputt** vorgefunden wurden | die **Wartungsprobe** (seit AP3 auf 1 nicht erfüllt, unbemerkt), zwei **Prüfmittel mit Rückständen** (2 Wegwerfkonten, 3 verwaiste Paketordner), die **Voraussetzung der Endpunktprobe** als blosse Meldung, `pruefkonten.php` ohne Serverschlüssel-Riegel, **sieben abgeschriebene Zahlen** in Anleitungen und Kommentaren, **zwei Prüfmittel, die `config.php` lasen**, die **erzeugten Tabellen von `docs/Design.md`** sieben Zeilen hinter den Quellen, ein **falsch beschriebenes Fach** in der Abmelde-Probe, eine **Browserprobe, die überhaupt nicht durchlief** (vier Ursachen, alle in der Probe) — und **zwei Fehler in AP5s eigener Arbeit**, gefunden von der Gegenprobe des Pakets: eine Erwartung, die nicht fehlschlagen konnte, und zwei Proben, die den Zustand hätten herstellen können, den sie messen. **Alle behoben** (F-S10-AP5-01 bis -13) |
