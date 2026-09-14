@@ -1767,7 +1767,9 @@ function migrationen_katalog(): array
              * staenden damit zwei verschiedene Dinge unter demselben Wort, und
              * zwar zwei Klicks voneinander entfernt (Stammdaten gegen
              * Backups). Deshalb heisst es hier BACKUP-ZIEL. Der
-             * Unterschied ist in docs/konzepte/erledigt/Konzept-S2 unter F-S2-G festgehalten.
+             * Unterschied ist in
+             * docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md
+             * unter F-S2-G festgehalten.
              *
              * DIE GEHEIMNISSE STEHEN VERSIEGELT DRIN, NIE IM KLARTEXT.
              * `geheim` und `schluessel` tragen `edsk1:`-Chiffren aus

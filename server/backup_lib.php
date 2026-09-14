@@ -1127,12 +1127,15 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
                 $insR = $pdo->prepare('INSERT IGNORE INTO vehicle_roles (vehicle_id, role_code)
                                        VALUES (?,?)');
                 foreach ($rm['roles'] as $rc) { $insR->execute([(int)$vid, $rc]); }
-                /* Faehigkeiten kommen ausschliesslich an luftgebundenen
-                 * Rettungsmitteln vor (E29, schema.sql). Bei einem
-                 * bodengebundenen werden sie verworfen statt gespeichert — sonst
+                /* Was der Bestand an Faehigkeiten fuehren darf, entscheidet
+                 * `veh_caps_erlaubt()` — Typ und Betriebsart zusammen (E29 und
+                 * seine benannte Ausnahme fuer den Typ Bergwacht). Was die
+                 * Regel nicht zulaesst, wird verworfen statt gespeichert: sonst
                  * traege der Bestand einen Zustand, den die Oberflaeche nicht
                  * herstellen kann. Das Verwerfen geschieht seit Web 16.0.0 in
-                 * `pruef_rettungsmittel()`; hier steht nur noch das Schreiben. */
+                 * `pruef_rettungsmittel()`; hier steht nur noch das Schreiben,
+                 * und deshalb ERBT dieser Weg jede Aenderung der Regel, statt
+                 * sie zu kopieren. */
                 if ($rm['caps']) {
                     $insC = $pdo->prepare('INSERT IGNORE INTO vehicle_capabilities
                                            (vehicle_id, capability) VALUES (?,?)');

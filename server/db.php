@@ -595,9 +595,15 @@ const CREW_ROLES = [
 /**
  * Faehigkeiten eines Rettungsmittels (E29). Zwei getrennte Haken, weil ein
  * Hubschrauber eine Winde fuehren kann, ohne in einer Bergwachtkooperation zu
- * stehen — und umgekehrt. Sie kommen ausschliesslich an luftgebundenen
- * Rettungsmitteln vor und steuern die zugehoerigen Einsatzfelder allein; eine
- * zusaetzliche Pruefung auf die Art ist deshalb weder noetig noch vorgesehen.
+ * stehen — und umgekehrt. Sie steuern die zugehoerigen Einsatzfelder allein
+ * (`cap_gate` in mission_fields.php); eine zweite Pruefung auf die Betriebsart
+ * gibt es dort bewusst nicht.
+ *
+ * WO SIE VORKOMMEN DUERFEN, sagt seit dem Demo-Ausbau nicht mehr die
+ * Betriebsart allein, sondern die Spalte `faehigkeiten` in VEHICLE_TYPEN —
+ * ausgewertet von `veh_caps_erlaubt()`. E29 gilt weiter fuer die Typen
+ * Standard, Veranstaltung und Sonstiges; der Typ BERGWACHT ist die benannte
+ * Ausnahme. Der Grund steht dort.
  */
 const VEHICLE_CAPABILITIES = [
     'winch'     => 'Winde',
@@ -622,31 +628,63 @@ const VEHICLE_CAPABILITIES = [
  * ist bewusst geschlossen (dieselbe Abwaegung wie bei `users.role`).
  *
  * Die Spalten:
- *   label        Beschriftung in Formular, Liste und Plakette
- *   betriebsart  null = frei waehlbar; sonst der eine erlaubte Wert
- *   rollen       duerfen Rollen-Vorlagen (`vehicle_roles`) hinterlegt werden?
- *   standort     ist `base_id` Pflicht?
+ *   label         Beschriftung in Formular, Liste und Plakette
+ *   betriebsart   null = frei waehlbar; sonst der eine erlaubte Wert
+ *   rollen        duerfen Rollen-Vorlagen (`vehicle_roles`) hinterlegt werden?
+ *   standort      ist `base_id` Pflicht?
+ *   faehigkeiten  'luft'  = nur luftgebunden (E29)
+ *                 'immer' = in BEIDEN Betriebsarten
  *
- * FAEHIGKEITEN STEHEN NICHT ALS SPALTE DARIN, obwohl E-S9-09 sie nennt: Sie
- * kommen ausschliesslich an luftgebundenen Rettungsmitteln vor (E29), und
- * 'veranstaltung' ist auf Boden festgelegt — „Veranstaltung hat keine
- * Faehigkeiten" folgt damit aus den beiden Angaben, die schon dastehen. Eine
- * eigene Spalte waere eine zweite Fassung derselben Aussage, und zwei
- * Fassungen koennen auseinanderlaufen.
+ * WARUM FAEHIGKEITEN JETZT EINE SPALTE SIND. Bis zum Demo-Ausbau stand hier,
+ * sie brauchten keine: Faehigkeiten kaemen ausschliesslich an luftgebundenen
+ * Rettungsmitteln vor, und 'veranstaltung' sei auf Boden festgelegt — beides
+ * zusammen ergab die Aussage von selbst. Diese Herleitung traegt nicht mehr.
+ * Ein Bergwachtnotarzt FAEHRT zum Einsatz und wird von dort GEFLOGEN; er
+ * braucht die Winde, und seine Betriebsart ist Boden. Die Kopplung von Winde
+ * und Luft war eine Regel ueber Hubschrauber, nicht ueber Bergwacht.
+ *
+ * Fuer 'veranstaltung' bleibt die Herleitung stehen und deshalb 'luft': Der Typ
+ * ist auf Boden festgelegt, und damit kommt er nie an Faehigkeiten — die Spalte
+ * sagt nur, was NICHT schon aus der Betriebsart folgt.
  *
  * Die Reihenfolge im Array ist die Anzeigereihenfolge; 'standard' steht
  * zuerst, weil es die Vorgabe ist.
  */
 const VEHICLE_TYPEN = [
     'standard'      => ['label' => 'Standard',      'betriebsart' => null,
-                        'rollen' => true,  'standort' => true],
+                        'rollen' => true,  'standort' => true,
+                        'faehigkeiten' => 'luft'],
     'bergwacht'     => ['label' => 'Bergwacht',     'betriebsart' => null,
-                        'rollen' => false, 'standort' => false],
+                        'rollen' => false, 'standort' => false,
+                        'faehigkeiten' => 'immer'],
     'veranstaltung' => ['label' => 'Veranstaltung', 'betriebsart' => 'ground',
-                        'rollen' => false, 'standort' => false],
+                        'rollen' => false, 'standort' => false,
+                        'faehigkeiten' => 'luft'],
     'sonstiges'     => ['label' => 'Sonstiges',     'betriebsart' => null,
-                        'rollen' => false, 'standort' => false],
+                        'rollen' => false, 'standort' => false,
+                        'faehigkeiten' => 'luft'],
 ];
+
+/**
+ * Darf ein Rettungsmittel dieses Typs in dieser Betriebsart Faehigkeiten
+ * fuehren?
+ *
+ * EINE STELLE FUER DREI LESER: die Pruefschicht (`pruef_rettungsmittel()`),
+ * der Stammdatendialog und — ueber `VEHICLE_TYPEN` im JSON — dessen Skript.
+ * Die Regel selbst ist zwei Zeilen lang; zweimal geschrieben waere sie beim
+ * naechsten Typ zweierlei.
+ *
+ * Ohne gewaehlte Betriebsart ist die Antwort NEIN und nicht „noch nicht
+ * entschieden": Was ohne Betriebsart hereinkaeme, liesse sich nicht pruefen.
+ */
+function veh_caps_erlaubt(?string $typ, ?string $kind): bool
+{
+    if ($typ === null || !isset(VEHICLE_TYPEN[$typ])) { return false; }
+    if (VEHICLE_TYPEN[$typ]['faehigkeiten'] === 'immer') {
+        return $kind === 'air' || $kind === 'ground';
+    }
+    return $kind === 'air';
+}
 
 /**
  * Rollen, die zu einer Einsatzart gehoeren, in Katalogreihenfolge.

@@ -1614,6 +1614,67 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zahl ist keiner. Zuordnung: **P6** (Review und Bereinigung, R69) oder
     früher, wenn vorher ein weiteres Konzept gelöscht wird.
 
+191. **Die Zeitraumübersicht zählt Windendienste nur luftgebunden.**
+    *Aufgenommen 14.09.2026 (Demo-Ausbau, AP0.)* Seit Web 20.3.0 darf ein
+    Rettungsmittel des Typs **Bergwacht** die Fähigkeiten Winde und Bergwacht
+    auch **bodengebunden** führen (`veh_caps_erlaubt()`). Sein Diensttag trägt
+    sie dann in `day_capabilities`, und das Einsatzformular zeigt die
+    Windenfelder — `cap_gate` fragt den Diensttag ohne Artfilter. Die
+    **Zeitraumübersicht** übergeht ihn an zwei Stellen: `api/range.php`
+    beantwortet `faehigkeiten` nur über `d.kind = 'air'`, und die beiden
+    Windenkacheln (`winchcycles`, `avgwinch`) stehen ausschließlich im
+    Luft-Kachelsatz `KACHELN_LUFT`.
+
+    **Warum es nicht in AP0 mitging.** Die Abfrage wäre eine Zeile. Der
+    Bodensatz hat heute **acht** Kacheln in **vier** Spalten
+    (`SPALTEN_JE_SATZ.ground`); zwei weitere ergäben zehn in vier Spalten, also
+    zwei volle Reihen und eine mit zwei — genau die halb leere Reihe, die
+    E-P3-37 vermeiden wollte. Das ist eine Gestaltungsentscheidung und braucht
+    eine Freigabe mit Mockup (`CLAUDE.md` 5), nicht einen Nebenbeischritt in
+    einem Paket über Referenzdaten.
+
+    **Der Artfilter selbst bleibt nötig**, er ist nur zu eng formuliert: Die
+    Migration `2026_08_17_notarzt_erweiterung` hat **jedem** damals
+    bestehenden Diensttag beide Fähigkeiten gegeben, ohne nach der Art zu
+    fragen. Wer die Zeile streicht, holt auf einem gewachsenen Bestand diese
+    Altlast zurück. Die tragfähige Bedingung ist
+    `d.kind = 'air' OR d.vehicle_typ = 'bergwacht'` — Bergwacht-Diensttage
+    kann es vor Web 16.0.0 nicht gegeben haben, also trägt keiner die Altlast.
+
+    *Abnahme:* Ein bodengebundener Bergwacht-Diensttag mit Windeneinsatz (im
+    Referenzbestand **D19**) zeigt im Zeitraum, der ihn enthält, die
+    Windenkacheln mit dem richtigen Wert. *Fehlschlag:* die Kacheln fehlen oder
+    zeigen 0. Zuordnung: **P6** (Review der Oberfläche) oder ein eigenes
+    kleines Paket mit Mockup.
+
+## Erledigt
+
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
+
+190. **Fähigkeiten lassen sich an einem bodengebundenen Bergwacht-Rettungsmittel
+    nicht hinterlegen.** *Aufgenommen und erledigt 14.09.2026 (Demo-Ausbau,
+    AP0, Web 20.3.0).* E29 erlaubte Winde und Bergwacht ausschließlich an
+    luftgebundenen Rettungsmitteln. Ein **Bergwachtnotarzt** fährt aber zum
+    Einsatz und wird von dort geflogen: Er braucht die Winde, und seine
+    Betriebsart ist Boden. `pruef_rettungsmittel()` verwarf die Häkchen still,
+    und der zugehörige Diensttag bekam im Einsatzformular keine Windenfelder
+    (`cap_gate` über `day_capabilities`).
+
+    **Erledigt mit einer Spalte statt einer Bedingung.** `VEHICLE_TYPEN` führt
+    seither `faehigkeiten` (`'luft'` | `'immer'`), `veh_caps_erlaubt()` wertet
+    sie aus, und Prüfschicht, Stammdatendialog und Rückspielweg der Sicherung
+    fragen dieselbe Funktion. Nebenbei geschlossen: Das Dialogskript führte
+    eine dritte, engere Fassung der Regel (Typ Bergwacht oder Sonstiges mit
+    Betriebsart Luft durfte Fähigkeiten führen, sah die Häkchen aber nie), und
+    die Karte *Bergwacht-Bereitschaften* erschien nur an einem Standort mit
+    luftgebundenem Rettungsmittel.
+
+    **Was offen blieb, steht als Nr. 191:** Die Zeitraumübersicht zählt
+    Windendienste weiter nur luftgebunden. Einzelheiten und Begründung im
+    Changelog zu Web 20.3.0.
+
 189. **`server/schema.sql` nennt einen Pfad, den es seit dem 02.09.2026 nicht
     mehr gibt.**
     *Aufgenommen 14.09.2026 (S10-Nachlauf, Fund der Vollständigkeitskritik.)*
@@ -1639,11 +1700,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `server/`, spätestens der Kommentardurchgang in P6 (R69), der die
     Konzept- und Beschlussverweise im Code ohnehin durchgeht.
 
-## Erledigt
-
-
-Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
-zutreffen.
+    *Erledigt 14.09.2026 (Demo-Ausbau, AP0, Web 20.3.0)* — das war das nächste
+    Paket unter `server/`. Beide Stellen nennen jetzt
+    `docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md`
+    ausgeschrieben; die Datei liegt dort.
 
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des

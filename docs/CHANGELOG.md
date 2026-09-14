@@ -14,6 +14,83 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.3.0] — 2026-09-14
+
+Schritt 9d (**Demo-Ausbau**), erstes Arbeitspaket (AP0). Der Referenzbestand
+soll die drei Rettungsmittel-Typen aus S9 **im Betrieb** zeigen, und dafür
+braucht ein Bergwachtnotarzt die Winde. Genau das ließ die Prüfschicht bisher
+nicht zu — deshalb steht diese eine Regeländerung **vor** allem anderen des
+Pakets: Ohne sie verwirft der Einspielweg die Fähigkeiten still, und kein
+Bergwacht-Einsatz bekäme seine Windenfelder.
+
+### Geändert — Fähigkeiten beim Typ Bergwacht in beiden Betriebsarten
+
+**Was galt.** E29: Winde und Bergwacht kommen ausschließlich an
+luftgebundenen Rettungsmitteln vor. `pruef_rettungsmittel()` prüfte
+`$kind === 'air'`, und `db.php` begründete daneben, warum `VEHICLE_TYPEN`
+dafür keine eigene Spalte brauche: Bei „Veranstaltung" folge „keine" schon aus
+der festen Betriebsart, bei den übrigen aus E29.
+
+**Was nicht galt.** Ein Bergwachtnotarzt **fährt** zum Einsatz und wird von
+dort **geflogen**. Er braucht die Winde, und seine Betriebsart ist Boden. Die
+Kopplung von Winde und Luft war eine Regel über Hubschrauber, nicht über
+Bergwacht — und sie war die einzige Stelle, die beides aneinanderband: Die
+Einsatzfelder hängen längst an der **Fähigkeit** des Diensttags (`cap_gate`),
+nicht an seiner Art.
+
+**Was sich ändert.** `VEHICLE_TYPEN` bekommt die Spalte `faehigkeiten`
+(`'luft'` | `'immer'`), `veh_caps_erlaubt()` wertet sie aus, und die
+Prüfschicht fragt nur noch diese eine Funktion. Der Typ Bergwacht steht auf
+`'immer'`, die drei anderen auf `'luft'`. Für „Veranstaltung" bleibt die alte
+Herleitung gültig — fest bodengebunden, also nie Fähigkeiten —, und die Spalte
+sagt deshalb nur, was **nicht** schon aus der Betriebsart folgt. Der
+Rückspielweg der Sicherung (`backup_lib.php`) **erbt** die Regel, statt sie zu
+kopieren; er ruft dieselbe Prüfschicht auf wie das Formular.
+
+**Zwei Lücken fallen dabei zu, und beide standen nicht im Auftrag.**
+
+1. Das Skript des Stammdatendialogs führte mit `regel.rollen && kind === 'air'`
+   eine **dritte** Fassung der Regel — enger als der Server. Ein Rettungsmittel
+   des Typs **Bergwacht oder Sonstiges mit Betriebsart Luft** durfte
+   Fähigkeiten führen (der Server nahm sie an), bekam die Häkchen aber nie zu
+   sehen: Die Zeile hing an `regel.rollen`, und das hat außer „Standard"
+   keiner. Jetzt liest das Skript dieselbe Tabelle wie die Prüfschicht.
+2. Die Karte **Bergwacht-Bereitschaften** auf der Standortseite erschien nur,
+   wenn dort ein luftgebundenes Rettungsmittel stand. Eine Bergwachtstation mit
+   einem bodengebundenen Notarzt hätte danach ein Feld „Bereitschaft" im
+   Einsatz, aber keinen Ort, an dem sich Bereitschaften anlegen lassen. Gefragt
+   wird jetzt `veh_caps_erlaubt()`.
+
+Dazu zwei Kleinzeilen statt einer („nur luftgebunden" / „bei diesem Typ auch
+bodengebunden") und ein zweiter Satz unter den Häkchen: Beim Typ Bergwacht
+fehlen die **Rollen**-Vorlagen, die Fähigkeiten aber nicht — der bisherige Satz
+behauptete beides und war damit zur Hälfte falsch.
+
+**Was bewusst stehen bleibt.** `api/range.php` zählt die Fähigkeiten eines
+Zeitraums weiter nur über `d.kind = 'air'`, und die beiden Windenkacheln gibt
+es nur im Luft-Kachelsatz. Ein bodengebundener Bergwacht-Diensttag zeigt seine
+Windenfelder also im **Einsatzformular**, wird in der **Zeitraumübersicht**
+aber nicht als Windendienst gezählt. Das zu ändern hieße zehn Kacheln in vier
+Spalten — eine Gestaltungsentscheidung, die eine Freigabe mit Mockup braucht
+(`CLAUDE.md` 5). Sie steht als **Backlog Nr. 191**; der Kommentar an der
+Abfrage sagt es jetzt, statt sich weiter auf E29 zu berufen.
+
+**Keine Schemaänderung, keine Migration.** `vehicle_capabilities` und
+`day_capabilities` führen keine Art; sie konnten den Fall immer schon tragen.
+`update.php` muss nach dem Deploy **nicht** laufen.
+
+### Behoben — ein toter Verweis in zwei Kommentaren (Backlog Nr. 189)
+
+`server/schema.sql` und `server/migration_lib.php` erklären dieselbe Sache mit
+demselben Beleg (F-S2-G); einer der beiden war beim Umzug der Konzepte am
+02.09.2026 nachgeführt worden, der andere nicht. Beide nennen den Pfad jetzt
+ausgeschrieben. Der Punkt wartete ausdrücklich auf „das nächste Paket, das
+`server/` ohnehin anfasst" — das ist dieses.
+
+**Gemessen:** `php -l` auf allen berührten Dateien fehlerfrei; die
+Regeltabelle `veh_caps_erlaubt()` über alle acht Paare aus vier Typen und zwei
+Betriebsarten nachgerechnet (Prüfdokument des Pakets, Abschnitt 2).
+
 ## [Web 20.2.1] — 2026-09-14
 
 Schritt 9b (**S10 — Sicherheit**, R78), fünftes Arbeitspaket: die Prüfmittel

@@ -100,20 +100,26 @@ declare(strict_types=1);
  *                                   VEHICLE_CAPABILITIES in db.php.
  *
  *                                   ERSETZT DIE ARTPRUEFUNG VOLLSTAENDIG (E29):
- *                                   Faehigkeiten kommen ausschliesslich an
- *                                   luftgebundenen Rettungsmitteln vor, ein
- *                                   zusaetzliches 'kind_gate' waere also nur
- *                                   eine zweite Formulierung derselben Aussage
- *                                   — und die erste, die beim naechsten Umbau
+ *                                   Ein zusaetzliches 'kind_gate' waere eine
+ *                                   zweite Formulierung derselben Aussage —
+ *                                   und die erste, die beim naechsten Umbau
  *                                   vergessen wird.
  *
- *                                   Der Schluessel ist zugleich der Grund,
- *                                   warum ein bodengebundener Dienst keine
- *                                   Windenfelder zeigt (A3) und warum ein
- *                                   spaeter abgewaehlter Windenhaken alte
- *                                   Einsaetze nicht beschaedigt (A13e): Gefragt
- *                                   wird der Diensttag, nicht das heutige
- *                                   Rettungsmittel.
+ *                                   UND GENAU DAS HAT SICH BEWAEHRT. Seit dem
+ *                                   Demo-Ausbau darf ein Rettungsmittel des
+ *                                   Typs BERGWACHT die Winde auch bodengebunden
+ *                                   fuehren (`veh_caps_erlaubt()` in db.php).
+ *                                   Ein bodengebundener Dienst zeigt die
+ *                                   Windenfelder seither dann, wenn SEIN
+ *                                   Diensttag die Faehigkeit traegt — an dieser
+ *                                   Datei war dafuer keine Zeile zu aendern.
+ *                                   Ein 'kind_gate' daneben haette hier
+ *                                   nachgezogen werden muessen.
+ *
+ *                                   Dasselbe gilt fuer A13e: Ein spaeter
+ *                                   abgewaehlter Windenhaken beschaedigt alte
+ *                                   Einsaetze nicht, weil der DIENSTTAG gefragt
+ *                                   wird und nicht das heutige Rettungsmittel.
  *
  *   'show_if' => [                  WERTABHAENGIGES UNTERFELD unter einem
  *      'field'  => '<elternspalte>',  'select'. Nur zeigen und nur speichern,
@@ -406,9 +412,11 @@ return [
 
     /* ---- Gruppe „Bergrettung" ---------------------------------------------
      * Bergwacht steht vor der Winde: Erst wer beteiligt war, dann womit. Beide
-     * haengen an einer FAEHIGKEIT des Diensttags ('cap_gate') und sind an einem
-     * bodengebundenen Dienst gar nicht zu sehen — die ganze Gruppe faellt dann
-     * weg (einsatz_form.php). */
+     * haengen an einer FAEHIGKEIT des Diensttags ('cap_gate'); traegt er keine,
+     * faellt die ganze Gruppe weg (einsatz_form.php). Das ist an einem
+     * bodengebundenen Dienst der Regelfall — aber seit dem Demo-Ausbau nicht
+     * mehr ausnahmslos: Ein Diensttag auf einem Rettungsmittel des Typs
+     * Bergwacht traegt die Faehigkeiten in beiden Betriebsarten. */
     'bergwacht' => [
         'label' => 'Bergwacht', 'type' => 'checkbox', 'gruppe' => 'bergrettung',
         'cap_gate' => 'bergwacht',
