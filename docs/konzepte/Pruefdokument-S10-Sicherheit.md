@@ -16,8 +16,7 @@ abgehakt ist (R62).
 > | Stand | 14.09.2026 — **AP5 erledigt** (Web **20.2.1**: eine Stelle unter `server/`, der zweite Riegel an der Demo-Fixture), AP6 als Nächstes. |
 > | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines** · AP3: **Betriebslauf** in drei Engines (Oberfläche der fünf Lagen, Blatt im Druck, Rotation, Neuanfang, Reset) · AP4: Freigabe-, Wiederherstellungs-, Versand- und Komplettprobe, dazu fünf Wege am `ftp`-Altziel und die Cron-Zeile · **AP5: Wartungs-, Riegel-, Sitzungs-, Wiederherstellungs-, Komplett-, Endpunkt- und Generatorprüfung, Prüfkonten, beide Kreisläufe**; alles aus AP1 bis AP3 erneut (Abschnitt 2) |
 > | Offen | P-01 bis P-14 |
-> | **Nicht** behoben, mit Begründung | `tools/referenzdatensatz/browser/demo_pruefen.mjs` läuft nicht durch — **vorbestehend**, belegt durch einen Gegenlauf gegen den Stand ohne die AP5-Änderung. Ihr Abschnitt 5 misst gegen Markup, das es nicht mehr gibt, und müsste neu geschrieben werden: ein eigenes Paket (Abschnitt 0, Punkt 0) |
-> | Prüfmittel, die in AP5 **kaputt** vorgefunden wurden | die **Wartungsprobe** (seit AP3 auf 1 nicht erfüllt, unbemerkt), zwei **Prüfmittel mit Rückständen** (2 Wegwerfkonten, 3 verwaiste Paketordner), die **Voraussetzung der Endpunktprobe** als blosse Meldung, `pruefkonten.php` ohne Serverschlüssel-Riegel, **sieben abgeschriebene Zahlen** in Anleitungen und Kommentaren, **zwei Prüfmittel, die `config.php` lasen**, die **erzeugten Tabellen von `docs/Design.md`** sieben Zeilen hinter den Quellen, ein **falsch beschriebenes Fach** in der Abmelde-Probe — und **zwei Fehler in AP5s eigener Arbeit**, gefunden von der Gegenprobe des Pakets: eine Erwartung, die nicht fehlschlagen konnte, und zwei Proben, die den Zustand hätten herstellen können, den sie messen (F-S10-AP5-01 bis -13) |
+> | Prüfmittel, die in AP5 **kaputt** vorgefunden wurden | die **Wartungsprobe** (seit AP3 auf 1 nicht erfüllt, unbemerkt), zwei **Prüfmittel mit Rückständen** (2 Wegwerfkonten, 3 verwaiste Paketordner), die **Voraussetzung der Endpunktprobe** als blosse Meldung, `pruefkonten.php` ohne Serverschlüssel-Riegel, **sieben abgeschriebene Zahlen** in Anleitungen und Kommentaren, **zwei Prüfmittel, die `config.php` lasen**, die **erzeugten Tabellen von `docs/Design.md`** sieben Zeilen hinter den Quellen, ein **falsch beschriebenes Fach** in der Abmelde-Probe, eine **Browserprobe, die überhaupt nicht durchlief** (vier Ursachen, alle in der Probe) — und **zwei Fehler in AP5s eigener Arbeit**, gefunden von der Gegenprobe des Pakets: eine Erwartung, die nicht fehlschlagen konnte, und zwei Proben, die den Zustand hätten herstellen können, den sie messen. **Alle behoben** (F-S10-AP5-01 bis -13) |
 > | Fragen | keine. **F-S10-6** (Konzept Abschnitt 7) — der zweite Riegel in `server/demo_lib.php` — ist am 14.09.2026 mit **Weg (a)** entschieden und als Web 20.2.1 gebaut. Das erste `@media print` des Projekts (Schlüsselblatt) war nach `CLAUDE.md` 5 freigabepflichtig und ist am **14.09.2026 nach Vorlage der Bilder abgenommen** — ohne weiteres Mockup (E-S10-U-06). |
 > | Fehlerfunde | **drei in der Anwendung** (F-1 bis F-3, in AP2 behoben), **vier in Bestand und Dokumentation** (F-15 bis F-17 in AP3, F-S10-AP4-04 in AP4), **neunzehn am Prüfstand** (F-S10-U-01, F-11 bis F-14, F-S10-AP3-01 bis -09, F-S10-AP4-01 bis -06). **Zwei Prüfmittel waren kaputt, bevor AP4 sie anfasste** — die Komplettprobe stürzte ab (Rückgabewert 255), die Wiederherstellungsprobe scheiterte an ihrer eigenen Arithmetik |
 > | Prüfumgebung | PHP **8.4.19** (CLI, NTS) · MariaDB **10.11.14** · Python **3.11.15** · Node **22.22.2** · Playwright **1.56.1** mit drei Engines: Chromium **141.0.7390.37**, Firefox **142.0.1**, WebKit **26.0** · lokale Installation über `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto; `admin@gen-em.org` und `demo@gen-em.org` mit den Vorgabekennwörtern) |
@@ -67,21 +66,20 @@ eine Stelle an (`demo_fixture_laden()`, Web 20.2.1). Vier Punkte gehören
 hierher, weil sie sagen, worüber die AP5-Zahlen **nichts** aussagen — und
 einer davon ist ein Prüfmittel, das AP5 **nicht** repariert hat:
 
-0. **`tools/referenzdatensatz/browser/demo_pruefen.mjs` läuft nicht durch.**
-   Sie stürzt in Abschnitt 5 mit einem `TimeoutError` ab — sie sucht ein
-   `input[name="email"]` auf `einstellungen.php?t=profil`, und das gibt es
-   dort nicht mehr (der einzige Treffer im ganzen `server/`-Baum steht in
-   `login.php`). **Vorbestehend:** Ein Gegenlauf gegen den Stand ohne die
-   AP5-Änderung zeigt denselben Absturz an derselben Zeile. Sie steht in
-   keiner Liste von E-S10-15, und ihr Abschnitt 5 müsste gegen die heutige
-   Oberfläche neu geschrieben werden — **das ist ein eigenes Paket**.
-   *Dabei ist noch etwas sichtbar geworden:* Der Knopf „Auf Standard
-   zurücksetzen" wirkte in beiden Läufen nicht (der Papierkorb des
-   Demo-Kontos wuchs 6 → 7 → 8), während `demo_zuruecksetzen()` von Hand
-   gerufen sofort wieder **88 Einsätze, Papierkorb 5/1/5** ergab. Der
-   Unterschied liegt am Bedienweg, nicht am Reset — und den misst nur diese
-   Probe. **Für den Backlog**, mit dieser Beobachtung als Anfang.
-   *(Der Bestand ist wiederhergestellt: 88/5/1/5, gemessen.)*
+0. **`demo_pruefen.mjs` ist repariert** (nach ausdrücklicher Anweisung vor
+   AP6, siehe F-S10-AP5-13). Sie lief zuvor überhaupt nicht durch, und alle
+   vier Ursachen lagen in der Probe: der Kacheltext wurde an einem statt an
+   mehreren Umbrüchen geteilt, der Reset-Knopf hiess anders als gesucht (der
+   Lauf setzte **nie** zurück), die Diagnose wurde über das Schloss-**Emoji**
+   gesucht, das längst ein `<svg>` ist, und `window.CSRF` gibt es nicht.
+   **Gemessen: 24 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**, dreimal
+   hintereinander. Dazu drei Erwartungen, die es vorher nicht gab: das
+   Schloss an den geschützten Feldern (`.symbol-schutz`, 5), die Zusage
+   `api/kdf_upgrade.php` → `uebersprungen: demo`, und dass die E-Mail-Adresse
+   nach der Abweisung noch dasteht.
+   *Was ich dabei zurücknehmen muss:* Ich hatte gemeldet, der Knopf „Auf
+   Standard zurücksetzen" wirke nicht, und das als möglichen Anwendungsfehler
+   in den Raum gestellt. **Er wirkt.** Die Probe hat ihn nur nie gefunden.
 
 1. **Teil 12 und Teil 11 nehmen den Anteil aus dem Speicher, nicht von der
    Platte.** Gemessen ist das Verhalten der Bibliothek bei fehlendem
@@ -397,6 +395,8 @@ AP4 sie anfasste (Abschnitt 4).
 | AP5 | darin Teil 11 | Anteil · Vor-Anteil · Serverschlüssel der **Installation** im Klartext-Dump | **0 Treffer** in 1 904 401 Byte; Kennung **3 Treffer** |
 | AP5 | `tools/anteilprobe/endpunkt.py` · `probe.php --schreiben` | Regression, E0 neu | **34 / 0** (vorher 33) · **69 / 0** |
 | AP5 | `tools/freigabeprobe/probe.mjs` | Regression gegen ein Fassung-3-Paket (Posten aus E-S10-15, in AP4 gebaut) | **16 / 0** |
+| AP5 | `browser/demo_pruefen.mjs`, dreimal | Demo-Weg im Browser, fünf Abschnitte | **24 / 0**, 0 Konsolenfehler (193 Kacheln ausgewiesen) — vorher: lief nicht durch |
+| AP5 | derselbe Lauf mit greifender Mengenbremse | „nicht gemessen" statt „verfehlt" | **12 gemessen / 11 nicht gemessen / 0 Befunde** |
 | AP5 | `tools/versandprobe/probe.php` | Regression FTPS/SFTP, Negativfälle | **116 / 0** (Anleitung nannte 115) |
 | AP5 | `tools/jobprobe/probe.php` | **neu:** `uebergangen` übersteht `jobs_lauf()` | **27 / 0** (vorher 24) |
 | AP5 | `tools/design/tabellen.py alle` gegen `docs/Design.md` | erzeugte Zeilen / abweichend | **237 / 0** (vorher **7** abweichend) |
@@ -668,10 +668,12 @@ nicht mehr das mass, was daneben stand.**
   seit AP3 hat. **Die Falle war bekannt und an einem Ort geschlossen; den
   zweiten hat niemand gesucht.**
 
-- **F-S10-AP5-13 — `demo_pruefen.mjs` läuft nicht durch**, und tat es schon
-  vor AP5 nicht (Gegenlauf mit `git stash`). **Nicht behoben** — siehe
-  Abschnitt 0, Punkt 0: Ihr Abschnitt 5 müsste gegen die heutige Oberfläche
-  neu geschrieben werden, und das ist ein eigenes Paket.
+- **F-S10-AP5-13 — `demo_pruefen.mjs` lief überhaupt nicht durch**, und tat es
+  schon vor AP5 nicht (Gegenlauf mit `git stash`). **Repariert** — vier
+  Ursachen, alle vier in der Probe: ein Umbruch zu wenig beim Teilen, ein
+  Knopf, der anders heisst als gesucht (dadurch lief der Reset **nie**), das
+  Schloss als Emoji gesucht statt als SVG, und `window.CSRF`, das es nicht
+  gibt. **24 Prüfungen, 0 Befunde, 0 Konsolenfehler.**
 
 *Was diese dreizehn verbindet:* **Kein einziger ist ein Fehler der Anwendung.**
 Alle fünf sind Prüfmittel, die grün meldeten oder still danebenlagen — und
