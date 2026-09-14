@@ -21,9 +21,9 @@ Dateien.
 > | | |
 > |---|---|
 > | Stand | 14.09.2026 — **AP3 erledigt (Web 20.1.0), AP4 in Vorbereitung.** Konzept freigegeben; fünf Fragen (F-S10-1 bis -5) am 13.09.2026 mit dem Auftraggeber entschieden und als E-S10-03, -05, -12, -13, -14 übernommen. Die **eine Abweichung zur Ansage** — das erste `@media print` des Projekts (E-S10-U-06) — ist am 14.09.2026 nach Vorlage der Bilder **abgenommen**, ohne weiteres Mockup. Keine offene Frage. |
-> | Entschieden | E-S10-01 bis E-S10-18 (Abschnitt 2), dazu E-S10-U-01 bis **-08** aus der Umsetzung (Abschnitt 2a) |
+> | Entschieden | E-S10-01 bis E-S10-18 (Abschnitt 2), dazu E-S10-U-01 bis **-16** aus der Umsetzung (Abschnitt 2a) |
 > | Offen | **Eine** der zwei gemessenen Zahlen steht seit AP2: HKDF im Browser. Die zweite — Paketgröße Fassung 3 — kommt mit AP4 |
-> | Umsetzung | **AP0 bis AP3 erledigt, AP4 als Nächstes.** Sechs Arbeitspakete (Abschnitt 3), eines nach dem anderen; nach jedem Paket Statusblock hier, Prüfprotokoll (Abschnitt 5), Push (K7). Voraussetzung erfüllt: Backlog-Runde 3 (PR #43) **und** Mockup-Runde 9c (PR #44) sind gemergt; `origin/main` stand am 14.09.2026 auf `3886e26`, **Web 19.6.0** |
+> | Umsetzung | **AP0 bis AP3 erledigt, AP4 in Arbeit** (acht Entscheidungen am 14.09.2026 getroffen, E-S10-U-09 bis -16; der AP4-Zuschnitt in Abschnitt 3 ist danach fortgeschrieben). Sechs Arbeitspakete (Abschnitt 3), eines nach dem anderen; nach jedem Paket Statusblock hier, Prüfprotokoll (Abschnitt 5), Push (K7). Voraussetzung erfüllt: Backlog-Runde 3 (PR #43) **und** Mockup-Runde 9c (PR #44) sind gemergt; `origin/main` stand am 14.09.2026 auf `3886e26`, **Web 19.6.0** |
 > | Fable-Schritte der Umsetzung | keine |
 
 > **Stand der Umsetzung**
@@ -34,7 +34,7 @@ Dateien.
 > | AP1 Grundlage Server | **erledigt** 14.09.2026 | **19.7.0** | Anteilprobe **69 von 69** + Endpunktprobe **33 von 33**; `php -l` **0** Fehler in 9 Dateien; Klickprobe **43 von 43**; Kreisläufe csv **9120/0** und edbak **287 687/0**; Bilderlauf 48 Bilder **0/0/0**; Wortliste **0/0/0**; Linkprobe **117/0** |
 > | AP2 Browser: Datenschlüssel mit Anteil, stille Umstellung | **erledigt** 14.09.2026 | **20.0.0** (Haupt) | Umstellungslauf **16 von 16** in **drei Engines, je zweimal**; darin **80 von 80** Blöcken nach der Umstellung lesbar und **0** Aufrufe von `kdf_upgrade.php` beim zweiten Anmelden; HKDF **0,023–0,154 ms** je Ableitung; Anteilprobe **69 von 69** + Endpunktprobe **33 von 33**; Klickprobe **43 von 43**; Kreisläufe **9120/0** und **287 687/0**; Bilderlauf 48 Bilder **0/0/0**; Wortliste **0/0/0**; Linkprobe **117/0**; `dataKeyHex` **0 im Code** (2 in der Versionserzählung) |
 > | AP3 Betrieb: Schlüsselblatt, Nachtragen, Rotation, Status | **erledigt** 14.09.2026 | **20.1.0** | Betriebslauf **50 von 50** in **drei Engines**; darin: drei Kennungen gleich (Karte = Status = Blatt), Druckansicht bei 210 mm **16 Gruppen / 0 zerschnitten / 0 Überlauf**, Nachtragen falsch → `config.php` **byte-gleich**, Rotation **0/3 → 1/2** nach einer echten Anmeldung, Neuanfang zweiter Versuch **abgewiesen**, nach Reset **Inhaltsschlüssel identisch** und **1 von 1** Chiffretext geöffnet; Anteilprobe **69 von 69** + Endpunktprobe **33 von 33**; Klickprobe **43 von 43**; Kreisläufe **9120/0** und **287 687/0**; Bilderlauf 4 Seiten × 8 Breiten × **beide Bedienhöhen** je **0/0/0**, dazu Risikoliste in Firefox und WebKit; Kontraste **22 Paare, 0 verfehlt**; Wortliste **0/0/0**; Linkprobe **117/0**; Vollständigkeit **329 → 335**, Unterschied erklärt |
-> | AP4 Adminpakete versiegeln, `ftp` abschaffen | offen | 20.2.0 vorgesehen | |
+> | AP4 Adminpakete versiegeln, `ftp` abschaffen | **in Arbeit** seit 14.09.2026 | 20.2.0 vorgesehen | Vorbereitung abgeschlossen: Code kartiert, **acht** Funde gegengeprüft (alle bestätigt, zwei in berichtigter Form), **acht** Entscheidungen getroffen, **acht** Falschangaben des Konzepts berichtigt |
 > | AP5 Prüfmittel und Referenzbestand | offen | keine (nur `tools/`) | |
 > | AP6 Abschluss: Dokumente, Backlog, Rahmenplan | offen | keine (nur `docs/`) | |
 
@@ -124,8 +124,25 @@ weder Fassung 1 noch unversiegelte Fassung 2. Das vereinfacht AP4 (E-S10-13).
 `sz_versand_schub()` beschickt alle aktiven Ziele mit Kontopaketen und
 Komplettbackups. Schema: `backup_targets.protokoll ENUM('ftp','ftps','sftp')`
 (`schema.sql`, Migration in `migration_lib.php`). `ext/ftp` prüft bei FTPS kein
-Zertifikat — belegt in `tools/versandprobe/LIESMICH.md`. Die Versandprobe legt
-ihr Probeziel heute mit Protokoll `ftp` an.
+Zertifikat — belegt in `tools/versandprobe/LIESMICH.md`.
+
+> **Berichtigt am 14.09.2026 (AP4-Vorbereitung).** Hier stand: „Die
+> Versandprobe legt ihr Probeziel heute mit Protokoll `ftp` an." Das ist
+> falsch, und es stand zweimal so da (auch in 1.7). Die Versandprobe legt ihr
+> Datenbankziel als **`sftp`** an (`tools/versandprobe/probe.php:379`); ihr
+> einziges `ftp` steht in einem **Negativfall** (`:400`), der heute schon
+> nichts schreibt. Das einzige Werkzeug, das ein `ftp`-Ziel wirklich anlegt,
+> ist **`tools/komplettprobe/probe.php:537`** — und genau das nennt der
+> AP4-Inhalt nicht.
+>
+> **Zwei weitere Angaben desselben Abschnitts sind zu schärfen.**
+> `sz_weg()` hat genau **einen** benannten Zweig (`sftp`, `:827`); alles
+> andere landet in `ZielFtp`, und dort entscheidet `$prot === 'ftps'` über
+> TLS (`:836`). FTPS ist damit geschützt — aber ein **unbekanntes oder
+> leeres** Protokoll fällt still auf **Klartext-FTP** zurück. Und
+> `sz_pruefen_eingabe()` prüft gegen `SZ_PORTS` (`:673`), nicht gegen
+> `SZ_PROTOKOLLE`; ein Streichen nur aus dem Anzeigekatalog bliebe wirkungslos
+> (das ist F-6, hier zum zweiten Mal belegt).
 
 ### 1.6 Was S10 an der Oberfläche berührt
 
@@ -146,8 +163,10 @@ liest `KDF_ITER` und `PAT_WRAP` aus der Seite und packt den CK mit dem
 Datenschlüssel aus; `generator/krypto.py` liefert `ableiten()`/`entpacken()`;
 `fixture/erzeugen.php` schreibt die Hüllen des Demo-Kontos in die Fixture. Dazu
 `tools/freigabeprobe/` (liest Adminpakete über `edbak_paket_kopf_lesen()`),
-`tools/versandprobe/` (Protokoll `ftp`), `tools/komplettprobe/`,
-`tools/wiederherstellungs-probe/`.
+`tools/versandprobe/` (Datenbankziel **`sftp`**, ein `ftp`-Negativfall),
+`tools/komplettprobe/` (legt als **einziges** Werkzeug ein `ftp`-Ziel an,
+`probe.php:537`, und liest aus einem fest geschriebenen Ordner `/ftp/`,
+`:553`), `tools/wiederherstellungs-probe/`.
 
 ---
 
@@ -531,6 +550,114 @@ diese Schranke erzeugte ein versehentliches Neuladen einen **zweiten** neuen
 Anteil — und die Konten, die gerade zurückgesetzt wurden, wären ein zweites
 Mal ausgesperrt. Gemessen im Betriebslauf, Abschnitt 8.
 
+**E-S10-U-09 Der Vermerk „übersprungen" bekommt einen eigenen Rückgabeschlüssel
+— und auf der Jobebene einen zweiten Namen** (14.09.2026, mit dem
+Auftraggeber; aus Fund F-A). `sz_versand_schub()` gibt zusätzlich
+`'uebersprungen' => int` und `'uebersprungen_namen' => [string]` zurück; die
+Zielseite hängt den Satz an die **Erfolgsmeldung**, nicht an den Fehlerkasten.
+
+*Warum nicht in `fehler`:* `jobs_lib.php:1167` wirft, sobald dort etwas steht.
+Die Folge wäre kein Vermerk, sondern ein **dauerhaft roter Versandjob** —
+Betriebsstatus „scheitert", Wartungsseite rot, Cron-Rückgabewert 1, und
+`jobs.letzter_erfolg` friert ein. Das Signal, für das dieser Wurf gebaut wurde
+(„damit die Wartungsseite nicht ‚grün' meldet, während seit drei Wochen nichts
+hinausgeht"), wäre verbrannt.
+
+*Und auf der Jobebene ein ANDERER Name.* Die Zahl geht bis ins Cron-Protokoll
+durch — dort ist `uebersprungen` aber schon belegt, und zwar schärfer als
+erwartet: `jobs.php:73` prüft `isset($b['uebersprungen'])` und **überspringt
+dann die ganze Jobzeile** (`continue`), weil der Schlüssel dort „dieser Job
+lief wegen einer Pause gar nicht" heißt (`jobs_lib.php:319`). Ein
+gleichnamiger Schlüssel ersetzte also das Ergebnis, statt es zu ergänzen.
+`job_versand()` gibt deshalb **`uebergangen`** zurück, und `jobs.php` hängt es
+an die normale Zeile: `versand fertig · erledigt 3 · 1 übergangen`.
+
+**E-S10-U-10 `sz_weg()` prüft POSITIV gegen den Katalog** (14.09.2026, mit dem
+Auftraggeber; aus Fund F-C). Die Funktion hat genau einen benannten Zweig
+(`sftp`); alles andere landet in `ZielFtp`, wo `$prot === 'ftps'` über TLS
+entscheidet. FTPS ist damit geschützt — ein **unbekanntes oder leeres**
+Protokoll aber fällt still auf **Klartext-FTP** zurück, und dann gehen
+Nutzername und Passwort offen über Port 21.
+
+Geprüft wird deshalb `isset(SZ_PROTOKOLLE[$prot])` und **nicht** `!== 'ftp'`:
+Ein `ENUM`, das je nach `sql_mode` still zum Leerstring wird, ist im Projekt
+belegt (`backup_lib.php:2101`), und `db.php` setzt kein `sql_mode`. Damit sind
+**beide** Wege dicht — der Versand und „Verbindung prüfen"
+(`admin_sicherungsziele.php:351`), das sonst an einem Altziel weiterhin
+Zugangsdaten im Klartext verschickt hätte.
+
+**E-S10-U-11 Das Siegel bindet auch den PAKETNAMEN** (14.09.2026, mit dem
+Auftraggeber; löst Fund F-7 auf). Der Zweck heißt
+`adminpaket|<konto>|<paket>|<teil>` statt `adminpaket|<konto>|<teil>`.
+
+*Der Einwand des Konzepts trägt nicht.* E-S10-13 hielt dagegen, der
+Paketstempel müsse beim Lesen bekannt sein und käme damit aus dem versiegelten
+Manifest. Nachgesehen: **Alle vier Leser bekommen den Dateinamen als
+Parameter**, bevor sie irgendetwas öffnen (`adminbackup_lib.php:856`, `:2040`,
+`:2184`, `:2207`), und der Name ist eindeutig (Zeitstempel plus vier
+Zufallsbytes, `:246`).
+
+*Der Preis wird ausdrücklich festgeschrieben:* **Wer ein Paket umbenennt,
+macht es unlesbar** — auch dann, wenn es von einem Backup-Ziel unter anderem
+Namen zurückkommt. Der Dateiname ist schon heute die Identität in der Ablage
+(`edbak_verzeichnis_abgleichen()`), aber es stand nirgends geschrieben. Es
+steht ab AP4 in `docs/Backup-Format.md`.
+
+**E-S10-U-12 gzip vor dem Siegel** (14.09.2026, mit dem Auftraggeber).
+Versiegelte Teile sind Zufallsrauschen; das ZIP kann sie nicht mehr packen,
+und die Begründung im Bestand („hier ist es blankes JSON, der Packlauf lohnt
+sich also", `adminbackup_lib.php:623`) fällt mit der Versiegelung weg. Ohne
+Vorstufe wüchse das Paket am 5000er-Bestand von **11,42 MB Richtung 94,28 MB**
+— das trifft Speichergrenze, Verdrängung und die Übertragung an jedes
+Backup-Ziel.
+
+Das Verfahren wird **einmal festgeschrieben** und in `docs/Backup-Format.md`
+benannt: `spur_lib.php:137` hält fest, dass `gzencode`, `gzdeflate` und
+`gzread` im Projekt nicht beliebig austauschbar sind. **Gemessen werden drei
+Zahlen** (so verlangt es AP4 selbst und so berichtigt F-10): heute · Siegel im
+ZIP ohne Vorstufe · gzip vor dem Siegel.
+
+**E-S10-U-13 Ein Altziel lässt sich nicht durch bloßes Speichern umstellen**
+(14.09.2026, mit dem Auftraggeber; aus Fund F-D). `ui_feld()` setzt `selected`
+nur bei Übereinstimmung (`ui.php:1811`); fällt `ftp` aus dem Katalog, wählt der
+Browser die **erste** Option — `sftp` —, während Port 21 und die versiegelten
+Zugangsdaten stehenbleiben. Ein Druck auf „Speichern" ergäbe ein Ziel, das
+plausibel aussieht und beim nächsten Versand scheitert; die rote Plakette wäre
+dabei verschwunden, weil das Protokoll ja nicht mehr `ftp` ist.
+
+Das Formular **sperrt** deshalb bei einem Altziel und sagt, was zu tun ist:
+Protokoll, Port **und** Zugangsdaten neu setzen. Die Zugangsdaten sind mit dem
+Serverschlüssel versiegelt und gelten nicht notwendig auch für FTPS — sie
+stillschweigend zu übernehmen wäre geraten, nicht gewusst.
+
+**E-S10-U-14 `konto.json` wird mitversiegelt** (14.09.2026, mit dem
+Auftraggeber; löst Fund F-9 auf). Die Begleitdatei neben dem Paket trägt
+E-Mail und Namen im Klartext (`adminbackup_lib.php:665`). Der Serverschlüssel
+ist genau dafür da: Der Server muss sie ohne Browser lesen können.
+
+*Erst damit stimmt die Abnahmezahl.* „Kein lesbarer Name, keine E-Mail" galt
+sonst nur für die ZIP-Einträge, während die Adresse im Ordner daneben stünde —
+eine grüne Zahl, die das Falsche misst. *Preis:* ein weiterer Leser und
+Schreiber, und **ohne Serverschlüssel ist die Backup-Übersicht nicht mehr
+lesbar** — was der Riegel aus Schritt 1 ohnehin verlangt.
+
+**E-S10-U-15 Ein übersprungenes Ziel zählt nicht als säumig** (14.09.2026).
+`sz_versand_rueckstand()` wertet allein `letzter_erfolg` und liefert ohne je
+erfolgten Versand dauerhaft `null` — die Jobzeile stünde dann **blau „in
+Ordnung"**, obwohl Pakete liegenbleiben; mit altem `letzter_erfolg` stünde sie
+dauerhaft orange, obwohl alle SFTP-Ziele beliefert sind. Beides ist eine
+Dauermeldung, die nichts mehr aussagt. Das übergangene Ziel wird deshalb aus
+der Rückstandsrechnung genommen; sichtbar ist es an **seiner Zeile** (rote
+Plakette). Mitzuziehen ist `status_lib.php:509`, dessen Zweig an `letzter_lauf`
+hängt und das Ziel sonst dauerhaft als „nie versendet" meldete.
+
+**E-S10-U-16 Der FTP-Absatz der Karte „Was hier gilt" wird umgeschrieben, nicht
+gestrichen** (14.09.2026). Er rechtfertigt heute FTP („es steht hier, weil es
+auf einfachem Webspace oft das Einzige ist"). Nach AP4 ist er der **einzige
+Ort, an dem die rote Plakette erklärt wird**: Klartext, deshalb weder wählbar
+noch beschickt, bestehende Ziele umstellen. Die Streichung selbst wird für den
+`ENUM`-Rückbau vorgemerkt (Backlog Nr. 168 / Nr. 46).
+
 ---
 
 ## 3. Arbeitspakete
@@ -627,30 +754,69 @@ Backup-Ziele in beiden Bedienhöhen 0/0/0; Kontraste 0 verfehlt; Wortliste 0/0/0
 
 ### AP4 — Adminpakete versiegeln, `ftp` abschaffen
 
+> **Fortgeschrieben am 14.09.2026** nach der Vorbereitung (Kartierung des
+> Codes, acht gegengeprüfte Funde, acht Entscheidungen E-S10-U-09 bis -16).
+> Was hier stand, war an vier Stellen zu knapp; die Ergänzungen sind **kursiv**
+> gekennzeichnet, die Berichtigungen benannt.
+
 **Inhalt:** `adminbackup_lib.php` nach E-S10-13 (Schreiben, vier Leser,
 Fassungserkennung am Inhalt, Fehlersatz), `admin_sicherungen.php` und
 `admin_user.php` (Meldung ohne Serverschlüssel), `api/adminbackup_freigabe.php`
 (öffnet vor der Weitergabe). `sicherungsziel_lib.php` und
-`admin_sicherungsziele.php` nach E-S10-14. `tools/versandprobe/` auf FTPS plus
-Negativfall; `tools/freigabeprobe/` gegen Fassung 3.
-**Eine Zahl wird gemessen:** Paketgröße Fassung 3 gegen Fassung 2 am
-5000er-Bestand (Versiegelung vor dem Packen kostet die ZIP-Kompression; die
-Teile sollten deshalb **vor** dem Versiegeln gzip-gepackt werden, wie die
-`.edbak`-Teile — die Entscheidung trifft die Messung: gzip+Siegel vs. Siegel
-allein, beide Zahlen ins Prüfprotokoll).
-**Ort:** unverändert — Backup-Ziele (Protokollauswahl, Plakette), Kontoseite und
-NutzerInnen-Liste (Pakete), Sicherungen.
+`admin_sicherungsziele.php` nach E-S10-14. `tools/freigabeprobe/` gegen
+Fassung 3.
+
+*Dazu, und im ursprünglichen Zuschnitt nicht genannt:*
+
+- ***`tools/komplettprobe/` zieht mit.*** Sie legt als **einziges** Werkzeug
+  ein `ftp`-Ziel an (`probe.php:537`) und liest aus einem fest geschriebenen
+  Ordner `/ftp/` (`:553`). Sobald `sz_pruefen_eingabe()` das Protokoll
+  abweist, scheitert schon das Anlegen, und die **sieben** Erwartungen im
+  Rumpf darunter laufen nicht mehr: aus 76/0 würde 69/1. Umgestellt wird auf
+  `ftps` mit Port 2122, und der Ordnername wird aus dem Protokoll abgeleitet
+  statt geschrieben.
+- ***`tools/versandprobe/` bleibt bei `sftp`.*** Der ursprüngliche Satz
+  („auf FTPS plus Negativfall") beruhte auf dem falschen Befund 1.5. Ihr
+  Datenbankteil misst unter anderem, dass sich ein **Hostschlüssel-
+  Fingerabdruck übernehmen lässt** (`probe.php:426`) — ein FTPS-Ziel hat
+  keinen, der Fall bliebe grün und maß nichts. Sie bekommt **nur** den
+  Negativfall dazu.
+- ***Der vorhandene Negativfall wird stumpf und muss geschärft.***
+  `probe.php:400` legt heute ein `ftp`-Ziel an und erwartet die Abweisung —
+  aber wegen des **Doppelnamens** (`sicherungsziel_lib.php:723`), nicht wegen
+  des Protokolls. Nach AP4 wäre er weiterhin grün und prüfte etwas anderes als
+  gemeint. Er bekommt einen eigenen Namen, damit die Abweisung tatsächlich am
+  Protokoll hängt.
+- ***Neun sichtbare Texte*** statt der zwei genannten Stellen — die
+  Aufzählung steht bei E-S10-U-16 und in Abschnitt 6.
+- ***`konto.json` wird mitversiegelt*** (E-S10-U-14), sonst misst die
+  Abnahmezahl unten nur die ZIP-Einträge und nicht den Ordner daneben.
+
+**Drei Zahlen werden gemessen**, nicht zwei (Berichtigung aus F-10): Die Teile
+sind heute schon **gepackt** — das ZIP tut es. Gemessen wird deshalb
+**heute · Siegel ohne Vorstufe · gzip vor dem Siegel**, am 5000er-Bestand.
+Gebaut wird nach E-S10-U-12 mit gzip; die mittlere Zahl belegt, warum.
+
+**Ort:** Backup-Ziele (Protokollauswahl, Plakette, *Sperre am Altziel*,
+*Karte „Was hier gilt"*), Kontoseite und NutzerInnen-Liste (Pakete),
+Sicherungen, *Betrieb → Status (Zeile „Backups versenden")*.
+
 **Abnahme:** `tools/freigabeprobe/` „Chiffretext ist ein anderer, Klartext
-derselbe“ gegen ein Fassung-3-Paket, Zahl wie bisher; `unzip -p paket.zip
-manifest.json | head -c 6` = `edsk1:` für jeden Teil (**n von n Teilen**);
-`grep -c '"email"' <(unzip -p …)` = **0**; Einspielen und Zurückspielen eines
-Fassung-3-Pakets über den Kreislauf edbak (0 unerklärte Abweichungen); Paket
-mit vertauschtem Teilnamen im ZIP → Fehlersatz, nichts eingespielt (**1 von 1**);
-ohne Serverschlüssel: „Alle sichern“ bricht mit Grund ab, 0 Dateien angelegt;
-Versandprobe gegen FTPS und SFTP grün mit Zahl, `ftp`-Ziel im Bestand:
-Plakette rot, Versandlauf meldet „übersprungen: 1“, Formular ohne `ftp`,
-Speichern mit `ftp` abgewiesen (**4 von 4**); Wortliste 0/0/0; Bilderlauf
-Backup-Ziele 0/0/0.
+derselbe“ gegen ein Fassung-3-Paket, Zahl wie bisher; jeder ZIP-Eintrag beginnt
+mit `edsk1:` (**n von n Teilen**, `manifest.json` eingeschlossen); *im ganzen
+Ablageordner* — ZIP **und** `konto.json` — **0** Treffer für eine
+E-Mail-Adresse; Einspielen und Zurückspielen eines Fassung-3-Pakets über den
+Kreislauf edbak (0 unerklärte Abweichungen); Paket mit vertauschtem Teilnamen
+im ZIP → Fehlersatz, nichts eingespielt (**1 von 1**); *Teil aus einem ANDEREN
+Paket desselben Kontos untergeschoben → Fehlersatz* (**1 von 1**, das ist der
+Zweck von E-S10-U-11); *umbenanntes Paket → Fehlersatz statt stillem
+Fehlschlag* (**1 von 1**); ohne Serverschlüssel: „Alle sichern“ bricht mit
+Grund ab, 0 Dateien angelegt; Versandprobe gegen FTPS und SFTP grün mit Zahl,
+`ftp`-Ziel im Bestand: Plakette rot, Versandlauf meldet „übersprungen: 1“
+*und das Cron-Protokoll „1 übergangen“*, Formular *sperrt mit Satz*, Speichern
+mit `ftp` abgewiesen *am Protokoll, nicht am Namen* (**5 von 5**);
+*`sz_weg()` mit leerem Protokoll wirft, statt Klartext zu senden* (**1 von 1**);
+*Komplettprobe wieder 76/0*; Wortliste 0/0/0; Bilderlauf Backup-Ziele 0/0/0.
 
 ### AP5 — Prüfmittel und Referenzbestand
 
