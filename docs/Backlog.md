@@ -458,6 +458,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Vorher zu klären: Was geschieht mit einer alten Datei nach dem Stichtag?
     Vorschlag: Die Meldung nennt die letzte Fassung, die sie noch einspielen
     konnte — so wie es `version_alt` heute für Nutzlasten unter 6 tut.
+
+    **Zwei Reste aus S10 gehen hier mit** (Konzept S10, E-S10-13 und
+    E-S10-14, 13.09.2026). Beide sind nach S10 nur noch **Toleranz**, nicht
+    mehr Funktion, und beide sind an keiner Stelle erreichbar, die sie
+    erzeugen könnte: der **Lesezweig für unversiegelte Adminpakete der
+    Fassung 2** (S10 schreibt ab AP4 nur noch Fassung 3, und Altpakete gibt
+    es auf der Installation keine) und der **`ENUM`-Wert `ftp`** in
+    `backup_targets.protokoll` (S10 nimmt ihn aus `SZ_PROTOKOLLE`, lässt aber
+    das Schema unberührt — eine Migration allein für einen Wert, den niemand
+    mehr wählen kann, wäre Aufwand ohne Gegenwert). Der Wert kann
+    alternativ mit dem P5-Schemarückbau (Nr. 168) fallen; wer zuerst kommt,
+    nimmt ihn mit.
 48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
     *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
     manuell mehr je Konto möglich". Umgesetzt ist die Zahl für die ganze
@@ -1065,6 +1077,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dem Serverschlüssel (Web 12.1.0) überholt. Versiegeln mit
     `sk_versiegeln()` wie das Komplettbackup, `ftp` aus der Auswahl,
     bestehende `ftp`-Ziele mit rotem Hinweis. Zuordnung: **S10** (R78).
+
+    *Konzept S10 liegt vor (13.09.2026), E-S10-13 und E-S10-14; Umsetzung in
+    **AP4**.* Entschieden ist dabei mehr, als der Punkt verlangte, und
+    zweierlei anders: **Auch `manifest.json` wird versiegelt**, nicht nur die
+    Teile — der Zweck bindet jeden Teil an Konto **und** Teilnamen
+    (`adminpaket|<konto>|<teil>`), sodass ein Umhängen an der Prüfsumme
+    scheitert; die Fassung erkennt der Leser am **Inhalt** (`sk_versiegelt()`),
+    nicht an der Dateiendung. Und **FTPS bleibt** (F-S10-5) statt mitzugehen,
+    mit dem Zusatz „prüft das Zertifikat der Gegenstelle nicht — SFTP
+    empfohlen" an Formular, Handbuch und Runbook; nur `ftp` fällt.
+    **Umzusiegeln ist nichts** (F-S10-4): Auf der Installation gibt es keine
+    Altpakete, also kein Job und kein Zähler — der Lesezweig für unversiegelte
+    Fassung-2-Teile bleibt als Toleranz und geht mit **Nr. 46**.
 
 140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-16).* Die
@@ -3034,6 +3059,18 @@ zutreffen.
     (`lokal_einrichten.sh`), dann das Demo-Konto samt `app_state`-Marker
     entfernen, `lauf.json` leeren, **dann** die Stufen. Steht so jetzt nicht
     im LIESMICH — es beschreibt nur den Fall der leeren Installation.
+
+    **S10 legt einen zweiten Riegel derselben Art daneben** (Konzept S10,
+    E-S10-06 und E-S10-15, 13.09.2026). Ab S10 hängt der Datenschlüssel am
+    **Server-Anteil** aus `config.php`, und Hüllen tragen dann die Kennung
+    `edka1:<kennung>:`. Das **Demo-Konto bleibt ausgenommen**: Es bekommt
+    keinen Anteil ausgeliefert (`ANTEIL_STAND = 'demo'`), und seine Hülle
+    bleibt `edk1:` — aus demselben Grund wie hier die Rundenzahl: Die Fixture
+    muss auf **jeder** Installation aufgehen, und eine Hülle, die am Anteil
+    dieser einen Installation hängt, täte das nicht.
+    `tools/referenzdatensatz/fixture/erzeugen.php` prüft es künftig genauso,
+    wie es heute die Rundenzahl prüft — ein Abbruch statt einer Fixture, die
+    erst beim nächsten Reset auf einer fremden Installation auffällt.
 
 38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
     *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste

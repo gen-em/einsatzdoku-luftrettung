@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 59 (14.09.2026)** — dieses Dokument steuert das Programm:
+**Fassung 60 (14.09.2026)** — dieses Dokument steuert das Programm:
 Reihenfolge, Status, programmweite Entscheidungen. Es hält nur, was für die
 nächsten Schritte gebraucht wird. Der eingefrorene Altbestand — die
 Fassungsvermerke, die Phasentexte mit ihren Umsetzungsblöcken und die 50
@@ -9,11 +9,15 @@ Programmentscheidungen im Volltext — liegt **wörtlich und unverändert** in
 Abschnitt 5" oder „Fassung 13" meinen das Archiv; sein Kopf sagt, welcher
 alte Abschnitt wo weiterlebt.
 
-**Stand am 14.09.2026, gemessen an `origin/main` (`8f1712c`):** **Web
-19.3.1**, **Uhr 3.1.0**, **Android 0.15.0**. Die Backlog-Runde 3 ist
-**gemergt** (PR #43). **Zum Merge steht die Mockup-Runde 9c** (Zweig
-`claude/jolly-planck-vexxpd`, **Web 19.6.0**, Uhr und Android unberührt) —
-gebaut und geprüft, Erledigt-Zeile in Abschnitt 8, **keine Migration**. Die jüngsten Merges in der Reihenfolge, in der sie liefen: die
+**Stand am 14.09.2026, gemessen an `origin/main` (`3886e26`):** **Web
+19.6.0**, **Uhr 3.1.0**, **Android 0.15.0**. **Es steht nichts zum Merge
+an.** Die Backlog-Runde 3 ist **gemergt** (PR #43, `8f1712c`), und die
+**Mockup-Runde 9c** ebenfalls (PR #44, `3886e26`, Web 19.4.0–19.6.0, Uhr
+und Android unberührt, keine Migration) — Fassung 59 führte sie noch als
+„zum Merge stehend" und nannte `main` bei Web 19.3.1; beides ist am
+14.09.2026 an `origin/main` **nachgemessen** und hier berichtigt (Abschnitt
+9, Regel aus Fassung 42). **In Arbeit ist seither Schritt 9b (S10
+Sicherheit)** auf dem Zweig `claude/konzept-umsetzen-uszccc`. Die jüngsten Merges in der Reihenfolge, in der sie liefen: die
 Korrekturstufe **Nr. 148 und 149** am 06.09.2026 (PR #36, Web 15.5.2),
 **Schritt 9a** am 08.09.2026 (PR #37, `f299bbf`, Web 15.6.0 / Android
 0.14.0, dazu Uhr 3.1.0 und Android 0.15.0 aus den Punkten 159/160), **S9**
@@ -21,7 +25,9 @@ am 10.09.2026 (PR #38, `0143df3`, Web 15.7.0–19.1.0) und **Web 19.1.1** am
 selben Tag (PR #39, `015b26f`, das Schloss an Einsatznummer und
 Notizen-Karte), dann die beiden **Backlog-Runden** am 12.09.2026: Runde 1
 (PR #40, `1c9f826`, Web 19.1.2), Runde 2 (PR #41, `6f316ee`, Web 19.2.0 und
-19.3.0) und deren zwei Doku-Nachträge ohne Stufe (PR #42, `dabd7a3`).
+19.3.0) und deren zwei Doku-Nachträge ohne Stufe (PR #42, `dabd7a3`), dann
+die **Backlog-Runde 3** am 13.09.2026 (PR #43, `8f1712c`, Web 19.3.1) und
+die **Mockup-Runde 9c** am 14.09.2026 (PR #44, `3886e26`, Web 19.6.0).
 
 **Was daraus für den Betrieb folgt, ist fällig und nicht erledigt** — vier
 Dinge; alles Weitere steht in Abschnitt 6:
@@ -51,12 +57,11 @@ zieht (Web 19.0.3).
 älteren Prüflisten (S2, S4, S5, S7, S8) stehen ebenfalls offen; sie hängen
 an keinem frischen Merge und deshalb nur in Abschnitt 6.
 
-**Als Nächstes** laufen zwei Dinge parallel, beide in Abschnitt 3: die
-**Mockup-Runde 9c** — vier Gestaltungsaufgaben (Backlog 41, 42, 45, 124) in
-einer Freigaberunde statt vier; sie läuft früh, weil sie eine Freigabe
-braucht und am Ende darauf warten müsste — und, nach dem Merge der
-**Backlog-Runde 3**, der **Schritt 9b (S10 Sicherheit)**; die Runde 3 selbst
-ist gebaut (Web 19.3.1, zehn Arbeitspakete, neun Backlog-Punkte). Die Festlegungen für v1.0 sind entschieden
+**Als Nächstes** läuft nur noch eines, in Abschnitt 3: der **Schritt 9b
+(S10 Sicherheit)**. Seine beiden Voraussetzungen sind erfüllt — die
+**Backlog-Runde 3** ist gemergt (Web 19.3.1, zehn Arbeitspakete, neun
+Backlog-Punkte) und die **Mockup-Runde 9c** ebenfalls (Web 19.6.0, vier
+Gestaltungsaufgaben: Backlog 41, 42, 45, 124). Die Festlegungen für v1.0 sind entschieden
 (R65 bis R73; der Schnitt ist in die drei Phasen P6, P7 und P8 geteilt,
 R71). Von den Zuarbeiten hat die **D-U-N-S-Nummer** für das
 Play-Console-Organisationskonto die längste Vorlaufzeit — bis zu vier
@@ -192,7 +197,7 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 8 | **S9 — Einsatzbearbeitung und Rettungsmittel** | Problemsammlung vom 03.09.2026 (Nr. 101–113): Adresssuche und gemeinsamer Kartendialog, Rettungsmittel-Übernahme, kompaktere Kartenschilder, Windenkacheln, Artzeichen, Vorschlagsliste, Transportziel ad hoc, Schloss-Kennzeichnung, Notizfeld verschlüsselt, „GPS-Daten", neue Rettungsmittel-Typen, Tageszuordnung, Rollen; dazu **Nr. 147** (Spur im Kartendialog), **Nr. 44, 68, 69, 70, 72** (06.09.2026) und **Nr. 152** (PS-12 Standortseiten, 07.09.2026) | Schritt 7 **erfüllt**; F3–F6 **beantwortet 06.09.2026**; **keine weitere** — Nr. 137/132 sind in S9 (07.09.2026) | **Konzept liegt vor und ist freigegeben** (Fable, 06./07.09.2026): `docs/konzepte/Konzept-S9-Einsatzbearbeitung-Rettungsmittel.md`, E-S9-01 bis -19, sieben Mockups in `konzept-s9/mockups/` | Umsetzung Opus, acht Arbeitspakete, kein Fable-Schritt | **Gebaut und geprüft** (Zweig `claude/go-bwucrx`): **AP1 bis AP8 erledigt** (AP4a und AP5b eingeschlossen) 07.–10.09.2026, Web 15.7.0 bis **19.1.1**, Migrationen `2026_09_07_adresssuche_konto` und `2026_09_07_rettungsmittel_typ`. **Am 10.09.2026 auf `main` gemergt** (PR #38, `0143df3`), der Nachtrag Web 19.1.1 am selben Tag (PR #39, `015b26f`). **Fällig ist jetzt `update.php`** (die beiden Migrationen aus AP2 und AP4 — AP7 braucht keine) und die 32-Punkte-Prüfliste. Siehe Abschnitt 8 |
 | 9 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen — die **Korrekturstufe mit Nr. 148 und 149** ist gebaut, geprüft und **am 06.09.2026 auf `main` gemergt** (Web 15.5.2, PR #36). Ihre **zweiteilige Prüfliste** in `docs/konzepte/Pruefdokument-Korrektur-148-149.md` ist seit dem Merge **fällig**. **Zwei Runden sind seither gebaut und gemergt** (berichtigt mit Fassung 47 — hier stand „offen ist allein die zweiteilige Prüfliste" und „die übrigen Einzelpunkte sind unangetastet", beides überholt): **Runde 1** am 12.09.2026 (PR #40, Web 19.1.2, sieben Punkte — 38, 93, 97, 151, 153, 156, 167; Abschnitt 8) und **Runde 2** am selben Tag (PR #41, Web 19.2.0 und 19.3.0, fünf Punkte — 118, 119, 120, 125, 126; Prüfdokument `Pruefdokument-Backlog-Runde-2.md` mit **sieben** offenen Punkten, ebenfalls fällig). **Runde 3 ist konzipiert** (13.09.2026, `docs/konzepte/Konzept-Backlog-Runde-3.md`, Prüfdokument-Vorlage daneben): Block A Nr. 91, 94, 117, 67-Unterpunkt, 41-Streichungen · Block B Nr. 47, 58 (Prüfgruppe „Zusagen" in `tools/vollstaendigkeit/`) · Block C Nr. 173, 174 (Referenzdateien neu) — keine Fable-Schritte, Umsetzung Opus |
 | 9a | **Sofortpaket Sicherheit** (R78) | Web: Nr. 127–131, 133–136, 138 (Rundenzahl 600 000, Login-CSRF, E-Mail-Nachweis, Ordner, GPX, `wiederherstellen.php`, Bauordner, Ersetzfenster der Uhr, Maskierung, Weg C, Integritätswache aus Nr. 140) — **ohne 132 und 137, die sind seit dem 07.09.2026 in S9**; Android: Nr. 142–145 und der Räumteil von 114 | Web sofort; Android nach Schritt 6 auf `main` | keins; `docs/konzepte/Vorbereitung-Sicherheitspaket.md` ist die Spezifikation (Muster R42, Prüfdokument mit Zahlen) | Opus | **gebaut, geprüft und gegengeprüft (Web 15.6.0 und Android 0.14.0, 07.09.2026)** — Nachbesserungen nach der adversarischen Gegenprüfung committet, Zweig gepusht; **am 08.09.2026 auf `main` gemergt** (PR #37, Merge-Commit `f299bbf`), **danach `update.php`** |
-| 9b | **S10 — Sicherheit** (R78) | Server-Anteil am Datenschlüssel mit Schlüsselblatt, Kennung und Rotation (SP-3); Adminpakete versiegeln, `ftp` abschaffen (Nr. 139) | Schritt 9a; **vor P5** (Hauptstufe, Umstellung aller Hüllen) | neu, nach K1 aus der Vorbereitung | Fable (Konzept), Opus | offen |
+| 9b | **S10 — Sicherheit** (R78) | Server-Anteil am Datenschlüssel mit Schlüsselblatt, Kennung und Rotation (SP-3); Adminpakete versiegeln, `ftp` abschaffen (Nr. 139) | Schritt 9a; **vor P5** (Hauptstufe, Umstellung aller Hüllen) | **liegt vor** (Fable, 13.09.2026), `docs/konzepte/Konzept-S10-Sicherheit.md`, E-S10-01 bis -18, keine Mockups | Fable (Konzept), Opus | **Konzept freigegeben; Umsetzung Opus, sechs Arbeitspakete, kein Fable-Schritt; keine Migration**; Voraussetzung Runde 3 und 9c **gemergt** (PR #43, #44) — **in Arbeit** auf `claude/konzept-umsetzen-uszccc` |
 | 9c | **Mockup-Runde** | Vier Gestaltungsaufgaben, eine Freigaberunde statt vier (Entscheidung 15 vom 12.09.2026): **Nr. 41** zwei Regeln für die Importvorschau (`imp-warn`, `imp-daygroup`), **Nr. 42** `×` am Koordinaten-Chip (`.rmx` neu bemaßen) und `⚠` im Fließtext, **Nr. 45** dritte Kartengröße, **Nr. 124** Aktionsblatt nach Weg (b) — **vier Bauarten** von Öffnern: sechs `ui_aktionen()`, neun `ui_zeilenaktionen()`, der Pin-Knopf des Ortsfelds und drei handgeschriebene Sortierblatt-Knöpfe (nachgezählt 13.09.2026, berichtigt in AP4 — die Regel hängt am Attribut und erreicht alle) | keine; **ab jetzt, parallel** — die Runde braucht eine Freigabe und läuft deshalb früh, damit sie nicht am Ende wartet | keins; Mockups nach `Design.md` 1, Freigabe je Mockup | Fable (Mockups), Opus (Umsetzung) | **Freigegeben am 13.09.2026** (`docs/konzepte/Konzept-Mockup-Runde.md`, vier Mockups in vier Fassungen, F-MR-1 bis F-MR-13 beantwortet; darunter `--dauer` fuer die ganze Anwendung auf 240 ms). **AP1 erledigt** (Web 19.4.0, 13.09.2026): Nr. 41 ist beantwortet — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen, `pruefen.py` meldet **0** `[offen]` statt 2. Dabei **Nr. 182** entstanden und mit **Web 19.4.1 gleich erledigt** (M-MR-05, F-MR-14 = Weg B): Die Kopfzeile nimmt ueber eine Container-Abfrage die sichtbare Breite an — **ohne JavaScript**. Weg C war zuerst gewaehlt und ist nach einer Kartierung mit **58 Befunden, 22 davon „bricht"**, verworfen worden. **Erledigt am 14.09.2026, Web 19.6.0.** AP2 (Nr. 42, 19.4.2) — die beiden Chips und der Satz der Meldung tragen Symbole, das Treffziel waechst von 17 x 15 auf 28 x 28 px; **AP3** (Nr. 45, 19.5.0) — die dritte Kartengroesse, ein Zustand mit zwei Wirkungen je Breite; **AP3b** (Nr. 183, 19.5.1) — Bilderlauf, Klickprobe und Stilvergleich fahren seither `--motor chromium|firefox|webkit`, und der erste dreifache Lauf brachte gleich zwei Befunde (Nr. 185, Nr. 186, beide erledigt); **AP4** (Nr. 124, 19.6.0) — das Blatt faehrt auf, der offene Oeffner ist orange hinterlegt, `--dauer` steht auf 240 ms. Zahlen in Abschnitt 8. **Drei Rueckfragen vor Beginn beantwortet** (13.09.2026): die Unicode-Pruefung bekommt eine Ausnahmeliste ueber `zusagen.md` statt des wirkungslosen Eintrags in `ausnahmen.md` (E-MR-24), die orange Markierung gilt fuer **alle** Blatt-Oeffner und nicht nur fuer die beiden Bausteine (E-MR-25), und Fehlerfund 1 laeuft in AP2 mit statt als eigener Backlog-Punkt. **Nr. 124 ist der einzige der vier aus einer Rueckmeldung von aussen** und darf die Runde verlassen, wenn sie ins Rutschen geraet. Ort begruendet in Fassung 46: vor P5, nicht in P7 |
 | 10 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb; Zweitfaktor für alle Konten (Nr. 141) und CSP nach Bauplan SP-5 (Nr. 8) | Schritte 2, 5, 7 und 9b; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt: Store-Verteilung (R65), Update-Weg (R66), Auslieferungskette (R67), Repositorium (R68), Code-Review (R69), Web-App auf Android (R70), Phasenschnitt (R71), Doku-Anforderungen (R72), Problemsammlung (R73); Ergebnis sind die Konzepte der Phasen P6–P8 mit je eigenem Paketschnitt | Festlegungen: keine (vorgezogen); Paketschnitte: die jeweilige Vorphase, P6 nach der Freigaberunde des Reviews | `docs/konzepte/Konzept-Planung-v1.0.md` | Fable (R14) | **Festlegungen entschieden** 03.09.2026 (R65–R73); offen nur die Paketschnitte je Phasenkonzept |
@@ -963,6 +968,36 @@ gelaufen sein soll. **Abnahme:** Umstellungslauf mit dem Referenzbestand,
 Reset-Weg, Freigabeweg, Demo-Reset (bleibt ohne Anteil), Wartungsseite mit
 falscher Kennung, Prüfdokument.
 
+**Das Konzept liegt vor** (Fable, 13.09.2026):
+`docs/konzepte/Konzept-S10-Sicherheit.md`, Entscheidungen E-S10-01 bis
+E-S10-18, fünf Fragen am 13.09.2026 mit dem Auftraggeber entschieden, keine
+offene Frage, **keine Mockups** (S10 baut keinen neuen Baustein und keine
+neue Darstellung). Fünf Entscheidungen in je einem Halbsatz: der
+**Konto-Anteil kommt aus der Kontonummer** per HMAC, nicht aus dem Salz
+(F-S10-1, E-S10-03 — Passwortwechsel und Reset würfeln das neue Salz im
+Browser, der Anteil dazu wäre in dem Augenblick unbekannt) · die
+**Hüllenkennung ist `edka1:<kennung>:`** und nicht `edk2:` (F-S10-2,
+E-S10-05 — an ihr liest der Browser ab, mit welchem Anteil er öffnet, und
+die Statusseite zählt, ohne eine Hülle zu öffnen) · die
+**Schlüsselfunktionen liegen unter Betrieb → Servereinstellungen**, Karte
+„Schlüssel des Servers" (F-S10-3, E-S10-12, Ordnungsprinzip R74/E-S8-12) ·
+**Altpakete umzusiegeln ist gegenstandslos** — es gibt keine (F-S10-4,
+E-S10-13; Lesetoleranz bis Nr. 46, kein Job, kein Zähler) · **FTPS bleibt
+mit Hinweis**, nur `ftp` geht (F-S10-5, E-S10-14).
+
+**Nicht in S10** (E-S10-01, abgegrenzt): Deploy-Tor (mit dem Staging,
+P5-Beginn; Nr. 140 bleibt offen), Zweitfaktor (Nr. 141, P5), Argon2id /
+`CryptoKey` / Passkeys (Nr. 146, P6), Weg B (S11, Nr. 43/53), CSP (Nr. 8,
+P5). Wer eines davon beim Bauen „mitnehmen" will, hält an (K4).
+
+**Umsetzung:** sechs Arbeitspakete, eines nach dem anderen (AP1 Grundlage
+Server · AP2 Browser mit HKDF und stiller Umstellung · AP3 Betrieb mit
+Karte, Schlüsselblatt, Nachtragen, Rotation und Status · AP4 Adminpakete
+Fassung 3 und `ftp` weg · AP5 Prüfmittel und Referenzbestand · AP6
+Abschluss). **Kein Fable-Schritt.** **Keine Schemaänderung und keine
+Migration** — `update.php` muss nach dem Merge **nicht** laufen (E-S10-16);
+was stattdessen fällig ist, steht in Abschnitt 6.
+
 ### Schritt 10 — P5 Dienstbetrieb
 
 **Ziel:** Die Anwendung trägt eine größere Nutzerbasis sicher. Baut auf
@@ -1341,7 +1376,11 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | ~~**Entscheidung F-SP-9** — Integritätswache~~ (Nr. 140) | Schritt 9a | **entschieden 06.09.2026: (a)** — sofort, im Sofortpaket |
 | **Datenschutzerklärung: Photon (`photon.komoot.io`) und die vier Kachelanbieter nennen**, dazu die Grenze der Verschlüsselung nach Weg C (Nr. 137, 138; R41) | Schritt 9a | mit dem Text |
 | **Passwort des eigenen Kontos prüfen** — mindestens zwölf Zeichen oder eine Passphrase, nirgends wiederverwendet; der Server kann es nicht prüfen (Nr. 136) | Krypto-Review | sofort |
-| **Schlüsselblatt der Installation ablegen** (Betriebsakte und Passwortmanager), sobald S10 es druckt; danach Ablageort in der Betriebsakte vermerken | Schritt 9b | nach S10 |
+| **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers" → *Server-Anteil anlegen*. **Ohne diesen Griff tut S10 nichts:** Die Hüllen bleiben `edk1:`, die Anwendung läuft wie vorher, und die Statuszeile steht rot (E-S10-09, Zustand „nicht eingerichtet") | Schritt 9b | nach dem Merge von S10 |
+| **Schlüsselblatt drucken — zwei Ausdrucke, zwei Orte** (Betriebsakte und Passwortmanager der Betreiberin); danach Ablageort in der Betriebsakte vermerken. Es trägt **beide** Geheimnisse: Serverschlüssel und Server-Anteil, je mit Kennung | Schritt 9b | unmittelbar nach dem Anlegen |
+| **Einmal anmelden und auf Status nachsehen** — die Zeile „Server-Anteil" zählt die stille Umstellung `edk1:` → `edka1:` je Konto mit. Bewegt sie sich beim zweiten Anmelden nicht mehr, ist das Konto umgestellt | Schritt 9b | nach dem Anlegen |
+| **Ein `ftp`-Ziel, falls vorhanden, auf SFTP oder FTPS umstellen** — Einstellungen → Backup-Ziele. Bestehende `ftp`-Ziele tragen ab S10 eine rote Plakette und werden **nicht mehr beschickt** (E-S10-14) | Schritt 9b | nach dem Merge von S10 |
+| **Wiederanlaufpaket um den Server-Anteil ergänzen** — es hat ab S10 **vier** Stücke: `config.php`, Serverschlüssel, Server-Anteil, Zugang zum Backup-Ziel. `config.php` ist damit Schlüsselträger **aller** Konten; das Blatt ist Pflicht, nicht Empfehlung (E-S10-17). Der Wiederherstellungsschlüssel öffnet weiterhin **ohne** Anteil | Schritt 9b | mit dem Blatt |
 | ~~Freigabe des S8-Konzepts und seiner Mockups; darin die Entscheidung zur Bedienhöhe am Schreibtisch (Nr. 74)~~ | Schritt 7 | **erledigt 05.09.2026** — E-S8-01 bis -18 bestätigt, Mockups 01 und 03–12 freigegeben (02 verworfen), Bedienhöhe als zwei Stufen entschieden (R76) |
 | **Play-Store-Beitrittslink des internen Tests** — für die Karte „App installieren" auf der Geräte-Seite (S8 AP6). Ohne ihn steht dort die Zeile ohne Knopf; die Adresse ist danach an **einer** Stelle nachzutragen (Konstante `PLAY_TEST_URL`) | Schritt 7 (S8 AP6), R65 | vor der Produktionsfreigabe |
 | **Adresse der Uhr-App im Connect-IQ-Store**, falls sie dort veröffentlicht ist — dieselbe Karte, dieselbe Mechanik (Konstante `CONNECT_IQ_URL`) | Schritt 7 (S8 AP6) | wenn die Uhr-App im Store steht |
@@ -2214,6 +2253,7 @@ Abschnitt 5 als Frage.
 
 | Fassung | Datum | Was |
 |---|---|---|
+| **60** | **14.09.2026** | **Schritt 9b (S10 Sicherheit) begonnen — Konzept abgelegt, Buchführung nachgezogen.** `docs/konzepte/Konzept-S10-Sicherheit.md` und sein Prüfdokument liegen im Repositorium; die Einträge aus Konzept-Abschnitt 8 sind in die **heute gültige** Fassung eingepflegt (Fahrplanzeile 9b, der Block „Schritt 9b" mit den fünf Entscheidungen und der Abgrenzung, **fünf** Zeilen in Abschnitt 6, Vermerke an Backlog 46, 139, 155). **Und der Kopf war wieder falsch:** Fassung 59 führte die Mockup-Runde 9c als „zum Merge stehend" und nannte `main` bei Web 19.3.1 — gemessen an `origin/main` steht dort **`3886e26`, Web 19.6.0**, 9c ist als PR #44 gemergt. Das ist die vierte Runde dieser Art (Fassungen 39, 41, 42, 60), und die Ursache ist unverändert die aus Fassung 42: Der Merge geschieht außerhalb der Sitzung, die das Dokument schreibt. **Kein Code, keine Versionsstufe** — bis auf eine `tools/`-Änderung ohne Stufe: `tools/containeraufbau/` zieht die vier WebKit-Bibliotheken nach und **misst nach**, dass alle drei Engines starten (`3 von 3`; vorher startete WebKit in einem frischen Container nicht, und ein Dreimotorenlauf wäre stillschweigend ein Zweimotorenlauf gewesen) |
 | **59** | **14.09.2026** | **Mockup-Runde 9c abgeschlossen (Web 19.6.0).** Erledigt-Zeile in Abschnitt 8 mit allen Pruefzahlen, Schritt 9c auf erledigt, die vier Backlog-Zeilen aus Abschnitt 5 ausgetragen (Selbstpruefzahl **51 = 51**), zwei Zeilen nach Abschnitt 6 (Pruefliste und Freigabe des Abschlusses). Kopf gegengelesen und **gemessen**: `origin/main` steht auf `8f1712c` mit **Web 19.3.1**, die Backlog-Runde 3 ist gemergt — der Kopf nannte sie noch als ausstehend. Die Oeffnerzahl in der 9c-Zeile ist berichtigt: **vier Bauarten**, nicht zwei Bausteine |
 | **58** | **14.09.2026** | **AP4 der Mockup-Runde gebaut (Web 19.6.0, Backlog Nr. 124).** Das Aktionsblatt faehrt von unten auf statt dazustehen, und der Oeffner traegt `--orange-hell` mit `--orange-tief`, solange sein Blatt offen ist (Fassung D4). Die Markierung haengt am **Attribut** `[data-blatt][aria-expanded="true"]` und erreicht damit alle vier Bauarten von Oeffnern — auch die naechste. Am Schreibtisch faehrt ausdruecklich nichts; `blatt.js` fragt dafuer die **gerechnete** Fahrtdauer, statt eine zu kennen. `--dauer` steht seither auf **240 ms** fuer die ganze Anwendung (E-MR-22). Gemessen: drei neue Klickprobe-Wege, 3/3 in allen drei Motoren; Stilvergleich 46 202 Elementmessungen / 390 Abweichungen, saemtlich erklaert; Bilderlauf 360 Bilder 0/0/0. **Nachgezogen, was AP2 und AP3 offen gelassen hatten:** die vier erzeugten Tabellen in `Design.md` standen auf einem alten Stand — `tabellen.py` schreibt nichts, es gibt nur aus |
 | **57** | **14.09.2026** | **AP3b: die Pruefmittel fahren drei Engines (Web 19.5.1, Backlog Nr. 183 ganz erledigt).** `tools/motor.mjs` haelt Motorwahl und Firefox-Voreinstellung an einer Stelle; Bilderlauf, Klickprobe und Stilvergleich kennen `--motor`. Die Staffelung ist gemessen begruendet und steht in `docs/Technik.md`. **Zwei Befunde aus dem allerersten dreifachen Lauf**, beide erledigt: **Nr. 185** (`import.php` lief bei 360 px nur in WebKit um 6 px ueber — WebKit rechnet den laengsten `<select>`-Eintrag in den Ueberlauf) und **Nr. 186** (die Klickprobe mass Drehungen mit `getScreenCTM()`, das in WebKit die CSS-Transformation eines HTML-Vorfahren nicht enthaelt — ein Fehler des Pruefmittels, der wie einer der Anwendung aussah). **Ein Satz zurueckgenommen:** Firefox meldet die `latin-ext`-Schriften NICHT als Konsolenfehler; die Abbrueche stammten von einem Messskript |
