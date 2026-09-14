@@ -5,9 +5,16 @@ und mit welcher **Zahl**; was konnte nicht geprüft werden und warum; welche
 Funde sind aufgetreten; und als Kernstück die **Prüfliste für den
 Auftraggeber** — alles, was nur auf der Installation geht.
 
-Das Konzept liegt daneben (`Konzept-S10-Sicherheit.md`) und trägt den
-Statusblock der Umsetzung. Dieses Dokument bleibt, bis seine Prüfliste
-abgehakt ist (R62).
+**Das Konzept ist fort.** `Konzept-S10-Sicherheit.md` trug den Statusblock
+der Umsetzung, alle Entscheidungen (E-S10-01 bis -18 und E-S10-U-01 bis -16),
+das Prüfprotokoll mit jeder Zahl und die dreiundzwanzig Fehlerfunde. Es ist
+nach der Freigabe des Abschlusses am 14.09.2026 gelöscht worden (R62/K9) —
+**die Git-Historie behält es vollständig**:
+
+    git show a00f6b5:docs/konzepte/Konzept-S10-Sicherheit.md
+
+Die Kurzfassung steht im Rahmenplan, Abschnitt 8, unter *S10 — Sicherheit*.
+**Dieses Dokument bleibt**, bis seine Prüfliste abgehakt ist (R62).
 
 > **Statusblock**
 >
