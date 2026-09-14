@@ -1614,6 +1614,31 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zahl ist keiner. Zuordnung: **P6** (Review und Bereinigung, R69) oder
     früher, wenn vorher ein weiteres Konzept gelöscht wird.
 
+189. **`server/schema.sql` nennt einen Pfad, den es seit dem 02.09.2026 nicht
+    mehr gibt.**
+    *Aufgenommen 14.09.2026 (S10-Nachlauf, Fund der Vollständigkeitskritik.)*
+    Zeile 528 verweist auf `docs/Konzept-S2`; die Datei liegt seit der
+    Neuordnung vom 02.09.2026 (`781e624`) unter
+    `docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md`.
+
+    **Dass es ein Versehen ist und keine Protokollzeile, belegt der Zwilling:**
+    `server/migration_lib.php:1770` erklärt **dieselbe** Sache mit **demselben**
+    Beleg F-S2-G und ist auf das neue Verzeichnis gezogen worden. Von zwei
+    gleichlautenden Kommentaren wurde einer nachgeführt. Beide kürzen den
+    Dateinamen auf `Konzept-S2` ab — wer hier anfasst, schreibt ihn an beiden
+    Stellen aus, sonst bleibt die Hälfte des Fundes stehen.
+
+    **Warum es nicht im Nachlauf mitging:** Die Datei liegt unter `server/`.
+    Eine Änderung dort verlangt eine Versionsstufe (`CLAUDE.md` 2) und löst
+    beim Merge einen Deploy aus (`CLAUDE.md` 3) — für einen Kommentar, der
+    weder Verhalten noch Schema berührt, ist das der falsche Preis. Gehört in
+    das nächste Paket, das `server/` ohnehin anfasst.
+
+    *Abnahme:* Beide Kommentare nennen denselben, vollständigen Pfad, und die
+    Datei dort existiert. Zuordnung: **mitlaufend** — nächstes Paket unter
+    `server/`, spätestens der Kommentardurchgang in P6 (R69), der die
+    Konzept- und Beschlussverweise im Code ohnehin durchgeht.
+
 ## Erledigt
 
 
