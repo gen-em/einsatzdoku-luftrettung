@@ -133,7 +133,12 @@ ui_seite_start(['titel' => 'Import / Export']);
            änderbar; nach jeder Änderung wird die Zeile neu geprüft. Fehlerhafte
            Zeilen blockieren nur sich selbst — entweder korrigieren oder
            überspringen.</p>
-        <div class="tabelle-scroll"><table class="tabelle" id="tabelle"></table></div>
+        <?php /* `imp-roll` macht den Rollbereich zum Groessencontainer, damit die
+               Kopfzeile einer Tagesgruppe die SICHTBARE Breite annehmen kann und
+               nicht die der Tabelle (Backlog Nr. 182, Stylesheet Abschnitt 29).
+               Eigene Klasse statt `.tabelle-scroll`: die traegt neun Stellen auf
+               sechs Seiten, und `container-type` bringt Containment mit. */ ?>
+        <div class="tabelle-scroll imp-roll"><table class="tabelle" id="tabelle"></table></div>
       <?php ui_karte_ende(); ?>
     </div>
 

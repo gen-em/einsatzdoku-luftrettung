@@ -1,4 +1,7 @@
-/* Vollbildmodus fuer Leaflet-Karten: ein wiederverwendbares Control fuer
+/* Karten-Bedienelemente: Vollbild fuer alle Kartenseiten, dritte Groesse nur
+ * fuer die Tagesuebersicht (Backlog Nr. 45, AP3 der Mockup-Runde).
+ *
+ * Vollbildmodus fuer Leaflet-Karten: ein wiederverwendbares Control fuer
  * alle Kartenseiten (Tagesuebersicht, Einsatzansicht, Zeitraum-Uebersicht).
  * Primaer die native Fullscreen-API auf dem Karten-Container. Faellt sie
  * aus -- relevant v. a. iOS Safari, das requestFullscreen() fuer beliebige
@@ -101,5 +104,92 @@
     // invalidateSize()-Aufruf fuer eine unbeteiligte Karte ist unschaedlich.
     document.addEventListener('fullscreenchange', nachUmschalten);
     document.addEventListener('webkitfullscreenchange', nachUmschalten);
+  };
+
+  /* ---- Dritte Kartengroesse (Backlog Nr. 45, M-MR-03, F-MR-7 bis F-MR-10) --
+   *
+   * WOFUER. Zwischen der Hoehe nach Fensterbreite (160/220/300 px) und dem
+   * Vollbild lag nichts. Wer mehr von der Spur sehen wollte, musste die Seite
+   * verlassen. Ein Knopf, ein Zustand — und je nach Breite zwei Wirkungen:
+   * bis 1599 px wird die Karte hoeher, ab 1600 px breit (E-MR-16). Beides
+   * macht dieselbe Klasse `.geo-gross`; WELCHE Wirkung sie hat, entscheidet
+   * das Stylesheet (Abschnitt 30). Hier steht die Schwelle 1600 NICHT.
+   *
+   * NUR AUF DER TAGESUEBERSICHT. `attachFullscreenControl()` haengt an vier
+   * Karten; dieses Control wird ausdruecklich einzeln gerufen. Die Einsatz-
+   * ansicht und die Zeitraumuebersicht haben keine Liste unter der Karte,
+   * die vom Hoeherwerden etwas haette.
+   *
+   * DER ZUSTAND WIRD GEMERKT (F-MR-8), je Browser und Geraet, nicht je Konto:
+   * Wer am Schreibtisch gross arbeitet, will das am Handy nicht zwangslaeufig.
+   * `localStorage` kann werfen (privates Fenster, geblockte Seitendaten) und
+   * leer zurueckkommen — beides faengt `gemerkt()`/`merken()` ab, und die
+   * Karte steht dann eben klein da.
+   */
+  var SCHLUESSEL = 'nadoku.karte-gross';
+
+  function gemerkt() {
+    try { return window.localStorage.getItem(SCHLUESSEL) === '1'; }
+    catch (e) { return false; }
+  }
+  function merken(gross) {
+    try { window.localStorage.setItem(SCHLUESSEL, gross ? '1' : '0'); }
+    catch (e) { /* ohne Gedaechtnis, aber bedienbar */ }
+  }
+
+  window.attachGroessenControl = function (map) {
+    var behaelter = map.getContainer();
+    var knopf = null;
+
+    function gross() { return behaelter.classList.contains('geo-gross'); }
+
+    function beschriften() {
+      if (!knopf) { return; }
+      /* ZWEI BESCHRIFTUNGEN IN EINEM SATZ. Der Knopf tut je nach Breite etwas
+       * anderes, und die Schwelle steht im Stylesheet — hier waere sie ein
+       * zweites Mal. „vergroessern/verkleinern" deckt beide Wirkungen; das
+       * Symbol daneben sagt, welche gerade gilt. */
+      var text = gross() ? 'Karte verkleinern' : 'Karte vergrößern';
+      knopf.title = text;
+      knopf.setAttribute('aria-label', text);
+      knopf.setAttribute('aria-pressed', gross() ? 'true' : 'false');
+      knopf.classList.toggle('active', gross());
+    }
+
+    function umschalten(an) {
+      behaelter.classList.toggle('geo-gross', an);
+      merken(an);
+      beschriften();
+      /* OHNE invalidateSize() BLEIBEN DIE KACHELN AUF DER ALTEN HOEHE stehen,
+       * und zwar bis zur naechsten Groessenaenderung des Fensters: Leaflet
+       * merkt von einer Klasse nichts. Derselbe Tick-Abstand wie beim
+       * Vollbild — der Behaelter braucht einen Durchgang, bis er sein neues
+       * Mass hat. */
+      setTimeout(function () { map.invalidateSize(); }, 60);
+    }
+
+    var GroessenControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function () {
+        var wrap = L.DomUtil.create('div', 'leaflet-bar map-ctrl-groesse karte-groesse');
+        knopf = L.DomUtil.create('a', '', wrap);
+        knopf.href = '#';
+        knopf.setAttribute('role', 'button');
+        /* BEIDE ZEICHEN IM KNOPF (E-MR-19), das Stylesheet blendet je Breite
+         * eines aus. `aria-hidden` an beiden: Die Auskunft steht im
+         * aria-label, und ein Vorleser soll nicht zwei Zeichen ansagen, von
+         * denen eines unsichtbar ist. */
+        knopf.innerHTML = edSymbol('karte-gross', 'symbol-gross symbol-hoch')
+                        + edSymbol('karte-breit', 'symbol-gross symbol-breit');
+        L.DomEvent.disableClickPropagation(wrap);
+        L.DomEvent.on(knopf, 'click', L.DomEvent.stop)
+          .on(knopf, 'click', function () { umschalten(!gross()); });
+        beschriften();
+        return wrap;
+      }
+    });
+
+    map.addControl(new GroessenControl());
+    if (gemerkt()) { umschalten(true); }
   };
 })();

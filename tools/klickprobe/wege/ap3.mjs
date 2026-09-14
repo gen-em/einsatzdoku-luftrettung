@@ -134,12 +134,43 @@ export const wege = [
     name: 'ap3-pfeile-drehen',
     paket: 'AP3', punkt: 'P-10', rolle: 'demo',
     was: 'Die Richtungspfeile drehen sich — einmal ganz herum in 30-Grad-Schritten',
-    soll: '12 von 12 auf 0,1 Grad, dazu jeder Pfeil auf der Spur — Pfeile erwartet, '
-        + 'sobald die Spur am Bildschirm länger als 280 px ist (geo.js, ABSTAND_PX × 2)',
+    soll: '12 von 12 auf 0,1 Grad, 8 von 8 schrägen mit größerem Umriss, dazu '
+        + 'jeder Pfeil auf der Spur — Pfeile erwartet, sobald die Spur am Bildschirm '
+        + 'länger als 280 px ist (geo.js, ABSTAND_PX × 2)',
     async fahren(k) {
       await karteSeite(k);
       const GRADE = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
-      const mess = await k.seite.evaluate((GRADE) => {
+      /* WIE DER WINKEL GEMESSEN WIRD — und warum nicht mehr mit
+         `getScreenCTM()` (AP3b, Nr. 186).
+
+         Bis zum 14.09.2026 las dieser Weg die Drehung aus der
+         Bildschirmmatrix des inneren `<svg>`. Das ist in Chromium und Gecko
+         richtig und in WebKit falsch: WebKit rechnet die CSS-Transformation
+         eines HTML-Vorfahren NICHT in die Matrix des SVG hinein. Gemessen,
+         fuenf Winkel, drei Motoren:
+
+             chromium/firefox   30° → getScreenCTM 30 · computed 30
+             webkit             30° → getScreenCTM  0 · computed 30
+
+         Die Pfeile DREHEN SICH also auch in WebKit — der Umriss waechst bei
+         30° in allen drei Motoren von 16 auf 22 px. Falsch war die Messung,
+         und sie meldete „1 von 12", was wie ein Anwendungsfehler aussah.
+
+         Gemessen wird deshalb jetzt ZWEIERLEI, beides motorunabhaengig: die
+         berechnete Matrix des drehenden Elements (die Drehung GILT) und der
+         Umriss (sie wird auch GEZEICHNET — bei 30° muss der Kasten breiter
+         sein als bei 0°). Beide Messungen liegen in EINEM `evaluate`, damit
+         der Leser nur einmal dasteht. */
+      const { mess, echt } = await k.seite.evaluate((GRADE) => {
+        const winkel = (el) => {
+          const t = getComputedStyle(el).transform;
+          const m = t && t !== 'none' ? t.match(/matrix\(([^)]+)\)/) : null;
+          const r = el.getBoundingClientRect();
+          if (!m) { return { grad: 0, breite: Math.round(r.width) }; }
+          const v = m[1].split(',').map(Number);
+          const g = ((Math.atan2(v[1], v[0]) * 180 / Math.PI) % 360 + 360) % 360;
+          return { grad: +g.toFixed(1), breite: Math.round(r.width) };
+        };
         const halter = document.createElement('div');
         halter.style.cssText = 'position:absolute;left:-9999px;top:0;display:flex;gap:8px';
         document.body.appendChild(halter);
@@ -149,22 +180,31 @@ export const wege = [
             + '<svg class="symbol" viewBox="0 0 24 24"></svg></span>';
           halter.appendChild(d);
         });
-        const erg = Array.from(halter.querySelectorAll('.geo-pfeil')).map((e, i) => {
-          const m = e.querySelector('svg').getScreenCTM();
-          const ist = ((Math.atan2(m.b, m.a) * 180 / Math.PI) % 360 + 360) % 360;
-          return { soll: GRADE[i], ist: +ist.toFixed(1) };
+        const mess = Array.from(halter.querySelectorAll('.geo-pfeil')).map((e, i) => {
+          const w = winkel(e);
+          return { soll: GRADE[i], ist: w.grad, breite: w.breite };
         });
         halter.remove();
-        return erg;
-      }, GRADE);
-      const echt = await k.seite.evaluate(() =>
-        Array.from(document.querySelectorAll('.geo-pfeil')).map(e => {
-          const svg = e.querySelector('svg');
-          const m = svg && svg.getScreenCTM ? svg.getScreenCTM() : null;
+        const echt = Array.from(document.querySelectorAll('.geo-pfeil')).map(e => {
           const roh = parseFloat((e.getAttribute('style') || '').replace(/[^\-0-9.]/g, '')) || 0;
-          const ist = m ? ((Math.atan2(m.b, m.a) * 180 / Math.PI) % 360 + 360) % 360 : null;
-          return { soll: ((roh % 360) + 360) % 360, ist: ist === null ? null : +ist.toFixed(1) };
-        }));
+          const w = winkel(e);
+          return { soll: ((roh % 360) + 360) % 360, ist: w.grad };
+        });
+        return { mess, echt };
+      }, GRADE);
+      /* DER UMRISS ALS GEGENPROBE. Ein schraeg gedrehtes Quadrat ist breiter
+         als ein ungedrehtes — wenn also KEIN gedrehter Pfeil breiter ist als
+         der ungedrehte, gilt die Drehung nicht, und das faellt hier auf, auch
+         wenn die Matrix stimmt.
+         GEZAEHLT WERDEN NUR DIE ECHT SCHRAEGEN. Vielfache von 90° scheiden
+         aus, nicht nur 0° und 180°: Ein um 90° gedrehtes Quadrat ist genauso
+         breit wie ein ungedrehtes. Der erste Entwurf zaehlte sie mit und
+         meldete in allen drei Motoren „8 von 10" — kein Fund, sondern
+         Geometrie. */
+      const breit0 = (mess.find(m => m.soll === 0) || {}).breite || 0;
+      const schraegeWinkel = mess.filter(m => m.soll % 90 !== 0);
+      const gewachsen = schraegeWinkel.filter(m => m.breite > breit0).length;
+      const schraeg = schraegeWinkel.length;
       /* WIE LANG IST DIE SPUR AM BILDSCHIRM? `geo.js` zeichnet einen Pfeil
          alle 140 px und gar keinen, wenn die ganze Spur kürzer als zwei
          Abstände ist (E-P3-33/40, „herausgezoomt verschwinden sie von
@@ -187,10 +227,12 @@ export const wege = [
       const erwartet = spurPx >= 280;
       return {
         ist: treffer + ' von ' + mess.length + ' in der Aufstellung · '
+           + gewachsen + ' von ' + schraeg + ' schräge Pfeile mit größerem Umriss ('
+           + breit0 + ' px ungedreht) · '
            + echtOk + ' von ' + echt.length + ' auf der Spur des Einsatzes'
            + ' · Spur am Bildschirm ' + spurPx + ' px'
            + (erwartet ? '' : ' (unter 280 px — geo.js zeichnet dort keine Pfeile)'),
-        ok: treffer === mess.length && echtOk === echt.length
+        ok: treffer === mess.length && echtOk === echt.length && gewachsen === schraeg
             && (erwartet ? echt.length > 0 : echt.length === 0),
         bemerkung: treffer !== mess.length
           ? mess.filter(m => !nah(m.ist, m.soll))

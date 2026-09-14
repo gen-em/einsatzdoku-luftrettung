@@ -14,6 +14,430 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.6.0] — 2026-09-14
+
+Mockup-Runde 9c, viertes Arbeitspaket: **Backlog Nr. 124** — das Aktionsblatt.
+Damit ist der letzte der vier Gestaltungspunkte gebaut.
+
+### Web — das Blatt fährt auf, und der Knopf bleibt markiert
+
+**Zwei Änderungen, eine Frage:** wo bin ich gerade? Das Aktionsblatt deckt am
+Handy die untere Bildhälfte ab. Es erschien bisher ohne Bewegung, und der
+Knopf, aus dem es kam, verschwand darin optisch — wer es wieder zumachen
+wollte, suchte.
+
+**Es fährt jetzt auf.** Im Ruhezustand steht das Blatt um seine eigene Höhe
+unter dem Bildrand; beim Öffnen wird es in 240 ms heraufgeholt, beim Schließen
+fährt es denselben Weg zurück. Ohne Bewegung las sich das Erscheinen wie ein
+Seitenwechsel: Die halbe Fläche war plötzlich eine andere, und niemand wusste,
+woher sie kam.
+
+**Am Schreibtisch ausdrücklich nicht.** Ab 1024 px ist dasselbe Markup ein
+Aufklappmenü direkt unter dem Knopf. Eine Fahrt „um die eigene Höhe von
+unten" schöbe es dort neben die Sache statt unter den Bildrand. Das Mockup
+sagt zum Schreibtisch „unverändert", und so ist es geblieben — die Markierung
+des Knopfes gilt dort trotzdem, und der Winkel dreht weiter.
+
+**Der offene Öffner ist orange hinterlegt** (Fassung D4 aus der Freigaberunde,
+F-MR-11): Fläche `--orange-hell`, Punkte und Schrift `--orange-tief`. Gemessen
+11,7:1 gegen den dunkelblauen Kartenkopf und 3,8:1 für die Punkte gegen die
+Fläche — über den 3:1, die WCAG 1.4.11 für ein Bedienelement verlangt. Vier
+Ringfassungen standen vorher zur Wahl; keine überzeugte, und der Ring auf
+Blau-hell lag bei 1,9:1.
+
+**Die Markierung hängt am Attribut, nicht an einer Klasse** — und das ist der
+eigentliche Gewinn. Öffner gibt es in vier Bauarten: das Seitenmenü
+(`ui_aktionen()`, 6 Aufrufe), das Zeilen-„⋯" (`ui_zeilenaktionen()`, 9), der
+Pin-Knopf des Ortsfelds und drei handgeschriebene Sortierblatt-Knöpfe in
+Tagesübersicht, Suche und Zeitraumübersicht. Sie teilen genau ein Merkmal:
+`data-blatt` mit `aria-expanded`. Eine Regel daran erreicht alle vier — und
+die nächste, die jemand baut, ebenfalls. „Blatt offen" ist dieselbe Aussage,
+gleich an welchem Knopf.
+
+**Alle Bewegungen der Anwendung dauern jetzt 240 ms statt 180** (F-MR-12).
+Das betrifft nicht nur das Blatt, sondern jeden Nutzer des Tokens `--dauer`:
+Schublade und Schleier, den Winkel am Akkordeon und am „Aktionen"-Knopf, den
+Schaltergriff, den Winkel der Kennzahlen. Bei 180 ms war die Auffahrt aus der
+Bildkante eher ein Aufblitzen als eine Bewegung, und eine Bewegung, die man
+nicht sieht, erklärt auch nichts. Ein zweiter Wert nur fürs Blatt wäre die
+Stelle, an der die Anwendung anfängt, verschieden schnell zu sein. **Wer
+Bewegung abbestellt hat, bekommt weiterhin keine** — dann erscheint das Blatt
+ohne Fahrt.
+
+**Was beim Bauen zu lernen war, steht im Skript:** Die Reihenfolge ist kein
+Geschmack. Beim Öffnen erst sichtbar machen, die Klasse erst im **nächsten**
+Frame — beides im selben Frame rechnet der Browser zusammen und zeichnet nur
+den Endzustand. Beim Schließen umgekehrt: erst die Klasse weg, aus dem Fluss
+erst nach der Rückfahrt, denn `display:none` hält keine Bewegung an, es
+beendet sie. Und das Skript **fragt** die gerechnete Fahrtdauer, statt eine
+Zahl zu kennen: Ist sie null — Aufklappmenü am Schreibtisch, oder Bewegung
+abbestellt —, geht das Blatt sofort aus dem Fluss. Ohne diese Frage stünde das
+Aufklappmenü eine Viertelsekunde zu lange offen.
+
+### Prüfstand — drei neue Wege in der Klickprobe
+
+`tools/klickprobe/wege/mr.mjs`: Die Markierung an **allen fünf** Vertretern
+der vier Bauarten, die Auffahrt mitten in der Bewegung gemessen (nicht nur am
+Ende), und der Schreibtischfall — dass dort **nichts** fährt und das Menü
+sofort zugeht. Den letzten sieht man einem Bild nicht an, weil es am Ende ja
+zu ist.
+
+## [Web 19.5.1] — 2026-09-14
+
+Mockup-Runde 9c, Arbeitspaket 3b: **Backlog Nr. 183** — die Prüfmittel fahren
+drei Engines. Der erste dreifache Lauf hat den Fehler unten gleich mitgebracht.
+
+### Web — ein Auswahlfeld schob die Importseite in WebKit um 6 px zur Seite
+
+**Der Befund war zuerst keiner, sondern ein Rätsel.** Der Bilderlauf meldete
+für `import.php` bei 360 px einen waagerechten Überlauf von 6 px — und nannte
+keinen Verursacher. Das war richtig: Kein Element der Seite ragt hinaus, das
+Auswahlfeld ist 302 px breit und endet bei 331. Und es passierte nur in
+WebKit; Chromium und Firefox meldeten 360 gegen 360.
+
+**Übergelaufen ist der Inhalt, nicht der Kasten.** WebKit rechnet den
+längsten Eintrag eines `<select>` in den Überlauf mit, auch wenn der Kasten
+ihn abschneidet. Nachgewiesen durch Kürzen: alle Eintragstexte auf „x" gesetzt
+→ 360 px; zurückgesetzt → wieder 366 px. Der längste Eintrag hat 53 Zeichen;
+die drei anderen Auswahlfelder derselben Seite haben 17, 17 und 30 und laufen
+nicht über. Ab 390 px verschwindet der Überlauf von selbst.
+
+**Behoben mit einer Regel**, `select.feld-eingabe{contain:paint}`. Sie war die
+einzige von vieren, die wirkt — `overflow:clip` am Feld half nicht (gemessen
+366), `max-width:100%` ebenso wenig, `appearance:none` nur zur Hälfte (361).
+Was sie kostet, ist nachgemessen und nicht geschätzt: Der fokussierte
+Ausschnitt (318 × 60 px) ist vor und nach der Regel in Firefox bitgleich, in
+Chromium und WebKit **ein** Pixel verschieden, bei einer Abweichung von 6 von
+255 — die Rundung des Fokusrings. Der Ring bleibt vollständig stehen;
+Malbegrenzung schneidet Inhalt, nicht Umriss.
+
+**Warum die Regel nur `select` trifft:** Ein Textfeld hat keinen Inhalt, der
+breiter wäre als sein Kasten. Eine Regel, die alle Eingabefelder
+malbegrenzt, hätte mehr geändert als das Gefundene.
+
+### Prüfstand — drei Engines, und wann welche fährt
+
+Nicht ausgeliefert (`tools/` ist vom Deploy ausgenommen), aber Teil derselben
+Arbeit: Bilderlauf, Klickprobe und Stilvergleich kennen seit heute
+`--motor chromium|firefox|webkit`. Motorwahl und die nötige
+Firefox-Voreinstellung stehen an **einer** Stelle, `tools/motor.mjs`. Die
+Empfehlung ist gestaffelt und steht in `docs/Technik.md`: Stilvergleich immer
+(14–18 s je Motor), Bilderlauf gestaffelt (Chromium voll, die anderen über die
+berührten Seiten plus eine Risikoliste), Klickprobe nach Bedarf.
+
+**Zwei Fallen mussten dafür ausgeräumt werden.** Headless Firefox meldet ohne
+Voreinstellung „kein Zeiger, kein Hover" und misst damit den ganzen
+Media-Block der 36-px-Bedienhöhe nicht — er meldete prompt 44 px, wo 36
+stehen. Und `newCDPSession` gibt es nur in Chromium; der Aufruf stand in
+Bilderlauf und Klickprobe und warf in den anderen beiden sofort. Gebraucht
+wird er ohnehin nur dort — gemessen behalten Firefox und WebKit die
+Eingabeart des Fingerlaufs über den Vollseiten-Screenshot hinweg, nur Chromium
+verliert sie.
+
+**Ein Satz von gestern ist zurückgenommen:** Firefox meldet die
+`latin-ext`-Schriftabrufe **nicht** als Konsolenfehler. Die Abbrüche stammten
+von einem Messskript, das schneller weiterblätterte als die Schriften luden;
+im echten Lauf melden alle drei Motoren 0. Ein Rauschfilter dafür ist deshalb
+nicht gebaut worden.
+
+## [Web 19.5.0] — 2026-09-14
+
+Mockup-Runde 9c, drittes Arbeitspaket: **Backlog Nr. 45** — die dritte
+Kartengröße.
+
+### Web — die Karte der Tagesübersicht bekommt einen Zwischenzustand
+
+**Zwischen 300 px und Vollbild lag nichts.** Wer mehr von der Spur sehen
+wollte, musste die Seite verlassen und wiederkommen — und verlor dabei den
+Blick auf die Einsatzliste. Jetzt liegt dazwischen ein Knopf, unter dem für
+das Vollbild.
+
+**Ein Zustand, zwei Wirkungen je Breite** (F-MR-9, geändert gegenüber der
+ersten Mockup-Fassung). Bis 1599 px wird die Karte **höher** —
+`min(60vh, 520px)`, beide Hälften mit Grund: 60vh lässt auf jedem Gerät ein
+gutes Drittel des Glases für die Liste darunter, 520 px deckelt das auf einem
+hohen Schreibtischbildschirm, wo 60vh sonst 800 px wären. Ab 1600 px steht die
+Karte ohnehin in einer eigenen Spalte und ist dort schon hoch; **dort wird sie
+stattdessen breit**: Das Raster fällt auf eine Spalte, und sie rückt zwischen
+Diensttag-Daten und Einsatzliste — dorthin, wo sie unter 1600 px immer steht.
+
+Beides trägt dieselbe Klasse `.geo-gross`; **welche** Wirkung sie hat,
+entscheidet das Stylesheet. Die Schwelle 1600 steht damit weiterhin an genau
+einer Stelle der Anwendung. Aus demselben Grund trägt der Knopf **beide
+Zeichen** und das Stylesheet blendet je Breite eines aus — senkrechte Pfeile
+für höher, Querpfeile für breiter (E-MR-19): Ein Knopf, der sein Symbol per
+JavaScript tauscht, hätte die Schwelle ein zweites Mal im Code.
+
+**Nur auf der Tagesübersicht.** `attachGroessenControl()` wird ausdrücklich
+einzeln gerufen; Einsatzansicht, Spurenseite und Zeitraumübersicht haben keine
+Liste unter der Karte, die vom Höherwerden etwas hätte.
+
+**Die Wahl bleibt erhalten** (F-MR-8) — je Browser und Gerät, nicht je Konto:
+Wer am Schreibtisch groß arbeitet, will das am Handy nicht zwangsläufig. Das
+ist der **erste `localStorage` dieser Anwendung**. Er kann werfen (privates
+Fenster, geblockte Seitendaten) und leer zurückkommen; beides ist abgefangen,
+und die Karte steht dann eben klein da.
+
+**Ohne `invalidateSize()` bliebe die Kacheldarstellung auf der alten Höhe**
+stehen, und zwar bis zur nächsten Größenänderung des Fensters — Leaflet merkt
+von einer Klasse nichts. Nachgemessen: vorher 10 Kacheln, nach dem Umschalten
+**15**, davon **5 am Unterrand**, **0 px unbedeckt**, schon nach 200 ms.
+
+Neu: Token `--karte-gross`, Klasse `.geo-gross`, die Symbole
+`karte-gross.svg` und `karte-breit.svg` (54. und 55. des Vorrats, beide
+Tabler). **Kein neuer Farbwert.** Token-Tabelle in `docs/Design.md` 100 → 101,
+Symboltabelle 53 → 55.
+
+Gemessen **in drei Engines** (Chromium 141, Firefox 142, WebKit 26), fünf
+Fensterbreiten je Engine — und in allen fünfzehn Messungen dasselbe Bild:
+
+| Breite | klein | groß | Raster groß | Symbol | Liste unter der Karte |
+|---|---|---|---|---|---|
+| 400 px | 160 px | **520 px** | Fluss | senkrecht | ja |
+| 720 px | 220 px | **520 px** | Fluss | senkrecht | ja |
+| 1280 px | 300 px | **520 px** | Fluss | senkrecht | ja |
+| 1600 px | 843–864 px (Spalte) | **520 px, volle Breite** | Fluss statt Raster | quer | ja |
+| 1920 px | 820–840 px (Spalte) | **520 px, volle Breite** | Fluss statt Raster | quer | ja |
+
+Dazu: `aria-pressed` folgt dem Zustand, **0** waagerechter Überlauf in allen
+fünfzehn, **keine** Konsolenfehler, und nach dem Neuladen steht die Karte
+wieder groß (520 px). Voller Bilderlauf: **360 Bilder, 0 Überlauf, 0
+Konsolenfehler, 0 Knöpfe falscher Höhe**.
+
+## [Web 19.4.2] — 2026-09-14
+
+Mockup-Runde 9c, zweites Arbeitspaket: **Backlog Nr. 42** — die letzten
+Unicode-Zeichen, die als Symbol im Markup standen.
+
+### Web — der Entfernen-Knopf im Chip bekommt ein Ziel, das man trifft
+
+**Das Problem war nicht das Zeichen, sondern die Fläche darunter.** `.rmx`
+trug ein Malzeichen als Text; das Treffziel war so groß wie das Zeichen —
+**gemessen 17 × 15 px**. Auf einem Handy mit Handschuhen ist das kein
+Bedienelement, sondern ein Glücksspiel, und ein Fehlgriff löscht eine
+Koordinate oder ein beteiligtes Rettungsmittel.
+
+Jetzt: das Symbol `schliessen` in **12 px**, zentriert in einem **28-px-Ziel**
+(M-MR-02 Variante C, F-MR-6b), mit **6 px zum Text und 6 px zum Chiprand** —
+gleich viel beidseits, wie es die Skizze des Auftraggebers verlangt (E-MR-18).
+
+**Warum ein Pseudoelement und kein größerer Knopf:** Ein 28 px hoher Knopf
+hätte den Chip 28 px hoch gemacht — und der soll seine Höhe behalten. Das
+`::before` liegt absolut über dem Symbol, vergrößert die Trefferfläche des
+Knopfes und nimmt keinen Platz im Fluss. Nachgemessen: Der Chip ist **vorher
+wie nachher 28,1 px** hoch. (Die „26 px" des Mockups waren gezeichnet, nicht
+gemessen — der Wert kommt aus der Zeilenhöhe `--zeile` und war nie 26.)
+
+**Beide Chips, eine Regel** (E-MR-11). Koordinaten (`ortsfeld.js`) und
+beteiligte Rettungsmittel (`einsatz_form.php`) setzten dasselbe Zeichen auf
+**zwei Arten** — einmal als Zeichen, einmal als JavaScript-Escape. Die zweite
+hat die Vollständigkeitsprüfung nie gesehen; sie sieht Escape-Folgen jetzt
+(unten).
+
+### Web — das Warnzeichen im Satz ist dasselbe Symbol wie in der Tabelle
+
+`patient.js` trug das Zeichen als Konstante `ZEICHEN_UNLESBAR` und setzte den
+Satz mit `textContent`. Drei Dinge waren daran falsch: Es sah in jedem System
+anders aus, es nahm die Schriftfarbe der Meldung nicht an, und es war etwas
+**anderes** als die Marke, die dieselbe Sache in der Tabelle daneben trägt —
+`missiontable.js` benutzt dort seit P3 das Symbol.
+
+Jetzt dasselbe Symbol, über die neue Klasse `.symbol-text` so groß wie die
+Schrift, in der es steht (`1em`), und auf der Grundlinie statt in der
+Zeilenmitte. Die Farbe kommt aus `.meldung-warn .symbol` — dieselbe Regel,
+die auch das große Symbol der Meldung färbt. `hinweisUnlesbar()` liefert
+damit Markup statt Text, und `zeigeUnlesbar()` setzt es mit `innerHTML`; was
+hineingeht, ist ausschließlich eigener Text, eine eigene Zahl und das Markup
+aus `edSymbol()`.
+
+### Web — eine Ausnahme weniger, nicht eine mehr
+
+Das Konzept sah vor, den `✕`-Rückfall in `wegKnopf()` als **begründete
+Ausnahme** stehen zu lassen. Der Vermerk daneben — „symbol.js lädt erst am
+Seitenende (`ui_seite_ende`)" — war **falsch**: `symbol.js` kommt aus
+`ui_geruest_ende()` und damit als *erstes* Skript der Seite; der betroffene
+Aufbau steht danach. Nachgemessen am laufenden Formular: `typeof edSymbol` ist
+`function`, **alle acht** Entfernen-Knöpfe tragen ein SVG, **keiner** das
+Zeichen. Der Zweig war seit seiner Entstehung tot.
+
+Er ist fort, und der Vermerk ist durch die Messung ersetzt. **Damit braucht
+Nr. 42 überhaupt keine Ausnahme** — weder in `ausnahmen.md` (die liest
+ausschließlich die Token-Prüfung, ein Eintrag dort stünde wirkungslos da) noch
+in `zusagen.md`.
+
+### Prüfmittel — die Symbolprüfung sieht Escape-Folgen
+
+`tools/vollstaendigkeit/pruefen.py` suchte Zeichen und übersah damit
+`'\u00d7'` — dieselbe Sache, anders geschrieben. Genau daran ist der zweite
+Chip jahrelang vorbeigekommen. Die Prüfung löst `\uXXXX` jetzt auf, bevor sie
+zählt, und zwar **längentreu**, damit jede Fundstelle auf ihrer Zeile bleibt.
+
+**Was bewusst NICHT gemacht wurde:** die Kommentare auszublenden. Das hätte
+die Zahl von 252 auf 108 gedrückt, und der Abtaster dafür (`ohne_php_js_­kommentare()`
+aus Backlog-Runde 3) ist dieser Aufgabe nicht gewachsen — in einer PHP-Datei
+mit HTML schickt ihn ein ungepaartes `"` im Fließtext in den
+Zeichenketten-Modus, und er verschluckt alles bis zum nächsten; in
+`einsatz_form.php` ab Zeile 1547 **rund 800 Zeilen am Stück**. Eine kleinere
+Zahl, die durch Wegsehen entsteht, ist schlechter als eine große, die alles
+zeigt. Der Befund ist als **Backlog Nr. 184** aufgenommen — er betrifft auch
+die drei Zusagen-Prüfungen, die denselben Abtaster benutzen.
+
+Gemessen: Unicode-Zeichen **255 → 252**, Emoji unverändert 8, Befunde
+insgesamt **326 → 323**. Die **vier echten Treffer sind namentlich weg**
+(`einsatz_form.php` zweimal, `ortsfeld.js`, `patient.js`); die verbliebenen
+dreizehn nicht-typografischen stehen alle in Kommentaren oder im Satz
+(„3× Standorte"), der Rest ist `…` und `→`.
+
+**Im Browser geprüft — in drei Engines** (Chromium 141, Firefox 142,
+WebKit 26), seit dem 14.09.2026 alle drei im Prüfstand: Chip 3 von 3 mit SVG,
+**0** mit Zeichen, Symbol **12 × 12 px**, Ziel **28 × 28 px** rund, Abstand
+**6 px** zum Text und **6 px** zum Rand, Chiphöhe 28–28,2 px — in allen drei
+Engines identisch. Entfernen-Knöpfe **8 von 8** mit SVG. Meldung: SVG mit
+`symbol symbol-text`, **15 × 15 px** bei 15 px Schrift, Farbe
+`rgb(194, 90, 0)` = `--orange-tief`, kein rohes Markup im Text.
+
+Neu entstanden: drei abgeleitete Token (`--symbol-winzig` 12 px = `--symbol-klein`
+− `--abstand-1`, `--ziel-chip` 28 px = `--symbol-gross` + `--abstand-1`,
+`--symbol-text` 1em) und die Klasse `.symbol-text`. **Kein neuer Farbwert, kein
+neues Symbol** — `schliessen` und `warnung` lagen im Vorrat. Token-Tabelle in
+`docs/Design.md` neu erzeugt: 97 → 100.
+
+## [Web 19.4.1] — 2026-09-14
+
+### Web — die Kopfzeile der Importvorschau steht da, wo gelesen wird (Backlog Nr. 182)
+
+**Der Fehlerfund aus 19.4.0, behoben.** Die Kopfzeile einer Tagesgruppe sitzt
+in einer Tabellenzelle, und die ist so breit wie die ganze Vorschautabelle —
+gemessen **2653 px gegen 342 px** Sichtfenster am Handy. `flex-wrap` griff
+deshalb nie: In einer 2653 px breiten Zeile bricht nichts um. Alles hinter dem
+Datum stand außerhalb des Sichtfensters — die Besatzung, die orange Plakette
+„abweichende Crew" und das Auswahlfeld, mit dem man entscheidet, welche
+Besatzung gilt. In **keiner** der gemessenen Breiten war die Plakette ohne
+waagerechtes Scrollen zu sehen.
+
+**Die Lösung braucht kein JavaScript, und das war die Überraschung.** Der
+Rollbereich der Vorschau wird über `container-type: inline-size` zum
+Größencontainer; `100cqi` ist damit die **sichtbare** Breite statt der
+Tabellenbreite. Der Inhalt der Kopfzeile heftet sich mit
+`position:sticky; left:0` an den linken Rand des Rollbereichs und bleibt
+stehen, während die Datenzeilen darunter waagerecht durchlaufen. Die Fläche
+(das `<td>`) bleibt durchgehend, damit das Band nicht auf halber Strecke
+aufhört — nur sein Inhalt folgt dem Blick. Vier Deklarationen im Stylesheet,
+ein Klassenname in `import.php`, **null Zeilen Skript**.
+
+**Die Container-Eigenschaft sitzt an einer eigenen Klasse** (`.imp-roll`),
+nicht an `.tabelle-scroll`: Die trägt neun Stellen auf sechs Seiten, und
+`container-type` bringt `contain: layout inline-size` mit. Eine global
+gesetzte Eigenschaft für ein örtliches Problem wäre falsch.
+
+**Warum der Umweg hierher gehört.** Zur Freigabe standen drei Wege (Mockup
+M-MR-05, F-MR-14): so lassen, heften, oder je Diensttag-Gruppe eine eigene
+Tabelle. Der dritte war zuerst gewählt. Die Kartierung davor hat **58 Befunde**
+ergeben, **22 davon „bricht"** — und vier davon scheitern **lautlos**:
+
+- Der delegierte Ereignisbehandler hängt an `$('tabelle')` und wird beim
+  Seitenstart **synchron** gesetzt. Fällt das Element weg, wirft es
+  `TypeError`, die Start-Funktion bricht mitten drin ab, und `sperrstatus()`
+  läuft nie — der Sperrhinweis bliebe versteckt, obwohl die Verschlüsselung
+  gesperrt sein kann. Nicht die Zellbearbeitung wäre kaputt, sondern die
+  ganze Seite.
+- Das Auswahlfeld der Tageswahl wäre aus dem Tabellenbaum gefallen. Sein
+  Scheitern hätte man **nach** dem Import in den Daten gesehen, nicht davor
+  in der Vorschau.
+- Mehrere `id="tabelle"` hätten nur die erste Gruppe bedienbar gelassen —
+  ein Ausgang, der beim Prüfen wie Erfolg aussieht.
+- `.imp-daygroup td` hätte nichts mehr getroffen; der Kopf wäre fast genau
+  auf den Zustand vor Web 19.4.0 zurückgefallen.
+
+Dazu hätte der Weg die **Spaltenflucht über die Gruppen** gebrochen — und
+genau die steht in der Abnahmezeile von Nr. 182. Nachgemessen: `width` auf
+der einen abweichenden Spalte ist in dieser Tabelle wirkungslos (183 px mit
+und ohne Regel), `table-layout:fixed` macht das Eingabefeld **52 px** breit
+und lässt **9 von 14** Spaltentiteln aus ihrer Zelle laufen.
+
+**Was bleibt:** Der Kopf wird am Handy hoch — **231 px bei 400 px**, 270 px
+bei 360 px, im ungünstigsten Fall (zwei abweichende Rollen mit langen Namen);
+bei einer Rolle rund 130 px. Das ist der Preis dafür, dass die Angabe
+vollständig dasteht, und er ist bewusst nicht gedrückt worden: Der Text ist
+der Grund, warum jemand hinsieht.
+
+Gemessen im Browser bei **sieben Fensterbreiten** (360, 400, 720, 1024, 1280,
+1600, 1920 px): Datum, Besatzung, Plakette **und** Auswahlfeld in **jeder**
+Breite im Sichtfenster, Kopfbreite immer gleich der sichtbaren Breite,
+**0** waagerechter Überlauf der Seite, **keine** Konsolenfehler. Waagerecht um
+1500 px gescrollt: Die Kopfzeile bleibt stehen, die Datenzeilen laufen durch.
+Die vier Bedienwege am delegierten Behandler nachgefahren — Zellbearbeitung
+(der getippte Wert überlebt zwei Neuzeichnungen, steht also im Datenmodell),
+Überspringen-Kästchen, Tageswahl —, alle drei wirken; **eine** Tabelle,
+**ein** Element mit der Kennung `tabelle`.
+
+## [Web 19.4.0] — 2026-09-13
+
+Mockup-Runde 9c, erstes von vier Arbeitspaketen
+(`docs/konzepte/Konzept-Mockup-Runde.md`, Rahmenplan Schritt 9c). Vier
+Gestaltungsaufgaben, die alle eine Freigabe brauchten, sind am 13.09.2026 in
+**einer** Runde gezeichnet und freigegeben worden statt in vier; AP1 setzt
+die erste um.
+
+### Web — die Importvorschau bekommt eine Überschrift (Backlog Nr. 41)
+
+**Das Problem.** Die Vorschau des CSV-Imports gruppiert ihre Zeilen nach
+Diensttagen, und über jeder Gruppe steht eine Zeile mit Datum, Besatzung,
+Zahl der Einsätze und dem Vermerk, ob der Diensttag schon existiert. Diese
+Zeile trug ihren Text in `<strong>` und sonst nichts — sie sah aus wie die
+Datenzeilen darunter. Die Warnung „abweichende Crew" stand daneben als
+Fließtext zwischen zwei Punkten und war von der Besatzungsangabe davor nicht
+zu unterscheiden. Beide Klassen (`imp-daygroup`, `imp-warn`) standen seit O11
+als `[offen]` in `tools/vollstaendigkeit/ohne-regel.md`: Klassen im Markup,
+für die es keine Regel gab und bei denen niemand entschieden hatte, ob sie
+eine brauchen.
+
+**Warum ein Mockup nötig war.** Beide Antworten sind neue Darstellungen, und
+dafür verlangt `Design.md` 1.2 eine Freigabe mit Bild. Das Mockup M-MR-01
+stellte zwei Wege gegeneinander: **(A)** die Kopfzeile bekommt eine Regel und
+die Warnung wird eine vorhandene `.plakette-orange`, **(B)** beide bekommen je
+eine eigene Regel. Freigegeben ist **A** (F-MR-1) — und zwar nicht aus
+Sparsamkeit: Die Plakette ist die Form, mit der die Anwendung an jeder
+anderen Stelle „Zustand, der Aufmerksamkeit will" zeigt (Filter, Sync,
+Kennzahlen). Eine zweite Darstellung für dieselbe Aussage hätte den Vorrat
+vergrößert, ohne etwas zu können, was der Baustein nicht kann. `imp-warn`
+fällt damit ersatzlos weg und steht mit Begründung auf der Streichliste.
+
+**Was jetzt dasteht.** Die Kopfzeile trägt Rauch als Fläche, eine kräftige
+Oberlinie, das Datum in Kopfschrift und Dunkelblau, den Rest gedämpft und
+eine Stufe kleiner. Das Datum steht **deutsch** — „17.01.2026" statt
+„2026-01-17" (F-MR-2). Die ISO-Form kam aus der Importdatei und ist bis in
+die Oberfläche durchgereicht worden; sie ist dort das einzige Datum der
+Anwendung gewesen, das so aussah. Die Gruppe „Nicht zuordenbar" trägt
+dieselbe Kopfzeile mit `.plakette-rot` und nennt die Zahl der Zeilen, statt
+sie in Klammern hinter den Text zu setzen (F-MR-3).
+
+**Eine Abweichung vom Baustein, und sie ist begründet.** `.plakette` steht
+auf `white-space:nowrap`, weil eine Plakette sonst ein einzelnes Wort ist
+(„freigegeben", „kein Ende"). Hier trägt sie den Konflikttext, und der wächst
+mit der Zahl der abweichenden Rollen. Bei 360 px wäre das eine Plakette,
+breiter als das Gerät; in der Kopfzeile darf sie deshalb umbrechen.
+
+**Was diese Stufe NICHT löst.** Beim Prüfen im Browser ist aufgefallen: Die
+Kopfzeile sitzt in einer Tabellenzelle, die so breit ist wie die ganze
+Vorschautabelle — gemessen **2677 px** bei einem Sichtfenster von 342 bis
+1354 px. Besatzung und Plakette stehen deshalb in **jeder** Breite außerhalb
+des Sichtfensters, bis jemand waagerecht scrollt. Das ist kein Rückschritt —
+der alte Fließtext stand an derselben Stelle (gemessen x=1077 statt jetzt
+x=940) —, aber es ist jetzt eine Plakette, die Aufmerksamkeit will und keine
+bekommt. Der Befund liegt als Fehlerfund 2 im Konzept und wartet auf eine
+Entscheidung; er ist älter als diese Stufe und wird nicht nebenbei behoben.
+
+Gemessen: `tools/vollstaendigkeit/pruefen.py` meldet **0** Klassen „im Markup
+ohne Regel, als `[offen]` vermerkt" (vorher 2), **0** ungenutzte Einträge in
+beiden Hilfslisten und **0** Klassen „auf der Streichliste, aber noch im
+Markup"; die Sollmenge des alten Stylesheets hat zwei Namen weniger ohne
+Gegenstück (52 → 50). Im Browser geprüft mit einer Importdatei, die alle drei
+Fälle auslöst (vorhandener Tag mit abweichender Besatzung, neuer Tag, eine
+Zeile ohne verwertbares Datum): 400, 720 und 1280 px, **0** waagerechter
+Überlauf der Seite, **keine** Konsolenfehler. Wortliste: 0 Treffer außerhalb
+der Ausnahmen, 0 ungenutzte Ausnahmen.
+
 ## [Web 19.3.1] — 2026-09-13
 
 Backlog-Runde 3, neun Punkte in drei Blöcken

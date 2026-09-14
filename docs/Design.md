@@ -247,6 +247,15 @@ Oberfläche „Aufmerksamkeit", und ein Maximum verlangt keine.
 zusätzlich Text, Symbol oder Position. Eine Plakette trägt kein Häkchen: Ihr
 Vorhandensein *ist* das Häkchen (E-P3-17).
 
+**Orange heißt seit Web 19.6.0 auch „hier ist gerade etwas offen"** (E-MR-21,
+E-MR-25). Ein Öffner, dessen Blatt offen steht, trägt `--orange-hell` mit
+`--orange-tief` darauf — dieselbe Sprache wie die aktive Kennzahl und das
+angesprungene Sprungziel. Das ist keine zweite Bedeutung neben „hier wird
+gehandelt", sondern deren Fortsetzung: Der Knopf **ist** gerade die Handlung,
+und das Blatt darunter gehört zu ihm. Die Regel steht am Attribut
+(`[data-blatt][aria-expanded="true"]`) und gilt damit für alle vier Bauarten
+von Öffnern — auch für die nächste.
+
 ### 3.2 Warum es je drei Töne gibt
 
 Jede Kernfarbe kommt dreifach vor, und die drei sind nicht austauschbar:
@@ -343,14 +352,14 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-97 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+101 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--schnee` | `#FFFCFA` | 33 |  |
-| `--rauch` | `#F7F5ED` | 29 |  |
+| `--rauch` | `#F7F5ED` | 30 |  |
 | `--sand` | `#D4C7AD` | 13 |  |
 
 **Schrift**
@@ -358,15 +367,15 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--asphalt` | `#1A0500` | 21 |  |
-| `--dunkelblau` | `#1A2E4D` | 52 |  |
-| `--gedaempft` | `#6E6459` | 58 |  |
+| `--dunkelblau` | `#1A2E4D` | 53 |  |
+| `--gedaempft` | `#6E6459` | 59 |  |
 | `--auf-dunkel` | `#FFFFFF` | 7 | Schrift auf Dunkelblau, 13,62:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 30 |  |
+| `--linie` | `#E3DAC6` | 31 |  |
 | `--linie-stark` | `var(--gedaempft)` | 11 |  |
 
 **Orange — Handeln**
@@ -374,15 +383,15 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--orange` | `#FF8F1F` | 30 |  |
-| `--orange-tief` | `#C25A00` | 16 |  |
-| `--orange-hell` | `#FFEBD6` | 20 |  |
+| `--orange-tief` | `#C25A00` | 17 |  |
+| `--orange-hell` | `#FFEBD6` | 22 |  |
 
 **Blau — Auswählen und Erklären**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--blau` | `#4280E5` | 12 |  |
-| `--blau-tief` | `#1F4E9C` | 17 |  |
+| `--blau-tief` | `#1F4E9C` | 18 |  |
 | `--blau-hell` | `#D9ECFD` | 4 |  |
 
 **Rot — Aufmerksamkeit**
@@ -405,7 +414,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--groesse-1` | `12px` | 7 |  |
-| `--groesse-2` | `13px` | 42 |  |
+| `--groesse-2` | `13px` | 43 |  |
 | `--groesse-3` | `15px` | 11 |  |
 | `--groesse-4` | `16px` | 10 |  |
 | `--groesse-5` | `19px` | 6 |  |
@@ -419,9 +428,9 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 66 |  |
-| `--abstand-2` | `8px` | 88 |  |
-| `--abstand-3` | `12px` | 119 |  |
+| `--abstand-1` | `4px` | 67 |  |
+| `--abstand-2` | `8px` | 90 |  |
+| `--abstand-3` | `12px` | 120 |  |
 | `--abstand-4` | `16px` | 54 |  |
 | `--abstand-5` | `24px` | 23 |  |
 
@@ -430,7 +439,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 20 | Plakette, Kästchen, Eingabefeld |
-| `--radius` | `10px` | 17 | Knopf, Meldung |
+| `--radius` | `10px` | 18 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 6 | Karte, Blatt, Dialog |
 
 **Maße**
@@ -452,11 +461,14 @@ auseinanderlaufen kann.
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
 | `--symbol-klein` | `16px` | 6 | Zusatzzeichen an einer Beschriftung |
+| `--symbol-winzig` | `calc(var(--symbol-klein) - var(--abstand-1))` | 4 | 12 px, im Chip |
+| `--ziel-chip` | `calc(var(--symbol-gross) + var(--abstand-1))` | 2 | 28 px, Treffziel |
+| `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 9 | Symbolgröße im Knopf und Kartenkopf |
 | `--strich` | `1px` | 43 | Haarlinie |
-| `--strich-stark` | `2px` | 30 | Aktivstrich, Randstrich, Fokus |
-| `--radius-rund` | `999px` | 17 | Zähler, Griff, Punkt — voll rund |
+| `--strich-stark` | `2px` | 31 | Aktivstrich, Randstrich, Fokus |
+| `--radius-rund` | `999px` | 18 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
 | `--schalter-punkt` | `20px` | 4 | 44-px-Zeile passt und greifbar bleibt |
@@ -481,6 +493,7 @@ auseinanderlaufen kann.
 | `--karte-mobil` | `160px` | 1 |  |
 | `--karte-tablet` | `220px` | 1 |  |
 | `--karte-desktop` | `300px` | 4 |  |
+| `--karte-gross` | `min(60vh, 520px)` | 2 |  |
 
 **Spurfarben (P3/O3, E-P3-40)**
 
@@ -509,7 +522,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--dauer` | `.18s` | 7 |  |
+| `--dauer` | `.24s` | 8 |  |
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
 | `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 7 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
@@ -594,8 +607,12 @@ wäre die Tastaturbedienung unsichtbar.
 Breite darf `scrollWidth > innerWidth` gelten. Was breit ist, scrollt in
 seinem eigenen Behälter (`.tabelle-scroll`) oder wird zur Kachel.
 
-**Bewegung ist kurz und einheitlich** (`--dauer` .18 s) — und wer sie
-abbestellt hat (`prefers-reduced-motion`), bekommt keine.
+**Bewegung ist kurz und einheitlich** (`--dauer` **.24 s**, bis Web 19.5.1
+.18 s) — und wer sie abbestellt hat (`prefers-reduced-motion`), bekommt keine.
+Der Wert ist mit dem Aktionsblatt gewachsen (E-MR-22): Eine Auffahrt aus der
+unteren Bildkante war bei 180 ms eher ein Aufblitzen als eine Bewegung. Er
+gilt für **alle** Nutzer des Tokens; ein zweiter Wert nur fürs Blatt wäre die
+Stelle, an der die Anwendung anfängt, verschieden schnell zu sein.
 
 **Symbole kommen aus dem Vorrat.** Kein Inline-Pfad im Code, kein
 Unicode-Zeichen, kein Emoji (Kapitel 8).
@@ -708,14 +725,14 @@ neben „Standard der Installation" sprengt sonst jede Zeile.
 
 | Abfrage | Regelblöcke |
 |---|--:|
-| `@media (min-width:1600px)` | 2 |
+| `@media (min-width:1600px)` | 3 |
 | `@media (min-width:1200px)` | 3 |
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px)` | 2 |
 | `@media (min-width:720px)` | 12 |
 | `@media (max-width:479px)` | 1 |
 
-Zusammen 21 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 22 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -801,6 +818,8 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 30 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
+| `karte-breit.svg` | Tabler Icons „arrows-horizontal" (MIT) | 1 |
+| `karte-gross.svg` | Tabler Icons „arrows-vertical" (MIT) | 1 |
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
@@ -818,7 +837,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 26 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 1 |
-| `schliessen.svg` | Tabler Icons „x" (MIT) | 9 |
+| `schliessen.svg` | Tabler Icons „x" (MIT) | 11 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 14 |
 | `server.svg` | Tabler Icons „server" (MIT) | 6 |
@@ -834,14 +853,14 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 9 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
-| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 27 |
+| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 29 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 28 |
 
-53 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
+55 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
 
 ## 9. Bausteine
@@ -901,7 +920,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 54 |
 | `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 108 |
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 141 |
-| `ui_symbol()` | `.symbol` | ja (+6 Unterklassen) | 194 |
+| `ui_symbol()` | `.symbol` | ja (+10 Unterklassen) | 194 |
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 297 |
 | `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 359 |
 | `ui_geruest_start()` | `.inhalt` | ja | 434 |
@@ -917,15 +936,15 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1244 |
 | `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1297 |
 | `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1323 |
-| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1359 |
-| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1439 |
+| `ui_karte_start()` | `.karte` | ja (+36 Unterklassen) | 1359 |
+| `ui_karte_ende()` | `.karte` | ja (+36 Unterklassen) | 1439 |
 | `ui_nach_oben()` | `.nach-oben` | ja | 1474 |
 | `ui_sprungliste()` | `.sprungliste` | ja | 1516 |
 | `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1564 |
 | `ui_zeile()` | `.zeile` | ja (+15 Unterklassen) | 1618 |
 | `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1666 |
 | `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1708 |
-| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1777 |
+| `ui_feld()` | `.feld` | ja (+20 Unterklassen) | 1777 |
 | `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1842 |
 | `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1886 |
 | `ui_wahlliste()` | `.wahlliste` | ja | 1939 |
@@ -1197,6 +1216,20 @@ gruppiert, Web 12.4.1). Der Feldsatz dämpft die Gruppe samt Beschriftungen
 über `opacity`, die Regel am Feld sagt, welches Element gemeint ist. Beide
 greifen zugleich, und das ist gewollt.
 
+**Das Auswahlfeld ist der andere Sonderfall** (seit Web 19.5.1). Ein
+`<select>` trägt `contain: paint`, und das ist keine Feinheit: WebKit rechnet
+den **längsten Eintrag** in den Überlauf des Kastens mit, auch wenn der Kasten
+ihn abschneidet. Gemessen auf `import.php` bei 360 px: `scrollWidth` 366 gegen
+`innerWidth` 360 — nur in WebKit, und **kein einziges Element** der Seite ragte
+hinaus. Der längste Eintrag hatte 53 Zeichen; die drei anderen Auswahlfelder
+derselben Seite mit 17, 17 und 30 liefen nicht über (Backlog Nr. 185).
+`overflow:clip` am Feld hilft nicht, `max-width:100%` auch nicht — nur die
+Malbegrenzung. Sie kostet nachgemessen **ein** Pixel am fokussierten Feld
+(318 × 60 px Ausschnitt, Abweichung 6 von 255, die Rundung des Fokusrings); der
+Ring selbst bleibt stehen, weil Malbegrenzung Inhalt schneidet und nicht
+Umriss. **Nur `select`** — ein Textfeld hat keinen Inhalt, der breiter wäre als
+sein Kasten.
+
 **Das Dateifeld ist der eine Sonderfall.** `input[type=file]` stellt seinen
 nativen Knopf auf die Textzeile, und die steht in einem 44 px hohen Feld ohne
 senkrechte Polsterung ganz oben — gemessen 0 px Luft darüber, 19 px darunter.
@@ -1390,6 +1423,34 @@ ein Zustandswechsel auf ein GET hin. Dafür `'form' => 'kennung'`: Der Eintrag
 wird ein `<button form="…">`, das Formular steht einmal versteckt auf der
 Seite. Ein `<form>` **um** den Eintrag ginge nicht — das Blatt kann selbst in
 einem Formular stehen.
+
+**Das Blatt fährt auf, und der Öffner bleibt markiert** (seit Web 19.6.0,
+Backlog Nr. 124, Weg b; E-P3-27 fortgeschrieben). Zwei Dinge ändern sich
+gegenüber der ersten Fassung, und beide betreffen die Frage „wo bin ich
+gerade?":
+
+- **Die Bewegung.** Das Blatt steht im Ruhezustand um seine eigene Höhe unter
+  dem Bildrand (`transform: translateY(100%)`) und wird von `.blatt-auf`
+  heraufgeholt, in `--dauer` (240 ms, `ease-out`). Ohne sie las sich das
+  Erscheinen wie ein Seitenwechsel: Die halbe Fläche war plötzlich eine
+  andere, und niemand wusste, woher sie kam. **Am Schreibtisch nicht** — dort
+  ist das Blatt ein Aufklappmenü direkt unter dem Knopf, und
+  `translateY(100%)` hieße dort „um die eigene Höhe nach unten", also neben
+  die Sache. Der 1024er Block setzt deshalb `transform:none; transition:none`.
+- **Die Markierung.** Solange sein Blatt offen ist, trägt der Öffner
+  `--orange-hell` mit `--orange-tief` (Kapitel 3.1). Sie hängt am Attribut,
+  nicht an einer Klasse — siehe dort.
+
+**Für wen das wichtig ist, der `blatt.js` anfasst:** Die Reihenfolge ist kein
+Geschmack. Beim Öffnen erst `hidden=false`, die Klasse erst im **nächsten**
+Frame — beides im selben Frame rechnet der Browser zusammen und zeichnet nur
+den Endzustand. Beim Schließen umgekehrt: erst die Klasse weg, `hidden` erst
+nach der Rückfahrt; `display:none` hält keine Bewegung an, es beendet sie.
+Und das Skript fragt die **gerechnete** `transition-duration` des Blattes:
+Ist sie ~0 — Aufklappmenü am Schreibtisch, oder Bewegung abbestellt —, geht
+`hidden` sofort, sonst nach `transitionend` mit einem Nachlauf als Sicherung.
+Ein Blatt, das im Fluss hängen bliebe, wäre unsichtbar, aber klickbar und im
+Vorlesebaum.
 
 ### 9.13 Ortsfeld
 
@@ -2281,6 +2342,126 @@ Element im `<main>`, der Sprung landet also dort, wo das Mockup hinwill.
 **Eigene Funktion und keine Option an `ui_karte_ende()`:** Die hat als
 einziger Baustein kein `array $o`, dafür 115 Aufrufstellen.
 
+### 9.34 Kopfzeile einer Tagesgruppe (`.imp-daygroup`)
+
+**Zweck:** die Überschrift über einer Gruppe von Zeilen **innerhalb** einer
+Tabelle. Bisher nur in der Importvorschau, wo die eingelesenen Einsätze nach
+Diensttagen gruppiert erscheinen. Freigegeben mit M-MR-01, Variante A
+(F-MR-1, Mockup-Runde 9c).
+
+```html
+<div class="tabelle-scroll imp-roll">          <!-- Größencontainer -->
+ <table class="tabelle">
+  <tr class="imp-daygroup"><td colspan="…">
+  <div class="imp-kopfzeile">
+    <span class="imp-tag">17.01.2026</span>
+    <span class="imp-rest">Besatzung … · 2 Einsätze · Diensttag vorhanden</span>
+    <span class="plakette plakette-orange"><svg class="symbol symbol-klein">…</svg>
+      abweichende Besatzung: Weber → Muster</span>
+    <select class="imp-daymode">…</select>
+  </div>
+  </td></tr>
+ </table>
+</div>
+```
+
+**Der Unterschied zur Datenzeile ist die Schriftfamilie, nicht das Gewicht.**
+Vorher stand dort `<strong>` — dasselbe, was auch eine betonte Zelle trägt.
+Was eine Überschrift in dieser Anwendung ausmacht, ist die Kopfschrift; das
+Gewicht allein trägt sie nicht. Dazu Rauch als Fläche und eine kräftige
+Oberlinie (`--strich-stark`), damit die Gruppe sichtbar beginnt.
+
+**Ein Zustand an der Gruppe ist eine Plakette, keine eigene Regel.** Die
+Warnung „abweichende Crew" war Fließtext und bekam in Variante B des Mockups
+eine eigene Regel; freigegeben ist Variante A — die vorhandene
+`.plakette-orange` mit dem Symbol `warnung`, in Rot (`.plakette-rot`) für die
+Gruppe „Nicht zuordenbar". Das ist dieselbe Form wie überall sonst, und ein
+Leser erkennt sie ohne Lernen. **Die eine Abweichung:** In dieser Kopfzeile
+darf die Plakette **umbrechen** (`white-space:normal`) — sie trägt hier einen
+Satz, keine Vokabel, und wäre bei 360 px sonst breiter als das Gerät.
+
+**Wann nicht:** für eine Überschrift, die **über** einer Tabelle steht statt
+in ihr — das ist der Kartentitel (`ui_karte_start()`). Diese Kopfzeile gibt
+es nur, weil die Gruppen sich eine Tabelle teilen müssen, damit die Spalten
+fluchten.
+
+**Wie sie das Sichtfenster findet — und warum das der Kern ist.** Die Zelle
+ist so breit wie die **Tabelle**, nicht wie das Sichtfenster: in der
+Importvorschau gemessen 2653 px gegen 342 px am Handy. Web 19.4.0 hat das
+übersehen und `flex-wrap` gesetzt; in einer 2653 px breiten Zeile bricht aber
+nichts um, und alles nach dem Datum stand außerhalb (Backlog Nr. 182).
+
+Seit Web 19.4.1 trägt der Rollbereich `container-type: inline-size` über eine
+**eigene Klasse** (`.imp-roll`), und die Kopfzeile nimmt mit `width:100cqi`
+die **sichtbare** Breite an; `position:sticky; left:0` hält sie am linken Rand,
+während die Datenzeilen darunter durchlaufen. Das Polster wandert dafür von der
+Zelle in die Kopfzeile — Fläche und Oberlinie bleiben an der Zelle und laufen
+über die ganze Tabellenbreite, damit das Band durchgehend bleibt.
+
+Drei Sätze für den nächsten, der das braucht:
+
+- **`width:100%` wäre falsch** — das ist die Breite der Zelle, also 2653 px.
+  Nur `cqi` kennt den Rollbereich.
+- **Eine gemessene Zahl aus JavaScript braucht es nicht.** Beide Fassungen
+  sind bei sechs Fensterbreiten auf den Pixel gleich; die CSS-Fassung kommt
+  ohne `ResizeObserver` aus.
+- **Die Container-Eigenschaft gehört nicht an `.tabelle-scroll`.** Die Klasse
+  trägt neun Stellen auf sechs Seiten, und `container-type` bringt
+  `contain: layout inline-size` mit — eine globale Eigenschaft für ein
+  örtliches Problem.
+
+**Der Preis:** Am Handy wird der Kopf hoch — 231 px bei 400 px im ungünstigsten
+Fall (zwei abweichende Rollen mit langen Namen), rund 130 px bei einer. Das ist
+gewollt: Der Text ist der Grund, warum jemand hinsieht.
+
+### 9.35 Kartengröße (`.geo-gross`, Knopf `map-ctrl-groesse`)
+
+*Nachgetragen mit Web 19.5.1. Der Baustein ist mit Web 19.5.0 entstanden
+(Mockup-Runde 9c / AP3, Mockups M-MR-03 und M-MR-04, F-MR-7 bis F-MR-10) —
+die Kapitelpflicht aus 1.3 ist dort **übersehen** worden; nur die erzeugten
+Tabellen sind nachgezogen. Das hier holt es nach.*
+
+**Wozu.** Die Karte der Tagesübersicht hatte zwei Zustände: ihre Höhe nach
+Fensterbreite (`--karte-mobil` 160, `--karte-tablet` 220, `--karte-desktop`
+300 px) und Vollbild. Dazwischen lag nichts — wer mehr von der Spur sehen
+wollte, musste die Seite verlassen und wiederkommen und verlor dabei den Blick
+auf die Einsatzliste. Der dritte Zustand liegt dazwischen.
+
+**Ein Zustand, zwei Wirkungen je Breite.** Die Klasse `.geo-gross` heißt
+überall dasselbe, das Stylesheet entscheidet, was sie tut:
+
+| Breite | Wirkung |
+|---|---|
+| bis 1599 px | Die Karte wird **höher** — `--karte-gross`, also `min(60vh, 520px)` |
+| ab 1600 px | Die Karte wird **breit** — das Raster fällt über `.tag-raster:has(.geo-gross)` auf eine Spalte, die Karte verlässt die rechte Spalte und liegt in voller Inhaltsbreite über der Liste, weiterhin 520 px hoch |
+
+Die Schwelle 1600 steht damit an **einer** Stelle, im Stylesheet. Ein Knopf,
+der je Breite etwas anderes täte, hätte sie ein zweites Mal im Code.
+
+**Der Knopf trägt beide Symbole.** `karte-gross.svg` (senkrechte Pfeile) bis
+1599 px, `karte-breit.svg` (Querpfeile) darüber; beide liegen im Markup, das
+Stylesheet blendet je Breite eines aus (`.karte-groesse .symbol-hoch` /
+`.symbol-breit`). Ein Tausch per JavaScript hätte die Schwelle ein drittes Mal
+gebraucht. Die Beschriftung wechselt **nicht** — „Karte vergrößern" bzw.
+„verkleinern" deckt beide Wirkungen, das Symbol daneben sagt welche. Der
+Zustand steht in `aria-pressed`.
+
+**Wo er sitzt und wo nicht.** Nur auf der Tagesübersicht
+(`attachGroessenControl()` wird dort einzeln gerufen). Einsatzansicht,
+Spurenseite und Zeitraumübersicht haben keine Liste unter der Karte, die vom
+Höherwerden etwas hätte; ihr Vollbildknopf bleibt unberührt.
+
+**Der Zustand wird je Gerät gemerkt**, nicht je Konto — `localStorage`,
+Schlüssel `nadoku.karte-gross`, der erste dieser Anwendung. Wer am Schreibtisch
+groß arbeitet, will das am Handy nicht zwangsläufig. Lesen und Schreiben sind
+abgefangen; kommt nichts zurück, steht die Karte klein da.
+
+**Ein Satz für den nächsten, der eine Karte umschaltet:** Leaflet muss es
+erfahren. Nach dem Umschalten läuft `map.invalidateSize()` mit 60 ms Verzug —
+ohne das bleibt die neue Fläche grau. Gemessen: 10 → 15 Kacheln, 0 px
+unbedeckt nach 200 ms.
+
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Fünf Typen
@@ -2419,6 +2600,12 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 19.6.0 (Mockup-Runde 9c / AP4)** | **9.12 um zwei Absätze ergänzt** (E-P3-27 fortgeschrieben): Das Blatt **fährt auf** (`translateY(100%)` → `.blatt-auf`, `--dauer`, am Schreibtisch ausdrücklich nicht), und der **Öffner bleibt markiert**, solange sein Blatt offen ist. Kapitel **3.1** sagt dazu, dass Orange seither auch „hier ist gerade etwas offen" heißt — als Fortsetzung von „hier wird gehandelt", nicht als zweite Bedeutung. Die Markierung steht **am Attribut** `[data-blatt][aria-expanded="true"]` und erreicht damit alle vier Bauarten von Öffnern (6 × `ui_aktionen()`, 9 × `ui_zeilenaktionen()`, der Pin-Knopf des Ortsfelds, 3 handgeschriebene Sortierblatt-Knöpfe) — E-MR-25. **`--dauer` von .18 s auf .24 s** für die ganze Anwendung (E-MR-22, F-MR-12); der Grundsatz in Kapitel 6 nennt den neuen Wert. **Kein neues Token** — die Fassung D4 benutzt `--orange-hell` und `--orange-tief`, das Kontrastpaar „Orange tief auf Orange hell" war schon gerechnet. **Kein neues Symbol, kein neuer Baustein.** Gemessen in drei Motoren, fünf Öffner, mit und ohne abbestellte Bewegung: Fläche und Schrift überall richtig, nach `Escape` `hidden=true`, `aria-expanded=false`, Fokus zurück am Knopf; mit abbestellter Bewegung 0,01 ms und kein Zwischenbild. |
+| **Web 19.5.1 (Mockup-Runde 9c / AP3b)** | **9.35 nachgetragen** (siehe dort — die Kapitelpflicht aus 1.3 war mit 19.5.0 übersehen worden) und **9.7 um einen Absatz ergänzt:** Ein `<select>` bekommt `contain:paint`, weil WebKit den längsten Eintrag in den Überlauf des Kastens rechnet und `import.php` bei 360 px dadurch um 6 px überlief (Backlog Nr. 185) — gefunden vom ersten dreifachen Bilderlauf. **Kein neues Token, kein neues Symbol, kein neuer Baustein.** Gemessen in drei Motoren: Kaskade **758 → 759 Regeln, 0 entfallen, 1 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **46 150 Elementmessungen, 104 Abweichungen** — 8 Auswahlfelder × 13 Breiten, und die einzige geänderte Eigenschaft ist `contain: none → paint`. Chromium, Firefox und WebKit melden dieselben Zahlen. |
+| **Web 19.5.0 (Mockup-Runde 9c / AP3)** | **Neues Token `--karte-gross`** (`min(60vh, 520px)`; Tabelle 100 → 101) und **zwei neue Symbole** — `karte-gross.svg` und `karte-breit.svg`, Tabler „arrows-vertical" und „arrows-horizontal" (Vorrat 53 → 55). Der Baustein dazu ist erst mit 19.5.1 als **9.35** beschrieben worden; diese Zeile hält fest, dass er mit 19.5.0 entstanden ist. **Kein neuer Farbwert.** |
+| **Web 19.4.2 (Mockup-Runde 9c / AP2)** | **Zwei neue abgeleitete Token** — `--symbol-winzig` (`calc(var(--symbol-klein) - var(--abstand-1))`, 12 px) und `--ziel-chip` (`calc(var(--symbol-gross) + var(--abstand-1))`, 28 px); dazu `--symbol-text` (`1em`) und die Klasse `.symbol-text` für ein Symbol, das **im Satz** steht und mit der Schrift wächst (Tabelle 97 → 100). Das Entfernen-Zeichen des Chips ist ein Symbol geworden, sein Treffziel wächst von 17 × 15 auf **28 × 28 px** (F-MR-6a/6b, E-MR-18: 6 px zum Text wie zum Rand). **Kein neuer Farbwert, kein neues Symbol** — `schliessen` und `warnung` lagen im Vorrat. |
+| **Web 19.4.1 (Mockup-Runde 9c / Nr. 182)** | **9.34 fortgeschrieben:** Aus „Was sie nicht kann" wird „Wie sie das Sichtfenster findet". Die Kopfzeile nimmt über eine Container-Abfrage (`container-type:inline-size` an `.imp-roll`, `width:100cqi`) die **sichtbare** Breite statt der Tabellenbreite an und heftet sich mit `position:sticky;left:0` an den linken Rand. **Kein JavaScript** — beide Fassungen (Container-Abfrage und gemessene Zahl) sind bei sechs Fensterbreiten auf den Pixel gleich. Freigegeben mit **M-MR-05, F-MR-14 = Weg B**; Weg C (je Gruppe eine eigene Tabelle) ist nach einer Kartierung mit **58 Befunden, 22 davon „bricht"** verworfen worden — er hätte die Spaltenflucht gebrochen, die in der Abnahme von Nr. 182 steht. Gemessen: 7 Breiten von 360 bis 1920 px, Datum/Besatzung/Plakette/Auswahl in **jeder** im Sichtfenster, **0** waagerechter Überlauf, keine Konsolenfehler. **Kein neues Token, kein neues Symbol, kein neuer Baustein.** |
+| **Web 19.4.0 (Mockup-Runde 9c / AP1)** | **9.34 neu — Kopfzeile einer Tagesgruppe** (`.imp-daygroup`), freigegeben mit M-MR-01 Variante A (F-MR-1/F-MR-2/F-MR-3). Die Kopfzeile der Importvorschau war eine Datenzeile mit `<strong>`; sie trägt jetzt Rauch, eine kräftige Oberlinie und das Datum in Kopfschrift, und das Datum steht deutsch. Die Warnung „abweichende Crew" ist eine `.plakette-orange` geworden — `imp-warn` ist ersatzlos gestrichen, weil eine zweite Darstellung für „Zustand, der Aufmerksamkeit will" den Vorrat vergrößert hätte, ohne etwas zu können. **Eine begründete Abweichung am Baustein Plakette:** in dieser Kopfzeile darf sie umbrechen. Gemessen: `pruefen.py` „im Markup ohne Regel, als `[offen]` vermerkt" **2 → 0**, Sollmenge ohne Gegenstück **52 → 50**, Hexfarben außerhalb `:root` **0**; im Browser 400/720/1280 px, **0** waagerechter Überlauf, keine Konsolenfehler. **Kein neues Token, kein neues Symbol.** |
 | **13.09.2026 (Textpflege, keine Auslieferung)** | **2.5** berichtigt: „B1 erledigt, nachgemessen" traf seit dem Commit „Update Logos" nicht mehr zu (Backlog Nr. 62). Der Absatz sagt jetzt den gemessenen Stand vom 13.09.2026 und die Entscheidung vom 12.09.2026, neue Vorlagen anzufordern. **Zwei Nachbesserungen am selben Tag:** Der Absatz nannte die weiße Fassung in Prosa statt beim Dateinamen und war damit der einzige Treffer der Wortliste außerhalb der Ausnahmeliste (jetzt `gen-em_logo_helicopter_weiss.svg`, 0 Treffer) — und er zählte `gen-em_logo_nef.png` zu den richtigen Dateien, obwohl sie den **alten** Korpuswert `#1D0E0A` trägt, genau wie die `.svg` daneben, die derselbe Absatz als falsch führt. Alle acht Dateien sind nachgemessen (SVG-Farbwerte und dekodierte Bildpunkte der PNG): richtig sind die beiden Fassungen **ohne** Korpus, `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef_weiss.png`. Die beiden PNG der Luftmarke tragen die alten Werte um ein bis zwei Stufen je Kanal verschoben, weil sie gerastert sind. |
 | **Web 16.1.1 (S9)** | Kapitel 7: Im Band 1024–1199 px rückt das Akkordeon je Ebene **4 statt 8 px** ein, und der Abstand der Diensttagszeile geht von 8 auf **4 px** (Freigabe M-S9-11, Weg 2). Gemessen: dem Nebentext stehen dort **64–79 px** statt 48–63 zur Verfügung — dreizehn Kurznamen, **keiner** mehr mit Auslassungszeichen (vorher zehn). Der Abstand ist mit `:not(.leiste-gruppe)` eingegrenzt, weil die Zeilenklasse auch Leistenfuß, Schubladen-Hauptpunkte und Einstellungsmenü trägt; nachgemessen bleiben die bei 8 px. **Keine neue Schwelle, kein neues Token** — 4 px ist `--abstand-1`. |
 | **Web 17.1.1 (S9/AP5-6)** | **9.32 Kartenfilter**, Punkt 3 berichtigt: Die Anlegen-Formulare in der Liste gibt es seit Web 17.0.0 nicht mehr — die Regel bleibt als Netz stehen, und die Klickprobe misst seither **0 Formulare UND „Anlegen" sichtbar**, auch bei null Treffern. Punkt 4 nachgezogen: Der Leerzustand sagt jetzt „Leere den Filter, um wieder alle zu sehen" statt „…, um etwas anzulegen" — der alte Satz beschrieb eine Sackgasse, die es nicht mehr gibt. **Keine Regel im Stylesheet berührt.** |

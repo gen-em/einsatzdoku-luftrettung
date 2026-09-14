@@ -1610,11 +1610,22 @@ function wegKnopf(titel, ziel) {
   rm.type = 'button';
   rm.className = 'knopf knopf-symbol knopf-gefahr zeile-weg';
   rm.title = titel;
-  /* symbol.js laedt erst am Seitenende (ui_seite_ende); dieser Aufbau laeuft
-   * synchron davor. Faellt edSymbol aus, bleibt das Zeichen — wie in
-   * missiontable.js. */
-  rm.innerHTML = (typeof edSymbol === 'function')
-    ? edSymbol('schliessen', '', titel) : '✕';
+  /* KEIN RUECKFALL MEHR, und der Grund gehoert dazu (Nr. 42, Web 19.4.2).
+   *
+   * Hier stand `(typeof edSymbol === 'function') ? edSymbol(...)` mit dem
+   * Malkreuz als Rueckfall und dem Vermerk, `symbol.js` lade „erst am
+   * Seitenende (ui_seite_ende)".
+   * Der Vermerk war FALSCH: `symbol.js` kommt aus `ui_geruest_ende()`
+   * (Zeile 1570) und damit als erstes Skript der Seite — dieser Aufbau steht
+   * ab Zeile 1593, also danach. Nachgemessen am 14.09.2026 am laufenden
+   * Formular: `typeof edSymbol` ist `function`, und alle acht
+   * Entfernen-Knoepfe tragen ein SVG; KEINER das Zeichen. Der Zweig war seit
+   * seiner Entstehung tot.
+   *
+   * Ein toter Zweig mit falscher Begruendung ist schlimmer als keiner: Die
+   * naechste Person liest den Vermerk und glaubt ihn — das Konzept der
+   * Mockup-Runde hat ihn geglaubt und eine Ausnahme dafuer vorgesehen. */
+  rm.innerHTML = edSymbol('schliessen', '', titel);
   rm.addEventListener('click', () => {
     ziel().remove();
     EdForms.markieren(document.getElementById('missionform'));
@@ -2230,7 +2241,12 @@ document.getElementById('addrea').addEventListener('click', ev => {
       chip.className = 'rmchip';
       chip.appendChild(document.createTextNode(name));
       const x = document.createElement('button');
-      x.type = 'button'; x.className = 'rmx'; x.textContent = '\u00d7';
+      x.type = 'button'; x.className = 'rmx';
+      /* DASSELBE SYMBOL WIE AM KOORDINATEN-CHIP (Nr. 42, Fehlerfund 1 des
+         Konzepts): Hier stand dasselbe Malzeichen, nur als JS-Escape
+         geschrieben — und die Vollstaendigkeitspruefung sucht Zeichen, keine
+         Escape-Folgen, und hat diese Stelle deshalb nie gesehen. */
+      x.innerHTML = edSymbol('schliessen', '', name + ' entfernen');
       x.title = name + ' entfernen';
       x.addEventListener('click', () => { gewaehlt.splice(i, 1); zeichneChips(); suche(); });
       chip.appendChild(x);

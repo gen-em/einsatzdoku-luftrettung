@@ -401,6 +401,26 @@ UNICODE_SYMBOLE = ('▸▾▴▿▲▼◂◃►◄✓✔✗✘✕✖×⚠★☆�
 # U+2600-27BF: Dort liegen ⚠ und ✓, und die gehoeren oben hin.
 EMOJI = re.compile('[\U0001F000-\U0001FAFF\U0001F900-\U0001F9FF]|\uFE0F')
 
+# JS-Escape-Folgen fuer dieselben Zeichen. WARUM DAS NOETIG IST:
+# `x.textContent = '\u00D7'` ist dasselbe Malzeichen wie `'\u00D7'`, nur anders
+# geschrieben \u2014 und bis Web 19.4.2 hat diese Pruefung es nicht gesehen.
+# Gefunden am 13.09.2026 beim Zeichnen von M-MR-02 (Fehlerfund 1): Der
+# Koordinaten-Chip stand als Treffer da, der Rettungsmittel-Chip daneben
+# nicht, obwohl beide dasselbe taten. Eine Pruefung, die sich mit einer
+# anderen Schreibweise umgehen laesst, prueft nichts.
+ESCAPE = re.compile(r'\\u([0-9a-fA-F]{4})')
+
+
+def escapes_aufloesen(text):
+    """`\\uXXXX` durch das Zeichen ersetzen, LAENGENTREU.
+
+    Aus den sechs Stellen der Folge werden ein Zeichen und fuenf Leerzeichen.
+    So bleibt jede spaetere Fundstelle auf ihrer Zeile und in ihrer Spalte \u2014
+    ohne das zeigte jeder Treffer nach der ersten Escape-Folge daneben,
+    dieselbe Falle wie bei ohne_kommentare() fuer CSS.
+    """
+    return ESCAPE.sub(lambda m: chr(int(m.group(1), 16)) + '     ', text)
+
 
 def pruefung_symbole(bericht):
     inline, unicode_, emoji, fehlend = [], [], [], []
@@ -408,6 +428,19 @@ def pruefung_symbole(bericht):
 
     for pfad in quelldateien():
         t = lies(pfad)
+        # ESCAPE-FOLGEN AUFLOESEN, KOMMENTARE NICHT AUSBLENDEN — und das
+        # zweite ist eine Entscheidung, keine Auslassung (Web 19.4.2).
+        #
+        # Naheliegend waere gewesen, hier `ohne_php_js_kommentare()` aus
+        # Gruppe 5 dazwischenzuschalten: Von 255 Treffern stehen rund 250 in
+        # Kommentaren oder in Fliesstext, die Zahl faellt damit auf 108.
+        # Nachgemessen am 14.09.2026 taugt der Abtaster dafuer aber nicht: In
+        # einer PHP-Datei mit HTML schickt ihn ein ungepaartes `"` im
+        # Fliesstext in den Zeichenketten-Modus, und er verschluckt alles bis
+        # zum naechsten — in `einsatz_form.php` ab Zeile 1547 ganze 800
+        # Zeilen am Stueck. Eine kleinere Zahl, die durch Wegsehen entsteht,
+        # ist schlechter als eine grosse, die alles zeigt. Backlog Nr. 184.
+        markup = escapes_aufloesen(t)
         istr_ui = pfad.endswith('ui.php')
         istr_js = pfad.endswith(os.sep + 'symbol.js')
         for m in re.finditer(r'<svg\b[^>]*>(.*?)</svg>', t, re.S):
@@ -419,10 +452,10 @@ def pruefung_symbole(bericht):
             verwendet.add(m.group(1))
         if istr_ui or istr_js:
             continue
-        for m in re.finditer('[' + re.escape(UNICODE_SYMBOLE) + ']', t):
-            unicode_.append('%s:%d  %s' % (kurz(pfad), zeile_von(t, m.start()), m.group(0)))
-        for m in EMOJI.finditer(t):
-            emoji.append('%s:%d  %s' % (kurz(pfad), zeile_von(t, m.start()), m.group(0)))
+        for m in re.finditer('[' + re.escape(UNICODE_SYMBOLE) + ']', markup):
+            unicode_.append((kurz(pfad), zeile_von(markup, m.start()), m.group(0)))
+        for m in EMOJI.finditer(markup):
+            emoji.append('%s:%d  %s' % (kurz(pfad), zeile_von(markup, m.start()), m.group(0)))
 
     vorhanden = set()
     if os.path.isdir(SYMBOLE):
@@ -433,7 +466,17 @@ def pruefung_symbole(bericht):
     bericht.zahl('3 Symbole', 'Symboldateien vorhanden', len(vorhanden))
     bericht.zahl('3 Symbole', 'davon im Code verwendet', len(vorhanden & verwendet))
     bericht.befund('3 Symbole', 'Inline-SVG mit Pfaden in PHP/JS', inline)
-    bericht.befund('3 Symbole', 'Unicode-Zeichen als Symbol im Markup', unicode_)
+    # KEINE AUSNAHMELISTE FUER DIESE PRUEFUNG, und auch das ist entschieden.
+    # Das Konzept der Mockup-Runde sah eine vor (`ausnahmen.md`, E-MR-02);
+    # diese Datei liest aber ausschliesslich die Token-Pruefung, ein Eintrag
+    # dort stuende wirkungslos da (nachgesehen 13.09.2026, E-MR-24). Die
+    # Zusagenliste aus Gruppe 5 waere der richtige Ort — nur bliebe dann eine
+    # Liste mit rund hundert Eintraegen fuer „…" und „→", und die liest
+    # niemand. Solange die Zahl aus Typografie besteht, ist sie eine ZAHL und
+    # kein Befund je Zeile; wer sie klein bekommen will, braucht zuerst
+    # Nr. 184 (der Abtaster) und dann eine engere Zeichenliste.
+    bericht.befund('3 Symbole', 'Unicode-Zeichen als Symbol im Markup',
+                   ['%s:%d  %s' % z for z in unicode_])
     bericht.befund('3 Symbole', 'Emoji im Markup', emoji)
     bericht.befund('3 Symbole', 'Verweis auf fehlende Symboldatei', fehlend)
     bericht.hinweis('3 Symbole', 'Symboldatei ohne Verweis', ohne_verweis)

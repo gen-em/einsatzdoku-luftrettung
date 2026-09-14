@@ -4,6 +4,73 @@ Entstanden in P3 (Konzept, Anlage F). Zusammen mit
 `tools/vollstaendigkeit/` ersetzt sie den Stilvergleich für die Dauer der
 Phase.
 
+> ## Drei Engines, und wann welche fährt
+>
+> Seit dem 14.09.2026 beschafft der Startvorgang **Chromium, Firefox und
+> WebKit** (`.claude/hooks/session-start.sh`, Backlog Nr. 183); seit AP3b der
+> Mockup-Runde fährt der Bilderlauf alle drei — `--motor chromium|firefox|webkit`,
+> Vorgabe Chromium. Die Wahl und die Firefox-Voreinstellung stehen in
+> `tools/motor.mjs`, einmal für alle drei Prüfmittel.
+>
+> **Die Empfehlung ist gestaffelt, und zwar aus einer Zahl heraus:** Der volle
+> Lauf misst 45 Seiten in acht Breiten und braucht je Motor rund neun Minuten
+> (gemessen: 360 Bilder in 8 min 47 s). Dreimal voll sind eine knappe halbe
+> Stunde nach **jedem** Arbeitspaket, und das Meiste davon ist Wiederholung.
+> Deshalb:
+>
+> ```
+> node tools/screenshots/aufnehmen.mjs                               # Chromium, voll
+> node tools/screenshots/aufnehmen.mjs --motor firefox --risiko --nur 13-,35-
+> node tools/screenshots/aufnehmen.mjs --motor webkit  --risiko --nur 13-,35-
+> ```
+>
+> `--risiko` nimmt zu den mit `--nur` gewählten Seiten die **Risikoliste**
+> hinzu: zehn Seiten, jede mit einem CSS-Merkmal, bei dem die Engines
+> auseinandergehen können (Container-Abfrage, `:has()`, `dvh`,
+> `position:sticky`, `dialog`). Die Liste steht im Kopf von `aufnehmen.mjs`,
+> je Zeile mit ihrem Grund; wer ein solches Merkmal neu einbaut, trägt seine
+> Seite dort ein. Ein Name, den `seiten.json` nicht kennt, ist ein Abbruch —
+> eine Risikoliste, die sich still kürzt, meldet eine schmeichelhafte Null.
+>
+> **Was der dreifache Lauf am ersten Tag gefunden hat** (also nicht bloß eine
+> Vorsichtsmaßnahme): `import.php` lief bei 360 px **nur in WebKit** um 6 px
+> über — `scrollWidth` 366 gegen `innerWidth` 360, und kein einziges Element
+> ragte hinaus. Ursache war der längste Eintrag eines Auswahlfeldes, den
+> WebKit in den Überlauf des Kastens rechnet (Nr. 185, behoben mit
+> `select.feld-eingabe{contain:paint}`).
+>
+> Vier Dinge, die man beim Messen über Engines wissen muss:
+>
+> - **Der Browser kommt über `PLAYWRIGHT_BROWSERS_PATH`** (Vorgabe
+>   `/opt/pw-browsers`) und heißt in Playwright `chromium`, `firefox` oder
+>   `webkit`. Gemessen am 14.09.2026: 141.0.7390.37, 142.0.1, 26.0.
+> - **Headless Firefox meldet ohne Voreinstellung „kein Zeiger, kein Hover".**
+>   Damit ist der ganze Media-Block der 36-px-Bedienhöhe unsichtbar und der
+>   Lauf meldet ab 1024 px falsche Knopfhöhen. `tools/motor.mjs` setzt
+>   deshalb `ui.primaryPointerCapabilities` und `ui.allPointerCapabilities`
+>   auf `6` (fein + Hover) — **außer** im Fingerlauf, wo `hasTouch` in allen
+>   drei Motoren von selbst `pointer:coarse` ergibt.
+> - **`waitUntil: 'load'` hängt in Firefox**, solange die Kartenkacheln nicht
+>   erreichbar sind — es wartet auf sie, Chromium nicht. Entweder
+>   `domcontentloaded` nehmen oder die Kacheln abfangen (dieses Werkzeug tut
+>   Letzteres bereits, siehe `kachelAntwort`).
+> - **Maße weichen um wenige Pixel ab.** Dieselbe Kopfzeile maß bei 400 px
+>   231 px (Chromium), 232 px (Firefox) und 233 px (WebKit) — Schriftmetrik,
+>   kein Befund. Ein Vergleich über Engines braucht eine Toleranz, kein
+>   `===`.
+>
+> **Und ein Satz zurückgenommen:** Bis AP3b stand hier, Firefox melde die
+> `latin-ext`-Schriftabrufe als Konsolenfehler (`NS_BINDING_ABORTED`) und ein
+> Rauschfilter müsse das kennen. Das stimmt nicht für diesen Lauf — die
+> Abbrüche entstanden durch ein Messskript, das schneller weiterblätterte, als
+> die Schriften luden. Gemessen über fünf Seiten in acht Breiten: Chromium,
+> Firefox und WebKit melden **je 0 Konsolenfehler**. Es ist kein Filter
+> eingebaut worden, weil es nichts zu filtern gab.
+>
+> **WebKit hier ist nicht Safari.** Derselbe Kern, anderer Unterbau —
+> Schriften, Textrasterung, Systemintegration. Für „läuft das in Safari" ist
+> es ein starkes Indiz, kein Beweis.
+
 ## Warum es sie gibt
 
 Ein Redesign, das „voll mobiltauglich auf allen Seiten" verspricht, muss das
@@ -93,6 +160,9 @@ Wie sie entsteht, steht in `tools/referenzdatensatz/LIESMICH.md`.
 ```
 node tools/screenshots/aufnehmen.mjs                  # alles
 node tools/screenshots/aufnehmen.mjs --nur 10-,12-    # nur diese Seiten
+node tools/screenshots/aufnehmen.mjs --risiko         # dazu die Risikoliste
+node tools/screenshots/aufnehmen.mjs --motor firefox  # Gecko statt Chromium
+node tools/screenshots/aufnehmen.mjs --motor webkit   # WebKit statt Chromium
 node tools/screenshots/aufnehmen.mjs --klein          # 1× statt 2×
 node tools/screenshots/aufnehmen.mjs --finger         # als Fingergerät
 node tools/screenshots/aufnehmen.mjs --selbstprobe    # nur die Rauschprobe

@@ -309,6 +309,22 @@
   --uebersicht-spalte:240px;           /* schmalste Spalte der Einstellungs-Übersicht */
   --suchfeld:48px;                     /* das große Suchfeld */
   --symbol-klein:16px;                 /* Zusatzzeichen an einer Beschriftung */
+  /* Drei abgeleitete Symbolmasse aus der Mockup-Runde 9c (AP2, Nr. 42). Die
+   * Skala ist geschlossen (`CLAUDE.md` 5), deshalb stehen sie als RECHNUNG da,
+   * und die Rechnung ist ihre Herkunft:
+   *   --symbol-winzig 12 px = --symbol-klein (16) minus --abstand-1 (4). So
+   *     gross wie das Malzeichen, das es ersetzt (E-MR-14): Der 16-px-Vorschlag
+   *     war „zu gross, zu dicht" und ist verworfen.
+   *   --ziel-chip    28 px = --symbol-gross (24) plus --abstand-1 (4). Das
+   *     TREFFZIEL um dieses Symbol, freigegeben als F-MR-6b. Es ist groesser
+   *     als das der Filter-Plakette (20 px, .plakette-weg) — mit Absicht: Der
+   *     Chip steht in einem Formular, die Plakette in einer Leiste, und ein
+   *     Fehlgriff kostet hier einen Wert.
+   *   --symbol-text  1em = so gross wie die Schrift, in der es steht. Das
+   *     Warnzeichen im Satz einer Meldung waechst mit ihr (E-MR-10). */
+  --symbol-winzig:calc(var(--symbol-klein) - var(--abstand-1)); /* 12 px, im Chip */
+  --ziel-chip:calc(var(--symbol-gross) + var(--abstand-1));     /* 28 px, Treffziel */
+  --symbol-text:1em;                   /* Symbol im Fliesstext */
   --symbol:20px;                       /* Symbolgröße in der Zeile */
   --symbol-gross:24px;                 /* Symbolgröße im Knopf und Kartenkopf */
   --strich:1px;                        /* Haarlinie */
@@ -350,6 +366,14 @@
   --karte-mobil:160px;
   --karte-tablet:220px;
   --karte-desktop:300px;
+  /* DIE DRITTE GROESSE (Backlog Nr. 45, M-MR-03, F-MR-7). Zwischen 300 px und
+   * Vollbild lag nichts: Wer mehr von der Spur sehen wollte, musste die Seite
+   * verlassen. `min()` statt einer festen Zahl, und beide Haelften haben einen
+   * Grund — 60vh laesst auf jedem Geraet ein Drittel des Glases fuer die
+   * Liste darunter uebrig, 520 px deckelt das auf einem hohen Schreibtisch-
+   * bildschirm, wo 60vh sonst 800 px waeren und die Liste aus dem Bild
+   * schoebe. Freigegeben am 14.09.2026. */
+  --karte-gross:min(60vh, 520px);
 
   /* ---- Spurfarben (P3/O3, E-P3-40) --------------------------------------
    * Acht Farben für die Einsätze eines Tages, in Vergabereihenfolge. Bis
@@ -391,8 +415,17 @@
 
   /* ---- Bewegung ----------------------------------------------------------
    * Kurz und einheitlich. Wer Bewegung abbestellt hat, bekommt keine
-   * (Abschnitt 3). */
-  --dauer:.18s;
+   * (Abschnitt 3).
+   *
+   * SEIT WEB 19.6.0 SIND ES 240 ms, VORHER 180 (E-MR-22). Anlass war das
+   * Aktionsblatt: Bei 180 ms war die Auffahrt aus der unteren Bildkante
+   * eher ein Aufblitzen als eine Bewegung, und eine Bewegung, die man
+   * nicht sieht, erklaert auch nichts. Der Wert gilt fuer ALLE Nutzer des
+   * Tokens — Schublade und Schleier, Akkordeon-Winkel, Winkel am
+   * „Aktionen"-Knopf, Schalter-Griff, Kennzahlen-Winkel und das Blatt.
+   * Ein zweites Token nur fuers Blatt waere die Stelle, an der die
+   * Anwendung anfaengt, verschieden schnell zu sein. */
+  --dauer:.24s;
   --schleier:rgba(26,46,77,.55);       /* Dunkelblau, halbdurchsichtig */
   --schatten:0 2px 8px rgba(26,5,0,.10);
   --schatten-hoch:0 8px 28px rgba(26,5,0,.22);
@@ -581,6 +614,21 @@ img,svg,video{max-width:100%;height:auto}
   vertical-align:middle;
 }
 .symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
+/* EIN SYMBOL IM FLIESSTEXT (E-MR-10, Mockup-Runde 9c / AP2). Es waechst mit
+ * der Schrift, in der es steht — `1em`, nicht 16 oder 20 px —, und sitzt auf
+ * der Grundlinie statt in der Zeilenmitte: `vertical-align:middle` laesst ein
+ * Zeichen in einem Satz zu hoch schweben. Der Wert `-.15em` ist die
+ * Unterlaenge der Grundschrift und kein Mass der Skala; er steht relativ zur
+ * Schriftgroesse und geht deshalb mit ihr mit.
+ *
+ * WOFUER. Die Meldung „N Eintraege lassen sich nicht entschluesseln und sind
+ * mit … gekennzeichnet" trug das Zeichen bis Web 19.4.1 als Unicode `⚠` —
+ * damit sah es in jedem System anders aus und nahm die Schriftfarbe nicht an.
+ * Jetzt ist es dasselbe Symbol wie die Marke in der Tabelle daneben. */
+.symbol-text{
+  width:var(--symbol-text);height:var(--symbol-text);
+  vertical-align:-.15em;
+}
 
 /* Der Winkel liegt EINMAL vor (winkel.svg, zeigt nach unten) und wird
  * gedreht — statt vier Dateien für vier Richtungen. */
@@ -1277,6 +1325,55 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .aktionen-knopf .symbol:last-child{transition:transform var(--dauer) ease-out}
 .aktionen-knopf[aria-expanded="true"] .symbol:last-child{transform:rotate(180deg)}
 
+/* DER OFFENE OEFFNER IST MARKIERT (Backlog Nr. 124, Weg b; E-MR-21, D4).
+ *
+ * Das Blatt deckt am Handy die untere Bildhaelfte ab, und der Knopf, aus dem
+ * es kam, verschwand darin optisch — wer es wieder zumachen wollte, suchte.
+ * Er traegt deshalb, solange sein Blatt offen ist, die Flaeche `--orange-hell`
+ * mit `--orange-tief` darauf: 11,7:1 gegen den dunkelblauen Kartenkopf,
+ * 3,8:1 fuer die Punkte gegen die Flaeche — ueber den 3:1, die WCAG 1.4.11
+ * fuer ein Bedienelement verlangt (`kontrast.py`, Paar „Orange tief auf
+ * Orange hell"). Zur Wahl standen vier Ringfassungen; keine ueberzeugte, der
+ * Ring auf Blau-hell lag bei 1,9:1 (E-MR-17, E-MR-20).
+ *
+ * AM ATTRIBUT, NICHT AN DER KLASSE — und das ist der Kern. Oeffner gibt es in
+ * vier Bauarten: `ui_aktionen()` (6 Aufrufe), `ui_zeilenaktionen()` (9), der
+ * Pin-Knopf des Ortsfelds und drei handgeschriebene Sortierblatt-Knoepfe in
+ * index.php, suche.php und zeitraum.php. Sie teilen genau ein Merkmal:
+ * `data-blatt` und `aria-expanded`. Eine Regel daran erreicht alle vier, auch
+ * die naechste — „Blatt offen" ist dieselbe Aussage, gleich an welchem Knopf
+ * (E-MR-25).
+ *
+ * `border-radius` steht hier mit, weil nicht jeder Oeffner ein `.knopf` ist:
+ * `.karte-sortieren` ist ein blanker Button, und ohne die Rundung bekaeme er
+ * ein hartes oranges Quadrat. Die Spezifitaet (0,2,0) liegt ueber jeder
+ * Knopfvariante und ueber deren `:hover`. */
+[data-blatt][aria-expanded="true"]{
+  background:var(--orange-hell);
+  color:var(--orange-tief);
+  border-color:var(--orange-hell);
+  border-radius:var(--radius);
+}
+
+/* DAS BLATT FAEHRT AUF, STATT DAZUSTEHEN (Backlog Nr. 124, Weg b).
+ *
+ * Es liegt unten am Bildrand, und ein Menue, das dort ohne Bewegung
+ * erscheint, liest sich wie ein Seitenwechsel: Die halbe Flaeche ist ploetzlich
+ * eine andere, und niemand weiss, woher sie kam. Mit der Auffahrt sagt die
+ * Bewegung, wo es herkommt und wohin es zurueckgeht.
+ *
+ * ZWEI ZUSTAENDE, EINE KLASSE. Im Ruhezustand steht es um seine eigene Hoehe
+ * unter dem Bildrand (`translateY(100%)`); `.blatt-auf` holt es herauf.
+ * `assets/blatt.js` setzt die Klasse im naechsten Frame nach `hidden=false` —
+ * beides im selben Frame waere keine Bewegung, sondern ein Sprung.
+ *
+ * `hidden` BLEIBT DER SCHALTER fuer „da oder nicht da": Ein Blatt, das nur
+ * verschoben ist, faenge weiter Klicks und stuende im Vorlesebaum. Das Skript
+ * nimmt es deshalb erst NACH der Rueckfahrt aus dem Fluss.
+ *
+ * Bewegung abbestellt: Abschnitt 3 setzt jede `transition-duration` auf
+ * 0,01 ms. Das Blatt erscheint dann ohne Fahrt — und `transitionend` feuert
+ * trotzdem, worauf sich das Skript NICHT verlaesst (es hat einen Nachlauf). */
 .blatt{
   position:fixed;inset:auto 0 0 0;z-index:70;
   background:var(--schnee);
@@ -1284,7 +1381,10 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
   box-shadow:var(--schatten-hoch);
   padding:var(--abstand-3) var(--abstand-3) var(--abstand-5);
   max-height:80vh;overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform var(--dauer) ease-out;
 }
+.blatt.blatt-auf{transform:none}
 .blatt-griff{
   width:2.5rem;height:var(--abstand-1);margin:0 auto var(--abstand-3);
   border-radius:var(--radius-rund);background:var(--sand);
@@ -1393,6 +1493,39 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  * Eigenschaftsmessungen über sieben Feldarten zeigten genau diese eine
  * Änderung und keine zweite. */
 input[type=file].feld-eingabe{line-height:calc(var(--knopf) - 2*var(--strich))}
+/* DAS AUSWAHLFELD: sein laengster Eintrag schiebt die SEITE, nicht sich selbst
+ * (WebKit; gefunden in AP3b mit dem dreifachen Bilderlauf, Nr. 185).
+ *
+ * Gemessen auf `import.php` bei 360 px, angemeldet als Demo-Konto:
+ *
+ *     chromium  scrollWidth 360 = innerWidth 360
+ *     firefox   scrollWidth 360 = innerWidth 360
+ *     webkit    scrollWidth 366 > innerWidth 360      <-- 6 px Ueberlauf
+ *
+ * Der Verursacher liess sich nicht finden, weil er keiner ist: KEIN Element
+ * der Seite ragt ueber 360 px hinaus — das Auswahlfeld ist 302 px breit und
+ * endet bei 331. Was ueberlaeuft, ist die innere Breite des Feldes: WebKit
+ * rechnet den laengsten EINTRAG in den Ueberlauf des Kastens mit, auch wenn
+ * der Kasten ihn abschneidet. Nachgewiesen durch Kuerzen: Alle
+ * Eintragstexte auf „x" gesetzt, und scrollWidth fiel von 366 auf 360;
+ * zurueckgesetzt, und es waren wieder 366. Der laengste Eintrag hat 53
+ * Zeichen („Bergwacht Hochkreuth · Luftrettungsstation Hochkreuth"), die
+ * drei anderen Auswahlfelder derselben Seite haben 17, 17 und 30 — sie
+ * laufen nicht ueber. Ab 390 px verschwindet der Ueberlauf.
+ *
+ * `overflow:clip` am Feld hilft NICHT (gemessen: 366), `max-width:100%`
+ * ebenso wenig, `appearance:none` nur zur Haelfte (361). Was hilft, ist
+ * Malbegrenzung: `contain:paint` nimmt den Eintragstext aus dem Ueberlauf
+ * der Seite. Was sie KOSTET, ist nachgemessen und nicht geschaetzt — der
+ * fokussierte Ausschnitt (318 x 60 px) vor und nach der Regel: in Firefox
+ * bitgleich, in Chromium und WebKit **ein** Pixel Unterschied bei einer
+ * Abweichung von 6 von 255, an der Rundung des Fokusrings. Der Fokusring
+ * selbst bleibt vollstaendig stehen; er gehoert dem Feld und nicht seinem
+ * Inhalt, und Malbegrenzung schneidet nur Inhalt.
+ *
+ * Nur `select`: Ein Textfeld hat keinen Inhalt, der breiter waere als sein
+ * Kasten. */
+select.feld-eingabe{contain:paint}
 .feld-klein{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
 .feld-reihe{display:flex;flex-wrap:wrap;gap:var(--abstand-3)}
 .feld-reihe > .feld{flex:1 1 12rem;min-width:0}
@@ -1966,13 +2099,19 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .akkordeon-inhalt{padding-left:var(--abstand-1)}
   .akkordeon:not(.leiste-gruppe) .eintrag{gap:var(--abstand-1)}
 
-  /* Das Aktionsmenü wird ein Aufklappmenü statt eines Blattes. */
+  /* Das Aktionsmenü wird ein Aufklappmenü statt eines Blattes.
+     KEINE FAHRT HIER. `translateY(100%)` hiesse am Aufklappmenü „um die
+     eigene Höhe nach unten" — es stünde neben der Sache statt unter dem
+     Bildrand. Das Mockup M-MR-04 sagt zum Schreibtisch ausdrücklich
+     „unverändert"; die Markierung des Öffners gilt dagegen in beiden Formen,
+     und der Winkel dreht weiter. */
   .blatt{
     position:absolute;inset:auto 0 auto auto;top:calc(var(--knopf) + var(--abstand-1));
     width:16rem;
     border-radius:var(--radius);
     padding:var(--abstand-2);
     border:var(--strich) solid var(--linie);
+    transform:none;transition:none;
   }
   .blatt-griff,.blatt-titel,.blatt-abbrechen{display:none}
   .blatt-zeile{min-height:var(--knopf)}
@@ -2618,17 +2757,54 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 /* ---- Chips (Koordinaten am Ortsfeld, gewählte Rettungsmittel) ------------ */
 .rmchips{display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center}
 .rmchip{
-  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  display:inline-flex;align-items:center;
   background:var(--blau-hell);color:var(--dunkelblau);
   border-radius:var(--radius-rund);
-  padding:var(--abstand-1) var(--abstand-2);
   font-size:var(--groesse-2);font-weight:600;
+  /* GLEICH VIEL ABSTAND ZUM TEXT WIE ZUM RAND (E-MR-18, Skizze des
+   * Auftraggebers): 6 px beidseits des Symbols. 6 px ist keine Stufe des
+   * Vierer-Rasters — es ist anderthalb `--abstand-1`, und genau so steht es
+   * da, damit die Zahl ihre Herkunft behaelt. Links bleibt `--abstand-2`:
+   * Dort steht Text an einer runden Kante und braucht mehr Luft. */
+  gap:calc(var(--abstand-1) * 1.5);
+  padding:var(--abstand-1) calc(var(--abstand-1) * 1.5)
+          var(--abstand-1) var(--abstand-2);
 }
+/* DAS ENTFERNEN-ZIEL IST GROESSER ALS DAS, WAS MAN SIEHT — und das ist der
+ * ganze Punkt von Backlog Nr. 42 (M-MR-02, Variante C).
+ *
+ * Bis Web 19.4.1 stand hier das Malzeichen `×` als TEXT, und das Ziel war so
+ * gross wie das Zeichen: gemessen 11 x 15 px. Auf einem Handy mit Handschuhen
+ * ist das kein Bedienelement, sondern ein Glueckspiel — und ein Fehlgriff
+ * loescht eine Koordinate oder ein Rettungsmittel.
+ *
+ * WARUM EIN PSEUDOELEMENT UND KEIN GROESSERER KNOPF: Ein 28 px hoher Knopf
+ * machte den Chip 28 px hoch, und der soll bei 26 bleiben. Das `::before`
+ * liegt ABSOLUT ueber dem Symbol, vergroessert die Trefferflaeche des Knopfes
+ * (sie gehoert zu ihm, nicht zum Chip) und nimmt keinen Platz im Fluss. Der
+ * Chip behaelt seine Hoehe, das Ziel ragt unsichtbar darueber hinaus.
+ *
+ * EINE REGEL FUER BEIDE CHIPS (E-MR-11): Koordinaten (`ortsfeld.js`) und
+ * beteiligte Rettungsmittel (`einsatz_form.php`) teilen sich `.rmchip`/`.rmx`.
+ * Bis hierher setzten sie dasselbe Zeichen auf zwei Arten — einmal als
+ * Zeichen, einmal als JavaScript-Escape; die zweite hat die
+ * Vollstaendigkeitspruefung nie gesehen. */
 .rmx{
+  position:relative;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:var(--symbol-winzig);height:var(--symbol-winzig);
   border:0;background:none;color:inherit;cursor:pointer;
-  min-height:0;padding:0 var(--abstand-1);
-  font-size:var(--groesse-3);line-height:1;
+  min-height:0;padding:0;
 }
+.rmx .symbol{width:var(--symbol-winzig);height:var(--symbol-winzig)}
+.rmx::before{
+  content:"";position:absolute;
+  width:var(--ziel-chip);height:var(--ziel-chip);
+  border-radius:var(--radius-rund);
+}
+/* Rueckmeldung ohne neue Flaeche: der Ton wird kraeftiger. Eine Fuellung
+ * haette eine zweite Blauflaeche auf der ersten bedeutet. */
+.rmx:hover{color:var(--blau-tief)}
 /* Eingabefeld mit Chips darin (Weitere Rettungsmittel, Mockup 22). */
 .rmbox{position:relative}
 .rmfeld{
@@ -3719,3 +3895,129 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* Der Leerzustand ist ein gewöhnlicher Hinweis; er braucht nur den Abstand,
  * den die weggefilterten Zeilen hinterlassen. */
 .kartenfilter-leer{margin:var(--abstand-3) 0 0}
+
+
+/* ===========================================================================
+ * 29  IMPORTVORSCHAU                      (Mockup-Runde 9c, M-MR-01, E-MR-09)
+ *
+ * Die Vorschau des CSV-Imports gruppiert ihre Zeilen nach Diensttagen. Der
+ * Gruppenkopf ist eine Tabellenzeile ueber die volle Breite — und sah bis
+ * Web 19.3.1 aus wie eine Datenzeile: Text in `<strong>`, sonst nichts.
+ * `imp-daygroup` und `imp-warn` standen deshalb seit O11 als `[offen]` in
+ * `ohne-regel.md`; Backlog Nr. 41 ist der Eintrag dazu.
+ *
+ * WAS DIE REGEL TUT. Sie macht aus der Datenzeile eine Ueberschrift: Flaeche
+ * in Rauch, kraeftige Oberlinie, das Datum in Kopfschrift und Dunkelblau,
+ * der Rest gedaempft und eine Stufe kleiner. Damit traegt der Kopf dieselbe
+ * Sprache wie jede andere Zwischenueberschrift der Anwendung.
+ *
+ * WARUM `imp-warn` NICHT AUCH EINE REGEL BEKOMMT (F-MR-1, Variante A). Die
+ * Warnung „abweichende Crew" ist ein Zustand, der Aufmerksamkeit will — und
+ * dafuer gibt es den Baustein schon: `.plakette-orange` mit dem Symbol
+ * `warnung`. Eine zweite Darstellung fuer dieselbe Aussage waere eine
+ * Darstellung zu viel; die Klasse ist deshalb ersatzlos gestrichen und steht
+ * mit Begruendung auf `streichliste.md`. Dieselbe Kopfzeile traegt die
+ * Gruppe „Nicht zuordenbar", dort mit `.plakette-rot` (F-MR-3, E-MR-13).
+ *
+ * DIE ZEILE BRICHT UM — ABER ERST SEIT WEB 19.4.1, und der Umweg dorthin ist
+ * der Kern dieses Abschnitts (Backlog Nr. 182, M-MR-05, F-MR-14 = Weg B).
+ *
+ * Web 19.4.0 hat `flex-wrap` gesetzt und geglaubt, damit sei es getan. Es war
+ * es nicht: Die Zelle ist so breit wie die TABELLE, nicht wie das
+ * Sichtfenster — gemessen 2653 px gegen 342 px am Handy. In einer 2653 px
+ * breiten Zeile bricht nichts um, und alles hinter dem Datum stand ausserhalb
+ * des Sichtfensters. Die Plakette „abweichende Crew" war damit in KEINER
+ * Breite zu sehen, ohne waagerecht zu scrollen — eine Plakette, die
+ * Aufmerksamkeit will und keine bekommt.
+ *
+ * DIE LOESUNG IST EINE CONTAINER-ABFRAGE, und sie braucht kein JavaScript.
+ * `.imp-roll` (der Rollbereich der Vorschau) wird zum Groessencontainer;
+ * `100cqi` ist damit die SICHTBARE Breite, nicht die der Tabelle. Der Inhalt
+ * der Kopfzeile heftet sich mit `position:sticky; left:0` an den linken Rand
+ * des Rollbereichs und bleibt stehen, waehrend die Datenzeilen darunter
+ * waagerecht durchlaufen. Erst dadurch greift `flex-wrap` ueberhaupt.
+ *
+ *   WARUM NICHT `width:100%`: Das waere die Breite der ZELLE — 2653 px.
+ *   WARUM NICHT EINE GEMESSENE ZAHL AUS JAVASCRIPT: Weil es sie nicht
+ *     braucht. Beide Fassungen sind bei sechs Fensterbreiten (360 bis
+ *     1920 px) auf den Pixel gleich gemessen worden; die CSS-Fassung kommt
+ *     ohne `ResizeObserver` aus.
+ *   WARUM NICHT AN `.tabelle-scroll`: Die Klasse traegt neun Stellen auf
+ *     sechs Seiten, und `container-type` bringt `contain: layout
+ *     inline-size` mit. Eine global gesetzte Eigenschaft fuer ein oertliches
+ *     Problem waere falsch — deshalb die eigene Klasse `.imp-roll`, die
+ *     `import.php` neben `tabelle-scroll` setzt.
+ *
+ * DIE FLAECHE BLEIBT DURCHGEHEND. Das Polster wandert von der Zelle in die
+ * Kopfzeile; Rauch und Oberlinie bleiben an der Zelle und laufen damit ueber
+ * die ganze Tabellenbreite. Das Band hoert also nicht auf halber Strecke auf,
+ * nur sein Inhalt folgt dem Blick.
+ * ======================================================================== */
+.imp-roll{container-type:inline-size}
+.imp-daygroup td{
+  background:var(--rauch);
+  border-top:var(--strich-stark) solid var(--linie);
+  padding:0;
+}
+.imp-kopfzeile{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);
+  position:sticky;left:0;
+  width:100cqi;box-sizing:border-box;
+  padding:var(--abstand-2) var(--abstand-3);
+}
+/* KOPFSCHRIFT, NICHT NUR FETT. Der Unterschied zwischen Ueberschrift und
+ * Datenzeile ist in dieser Anwendung die Schriftfamilie, nicht das Gewicht —
+ * `<strong>` allein hat genau deshalb nicht gereicht. */
+.imp-tag{
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-3);color:var(--dunkelblau);
+}
+.imp-rest{color:var(--gedaempft);font-size:var(--groesse-2)}
+/* DIE EINE ABWEICHUNG VOM BAUSTEIN, und sie ist noetig: `.plakette` steht auf
+ * `white-space:nowrap`, weil eine Plakette sonst ueblicherweise ein einzelnes
+ * Wort ist („freigegeben", „kein Ende"). Hier traegt sie den Konflikttext,
+ * und der waechst mit der Zahl der abweichenden Rollen — „HEMS: Weber ->
+ * Muster, P1: Berger -> Beispiel". Bei 360 px waere das eine Plakette, die
+ * breiter ist als das Geraet. Sie darf deshalb umbrechen; alles andere am
+ * Baustein bleibt. */
+.imp-kopfzeile .plakette{white-space:normal}
+
+
+/* ===========================================================================
+ * 30  DRITTE KARTENGROESSE                 (Mockup-Runde 9c, M-MR-03, AP3)
+ *
+ * Die Karte der Tagesuebersicht hatte zwei Zustaende: ihre Hoehe nach Breite
+ * (160 / 220 / 300 px) und Vollbild. Dazwischen lag nichts — wer mehr von der
+ * Spur sehen wollte, musste die Seite verlassen und wiederkommen. Backlog
+ * Nr. 45 fuellt die Luecke mit EINEM Zustand und EINEM Knopf.
+ *
+ * ZWEI WIRKUNGEN JE BREITE (E-MR-16, F-MR-9 geaendert). Bis 1599 px wird die
+ * Karte HOEHER — `--karte-gross`, also min(60vh, 520px). Ab 1600 px steht sie
+ * ohnehin in einer eigenen Spalte und ist dort schon hoch; dort wird sie
+ * stattdessen BREIT: Das Raster faellt auf eine Spalte, und die Karte rueckt
+ * zwischen Diensttag-Daten und Einsatzliste — dorthin, wo sie unter 1600 px
+ * immer steht. Die DOM-Reihenfolge ist bereits Daten, Karte, Liste; es genuegt
+ * deshalb, das Raster abzuschalten.
+ *
+ * WARUM `:has()` UND KEINE ZWEITE KLASSE AM RASTER. Der Zustand gehoert der
+ * Karte, nicht dem Raster — `blatt.js` und `map_fullscreen.js` setzen ihn
+ * dort, und eine zweite Klasse an einem Vorfahren waere eine zweite Stelle,
+ * die auseinanderlaufen kann. `:has()` steht seit P3 an sechs Stellen im
+ * Stylesheet; die Browsergeneration ist damit ohnehin vorausgesetzt.
+ * ======================================================================== */
+.geo-gross{height:var(--karte-gross)}
+
+/* DER KNOPF TRAEGT BEIDE ZEICHEN, das Stylesheet zeigt je Breite eins
+ * (E-MR-19). Ein Knopf, der sein Symbol per JavaScript tauscht, haette die
+ * Schwelle 1600 ein zweites Mal im Code — sie steht in dieser Anwendung
+ * ausschliesslich hier. */
+.karte-groesse .symbol-breit{display:none}
+
+@media (min-width:1600px){
+  /* Vorrang vor `.geo-spalte .geo{height:100%}` aus Abschnitt 20 — gleiche
+   * Spezifitaet, spaeter in der Datei. */
+  .geo-spalte .geo-gross{height:var(--karte-gross)}
+  .tag-raster:has(.geo-gross){display:block}
+  .karte-groesse .symbol-hoch{display:none}
+  .karte-groesse .symbol-breit{display:inline-block}
+}

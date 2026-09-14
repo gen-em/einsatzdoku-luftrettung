@@ -379,7 +379,13 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
     <?php /* Die Karte. Mobil 160 px ueber der Liste, ab 720 px 220, ab 1200
              300; ab 1600 rueckt sie in die rechte Spalte des Rasters und
              laeuft von der Hoehe der Diensttag-Daten bis unter die Tabelle
-             (E-P3-31, Anlage G). */ ?>
+             (E-P3-31, Anlage G).
+             SEIT WEB 19.5.0 GIBT ES EINEN DRITTEN ZUSTAND (Backlog Nr. 45):
+             Der Knopf unter „Vollbild" macht sie hoeher — und ab 1600 px, wo
+             sie ohnehin hoch ist, stattdessen breit; dann faellt das Raster
+             auf eine Spalte und die Karte steht wieder zwischen Daten und
+             Liste. Die Klasse `.geo-gross` traegt beides, das Stylesheet
+             entscheidet je Breite (Abschnitt 30). */ ?>
     <div class="geo-spalte"><div id="map" class="geo"></div></div>
 
     <section class="karte karte-einsaetze" id="einsatzliste">
@@ -582,6 +588,11 @@ let currentBase = null;
 const map = L.map('map');
 attachBaseLayers(map);
 attachFullscreenControl(map);
+/* Die dritte Kartengroesse gibt es NUR hier (Backlog Nr. 45): Diese Seite ist
+   die einzige mit einer Liste unter der Karte, die vom Hoeherwerden etwas
+   hat. Einsatzansicht, Spurenseite und Zeitraumuebersicht bekommen den Knopf
+   ausdruecklich nicht. */
+attachGroessenControl(map);
 map.setView([48.5, 10.5], 7); // Fallback, bis Daten da sind
 
 let layerGroup = L.layerGroup().addTo(map);

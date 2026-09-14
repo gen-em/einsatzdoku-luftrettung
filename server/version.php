@@ -4075,5 +4075,230 @@ declare(strict_types=1);
  * Ueberschrift, weil sie zur selben Runde gehoeren. Uhr und Android sind
  * unberuehrt. Keine Migration — `update.php` muss nach dem Deploy nicht
  * laufen.
+ *
+ * 19.4.0 — MOCKUP-RUNDE 9c, AP1: DIE IMPORTVORSCHAU BEKOMMT EINE UEBERSCHRIFT.
+ *
+ * Vier Gestaltungsaufgaben in einer Freigaberunde (Rahmenplan Schritt 9c,
+ * `Konzept-Mockup-Runde.md`); dies ist die erste. Backlog Nr. 41 fragte, was
+ * mit fuenf Klassen geschehen soll, die im Markup stehen und keine Regel
+ * haben. Drei davon hat Backlog-Runde 3 gestrichen (19.3.1); die beiden
+ * letzten sitzen in der Importvorschau und sind hier beantwortet — die eine
+ * bekommt eine Regel, die andere faellt weg.
+ *
+ * `imp-daygroup` ist die Kopfzeile einer Tagesgruppe. Sie trug ihren Text in
+ * `<strong>` und sah damit aus wie die Datenzeilen darunter — eine
+ * Ueberschrift, die keine war. Jetzt traegt sie Rauch als Flaeche, eine
+ * kraeftige Oberlinie, das Datum in Kopfschrift und Dunkelblau, den Rest
+ * gedaempft und eine Stufe kleiner. Und das Datum steht deutsch
+ * ("17.01.2026" statt "2026-01-17"): Die ISO-Form kam aus der Datei und ist
+ * bis in die Oberflaeche durchgereicht worden.
+ *
+ * `imp-warn` ist ersatzlos gestrichen. Die Warnung "abweichende Crew" stand
+ * als Fliesstext zwischen zwei Punkten; sie ist jetzt eine
+ * `.plakette-orange` mit dem Symbol `warnung` — der Baustein, mit dem die
+ * Anwendung ueberall "Zustand, der Aufmerksamkeit will" zeigt. Dieselbe
+ * Kopfzeile traegt die Gruppe "Nicht zuordenbar", dort in Rot und mit der
+ * Zahl der Zeilen statt einer Klammer.
+ *
+ * NEUE STUFE, KEINE KORREKTUR: Es sind neue Darstellungen (Mockup M-MR-01,
+ * Variante A, freigegeben am 13.09.2026), kein Fehler, der behoben wird.
+ * Uhr und Android sind unberuehrt. Keine Migration.
+ *
+ * WAS DIESE STUFE NICHT LOEST und was beim Pruefen im Browser aufgefallen
+ * ist: Die Kopfzeile sitzt in einer Tabellenzelle, die so breit ist wie die
+ * ganze Vorschautabelle — gemessen 2677 px bei 342 bis 1354 px Sichtfenster.
+ * Besatzung und Plakette stehen deshalb in JEDER Breite ausserhalb des
+ * Sichtfensters, bis jemand waagerecht scrollt. Das ist kein Rueckschritt
+ * (der alte Fliesstext stand an derselben Stelle, gemessen bei x=1077 statt
+ * x=940), aber es ist jetzt eine Plakette, die Aufmerksamkeit will und keine
+ * bekommt. Steht als Fehlerfund 2 im Konzept.
+ *
+ * 19.4.1 — DIE KOPFZEILE STEHT DA, WO GELESEN WIRD (Backlog Nr. 182).
+ *
+ * Der Fehlerfund aus 19.4.0, behoben. Die Kopfzeile einer Tagesgruppe sitzt
+ * in einer Tabellenzelle, die so breit ist wie die ganze Vorschautabelle —
+ * gemessen 2653 px gegen 342 px Sichtfenster am Handy. `flex-wrap` griff
+ * deshalb nie, und alles hinter dem Datum stand ausserhalb des
+ * Sichtfensters: Besatzung, die orange Plakette „abweichende Crew" und das
+ * Auswahlfeld daneben. In KEINER der gemessenen Breiten war die Plakette zu
+ * sehen, ohne waagerecht zu scrollen — eine Plakette, die Aufmerksamkeit
+ * will und keine bekommt.
+ *
+ * DIE LOESUNG BRAUCHT KEIN JAVASCRIPT, und das ist die Pointe. Der
+ * Rollbereich der Vorschau wird ueber `container-type:inline-size` zum
+ * Groessencontainer; `100cqi` ist damit die SICHTBARE Breite statt der
+ * Tabellenbreite. Der Inhalt der Kopfzeile heftet sich mit
+ * `position:sticky; left:0` an den linken Rand und bleibt stehen, waehrend
+ * die Datenzeilen darunter durchlaufen. Vier Deklarationen im Stylesheet,
+ * ein Klassenname in `import.php`, null Zeilen Skript.
+ *
+ * DER UMWEG GEHOERT ZUR SACHE. Zur Freigabe standen drei Wege (M-MR-05,
+ * F-MR-14): so lassen, heften, oder je Gruppe eine eigene Tabelle. Der
+ * dritte war zuerst gewaehlt und ist nach der Kartierung verworfen worden —
+ * 22 Befunde der Art „bricht", darunter vier, die LAUTLOS scheitern: der
+ * delegierte Ereignisbehandler haengt an `$('tabelle')` und haette beim
+ * Seitenstart die ganze Importseite mitgerissen; das Auswahlfeld der
+ * Tageswahl waere aus dem Tabellenbaum gefallen und sein Scheitern erst
+ * NACH dem Import in den Daten sichtbar geworden; mehrere `id="tabelle"`
+ * haetten nur die erste Gruppe bedienbar gelassen; und `.imp-daygroup td`
+ * haette nichts mehr getroffen, womit der Kopf auf den Zustand vor 19.4.0
+ * zurueckgefallen waere. Dazu haette der Weg die Spaltenflucht ueber die
+ * Gruppen gebrochen — eine Bedingung, die in der Abnahme von Nr. 182 steht.
+ *
+ * KORREKTURSTUFE, KEINE NEBENSTUFE: Es ist dieselbe Darstellung an
+ * derselben Stelle; sie ist jetzt zu sehen. Uhr und Android unberuehrt,
+ * keine Migration.
+ *
+ * 19.4.2 — MOCKUP-RUNDE 9c, AP2: ZWEI ZEICHEN WERDEN SYMBOLE (Nr. 42).
+ *
+ * Der Entfernen-Knopf im Chip und das Warnzeichen im Satz einer Meldung
+ * standen als Unicode-Zeichen im Markup. Beide sind jetzt Symbole aus dem
+ * Vorrat — und der Knopf hat ein Treffziel, das diesen Namen verdient.
+ *
+ * DER CHIP. `.rmx` trug ein Malzeichen als TEXT, und das Ziel war so gross
+ * wie das Zeichen: gemessen 17 x 15 px. Auf einem Handy mit Handschuhen ist
+ * das kein Bedienelement, und ein Fehlgriff loescht eine Koordinate oder ein
+ * Rettungsmittel. Jetzt: `schliessen` in 12 px, zentriert in einem 28-px-Ziel
+ * (M-MR-02 Variante C, F-MR-6b), 6 px zum Text und 6 px zum Chiprand
+ * (E-MR-18). Das Ziel liegt als Pseudoelement UEBER dem Symbol — ein
+ * groesserer Knopf haette den Chip hoeher gemacht; so bleibt er bei seinen
+ * 28,1 px und das Ziel ragt unsichtbar darueber hinaus.
+ *
+ * BEIDE CHIPS, EINE REGEL (E-MR-11). Koordinaten (`ortsfeld.js`) und
+ * beteiligte Rettungsmittel (`einsatz_form.php`) setzten dasselbe Zeichen auf
+ * ZWEI Arten — einmal als Zeichen, einmal als JavaScript-Escape. Die zweite
+ * hat die Vollstaendigkeitspruefung nie gesehen (Fehlerfund 1 des Konzepts);
+ * sie sieht Escape-Folgen jetzt.
+ *
+ * DAS WARNZEICHEN IM SATZ. `patient.js` trug das Zeichen als Konstante und
+ * setzte den Satz mit `textContent`. Es sah in jedem System anders aus, nahm
+ * die Schriftfarbe der Meldung nicht an und war etwas anderes als die Marke,
+ * die dieselbe Sache in der Tabelle daneben traegt. Jetzt dasselbe Symbol,
+ * ueber die neue Klasse `.symbol-text` so gross wie die Schrift (`1em`) und
+ * auf der Grundlinie; die Farbe kommt aus `.meldung-warn .symbol`.
+ *
+ * EINE AUSNAHME WENIGER, NICHT EINE MEHR. Das Konzept sah vor, den
+ * Zeichen-Rueckfall in `wegKnopf()` als begruendete Ausnahme stehen zu
+ * lassen. Der Vermerk daneben („symbol.js laedt erst am Seitenende") war
+ * falsch: `symbol.js` kommt aus `ui_geruest_ende()` und damit als erstes
+ * Skript der Seite. Nachgemessen am laufenden Formular — `typeof edSymbol`
+ * ist `function`, alle acht Entfernen-Knoepfe tragen ein SVG, keiner das
+ * Zeichen. Der Zweig war seit seiner Entstehung tot und ist fort; damit
+ * braucht Nr. 42 UEBERHAUPT keine Ausnahme.
+ *
+ * NEU: drei abgeleitete Token (`--symbol-winzig` 12 px, `--ziel-chip` 28 px,
+ * `--symbol-text` 1em) und die Klasse `.symbol-text`. Kein neuer Farbwert,
+ * kein neues Symbol — `schliessen` und `warnung` lagen im Vorrat.
+ *
+ * Uhr und Android unberuehrt, keine Migration.
+ *
+ * 19.5.0 — MOCKUP-RUNDE 9c, AP3: DIE DRITTE KARTENGROESSE (Nr. 45).
+ *
+ * Die Karte der Tagesuebersicht hatte zwei Zustaende: ihre Hoehe nach
+ * Fensterbreite (160 / 220 / 300 px) und Vollbild. Dazwischen lag nichts —
+ * wer mehr von der Spur sehen wollte, musste die Seite verlassen und
+ * wiederkommen. Jetzt liegt dazwischen ein Knopf.
+ *
+ * EIN ZUSTAND, ZWEI WIRKUNGEN JE BREITE (E-MR-16, F-MR-9 geaendert). Bis
+ * 1599 px wird die Karte HOEHER — `--karte-gross`, also min(60vh, 520px).
+ * Ab 1600 px steht sie ohnehin in einer eigenen Spalte und ist dort schon
+ * hoch; dort wird sie stattdessen BREIT: Das Raster faellt auf eine Spalte,
+ * und die Karte rueckt zwischen Diensttag-Daten und Einsatzliste — dorthin,
+ * wo sie unter 1600 px immer steht. Beides traegt dieselbe Klasse
+ * `.geo-gross`; WELCHE Wirkung sie hat, entscheidet das Stylesheet. Die
+ * Schwelle 1600 steht damit weiterhin an genau einer Stelle.
+ *
+ * DER KNOPF TRAEGT BEIDE ZEICHEN (E-MR-19) — senkrechte Pfeile bis 1599 px,
+ * Querpfeile darueber; das Stylesheet blendet je Breite eines aus. Ein
+ * Knopf, der sein Symbol per JavaScript tauscht, haette die Schwelle ein
+ * zweites Mal im Code.
+ *
+ * NUR AUF DER TAGESUEBERSICHT. `attachGroessenControl()` wird ausdruecklich
+ * einzeln gerufen; Einsatzansicht, Spurenseite und Zeitraumuebersicht haben
+ * keine Liste unter der Karte, die vom Hoeherwerden etwas haette.
+ *
+ * DER ZUSTAND WIRD GEMERKT (F-MR-8), je Browser und Geraet, nicht je Konto:
+ * Wer am Schreibtisch gross arbeitet, will das am Handy nicht zwangslaeufig.
+ * Das ist der erste `localStorage` dieser Anwendung; er kann werfen und leer
+ * zurueckkommen, und beides ist abgefangen — dann steht die Karte eben klein
+ * da.
+ *
+ * NEU: Token `--karte-gross`, Klasse `.geo-gross`, zwei Symbole
+ * (`karte-gross.svg`, `karte-breit.svg`; 54. und 55. des Vorrats). Kein
+ * neuer Farbwert.
+ *
+ * NEBENSTUFE, KEINE KORREKTUR: Es ist eine neue Funktion an einer Stelle,
+ * an der bisher keine war. Uhr und Android unberuehrt, keine Migration.
+ *
+ * 19.5.1 — EIN AUSWAHLFELD SCHOB DIE IMPORTSEITE ZUR SEITE (Nr. 185).
+ *
+ * Gefunden vom ersten dreifachen Bilderlauf (AP3b, Backlog Nr. 183):
+ * `import.php` bei 360 px lief NUR IN WEBKIT um 6 px ueber — scrollWidth 366
+ * gegen innerWidth 360, waehrend Chromium und Firefox 360 meldeten.
+ *
+ * DER BERICHT NANNTE KEINEN VERURSACHER, UND DAS WAR RICHTIG. Kein Element
+ * der Seite ragte hinaus; das Auswahlfeld ist 302 px breit und endet bei 331.
+ * Uebergelaufen ist sein INHALT: WebKit rechnet den laengsten Eintrag eines
+ * `<select>` in den Ueberlauf des Kastens mit, auch wenn der Kasten ihn
+ * abschneidet. Nachgewiesen durch Kuerzen — alle Eintragstexte auf „x"
+ * gesetzt, und es waren 360; zurueckgesetzt, und es waren wieder 366. Der
+ * laengste Eintrag hat 53 Zeichen; die drei anderen Auswahlfelder derselben
+ * Seite haben 17, 17 und 30 und laufen nicht ueber. Ab 390 px verschwindet es.
+ *
+ * BEHOBEN MIT `select.feld-eingabe{contain:paint}` — der einzigen der vier
+ * versuchten Regeln, die wirkt: `overflow:clip` am Feld half nicht (gemessen
+ * 366), `max-width:100%` ebenso wenig, `appearance:none` nur zur Haelfte
+ * (361). Was die Malbegrenzung kostet, ist nachgemessen: der fokussierte
+ * Ausschnitt (318 x 60 px) vor und nach der Regel ist in Firefox bitgleich,
+ * in Chromium und WebKit EIN Pixel verschieden bei einer Abweichung von 6 von
+ * 255 — die Rundung des Fokusrings. Der Ring selbst bleibt stehen;
+ * Malbegrenzung schneidet Inhalt, nicht Umriss.
+ *
+ * KORREKTURSTUFE: eine Regel, eine Datei, keine neue Funktion. Uhr und
+ * Android unberuehrt, keine Migration.
+ *
+ * 19.6.0 — MOCKUP-RUNDE 9c, AP4: DAS BLATT FAEHRT AUF (Nr. 124).
+ *
+ * Das Aktionsblatt stand am Handy einfach da, und der Knopf, aus dem es kam,
+ * verschwand darunter. Zweierlei aendert sich, und beides beantwortet
+ * dieselbe Frage — „wo bin ich gerade?".
+ *
+ * ES FAEHRT AUF. Im Ruhezustand steht das Blatt um seine eigene Hoehe unter
+ * dem Bildrand (`translateY(100%)`), `.blatt-auf` holt es herauf, in
+ * `--dauer` mit `ease-out`. Ohne Bewegung las sich das Erscheinen wie ein
+ * Seitenwechsel: Die halbe Flaeche war ploetzlich eine andere, und niemand
+ * wusste, woher sie kam.
+ *
+ * AM SCHREIBTISCH NICHT. Ab 1024 px ist dasselbe Markup ein Aufklappmenue
+ * unter dem Knopf; `translateY(100%)` hiesse dort „um die eigene Hoehe nach
+ * unten" und schoebe es neben die Sache. Der 1024er Block setzt deshalb
+ * `transform:none; transition:none` — und `blatt.js` fragt die GERECHNETE
+ * Fahrtdauer, statt eine Zahl zu kennen: Ist sie ~0, geht `hidden` sofort.
+ * Ohne diese Frage stuende das Aufklappmenue eine Viertelsekunde zu lange
+ * offen.
+ *
+ * DER OFFENE OEFFNER IST MARKIERT (E-MR-21, Fassung D4): `--orange-hell` als
+ * Flaeche, `--orange-tief` darauf — 11,7:1 gegen den dunkelblauen Kartenkopf,
+ * 3,8:1 fuer die Punkte gegen die Flaeche. Vier Ringfassungen standen zur
+ * Wahl und ueberzeugten nicht; der Ring auf Blau-hell lag bei 1,9:1.
+ * Die Regel haengt am ATTRIBUT `[data-blatt][aria-expanded="true"]` und
+ * erreicht damit alle vier Bauarten von Oeffnern: 6 `ui_aktionen()`, 9
+ * `ui_zeilenaktionen()`, den Pin-Knopf des Ortsfelds und drei
+ * handgeschriebene Sortierblatt-Knoepfe in index.php, suche.php und
+ * zeitraum.php (E-MR-25). Eine Regel je Bauart waere vier Stellen gewesen,
+ * die auseinanderlaufen koennen.
+ *
+ * `--dauer` STEHT JETZT AUF 240 ms, VORHER 180 — fuer die ganze Anwendung
+ * (E-MR-22, F-MR-12), also auch fuer Schublade, Schleier, Akkordeon-Winkel,
+ * Schalter-Griff und Kennzahlen-Winkel. Bei 180 ms war die Auffahrt eher ein
+ * Aufblitzen als eine Bewegung. Ein zweites Token nur fuers Blatt waere die
+ * Stelle, an der die Anwendung anfaengt, verschieden schnell zu sein.
+ *
+ * NEU: Klasse `.blatt-auf`. Kein neues Token, kein neues Symbol, kein neuer
+ * Farbwert — das Kontrastpaar „Orange tief auf Orange hell" war schon
+ * gerechnet.
+ *
+ * NEBENSTUFE: eine neue Darstellung an einer Stelle, an der bisher keine war.
+ * Uhr und Android unberuehrt, keine Migration.
  */
-const WEB_VERSION = '19.3.1';
+const WEB_VERSION = '19.6.0';

@@ -333,6 +333,13 @@ Schreibtisch als Knöpfe am rechten Zeilenrand. Auf schmalen Geräten steht dort
 dieselben Handlungen untereinander stehen, „Löschen" rot und abgesetzt. Das
 gilt überall: Stammdaten, Geräte, NutzerInnen, Papierkorb.
 
+**Das Blatt fährt von unten herein, und der Knopf bleibt orange**, solange es
+offen steht — damit zu sehen ist, wohin es gehört und womit man es wieder
+zumacht. Zum Schließen genügt der Knopf ein zweites Mal, ein Tipp daneben,
+„Abbrechen" im Blatt oder die Escape-Taste. Wer im Betriebssystem
+„Bewegung reduzieren" eingestellt hat, bekommt das Blatt ohne Fahrt; die
+orange Markierung bleibt.
+
 **Ganz unten auf jeder Seite** steht die Fußzeile — auch vor der Anmeldung.
 Sie ist zweizeilig: oben Lizenz und Versionsnummer, darunter die Verweise auf
 **Impressum** und **Datenschutz**. Beide Seiten sind ohne Anmeldung erreichbar;
@@ -683,6 +690,19 @@ Pro Tag:
   der Einsatzort auf einer Wiese, im Wald oder auf einem Parkplatz lag. Es ist
   bewusst nicht der Standard, weil es deutlich größere Kacheln lädt. Beide
   Controls stehen auf allen drei Kartenseiten der Anwendung zur Verfügung.
+
+  Unter dem Vollbild-Knopf steht seit Web 19.5.0 ein **dritter Knopf** — nur
+  hier, auf der Tagesübersicht. Er **vergrößert die Karte**, ohne die Seite zu
+  verlassen: Sie wird so hoch, dass ein gutes Drittel des Bildschirms für die
+  Einsatzliste darunter bleibt. Auf sehr breiten Bildschirmen (ab 1600 px),
+  wo sie ohnehin hoch neben Daten und Tabelle steht, macht derselbe Knopf sie
+  stattdessen **breit**: Sie rückt dann über die ganze Inhaltsbreite zwischen
+  Diensttag-Daten und Liste. Das Zeichen im Knopf sagt, was gerade passiert —
+  senkrechte Pfeile für höher, Querpfeile für breiter. Ein zweiter Klick
+  stellt den Ausgangszustand wieder her, und **die Wahl bleibt erhalten**:
+  Wer die Karte groß lässt, findet sie beim nächsten Aufruf groß vor. Das
+  merkt sich der Browser, nicht das Konto — am Handy kann sie also klein
+  bleiben, während sie am Schreibtisch groß steht.
 - **Einsätze**: Die Kopfzeile der Karte nennt Anzahl und Kilometersumme des
   Tages und trägt rechts **„+ Nachtragen"** — das öffnet das
   Eingabeformular für diesen Tag.
