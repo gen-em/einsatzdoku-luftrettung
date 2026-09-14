@@ -958,6 +958,44 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zeilen tragen die ungeprüfte Selbstauskunft; vor der ersten Auswertung
     deshalb `php tools/geraetemodelle/nachaufloesen.php` fahren.
 
+    **Drei Befunde vom 14.09.2026 (Bestandsaufnahme zu R42), alle zu
+    entscheiden, bevor der P5-Rest angefasst wird:**
+
+    **Erstens — die Vorbedingung widerspricht der eigenen Teilung.** Sie
+    begründet sich oben wörtlich mit dem **Gerätemodell**: „ein schwaches
+    Merkmal, in einer kleinen Gruppe aber möglicherweise identifizierend".
+    Die Teilung vom 05.09.2026 hat genau die **Gerätemodell-Tabelle** als
+    „Teil ohne Datenschutz-Vorbedingung" nach S8 vorgezogen, und sie ist seit
+    Web 15.3.0 ausgeliefert. Entweder war die Teilung zu weit gefasst oder
+    die Vorbedingung zu weit formuliert; heute steht beides nebeneinander im
+    selben Eintrag, und `docs/Technik.md` hält unverändert die strenge Lesart
+    fest. Was die Erklärung der Produktivinstallation tatsächlich sagt, ist
+    aus dem Repositorium **nicht** feststellbar — der Text liegt in der
+    Tabelle `rechtstexte`, `datenschutz.php` reicht ihn nur durch. Der
+    Rahmenplan führt die Ergänzung weiter als Zuarbeit (Abschnitt 6).
+
+    **Zweitens — das Nachauflösen ist beim Ausrollen von S8 durchgerutscht.**
+    Der Absatz darüber macht `nachaufloesen.php` zur Bedingung „vor der
+    ersten Auswertung". Die erste Auswertung ist mit S8/AP4 gebaut und
+    ausgeliefert; ob der Lauf auf dem Produktivserver je stattgefunden hat,
+    ist am 14.09.2026 unbekannt. Wenn nicht, zählt die Modelltabelle dort
+    nach der ungeprüften Selbstauskunft — ein Radcomputer, der sich „uhr"
+    nennt, steht als Uhr, und die Zahl sieht richtig aus. Als Zuarbeit in
+    Rahmenplan Abschnitt 6 eingetragen.
+
+    **Drittens — die zweite Hälfte der Frage widerspricht R36.** Der Absatz
+    oben verlangt, **Rechner über den User-Agent der Browsersitzung** zu
+    zählen. R36 sagt: „Keine Telemetrie — Betriebszahlen ausschließlich aus
+    vorhandenen Spalten, es wird nichts Neues erfasst", und benennt die eine
+    zugelassene Ausnahme namentlich: die Gerätekennung nach R42. Der
+    User-Agent ist sie nicht. Gegengeprüft: `grep -rn "user_agent\|HTTP_USER_AGENT" server/`
+    findet **null** Treffer — es gibt keine Spalte, kein Log, keine
+    Sitzungsangabe. Die Umsetzung wäre also eine **Neuerhebung von
+    Nutzungsdaten** bei einer Anwendung, deren Verkaufsargument „keine
+    Telemetrie" ist. Zu entscheiden, bevor jemand es in P5 einbaut: die
+    Ausnahme wie bei R42 ausdrücklich beschließen — oder die Hälfte streichen
+    und sagen, dass Browser-Zugriffe nicht gezählt werden.
+
 ---
 
 ---
@@ -1634,10 +1672,201 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     weder Verhalten noch Schema berührt, ist das der falsche Preis. Gehört in
     das nächste Paket, das `server/` ohnehin anfasst.
 
+    **Ein zweiter Kommentarfehler in derselben Datei** *(nachgetragen
+    14.09.2026 aus der Bestandsaufnahme zu R42)*: An `geraet_modell` steht
+    „Sammelnamen werden lang, der laengste hat **156** Zeichen". Es sind
+    **153** — nachgemessen an `GERAETE_MODELLE`, längster Name
+    „fēnix 6X Pro / 6X Sapphire / …". **Und es ist kein Zahlendreher:** Die
+    156 war am 02.09.2026 richtig und ist mit **Web 12.9.2** überholt worden,
+    als `erzeugen.py` die Marken- und Schutzrechtszeichen aus den Namen nahm
+    — der Changelog-Eintrag sagt es wörtlich („schrumpft von 156 auf 153
+    Zeichen"). `migration_lib.php` und `docs/Technik.md` sind mitgezogen,
+    `schema.sql` nicht. **Zwei weitere lebende Stellen führen die 156**:
+    Rahmenplan Abschnitt 3, Schritt 2 (E-S6-7) und
+    `docs/konzepte/Konzept-R64-Herkunft-Geraet.md`. Die Fassung-19-Zeile des
+    Rahmenplans und der Changelog-Eintrag zu Web 12.9.1 **bleiben** — sie
+    beschreiben, was damals galt.
+
     *Abnahme:* Beide Kommentare nennen denselben, vollständigen Pfad, und die
-    Datei dort existiert. Zuordnung: **mitlaufend** — nächstes Paket unter
-    `server/`, spätestens der Kommentardurchgang in P6 (R69), der die
-    Konzept- und Beschlussverweise im Code ohnehin durchgeht.
+    Datei dort existiert; die drei lebenden Stellen nennen **153**, die zwei
+    Protokollzeilen bleiben unberührt. Zuordnung: **mitlaufend** — nächstes
+    Paket unter `server/`, spätestens der Kommentardurchgang in P6 (R69), der
+    die Konzept- und Beschlussverweise im Code ohnehin durchgeht.
+
+190. **Die Statistikseite lässt das virtuelle Gerät stehen — „Ohne Gerät"
+    zählt zu niedrig.**
+    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
+    `server/db.php` führt die Konstante `GERAETE_ECHT_SQL`
+    (`device_id NOT LIKE 'manual-%'`), damit das virtuelle Gerät der
+    Handeinträge an **einer** Stelle beschrieben ist. Fünf Abfragen benutzen
+    sie — zweimal `db.php`, dazu `einstellungen.php`, `admin_demo.php` und
+    `tools/referenzdatensatz/fixture/erzeugen.php`. Drei schreiben das `LIKE`
+    von Hand (`admin_users.php`, `admin_user.php` und die Geräteabfrage in
+    `betrieb_statistik.php`), und **eine hat gar keine Bedingung**: die
+    Kontenabfrage derselben Datei, aus der die Zeile „Ohne Gerät" kommt. Sie
+    fragt schlicht `NOT EXISTS (SELECT 1 FROM devices …)`.
+
+    **Das ist eine falsche Zahl, kein Schönheitsfehler.** Das virtuelle Gerät
+    ist eine echte `devices`-Zeile (Bezeichnung „Manuelle Einträge",
+    `active = 0`) und entsteht an **vier** Stellen: beim ersten Handeintrag
+    (`einsatz_form.php`), beim CSV-Import (`api/import_commit.php`), beim
+    Schneiden (`api/schneiden.php`) und beim GPX-Import
+    (`api/gpx_import.php`) — `db.php` sagt es am Kopf der Konstanten selbst.
+    Wer ausschließlich von Hand dokumentiert oder auch nur einmal eine
+    GPX-Datei einliest, hat damit eine Gerätezeile und fällt aus „Ohne Gerät"
+    heraus. Ausgerechnet aus der Gruppe, deren Kleinzeile „sie tragen von
+    Hand nach" genau diese Menschen meint.
+
+    **Weg:** `GERAETE_ECHT_SQL` in beide Abfragen der Statistikseite; die
+    beiden handgeschriebenen Zwillinge in `admin_users.php` und
+    `admin_user.php` filtern zwar richtig, gehören aber in denselben Griff.
+    Danach steht das Muster an einer Stelle statt an vieren. *Abnahme:* Ein
+    Konto ohne gekoppeltes Gerät, aber mit einem Handeintrag steht in „Ohne
+    Gerät"; die Kachel „Geräte" ändert sich dabei nicht. Zuordnung:
+    **Backlog-Runde.**
+
+191. **Der von R38 bestellte Index auf `missions(started_at)` ist nie gelegt
+    worden.**
+    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
+    R38 bestellt für die Einsatzzählung des Betriebslage-Dashboards wörtlich
+    einen Index auf `missions(started_at)` und begründet ihn: „der vorhandene
+    führt mit `user_id` und trägt die kontenübergreifende Zählung nicht"
+    (`docs/Rahmenplan-Archiv.md`, R38). `server/schema.sql` führt an
+    `missions` genau `uq_dev_ref`, `idx_user_started (user_id, started_at)`
+    und `idx_day` — mehr nicht.
+
+    **Warum das bis heute niemandem auffiel:** Die Statistikseite aus S8
+    zählt nach **Diensttag** (`days.day`) und kommt ohne ihn aus. Das
+    Dashboard nach R38 zählt nach `started_at` und braucht ihn — er ist die
+    einzige Schemaarbeit, die der Minimalumfang überhaupt vorschreibt.
+    Vorziehen muss man ihn nicht: Ohne die Zählung, für die er da ist, kostet
+    er nur Schreiblast. Er hängt außerdem an **Nr. 192** — nötig ist er nur,
+    wenn dort `started_at` gewinnt. *Abnahme:* Die Migration liegt, und
+    `EXPLAIN` zeigt den Index an einer kontenübergreifenden Zeitraumzählung.
+    Zuordnung: **P5**, mit dem Dashboard.
+
+192. **R38 und die Statistikseite aus S8 zählen Verschiedenes — „aktiv", die
+    Fenster und die Zählgröße.**
+    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
+    Der feste Minimalumfang des Betriebslage-Dashboards (R38) legt drei Dinge
+    fest, und die gebaute Seite macht alle drei anders. Das ist zunächst kein
+    Fehler: Die Seite **setzt R38 nicht um** — sie ist der nach E-S8-05
+    vorgezogene Teil von Nr. 80 und beantwortet eine andere Frage („was trägt
+    diese Installation"). Entsteht das Dashboard aber, stehen zwei Zählweisen
+    nebeneinander, und das wären zwei Wahrheiten.
+
+    | R38 verlangt | Die Seite tut |
+    |---|---|
+    | „aktiv" = `users.last_login` **oder** `devices.last_seen` im Fenster | zwei getrennte Zeilen in zwei Karten, nie verodert |
+    | Konten in **24 h / 7 T / 30 T**, Einsätze in **24 h / 7 T / 30 T / 6 M / 1 J** | drei Fenster, **7 / 30 / 180 Tage** (`STAT_ZEITRAEUME`) |
+    | Einsätze nach `started_at`, **nicht** `created_at` — „ein Alt-Import verzerrte sonst die Aktivität" | nach **Diensttag** (`days.day`), im Kopfkommentar ausdrücklich begründet |
+
+    Die dritte Zeile ist die unangenehmste: Hier stehen sich **zwei
+    ausformulierte Begründungen** gegenüber, nicht eine Vorgabe und ein
+    Versehen. Und die erste hat eine Wirkung, die R38 ausdrücklich verhindern
+    wollte — wer nur mit der Uhr arbeitet und sich nie anmeldet, erscheint
+    unter „Zuletzt angemeldet" als tot.
+
+    **Die Fenster stehen schon als Nr. 122** („Freie Zeiträume und Diagramme
+    in der Statistik"); dieser Punkt fügt die ODER-Frage und die Zählgröße
+    hinzu. Zu entscheiden, **bevor** das Dashboard gebaut wird: ob die Seite
+    nachzieht oder R38 berichtigt wird. Beides ist vertretbar, beides
+    nebeneinander stehen zu lassen nicht. Zuordnung: **Entscheidung in einer
+    Backlog-Runde, Umsetzung P5** — wie bei Nr. 122.
+
+193. **Register und Handbuch führen die R42-Auswertung als offen, obwohl sie
+    seit Web 15.3.0 läuft.**
+    *Aufgenommen 14.09.2026 bei der Bestandsaufnahme zu R42.*
+    R42 verlangt unter „Auswertung" genau eines: eine **Geräteverteilung je
+    Kategorie und je Bezeichnung, gezählt über echte Geräte, ohne
+    `manual-%`, ohne Demo-Konto**. Der Inhalt steht seit S8/AP4 in
+    `betrieb_statistik.php` — am anderen Ort als beauftragt (R42 sagt „im
+    Betriebslage-Dashboard") und mit dem Vorbehalt aus **Nr. 190**.
+    Nachgezogen ist das an zwei Stellen: Rahmenplan Abschnitt 5 und der
+    Eintrag Nr. 80 hier. **Vier sagen unverändert das Gegenteil:**
+
+    | Stelle | Was dort steht |
+    |---|---|
+    | Rahmenplan Abschnitt 7, Zeile **R42** | „Auswertung P5 (Backlog 80)" |
+    | Rahmenplan Abschnitt 7, Zeile **R64** | verweist auf die **Kachel Nr. 88** — verworfen am 12.09.2026 |
+    | `docs/Technik.md`, „Was ein Gerät beim Koppeln über sich meldet" | „**Die Auswertung ist P5.** Vorher muss die Datenschutzerklärung die Erhebung benennen" |
+    | `docs/Handbuch.md`, Kapitel 10 | „Bevor eine Auswertung entsteht, wird sie in der Datenschutzerklärung benannt" |
+
+    **Warum das mehr ist als Schreibarbeit.** Der Handbuchsatz ist keine
+    Statusangabe, sondern eine **Zusage an die NutzerIn** — und er steht zwei
+    Kapitel vor Abschnitt 12.2, der die Statistikseite mitsamt
+    Gerätemodell-Tabelle beschreibt. Das Handbuch widerspricht sich damit
+    selbst. Beim Berichtigen ist zu trennen: Für die **Momentaufnahme am
+    Einsatz** (`missions.geraet_art`) bleibt der Satz wahr, sie wird
+    nirgends ausgewertet; die Zusage darin gilt aber der Gerätekennung
+    überhaupt. Die Datenschutz-Frage, die daran hängt, steht bei **Nr. 80**.
+
+    **Dieser Punkt ist der zweite Beleg für Nr. 188** (kein Prüfmittel misst
+    Verweise zwischen Dokumenten): vier Stellen, die neun Tage lang das
+    Gegenteil des Ist-Stands sagten, neben lauter grünen Zahlen. Und die
+    Arbeit ist die „größere Rahmenplan-Pflege", auf die **Nr. 177** wartet —
+    die drei gehören in einen Griff. *Abnahme:* Die vier Stellen sagen
+    dasselbe wie Abschnitt 5 und Nr. 80. Zuordnung: **Backlog-Runde**,
+    gemeinsam mit Nr. 177.
+
+194. **Das Handbuch nennt den Verschlüsselungsumfang dreimal ohne die
+    Notizen — einmal davon als Textbaustein für die Datenschutzerklärung.**
+    *Aufgenommen 14.09.2026 als Nebenfund der Bestandsaufnahme zu R42.*
+    Seit **Web 19.0.0** (S9/AP7) sind die **Notizen des Einsatzes**
+    Ende-zu-Ende-verschlüsselt; `mission_fields.php` führt sie mit
+    `'store' => 'pat'`, `docs/Technik.md` 4.98 und `CLAUDE.md` 4 nennen sie
+    im Katalog. Das Handbuch weiß es an **einer** Stelle (Abschnitt 11.5:
+    „Notizen — seit Web 19 **verschlüsselt** wie die Patientendaten") und an
+    **drei** Stellen nicht:
+
+    - **Der Einstieg** sagt das Gegenteil: „Notizen und Freitextfelder sind
+      davon **nicht** erfasst — dort gehören keine Patientendaten hinein."
+      Das ist für die Notizen des **Einsatzes** schlicht falsch; wahr ist es
+      nur noch für die des **Diensttags**.
+    - **Kapitel 5** („Verschlüsselung der Patientendaten (Pflicht)") zählt
+      die Felder auf und lässt die Notizen aus.
+    - **Der Textbaustein zum Übernehmen** (Kapitel 11, Backlog Nr. 138) tut
+      dasselbe — und der ist keine Beschreibung, sondern ein Absatz, der
+      **in eine Rechtserklärung kopiert werden soll.**
+
+    **Das ist die schwerere Hälfte.** Der Baustein untertreibt den Schutz,
+    nennt also nicht zu viel, sondern zu wenig — die Erklärung wäre nicht
+    falsch zugunsten des Betreibers, sondern veraltet. Unangenehm ist etwas
+    anderes: `CLAUDE.md` 4 verlangt, dass wer die Zusage zitiert, sie
+    **vollständig oder gar nicht** zitiert. Drei Handbuchstellen zitieren sie
+    unvollständig, und eine widerspricht der vierten offen.
+
+    *Abnahme:* `CLAUDE.md` 4, `docs/Technik.md` 4.98 und die vier
+    Handbuchstellen nennen **dieselben** Felder; der Satz „Notizen und
+    Freitextfelder sind davon nicht erfasst" ist auf die Notizen des
+    Diensttags eingegrenzt. Zuordnung: **vor 1.0** — es ist ein Rechtstext,
+    kein Feinschliff; spätestens mit der Doku-Neufassung in P7 (R72).
+
+195. **`geraet_art` kommt auf dem Rückweg der Sicherung ungeprüft durch.**
+    *Aufgenommen 14.09.2026 als Nebenfund der Bestandsaufnahme zu R42.*
+    Beim Koppeln verengt `geraete_lib.php` die Geräteart auf die drei
+    erlaubten Werte — was nicht in `GERAET_ARTEN` steht, wird `NULL`, und
+    `docs/Technik.md` führt das ausdrücklich als Zusage („eine Geräteart
+    außerhalb der drei erlaubten Werte zu `NULL`"). Auf dem Rückweg der
+    Konto-Sicherung gilt sie nicht: `backup_lib.php` prüft
+    `missions.geraet_art` und `rest_segments.geraet_art` nur mit
+    `pruef_text(…, GERAET_MAX_ART, …)`, also allein auf die Länge von 16
+    Zeichen. Jede Zeichenkette bis dahin geht durch. Bei `origin` ist es
+    anders — der wird gegen `HERKUNFT_WERTE` gehalten; die Asymmetrie ist im
+    Code nicht begründet.
+
+    Heute fällt das nirgends auf, weil die Statistik `devices` liest und
+    nicht `missions`. Genau diese beiden Spalten sind aber das, was der
+    offene R42-Rest auswerten soll („Herkunft je Einsatz", R64) — eine
+    Zählung darüber würde eine eingespielte Sicherung ungefiltert
+    übernehmen. Kein Sicherheitsproblem: Der Weg setzt voraus, dass jemand
+    seine eigene Sicherung verändert. Aber eine Zählung, die man verunreinigen
+    kann, taugt nicht als Betriebszahl.
+
+    *Abnahme:* Ein Sicherungspaket mit `geraet_art: "radcomputer"` landet als
+    `NULL` in der Datenbank, nicht als `radcomputer`. Zuordnung: **P5**,
+    zusammen mit der Auswertung — vorher hat die Spalte keinen Leser.
+
 
 ## Erledigt
 
