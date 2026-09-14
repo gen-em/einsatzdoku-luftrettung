@@ -59,11 +59,34 @@ if ($schritt === 'quelle') {
     edbak_freigeben($kennung, (string)$info['datei'], $zielId);
 
     $m = edbak_paket_kopf_lesen($kennung, (string)$info['datei']);
+
+    /* WIE VIELE EINTRÄGE SIND VERSIEGELT — am ROHEN ZIP gezählt (S10/AP4).
+     *
+     * Die Fassungsnummer aus dem Manifest sagt, was das Paket von sich
+     * behauptet; sie sagt nicht, dass die Teile auch wirklich versiegelt
+     * sind. Gezählt wird deshalb das Präfix `edsk1:` an jedem Eintrag, am
+     * unveränderten Archiv — eine Zahl, die das Gemessene benennt
+     * (`CLAUDE.md` 6). Die Begleitdatei zählt getrennt: Sie liegt NEBEN dem
+     * Paket und wäre sonst der Ort, an dem die E-Mail offen stünde (F-9). */
+    $zipPfad = edbak_ordner($kennung) . '/' . (string)$info['datei'];
+    $z = new ZipArchive();
+    $eintraege = 0; $versiegelt = 0;
+    if ($z->open($zipPfad) === true) {
+        for ($i = 0; $i < $z->numFiles; $i++) {
+            $eintraege++;
+            if (sk_versiegelt((string)$z->getFromIndex($i, 8))) { $versiegelt++; }
+        }
+        $z->close();
+    }
+    $begleitRoh = (string)@file_get_contents(edbak_ordner($kennung) . '/konto.json');
+
     echo json_encode(['kennung' => $kennung, 'datei' => $info['datei'],
                       'quelle_id' => $uid, 'ziel_id' => $zielId,
                       'fassung' => $m['version'], 'geschuetzte' => $m['geschuetzte'],
                       'eintragsteile' => $m['eintragsteile'],
                       'spurteile' => $m['spurteile'],
+                      'zip_eintraege' => $eintraege, 'zip_versiegelt' => $versiegelt,
+                      'begleit_versiegelt' => sk_versiegelt($begleitRoh),
                       'quelle_blob' => (string)$daten['blob']]), "\n";
     exit(0);
 }

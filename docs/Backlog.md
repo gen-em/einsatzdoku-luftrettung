@@ -474,6 +474,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Aufräumung und gehört in ein Paket — wer nur das Backup-Altformat streicht
     und die Anhebungswege stehen lässt, hat die halbe Lesetoleranz behalten.
 
+    **Und eine dritte Toleranz kommt mit Web 20.2.0 dazu** (S10/AP4, Nr. 139):
+    der Lesezweig für **unversiegelte Fassung-2-Teile** eines Adminpakets.
+    `edbak_teil_oeffnen()` lässt einen Eintrag ohne `edsk1:` unverändert
+    durch — das ist der Weg, auf dem vorhandene Pakete lesbar bleiben.
+    Geschrieben wird seit 20.2.0 nur noch Fassung 3. Zum Stichtag entfällt
+    die Weiche, und `edbak_teil_oeffnen()` gibt für einen unversiegelten
+    Eintrag `null` statt seines Inhalts.
+
     Vorher zu klären: Was geschieht mit einer alten Datei nach dem Stichtag?
     Vorschlag: Die Meldung nennt die letzte Fassung, die sie noch einspielen
     konnte — so wie es `version_alt` heute für Nutzlasten unter 6 tut.
@@ -1085,31 +1093,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
 
-139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
-    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
-    Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
-    mit allen Klartextfeldern, E-Mail, Name und `pat_wrap_rc`; der Versand
-    lässt reines `ftp` zu (`backup_targets.protokoll` in `schema.sql`) und
-    prüft bei FTPS kein
-    Zertifikat (`sicherungsziel_lib.php:31-33`). Die Begründung in
-    `Backup-Format.md` 5 („kein Schlüssel, ohne ihn zu speichern") ist seit
-    dem Serverschlüssel (Web 12.1.0) überholt. Versiegeln mit
-    `sk_versiegeln()` wie das Komplettbackup, `ftp` aus der Auswahl,
-    bestehende `ftp`-Ziele mit rotem Hinweis. Zuordnung: **S10** (R78).
-
-    *Konzept S10 liegt vor (13.09.2026), E-S10-13 und E-S10-14; Umsetzung in
-    **AP4**.* Entschieden ist dabei mehr, als der Punkt verlangte, und
-    zweierlei anders: **Auch `manifest.json` wird versiegelt**, nicht nur die
-    Teile — der Zweck bindet jeden Teil an Konto **und** Teilnamen
-    (`adminpaket|<konto>|<teil>`), sodass ein Umhängen an der Prüfsumme
-    scheitert; die Fassung erkennt der Leser am **Inhalt** (`sk_versiegelt()`),
-    nicht an der Dateiendung. Und **FTPS bleibt** (F-S10-5) statt mitzugehen,
-    mit dem Zusatz „prüft das Zertifikat der Gegenstelle nicht — SFTP
-    empfohlen" an Formular, Handbuch und Runbook; nur `ftp` fällt.
-    **Umzusiegeln ist nichts** (F-S10-4): Auf der Installation gibt es keine
-    Altpakete, also kein Job und kein Zähler — der Lesezweig für unversiegelte
-    Fassung-2-Teile bleibt als Toleranz und geht mit **Nr. 46**.
-
 140. **Push auf `main` ist Deploy — Zugang zum Repositorium ist Zugang zum Schlüssel.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-16).* Die
     FTPS-Action deployt jeden Push mit Klartext-Zugangsdaten in Secrets;
@@ -1565,6 +1548,60 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
+    *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
+    Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
+    mit allen Klartextfeldern, E-Mail, Name und `pat_wrap_rc`; der Versand
+    lässt reines `ftp` zu (`backup_targets.protokoll` in `schema.sql`) und
+    prüft bei FTPS kein
+    Zertifikat (`sicherungsziel_lib.php:31-33`). Die Begründung in
+    `Backup-Format.md` 5 („kein Schlüssel, ohne ihn zu speichern") ist seit
+    dem Serverschlüssel (Web 12.1.0) überholt. Versiegeln mit
+    `sk_versiegeln()` wie das Komplettbackup, `ftp` aus der Auswahl,
+    bestehende `ftp`-Ziele mit rotem Hinweis. Zuordnung: **S10** (R78).
+
+    *Konzept S10 liegt vor (13.09.2026), E-S10-13 und E-S10-14; Umsetzung in
+    **AP4**.* Entschieden ist dabei mehr, als der Punkt verlangte, und
+    zweierlei anders: **Auch `manifest.json` wird versiegelt**, nicht nur die
+    Teile — der Zweck bindet jeden Teil an Konto **und** Teilnamen
+    (`adminpaket|<konto>|<teil>`), sodass ein Umhängen an der Prüfsumme
+    scheitert; die Fassung erkennt der Leser am **Inhalt** (`sk_versiegelt()`),
+    nicht an der Dateiendung. Und **FTPS bleibt** (F-S10-5) statt mitzugehen,
+    mit dem Zusatz „prüft das Zertifikat der Gegenstelle nicht — SFTP
+    empfohlen" an Formular, Handbuch und Runbook; nur `ftp` fällt.
+    **Umzusiegeln ist nichts** (F-S10-4): Auf der Installation gibt es keine
+    Altpakete, also kein Job und kein Zähler — der Lesezweig für unversiegelte
+    Fassung-2-Teile bleibt als Toleranz und geht mit **Nr. 46**.
+
+    **Erledigt mit Web 20.2.0 (S10/AP4, 14.09.2026).** Umgesetzt wie
+    entschieden, mit **drei** Abweichungen, die beim Bauen entstanden sind:
+
+    - **Der Siegelzweck bindet auch den PAKETNAMEN**
+      (`adminpaket|<konto>|<paket>|<teil>`, E-S10-U-11). Der Einwand des
+      Konzepts — der Stempel müsse beim Lesen bekannt sein, komme also aus dem
+      versiegelten Manifest — trägt nicht: Alle vier Leser bekommen den
+      Dateinamen als Parameter, bevor sie irgendetwas öffnen. Ohne ihn liesse
+      sich ein Teil aus einem älteren Paket **desselben Kontos** unterschieben.
+      Der Preis steht in `Backup-Format.md` 5: Wer ein Paket umbenennt, macht
+      es unlesbar.
+    - **`konto.json` wird mitversiegelt** (E-S10-U-14). Die Begleitdatei neben
+      dem Paket trug E-Mail und Namen im Klartext — die Zusage „kein lesbarer
+      Name, keine E-Mail" hätte sonst nur für das ZIP gegolten und nicht für
+      den Ordner, in dem es liegt.
+    - **gzip vor dem Siegel** (E-S10-U-12), gemessen am Referenzkonto:
+      Fassung 2 **33 281** Byte, Siegel ohne Vorstufe **201 390** (+505 %),
+      gzip davor **45 290** (+36 %). Die 36 Prozent sind der base64-Rahmen
+      von `edsk1:`, nicht der Packlauf.
+
+    *Und einer, den der Punkt selbst nicht sah:* `sz_pruefen_eingabe()` prüfte
+    gegen `SZ_PORTS`, nicht gegen `SZ_PROTOKOLLE` — `ftp` nur aus dem
+    Anzeigekatalog zu streichen hätte gar nichts abgeschafft. Dazu fiel
+    `sz_weg()` für jedes **unbekannte oder leere** Protokoll still auf
+    Klartext-FTP zurück; geprüft wird jetzt positiv gegen den Katalog.
+
+    Die Toleranz für unversiegelte Fassung-2-Teile bleibt und geht mit
+    **Nr. 46** (und **Nr. 187**).
 
 124. **Das Aktionsblatt öffnet weit weg von seinem Knopf.**
     *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin

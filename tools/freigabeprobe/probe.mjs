@@ -87,8 +87,18 @@ try {
 
   /* ---- 2. Quelle herrichten, sichern, freigeben ------------------------ */
   const q = php('quelle', { ...mat, ziel: ZIEL });
-  pruefe(q.fassung === 2, 'Das Backup ist ein Fassung-2-Paket',
+  /* FASSUNG 3 SEIT S10/AP4 — und die Nummer allein ist kein Beleg. Ein
+   * Paket, das „3" ins Manifest schreibt und die Teile offen ablegt, käme
+   * hier durch. Gezählt wird deshalb das Siegel an JEDEM ZIP-Eintrag und an
+   * der Begleitdatei daneben. */
+  pruefe(q.fassung === 3, 'Das Backup ist ein Fassung-3-Paket',
          `Fassung ${q.fassung}, ${q.eintragsteile} Eintrags-, ${q.spurteile} Spurteile`);
+  pruefe(q.zip_eintraege > 0 && q.zip_versiegelt === q.zip_eintraege,
+         'Jeder Eintrag im ZIP trägt das Siegel edsk1:',
+         `${q.zip_versiegelt} von ${q.zip_eintraege} Einträgen`);
+  pruefe(q.begleit_versiegelt === true,
+         'Auch die Begleitdatei konto.json ist versiegelt',
+         q.begleit_versiegelt ? 'edsk1:' : 'im Klartext');
   pruefe(q.geschuetzte === 1, 'Das Manifest zählt den Einsatz mit geschützten Angaben',
          'geschuetzte=' + q.geschuetzte);
 

@@ -42,18 +42,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
      * eines eigenen Backups.
      *
      * Der Name wird in `edbak_paket_teil_lesen()` gegen die Teileliste des
-     * Manifests geprueft; was dort nicht steht, gibt es hier nicht. */
+     * Manifests geprueft; was dort nicht steht, gibt es hier nicht.
+     *
+     * SEIT S10/AP4 OEFFNET DER SERVER VORHER. Die Teile eines Fassung-3-Pakets
+     * sind gzip-gepackt und mit dem Serverschluessel versiegelt; der Browser
+     * kennt ihn nicht und koennte damit nichts anfangen.
+     * `edbak_paket_teil_lesen()` gibt deshalb Klartext-JSON zurueck — fuer
+     * diese Stelle aendert sich nichts ausser dem Namen der Variablen. Was
+     * hier hinausgeht, ist unveraendert dasselbe wie vorher: `pat_blob`
+     * bleibt Chiffretext, den nur die NutzerIn oeffnet. */
     $teil = (string)($_GET['teil'] ?? '');
     if ($teil !== '') {
-        $roh = edbak_paket_teil_lesen($f['account_key'], $f['datei'], $teil);
-        if ($roh === null) {
+        $klar = edbak_paket_teil_lesen($f['account_key'], $f['datei'], $teil);
+        if ($klar === null) {
             json_out(['error' => 'teil',
                       'meldung' => 'Dieser Teil gehört nicht zur freigegebenen '
                                  . 'Backup.'], 404);
         }
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store');
-        echo $roh;
+        echo $klar;
         exit;
     }
 

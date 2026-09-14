@@ -13,11 +13,11 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **AP3 erledigt** (Web 20.1.0), AP4 als Nächstes. |
-> | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines** · AP3: **Betriebslauf** in drei Engines (Oberfläche der fünf Lagen, Blatt im Druck, Rotation, Neuanfang, Reset), dazu alles aus AP1/AP2 erneut (Abschnitt 2) |
+> | Stand | 14.09.2026 — **AP4 erledigt** (Web 20.2.0), AP5 als Nächstes. |
+> | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines** · AP3: **Betriebslauf** in drei Engines (Oberfläche der fünf Lagen, Blatt im Druck, Rotation, Neuanfang, Reset) · AP4: Freigabe-, Wiederherstellungs-, Versand- und Komplettprobe, dazu fünf Wege am `ftp`-Altziel und die Cron-Zeile; alles aus AP1 bis AP3 erneut (Abschnitt 2) |
 > | Offen | P-01 bis P-14 |
 > | Fragen | keine. Das erste `@media print` des Projekts (Schlüsselblatt) war nach `CLAUDE.md` 5 freigabepflichtig und ist am **14.09.2026 nach Vorlage der Bilder abgenommen** — ohne weiteres Mockup (E-S10-U-06). |
-> | Fehlerfunde | **drei in der Anwendung** (F-1 bis F-3, in AP2 behoben), **drei in Bestand und Dokumentation** (F-15 bis F-17, AP3), **dreizehn am Prüfstand** (F-S10-U-01, F-11 bis F-14, F-S10-AP3-01 bis -09) |
+> | Fehlerfunde | **drei in der Anwendung** (F-1 bis F-3, in AP2 behoben), **vier in Bestand und Dokumentation** (F-15 bis F-17 in AP3, F-S10-AP4-04 in AP4), **neunzehn am Prüfstand** (F-S10-U-01, F-11 bis F-14, F-S10-AP3-01 bis -09, F-S10-AP4-01 bis -06). **Zwei Prüfmittel waren kaputt, bevor AP4 sie anfasste** — die Komplettprobe stürzte ab (Rückgabewert 255), die Wiederherstellungsprobe scheiterte an ihrer eigenen Arithmetik |
 > | Prüfumgebung | PHP **8.4.19** (CLI, NTS) · MariaDB **10.11.14** · Python **3.11.15** · Node **22.22.2** · Playwright **1.56.1** mit drei Engines: Chromium **141.0.7390.37**, Firefox **142.0.1**, WebKit **26.0** · lokale Installation über `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto; `admin@gen-em.org` und `demo@gen-em.org` mit den Vorgabekennwörtern) |
 
 ---
@@ -38,6 +38,27 @@ Grund und dem Weg, auf dem der Auftraggeber ihn nachholt:
 ist Buchführung plus eine `tools/`-Änderung, und beides ist in Abschnitt 2 mit
 Zahl belegt. Die drei Punkte oben bleiben unverändert stehen; sie hängen an
 Paketen, die noch nicht gebaut sind.
+
+**Stand nach AP4 — was weiterhin offen ist.** Punkt 4 von AP3 (Versand gegen
+die echten Backup-Ziele) bleibt und ist jetzt der einzige, der an AP4 hängt:
+
+1. **Die echten Gegenstellen** → **P-12**. Gemessen ist gegen die Nachbauten
+   (`tools/versandprobe/gegenstellen.py`) und, für den Komplett-Backup-Weg,
+   gegen dieselben. Ob das FTPS-Zertifikat des echten Ziels angenommen wird
+   und ob dessen Hostschlüssel passt, sieht nur, wer die Zugänge hat.
+2. **Ein bestehendes `ftp`-Ziel auf luftrettung.net.** Auf der
+   Prüfinstallation ist es von Hand hergestellt worden (per SQL, weil der
+   reguläre Weg es ja gerade abweist) und alle fünf Wege daran sind gemessen.
+   Ob dort überhaupt eines steht, weiß nur die Betreiberin → **P-12**.
+3. **Die Paketgröße am 5000er-Bestand.** Die drei Zahlen sind am
+   Referenzkonto gemessen (83 Einsätze). Der Messstand hat den großen
+   Bestand; dort zu messen war für AP4 nicht nötig, weil das Verhältnis der
+   drei Zahlen zueinander die Entscheidung trägt, nicht ihr Betrag.
+4. **Ein Adminpaket, das über ein Backup-Ziel gelaufen und zurückgeholt
+   wurde.** Der Siegelzweck bindet den Dateinamen — kommt ein Paket unter
+   anderem Namen zurück, ist es unlesbar. Auf der Prüfinstallation ist der
+   Fall hergestellt und abgewiesen worden; dass ein echtes Ziel den Namen
+   nicht ändert, ist eine Annahme über fremde Server → **P-12**.
 
 **Stand nach AP3 — was weiterhin offen ist.** Punkt 1 von AP2 ist damit
 **erledigt**: Der neue Betriebslauf (`tools/anteilprobe/betriebslauf.mjs`)
@@ -228,6 +249,41 @@ Klickprobe (43/43) und beide Kreisläufe (**9120/0** und **287 687/0**)
 gemessen. Der Bilderlauf fährt die vier berührten Seiten in acht Breiten und
 **beiden Bedienhöhen**: je **0/0/0**.
 
+**AP4 — Adminpakete versiegeln, `ftp` abschaffen (Web 20.2.0).** Jeder Teil
+eines Konto-Backups ist seit Fassung 3 gzip-gepackt und mit dem
+Serverschlüssel versiegelt, das Manifest eingeschlossen — und die Begleitdatei
+`konto.json` daneben ebenso. `ftp` ist weder wählbar noch speicherbar noch
+beschickt; ein bestehendes Ziel wird **übergangen**, nicht beliefert und nicht
+als Störung gezählt.
+
+*Was die Zahlen sagen.* Die Abnahmezahl ist nicht „3 Teile tragen `edsk1:`",
+sondern **0 Treffer für die E-Mail-Adresse im ganzen Ablageordner** — ZIP
+**und** Begleitdatei. Das ist der Unterschied, den `konto.json` ausmacht:
+Ohne sie hätte dieselbe grüne Zahl gestimmt und das Falsche gemessen (Fund
+F-9). Die drei Größenzahlen stehen ebenfalls (F-10 verlangte drei statt zwei):
+Fassung 2 **33 281** Byte, Siegel ohne Vorstufe **201 390** (+505 %), gzip
+davor **45 290** (+36 %) — und die 36 Prozent sind der base64-Rahmen von
+`edsk1:`, nicht der Packlauf.
+
+*Zwei Zahlen, die den Zweck belegen und nicht nur die Form:* ein
+**umbenanntes** Paket und ein **untergeschobener Teil aus einem anderen Paket
+desselben Kontos** werden je **1 von 1** abgewiesen, ohne dass etwas
+geschrieben wird. Das erste ist der Preis von E-S10-U-11, das zweite ihr
+Zweck.
+
+*Am `ftp`-Altziel sind fünf Wege gemessen*, weil einer davon der stille war:
+`sz_weg()` **abgewiesen**, „Verbindung prüfen" **abgewiesen** (bis AP4 hätte
+es Nutzername und Passwort über Port 21 geschickt), Versandschub
+**übersprungen 1 / Fehler 0**, Rückstand `null` statt eingefroren, Speichern
+abgewiesen **am Protokoll und nicht am Namen**. Dazu die Cron-Zeile:
+`versand fertig · erledigt 0 · 1 übergangen`.
+
+*Die Regression* ist über Freigabeprobe (16/16), Wiederherstellungsprobe
+(98/98), Versandprobe (116/116), Komplettprobe (63/63), Klickprobe (43/43) und
+beide Kreisläufe gemessen — **drei** dieser Zahlen sind gewachsen, weil die
+Proben vorher weniger gemessen haben, und **zwei** davon waren kaputt, bevor
+AP4 sie anfasste (Abschnitt 4).
+
 ---
 
 ## 2. Maschinelle Prüfungen (Mittel und Zahl)
@@ -277,10 +333,19 @@ gemessen. Der Bilderlauf fährt die vier berührten Seiten in acht Breiten und
 | AP3 | Bilderlauf mit Risikoliste (Firefox, WebKit) | dasselbe über 14 Seiten | je 112 Bilder, **0 Überlauf / 0 Knopfhöhe**; Firefox 2–4 abgebrochene Schriftabrufe (F-S10-AP3-07) |
 | AP3 | `kontrast.py` | gerechnete Paare / verfehlt | **22 / 0** |
 | AP3 | `tools/vollstaendigkeit/` | Befunde vorher → nachher; Hexfarben außerhalb `:root` | **329 → 335**, erklärt · **0** |
-| AP4 | `unzip -p` | Teile mit `edsk1:` / Teile gesamt; `"email"`-Treffer im Rohtext | n/n · 0 |
-| AP4 | Paketgröße | Fassung 3 gegen Fassung 2 am 5000er-Bestand, gzip+Siegel vs. Siegel | |
-| AP4 | `tools/freigabeprobe/` | Chiffretext anders, Klartext gleich | |
-| AP4 | `tools/versandprobe/` | FTPS, SFTP, `ftp`-Negativfall | |
+| AP4 | `php -l` | berührte Dateien | **0 Fehler in 14** |
+| AP4 | frisches Paket, roh im ZIP gezählt | Einträge mit `edsk1:` / gesamt | **3 von 3** |
+| AP4 | `grep` über den **ganzen Ablageordner** | Treffer für die E-Mail des Kontos (ZIP **und** `konto.json`) | **0** |
+| AP4 | Paketgröße am Referenzkonto | drei Zahlen (F-10) | 33 281 · 201 390 (+505 %) · **45 290** (+36 %) |
+| AP4 | umbenanntes Paket · untergeschobener Teil | je abgewiesen, nichts geschrieben | **1 von 1** · **1 von 1** |
+| AP4 | Freigabeprobe · Wiederherstellungsprobe | Fassung 3, Siegel gezählt, Negativfälle | **16/16** · **98/98** |
+| AP4 | Versandprobe · Komplettprobe (mit `--ziel`) | FTPS/SFTP, Negativfälle, Versand | **116/116** · **63/63** |
+| AP4 | `ftp`-Altziel, fünf Wege | `sz_weg` · Verbindung prüfen · Schub · Rückstand · Speichern | abgewiesen · abgewiesen · **1 übersprungen / 0 Fehler** · `null` · abgewiesen am Protokoll |
+| AP4 | `php server/jobs.php versand` | Cron-Zeile | `fertig · erledigt 0 · **1 übergangen**` |
+| AP4 | Browser: Backup-Ziele, Status | Plakette, Formularsperre, Statuszeile, Konsole | „wird übergangen" · Protokollfeld `["","sftp","ftps"]` · „1 umzustellen" · **0 Fehler** |
+| AP4 | Klickprobe · Kreisläufe | Regression | **43/43** · **9120/0** und **287 687/0** |
+| AP4 | Bilderlauf, 4 Seiten × 8 Breiten, beide Bedienhöhen | Überlauf / Konsole / Knopfhöhe | je 32 Bilder **0/0/0** |
+| AP4 | Vollständigkeit · Kontraste | Befunde vorher → nachher · Paare/verfehlt | **335 → 341** (erklärt), Hexfarben **0** · **22/0** |
 | AP5 | Kreisläufe (R24) | csv und edbak, unerklärte Abweichungen | 0 / 0 |
 | AP5 | `sitzung.py` | CK aus `edk1:`- und `edka1:`-Hülle | von 2 |
 | AP5 | Wiederherstellungs-, Komplett-, Wartungsprobe | Erwartungen / nicht erfüllt | |

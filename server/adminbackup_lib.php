@@ -40,6 +40,116 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/backup_lib.php';
+require_once __DIR__ . '/serverkrypto_lib.php';   // Siegel der Fassung 3 (S10/AP4)
+
+/* ===========================================================================
+ * FASSUNG 3 — DIE TEILE SIND VERSIEGELT (S10/AP4, E-S10-13, E-S10-U-11/-12)
+ * ===========================================================================
+ *
+ * WARUM. Ein Adminpaket lag bis Fassung 2 als blankes JSON im ZIP: Name,
+ * E-Mail, Diagnosen im Klartext, lesbar mit jedem Packprogramm. Es liegt auf
+ * dem Server, es geht per Versand an fremde Gegenstellen, und es wandert in
+ * Sicherungen — drei Orte, an denen niemand mehr hinsieht. Der
+ * Serverschlüssel ist genau dafür da: Er versiegelt, was der Server ohne
+ * Browser lesen können muss.
+ *
+ * WAS DAS NICHT IST. Das ist keine Ende-zu-Ende-Verschlüsselung. Der Server
+ * kann das Siegel öffnen — er hält den Schlüssel. Was es verhindert, ist der
+ * Zugriff auf die Datei OHNE den Server: ein kopiertes Backup, ein
+ * mitgelesener Versand, ein Blick in den Ablageordner. `pat_blob` bleibt
+ * unabhängig davon Ende-zu-Ende verschlüsselt; das Siegel liegt darüber.
+ *
+ * DER ZWECK BINDET DREI DINGE (E-S10-U-11): Konto, PAKET und Teil. Ohne den
+ * Paketnamen ließe sich ein Teil aus einem älteren Paket desselben Kontos
+ * unterschieben — das Manifest führt nur Namen, keine Prüfsummen je Teil
+ * (Fund F-7). Der Preis steht in `docs/Backup-Format.md`: **Wer ein Paket
+ * umbenennt, macht es unlesbar.** Der Name ist schon heute die Identität in
+ * der Ablage (`edbak_verzeichnis_abgleichen()`), ab jetzt steht es geschrieben.
+ *
+ * GZIP VOR DEM SIEGEL (E-S10-U-12). Versiegelte Teile sind Zufallsrauschen;
+ * das ZIP kann sie nicht mehr packen, und die Begründung weiter unten („hier
+ * ist es blankes JSON, der Packlauf lohnt sich also") fällt mit dieser
+ * Fassung weg. Ohne Vorstufe wüchse das Paket am 5000er-Bestand von 11,42 MB
+ * Richtung 94,28 MB — das trifft Speichergrenze, Verdrängung und jede
+ * Übertragung an ein Backup-Ziel.
+ *
+ * `gzencode`/`gzdecode` UND NICHT `gzcompress`/`gzuncompress`. `spur_lib.php`
+ * wählt zlib, WEIL Python und JavaScript die Spur lesen müssen; hier liest
+ * niemand außer PHP, denn ohne den Serverschlüssel kommt ohnehin keiner an
+ * den Inhalt. Der gzip-Rahmen bringt dafür eine CRC mit: Ein beschädigter
+ * Teil fällt auf, statt halb entpackt zu werden. Wer das ändert, ändert
+ * beide Seiten und `docs/Backup-Format.md` mit.
+ */
+
+/**
+ * Die Fassung, die geschrieben wird.
+ *
+ * Sie steht IM MANIFEST (`version`) und hat nichts mit
+ * `edbak_paket_fassung()` zu tun — jene liest die Dateiendung und
+ * unterscheidet einteiliges JSON von mehrteiligem ZIP. Beide Zahlen
+ * heissen „Fassung" und meinen Verschiedenes; wer sie verwechselt, bricht
+ * sechs Vergleichsstellen auf einmal.
+ */
+const EDBAK_FASSUNG = 3;
+
+/** Der Siegelzweck der Begleitdatei eines Kontos (E-S10-U-14). */
+function edbak_begleit_zweck(string $kennung): string
+{
+    return 'adminkonto|' . $kennung;
+}
+
+/** Der Siegelzweck eines Paketteils: Konto, Paket, Teil (E-S10-U-11). */
+function edbak_teil_zweck(string $kennung, string $paket, string $teil): string
+{
+    return 'adminpaket|' . $kennung . '|' . $paket . '|' . $teil;
+}
+
+/**
+ * Einen Teil für Fassung 3 verpacken: erst gzip, dann Siegel.
+ *
+ * @throws RuntimeException wenn kein Serverschlüssel da ist (aus
+ *         `sk_versiegeln()`) oder das Packen scheitert. Beides ist Absicht:
+ *         Wer versiegeln will und nicht kann, darf nicht im Klartext
+ *         weitermachen.
+ */
+function edbak_teil_siegeln(string $klartext, string $kennung,
+                            string $paket, string $teil): string
+{
+    $gz = gzencode($klartext, 6);
+    if ($gz === false) {
+        throw new RuntimeException('Ein Teil des Adminpakets liess sich nicht packen.');
+    }
+    return sk_versiegeln($gz, edbak_teil_zweck($kennung, $paket, $teil));
+}
+
+/**
+ * Einen rohen ZIP-Eintrag lesen — Fassung 2 wie Fassung 3.
+ *
+ * DAS PRÄFIX ENTSCHEIDET, nicht eine Fassungsnummer von außen. Ein Eintrag
+ * ohne `edsk1:` ist Fassung 2 und kommt unverändert zurück; das ist der Weg,
+ * auf dem vorhandene Pakete weiter lesbar bleiben. Ein Eintrag MIT Präfix,
+ * der sich nicht öffnen lässt, gibt `null` — und das heisst genau eines:
+ * Dieser Teil gehört nicht zu diesem Server, diesem Konto, diesem Paket oder
+ * diesem Namen. Welches davon, unterscheidet die Funktion bewusst nicht
+ * (dieselbe Linie wie `sk_oeffnen()`); was die Betreiberin braucht, ist der
+ * Satz an der Oberfläche.
+ */
+function edbak_teil_oeffnen(string $roh, string $kennung,
+                            string $paket, string $teil): ?string
+{
+    if (!sk_versiegelt($roh)) { return $roh; }          // Fassung 2
+    $gz = sk_oeffnen($roh, edbak_teil_zweck($kennung, $paket, $teil));
+    if ($gz === null) { return null; }
+    $klar = @gzdecode($gz);
+    return $klar === false ? null : $klar;
+}
+
+/** Der Satz, den jeder Leser sagt, wenn ein Teil sich nicht öffnen lässt. */
+const EDBAK_SIEGEL_FEHLER =
+    'Dieses Paket lässt sich nicht öffnen: Es wurde mit einem anderen '
+    . 'Serverschlüssel gespeichert, oder es ist umbenannt worden — der '
+    . 'Dateiname gehört zum Siegel. Der Serverschlüssel steht unter '
+    . 'Betrieb → Servereinstellungen.';
 
 /**
  * Vorbelegung der Aufbewahrung je Konto (E18, seit Web 9.8.0 einstellbar).
@@ -276,6 +386,16 @@ function edbak_begleit_lesen(string $kennung): array
     if (!is_file($pfad)) { return $vorgabe; }
     $roh = @file_get_contents($pfad);
     if ($roh === false) { return $vorgabe; }
+    /* SEIT S10/AP4 VERSIEGELT (E-S10-U-14). Das Präfix entscheidet: Eine
+     * Datei ohne `edsk1:` ist die alte, unversiegelte Fassung und wird
+     * unverändert gelesen — sie versiegelt sich beim nächsten Schreiben von
+     * selbst. Lässt sich eine versiegelte nicht öffnen, fällt sie in
+     * `lesbar => false`, und das ist die richtige Schublade: Sie IST dann
+     * nicht lesbar, und die Übersicht sagt es mit einer orangen Plakette. */
+    if (sk_versiegelt($roh)) {
+        $roh = sk_oeffnen($roh, edbak_begleit_zweck($kennung));
+        if ($roh === null) { return $vorgabe; }
+    }
     $d = json_decode($roh, true);
     if (!is_array($d)) { return $vorgabe; }
     return array_merge($vorgabe, $d, ['lesbar' => true, 'account_key' => $kennung]);
@@ -290,8 +410,21 @@ function edbak_begleit_schreiben(string $kennung, array $daten): bool
      * sonst genau die Datei zerstören, die nach einer Kontolöschung die
      * einzige Zuordnung ist. */
     $tmp = $pfad . '.' . bin2hex(random_bytes(4)) . '.tmp';
-    $ok = @file_put_contents($tmp, json_encode($daten,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    /* VERSIEGELT (S10/AP4, E-S10-U-14). Diese Datei trug E-Mail und
+     * Anzeigenamen im Klartext — neben dem Paket, also genau dort, wo die
+     * Versiegelung der Teile nichts genützt hätte. Ohne sie stimmte die
+     * Abnahmezahl „kein lesbarer Name, keine E-Mail" nur für das ZIP und
+     * nicht für den Ordner (Fund F-9). NICHT gzip-gepackt: Die Datei ist
+     * ein paar hundert Bytes gross, da kostet der Rahmen mehr, als er
+     * einspart. */
+    try {
+        $inhalt = sk_versiegeln((string)json_encode($daten,
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            edbak_begleit_zweck($kennung));
+    } catch (Throwable $e) {
+        return false;
+    }
+    $ok = @file_put_contents($tmp, $inhalt);
     if ($ok === false) { @unlink($tmp); return false; }
     return @rename($tmp, $pfad);
 }
@@ -356,6 +489,23 @@ function edbak_zeit_aus_name(string $name): ?string
  */
 function edbak_sicherung_erzeugen(int $userId): array
 {
+    /* OHNE SERVERSCHLÜSSEL ENTSTEHT KEIN PAKET (S10/AP4, E-S10-13).
+     *
+     * Derselbe Riegel wie beim Komplett-Backup (`komp_auftrag_starten()`),
+     * und aus demselben Grund: Ein Adminpaket trägt seit Fassung 3 nur noch
+     * versiegelte Teile. Ohne Schlüssel bliebe die Wahl zwischen einem
+     * unversiegelten Paket — also dem, was diese Stufe abschafft — und einem
+     * Abbruch mitten im Bau, nachdem der Bestand schon gelesen ist. Der
+     * Riegel steht deshalb VOR allem anderen und sagt, wo der Schlüssel
+     * herkommt. */
+    if (!serverschluessel_da()) {
+        return [false, 'Es gibt noch keinen Serverschlüssel. Ohne ihn lässt '
+                     . 'sich ein Backup dieses Kontos nicht versiegeln, und '
+                     . 'unversiegelt wird keines mehr abgelegt. Der Schlüssel '
+                     . 'wird unter Betrieb → Servereinstellungen eingetragen.',
+                null];
+    }
+
     [$bereit, $grund] = edbak_ablage_bereit();
     if (!$bereit) { return [false, $grund, null]; }
 
@@ -435,13 +585,38 @@ function edbak_sicherung_erzeugen(int $userId): array
         return [false, 'Der Bauordner lässt sich nicht anlegen.', null];
     }
 
+    /* DER PAKETNAME STEHT JETZT VORHER FEST (S10/AP4).
+     *
+     * Bis Fassung 2 entstand er erst beim Packen, weiter unten. Seit
+     * E-S10-U-11 geht er in den Siegelzweck jedes Teils ein — also muss er
+     * bekannt sein, BEVOR der erste Teil geschrieben wird. Er ist ohnehin
+     * nur ein Zeitstempel plus vier Zufallsbytes und hängt an nichts, was
+     * hier erst entsteht. */
+    $paketName = edbak_paketname();
+
     $teile = [];
     $bauNr = 0;
-    /** Ein Teil: erst in den Bauordner, dann in die Teileliste. */
-    $teilSchreiben = function (string $name, string $inhalt) use ($bau, &$teile, &$bauNr): bool {
+    /**
+     * Ein Teil: versiegeln, in den Bauordner, in die Teileliste.
+     *
+     * DIE EINE STELLE, AN DER VERSIEGELT WIRD. Jeder Teil des Pakets geht
+     * hier durch — Kopf, Eintragsfenster, Spurteile, Manifest. Ein zweiter
+     * Schreibweg daneben wäre der Weg, auf dem ein Teil unversiegelt
+     * hinausginge, ohne dass es jemand merkt.
+     *
+     * `bytes` zählt die Bytes IM PAKET, also nach gzip und Siegel — das
+     * Manifest nennt damit die Größe, die die Datei wirklich hat.
+     */
+    $teilSchreiben = function (string $name, string $inhalt)
+            use ($bau, &$teile, &$bauNr, $kennung, $paketName): bool {
+        try {
+            $roh = edbak_teil_siegeln($inhalt, $kennung, $paketName, $name);
+        } catch (Throwable $e) {
+            return false;
+        }
         $datei = $bau . '/' . sprintf('%04d', ++$bauNr) . '.part';
-        if (@file_put_contents($datei, $inhalt) === false) { return false; }
-        $teile[] = ['name' => $name, 'datei' => $datei, 'bytes' => strlen($inhalt)];
+        if (@file_put_contents($datei, $roh) === false) { return false; }
+        $teile[] = ['name' => $name, 'datei' => $datei, 'bytes' => strlen($roh)];
         return true;
     };
     $abbruch = function (string $meldung) use ($bau, $ordner, $ordnerNeu): array {
@@ -581,7 +756,7 @@ function edbak_sicherung_erzeugen(int $userId): array
     $erzeugt = gmdate('Y-m-d\TH:i:s\Z');
     $manifest = [
         'format'      => 'einsatzdoku-adminsicherung',
-        'version'     => 2,
+        'version'     => EDBAK_FASSUNG,
         'erzeugt'     => $erzeugt,
         'web_version' => WEB_VERSION,
         'konto'       => [
@@ -613,22 +788,31 @@ function edbak_sicherung_erzeugen(int $userId): array
     }
 
     /* ---- Und alles in ein Archiv --------------------------------------- */
-    $name = edbak_paketname();
+    $name = $paketName;          // steht seit S10/AP4 schon oben fest
     $tmp  = $ordner . '/' . $name . '.tmp';
     $zip  = new ZipArchive();
     if ($zip->open($tmp, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
         return $abbruch('Die Backup-Datei lässt sich nicht anlegen.');
     }
     foreach ($teile as $t) {
-        /* GEPACKT, anders als beim Nutzerformat: Dort sind die Teile bereits
-         * gzip UND verschlüsselt, hier ist es blankes JSON. Der Packlauf
-         * lohnt sich also — er ist der Grund, aus dem ein Adminpaket trotz
-         * derselben Daten kleiner ausfällt als früher. */
+        /* UNGEPACKT SEIT FASSUNG 3 (S10/AP4).
+         *
+         * Hier stand: „GEPACKT, anders als beim Nutzerformat: Dort sind die
+         * Teile bereits gzip UND verschlüsselt, hier ist es blankes JSON."
+         * Das galt für Fassung 2. Seit Fassung 3 ist es genau wie beim
+         * Nutzerformat — die Teile sind gzip UND versiegelt, und ein Siegel
+         * ist Zufallsrauschen. Ein Packlauf darüber kostet Zeit und bringt
+         * nichts; er machte das Paket sogar minimal größer. */
         if (!$zip->addFile($t['datei'], $t['name'])) {
             @$zip->close();
             @unlink($tmp);
             return $abbruch('Ein Teil liess sich nicht in das Backup legen.');
         }
+        /* ERST HINZUFÜGEN, DANN DAS VERFAHREN SETZEN: `setCompressionName()`
+         * greift auf einen Eintrag, den es schon gibt. Umgekehrt tut der
+         * Aufruf nichts und meldet auch nichts — das Paket wäre wieder
+         * gepackt, und die Zahl im Prüfprotokoll stimmte nicht. */
+        $zip->setCompressionName($t['name'], ZipArchive::CM_STORE);
     }
     if (!$zip->close()) {
         @unlink($tmp);
@@ -656,7 +840,7 @@ function edbak_sicherung_erzeugen(int $userId): array
      * unbrauchbar — wer sie ansieht, soll sie finden), und der Lauf meldet
      * einen Fehler, ohne den Bestand angetastet zu haben. */
     $gegenprobe = edbak_paket_kopf_lesen($kennung, $name);
-    if ($gegenprobe === null || ($gegenprobe['version'] ?? 0) !== 2) {
+    if ($gegenprobe === null || (int)($gegenprobe['version'] ?? 0) !== EDBAK_FASSUNG) {
         return [false, 'Das Backup wurde geschrieben, liess sich danach aber '
                      . 'nicht lesen. Der bisherige Bestand ist unangetastet '
                      . 'geblieben; die fragliche Datei heisst ' . $name . '.', null];
@@ -866,7 +1050,18 @@ function edbak_paket_kopf_lesen(string $kennung, string $datei): ?array
         $roh = $zip->getFromName('manifest.json');
         $zip->close();
         if ($roh === false) { return null; }
-        $d = json_decode($roh, true);
+        /* DIE FASSUNG STEHT IM MANIFEST, NICHT AM DATEINAMEN (S10/AP4, F-8).
+         *
+         * `edbak_paket_fassung()` liest die ENDUNG und liefert für jedes ZIP
+         * weiterhin 2 — sie ist an sechs Stellen so gemeint und bleibt es.
+         * Ob ein ZIP Fassung 2 oder 3 ist, entscheidet das Siegel des
+         * Manifests: `manifest.json` ist der einzige Eintrag, den jeder
+         * Leser ohnehin anfasst. Das Konzept sagte „`sk_versiegelt()` am
+         * ersten Teil" — einen ersten Teil gibt es nicht, die vier Leser
+         * greifen je einen benannten Eintrag. */
+        $klar = edbak_teil_oeffnen($roh, $kennung, $datei, 'manifest.json');
+        if ($klar === null) { return null; }
+        $d = json_decode($klar, true);
         if (!is_array($d) || ($d['format'] ?? '') !== 'einsatzdoku-adminsicherung') { return null; }
         return $d;
     }
@@ -2052,15 +2247,35 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     if ($zip->open($pfad) !== true) {
         return [false, 'Das Backup liess sich nicht öffnen.', null];
     }
-    $lies = static function (string $name) use ($zip): ?array {
+    /* JEDER TEIL GEHT DURCH DAS SIEGEL (S10/AP4). `edbak_teil_oeffnen()`
+     * lässt einen unversiegelten Eintrag unverändert durch — so bleibt ein
+     * Fassung-2-Paket lesbar, ohne dass hier eine Fassungsweiche steht. */
+    $lies = static function (string $name) use ($zip, $kennung, $datei): ?array {
         $roh = $zip->getFromName($name);
         if ($roh === false) { return null; }
-        $d = json_decode($roh, true);
+        $klar = edbak_teil_oeffnen($roh, $kennung, $datei, $name);
+        if ($klar === null) { return null; }
+        $d = json_decode($klar, true);
         return is_array($d) ? $d : null;
     };
 
-    $manifest = $lies('manifest.json');
-    if ($manifest === null || ($manifest['format'] ?? '') !== 'einsatzdoku-adminsicherung') {
+    /* DAS MANIFEST GETRENNT, WEIL SEIN FEHLSCHLAG ETWAS ANDERES HEISST.
+     * „Fehlt" und „lässt sich nicht öffnen" sind zwei Lagen mit zwei
+     * Handgriffen: Das eine ist ein kaputtes Paket, das andere ein Paket von
+     * einem anderen Server — oder ein umbenanntes. Eine gemeinsame Meldung
+     * schickte die Betreiberin in die falsche Richtung. */
+    $mRoh = $zip->getFromName('manifest.json');
+    if ($mRoh === false) {
+        $zip->close();
+        return [false, 'Dem Backup fehlt ein lesbares Manifest.', null];
+    }
+    $mKlar = edbak_teil_oeffnen($mRoh, $kennung, $datei, 'manifest.json');
+    if ($mKlar === null) {
+        $zip->close();
+        return [false, EDBAK_SIEGEL_FEHLER, null];
+    }
+    $manifest = json_decode($mKlar, true);
+    if (!is_array($manifest) || ($manifest['format'] ?? '') !== 'einsatzdoku-adminsicherung') {
         $zip->close();
         return [false, 'Dem Backup fehlt ein lesbares Manifest.', null];
     }
@@ -2083,7 +2298,12 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     $kopf = $lies('kopf.json');
     if ($kopf === null) {
         $zip->close();
-        return [false, 'Dem Backup fehlt der Kopf.', null];
+        /* Das Manifest ging auf, dieser Teil nicht: Dann fehlt er entweder,
+         * oder er stammt aus einem anderen Paket — der Siegelzweck bindet
+         * den Paketnamen (E-S10-U-11), und genau das ist der Fall, den F-7
+         * meint. */
+        return [false, 'Der Kopf des Backups fehlt oder gehört nicht zu diesem '
+                     . 'Paket. Es wurde nichts geändert.', null];
     }
 
     $summe = [];
@@ -2111,8 +2331,9 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
             $f = $lies($name);
             if ($f === null) {
                 $zip->close();
-                return [false, 'Das Teil ' . $name . ' liess sich nicht lesen. '
-                             . 'Der bis dahin eingespielte Bestand bleibt stehen.', null];
+                return [false, 'Das Teil ' . $name . ' fehlt, ist beschädigt '
+                             . 'oder gehört nicht zu diesem Paket. Der bis '
+                             . 'dahin eingespielte Bestand bleibt stehen.', null];
             }
             /* Die Fassung steht im Kopf der Datei und wird hier mitgegeben —
              * derselbe Grund wie in api/backup_eintraege_restore.php: Den
@@ -2141,8 +2362,9 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
             $t = $lies($name);
             if ($t === null) {
                 $zip->close();
-                return [false, 'Das Spurteil ' . $name . ' liess sich nicht lesen. '
-                             . 'Der Bestand ist eingespielt, es fehlen aber GPS-Daten.', null];
+                return [false, 'Das Spurteil ' . $name . ' fehlt, ist beschädigt '
+                             . 'oder gehört nicht zu diesem Paket. Der Bestand '
+                             . 'ist eingespielt, es fehlen aber GPS-Daten.', null];
             }
             $liste = [];
             foreach ((array)($t['spuren'] ?? []) as $e) {
@@ -2192,7 +2414,12 @@ function edbak_paket_zurueckspielen(string $kennung, string $datei, int $zielUse
 }
 
 /**
- * EIN Teil eines Fassung-2-Pakets, roh (S2/AP6).
+ * EIN Teil eines mehrteiligen Pakets, GEÖFFNET (S2/AP6, seit S10/AP4 entsiegelt).
+ *
+ * Bis Fassung 2 kam der Eintrag roh aus dem ZIP — er war blankes JSON. Seit
+ * Fassung 3 ist er gzip-gepackt und versiegelt, und der Browser der NutzerIn
+ * kennt den Serverschlüssel nicht. Diese Funktion öffnet deshalb und gibt
+ * Klartext-JSON zurück, wie eh und je; für den Aufrufer ändert sich nichts.
  *
  * WOFUER. Der Freigabeweg reicht das Paket an den Browser der NutzerIn — sie
  * ist die Einzige, die die geschuetzten Angaben umschluesseln kann. Bis
@@ -2212,12 +2439,19 @@ function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?
     if (!is_file($pfad)) { return null; }
     $zip = new ZipArchive();
     if ($zip->open($pfad) !== true) { return null; }
-    $manifest = json_decode((string)$zip->getFromName('manifest.json'), true);
+    /* Das Manifest erst öffnen, dann lesen (S10/AP4). Es ist der Eintrag,
+     * der sagt, welche Teile es überhaupt gibt — ein Paket, dessen Manifest
+     * sich nicht öffnen lässt, gibt auch keinen Teil heraus. */
+    $mRoh = $zip->getFromName('manifest.json');
+    $mKlar = $mRoh === false
+        ? null : edbak_teil_oeffnen($mRoh, $kennung, $datei, 'manifest.json');
+    $manifest = $mKlar === null ? null : json_decode($mKlar, true);
     $erlaubt = is_array($manifest) ? array_map('strval', (array)($manifest['teile'] ?? [])) : [];
     if (!in_array($teil, $erlaubt, true)) { $zip->close(); return null; }
     $roh = $zip->getFromName($teil);
     $zip->close();
-    return $roh === false ? null : $roh;
+    if ($roh === false) { return null; }
+    return edbak_teil_oeffnen($roh, $kennung, $datei, $teil);
 }
 
 /* ---- Der Auftrag „Alle sichern" (S2/AP6, E-S2-14) ------------------------

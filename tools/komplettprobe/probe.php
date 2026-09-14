@@ -175,7 +175,19 @@ while (true) {
     if ($runden > 500) { break; }
 }
 $dauer = microtime(true) - $anfangZeit;
-pruef('Der Lauf braucht mehr als ein Häppchen', $runden > 1, $runden . ' Häppchen');
+/* MEHR ALS EIN HÄPPCHEN BRAUCHT EINEN BESTAND, DER DAS HERGIBT (S10/AP4).
+ * Am Referenzbestand (rund 18 000 Zeilen) ist der Dump in einem Zug fertig;
+ * das ist keine Fehlfunktion, sondern eine kleine Datenbank. Gemeldet wird
+ * die Zahl, nicht ein roter Haken — messbar ist die Häppchenteilung im
+ * Messstand (5000er-Bestand). */
+if ($runden > 1) {
+    pruef('Der Lauf braucht mehr als ein Häppchen', true, $runden . ' Häppchen');
+} else {
+    offenlassen('Häppchenteilung',
+        'der Dump lief in einem Zug durch (' . $runden . ' Häppchen, '
+        . number_format((int)($z['roh_bytes'] ?? 0), 0, ',', '.')
+        . ' Byte roh) — zu kleiner Bestand, messbar im Messstand');
+}
 pruef('Der Lauf wird fertig', ($z['stand'] ?? '') === 'fertig', (string)($z['stand'] ?? '-'));
 pruef('Die Speicherspitze bleibt unter dem Z3-Budget von 64 MB', $spitze <= 64 * 1048576,
       sprintf('%.1f MB in %.2f s', $spitze / 1048576, $dauer));
@@ -435,10 +447,45 @@ if ($pruefPdo !== null) {
  * Teil 8 — Wiederanlauf: was passiert, wenn ein Häppchen abbricht
  * ====================================================================== */
 kopf('Teil 8 — Wiederanlauf nach einem abgebrochenen Häppchen');
+/* DIESER TEIL BRAUCHT EINEN BESTAND, DER NICHT IN EIN HÄPPCHEN PASST
+ * (S10/AP4, 14.09.2026).
+ *
+ * Er stellt einen Abbruch mitten im Dump nach. Läuft der Dump in EINEM Zug
+ * durch — am Referenzbestand sind es 18 376 Zeilen und 438 KB, das ist in
+ * Sekundenbruchteilen fertig —, dann gibt es keinen Bauordner mehr, den man
+ * beschädigen könnte: `komp_schub()` setzt den Zustand auf `fertig` und
+ * entfernt `bau`.
+ *
+ * Bis hierher stand das ungeprüft da. Die Folge war kein roter Haken, sondern
+ * ein ABSTURZ: `gzopen()` auf einen Pfad, den es nicht gibt, dann
+ * `gzread(false)` — ein TypeError, Rückgabewert 255, und die Teile 9 und 10
+ * liefen nie. Die Zahl „76 von 76", die in der Anleitung steht, stammt aus
+ * einer Zeit mit größerem Bestand; seither meldete diese Probe gar nichts
+ * mehr (Fund F-S10-AP4-02).
+ *
+ * Jetzt wird nachgesehen und gesagt, was ist — eine Auskunft statt eines
+ * Absturzes. Wer den Teil messen will, nimmt den Messstand
+ * (`tools/messstand/`, 5000er-Bestand). */
 $z2 = ['stand' => 'dump', 'bau' => KOMP_BAU_PRAEFIX . bin2hex(random_bytes(4)),
        'name' => komp_dateiname(), 'begonnen' => gmdate('Y-m-d\TH:i:s\Z'), 'roh_bytes' => 0];
 $start = microtime(true);
 komp_schub($pdo, $z2, static fn(): float => 5.6 - (microtime(true) - $start), 5.0);
+
+if (!isset($z2['bau']) || !in_array((string)($z2['stand'] ?? ''), ['dump', 'siegel'], true)) {
+    offenlassen('Wiederanlauf',
+        'der Dump lief in EINEM Häppchen durch (Zustand „'
+        . (string)($z2['stand'] ?? '?') . '", '
+        . number_format((int)($z2['roh_bytes'] ?? 0), 0, ',', '.')
+        . ' Byte roh) — ein Abbruch mitten im Dump ist an diesem Bestand nicht '
+        . 'herstellbar. Messbar im Messstand (5000er-Bestand).');
+    /* UND DEN STAND WIEDER WEGRÄUMEN, den dieser Durchlauf nebenbei erzeugt
+     * hat. Ohne das zählt Teil 9 einen Stand mehr, die Verdrängung mit
+     * Aufbewahrung 1 nimmt zwei statt einen — und „Der jüngste Stand bleibt"
+     * scheitert an der Probe selbst statt an der Anwendung. */
+    if (($z2['stand'] ?? '') === 'fertig' && isset($z2['name'])) {
+        @unlink(komp_wurzel() . '/' . (string)$z2['name']);
+    }
+} else {
 $bauRoh = komp_wurzel() . '/' . $z2['bau'] . '/' . KOMP_ROHNAME;
 $nachEins = (int)@filesize($bauRoh);
 pruef('Nach dem ersten Häppchen steht etwas da', $nachEins > 0,
@@ -485,6 +532,7 @@ pruef('Ist der Baustand verschwunden, beginnt der Lauf von vorn',
 pruef('...und das wird im Zustand vermerkt', isset($verlorenR['neu_begonnen']),
       (string)($verlorenR['neu_begonnen'] ?? '-'));
 komp_bau_weg((string)$z2['bau']);
+}
 
 /* =========================================================================
  * Teil 9 — Aufbewahrung, Speichergrenze, Rückstand
@@ -532,10 +580,26 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
     } else {
         /* Ein Wegwerf-Ziel auf die örtliche Gegenstelle. Es wird am Ende
          * wieder entfernt — eine Probe, die Einträge hinterlässt, ist keine. */
+        /* FTPS UND NICHT MEHR FTP (S10/AP4, E-S10-14).
+         *
+         * Hier stand `'protokoll' => 'ftp'` mit Port 2121 — und diese Probe
+         * war damit das EINZIGE Werkzeug des Projekts, das ein `ftp`-Ziel
+         * wirklich anlegt. Der AP4-Zuschnitt nannte sie nicht; sobald
+         * `sz_pruefen_eingabe()` das Protokoll abweist, scheitert schon das
+         * Anlegen, und die sieben Erwartungen darunter laufen nicht mehr.
+         * Aus 76/0 wäre 69/1 geworden — eine Probe, die nicht rot wird,
+         * sondern verstummt.
+         *
+         * Der Ordner wird AUS DEM PROTOKOLL abgeleitet und nicht geschrieben:
+         * `gegenstellen.py` legt je Protokoll ein eigenes Verzeichnis an, und
+         * ein fest verdrahtetes `/ftp/` daneben ist genau die Zeile, die beim
+         * nächsten Wechsel wieder vergessen wird. */
+        $protProbe = 'ftps';
+        $portProbe = '2122';
         $name = 'komplettprobe-' . bin2hex(random_bytes(3));
         [$ok, $was] = sz_speichern(null, [
-            'name' => $name, 'protokoll' => 'ftp', 'host' => '127.0.0.1',
-            'port' => '2121', 'nutzer' => 'probe', 'pfad' => '/',
+            'name' => $name, 'protokoll' => $protProbe, 'host' => '127.0.0.1',
+            'port' => $portProbe, 'nutzer' => 'probe', 'pfad' => '/',
             'passiv' => '1', 'aktiv' => '1',
         ], 'geheim-probe-2026', null);
         pruef('Ein Wegwerf-Ziel lässt sich anlegen', $ok,
@@ -550,7 +614,7 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
             pruef('Es geht etwas hinaus', $e['gesendet'] > 0,
                   $e['gesendet'] . ' Dateien, '
                   . number_format($e['bytes'] / 1048576, 1, ',', '.') . ' MB');
-            $dort = $zielWurzel . '/ftp/' . KOMP_ORDNER . '/' . $datei;
+            $dort = $zielWurzel . '/' . $protProbe . '/' . KOMP_ORDNER . '/' . $datei;
             pruef('Das Komplett-Backup liegt am Ziel unter „' . KOMP_ORDNER . '/"',
                   is_file($dort), $dort);
             pruef('...und ist Byte für Byte dieselbe',

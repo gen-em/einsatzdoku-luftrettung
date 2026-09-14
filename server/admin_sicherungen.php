@@ -585,7 +585,7 @@ ui_seite_start(['titel' => 'Konto-Backups']);
          bei ihr — auch die Verwaltung hat ihn nicht.</p>
       <p class="feld-hinweis"><strong>Wohin die Pakete von hier aus gehen</strong>,
          steht unter <a href="admin_sicherungsziele.php">Backup-Ziele</a> —
-         FTP-, FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
+         FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
          Backups auf demselben Server, dessen Ausfall der Grund für ein Backup
          wäre. Die Ablage selbst ist über den Browser nicht erreichbar: eine
          <code>.htaccess</code> sperrt sie, und der Ordnername je Konto ist nicht

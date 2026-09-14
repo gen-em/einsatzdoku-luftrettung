@@ -59,15 +59,37 @@ require_once __DIR__ . '/serverkrypto_lib.php';
  */
 const SZ_ZEITLIMIT = 20;
 
-/** Vorgabeports je Protokoll. */
-const SZ_PORTS = ['ftp' => 21, 'ftps' => 21, 'sftp' => 22];
+/**
+ * Vorgabeports je Protokoll.
+ *
+ * `ftp` STEHT HIER NICHT MEHR (S10/AP4, E-S10-14). Diese Liste ist nicht bloss
+ * eine Bequemlichkeit: `sz_pruefen_eingabe()` prüfte gegen SIE, nicht gegen
+ * `SZ_PROTOKOLLE` (Fund F-6). Wer das Protokoll nur aus dem Anzeigekatalog
+ * gestrichen hätte, hätte gar nichts abgeschafft — es wäre weiter
+ * speicherbar gewesen, nur nicht mehr wählbar. Geprüft wird ab jetzt gegen
+ * `SZ_PROTOKOLLE`, und beide Listen tragen dieselben Schlüssel; eine
+ * Gegenprobe darunter zählt das nach, damit sie es auch morgen tun.
+ */
+const SZ_PORTS = ['ftps' => 21, 'sftp' => 22];
 
 /** Anzeigenamen der Protokolle, in der Reihenfolge der Empfehlung. */
 const SZ_PROTOKOLLE = [
     'sftp' => 'SFTP (SSH) — empfohlen',
     'ftps' => 'FTPS (FTP über TLS)',
-    'ftp'  => 'FTP (unverschlüsselt)',
 ];
+
+/**
+ * Ist dieses Protokoll erlaubt?
+ *
+ * DIE EINE STELLE, DIE DAS ENTSCHEIDET. Es gab zwei Listen und zwei
+ * Meinungen; jetzt gibt es eine Frage. Wer ein Protokoll hinzunimmt, trägt
+ * es in `SZ_PROTOKOLLE` und `SZ_PORTS` ein — und `sz_weg()` braucht einen
+ * Zweig, sonst wirft es.
+ */
+function sz_protokoll_erlaubt(string $prot): bool
+{
+    return isset(SZ_PROTOKOLLE[$prot]) && isset(SZ_PORTS[$prot]);
+}
 
 /**
  * Ein Fehler auf dem Weg zum Ziel — mit einem Satz, der einer Betreiberin
@@ -238,7 +260,7 @@ final class ZielFtp implements Zielweg
         }
         if ($this->tls && !function_exists('ftp_ssl_connect')) {
             throw new ZielFehler('Dieses PHP hat „ftp" ohne TLS-Unterstützung; '
-                . 'FTPS geht damit nicht. FTP oder SFTP verwenden.');
+                . 'FTPS geht damit nicht. SFTP verwenden.');
         }
         $verb = $this->ruf(
             fn() => $this->tls
@@ -670,7 +692,16 @@ function sz_pruefen_eingabe(array $e): array
         $f[] = 'Der Name fehlt oder ist zu lang (höchstens 190 Zeichen).';
     }
     $prot = (string)($e['protokoll'] ?? '');
-    if (!isset(SZ_PORTS[$prot])) { $f[] = 'Unbekanntes Protokoll.'; }
+    if (!sz_protokoll_erlaubt($prot)) {
+        /* DER SATZ NENNT DEN GRUND, nicht bloss „unbekannt". Wer ein
+         * bestehendes `ftp`-Ziel bearbeitet, soll nicht rätseln, warum das
+         * Protokoll, das gestern noch dastand, heute abgewiesen wird. */
+        $f[] = $prot === 'ftp'
+            ? 'FTP überträgt alles im Klartext, auch Nutzername und Passwort. '
+              . 'Es wird seit Web 20.2.0 nicht mehr angeboten — bitte SFTP oder '
+              . 'FTPS wählen und Port und Zugangsdaten dazu neu setzen.'
+            : 'Unbekanntes Protokoll.';
+    }
     $host = trim((string)($e['host'] ?? ''));
     if ($host === '' || mb_strlen($host) > 190
         || !preg_match('/^[A-Za-z0-9._:\[\]-]+$/', $host)) {
@@ -824,6 +855,25 @@ function sz_weg(array $ziel): Zielweg
             . 'erfassen.');
     }
     $prot = (string)$ziel['protokoll'];
+    /* DER ENGPASS, UND ER PRÜFT POSITIV (S10/AP4, E-S10-U-10).
+     *
+     * Hier stand ein einziger benannter Zweig (`sftp`), und alles andere fiel
+     * in `ZielFtp`, wo `$prot === 'ftps'` über TLS entscheidet. FTPS war
+     * damit geschützt — ein UNBEKANNTES oder LEERES Protokoll aber fiel
+     * still auf Klartext-FTP zurück, und dann gehen Nutzername und Passwort
+     * offen über Port 21.
+     *
+     * Geprüft wird deshalb gegen den Katalog und nicht auf `!== 'ftp'`: Ein
+     * `ENUM`, das je nach `sql_mode` zum Leerstring wird, ist im Projekt
+     * belegt (`backup_lib.php`, „die ENUM-Falle"), und `db.php` setzt kein
+     * `sql_mode`. Ein Wert, den diese Anwendung nicht kennt, bekommt keine
+     * Verbindung — weder im Versand noch bei „Verbindung prüfen". */
+    if (!sz_protokoll_erlaubt($prot)) {
+        throw new ZielFehler('Dieses Ziel trägt das Protokoll „'
+            . ($prot === '' ? '(leer)' : $prot) . '", das diese Fassung nicht '
+            . 'mehr kennt. Es wird nichts gesendet. Bitte das Ziel auf SFTP '
+            . 'oder FTPS umstellen (Protokoll, Port und Zugangsdaten).');
+    }
     if ($prot === 'sftp') {
         return new ZielSftp((string)$ziel['host'], (int)$ziel['port'],
             (string)$ziel['nutzer'], $geheim,
@@ -960,14 +1010,23 @@ function sz_auto_setzen(bool $an): bool
  *
  * @param callable $zeitLinks gibt die verbleibenden Sekunden
  * @return array ['gesendet' => int, 'bytes' => int, 'ziele' => int,
- *                'fehler' => [text, ...], 'fertig' => bool]
+ *                'fehler' => [text, ...], 'fertig' => bool,
+ *                'uebersprungen' => int, 'uebersprungen_namen' => [text, ...]]
+ *
+ * WARUM „uebersprungen" NICHT IN „fehler" GEHÖRT (S10/AP4, E-S10-U-09).
+ * `jobs_lib.php` wirft, sobald `fehler` nicht leer ist — und das mit gutem
+ * Grund: Sonst meldete die Wartungsseite „grün", während seit drei Wochen
+ * nichts hinausgeht. Ein Ziel, das planmäßig übergangen wird, ist aber keine
+ * Störung; stünde sein Vermerk dort, wäre der Versandjob dauerhaft rot und
+ * das Signal für echte Störungen verbrannt. Deshalb zwei getrennte Zahlen.
  */
 function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESERVE_S): array
 {
     require_once __DIR__ . '/adminbackup_lib.php';
     $ziele = sz_alle(true);
     $raus = ['gesendet' => 0, 'bytes' => 0, 'ziele' => count($ziele),
-             'fehler' => [], 'fertig' => true];
+             'fehler' => [], 'fertig' => true,
+             'uebersprungen' => 0, 'uebersprungen_namen' => []];
     if ($ziele === []) { return $raus; }
 
     $wurzel = edbak_wurzel();
@@ -999,6 +1058,24 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
 
     foreach ($ziele as $z) {
         if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
+
+        /* ÜBERGANGEN STATT BESCHICKT (S10/AP4, E-S10-14).
+         *
+         * Ein Ziel mit einem Protokoll, das diese Fassung nicht mehr kennt,
+         * wird NICHT im Klartext beliefert und NICHT als Störung gezählt. Es
+         * bekommt einen Vermerk an sich selbst (rote Plakette auf der
+         * Zielseite) und eine Zahl im Lauf. `continue` VOR `sz_weg()`: Jene
+         * würfe sonst, und der Wurf landete in `fehler`. */
+        if (!sz_protokoll_erlaubt((string)$z['protokoll'])) {
+            $raus['uebersprungen']++;
+            $raus['uebersprungen_namen'][] = (string)$z['name'];
+            sz_lauf_merken((int)$z['id'], false,
+                'Übergangen: Das Protokoll „' . (string)$z['protokoll']
+                . '" wird nicht mehr beschickt, weil es unverschlüsselt '
+                . 'überträgt. Bitte das Ziel auf SFTP oder FTPS umstellen.');
+            continue;
+        }
+
         $weg = null;
         try {
             $weg = sz_weg($z);
@@ -1068,7 +1145,19 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
 function sz_versand_rueckstand(): ?int
 {
     require_once __DIR__ . '/adminbackup_lib.php';
-    $ziele = sz_alle(true);
+    /* ÜBERGANGENE ZIELE ZÄHLEN NICHT MIT (S10/AP4, E-S10-U-15).
+     *
+     * Sie werden nie beschickt, also steht ihr `letzter_erfolg` für immer auf
+     * `null` — und die Zeile darunter machte daraus „keine Aussage" für die
+     * GANZE Installation. Die Jobzeile stünde dann dauerhaft blau „in
+     * Ordnung", obwohl Pakete liegenbleiben; oder, mit einem alten Erfolg,
+     * dauerhaft orange, obwohl jedes erreichbare Ziel beliefert ist. Beides
+     * ist eine Dauermeldung, die nichts mehr sagt.
+     *
+     * Sichtbar bleibt das Ziel an SEINER Zeile: rote Plakette, Vermerk aus
+     * dem Lauf. Das ist der Ort, an dem etwas zu tun ist. */
+    $ziele = array_values(array_filter(sz_alle(true),
+        static fn(array $z): bool => sz_protokoll_erlaubt((string)$z['protokoll'])));
     if ($ziele === []) { return null; }
     $aeltester = null;
     foreach ($ziele as $z) {

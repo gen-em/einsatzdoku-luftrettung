@@ -4423,5 +4423,63 @@ declare(strict_types=1);
  * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `app_state` bekommt zwei Marken
  * (`kdf_anteil_kennung`, `server_key_kennung`) — die Tabelle gibt es seit
  * langem, und beide entstehen beim ersten Anlegen von selbst.
+ *
+ * 20.2.0 VERSIEGELT DIE ADMINPAKETE UND SCHAFFT `ftp` AB (S10/AP4). Zwei
+ * Dinge, die nichts miteinander zu tun haben ausser dem Ort, an dem sie
+ * wehtun: Ein Adminpaket geht per Versand an fremde Gegenstellen — bis
+ * hierher als blankes JSON, und bei einem `ftp`-Ziel auch noch ueber eine
+ * offene Leitung.
+ *
+ * FASSUNG 3 DES ADMINPAKETS. Jeder Teil im ZIP ist gzip-gepackt und mit dem
+ * SERVERSCHLUESSEL versiegelt (`edsk1:`), das Manifest eingeschlossen — und
+ * die Begleitdatei `konto.json` daneben ebenso, denn sie trug E-Mail und
+ * Namen im Klartext. Ohne sie haette die Abnahmezahl „kein lesbarer Name,
+ * keine E-Mail" nur fuer das ZIP gegolten und nicht fuer den Ordner.
+ *
+ * DAS IST KEINE ENDE-ZU-ENDE-VERSCHLUESSELUNG. Der Server kann das Siegel
+ * oeffnen — er haelt den Schluessel. Was es verhindert, ist der Zugriff OHNE
+ * den Server: ein kopiertes Backup, ein mitgelesener Versand, ein Blick in
+ * den Ablageordner. `pat_blob` bleibt davon unberuehrt Ende-zu-Ende
+ * verschluesselt; das Siegel liegt darueber.
+ *
+ * DER SIEGELZWECK BINDET DEN PAKETNAMEN (E-S10-U-11). Ohne ihn liesse sich
+ * ein Teil aus einem aelteren Paket desselben Kontos unterschieben — das
+ * Manifest fuehrt nur Namen, keine Pruefsummen je Teil. Der Preis steht in
+ * `docs/Backup-Format.md`: Wer ein Paket umbenennt, macht es unlesbar.
+ *
+ * GZIP VOR DEM SIEGEL, und die Zahl sagt warum (E-S10-U-12). Versiegelte
+ * Teile sind Zufallsrauschen; das ZIP kann sie nicht mehr packen. Gemessen
+ * am Referenzkonto (83 Einsaetze, 150 690 Byte Klartext): Fassung 2
+ * **33 281** Byte, Siegel ohne Vorstufe **201 390** (+505 %), gzip davor
+ * **45 290** (+36 %). Die verbleibenden 36 % sind der base64-Rahmen von
+ * `edsk1:` — das Format der Versiegelung, nicht der Packlauf.
+ *
+ * OHNE SERVERSCHLUESSEL ENTSTEHT KEIN PAKET. Derselbe Riegel wie beim
+ * Komplett-Backup: Die Wahl zwischen einem unversiegelten Paket und einem
+ * Abbruch mitten im Bau ist keine.
+ *
+ * `ftp` IST FORT (E-S10-14). Nicht mehr waehlbar, nicht mehr speicherbar,
+ * nicht mehr beschickt. Drei Stellen, und die mittlere war der Fund:
+ * `sz_pruefen_eingabe()` prueft gegen `SZ_PORTS`, nicht gegen
+ * `SZ_PROTOKOLLE` — wer nur aus dem Anzeigekatalog gestrichen haette, haette
+ * gar nichts abgeschafft. Beide Listen fuehren jetzt dieselben Schluessel,
+ * und `sz_protokoll_erlaubt()` ist die eine Frage.
+ *
+ * DER ENGPASS PRUEFT POSITIV (E-S10-U-10). `sz_weg()` hatte genau einen
+ * benannten Zweig (`sftp`); alles andere fiel in `ZielFtp`, wo
+ * `$prot === 'ftps'` ueber TLS entscheidet. FTPS war damit geschuetzt — ein
+ * UNBEKANNTES oder LEERES Protokoll aber fiel still auf Klartext-FTP zurueck.
+ * Geprueft wird jetzt gegen den Katalog, nicht auf `!== 'ftp'`.
+ *
+ * UEBERGANGEN STATT GESCHEITERT. Ein Altziel wird uebersprungen und bekommt
+ * einen Vermerk — nicht einen Eintrag in `fehler`, denn `jobs_lib.php` wirft
+ * darauf, und der Versandjob staende dauerhaft rot. Auf der Jobebene heisst
+ * die Zahl `uebergangen` und nicht `uebersprungen`: Letzteres ist dort schon
+ * belegt, und `jobs.php` ueberspringt bei diesem Schluessel die GANZE
+ * Ergebniszeile.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. Das `ENUM` behaelt `ftp` — ein
+ * bestehendes Ziel bleibt lesbar, sichtbar und umstellbar. Der Rueckbau der
+ * Spalte gehoert zum ENUM-Aufraeumen (Backlog Nr. 168 / Nr. 46).
  */
-const WEB_VERSION = '20.1.0';
+const WEB_VERSION = '20.2.0';

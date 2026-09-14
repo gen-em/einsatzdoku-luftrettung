@@ -506,11 +506,37 @@ function status_erhebung(): array
             . 'Server, dessen Ausfall der Grund für ein Backup wäre',
             'neutral', 'keines', 'admin_sicherungsziele.php');
     } else {
+        /* ÜBERGANGENE ZIELE SIND EINE EIGENE SCHUBLADE (S10/AP4, E-S10-U-15).
+         *
+         * Ein Ziel mit abgeschafftem Protokoll trägt einen Vermerk in
+         * `letzter_fehler` und hätte damit in `$mitFehler` gestanden: rot,
+         * dauerhaft, und mit dem Text „Übergangen …" in der Zeile
+         * „Letzter Fehler". Das ist die falsche Auskunft — es ist nichts
+         * kaputt, es ist etwas umzustellen. Sortiert wird deshalb am
+         * PROTOKOLL und nicht am Text der Meldung: Das ist die Wahrheit,
+         * der Text ist nur ihre Beschreibung.
+         *
+         * Ton ORANGE und nicht rot (`Design.md` 9.23): „braucht
+         * Aufmerksamkeit", nicht „ist kaputt". Es geht deswegen kein Backup
+         * verloren — die Pakete liegen weiter da. */
+        $umzustellen = array_values(array_filter($aktiv,
+            static fn($z) => !sz_protokoll_erlaubt((string)$z['protokoll'])));
+        $aktiv = array_values(array_filter($aktiv,
+            static fn($z) => sz_protokoll_erlaubt((string)$z['protokoll'])));
         $nieVersandt = array_values(array_filter($aktiv,
             static fn($z) => empty($z['letzter_lauf'])));
         $mitFehler = array_values(array_filter($aktiv,
             static fn($z) => !empty($z['letzter_fehler'])));
-        if ($mitFehler !== []) {
+        if ($umzustellen !== []) {
+            $ton = 'orange';
+            $pl  = count($umzustellen) . ' umzustellen';
+            $klein = count($umzustellen) . ' aktives Ziel überträgt '
+                   . 'unverschlüsselt und wird nicht mehr beschickt ('
+                   . implode(', ', array_map(
+                        static fn($z) => (string)$z['name'],
+                        array_slice($umzustellen, 0, 2)))
+                   . ') — auf SFTP oder FTPS umstellen';
+        } elseif ($mitFehler !== []) {
             $ton = 'rot'; $pl = count($mitFehler) . ' mit Fehler';
             $klein = 'Letzter Fehler: ' . (string)$mitFehler[0]['letzter_fehler'];
         } elseif ($nieVersandt !== []) {

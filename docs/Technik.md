@@ -119,8 +119,12 @@ Daten erst nach Server-Bestätigung.
 │   │                       Sperre)
 │   ├── backup_lib.php     Backup-Serialisierung (Kern mit oder ohne Spuren)
 │   │                       · trash_lib.php Papierkorb-Logik
-│   ├── adminbackup_lib.php  Konto-Backups: Ablage (ZIP, Fassung 2),
-│   │                       Übersicht, Freigabe, Speichergrenze, Auftrag (A8, S2/AP6)
+│   ├── adminbackup_lib.php  Konto-Backups: Ablage (ZIP, Fassung 3 — jeder
+│   │                       Eintrag gzip UND mit dem Serverschlüssel
+│   │                       versiegelt, die Begleitdatei konto.json daneben
+│   │                       ebenso; der Siegelzweck bindet Konto, PAKETNAME
+│   │                       und Teil, ein umbenanntes Paket ist unlesbar),
+│   │                       Übersicht, Freigabe, Speichergrenze, Auftrag (A8, S2/AP6, S10/AP4)
 │   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
 │   │                       Regeln, Ablage und Backups ohne Konto;
 │   │                       die Konten stehen in admin_users.php, die
@@ -633,7 +637,7 @@ Daten erst nach Server-Bestätigung.
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz, `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
-| `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTP-, FTPS- oder SFTP-Gegenstelle je Zeile. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
+| `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTPS- oder SFTP-Gegenstelle je Zeile. **`ftp` ist seit Web 20.2.0 abgeschafft** (S10/AP4, E-S10-14): nicht mehr wählbar, nicht mehr speicherbar, nicht mehr beschickt. Das `ENUM` behält den Wert, damit ein bestehendes Ziel lesbar, sichtbar und umstellbar bleibt — es trägt dann die rote Plakette *wird übergangen* und wird beim Versand übersprungen statt im Klartext beliefert. Der Rückbau der Spalte gehört zum ENUM-Aufräumen (Backlog Nr. 168/46). `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
 **Zum Wert `user_id IS NULL`.** Er bezeichnet einen **zentralen
@@ -3407,12 +3411,24 @@ Datenbank:
 
 ```
 edsk1:base64( nonce(12) ‖ prüfsumme(16) ‖ chiffre )     AES-256-GCM
-Zusatzdaten: 'edsk1|sicherungsziel:<id>:<feld>'
+Zusatzdaten: 'edsk1|<zweck>'
 ```
 
-Der Zweck in den Zusatzdaten bindet die Chiffre an **dieses** Ziel und
-**dieses** Feld: Ein versiegeltes Passwort von Ziel 3 lässt sich nicht als
-Passwort von Ziel 7 einsetzen, obwohl beide denselben Schlüssel benutzen.
+Der Zweck in den Zusatzdaten bindet die Chiffre an **die eine Stelle**, für
+die sie gedacht ist. Vier Zwecke gibt es:
+
+| Zweck | Wofür | seit |
+|---|---|---|
+| `sicherungsziel:<id>:<feld>` | Passwort und privater Schlüssel eines Backup-Ziels | Web 12.1.0 |
+| `komplett:<datei>` | das Komplett-Backup der Installation | Web 15.3.0 |
+| `adminpaket\|<konto>\|<paket>\|<teil>` | jeder Eintrag eines Konto-Backups, Fassung 3 | Web 20.2.0 |
+| `adminkonto\|<konto>` | die Begleitdatei `konto.json` neben den Paketen | Web 20.2.0 |
+
+Ein versiegeltes Passwort von Ziel 3 lässt sich damit nicht als Passwort von
+Ziel 7 einsetzen, obwohl beide denselben Schlüssel benutzen — und ein Teil aus
+Paket A nicht in Paket B unterschieben, obwohl beide demselben Konto gehören.
+**Der Preis des Paketnamens:** Wer ein Paket umbenennt, macht es unlesbar
+(`docs/Backup-Format.md` 5).
 
 Warum `config.php` und nicht die Datenbank: Der Zweck ist der Fall „jemand hat
 die Datenbank". Für das Komplettbackup (AP8) wird es zwingend — dessen Dump

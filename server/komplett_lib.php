@@ -1192,15 +1192,17 @@ function komp_zustand_setzen(array $z): bool
  * die Ende-zu-Ende-Zusage an genau der Stelle zu unterlaufen, an der es am
  * wenigsten auffiele. E-S2-21 verlangt die Versiegelung ohnehin, sobald die
  * Datei das Haus verlaesst; hier verlaesst sie es spaetestens mit dem
- * Versand. Der Schlüssel wird auf der Seite „Backup-Ziele" nachgetragen.
+ * Versand. Der Schlüssel wird unter Betrieb → Servereinstellungen
+ * nachgetragen (seit Web 20.1.0; bis dahin stand die Karte auf der Seite
+ * „Backup-Ziele", und dieser Satz zeigte dorthin).
  */
 function komp_auftrag_starten(): array
 {
     if (!serverschluessel_da()) {
         return ['ok' => false, 'meldung' => 'Es gibt noch keinen Serverschlüssel. '
             . 'Ohne ihn kann das Komplett-Backup nicht versiegelt werden, und '
-            . 'unversiegelt wird es nicht abgelegt. Der Schlüssel wird auf der '
-            . 'Seite „Backup-Ziele" eingetragen.'];
+            . 'unversiegelt wird es nicht abgelegt. Der Schlüssel wird unter '
+            . 'Betrieb → Servereinstellungen eingetragen.'];
     }
     [$bOk, $bMeldung] = komp_bereit();
     if (!$bOk) { return ['ok' => false, 'meldung' => (string)$bMeldung]; }

@@ -698,7 +698,7 @@ $sag('GEGENPROBE: Nutzlast 8 OHNE Punktlisten meldet nichts dergleichen',
 $weg($uid8);
 
 /* ==========================================================================
- * Teil 8 — Das Adminpaket der Fassung 2: Rundlauf (S2/AP6)
+ * Teil 8 — Das Adminpaket: Rundlauf und Siegel (S2/AP6, Fassung 3 seit S10/AP4)
  *
  * WOFUER. Das Admin-Backup ist seit Web 11.2.0 ein mehrteiliges ZIP und
  * wird in Fenstern gebaut. Zwei Dinge muessen dabei stimmen, und beide gehen
@@ -712,7 +712,7 @@ $weg($uid8);
  *      Ohne die Zahl im Manifest liefert sie still `false`, und ein Paket mit
  *      unlesbaren Angaben ginge als „direkt einspielbar" durch.
  * ====================================================================== */
-echo "\n  Teil 8 — Adminpaket Fassung 2: Rundlauf (S2/AP6)\n";
+echo "\n  Teil 8 — Adminpaket Fassung 3: Rundlauf und Siegel (S2/AP6, S10/AP4)\n";
 require_once $server . '/adminbackup_lib.php';
 
 $quelle = $konto('probe-adminquelle@example.invalid');
@@ -750,13 +750,38 @@ edbak_restore($quelle, [
 [$ok6, $grund6, $info6] = edbak_sicherung_erzeugen($quelle);
 $sag('Das Backup entsteht', $ok6 === true, $ok6 ? (string)$info6['datei'] : (string)$grund6);
 $datei6 = $ok6 ? (string)$info6['datei'] : '';
-$sag('Sie ist ein ZIP (Fassung 2 am Namen erkennbar)',
+$sag('Sie ist ein ZIP (mehrteilig, am Namen erkennbar)',
      $datei6 !== '' && edbak_paket_fassung($datei6) === 2, $datei6 ?: '—');
 
+/* ZWEI ZAHLEN, DIE „FASSUNG" HEISSEN. `edbak_paket_fassung()` liest die
+ * ENDUNG (2 = mehrteiliges ZIP) und bleibt bei 2, auch fuer ein Paket der
+ * Fassung 3 — sie unterscheidet einteiliges JSON von mehrteiligem ZIP. Die
+ * Fassung des FORMATS steht im Manifest und ist seit S10/AP4 die 3. Wer die
+ * beiden verwechselt, bricht sechs Vergleichsstellen in adminbackup_lib.php. */
 $manifest = $datei6 ? edbak_paket_kopf_lesen($kennung, $datei6) : null;
 $sag('Das Manifest laesst sich ohne den Bestand lesen',
-     is_array($manifest) && ($manifest['version'] ?? 0) === 2,
+     is_array($manifest) && (int)($manifest['version'] ?? 0) === 3,
      is_array($manifest) ? 'Fassung ' . $manifest['version'] : 'nicht lesbar');
+/* DIE NUMMER ALLEIN IST KEIN BELEG (S10/AP4). Ein Paket, das „3" ins
+ * Manifest schreibt und die Teile offen ablegt, kaeme hier durch. Gezaehlt
+ * wird das Siegel an JEDEM Eintrag, am rohen Archiv. */
+$zipSiegel = [0, 0];
+if ($datei6 !== '') {
+    $zs = new ZipArchive();
+    if ($zs->open(edbak_ordner($kennung) . '/' . $datei6) === true) {
+        for ($i = 0; $i < $zs->numFiles; $i++) {
+            $zipSiegel[0]++;
+            if (sk_versiegelt((string)$zs->getFromIndex($i, 8))) { $zipSiegel[1]++; }
+        }
+        $zs->close();
+    }
+}
+$sag('Jeder Eintrag im ZIP traegt das Siegel edsk1:',
+     $zipSiegel[0] > 0 && $zipSiegel[1] === $zipSiegel[0],
+     $zipSiegel[1] . ' von ' . $zipSiegel[0] . ' Eintraegen');
+$sag('Und die Begleitdatei konto.json daneben ebenso',
+     sk_versiegelt((string)@file_get_contents(edbak_ordner($kennung) . '/konto.json')),
+     'edsk1: im ganzen Ablageordner');
 $sag('Es nennt Eintraege, Spuren und Punkte',
      is_array($manifest) && (int)$manifest['eintraege'] === 3
        && (int)$manifest['spuren'] === 2 && (int)$manifest['punkte'] === 5,
@@ -806,20 +831,76 @@ $sag('WIEDERAUFNAHME: ein zweiter Lauf legt nichts an und ueberschreibt nichts',
         $st8['missions'] ?? 0, $st8['rests'] ?? 0,
         $st8['spuren']['uebersprungen'] ?? 0) : '—');
 
-/* Ein fehlendes Teil faellt auf, BEVOR etwas geschrieben wird. */
+/* Ein fehlendes Teil faellt auf, BEVOR etwas geschrieben wird.
+ *
+ * AM PAKET SELBST, NICHT AN EINER KOPIE (S10/AP4). Hier wurde bis dahin
+ * unter einem anderen Namen kopiert und aus der Kopie ein Teil geloescht.
+ * Seit E-S10-U-11 bindet das Siegel den PAKETNAMEN — die Kopie ist damit
+ * schon deshalb unlesbar, und die Probe maass den Namen statt das fehlende
+ * Teil. Gearbeitet wird jetzt am Original, mit einer Sicherung ausserhalb
+ * der Ablage; der Namensfall steht als eigene Erwartung darunter. */
 $pfad6 = edbak_ordner($kennung) . '/' . $datei6;
-$kaputt = edbak_ordner($kennung) . '/2026-07-08T00-00-00Z_deadbeef.zip';
-copy($pfad6, $kaputt);
-$zz = new ZipArchive(); $zz->open($kaputt);
+$sicher6 = sys_get_temp_dir() . '/whprobe-' . bin2hex(random_bytes(4)) . '.zip';
+copy($pfad6, $sicher6);
+$zz = new ZipArchive(); $zz->open($pfad6);
 $zz->deleteName('spuren/0001.json');
 $zz->close();
 $ziel9 = $konto('probe-adminfehlt@example.invalid');
-[$ok9, $grund9, ] = edbak_paket_einspielen($kennung, basename($kaputt), $ziel9);
+[$ok9, $grund9, ] = edbak_paket_einspielen($kennung, $datei6, $ziel9);
 $sag('Ein fehlendes Teil wird benannt und nichts geschrieben',
      $ok9 === false && str_contains((string)$grund9, 'Teilen')
        && (int)$pdo->query("SELECT COUNT(*) FROM missions WHERE user_id = $ziel9")
                    ->fetchColumn() === 0,
      substr((string)$grund9, 0, 60));
+copy($sicher6, $pfad6);
+@unlink($sicher6);
+
+/* ---- Was das Siegel der Fassung 3 leisten soll (S10/AP4) ---------------
+ *
+ * Zwei Faelle, und beide gab es vorher nicht. Der erste ist der Preis von
+ * E-S10-U-11 und muss deshalb belegt sein; der zweite ist ihr Zweck (F-7). */
+$umbenannt = '2026-07-08T00-00-00Z_deadbeef.zip';
+copy($pfad6, edbak_ordner($kennung) . '/' . $umbenannt);
+$ziel10 = $konto('probe-adminname@example.invalid');
+[$okU, $grundU, ] = edbak_paket_einspielen($kennung, $umbenannt, $ziel10);
+$sag('Ein UMBENANNTES Paket wird abgewiesen (der Name gehoert zum Siegel)',
+     $okU === false && str_contains((string)$grundU, 'umbenannt')
+       && (int)$pdo->query("SELECT COUNT(*) FROM missions WHERE user_id = $ziel10")
+                   ->fetchColumn() === 0,
+     substr((string)$grundU, 0, 60));
+@unlink(edbak_ordner($kennung) . '/' . $umbenannt);
+
+/* Ein Teil aus einem ANDEREN Paket desselben Kontos — genau die Luecke, die
+ * F-7 benennt: Das Manifest fuehrt nur Namen, keine Pruefsummen je Teil. */
+[$okZ, , $infoZ] = edbak_sicherung_erzeugen($quelle);
+$fremdTeil = null;
+if ($okZ) {
+    $zf = new ZipArchive();
+    if ($zf->open(edbak_ordner($kennung) . '/' . $infoZ['datei']) === true) {
+        $fremdTeil = $zf->getFromName('kopf.json');
+        $zf->close();
+    }
+    @unlink(edbak_ordner($kennung) . '/' . $infoZ['datei']);
+}
+$sicher7 = sys_get_temp_dir() . '/whprobe-' . bin2hex(random_bytes(4)) . '.zip';
+copy($pfad6, $sicher7);
+if (is_string($fremdTeil)) {
+    $zd = new ZipArchive(); $zd->open($pfad6); $zd->deleteName('kopf.json'); $zd->close();
+    $ze = new ZipArchive(); $ze->open($pfad6);
+    $ze->addFromString('kopf.json', $fremdTeil);
+    $ze->setCompressionName('kopf.json', ZipArchive::CM_STORE);
+    $ze->close();
+}
+$ziel11 = $konto('probe-adminmisch@example.invalid');
+[$okM, $grundM, ] = edbak_paket_einspielen($kennung, $datei6, $ziel11);
+$sag('Ein Teil aus einem ANDEREN Paket desselben Kontos wird abgewiesen',
+     is_string($fremdTeil) && $okM === false
+       && str_contains((string)$grundM, 'gehört nicht zu diesem Paket')
+       && (int)$pdo->query("SELECT COUNT(*) FROM missions WHERE user_id = $ziel11")
+                   ->fetchColumn() === 0,
+     substr((string)$grundM, 0, 62));
+copy($sicher7, $pfad6);
+@unlink($sicher7);
 
 /* Baureste blockieren die Ordnerloeschung nicht mehr. */
 @mkdir(edbak_ordner($kennung) . '/' . EDBAK_BAU_PRAEFIX . 'deadbeef');
@@ -1011,21 +1092,40 @@ $sag('Ein knapper Schub sichert wenigstens ein Konto und hoert dann auf',
      $e10['erledigt'] >= 1 && $e10['erledigt'] < $vorher10 && $e10['offen'] > 0,
      $e10['erledigt'] . ' erledigt, ' . $e10['offen'] . ' von ' . $vorher10 . ' offen');
 
-/* WIEDERAUFNAHME: Der naechste Schub faengt NICHT von vorn an. */
+/* WIEDERAUFNAHME: Der naechste Schub faengt NICHT von vorn an.
+ *
+ * DER ZWEITE SCHUB NIMMT GENAU EIN KONTO (S10/AP4, 14.09.2026). Hier stand
+ * `$tick = 2`, und das war an die Installation von damals gebunden: Der
+ * Kommentar oben spricht von „alle 31 Konten" — mit dem Pruefkonten-Bestand
+ * blieb nach zwei mal zwei Konten reichlich offen. Der Referenzbestand hat
+ * VIER Konten; zwei mal zwei raeumt die Warteschlange leer,
+ * `edbak_auftrag_lesen()` gibt dann `null`, und drei Erwartungen meldeten
+ * `cur 2 -> —`. Das sah wie ein Fehler der Anwendung aus und war die
+ * Arithmetik der Probe.
+ *
+ * Mit einem Konto je Schub traegt die Pruefung ab ZWEI offenen Konten. Sind
+ * es weniger, laesst sich Wiederaufnahme nicht messen — dann sagt die Probe
+ * das mit einer Zahl, statt eine Erwartung zu verfehlen. */
 $a11 = edbak_auftrag_lesen();
 $sag('Der Zeiger steht auf dem zuletzt gesicherten Konto',
      is_array($a11) && (int)$a11['cur'] > 0, 'cur=' . ($a11['cur'] ?? '—'));
-$tick = 2;
-$e11 = edbak_auftrag_schub($uhr, 0.2);
-$a12 = edbak_auftrag_lesen();
-$sag('WIEDERAUFNAHME: der zweite Schub nimmt ein ANDERES Konto',
-     is_array($a12) && (int)$a12['cur'] > (int)$a11['cur'],
-     'cur ' . $a11['cur'] . ' -> ' . ($a12['cur'] ?? '—'));
-$sag('...und die Zahl der gesicherten Konten waechst mit',
-     is_array($a12) && (int)$a12['gut'] + (int)$a12['feh']
-       === (int)$a11['gut'] + (int)$a11['feh'] + $e11['erledigt'],
-     'gut+feh ' . ((int)$a11['gut'] + (int)$a11['feh']) . ' -> '
-     . ((int)$a12['gut'] + (int)$a12['feh']));
+$offen11 = is_array($a11) ? edbak_auftrag_offen($a11) : 0;
+if ($offen11 < 2) {
+    $sag('WIEDERAUFNAHME: nicht messbar — zu wenige Konten offen', true,
+         $offen11 . ' offen, gebraucht werden 2 (Bestand zu klein, kein Befund)');
+} else {
+    $tick = 1;
+    $e11 = edbak_auftrag_schub($uhr, 0.2);
+    $a12 = edbak_auftrag_lesen();
+    $sag('WIEDERAUFNAHME: der zweite Schub nimmt ein ANDERES Konto',
+         is_array($a12) && (int)$a12['cur'] > (int)$a11['cur'],
+         'cur ' . $a11['cur'] . ' -> ' . ($a12['cur'] ?? '—'));
+    $sag('...und die Zahl der gesicherten Konten waechst mit',
+         is_array($a12) && (int)$a12['gut'] + (int)$a12['feh']
+           === (int)$a11['gut'] + (int)$a11['feh'] + $e11['erledigt'],
+         'gut+feh ' . ((int)$a11['gut'] + (int)$a11['feh']) . ' -> '
+         . ((int)$a12['gut'] + (int)$a12['feh']));
+}
 
 /* Eine zu lange Marke wird abgewiesen und benannt, nicht still gekuerzt. */
 $sag('Eine zu lange Marke wird abgewiesen, nicht still gekuerzt',
@@ -1039,9 +1139,18 @@ require_once $server . '/jobs_lib.php';
 $sag('Der Job „adminbackup" steht im Katalog',
      array_key_exists('adminbackup', jobs_katalog()),
      implode(', ', array_keys(jobs_katalog())));
+/* DEN STAND HIER FRISCH LESEN, nicht aus `$a12` weiterreichen: Ob ein
+ * zweiter Schub gelaufen ist, haengt am Bestand (siehe oben), und eine
+ * Erwartung, die an einer Variablen aus einem bedingten Zweig haengt,
+ * scheitert dann an der Probe statt an der Anwendung. Ohne Auftrag ist der
+ * Rueckstand `null`, und das ist die richtige Antwort — nicht 0. */
+$aR = edbak_auftrag_lesen();
 $sag('Sein Rueckstand ist die Zahl der offenen Konten',
-     is_array($a12) && job_adminbackup_rueckstand($pdo, []) === edbak_auftrag_offen($a12),
-     (string)(job_adminbackup_rueckstand($pdo, []) ?? '—'));
+     job_adminbackup_rueckstand($pdo, [])
+       === (is_array($aR) ? edbak_auftrag_offen($aR) : null),
+     is_array($aR)
+       ? (string)job_adminbackup_rueckstand($pdo, [])
+       : 'kein Auftrag offen -> null (richtig)');
 $sag('Der Rahmen misst jetzt auch den Speicher, nicht nur die Zeit',
      function_exists('jobs_speicher_knapp') && !jobs_speicher_knapp(),
      'Deckel ' . JOB_SPEICHER_DECKEL_MB . ' MB, belegt '

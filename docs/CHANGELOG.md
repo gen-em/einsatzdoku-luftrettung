@@ -14,6 +14,119 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.2.0] — 2026-09-14
+
+Schritt 9b (**S10 — Sicherheit**, R78), viertes Arbeitspaket: die Adminpakete
+werden versiegelt, `ftp` wird abgeschafft.
+
+### Web — Fassung 3 des Adminpakets
+
+**Ein Adminpaket lag bis hierher als blankes JSON im ZIP.** Name, E-Mail,
+Diagnosen — lesbar mit jedem Packprogramm. Das wäre für sich schon genug;
+entscheidend ist aber, **wo diese Datei überall liegt**: auf dem Server, in
+jeder Sicherung, und per Versand auf einer fremden Gegenstelle. Drei Orte, an
+denen niemand mehr hinsieht.
+
+Seit Fassung 3 ist **jeder Teil des Pakets gzip-gepackt und mit dem
+Serverschlüssel versiegelt** (`edsk1:`), das Manifest eingeschlossen — und die
+Begleitdatei `konto.json` daneben ebenso. Die gehört dazu, weil sie E-Mail und
+Anzeigenamen trägt: Ohne sie hätte die Zusage „kein lesbarer Name, keine
+E-Mail" nur für das ZIP gegolten und nicht für den Ordner, in dem es liegt.
+
+**Das ist keine Ende-zu-Ende-Verschlüsselung, und es soll keine sein.** Der
+Server kann das Siegel öffnen — er hält den Schlüssel. Verhindert wird der
+Zugriff *ohne* den Server: ein kopiertes Backup, ein mitgelesener Versand, ein
+Blick in den Ablageordner. `pat_blob` bleibt davon unberührt Ende-zu-Ende
+verschlüsselt; das Siegel liegt darüber, nicht darunter.
+
+**Der Siegelzweck bindet den Paketnamen.** Ohne ihn ließe sich ein Teil aus
+einem *älteren Paket desselben Kontos* unterschieben — das Manifest führt nur
+Namen, keine Prüfsummen je Teil. Das hat einen Preis, und er steht ab jetzt
+geschrieben: **Wer ein Paket umbenennt, macht es unlesbar.** Der Dateiname war
+schon vorher die Identität in der Ablage; neu ist, dass es jemand aufgeschrieben
+hat.
+
+**gzip vor dem Siegel — die Zahl sagt, warum.** Versiegelte Teile sind
+Zufallsrauschen; das ZIP kann sie nicht mehr packen, und die alte Begründung
+(„hier ist es blankes JSON, der Packlauf lohnt sich") fällt mit dieser Fassung
+weg. Gemessen am Referenzkonto (83 Einsätze, 150 690 Byte Klartext):
+
+| | Paketgröße | gegen Fassung 2 |
+|---|--:|--:|
+| Fassung 2 (JSON, im ZIP gepackt) | 33 281 Byte | — |
+| Siegel **ohne** Vorstufe | 201 390 Byte | **+505 %** |
+| **gzip, dann Siegel** | 45 290 Byte | +36 % |
+
+Die verbleibenden 36 Prozent sind der base64-Rahmen von `edsk1:`, nicht der
+Packlauf — das Format der Versiegelung kostet ein Drittel, und das ist der
+Preis dafür, dass ein Siegel als Text durch jede Stelle passt, die Text erwartet.
+
+**Ohne Serverschlüssel entsteht kein Paket.** Derselbe Riegel wie beim
+Komplett-Backup: Die Wahl zwischen einem unversiegelten Paket — also dem, was
+diese Stufe abschafft — und einem Abbruch mitten im Bau ist keine.
+
+### Web — `ftp` wird nicht mehr angeboten
+
+**FTP überträgt alles im Klartext, auch das Passwort.** Es stand bisher zur
+Wahl, weil einfacher Webspace oft nichts anderes anbietet. Eine Backup-Datei
+ist aber genau das, was man dabei nicht mitlesen lassen will — und seit
+Fassung 3 steht der Serverschlüssel mit im Paket, das dort hinausginge.
+
+**Drei Stellen, und die mittlere war der Fund.** `sz_pruefen_eingabe()` prüfte
+gegen `SZ_PORTS`, nicht gegen `SZ_PROTOKOLLE`: Wer das Protokoll nur aus dem
+Anzeigekatalog gestrichen hätte, hätte gar nichts abgeschafft — es wäre weiter
+speicherbar gewesen, nur nicht mehr wählbar. Beide Listen führen jetzt
+dieselben Schlüssel, und `sz_protokoll_erlaubt()` ist die eine Frage.
+
+**Der Engpass prüft positiv.** `sz_weg()` hatte genau einen benannten Zweig
+(`sftp`); alles andere landete in `ZielFtp`, wo `$prot === 'ftps'` über TLS
+entscheidet. FTPS war damit geschützt — ein **unbekanntes oder leeres**
+Protokoll aber fiel still auf Klartext-FTP zurück, und dann gingen Nutzername
+und Passwort offen über Port 21. Ein `ENUM`, das je nach `sql_mode` zum
+Leerstring wird, ist im Projekt belegt; geprüft wird deshalb gegen den Katalog
+und nicht auf „ist nicht `ftp`".
+
+**Ein bestehendes Ziel wird übergangen, nicht beschickt** — und es scheitert
+auch nicht. Es trägt in der Liste die rote Plakette *wird übergangen*, der
+Versandlauf zählt es getrennt („Übersprungen: 1"), und der Rückstand rechnet
+es heraus. Der Vermerk steht **nicht** in `fehler`: Der Versandjob wirft
+darauf, und er stünde sonst dauerhaft rot — womit das Signal für echte
+Störungen verbrannt wäre. Im Cron-Protokoll heißt die Zahl `übergangen` und
+nicht `übersprungen`, denn dieses Wort bedeutet dort schon etwas anderes
+(„dieser Job lief wegen einer Pause gar nicht") und hätte die Ergebniszeile
+nicht ergänzt, sondern ersetzt.
+
+**Ein Altziel lässt sich nicht durch bloßes Speichern umstellen.** Fällt das
+Protokoll aus dem Katalog, wählt der Browser die erste Option — `sftp` —,
+während Port 21 und die versiegelten Zugangsdaten stehenbleiben. Ein Druck auf
+„Speichern" ergäbe ein Ziel, das plausibel aussieht und beim nächsten Versand
+scheitert; die rote Plakette wäre dabei verschwunden. Das Formular sagt
+deshalb, was zu tun ist, und beginnt mit einer leeren Protokollwahl: Protokoll,
+Port **und** Zugangsdaten sind neu zu setzen. Geraten wird nichts.
+
+**Keine Schemaänderung, keine Migration.** Das `ENUM` behält `ftp` — ein
+bestehendes Ziel bleibt lesbar, sichtbar und umstellbar. Der Rückbau der Spalte
+gehört zum ENUM-Aufräumen (Backlog Nr. 168 / Nr. 46).
+
+### Behoben — an den Prüfmitteln
+
+- **Die Komplettprobe stürzte ab und meldete es nicht.** Ihr Teil 8 stellt
+  einen Abbruch mitten im Dump nach; am Referenzbestand läuft der Dump aber in
+  *einem* Zug durch, es gibt dann keinen Bauordner, und `gzopen()` auf einen
+  Pfad, den es nicht gibt, endete in einem TypeError — Rückgabewert 255, die
+  Teile 9 und 10 liefen nie. Die in der Anleitung stehende Zahl stammte aus
+  einer Zeit mit größerem Bestand. Jetzt wird nachgesehen und gesagt, was ist.
+- **Die Wiederherstellungsprobe scheiterte an ihrer eigenen Arithmetik.** Ihr
+  Teil 10 gab je Schub zwei Konten frei; der Referenzbestand hat vier, also
+  räumten zwei Schübe die Warteschlange leer, und drei Erwartungen meldeten
+  `cur 2 -> —`. Jetzt nimmt der zweite Schub ein Konto, und bei zu kleinem
+  Bestand sagt die Probe das mit einer Zahl.
+- **Ein Negativfall der Versandprobe wäre stumpf geworden**, ohne rot zu
+  werden: Er legte ein zweites Ziel mit demselben Namen *und* dem Protokoll
+  `ftp` an und erwartete die Abweisung — die kam vom Namen. Nach dieser Stufe
+  wäre er weiter grün gewesen und hätte etwas anderes gemessen, als draufsteht.
+  Jetzt zwei Fälle, jeder mit genau einem Grund.
+
 ## [Web 20.1.0] — 2026-09-14
 
 Schritt 9b (**S10 — Sicherheit**, R78), drittes Arbeitspaket: der Anteil

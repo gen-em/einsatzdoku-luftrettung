@@ -3943,7 +3943,7 @@ wurde, ist eine Vermutung.
 
 Seit Web 12.1.0 kann die BetreiberIn unter **Betrieb →
 Backup-Ziele** eine Gegenstelle eintragen, auf die die Konto-Backups
-geschoben werden — per FTP, FTPS oder SFTP. Der Grund ist schlicht: Ein
+geschoben werden — per **SFTP oder FTPS**. Der Grund ist schlicht: Ein
 Paket, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
 wenn dieser Server ausfällt.
 
@@ -3952,13 +3952,21 @@ Zielklinik und steht unter Stammdaten.
 
 Was dabei zu wissen ist:
 
-- **SFTP ist die Empfehlung.** Es ist das einzige der drei Protokolle, das den
-  Server beim nächsten Mal wiedererkennt. Meldet sich dort plötzlich ein
+- **SFTP ist die Empfehlung.** Es ist das einzige der beiden Protokolle, das
+  den Server beim nächsten Mal wiedererkennt. Meldet sich dort plötzlich ein
   anderer, bricht die Verbindung ab, bevor ein Passwort hinausgeht.
 - **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht.** Das
   schützt gegen Mitlesen, nicht gegen einen untergeschobenen Server.
-- **FTP überträgt alles im Klartext**, auch das Passwort. Es steht zur
+- **FTP wird seit Web 20.2.0 nicht mehr angeboten.** Es überträgt alles im
+  Klartext, auch das Passwort — und seit derselben Fassung tragen die Pakete
+  Geheimnisse, die dort nicht mitlesbar sein dürfen. Es stand vorher zur
   Auswahl, weil einfacher Webspace oft nichts anderes anbietet.
+  **Steht noch ein Ziel darauf**, passiert Folgendes: Es trägt in der Liste
+  die rote Plakette *wird übergangen*, es wird beim Versand **übersprungen**
+  statt im Klartext beliefert, und der Versandlauf sagt es („Übersprungen: 1").
+  Zum Umstellen sind **drei** Angaben neu zu setzen: Protokoll, Port und die
+  Zugangsdaten — die alten gelten nicht notwendig auch für den
+  verschlüsselten Weg, und geraten wird nichts.
 - Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
   dazu steht in einer Datei, die nicht mitgesichert wird — wer den
   Datenbankdump hat, hat die Passwörter nicht.

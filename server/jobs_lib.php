@@ -388,12 +388,17 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
     $zustand = json_decode((string)($z->fetchColumn() ?: '{}'), true);
     if (!is_array($zustand)) { $zustand = []; }
 
-    $erledigt = 0; $fertig = false; $fehler = null;
+    $erledigt = 0; $fertig = false; $fehler = null; $uebergangen = 0;
     try {
         $e = ($job['lauf'])($pdo, $zustand, $zeitLinks);
         $zustand  = $e['zustand'] ?? [];
         $erledigt = (int)($e['erledigt'] ?? 0);
         $fertig   = (bool)($e['fertig'] ?? false);
+        /* DER BERICHT WIRD MIT FESTEN SCHLÜSSELN NEU GEBAUT, und was hier
+         * nicht steht, fällt heraus. `uebergangen` (S10/AP4) wäre sonst im
+         * Versandjob entstanden und auf dem Weg zur Ausgabe verschwunden —
+         * eine Zahl, die es gibt und die niemand sieht. */
+        $uebergangen = (int)($e['uebergangen'] ?? 0);
     } catch (Throwable $ex) {
         $fehler = get_class($ex) . ': ' . $ex->getMessage();
         // Still gegenueber der Anfrage — die Wartung darf keine Seite
@@ -426,7 +431,8 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
                    $erledigt, $name]);
 
     return ['erledigt' => $erledigt, 'fertig' => $fertig,
-            'rueckstand' => $rueckstand, 'fehler' => $fehler];
+            'rueckstand' => $rueckstand, 'fehler' => $fehler,
+            'uebergangen' => $uebergangen];
 }
 
 /** Zustand aller Jobs — fuer die Wartungsseite. */
@@ -1167,7 +1173,17 @@ function job_versand(PDO $pdo, array $zustand, callable $zeitLinks): array
     if ($e['fehler'] !== []) {
         throw new RuntimeException(implode(' | ', array_slice($e['fehler'], 0, 3)));
     }
-    return ['zustand' => [], 'erledigt' => $e['gesendet'], 'fertig' => $e['fertig']];
+    /* „uebergangen" UND NICHT „uebersprungen" (S10/AP4, E-S10-U-09).
+     *
+     * Der Name `uebersprungen` ist auf DIESER Ebene bereits belegt, und zwar
+     * schärfer als es aussieht: `jobs_lauf()` setzt ihn, wenn ein Job wegen
+     * einer Pause gar nicht gelaufen ist, und `jobs.php` prüft ihn mit
+     * `isset()` und überspringt dann die GANZE Ergebniszeile (`continue`).
+     * Ein gleichnamiger Schlüssel hätte das Ergebnis des Versandjobs also
+     * nicht ergänzt, sondern ersetzt: „versand übersprungen (1)" statt
+     * „versand fertig · erledigt 3 · 1 übergangen". */
+    return ['zustand' => [], 'erledigt' => $e['gesendet'], 'fertig' => $e['fertig'],
+            'uebergangen' => (int)($e['uebersprungen'] ?? 0)];
 }
 
 /** Wie viele Dateien warten noch? Eine Schätzung — siehe sz_versand_rueckstand(). */
