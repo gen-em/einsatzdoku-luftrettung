@@ -468,6 +468,12 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     > — und im Ernstfall verlässt sich jemand darauf. Ein Datum, zu dem er
     > verschwindet, ist ehrlicher als ein „bleibt erstmal".
 
+    **Gehört zu Nr. 187** (14.09.2026). Dort geht es um dieselbe Sache von der
+    anderen Seite: Ab 1.0 gibt es nur noch neue Konten, also auch keinen
+    Bestand mehr, der still angehoben werden müsste. Beides ist **eine**
+    Aufräumung und gehört in ein Paket — wer nur das Backup-Altformat streicht
+    und die Anhebungswege stehen lässt, hat die halbe Lesetoleranz behalten.
+
     Vorher zu klären: Was geschieht mit einer alten Datei nach dem Stichtag?
     Vorschlag: Die Meldung nennt die letzte Fassung, die sie noch einspielen
     konnte — so wie es `version_alt` heute für Nutzlasten unter 6 tut.
@@ -1504,6 +1510,55 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Zusagen-Prüfungen bleiben bei 0 Befunden **und** finden eine testweise
     eingeschleuste `confirm(`-Stelle im bisher verschluckten Bereich.
     Zuordnung: **Backlog-Runde**.
+
+187. **Alle „Anhebungs"-Wege werden mit NaDoku 1.0 abgeschafft.**
+    *Aufgenommen 14.09.2026 (S10/AP3) auf Anweisung des Auftraggebers.* Ab 1.0
+    gibt es **nur noch neue Konten** — also keinen Altbestand mehr, der still
+    von einer Fassung in die nächste gehoben werden müsste. Damit fällt der
+    Zweck jeder Anhebung weg, und was bleibt, ist Code, den niemand mehr
+    ausführt und trotzdem pflegen muss.
+
+    **Was eine „Anhebung" hier heißt:** ein Weg, der bestehende Daten beim
+    nächsten Anmelden oder Anzeigen **still** auf die aktuelle Fassung bringt,
+    ohne dass jemand etwas eingibt. Es gibt davon heute drei, und sie hängen
+    alle an `assets/unlock.js`:
+
+    | Weg | Was er hebt | Wo |
+    |---|---|---|
+    | **Rundenzahl** (M2-01) | `kdf_iter` eines Kontos auf `KDF_ITER_ZIEL` | `unlock.js` (`rundenAnheben`) → `api/kdf_upgrade.php` |
+    | **Schlüsselhülle** (S10, E-S10-07) | `edk1:` → `edka1:<kennung>:` | `unlock.js` (`huelleUmstellen`) → derselbe Endpunkt |
+    | **Einsatz-Notizen** (S9/AP7, E-S9-01) | Klartext-Notizen in den `pat_blob` | `unlock.js` → `api/pat_anheben.php` |
+
+    **Zu entfernen sind dann:** `server/api/kdf_upgrade.php` und
+    `server/api/pat_anheben.php` samt ihren Aufrufern in `assets/unlock.js`
+    (`loeseVormerkung()` behält nur noch das Bilden des Datenschlüssels),
+    `KDF_ITER_LISTE` in `server/db.php` (es bliebe **eine** Rundenzahl, und
+    damit fällt auch das Vormerkfach der Anmeldung weg, das es nur gibt, weil
+    `login.php` die Rundenzahl nicht kennt), die Statuszeile
+    „Schlüsselableitung" in `status_lib.php`, die Lesetoleranz für `edk1:`
+    in `serverkrypto_lib.php`/`validate_lib.php` (`WRAP_PRAEFIX_RE`) — und die
+    Prüfmittel, die genau diese Wege messen: `tools/anteilprobe/endpunkt.py`
+    (Teil E), `umstellungslauf.mjs` (Teil F) und `huelle_stellen.py`.
+
+    **Zwei Dinge, die dabei NICHT mitgehen dürfen.** Erstens die
+    *Formatkennung* selbst (`edk1:`, `edka1:`, M2-10): Sie ist kein
+    Altbestand, sondern das Merkmal, an dem eine künftige Fassung alt von neu
+    unterscheidet — ohne sie müsste man wieder raten. Zweitens die
+    **Rotation** des Server-Anteils (S10, E-S10-11): Sie sieht aus wie eine
+    Anhebung und ist keine — sie läuft nicht einmalig gegen einen Altbestand,
+    sondern jedes Mal, wenn eine Betreiberin den Anteil wechselt, und das
+    bleibt auch nach 1.0 möglich.
+
+    **Reihenfolge:** erst wenn feststeht, dass keine Installation mit
+    Altbestand mehr herüberkommt — dieselbe Bedingung wie bei **Nr. 46**
+    (Altformat des Backups). Beide gehören in dasselbe Paket; wer nur eines
+    von beiden macht, lässt die halbe Lesetoleranz stehen.
+
+    *Abnahme:* `grep -rn "anheben\|kdf_upgrade\|pat_anheben" server/` ist
+    **leer**; ein frisch angelegtes Konto meldet sich an und liest seine Daten
+    (Klickprobe, Kreisläufe unverändert grün); die Wortliste und die
+    Vollständigkeit melden keine ungenutzten Ausnahmen. Zuordnung: **vor 1.0**,
+    zusammen mit Nr. 46.
 
 ## Erledigt
 

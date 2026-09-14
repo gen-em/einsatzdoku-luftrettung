@@ -16,8 +16,8 @@ abgehakt ist (R62).
 > | Stand | 14.09.2026 — **AP3 erledigt** (Web 20.1.0), AP4 als Nächstes. |
 > | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines** · AP3: **Betriebslauf** in drei Engines (Oberfläche der fünf Lagen, Blatt im Druck, Rotation, Neuanfang, Reset), dazu alles aus AP1/AP2 erneut (Abschnitt 2) |
 > | Offen | P-01 bis P-14 |
-> | Fragen | keine. **Eine Ansage:** Das Schlüsselblatt bringt das erste `@media print` des Projekts — nach `CLAUDE.md` 5 eine neue Darstellung und damit freigabepflichtig; Begründung in E-S10-U-06. |
-> | Fehlerfunde | **drei in der Anwendung** (F-1 bis F-3, in AP2 behoben), **drei in Bestand und Dokumentation** (F-15 bis F-17, AP3), **zwölf am Prüfstand** (F-S10-U-01, F-11 bis F-14, F-S10-AP3-01 bis -08) |
+> | Fragen | keine. Das erste `@media print` des Projekts (Schlüsselblatt) war nach `CLAUDE.md` 5 freigabepflichtig und ist am **14.09.2026 nach Vorlage der Bilder abgenommen** — ohne weiteres Mockup (E-S10-U-06). |
+> | Fehlerfunde | **drei in der Anwendung** (F-1 bis F-3, in AP2 behoben), **drei in Bestand und Dokumentation** (F-15 bis F-17, AP3), **dreizehn am Prüfstand** (F-S10-U-01, F-11 bis F-14, F-S10-AP3-01 bis -09) |
 > | Prüfumgebung | PHP **8.4.19** (CLI, NTS) · MariaDB **10.11.14** · Python **3.11.15** · Node **22.22.2** · Playwright **1.56.1** mit drei Engines: Chromium **141.0.7390.37**, Firefox **142.0.1**, WebKit **26.0** · lokale Installation über `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto; `admin@gen-em.org` und `demo@gen-em.org` mit den Vorgabekennwörtern) |
 
 ---
@@ -272,7 +272,7 @@ gemessen. Der Bilderlauf fährt die vier berührten Seiten in acht Breiten und
 | AP3 | dasselbe, Abschnitt 8b | Reset über den Wiederherstellungsschlüssel | Inhaltsschlüssel **identisch**, `pat_key_check` unverändert, **1 von 1** Chiffretext geöffnet |
 | AP3 | dasselbe, `finally` | Rückgabe der Prüfinstallation | `config.php` byte-gleich · **5/5** Hüllen · **6/6** Kontofelder |
 | AP3 | Anteilprobe · Endpunktprobe | Regression Serverseite | **69 von 69** · **33 von 33** |
-| AP3 | Klickprobe · Kreisläufe | Regression | **43 von 43** · **9120/0** und **287 687/0** |
+| AP3 | Klickprobe · Kreisläufe | Regression, gefahren **nach** der Reparatur der Prüfinstallation | **43 von 43** · **9120/0** und **287 687/0** |
 | AP3 | Bilderlauf, 4 Seiten × 8 Breiten, **beide Bedienhöhen** | Überlauf / Konsole / Knopfhöhe | je 32 Bilder **0/0/0** |
 | AP3 | Bilderlauf mit Risikoliste (Firefox, WebKit) | dasselbe über 14 Seiten | je 112 Bilder, **0 Überlauf / 0 Knopfhöhe**; Firefox 2–4 abgebrochene Schriftabrufe (F-S10-AP3-07) |
 | AP3 | `kontrast.py` | gerechnete Paare / verfehlt | **22 / 0** |
@@ -421,7 +421,19 @@ kaputtgemacht.** Sie stehen im Konzept, Abschnitt 6, und in
   die Hüllen **aller** Konten; das `finally` legt sie zurück und zählt nach.
   *Was das Konto angeht, siehe Abschnitt 0.*
 
-*Was diese acht verbindet:* **Sechs von ihnen sahen aus wie ein Fehler der
+- **F-S10-AP3-09 — eine Zahl, die den falschen Stand maß.** Klickprobe und
+  Bilderlauf waren zunächst **vor** der Reparatur der Prüfinstallation
+  gelaufen und als AP3-Zahlen gemeldet worden — genau der Fehler, vor dem
+  `CLAUDE.md` 6 warnt („Die Prüfmittel laufen zuletzt"). Beim Nachholen
+  meldete die Klickprobe **37 von 43**: Der Demo-Reset war um 14:01:15 mitten
+  in den Lauf gefallen, und sechs Wege meldeten „Bestand leer?" — die Daten
+  waren vollständig. Sechs Minuten später **43 von 43**. *Behoben:* Die
+  Klickprobe liest `demo_letzter_reset` vor und nach dem Lauf und **warnt**,
+  wenn ein Reset hineinfiel; der Fehlertext nennt jetzt beide Ursachen.
+  **Die im Prüfprotokoll stehenden Zahlen sind die aus den Läufen NACH der
+  Reparatur.**
+
+*Was diese neun verbindet:* **Sieben von ihnen sahen aus wie ein Fehler der
 Anwendung.** Das ist die teuerste Sorte, weil man am falschen Ende sucht —
 und AP3 hat daran mehr Zeit verloren als am Bauen.
 
