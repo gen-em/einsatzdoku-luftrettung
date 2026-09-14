@@ -91,7 +91,34 @@ PROBEN=pseudo.html \
 ```
 
 `PROBEN=…` wählt die Proben aus (Vorgabe: die ersten beiden).
-`CHROMIUM=<pfad>` setzt den Browser.
+`CHROMIUM=<pfad>` setzt den Browser — für Chromium; Firefox und WebKit kommen
+aus `PLAYWRIGHT_BROWSERS_PATH`.
+
+### Drei Motoren, und hier lohnt es sich immer
+
+`--motor chromium|firefox|webkit` (Vorgabe Chromium) fährt denselben Vergleich
+in Gecko und WebKit; die Wahl und die Firefox-Voreinstellung stehen in
+`tools/motor.mjs`. Der Schalter darf vor oder hinter den Stellungsangaben
+stehen, er wird vorher herausgenommen.
+
+**Warum gerade hier immer:** Der Lauf kostet je Motor rund eine Viertelminute
+— gemessen am 14.09.2026: 16 s (Chromium), 18 s (Firefox), 14 s (WebKit) für
+je 45 955 Elementmessungen. Und berechnete Stile sind genau die Frage, bei der
+Motoren auseinandergehen.
+
+**Die Aussage ist aber nicht die Zahl, sondern ihre Übereinstimmung.** Der
+Vergleich misst *differenziell* — alt gegen neu **innerhalb** eines Motors —,
+also kürzen sich Motoreigenheiten heraus. Unterstützt ein Motor eine neue
+Regel nicht, rechnet er „neu" wie „alt" und meldet **weniger** Abweichungen.
+Drei gleiche Zahlen heißen: Die Änderung wirkt überall. Drei verschiedene sind
+der Fund.
+
+```
+for M in chromium firefox webkit; do
+  PROBEN=seiten.html,katalog.html \
+    node stilvergleich.js --motor $M <ausgabeordner> <alt.css> <neu.css> | tail -1
+done
+```
 
 > **Zwei Läufe, und der zweite braucht die umgeschriebenen Stylesheets.** Die
 > Pseudoprobe misst Zustände, die es als Pseudoklasse gibt; `proben.py` hat

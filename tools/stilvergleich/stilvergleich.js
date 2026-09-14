@@ -6,14 +6,22 @@
  * vorkommen. Gemessen wird bei mehreren Fensterbreiten, damit auch die
  * gesammelten Media Queries mitgeprueft werden.
  */
-const { chromium } = require('playwright');
+const PW = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
 const SEP = String.fromCharCode(1);
-const SP  = process.argv[2];          // Ordner mit fixtures/
-const ALT = process.argv[3];
-const NEU = process.argv[4];
+/* `--motor <name>` wird vor den Stellungsangaben herausgenommen, damit SP,
+ * ALT und NEU an ihrer Stelle bleiben, gleich wo der Schalter steht. */
+const ARGV = (() => {
+  const a = process.argv.slice(2);
+  const i = a.indexOf('--motor');
+  if (i >= 0) { a.splice(i, 2); }
+  return a;
+})();
+const SP  = ARGV[0];                  // Ordner mit fixtures/
+const ALT = ARGV[1];
+const NEU = ARGV[2];
 const PROBEN = (process.env.PROBEN || 'seiten.html,katalog.html').split(',');
 /* WIE VIELE ABWEICHENDE ELEMENTE AUSGESCHRIEBEN WERDEN (Vorgabe 8).
  *
@@ -49,11 +57,35 @@ function eigenschaften(css) {
 }
 
 (async () => {
+  /* Motorwahl und Firefox-Voreinstellung liegen in tools/motor.mjs — eine
+   * Stelle fuer alle drei Pruefmittel. Diese Datei ist CommonJS, das Modul
+   * ist ESM; der dynamische Import laeuft deshalb hier drin. */
+  const { motorWahl, starten } = await import(
+    require('url').pathToFileURL(path.join(__dirname, '..', 'motor.mjs')).href);
+  const MOTOR = motorWahl(process.argv);
+
   const cssAlt = fs.readFileSync(ALT, 'utf8');
   const cssNeu = fs.readFileSync(NEU, 'utf8');
   const props = [...new Set([...eigenschaften(cssAlt), ...eigenschaften(cssNeu)])];
 
-  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  /* DREI MOTOREN, EINE ZAHL JE MOTOR (AP3b, Nr. 183).
+   *
+   * Dieser Vergleich misst DIFFERENZIELL — alt gegen neu INNERHALB eines
+   * Motors. Engine-Eigenheiten kuerzen sich darin heraus, und genau deshalb
+   * ist der dreifache Lauf nicht dreimal dieselbe Null: Unterstuetzt ein
+   * Motor eine neue Regel nicht, rechnet er „neu" wie „alt" und meldet
+   * WENIGER Abweichungen. Die Aussage ist also nicht die Zahl, sondern ihre
+   * UEBEREINSTIMMUNG ueber die drei Laeufe. Gemessen am 14.09.2026 an der
+   * einen Regel aus AP3b: 46 150 Elementmessungen und 104 Abweichungen in
+   * allen dreien — 8 Auswahlfelder mal 13 Breiten, und die einzige geaenderte
+   * Eigenschaft ist `contain`. Je Motor 14 bis 18 Sekunden.
+   *
+   * `CHROMIUM=<pfad>` gilt weiter, aber nur fuer Chromium — Firefox und
+   * WebKit nimmt Playwright aus PLAYWRIGHT_BROWSERS_PATH. */
+  const auf = MOTOR === 'chromium'
+    ? { executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' }
+    : {};
+  const browser = await starten(PW, MOTOR, { optionen: auf });
   const seite = await browser.newPage();
   let abweichungen = 0, gemessen = 0;
 
@@ -122,6 +154,6 @@ function eigenschaften(css) {
   await browser.close();
   console.log('');
   console.log(gemessen + ' Elementmessungen, ' + abweichungen + ' Abweichungen, '
-              + props.length + ' Eigenschaften je Element');
+              + props.length + ' Eigenschaften je Element  [' + MOTOR + ']');
   process.exit(abweichungen ? 1 : 0);
 })();

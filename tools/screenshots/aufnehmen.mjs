@@ -67,7 +67,9 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const { motorWahl, starten } = await import(
+  new URL('../motor.mjs', import.meta.url).href);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..');
@@ -83,6 +85,7 @@ const ADMIN  = { email: wert('--admin', 'admin@gen-em.org'), pw: wert('--admin-p
 const SKALA  = flag('--klein') ? 1 : 2;
 const FINGER = flag('--finger');
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
+const MOTOR  = motorWahl(argv);
 
 /* Acht Breiten, je mit einer realistischen Höhe. Die Höhe entscheidet nur
  * darüber, wie viel ohne Scrollen sichtbar ist — aufgenommen wird die ganze
@@ -99,9 +102,57 @@ const BREITEN = [
 ];
 
 const { seiten } = JSON.parse(readFileSync(join(HIER, 'seiten.json'), 'utf-8'));
-const liste = FILTER.length
-  ? seiten.filter(s => FILTER.some(f => s.name.startsWith(f)))
-  : seiten;
+
+/* ---- Die Risikoliste (--risiko, AP3b) -----------------------------------
+ *
+ * WOZU. Der volle Lauf misst 45 Seiten in acht Breiten und braucht in jeder
+ * Engine rund neun Minuten; dreimal gefahren sind das eine knappe halbe
+ * Stunde nach JEDEM Arbeitspaket. Das Meiste davon ist Wiederholung — ein
+ * Layoutfehler in Chromium ist fast immer auch in Gecko und WebKit einer.
+ * Chromium faehrt deshalb weiter den vollen Lauf; Firefox und WebKit fahren
+ * die vom Paket beruehrten Seiten (`--nur`) UND diese Liste.
+ *
+ * WAS DRINSTEHT, UND WARUM GENAU DAS. Jede Seite hier traegt ein
+ * CSS-Merkmal, bei dem die drei Engines auseinandergehen KOENNEN. Wer eine
+ * Zeile streicht, streicht die Abdeckung dieses Merkmals — deshalb steht der
+ * Grund daneben und nicht in einer Anleitung. Und wer ein solches Merkmal neu
+ * einbaut, traegt die Seite hier ein; die Liste ist keine Momentaufnahme aus
+ * AP3b, sondern eine Pflegepflicht (docs/Technik.md, Pruefstand).
+ *
+ * Ein Name, der in seiten.json nicht vorkommt, ist ein ABBRUCH und kein
+ * stilles Weniger: Eine Risikoliste, die sich selbst kuerzt, meldet eine
+ * schmeichelhafte Null. */
+const RISIKO = [
+  { name: '01-anmeldung',                 wegen: '100dvh am Seitengeruest' },
+  { name: '10-tagesuebersicht',           wegen: 'Kopfleiste position:sticky; .tag-raster:has(.geo-gross) ab 1600 px' },
+  { name: '11-tagesuebersicht-schublade', wegen: 'Schublade position:sticky ab 1024 px' },
+  { name: '12-einsatzansicht',            wegen: '.einsatz-neben position:sticky im Raster' },
+  { name: '13-einsatzformular',           wegen: 'Speichern-Leiste position:sticky; label:has(> input)' },
+  { name: '14-zeitraum',                  wegen: '.titelzeile-aktionen:has(.segment-art)' },
+  { name: '15-suche',                     wegen: '.kachel-zeit:has(.kachel-datum)' },
+  { name: '20-diensttag-loeschen',        wegen: 'dialog + ::backdrop, max-height in dvh' },
+  { name: '33a-geraete-rueckfrage',       wegen: 'dialog ueber einer Einstellungsseite' },
+  { name: '35-import-export',             wegen: 'container-type:inline-size und 100cqi (Nr. 182)' },
+];
+
+const liste = (() => {
+  const vorhanden = new Set(seiten.map(s => s.name));
+  let gewaehlt = FILTER.length
+    ? seiten.filter(s => FILTER.some(f => s.name.startsWith(f)))
+    : (flag('--risiko') ? [] : seiten);
+  if (flag('--risiko')) {
+    const fehlend = RISIKO.filter(r => !vorhanden.has(r.name)).map(r => r.name);
+    if (fehlend.length) {
+      console.error('Risikoliste nennt Seiten, die es in seiten.json nicht gibt: '
+        + fehlend.join(', '));
+      process.exit(2);
+    }
+    const schon = new Set(gewaehlt.map(s => s.name));
+    const dazu = seiten.filter(s => RISIKO.some(r => r.name === s.name) && !schon.has(s.name));
+    gewaehlt = gewaehlt.concat(dazu);
+  }
+  return gewaehlt;
+})();
 
 /* WAS NICHT ALS KONSOLENFEHLER ZAEHLT — und warum die Unterscheidung noetig
  * ist: Ein Bericht, der jede rote Zeile meldet, wird nach zwei Laeufen
@@ -162,7 +213,7 @@ const liste = FILTER.length
  * fremden Adresse, die gar nicht abgerufen werden duerfte. Hier stand zuerst,
  * das messe tools/vollstaendigkeit/ — das war FALSCH, als es hier stand:
  * Dessen Gruppe 5 kannte zwei Zusagen, und kein Werkzeug zaehlte "keine fremde
- * Quelle zur Laufzeit" nach. Seit dem 13.09.2026 tut es das (Backlog Nr. 179,
+ * Quelle zur Laufzeit" nach. Seit dem 14.09.2026 tut es das (Backlog Nr. 179,
  * Pruefung `fremde Quelle`) — aber AM QUELLTEXT, nicht zur Laufzeit: Es
  * meldet jede absolute Adresse in eigenem Code gegen eine Ausnahmeliste mit
  * Grund. Was zur Laufzeit dazukommt, sieht weiterhin niemand; eine
@@ -306,7 +357,7 @@ rmSync(AUSGABE, { recursive: true, force: true });
 mkdirSync(join(AUSGABE, 'einzeln'), { recursive: true });
 mkdirSync(join(AUSGABE, 'bogen'), { recursive: true });
 
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR, { finger: FINGER });
 
 /* Kartenkacheln liefert NODE, nicht der Browser (Fund aus O3).
  *
@@ -409,7 +460,10 @@ async function anmelden(rolle) {
    * und aendert nichts (gemessen). Was hilft, ist
    * `Emulation.setTouchEmulationEnabled`; die beiden Medienmerkmale folgen
    * daraus. Es wird deshalb vor JEDER Breite erneut gesendet. */
-  const cdp = await kontext.newCDPSession(seite);
+  /* NUR CHROMIUM HAT CDP. Seit AP3b faehrt der Lauf auch Firefox und WebKit
+   * (Nr. 183); `newCDPSession` wirft dort. Der Aufruf haengt ohnehin am
+   * Fingerlauf — der Zeigerlauf braucht ihn nicht (siehe unten). */
+  const cdp = (FINGER && MOTOR === 'chromium') ? await kontext.newCDPSession(seite) : null;
   const eingabeart = async () => {
     /* NUR IM FINGERLAUF SENDEN. `setTouchEmulationEnabled {enabled:false}`
      * ist NICHT das Gegenteil von `{enabled:true}`: Gemessen an einem
@@ -418,7 +472,7 @@ async function anmelden(rolle) {
      * daraufhin 44 px, wo 36 stehen sollten, also denselben Fehler
      * spiegelverkehrt. Der Zeigerlauf braucht ihn ohnehin nicht: Sein
      * Zustand ist der Grundzustand des Browsers und geht nicht verloren. */
-    if (!FINGER) { return; }
+    if (!FINGER || !cdp) { return; }
     await cdp.send('Emulation.setTouchEmulationEnabled',
       { enabled: true, maxTouchPoints: 5 }).catch(() => {});
   };

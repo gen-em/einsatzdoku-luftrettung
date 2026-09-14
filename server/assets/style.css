@@ -372,7 +372,7 @@
    * Grund — 60vh laesst auf jedem Geraet ein Drittel des Glases fuer die
    * Liste darunter uebrig, 520 px deckelt das auf einem hohen Schreibtisch-
    * bildschirm, wo 60vh sonst 800 px waeren und die Liste aus dem Bild
-   * schoebe. Freigegeben am 13.09.2026. */
+   * schoebe. Freigegeben am 14.09.2026. */
   --karte-gross:min(60vh, 520px);
 
   /* ---- Spurfarben (P3/O3, E-P3-40) --------------------------------------
@@ -1432,6 +1432,39 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  * Eigenschaftsmessungen über sieben Feldarten zeigten genau diese eine
  * Änderung und keine zweite. */
 input[type=file].feld-eingabe{line-height:calc(var(--knopf) - 2*var(--strich))}
+/* DAS AUSWAHLFELD: sein laengster Eintrag schiebt die SEITE, nicht sich selbst
+ * (WebKit; gefunden in AP3b mit dem dreifachen Bilderlauf, Nr. 185).
+ *
+ * Gemessen auf `import.php` bei 360 px, angemeldet als Demo-Konto:
+ *
+ *     chromium  scrollWidth 360 = innerWidth 360
+ *     firefox   scrollWidth 360 = innerWidth 360
+ *     webkit    scrollWidth 366 > innerWidth 360      <-- 6 px Ueberlauf
+ *
+ * Der Verursacher liess sich nicht finden, weil er keiner ist: KEIN Element
+ * der Seite ragt ueber 360 px hinaus — das Auswahlfeld ist 302 px breit und
+ * endet bei 331. Was ueberlaeuft, ist die innere Breite des Feldes: WebKit
+ * rechnet den laengsten EINTRAG in den Ueberlauf des Kastens mit, auch wenn
+ * der Kasten ihn abschneidet. Nachgewiesen durch Kuerzen: Alle
+ * Eintragstexte auf „x" gesetzt, und scrollWidth fiel von 366 auf 360;
+ * zurueckgesetzt, und es waren wieder 366. Der laengste Eintrag hat 53
+ * Zeichen („Bergwacht Hochkreuth · Luftrettungsstation Hochkreuth"), die
+ * drei anderen Auswahlfelder derselben Seite haben 17, 17 und 30 — sie
+ * laufen nicht ueber. Ab 390 px verschwindet der Ueberlauf.
+ *
+ * `overflow:clip` am Feld hilft NICHT (gemessen: 366), `max-width:100%`
+ * ebenso wenig, `appearance:none` nur zur Haelfte (361). Was hilft, ist
+ * Malbegrenzung: `contain:paint` nimmt den Eintragstext aus dem Ueberlauf
+ * der Seite. Was sie KOSTET, ist nachgemessen und nicht geschaetzt — der
+ * fokussierte Ausschnitt (318 x 60 px) vor und nach der Regel: in Firefox
+ * bitgleich, in Chromium und WebKit **ein** Pixel Unterschied bei einer
+ * Abweichung von 6 von 255, an der Rundung des Fokusrings. Der Fokusring
+ * selbst bleibt vollstaendig stehen; er gehoert dem Feld und nicht seinem
+ * Inhalt, und Malbegrenzung schneidet nur Inhalt.
+ *
+ * Nur `select`: Ein Textfeld hat keinen Inhalt, der breiter waere als sein
+ * Kasten. */
+select.feld-eingabe{contain:paint}
 .feld-klein{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
 .feld-reihe{display:flex;flex-wrap:wrap;gap:var(--abstand-3)}
 .feld-reihe > .feld{flex:1 1 12rem;min-width:0}

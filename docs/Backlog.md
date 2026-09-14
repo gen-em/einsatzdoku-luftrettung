@@ -1460,6 +1460,84 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     (P6, R69) — die Entscheidung gehört in den Rahmenplan.
 
 
+184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
+    *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
+    benutzen wollte.* `ohne_php_js_kommentare()` in
+    `tools/vollstaendigkeit/pruefen.py` (Backlog-Runde 3, Nr. 47/58) geht
+    zeichenweise durch die Datei und merkt sich, ob es gerade in einer
+    Zeichenkette steht. In einer **PHP-Datei mit HTML** trifft es dabei auf
+    Anführungszeichen im Fließtext, die kein String sind — und ein einzelnes
+    ungepaartes `"` schickt es in den Zeichenketten-Modus, aus dem es erst
+    beim nächsten herauskommt.
+    **Gemessen** an `server/einsatz_form.php`: ab Zeile 1547 verschluckt es
+    **rund 800 Zeilen am Stück**; der Kommentar in Zeile 1613 wird nicht mehr
+    erkannt. Von 2350 Zeilen werden 853 geleert — der Rest bleibt stehen, ohne
+    dass irgendetwas meldet.
+    **Die Folge sind falsche NEGATIVE, und die sind teurer als falsche
+    positive:** Die drei Zusagen-Prüfungen (`native Dialoge`, `Seite ohne
+    Gerüst`, `fremde Quelle`) suchen ihre Muster in genau diesem Text. Was im
+    verschluckten Bereich steht, wird nicht gefunden — und die Gruppe meldet
+    trotzdem **0**. Genau die Sorte grüner Zahl, gegen die `CLAUDE.md` 6
+    warnt.
+    *Warum AP2 ihn nicht benutzt hat:* Mit Ausblenden fiele die Symbolzahl von
+    252 auf 108. Eine kleinere Zahl, die durch Wegsehen entsteht, ist
+    schlechter als eine große, die alles zeigt — deshalb zählt die
+    Symbolprüfung weiterhin den ganzen Quelltext.
+    **Weg:** Für `.php`-Dateien nur **innerhalb** der Bereiche abtasten, die
+    wirklich Code sind — `<?php … ?>`, `<?= … ?>` und `<script> … </script>`;
+    alles dazwischen ist HTML, dort gibt es keine Zeichenketten und keine
+    `//`-Kommentare. *Abnahme:* An `einsatz_form.php` werden die Kommentare ab
+    Zeile 1547 wieder erkannt (geleerte Zeilen deutlich über 853); die drei
+    Zusagen-Prüfungen bleiben bei 0 Befunden **und** finden eine testweise
+    eingeschleuste `confirm(`-Stelle im bisher verschluckten Bereich.
+    Zuordnung: **Backlog-Runde**.
+
+## Erledigt
+
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
+
+185. **Ein Auswahlfeld schob die Importseite in WebKit um 6 px zur Seite.**
+    *Gefunden und behoben am 14.09.2026 in AP3b der Mockup-Runde, beim ersten
+    dreifachen Bilderlauf.* `import.php` bei 360 px, angemeldet als Demo-Konto:
+    `scrollWidth` 366 gegen `innerWidth` 360 — **nur in WebKit**, Chromium und
+    Firefox meldeten 360. Der Bericht nannte keinen Verursacher, und das war
+    richtig: **Kein Element** der Seite ragte über 360 px hinaus; das
+    Auswahlfeld ist 302 px breit und endet bei 331.
+    **Was überlief, war sein Inhalt.** WebKit rechnet den längsten EINTRAG
+    eines `<select>` in den Überlauf des Kastens mit, auch wenn der Kasten ihn
+    abschneidet. Nachgewiesen durch Kürzen: alle Eintragstexte auf „x" gesetzt
+    → 360; zurückgesetzt → wieder 366. Der längste Eintrag hat 53 Zeichen, die
+    drei anderen Auswahlfelder derselben Seite 17, 17 und 30 — sie laufen nicht
+    über. Ab 390 px verschwindet es.
+    **Behoben mit `select.feld-eingabe{contain:paint}`.** `overflow:clip` am
+    Feld half nicht (gemessen: 366), `max-width:100%` ebenso wenig,
+    `appearance:none` nur zur Hälfte (361). Die Kosten sind nachgemessen, nicht
+    geschätzt: der fokussierte Ausschnitt (318 × 60 px) vor und nach der Regel
+    ist in Firefox bitgleich, in Chromium und WebKit **ein** Pixel verschieden
+    bei einer Abweichung von 6 von 255 — die Rundung des Fokusrings. Der
+    Fokusring bleibt stehen; Malbegrenzung schneidet Inhalt, nicht Umriss.
+    Web 19.5.1.
+
+186. **Die Klickprobe maß Drehungen mit einem Mittel, das in WebKit nichts sagt.**
+    *Gefunden und behoben am 14.09.2026 in AP3b der Mockup-Runde.* Der Weg
+    `ap3-pfeile-drehen` las die Drehung der Richtungspfeile aus
+    `getScreenCTM()` des inneren `<svg>`. WebKit rechnet die
+    CSS-Transformation eines HTML-Vorfahren dort **nicht** hinein und lieferte
+    für jeden Winkel 0°; die Probe meldete „1 von 12" und sah aus wie ein
+    Anwendungsfehler.
+    **Die Pfeile drehen sich.** Gemessen, fünf Winkel, drei Motoren: die
+    berechnete Matrix stimmt überall, und der Umriss des Symbols wächst bei
+    30° in allen dreien von 16 auf 22 px.
+    **Behoben durch zwei motorunabhängige Messungen** statt einer
+    motorabhängigen: die berechnete Matrix des drehenden Elements (die Drehung
+    gilt) und das Wachsen des Umrisses (sie wird gezeichnet). Gezählt werden
+    dabei nur die **echt schrägen** Winkel — ein um 90° gedrehtes Quadrat ist
+    genauso breit wie ein ungedrehtes; der erste Entwurf zählte sie mit und
+    meldete in allen drei Motoren „8 von 10", was keine Abweichung war,
+    sondern Geometrie.
+
 183. **Der Prüfstand kennt nur eine Engine.**
     *Aufgenommen 14.09.2026 bei der Gegenprobe zu Nr. 182.* Jede Browserprüfung
     des Projekts — Bilderlauf, Klickprobe, Stilvergleich, Kopplungsprobe — läuft
@@ -1506,47 +1584,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Engines muss das kennen, sonst ist „0 Konsolenfehler" nicht mehr zu
     halten; (3) Maße weichen um wenige Pixel ab, ein Vergleich über Engines
     braucht eine Toleranz.
-    **Offen bleibt die zweite Hälfte:** das Mittel, das die drei von sich aus
-    fährt. Bilderlauf, Klickprobe und Stilvergleich benutzen weiterhin
-    Chromium, und die bisherigen Dreifachmessungen sind Handarbeit.
-
-184. **Der Kommentar-Abtaster der Prüfmittel verliert in PHP-Dateien mit HTML die Spur.**
-    *Aufgenommen 14.09.2026 in AP2 der Mockup-Runde, als die Symbolprüfung ihn
-    benutzen wollte.* `ohne_php_js_kommentare()` in
-    `tools/vollstaendigkeit/pruefen.py` (Backlog-Runde 3, Nr. 47/58) geht
-    zeichenweise durch die Datei und merkt sich, ob es gerade in einer
-    Zeichenkette steht. In einer **PHP-Datei mit HTML** trifft es dabei auf
-    Anführungszeichen im Fließtext, die kein String sind — und ein einzelnes
-    ungepaartes `"` schickt es in den Zeichenketten-Modus, aus dem es erst
-    beim nächsten herauskommt.
-    **Gemessen** an `server/einsatz_form.php`: ab Zeile 1547 verschluckt es
-    **rund 800 Zeilen am Stück**; der Kommentar in Zeile 1613 wird nicht mehr
-    erkannt. Von 2350 Zeilen werden 853 geleert — der Rest bleibt stehen, ohne
-    dass irgendetwas meldet.
-    **Die Folge sind falsche NEGATIVE, und die sind teurer als falsche
-    positive:** Die drei Zusagen-Prüfungen (`native Dialoge`, `Seite ohne
-    Gerüst`, `fremde Quelle`) suchen ihre Muster in genau diesem Text. Was im
-    verschluckten Bereich steht, wird nicht gefunden — und die Gruppe meldet
-    trotzdem **0**. Genau die Sorte grüner Zahl, gegen die `CLAUDE.md` 6
-    warnt.
-    *Warum AP2 ihn nicht benutzt hat:* Mit Ausblenden fiele die Symbolzahl von
-    252 auf 108. Eine kleinere Zahl, die durch Wegsehen entsteht, ist
-    schlechter als eine große, die alles zeigt — deshalb zählt die
-    Symbolprüfung weiterhin den ganzen Quelltext.
-    **Weg:** Für `.php`-Dateien nur **innerhalb** der Bereiche abtasten, die
-    wirklich Code sind — `<?php … ?>`, `<?= … ?>` und `<script> … </script>`;
-    alles dazwischen ist HTML, dort gibt es keine Zeichenketten und keine
-    `//`-Kommentare. *Abnahme:* An `einsatz_form.php` werden die Kommentare ab
-    Zeile 1547 wieder erkannt (geleerte Zeilen deutlich über 853); die drei
-    Zusagen-Prüfungen bleiben bei 0 Befunden **und** finden eine testweise
-    eingeschleuste `confirm(`-Stelle im bisher verschluckten Bereich.
-    Zuordnung: **Backlog-Runde**.
-
-## Erledigt
-
-
-Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
-zutreffen.
+    **Die zweite Hälfte ist am 14.09.2026 in AP3b der Mockup-Runde erledigt.**
+    `tools/motor.mjs` hält Motorwahl und Firefox-Voreinstellung an **einer**
+    Stelle; Bilderlauf, Klickprobe und Stilvergleich nehmen sie von dort und
+    kennen `--motor chromium|firefox|webkit`. Wie oft welches Mittel dreifach
+    fährt, steht in `docs/Technik.md` (Prüfstand) und ist nicht für alle
+    gleich: Stilvergleich **immer** (14–18 s je Motor), Bilderlauf
+    **gestaffelt** (Chromium voll, die beiden anderen `--nur` plus `--risiko`;
+    voll wären es 9 Minuten je Motor), Klickprobe **nach Bedarf** (3,5 min je
+    Motor, und nur mit frisch eingespieltem Bestand dazwischen).
+    **Zwei Dinge mussten dafür gemessen und behoben werden**, und beide hätten
+    sonst eine grüne Zahl erzeugt, die nichts wert ist: Headless Firefox
+    meldet ohne Voreinstellung `hover:none` und `pointer:none` und misst damit
+    den ganzen Media-Block der 36-px-Bedienhöhe **nicht** (`ui.*PointerCapabilities`
+    auf 6 = fein + Hover); und `newCDPSession` gibt es nur in Chromium — der
+    Aufruf steht in Bilderlauf und Klickprobe und warf in den anderen beiden
+    sofort. Gebraucht wird er ohnehin nur dort: Gemessen behalten Firefox und
+    WebKit die Eingabeart über den Vollseiten-Screenshot hinweg, nur Chromium
+    verliert sie.
+    **Der Lauf hat am ersten Tag zwei Befunde geliefert** — Nr. 185
+    (WebKit-Überlauf auf `import.php`) und Nr. 186 (die Klickprobe maß
+    Drehungen mit einem Mittel, das in WebKit nichts sagt). Beide sind
+    erledigt; der Punkt hier ist damit ganz abgeschlossen.
 
 45. **Dritte Kartengröße zwischen klein und Vollbild.**
     *Aufgenommen 30.08.2026, zurückgestellt.* Die Karte des Diensttags ist im

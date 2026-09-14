@@ -4229,5 +4229,32 @@ declare(strict_types=1);
  *
  * NEBENSTUFE, KEINE KORREKTUR: Es ist eine neue Funktion an einer Stelle,
  * an der bisher keine war. Uhr und Android unberuehrt, keine Migration.
+ *
+ * 19.5.1 — EIN AUSWAHLFELD SCHOB DIE IMPORTSEITE ZUR SEITE (Nr. 185).
+ *
+ * Gefunden vom ersten dreifachen Bilderlauf (AP3b, Backlog Nr. 183):
+ * `import.php` bei 360 px lief NUR IN WEBKIT um 6 px ueber — scrollWidth 366
+ * gegen innerWidth 360, waehrend Chromium und Firefox 360 meldeten.
+ *
+ * DER BERICHT NANNTE KEINEN VERURSACHER, UND DAS WAR RICHTIG. Kein Element
+ * der Seite ragte hinaus; das Auswahlfeld ist 302 px breit und endet bei 331.
+ * Uebergelaufen ist sein INHALT: WebKit rechnet den laengsten Eintrag eines
+ * `<select>` in den Ueberlauf des Kastens mit, auch wenn der Kasten ihn
+ * abschneidet. Nachgewiesen durch Kuerzen — alle Eintragstexte auf „x"
+ * gesetzt, und es waren 360; zurueckgesetzt, und es waren wieder 366. Der
+ * laengste Eintrag hat 53 Zeichen; die drei anderen Auswahlfelder derselben
+ * Seite haben 17, 17 und 30 und laufen nicht ueber. Ab 390 px verschwindet es.
+ *
+ * BEHOBEN MIT `select.feld-eingabe{contain:paint}` — der einzigen der vier
+ * versuchten Regeln, die wirkt: `overflow:clip` am Feld half nicht (gemessen
+ * 366), `max-width:100%` ebenso wenig, `appearance:none` nur zur Haelfte
+ * (361). Was die Malbegrenzung kostet, ist nachgemessen: der fokussierte
+ * Ausschnitt (318 x 60 px) vor und nach der Regel ist in Firefox bitgleich,
+ * in Chromium und WebKit EIN Pixel verschieden bei einer Abweichung von 6 von
+ * 255 — die Rundung des Fokusrings. Der Ring selbst bleibt stehen;
+ * Malbegrenzung schneidet Inhalt, nicht Umriss.
+ *
+ * KORREKTURSTUFE: eine Regel, eine Datei, keine neue Funktion. Uhr und
+ * Android unberuehrt, keine Migration.
  */
-const WEB_VERSION = '19.5.0';
+const WEB_VERSION = '19.5.1';

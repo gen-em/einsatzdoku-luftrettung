@@ -23,9 +23,9 @@ nach K9 als Vorlage daneben.*
 > | | |
 > |---|---|
 > | In Arbeit | **AP4** (Nr. 124, Aktionsblatt) — als Nächstes. Backlog-Runde 3 ist am 13.09.2026 gemergt (PR #43, `8f1712c`, Web 19.3.1) und in den Arbeitszweig geholt; sie hat drei der fünf `[offen]`-Klassen gestrichen und bringt mit `zusagen.md` die Mechanik, die AP2 braucht (E-MR-24) |
-> | Erledigt | **AP3** (Nr. 45, Web 19.5.0, 14.09.2026) — ein Knopf zwischen 300 px und Vollbild; bis 1599 px höher, ab 1600 px breit, dieselbe Klasse. In drei Engines × fünf Breiten gemessen, fünfzehnmal dasselbe Bild. · **AP2** (Nr. 42, Web 19.4.2, 14.09.2026) — beide Chips und der Satz der Meldung tragen Symbole; das Treffziel wächst von 17 × 15 px auf 28 × 28 px, in **drei Engines** gemessen (Chromium 141, Firefox 142, WebKit 26 — seit 14.09.2026 im Prüfstand, Nr. 183). · **AP1** (Nr. 41, Web 19.4.0, 13.09.2026) — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen. Gemessen `[offen]` **2 → 0**, „ohne Gegenstück" **52 → 50**, Befunde **330 → 326**. **Dazu Nr. 182** (Web 19.4.1, 14.09.2026, F-MR-14 = Weg B): die Kopfzeile nimmt über eine Container-Abfrage die sichtbare Breite an, **ohne JavaScript**; gemessen bei 7 Breiten, alle vier Teile im Sichtfenster, 0 Überlauf, keine Konsolenfehler |
+> | Erledigt | **AP3b** (Nr. 183, Web 19.5.1, 14.09.2026) — Bilderlauf, Klickprobe und Stilvergleich kennen `--motor`; Motorwahl und Firefox-Voreinstellung an einer Stelle (`tools/motor.mjs`). Der erste dreifache Lauf hat **zwei** Befunde geliefert: Nr. 185 (WebKit-Überlauf auf `import.php`, behoben) und Nr. 186 (die Klickprobe maß Drehungen mit `getScreenCTM()`, das in WebKit nichts sagt; behoben). · **AP3** (Nr. 45, Web 19.5.0, 14.09.2026) — ein Knopf zwischen 300 px und Vollbild; bis 1599 px höher, ab 1600 px breit, dieselbe Klasse. In drei Engines × fünf Breiten gemessen, fünfzehnmal dasselbe Bild. · **AP2** (Nr. 42, Web 19.4.2, 14.09.2026) — beide Chips und der Satz der Meldung tragen Symbole; das Treffziel wächst von 17 × 15 px auf 28 × 28 px, in **drei Engines** gemessen (Chromium 141, Firefox 142, WebKit 26 — seit 14.09.2026 im Prüfstand, Nr. 183). · **AP1** (Nr. 41, Web 19.4.0, 13.09.2026) — `imp-daygroup` hat eine Regel, `imp-warn` ist gestrichen. Gemessen `[offen]` **2 → 0**, „ohne Gegenstück" **52 → 50**, Befunde **330 → 326**. **Dazu Nr. 182** (Web 19.4.1, 14.09.2026, F-MR-14 = Weg B): die Kopfzeile nimmt über eine Container-Abfrage die sichtbare Breite an, **ohne JavaScript**; gemessen bei 7 Breiten, alle vier Teile im Sichtfenster, 0 Überlauf, keine Konsolenfehler |
 > | Haken | **keiner offen.** Fehlerfund 2 ist mit Web 19.4.1 erledigt (Nr. 182). Die Abnahme von AP1 — „am Handy bricht die Kopfzeile in zwei Zeilen" — ist damit **nachträglich erfüllt**: Sie war in 19.4.0 unerfüllbar, weil `flex-wrap` in einer 2653 px breiten Zeile nie greift; seit 19.4.1 ist die Zeile so breit wie das Sichtfenster und bricht |
-> | Stufe | **Web 19.5.0** — 19.4.0 Nebenstufe (AP1), 19.4.1 Korrektur (Nr. 182), 19.4.2 AP2, 19.5.0 AP3. Uhr und Android unberührt |
+> | Stufe | **Web 19.5.1** — 19.4.0 Nebenstufe (AP1), 19.4.1 Korrektur (Nr. 182), 19.4.2 AP2, 19.5.0 AP3, 19.5.1 Korrektur (Nr. 185, aus AP3b). Uhr und Android unberührt |
 
 ---
 
@@ -103,6 +103,11 @@ Ab 1024 px dasselbe Markup als Aufklappmenü — dort ist nichts zu ändern.
 | **E-MR-26** | Nr. 182: Das Mockup dazu (**M-MR-05**) wird **nicht gezeichnet, sondern gemessen** — die drei Wege werden in die laufende Anwendung eingesetzt und darin fotografiert. Grund: Der Befund entstand genau daran, dass M-MR-01 eine Tabelle mit **fünf** Spalten zeigte und die Anwendung **vierzehn** hat. Eine zweite Skizze hätte denselben Fehler wiederholen können. Die Bilder sind deshalb Bildschirmfotos, das Dokument selbst ist mit Chromium über Playwright gerendert | Opus 14.09.2026 |
 | **E-MR-24** | Nr. 42, Prüfmittel: **Die Unicode-Prüfung bekommt eine Ausnahmeliste — sie hat heute keine.** AP2 verweist die `'✕'`-Ausnahme auf `tools/vollstaendigkeit/ausnahmen.md`; diese Datei wird aber ausschließlich von der **Token**-Prüfung gelesen (Eigenschaftsnamen wie `clip-path`), der Eintrag stünde wirkungslos da. Backlog-Runde 3 liefert die passende Mechanik mit: `zusagen.md` (vier Spalten Prüfung · Datei · Muster · Grund) und `zusagen_werten()`, das eine **ungenutzte Ausnahme als Befund** meldet. Die Unicode-Prüfung wird auf diese Mechanik umgestellt, `'✕'` in `einsatz_form.php` dort eingetragen. Damit ist die Zusage „keine Unicode-Zeichen als Symbol" zum ersten Mal **messbar** statt behauptet | Opus 13.09.2026 (Befund), Auftraggeber 13.09.2026 (Freigabe) |
 | **E-MR-25** | Nr. 124: Die Markierung gilt für **alle** Öffner, nicht nur für die beiden Bausteine. Nachgezählt am Code: neben den 6 `ui_aktionen()`- und 9 `ui_zeilenaktionen()`-Aufrufen tragen **vier weitere Bauarten** `data-blatt` — der Pin-Knopf des Ortsfelds (`ui.php`, `…ortsblatt`; erscheint im Einsatzformular und in den Stammdaten) und drei handgeschriebene Sortierblatt-Öffner (`index.php`, `suche.php`, `zeitraum.php`). Die Regel an `[data-blatt][aria-expanded="true"]` erreicht sie von selbst, und das ist gewollt: „Blatt offen" ist dieselbe Aussage, gleich an welchem Knopf. Der Hinweis in `Design.md` 3.1 (Orange = Handlung) wird entsprechend um „und geöffnet" erweitert — siehe AP4 | Opus 13.09.2026 (Nachzählung), Auftraggeber 13.09.2026 |
+| **E-MR-31** | AP3b: Die Motorwahl liegt in **einem** Modul (`tools/motor.mjs`), nicht dreimal in drei Werkzeugen. Grund ist nicht Sparsamkeit, sondern die Firefox-Voreinstellung darin: Stünde sie dreimal da, stünde sie früher oder später an zwei Stellen richtig und an einer falsch — und die falsche meldete eine schmeichelhafte Null | Opus 14.09.2026 |
+| **E-MR-32** | AP3b: **Nicht alle drei Mittel fahren gleich oft dreifach.** Stilvergleich immer (14–18 s je Motor, und berechnete Stile sind genau die motorempfindliche Frage), Bilderlauf gestaffelt (Chromium voll, die anderen `--nur` plus `--risiko`; dreimal voll wären 26 min je Arbeitspaket), Klickprobe nach Bedarf (sie misst Wege, nicht Darstellung). Die Zahlen stehen in `docs/Technik.md` | Opus 14.09.2026 (Messung); Auftraggeber 14.09.2026 („in allen 3 Browsern … oder ist das Quatsch?") |
+| **E-MR-33** | AP3b: **Es wird kein Rauschfilter für Firefox gebaut** — gegen die Annahme vom 14.09.2026. Die `latin-ext`-Abbrüche (`NS_BINDING_ABORTED`) stammten von einem Messskript, das schneller weiterblätterte als die Schriften luden, nicht vom Bilderlauf. Gemessen über fünf Seiten in acht Breiten: **0 Konsolenfehler in allen drei Motoren**. Ein Filter hätte etwas versteckt, das es nicht gibt | Opus 14.09.2026 (Messung) |
+| **E-MR-34** | AP3b: **Nr. 185 wird sofort behoben und nicht vertagt**, obwohl das Paket sonst nur `tools/` und `docs/` anfasst. Grund: Der Befund kommt vom Bilderlauf selbst. Bliebe er stehen, meldete jeder künftige Lauf „Überlauf: 1", und eine Zahl, die man dauerhaft erklären muss, wird bald nicht mehr gelesen. Damit ist AP3b eine Korrekturstufe (Web 19.5.1) | Opus 14.09.2026 |
+| **E-MR-35** | AP3b: **Der Fingerlauf bleibt in allen drei Motoren möglich.** `newCDPSession` gibt es nur in Chromium, und beide Werkzeuge riefen es unbedingt auf. Gebraucht wird es aber nur dort: Gemessen verlieren Firefox und WebKit die Eingabeart am Vollseiten-Screenshot **nicht** — der Fund aus S8/AP7 ist ein Chromium-Fund. Der Aufruf hängt seither an `FINGER && MOTOR === 'chromium'` | Opus 14.09.2026 (Messung) |
 
 ---
 
@@ -260,6 +265,28 @@ bei der Karte des Diensttags.
 Kachelflächen (Bildschirmfoto nach `invalidateSize`). Backlog Nr. 45 nach
 *Erledigt*.
 
+#### AP3b · Nr. 183 — die Prüfmittel fahren drei Engines
+
+*Nachträglich eingeschoben am 14.09.2026, auf Rückfrage des Auftraggebers
+(„Bilderlauf, Klickprobe und Stilvergleich sollen bitte immer in allen 3
+Browsern laufen, geht das? Oder ist das Quatsch?"). Die erste Hälfte von
+Nr. 183 — die Engines beschaffen — war mit AP2 erledigt; hier kommt die
+zweite, das Mittel, das sie benutzt.*
+
+*Was zu tun war:* `tools/motor.mjs` als gemeinsame Stelle für Motorwahl und
+Firefox-Voreinstellung (E-MR-31); `--motor chromium|firefox|webkit` in
+Bilderlauf, Klickprobe und Stilvergleich; `--risiko` im Bilderlauf mit einer
+Liste von zehn Seiten, jede mit ihrem CSS-Merkmal als Grund; die drei
+Anleitungen und `docs/Technik.md` nachziehen — **einschließlich der Sätze,
+die nicht mehr stimmen** (die Klickprobe trug „GRENZEN. Nur Chromium" im
+Kopf).
+
+*Abnahme:* Jedes der drei Mittel läuft in allen drei Motoren und meldet
+dieselbe Zahl — Stilvergleich 45 955 Elementmessungen und dieselbe Zahl
+Abweichungen, Klickprobe 40 von 40, Bilderlauf 0 Überlauf / 0
+Konsolenfehler / 0 falsche Knopfhöhen. Backlog Nr. 183 nach *Erledigt*,
+Zeile aus Rahmenplan Abschnitt 5.
+
 #### AP4 · Nr. 124 — Aktionsblatt (allein baubar)
 
 *Was zu tun ist:* Stylesheet Abschnitt 10: `.blatt{transform:
@@ -403,6 +430,31 @@ vierzehn weicht ab), und der **Spaltenkopf wiederholt sich je Gruppe** —
 lässt man ihn weg, haben alle Gruppen außer der ersten keine
 Spaltenbeschriftung. Empfehlung deshalb **B**.
 
+**Fehlerfund 3 (14.09.2026, erster dreifacher Bilderlauf):** `import.php`
+läuft bei 360 px **nur in WebKit** um 6 px über — und kein Element der Seite
+ragt hinaus. Übergelaufen ist der längste Eintrag eines Auswahlfeldes, den
+WebKit in den Überlauf des Kastens rechnet. Nachgewiesen durch Kürzen (alle
+Eintragstexte auf „x" → 360, zurück → 366). **Anders als Fehlerfund 1 und 2
+ist er sofort behoben worden** (E-MR-34, Web 19.5.1,
+`select.feld-eingabe{contain:paint}`): Der Befund kommt vom Bilderlauf
+selbst, und eine stehende „Überlauf: 1" in jedem künftigen Bericht wäre
+teurer als die eine Regel. Backlog **Nr. 185**, erledigt.
+
+**Fehlerfund 4 (14.09.2026, erste dreifache Klickprobe):** Der Weg
+`ap3-pfeile-drehen` meldete in WebKit „1 von 12" — sah aus wie ein
+Anwendungsfehler und war einer des Prüfmittels. Er las die Drehung aus
+`getScreenCTM()` des inneren `<svg>`, und WebKit rechnet die
+CSS-Transformation eines HTML-Vorfahren dort nicht hinein. Gemessen: Die
+Pfeile drehen sich in allen drei Motoren, der Umriss wächst bei 30° von 16
+auf 22 px. Der Weg misst seither die berechnete Matrix **und** den Umriss.
+Backlog **Nr. 186**, erledigt.
+
+**Ein Prüfmittel, das in drei Motoren läuft, misst auch sich selbst.** Beide
+Funde oben sind in derselben Stunde entstanden, und einer davon war ein
+Fehler der Messung, nicht der Anwendung. Das ist keine Enttäuschung, sondern
+der Regelfall beim ersten Lauf eines neuen Mittels — es gehört nur gesagt,
+damit niemand die Zahl „zwei Befunde" für zwei Anwendungsfehler hält.
+
 | AP | Punkt | Stand | Probleme / wie gelöst |
 |---|---|---|---|
 | — | Freigabe F-MR-1 … F-MR-13 | **erteilt 13.09.2026** (vier Fassungen der Mockups) | |
@@ -410,5 +462,6 @@ Spaltenbeschriftung. Empfehlung deshalb **B**.
 | AP1 | 41 | **erledigt** (Web 19.4.0, 13.09.2026) | **Zwei Abweichungen vom Konzepttext, beide begründet.** (1) Die Kopfzeile verwendet nicht die Klassennamen des Mockups (`.zeile`, `.tag`, `.rest`): `.zeile` ist in dieser Anwendung ein **Baustein** (Design.md 9.2, Listeneintrag) und hätte seine Regel mitgebracht. Sie heißen `.imp-kopfzeile`, `.imp-tag`, `.imp-rest` — dieselbe Familie wie die übrigen sechs `imp-`-Anker. (2) `.plakette` steht auf `white-space:nowrap`; der Konflikttext wächst mit der Zahl der abweichenden Rollen und wäre bei 360 px breiter als das Gerät. In dieser Kopfzeile darf sie umbrechen — eine gescopte Regel, im Stylesheet und in Design.md 9.34 begründet. **Dazu Fehlerfund 2**, siehe unten. |
 | AP2 | 42 | **erledigt** (Web 19.4.2, 14.09.2026) | **Drei Abweichungen vom Konzepttext, alle gemessen begründet.** (1) Kein handgebautes SVG-Markup in `patient.js`: `edSymbol()` liegt auf allen sieben Seiten vor, die patient.js laden — der Vorbehalt im Befund traf nicht zu. (2) Der `✕`-Rückfall wird **gestrichen statt zur Ausnahme** (E-MR-30); damit braucht das Paket gar keine Ausnahme. (3) Die Kommentare bleiben in der Zählung (E-MR-29, Backlog Nr. 184). **Zwei Nebenfunde:** `symbol-klein` ist ein Token und keine Klasse — der Aufruf aus AP1 tat nichts und ist heraus; und die „26 px" Chiphöhe des Mockups waren gezeichnet, gemessen sind es 28,1 px, vorher wie nachher. |
 | AP3 | 45 | **erledigt** (Web 19.5.0, 14.09.2026) | **Zwei Festlegungen, die das Konzept offen ließ.** (1) Die Beschriftung wechselt **nicht** je Breite: „Karte vergrößern/verkleinern" deckt beide Wirkungen, das Symbol daneben sagt welche. Eine Beschriftung je Breite hätte die Schwelle 1600 ein zweites Mal in den Code gebracht — sie steht ausschließlich im Stylesheet. (2) Das Raster fällt über `:has(.geo-gross)` weg statt über eine zweite Klasse am `.tag-raster`: Der Zustand gehört der Karte, und eine zweite Stelle könnte auseinanderlaufen. **Der `localStorage`-Schlüssel** heißt `nadoku.karte-gross` — der erste der Anwendung; Werfen und Leerkommen sind abgefangen. **Nebenbefund beim Prüfen:** Meine erste Kachelmessung („410 px Lücke") war falsch — `.leaflet-tile-pane` hat kein aussagekräftiges Rechteck. Richtig gemessen an den Kacheln selbst: 10 → 15, 0 px unbedeckt. |
+| AP3b | 183 | **erledigt** (Web 19.5.1, 14.09.2026) | **Nicht geplant, sondern aus einer Rückfrage entstanden** („sollen alle drei immer laufen?"). Die Antwort ist gestaffelt (E-MR-32) und mit Zahlen begründet. **Drei Dinge waren zu beheben, bevor überhaupt etwas dreifach lief:** (1) Headless Firefox meldet `hover:none`/`pointer:none` und misst damit den ganzen Media-Block der 36-px-Bedienhöhe nicht — die Klickprobe meldete prompt 44 px, wo 36 stehen; behoben mit `ui.*PointerCapabilities` = 6. (2) `newCDPSession` gibt es nur in Chromium (E-MR-35). (3) Die Klickprobe ist **nicht wiederholbar** ohne frischen Bestand — drei Läufe hintereinander ergaben 40 / 38 / 36 von 40, und keiner der sechs Fehlschläge war ein Motorunterschied; mit `lokal_einrichten.sh` (8 s) davor sind es dreimal 40. **Zwei Befunde:** Nr. 185 und Nr. 186. **Ein Satz zurückgenommen:** E-MR-33. |
 | AP4 | 124 | offen | |
 | AP5 | Abschluss | offen | |

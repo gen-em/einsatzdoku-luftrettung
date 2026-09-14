@@ -41,6 +41,8 @@ sh tools/referenzdatensatz/einspielen/lokal_einrichten.sh  # von Null
 node tools/klickprobe/probe.mjs                          # alle Wege, 1280 px
 node tools/klickprobe/probe.mjs --nur ap1                # nur ein Paket
 node tools/klickprobe/probe.mjs --breiten 390,1280       # mehrere Breiten
+node tools/klickprobe/probe.mjs --motor firefox          # Gecko statt Chromium
+node tools/klickprobe/probe.mjs --motor webkit           # WebKit statt Chromium
 node tools/klickprobe/probe.mjs --finger                 # als Fingergerät
 node tools/klickprobe/probe.mjs --bilder                 # Bild je Weg und Breite
 node tools/klickprobe/probe.mjs --behalten               # Ausgabe stehen lassen
@@ -163,12 +165,51 @@ Unter `tools/klickprobe/ausgabe/` — steht in `.gitignore`.
 | `bericht.json` | dasselbe für Werkzeuge |
 | `bild/<weg>.png` | nur mit `--bilder` |
 
+## Drei Motoren — aber nicht bei jeder Änderung
+
+Seit AP3b der Mockup-Runde fährt die Probe auch Firefox und WebKit
+(`--motor`, Backlog Nr. 183). **Als Dauerregel lohnt sich das nicht**, und der
+Grund ist keine Bequemlichkeit: Sie misst **Wege** — feuert der Handler,
+überlebt der Wert, führt der Knopf auf die richtige Adresse. Das ist
+JS-Semantik und über die Motoren hinweg weitgehend dieselbe. Dreifach fahren,
+wenn die Änderung **Dialoge, Blätter, Übergänge, Fokus, `<details>` oder
+Zeigerereignisse** berührt; sonst genügt Chromium und ein Satz im
+Prüfdokument, warum.
+
+**Zwischen zwei Läufen muss der Referenzbestand neu eingespielt werden.** Die
+Probe legt an, ändert und löscht — Besatzung, Standorte, Ad-hoc-Fahrzeuge —,
+und was der erste Lauf stehen lässt, bringt den zweiten zu Fall. Gemessen am
+14.09.2026, drei volle Läufe hintereinander ohne Neueinspielen:
+
+| Lauf | Motor | Ergebnis |
+|---|---|---|
+| 1 | Chromium | 40 von 40 |
+| 2 | Firefox | 38 von 40 |
+| 3 | WebKit | 36 von 40 |
+
+Keiner der sechs Fehlschläge war ein Motorunterschied; sie lasen sich als
+„3 Rettungsmittel ohne Standort statt 2, 7 insgesamt statt 6". Mit
+`sh tools/referenzdatensatz/einspielen/lokal_einrichten.sh` davor (**8 s**)
+liefern alle drei dieselbe Zahl. Dazu füllt sich die Mengenbremse des
+Demo-Kontos: Drei Läufe hintereinander brauchen mehr Anmeldungen, als ein
+Fenster zulässt, und dann scheitert nicht ein Weg, sondern der ganze Rest des
+Laufs (`DELETE FROM rate_limits` leert sie; `lokal_einrichten.sh` tut es
+ohnehin).
+
+**Was der erste dreifache Lauf gefunden hat:** einen Fehler in der Probe
+selbst, nicht in der Anwendung. `ap3-pfeile-drehen` las die Drehung der
+Richtungspfeile aus `getScreenCTM()` des inneren `<svg>`; WebKit rechnet die
+CSS-Transformation eines HTML-Vorfahren dort nicht hinein und meldete „1 von
+12". Gemessen: Die Pfeile drehen sich in allen drei Motoren, der Umriss wächst
+bei 30° von 16 auf 22 px. Der Weg misst seither die **berechnete Matrix** des
+drehenden Elements und zusätzlich den **Umriss** (Nr. 186).
+
+**WebKit hier ist nicht Safari.** Derselbe Kern, anderer Unterbau. Für „geht
+das auf dem iPhone" ist es ein starkes Indiz, kein Beweis — `mousedown` auf
+iOS bleibt auf der Prüfliste des Auftraggebers.
+
 ## Grenzen
 
-- **Nur Chromium.** WebKit (Safari, iOS) und Gecko stehen in dieser Umgebung
-  nicht zur Verfügung; was nur dort aufﬁele, fällt hier nicht auf. Gerade
-  `mousedown` ist auf iOS eine eigene Geschichte — er bleibt auf der
-  Prüfliste des Auftraggebers.
 - **Ein Zeiger ist kein Finger.** Die Probe fährt eine Maus. Ein Tipp mit
   Handschuhen an einem 390-px-Schirm ist etwas anderes und bleibt am Gerät zu
   prüfen.

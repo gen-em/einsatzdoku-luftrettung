@@ -279,7 +279,7 @@ Daten erst nach Server-Bestätigung.
 │   │       │                favicon.png + favicon-fahrzeug.png (erzeugt aus den
 │   │       │                Logodateien, s. tools/logos/); das Fahrzeug-Logo ist bis
 │   │       │                zur Zulieferung ein PLATZHALTER (gestrichelter Rahmen)
-│   │       └── symbole/    53 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
+│   │       └── symbole/    55 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
 │   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
 │   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und
 │   │                       LIESMICH.md mit der Zuordnung Datei -> Tabler-Name ->
@@ -316,6 +316,13 @@ Daten erst nach Server-Bestätigung.
 │   ├── mockups/           Vorher/Nachher-Bilder aus dem Prüfstand
 │   └── LIESMICH.md        Bauanleitung, Entscheidungen, Prüfstand
 ├── tools/                 Werkzeuge, werden nicht ausgeliefert
+│   ├── motor.mjs          Motorwahl für die drei Browserproben (AP3b,
+│   │                      Backlog Nr. 183): `--motor chromium|firefox|webkit`
+│   │                      und die Firefox-Voreinstellung, ohne die Gecko den
+│   │                      Media-Block der 36-px-Bedienhöhe nicht sieht.
+│   │                      Eine Stelle für Bilderlauf, Klickprobe und
+│   │                      Stilvergleich — dreimal geschrieben wäre sie
+│   │                      zweimal richtig und einmal falsch
 │   ├── abmelde-probe/     zeigt, was der Abmeldeweg im sessionStorage
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
 │   ├── containeraufbau/   zieht in einer Wegwerf-Umgebung nach, was das Abbild
@@ -4496,13 +4503,41 @@ der Arbeitsumgebung freigegeben werden und waren es bis dahin nicht.
 Gemessen am 14.09.2026: **Chromium 141.0.7390.37, Firefox 142.0.1,
 WebKit 26.0**.
 
-**Was die Werkzeuge daraus machen, ist noch offen.** Bilderlauf, Klickprobe
-und Stilvergleich fahren weiterhin Chromium; dreifach gemessen sind bislang
-nur Backlog Nr. 182 und Nr. 42, und zwar von Hand. Wer das Mittel baut, findet
-die drei Fallstricke in `tools/screenshots/LIESMICH.md` (Firefox wartet bei
-`waitUntil:'load'` auf die Kartenkacheln; er meldet abgebrochene
-`latin-ext`-Schriftabrufe als Konsolenfehler; Maße weichen um wenige Pixel
-ab).
+**Seit AP3b der Mockup-Runde fahren die drei Prüfmittel sie selbst**
+(`--motor chromium|firefox|webkit`, Vorgabe Chromium). Motorwahl und die
+nötige Firefox-Voreinstellung stehen **an einer Stelle**, `tools/motor.mjs`;
+Bilderlauf, Klickprobe und Stilvergleich holen sie dort. Wie oft welches
+Mittel dreifach fährt, ist nicht für alle gleich, und der Unterschied ist
+gemessen, nicht geschätzt:
+
+| Mittel | dreifach | Kosten je Motor | warum |
+|---|---|---|---|
+| **Stilvergleich** | **immer** | 14–18 s | Berechnete Stile sind genau die Frage, bei der Motoren auseinandergehen. Die Aussage ist die **Übereinstimmung** der drei Zahlen, nicht die Zahl: Der Vergleich misst alt gegen neu *innerhalb* eines Motors, also meldet ein Motor, der eine neue Regel nicht kann, **weniger** Abweichungen. |
+| **Bilderlauf** | **gestaffelt** | rund 9 min voll | Chromium voll; Firefox und WebKit über die berührten Seiten (`--nur`) plus `--risiko` — zehn Seiten mit motorempfindlichem CSS, die Liste samt Gründen im Kopf von `aufnehmen.mjs`. Dreimal voll wären 26 Minuten nach jedem Arbeitspaket. |
+| **Klickprobe** | **nach Bedarf** | rund 3,5 min | Sie misst Wege, nicht Darstellung — JS-Semantik ist über Motoren hinweg weitgehend dieselbe. Dreifach bei Dialogen, Blättern, Übergängen, Fokus, `<details>`, Zeigerereignissen. **Und nur mit frisch eingespieltem Referenzbestand zwischen den Läufen** (8 s); ohne ihn melden Lauf 2 und 3 falsche Fehlschläge, gemessen 40 / 38 / 36 von 40. |
+
+**Zwei Dinge, die jeder Motorlauf wissen muss**, beide gemessen und beide in
+`tools/motor.mjs` begründet: Headless Firefox meldet ohne Voreinstellung
+„kein Zeiger, kein Hover" und misst damit den ganzen Media-Block der
+36-px-Bedienhöhe nicht (`ui.primaryPointerCapabilities` und
+`ui.allPointerCapabilities` auf `6`); und nur **Chromium** verliert die
+Eingabeart des Fingerlaufs am Vollseiten-Screenshot — Firefox und WebKit
+behalten sie, weshalb die CDP-Krücke dort weder nötig noch möglich ist.
+
+**Der dreifache Lauf hat am ersten Tag zwei Befunde geliefert**, und beide
+wären sonst nicht aufgefallen: `import.php` lief bei 360 px **nur in WebKit**
+um 6 px über, weil WebKit den längsten Eintrag eines Auswahlfeldes in den
+Überlauf des Kastens rechnet (Nr. 185, behoben mit
+`select.feld-eingabe{contain:paint}`); und die Klickprobe maß die Drehung der
+Richtungspfeile mit `getScreenCTM()`, das in WebKit die CSS-Transformation
+eines HTML-Vorfahren nicht enthält — ein Fehler im Prüfmittel, der wie einer
+der Anwendung aussah (Nr. 186).
+
+**Ein Satz von gestern ist zurückgenommen:** Firefox meldet die
+`latin-ext`-Schriftabrufe **nicht** als Konsolenfehler. Die Abbrüche
+(`NS_BINDING_ABORTED`) stammten von einem Messskript, das schneller
+weiterblätterte als die Schriften luden; im echten Lauf melden alle drei
+Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 
 `.claude/hooks/session-start.sh` beschafft sie beim Sitzungsstart und meldet
 je Stück „ok" oder „FEHLT" — die drei Engines **einzeln**, denn „3 Browser da"

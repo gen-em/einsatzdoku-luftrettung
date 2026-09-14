@@ -1203,6 +1203,20 @@ gruppiert, Web 12.4.1). Der Feldsatz dämpft die Gruppe samt Beschriftungen
 über `opacity`, die Regel am Feld sagt, welches Element gemeint ist. Beide
 greifen zugleich, und das ist gewollt.
 
+**Das Auswahlfeld ist der andere Sonderfall** (seit Web 19.5.1). Ein
+`<select>` trägt `contain: paint`, und das ist keine Feinheit: WebKit rechnet
+den **längsten Eintrag** in den Überlauf des Kastens mit, auch wenn der Kasten
+ihn abschneidet. Gemessen auf `import.php` bei 360 px: `scrollWidth` 366 gegen
+`innerWidth` 360 — nur in WebKit, und **kein einziges Element** der Seite ragte
+hinaus. Der längste Eintrag hatte 53 Zeichen; die drei anderen Auswahlfelder
+derselben Seite mit 17, 17 und 30 liefen nicht über (Backlog Nr. 185).
+`overflow:clip` am Feld hilft nicht, `max-width:100%` auch nicht — nur die
+Malbegrenzung. Sie kostet nachgemessen **ein** Pixel am fokussierten Feld
+(318 × 60 px Ausschnitt, Abweichung 6 von 255, die Rundung des Fokusrings); der
+Ring selbst bleibt stehen, weil Malbegrenzung Inhalt schneidet und nicht
+Umriss. **Nur `select`** — ein Textfeld hat keinen Inhalt, der breiter wäre als
+sein Kasten.
+
 **Das Dateifeld ist der eine Sonderfall.** `input[type=file]` stellt seinen
 nativen Knopf auf die Textzeile, und die steht in einem 44 px hohen Feld ohne
 senkrechte Polsterung ganz oben — gemessen 0 px Luft darüber, 19 px darunter.
@@ -2359,6 +2373,54 @@ Drei Sätze für den nächsten, der das braucht:
 Fall (zwei abweichende Rollen mit langen Namen), rund 130 px bei einer. Das ist
 gewollt: Der Text ist der Grund, warum jemand hinsieht.
 
+### 9.35 Kartengröße (`.geo-gross`, Knopf `map-ctrl-groesse`)
+
+*Nachgetragen mit Web 19.5.1. Der Baustein ist mit Web 19.5.0 entstanden
+(Mockup-Runde 9c / AP3, Mockups M-MR-03 und M-MR-04, F-MR-7 bis F-MR-10) —
+die Kapitelpflicht aus 1.3 ist dort **übersehen** worden; nur die erzeugten
+Tabellen sind nachgezogen. Das hier holt es nach.*
+
+**Wozu.** Die Karte der Tagesübersicht hatte zwei Zustände: ihre Höhe nach
+Fensterbreite (`--karte-mobil` 160, `--karte-tablet` 220, `--karte-desktop`
+300 px) und Vollbild. Dazwischen lag nichts — wer mehr von der Spur sehen
+wollte, musste die Seite verlassen und wiederkommen und verlor dabei den Blick
+auf die Einsatzliste. Der dritte Zustand liegt dazwischen.
+
+**Ein Zustand, zwei Wirkungen je Breite.** Die Klasse `.geo-gross` heißt
+überall dasselbe, das Stylesheet entscheidet, was sie tut:
+
+| Breite | Wirkung |
+|---|---|
+| bis 1599 px | Die Karte wird **höher** — `--karte-gross`, also `min(60vh, 520px)` |
+| ab 1600 px | Die Karte wird **breit** — das Raster fällt über `.tag-raster:has(.geo-gross)` auf eine Spalte, die Karte verlässt die rechte Spalte und liegt in voller Inhaltsbreite über der Liste, weiterhin 520 px hoch |
+
+Die Schwelle 1600 steht damit an **einer** Stelle, im Stylesheet. Ein Knopf,
+der je Breite etwas anderes täte, hätte sie ein zweites Mal im Code.
+
+**Der Knopf trägt beide Symbole.** `karte-gross.svg` (senkrechte Pfeile) bis
+1599 px, `karte-breit.svg` (Querpfeile) darüber; beide liegen im Markup, das
+Stylesheet blendet je Breite eines aus (`.karte-groesse .symbol-hoch` /
+`.symbol-breit`). Ein Tausch per JavaScript hätte die Schwelle ein drittes Mal
+gebraucht. Die Beschriftung wechselt **nicht** — „Karte vergrößern" bzw.
+„verkleinern" deckt beide Wirkungen, das Symbol daneben sagt welche. Der
+Zustand steht in `aria-pressed`.
+
+**Wo er sitzt und wo nicht.** Nur auf der Tagesübersicht
+(`attachGroessenControl()` wird dort einzeln gerufen). Einsatzansicht,
+Spurenseite und Zeitraumübersicht haben keine Liste unter der Karte, die vom
+Höherwerden etwas hätte; ihr Vollbildknopf bleibt unberührt.
+
+**Der Zustand wird je Gerät gemerkt**, nicht je Konto — `localStorage`,
+Schlüssel `nadoku.karte-gross`, der erste dieser Anwendung. Wer am Schreibtisch
+groß arbeitet, will das am Handy nicht zwangsläufig. Lesen und Schreiben sind
+abgefangen; kommt nichts zurück, steht die Karte klein da.
+
+**Ein Satz für den nächsten, der eine Karte umschaltet:** Leaflet muss es
+erfahren. Nach dem Umschalten läuft `map.invalidateSize()` mit 60 ms Verzug —
+ohne das bleibt die neue Fläche grau. Gemessen: 10 → 15 Kacheln, 0 px
+unbedeckt nach 200 ms.
+
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Fünf Typen
@@ -2497,6 +2559,9 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 19.5.1 (Mockup-Runde 9c / AP3b)** | **9.35 nachgetragen** (siehe dort — die Kapitelpflicht aus 1.3 war mit 19.5.0 übersehen worden) und **9.7 um einen Absatz ergänzt:** Ein `<select>` bekommt `contain:paint`, weil WebKit den längsten Eintrag in den Überlauf des Kastens rechnet und `import.php` bei 360 px dadurch um 6 px überlief (Backlog Nr. 185) — gefunden vom ersten dreifachen Bilderlauf. **Kein neues Token, kein neues Symbol, kein neuer Baustein.** Gemessen in drei Motoren: Kaskade **758 → 759 Regeln, 0 entfallen, 1 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **46 150 Elementmessungen, 104 Abweichungen** — 8 Auswahlfelder × 13 Breiten, und die einzige geänderte Eigenschaft ist `contain: none → paint`. Chromium, Firefox und WebKit melden dieselben Zahlen. |
+| **Web 19.5.0 (Mockup-Runde 9c / AP3)** | **Neues Token `--karte-gross`** (`min(60vh, 520px)`; Tabelle 100 → 101) und **zwei neue Symbole** — `karte-gross.svg` und `karte-breit.svg`, Tabler „arrows-vertical" und „arrows-horizontal" (Vorrat 53 → 55). Der Baustein dazu ist erst mit 19.5.1 als **9.35** beschrieben worden; diese Zeile hält fest, dass er mit 19.5.0 entstanden ist. **Kein neuer Farbwert.** |
+| **Web 19.4.2 (Mockup-Runde 9c / AP2)** | **Zwei neue abgeleitete Token** — `--symbol-winzig` (`calc(var(--symbol-klein) - var(--abstand-1))`, 12 px) und `--ziel-chip` (`calc(var(--symbol-gross) + var(--abstand-1))`, 28 px); dazu `--symbol-text` (`1em`) und die Klasse `.symbol-text` für ein Symbol, das **im Satz** steht und mit der Schrift wächst (Tabelle 97 → 100). Das Entfernen-Zeichen des Chips ist ein Symbol geworden, sein Treffziel wächst von 17 × 15 auf **28 × 28 px** (F-MR-6a/6b, E-MR-18: 6 px zum Text wie zum Rand). **Kein neuer Farbwert, kein neues Symbol** — `schliessen` und `warnung` lagen im Vorrat. |
 | **Web 19.4.1 (Mockup-Runde 9c / Nr. 182)** | **9.34 fortgeschrieben:** Aus „Was sie nicht kann" wird „Wie sie das Sichtfenster findet". Die Kopfzeile nimmt über eine Container-Abfrage (`container-type:inline-size` an `.imp-roll`, `width:100cqi`) die **sichtbare** Breite statt der Tabellenbreite an und heftet sich mit `position:sticky;left:0` an den linken Rand. **Kein JavaScript** — beide Fassungen (Container-Abfrage und gemessene Zahl) sind bei sechs Fensterbreiten auf den Pixel gleich. Freigegeben mit **M-MR-05, F-MR-14 = Weg B**; Weg C (je Gruppe eine eigene Tabelle) ist nach einer Kartierung mit **58 Befunden, 22 davon „bricht"** verworfen worden — er hätte die Spaltenflucht gebrochen, die in der Abnahme von Nr. 182 steht. Gemessen: 7 Breiten von 360 bis 1920 px, Datum/Besatzung/Plakette/Auswahl in **jeder** im Sichtfenster, **0** waagerechter Überlauf, keine Konsolenfehler. **Kein neues Token, kein neues Symbol, kein neuer Baustein.** |
 | **Web 19.4.0 (Mockup-Runde 9c / AP1)** | **9.34 neu — Kopfzeile einer Tagesgruppe** (`.imp-daygroup`), freigegeben mit M-MR-01 Variante A (F-MR-1/F-MR-2/F-MR-3). Die Kopfzeile der Importvorschau war eine Datenzeile mit `<strong>`; sie trägt jetzt Rauch, eine kräftige Oberlinie und das Datum in Kopfschrift, und das Datum steht deutsch. Die Warnung „abweichende Crew" ist eine `.plakette-orange` geworden — `imp-warn` ist ersatzlos gestrichen, weil eine zweite Darstellung für „Zustand, der Aufmerksamkeit will" den Vorrat vergrößert hätte, ohne etwas zu können. **Eine begründete Abweichung am Baustein Plakette:** in dieser Kopfzeile darf sie umbrechen. Gemessen: `pruefen.py` „im Markup ohne Regel, als `[offen]` vermerkt" **2 → 0**, Sollmenge ohne Gegenstück **52 → 50**, Hexfarben außerhalb `:root` **0**; im Browser 400/720/1280 px, **0** waagerechter Überlauf, keine Konsolenfehler. **Kein neues Token, kein neues Symbol.** |
 | **13.09.2026 (Textpflege, keine Auslieferung)** | **2.5** berichtigt: „B1 erledigt, nachgemessen" traf seit dem Commit „Update Logos" nicht mehr zu (Backlog Nr. 62). Der Absatz sagt jetzt den gemessenen Stand vom 13.09.2026 und die Entscheidung vom 12.09.2026, neue Vorlagen anzufordern. **Zwei Nachbesserungen am selben Tag:** Der Absatz nannte die weiße Fassung in Prosa statt beim Dateinamen und war damit der einzige Treffer der Wortliste außerhalb der Ausnahmeliste (jetzt `gen-em_logo_helicopter_weiss.svg`, 0 Treffer) — und er zählte `gen-em_logo_nef.png` zu den richtigen Dateien, obwohl sie den **alten** Korpuswert `#1D0E0A` trägt, genau wie die `.svg` daneben, die derselbe Absatz als falsch führt. Alle acht Dateien sind nachgemessen (SVG-Farbwerte und dekodierte Bildpunkte der PNG): richtig sind die beiden Fassungen **ohne** Korpus, `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef_weiss.png`. Die beiden PNG der Luftmarke tragen die alten Werte um ein bis zwei Stufen je Kanal verschoben, weil sie gerastert sind. |

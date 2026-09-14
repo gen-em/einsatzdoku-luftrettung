@@ -14,6 +14,64 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.5.1] — 2026-09-14
+
+Mockup-Runde 9c, Arbeitspaket 3b: **Backlog Nr. 183** — die Prüfmittel fahren
+drei Engines. Der erste dreifache Lauf hat den Fehler unten gleich mitgebracht.
+
+### Web — ein Auswahlfeld schob die Importseite in WebKit um 6 px zur Seite
+
+**Der Befund war zuerst keiner, sondern ein Rätsel.** Der Bilderlauf meldete
+für `import.php` bei 360 px einen waagerechten Überlauf von 6 px — und nannte
+keinen Verursacher. Das war richtig: Kein Element der Seite ragt hinaus, das
+Auswahlfeld ist 302 px breit und endet bei 331. Und es passierte nur in
+WebKit; Chromium und Firefox meldeten 360 gegen 360.
+
+**Übergelaufen ist der Inhalt, nicht der Kasten.** WebKit rechnet den
+längsten Eintrag eines `<select>` in den Überlauf mit, auch wenn der Kasten
+ihn abschneidet. Nachgewiesen durch Kürzen: alle Eintragstexte auf „x" gesetzt
+→ 360 px; zurückgesetzt → wieder 366 px. Der längste Eintrag hat 53 Zeichen;
+die drei anderen Auswahlfelder derselben Seite haben 17, 17 und 30 und laufen
+nicht über. Ab 390 px verschwindet der Überlauf von selbst.
+
+**Behoben mit einer Regel**, `select.feld-eingabe{contain:paint}`. Sie war die
+einzige von vieren, die wirkt — `overflow:clip` am Feld half nicht (gemessen
+366), `max-width:100%` ebenso wenig, `appearance:none` nur zur Hälfte (361).
+Was sie kostet, ist nachgemessen und nicht geschätzt: Der fokussierte
+Ausschnitt (318 × 60 px) ist vor und nach der Regel in Firefox bitgleich, in
+Chromium und WebKit **ein** Pixel verschieden, bei einer Abweichung von 6 von
+255 — die Rundung des Fokusrings. Der Ring bleibt vollständig stehen;
+Malbegrenzung schneidet Inhalt, nicht Umriss.
+
+**Warum die Regel nur `select` trifft:** Ein Textfeld hat keinen Inhalt, der
+breiter wäre als sein Kasten. Eine Regel, die alle Eingabefelder
+malbegrenzt, hätte mehr geändert als das Gefundene.
+
+### Prüfstand — drei Engines, und wann welche fährt
+
+Nicht ausgeliefert (`tools/` ist vom Deploy ausgenommen), aber Teil derselben
+Arbeit: Bilderlauf, Klickprobe und Stilvergleich kennen seit heute
+`--motor chromium|firefox|webkit`. Motorwahl und die nötige
+Firefox-Voreinstellung stehen an **einer** Stelle, `tools/motor.mjs`. Die
+Empfehlung ist gestaffelt und steht in `docs/Technik.md`: Stilvergleich immer
+(14–18 s je Motor), Bilderlauf gestaffelt (Chromium voll, die anderen über die
+berührten Seiten plus eine Risikoliste), Klickprobe nach Bedarf.
+
+**Zwei Fallen mussten dafür ausgeräumt werden.** Headless Firefox meldet ohne
+Voreinstellung „kein Zeiger, kein Hover" und misst damit den ganzen
+Media-Block der 36-px-Bedienhöhe nicht — er meldete prompt 44 px, wo 36
+stehen. Und `newCDPSession` gibt es nur in Chromium; der Aufruf stand in
+Bilderlauf und Klickprobe und warf in den anderen beiden sofort. Gebraucht
+wird er ohnehin nur dort — gemessen behalten Firefox und WebKit die
+Eingabeart des Fingerlaufs über den Vollseiten-Screenshot hinweg, nur Chromium
+verliert sie.
+
+**Ein Satz von gestern ist zurückgenommen:** Firefox meldet die
+`latin-ext`-Schriftabrufe **nicht** als Konsolenfehler. Die Abbrüche stammten
+von einem Messskript, das schneller weiterblätterte als die Schriften luden;
+im echten Lauf melden alle drei Motoren 0. Ein Rauschfilter dafür ist deshalb
+nicht gebaut worden.
+
 ## [Web 19.5.0] — 2026-09-14
 
 Mockup-Runde 9c, drittes Arbeitspaket: **Backlog Nr. 45** — die dritte

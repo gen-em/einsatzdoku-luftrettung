@@ -4,12 +4,15 @@
 **die Zahlen trägt die Umsetzung ein**. Fortgeschrieben nach jedem
 Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
-> **Stand: AP1, AP2 und AP3 gemessen, Nr. 182 behoben. AP4 und AP5 offen.**
+> **Stand: AP1, AP2, AP3 und AP3b gemessen, Nr. 182 behoben. AP4 und AP5
+> offen.**
 >
 > **Seit dem 14.09.2026 hat der Prüfstand drei Engines** — Chromium 141,
 > Firefox 142, WebKit 26 (Backlog Nr. 183, der Startvorgang beschafft sie).
 > Nr. 182 und Nr. 42 sind in allen dreien gemessen; **Prüflistenpunkt 6
-> entfällt damit**.
+> entfällt damit**. **Seit AP3b fahren die Prüfmittel sie selbst**
+> (`--motor`, Nr. 183 ganz erledigt); wie oft welches dreifach fährt, steht
+> in `docs/Technik.md`.
 >
 > **Vier Sollwerte der Vorlage waren veraltet** — sie entstand vor E-MR-16,
 > E-MR-19 und E-MR-21 — und sind hier berichtigt: Symboldateien **55** statt
@@ -19,8 +22,8 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
 > | | |
 > |---|---|
-> | Stufe | **Web 19.5.0** — 19.4.0 Nebenstufe (AP1), 19.4.1 Korrektur (Nr. 182), 19.4.2 AP2, 19.5.0 AP3. Keine Migration. Uhr und Android unberührt |
-> | Punkte | Backlog **Nr. 41, 42, 45 und 182 erledigt**; 124 offen. **Nr. 183 zur Hälfte** (Engines da, Mittel offen), **Nr. 184 neu** (Kommentar-Abtaster) |
+> | Stufe | **Web 19.5.1** — 19.4.0 Nebenstufe (AP1), 19.4.1 Korrektur (Nr. 182), 19.4.2 AP2, 19.5.0 AP3, 19.5.1 Korrektur (Nr. 185, aus AP3b). Keine Migration. Uhr und Android unberührt |
+> | Punkte | Backlog **Nr. 41, 42, 45, 182, 183, 185 und 186 erledigt**; 124 offen. **Nr. 184 neu** (Kommentar-Abtaster) |
 > | Neu entstanden | Token `--symbol-text`, `--karte-gross`; **`--dauer` von .18s auf .24s** (alle Bewegungen); Klassen `.symbol-text`, `.geo-gross`; Symbole `karte-gross.svg`, `karte-breit.svg` (54., 55.); Regel `.imp-daygroup`; Knopf offen = `--orange-hell`/`--orange-tief` (D4); Ausnahme `'✕'` in `ausnahmen.md`; Streichliste `imp-warn` |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19, MariaDB 10.11.14, Node 22.22.2, Playwright 1.56.1, **Chromium 141.0.7390.37 · Firefox 142.0.1 · WebKit 26.0**. Lokale Installation über `lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte) |
 > | Ergebnis | AP1 **grün, Vorbehalt aufgelöst** (Nr. 182 behoben). Rest offen |
@@ -37,9 +40,21 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
   (`cdn.playwright.dev`, `playwright.download.prss.microsoft.com`, bis dahin
   403); seither liegen Chromium 141, Firefox 142 und WebKit 26 im Prüfstand,
   und der Startvorgang beschafft sie. Zahlen in Abschnitt 3.
-- **Was weiterhin offen ist: kein Prüfmittel fährt die drei.** Bilderlauf,
-  Klickprobe und Stilvergleich benutzen Chromium; Nr. 182 und Nr. 42 sind von
-  **Hand** dreifach gemessen. Backlog **Nr. 183** (zweite Hälfte).
+- ~~**Kein Prüfmittel fährt die drei.**~~ **Erledigt mit AP3b** (14.09.2026).
+  Bilderlauf, Klickprobe und Stilvergleich kennen `--motor`; Motorwahl und
+  Firefox-Voreinstellung liegen in `tools/motor.mjs`. Zahlen in Abschnitt 2
+  und 3.
+- **Was dabei NICHT geprüft werden konnte: echtes Safari und echter Firefox
+  auf einem Gerät.** Der Prüfstand fährt Playwrights **WebKit** — derselbe
+  Kern wie Safari, aber ein anderer Unterbau (Schriften, Textrasterung,
+  Systemintegration) — und Firefox **headless**. Ein Befund von dort ist ein
+  starkes Indiz, kein Beweis; `mousedown` auf iOS bleibt Punkt 6a der
+  Prüfliste.
+- **Und die Klickprobe misst dreifach nur mit frischem Bestand.** Sie legt
+  an, ändert und löscht; drei Läufe hintereinander ohne
+  `lokal_einrichten.sh` ergaben **40 / 38 / 36** von 40, und keiner der sechs
+  Fehlschläge war ein Motorunterschied. Wer die Zahl aus einem solchen Lauf
+  zitiert, zitiert Datenreste.
 - **Und eine Zahl, die kleiner aussehen könnte, als sie ist.** Die
   Symbolprüfung meldet 252 Unicode-Zeichen. Mit ausgeblendeten Kommentaren
   wären es 108 — aber der Abtaster dafür verschluckt in `einsatz_form.php`
@@ -85,6 +100,9 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 | Klickprobe | 40 von 40 | **40 von 40** + [n] neue Wege (Blatt auf/zu, Karte groß/klein) | [AP5] |
 | Kreisläufe csv/edbak (R24) | 0 / 0 | **0 unerklärt, 0 ungenutzt** | [AP5] |
 | Wortliste | 0 / 0 | **0 / 0** | **0 / 0** ✓ (nach AP1; zwei Treffer im neuen `Design.md`-Beispiel sind beim Schreiben entstanden und sofort neutral gefasst worden) |
+| **AP3b — Stilvergleich in drei Motoren** | — | dieselbe Zahl in allen dreien | **Kaskade** 758 → 759 Regeln, **0 entfallen, 1 neu** (`select.feld-eingabe contain: paint`), **0 anderer Endwert, 0 Reihenfolgeumkehrungen**. **Berechnete Stile** je Motor **46 150 Elementmessungen, 104 Abweichungen** — 8 Auswahlfelder × 13 Breiten, einzige geänderte Eigenschaft `contain: none → paint`; Pseudoprobe **20 540 Messungen, 13 Abweichungen**. Chromium, Firefox und WebKit **identisch**, 14–18 s je Motor ✓ |
+| **AP3b — Klickprobe in drei Motoren** | 40 von 40 (Chromium) | 40 von 40 je Motor | **40 / 40 / 40** ✓ — mit `lokal_einrichten.sh` (8 s) vor **jedem** Lauf, und bei Firefox und WebKit **erst im zweiten Anlauf**. Die drei Läufe im Einzelnen stehen in Abschnitt 3; **kein** Fehlschlag war ein Motorunterschied, alle waren Datenreste des Vorlaufs oder Zeitgrenzen. Der eine echte Motorbefund — WebKit meldete „1 von 12" bei den Richtungspfeilen — war ein Fehler der **Probe** (Nr. 186) und ist behoben |
+| **AP3b — Bilderlauf in drei Motoren** | — | 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen je Motor | **Chromium voll: 360 Einzelbilder, 45 Kontaktbögen, 0 / 0 / 0** in 8 min 37 s. **Firefox `--risiko`: 80 Bilder, 0 / 0 / 0** in 2 min 36 s. **WebKit `--risiko`: 80 Bilder, 0 / 0 / 0** in 2 min 59 s ✓ — und das ist der Lauf **nach** der Behebung von Nr. 185; davor meldete WebKit als einziger „Überlauf bei 360" auf `import.php` |
 
 ## 3. Im Browser
 
@@ -164,6 +182,34 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
   - **Berichtigt:** Meine erste Messung meldete „410 px Kachellücke" — das war
     ein Messfehler, `.leaflet-tile-pane` hat kein aussagekräftiges Rechteck.
     An den Kacheln selbst gemessen ist nichts unbedeckt.
+- **AP3b — die drei Motoren, und was dabei wirklich passiert ist.** Nicht
+  „dreimal grün", sondern drei Läufe mit Zahlen:
+
+  | Lauf | Vorbereitung | Chromium | Firefox | WebKit |
+  |---|---|---|---|---|
+  | 1 | einmal eingespielt, dann drei Läufe | 40/40 | 38/40 | 36/40 |
+  | 2 | `lokal_einrichten.sh` vor jedem Lauf | 40/40 | 39/40 | 36/40 |
+  | 3 | dasselbe, Firefox und WebKit erneut | — | **40/40** | **40/40** |
+
+  **Lauf 1** zeigt, was passiert, wenn man es falsch macht: Die Probe legt an,
+  ändert und löscht, und Lauf 2 und 3 lesen die Reste („3 Rettungsmittel ohne
+  Standort statt 2, 7 insgesamt statt 6"). **Lauf 2** hat das behoben und
+  trotzdem fünf Fehlschläge — einen Zeitgrenzenlauf in Firefox
+  (`waitForFunction` auf `#savestate`) und vier `page.goto: WebKit
+  encountered an internal error`. **Nachgemessen, ob Firefox zu langsam ist:
+  nein.** Dreimal speichern je Motor, gemessen vom Klick bis „Gespeichert."
+  im Feld: Chromium 95/69/72 ms, Firefox 137/99/140 ms, WebKit 91/90/77 ms —
+  die Zeitgrenze steht bei 15 000 ms. Es ist also keine Langsamkeit, sondern
+  Aussetzer des Containers; sie sind **nicht** reproduzierbar (derselbe Weg
+  einzeln gefahren lief in Firefox durch).
+  **Was daraus folgt, steht in `tools/klickprobe/LIESMICH.md`:** frischer
+  Bestand vor jedem Lauf, und die Zahl eines Laufs ohne ihn ist keine Zahl.
+- **AP3b — der eine Motorbefund der Anwendung:** `import.php` bei 360 px,
+  Überlauf **6 px in WebKit**, 0 in Chromium und Firefox. Ursache und
+  Behebung stehen im Changelog zu Web 19.5.1; nachgemessen nach der Behebung
+  **0 / 0 / 0**. Die Kosten der Regel: fokussierter Ausschnitt 318 × 60 px,
+  Firefox bitgleich, Chromium und WebKit **1 von 19 080 Pixeln** verschieden
+  bei einer Abweichung von 6 von 255.
 - Aktionsblatt auf `index.php` und in der Geräteliste (Zeilenaktion): Knopf markiert, Blatt fährt auf, `prefers-reduced-motion` ohne Bewegung. [ ]
 
 ## 4. Prüfliste — Auftraggeber
@@ -176,17 +222,19 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 | 3 | CSV-Import mit einer Datei, deren Crew von einem gespeicherten Tag abweicht | Tagesgruppe hat Kopfzeile, Warnung als orange Plakette mit Symbol — **und am Handy ist alles davon ohne waagerechtes Scrollen zu sehen** (seit Web 19.4.1, Nr. 182) | Wenn die Kopfzeile fehlt oder wie eine Datenzeile aussieht: AP1 hat nicht gegriffen. Wenn nach dem Datum nichts mehr kommt: die Container-Abfrage greift auf diesem Browser nicht — siehe Punkt 6 |
 | 4 | Einsatz bearbeiten, Koordinaten setzen, Chip-`×` tippen | Ziel trifft sich leicht (**28 px**, F-MR-6b), Koordinaten weg, Textfeld bleibt | Ziel zu klein: F-MR-6b nachjustieren |
 | 5 | Freigabe des Abschlusses | — | — |
+| 6a | **Am iPhone (echtes Safari): Import öffnen, eine Datei wählen, waagerecht wischen** | Die Seite lässt sich **nicht** seitwärts schieben; die Kopfzeile jeder Tagesgruppe bleibt am linken Rand stehen | Wenn sich die Seite um ein paar Pixel schieben lässt: Die Regel aus Web 19.5.1 (`select{contain:paint}`) greift auf echtem Safari nicht so wie auf Playwrights WebKit — dann mit der Breite melden, an der es auftritt. Wenn nach dem Datum nichts mehr kommt: Die Container-Abfrage greift dort nicht (Nr. 182) |
+| 6b | **Am iPhone: einen Chip-`×` mit dem Daumen antippen, Taste kurz halten** | Der Chip verschwindet | Auf iOS ist `mousedown` eine eigene Geschichte; der Prüfstand fährt eine Maus und kann das nicht zeigen |
 | ~~6~~ | ~~In Firefox nachsehen~~ | **Entfällt.** Seit dem 14.09.2026 hat der Prüfstand alle drei Engines; Nr. 182 und Nr. 42 sind in Chromium 141, Firefox 142 und WebKit 26 gemessen und stimmen überein | — |
 
 ## 5. Grenzen · 6. Offen
 
 - Der Bilderlauf misst Ruhezustände; die Bewegung ist nur am Gerät zu bewerten.
-- **Nr. 182 und Nr. 42 sind in DREI Engines gemessen** — Chromium 141,
-  Firefox 142, WebKit 26 über Playwright, alle drei im Prüfstand. Was
-  **fehlt**, ist ein Prüfmittel, das sie von sich aus fährt: Bilderlauf,
-  Klickprobe und Stilvergleich benutzen weiterhin Chromium, und die
-  Dreifachmessung war Handarbeit (Backlog **Nr. 183**, zweite Hälfte).
-- **AP3 und AP4 sind noch in keiner Engine geprüft** — sie sind nicht gebaut.
+- **Die Prüfmittel fahren die drei Engines seit AP3b selbst** (`--motor`,
+  Backlog Nr. 183 vollständig erledigt). Zwei Grenzen bleiben: Playwrights
+  **WebKit ist nicht Safari** (gleicher Kern, anderer Unterbau) und Firefox
+  läuft **headless**; und der Container hat **Aussetzer** — vier
+  `page.goto`-Abbrüche in einem WebKit-Lauf, im nächsten keiner.
+- **AP4 ist noch in keiner Engine geprüft** — es ist nicht gebaut.
 - **Fehlerfund 1** (Konzept Abschnitt 6): dasselbe Malzeichen als
   JavaScript-Escape im zweiten Chip — das Prüfmittel sieht Escape-Folgen
   nicht. Läuft in **AP2** mit (E-MR-24), keine eigene Backlog-Nummer.

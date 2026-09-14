@@ -51,10 +51,15 @@
  * VERFEHLT und nicht als „uebersprungen": Ein Pruefmittel, das sich selbst
  * ueberspringt, meldet Null, ohne gemessen zu haben.
  *
- * GRENZEN. Nur Chromium (WebKit und Gecko stehen hier nicht zur Verfuegung);
- * die Adressabfrage laeuft gegen die Attrappe in `attrappe.mjs`, nicht gegen
- * den echten Dienst; ein Finger ist kein Zeiger — was nur mit Handschuhen
- * auffaellt, faellt hier nicht auf.
+ * GRENZEN. Die Adressabfrage laeuft gegen die Attrappe in `attrappe.mjs`, nicht
+ * gegen den echten Dienst; ein Finger ist kein Zeiger — was nur mit
+ * Handschuhen auffaellt, faellt hier nicht auf. Der Satz „nur Chromium“
+ * stand hier bis AP3b und stimmt seit dem 14.09.2026 nicht mehr:
+ * `--motor firefox|webkit` faehrt dieselben Wege in Gecko und WebKit
+ * (Nr. 183). Was dabei NICHT gleich ist, steht in `tools/motor.mjs` —
+ * headless Firefox meldet ohne Voreinstellung „kein Zeiger, kein Hover“
+ * und misst damit 44 statt 36 px. Und WebKit hier ist nicht Safari:
+ * derselbe Kern, anderer Unterbau (Schriften, Textrasterung).
  */
 import { mkdirSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -74,7 +79,9 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const { motorWahl, starten } = await import(
+  new URL('../motor.mjs', import.meta.url).href);
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const AUSGABE = join(HIER, 'ausgabe');
@@ -87,6 +94,7 @@ const BASIS  = wert('--basis', 'https://127.0.0.1:8443');
 const DEMO   = { email: wert('--demo',  'demo@gen-em.org'),  pw: wert('--demo-pw',  'nadokudemo0815') };
 const ADMIN  = { email: wert('--admin', 'admin@gen-em.org'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
+const MOTOR  = motorWahl(argv);
 const BILDER = flag('--bilder');
 const MARKE  = wert('--marke', '');     // freie Beschriftung des Laufs im Bericht
 
@@ -136,7 +144,7 @@ const WEGE = FILTER.length
 if (!WEGE.length) { console.error('Kein Weg ausgewählt.'); process.exit(2); }
 
 /* ---- Browser und Anmeldung ------------------------------------------------ */
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR, { finger: FINGER });
 
 async function anmelden(rolle) {
   const konto = rolle === 'admin' ? ADMIN : DEMO;
@@ -181,9 +189,14 @@ async function anmelden(rolle) {
    * wird deshalb vor jeder Breite erneut gesendet — und NUR im Fingerlauf:
    * `{enabled:false}` ist nicht das Gegenteil von `{enabled:true}` und kippt
    * an einem Zeigerkontext die Merkmale auf `none`/`coarse`. */
-  const cdp = await kontext.newCDPSession(seite);
+  /* NUR CHROMIUM HAT CDP. Seit AP3b faehrt die Probe auch Firefox und WebKit
+   * (Nr. 183); dort wirft `newCDPSession`. Gebraucht wird die Sitzung ohnehin
+   * nur im Fingerlauf — und nur in Chromium, weil nur Chromium die
+   * Eingabeart am Vollseiten-Screenshot verliert (gemessen: Firefox und
+   * WebKit behalten pointer:coarse darueber hinweg). */
+  const cdp = (FINGER && MOTOR === 'chromium') ? await kontext.newCDPSession(seite) : null;
   const eingabeart = async () => {
-    if (!FINGER) { return; }
+    if (!FINGER || !cdp) { return; }
     await cdp.send('Emulation.setTouchEmulationEnabled',
       { enabled: true, maxTouchPoints: 5 }).catch(() => {});
   };
