@@ -14,6 +14,97 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.1.0] — 2026-09-14
+
+Schritt 9b (**S10 — Sicherheit**, R78), drittes Arbeitspaket: der Anteil
+bekommt eine Bedienung und einen zweiten Ort.
+
+### Web — die Karte, das Blatt und die fünf Zustände
+
+**Bis 20.0.0 war der Server-Anteil eine Zeile in `config.php`**, die nur
+jemand mit Dateizugang anlegen konnte — und niemand sah ihr an, ob sie die
+richtige war. Wer den Anteil verliert, sperrt jedes Konto von seinen
+geschützten Angaben aus; das ist ein zu großer Hebel für eine Zeile, die nur
+per FTP erreichbar ist. Diese Stufe trägt drei Dinge nach.
+
+**Die Karte „Schlüssel des Servers"** unter *Betrieb → Servereinstellungen*
+führt beide Geheimnisse an einer Stelle: anlegen, wechseln, alten Anteil
+entfernen, nachtragen, Neuanfang. Sie ist von den Backup-Zielen dorthin
+gezogen, wo sie hingehört — der Serverschlüssel versiegelt längst mehr als
+nur deren Zugangsdaten (Komplett-Backup, Konto-Backups), und eine Karte, die
+unter „Backup-Ziele" steht, sieht nur die halbe Sache. Auf den Backup-Zielen
+bleibt ein Verweis stehen.
+
+**Sie zeigt den Wert nicht.** Sie nennt seine **Kennung** — die ersten acht
+Hexzeichen des SHA-256 über den Wert. Damit lässt sich vergleichen, ohne
+vorzulesen: Karte, Statusseite und Schlüsselblatt nennen dieselben acht
+Zeichen, und wer prüfen will, ob der Ausdruck in der Betriebsakte noch der
+richtige ist, vergleicht acht Zeichen statt vierundsechzig. Ein Wert, der
+vollständig auf jedem Bildschirm steht, steht früher oder später auch in
+einem Screenshot in einem Ticket.
+
+**Das Schlüsselblatt** (`betrieb_schluesselblatt.php`) ist die eine Seite,
+deren Zweck der Ausdruck ist. `config.php` trägt seit S10 die Schlüssel der
+ganzen Installation; ein zweiter Ort dafür muss überleben, was die Datei nicht
+überlebt — ein Serverausfall, ein verlorenes Hosting, ein Backup, das die
+Datei nicht enthält. Papier tut das, eine heruntergeladene Datei liegt im
+selben Unglück. Das Blatt sagt deshalb selbst, wohin es gehört: **zwei
+Ausdrucke, zwei getrennte Orte** — Betriebsakte und Passwortmanager der
+BetreiberIn, nicht in den Serverordner und nicht in dasselbe Backup.
+
+**Fünf Zustände statt „da oder nicht da":** nicht eingerichtet, bereit,
+Rotation, abweichend, Neuanfang. Der interessante ist **abweichend** —
+`config.php` trägt einen anderen Wert, als die Hüllen verlangen. Er entsteht
+nicht nur beim Verlieren der Datei, sondern **planmäßig nach einem
+Komplett-Backup**: Das Paket stellt `app_state` wieder her, `config.php`
+gehört nicht dazu und darf auch nicht dazugehören. Wer eine Sicherung auf
+einem neuen Server einspielt, landet also zwangsläufig hier, und die Karte
+sagt ihm, was zu tun ist, statt „Passwort falsch" zu melden.
+
+**Nachtragen schreibt nur bei Übereinstimmung.** Der Server rechnet die
+Kennung des eingegebenen Werts und vergleicht sie mit der erwarteten; passt
+sie nicht, wird **nichts** geschrieben und die Meldung nennt **beide**
+Kennungen. Ein falsch abgetippter Wert, der stillschweigend landet, macht aus
+einer behebbaren Lage eine unbehebbare — er überschreibt den einzigen Ort, an
+dem der richtige noch stehen könnte. Leerzeichen, Bindestriche und
+Großschreibung dürfen drinbleiben: Das Blatt druckt in Vierergruppen, und wer
+sie beim Abtippen mitnimmt, soll nicht dafür bestraft werden.
+
+**Rotation in zwei Schritten.** „Server-Anteil wechseln" legt den neuen an und
+lässt den alten als `kdf_anteil_alt` stehen; ausgeliefert werden beide, jedes
+Konto stellt beim nächsten Anmelden von selbst um. „Alten Anteil entfernen"
+wird erst angeboten, wenn **kein Konto** mehr auf ihm steht — die Karte zählt
+das nach. Ein Wechsel, der den alten Wert sofort wegnimmt, sperrt jedes Konto
+aus, das seither nicht angemeldet war.
+
+**Der Neuanfang ist die letzte Tür** und heißt deshalb so. Er ist nur aus der
+Lage *abweichend* erreichbar, fragt zurück und lässt sich nicht durch ein F5
+wiederholen — der zweite Versuch wird serverseitig abgewiesen. Danach setzt
+jede NutzerIn ihr Passwort über den Wiederherstellungsschlüssel neu; die Daten
+selbst bleiben unversehrt, weil die Wiederherstellungshülle nicht am Anteil
+hängt.
+
+**Das erste `@media print` des Projekts.** Drei Regeln, und sie gelten nur für
+das Blatt: Bildschirmknöpfe fort, keine Flächenfarbe, kein Seitenumbruch
+mitten im Wert. Ein Druck-Stylesheet, das jede Seite umgestaltet, wäre eine
+zweite Oberfläche mit eigenen Fehlern — gestaltet wird die eine Seite, die
+gedruckt werden soll. Gemessen bei 210 mm Papierbreite: **16 Vierergruppen,
+0 zerschnitten, 0 waagerechter Überlauf**.
+
+**Keine Schemaänderung, keine Migration.** `app_state` bekommt zwei Marken
+(`kdf_anteil_kennung`, `server_key_kennung`); die Tabelle gibt es seit langem,
+und beide entstehen beim ersten Anlegen von selbst.
+
+### Behoben
+
+- **`.plakette-ok` gab es im Stylesheet nicht.** Die Klasse stand an zwei
+  Stellen im Bestand und traf auf keine Regel — die Plakette war dort
+  unauffällig statt blau. Die neue Karte benutzt `blau`; die zwei Altstellen
+  bleiben vorerst, sie gehören nicht zu diesem Paket.
+- **Die Kennung in Vierergruppen stand zweimal im Code.** `apk_lib.php` hatte
+  dieselbe Zerlegung wie das Schlüsselblatt; sie liegt jetzt einmal in
+  `db.php` (`hex_vierergruppen()`).
+
 ## [Web 20.0.0] — 2026-09-14
 
 Schritt 9b (**S10 — Sicherheit**, R78), zweites Arbeitspaket: der Browser

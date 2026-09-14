@@ -186,7 +186,24 @@ Daten erst nach Server-Bestätigung.
 │   │                       Kopieren (assets/kopieren.js), Regeln
 │   ├── betrieb_server.php  Betrieb → Servereinstellungen (S8/AP2): Speicher
 │   │                       der Installation als Balken, Grenze und Schwellen
-│   │                       der Konto-Backups, Webspace-Angabe
+│   │                       der Konto-Backups, Webspace-Angabe; seit S10/AP3
+│   │                       zuoberst die Karte „Schlüssel des Servers"
+│   │                       (Serverschlüssel und Server-Anteil: anlegen,
+│   │                       wechseln, alten entfernen, nachtragen, Neuanfang
+│   │                       — genannt wird nur die Kennung, nie der Wert)
+│   ├── betrieb_schluesselblatt.php
+│   │                       Das Schlüsselblatt (S10/AP3): die EINE Seite,
+│   │                       deren Zweck der Ausdruck ist. Ohne Gerüst, ohne
+│   │                       Zwischenspeicher (`no-store`, `no-referrer`,
+│   │                       `noindex`), Werte in Vierergruppen. Sie trägt
+│   │                       beide Geheimnisse im Klartext — der zweite Ort,
+│   │                       der überleben soll, was `config.php` nicht
+│   │                       überlebt
+│   ├── assets/blatt-drucken.js
+│   │                       Sechs Zeilen: Der Knopf „Drucken" ist ohne
+│   │                       JavaScript verborgen und ruft `window.print()`.
+│   │                       Ein Knopf, der ohne Skript nichts tut, ist
+│   │                       schlimmer als keiner
 │   ├── speicher_lib.php   Was die Installation belegt (S8/AP2): Datenbank aus
 │   │                       information_schema, Dateien per Verzeichnislauf,
 │   │                       Stand in settings, Ton nach Schwellen. Gemessen
@@ -330,7 +347,16 @@ Daten erst nach Server-Bestätigung.
 │   │                      Lagen aus E-S10-09, mit `--schreiben` dazu den
 │   │                      Schreibweg in config.php; `endpunkt.py` die
 │   │                      Hüllenfassung von api/kdf_upgrade.php über ECHTES
-│   │                      HTTP. Vier der fünf Lagen entstehen nur, wenn man
+│   │                      HTTP; `umstellungslauf.mjs` die stille Umstellung
+│   │                      im Browser; `betriebslauf.mjs` (S10/AP3) die
+│   │                      OBERFLÄCHE der Lagen — Karte, Statuszeile und
+│   │                      Schlüsselblatt nennen dieselbe Kennung, das Blatt
+│   │                      im Druck bei 210 mm, Nachtragen mit falschem und
+│   │                      richtigem Wert, Rotation, Neuanfang.
+│   │                      `huelle_stellen.py` stellt eine Hülle auf edk1:
+│   │                      oder edka1: zurück — die Voraussetzung, ohne die
+│   │                      ein zweiter Lauf etwas anderes misst als der erste.
+│   │                      Vier der fünf Lagen entstehen nur, wenn man
 │   │                      config.php oder app_state verstellt — die Probe
 │   │                      stellt sie her und im finally zurück. **Nicht auf
 │   │                      einer Installation mit Betrieb** (s. LIESMICH.md)
@@ -753,6 +779,50 @@ Dass im Zweifel **gar nichts** ausgeliefert wird, ist die eigentliche
 Entscheidung: Ein Anteil, der nicht passt, ergäbe einen Datenschlüssel, der
 nicht passt — und der Fehlschlag sähe für jede NutzerIn gleichzeitig aus wie
 ein falsches Passwort. Belegt von `tools/anteilprobe/`.
+
+*Bedient werden die Lagen auf einer Seite* (seit Web 20.1.0, S10/AP3):
+**Betrieb → Servereinstellungen**, Karte „Schlüssel des Servers"
+(`betrieb_server.php`, Anker `#k-schluessel`). Sechs Handlungen, alle über
+POST mit CSRF und `require_betreiberin()`, alle in `serverkrypto_lib.php`:
+
+| Handlung | Funktion | angeboten bei |
+|---|---|---|
+| Serverschlüssel anlegen | `serverschluessel_eintragen()` | Serverschlüssel `fehlt` |
+| Server-Anteil anlegen | `anteil_anlegen()` | Anteil `fehlt` |
+| Server-Anteil wechseln | `anteil_wechseln()` | `bereit` oder `rotation` **ohne** `kdf_anteil_alt` |
+| Alten Anteil entfernen | `anteil_alt_entfernen()` | `kdf_anteil_alt` gesetzt **und** `anteil_zaehlung()['alt'] === 0` |
+| … nachtragen (beide) | `anteil_nachtragen()`, `serverschluessel_nachtragen()` | jeweils `abweichend` |
+| Server-Anteil neu erzeugen | `anteil_neuanfang()` | **nur** `abweichend` |
+
+Drei Dinge daran sind Absicht und keine Geschmacksfrage:
+
+- **Die Karte zeigt den Wert nicht**, nur die Kennung. Der Wert steht an
+  genau einer Stelle in der Oberfläche: auf dem Schlüsselblatt, das man
+  ausdruckt. Ein Wert, der auf jedem Bildschirm vollständig steht, steht
+  früher oder später in einem Screenshot in einem Ticket.
+- **Nachtragen schreibt nur bei Übereinstimmung.** `anteil_nachtragen()`
+  rechnet die Kennung des eingegebenen Werts und vergleicht sie mit
+  `anteil_zustand()['erwartet']`; passt sie nicht, wird nichts geschrieben
+  und die Meldung nennt beide Kennungen. Leerzeichen, Bindestriche und
+  Großschreibung werden vorher entfernt
+  (`schluessel_eingabe_normalisieren()`) — das Blatt druckt in
+  Vierergruppen, und wer sie mit abtippt, soll nicht dafür bestraft werden.
+- **`anteil_wechseln()` sichert den alten Wert zuerst** und nimmt ihn bei
+  einem Fehlschlag des zweiten Schreibvorgangs wieder zurück. Ein Wechsel,
+  der auf halbem Weg stehenbleibt, wäre die Lage `abweichend` ohne Blatt.
+
+*Der Neuanfang ist serverseitig einmalig.* `anteil_neuanfang()` prüft die Lage
+selbst und weist alles ab, was nicht `abweichend` ist — ein F5 nach dem
+Absenden erzeugt sonst einen zweiten neuen Anteil und macht die Konten, die
+gerade zurückgesetzt wurden, ein zweites Mal ungültig.
+
+*Das Schlüsselblatt* (`betrieb_schluesselblatt.php`) ist die einzige Seite der
+Anwendung ohne Gerüst, deren Zweck der Ausdruck ist. `Cache-Control: no-store`,
+`Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex`; Werte in
+Vierergruppen (`hex_vierergruppen()` in `db.php`). Sie steht in
+`WARTUNG_AUSNAHMEN` — die Lage, in der man sie braucht, ist eine Wartungslage.
+Das zugehörige `@media print` in `assets/style.css` (Abschnitt 26) ist das
+**erste und einzige** des Projekts und umfasst drei Regeln.
 
 **Formatkennung (seit Web 5.1.0, M2-10).** Jeder von `EdCrypto.encrypt()`
 erzeugte Chiffretext beginnt mit `edk1:` — sowohl `pat_blob` als auch die
@@ -5168,7 +5238,7 @@ geändert** (E-S5W-08).
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript `ingest.php` oder `pair.php` heißt — die beiden liegen nicht unter `/api/`, und genau sie brauchen JSON |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
-| Ausnahmen | elf Skripte, verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`, `install.php`. **Die fünf Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
+| Ausnahmen | **dreizehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
 | Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
 | Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
 | Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |

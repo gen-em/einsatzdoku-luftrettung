@@ -86,7 +86,20 @@ const WARTUNG_RETRY_S = 300;
  *   betrieb_server.php   die Belegung. Wer waehrend eines Updates merkt, dass
  *                        die Grenze erreicht ist, muss sie hier anheben
  *                        koennen — sonst scheitert das Backup, das dem
- *                        Update vorausgehen soll.
+ *                        Update vorausgehen soll. Seit S10/AP3 traegt sie
+ *                        dazu die Karte „Schluessel des Servers".
+ *   betrieb_schluesselblatt.php
+ *                        DAS BLATT ZUR KARTE (S10/AP3). Es steht hier aus
+ *                        demselben Grund, aus dem betrieb_updates.php hier
+ *                        steht: Die Karte ist erreichbar, ihr Druckknopf
+ *                        fuehrte sonst auf eine 503-Seite — derselbe Griff
+ *                        ins Leere wie F-S8-P-04, nur eine Ebene tiefer.
+ *                        Und die Lage, in der man das Blatt braucht, ist
+ *                        genau eine Wartungslage: Eine Sicherung ist auf
+ *                        einen neuen Server eingespielt, `config.php` ist
+ *                        nicht mit dabei, der Anteil steht auf `abweichend`
+ *                        — und der Wert, der nachzutragen ist, steht auf
+ *                        dem Ausdruck, den diese Seite gemacht hat.
  *   wiederherstellen.php der Rueckweg, wenn die Migration schiefging.
  *   jobs.php             der Token-Weg. Das Komplett-Backup der Kette laeuft
  *                        WAEHREND der Wartung — genau dann ist es
@@ -121,6 +134,7 @@ const WARTUNG_AUSNAHMEN = [
     'betrieb_updates.php',
     'betrieb_jobs.php',
     'betrieb_server.php',
+    'betrieb_schluesselblatt.php',
     'update.php',
     'wiederherstellen.php',
     'jobs.php',

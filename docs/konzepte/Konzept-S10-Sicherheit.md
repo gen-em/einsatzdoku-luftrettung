@@ -20,10 +20,10 @@ Dateien.
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **AP2 erledigt (Web 20.0.0, die Hauptstufe).** Konzept freigegeben; fünf Fragen (F-S10-1 bis -5) am 13.09.2026 mit dem Auftraggeber entschieden und als E-S10-03, -05, -12, -13, -14 übernommen. Keine offene Frage. |
-> | Entschieden | E-S10-01 bis E-S10-18 (Abschnitt 2), dazu E-S10-U-01 bis -03 aus der Umsetzung (Abschnitt 2a) |
-> | Offen | nichts. **Eine der zwei gemessenen Zahlen steht:** HKDF im Browser (AP2). Die zweite — Paketgröße Fassung 3 — kommt mit AP4 |
-> | Umsetzung | **AP0 bis AP2 erledigt, AP3 als Nächstes.** Sechs Arbeitspakete (Abschnitt 3), eines nach dem anderen; nach jedem Paket Statusblock hier, Prüfprotokoll (Abschnitt 5), Push (K7). Voraussetzung erfüllt: Backlog-Runde 3 (PR #43) **und** Mockup-Runde 9c (PR #44) sind gemergt; `origin/main` stand am 14.09.2026 auf `3886e26`, **Web 19.6.0** |
+> | Stand | 14.09.2026 — **AP3 erledigt (Web 20.1.0).** Konzept freigegeben; fünf Fragen (F-S10-1 bis -5) am 13.09.2026 mit dem Auftraggeber entschieden und als E-S10-03, -05, -12, -13, -14 übernommen. **Eine Abweichung zur Ansage:** Das Schlüsselblatt bringt das erste `@media print` des Projekts (E-S10-U-06) — Konzept 1.6 sagt „kein neuer Baustein, kein Mockup"; für die Karte stimmt das, für die Druckseite nicht ganz. Dem Auftraggeber angesagt. |
+> | Entschieden | E-S10-01 bis E-S10-18 (Abschnitt 2), dazu E-S10-U-01 bis **-08** aus der Umsetzung (Abschnitt 2a) |
+> | Offen | **Eine** der zwei gemessenen Zahlen steht seit AP2: HKDF im Browser. Die zweite — Paketgröße Fassung 3 — kommt mit AP4 |
+> | Umsetzung | **AP0 bis AP3 erledigt, AP4 als Nächstes.** Sechs Arbeitspakete (Abschnitt 3), eines nach dem anderen; nach jedem Paket Statusblock hier, Prüfprotokoll (Abschnitt 5), Push (K7). Voraussetzung erfüllt: Backlog-Runde 3 (PR #43) **und** Mockup-Runde 9c (PR #44) sind gemergt; `origin/main` stand am 14.09.2026 auf `3886e26`, **Web 19.6.0** |
 > | Fable-Schritte der Umsetzung | keine |
 
 > **Stand der Umsetzung**
@@ -33,7 +33,7 @@ Dateien.
 > | AP0 Ablage und Buchführung | **erledigt** 14.09.2026 | keine (nur `docs/`, `tools/`) | Rahmenplan Fassung **60**; Backlog-Vermerke an **3** Nummern (46, 139, 155); Containeraufbau **3 von 3** Engines |
 > | AP1 Grundlage Server | **erledigt** 14.09.2026 | **19.7.0** | Anteilprobe **69 von 69** + Endpunktprobe **33 von 33**; `php -l` **0** Fehler in 9 Dateien; Klickprobe **43 von 43**; Kreisläufe csv **9120/0** und edbak **287 687/0**; Bilderlauf 48 Bilder **0/0/0**; Wortliste **0/0/0**; Linkprobe **117/0** |
 > | AP2 Browser: Datenschlüssel mit Anteil, stille Umstellung | **erledigt** 14.09.2026 | **20.0.0** (Haupt) | Umstellungslauf **16 von 16** in **drei Engines, je zweimal**; darin **80 von 80** Blöcken nach der Umstellung lesbar und **0** Aufrufe von `kdf_upgrade.php` beim zweiten Anmelden; HKDF **0,023–0,154 ms** je Ableitung; Anteilprobe **69 von 69** + Endpunktprobe **33 von 33**; Klickprobe **43 von 43**; Kreisläufe **9120/0** und **287 687/0**; Bilderlauf 48 Bilder **0/0/0**; Wortliste **0/0/0**; Linkprobe **117/0**; `dataKeyHex` **0 im Code** (2 in der Versionserzählung) |
-> | AP3 Betrieb: Schlüsselblatt, Nachtragen, Rotation, Status | offen | 20.1.0 vorgesehen | |
+> | AP3 Betrieb: Schlüsselblatt, Nachtragen, Rotation, Status | **erledigt** 14.09.2026 | **20.1.0** | Betriebslauf **50 von 50** in **drei Engines**; darin: drei Kennungen gleich (Karte = Status = Blatt), Druckansicht bei 210 mm **16 Gruppen / 0 zerschnitten / 0 Überlauf**, Nachtragen falsch → `config.php` **byte-gleich**, Rotation **0/3 → 1/2** nach einer echten Anmeldung, Neuanfang zweiter Versuch **abgewiesen**, nach Reset **Inhaltsschlüssel identisch** und **1 von 1** Chiffretext geöffnet; Anteilprobe **69 von 69** + Endpunktprobe **33 von 33**; Klickprobe **43 von 43**; Kreisläufe **9120/0** und **287 687/0**; Bilderlauf 4 Seiten × 8 Breiten × **beide Bedienhöhen** je **0/0/0**, dazu Risikoliste in Firefox und WebKit; Kontraste **22 Paare, 0 verfehlt**; Wortliste **0/0/0**; Linkprobe **117/0**; Vollständigkeit **329 → 335**, Unterschied erklärt |
 > | AP4 Adminpakete versiegeln, `ftp` abschaffen | offen | 20.2.0 vorgesehen | |
 > | AP5 Prüfmittel und Referenzbestand | offen | keine (nur `tools/`) | |
 > | AP6 Abschluss: Dokumente, Backlog, Rahmenplan | offen | keine (nur `docs/`) | |
@@ -472,6 +472,59 @@ nachgerechnet.** AP5 hat damit weniger zu tun; was dort offenbleibt, steht
 unverändert in E-S10-15 (Fixture, Freigabe-, Wiederherstellungs- und
 Komplettprobe, Referenzbestand).
 
+**E-S10-U-05 „Nicht eingerichtet" trägt eine NEUTRALE Plakette, keine rote**
+(14.09.2026, Abweichung von E-S10-09 / AP3-Inhalt). Der AP3-Inhalt schreibt
+„rot bei `fehlt` und `abweichend`". Rot bleibt jetzt `abweichend` allein;
+`fehlt` ist neutral.
+
+*Warum:* `docs/Design.md` 9.23 legt fest, was die vier Plakettentöne **auf
+einer Statusseite** heißen — rot ist „etwas ist kaputt und muss reparariert
+werden". Eine Installation ohne Server-Anteil ist nicht kaputt: Sie verhält
+sich Zeile für Zeile wie vor Web 20.0.0, jede Hülle bleibt `edk1:`, niemand
+ist ausgesperrt. Rot dort hieße, dass jede Installation, die S10 noch nicht
+eingerichtet hat, mit einer roten Zeile im Status dasteht — und eine rote
+Zeile, die immer steht und nichts bedeutet, macht die roten daneben
+wertlos. `abweichend` bleibt rot, denn dort ist tatsächlich jemand
+ausgesperrt.
+
+**E-S10-U-06 Das Schlüsselblatt bringt das erste `@media print` des Projekts**
+(14.09.2026). Konzept 1.6 sagt, S10 brauche „keinen neuen Baustein, kein
+Mockup". Für die Karte und die Statuszeilen stimmt das; für das Blatt nicht
+ganz: Es ist eine Seite, deren **Zweck der Ausdruck** ist, und dafür gab es
+bis jetzt nichts — `server/assets/style.css` hatte keinen einzigen
+Druckblock.
+
+*Was gebaut wurde und was nicht:* **kein** neuer Baustein — das Blatt
+benutzt Lesespalte, Meldung, Wertekasten, Feldhinweis und Knopf, alles
+vorhanden. Dazu **drei** Druckregeln (Bildschirmknöpfe fort, keine
+Flächenfarbe, kein Umbruch im Wert) und **eine** neue Klasse `.blatt-wert`,
+die den vorhandenen Wertekasten um zwei Eigenschaften ergänzt. Kein neues
+Token, kein neuer Farbwert, kein neues Symbol. In `docs/Design.md` steht es
+als **sechster Seitentyp** (10.1) mit den drei Regeln und ihrer Begründung.
+
+*Dies ist die eine Stelle, an der AP3 über das Konzept hinausgeht*, und sie
+ist dem Auftraggeber ausdrücklich angesagt: `CLAUDE.md` 5 verlangt für eine
+**neue Darstellung** eine Freigabe mit Mockup. Der Bilderlauf zeigt die
+Seite in acht Breiten, der Betriebslauf die Druckansicht bei 210 mm.
+
+**E-S10-U-07 `betrieb_schluesselblatt.php` steht in `WARTUNG_AUSNAHMEN`**
+(14.09.2026). Der AP3-Inhalt sagt, `wartung_lib.php` bleibe unberührt — das
+galt für die Sperre aus E-S10-09 und gilt weiter. Die Ausnahmeliste ist etwas
+anderes: `betrieb_server.php` steht dort seit S8, und ihr Druckknopf führte
+sonst auf eine 503-Seite — derselbe Griff ins Leere wie F-S8-P-04, nur eine
+Ebene tiefer. Vor allem aber ist die Lage, in der man das Blatt braucht, genau
+eine Wartungslage: Eine Sicherung ist auf einen neuen Server eingespielt,
+`config.php` fehlt, der Anteil steht auf `abweichend` — und der Wert, der
+nachzutragen ist, steht auf dem Ausdruck, den diese Seite gemacht hat.
+
+**E-S10-U-08 Der Neuanfang ist serverseitig gegen Wiederholung gesichert**
+(14.09.2026). E-S10-09 nennt den Neuanfang „mit Rückfrage"; eine Rückfrage im
+Browser hält ein F5 nach dem Absenden nicht auf. `anteil_neuanfang()` prüft
+deshalb die Lage selbst und weist alles ab, was nicht `abweichend` ist. Ohne
+diese Schranke erzeugte ein versehentliches Neuladen einen **zweiten** neuen
+Anteil — und die Konten, die gerade zurückgesetzt wurden, wären ein zweites
+Mal ausgesperrt. Gemessen im Betriebslauf, Abschnitt 8.
+
 ---
 
 ## 3. Arbeitspakete
@@ -683,6 +736,27 @@ Wird je Paket fortgeschrieben: Mittel, Zahl, Stand. Leer bis AP1.
 | AP2 | Kreisläufe (R24) | csv / edbak | **9120/0** und **287 687/0** |
 | AP2 | `tools/screenshots/` (5 Seiten × 8 Breiten) | Überlauf / Konsole / Knopfhöhe | 48 Bilder **0/0/0** |
 | AP2 | `tools/wortliste/`, `tools/linkprobe/` | | **0/0/0** · **117/0** |
+| AP3 | `php -l` | berührte PHP-Dateien | **0 Fehler in 8 Dateien** |
+| AP3 | `tools/anteilprobe/betriebslauf.mjs`, drei Engines | Karte, Statuszeile, Blatt, die fünf Lagen an der **Oberfläche** | **50 von 50** je Engine |
+| AP3 | darin Abschnitt 1 | Karte, Status und Blatt nennen dieselbe Kennung; die Karte zeigt den Wert **nicht** | **3 Kennungen gleich**, Wert auf der Karte **nicht** enthalten |
+| AP3 | darin Abschnitt 2 | Blatt in `media: print` bei 718 px (210 mm) | **16 Vierergruppen · 0 zerschnitten · 0 waagerechter Überlauf · 0 Bildschirmknöpfe**, 1 Zeile; Bild `tools/anteilprobe/ausgabe-blatt-druck.png` |
+| AP3 | darin Abschnitt 4 | Nachtragen mit **falschem** Wert | Meldung nennt **beide** Kennungen; `config.php` vorher/nachher **byte-gleich** |
+| AP3 | darin Abschnitt 5 | Nachtragen mit richtigem Wert, in Vierergruppen abgetippt | geschrieben, Zustand `bereit` |
+| AP3 | darin Abschnitt 6 | Rotation: beide Einträge in `config.php`, Marke gewandert, „alten Anteil entfernen" **nicht** angeboten | **3 von 3** · nicht angeboten |
+| AP3 | darin Abschnitt 6b | **eine echte Anmeldung** während der Rotation schiebt ein Konto | **0/3 → 1/2**, Hülle des Kontos trägt die neue Kennung |
+| AP3 | darin Abschnitt 7 | „Alten Anteil entfernen" bei alt = 0 | angeboten; `kdf_anteil_alt` danach **nicht mehr** in `config.php` |
+| AP3 | darin Abschnitt 8 | Neuanfang: gelingt einmal, **zweiter Versuch** (das F5) wird abgewiesen | **1 gelungen / 1 abgewiesen**, Wert unverändert |
+| AP3 | darin Abschnitt 8b | betroffenes Konto: Anmeldung gelingt, Entsperrdialog nennt den **erneuerten Anteil** | Wortlaut „Der Server-Anteil wurde erneuert — bitte das Passwort über den Wiederherstellungsschlüssel neu setzen" |
+| AP3 | darin Abschnitt 8b | Reset über den Wiederherstellungsschlüssel, danach die Daten | **Inhaltsschlüssel Zeichen für Zeichen derselbe**, `pat_key_check` unverändert, **1 von 1** vor dem Neuanfang gebauter Chiffretext geöffnet |
+| AP3 | darin Abschnitt 9 und `finally` | Fehler aus der Anwendung; Rückgabe | **0 Fehler**; `config.php` **byte-gleich**, **5 von 5** Hüllen byte-gleich, **6 von 6** Kontofeldern gleich |
+| AP3 | Anteilprobe + Endpunktprobe (Regression) | Serverseite | **69 von 69** · **33 von 33** |
+| AP3 | `tools/klickprobe/probe.mjs` | Regression über alle Bedienwege | **43 von 43** |
+| AP3 | Kreisläufe (R24) | csv / edbak, unerklärte Abweichungen | **9120/0** und **287 687/0** |
+| AP3 | Bilderlauf, 4 Seiten × 8 Breiten, **beide Bedienhöhen** | Überlauf / Konsole / Knopfhöhe | je 32 Bilder, **0/0/0** (Zeiger 44/36 px) und **0/0/0** (Finger 44 px) |
+| AP3 | Bilderlauf mit Risikoliste, Firefox und WebKit | dasselbe über 14 Seiten | je 112 Bilder, **0 Überlauf / 0 Knopfhöhe**; Firefox **2–4 Konsolenfehler**, sämtlich abgebrochene Schriftabrufe — vor der Änderung 3, nach der Änderung 2 auf derselben Seite (F-S10-AP3-07) |
+| AP3 | `tools/screenshots/kontrast.py` | gerechnete Paare / verfehlt | **22 / 0** |
+| AP3 | `tools/vollstaendigkeit/pruefen.py` | Befunde vorher → nachher | **329 → 335**; die sechs sind `→` in der Pfadschreibweise (3 in Kommentaren, 3 in sichtbarem Text). **Hexfarben außerhalb `:root`: 0** |
+| AP3 | `tools/wortliste/` · `tools/linkprobe/` | | **0/0/0** · **117/0** |
 
 ---
 
@@ -715,6 +789,17 @@ Oberfläche/Doku) und werden vor AP4 nachgeholt. Die Funde unten sind
 | F-8 | „`sk_versiegelt()` am ersten Teil" — es gibt keinen „ersten Teil": Die vier Leser greifen je einen benannten Eintrag im ZIP | `adminbackup_lib.php` | **AP4.** Die Fassung erkennt der Leser an **`manifest.json`**, dem einzigen Eintrag, den jedes Paket hat und jeder Leser ohnehin liest |
 | F-9 | Die Abnahmezahl `grep -c '"email"' = 0` misst nicht, was sie behauptet: Die E-Mail-Adresse liegt weiter im Klartext **neben** dem Paket (Ordnername, Dateiname, Kontozeile) | AP4-Abnahme | **AP4.** Die Zahl wird umformuliert oder fällt weg. Eine grüne Zahl, die das Falsche misst, ist schlimmer als keine (`CLAUDE.md` 6) |
 | F-10 | Die Größenmessung in AP4 setzt voraus, die Teile seien heute ungepackt — das ZIP packt sie bereits | AP4-Abnahme | **AP4.** Gemessen werden drei Zahlen, nicht zwei: heute · Siegel im ZIP · gzip vor dem Siegel |
+| F-15 | `ui_plakette(['ton' => 'ok'])` — `.plakette-ok` gibt es im Stylesheet **nicht**. Zwei Stellen im Bestand tragen den Ton seit ihrer Einführung und stehen dort ohne Hintergrund als bloßer Text: `betrieb_server.php` (Karte „Adresssuche") und `einstellungen.php` (Zeile „Adresssuche an"). Die neue Karte wollte ihn übernehmen | `betrieb_server.php`, `einstellungen.php`, `style.css` | **Gefunden im Gegenlesen von AP3, bevor er ausgeliefert wurde.** Die neue Karte nimmt `blau` — den Ton, den `Design.md` 9.23 für „in Ordnung" führt. Die zwei Altstellen bleiben unangefasst (K4: sie gehören nicht zu S10) und sind in **Backlog Nr. 36** vermerkt — dort steht derselbe Fall schon zweimal (`warn`, Web 10.3.0), und beim dritten Mal ist es kein Zufall mehr |
+| F-16 | Die Zerlegung eines Hexwerts in Vierergruppen stand **zweimal** im Code — `apk_sha_lesbar()` und das Schlüsselblatt | `apk_lib.php`, `db.php` | **Erledigt in AP3.** Einmal als `hex_vierergruppen()` in `db.php`; `apk_sha_lesbar()` ruft sie |
+| F-17 | `docs/Technik.md` führte die Ausnahmeliste des Wartungsmodus als „**elf** Skripte" und ließ `auth_salt.php` in der Aufzählung aus. Tatsächlich waren es zwölf, seit Web 19.1.2 (Nr. 171) | `Technik.md`, `wartung_lib.php` | **Erledigt in AP3.** Die Zeile nennt jetzt **dreizehn** (mit dem Schlüsselblatt), zählt `auth_salt.php` mit und verweist für den Grund je Eintrag auf die Konstante. Eine Zahl in der Dokumentation, die niemand nachzählt, wird beim nächsten Eintrag wieder falsch |
+| F-S10-AP3-01 | **OPcache.** `php -S` läuft mit eingeschaltetem OPcache (`opcache.enable_cli` gilt für die SAPI `cli`, der eingebaute Server heißt `cli-server`), und der prüft den Zeitstempel nur alle 2 Sekunden. Der Betriebslauf schreibt `config.php` **an der Anwendung vorbei** und wartete danach 30 Sekunden auf ein Eingabefeld, das es in der gemessenen Lage nicht gab | `tools/anteilprobe/betriebslauf.mjs` | **Fehler des Prüfmittels, nicht der Anwendung.** `config_eintrag_schreiben()` verwirft den Zwischenspeicher seit S2/AP7 selbst; der Prüfstand sitzt in einem anderen Prozess und wartet deshalb 2,2 s. Er sah zwei Stunden lang wie ein Anwendungsfehler aus |
+| F-S10-AP3-02 | **`form.requestSubmit()` läuft in `confirm.js`.** Der Lauf drückte damit „wechseln", „entfernen" und „Neuanfang" — und nichts geschah: `requestSubmit()` löst `submit` aus, die Rückfrage fängt es ab. Der Aufruf kehrte klaglos zurück, und sechs Erwartungen maßen eine Seite, die sich nie geändert hatte | dasselbe | **Erledigt.** Der Lauf **drückt den Knopf und beantwortet den Dialog**, wie es eine Betreiberin täte — damit ist die Rückfrage mitgemessen. `form.submit()` ginge am Zuhörer vorbei und misst einen Weg, den niemand geht |
+| F-S10-AP3-03 | **Eine Voraussetzung, die man herstellen muss.** `endpunkt.py` misst ab E4 die Umstellung einer `edk1:`-Hülle; steht das Konto schon auf `edka1:` — nach jedem eigenen Lauf, nach dem Umstellungslauf, nach jedem Anmelden im Browser —, antwortet der Endpunkt `nicht_noetig`, und der Lauf meldet **22 von 33**, ohne dass an der Anwendung etwas fehlte | `tools/anteilprobe/endpunkt.py` | **Erledigt.** Die Datei ruft die Ausgangslage jetzt selbst über `huelle_stellen.py` her und nennt sie in der Kopfzeile. Zweimal hintereinander gefahren: **33 von 33**, beide Male |
+| F-S10-AP3-04 | **Ein zweiter Tab ist keine zweite Sitzung.** Der Betriebslauf meldete sich in einem Tab des Hauptkontexts an, der bereits als Betreiberin angemeldet war; `login.php` leitet dort sofort weiter, und der Lauf wartete 30 s auf ein Anmeldefeld, das es auf der Zielseite nicht gibt | dasselbe | **Erledigt.** Jede Probeanmeldung bekommt einen **eigenen Browserkontext** — eigene Cookies, und zugleich das, was gemeint ist: ein anderer Mensch, ein anderer Browser |
+| F-S10-AP3-05 | **Der teure.** Der Lauf legte sechs Felder des Admin-Kontos über PHP-Quelltext zurück, den er aus JavaScript zusammensetzte — mit `JSON.stringify()`, also in **doppelten** Anführungszeichen. PHP ersetzt darin alles, was wie eine Variable aussieht. Aus dem bcrypt-Hash `$2y$12$xdD.Dxofamu…` wurde `$2y$12.`, sieben Zeichen: **Das Konto war mit keinem Passwort mehr erreichbar**, und der nächste Lauf blieb an der Anmeldung stehen, ohne zu sagen, warum | dasselbe | **Erledigt.** `phpStr()` setzt jeden Wert in **einfache** Anführungszeichen; die Rückgabe zählt am Ende **alle sechs Felder** gegen den Stand vom Anfang und meldet die abweichenden beim Namen. Wiederhergestellt wurde der Hash aus dem abgeleiteten Anmeldetoken (`krypto.ableiten()`), nicht aus dem Passwort — dieselbe Rechnung, die der Browser macht |
+| F-S10-AP3-06 | **Ein Dialog, den niemand ruft, erscheint nicht.** Abschnitt 8b wartete auf den Entsperrdialog des Admin-Kontos. Das Konto hat **keine geschützten Angaben** — also fragt keine Seite von selbst danach, und der Lauf meldete zwei rote Haken für etwas, das die Anwendung richtig macht | dasselbe | **Erledigt.** Der Lauf ruft `EdUnlock.ensureContentKey()` selbst — derselbe Aufruf, den jede Seite mit geschützten Angaben macht — und geht den Weg dann zu Ende: Passwort eintragen, „Entsperren" drücken, lesen, was dasteht. **Die Meldung erscheint erst nach der Eingabe**, und das ist richtig so: Der Dialog fragt zuerst nach dem Passwort und sagt erst dann, woran die Ableitung gescheitert ist |
+| F-S10-AP3-07 | **`tools/screenshots/LIESMICH.md` versprach „0 Konsolenfehler in allen drei Motoren".** In S10/AP3 meldete Firefox auf `43b-sicherungsziele` bei 360 px zwei bis drei abgebrochene Schriftabrufe (`status=2152398850` = `NS_BINDING_ABORTED`) | `tools/screenshots/` | **Kein Anwendungsfehler; die Zusage war zu stark.** Ursache ist wieder `php -S`: Bei Last stehen die Schriftabrufe in der Schlange, und Firefox bricht sie ab, sobald die Seite fertig gezeichnet ist. Gegenprobe auf **demselben Stand vor und nach** der Änderung: **3 vorher, 2 nachher**. Die LIESMICH sagt es jetzt so und nennt den Wortlaut, an dem man es erkennt — **kein Filter**, denn ein Filter machte aus einer lesbaren Auskunft eine schmeichelhafte Null |
+| F-S10-AP3-08 | **Der teuerste, und er hat echte Daten gekostet.** Abschnitt 6b meldet ein Konto an und lässt die stille Umstellung laufen — die packt den Inhaltsschlüssel mit dem Datenschlüssel des **neuen** Anteils neu ein. Der Schnappschuss der Hüllen stand aber in Abschnitt 7, also **nach** 6b; zurückgelegt wurde auf einen bereits umgestellten Stand, und das `finally` nahm den zugehörigen Anteil danach wieder aus `config.php`. `umlauf-csv@gen-em.org` trug anschließend eine Hülle mit der Kennung eines Anteils, den es nicht mehr gibt — **ausgesperrt, ohne Rückweg außer dem Wiederherstellungsschlüssel**, und den kennt niemand | `tools/anteilprobe/betriebslauf.mjs` | **Erledigt.** Der Schnappschuss steht jetzt **ganz am Anfang** und umfasst die Hüllen **aller** Konten; das `finally` legt sie zurück und zählt nach. Die alte Hülle ist der einzige mögliche Rückweg — eine Umhüllung ist nicht rückrechenbar, und sie geht nur mit dem Anteil auf, den dasselbe `finally` wiederherstellt. **Das Konto ist neu eingerichtet worden** (Prüfdokument Abschnitt 0). *Die Lehre gilt über dieses Werkzeug hinaus: Ein Prüfstand, der eine Verschlüsselung anfasst, muss seinen Schnappschuss vor der **ersten** Handlung nehmen, nicht vor der, die er für die erste hält.* |
 
 ---
 

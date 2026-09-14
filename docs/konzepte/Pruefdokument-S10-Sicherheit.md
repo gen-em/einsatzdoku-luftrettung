@@ -13,11 +13,11 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **AP2 erledigt** (Web 20.0.0, die Hauptstufe), AP3 als Nächstes. |
-> | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines**, dazu alles aus AP1 erneut (Abschnitt 2) |
+> | Stand | 14.09.2026 — **AP3 erledigt** (Web 20.1.0), AP4 als Nächstes. |
+> | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines** · AP3: **Betriebslauf** in drei Engines (Oberfläche der fünf Lagen, Blatt im Druck, Rotation, Neuanfang, Reset), dazu alles aus AP1/AP2 erneut (Abschnitt 2) |
 > | Offen | P-01 bis P-14 |
-> | Fragen | keine |
-> | Fehlerfunde | **drei in der Anwendung** (F-1 bis F-3, im Gegenlesen gefunden, in AP2 behoben); **fünf am Prüfstand** (F-S10-U-01, F-11 bis F-14) |
+> | Fragen | keine. **Eine Ansage:** Das Schlüsselblatt bringt das erste `@media print` des Projekts — nach `CLAUDE.md` 5 eine neue Darstellung und damit freigabepflichtig; Begründung in E-S10-U-06. |
+> | Fehlerfunde | **drei in der Anwendung** (F-1 bis F-3, in AP2 behoben), **drei in Bestand und Dokumentation** (F-15 bis F-17, AP3), **zwölf am Prüfstand** (F-S10-U-01, F-11 bis F-14, F-S10-AP3-01 bis -08) |
 > | Prüfumgebung | PHP **8.4.19** (CLI, NTS) · MariaDB **10.11.14** · Python **3.11.15** · Node **22.22.2** · Playwright **1.56.1** mit drei Engines: Chromium **141.0.7390.37**, Firefox **142.0.1**, WebKit **26.0** · lokale Installation über `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto; `admin@gen-em.org` und `demo@gen-em.org` mit den Vorgabekennwörtern) |
 
 ---
@@ -38,6 +38,43 @@ Grund und dem Weg, auf dem der Auftraggeber ihn nachholt:
 ist Buchführung plus eine `tools/`-Änderung, und beides ist in Abschnitt 2 mit
 Zahl belegt. Die drei Punkte oben bleiben unverändert stehen; sie hängen an
 Paketen, die noch nicht gebaut sind.
+
+**Stand nach AP3 — was weiterhin offen ist.** Punkt 1 von AP2 ist damit
+**erledigt**: Der neue Betriebslauf (`tools/anteilprobe/betriebslauf.mjs`)
+stellt `abweichend` und `Rotation` her, **bedient sie an der Oberfläche** und
+stellt sie zurück — in drei Engines. Offen bleiben:
+
+1. **`config.php` der echten Installation** (Beschreibbarkeit, OPcache des
+   Hosters) → **P-01** und **P-06**. Der Prüfstand schreibt gegen eine
+   `config.php`, die ihm gehört; ob der Hoster das zulässt, sieht man nur
+   dort. AP3 hat dabei nebenbei gezeigt, **wie wichtig die Frage ist**: Der
+   eingebaute PHP-Server läuft mit OPcache, und ohne das
+   `opcache_invalidate()` in `config_eintrag_schreiben()` läse die nächste
+   Anfrage bis zu zwei Sekunden lang die alte Datei (F-S10-AP3-01).
+2. **Der Druck auf Papier** → **P-02**. Gemessen ist die Druckansicht bei
+   718 px (210 mm) in `media: print`: 16 Vierergruppen, 0 zerschnitten,
+   0 waagerechter Überlauf. Das ist das **gerechnete** Bild. Ob ein Drucker
+   die Gruppen so setzt, sagt nur ein Ausdruck.
+3. **Die Umstellung an echtem Bestand** → **P-03**. Gemessen an
+   `umlauf-csv@gen-em.org` mit 83 Einsätzen; auf luftrettung.net liegt mehr.
+4. **Versand gegen die echten Backup-Ziele** → **P-12** (gehört zu AP4).
+
+> **Ein Konto der Prüfinstallation ist ausgesperrt worden und neu
+> eingerichtet.** Der Betriebslauf hat `umlauf-csv@gen-em.org` in einem
+> Zwischenstand auf eine Schlüsselhülle gesetzt, deren Server-Anteil er
+> unmittelbar darauf aus `config.php` entfernte (F-S10-AP3-08). Das ist
+> **nicht** rückrechenbar. Das Konto ist über den regulären Weg neu angelegt
+> worden (`einspielen.py --stufen konto,stammdaten`, `passwort_setzen.mjs`,
+> `kreislauf.py --art csv --frisch`) und misst seither wieder **9120/0**. Der
+> **alte Kontostand liegt geparkt** unter
+> `umlauf-csv-ausgesperrt-20260914@gen-em.org` — mit 83 Einsätzen, deren
+> geschützte Angaben niemand mehr öffnen kann. Er ist nicht gelöscht worden,
+> weil Löschen die eine Handlung ist, die sich nicht zurücknehmen lässt;
+> **er darf gelöscht werden** (Verwaltung → NutzerInnen → Konto löschen) und
+> verschwindet ohnehin mit dem Wegwerf-Container. Auf luftrettung.net ist
+> davon nichts passiert und nichts zu tun — es betrifft ausschließlich die
+> Prüfinstallation. *Der Fehler lag im Prüfmittel, nicht in der Anwendung:
+> Die stille Umstellung hat genau das getan, was sie soll.*
 
 **Stand nach AP2 — was weiterhin offen ist.** Punkt 1 von AP1 ist damit
 **erledigt**: Der Umstellungslauf misst jetzt im echten Browser, dass
@@ -156,6 +193,41 @@ nie einlaufende Netzruhe hinter dem Egress-Filter und der einzelne PHP-Prozess,
 der eine Anfrage zur Zeit bedient. **Sie sind der Grund, warum der Lauf in
 drei Engines fährt** — zwei der drei traten in Chromium gar nicht auf.
 
+**AP3 — Betrieb: Karte, Blatt, Rotation (Web 20.1.0).** Der Server-Anteil
+bekommt eine Bedienung und einen zweiten Ort. Die Karte „Schlüssel des
+Servers" führt beide Geheimnisse an einer Stelle (anlegen, wechseln, alten
+entfernen, nachtragen, Neuanfang) und **nennt nur die Kennung, nie den Wert**;
+das Schlüsselblatt ist die eine Seite, deren Zweck der Ausdruck ist; die
+Statusseite hat zwei Zeilen statt einer. Die Serverschlüssel-Karte ist von den
+Backup-Zielen hierher gezogen, dort steht ein Verweis.
+
+*Was die Zahlen sagen.* Der neue **Betriebslauf** misst, was kein anderes
+Mittel messen kann — die Oberfläche der Lagen `abweichend` und `Rotation`, die
+nach AP2 im Prüfdokument unter „nicht geprüft" standen: **50 von 50 in allen
+drei Engines**. Drei Zahlen darin sind die eigentlichen:
+
+- **Nachtragen mit falschem Wert ändert nichts.** Die Meldung nennt beide
+  Kennungen, und `config.php` ist vorher und nachher **byte-gleich**. Ein
+  falsch abgetippter Wert, der stillschweigend landet, überschriebe den
+  einzigen Ort, an dem der richtige noch stehen könnte.
+- **Die Rotation läuft von selbst.** Eine **echte Anmeldung** schiebt ein
+  Konto von alt nach neu: **0/3 → 1/2**, gemessen an der Karte, nicht an der
+  Datenbank — die Frage ist, ob die BetreiberIn den Fortschritt sieht.
+- **Der Neuanfang kostet keine Daten.** Nach dem Reset über den
+  Wiederherstellungsschlüssel ist der Inhaltsschlüssel **Zeichen für Zeichen
+  derselbe**, `pat_key_check` unverändert, und ein vor dem Neuanfang gebauter
+  Chiffretext geht wieder auf (**1 von 1**). Das ist die Zusage, die auf dem
+  Schlüsselblatt und in der Rückfrage steht — jetzt als Zahl statt als Satz.
+
+*Und eine vierte, die zum Papier gehört:* Das Blatt in `media: print` bei
+718 px (210 mm) — **16 Vierergruppen, 0 zerschnitten, 0 waagerechter
+Überlauf**. Das ist das gerechnete Bild; der Ausdruck bleibt **P-02**.
+
+*Die Regression* ist über Anteilprobe (69/69), Endpunktprobe (33/33),
+Klickprobe (43/43) und beide Kreisläufe (**9120/0** und **287 687/0**)
+gemessen. Der Bilderlauf fährt die vier berührten Seiten in acht Breiten und
+**beiden Bedienhöhen**: je **0/0/0**.
+
 ---
 
 ## 2. Maschinelle Prüfungen (Mittel und Zahl)
@@ -189,8 +261,22 @@ drei Engines fährt** — zwei der drei traten in Chromium gar nicht auf.
 | AP2 | Anteilprobe + Endpunktprobe (Regression nach F-2/F-3) | Serverseite | **69 von 69** · **33 von 33** |
 | AP2 | Klickprobe · Kreisläufe | Regression | **43 von 43** · **9120/0** und **287 687/0** |
 | AP2 | Bilderlauf (5 Seiten × 8 Breiten) | Überlauf / Konsole / Knopfhöhe | 48 Bilder **0/0/0** |
-| AP3 | Browserlauf | Anlegen, Nachtragen falsch/richtig, Rotation, Neuanfang | |
-| AP3 | Kontraste | Paare, verfehlt | |
+| AP3 | `php -l` | berührte Dateien | **0 Fehler in 8** |
+| AP3 | `betriebslauf.mjs`, 3 Engines | Oberfläche der fünf Lagen, Blatt, Rotation, Neuanfang, Reset | **50 von 50** je Engine |
+| AP3 | dasselbe, Abschnitt 1 | Karte = Status = Blatt nennen dieselbe Kennung; Wert **nicht** auf der Karte | **3 gleich** · Wert nicht enthalten |
+| AP3 | dasselbe, Abschnitt 2 | Blatt in `media: print` bei 718 px (210 mm) | **16 Gruppen · 0 zerschnitten · 0 Überlauf · 0 Bildschirmknöpfe** |
+| AP3 | dasselbe, Abschnitt 4 | Nachtragen mit falschem Wert | beide Kennungen genannt; `config.php` **byte-gleich** |
+| AP3 | dasselbe, Abschnitt 6b | echte Anmeldung während der Rotation | **0/3 → 1/2** |
+| AP3 | dasselbe, Abschnitt 8 | Neuanfang, zweiter Versuch (F5) | **1 gelungen / 1 abgewiesen** |
+| AP3 | dasselbe, Abschnitt 8b | Entsperrdialog nach dem Neuanfang | Wortlaut „Der Server-Anteil wurde erneuert …" statt „Passwort falsch" |
+| AP3 | dasselbe, Abschnitt 8b | Reset über den Wiederherstellungsschlüssel | Inhaltsschlüssel **identisch**, `pat_key_check` unverändert, **1 von 1** Chiffretext geöffnet |
+| AP3 | dasselbe, `finally` | Rückgabe der Prüfinstallation | `config.php` byte-gleich · **5/5** Hüllen · **6/6** Kontofelder |
+| AP3 | Anteilprobe · Endpunktprobe | Regression Serverseite | **69 von 69** · **33 von 33** |
+| AP3 | Klickprobe · Kreisläufe | Regression | **43 von 43** · **9120/0** und **287 687/0** |
+| AP3 | Bilderlauf, 4 Seiten × 8 Breiten, **beide Bedienhöhen** | Überlauf / Konsole / Knopfhöhe | je 32 Bilder **0/0/0** |
+| AP3 | Bilderlauf mit Risikoliste (Firefox, WebKit) | dasselbe über 14 Seiten | je 112 Bilder, **0 Überlauf / 0 Knopfhöhe**; Firefox 2–4 abgebrochene Schriftabrufe (F-S10-AP3-07) |
+| AP3 | `kontrast.py` | gerechnete Paare / verfehlt | **22 / 0** |
+| AP3 | `tools/vollstaendigkeit/` | Befunde vorher → nachher; Hexfarben außerhalb `:root` | **329 → 335**, erklärt · **0** |
 | AP4 | `unzip -p` | Teile mit `edsk1:` / Teile gesamt; `"email"`-Treffer im Rohtext | n/n · 0 |
 | AP4 | Paketgröße | Fassung 3 gegen Fassung 2 am 5000er-Bestand, gzip+Siegel vs. Siegel | |
 | AP4 | `tools/freigabeprobe/` | Chiffretext anders, Klartext gleich | |
@@ -207,7 +293,7 @@ drei Engines fährt** — zwei der drei traten in Chromium gar nicht auf.
 ## 3. Grenzen der Prüfmittel
 
 - Der Bilderlauf sieht keinen Zustand `abweichend` und keine Rotation — beides
-  wird im Browserlauf hergestellt (Kennung in `app_state` verstellen, zweiten
+  wird im Betriebslauf hergestellt (Kennung in `app_state` verstellen, zweiten
   Anteil eintragen) und wieder zurückgestellt; die Zahl sagt, was hergestellt war.
 - `sitzung.py` stellt nicht um; ein Konto, das nur über das Prüfmittel angemeldet
   war, bleibt `edk1:`. Der Umstellungslauf braucht einen echten Browser.
@@ -221,6 +307,29 @@ drei Engines fährt** — zwei der drei traten in Chromium gar nicht auf.
   Ob in einer Hülle wirklich derselbe Inhaltsschlüssel steckt, sieht nur, wer
   sie öffnet. Deshalb misst die Endpunktprobe den Rundlauf (E8) und nicht
   bloß den Statuscode — eine grüne 200 allein wäre hier kein Beleg.
+
+- **Der Betriebslauf sieht die Oberfläche, aber nicht das Papier.** Er misst
+  das Blatt in `media: print` bei 718 px — das ist die *gerechnete*
+  Druckansicht. Ob ein Drucker die Vierergruppen so setzt, sagt nur ein
+  Ausdruck (**P-02**).
+- **Der Betriebslauf stellt zwei Lagen her, statt sie entstehen zu lassen.**
+  `abweichend` erzeugt er über `app_state`, nicht über ein verlorenes
+  `config.php`; die Zahl der Konten auf dem alten Anteil setzt er in
+  Abschnitt 7 per SQL, statt vier Anmeldungen abzuwarten. Gemessen wird die
+  **Reaktion** der Oberfläche auf die Lage — nicht, dass die Lage auf dem
+  üblichen Weg entsteht. **Eine Ausnahme, und sie ist die wichtige:**
+  Abschnitt 6b meldet ein echtes Konto an und lässt die stille Umstellung
+  laufen; dort wandert die Zahl auf dem üblichen Weg (**0/2 → 1/1**).
+- **Abschnitt 8b misst den Reset am Admin-Konto, nicht am Datenkonto.** Nur
+  von ihm ist der Wiederherstellungsschlüssel bekannt (er entsteht beim
+  Einrichten der Prüfinstallation). Das Admin-Konto hat **keine** Einsätze —
+  „Daten lesbar" wird deshalb nicht an Datensätzen gemessen, sondern am
+  **Inhaltsschlüssel selbst**: Er ist vor dem Neuanfang und nach dem Reset
+  Zeichen für Zeichen derselbe, `pat_key_check` unverändert, und ein vor dem
+  Neuanfang mit `EdCrypto.encrypt()` gebauter Chiffretext geht danach wieder
+  auf. Das ist die stärkere Aussage — ein bitgleicher Inhaltsschlüssel öffnet
+  genau dieselbe Menge Datensätze —, aber es ist **nicht** dasselbe wie ein
+  Konto mit 83 Einsätzen durch den Reset zu fahren (**P-08**).
 
 ---
 
@@ -276,6 +385,45 @@ leeren `PLAYWRIGHT_BROWSERS_PATH` meldet **0 von 3** und Rückgabewert **1**.
 `playwright install` ist ausdrücklich **nicht** der Weg — es zöge eine zweite,
 abweichende Fassung neben die des Abbilds; das steht als Absatz „Was es nicht
 tut" in der `LIESMICH.md`.
+
+**F-15 bis F-17 — drei Funde in AP3, zwei davon im Bestand.** `.plakette-ok`
+gibt es im Stylesheet nicht, und **zwei Stellen des Bestands** tragen den Ton
+seit ihrer Einführung: Die Plaketten stehen dort ohne Hintergrund als bloßer
+Text (Backlog Nr. 36 — derselbe Fall steht dort schon zweimal). Die
+Vierergruppen-Zerlegung stand doppelt im Code. Und `docs/Technik.md` führte die
+Ausnahmeliste des Wartungsmodus als „elf Skripte" und ließ `auth_salt.php` aus
+— falsch seit Web 19.1.2. Alle drei sind im Konzept, Abschnitt 6, mit Beleg.
+
+**F-S10-AP3-01 bis -08 — acht Funde am Prüfstand, und zwei davon haben etwas
+kaputtgemacht.** Sie stehen im Konzept, Abschnitt 6, und in
+`tools/anteilprobe/LIESMICH.md` („Elf Fallen"). Die beiden teuren:
+
+- **F-S10-AP3-05 — ein Konto ohne Passwort.** Der Betriebslauf legte sechs
+  Felder des Admin-Kontos über `php -r` zurück und setzte die Werte mit
+  `JSON.stringify()` ein, also in **doppelte** Anführungszeichen. PHP ersetzt
+  darin alles, was wie eine Variable aussieht; aus dem bcrypt-Hash
+  `$2y$12$xdD.Dxofamu…` wurde `$2y$12.` — sieben Zeichen. Das Konto war
+  danach mit keinem Passwort mehr erreichbar, und der nächste Lauf blieb an
+  der Anmeldung stehen, ohne den Grund zu nennen. *Wiederhergestellt* aus dem
+  abgeleiteten Anmeldetoken (`krypto.ableiten()` mit Salz und Rundenzahl des
+  Kontos, dann `password_hash()`) — dieselbe Rechnung, die der Browser macht.
+  *Behoben* mit `phpStr()` (einfache Anführungszeichen) und einer Rückgabe,
+  die **alle sechs Felder** gegen den Stand vom Anfang zählt.
+- **F-S10-AP3-08 — ein Konto ohne Schlüssel.** Der Schnappschuss der
+  Schlüsselhüllen stand **nach** dem Abschnitt, der eine echte Anmeldung und
+  damit die stille Umstellung auslöst. Zurückgelegt wurde auf einen bereits
+  umgestellten Stand, und das `finally` nahm den zugehörigen Anteil gleich
+  darauf wieder aus `config.php`: `umlauf-csv@gen-em.org` trug eine Hülle mit
+  der Kennung eines Anteils, den es nicht mehr gibt. **Eine Umhüllung ist
+  nicht rückrechenbar** — der einzige Rückweg wäre der
+  Wiederherstellungsschlüssel des Kontos gewesen, und den hatte niemand
+  notiert. *Behoben:* Der Schnappschuss steht jetzt ganz am Anfang und umfasst
+  die Hüllen **aller** Konten; das `finally` legt sie zurück und zählt nach.
+  *Was das Konto angeht, siehe Abschnitt 0.*
+
+*Was diese acht verbindet:* **Sechs von ihnen sahen aus wie ein Fehler der
+Anwendung.** Das ist die teuerste Sorte, weil man am falschen Ende sucht —
+und AP3 hat daran mehr Zeit verloren als am Bauen.
 
 ---
 

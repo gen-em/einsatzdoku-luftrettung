@@ -59,13 +59,27 @@ Phase.
 >   kein Befund. Ein Vergleich über Engines braucht eine Toleranz, kein
 >   `===`.
 >
-> **Und ein Satz zurückgenommen:** Bis AP3b stand hier, Firefox melde die
-> `latin-ext`-Schriftabrufe als Konsolenfehler (`NS_BINDING_ABORTED`) und ein
-> Rauschfilter müsse das kennen. Das stimmt nicht für diesen Lauf — die
-> Abbrüche entstanden durch ein Messskript, das schneller weiterblätterte, als
-> die Schriften luden. Gemessen über fünf Seiten in acht Breiten: Chromium,
-> Firefox und WebKit melden **je 0 Konsolenfehler**. Es ist kein Filter
-> eingebaut worden, weil es nichts zu filtern gab.
+> **Und ein Satz zurückgenommen, dann halb wiederaufgenommen:** Bis AP3b
+> stand hier, Firefox melde die `latin-ext`-Schriftabrufe als Konsolenfehler
+> (`NS_BINDING_ABORTED`) und ein Rauschfilter müsse das kennen. Gemessen über
+> fünf Seiten in acht Breiten meldeten damals alle drei Motoren **je 0**, und
+> der Filter ist deshalb nicht eingebaut worden.
+>
+> **In S10/AP3 ist die Null nicht mehr gekommen.** Firefox meldete auf
+> `43b-sicherungsziele` bei 360 px zwei bis drei abgebrochene Schriftabrufe
+> (`status=2152398850` — das ist `NS_BINDING_ABORTED` als Zahl). Die Ursache
+> liegt nicht im Stylesheet: **`php -S` bedient eine Anfrage nach der
+> anderen.** Läuft daneben noch etwas — ein zweiter Motor, eine Probe —,
+> stehen die Schriftabrufe in der Schlange, und Firefox bricht sie ab, sobald
+> die Seite fertig gezeichnet ist. Chromium und WebKit tun das nicht.
+>
+> **Die Zahl ist damit lastabhängig, und das ist die Auskunft.** Belegt in
+> S10/AP3 durch eine Gegenprobe auf **demselben Stand vor und nach** der
+> Änderung: 3 Fehler vorher, 2 nachher, dieselbe Seite, derselbe Motor. Wer
+> hier eine Zahl über 0 sieht, liest **zuerst den Wortlaut** im Bericht: Steht
+> dort `downloadable font: download failed`, ist es diese Schlange; steht dort
+> etwas anderes, ist es ein Befund. Es ist weiterhin **kein Filter** eingebaut
+> — ein Filter machte aus einer lesbaren Auskunft eine schmeichelhafte Null.
 >
 > **WebKit hier ist nicht Safari.** Derselbe Kern, anderer Unterbau —
 > Schriften, Textrasterung, Systemintegration. Für „läuft das in Safari" ist

@@ -4021,3 +4021,61 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   .karte-groesse .symbol-hoch{display:none}
   .karte-groesse .symbol-breit{display:inline-block}
 }
+
+/* ===========================================================================
+ * 26. DRUCK — und die eine Seite, die dafür gemacht ist (S10/AP3, E-S10-10)
+ *
+ * DAS IST DER ERSTE `@media print`-BLOCK DIESER ANWENDUNG. Bis Web 20.0.0 gab
+ * es keinen: Nachgezählt am 14.09.2026 ergab `grep -c '@media print'` genau 0.
+ * Es gab bis dahin auch nichts zu drucken — eine Einsatzliste sieht man am
+ * Bildschirm an, und ein Ausdruck davon wäre eine zweite, ungepflegte Fassung
+ * der Daten.
+ *
+ * DAS SCHLÜSSELBLATT IST DIE AUSNAHME, und es ist die einzige, die es geben
+ * soll: Es ist eine Seite, deren ZWECK der Ausdruck ist. `config.php` ist seit
+ * S10 Schlüsselträger der ganzen Installation, und ein zweiter Ort für ihre
+ * beiden Geheimnisse muss das überleben, was die Datei nicht überlebt. Papier
+ * tut das; eine heruntergeladene Datei liegt im selben Unglück.
+ *
+ * DREI REGELN, MEHR NICHT. Was hier steht, ist absichtlich knapp — ein
+ * Druck-Stylesheet, das jede Seite umgestaltet, ist eine zweite Oberfläche mit
+ * eigenen Fehlern. Gestaltet wird die eine Seite, die gedruckt werden soll.
+ * ======================================================================== */
+
+/* Was nur am Bildschirm Sinn ergibt. Zwei Knöpfe auf einem Ausdruck sind zwei
+ * Kästen, die nichts tun. */
+@media print {
+  .nur-bildschirm { display: none !important; }
+
+  /* KEINE FLÄCHE AUF PAPIER. Die Flächenfarbe der Anwendung (`--schnee`,
+   * `--rauch`) druckt als grauer Kasten und kostet Tinte; auf Papier ist der
+   * Kontrast des Druckers der einzige, der zählt.
+   *
+   * `none` UND NICHT WEISS. Ein weisser Hexwert wäre ein Farbwert in einer
+   * Regel — die Skala ist geschlossen, und einen Token für Weiss gibt es
+   * nicht (`--schnee` ist #FFFCFA, kein Weiss). `background: none` setzt die
+   * Fläche auf durchsichtig zurück; was durchscheint, ist das Papier. So
+   * braucht diese Regel überhaupt keine Farbe. */
+  .blatt-seite,
+  .blatt-seite .rahmen,
+  .blatt-seite .inhalt { background: none; }
+
+  /* KEIN SEITENUMBRUCH MITTEN IM WERT. Ein Schlüssel, der über zwei Blätter
+   * läuft, ist beim Abtippen die eine Stelle, an der eine Gruppe verlorengeht
+   * — und ein halb abgetippter Schlüssel sieht aus wie ein falscher. */
+  .blatt-wert { break-inside: avoid; page-break-inside: avoid; }
+  h2 { break-after: avoid; page-break-after: avoid; }
+}
+
+/* Der Wert auf dem Blatt: 64 Hexzeichen in sechzehn Vierergruppen.
+ *
+ * ER BENUTZT `.codeblock-wert` als Grundlage und ändert genau zwei Dinge: Er
+ * darf umbrechen (sechzehn Gruppen passen in keine Zeile von 210 mm), und er
+ * bricht NUR ZWISCHEN den Gruppen um — `word-break:break-all` zerschnitte eine
+ * Gruppe mitten durch, und dann zählt beim Abtippen niemand mehr nach. */
+.blatt-wert {
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  line-height: 1.9;
+}

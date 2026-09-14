@@ -44,18 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $aktion = (string)($_POST['action'] ?? '');
     $id = (int)($_POST['id'] ?? 0);
 
-    if ($aktion === 'schluessel_anlegen') {
-        [$ok, $was] = serverschluessel_eintragen();
-        if ($ok) {
-            $notice = 'Der Serverschlüssel steht jetzt in config.php. '
-                    . 'Er gehört ins Wiederanlaufpaket — ohne ihn sind die '
-                    . 'Zugangsdaten der Ziele nicht mehr zu öffnen.';
-        } else {
-            $error = $was . ' Der Schlüssel lässt sich von Hand eintragen: '
-                   . 'die Zeile unten in config.php einfügen, gleich hinter '
-                   . '„return [".';
-        }
-    } elseif ($aktion === 'ziel_speichern') {
+    if ($aktion === 'ziel_speichern') {
         /* Ein LEERES Passwortfeld heisst „nicht anfassen", nicht „löschen".
          * Deshalb `null` statt `''` — die Bibliothek unterscheidet beides. */
         $geheim = ($_POST['geheim'] ?? '') === '' ? null : (string)$_POST['geheim'];
@@ -162,7 +151,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error !== null && $bearbeiten !== 
 }
 
 $schluesselDa = serverschluessel_da();
-$vorschlag = $schluesselDa ? '' : serverschluessel_neu();
+/* `$vorschlag` ist mit S10 entfallen: Diese Seite wuerfelt keinen
+ * Serverschluessel mehr — das tut die Karte „Schluessel des Servers" unter
+ * Betrieb → Servereinstellungen (E-S10-12). Ein zweiter Ort, an dem bei jedem
+ * Neuladen ein anderer Schluessel entsteht, waere die Stelle, an der jemand
+ * zwei davon eintraegt. */
 $aktiveZiele = count(array_filter($ziele, static fn($z) => (int)$z['aktiv'] === 1));
 $autoAn = $tabelleDa && sz_auto_an();
 
@@ -231,7 +224,19 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
     <?php endif; ?>
   <?php endif; ?>
 
-  <?php /* ---- Der Serverschlüssel ------------------------------------- */ ?>
+  <?php /* ---- Der Serverschlüssel steht jetzt woanders (S10, E-S10-12) --
+       DIE KARTE IST NACH BETRIEB → SERVEREINSTELLUNGEN GEZOGEN und dort mit
+       dem Server-Anteil zusammengelegt („Schlüssel des Servers"). Der Grund
+       ist das Ordnungsprinzip aus R74/E-S8-12: Der Serverschlüssel betrifft
+       nicht die Backup-Ziele, sondern die INSTALLATION — er versiegelt auch
+       das Komplett-Backup und, seit S10, die Konto-Backups. Er hier zu
+       verwalten hiesse, ihn auf der Seite anzulegen, die ihn am wenigsten
+       braucht.
+
+       WAS BLEIBT, IST DER VERWEIS. Ohne Schlüssel lässt sich hier kein Ziel
+       anlegen, und wer davorsteht, muss wissen wohin. Eine Seite, die eine
+       Voraussetzung nennt, ohne den Weg dorthin zu zeigen, schickt die
+       Betreiberin auf die Suche. */ ?>
   <?php if (!$schluesselDa): ?>
     <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
       <p class="feld-hinweis">Die Zugangsdaten der Ziele werden verschlüsselt in
@@ -240,27 +245,17 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
          Datenbankdump: Wer die Datenbank hat, hat die Passwörter nicht.
          Solange kein Schlüssel eingetragen ist, lässt sich kein Ziel anlegen —
          ein Passwort im Klartext zu speichern kommt nicht in Frage.</p>
-      <form method="post">
-        <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_anlegen">
-        <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => 'Serverschlüssel erzeugen und eintragen',
-                        'symbol' => 'schloss', 'art' => 'primaer']) ?>
-        </div>
-      </form>
-      <p class="feld-hinweis">Klappt das nicht (weil <code>config.php</code> nicht
-         beschreibbar ist), diese Zeile von Hand einfügen, gleich hinter
-         <code>return [</code>:</p>
-      <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Die
-               Zeile ist zum Einfuegen in die `config.php` da — abtippen wird
-               sie niemand. In der grossen Stufe stand sie gesperrt in
-               Plakatgroesse und ohne Knopf. */ ?>
-      <?= ui_codeblock_lang(serverschluessel_zeile($vorschlag), 'Zeile für die config.php') ?>
-      <p class="feld-hinweis"><strong>Genau eine Zeile eintragen.</strong> Bei jedem
-         Neuladen dieser Seite steht dort ein anderer Schlüssel — welcher es
-         wird, ist gleich, aber es darf nur einer sein. Und er gehört ins
-         Wiederanlaufpaket neben <code>config.php</code>: Geht er verloren,
-         sind die Zugangsdaten neu einzutragen (verschmerzbar) und ein
-         versiegeltes Komplettbackup nicht mehr zu öffnen (nicht verschmerzbar).</p>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Zu den Servereinstellungen', 'symbol' => 'schloss',
+                      'art' => 'primaer',
+                      'href' => 'betrieb_server.php#k-schluessel']) ?>
+      </div>
+      <p class="feld-hinweis">Dort steht die Karte <strong>„Schlüssel des
+         Servers"</strong> — sie legt ihn an, zeigt seine Kennung und druckt das
+         Schlüsselblatt. Beides gehört ins Wiederanlaufpaket: Geht der Schlüssel
+         verloren, sind die Zugangsdaten der Ziele neu einzutragen
+         (verschmerzbar) und ein versiegeltes Komplett-Backup nicht mehr zu
+         öffnen (nicht verschmerzbar).</p>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
@@ -499,4 +494,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php ui_karte_ende(true); ?>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(['skripte' => ['assets/kopieren.js']]); ?>
+<?php /* `assets/kopieren.js` ist mit S10 entfallen: Es hing am
+         `ui_codeblock_lang()` der Serverschluessel-Karte, und die ist nach
+         Betrieb → Servereinstellungen gezogen (E-S10-12). Ein Skript ohne
+         Baustein laedt bei jedem Aufruf ein paar Kilobyte fuer nichts. */ ?>
+<?php ui_seite_ende(); ?>

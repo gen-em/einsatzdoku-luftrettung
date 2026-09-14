@@ -6,16 +6,20 @@ php     tools/anteilprobe/probe.php --schreiben    # dazu Teil D (config.php)
 python3 tools/anteilprobe/endpunkt.py              # Teil E (api/kdf_upgrade.php)
 node    tools/anteilprobe/umstellungslauf.mjs      # Teil F (echter Browser)
 node    tools/anteilprobe/umstellungslauf.mjs --motor firefox|webkit
+node    tools/anteilprobe/betriebslauf.mjs         # Teil G (Oberflaeche, Browser)
+node    tools/anteilprobe/betriebslauf.mjs --motor firefox|webkit
 python3 tools/anteilprobe/huelle_stellen.py <konto> <passwort> edk1|edka1
 ```
 
 Rückgabewert 0 = alle Erwartungen erfüllt, 1 = mindestens eine nicht.
 
-> **Beide Teile fassen die Installation an und legen zurück.** `probe.php`
+> **Drei Teile fassen die Installation an und legen zurück.** `probe.php`
 > verstellt `app_state.kdf_anteil_kennung` und — mit `--schreiben` —
 > `server/config.php`; `endpunkt.py` tauscht die Schlüsselhülle des
-> Admin-Kontos. Zurückgelegt wird jeweils im `finally`, auch bei einem
-> Abbruch, und beide melden am Ende, worauf sie zurückgestellt haben.
+> Admin-Kontos; `betriebslauf.mjs` schreibt **alle drei**: `config.php`
+> (byteweise verglichen), beide Marken in `app_state` und vorübergehend die
+> Hüllen aller Konten. Zurückgelegt wird jeweils im `finally`, auch bei einem
+> Abbruch, und alle drei melden am Ende, worauf sie zurückgestellt haben.
 > **Auf einer Installation mit Betrieb nicht fahren:** Für die Dauer des Laufs
 > steht in `app_state` eine fremde Kennung, und angemeldete Sitzungen bekommen
 > in dieser Zeit keinen Anteil ausgeliefert. Dieselbe Ansage wie bei
@@ -52,9 +56,10 @@ werden sie hergestellt, gemessen und zurückgestellt.
 | **D** | `config_eintrag_schreiben()` an der echten `config.php` — anlegen, nicht still ersetzen, mit Ansage ersetzen, entfernen, fremder Eintrag, kein Hexwert, Datei hinterher byte-gleich | 14 |
 | **E** | `api/kdf_upgrade.php` als Hüllenfassung — über echtes HTTP mit angemeldeter Sitzung | 33 |
 | **F** | `umstellungslauf.mjs` — stellt der **Browser** von selbst um? Erstes Anmelden, zweites Anmelden (0 Aufrufe), Daten lesbar, HKDF-Dauer, Entsperrdialog, Demo-Konto | 16 |
+| **G** | `betriebslauf.mjs` — die **Oberfläche** der Zustände (S10/AP3): drei gleiche Kennungen, das Blatt im Druck bei 210 mm, `abweichend`, Nachtragen falsch und richtig, Rotation, alten Anteil entfernen, Neuanfang und sein zweiter Versuch | 35 |
 
-Gemessen am 14.09.2026: **69 von 69** (A bis D), **33 von 33** (E) und
-**16 von 16** (F, in drei Engines).
+Gemessen am 14.09.2026: **69 von 69** (A bis D), **33 von 33** (E),
+**16 von 16** (F) und **35 von 35** (G) — F und G in **drei Engines**.
 
 ## Warum Teil F trotz Teil E nötig ist
 
@@ -99,11 +104,13 @@ Statusseite meldet, es stehe niemand mehr auf dem alten Anteil. Zwei Zeilen
 Prüfung im Endpunkt schließen das aus; E2 und E3 messen sie in beide
 Richtungen.
 
-## Vier Fallen, in die dieser Prüfstand gelaufen ist
+## Elf Fallen, in die dieser Prüfstand gelaufen ist
 
-Sie stehen hier, weil sie beim nächsten Mal wieder danebenlägen. Drei von
-ihnen sahen aus wie ein Fehler der Anwendung und waren einer des Prüfmittels
-— die teuerste Sorte, weil man am falschen Ende sucht.
+Sie stehen hier, weil sie beim nächsten Mal wieder danebenlägen. **Zehn von
+ihnen sahen aus wie ein Fehler der Anwendung und waren einer des Prüfmittels**
+— die teuerste Sorte, weil man am falschen Ende sucht. Zwei davon haben
+obendrein etwas kaputtgemacht: ein Konto ohne Passwort und ein Konto ohne
+Schlüssel.
 
 **`php -S` bedient EINE Anfrage zur Zeit.** Teil F öffnet in Schritt 5 einen
 zweiten Tab für den Entsperrdialog. Blieb der offen, wartete Schritt 6
@@ -135,15 +142,107 @@ für dasselbe harmlose Verhalten. Teil F zählt deshalb zwei Töpfe getrennt —
 Fehler der **Anwendung** (die zählen) und Fehler des **Prüfstands** (die
 werden genannt, nicht gezählt).
 
+**Ein Prüfstand, der an der Anwendung vorbei schreibt, muss ihre Aufräumarbeit
+mitmachen.** `betriebslauf.mjs` setzt `config.php` von Hand — und wartete
+danach 30 Sekunden auf ein Eingabefeld, das es in der gemessenen Lage nicht
+gab. Die Datei war geschrieben, die Anwendung las sie nur nicht: **`php -S`
+läuft mit eingeschaltetem OPcache** (`opcache.enable_cli` gilt für die SAPI
+`cli`, der eingebaute Server heißt `cli-server`), und der prüft den
+Zeitstempel nur alle `opcache.revalidate_freq` Sekunden — Vorgabe 2. Die
+Anwendung selbst hat das Problem nicht: `config_eintrag_schreiben()` verwirft
+den Zwischenspeicher nach jedem Schreiben (aufgestellt in S2/AP7). Der
+Prüfstand sitzt in einem anderen Prozess und kann das nicht; er wartet
+deshalb nach jedem Schreiben 2,2 Sekunden. **Das war ein Fehler des
+Werkzeugs, nicht der Anwendung** — und er sah zwei Stunden lang wie einer der
+Anwendung aus.
+
+**Dieselbe Falle ZWISCHEN zwei Läufen.** `probe.php --schreiben` nimmt
+Einträge aus `config.php` und trägt sie wieder ein — über die Anwendung, also
+mit Verwerfen des Zwischenspeichers. Nur: Das geschieht im **CLI-Prozess**,
+und der Server hat seinen eigenen. Wird `endpunkt.py` unmittelbar danach
+gestartet, kann der Server bis zu zwei Sekunden lang eine Fassung ausliefern,
+in der der Anteil fehlte: Der Lauf meldete `ANTEIL_STAND 'fehlt'` statt
+`'demo'` und **29 von 33**, wenige Sekunden später **33 von 33**. Wer die
+Teile hintereinander fährt, lässt zwischen ihnen ein paar Sekunden — oder
+liest ein Ergebnis, das nicht die Anwendung beschreibt, sondern den Takt des
+Zwischenspeichers.
+
+**`form.requestSubmit()` läuft in `confirm.js`.** Der Betriebslauf drückte
+damit die Knöpfe „wechseln", „entfernen" und „Neuanfang" — und nichts
+geschah: `requestSubmit()` löst das Ereignis `submit` aus, und die
+Rückfrage fängt es ab, um ihren Dialog zu zeigen. Der Aufruf kehrte
+klaglos zurück, und die sechs folgenden Erwartungen maßen eine Seite, die
+sich nie geändert hatte. `form.submit()` ginge am Zuhörer vorbei, misst dann
+aber einen Weg, den niemand geht. Der Lauf **drückt jetzt den Knopf und
+beantwortet den Dialog**, wie es eine Betreiberin täte — damit ist die
+Rückfrage selbst mitgemessen.
+
+**Eine Voraussetzung, die man herstellen muss, stellt man her.** `endpunkt.py`
+misst ab E4 die Umstellung einer `edk1:`-Hülle. Steht das Konto schon auf
+`edka1:` — und das tut es nach jedem eigenen Lauf, nach dem Umstellungslauf
+und nach jedem Anmelden im Browser —, antwortet der Endpunkt `nicht_noetig`,
+und der Lauf meldet **22 von 33**, ohne dass an der Anwendung etwas fehlte.
+Genau so gelesen in S10/AP3. `endpunkt.py` ruft die Ausgangslage jetzt selbst
+über `huelle_stellen.py` her und sagt in der Kopfzeile, was es vorgefunden
+hat. **Ein Prüfmittel, dessen Zahl von der Reihenfolge der Aufrufe abhängt,
+ist keines.**
+
+**Ein zweiter Tab ist keine zweite Sitzung.** Der Betriebslauf meldete sich in
+einem Tab des Hauptkontexts an, der bereits als Betreiberin angemeldet war;
+`login.php` leitet dort sofort weiter, und der Lauf wartete 30 Sekunden auf
+ein Anmeldefeld, das es auf der Zielseite nicht gibt. Jede Probeanmeldung
+bekommt jetzt einen **eigenen Browserkontext** — eigene Cookies, und zugleich
+das, was gemeint ist: ein anderer Mensch, ein anderer Browser.
+
+**Wer aus JavaScript PHP-Quelltext baut, nimmt EINFACHE Anführungszeichen.**
+Der Betriebslauf legte sechs Felder des Admin-Kontos über `php -r` zurück und
+setzte die Werte mit `JSON.stringify()` ein — also in doppelte
+Anführungszeichen. PHP ersetzt darin alles, was wie eine Variable aussieht.
+Aus dem bcrypt-Hash `$2y$12$xdD.Dxofamu…` wurde `$2y$12.`, sieben Zeichen:
+**Das Konto war danach mit keinem Passwort mehr erreichbar**, und der nächste
+Lauf blieb an der Anmeldung stehen, ohne zu sagen, warum. Es gibt jetzt
+`phpStr()`, und die Rückgabe zählt am Ende alle sechs Felder gegen den Stand
+vom Anfang.
+
+**Ein Dialog, den niemand ruft, erscheint nicht.** Abschnitt 8b wartete auf
+den Entsperrdialog des Admin-Kontos — das hat **keine geschützten Angaben**,
+also fragt keine Seite von selbst danach. Der Lauf ruft
+`EdUnlock.ensureContentKey()` jetzt selbst und geht den Weg zu Ende: Passwort
+eintragen, „Entsperren" drücken, lesen, was dasteht. **Die Meldung erscheint
+erst nach der Eingabe**, und das ist richtig so: Der Dialog fragt zuerst nach
+dem Passwort und sagt erst dann, woran die Ableitung gescheitert ist.
+
+**Der Schnappschuss gehört vor die ERSTE Handlung, nicht vor die, die man für
+die erste hält.** Das ist die teuerste Zeile dieser Datei, denn sie hat echte
+Daten gekostet. Abschnitt 6b meldet ein Konto an und lässt die stille
+Umstellung laufen — die packt den Inhaltsschlüssel mit dem Datenschlüssel des
+**neuen** Anteils neu ein. Der Schnappschuss der Hüllen stand in Abschnitt 7,
+also danach; zurückgelegt wurde auf einen bereits umgestellten Stand, und das
+`finally` nahm den zugehörigen Anteil gleich darauf wieder aus `config.php`.
+`umlauf-csv@gen-em.org` trug anschließend eine Hülle mit der Kennung eines
+Anteils, den es nicht mehr gibt — **ausgesperrt**, und der einzige Rückweg
+wäre sein Wiederherstellungsschlüssel gewesen, den niemand notiert hatte. Das
+Konto musste neu eingerichtet werden. **Eine Umhüllung ist nicht
+rückrechenbar:** Wer eine Verschlüsselung anfasst, sichert vorher, was er
+sonst nicht wiederbekommt — und zwar bevor irgendetwas geschieht.
+
 ## Grenzen
 
 - **Die Teile A bis E stellen nicht um.** Was der *Browser* tut — Hülle lesen,
   Datenschlüssel bilden, neu hüllen, absenden —, misst erst Teil F. Teil E
   baut die Hülle selbst und schickt sie; dass `unlock.js` dasselbe tut, ist
   damit **nicht** gezeigt.
-- **Kein Teil sieht die Zustände `abweichend` und `Rotation` an der
-  Oberfläche.** Teil B stellt sie in der Zustandsmaschine her, aber ob die
-  Meldung erscheint und wie sie aussieht, misst der Browserlauf von AP3.
+- **Teil G sieht die Oberfläche, aber nicht das Papier.** Er misst das Blatt
+  in `media: print` bei 718 px — das ist die *gerechnete* Druckansicht, nicht
+  der Ausdruck. Ob ein Drucker die Vierergruppen so setzt, wie Chromium sie
+  rechnet, sagt nur ein Ausdruck. (Die frühere Grenze „kein Teil sieht
+  `abweichend` und `Rotation` an der Oberfläche" ist mit Teil G gefallen.)
+- **Teil G stellt drei Dinge her, die es nicht messen kann.** Die Zahl der
+  Konten auf dem alten Anteil setzt er per SQL, statt vier Anmeldungen
+  abzuwarten; den Zustand `abweichend` erzeugt er über `app_state`, nicht
+  über ein verlorenes `config.php`. Was gemessen wird, ist die **Reaktion**
+  der Oberfläche auf die Lage — nicht, dass die Lage auf dem üblichen Weg
+  entsteht.
 - **Teil D fährt gegen die echte `config.php`**, aber nur gegen den Eintrag
   `kdf_anteil_alt` — den einzigen der drei, der auf einer Installation ohne
   laufende Rotation nicht in Gebrauch ist. Ein Fehlschlag mitten im Lauf

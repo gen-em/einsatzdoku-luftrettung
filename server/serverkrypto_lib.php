@@ -153,6 +153,39 @@ function serverschluessel_kennung(): ?string
 }
 
 /**
+ * 64 Hexzeichen in Vierergruppen — die Form fürs Papier (E-S10-10).
+ *
+ * WOZU DIE GRUPPEN. Das Schlüsselblatt ist zum Abtippen da, und zwar im
+ * Ernstfall: nach einem Wiederanlauf, unter Zeitdruck, von einem Ausdruck.
+ * 64 Zeichen am Stück verliert man beim Lesen; sechzehn Gruppen zu vier hält
+ * das Auge. Dieselbe Entscheidung wie beim Wiederherstellungsschlüssel, nur
+ * dort mit Bindestrichen — hier mit Leerzeichen, weil ein Bindestrich in
+ * einem Hexwert wie ein Zeichen aussieht, das dazugehört.
+ *
+ * BEIM EINLESEN WIRD DIE GRUPPIERUNG WIEDER ENTFERNT
+ * (`schluessel_eingabe_normalisieren()`), samt Groß-/Kleinschreibung: Wer vom
+ * Blatt abschreibt, soll nicht daran scheitern, wie er die Lesehilfe tippt.
+ */
+function schluessel_gruppen(?string $hex): string
+{
+    if ($hex === null) { return ''; }
+    return hex_vierergruppen(strtolower($hex));
+}
+
+/**
+ * Was von der Tastatur kommt, auf 64 Hexzeichen zurückführen — oder null.
+ *
+ * Entfernt jeden Leerraum und jeden Bindestrich und schreibt klein. Was
+ * danach keine 64 Hexzeichen sind, ist keine Eingabe, sondern ein Vertipper —
+ * und wird als `null` zurückgegeben, statt halb verarbeitet zu werden.
+ */
+function schluessel_eingabe_normalisieren(string $roh): ?string
+{
+    $h = strtolower(preg_replace('/[\s\-]+/', '', $roh) ?? '');
+    return preg_match('/^[0-9a-f]{64}$/', $h) ? $h : null;
+}
+
+/**
  * Ein frischer Schlüssel als 64 Hexzeichen.
  *
  * `random_bytes()` und nichts anderes: Es ist die einzige Quelle in PHP, die
@@ -798,6 +831,303 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
     else               { $CFG[$schluessel] = $hex; }
     config_gemerktes_verwerfen();
     return [true, (string)$hex];
+}
+
+/* ===========================================================================
+ * DIE VIER HANDGRIFFE AM SERVER-ANTEIL (S10, E-S10-10 und E-S10-11)
+ *
+ * Sie stehen hier und nicht in `betrieb_server.php`, weil jeder von ihnen aus
+ * zwei Schritten besteht, die zusammengehören: `config.php` schreiben UND die
+ * Marke in `app_state` nachziehen. Getrennt geschrieben wären sie vier Stellen,
+ * an denen der eine Schritt ohne den anderen laufen kann — und eine Marke, die
+ * nicht zum Wert passt, ist genau der Zustand „abweichend", gegen den S10
+ * gebaut ist.
+ * ======================================================================== */
+
+/**
+ * Anlegen — einen frischen Anteil würfeln und eintragen.
+ *
+ * Nur, wenn noch keiner dasteht. Ein vorhandener Anteil wird über *Wechseln*
+ * (Rotation) ersetzt, nicht über *Anlegen*: Der Unterschied ist, dass die
+ * Rotation den alten Wert stehen lässt, damit die Hüllen noch zu öffnen sind.
+ */
+function anteil_anlegen(): array
+{
+    if (kdf_anteil() !== null) {
+        return [false, 'Es steht bereits ein Server-Anteil in config.php.'];
+    }
+    [$ok, $was] = config_eintrag_schreiben('kdf_anteil', kdf_anteil_neu());
+    if (!$ok) { return [false, $was]; }
+    /* Die Marke setzt `anteil_zustand()` beim ersten Lesen nach (E-S10-U-02) —
+     * hier wird sie nur ausgelöst, damit die Karte gleich den Endzustand
+     * zeigt und nicht erst nach dem nächsten Aufruf. */
+    anteil_zustand(true);
+    return [true, (string)schluessel_kennung($was)];
+}
+
+/**
+ * Rotation — neuen Anteil würfeln, den bisherigen als `kdf_anteil_alt` behalten.
+ *
+ * WARUM DER ALTE STEHEN BLEIBT. Die Hüllen aller Konten sind mit ihm gebaut.
+ * Würde er beim Wechsel verschwinden, wäre jedes Konto ausgesperrt, bis es sich
+ * einmal angemeldet hat — und anmelden kann es sich nur, wenn es die Hülle
+ * öffnen kann. Der alte Wert wird deshalb weiter ausgeliefert, bis die
+ * Statuszeile sagt, dass niemand mehr auf ihm steht (E-S10-11).
+ *
+ * DIE REIHENFOLGE IST NICHT BELIEBIG: erst den alten Wert sichern, dann den
+ * neuen setzen. Andersherum wäre der alte für die Dauer eines Fehlschlags
+ * verloren — und mit ihm jede Hülle.
+ */
+function anteil_wechseln(): array
+{
+    $jetzt = kdf_anteil();
+    if ($jetzt === null) {
+        return [false, 'Es steht kein Server-Anteil in config.php, der zu '
+                     . 'wechseln wäre.'];
+    }
+    if (kdf_anteil_alt() !== null) {
+        return [false, 'Es läuft bereits eine Rotation. Erst den alten Anteil '
+                     . 'entfernen, wenn kein Konto mehr auf ihm steht.'];
+    }
+    global $CFG;
+    $altHex = strtolower((string)$CFG['kdf_anteil']);
+
+    [$ok, $was] = config_eintrag_schreiben('kdf_anteil_alt', $altHex);
+    if (!$ok) { return [false, $was]; }
+
+    [$ok2, $was2] = config_eintrag_schreiben('kdf_anteil', kdf_anteil_neu(), true);
+    if (!$ok2) {
+        /* Zurücknehmen, damit kein halber Zustand stehen bleibt: ein
+         * `kdf_anteil_alt` neben einem unveränderten `kdf_anteil` wäre eine
+         * Rotation, die nie stattgefunden hat — und die Statuszeile zählte ab
+         * sofort gegen eine Kennung, die niemand trägt. */
+        config_eintrag_schreiben('kdf_anteil_alt', null);
+        return [false, $was2];
+    }
+    anteil_zustand(true);     // schreibt die Marke auf die neue Kennung
+    return [true, (string)schluessel_kennung($was2)];
+}
+
+/**
+ * Den alten Anteil entfernen — erst, wenn niemand mehr auf ihm steht.
+ *
+ * Die Zählung macht `anteil_zaehlung()`; diese Funktion verlässt sich nicht
+ * darauf, dass die Oberfläche den Knopf verbirgt. Ein Knopf, der nur versteckt
+ * ist, wird irgendwann doch gedrückt — über die Zurück-Taste, ein zweites
+ * Fenster oder ein Lesezeichen.
+ */
+function anteil_alt_entfernen(): array
+{
+    if (kdf_anteil_alt() === null) {
+        return [false, 'Es steht kein alter Server-Anteil in config.php.'];
+    }
+    $z = anteil_zaehlung();
+    if ($z['alt'] > 0) {
+        return [false, $z['alt'] . ' Konto/Konten tragen noch eine Hülle auf dem '
+                     . 'alten Anteil. Würde er jetzt entfernt, kämen sie nicht '
+                     . 'mehr an ihre geschützten Angaben. Es wurde nichts geändert.'];
+    }
+    return config_eintrag_schreiben('kdf_anteil_alt', null);
+}
+
+/**
+ * Neuanfang — ein frischer Anteil, obwohl der alte verloren ist.
+ *
+ * DER FALL, FÜR DEN ES DAS GIBT: `config.php` ist weg und beide Ausdrucke des
+ * Schlüsselblatts auch. Dann lässt sich keine `edka1:`-Hülle mehr öffnen, und
+ * es gibt nichts nachzutragen.
+ *
+ * WAS DAS KOSTET, UND WAS NICHT. Jedes Konto mit `edka1:`-Hülle muss sein
+ * Passwort über den **Wiederherstellungsschlüssel** neu setzen — der hängt
+ * nicht am Anteil (E-S10-04). Es ist also ein Vorgang für alle und **kein
+ * Datenverlust**. Genau deshalb steht der Knopf überhaupt da: Ohne ihn bliebe
+ * eine Installation im Zustand „abweichend" stehen, in dem niemand mehr
+ * hereinkommt und niemand etwas tun kann.
+ *
+ * Ein etwaiger alter Anteil geht mit: Er öffnet nach einem Neuanfang nichts
+ * mehr, was der neue nicht auch nicht öffnet, und stünde nur im Weg.
+ */
+function anteil_neuanfang(): array
+{
+    /* NUR AUS DER LAGE „abweichend" HERAUS. Der Knopf steht auch nur dort —
+     * aber ein Knopf, der bloss verborgen ist, wird trotzdem gedrückt: über
+     * die Zurück-Taste, ein zweites Fenster oder ein F5 nach dem Absenden.
+     * Ohne diesen Riegel erzeugte jedes Neuladen einen WEITEREN Anteil, und
+     * jeder davon wäre wieder der falsche für die Hüllen, die inzwischen
+     * gebaut wurden. Der Riegel gehört in die Funktion, nicht in die Seite. */
+    $stand = anteil_zustand()['stand'];
+    if ($stand !== 'abweichend') {
+        return [false, 'Ein Neuanfang ist nur nötig, wenn der Server-Anteil '
+                     . 'nicht zu den vorhandenen Hüllen passt. Der Zustand ist '
+                     . 'derzeit „' . $stand . '" — es wurde nichts geändert.'];
+    }
+    if (kdf_anteil_alt() !== null) {
+        [$ok, $was] = config_eintrag_schreiben('kdf_anteil_alt', null);
+        if (!$ok) { return [false, $was]; }
+    }
+    $neu = kdf_anteil_neu();
+    [$ok, $was] = config_eintrag_schreiben('kdf_anteil', $neu,
+                                           kdf_anteil() !== null);
+    if (!$ok) { return [false, $was]; }
+    /* DIE MARKE WIRD HIER AUSDRÜCKLICH ÜBERSCHRIEBEN und nicht nachgetragen.
+     * Beim Neuanfang ist genau das der Vorgang: Die Installation erklärt, dass
+     * ab jetzt mit diesem Wert gearbeitet wird — auch wenn die vorhandenen
+     * Hüllen zu einem anderen gehören. Ohne diese Zeile bliebe der Zustand
+     * „abweichend" bestehen, und der Neuanfang täte nichts. */
+    schluessel_marke_setzen('kdf_anteil_kennung', (string)schluessel_kennung($neu));
+    anteil_zustand(true);
+    return [true, (string)schluessel_kennung($neu)];
+}
+
+/**
+ * Wie viele Konten stehen auf welcher Hüllenfassung? (E-S10-11)
+ *
+ * GEZÄHLT WIRD AM PRÄFIX, IN SQL, OHNE EINE HÜLLE ZU ÖFFNEN — der Server
+ * könnte es gar nicht. Genau dafür steht die Kennung vorn: Sie macht eine
+ * Auskunft möglich, für die man sonst den Schlüssel bräuchte.
+ *
+ * Das Demo-Konto zählt **nicht mit** (E-P1-19): Es bleibt bauartbedingt auf
+ * `edk1:`, und es als „noch offen" zu führen hieße, eine Zahl zu zeigen, die
+ * nie auf null geht. Denselben Fehler hat die Zeile „Schlüsselableitung"
+ * schon einmal gemacht (Backlog Nr. 155).
+ *
+ * Konten ohne Hülle (`pat_wrap_pw IS NULL` — eingeladen, aber nie
+ * eingerichtet) zählen ebenfalls nicht: Sie haben nichts umzustellen.
+ */
+function anteil_zaehlung(): array
+{
+    $z = anteil_zustand();
+    $aus = ['neu' => 0, 'alt' => 0, 'ohne' => 0, 'demo' => 0];
+    try {
+        require_once __DIR__ . '/demo_lib.php';
+        $demoId = demo_id();
+        $st = db()->prepare(
+            'SELECT SUBSTRING(pat_wrap_pw, 1, 15) AS p, COUNT(*) AS n
+               FROM users
+              WHERE pat_wrap_pw IS NOT NULL AND (? IS NULL OR id <> ?)
+              GROUP BY p');
+        $st->execute([$demoId, $demoId ?? 0]);
+        foreach ($st as $r) {
+            $kennung = huelle_anteil_kennung((string)$r['p']);
+            $n = (int)$r['n'];
+            if ($kennung === null)                    { $aus['ohne'] += $n; }
+            elseif ($kennung === $z['kennung'])       { $aus['neu']  += $n; }
+            elseif ($kennung === $z['kennung_alt'])   { $aus['alt']  += $n; }
+            else                                      { $aus['alt']  += $n; }
+        }
+        if ($demoId !== null) {
+            $st2 = db()->prepare('SELECT COUNT(*) FROM users
+                                   WHERE id = ? AND pat_wrap_pw IS NOT NULL');
+            $st2->execute([$demoId]);
+            $aus['demo'] = (int)$st2->fetchColumn();
+        }
+    } catch (Throwable $ex) {
+        /* Eine Zählung, die nicht geht, ist keine Null — sie ist keine
+         * Zählung. Der Aufrufer sieht das an `fehler`. */
+        $aus['fehler'] = $ex->getMessage();
+    }
+    return $aus;
+}
+
+/**
+ * Einen Wert vom Schlüsselblatt nachtragen (E-S10-10).
+ *
+ * DER UNTERSCHIED ZU „ANLEGEN": Hier ist der Wert vorgegeben, und er wird
+ * **gegen die Kennung geprüft, bevor irgendetwas geschrieben wird**. Das ist
+ * der ganze Zweck dieses Wegs — ein falsch abgeschriebener Anteil, der
+ * stillschweigend landet, macht aus einer behebbaren Lage eine unbehebbare:
+ * Danach steht in `config.php` ein Wert, der zu nichts passt, und der richtige
+ * ist überschrieben.
+ *
+ * GEPRÜFT WIRD GEGEN `app_state`, nicht gegen den vorhandenen Eintrag. Der
+ * vorhandene ist ja gerade der, von dem man annimmt, dass er falsch ist.
+ */
+function anteil_nachtragen(string $roh, bool $ersetzen): array
+{
+    $hex = schluessel_eingabe_normalisieren($roh);
+    if ($hex === null) {
+        return [false, 'Das sind keine 64 Hexzeichen. Leerzeichen und '
+                     . 'Bindestriche dürfen drinstehen, andere Zeichen nicht.'];
+    }
+    $soll = schluessel_marke_lesen('kdf_anteil_kennung');
+    if ($soll === null) {
+        return [false, 'Diese Installation hat noch nie mit einem Server-Anteil '
+                     . 'gearbeitet — es gibt keine Kennung, gegen die sich der '
+                     . 'Wert prüfen ließe. Bitte „Server-Anteil anlegen" '
+                     . 'benutzen.'];
+    }
+    $ist = (string)schluessel_kennung($hex);
+    if ($ist !== $soll) {
+        return [false, 'Die Kennung dieses Werts ist ' . $ist . ', erwartet ist '
+                     . $soll . ' — das ist nicht der Wert, mit dem die Hüllen '
+                     . 'gebaut wurden. Es wurde nichts geändert.'];
+    }
+    [$ok, $was] = config_eintrag_schreiben('kdf_anteil', $hex, $ersetzen);
+    if (!$ok) { return [false, $was]; }
+    anteil_zustand(true);
+    return [true, $ist];
+}
+
+/**
+ * Denselben Weg für den Serverschlüssel.
+ *
+ * Er hat keine Rotation (E-S10-11: sie hieße, jedes versiegelte Feld und jedes
+ * Paket umzusiegeln) — aber denselben Ernstfall: Nach einem Wiederanlauf steht
+ * der falsche Wert in `config.php`, und die Meldung „mit einem anderen
+ * Serverschlüssel gespeichert" sagt nicht, welcher der richtige wäre.
+ *
+ * Die Marke `server_key_kennung` entsteht bei der ersten Anzeige nach S10 —
+ * dieselbe Mechanik wie beim Anteil.
+ */
+function serverschluessel_nachtragen(string $roh, bool $ersetzen): array
+{
+    $hex = schluessel_eingabe_normalisieren($roh);
+    if ($hex === null) {
+        return [false, 'Das sind keine 64 Hexzeichen. Leerzeichen und '
+                     . 'Bindestriche dürfen drinstehen, andere Zeichen nicht.'];
+    }
+    $soll = schluessel_marke_lesen('server_key_kennung');
+    if ($soll === null) {
+        return [false, 'Diese Installation hat noch nie mit einem '
+                     . 'Serverschlüssel versiegelt — es gibt keine Kennung, '
+                     . 'gegen die sich der Wert prüfen ließe.'];
+    }
+    $ist = (string)schluessel_kennung($hex);
+    if ($ist !== $soll) {
+        return [false, 'Die Kennung dieses Werts ist ' . $ist . ', erwartet ist '
+                     . $soll . ' — das ist nicht der Schlüssel, mit dem '
+                     . 'versiegelt wurde. Es wurde nichts geändert.'];
+    }
+    [$ok, $was] = config_eintrag_schreiben('server_key', $hex, $ersetzen);
+    return $ok ? [true, $ist] : [false, $was];
+}
+
+/**
+ * Der Zustand des Serverschlüssels — dieselben vier Lagen wie beim Anteil.
+ *
+ * Er kennt keine Rotation, also gibt es nur drei: `fehlt`, `bereit`,
+ * `abweichend`. Die Marke wird nachgetragen, sobald ein gültiger Schlüssel
+ * dasteht und noch keine Marke existiert (E-S10-U-02).
+ */
+function serverschluessel_zustand(bool $frisch = false): array
+{
+    static $merk = null;
+    if ($frisch) { $merk = null; }
+    if ($merk !== null) { return $merk; }
+
+    $kennung  = serverschluessel_kennung();
+    $erwartet = schluessel_marke_lesen('server_key_kennung');
+
+    if ($kennung === null) {
+        return $merk = ['stand' => $erwartet === null ? 'fehlt' : 'abweichend',
+                        'kennung' => null, 'erwartet' => $erwartet];
+    }
+    if ($erwartet === null) {
+        schluessel_marke_setzen('server_key_kennung', $kennung);
+        $erwartet = $kennung;
+    }
+    return $merk = ['stand' => $erwartet === $kennung ? 'bereit' : 'abweichend',
+                    'kennung' => $kennung, 'erwartet' => $erwartet];
 }
 
 /**

@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -113,6 +114,26 @@ def feld(spalte: str, uid: str) -> str:
 
 
 print(f"Anteilprobe, Teil E — {BASIS}")
+
+# DIE VORAUSSETZUNG WIRD HERGESTELLT, NICHT VORAUSGESETZT.
+#
+# E4 bis E6 messen die Umstellung einer `edk1:`-Huelle. Steht das Konto schon
+# auf `edka1:` — und das tut es nach jedem Lauf dieser Datei, nach dem
+# Umstellungslauf und nach jedem Anmelden im Browser —, dann antwortet der
+# Endpunkt mit 'nicht_noetig', und der Lauf meldet 11 offene Erwartungen, die
+# in Wahrheit nur eine falsche Ausgangslage sind. Genau so gelesen in S10/AP3:
+# 22 von 33, ohne dass an der Anwendung etwas fehlte (F-S10-AP3-03).
+#
+# `huelle_stellen.py` kann das rueckwaerts; hier wird es aufgerufen statt
+# nachgebaut, damit es EINE Umsetzung bleibt.
+_stellen = subprocess.run(
+    [sys.executable, str(HIER / "huelle_stellen.py"), ADMIN, ADMIN_PW, "edk1"],
+    capture_output=True, text=True, env={**os.environ, "BASIS": BASIS})
+print("  Ausgangslage: " + (_stellen.stdout.strip().splitlines() or ["(stumm)"])[-1])
+if _stellen.returncode != 0:
+    print("  !! Die Ausgangslage liess sich nicht herstellen — der Lauf misst "
+          "ab E4 etwas anderes als gemeint.")
+    print("  !! " + (_stellen.stderr or "").strip()[:400])
 
 s = Sitzung(BASIS).anmelden(ADMIN, ADMIN_PW)
 uid = php('$st = db()->prepare("SELECT id FROM users WHERE email = ?");'

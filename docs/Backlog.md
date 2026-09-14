@@ -223,6 +223,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     selbst — eine Prüfung, die jeden übergebenen Wert gegen diese Liste hält,
     hätte den Fall sofort gemeldet.
 
+    **Und ein drittes Mal, S10/AP3 (14.09.2026): der Ton `ok`.** Er wird an
+    **zwei** Stellen des Bestands übergeben — `betrieb_server.php` (Karte
+    „Adresssuche") und `einstellungen.php` (Zeile „Adresssuche an") —, und
+    `.plakette-ok` gibt es im Stylesheet nicht. Beide Plaketten stehen dort
+    seit ihrer Einführung ohne Hintergrund als bloßer Text. Gefunden beim
+    Gegenlesen einer neuen Karte, die ihn übernehmen wollte; die neue Karte
+    benutzt jetzt `blau`, die zwei Altstellen sind **nicht** angefasst worden
+    (sie gehören nicht zu S10). **Das ist inzwischen der zweite Ton, der so
+    durchgerutscht ist, und beim zweiten Mal ist es kein Zufall mehr** — der
+    billige Sonderweg oben (Werte gegen den Vorrat des Bausteins halten)
+    hätte beide Fälle am Tag ihrer Entstehung gemeldet. Wer Nr. 36 angeht,
+    fängt damit an und räumt die zwei Stellen gleich mit.
+
 37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?**
     Aufgeworfen während P3, dort bewusst **nicht** weiterverfolgt — die Frage
     gehört nicht ins Oberflächen-Redesign. Der Bestand ist ausgelegt auf

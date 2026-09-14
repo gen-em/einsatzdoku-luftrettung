@@ -4386,5 +4386,42 @@ declare(strict_types=1);
  * KEINE SCHEMAAENDERUNG, KEINE MIGRATION — dieselbe Lage wie bei 19.7.0.
  * Eine Installation ohne `kdf_anteil` verhaelt sich weiterhin wie vor S10;
  * die Umstellung beginnt erst, wenn der Anteil angelegt wird.
+ *
+ * 20.1.0 GIBT DEM ANTEIL EINE BEDIENUNG — UND EINEN ZWEITEN ORT. Bis 20.0.0
+ * war der Server-Anteil eine Zeile in `config.php`, die nur ein Mensch mit
+ * Dateizugang anlegen konnte, und niemand sah ihr an, ob sie die richtige
+ * war. Die Nebennummer traegt drei Dinge nach:
+ *
+ *   1. DIE KARTE „Schluessel des Servers" unter Betrieb -> Servereinstellungen
+ *      fuehrt beide Geheimnisse an einer Stelle: anlegen, wechseln, alten
+ *      Anteil entfernen, nachtragen, Neuanfang. Sie ZEIGT DEN WERT NICHT —
+ *      sie nennt nur seine Kennung, die ersten acht Hexzeichen des SHA-256
+ *      ueber den Wert. Damit laesst sich vergleichen, ohne vorzulesen.
+ *   2. DAS SCHLUESSELBLATT (`betrieb_schluesselblatt.php`) ist die eine
+ *      Seite, deren Zweck der Ausdruck ist. `config.php` traegt seit S10 die
+ *      Schluessel der ganzen Installation, und ein zweiter Ort dafuer muss
+ *      ueberleben, was die Datei nicht ueberlebt. Papier tut das.
+ *   3. FUENF ZUSTAENDE statt „da oder nicht da": nicht eingerichtet, bereit,
+ *      Rotation, abweichend, Neuanfang. Der interessante ist `abweichend` —
+ *      `config.php` traegt einen anderen Wert, als die Huellen verlangen. Er
+ *      entsteht nicht nur beim Verlieren der Datei, sondern PLANMAESSIG nach
+ *      einem Komplett-Backup: Das Paket stellt `app_state` wieder her,
+ *      `config.php` gehoert nicht dazu.
+ *
+ * NACHTRAGEN SCHREIBT NUR BEI UEBEREINSTIMMUNG. Der Server rechnet die
+ * Kennung des eingegebenen Werts und vergleicht sie mit der erwarteten; passt
+ * sie nicht, wird NICHTS geschrieben und die Meldung nennt beide Kennungen.
+ * Ein falsch abgetippter Wert, der stillschweigend landet, macht aus einer
+ * behebbaren Lage eine unbehebbare — er ueberschreibt den einzigen Ort, an
+ * dem der richtige noch stehen koennte.
+ *
+ * DAS ERSTE @media print DES PROJEKTS. Drei Regeln, und sie gelten nur fuer
+ * das Blatt: Bildschirmknoepfe fort, keine Flaechenfarbe, kein Seitenumbruch
+ * mitten im Wert. Ein Druck-Stylesheet, das jede Seite umgestaltet, waere
+ * eine zweite Oberflaeche mit eigenen Fehlern.
+ *
+ * KEINE SCHEMAAENDERUNG, KEINE MIGRATION. `app_state` bekommt zwei Marken
+ * (`kdf_anteil_kennung`, `server_key_kennung`) — die Tabelle gibt es seit
+ * langem, und beide entstehen beim ersten Anlegen von selbst.
  */
-const WEB_VERSION = '20.0.0';
+const WEB_VERSION = '20.1.0';
