@@ -6591,6 +6591,24 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
 | „falscher Schlüssel, falsche Passphrase — oder der Dateikopf ist verändert" | der `server_key` in `config.php` ist nicht der, mit dem versiegelt wurde | den richtigen aus dem Wiederanlaufpaket eintragen |
 | „Dieses Backup ist unvollständig — die Endmarke fehlt" | der Lauf ist beim Erzeugen abgebrochen | einen älteren Stand nehmen |
 | „gescheitert an Anweisung *n*" | halb eingespielt; es wurde **nichts** zurückgenommen | Datenbank leeren und von vorn |
+| „Der Server-Anteil der Verschlüsselung fehlt oder ist nicht der, mit dem die Hüllen gebaut wurden" (seit Web 19.7.0) | **der Regelfall nach Schritt 5**, siehe unten | den `kdf_anteil` aus dem Wiederanlaufpaket eintragen |
+
+**Nach Schritt 5 steht der Server-Anteil fast immer auf „abweichend" — und
+das ist richtig so (seit Web 19.7.0, S10).** Das Komplettbackup enthält
+**jede** Tabelle, also auch `app_state` mit der Kennung des Anteils, mit dem
+die Hüllen gebaut wurden. Es enthält **nicht** `config.php`; die hat Schritt 3
+frisch angelegt, und `install.php` hat darin einen **neuen**, zufälligen
+`kdf_anteil` gewürfelt. Wert und Marke gehen damit auseinander.
+
+Genau dafür gibt es die Marke. Ohne sie würde die Installation den neuen
+Anteil für den richtigen halten, und jede NutzerIn bekäme beim Anmelden
+„Passwort falsch" — für Daten, die vollständig da sind. Mit ihr sagt die
+Anwendung, was Sache ist, und nennt die **erwartete Kennung**. Der Griff
+danach: den `kdf_anteil` aus dem Wiederanlaufpaket über die Karte *Nachtragen
+vom Blatt* eintragen (die Kennung wird vor dem Schreiben verglichen). Ist er
+unwiederbringlich weg, bleibt der Neuanfang — dann setzt jede NutzerIn ihr
+Passwort über den Wiederherstellungsschlüssel neu; **die Daten selbst sind
+davon nicht betroffen**.
 
 **Das Wiederanlaufpaket (seit Web 12.1.0, E-S2-21; seit Web 19.7.0 mit einem
 vierten Stück).** Getrennt von der Anwendung aufbewahren — auf einem anderen

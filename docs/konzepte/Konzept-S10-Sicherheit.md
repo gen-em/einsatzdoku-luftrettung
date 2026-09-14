@@ -660,11 +660,28 @@ Wird je Paket fortgeschrieben: Mittel, Zahl, Stand. Leer bis AP1.
 ## 6. Gesammelte Fehlerfunde (K4)
 
 Funde während der Umsetzung, die nicht blockieren, werden hier gesammelt und
-am Ende in den Backlog überführt. Leer bis AP1.
+am Ende in den Backlog überführt.
+
+**Woher die Funde von AP1 stammen.** Vor Beginn der Umsetzung ist das Konzept
+**adversarisch gegen den Code gelesen** worden — sechs Angriffsrichtungen,
+jede mit dem Auftrag zu widerlegen statt zu bestätigen, jeder Fund mit Beleg
+aus dem Quelltext. Drei Richtungen sind durchgelaufen (Hüllen-Leser,
+Sicherung/Wiederherstellung, Adminpakete), zwei blieben stehen (Versand,
+Oberfläche/Doku) und werden vor AP4 nachgeholt. Die Funde unten sind
+**von Hand am Code nachgeprüft**, nicht übernommen.
 
 | Nr. | Fund | Wo | Entscheidung |
 |---|---|---|---|
-| | | | |
+| F-1 | `EdCrypto.getContentKey()` ruft `decrypt()` unmittelbar und wirft damit an jeder `edka1:`-Hülle — auch über `EdKeyGuard.contentKey()`, das **jede** Anzeigeseite benutzt. Der Katalog der „fünf Stellen" in 1.2 zählt sie nicht mit | `crypto.js`, `keyguard.js` | **AP2.** `getContentKey()` geht über `huelleOeffnen()`. Ohne das wäre nach AP2 jede Seite gesperrt, und zwar erst beim zweiten Aufruf — der erste kommt aus dem Vormerkfach |
+| F-2 | `WRAP_RE` prüft `pat_wrap_pw` **und** `pat_wrap_rc`. Seit AP1 nimmt sie `edka1:` an — für `pat_wrap_rc` soll das nie gelten (E-S10-04), und nichts hält es auf | `validate_lib.php` | **AP2.** Zwei Ausdrücke statt einem, und eine gemeinsame Prüffunktion in `serverkrypto_lib.php`. Ein `edka1:`-`pat_wrap_rc` wäre der Verlust des Rückwegs — genau das, was die Zusage ausschließt |
+| F-3 | Die Kennungsprüfung sitzt an **einem von vier** Schreibwegen für `pat_wrap_pw`: `pw_handling.php` (Erstvergabe **und** Reset), `einstellungen.php` (Passwortwechsel) und `api/kdf_upgrade.php` — nur der letzte prüft | vier Dateien | **AP2.** Dieselbe Prüffunktion wie F-2 an allen vier. „Feldkatalog statt Sonderfall" gilt auch hier: eine Prüfung, die an drei Stellen fehlt, ist keine |
+| F-4 | Nach dem Zurückspielen eines Komplettbackups steht der Anteil **immer** auf `abweichend` — das Backup bringt `app_state` mit, `config.php` aber nicht, und `install.php` würfelt einen neuen Anteil | `komplett_lib.php`, Runbook | **Kein Fehler, sondern der Zweck der Marke** — ohne sie sähe derselbe Zustand aus wie „Passwort falsch" für alle. **In AP1 dokumentiert:** Runbook 7 nennt den Fall als Regelfall nach Schritt 5, mit Griff und Rückweg |
+| F-5 | `E-S10-07` verlangt, dass `login.php` **immer** ins Vormerkfach legt — damit liegt das Anmelde-Token nach **jeder** Anmeldung im `sessionStorage`, heute nur bei mehreren Rundenzahlen (also nie) | `login.php`, `crypto.js` | **AP2, mit Ansage.** Das Fach wird von der ersten Seite geräumt, die den Inhaltsschlüssel braucht — aber „die erste Seite" ist nicht jede. Zu prüfen ist, ob eine Räumung auch ohne Hülle stattfindet; sonst bleibt das Token länger liegen als nötig |
+| F-6 | `SZ_PORTS` wird geprüft, nicht `SZ_PROTOKOLLE` — `ftp` aus der einen Liste zu streichen genügt nicht | `sicherungsziel_lib.php` | **AP4.** Vor dem Bauen nachzählen, an wie vielen Stellen `ftp` steht (die Gegenlesung nennt fünf allein in der Versandprobe) |
+| F-7 | Der Zweck `adminpaket\|<konto>\|<teil>` bindet **nicht das Paket**: Ein Teil aus einem älteren Paket desselben Kontos ließe sich unterschieben | `adminbackup_lib.php` | **AP4, zu entscheiden.** Der Zweck könnte den Paketstempel aufnehmen. Dagegen spricht, dass er dann beim Lesen bekannt sein muss — also aus dem Manifest kommt, das selbst versiegelt ist |
+| F-8 | „`sk_versiegelt()` am ersten Teil" — es gibt keinen „ersten Teil": Die vier Leser greifen je einen benannten Eintrag im ZIP | `adminbackup_lib.php` | **AP4.** Die Fassung erkennt der Leser an **`manifest.json`**, dem einzigen Eintrag, den jedes Paket hat und jeder Leser ohnehin liest |
+| F-9 | Die Abnahmezahl `grep -c '"email"' = 0` misst nicht, was sie behauptet: Die E-Mail-Adresse liegt weiter im Klartext **neben** dem Paket (Ordnername, Dateiname, Kontozeile) | AP4-Abnahme | **AP4.** Die Zahl wird umformuliert oder fällt weg. Eine grüne Zahl, die das Falsche misst, ist schlimmer als keine (`CLAUDE.md` 6) |
+| F-10 | Die Größenmessung in AP4 setzt voraus, die Teile seien heute ungepackt — das ZIP packt sie bereits | AP4-Abnahme | **AP4.** Gemessen werden drei Zahlen, nicht zwei: heute · Siegel im ZIP · gzip vor dem Siegel |
 
 ---
 
