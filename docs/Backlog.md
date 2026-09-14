@@ -1127,6 +1127,26 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     2FA-Zwang (Zuarbeit, nicht im Repositorium machbar) und das Deploy-Tor
     (S10 mit R40 (2)).*
 
+    **Vermerk nach S10 (14.09.2026, AP6): Das Deploy-Tor ist NICHT in S10
+    gebaut worden, und das war richtig so.** Die Zuordnung „S10 mit R40 (2)"
+    oben las sich, als hinge es an Schritt 9b; R78 Punkt (7) sagt aber das
+    Gegenteil und ist die ältere Entscheidung: *„Deploy-Tor erst mit dem
+    Staging-Aufbau (R40 (2)) — bestätigt."* S10 hat kein Staging aufgebaut,
+    also war hier nichts fällig. **Der offene Rest von Nr. 140 hängt seither
+    allein an R40 (2)** — Branch-Schutz und 2FA bleiben Zuarbeit.
+
+    *Was S10 an dieser Nummer trotzdem verändert hat, und zwar zum
+    Schlechteren:* Der Angriff, den K-16 beschreibt — wer pushen darf, kann
+    `crypto.js` ändern und Passwörter beim nächsten Anmelden abgreifen —
+    **wiegt seit S10 schwerer**. Bis Web 19.6.0 kostete ein solcher Zugriff
+    die Passwörter derer, die sich danach anmelden. Seither liegt in
+    `config.php` zusätzlich der Server-Anteil, und wer `server/` beschreiben
+    kann, kann ihn mit ausliefern. **Der Server-Anteil schützt gegen den
+    Datenbankabzug, nicht gegen einen Angreifer, der Code ausliefert** —
+    genau die Grenze, die R78 Punkt (1) für das ganze Verfahren zieht. Das ist
+    kein neuer Befund, sondern ein Grund mehr, Branch-Schutz und 2FA nicht
+    weiter zu schieben.
+
 141. **Zweitfaktor für alle Konten.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-5).* Passwort ist
     Anmeldung **und** Datenschlüssel; Phishing genügt für alles. R38 sieht

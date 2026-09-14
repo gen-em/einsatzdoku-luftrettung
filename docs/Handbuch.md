@@ -3921,12 +3921,29 @@ Was von selbst auf ein Backup-Ziel geschoben wird, ist immer die
 verschlossene Fassung.
 
 **Das Wichtigste steht nicht in der Datei.** Das Komplett-Backup enthält
-absichtlich *nicht* die Datei `config.php` des Servers. In ihr steht der
-Schlüssel, mit dem sich das Backup öffnen lässt — beides zusammen
-aufzubewahren wäre, als klebte der Schlüssel am Schloss. Sie gehört an einen
-anderen Ort, zusammen mit dem Zugang zum Backup-Ziel. Diese drei Dinge
-zusammen heissen **Wiederanlaufpaket**, und ohne sie nützt das beste Backup
-nichts.
+absichtlich *nicht* die Datei `config.php` des Servers. In ihr stehen die
+Schlüssel — beides zusammen aufzubewahren wäre, als klebte der Schlüssel am
+Schloss. Sie gehört an einen anderen Ort, zusammen mit dem Zugang zum
+Backup-Ziel. Das alles zusammen heisst **Wiederanlaufpaket**, und ohne es
+nützt das beste Backup nichts.
+
+**Seit Web 19.7.0 hat es vier Stücke, nicht drei** — der **Server-Anteil** ist
+dazugekommen (12.5). Die vier:
+
+1. die Datei `config.php` selbst,
+2. der **Serverschlüssel** darin — er öffnet das Komplett-Backup,
+3. der **Server-Anteil** darin — er gehört zum Passwort *jeder* Nutzerin,
+4. der **Zugang zum Backup-Ziel** (Rechner, Nutzer, Passwort oder Schlüssel).
+
+Der Unterschied zwischen 2 und 3 ist wichtig: Ohne den **Serverschlüssel**
+lässt sich ein Komplett-Backup nicht mehr öffnen — das ist endgültig. Ohne den
+**Server-Anteil** kommt zunächst niemand mehr an die verschlüsselten Angaben,
+aber **verloren ist nichts**: Jede NutzerIn kommt über ihren
+Wiederherstellungsschlüssel wieder herein und vergibt dabei ein neues
+Passwort. Lästig für alle, aber kein Datenverlust.
+
+Beide stehen auf dem **Schlüsselblatt** (12.5) — drucken, sobald ein Anteil
+angelegt oder gewechselt wurde, zweimal und an zwei Orten.
 
 **Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
 gebraucht: wenn alles weg ist. Er arbeitet nur auf einer **leeren** Datenbank

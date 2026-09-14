@@ -13,7 +13,7 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **AP5 erledigt** (Web **20.2.1**: eine Stelle unter `server/`, der zweite Riegel an der Demo-Fixture), AP6 als Nächstes. |
+> | Stand | 14.09.2026 — **alle sechs Arbeitspakete erledigt** (Web 19.7.0 bis **20.2.1**). Offen ist allein die **Freigabe des Abschlusses**; danach wird das Konzept gelöscht, **dieses Dokument bleibt**, bis seine Prüfliste abgehakt ist. |
 > | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines** · AP3: **Betriebslauf** in drei Engines (Oberfläche der fünf Lagen, Blatt im Druck, Rotation, Neuanfang, Reset) · AP4: Freigabe-, Wiederherstellungs-, Versand- und Komplettprobe, dazu fünf Wege am `ftp`-Altziel und die Cron-Zeile · **AP5: Wartungs-, Riegel-, Sitzungs-, Wiederherstellungs-, Komplett-, Endpunkt- und Generatorprüfung, Prüfkonten, beide Kreisläufe**; alles aus AP1 bis AP3 erneut (Abschnitt 2) |
 > | Offen | P-01 bis P-14 |
 > | Prüfmittel, die in AP5 **kaputt** vorgefunden wurden | die **Wartungsprobe** (seit AP3 auf 1 nicht erfüllt, unbemerkt), zwei **Prüfmittel mit Rückständen** (2 Wegwerfkonten, 3 verwaiste Paketordner), die **Voraussetzung der Endpunktprobe** als blosse Meldung, `pruefkonten.php` ohne Serverschlüssel-Riegel, **sieben abgeschriebene Zahlen** in Anleitungen und Kommentaren, **zwei Prüfmittel, die `config.php` lasen**, die **erzeugten Tabellen von `docs/Design.md`** sieben Zeilen hinter den Quellen, ein **falsch beschriebenes Fach** in der Abmelde-Probe, eine **Browserprobe, die überhaupt nicht durchlief** (vier Ursachen, alle in der Probe) — und **zwei Fehler in AP5s eigener Arbeit**, gefunden von der Gegenprobe des Pakets: eine Erwartung, die nicht fehlschlagen konnte, und zwei Proben, die den Zustand hätten herstellen können, den sie messen. **Alle behoben** (F-S10-AP5-01 bis -13) |
@@ -408,6 +408,11 @@ AP4 sie anfasste (Abschnitt 4).
 | alle | Wortliste | Treffer außerhalb Ausnahmen / ungenutzte Ausnahmen / Fallen | **0/0/0** |
 | alle | Vollständigkeit | Befunde vorher → nachher, Unterschied erklärt | **341 → 340** — der eine ist `config.php` (F-S10-AP5-06); Hexfarben **0** |
 | AP5 | Linkprobe | Verweise / Abweichungen, über wie viele Zielseiten | **117 / 0** über **100** (vorher 101) |
+| AP6 | Rahmenplan Abschnitt 5 gegen `docs/Backlog.md`, mit `comm` | Nummern nur hier / nur dort | **0 · 0** — vorher **1 · 1** bei gleicher Summe 51 (F-S10-AP6-01) |
+| AP6 | `grep` nach `ftp` als **wählbarem** Protokoll in `docs/Technik.md` | verbliebene Stellen | **0** (vorher 5) |
+| AP6 | `grep -rn "kdf_pepper"` über `docs/`, `server/`, `tools/`, `CLAUDE.md` | Treffer außerhalb von Vorbereitung und Review | **0** |
+| AP6 | Konsistenzlesen Technik 7 ↔ Handbuch 12 ↔ Backup-Format 5 | Widersprüche gefunden / behoben | **1 von 1** (Handbuch: drei Stücke statt vier — F-S10-AP6-02) |
+| AP6 | `tools/wortliste/` · `tools/linkprobe/` | nach der Dokumentationsarbeit | **0/0/0** · **117/0** |
 | AP6 | Linkprobe | Verweise, unbekannte Abweichungen | / 0 |
 
 ---

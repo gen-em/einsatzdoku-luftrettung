@@ -135,8 +135,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       · sicherungen/eingang/ was wiederhergestellt
 │   │                         werden soll — von Hand dorthin gelegt
 │   ├── sicherungsziel_lib.php  Backup-Ziele (S2/AP7): Schnittstelle
-│   │                       `Zielweg` und drei Adapter — FTP und FTPS über
-│   │                       ext/ftp, SFTP über phpseclib; dazu Pflege in der
+│   │                       `Zielweg` und zwei Adapter — FTPS über ext/ftp,
+│   │                       SFTP über phpseclib. `ftp` ist seit Web 20.2.0
+│   │                       abgeschafft (S10/AP4); ein bestehendes Ziel wird
+│   │                       übergangen, nicht gelöscht. Dazu Pflege in der
 │   │                       Tabelle backup_targets, „Verbindung prüfen" und
 │   │                       der Versandschub
 │   ├── admin_sicherungsziele.php  Adminseite dazu: Ziele anlegen und prüfen,
@@ -550,12 +552,14 @@ Daten erst nach Server-Bestätigung.
 │   │                      (S2/AP8): erzeugen in Häppchen, versiegeln, öffnen,
 │   │                      in eine LEERE Datenbank einspielen und Tabelle für
 │   │                      Tabelle vergleichen, aufs Backup-Ziel schieben.
-│   │                      76 Erwartungen. Arbeitet in einer Kopie unter /tmp,
-│   │                      liest aber aus der ECHTEN Datenbank
-│   ├── versandprobe/      prüft die drei Backup-Ziel-Adapter (S2/AP7)
-│   │                      gegen ECHTE Server auf 127.0.0.1: Rundlauf je
-│   │                      Protokoll, Fingerabdruck als Riegel, Fehlerfälle,
-│   │                      Versiegelung der Zugangsdaten. 115 Erwartungen.
+│   │                      72 Erwartungen mit allen Schaltern (64 ohne).
+│   │                      Arbeitet in einer Kopie unter /tmp, liest aber
+│   │                      aus der ECHTEN Datenbank
+│   ├── versandprobe/      prüft die beiden Backup-Ziel-Adapter (S2/AP7;
+│   │                      `ftp` ist seit S10/AP4 abgeschafft) gegen ECHTE
+│   │                      Server auf 127.0.0.1: Rundlauf je Protokoll,
+│   │                      Fingerabdruck als Riegel, Fehlerfälle,
+│   │                      Versiegelung der Zugangsdaten. 116 Erwartungen.
 │   │                      ZWEI Sätze Gegenstellen, und beide werden
 │   │                      gebraucht: gegenstellen.py (pyftpdlib/paramiko,
 │   │                      portabel) und echte_gegenstellen.sh (vsftpd und
@@ -3366,7 +3370,7 @@ das sind die Zielkliniken einer Patientin, gepflegt unter Stammdaten. Zwei
 Dinge unter einem Wort, zwei Klicks voneinander entfernt — das lässt sich in
 einer Fehlermeldung nicht mehr auflösen (Konzept-S2, F-S2-G).
 
-#### Eine Schnittstelle, drei Adapter
+#### Eine Schnittstelle, zwei Adapter
 
 `server/sicherungsziel_lib.php` beschreibt mit `Zielweg`, was ein Ziel können
 muss: `verbinden`, `trennen`, `ordner`, `senden`, `holen`, `liste`,
@@ -3376,23 +3380,56 @@ eine Empfehlung und keine Grenze.
 
 | Adapter | Protokoll | Grundlage |
 |---|---|---|
-| `ZielFtp` | FTP und FTPS | PHP-Erweiterung `ftp` (`ftp_ssl_connect`) |
+| `ZielFtp` | FTPS | PHP-Erweiterung `ftp` (`ftp_ssl_connect`) |
 | `ZielSftp` | SFTP | phpseclib 3 (`server/vendor/`, docs/Lizenzen.md 3a) |
 
-Ein Adapter für FTP **und** FTPS, weil sich genau eine Zeile unterscheidet.
-Das Komplettbackup aus AP8 benutzt dieselbe Schnittstelle und weiss vom
-Protokoll nichts; ein vierter Adapter (WebDAV, Backlog) soll sie nicht
+Der erste Adapter trug bis Web 20.2.0 **FTP und FTPS**, weil sich genau eine
+Zeile unterscheidet; seither gibt es nur noch die verschlüsselte Hälfte
+(unten). Das Komplettbackup aus AP8 benutzt dieselbe Schnittstelle und weiss
+vom Protokoll nichts; ein dritter Adapter (WebDAV, Backlog) soll sie nicht
 anfassen.
 
-#### Was die drei taugen
+#### `ftp` ist abgeschafft (ab Web 20.2.0, S10/AP4, E-S10-14)
+
+`SZ_PROTOKOLLE` und `SZ_PORTS` führen seither **nur noch `sftp` und `ftps`**,
+und `sz_protokoll_erlaubt()` ist die eine Frage, die beide Listen stellt.
+Geprüft wird **positiv gegen den Katalog**, nicht negativ gegen `ftp` — das
+ist der Unterschied, auf den es ankommt: `sz_weg()` hatte genau einen
+benannten Zweig (`sftp`), und alles Übrige fiel in `ZielFtp`, wo
+`$prot === 'ftps'` über TLS entscheidet. FTPS war damit geschützt, ein
+**unbekanntes oder leeres** Protokoll aber fiel still auf Klartext-FTP zurück.
+
+**Ein bestehendes Ziel wird übergangen, nicht gelöscht.** Es bleibt lesbar,
+sichtbar und umstellbar:
+
+| Wo | Was geschieht |
+|---|---|
+| Liste der Backup-Ziele | rote Plakette **„wird übergangen"**; die Zeile „Zuletzt gescheitert" heisst dort „Zuletzt übergangen" und steht orange |
+| Formular | gesperrt mit Erklärung; die Protokollauswahl öffnet **ohne Vorauswahl** (`['' => '— bitte wählen —']`), ein Speichern stellt also zwangsläufig um |
+| „Verbindung prüfen" | gesperrt |
+| Versandschub | `sz_versand_schub()` überspringt es **vor** `sz_weg()` und zählt es als `uebersprungen`; im Lauf steht „Übergangen: …" |
+| Rückstand | `sz_versand_rueckstand()` filtert es heraus |
+| Cron | `php server/jobs.php versand` hängt `· N übergangen` an die Ergebniszeile |
+| Betrieb → Status | eigener Eimer, Ton **orange** (Design.md 9.23: etwas braucht Zuwendung, nichts ist kaputt) — sortiert nach **Protokoll**, nicht nach dem Text von `letzter_fehler` |
+
+**Kein `fehler`-Eintrag**, und das ist Absicht: `jobs_lib.php` wirft darauf,
+und der Versandjob stünde dauerhaft rot. Auf der Jobebene heisst die Zahl
+deshalb `uebergangen` und **nicht** `uebersprungen` — Letzteres ist im Bericht
+schon belegt („der Job lief gar nicht"), und `jobs.php` überspränge bei diesem
+Schlüssel die **ganze** Ergebniszeile.
+
+**Keine Schemaänderung.** Das `ENUM` von `backup_targets.protokoll` behält den
+Wert `ftp`; der Rückbau der Spalte gehört zum ENUM-Aufräumen (Backlog Nr. 168
+bzw. Nr. 46). Eine Migration braucht S10 nicht.
+
+#### Was die beiden taugen
 
 | | verschlüsselt | erkennt den Server wieder |
 |---|---|---|
 | **SFTP** | ja | **ja** — Fingerabdruck des Hostschlüssels |
 | **FTPS** | ja | nein |
-| **FTP** | **nein** | nein |
 
-Der mittlere Fall wird leicht überschätzt: **`ext/ftp` prüft das Zertifikat
+Der zweite Fall wird leicht überschätzt: **`ext/ftp` prüft das Zertifikat
 nicht.** Nachgemessen in `tools/versandprobe/` gegen eine Gegenstelle mit
 selbst ausgestelltem Zertifikat ohne Vertrauenskette — die Verbindung kommt
 zustande. Schutz gegen Mitlesen ja, Schutz gegen einen untergeschobenen Server
@@ -3500,7 +3537,7 @@ Gegenstellen:
 
 | | Dauer | PHP-Speicherspitze (Budget Z3: 64 MB) |
 |---|---|---|
-| FTP | 0,13 s | 2,0 MB |
+| FTP *(seit Web 20.2.0 abgeschafft, die Zahl bleibt als Vergleich)* | 0,13 s | 2,0 MB |
 | FTPS | 0,68 s | 2,0 MB |
 | SFTP | 3,08 s | 8,0 MB |
 
@@ -3511,7 +3548,8 @@ gekürzte Datei wurde beim nächsten Lauf **einzeln** erneut geschickt (1 von
 (34 + 30) und war danach vollständig.
 
 `tools/versandprobe/` deckt Adapter, Fingerabdruck-Riegel, Fehlerfälle und
-Versiegelung ab: **115 Erwartungen**, gefahren gegen zwei Sätze Gegenstellen
+Versiegelung ab: **116 Erwartungen** (115 bis S10/AP4 — die 116. weist ein
+**leeres** Protokoll ab), gefahren gegen zwei Sätze Gegenstellen
 — pyftpdlib/paramiko und **vsftpd/OpenSSH**. Beide werden gebraucht: vsftpd
 kennt kein `MLSD` und fährt damit als einziges den Rückfall auf `NLST` +
 `SIZE`; pyftpdlib fährt den Hauptweg. Gegen die echten Server: FTP 0,35 s,
@@ -6820,8 +6858,9 @@ zeigt die Seite die fertige Zeile zum Einfügen — **genau eine** eintragen, be
 jedem Neuladen steht dort eine andere. Danach die Zeile ins Wiederanlaufpaket.
 
 **Backup-Ziel einrichten:** Adminbereich → **Backup-Ziele** → *Ziel
-anlegen*. **SFTP wählen, wenn das Ziel es anbietet** — es ist das einzige der
-drei Protokolle, das den Server am Hostschlüssel wiedererkennt. Danach
+anlegen*. **SFTP wählen, wenn das Ziel es anbietet** — es ist von den
+beiden das einzige, das den Server am Hostschlüssel wiedererkennt (`ftp` ist
+seit Web 20.2.0 abgeschafft, 4.97c). Danach
 **Verbindung prüfen**: Der Lauf schreibt eine Probedatei, liest sie zurück,
 vergleicht sie und löscht sie wieder; er beantwortet damit auch die Frage nach
 den Schreibrechten. Beim ersten Mal wird der Hostschlüssel übernommen.
