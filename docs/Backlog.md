@@ -3196,6 +3196,23 @@ zutreffen.
     wie es heute die Rundenzahl prüft — ein Abbruch statt einer Fixture, die
     erst beim nächsten Reset auf einer fremden Installation auffällt.
 
+    **Gebaut in S10/AP5 (14.09.2026) — und zwar als PAAR, wie hier.** Der
+    Riegel im Erzeuger allein wäre die halbe Sache gewesen: Er läuft auf der
+    Referenzmaschine, die Datei kommt auf dem Produktivserver an. Seit
+    **Web 20.2.1** prüft deshalb auch `demo_fixture_laden()` beide Hüllen, mit
+    der gemeinsamen Prüfschicht (`huelle_pw_pruefen($wrap, istDemo: true)` und
+    `huelle_rc_pruefen()`) statt mit einem eigenen Ausdruck. Die Begründung
+    ist wörtlich die dieses Eintrags: *Ohne den zweiten Riegel wäre ein Reset
+    still erfolgreich und niemand käme mehr herein.*
+
+    Damit trägt jeder der beiden installationsgebundenen Werte der Fixture ein
+    Riegelpaar; die Tafel steht in `docs/Technik.md` 4.99a. Gemessen von
+    `tools/referenzdatensatz/fixture/riegelprobe.php`: **10 von 10**, beide
+    Riegel in beide Richtungen — denn ein Riegel, der immer zuschlägt, ist so
+    kaputt wie einer, der es nie tut — und dazu die Zusage, die das `throw`
+    vertretbar macht: Ein Reset mit verbogener Fixture wird abgefangen, das
+    Demo-Konto behält seine 88 Einsätze.
+
 38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
     *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste
     ruft bei **jedem** Seitenaufruf `nb_offen_gesamt()`. Die Funktion bricht

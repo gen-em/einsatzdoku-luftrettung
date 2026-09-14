@@ -42,7 +42,7 @@ declare(strict_types=1);
  * stehen — sonst schlaegt ein anderer Riegel vorher zu, und die Probe sagt
  * das, statt gruen zu melden.
  *
- * Erwartet: **4 von 4**, Rueckgabe 0.
+ * Erwartet: **10 von 10**, Rueckgabe 0.
  *
  * DIE POSITIVE HAELFTE SCHREIBT EINE DATEI — in den Systemtempordner, nicht
  * nach `server/demo/`. Die echte Fixture wird von dieser Probe nie angefasst.
@@ -122,6 +122,135 @@ pruef('2  ... die Meldung nennt `edka1:` und schreibt KEINE Datei',
       str_contains($b['err'], 'edka1:') && $b['datei'] === 0,
       trim(explode("\n", $b['err'])[0] ?? ''));
 @unlink($ziel2);
+
+/* ---- 3. Der ZWEITE Riegel: demo_fixture_laden() weist sie ab ------------- */
+/*
+ * ZWEI RIEGEL, ZWEI ORTE. Teil 1 und 2 messen den Riegel im ERZEUGER — er
+ * verhindert, dass eine unbrauchbare Fixture entsteht. Der hier sitzt im
+ * EINSPIELER (`demo_fixture_laden()`, Web 20.2.1) und verhindert, dass sie
+ * eingespielt wird. Der zweite ist nicht ueberfluessig: Der Erzeuger laeuft
+ * auf der Referenzmaschine, die Datei kommt auf dem Produktivserver an.
+ * Dieselbe Paarung wie bei der Rundenzahl (Backlog Nr. 155).
+ *
+ * WAS DIESER TEIL ANFASST — und warum das vertretbar ist. Er legt die echte
+ * `server/demo/fixture.json.gz` beiseite, schreibt eine verbogene an ihre
+ * Stelle, laesst sie abweisen und legt die echte im `finally` zurueck. Danach
+ * wird die Pruefsumme verglichen und genannt.
+ *
+ * Drei Sicherungen dagegen, dass daraus ein Schaden wird:
+ *   1. Die Datei ist VERSIONIERT (`git ls-files server/demo/`). Geht etwas
+ *      schief, stellt `git checkout -- server/demo/fixture.json.gz` sie her.
+ *   2. Der Schaden waere ohnehin begrenzt: `demo_reset_wenn_faellig()` faengt
+ *      jede Ausnahme ab und schreibt ins `error_log`. Das Demo-Konto hoerte
+ *      auf, sich zuruecksetzen — es ginge nichts verloren.
+ *   3. Das `finally` legt zurueck, auch bei einem Abbruch, und die letzte
+ *      Zeile dieses Teils nennt die Pruefsumme vorher/nachher.
+ */
+$fxPfad   = $wurzel . '/server/demo/fixture.json.gz';
+$fxSicher = sys_get_temp_dir() . '/riegelprobe-fixture-' . bin2hex(random_bytes(4)) . '.gz';
+$summeVor = @hash_file('sha256', $fxPfad);
+
+if ($summeVor === false || !copy($fxPfad, $fxSicher)) {
+    fwrite(STDERR, "Die Fixture liess sich nicht beiseitelegen — Teil 3 faellt aus.\n");
+    exit(2);
+}
+
+/** Die Fixture mit einer verbogenen Huelle neu schreiben. */
+$verbiegen = static function (string $spalte) use ($fxSicher, $fxPfad): void {
+    $j = json_decode((string)gzdecode((string)file_get_contents($fxSicher)), true);
+    $alt = (string)$j['konto'][$spalte];
+    /* `edk1:` durch `edka1:<acht hex>:` ersetzen — die Form, die eine Huelle
+     * mit Server-Anteil traegt. Der Inhalt bleibt, er wird nie geoeffnet. */
+    $j['konto'][$spalte] = 'edka1:' . bin2hex(random_bytes(4)) . ':'
+                         . substr($alt, strlen('edk1:'));
+    file_put_contents($fxPfad, (string)gzencode(
+        (string)json_encode($j, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), 9));
+};
+
+/** `demo_fixture_laden()` in einem EIGENEN Prozess rufen. */
+$laden = static function () use ($wurzel): array {
+    $d = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $p = proc_open(['php', '-r',
+        'require ' . var_export($wurzel . '/server/db.php', true) . ';'
+      . 'require ' . var_export($wurzel . '/server/demo_lib.php', true) . ';'
+      . 'try { demo_fixture_laden(); echo "ANGENOMMEN"; }'
+      . 'catch (Throwable $e) { echo "ABGEWIESEN: " . $e->getMessage(); }'], $d, $rohr);
+    $aus = stream_get_contents($rohr[1]); fclose($rohr[1]);
+    $err = stream_get_contents($rohr[2]); fclose($rohr[2]);
+    proc_close($p);
+    return ['aus' => (string)$aus, 'err' => (string)$err];
+};
+
+try {
+    /* Gegenprobe zuerst: Die ECHTE Fixture geht durch. Ohne diese Zeile
+     * saehe ein Riegel, der ALLES abweist, genauso gruen aus wie ein
+     * richtiger. */
+    $r0 = $laden();
+    pruef('3  Die echte Fixture wird angenommen', str_contains($r0['aus'], 'ANGENOMMEN'),
+          trim(mb_substr($r0['aus'], 0, 60)));
+
+    $verbiegen('pat_wrap_pw');
+    $r1 = $laden();
+    pruef('3  Eine Fixture mit `edka1:`-Schluesselhuelle wird abgewiesen',
+          str_contains($r1['aus'], 'ABGEWIESEN'),
+          trim(mb_substr($r1['aus'], 0, 72)));
+    pruef('3  ... und die Meldung nennt den Server-Anteil',
+          str_contains($r1['aus'], 'Server-Anteil'),
+          str_contains($r1['aus'], 'Server-Anteil') ? 'ja' : 'die Meldung erklaert nichts');
+
+    copy($fxSicher, $fxPfad);
+    $verbiegen('pat_wrap_rc');
+    $r2 = $laden();
+    pruef('4  Auch eine `edka1:`-Wiederherstellungs-Huelle wird abgewiesen (E-S10-04)',
+          str_contains($r2['aus'], 'ABGEWIESEN'),
+          trim(mb_substr($r2['aus'], 0, 72)));
+
+    /* DER ABBRUCH DARF DIE INSTALLATION NICHT KOSTEN — und das ist die
+     * Zusage, die das `throw` ueberhaupt vertretbar macht.
+     *
+     * `demo_reset_wenn_faellig()` laeuft HUCKEPACK auf jeder Anfrage des
+     * Demo-Kontos (`auth_guard.php`, `ingest.php`). Wuerde die Ausnahme von
+     * dort nach oben durchschlagen, machte eine verbogene Fixture die
+     * oeffentliche Demo unbenutzbar — aus einem Riegel wuerde ein Ausfall.
+     * Die Funktion faengt deshalb `Throwable` und schreibt ins `error_log`.
+     *
+     * Gemessen statt gelesen: Der Reset wird faellig gemacht, gerufen, und es
+     * wird nachgesehen, dass er `false` liefert und das Konto UNVERAENDERT
+     * dasteht. Zurueckgestellt wird die Marke im selben Zug. */
+    $r3 = (static function () use ($wurzel): string {
+        $d = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $p = proc_open(['php', '-r',
+            'require ' . var_export($wurzel . '/server/db.php', true) . ';'
+          . 'require ' . var_export($wurzel . '/server/demo_lib.php', true) . ';'
+          . '$m = (int)db()->query("SELECT v FROM app_state WHERE k = \'demo_letzter_reset\'")'
+          . '  ->fetchColumn();'
+          . '$n = (int)db()->query("SELECT COUNT(*) FROM missions WHERE user_id = "'
+          . '  . (int)demo_id())->fetchColumn();'
+          . 'demo_reset_marke_setzen(time() - 4000);'
+          . '$ok = demo_reset_wenn_faellig();'
+          . '$n2 = (int)db()->query("SELECT COUNT(*) FROM missions WHERE user_id = "'
+          . '  . (int)demo_id())->fetchColumn();'
+          . 'if ($m > 0) { demo_reset_marke_setzen($m); }'
+          . 'echo ($ok ? "RESET" : "ABGEFANGEN") . "|" . $n . "|" . $n2;'], $d, $rohr);
+        $aus = stream_get_contents($rohr[1]); fclose($rohr[1]);
+        fclose($rohr[2]); proc_close($p);
+        return (string)$aus;
+    })();
+    [$lage, $vorN, $nachN] = array_pad(explode('|', trim($r3)), 3, '');
+    pruef('5  Ein Reset mit verbogener Fixture wird ABGEFANGEN, nicht durchgereicht',
+          $lage === 'ABGEFANGEN' && $vorN !== '' && $vorN === $nachN,
+          $lage . ', Einsaetze ' . $vorN . ' -> ' . $nachN
+          . ' (der Grund steht im error_log)');
+} finally {
+    copy($fxSicher, $fxPfad);
+    @unlink($fxSicher);
+    $summeNach = @hash_file('sha256', $fxPfad);
+    pruef('6  Die echte Fixture liegt unveraendert zurueck',
+          $summeNach !== false && $summeNach === $summeVor,
+          $summeNach === $summeVor
+            ? 'SHA-256 gleich (' . substr((string)$summeVor, 0, 12) . '…)'
+            : 'ABWEICHUNG — `git checkout -- server/demo/fixture.json.gz`');
+}
 
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $offen);
 exit($offen === 0 ? 0 : 1);

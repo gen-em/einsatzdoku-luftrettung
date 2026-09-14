@@ -14,6 +14,73 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 20.2.1] — 2026-09-14
+
+Schritt 9b (**S10 — Sicherheit**, R78), fünftes Arbeitspaket: die Prüfmittel
+ziehen nach. Der Code darin ist eine einzige Stelle — **der zweite Riegel an
+der Demo-Fixture**; alles andere sind Werkzeuge und Dokumentation und stufen
+nichts hoch.
+
+### Web — eine Fixture mit Server-Anteil wird nicht mehr eingespielt
+
+**Der Riegel, den AP5 zuerst gebaut hat, sitzt am falschen Ende.**
+`tools/referenzdatensatz/fixture/erzeugen.php` hält jetzt an, wenn die
+Schlüsselhülle des Demo-Kontos nicht `edk1:` trägt — das verhindert, dass eine
+unbrauchbare Fixture **entsteht**. Es verhindert nicht, dass eine eingespielt
+wird: Der Erzeuger läuft auf der Referenzmaschine, die Datei geht mit dem
+Deploy auf den Produktivserver.
+
+`demo_fixture_laden()` prüft deshalb jetzt beide Hüllen. Der Grund ist
+derselbe wie überall in S10: Seit dem Server-Anteil hängt der Datenschlüssel
+an einem Wert, der **je Installation ein anderer** ist, und das Demo-Konto
+bekommt bauartbedingt gar keinen (E-P1-19). Eine `edka1:`-Hülle in der Fixture
+hieße: Das Konto meldet sich an — der bcrypt-Hash stimmt ja —, und erst das
+Entsperren scheitert. Auf der öffentlichen Demo, alle 30 Minuten aufs Neue.
+
+**Zwei Riegel, weil einer nicht reicht** — dieselbe Paarung, die Backlog
+Nr. 155 für die Rundenzahl gebaut hat, mit derselben Begründung: *Ohne den
+zweiten Riegel wäre ein Reset still erfolgreich und niemand käme mehr herein.*
+
+Geprüft wird mit der **gemeinsamen Prüfschicht**
+(`huelle_pw_pruefen($wrap, istDemo: true)`, `huelle_rc_pruefen()`), nicht mit
+einem eigenen Ausdruck — ein zweiter Ausdruck ließe früher oder später die
+falsche Hülle durch. Auch `pat_wrap_rc` wird mitgeprüft, obwohl sie nie einen
+Anteil tragen darf: Sie ist der einzige Rückweg, wenn der Anteil verlorengeht,
+und eine Fixture, die ihn mit einem Anteil verbindet, nähme dem Demo-Konto
+genau den (E-S10-04).
+
+**Was ein Abbruch kostet, und warum er trotzdem richtig ist.**
+`demo_reset_wenn_faellig()` fängt jede Ausnahme ab und schreibt ins
+`error_log`. Eine verbogene Fixture lässt das Demo-Konto also **aufhören, sich
+zurückzusetzen** — es geht nichts verloren, und niemand wird ausgesperrt.
+`demo_anlegen()` dagegen lässt die Ausnahme durch: Wer das Konto von Hand
+anlegt, soll den Grund lesen.
+
+**Gemessen:** `tools/referenzdatensatz/fixture/riegelprobe.php` **10 von 10** —
+beide Riegel in beide Richtungen (ein Riegel, der immer zuschlägt, ist so
+kaputt wie einer, der es nie tut), dazu die Zusage, die das `throw` überhaupt
+vertretbar macht: Ein Reset mit verbogener Fixture wird **abgefangen**, das
+Demo-Konto behält seine 88 Einsätze. Und am Ende die SHA-256 der echten
+Fixture vorher/nachher, damit die Probe belegt, dass sie nichts hinterlassen
+hat.
+
+### Prüfmittel — zwölf Funde, keiner in der Anwendung
+
+Der größere Teil von AP5 stuft nichts hoch und steht deshalb nicht hier,
+sondern in `docs/konzepte/Pruefdokument-S10-Sicherheit.md`. Zwei Sätze
+gehören trotzdem hierher, weil sie erklären, warum eine grüne Zahl kein
+Beleg ist:
+
+- **Die Wartungsprobe stand seit Web 20.1.0 auf „1 nicht erfüllt"** — die
+  Ausnahmeliste war auf dreizehn Einträge gewachsen, die Erwartung zählte
+  zwölf. Sie tat genau das, wofür sie gebaut ist; bemerkt hat es niemand,
+  weil sie nicht zu dem Satz gehört, den man nach einer Oberflächenänderung
+  fährt.
+- **Sieben Zahlen in Anleitungen waren Abschriften**, darunter zweimal
+  *verschiedene* Zahlen für dieselbe Probe in einem Dokument. Dass sie
+  nebeneinander stehen konnten, ist der Beleg, dass beide abgeschrieben
+  waren.
+
 ## [Web 20.2.0] — 2026-09-14
 
 Schritt 9b (**S10 — Sicherheit**, R78), viertes Arbeitspaket: die Adminpakete

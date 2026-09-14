@@ -13,11 +13,12 @@ abgehakt ist (R62).
 >
 > | | |
 > |---|---|
-> | Stand | 14.09.2026 — **AP5 erledigt** (keine Stufe: AP5 ändert keine Datei unter `server/`), AP6 als Nächstes. |
+> | Stand | 14.09.2026 — **AP5 erledigt** (Web **20.2.1**: eine Stelle unter `server/`, der zweite Riegel an der Demo-Fixture), AP6 als Nächstes. |
 > | Geprüft | AP0: Containeraufbau · AP1: Anteilprobe, Endpunktprobe, Klickprobe, Kreisläufe, Bilderlauf, Wortliste, Linkprobe · AP2: Umstellungslauf in **drei Engines** · AP3: **Betriebslauf** in drei Engines (Oberfläche der fünf Lagen, Blatt im Druck, Rotation, Neuanfang, Reset) · AP4: Freigabe-, Wiederherstellungs-, Versand- und Komplettprobe, dazu fünf Wege am `ftp`-Altziel und die Cron-Zeile · **AP5: Wartungs-, Riegel-, Sitzungs-, Wiederherstellungs-, Komplett-, Endpunkt- und Generatorprüfung, Prüfkonten, beide Kreisläufe**; alles aus AP1 bis AP3 erneut (Abschnitt 2) |
 > | Offen | P-01 bis P-14 |
-> | Prüfmittel, die in AP5 **kaputt** vorgefunden wurden | die **Wartungsprobe** (seit AP3 auf 1 nicht erfüllt, unbemerkt), zwei **Prüfmittel mit Rückständen** (2 Wegwerfkonten, 3 verwaiste Paketordner), die **Voraussetzung der Endpunktprobe** als blosse Meldung, `pruefkonten.php` ohne Serverschlüssel-Riegel, **sieben abgeschriebene Zahlen** in Anleitungen und Kommentaren, **zwei Prüfmittel, die `config.php` lasen**, die **erzeugten Tabellen von `docs/Design.md`** sieben Zeilen hinter den Quellen, ein **falsch beschriebenes Fach** in der Abmelde-Probe — und **zwei Fehler in AP5s eigener Arbeit**, gefunden von der Gegenprobe des Pakets: eine Erwartung, die nicht fehlschlagen konnte, und zwei Proben, die den Zustand hätten herstellen können, den sie messen (F-S10-AP5-01 bis -12) |
-> | Fragen | **eine: F-S10-6** (Konzept Abschnitt 7) — der zweite Riegel in `server/demo_lib.php`. Er ist inhaltlich unstrittig, aber `server/` und damit eine Korrekturstufe samt Deploy; AP5 ist stufenlos geplant. Empfehlung: jetzt, als Web 20.2.1. Das erste `@media print` des Projekts (Schlüsselblatt) war nach `CLAUDE.md` 5 freigabepflichtig und ist am **14.09.2026 nach Vorlage der Bilder abgenommen** — ohne weiteres Mockup (E-S10-U-06). |
+> | **Nicht** behoben, mit Begründung | `tools/referenzdatensatz/browser/demo_pruefen.mjs` läuft nicht durch — **vorbestehend**, belegt durch einen Gegenlauf gegen den Stand ohne die AP5-Änderung. Ihr Abschnitt 5 misst gegen Markup, das es nicht mehr gibt, und müsste neu geschrieben werden: ein eigenes Paket (Abschnitt 0, Punkt 0) |
+> | Prüfmittel, die in AP5 **kaputt** vorgefunden wurden | die **Wartungsprobe** (seit AP3 auf 1 nicht erfüllt, unbemerkt), zwei **Prüfmittel mit Rückständen** (2 Wegwerfkonten, 3 verwaiste Paketordner), die **Voraussetzung der Endpunktprobe** als blosse Meldung, `pruefkonten.php` ohne Serverschlüssel-Riegel, **sieben abgeschriebene Zahlen** in Anleitungen und Kommentaren, **zwei Prüfmittel, die `config.php` lasen**, die **erzeugten Tabellen von `docs/Design.md`** sieben Zeilen hinter den Quellen, ein **falsch beschriebenes Fach** in der Abmelde-Probe — und **zwei Fehler in AP5s eigener Arbeit**, gefunden von der Gegenprobe des Pakets: eine Erwartung, die nicht fehlschlagen konnte, und zwei Proben, die den Zustand hätten herstellen können, den sie messen (F-S10-AP5-01 bis -13) |
+> | Fragen | keine. **F-S10-6** (Konzept Abschnitt 7) — der zweite Riegel in `server/demo_lib.php` — ist am 14.09.2026 mit **Weg (a)** entschieden und als Web 20.2.1 gebaut. Das erste `@media print` des Projekts (Schlüsselblatt) war nach `CLAUDE.md` 5 freigabepflichtig und ist am **14.09.2026 nach Vorlage der Bilder abgenommen** — ohne weiteres Mockup (E-S10-U-06). |
 > | Fehlerfunde | **drei in der Anwendung** (F-1 bis F-3, in AP2 behoben), **vier in Bestand und Dokumentation** (F-15 bis F-17 in AP3, F-S10-AP4-04 in AP4), **neunzehn am Prüfstand** (F-S10-U-01, F-11 bis F-14, F-S10-AP3-01 bis -09, F-S10-AP4-01 bis -06). **Zwei Prüfmittel waren kaputt, bevor AP4 sie anfasste** — die Komplettprobe stürzte ab (Rückgabewert 255), die Wiederherstellungsprobe scheiterte an ihrer eigenen Arithmetik |
 > | Prüfumgebung | PHP **8.4.19** (CLI, NTS) · MariaDB **10.11.14** · Python **3.11.15** · Node **22.22.2** · Playwright **1.56.1** mit drei Engines: Chromium **141.0.7390.37**, Firefox **142.0.1**, WebKit **26.0** · lokale Installation über `tools/referenzdatensatz/einspielen/lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte im Demo-Konto; `admin@gen-em.org` und `demo@gen-em.org` mit den Vorgabekennwörtern) |
 
@@ -61,10 +62,26 @@ die echten Backup-Ziele) bleibt und ist jetzt der einzige, der an AP4 hängt:
    Fall hergestellt und abgewiesen worden; dass ein echtes Ziel den Namen
    nicht ändert, ist eine Annahme über fremde Server → **P-12**.
 
-**Stand nach AP5 — was weiterhin offen ist.** AP5 fasst keine Datei unter
-`server/` an; es hat deshalb **nichts Neues** an die Liste oben angehängt. Zwei
-Sätze gehören trotzdem hierher, weil sie sagen, worüber die AP5-Zahlen
-**nichts** aussagen:
+**Stand nach AP5 — was weiterhin offen ist.** AP5 fasst unter `server/` genau
+eine Stelle an (`demo_fixture_laden()`, Web 20.2.1). Vier Punkte gehören
+hierher, weil sie sagen, worüber die AP5-Zahlen **nichts** aussagen — und
+einer davon ist ein Prüfmittel, das AP5 **nicht** repariert hat:
+
+0. **`tools/referenzdatensatz/browser/demo_pruefen.mjs` läuft nicht durch.**
+   Sie stürzt in Abschnitt 5 mit einem `TimeoutError` ab — sie sucht ein
+   `input[name="email"]` auf `einstellungen.php?t=profil`, und das gibt es
+   dort nicht mehr (der einzige Treffer im ganzen `server/`-Baum steht in
+   `login.php`). **Vorbestehend:** Ein Gegenlauf gegen den Stand ohne die
+   AP5-Änderung zeigt denselben Absturz an derselben Zeile. Sie steht in
+   keiner Liste von E-S10-15, und ihr Abschnitt 5 müsste gegen die heutige
+   Oberfläche neu geschrieben werden — **das ist ein eigenes Paket**.
+   *Dabei ist noch etwas sichtbar geworden:* Der Knopf „Auf Standard
+   zurücksetzen" wirkte in beiden Läufen nicht (der Papierkorb des
+   Demo-Kontos wuchs 6 → 7 → 8), während `demo_zuruecksetzen()` von Hand
+   gerufen sofort wieder **88 Einsätze, Papierkorb 5/1/5** ergab. Der
+   Unterschied liegt am Bedienweg, nicht am Reset — und den misst nur diese
+   Probe. **Für den Backlog**, mit dieser Beobachtung als Anfang.
+   *(Der Bestand ist wiederhergestellt: 88/5/1/5, gemessen.)*
 
 1. **Teil 12 und Teil 11 nehmen den Anteil aus dem Speicher, nicht von der
    Platte.** Gemessen ist das Verhalten der Bibliothek bei fehlendem
@@ -370,10 +387,10 @@ AP4 sie anfasste (Abschnitt 4).
 | AP4 | Klickprobe · Kreisläufe | Regression | **43/43** · **9120/0** und **287 687/0** |
 | AP4 | Bilderlauf, 4 Seiten × 8 Breiten, beide Bedienhöhen | Überlauf / Konsole / Knopfhöhe | je 32 Bilder **0/0/0** |
 | AP4 | Vollständigkeit · Kontraste | Befunde vorher → nachher · Paare/verfehlt | **335 → 341** (erklärt), Hexfarben **0** · **22/0** |
-| AP5 | `php -l` · `ast.parse` | berührte Dateien | **0 Fehler in 6 PHP, 3 Python** |
+| AP5 | `php -l` · `ast.parse` · `node --check` | alle 17 berührten Quelldateien | **0 Fehler** (9 PHP, 5 Python, 3 JS) |
 | AP5 | Kreisläufe (R24), je `--frisch` | csv und edbak, unerklärte Abweichungen | **9120 / 0** und **287 687 / 0** |
 | AP5 | `tools/referenzdatensatz/einspielen/sitzungsprobe.py` | CK aus `edk1:`- und `edka1:`-Hülle, gegen `pat_key_check` gerechnet | **2 von 2** |
-| AP5 | `tools/referenzdatensatz/fixture/riegelprobe.php` | Hüllen-Riegel, beide Richtungen, **ohne Schreibvorgang** | **4 von 4** |
+| AP5 | `tools/referenzdatensatz/fixture/riegelprobe.php` | **beide** Riegel (Erzeuger und Einspieler), je beide Richtungen, dazu der abgefangene Reset | **10 / 0**, Demo-Konto 88 → 88 Einsätze, SHA-256 der Fixture vorher/nachher gleich |
 | AP5 | `tools/wartungsprobe/probe.php` | Wartungsmodus, Ausnahmeliste (13), Blatt erreichbar | **57 / 0** — vorher **55 / 1** (F-S10-AP5-01) |
 | AP5 | `tools/wiederherstellungs-probe/probe.php` | zwölf Teile, neu Teil 12 | **106 / 0** (vorher 98) |
 | AP5 | `tools/komplettprobe/probe.php --pruefdb --ziel` | elf Teile, neu Teil 11 | **72 / 0** (vorher 63, gleiche Schalter); ohne Schalter **64** (vorher 55) |
@@ -387,7 +404,7 @@ AP4 sie anfasste (Abschnitt 4).
 | AP5 | `pruefkonten.php anlegen 8` | Konten mit Hülle · Fassung-1-Pakete lesbar | **0 von 8** · **16 von 16** |
 | AP5 | Klickprobe | Regression über alle Bedienwege | **43 / 43** |
 | AP5 | Nachlese auf der Prüfinstallation | Wegwerfkonten · verwaiste Paketordner | **0** · **0** (vorher 2 · 3 — F-S10-AP5-02) |
-| AP5 | Bilderlauf, 4 Betriebsseiten × 8 Breiten | Überlauf / Konsole / Knopfhöhe | **32 Bilder, 0/0/0** (Gegenprobe; AP5 ändert keine Datei unter `server/`) |
+| AP5 | Bilderlauf, 4 Betriebsseiten × 8 Breiten | Überlauf / Konsole / Knopfhöhe | **32 Bilder, 0/0/0**. AP5 ändert unter `server/` genau eine Stelle — `demo_fixture_laden()`, ohne Oberfläche —, die Gegenprobe ist deshalb eine Gegenprobe und keine Notwendigkeit |
 | alle | Wortliste | Treffer außerhalb Ausnahmen / ungenutzte Ausnahmen / Fallen | **0/0/0** |
 | alle | Vollständigkeit | Befunde vorher → nachher, Unterschied erklärt | **341 → 340** — der eine ist `config.php` (F-S10-AP5-06); Hexfarben **0** |
 | AP5 | Linkprobe | Verweise / Abweichungen, über wie viele Zielseiten | **117 / 0** über **100** (vorher 101) |
@@ -436,10 +453,11 @@ AP4 sie anfasste (Abschnitt 4).
   anderer Kodierung trüge (hex-umgedreht, base64, in Teilen), fände er nicht —
   das ist die Grenze jeder Volltextsuche und mit ihr zu leben, solange
   `config.php` nachweislich nicht in der Sicherung liegt.
-- **Der Bilderlauf hatte in AP5 nichts zu finden** — AP5 ändert keine Datei
-  unter `server/` (`git status server/` meldet 0 Dateien). Er ist trotzdem über
-  die vier Betriebsseiten gefahren (**32 Bilder, 0/0/0**), weil eine Gegenprobe
-  mit Zahl mehr wert ist als ein Argument, warum sie sich erübrigt.
+- **Der Bilderlauf hatte in AP5 nichts zu finden.** AP5 ändert unter `server/`
+  genau eine Stelle — `demo_fixture_laden()` —, und die hat keine Oberfläche.
+  Er ist trotzdem über die vier Betriebsseiten gefahren (**32 Bilder, 0/0/0**),
+  weil eine Gegenprobe mit Zahl mehr wert ist als ein Argument, warum sie sich
+  erübrigt.
 
 - **Der Betriebslauf sieht die Oberfläche, aber nicht das Papier.** Er misst
   das Blatt in `media: print` bei 718 px — das ist die *gerechnete*
@@ -570,9 +588,9 @@ kaputtgemacht.** Sie stehen im Konzept, Abschnitt 6, und in
 Anwendung.** Das ist die teuerste Sorte, weil man am falschen Ende sucht —
 und AP3 hat daran mehr Zeit verloren als am Bauen.
 
-### AP5 — zwölf Funde, und keiner davon in der Anwendung
+### AP5 — dreizehn Funde, und keiner davon in der Anwendung
 
-AP5 ist das Paket, in dem die Prüfmittel nachziehen. Es hat dabei zwölf Dinge
+AP5 ist das Paket, in dem die Prüfmittel nachziehen. Es hat dabei dreizehn Dinge
 gefunden, und die meisten haben dieselbe Form: **Ein Prüfmittel meldete eine Zahl, die
 nicht mehr das mass, was daneben stand.**
 
@@ -650,7 +668,12 @@ nicht mehr das mass, was daneben stand.**
   seit AP3 hat. **Die Falle war bekannt und an einem Ort geschlossen; den
   zweiten hat niemand gesucht.**
 
-*Was diese zwölf verbindet:* **Kein einziger ist ein Fehler der Anwendung.**
+- **F-S10-AP5-13 — `demo_pruefen.mjs` läuft nicht durch**, und tat es schon
+  vor AP5 nicht (Gegenlauf mit `git stash`). **Nicht behoben** — siehe
+  Abschnitt 0, Punkt 0: Ihr Abschnitt 5 müsste gegen die heutige Oberfläche
+  neu geschrieben werden, und das ist ein eigenes Paket.
+
+*Was diese dreizehn verbindet:* **Kein einziger ist ein Fehler der Anwendung.**
 Alle fünf sind Prüfmittel, die grün meldeten oder still danebenlagen — und
 das ist die Sorte, die am längsten unentdeckt bleibt, weil niemand ein
 Prüfmittel prüft.

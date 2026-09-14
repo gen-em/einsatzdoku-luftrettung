@@ -4848,6 +4848,39 @@ Gepackt abgelegt: roh rund 2,4 MB, im Wesentlichen 55 861 Spurpunkte als
 JSON-Zahlen. Gepackt sind es rund 745 KB, und die Datei geht bei jedem Deploy
 über FTPS mit.
 
+#### Zwei Riegel je Geheimnis — einer beim Erzeugen, einer beim Einspielen
+
+Die Fixture **reist**: Sie entsteht auf der Referenzmaschine und wird beim
+Deploy auf den Produktivserver gelegt. Ein Riegel im Erzeuger greift deshalb
+nur an einem der beiden Enden. Zwei Werte in ihr sind an die Installation
+gebunden, und beide haben darum ein Riegelpaar:
+
+| Wert | Riegel im Erzeuger (`fixture/erzeugen.php`) | Riegel im Einspieler (`demo_fixture_laden()`) |
+|---|---|---|
+| `kdf_iter` | bricht ab, wenn das Konto nicht auf `KDF_ITER_ZIEL` steht (Backlog Nr. 155, Web 19.2.0) | weist eine Rundenzahl ab, die `KDF_ITER_LISTE` nicht mehr anbietet |
+| `pat_wrap_pw` / `pat_wrap_rc` | bricht ab, wenn eine der beiden nicht `edk1:` trägt (S10/AP5) | weist sie ab — `huelle_pw_pruefen($wrap, istDemo: true)` und `huelle_rc_pruefen()`, Web 20.2.1 |
+
+**Warum die Hüllen `edk1:` bleiben müssen.** Seit S10 hängt der
+Datenschlüssel am Server-Anteil aus `config.php`, und den würfelt
+`install.php` je Installation neu. Eine Hülle mit Anteil
+(`edka1:<kennung>:`) lässt sich nur dort öffnen, wo dieser Anteil steht. Das
+Demo-Konto bekommt bauartbedingt **gar keinen** (E-P1-19/E-S10-06):
+`KONTO_ANTEILE` ist für es `null`, `ANTEIL_STAND` ist `'demo'`, und
+`api/kdf_upgrade.php` überspringt es. `EdCrypto.datenschluessel()` wirft bei
+einer `edka1:`-Hülle ohne Anteil ausdrücklich, statt auf die PBKDF2-Hälfte
+zurückzufallen — ein Rückfall ergäbe einen Schlüssel, der nicht passt, und der
+Fehlschlag sähe aus wie ein falsch getipptes Passwort.
+
+**Was ein Abbruch kostet.** `demo_reset_wenn_faellig()` fängt jede Ausnahme ab
+und schreibt ins `error_log`; eine verbogene Fixture lässt das Demo-Konto also
+aufhören, sich zurückzusetzen — es geht nichts verloren und niemand wird
+ausgesperrt. `demo_anlegen()` lässt die Ausnahme durch: Wer das Konto von Hand
+anlegt, soll den Grund lesen.
+
+Gemessen von `tools/referenzdatensatz/fixture/riegelprobe.php`: **10 von 10**,
+beide Riegel in beide Richtungen, der abgefangene Reset (Demo-Konto 88 → 88
+Einsätze) und die SHA-256 der echten Fixture vorher/nachher.
+
 #### Kein zweiter Einspielweg
 
 Der Bestand wird über `edbak_restore()` eingespielt — dieselbe Routine wie bei

@@ -4482,4 +4482,45 @@ declare(strict_types=1);
  * bestehendes Ziel bleibt lesbar, sichtbar und umstellbar. Der Rueckbau der
  * Spalte gehoert zum ENUM-Aufraeumen (Backlog Nr. 168 / Nr. 46).
  */
-const WEB_VERSION = '20.2.0';
+/* ---------------------------------------------------------------------------
+ * 20.2.1 — DER ZWEITE RIEGEL AN DER DEMO-FIXTURE (S10/AP5)
+ *
+ * Eine Korrekturstufe mit fuenfzehn Zeilen und einem Gedanken: Ein Riegel,
+ * der nur dort greift, wo das Werkzeug laeuft, greift nicht dort, wo die
+ * Datei ankommt.
+ *
+ * S10/AP5 hat `tools/referenzdatensatz/fixture/erzeugen.php` beigebracht,
+ * anzuhalten, wenn die Schluesselhuelle des Demo-Kontos nicht `edk1:` traegt.
+ * Das verhindert, dass eine unbrauchbare Fixture ENTSTEHT. Es verhindert
+ * nicht, dass eine eingespielt wird: Der Erzeuger laeuft auf der
+ * Referenzmaschine, die Datei geht mit dem Deploy auf den Produktivserver.
+ *
+ * `demo_fixture_laden()` prueft deshalb jetzt beide Huellen — mit der
+ * gemeinsamen Pruefschicht (`huelle_pw_pruefen($wrap, istDemo: true)` und
+ * `huelle_rc_pruefen()`), nicht mit einem eigenen Ausdruck.
+ *
+ * WARUM DAS NOETIG IST. Seit S10 haengt der Datenschluessel am Server-Anteil,
+ * und der ist je Installation ein anderer. Das Demo-Konto bekommt
+ * bauartbedingt GAR KEINEN (E-P1-19/E-S10-06). Eine `edka1:`-Huelle in der
+ * Fixture hiesse: Das Konto meldet sich an — der bcrypt-Hash stimmt ja —, und
+ * erst das Entsperren scheitert. Auf der oeffentlichen Demo, alle 30 Minuten
+ * aufs Neue, ohne dass jemand etwas bemerkt.
+ *
+ * DIESELBE PAARUNG WIE BEI DER RUNDENZAHL (Backlog Nr. 155): dort ein Riegel
+ * im Erzeuger und einer in `demo_fixture_laden()`, mit derselben Begruendung
+ * — „Ohne den zweiten Riegel waere ein Reset still erfolgreich und niemand
+ * kaeme mehr herein."
+ *
+ * WAS EIN ABBRUCH KOSTET, und warum er trotzdem richtig ist:
+ * `demo_reset_wenn_faellig()` faengt jede Ausnahme ab und schreibt ins
+ * `error_log`. Eine verbogene Fixture laesst das Demo-Konto also aufhoeren,
+ * sich zurueckzusetzen — es geht nichts verloren, und niemand wird
+ * ausgesperrt. `demo_anlegen()` dagegen laesst die Ausnahme durch: Wer das
+ * Konto von Hand anlegt, soll den Grund lesen.
+ *
+ * Gemessen: `tools/referenzdatensatz/fixture/riegelprobe.php` **10 von 10** —
+ * beide Riegel in beide Richtungen, der abgefangene Reset (Demo-Konto 88 ->
+ * 88 Einsaetze), und am Ende die Pruefsumme der echten Fixture
+ * vorher/nachher.
+ */
+const WEB_VERSION = '20.2.1';
