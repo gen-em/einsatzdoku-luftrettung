@@ -1276,7 +1276,6 @@ damit „nach v1.0" verlassen — dort stehen noch **acht**: 50, 51, 52, 55,
 | 116 | Kontrastwerkzeug misst nur seine Paarliste | Backlog-Runde | Android-Prüfmittel `android/werkzeuge/kontraste.py`; Paare aus dem Code ableiten |
 | 121 | Vorschau der Rechtstexte beim Tippen (Mockup 09) | Backlog-Runde | heute nur der gespeicherte Stand |
 | 122 | Freie Zeiträume und Diagramme in der Statistik (Mockup 04) | P5 / Backlog-Runde | Diagrammbibliothek müsste vendoriert werden |
-| 124 | Aktionsblatt öffnet weit weg von seinem Knopf | **Mockup-Runde** (9c) | **Entschieden 12.09.2026: Weg (b)** — Knopf bleibt hervorgehoben, Blatt fährt sichtbar aus seiner Richtung auf. Mit Bild gemeldet (Tagesübersicht am Handy); als einziger der vier aus einer Rückmeldung von außen — darf die Runde verlassen, wenn sie rutscht |
 | 139 | Adminpakete unversiegelt, `ftp` (K-4) | S10 | `sk_versiegeln()`; `Backup-Format.md` 5 neu |
 | 140 | Push auf `main` ist Deploy (K-16) | Zuarbeit / S10 | Branch-Schutz und 2FA sofort; Deploy-Tor mit Staging (R40 (2)); Integritätswache im Sofortpaket (F-SP-9) |
 | 141 | Zweitfaktor für alle Konten (K-5) | P5 | erweitert R38 |

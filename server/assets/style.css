@@ -415,8 +415,17 @@
 
   /* ---- Bewegung ----------------------------------------------------------
    * Kurz und einheitlich. Wer Bewegung abbestellt hat, bekommt keine
-   * (Abschnitt 3). */
-  --dauer:.18s;
+   * (Abschnitt 3).
+   *
+   * SEIT WEB 19.6.0 SIND ES 240 ms, VORHER 180 (E-MR-22). Anlass war das
+   * Aktionsblatt: Bei 180 ms war die Auffahrt aus der unteren Bildkante
+   * eher ein Aufblitzen als eine Bewegung, und eine Bewegung, die man
+   * nicht sieht, erklaert auch nichts. Der Wert gilt fuer ALLE Nutzer des
+   * Tokens — Schublade und Schleier, Akkordeon-Winkel, Winkel am
+   * „Aktionen"-Knopf, Schalter-Griff, Kennzahlen-Winkel und das Blatt.
+   * Ein zweites Token nur fuers Blatt waere die Stelle, an der die
+   * Anwendung anfaengt, verschieden schnell zu sein. */
+  --dauer:.24s;
   --schleier:rgba(26,46,77,.55);       /* Dunkelblau, halbdurchsichtig */
   --schatten:0 2px 8px rgba(26,5,0,.10);
   --schatten-hoch:0 8px 28px rgba(26,5,0,.22);
@@ -1316,6 +1325,55 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .aktionen-knopf .symbol:last-child{transition:transform var(--dauer) ease-out}
 .aktionen-knopf[aria-expanded="true"] .symbol:last-child{transform:rotate(180deg)}
 
+/* DER OFFENE OEFFNER IST MARKIERT (Backlog Nr. 124, Weg b; E-MR-21, D4).
+ *
+ * Das Blatt deckt am Handy die untere Bildhaelfte ab, und der Knopf, aus dem
+ * es kam, verschwand darin optisch — wer es wieder zumachen wollte, suchte.
+ * Er traegt deshalb, solange sein Blatt offen ist, die Flaeche `--orange-hell`
+ * mit `--orange-tief` darauf: 11,7:1 gegen den dunkelblauen Kartenkopf,
+ * 3,8:1 fuer die Punkte gegen die Flaeche — ueber den 3:1, die WCAG 1.4.11
+ * fuer ein Bedienelement verlangt (`kontrast.py`, Paar „Orange tief auf
+ * Orange hell"). Zur Wahl standen vier Ringfassungen; keine ueberzeugte, der
+ * Ring auf Blau-hell lag bei 1,9:1 (E-MR-17, E-MR-20).
+ *
+ * AM ATTRIBUT, NICHT AN DER KLASSE — und das ist der Kern. Oeffner gibt es in
+ * vier Bauarten: `ui_aktionen()` (6 Aufrufe), `ui_zeilenaktionen()` (9), der
+ * Pin-Knopf des Ortsfelds und drei handgeschriebene Sortierblatt-Knoepfe in
+ * index.php, suche.php und zeitraum.php. Sie teilen genau ein Merkmal:
+ * `data-blatt` und `aria-expanded`. Eine Regel daran erreicht alle vier, auch
+ * die naechste — „Blatt offen" ist dieselbe Aussage, gleich an welchem Knopf
+ * (E-MR-25).
+ *
+ * `border-radius` steht hier mit, weil nicht jeder Oeffner ein `.knopf` ist:
+ * `.karte-sortieren` ist ein blanker Button, und ohne die Rundung bekaeme er
+ * ein hartes oranges Quadrat. Die Spezifitaet (0,2,0) liegt ueber jeder
+ * Knopfvariante und ueber deren `:hover`. */
+[data-blatt][aria-expanded="true"]{
+  background:var(--orange-hell);
+  color:var(--orange-tief);
+  border-color:var(--orange-hell);
+  border-radius:var(--radius);
+}
+
+/* DAS BLATT FAEHRT AUF, STATT DAZUSTEHEN (Backlog Nr. 124, Weg b).
+ *
+ * Es liegt unten am Bildrand, und ein Menue, das dort ohne Bewegung
+ * erscheint, liest sich wie ein Seitenwechsel: Die halbe Flaeche ist ploetzlich
+ * eine andere, und niemand weiss, woher sie kam. Mit der Auffahrt sagt die
+ * Bewegung, wo es herkommt und wohin es zurueckgeht.
+ *
+ * ZWEI ZUSTAENDE, EINE KLASSE. Im Ruhezustand steht es um seine eigene Hoehe
+ * unter dem Bildrand (`translateY(100%)`); `.blatt-auf` holt es herauf.
+ * `assets/blatt.js` setzt die Klasse im naechsten Frame nach `hidden=false` —
+ * beides im selben Frame waere keine Bewegung, sondern ein Sprung.
+ *
+ * `hidden` BLEIBT DER SCHALTER fuer „da oder nicht da": Ein Blatt, das nur
+ * verschoben ist, faenge weiter Klicks und stuende im Vorlesebaum. Das Skript
+ * nimmt es deshalb erst NACH der Rueckfahrt aus dem Fluss.
+ *
+ * Bewegung abbestellt: Abschnitt 3 setzt jede `transition-duration` auf
+ * 0,01 ms. Das Blatt erscheint dann ohne Fahrt — und `transitionend` feuert
+ * trotzdem, worauf sich das Skript NICHT verlaesst (es hat einen Nachlauf). */
 .blatt{
   position:fixed;inset:auto 0 0 0;z-index:70;
   background:var(--schnee);
@@ -1323,7 +1381,10 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
   box-shadow:var(--schatten-hoch);
   padding:var(--abstand-3) var(--abstand-3) var(--abstand-5);
   max-height:80vh;overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform var(--dauer) ease-out;
 }
+.blatt.blatt-auf{transform:none}
 .blatt-griff{
   width:2.5rem;height:var(--abstand-1);margin:0 auto var(--abstand-3);
   border-radius:var(--radius-rund);background:var(--sand);
@@ -2038,13 +2099,19 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .akkordeon-inhalt{padding-left:var(--abstand-1)}
   .akkordeon:not(.leiste-gruppe) .eintrag{gap:var(--abstand-1)}
 
-  /* Das Aktionsmenü wird ein Aufklappmenü statt eines Blattes. */
+  /* Das Aktionsmenü wird ein Aufklappmenü statt eines Blattes.
+     KEINE FAHRT HIER. `translateY(100%)` hiesse am Aufklappmenü „um die
+     eigene Höhe nach unten" — es stünde neben der Sache statt unter dem
+     Bildrand. Das Mockup M-MR-04 sagt zum Schreibtisch ausdrücklich
+     „unverändert"; die Markierung des Öffners gilt dagegen in beiden Formen,
+     und der Winkel dreht weiter. */
   .blatt{
     position:absolute;inset:auto 0 auto auto;top:calc(var(--knopf) + var(--abstand-1));
     width:16rem;
     border-radius:var(--radius);
     padding:var(--abstand-2);
     border:var(--strich) solid var(--linie);
+    transform:none;transition:none;
   }
   .blatt-griff,.blatt-titel,.blatt-abbrechen{display:none}
   .blatt-zeile{min-height:var(--knopf)}

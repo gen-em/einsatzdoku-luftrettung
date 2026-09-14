@@ -1054,42 +1054,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     fremde Quelle zur Laufzeit" — eine Diagrammbibliothek müsste vendoriert
     werden. Zuordnung: Backlog-Runde oder P5 (Dashboard, R38).
 
-124. **Das Aktionsblatt öffnet weit weg von seinem Knopf.**
-    *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin
-    (Tagesübersicht am Handy).* Das „⋯" steht oben rechts neben dem
-    Seitentitel; das Blatt fährt vom **unteren** Bildschirmrand herein
-    (`.blatt{position:fixed;inset:auto 0 0 0}`). Dazwischen liegt der halbe
-    Bildschirm, und der Zusammenhang zwischen Knopf und Menü ist nicht zu
-    sehen — man sucht die Antwort dort, wo man gedrückt hat.
-    **Das ist kein Fehler, sondern eine Entscheidung** (E-P3-27, `Design.md`
-    9.12): mobil ein Blatt von unten, ab 1024 px dasselbe Markup als
-    Aufklappmenü am Knopf. Das Blatt folgt der Plattformkonvention und liegt
-    im Daumenbereich — was bei einem Menü am oberen Bildschirmrand gerade
-    nicht der Fall ist. Die Meldung ist damit ein Zielkonflikt, kein Defekt.
-    **Drei Wege:** (a) auch mobil am Knopf aufklappen — sichtbarer
-    Zusammenhang, schlechter erreichbar; (b) Blatt behalten und den
-    Zusammenhang zeigen: das „⋯" bleibt hervorgehoben, solange das Blatt
-    offen ist, und das Blatt fährt sichtbar aus seiner Richtung auf;
-    (c) so lassen. **Empfehlung: (b)** — behält die Erreichbarkeit, behebt
-    das Gemeldete und ist die kleinste Änderung. Alle drei ändern die
-    Darstellung eines Bausteins und brauchen Mockup und Freigabe
-    (`CLAUDE.md` 5); betroffen ist jede Seite mit `ui_aktionen()`.
-    Zuordnung: Backlog-Runde oder P7 (Gesicht v1.0).
-    **Entschieden am 12.09.2026: Weg (b).** Das Blatt bleibt unten; das „⋯"
-    bleibt hervorgehoben, solange das Blatt offen ist, und das Blatt fährt
-    sichtbar aus seiner Richtung auf. Geht in die **Mockup-Runde** (mit
-    Nr. 41, 42 und 45) — als einziger der vier ein Punkt aus einer
-    Rückmeldung von außen; gerät die Runde ins Rutschen, darf er sie
-    verlassen.
-    *Nachgezählt 13.09.2026:* `ui_aktionen()` hat **sechs** Aufrufe auf fünf
-    Seiten (`index.php`, `einsatz.php`, `admin_user.php` zweimal,
-    `admin_demo.php`, `admin_sicherungen.php`) — hier standen „zehn".
-    Dasselbe Blatt baut auch `ui_zeilenaktionen()` (neun Aufrufe:
-    Geräteliste, Stammdaten, Papierkorb, Sicherungsziele, Komplettsicherung,
-    Einstellungen); beide öffnen über `data-blatt` in `assets/blatt.js`. Die
-    Änderung sitzt damit im Baustein und erreicht alle fünfzehn Öffner; ob
-    Weg (b) für die Zeilenblätter gleich mitgilt, klärt das Mockup.
-
 139. **Adminpakete sind unversiegelt und gehen über FTP hinaus.**
     *Aufgenommen 06.09.2026 aus dem Krypto-Review (K-4).* Die Teile des
     Admin-Backups sind blankes JSON im ZIP (`adminbackup_lib.php:404,624`)
@@ -1497,6 +1461,63 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+124. **Das Aktionsblatt öffnet weit weg von seinem Knopf.**
+    *Aufgenommen 05.09.2026, gemeldet mit Bild von der Auftraggeberin
+    (Tagesübersicht am Handy).* Das „⋯" steht oben rechts neben dem
+    Seitentitel; das Blatt fährt vom **unteren** Bildschirmrand herein
+    (`.blatt{position:fixed;inset:auto 0 0 0}`). Dazwischen liegt der halbe
+    Bildschirm, und der Zusammenhang zwischen Knopf und Menü ist nicht zu
+    sehen — man sucht die Antwort dort, wo man gedrückt hat.
+    **Das ist kein Fehler, sondern eine Entscheidung** (E-P3-27, `Design.md`
+    9.12): mobil ein Blatt von unten, ab 1024 px dasselbe Markup als
+    Aufklappmenü am Knopf. Das Blatt folgt der Plattformkonvention und liegt
+    im Daumenbereich — was bei einem Menü am oberen Bildschirmrand gerade
+    nicht der Fall ist. Die Meldung ist damit ein Zielkonflikt, kein Defekt.
+    **Drei Wege:** (a) auch mobil am Knopf aufklappen — sichtbarer
+    Zusammenhang, schlechter erreichbar; (b) Blatt behalten und den
+    Zusammenhang zeigen: das „⋯" bleibt hervorgehoben, solange das Blatt
+    offen ist, und das Blatt fährt sichtbar aus seiner Richtung auf;
+    (c) so lassen. **Empfehlung: (b)** — behält die Erreichbarkeit, behebt
+    das Gemeldete und ist die kleinste Änderung. Alle drei ändern die
+    Darstellung eines Bausteins und brauchen Mockup und Freigabe
+    (`CLAUDE.md` 5); betroffen ist jede Seite mit `ui_aktionen()`.
+    Zuordnung: Backlog-Runde oder P7 (Gesicht v1.0).
+    **Entschieden am 12.09.2026: Weg (b).** Das Blatt bleibt unten; das „⋯"
+    bleibt hervorgehoben, solange das Blatt offen ist, und das Blatt fährt
+    sichtbar aus seiner Richtung auf. Geht in die **Mockup-Runde** (mit
+    Nr. 41, 42 und 45) — als einziger der vier ein Punkt aus einer
+    Rückmeldung von außen; gerät die Runde ins Rutschen, darf er sie
+    verlassen.
+    *Nachgezählt 13.09.2026:* `ui_aktionen()` hat **sechs** Aufrufe auf fünf
+    Seiten (`index.php`, `einsatz.php`, `admin_user.php` zweimal,
+    `admin_demo.php`, `admin_sicherungen.php`) — hier standen „zehn".
+    Dasselbe Blatt baut auch `ui_zeilenaktionen()` (neun Aufrufe:
+    Geräteliste, Stammdaten, Papierkorb, Sicherungsziele, Komplettsicherung,
+    Einstellungen); beide öffnen über `data-blatt` in `assets/blatt.js`. Die
+    Änderung sitzt damit im Baustein und erreicht alle fünfzehn Öffner; ob
+    Weg (b) für die Zeilenblätter gleich mitgilt, klärt das Mockup.
+    **Erledigt am 14.09.2026 mit Web 19.6.0** (Mockup-Runde 9c, AP4).
+    Weg (b), wie entschieden: Das Blatt steht im Ruhezustand um seine eigene
+    Höhe unter dem Bildrand und wird beim Öffnen in `--dauer` heraufgeholt
+    (`transform:translateY(100%)` → `.blatt-auf`); der Öffner trägt, solange
+    sein Blatt offen ist, `--orange-hell` mit `--orange-tief` (Fassung D4,
+    F-MR-11). **Am Schreibtisch fährt nichts** — dort ist dasselbe Markup ein
+    Aufklappmenü unter dem Knopf, und eine Fahrt „um die eigene Höhe nach
+    unten" schöbe es neben die Sache; die Markierung gilt dort trotzdem.
+    **Die Markierung hängt am Attribut** `[data-blatt][aria-expanded="true"]`
+    und erreicht damit nicht nur die fünfzehn Öffner der beiden Bausteine,
+    sondern auch den Pin-Knopf des Ortsfelds und die drei handgeschriebenen
+    Sortierblatt-Knöpfe — **vier Bauarten**, nicht zwei; die Zahl „fünfzehn"
+    oben ist damit berichtigt (E-MR-25).
+    **`--dauer` steht seither auf .24s statt .18s**, für die ganze Anwendung
+    (E-MR-22, F-MR-12) — bei 180 ms war die Auffahrt eher ein Aufblitzen.
+    *Gemessen:* Klickprobe drei neue Wege, 5 von 5 Öffnern markiert und sauber
+    zurückgestellt, Fahrt 240 ms und mitten in der Bewegung nachgewiesen (389
+    px unter der Ruhelage), am Schreibtisch 0 ms und 60 ms nach `Escape`
+    bereits aus dem Fluss; Stilvergleich 46 202 Elementmessungen, 390
+    Abweichungen, sämtlich Fahrtdauer, `.blatt` und der markierte Öffner —
+    in allen drei Motoren dieselbe Zahl.
 
 185. **Ein Auswahlfeld schob die Importseite in WebKit um 6 px zur Seite.**
     *Gefunden und behoben am 14.09.2026 in AP3b der Mockup-Runde, beim ersten

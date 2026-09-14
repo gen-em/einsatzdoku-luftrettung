@@ -4,7 +4,7 @@
 **die Zahlen trägt die Umsetzung ein**. Fortgeschrieben nach jedem
 Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
-> **Stand: AP1, AP2, AP3 und AP3b gemessen, Nr. 182 behoben. AP4 und AP5
+> **Stand: AP1, AP2, AP3, AP3b und AP4 gemessen, Nr. 182 behoben. AP5
 > offen.**
 >
 > **Seit dem 14.09.2026 hat der Prüfstand drei Engines** — Chromium 141,
@@ -22,8 +22,8 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 
 > | | |
 > |---|---|
-> | Stufe | **Web 19.5.1** — 19.4.0 Nebenstufe (AP1), 19.4.1 Korrektur (Nr. 182), 19.4.2 AP2, 19.5.0 AP3, 19.5.1 Korrektur (Nr. 185, aus AP3b). Keine Migration. Uhr und Android unberührt |
-> | Punkte | Backlog **Nr. 41, 42, 45, 182, 183, 185 und 186 erledigt**; 124 offen. **Nr. 184 neu** (Kommentar-Abtaster) |
+> | Stufe | **Web 19.6.0** — 19.4.0 Nebenstufe (AP1), 19.4.1 Korrektur (Nr. 182), 19.4.2 AP2, 19.5.0 AP3, 19.5.1 Korrektur (Nr. 185, aus AP3b), 19.6.0 AP4. Keine Migration. Uhr und Android unberührt |
+> | Punkte | Backlog **Nr. 41, 42, 45, 124, 182, 183, 185 und 186 erledigt** — damit alle vier Gestaltungspunkte der Runde. **Nr. 184 neu** (Kommentar-Abtaster) |
 > | Neu entstanden | Token `--symbol-text`, `--karte-gross`; **`--dauer` von .18s auf .24s** (alle Bewegungen); Klassen `.symbol-text`, `.geo-gross`; Symbole `karte-gross.svg`, `karte-breit.svg` (54., 55.); Regel `.imp-daygroup`; Knopf offen = `--orange-hell`/`--orange-tief` (D4); Ausnahme `'✕'` in `ausnahmen.md`; Streichliste `imp-warn` |
 > | Prüfumgebung | Wegwerf-Container: PHP 8.4.19, MariaDB 10.11.14, Node 22.22.2, Playwright 1.56.1, **Chromium 141.0.7390.37 · Firefox 142.0.1 · WebKit 26.0**. Lokale Installation über `lokal_einrichten.sh` (88 Einsätze, 16 Diensttage, 2 Geräte) |
 > | Ergebnis | AP1 **grün, Vorbehalt aufgelöst** (Nr. 182 behoben). Rest offen |
@@ -103,6 +103,10 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
 | **AP3b — Stilvergleich in drei Motoren** | — | dieselbe Zahl in allen dreien | **Kaskade** 758 → 759 Regeln, **0 entfallen, 1 neu** (`select.feld-eingabe contain: paint`), **0 anderer Endwert, 0 Reihenfolgeumkehrungen**. **Berechnete Stile** je Motor **46 150 Elementmessungen, 104 Abweichungen** — 8 Auswahlfelder × 13 Breiten, einzige geänderte Eigenschaft `contain: none → paint`; Pseudoprobe **20 540 Messungen, 13 Abweichungen**. Chromium, Firefox und WebKit **identisch**, 14–18 s je Motor ✓ |
 | **AP3b — Klickprobe in drei Motoren** | 40 von 40 (Chromium) | 40 von 40 je Motor | **40 / 40 / 40** ✓ — mit `lokal_einrichten.sh` (8 s) vor **jedem** Lauf, und bei Firefox und WebKit **erst im zweiten Anlauf**. Die drei Läufe im Einzelnen stehen in Abschnitt 3; **kein** Fehlschlag war ein Motorunterschied, alle waren Datenreste des Vorlaufs oder Zeitgrenzen. Der eine echte Motorbefund — WebKit meldete „1 von 12" bei den Richtungspfeilen — war ein Fehler der **Probe** (Nr. 186) und ist behoben |
 | **AP3b — Bilderlauf in drei Motoren** | — | 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen je Motor | **Chromium voll: 360 Einzelbilder, 45 Kontaktbögen, 0 / 0 / 0** in 8 min 37 s. **Firefox `--risiko`: 80 Bilder, 0 / 0 / 0** in 2 min 36 s. **WebKit `--risiko`: 80 Bilder, 0 / 0 / 0** in 2 min 59 s ✓ — und das ist der Lauf **nach** der Behebung von Nr. 185; davor meldete WebKit als einziger „Überlauf bei 360" auf `import.php` |
+| **AP4 — Klickprobe, drei neue Wege** | 40 von 40 | 43 von 43 | **3 / 3 / 3** ✓ in allen drei Motoren (je mit frischem Bestand); voller Lauf Chromium **43 von 43**. Firefox 42/43 und WebKit 41/43 im selben Durchgang — beide Fehlschläge sind Aussetzer des Containers, siehe Abschnitt 3 |
+| **AP4 — Stilvergleich in drei Motoren** | — | dieselbe Zahl in allen dreien | **Kaskade** 759 → 761 Regeln, **0 entfallen, 9 neu, 1 anderer Endwert** (`:root --dauer .18s → .24s`), **0 Reihenfolgeumkehrungen**. **Berechnete Stile** je Motor **46 202 Elementmessungen, 390 Abweichungen**, Pseudoprobe **20 592 / 286** — Chromium, Firefox und WebKit **identisch**. Aufgeschlüsselt: 286 × Fahrtdauer `.18s → .24s`, 77 × `.blatt` (`transition: all → none` bzw. `→ transform .24s`), 14 × die Ruhelage `transform: none → matrix(…)`, 13 × die Fläche des markierten Öffners. **Keine unerklärte Abweichung** |
+| **AP4 — `var(--dauer)` im Stylesheet** | 7 | **8** (genau die Blatt-Regel dazu) | **8** ✓; andere Zeitwerte im Stylesheet: **2**, beide im `prefers-reduced-motion`-Block (`.01ms !important`) und beide schon vorher da |
+| **AP4 — Bilderlauf** | — | 0 / 0 / 0 je Lauf | **Chromium voll: 360 Einzelbilder, 45 Kontaktbögen, 0 Überlauf / 0 Konsolenfehler / 0 falsche Knopfhöhen** (8 min 54 s). **Firefox `--risiko`: 80 Bilder, 0/0/0**, **WebKit `--risiko`: 80 Bilder, 0/0/0**, **Chromium `--finger --risiko`: 80 Bilder, 0/0/0** (44 px am Finger) ✓. **Was er NICHT misst:** das offene Blatt — er fotografiert Ruhezustände, und kein Eintrag in `seiten.json` öffnet eines. Dafür stehen die Klickprobe und die Handmessung in Abschnitt 3 |
 
 ## 3. Im Browser
 
@@ -210,13 +214,51 @@ Arbeitspaket — was noch `[eckige Klammern]` trägt, ist noch nicht gemessen.*
   **0 / 0 / 0**. Die Kosten der Regel: fokussierter Ausschnitt 318 × 60 px,
   Firefox bitgleich, Chromium und WebKit **1 von 19 080 Pixeln** verschieden
   bei einer Abweichung von 6 von 255.
+- **AP4 — das Aktionsblatt, fünf Öffner × drei Motoren × zwei
+  Bewegungseinstellungen** (Playwright, 390 px, angemeldet als Demo-Konto).
+  Gemessen wurde je Öffner: Fläche und Schrift im offenen Zustand,
+  `aria-expanded`, die Unterkante des Blattes, und nach `Escape` `hidden`,
+  `aria-expanded` und wo der Fokus steht.
+
+  | | Chromium | Firefox | WebKit |
+  |---|---|---|---|
+  | Fahrt bei +40 ms (normal) | ja | ja | ja |
+  | Fahrt bei +60 ms (Bewegung abbestellt) | nein | nein | nein |
+  | Fläche `--orange-hell` / Schrift `--orange-tief` | 5/5 | 5/5 | 5/5 |
+  | Blatt offen: Unterkante = Fensterunterkante | 5/5 | 5/5 | 5/5 |
+  | nach `Escape`: `hidden`, `aria-expanded=false`, Fokus am Knopf | 5/5 | 5/5 | 5/5 |
+  | Konsolenfehler | keine | keine | keine |
+
+  Die fünf Öffner: `ui_aktionen()` (Tagesübersicht), das handgeschriebene
+  Sortierblatt der Tagesübersicht, `ui_zeilenaktionen()` (Geräteliste), die
+  Sortierblätter von Suche und Zeitraumübersicht. Damit ist **jede der vier
+  Bauarten** vertreten.
+
+  Dazu einzeln nachgemessen: **Fahrtdauer 240 ms** und mitten in der Bewegung
+  **389 px unter der Ruhelage** (also nicht schon oben); bei abbestellter
+  Bewegung `transition-duration` **0,00001 s** und nach 120 ms bereits
+  `transform: none`, also kein Zwischenbild. **Am Schreibtisch (1280 px):
+  Fahrtdauer 0 ms**, und 60 ms nach `Escape` ist das Aufklappmenü schon aus
+  dem Fluss — das ist der Punkt, den die Konzeptfassung mit `transitionend`
+  verfehlt hätte.
+- **AP4 — was bei der Klickprobe in drei Motoren wirklich passiert ist.**
+  Nicht „dreimal grün": Chromium **43 von 43**, Firefox **42 von 43**, WebKit
+  **41 von 43** — jeweils mit frisch eingespieltem Bestand davor. Alle drei
+  Fehlschläge sind Aussetzer des Containers und keine Motorunterschiede:
+  einmal `page.waitForFunction` in die Zeitgrenze (Firefox), einmal
+  `page.goto: WebKit encountered an internal error`, und **einmal dessen
+  Folge** — der abgebrochene Weg räumt seinen angelegten Datensatz nicht mehr
+  weg, und der nächste liest „3 Rettungsmittel ohne Standort statt 2". Beim
+  Nachfahren derselben Wege trat der Abbruch an **anderer** Stelle auf und die
+  Folgemeldung verschwand; die drei neuen Wege der Mockup-Runde liefen in
+  allen drei Motoren **3 von 3**.
 - Aktionsblatt auf `index.php` und in der Geräteliste (Zeilenaktion): Knopf markiert, Blatt fährt auf, `prefers-reduced-motion` ohne Bewegung. [ ]
 
 ## 4. Prüfliste — Auftraggeber
 
 | # | Bedienweg | Erwartet | Wenn nicht |
 |---|---|---|---|
-| 1 | Am S24: Tagesübersicht, „⋯" tippen | Knopf färbt sich hell-orange (D4), Blatt kommt erkennbar von unten; nach „Abbrechen" beides zurück | Bewegung zu schnell/zu langsam: `--dauer` nachjustieren (nur der Wert) |
+| 1 | Am S24: Tagesübersicht, „⋯" tippen | Knopf färbt sich hell-orange (D4), Blatt kommt erkennbar von unten (240 ms); nach „Abbrechen" beides zurück. **Am Prüfstand belegt** — fünf Öffner, drei Motoren, Fahrt und Markierung gemessen; was hier fehlt, ist das Urteil, ob 240 ms sich am Gerät richtig anfühlen | Bewegung zu schnell/zu langsam: `--dauer` nachjustieren (nur der Wert) |
 | 1a | Am S24: ☰ tippen (Schublade), ein Akkordeon auf- und zuklappen | Beides in 240 ms — fühlt sich gleich an wie das Blatt, nicht träge | Wenn träge: `--dauer` zurück auf .18s und fürs Blatt doch ein eigener Wert — dann als Entscheidung ins Konzept |
 | 2 | Am S24: Tagesübersicht, Kartenknopf „vergrößern" | Karte wird deutlich höher, Liste bleibt darunter erreichbar; nach Neuladen bleibt der Zustand | Höhe unpassend: F-MR-7 nachjustieren **Ab 1600 px macht derselbe Knopf die Karte breit statt hoch** (E-MR-16) — am Gerät nicht prüfbar, dafür am Schreibtisch nachsehen |
 | 3 | CSV-Import mit einer Datei, deren Crew von einem gespeicherten Tag abweicht | Tagesgruppe hat Kopfzeile, Warnung als orange Plakette mit Symbol — **und am Handy ist alles davon ohne waagerechtes Scrollen zu sehen** (seit Web 19.4.1, Nr. 182) | Wenn die Kopfzeile fehlt oder wie eine Datenzeile aussieht: AP1 hat nicht gegriffen. Wenn nach dem Datum nichts mehr kommt: die Container-Abfrage greift auf diesem Browser nicht — siehe Punkt 6 |

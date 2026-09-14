@@ -333,6 +333,13 @@ Schreibtisch als Knöpfe am rechten Zeilenrand. Auf schmalen Geräten steht dort
 dieselben Handlungen untereinander stehen, „Löschen" rot und abgesetzt. Das
 gilt überall: Stammdaten, Geräte, NutzerInnen, Papierkorb.
 
+**Das Blatt fährt von unten herein, und der Knopf bleibt orange**, solange es
+offen steht — damit zu sehen ist, wohin es gehört und womit man es wieder
+zumacht. Zum Schließen genügt der Knopf ein zweites Mal, ein Tipp daneben,
+„Abbrechen" im Blatt oder die Escape-Taste. Wer im Betriebssystem
+„Bewegung reduzieren" eingestellt hat, bekommt das Blatt ohne Fahrt; die
+orange Markierung bleibt.
+
 **Ganz unten auf jeder Seite** steht die Fußzeile — auch vor der Anmeldung.
 Sie ist zweizeilig: oben Lizenz und Versionsnummer, darunter die Verweise auf
 **Impressum** und **Datenschutz**. Beide Seiten sind ohne Anmeldung erreichbar;

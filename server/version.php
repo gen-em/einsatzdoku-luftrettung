@@ -4256,5 +4256,49 @@ declare(strict_types=1);
  *
  * KORREKTURSTUFE: eine Regel, eine Datei, keine neue Funktion. Uhr und
  * Android unberuehrt, keine Migration.
+ *
+ * 19.6.0 — MOCKUP-RUNDE 9c, AP4: DAS BLATT FAEHRT AUF (Nr. 124).
+ *
+ * Das Aktionsblatt stand am Handy einfach da, und der Knopf, aus dem es kam,
+ * verschwand darunter. Zweierlei aendert sich, und beides beantwortet
+ * dieselbe Frage — „wo bin ich gerade?".
+ *
+ * ES FAEHRT AUF. Im Ruhezustand steht das Blatt um seine eigene Hoehe unter
+ * dem Bildrand (`translateY(100%)`), `.blatt-auf` holt es herauf, in
+ * `--dauer` mit `ease-out`. Ohne Bewegung las sich das Erscheinen wie ein
+ * Seitenwechsel: Die halbe Flaeche war ploetzlich eine andere, und niemand
+ * wusste, woher sie kam.
+ *
+ * AM SCHREIBTISCH NICHT. Ab 1024 px ist dasselbe Markup ein Aufklappmenue
+ * unter dem Knopf; `translateY(100%)` hiesse dort „um die eigene Hoehe nach
+ * unten" und schoebe es neben die Sache. Der 1024er Block setzt deshalb
+ * `transform:none; transition:none` — und `blatt.js` fragt die GERECHNETE
+ * Fahrtdauer, statt eine Zahl zu kennen: Ist sie ~0, geht `hidden` sofort.
+ * Ohne diese Frage stuende das Aufklappmenue eine Viertelsekunde zu lange
+ * offen.
+ *
+ * DER OFFENE OEFFNER IST MARKIERT (E-MR-21, Fassung D4): `--orange-hell` als
+ * Flaeche, `--orange-tief` darauf — 11,7:1 gegen den dunkelblauen Kartenkopf,
+ * 3,8:1 fuer die Punkte gegen die Flaeche. Vier Ringfassungen standen zur
+ * Wahl und ueberzeugten nicht; der Ring auf Blau-hell lag bei 1,9:1.
+ * Die Regel haengt am ATTRIBUT `[data-blatt][aria-expanded="true"]` und
+ * erreicht damit alle vier Bauarten von Oeffnern: 6 `ui_aktionen()`, 9
+ * `ui_zeilenaktionen()`, den Pin-Knopf des Ortsfelds und drei
+ * handgeschriebene Sortierblatt-Knoepfe in index.php, suche.php und
+ * zeitraum.php (E-MR-25). Eine Regel je Bauart waere vier Stellen gewesen,
+ * die auseinanderlaufen koennen.
+ *
+ * `--dauer` STEHT JETZT AUF 240 ms, VORHER 180 — fuer die ganze Anwendung
+ * (E-MR-22, F-MR-12), also auch fuer Schublade, Schleier, Akkordeon-Winkel,
+ * Schalter-Griff und Kennzahlen-Winkel. Bei 180 ms war die Auffahrt eher ein
+ * Aufblitzen als eine Bewegung. Ein zweites Token nur fuers Blatt waere die
+ * Stelle, an der die Anwendung anfaengt, verschieden schnell zu sein.
+ *
+ * NEU: Klasse `.blatt-auf`. Kein neues Token, kein neues Symbol, kein neuer
+ * Farbwert — das Kontrastpaar „Orange tief auf Orange hell" war schon
+ * gerechnet.
+ *
+ * NEBENSTUFE: eine neue Darstellung an einer Stelle, an der bisher keine war.
+ * Uhr und Android unberuehrt, keine Migration.
  */
-const WEB_VERSION = '19.5.1';
+const WEB_VERSION = '19.6.0';

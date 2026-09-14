@@ -247,6 +247,15 @@ Oberfläche „Aufmerksamkeit", und ein Maximum verlangt keine.
 zusätzlich Text, Symbol oder Position. Eine Plakette trägt kein Häkchen: Ihr
 Vorhandensein *ist* das Häkchen (E-P3-17).
 
+**Orange heißt seit Web 19.6.0 auch „hier ist gerade etwas offen"** (E-MR-21,
+E-MR-25). Ein Öffner, dessen Blatt offen steht, trägt `--orange-hell` mit
+`--orange-tief` darauf — dieselbe Sprache wie die aktive Kennzahl und das
+angesprungene Sprungziel. Das ist keine zweite Bedeutung neben „hier wird
+gehandelt", sondern deren Fortsetzung: Der Knopf **ist** gerade die Handlung,
+und das Blatt darunter gehört zu ihm. Die Regel steht am Attribut
+(`[data-blatt][aria-expanded="true"]`) und gilt damit für alle vier Bauarten
+von Öffnern — auch für die nächste.
+
 ### 3.2 Warum es je drei Töne gibt
 
 Jede Kernfarbe kommt dreifach vor, und die drei sind nicht austauschbar:
@@ -374,8 +383,8 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--orange` | `#FF8F1F` | 30 |  |
-| `--orange-tief` | `#C25A00` | 16 |  |
-| `--orange-hell` | `#FFEBD6` | 20 |  |
+| `--orange-tief` | `#C25A00` | 17 |  |
+| `--orange-hell` | `#FFEBD6` | 22 |  |
 
 **Blau — Auswählen und Erklären**
 
@@ -430,7 +439,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 20 | Plakette, Kästchen, Eingabefeld |
-| `--radius` | `10px` | 17 | Knopf, Meldung |
+| `--radius` | `10px` | 18 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 6 | Karte, Blatt, Dialog |
 
 **Maße**
@@ -513,7 +522,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--dauer` | `.18s` | 7 |  |
+| `--dauer` | `.24s` | 8 |  |
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
 | `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 7 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
@@ -598,8 +607,12 @@ wäre die Tastaturbedienung unsichtbar.
 Breite darf `scrollWidth > innerWidth` gelten. Was breit ist, scrollt in
 seinem eigenen Behälter (`.tabelle-scroll`) oder wird zur Kachel.
 
-**Bewegung ist kurz und einheitlich** (`--dauer` .18 s) — und wer sie
-abbestellt hat (`prefers-reduced-motion`), bekommt keine.
+**Bewegung ist kurz und einheitlich** (`--dauer` **.24 s**, bis Web 19.5.1
+.18 s) — und wer sie abbestellt hat (`prefers-reduced-motion`), bekommt keine.
+Der Wert ist mit dem Aktionsblatt gewachsen (E-MR-22): Eine Auffahrt aus der
+unteren Bildkante war bei 180 ms eher ein Aufblitzen als eine Bewegung. Er
+gilt für **alle** Nutzer des Tokens; ein zweiter Wert nur fürs Blatt wäre die
+Stelle, an der die Anwendung anfängt, verschieden schnell zu sein.
 
 **Symbole kommen aus dem Vorrat.** Kein Inline-Pfad im Code, kein
 Unicode-Zeichen, kein Emoji (Kapitel 8).
@@ -712,14 +725,14 @@ neben „Standard der Installation" sprengt sonst jede Zeile.
 
 | Abfrage | Regelblöcke |
 |---|--:|
-| `@media (min-width:1600px)` | 2 |
+| `@media (min-width:1600px)` | 3 |
 | `@media (min-width:1200px)` | 3 |
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px)` | 2 |
 | `@media (min-width:720px)` | 12 |
 | `@media (max-width:479px)` | 1 |
 
-Zusammen 21 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 22 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -907,7 +920,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 54 |
 | `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 108 |
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 141 |
-| `ui_symbol()` | `.symbol` | ja (+6 Unterklassen) | 194 |
+| `ui_symbol()` | `.symbol` | ja (+10 Unterklassen) | 194 |
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 297 |
 | `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 359 |
 | `ui_geruest_start()` | `.inhalt` | ja | 434 |
@@ -923,15 +936,15 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_knopf()` | `.knopf` | ja (+16 Unterklassen) | 1244 |
 | `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1297 |
 | `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1323 |
-| `ui_karte_start()` | `.karte` | ja (+33 Unterklassen) | 1359 |
-| `ui_karte_ende()` | `.karte` | ja (+33 Unterklassen) | 1439 |
+| `ui_karte_start()` | `.karte` | ja (+36 Unterklassen) | 1359 |
+| `ui_karte_ende()` | `.karte` | ja (+36 Unterklassen) | 1439 |
 | `ui_nach_oben()` | `.nach-oben` | ja | 1474 |
 | `ui_sprungliste()` | `.sprungliste` | ja | 1516 |
 | `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1564 |
 | `ui_zeile()` | `.zeile` | ja (+15 Unterklassen) | 1618 |
 | `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 1666 |
 | `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1708 |
-| `ui_feld()` | `.feld` | ja (+19 Unterklassen) | 1777 |
+| `ui_feld()` | `.feld` | ja (+20 Unterklassen) | 1777 |
 | `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 1842 |
 | `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 1886 |
 | `ui_wahlliste()` | `.wahlliste` | ja | 1939 |
@@ -1410,6 +1423,34 @@ ein Zustandswechsel auf ein GET hin. Dafür `'form' => 'kennung'`: Der Eintrag
 wird ein `<button form="…">`, das Formular steht einmal versteckt auf der
 Seite. Ein `<form>` **um** den Eintrag ginge nicht — das Blatt kann selbst in
 einem Formular stehen.
+
+**Das Blatt fährt auf, und der Öffner bleibt markiert** (seit Web 19.6.0,
+Backlog Nr. 124, Weg b; E-P3-27 fortgeschrieben). Zwei Dinge ändern sich
+gegenüber der ersten Fassung, und beide betreffen die Frage „wo bin ich
+gerade?":
+
+- **Die Bewegung.** Das Blatt steht im Ruhezustand um seine eigene Höhe unter
+  dem Bildrand (`transform: translateY(100%)`) und wird von `.blatt-auf`
+  heraufgeholt, in `--dauer` (240 ms, `ease-out`). Ohne sie las sich das
+  Erscheinen wie ein Seitenwechsel: Die halbe Fläche war plötzlich eine
+  andere, und niemand wusste, woher sie kam. **Am Schreibtisch nicht** — dort
+  ist das Blatt ein Aufklappmenü direkt unter dem Knopf, und
+  `translateY(100%)` hieße dort „um die eigene Höhe nach unten", also neben
+  die Sache. Der 1024er Block setzt deshalb `transform:none; transition:none`.
+- **Die Markierung.** Solange sein Blatt offen ist, trägt der Öffner
+  `--orange-hell` mit `--orange-tief` (Kapitel 3.1). Sie hängt am Attribut,
+  nicht an einer Klasse — siehe dort.
+
+**Für wen das wichtig ist, der `blatt.js` anfasst:** Die Reihenfolge ist kein
+Geschmack. Beim Öffnen erst `hidden=false`, die Klasse erst im **nächsten**
+Frame — beides im selben Frame rechnet der Browser zusammen und zeichnet nur
+den Endzustand. Beim Schließen umgekehrt: erst die Klasse weg, `hidden` erst
+nach der Rückfahrt; `display:none` hält keine Bewegung an, es beendet sie.
+Und das Skript fragt die **gerechnete** `transition-duration` des Blattes:
+Ist sie ~0 — Aufklappmenü am Schreibtisch, oder Bewegung abbestellt —, geht
+`hidden` sofort, sonst nach `transitionend` mit einem Nachlauf als Sicherung.
+Ein Blatt, das im Fluss hängen bliebe, wäre unsichtbar, aber klickbar und im
+Vorlesebaum.
 
 ### 9.13 Ortsfeld
 
@@ -2559,6 +2600,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 19.6.0 (Mockup-Runde 9c / AP4)** | **9.12 um zwei Absätze ergänzt** (E-P3-27 fortgeschrieben): Das Blatt **fährt auf** (`translateY(100%)` → `.blatt-auf`, `--dauer`, am Schreibtisch ausdrücklich nicht), und der **Öffner bleibt markiert**, solange sein Blatt offen ist. Kapitel **3.1** sagt dazu, dass Orange seither auch „hier ist gerade etwas offen" heißt — als Fortsetzung von „hier wird gehandelt", nicht als zweite Bedeutung. Die Markierung steht **am Attribut** `[data-blatt][aria-expanded="true"]` und erreicht damit alle vier Bauarten von Öffnern (6 × `ui_aktionen()`, 9 × `ui_zeilenaktionen()`, der Pin-Knopf des Ortsfelds, 3 handgeschriebene Sortierblatt-Knöpfe) — E-MR-25. **`--dauer` von .18 s auf .24 s** für die ganze Anwendung (E-MR-22, F-MR-12); der Grundsatz in Kapitel 6 nennt den neuen Wert. **Kein neues Token** — die Fassung D4 benutzt `--orange-hell` und `--orange-tief`, das Kontrastpaar „Orange tief auf Orange hell" war schon gerechnet. **Kein neues Symbol, kein neuer Baustein.** Gemessen in drei Motoren, fünf Öffner, mit und ohne abbestellte Bewegung: Fläche und Schrift überall richtig, nach `Escape` `hidden=true`, `aria-expanded=false`, Fokus zurück am Knopf; mit abbestellter Bewegung 0,01 ms und kein Zwischenbild. |
 | **Web 19.5.1 (Mockup-Runde 9c / AP3b)** | **9.35 nachgetragen** (siehe dort — die Kapitelpflicht aus 1.3 war mit 19.5.0 übersehen worden) und **9.7 um einen Absatz ergänzt:** Ein `<select>` bekommt `contain:paint`, weil WebKit den längsten Eintrag in den Überlauf des Kastens rechnet und `import.php` bei 360 px dadurch um 6 px überlief (Backlog Nr. 185) — gefunden vom ersten dreifachen Bilderlauf. **Kein neues Token, kein neues Symbol, kein neuer Baustein.** Gemessen in drei Motoren: Kaskade **758 → 759 Regeln, 0 entfallen, 1 neu, 0 anderer Endwert, 0 Reihenfolgeumkehrungen**; berechnete Stile **46 150 Elementmessungen, 104 Abweichungen** — 8 Auswahlfelder × 13 Breiten, und die einzige geänderte Eigenschaft ist `contain: none → paint`. Chromium, Firefox und WebKit melden dieselben Zahlen. |
 | **Web 19.5.0 (Mockup-Runde 9c / AP3)** | **Neues Token `--karte-gross`** (`min(60vh, 520px)`; Tabelle 100 → 101) und **zwei neue Symbole** — `karte-gross.svg` und `karte-breit.svg`, Tabler „arrows-vertical" und „arrows-horizontal" (Vorrat 53 → 55). Der Baustein dazu ist erst mit 19.5.1 als **9.35** beschrieben worden; diese Zeile hält fest, dass er mit 19.5.0 entstanden ist. **Kein neuer Farbwert.** |
 | **Web 19.4.2 (Mockup-Runde 9c / AP2)** | **Zwei neue abgeleitete Token** — `--symbol-winzig` (`calc(var(--symbol-klein) - var(--abstand-1))`, 12 px) und `--ziel-chip` (`calc(var(--symbol-gross) + var(--abstand-1))`, 28 px); dazu `--symbol-text` (`1em`) und die Klasse `.symbol-text` für ein Symbol, das **im Satz** steht und mit der Schrift wächst (Tabelle 97 → 100). Das Entfernen-Zeichen des Chips ist ein Symbol geworden, sein Treffziel wächst von 17 × 15 auf **28 × 28 px** (F-MR-6a/6b, E-MR-18: 6 px zum Text wie zum Rand). **Kein neuer Farbwert, kein neues Symbol** — `schliessen` und `warnung` lagen im Vorrat. |

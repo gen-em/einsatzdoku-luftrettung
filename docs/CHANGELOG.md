@@ -14,6 +14,74 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 19.6.0] — 2026-09-14
+
+Mockup-Runde 9c, viertes Arbeitspaket: **Backlog Nr. 124** — das Aktionsblatt.
+Damit ist der letzte der vier Gestaltungspunkte gebaut.
+
+### Web — das Blatt fährt auf, und der Knopf bleibt markiert
+
+**Zwei Änderungen, eine Frage:** wo bin ich gerade? Das Aktionsblatt deckt am
+Handy die untere Bildhälfte ab. Es erschien bisher ohne Bewegung, und der
+Knopf, aus dem es kam, verschwand darin optisch — wer es wieder zumachen
+wollte, suchte.
+
+**Es fährt jetzt auf.** Im Ruhezustand steht das Blatt um seine eigene Höhe
+unter dem Bildrand; beim Öffnen wird es in 240 ms heraufgeholt, beim Schließen
+fährt es denselben Weg zurück. Ohne Bewegung las sich das Erscheinen wie ein
+Seitenwechsel: Die halbe Fläche war plötzlich eine andere, und niemand wusste,
+woher sie kam.
+
+**Am Schreibtisch ausdrücklich nicht.** Ab 1024 px ist dasselbe Markup ein
+Aufklappmenü direkt unter dem Knopf. Eine Fahrt „um die eigene Höhe von
+unten" schöbe es dort neben die Sache statt unter den Bildrand. Das Mockup
+sagt zum Schreibtisch „unverändert", und so ist es geblieben — die Markierung
+des Knopfes gilt dort trotzdem, und der Winkel dreht weiter.
+
+**Der offene Öffner ist orange hinterlegt** (Fassung D4 aus der Freigaberunde,
+F-MR-11): Fläche `--orange-hell`, Punkte und Schrift `--orange-tief`. Gemessen
+11,7:1 gegen den dunkelblauen Kartenkopf und 3,8:1 für die Punkte gegen die
+Fläche — über den 3:1, die WCAG 1.4.11 für ein Bedienelement verlangt. Vier
+Ringfassungen standen vorher zur Wahl; keine überzeugte, und der Ring auf
+Blau-hell lag bei 1,9:1.
+
+**Die Markierung hängt am Attribut, nicht an einer Klasse** — und das ist der
+eigentliche Gewinn. Öffner gibt es in vier Bauarten: das Seitenmenü
+(`ui_aktionen()`, 6 Aufrufe), das Zeilen-„⋯" (`ui_zeilenaktionen()`, 9), der
+Pin-Knopf des Ortsfelds und drei handgeschriebene Sortierblatt-Knöpfe in
+Tagesübersicht, Suche und Zeitraumübersicht. Sie teilen genau ein Merkmal:
+`data-blatt` mit `aria-expanded`. Eine Regel daran erreicht alle vier — und
+die nächste, die jemand baut, ebenfalls. „Blatt offen" ist dieselbe Aussage,
+gleich an welchem Knopf.
+
+**Alle Bewegungen der Anwendung dauern jetzt 240 ms statt 180** (F-MR-12).
+Das betrifft nicht nur das Blatt, sondern jeden Nutzer des Tokens `--dauer`:
+Schublade und Schleier, den Winkel am Akkordeon und am „Aktionen"-Knopf, den
+Schaltergriff, den Winkel der Kennzahlen. Bei 180 ms war die Auffahrt aus der
+Bildkante eher ein Aufblitzen als eine Bewegung, und eine Bewegung, die man
+nicht sieht, erklärt auch nichts. Ein zweiter Wert nur fürs Blatt wäre die
+Stelle, an der die Anwendung anfängt, verschieden schnell zu sein. **Wer
+Bewegung abbestellt hat, bekommt weiterhin keine** — dann erscheint das Blatt
+ohne Fahrt.
+
+**Was beim Bauen zu lernen war, steht im Skript:** Die Reihenfolge ist kein
+Geschmack. Beim Öffnen erst sichtbar machen, die Klasse erst im **nächsten**
+Frame — beides im selben Frame rechnet der Browser zusammen und zeichnet nur
+den Endzustand. Beim Schließen umgekehrt: erst die Klasse weg, aus dem Fluss
+erst nach der Rückfahrt, denn `display:none` hält keine Bewegung an, es
+beendet sie. Und das Skript **fragt** die gerechnete Fahrtdauer, statt eine
+Zahl zu kennen: Ist sie null — Aufklappmenü am Schreibtisch, oder Bewegung
+abbestellt —, geht das Blatt sofort aus dem Fluss. Ohne diese Frage stünde das
+Aufklappmenü eine Viertelsekunde zu lange offen.
+
+### Prüfstand — drei neue Wege in der Klickprobe
+
+`tools/klickprobe/wege/mr.mjs`: Die Markierung an **allen fünf** Vertretern
+der vier Bauarten, die Auffahrt mitten in der Bewegung gemessen (nicht nur am
+Ende), und der Schreibtischfall — dass dort **nichts** fährt und das Menü
+sofort zugeht. Den letzten sieht man einem Bild nicht an, weil es am Ende ja
+zu ist.
+
 ## [Web 19.5.1] — 2026-09-14
 
 Mockup-Runde 9c, Arbeitspaket 3b: **Backlog Nr. 183** — die Prüfmittel fahren
